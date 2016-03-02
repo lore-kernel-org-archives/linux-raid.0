@@ -1,220 +1,327 @@
-From: <rodman@shellport.com>
-Subject: RE: Checkarray doesn't seem to do anything
-Date: Tue, 01 Mar 2016 17:50:09 -0700
-Message-ID: <20160301175009.0a91db92e0d9ae1e5e3fde0508678719.a1548d3694.wbe@email03.secureserver.net>
+From: Another Sillyname <anothersname@googlemail.com>
+Subject: RAID6 Array crash during reshape.....now will not re-assemble.
+Date: Wed, 2 Mar 2016 03:46:48 +0000
+Message-ID: <CAOS+5GEd4E2wzYhw0rPdrZnjK6UwAUdKCQLLTxXrdPO8d7hS7w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+I have a 30TB RAID6 array using 7 x 6TB drives that I wanted to
+migrate to RAID5 to take one of the drives offline and use in a new
+array for a migration.
 
-It appears this is not an Mdadm bug but is in fact kernel/dash issue as
-you noted, Piergiorgio.
+sudo mdadm --grow /dev/md127 --level=raid5 --raid-device=6
+--backup-file=mdadm_backupfile
 
-From the bug tracker here: 
-https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=787950
+I watched this using cat /proc/mdstat and even after an hour the
+percentage of the reshape was still 0.0%.
 
-"This is a kernel/dash issue. In kernel 4.0, the md sysfs implementation
-does not work with partial reads from /sys/block/md0/md/sync_action;
-the read syscall returns the entire contents of the file even if you
-try to read less. Dash has an inefficient implementation which reads
-input one byte at a time, and fails when it hits the kernel
-misbehavior."
+I know from previous experience that reshaping can be slow, but did
+not expect it to be this slow frankly.  But erring on the side of
+caution I decided to leave the array for 12 hours and see what was
+happening then.
 
-The work around is what you said.  Substitute bash for sh at the
-beginning of the script.  Unfortunately that doesn't work for me as I
-get this error when trying to run checkarray now:
-"checkarray: E: /sys/block/md0/md/sync_action not writeable."
+Sure enough, 12 hours later cat /proc/mdstat still shows reshape at 0.0%
 
-I'll do some research to see what's that's about.  I'm glad to know its
-not a Mdadm issue per say.
+Looking at CPU usage the reshape process is using 0% of the CPU.
 
-Rodman Frowert
+So reading a bit more......if you reboot a server the reshape should continue.
 
--------- Original Message --------
-Subject: Re: Checkarray doesn't seem to do anything
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Date: Tue, March 01, 2016 4:25 pm
-To: rodman@shellport.com
-Cc: linux-raid@vger.kernel.org
+Reboot.....
 
-On Tue, Mar 01, 2016 at 02:57:21PM -0700, rodman@shellport.com wrote:
-> Thank you for that information. My kernel is 4.2.0.
+Array will not come back online at all.
 
-I guess the problem is the same.
+Bring the server up without the array trying to automount.
 
-> 
-> Is this it's intended behavior or is it simply a bug that has not been
-> corrected?
+cat /proc/mdstat shows the array offline.
 
-Well, I think it is a bug.
-I'm not sure if "dash" bug or kernel bug.
-I suspect "dash", since "bash" works...
+Personalities :
+md127 : inactive sdf1[2](S) sde1[3](S) sdg1[0](S) sdb1[8](S)
+sdh1[7](S) sdc1[1](S) sdd1[6](S)
+      41022733300 blocks super 1.2
 
-> 
-> I only bring this up as nearly all mdadm config tutorials at some point
-> mention the checkarray function. They also point out that checkarray is
-> also auto configured in the cron tab (cron.d) to run once a month. But
-> of course, if checkarray doesn't work then people may think it is
-> running once a month when it really isn't.
+unused devices: <none>
 
-Exactly!
-I've some Ubuntu 14.04.x with old kernel, and one
-with new kernel.
-This one has a "weak" HDD in RAID (one / some blocks
-waiting for relocation).
-In my sytems the check occurs weekly, but it did not!
-Tried from command line to no avail...
-Debugging the script led to the previous result.
+Try to reassemble the array.
 
-I'm not sure, maybe someone should file a bug, but I
-have not to much faith in Ubuntu md/mdadm support.
-In the past they were slow or no reacting, and "mdadm"
-was always an obsolete version (like it is in 14.04.x).
-Maybe Debian could be a better place, not sure.
+>sudo mdadm --assemble /dev/md127 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1 /dev/sdg1 /dev/sdh1
+mdadm: /dev/sdg1 is busy - skipping
+mdadm: /dev/sdh1 is busy - skipping
+mdadm: Merging with already-assembled /dev/md/server187.internallan.com:1
+mdadm: Failed to restore critical section for reshape, sorry.
+       Possibly you needed to specify the --backup-file
 
-bye,
 
-pg
+Have no idea where the server187 stuff has come from.
 
-> 
-> 
-> Rodman Frowert -------- Original Message --------
-> Subject: Re: Checkarray doesn't seem to do anything
-> From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-> Date: Tue, March 01, 2016 3:33 pm
-> To: rodman@shellport.com
-> Cc: linux-raid@vger.kernel.org
-> 
-> On Tue, Mar 01, 2016 at 02:09:44PM -0700, rodman@shellport.com wrote:
-> > 
-> > Hello,
-> > 
-> > I have a question as it pertains to the checkarray function of Mdadm.
-> I
-> > can't actually get it to do anything. I'm running Ubuntu 14.04.4
-> Server
-> > LTS with the latest mdadm installed. I have a single RAID 1 mirror
-> > configured and working properly near as I can tell. 
-> > 
-> > I can force a check if I issue "echo check >
-> > /sys/block/md0/md/sync_action" as root. I can then see the status of
-> > the check via /proc/mdstat or using the --detail switch on mdadm
-> itself.
-> > 
-> > However, nothing happens if I type in:
-> > /usr/share/mdadm/checkarray -a
-> > or
-> > /usr/share/mdadm/checkarray -a /dev/mdX
-> > or
-> > /usr/share/mdadm/checkarray -as
-> > 
-> > I've tried the commands as root and using sudo. The array sits idle
-> > after all of the above commands. The only thing I can actually get
-> > checkarray to perform is to give me the help output if I pass it -h.
-> I
-> > have attached, below, the current status of the mdadm managed array. 
-> > Doing some Googling I haven't been able to find anyone else that
-> isn't
-> > able to use the checkarray function so I must be doing something
-> wrong.
-> > 
-> > Any ideas?
-> 
-> Well, yes, I've the same problem.
-> 
-> Ubuntu 14.04.x with kernel 3.13, "checkarray" works.
-> Ubuntu 14.04.x with kernel 4.11 (I think), "checkarray"
-> does not work.
-> 
-> The script runs with "dash" (not "bash") and it has
-> a "read cur_status < something_from_sysfs" in order to check
-> the array status.
-> With kernel 3.13, the "read" returns the proper value,
-> with kernel 4.11 (I think) the very same "read" exits
-> the script without any message or else.
-> 
-> One option is to use "bash", that is change the top
-> of the script from: #!/bin/sh to #!/bin/bash
-> 
-> Another is to change the "read", with a "cat", that is
-> something like: cur_status=$( cat something_from_sysfs )
-> 
-> You can check yourself, there is only one "read" in
-> the script (if I recall correctly).
-> 
-> Hope this helps,
-> 
-> bye,
-> 
-> pg
-> 
-> > 
-> > Rodman Frowert
-> > 
-> 
-> > 
-> > cat /proc/mdstat shows:
-> > ------------------
-> > rodman@nas:/usr/share/mdadm$ cat /proc/mdstat
-> > Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
-> > [raid4] [raid10]
-> > md0 : active raid1 sdc1[1] sdb1[0]
-> > 5860389696 blocks super 1.2 [2/2] [UU]
-> > -----------------
-> > 
-> > sudo mdadm --detail /dev/md0 shows:
-> > ------------------
-> > rodman@nas:/usr/share/mdadm$ sudo mdadm --detail /dev/md0
-> > /dev/md0:
-> > Version : 1.2
-> > Creation Time : Fri Feb 26 14:07:40 2016
-> > Raid Level : raid1
-> > Array Size : 5860389696 (5588.90 GiB 6001.04 GB)
-> > Used Dev Size : 5860389696 (5588.90 GiB 6001.04 GB)
-> > Raid Devices : 2
-> > Total Devices : 2
-> > Persistence : Superblock is persistent
-> > 
-> > Update Time : Tue Mar 1 07:40:19 2016
-> > State : clean
-> > Active Devices : 2
-> > Working Devices : 2
-> > Failed Devices : 0
-> > Spare Devices : 0
-> > 
-> > Name : nas:0 (local to host nas)
-> > UUID : 4765e7df:0e1a6ad2:1321765f:a2d9f2c9
-> > Events : 164
-> > 
-> > Number Major Minor RaidDevice State
-> > 0 8 17 0 active sync /dev/sdb1
-> > 1 8 33 1 active sync /dev/sdc1
-> > 
-> > -----------------
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at http://vger.kernel.org/majordomo-info.html
-> 
-> -- 
-> 
-> piergiorgio
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at http://vger.kernel.org/majordomo-info.html
+stop the array.
 
--- 
+>sudo mdadm --stop /dev/md127
 
-piergiorgio
+try to re-assemble
+
+>sudo mdadm --assemble /dev/md127 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1 /dev/sdg1 /dev/sdh1
+
+mdadm: Failed to restore critical section for reshape, sorry.
+       Possibly you needed to specify the --backup-file
+
+
+try to re-assemble using the backup file
+
+>sudo mdadm --assemble /dev/md127 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1 /dev/sdg1 /dev/sdh1 --backup-file=mdadm_backupfile
+
+mdadm: Failed to restore critical section for reshape, sorry.
+
+have a look at the individual drives
+
+>sudo mdadm --examine /dev/sd[b-h]1
+
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x5
+     Array UUID : da29a06f:f8cf1409:bc52afb2:6945ba08
+           Name : server187.internallan.com:1
+  Creation Time : Sun May 10 14:47:51 2015
+     Raid Level : raid6
+   Raid Devices : 7
+
+ Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
+     Array Size : 29301952000 (27944.52 GiB 30005.20 GB)
+  Used Dev Size : 11720780800 (5588.90 GiB 6001.04 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=262056 sectors, after=143 sectors
+          State : clean
+    Device UUID : 1152bdeb:15546156:1918b67d:37d68b1f
+
+Internal Bitmap : 8 sectors from superblock
+  Reshape pos'n : 0
+     New Layout : left-symmetric-6
+
+    Update Time : Wed Mar  2 01:19:42 2016
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : 3a66db58 - correct
+         Events : 369282
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 4
+   Array State : AAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x5
+     Array UUID : da29a06f:f8cf1409:bc52afb2:6945ba08
+           Name : server187.internallan.com:1
+  Creation Time : Sun May 10 14:47:51 2015
+     Raid Level : raid6
+   Raid Devices : 7
+
+ Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
+     Array Size : 29301952000 (27944.52 GiB 30005.20 GB)
+  Used Dev Size : 11720780800 (5588.90 GiB 6001.04 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=262056 sectors, after=143 sectors
+          State : clean
+    Device UUID : 140e09af:56e14b4e:5035d724:c2005f0b
+
+Internal Bitmap : 8 sectors from superblock
+  Reshape pos'n : 0
+     New Layout : left-symmetric-6
+
+    Update Time : Wed Mar  2 01:19:42 2016
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : 88916c56 - correct
+         Events : 369282
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 1
+   Array State : AAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x5
+     Array UUID : da29a06f:f8cf1409:bc52afb2:6945ba08
+           Name : server187.internallan.com:1
+  Creation Time : Sun May 10 14:47:51 2015
+     Raid Level : raid6
+   Raid Devices : 7
+
+ Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
+     Array Size : 29301952000 (27944.52 GiB 30005.20 GB)
+  Used Dev Size : 11720780800 (5588.90 GiB 6001.04 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=262056 sectors, after=143 sectors
+          State : clean
+    Device UUID : a50dd0a1:eeb0b3df:76200476:818e004d
+
+Internal Bitmap : 8 sectors from superblock
+  Reshape pos'n : 0
+     New Layout : left-symmetric-6
+
+    Update Time : Wed Mar  2 01:19:42 2016
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : 9f8eb46a - correct
+         Events : 369282
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 6
+   Array State : AAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sde1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x5
+     Array UUID : da29a06f:f8cf1409:bc52afb2:6945ba08
+           Name : server187.internallan.com:1
+  Creation Time : Sun May 10 14:47:51 2015
+     Raid Level : raid6
+   Raid Devices : 7
+
+ Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
+     Array Size : 29301952000 (27944.52 GiB 30005.20 GB)
+  Used Dev Size : 11720780800 (5588.90 GiB 6001.04 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=262056 sectors, after=143 sectors
+          State : clean
+    Device UUID : 7d0b65b3:d2ba2023:4625c287:1db2de9b
+
+Internal Bitmap : 8 sectors from superblock
+  Reshape pos'n : 0
+     New Layout : left-symmetric-6
+
+    Update Time : Wed Mar  2 01:19:42 2016
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : 552ce48f - correct
+         Events : 369282
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 3
+   Array State : AAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdf1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x5
+     Array UUID : da29a06f:f8cf1409:bc52afb2:6945ba08
+           Name : server187.internallan.com:1
+  Creation Time : Sun May 10 14:47:51 2015
+     Raid Level : raid6
+   Raid Devices : 7
+
+ Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
+     Array Size : 29301952000 (27944.52 GiB 30005.20 GB)
+  Used Dev Size : 11720780800 (5588.90 GiB 6001.04 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=262056 sectors, after=143 sectors
+          State : clean
+    Device UUID : cda4f5e5:a489dbb9:5c1ab6a0:b257c984
+
+Internal Bitmap : 8 sectors from superblock
+  Reshape pos'n : 0
+     New Layout : left-symmetric-6
+
+    Update Time : Wed Mar  2 01:19:42 2016
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : 2056e75c - correct
+         Events : 369282
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 2
+   Array State : AAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdg1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x5
+     Array UUID : da29a06f:f8cf1409:bc52afb2:6945ba08
+           Name : server187.internallan.com:1
+  Creation Time : Sun May 10 14:47:51 2015
+     Raid Level : raid6
+   Raid Devices : 7
+
+ Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
+     Array Size : 29301952000 (27944.52 GiB 30005.20 GB)
+  Used Dev Size : 11720780800 (5588.90 GiB 6001.04 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=262056 sectors, after=143 sectors
+          State : clean
+    Device UUID : df5af6ce:9017c863:697da267:046c9709
+
+Internal Bitmap : 8 sectors from superblock
+  Reshape pos'n : 0
+     New Layout : left-symmetric-6
+
+    Update Time : Wed Mar  2 01:19:42 2016
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : fefea2b5 - correct
+         Events : 369282
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 0
+   Array State : AAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdh1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x5
+     Array UUID : da29a06f:f8cf1409:bc52afb2:6945ba08
+           Name : server187.internallan.com:1
+  Creation Time : Sun May 10 14:47:51 2015
+     Raid Level : raid6
+   Raid Devices : 7
+
+ Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
+     Array Size : 29301952000 (27944.52 GiB 30005.20 GB)
+  Used Dev Size : 11720780800 (5588.90 GiB 6001.04 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=262056 sectors, after=143 sectors
+          State : clean
+    Device UUID : 9d98af83:243c3e02:94de20c7:293de111
+
+Internal Bitmap : 8 sectors from superblock
+  Reshape pos'n : 0
+     New Layout : left-symmetric-6
+
+    Update Time : Wed Mar  2 01:19:42 2016
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : b9f6375e - correct
+         Events : 369282
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 5
+   Array State : AAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+
+
+As all the drives are showing Reshape pos'n 0 I'm assuming the reshape
+never got started (even though cat /proc/mdstat showed the array
+reshaping)?
+
+So now I'm well out of my comfort zone so instead of flapping around
+have decided to sleep for a few hours before revisiting this.
+
+Any help and guidance would be appreciated, the drives showing clean
+gives me comfort that the data is likely intact and complete (crossed
+fingers) however I can't re-assemble the array as I keep getting the
+'critical information for reshape, sorry' warning.
+
+Help???
