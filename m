@@ -1,7 +1,7 @@
 From: <rodman@shellport.com>
 Subject: RE: Checkarray doesn't seem to do anything
-Date: Tue, 01 Mar 2016 16:00:21 -0700
-Message-ID: <20160301160021.0a91db92e0d9ae1e5e3fde0508678719.43bcc94975.wbe@email03.secureserver.net>
+Date: Tue, 01 Mar 2016 17:50:09 -0700
+Message-ID: <20160301175009.0a91db92e0d9ae1e5e3fde0508678719.a1548d3694.wbe@email03.secureserver.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8BIT
@@ -11,16 +11,29 @@ To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Looks like it was reported in 2015:
+
+It appears this is not an Mdadm bug but is in fact kernel/dash issue as
+you noted, Piergiorgio.
+
+From the bug tracker here: 
 https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=787950
 
-Is Debian the sole maintainer for mdadm now?
+"This is a kernel/dash issue. In kernel 4.0, the md sysfs implementation
+does not work with partial reads from /sys/block/md0/md/sync_action;
+the read syscall returns the entire contents of the file even if you
+try to read less. Dash has an inefficient implementation which reads
+input one byte at a time, and fails when it hits the kernel
+misbehavior."
 
-Regards,
+The work around is what you said.  Substitute bash for sh at the
+beginning of the script.  Unfortunately that doesn't work for me as I
+get this error when trying to run checkarray now:
+"checkarray: E: /sys/block/md0/md/sync_action not writeable."
+
+I'll do some research to see what's that's about.  I'm glad to know its
+not a Mdadm issue per say.
 
 Rodman Frowert
-
-
 
 -------- Original Message --------
 Subject: Re: Checkarray doesn't seem to do anything
