@@ -1,53 +1,38 @@
-From: Roman Mamedov <rm@romanrm.net>
-Subject: RAID5/6 slow due to a member device -- how to diagnose?
-Date: Thu, 3 Mar 2016 19:30:26 +0500
-Message-ID: <20160303193026.7d08e64b@natsu>
+From: Mateusz Korniak <mateusz-lists@ant.gliwice.pl>
+Subject: Re: RAID5/6 slow due to a member device -- how to diagnose?
+Date: Thu, 03 Mar 2016 15:35:21 +0100
+Message-ID: <4472129.pebMKxQj7W@matkor-toshiba>
+References: <20160303193026.7d08e64b@natsu>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/KE/kxrd7f0HEM5fHdj.xQgf"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20160303193026.7d08e64b@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Roman Mamedov <rm@romanrm.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/KE/kxrd7f0HEM5fHdj.xQgf
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Thursday 03 March 2016 19:30:26 Roman Mamedov wrote:
+> But is that broken down somewhere to show which particular block devi=
+ce is
+> being the most 'waited for'?
 
-Hello,
+iostat  ?
 
-Let's suppose I am seeing slow write performance on a RAID5 or RAID6, and I=
- am
-suspecting that it's because of one of its devices operating slower than
-others (maybe a soft-failing or just low-performing hard drive, in case with
-non-identical member drives). Nothing in dmesg, no timeouts or ATA errors or
-anything like that.
+r_await w_await  svctm  %util  columns?
 
-How would I go about diagnosing which device that is (if any) is slowing do=
-wn
-the array, aside from performance-testing each individual device (which see=
-ms
-rather difficult if it's only slow on writes, not reads).
-
-In 'top' there's of course high iowait, 50-70% all the time during writes. =
-But
-is that broken down somewhere to show which particular block device is being
-the most 'waited for'?
+Regards,
 
 --=20
-With respect,
-Roman
+Mateusz Korniak
+"(...) mam brata - powa=C5=BCny, domator, liczykrupa, hipokryta, pobo=C5=
+=BCni=C5=9B,
+ 	kr=C3=B3tko m=C3=B3wi=C4=85c - podpora spo=C5=82ecze=C5=84stwa."
+				Nikos Kazantzakis - "Grek Zorba"
 
---Sig_/KE/kxrd7f0HEM5fHdj.xQgf
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEARECAAYFAlbYSoUACgkQTLKSvz+PZwjzNgCfVHcbogGpnixFDU1S3bKuWrVg
-nHwAn36WyXNDJqpOL3d5CB3K40b3niE5
-=+M1h
------END PGP SIGNATURE-----
-
---Sig_/KE/kxrd7f0HEM5fHdj.xQgf--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
