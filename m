@@ -1,53 +1,36 @@
-From: Seth Forshee <seth.forshee@canonical.com>
-Subject: Re: [PATCH RESEND v2 11/18] fs: Ensure the mounter of a filesystem
- is privileged towards its inodes
-Date: Thu, 3 Mar 2016 11:02:01 -0600
-Message-ID: <20160303170201.GA30224@ubuntu-hedt>
-References: <1451930639-94331-1-git-send-email-seth.forshee@canonical.com>
- <1451930639-94331-12-git-send-email-seth.forshee@canonical.com>
+From: Sarah Newman <srn@prgmr.com>
+Subject: Re: Fwd: RAID6 Array crash during reshape.....now will not
+ re-assemble.
+Date: Thu, 3 Mar 2016 09:48:24 -0800
+Message-ID: <56D878E8.1060409@prgmr.com>
+References: <CAOS+5GEd4E2wzYhw0rPdrZnjK6UwAUdKCQLLTxXrdPO8d7hS7w@mail.gmail.com>
+ <56D6E883.50801@youngman.org.uk>
+ <CAOS+5GHof=F94x58SKqFojV26hGpDSLF85dFfm8Xc6M43sN6jA@mail.gmail.com>
+ <CAOS+5GEfQ2p0xguguKC3uXW8GYBDCxt2vk=-Ci6+nTKwkcWtdQ@mail.gmail.com>
+ <CAOS+5GGX8QBo3=s+Mcj=Kd6VSmZyatfZ30NXBy8E=4WJE6z0sA@mail.gmail.com>
+ <CAOS+5GGB5gVSFJbYwwJu+z0C0oyYPzsLRhnjD6FkmLEWFFquFA@mail.gmail.com>
+ <56D8348E.9070802@youngman.org.uk>
+ <CAOS+5GH1Rcu8zGk1dQ+aSNmVzjo=irH65KfPuq1ZGruzqX_=vg@mail.gmail.com>
+ <CAOS+5GHUKD63M90zWfiv14QkJunj2QF+gYqDMrg208-S4oXE2Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1451930639-94331-12-git-send-email-seth.forshee@canonical.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <miklos@szeredi.hu>, linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAOS+5GHUKD63M90zWfiv14QkJunj2QF+gYqDMrg208-S4oXE2Q@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Another Sillyname <anothersname@googlemail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Jan 04, 2016 at 12:03:50PM -0600, Seth Forshee wrote:
-> The mounter of a filesystem should be privileged towards the
-> inodes of that filesystem. Extend the checks in
-> inode_owner_or_capable() and capable_wrt_inode_uidgid() to
-> permit access by users priviliged in the user namespace of the
-> inode's superblock.
+On 03/03/2016 06:07 AM, Another Sillyname wrote:
+> Plenty of hits....but no clear fixes and as I said I'm not willing to
+> 'try' things from google hits until someone with better insight can
+> give me a view.
+> 
+> Trying things is fine in many instances, but not with a 20+TB data set
+> as I'm sure you can understand.
+> 
 
-Eric - I've discovered a problem related to this patch. The patches
-you've already applied to your testing branch make it so that s_user_ns
-can be an unprivileged user for proc and kernfs-based mounts. In some
-cases DAC is the only thing protecting files in these mounts (ignoring
-MAC), and with this patch an unprivileged user could bypass DAC.
+I have not tried this personally, but it may be of interest:
+https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID#Making_the_harddisks_read-only_using_an_overlay_file I found this explanation
+of the dmsetup commands to be more easy to follow: http://www.flaterco.com/kb/sandbox.html
 
-There's a simple solution - always set s_user_ns to &init_user_ns for
-those filesystems. I think this is the right thing to do, since the
-backing store behind these filesystems are really kernel objects.  But
-this would break the assumption behind your patch "userns: Simpilify
-MNT_NODEV handling" and cause a regression in mounting behavior.
-
-I've come up with several possible solutions for this conflict.
-
- 1. Drop this patch and keep on setting s_user_ns to unprivilged users.
-    This would be unfortunate because I think this patch does make sense
-    for most filesystems.
- 2. Restrict this patch so that a user privileged towards s_user_ns is
-    only privileged towards the super blocks inodes if s_user_ns has a
-    mapping for both i_uid and i_gid. This is better than (1) but still
-    not ideal in my mind.
- 3. Drop your patch and maintain the current MNT_NODEV behavior.
- 4. Add a new s_iflags flag to indicate a super block is from an
-    unprivileged mount, and use this in your patch instead of s_user_ns.
-
-Any preference, or any other ideas?
-
-Thanks,
-Seth
