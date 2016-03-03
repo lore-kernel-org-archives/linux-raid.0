@@ -1,60 +1,93 @@
-From: Another Sillyname <anothersname@googlemail.com>
-Subject: Re: Fwd: RAID6 Array crash during reshape.....now will not re-assemble.
-Date: Thu, 3 Mar 2016 17:59:57 +0000
-Message-ID: <CAOS+5GEnvtPMUqorddDNUvkNr2+K2S=0N76i3f0AkAOE-7U4Pg@mail.gmail.com>
-References: <CAOS+5GEd4E2wzYhw0rPdrZnjK6UwAUdKCQLLTxXrdPO8d7hS7w@mail.gmail.com>
-	<56D6E883.50801@youngman.org.uk>
-	<CAOS+5GHof=F94x58SKqFojV26hGpDSLF85dFfm8Xc6M43sN6jA@mail.gmail.com>
-	<CAOS+5GEfQ2p0xguguKC3uXW8GYBDCxt2vk=-Ci6+nTKwkcWtdQ@mail.gmail.com>
-	<CAOS+5GGX8QBo3=s+Mcj=Kd6VSmZyatfZ30NXBy8E=4WJE6z0sA@mail.gmail.com>
-	<CAOS+5GGB5gVSFJbYwwJu+z0C0oyYPzsLRhnjD6FkmLEWFFquFA@mail.gmail.com>
-	<56D8348E.9070802@youngman.org.uk>
-	<CAOS+5GH1Rcu8zGk1dQ+aSNmVzjo=irH65KfPuq1ZGruzqX_=vg@mail.gmail.com>
-	<CAOS+5GHUKD63M90zWfiv14QkJunj2QF+gYqDMrg208-S4oXE2Q@mail.gmail.com>
-	<56D878E8.1060409@prgmr.com>
+From: Robert Jarzmik <robert.jarzmik@free.fr>
+Subject: Re: [PATCH 1/4] scatterlist: Introduce some helper functions
+Date: Thu, 03 Mar 2016 20:15:42 +0100
+Message-ID: <87povbpe3l.fsf@belgarion.home>
+References: <cover.1456981314.git.baolin.wang@linaro.org>
+	<cover.1456981314.git.baolin.wang@linaro.org>
+	<3bff3e286d3ee01ebb7e26d7233075054c42a7a9.1456981314.git.baolin.wang@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56D878E8.1060409@prgmr.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-crypto-owner@vger.kernel.org>
+In-Reply-To: <3bff3e286d3ee01ebb7e26d7233075054c42a7a9.1456981314.git.baolin.wang@linaro.org>
+	(Baolin Wang's message of "Thu, 3 Mar 2016 13:19:36 +0800")
+Sender: linux-crypto-owner@vger.kernel.org
+To: Baolin Wang <baolin.wang@linaro.org>
+Cc: herbert@gondor.apana.org.au, davem@davemloft.net, agk@redhat.com, snitzer@redhat.com, axboe@fb.com, dm-devel@redhat.com, akpm@linux-foundation.org, david.s.gordon@intel.com, thomas.lendacky@amd.com, yamada.masahiro@socionext.com, smueller@chronox.de, tadeusz.struk@intel.com, standby24x7@gmail.com, shli@kernel.org, broonie@kernel.org, linus.walleij@linaro.org, arnd@arndb.de, linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Sarah
+Baolin Wang <baolin.wang@linaro.org> writes:
 
-Thanks for the suggestion.
+> @@ -212,6 +212,37 @@ static inline void sg_unmark_end(struct scatterlist *sg)
+>  }
+>  
+>  /**
+> + * sg_is_contiguous - Check if the scatterlists are contiguous
+> + * @sga: SG entry
+> + * @sgb: SG entry
+> + *
+> + * Description:
+> + *   If the sga scatterlist is contiguous with the sgb scatterlist,
+> + *   that means they can be merged together.
+> + *
+> + **/
+> +static inline bool sg_is_contiguous(struct scatterlist *sga,
+> +				    struct scatterlist *sgb)
+> +{
+> +	return ((sga->page_link & ~0x3UL) + sga->offset + sga->length ==
+> +		(sgb->page_link & ~0x3UL));
+> +}
+I don't understand that one.
+sga->page_link is a pointer to a "struct page *". How can it be added to an
+offset within a page ???
 
-I'd read that a couple of days back and while it's an interesting idea
-I don't believe it will address my specific issue of the array not
-allowing re-assembly (even with force and read only flags set) as
-mdadm reports the 'need backup file for reshape, sorry' error no
-matter what I've tried.
+> @@ -370,6 +370,65 @@ int sg_alloc_table(struct sg_table *table, unsigned int
+> nents, gfp_t gfp_mask)
+...
+>  /**
+> + * sg_add_sg_to_table - Add one scatterlist into sg table
+> + * @sgt:	The sg table header to use
+> + * @src:	The sg need to be added into sg table
+> + *
+> + * Description:
+> + *   The 'nents' member indicates how many scatterlists added in the sg table.
+> + *   Copy the @src@ scatterlist into sg table and increase 'nents' member.
+> + *
+> + **/
+> +int sg_add_sg_to_table(struct sg_table *sgt, struct scatterlist *src)
+> +{
+> +	unsigned int i = 0, orig_nents = sgt->orig_nents;
+> +	struct scatterlist *sgl = sgt->sgl;
+> +	struct scatterlist *sg;
+> +
+> +	/* Check if there are enough space for the new sg to be added */
+> +	if (sgt->nents >= sgt->orig_nents)
+> +		return -EINVAL;
+I must admit I don't understand that one either : how do comparing the number of
+"mapped" entries against the number of "allocated" entries determines if there
+is enough room ?
 
-Even trying the above flags with invalid-backup does not work so I
-need someone to have a eureka moment and say "....it's this....".
+> +/**
+> + * sg_alloc_empty_table - Allocate one empty sg table
+> + * @sgt:	The sg table header to use
+> + * @nents:	Number of entries in sg list
+> + * @gfp_mask:	GFP allocation mask
+> + *
+> + *  Description:
+> + *    Allocate and initialize an sg table. The 'nents' member of sg_table
+> + *    indicates how many scatterlists added in the sg table. It should set
+> + *    0 which means there are no scatterlists added in this sg table now.
+> + *
+> + **/
+> +int sg_alloc_empty_table(struct sg_table *sgt, unsigned int nents,
+> +			 gfp_t gfp_mask)
+As for this one, there has to be a purpose for it I fail to see. From far away
+it looks exactly like sg_alloc_table(), excepting it "works around" the nents >
+0 protection of __sg_alloc_table().
+What is exactly the need for this one, and if it's usefull why not simply
+changing the __sg_alloc_table() "nents > 0" test and see what the outcome of the
+review will be ?
 
-I believe that mdadm 3.3 incorporated the recover during reshape
-functionality, however I've read elsewhere it only applies to
-expansion into a new drive...I was going RAID6 to RAID5 (even though
-it never really got started) and the backup file looks like 20mb of
-EOLs.
+Cheers.
 
-So at he moment I'm pretty much stuck unless someone can tell me how
-to clear down the reshape flag, even in read only mode so I can copy
-the data off.
-
-
-On 3 March 2016 at 17:48, Sarah Newman <srn@prgmr.com> wrote:
-> On 03/03/2016 06:07 AM, Another Sillyname wrote:
->> Plenty of hits....but no clear fixes and as I said I'm not willing to
->> 'try' things from google hits until someone with better insight can
->> give me a view.
->>
->> Trying things is fine in many instances, but not with a 20+TB data set
->> as I'm sure you can understand.
->>
->
-> I have not tried this personally, but it may be of interest:
-> https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID#Making_the_harddisks_read-only_using_an_overlay_file I found this explanation
-> of the dmsetup commands to be more easy to follow: http://www.flaterco.com/kb/sandbox.html
->
+-- 
+Robert
