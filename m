@@ -1,38 +1,17 @@
-From: Mateusz Korniak <mateusz-lists@ant.gliwice.pl>
-Subject: Re: RAID5/6 slow due to a member device -- how to diagnose?
-Date: Thu, 03 Mar 2016 15:35:21 +0100
-Message-ID: <4472129.pebMKxQj7W@matkor-toshiba>
-References: <20160303193026.7d08e64b@natsu>
+From: "hi" <footballboii3211@aol.com>
+Subject: =?utf-8?B?4oijIGlwaG9uZSA2cywzODhldXJv?=
+Date: Thu, 3 Mar 2016 22:37:53 +0800
+Message-ID: <53C5381C46C0DF93A8F105DBFEEA3AD5@zi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160303193026.7d08e64b@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.net>
-Cc: linux-raid@vger.kernel.org
+To: marinogiorgio@tiscali.it
 List-Id: linux-raid.ids
 
-On Thursday 03 March 2016 19:30:26 Roman Mamedov wrote:
-> But is that broken down somewhere to show which particular block devi=
-ce is
-> being the most 'waited for'?
+Z29vZCBuZXdzLCBnb29kIG5ld3MNCmlwaG9uZSA2cywzODhldXJvLGh1YXdlaSBtYXRlNywyMDBl
+dXJvLGRqLGd1bHRhci4uLi4uZnJlZSBzaGlwcGluZw0KcyBpdGU6ICB0b29vb2VsIC5jb20NCg==
 
-iostat  ?
 
-r_await w_await  svctm  %util  columns?
-
-Regards,
-
---=20
-Mateusz Korniak
-"(...) mam brata - powa=C5=BCny, domator, liczykrupa, hipokryta, pobo=C5=
-=BCni=C5=9B,
- 	kr=C3=B3tko m=C3=B3wi=C4=85c - podpora spo=C5=82ecze=C5=84stwa."
-				Nikos Kazantzakis - "Grek Zorba"
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
