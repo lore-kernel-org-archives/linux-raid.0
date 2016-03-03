@@ -1,63 +1,53 @@
-From: Roman Mamedov <rm@romanrm.net>
-Subject: Re: RAID5/6 slow due to a member device -- how to diagnose?
-Date: Thu, 3 Mar 2016 20:00:16 +0500
-Message-ID: <20160303200016.2d3da705@natsu>
-References: <20160303193026.7d08e64b@natsu>
-	<4472129.pebMKxQj7W@matkor-toshiba>
+From: Seth Forshee <seth.forshee@canonical.com>
+Subject: Re: [PATCH RESEND v2 11/18] fs: Ensure the mounter of a filesystem
+ is privileged towards its inodes
+Date: Thu, 3 Mar 2016 11:02:01 -0600
+Message-ID: <20160303170201.GA30224@ubuntu-hedt>
+References: <1451930639-94331-1-git-send-email-seth.forshee@canonical.com>
+ <1451930639-94331-12-git-send-email-seth.forshee@canonical.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/QUcndE.ggxBoCgKe==BHx0c"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4472129.pebMKxQj7W@matkor-toshiba>
-Sender: linux-raid-owner@vger.kernel.org
-To: Mateusz Korniak <mateusz-lists@ant.gliwice.pl>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1451930639-94331-12-git-send-email-seth.forshee@canonical.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <miklos@szeredi.hu>, linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov
 List-Id: linux-raid.ids
 
---Sig_/QUcndE.ggxBoCgKe==BHx0c
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Mon, Jan 04, 2016 at 12:03:50PM -0600, Seth Forshee wrote:
+> The mounter of a filesystem should be privileged towards the
+> inodes of that filesystem. Extend the checks in
+> inode_owner_or_capable() and capable_wrt_inode_uidgid() to
+> permit access by users priviliged in the user namespace of the
+> inode's superblock.
 
-On Thu, 03 Mar 2016 15:35:21 +0100
-Mateusz Korniak <mateusz-lists@ant.gliwice.pl> wrote:
+Eric - I've discovered a problem related to this patch. The patches
+you've already applied to your testing branch make it so that s_user_ns
+can be an unprivileged user for proc and kernfs-based mounts. In some
+cases DAC is the only thing protecting files in these mounts (ignoring
+MAC), and with this patch an unprivileged user could bypass DAC.
 
-> On Thursday 03 March 2016 19:30:26 Roman Mamedov wrote:
-> > But is that broken down somewhere to show which particular block device=
- is
-> > being the most 'waited for'?
->=20
-> iostat  ?
->=20
-> r_await w_await  svctm  %util  columns?
+There's a simple solution - always set s_user_ns to &init_user_ns for
+those filesystems. I think this is the right thing to do, since the
+backing store behind these filesystems are really kernel objects.  But
+this would break the assumption behind your patch "userns: Simpilify
+MNT_NODEV handling" and cause a regression in mounting behavior.
 
-Cheers -- never knew there was this 'extended' output mode in iostat.
-Indeed it pinpoints the culprit nicely.
+I've come up with several possible solutions for this conflict.
 
-Device: [...]    wkB/s avgrq-sz avgqu-sz   await r_await w_await  svctm  %u=
-til
-sde1    [...] 53748.00   969.01     1.95   17.46   68.00   17.00   4.09  45=
-.40
-sdf1    [...] 49410.75  1176.97    32.09  393.95  106.00  397.42  11.90 100=
-.00
-sdg1    [...] 50230.00   995.17     7.12   66.81   88.00   66.60   6.08  61=
-.40
-sdh1    [...] 53110.00   970.89     2.46   22.21   46.40   21.64   4.64  50=
-.80
+ 1. Drop this patch and keep on setting s_user_ns to unprivilged users.
+    This would be unfortunate because I think this patch does make sense
+    for most filesystems.
+ 2. Restrict this patch so that a user privileged towards s_user_ns is
+    only privileged towards the super blocks inodes if s_user_ns has a
+    mapping for both i_uid and i_gid. This is better than (1) but still
+    not ideal in my mind.
+ 3. Drop your patch and maintain the current MNT_NODEV behavior.
+ 4. Add a new s_iflags flag to indicate a super block is from an
+    unprivileged mount, and use this in your patch instead of s_user_ns.
 
---=20
-With respect,
-Roman
+Any preference, or any other ideas?
 
---Sig_/QUcndE.ggxBoCgKe==BHx0c
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEARECAAYFAlbYUYMACgkQTLKSvz+PZwhxfwCfSqYZMTxVcfmSWp0Ya3uiPnkd
-s0EAoIYbYYpfLroDwJF8kgsuhmcEDn46
-=gzuX
------END PGP SIGNATURE-----
-
---Sig_/QUcndE.ggxBoCgKe==BHx0c--
+Thanks,
+Seth
