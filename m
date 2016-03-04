@@ -1,97 +1,53 @@
-From: Alireza Haghdoost <alireza@cs.umn.edu>
-Subject: Re: Fwd: RAID6 Array crash during reshape.....now will not re-assemble.
-Date: Fri, 4 Mar 2016 15:02:39 -0600
-Message-ID: <CAB-428nDwNOuFe5Bqh=LXD5Vw8MxzKzpP6ELuAqen1wD54urmA@mail.gmail.com>
-References: <CAOS+5GEd4E2wzYhw0rPdrZnjK6UwAUdKCQLLTxXrdPO8d7hS7w@mail.gmail.com>
- <56D6E883.50801@youngman.org.uk> <CAOS+5GHof=F94x58SKqFojV26hGpDSLF85dFfm8Xc6M43sN6jA@mail.gmail.com>
- <CAOS+5GEfQ2p0xguguKC3uXW8GYBDCxt2vk=-Ci6+nTKwkcWtdQ@mail.gmail.com>
- <CAOS+5GGX8QBo3=s+Mcj=Kd6VSmZyatfZ30NXBy8E=4WJE6z0sA@mail.gmail.com>
- <CAOS+5GGB5gVSFJbYwwJu+z0C0oyYPzsLRhnjD6FkmLEWFFquFA@mail.gmail.com>
- <56D8348E.9070802@youngman.org.uk> <CAOS+5GH1Rcu8zGk1dQ+aSNmVzjo=irH65KfPuq1ZGruzqX_=vg@mail.gmail.com>
- <CAOS+5GHUKD63M90zWfiv14QkJunj2QF+gYqDMrg208-S4oXE2Q@mail.gmail.com>
- <56D878E8.1060409@prgmr.com> <CAOS+5GEnvtPMUqorddDNUvkNr2+K2S=0N76i3f0AkAOE-7U4Pg@mail.gmail.com>
- <22232.41693.691818.451316@quad.stoffel.home> <CAOS+5GFfNdeYrfw6j_LowkW+g69h2fEOikHN1=-VQ98ZF9Jtpg@mail.gmail.com>
- <22232.48582.65930.822795@quad.stoffel.home> <CAOS+5GEeGapxE1_GUhxD6F2BCabso-M=h-HQYjZ0hvNxh04Hug@mail.gmail.com>
- <CAB-428mE21BZSvNCjyygQ4AWvRfRTyu7ZFfYZ8RYnEtbw+cMew@mail.gmail.com> <CAOS+5GEZxF6B7f9W3eQg07fahYf02EGStu2whzWGTP4+p71fPQ@mail.gmail.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: use after free bug in b98043a2f8e7bb5b1918e2e02778f822f9dd4d3a
+Date: Fri, 04 Mar 2016 16:19:16 -0500
+Message-ID: <wrfjy49yym97.fsf@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAOS+5GEZxF6B7f9W3eQg07fahYf02EGStu2whzWGTP4+p71fPQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Another Sillyname <anothersname@googlemail.com>
-Cc: John Stoffel <john@stoffel.org>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Guoqing Jiang <gqjiang@suse.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Goldwyn Rodrigues <rgoldwyn@suse.com>, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On Fri, Mar 4, 2016 at 2:30 PM, Another Sillyname
-<anothersname@googlemail.com> wrote:
-> That's possibly true, however there are lessons to be learnt here even
-> if my array is not recoverable.
->
-> I don't know the process order of doing a reshape....but I would
-> suspect it's something along the lines of.
->
-> Examine existing array.
-> Confirm command can be run against existing array configuration (i.e.
-> It's a valid command for this array setup).
-> Do backup file (if specified)
-> Set reshape flag high
-> Start reshape
->
-> I would suggest....
->
-> There needs to be another step in the process
->
-> Before 'Set reshape flag high' that the backup file needs to be
-> checked for consistency.
->
-> My backup file appears to be just full of EOLs (now for all I know the
-> backup file actually gets 'created' during the process and therefore
-> starts out as EOLs).  But once the flag is set high you are then
-> committing the array before you know if the backup is good.
->
-> Also
->
-> The drives in this array had been working correctly for 6 months and
-> undergone a number of reboots.
->
-> If, as we are theorising, there was some metadata from a previous
-> array setup on two of the drives that as a result of the reshape
-> somehow became the 'valid' metadata regarding those two drives RAID
-> status then I would suggest that during any mdadm raid create process
-> there is an extensive and thorough check of any drives being used to
-> identify and remove any possible previously existing RAID metadata
-> information...thus making the drives 'clean'.
->
->
->
->
->
->
-> On 4 March 2016 at 19:11, Alireza Haghdoost <alireza@cs.umn.edu> wrote:
->> On Fri, Mar 4, 2016 at 1:01 PM, Another Sillyname
->> <anothersname@googlemail.com> wrote:
->>>
->>>
->>> Thanks for the suggestion but I'm still stuck and there is no bug
->>> tracker on the mdadm git website so I have to wait here.
->>>
->>> Ho Huum
->>>
->>>
->>
->> Looks like it is going to be a long wait. I think you are waiting to
->> do something that might not be inplace/available at all. That thing is
->> the capability to reset reshape flag when the array metadata is not
->> consistent. You had an old array in two of these drives and it seems
->> mdadm confused when it observes the drives metadata are not
->> consistent.
->>
->> Hope someone chip in some tricks to do so without a need to develop
->> such a functionality in mdadm.
+Hi,
 
-Do you know the metadata version that is used on those two drives ?
-For example, if the version is < 1.0 then we could easily erase the
-old metadata since it has been recorded in the end of the drive. Newer
-metada versions after 1.0 are stored in the beginning of the drive.
+I was looking at ExamineBitmap() and noticed that your patch below,
+seems to introduce a use after free bug.
 
-Therefore, there is no risk to erase your current array metadata !
+commit b98043a2f8e7bb5b1918e2e02778f822f9dd4d3a
+Author: Guoqing Jiang <gqjiang@suse.com>
+Date:   Wed Jun 10 13:42:07 2015 +0800
+
+    Show all bitmaps while examining bitmap
+    
+    This adds capability of exmining bitmaps corresponding to all
+    nodes/slots on the device.
+    
+    Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+    Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+    Signed-off-by: NeilBrown <neilb@suse.de>
+
+Line 284 does a close(fd), but further down the code your patch
+introduces:
+
++       } else {
++               printf("   Cluster nodes : %d\n", sb->nodes);
++               printf("    Cluster name : %64s\n", sb->cluster_name);
++               for (i = 0; i < (int)sb->nodes; i++) {
++                       if (i) {
++                               free(info);
++                               info = bitmap_fd_read(fd, brief);
++                               sb = &info->sb;
++                       }
+
+It's not totally obvious to me here what the intention is for clustered
+md here. Are you intending to use the same fd as was used at the top of
+ExamineBitmap() or is it meant to open a new fd based on each clustered
+entry?
+
+In either case, the code as it is right now is certainly not going to
+work :(
+
+Cheers,
+Jes
