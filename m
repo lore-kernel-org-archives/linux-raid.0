@@ -1,65 +1,117 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: dead code question
-Date: Fri, 04 Mar 2016 16:27:33 -0500
-Message-ID: <wrfjpovaylve.fsf@redhat.com>
+From: Another Sillyname <anothersname@googlemail.com>
+Subject: Re: Fwd: RAID6 Array crash during reshape.....now will not re-assemble.
+Date: Fri, 4 Mar 2016 21:52:49 +0000
+Message-ID: <CAOS+5GEr2p9nOcxWJxnX_u3_2PGyTfEPXnnzWYsMBWuXxSy-4Q@mail.gmail.com>
+References: <CAOS+5GEd4E2wzYhw0rPdrZnjK6UwAUdKCQLLTxXrdPO8d7hS7w@mail.gmail.com>
+	<56D6E883.50801@youngman.org.uk>
+	<CAOS+5GHof=F94x58SKqFojV26hGpDSLF85dFfm8Xc6M43sN6jA@mail.gmail.com>
+	<CAOS+5GEfQ2p0xguguKC3uXW8GYBDCxt2vk=-Ci6+nTKwkcWtdQ@mail.gmail.com>
+	<CAOS+5GGX8QBo3=s+Mcj=Kd6VSmZyatfZ30NXBy8E=4WJE6z0sA@mail.gmail.com>
+	<CAOS+5GGB5gVSFJbYwwJu+z0C0oyYPzsLRhnjD6FkmLEWFFquFA@mail.gmail.com>
+	<56D8348E.9070802@youngman.org.uk>
+	<CAOS+5GH1Rcu8zGk1dQ+aSNmVzjo=irH65KfPuq1ZGruzqX_=vg@mail.gmail.com>
+	<CAOS+5GHUKD63M90zWfiv14QkJunj2QF+gYqDMrg208-S4oXE2Q@mail.gmail.com>
+	<56D878E8.1060409@prgmr.com>
+	<CAOS+5GEnvtPMUqorddDNUvkNr2+K2S=0N76i3f0AkAOE-7U4Pg@mail.gmail.com>
+	<22232.41693.691818.451316@quad.stoffel.home>
+	<CAOS+5GFfNdeYrfw6j_LowkW+g69h2fEOikHN1=-VQ98ZF9Jtpg@mail.gmail.com>
+	<22232.48582.65930.822795@quad.stoffel.home>
+	<CAOS+5GEeGapxE1_GUhxD6F2BCabso-M=h-HQYjZ0hvNxh04Hug@mail.gmail.com>
+	<CAB-428mE21BZSvNCjyygQ4AWvRfRTyu7ZFfYZ8RYnEtbw+cMew@mail.gmail.com>
+	<CAOS+5GEZxF6B7f9W3eQg07fahYf02EGStu2whzWGTP4+p71fPQ@mail.gmail.com>
+	<CAB-428nDwNOuFe5Bqh=LXD5Vw8MxzKzpP6ELuAqen1wD54urmA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAB-428nDwNOuFe5Bqh=LXD5Vw8MxzKzpP6ELuAqen1wD54urmA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: gqjiang@suse.com
-Cc: linux-raid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Alireza Haghdoost <alireza@cs.umn.edu>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+I have no clue, they were used in a temporary system for 10 days about
+8 months ago, they were then used in the new array that was built back
+in August.
 
-Another question regarding the cluster code. This one was introduced
-with:
+Even if the metadata was removed from those two drives the 'merge'
+that happened, without warning or requiring verification, seems to now
+have 'contaminated' all the drives possibly.
 
-commit d15a1f72bd92bc4724ee94b2ae8132633ffeb72b
-Author: Guoqing Jiang <gqjiang@suse.com>
-Date:   Mon Oct 19 16:03:19 2015 +0800
+I'm still reasonably convinced the data is there and intact, just need
+an analytical approach to how to recover it.
 
-    Safeguard against writing to an active device of another node
-    
-    Modifying an exiting device's superblock or creating a new superblock
-    on an existing device needs to be checked because the device could be
-    in use by another node in another array. So, we check this by taking
-    all superblock locks in userspace so that we don't  step onto an active
-    device used by another node and safeguard against accidental edits.
-    After the edit is complete, we release all locks and the lockspace so
-    that it can be used by the kernel space.
-    
-    Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-    Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-    Signed-off-by: NeilBrown <neilb@suse.com>
 
-[snip]
 
-+/* Create the lockspace, take bitmapXXX locks on all the bitmaps. */
-+int cluster_get_dlmlock(struct supertype *st, int *lockid)
-+{
-+       int ret = -1;
-+       char str[64];
-+       int flags = LKF_NOQUEUE;
-+
-+       dlm_lock_res = xmalloc(sizeof(struct dlm_lock_resource));
-+       dlm_lock_res->ls = dlm_hooks->create_lockspace(st->cluster_name, O_RDWR);
-+       if (!dlm_lock_res->ls) {
-+               pr_err("%s failed to create lockspace\n", st->cluster_name);
-+                goto out;
-+       }
-+
-+       /* Conversions need the lockid in the LKSB */
-+       if (flags & LKF_CONVERT)
-+               dlm_lock_res->lksb.sb_lkid = *lockid;
-
-You set flags = LKF_NOQUEUE but later check (flags & LKF_CONVERT), which
-cannot be true given that:
-
-mdadm.h:#define LKF_NOQUEUE	0x00000001
-mdadm.h:#define LKF_CONVERT	0x00000004
-
-Is this a bug, or do you have pending patches for this?
-
-Cheers,
-Jes
+On 4 March 2016 at 21:02, Alireza Haghdoost <alireza@cs.umn.edu> wrote:
+> On Fri, Mar 4, 2016 at 2:30 PM, Another Sillyname
+> <anothersname@googlemail.com> wrote:
+>> That's possibly true, however there are lessons to be learnt here even
+>> if my array is not recoverable.
+>>
+>> I don't know the process order of doing a reshape....but I would
+>> suspect it's something along the lines of.
+>>
+>> Examine existing array.
+>> Confirm command can be run against existing array configuration (i.e.
+>> It's a valid command for this array setup).
+>> Do backup file (if specified)
+>> Set reshape flag high
+>> Start reshape
+>>
+>> I would suggest....
+>>
+>> There needs to be another step in the process
+>>
+>> Before 'Set reshape flag high' that the backup file needs to be
+>> checked for consistency.
+>>
+>> My backup file appears to be just full of EOLs (now for all I know the
+>> backup file actually gets 'created' during the process and therefore
+>> starts out as EOLs).  But once the flag is set high you are then
+>> committing the array before you know if the backup is good.
+>>
+>> Also
+>>
+>> The drives in this array had been working correctly for 6 months and
+>> undergone a number of reboots.
+>>
+>> If, as we are theorising, there was some metadata from a previous
+>> array setup on two of the drives that as a result of the reshape
+>> somehow became the 'valid' metadata regarding those two drives RAID
+>> status then I would suggest that during any mdadm raid create process
+>> there is an extensive and thorough check of any drives being used to
+>> identify and remove any possible previously existing RAID metadata
+>> information...thus making the drives 'clean'.
+>>
+>>
+>>
+>>
+>>
+>>
+>> On 4 March 2016 at 19:11, Alireza Haghdoost <alireza@cs.umn.edu> wrote:
+>>> On Fri, Mar 4, 2016 at 1:01 PM, Another Sillyname
+>>> <anothersname@googlemail.com> wrote:
+>>>>
+>>>>
+>>>> Thanks for the suggestion but I'm still stuck and there is no bug
+>>>> tracker on the mdadm git website so I have to wait here.
+>>>>
+>>>> Ho Huum
+>>>>
+>>>>
+>>>
+>>> Looks like it is going to be a long wait. I think you are waiting to
+>>> do something that might not be inplace/available at all. That thing is
+>>> the capability to reset reshape flag when the array metadata is not
+>>> consistent. You had an old array in two of these drives and it seems
+>>> mdadm confused when it observes the drives metadata are not
+>>> consistent.
+>>>
+>>> Hope someone chip in some tricks to do so without a need to develop
+>>> such a functionality in mdadm.
+>
+> Do you know the metadata version that is used on those two drives ?
+> For example, if the version is < 1.0 then we could easily erase the
+> old metadata since it has been recorded in the end of the drive. Newer
+> metada versions after 1.0 are stored in the beginning of the drive.
+>
+> Therefore, there is no risk to erase your current array metadata !
