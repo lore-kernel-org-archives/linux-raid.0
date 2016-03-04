@@ -1,133 +1,72 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: Fwd: RAID6 Array crash during reshape.....now will not
- re-assemble.
-Date: Fri, 4 Mar 2016 17:07:06 -0500
-Message-ID: <22234.1802.863099.33875@quad.stoffel.home>
-References: <CAOS+5GEd4E2wzYhw0rPdrZnjK6UwAUdKCQLLTxXrdPO8d7hS7w@mail.gmail.com>
-	<56D6E883.50801@youngman.org.uk>
-	<CAOS+5GHof=F94x58SKqFojV26hGpDSLF85dFfm8Xc6M43sN6jA@mail.gmail.com>
-	<CAOS+5GEfQ2p0xguguKC3uXW8GYBDCxt2vk=-Ci6+nTKwkcWtdQ@mail.gmail.com>
-	<CAOS+5GGX8QBo3=s+Mcj=Kd6VSmZyatfZ30NXBy8E=4WJE6z0sA@mail.gmail.com>
-	<CAOS+5GGB5gVSFJbYwwJu+z0C0oyYPzsLRhnjD6FkmLEWFFquFA@mail.gmail.com>
-	<56D8348E.9070802@youngman.org.uk>
-	<CAOS+5GH1Rcu8zGk1dQ+aSNmVzjo=irH65KfPuq1ZGruzqX_=vg@mail.gmail.com>
-	<CAOS+5GHUKD63M90zWfiv14QkJunj2QF+gYqDMrg208-S4oXE2Q@mail.gmail.com>
-	<56D878E8.1060409@prgmr.com>
-	<CAOS+5GEnvtPMUqorddDNUvkNr2+K2S=0N76i3f0AkAOE-7U4Pg@mail.gmail.com>
-	<22232.41693.691818.451316@quad.stoffel.home>
-	<CAOS+5GFfNdeYrfw6j_LowkW+g69h2fEOikHN1=-VQ98ZF9Jtpg@mail.gmail.com>
-	<22232.48582.65930.822795@quad.stoffel.home>
-	<CAOS+5GEeGapxE1_GUhxD6F2BCabso-M=h-HQYjZ0hvNxh04Hug@mail.gmail.com>
-	<CAB-428mE21BZSvNCjyygQ4AWvRfRTyu7ZFfYZ8RYnEtbw+cMew@mail.gmail.com>
-	<CAOS+5GEZxF6B7f9W3eQg07fahYf02EGStu2whzWGTP4+p71fPQ@mail.gmail.com>
-	<CAB-428nDwNOuFe5Bqh=LXD5Vw8MxzKzpP6ELuAqen1wD54urmA@mail.gmail.com>
-	<CAOS+5GEr2p9nOcxWJxnX_u3_2PGyTfEPXnnzWYsMBWuXxSy-4Q@mail.gmail.com>
+From: ebiederm@xmission.com (Eric W. Biederman)
+Subject: Re: [PATCH RESEND v2 11/18] fs: Ensure the mounter of a filesystem is privileged towards its inodes
+Date: Fri, 04 Mar 2016 16:43:06 -0600
+Message-ID: <87twkl50g5.fsf@x220.int.ebiederm.org>
+References: <1451930639-94331-1-git-send-email-seth.forshee@canonical.com>
+	<1451930639-94331-12-git-send-email-seth.forshee@canonical.com>
+	<20160303170201.GA30224@ubuntu-hedt>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAOS+5GEr2p9nOcxWJxnX_u3_2PGyTfEPXnnzWYsMBWuXxSy-4Q@mail.gmail.com>
+In-Reply-To: <20160303170201.GA30224@ubuntu-hedt> (Seth Forshee's message of
+	"Thu, 3 Mar 2016 11:02:01 -0600")
 Sender: linux-raid-owner@vger.kernel.org
-To: Another Sillyname <anothersname@googlemail.com>
-Cc: Alireza Haghdoost <alireza@cs.umn.edu>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <miklos@szeredi.hu>, linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov
 List-Id: linux-raid.ids
 
+Seth Forshee <seth.forshee@canonical.com> writes:
 
-Can you post the output of mdadm -E /dev/sd?1 for all your drives?
-And did you pull down the latest version of mdadm from neil's repo and
-build it and use that to undo the re-shape?
+> On Mon, Jan 04, 2016 at 12:03:50PM -0600, Seth Forshee wrote:
+>> The mounter of a filesystem should be privileged towards the
+>> inodes of that filesystem. Extend the checks in
+>> inode_owner_or_capable() and capable_wrt_inode_uidgid() to
+>> permit access by users priviliged in the user namespace of the
+>> inode's superblock.
+>
+> Eric - I've discovered a problem related to this patch. The patches
+> you've already applied to your testing branch make it so that s_user_ns
+> can be an unprivileged user for proc and kernfs-based mounts. In some
+> cases DAC is the only thing protecting files in these mounts (ignoring
+> MAC), and with this patch an unprivileged user could bypass DAC.
+>
+> There's a simple solution - always set s_user_ns to &init_user_ns for
+> those filesystems. I think this is the right thing to do, since the
+> backing store behind these filesystems are really kernel objects.  But
+> this would break the assumption behind your patch "userns: Simpilify
+> MNT_NODEV handling" and cause a regression in mounting behavior.
+>
+> I've come up with several possible solutions for this conflict.
+>
+>  1. Drop this patch and keep on setting s_user_ns to unprivilged users.
+>     This would be unfortunate because I think this patch does make sense
+>     for most filesystems.
+>  2. Restrict this patch so that a user privileged towards s_user_ns is
+>     only privileged towards the super blocks inodes if s_user_ns has a
+>     mapping for both i_uid and i_gid. This is better than (1) but still
+>     not ideal in my mind.
+>  3. Drop your patch and maintain the current MNT_NODEV behavior.
+>  4. Add a new s_iflags flag to indicate a super block is from an
+>     unprivileged mount, and use this in your patch instead of s_user_ns.
+>
+> Any preference, or any other ideas?
 
-John
+In general this is only an issue if uids and gids on the filesystem
+do not map into the user namespace.
 
+Therefore the general fix is to limit the logic of checking for
+capabilities in s_user_ns if we are dealing with INVALID_UID and
+INVALID_GID.  For proc and kernfs that should never be the case
+so the problem becomes a non-issue.
 
-Another> I have no clue, they were used in a temporary system for 10 days about
-Another> 8 months ago, they were then used in the new array that was built back
-Another> in August.
+Further I would look at limiting that relaxation to just
+inode_change_ok.  So that we can easily wrap that check per filesystem
+and deny the relaxation for proc and kernfs.  proc and kernfs already
+have wrappers for .setattr so denying changes when !uid_vaid and
+!gid_valid would be a trivial addition, and ensure calamity does
+not ensure.
 
-Another> Even if the metadata was removed from those two drives the 'merge'
-Another> that happened, without warning or requiring verification, seems to now
-Another> have 'contaminated' all the drives possibly.
+Furthmore by limiting any additional to inode_change_ok we keep
+the work of the additional tests off of the fast paths.
 
-Another> I'm still reasonably convinced the data is there and intact, just need
-Another> an analytical approach to how to recover it.
-
-
-
-Another> On 4 March 2016 at 21:02, Alireza Haghdoost <alireza@cs.umn.edu> wrote:
->> On Fri, Mar 4, 2016 at 2:30 PM, Another Sillyname
->> <anothersname@googlemail.com> wrote:
->>> That's possibly true, however there are lessons to be learnt here even
->>> if my array is not recoverable.
->>> 
->>> I don't know the process order of doing a reshape....but I would
->>> suspect it's something along the lines of.
->>> 
->>> Examine existing array.
->>> Confirm command can be run against existing array configuration (i.e.
->>> It's a valid command for this array setup).
->>> Do backup file (if specified)
->>> Set reshape flag high
->>> Start reshape
->>> 
->>> I would suggest....
->>> 
->>> There needs to be another step in the process
->>> 
->>> Before 'Set reshape flag high' that the backup file needs to be
->>> checked for consistency.
->>> 
->>> My backup file appears to be just full of EOLs (now for all I know the
->>> backup file actually gets 'created' during the process and therefore
->>> starts out as EOLs).  But once the flag is set high you are then
->>> committing the array before you know if the backup is good.
->>> 
->>> Also
->>> 
->>> The drives in this array had been working correctly for 6 months and
->>> undergone a number of reboots.
->>> 
->>> If, as we are theorising, there was some metadata from a previous
->>> array setup on two of the drives that as a result of the reshape
->>> somehow became the 'valid' metadata regarding those two drives RAID
->>> status then I would suggest that during any mdadm raid create process
->>> there is an extensive and thorough check of any drives being used to
->>> identify and remove any possible previously existing RAID metadata
->>> information...thus making the drives 'clean'.
->>> 
->>> 
->>> 
->>> 
->>> 
->>> 
->>> On 4 March 2016 at 19:11, Alireza Haghdoost <alireza@cs.umn.edu> wrote:
->>>> On Fri, Mar 4, 2016 at 1:01 PM, Another Sillyname
->>>> <anothersname@googlemail.com> wrote:
->>>>> 
->>>>> 
->>>>> Thanks for the suggestion but I'm still stuck and there is no bug
->>>>> tracker on the mdadm git website so I have to wait here.
->>>>> 
->>>>> Ho Huum
->>>>> 
->>>>> 
->>>> 
->>>> Looks like it is going to be a long wait. I think you are waiting to
->>>> do something that might not be inplace/available at all. That thing is
->>>> the capability to reset reshape flag when the array metadata is not
->>>> consistent. You had an old array in two of these drives and it seems
->>>> mdadm confused when it observes the drives metadata are not
->>>> consistent.
->>>> 
->>>> Hope someone chip in some tricks to do so without a need to develop
->>>> such a functionality in mdadm.
->> 
->> Do you know the metadata version that is used on those two drives ?
->> For example, if the version is < 1.0 then we could easily erase the
->> old metadata since it has been recorded in the end of the drive. Newer
->> metada versions after 1.0 are stored in the beginning of the drive.
->> 
->> Therefore, there is no risk to erase your current array metadata !
-Another> --
-Another> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-Another> the body of a message to majordomo@vger.kernel.org
-Another> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Eric
