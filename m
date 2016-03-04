@@ -1,53 +1,65 @@
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: use after free bug in b98043a2f8e7bb5b1918e2e02778f822f9dd4d3a
-Date: Fri, 04 Mar 2016 16:19:16 -0500
-Message-ID: <wrfjy49yym97.fsf@redhat.com>
+Subject: dead code question
+Date: Fri, 04 Mar 2016 16:27:33 -0500
+Message-ID: <wrfjpovaylve.fsf@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Goldwyn Rodrigues <rgoldwyn@suse.com>, NeilBrown <neilb@suse.de>
+To: gqjiang@suse.com
+Cc: linux-raid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>, Goldwyn Rodrigues <rgoldwyn@suse.com>
 List-Id: linux-raid.ids
 
 Hi,
 
-I was looking at ExamineBitmap() and noticed that your patch below,
-seems to introduce a use after free bug.
+Another question regarding the cluster code. This one was introduced
+with:
 
-commit b98043a2f8e7bb5b1918e2e02778f822f9dd4d3a
+commit d15a1f72bd92bc4724ee94b2ae8132633ffeb72b
 Author: Guoqing Jiang <gqjiang@suse.com>
-Date:   Wed Jun 10 13:42:07 2015 +0800
+Date:   Mon Oct 19 16:03:19 2015 +0800
 
-    Show all bitmaps while examining bitmap
+    Safeguard against writing to an active device of another node
     
-    This adds capability of exmining bitmaps corresponding to all
-    nodes/slots on the device.
+    Modifying an exiting device's superblock or creating a new superblock
+    on an existing device needs to be checked because the device could be
+    in use by another node in another array. So, we check this by taking
+    all superblock locks in userspace so that we don't  step onto an active
+    device used by another node and safeguard against accidental edits.
+    After the edit is complete, we release all locks and the lockspace so
+    that it can be used by the kernel space.
     
     Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
     Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-    Signed-off-by: NeilBrown <neilb@suse.de>
+    Signed-off-by: NeilBrown <neilb@suse.com>
 
-Line 284 does a close(fd), but further down the code your patch
-introduces:
+[snip]
 
-+       } else {
-+               printf("   Cluster nodes : %d\n", sb->nodes);
-+               printf("    Cluster name : %64s\n", sb->cluster_name);
-+               for (i = 0; i < (int)sb->nodes; i++) {
-+                       if (i) {
-+                               free(info);
-+                               info = bitmap_fd_read(fd, brief);
-+                               sb = &info->sb;
-+                       }
++/* Create the lockspace, take bitmapXXX locks on all the bitmaps. */
++int cluster_get_dlmlock(struct supertype *st, int *lockid)
++{
++       int ret = -1;
++       char str[64];
++       int flags = LKF_NOQUEUE;
++
++       dlm_lock_res = xmalloc(sizeof(struct dlm_lock_resource));
++       dlm_lock_res->ls = dlm_hooks->create_lockspace(st->cluster_name, O_RDWR);
++       if (!dlm_lock_res->ls) {
++               pr_err("%s failed to create lockspace\n", st->cluster_name);
++                goto out;
++       }
++
++       /* Conversions need the lockid in the LKSB */
++       if (flags & LKF_CONVERT)
++               dlm_lock_res->lksb.sb_lkid = *lockid;
 
-It's not totally obvious to me here what the intention is for clustered
-md here. Are you intending to use the same fd as was used at the top of
-ExamineBitmap() or is it meant to open a new fd based on each clustered
-entry?
+You set flags = LKF_NOQUEUE but later check (flags & LKF_CONVERT), which
+cannot be true given that:
 
-In either case, the code as it is right now is certainly not going to
-work :(
+mdadm.h:#define LKF_NOQUEUE	0x00000001
+mdadm.h:#define LKF_CONVERT	0x00000004
+
+Is this a bug, or do you have pending patches for this?
 
 Cheers,
 Jes
