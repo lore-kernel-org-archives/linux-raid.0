@@ -1,60 +1,123 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: Fwd: RAID6 Array crash during reshape.....now will not re-assemble.
-Date: Thu, 3 Mar 2016 17:42:14 -0500
-Message-ID: <22232.48582.65930.822795@quad.stoffel.home>
-References: <CAOS+5GEd4E2wzYhw0rPdrZnjK6UwAUdKCQLLTxXrdPO8d7hS7w@mail.gmail.com>
-	<56D6E883.50801@youngman.org.uk>
-	<CAOS+5GHof=F94x58SKqFojV26hGpDSLF85dFfm8Xc6M43sN6jA@mail.gmail.com>
-	<CAOS+5GEfQ2p0xguguKC3uXW8GYBDCxt2vk=-Ci6+nTKwkcWtdQ@mail.gmail.com>
-	<CAOS+5GGX8QBo3=s+Mcj=Kd6VSmZyatfZ30NXBy8E=4WJE6z0sA@mail.gmail.com>
-	<CAOS+5GGB5gVSFJbYwwJu+z0C0oyYPzsLRhnjD6FkmLEWFFquFA@mail.gmail.com>
-	<56D8348E.9070802@youngman.org.uk>
-	<CAOS+5GH1Rcu8zGk1dQ+aSNmVzjo=irH65KfPuq1ZGruzqX_=vg@mail.gmail.com>
-	<CAOS+5GHUKD63M90zWfiv14QkJunj2QF+gYqDMrg208-S4oXE2Q@mail.gmail.com>
-	<56D878E8.1060409@prgmr.com>
-	<CAOS+5GEnvtPMUqorddDNUvkNr2+K2S=0N76i3f0AkAOE-7U4Pg@mail.gmail.com>
-	<22232.41693.691818.451316@quad.stoffel.home>
-	<CAOS+5GFfNdeYrfw6j_LowkW+g69h2fEOikHN1=-VQ98ZF9Jtpg@mail.gmail.com>
+From: Baolin Wang <baolin.wang@linaro.org>
+Subject: Re: [PATCH 1/4] scatterlist: Introduce some helper functions
+Date: Fri, 4 Mar 2016 14:29:25 +0800
+Message-ID: <CAMz4kuKtwCkgG-3GeCtfnAX5zN8MkwyVr2XVYzaV3Z6SFFcZww@mail.gmail.com>
+References: <cover.1456981314.git.baolin.wang@linaro.org>
+	<3bff3e286d3ee01ebb7e26d7233075054c42a7a9.1456981314.git.baolin.wang@linaro.org>
+	<87povbpe3l.fsf@belgarion.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAOS+5GFfNdeYrfw6j_LowkW+g69h2fEOikHN1=-VQ98ZF9Jtpg@mail.gmail.com>
+In-Reply-To: <87povbpe3l.fsf@belgarion.home>
 Sender: linux-raid-owner@vger.kernel.org
-To: Another Sillyname <anothersname@googlemail.com>
-Cc: John Stoffel <john@stoffel.org>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Robert Jarzmik <robert.jarzmik@free.fr>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>, David Miller <davem@davemloft.net>, Alasdair G Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, axboe@fb.com, dm-devel@redhat.com, akpm@linux-foundation.org, david.s.gordon@intel.com, Tom Lendacky <thomas.lendacky@amd.com>, yamada.masahiro@socionext.com, smueller@chronox.de, tadeusz.struk@intel.com, standby24x7@gmail.com, shli@kernel.org, Mark Brown <broonie@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Arnd Bergmann <arnd@arndb.de>, LKML <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi Robert,
 
-Another> Thanks for the suggestion but that's still 'trying' things
-Another> rather then an analytical approach.
+On 4 March 2016 at 03:15, Robert Jarzmik <robert.jarzmik@free.fr> wrote:
+> Baolin Wang <baolin.wang@linaro.org> writes:
+>
+>> @@ -212,6 +212,37 @@ static inline void sg_unmark_end(struct scatterlist *sg)
+>>  }
+>>
+>>  /**
+>> + * sg_is_contiguous - Check if the scatterlists are contiguous
+>> + * @sga: SG entry
+>> + * @sgb: SG entry
+>> + *
+>> + * Description:
+>> + *   If the sga scatterlist is contiguous with the sgb scatterlist,
+>> + *   that means they can be merged together.
+>> + *
+>> + **/
+>> +static inline bool sg_is_contiguous(struct scatterlist *sga,
+>> +                                 struct scatterlist *sgb)
+>> +{
+>> +     return ((sga->page_link & ~0x3UL) + sga->offset + sga->length ==
+>> +             (sgb->page_link & ~0x3UL));
+>> +}
+> I don't understand that one.
+> sga->page_link is a pointer to a "struct page *". How can it be added to an
+> offset within a page ???
 
-Well... since Neil is the guy who knows the code, and I've been
-several emails in the past about re-shapes gone wrong, and pulling
-down Neil's latest version was the solution.  So that's what I'd go
-with.
 
-Another> I also do not want to reboot this machine until I absolutely
-Another> have to incase I need to capture any data needed to identify
-Another> and thereby resolve the problem.
+Ah, sorry that's a mistake. It should check as below:
+static inline bool sg_is_contiguous(struct scatterlist *sga, struct
+scatterlist *sgb)
+{
+    return (unsigned int)sg_virt(sga) + sga->length == (unsigned
+int)sg_virt(sgb);
+}
 
-Reboot won't make a difference, all the data is on the disks. 
+>
+>> @@ -370,6 +370,65 @@ int sg_alloc_table(struct sg_table *table, unsigned int
+>> nents, gfp_t gfp_mask)
+> ...
+>>  /**
+>> + * sg_add_sg_to_table - Add one scatterlist into sg table
+>> + * @sgt:     The sg table header to use
+>> + * @src:     The sg need to be added into sg table
+>> + *
+>> + * Description:
+>> + *   The 'nents' member indicates how many scatterlists added in the sg table.
+>> + *   Copy the @src@ scatterlist into sg table and increase 'nents' member.
+>> + *
+>> + **/
+>> +int sg_add_sg_to_table(struct sg_table *sgt, struct scatterlist *src)
+>> +{
+>> +     unsigned int i = 0, orig_nents = sgt->orig_nents;
+>> +     struct scatterlist *sgl = sgt->sgl;
+>> +     struct scatterlist *sg;
+>> +
+>> +     /* Check if there are enough space for the new sg to be added */
+>> +     if (sgt->nents >= sgt->orig_nents)
+>> +             return -EINVAL;
+> I must admit I don't understand that one either : how do comparing the number of
+> "mapped" entries against the number of "allocated" entries determines if there
+> is enough room ?
 
-Another> Given I'm not getting much joy here I think I'll have to post
-Another> a bug tomorrow and see where that goes.
+That's for a dynamic sg table. If there is one sg table allocated
+'orig_nents' scatterlists, and we need copy another mapped scatterlist
+into the sg table if there are some requirements. So we use 'nents' to
+record how many scatterlists have been copied into the sg table.
 
-I'd also argue that removing a disk from a RAID6 of 30Tb in size is
-crazy, but you know the risks I'm sure.
+>
+>> +/**
+>> + * sg_alloc_empty_table - Allocate one empty sg table
+>> + * @sgt:     The sg table header to use
+>> + * @nents:   Number of entries in sg list
+>> + * @gfp_mask:        GFP allocation mask
+>> + *
+>> + *  Description:
+>> + *    Allocate and initialize an sg table. The 'nents' member of sg_table
+>> + *    indicates how many scatterlists added in the sg table. It should set
+>> + *    0 which means there are no scatterlists added in this sg table now.
+>> + *
+>> + **/
+>> +int sg_alloc_empty_table(struct sg_table *sgt, unsigned int nents,
+>> +                      gfp_t gfp_mask)
+> As for this one, there has to be a purpose for it I fail to see. From far away
+> it looks exactly like sg_alloc_table(), excepting it "works around" the nents >
+> 0 protection of __sg_alloc_table().
+> What is exactly the need for this one, and if it's usefull why not simply
+> changing the __sg_alloc_table() "nents > 0" test and see what the outcome of the
+> review will be ?
 
-It might have been better to just fail one disk, then zero it's
-super-block and use that new disk formatted by hand into a plain xfs
-or ext4 filesystem for you travels.  Then when done, you'd just re-add
-the disk into the array and let it rebuild the second parity stripes.
+Like I said above. If we want to copy some mapped scatterlists into
+one sg table, we should set the 'nents' to 0 to indicates how many
+scatterlists coppied in the sg table.
+Thanks for your comments.
 
-Also, I jsut dug into my archives, have you tried:
+>
+> Cheers.
+>
+> --
+> Robert
 
-       --assemble --update=revert-reshape
 
-on your array?
 
-John
+-- 
+Baolin.wang
+Best Regards
