@@ -1,34 +1,39 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH 2/2] Remove dead code about LKF_CONVERT flag
-Date: Mon, 07 Mar 2016 15:54:17 -0500
-Message-ID: <wrfjio0yj9fq.fsf@redhat.com>
-References: <1457343063-14884-1-git-send-email-gqjiang@suse.com>
-	<1457343063-14884-2-git-send-email-gqjiang@suse.com>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Subject: Re: Import/recover RAID6 created with SAS2108?
+Date: Mon, 7 Mar 2016 22:50:26 +0100
+Message-ID: <20160307215026.GA8042@EIS>
+References: <2832CD22-EADC-4BC6-A250-FE8919A92E0A@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1457343063-14884-2-git-send-email-gqjiang@suse.com> (Guoqing
-	Jiang's message of "Mon, 7 Mar 2016 17:31:03 +0800")
+Content-Disposition: inline
+In-Reply-To: <2832CD22-EADC-4BC6-A250-FE8919A92E0A@aol.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>
-Cc: linux-raid@vger.kernel.org, rgoldwyn@suse.com, neilb@suse.de
+To: Dan Russell <dpr@aol.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Guoqing Jiang <gqjiang@suse.com> writes:
-> Since flags is only set as LKF_NOQUEUE, the code
-> with LKF_CONVERT flag should be delete.
->
-> Reported-by: Jes Sorensen <Jes.Sorensen@redhat.com>
-> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-> ---
->  mdadm.h | 1 -
->  util.c  | 8 --------
->  2 files changed, 9 deletions(-)
+On Sun, Mar 06, 2016 at 04:37:42PM -0500, Dan Russell wrote:
+> can md read a RAID6 created by the 2108, or would I be wasting my time?
 
-Applied!
+It might be possible.
 
-For multi-patch series, would you mind adding a cover letter when you
-post them? Then I can just respond to that if all patches are applied.
+I don't use HW-RAID anywhere but if I was forced to, this would be 
+one of the first things to determine, how to read it with software 
+in case the card fails.
 
-Thanks,
-Jes
+> I can paste or gist the output of madam -E (304 lines) if it would help.
+
+I don't know if it would help, but paste everything you have anyhow.
+
+Is the data encrypted? If not - search for known file type headers 
+(like a large jpeg or tar.gz, something larger than disks * chunksize), 
+then look at the data on the other disks at the same offsets 
+(grab a few megs of each disks), then try to deduce the layout 
+and structure from that.
+
+Basically use known data to reverse-engineer the layout if you 
+currently know nothing about disk orders, chunk sizes, etc.
+
+Regards
+Andreas Klauer
