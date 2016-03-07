@@ -1,44 +1,90 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: Caching raid with SSD.
-Date: Sun, 6 Mar 2016 20:58:19 -0500
-Message-ID: <22236.57403.411891.23182@quad.stoffel.home>
-References: <56DB4A5C.7020901@gmail.com>
+From: Weedy <weedy2887@gmail.com>
+Subject: Re: When do you replace old hard drives in a raid6?
+Date: Sun, 6 Mar 2016 21:31:51 -0500
+Message-ID: <CAFE24U3in=jKonie7i_tG-kP=8xHQufPaJwHdJAR0vYfAzLBXg@mail.gmail.com>
+References: <56DB465E.9010703@gmail.com> <56DCCB55.1060906@turmel.org> <56DCD0E9.8040506@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56DB4A5C.7020901@gmail.com>
+In-Reply-To: <56DCD0E9.8040506@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Ram Ramesh <rramesh2400@gmail.com>
-Cc: Linux Raid <linux-raid@vger.kernel.org>
+Cc: Phil Turmel <philip@turmel.org>, Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Sun, Mar 6, 2016 at 7:52 PM, Ram Ramesh <rramesh2400@gmail.com> wrote:
+> On 03/06/2016 06:29 PM, Phil Turmel wrote:
+>>
+>> On 03/05/2016 03:49 PM, Ram Ramesh wrote:
+>>>
+>>> I am curious if people actually replace hard drives periodically because
+>>> they are old or out of warranty. My 5 device raid6 has several older
+>>> drives (3/5 are 3+ years old and out of warranty) They seem fine with
+>>> SMART and raid scrubs. However, it makes me wonder when they will die.
+>>> What is the best policy in such situations? More importantly, do people
+>>> wait for disks to die and then replace or have some ad hoc schedule of
+>>> replacing (like every 6mo replace oldest) to keep things safe?
+>>
+>> I replace drives when their relocation count hits double digits.  In my
+>> limited sample, that's typically after 40,000 hours.
+>>
+>> Phil
+>
+>
+> Thanks for the data point. 40K hours means roughly 4.5 years with 24/7. That
+> is very good. You use enterprise drives?
 
-Ram> Any one here actually use SSD caches for RAID arrays? Can you
-Ram> share your experience and let me know your choice of the type of
-Ram> cache methods your tired/used and why you think one is better or
-Ram> worse than other? If it is possible, please provide raid
-Ram> type/size and ssd size used.
+They don't have to be, cheap crap can last. My case slots the drives
+in vertically with large silicone dampers, I feel like this helps.
 
-I'm using a pair of 4Tb drives mirrored, and a pair of 512gb SSDs,
-also mirrored, along with lvmcache to setup my caching across a couple
-of volumes.
+Model Family:     Seagate Barracuda 7200.10
+Device Model:     ST3320620AS
+  5 Reallocated_Sector_Ct   0x0033   100   100   036    Pre-fail
+Always       -       0
+  9 Power_On_Hours          0x0032   040   040   000    Old_age
+Always       -       52576
 
-I honestly haven't seen huge improvements, but I also haven't had the
-time to do any serious testing either.  Whcih I should do.  I've been
-sorta thinking that using the Phoronix testing stuff would be the way
-to go.
+Model Family:     Seagate Barracuda 7200.10
+Device Model:     ST3320620AS
+  5 Reallocated_Sector_Ct   0x0033   100   100   036    Pre-fail
+Always       -       0
+  9 Power_On_Hours          0x0032   048   048   000    Old_age
+Always       -       46196
 
-My SSDs and 4Tb drives are all on an LSI 8-port SATA controller, PCI-E
-4x I think.  It's an MPT SAS-2 controller.  I did this so that my boot
-drives are some partitions on the SSDs, and then I use two more
-mirrored partitions for the cache.
+Model Family:     Western Digital Caviar Black
+Device Model:     WDC WD1001FALS-00E8B0
+  5 Reallocated_Sector_Ct   0x0033   200   200   140    Pre-fail
+Always       -       0
+  9 Power_On_Hours          0x0032   039   039   000    Old_age
+Always       -       44551
 
-And this is an NFS server for my home directories, etc.
 
-I didn't use bcache because you can't remove a cache device without
-rebooting, or at least bringing a device offline and back online,
-which doesn't fit my desires to be able to dynamically add/remove
-caches, esp for the testing I've never bothered to do.
+Model Family:     SAMSUNG SpinPoint F1 DT
+Device Model:     SAMSUNG HD103UJ
+  5 Reallocated_Sector_Ct   0x0033   100   100   010    Pre-fail
+Always       -       10
+  9 Power_On_Hours          0x0032   087   087   000    Old_age
+Always       -       67735
 
-John
+
+Model Family:     Western Digital Caviar Black
+Device Model:     WDC WD1001FALS-00E8B0
+  5 Reallocated_Sector_Ct   0x0033   200   200   140    Pre-fail
+Always       -       0
+  9 Power_On_Hours          0x0032   040   040   000    Old_age
+Always       -       44427
+
+Model Family:     SAMSUNG SpinPoint F1 DT
+Device Model:     SAMSUNG HD103UJ
+  5 Reallocated_Sector_Ct   0x0033   100   100   010    Pre-fail
+Always       -       6
+  9 Power_On_Hours          0x0032   093   093   000    Old_age
+Always       -       36570
+
+
+I would say the biggest thing is how often you get a reallocated
+sector. The Samsungs seem to get 1-3 a year, they will probably keep
+doing that until they die. Past experience with seagate tells me I'm
+going to get 10 in one day and the drive will die in a week. The WD
+will probably throw a few at a time and I'll dump them when they get
+to 10-15 sectors.
