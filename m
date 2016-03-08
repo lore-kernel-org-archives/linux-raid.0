@@ -1,40 +1,55 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: Re: [PATCH 2/2] Remove dead code about LKF_CONVERT flag
-Date: Tue, 8 Mar 2016 09:28:18 +0800
-Message-ID: <56DE2AB2.3020604@suse.com>
-References: <1457343063-14884-1-git-send-email-gqjiang@suse.com>
- <1457343063-14884-2-git-send-email-gqjiang@suse.com>
- <wrfjio0yj9fq.fsf@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Jes.Sorensen@redhat.com
+Subject: [PATCH 0/8] mdadm static checker fixes
+Date: Tue,  8 Mar 2016 12:30:44 -0500
+Message-ID: <1457458252-20203-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjio0yj9fq.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>, Guoqing Jiang <gqjiang@suse.com>
-Cc: linux-raid@vger.kernel.org, rgoldwyn@suse.com, neilb@suse.de
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de, gqjiang@suse.com, pawel.baldysiak@intel.com
 List-Id: linux-raid.ids
 
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+
+Hi,
+
+I have been running mdadm through Coverity and fixed a number of
+issues that were raised in the scan. A couple of them were non issues
+related to conditions where we know for sure the kernel will not
+return strings longer than a given size, but there were also a number
+of potential memory leaks and buffer overflows.
+
+These patches are sitting in my pending queue. If you are on the CC
+list, would you mind having a look at the portions touching code you
+previously pushed wrote.
+
+Please hollor if you notice I did anything wrong, otherwise I'll push
+this set into git within the next couple of days.
+
+Cheers,
+Jes
 
 
-On 03/08/2016 04:54 AM, Jes Sorensen wrote:
-> Guoqing Jiang <gqjiang@suse.com> writes:
->> Since flags is only set as LKF_NOQUEUE, the code
->> with LKF_CONVERT flag should be delete.
->>
->> Reported-by: Jes Sorensen <Jes.Sorensen@redhat.com>
->> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
->> ---
->>   mdadm.h | 1 -
->>   util.c  | 8 --------
->>   2 files changed, 9 deletions(-)
-> Applied!
->
-> For multi-patch series, would you mind adding a cover letter when you
-> post them? Then I can just respond to that if all patches are applied.
+Jes Sorensen (8):
+  Manage: Manage_add(): Fix memory leak
+  load_sys(): Add a buffer size argument
+  Grow: Grow_continue_command() remove dead code
+  Grow: Grow_addbitmap(): Add check to quiet down static code checkers
+  {platform,super}-intel: Fix two resource leaks
+  bitmap: Fix resource leak in bitmap_file_open()
+  Manage: Manage_subdevs() fix file descriptor leak
+  super1: Fix potential buffer overflows when copying cluster_name
 
-Sorry for inconvenience, I will do it in next time for similar case.
+ Detail.c         |  2 +-
+ Grow.c           | 11 ++++++++---
+ Manage.c         |  8 ++++++--
+ bitmap.c         |  1 +
+ mdadm.h          |  2 +-
+ platform-intel.c |  7 ++++++-
+ super-intel.c    | 12 ++++++++----
+ super1.c         | 18 ++++++++++++------
+ sysfs.c          | 47 ++++++++++++++++++++++++-----------------------
+ 9 files changed, 67 insertions(+), 41 deletions(-)
 
-Thanks,
-Guoqing
+-- 
+2.5.0
 
