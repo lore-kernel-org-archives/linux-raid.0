@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 7/8] Manage: Manage_subdevs() fix file descriptor leak
-Date: Tue,  8 Mar 2016 12:30:51 -0500
-Message-ID: <1457458252-20203-8-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 6/8] bitmap: Fix resource leak in bitmap_file_open()
+Date: Tue,  8 Mar 2016 12:30:50 -0500
+Message-ID: <1457458252-20203-7-git-send-email-Jes.Sorensen@redhat.com>
 References: <1457458252-20203-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1457458252-20203-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -12,28 +12,25 @@ List-Id: linux-raid.ids
 
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
+The code would leak 'fd' if locate_bitmap() failed.
+
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- Manage.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ bitmap.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/Manage.c b/Manage.c
-index 9d2e0d0..808c2cb 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -1511,9 +1511,10 @@ int Manage_subdevs(char *devname, int fd,
+diff --git a/bitmap.c b/bitmap.c
+index 5ad7401..0367d13 100644
+--- a/bitmap.c
++++ b/bitmap.c
+@@ -224,6 +224,7 @@ int bitmap_file_open(char *filename, struct supertype **stp, int node_num)
  		} else {
- 			struct stat stb;
- 			tfd = dev_open(dv->devname, O_RDONLY);
--			if (tfd >= 0)
-+			if (tfd >= 0) {
- 				fstat(tfd, &stb);
--			else {
-+				close(tfd);
-+			} else {
- 				int open_err = errno;
- 				if (stat(dv->devname, &stb) != 0) {
- 					pr_err("Cannot find %s: %s\n",
+ 			if (st->ss->locate_bitmap(st, fd, node_num)) {
+ 				pr_err("%s doesn't have bitmap\n", filename);
++				close(fd);
+ 				fd = -1;
+ 			}
+ 		}
 -- 
 2.5.0
 
