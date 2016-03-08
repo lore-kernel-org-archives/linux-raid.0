@@ -1,36 +1,26 @@
-From: Jes.Sorensen@redhat.com
-Subject: [PATCH 6/8] bitmap: Fix resource leak in bitmap_file_open()
-Date: Tue,  8 Mar 2016 12:30:50 -0500
-Message-ID: <1457458252-20203-7-git-send-email-Jes.Sorensen@redhat.com>
-References: <1457458252-20203-1-git-send-email-Jes.Sorensen@redhat.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: When do you replace old hard drives in a raid6?
+Date: Tue, 8 Mar 2016 22:01:54 +0000
+Message-ID: <56DF4BD2.3050009@youngman.org.uk>
+References: <56DB465E.9010703@gmail.com> <56DCCB55.1060906@turmel.org>
+ <56DD26DC.8020701@aei.mpg.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1457458252-20203-1-git-send-email-Jes.Sorensen@redhat.com>
+In-Reply-To: <56DD26DC.8020701@aei.mpg.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de, gqjiang@suse.com, pawel.baldysiak@intel.com
+To: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+On 07/03/16 06:59, Carsten Aulbert wrote:
+> It really depends a lot on the drive type and manufacturer (for example
+> see the various reports by Backblaze).
 
-The code would leak 'fd' if locate_bitmap() failed.
+I've seen it reported that Seagate Barracudas (I remembered it because
+that's what I've got) have a bit of a design fault. I think the air
+filter has a tendency to leak, and that could be why they fail so quick
+once they go - they get dust into them.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- bitmap.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/bitmap.c b/bitmap.c
-index 5ad7401..0367d13 100644
---- a/bitmap.c
-+++ b/bitmap.c
-@@ -224,6 +224,7 @@ int bitmap_file_open(char *filename, struct supertype **stp, int node_num)
- 		} else {
- 			if (st->ss->locate_bitmap(st, fd, node_num)) {
- 				pr_err("%s doesn't have bitmap\n", filename);
-+				close(fd);
- 				fd = -1;
- 			}
- 		}
--- 
-2.5.0
-
+Cheers,
+Wol
