@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 1/8] Manage: Manage_add(): Fix memory leak
-Date: Tue,  8 Mar 2016 12:30:45 -0500
-Message-ID: <1457458252-20203-2-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 4/8] Grow: Grow_addbitmap(): Add check to quiet down static code checkers
+Date: Tue,  8 Mar 2016 12:30:48 -0500
+Message-ID: <1457458252-20203-5-git-send-email-Jes.Sorensen@redhat.com>
 References: <1457458252-20203-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1457458252-20203-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -12,32 +12,35 @@ List-Id: linux-raid.ids
 
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-sysfs_read() allocates and populates a struct mdinfo, however the code
-forgot to free it again, before dropping the reference to the pointer.
+Grow_addbitmap() is only ever called with s->bitmap_file != NULL, but
+not all static code checkers catch this. This adds a check to quiet
+down the false positive warnings.
 
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- Manage.c | 3 +++
- 1 file changed, 3 insertions(+)
+ Grow.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/Manage.c b/Manage.c
-index a812ba0..9d2e0d0 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -944,10 +944,13 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
- 		}
+diff --git a/Grow.c b/Grow.c
+index 0fa776d..c453eb6 100755
+--- a/Grow.c
++++ b/Grow.c
+@@ -297,7 +297,14 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
+ 			"  between different architectures.  Consider upgrading the Linux kernel.\n");
+ 	}
  
- 		if (strncmp(mdp->sysfs_array_state, "readonly", 8) != 0) {
-+			sysfs_free(mdp);
- 			pr_err("%s is not readonly, cannot add journal.\n", devname);
- 			return -1;
- 		}
- 
-+		sysfs_free(mdp);
+-	if (s->bitmap_file && strcmp(s->bitmap_file, "clustered") == 0)
++	/*
++	 * We only ever get called if s->bitmap_file is != NULL, so this check
++	 * is just here to quiet down static code checkers.
++	 */
++	if (!s->bitmap_file)
++		return 1;
 +
- 		tst->ss->getinfo_super(tst, &mdi, NULL);
- 		if (mdi.journal_device_required == 0) {
- 			pr_err("%s does not support journal device.\n", devname);
++	if (strcmp(s->bitmap_file, "clustered") == 0)
+ 		major = BITMAP_MAJOR_CLUSTERED;
+ 
+ 	if (ioctl(fd, GET_BITMAP_FILE, &bmf) != 0) {
 -- 
 2.5.0
 
