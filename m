@@ -1,86 +1,79 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md/raid5: preserve STRIPE_PREREAD_ACTIVE in
- break_stripe_batch_list
-Date: Wed, 9 Mar 2016 09:26:52 -0800
-Message-ID: <20160309172652.GA8073@kernel.org>
-References: <87r3fkjttq.fsf@notabene.neil.brown.name>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH] Fix regression during add devices
+Date: Wed, 09 Mar 2016 13:30:49 -0500
+Message-ID: <wrfjio0v4i7a.fsf@redhat.com>
+References: <1457500818-1586-1-git-send-email-colyli@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87r3fkjttq.fsf@notabene.neil.brown.name>
+In-Reply-To: <1457500818-1586-1-git-send-email-colyli@suse.de> (Coly Li's
+	message of "Wed, 9 Mar 2016 13:20:18 +0800")
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Martin Svec <martin.svec@zoner.cz>
+To: Coly Li <colyli@suse.de>
+Cc: linux-raid@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Neil Brown <neilb@suse.com>
 List-Id: linux-raid.ids
 
-On Wed, Mar 09, 2016 at 12:58:25PM +1100, Neil Brown wrote:
-> 
-> break_stripe_batch_list breaks up a batch and copies some flags from
-> the batch head to the members, preserving others.
-> 
-> It doesn't preserve or copy STRIPE_PREREAD_ACTIVE.  This is not
-> normally a problem as STRIPE_PREREAD_ACTIVE is cleared when a
-> stripe_head is added to a batch, and is not set on stripe_heads
-> already in a batch.
-> 
-> However there is no locking to ensure one thread doesn't set the flag
-> after it has just been cleared in another.  This does occasionally happen.
-> 
-> md/raid5 maintains a count of the number of stripe_heads with
-> STRIPE_PREREAD_ACTIVE set: conf->preread_active_stripes.  When
-> break_stripe_batch_list clears STRIPE_PREREAD_ACTIVE inadvertently
-> this could becomes incorrect and will never again return to zero.
-> 
-> md/raid5 delays the handling of some stripe_heads until
-> preread_active_stripes becomes zero.  So when the above mention race
-> happens, those stripe_heads become blocked and never progress,
-> resulting is write to the array handing.
-> 
-> So: change break_stripe_batch_list to preserve STRIPE_PREREAD_ACTIVE
-> in the members of a batch.
-> 
-> URL: https://bugzilla.kernel.org/show_bug.cgi?id=108741
-> URL: https://bugzilla.redhat.com/show_bug.cgi?id=1258153
-> URL: http://thread.gmane.org/5649C0E9.2030204@zoner.cz
-> Reported-by: Martin Svec <martin.svec@zoner.cz> (and others)
-> Tested-by: Tom Weber <linux@junkyard.4t2.com>
-> Fixes: 1b956f7a8f9a ("md/raid5: be more selective about distributing flags across batch.")
-> Cc: stable@vger.kernel.org (v4.1 and later)
-> Signed-off-by: NeilBrown <neilb@suse.com>
+Coly Li <colyli@suse.de> writes:
+> From: Hannes Reinecke <hare@suse.de>
+>
+> Commit d180d2aa2a17 ("Manage: fix test for 'is array failed'.")
+> introduced a regression which would not allow to re-add new
+> drivers to a failed array.
+>
+> The patch is written by Hannes Reinecke, Neil Brown points out
+> the buggy commit ID is d180d2aa2a17. Coly helps to submit the
+> patch to mdadm upstream.
+>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> Cc: Coly Li <colyli@suse.de>
+> Cc: Neil Brown <neilb@suse.com>
+> ---
+>  Manage.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-Applied, thanks Neil! I'll split the WARN_ON_ONCE and do it for each bit, so
-next time we can have clear clue.
+Coly,
+
+Thanks for the fix - please use "Fixes: " to indicate which patch
+introduced the bug, and the story of pushing the patch really belongs in
+a comment below the --- line, so it doesn't go into git.
+
+I modified it to look like this - please let me know if you are OK with
+this.
 
 Thanks,
-Shaohua
-
-> ---
->  drivers/md/raid5.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index b4f02c9959f2..2e7d253be6ce 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -4236,7 +4236,6 @@ static void break_stripe_batch_list(struct stripe_head *head_sh,
->  		WARN_ON_ONCE(sh->state & ((1 << STRIPE_ACTIVE) |
->  					  (1 << STRIPE_SYNCING) |
->  					  (1 << STRIPE_REPLACED) |
-> -					  (1 << STRIPE_PREREAD_ACTIVE) |
->  					  (1 << STRIPE_DELAYED) |
->  					  (1 << STRIPE_BIT_DELAY) |
->  					  (1 << STRIPE_FULL_WRITE) |
-> @@ -4251,6 +4250,7 @@ static void break_stripe_batch_list(struct stripe_head *head_sh,
->  					      (1 << STRIPE_REPLACED)));
->  
->  		set_mask_bits(&sh->state, ~(STRIPE_EXPAND_SYNC_FLAGS |
-> +					    (1 << STRIPE_PREREAD_ACTIVE) |
->  					    (1 << STRIPE_DEGRADED)),
->  			      head_sh->state & (1 << STRIPE_INSYNC));
->  
-> -- 
-> 2.7.2
-> 
+Jes
 
 
+commit 227bd322d3ed80bee0f1a0ae44a293908890851c
+Author: Hannes Reinecke <hare@suse.de>
+Date:   Wed Mar 9 13:20:18 2016 +0800
+
+    Fix regression during add devices
+    
+    Commit d180d2aa2a17 ("Manage: fix test for 'is array failed'.")
+    introduced a regression which would not allow to re-add new
+    drivers to a failed array.
+    
+    Fixes: d180d2aa2a17 ("Manage: fix test for 'is array failed'.")
+    Signed-off-by: Hannes Reinecke <hare@suse.de>
+    Cc: Coly Li <colyli@suse.de>
+    Cc: Neil Brown <neilb@suse.com>
+    Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+
+
+> diff --git a/Manage.c b/Manage.c
+> index 7e1b94b..073ddb9 100644
+> --- a/Manage.c
+> +++ b/Manage.c
+> @@ -879,10 +879,10 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+>  					continue;
+>  				if (disc.major == 0 && disc.minor == 0)
+>  					continue;
+> -				found++;
+>  				if (!(disc.state & (1<<MD_DISK_SYNC)))
+>  					continue;
+>  				avail[disc.raid_disk] = 1;
+> +				found++;
+>  			}
+>  			array_failed = !enough(array->level, array->raid_disks,
+>  					       array->layout, 1, avail);
