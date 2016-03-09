@@ -1,79 +1,129 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH] Fix regression during add devices
-Date: Wed, 09 Mar 2016 13:30:49 -0500
-Message-ID: <wrfjio0v4i7a.fsf@redhat.com>
-References: <1457500818-1586-1-git-send-email-colyli@suse.de>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH] md/raid5: preserve STRIPE_PREREAD_ACTIVE in break_stripe_batch_list
+Date: Thu, 10 Mar 2016 06:19:42 +1100
+Message-ID: <87lh5rjw6p.fsf@notabene.neil.brown.name>
+References: <87r3fkjttq.fsf@notabene.neil.brown.name> <20160309172652.GA8073@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1457500818-1586-1-git-send-email-colyli@suse.de> (Coly Li's
-	message of "Wed, 9 Mar 2016 13:20:18 +0800")
+In-Reply-To: <20160309172652.GA8073@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Coly Li <colyli@suse.de>
-Cc: linux-raid@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Neil Brown <neilb@suse.com>
+To: Shaohua Li <shli@kernel.org>
+Cc: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Martin Svec <martin.svec@zoner.cz>
 List-Id: linux-raid.ids
 
-Coly Li <colyli@suse.de> writes:
-> From: Hannes Reinecke <hare@suse.de>
->
-> Commit d180d2aa2a17 ("Manage: fix test for 'is array failed'.")
-> introduced a regression which would not allow to re-add new
-> drivers to a failed array.
->
-> The patch is written by Hannes Reinecke, Neil Brown points out
-> the buggy commit ID is d180d2aa2a17. Coly helps to submit the
-> patch to mdadm upstream.
->
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> Cc: Coly Li <colyli@suse.de>
-> Cc: Neil Brown <neilb@suse.com>
-> ---
->  Manage.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Coly,
+On Thu, Mar 10 2016, Shaohua Li wrote:
 
-Thanks for the fix - please use "Fixes: " to indicate which patch
-introduced the bug, and the story of pushing the patch really belongs in
-a comment below the --- line, so it doesn't go into git.
+> On Wed, Mar 09, 2016 at 12:58:25PM +1100, Neil Brown wrote:
+>>=20
+>> break_stripe_batch_list breaks up a batch and copies some flags from
+>> the batch head to the members, preserving others.
+>>=20
+>> It doesn't preserve or copy STRIPE_PREREAD_ACTIVE.  This is not
+>> normally a problem as STRIPE_PREREAD_ACTIVE is cleared when a
+>> stripe_head is added to a batch, and is not set on stripe_heads
+>> already in a batch.
+>>=20
+>> However there is no locking to ensure one thread doesn't set the flag
+>> after it has just been cleared in another.  This does occasionally happe=
+n.
+>>=20
+>> md/raid5 maintains a count of the number of stripe_heads with
+>> STRIPE_PREREAD_ACTIVE set: conf->preread_active_stripes.  When
+>> break_stripe_batch_list clears STRIPE_PREREAD_ACTIVE inadvertently
+>> this could becomes incorrect and will never again return to zero.
+>>=20
+>> md/raid5 delays the handling of some stripe_heads until
+>> preread_active_stripes becomes zero.  So when the above mention race
+>> happens, those stripe_heads become blocked and never progress,
+>> resulting is write to the array handing.
+>>=20
+>> So: change break_stripe_batch_list to preserve STRIPE_PREREAD_ACTIVE
+>> in the members of a batch.
+>>=20
+>> URL: https://bugzilla.kernel.org/show_bug.cgi?id=3D108741
+>> URL: https://bugzilla.redhat.com/show_bug.cgi?id=3D1258153
+>> URL: http://thread.gmane.org/5649C0E9.2030204@zoner.cz
+>> Reported-by: Martin Svec <martin.svec@zoner.cz> (and others)
+>> Tested-by: Tom Weber <linux@junkyard.4t2.com>
+>> Fixes: 1b956f7a8f9a ("md/raid5: be more selective about distributing fla=
+gs across batch.")
+>> Cc: stable@vger.kernel.org (v4.1 and later)
+>> Signed-off-by: NeilBrown <neilb@suse.com>
+>
+> Applied, thanks Neil! I'll split the WARN_ON_ONCE and do it for each bit,=
+ so
+> next time we can have clear clue.
 
-I modified it to look like this - please let me know if you are OK with
-this.
+I personally think that would look ugly and increase the in-line code
+size for minimal gain.
+If you want to make a change (which I'm in two minds about) I think it
+would be much cleaner to do
+  if (WARN_ON_ONCE(...)) printk(....);
+
+Then at least the extra code will be out of line - not even loaded into
+the instruction cache until needed.
 
 Thanks,
-Jes
+NeilBrown
 
+>
+> Thanks,
+> Shaohua
+>
+>> ---
+>>  drivers/md/raid5.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>=20
+>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>> index b4f02c9959f2..2e7d253be6ce 100644
+>> --- a/drivers/md/raid5.c
+>> +++ b/drivers/md/raid5.c
+>> @@ -4236,7 +4236,6 @@ static void break_stripe_batch_list(struct stripe_=
+head *head_sh,
+>>  		WARN_ON_ONCE(sh->state & ((1 << STRIPE_ACTIVE) |
+>>  					  (1 << STRIPE_SYNCING) |
+>>  					  (1 << STRIPE_REPLACED) |
+>> -					  (1 << STRIPE_PREREAD_ACTIVE) |
+>>  					  (1 << STRIPE_DELAYED) |
+>>  					  (1 << STRIPE_BIT_DELAY) |
+>>  					  (1 << STRIPE_FULL_WRITE) |
+>> @@ -4251,6 +4250,7 @@ static void break_stripe_batch_list(struct stripe_=
+head *head_sh,
+>>  					      (1 << STRIPE_REPLACED)));
+>>=20=20
+>>  		set_mask_bits(&sh->state, ~(STRIPE_EXPAND_SYNC_FLAGS |
+>> +					    (1 << STRIPE_PREREAD_ACTIVE) |
+>>  					    (1 << STRIPE_DEGRADED)),
+>>  			      head_sh->state & (1 << STRIPE_INSYNC));
+>>=20=20
+>> --=20
+>> 2.7.2
+>>=20
 
-commit 227bd322d3ed80bee0f1a0ae44a293908890851c
-Author: Hannes Reinecke <hare@suse.de>
-Date:   Wed Mar 9 13:20:18 2016 +0800
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
-    Fix regression during add devices
-    
-    Commit d180d2aa2a17 ("Manage: fix test for 'is array failed'.")
-    introduced a regression which would not allow to re-add new
-    drivers to a failed array.
-    
-    Fixes: d180d2aa2a17 ("Manage: fix test for 'is array failed'.")
-    Signed-off-by: Hannes Reinecke <hare@suse.de>
-    Cc: Coly Li <colyli@suse.de>
-    Cc: Neil Brown <neilb@suse.com>
-    Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-
-> diff --git a/Manage.c b/Manage.c
-> index 7e1b94b..073ddb9 100644
-> --- a/Manage.c
-> +++ b/Manage.c
-> @@ -879,10 +879,10 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
->  					continue;
->  				if (disc.major == 0 && disc.minor == 0)
->  					continue;
-> -				found++;
->  				if (!(disc.state & (1<<MD_DISK_SYNC)))
->  					continue;
->  				avail[disc.raid_disk] = 1;
-> +				found++;
->  			}
->  			array_failed = !enough(array->level, array->raid_disks,
->  					       array->layout, 1, avail);
+iQIcBAEBCAAGBQJW4HdOAAoJEDnsnt1WYoG5lyEQAJzNnamKeEYKs0CyujrX7GwB
+CaqsIcQkpLU0snGYWDzMWkUvmQhWayvnt0B2/jQQWf1ZSJVgGs1Hrj5c03llMSfV
+ANXW771wxee7fV04HmVa05S+SCpRdjSFlQFy31qpC7h7zFMMNnLIwFyWqQDECZwA
+PRfz2hJIYOdKCAMY0UAeO948v2fpiL469jeq1PXCzcZIcuhKrZOXkfTS6c8la3mf
+Lvioux4LIRlghxM8eU9YVSlqYYQJR7pvDcFBmJbFA6My0viFXJa02c8jH2S9Cz0s
+Zg0uZVwrIQbhEjRIdILcn92y0mk4s7NwvVYh5NW/xN2nCyJMfeC7nhLbsHLM3qJk
+tWrQCLo2g5C8VT0836OsVze5N5fSvYkmDpRigQhp0nMYVhE20+1RfWsAZE7NMifH
+MD+QT075zYVGnM4Isv5aX6tFhKO7D1RDHj1TobwC3sEPUWE7QilxSN/o6SsrY1OZ
+Uu/+0crlfZL6+bCRmcZcvTd6XAFwWZpF4EOTxmAf49uf+KLgAYkHBIU0Sc/Qu+x2
+4H5DK9JzXu+ic5Dh5L6v/cVnLUvh7EKf1tGbxWPeyu72CalhB1RH2E3K2cmCv1H0
+aHMMC9MjyzPcXUbVMeagGjnFzGIup9bujGs/ddh/yxufPTlaFeWuKCJtJeF1YAco
+lU4q0OtugTmas2NIba2o
+=JIaC
+-----END PGP SIGNATURE-----
+--=-=-=--
