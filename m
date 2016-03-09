@@ -1,103 +1,63 @@
-From: NeilBrown <neilb@suse.com>
-Subject: [PATCH] md/raid5: preserve STRIPE_PREREAD_ACTIVE in
- break_stripe_batch_list
-Date: Wed, 09 Mar 2016 12:58:25 +1100
-Message-ID: <87r3fkjttq.fsf@notabene.neil.brown.name>
+From: "John Stoffel" <john@stoffel.org>
+Subject: Re: When do you replace old hard drives in a raid6?
+Date: Tue, 8 Mar 2016 21:49:51 -0500
+Message-ID: <22239.36687.230505.827644@quad.stoffel.home>
+References: <56DB465E.9010703@gmail.com>
+	<56DCCB55.1060906@turmel.org>
+	<56DCD0E9.8040506@gmail.com>
+	<56DD0F12.2060104@turmel.org>
+	<56DF6A39.4020904@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>
-Cc: linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Martin Svec <martin.svec@zoner.cz>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <56DF6A39.4020904@gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Ram Ramesh <rramesh2400@gmail.com>
+Cc: Phil Turmel <philip@turmel.org>, Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+>>>>> "Ram" == Ram Ramesh <rramesh2400@gmail.com> writes:
 
+Ram> On 03/06/2016 11:18 PM, Phil Turmel wrote:
+>> On 03/06/2016 07:52 PM, Ram Ramesh wrote:
+>>> On 03/06/2016 06:29 PM, Phil Turmel wrote:
+>>>> On 03/05/2016 03:49 PM, Ram Ramesh wrote:
+>>>>> I am curious if people actually replace hard drives periodically because
+>>>>> they are old or out of warranty. My 5 device raid6 has several older
+>>>>> drives (3/5 are 3+ years old and out of warranty) They seem fine with
+>>>>> SMART and raid scrubs. However, it makes me wonder when they will die.
+>>>>> What is the best policy in such situations? More importantly, do people
+>>>>> wait for disks to die and then replace or have some ad hoc schedule of
+>>>>> replacing (like every 6mo replace oldest) to keep things safe?
+>>>> I replace drives when their relocation count hits double digits.  In my
+>>>> limited sample, that's typically after 40,000 hours.
+>>>> 
+>>>> Phil
+>>> Thanks for the data point. 40K hours means roughly 4.5 years with 24/7.
+>>> That is very good. You use enterprise drives? Mine are desktop (and may
+>>> be one HGST NAS)
+>> I moved from desktop drives to NAS drives about 4 years ago.  So the
+>> 40k+ hours were on desktop drives.  (A couple started dying in the mid
+>> 30,000's, but I suspect I overheated those two.)  The oldest NAS drives
+>> I have now are approaching 40k, and are all still @ zero relocations.
+>> WD Reds, fwiw.
+>> 
+>>> My SMART is perfect except for power on hours. I am going to take it
+>>> easy for now as I have a spare (not part of a RAID) just in case
+>>> something bad happens.
+>> Yes, sounds reasonable.
+>> 
+>> Phil
+>> 
 
-break_stripe_batch_list breaks up a batch and copies some flags from
-the batch head to the members, preserving others.
+Ram> My disks have about 10K hours (my server only runs from
+Ram> 4pm-2am). I think I have quite a bit of life left assuming an
+Ram> on/off cycle is not as bad as extra 14 hours of run time.
 
-It doesn't preserve or copy STRIPE_PREREAD_ACTIVE.  This is not
-normally a problem as STRIPE_PREREAD_ACTIVE is cleared when a
-stripe_head is added to a batch, and is not set on stripe_heads
-already in a batch.
+The on/off is much worse than just sitting and spinning.  That's what
+tends to kill drives in my experience.  Drives die no matter what, but
+laptops and other systems which power off/on tend to die much more
+quickly.
 
-However there is no locking to ensure one thread doesn't set the flag
-after it has just been cleared in another.  This does occasionally happen.
-
-md/raid5 maintains a count of the number of stripe_heads with
-STRIPE_PREREAD_ACTIVE set: conf->preread_active_stripes.  When
-break_stripe_batch_list clears STRIPE_PREREAD_ACTIVE inadvertently
-this could becomes incorrect and will never again return to zero.
-
-md/raid5 delays the handling of some stripe_heads until
-preread_active_stripes becomes zero.  So when the above mention race
-happens, those stripe_heads become blocked and never progress,
-resulting is write to the array handing.
-
-So: change break_stripe_batch_list to preserve STRIPE_PREREAD_ACTIVE
-in the members of a batch.
-
-URL: https://bugzilla.kernel.org/show_bug.cgi?id=3D108741
-URL: https://bugzilla.redhat.com/show_bug.cgi?id=3D1258153
-URL: http://thread.gmane.org/5649C0E9.2030204@zoner.cz
-Reported-by: Martin Svec <martin.svec@zoner.cz> (and others)
-Tested-by: Tom Weber <linux@junkyard.4t2.com>
-Fixes: 1b956f7a8f9a ("md/raid5: be more selective about distributing flags =
-across batch.")
-Cc: stable@vger.kernel.org (v4.1 and later)
-Signed-off-by: NeilBrown <neilb@suse.com>
-=2D--
- drivers/md/raid5.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index b4f02c9959f2..2e7d253be6ce 100644
-=2D-- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4236,7 +4236,6 @@ static void break_stripe_batch_list(struct stripe_hea=
-d *head_sh,
- 		WARN_ON_ONCE(sh->state & ((1 << STRIPE_ACTIVE) |
- 					  (1 << STRIPE_SYNCING) |
- 					  (1 << STRIPE_REPLACED) |
-=2D					  (1 << STRIPE_PREREAD_ACTIVE) |
- 					  (1 << STRIPE_DELAYED) |
- 					  (1 << STRIPE_BIT_DELAY) |
- 					  (1 << STRIPE_FULL_WRITE) |
-@@ -4251,6 +4250,7 @@ static void break_stripe_batch_list(struct stripe_hea=
-d *head_sh,
- 					      (1 << STRIPE_REPLACED)));
-=20
- 		set_mask_bits(&sh->state, ~(STRIPE_EXPAND_SYNC_FLAGS |
-+					    (1 << STRIPE_PREREAD_ACTIVE) |
- 					    (1 << STRIPE_DEGRADED)),
- 			      head_sh->state & (1 << STRIPE_INSYNC));
-=20
-=2D-=20
-2.7.2
-
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJW34NBAAoJEDnsnt1WYoG5zB4QAJKh44LfgVIa1hOSPYtnXl3i
-SXDFvbjRtY8zsiawxwvJRBcg3gYDrXRWzPqKaGGZ/eSQUJmEbdhr3liu9NUdnmZo
-5A8SOO8BtZKea1p+GqgbDj7At8m2SO7jnlQqJDJ3jchEzChlh8JMQM9042LhzYEn
-5Mnv0WK16zm637yD3v64YxdIIgjreh9nVE+si/XRjG7SO6oMUT42Yy/jdqpWDukW
-eUuZEOYi3LxOJbaKz3sQgwsusEUBqi9VQEodQnUTLaMGYeftn2Z1uf8hkBDfdxmM
-eniqS9x7DXdcWTiDMgqhf/slCYfKdZqYvuv9Yt11UUUqfuwZEeZM62Gg++CiqVNd
-lyMG3S9rkpogrNcE+r2YFdt94b4vQg5b8ByxIkhuy8c8Yl/yyrxAaEqbLGUHDZSE
-crDCzosgrF/Y/Q8Pd/rnkBd9WlTqLcLkQN/tD3FlJcw8leUo8Zuqmb24QEXappD9
-jqT9WCvfJm4fOmXPapXOEMEQ35agmr6mxdik5toZpM4nqJ07DgUURcTqD2FxOS4B
-4PQCHmvYHvcwdxK3XfjS/nj0FofJkxntxNYR/48ETkSfAIiVUjinl31JtXc7ecvo
-zbzWAoSXk6s7R2lcE5JWMr7AcRJGoNhOIJPqra9j3k2Ju5RkIJy2ydVNnVrQIt/G
-sFbtk/zSsU6I2N1dWg+I
-=Wy+g
------END PGP SIGNATURE-----
---=-=-=--
+John
