@@ -1,92 +1,86 @@
-From: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Subject: Re: [PATCH RESEND v2 16/18] fuse: Support fuse
- filesystems outside of init_user_ns
-Date: Wed, 9 Mar 2016 11:07:26 -0600
-Message-ID: <20160309170726.GB28779@ubuntu-hedt>
-References: <1451930639-94331-1-git-send-email-seth.forshee@canonical.com>
-	<1451930639-94331-17-git-send-email-seth.forshee@canonical.com>
-	<20160309112923.GF8655@tucsk> <20160309141840.GC23399@ubuntu-xps13>
-	<CAJfpegv5JmB15yHpjYxVeOYdWWkoLMftr9-e_iS93Y_7m=t4Zw@mail.gmail.com>
-	<20160309152505.GA28779@ubuntu-hedt>
-	<CAJfpegv5KR_Hi-79a8oyb+R+tv9W3RYqy5pngUKSyauVNk2ScQ@mail.gmail.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH] md/raid5: preserve STRIPE_PREREAD_ACTIVE in
+ break_stripe_batch_list
+Date: Wed, 9 Mar 2016 09:26:52 -0800
+Message-ID: <20160309172652.GA8073@kernel.org>
+References: <87r3fkjttq.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <fuse-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CAJfpegv5KR_Hi-79a8oyb+R+tv9W3RYqy5pngUKSyauVNk2ScQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/fuse-devel>,
-	<mailto:fuse-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=fuse-devel>
-List-Post: <mailto:fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
-List-Help: <mailto:fuse-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/fuse-devel>,
-	<mailto:fuse-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
-Errors-To: fuse-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
-To: Miklos Szeredi <miklos-sUDqSbJrdHQHWmgEVkV9KA@public.gmane.org>
-Cc: linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, LSM <linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fuse-devel <fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, Linux-Fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+In-Reply-To: <87r3fkjttq.fsf@notabene.neil.brown.name>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Martin Svec <martin.svec@zoner.cz>
 List-Id: linux-raid.ids
 
-On Wed, Mar 09, 2016 at 04:51:42PM +0100, Miklos Szeredi wrote:
-> On Wed, Mar 9, 2016 at 4:25 PM, Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org> wrote:
-> > On Wed, Mar 09, 2016 at 03:48:22PM +0100, Miklos Szeredi wrote:
+On Wed, Mar 09, 2016 at 12:58:25PM +1100, Neil Brown wrote:
 > 
-> >> Can't we use current_cred()->uid/gid? Or fsuid/fsgid maybe?
-> >
-> > That would be a departure from the current behavior in the !allow_other
-> > case for unprivileged users. Since those mounts are done by an suid
-> > helper all of those ids would be root in the userns, wouldn't they?
+> break_stripe_batch_list breaks up a batch and copies some flags from
+> the batch head to the members, preserving others.
 > 
-> Well, actually this is what the helper does:
+> It doesn't preserve or copy STRIPE_PREREAD_ACTIVE.  This is not
+> normally a problem as STRIPE_PREREAD_ACTIVE is cleared when a
+> stripe_head is added to a batch, and is not set on stripe_heads
+> already in a batch.
 > 
->     sprintf(d, "fd=%i,rootmode=%o,user_id=%u,group_id=%u",
->         fd, rootmode, getuid(), getgid());
-
-Sorry, I was thinking of euid. So this may not be a problem.
-
-> So it just uses the current uid/gid.  Apparently no reason to do this
-> in userland, we could just as well set these in the kernel.  Except
-> for possible backward compatibility problems for things not using the
-> helper.
+> However there is no locking to ensure one thread doesn't set the flag
+> after it has just been cleared in another.  This does occasionally happen.
 > 
-> BUT if the mount is unprivileged or it's a userns mount, or anything
-> previously not possible, then we are not constrained by the backward
-> compatibility issues, and can go with the saner solution.
+> md/raid5 maintains a count of the number of stripe_heads with
+> STRIPE_PREREAD_ACTIVE set: conf->preread_active_stripes.  When
+> break_stripe_batch_list clears STRIPE_PREREAD_ACTIVE inadvertently
+> this could becomes incorrect and will never again return to zero.
 > 
-> Does that not make sense?
-
-But we generally do want backwards compatibility, and we want userspace
-software to be able to expect the same behavior whether or not it's
-running in a user namespaced container. Obviously we can't always have
-things 100% identical, but we shouldn't break things unless we really
-need to.
-
-However it may be that this isn't actually going to break assumptions of
-existing software like I had feared. My preference is still to not
-change any userspace-visible behaviors since we never know what software
-might have made assumptions based on those behaviors. But if you're
-confident that it won't break anything I'm willing to give it a try.
-
-> >> When we have true unprivileged mounts, the user_id/group_id options
-> >> become redundant anyway and we can just use the current credentials.
-> >
-> > True, but we don't yet have that.
+> md/raid5 delays the handling of some stripe_heads until
+> preread_active_stripes becomes zero.  So when the above mention race
+> happens, those stripe_heads become blocked and never progress,
+> resulting is write to the array handing.
 > 
-> What's missing?
+> So: change break_stripe_batch_list to preserve STRIPE_PREREAD_ACTIVE
+> in the members of a batch.
+> 
+> URL: https://bugzilla.kernel.org/show_bug.cgi?id=108741
+> URL: https://bugzilla.redhat.com/show_bug.cgi?id=1258153
+> URL: http://thread.gmane.org/5649C0E9.2030204@zoner.cz
+> Reported-by: Martin Svec <martin.svec@zoner.cz> (and others)
+> Tested-by: Tom Weber <linux@junkyard.4t2.com>
+> Fixes: 1b956f7a8f9a ("md/raid5: be more selective about distributing flags across batch.")
+> Cc: stable@vger.kernel.org (v4.1 and later)
+> Signed-off-by: NeilBrown <neilb@suse.com>
 
-A user must still be privileged to mount, even if only towards their own
-user and mount namespaces. Maybe that's what you meant though and I just
-misunderstood.
+Applied, thanks Neil! I'll split the WARN_ON_ONCE and do it for each bit, so
+next time we can have clear clue.
 
 Thanks,
-Seth
+Shaohua
 
-------------------------------------------------------------------------------
-Transform Data into Opportunity.
-Accelerate data analysis in your applications with
-Intel Data Analytics Acceleration Library.
-Click to learn more.
-http://pubads.g.doubleclick.net/gampad/clk?id=278785111&iu=/4140
--- 
-fuse-devel mailing list
-To unsubscribe or subscribe, visit https://lists.sourceforge.net/lists/listinfo/fuse-devel
+> ---
+>  drivers/md/raid5.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index b4f02c9959f2..2e7d253be6ce 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -4236,7 +4236,6 @@ static void break_stripe_batch_list(struct stripe_head *head_sh,
+>  		WARN_ON_ONCE(sh->state & ((1 << STRIPE_ACTIVE) |
+>  					  (1 << STRIPE_SYNCING) |
+>  					  (1 << STRIPE_REPLACED) |
+> -					  (1 << STRIPE_PREREAD_ACTIVE) |
+>  					  (1 << STRIPE_DELAYED) |
+>  					  (1 << STRIPE_BIT_DELAY) |
+>  					  (1 << STRIPE_FULL_WRITE) |
+> @@ -4251,6 +4250,7 @@ static void break_stripe_batch_list(struct stripe_head *head_sh,
+>  					      (1 << STRIPE_REPLACED)));
+>  
+>  		set_mask_bits(&sh->state, ~(STRIPE_EXPAND_SYNC_FLAGS |
+> +					    (1 << STRIPE_PREREAD_ACTIVE) |
+>  					    (1 << STRIPE_DEGRADED)),
+>  			      head_sh->state & (1 << STRIPE_INSYNC));
+>  
+> -- 
+> 2.7.2
+> 
+
+
