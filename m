@@ -1,212 +1,84 @@
-From: NeilBrown <nfbrown@novell.com>
-Subject: Re: RAID6 Array crash during reshape.....now will not re-assemble.
-Date: Wed, 09 Mar 2016 11:23:30 +1100
-Message-ID: <874mcglcsd.fsf@notabene.neil.brown.name>
-References: <CAOS+5GEd4E2wzYhw0rPdrZnjK6UwAUdKCQLLTxXrdPO8d7hS7w@mail.gmail.com>
+From: NeilBrown <neilb@suse.com>
+Subject: [PATCH] md/raid5: preserve STRIPE_PREREAD_ACTIVE in
+ break_stripe_batch_list
+Date: Wed, 09 Mar 2016 12:58:25 +1100
+Message-ID: <87r3fkjttq.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAOS+5GEd4E2wzYhw0rPdrZnjK6UwAUdKCQLLTxXrdPO8d7hS7w@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Another Sillyname <anothersname@googlemail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shaohua Li <shli@fb.com>
+Cc: linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Martin Svec <martin.svec@zoner.cz>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
-
-On Wed, Mar 02 2016, Another Sillyname wrote:
-
-> I have a 30TB RAID6 array using 7 x 6TB drives that I wanted to
-> migrate to RAID5 to take one of the drives offline and use in a new
-> array for a migration.
->
-> sudo mdadm --grow /dev/md127 --level=raid5 --raid-device=6
-> --backup-file=mdadm_backupfile
-
-First observation:  Don't use --backup-file unless mdadm tell you that
-you have to.  New mdadm on new kernel with newly create arrays don't
-need a backup file at all.  Your array is sufficiently newly created and
-I think your mdadm/kernel are new enough too.  Note in the --examine output:
-
->    Unused Space : before=262056 sectors, after=143 sectors
-
-This means there is (nearly) 128M of free space in the start of each
-device.  md can perform the reshape by copying a few chunks down into
-this space, then the next few chunks into the space just freed, then the
-next few chunks ... and so on.  No backup file needed.  That is
-providing the chunk size is quite a bit smaller than the space, and your
-512K chunk size certainly is.
-
-A reshape which increases the size of the array needs 'before' space, a
-reshape which decreases the size of the array needs 'after' space.  A
-reshape which doesn't change the size of the array (like yours) can use
-either.
-
->
-> I watched this using cat /proc/mdstat and even after an hour the
-> percentage of the reshape was still 0.0%.
-
-A more useful number to watch is the  (xxx/yyy) after the percentage.
-The first number should change at least every few seconds.
-
->
-> Reboot.....
->
-> Array will not come back online at all.
->
-> Bring the server up without the array trying to automount.
->
-> cat /proc/mdstat shows the array offline.
->
-> Personalities :
-> md127 : inactive sdf1[2](S) sde1[3](S) sdg1[0](S) sdb1[8](S)
-> sdh1[7](S) sdc1[1](S) sdd1[6](S)
->       41022733300 blocks super 1.2
->
-> unused devices: <none>
->
-> Try to reassemble the array.
->
->>sudo mdadm --assemble /dev/md127 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1 /dev/sdg1 /dev/sdh1
-> mdadm: /dev/sdg1 is busy - skipping
-> mdadm: /dev/sdh1 is busy - skipping
-> mdadm: Merging with already-assembled /dev/md/server187.internallan.com:1
-
-It looks like you are getting races with udev.  mdadm is detecting the
-race and says that it is "Merging" rather than creating a separate array
-but still the result isn't very useful...
+Content-Transfer-Encoding: quoted-printable
 
 
-When you  run "mdadm --assemble /dev/md127 ...." mdadm notices that /dev/md127
-already exists but isn't active, so it stops it properly so that all the
-devices become available to be assembled.
-As the devices become available they tell udev "Hey, I've changed
-status" and udev says "Hey, you look like part of an md array, let's put
-you back together".... or something like that.  I might have the details
-a little wrong - it is a while since I looked at this.
-Anyway it seems that udev called "mdadm -I" to put some of the devices
-together so they were busy when your "mdadm --assemble" looked at them.
+break_stripe_batch_list breaks up a batch and copies some flags from
+the batch head to the members, preserving others.
 
+It doesn't preserve or copy STRIPE_PREREAD_ACTIVE.  This is not
+normally a problem as STRIPE_PREREAD_ACTIVE is cleared when a
+stripe_head is added to a batch, and is not set on stripe_heads
+already in a batch.
 
-> mdadm: Failed to restore critical section for reshape, sorry.
->        Possibly you needed to specify the --backup-file
->
->
-> Have no idea where the server187 stuff has come from.
+However there is no locking to ensure one thread doesn't set the flag
+after it has just been cleared in another.  This does occasionally happen.
 
-That is in the 'Name' field in the metadata, which must have been put
-there when the array was created
->            Name : server187.internallan.com:1
->   Creation Time : Sun May 10 14:47:51 2015
+md/raid5 maintains a count of the number of stripe_heads with
+STRIPE_PREREAD_ACTIVE set: conf->preread_active_stripes.  When
+break_stripe_batch_list clears STRIPE_PREREAD_ACTIVE inadvertently
+this could becomes incorrect and will never again return to zero.
 
-It is possible to change it after-the-fact, but unlikely unless someone
-explicitly tried.
-I doesn't really matter how it got there as all the devices are the
-same.
-When "mdadm -I /dev/sdb1" etc is run by udev, mdadm needs to deduce a
-name for the array.  It looks in the Name filed and creates
+md/raid5 delays the handling of some stripe_heads until
+preread_active_stripes becomes zero.  So when the above mention race
+happens, those stripe_heads become blocked and never progress,
+resulting is write to the array handing.
 
-/dev/md/server187.internallan.com:1
+So: change break_stripe_batch_list to preserve STRIPE_PREREAD_ACTIVE
+in the members of a batch.
 
->
-> stop the array.
->
->>sudo mdadm --stop /dev/md127
->
-> try to re-assemble
->
->>sudo mdadm --assemble /dev/md127 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1 /dev/sdg1 /dev/sdh1
->
-> mdadm: Failed to restore critical section for reshape, sorry.
->        Possibly you needed to specify the --backup-file
->
->
-> try to re-assemble using the backup file
->
->>sudo mdadm --assemble /dev/md127 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1 /dev/sdg1 /dev/sdh1 --backup-file=mdadm_backupfile
->
-> mdadm: Failed to restore critical section for reshape, sorry.
+URL: https://bugzilla.kernel.org/show_bug.cgi?id=3D108741
+URL: https://bugzilla.redhat.com/show_bug.cgi?id=3D1258153
+URL: http://thread.gmane.org/5649C0E9.2030204@zoner.cz
+Reported-by: Martin Svec <martin.svec@zoner.cz> (and others)
+Tested-by: Tom Weber <linux@junkyard.4t2.com>
+Fixes: 1b956f7a8f9a ("md/raid5: be more selective about distributing flags =
+across batch.")
+Cc: stable@vger.kernel.org (v4.1 and later)
+Signed-off-by: NeilBrown <neilb@suse.com>
+=2D--
+ drivers/md/raid5.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-As you have noted else where, the backup file contains nothing useful.
-That is causing the problem.
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index b4f02c9959f2..2e7d253be6ce 100644
+=2D-- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -4236,7 +4236,6 @@ static void break_stripe_batch_list(struct stripe_hea=
+d *head_sh,
+ 		WARN_ON_ONCE(sh->state & ((1 << STRIPE_ACTIVE) |
+ 					  (1 << STRIPE_SYNCING) |
+ 					  (1 << STRIPE_REPLACED) |
+=2D					  (1 << STRIPE_PREREAD_ACTIVE) |
+ 					  (1 << STRIPE_DELAYED) |
+ 					  (1 << STRIPE_BIT_DELAY) |
+ 					  (1 << STRIPE_FULL_WRITE) |
+@@ -4251,6 +4250,7 @@ static void break_stripe_batch_list(struct stripe_hea=
+d *head_sh,
+ 					      (1 << STRIPE_REPLACED)));
+=20
+ 		set_mask_bits(&sh->state, ~(STRIPE_EXPAND_SYNC_FLAGS |
++					    (1 << STRIPE_PREREAD_ACTIVE) |
+ 					    (1 << STRIPE_DEGRADED)),
+ 			      head_sh->state & (1 << STRIPE_INSYNC));
+=20
+=2D-=20
+2.7.2
 
-When an in-place reshape like yours (not changing the size of the array,
-just changing the configuration) starts the sequence is something like:
-
- - make sure reshape doesn't progress at all (set md/sync_max to zero)
- - tell the kernel about the new shape of the array
- - start the reshape (this won't make any progress, but will update the
-   metadata)
-Start:
- - suspend user-space writes to the next few stripes
- - read the next few stripes and write to the backup file
- - tell the kernel that it is allowed to progress to the end of those
-   'few stripes'
- - wait for the kernel to do that
- - invalidate the backup
- - resume user-space writes to those next few stripes
- - goto Start
-
-(the process is actually 'double-buffered' so it is more complex, but
-this gives the idea close enough)
-
-If the system crashes or is shut down, on restart the kernel cannot know
-if the "next few stripes" started reshaping or not, so it depends on
-mdadm to load the backup file, check if there is valid data, and write
-it out.
-
-I suspect that part of the problem is that mdadm --grow doesn't initialize the
-backup file in quite the right way, so when mdadm --assemble looks at it
-it doesn't see "Nothing has been written yet" but instead sees
-"confusion" and gives up.
-
-If you --stop and then run the same --assemble command, including the
---backup, but this time add --invalid-backup (a bit like Wol
-suggested) it should assemble and restart the reshape.  --invalid-backup
-tells mdadm "I know the backup file is invalid, I know that means there
-could be inconsistent data which won't be restored, but I know what is
-going on and I'm willing to take that risk.  Just don't restore anything,
-it'll be find.  Really".
-
-I don't actually recommend doing that though.
-
-It would be better to revert the current reshape and start again with no
---backup file.  This will use the new mechanism of changing the "Data
-Offset" which is easier to work with and should be faster.
-
-If you have the very latest mdadm (3.4) you can add
---update=revert-reshape together with --invalid-backup and in your case
-this will cancel the reshape and let you start again.
-
-You can test this out fairly safely if you want to.
-
-   mkdir /tmp/foo
-   mdadm --dump /tmp/foo /dev/.... list of all devices in the array
-
- This will create sparse files in /tmp/foo containing just the md
- metadata from those devices.  Use "losetup /dev/loop0 /tmp/foo/sdb1" etc
- to create loop-back device for all those files (there are multiple hard
- links to each file - just choose 1 each).
- Then you can experiment with mdadm on those /dev/loopXX files to see
- what happens.
-
-Once you have the array reverted, you can start a new --grow, but don't
-specify a --backup file.  That should DoTheRightThing.
-
-This still leaves the question of why it didn't start a reshape in the
-first place.  If someone would like to experiment (probably with
-loop-back files) and produce a test case that reliably (or even just
-occasionally) hangs, then I'm happy to have a look at it.
-
-It also doesn't answer the question of why mdadm doesn't create the
-backup file in a format that it knows is safe to ignore.  Maybe someone
-could look into that.
-
-
-Good luck :-)
-
-NeilBrown
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
@@ -214,18 +86,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJW320CAAoJEDnsnt1WYoG5+ZMP/RcvxTJfw3O4enA+b/DjCR38
-tFAJHwEpezReE5IXzU0hOcgQsl9TEGeFVhEslhhcM+/ZqHdfe9AsKjxO/92T84Ju
-1Cy88BgcnHCg2sThAFGDxRQxMhv1Lk5pjttZNyFeicn4lem/SyN5q8ZR7Omqi8X9
-LRAEG4zloK2e8zMRq4lnsC1BdZSvMsnHw/HWELhS2qHud7XyeiH4kyvy6MojaCCN
-ed8MOaQnAT7dZriOuetJYtsbWrFvR+NPqmQ05jbdJdQC0ZvxqA4wmc5HIc92wOwP
-EIMHtgm4txnezkPj2bC5WxoMRS5SUFmo2HEYvwUmmi94R7uA9SDeTXgotrQyMMhW
-JdDBRGU9Yj2XDl9l3FQPDufC6B1t+d2BFhQwhd+vpd9t7GELsCaFgx/yVffopAFP
-4BLtd9Qcw+ZlbxMSsGjgOfFOrfjqt2uNyLrtH18Mqh0+e47LSOE+k5wuHwZzOjli
-yEBAs7bhRner8Tt4puUj4pvNIldZXTrU8SMCiIOakwET3trIDpEc0ExVZXr7mzVc
-ojWfPHwiFLOJRty4VNdroQ0QnJO3YsStQUK4Ndnjieu0y7FoLqU+ZzwDN7TilAEM
-+MGFEbrcuPKT1G2Co1xCrG/ji5cT6s84CY8WXP5INwgzL6JYfXl7IgzpP4JcVeXm
-0FD1D1I4/cElD7paC6WO
-=kkiW
+iQIcBAEBCAAGBQJW34NBAAoJEDnsnt1WYoG5zB4QAJKh44LfgVIa1hOSPYtnXl3i
+SXDFvbjRtY8zsiawxwvJRBcg3gYDrXRWzPqKaGGZ/eSQUJmEbdhr3liu9NUdnmZo
+5A8SOO8BtZKea1p+GqgbDj7At8m2SO7jnlQqJDJ3jchEzChlh8JMQM9042LhzYEn
+5Mnv0WK16zm637yD3v64YxdIIgjreh9nVE+si/XRjG7SO6oMUT42Yy/jdqpWDukW
+eUuZEOYi3LxOJbaKz3sQgwsusEUBqi9VQEodQnUTLaMGYeftn2Z1uf8hkBDfdxmM
+eniqS9x7DXdcWTiDMgqhf/slCYfKdZqYvuv9Yt11UUUqfuwZEeZM62Gg++CiqVNd
+lyMG3S9rkpogrNcE+r2YFdt94b4vQg5b8ByxIkhuy8c8Yl/yyrxAaEqbLGUHDZSE
+crDCzosgrF/Y/Q8Pd/rnkBd9WlTqLcLkQN/tD3FlJcw8leUo8Zuqmb24QEXappD9
+jqT9WCvfJm4fOmXPapXOEMEQ35agmr6mxdik5toZpM4nqJ07DgUURcTqD2FxOS4B
+4PQCHmvYHvcwdxK3XfjS/nj0FofJkxntxNYR/48ETkSfAIiVUjinl31JtXc7ecvo
+zbzWAoSXk6s7R2lcE5JWMr7AcRJGoNhOIJPqra9j3k2Ju5RkIJy2ydVNnVrQIt/G
+sFbtk/zSsU6I2N1dWg+I
+=Wy+g
 -----END PGP SIGNATURE-----
 --=-=-=--
