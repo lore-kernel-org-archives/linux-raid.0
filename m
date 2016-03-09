@@ -1,72 +1,61 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md/raid5: preserve STRIPE_PREREAD_ACTIVE in
- break_stripe_batch_list
-Date: Wed, 9 Mar 2016 11:23:30 -0800
-Message-ID: <20160309192330.GA84526@kernel.org>
-References: <87r3fkjttq.fsf@notabene.neil.brown.name>
- <20160309172652.GA8073@kernel.org>
- <87lh5rjw6p.fsf@notabene.neil.brown.name>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Subject: Re: Import/recover RAID6 created with SAS2108?
+Date: Wed, 9 Mar 2016 20:27:28 +0100
+Message-ID: <20160309192728.GA3581@EIS>
+References: <2832CD22-EADC-4BC6-A250-FE8919A92E0A@aol.com>
+ <20160307215026.GA8042@EIS>
+ <ECED3C91-8D12-469E-A9AB-1337292DA216@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <87lh5rjw6p.fsf@notabene.neil.brown.name>
-Sender: linux-kernel-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Martin Svec <martin.svec@zoner.cz>
+In-Reply-To: <ECED3C91-8D12-469E-A9AB-1337292DA216@aol.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Dan Russell <dpr@aol.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Mar 10, 2016 at 06:19:42AM +1100, Neil Brown wrote:
-> On Thu, Mar 10 2016, Shaohua Li wrote:
-> 
-> > On Wed, Mar 09, 2016 at 12:58:25PM +1100, Neil Brown wrote:
-> >> 
-> >> break_stripe_batch_list breaks up a batch and copies some flags from
-> >> the batch head to the members, preserving others.
-> >> 
-> >> It doesn't preserve or copy STRIPE_PREREAD_ACTIVE.  This is not
-> >> normally a problem as STRIPE_PREREAD_ACTIVE is cleared when a
-> >> stripe_head is added to a batch, and is not set on stripe_heads
-> >> already in a batch.
-> >> 
-> >> However there is no locking to ensure one thread doesn't set the flag
-> >> after it has just been cleared in another.  This does occasionally happen.
-> >> 
-> >> md/raid5 maintains a count of the number of stripe_heads with
-> >> STRIPE_PREREAD_ACTIVE set: conf->preread_active_stripes.  When
-> >> break_stripe_batch_list clears STRIPE_PREREAD_ACTIVE inadvertently
-> >> this could becomes incorrect and will never again return to zero.
-> >> 
-> >> md/raid5 delays the handling of some stripe_heads until
-> >> preread_active_stripes becomes zero.  So when the above mention race
-> >> happens, those stripe_heads become blocked and never progress,
-> >> resulting is write to the array handing.
-> >> 
-> >> So: change break_stripe_batch_list to preserve STRIPE_PREREAD_ACTIVE
-> >> in the members of a batch.
-> >> 
-> >> URL: https://bugzilla.kernel.org/show_bug.cgi?id=108741
-> >> URL: https://bugzilla.redhat.com/show_bug.cgi?id=1258153
-> >> URL: http://thread.gmane.org/5649C0E9.2030204@zoner.cz
-> >> Reported-by: Martin Svec <martin.svec@zoner.cz> (and others)
-> >> Tested-by: Tom Weber <linux@junkyard.4t2.com>
-> >> Fixes: 1b956f7a8f9a ("md/raid5: be more selective about distributing flags across batch.")
-> >> Cc: stable@vger.kernel.org (v4.1 and later)
-> >> Signed-off-by: NeilBrown <neilb@suse.com>
-> >
-> > Applied, thanks Neil! I'll split the WARN_ON_ONCE and do it for each bit, so
-> > next time we can have clear clue.
-> 
-> I personally think that would look ugly and increase the in-line code
-> size for minimal gain.
-> If you want to make a change (which I'm in two minds about) I think it
-> would be much cleaner to do
->   if (WARN_ON_ONCE(...)) printk(....);
-> 
-> Then at least the extra code will be out of line - not even loaded into
-> the instruction cache until needed.
+On Tue, Mar 08, 2016 at 10:20:17PM -0500, Dan Russell wrote:
+> The partially-rebuilt drive is sdk, the original =E2=80=9Cfailed=E2=80=
+=9D drive is sdag
 
-There is a handy WARN_ONCE(). It's like WARN_ON_ONCE() but allows printing exra info.
+Best to leave both out if one has outdated and the other only half=20
+the content...
 
-Thanks,
-Shaohua
+> However fdisk and mdadm are reporting the array is 17.6TB in size, wh=
+ereas it should be 66TB (24 3TB HDDs RAID6).
+
+I reproduced your commands using tmpfs based loop devices and it gives =
+me=20
+the same problem. The RAID size is only 16 TiB. It seems to be hitting =
+a=20
+limit somewhere.
+
+Your /dev/mapper/sdx are snapshot/overlays, I hope?
+
+DDF metadata seems to be located at the end of the device, so you could=
+ try=20
+your luck with mdadm 1.0 metadata instead; that gives me a RAID of a si=
+ze=20
+closer to home.
+
+# mdadm --create /dev/md42 --assume-clean --metadata=3D1.0 --level=3D6 =
+--raid-devices=3D24 --chunk=3D64 /dev/loop{0..23}
+# fdisk -l /dev/md42
+Disk /dev/md42: 60 TiB, 65999996846080 bytes, 128906243840 sectors
+Units: sectors of 1 * 512 =3D 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 65536 bytes / 1441792 bytes
+
+It wastes some sectors at the end though, not sure if more or less=20
+than what DDF uses for metadata. You might have to add some empty=20
+space to your device mappings to get a full view.
+
+Regards
+Andreas Klauer
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
