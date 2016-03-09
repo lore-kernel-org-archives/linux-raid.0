@@ -1,91 +1,92 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH 0/8] mdadm static checker fixes
-Date: Wed, 09 Mar 2016 11:30:36 -0500
-Message-ID: <wrfj60wvvck3.fsf@redhat.com>
-References: <1457458252-20203-1-git-send-email-Jes.Sorensen@redhat.com>
-	<877fhclgvn.fsf@notabene.neil.brown.name>
+From: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Subject: Re: [PATCH RESEND v2 16/18] fuse: Support fuse
+ filesystems outside of init_user_ns
+Date: Wed, 9 Mar 2016 11:07:26 -0600
+Message-ID: <20160309170726.GB28779@ubuntu-hedt>
+References: <1451930639-94331-1-git-send-email-seth.forshee@canonical.com>
+	<1451930639-94331-17-git-send-email-seth.forshee@canonical.com>
+	<20160309112923.GF8655@tucsk> <20160309141840.GC23399@ubuntu-xps13>
+	<CAJfpegv5JmB15yHpjYxVeOYdWWkoLMftr9-e_iS93Y_7m=t4Zw@mail.gmail.com>
+	<20160309152505.GA28779@ubuntu-hedt>
+	<CAJfpegv5KR_Hi-79a8oyb+R+tv9W3RYqy5pngUKSyauVNk2ScQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <877fhclgvn.fsf@notabene.neil.brown.name> (NeilBrown's message of
-	"Wed, 09 Mar 2016 09:55:08 +1100")
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, gqjiang@suse.com, pawel.baldysiak@intel.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <fuse-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CAJfpegv5KR_Hi-79a8oyb+R+tv9W3RYqy5pngUKSyauVNk2ScQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/fuse-devel>,
+	<mailto:fuse-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=fuse-devel>
+List-Post: <mailto:fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+List-Help: <mailto:fuse-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/fuse-devel>,
+	<mailto:fuse-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
+Errors-To: fuse-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+To: Miklos Szeredi <miklos-sUDqSbJrdHQHWmgEVkV9KA@public.gmane.org>
+Cc: linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, LSM <linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fuse-devel <fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, Linux-Fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.de> writes:
-> On Wed, Mar 09 2016, Jes.Sorensen@redhat.com wrote:
->
->> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->>
->> Hi,
->>
->> I have been running mdadm through Coverity and fixed a number of
->> issues that were raised in the scan. A couple of them were non issues
->> related to conditions where we know for sure the kernel will not
->> return strings longer than a given size, but there were also a number
->> of potential memory leaks and buffer overflows.
->>
->> These patches are sitting in my pending queue. If you are on the CC
->> list, would you mind having a look at the portions touching code you
->> previously pushed wrote.
->>
->> Please hollor if you notice I did anything wrong, otherwise I'll push
->> this set into git within the next couple of days.
->
-> All
->   Reviewed-by: NeilBrown <neilb@suse.com>
->
-> The comments I have made are only possible enhancements, no problems
-> found.
->
-> I must confess that I was generally fairly careless about resource
-> leakage.  mdadm usually calls 'exit' fairly soon and that releases
-> everything.  But mdmon and "mdadm --monitor" at long-running so it can
-> pay to be careful.  And I'm very supportive of silencing warnings from
-> tools that also provide useful warnings.
+On Wed, Mar 09, 2016 at 04:51:42PM +0100, Miklos Szeredi wrote:
+> On Wed, Mar 9, 2016 at 4:25 PM, Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org> wrote:
+> > On Wed, Mar 09, 2016 at 03:48:22PM +0100, Miklos Szeredi wrote:
+> 
+> >> Can't we use current_cred()->uid/gid? Or fsuid/fsgid maybe?
+> >
+> > That would be a departure from the current behavior in the !allow_other
+> > case for unprivileged users. Since those mounts are done by an suid
+> > helper all of those ids would be root in the userns, wouldn't they?
+> 
+> Well, actually this is what the helper does:
+> 
+>     sprintf(d, "fd=%i,rootmode=%o,user_id=%u,group_id=%u",
+>         fd, rootmode, getuid(), getgid());
 
-Thanks for the feedback - much appreciated!
+Sorry, I was thinking of euid. So this may not be a problem.
 
-Cheers,
-Jes
+> So it just uses the current uid/gid.  Apparently no reason to do this
+> in userland, we could just as well set these in the kernel.  Except
+> for possible backward compatibility problems for things not using the
+> helper.
+> 
+> BUT if the mount is unprivileged or it's a userns mount, or anything
+> previously not possible, then we are not constrained by the backward
+> compatibility issues, and can go with the saner solution.
+> 
+> Does that not make sense?
 
+But we generally do want backwards compatibility, and we want userspace
+software to be able to expect the same behavior whether or not it's
+running in a user namespaced container. Obviously we can't always have
+things 100% identical, but we shouldn't break things unless we really
+need to.
 
-> Thanks!
->
-> NeilBrown
->
->>
->> Cheers,
->> Jes
->>
->>
->> Jes Sorensen (8):
->>   Manage: Manage_add(): Fix memory leak
->>   load_sys(): Add a buffer size argument
->>   Grow: Grow_continue_command() remove dead code
->>   Grow: Grow_addbitmap(): Add check to quiet down static code checkers
->>   {platform,super}-intel: Fix two resource leaks
->>   bitmap: Fix resource leak in bitmap_file_open()
->>   Manage: Manage_subdevs() fix file descriptor leak
->>   super1: Fix potential buffer overflows when copying cluster_name
->>
->>  Detail.c         |  2 +-
->>  Grow.c           | 11 ++++++++---
->>  Manage.c         |  8 ++++++--
->>  bitmap.c         |  1 +
->>  mdadm.h          |  2 +-
->>  platform-intel.c |  7 ++++++-
->>  super-intel.c    | 12 ++++++++----
->>  super1.c         | 18 ++++++++++++------
->>  sysfs.c          | 47 ++++++++++++++++++++++++-----------------------
->>  9 files changed, 67 insertions(+), 41 deletions(-)
->>
->> -- 
->> 2.5.0
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+However it may be that this isn't actually going to break assumptions of
+existing software like I had feared. My preference is still to not
+change any userspace-visible behaviors since we never know what software
+might have made assumptions based on those behaviors. But if you're
+confident that it won't break anything I'm willing to give it a try.
+
+> >> When we have true unprivileged mounts, the user_id/group_id options
+> >> become redundant anyway and we can just use the current credentials.
+> >
+> > True, but we don't yet have that.
+> 
+> What's missing?
+
+A user must still be privileged to mount, even if only towards their own
+user and mount namespaces. Maybe that's what you meant though and I just
+misunderstood.
+
+Thanks,
+Seth
+
+------------------------------------------------------------------------------
+Transform Data into Opportunity.
+Accelerate data analysis in your applications with
+Intel Data Analytics Acceleration Library.
+Click to learn more.
+http://pubads.g.doubleclick.net/gampad/clk?id=278785111&iu=/4140
+-- 
+fuse-devel mailing list
+To unsubscribe or subscribe, visit https://lists.sourceforge.net/lists/listinfo/fuse-devel
