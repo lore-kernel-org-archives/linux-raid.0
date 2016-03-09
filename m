@@ -1,79 +1,60 @@
-From: Roman Mamedov <rm@romanrm.net>
-Subject: Re: When do you replace old hard drives in a raid6?
-Date: Wed, 9 Mar 2016 11:59:05 +0500
-Message-ID: <20160309115905.5ff2e9dd@natsu>
-References: <56DB465E.9010703@gmail.com>
-	<56DCCB55.1060906@turmel.org>
-	<56DCD0E9.8040506@gmail.com>
-	<56DD0F12.2060104@turmel.org>
-	<56DF6A39.4020904@gmail.com>
-	<alpine.DEB.2.02.1603090733030.31096@uplift.swm.pp.se>
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: Re: [PATCH 4/8] Grow: Grow_addbitmap(): Add check to quiet down static
+ code checkers
+Date: Thu, 10 Mar 2016 01:42:06 +0800
+Message-ID: <56E0606E.5000906@suse.com>
+References: <1457458252-20203-1-git-send-email-Jes.Sorensen@redhat.com> <1457458252-20203-5-git-send-email-Jes.Sorensen@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/_0WYSf2SJxXDLCw4Uy0O.g2"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1603090733030.31096@uplift.swm.pp.se>
+In-Reply-To: <1457458252-20203-5-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: Linux Raid <linux-raid@vger.kernel.org>
+To: Jes.Sorensen@redhat.com, linux-raid@vger.kernel.org
+Cc: neilb@suse.de, pawel.baldysiak@intel.com
 List-Id: linux-raid.ids
 
---Sig_/_0WYSf2SJxXDLCw4Uy0O.g2
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
 
-On Wed, 9 Mar 2016 07:43:16 +0100 (CET)
-Mikael Abrahamsson <swmike@swm.pp.se> wrote:
 
-> I had very high failure rates of the early 2TB WD Greens, but I still hav=
-e=20
-> some WD20EARS and WD20EADS that are alive after 58k hours.
+On 03/09/2016 01:30 AM, Jes.Sorensen@redhat.com wrote:
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>
+> Grow_addbitmap() is only ever called with s->bitmap_file != NULL, but
+> not all static code checkers catch this. This adds a check to quiet
+> down the false positive warnings.
+>
+> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+> ---
+>   Grow.c | 9 ++++++++-
+>   1 file changed, 8 insertions(+), 1 deletion(-)
+>
+> diff --git a/Grow.c b/Grow.c
+> index 0fa776d..c453eb6 100755
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -297,7 +297,14 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
+>   			"  between different architectures.  Consider upgrading the Linux kernel.\n");
+>   	}
+>   
+> -	if (s->bitmap_file && strcmp(s->bitmap_file, "clustered") == 0)
+> +	/*
+> +	 * We only ever get called if s->bitmap_file is != NULL, so this check
+> +	 * is just here to quiet down static code checkers.
+> +	 */
+> +	if (!s->bitmap_file)
+> +		return 1;
 
-In my experience a major cause for the WD failures is that they develop rust
-on the PCB contacts which connect to the drive insides, see e.g.:
-http://ods.com.ua/win/rus/other/hdd/2/wd_cont2.jpg
-http://www.chipmaker.ru/uploads/monthly_12_2013/post/image/post-7336-020632=
-100%201388236036.jpg
-and: https://www.youtube.com/watch?v=3DtDTt_yjYYQ8
+Is it really need to make all static code checkers happy? ;-)
+Otherwise, I would prefer remove above check.
 
-If such WD drive has just developed several unreadable sectors, this often =
-can
-be solved by checking and cleaning those contacts, then overwriting the who=
-le
-drive with zeroes (or well, with whatever you want, the point is to rewrite
-all the "badly written" areas), then it will likely work fine for years aft=
-er
-that.
+Anyway, I am fine with the changes.
 
-> One of the slightly lower power on time ones has a scary load cycle count=
-=20
-> though:
->=20
-> Device Model:     WDC WD20EARS-00S8B1
->    9 Power_On_Hours          0x0032   033   033   000    Old_age   Always=
-       -       49255
-> 193 Load_Cycle_Count        0x0032   001   001   000    Old_age   Always =
-      -       1317839
+Thanks,
+Guoqing
 
-This can be disabled:
-http://www.storagereview.com/how_to_stop_excessive_load_cycles_on_the_weste=
-rn_digital_2tb_caviar_green_wd20ears_with_wdidle3
-http://idle3-tools.sourceforge.net/
+> +
+> +	if (strcmp(s->bitmap_file, "clustered") == 0)
+>   		major = BITMAP_MAJOR_CLUSTERED;
+>   
+>   	if (ioctl(fd, GET_BITMAP_FILE, &bmf) != 0) {
 
---=20
-With respect,
-Roman
-
---Sig_/_0WYSf2SJxXDLCw4Uy0O.g2
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEARECAAYFAlbfybwACgkQTLKSvz+PZwhdOgCglEpBVPAUb/fGHRGbctC24Pcb
-5jAAoJZaaEbrnP0ml9KeGiRnJnClFqyb
-=AI03
------END PGP SIGNATURE-----
-
---Sig_/_0WYSf2SJxXDLCw4Uy0O.g2--
