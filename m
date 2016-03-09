@@ -1,46 +1,43 @@
-From: Coly Li <colyli@suse.de>
-Subject: [PATCH] Fix regression during add devices
-Date: Wed,  9 Mar 2016 13:20:18 +0800
-Message-ID: <1457500818-1586-1-git-send-email-colyli@suse.de>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: When do you replace old hard drives in a raid6?
+Date: Wed, 9 Mar 2016 07:43:16 +0100 (CET)
+Message-ID: <alpine.DEB.2.02.1603090733030.31096@uplift.swm.pp.se>
+References: <56DB465E.9010703@gmail.com> <56DCCB55.1060906@turmel.org> <56DCD0E9.8040506@gmail.com> <56DD0F12.2060104@turmel.org> <56DF6A39.4020904@gmail.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <56DF6A39.4020904@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Hannes Reinecke <hare@suse.de>, Coly Li <colyli@suse.de>, Neil Brown <neilb@suse.com>
+To: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From: Hannes Reinecke <hare@suse.de>
+On Tue, 8 Mar 2016, Ram Ramesh wrote:
 
-Commit d180d2aa2a17 ("Manage: fix test for 'is array failed'.")
-introduced a regression which would not allow to re-add new
-drivers to a failed array.
+> My disks have about 10K hours (my server only runs from 4pm-2am). I 
+> think I have quite a bit of life left assuming an on/off cycle is not as 
+> bad as extra 14 hours of run time.
 
-The patch is written by Hannes Reinecke, Neil Brown points out
-the buggy commit ID is d180d2aa2a17. Coly helps to submit the
-patch to mdadm upstream.
+I had very high failure rates of the early 2TB WD Greens, but I still have 
+some WD20EARS and WD20EADS that are alive after 58k hours.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Cc: Coly Li <colyli@suse.de>
-Cc: Neil Brown <neilb@suse.com>
----
- Manage.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+One of the slightly lower power on time ones has a scary load cycle count 
+though:
 
-diff --git a/Manage.c b/Manage.c
-index 7e1b94b..073ddb9 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -879,10 +879,10 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
- 					continue;
- 				if (disc.major == 0 && disc.minor == 0)
- 					continue;
--				found++;
- 				if (!(disc.state & (1<<MD_DISK_SYNC)))
- 					continue;
- 				avail[disc.raid_disk] = 1;
-+				found++;
- 			}
- 			array_failed = !enough(array->level, array->raid_disks,
- 					       array->layout, 1, avail);
+Device Model:     WDC WD20EARS-00S8B1
+   9 Power_On_Hours          0x0032   033   033   000    Old_age   Always       -       49255
+193 Load_Cycle_Count        0x0032   001   001   000    Old_age   Always       -       1317839
+
+I'm running this as RAID6+spare and I'm just going to let these run until 
+they fail and replace them with WD REDs one by one. I clearly had bathtub 
+effect where I had several drives I replaced under warranty in the first 
+1-2 years of their lifetime, but the ones that replaced them, and the ones 
+that didn't fail, still seems to be doing fine.
+
+I have two drives with reallocated sectors, but it's 3 and 5 sectors 
+respectively, so this is not worrying yet.
+
+I wish we had raid6e (or whatever to call it) with 3 parity drives, I'd 
+really like to run that instead of raid6+spare.
+
 -- 
-2.6.2
-
+Mikael Abrahamsson    email: swmike@swm.pp.se
