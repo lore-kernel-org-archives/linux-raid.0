@@ -1,51 +1,32 @@
-From: NeilBrown <nfbrown@novell.com>
-Subject: Re: Import/recover RAID6 created with SAS2108?
-Date: Thu, 10 Mar 2016 18:02:26 +1100
-Message-ID: <87d1r2ke7x.fsf@notabene.neil.brown.name>
-References: <2832CD22-EADC-4BC6-A250-FE8919A92E0A@aol.com> <20160307215026.GA8042@EIS> <ECED3C91-8D12-469E-A9AB-1337292DA216@aol.com>
+From: NeilBrown <neilb@suse.com>
+Subject: [PATCH mdadm] ddf: use 64bit 'size', not 32bit 'info->size' for create.
+Date: Thu, 10 Mar 2016 18:06:59 +1100
+Message-ID: <87a8m6ke0c.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ECED3C91-8D12-469E-A9AB-1337292DA216@aol.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Russell <dpr@aol.com>, linux-raid@vger.kernel.org
+To: Jes.Sorensen@redhat.com
+Cc: Dan Russell <dpr@aol.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Mar 09 2016, Dan Russell wrote:
 
-> # mdadm --create /dev/md1 --assume-clean --level=3D6 --raid-devices=3D24
-     --chunk=3D64 --size=3D2929686528
+The 'size' field of mdu_disk_info_t is 32bit and should not be used
+except for legacy ioctls.  super-ddf got this wrong :-(
 
-22 * 2929686528 =3D=3D 0xF01B45000
-> # cat /proc/mdstat=20
-> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [rai=
-d4] [raid10]=20
-> md1 : active (auto-read-only) raid6 dm-24[23] dm-23[22].....
->       17208463360 blocks super external:/md127/0 level 6, 64k chunk,....
+This change makes it possible to create ddf arrays which used more than
+2TB of each device.
 
-17208463360 =3D=3D 0x401B45000
-
-So the size hasn't just be truncated to to some number of bits, but the
-5th byte has changed from 0xF to 0x4.
-
-That is very odd....
-
-Ahhh.. I tried it myself, and used "mdadm -D" to look at the RAID6
-array.
-
-  Used Dev Size : 782202880 (745.97 GiB 800.98 GB)
-
-The requested per-device size was
-   2929686528 =3D 0xAE9F7800
-the size given was
-   782202880  =3D 0x2E9F7800
-
-so we lost the msbit there...  Ahhhh.
+Reported-by: Dan Russell <dpr@aol.com>
+Signed-off-by: NeilBrown <neilb@suse.com>
+=2D--
+ super-ddf.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/super-ddf.c b/super-ddf.c
 index faaf0a7ca9e0..0e00d17dd169 100644
@@ -64,17 +45,9 @@ index faaf0a7ca9e0..0e00d17dd169 100644
  	memset(vc->pad1, 0xff, 8);
  	vc->spare_refs[0] =3D cpu_to_be32(0xffffffff);
  	vc->spare_refs[1] =3D cpu_to_be32(0xffffffff);
+=2D-=20
+2.7.2
 
-
-That was careless.  "info" is a legacy structure which has a 32bit size
-field. So a 64bit size if passed as a separate arg, but this function
-used the wrong one :-(
-
-I'll send off a patch.
-
-Thanks for the report - and glad you could get at your data :-)
-
-NeilBrown
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
@@ -82,18 +55,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJW4RwCAAoJEDnsnt1WYoG5D3AP/iBEN4Zjrg8LvReg0X71hre9
-repPjh3aavGlOG/tZp9tVETXPNa2r7dvoPQhD41FiDPPhHH2BpvVRWmq9xV5gIas
-EbnYPZBzploQRjEtERsf5/5ve9GPPiHbIcBa4fZKvuTL+h5wUPNQw/OfgqMHNCsk
-LwVtG1Lyg60GXd6aMw+oGVzPcB+Wp/sLDcmEGC6yVdBuwlg1IxlYZvaTb/VW8A5f
-g5DHJVtn64M78VcEDfk6L8Sfuq6fUax6FZ8a3yve45N/KLOgVqe8gIupES6c8a5u
-n+uFj7DvZEO//Nt+jWDBJnjMNb/YkrKt8kn7rsc4usSFuWyRetjGSTKT+KkffAp6
-4HxEkjdAMnuZq44AcTwrf5Z4WLFANPV97QTkvLVB5gSjFZXBTVJZY6WxtB9kTYnH
-eD8KV7jiKDHPdU5iedeLiMFfx2myJAR6T4ghXsKCQ01QsPiNbrL/0t/bZkEOshS3
-SpDIebSBZAd8Zi0ZqcEnSFYTOV3ZcVXUccKLB1guab1DAOASw+17tCu0bvw+usls
-swt6MINFScmji7Nm0hETaaQ99PoR+ETmcie4perKEEU5ncNrDQn7/efkY1UicYoT
-WdJN1R53VadOA3hg2YmV6YjTUaZaAtTj8wMKG/HukhrlOmdwoLl9bqzSXt2KgQbD
-bHQKy7plPS1uzzjJwaEy
-=T+jZ
+iQIcBAEBCAAGBQJW4R0TAAoJEDnsnt1WYoG5qYgQAJUYSVa98G0Pd4fIkdIgaxsR
+t8q7L14RZy8NpH+2QhXv3PPWY5HFIbnCjv91/VSiWlkiI0jkm2U/jsi5RvxhIkZF
+IxaSZbW1p9coeEcARZ1cu2pMJw/pNADQmBf9rTosM5TLm4LfEUHm94+M1Mbjfsj4
+p4EXvom8yIoSY+gVe+RNLTEupkZDB0cOSlRhWpcNW8vxo5wujzsqmJYaUK2ryjr+
+HqUjWEroCKMHNi78a9NHOmmOT7IBkTA5dXt2LyafIQ1lmiSyMybMk4QBaYPcx+uI
+2DHIYeSOaeveotE6u3EvtLPouCnZ7PJTOGNhtkCJ2Dqsk1odo/OSpeyF8FOBhGpp
++nGwTmQCySp9lE9H3/L327DTUPczSWYumSOJ5jB4mk0P+X+3oVhV+UDAAJQx2qP5
+aGN8cBpi/qSAMB5s6Kc7LssA8/C5xk1wdxGdCE/c/vIq5Ft/jvU3EMNUip5OTOQp
+fYTMWmWApZtQdSqif/VQCvC9HqTa+SJTfaGUX/RgH1adPo+3KWnpO5C3VNWg7NUi
+ZfE8Cxpq+Pk66/TMpF0XxU3kUiihXq3lcqp3Rq+0aAinvIHPZfhvk2qYYLc7YoOy
+ih3p/nOLRIOQ/+heGgpyb6geWccz9skFZgqHYBKVDdc5xEb8FCxDpp5X1ZSpb3Xt
+gN/569SladAaBbAPUk6o
+=myRh
 -----END PGP SIGNATURE-----
 --=-=-=--
