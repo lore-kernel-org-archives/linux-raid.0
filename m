@@ -1,53 +1,69 @@
-From: NeilBrown <neilb@suse.com>
-Subject: [PATCH mdadm] ddf: use 64bit 'size', not 32bit 'info->size' for create.
-Date: Thu, 10 Mar 2016 18:06:59 +1100
-Message-ID: <87a8m6ke0c.fsf@notabene.neil.brown.name>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 4/8] Grow: Grow_addbitmap(): Add check to quiet down static code checkers
+Date: Thu, 10 Mar 2016 18:21:03 +1100
+Message-ID: <877fhakdcw.fsf@notabene.neil.brown.name>
+References: <1457458252-20203-1-git-send-email-Jes.Sorensen@redhat.com> <1457458252-20203-5-git-send-email-Jes.Sorensen@redhat.com> <56E0606E.5000906@suse.com> <wrfjr3fj92ej.fsf@redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <wrfjr3fj92ej.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@redhat.com
-Cc: Dan Russell <dpr@aol.com>, linux-raid@vger.kernel.org
+To: Jes Sorensen <Jes.Sorensen@redhat.com>, Guoqing Jiang <gqjiang@suse.com>
+Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
+On Thu, Mar 10 2016, Jes Sorensen wrote:
 
-The 'size' field of mdu_disk_info_t is 32bit and should not be used
-except for legacy ioctls.  super-ddf got this wrong :-(
+> Guoqing Jiang <gqjiang@suse.com> writes:
+>> On 03/09/2016 01:30 AM, Jes.Sorensen@redhat.com wrote:
+>>> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>>>
+>>> Grow_addbitmap() is only ever called with s->bitmap_file != NULL, but
+>>> not all static code checkers catch this. This adds a check to quiet
+>>> down the false positive warnings.
+>>>
+>>> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+>>> ---
+>>>   Grow.c | 9 ++++++++-
+>>>   1 file changed, 8 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/Grow.c b/Grow.c
+>>> index 0fa776d..c453eb6 100755
+>>> --- a/Grow.c
+>>> +++ b/Grow.c
+>>> @@ -297,7 +297,14 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
+>>>   			"  between different architectures.  Consider upgrading the Linux kernel.\n");
+>>>   	}
+>>>   -	if (s->bitmap_file && strcmp(s->bitmap_file, "clustered") ==
+>>> 0)
+>>> +	/*
+>>> +	 * We only ever get called if s->bitmap_file is != NULL, so this check
+>>> +	 * is just here to quiet down static code checkers.
+>>> +	 */
+>>> +	if (!s->bitmap_file)
+>>> +		return 1;
+>>
+>> Is it really need to make all static code checkers happy? ;-)
+>> Otherwise, I would prefer remove above check.
+>>
+>> Anyway, I am fine with the changes.
+>
+> We had a check in one place, but not in the remaining places. I just
+> made it more consistent.
 
-This change makes it possible to create ddf arrays which used more than
-2TB of each device.
+I wonder if maybe the checker was only complaining because the code was
+inconsistent.
+i.e. if we just got rid of the existing test on s->bitmap_file, maybe
+that would make the checker happy.
+It would be interesting to experiment even if you ultimately decide to
+leave the new test there.
 
-Reported-by: Dan Russell <dpr@aol.com>
-Signed-off-by: NeilBrown <neilb@suse.com>
-=2D--
- super-ddf.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/super-ddf.c b/super-ddf.c
-index faaf0a7ca9e0..0e00d17dd169 100644
-=2D-- a/super-ddf.c
-+++ b/super-ddf.c
-@@ -2688,10 +2688,10 @@ static int init_super_ddf_bvd(struct supertype *st,
- 		free(vcl);
- 		return 0;
- 	}
-=2D	vc->blocks =3D cpu_to_be64(info->size * 2);
-+	vc->blocks =3D cpu_to_be64(size * 2);
- 	vc->array_blocks =3D cpu_to_be64(
- 		calc_array_size(info->level, info->raid_disks, info->layout,
-=2D				info->chunk_size, info->size*2));
-+				info->chunk_size, size*2));
- 	memset(vc->pad1, 0xff, 8);
- 	vc->spare_refs[0] =3D cpu_to_be32(0xffffffff);
- 	vc->spare_refs[1] =3D cpu_to_be32(0xffffffff);
-=2D-=20
-2.7.2
-
+Thanks,
+NeilBrown
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
@@ -55,18 +71,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJW4R0TAAoJEDnsnt1WYoG5qYgQAJUYSVa98G0Pd4fIkdIgaxsR
-t8q7L14RZy8NpH+2QhXv3PPWY5HFIbnCjv91/VSiWlkiI0jkm2U/jsi5RvxhIkZF
-IxaSZbW1p9coeEcARZ1cu2pMJw/pNADQmBf9rTosM5TLm4LfEUHm94+M1Mbjfsj4
-p4EXvom8yIoSY+gVe+RNLTEupkZDB0cOSlRhWpcNW8vxo5wujzsqmJYaUK2ryjr+
-HqUjWEroCKMHNi78a9NHOmmOT7IBkTA5dXt2LyafIQ1lmiSyMybMk4QBaYPcx+uI
-2DHIYeSOaeveotE6u3EvtLPouCnZ7PJTOGNhtkCJ2Dqsk1odo/OSpeyF8FOBhGpp
-+nGwTmQCySp9lE9H3/L327DTUPczSWYumSOJ5jB4mk0P+X+3oVhV+UDAAJQx2qP5
-aGN8cBpi/qSAMB5s6Kc7LssA8/C5xk1wdxGdCE/c/vIq5Ft/jvU3EMNUip5OTOQp
-fYTMWmWApZtQdSqif/VQCvC9HqTa+SJTfaGUX/RgH1adPo+3KWnpO5C3VNWg7NUi
-ZfE8Cxpq+Pk66/TMpF0XxU3kUiihXq3lcqp3Rq+0aAinvIHPZfhvk2qYYLc7YoOy
-ih3p/nOLRIOQ/+heGgpyb6geWccz9skFZgqHYBKVDdc5xEb8FCxDpp5X1ZSpb3Xt
-gN/569SladAaBbAPUk6o
-=myRh
+iQIcBAEBCAAGBQJW4SBfAAoJEDnsnt1WYoG5ga4QAJfIOy1VrhjlyfUxD8p2A+wQ
+zYbKbLMRXHBbOVP+UzMB7DhQLvIupAV3mv5Beyb8h5EDuy1yMY16lMhyl0WXu0u7
+7WhVQllC6oYIQO7vZ4P9nqZH6URoQoyFjnn09Ow9C78diE4YsGHALwyvazNAVh0q
+3FuHsoWWR5rGWkCp20FmHtQMWWZr9pjXrEV1B+c2zaztvCHQWx9KzawE3/kZel0A
+1CMroOFRg3viH+SwyIYRZEhps1lQ5MZdQeBoRQS/aGOyj3e8+Oo6HMuoTiCZcPIe
+bKBl3Ppb8CxelHdWB3H4YJDexCDGZYiuqtriWudN5q2eIxKrDkuOC+WSGjLFkIHl
+3h/bheqdzDB7p7a+CmSflOrjbWTEEZfs8wdlVqFIJzXG86sP9yGJuf112K9rGbuo
+XCV2U19t/JG7v6fBNIitvoVr24bFgjxGYNol/gO85CSaGOBk6LTjSbk9ZyUZqr8V
+0B1SdOHa06oAVeXvFAF2gogHtrrZuFtYL/S1LPwHFLQVHmOub6zIJM1v+PDg889V
+Olx/UTdODw8pIlnz1R/yiXWY9PLgY1cXGENCQ86gHO7+dGvU25ZbEj0pKEwAKKxG
+WiEmlZbV36VuegdYuSX9kJbDOPufZ+LgHUxjNtV+EKyugNaW5WWg3fOIi5qjpcPQ
+LFZZ1UeETOP8cS/rrHZZ
+=/7a3
 -----END PGP SIGNATURE-----
 --=-=-=--
