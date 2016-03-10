@@ -1,56 +1,53 @@
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH 4/8] Grow: Grow_addbitmap(): Add check to quiet down static code checkers
-Date: Thu, 10 Mar 2016 11:40:35 -0500
-Message-ID: <wrfjmvq61e2k.fsf@redhat.com>
-References: <1457458252-20203-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1457458252-20203-5-git-send-email-Jes.Sorensen@redhat.com>
-	<56E0606E.5000906@suse.com> <wrfjr3fj92ej.fsf@redhat.com>
-	<877fhakdcw.fsf@notabene.neil.brown.name>
+Subject: Re: [PATCH mdadm] ddf: use 64bit 'size', not 32bit 'info->size' for create.
+Date: Thu, 10 Mar 2016 11:43:46 -0500
+Message-ID: <wrfjio0u1dx9.fsf@redhat.com>
+References: <87a8m6ke0c.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <877fhakdcw.fsf@notabene.neil.brown.name> (NeilBrown's message of
-	"Thu, 10 Mar 2016 18:21:03 +1100")
+In-Reply-To: <87a8m6ke0c.fsf@notabene.neil.brown.name> (NeilBrown's message of
+	"Thu, 10 Mar 2016 18:06:59 +1100")
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Guoqing Jiang <gqjiang@suse.com>, linux-raid@vger.kernel.org, pawel.baldysiak@intel.com
+To: NeilBrown <neilb@suse.com>
+Cc: Dan Russell <dpr@aol.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.de> writes:
-> On Thu, Mar 10 2016, Jes Sorensen wrote:
+NeilBrown <neilb@suse.com> writes:
+> The 'size' field of mdu_disk_info_t is 32bit and should not be used
+> except for legacy ioctls.  super-ddf got this wrong :-(
 >
->> Guoqing Jiang <gqjiang@suse.com> writes:
->>> On 03/09/2016 01:30 AM, Jes.Sorensen@redhat.com wrote:
->>>> @@ -297,7 +297,14 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
->>>>   			"  between different architectures.  Consider upgrading the Linux kernel.\n");
->>>>   	}
->>>>   -	if (s->bitmap_file && strcmp(s->bitmap_file, "clustered") ==
->>>> 0)
->>>> +	/*
->>>> +	 * We only ever get called if s->bitmap_file is != NULL, so this check
->>>> +	 * is just here to quiet down static code checkers.
->>>> +	 */
->>>> +	if (!s->bitmap_file)
->>>> +		return 1;
->>>
->>> Is it really need to make all static code checkers happy? ;-)
->>> Otherwise, I would prefer remove above check.
->>>
->>> Anyway, I am fine with the changes.
->>
->> We had a check in one place, but not in the remaining places. I just
->> made it more consistent.
+> This change makes it possible to create ddf arrays which used more than
+> 2TB of each device.
 >
-> I wonder if maybe the checker was only complaining because the code
-> was inconsistent.  i.e. if we just got rid of the existing test on
-> s->bitmap_file, maybe that would make the checker happy.  It would be
-> interesting to experiment even if you ultimately decide to leave the
-> new test there.
+> Reported-by: Dan Russell <dpr@aol.com>
+> Signed-off-by: NeilBrown <neilb@suse.com>
+> ---
+>  super-ddf.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/super-ddf.c b/super-ddf.c
+> index faaf0a7ca9e0..0e00d17dd169 100644
+> --- a/super-ddf.c
+> +++ b/super-ddf.c
+> @@ -2688,10 +2688,10 @@ static int init_super_ddf_bvd(struct supertype *st,
+>  		free(vcl);
+>  		return 0;
+>  	}
+> -	vc->blocks = cpu_to_be64(info->size * 2);
+> +	vc->blocks = cpu_to_be64(size * 2);
+>  	vc->array_blocks = cpu_to_be64(
+>  		calc_array_size(info->level, info->raid_disks, info->layout,
+> -				info->chunk_size, info->size*2));
+> +				info->chunk_size, size*2));
+>  	memset(vc->pad1, 0xff, 8);
+>  	vc->spare_refs[0] = cpu_to_be32(0xffffffff);
+>  	vc->spare_refs[1] = cpu_to_be32(0xffffffff);
 
-I went back and checked the scan logs and it basically complained about
-all the cases that didn't check the validity of s->bitmap_file. I think
-it's safer to just have the one check at the top, even if we expect it
-never to be called with an invalid pointer.
+Thanks for the fix! I applied it with a small mod, adding the missing
+spaces in the last line:
+
+> +				info->chunk_size, size * 2));
 
 Cheers,
 Jes
