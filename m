@@ -1,53 +1,67 @@
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH mdadm] ddf: use 64bit 'size', not 32bit 'info->size' for create.
-Date: Thu, 10 Mar 2016 11:43:46 -0500
-Message-ID: <wrfjio0u1dx9.fsf@redhat.com>
-References: <87a8m6ke0c.fsf@notabene.neil.brown.name>
+Subject: Re: [PATCH] Fix regression during add devices
+Date: Thu, 10 Mar 2016 11:44:09 -0500
+Message-ID: <wrfjegbi1dwm.fsf@redhat.com>
+References: <1457500818-1586-1-git-send-email-colyli@suse.de>
+	<wrfjio0v4i7a.fsf@redhat.com> <56E0FF30.1060807@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87a8m6ke0c.fsf@notabene.neil.brown.name> (NeilBrown's message of
-	"Thu, 10 Mar 2016 18:06:59 +1100")
+In-Reply-To: <56E0FF30.1060807@suse.de> (Coly Li's message of "Thu, 10 Mar
+	2016 12:59:28 +0800")
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Dan Russell <dpr@aol.com>, linux-raid@vger.kernel.org
+To: Coly Li <colyli@suse.de>
+Cc: linux-raid@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Neil Brown <neilb@suse.com>
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.com> writes:
-> The 'size' field of mdu_disk_info_t is 32bit and should not be used
-> except for legacy ioctls.  super-ddf got this wrong :-(
+Coly Li <colyli@suse.de> writes:
+> =E5=9C=A8 16/3/10 =E4=B8=8A=E5=8D=882:30, Jes Sorensen =E5=86=99=E9=81=
+=93:
+>> Coly Li <colyli@suse.de> writes:
+>>> From: Hannes Reinecke <hare@suse.de>
+>>>
+>>> Commit d180d2aa2a17 ("Manage: fix test for 'is array failed'.")
+>>> introduced a regression which would not allow to re-add new
+>>> drivers to a failed array.
+>>>
+>>> The patch is written by Hannes Reinecke, Neil Brown points out
+>>> the buggy commit ID is d180d2aa2a17. Coly helps to submit the
+>>> patch to mdadm upstream.
+>>>
+>>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>>> Cc: Coly Li <colyli@suse.de>
+>>> Cc: Neil Brown <neilb@suse.com>
+>>> ---
+>>>  Manage.c | 2 +-
+>>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>=20
+>> Coly,
+>>=20
+>> Thanks for the fix - please use "Fixes: " to indicate which patch
+>> introduced the bug, and the story of pushing the patch really belong=
+s in
+>> a comment below the --- line, so it doesn't go into git.
+>>=20
+>> I modified it to look like this - please let me know if you are OK w=
+ith
+>> this.
+>>=20
+>> Thanks,
+>> Jes
+>>=20
 >
-> This change makes it possible to create ddf arrays which used more than
-> 2TB of each device.
+> Hi Jes,
 >
-> Reported-by: Dan Russell <dpr@aol.com>
-> Signed-off-by: NeilBrown <neilb@suse.com>
-> ---
->  super-ddf.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/super-ddf.c b/super-ddf.c
-> index faaf0a7ca9e0..0e00d17dd169 100644
-> --- a/super-ddf.c
-> +++ b/super-ddf.c
-> @@ -2688,10 +2688,10 @@ static int init_super_ddf_bvd(struct supertype *st,
->  		free(vcl);
->  		return 0;
->  	}
-> -	vc->blocks = cpu_to_be64(info->size * 2);
-> +	vc->blocks = cpu_to_be64(size * 2);
->  	vc->array_blocks = cpu_to_be64(
->  		calc_array_size(info->level, info->raid_disks, info->layout,
-> -				info->chunk_size, info->size*2));
-> +				info->chunk_size, size*2));
->  	memset(vc->pad1, 0xff, 8);
->  	vc->spare_refs[0] = cpu_to_be32(0xffffffff);
->  	vc->spare_refs[1] = cpu_to_be32(0xffffffff);
+> It is OK to me, so I don't resend another fixed version.
+> Thanks for the fix up.
 
-Thanks for the fix! I applied it with a small mod, adding the missing
-spaces in the last line:
-
-> +				info->chunk_size, size * 2));
+Great, yes you're all set!
 
 Cheers,
 Jes
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
