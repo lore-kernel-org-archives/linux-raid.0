@@ -1,120 +1,83 @@
-From: Robert Jarzmik <robert.jarzmik@free.fr>
-Subject: Re: [PATCH 1/4] scatterlist: Introduce some helper functions
-Date: Thu, 10 Mar 2016 10:42:12 +0100
-Message-ID: <87vb4ufz4b.fsf@belgarion.home>
-References: <cover.1456981314.git.baolin.wang@linaro.org>
-	<3bff3e286d3ee01ebb7e26d7233075054c42a7a9.1456981314.git.baolin.wang@linaro.org>
-	<87povbpe3l.fsf@belgarion.home>
-	<CAMz4kuKtwCkgG-3GeCtfnAX5zN8MkwyVr2XVYzaV3Z6SFFcZww@mail.gmail.com>
+From: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
+Subject: Re: [PATCH 5/8] {platform,super}-intel: Fix two resource leaks
+Date: Thu, 10 Mar 2016 11:14:10 +0000
+Message-ID: <1457608450.28311.10.camel@intel.com>
+References: <1457458252-20203-1-git-send-email-Jes.Sorensen@redhat.com>
+	 <1457458252-20203-6-git-send-email-Jes.Sorensen@redhat.com>
+	 <87d1r4lhb8.fsf@notabene.neil.brown.name> <wrfjegbjvcvd.fsf@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAMz4kuKtwCkgG-3GeCtfnAX5zN8MkwyVr2XVYzaV3Z6SFFcZww@mail.gmail.com>
-	(Baolin Wang's message of "Fri, 4 Mar 2016 14:29:25 +0800")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Baolin Wang <baolin.wang@linaro.org>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>, David Miller <davem@davemloft.net>, Alasdair G Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, axboe@fb.com, dm-devel@redhat.com, akpm@linux-foundation.org, david.s.gordon@intel.com, Tom Lendacky <thomas.lendacky@amd.com>, yamada.masahiro@socionext.com, smueller@chronox.de, tadeusz.struk@intel.com, standby24x7@gmail.com, shli@kernel.org, Mark Brown <broonie@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Arnd Bergmann <arnd@arndb.de>, LKML <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <wrfjegbjvcvd.fsf@redhat.com>
+Content-Language: en-US
+Content-ID: <9A543843EB38E64ABEC1980C07D889C3@intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "neilb@suse.de" <neilb@suse.de>, "Jes.Sorensen@redhat.com" <Jes.Sorensen@redhat.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "gqjiang@suse.com" <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-Baolin Wang <baolin.wang@linaro.org> writes:
-
-> Hi Robert,
->
-> On 4 March 2016 at 03:15, Robert Jarzmik <robert.jarzmik@free.fr> wrote:
->> Baolin Wang <baolin.wang@linaro.org> writes:
->>> +static inline bool sg_is_contiguous(struct scatterlist *sga,
->>> +                                 struct scatterlist *sgb)
->>> +{
->>> +     return ((sga->page_link & ~0x3UL) + sga->offset + sga->length ==
->>> +             (sgb->page_link & ~0x3UL));
->>> +}
->> I don't understand that one.
->> sga->page_link is a pointer to a "struct page *". How can it be added to an
->> offset within a page ???
->
->
-> Ah, sorry that's a mistake. It should check as below:
-> static inline bool sg_is_contiguous(struct scatterlist *sga, struct
-> scatterlist *sgb)
-> {
->     return (unsigned int)sg_virt(sga) + sga->length == (unsigned
-> int)sg_virt(sgb);
-> }
-NAK.
-First, I don't like the cast.
-Second ask yourself: what if you compile on a 64 bit architecture ?
-Third, I don't like void* arithmetics, some compilers might refuse it.
-
-And as a last comment, is it "virtual" contiguity you're looking after, physical
-contiguity, or dma_addr_t contiguity ?
-
->>> @@ -370,6 +370,65 @@ int sg_alloc_table(struct sg_table *table, unsigned int
->>> nents, gfp_t gfp_mask)
->> ...
->>>  /**
->>> + * sg_add_sg_to_table - Add one scatterlist into sg table
->>> + * @sgt:     The sg table header to use
->>> + * @src:     The sg need to be added into sg table
->>> + *
->>> + * Description:
->>> + *   The 'nents' member indicates how many scatterlists added in the sg table.
->>> + *   Copy the @src@ scatterlist into sg table and increase 'nents' member.
->>> + *
->>> + **/
->>> +int sg_add_sg_to_table(struct sg_table *sgt, struct scatterlist *src)
->>> +{
->>> +     unsigned int i = 0, orig_nents = sgt->orig_nents;
->>> +     struct scatterlist *sgl = sgt->sgl;
->>> +     struct scatterlist *sg;
->>> +
->>> +     /* Check if there are enough space for the new sg to be added */
->>> +     if (sgt->nents >= sgt->orig_nents)
->>> +             return -EINVAL;
->> I must admit I don't understand that one either : how do comparing the number of
->> "mapped" entries against the number of "allocated" entries determines if there
->> is enough room ?
->
-> That's for a dynamic sg table. If there is one sg table allocated
-> 'orig_nents' scatterlists, and we need copy another mapped scatterlist
-> into the sg table if there are some requirements. So we use 'nents' to
-> record how many scatterlists have been copied into the sg table.
-As I'm still having difficulities to understand, please explain to me :
- - what is a dynamic sg_table
- - how it works
- - if it's "struct sg_table", how the field of this structure are different when
-   it's a dynamic sg_table from a "static sg_table" ?
-
->>> +/**
->>> + * sg_alloc_empty_table - Allocate one empty sg table
->>> + * @sgt:     The sg table header to use
->>> + * @nents:   Number of entries in sg list
->>> + * @gfp_mask:        GFP allocation mask
->>> + *
->>> + *  Description:
->>> + *    Allocate and initialize an sg table. The 'nents' member of sg_table
->>> + *    indicates how many scatterlists added in the sg table. It should set
->>> + *    0 which means there are no scatterlists added in this sg table now.
->>> + *
->>> + **/
->>> +int sg_alloc_empty_table(struct sg_table *sgt, unsigned int nents,
->>> +                      gfp_t gfp_mask)
->> As for this one, there has to be a purpose for it I fail to see. From far away
->> it looks exactly like sg_alloc_table(), excepting it "works around" the nents >
->> 0 protection of __sg_alloc_table().
->> What is exactly the need for this one, and if it's usefull why not simply
->> changing the __sg_alloc_table() "nents > 0" test and see what the outcome of the
->> review will be ?
->
-> Like I said above. If we want to copy some mapped scatterlists into
-> one sg table, we should set the 'nents' to 0 to indicates how many
-> scatterlists coppied in the sg table.
-So how do you unmap this scatterlist once you've lost the number of mapped
-entries ?
-
-I think we'll come back to this once I understand how a "dynamic" sg_table is
-different from a "static" one.
-
-Cheers.
-
--- 
-Robert
+T24gV2VkLCAyMDE2LTAzLTA5IGF0IDExOjIzIC0wNTAwLCBKZXMgU29yZW5zZW4gd3JvdGU6DQo+
+IE5laWxCcm93biA8bmVpbGJAc3VzZS5kZT4gd3JpdGVzOg0KPiA+IA0KPiA+IE9uIFdlZCwgTWFy
+IDA5IDIwMTYsIEplcy5Tb3JlbnNlbkByZWRoYXQuY29tIHdyb3RlOg0KPiA+IA0KPiA+ID4gDQo+
+ID4gPiBGcm9tOiBKZXMgU29yZW5zZW4gPEplcy5Tb3JlbnNlbkByZWRoYXQuY29tPg0KPiA+ID4g
+DQo+ID4gPiBUaGUgY29kZSBkaWQgbm90IGZyZWUgJ2RpcicgYWxsb2NhdGVkIGJ5IG9wZW5kaXIo
+KS4gQW4gYWRkaXRpb25hbA0KPiA+ID4gYmVuZWZpdCBpcyB0aGF0IHRoaXMgc2ltcGxpZmllcyB0
+aGUgZm9yKCkgbG9vcHMuDQo+ID4gPiANCj4gPiA+IEZpeGVzOiA2MGYwZjU0ZCAoIklNU006IEFk
+ZCBzdXBwb3J0IGZvciBWTUQiKQ0KPiA+ID4gU2lnbmVkLW9mZi1ieTogSmVzIFNvcmVuc2VuIDxK
+ZXMuU29yZW5zZW5AcmVkaGF0LmNvbT4NCj4gPiA+IC0tLQ0KPiA+ID4gwqBwbGF0Zm9ybS1pbnRl
+bC5jIHwgNyArKysrKystDQo+ID4gPiDCoHN1cGVyLWludGVsLmPCoMKgwqDCoHwgNiArKysrKy0N
+Cj4gPiA+IMKgMiBmaWxlcyBjaGFuZ2VkLCAxMSBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygt
+KQ0KPiA+ID4gDQo+ID4gPiBkaWZmIC0tZ2l0IGEvcGxhdGZvcm0taW50ZWwuYyBiL3BsYXRmb3Jt
+LWludGVsLmMNCj4gPiA+IGluZGV4IDg4ODE4ZjMuLmM2MGZkOWUgMTAwNjQ0DQo+ID4gPiAtLS0g
+YS9wbGF0Zm9ybS1pbnRlbC5jDQo+ID4gPiArKysgYi9wbGF0Zm9ybS1pbnRlbC5jDQo+ID4gPiBA
+QCAtNzI0LDggKzcyNCwxMCBAQCBjaGFyICp2bWRfZG9tYWluX3RvX2NvbnRyb2xsZXIoc3RydWN0
+IHN5c19kZXYgKmhiYSwgY2hhciAqYnVmKQ0KPiA+ID4gwqAJCXJldHVybiBOVUxMOw0KPiA+ID4g
+wqANCj4gPiA+IMKgCWRpciA9IG9wZW5kaXIoIi9zeXMvYnVzL3BjaS9kcml2ZXJzL3ZtZCIpOw0K
+PiA+ID4gKwlpZiAoIWRpcikNCj4gPiA+ICsJCXJldHVybiBOVUxMOw0KPiA+ID4gwqANCj4gPiA+
+IC0JZm9yIChlbnQgPSBkaXIgPyByZWFkZGlyKGRpcikgOiBOVUxMOyBlbnQ7IGVudCA9IHJlYWRk
+aXIoZGlyKSkgew0KPiA+ID4gKwlmb3IgKGVudCA9IHJlYWRkaXIoZGlyKTsgZW50OyBlbnQgPSBy
+ZWFkZGlyKGRpcikpIHsNCj4gPiA+IMKgCQlzcHJpbnRmKHBhdGgsICIvc3lzL2J1cy9wY2kvZHJp
+dmVycy92bWQvJXMvZG9tYWluL2RldmljZSIsDQo+ID4gPiDCoAkJCWVudC0+ZF9uYW1lKTsNCj4g
+PiA+IMKgDQo+ID4gPiBAQCAtNzM0LDggKzczNiwxMSBAQCBjaGFyICp2bWRfZG9tYWluX3RvX2Nv
+bnRyb2xsZXIoc3RydWN0IHN5c19kZXYgKmhiYSwgY2hhciAqYnVmKQ0KPiA+ID4gwqANCj4gPiA+
+IMKgCQlpZiAoc3RybmNtcChidWYsIGhiYS0+cGF0aCwgc3RybGVuKGJ1ZikpID09IDApIHsNCj4g
+PiA+IMKgCQkJc3ByaW50ZihwYXRoLCAiL3N5cy9idXMvcGNpL2RyaXZlcnMvdm1kLyVzIiwgZW50
+LT5kX25hbWUpOw0KPiA+ID4gKwkJCWNsb3NlZGlyKGRpcik7DQo+ID4gPiDCoAkJCXJldHVybiBy
+ZWFscGF0aChwYXRoLCBidWYpOw0KPiA+ID4gwqAJCX0NCj4gPiA+IMKgCX0NCj4gPiA+ICsNCj4g
+PiA+ICsJY2xvc2VkaXIoZGlyKTsNCj4gPiA+IMKgCXJldHVybiBOVUxMOw0KPiA+ID4gwqB9DQo+
+ID4gPiBkaWZmIC0tZ2l0IGEvc3VwZXItaW50ZWwuYyBiL3N1cGVyLWludGVsLmMNCj4gPiA+IGlu
+ZGV4IDE1OGY0ZTguLmUxYmVlNzUgMTAwNjQ0DQo+ID4gPiAtLS0gYS9zdXBlci1pbnRlbC5jDQo+
+ID4gPiArKysgYi9zdXBlci1pbnRlbC5jDQo+ID4gPiBAQCAtMTc4MSw3ICsxNzgxLDEwIEBAIHN0
+YXRpYyBpbnQgcHJpbnRfdm1kX2F0dGFjaGVkX2RldnMoc3RydWN0IHN5c19kZXYgKmhiYSkNCj4g
+PiA+IMKgCcKgKiB0aGlzIGhiYQ0KPiA+ID4gwqAJwqAqLw0KPiA+ID4gwqAJZGlyID0gb3BlbmRp
+cigiL3N5cy9idXMvcGNpL2RyaXZlcnMvbnZtZSIpOw0KPiA+ID4gLQlmb3IgKGVudCA9IGRpciA/
+IHJlYWRkaXIoZGlyKSA6IE5VTEw7IGVudDsgZW50ID0gcmVhZGRpcihkaXIpKSB7DQo+ID4gPiAr
+CWlmICghZGlyKQ0KPiA+ID4gKwkJcmV0dXJuIDE7DQo+ID4gPiArDQo+ID4gUmV0dXJuaW5nICcx
+JyBsb29rcyByZWFsbHkgd2VpcmQgaGVyZS7CoMKgSSBjYW4gc2VlIGl0IGlzIGNvbnNpc3RlbnQg
+d2l0aA0KPiA+IAlpZiAoaGJhLT50eXBlICE9IFNZU19ERVZfVk1EKQ0KPiA+IAkJcmV0dXJuIDE7
+DQo+ID4gDQo+ID4gYWJvdmUsIGJ1dCBzdGlsbC4uLi4NCj4gPiBBcyB0aGUgcmV0dXJuIHZhbHVl
+IGlzIG5ldmVyIHVzZWQsIHNob3VsZCB3ZSBqdXN0IG1ha2UgaXQgJ3ZvaWQnID8/DQo+IFNlZW1z
+IHJlYXNvbmFibGUgLSBJJ2xsIHB1dCB0aGF0IGluIGEgc2VwYXJhdGUgcGF0Y2guDQo+IA0KPiBD
+aGVlcnMsDQo+IEplcw0KSGVsbG8sDQpUaGFua3MgZm9yIHRoZSBmaXggSmVzLg0KDQpJIHRoaW5r
+cyB0aGF0IGluc3RlYWQgb2YgbWFraW5nIGl0ICJ2b2lkIiB3ZSBjYW4gYWN0dWFsbHkgY2hlY2sg
+dGhlIHJldHVybiB2YWx1ZSBhbmQgcHJpbnQgYSBwcm9wZXIgbWVzc2FnZSBpZiBzb21ldGhpbmcg
+Z29lcyB3cm9uZy4NCkFsc28gInNpbXBsaWZpZWQgZm9yKCkgbG9vcCIgY2FuIGJlIGFwcGxpZWQg
+dG8gYWhjaV9lbnVtZXJhdGVfcG9ydHMoKSBhcyB3ZWxsLg0KDQpAQCAtMTYyNCw3ICsxNjI0LDEw
+IEBAIHN0YXRpYyBpbnQgYWhjaV9lbnVtZXJhdGVfcG9ydHMoY29uc3QgY2hhciAqaGJhX3BhdGgs
+IGludCBwb3J0X2NvdW50LCBpbnQgaG9zdF9iDQrCoAnCoCogdGhpcyBoYmENCsKgCcKgKi8NCsKg
+CWRpciA9IG9wZW5kaXIoIi9zeXMvZGV2L2Jsb2NrIik7DQotCWZvciAoZW50ID0gZGlyID8gcmVh
+ZGRpcihkaXIpIDogTlVMTDsgZW50OyBlbnQgPSByZWFkZGlyKGRpcikpIHsNCisJaWYgKCFkaXIp
+DQorCQlyZXR1cm4gMTsNCisNCisJZm9yIChlbnQgPSByZWFkZGlyKGRpcik7IGVudDsgZW50ID0g
+cmVhZGRpcihkaXIpKSB7DQrCoAkJaW50IGZkOw0KwqAJCWNoYXIgbW9kZWxbNjRdOw0KwqAJCWNo
+YXIgdmVuZG9yWzY0XTsNCkBAIC0yMDIxLDcgKzIwMjQsMTEgQEAgc3RhdGljIGludCBkZXRhaWxf
+cGxhdGZvcm1faW1zbShpbnQgdmVyYm9zZSwgaW50IGVudW1lcmF0ZV9vbmx5LCBjaGFyICpjb250
+cm9sbGUNCsKgCQkJCQlwcmludF9pbXNtX2NhcGFiaWxpdHkoJmVudHJ5LT5vcm9tKTsNCsKgCQkJ
+CQlwcmludGYoIiBJL08gQ29udHJvbGxlciA6ICVzICglcylcbiIsDQrCoAkJCQkJCXZtZF9kb21h
+aW5fdG9fY29udHJvbGxlcihoYmEsIGJ1ZiksIGdldF9zeXNfZGV2X3R5cGUoaGJhLT50eXBlKSk7
+DQotCQkJCQlwcmludF92bWRfYXR0YWNoZWRfZGV2cyhoYmEpOw0KKwkJCQkJaWYgKHByaW50X3Zt
+ZF9hdHRhY2hlZF9kZXZzKGhiYSkpIHsNCisJCQkJCQlpZiAodmVyYm9zZSA+IDApDQorCQkJCQkJ
+CXByX2VycigiZmFpbGVkIHRvIGdldCBkZXZpY2VzIGF0dGFjaGVkIHRvIFZNRCBkb21haW4uXG4i
+KTsNCisJCQkJCQlyZXN1bHQgfD0gMjsNCisJCQkJCX0NCsKgCQkJCQlwcmludGYoIlxuIik7DQrC
+oAkJCQl9DQrCoAkJCX0NCg0KSXMgdGhhdCBvayB3aXRoIHlvdT8gU2hvdWxkIEkgcHJlcGFyZSBh
+IHByb3BlciBwYXRjaCB3aXRoIHRoaXM/DQoNClRoYW5rcywNClBhd2VsIEJhbGR5c2lhaw==
