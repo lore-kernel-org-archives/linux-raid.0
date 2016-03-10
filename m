@@ -1,88 +1,120 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 4/8] Grow: Grow_addbitmap(): Add check to quiet down static code checkers
-Date: Thu, 10 Mar 2016 18:21:03 +1100
-Message-ID: <877fhakdcw.fsf@notabene.neil.brown.name>
-References: <1457458252-20203-1-git-send-email-Jes.Sorensen@redhat.com> <1457458252-20203-5-git-send-email-Jes.Sorensen@redhat.com> <56E0606E.5000906@suse.com> <wrfjr3fj92ej.fsf@redhat.com>
+From: Robert Jarzmik <robert.jarzmik@free.fr>
+Subject: Re: [PATCH 1/4] scatterlist: Introduce some helper functions
+Date: Thu, 10 Mar 2016 10:42:12 +0100
+Message-ID: <87vb4ufz4b.fsf@belgarion.home>
+References: <cover.1456981314.git.baolin.wang@linaro.org>
+	<3bff3e286d3ee01ebb7e26d7233075054c42a7a9.1456981314.git.baolin.wang@linaro.org>
+	<87povbpe3l.fsf@belgarion.home>
+	<CAMz4kuKtwCkgG-3GeCtfnAX5zN8MkwyVr2XVYzaV3Z6SFFcZww@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjr3fj92ej.fsf@redhat.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>, Guoqing Jiang <gqjiang@suse.com>
-Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAMz4kuKtwCkgG-3GeCtfnAX5zN8MkwyVr2XVYzaV3Z6SFFcZww@mail.gmail.com>
+	(Baolin Wang's message of "Fri, 4 Mar 2016 14:29:25 +0800")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Baolin Wang <baolin.wang@linaro.org>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>, David Miller <davem@davemloft.net>, Alasdair G Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, axboe@fb.com, dm-devel@redhat.com, akpm@linux-foundation.org, david.s.gordon@intel.com, Tom Lendacky <thomas.lendacky@amd.com>, yamada.masahiro@socionext.com, smueller@chronox.de, tadeusz.struk@intel.com, standby24x7@gmail.com, shli@kernel.org, Mark Brown <broonie@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Arnd Bergmann <arnd@arndb.de>, LKML <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
+Baolin Wang <baolin.wang@linaro.org> writes:
 
-On Thu, Mar 10 2016, Jes Sorensen wrote:
-
-> Guoqing Jiang <gqjiang@suse.com> writes:
->> On 03/09/2016 01:30 AM, Jes.Sorensen@redhat.com wrote:
->>> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->>>
->>> Grow_addbitmap() is only ever called with s->bitmap_file != NULL, but
->>> not all static code checkers catch this. This adds a check to quiet
->>> down the false positive warnings.
->>>
->>> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
->>> ---
->>>   Grow.c | 9 ++++++++-
->>>   1 file changed, 8 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/Grow.c b/Grow.c
->>> index 0fa776d..c453eb6 100755
->>> --- a/Grow.c
->>> +++ b/Grow.c
->>> @@ -297,7 +297,14 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
->>>   			"  between different architectures.  Consider upgrading the Linux kernel.\n");
->>>   	}
->>>   -	if (s->bitmap_file && strcmp(s->bitmap_file, "clustered") ==
->>> 0)
->>> +	/*
->>> +	 * We only ever get called if s->bitmap_file is != NULL, so this check
->>> +	 * is just here to quiet down static code checkers.
->>> +	 */
->>> +	if (!s->bitmap_file)
->>> +		return 1;
->>
->> Is it really need to make all static code checkers happy? ;-)
->> Otherwise, I would prefer remove above check.
->>
->> Anyway, I am fine with the changes.
+> Hi Robert,
 >
-> We had a check in one place, but not in the remaining places. I just
-> made it more consistent.
+> On 4 March 2016 at 03:15, Robert Jarzmik <robert.jarzmik@free.fr> wrote:
+>> Baolin Wang <baolin.wang@linaro.org> writes:
+>>> +static inline bool sg_is_contiguous(struct scatterlist *sga,
+>>> +                                 struct scatterlist *sgb)
+>>> +{
+>>> +     return ((sga->page_link & ~0x3UL) + sga->offset + sga->length ==
+>>> +             (sgb->page_link & ~0x3UL));
+>>> +}
+>> I don't understand that one.
+>> sga->page_link is a pointer to a "struct page *". How can it be added to an
+>> offset within a page ???
+>
+>
+> Ah, sorry that's a mistake. It should check as below:
+> static inline bool sg_is_contiguous(struct scatterlist *sga, struct
+> scatterlist *sgb)
+> {
+>     return (unsigned int)sg_virt(sga) + sga->length == (unsigned
+> int)sg_virt(sgb);
+> }
+NAK.
+First, I don't like the cast.
+Second ask yourself: what if you compile on a 64 bit architecture ?
+Third, I don't like void* arithmetics, some compilers might refuse it.
 
-I wonder if maybe the checker was only complaining because the code was
-inconsistent.
-i.e. if we just got rid of the existing test on s->bitmap_file, maybe
-that would make the checker happy.
-It would be interesting to experiment even if you ultimately decide to
-leave the new test there.
+And as a last comment, is it "virtual" contiguity you're looking after, physical
+contiguity, or dma_addr_t contiguity ?
 
-Thanks,
-NeilBrown
+>>> @@ -370,6 +370,65 @@ int sg_alloc_table(struct sg_table *table, unsigned int
+>>> nents, gfp_t gfp_mask)
+>> ...
+>>>  /**
+>>> + * sg_add_sg_to_table - Add one scatterlist into sg table
+>>> + * @sgt:     The sg table header to use
+>>> + * @src:     The sg need to be added into sg table
+>>> + *
+>>> + * Description:
+>>> + *   The 'nents' member indicates how many scatterlists added in the sg table.
+>>> + *   Copy the @src@ scatterlist into sg table and increase 'nents' member.
+>>> + *
+>>> + **/
+>>> +int sg_add_sg_to_table(struct sg_table *sgt, struct scatterlist *src)
+>>> +{
+>>> +     unsigned int i = 0, orig_nents = sgt->orig_nents;
+>>> +     struct scatterlist *sgl = sgt->sgl;
+>>> +     struct scatterlist *sg;
+>>> +
+>>> +     /* Check if there are enough space for the new sg to be added */
+>>> +     if (sgt->nents >= sgt->orig_nents)
+>>> +             return -EINVAL;
+>> I must admit I don't understand that one either : how do comparing the number of
+>> "mapped" entries against the number of "allocated" entries determines if there
+>> is enough room ?
+>
+> That's for a dynamic sg table. If there is one sg table allocated
+> 'orig_nents' scatterlists, and we need copy another mapped scatterlist
+> into the sg table if there are some requirements. So we use 'nents' to
+> record how many scatterlists have been copied into the sg table.
+As I'm still having difficulities to understand, please explain to me :
+ - what is a dynamic sg_table
+ - how it works
+ - if it's "struct sg_table", how the field of this structure are different when
+   it's a dynamic sg_table from a "static sg_table" ?
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+>>> +/**
+>>> + * sg_alloc_empty_table - Allocate one empty sg table
+>>> + * @sgt:     The sg table header to use
+>>> + * @nents:   Number of entries in sg list
+>>> + * @gfp_mask:        GFP allocation mask
+>>> + *
+>>> + *  Description:
+>>> + *    Allocate and initialize an sg table. The 'nents' member of sg_table
+>>> + *    indicates how many scatterlists added in the sg table. It should set
+>>> + *    0 which means there are no scatterlists added in this sg table now.
+>>> + *
+>>> + **/
+>>> +int sg_alloc_empty_table(struct sg_table *sgt, unsigned int nents,
+>>> +                      gfp_t gfp_mask)
+>> As for this one, there has to be a purpose for it I fail to see. From far away
+>> it looks exactly like sg_alloc_table(), excepting it "works around" the nents >
+>> 0 protection of __sg_alloc_table().
+>> What is exactly the need for this one, and if it's usefull why not simply
+>> changing the __sg_alloc_table() "nents > 0" test and see what the outcome of the
+>> review will be ?
+>
+> Like I said above. If we want to copy some mapped scatterlists into
+> one sg table, we should set the 'nents' to 0 to indicates how many
+> scatterlists coppied in the sg table.
+So how do you unmap this scatterlist once you've lost the number of mapped
+entries ?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+I think we'll come back to this once I understand how a "dynamic" sg_table is
+different from a "static" one.
 
-iQIcBAEBCAAGBQJW4SBfAAoJEDnsnt1WYoG5ga4QAJfIOy1VrhjlyfUxD8p2A+wQ
-zYbKbLMRXHBbOVP+UzMB7DhQLvIupAV3mv5Beyb8h5EDuy1yMY16lMhyl0WXu0u7
-7WhVQllC6oYIQO7vZ4P9nqZH6URoQoyFjnn09Ow9C78diE4YsGHALwyvazNAVh0q
-3FuHsoWWR5rGWkCp20FmHtQMWWZr9pjXrEV1B+c2zaztvCHQWx9KzawE3/kZel0A
-1CMroOFRg3viH+SwyIYRZEhps1lQ5MZdQeBoRQS/aGOyj3e8+Oo6HMuoTiCZcPIe
-bKBl3Ppb8CxelHdWB3H4YJDexCDGZYiuqtriWudN5q2eIxKrDkuOC+WSGjLFkIHl
-3h/bheqdzDB7p7a+CmSflOrjbWTEEZfs8wdlVqFIJzXG86sP9yGJuf112K9rGbuo
-XCV2U19t/JG7v6fBNIitvoVr24bFgjxGYNol/gO85CSaGOBk6LTjSbk9ZyUZqr8V
-0B1SdOHa06oAVeXvFAF2gogHtrrZuFtYL/S1LPwHFLQVHmOub6zIJM1v+PDg889V
-Olx/UTdODw8pIlnz1R/yiXWY9PLgY1cXGENCQ86gHO7+dGvU25ZbEj0pKEwAKKxG
-WiEmlZbV36VuegdYuSX9kJbDOPufZ+LgHUxjNtV+EKyugNaW5WWg3fOIi5qjpcPQ
-LFZZ1UeETOP8cS/rrHZZ
-=/7a3
------END PGP SIGNATURE-----
---=-=-=--
+Cheers.
+
+-- 
+Robert
