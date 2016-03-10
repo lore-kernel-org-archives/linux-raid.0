@@ -1,143 +1,89 @@
-From: Baolin Wang <baolin.wang@linaro.org>
-Subject: Re: [PATCH 1/4] scatterlist: Introduce some helper functions
-Date: Thu, 10 Mar 2016 20:58:46 +0800
-Message-ID: <CAMz4ku+uJPUXK-qmcP2tiPnSnKJ6Q2by-bxbz09j2sRWt5gHPA@mail.gmail.com>
-References: <cover.1456981314.git.baolin.wang@linaro.org>
-	<3bff3e286d3ee01ebb7e26d7233075054c42a7a9.1456981314.git.baolin.wang@linaro.org>
-	<87povbpe3l.fsf@belgarion.home>
-	<CAMz4kuKtwCkgG-3GeCtfnAX5zN8MkwyVr2XVYzaV3Z6SFFcZww@mail.gmail.com>
-	<87vb4ufz4b.fsf@belgarion.home>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH 5/8] {platform,super}-intel: Fix two resource leaks
+Date: Thu, 10 Mar 2016 11:37:26 -0500
+Message-ID: <wrfjr3fi1e7t.fsf@redhat.com>
+References: <1457458252-20203-1-git-send-email-Jes.Sorensen@redhat.com>
+	<1457458252-20203-6-git-send-email-Jes.Sorensen@redhat.com>
+	<87d1r4lhb8.fsf@notabene.neil.brown.name>
+	<wrfjegbjvcvd.fsf@redhat.com> <1457608450.28311.10.camel@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <87vb4ufz4b.fsf@belgarion.home>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Robert Jarzmik <robert.jarzmik@free.fr>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>, David Miller <davem@davemloft.net>, Alasdair G Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, axboe@fb.com, dm-devel@redhat.com, akpm@linux-foundation.org, david.s.gordon@intel.com, Tom Lendacky <thomas.lendacky@amd.com>, Masahiro Yamada <yamada.masahiro@socionext.com>, smueller@chronox.de, tadeusz.struk@intel.com, Masanari Iida <standby24x7@gmail.com>, shli@kernel.org, Mark Brown <broonie@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Arnd Bergmann <arnd@arndb.de>, LKML <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1457608450.28311.10.camel@intel.com> (Pawel Baldysiak's message
+	of "Thu, 10 Mar 2016 11:14:10 +0000")
+Sender: linux-raid-owner@vger.kernel.org
+To: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
+Cc: "neilb@suse.de" <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "gqjiang@suse.com" <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-On 10 March 2016 at 17:42, Robert Jarzmik <robert.jarzmik@free.fr> wrote:
->>
->>
->> Ah, sorry that's a mistake. It should check as below:
->> static inline bool sg_is_contiguous(struct scatterlist *sga, struct
->> scatterlist *sgb)
->> {
->>     return (unsigned int)sg_virt(sga) + sga->length == (unsigned
->> int)sg_virt(sgb);
->> }
-> NAK.
-> First, I don't like the cast.
-> Second ask yourself: what if you compile on a 64 bit architecture ?
-
-Sorry, it's a mistake. I've resend one email to correct that with
-'unsigned long'.
-
-> Third, I don't like void* arithmetics, some compilers might refuse it.
-
-OK. I will modify that.
-
+"Baldysiak, Pawel" <pawel.baldysiak@intel.com> writes:
+> On Wed, 2016-03-09 at 11:23 -0500, Jes Sorensen wrote:
+>> NeilBrown <neilb@suse.de> writes:
+>> >=20
+>> > On Wed, Mar 09 2016, Jes.Sorensen@redhat.com wrote:
+>> > Returning '1' looks really weird here.=C2=A0=C2=A0I can see it is =
+consistent with
+>> > 	if (hba->type !=3D SYS_DEV_VMD)
+>> > 		return 1;
+>> >=20
+>> > above, but still....
+>> > As the return value is never used, should we just make it 'void' ?=
+?
+>> Seems reasonable - I'll put that in a separate patch.
+>>=20
+>> Cheers,
+>> Jes
+> Hello,
+> Thanks for the fix Jes.
 >
-> And as a last comment, is it "virtual" contiguity you're looking after, physical
-> contiguity, or dma_addr_t contiguity ?
-
-Yes, I need check the virtual contiguity.
-
+> I thinks that instead of making it "void" we can actually check the
+> return value and print a proper message if something goes wrong.
+> Also "simplified for() loop" can be applied to ahci_enumerate_ports()=
+ as well.
 >
->>>> @@ -370,6 +370,65 @@ int sg_alloc_table(struct sg_table *table, unsigned int
->>>> nents, gfp_t gfp_mask)
->>> ...
->>>>  /**
->>>> + * sg_add_sg_to_table - Add one scatterlist into sg table
->>>> + * @sgt:     The sg table header to use
->>>> + * @src:     The sg need to be added into sg table
->>>> + *
->>>> + * Description:
->>>> + *   The 'nents' member indicates how many scatterlists added in the sg table.
->>>> + *   Copy the @src@ scatterlist into sg table and increase 'nents' member.
->>>> + *
->>>> + **/
->>>> +int sg_add_sg_to_table(struct sg_table *sgt, struct scatterlist *src)
->>>> +{
->>>> +     unsigned int i = 0, orig_nents = sgt->orig_nents;
->>>> +     struct scatterlist *sgl = sgt->sgl;
->>>> +     struct scatterlist *sg;
->>>> +
->>>> +     /* Check if there are enough space for the new sg to be added */
->>>> +     if (sgt->nents >= sgt->orig_nents)
->>>> +             return -EINVAL;
->>> I must admit I don't understand that one either : how do comparing the number of
->>> "mapped" entries against the number of "allocated" entries determines if there
->>> is enough room ?
->>
->> That's for a dynamic sg table. If there is one sg table allocated
->> 'orig_nents' scatterlists, and we need copy another mapped scatterlist
->> into the sg table if there are some requirements. So we use 'nents' to
->> record how many scatterlists have been copied into the sg table.
-> As I'm still having difficulities to understand, please explain to me :
->  - what is a dynamic sg_table
-
-OK. That's for some special usage. For example, the dm-crypt will send
-one request mapped one scatterlist to engine level to handle the
-request at one time. But we want to collect some requests together to
-handle together at one time to improve engine efficiency. So in crypto
-engine layer we need to copy the mapped scatterlists into one sg
-table, which has been allocated some sg memory.
-
->  - how it works
-
-The 'orig_nents' means how many scatterlists the sg table can hold.
-The 'nents' means how many scatterlists have been copied into sg
-table. So the 'nents' will be not equal as 'orig_nents' unless the sg
-table is full.
-
->  - if it's "struct sg_table", how the field of this structure are different when
->    it's a dynamic sg_table from a "static sg_table" ?
-
+> @@ -1624,7 +1624,10 @@ static int ahci_enumerate_ports(const char
+> *hba_path, int port_count, int host_b
+> =C2=A0	=C2=A0* this hba
+> =C2=A0	=C2=A0*/
+> =C2=A0	dir =3D opendir("/sys/dev/block");
+> -	for (ent =3D dir ? readdir(dir) : NULL; ent; ent =3D readdir(dir)) =
+{
+> +	if (!dir)
+> +		return 1;
+> +
+> +	for (ent =3D readdir(dir); ent; ent =3D readdir(dir)) {
+> =C2=A0		int fd;
+> =C2=A0		char model[64];
+> =C2=A0		char vendor[64];
+> @@ -2021,7 +2024,11 @@ static int detail_platform_imsm(int verbose,
+> int enumerate_only, char *controlle
+> =C2=A0					print_imsm_capability(&entry->orom);
+> =C2=A0					printf(" I/O Controller : %s (%s)\n",
+> =C2=A0 vmd_domain_to_controller(hba, buf), get_sys_dev_type(hba->type=
+));
+> -					print_vmd_attached_devs(hba);
+> +					if (print_vmd_attached_devs(hba)) {
+> +						if (verbose > 0)
+> + pr_err("failed to get devices attached to VMD domain.\n");
+> +						result |=3D 2;
+> +					}
+> =C2=A0					printf("\n");
+> =C2=A0				}
+> =C2=A0			}
 >
->>>> +/**
->>>> + * sg_alloc_empty_table - Allocate one empty sg table
->>>> + * @sgt:     The sg table header to use
->>>> + * @nents:   Number of entries in sg list
->>>> + * @gfp_mask:        GFP allocation mask
->>>> + *
->>>> + *  Description:
->>>> + *    Allocate and initialize an sg table. The 'nents' member of sg_table
->>>> + *    indicates how many scatterlists added in the sg table. It should set
->>>> + *    0 which means there are no scatterlists added in this sg table now.
->>>> + *
->>>> + **/
->>>> +int sg_alloc_empty_table(struct sg_table *sgt, unsigned int nents,
->>>> +                      gfp_t gfp_mask)
->>> As for this one, there has to be a purpose for it I fail to see. From far away
->>> it looks exactly like sg_alloc_table(), excepting it "works around" the nents >
->>> 0 protection of __sg_alloc_table().
->>> What is exactly the need for this one, and if it's usefull why not simply
->>> changing the __sg_alloc_table() "nents > 0" test and see what the outcome of the
->>> review will be ?
->>
->> Like I said above. If we want to copy some mapped scatterlists into
->> one sg table, we should set the 'nents' to 0 to indicates how many
->> scatterlists coppied in the sg table.
-> So how do you unmap this scatterlist once you've lost the number of mapped
-> entries ?
+> Is that ok with you? Should I prepare a proper patch with this?
 
-I will not lost the number of mapped in sg table,  'nents' member
-means how many mapped scatterlists in the dynamic table. Every time
-one mapped sg copied into the dynamic table, the 'nents' will increase
-1.
+Hi Pawel,
 
->
-> I think we'll come back to this once I understand how a "dynamic" sg_table is
-> different from a "static" one.
->
-> Cheers.
->
-> --
-> Robert
+I already pushed this into git, but if you want to send me a patch (or
+two) for this, I am happy to apply them. Lets make the
+ahci_enumerate_ports() change in a separate patch.
 
-
-
--- 
-Baolin.wang
-Best Regards
+Cheers,
+Jes
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
