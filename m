@@ -1,89 +1,56 @@
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH 5/8] {platform,super}-intel: Fix two resource leaks
-Date: Thu, 10 Mar 2016 11:37:26 -0500
-Message-ID: <wrfjr3fi1e7t.fsf@redhat.com>
+Subject: Re: [PATCH 4/8] Grow: Grow_addbitmap(): Add check to quiet down static code checkers
+Date: Thu, 10 Mar 2016 11:40:35 -0500
+Message-ID: <wrfjmvq61e2k.fsf@redhat.com>
 References: <1457458252-20203-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1457458252-20203-6-git-send-email-Jes.Sorensen@redhat.com>
-	<87d1r4lhb8.fsf@notabene.neil.brown.name>
-	<wrfjegbjvcvd.fsf@redhat.com> <1457608450.28311.10.camel@intel.com>
+	<1457458252-20203-5-git-send-email-Jes.Sorensen@redhat.com>
+	<56E0606E.5000906@suse.com> <wrfjr3fj92ej.fsf@redhat.com>
+	<877fhakdcw.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1457608450.28311.10.camel@intel.com> (Pawel Baldysiak's message
-	of "Thu, 10 Mar 2016 11:14:10 +0000")
+In-Reply-To: <877fhakdcw.fsf@notabene.neil.brown.name> (NeilBrown's message of
+	"Thu, 10 Mar 2016 18:21:03 +1100")
 Sender: linux-raid-owner@vger.kernel.org
-To: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
-Cc: "neilb@suse.de" <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "gqjiang@suse.com" <gqjiang@suse.com>
+To: NeilBrown <neilb@suse.de>
+Cc: Guoqing Jiang <gqjiang@suse.com>, linux-raid@vger.kernel.org, pawel.baldysiak@intel.com
 List-Id: linux-raid.ids
 
-"Baldysiak, Pawel" <pawel.baldysiak@intel.com> writes:
-> On Wed, 2016-03-09 at 11:23 -0500, Jes Sorensen wrote:
->> NeilBrown <neilb@suse.de> writes:
->> >=20
->> > On Wed, Mar 09 2016, Jes.Sorensen@redhat.com wrote:
->> > Returning '1' looks really weird here.=C2=A0=C2=A0I can see it is =
-consistent with
->> > 	if (hba->type !=3D SYS_DEV_VMD)
->> > 		return 1;
->> >=20
->> > above, but still....
->> > As the return value is never used, should we just make it 'void' ?=
-?
->> Seems reasonable - I'll put that in a separate patch.
->>=20
->> Cheers,
->> Jes
-> Hello,
-> Thanks for the fix Jes.
+NeilBrown <neilb@suse.de> writes:
+> On Thu, Mar 10 2016, Jes Sorensen wrote:
 >
-> I thinks that instead of making it "void" we can actually check the
-> return value and print a proper message if something goes wrong.
-> Also "simplified for() loop" can be applied to ahci_enumerate_ports()=
- as well.
+>> Guoqing Jiang <gqjiang@suse.com> writes:
+>>> On 03/09/2016 01:30 AM, Jes.Sorensen@redhat.com wrote:
+>>>> @@ -297,7 +297,14 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
+>>>>   			"  between different architectures.  Consider upgrading the Linux kernel.\n");
+>>>>   	}
+>>>>   -	if (s->bitmap_file && strcmp(s->bitmap_file, "clustered") ==
+>>>> 0)
+>>>> +	/*
+>>>> +	 * We only ever get called if s->bitmap_file is != NULL, so this check
+>>>> +	 * is just here to quiet down static code checkers.
+>>>> +	 */
+>>>> +	if (!s->bitmap_file)
+>>>> +		return 1;
+>>>
+>>> Is it really need to make all static code checkers happy? ;-)
+>>> Otherwise, I would prefer remove above check.
+>>>
+>>> Anyway, I am fine with the changes.
+>>
+>> We had a check in one place, but not in the remaining places. I just
+>> made it more consistent.
 >
-> @@ -1624,7 +1624,10 @@ static int ahci_enumerate_ports(const char
-> *hba_path, int port_count, int host_b
-> =C2=A0	=C2=A0* this hba
-> =C2=A0	=C2=A0*/
-> =C2=A0	dir =3D opendir("/sys/dev/block");
-> -	for (ent =3D dir ? readdir(dir) : NULL; ent; ent =3D readdir(dir)) =
-{
-> +	if (!dir)
-> +		return 1;
-> +
-> +	for (ent =3D readdir(dir); ent; ent =3D readdir(dir)) {
-> =C2=A0		int fd;
-> =C2=A0		char model[64];
-> =C2=A0		char vendor[64];
-> @@ -2021,7 +2024,11 @@ static int detail_platform_imsm(int verbose,
-> int enumerate_only, char *controlle
-> =C2=A0					print_imsm_capability(&entry->orom);
-> =C2=A0					printf(" I/O Controller : %s (%s)\n",
-> =C2=A0 vmd_domain_to_controller(hba, buf), get_sys_dev_type(hba->type=
-));
-> -					print_vmd_attached_devs(hba);
-> +					if (print_vmd_attached_devs(hba)) {
-> +						if (verbose > 0)
-> + pr_err("failed to get devices attached to VMD domain.\n");
-> +						result |=3D 2;
-> +					}
-> =C2=A0					printf("\n");
-> =C2=A0				}
-> =C2=A0			}
->
-> Is that ok with you? Should I prepare a proper patch with this?
+> I wonder if maybe the checker was only complaining because the code
+> was inconsistent.  i.e. if we just got rid of the existing test on
+> s->bitmap_file, maybe that would make the checker happy.  It would be
+> interesting to experiment even if you ultimately decide to leave the
+> new test there.
 
-Hi Pawel,
-
-I already pushed this into git, but if you want to send me a patch (or
-two) for this, I am happy to apply them. Lets make the
-ahci_enumerate_ports() change in a separate patch.
+I went back and checked the scan logs and it basically complained about
+all the cases that didn't check the validity of s->bitmap_file. I think
+it's safer to just have the one check at the top, even if we expect it
+never to be called with an invalid pointer.
 
 Cheers,
 Jes
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
