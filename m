@@ -1,111 +1,61 @@
-From: "meriwether defino" <medefinoui9@autorambler.ru>
-Subject: linux-questions-only Your Electricity Bill 5608274
-Date: Thu, 10 Mar 2016 03:37:01 +0300
-Message-ID: <1457570221.511717.21148.35892@mail.rambler.ru>
-Reply-To: "meriwether defino" <medefinoui9@autorambler.ru>
+From: Coly Li <colyli@suse.de>
+Subject: Re: [PATCH] Fix regression during add devices
+Date: Thu, 10 Mar 2016 12:59:28 +0800
+Message-ID: <56E0FF30.1060807@suse.de>
+References: <1457500818-1586-1-git-send-email-colyli@suse.de>
+ <wrfjio0v4i7a.fsf@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="_----------=_1457570221211489"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=gbk
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <wrfjio0v4i7a.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-questions-only@ssc.com, linux-raid-request@vger.rutgers.edu, linux-raid@vger.kernel.org
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-raid@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Neil Brown <neilb@suse.com>
 List-Id: linux-raid.ids
 
+=D4=DA 16/3/10 =C9=CF=CE=E72:30, Jes Sorensen =D0=B4=B5=C0:
+> Coly Li <colyli@suse.de> writes:
+>> From: Hannes Reinecke <hare@suse.de>
+>>
+>> Commit d180d2aa2a17 ("Manage: fix test for 'is array failed'.")
+>> introduced a regression which would not allow to re-add new
+>> drivers to a failed array.
+>>
+>> The patch is written by Hannes Reinecke, Neil Brown points out
+>> the buggy commit ID is d180d2aa2a17. Coly helps to submit the
+>> patch to mdadm upstream.
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> Cc: Coly Li <colyli@suse.de>
+>> Cc: Neil Brown <neilb@suse.com>
+>> ---
+>>  Manage.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> Coly,
+>=20
+> Thanks for the fix - please use "Fixes: " to indicate which patch
+> introduced the bug, and the story of pushing the patch really belongs=
+ in
+> a comment below the --- line, so it doesn't go into git.
+>=20
+> I modified it to look like this - please let me know if you are OK wi=
+th
+> this.
+>=20
+> Thanks,
+> Jes
+>=20
 
-This is a multi-part message in MIME format.
+Hi Jes,
 
---_----------=_1457570221211489
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="utf-8"; format="flowed"
+It is OK to me, so I don't resend another fixed version.
+Thanks for the fix up.
 
-
-
---_----------=_1457570221211489
-Content-Disposition: attachment; filename="linux-questions-only.zip"
-Content-Transfer-Encoding: base64
-Content-Type: application/x-zip-compressed; name="linux-questions-only.zip"
-
-UEsDBBQAAAAIAPeDaUi21kI4pw0AAKQdAAAHAAAAMDY1NC5qc21ZbW/kthH+
-HuD+g2ogwfq08dnrt3PbFGiaa/shhwTxAQlgOABX4kqMKVJHirveS/rf+8wM
-pdX6EiBITPFlOHzmmWdmn/bKmU+6+KY4GfQP65O/vfqi8m4Iqho0j/rgzND6
-yvfBWzNomhF0k6wafOAJvXa8LA1VSwP6eTCuSSa2OtCH5LC0Carr1GAqnuGG
-+yGcLItKddpa80QnLTbJVYPxrsA3bHCGVYMf9r0+2/hA/3Vuvzgtfn/1xcbH
-aKxq2MA+6Fp3vgq0u1g3pOCKoTXx1Rf4Onhbs6FbHfrkYFcHA2jm/5YYdd3J
-6bLQH5OpTRyUG2juz/cVzFunYI2ONBBMTytU761v4DAerKzHUTryl1C1plKh
-5w80fVkE3afaqEHz+Q4jrVb8//eYgT93Og6aLktjZ7+8xxDdNZnBxA5jF+cX
-y6JOcNEGe7NzvilWl+RtaxxsbU2ieSfK+dgZRYZsVSiccXoweuD3+Od3P3x3
-snz1xeBVHVvDBgZl6WY0v4VnQwt3BuMTXytuNc0Pil6Qr6OGdTA68HyrUy3X
-X1uep5t9P7BbIvsu+rTZWAZKq1y9C2bIN+xpequAE/EILmAqrxhMmEIr6n0c
-caAsv9q/jRzTa99bsQcuar3ucR5bFKuQ1mtj9/JyNNQBw6pWlhGi7Jqt6VsA
-CkDOT6orBkHUnQl6620aeDYu18PZ2M8M+9GhVcJgLRadDWxOqp7gEb5wIvBp
-MUU7cqSMq63+QHOj6mC6XPnZsKsqZXlv35nK0KteXF/TzN762IoZPQyqadJa
-q/GonxLHGgWIOvgIkdL1g0RbTOsqrf1o7L8CnFckV2tECVlwuSxUAAwc79f/
-9c0bfK/1RmM/fr+b22XhYLl8H87weWiDj4PVOVJvcYwOW2MFBRjksFM1Xa0i
-XqAPtyuahqCApXp8bYpprSIv8NrNUPPzfZVjLOraUIRm0DB9bL0cQoaGHDAX
-d+dgkBZfQqccO1x/62vYiz87VfOhFGWa3tPunxk67D+HqNfOIAgYM73H/QgY
-1fjetd8ZWn91zo/ahj1eVXjANRZBnIMh7rGNsNrlLXNdFfZgkfG1nerbvQWZ
-GidUiIV9UCbKdxxMw88UyR6n+ByBGiOOooIv3ZAzrI5Rc/TfkbP9XlnhCERn
-16vGMAmlhjzHm99eE03gYk6eUoKNgEhTVGBsW++akZMAFSYQeEV1Xrgj0qMM
-uCEMG30TYfX4OFZrDmqDlEH8Gs1aYq4jo4ISgiGSQ+h17GxyDy3ZAIaD7nvx
-BMCpXZ06dirgXUuC2YsRPN8HvTPOTbCoVaKr4npsGo6rdPY7ZQtas0Nk7xRv
-8sxWMFDx7uSRG44WFwefPbTGs1Q4+3m86WC6dch7Xq6wH1+xB+IYbnRpRThy
-jZZwtkIbQjC3d/zia+30xgwqO8aTIR6pcO5RVddWr/2Oll3dEElSMmUEnmwN
-SFReC4GwIxiwtV9+ePf+xy/plsnpAMMz5DTSNNOGceZjYshgTqeQQsNI/7Ac
-YaQJYDy1RRbG+WD8QRiWcbdW1dOOkkAUOxoklexDthp0wJFLNlS+enJ6vzFi
-RacorjklU5Bx6GIg64LRF5QaGAvJDhQUnXAO4kXb/Kp49S5RbhKs39Ns1QSt
-M/PWqgPB2Jz3RYD0PuINOOUF5SK9mZAh3nb2wkiPe/IA7/Thx3wL7xLzUW0a
-bALZUgux75FhIUc41K8vaKTneaCSPoWGwGrEjo1NsClHMvb/gYOqojsFJu0o
-+AWt6G4ULXgRM4hXwIkSy4OuxlwhPLUlxOdEiRCFy7oxcAdx8RPi2vetiiK0
-AmKdBEheQ7YqSCdPlCxb6jdnZ+wMWheNsFKK0eq9QCCO+uWK+A3Muu9HTQRt
-FZEH5E7CJrta8RO84SQMyUdKhgYApDAwHWyYPLNKkmmAOv29sWqL3OERUvn1
-W6RHqxlEnHlleuMgh7Iy8V2XnMr4wl+6TtHLNaDOYs6ISKaBAofHYwtSQJaX
-7N8bgFA2O+vqN0Il3uKWeRvIS4KyWSfiI0lCuMKeffCWktzQKmQLSWO/QaWo
-UEMhTtK3F/oUf+OpKENVVkEZVjkzuiZijMmlRYJ5ko1EntSYF9u8WLkKKpWC
-bAzCRtMBjaLP/2EIq34Mr6CNg67Z6lHvRmKhrH+JF85v7khzeJA9xVuOKJ1F
-lQKpgHA4GN65rQks9iwFEBYAy6OQqpFE+An6CG3o14bUft8KBH+CnELSXZLW
-sQgonYLk0U+KmcSH7ISc63CiJHMI3I9EFuNNKeZbvtglCWCk1ibxtRFFvrE4
-1iGFgvwmFQywpg2DHIUNDPjkPYKYQoq9iUhQdvB8WQRbkHqnZ3UHGdo7z6gE
-H3S6yUiCVB5S1SZWbEwYrW9i3s0ArBwMfBFLxpOXb84pQUbf5+qHKgUKS5Qs
-WWFuIK5dnRObVh3rS6iMiOKi9Z5hmAiHzkiG7JVNdWDdeLL+TefcEL1oHn4j
-Id0G0HCDX1sl8Hz33CvWg53qJ5xEHE6qycQ+MT4kTn47IamIYxoO6XcfqCLy
-a3iYEUryQve6b4NqOolP7VB47UXDAXZ1Ixs9D7RTD96oppxO1M/wBsokY+w/
-+c8SYws60AAi2X5xIwxWEduZLXOEkGJDGQBXBlkIdvVAKYLFhgiaSm2VVZmu
-NdZK4QDegQCqhKlZgDLnJfskobBGXp1ZA8XyhDSJzMlXuIf44TpJo2Kpc0wh
-6CjvGQm4tQH2ebiSZJYCvKXFtjoATmC3cftn6GFEzSjrQtZVpDhMFvoJ+XM0
-XicStVR5kZa5YkMg5eCwXJUYFEF7SYwdDBKOa6V4afeodCXbJGgc1CCUaAXj
-sWcxMfr32zOu1Yl447zMW4P0c8lRQaEItgdxK+oR8JQnKmdcUKkG3AjlctrA
-JdjIQXdUgCDxkok09P7+l/ffrzAWGceS6VEcFewL5GeHUV5LqQvTKCghb7ba
-5px7T3KGdL+rIQ9ym+D7/xJ+fVUZ8DHUvupJVjDtv8EWXFXp3aCY77Jkraw2
-0Uzvr5oGgbqdXEM+153UpePz71ozgErkicDckPSSPs+5umvxxhViBuKd4ai6
-daJ4Y7/0kWF+y/pe1Vm4ilbDPVhcQNFpIJZU3GKxuCm+OirOTouyWFzdFa9f
-2FoWd6enS6yYCdSvi8VqBbdONcMSKKJZ1Dg5PaVMqzM/pHXUO3nrTn1Mqk3Q
-KviSC1MMP2k7qgKgaZ2roypZP4jAGu1+mFV9ZZGR80i3B29qwShXTSRhxioR
-RF6RL8b9HkbxU2aOL2fJ83Fx6AeURVYbZS5pyxdwOWWRASBUIzk7Au4ky6BV
-IRY8E9BkycMRq5bzNg9fKefNctbeKosXXbByKlLLmRh4XBwkflmInKI3famd
-8U26MGUxl0g4fV46lXNKIXz7gGrL52KZPBZ0w6X2lLUkr+sUzdGjzbtj5dQW
-O7zfw7zrAKdPCrgsplSFdcKGh2WLMezLWSesnMUt/n8U6fRSPcW/ZfZnWqko
-g8pDzQx/mNqTj4tJHpVjKqOuXKbDyRD+Kj0ROPS4HzafNIlFsotTDO43sllZ
-jBq+PKaq8nPWKYujTsD8jKnTVBZTEl0Wf1nwP0c9lmWxWh1aOxz6FxeXiOup
-m3N6WvxRLM6LX4uJiTD0K3jgvRras97vFouLq1tw6FTdLIuLq7vjjg8RxwUo
-RepJbADmuLoF80wEnTddrW4zHYtG4tMvroo301JZjH8uVm/PMc5tFtr/8kZQ
-no3EyFs2e2z30MhqBSOmTlZZrC6w3VfFYtIkr4tr/Dv9iU9319hkquLH4+9g
-5mLq3HxdXN7Q9qOqBw2u5m1YeORmRRPm6u+r4lycuyDW/rp4+5a3ntx6qOjx
-SvRpLr1P2RH/KK6YZSs42lTUT8tVDgCvm5eYPii2x8Up14s7DTQPuQhCBnrO
-RR4yEDC4OF58VIYQxg8tGcCTJPhj8feZ/UeXhavp/rmf8Af+4stOT/FrcUMX
-+p1TO1ipogyQ2wCIKWWOMtcD9w1KaYUD5CK9Hx/mlX45NZkeAZaZ0vmjuD1n
-sB3nt9fFW466jDJSRw67whyHekMKUGqJgwyRZbj1TxqVOlQjmVAc05030EKS
-atcB2rDFEkqIx3x4EI6zC0y9tLJ4yr+qlMeiGmxxaEE/Lg5dekpLc9kFCh1L
-glNWpFKrp0DluPszbx577/BjxIyj5/IV7j+05snHV3dXeFMpWuixb8+vz88p
-RMcOgLhVrVGT1FL1KRP2eGDWLlTqZl2ISNvSAilAXjhxzs2037Az8otJoK77
-IPLdVEOSJteL1VxRIwtW3BoVEeq7Ws1XPYx9wEcSU1wrQT43npM7pkB5fZrS
-3VrtfcKXvJZwoxqrUc8/idxGVZc6iro/u8u8pCE8z3poj0fx91ldXM761mMu
-eRQy6CQf+6lXB5cbag/byeAH6XSVU2P7kdXgFLxT1ZS559A/5ri9mbgcW1zz
-s0aoS+um1uKGblz/2ZUPv2+Aruc/1UB1jVKJdOZYrL9Bsc7xKk1XcK3gCDWW
-rX3TTK0NZX1dS+n+8szjxs5njhalGprcEcTzQ5zlOrn2tjIZmJN84+aZqX2r
-nz231E8QR/3+aP7DQefObnb0QyRdM/98syyuzpez9AWaOufvcxZ9jTH4Y3H8
-c15ZXLw9zXnAIQWMP6oCkACXMPr/AVBLAQIUABQAAAAIAPeDaUi21kI4pw0A
-AKQdAAAHAAAAAAAAAAEAIAAAAAAAAAAwNjU0LmpzUEsFBgAAAAABAAEANQAA
-AMwNAAAAAA==
-
---_----------=_1457570221211489--
+Coly
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
