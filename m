@@ -1,74 +1,52 @@
-From: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Subject: [PATCH 1/2] super-intel: Make print_vmd_attached_devs() return int again
-Date: Fri, 11 Mar 2016 16:47:15 +0100
-Message-ID: <1457711236-16990-1-git-send-email-pawel.baldysiak@intel.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH 1/1] Grow: close fd earlier to avoid "cannot get excl access" when stopping
+Date: Fri, 11 Mar 2016 12:31:51 -0500
+Message-ID: <wrfjr3fg7wfs.fsf@redhat.com>
+References: <1457700547-13253-1-git-send-email-pawel.baldysiak@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1457700547-13253-1-git-send-email-pawel.baldysiak@intel.com>
+	(Pawel Baldysiak's message of "Fri, 11 Mar 2016 13:49:07 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: jes.sorensen@redhat.com, artur.paszkiewicz@intel.com, Pawel Baldysiak <pawel.baldysiak@intel.com>
+To: Pawel Baldysiak <pawel.baldysiak@intel.com>
+Cc: linux-raid@vger.kernel.org, artur.paszkiewicz@intel.com
 List-Id: linux-raid.ids
 
-This patch reverts a0abe1e
-(super-intel: Make print_found_intel_controllers() return void)
-and make this function "return int" again.
-Also, interpreting the return value is added.
+Pawel Baldysiak <pawel.baldysiak@intel.com> writes:
+> If this file descriptor is not closed here, it remains open during
+> reshape process and stopping process will end up with
+> "cannot get exclusive access to container".
+> Once this file descriptor is no longer needed - it can be closed.
+>
+> Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+> ---
+>  Grow.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+>
+> diff --git a/Grow.c b/Grow.c
+> index cf2750a..d9db00b 100755
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -2070,6 +2070,10 @@ size_change_error:
+>  		 * number of devices (On-Line Capacity Expansion) must be
+>  		 * performed at the level of the container
+>  		 */
+> +		if (fd > 0) {
+> +			close(fd);
+> +			fd = -1;
+> +		}
+>  		rv = reshape_container(container, devname, -1, st, &info,
+>  				       c->force, c->backup_file, c->verbose, 0, 0, 0);
+>  		frozen = 0;
 
-Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
----
- super-intel.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+I went in and looked at this one to see how we deal with the open file
+descriptior. I was worried something else could try and access or close
+it later, but it looks like we just let it dangle and rely on exit()
+cleaning up. So I'll apply this one as is and hopefully someone will
+feel excited enough about it to clean it up down the line ;)
 
-diff --git a/super-intel.c b/super-intel.c
-index 3fe304a..8a80c5b 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -1766,7 +1766,7 @@ static int ahci_enumerate_ports(const char *hba_path, int port_count, int host_b
- 	return err;
- }
- 
--static void print_vmd_attached_devs(struct sys_dev *hba)
-+static int print_vmd_attached_devs(struct sys_dev *hba)
- {
- 	struct dirent *ent;
- 	DIR *dir;
-@@ -1775,14 +1775,14 @@ static void print_vmd_attached_devs(struct sys_dev *hba)
- 	char *c, *rp;
- 
- 	if (hba->type != SYS_DEV_VMD)
--		return;
-+		return 1;
- 
- 	/* scroll through /sys/dev/block looking for devices attached to
- 	 * this hba
- 	 */
- 	dir = opendir("/sys/bus/pci/drivers/nvme");
- 	if (!dir)
--		return;
-+		return 1;
- 
- 	for (ent = readdir(dir); ent; ent = readdir(dir)) {
- 		int n;
-@@ -1818,6 +1818,7 @@ static void print_vmd_attached_devs(struct sys_dev *hba)
- 	}
- 
- 	closedir(dir);
-+	return 0;
- }
- 
- static void print_found_intel_controllers(struct sys_dev *elem)
-@@ -2024,7 +2025,11 @@ static int detail_platform_imsm(int verbose, int enumerate_only, char *controlle
- 					print_imsm_capability(&entry->orom);
- 					printf(" I/O Controller : %s (%s)\n",
- 						vmd_domain_to_controller(hba, buf), get_sys_dev_type(hba->type));
--					print_vmd_attached_devs(hba);
-+					if (print_vmd_attached_devs(hba)) {
-+						if (verbose > 0)
-+							pr_err("failed to get devices attached to VMD domain.\n");
-+						result |= 2;
-+					}
- 					printf("\n");
- 				}
- 			}
--- 
-2.5.0
+Cheers,
+Jes
+
 
