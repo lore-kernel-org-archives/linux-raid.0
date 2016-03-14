@@ -1,98 +1,74 @@
-From: Andrea Righi <righi.andrea@gmail.com>
-Subject: Re: multipath: I/O hanging forever
-Date: Sun, 13 Mar 2016 09:29:25 -0600
-Message-ID: <20160313152924.GB2640@Dell>
-References: <20160229015333.GA3101@Dell>
- <20160229034616.GA2682@Dell>
- <20160304173044.GA2636@Dell>
- <20160306053103.GA31060@kmo-pixel>
- <20160311222433.GA2617@Dell>
- <20160312094723.7c6a4ff4@tom-T450>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: RAID6 Array crash during reshape.....now will not re-assemble.
+Date: Mon, 14 Mar 2016 12:08:06 +1100
+Message-ID: <87r3fdx3wp.fsf@notabene.neil.brown.name>
+References: <CAOS+5GEd4E2wzYhw0rPdrZnjK6UwAUdKCQLLTxXrdPO8d7hS7w@mail.gmail.com> <874mcglcsd.fsf@notabene.neil.brown.name> <CAOS+5GEu0xku0bjf=SAbx8=bkjn33wLg-1c1YK4DK5fOs_QhTQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha1; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20160312094723.7c6a4ff4@tom-T450>
+In-Reply-To: <CAOS+5GEu0xku0bjf=SAbx8=bkjn33wLg-1c1YK4DK5fOs_QhTQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ming Lei <tom.leiming@gmail.com>
-Cc: Kent Overstreet <kent.overstreet@gmail.com>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Another Sillyname <anothersname@googlemail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, Mar 12, 2016 at 09:47:23AM +0800, Ming Lei wrote:
-> On Fri, 11 Mar 2016 15:24:33 -0700
-> Andrea Righi <righi.andrea@gmail.com> wrote:
-> 
-> > On Sat, Mar 05, 2016 at 08:31:03PM -0900, Kent Overstreet wrote:
-> > > On Fri, Mar 04, 2016 at 10:30:44AM -0700, Andrea Righi wrote:
-> > > > On Sun, Feb 28, 2016 at 08:46:16PM -0700, Andrea Righi wrote:
-> > > > > On Sun, Feb 28, 2016 at 06:53:33PM -0700, Andrea Righi wrote:
-> > > > > ... 
-> > > > > > I'm using 4.5.0-rc5+, from Linus' git. I'll try to do a git bisect
-> > > > > > later, I'm pretty sure this problem has been introduced recently (i.e.,
-> > > > > > I've never seen this issue with 4.1.x).
-> > > > > 
-> > > > > I confirm, just tested kernel 4.1 and this problem doesn't happen.
-> > > > 
-> > > > Alright, I had some spare time to bisect this problem and I found that
-> > > > the commit that introduced this issue is c66a14d.
-> > > > 
-> > > > So, I tried to revert the commit (with some changes to fix conflicts and
-> > > > ABI changes) and now multipath seems to work fine for me (no hung task).
-> > > 
-> > > Is it hanging on first IO, first large IO, or just randomly?
-> > 
-> > It's always the very first O_DIRECT I/O, in general the task gets stuck
-> > in do_blockdev_direct_IO().
-> 
-> I can reproduce the issue too, and looks it is a MD issue instead of block.
-> Andrea, could you try the following patch to see if it can fix your issue?
+--=-=-=
+Content-Type: text/plain
 
-It works perfectly to me.
+On Sat, Mar 12 2016, Another Sillyname wrote:
 
-Thanks!
--Andrea
+> Neil
+>
+> Thanks for the insight, much appreciated.
+>
+> I've tried what you suggested and still get stuck.
+>
+>>:losetup /dev/loop0 /tmp/foo/sdb1
+>>:losetup /dev/loop1 /tmp/foo/sdc1
+>>:losetup /dev/loop2 /tmp/foo/sdd1
+>>:losetup /dev/loop3 /tmp/foo/sde1
+>>:losetup /dev/loop4 /tmp/foo/sdf1
+>>:losetup /dev/loop5 /tmp/foo/sdg1
+>>:losetup /dev/loop6 /tmp/foo/sdh1
+>
+>
+>>:mdadm --assemble --force --update=revert-reshape --invalid-backup /dev/md127 /dev/loop0 /dev/loop1 /dev/loop2 /dev/loop3 /dev/loop4 /dev/loop5 /dev/loop6
+> mdadm: /dev/md127: Need a backup file to complete reshape of this array.
+> mdadm: Please provided one with "--backup-file=..."
+> mdadm: (Don't specify --update=revert-reshape again, that part succeeded.)
+>
+> As you can see it 'seems' to have accepted the revert command, but
+> even though I've told it the backup is invalid it's still insisting on
+> the backup being made available.
+>
+> Any further thoughts or insights would be gratefully received.
 
-Tested-by: Andrea Righi <righi.andrea@gmail.com>
+Try giving it a backup file too.
+It doesn't matter what the contents of the file are because you have
+told it the file is invalid.  But I guess it thinks it might still need
+a file to write new backups to temporarily.
 
-> 
-> ---
-> From 43fc9c221e53c64f2df7c100c77cc25c4a98c607 Mon Sep 17 00:00:00 2001
-> From: Ming Lei <ming.lei@canonical.com>
-> Date: Sat, 12 Mar 2016 09:29:40 +0800
-> Subject: [PATCH] md: multipath: don't hardcopy bio in .make_request path
-> 
-> Inside multipath_make_request(), multipath maps the incoming
-> bio into low level device's bio, but it is totally wrong to
-> copy the bio into mapped bio via '*mapped_bio = *bio'. For
-> example, .__bi_remaining is kept in the copy, especially if
-> the incoming bio is chained to via bio splitting, so .bi_end_io
-> can't be called for the mapped bio at all in the completing path
-> in this kind of situation.
-> 
-> This patch fixes the issue by using clone style.
-> 
-> Signed-off-by: Ming Lei <ming.lei@canonical.com>
-> ---
->  drivers/md/multipath.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
-> index 0a72ab6..dd483bb 100644
-> --- a/drivers/md/multipath.c
-> +++ b/drivers/md/multipath.c
-> @@ -129,7 +129,9 @@ static void multipath_make_request(struct mddev *mddev, struct bio * bio)
->  	}
->  	multipath = conf->multipaths + mp_bh->path;
->  
-> -	mp_bh->bio = *bio;
-> +	bio_init(&mp_bh->bio);
-> +	__bio_clone_fast(&mp_bh->bio, bio);
-> +
->  	mp_bh->bio.bi_iter.bi_sector += multipath->rdev->data_offset;
->  	mp_bh->bio.bi_bdev = multipath->rdev->bdev;
->  	mp_bh->bio.bi_rw |= REQ_FAILFAST_TRANSPORT;
-> -- 
-> 1.9.1
-> 
-> 
-> Thanks,
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJW5g72AAoJEDnsnt1WYoG5A4cP/A9UuQvKMIJuqfAGDeCtB9VD
+bpO6bfl7HLOzleKqIoEuygH+hYzzSIr4bGzbFgIxClTvk6Ebdkpfw3Vf47Hycflp
+hpO0/a6opB9dUsrYCsu0YwlaEMTGaMPfBlmh6swb9VDEvEORv55GfPbKkw6HfYQh
+7O54rFBV+OHODC15m6+5/+7yS9l81VvEO5yexURBbA3dVznnGSUSZFWMQzta6Z2L
+4lkU3nATLa3l3feTebx5QQ8SS1v5K3ebt3qtjMQfM3yyyl5z92/OdeTPw/i77GoE
+j/RSiyO8DmWljvv5yqcvBjDEZm+aKNjoO0R4zwTvnaV5jez8R2XUfwNQ62HNGTRm
+6Lre4gLyiJiBDBH6Dg9BapOAcZbQL1uCIpTZFR+CrsprT0CB8C/L9zV80xNpi9G0
+gdV8/Ub0cDA4zEohEx+qmBFxj09wPdIQL3hdBUHMOx1LKNNlqB52ie94usw3T2XA
+u82z9Mqo0ghuZ3gmjNYUNcY05xRAryn36QJ2LQAWyIxw+u3e2+KUfywGzGx1piy/
+5FNcV8g8rVYDTnDtTm/SGKAJEmBj1Le5dJpvmSHnQFOXp/yWW/9f/dAIbGew/87x
+uipXAip4SeEh2je7ErB6mMl5980zZhdC5bWp9ObOTDu7upS/9cr2XDqhReJsTWnC
+ya+OORpARCc/SKH1FNcA
+=skE5
+-----END PGP SIGNATURE-----
+--=-=-=--
