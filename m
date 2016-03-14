@@ -1,42 +1,66 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] raid1: include bio_end_io_list in nr_queued to prevent
- freeze_array hang
-Date: Mon, 14 Mar 2016 11:59:41 -0700
-Message-ID: <20160314185941.GA42144@kernel.org>
-References: <1456760638-23936-1-git-send-email-nate.dailey@stratus.com>
- <20160306233304.GA3200@kernel.org>
+From: Miklos Szeredi <miklos@szeredi.hu>
+Subject: Re: [PATCH RESEND v2 16/18] fuse: Support fuse filesystems outside of init_user_ns
+Date: Mon, 14 Mar 2016 21:58:43 +0100
+Message-ID: <CAJfpegvTuR-LZAVxeJAmojs=gcrM-t5dd-QyZM-bOYMYLRL6Dg@mail.gmail.com>
+References: <1451930639-94331-1-git-send-email-seth.forshee@canonical.com>
+	<1451930639-94331-17-git-send-email-seth.forshee@canonical.com>
+	<20160309112923.GF8655@tucsk>
+	<20160309141840.GC23399@ubuntu-xps13>
+	<CAJfpegv5JmB15yHpjYxVeOYdWWkoLMftr9-e_iS93Y_7m=t4Zw@mail.gmail.com>
+	<20160309152505.GA28779@ubuntu-hedt>
+	<CAJfpegv5KR_Hi-79a8oyb+R+tv9W3RYqy5pngUKSyauVNk2ScQ@mail.gmail.com>
+	<20160309170726.GB28779@ubuntu-hedt>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20160306233304.GA3200@kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Nate Dailey <nate.dailey@stratus.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-bcache-owner@vger.kernel.org>
+In-Reply-To: <20160309170726.GB28779@ubuntu-hedt>
+Sender: linux-bcache-owner@vger.kernel.org
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, Linux-Fsdevel <linux-fsdevel@vger.kernel.org>, fuse-devel <fuse-devel@lists.sourceforge.net>, LSM <linux-security-module@vger.kernel.org>, selinux@tycho.nsa.gov
 List-Id: linux-raid.ids
 
-On Sun, Mar 06, 2016 at 03:33:04PM -0800, Shaohua Li wrote:
-> On Mon, Feb 29, 2016 at 10:43:58AM -0500, Nate Dailey wrote:
-> > If raid1d is handling a mix of read and write errors, handle_read_error's
-> > call to freeze_array can get stuck.
-> > 
-> > This can happen because, though the bio_end_io_list is initially drained,
-> > writes can be added to it via handle_write_finished as the retry_list
-> > is processed. These writes contribute to nr_pending but are not included
-> > in nr_queued.
-> > 
-> > If a later entry on the retry_list triggers a call to handle_read_error,
-> > freeze array hangs waiting for nr_pending == nr_queued+extra. The writes
-> > on the bio_end_io_list aren't included in nr_queued so the condition will
-> > never be satisfied.
-> > 
-> > To prevent the hang, include bio_end_io_list writes in nr_queued.
-> > 
-> > There's probably a better way to handle decrementing nr_queued, but this
-> > seemed like the safest way to avoid breaking surrounding code.
-> > 
-> > I'm happy to supply the script I used to repro this hang.
-> 
-> Looks good. Could you please also fix raid10?
+On Wed, Mar 9, 2016 at 6:07 PM, Seth Forshee <seth.forshee@canonical.com> wrote:
+> On Wed, Mar 09, 2016 at 04:51:42PM +0100, Miklos Szeredi wrote:
+>> On Wed, Mar 9, 2016 at 4:25 PM, Seth Forshee <seth.forshee@canonical.com> wrote:
+>> > On Wed, Mar 09, 2016 at 03:48:22PM +0100, Miklos Szeredi wrote:
+>>
+>> >> Can't we use current_cred()->uid/gid? Or fsuid/fsgid maybe?
+>> >
+>> > That would be a departure from the current behavior in the !allow_other
+>> > case for unprivileged users. Since those mounts are done by an suid
+>> > helper all of those ids would be root in the userns, wouldn't they?
+>>
+>> Well, actually this is what the helper does:
+>>
+>>     sprintf(d, "fd=%i,rootmode=%o,user_id=%u,group_id=%u",
+>>         fd, rootmode, getuid(), getgid());
+>
+> Sorry, I was thinking of euid. So this may not be a problem.
+>
+>> So it just uses the current uid/gid.  Apparently no reason to do this
+>> in userland, we could just as well set these in the kernel.  Except
+>> for possible backward compatibility problems for things not using the
+>> helper.
+>>
+>> BUT if the mount is unprivileged or it's a userns mount, or anything
+>> previously not possible, then we are not constrained by the backward
+>> compatibility issues, and can go with the saner solution.
+>>
+>> Does that not make sense?
+>
+> But we generally do want backwards compatibility, and we want userspace
+> software to be able to expect the same behavior whether or not it's
+> running in a user namespaced container. Obviously we can't always have
+> things 100% identical, but we shouldn't break things unless we really
+> need to.
+>
+> However it may be that this isn't actually going to break assumptions of
+> existing software like I had feared. My preference is still to not
+> change any userspace-visible behaviors since we never know what software
+> might have made assumptions based on those behaviors. But if you're
+> confident that it won't break anything I'm willing to give it a try.
 
-Alright, I applied the patch and added raid10 part so this can be applied to 4.6
+I'm quite confident it won't make a difference.
+
+Thanks,
+Miklos
