@@ -1,66 +1,39 @@
-From: Miklos Szeredi <miklos@szeredi.hu>
-Subject: Re: [PATCH RESEND v2 16/18] fuse: Support fuse filesystems outside of init_user_ns
-Date: Mon, 14 Mar 2016 21:58:43 +0100
-Message-ID: <CAJfpegvTuR-LZAVxeJAmojs=gcrM-t5dd-QyZM-bOYMYLRL6Dg@mail.gmail.com>
-References: <1451930639-94331-1-git-send-email-seth.forshee@canonical.com>
-	<1451930639-94331-17-git-send-email-seth.forshee@canonical.com>
-	<20160309112923.GF8655@tucsk>
-	<20160309141840.GC23399@ubuntu-xps13>
-	<CAJfpegv5JmB15yHpjYxVeOYdWWkoLMftr9-e_iS93Y_7m=t4Zw@mail.gmail.com>
-	<20160309152505.GA28779@ubuntu-hedt>
-	<CAJfpegv5KR_Hi-79a8oyb+R+tv9W3RYqy5pngUKSyauVNk2ScQ@mail.gmail.com>
-	<20160309170726.GB28779@ubuntu-hedt>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-bcache-owner@vger.kernel.org>
-In-Reply-To: <20160309170726.GB28779@ubuntu-hedt>
-Sender: linux-bcache-owner@vger.kernel.org
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, Linux-Fsdevel <linux-fsdevel@vger.kernel.org>, fuse-devel <fuse-devel@lists.sourceforge.net>, LSM <linux-security-module@vger.kernel.org>, selinux@tycho.nsa.gov
+From: Baolin Wang <baolin.wang@linaro.org>
+Subject: [PATCH v2 0/4] Introduce bulk mode for crypto engine framework
+Date: Tue, 15 Mar 2016 15:47:58 +0800
+Message-ID: <cover.1458023695.git.baolin.wang@linaro.org>
+Return-path: <linux-crypto-owner@vger.kernel.org>
+Sender: linux-crypto-owner@vger.kernel.org
+To: herbert@gondor.apana.org.au, davem@davemloft.net, agk@redhat.com, snitzer@redhat.com, axboe@fb.com, dm-devel@redhat.com
+Cc: akpm@linux-foundation.org, david.s.gordon@intel.com, thomas.lendacky@amd.com, robert.jarzmik@free.fr, yamada.masahiro@socionext.com, smueller@chronox.de, tadeusz.struk@intel.com, standby24x7@gmail.com, shli@kernel.org, broonie@kernel.org, linus.walleij@linaro.org, arnd@arndb.de, baolin.wang@linaro.org, linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Mar 9, 2016 at 6:07 PM, Seth Forshee <seth.forshee@canonical.com> wrote:
-> On Wed, Mar 09, 2016 at 04:51:42PM +0100, Miklos Szeredi wrote:
->> On Wed, Mar 9, 2016 at 4:25 PM, Seth Forshee <seth.forshee@canonical.com> wrote:
->> > On Wed, Mar 09, 2016 at 03:48:22PM +0100, Miklos Szeredi wrote:
->>
->> >> Can't we use current_cred()->uid/gid? Or fsuid/fsgid maybe?
->> >
->> > That would be a departure from the current behavior in the !allow_other
->> > case for unprivileged users. Since those mounts are done by an suid
->> > helper all of those ids would be root in the userns, wouldn't they?
->>
->> Well, actually this is what the helper does:
->>
->>     sprintf(d, "fd=%i,rootmode=%o,user_id=%u,group_id=%u",
->>         fd, rootmode, getuid(), getgid());
->
-> Sorry, I was thinking of euid. So this may not be a problem.
->
->> So it just uses the current uid/gid.  Apparently no reason to do this
->> in userland, we could just as well set these in the kernel.  Except
->> for possible backward compatibility problems for things not using the
->> helper.
->>
->> BUT if the mount is unprivileged or it's a userns mount, or anything
->> previously not possible, then we are not constrained by the backward
->> compatibility issues, and can go with the saner solution.
->>
->> Does that not make sense?
->
-> But we generally do want backwards compatibility, and we want userspace
-> software to be able to expect the same behavior whether or not it's
-> running in a user namespaced container. Obviously we can't always have
-> things 100% identical, but we shouldn't break things unless we really
-> need to.
->
-> However it may be that this isn't actually going to break assumptions of
-> existing software like I had feared. My preference is still to not
-> change any userspace-visible behaviors since we never know what software
-> might have made assumptions based on those behaviors. But if you're
-> confident that it won't break anything I'm willing to give it a try.
+Now some cipher hardware engines prefer to handle bulk block by merging requests
+to increase the block size and thus increase the hardware engine processing speed.
 
-I'm quite confident it won't make a difference.
+This patchset introduces request bulk mode to help the crypto hardware drivers
+improve in efficiency.
 
-Thanks,
-Miklos
+Changes since v1:
+ - Modify the sg_is_contiguous() function.
+
+Baolin Wang (4):
+  scatterlist: Introduce some helper functions
+  crypto: Introduce some helper functions to help to merge requests
+  crypto: Introduce the bulk mode for crypto engine framework
+  md: dm-crypt: Initialize the sector number for one request
+
+ crypto/Kconfig               |    1 +
+ crypto/ablk_helper.c         |  135 ++++++++++++++++++++++++++++++++++++++++++
+ crypto/crypto_engine.c       |  122 +++++++++++++++++++++++++++++++++++++-
+ drivers/crypto/omap-aes.c    |    2 +-
+ drivers/md/dm-crypt.c        |    1 +
+ include/crypto/ablk_helper.h |    3 +
+ include/crypto/algapi.h      |   23 ++++++-
+ include/linux/crypto.h       |    5 ++
+ include/linux/scatterlist.h  |   33 +++++++++++
+ lib/scatterlist.c            |   69 +++++++++++++++++++++
+ 10 files changed, 389 insertions(+), 5 deletions(-)
+
+-- 
+1.7.9.5
