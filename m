@@ -1,38 +1,35 @@
-From: Baolin Wang <baolin.wang@linaro.org>
-Subject: [PATCH v2 4/4] md: dm-crypt: Initialize the sector number for one request
-Date: Tue, 15 Mar 2016 15:48:02 +0800
-Message-ID: <db3291f8338ef47059c64b10d4510d506acaac3d.1458023699.git.baolin.wang@linaro.org>
-References: <cover.1458023695.git.baolin.wang@linaro.org>
-Return-path: <linux-crypto-owner@vger.kernel.org>
-In-Reply-To: <cover.1458023695.git.baolin.wang@linaro.org>
-In-Reply-To: <cover.1458023695.git.baolin.wang@linaro.org>
-References: <cover.1458023695.git.baolin.wang@linaro.org>
-Sender: linux-crypto-owner@vger.kernel.org
-To: herbert@gondor.apana.org.au, davem@davemloft.net, agk@redhat.com, snitzer@redhat.com, axboe@fb.com, dm-devel@redhat.com
-Cc: akpm@linux-foundation.org, david.s.gordon@intel.com, thomas.lendacky@amd.com, robert.jarzmik@free.fr, yamada.masahiro@socionext.com, smueller@chronox.de, tadeusz.struk@intel.com, standby24x7@gmail.com, shli@kernel.org, broonie@kernel.org, linus.walleij@linaro.org, arnd@arndb.de, baolin.wang@linaro.org, linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org
+From: Anna-Maria Gleixner <anna-maria@linutronix.de>
+Subject: [PATCH] md/raid5: Cleanup cpu hotplug notifier
+Date: Wed, 16 Mar 2016 09:25:23 +0100
+Message-ID: <1458116723-66984-1-git-send-email-anna-maria@linutronix.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: rt@linutronix.de, Anna-Maria Gleixner <anna-maria@linutronix.de>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If the crypto engine can support the bulk mode, that means the contiguous
-requests from one block can be merged into one request to be handled by
-crypto engine. If so, the crypto engine need the sector number of one request
-to do merging action.
+The raid456_cpu_notify() hotplug callback lacks handling of the
+CPU_UP_CANCELED case. That means if CPU_UP_PREPARE fails, the scratch
+buffer is leaked.
 
-Signed-off-by: Baolin Wang <baolin.wang@linaro.org>
+Add handling for CPU_UP_CANCELED[_FROZEN] hotplug notifier transitions
+to free the scratch buffer.
+
+CC: Shaohua Li <shli@kernel.org>
+CC: linux-raid@vger.kernel.org
+Signed-off-by: Anna-Maria Gleixner <anna-maria@linutronix.de>
 ---
- drivers/md/dm-crypt.c |    1 +
- 1 file changed, 1 insertion(+)
+ drivers/md/raid5.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
-index 3147c8d..9e2dbfd 100644
---- a/drivers/md/dm-crypt.c
-+++ b/drivers/md/dm-crypt.c
-@@ -866,6 +866,7 @@ static int crypt_convert_block(struct crypt_config *cc,
- 			return r;
- 	}
- 
-+	req->sector = ctx->cc_sector;
- 	ablkcipher_request_set_crypt(req, &dmreq->sg_in, &dmreq->sg_out,
- 				     1 << SECTOR_SHIFT, iv);
- 
--- 
-1.7.9.5
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6376,6 +6376,8 @@ static int raid456_cpu_notify(struct not
+ 		break;
+ 	case CPU_DEAD:
+ 	case CPU_DEAD_FROZEN:
++	case CPU_UP_CANCELED:
++	case CPU_UP_CANCELED_FROZEN:
+ 		free_scratch_buffer(conf, per_cpu_ptr(conf->percpu, cpu));
+ 		break;
+ 	default:
