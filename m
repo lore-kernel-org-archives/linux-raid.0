@@ -1,41 +1,74 @@
 From: "Patrick Tschackert" <Killing-Time@gmx.de>
 Subject: Re: problems with dm-raid 6
-Date: Mon, 21 Mar 2016 23:06:17 +0100
-Message-ID: <trinity-158217dd-e51b-4a8a-b40f-dd55ee5a1530-1458597977168@3capp-gmx-bs35>
+Date: Mon, 21 Mar 2016 23:19:03 +0100
+Message-ID: <trinity-d8aad971-9614-4e9c-97ec-f96c279f2157-1458598743708@3capp-gmx-bs35>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas.Klauer@metamorpher.de
+To: philip@turmel.org
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thank you for answering!
+Hi Philip, thanks for answering!
 
->> After rebooting the system, one of the harddisks was missing from my md raid 6 (the drive was /dev/sdf), so i rebuilt it with a hotspare that was already present in the system.
->> I physically removed the "missing" /dev/sdf drive after the restore and replaced it with a new drive.
+> Your smartctl output shows pending sector problems with sdf, sdh, and
+> sdj.  The latter are WD Reds that won't keep those problems through a
+> scrub, so I guess the smartctl report was from before that?
 
->Exact commands involved for those steps?
+The smartctl results are "fresh", i ran the commands just before sending my last eMail.
 
-Well since the /dev/sdf disk was missing from the array after the reboot, i didn't use any command to remove it. I just used
-$ mdadm --run /dev/md0
-to trigger the rebuild/restore. As i had two spare drives present in the array anyway, i thought that was the smartest thing to do.
-After the restore was done, i shut down the system and swapped the missing disk (/dev/sdf) with a new one.
-I then added the new disk to the array as a spare (mdadm --add /dev/md0 /dev/sdf)
+>> mdadm --examine output for your disks?
+>Yes, we want these.
 
-> mdadm --examine output for your disks?
-Here is the output for every disk in the array: http://pastebin.com/JW8rbJYY
+Here: http://pastebin.com/JW8rbJYY
 
-> This is what you get when you use --create --assume-clean on disks
-> that are not actually clean... or if you somehow convince md to
-> integrate a disk that does not have valid data on, for example
-> because you copied partition table and md metadata - but not
-> everything else - using dd.
+> Your mdadm -D output clearly shows a 2014 creation date,
+> so you definitely hadn't done --create --assume-clean at that point.
+> (Don't.)
 
-I didn't use that command or anything like that, i just triggered the rebuild with mdadm --run. It then started the restore (i monitored the progress by looking at /proc/mdstat), and it seemed to complete successfully.
+I didn't do that, I used mdadm --run /dev/md0 to start the rebuild/restore
 
-> Your best bet is that the data is valid on n-2 disks.
-> Use overlay https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID#Making_the_harddisks_read-only_using_an_overlay_file
-> Assemble the overlay RAID with any 2 disks missing (try all combinations) and see if you get valid data.
+> Something else is wrong, quite possibly hardware.  You don't get a
+> mismatch count like that without it showing up in smartctl too, unless
+> corrupt data was being written to one or more disks for a long time.
 
-Thanks, I will definitely try that!
+As I said in my initial eMail, I got
+
+$ cat /sys/block/md0/md/mismatch_cnt
+0
+
+directly after the rebuild/restore. I then ran
+
+$ for i in /sys/class/scsi_generic/*/device/timeout; do echo 120 > "$i"; done
+
+to correct disk timeouts (got that advice from irc) and
+
+$ echo check > /sys/block/md0/md/sync_action
+
+to start a check on the raid. After the check was completed i got
+
+$ cat /sys/block/md0/md/mismatch_cnt
+311936608
+
+> If you used ddrescue to replace sdf instead of letting mdadm reconstruct
+> it, that would have introduced zero sectors that would scramble your
+> encrypted filesystem.  Please let us know that you didn't use ddrescue.
+
+I didn't do that, I just ran mdadm --run /dev/md0, which started the rebuild, nothing else.
+
+
+> The encryption inside your array will frustrate any attempt to do
+> per-member analysis.  I don't think there's anything still wrong with
+> the array (anything fixable, that is).
+> If an array error stomped on the key area of your dm-crypt layer, you
+> are totally destroyed, unless you happen to have a key backup you can
+> restore.
+> Otherwise you are at the mercy of fsck to try to fix your volume.  I
+> would use an overlay for that.
+
+Well, the key area seems alright, i can open the volume using "cryptsetup luksOpen /dev/md0 storage", it asks for my passphrase and then opens the volume.
+I can even read the BTRFS superblock (of the filesys on my luks volume), so the whole thing doesn't seem to be completely borked.
+I'll read up on overlays and try them maybe.
+
+Kind regards
