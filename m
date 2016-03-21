@@ -1,46 +1,84 @@
-From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Subject: Re: problems with dm-raid 6
-Date: Sun, 20 Mar 2016 23:37:27 +0100
-Message-ID: <20160320223727.GA29895@EIS>
-References: <trinity-235b76ed-571d-4615-b6f7-b4d5ed6a116d-1458509365312@3capp-gmx-bs09>
- <trinity-dd5fc296-8c28-4b99-85de-889a495e6956-1458510296940@3capp-gmx-bs09>
+From: Shaohua Li <shli@kernel.org>
+Subject: [GIT PULL] MD for 4.6
+Date: Sun, 20 Mar 2016 22:10:07 -0700
+Message-ID: <20160321051007.GA2231@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <trinity-dd5fc296-8c28-4b99-85de-889a495e6956-1458510296940@3capp-gmx-bs09>
 Sender: linux-raid-owner@vger.kernel.org
-To: Patrick Tschackert <Killing-Time@gmx.de>
-Cc: linux-raid@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.com
 List-Id: linux-raid.ids
 
-On Sun, Mar 20, 2016 at 10:44:57PM +0100, Patrick Tschackert wrote:
-> After rebooting the system, one of the harddisks was missing from my md raid 6 (the drive was /dev/sdf), so i rebuilt it with a hotspare that was already present in the system.
-> I physically removed the "missing" /dev/sdf drive after the restore and replaced it with a new drive.
+Hi Linus,
 
-Exact commands involved for those steps?
+Could you please pull the MD update for 4.6? This update mainly fixes bugs.
+- A raid5 discard related fix from Jes
+- A MD multipath bio clone fix from Ming
+- raid1 error handling deadlock fix from Nate and corresponding raid10 fix from
+  myself
+- A raid5 stripe batch fix from Neil
+- A patch from Sebastian to avoid unnecessary uevent
+- Several cleanup/debug patches
 
-mdadm --examine output for your disks?
+Thanks,
+Shaohua
 
-> $ cat /sys/block/md0/md/mismatch_cnt
-> 311936608
+The following changes since commit 6dc390ad61ac8dfca5fa9b0823981fb6f7ec17a0:
 
-Basically the whole array out of whack.
+  Merge tag 'arc-4.5-rc6-fixes-upd' of git://git.kernel.org/pub/scm/linux/kernel/git/vgupta/arc (2016-02-24 14:06:17 -0800)
 
-This is what you get when you use --create --assume-clean on disks 
-that are not actually clean... or if you somehow convince md to 
-integrate a disk that does not have valid data on, for example 
-because you copied partition table and md metadata - but not  
-everything else - using dd.
+are available in the git repository at:
 
-Something really bad happened here and the only person who 
-can explain it, is probably yourself.
+  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git tags/md/4.6-rc1
 
-Your best bet is that the data is valid on n-2 disks.
+for you to fetch changes up to 1d034e68e2c256640eb1f44bd7dcd89f90806ccf:
 
-Use overlay https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID#Making_the_harddisks_read-only_using_an_overlay_file
+  md/raid5: Cleanup cpu hotplug notifier (2016-03-17 14:30:15 -0700)
 
-Assemble the overlay RAID with any 2 disks missing (try all combinations) and see if you get valid data.
+----------------------------------------------------------------
+Anna-Maria Gleixner (1):
+      md/raid5: Cleanup cpu hotplug notifier
 
-Regards
-Andreas Klauer
+Eric Engestrom (1):
+      md/bitmap: remove redundant check
+
+Guoqing Jiang (3):
+      md/raid1: remove unnecessary BUG_ON
+      md/bitmap: remove redundant return in bitmap_checkpage
+      md: fix typos for stipe
+
+Jes Sorensen (1):
+      md/raid5: Compare apples to apples (or sectors to sectors)
+
+Ming Lei (1):
+      md: multipath: don't hardcopy bio in .make_request path
+
+Nate Dailey (1):
+      raid1: include bio_end_io_list in nr_queued to prevent freeze_array hang
+
+NeilBrown (1):
+      md/raid5: preserve STRIPE_PREREAD_ACTIVE in break_stripe_batch_list
+
+Sebastian Parschauer (1):
+      md: Drop sending a change uevent when stopping
+
+Shaohua Li (6):
+      RAID5: check_reshape() shouldn't call mddev_suspend
+      RAID5: revert e9e4c377e2f563 to fix a livelock
+      MD: warn for potential deadlock
+      Update MD git tree URL
+      md/raid5: output stripe state for debug
+      raid10: include bio_end_io_list in nr_queued to prevent freeze_array hang
+
+ MAINTAINERS            |  2 +-
+ drivers/md/bitmap.c    |  4 +---
+ drivers/md/bitmap.h    |  4 ++--
+ drivers/md/md.c        |  2 +-
+ drivers/md/multipath.c |  4 +++-
+ drivers/md/raid1.c     |  8 ++++---
+ drivers/md/raid10.c    |  7 ++++--
+ drivers/md/raid5.c     | 63 +++++++++++++++++++++++++++++---------------------
+ drivers/md/raid5.h     |  4 +++-
+ 9 files changed, 58 insertions(+), 40 deletions(-)
