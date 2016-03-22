@@ -1,68 +1,77 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
+From: Chris Murphy <lists@colorremedies.com>
 Subject: Re: problems with dm-raid 6
-Date: Tue, 22 Mar 2016 10:48:19 +1100
-Message-ID: <56F08843.4030909@websitemanagers.com.au>
-References: <trinity-226526b2-6058-40bf-a276-9c1b47a80b3b-1458600120646@3capp-gmx-bs35>
- <56F07BBE.1010306@websitemanagers.com.au> <20160321231533.GB16913@EIS>
+Date: Mon, 21 Mar 2016 21:53:29 -0600
+Message-ID: <CAJCQCtRELEP8WxVpiS_E7i7raz+JbPOYTGvVvswCVHW__BC+nA@mail.gmail.com>
+References: <20160321213829.GA16677@EIS>
+	<trinity-226526b2-6058-40bf-a276-9c1b47a80b3b-1458600120646@3capp-gmx-bs35>
+	<20160321230456.GA16913@EIS>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160321231533.GB16913@EIS>
+In-Reply-To: <20160321230456.GA16913@EIS>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Cc: Patrick Tschackert <Killing-Time@gmx.de>, lists@colorremedies.com, linux-raid@vger.kernel.org
+Cc: Patrick Tschackert <Killing-Time@gmx.de>, Chris Murphy <lists@colorremedies.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 22/03/16 10:15, Andreas Klauer wrote:
-> On Tue, Mar 22, 2016 at 09:54:54AM +1100, Adam Goryachev wrote:
->> To my untrained eye, it looks like maybe the "first" drive in your array is correct, and
->> hence the first block returns the correct data so you can access the
->> LUKS, but the second (or third, or fourth) is damaged, and thats why you
->> can't read the filesystem inside the LUKS.
-> This is a "problem" you get with arrays of many disks, if you "forget"
-> the correct drive order and then "create" the RAID anew, it might
-> result in a perfectly mountable filesystem but with errors down the
-> way since the first "wrong" data may appear outside the filesystems
-> immediate metadata zone, if two later disks switched places.
->
-> However the OP only uses 64K chunksize, so that gives a lot less
-> valid data than you'd get with 512K chunks. The LUKS header is already
-> larger than 64K so if there is really bad data on one of the disks
-> throughout, it's already quite lucky for the LUKS header to have
-> survived. May be a good idea to grab a backup of that header while
-> it's still working anyhow.
->
-> The one disk full of bad data theory might not even be correct,
-> maybe a sync started, and somehow the disk got accepted as fully
-> synced even though it didn't... because the controller silently
-> ignored all writes? Mysterious selective hardware failure?
->
->> Once you can do that, then either the filesystem will "Just Work" or
->> else you might need to do a repair depending on what exactly went wrong,
->> and how much was written during that time.
-> Hope dies last.
->
-> If btrfs stored data the same way a traditional filesystem would,
-> uncompressed unencrypted unfragmented, you could hunt the raw data
-> of your md for magic headers of known large files and see if you
-> can tell in more detail the type of damage.
->
-> For example if you could find a large megapixel JPEG image like
-> that and were able to load it but it would appear corrupted at
-> some point, the point of corruption might point you to the
-> disk you no longer want to be in your array.
->
-> But I don't know enough/anything about btrfs so not sure if viable.
+On Mon, Mar 21, 2016 at 5:04 PM, Andreas Klauer
+<Andreas.Klauer@metamorpher.de> wrote:
 
-All of that is true, but it is a LUKS (encrypted) partition, so even if 
-the filesystem format was simple, you wouldn't be able to work it out 
-because all the data is encrypted. (At least, that is the point of data 
-encryption right.... in practice maybe there are still some options, but 
-I'm definitely out of my depth there).
+> Of course you can also attempt to repair btrfs directly but
+> if btrfs redundancy is not equal to RAID-6 then it won't be
+> able to fix. (I think you already cleared that point on
+> the btrfs mailing list and would not be asking here if
+> btrfs had the magic ability to recover)
 
-Regards,
-Adam
+No such unicorns in Btrfs.
+
+In the Btrfs thread, I suggested the md scrub "check", and when I saw
+that high count I was like, no Patrick, do not change anything, don't
+run any Btrfs repair tools, go talk to the linux-raid@ folks. Those
+mismatches are not read errors. Those are discrepancies between data
+and parity strips (chunks for md folks, I use SNIA strip terminology
+because in Btrfs a chunk is a kind of super-extent or collection of
+extents, either metadata or data).
+
+Patrick, do you remember what your mkfs options were?
+
+If default, it will be single profile for data chunks, and DUP for
+metadata chunks. That means there's only one copy of data extents, and
+two copies of metadata. The file system is the metadata including all
+checksums for data and metadata, and all trees. The problem though is
+there's a possible single source of failure in really narrow cases.
+Everything in Btrfs land is a logical address. if you do filefrag on a
+file, the physical address * 4096 is the logical address within
+Btrfs's address space, it's not a physical block. That address has to
+be referenced in the chunk tree, which is what references two things:
+what device(s) *and* what sector on those devices. So even though
+there's a duplicate of the chunk tree, since there's only one logical
+address in the super for the chunk tree, if that logical address
+doesn't resolve to a sane physical location, there's no way to find
+out where any copies are. So it's stuck.
+
+
+Per the Btrfs FAQ:
+------
+There are three superblocks: the first one is located at 64K, the
+second one at 64M, the third one at 256GB. The following lines reset
+the magic string on all the three superblocks
+
+# dd if=/dev/zero bs=1 count=8 of=/dev/sda seek=$((64*1024+64))
+# dd if=/dev/zero bs=1 count=8 of=/dev/sda seek=$((64*1024*1024+64))
+# dd if=/dev/zero bs=1 count=8 of=/dev/sda seek=$((256*1024*1024*1024+64))
+------
+
+So if someone can do the math and figure out what physical devices
+those supers might be on, with a 64K chunk and 9 devices, might be
+funny if they end up all on one drive... tragically funny. Hopefully
+they're on multiple drives thought, and this suggests at least the
+critical minimum number of drives are still sane and this can be
+recovered even minus two drives.
+
+If there's more than two drives toasted, then I don't think Btrfs can
+help at all - same as any other file system.
+
 
 -- 
-Adam Goryachev Website Managers www.websitemanagers.com.au
+Chris Murphy
