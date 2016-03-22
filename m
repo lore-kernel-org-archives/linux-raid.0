@@ -1,38 +1,47 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH] Grow: goto release if Manage_subdevs failed
-Date: Tue, 22 Mar 2016 17:03:44 +0800
-Message-ID: <1458637424-13887-1-git-send-email-gqjiang@suse.com>
+From: zhilong <zlliu@suse.com>
+Subject: [PATCH] Add '--nodes' option in GROW mode
+Date: Tue, 22 Mar 2016 19:44:32 +0800
+Message-ID: <56F13020.8020900@suse.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@redhat.com
-Cc: linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If failure happened when add disk to array
-by grow mode, need to goto release instead
-of continue the reshape.
+Bug description:
+# mdadm -Cv /dev/md0 --bitmap=clustered -l1 -n2 /dev/sdd /dev/sdb 
+--nodes=6 --assume-clean
+# mdadm --grow /dev/md0 --bitmap=none
+# mdadm --grow /dev/md0 --bitmap=clustered
+     -> cluster nodes would be changed to 4, here is my method to 
+resolve it.
+# mdadm --grow /dev/md0 --bitmap=clustered --nodes=6
 
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+Patch:
+
+Cluster nodes is set 4 as default when switch bitmap from
+none to clustered under GROW mode, so add '--nodes'
+option in GROW mode.
+
+Signed-off-by: Zhilong Liu <zlliu@suse.com>
 ---
- Grow.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+  mdadm.c | 1 +
+  1 file changed, 1 insertion(+)
 
-diff --git a/Grow.c b/Grow.c
-index cf2750a..1767a1e 100755
---- a/Grow.c
-+++ b/Grow.c
-@@ -3003,8 +3003,9 @@ static int reshape_array(char *container, int fd, char *devname,
- 	 * level and frozen, we can safely add them.
- 	 */
- 	if (devlist)
--		Manage_subdevs(devname, fd, devlist, verbose,
--			       0,NULL, 0);
-+		if (Manage_subdevs(devname, fd, devlist, verbose,
-+				   0,NULL, 0))
-+			goto release;
- 
- 	if (reshape.backup_blocks == 0 && data_offset != INVALID_SECTORS)
- 		reshape.backup_blocks = reshape.before.data_disks * info->array.chunk_size/512;
+diff --git a/mdadm.c b/mdadm.c
+index 51e16f3..b542b8c 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -592,6 +592,7 @@ int main(int argc, char *argv[])
+              ident.raid_disks = s.raiddisks;
+              continue;
+          case O(ASSEMBLE, Nodes):
++        case O(GROW, Nodes):
+          case O(CREATE, Nodes):
+              c.nodes = parse_num(optarg);
+              if (c.nodes <= 0) {
 -- 
-2.6.2
+2.1.4
 
