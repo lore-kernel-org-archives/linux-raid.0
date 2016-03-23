@@ -1,92 +1,57 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: Re: [PATCH] Grow: goto release if Manage_subdevs failed
-Date: Wed, 23 Mar 2016 09:13:11 +0800
-Message-ID: <56F1EDA7.8040702@suse.com>
-References: <1458637424-13887-1-git-send-email-gqjiang@suse.com>
- <wrfjwpou9z4r.fsf@redhat.com>
+Subject: Re: [PATCH] Add '--nodes' option in GROW mode
+Date: Wed, 23 Mar 2016 19:38:46 +0800
+Message-ID: <56F28046.9010801@suse.com>
+References: <56F13020.8020900@suse.com> <wrfjshzi9z1l.fsf@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjwpou9z4r.fsf@redhat.com>
+In-Reply-To: <wrfjshzi9z1l.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>, zhilong <zlliu@suse.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
 
-On 03/23/2016 01:54 AM, Jes Sorensen wrote:
-> Guoqing Jiang <gqjiang@suse.com> writes:
->> If failure happened when add disk to array
->> by grow mode, need to goto release instead
->> of continue the reshape.
+On 03/23/2016 01:56 AM, Jes Sorensen wrote:
+> zhilong <zlliu@suse.com> writes:
+>> Bug description:
+>> # mdadm -Cv /dev/md0 --bitmap=clustered -l1 -n2 /dev/sdd /dev/sdb
+>> --nodes=6 --assume-clean
+>> # mdadm --grow /dev/md0 --bitmap=none
+>> # mdadm --grow /dev/md0 --bitmap=clustered
+>>      -> cluster nodes would be changed to 4, here is my method to
+>> resolve it.
+>> # mdadm --grow /dev/md0 --bitmap=clustered --nodes=6
 >>
->> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+>> Patch:
+>>
+>> Cluster nodes is set 4 as default when switch bitmap from
+>> none to clustered under GROW mode, so add '--nodes'
+>> option in GROW mode.
+>>
+>> Signed-off-by: Zhilong Liu <zlliu@suse.com>
 >> ---
->>   Grow.c | 5 +++--
->>   1 file changed, 3 insertions(+), 2 deletions(-)
->>
->> diff --git a/Grow.c b/Grow.c
->> index cf2750a..1767a1e 100755
->> --- a/Grow.c
->> +++ b/Grow.c
->> @@ -3003,8 +3003,9 @@ static int reshape_array(char *container, int fd, char *devname,
->>   	 * level and frozen, we can safely add them.
->>   	 */
->>   	if (devlist)
->> -		Manage_subdevs(devname, fd, devlist, verbose,
->> -			       0,NULL, 0);
->> +		if (Manage_subdevs(devname, fd, devlist, verbose,
->> +				   0,NULL, 0))
->> +			goto release;
->>   
->>   	if (reshape.backup_blocks == 0 && data_offset != INVALID_SECTORS)
->>   		reshape.backup_blocks = reshape.before.data_disks * info->array.chunk_size/512;
-> Applied with minor mod to add brackets to the outer if() case - I hope
-> you are OK with this.
+>>   mdadm.c | 1 +
+>>   1 file changed, 1 insertion(+)
+> Hi,
+>
+> I have a question about this, since I simply do not have the knowledge
+> about clustering to judge this approach.
+>
+> If you remove the bitmap, does that 'uncluster' the array? If not,
 
-Thanks, I am fine with it :).
+Yes, remove the bitmap would 'uncluster' the array since leave()
+will be called in kernel if switch the bitmap from 'clustered' to
+'none'.
 
-Regards,
+> shouldn't mdadm be fixed to not set #nodes to 4 when adding a clustered
+> bitmap, if a number of cluster nodes is already present?
+
+The nodes is set 4 by default if the 'nodes' parameter is not specified,
+And it could be overwrite if re-create the clustered bitmap.
+
+Thanks,
 Guoqing
-
->
-> Cheers,
-> Jes
->
->  From 31dbeda730ab1c25040f2e9b5bc49008b8519adf Mon Sep 17 00:00:00 2001
-> From: Guoqing Jiang <gqjiang@suse.com>
-> Date: Tue, 22 Mar 2016 17:03:44 +0800
-> Subject: [PATCH] Grow: goto release if Manage_subdevs failed
->
-> If failure happened when add disk to array
-> by grow mode, need to goto release instead
-> of continue the reshape.
->
-> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
-> ---
->   Grow.c | 8 +++++---
->   1 file changed, 5 insertions(+), 3 deletions(-)
->
-> diff --git a/Grow.c b/Grow.c
-> index 3204135..5953db2 100755
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -3009,9 +3009,11 @@ static int reshape_array(char *container, int fd, char *devname,
->   	 * array.  Now that the array has been changed to the right
->   	 * level and frozen, we can safely add them.
->   	 */
-> -	if (devlist)
-> -		Manage_subdevs(devname, fd, devlist, verbose,
-> -			       0,NULL, 0);
-> +	if (devlist) {
-> +		if (Manage_subdevs(devname, fd, devlist, verbose,
-> +				   0, NULL, 0))
-> +			goto release;
-> +	}
->   
->   	if (reshape.backup_blocks == 0 && data_offset != INVALID_SECTORS)
->   		reshape.backup_blocks = reshape.before.data_disks * info->array.chunk_size/512;
-
