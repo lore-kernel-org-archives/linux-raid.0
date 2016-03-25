@@ -1,65 +1,81 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH] md/bitmap: call bitmap_destroy in case bitmap_create failed
-Date: Fri, 25 Mar 2016 19:00:14 +0800
-Message-ID: <1458903614-21498-1-git-send-email-gqjiang@suse.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: shli@kernel.org
-Cc: linux-raid@vger.kernel.org, neilb@suse.com, Guoqing Jiang <gqjiang@suse.com>
+From: Seth Forshee <seth.forshee@canonical.com>
+Subject: Re: [PATCH RESEND v2 16/18] fuse: Support fuse filesystems outside
+ of init_user_ns
+Date: Fri, 25 Mar 2016 15:31:48 -0500
+Message-ID: <20160325203148.GA4055@ubuntu-xps13>
+References: <1451930639-94331-1-git-send-email-seth.forshee@canonical.com>
+ <1451930639-94331-17-git-send-email-seth.forshee@canonical.com>
+ <20160309112923.GF8655@tucsk>
+ <20160309141840.GC23399@ubuntu-xps13>
+ <CAJfpegv5JmB15yHpjYxVeOYdWWkoLMftr9-e_iS93Y_7m=t4Zw@mail.gmail.com>
+ <20160309152505.GA28779@ubuntu-hedt>
+ <CAJfpegv5KR_Hi-79a8oyb+R+tv9W3RYqy5pngUKSyauVNk2ScQ@mail.gmail.com>
+ <20160309170726.GB28779@ubuntu-hedt>
+ <CAJfpegvTuR-LZAVxeJAmojs=gcrM-t5dd-QyZM-bOYMYLRL6Dg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-security-module-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAJfpegvTuR-LZAVxeJAmojs=gcrM-t5dd-QyZM-bOYMYLRL6Dg@mail.gmail.com>
+Sender: owner-linux-security-module@vger.kernel.org
+To: Miklos Szeredi <miklos@szeredi.hu>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, Linux-Fsdevel <linux-fsdevel@vger.kernel.org>, fuse-devel <fuse-devel@lists.sourceforge.net>, LSM <linux-security-module@vger.kernel.org>, selinux@tycho.nsa.gov
 List-Id: linux-raid.ids
 
-If bitmap_create returns an error, bitmap_destroy must be
-called to do clean up.
+On Mon, Mar 14, 2016 at 09:58:43PM +0100, Miklos Szeredi wrote:
+> On Wed, Mar 9, 2016 at 6:07 PM, Seth Forshee <seth.forshee@canonical.com> wrote:
+> > On Wed, Mar 09, 2016 at 04:51:42PM +0100, Miklos Szeredi wrote:
+> >> On Wed, Mar 9, 2016 at 4:25 PM, Seth Forshee <seth.forshee@canonical.com> wrote:
+> >> > On Wed, Mar 09, 2016 at 03:48:22PM +0100, Miklos Szeredi wrote:
+> >>
+> >> >> Can't we use current_cred()->uid/gid? Or fsuid/fsgid maybe?
+> >> >
+> >> > That would be a departure from the current behavior in the !allow_other
+> >> > case for unprivileged users. Since those mounts are done by an suid
+> >> > helper all of those ids would be root in the userns, wouldn't they?
+> >>
+> >> Well, actually this is what the helper does:
+> >>
+> >>     sprintf(d, "fd=%i,rootmode=%o,user_id=%u,group_id=%u",
+> >>         fd, rootmode, getuid(), getgid());
+> >
+> > Sorry, I was thinking of euid. So this may not be a problem.
+> >
+> >> So it just uses the current uid/gid.  Apparently no reason to do this
+> >> in userland, we could just as well set these in the kernel.  Except
+> >> for possible backward compatibility problems for things not using the
+> >> helper.
+> >>
+> >> BUT if the mount is unprivileged or it's a userns mount, or anything
+> >> previously not possible, then we are not constrained by the backward
+> >> compatibility issues, and can go with the saner solution.
+> >>
+> >> Does that not make sense?
+> >
+> > But we generally do want backwards compatibility, and we want userspace
+> > software to be able to expect the same behavior whether or not it's
+> > running in a user namespaced container. Obviously we can't always have
+> > things 100% identical, but we shouldn't break things unless we really
+> > need to.
+> >
+> > However it may be that this isn't actually going to break assumptions of
+> > existing software like I had feared. My preference is still to not
+> > change any userspace-visible behaviors since we never know what software
+> > might have made assumptions based on those behaviors. But if you're
+> > confident that it won't break anything I'm willing to give it a try.
+> 
+> I'm quite confident it won't make a difference.
 
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
----
- drivers/md/bitmap.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+I was just about to go make these changes and discovered that the
+user_id and group_id options are already mandatory, due to this check at
+the bottom of parse_fuse_opt():
 
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index 7df6b4f..ba908e7 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -1865,8 +1865,10 @@ int bitmap_copy_from_slot(struct mddev *mddev, int slot,
- 	struct bitmap_counts *counts;
- 	struct bitmap *bitmap = bitmap_create(mddev, slot);
- 
--	if (IS_ERR(bitmap))
-+	if (IS_ERR(bitmap)) {
-+		bitmap_destroy(mddev);
- 		return PTR_ERR(bitmap);
-+	}
- 
- 	rv = bitmap_init_from_disk(bitmap, 0);
- 	if (rv)
-@@ -1898,7 +1900,7 @@ int bitmap_copy_from_slot(struct mddev *mddev, int slot,
- 	*low = lo;
- 	*high = hi;
- err:
--	bitmap_free(bitmap);
-+	bitmap_destroy(mddev);
- 	return rv;
- }
- EXPORT_SYMBOL_GPL(bitmap_copy_from_slot);
-@@ -2170,14 +2172,14 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
- 				else {
- 					mddev->bitmap = bitmap;
- 					rv = bitmap_load(mddev);
--					if (rv) {
--						bitmap_destroy(mddev);
-+					if (rv)
- 						mddev->bitmap_info.offset = 0;
--					}
- 				}
- 				mddev->pers->quiesce(mddev, 0);
--				if (rv)
-+				if (rv) {
-+					bitmap_destroy(mddev);
- 					return rv;
-+				}
- 			}
- 		}
- 	}
--- 
-2.1.4
+        if (!d->fd_present || !d->rootmode_present ||
+            !d->user_id_present || !d->group_id_present)
+                return 0;
 
+So I'll simply drop those two lines which supply default values for
+these options.
+
+Thanks,
+Seth
