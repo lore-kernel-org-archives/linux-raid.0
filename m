@@ -1,16 +1,21 @@
-From: =?utf-8?B?5oiR55qE54Wn54mH5ZyoOg==?= <cable@yjvcable.com>
-Subject: =?utf-8?B?5oiR55qE54Wn54mH5ZyoOg==?=
-Date: Sun, 27 Mar 2016 03:28:56 +0800
-Message-ID: <20160327032903628173@yjvcable.com>
+From: info@loan.com
+Subject: Darlehen Angebot
+Date: Sun, 27 Mar 2016 18:14:01 +0530
+Message-ID: <201603271244.u2RCFKAb011514__13681.8639039577$1459083207$gmane$org@lifc-proxy.univ-fcomte.fr>
+Reply-To: legacyassetgrougp@hotmail.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Description: Mail message body
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Recipients <info@loan.com>
 List-Id: linux-raid.ids
 
-5L2g55qE6ICB5pyL5Y+L6YKA5L2g5p2lUee+pDozNDMyNTc3NTkNCg==
-
-
+Sie ben=F6tigen ein Darlehen niedrige Rate? Altanlage gibt aus Darlehen=
+ in g=FCnstigen Preis gilt jetzt: legacyassetgrougp@hotmail.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
