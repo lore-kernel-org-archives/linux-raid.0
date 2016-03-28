@@ -1,27 +1,37 @@
-From: "John Stoffel" <john@stoffel.org>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
 Subject: Re: Looking to pick PCIe x4/x8 4+ SATA expansion card recommendation.
-Date: Mon, 28 Mar 2016 15:25:18 -0400
-Message-ID: <22265.34078.125691.255754@quad.stoffel.home>
+Date: Mon, 28 Mar 2016 21:35:41 +0200
+Message-ID: <20160328193541.GA9502@EIS>
 References: <56F97B91.4070302@gmail.com>
-	<22265.33776.226233.227426@quad.stoffel.home>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <22265.33776.226233.227426@quad.stoffel.home>
+Content-Disposition: inline
+In-Reply-To: <56F97B91.4070302@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Stoffel <john@stoffel.org>
-Cc: Ram Ramesh <rramesh2400@gmail.com>, Linux Raid <linux-raid@vger.kernel.org>
+To: Ram Ramesh <rramesh2400@gmail.com>
+Cc: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Mon, Mar 28, 2016 at 01:44:33PM -0500, Ram Ramesh wrote:
+> The recommendations typically go for PCIe x1-2port type cards
 
-I just went back and checked, and I got the:
+Well, an 8 port card (like HP H220 or similar) is a bit too 
+expensive if all you need is two more slots, and it's not 
+like mdadm is picky - anything goes, well, as long as it
+meets minimum requirements (no I/O errors etc)...
 
-   LSI 9211 SAS9211-8i 8port low profile 6Gb/s SAS Host Bus Adapter
+If you're looking for something on an even larger scale, 
+maybe have a look at the Backblaze Storage Pod blog posts. 
+Although the hardware they use seems to be hard to get,
+it might give you some ideas.
 
-which was a DELL brand controller.  The 9207 is another model which is
-also recommended, but this is from 2014 or even earlier.   There might
-be newer models out there.
+They actually use port multipliers, I actually wish they 
+were as widespread (and as cheap) as USB hubs, so we all 
+could simply put three or four disks to a single SATA port,
+but alas...
 
-I paid $123 plus shipping.  Been very happy with it, not problems at
-all.
+Maybe next time.
+
+Regards
+Andreas Klauer
