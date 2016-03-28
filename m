@@ -1,105 +1,73 @@
-From: Seth Forshee <seth.forshee@canonical.com>
-Subject: Re: [PATCH RESEND v2 11/18] fs: Ensure the mounter of a filesystem
- is privileged towards its inodes
-Date: Mon, 28 Mar 2016 11:59:36 -0500
-Message-ID: <20160328165936.GC137406@ubuntu-hedt>
-References: <1451930639-94331-1-git-send-email-seth.forshee@canonical.com>
- <1451930639-94331-12-git-send-email-seth.forshee@canonical.com>
- <20160303170201.GA30224@ubuntu-hedt>
- <87twkl50g5.fsf@x220.int.ebiederm.org>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [BUG] NULL pointer in raid1_make_request passed to bio_trim when
+ adding md as bcache caching dev
+Date: Mon, 28 Mar 2016 11:10:59 -0700
+Message-ID: <20160328181059.GA83819@kernel.org>
+References: <56F4058B.1030309@roesner-online.de>
+ <alpine.LRH.2.11.1603250126110.13440@mail.ewheeler.net>
+ <alpine.LRH.2.11.1603250416030.13440@mail.ewheeler.net>
+ <56F54712.6090202@roesner-online.de>
+ <alpine.LRH.2.11.1603251954220.13440@mail.ewheeler.net>
+ <CACVXFVO7ARehcQHvBuRoVHZhc0BgA5kKxaPQTqMT7Y=4Ca6urw@mail.gmail.com>
+ <56F6BCD8.70504@roesner-online.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-bcache-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <87twkl50g5.fsf@x220.int.ebiederm.org>
+In-Reply-To: <56F6BCD8.70504@roesner-online.de>
 Sender: linux-bcache-owner@vger.kernel.org
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <miklos@szeredi.hu>, linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov
+To: Sebastian Roesner <sroesner-kernelorg@roesner-online.de>
+Cc: Ming Lei <ming.lei@canonical.com>, Eric Wheeler <bcache@lists.ewheeler.net>, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, Ming Lin <mlin@kernel.org>, Vlad-Cosmin Miu <miuvlad@gmail.com>, rjones@redhat.com, Kent Overstreet <kent.overstreet@gmail.com>, jmoyer@redhat.com, axboe@fb.com
 List-Id: linux-raid.ids
 
-On Fri, Mar 04, 2016 at 04:43:06PM -0600, Eric W. Biederman wrote:
-> In general this is only an issue if uids and gids on the filesystem
-> do not map into the user namespace.
+On Sat, Mar 26, 2016 at 05:46:16PM +0100, Sebastian Roesner wrote:
+> Hello Ming, Eric,
 > 
-> Therefore the general fix is to limit the logic of checking for
-> capabilities in s_user_ns if we are dealing with INVALID_UID and
-> INVALID_GID.  For proc and kernfs that should never be the case
-> so the problem becomes a non-issue.
+> Am 26.03.2016 um 16:40 schrieb Ming Lei:
+> > From the trace, looks the bio returned from bio_clone_mddev() is NULL,
+> >and maybe the source bio is buggy, something like the attached patch
+> >might be helpful, could you apply the attached debug patch, reproduce
+> >and post the log?
 > 
-> Further I would look at limiting that relaxation to just
-> inode_change_ok. 
+> I was able to reproduce it on a non-productive system, but only after
+> copying the bcache superblocks/partition starts from the original system,
+> with new created ones it worked fine.
+> 
+> Full trace and check_bio output can be found here:
+> 
+> http://pastebin.com/ngvGGHBZ
 
-Finally got around to implementing this today; is the patch below what
-you had in mind?
+320 bvecs exceeds what bio-clone_set can handle. Could you please try below patch?
 
-> So that we can easily wrap that check per filesystem
-> and deny the relaxation for proc and kernfs.  proc and kernfs already
-> have wrappers for .setattr so denying changes when !uid_vaid and
-> !gid_valid would be a trivial addition, and ensure calamity does
-> not ensure.
+commit 92761dad7ff6e1bf25de247e0064dd398e797599
+Author: Shaohua Li <shli@fb.com>
+Date:   Mon Mar 28 10:54:35 2016 -0700
 
-I'm confused about this part though. As you say above, proc and kernfs
-will never have inodes with invalid ids, so it's not an issue. Do you
-just mean this to be extra insurance against problems?
+    block: don't make BLK_DEF_MAX_SECTORS too big
+    
+    bio_alloc_bioset() allocates bvecs from bvec_slabs which can only allocate
+    maximum 256 bvec (eg, 1M for 4k pages). We can't bump BLK_DEF_MAX_SECTORS to
+    exceed this value otherwise bio_alloc_bioset will fail.
+    
+    This fixes commit 30e2bc08b2bb7c069. We probably should make the bvec_slabs
+    hold bigger bvecs if bigger bio size is required.
+    
+    Signed-off-by: Shaohua Li <shli@fb.com>
 
-Thanks,
-Seth
-
----
-
-diff --git a/fs/attr.c b/fs/attr.c
-index 3cfaaac4a18e..f2bcd3f7dfbb 100644
---- a/fs/attr.c
-+++ b/fs/attr.c
-@@ -16,6 +16,31 @@
- #include <linux/evm.h>
- #include <linux/ima.h>
- 
-+static bool chown_ok(const struct inode *inode, kuid_t uid)
-+{
-+	if (uid_eq(current_fsuid(), inode->i_uid) && uid_eq(uid, inode->i_uid))
-+		return true;
-+	if (capable_wrt_inode_uidgid(inode, CAP_CHOWN))
-+		return true;
-+	if (!uid_valid(inode->i_uid) &&
-+	    ns_capable(inode->i_sb->s_user_ns, CAP_CHOWN))
-+		return true;
-+	return false;
-+}
-+
-+static bool chgrp_ok(const struct inode *inode, kgid_t gid)
-+{
-+	if (uid_eq(current_fsuid(), inode->i_uid) &&
-+	    (in_group_p(gid) || gid_eq(gid, inode->i_gid)))
-+		return true;
-+	if (capable_wrt_inode_uidgid(inode, CAP_CHOWN))
-+		return true;
-+	if (!gid_valid(inode->i_gid) &&
-+	    ns_capable(inode->i_sb->s_user_ns, CAP_CHOWN))
-+		return true;
-+	return false;
-+}
-+
- /**
-  * inode_change_ok - check if attribute changes to an inode are allowed
-  * @inode:	inode to check
-@@ -58,17 +83,11 @@ int inode_change_ok(const struct inode *inode, struct iattr *attr)
- 		return 0;
- 
- 	/* Make sure a caller can chown. */
--	if ((ia_valid & ATTR_UID) &&
--	    (!uid_eq(current_fsuid(), inode->i_uid) ||
--	     !uid_eq(attr->ia_uid, inode->i_uid)) &&
--	    !capable_wrt_inode_uidgid(inode, CAP_CHOWN))
-+	if ((ia_valid & ATTR_UID) && !chown_ok(inode, attr->ia_uid))
- 		return -EPERM;
- 
- 	/* Make sure caller can chgrp. */
--	if ((ia_valid & ATTR_GID) &&
--	    (!uid_eq(current_fsuid(), inode->i_uid) ||
--	    (!in_group_p(attr->ia_gid) && !gid_eq(attr->ia_gid, inode->i_gid))) &&
--	    !capable_wrt_inode_uidgid(inode, CAP_CHOWN))
-+	if ((ia_valid & ATTR_GID) && !chgrp_ok(inode, attr->ia_gid))
- 		return -EPERM;
- 
- 	/* Make sure a caller can chmod. */
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 7e5d7e0..da64325 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1153,7 +1153,11 @@ extern int blk_verify_command(unsigned char *cmd, fmode_t has_write_perm);
+ enum blk_default_limits {
+ 	BLK_MAX_SEGMENTS	= 128,
+ 	BLK_SAFE_MAX_SECTORS	= 255,
+-	BLK_DEF_MAX_SECTORS	= 2560,
++	/*
++	 * if you change this, please also change bvec_alloc and BIO_MAX_PAGES.
++	 * Otherwise bio_alloc_bioset will break.
++	 */
++	BLK_DEF_MAX_SECTORS	= BIO_MAX_SECTORS,
+ 	BLK_MAX_SEGMENT_SIZE	= 65536,
+ 	BLK_SEG_BOUNDARY_MASK	= 0xFFFFFFFFUL,
+ };
