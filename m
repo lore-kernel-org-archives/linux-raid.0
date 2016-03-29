@@ -1,304 +1,84 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: Unable to handle kernel NULL pointer dereference in super_written
-Date: Tue, 29 Mar 2016 08:22:00 -0400 (EDT)
-Message-ID: <538658018.35237734.1459254120634.JavaMail.zimbra@redhat.com>
-References: <678678296.35099303.1459240762496.JavaMail.zimbra@redhat.com>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_35237732_1860935665.1459254120631"
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: [PATCH] Introduce stat2kname() and fd2kname()
+Date: Tue, 29 Mar 2016 15:20:29 +0200
+Message-ID: <1459257629-22027-1-git-send-email-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <678678296.35099303.1459240762496.JavaMail.zimbra@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
-Cc: shli@kernel.org, Jes.Sorensen@redhat.com, Neil Brown <neilb@suse.de>
+To: linux-raid@vger.kernel.org
+Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-------=_Part_35237732_1860935665.1459254120631
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+These are similar to stat2devnm() and fd2devnm() but not limited to md
+devices. If the device is a partition they will return its kernel name,
+not the whole device's name. For more information see commit:
+8d83493 ("Introduce devid2kname - slightly different to devid2devnm.")
 
-Hi all
+Also remove unsued declaration for fmt_devname().
 
-I encountered one NULL pointer dereference problem.
+Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+---
+ lib.c         | 15 +++++++++++++++
+ mdadm.h       |  3 ++-
+ super-intel.c |  6 +++++-
+ 3 files changed, 22 insertions(+), 2 deletions(-)
 
-The environment=EF=BC=9A
-latest linux-stable and mdadm codes
-aarch64 platform
-the md device is created with loop devices
+diff --git a/lib.c b/lib.c
+index 6808f62..621edf3 100644
+--- a/lib.c
++++ b/lib.c
+@@ -84,6 +84,21 @@ char *devid2kname(int devid)
+ 	return NULL;
+ }
+ 
++char *stat2kname(struct stat *st)
++{
++	if ((S_IFMT & st->st_mode) != S_IFBLK)
++		return NULL;
++	return devid2kname(st->st_rdev);
++}
++
++char *fd2kname(int fd)
++{
++	struct stat stb;
++	if (fstat(fd, &stb) == 0)
++		return stat2kname(&stb);
++	return NULL;
++}
++
+ char *devid2devnm(int devid)
+ {
+ 	char path[30];
+diff --git a/mdadm.h b/mdadm.h
+index 3b96076..d209488 100755
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -1474,7 +1474,8 @@ void abort_reshape(struct mdinfo *sra);
+ 
+ void *super1_make_v0(struct supertype *st, struct mdinfo *info, mdp_super_t *sb0);
+ 
+-extern void fmt_devname(char *name, int num);
++extern char *stat2kname(struct stat *st);
++extern char *fd2kname(int fd);
+ extern char *stat2devnm(struct stat *st);
+ extern char *fd2devnm(int fd);
+ 
+diff --git a/super-intel.c b/super-intel.c
+index f04ac2f..ba3ee48 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -4589,7 +4589,11 @@ static int load_super_imsm(struct supertype *st, int fd, char *devname)
+ 
+ 	/* retry the load if we might have raced against mdmon */
+ 	if (rv == 3) {
+-		struct mdstat_ent *mdstat = mdstat_by_component(fd2devnm(fd));
++		struct mdstat_ent *mdstat = NULL;
++		char *name = fd2kname(fd);
++
++		if (name)
++			mdstat = mdstat_by_component(name);
+ 
+ 		if (mdstat && mdmon_running(mdstat->devnm) && getpid() != mdmon_pid(mdstat->devnm)) {
+ 			for (retry = 0; retry < 3; retry++) {
+-- 
+2.6.2
 
-It's a test case to check date integrity. I added the test script as the at=
-tachment.
-
-[37158.968198] Unable to handle kernel NULL pointer dereference at virtual =
-address 000002a8
-[37158.976261] pgd =3D fffffe0001300000
-[37158.979648] [000002a8] *pgd=3D00000043f9a50003, *pud=3D00000043f9a50003,=
- *pmd=3D00000043f9a50003, *pte=3D00e8000078090707
-[37158.989911] Internal error: Oops: 96000006 [#1] SMP
-[37158.994766] Modules linked in: ext4 mbcache jbd2 raid456 async_raid6_rec=
-ov async_memcpy async_pq async_xor xor async_tx raid6_pq md_mod loop vfat f=
-at sg xgene_rng nfsd ip_tables xfs libcrc32c dm_mirror dm_region_hash dm_lo=
-g dm_mod realtek(E)
-[37159.016342] CPU: 0 PID: 1817 Comm: loop0 Tainted: G            E   4.5.0=
- #1
-[37159.023271] Hardware name: AppliedMicro Mustang/Mustang, BIOS 1.1.0 Oct =
-20 2015
-[37159.030548] task: fffffe03dd7db300 ti: fffffe03d5fa4000 task.ti: fffffe0=
-3d5fa4000
-[37159.038021] PC is at super_written+0x34/0x98 [md_mod]
-[37159.043052] LR is at bio_endio+0x90/0xc4
-[37159.046956] pc : [<fffffdfffc577984>] lr : [<fffffe0000360890>] pstate: =
-800001c5
-[37159.054319] sp : fffffe03d5fa7b40
-[37159.057617] x29: fffffe03d5fa7b40 x28: 0000000000000000=20
-[37159.062924] x27: 0000000000000000 x26: 0000000000000000=20
-[37159.068230] x25: fffffe03d848adf8 x24: 0000000000000000=20
-[37159.073535] x23: 0000000000000000 x22: fffffe03d876ce00=20
-[37159.078841] x21: fffffe00bc3a8c00 x20: fffffe019df0aa00=20
-[37159.084147] x19: 0000000000000000 x18: 000003ffe853c260=20
-[37159.089455] x17: 00000000004f0468 x16: fffffe0000219b20=20
-[37159.094760] x15: 0000000000000000 x14: 0000000000000000=20
-[37159.100066] x13: 0000000000000000 x12: 0000000000000000=20
-[37159.105371] x11: fffffe00007137b8 x10: 0000000000000aa0=20
-[37159.110677] x9 : fffffe03ffe3ca60 x8 : 0000000000000000=20
-[37159.115982] x7 : 00000003ff340000 x6 : 00000000032ff9d8=20
-[37159.121288] x5 : 0000000000000000 x4 : 0000000000000000=20
-[37159.126593] x3 : fffffe0000b43000 x2 : 00000000000002a8=20
-[37159.131899] x1 : 0000000000000000 x0 : fffffe0000360890=20
-[37159.137204]=20
-[37159.138688] Process loop0 (pid: 1817, stack limit =3D 0xfffffe03d5fa4020=
-)
-[37159.145272] Stack: (0xfffffe03d5fa7b40 to 0xfffffe03d5fa8000)
-[37159.150991] 7b40: fffffe03d5fa7b70 fffffe0000360890 fffffe019df0aa00 fff=
-ffe00003608c4
-[37159.158788] 7b60: 0000000000000000 dead000000000200 fffffe03d5fa7ba0 fff=
-ffe0000367c8c
-[37159.166584] 7b80: fffffe019df0aa00 0000000000000000 0000000000000000 fff=
-ffe03d876ce00
-[37159.174379] 7ba0: fffffe03d5fa7be0 fffffe00003715dc fffffe03d876ce00 000=
-0000000000000
-[37159.182174] 7bc0: fffffe00bc801200 0000000000000000 fffffdfffc533690 000=
-0000000000140
-[37159.189969] 7be0: fffffe03d5fa7c00 fffffe000036b5a4 fffffe03d876ce00 fff=
-ffe03d848ae80
-[37159.197764] 7c00: fffffe03d5fa7c50 fffffe000036b960 fffffe03d848ae80 fff=
-ffe03d848aea0
-[37159.205559] 7c20: 0000000000000001 0000000000000000 fffffe00bc801200 000=
-0000000000140
-[37159.213354] 7c40: fffffe03d848ae80 0000000000000004 fffffe03d5fa7ca0 fff=
-ffe0000371600
-[37159.221148] 7c60: fffffe03dc904000 0000000000000000 fffffe03d5fa4000 000=
-0000000000001
-[37159.228945] 7c80: fffffe00be386f50 fffffe00011a4ff0 0000000000000000 000=
-0000000000000
-[37159.236739] 7ca0: fffffe03d5fa7cc0 fffffe0000371800 fffffe03dc904000 000=
-0000000000000
-[37159.244534] 7cc0: fffffe03d5fa7cf0 fffffe0000371848 fffffe03dc904000 000=
-0000000000000
-[37159.252330] 7ce0: fffffe03d5fa4000 fffffdfffc532948 fffffe03d5fa7d10 fff=
-ffdfffc532740
-[37159.260125] 7d00: fffffe00be386e00 0000000000000000 fffffe03d5fa7df0 fff=
-ffe00000d4f78
-[37159.267921] 7d20: fffffe00011a4000 fffffe00be386f48 fffffe03d5fa4000 000=
-0000000000001
-[37159.275717] 7d40: fffffe00be386f50 fffffe00011a4ff0 0000000000000000 000=
-0000000000000
-[37159.283513] 7d60: 0000000000000000 0000000000000000 fffffe03d5fa7dc0 fff=
-ffe03dc904170
-[37159.291308] 7d80: fffffe03dc904000 fffffe00be386f48 fffffe03d5fa4000 000=
-0000000000001
-[37159.299104] 7da0: fffffe00be386f50 fffffe00011a4ff0 0000000000000000 000=
-0000000000000
-[37159.306900] 7dc0: fffffe03d5fa7de0 fffffe00006f64f0 fffffe03d5fa7df0 fff=
-ffe00000d4fb4
-[37159.314695] 7de0: fffffe03d5fa7df0 fffffe00000d4fcc fffffe03d5fa7e30 fff=
-ffe00000d4f00
-[37159.322491] 7e00: fffffe03d848c100 fffffe0001111e68 fffffe0000915ff8 fff=
-ffe00be386f48
-[37159.330286] 7e20: fffffe00000d4f14 0000000000000000 0000000000000000 fff=
-ffe00000859c0
-[37159.338082] 7e40: fffffe00000d4e24 fffffe03d848c100 0000000000000000 000=
-0000000000000
-[37159.345876] 7e60: 0000000000000000 fffffe00000e1b28 fffffe03dc0ecb00 000=
-0000000000000
-[37159.353673] 7e80: 0000000000000000 fffffe00be386f48 0000000000000000 000=
-0000000000000
-[37159.361469] 7ea0: fffffe03d5fa7ea0 fffffe03d5fa7ea0 0000000000000000 fff=
-ffe0000000000
-[37159.369263] 7ec0: fffffe03d5fa7ec0 fffffe03d5fa7ec0 0000000000000000 000=
-0000000000000
-[37159.377059] 7ee0: 0000000000000000 0000000000000000 0000000000000000 000=
-0000000000000
-[37159.384855] 7f00: 0000000000000000 0000000000000000 0000000000000000 000=
-0000000000000
-[37159.392651] 7f20: 0000000000000000 0000000000000000 0000000000000000 000=
-0000000000000
-[37159.400446] 7f40: 0000000000000000 0000000000000000 0000000000000000 000=
-0000000000000
-[37159.408240] 7f60: 0000000000000000 0000000000000000 0000000000000000 000=
-0000000000000
-[37159.416035] 7f80: 0000000000000000 0000000000000000 0000000000000000 000=
-0000000000000
-[37159.423831] 7fa0: 0000000000000000 0000000000000000 0000000000000000 000=
-0000000000000
-[37159.431625] 7fc0: 0000000000000000 0000000000000000 0000000000000000 000=
-0000000000005
-[37159.439420] 7fe0: 0000000000000000 0000000000000000 0000000000000000 000=
-0000000000000
-[37159.447214] Call trace:
-[37159.449649] Exception stack(0xfffffe03d5fa7980 to 0xfffffe03d5fa7aa0)
-[37159.456059] 7980: 0000000000000000 fffffe019df0aa00 fffffe03d5fa7b40 fff=
-ffdfffc577984
-[37159.463854] 79a0: fffffe0000b43000 fffffe03ffe39400 fffffe03d5fa7a00 fff=
-ffe00006f6254
-[37159.471648] 79c0: fffffe03d5fa4000 fffffe00006f5b20 7fffffffffffffff 000=
-0000000000002
-[37159.479445] 79e0: fffffe03d5fa4000 fffffe03d5fa7b48 7fffffffffffffff 000=
-0000000000000
-[37159.487240] 7a00: fffffe03d5fa7a20 fffffe00006f8ca4 fffffe03ffe39400 000=
-00000fffffffb
-[37159.495034] 7a20: fffffe0000360890 0000000000000000 00000000000002a8 fff=
-ffe0000b43000
-[37159.502830] 7a40: 0000000000000000 0000000000000000 00000000032ff9d8 000=
-00003ff340000
-[37159.510625] 7a60: 0000000000000000 fffffe03ffe3ca60 0000000000000aa0 fff=
-ffe00007137b8
-[37159.518421] 7a80: 0000000000000000 0000000000000000 0000000000000000 000=
-0000000000000
-[37159.526237] [<fffffdfffc577984>] super_written+0x34/0x98 [md_mod]
-[37159.532302] [<fffffe0000360890>] bio_endio+0x90/0xc4
-[37159.537246] [<fffffe0000367c8c>] blk_update_request+0xb8/0x34c
-[37159.543053] [<fffffe00003715dc>] blk_mq_end_request+0x2c/0x84
-[37159.548773] [<fffffe000036b5a4>] blk_flush_complete_seq+0x1ac/0x308
-[37159.555011] [<fffffe000036b960>] flush_end_io+0x124/0x1c8
-[37159.560384] [<fffffe0000371600>] blk_mq_end_request+0x50/0x84
-[37159.566104] [<fffffe0000371800>] __blk_mq_complete_request+0x108/0x118
-[37159.572601] [<fffffe0000371848>] blk_mq_complete_request+0x38/0x44
-[37159.578755] [<fffffdfffc532740>] loop_queue_work+0x368/0x870 [loop]
-[37159.584995] [<fffffe00000d4f78>] kthread_worker_fn+0x64/0x160
-[37159.590714] [<fffffe00000d4f00>] kthread+0xdc/0xf0
-[37159.595483] [<fffffe00000859c0>] ret_from_fork+0x10/0x50
-[37159.600771] Code: f9400eb3 35000281 910aa262 f9800051 (885f7c40)
-
-
-I added BUG_ON(rdev->mddev =3D=3D NULL) in super_write and super_written.=
-=20
-Panic happened in super_written :
-
-[ 4829.714552] md: export_rdev(loop0)
-[ 4829.850794] ------------[ cut here ]------------
-[ 4829.855396] kernel BUG at /root/md/md.c:713!
-
- 708 static void super_written(struct bio *bio)
- 709 {
- 710         struct md_rdev *rdev =3D bio->bi_private;
- 711         struct mddev *mddev =3D rdev->mddev;
- 712=20
- 713         BUG_ON(rdev->mddev =3D=3D NULL);
-
-I tried this on x86_64 too, it gave another calltrace:
-
-[26396.335146] BUG: unable to handle kernel NULL pointer dereference at 000=
-00000000002a8
-[26396.342990] IP: [<ffffffffa0425b00>] super_written+0x20/0x80 [md_mod]
-[26396.349449] PGD 0=20
-[26396.351468] Oops: 0002 [#1] SMP=20
-[26396.354898] Modules linked in: ext4 mbcache jbd2 raid456 async_raid6_rec=
-ov async_memcpy async_pq async_xor xor async_td
-[26396.408404] CPU: 5 PID: 3261 Comm: loop0 Not tainted 4.5.0 #1
-[26396.414140] Hardware name: Dell Inc. PowerEdge R715/0G2DP3, BIOS 3.2.2 0=
-9/15/2014
-[26396.421608] task: ffff8808339be680 ti: ffff8808365f4000 task.ti: ffff880=
-8365f4000
-[26396.429074] RIP: 0010:[<ffffffffa0425b00>]  [<ffffffffa0425b00>] super_w=
-ritten+0x20/0x80 [md_mod]
-[26396.437952] RSP: 0018:ffff8808365f7c38  EFLAGS: 00010046
-[26396.443252] RAX: ffffffffa0425ae0 RBX: ffff8804336a7900 RCX: ffffe8f9f7b=
-41198
-[26396.450371] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff8804336=
-a7900
-[26396.457489] RBP: ffff8808365f7c50 R08: 0000000000000005 R09: 00001801e02=
-ce3d7
-[26396.464608] R10: 0000000000000001 R11: 0000000000000000 R12: 00000000000=
-00000
-[26396.471728] R13: ffff8808338d9a00 R14: 0000000000000000 R15: ffff880833f=
-9fe00
-[26396.478849] FS:  00007f9e5066d740(0000) GS:ffff880237b40000(0000) knlGS:=
-0000000000000000
-[26396.486922] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-[26396.492656] CR2: 00000000000002a8 CR3: 00000000019ea000 CR4: 00000000000=
-006e0
-[26396.499775] Stack:
-[26396.501781]  ffff8804336a7900 0000000000000000 0000000000000000 ffff8808=
-365f7c68
-[26396.509199]  ffffffff81308cd0 ffff8804336a7900 ffff8808365f7ca8 ffffffff=
-81310637
-[26396.516618]  00000000a0233a00 ffff880833f9fe00 0000000000000000 ffff8808=
-33fb0000
-[26396.524038] Call Trace:
-[26396.526485]  [<ffffffff81308cd0>] bio_endio+0x40/0x60
-[26396.531529]  [<ffffffff81310637>] blk_update_request+0x87/0x320
-[26396.537439]  [<ffffffff8131a20a>] blk_mq_end_request+0x1a/0x70
-[26396.543261]  [<ffffffff81313889>] blk_flush_complete_seq+0xd9/0x2a0
-[26396.549517]  [<ffffffff81313ccf>] flush_end_io+0x15f/0x240
-[26396.554993]  [<ffffffff8131a22a>] blk_mq_end_request+0x3a/0x70
-[26396.560815]  [<ffffffff8131a314>] __blk_mq_complete_request+0xb4/0xe0
-[26396.567246]  [<ffffffff8131a35c>] blk_mq_complete_request+0x1c/0x20
-[26396.573506]  [<ffffffffa04182df>] loop_queue_work+0x6f/0x72c [loop]
-[26396.579764]  [<ffffffff81697844>] ? __schedule+0x2b4/0x8f0
-[26396.585242]  [<ffffffff810a7812>] kthread_worker_fn+0x52/0x170
-[26396.591065]  [<ffffffff810a77c0>] ? kthread_create_on_node+0x1a0/0x1a0
-[26396.597582]  [<ffffffff810a7238>] kthread+0xd8/0xf0
-[26396.602453]  [<ffffffff810a7160>] ? kthread_park+0x60/0x60
-[26396.607929]  [<ffffffff8169bdcf>] ret_from_fork+0x3f/0x70
-[26396.613319]  [<ffffffff810a7160>] ? kthread_park+0x60/0x60
-
-
-Best Regards
-Xiao
-------=_Part_35237732_1860935665.1459254120631
-Content-Type: application/x-shellscript; name=test.sh
-Content-Disposition: attachment; filename=test.sh
-Content-Transfer-Encoding: base64
-
-IyEvYmluL2Jhc2gKQ3JlYXRlX0xvb3AoKQp7CmZvciBpIGluIGBzZXEgMCA3YDtkbwoJZGQgaWY9
-L2Rldi96ZXJvIG9mPS9ob21lLyRpLnRtcCBicz0xTSBjb3VudD0yMDAwICYKZG9uZQpkZCBpZj0v
-ZGV2L3VyYW5kb20gb2Y9YmlnZmlsZSBicz0xTSBjb3VudD0xMDI0ICYKd2FpdApmb3IgaSBpbiBg
-c2VxIDAgN2A7ZG8KCWxvc2V0dXAgL2Rldi9sb29wJGkgL2hvbWUvJGkudG1wCmRvbmUKfQpQcmVw
-YXJlKCkKewptZGFkbSAtLWNyZWF0ZSAtLXJ1biAvZGV2L21kMCAtLWxldmVsICQxIC0tbWV0YWRh
-dGEgMS4yIC0tcmFpZC1kZXZpY2VzIDggL2Rldi9sb29wWzAtN10gLS1jaHVuayA1MTIgLS1iaXRt
-YXA9aW50ZXJuYWwgLS1iaXRtYXAtY2h1bms9NjRNIC0tYXNzdW1lLWNsZWFuCnNsZWVwIDIKbWRh
-ZG0gLS13YWl0IC9kZXYvbWQwCm1rZnMuZXh0NCAgL2Rldi9tZDAKbWtkaXIgL21udC9mb3J0ZXN0
-Cm1vdW50IC9kZXYvbWQwIC9tbnQvZm9ydGVzdAptZDVzdW0gYmlnZmlsZSAgPm1kNXN1bTEKfQpD
-bGVhbl9FbnYoKQp7CnVtb3VudCAvZGV2L21kMAptZGFkbSAtU3MKfQpSdW4oKQp7CmNudD0wCndo
-aWxlIFsgJGNudCAtbHQgMTAwMDAgXTsgZG8KCWVjaG8gIi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tJGNudCIKICAgICAgICBjcCBiaWdmaWxlIC9t
-bnQvZm9ydGVzdCAmCiAgICAgICAgc2xlZXAgMTAKICAgICAgICBtZGFkbSAvZGV2L21kMCAtZiAv
-ZGV2L2xvb3AwCiAgICAgICAgc2xlZXAgNQogICAgICAgIG1kYWRtIC9kZXYvbWQwIC1yIC9kZXYv
-bG9vcDAKCXJ0PSQ/CiAgICAgICAgd2hpbGUgWyAxIF07IGRvCiAgICAgICAgICAgICAgICBpZiBb
-ICRydCAtbmUgMCBdO3RoZW4KICAgICAgICAgICAgICAgICAgICAgICAgc2xlZXAgNQogICAgICAg
-ICAgICAgICAgICAgICAgICBtZGFkbSAvZGV2L21kMCAtciAvZGV2L2xvb3AwCgkJCXJ0PSQ/CiAg
-ICAgICAgICAgICAgICBlbHNlCiAgICAgICAgICAgICAgICAgICAgICAgIGJyZWFrCiAgICAgICAg
-ICAgICAgICBmaQogICAgICAgIGRvbmUKICAgICAgICBzbGVlcCAzMAogICAgICAgIG1kYWRtIC9k
-ZXYvbWQwIC1hIC9kZXYvbG9vcDAKCiAgICAgICAgbnVtPWBwcyBhdXhmIHwgZ3JlcCBjcCB8IGdy
-ZXAgYmlnZmlsZSB8IHdjIC1sYAogICAgICAgIHdoaWxlIFsgJG51bSAtbmUgMCBdOyBkbwogICAg
-ICAgICAgICAgICAgc2xlZXAgMTAKICAgICAgICAgICAgICAgIG51bT1gcHMgYXV4ZiB8IGdyZXAg
-Y3AgfCBncmVwIGJpZ2ZpbGUgfCB3YyAtbGAKICAgICAgICBkb25lCgl3YWl0CiAgICAgICAgZWNo
-byAiY3AgZG9uZSIKCWVjaG8gIi0tLS0tLS0tLS0tLS0tLS0tLS1wcyBhdXggfCBncmVwIGNwLS0t
-LS0tLS0tLS0tLSIKCXBzIGF1eCB8IGdyZXAgY3AKCWVjaG8gIi0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLSIKCXN5bmMKCWxzIC1sIC9tbnQvZm9ydGVzdC8K
-CWVjaG8gIm9yaWdpbmFsIGZpbGUiCglscyAtbCBiaWdmaWxlCglzbGVlcCAyCiAgICAgICAgcmVj
-bz1gY2F0IC9wcm9jL21kc3RhdCAgfCBncmVwIHJlY292ZXJ5YAogICAgICAgIHdoaWxlIFsgLW4g
-IiRyZWNvIiBdOyBkbwogICAgICAgICAgICAgICAgICBzbGVlcCAxMAogICAgICAgICAgICAgICAg
-cmVjbz1gY2F0IC9wcm9jL21kc3RhdCAgfCBncmVwIHJlY292ZXJ5YAogICAgICAgIGRvbmUKCW1k
-YWRtIC1EIC9kZXYvbWQwCgljYXQgL3Byb2MvbWRzdGF0CgllY2hvICJyZWNvdmVyeSBkb25lIgoJ
-bWRhZG0gLS13YWl0IC9kZXYvbWQwCgltZDVzdW0gL21udC9mb3J0ZXN0L2JpZ2ZpbGUgPiBtZDVz
-dW0yCiAgICAgICAgdG1wMT1gYXdrICd7cHJpbnQgJDF9JyAuL21kNXN1bTFgCiAgICAgICAgdG1w
-Mj1gYXdrICd7cHJpbnQgJDF9JyAuL21kNXN1bTJgCiAgICAgICAgZWNobyAkdG1wMSA+IGEKICAg
-ICAgICBlY2hvICR0bXAyID4gYgogICAgICAgIGRpZmYgYSBiCiAgICAgICAgaWYgWyAkPyAtbmUg
-MCBdOyB0aGVuCiAgICAgICAgICAgICAgICBlY2hvICJUaGVyZSBhcmUgc29tZSBkYXRlIGNvcnJ1
-cHRpb24sIGNudCBpcyAkY250IgoJCWJyZWFrCiAgICAgICAgZmkKICAgICAgICAoKGNudCsrKSkK
-ICAgICAgICBybSAtcmYgL21udC9mb3J0ZXN0L2JpZ2ZpbGUKZG9uZQp9CkNyZWF0ZV9Mb29wCmZv
-ciBpIGluIDU7IGRvCgllY2hvICRpCglQcmVwYXJlICRpCglSdW4gPlJBSURfJGkubG9nIDI+JjEg
-CglDbGVhbl9FbnYKZG9uZQo=
-------=_Part_35237732_1860935665.1459254120631--
