@@ -1,91 +1,99 @@
-From: Anugraha Sinha <asinha.mailinglist@gmail.com>
-Subject: md raid sync and ext3 formatting on xen hvm guest causing kernel
- crash and device offline
-Date: Wed, 30 Mar 2016 23:41:54 +0530
-Message-ID: <56FC16EA.9050401@gmail.com>
+From: Marko Hauptvogel <marko.hauptvogel@googlemail.com>
+Subject: [PATCH] Consistent use of IEC 80000-13 prefix in manpage
+Date: Wed, 30 Mar 2016 21:48:58 +0200
+Message-ID: <56FC2DAA.2020605@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de, philip@turmel.org
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Phil,
+From: Marko Hauptvogel <marko.hauptvogel@googlemail.com>
 
-This problem is related to mirror raid resyncing when doing installation 
-through anaconda of CentOS 6.6 systems as a xen hvm guest.
+Added the optional K suffix for completeness, as it
+is allowed by util.c's parse_size(char*).
 
-Base xen system - xen kernel version - 4.1.18-1.el6xen.x86_64
-Guest System - CentOS 6.6 - kernel version -  2.6.32-504.16.2.el6
+Signed-off-by: Marko Hauptvogel <marko.hauptvogel@googlemail.com>
+---
+ mdadm.8.in | 21 +++++++++++----------
+ 1 file changed, 11 insertions(+), 10 deletions(-)
 
-Drive exposed on host system, for hvm guest = /dev/sdb - 2TB
-partitioned as
-/dev/sdb1 - primary  - 1024MB    - 262144MB = 256GB
-/dev/sdb2 - primary  - 262144MB  - 524288MB = 256GB
-/dev/sdb3 - primary  - 524288MB  - 786432MB = 256GB
-/dev/sda4 - extended - 786432MB  - (-1)
-/dev/sda5 - logical  - 786432MB  - 1048576MB = 256GB
-/dev/sda6 - logical  - 1048576MB - (-1)
+diff --git a/mdadm.8.in b/mdadm.8.in
+index 50be1aa..80b0826 100644
+--- a/mdadm.8.in
++++ b/mdadm.8.in
+@@ -467,8 +467,8 @@ If this is not specified
+ size, though if there is a variance among the drives of greater than
+1%, a warning is
+ issued.
 
-The above partition layout was exposed to hvm guest as follows
--------------------
-builder = "hvm"
-name = "centos_md_sync"
-memory = 2048
-vcpus = 4
-vif = ['bridge=xenbr0']
-disk = 
-['phy:/dev/sdb1,sda,w','phy:/dev/sdb2,sdb,w','phy:/dev/sdb3,sdc,w','phy:/dev/sdb5,sdd,w']
-vnc = 1
-boot="c"
----------------------
+-A suffix of 'M' or 'G' can be given to indicate Megabytes or
+-Gigabytes respectively.
++A suffix of 'K', 'M' or 'G' can be given to indicate Kibibytes,
+Mebibytes or
++Gibibytes respectively.
 
-When anaconda installation started, I partitioned drives mentioned above 
-as follows
-Host System  ->  Guest System -> Partition layout
-/dev/sdb1    -> /dev/sda      -> /dev/sda1, /dev/sda2 ..... /dev/sda12
-/dev/sdb2    -> /dev/sdb      -> /dev/sdb1, /dev/sdb2 ..... /dev/sdb12
-/dev/sdb3    -> /dev/sdc      -> /dev/sdc1, /dev/sdc2 ..... /dev/sdc12
-/dev/sdb5    -> /dev/sdd      -> /dev/sdd1, /dev/sdd2 ..... /dev/sdd12
+ Sometimes a replacement drive can be a little smaller than the
+ original drives though this should be minimised by IDEMA standards.
+@@ -534,8 +534,8 @@ problems the array can be made bigger again with no
+loss with another
+ .B "\-\-grow \-\-array\-size="
+ command.
 
-Now in the HVM guest OS we doing RAID 1 mirroring as follows (done 
-during installation itself, from anaconda)
-/dev/sd[ab]1 = /dev/md0
-/dev/sd[ab]2 = /dev/md1
-|.
-|.
-|.
-/dev/sd[cd]1 = /dev/mdX
-/dev/sd[cd]2 = /dev/mdY ....etc.
+-A suffix of 'M' or 'G' can be given to indicate Megabytes or
+-Gigabytes respectively.
++A suffix of 'K', 'M' or 'G' can be given to indicate Kibibytes,
+Mebibytes or
++Gibibytes respectively.
+ A value of
+ .B max
+ restores the apparent size of the array to be whatever the real
+@@ -551,8 +551,8 @@ This is only meaningful for RAID0, RAID4, RAID5,
+RAID6, and RAID10.
+ RAID4, RAID5, RAID6, and RAID10 require the chunk size to be a power
+ of 2.  In any case it must be a multiple of 4KB.
 
-Now these md(s) get created properly, and as soon as the creation ends, 
-resyncing starts. Now when /dev/md0 is resyncing, other partitions on 
-/dev/sda & /dev/sdb go in DELAYED state, that is expected, I understand.
-Similarly with /dev/sdc and /dev/sdd. However after sometime, the
-/dev/sd[abcd] drives start to go offline and eventually kernel crashes.
-I checked /sys/block/sda/device/state information on Guest OS while the 
-installation was going on, and it says "offline"
+-A suffix of 'M' or 'G' can be given to indicate Megabytes or
+-Gigabytes respectively.
++A suffix of 'K', 'M' or 'G' can be given to indicate Kibibytes,
+Mebibytes or
++Gibibytes respectively.
 
-I picked up some snapshots and they are kept here:
+ .TP
+ .BR \-\-rounding=
+@@ -729,7 +729,7 @@ beneficial.  This can be suppressed with
+ .TP
+ .BR \-\-bitmap\-chunk=
+ Set the chunksize of the bitmap.  Each bit corresponds to that many
+-Kilobytes of storage.
++Kibibytes of storage.
+ When using a file based bitmap, the default is to use the smallest
+ size that is at-least 4 and requires no more than 2^21 chunks.
+ When using an
+@@ -737,8 +737,8 @@ When using an
+ bitmap, the chunksize defaults to 64Meg, or larger if necessary to
+ fit the bitmap into the available space.
 
-https://drive.google.com/folderview?id=0B3b5lkAlTOf9eGVFUTVOeWxoTms&usp=sharing
+-A suffix of 'M' or 'G' can be given to indicate Megabytes or
+-Gigabytes respectively.
++A suffix of 'K', 'M' or 'G' can be given to indicate Kibibytes,
+Mebibytes or
++Gibibytes respectively.
 
-Some important points,
-1. I installed a Linux CentOS 6.6, without having these SW RAID 
-partitions being created from within anaconda.
-2. When the Guest System came up, I created md raids from within a 
-running system, and similar issue were seen. The problem was same as to 
-what happened during installation, devices went offline, and then kernel 
-crashed.
+ .TP
+ .BR \-W ", " \-\-write\-mostly
+@@ -808,7 +808,8 @@ an array which was originally created using a
+different version of
+ which computed a different offset.
 
-Everytime, a RAID1 sync starts for a large drive in Guest OS
-(say > 20GB), after sometime, devices start to go offline and then 
-kernel crashes. Whether during installation or else otherwise as well.
+ Setting the offset explicitly over-rides the default.  The value given
+-is in Kilobytes unless an 'M' or 'G' suffix is given.
++is in Kibibytes unless a suffix of 'K', 'M' or 'G' is given to indicate
++Kibibytes, Mebibytes or Gibibytes respectively.
 
-Could you please help in this.
-If you want some more snapshots or error messages do let me know.
-
-Regards
-Anugraha Sinha
+ Since Linux 3.4,
+ .B \-\-data\-offset
+-- 
+2.7.4
