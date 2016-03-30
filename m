@@ -1,121 +1,99 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: Re: Unable to handle kernel NULL pointer dereference in
- super_written
-Date: Wed, 30 Mar 2016 03:44:53 -0400 (EDT)
-Message-ID: <2075551491.35783408.1459323893191.JavaMail.zimbra@redhat.com>
-References: <678678296.35099303.1459240762496.JavaMail.zimbra@redhat.com> <538658018.35237734.1459254120634.JavaMail.zimbra@redhat.com> <20160329213731.GA2287@kernel.org>
+From: Seth Forshee <seth.forshee@canonical.com>
+Subject: Re: [PATCH RESEND v2 11/18] fs: Ensure the mounter of a filesystem
+ is privileged towards its inodes
+Date: Wed, 30 Mar 2016 09:58:20 -0500
+Message-ID: <20160330145820.GA41461@ubuntu-hedt>
+References: <1451930639-94331-1-git-send-email-seth.forshee@canonical.com>
+ <1451930639-94331-12-git-send-email-seth.forshee@canonical.com>
+ <20160303170201.GA30224@ubuntu-hedt>
+ <87twkl50g5.fsf@x220.int.ebiederm.org>
+ <20160328165936.GC137406@ubuntu-hedt>
+ <87twjoiw6u.fsf@x220.int.ebiederm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160329213731.GA2287@kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Jes Sorensen <Jes.Sorensen@redhat.com>, Neil Brown <neilb@suse.de>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-security-module-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <87twjoiw6u.fsf@x220.int.ebiederm.org>
+Sender: owner-linux-security-module@vger.kernel.org
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <miklos@szeredi.hu>, linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov
 List-Id: linux-raid.ids
 
+On Tue, Mar 29, 2016 at 08:36:09PM -0500, Eric W. Biederman wrote:
+> Seth Forshee <seth.forshee@canonical.com> writes:
+> 
+> > On Fri, Mar 04, 2016 at 04:43:06PM -0600, Eric W. Biederman wrote:
+> >> In general this is only an issue if uids and gids on the filesystem
+> >> do not map into the user namespace.
+> >> 
+> >> Therefore the general fix is to limit the logic of checking for
+> >> capabilities in s_user_ns if we are dealing with INVALID_UID and
+> >> INVALID_GID.  For proc and kernfs that should never be the case
+> >> so the problem becomes a non-issue.
+> >> 
+> >> Further I would look at limiting that relaxation to just
+> >> inode_change_ok. 
+> >
+> > Finally got around to implementing this today; is the patch below what
+> > you had in mind?
+> 
+> Pretty much.
+> 
+> For the same reason that capble_wrt_inode_uidgid(inode) had to look
+> at both inode->i_uid and inode->i_gid I think we need to look at
+> both inode->i_uid and inode->i_gid in those case.
+> 
+> I am worried about chgrp_ok in cases such as inode->i_uid is valid
+> but unmapped.  I have a similiar worry about chown_ok where
+> inode->i_gid is valid but unmapped (although that worry is less
+> serious).
 
+That makes sense.
 
------ Original Message -----
-> From: "Shaohua Li" <shli@kernel.org>
-> To: "Xiao Ni" <xni@redhat.com>
-> Cc: "linux-raid" <linux-raid@vger.kernel.org>, "Jes Sorensen" <Jes.So=
-rensen@redhat.com>, "Neil Brown" <neilb@suse.de>
-> Sent: Wednesday, March 30, 2016 5:37:31 AM
-> Subject: Re: Unable to handle kernel NULL pointer dereference in supe=
-r_written
->=20
-> On Tue, Mar 29, 2016 at 08:22:00AM -0400, Xiao Ni wrote:
-> > Hi all
-> >=20
-> > I encountered one NULL pointer dereference problem.
-> >=20
-> > The environment=EF=BC=9A
-> > latest linux-stable and mdadm codes
-> > aarch64 platform
-> > the md device is created with loop devices
-> >=20
-> > It's a test case to check date integrity. I added the test script a=
-s the
-> > attachment.
->=20
-> Could you please try this patch:
+So then what is wanted is to check that the other id is either invalid,
+or else it maps into s_user_ns. So for chown_ok() something like this:
 
-Thanks for the patch, I'm running test and will give the result. It nee=
-d to run=20
-more than 300 iterations to reproduce this.
+    if (!uid_valid(inode->i_uid) &&
+        (!gid_valid(inode->i_gid) || kgid_has_mapping(inode->i_sb->s_user_ns, inode->i_gid)) &&
+        ns_capable(inode->i_sb->s_user_ns, CAP_CHOWN))
+            return true;
 
->=20
->=20
-> From b86d9e1724184c79ad1ea63901aec802492b861c Mon Sep 17 00:00:00 200=
-1
-> Message-Id:
-> <b86d9e1724184c79ad1ea63901aec802492b861c.1459285706.git.shli@fb.com>
-> From: Shaohua Li <shli@fb.com>
-> Date: Tue, 29 Mar 2016 14:00:19 -0700
-> Subject: [PATCH] MD: add rdev reference for super write
->=20
-> md_super_write() and corresponding md_super_wait() generally are call=
-ed
-> with reconfig_mutex locked, which prevents disk disappears. There is =
-one
-> case this rule is broken. write_sb_page of bitmap.c doesn't hold the
-> mutex. next_active_rdev does increase rdev reference, but it decrease=
-s
-> the reference too early (eg, before IO finish). disk can disappear at
-> the window. We unconditionally increase rdev reference in
-> md_super_write() to avoid the race.
+and likewise for chgrp_ok(). Does that satisfy your concerns?
 
-In the path hot_remove_disk, the write_sb_page is protected by reconfig=
-_mutex.
-It shouldn't submit bio to the leg which is already set FAULTY. Could y=
-ou give
-an example to show how the buy happen?=20
+> >> So that we can easily wrap that check per filesystem
+> >> and deny the relaxation for proc and kernfs.  proc and kernfs already
+> >> have wrappers for .setattr so denying changes when !uid_vaid and
+> >> !gid_valid would be a trivial addition, and ensure calamity does
+> >> not ensure.
+> >
+> > I'm confused about this part though. As you say above, proc and kernfs
+> > will never have inodes with invalid ids, so it's not an issue. Do you
+> > just mean this to be extra insurance against problems?
+> 
+> I meant two things.
+> 1) As filesystems explicitly have to call inode_change_ok they can
+>    over ride the default if it is possible.
+> 
+> 2) Because being paranoid about backward compatibility matters, it
+>    almost certainly workth add adding a check:
+>    "if (!uid_valid(inode->i_uid) ||!gid_valid(inode->i_gid)) return -EPERM"
+>    To proc and sysfs just before they call inode_change_ok just so we
+>    don't need to analyze them and confirm that they don't use
+>    INVALID_UID.
+> 
+>    That just makes the patch more robust.
+> 
+>    The we could leave removing that code for a follow on patch where
+>    someone takes the time to read through and audit all of the proc and
+>    sysfs code to ensure that the case does not arise, instead of just
+>    implicitily assuming it.
+> 
+>    That is the usual pattern when pushing down changes.  Do something
+>    that is easily guaranteed to work, and leave the careful looking for
+>    a patch all of it's own.
 
-Best Regards
-Xiao
->=20
-> Reported-by: Xiao Ni <xni@redhat.com>
-> Cc: Neil Brown <neilb@suse.de>
-> Signed-off-by: Shaohua Li <shli@fb.com>
-> ---
->  drivers/md/md.c | 3 +++
->  1 file changed, 3 insertions(+)
->=20
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index c068f17..bcfde333 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -718,6 +718,7 @@ static void super_written(struct bio *bio)
-> =20
->  	if (atomic_dec_and_test(&mddev->pending_writes))
->  		wake_up(&mddev->sb_wait);
-> +	rdev_dec_pending(rdev, mddev);
->  	bio_put(bio);
->  }
-> =20
-> @@ -732,6 +733,8 @@ void md_super_write(struct mddev *mddev, struct m=
-d_rdev
-> *rdev,
->  	 */
->  	struct bio *bio =3D bio_alloc_mddev(GFP_NOIO, 1, mddev);
-> =20
-> +	atomic_inc(&rdev->nr_pending);
-> +
->  	bio->bi_bdev =3D rdev->meta_bdev ? rdev->meta_bdev : rdev->bdev;
->  	bio->bi_iter.bi_sector =3D sector;
->  	bio_add_page(bio, page, size, 0);
-> --
-> 2.8.0.rc2
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Okay, I'll add checks.
+
+Thanks,
+Seth
+
