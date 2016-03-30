@@ -1,99 +1,67 @@
-From: Marko Hauptvogel <marko.hauptvogel@googlemail.com>
-Subject: [PATCH] Consistent use of IEC 80000-13 prefix in manpage
-Date: Wed, 30 Mar 2016 21:48:58 +0200
-Message-ID: <56FC2DAA.2020605@googlemail.com>
+From: ebiederm@xmission.com (Eric W. Biederman)
+Subject: Re: [PATCH RESEND v2 11/18] fs: Ensure the mounter of a filesystem is privileged towards its inodes
+Date: Wed, 30 Mar 2016 15:18:28 -0500
+Message-ID: <87oa9viusr.fsf@x220.int.ebiederm.org>
+References: <1451930639-94331-1-git-send-email-seth.forshee@canonical.com>
+	<1451930639-94331-12-git-send-email-seth.forshee@canonical.com>
+	<20160303170201.GA30224@ubuntu-hedt>
+	<87twkl50g5.fsf@x220.int.ebiederm.org>
+	<20160328165936.GC137406@ubuntu-hedt>
+	<87twjoiw6u.fsf@x220.int.ebiederm.org>
+	<20160330145820.GA41461@ubuntu-hedt>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-bcache-owner@vger.kernel.org>
+In-Reply-To: <20160330145820.GA41461@ubuntu-hedt> (Seth Forshee's message of
+	"Wed, 30 Mar 2016 09:58:20 -0500")
+Sender: linux-bcache-owner@vger.kernel.org
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <miklos@szeredi.hu>, linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov
 List-Id: linux-raid.ids
 
-From: Marko Hauptvogel <marko.hauptvogel@googlemail.com>
+Seth Forshee <seth.forshee@canonical.com> writes:
 
-Added the optional K suffix for completeness, as it
-is allowed by util.c's parse_size(char*).
+> On Tue, Mar 29, 2016 at 08:36:09PM -0500, Eric W. Biederman wrote:
+>> Seth Forshee <seth.forshee@canonical.com> writes:
+>> 
+>> > On Fri, Mar 04, 2016 at 04:43:06PM -0600, Eric W. Biederman wrote:
+>> >> In general this is only an issue if uids and gids on the filesystem
+>> >> do not map into the user namespace.
+>> >> 
+>> >> Therefore the general fix is to limit the logic of checking for
+>> >> capabilities in s_user_ns if we are dealing with INVALID_UID and
+>> >> INVALID_GID.  For proc and kernfs that should never be the case
+>> >> so the problem becomes a non-issue.
+>> >> 
+>> >> Further I would look at limiting that relaxation to just
+>> >> inode_change_ok. 
+>> >
+>> > Finally got around to implementing this today; is the patch below what
+>> > you had in mind?
+>> 
+>> Pretty much.
+>> 
+>> For the same reason that capble_wrt_inode_uidgid(inode) had to look
+>> at both inode->i_uid and inode->i_gid I think we need to look at
+>> both inode->i_uid and inode->i_gid in those case.
+>> 
+>> I am worried about chgrp_ok in cases such as inode->i_uid is valid
+>> but unmapped.  I have a similiar worry about chown_ok where
+>> inode->i_gid is valid but unmapped (although that worry is less
+>> serious).
+>
+> That makes sense.
+>
+> So then what is wanted is to check that the other id is either invalid,
+> or else it maps into s_user_ns. So for chown_ok() something like this:
+>
+>     if (!uid_valid(inode->i_uid) &&
+>         (!gid_valid(inode->i_gid) || kgid_has_mapping(inode->i_sb->s_user_ns, inode->i_gid)) &&
+>         ns_capable(inode->i_sb->s_user_ns, CAP_CHOWN))
+>             return true;
+>
+> and likewise for chgrp_ok(). Does that satisfy your concerns?
 
-Signed-off-by: Marko Hauptvogel <marko.hauptvogel@googlemail.com>
----
- mdadm.8.in | 21 +++++++++++----------
- 1 file changed, 11 insertions(+), 10 deletions(-)
+Yes it does.
 
-diff --git a/mdadm.8.in b/mdadm.8.in
-index 50be1aa..80b0826 100644
---- a/mdadm.8.in
-+++ b/mdadm.8.in
-@@ -467,8 +467,8 @@ If this is not specified
- size, though if there is a variance among the drives of greater than
-1%, a warning is
- issued.
-
--A suffix of 'M' or 'G' can be given to indicate Megabytes or
--Gigabytes respectively.
-+A suffix of 'K', 'M' or 'G' can be given to indicate Kibibytes,
-Mebibytes or
-+Gibibytes respectively.
-
- Sometimes a replacement drive can be a little smaller than the
- original drives though this should be minimised by IDEMA standards.
-@@ -534,8 +534,8 @@ problems the array can be made bigger again with no
-loss with another
- .B "\-\-grow \-\-array\-size="
- command.
-
--A suffix of 'M' or 'G' can be given to indicate Megabytes or
--Gigabytes respectively.
-+A suffix of 'K', 'M' or 'G' can be given to indicate Kibibytes,
-Mebibytes or
-+Gibibytes respectively.
- A value of
- .B max
- restores the apparent size of the array to be whatever the real
-@@ -551,8 +551,8 @@ This is only meaningful for RAID0, RAID4, RAID5,
-RAID6, and RAID10.
- RAID4, RAID5, RAID6, and RAID10 require the chunk size to be a power
- of 2.  In any case it must be a multiple of 4KB.
-
--A suffix of 'M' or 'G' can be given to indicate Megabytes or
--Gigabytes respectively.
-+A suffix of 'K', 'M' or 'G' can be given to indicate Kibibytes,
-Mebibytes or
-+Gibibytes respectively.
-
- .TP
- .BR \-\-rounding=
-@@ -729,7 +729,7 @@ beneficial.  This can be suppressed with
- .TP
- .BR \-\-bitmap\-chunk=
- Set the chunksize of the bitmap.  Each bit corresponds to that many
--Kilobytes of storage.
-+Kibibytes of storage.
- When using a file based bitmap, the default is to use the smallest
- size that is at-least 4 and requires no more than 2^21 chunks.
- When using an
-@@ -737,8 +737,8 @@ When using an
- bitmap, the chunksize defaults to 64Meg, or larger if necessary to
- fit the bitmap into the available space.
-
--A suffix of 'M' or 'G' can be given to indicate Megabytes or
--Gigabytes respectively.
-+A suffix of 'K', 'M' or 'G' can be given to indicate Kibibytes,
-Mebibytes or
-+Gibibytes respectively.
-
- .TP
- .BR \-W ", " \-\-write\-mostly
-@@ -808,7 +808,8 @@ an array which was originally created using a
-different version of
- which computed a different offset.
-
- Setting the offset explicitly over-rides the default.  The value given
--is in Kilobytes unless an 'M' or 'G' suffix is given.
-+is in Kibibytes unless a suffix of 'K', 'M' or 'G' is given to indicate
-+Kibibytes, Mebibytes or Gibibytes respectively.
-
- Since Linux 3.4,
- .B \-\-data\-offset
--- 
-2.7.4
+Eric
