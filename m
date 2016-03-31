@@ -1,50 +1,30 @@
-From: Felipe Sateler <fsateler@debian.org>
-Subject: Re: mdadm: Has init script in runlevel S but no matching service file
-Date: Thu, 31 Mar 2016 10:08:50 -0300
-Message-ID: <CAAfdZj8eoXxr_fU8OU+G2S1s4RnJrTB7fAtLxwwtsjeN+BXj=g@mail.gmail.com>
-References: <CAAfdZj_hDJOS2-Q9BchbnBhsprUOn_EmftGLXR-t_b7BOidUYw@mail.gmail.com>
+From: Elder I Frank <eesdeityrs@jjhghg.website.tk>
+Subject: To Your Attention
+Date: Thu, 31 Mar 2016 06:30:21 -0700
+Message-ID: <DB4PR05MB07037E9DE61262CCDDD7BC9789990@DB4PR05MB0703.eurprd05.prod.outlook.com>
+Reply-To: <elder_frank1@yahoo.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAfdZj_hDJOS2-Q9BchbnBhsprUOn_EmftGLXR-t_b7BOidUYw@mail.gmail.com>
+Content-Description: Mail message body
 Sender: linux-raid-owner@vger.kernel.org
-To: 796624@bugs.debian.org, linux-raid@vger.kernel.org
+To: Recipients <eesdeityrs@jjhghg.website.tk>
 List-Id: linux-raid.ids
 
-Hello upstream mdadm.
+To Your Attention,
 
-I'm adding you to CC to resolve the issue of an init script that
-current debian uses, that might possibly be redundant. Please see my
-below diagnosis
+On behalf of the board and management of International Monetary Committees it was resolved by the federal executive council and agreed that your Inheritance/Contract Fund valued at $10.5M would be released to you via DIPLOMATIC CHANNEL immediately your attention is received so you are advice to confirm the following information.send your reply to: elderifrank@gmail.com
 
-On 24 December 2015 at 16:10, Felipe Sateler <fsateler@debian.org> wrote:
->
-> On Sat, 22 Aug 2015 22:32:00 -0300 fsateler@debian.org wrote:
-> > Hi,
-> >
-> > Your package mdadm has an initscript that is enabled in runlevel S,
-> > but it does not provide a corresponding systemd service unit.
->
-> It seems that the mdadm-raid init script (which triggered this bug
-> report) is not useful on a udev system (which all systemd systems
-> are[1]). The file /lib/udev/rules.d/64-md-raid-assembly.rules assembles
-> the arrays incrementally as devices are known to udev, and so running
-> a separate assembly step should be superfluous. If this is not true,
-> then maybe this should be reported upstream, as there is a systemd
-> service missing.
+Your Name,===============
+Address,===================
+Next of kin.==============
+Your Occupation=============
+A scanned copy of your ID or passport.=============
+Direct TelePhone Number===================
 
-For reference, the init script in question can be seen in the souces
-site[1]. On boot, it invokes mdadm --assemble and reports some status
-messages for each md device.
+Regards
 
-So, the questions are: is this init script redundant on a udev system?
-If not, isn't an equivalent systemd unit missing upstream?
-
-
-[1] http://sources.debian.net/src/mdadm/3.4-1/debian/mdadm-raid/
-
-
--- 
-
-Saludos,
-Felipe Sateler
+Elder Idris Frank
+Federal Ministry of Finance
+Email:elderifrank@gmail.com
