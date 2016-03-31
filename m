@@ -1,109 +1,53 @@
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH] Consistent use of IEC 80000-13 prefix in manpage
-Date: Thu, 31 Mar 2016 15:09:11 -0400
-Message-ID: <wrfjio028nxk.fsf@redhat.com>
-References: <56FC2DAA.2020605@googlemail.com>
+Subject: Re: mdadm: Has init script in runlevel S but no matching service file
+Date: Thu, 31 Mar 2016 15:12:33 -0400
+Message-ID: <wrfjegaq8nry.fsf@redhat.com>
+References: <CAAfdZj_hDJOS2-Q9BchbnBhsprUOn_EmftGLXR-t_b7BOidUYw@mail.gmail.com>
+	<CAAfdZj8eoXxr_fU8OU+G2S1s4RnJrTB7fAtLxwwtsjeN+BXj=g@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56FC2DAA.2020605@googlemail.com> (Marko Hauptvogel's message of
-	"Wed, 30 Mar 2016 21:48:58 +0200")
+In-Reply-To: <CAAfdZj8eoXxr_fU8OU+G2S1s4RnJrTB7fAtLxwwtsjeN+BXj=g@mail.gmail.com>
+	(Felipe Sateler's message of "Thu, 31 Mar 2016 10:08:50 -0300")
 Sender: linux-raid-owner@vger.kernel.org
-To: Marko Hauptvogel <marko.hauptvogel@googlemail.com>
-Cc: linux-raid@vger.kernel.org
+To: Felipe Sateler <fsateler@debian.org>
+Cc: 796624@bugs.debian.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Marko Hauptvogel <marko.hauptvogel@googlemail.com> writes:
-> From: Marko Hauptvogel <marko.hauptvogel@googlemail.com>
+Felipe Sateler <fsateler@debian.org> writes:
+> Hello upstream mdadm.
 >
-> Added the optional K suffix for completeness, as it
-> is allowed by util.c's parse_size(char*).
+> I'm adding you to CC to resolve the issue of an init script that
+> current debian uses, that might possibly be redundant. Please see my
+> below diagnosis
 >
-> Signed-off-by: Marko Hauptvogel <marko.hauptvogel@googlemail.com>
+> On 24 December 2015 at 16:10, Felipe Sateler <fsateler@debian.org> wrote:
+>>
+>> On Sat, 22 Aug 2015 22:32:00 -0300 fsateler@debian.org wrote:
+>> > Hi,
+>> >
+>> > Your package mdadm has an initscript that is enabled in runlevel S,
+>> > but it does not provide a corresponding systemd service unit.
+>>
+>> It seems that the mdadm-raid init script (which triggered this bug
+>> report) is not useful on a udev system (which all systemd systems
+>> are[1]). The file /lib/udev/rules.d/64-md-raid-assembly.rules assembles
+>> the arrays incrementally as devices are known to udev, and so running
+>> a separate assembly step should be superfluous. If this is not true,
+>> then maybe this should be reported upstream, as there is a systemd
+>> service missing.
+>
+> For reference, the init script in question can be seen in the souces
+> site[1]. On boot, it invokes mdadm --assemble and reports some status
+> messages for each md device.
+>
+> So, the questions are: is this init script redundant on a udev system?
+> If not, isn't an equivalent systemd unit missing upstream?
 
-I am not very much in favor of this patch. Any normal sane person still
-refers to megabytes and kilobytes as referring to 1024 base sizes,
-despite the pointless standard trying to mess them up to accommodate the
-harddrive vendors. Nobody normal knows what a kibibyte is.
+I haven't looked at Debian's scripts here, but whatever Debian uses as
+init scripts to control mdadm startup is decided by the Debian mdadm
+maintainer. We do carry a set of system files for mdadm in the
+mdadm/systemd directory, so if something is missing, it may be that the
+Debian maintainer forgot to include it.
 
 Jes
-
-> ---
->  mdadm.8.in | 21 +++++++++++----------
->  1 file changed, 11 insertions(+), 10 deletions(-)
->
-> diff --git a/mdadm.8.in b/mdadm.8.in
-> index 50be1aa..80b0826 100644
-> --- a/mdadm.8.in
-> +++ b/mdadm.8.in
-> @@ -467,8 +467,8 @@ If this is not specified
->  size, though if there is a variance among the drives of greater than
-> 1%, a warning is
->  issued.
->
-> -A suffix of 'M' or 'G' can be given to indicate Megabytes or
-> -Gigabytes respectively.
-> +A suffix of 'K', 'M' or 'G' can be given to indicate Kibibytes,
-> Mebibytes or
-> +Gibibytes respectively.
->
->  Sometimes a replacement drive can be a little smaller than the
->  original drives though this should be minimised by IDEMA standards.
-> @@ -534,8 +534,8 @@ problems the array can be made bigger again with no
-> loss with another
->  .B "\-\-grow \-\-array\-size="
->  command.
->
-> -A suffix of 'M' or 'G' can be given to indicate Megabytes or
-> -Gigabytes respectively.
-> +A suffix of 'K', 'M' or 'G' can be given to indicate Kibibytes,
-> Mebibytes or
-> +Gibibytes respectively.
->  A value of
->  .B max
->  restores the apparent size of the array to be whatever the real
-> @@ -551,8 +551,8 @@ This is only meaningful for RAID0, RAID4, RAID5,
-> RAID6, and RAID10.
->  RAID4, RAID5, RAID6, and RAID10 require the chunk size to be a power
->  of 2.  In any case it must be a multiple of 4KB.
->
-> -A suffix of 'M' or 'G' can be given to indicate Megabytes or
-> -Gigabytes respectively.
-> +A suffix of 'K', 'M' or 'G' can be given to indicate Kibibytes,
-> Mebibytes or
-> +Gibibytes respectively.
->
->  .TP
->  .BR \-\-rounding=
-> @@ -729,7 +729,7 @@ beneficial.  This can be suppressed with
->  .TP
->  .BR \-\-bitmap\-chunk=
->  Set the chunksize of the bitmap.  Each bit corresponds to that many
-> -Kilobytes of storage.
-> +Kibibytes of storage.
->  When using a file based bitmap, the default is to use the smallest
->  size that is at-least 4 and requires no more than 2^21 chunks.
->  When using an
-> @@ -737,8 +737,8 @@ When using an
->  bitmap, the chunksize defaults to 64Meg, or larger if necessary to
->  fit the bitmap into the available space.
->
-> -A suffix of 'M' or 'G' can be given to indicate Megabytes or
-> -Gigabytes respectively.
-> +A suffix of 'K', 'M' or 'G' can be given to indicate Kibibytes,
-> Mebibytes or
-> +Gibibytes respectively.
->
->  .TP
->  .BR \-W ", " \-\-write\-mostly
-> @@ -808,7 +808,8 @@ an array which was originally created using a
-> different version of
->  which computed a different offset.
->
->  Setting the offset explicitly over-rides the default.  The value given
-> -is in Kilobytes unless an 'M' or 'G' suffix is given.
-> +is in Kibibytes unless a suffix of 'K', 'M' or 'G' is given to indicate
-> +Kibibytes, Mebibytes or Gibibytes respectively.
->
->  Since Linux 3.4,
->  .B \-\-data\-offset
