@@ -1,121 +1,79 @@
-From: Marko Hauptvogel <marko.hauptvogel@googlemail.com>
-Subject: [PATCH v2] Consistent use of metric prefix in manpage
-Date: Fri, 1 Apr 2016 00:21:53 +0200
-Message-ID: <56FDA301.1080304@googlemail.com>
-References: <56FC2DAA.2020605@googlemail.com> <wrfjio028nxk.fsf@redhat.com>
+From: Dimitri John Ledkov <xnox@debian.org>
+Subject: Re: Bug#796624: mdadm: Has init script in runlevel S but no matching
+ service file
+Date: Thu, 31 Mar 2016 23:53:23 +0100
+Message-ID: <CANBHLUj4GkoBJA-C2weKNS=vOb1Pqj+2Z5YVLG-sZpV+iLh=EQ@mail.gmail.com>
+References: <CAAfdZj_hDJOS2-Q9BchbnBhsprUOn_EmftGLXR-t_b7BOidUYw@mail.gmail.com>
+	<CAAfdZj8eoXxr_fU8OU+G2S1s4RnJrTB7fAtLxwwtsjeN+BXj=g@mail.gmail.com>
+	<wrfjegaq8nry.fsf@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjio028nxk.fsf@redhat.com>
+In-Reply-To: <wrfjegaq8nry.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-raid@vger.kernel.org
+To: Jes Sorensen <Jes.Sorensen@redhat.com>, 796624@bugs.debian.org
+Cc: Felipe Sateler <fsateler@debian.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 31.03.2016 21:09, Jes Sorensen wrote:
-> Marko Hauptvogel <marko.hauptvogel@googlemail.com> writes:
->> > From: Marko Hauptvogel <marko.hauptvogel@googlemail.com>
->> >
->> > Added the optional K suffix for completeness, as it
->> > is allowed by util.c's parse_size(char*).
->> >
->> > Signed-off-by: Marko Hauptvogel <marko.hauptvogel@googlemail.com>
-> I am not very much in favor of this patch. Any normal sane person still
-> refers to megabytes and kilobytes as referring to 1024 base sizes,
-> despite the pointless standard trying to mess them up to accommodate the
-> harddrive vendors. Nobody normal knows what a kibibyte is.
-> 
-> Jes
-> 
+On 31 March 2016 at 20:12, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
+> Felipe Sateler <fsateler@debian.org> writes:
+>> Hello upstream mdadm.
+>>
+>> I'm adding you to CC to resolve the issue of an init script that
+>> current debian uses, that might possibly be redundant. Please see my
+>> below diagnosis
+>>
+>> On 24 December 2015 at 16:10, Felipe Sateler <fsateler@debian.org> wrote:
+>>>
+>>> On Sat, 22 Aug 2015 22:32:00 -0300 fsateler@debian.org wrote:
+>>> > Hi,
+>>> >
+>>> > Your package mdadm has an initscript that is enabled in runlevel S,
+>>> > but it does not provide a corresponding systemd service unit.
+>>>
+>>> It seems that the mdadm-raid init script (which triggered this bug
+>>> report) is not useful on a udev system (which all systemd systems
+>>> are[1]). The file /lib/udev/rules.d/64-md-raid-assembly.rules assembles
+>>> the arrays incrementally as devices are known to udev, and so running
+>>> a separate assembly step should be superfluous. If this is not true,
+>>> then maybe this should be reported upstream, as there is a systemd
+>>> service missing.
+>>
+>> For reference, the init script in question can be seen in the souces
+>> site[1]. On boot, it invokes mdadm --assemble and reports some status
+>> messages for each md device.
+>>
+>> So, the questions are: is this init script redundant on a udev system?
+>> If not, isn't an equivalent systemd unit missing upstream?
+>
+> I haven't looked at Debian's scripts here, but whatever Debian uses as
+> init scripts to control mdadm startup is decided by the Debian mdadm
+> maintainer. We do carry a set of system files for mdadm in the
+> mdadm/systemd directory, so if something is missing, it may be that the
+> Debian maintainer forgot to include it.
+>
 
-I am fine either way, but it should be used consistently throughout the man page. The mix up was what made me cringe.
+In Debian we have multiple configuration that we support:
+* initramfs-tools based initrd without udev
+* initramfs-tools based initrd with udev
+* regular userspace with systemd
+* regular userspace without systemd (sysv init based, with udev)
 
-Greetings
+I believe some of the initscripts are specific to second & last cases,
+and indeed quite debian (and debian derivatives) specific rather than
+upstream worthy.
+In the udev present and systemd available cases packaging is (or
+should be trying to anyway) to follow upstream set of units/udev
+rules.
+But due to supporting the two extra cases listed above we have
+initscripts without equivalent systemd unit, whichi imho should be
+just fine. If there is a problem with that, I don't see a reason to
+report it to mdadm upstream / linux-raid mailing list...
 
---------
+Apart from aesthetics, is there an actual problem with shipping extra
+initscripts on debian?
 
-From eaad00be960ff1d60861cba75cc7e5eb07f7e330 Mon Sep 17 00:00:00 2001
-From: Marko Hauptvogel <marko.hauptvogel@googlemail.com>
-Date: Fri, 1 Apr 2016 00:13:44 +0200
-Subject: [PATCH] Consistent use of metric prefix in manpage
-
-Added the optional K suffix for completeness, as it
-is allowed by util.c's parse_size(char*).
-
-Signed-off-by: Marko Hauptvogel <marko.hauptvogel@googlemail.com>
----
- mdadm.8.in | 15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
-
-diff --git a/mdadm.8.in b/mdadm.8.in
-index 50be1aa..1a04bd1 100644
---- a/mdadm.8.in
-+++ b/mdadm.8.in
-@@ -459,7 +459,7 @@ number of spare devices.
-
- .TP
- .BR \-z ", " \-\-size=
--Amount (in Kibibytes) of space to use from each drive in RAID levels 1/4/5/6.
-+Amount (in Kilobytes) of space to use from each drive in RAID levels 1/4/5/6.
- This must be a multiple of the chunk size, and must leave about 128Kb
- of space at the end of the drive for the RAID superblock.
- If this is not specified
-@@ -467,7 +467,7 @@ If this is not specified
- size, though if there is a variance among the drives of greater than 1%, a warning is
- issued.
-
--A suffix of 'M' or 'G' can be given to indicate Megabytes or
-+A suffix of 'K', 'M' or 'G' can be given to indicate Kilobytes, Megabytes or
- Gigabytes respectively.
-
- Sometimes a replacement drive can be a little smaller than the
-@@ -534,7 +534,7 @@ problems the array can be made bigger again with no loss with another
- .B "\-\-grow \-\-array\-size="
- command.
-
--A suffix of 'M' or 'G' can be given to indicate Megabytes or
-+A suffix of 'K', 'M' or 'G' can be given to indicate Kilobytes, Megabytes or
- Gigabytes respectively.
- A value of
- .B max
-@@ -543,7 +543,7 @@ amount of available space is.
-
- .TP
- .BR \-c ", " \-\-chunk=
--Specify chunk size of kibibytes.  The default when creating an
-+Specify chunk size of kilobytes.  The default when creating an
- array is 512KB.  To ensure compatibility with earlier versions, the
- default when building an array with no persistent metadata is 64KB.
- This is only meaningful for RAID0, RAID4, RAID5, RAID6, and RAID10.
-@@ -551,7 +551,7 @@ This is only meaningful for RAID0, RAID4, RAID5, RAID6, and RAID10.
- RAID4, RAID5, RAID6, and RAID10 require the chunk size to be a power
- of 2.  In any case it must be a multiple of 4KB.
-
--A suffix of 'M' or 'G' can be given to indicate Megabytes or
-+A suffix of 'K', 'M' or 'G' can be given to indicate Kilobytes, Megabytes or
- Gigabytes respectively.
-
- .TP
-@@ -737,7 +737,7 @@ When using an
- bitmap, the chunksize defaults to 64Meg, or larger if necessary to
- fit the bitmap into the available space.
-
--A suffix of 'M' or 'G' can be given to indicate Megabytes or
-+A suffix of 'K', 'M' or 'G' can be given to indicate Kilobytes, Megabytes or
- Gigabytes respectively.
-
- .TP
-@@ -808,7 +808,8 @@ an array which was originally created using a different version of
- which computed a different offset.
-
- Setting the offset explicitly over-rides the default.  The value given
--is in Kilobytes unless an 'M' or 'G' suffix is given.
-+is in Kilobytes unless a suffix of 'K', 'M' or 'G' is used to explicitly
-+indicate Kilobytes, Megabytes or Gigabytes respectively.
-
- Since Linux 3.4,
- .B \-\-data\-offset
 -- 
-2.8.0
+Regards,
 
+Dimitri.
