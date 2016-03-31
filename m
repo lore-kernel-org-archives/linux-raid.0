@@ -1,68 +1,89 @@
-From: Benjamin Meier <maillists@ferienwohnung-altenbeken.de>
-Subject: Recovery after failed chunk size change
-Date: Thu, 31 Mar 2016 21:33:38 +0200
-Message-ID: <56FD7B92.1030102@ferienwohnung-altenbeken.de>
+From: Felipe Sateler <fsateler@debian.org>
+Subject: Re: mdadm: Has init script in runlevel S but no matching service file
+Date: Thu, 31 Mar 2016 16:43:06 -0300
+Message-ID: <CAAfdZj85B3iNAVDVMqj85xqpGtUhajG0j2RHOWbEVBPo49koNQ@mail.gmail.com>
+References: <CAAfdZj_hDJOS2-Q9BchbnBhsprUOn_EmftGLXR-t_b7BOidUYw@mail.gmail.com>
+ <CAAfdZj8eoXxr_fU8OU+G2S1s4RnJrTB7fAtLxwwtsjeN+BXj=g@mail.gmail.com> <wrfjegaq8nry.fsf@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <wrfjegaq8nry.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: 796624@bugs.debian.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi there,
+Hi,
 
-I tried to do a chunk size change from 4096k to 64k on a 7-disk RAID6 
-array. I am using Debian Jessie with kernel 3.16 and mdadm 3.3.2. After 
-I initiated the change the process staled immediately. I could watch it 
-in /proc/mdadm that there has not been any progress at all. The 
-backup-file hasn't been touched for days now.
+On 31 March 2016 at 16:12, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
+> Felipe Sateler <fsateler@debian.org> writes:
+>> Hello upstream mdadm.
+>>
+>> I'm adding you to CC to resolve the issue of an init script that
+>> current debian uses, that might possibly be redundant. Please see my
+>> below diagnosis
+>>
+>> On 24 December 2015 at 16:10, Felipe Sateler <fsateler@debian.org> wrote:
+>>>
+>>> On Sat, 22 Aug 2015 22:32:00 -0300 fsateler@debian.org wrote:
+>>> > Hi,
+>>> >
+>>> > Your package mdadm has an initscript that is enabled in runlevel S,
+>>> > but it does not provide a corresponding systemd service unit.
+>>>
+>>> It seems that the mdadm-raid init script (which triggered this bug
+>>> report) is not useful on a udev system (which all systemd systems
+>>> are[1]). The file /lib/udev/rules.d/64-md-raid-assembly.rules assembles
+>>> the arrays incrementally as devices are known to udev, and so running
+>>> a separate assembly step should be superfluous. If this is not true,
+>>> then maybe this should be reported upstream, as there is a systemd
+>>> service missing.
+>>
+>> For reference, the init script in question can be seen in the souces
+>> site[1]. On boot, it invokes mdadm --assemble and reports some status
+>> messages for each md device.
+>>
+>> So, the questions are: is this init script redundant on a udev system?
+>> If not, isn't an equivalent systemd unit missing upstream?
+>
+> I haven't looked at Debian's scripts here, but whatever Debian uses as
+> init scripts to control mdadm startup is decided by the Debian mdadm
+> maintainer. We do carry a set of system files for mdadm in the
+> mdadm/systemd directory, so if something is missing, it may be that the
+> Debian maintainer forgot to include it.
 
-So I decided to backup all data from that device in case it isn't 
-starting at next reboot. Accidentally the system was restarted before 
-the backup was finished. And now the array is not assembling any more, 
-even with the correct --backup-file. I get "mdadm: Failed to restore 
-critical section for reshape, sorry.".
+I may have been a bit unclear, and omitted important information. The
+systemd units are in fact shipped by mdadm:
 
-So the first question is: How can I access the data again? I think there 
-is no damage at this time- I appended an output from --examine at the 
-end of this message. All seven drives giving me the same output in all 
-relevant topics. Especially "Chunk Size", "New Chunksize" and "Reshape 
-pos'n" is all the same.
-What is the best way now that I do not damage any data?
+mdadm: /lib/systemd/system-shutdown/mdadm.shutdown
+mdadm: /lib/systemd/system/mdadm-grow-continue@.service
+mdadm: /lib/systemd/system/mdadm-last-resort@.service
+mdadm: /lib/systemd/system/mdadm-last-resort@.timer
+mdadm: /lib/systemd/system/mdadm-waitidle.service
+mdadm: /lib/systemd/system/mdadm.service
+mdadm: /lib/systemd/system/mdmon@.service
+mdadm: /lib/systemd/system/mdmonitor.service
 
-Second question: Is the problem with the level change a known bug?
 
-Thanks for reading!
+mdadm.service and mdadm-waitidle.service are symlinks to /dev/null, to
+mask the (debian-specific) sysv init scripts. However, there is still
+one init script left that is not masked. This init script calls mdadm
+--assemble --scan --auto=yes --symlink=no (and a bit more, full script
+linked in the original message). None of the upstream units invoke
+mdadm --assemble, probably because the udev rules assemble the arrays
+incrementally via mdadm --incremental.
 
---
-/dev/disk/by-partlabel/hyper_TA_1:
-           Magic : a92b4efc
-         Version : 1.2
-     Feature Map : 0x5
-            Name : hyper:TA  (local to host hyper)
-      Raid Level : raid6
-    Raid Devices : 7
+....
 
-  Avail Dev Size : 3434725376 (1637.80 GiB 1758.58 GB)
-      Array Size : 8586813440 (8189.02 GiB 8792.90 GB)
-     Data Offset : 147456 sectors
-    Super Offset : 8 sectors
-    Unused Space : before=147368 sectors, after=0 sectors
-           State : clean
+But now that I reviewed the rules file again, I find that the rules
+are modified in debian to disable the incremental assembly. So, the
+script would still be needed, but due to a deviation from upstream.
 
-Internal Bitmap : 8 sectors from superblock
-   Reshape pos'n : 0
-   New Chunksize : 64K
+This discussion should then continue on the debian bug report only.
 
-     Update Time : Thu Mar 31 17:57:01 2016
-   Bad Block Log : 512 entries available at offset 72 sectors
-        Checksum : e7172c1f - correct
-          Events : 527046
+Thanks and sorry for the noise.
 
-          Layout : left-symmetric
-      Chunk Size : 4096K
+-- 
 
-    Device Role : Active device 5
-    Array State : AAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
-
+Saludos,
+Felipe Sateler
