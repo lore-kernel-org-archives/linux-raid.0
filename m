@@ -1,91 +1,75 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [V2 PATCH] md/bitmap: clear bitmap if bitmap_create failed
-Date: Fri,  1 Apr 2016 17:08:49 +0800
-Message-ID: <1459501729-19224-1-git-send-email-gqjiang@suse.com>
-References: <1458903614-21498-1-git-send-email-gqjiang@suse.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1458903614-21498-1-git-send-email-gqjiang@suse.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: shli@kernel.org
-Cc: neilb@suse.com, linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
+From: Eric Wheeler <bcache@lists.ewheeler.net>
+Subject: Re: [BUG] NULL pointer in raid1_make_request passed to bio_trim when
+ adding md as bcache caching dev
+Date: Fri, 1 Apr 2016 18:14:53 +0000 (UTC)
+Message-ID: <alpine.LRH.2.11.1604011812170.5949@mail.ewheeler.net>
+References: <56F4058B.1030309@roesner-online.de> <alpine.LRH.2.11.1603250126110.13440@mail.ewheeler.net> <alpine.LRH.2.11.1603250416030.13440@mail.ewheeler.net> <56F54712.6090202@roesner-online.de> <alpine.LRH.2.11.1603251954220.13440@mail.ewheeler.net>
+ <CACVXFVO7ARehcQHvBuRoVHZhc0BgA5kKxaPQTqMT7Y=4Ca6urw@mail.gmail.com> <56F6BCD8.70504@roesner-online.de> <20160328181059.GA83819@kernel.org>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-bcache-owner@vger.kernel.org>
+In-Reply-To: <20160328181059.GA83819@kernel.org>
+Sender: linux-bcache-owner@vger.kernel.org
+To: Sebastian Roesner <sroesner-kernelorg@roesner-online.de>
+Cc: Shaohua Li <shli@kernel.org>, Ming Lei <ming.lei@canonical.com>, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, Ming Lin <mlin@kernel.org>, Vlad-Cosmin Miu <miuvlad@gmail.com>, rjones@redhat.com, Kent Overstreet <kent.overstreet@gmail.com>, jmoyer@redhat.com, axboe@fb.com
 List-Id: linux-raid.ids
 
-If bitmap_create returns an error, we need to call
-either bitmap_destroy or bitmap_free to do clean up,
-and the selection is based on mddev->bitmap is set
-or not.
+On Mon, 28 Mar 2016, Shaohua Li wrote:
+> On Sat, Mar 26, 2016 at 05:46:16PM +0100, Sebastian Roesner wrote:
+> > Hello Ming, Eric,
+> > 
+> > Am 26.03.2016 um 16:40 schrieb Ming Lei:
+> > I was able to reproduce it on a non-productive system, but only after
+> > copying the bcache superblocks/partition starts from the original system,
+> > with new created ones it worked fine.
 
-And the sysfs_put(bitmap->sysfs_can_clear) is moved
-from bitmap_destroy to bitmap_free, and the comment
-of bitmap_create is changed as well.
+Hey Sebastian,
 
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
----
- drivers/md/bitmap.c | 19 +++++++++++--------
- 1 file changed, 11 insertions(+), 8 deletions(-)
+Have you had a chance to test the patch below from Shaohua Li?
 
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index a624792..062ac99 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -1697,6 +1697,9 @@ static void bitmap_free(struct bitmap *bitmap)
- 	if (!bitmap) /* there was no bitmap */
- 		return;
- 
-+	if (bitmap->sysfs_can_clear)
-+		sysfs_put(bitmap->sysfs_can_clear);
-+
- 	if (mddev_is_clustered(bitmap->mddev) && bitmap->mddev->cluster_info &&
- 		bitmap->cluster_slot == md_cluster_ops->slot_number(bitmap->mddev))
- 		md_cluster_stop(bitmap->mddev);
-@@ -1736,15 +1739,13 @@ void bitmap_destroy(struct mddev *mddev)
- 	if (mddev->thread)
- 		mddev->thread->timeout = MAX_SCHEDULE_TIMEOUT;
- 
--	if (bitmap->sysfs_can_clear)
--		sysfs_put(bitmap->sysfs_can_clear);
--
- 	bitmap_free(bitmap);
- }
- 
- /*
-  * initialize the bitmap structure
-  * if this returns an error, bitmap_destroy must be called to do clean up
-+ * once mddev->bitmap is set
-  */
- struct bitmap *bitmap_create(struct mddev *mddev, int slot)
- {
-@@ -1889,8 +1890,10 @@ int bitmap_copy_from_slot(struct mddev *mddev, int slot,
- 	struct bitmap_counts *counts;
- 	struct bitmap *bitmap = bitmap_create(mddev, slot);
- 
--	if (IS_ERR(bitmap))
-+	if (IS_ERR(bitmap)) {
-+		bitmap_free(bitmap);
- 		return PTR_ERR(bitmap);
-+	}
- 
- 	rv = bitmap_init_from_disk(bitmap, 0);
- 	if (rv)
-@@ -2223,14 +2226,14 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
- 				else {
- 					mddev->bitmap = bitmap;
- 					rv = bitmap_load(mddev);
--					if (rv) {
--						bitmap_destroy(mddev);
-+					if (rv)
- 						mddev->bitmap_info.offset = 0;
--					}
- 				}
- 				mddev->pers->quiesce(mddev, 0);
--				if (rv)
-+				if (rv) {
-+					bitmap_destroy(mddev);
- 					return rv;
-+				}
- 			}
- 		}
- 	}
--- 
-2.6.2
+--
+Eric Wheeler
 
+
+> > 
+> > Full trace and check_bio output can be found here:
+> > 
+> > http://pastebin.com/ngvGGHBZ
+> 
+> 320 bvecs exceeds what bio-clone_set can handle. Could you please try below patch?
+> 
+> commit 92761dad7ff6e1bf25de247e0064dd398e797599
+> Author: Shaohua Li <shli@fb.com>
+> Date:   Mon Mar 28 10:54:35 2016 -0700
+> 
+>     block: don't make BLK_DEF_MAX_SECTORS too big
+>     
+>     bio_alloc_bioset() allocates bvecs from bvec_slabs which can only allocate
+>     maximum 256 bvec (eg, 1M for 4k pages). We can't bump BLK_DEF_MAX_SECTORS to
+>     exceed this value otherwise bio_alloc_bioset will fail.
+>     
+>     This fixes commit 30e2bc08b2bb7c069. We probably should make the bvec_slabs
+>     hold bigger bvecs if bigger bio size is required.
+>     
+>     Signed-off-by: Shaohua Li <shli@fb.com>
+> 
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 7e5d7e0..da64325 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -1153,7 +1153,11 @@ extern int blk_verify_command(unsigned char *cmd, fmode_t has_write_perm);
+>  enum blk_default_limits {
+>  	BLK_MAX_SEGMENTS	= 128,
+>  	BLK_SAFE_MAX_SECTORS	= 255,
+> -	BLK_DEF_MAX_SECTORS	= 2560,
+> +	/*
+> +	 * if you change this, please also change bvec_alloc and BIO_MAX_PAGES.
+> +	 * Otherwise bio_alloc_bioset will break.
+> +	 */
+> +	BLK_DEF_MAX_SECTORS	= BIO_MAX_SECTORS,
+>  	BLK_MAX_SEGMENT_SIZE	= 65536,
+>  	BLK_SEG_BOUNDARY_MASK	= 0xFFFFFFFFUL,
+>  };
+> 
+
+	
