@@ -1,54 +1,91 @@
-From: =?utf-8?Q?=C3=89tienne?= Buira <etienne.buira@gmail.com>
-Subject: Re: Probable bug in md with rdev->new_data_offset
-Date: Fri, 1 Apr 2016 08:15:16 +0200
-Message-ID: <20160401061515.GA24288@rcKGHUlyQfVFW>
-References: <20160328103123.GC8633@rcKGHUlyQfVFW>
- <56F92140.6080801@turmel.org>
- <20160329110750.GA2529@rcKGHUlyQfVFW>
- <877fghrj2n.fsf@notabene.neil.brown.name>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: [V2 PATCH] md/bitmap: clear bitmap if bitmap_create failed
+Date: Fri,  1 Apr 2016 17:08:49 +0800
+Message-ID: <1459501729-19224-1-git-send-email-gqjiang@suse.com>
+References: <1458903614-21498-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <877fghrj2n.fsf@notabene.neil.brown.name>
+In-Reply-To: <1458903614-21498-1-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <mr@neil.brown.name>
-Cc: linux-raid@vger.kernel.org
+To: shli@kernel.org
+Cc: neilb@suse.com, linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-On Fri, Apr 01, 2016 at 04:31:28PM +1100, NeilBrown wrote:
-> On Tue, Mar 29 2016, =C3=89tienne Buira wrote:
+If bitmap_create returns an error, we need to call
+either bitmap_destroy or bitmap_free to do clean up,
+and the selection is based on mddev->bitmap is set
+or not.
 
-=2E./..
+And the sysfs_put(bitmap->sysfs_can_clear) is moved
+from bitmap_destroy to bitmap_free, and the comment
+of bitmap_create is changed as well.
 
->=20
-> I guess sb->new_offset should be called sb->delta_offset.  If you loo=
-k
-> in md_p.h you will see:
->=20
-> 	__le32  new_offset;	/* signed number to add to data_offset in new
-> 				 * layout.  0 =3D=3D no-change.  This can be
-> 				 * different on each device in the array.
-> 				 */
->=20
-> which goes some way to explaining the situation.
->=20
-> NeilBrown
+Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+---
+ drivers/md/bitmap.c | 19 +++++++++++--------
+ 1 file changed, 11 insertions(+), 8 deletions(-)
 
-Hi Neil,
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index a624792..062ac99 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -1697,6 +1697,9 @@ static void bitmap_free(struct bitmap *bitmap)
+ 	if (!bitmap) /* there was no bitmap */
+ 		return;
+ 
++	if (bitmap->sysfs_can_clear)
++		sysfs_put(bitmap->sysfs_can_clear);
++
+ 	if (mddev_is_clustered(bitmap->mddev) && bitmap->mddev->cluster_info &&
+ 		bitmap->cluster_slot == md_cluster_ops->slot_number(bitmap->mddev))
+ 		md_cluster_stop(bitmap->mddev);
+@@ -1736,15 +1739,13 @@ void bitmap_destroy(struct mddev *mddev)
+ 	if (mddev->thread)
+ 		mddev->thread->timeout = MAX_SCHEDULE_TIMEOUT;
+ 
+-	if (bitmap->sysfs_can_clear)
+-		sysfs_put(bitmap->sysfs_can_clear);
+-
+ 	bitmap_free(bitmap);
+ }
+ 
+ /*
+  * initialize the bitmap structure
+  * if this returns an error, bitmap_destroy must be called to do clean up
++ * once mddev->bitmap is set
+  */
+ struct bitmap *bitmap_create(struct mddev *mddev, int slot)
+ {
+@@ -1889,8 +1890,10 @@ int bitmap_copy_from_slot(struct mddev *mddev, int slot,
+ 	struct bitmap_counts *counts;
+ 	struct bitmap *bitmap = bitmap_create(mddev, slot);
+ 
+-	if (IS_ERR(bitmap))
++	if (IS_ERR(bitmap)) {
++		bitmap_free(bitmap);
+ 		return PTR_ERR(bitmap);
++	}
+ 
+ 	rv = bitmap_init_from_disk(bitmap, 0);
+ 	if (rv)
+@@ -2223,14 +2226,14 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
+ 				else {
+ 					mddev->bitmap = bitmap;
+ 					rv = bitmap_load(mddev);
+-					if (rv) {
+-						bitmap_destroy(mddev);
++					if (rv)
+ 						mddev->bitmap_info.offset = 0;
+-					}
+ 				}
+ 				mddev->pers->quiesce(mddev, 0);
+-				if (rv)
++				if (rv) {
++					bitmap_destroy(mddev);
+ 					return rv;
++				}
+ 			}
+ 		}
+ 	}
+-- 
+2.6.2
 
-Thank you for the explanation, i have also looked at the sb loading
-counterpart, and indeed, PAX did catch a false positive here.
-
-=46or the record, the bug have been reported on Gentoo bugtracker [1].
-
-[1] https://bugs.gentoo.org/show_bug.cgi?id=3D578502
-
-Regards.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
