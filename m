@@ -1,101 +1,68 @@
-From: NeilBrown <nfbrown@novell.com>
-Subject: Re: Recovery after failed chunk size change
-Date: Fri, 01 Apr 2016 16:25:24 +1100
-Message-ID: <87a8ldrjcr.fsf@notabene.neil.brown.name>
-References: <56FD7B92.1030102@ferienwohnung-altenbeken.de>
+From: NeilBrown <mr@neil.brown.name>
+Subject: Re: Probable bug in md with rdev->new_data_offset
+Date: Fri, 01 Apr 2016 16:31:28 +1100
+Message-ID: <877fghrj2n.fsf@notabene.neil.brown.name>
+References: <20160328103123.GC8633@rcKGHUlyQfVFW> <56F92140.6080801@turmel.org> <20160329110750.GA2529@rcKGHUlyQfVFW>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56FD7B92.1030102@ferienwohnung-altenbeken.de>
+In-Reply-To: <20160329110750.GA2529@rcKGHUlyQfVFW>
 Sender: linux-raid-owner@vger.kernel.org
-To: Benjamin Meier <maillists@ferienwohnung-altenbeken.de>, linux-raid@vger.kernel.org
+To: =?utf-8?Q?=C3=89tienne?= Buira <etienne.buira@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, Apr 01 2016, Benjamin Meier wrote:
+On Tue, Mar 29 2016, =C3=89tienne Buira wrote:
 
-> Hi there,
+> Sorry, forgot to reply to list as well, resending for completeness.
 >
-> I tried to do a chunk size change from 4096k to 64k on a 7-disk RAID6=20
-> array. I am using Debian Jessie with kernel 3.16 and mdadm 3.3.2. After=20
-> I initiated the change the process staled immediately. I could watch it=20
-> in /proc/mdadm that there has not been any progress at all. The=20
-> backup-file hasn't been touched for days now.
+> On Mon, Mar 28, 2016 at 08:19:12AM -0400, Phil Turmel wrote:
+>> On 03/28/2016 06:31 AM, =C3=89tienne Buira wrote:
 >
-> So I decided to backup all data from that device in case it isn't=20
-> starting at next reboot. Accidentally the system was restarted before=20
-> the backup was finished. And now the array is not assembling any more,=20
-> even with the correct --backup-file. I get "mdadm: Failed to restore=20
-> critical section for reshape, sorry.".
+> ../..
 >
-> So the first question is: How can I access the data again? I think there=
-=20
-> is no damage at this time- I appended an output from --examine at the=20
-> end of this message. All seven drives giving me the same output in all=20
-> relevant topics. Especially "Chunk Size", "New Chunksize" and "Reshape=20
-> pos'n" is all the same.
-> What is the best way now that I do not damage any data?
+>> > After printking the values for rdev->new_data_offset and
+>> > rdev->data_offset in the
+>> > if (rdev->new_data_offset !=3D rdev->data_offset) { ...
+>> > block of super_1_sync, i found that new_data_offset (252928 in my case)
+>> > where smaller than data_offset (258048), thus, the substraction to
+>> > compute sb->new_data_offset yielded an insanely high value.
+>>=20
+>> Modern mdadm and kernels avoid the use of backup files by adjusting the
+>> data offset.  The lowered offset you see is normal.
+>>=20
+>> I suspect the grsecurity kernels haven't kept up with this.  If you can
+>> reproduce a problem with a vanilla kernel, please report back here.
+>> Otherwise you'll have to report to your kernel provider.
+>>=20
+>> Phil
+>
+> Hi,
+>
+> Thank you for the answer.
+>
+> I tried to reproduce the case with vanilla 4.4.6, but couldn't enter the
+> above said 'if', so i'm giving up on this topic.
+>
+> However, i'm still surprised that sb->new_offset gets assigned a
+> 'negative' (well, high, because it is computed unsigned) value.
+>
 
- mdadm --assemble --force --update=3Drevert-reshape --invalid-backup
- --backup-file=3D/whatever /dev/md/TA /dev/list-of-devices
+I guess sb->new_offset should be called sb->delta_offset.  If you look
+in md_p.h you will see:
 
-using mdadm 3.4.
+	__le32  new_offset;	/* signed number to add to data_offset in new
+				 * layout.  0 =3D=3D no-change.  This can be
+				 * different on each device in the array.
+				 */
 
->
-> Second question: Is the problem with the level change a known bug?
+which goes some way to explaining the situation.
 
-Yes, this has been happening to a few people.  The shape doesn't really
-start properly.
-If someone can provide a recipe for how to reproduce the problem
-(e.g. using loop-back devices) I'll happily look into fixing it, or
-identifying which kernel it is already fixed in.
-
-Neilbrown
-
-
->
-> Thanks for reading!
->
-> --
-> /dev/disk/by-partlabel/hyper_TA_1:
->            Magic : a92b4efc
->          Version : 1.2
->      Feature Map : 0x5
->             Name : hyper:TA  (local to host hyper)
->       Raid Level : raid6
->     Raid Devices : 7
->
->   Avail Dev Size : 3434725376 (1637.80 GiB 1758.58 GB)
->       Array Size : 8586813440 (8189.02 GiB 8792.90 GB)
->      Data Offset : 147456 sectors
->     Super Offset : 8 sectors
->     Unused Space : before=3D147368 sectors, after=3D0 sectors
->            State : clean
->
-> Internal Bitmap : 8 sectors from superblock
->    Reshape pos'n : 0
->    New Chunksize : 64K
->
->      Update Time : Thu Mar 31 17:57:01 2016
->    Bad Block Log : 512 entries available at offset 72 sectors
->         Checksum : e7172c1f - correct
->           Events : 527046
->
->           Layout : left-symmetric
->       Chunk Size : 4096K
->
->     Device Role : Active device 5
->     Array State : AAAAAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=
-=3D replacing)
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+NeilBrown
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
@@ -103,18 +70,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJW/gZEAAoJEDnsnt1WYoG5vUkP/RY4sdxGPuP98B8mhObN8mJX
-p2dIposqWjjurvJGZzLC9xmyl3XRM+bHaHEd4hm34+bOhA+OkEeheVr+gj9I+oT/
-CKtsEAuRMdQvwDqEQD3xxVjv57An5J6nRuZRz/lMv27NZhAc3bdhsb4BzIgZ6plp
-CKzJuurZFxxZLBVnFnlqKsmZuxcxnXIWHqCRLDB7eerxGN2KXnG1Jssbh1QIjbuu
-WVrz6PkHeaWTv79GQOmqGy+9zwDMvMx0M8y3njG7/FGF5zxpP29InpF/QdEt44Bi
-nXlC/FQlbsymem+13Zder0nhsaqSwy0HRlWdcW/ZCcIprfdU4tMffRfpDi4ZEj1j
-38tNpJ9eej2v8eo173tS0ib7u3dSmOwPO0r9S7JK45z9M2Q235nD0k2upKgDuYUE
-L4wx7WX7lMo4WEGwqvLjti2rT66qcTkUsFSlyjOezW9q77Dm9b/wXoifrGdRCZsG
-hyVnr1OJ30qjvlEOne4Cupqsh74Ko84K73fAxpdQUu5ULY2R9ZFT4LwVHpmJGQly
-n46SwAZKqeQrSWbNlVbWHK9DHrpSgtckMdpzBNqQ7ikYW5GuXKkQu36/TmP8F1Yy
-1LwGNjZSPzZ/1sr2tT/mfX6YgPJiK++4u+FdGptCjnVhxbyR7BI0Ke4r0VmNE7Ih
-jbBL0kt9ZRdE0e78S554
-=1TwQ
+iQIcBAEBCAAGBQJW/gewAAoJEDnsnt1WYoG5/vsP/2E37ny6RsrDVOkac99xJgCQ
+R+bsYjFNlt0SRR/NUXUE4CdMBd8l+2gEiujggxDgsdJH6lJHu61ekwxPjY1iFGJI
+PFrnaOhXUHkJQYuksxypk8YKn89e9LhmYv4LGBqqW/8z8lrZSCO0m01iS/kzFM8u
+DY6spjrpsX4+FK1f6ahPkJ9Sh6mBOlp/KHsBzL3VxJUjM1nnu3BosBzuDFJuKHk0
+3Rm19Vl2Te1yU5v51QlZwKqmrkdwi6kGxSqQHt+YazoE20aOjPcwsBb0EVsI9N+6
+jC7p17cgZSfzEI4DOS9FgZ67zWkBKBZyCu7DKuy5xwEG67urOvFlY7bfvFfWN8Dy
+c3N8ee3ryRkQFXK0Z2B2R+9qbw8DXkOouscIUyoji+MBeVn8blt0KCOOAuH8KTS9
+SyfZ5qUAm77AuediXeGJ/eT4+kLZmwooWqhmf4qKZPdf3ukccZqKBf6JT98AH3w4
+ytDXvmLWVLuV83HLAbuSbfU6IVjMRDsuvax324SGpUpul5tLAJd6Rz0wFvLuhOrg
+ekRE5kBV5euDqyFbVhvq8Tf1XxsMOUrEoXcUFe6FOygi063Tq8JSWkO1HL19CD6h
+C0ktxDQHo4J5A409tYpQgYgfSZyytkn3fRHuwHmZop0StVcLwx29R7dz+5V5OC6x
+btJOJc8TiruVedx4rqDG
+=3b6M
 -----END PGP SIGNATURE-----
 --=-=-=--
