@@ -1,79 +1,120 @@
-From: Dimitri John Ledkov <xnox@debian.org>
-Subject: Re: Bug#796624: mdadm: Has init script in runlevel S but no matching
- service file
-Date: Thu, 31 Mar 2016 23:53:23 +0100
-Message-ID: <CANBHLUj4GkoBJA-C2weKNS=vOb1Pqj+2Z5YVLG-sZpV+iLh=EQ@mail.gmail.com>
-References: <CAAfdZj_hDJOS2-Q9BchbnBhsprUOn_EmftGLXR-t_b7BOidUYw@mail.gmail.com>
-	<CAAfdZj8eoXxr_fU8OU+G2S1s4RnJrTB7fAtLxwwtsjeN+BXj=g@mail.gmail.com>
-	<wrfjegaq8nry.fsf@redhat.com>
+From: NeilBrown <nfbrown@novell.com>
+Subject: Re: Recovery after failed chunk size change
+Date: Fri, 01 Apr 2016 16:25:24 +1100
+Message-ID: <87a8ldrjcr.fsf@notabene.neil.brown.name>
+References: <56FD7B92.1030102@ferienwohnung-altenbeken.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjegaq8nry.fsf@redhat.com>
+In-Reply-To: <56FD7B92.1030102@ferienwohnung-altenbeken.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>, 796624@bugs.debian.org
-Cc: Felipe Sateler <fsateler@debian.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Benjamin Meier <maillists@ferienwohnung-altenbeken.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 31 March 2016 at 20:12, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
-> Felipe Sateler <fsateler@debian.org> writes:
->> Hello upstream mdadm.
->>
->> I'm adding you to CC to resolve the issue of an init script that
->> current debian uses, that might possibly be redundant. Please see my
->> below diagnosis
->>
->> On 24 December 2015 at 16:10, Felipe Sateler <fsateler@debian.org> wrote:
->>>
->>> On Sat, 22 Aug 2015 22:32:00 -0300 fsateler@debian.org wrote:
->>> > Hi,
->>> >
->>> > Your package mdadm has an initscript that is enabled in runlevel S,
->>> > but it does not provide a corresponding systemd service unit.
->>>
->>> It seems that the mdadm-raid init script (which triggered this bug
->>> report) is not useful on a udev system (which all systemd systems
->>> are[1]). The file /lib/udev/rules.d/64-md-raid-assembly.rules assembles
->>> the arrays incrementally as devices are known to udev, and so running
->>> a separate assembly step should be superfluous. If this is not true,
->>> then maybe this should be reported upstream, as there is a systemd
->>> service missing.
->>
->> For reference, the init script in question can be seen in the souces
->> site[1]. On boot, it invokes mdadm --assemble and reports some status
->> messages for each md device.
->>
->> So, the questions are: is this init script redundant on a udev system?
->> If not, isn't an equivalent systemd unit missing upstream?
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, Apr 01 2016, Benjamin Meier wrote:
+
+> Hi there,
 >
-> I haven't looked at Debian's scripts here, but whatever Debian uses as
-> init scripts to control mdadm startup is decided by the Debian mdadm
-> maintainer. We do carry a set of system files for mdadm in the
-> mdadm/systemd directory, so if something is missing, it may be that the
-> Debian maintainer forgot to include it.
+> I tried to do a chunk size change from 4096k to 64k on a 7-disk RAID6=20
+> array. I am using Debian Jessie with kernel 3.16 and mdadm 3.3.2. After=20
+> I initiated the change the process staled immediately. I could watch it=20
+> in /proc/mdadm that there has not been any progress at all. The=20
+> backup-file hasn't been touched for days now.
 >
+> So I decided to backup all data from that device in case it isn't=20
+> starting at next reboot. Accidentally the system was restarted before=20
+> the backup was finished. And now the array is not assembling any more,=20
+> even with the correct --backup-file. I get "mdadm: Failed to restore=20
+> critical section for reshape, sorry.".
+>
+> So the first question is: How can I access the data again? I think there=
+=20
+> is no damage at this time- I appended an output from --examine at the=20
+> end of this message. All seven drives giving me the same output in all=20
+> relevant topics. Especially "Chunk Size", "New Chunksize" and "Reshape=20
+> pos'n" is all the same.
+> What is the best way now that I do not damage any data?
 
-In Debian we have multiple configuration that we support:
-* initramfs-tools based initrd without udev
-* initramfs-tools based initrd with udev
-* regular userspace with systemd
-* regular userspace without systemd (sysv init based, with udev)
+ mdadm --assemble --force --update=3Drevert-reshape --invalid-backup
+ --backup-file=3D/whatever /dev/md/TA /dev/list-of-devices
 
-I believe some of the initscripts are specific to second & last cases,
-and indeed quite debian (and debian derivatives) specific rather than
-upstream worthy.
-In the udev present and systemd available cases packaging is (or
-should be trying to anyway) to follow upstream set of units/udev
-rules.
-But due to supporting the two extra cases listed above we have
-initscripts without equivalent systemd unit, whichi imho should be
-just fine. If there is a problem with that, I don't see a reason to
-report it to mdadm upstream / linux-raid mailing list...
+using mdadm 3.4.
 
-Apart from aesthetics, is there an actual problem with shipping extra
-initscripts on debian?
+>
+> Second question: Is the problem with the level change a known bug?
 
--- 
-Regards,
+Yes, this has been happening to a few people.  The shape doesn't really
+start properly.
+If someone can provide a recipe for how to reproduce the problem
+(e.g. using loop-back devices) I'll happily look into fixing it, or
+identifying which kernel it is already fixed in.
 
-Dimitri.
+Neilbrown
+
+
+>
+> Thanks for reading!
+>
+> --
+> /dev/disk/by-partlabel/hyper_TA_1:
+>            Magic : a92b4efc
+>          Version : 1.2
+>      Feature Map : 0x5
+>             Name : hyper:TA  (local to host hyper)
+>       Raid Level : raid6
+>     Raid Devices : 7
+>
+>   Avail Dev Size : 3434725376 (1637.80 GiB 1758.58 GB)
+>       Array Size : 8586813440 (8189.02 GiB 8792.90 GB)
+>      Data Offset : 147456 sectors
+>     Super Offset : 8 sectors
+>     Unused Space : before=3D147368 sectors, after=3D0 sectors
+>            State : clean
+>
+> Internal Bitmap : 8 sectors from superblock
+>    Reshape pos'n : 0
+>    New Chunksize : 64K
+>
+>      Update Time : Thu Mar 31 17:57:01 2016
+>    Bad Block Log : 512 entries available at offset 72 sectors
+>         Checksum : e7172c1f - correct
+>           Events : 527046
+>
+>           Layout : left-symmetric
+>       Chunk Size : 4096K
+>
+>     Device Role : Active device 5
+>     Array State : AAAAAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=
+=3D replacing)
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJW/gZEAAoJEDnsnt1WYoG5vUkP/RY4sdxGPuP98B8mhObN8mJX
+p2dIposqWjjurvJGZzLC9xmyl3XRM+bHaHEd4hm34+bOhA+OkEeheVr+gj9I+oT/
+CKtsEAuRMdQvwDqEQD3xxVjv57An5J6nRuZRz/lMv27NZhAc3bdhsb4BzIgZ6plp
+CKzJuurZFxxZLBVnFnlqKsmZuxcxnXIWHqCRLDB7eerxGN2KXnG1Jssbh1QIjbuu
+WVrz6PkHeaWTv79GQOmqGy+9zwDMvMx0M8y3njG7/FGF5zxpP29InpF/QdEt44Bi
+nXlC/FQlbsymem+13Zder0nhsaqSwy0HRlWdcW/ZCcIprfdU4tMffRfpDi4ZEj1j
+38tNpJ9eej2v8eo173tS0ib7u3dSmOwPO0r9S7JK45z9M2Q235nD0k2upKgDuYUE
+L4wx7WX7lMo4WEGwqvLjti2rT66qcTkUsFSlyjOezW9q77Dm9b/wXoifrGdRCZsG
+hyVnr1OJ30qjvlEOne4Cupqsh74Ko84K73fAxpdQUu5ULY2R9ZFT4LwVHpmJGQly
+n46SwAZKqeQrSWbNlVbWHK9DHrpSgtckMdpzBNqQ7ikYW5GuXKkQu36/TmP8F1Yy
+1LwGNjZSPzZ/1sr2tT/mfX6YgPJiK++4u+FdGptCjnVhxbyR7BI0Ke4r0VmNE7Ih
+jbBL0kt9ZRdE0e78S554
+=1TwQ
+-----END PGP SIGNATURE-----
+--=-=-=--
