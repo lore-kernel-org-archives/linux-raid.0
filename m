@@ -1,131 +1,97 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH v2] Consistent use of metric prefix in manpage
-Date: Fri, 01 Apr 2016 16:11:07 -0400
-Message-ID: <wrfjfuv53x9g.fsf@redhat.com>
-References: <56FC2DAA.2020605@googlemail.com> <wrfjio028nxk.fsf@redhat.com>
-	<56FDA301.1080304@googlemail.com>
+From: Robert Jarzmik <robert.jarzmik@free.fr>
+Subject: Re: [PATCH v2 1/4] scatterlist: Introduce some helper functions
+Date: Sat, 02 Apr 2016 17:00:58 +0200
+Message-ID: <87r3eoukb9.fsf@belgarion.home>
+References: <cover.1458023695.git.baolin.wang@linaro.org>
+	<cover.1458023695.git.baolin.wang@linaro.org>
+	<9442060edaca12f520bcbb76545ad33a52346e58.1458023698.git.baolin.wang@linaro.org>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56FDA301.1080304@googlemail.com> (Marko Hauptvogel's message of
-	"Fri, 1 Apr 2016 00:21:53 +0200")
-Sender: linux-raid-owner@vger.kernel.org
-To: Marko Hauptvogel <marko.hauptvogel@googlemail.com>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-crypto-owner@vger.kernel.org>
+In-Reply-To: <9442060edaca12f520bcbb76545ad33a52346e58.1458023698.git.baolin.wang@linaro.org>
+	(Baolin Wang's message of "Tue, 15 Mar 2016 15:47:59 +0800")
+Sender: linux-crypto-owner@vger.kernel.org
+To: Baolin Wang <baolin.wang@linaro.org>
+Cc: herbert@gondor.apana.org.au, davem@davemloft.net, agk@redhat.com, snitzer@redhat.com, axboe@fb.com, dm-devel@redhat.com, akpm@linux-foundation.org, david.s.gordon@intel.com, thomas.lendacky@amd.com, yamada.masahiro@socionext.com, smueller@chronox.de, tadeusz.struk@intel.com, standby24x7@gmail.com, shli@kernel.org, broonie@kernel.org, linus.walleij@linaro.org, arnd@arndb.de, linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Marko Hauptvogel <marko.hauptvogel@googlemail.com> writes:
-> On 31.03.2016 21:09, Jes Sorensen wrote:
->> Marko Hauptvogel <marko.hauptvogel@googlemail.com> writes:
->>> > From: Marko Hauptvogel <marko.hauptvogel@googlemail.com>
->>> >
->>> > Added the optional K suffix for completeness, as it
->>> > is allowed by util.c's parse_size(char*).
->>> >
->>> > Signed-off-by: Marko Hauptvogel <marko.hauptvogel@googlemail.com>
->> I am not very much in favor of this patch. Any normal sane person still
->> refers to megabytes and kilobytes as referring to 1024 base sizes,
->> despite the pointless standard trying to mess them up to accommodate the
->> harddrive vendors. Nobody normal knows what a kibibyte is.
->> 
->> Jes
->> 
->
-> I am fine either way, but it should be used consistently throughout
-> the man page. The mix up was what made me cringe.
+Baolin Wang <baolin.wang@linaro.org> writes:
 
-Works for me!
+> +/**
+> + * sg_is_contiguous - Check if the scatterlists are contiguous
+> + * @sga: SG entry
+> + * @sgb: SG entry
+> + *
+> + * Description:
+> + *   If the sga scatterlist is contiguous with the sgb scatterlist,
+> + *   that means they can be merged together.
+> + *
+> + **/
+> +static inline bool sg_is_contiguous(struct scatterlist *sga,
+> +				    struct scatterlist *sgb)
+> +{
+> +	return *(unsigned long *)sg_virt(sga) + sga->length ==
+> +		*(unsigned long *)sg_virt(sgb);
+As I already said, I don't like casts.
 
-Cheers,
-Jes
+But let's take some height : you're needing this function to decide to merge
+scatterlists. That means that you think the probability of having 2 scatterlist
+mergeable is not meaningless, ie. 50% or more.
 
->
-> Greetings
->
-> --------
->
-> From eaad00be960ff1d60861cba75cc7e5eb07f7e330 Mon Sep 17 00:00:00 2001
-> From: Marko Hauptvogel <marko.hauptvogel@googlemail.com>
-> Date: Fri, 1 Apr 2016 00:13:44 +0200
-> Subject: [PATCH] Consistent use of metric prefix in manpage
->
-> Added the optional K suffix for completeness, as it
-> is allowed by util.c's parse_size(char*).
->
-> Signed-off-by: Marko Hauptvogel <marko.hauptvogel@googlemail.com>
-> ---
->  mdadm.8.in | 15 ++++++++-------
->  1 file changed, 8 insertions(+), 7 deletions(-)
->
-> diff --git a/mdadm.8.in b/mdadm.8.in
-> index 50be1aa..1a04bd1 100644
-> --- a/mdadm.8.in
-> +++ b/mdadm.8.in
-> @@ -459,7 +459,7 @@ number of spare devices.
->
->  .TP
->  .BR \-z ", " \-\-size=
-> -Amount (in Kibibytes) of space to use from each drive in RAID levels 1/4/5/6.
-> +Amount (in Kilobytes) of space to use from each drive in RAID levels 1/4/5/6.
->  This must be a multiple of the chunk size, and must leave about 128Kb
->  of space at the end of the drive for the RAID superblock.
->  If this is not specified
-> @@ -467,7 +467,7 @@ If this is not specified
->  size, though if there is a variance among the drives of greater than
-> 1%, a warning is
->  issued.
->
-> -A suffix of 'M' or 'G' can be given to indicate Megabytes or
-> +A suffix of 'K', 'M' or 'G' can be given to indicate Kilobytes, Megabytes or
->  Gigabytes respectively.
->
->  Sometimes a replacement drive can be a little smaller than the
-> @@ -534,7 +534,7 @@ problems the array can be made bigger again with
-> no loss with another
->  .B "\-\-grow \-\-array\-size="
->  command.
->
-> -A suffix of 'M' or 'G' can be given to indicate Megabytes or
-> +A suffix of 'K', 'M' or 'G' can be given to indicate Kilobytes, Megabytes or
->  Gigabytes respectively.
->  A value of
->  .B max
-> @@ -543,7 +543,7 @@ amount of available space is.
->
->  .TP
->  .BR \-c ", " \-\-chunk=
-> -Specify chunk size of kibibytes.  The default when creating an
-> +Specify chunk size of kilobytes.  The default when creating an
->  array is 512KB.  To ensure compatibility with earlier versions, the
->  default when building an array with no persistent metadata is 64KB.
->  This is only meaningful for RAID0, RAID4, RAID5, RAID6, and RAID10.
-> @@ -551,7 +551,7 @@ This is only meaningful for RAID0, RAID4, RAID5,
-> RAID6, and RAID10.
->  RAID4, RAID5, RAID6, and RAID10 require the chunk size to be a power
->  of 2.  In any case it must be a multiple of 4KB.
->
-> -A suffix of 'M' or 'G' can be given to indicate Megabytes or
-> +A suffix of 'K', 'M' or 'G' can be given to indicate Kilobytes, Megabytes or
->  Gigabytes respectively.
->
->  .TP
-> @@ -737,7 +737,7 @@ When using an
->  bitmap, the chunksize defaults to 64Meg, or larger if necessary to
->  fit the bitmap into the available space.
->
-> -A suffix of 'M' or 'G' can be given to indicate Megabytes or
-> +A suffix of 'K', 'M' or 'G' can be given to indicate Kilobytes, Megabytes or
->  Gigabytes respectively.
->
->  .TP
-> @@ -808,7 +808,8 @@ an array which was originally created using a
-> different version of
->  which computed a different offset.
->
->  Setting the offset explicitly over-rides the default.  The value given
-> -is in Kilobytes unless an 'M' or 'G' suffix is given.
-> +is in Kilobytes unless a suffix of 'K', 'M' or 'G' is used to explicitly
-> +indicate Kilobytes, Megabytes or Gigabytes respectively.
->
->  Since Linux 3.4,
->  .B \-\-data\-offset
+I suppose your scatterlists are allocated through kmalloc(). I'd like to know,
+through your testing, what is the success rate of sg_is_contiguous(), ie. I'd
+like to know how many times sg_is_contiguous() was called, and amongst these
+calls how many times it returned true.
+
+That will tell me how "worth" is this optimization.
+
+> + * sg_add_sg_to_table - Add one scatterlist into sg table
+> + * @sgt:	The sg table header to use
+> + * @src:	The sg need to be added into sg table
+> + *
+> + * Description:
+> + *   The 'nents' member indicates how many mapped scatterlists has been added
+> + *   in the dynamic sg table. The 'orig_nents' member indicates the size of the
+> + *   dynamic sg table.
+> + *
+> + *   Copy one mapped @src@ scatterlist into the dynamic sg table and increase
+> + *   'nents' member.
+> + *
+> + **/
+Okay, I still believe this one is wrong, because we don't understand each other.
+So let's take an example :
+sg_table = {
+         .sgl = {
+		{
+                	.page_link = PAGE_48,
+                        .offset = 0,
+                        .length = 2048,
+                        .dma_address = 0x30000,
+                        .dma_length = 4096,
+                },
+		{
+                	.page_link = PAGE_48 | 0x02,
+                        .offset = 2048,
+                        .length = 2048,
+                        .dma_address = 0,
+                        .dma_length = 0,
+                },
+	},
+         .nents = 1,
+         .orig_nents = 2,
+};
+
+In this example, by sheer luck the 2 scatterlist entries were physically
+contiguous, and the mapping function coallesced the 2 entries into only one
+(dma_address, dma_length) entry. That could also happen with an IOMMU by the
+way.  Therefore, sg_table.nents = 1.
+
+If I understand your function correctly, it will erase sg_table.sgl[1], and that
+looks incorrect to me. This is why I can't understand how your code can be
+correct, and why I say you add a new "meaning" to sg_table->nents, which is not
+consistent with the meaning I understand.
+
+Cheers.
+
+-- 
+Robert
