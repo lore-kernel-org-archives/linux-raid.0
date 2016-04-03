@@ -1,39 +1,30 @@
-From: fu.zhongjun@execs.com
-Subject: Hilsener.
-Date: Sun, 03 Apr 2016 03:12:13 +0200
-Message-ID: <5321FC29-883A-4E83-B174-0DBC205C7A18__47250.387320719$1459646615$gmane$org@mail.resulticks.com>
-Reply-To: fuzhong348@gmail.com
+From: Anthonys Lists <antlists@youngman.org.uk>
+Subject: Re: [PATCH] Consistent use of IEC 80000-13 prefix in manpage
+Date: Sun, 3 Apr 2016 20:19:29 +0100
+Message-ID: <57016CC1.7010802@youngman.org.uk>
+References: <56FC2DAA.2020605@googlemail.com> <wrfjio028nxk.fsf@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Description: Mail message body
+In-Reply-To: <wrfjio028nxk.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Recipients <fu.zhongjun@execs.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-God dag,
+On 31/03/2016 20:09, Jes Sorensen wrote:
+> I am not very much in favor of this patch. Any normal sane person still
+> refers to megabytes and kilobytes as referring to 1024 base sizes,
+> despite the pointless standard trying to mess them up to accommodate the
+> harddrive vendors. Nobody normal knows what a kibibyte is.
+Nobody normal knows that kilo actually means 2^10 ...
 
+Yes I know us computer people regularly abuse the term, but nowadays the 
+majority of computer lusers are familiar with the fact kilo has *always* 
+meant 10^3.
 
-Jeg trenger en utenlandsk partner for en gjensidig virksomhet forslag, =
-som er relatert til overf=F8ring av en stor sum penger til en utenlands=
-k konto, som mottaker av midlene. Alt om denne transaksjonen vil bli gj=
-ort lovlig uten bro av =F8konomisk autoritet b=E5de i mitt land og your=
-s.I wil hengi deg til =E5 observere ytterste skj=F8nn i alle saker knyt=
-tet til dette problemet. Hvis du er interessert, kan du svare tilbake v=
-ia min private e-postadresse er skrevet under, vil jeg gi deg mer infor=
-masjon om meg selv med finans institusjonen jeg representerte og faktis=
-ke bel=F8pene inneb=E6rer om prosjektet s=E5 snart jeg f=E5r positiv re=
-spons.
+After all, isn't a billion one million squared? (10^12) ... :-) It's 
+only the Americans who think it's 1000^3 :-)
 
-Privat e-post:zhongjunfu@yahoo.com.hk
-
-Vennlig hilsen,
-
-Daglig leder.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cheers,
+Wol
