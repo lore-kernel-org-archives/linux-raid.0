@@ -1,97 +1,39 @@
-From: Robert Jarzmik <robert.jarzmik@free.fr>
-Subject: Re: [PATCH v2 1/4] scatterlist: Introduce some helper functions
-Date: Sat, 02 Apr 2016 17:00:58 +0200
-Message-ID: <87r3eoukb9.fsf@belgarion.home>
-References: <cover.1458023695.git.baolin.wang@linaro.org>
-	<cover.1458023695.git.baolin.wang@linaro.org>
-	<9442060edaca12f520bcbb76545ad33a52346e58.1458023698.git.baolin.wang@linaro.org>
+From: fu.zhongjun@execs.com
+Subject: Hilsener.
+Date: Sun, 03 Apr 2016 03:12:13 +0200
+Message-ID: <5321FC29-883A-4E83-B174-0DBC205C7A18__47250.387320719$1459646615$gmane$org@mail.resulticks.com>
+Reply-To: fuzhong348@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-crypto-owner@vger.kernel.org>
-In-Reply-To: <9442060edaca12f520bcbb76545ad33a52346e58.1458023698.git.baolin.wang@linaro.org>
-	(Baolin Wang's message of "Tue, 15 Mar 2016 15:47:59 +0800")
-Sender: linux-crypto-owner@vger.kernel.org
-To: Baolin Wang <baolin.wang@linaro.org>
-Cc: herbert@gondor.apana.org.au, davem@davemloft.net, agk@redhat.com, snitzer@redhat.com, axboe@fb.com, dm-devel@redhat.com, akpm@linux-foundation.org, david.s.gordon@intel.com, thomas.lendacky@amd.com, yamada.masahiro@socionext.com, smueller@chronox.de, tadeusz.struk@intel.com, standby24x7@gmail.com, shli@kernel.org, broonie@kernel.org, linus.walleij@linaro.org, arnd@arndb.de, linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Description: Mail message body
+Sender: linux-raid-owner@vger.kernel.org
+To: Recipients <fu.zhongjun@execs.com>
 List-Id: linux-raid.ids
 
-Baolin Wang <baolin.wang@linaro.org> writes:
+God dag,
 
-> +/**
-> + * sg_is_contiguous - Check if the scatterlists are contiguous
-> + * @sga: SG entry
-> + * @sgb: SG entry
-> + *
-> + * Description:
-> + *   If the sga scatterlist is contiguous with the sgb scatterlist,
-> + *   that means they can be merged together.
-> + *
-> + **/
-> +static inline bool sg_is_contiguous(struct scatterlist *sga,
-> +				    struct scatterlist *sgb)
-> +{
-> +	return *(unsigned long *)sg_virt(sga) + sga->length ==
-> +		*(unsigned long *)sg_virt(sgb);
-As I already said, I don't like casts.
 
-But let's take some height : you're needing this function to decide to merge
-scatterlists. That means that you think the probability of having 2 scatterlist
-mergeable is not meaningless, ie. 50% or more.
+Jeg trenger en utenlandsk partner for en gjensidig virksomhet forslag, =
+som er relatert til overf=F8ring av en stor sum penger til en utenlands=
+k konto, som mottaker av midlene. Alt om denne transaksjonen vil bli gj=
+ort lovlig uten bro av =F8konomisk autoritet b=E5de i mitt land og your=
+s.I wil hengi deg til =E5 observere ytterste skj=F8nn i alle saker knyt=
+tet til dette problemet. Hvis du er interessert, kan du svare tilbake v=
+ia min private e-postadresse er skrevet under, vil jeg gi deg mer infor=
+masjon om meg selv med finans institusjonen jeg representerte og faktis=
+ke bel=F8pene inneb=E6rer om prosjektet s=E5 snart jeg f=E5r positiv re=
+spons.
 
-I suppose your scatterlists are allocated through kmalloc(). I'd like to know,
-through your testing, what is the success rate of sg_is_contiguous(), ie. I'd
-like to know how many times sg_is_contiguous() was called, and amongst these
-calls how many times it returned true.
+Privat e-post:zhongjunfu@yahoo.com.hk
 
-That will tell me how "worth" is this optimization.
+Vennlig hilsen,
 
-> + * sg_add_sg_to_table - Add one scatterlist into sg table
-> + * @sgt:	The sg table header to use
-> + * @src:	The sg need to be added into sg table
-> + *
-> + * Description:
-> + *   The 'nents' member indicates how many mapped scatterlists has been added
-> + *   in the dynamic sg table. The 'orig_nents' member indicates the size of the
-> + *   dynamic sg table.
-> + *
-> + *   Copy one mapped @src@ scatterlist into the dynamic sg table and increase
-> + *   'nents' member.
-> + *
-> + **/
-Okay, I still believe this one is wrong, because we don't understand each other.
-So let's take an example :
-sg_table = {
-         .sgl = {
-		{
-                	.page_link = PAGE_48,
-                        .offset = 0,
-                        .length = 2048,
-                        .dma_address = 0x30000,
-                        .dma_length = 4096,
-                },
-		{
-                	.page_link = PAGE_48 | 0x02,
-                        .offset = 2048,
-                        .length = 2048,
-                        .dma_address = 0,
-                        .dma_length = 0,
-                },
-	},
-         .nents = 1,
-         .orig_nents = 2,
-};
+Daglig leder.
 
-In this example, by sheer luck the 2 scatterlist entries were physically
-contiguous, and the mapping function coallesced the 2 entries into only one
-(dma_address, dma_length) entry. That could also happen with an IOMMU by the
-way.  Therefore, sg_table.nents = 1.
-
-If I understand your function correctly, it will erase sg_table.sgl[1], and that
-looks incorrect to me. This is why I can't understand how your code can be
-correct, and why I say you add a new "meaning" to sg_table->nents, which is not
-consistent with the meaning I understand.
-
-Cheers.
-
--- 
-Robert
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
