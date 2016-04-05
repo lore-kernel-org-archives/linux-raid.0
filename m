@@ -1,31 +1,51 @@
-From: "Verma, Vishal L" <vishal.l.verma@intel.com>
-Subject: Re: [PATCH] badblocks: fix wrong return value when badblocks are
- disabled
-Date: Tue, 5 Apr 2016 17:37:12 +0000
-Message-ID: <1459877821.4741.4.camel@intel.com>
-References: <1459861174-9238-1-git-send-email-artur.paszkiewicz@intel.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 20/27] dm: dm-bufio.c: use bio_set_vec_table()
+Date: Tue, 5 Apr 2016 14:11:23 -0400
+Message-ID: <20160405181123.GA18323@redhat.com>
+References: <1459858062-21075-1-git-send-email-tom.leiming@gmail.com>
+ <1459858062-21075-6-git-send-email-tom.leiming@gmail.com>
+ <20160405130402.GD32576@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1459861174-9238-1-git-send-email-artur.paszkiewicz@intel.com>
-Content-Language: en-US
-Content-ID: <599C1945938CC94187CD94C5EC4F47E0@intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20160405130402.GD32576@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ming Lei <tom.leiming@gmail.com>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, Boaz Harrosh <boaz@plexistor.com>, Alasdair Kergon <agk@redhat.com>, "maintainer:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>, Shaohua Li <shli@kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-T24gVHVlLCAyMDE2LTA0LTA1IGF0IDE0OjU5ICswMjAwLCBBcnR1ciBQYXN6a2lld2ljeiB3cm90
-ZToNCj4gVGhlIHJldHVybiB2YWx1ZSBvZiBtZF9zZXRfYmFkYmxvY2tzKCkgd2FzIGludmVydGVk
-IHdoZW4gdGhlIGNvZGUgd2FzDQo+IHRha2VuIG91dCBvZiBtZCwgYnV0IHRoZSBjYXNlIHdoZW4g
-YmFkYmxvY2tzIGFyZSBkaXNhYmxlZCB3YXMgbGVmdA0KPiB1bmNoYW5nZWQuIFRoaXMgY2F1c2Vz
-IHNpbGVudCBpZ25vcmluZyBvZiBJL08gZXJyb3JzIGFuZCBvdGhlcg0KPiB1bnByZWRpY3RhYmxl
-IGJlaGF2aW9yIG9uIG1kIGFycmF5cyB0aGF0IGRvIG5vdCBzdXBwb3J0IGJhZGJsb2NrcyAoYW55
-DQo+IGFycmF5IG5vdCB1c2luZyB2MS54IG1ldGFkYXRhKS4NCj4gDQo+IEZpeGVzOiA5ZTBlMjUy
-YTA0OGIgKCJiYWRibG9ja3M6IEFkZCBjb3JlIGJhZGJsb2NrIG1hbmFnZW1lbnQgY29kZSIpDQo+
-IFNpZ25lZC1vZmYtYnk6IEFydHVyIFBhc3praWV3aWN6IDxhcnR1ci5wYXN6a2lld2ljekBpbnRl
-bC5jb20+DQo+IC0tLQ0KPiDCoGJsb2NrL2JhZGJsb2Nrcy5jIHwgMyArKy0NCj4gwqAxIGZpbGUg
-Y2hhbmdlZCwgMiBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pDQoNCkdvb2QgZmluZCwgdGhh
-bmtzIQ0KDQpBY2tlZC1ieTogVmlzaGFsIFZlcm1hIDx2aXNoYWwubC52ZXJtYUBpbnRlbC5jb20+
-DQoNClNob3VsZCB0aGlzIGFsc28gYmUgdGFnZ2VkIGZvciBzdGFibGU/DQoNCgktVmlzaGFsDQo=
+On Tue, Apr 05 2016 at  9:04am -0400,
+Christoph Hellwig <hch@infradead.org> wrote:
+
+> On Tue, Apr 05, 2016 at 08:07:35PM +0800, Ming Lei wrote:
+> > Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+> > ---
+> >  drivers/md/dm-bufio.c | 3 +--
+> >  1 file changed, 1 insertion(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
+> > index cd77216..0e48ad7 100644
+> > --- a/drivers/md/dm-bufio.c
+> > +++ b/drivers/md/dm-bufio.c
+> > @@ -624,8 +624,7 @@ static void use_inline_bio(struct dm_buffer *b, int rw, sector_t block,
+> >  	int len;
+> >  
+> >  	bio_init(&b->bio);
+> > -	b->bio.bi_io_vec = b->bio_vec;
+> > -	b->bio.bi_max_vecs = DM_BUFIO_INLINE_VECS;
+> > +	bio_set_vec_table(&b->bio, b->bio_vec, DM_BUFIO_INLINE_VECS);
+> >  	b->bio.bi_iter.bi_sector = block << b->c->sectors_per_block_bits;
+> >  	b->bio.bi_bdev = b->c->bdev;
+> >  	b->bio.bi_end_io = inline_endio;
+> 
+> Should be switched to use bio_alloc instead.
+
+Why does the use of bio_init() vs bio_alloc() bother you?
+
+'struct dm_buffer' has a 'struct bio'.  That bio is allocated as part of
+the dm_buffer in drivers/md/dmbufio.c:alloc_buffer() -- which is called
+by various other bufio interfaces (e.g. __alloc_buffer_wait).  Bufio is
+in control of ensuring forward progress by carefully managing the memory
+associated with these buffers.  I don't see the benefit of bio_alloc()
+here.  What am I missing?
