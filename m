@@ -1,269 +1,130 @@
-From: Baolin Wang <baolin.wang@linaro.org>
-Subject: Re: [PATCH v2 1/4] scatterlist: Introduce some helper functions
-Date: Tue, 5 Apr 2016 15:10:19 +0800
-Message-ID: <CAMz4kuKcJKHKoX8JTs5zSrre5y+cVo+hcHS6BZi1M=WOAHyu-g@mail.gmail.com>
-References: <cover.1458023695.git.baolin.wang@linaro.org>
-	<9442060edaca12f520bcbb76545ad33a52346e58.1458023698.git.baolin.wang@linaro.org>
-	<87r3eoukb9.fsf@belgarion.home>
+From: Ron Leach <ronleach@tesco.net>
+Subject: Repairing R1: Part tabl, & precise command
+Date: Tue, 05 Apr 2016 10:14:57 +0100
+Message-ID: <57038211.6040101@tesco.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87r3eoukb9.fsf@belgarion.home>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robert Jarzmik <robert.jarzmik@free.fr>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>, David Miller <davem@davemloft.net>, Alasdair G Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Jens Axboe <axboe@fb.com>, dm-devel@redhat.com, Andrew Morton <akpm@linux-foundation.org>, david.s.gordon@intel.com, Tom Lendacky <thomas.lendacky@amd.com>, Masahiro Yamada <yamada.masahiro@socionext.com>, smueller@chronox.de, tadeusz.struk@intel.com, Masanari Iida <standby24x7@gmail.com>, shli@kernel.org, Mark Brown <broonie@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Arnd Bergmann <arnd@arndb.de>, LKML <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Robert,
+List, good morning,
 
-Sorry for the late reply.
+We use a 2 x 3TB Raid 1 configuration in a Debian Oldstable (Wheezy) 
+machine employed for backup and one of the Raid pair has dropped off 
+the array.  An lsdrv report [1] is pasted below; sdb has failed. 
+Oddly, the offending disc seems to not have a partition table, now, 
+either.  The backup space occupied an LVM space on a 2.5TB R1 array; 
+the discs also have other R1 arrays.  I haven't altered any of the 
+information on the surviving element of the raid1-lvm, which seems to 
+be (read) functioning and with its data complete.
 
-On 2 April 2016 at 23:00, Robert Jarzmik <robert.jarzmik@free.fr> wrote:
-> Baolin Wang <baolin.wang@linaro.org> writes:
->
->> +/**
->> + * sg_is_contiguous - Check if the scatterlists are contiguous
->> + * @sga: SG entry
->> + * @sgb: SG entry
->> + *
->> + * Description:
->> + *   If the sga scatterlist is contiguous with the sgb scatterlist,
->> + *   that means they can be merged together.
->> + *
->> + **/
->> +static inline bool sg_is_contiguous(struct scatterlist *sga,
->> +                                 struct scatterlist *sgb)
->> +{
->> +     return *(unsigned long *)sg_virt(sga) + sga->length ==
->> +             *(unsigned long *)sg_virt(sgb);
-> As I already said, I don't like casts.
+I've re-seated cables and power connectors and read-tested the failed 
+disc using
 
-OK. Could you give me a good example. Thanks.
+dd if=/dev/sdb of=/dev/null bs=1M
 
->
-> But let's take some height : you're needing this function to decide to merge
-> scatterlists. That means that you think the probability of having 2 scatterlist
-> mergeable is not meaningless, ie. 50% or more.
->
-> I suppose your scatterlists are allocated through kmalloc(). I'd like to know,
-> through your testing, what is the success rate of sg_is_contiguous(), ie. I'd
-> like to know how many times sg_is_contiguous() was called, and amongst these
-> calls how many times it returned true.
->
-> That will tell me how "worth" is this optimization.
+which, after running overnight, reported the whole (suspect) disc read 
+without any errors.
 
-I think this is just one useful API for users, If the rate is only 1%,
-we also need to check if they are contiguous to decide if they can be
-coalesced.
+I'd like to try to restore the array using the previously-failed disk, 
+temporarily, while another drive arrives from suppliers.  I'm not sure 
+of the precise mechanism for restoring the array.  I think the same 
+process will be needed when the replacement disk - which will be 
+blank, too - arrives.
 
->
->> + * sg_add_sg_to_table - Add one scatterlist into sg table
->> + * @sgt:     The sg table header to use
->> + * @src:     The sg need to be added into sg table
->> + *
->> + * Description:
->> + *   The 'nents' member indicates how many mapped scatterlists has been added
->> + *   in the dynamic sg table. The 'orig_nents' member indicates the size of the
->> + *   dynamic sg table.
->> + *
->> + *   Copy one mapped @src@ scatterlist into the dynamic sg table and increase
->> + *   'nents' member.
->> + *
->> + **/
-> Okay, I still believe this one is wrong, because we don't understand each other.
-> So let's take an example :
-> sg_table = {
->          .sgl = {
->                 {
->                         .page_link = PAGE_48,
->                         .offset = 0,
->                         .length = 2048,
->                         .dma_address = 0x30000,
->                         .dma_length = 4096,
->                 },
->                 {
->                         .page_link = PAGE_48 | 0x02,
->                         .offset = 2048,
->                         .length = 2048,
->                         .dma_address = 0,
->                         .dma_length = 0,
->                 },
->         },
->          .nents = 1,
->          .orig_nents = 2,
-> };
->
-> In this example, by sheer luck the 2 scatterlist entries were physically
-> contiguous, and the mapping function coallesced the 2 entries into only one
-> (dma_address, dma_length) entry. That could also happen with an IOMMU by the
-> way.  Therefore, sg_table.nents = 1.
->
-> If I understand your function correctly, it will erase sg_table.sgl[1], and that
-> looks incorrect to me. This is why I can't understand how your code can be
-> correct, and why I say you add a new "meaning" to sg_table->nents, which is not
-> consistent with the meaning I understand.
+Presumably, I need to set up the partition table again.  These are 
+identical discs from the same manufacturer.  Elsewhere, people have 
+suggested using:
 
-I think you misunderstood my point. The 'sg_add_sg_to_table()'
-function is used to add one mapped scatterlist into the dynamic sg
-table. For example:
-1. How to add one mapped sg into dynamic sg table
-(1) If we allocate one dynamic sg table with 3 (small size can be
-showed easily) empty scatterlists.:
-sg_table = {
-          .sgl = {
-                 {
-                         .page_link = 0,
-                         .offset = 0,
-                         .length = 0,
-                 },
-                 {
-                         .page_link = 0,
-                         .offset = 0,
-                         .length = 0,
-                 },
-                 {
-                         .page_link = 0 | 0x02,
-                         .offset = 0,
-                         .length = 0,
-                 },
-         },
-          .nents = 0,
-          .orig_nents = 3,
- };
+sfdisk -d /dev/sdc | sfdisk /dev/sdb
 
-(2) If some module (like dm-crypt module) always sends one mapped
-scatterlist (size is always 512bytes) to another module (crypto
-driver) to handle the mapped scatterlist at one time. But we want to
-collect the mapped scatterlist into one dynamic sg table to manage
-them together, means we can send multiple mapped scatterlists (from
-sg_table->sgl) to the crypto driver to handle them together to improve
-its efficiency. So we add one mapped scatterlists into the dynamic sg
-table.
-mapped sg = {
-          .page_link = PAGE_20,
-          .offset = 0,
-          .length = 512,
-},
+Will this be ok for mdadm or will this command also replicate some 
+UUIDs or headers or partition content that mdadm prefers should be 
+kept unique?
 
-Add into synamic sg table ------->
-sg_table = {
-          .sgl = {
-                 {
-                         .page_link = PAGE_20 | 0x02,
-                         .offset = 0,
-                         .length = 512,
-                 },
-                 {
-                         .page_link = 0,
-                         .offset = 0,
-                         .length = 0,
-                 },
-                 {
-                         .page_link = 0,
-                         .offset = 0,
-                         .length = 0,
-                 },
-         },
-          .nents = 1,
-          .orig_nents = 3,
- };
+Having prepared the partition table on sdb, is the next step a simple
 
-Another two mapped scatterlists are added into synamic sg table ------->
-sg_table = {
-          .sgl = {
-                 {
-                         .page_link = PAGE_20,
-                         .offset = 0,
-                         .length = 512,
-                 },
-                 {
-                         .page_link = PAGE_25,
-                         .offset = 0,
-                         .length = 512,
-                 },
-                 {
-                         .page_link = PAGE_28 | 0x20,
-                         .offset = 0,
-                         .length = 512,
-                 },
-         },
-          .nents = 3,
-          .orig_nents = 3,
- };
+mdadm --manage /dev/md(x) --add /dev/sdb(y)
 
-Then we can send the dynamic sg table to the crypto engine driver to
-handle them together at one time. (If the dynamic sg table size is
-512, then the crypto engine driver can handle 512 scatterlists at one
-time, which can improve much efficiency). That's the reason why we
-want to introduce the dynamic sg table.
+sequence of commands?  Do I need to disable any attempt by mdadm to 
+rebuild itself?
 
-2. How to coalesce
-(1) If one mapped scatterlsit already has been added into dynamic sg table:
-sg_table = {
-          .sgl = {
-                 {
-                         .page_link = PAGE_20 | 0x02,
-                         .offset = 0,
-                         .length = 512,
-                 },
-                 {
-                         .page_link = 0,
-                         .offset = 0,
-                         .length = 0,
-                 },
-                 {
-                         .page_link = 0,
-                         .offset = 0,
-                         .length = 0,
-                 },
-         },
-          .nents = 1,
-          .orig_nents = 3,
- };
+Would be grateful for any pointers to anything incorrect I'm 
+proposing.  Though it is 'only' backup material on the disks, to us it 
+is pretty important because it was incremental and also therefore is 
+the repository of anything accidentally deleted since.
 
-(2) Another mapped scatterlist comes.
-mapped sg = {
-          .page_link = PAGE_20,
-          .offset = 512,
-          .length = 512,
-},
+regards, Ron
 
-So we check the new mapped scatterlist can be coalesced into previous
-one in dynamic sg table like this:
-sg_table = {
-          .sgl = {
-                 {
-                         .page_link = PAGE_20 | 0x02,
-                         .offset = 0,
-                         .length = 1024,
-                 },
-                 {
-                         .page_link = 0,
-                         .offset = 0,
-                         .length = 0,
-                 },
-                 {
-                         .page_link = 0,
-                         .offset = 0,
-                         .length = 0,
-                 },
-         },
-          .nents = 1,
-          .orig_nents = 3,
- };
+[1] lsdrv output
 
-It's done. We coalesced one scatterlist into antoher one to expand the
-scatterlist's length.
-Thanks for your comments.
+root@D7bak:/home/user# ./lsdrv
 
->
-> Cheers.
->
-> --
-> Robert
+PCI [ata_piix] 00:1f.2 IDE interface: Intel Corporation NM10/ICH7 
+Family SATA Controller [IDE mode] (rev 01)
 
 
+-scsi 0:0:1:0 ATA      WDC WD2500AAKX-2 {WD-WCC2ED752256}
 
--- 
-Baolin.wang
-Best Regards
+-:sda 232.88g [8:0] Partitioned (dos)
+- -sda1 17.27g [8:1] ext2 {ac6943f4-24dd-4605-ab97-9633bdf4aa0f}
+- -sda2 1.00k [8:2] Partitioned (dos)
+- -sda5 1.86g [8:5] ext4 {d0f0831b-b67b-43c7-869a-74ccd2b82f0a}
+- -:Mounted as /dev/disk/by-uuid/d0f0831b-b67b-43c7-869a-74ccd2b82f0a @ /
+- -sda6 13.97g [8:6] ext4 {777a0299-5756-4bb4-ae86-4b968a25ed20}
+- -:Mounted as /dev/sda6 @ /usr
+- -sda7 23.28g [8:7] ext4 {519b7c6e-cc14-4b4e-b8cb-8d9573da48fb}
+- -:Mounted as /dev/sda7 @ /var
+- -sda8 2.05g [8:8] swap {c1527154-1cfe-42c9-bc00-780fda199508}
+- -sda9 2.79g [8:9] ext4 {ca294bd6-4c95-4008-8531-1f467d2a3d7b}
+- -:Mounted as /dev/sda9 @ /tmp
+- :sda10 79.16g [8:10] ext4 {1a4793f3-cb46-4256-88f6-f065b4c49d88}
+-  :Mounted as /dev/sda10 @ /home
+
+
+-scsi 1:0:0:0 ATA      WDC WD30EZRX-00D {WD-WMC1T4003426}
+
+-:sdb 2.73t [8:16] Empty/Unknown
+
+
+:scsi 1:0:1:0 ATA      WDC WD30EZRX-00D {WD-WMC1T3894559}
+
+  :sdc 2.73t [8:32] Partitioned (gpt)
+   -sdc1 1.00m [8:33] Empty/Unknown
+   -sdc2 100.00m [8:34] MD raid1 (1/2) in_sync 
+{cc72a049-f9e6-7085-4a8f-b478c8ee9588}
+   -:md2 99.94m [9:2] MD v0.90 raid1 (2) read-auto DEGRADED 
+{cc72a049:f9e67085:4a8fb478:c8ee9588}
+   -                  ext2 'boot' {e211fdf8-4179-4d52-b994-61e958789b6c}
+   -sdc3 2.00g [8:35] Empty/Unknown
+   -sdc4 150.00g [8:36] MD raid1 (1/2) in_sync 'D7bak:4' 
+{741fb6b3-491b-f823-ba5d-bb377101ce96}
+   -:md4 149.87g [9:4] MD v1.2 raid1 (2) read-auto DEGRADED 
+{741fb6b3:491bf823:ba5dbb37:7101ce96}
+   -                   ext4 'OS' {618eae7a-2a6b-44fd-90d4-74595d3f24bd}
+   :sdc5 2.58t [8:37] MD raid1 (1/2) in_sync 'D7bak:5' 
+{0a1bd77e-6f0d-4fba-3260-932c021ed347}
+    :md5 2.58t [9:5] MD v1.2 raid1 (2) clean DEGRADED 
+{0a1bd77e:6f0d4fba:3260932c:021ed347}
+     -               PV LVM2_member 2.58t used, 0 free 
+{5b0KRp-rFJ3-WiBR-JW3i-U01v-SITm-fNcVbr}
+     :VG bkp100vg 2.58t 0 free {zWgmjF-zYiv-X9fp-0XCU-RFIf-kT8E-7bropr}
+      :dm-0 2.58t [253:0] LV bkp100lv ext4 
+{709a00ef-9306-4617-b464-4f30a4790f60}
+       :Mounted as /dev/mapper/bkp100vg-bkp100lv @ /mnt/bkp
+
+
+Other Block Devices
+-loop0 0.00k [7:0] Empty/Unknown
+-loop1 0.00k [7:1] Empty/Unknown
+-loop2 0.00k [7:2] Empty/Unknown
+-loop3 0.00k [7:3] Empty/Unknown
+-loop4 0.00k [7:4] Empty/Unknown
+-loop5 0.00k [7:5] Empty/Unknown
+-loop6 0.00k [7:6] Empty/Unknown
+-loop7 0.00k [7:7] Empty/Unknown
+root@D7bak:/home/user#
+
