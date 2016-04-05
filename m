@@ -1,51 +1,45 @@
-From: Ron Leach <ronleach@tesco.net>
-Subject: Re: Repairing R1: Part tabl, & precise command
-Date: Tue, 05 Apr 2016 17:34:17 +0100
-Message-ID: <5703E909.8090903@tesco.net>
-References: <57038211.6040101@tesco.net> <57039BCC.6040103@tesco.net> <5703AE18.700@tesco.net> <5703D98F.4020503@turmel.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 11/27] bcache: io.c: use bio_set_vec_table
+Date: Tue, 5 Apr 2016 10:31:34 -0700
+Message-ID: <20160405173134.GC31055@infradead.org>
+References: <1459857443-20611-1-git-send-email-tom.leiming@gmail.com>
+ <1459857443-20611-12-git-send-email-tom.leiming@gmail.com>
+ <20160405124902.GA11986@infradead.org>
+ <CACVXFVN+SfQ=mkdKeAMmPrkzQtrYcNxDPrT6bxNjC==xnuaxhg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5703D98F.4020503@turmel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-bcache-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CACVXFVN+SfQ=mkdKeAMmPrkzQtrYcNxDPrT6bxNjC==xnuaxhg@mail.gmail.com>
+Sender: linux-bcache-owner@vger.kernel.org
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@fb.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-block@vger.kernel.org, Boaz Harrosh <boaz@plexistor.com>, Kent Overstreet <kent.overstreet@gmail.com>, Shaohua Li <shli@kernel.org>, "open list:BCACHE (BLOCK LAYER CACHE)" <linux-bcache@vger.kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 05/04/2016 16:28, Phil Turmel wrote:
+On Tue, Apr 05, 2016 at 11:24:30PM +0800, Ming Lei wrote:
+> - bio can be embedded into one biger instance, which is often allocated
+> dynamically, so one extra allocation for bio can be avoided.
 
->
-> If your array has write-intent bitmaps, use --re-add instead of --add.
-> It'll be quick.  Otherwise just --add and let it rebuild.
->
+We can also do this the other way around with the bios front_pad,
+which avoid the caller poking into bio details.
 
-Phil, thanks for the advice.
+> - we should support arbitrary bio size by this way, at least bio_add_page()
+> supports this usage.  Also code gets lots of simplication with arbitrary bio
+> size support, such as prio_io(): bcache
 
-I hit an unexpected problem fixing the partition table on /dev/sdb, 
-the disk that dropped from the Raid1 array.  The problem is caused by 
-/dev/sdb being *smaller* than /dev/sdc (the working array member) - 
-despite the disks being identical products from WD.  gdisk complains 
-that partition 5 (/dev/sdb5), which is to be the Raid1 partner for the 
-LVM containing all our backed up files, is too big (together with the 
-other partitions) for the /dev/sdb disk.
+There is no reason for not supporting huge bios in the core bio code,
+in fact using bio_kmalloc you can already allocate huges bios
+dynamically right now.  Except that you can't really use it, because the
+layers below don't expect that.  Bios based drivers expect to be able to
+call bio_clone and friends called on bios passed to them, and might
+also make assumptions about the max number of bios segments for now.
 
-Presumably, raid1 doesn't work if an 'add'ed disk partition is smaller 
-than the existing, running, degraded array?  Am I right in thinking 
-that the LVM won't be able to be carried securely on the underlying md 
-system?  lsdrv is reporting that /dev/md127 has 0 free, so it seems 
-that the LVM is occupying the complete space of /dev/md127, and it 
-must be using the complete space of the underlying /dev/sdc5 because 
-only sdc is active, at the moment (the Raid1 being still degraded).
+> BTW, the root cause for bcache crash still isn't clear now because
+> blk_bio_segment_split() should split big bio into proper size with
+> all queue's limits. Maybe the max segment limit isn't figured out correctly.
 
-To protect the LVM, what would be a good thing to do?  Should I define 
-a slightly shorter 'partner' partition on the failed disk (/dev/sdb) - 
-I would think not, but I would welcome advice.
-
-I did think about reducing the size of one of the other partitions on 
-/dev/sdb - there's a swap partition of 2G which could become 1.5G, 
-because there's another 2G on the working disk anyway.  Doing that, 
-the partner partitions for the real data could be the same size, 
-though not in exactly the same place on both disks.  I think this 
-might work?
-
-regards, Ron
+The root cause is pretty simple:  The queue limits matter for request
+based drivers, which are the only ones getting bios > BIO_MAX_PAGES
+except for the buggy bcache use case.  You'll need to either adjust the
+limit for all bio based drivers to or get rid of that one magic caller
+not playing by the rules.
