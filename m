@@ -1,61 +1,51 @@
-From: "Christoph Pleger" <Christoph.Pleger@cs.tu-dortmund.de>
-Subject: Re: Setting up fakeraid with mdadm / dmraid
-Date: Tue, 5 Apr 2016 17:43:09 +0200
-Message-ID: <a889980159966a8db49dacfa8b00f25e.squirrel@postweb.cs.tu-dortmund.de>
+From: Ron Leach <ronleach@tesco.net>
+Subject: Re: Repairing R1: Part tabl, & precise command
+Date: Tue, 05 Apr 2016 17:34:17 +0100
+Message-ID: <5703E909.8090903@tesco.net>
+References: <57038211.6040101@tesco.net> <57039BCC.6040103@tesco.net> <5703AE18.700@tesco.net> <5703D98F.4020503@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5703D98F.4020503@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
+On 05/04/2016 16:28, Phil Turmel wrote:
 
-> Christoph> I have a machine with an LSI Megaraid Sofware RAID
-> Christoph> fakeraid, which uses ddf format. About two weeks ago, when
-Christoph> I wanted to install the machine, I configured a RAID 1
-Christoph> array in the BIOS config utility and then booted the
-> Christoph> machine from PXE with an NFSROOT. mdadm and dmraid are
-Christoph> installed in the NFSROOT, dracut is used for initrd
-> Christoph> generation. As dracut prefers mdadm over dmraid, mdadm was
-Christoph> chosen for RAID management.
+>
+> If your array has write-intent bitmaps, use --re-add instead of --add.
+> It'll be quick.  Otherwise just --add and let it rebuild.
+>
 
-> It's also almost entirely black magic to support these things, since the
-vendors don't generally share the details on the on-disk format that I'm
-aware of.  I'm probably wrong in the details.
+Phil, thanks for the advice.
 
-The same fakeraid works quite well in Linux when using dmraid instead of
-mdadm, so the ddf format used is obviously not secret. I just would like
-to switch to mdadm because its documentation states that it supports the
-ddf format and because many sites on the internet recommend to move from
-dmraid to mdadm for fakeraid management.
+I hit an unexpected problem fixing the partition table on /dev/sdb, 
+the disk that dropped from the Raid1 array.  The problem is caused by 
+/dev/sdb being *smaller* than /dev/sdc (the working array member) - 
+despite the disks being identical products from WD.  gdisk complains 
+that partition 5 (/dev/sdb5), which is to be the Raid1 partner for the 
+LVM containing all our backed up files, is too big (together with the 
+other partitions) for the /dev/sdb disk.
 
-> But again, please just use the controller in JBOD (Just a Bunch of
-Disks) mode, and let mdadm mirror the disks for you.
+Presumably, raid1 doesn't work if an 'add'ed disk partition is smaller 
+than the existing, running, degraded array?  Am I right in thinking 
+that the LVM won't be able to be carried securely on the underlying md 
+system?  lsdrv is reporting that /dev/md127 has 0 free, so it seems 
+that the LVM is occupying the complete space of /dev/md127, and it 
+must be using the complete space of the underlying /dev/sdc5 because 
+only sdc is active, at the moment (the Raid1 being still degraded).
 
-The purpose of my NFSROOT is to partition disks, create filesystems and
-unpack a base system to the disks. This should support a great variety of
-machines, so the installation system has to be quite general. Though it is
-not the case here, what if Linux had to be installed on the RAID together
-with another OS? I think, that then all installed OSes should have the
-same view on the RAID - the view which if offered by the fakeraid.
+To protect the LVM, what would be a good thing to do?  Should I define 
+a slightly shorter 'partner' partition on the failed disk (/dev/sdb) - 
+I would think not, but I would welcome advice.
 
-And if I had not intended to reinstall the machine anyway, but wanted to
-use the NFSROOT as a rescue system, my data had been lost without
-intention. So, even if mdadm does not support ddf fakeraids (correctly),
-it should at least not destroy data.
+I did think about reducing the size of one of the other partitions on 
+/dev/sdb - there's a swap partition of 2G which could become 1.5G, 
+because there's another 2G on the working disk anyway.  Doing that, 
+the partner partitions for the real data could be the same size, 
+though not in exactly the same place on both disks.  I think this 
+might work?
 
-> Crappy implementation of semi-secret on-disk format?   It could be that
-mdadm over-wrote something on the disk, or you partitioned it and then
-overwrote something the FakeRAID wanted kept around.
-
-Like I wrote before, I did not perform any action on the disks. No
-mounting, no partitioning, no mkfs. Just booting with an NFSROOT which has
-mdadm and dmraid installed.
-
-Regards
-  Christoph
-
-
-
+regards, Ron
