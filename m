@@ -1,38 +1,34 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 20/27] dm: dm-bufio.c: use bio_set_vec_table()
-Date: Tue, 5 Apr 2016 06:04:02 -0700
-Message-ID: <20160405130402.GD32576@infradead.org>
-References: <1459858062-21075-1-git-send-email-tom.leiming@gmail.com>
- <1459858062-21075-6-git-send-email-tom.leiming@gmail.com>
+From: "Christoph Pleger" <Christoph.Pleger@cs.tu-dortmund.de>
+Subject: Setting up fakeraid with mdadm / dmraid
+Date: Tue, 5 Apr 2016 15:03:12 +0200
+Message-ID: <b6ced30ee931f9a6faf2541db2462401.squirrel@postweb.cs.tu-dortmund.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1459858062-21075-6-git-send-email-tom.leiming@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ming Lei <tom.leiming@gmail.com>
-Cc: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Boaz Harrosh <boaz@plexistor.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "maintainer:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>, Shaohua Li <shli@kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Apr 05, 2016 at 08:07:35PM +0800, Ming Lei wrote:
-> Signed-off-by: Ming Lei <tom.leiming@gmail.com>
-> ---
->  drivers/md/dm-bufio.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
-> index cd77216..0e48ad7 100644
-> --- a/drivers/md/dm-bufio.c
-> +++ b/drivers/md/dm-bufio.c
-> @@ -624,8 +624,7 @@ static void use_inline_bio(struct dm_buffer *b, int rw, sector_t block,
->  	int len;
->  
->  	bio_init(&b->bio);
-> -	b->bio.bi_io_vec = b->bio_vec;
-> -	b->bio.bi_max_vecs = DM_BUFIO_INLINE_VECS;
-> +	bio_set_vec_table(&b->bio, b->bio_vec, DM_BUFIO_INLINE_VECS);
->  	b->bio.bi_iter.bi_sector = block << b->c->sectors_per_block_bits;
->  	b->bio.bi_bdev = b->c->bdev;
->  	b->bio.bi_end_io = inline_endio;
+Hello,
 
-Should be switched to use bio_alloc instead.
+I have a machine with an LSI Megaraid Sofware RAID fakeraid, which uses
+ddf format. About two weeks ago, when I wanted to install the machine, I
+configured a RAID 1 array in the BIOS config utility and then booted the
+machine from PXE with an NFSROOT. mdadm and dmraid are installed in the
+NFSROOT, dracut is used for initrd generation. As dracut prefers mdadm
+over dmraid, mdadm was chosen for RAID management.
+
+But though mdadm detected the RAID (it created container device /dev/md127
+and raid device /dev/md126), it destroyed it - that is, though I did not
+perform any action on the raid disks, at the next boot, the BIOS RAID
+utility had "forgotten" about the RAID configuration it had created
+before.
+
+Why are the possible reasons for that?
+
+Regards
+  Christoph
+
+
+
