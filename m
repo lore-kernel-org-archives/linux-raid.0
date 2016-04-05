@@ -1,30 +1,66 @@
-From: Anthonys Lists <antlists@youngman.org.uk>
-Subject: Re: [PATCH] Consistent use of IEC 80000-13 prefix in manpage
-Date: Sun, 3 Apr 2016 20:19:29 +0100
-Message-ID: <57016CC1.7010802@youngman.org.uk>
-References: <56FC2DAA.2020605@googlemail.com> <wrfjio028nxk.fsf@redhat.com>
+From: Noah Beck <noah.b.beck@gmail.com>
+Subject: recovery from selinux blocking --backup-file during RAID5->6
+Date: Mon, 4 Apr 2016 23:16:49 -0400
+Message-ID: <CAFAW0zxisX2Db_YdJxtNpF4YKayy=AnKnWcGdAgw6piy1Jjyng@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjio028nxk.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 31/03/2016 20:09, Jes Sorensen wrote:
-> I am not very much in favor of this patch. Any normal sane person still
-> refers to megabytes and kilobytes as referring to 1024 base sizes,
-> despite the pointless standard trying to mess them up to accommodate the
-> harddrive vendors. Nobody normal knows what a kibibyte is.
-Nobody normal knows that kilo actually means 2^10 ...
+I see a similar problem has been discussed at least once before at
+https://marc.info/?t=144970286700004&r=1&w=2
 
-Yes I know us computer people regularly abuse the term, but nowadays the 
-majority of computer lusers are familiar with the fact kilo has *always* 
-meant 10^3.
+In my case, this was a RAID5 array with 4 active devices and one
+spare.  I wanted to switch this to a 5-device RAID6 instead.  Ran the
+following:
 
-After all, isn't a billion one million squared? (10^12) ... :-) It's 
-only the Americans who think it's 1000^3 :-)
+  mdadm --grow /dev/md127 --raid-devices 5 --level 6 --backup-file
+/root/raid_migration_file
 
-Cheers,
-Wol
+Two things went wrong:
+
+1) selinux jumped in and blocked access to the --backup-file.  From journalctl:
+
+  SELinux is preventing mdadm from getattr access on the file
+/root/raid_migration_file
+
+This can be fixed with a "setenforce 0" in the future.  The
+/root/raid_migration_file did get created (25MB) but hexdump says it
+is all zeros so I believe no useful data was placed in this file.
+
+2) Turns out my spare device in the old RAID5 was actually ready to
+die.  This corresponds to what was previously the spare in my RAID5:
+
+  ata4.00: revalidation failed (errno=-2)
+  ata4.00: disabled
+  ata4: EH complete
+  blk_update_request: I/O error, dev sdb, sector 0
+  blk_update_request: I/O error, dev sdb, sector 3907023935
+  md: super_written gets error=-5
+  md/raid:md127: Disk failure on sdb1, disabling device.
+  md/raid:md127: Operation continuing on 4 devices.
+
+Since /dev/sdb1 was marked as failed in the array I removed it.  I
+tried zeroing it out with dd if=/dev/zero of=/dev/sdb1 to see what it
+would do and then that disk completely died.  So I'll get a new disk
+tomorrow.  In the meantime the system still seems to be running fine.
+/proc/mdstat shows this now:
+
+  md127 : active raid6 sde1[3] sda1[2] sdd1[0] sdf1[1]
+      5860535808 blocks super 0.91 level 6, 64k chunk, algorithm 18
+[5/4] [UUUU_]
+      [>....................]  reshape =  0.0% (1/1953511936)
+finish=722.0min speed=43680K/sec
+
+The previous thread resulted in a patch (in
+https://marc.info/?l=linux-raid&m=145187378405337&w=2 ).  If I want to
+go back to having a 4-device RAID5 array before I shut this system
+down to replace the bad disk, is the right thing to do still to apply
+that patch to mdadm, stop /dev/md127, and assemble again with
+--update=revert-reshape?  Or does the info above indicate I should use
+any different solution?
+
+Thanks,
+Noah
