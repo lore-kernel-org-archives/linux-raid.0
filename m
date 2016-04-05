@@ -1,7 +1,7 @@
 From: Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH 12/27] bcache: journal.c: use bio_set_vec_table()
-Date: Tue,  5 Apr 2016 19:56:57 +0800
-Message-ID: <1459857443-20611-13-git-send-email-tom.leiming@gmail.com>
+Subject: [PATCH 11/27] bcache: io.c: use bio_set_vec_table
+Date: Tue,  5 Apr 2016 19:56:56 +0800
+Message-ID: <1459857443-20611-12-git-send-email-tom.leiming@gmail.com>
 References: <1459857443-20611-1-git-send-email-tom.leiming@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1459857443-20611-1-git-send-email-tom.leiming@gmail.com>
@@ -13,22 +13,22 @@ List-Id: linux-raid.ids
 
 Signed-off-by: Ming Lei <tom.leiming@gmail.com>
 ---
- drivers/md/bcache/journal.c | 3 +--
+ drivers/md/bcache/io.c | 3 +--
  1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/md/bcache/journal.c b/drivers/md/bcache/journal.c
-index 29eba72..bf8924f 100644
---- a/drivers/md/bcache/journal.c
-+++ b/drivers/md/bcache/journal.c
-@@ -453,8 +453,7 @@ static void do_journal_discard(struct cache *ca)
- 						ca->sb.d[ja->discard_idx]);
- 		bio->bi_bdev		= ca->bdev;
- 		bio->bi_rw		= REQ_WRITE|REQ_DISCARD;
--		bio->bi_max_vecs	= 1;
--		bio->bi_io_vec		= bio->bi_inline_vecs;
-+		bio_set_vec_table(bio, bio->bi_inline_vecs, 1);
- 		bio->bi_iter.bi_size	= bucket_bytes(ca);
- 		bio->bi_end_io		= journal_discard_endio;
+diff --git a/drivers/md/bcache/io.c b/drivers/md/bcache/io.c
+index 86a0bb8..1c48462 100644
+--- a/drivers/md/bcache/io.c
++++ b/drivers/md/bcache/io.c
+@@ -26,8 +26,7 @@ struct bio *bch_bbio_alloc(struct cache_set *c)
  
+ 	bio_init(bio);
+ 	bio->bi_flags		|= BIO_POOL_NONE << BIO_POOL_OFFSET;
+-	bio->bi_max_vecs	 = bucket_pages(c);
+-	bio->bi_io_vec		 = bio->bi_inline_vecs;
++	bio_set_vec_table(bio, bio->bi_inline_vecs, bucket_pages(c));
+ 
+ 	return bio;
+ }
 -- 
 1.9.1
