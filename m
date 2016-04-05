@@ -1,47 +1,51 @@
-From: Noah Beck <noah.b.beck@gmail.com>
-Subject: Re: recovery from selinux blocking --backup-file during RAID5->6
-Date: Tue, 5 Apr 2016 11:01:38 -0400
-Message-ID: <CAFAW0zwaOjbhneYbSQ248h6RkZApcb7LT8Qpg-ggkGXMpJJ2tA@mail.gmail.com>
-References: <CAFAW0zxisX2Db_YdJxtNpF4YKayy=AnKnWcGdAgw6piy1Jjyng@mail.gmail.com>
-	<57039E1F.3060307@youngman.org.uk>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: [PATCH 11/27] bcache: io.c: use bio_set_vec_table
+Date: Tue, 5 Apr 2016 23:24:30 +0800
+Message-ID: <CACVXFVN+SfQ=mkdKeAMmPrkzQtrYcNxDPrT6bxNjC==xnuaxhg@mail.gmail.com>
+References: <1459857443-20611-1-git-send-email-tom.leiming@gmail.com>
+	<1459857443-20611-12-git-send-email-tom.leiming@gmail.com>
+	<20160405124902.GA11986@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <57039E1F.3060307@youngman.org.uk>
+In-Reply-To: <20160405124902.GA11986@infradead.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jens Axboe <axboe@fb.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-block@vger.kernel.org, Boaz Harrosh <boaz@plexistor.com>, Kent Overstreet <kent.overstreet@gmail.com>, Shaohua Li <shli@kernel.org>, "open list:BCACHE (BLOCK LAYER CACHE)" <linux-bcache@vger.kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Apr 5, 2016 at 7:14 AM, Wols Lists <antlists@youngman.org.uk> wrote:
-> DO YOU HAVE A BACKUP :-)
+On Tue, Apr 5, 2016 at 8:49 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Tue, Apr 05, 2016 at 07:56:56PM +0800, Ming Lei wrote:
+>> diff --git a/drivers/md/bcache/io.c b/drivers/md/bcache/io.c
+>> index 86a0bb8..1c48462 100644
+>> --- a/drivers/md/bcache/io.c
+>> +++ b/drivers/md/bcache/io.c
+>> @@ -26,8 +26,7 @@ struct bio *bch_bbio_alloc(struct cache_set *c)
+>>
+>>       bio_init(bio);
+>>       bio->bi_flags           |= BIO_POOL_NONE << BIO_POOL_OFFSET;
+>> -     bio->bi_max_vecs         = bucket_pages(c);
+>> -     bio->bi_io_vec           = bio->bi_inline_vecs;
+>> +     bio_set_vec_table(bio, bio->bi_inline_vecs, bucket_pages(c));
+>
+> All this bcache code needs to move away from bio_init on a bio
+> embedded in a driver private structure toward properly using
+> bio_alloc / bio_alloc_bioset.  That will also fix the crash
+> with bcache over md that Shaohua reported, so I'd suggest to fast
+> track this part of the series.
 
-There are three categories of stuff on this array:
-1) my own pictures and home videos, which are backed up to crashplan's
-servers.  So they're available and current but incredibly inconvenient
-to get to through my 1.7Mbps DSL (yes, DSL exists in 2016).
-2) local crashplan backups from other computers in the house.  If I
-lose this then crashplan just re-dumps the data from its source again.
-3) mythtv recordings of shows going back many years.  This is ~2TB by
-itself and since the aforementioned DSL is my automatic backup path,
-and I don't feel I lose much if it dies, it's not backed up.
-Primarily my wife wants these kept, so for domestic harmony I'll need
-to find 2TB elsewhere to dump this to before I do anything
-experimental.
+I suggest to keep this usage for the following reasons:
 
-> Thing is, when one drive fails, it should be ringing alarm bells that
-> another one is on its last legs - these things have an annoying habit of
-> failing in bunches. Which says that you really need a *second* spare
-> drive handy - is the rebuild going to tip one of your live drives over
-> the edge? I'd say the chances of you ending up with a 5-device raid-6
-> with one device failed is a lot higher than you'd like :-(
+- bio can be embedded into one biger instance, which is often allocated
+dynamically, so one extra allocation for bio can be avoided.
 
-Quite true.  That's why I wanted to switch to RAID6 in the first
-place.  This is an incredibly old array, dating back a little over 10
-years.  All of the original drives have been replaced (with larger
-ones) along the way and there have been a number of plain old failed
-drives that had to be replaced as well.  Having no redundancy
-available during the rebuild is a nail-biting experience I want to
-stop having.  :)
+- we should support arbitrary bio size by this way, at least bio_add_page()
+supports this usage.  Also code gets lots of simplication with arbitrary bio
+size support, such as prio_io(): bcache
 
-Noah
+BTW, the root cause for bcache crash still isn't clear now because
+blk_bio_segment_split() should split big bio into proper size with
+all queue's limits. Maybe the max segment limit isn't figured out correctly.
+
+Thanks,
+Ming Lei
