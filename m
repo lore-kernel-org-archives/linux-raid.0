@@ -1,55 +1,58 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: Setting up fakeraid with mdadm / dmraid
-Date: Tue, 5 Apr 2016 09:58:20 -0400
-Message-ID: <22275.50300.54320.32686@quad.stoffel.home>
-References: <b6ced30ee931f9a6faf2541db2462401.squirrel@postweb.cs.tu-dortmund.de>
+From: Noah Beck <noah.b.beck@gmail.com>
+Subject: Re: recovery from selinux blocking --backup-file during RAID5->6
+Date: Tue, 5 Apr 2016 10:44:45 -0400
+Message-ID: <CAFAW0zyNS3m4ZZ59xCkznxopo0d4soWQZrd2eBVfovfNCoX6Sg@mail.gmail.com>
+References: <CAFAW0zxisX2Db_YdJxtNpF4YKayy=AnKnWcGdAgw6piy1Jjyng@mail.gmail.com>
+	<CAF-Kpgaj2ycfxLumyXw1FwX+NetPa3XN0zhr6EM5O-qvnm6jrA@mail.gmail.com>
+	<CAF-KpgYqa9hB7m=pNAc8GFrTuKF8YwToHXvU4U2uCncs77Jx5g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <b6ced30ee931f9a6faf2541db2462401.squirrel@postweb.cs.tu-dortmund.de>
+In-Reply-To: <CAF-KpgYqa9hB7m=pNAc8GFrTuKF8YwToHXvU4U2uCncs77Jx5g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Pleger <Christoph.Pleger@cs.tu-dortmund.de>
-Cc: linux-raid@vger.kernel.org
+To: George Rapp <george.rapp@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+[re-send including linux-raid this time]
 
-Christoph> I have a machine with an LSI Megaraid Sofware RAID
-Christoph> fakeraid, which uses ddf format. About two weeks ago, when
-Christoph> I wanted to install the machine, I configured a RAID 1
-Christoph> array in the BIOS config utility and then booted the
-Christoph> machine from PXE with an NFSROOT. mdadm and dmraid are
-Christoph> installed in the NFSROOT, dracut is used for initrd
-Christoph> generation. As dracut prefers mdadm over dmraid, mdadm was
-Christoph> chosen for RAID management.
+On Mon, Apr 4, 2016 at 11:58 PM, George Rapp <george.rapp@gmail.com> wrote:
+>> The previous thread resulted in a patch (in
+>> https://marc.info/?l=linux-raid&m=145187378405337&w=2 ).  If I want to
+>> go back to having a 4-device RAID5 array before I shut this system
+>> down to replace the bad disk, is the right thing to do still to apply
+>> that patch to mdadm, stop /dev/md127, and assemble again with
+>> --update=revert-reshape?  Or does the info above indicate I should use
+>> any different solution?
+>
+> Noah -
+>
+> I was the one bitten by SELinux in the thread you linked above. However, my
+> starting point was different, as I was growing a 5-disk RAID 6 array to six
+> disks. Otherwise, what you described was exactly what I experienced.
 
-First off, I would strongly suggest that you turn off the FakeRAID
-entirely, just expose both disks to the OS and have the OS do the
-mirroring.  FakeRAID was designed when CPUs were much slower, but RAID
-HW ASICs were also expensive.  So you got the worst of both worlds!
-*grin*
+Heh.  I read 5-disk RAID 6 as RAID5 in your other thread.  Apparently
+wishful thinking on my part, but still pretty similar like you say.
 
-It's also almost entirely black magic to support these things, since
-the vendors don't generally share the details on the on-disk format
-that I'm aware of.  I'm probably wrong in the details.
+> If you want to try NeilBrown's patch
+> (https://marc.info/?l=linux-raid&m=145187378405337&w=2), I'd strongly
+> suggest testing it nondestructively first, using the overlay strategy
+> detailed at
+> https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID
 
-But again, please just use the controller in JBOD (Just a Bunch of
-Disks) mode, and let mdadm mirror the disks for you.  
+The overlay seems like a safe way to experiment.  I was wondering though,
+since the array is still running, is it supposed to work to apply the
+--update=revert-reshape to the system without shutting it down?
+Or is it required to apply revert-reshape on an assemble operation?
 
-Christoph> But though mdadm detected the RAID (it created container
-Christoph> device /dev/md127 and raid device /dev/md126), it destroyed
-Christoph> it - that is, though I did not perform any action on the
-Christoph> raid disks, at the next boot, the BIOS RAID utility had
-Christoph> "forgotten" about the RAID configuration it had created
-Christoph> before.
+> The steps you proposed above are correct. More detail on the exact commands
+> I used: https://marc.info/?l=linux-raid&m=145349072305613&w=2
+>
+> Good luck. Please report success or failure to the list.
 
-Christoph> Why are the possible reasons for that?
+Yes I saw that.  I'm headed out to get a replacement disk then I'll
+start messing
+with the system.  Hopefully I'll report back with something later today.
 
-Crappy implementation of semi-secret on-disk format?   It could be
-that mdadm over-wrote something on the disk, or you partitioned it and
-then overwrote something the FakeRAID wanted kept around.
-
-In general, just don't go the fake RAID route, it's not worth the
-hassle.
-
-John
+Thanks for the help,
+Noah
