@@ -1,7 +1,7 @@
 From: Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH 14/27] bcache: writeback: use bio_set_vec_table()
-Date: Tue,  5 Apr 2016 19:56:59 +0800
-Message-ID: <1459857443-20611-15-git-send-email-tom.leiming@gmail.com>
+Subject: [PATCH 12/27] bcache: journal.c: use bio_set_vec_table()
+Date: Tue,  5 Apr 2016 19:56:57 +0800
+Message-ID: <1459857443-20611-13-git-send-email-tom.leiming@gmail.com>
 References: <1459857443-20611-1-git-send-email-tom.leiming@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1459857443-20611-1-git-send-email-tom.leiming@gmail.com>
@@ -13,24 +13,22 @@ List-Id: linux-raid.ids
 
 Signed-off-by: Ming Lei <tom.leiming@gmail.com>
 ---
- drivers/md/bcache/writeback.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/md/bcache/journal.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/md/bcache/writeback.c b/drivers/md/bcache/writeback.c
-index b9346cd..49a8f8a 100644
---- a/drivers/md/bcache/writeback.c
-+++ b/drivers/md/bcache/writeback.c
-@@ -112,9 +112,9 @@ static void dirty_init(struct keybuf_key *w)
- 		bio_set_prio(bio, IOPRIO_PRIO_VALUE(IOPRIO_CLASS_IDLE, 0));
- 
- 	bio->bi_iter.bi_size	= KEY_SIZE(&w->key) << 9;
--	bio->bi_max_vecs	= DIV_ROUND_UP(KEY_SIZE(&w->key), PAGE_SECTORS);
- 	bio->bi_private		= w;
--	bio->bi_io_vec		= bio->bi_inline_vecs;
-+	bio_set_vec_table(bio, bio->bi_inline_vecs,
-+			  DIV_ROUND_UP(KEY_SIZE(&w->key), PAGE_SECTORS));
- 	bch_bio_map(bio, NULL);
- }
+diff --git a/drivers/md/bcache/journal.c b/drivers/md/bcache/journal.c
+index 29eba72..bf8924f 100644
+--- a/drivers/md/bcache/journal.c
++++ b/drivers/md/bcache/journal.c
+@@ -453,8 +453,7 @@ static void do_journal_discard(struct cache *ca)
+ 						ca->sb.d[ja->discard_idx]);
+ 		bio->bi_bdev		= ca->bdev;
+ 		bio->bi_rw		= REQ_WRITE|REQ_DISCARD;
+-		bio->bi_max_vecs	= 1;
+-		bio->bi_io_vec		= bio->bi_inline_vecs;
++		bio_set_vec_table(bio, bio->bi_inline_vecs, 1);
+ 		bio->bi_iter.bi_size	= bucket_bytes(ca);
+ 		bio->bi_end_io		= journal_discard_endio;
  
 -- 
 1.9.1
