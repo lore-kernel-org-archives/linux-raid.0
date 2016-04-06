@@ -1,45 +1,38 @@
-From: Kent Overstreet <kent.overstreet@gmail.com>
-Subject: Re: [PATCH 11/27] bcache: io.c: use bio_set_vec_table
-Date: Tue, 5 Apr 2016 16:35:07 -0800
-Message-ID: <20160406003507.GD31161@kmo-pixel>
-References: <1459857443-20611-1-git-send-email-tom.leiming@gmail.com>
- <1459857443-20611-12-git-send-email-tom.leiming@gmail.com>
- <20160405124902.GA11986@infradead.org>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH] [RFC] fix potential access after free: return value of
+ blk_check_plugged() must be used schedule() safe
+Date: Tue, 5 Apr 2016 17:49:56 -0700
+Message-ID: <20160406004956.GA102852@kernel.org>
+References: <20160405133657.GA3078@soda.linbit>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-bcache-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20160405124902.GA11986@infradead.org>
-Sender: linux-bcache-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Ming Lei <tom.leiming@gmail.com>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, Boaz Harrosh <boaz@plexistor.com>, Shaohua Li <shli@kernel.org>, "open list:BCACHE (BLOCK LAYER CACHE)" <linux-bcache@vger.kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>
+In-Reply-To: <20160405133657.GA3078@soda.linbit>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Lars Ellenberg <lars.ellenberg@linbit.com>
+Cc: Neil Brown <neilb@suse.de>, Jens Axboe <axboe@kernel.dk>, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Apr 05, 2016 at 05:49:02AM -0700, Christoph Hellwig wrote:
-> On Tue, Apr 05, 2016 at 07:56:56PM +0800, Ming Lei wrote:
-> > diff --git a/drivers/md/bcache/io.c b/drivers/md/bcache/io.c
-> > index 86a0bb8..1c48462 100644
-> > --- a/drivers/md/bcache/io.c
-> > +++ b/drivers/md/bcache/io.c
-> > @@ -26,8 +26,7 @@ struct bio *bch_bbio_alloc(struct cache_set *c)
-> >  
-> >  	bio_init(bio);
-> >  	bio->bi_flags		|= BIO_POOL_NONE << BIO_POOL_OFFSET;
-> > -	bio->bi_max_vecs	 = bucket_pages(c);
-> > -	bio->bi_io_vec		 = bio->bi_inline_vecs;
-> > +	bio_set_vec_table(bio, bio->bi_inline_vecs, bucket_pages(c));
+On Tue, Apr 05, 2016 at 03:36:57PM +0200, Lars Ellenberg wrote:
+> blk_check_plugged() will return a pointer
+> to an object linked on current->plug->cb_list.
 > 
-> All this bcache code needs to move away from bio_init on a bio
-> embedded in a driver private structure toward properly using
-> bio_alloc / bio_alloc_bioset.  That will also fix the crash
-> with bcache over md that Shaohua reported, so I'd suggest to fast
-> track this part of the series.
+> That list may "at any time" be implicitly cleared by
+> blk_flush_plug_list()
+>  flush_plug_callbacks()
+> either as a result of blk_finish_plug(),
+> or implicitly by schedule() [and maybe other implicit mechanisms?]
+> 
+> If there is no protection against an implicit unplug
+> between the call to blk_check_plug() and using its return value,
+> that implicit unplug may have already happened,
+> even before the plug is actually initialized or populated,
+> and we may be using a pointer to already free()d data.
 
-Why?
+This isn't correct. flush plug is never called in preemption, which is designed
+only called when the task is going to sleep. See sched_submit_work. Am I
+missing anything?
 
-bio_init() is a publicly exported function, it's always been one and bcache is
-ot the only driver to use it directly.
-
-bios with > BIO_MAX_PAGES bvecs is a separate issue; I would argue that the bug
-is in md's queue_limits; it uses blk_set_stacking_limits() which sets
-max_segments = USHRT_MAX, which is wrong if it's going to clone the biovec.
+Thanks,
+Shaohua
