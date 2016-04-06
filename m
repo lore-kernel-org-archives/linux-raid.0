@@ -1,87 +1,42 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] [RFC] fix potential access after free: return value of blk_check_plugged() must be used schedule() safe
-Date: Wed, 06 Apr 2016 13:10:57 +1000
-Message-ID: <87k2kbo2im.fsf@notabene.neil.brown.name>
-References: <20160405133657.GA3078@soda.linbit> <20160406004956.GA102852@kernel.org>
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: Re: [PATCH] badblocks: fix wrong return value when badblocks are
+ disabled
+Date: Wed, 6 Apr 2016 11:13:25 +0200
+Message-ID: <5704D335.605@intel.com>
+References: <1459861174-9238-1-git-send-email-artur.paszkiewicz@intel.com>
+ <1459877821.4741.4.camel@intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160406004956.GA102852@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>, Lars Ellenberg <lars.ellenberg@linbit.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1459877821.4741.4.camel@intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "Verma, Vishal L" <vishal.l.verma@intel.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On 04/05/2016 07:37 PM, Verma, Vishal L wrote:
+> On Tue, 2016-04-05 at 14:59 +0200, Artur Paszkiewicz wrote:
+>> The return value of md_set_badblocks() was inverted when the code was
+>> taken out of md, but the case when badblocks are disabled was left
+>> unchanged. This causes silent ignoring of I/O errors and other
+>> unpredictable behavior on md arrays that do not support badblocks (any
+>> array not using v1.x metadata).
+>>
+>> Fixes: 9e0e252a048b ("badblocks: Add core badblock management code")
+>> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+>> ---
+>>  block/badblocks.c | 3 ++-
+>>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> Good find, thanks!
+> 
+> Acked-by: Vishal Verma <vishal.l.verma@intel.com>
+> 
+> Should this also be tagged for stable?
 
-On Wed, Apr 06 2016, Shaohua Li wrote:
+Yes, I think it should be, since it affects 4.5.
 
-> On Tue, Apr 05, 2016 at 03:36:57PM +0200, Lars Ellenberg wrote:
->> blk_check_plugged() will return a pointer
->> to an object linked on current->plug->cb_list.
->>=20
->> That list may "at any time" be implicitly cleared by
->> blk_flush_plug_list()
->>  flush_plug_callbacks()
->> either as a result of blk_finish_plug(),
->> or implicitly by schedule() [and maybe other implicit mechanisms?]
->>=20
->> If there is no protection against an implicit unplug
->> between the call to blk_check_plug() and using its return value,
->> that implicit unplug may have already happened,
->> even before the plug is actually initialized or populated,
->> and we may be using a pointer to already free()d data.
->
-> This isn't correct. flush plug is never called in preemption, which is de=
-signed
-> only called when the task is going to sleep. See sched_submit_work. Am I
-> missing anything?
+Artur
 
-Ahh yes, thanks.
 
-Only two places call blk_schedule_flush_plug().
-One is io_schedule_timeout() which must be called explicitly.
-There other is, as you say, sched_submit_work().  It starts:
-
-static inline void sched_submit_work(struct task_struct *tsk)
-{
-        if (!tsk->state || tsk_is_pi_blocked(tsk))
-                return;
-
-so if the task is runnable, then as
-include/linux/sched.h:#define TASK_RUNNING              0
-
-it will never call blk_schedule_flush_plug().
-
-So I don't think you are missing anything, we were.
-
-Lars:  have your concerns been relieved or do you still have reason to
-think there is a problem?
-
-Thanks,
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJXBH5BAAoJEDnsnt1WYoG5taIP/2PjshEshFan0ldx2ZC371dK
-VfHvoqQEVQS+XwxQJjGEblNjggNZfE2mdFM4LLRyn+Rc2D0ZKAFlingKVXMkAhXO
-rjbcxJZD0H3hbWnMLGqQsnkyWXIsbP9Ci2iAxtogM2AyHzvTSQXMYfT7QWJ5iTIy
-zcxmJq03dl2iA+jvnhzFl+gt+nVXL8Ual3mu2FBgJr89+lsgPWzRY4yyiC6ldjWp
-z6zE6muE1rzBcJKOTt3y4WRuiIfXb4h3JWUxs3WKzLaMEsZLfVv2CYWKQ8mfoh7j
-QdhJUE7yj7wIqhfzwfSjvAnG329iJkunmVuMkeSxtwn0CUErkInLGw6segzUMSyX
-B3TKnF1lSuLKsIYd3QttwPLMkJ3yMPUr4FJxMXQ1WpHw69ZkOnYkJg2XR9JKnLiw
-FZQ79bvb/X8Vqcr9RWeMKEJKM1NEwC852PJNI+QU4l8mgyzHv3Ip9UJIfTzGqW2Y
-e5TLrJqNqczxOhTuEW8GPFsht1gjtWNYcDb84Q0NBnI0glrKg7KHaOsZrKFOTppN
-i+UXRB1ieQXvZdvd9NxXJk1A+616BO8h4MuFaOb1HcTRb9PoM7NDmXo3SpBOnvGs
-LdXxCGKBk1UvacgI4artOb6UVPGw/KAz0dsAdbdLYJtkTHkfqmXdKc/JlMt+YYPg
-ECz/B0xdLmTjZgU+NKX2
-=8JgF
------END PGP SIGNATURE-----
---=-=-=--
