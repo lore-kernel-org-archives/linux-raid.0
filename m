@@ -1,112 +1,62 @@
-From: "Brian J. Murrell" <brian@interlinx.bc.ca>
-Subject: raid1 recoverable after system crash?
-Date: Thu, 07 Apr 2016 08:44:46 -0400
-Message-ID: <1460033086.27740.145.camel@interlinx.bc.ca>
+From: Roman Mamedov <rm@romanrm.net>
+Subject: Re: raid1 recoverable after system crash?
+Date: Thu, 7 Apr 2016 18:00:04 +0500
+Message-ID: <20160407180004.53615913@natsu>
+References: <1460033086.27740.145.camel@interlinx.bc.ca>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
-	boundary="=-mP/mQUvbGD9cbAMk05e1"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/RElC_QomqedTNTNz.VUqh4F"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1460033086.27740.145.camel@interlinx.bc.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Brian J. Murrell" <brian@interlinx.bc.ca>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+--Sig_/RElC_QomqedTNTNz.VUqh4F
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
---=-mP/mQUvbGD9cbAMk05e1
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: base64
+On Thu, 07 Apr 2016 08:44:46 -0400
+"Brian J. Murrell" <brian@interlinx.bc.ca> wrote:
 
-SGkKCkkgaGFkIGEgc3lzdGVtIGNyYXNoLiDCoFdoZW4gaXQgY2FtZSBiYWNrIHVwLCBvbmUgb2Yg
-bXkgYXJyYXlzIHdhcwpkZWdyYWRlZDoKCiMgY2F0IC9wcm9jL21kc3RhdMKgClBlcnNvbmFsaXRp
-ZXMgOiBbbGluZWFyXSBbbXVsdGlwYXRoXSBbcmFpZDBdIFtyYWlkMV0gW3JhaWQ2XSBbcmFpZDVd
-IFtyYWlkNF0gW3JhaWQxMF3CoAptZDAgOiBhY3RpdmUgcmFpZDEgc2RkWzBdCsKgwqDCoMKgwqDC
-oDE5NTM1MTQ0OTYgYmxvY2tzIFsyLzFdIFtVX10KwqDCoMKgwqDCoMKgCm1kMSA6IGFjdGl2ZSBy
-YWlkMCBzZGNbMV0gc2RiWzBdCsKgwqDCoMKgwqDCoDE5NTM1MjQ3MzYgYmxvY2tzIHN1cGVyIDEu
-MiA1MTJrIGNodW5rcwrCoMKgwqDCoMKgwqAKdW51c2VkIGRldmljZXM6IDxub25lPgoKbWQxIGlz
-IHN1cHBvc2VkIHRvIGJlIGEgbWVtYmVyIG9mIG1kMCBidXQgaXQncyBub3QgY3VycmVudGx5OgoK
-L2Rldi9tZDA6CsKgwqDCoMKgwqDCoMKgwqBWZXJzaW9uIDogMC45MArCoCBDcmVhdGlvbiBUaW1l
-IDogTW9uIEphbiAyNiAxOTo1MTozOCAyMDA5CsKgwqDCoMKgwqBSYWlkIExldmVsIDogcmFpZDEK
-wqDCoMKgwqDCoEFycmF5IFNpemUgOiAxOTUzNTE0NDk2ICgxODYzLjAyIEdpQiAyMDAwLjQwIEdC
-KQrCoCBVc2VkIERldiBTaXplIDogMTk1MzUxNDQ5NiAoMTg2My4wMiBHaUIgMjAwMC40MCBHQikK
-wqDCoMKgUmFpZCBEZXZpY2VzIDogMgrCoCBUb3RhbCBEZXZpY2VzIDogMQpQcmVmZXJyZWQgTWlu
-b3IgOiAwCsKgwqDCoMKgUGVyc2lzdGVuY2UgOiBTdXBlcmJsb2NrIGlzIHBlcnNpc3RlbnQKCsKg
-wqDCoMKgVXBkYXRlIFRpbWUgOiBUaHUgQXBywqDCoDcgMDg6MTk6MjUgMjAxNgrCoMKgwqDCoMKg
-wqDCoMKgwqDCoFN0YXRlIDogY2xlYW4sIGRlZ3JhZGVkwqAKwqBBY3RpdmUgRGV2aWNlcyA6IDEK
-V29ya2luZyBEZXZpY2VzIDogMQrCoEZhaWxlZCBEZXZpY2VzIDogMArCoCBTcGFyZSBEZXZpY2Vz
-IDogMAoKwqDCoMKgwqDCoMKgwqDCoMKgwqDCoFVVSUQgOiAyZjhmYzVlMDphMGViNjQ2YToyMzAz
-ZDAwNTozM2YyNWYyMQrCoMKgwqDCoMKgwqDCoMKgwqBFdmVudHMgOiAwLjUwMzA3NTUKCsKgwqDC
-oMKgTnVtYmVywqDCoMKgTWFqb3LCoMKgwqBNaW5vcsKgwqDCoFJhaWREZXZpY2UgU3RhdGUKwqDC
-oMKgwqDCoMKgwqAwwqDCoMKgwqDCoMKgwqA4wqDCoMKgwqDCoMKgwqA0OMKgwqDCoMKgwqDCoMKg
-wqAwwqDCoMKgwqDCoMKgYWN0aXZlIHN5bmPCoMKgwqAvZGV2L3NkZArCoMKgwqDCoMKgwqDCoDHC
-oMKgwqDCoMKgwqDCoDDCoMKgwqDCoMKgwqDCoMKgMMKgwqDCoMKgwqDCoMKgwqAxwqDCoMKgwqDC
-oMKgcmVtb3ZlZAoKSXQgZG9lc24ndCBzZWVtIHRvIGJlIHJlLWFkZGFibGU6CgojIG1kYWRtIC0t
-c3RvcCAvZGV2L21kMAptZGFkbTogc3RvcHBlZCAvZGV2L21kMAojIG1kYWRtIC0tbWFuYWdlIC9k
-ZXYvbWQwIC0tcmUtYWRkIC9kZXYvbWQxCm1kYWRtOiAtLXJlLWFkZCBmb3IgL2Rldi9tZDEgdG8g
-L2Rldi9tZDAgaXMgbm90IHBvc3NpYmxlCgpJdCBkb2Vzbid0IHNlZW0gdG8gYmUgYXNzZW1ibGUt
-YWJsZToKCiPCoG1kYWRtIC0tc3RvcCAvZGV2L21kMAptZGFkbTogc3RvcHBlZCAvZGV2L21kMAoj
-IG1kYWRtIC0tYXNzZW1ibGUgL2Rldi9tZDAgL2Rldi9zZGQgL2Rldi9tZDEKbWRhZG06IC9kZXYv
-bWQwIGhhcyBiZWVuIHN0YXJ0ZWQgd2l0aCAxIGRyaXZlIChvdXQgb2YgMikuCgpldmVuIHdoZW4g
-Zm9yY2VkOgoKI8KgbWRhZG0gLS1zdG9wIC9kZXYvbWQwCm1kYWRtOiBzdG9wcGVkIC9kZXYvbWQw
-CiMgbWRhZG0gLS1hc3NlbWJsZSAtLWZvcmNlIC9kZXYvbWQwIC9kZXYvc2RkIC9kZXYvbWQxCm1k
-YWRtOiAvZGV2L21kMCBoYXMgYmVlbiBzdGFydGVkIHdpdGggMSBkcml2ZSAob3V0IG9mIDIpLgoK
-SXMgbXkgb25seSBvcHRpb24gaGVyZSB0byBmYWlsL3JlbW92ZSAvZGV2L21kMSBmcm9tIHRoZSBh
-cnJheSBhbmQgcmUtCmFkZCBpdCB0aGF0IHdheSBvciBpcyB0aGVyZSBhIG1vcmUgZ3JhY2VmdWwg
-cmVjb3ZlcnkgcG9zc2libGUgaGVyZT8KClNvbWUgYWRkaXRpb25hbCBpbmZvOgoKbWRhZG0gLS1l
-eGFtaW5lIC9kZXYvbWQxCi9kZXYvbWQxOgrCoMKgwqDCoMKgwqDCoMKgwqDCoE1hZ2ljIDogYTky
-YjRlZmMKwqDCoMKgwqDCoMKgwqDCoFZlcnNpb24gOiAwLjkwLjAwCsKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqBVVUlEIDogMmY4ZmM1ZTA6YTBlYjY0NmE6MjMwM2QwMDU6MzNmMjVmMjEKwqAgQ3JlYXRp
-b24gVGltZSA6IE1vbiBKYW4gMjYgMTk6NTE6MzggMjAwOQrCoMKgwqDCoMKgUmFpZCBMZXZlbCA6
-IHJhaWQxCsKgIFVzZWQgRGV2IFNpemUgOiAxOTUzNTE0NDk2ICgxODYzLjAyIEdpQiAyMDAwLjQw
-IEdCKQrCoMKgwqDCoMKgQXJyYXkgU2l6ZSA6IDE5NTM1MTQ0OTYgKDE4NjMuMDIgR2lCIDIwMDAu
-NDAgR0IpCsKgwqDCoFJhaWQgRGV2aWNlcyA6IDIKwqAgVG90YWwgRGV2aWNlcyA6IDIKUHJlZmVy
-cmVkIE1pbm9yIDogMAoKwqDCoMKgwqBVcGRhdGUgVGltZSA6IFRodSBBcHLCoMKgNyAwMDoxODo0
-NyAyMDE2CsKgwqDCoMKgwqDCoMKgwqDCoMKgU3RhdGUgOiBhY3RpdmUKwqBBY3RpdmUgRGV2aWNl
-cyA6IDIKV29ya2luZyBEZXZpY2VzIDogMgrCoEZhaWxlZCBEZXZpY2VzIDogMArCoCBTcGFyZSBE
-ZXZpY2VzIDogMArCoMKgwqDCoMKgwqDCoENoZWNrc3VtIDogZTVkZGVhYzUgLSBjb3JyZWN0CsKg
-wqDCoMKgwqDCoMKgwqDCoEV2ZW50cyA6IDUwMzA3MzcKCgrCoMKgwqDCoMKgwqBOdW1iZXLCoMKg
-wqBNYWpvcsKgwqDCoE1pbm9ywqDCoMKgUmFpZERldmljZSBTdGF0ZQp0aGlzwqDCoMKgwqDCoDHC
-oMKgwqDCoMKgwqDCoDnCoMKgwqDCoMKgwqDCoMKgMcKgwqDCoMKgwqDCoMKgwqAxwqDCoMKgwqDC
-oMKgYWN0aXZlIHN5bmPCoMKgwqAvZGV2L21kMQrCoMKgwqAwwqDCoMKgwqDCoDDCoMKgwqDCoMKg
-wqDCoDjCoMKgwqDCoMKgwqDCoDQ4wqDCoMKgwqDCoMKgwqDCoDDCoMKgwqDCoMKgwqBhY3RpdmUg
-c3luY8KgwqDCoC9kZXYvc2RkCsKgwqDCoDHCoMKgwqDCoMKgMcKgwqDCoMKgwqDCoMKgOcKgwqDC
-oMKgwqDCoMKgwqAxwqDCoMKgwqDCoMKgwqDCoDHCoMKgwqDCoMKgwqBhY3RpdmUgc3luY8KgwqDC
-oC9kZXYvbWQxCiMgbWRhZG0gLS1leGFtaW5lIC9kZXYvc2RkCi9kZXYvc2RkOgrCoMKgwqDCoMKg
-wqDCoMKgwqDCoE1hZ2ljIDogYTkyYjRlZmMKwqDCoMKgwqDCoMKgwqDCoFZlcnNpb24gOiAwLjkw
-LjAwCsKgwqDCoMKgwqDCoMKgwqDCoMKgwqBVVUlEIDogMmY4ZmM1ZTA6YTBlYjY0NmE6MjMwM2Qw
-MDU6MzNmMjVmMjEKwqAgQ3JlYXRpb24gVGltZSA6IE1vbiBKYW4gMjYgMTk6NTE6MzggMjAwOQrC
-oMKgwqDCoMKgUmFpZCBMZXZlbCA6IHJhaWQxCsKgIFVzZWQgRGV2IFNpemUgOiAxOTUzNTE0NDk2
-ICgxODYzLjAyIEdpQiAyMDAwLjQwIEdCKQrCoMKgwqDCoMKgQXJyYXkgU2l6ZSA6IDE5NTM1MTQ0
-OTYgKDE4NjMuMDIgR2lCIDIwMDAuNDAgR0IpCsKgwqDCoFJhaWQgRGV2aWNlcyA6IDIKwqAgVG90
-YWwgRGV2aWNlcyA6IDEKUHJlZmVycmVkIE1pbm9yIDogMAoKwqDCoMKgwqBVcGRhdGUgVGltZSA6
-IFRodSBBcHLCoMKgNyAwODozNzowNCAyMDE2CsKgwqDCoMKgwqDCoMKgwqDCoMKgU3RhdGUgOiBj
-bGVhbgrCoEFjdGl2ZSBEZXZpY2VzIDogMQpXb3JraW5nIERldmljZXMgOiAxCsKgRmFpbGVkIERl
-dmljZXMgOiAxCsKgIFNwYXJlIERldmljZXMgOiAwCsKgwqDCoMKgwqDCoMKgQ2hlY2tzdW0gOiBl
-NjJiMjMyYiAtIGNvcnJlY3QKwqDCoMKgwqDCoMKgwqDCoMKgRXZlbnRzIDogNTAzMDc1NwoKCsKg
-wqDCoMKgwqDCoE51bWJlcsKgwqDCoE1ham9ywqDCoMKgTWlub3LCoMKgwqBSYWlkRGV2aWNlIFN0
-YXRlCnRoaXPCoMKgwqDCoMKgMMKgwqDCoMKgwqDCoMKgOMKgwqDCoMKgwqDCoMKgNDjCoMKgwqDC
-oMKgwqDCoMKgMMKgwqDCoMKgwqDCoGFjdGl2ZSBzeW5jwqDCoMKgL2Rldi9zZGQKCsKgwqDCoDDC
-oMKgwqDCoMKgMMKgwqDCoMKgwqDCoMKgOMKgwqDCoMKgwqDCoMKgNDjCoMKgwqDCoMKgwqDCoMKg
-MMKgwqDCoMKgwqDCoGFjdGl2ZSBzeW5jwqDCoMKgL2Rldi9zZGQKwqDCoMKgMcKgwqDCoMKgwqAx
-wqDCoMKgwqDCoMKgwqAwwqDCoMKgwqDCoMKgwqDCoDDCoMKgwqDCoMKgwqDCoMKgMcKgwqDCoMKg
-wqDCoGZhdWx0eSByZW1vdmVkCgpNb3N0IGhhcHB5IHRvIHByb3ZpZGUgYW55IGFkZGl0aW9uYWwg
-aW5mb3JtYXRpb24gbmVlZGVkLgoKQ2hlZXJzLApiLgo=
+> # cat /proc/mdstat=C2=A0
+> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [rai=
+d4] [raid10]=C2=A0
+> md0 : active raid1 sdd[0]
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A01953514496 blocks [2/1] [U_]
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0
+> md1 : active raid0 sdc[1] sdb[0]
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A01953524736 blocks super 1.2 512k chun=
+ks
+...
+> Is my only option here to fail/remove /dev/md1 from the array and re-
+> add it that way or is there a more graceful recovery possible here?
 
+You do not have a write intent bitmap at md0, so re-add will not work. Seems
+like you should --add it now, then after it rebuilds use --grow to add a
+bitmap, so that in the future you could use -re-add.
 
---=-mP/mQUvbGD9cbAMk05e1
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+As to why the situation occured in the first place, you should ensure that =
+md1
+assembles before md0. Perhaps by listing both arrays in /etc/mdadm/mdadm.co=
+nf
+in the order you need (and don't forget to re-generate initrd.img).
+
+--=20
+With respect,
+Roman
+
+--Sig_/RElC_QomqedTNTNz.VUqh4F
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
+Version: GnuPG v2
 
-iQEcBAABAgAGBQJXBlY/AAoJENrB0DQWy8igyYUIAJoRF4L6obJXzQUVDftlvR6y
-Wd9Sk1JcTqsQ3I/AAQDjpA/Gu/gncHslwzAtROGB+gyrecPC0qFWowQUJT42zbgR
-9T2kiLECMRNPXnsWZV2A//5Gi2mbb6oi/PAEThjBuaMBohvxszZe8vNdCpCAoVx8
-Os+7sgalOc8mJh1Ry/U5JNpOxZV/Tq9LJAvVfVXx8shm0qHMBPnx+pPivrNVJ+S0
-iVgY+zfzvu3sik8Ra7vtdfO9hh9c++OpvLPwA3tJrKlUi6jNOsZko7ig5h9018fS
-sDQ5Z1K0Rx/1tEborMaQq5J/zfevhAbwOWzOHDtoqpV34NNSf7j+b8vkn5LvUnU=
-=Ocow
+iEYEARECAAYFAlcGWdkACgkQTLKSvz+PZwgTswCfWoYc0fVJSICHDGIbam+uIT/Y
+/z4AoI5zH9ptIkZkJbvs4KIqLp75L61K
+=yzTA
 -----END PGP SIGNATURE-----
 
---=-mP/mQUvbGD9cbAMk05e1--
-
-
+--Sig_/RElC_QomqedTNTNz.VUqh4F--
