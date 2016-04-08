@@ -1,27 +1,19 @@
-From: AKINWUMI <urr@adminnfo3.website.tk>
-Subject: FROM: MR. OLIVER SENO!!
-Date: Fri, 8 Apr 2016 11:53:28 -0700
-Message-ID: <SN1PR17MB0494D8912776EBB851B7ECECD0910__13296.4448807344$1460141677$gmane$org@SN1PR17MB0494.namprd17.prod.outlook.com>
-Reply-To: <officeosenol@yahoo.com>
+From: =?utf-8?B?0JjRgNC40L3QsCDQnNCw0YDQuNC90LjQvdCwICjQvNC10L3QtdC00LbQtdGAKQ==?=
+	<marinina.982@mail.ru>
+Subject: =?utf-8?B?0J/RgNC40LPQu9Cw0YjQsNC10Lwg0JLQsNGBINGB0L3Rj9GC0Ywg0L7RhNC40YE=?=
+Date: Fri, 8 Apr 2016 17:09:09 +0300
+Message-ID: <201604081409.u38E99i8023059@Ubuntu-1410-utopic-64-minimal>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=UTF-8;
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Description: Mail message body
+Subject: =?utf-8?B?0J/RgNC40LPQu9Cw0YjQsNC10Lwg0JLQsNGBINGB0L3Rj9GC0Ywg0L7RhNC40YE=?=
 Sender: linux-raid-owner@vger.kernel.org
-To: Recipients <urr@adminnfo3.website.tk>
+To: lwljtbsu@zsodknxp.com, lkuhsg@neftegazoswarr.ru, kompaspl@yandex.ru, kolomoecva@admbel.ru, kerilm0@micr-oosoft.com, kgxalgfsrc@eectzv.com, klub8igalliqnia@60.info, kaskad-tyre1@mail.ptl.ru, kiemunfw@yvsruiqh.com, l4058.html0.248699mail@ahtuba-magazin.ru, lryesz@oclxit.com, kazan@veneziastone.com, lotte-plaza@mezzatorre.ru, l2202_b.html0.067575mail@ahtuba-magazin.ru, magadan@natalie-tours.ru, lauriewallop8075@live.com, linux-raid@vger.kernel.org, kataisk45@e1.ru, lsjgegno@jskgtmtp.com, klmcomposer@totalemed.com
 List-Id: linux-raid.ids
 
-Dear Sir.
 
-I bring you greetings. My name is Mr.Oliver Seno Lim, I am a staff of Abbey National Plc. London and heading our regional office in West Africa. Our late customer named Engr.Ben W.westland, made a fixed deposit amount of US$7Million.He did not declare any next of kin in any of his paper work, I want you as a foreigner to stand as the beneficiary to transfer this funds out of my bank into your account, after the successful transfer, we shall share in the ratio of 30% for you, 70%for me. Should you be interested please send me your information:
+0JTQvtCx0YDRi9C5INC00LXQvdGMIQoK0J/RgNC10LTQu9Cw0LPQsNC10Lwg0JLQsNC8INC+0YLQutGA0YvRgtGMINC+0LTQuNC9INC40Lcg0L7RhNC40YHQvtCyINCyINC90LDRiNC10Lwg0LfQtNCw0L3QuNC4INGA0Y/QtNC+0Lwg0YHQviDRgdGC0LDQvdGG0LjQtdC5INC80LXRgtGA0L4g0JHQsNCz0YDQsNGC0LjQvtC90L7QstGB0LrQsNGPLgoK0JTQsNC90L3Ri9C5INCx0LjQt9C90LXRgS3RhtC10L3RgtGAINC4INC10LPQviDRgNCw0YHQv9C+0LvQvtC20LXQvdC40LUg0LjQtNC10LDQu9GM0L3QviDQv9C+0LTRhdC+0LTQuNGCINC00LvRjyDQktCw0YEsINC60YDQvtC80LUg0Y3RgtC+0LPQviAtINGG0LXQvdGLINGDINC90LDRgSDRgNC10LDQu9GM0L3QviDQvdC40LfQutC40LUuCgrQldGB0LvQuCDQktGLINC10YnQtSDQuNGJ0LjRgtC1INC/0L7QvNC10YnQtdC90LjQtSAtINC/0L7QttCw0LvRg9C50YHRgtCwINGB0L7QvtCx0YnQuNGC0LUg0L/RgNC40LzQtdGA0L3Ri9C5INC80LXRgtGA0LDQtiDQuNC90YLQtdGA0LXRgdGD0Y7RidC10LPQviDQktCw0YEg0L/QvtC80LXRidC10L3QuNGPINC4INGPINC+0YLQstC10YLQvdGL0Lwg0L/QuNGB0YzQ
+ vNC+0Lwg0YHQvtC+0LHRidGDINCy0YHQtSDRgdCy0L7QsdC+0LTQvdGL0LUg0LLQsNGA0LjQsNC90YLRiyDRgdC+INGB0YLQvtC40LzQvtGB0YLRjNGOINCw0YDQtdC90LTRiy4KCtChINGD0LLQsNC20LXQvdC40LXQvCwg0JjRgNC40L3QsCDQnNCw0!
+ YDQuNC90LjQvdCwLg==
 
-1,Full names.
-2,current residential address.
-3,Tele/Fax numbers./your work.
- 
-   
-All I need from you is your readiness, trustworthiness and edication. Please email me directly on my private email address: officeosenol@yahoo.com) so we can begin arrangements and I would give you more information on how we would handle this venture and once i hear from you i will give you information of the bank for the transferring funds on your name.
-
-Regards,
-Mr.Oliver Seno Lim 
