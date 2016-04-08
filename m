@@ -1,19 +1,50 @@
-From: =?utf-8?B?0JjRgNC40L3QsCDQnNCw0YDQuNC90LjQvdCwICjQvNC10L3QtdC00LbQtdGAKQ==?=
-	<marinina.982@mail.ru>
-Subject: =?utf-8?B?0J/RgNC40LPQu9Cw0YjQsNC10Lwg0JLQsNGBINGB0L3Rj9GC0Ywg0L7RhNC40YE=?=
-Date: Fri, 8 Apr 2016 17:09:09 +0300
-Message-ID: <201604081409.u38E99i8023059@Ubuntu-1410-utopic-64-minimal>
+From: Shaohua Li <shli@kernel.org>
+Subject: [GIT PULL] MD fix for 4.6-rc2
+Date: Fri, 8 Apr 2016 14:34:21 -0700
+Message-ID: <20160408213421.GA6279@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Subject: =?utf-8?B?0J/RgNC40LPQu9Cw0YjQsNC10Lwg0JLQsNGBINGB0L3Rj9GC0Ywg0L7RhNC40YE=?=
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: lwljtbsu@zsodknxp.com, lkuhsg@neftegazoswarr.ru, kompaspl@yandex.ru, kolomoecva@admbel.ru, kerilm0@micr-oosoft.com, kgxalgfsrc@eectzv.com, klub8igalliqnia@60.info, kaskad-tyre1@mail.ptl.ru, kiemunfw@yvsruiqh.com, l4058.html0.248699mail@ahtuba-magazin.ru, lryesz@oclxit.com, kazan@veneziastone.com, lotte-plaza@mezzatorre.ru, l2202_b.html0.067575mail@ahtuba-magazin.ru, magadan@natalie-tours.ru, lauriewallop8075@live.com, linux-raid@vger.kernel.org, kataisk45@e1.ru, lsjgegno@jskgtmtp.com, klmcomposer@totalemed.com
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.com
 List-Id: linux-raid.ids
 
+Hi Linus,
 
-0JTQvtCx0YDRi9C5INC00LXQvdGMIQoK0J/RgNC10LTQu9Cw0LPQsNC10Lwg0JLQsNC8INC+0YLQutGA0YvRgtGMINC+0LTQuNC9INC40Lcg0L7RhNC40YHQvtCyINCyINC90LDRiNC10Lwg0LfQtNCw0L3QuNC4INGA0Y/QtNC+0Lwg0YHQviDRgdGC0LDQvdGG0LjQtdC5INC80LXRgtGA0L4g0JHQsNCz0YDQsNGC0LjQvtC90L7QstGB0LrQsNGPLgoK0JTQsNC90L3Ri9C5INCx0LjQt9C90LXRgS3RhtC10L3RgtGAINC4INC10LPQviDRgNCw0YHQv9C+0LvQvtC20LXQvdC40LUg0LjQtNC10LDQu9GM0L3QviDQv9C+0LTRhdC+0LTQuNGCINC00LvRjyDQktCw0YEsINC60YDQvtC80LUg0Y3RgtC+0LPQviAtINGG0LXQvdGLINGDINC90LDRgSDRgNC10LDQu9GM0L3QviDQvdC40LfQutC40LUuCgrQldGB0LvQuCDQktGLINC10YnQtSDQuNGJ0LjRgtC1INC/0L7QvNC10YnQtdC90LjQtSAtINC/0L7QttCw0LvRg9C50YHRgtCwINGB0L7QvtCx0YnQuNGC0LUg0L/RgNC40LzQtdGA0L3Ri9C5INC80LXRgtGA0LDQtiDQuNC90YLQtdGA0LXRgdGD0Y7RidC10LPQviDQktCw0YEg0L/QvtC80LXRidC10L3QuNGPINC4INGPINC+0YLQstC10YLQvdGL0Lwg0L/QuNGB0YzQ
- vNC+0Lwg0YHQvtC+0LHRidGDINCy0YHQtSDRgdCy0L7QsdC+0LTQvdGL0LUg0LLQsNGA0LjQsNC90YLRiyDRgdC+INGB0YLQvtC40LzQvtGB0YLRjNGOINCw0YDQtdC90LTRiy4KCtChINGD0LLQsNC20LXQvdC40LXQvCwg0JjRgNC40L3QsCDQnNCw0!
- YDQuNC90LjQvdCwLg==
+Could you please pull the MD fixes for 4.6-rc2? This update mainly fixes bugs.
+- Fix error handling from Guoqing
+- Fix a crash when a disk is hotremoved from me
+- fix a dead loop from Wei Fang
 
+Thanks,
+Shaohua
+
+The following changes since commit c05c2ec96bb8b7310da1055c7b9d786a3ec6dc0c:
+
+  Merge branch 'parisc-4.6-2' of git://git.kernel.org/pub/scm/linux/kernel/git/deller/parisc-linux (2016-03-31 07:55:14 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git tags/md/4.6-rc2-fix
+
+for you to fetch changes up to f9a67b1182e5abfcfcec24762ea95a77332f035e:
+
+  md/bitmap: clear bitmap if bitmap_create failed (2016-04-01 13:05:50 -0700)
+
+----------------------------------------------------------------
+Guoqing Jiang (1):
+      md/bitmap: clear bitmap if bitmap_create failed
+
+Shaohua Li (1):
+      MD: add rdev reference for super write
+
+Wei Fang (2):
+      md:raid1: fix a dead loop when read from a WriteMostly disk
+      md: fix a trivial typo in comments
+
+ drivers/md/bitmap.c | 19 +++++++++++--------
+ drivers/md/md.c     |  5 ++++-
+ drivers/md/raid1.c  |  2 +-
+ 3 files changed, 16 insertions(+), 10 deletions(-)
