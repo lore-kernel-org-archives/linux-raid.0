@@ -1,38 +1,28 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: Setting up fakeraid with mdadm / dmraid
-Date: Mon, 11 Apr 2016 11:33:41 -0400
-Message-ID: <wrfjk2k4ma7e.fsf@redhat.com>
-References: <b6ced30ee931f9a6faf2541db2462401.squirrel@postweb.cs.tu-dortmund.de>
+From: Alasdair G Kergon <agk@redhat.com>
+Subject: Re: [PATCH] MAINTAINERS: correct entry for LVM
+Date: Mon, 11 Apr 2016 16:51:47 +0100
+Message-ID: <20160411155147.GB9288@agk-dp.fab.redhat.com>
+References: <1460388039-20282-1-git-send-email-sudipm.mukherjee@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <b6ced30ee931f9a6faf2541db2462401.squirrel@postweb.cs.tu-dortmund.de>
-	(Christoph Pleger's message of "Tue, 5 Apr 2016 15:03:12 +0200")
-Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Pleger <Christoph.Pleger@cs.tu-dortmund.de>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1460388039-20282-1-git-send-email-sudipm.mukherjee@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Shaohua Li <shli@kernel.org>, dm-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-"Christoph Pleger" <Christoph.Pleger@cs.tu-dortmund.de> writes:
-> Hello,
->
-> I have a machine with an LSI Megaraid Sofware RAID fakeraid, which uses
-> ddf format. About two weeks ago, when I wanted to install the machine, I
-> configured a RAID 1 array in the BIOS config utility and then booted the
-> machine from PXE with an NFSROOT. mdadm and dmraid are installed in the
-> NFSROOT, dracut is used for initrd generation. As dracut prefers mdadm
-> over dmraid, mdadm was chosen for RAID management.
->
-> But though mdadm detected the RAID (it created container device /dev/md127
-> and raid device /dev/md126), it destroyed it - that is, though I did not
-> perform any action on the raid disks, at the next boot, the BIOS RAID
-> utility had "forgotten" about the RAID configuration it had created
-> before.
->
-> Why are the possible reasons for that?
+On Mon, Apr 11, 2016 at 08:50:39PM +0530, Sudip Mukherjee wrote:
+> The entry of dm-devel@redhat.com was duplicated and the duplicate entry
+> was marked as a Maintainer but it appears from the email address that it
+> is a List. So remove the entry of M and only keep the L entry.
+ 
+M and L are not mutually exclusive!
 
-The LSI uses DDF and requires mdmon etc. to be launched. It is not clear
-from your posting what you created, but you would have to update dracut
-to include mdmon etc. after creating the RAID.
+The definition of M is:
+  M: Mail patches to: FullName <address@domain>
+and since we want patches to be sent to the mailing list, this entry is correct
+as it stands.
 
-Jes
+Alasdair
