@@ -1,44 +1,38 @@
-From: Benjamin Meier <maillists@ferienwohnung-altenbeken.de>
-Subject: Re: Recovery after failed chunk size change
-Date: Mon, 11 Apr 2016 17:29:09 +0200
-Message-ID: <570BC2C5.4070103@ferienwohnung-altenbeken.de>
-References: <56FD7B92.1030102@ferienwohnung-altenbeken.de>
- <87a8ldrjcr.fsf@notabene.neil.brown.name>
- <56FED3F7.8080009@ferienwohnung-altenbeken.de>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: Setting up fakeraid with mdadm / dmraid
+Date: Mon, 11 Apr 2016 11:33:41 -0400
+Message-ID: <wrfjk2k4ma7e.fsf@redhat.com>
+References: <b6ced30ee931f9a6faf2541db2462401.squirrel@postweb.cs.tu-dortmund.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56FED3F7.8080009@ferienwohnung-altenbeken.de>
+In-Reply-To: <b6ced30ee931f9a6faf2541db2462401.squirrel@postweb.cs.tu-dortmund.de>
+	(Christoph Pleger's message of "Tue, 5 Apr 2016 15:03:12 +0200")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Christoph Pleger <Christoph.Pleger@cs.tu-dortmund.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
-
+"Christoph Pleger" <Christoph.Pleger@cs.tu-dortmund.de> writes:
+> Hello,
 >
-> # Create a seven disk RAID6 array with sparse files (1GiB each)
-> declare -a LO_DEVICES
-> for x in 0 1 2 3 4 5 6; do
->   dd if=/dev/zero of=sparse$x bs=1G count=0 seek=1
->   losetup -f sparse${x}
->   LO_DEVICES[$x]=$(losetup -a|grep sparse${x}|cut -f1 -d" "|sed "s/://")
-> done
-> mdadm --create /dev/md/TestMD --chunk=4096 --bitmap=internal --level=6 
-> --raid-devices=7 \
->   ${LO_DEVICES[*]}
-> mdadm --wait /dev/md/TestMD
+> I have a machine with an LSI Megaraid Sofware RAID fakeraid, which uses
+> ddf format. About two weeks ago, when I wanted to install the machine, I
+> configured a RAID 1 array in the BIOS config utility and then booted the
+> machine from PXE with an NFSROOT. mdadm and dmraid are installed in the
+> NFSROOT, dracut is used for initrd generation. As dracut prefers mdadm
+> over dmraid, mdadm was chosen for RAID management.
 >
-> # Provocate BUG.
-> # Tested with Linux 3.16.0-4-amd64 #1 SMP Debian 3.16.7-ckt20-1+deb8u4 
-> (2016-02-29) x86_64 GNU/Linux
-> #             mdadm - v3.3.2 - 21st August 2014
-> mdadm --grow /dev/md/TestMD --chunk=64 --backup-file=backup.file
+> But though mdadm detected the RAID (it created container device /dev/md127
+> and raid device /dev/md126), it destroyed it - that is, though I did not
+> perform any action on the raid disks, at the next boot, the BIOS RAID
+> utility had "forgotten" about the RAID configuration it had created
+> before.
 >
+> Why are the possible reasons for that?
 
-Was this issue reproducible? Or do you need any additional information?
+The LSI uses DDF and requires mdmon etc. to be launched. It is not clear
+from your posting what you created, but you would have to update dracut
+to include mdmon etc. after creating the RAID.
 
-I have discovered that the problem is not limited to changing the chunk 
-size. It also happens with a RAID level change from say 6 to 5.
-
-BR!
+Jes
