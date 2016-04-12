@@ -1,56 +1,71 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: MAINTAINERS: correct entry for LVM
-Date: Mon, 11 Apr 2016 19:52:35 -0400
-Message-ID: <20160411235235.GA28565@redhat.com>
-References: <1460388039-20282-1-git-send-email-sudipm.mukherjee@gmail.com>
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Subject: Re: [PATCH] MAINTAINERS: correct entry for LVM
+Date: Tue, 12 Apr 2016 11:01:26 +0530
+Message-ID: <570C882E.1060109@gmail.com>
+References: <1460388039-20282-1-git-send-email-sudipm.mukherjee@gmail.com> <20160411155147.GB9288@agk-dp.fab.redhat.com> <570BCD85.6090807@gmail.com> <20160411162306.GC9288@agk-dp.fab.redhat.com> <570BD354.2000100@gmail.com> <570BF1DB.1040700@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1460388039-20282-1-git-send-email-sudipm.mukherjee@gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Alasdair Kergon <agk@redhat.com>, Shaohua Li <shli@kernel.org>, dm-devel@redhat.com, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <570BF1DB.1040700@youngman.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Wols Lists <antlists@youngman.org.uk>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Shaohua Li <shli@kernel.org>, dm-devel@redhat.com, linux-raid@vger.kernel.org, Joe Perches <joe@perches.com>
 List-Id: linux-raid.ids
 
-On Mon, Apr 11 2016 at 11:20am -0400,
-Sudip Mukherjee <sudipm.mukherjee@gmail.com> wrote:
+On Tuesday 12 April 2016 12:20 AM, Wols Lists wrote:
+> On 11/04/16 17:39, Sudip Mukherjee wrote:
+>> On Monday 11 April 2016 09:53 PM, Alasdair G Kergon wrote:
+>>> On Mon, Apr 11, 2016 at 09:45:01PM +0530, Sudip Mukherjee wrote:
+>>>> L stands for "Mailing list that is relevant to this area", and this is a
+>>>> mailing list. :)
+>>>
+>>> Your proposed patch isn't changing the L entry, so this is of no
+>>> relevance.
+>>
+>> Sorry, I am not understanding.
+>>
+>> The current entry in MAINTAINERS is:
+>> DEVICE-MAPPER  (LVM)
+>> M:      Alasdair Kergon <agk@redhat.com>
+>> M:      Mike Snitzer <snitzer@redhat.com>
+>> M:      dm-devel@redhat.com
+>> L:      dm-devel@redhat.com
+>> ...
+>>
+>> So my patch just removed the line : "M:      dm-devel@redhat.com"
+>>
+>> So now the entry becomes :
+>> DEVICE-MAPPER  (LVM)
+>> M:      Alasdair Kergon <agk@redhat.com>
+>> M:      Mike Snitzer <snitzer@redhat.com>
+>> L:      dm-devel@redhat.com
+>> ...
+>>
+>> So, now it correctly shows dm-devel@redhat.com as a mailing list which
+>> should have cc to all the patches related to LVM.
+>>
+>> Or am I understanding this wrong?
+>
+> Yes. Because (I guess M stands for maintainer) this list has maintainer
+> status. As all patches should be sent to the maintainers therefore all
+> patches should be sent to this list.
+>
+> The same person can appear twice in a phone book, once under their name
+> and once under their job title. This is exactly the same situation -
+> this list should appear once as a list to tell people that it's a list,
+> AND ALSO as a maintainer to tell people that patches must be sent to the
+> list.
+>
+> I guess English is not your first language, but the important point is
+> that M and L are not mutually exclusive.
 
-> The entry of dm-devel@redhat.com was duplicated and the duplicate entry
-> was marked as a Maintainer but it appears from the email address that it
-> is a List. So remove the entry of M and only keep the L entry.
-> 
-> Signed-off-by: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
-> ---
->  MAINTAINERS | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 51891b2..1c32e82 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -3557,7 +3557,6 @@ S:	Maintained
->  DEVICE-MAPPER  (LVM)
->  M:	Alasdair Kergon <agk@redhat.com>
->  M:	Mike Snitzer <snitzer@redhat.com>
-> -M:	dm-devel@redhat.com
->  L:	dm-devel@redhat.com
->  W:	http://sources.redhat.com/dm
->  Q:	http://patchwork.kernel.org/project/dm-devel/list/
-> -- 
-> 1.9.1
-> 
+Don't worry, English is my first language. Have you tried with 
+getmaintainer.pl and seen the result? It only shows dm-devel@redhat.com 
+as a Maintainer and not as a list. (I noticed because I was sending a 
+patch, and hence this patch again). But I believe a mailing list can not 
+be a Maintainer ( have you seen any patch with a Signed-off-by: from a 
+mailing list? ).
+Anyway, I think this thread has become too long for an unimportant patch.
 
-Nack.
-
-DM isn't unique here.  XFS does the same thing:
-
-XFS FILESYSTEM
-P:      Silicon Graphics Inc
-M:      Dave Chinner <david@fromorbit.com>
-M:      xfs@oss.sgi.com
-L:      xfs@oss.sgi.com
-...
-
-There really is more important stuff to deal with than bothering about
-MAINTAINERS entries like this.  Please stop.
+regards
+sudip
