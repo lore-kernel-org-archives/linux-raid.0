@@ -1,31 +1,24 @@
-From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Subject: Re: RAID 1 not fixing up sector errors?
-Date: Thu, 14 Apr 2016 16:56:58 +0200
-Message-ID: <20160414145658.GA12918@EIS.leimen.priv>
-References: <29813347.d6oRyCVBGp@dag.newtech.fi>
- <20160414142219.GA4783@EIS.leimen.priv>
- <11976887.0JgMgHdD8h@dag.newtech.fi>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [patch v2] md/raid0: fix uninitialized variable bug
+Date: Thu, 14 Apr 2016 09:57:00 -0700
+Message-ID: <20160414165700.GA2006@kernel.org>
+References: <20160413170240.GB6186@kernel.org>
+ <20160414093149.GA16549@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <11976887.0JgMgHdD8h@dag.newtech.fi>
-Sender: linux-raid-owner@vger.kernel.org
-To: Dag Nygren <dag@newtech.fi>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <20160414093149.GA16549@mwanda>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Apr 14, 2016 at 05:43:08PM +0300, Dag Nygren wrote:
-> There is a real access and a real error in the log, but no rewrite...
+On Thu, Apr 14, 2016 at 12:31:49PM +0300, Dan Carpenter wrote:
+> If this function fails the callers expect that *private_conf is set to
+> an ERR_PTR() but that isn't true for the first error path where we can't
+> allocate "conf".  It leads to some uninitialized variable bugs.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-I don't think there are log entries for rewrites.
-
-If the rewrite fails, the disk is either kicked directly, 
-or it gets an entry in its bad block log.
-
-You could try mdadm --examine and/or --examine-badblocks on your disks 
-and show us the output; also the relevant dmesg entries you've seen so 
-maybe someone can tell what's going on.
-
-Regards
-Andreas Klauer
+Applied, thanks!
