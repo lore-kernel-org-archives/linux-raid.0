@@ -1,49 +1,35 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 00/42] v5: separate operations from flags in the
- bio/request structs
-Date: Thu, 14 Apr 2016 08:09:30 +0200
-Message-ID: <570F341A.2040108@suse.de>
-References: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch v2] md/raid0: fix uninitialized variable bug
+Date: Thu, 14 Apr 2016 12:31:49 +0300
+Message-ID: <20160414093149.GA16549@mwanda>
+References: <20160413170240.GB6186@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-bcache-owner@vger.kernel.org>
-In-Reply-To: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
-Sender: linux-bcache-owner@vger.kernel.org
-To: mchristi@redhat.com, linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20160413170240.GB6186@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 04/13/2016 09:35 PM, mchristi@redhat.com wrote:
-> The following patches begin to cleanup the request->cmd_flags and
-> bio->bi_rw mess. We currently use cmd_flags to specify the operation,
-> attributes and state of the request. For bi_rw we use it for similar
-> info and also the priority but then also have another bi_flags field
-> for state. At some point, we abused them so much we just made cmd_fla=
-gs
-> 64 bits, so we could add more.
->=20
-> The following patches seperate the operation (read, write discard,
-> flush, etc) from cmd_flags/bi_rw.
->=20
-> This patchset was made against linux-next from today April 13
-> (git tag next-20160413).
->=20
-> I put a git tree here:
-> https://github.com/mikechristie/linux-kernel.git
-> The patches are in the op branch.
->=20
-A round of applause for you.
+If this function fails the callers expect that *private_conf is set to
+an ERR_PTR() but that isn't true for the first error path where we can't
+allocate "conf".  It leads to some uninitialized variable bugs.
 
-=46or the entire series:
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+v2: Shaohua suggested a different fix
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index 2ea12c6..f63dbb6 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -85,6 +85,7 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
+ 	struct r0conf *conf = kzalloc(sizeof(*conf), GFP_KERNEL);
+ 	unsigned short blksize = 512;
+ 
++	*private_conf = ERR_PTR(-ENOMEM);
+ 	if (!conf)
+ 		return -ENOMEM;
+ 	rdev_for_each(rdev1, mddev) {
