@@ -1,34 +1,36 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH v1 11/27] bcache: io.c: use bio_set_vec_table
-Date: Thu, 14 Apr 2016 20:02:29 +0800
-Message-ID: <1460635375-28282-12-git-send-email-tom.leiming@gmail.com>
-References: <1460635375-28282-1-git-send-email-tom.leiming@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1460635375-28282-1-git-send-email-tom.leiming@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org
-Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ming Lei <tom.leiming@gmail.com>, Kent Overstreet <kent.overstreet@gmail.com>, Shaohua Li <shli@kernel.org>, "open list:BCACHE BLOCK LAYER CACHE" <linux-bcache@vger.kernel.org>, "open list:SOFTWARE RAID Multiple Disks
-	SUPPORT" <linux-raid@vger.kernel.org>
+From: Dag Nygren <dag@newtech.fi>
+Subject: RAID 1 not fixing up sector errors?
+Date: Thu, 14 Apr 2016 16:03:59 +0300
+Message-ID: <29813347.d6oRyCVBGp@dag.newtech.fi>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Signed-off-by: Ming Lei <tom.leiming@gmail.com>
----
- drivers/md/bcache/io.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Hi!
 
-diff --git a/drivers/md/bcache/io.c b/drivers/md/bcache/io.c
-index 86a0bb8..1c48462 100644
---- a/drivers/md/bcache/io.c
-+++ b/drivers/md/bcache/io.c
-@@ -26,8 +26,7 @@ struct bio *bch_bbio_alloc(struct cache_set *c)
- 
- 	bio_init(bio);
- 	bio->bi_flags		|= BIO_POOL_NONE << BIO_POOL_OFFSET;
--	bio->bi_max_vecs	 = bucket_pages(c);
--	bio->bi_io_vec		 = bio->bi_inline_vecs;
-+	bio_set_vec_table(bio, bio->bi_inline_vecs, bucket_pages(c));
- 
- 	return bio;
- }
--- 
-1.9.1
+Have set up a RAID1 here for temporary storage of some backup files.
+As I am using Seagate barracudas I am prepared for sector errors :-).
+that's why I am using RAID1.
+
+Anyway I do get those occasional "Pending Reallocate" with
+the appropriate corresponding
+Unrecovered read error - auto reallocate failed
+in the log.
+
+A resync of the array will rewrite the failing sector 
+and the drive seems to reallocate it and all is fine again .
+
+But I was expecting the MD layer to try to fixup that sector
+automatically by using the data from the other drive ??
+
+Is there something I need to explicitly enable?
+Or am I expecting too much ;-)
+
+Best
+Dag
+
+
