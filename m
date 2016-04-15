@@ -1,27 +1,26 @@
-From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Subject: What does --replace actually do?
-Date: Fri, 15 Apr 2016 21:26:48 +1000
-Message-ID: <5710CFF8.70508@eyal.emu.id.au>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: What does --replace actually do?
+Date: Fri, 15 Apr 2016 14:11:38 +0200 (CEST)
+Message-ID: <alpine.DEB.2.02.1604151410040.16013@uplift.swm.pp.se>
+References: <5710CFF8.70508@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5710CFF8.70508@eyal.emu.id.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: list linux-raid <linux-raid@vger.kernel.org>
+To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Cc: list linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-When I request to replace sda with sdj (RAID6 in my case), does it create sdj from the
-other members (NOT using sda) or does it make a copy of (by reading) sda?
+On Fri, 15 Apr 2016, Eyal Lebedinsky wrote:
 
-I hope it is the former, assuming sda is having issues and the action is precautionary.
+> When I request to replace sda with sdj (RAID6 in my case), does it 
+> create sdj from the other members (NOT using sda) or does it make a copy 
+> of (by reading) sda?
 
-I see on stackexchange is mentioned that it actually does the latter:
-	http://unix.stackexchange.com/questions/74924/how-to-safely-replace-a-not-yet-failed-disk-in-a-linux-raid5-array
-
-And while I am here, can I replace two members at the same time? This should save time
-as it takes about 10 hours to reconstruct a 4TB member.
-
-TIA
+It reads sda and copies it to sdj. When it's done it'll fail sda. If it 
+has problems reading from sda, it'll use the rest of the drives to 
+recreate/recalculate the block and write that to sdj.
 
 -- 
-Eyal Lebedinsky (eyal@eyal.emu.id.au)
+Mikael Abrahamsson    email: swmike@swm.pp.se
