@@ -1,18 +1,42 @@
-From: =?utf-8?B?5oiR55qE6IGU57O75pa55byP5Zyo?= <admin@longgood.com>
-Subject: =?utf-8?B?5oiR55qE6IGU57O75pa55byP5Zyo?=
-Date: Sun, 17 Apr 2016 04:55:41 +0800
-Message-ID: <20160417045548606321@longgood.com>
+From: Juergen Gross <kernel@pfupf.net>
+Subject: Re: [PATCH 41/42] block: do not use REQ_FLUSH for tracking flush
+ support
+Date: Sun, 17 Apr 2016 10:46:59 +0200
+Message-ID: <57134D83.8020309@pfupf.net>
+References: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
+ <1460747777-8479-42-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-bcache-owner@vger.kernel.org>
+In-Reply-To: <1460747777-8479-42-git-send-email-mchristi@redhat.com>
+Sender: linux-bcache-owner@vger.kernel.org
+To: mchristi@redhat.com, linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 List-Id: linux-raid.ids
 
-5L2g55qE6ICB5pyL5Y+L6YKA5L2g5p2lUee+pDozNDMyNTc3NTkg5oqi57qi5YyFIOaKouenkuad
-gCDmiqJ2aXAg5LuA5LmI6YO96KaB5oqi44CC5aSq5Yi65r+A5LqG44CC5LiN6Z2g5omL5rCU5Y+q
-5ou85omL6YCfDQo=
+On 15/04/16 21:16, mchristi@redhat.com wrote:
+> From: Mike Christie <mchristi@redhat.com>
+> 
+> The last patch added a REQ_OP_FLUSH for request_fn drivers
+> and the next patch renames REQ_FLUSH to REQ_PREFLUSH which
+> will be used by file systems and make_request_fn drivers so
+> they can send a write/flush combo.
+> 
+> This patch drops xen's use of REQ_FLUSH to track if it supports
+> REQ_OP_FLUSH requests, so REQ_FLUSH can be deleted.
+> 
+> v7:
+> - Fix feature_flush/fua use.
+> 
+> v6:
+> - Dropped parts of patch handled by Jens's QUEUE_FLAG_WC/FUA
+> patches and modified patch to check feature_flush/fua bits.
+> 
+> Signed-off-by: Mike Christie <mchristi@redhat.com>
+> Reviewed-by: Hannes Reinecke <hare@suse.com>
+> Cc: Juergen Gross <kernel@pfupf.net>
+
+Acked-by: Juergen Gross <jgross@suse.com>
 
 
+Juergen
