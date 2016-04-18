@@ -1,42 +1,54 @@
-From: Juergen Gross <kernel@pfupf.net>
-Subject: Re: [PATCH 41/42] block: do not use REQ_FLUSH for tracking flush
- support
-Date: Sun, 17 Apr 2016 10:46:59 +0200
-Message-ID: <57134D83.8020309@pfupf.net>
-References: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
- <1460747777-8479-42-git-send-email-mchristi@redhat.com>
+From: Baolin Wang <baolin.wang@linaro.org>
+Subject: Re: [PATCH v2 0/4] Introduce bulk mode for crypto engine framework
+Date: Mon, 18 Apr 2016 13:31:09 +0800
+Message-ID: <CAMz4ku+hXbgx1+YcdJWbCBW7KoeFisk5qcquAAg0fD5Qw5XDFQ@mail.gmail.com>
+References: <cover.1458023695.git.baolin.wang@linaro.org>
+	<20160415134849.GA32694@gondor.apana.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-bcache-owner@vger.kernel.org>
-In-Reply-To: <1460747777-8479-42-git-send-email-mchristi@redhat.com>
-Sender: linux-bcache-owner@vger.kernel.org
-To: mchristi@redhat.com, linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20160415134849.GA32694@gondor.apana.org.au>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: David Miller <davem@davemloft.net>, Alasdair G Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Jens Axboe <axboe@fb.com>, dm-devel@redhat.com, Andrew Morton <akpm@linux-foundation.org>, david.s.gordon@intel.com, Tom Lendacky <thomas.lendacky@amd.com>, Robert Jarzmik <robert.jarzmik@free.fr>, Masahiro Yamada <yamada.masahiro@socionext.com>, smueller@chronox.de, tadeusz.struk@intel.com, Masanari Iida <standby24x7@gmail.com>, shli@kernel.org, Mark Brown <broonie@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Arnd Bergmann <arnd@arndb.de>, LKML <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 15/04/16 21:16, mchristi@redhat.com wrote:
-> From: Mike Christie <mchristi@redhat.com>
-> 
-> The last patch added a REQ_OP_FLUSH for request_fn drivers
-> and the next patch renames REQ_FLUSH to REQ_PREFLUSH which
-> will be used by file systems and make_request_fn drivers so
-> they can send a write/flush combo.
-> 
-> This patch drops xen's use of REQ_FLUSH to track if it supports
-> REQ_OP_FLUSH requests, so REQ_FLUSH can be deleted.
-> 
-> v7:
-> - Fix feature_flush/fua use.
-> 
-> v6:
-> - Dropped parts of patch handled by Jens's QUEUE_FLAG_WC/FUA
-> patches and modified patch to check feature_flush/fua bits.
-> 
-> Signed-off-by: Mike Christie <mchristi@redhat.com>
-> Reviewed-by: Hannes Reinecke <hare@suse.com>
-> Cc: Juergen Gross <kernel@pfupf.net>
+Hi Herbert,
 
-Acked-by: Juergen Gross <jgross@suse.com>
+On 15 April 2016 at 21:48, Herbert Xu <herbert@gondor.apana.org.au> wrote:
+> On Tue, Mar 15, 2016 at 03:47:58PM +0800, Baolin Wang wrote:
+>> Now some cipher hardware engines prefer to handle bulk block by merging requests
+>> to increase the block size and thus increase the hardware engine processing speed.
+>>
+>> This patchset introduces request bulk mode to help the crypto hardware drivers
+>> improve in efficiency.
+>
+> Could you please explain why this merging can't be done in dm-crypt
+> instead?
+
+We've tried to do this in dm-crypt, but it failed.
+The dm-crypt maintainer explained to me that I should optimize the
+driver, not add strange hw-dependent crypto modes to dm-crypt, this is
+not the first crypto accelerator that is just not suited for this kind
+of use.
+He thought if it can process batch of chunks of data each with own IV,
+then it can work with dm-crypt, but he thought such optimized code
+should be inside crypto API, not in dmcrypt.
+
+I think his suggestion is reasonable, so we introduce the crypto
+engine framework to factor out the common patterns for driving the
+queue of operations. Then it will be more reasonable to do the bulk
+mode optimization in crypto engine framework. Thanks.
+
+>
+> Thanks,
+> --
+> Email: Herbert Xu <herbert@gondor.apana.org.au>
+> Home Page: http://gondor.apana.org.au/~herbert/
+> PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
 
 
-Juergen
+
+-- 
+Baolin.wang
+Best Regards
