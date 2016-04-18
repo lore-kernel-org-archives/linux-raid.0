@@ -1,31 +1,49 @@
-From: <verifelaw@gmx.com>
-Subject: IMPORTANT MAIL TO YOU
-Date: Mon, 18 Apr 2016 13:09:41 +0200
-Message-ID: <613fad89-f8e9-4340-bd2b-935a5631973f__4004.9888346859$1460977858$gmane$org@GSCADMINS22.gsc.org.uk>
-Reply-To: <lawrencetyman@gmx.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH v2 0/4] Introduce bulk mode for crypto engine framework
+Date: Mon, 18 Apr 2016 09:36:12 -0400
+Message-ID: <20160418133612.GA16853@redhat.com>
+References: <cover.1458023695.git.baolin.wang@linaro.org>
+ <20160415134849.GA32694@gondor.apana.org.au>
+ <CAMz4ku+hXbgx1+YcdJWbCBW7KoeFisk5qcquAAg0fD5Qw5XDFQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1251"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAMz4ku+hXbgx1+YcdJWbCBW7KoeFisk5qcquAAg0fD5Qw5XDFQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Baolin Wang <baolin.wang@linaro.org>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>, David Miller <davem@davemloft.net>, Alasdair G Kergon <agk@redhat.com>, Jens Axboe <axboe@fb.com>, dm-devel@redhat.com, Andrew Morton <akpm@linux-foundation.org>, david.s.gordon@intel.com, Tom Lendacky <thomas.lendacky@amd.com>, Robert Jarzmik <robert.jarzmik@free.fr>, Masahiro Yamada <yamada.masahiro@socionext.com>, smueller@chronox.de, tadeusz.struk@intel.com, Masanari Iida <standby24x7@gmail.com>, shli@kernel.org, Mark Brown <broonie@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Arnd Bergmann <arnd@arndb.de>, LKML <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org, Milan Broz <mbroz@redhat.com>
 List-Id: linux-raid.ids
 
-I am Capt. Lawrence Tyman, an officer in US Army,and also a West Point
-Graduate, serving in the Military with the 82nd Air Borne Division
-Peace keeping force deployed from Afganistan to Syria.  
-We were moved to Syria from Iraq as the last batch just left,and i
-really need your help in assisting me with the safe keeping of 1 military
-trunk box contain funds amount of $10.2M which i secured on a raiding we carried out in 
-January in one of the chief Syrian IsIs base which i headed the squard as the 
-Captain.  With every possible arrangement to lift this box out, is intended to arrive 
-Belgium from there a diplomat will deliver it to your designated location
-I hope you can be trusted? You will be rewarded handsomely if you could help
-me secure the funds until I conclude my service here in 3 month to meet you while we can 
-plan head to head on a good and profitable business or company i can invest my funds in your country.
-If you can be trusted and willing to support me in securing this safely kindly indicate 
-by Letting me know this (1) Your name (2) Your address (3) Age (4) Occupation and 
-i will explain further when i get a response from you
-kindly contact me in this my private email address below: lawrencetyman@gmx.com
+On Mon, Apr 18 2016 at  1:31am -0400,
+Baolin Wang <baolin.wang@linaro.org> wrote:
 
-Regards,
-Capt. Lawrence Tyman
+> Hi Herbert,
+> 
+> On 15 April 2016 at 21:48, Herbert Xu <herbert@gondor.apana.org.au> wrote:
+> > On Tue, Mar 15, 2016 at 03:47:58PM +0800, Baolin Wang wrote:
+> >> Now some cipher hardware engines prefer to handle bulk block by merging requests
+> >> to increase the block size and thus increase the hardware engine processing speed.
+> >>
+> >> This patchset introduces request bulk mode to help the crypto hardware drivers
+> >> improve in efficiency.
+> >
+> > Could you please explain why this merging can't be done in dm-crypt
+> > instead?
+> 
+> We've tried to do this in dm-crypt, but it failed.
+> The dm-crypt maintainer explained to me that I should optimize the
+> driver, not add strange hw-dependent crypto modes to dm-crypt, this is
+> not the first crypto accelerator that is just not suited for this kind
+> of use.
+
+As a DM mainatiner my only contribution to this line of discussion was
+relative to your proposal to train the dm-crypt target (which is
+bio-based) to also provide request-based support, see:
+https://www.redhat.com/archives/dm-devel/2015-November/msg00112.html
+
+But follow-up discussion occured, primarily with Milan Broz, which led
+to this bulk mode support in the crypto layer.  Pretty strange Milan
+wasn't cc'd on your patchset posting (I've now cc'd him).
+
+Mike
