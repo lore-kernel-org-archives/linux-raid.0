@@ -1,52 +1,31 @@
-From: Baolin Wang <baolin.wang@linaro.org>
-Subject: Re: [PATCH v2 0/4] Introduce bulk mode for crypto engine framework
-Date: Mon, 18 Apr 2016 16:51:07 +0800
-Message-ID: <CAMz4kuKvL-A1YjqqPu06ETbk=gwjr8MjdT7cjfkFFoYQOvuu3A@mail.gmail.com>
-References: <20160418070407.GA17760@gondor.apana.org.au>
-	<CAMz4kuJvnbRBSiuStYeGkgOXFPVmPJmChd2Gz1aHP40Uh1VxbQ@mail.gmail.com>
-	<20160418072434.GA17954@gondor.apana.org.au>
-	<CAMz4kuJ4Yp=dZVjxvM5Cw3gBm_mEKdu7-ReSGQ9avAFyG3G=MQ@mail.gmail.com>
-	<20160418080454.GA18200@gondor.apana.org.au>
-	<CAMz4kuKJn4nW2Mzau2OnVFMMG+833wULFCAz_UbyqvM_eanZnA@mail.gmail.com>
-	<20160418081753.GA18323@gondor.apana.org.au>
-	<CAMz4kuLu3gsYoSm4aDDBTi-gOpDqiw7PEC-ZfMEOgOcuOAsbEA@mail.gmail.com>
-	<20160418083116.GA18406@gondor.apana.org.au>
-	<CAMz4kuKxp4uRtKNTU0emKtWCdgeYdEHDyoktokYS7j0EqRpMCw@mail.gmail.com>
-	<20160418084155.GA18513@gondor.apana.org.au>
+From: <verifelaw@gmx.com>
+Subject: IMPORTANT MAIL TO YOU
+Date: Mon, 18 Apr 2016 13:09:41 +0200
+Message-ID: <613fad89-f8e9-4340-bd2b-935a5631973f__4004.9888346859$1460977858$gmane$org@GSCADMINS22.gsc.org.uk>
+Reply-To: <lawrencetyman@gmx.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-crypto-owner@vger.kernel.org>
-In-Reply-To: <20160418084155.GA18513@gondor.apana.org.au>
-Sender: linux-crypto-owner@vger.kernel.org
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: David Miller <davem@davemloft.net>, Alasdair G Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Jens Axboe <axboe@fb.com>, dm-devel@redhat.com, Andrew Morton <akpm@linux-foundation.org>, david.s.gordon@intel.com, Tom Lendacky <thomas.lendacky@amd.com>, Robert Jarzmik <robert.jarzmik@free.fr>, Masahiro Yamada <yamada.masahiro@socionext.com>, smueller@chronox.de, tadeusz.struk@intel.com, Masanari Iida <standby24x7@gmail.com>, shli@kernel.org, Mark Brown <broonie@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Arnd Bergmann <arnd@arndb.de>, LKML <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="Windows-1251"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 18 April 2016 at 16:41, Herbert Xu <herbert@gondor.apana.org.au> wrote:
-> On Mon, Apr 18, 2016 at 04:40:36PM +0800, Baolin Wang wrote:
->>
->> Simply to say, now there are many different hardware engines for
->> different vendors, some engines can support bulk block but some can
->> not (or no cipher hardware engine), then the dm-crypt can not know
->> your hardware engine features. If the dm-crypt send one bulk block to
->> low level, but the engine driver can not support bulk block, then it
->> will crash. So we did the merging action in driver level not dm-crypt
->> level.
->
-> Surely we can handle it in the crypto API layer, just as we do GSO
-> in the network stack for drivers that can't handle TSO?
+I am Capt. Lawrence Tyman, an officer in US Army,and also a West Point
+Graduate, serving in the Military with the 82nd Air Borne Division
+Peace keeping force deployed from Afganistan to Syria.  
+We were moved to Syria from Iraq as the last batch just left,and i
+really need your help in assisting me with the safe keeping of 1 military
+trunk box contain funds amount of $10.2M which i secured on a raiding we carried out in 
+January in one of the chief Syrian IsIs base which i headed the squard as the 
+Captain.  With every possible arrangement to lift this box out, is intended to arrive 
+Belgium from there a diplomat will deliver it to your designated location
+I hope you can be trusted? You will be rewarded handsomely if you could help
+me secure the funds until I conclude my service here in 3 month to meet you while we can 
+plan head to head on a good and profitable business or company i can invest my funds in your country.
+If you can be trusted and willing to support me in securing this safely kindly indicate 
+by Letting me know this (1) Your name (2) Your address (3) Age (4) Occupation and 
+i will explain further when i get a response from you
+kindly contact me in this my private email address below: lawrencetyman@gmx.com
 
-Yes, it is similar. Thanks.
-
->
-> Cheers,
-> --
-> Email: Herbert Xu <herbert@gondor.apana.org.au>
-> Home Page: http://gondor.apana.org.au/~herbert/
-> PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
-
-
-
--- 
-Baolin.wang
-Best Regards
+Regards,
+Capt. Lawrence Tyman
