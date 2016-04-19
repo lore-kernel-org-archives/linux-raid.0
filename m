@@ -1,67 +1,48 @@
-From: Milan Broz <mbroz@redhat.com>
-Subject: Re: [PATCH v2 0/4] Introduce bulk mode for crypto engine framework
-Date: Mon, 18 Apr 2016 23:22:29 +0200
-Message-ID: <57155015.2090104@redhat.com>
-References: <cover.1458023695.git.baolin.wang@linaro.org>
- <20160415134849.GA32694@gondor.apana.org.au>
- <CAMz4ku+hXbgx1+YcdJWbCBW7KoeFisk5qcquAAg0fD5Qw5XDFQ@mail.gmail.com>
- <20160418133612.GA16853@redhat.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: Poor written performance with RAID5 on ARM64
+Date: Tue, 19 Apr 2016 06:59:17 -0700
+Message-ID: <20160419135917.GA2116@kernel.org>
+References: <tencent_7B55CA2751E70C532CB35C8E@qq.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-crypto-owner@vger.kernel.org>
-In-Reply-To: <20160418133612.GA16853@redhat.com>
-Sender: linux-crypto-owner@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>, Baolin Wang <baolin.wang@linaro.org>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>, David Miller <davem@davemloft.net>, Alasdair G Kergon <agk@redhat.com>, Jens Axboe <axboe@fb.com>, dm-devel@redhat.com, Andrew Morton <akpm@linux-foundation.org>, david.s.gordon@intel.com, Tom Lendacky <thomas.lendacky@amd.com>, Robert Jarzmik <robert.jarzmik@free.fr>, Masahiro Yamada <yamada.masahiro@socionext.com>, smueller@chronox.de, tadeusz.struk@intel.com, Masanari Iida <standby24x7@gmail.com>, shli@kernel.org, Mark Brown <broonie@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Arnd Bergmann <arnd@arndb.de>, LKML <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <tencent_7B55CA2751E70C532CB35C8E@qq.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: =?utf-8?B?5YiY5q2j5YWD?= <liuzhengyuan@kylinos.com.cn>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 04/18/2016 03:36 PM, Mike Snitzer wrote:
-> On Mon, Apr 18 2016 at  1:31am -0400,
-> Baolin Wang <baolin.wang@linaro.org> wrote:
-> 
->> Hi Herbert,
->>
->> On 15 April 2016 at 21:48, Herbert Xu <herbert@gondor.apana.org.au> wrote:
->>> On Tue, Mar 15, 2016 at 03:47:58PM +0800, Baolin Wang wrote:
->>>> Now some cipher hardware engines prefer to handle bulk block by merging requests
->>>> to increase the block size and thus increase the hardware engine processing speed.
->>>>
->>>> This patchset introduces request bulk mode to help the crypto hardware drivers
->>>> improve in efficiency.
->>>
->>> Could you please explain why this merging can't be done in dm-crypt
->>> instead?
->>
->> We've tried to do this in dm-crypt, but it failed.
->> The dm-crypt maintainer explained to me that I should optimize the
->> driver, not add strange hw-dependent crypto modes to dm-crypt, this is
->> not the first crypto accelerator that is just not suited for this kind
->> of use.
-> 
-> As a DM mainatiner my only contribution to this line of discussion was
-> relative to your proposal to train the dm-crypt target (which is
-> bio-based) to also provide request-based support, see:
-> https://www.redhat.com/archives/dm-devel/2015-November/msg00112.html
-> 
-> But follow-up discussion occured, primarily with Milan Broz, which led
-> to this bulk mode support in the crypto layer.  Pretty strange Milan
-> wasn't cc'd on your patchset posting (I've now cc'd him).
+On Mon, Apr 18, 2016 at 01:43:04PM +0800, =E5=88=98=E6=AD=A3=E5=85=83 w=
+rote:
+> Hi,everyone.  I upgrade kernel form 3.14.x to 4.4.x recently on my AR=
+M64
+> server.  I create a RAID5 device with 8 disks on the server and have =
+a dd
+> test which like this "dd if=3D/dev/zero of=3D/dev/md5 bs=3D64K count=3D=
+400000".
+> Before upgrade it can reach 700M/s written and only 500M/s after upgr=
+ade.
+> Then I disable the bitmap which means "mdadm create --bitmap=3Dnone",=
+ the speed
+> can reach 800M/s with 4.4 kernel. I have a fast view on driver/md/bit=
+map.c
+> and got no answer.  I doubt X86 platform has the same question. So, w=
+hat is
+> the most difference between 3.14.x and 4.4.x about md driver. Where c=
+ould I
+> found the ChangeLog or commit about the driver. Any answer would be t=
+hankful.
 
-My complaint was mainly that the proposed dmcrypt based version just did
-not work properly.
-https://lkml.org/lkml/2016/1/2/109
+did you observe any changes in iostat? Could you post blktrace from one=
+ of the
+raid disk?
 
-(I did not test the new version we are replying here. I wonder how the problem
-I mentioned is fixed though.
-Also see Mikulas' comments https://www.redhat.com/archives/dm-devel/2016-January/msg00145.html)
- 
-Anyway, all this seems to optimize case for specific crypto hw, that
-is not able to perform optimally with pattern dmcrypt produces.
-
-I do not think dmcrypt should do optimizations for specific hw.
-
-But if we decide that it is needed there, it should not cause any performance
-or compatibility problems elsewhere...
-
-Milan
+Thanks,
+Shaohua
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
