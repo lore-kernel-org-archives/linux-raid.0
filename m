@@ -1,27 +1,26 @@
 From: kbuild test robot <lkp@intel.com>
-Subject: Re: [PATCH 01/13] md-cluster: change resync lock from asynchronous
- to synchronous
-Date: Thu, 21 Apr 2016 14:20:20 +0800
-Message-ID: <201604211432.dt83f4Hh%fengguang.wu@intel.com>
-References: <1461218294-4960-2-git-send-email-gqjiang@suse.com>
+Subject: Re: [PATCH 08/13] md: set MD_CHANGE_PENDING in a spinlocked region
+Date: Thu, 21 Apr 2016 14:26:02 +0800
+Message-ID: <201604211453.9335b6JI%fengguang.wu@intel.com>
+References: <1461218294-4960-9-git-send-email-gqjiang@suse.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="huq684BweRXVnRxX"
+Content-Type: multipart/mixed; boundary="wRRV7LY7NUeQGEoC"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1461218294-4960-2-git-send-email-gqjiang@suse.com>
+In-Reply-To: <1461218294-4960-9-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 Cc: kbuild-all@01.org, shli@kernel.org, neilb@suse.de, linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
 
---huq684BweRXVnRxX
+--wRRV7LY7NUeQGEoC
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
 Hi,
 
-[auto build test WARNING on v4.6-rc4]
-[also build test WARNING on next-20160420]
+[auto build test ERROR on v4.6-rc4]
+[also build test ERROR on next-20160420]
 [if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
 
 url:    https://github.com/0day-ci/linux/commits/Guoqing-Jiang/The-latest-patches-for-md-cluster/20160421-140507
@@ -30,57 +29,40 @@ reproduce:
         # save the attached .config to linux build tree
         make ARCH=x86_64 
 
-All warnings (new ones prefixed by >>):
+All errors (new ones prefixed by >>):
 
+   drivers/md/md.c: In function 'md_update_sb':
+>> drivers/md/md.c:2303:20: error: 'struct mddev' has no member named 'write_lock'
+       spin_lock(&mddev->write_lock);
+                       ^
    drivers/md/md.c: In function 'md_start_sync':
->> drivers/md/md.c:8244:1: warning: label 'out' defined but not used [-Wunused-label]
+   drivers/md/md.c:8262:1: warning: label 'out' defined but not used [-Wunused-label]
     out:
     ^
 
-vim +/out +8244 drivers/md/md.c
+vim +2303 drivers/md/md.c
 
-60fc1370 NeilBrown         2011-12-23  8228  		}
-b4c4c7b8 NeilBrown         2007-02-28  8229  	}
-746d3207 NeilBrown         2013-04-24  8230  no_add:
-6dafab6b NeilBrown         2012-09-19  8231  	if (removed)
-6dafab6b NeilBrown         2012-09-19  8232  		set_bit(MD_CHANGE_DEVS, &mddev->flags);
-b4c4c7b8 NeilBrown         2007-02-28  8233  	return spares;
-b4c4c7b8 NeilBrown         2007-02-28  8234  }
-7ebc0be7 NeilBrown         2011-01-14  8235  
-ac05f256 NeilBrown         2014-09-30  8236  static void md_start_sync(struct work_struct *ws)
-ac05f256 NeilBrown         2014-09-30  8237  {
-ac05f256 NeilBrown         2014-09-30  8238  	struct mddev *mddev = container_of(ws, struct mddev, del_work);
-c186b128 Goldwyn Rodrigues 2015-09-30  8239  	int ret = 0;
-c186b128 Goldwyn Rodrigues 2015-09-30  8240  
-ac05f256 NeilBrown         2014-09-30  8241  	mddev->sync_thread = md_register_thread(md_do_sync,
-ac05f256 NeilBrown         2014-09-30  8242  						mddev,
-ac05f256 NeilBrown         2014-09-30  8243  						"resync");
-c186b128 Goldwyn Rodrigues 2015-09-30 @8244  out:
-ac05f256 NeilBrown         2014-09-30  8245  	if (!mddev->sync_thread) {
-c186b128 Goldwyn Rodrigues 2015-09-30  8246  		if (!(mddev_is_clustered(mddev) && ret == -EAGAIN))
-ac05f256 NeilBrown         2014-09-30  8247  			printk(KERN_ERR "%s: could not start resync"
-ac05f256 NeilBrown         2014-09-30  8248  			       " thread...\n",
-ac05f256 NeilBrown         2014-09-30  8249  			       mdname(mddev));
-ac05f256 NeilBrown         2014-09-30  8250  		/* leave the spares where they are, it shouldn't hurt */
-ac05f256 NeilBrown         2014-09-30  8251  		clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
-ac05f256 NeilBrown         2014-09-30  8252  		clear_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
-
-:::::: The code at line 8244 was first introduced by commit
-:::::: c186b128cda5a246da25f474e4689cb2bfacfcac md-cluster: Perform resync/recovery under a DLM lock
-
-:::::: TO: Goldwyn Rodrigues <rgoldwyn@suse.com>
-:::::: CC: Goldwyn Rodrigues <rgoldwyn@suse.com>
+  2297				nospares = 1;
+  2298			ret = md_cluster_ops->metadata_update_start(mddev);
+  2299			/* Has someone else has updated the sb */
+  2300			if (!does_sb_need_changing(mddev)) {
+  2301				if (ret == 0)
+  2302					md_cluster_ops->metadata_update_cancel(mddev);
+> 2303				spin_lock(&mddev->write_lock);
+  2304				if (!test_bit(MD_CHANGE_DEVS, &mddev->flags) &&
+  2305				    !test_bit(MD_CHANGE_CLEAN, &mddev->flags))
+  2306					clear_bit(MD_CHANGE_PENDING, &mddev->flags);
 
 ---
 0-DAY kernel test infrastructure                Open Source Technology Center
 https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
---huq684BweRXVnRxX
+--wRRV7LY7NUeQGEoC
 Content-Type: application/octet-stream
 Content-Disposition: attachment; filename=".config.gz"
 Content-Transfer-Encoding: base64
 
-H4sICLJuGFcAAy5jb25maWcAlDxdd9u2ku/9FTrpPtz7kMZ23dTZPX6AQFBCRRAMQMqWX3gU
+H4sICJBwGFcAAy5jb25maWcAlDxdd9u2ku/9FTrpPtz7kMZ23dTZPX6AQFBCRRAMQMqWX3gU
 W0l9rmPnWnZvsr9+ZwBSBMCherYPbYUZfHAw3zPwzz/9PGOvL09fty/3t9uHhx+zL7vH3fP2
 ZXc3+3z/sPufWaZnpa5nIpP1L4Bc3D++fn/3/eJ9+/58dv7L+19O3j7fns9Wu+fH3cOMPz1+
 vv/yCvPvnx5/+vknrstcLgB1LuvLH/3Pazc7+j38kKWtTcNrqcs2E1xnwgxA3dRVU7e5NorV
@@ -521,4 +503,4 @@ fTTCok5ZuW3y1UqGixiYRpgpHK412Z0leDuRkHP9cb7kqZW86Yit1kpObpuK6f7BXET6PaAo
 MgN70D+lVZ0WsXoKYhAeq0iTgzm+4crXcamOnoZDGYypTMhT9771QCM9pETHMJtJY5xd9CiZ
 2b87uvx/eumV00poAQA=
 
---huq684BweRXVnRxX--
+--wRRV7LY7NUeQGEoC--
