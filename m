@@ -1,7 +1,7 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH 12/13] md-cluster/bitmap: fix wrong page num in bitmap_file_clear_bit and bitmap_file_set_bit
-Date: Thu, 21 Apr 2016 13:58:13 +0800
-Message-ID: <1461218294-4960-13-git-send-email-gqjiang@suse.com>
+Subject: [PATCH 06/13] md-cluster: change array_sectors and update size are not supported
+Date: Thu, 21 Apr 2016 13:58:07 +0800
+Message-ID: <1461218294-4960-7-git-send-email-gqjiang@suse.com>
 References: <1461218294-4960-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1461218294-4960-1-git-send-email-gqjiang@suse.com>
@@ -10,69 +10,57 @@ To: shli@kernel.org
 Cc: neilb@suse.de, linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-The pnum passed to set_page_attr and test_page_attr should from
-0 to storage.file_pages - 1, but bitmap_file_set_bit and
-bitmap_file_clear_bit call set_page_attr and test_page_attr with
-page->index parameter while page->index has already added node_offset
-before.
-
-So we need to minus node_offset in both bitmap_file_clear_bit
-and bitmap_file_set_bit.
+Currently, some features are not supported yet,
+such as change array_sectors and update size, so
+return EINVAL for them and listed it in document.
 
 Reviewed-by: NeilBrown <neilb@suse.com>
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- drivers/md/bitmap.c | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
+ Documentation/md-cluster.txt | 6 ++++++
+ drivers/md/md.c              | 8 ++++++++
+ 2 files changed, 14 insertions(+)
 
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index bdae67a..08f4c04 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -903,6 +903,11 @@ static void bitmap_file_set_bit(struct bitmap *bitmap, sector_t block)
- 	struct page *page;
- 	void *kaddr;
- 	unsigned long chunk = block >> bitmap->counts.chunkshift;
-+	struct bitmap_storage *store = &bitmap->storage;
-+	unsigned long node_offset = 0;
+diff --git a/Documentation/md-cluster.txt b/Documentation/md-cluster.txt
+index c100c71..3888327 100644
+--- a/Documentation/md-cluster.txt
++++ b/Documentation/md-cluster.txt
+@@ -316,3 +316,9 @@ The algorithm is:
+  nodes are using the raid which is achieved by lock all bitmap
+  locks within the cluster, and also those locks are unlocked
+  accordingly.
 +
-+	if (mddev_is_clustered(bitmap->mddev))
-+		node_offset = bitmap->cluster_slot * store->file_pages;
- 
- 	page = filemap_get_page(&bitmap->storage, chunk);
- 	if (!page)
-@@ -918,7 +923,7 @@ static void bitmap_file_set_bit(struct bitmap *bitmap, sector_t block)
- 	kunmap_atomic(kaddr);
- 	pr_debug("set file bit %lu page %lu\n", bit, page->index);
- 	/* record page number so it gets flushed to disk when unplug occurs */
--	set_page_attr(bitmap, page->index, BITMAP_PAGE_DIRTY);
-+	set_page_attr(bitmap, page->index - node_offset, BITMAP_PAGE_DIRTY);
- }
- 
- static void bitmap_file_clear_bit(struct bitmap *bitmap, sector_t block)
-@@ -927,6 +932,11 @@ static void bitmap_file_clear_bit(struct bitmap *bitmap, sector_t block)
- 	struct page *page;
- 	void *paddr;
- 	unsigned long chunk = block >> bitmap->counts.chunkshift;
-+	struct bitmap_storage *store = &bitmap->storage;
-+	unsigned long node_offset = 0;
++7. Unsupported features
 +
-+	if (mddev_is_clustered(bitmap->mddev))
-+		node_offset = bitmap->cluster_slot * store->file_pages;
++There are somethings which are not supported by cluster MD yet.
++
++- update size and change array_sectors.
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 0639c01..1b26397 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -4812,6 +4812,10 @@ array_size_store(struct mddev *mddev, const char *buf, size_t len)
+ 	if (err)
+ 		return err;
  
- 	page = filemap_get_page(&bitmap->storage, chunk);
- 	if (!page)
-@@ -938,8 +948,8 @@ static void bitmap_file_clear_bit(struct bitmap *bitmap, sector_t block)
- 	else
- 		clear_bit_le(bit, paddr);
- 	kunmap_atomic(paddr);
--	if (!test_page_attr(bitmap, page->index, BITMAP_PAGE_NEEDWRITE)) {
--		set_page_attr(bitmap, page->index, BITMAP_PAGE_PENDING);
-+	if (!test_page_attr(bitmap, page->index - node_offset, BITMAP_PAGE_NEEDWRITE)) {
-+		set_page_attr(bitmap, page->index - node_offset, BITMAP_PAGE_PENDING);
- 		bitmap->allclean = 0;
- 	}
- }
++	/* cluster raid doesn't support change array_sectors */
++	if (mddev_is_clustered(mddev))
++		return -EINVAL;
++
+ 	if (strncmp(buf, "default", 7) == 0) {
+ 		if (mddev->pers)
+ 			sectors = mddev->pers->size(mddev, 0, 0);
+@@ -6433,6 +6437,10 @@ static int update_size(struct mddev *mddev, sector_t num_sectors)
+ 	int rv;
+ 	int fit = (num_sectors == 0);
+ 
++	/* cluster raid doesn't support update size */
++	if (mddev_is_clustered(mddev))
++		return -EINVAL;
++
+ 	if (mddev->pers->resize == NULL)
+ 		return -EINVAL;
+ 	/* The "num_sectors" is the number of sectors of each device that
 -- 
 2.6.6
 
