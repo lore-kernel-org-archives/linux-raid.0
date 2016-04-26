@@ -1,43 +1,79 @@
-From: Ming Lei <ming.lei@canonical.com>
-Subject: Re: [PATCH] MD: make bio mergeable
-Date: Tue, 26 Apr 2016 23:17:57 +0800
-Message-ID: <CACVXFVO02xNNsTXy1QNM1TYQ+rxC9or6H-FfAtTiaGsZV6WYkw@mail.gmail.com>
-References: <384a0e0c7d6f2700aadbcbdef003cece88fa7dd7.1461626533.git.shli@fb.com>
-	<CACVXFVMgKQmtKRQvkpyD5GMh0AN0i7uNyq8ecVvQQ5kmdLEm+A@mail.gmail.com>
-	<571F7961.4090703@kernel.dk>
+From: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Subject: [PATCH v4 10/21] fs: Check for invalid i_uid in may_follow_link()
+Date: Tue, 26 Apr 2016 14:30:33 -0500
+Message-ID: <1461699046-30485-11-git-send-email-seth.forshee@canonical.com>
+References: <1461699046-30485-1-git-send-email-seth.forshee@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <571F7961.4090703@kernel.dk>
-Sender: stable-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Shaohua Li <shli@fb.com>, linux-block@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, Ju Hyung Park <qkrwngud825@gmail.com>, FB Kernel Team <Kernel-team@fb.com>, "v4.3+" <stable@vger.kernel.org>, Jens Axboe <axboe@fb.com>, Neil Brown <neilb@suse.de>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <selinux-bounces-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
+In-Reply-To: <1461699046-30485-1-git-send-email-seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+List-Post: <mailto:selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
+List-Help: <mailto:selinux-request-+05T5uksL2qpZYMLLGbcSA@public.gmane.org?subject=help>
+Errors-To: selinux-bounces-+05T5uksL2qpZYMLLGbcSA@public.gmane.org
+Sender: "Selinux" <selinux-bounces-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
+To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+Cc: linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Miklos Szeredi <mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Richard Weinberger <richard.weinberger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Pavel Tikhomirov <ptikhomirov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 List-Id: linux-raid.ids
 
-On Tue, Apr 26, 2016 at 10:21 PM, Jens Axboe <axboe@kernel.dk> wrote:
-> On 04/26/2016 03:56 AM, Ming Lei wrote:
->>
->> On Tue, Apr 26, 2016 at 7:52 AM, Shaohua Li <shli@fb.com> wrote:
->>>
->>> blk_queue_split marks bio unmergeable, which makes sense for normal bio.
->>> But if dispatching the bio to underlayer disk, the blk_queue_split
->>> checks are invalid, hence it's possible the bio becomes mergeable.
->>
->>
->> If the bio from md is splitted and marked as NOMERGE, it means some
->> queue limits are reached. So looks the raid's queue limit is set as not
->> big enough, could your find which limit causes the splitting and nomerge?
->
->
-> raid0 sets a limit of the stripe size for IO. Once the IO has passed md,
-> there's no reason why we can't merge for the lower driver. This is
-> (potentially) a huge performance issue on trim, since a lot of devices are
-> trim ops / sec limited rather than throughput limited.
+Filesystem uids which don't map into a user namespace may result
+in inode->i_uid being INVALID_UID. A symlink and its parent
+could have different owners in the filesystem can both get
+mapped to INVALID_UID, which may result in following a symlink
+when this would not have otherwise been permitted when protected
+symlinks are enabled.
 
-Just found raid0 maps the chunk sectors into max hw sectors of queue,
-and dm uses blk_stack_limits() to set up the limits.
+Add a new helper function, uid_valid_eq(), and use this to
+validate that the ids in may_follow_link() are both equal and
+valid. Also add an equivalent helper for gids, which is
+currently unused.
 
-So looks a raid specific issue, then the fix is correct, sorry for the noise.
+Signed-off-by: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Acked-by: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+---
+ fs/namei.c             |  2 +-
+ include/linux/uidgid.h | 10 ++++++++++
+ 2 files changed, 11 insertions(+), 1 deletion(-)
 
-thanks,
-Ming
+diff --git a/fs/namei.c b/fs/namei.c
+index a29094c6f4a1..6fe8b0d8ca90 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -915,7 +915,7 @@ static inline int may_follow_link(struct nameidata *nd)
+ 		return 0;
+ 
+ 	/* Allowed if parent directory and link owner match. */
+-	if (uid_eq(parent->i_uid, inode->i_uid))
++	if (uid_valid_eq(parent->i_uid, inode->i_uid))
+ 		return 0;
+ 
+ 	if (nd->flags & LOOKUP_RCU)
+diff --git a/include/linux/uidgid.h b/include/linux/uidgid.h
+index 03835522dfcb..e09529fe2668 100644
+--- a/include/linux/uidgid.h
++++ b/include/linux/uidgid.h
+@@ -117,6 +117,16 @@ static inline bool gid_valid(kgid_t gid)
+ 	return __kgid_val(gid) != (gid_t) -1;
+ }
+ 
++static inline bool uid_valid_eq(kuid_t left, kuid_t right)
++{
++	return uid_eq(left, right) && uid_valid(left);
++}
++
++static inline bool gid_valid_eq(kgid_t left, kgid_t right)
++{
++	return gid_eq(left, right) && gid_valid(left);
++}
++
+ #ifdef CONFIG_USER_NS
+ 
+ extern kuid_t make_kuid(struct user_namespace *from, uid_t uid);
+-- 
+2.7.4
+
+_______________________________________________
+Selinux mailing list
+Selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org
+To unsubscribe, send email to Selinux-leave-+05T5uksL2pAGbPMOrvdOA@public.gmane.org
+To get help, send an email containing "help" to Selinux-request-+05T5uksL2pAGbPMOrvdOA@public.gmane.org
