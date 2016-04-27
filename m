@@ -1,87 +1,202 @@
-From: Seth Forshee <seth.forshee@canonical.com>
-Subject: Re: [PATCH v3 14/21] fs: Allow superblock owner to change ownership
- of inodes with unmappable ids
-Date: Mon, 25 Apr 2016 15:54:51 -0500
-Message-ID: <20160425205451.GA22516@ubuntu-hedt>
-References: <1461339521-123191-1-git-send-email-seth.forshee@canonical.com>
- <1461339521-123191-15-git-send-email-seth.forshee@canonical.com>
- <20160425203047.GA29927@mail.hallyn.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: [PATCH V3 08/13] md: set MD_CHANGE_PENDING in a spinlocked region
+Date: Tue, 26 Apr 2016 21:56:26 -0400
+Message-ID: <1461722186-11023-1-git-send-email-gqjiang@suse.com>
+References: <1461221895-20688-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20160425203047.GA29927@mail.hallyn.com>
+In-Reply-To: <1461221895-20688-1-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Serge E. Hallyn" <serge@hallyn.com>
-Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <mszeredi@redhat.com>, Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov, cgroups@vger.kernel.org
+To: shli@kernel.org
+Cc: neilb@suse.de, linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-On Mon, Apr 25, 2016 at 03:30:47PM -0500, Serge E. Hallyn wrote:
-> Quoting Seth Forshee (seth.forshee@canonical.com):
-> > In a userns mount some on-disk inodes may have ids which do not
-> > map into s_user_ns, in which case the in-kernel inodes are owned
-> > by invalid users. The superblock owner should be able to change
-> > attributes of these inodes but cannot. However it is unsafe to
-> > grant the superblock owner privileged access to all inodes in the
-> > superblock since proc, sysfs, etc. use DAC to protect files which
-> > may not belong to s_user_ns. The problem is restricted to only
-> > inodes where the owner or group is an invalid user.
-> > 
-> > We can work around this by allowing users with CAP_CHOWN in
-> > s_user_ns to change an invalid owner or group id, so long as the
-> > other id is either invalid or mappable in s_user_ns. After
-> > changing ownership the user will be privileged towards the inode
-> > and thus able to change other attributes.
-> > 
-> > As an precaution, checks for invalid ids are added to the proc
-> > and kernfs setattr interfaces. These filesystems are not expected
-> > to have inodes with invalid ids, but if it does happen any
-> > setattr operations will return -EPERM.
-> > 
-> > Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
-> 
-> Acked-by: Serge Hallyn <serge.hallyn@canonical.com>
-> 
-> bug a request below,
-> 
-> > ---
-> >  fs/attr.c             | 47 +++++++++++++++++++++++++++++++++++++++--------
-> >  fs/kernfs/inode.c     |  2 ++
-> >  fs/proc/base.c        |  2 ++
-> >  fs/proc/generic.c     |  3 +++
-> >  fs/proc/proc_sysctl.c |  2 ++
-> >  5 files changed, 48 insertions(+), 8 deletions(-)
-> > 
-> > diff --git a/fs/attr.c b/fs/attr.c
-> > index 3cfaaac4a18e..a8b0931654a5 100644
-> > --- a/fs/attr.c
-> > +++ b/fs/attr.c
-> > @@ -16,6 +16,43 @@
-> >  #include <linux/evm.h>
-> >  #include <linux/ima.h>
-> >  
-> > +static bool chown_ok(const struct inode *inode, kuid_t uid)
-> > +{
-> > +	struct user_namespace *user_ns;
-> > +
-> > +	if (uid_eq(current_fsuid(), inode->i_uid) && uid_eq(uid, inode->i_uid))
-> > +		return true;
-> > +	if (capable_wrt_inode_uidgid(inode, CAP_CHOWN))
-> > +		return true;
-> > +
-> > +	user_ns = inode->i_sb->s_user_ns;
-> > +	if (!uid_valid(inode->i_uid) &&
-> > +	    (!gid_valid(inode->i_gid) || kgid_has_mapping(user_ns, inode->i_gid)) &&
-> 
-> This confused me to no end :)  Perhaps a "is_unmapped_valid_gid()" helper
-> would make it clearer what this is meant to do?  Or else maybe a comment
-> above chown_ok(), explaining that
-> 
-> 1. for a blockdev, the uid is converted at inode read so that it is
-> either mapped or invalid
-> 2. for sysfs / etc, uid can be valid but not mapped into the userns
+Some code waits for a metadata update by:
 
-Even with a helper a comment is probably helpful to explain why. I'll do
-that first, then see if a helper would make things any clearer.
-Honestly, I had to think about the helper name you proposed for a minute
-before it made sense even though I already understood the code ;-)
+1. flagging that it is needed (MD_CHANGE_DEVS or MD_CHANGE_CLEAN)
+2. setting MD_CHANGE_PENDING and waking the management thread
+3. waiting for MD_CHANGE_PENDING to be cleared
+
+If the first two are done without locking, the code in md_update_sb()
+which checks if it needs to repeat might test if an update is needed
+before step 1, then clear MD_CHANGE_PENDING after step 2, resulting
+in the wait returning early.
+
+So make sure all places that set MD_CHANGE_PENDING are protected by
+mddev->lock.
+
+Reviewed-by: NeilBrown <neilb@suse.com>
+Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+---
+V3 changes:
+1. use spin_lock_irqsave/spin_unlock_irqrestore in error funcs and
+   raid10's __make_request
+
+V2 Changes:
+1. s/write_lock/lock which is reported by auto build
+
+ drivers/md/md.c          | 22 +++++++++++++++++-----
+ drivers/md/raid1.c       |  2 ++
+ drivers/md/raid10.c      |  6 +++++-
+ drivers/md/raid5-cache.c |  2 ++
+ drivers/md/raid5.c       |  2 ++
+ 5 files changed, 28 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 06f6e81..943c953 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -2295,12 +2295,18 @@ repeat:
+ 	if (mddev_is_clustered(mddev)) {
+ 		if (test_and_clear_bit(MD_CHANGE_DEVS, &mddev->flags))
+ 			force_change = 1;
++		if (test_and_clear_bit(MD_CHANGE_CLEAN, &mddev->flags))
++			nospares = 1;
+ 		ret = md_cluster_ops->metadata_update_start(mddev);
+ 		/* Has someone else has updated the sb */
+ 		if (!does_sb_need_changing(mddev)) {
+ 			if (ret == 0)
+ 				md_cluster_ops->metadata_update_cancel(mddev);
+-			clear_bit(MD_CHANGE_PENDING, &mddev->flags);
++			spin_lock(&mddev->lock);
++			if (!test_bit(MD_CHANGE_DEVS, &mddev->flags) &&
++			    !test_bit(MD_CHANGE_CLEAN, &mddev->flags))
++				clear_bit(MD_CHANGE_PENDING, &mddev->flags);
++			spin_unlock(&mddev->lock);
+ 			return;
+ 		}
+ 	}
+@@ -2436,7 +2442,8 @@ repeat:
+ 
+ 	spin_lock(&mddev->lock);
+ 	if (mddev->in_sync != sync_req ||
+-	    test_bit(MD_CHANGE_DEVS, &mddev->flags)) {
++	    test_bit(MD_CHANGE_DEVS, &mddev->flags) ||
++	    test_bit(MD_CHANGE_CLEAN, &mddev->flags)) {
+ 		/* have to write it out again */
+ 		spin_unlock(&mddev->lock);
+ 		goto repeat;
+@@ -8147,18 +8154,20 @@ void md_do_sync(struct md_thread *thread)
+ 		}
+ 	}
+  skip:
+-	set_bit(MD_CHANGE_DEVS, &mddev->flags);
+-
+ 	if (mddev_is_clustered(mddev) &&
+ 	    ret == 0) {
+ 		/* set CHANGE_PENDING here since maybe another
+ 		 * update is needed, so other nodes are informed */
++		spin_lock(&mddev->lock);
++		set_bit(MD_CHANGE_DEVS, &mddev->flags);
+ 		set_bit(MD_CHANGE_PENDING, &mddev->flags);
++		spin_unlock(&mddev->lock);
+ 		md_wakeup_thread(mddev->thread);
+ 		wait_event(mddev->sb_wait,
+ 			   !test_bit(MD_CHANGE_PENDING, &mddev->flags));
+ 		md_cluster_ops->resync_finish(mddev);
+-	}
++	} else
++		set_bit(MD_CHANGE_DEVS, &mddev->flags);
+ 
+ 	spin_lock(&mddev->lock);
+ 	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
+@@ -8550,6 +8559,7 @@ EXPORT_SYMBOL(md_finish_reshape);
+ int rdev_set_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
+ 		       int is_new)
+ {
++	struct mddev *mddev = rdev->mddev;
+ 	int rv;
+ 	if (is_new)
+ 		s += rdev->new_data_offset;
+@@ -8559,8 +8569,10 @@ int rdev_set_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
+ 	if (rv == 0) {
+ 		/* Make sure they get written out promptly */
+ 		sysfs_notify_dirent_safe(rdev->sysfs_state);
++		spin_lock(&mddev->lock);
+ 		set_bit(MD_CHANGE_CLEAN, &rdev->mddev->flags);
+ 		set_bit(MD_CHANGE_PENDING, &rdev->mddev->flags);
++		spin_unlock(&mddev->lock);
+ 		md_wakeup_thread(rdev->mddev->thread);
+ 		return 1;
+ 	} else
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index a7f2b9c..cffd224 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1474,8 +1474,10 @@ static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
+ 	 * if recovery is running, make sure it aborts.
+ 	 */
+ 	set_bit(MD_RECOVERY_INTR, &mddev->recovery);
++	spin_lock_irqsave(&mddev->lock, flags);
+ 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
+ 	set_bit(MD_CHANGE_PENDING, &mddev->flags);
++	spin_unlock_irqrestore(&mddev->lock, flags);
+ 	printk(KERN_ALERT
+ 	       "md/raid1:%s: Disk failure on %s, disabling device.\n"
+ 	       "md/raid1:%s: Operation continuing on %d devices.\n",
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index e3fd725..cd615fe 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1102,8 +1102,10 @@ static void __make_request(struct mddev *mddev, struct bio *bio)
+ 		bio->bi_iter.bi_sector < conf->reshape_progress))) {
+ 		/* Need to update reshape_position in metadata */
+ 		mddev->reshape_position = conf->reshape_progress;
++		spin_lock_irqsave(&mddev->lock, flags);
+ 		set_bit(MD_CHANGE_DEVS, &mddev->flags);
+ 		set_bit(MD_CHANGE_PENDING, &mddev->flags);
++		spin_unlock_irqrestore(&mddev->lock, flags);
+ 		md_wakeup_thread(mddev->thread);
+ 		wait_event(mddev->sb_wait,
+ 			   !test_bit(MD_CHANGE_PENDING, &mddev->flags));
+@@ -1585,15 +1587,17 @@ static void raid10_error(struct mddev *mddev, struct md_rdev *rdev)
+ 	}
+ 	if (test_and_clear_bit(In_sync, &rdev->flags))
+ 		mddev->degraded++;
++	spin_unlock_irqrestore(&conf->device_lock, flags);
+ 	/*
+ 	 * If recovery is running, make sure it aborts.
+ 	 */
+ 	set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+ 	set_bit(Blocked, &rdev->flags);
+ 	set_bit(Faulty, &rdev->flags);
++	spin_lock_irqsave(&mddev->lock, flags);
+ 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
+ 	set_bit(MD_CHANGE_PENDING, &mddev->flags);
+-	spin_unlock_irqrestore(&conf->device_lock, flags);
++	spin_unlock_irqrestore(&mddev->lock, flags);
+ 	printk(KERN_ALERT
+ 	       "md/raid10:%s: Disk failure on %s, disabling device.\n"
+ 	       "md/raid10:%s: Operation continuing on %d devices.\n",
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 9531f5f..2ba9366 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -712,8 +712,10 @@ static void r5l_write_super_and_discard_space(struct r5l_log *log,
+ 	 * in_teardown check workaround this issue.
+ 	 */
+ 	if (!log->in_teardown) {
++		spin_lock(&mddev->lock);
+ 		set_bit(MD_CHANGE_DEVS, &mddev->flags);
+ 		set_bit(MD_CHANGE_PENDING, &mddev->flags);
++		spin_unlock(&mddev->lock);
+ 		md_wakeup_thread(mddev->thread);
+ 		wait_event(mddev->sb_wait,
+ 			!test_bit(MD_CHANGE_PENDING, &mddev->flags) ||
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 8ab8b65..fffa53f 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -2514,8 +2514,10 @@ static void raid5_error(struct mddev *mddev, struct md_rdev *rdev)
+ 
+ 	set_bit(Blocked, &rdev->flags);
+ 	set_bit(Faulty, &rdev->flags);
++	spin_lock_irqsave(&mddev->lock, flags);
+ 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
+ 	set_bit(MD_CHANGE_PENDING, &mddev->flags);
++	spin_unlock_irqrestore(&mddev->lock, flags);
+ 	printk(KERN_ALERT
+ 	       "md/raid:%s: Disk failure on %s, disabling device.\n"
+ 	       "md/raid:%s: Operation continuing on %d devices.\n",
+-- 
+2.6.6
+
