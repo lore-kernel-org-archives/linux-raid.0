@@ -1,67 +1,80 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH V3 08/13] md: set MD_CHANGE_PENDING in a spinlocked region
-Date: Wed, 27 Apr 2016 20:58:02 -0700
-Message-ID: <20160428035802.GA90901@kernel.org>
-References: <1461221895-20688-1-git-send-email-gqjiang@suse.com>
- <1461722186-11023-1-git-send-email-gqjiang@suse.com>
- <20160427152753.GB17061@kernel.org>
- <57217BAF.5060702@suse.com>
+From: Andread Mayrhoff <repro@spoilbase.eu>
+Subject: Help needed: array inactive after grow attempt
+Date: Thu, 28 Apr 2016 21:27:53 +0200
+Message-ID: <1d5a8c36a6802a9e7e32eb056165f200@spoilbase.eu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <57217BAF.5060702@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>
-Cc: neilb@suse.de, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Apr 27, 2016 at 10:55:43PM -0400, Guoqing Jiang wrote:
-> 
-> 
-> On 04/27/2016 11:27 AM, Shaohua Li wrote:
-> >On Tue, Apr 26, 2016 at 09:56:26PM -0400, Guoqing Jiang wrote:
-> >>Some code waits for a metadata update by:
-> >>
-> >>1. flagging that it is needed (MD_CHANGE_DEVS or MD_CHANGE_CLEAN)
-> >>2. setting MD_CHANGE_PENDING and waking the management thread
-> >>3. waiting for MD_CHANGE_PENDING to be cleared
-> >>
-> >>If the first two are done without locking, the code in md_update_sb()
-> >>which checks if it needs to repeat might test if an update is needed
-> >>before step 1, then clear MD_CHANGE_PENDING after step 2, resulting
-> >>in the wait returning early.
-> >>
-> >>So make sure all places that set MD_CHANGE_PENDING are protected by
-> >>mddev->lock.
-> >>
-> >>Reviewed-by: NeilBrown <neilb@suse.com>
-> >>Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-> >>---
-> >>V3 changes:
-> >>1. use spin_lock_irqsave/spin_unlock_irqrestore in error funcs and
-> >>    raid10's __make_request
-> >shouldn't other places use spin_lock_irq/spin_unlock_irq? interrupt can occur
-> >after you do spin_lock(), and if it's md_error, we deadlock.
-> 
-> It could possible in theory if func was interrupted by md_error after it
-> called spin_lock,
-> but seems lots of place in md.c also use spin_lock/unlock for mddev->lock,
-> take
-> md_do_sync and md_update_sb as example, both of them used
-> spin_lock(&mddev->lock)
-> and spin_unlock(&mddev->lock) before.
-> 
-> So I guess it will not cause trouble, otherwise, then we need to change all
-> the usages of
-> spin_lock/unlock(&mddev->lock), or introduce a new lock for this scenario. I
-> am not sure
-> which one is more acceptable.
+Hello,
 
-It doesn't cause trouble, because no interrupt/bh uses lock before. But now we
-use it in softirq, that's the difference. Please enable lockdep, I think it
-will complain. either we change all the locking to irq save or introducing a
-new lock. either is ok.
+I believe I need some help from an mdadm expert.
 
-Thanks,
-Shaohua
+I tried to add a disk to an existing RAID5-array (/dev/md127) that 
+consisted of 5 disks: /dev/sd[bcdef]1
+The system is a 4.5.2-2-kernel, x86_64-architecture, mdadm 3.3.1.
+I attempted to add partition /dev/sdg1 to that array, in an attempt to 
+create a 6-disk-RAID5-array.
+To achieve that goal, I typed "mdadm --add /dev/md127 /dev/sdg1".
+As I found that working, I attempted to grow the array by typing "mdadm 
+--grow /dev/md127 --raid-devices=6".
+
+I left my machine, and when I returned, I found it had been switched off 
+by my... ahem, anyway, it had been switched off.
+
+I powered it on again, "cat /proc/mdstat" returned
+
+>> 
+Personalities : [raid6] [raid5] [raid4]
+md127 : inactive sdg1[9](S) sdf1[8](S) sdc1[5](S) sdb1[6](S) sde1[4](S) 
+sdd1[7](S)
+       17578345656 blocks super 1.0
+
+unused devices: <none>
+<<
+
+mdadm --detail /dev/md127 returns
+
+>> 
+/dev/md127:
+         Version : 1.0
+      Raid Level : raid0
+   Total Devices : 6
+     Persistence : Superblock is persistent
+
+           State : inactive
+
+   Delta Devices : 1, (-1->0)
+       New Level : raid5
+      New Layout : left-symmetric
+   New Chunksize : 128K
+
+            Name : n54l:raid5.11111111.eu
+            UUID : b120f4d9:d1ba5648:e1359c5d:7a36372e
+          Events : 60868
+
+     Number   Major   Minor   RaidDevice
+
+        -       8       17        -        /dev/sdb1
+        -       8       33        -        /dev/sdc1
+        -       8       49        -        /dev/sdd1
+        -       8       65        -        /dev/sde1
+        -       8       81        -        /dev/sdf1
+        -       8       97        -        /dev/sdg1
+<<
+
+Now, before I do anything extreme like unplugging that disk again or 
+forcing a recreate, could an expert suggest the next logical step I 
+should do. I know this sounds pretty defensive, but rather than playing 
+"Raid-hero with an erased set of disks" I'd go along with "Raid-idiot 
+that needed experts' advice which is why he still's got all his data".
+
+Thanks for your advice!
+
+
+
