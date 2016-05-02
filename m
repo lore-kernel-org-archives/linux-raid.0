@@ -1,7 +1,7 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [V2 PATCH 01/13] md-cluster: change resync lock from asynchronous to synchronous
-Date: Mon,  2 May 2016 11:33:08 -0400
-Message-ID: <1462203200-1375-2-git-send-email-gqjiang@suse.com>
+Subject: [V2 PATCH 02/13] md-cluser: make resync_finish only called after pers->sync_request
+Date: Mon,  2 May 2016 11:33:09 -0400
+Message-ID: <1462203200-1375-3-git-send-email-gqjiang@suse.com>
 References: <1462203200-1375-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1462203200-1375-1-git-send-email-gqjiang@suse.com>
@@ -10,104 +10,103 @@ To: shli@kernel.org
 Cc: neilb@suse.de, linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-If multiple nodes choose to attempt do resync at the same time
-they need to be serialized so they don't duplicate effort. This
-serialization is done by locking the 'resync' DLM lock.
+It is not reasonable that cluster raid to release resync
+lock before the last pers->sync_request has finished.
 
-Currently if a node cannot get the lock immediately it doesn't
-request notification when the lock becomes available (i.e.
-DLM_LKF_NOQUEUE is set), so it may not reliably find out when it
-is safe to try again.
+As the metadata will be changed when node performs resync,
+we need to inform other nodes to update metadata, so the
+MD_CHANGE_PENDING flag is set before finish resync.
 
-Rather than trying to arrange an async wake-up when the lock
-becomes available, switch to using synchronous locking - this is
-a lot easier to think about.  As it is not permitted to block in
-the 'raid1d' thread, move the locking to the resync thread.  So
-the rsync thread is forked immediately, but it blocks until the
-resync lock is available. Once the lock is locked it checks again
-if any resync action is needed.
-
-A particular symptom of the current problem is that a node can
-get stuck with "resync=pending" indefinitely.
+Then metadata_update_finish is move ahead to ensure that
+METADATA_UPDATED msg is sent before finish resync, and
+metadata_update_start need to be run after "repeat:" label
+accordingly.
 
 Reviewed-by: NeilBrown <neilb@suse.com>
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- drivers/md/md-cluster.c |  2 --
- drivers/md/md.c         | 23 ++++++++++++++---------
- 2 files changed, 14 insertions(+), 11 deletions(-)
+ drivers/md/md.c | 25 +++++++++++++------------
+ 1 file changed, 13 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index dd97d42..12fbfec 100644
---- a/drivers/md/md-cluster.c
-+++ b/drivers/md/md-cluster.c
-@@ -937,7 +937,6 @@ static void metadata_update_cancel(struct mddev *mddev)
- static int resync_start(struct mddev *mddev)
- {
- 	struct md_cluster_info *cinfo = mddev->cluster_info;
--	cinfo->resync_lockres->flags |= DLM_LKF_NOQUEUE;
- 	return dlm_lock_sync(cinfo->resync_lockres, DLM_LOCK_EX);
- }
- 
-@@ -967,7 +966,6 @@ static int resync_info_update(struct mddev *mddev, sector_t lo, sector_t hi)
- static int resync_finish(struct mddev *mddev)
- {
- 	struct md_cluster_info *cinfo = mddev->cluster_info;
--	cinfo->resync_lockres->flags &= ~DLM_LKF_NOQUEUE;
- 	dlm_unlock_sync(cinfo->resync_lockres);
- 	return resync_info_update(mddev, 0, 0);
- }
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 14d3b37..4fd7d77 100644
+index 4fd7d77..dd83a50 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -7786,6 +7786,7 @@ void md_do_sync(struct md_thread *thread)
- 	char *desc, *action = NULL;
- 	struct blk_plug plug;
- 	bool cluster_resync_finished = false;
-+	int ret;
- 
- 	/* just incase thread restarts... */
- 	if (test_bit(MD_RECOVERY_DONE, &mddev->recovery))
-@@ -7795,6 +7796,19 @@ void md_do_sync(struct md_thread *thread)
+@@ -2291,6 +2291,7 @@ void md_update_sb(struct mddev *mddev, int force_change)
  		return;
  	}
  
-+	if (mddev_is_clustered(mddev)) {
-+		ret = md_cluster_ops->resync_start(mddev);
-+		if (ret)
-+			goto skip;
++repeat:
+ 	if (mddev_is_clustered(mddev)) {
+ 		if (test_and_clear_bit(MD_CHANGE_DEVS, &mddev->flags))
+ 			force_change = 1;
+@@ -2303,7 +2304,7 @@ void md_update_sb(struct mddev *mddev, int force_change)
+ 			return;
+ 		}
+ 	}
+-repeat:
 +
-+		if (!(test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ||
-+			test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) ||
-+			test_bit(MD_RECOVERY_RECOVER, &mddev->recovery))
-+		     && ((unsigned long long)mddev->curr_resync_completed
-+			 < (unsigned long long)mddev->resync_max_sectors))
-+			goto skip;
-+	}
-+
- 	if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
- 		if (test_bit(MD_RECOVERY_CHECK, &mddev->recovery)) {
- 			desc = "data-check";
-@@ -8226,18 +8240,9 @@ static void md_start_sync(struct work_struct *ws)
- 	struct mddev *mddev = container_of(ws, struct mddev, del_work);
- 	int ret = 0;
+ 	/* First make sure individual recovery_offsets are correct */
+ 	rdev_for_each(rdev, mddev) {
+ 		if (rdev->raid_disk >= 0 &&
+@@ -2430,6 +2431,9 @@ repeat:
+ 	md_super_wait(mddev);
+ 	/* if there was a failure, MD_CHANGE_DEVS was set, and we re-write super */
  
--	if (mddev_is_clustered(mddev)) {
--		ret = md_cluster_ops->resync_start(mddev);
--		if (ret) {
--			mddev->sync_thread = NULL;
--			goto out;
--		}
--	}
++	if (mddev_is_clustered(mddev) && ret == 0)
++		md_cluster_ops->metadata_update_finish(mddev);
++
+ 	spin_lock(&mddev->lock);
+ 	if (mddev->in_sync != sync_req ||
+ 	    test_bit(MD_CHANGE_DEVS, &mddev->flags)) {
+@@ -2452,9 +2456,6 @@ repeat:
+ 		clear_bit(BlockedBadBlocks, &rdev->flags);
+ 		wake_up(&rdev->blocked_wait);
+ 	}
 -
- 	mddev->sync_thread = md_register_thread(md_do_sync,
- 						mddev,
- 						"resync");
--out:
- 	if (!mddev->sync_thread) {
- 		if (!(mddev_is_clustered(mddev) && ret == -EAGAIN))
- 			printk(KERN_ERR "%s: could not start resync"
+-	if (mddev_is_clustered(mddev) && ret == 0)
+-		md_cluster_ops->metadata_update_finish(mddev);
+ }
+ EXPORT_SYMBOL(md_update_sb);
+ 
+@@ -7785,7 +7786,6 @@ void md_do_sync(struct md_thread *thread)
+ 	struct md_rdev *rdev;
+ 	char *desc, *action = NULL;
+ 	struct blk_plug plug;
+-	bool cluster_resync_finished = false;
+ 	int ret;
+ 
+ 	/* just incase thread restarts... */
+@@ -8103,11 +8103,6 @@ void md_do_sync(struct md_thread *thread)
+ 		mddev->curr_resync_completed = mddev->curr_resync;
+ 		sysfs_notify(&mddev->kobj, NULL, "sync_completed");
+ 	}
+-	/* tell personality and other nodes that we are finished */
+-	if (mddev_is_clustered(mddev)) {
+-		md_cluster_ops->resync_finish(mddev);
+-		cluster_resync_finished = true;
+-	}
+ 	mddev->pers->sync_request(mddev, max_sectors, &skipped);
+ 
+ 	if (!test_bit(MD_RECOVERY_CHECK, &mddev->recovery) &&
+@@ -8147,9 +8142,15 @@ void md_do_sync(struct md_thread *thread)
+ 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
+ 
+ 	if (mddev_is_clustered(mddev) &&
+-	    test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
+-	    !cluster_resync_finished)
++	    ret == 0) {
++		/* set CHANGE_PENDING here since maybe another
++		 * update is needed, so other nodes are informed */
++		set_bit(MD_CHANGE_PENDING, &mddev->flags);
++		md_wakeup_thread(mddev->thread);
++		wait_event(mddev->sb_wait,
++			   !test_bit(MD_CHANGE_PENDING, &mddev->flags));
+ 		md_cluster_ops->resync_finish(mddev);
++	}
+ 
+ 	spin_lock(&mddev->lock);
+ 	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
 -- 
 2.6.6
 
