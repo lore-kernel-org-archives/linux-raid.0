@@ -1,7 +1,7 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [V2 PATCH 06/13] md-cluster: change array_sectors and update size are not supported
-Date: Mon,  2 May 2016 11:33:13 -0400
-Message-ID: <1462203200-1375-7-git-send-email-gqjiang@suse.com>
+Subject: [V2 PATCH 05/13] md-cluster: fix locking when node joins cluster during message broadcast
+Date: Mon,  2 May 2016 11:33:12 -0400
+Message-ID: <1462203200-1375-6-git-send-email-gqjiang@suse.com>
 References: <1462203200-1375-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1462203200-1375-1-git-send-email-gqjiang@suse.com>
@@ -10,57 +10,58 @@ To: shli@kernel.org
 Cc: neilb@suse.de, linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-Currently, some features are not supported yet,
-such as change array_sectors and update size, so
-return EINVAL for them and listed it in document.
+If a node joins the cluster while a message broadcast
+is under way, a lock issue could happen as follows.
+
+For a cluster which included two nodes, if node A is
+calling __sendmsg before up-convert CR to EX on ack,
+and node B released CR on ack. But if a new node C
+joins the cluster and it doesn't receive the message
+which A sent before, so it could hold CR on ack before
+A up-convert CR to EX on ack.
+
+So a node joining the cluster should get an EX lock on
+the "token" first to ensure no broadcast is ongoing,
+then release it after held CR on ack.
 
 Reviewed-by: NeilBrown <neilb@suse.com>
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- Documentation/md-cluster.txt | 6 ++++++
- drivers/md/md.c              | 8 ++++++++
- 2 files changed, 14 insertions(+)
+ drivers/md/md-cluster.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/md-cluster.txt b/Documentation/md-cluster.txt
-index c100c71..3888327 100644
---- a/Documentation/md-cluster.txt
-+++ b/Documentation/md-cluster.txt
-@@ -316,3 +316,9 @@ The algorithm is:
-  nodes are using the raid which is achieved by lock all bitmap
-  locks within the cluster, and also those locks are unlocked
-  accordingly.
-+
-+7. Unsupported features
-+
-+There are somethings which are not supported by cluster MD yet.
-+
-+- update size and change array_sectors.
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index dd83a50..8cc4bbc 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4817,6 +4817,10 @@ array_size_store(struct mddev *mddev, const char *buf, size_t len)
- 	if (err)
- 		return err;
+diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+index 76f88f7..30f1160 100644
+--- a/drivers/md/md-cluster.c
++++ b/drivers/md/md-cluster.c
+@@ -781,17 +781,24 @@ static int join(struct mddev *mddev, int nodes)
+ 	cinfo->token_lockres = lockres_init(mddev, "token", NULL, 0);
+ 	if (!cinfo->token_lockres)
+ 		goto err;
+-	cinfo->ack_lockres = lockres_init(mddev, "ack", ack_bast, 0);
+-	if (!cinfo->ack_lockres)
+-		goto err;
+ 	cinfo->no_new_dev_lockres = lockres_init(mddev, "no-new-dev", NULL, 0);
+ 	if (!cinfo->no_new_dev_lockres)
+ 		goto err;
  
-+	/* cluster raid doesn't support change array_sectors */
-+	if (mddev_is_clustered(mddev))
-+		return -EINVAL;
-+
- 	if (strncmp(buf, "default", 7) == 0) {
- 		if (mddev->pers)
- 			sectors = mddev->pers->size(mddev, 0, 0);
-@@ -6438,6 +6442,10 @@ static int update_size(struct mddev *mddev, sector_t num_sectors)
- 	int rv;
- 	int fit = (num_sectors == 0);
- 
-+	/* cluster raid doesn't support update size */
-+	if (mddev_is_clustered(mddev))
-+		return -EINVAL;
-+
- 	if (mddev->pers->resize == NULL)
- 		return -EINVAL;
- 	/* The "num_sectors" is the number of sectors of each device that
++	ret = dlm_lock_sync(cinfo->token_lockres, DLM_LOCK_EX);
++	if (ret) {
++		ret = -EAGAIN;
++		pr_err("md-cluster: can't join cluster to avoid lock issue\n");
++		goto err;
++	}
++	cinfo->ack_lockres = lockres_init(mddev, "ack", ack_bast, 0);
++	if (!cinfo->ack_lockres)
++		goto err;
+ 	/* get sync CR lock on ACK. */
+ 	if (dlm_lock_sync(cinfo->ack_lockres, DLM_LOCK_CR))
+ 		pr_err("md-cluster: failed to get a sync CR lock on ACK!(%d)\n",
+ 				ret);
++	dlm_unlock_sync(cinfo->token_lockres);
+ 	/* get sync CR lock on no-new-dev. */
+ 	if (dlm_lock_sync(cinfo->no_new_dev_lockres, DLM_LOCK_CR))
+ 		pr_err("md-cluster: failed to get a sync CR lock on no-new-dev!(%d)\n", ret);
 -- 
 2.6.6
 
