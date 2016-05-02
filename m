@@ -1,56 +1,46 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [V2 PATCH 00/13] The latest patches for md-cluster
-Date: Mon,  2 May 2016 11:33:07 -0400
-Message-ID: <1462203200-1375-1-git-send-email-gqjiang@suse.com>
+Subject: [V2 PATCH 03/13] md-cluster: wake up thread to continue recovery
+Date: Mon,  2 May 2016 11:33:10 -0400
+Message-ID: <1462203200-1375-4-git-send-email-gqjiang@suse.com>
+References: <1462203200-1375-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1462203200-1375-1-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: shli@kernel.org
 Cc: neilb@suse.de, linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-Changes:
-1. delete no_hijack parameter from bitmap_get_counter
-2. add one patch from kbuild test robot to remove checkpatch warning
-3. md-set-MD_CHANGE_PENDING-in-a-spinlocked-region.patch is removed
-from the patchset and it will be post later.
+In recovery case, we need to set MD_RECOVERY_NEEDED
+and wake up thread only if recover is not finished.
 
-For cluster raid1, we found some issues and some codes need to be
-improved during the past months, and all the patches are based on
-for-next branch of md tree.
+Reviewed-by: NeilBrown <neilb@suse.com>
+Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+---
+ drivers/md/md-cluster.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-The patchset also available in github as follows:
-
-https://github.com/GuoqingJiang/linux/tree/md-for-next
-
-Thanks,
-Guoqing
-
-Guoqing Jiang (12):
-  md-cluster: change resync lock from asynchronous to synchronous
-  md-cluser: make resync_finish only called after pers->sync_request
-  md-cluster: wake up thread to continue recovery
-  md-cluster: unregister thread if err happened
-  md-cluster: fix locking when node joins cluster during message
-    broadcast
-  md-cluster: change array_sectors and update size are not supported
-  md-cluster: wakeup thread if activated a spare disk
-  md-cluster: always setup in-memory bitmap
-  md-cluster: sync bitmap when node received RESYNCING msg
-  md-cluster/bitmap: fix wrong calcuation of offset
-  md-cluster/bitmap: fix wrong page num in bitmap_file_clear_bit and
-    bitmap_file_set_bit
-  md-cluster/bitmap: unplug bitmap to sync dirty pages to disk
-
-kbuild test robot (1):
-  md-cluster: fix ifnullfree.cocci warnings
-
- Documentation/md-cluster.txt |  6 ++++
- drivers/md/bitmap.c          | 85 ++++++++++++++++++++++++++++++++++++++------
- drivers/md/bitmap.h          |  3 ++
- drivers/md/md-cluster.c      | 53 ++++++++++++++++++++++-----
- drivers/md/md.c              | 61 ++++++++++++++++++++-----------
- 5 files changed, 168 insertions(+), 40 deletions(-)
-
+diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+index 12fbfec..0d4ddf8 100644
+--- a/drivers/md/md-cluster.c
++++ b/drivers/md/md-cluster.c
+@@ -284,11 +284,14 @@ static void recover_bitmaps(struct md_thread *thread)
+ 			goto dlm_unlock;
+ 		}
+ 		if (hi > 0) {
+-			/* TODO:Wait for current resync to get over */
+-			set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 			if (lo < mddev->recovery_cp)
+ 				mddev->recovery_cp = lo;
+-			md_check_recovery(mddev);
++			/* wake up thread to continue resync in case resync
++			 * is not finished */
++			if (mddev->recovery_cp != MaxSector) {
++			    set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
++			    md_wakeup_thread(mddev->thread);
++			}
+ 		}
+ dlm_unlock:
+ 		dlm_unlock_sync(bm_lockres);
 -- 
 2.6.6
 
