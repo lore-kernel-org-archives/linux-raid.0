@@ -1,7 +1,7 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [V2 PATCH 10/13] md-cluster/bitmap: fix wrong calcuation of offset
-Date: Mon,  2 May 2016 11:50:13 -0400
-Message-ID: <1462204216-2269-3-git-send-email-gqjiang@suse.com>
+Subject: [V2 PATCH 11/13] md-cluster/bitmap: fix wrong page num in bitmap_file_clear_bit and bitmap_file_set_bit
+Date: Mon,  2 May 2016 11:50:14 -0400
+Message-ID: <1462204216-2269-4-git-send-email-gqjiang@suse.com>
 References: <1462203200-1375-1-git-send-email-gqjiang@suse.com>
  <1462204216-2269-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -11,34 +11,69 @@ To: shli@kernel.org
 Cc: neilb@suse.de, linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-The offset is wrong in bitmap_storage_alloc, we should
-set it like below in bitmap_init_from_disk().
+The pnum passed to set_page_attr and test_page_attr should from
+0 to storage.file_pages - 1, but bitmap_file_set_bit and
+bitmap_file_clear_bit call set_page_attr and test_page_attr with
+page->index parameter while page->index has already added node_offset
+before.
 
-node_offset = bitmap->cluster_slot * (DIV_ROUND_UP(store->bytes, PAGE_SIZE));
-
-Because 'offset' is only assigned to 'page->index' and
-that is usually over-written by read_sb_page. So it does
-not cause problem in general, but it still need to be fixed.
+So we need to minus node_offset in both bitmap_file_clear_bit
+and bitmap_file_set_bit.
 
 Reviewed-by: NeilBrown <neilb@suse.com>
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- drivers/md/bitmap.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/md/bitmap.c | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index ac93d87..cf93bb8 100644
+index cf93bb8..de28c80 100644
 --- a/drivers/md/bitmap.c
 +++ b/drivers/md/bitmap.c
-@@ -759,7 +759,7 @@ static int bitmap_storage_alloc(struct bitmap_storage *store,
- 		bytes += sizeof(bitmap_super_t);
+@@ -903,6 +903,11 @@ static void bitmap_file_set_bit(struct bitmap *bitmap, sector_t block)
+ 	struct page *page;
+ 	void *kaddr;
+ 	unsigned long chunk = block >> bitmap->counts.chunkshift;
++	struct bitmap_storage *store = &bitmap->storage;
++	unsigned long node_offset = 0;
++
++	if (mddev_is_clustered(bitmap->mddev))
++		node_offset = bitmap->cluster_slot * store->file_pages;
  
- 	num_pages = DIV_ROUND_UP(bytes, PAGE_SIZE);
--	offset = slot_number * (num_pages - 1);
-+	offset = slot_number * num_pages;
+ 	page = filemap_get_page(&bitmap->storage, chunk);
+ 	if (!page)
+@@ -918,7 +923,7 @@ static void bitmap_file_set_bit(struct bitmap *bitmap, sector_t block)
+ 	kunmap_atomic(kaddr);
+ 	pr_debug("set file bit %lu page %lu\n", bit, page->index);
+ 	/* record page number so it gets flushed to disk when unplug occurs */
+-	set_page_attr(bitmap, page->index, BITMAP_PAGE_DIRTY);
++	set_page_attr(bitmap, page->index - node_offset, BITMAP_PAGE_DIRTY);
+ }
  
- 	store->filemap = kmalloc(sizeof(struct page *)
- 				 * num_pages, GFP_KERNEL);
+ static void bitmap_file_clear_bit(struct bitmap *bitmap, sector_t block)
+@@ -927,6 +932,11 @@ static void bitmap_file_clear_bit(struct bitmap *bitmap, sector_t block)
+ 	struct page *page;
+ 	void *paddr;
+ 	unsigned long chunk = block >> bitmap->counts.chunkshift;
++	struct bitmap_storage *store = &bitmap->storage;
++	unsigned long node_offset = 0;
++
++	if (mddev_is_clustered(bitmap->mddev))
++		node_offset = bitmap->cluster_slot * store->file_pages;
+ 
+ 	page = filemap_get_page(&bitmap->storage, chunk);
+ 	if (!page)
+@@ -938,8 +948,8 @@ static void bitmap_file_clear_bit(struct bitmap *bitmap, sector_t block)
+ 	else
+ 		clear_bit_le(bit, paddr);
+ 	kunmap_atomic(paddr);
+-	if (!test_page_attr(bitmap, page->index, BITMAP_PAGE_NEEDWRITE)) {
+-		set_page_attr(bitmap, page->index, BITMAP_PAGE_PENDING);
++	if (!test_page_attr(bitmap, page->index - node_offset, BITMAP_PAGE_NEEDWRITE)) {
++		set_page_attr(bitmap, page->index - node_offset, BITMAP_PAGE_PENDING);
+ 		bitmap->allclean = 0;
+ 	}
+ }
 -- 
 2.6.6
 
