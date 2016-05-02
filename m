@@ -1,55 +1,56 @@
-From: Joey Liao <joeyliao@qnap.com>
-Subject: Re: Write to the degraded raid5 will trigger the call trace dump when
- skip_copy is enabled
-Date: Mon, 2 May 2016 22:45:49 +0800
-Message-ID: <CAHvN=imVJgEtMmO6XtLCdQKCPiuVT2sCqpq_0qoMR-3aJ+ZzPw@mail.gmail.com>
-References: <CAHvN=inPP5ubYK1YkNW_B1b9ouhqBo8qMMfVcGSjddMYekDEng@mail.gmail.com>
-	<20160429211719.GA104659@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: [V2 PATCH 00/13] The latest patches for md-cluster
+Date: Mon,  2 May 2016 11:33:07 -0400
+Message-ID: <1462203200-1375-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160429211719.GA104659@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
+To: shli@kernel.org
+Cc: neilb@suse.de, linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-Hi Shaohua,
+Changes:
+1. delete no_hijack parameter from bitmap_get_counter
+2. add one patch from kbuild test robot to remove checkpatch warning
+3. md-set-MD_CHANGE_PENDING-in-a-spinlocked-region.patch is removed
+from the patchset and it will be post later.
 
-Many thanks for your reply.
+For cluster raid1, we found some issues and some codes need to be
+improved during the past months, and all the patches are based on
+for-next branch of md tree.
 
-How about the following WARN_ON() in handle_stripe_clean_event()???
+The patchset also available in github as follows:
 
-if (test_and_clear_bit(R5_SkipCopy, &dev->flags)) {
-    WARN_ON(test_bit(R5_UPTODATE, &dev->flags));
-}
+https://github.com/GuoqingJiang/linux/tree/md-for-next
 
-Sometimes it will be triggered as well but I can't find the exactly
-way to reproduce it.
-I would like to know if it is suitable to remove it as well or not.
+Thanks,
+Guoqing
 
+Guoqing Jiang (12):
+  md-cluster: change resync lock from asynchronous to synchronous
+  md-cluser: make resync_finish only called after pers->sync_request
+  md-cluster: wake up thread to continue recovery
+  md-cluster: unregister thread if err happened
+  md-cluster: fix locking when node joins cluster during message
+    broadcast
+  md-cluster: change array_sectors and update size are not supported
+  md-cluster: wakeup thread if activated a spare disk
+  md-cluster: always setup in-memory bitmap
+  md-cluster: sync bitmap when node received RESYNCING msg
+  md-cluster/bitmap: fix wrong calcuation of offset
+  md-cluster/bitmap: fix wrong page num in bitmap_file_clear_bit and
+    bitmap_file_set_bit
+  md-cluster/bitmap: unplug bitmap to sync dirty pages to disk
 
-2016-04-30 5:17 GMT+08:00 Shaohua Li <shli@kernel.org>:
-> On Fri, Apr 29, 2016 at 06:54:10PM +0800, Joey Liao wrote:
->> Hi all,
->>
->> For improving the I/O performance, we try to enable the raid 5
->> skip_copy feature by default. It indeed has some benefit, however, it
->> will always (not a random issue) dump the following call trace
->> repeatedly when we try to write the raid 5 block device. It is related
->> to the following codes in handle_stripe_clean_event() in raid5.c.
->>
->> WARN_ON(test_bit(R5_SkipCopy, &dev->flags));
->> WARN_ON(dev->page != dev->orig_page);
->>
->> Is it a known bug for skip_copy feature?
->> Does it do harm to the data integrity?
->> If we would like to prevent this call trace, for your suggestion how
->> should we do to modify the source code?
->
-> Looks the two WARN_ON should be deleted. if the dev has R5_LOCKED, it's legit
-> the dev has SkipCopy set and page != orig_page. I'll delete the code. This will
-> not harm to data integrity.
->
-> Thanks,
-> Shaohua
+kbuild test robot (1):
+  md-cluster: fix ifnullfree.cocci warnings
+
+ Documentation/md-cluster.txt |  6 ++++
+ drivers/md/bitmap.c          | 85 ++++++++++++++++++++++++++++++++++++++------
+ drivers/md/bitmap.h          |  3 ++
+ drivers/md/md-cluster.c      | 53 ++++++++++++++++++++++-----
+ drivers/md/md.c              | 61 ++++++++++++++++++++-----------
+ 5 files changed, 168 insertions(+), 40 deletions(-)
+
+-- 
+2.6.6
+
