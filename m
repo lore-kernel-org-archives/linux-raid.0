@@ -1,7 +1,7 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH 2/3] md-cluster: gather resync infos and enable recv_thread after bitmap is ready
-Date: Tue,  3 May 2016 22:22:14 -0400
-Message-ID: <1462328535-22566-2-git-send-email-gqjiang@suse.com>
+Subject: [PATCH 3/3] md-cluster: check the return value of process_recvd_msg
+Date: Tue,  3 May 2016 22:22:15 -0400
+Message-ID: <1462328535-22566-3-git-send-email-gqjiang@suse.com>
 References: <1462328535-22566-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1462328535-22566-1-git-send-email-gqjiang@suse.com>
@@ -10,130 +10,66 @@ To: shli@kernel.org
 Cc: neilb@suse.de, linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-The in-memory bitmap is not ready when node joins cluster,
-so it doesn't make sense to make gather_all_resync_info()
-called so earlier, we need to call it after the node's
-bitmap is setup. Also, recv_thread could be wake up after
-node joins cluster, but it could cause problem if node
-receives RESYNCING message without persionality since
-mddev->pers->quiesce is called in process_suspend_info.
-
-This commit introduces a new cluster interface load_bitmaps
-to fix above problems, load_bitmaps is called in bitmap_load
-where bitmap and persionality are ready, and load_bitmaps
-does the following tasks:
-
-1. call gather_all_resync_info to load all the node's
-   bitmap info.
-2. set MD_CLUSTER_ALREADY_IN_CLUSTER bit to recv_thread
-   could be wake up, and wake up recv_thread if there is
-   pending recv event.
-
-Then ack_bast only wakes up recv_thread after IN_CLUSTER
-bit is ready otherwise MD_CLUSTER_PENDING_RESYNC_EVENT is
-set.
+We don't need to run the full path of recv_daemon
+if process_recvd_msg doesn't return 0.
 
 Reviewed-by: NeilBrown <neilb@suse.com>
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- drivers/md/bitmap.c     |  3 +++
- drivers/md/md-cluster.c | 27 ++++++++++++++++++++++-----
- drivers/md/md-cluster.h |  1 +
- 3 files changed, 26 insertions(+), 5 deletions(-)
+ drivers/md/md-cluster.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index ad5a858..d8129ec 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -1848,6 +1848,9 @@ int bitmap_load(struct mddev *mddev)
- 	if (!bitmap)
- 		goto out;
- 
-+	if (mddev_is_clustered(mddev))
-+		md_cluster_ops->load_bitmaps(mddev, mddev->bitmap_info.nodes);
-+
- 	/* Clear out old bitmap info first:  Either there is none, or we
- 	 * are resuming after someone else has possibly changed things,
- 	 * so we should forget old cached info.
 diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index a55b5f4..bee4085 100644
+index bee4085..301207d 100644
 --- a/drivers/md/md-cluster.c
 +++ b/drivers/md/md-cluster.c
-@@ -61,6 +61,10 @@ struct resync_info {
-  * the lock.
-  */
- #define		MD_CLUSTER_SEND_LOCKED_ALREADY		5
-+/* We should receive message after node joined cluster and
-+ * set up all the related infos such as bitmap and personality */
-+#define		MD_CLUSTER_ALREADY_IN_CLUSTER		6
-+#define		MD_CLUSTER_PENDING_RESYNC_EVENT		7
- 
- 
- struct md_cluster_info {
-@@ -376,8 +380,11 @@ static void ack_bast(void *arg, int mode)
- 	struct dlm_lock_resource *res = arg;
- 	struct md_cluster_info *cinfo = res->mddev->cluster_info;
- 
--	if (mode == DLM_LOCK_EX)
-+	if (mode == DLM_LOCK_EX &&
-+	    test_bit(MD_CLUSTER_ALREADY_IN_CLUSTER, &cinfo->state))
- 		md_wakeup_thread(cinfo->recv_thread);
-+	else
-+		set_bit(MD_CLUSTER_PENDING_RESYNC_EVENT, &cinfo->state);
+@@ -519,11 +519,13 @@ static void process_readd_disk(struct mddev *mddev, struct cluster_msg *msg)
+ 			__func__, __LINE__, le32_to_cpu(msg->raid_slot));
  }
  
- static void __remove_suspend_info(struct md_cluster_info *cinfo, int slot)
-@@ -846,10 +853,6 @@ static int join(struct mddev *mddev, int nodes)
- 	if (!cinfo->resync_lockres)
- 		goto err;
- 
--	ret = gather_all_resync_info(mddev, nodes);
--	if (ret)
--		goto err;
--
- 	return 0;
- err:
- 	md_unregister_thread(&cinfo->recovery_thread);
-@@ -867,6 +870,19 @@ err:
- 	return ret;
- }
- 
-+static void load_bitmaps(struct mddev *mddev, int total_slots)
-+{
-+	struct md_cluster_info *cinfo = mddev->cluster_info;
-+
-+	/* load all the node's bitmap info for resync */
-+	if (gather_all_resync_info(mddev, total_slots))
-+		pr_err("md-cluster: failed to gather all resyn infos\n");
-+	set_bit(MD_CLUSTER_ALREADY_IN_CLUSTER, &cinfo->state);
-+	/* wake up recv thread in case something need to be handled */
-+	if (test_and_clear_bit(MD_CLUSTER_PENDING_RESYNC_EVENT, &cinfo->state))
-+		md_wakeup_thread(cinfo->recv_thread);
-+}
-+
- static void resync_bitmap(struct mddev *mddev)
+-static void process_recvd_msg(struct mddev *mddev, struct cluster_msg *msg)
++static int process_recvd_msg(struct mddev *mddev, struct cluster_msg *msg)
  {
- 	struct md_cluster_info *cinfo = mddev->cluster_info;
-@@ -1208,6 +1224,7 @@ static struct md_cluster_operations cluster_ops = {
- 	.add_new_disk_cancel = add_new_disk_cancel,
- 	.new_disk_ack = new_disk_ack,
- 	.remove_disk = remove_disk,
-+	.load_bitmaps = load_bitmaps,
- 	.gather_bitmaps = gather_bitmaps,
- 	.lock_all_bitmaps = lock_all_bitmaps,
- 	.unlock_all_bitmaps = unlock_all_bitmaps,
-diff --git a/drivers/md/md-cluster.h b/drivers/md/md-cluster.h
-index 45ce6c9..e765499 100644
---- a/drivers/md/md-cluster.h
-+++ b/drivers/md/md-cluster.h
-@@ -23,6 +23,7 @@ struct md_cluster_operations {
- 	void (*add_new_disk_cancel)(struct mddev *mddev);
- 	int (*new_disk_ack)(struct mddev *mddev, bool ack);
- 	int (*remove_disk)(struct mddev *mddev, struct md_rdev *rdev);
-+	void (*load_bitmaps)(struct mddev *mddev, int total_slots);
- 	int (*gather_bitmaps)(struct md_rdev *rdev);
- 	int (*lock_all_bitmaps)(struct mddev *mddev);
- 	void (*unlock_all_bitmaps)(struct mddev *mddev);
++	int ret = 0;
++
+ 	if (WARN(mddev->cluster_info->slot_number - 1 == le32_to_cpu(msg->slot),
+ 		"node %d received it's own msg\n", le32_to_cpu(msg->slot)))
+-		return;
++		return -1;
+ 	switch (le32_to_cpu(msg->type)) {
+ 	case METADATA_UPDATED:
+ 		process_metadata_update(mddev, msg);
+@@ -546,9 +548,11 @@ static void process_recvd_msg(struct mddev *mddev, struct cluster_msg *msg)
+ 		__recover_slot(mddev, le32_to_cpu(msg->slot));
+ 		break;
+ 	default:
++		ret = -1;
+ 		pr_warn("%s:%d Received unknown message from %d\n",
+ 			__func__, __LINE__, msg->slot);
+ 	}
++	return ret;
+ }
+ 
+ /*
+@@ -572,7 +576,9 @@ static void recv_daemon(struct md_thread *thread)
+ 
+ 	/* read lvb and wake up thread to process this message_lockres */
+ 	memcpy(&msg, message_lockres->lksb.sb_lvbptr, sizeof(struct cluster_msg));
+-	process_recvd_msg(thread->mddev, &msg);
++	ret = process_recvd_msg(thread->mddev, &msg);
++	if (ret)
++		goto out;
+ 
+ 	/*release CR on ack_lockres*/
+ 	ret = dlm_unlock_sync(ack_lockres);
+@@ -586,6 +592,7 @@ static void recv_daemon(struct md_thread *thread)
+ 	ret = dlm_lock_sync(ack_lockres, DLM_LOCK_CR);
+ 	if (unlikely(ret != 0))
+ 		pr_info("lock CR on ack failed return %d\n", ret);
++out:
+ 	/*release CR on message_lockres*/
+ 	ret = dlm_unlock_sync(message_lockres);
+ 	if (unlikely(ret != 0))
 -- 
 2.6.6
 
