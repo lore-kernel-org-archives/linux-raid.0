@@ -1,75 +1,69 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH 3/3] md-cluster: check the return value of process_recvd_msg
-Date: Tue,  3 May 2016 22:22:15 -0400
-Message-ID: <1462328535-22566-3-git-send-email-gqjiang@suse.com>
-References: <1462328535-22566-1-git-send-email-gqjiang@suse.com>
+From: Joey Liao <joeyliao@qnap.com>
+Subject: Re: Write to the degraded raid5 will trigger the call trace dump when
+ skip_copy is enabled
+Date: Wed, 4 May 2016 11:21:59 +0800
+Message-ID: <CAHvN=intgqwK+Cw=sUb9wBSfF1wimGkbRBrxKOTtd_oZOH2M0w@mail.gmail.com>
+References: <CAHvN=inPP5ubYK1YkNW_B1b9ouhqBo8qMMfVcGSjddMYekDEng@mail.gmail.com>
+	<20160429211719.GA104659@kernel.org>
+	<CAHvN=imVJgEtMmO6XtLCdQKCPiuVT2sCqpq_0qoMR-3aJ+ZzPw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1462328535-22566-1-git-send-email-gqjiang@suse.com>
+In-Reply-To: <CAHvN=imVJgEtMmO6XtLCdQKCPiuVT2sCqpq_0qoMR-3aJ+ZzPw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: shli@kernel.org
-Cc: neilb@suse.de, linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-We don't need to run the full path of recv_daemon
-if process_recvd_msg doesn't return 0.
+Any suggestion for my question in the last e-mail?
+Should the WARN_ON() be exist or not?
 
-Reviewed-by: NeilBrown <neilb@suse.com>
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
----
- drivers/md/md-cluster.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+It is also related to skip_copy feature and I think it seems make
+sense that maybe R5_UPTODATE should not be set in this case.
+But I'm not really sure if my thinking is correct or not.
 
-diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index bee4085..301207d 100644
---- a/drivers/md/md-cluster.c
-+++ b/drivers/md/md-cluster.c
-@@ -519,11 +519,13 @@ static void process_readd_disk(struct mddev *mddev, struct cluster_msg *msg)
- 			__func__, __LINE__, le32_to_cpu(msg->raid_slot));
- }
- 
--static void process_recvd_msg(struct mddev *mddev, struct cluster_msg *msg)
-+static int process_recvd_msg(struct mddev *mddev, struct cluster_msg *msg)
- {
-+	int ret = 0;
-+
- 	if (WARN(mddev->cluster_info->slot_number - 1 == le32_to_cpu(msg->slot),
- 		"node %d received it's own msg\n", le32_to_cpu(msg->slot)))
--		return;
-+		return -1;
- 	switch (le32_to_cpu(msg->type)) {
- 	case METADATA_UPDATED:
- 		process_metadata_update(mddev, msg);
-@@ -546,9 +548,11 @@ static void process_recvd_msg(struct mddev *mddev, struct cluster_msg *msg)
- 		__recover_slot(mddev, le32_to_cpu(msg->slot));
- 		break;
- 	default:
-+		ret = -1;
- 		pr_warn("%s:%d Received unknown message from %d\n",
- 			__func__, __LINE__, msg->slot);
- 	}
-+	return ret;
- }
- 
- /*
-@@ -572,7 +576,9 @@ static void recv_daemon(struct md_thread *thread)
- 
- 	/* read lvb and wake up thread to process this message_lockres */
- 	memcpy(&msg, message_lockres->lksb.sb_lvbptr, sizeof(struct cluster_msg));
--	process_recvd_msg(thread->mddev, &msg);
-+	ret = process_recvd_msg(thread->mddev, &msg);
-+	if (ret)
-+		goto out;
- 
- 	/*release CR on ack_lockres*/
- 	ret = dlm_unlock_sync(ack_lockres);
-@@ -586,6 +592,7 @@ static void recv_daemon(struct md_thread *thread)
- 	ret = dlm_lock_sync(ack_lockres, DLM_LOCK_CR);
- 	if (unlikely(ret != 0))
- 		pr_info("lock CR on ack failed return %d\n", ret);
-+out:
- 	/*release CR on message_lockres*/
- 	ret = dlm_unlock_sync(message_lockres);
- 	if (unlikely(ret != 0))
--- 
-2.6.6
+However, if it does not have to exist, would you mind delete it as
+well or just modify the code?
 
+
+
+2016-05-02 22:45 GMT+08:00 Joey Liao <joeyliao@qnap.com>:
+> Hi Shaohua,
+>
+> Many thanks for your reply.
+>
+> How about the following WARN_ON() in handle_stripe_clean_event()???
+>
+> if (test_and_clear_bit(R5_SkipCopy, &dev->flags)) {
+>     WARN_ON(test_bit(R5_UPTODATE, &dev->flags));
+> }
+>
+> Sometimes it will be triggered as well but I can't find the exactly
+> way to reproduce it.
+> I would like to know if it is suitable to remove it as well or not.
+>
+>
+> 2016-04-30 5:17 GMT+08:00 Shaohua Li <shli@kernel.org>:
+>> On Fri, Apr 29, 2016 at 06:54:10PM +0800, Joey Liao wrote:
+>>> Hi all,
+>>>
+>>> For improving the I/O performance, we try to enable the raid 5
+>>> skip_copy feature by default. It indeed has some benefit, however, it
+>>> will always (not a random issue) dump the following call trace
+>>> repeatedly when we try to write the raid 5 block device. It is related
+>>> to the following codes in handle_stripe_clean_event() in raid5.c.
+>>>
+>>> WARN_ON(test_bit(R5_SkipCopy, &dev->flags));
+>>> WARN_ON(dev->page != dev->orig_page);
+>>>
+>>> Is it a known bug for skip_copy feature?
+>>> Does it do harm to the data integrity?
+>>> If we would like to prevent this call trace, for your suggestion how
+>>> should we do to modify the source code?
+>>
+>> Looks the two WARN_ON should be deleted. if the dev has R5_LOCKED, it's legit
+>> the dev has SkipCopy set and page != orig_page. I'll delete the code. This will
+>> not harm to data integrity.
+>>
+>> Thanks,
+>> Shaohua
