@@ -1,222 +1,139 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH 1/3] md: set MD_CHANGE_PENDING in a atomic region
-Date: Tue,  3 May 2016 22:22:13 -0400
-Message-ID: <1462328535-22566-1-git-send-email-gqjiang@suse.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH 2/3] md-cluster: gather resync infos and enable recv_thread after bitmap is ready
+Date: Tue,  3 May 2016 22:22:14 -0400
+Message-ID: <1462328535-22566-2-git-send-email-gqjiang@suse.com>
+References: <1462328535-22566-1-git-send-email-gqjiang@suse.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1462328535-22566-1-git-send-email-gqjiang@suse.com>
+Sender: linux-raid-owner@vger.kernel.org
 To: shli@kernel.org
-Cc: neilb@suse.de, linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>, Martin Kepplinger <martink@posteo.de>, Andrew Morton <akpm@linux-foundation.org>, Denys Vlasenko <dvlasenk@redhat.com>, Sasha Levin <sasha.levin@oracle.com>, linux-kernel@vger.kernel.org
+Cc: neilb@suse.de, linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-Some code waits for a metadata update by:
+The in-memory bitmap is not ready when node joins cluster,
+so it doesn't make sense to make gather_all_resync_info()
+called so earlier, we need to call it after the node's
+bitmap is setup. Also, recv_thread could be wake up after
+node joins cluster, but it could cause problem if node
+receives RESYNCING message without persionality since
+mddev->pers->quiesce is called in process_suspend_info.
 
-1. flagging that it is needed (MD_CHANGE_DEVS or MD_CHANGE_CLEAN)
-2. setting MD_CHANGE_PENDING and waking the management thread
-3. waiting for MD_CHANGE_PENDING to be cleared
+This commit introduces a new cluster interface load_bitmaps
+to fix above problems, load_bitmaps is called in bitmap_load
+where bitmap and persionality are ready, and load_bitmaps
+does the following tasks:
 
-If the first two are done without locking, the code in md_update_sb()
-which checks if it needs to repeat might test if an update is needed
-before step 1, then clear MD_CHANGE_PENDING after step 2, resulting
-in the wait returning early.
+1. call gather_all_resync_info to load all the node's
+   bitmap info.
+2. set MD_CLUSTER_ALREADY_IN_CLUSTER bit to recv_thread
+   could be wake up, and wake up recv_thread if there is
+   pending recv event.
 
-So make sure all places that set MD_CHANGE_PENDING are atomicial, and
-bit_clear_unless (suggested by Neil) is introduced for the purpose.
+Then ack_bast only wakes up recv_thread after IN_CLUSTER
+bit is ready otherwise MD_CLUSTER_PENDING_RESYNC_EVENT is
+set.
 
-Cc: Martin Kepplinger <martink@posteo.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Denys Vlasenko <dvlasenk@redhat.com>
-Cc: Sasha Levin <sasha.levin@oracle.com>
-Cc: <linux-kernel@vger.kernel.org>
 Reviewed-by: NeilBrown <neilb@suse.com>
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- drivers/md/md.c          | 27 ++++++++++++++-------------
- drivers/md/raid1.c       |  4 ++--
- drivers/md/raid10.c      |  8 ++++----
- drivers/md/raid5-cache.c |  4 ++--
- drivers/md/raid5.c       |  4 ++--
- include/linux/bitops.h   | 16 ++++++++++++++++
- 6 files changed, 40 insertions(+), 23 deletions(-)
+ drivers/md/bitmap.c     |  3 +++
+ drivers/md/md-cluster.c | 27 ++++++++++++++++++++++-----
+ drivers/md/md-cluster.h |  1 +
+ 3 files changed, 26 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 06f6e81..892d639 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -2295,12 +2295,16 @@ repeat:
- 	if (mddev_is_clustered(mddev)) {
- 		if (test_and_clear_bit(MD_CHANGE_DEVS, &mddev->flags))
- 			force_change = 1;
-+		if (test_and_clear_bit(MD_CHANGE_CLEAN, &mddev->flags))
-+			nospares = 1;
- 		ret = md_cluster_ops->metadata_update_start(mddev);
- 		/* Has someone else has updated the sb */
- 		if (!does_sb_need_changing(mddev)) {
- 			if (ret == 0)
- 				md_cluster_ops->metadata_update_cancel(mddev);
--			clear_bit(MD_CHANGE_PENDING, &mddev->flags);
-+			bit_clear_unless(&mddev->flags, BIT(MD_CHANGE_PENDING),
-+							 BIT(MD_CHANGE_DEVS) |
-+							 BIT(MD_CHANGE_CLEAN));
- 			return;
- 		}
- 	}
-@@ -2434,15 +2438,11 @@ repeat:
- 	if (mddev_is_clustered(mddev) && ret == 0)
- 		md_cluster_ops->metadata_update_finish(mddev);
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index ad5a858..d8129ec 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -1848,6 +1848,9 @@ int bitmap_load(struct mddev *mddev)
+ 	if (!bitmap)
+ 		goto out;
  
--	spin_lock(&mddev->lock);
- 	if (mddev->in_sync != sync_req ||
--	    test_bit(MD_CHANGE_DEVS, &mddev->flags)) {
-+	    !bit_clear_unless(&mddev->flags, BIT(MD_CHANGE_PENDING),
-+			       BIT(MD_CHANGE_DEVS) | BIT(MD_CHANGE_CLEAN)))
- 		/* have to write it out again */
--		spin_unlock(&mddev->lock);
- 		goto repeat;
--	}
--	clear_bit(MD_CHANGE_PENDING, &mddev->flags);
--	spin_unlock(&mddev->lock);
- 	wake_up(&mddev->sb_wait);
- 	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
- 		sysfs_notify(&mddev->kobj, NULL, "sync_completed");
-@@ -8147,18 +8147,18 @@ void md_do_sync(struct md_thread *thread)
- 		}
- 	}
-  skip:
--	set_bit(MD_CHANGE_DEVS, &mddev->flags);
--
- 	if (mddev_is_clustered(mddev) &&
- 	    ret == 0) {
- 		/* set CHANGE_PENDING here since maybe another
- 		 * update is needed, so other nodes are informed */
--		set_bit(MD_CHANGE_PENDING, &mddev->flags);
-+		set_mask_bits(&mddev->flags, 0,
-+			      BIT(MD_CHANGE_PENDING) | BIT(MD_CHANGE_DEVS));
- 		md_wakeup_thread(mddev->thread);
- 		wait_event(mddev->sb_wait,
- 			   !test_bit(MD_CHANGE_PENDING, &mddev->flags));
- 		md_cluster_ops->resync_finish(mddev);
--	}
-+	} else
-+		set_bit(MD_CHANGE_DEVS, &mddev->flags);
- 
- 	spin_lock(&mddev->lock);
- 	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
-@@ -8550,6 +8550,7 @@ EXPORT_SYMBOL(md_finish_reshape);
- int rdev_set_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
- 		       int is_new)
- {
-+	struct mddev *mddev = rdev->mddev;
- 	int rv;
- 	if (is_new)
- 		s += rdev->new_data_offset;
-@@ -8559,8 +8560,8 @@ int rdev_set_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
- 	if (rv == 0) {
- 		/* Make sure they get written out promptly */
- 		sysfs_notify_dirent_safe(rdev->sysfs_state);
--		set_bit(MD_CHANGE_CLEAN, &rdev->mddev->flags);
--		set_bit(MD_CHANGE_PENDING, &rdev->mddev->flags);
-+		set_mask_bits(&mddev->flags, 0,
-+			      BIT(MD_CHANGE_CLEAN) | BIT(MD_CHANGE_PENDING));
- 		md_wakeup_thread(rdev->mddev->thread);
- 		return 1;
- 	} else
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index a7f2b9c..c7c8cde 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1474,8 +1474,8 @@ static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
- 	 * if recovery is running, make sure it aborts.
- 	 */
- 	set_bit(MD_RECOVERY_INTR, &mddev->recovery);
--	set_bit(MD_CHANGE_DEVS, &mddev->flags);
--	set_bit(MD_CHANGE_PENDING, &mddev->flags);
-+	set_mask_bits(&mddev->flags, 0,
-+		      BIT(MD_CHANGE_DEVS) | BIT(MD_CHANGE_PENDING));
- 	printk(KERN_ALERT
- 	       "md/raid1:%s: Disk failure on %s, disabling device.\n"
- 	       "md/raid1:%s: Operation continuing on %d devices.\n",
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index e3fd725..f21c4bb 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1102,8 +1102,8 @@ static void __make_request(struct mddev *mddev, struct bio *bio)
- 		bio->bi_iter.bi_sector < conf->reshape_progress))) {
- 		/* Need to update reshape_position in metadata */
- 		mddev->reshape_position = conf->reshape_progress;
--		set_bit(MD_CHANGE_DEVS, &mddev->flags);
--		set_bit(MD_CHANGE_PENDING, &mddev->flags);
-+		set_mask_bits(&mddev->flags, 0,
-+			      BIT(MD_CHANGE_DEVS) | BIT(MD_CHANGE_PENDING));
- 		md_wakeup_thread(mddev->thread);
- 		wait_event(mddev->sb_wait,
- 			   !test_bit(MD_CHANGE_PENDING, &mddev->flags));
-@@ -1591,8 +1591,8 @@ static void raid10_error(struct mddev *mddev, struct md_rdev *rdev)
- 	set_bit(MD_RECOVERY_INTR, &mddev->recovery);
- 	set_bit(Blocked, &rdev->flags);
- 	set_bit(Faulty, &rdev->flags);
--	set_bit(MD_CHANGE_DEVS, &mddev->flags);
--	set_bit(MD_CHANGE_PENDING, &mddev->flags);
-+	set_mask_bits(&mddev->flags, 0,
-+		      BIT(MD_CHANGE_DEVS) | BIT(MD_CHANGE_PENDING));
- 	spin_unlock_irqrestore(&conf->device_lock, flags);
- 	printk(KERN_ALERT
- 	       "md/raid10:%s: Disk failure on %s, disabling device.\n"
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 9531f5f..ac51bc5 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -712,8 +712,8 @@ static void r5l_write_super_and_discard_space(struct r5l_log *log,
- 	 * in_teardown check workaround this issue.
- 	 */
- 	if (!log->in_teardown) {
--		set_bit(MD_CHANGE_DEVS, &mddev->flags);
--		set_bit(MD_CHANGE_PENDING, &mddev->flags);
-+		set_mask_bits(&mddev->flags, 0,
-+			      BIT(MD_CHANGE_DEVS) | BIT(MD_CHANGE_PENDING));
- 		md_wakeup_thread(mddev->thread);
- 		wait_event(mddev->sb_wait,
- 			!test_bit(MD_CHANGE_PENDING, &mddev->flags) ||
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index e48c262..cd110ce 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -2514,8 +2514,8 @@ static void raid5_error(struct mddev *mddev, struct md_rdev *rdev)
- 
- 	set_bit(Blocked, &rdev->flags);
- 	set_bit(Faulty, &rdev->flags);
--	set_bit(MD_CHANGE_DEVS, &mddev->flags);
--	set_bit(MD_CHANGE_PENDING, &mddev->flags);
-+	set_mask_bits(&mddev->flags, 0,
-+		      BIT(MD_CHANGE_DEVS) | BIT(MD_CHANGE_PENDING));
- 	printk(KERN_ALERT
- 	       "md/raid:%s: Disk failure on %s, disabling device.\n"
- 	       "md/raid:%s: Operation continuing on %d devices.\n",
-diff --git a/include/linux/bitops.h b/include/linux/bitops.h
-index defeaac..299e76b 100644
---- a/include/linux/bitops.h
-+++ b/include/linux/bitops.h
-@@ -227,6 +227,22 @@ static inline unsigned long __ffs64(u64 word)
- })
- #endif
- 
-+#ifndef bit_clear_unless
-+#define bit_clear_unless(ptr, _clear, _test)	\
-+({								\
-+	const typeof(*ptr) clear = (_clear), test = (_test);	\
-+	typeof(*ptr) old, new;					\
-+								\
-+	do {							\
-+		old = ACCESS_ONCE(*ptr);			\
-+		new = old & ~clear;				\
-+	} while (!(old & test) &&				\
-+		 cmpxchg(ptr, old, new) != old);		\
-+								\
-+	!(old & test);						\
-+})
-+#endif
++	if (mddev_is_clustered(mddev))
++		md_cluster_ops->load_bitmaps(mddev, mddev->bitmap_info.nodes);
 +
- #ifndef find_last_bit
- /**
-  * find_last_bit - find the last set bit in a memory region
+ 	/* Clear out old bitmap info first:  Either there is none, or we
+ 	 * are resuming after someone else has possibly changed things,
+ 	 * so we should forget old cached info.
+diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+index a55b5f4..bee4085 100644
+--- a/drivers/md/md-cluster.c
++++ b/drivers/md/md-cluster.c
+@@ -61,6 +61,10 @@ struct resync_info {
+  * the lock.
+  */
+ #define		MD_CLUSTER_SEND_LOCKED_ALREADY		5
++/* We should receive message after node joined cluster and
++ * set up all the related infos such as bitmap and personality */
++#define		MD_CLUSTER_ALREADY_IN_CLUSTER		6
++#define		MD_CLUSTER_PENDING_RESYNC_EVENT		7
+ 
+ 
+ struct md_cluster_info {
+@@ -376,8 +380,11 @@ static void ack_bast(void *arg, int mode)
+ 	struct dlm_lock_resource *res = arg;
+ 	struct md_cluster_info *cinfo = res->mddev->cluster_info;
+ 
+-	if (mode == DLM_LOCK_EX)
++	if (mode == DLM_LOCK_EX &&
++	    test_bit(MD_CLUSTER_ALREADY_IN_CLUSTER, &cinfo->state))
+ 		md_wakeup_thread(cinfo->recv_thread);
++	else
++		set_bit(MD_CLUSTER_PENDING_RESYNC_EVENT, &cinfo->state);
+ }
+ 
+ static void __remove_suspend_info(struct md_cluster_info *cinfo, int slot)
+@@ -846,10 +853,6 @@ static int join(struct mddev *mddev, int nodes)
+ 	if (!cinfo->resync_lockres)
+ 		goto err;
+ 
+-	ret = gather_all_resync_info(mddev, nodes);
+-	if (ret)
+-		goto err;
+-
+ 	return 0;
+ err:
+ 	md_unregister_thread(&cinfo->recovery_thread);
+@@ -867,6 +870,19 @@ err:
+ 	return ret;
+ }
+ 
++static void load_bitmaps(struct mddev *mddev, int total_slots)
++{
++	struct md_cluster_info *cinfo = mddev->cluster_info;
++
++	/* load all the node's bitmap info for resync */
++	if (gather_all_resync_info(mddev, total_slots))
++		pr_err("md-cluster: failed to gather all resyn infos\n");
++	set_bit(MD_CLUSTER_ALREADY_IN_CLUSTER, &cinfo->state);
++	/* wake up recv thread in case something need to be handled */
++	if (test_and_clear_bit(MD_CLUSTER_PENDING_RESYNC_EVENT, &cinfo->state))
++		md_wakeup_thread(cinfo->recv_thread);
++}
++
+ static void resync_bitmap(struct mddev *mddev)
+ {
+ 	struct md_cluster_info *cinfo = mddev->cluster_info;
+@@ -1208,6 +1224,7 @@ static struct md_cluster_operations cluster_ops = {
+ 	.add_new_disk_cancel = add_new_disk_cancel,
+ 	.new_disk_ack = new_disk_ack,
+ 	.remove_disk = remove_disk,
++	.load_bitmaps = load_bitmaps,
+ 	.gather_bitmaps = gather_bitmaps,
+ 	.lock_all_bitmaps = lock_all_bitmaps,
+ 	.unlock_all_bitmaps = unlock_all_bitmaps,
+diff --git a/drivers/md/md-cluster.h b/drivers/md/md-cluster.h
+index 45ce6c9..e765499 100644
+--- a/drivers/md/md-cluster.h
++++ b/drivers/md/md-cluster.h
+@@ -23,6 +23,7 @@ struct md_cluster_operations {
+ 	void (*add_new_disk_cancel)(struct mddev *mddev);
+ 	int (*new_disk_ack)(struct mddev *mddev, bool ack);
+ 	int (*remove_disk)(struct mddev *mddev, struct md_rdev *rdev);
++	void (*load_bitmaps)(struct mddev *mddev, int total_slots);
+ 	int (*gather_bitmaps)(struct md_rdev *rdev);
+ 	int (*lock_all_bitmaps)(struct mddev *mddev);
+ 	void (*unlock_all_bitmaps)(struct mddev *mddev);
 -- 
 2.6.6
+
