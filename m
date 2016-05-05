@@ -1,50 +1,58 @@
-From: Mike Christie <mchristi@redhat.com>
-Subject: Re: [PATCH 00/42] v7: separate operations from flags in the
- bio/request structs
-Date: Wed, 4 May 2016 13:04:45 -0500
-Message-ID: <572A39BD.8020405@redhat.com>
-References: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
- <x49d1p2c1nx.fsf@segfault.boston.devel.redhat.com>
- <572A36BF.3070208@redhat.com>
- <x49a8k5aen2.fsf@segfault.boston.devel.redhat.com>
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: Re: [PATCH 0/2] Check node nums for cluster raid
+Date: Wed, 4 May 2016 23:03:11 -0400
+Message-ID: <572AB7EF.6090403@suse.com>
+References: <1462350824-9872-1-git-send-email-gqjiang@suse.com>
+ <wrfjinytx3fv.fsf@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ext4-owner@vger.kernel.org>
-In-Reply-To: <x49a8k5aen2.fsf@segfault.boston.devel.redhat.com>
-Sender: linux-ext4-owner@vger.kernel.org
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <wrfjinytx3fv.fsf@redhat.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 05/04/2016 12:58 PM, Jeff Moyer wrote:
-> Mike Christie <mchristi@redhat.com> writes:
-> 
->> On 05/03/2016 03:44 PM, Jeff Moyer wrote:
->>> Hi, Mike,
->>>
->>> That git tree doesn't seem to exist.  I did manage to apply your patch
->>> set on top of next-20160415, though.
->>>
->>> So... what testing did you do? ;-) I ran into the following problems
->>
->> I normally run xfstests and run it on my daily workstation and laptop. I
->> did not do this for every FS this time and hit a regression.
->>
->> What FS were you using?
-> 
-> I'm using xfs, scsi disk, no blk-mq, no dm.
-> 
->>> - git clone fails
->>> - yum segfaults
->>
->> In v7/v6, I missed a new submit_bio call, so I hit issues like the two
->> above. I have this fixed in the next version.
-> 
-> OK, does this mean you're posting another version, or you already did
-> and I somehow missed it?
-> 
+Hi Jes,
 
-I did not repost yet. I am still testing. Jens had me add some wrappers
-around the operation access, so because of my last screw up and the
-wrapper change affected all my patches I am redoing all my testing.
+On 05/04/2016 11:12 AM, Jes Sorensen wrote:
+> Guoqing Jiang <gqjiang@suse.com> writes:
+>> For cluster raid, we do need at least two nodes for it,
+>> the two patches add the checks before create and change
+>> bitmap.
+>>
+>> Thanks,
+>> Guoqing
+>>
+>> Guoqing Jiang (2):
+>>    Create: check the node nums when create clustered raid
+>>    super1: don't update node nums if it is not more than 1
+>>
+>>   Create.c | 7 ++++++-
+>>   super1.c | 5 +++++
+>>   2 files changed, 11 insertions(+), 1 deletion(-)
+> Hi Guoqing,
+>
+> I am a little confused on this one - albeit I haven't looked at it in
+> detail. Why should it not be possible to start a cluster with one node?
+> In theory you should be able to do that, and then add nodes later?
+
+The "nodes" means how many nodes could run with the clustered raid.
+IOW, if nodes is set to 1, then we can't assemble the clustered raid in
+node B after clustered raid is created in node A.
+
+And we had provided below protection in md-cluster.c, so it doesn't make
+sense to create clustered raid with "nodes = 1" since we can't use this raid
+across cluster.
+
+f (nodes < cinfo->slot_number) {
+                 pr_err("md-cluster: Slot allotted(%d) is greater than 
+available slots(%d).",
+                         cinfo->slot_number, nodes);
+                 ret = -ERANGE;
+                 goto err;
+}
+
+Regards,
+Guoqing
