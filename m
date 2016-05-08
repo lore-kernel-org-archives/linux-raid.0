@@ -1,31 +1,53 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH 1/3] md: set MD_CHANGE_PENDING in a atomic region
-Date: Sun, 8 May 2016 15:12:27 -0700
-Message-ID: <20160508221227.GA2271@kernel.org>
-References: <1462328535-22566-1-git-send-email-gqjiang@suse.com>
+Subject: Re: Write to the degraded raid5 will trigger the call trace dump
+ when skip_copy is enabled
+Date: Sun, 8 May 2016 15:23:40 -0700
+Message-ID: <20160508222340.GA8100@kernel.org>
+References: <CAHvN=inPP5ubYK1YkNW_B1b9ouhqBo8qMMfVcGSjddMYekDEng@mail.gmail.com>
+ <20160429211719.GA104659@kernel.org>
+ <CAHvN=imVJgEtMmO6XtLCdQKCPiuVT2sCqpq_0qoMR-3aJ+ZzPw@mail.gmail.com>
+ <CAHvN=intgqwK+Cw=sUb9wBSfF1wimGkbRBrxKOTtd_oZOH2M0w@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1462328535-22566-1-git-send-email-gqjiang@suse.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>
-Cc: neilb@suse.de, linux-raid@vger.kernel.org, Martin Kepplinger <martink@posteo.de>, Andrew Morton <akpm@linux-foundation.org>, Denys Vlasenko <dvlasenk@redhat.com>, Sasha Levin <sasha.levin@oracle.com>, linux-kernel@vger.kernel.org
+In-Reply-To: <CAHvN=intgqwK+Cw=sUb9wBSfF1wimGkbRBrxKOTtd_oZOH2M0w@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Joey Liao <joeyliao@qnap.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, May 03, 2016 at 10:22:13PM -0400, Guoqing Jiang wrote:
-> Some code waits for a metadata update by:
+On Wed, May 04, 2016 at 11:21:59AM +0800, Joey Liao wrote:
+> Any suggestion for my question in the last e-mail?
+> Should the WARN_ON() be exist or not?
 > 
-> 1. flagging that it is needed (MD_CHANGE_DEVS or MD_CHANGE_CLEAN)
-> 2. setting MD_CHANGE_PENDING and waking the management thread
-> 3. waiting for MD_CHANGE_PENDING to be cleared
+> It is also related to skip_copy feature and I think it seems make
+> sense that maybe R5_UPTODATE should not be set in this case.
+> But I'm not really sure if my thinking is correct or not.
 > 
-> If the first two are done without locking, the code in md_update_sb()
-> which checks if it needs to repeat might test if an update is needed
-> before step 1, then clear MD_CHANGE_PENDING after step 2, resulting
-> in the wait returning early.
+> However, if it does not have to exist, would you mind delete it as
+> well or just modify the code?
 > 
-> So make sure all places that set MD_CHANGE_PENDING are atomicial, and
-> bit_clear_unless (suggested by Neil) is introduced for the purpose.
+> 
+> 
+> 2016-05-02 22:45 GMT+08:00 Joey Liao <joeyliao@qnap.com>:
+> > Hi Shaohua,
+> >
+> > Many thanks for your reply.
+> >
+> > How about the following WARN_ON() in handle_stripe_clean_event()???
+> >
+> > if (test_and_clear_bit(R5_SkipCopy, &dev->flags)) {
+> >     WARN_ON(test_bit(R5_UPTODATE, &dev->flags));
+> > }
+> >
+> > Sometimes it will be triggered as well but I can't find the exactly
+> > way to reproduce it.
+> > I would like to know if it is suitable to remove it as well or not.
 
-Applied the 3, thanks!
+This one isn't false alarm. If the dev->flags has R5_SkipCopy, we don't copy
+data to stripe cache, so stripe cache shouldn't have R5_UPTODATE. So this
+warning indicates a bug. If you can reproduce it, I'd be happy to debug.
+
+Thanks,
+Shaohua
