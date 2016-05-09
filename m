@@ -1,25 +1,26 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md: raid5: add prerequisite to run underneath dm-raid
-Date: Mon, 9 May 2016 09:42:31 -0700
-Message-ID: <20160509164231.GA11021@kernel.org>
-References: <1462809009-2809-1-git-send-email-heinzm@redhat.com>
+From: SharksArt <sharksart@gmail.com>
+Subject: Re: RAID5 - =?utf-8?b?cmVzaGFwZV9wb3NpdGlvbg==?= too early for auto-recovery - aborting
+Date: Mon, 9 May 2016 16:43:48 +0000 (UTC)
+Message-ID: <loom.20160509T184322-684@post.gmane.org>
+References: <CAJwyido42Gk0uoMCKCLXk0dLfJ+J91uS=4N359fG0jkwg=jAGw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1462809009-2809-1-git-send-email-heinzm@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: heinzm@redhat.com
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, May 09, 2016 at 05:50:09PM +0200, heinzm@redhat.com wrote:
-> From: Heinz Mauelshagen <heinzm@redhat.com>
-> 
-> In case md runs underneath the dm-raid target, the mddev does not have
-> a request queue or gendisk, thus avoid accesses.
-> 
-> This patch adds a missing conditional to the raid5 personality.
+Hi,
 
-already added the 3 patches to my tree since you last post. I probably forgot
-to reply you though, sorry.
+I searched again on this mailing list and i've just found the
+--update=revert-reshape and it works well ! My RAID 5 is now up and my
+volume is Ok :)
+
+In my case : mdadm --assemble --verbose --force --update=revert-reshape
+--invalid-backup --backup-file=/whatever /dev/md/3 /dev/sd[bcdefg]6
+
+Now, i will make a full backup of my datas before growing ^_^'
+
+Laurent
+
