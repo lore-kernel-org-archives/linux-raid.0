@@ -1,197 +1,88 @@
-From: bobzer <bobzer@gmail.com>
-Subject: raid 5 crashed
-Date: Tue, 10 May 2016 23:28:31 +0200
-Message-ID: <CADzS=aoMEaFv5TPYUpYBnLhOpF+u9dtG6aa=JZ5gd=Qv1=OrMQ@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: problems with lots of arrays
+Date: Wed, 11 May 2016 08:39:53 +1000
+Message-ID: <87wpn1sfk6.fsf@notabene.neil.brown.name>
+References: <CAK9wOaB+Cic3nR5kzB3n=nVpbRtfo8+Qr9j_VNM3hh5tJRw6YA@mail.gmail.com> <wrfj8tzhk5by.fsf@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <wrfj8tzhk5by.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>, Mike Lovell <mike.lovell@endurance.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-hi everyone,
+--=-=-=
+Content-Type: text/plain
 
-I'm in panic mode :-( because i got a raid 5 with 4 disk but 2 removed
-yesterday i got a power outage which removed one disk. the disks
-sd[bcd]1 was ok and saying that sde1 is removed but sde1 said that
-everything is fine.
-so i stop the raid, zero the superblock of sde1, start the raid and
-add sde1 to the raid. then it start to reconstruct, i think it had
-time to finish before this problem (i'm not 100% sure that it finish
-but i think so)
-the data was accessible so i went to sleep
-today i discovered the raid in this state :
+On Wed, May 11 2016, Jes Sorensen wrote:
 
-root@serveur:/home/math# mdadm -D /dev/md0
-/dev/md0:
-        Version : 1.2
-  Creation Time : Sun Mar  4 22:49:14 2012
-     Raid Level : raid5
-     Array Size : 5860532352 (5589.04 GiB 6001.19 GB)
-  Used Dev Size : 1953510784 (1863.01 GiB 2000.40 GB)
-   Raid Devices : 4
-  Total Devices : 4
-    Persistence : Superblock is persistent
+> Mike Lovell <mike.lovell@endurance.com> writes:
+>> we have a number of systems that have a large number of software
+>> arrays running. its in the couple hundred range. we have been using a
+>> custom built kernel based on 3.4 but are wanting to update to a
+>> mainline kernel and have been experimenting with 4.4. the systems are
+>> running recent centos 6 releases but we have been downgrading the
+>> mdadm version from 3.3.2 in 6.7 to a custom build 3.2.6. we installed
+>> the downgraded version due to a problem with array numbering. i
+>> emailed the list a while ago explaining the issue and submitting a
+>> patch to fix [1]. i never heard anything back and since we had a
+>> simple fix i didn't follow up on it.
+>
+> [snip]
+>
+>> what do you all think?
+>>
+>> thanks
+>> mike
+>>
+>> [1] http://marc.info/?l=linux-raid&m=142387809409798&w=2
+>
+> Staying consistent in using dev_t rather than casting back and forth to
+> int seems a reasonable fix to apply to mdadm. It obviously won't change
+> the issues with the newer kernels, but I don't see any reason why we
+> shouldn't apply that fix to mdadm.
+>
+> Neil any thoughts on this?
 
-    Update Time : Fri May  6 17:44:02 2016
-          State : clean, FAILED
- Active Devices : 2
-Working Devices : 3
- Failed Devices : 1
-  Spare Devices : 1
+I agree that changing "int" to "dev_t" is a good idea.
 
-         Layout : left-symmetric
-     Chunk Size : 128K
+We should really fix the more general problem too.
 
-           Name : debian:0
-           UUID : bf3c605b:9699aa55:d45119a2:7ba58d56
-         Events : 892482
+On any kernel with  /sys/module/md_mod/parameters/new_array
+find_free_devnm avoid trying anything above 511. (1<<9)-1.
 
-    Number   Major   Minor   RaidDevice State
-       3       8       33        0      active sync   /dev/sdc1
-       1       8       49        1      active sync   /dev/sdd1
-       4       0        0        4      removed
-       6       0        0        6      removed
+If that fails to find a free number, then it should probably try a name
+like "md_NN" and act as though ci->name is set.
 
-       4       8       17        -      faulty   /dev/sdb1
-       5       8       65        -      spare   /dev/sde1
+Also, when a "name" given for the md array that is longer than 28 bytes
+we need to fall back to choose an array name ourselves even if ci->name
+is set.  Start with md_512 and work upwards.
+Rather than probing we should read /sys/block looking for "md_*" and
+maybe choose 1 more than the largest number found.
 
+Thanks,
+NeilBrown
 
-root@serveur:/home/math# mdadm --examine /dev/sdb1
-/dev/sdb1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : bf3c605b:9699aa55:d45119a2:7ba58d56
-           Name : debian:0
-  Creation Time : Sun Mar  4 22:49:14 2012
-     Raid Level : raid5
-   Raid Devices : 4
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
- Avail Dev Size : 3907021954 (1863.01 GiB 2000.40 GB)
-     Array Size : 5860532352 (5589.04 GiB 6001.19 GB)
-  Used Dev Size : 3907021568 (1863.01 GiB 2000.40 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=1960 sectors, after=386 sectors
-          State : clean
-    Device UUID : 9bececcb:d520ca38:fd88d956:5718e361
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-    Update Time : Fri May  6 02:07:00 2016
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : dc2a133a - correct
-         Events : 892215
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-   Device Role : Active device 2
-   Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
-
-
-root@serveur:/home/math# mdadm --examine /dev/sdc1
-/dev/sdc1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : bf3c605b:9699aa55:d45119a2:7ba58d56
-           Name : debian:0
-  Creation Time : Sun Mar  4 22:49:14 2012
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 3907021954 (1863.01 GiB 2000.40 GB)
-     Array Size : 5860532352 (5589.04 GiB 6001.19 GB)
-  Used Dev Size : 3907021568 (1863.01 GiB 2000.40 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=1960 sectors, after=386 sectors
-          State : clean
-    Device UUID : 1ecaf51c:3289a902:7bb71a93:237c68e8
-
-    Update Time : Fri May  6 17:58:27 2016
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : b9d6aa84 - correct
-         Events : 892484
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-   Device Role : Active device 0
-   Array State : AA.. ('A' == active, '.' == missing, 'R' == replacing)
-
-root@serveur:/home/math# mdadm --examine /dev/sdd1
-/dev/sdd1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : bf3c605b:9699aa55:d45119a2:7ba58d56
-           Name : debian:0
-  Creation Time : Sun Mar  4 22:49:14 2012
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 3907021954 (1863.01 GiB 2000.40 GB)
-     Array Size : 5860532352 (5589.04 GiB 6001.19 GB)
-  Used Dev Size : 3907021568 (1863.01 GiB 2000.40 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=0 sectors, after=386 sectors
-          State : clean
-    Device UUID : 406c4cb5:c188e4a9:7ed8be9f:14a49b16
-
-    Update Time : Fri May  6 17:58:27 2016
-  Bad Block Log : 512 entries available at offset 2032 sectors
-       Checksum : 343f9cd0 - correct
-         Events : 892484
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-   Device Role : Active device 1
-   Array State : AA.. ('A' == active, '.' == missing, 'R' == replacing)
-
-
-root@serveur:/home/math# mdadm --examine /dev/sde1
-/dev/sde1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x8
-     Array UUID : bf3c605b:9699aa55:d45119a2:7ba58d56
-           Name : debian:0
-  Creation Time : Sun Mar  4 22:49:14 2012
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 3907025072 (1863.01 GiB 2000.40 GB)
-     Array Size : 5860532352 (5589.04 GiB 6001.19 GB)
-  Used Dev Size : 3907021568 (1863.01 GiB 2000.40 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=1960 sectors, after=3504 sectors
-          State : clean
-    Device UUID : f2e9c1ec:2852cf21:1a588581:b9f49a8b
-
-    Update Time : Fri May  6 17:58:27 2016
-  Bad Block Log : 512 entries available at offset 72 sectors - bad
-blocks present.
-       Checksum : 3a65b8bc - correct
-         Events : 892484
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-   Device Role : spare
-   Array State : AA.. ('A' == active, '.' == missing, 'R' == replacing)
-
-
-
-PLEASE help me :-) i don't know what to do so i did nothing to not do
-any stupid things
-1000 thank you
-
-ps i just saw this, i hope it not mak y case worst
-root@serveur:/home/math# cat /etc/mdadm/mdadm.conf
-DEVICE /dev/sd[bcd]1
-ARRAY /dev/md0 metadata=1.2 name=debian:0
-UUID=bf3c605b:9699aa55:d45119a2:7ba58d56
+iQIcBAEBCAAGBQJXMmM5AAoJEDnsnt1WYoG5QkwQAJmJJU4dGnlJb/4pHPWxXegn
+s6XgdThzVnNumyG26NPvI54T33VCmG1R/TykGsE/N2dyfyGEY9zYNAidsHZrDj7q
+Z5gLdGddfFvjx+xlnRNJhYe9KPJCSV+MhKlQppAbHawWmufLynqOC+fh5g+yhJbM
+I91fzn5FA/tCKDVagkw+PZtFem2L29JcQePtQ5nYIotrgCejVA6ZIYSTw4OzYMJL
+JpamA1B5SWZIVyjjYvyMW/+h8L7uPznAld0TTQ4QhgYwiFj4WUaorzpaQF9Nsq2l
+hLyipxvjrCgZio0+qLiVUX8pan7S60q0NKXSwm/I6y0/0vmQKeHqE27I5xjXnovZ
+/l1lLPd9TBiCOSzASNUvHXJsR3IUF4oDu7JDvCFHAaP4ybwsDsSPr2k7KewYplTJ
+iGUabMddL2ObsECAnPEveOb4vkKdwylcmSHo6c0qlcfdShMM3SvxymaYY1SKUAT1
+60H24TY1uHEy4PMbCxQlww6/JTCpbENW8IuCHh0u/qztr4i9ddijzSNBKeRR4dLw
+paldvRcQeKr7mT2EnQm4Mci2dn+Zdng1PbaJjnc1Dp0XzBGGSR7jRaI+VDS9hjew
+/gA9mpf9HFqf1VR6eS/YlmVZpMoGG6U14YWHtLRX8UVIteClcIE1xOSA29KukpKr
+wupKFTTNj8vfiizFW9ru
+=d7JI
+-----END PGP SIGNATURE-----
+--=-=-=--
