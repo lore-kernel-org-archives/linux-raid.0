@@ -1,59 +1,45 @@
-From: Heinz Mauelshagen <heinzm@redhat.com>
-Subject: Re: [PATCH] md: raid5: add prerequisite to run underneath dm-raid
-Date: Mon, 9 May 2016 23:31:04 +0200
-Message-ID: <57310198.9070001@redhat.com>
-References: <1462809009-2809-1-git-send-email-heinzm@redhat.com>
- <wrfj8tzjrmbd.fsf@redhat.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: problems with lots of arrays
+Date: Tue, 10 May 2016 16:48:01 -0400
+Message-ID: <wrfj8tzhk5by.fsf@redhat.com>
+References: <CAK9wOaB+Cic3nR5kzB3n=nVpbRtfo8+Qr9j_VNM3hh5tJRw6YA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfj8tzjrmbd.fsf@redhat.com>
+In-Reply-To: <CAK9wOaB+Cic3nR5kzB3n=nVpbRtfo8+Qr9j_VNM3hh5tJRw6YA@mail.gmail.com>
+	(Mike Lovell's message of "Thu, 5 May 2016 17:24:29 -0600")
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-raid@vger.kernel.org
+To: Mike Lovell <mike.lovell@endurance.com>
+Cc: linux-raid@vger.kernel.org, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
+Mike Lovell <mike.lovell@endurance.com> writes:
+> we have a number of systems that have a large number of software
+> arrays running. its in the couple hundred range. we have been using a
+> custom built kernel based on 3.4 but are wanting to update to a
+> mainline kernel and have been experimenting with 4.4. the systems are
+> running recent centos 6 releases but we have been downgrading the
+> mdadm version from 3.3.2 in 6.7 to a custom build 3.2.6. we installed
+> the downgraded version due to a problem with array numbering. i
+> emailed the list a while ago explaining the issue and submitting a
+> patch to fix [1]. i never heard anything back and since we had a
+> simple fix i didn't follow up on it.
 
+[snip]
 
-On 05/09/2016 10:47 PM, Jes Sorensen wrote:
-> heinzm@redhat.com writes:
->> From: Heinz Mauelshagen <heinzm@redhat.com>
->>
->> In case md runs underneath the dm-raid target, the mddev does not have
->> a request queue or gendisk, thus avoid accesses.
->>
->> This patch adds a missing conditional to the raid5 personality.
->>
->>
->> Signed-of-by: Heinz Mauelshagen <heinzm@redhat.com>
->>
->>
->> ---
->>   drivers/md/raid5.c | 6 ++++--
->>   1 file changed, 4 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> index 8ab8b65..ce79ce6 100644
->> --- a/drivers/md/raid5.c
->> +++ b/drivers/md/raid5.c
->> @@ -7574,8 +7574,10 @@ static void raid5_finish_reshape(struct mddev *mddev)
->>   
->>   		if (mddev->delta_disks > 0) {
->>   			md_set_array_sectors(mddev, raid5_size(mddev, 0, 0));
->> -			set_capacity(mddev->gendisk, mddev->array_sectors);
->> -			revalidate_disk(mddev->gendisk);
->> +			if (mddev->queue) {
->> +				set_capacity(mddev->gendisk, mddev->array_sectors);
->> +				revalidate_disk(mddev->gendisk);
->> +			}
-> Since we're in the code taste mode, this is a reminder that kernel code
-> is 80 characters per line :)
-
-Hehe, gotta shorten > 20 lines in raid5.c alone then :-)
-
-Heinz
-
+> what do you all think?
 >
-> Jes
+> thanks
+> mike
+>
+> [1] http://marc.info/?l=linux-raid&m=142387809409798&w=2
 
+Staying consistent in using dev_t rather than casting back and forth to
+int seems a reasonable fix to apply to mdadm. It obviously won't change
+the issues with the newer kernels, but I don't see any reason why we
+shouldn't apply that fix to mdadm.
+
+Neil any thoughts on this?
+
+Cheers,
+Jes
