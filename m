@@ -1,59 +1,37 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH] super1: add more checks for NodeNumUpdate option
-Date: Wed, 11 May 2016 17:31:36 +0800
-Message-ID: <1462959096-11272-1-git-send-email-gqjiang@suse.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: raid 5 crashed
+Date: Wed, 11 May 2016 14:09:09 +0200 (CEST)
+Message-ID: <alpine.DEB.2.02.1605111406530.28372@uplift.swm.pp.se>
+References: <CADzS=aoMEaFv5TPYUpYBnLhOpF+u9dtG6aa=JZ5gd=Qv1=OrMQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CADzS=aoMEaFv5TPYUpYBnLhOpF+u9dtG6aa=JZ5gd=Qv1=OrMQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@redhat.com
-Cc: linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
+To: bobzer <bobzer@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-There are some cases which didn't need to check the space
-is enough or not for NodeNumUpdate option.
+On Tue, 10 May 2016, bobzer wrote:
 
-1. for array which does not have clustered bitmap.
-2. "--nodes" parameter is 0 (eg, add a disk to clustered raid).
-3. if "--nodes" parameter is set to a smaller num than
-   current bms->nodes.
+> PLEASE help me :-) i don't know what to do so i did nothing to not do 
+> any stupid things 1000 thank you
 
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
----
- super1.c | 22 +++++++++++++++++++---
- 1 file changed, 19 insertions(+), 3 deletions(-)
+What does dmesg say? Did you get read error on one of the remaining 3 
+drives? Then you need to look into the archives to use dd_rescue to get as 
+much data off of that drive as possible, and try again.
 
-diff --git a/super1.c b/super1.c
-index fa93367..3d25fae 100644
---- a/super1.c
-+++ b/super1.c
-@@ -2394,9 +2394,25 @@ static int write_bitmap1(struct supertype *st, int fd, enum bitmap_update update
- 			return -EINVAL;
- 		}
- 
--		if (bms->version == BITMAP_MAJOR_CLUSTERED && st->nodes <= 1) {
--			pr_err("Warning: cluster-md at least needs two nodes\n");
--			return -EINVAL;
-+		if (bms->version == BITMAP_MAJOR_CLUSTERED) {
-+			if (st->nodes == 1) {
-+				/* the parameter for nodes is not valid */
-+				pr_err("Warning: cluster-md at least needs two nodes\n");
-+				return -EINVAL;
-+			} else if (st->nodes == 0)
-+				/* --nodes is not specified */
-+				break;
-+			else if (__cpu_to_le32(st->nodes) < bms->nodes) {
-+				/* Since the nodes num is not increased, no need to check the space
-+				 * is enough or not, just update bms->nodes */
-+				bms->nodes = __cpu_to_le32(st->nodes);
-+				break;
-+			}
-+		} else {
-+			/* no need to change bms->nodes for other bitmap types */
-+			if (st->nodes)
-+				pr_err("Warning: --nodes option is only suitable for clustered bitmap\n");
-+			break;
- 		}
- 
- 		/* Each node has an independent bitmap, it is necessary to calculate the
+It would also help if you provided what kernel version and mdadm version 
+you're using.
+
+Before you try again, also do this:
+
+for x in /sys/block/sd[a-z] ; do
+         echo 180  > $x/device/timeout
+done
+
+This makes sure the kernel will not kick a drive that might take long to 
+respond due to read errors.
+
 -- 
-2.6.2
-
+Mikael Abrahamsson    email: swmike@swm.pp.se
