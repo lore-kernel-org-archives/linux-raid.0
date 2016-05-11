@@ -1,66 +1,47 @@
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: [PATCH v1] dm-crypt: replace custom implementation of hex2bin()
-Date: Wed, 11 May 2016 02:24:11 +0300
-Message-ID: <1462922651-6465-1-git-send-email-andy.shevchenko@gmail.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH] md: make the code more readable in the for-loop
+Date: Tue, 10 May 2016 17:29:36 -0700
+Message-ID: <20160511002936.GA127453@kernel.org>
+References: <318e71b0.3d4e.1549071292b.Coremail.kernelpatch@126.com>
+ <572FCCD3.4070907@eyal.emu.id.au>
+ <20160509035319.GA57828@kernel.org>
+ <87inynu4he.fsf@notabene.neil.brown.name>
+ <wrfjd1ovrmdp.fsf@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <wrfjd1ovrmdp.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>, linux-raid@vger.kernel.org
-Cc: Andy Shevchenko <andy.shevchenko@gmail.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: NeilBrown <nfbrown@novell.com>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid@vger.kernel.org, kernelpatch@126.com
 List-Id: linux-raid.ids
 
-There is no need to have a duplication of the generic library, i.e. hex2bin().
-Replace the open coded variant.
+On Mon, May 09, 2016 at 04:45:38PM -0400, Jes Sorensen wrote:
+> NeilBrown <nfbrown@novell.com> writes:
+> > On Mon, May 09 2016, Shaohua Li wrote:
+> >
+> >> On Mon, May 09, 2016 at 09:33:39AM +1000, Eyal Lebedinsky wrote:
+> >>> I do not see how this change makes it clearer. The original form is
+> >>> actually a very common and clear
+> >>> 	scan an array in reverse order
+> >>
+> >> People always have different opinions for this stuff. When I read '--j' or
+> >> 'j--', I always think extra time what the value of j is. So for me the change
+> >> actually makes the code more readable :)
+> >
+> > If the goal is to make the code more readable, you may as well make it:
+> >
+> >   for (j = 0; i < ->raid_disk; j++)
+> >
+> > That will be clearer to most people than the current code, which I don't
+> > think is very much clearer than the original (maybe a little bit).
+> 
+> I agree - I had to read the updated version multiple times to convince
+> myself it was doing the same thing as the original.
 
-Signed-off-by: Andy Shevchenko <andy.shevchenko@gmail.com>
----
- drivers/md/dm-crypt.c | 27 ++-------------------------
- 1 file changed, 2 insertions(+), 25 deletions(-)
+ok, droped the patch. If Tiezhu Yang is willing to post a new one as neil
+suggested, I'll still apply. To be honest I hate the 'j--' and check 'j' stuff.
 
-diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
-index 4f3cb35..eb30284 100644
---- a/drivers/md/dm-crypt.c
-+++ b/drivers/md/dm-crypt.c
-@@ -1407,30 +1407,6 @@ static void kcryptd_queue_crypt(struct dm_crypt_io *io)
- 	queue_work(cc->crypt_queue, &io->work);
- }
- 
--/*
-- * Decode key from its hex representation
-- */
--static int crypt_decode_key(u8 *key, char *hex, unsigned int size)
--{
--	char buffer[3];
--	unsigned int i;
--
--	buffer[2] = '\0';
--
--	for (i = 0; i < size; i++) {
--		buffer[0] = *hex++;
--		buffer[1] = *hex++;
--
--		if (kstrtou8(buffer, 16, &key[i]))
--			return -EINVAL;
--	}
--
--	if (*hex != '\0')
--		return -EINVAL;
--
--	return 0;
--}
--
- static void crypt_free_tfms(struct crypt_config *cc)
- {
- 	unsigned i;
-@@ -1502,7 +1478,8 @@ static int crypt_set_key(struct crypt_config *cc, char *key)
- 	if (!cc->key_size && strcmp(key, "-"))
- 		goto out;
- 
--	if (cc->key_size && crypt_decode_key(cc->key, key, cc->key_size) < 0)
-+	/* Decode key from its hex representation. */
-+	if (cc->key_size && hex2bin(cc->key, key, cc->key_size) < 0)
- 		goto out;
- 
- 	set_bit(DM_CRYPT_KEY_VALID, &cc->flags);
--- 
-2.8.2
-
+Thanks,
+Shaohua
