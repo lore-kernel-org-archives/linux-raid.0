@@ -1,123 +1,98 @@
-From: Gioh Kim <gi-oh.kim@profitbricks.com>
-Subject: [RFC] super1: error handling for super-block loading
-Date: Thu, 12 May 2016 19:38:43 +0200
-Message-ID: <5734BFA3.1070405@profitbricks.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [RFC] super1: error handling for super-block loading
+Date: Thu, 12 May 2016 14:16:19 -0400
+Message-ID: <wrfj8tzfb0r0.fsf@redhat.com>
+References: <5734BFA3.1070405@profitbricks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5734BFA3.1070405@profitbricks.com> (Gioh Kim's message of "Thu,
+	12 May 2016 19:38:43 +0200")
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>, linux-raid@vger.kernel.org
-Cc: Elmar Gerdes <elmar.gerdes@profitbricks.com>, Jinpu Wang <jinpu.wang@profitbricks.com>
+To: Gioh Kim <gi-oh.kim@profitbricks.com>
+Cc: linux-raid@vger.kernel.org, Elmar Gerdes <elmar.gerdes@profitbricks.com>, Jinpu Wang <jinpu.wang@profitbricks.com>
 List-Id: linux-raid.ids
 
-Hi,
+Gioh Kim <gi-oh.kim@profitbricks.com> writes:
+> I'm not sure yet why mdadm failed to load super-block of disks.
+> I checked the kernel log and found I/O error from disks.
+> Anyway mdadm needs to handle that error case.
+>
+> Please review following patch.
+>
+> ------------------------------------------- 8<
+> -------------------------------------------------------------
+> From 8cacf56b2d630c7e74bad942779ff7ed5f516d26 Mon Sep 17 00:00:00 2001
+> From: Gioh Kim <gi-oh.kim@profitbricks.com>
+> Date: Thu, 12 May 2016 19:09:45 +0200
+> Subject: [PATCH] super1: error handling for super-block loading
+>
+> Loading super-block can fail if all sub-devices are faulty
+> or have I/O errors.
+>
+> Signed-off-by: Gioh Kim <gi-oh.kim@profitbricks.com>
+> ---
+>  Grow.c | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+>
+> diff --git a/Grow.c b/Grow.c
+> index f58c753..fa08522 100755
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -389,7 +389,7 @@ int Grow_addbitmap(char *devname, int fd, struct
+> context *c, struct shape *s)
+>      }
+>      if (strcmp(s->bitmap_file, "internal") == 0 ||
+>          strcmp(s->bitmap_file, "clustered") == 0) {
+> -        int rv;
+> +        int rv = 0;
+>          int d;
+>          int offset_setable = 0;
+>          struct mdinfo *mdi;
+> @@ -419,6 +419,7 @@ int Grow_addbitmap(char *devname, int fd, struct
+> context *c, struct shape *s)
+>                  if (fd2 < 0)
+>                      continue;
+>                  if (st->ss->load_super(st, fd2, NULL)==0) {
+> +                    rv++;
+>                      if (st->ss->add_internal_bitmap(
+>                              st,
+>                              &s->bitmap_chunk, c->delay, s->write_behind,
+> @@ -435,6 +436,10 @@ int Grow_addbitmap(char *devname, int fd, struct
+> context *c, struct shape *s)
+>                  close(fd2);
+>              }
+>          }
+> +        if (rv == 0) {
+> +            pr_err("failed to load super-block.\n");
+> +            return 1;
+> +        }
+>          if (offset_setable) {
+>              st->ss->getinfo_super(st, mdi, NULL);
+>              sysfs_init(mdi, fd, NULL);
 
-I found a segfault of mdadm.
-mdadm[59966]: segfault at 5c ip 000000000042c1e1 sp 00007ffe52745390 
-error 4 in mdadm[400000+65000]
+This is definitly not the right way to solve this problem. Error codes
+are negative, and zero should _always_ mean success. Here you suddenly
+introduced a new meaning to positive values of rv.
 
-I disassembled mdadm.
+I agree handling the error case needs to be fixed, so a better way to
+solve this would be to bail out when the load_super() call fails and
+stop there, the same way it does if add_internal_bitmap() fails.
 
-   42c170:       41 55                   push   %r13
-   42c172:       49 89 f8                mov    %rdi,%r8
-   42c175:       41 54                   push   %r12
-   42c177:       49 89 d4                mov    %rdx,%r12
-   42c17a:       55                      push   %rbp
-   42c17b:       53                      push   %rbx
-   42c17c:       48 89 f3                mov    %rsi,%rbx
-   42c17f:       48 83 ec 08             sub    $0x8,%rsp
-   42c183:       f6 c3 01                test   $0x1,%bl
-   42c186:       48 8b 6f 18             mov    0x18(%rdi),%rbp
-   42c18a:       44 8b 6e 1c             mov    0x1c(%rsi),%r13d
-   42c18e:       48 89 f7                mov    %rsi,%rdi
-   42c191:       be 88 01 00 00          mov    $0x188,%esi
-   42c196:       0f 85 b8 02 00 00       jne    42c454 <socket@plt+0x29724>
-   42c19c:       40 f6 c7 02             test   $0x2,%dil
-   42c1a0:       0f 85 c2 02 00 00       jne    42c468 <socket@plt+0x29738>
-   42c1a6:       40 f6 c7 04             test   $0x4,%dil
-   42c1aa:       0f 85 ce 02 00 00       jne    42c47e <socket@plt+0x2974e>
-   42c1b0:       89 f1                   mov    %esi,%ecx
-   42c1b2:       31 c0                   xor    %eax,%eax
-   42c1b4:       c1 e9 03                shr    $0x3,%ecx
-   42c1b7:       40 f6 c6 04             test   $0x4,%sil
-   42c1bb:       f3 48 ab                rep stos %rax,%es:(%rdi)
-   42c1be:       74 0a                   je     42c1ca <socket@plt+0x2949a>
-   42c1c0:       c7 07 00 00 00 00       movl   $0x0,(%rdi)
-   42c1c6:       48 83 c7 04             add    $0x4,%rdi
-   42c1ca:       40 f6 c6 02             test   $0x2,%sil
-   42c1ce:       74 09                   je     42c1d9 <socket@plt+0x294a9>
-   42c1d0:       66 c7 07 00 00          movw   $0x0,(%rdi)
-   42c1d5:       48 83 c7 02             add    $0x2,%rdi
-   42c1d9:       83 e6 01                and    $0x1,%esi
-   42c1dc:       74 03                   je     42c1e1 <socket@plt+0x294b1>
-   42c1de:       c6 07 00                movb   $0x0,(%rdi)
-   42c1e1:       8b 45 5c                mov    0x5c(%rbp),%eax
+Ie. make it do something like this:
 
-I think this is getinfo_super1() because I rebuilt mdadm with debugging 
-symbol and found exactly the same assemble code.
-A NULL pointer referencing is generated by reading st->sb->raid_disks 
-(%rdi=st, %rbp=sb=NULL).
-I found there is no error handling if Grow_addbitmap fails to load 
-super-block.
+	rv = st->ss->load_super(st, fd2, NULL)==0) {
+	if (!rv) {
+		if (st->ss->add_internal_bitmap(
+....
+	} else {
+		pr_err("failed to load super-block.\n");
+		close(fd2);
+		return 1;
+	}
 
-I'm not sure yet why mdadm failed to load super-block of disks.
-I checked the kernel log and found I/O error from disks.
-Anyway mdadm needs to handle that error case.
+Actually looking at that code, there's a couple of things to do to clean
+it up and make it more readable.
 
-Please review following patch.
-
-------------------------------------------- 8< 
--------------------------------------------------------------
- From 8cacf56b2d630c7e74bad942779ff7ed5f516d26 Mon Sep 17 00:00:00 2001
-From: Gioh Kim <gi-oh.kim@profitbricks.com>
-Date: Thu, 12 May 2016 19:09:45 +0200
-Subject: [PATCH] super1: error handling for super-block loading
-
-Loading super-block can fail if all sub-devices are faulty
-or have I/O errors.
-
-Signed-off-by: Gioh Kim <gi-oh.kim@profitbricks.com>
----
-  Grow.c | 7 ++++++-
-  1 file changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/Grow.c b/Grow.c
-index f58c753..fa08522 100755
---- a/Grow.c
-+++ b/Grow.c
-@@ -389,7 +389,7 @@ int Grow_addbitmap(char *devname, int fd, struct 
-context *c, struct shape *s)
-      }
-      if (strcmp(s->bitmap_file, "internal") == 0 ||
-          strcmp(s->bitmap_file, "clustered") == 0) {
--        int rv;
-+        int rv = 0;
-          int d;
-          int offset_setable = 0;
-          struct mdinfo *mdi;
-@@ -419,6 +419,7 @@ int Grow_addbitmap(char *devname, int fd, struct 
-context *c, struct shape *s)
-                  if (fd2 < 0)
-                      continue;
-                  if (st->ss->load_super(st, fd2, NULL)==0) {
-+                    rv++;
-                      if (st->ss->add_internal_bitmap(
-                              st,
-                              &s->bitmap_chunk, c->delay, s->write_behind,
-@@ -435,6 +436,10 @@ int Grow_addbitmap(char *devname, int fd, struct 
-context *c, struct shape *s)
-                  close(fd2);
-              }
-          }
-+        if (rv == 0) {
-+            pr_err("failed to load super-block.\n");
-+            return 1;
-+        }
-          if (offset_setable) {
-              st->ss->getinfo_super(st, mdi, NULL);
-              sysfs_init(mdi, fd, NULL);
--- 
-2.5.0
-
-
+Cheers,
+Jes
