@@ -1,113 +1,107 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: problems with lots of arrays
-Date: Thu, 12 May 2016 07:58:06 +0200
-Message-ID: <57341B6E.2080604@suse.de>
-References: <CAK9wOaB+Cic3nR5kzB3n=nVpbRtfo8+Qr9j_VNM3hh5tJRw6YA@mail.gmail.com>
- <wrfj8tzhk5by.fsf@redhat.com> <87wpn1sfk6.fsf@notabene.neil.brown.name>
- <20160511004550.GB127453@kernel.org>
- <87eg98rqe1.fsf@notabene.neil.brown.name>
+From: Claudiu Rad <jazzman@misalpina.net>
+Subject: recovering failed and unrecognizable RAID5 during mdadm --grow
+ without backup
+Date: Thu, 12 May 2016 09:22:17 +0300
+Message-ID: <1b26650f-0b2c-2485-f781-e3fd26340741@misalpina.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=iso-8859-2; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87eg98rqe1.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>, Shaohua Li <shli@kernel.org>
-Cc: Jes Sorensen <Jes.Sorensen@redhat.com>, Mike Lovell <mike.lovell@endurance.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+hello all,
 
-On 05/12/2016 03:55 AM, NeilBrown wrote:
-> On Wed, May 11 2016, Shaohua Li wrote:
->=20
->> On Wed, May 11, 2016 at 08:39:53AM +1000, NeilBrown wrote:
->>> On Wed, May 11 2016, Jes Sorensen wrote:
->>>=20
->>>> Mike Lovell <mike.lovell@endurance.com> writes:
->>>>> we have a number of systems that have a large number of
->>>>> software arrays running. its in the couple hundred range.
->>>>> we have been using a custom built kernel based on 3.4 but
->>>>> are wanting to update to a mainline kernel and have been
->>>>> experimenting with 4.4. the systems are running recent
->>>>> centos 6 releases but we have been downgrading the mdadm
->>>>> version from 3.3.2 in 6.7 to a custom build 3.2.6. we
->>>>> installed the downgraded version due to a problem with
->>>>> array numbering. i emailed the list a while ago explaining
->>>>> the issue and submitting a patch to fix [1]. i never heard
->>>>> anything back and since we had a simple fix i didn't follow
->>>>> up on it.
->>>>=20
->>>> [snip]
->>>>=20
->>>>> what do you all think?
->>>>>=20
->>>>> thanks mike
->>>>>=20
->>>>> [1] http://marc.info/?l=3Dlinux-raid&m=3D142387809409798&w=3D2
->>>>=20
->>>> Staying consistent in using dev_t rather than casting back
->>>> and forth to int seems a reasonable fix to apply to mdadm. It
->>>> obviously won't change the issues with the newer kernels, but
->>>> I don't see any reason why we shouldn't apply that fix to
->>>> mdadm.
->>>>=20
->>>> Neil any thoughts on this?
->>>=20
->>> I agree that changing "int" to "dev_t" is a good idea.
->>>=20
->>> We should really fix the more general problem too.
->>>=20
->>> On any kernel with  /sys/module/md_mod/parameters/new_array=20
->>> find_free_devnm avoid trying anything above 511. (1<<9)-1.
->>>=20
->>> If that fails to find a free number, then it should probably
->>> try a name like "md_NN" and act as though ci->name is set.
->>>=20
->>> Also, when a "name" given for the md array that is longer than
->>> 28 bytes we need to fall back to choose an array name ourselves
->>> even if ci->name is set.  Start with md_512 and work upwards.=20
->>> Rather than probing we should read /sys/block looking for
->>> "md_*" and maybe choose 1 more than the largest number found.
->>=20
->> I'm wondering why udev open the device with major/minor without
->> checking if the device exists. A simple 'stat' check is neat.
->=20
-> A big part of the role of udev is to create the device nodes in
-> /dev.
->=20
-Not any more.
-devtmpfs will create the device nodes automagically,
-no need for udev to interfere.
+i am a desperate guy that 'successfully' made a chain of mistakes 
+leading to a real personal disaster. i need to try recover this as much 
+as i can as total data loss is really not acceptable.
+the short story is that having a weak performance 4x4TB RAID5 (full 
+drives allocated to RAID5 besides the small RAID1 partitions for boot) + 
+LVM, after reading a few articles on the internet, i figured out i 
+should try some chunk size 'optimizations' and read that this can be 
+done with my version of mdadm and my kernel (machine running debian 7.9).
+the mistakes:
 
-Cheers,
+ 1. no backup of 10TB of data. i am talking about a remote rented
+    server, and didn't had any easy way to do backups
+ 2. i did run mdadm --grow -c 128 /dev/md2, it complained about
+    --backup-file. run the command again with the file placed in
+    /root/...txt, this being a partition inside the vg0 filling
+    /dev/md2, thus defeating the purpose. the chunk size was
+    automatically set to 512K before, i was trying to reduce it
+ 3. the command returned almost immediately, didn't have any idea that
+    this would trigger a background process, although it is now obvious.
+    i then tried to see what it has done but after a ls, a second ls in
+    root partition was hanging. my web server panel (webmin) hanged in
+    'waiting for...'; tried connecting to a new shell, after providing
+    credentials, hanging, no cursor. i thought that my ever running
+    monitoring system and some other constant I/O processes running with
+    higher priority were clogging the system that now had lower
+    throughput due to parameter change and entire I/O was filled because
+    of this and maybe my experiments with the scheduler. actually nginx
+    webserver seemed to be working properly and this had nice -10
+    attached, which led me to this conclusion. another mistake
+ 4. after a few minutes of unresponsive machine, decided to send a soft
+    CTRL+ALT+DELETE restart signal from datacenter control panel but it
+    wouldn't work apparently, thus, decided there is no way to exit this
+    situation unless using a hard restart (system reset), and this was
+    my final and big mistake not knowing that the array was reshaping.
+    the system won't boot and datacenter's rescue (network boot) system
+    can't see/assemble the /dev/md2 array
 
-Hannes
-- --=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+i assume i really did the best to destroy a working array (well, besides 
+not being satisfied with performance and apparent degradation during 
+time). into the rescue system, this is what i see so far:
 
-iQIcBAEBAgAGBQJXNBttAAoJEGz4yi9OyKjPAHcP/R4+cgYjqcNH4acdGLIR9g4x
-ASIieuAEe1E4/OkWcSM1pRkOMHy8fjlXw41EKBePZRshkDAL0avoPkwL6QuCbK6T
-jktuTHogNKgplGyBn9ibwKBSeXlw3skDHpYU+BoIoNGJD0fGGUcFHgJQj48ptsny
-mpuqyy/1LXFQCYI7Sv96cZg1InA60I6vKEJXUud78InE01bJZWS6eHCh4PH9yq9S
-7l+yrnMbtMiz78TtYvgSF77CVIFgJkV8xtWO3AExTDHL1V5UtLXnAI+tS4xOtvsE
-vA0NTOpiVplwJVaLEwlgRFaAZYs8zFpiko/TUitQmx7BgaxPVas30h7R0uoWhsQY
-ejn6HVSQMvKJQWl0guD1JnU8CrPge36OdJnqDtLOY9Dqwqun97EriGWle8j8zpgo
-yJG852IchaMYB/YPhZvag4+hDRVgqVZO4XWyC9j5pk/tPBMwFPMMk7gZSDjDKMHD
-Rm11uu1O6itUJr/IDMX5broTAI6e+DJDOUn4imXjSUmTp+cWqq+HSuvQR1/Amg6S
-QuOSTJbOeEF+bEM209IMmCQj6pG/Fhw2vODGrnptiFI+g5Rsf6v8/DbOnSxJhnVX
-QolSvjMigykY/K7JqvjYBjtCMrwvrEgNHOAUTOD9F70SWatetLA2rAbrl71LHMgS
-CByHeGYD9xkd/UzzLKy0
-=3D4WAN
------END PGP SIGNATURE-----
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+root@rescue ~ # mdadm --detail --scan
+ARRAY /dev/md/0 metadata=1.2 name=rescue:0 
+UUID=63b58acc:19623c52:c1134929:5d592d29
+ARRAY /dev/md/1 metadata=1.2 name=rescue:1 
+UUID=94713b26:3eca44bc:dee330c8:23443240
+
+root@rescue ~ # mdadm --examine --scan
+ARRAY /dev/md/0  metadata=1.2 UUID=63b58acc:19623c52:c1134929:5d592d29 
+name=rescue:0
+ARRAY /dev/md/1  metadata=1.2 UUID=94713b26:3eca44bc:dee330c8:23443240 
+name=rescue:1
+ARRAY /dev/md/2  metadata=1.2 UUID=a935894f:be435fc0:589c1c7f:d5454b43 
+name=rescue:2
+(so here the array appears)
+
+root@rescue ~ # cat /proc/mdstat
+Personalities : [raid1]
+md1 : active raid1 sda2[0] sdd2[3] sdc2[2] sdb2[1]
+       523968 blocks super 1.2 [4/4] [UUUU]
+md0 : active raid1 sda1[0] sdd1[3] sdc1[2] sdb1[1]
+       16768896 blocks super 1.2 [4/4] [UUUU]
+
+root@rescue ~ # mdadm --assemble --scan
+mdadm: /dev/md/0 has been started with 4 drives.
+mdadm: /dev/md/1 has been started with 4 drives.
+mdadm: Failed to restore critical section for reshape, sorry.
+        Possibly you needed to specify the --backup-file
+Segmentation fault
+(this segmentation fault is weird)
+
+root@rescue ~ # mdadm --assemble --scan --invalid-backup
+mdadm: /dev/md/2: Need a backup file to complete reshape of this array.
+mdadm: Please provided one with "--backup-file=..."
+
+root@rescue ~ # mdadm -V
+mdadm - v3.3.2 - 21st August 2014
+
+
+now.. what can i best do to try as much as i can to recover my array? 
+the backup is actually trapped inside the / partition in the vg0 in the 
+array. after starting the --grow, i estimate it has been running for 
+about 10minutes when i did a force reboot. how can this be reconstructed 
+properly? i have broken it enough, i don't want to make any other move 
+without asking experts.
+
+please, help. this is my greatest nightmare :(
+
+-- 
+Claudiu
+
