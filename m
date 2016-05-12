@@ -1,107 +1,50 @@
-From: Claudiu Rad <jazzman@misalpina.net>
-Subject: recovering failed and unrecognizable RAID5 during mdadm --grow
- without backup
-Date: Thu, 12 May 2016 09:22:17 +0300
-Message-ID: <1b26650f-0b2c-2485-f781-e3fd26340741@misalpina.net>
+From: "Mr. Ragner Henderson" <p2@1qa2ws3ed.synergize.co>
+Subject: URGENT RESPONSE NEEDED, PLEASE REPLY....
+Date: Thu, 12 May 2016 07:10:01 -0700
+Message-ID: <PN1PR01MB0174B5525FF632D4D0742098F3730__43445.9925083958$1463063237$gmane$org@PN1PR01MB0174.INDPRD01.PROD.OUTLOOK.COM>
+Reply-To: <mr.ragnerhenderson@yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Description: Mail message body
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Recipients <p2@1qa2ws3ed.synergize.co>
 List-Id: linux-raid.ids
 
-hello all,
+Dear Friend,
 
-i am a desperate guy that 'successfully' made a chain of mistakes 
-leading to a real personal disaster. i need to try recover this as much 
-as i can as total data loss is really not acceptable.
-the short story is that having a weak performance 4x4TB RAID5 (full 
-drives allocated to RAID5 besides the small RAID1 partitions for boot) + 
-LVM, after reading a few articles on the internet, i figured out i 
-should try some chunk size 'optimizations' and read that this can be 
-done with my version of mdadm and my kernel (machine running debian 7.9).
-the mistakes:
+Pardon me for not having the pleasure of knowing your mindset before ma=
+king you this offer and it is utterly confidential and genuine by virtu=
+e of its nature I write to solicit your assistance in a funds transfer =
+deal involving =A315.2M.This fund has been stashed out of the excess pr=
+ofit made last 2years by my branch office of  the Co-operative Bank Plc=
+ here in United Kingdom which I am the manager.
 
- 1. no backup of 10TB of data. i am talking about a remote rented
-    server, and didn't had any easy way to do backups
- 2. i did run mdadm --grow -c 128 /dev/md2, it complained about
-    --backup-file. run the command again with the file placed in
-    /root/...txt, this being a partition inside the vg0 filling
-    /dev/md2, thus defeating the purpose. the chunk size was
-    automatically set to 512K before, i was trying to reduce it
- 3. the command returned almost immediately, didn't have any idea that
-    this would trigger a background process, although it is now obvious.
-    i then tried to see what it has done but after a ls, a second ls in
-    root partition was hanging. my web server panel (webmin) hanged in
-    'waiting for...'; tried connecting to a new shell, after providing
-    credentials, hanging, no cursor. i thought that my ever running
-    monitoring system and some other constant I/O processes running with
-    higher priority were clogging the system that now had lower
-    throughput due to parameter change and entire I/O was filled because
-    of this and maybe my experiments with the scheduler. actually nginx
-    webserver seemed to be working properly and this had nice -10
-    attached, which led me to this conclusion. another mistake
- 4. after a few minutes of unresponsive machine, decided to send a soft
-    CTRL+ALT+DELETE restart signal from datacenter control panel but it
-    wouldn't work apparently, thus, decided there is no way to exit this
-    situation unless using a hard restart (system reset), and this was
-    my final and big mistake not knowing that the array was reshaping.
-    the system won't boot and datacenter's rescue (network boot) system
-    can't see/assemble the /dev/md2 array
+I have already submitted an approved end-of-the-year report for the yea=
+r 2015 to my head office here in Manchester UK. and they will never kno=
+w of this excess.
 
-i assume i really did the best to destroy a working array (well, besides 
-not being satisfied with performance and apparent degradation during 
-time). into the rescue system, this is what i see so far:
+I have since then, placed this amount on a Non-Investment Account witho=
+ut a beneficiary. Upon your response, I will configure your name on our=
+ database as holder of the Non-Investment Account. I will then guide yo=
+u on how to apply to my head office for the Account Closure/bank-to-ban=
+k remittance of the funds to your designated bank account.
+If you concur with this proposal, I intend for you to retain 30% of the=
+ funds while 70% shall be for me. Kindly forward your response to me im=
+mediately to my private mail box: (mr.ragnerhenderson@yahoo.com) thank =
+you.
 
+With Regards,
 
-root@rescue ~ # mdadm --detail --scan
-ARRAY /dev/md/0 metadata=1.2 name=rescue:0 
-UUID=63b58acc:19623c52:c1134929:5d592d29
-ARRAY /dev/md/1 metadata=1.2 name=rescue:1 
-UUID=94713b26:3eca44bc:dee330c8:23443240
+Mr. Ragner Henderson.
 
-root@rescue ~ # mdadm --examine --scan
-ARRAY /dev/md/0  metadata=1.2 UUID=63b58acc:19623c52:c1134929:5d592d29 
-name=rescue:0
-ARRAY /dev/md/1  metadata=1.2 UUID=94713b26:3eca44bc:dee330c8:23443240 
-name=rescue:1
-ARRAY /dev/md/2  metadata=1.2 UUID=a935894f:be435fc0:589c1c7f:d5454b43 
-name=rescue:2
-(so here the array appears)
+---
+This email has been checked for viruses by Avast antivirus software.
+https://www.avast.com/antivirus
 
-root@rescue ~ # cat /proc/mdstat
-Personalities : [raid1]
-md1 : active raid1 sda2[0] sdd2[3] sdc2[2] sdb2[1]
-       523968 blocks super 1.2 [4/4] [UUUU]
-md0 : active raid1 sda1[0] sdd1[3] sdc1[2] sdb1[1]
-       16768896 blocks super 1.2 [4/4] [UUUU]
-
-root@rescue ~ # mdadm --assemble --scan
-mdadm: /dev/md/0 has been started with 4 drives.
-mdadm: /dev/md/1 has been started with 4 drives.
-mdadm: Failed to restore critical section for reshape, sorry.
-        Possibly you needed to specify the --backup-file
-Segmentation fault
-(this segmentation fault is weird)
-
-root@rescue ~ # mdadm --assemble --scan --invalid-backup
-mdadm: /dev/md/2: Need a backup file to complete reshape of this array.
-mdadm: Please provided one with "--backup-file=..."
-
-root@rescue ~ # mdadm -V
-mdadm - v3.3.2 - 21st August 2014
-
-
-now.. what can i best do to try as much as i can to recover my array? 
-the backup is actually trapped inside the / partition in the vg0 in the 
-array. after starting the --grow, i estimate it has been running for 
-about 10minutes when i did a force reboot. how can this be reconstructed 
-properly? i have broken it enough, i don't want to make any other move 
-without asking experts.
-
-please, help. this is my greatest nightmare :(
-
--- 
-Claudiu
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
