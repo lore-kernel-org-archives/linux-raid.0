@@ -1,68 +1,69 @@
-From: Wolfgang Denk <wd@denx.de>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
 Subject: Re: MD RAID6 corrupted by Avago 9260-4i controller [SOLVED]
-Date: Sun, 15 May 2016 21:35:16 +0200
-Message-ID: <20160515193516.2C457100879@atlas.denx.de>
-References: <20160515124534.A42D0100879@atlas.denx.de> <20160515133740.85EC3100879@atlas.denx.de> <20160515153121.GA11365@EIS.leimen.priv> <20160515182524.7B12D100A8E@atlas.denx.de> <20160515183128.GA12823@EIS.leimen.priv>
+Date: Sun, 15 May 2016 22:34:46 +0200
+Message-ID: <20160515203446.GA13218@EIS.leimen.priv>
+References: <20160515124534.A42D0100879@atlas.denx.de>
+ <20160515133740.85EC3100879@atlas.denx.de>
+ <20160515153121.GA11365@EIS.leimen.priv>
+ <20160515182524.7B12D100A8E@atlas.denx.de>
+ <20160515183128.GA12823@EIS.leimen.priv>
+ <20160515193516.2C457100879@atlas.denx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <20160515183128.GA12823@EIS.leimen.priv>
+Content-Disposition: inline
+In-Reply-To: <20160515193516.2C457100879@atlas.denx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+To: Wolfgang Denk <wd@denx.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear Andreas,
+On Sun, May 15, 2016 at 09:35:16PM +0200, Wolfgang Denk wrote:
+> So I tried to repeat the same procedure, but it does not work any
+> more:  after erasing the superblocks my attempts to assemble the array
+> now give only:
 
-In message <20160515183128.GA12823@EIS.leimen.priv> you wrote:
-> On Sun, May 15, 2016 at 08:25:24PM +0200, Wolfgang Denk wrote:
-> > After creating the overlys, the system would automatically start the
-> > (incorrect) RAID arrays.
+That's strange, if it worked once, it should work twice (if no changes 
+were made outside of the overlays). If you have created the udev rules 
+file, just in case there is a side effect, remove it again ...
+
+> 	#  mdadm --assemble  /dev/md2 --metadata=1.2  $overlays
+> 	mdadm: no RAID superblock on /dev/mapper/sda
+> 	mdadm: /dev/mapper/sda has no superblock - assembly aborted
+
+What does mdadm --examine /dev/mapper/sda say before and after
+you --zero-superblock? (is it the same for the other disks?)
+ 
+> OK, I can recreate the array, but LVM does not recognize it.
 > 
-> That should be courtesy of udev, see if you have a 
-> 
->     /lib/udev/rules.d/64-md-raid-assembly.rules
-> 
-> and if that's the case you can temporarily disable them by
-> 
->     touch /etc/udev/rules.d/64-md-raid-assembly.rules
-> 
-> and (later) re-enable by rm'ing the /etc/ file.
+> You mentioned I had to play around with the offsets - do you have any
+> idea which values would be reasonable to try out?
 
-Thanks.
+If it's LVM, you could search the first few hundred megs of your devices for
+the LVM header, that should be the data offset you're looking for.
 
-> > Recovering my data was (fortunately) simple:
+    hexdump -C -n $((1024*1024*1024)) /dev/mapper/sda | less
 
-Unfortunately my luck did not last very long.  While copying the first
-file system from the recovered array, the system crashed - can't tell
-why, when I got to the console it was all black :-(
+and then search for LABELONE
 
-So I tried to repeat the same procedure, but it does not work any
-more:  after erasing the superblocks my attempts to assemble the array
-now give only:
+    /LABELONE
 
-	#  mdadm --assemble  /dev/md2 --metadata=1.2  $overlays
-	mdadm: no RAID superblock on /dev/mapper/sda
-	mdadm: /dev/mapper/sda has no superblock - assembly aborted
+| 00000000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+| *
+| 00000200  4c 41 42 45 4c 4f 4e 45  01 00 00 00 00 00 00 00  |LABELONE........|
+| 00000210  c1 11 05 3d 20 00 00 00  4c 56 4d 32 20 30 30 31  |...= ...LVM2 001|
+| 00000220  36 46 41 75 32 49 70 65  38 62 75 50 31 46 32 75  |6FAu2Ipe8buP1F2u|
+| 00000230  38 4a 41 34 41 45 64 51  54 49 49 6b 4f 76 45 35  |8JA4AEdQTIIkOvE5|
 
-[which is what I had initially expected; I have no idea why it worked
-once, but not a second time.]
+That's LABELONE at offset 0x200 and you have to substract 512 bytes from it, 
+so this is actually what it would look like for offset 0.
 
-OK, I can recreate the array, but LVM does not recognize it.
+Alternatively this can also be done using
 
-You mentioned I had to play around with the offsets - do you have any
-idea which values would be reasonable to try out?
+    dd bs=1M count=1024 if=... | strings -t d -n 8 | grep LABELONE
+    512 LABELONE
 
-Thanks in advance - once more...
+if your version of strings supports this option.
 
-Best regards,
-
-Wolfgang Denk
-
--- 
-DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-You can't depend on your eyes when your imagination is out of  focus.
-- Mark Twain
+Regards
+Andreas Klauer
