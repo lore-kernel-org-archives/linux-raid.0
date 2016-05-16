@@ -1,46 +1,49 @@
-From: Wolfgang Denk <wd@denx.de>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
 Subject: Re: MD RAID6 corrupted by Avago 9260-4i controller [SOLVED]
-Date: Mon, 16 May 2016 14:58:01 +0200
-Message-ID: <20160516125801.20A1A100879@atlas.denx.de>
-References: <20160515124534.A42D0100879@atlas.denx.de> <20160515133740.85EC3100879@atlas.denx.de> <20160515153121.GA11365@EIS.leimen.priv> <20160515182524.7B12D100A8E@atlas.denx.de> <20160515183128.GA12823@EIS.leimen.priv> <20160515193516.2C457100879@atlas.denx.de> <20160515203446.GA13218@EIS.leimen.priv> <20160515231046.E3685100A8E@atlas.denx.de> <20160516083903.GA29380@EIS.leimen.priv> <20160516120600.5428910035C@atlas.denx.de>
+Date: Mon, 16 May 2016 15:14:39 +0200
+Message-ID: <20160516131439.GA2850@metamorpher.de>
+References: <20160515133740.85EC3100879@atlas.denx.de>
+ <20160515153121.GA11365@EIS.leimen.priv>
+ <20160515182524.7B12D100A8E@atlas.denx.de>
+ <20160515183128.GA12823@EIS.leimen.priv>
+ <20160515193516.2C457100879@atlas.denx.de>
+ <20160515203446.GA13218@EIS.leimen.priv>
+ <20160515231046.E3685100A8E@atlas.denx.de>
+ <20160516083903.GA29380@EIS.leimen.priv>
+ <20160516120600.5428910035C@atlas.denx.de>
+ <20160516125801.20A1A100879@atlas.denx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <20160516120600.5428910035C@atlas.denx.de>
+Content-Disposition: inline
+In-Reply-To: <20160516125801.20A1A100879@atlas.denx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+To: Wolfgang Denk <wd@denx.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear Andreas,
+On Mon, May 16, 2016 at 02:58:01PM +0200, Wolfgang Denk wrote:
+> Seems I was lucky - already the second of the 120 possible
+> combination turned out to be working: b a c d f e
 
-In message <20160516120600.5428910035C@atlas.denx.de> I wrote:
-> 
-...
-> OK, so I started playing around with the disk order - even though I
-> checked yet another time from the disk serial numbers that the drive
-> order "a b c d e f" is what was used when initially creating the
-> array. When swapping the first two disks (so sda where the LABELONE
-> is present) becomes the second disk (i. e. "b a c d e f"), then LVM
-> will recognize the volume group and volumes, but data are corrupted.
-> 
-> So I guess I have to try the possible permutations (probably with sda
-> being the second disk only).
+Find a large enough file (disks * chunksize) and verify it.
 
-Seems I was lucky - already the second of the 120 possible
-combination turned out to be working: b a c d f e
+Sometimes you can be unlucky, i.e. the LVM is detected, the filesystem 
+mounts, but still data is corrupt because the wrong two disks switched 
+places (just not the ones that contain filesystem metadata).
+ 
+> But I still have not the slightest idea why the drive order might have
+> changed...
 
-But I still have not the slightest idea why the drive order might have
-changed...
+Me neither. :)
 
-Best regards,
+With GPT partition table, I set PARTLABEL to mdnumber-role so that's 
+another place that has metadata in case mdadm loses its own... 
+Since GPT lives at beginning and end of the disk it should have a 
+good chance of surviving accidents, and you can address them as 
+/dev/disk/by-partlabel/mdnumber-* in the correct order...
 
-Wolfgang Denk
+Anyway, glad you (hopefully, finally?) got your data back.
 
--- 
-DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-Do you suppose the reason the ends of the `Intel Inside'  logo  don't
-match up is that it was drawn on a Pentium?
+Regards
+Andreas Klauer
