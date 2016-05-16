@@ -1,122 +1,107 @@
-From: Wolfgang Denk <wd@denx.de>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
 Subject: Re: MD RAID6 corrupted by Avago 9260-4i controller [SOLVED]
-Date: Mon, 16 May 2016 01:10:46 +0200
-Message-ID: <20160515231046.E3685100A8E@atlas.denx.de>
-References: <20160515124534.A42D0100879@atlas.denx.de> <20160515133740.85EC3100879@atlas.denx.de> <20160515153121.GA11365@EIS.leimen.priv> <20160515182524.7B12D100A8E@atlas.denx.de> <20160515183128.GA12823@EIS.leimen.priv> <20160515193516.2C457100879@atlas.denx.de> <20160515203446.GA13218@EIS.leimen.priv>
+Date: Mon, 16 May 2016 10:39:03 +0200
+Message-ID: <20160516083903.GA29380@EIS.leimen.priv>
+References: <20160515124534.A42D0100879@atlas.denx.de>
+ <20160515133740.85EC3100879@atlas.denx.de>
+ <20160515153121.GA11365@EIS.leimen.priv>
+ <20160515182524.7B12D100A8E@atlas.denx.de>
+ <20160515183128.GA12823@EIS.leimen.priv>
+ <20160515193516.2C457100879@atlas.denx.de>
+ <20160515203446.GA13218@EIS.leimen.priv>
+ <20160515231046.E3685100A8E@atlas.denx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <20160515203446.GA13218@EIS.leimen.priv>
+Content-Disposition: inline
+In-Reply-To: <20160515231046.E3685100A8E@atlas.denx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+To: Wolfgang Denk <wd@denx.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear Andreas,
+On Mon, May 16, 2016 at 01:10:46AM +0200, Wolfgang Denk wrote:
+> NO, I think it's me to blame.  If I read the bash history correctly,
+> I made a mistake (confusing $DEVICES and $devices and $overlays)
+> and ran the --zero-superblock on the real disk devices, not the overlays.
 
-In message <20160515203446.GA13218@EIS.leimen.priv> you wrote:
->
-> That's strange, if it worked once, it should work twice (if no change=
-s=20
-> were made outside of the overlays). If you have created the udev rule=
-s=20
-> file, just in case there is a side effect, remove it again ...
+Ooh. :(
+ 
+> On the other hand, that should not make a real difference if it worked
+> for the overlays.  Well, it does...
 
-NO, I think it's me to blame.  If I read the bash history correctly,
-I made a mistake (confusing $DEVICES and $devices and $overlays)
-and ran the --zero-superblock on the real disk devices, not the overlay=
-s.
+About that, I don't know either.
 
-On the other hand, that should not make a real difference if it worked
-for the overlays.  Well, it does...
+> That would be the --data-offset= parameter?
 
-> What does mdadm --examine /dev/mapper/sda say before and after
-> you --zero-superblock? (is it the same for the other disks?)
+Yes.
 
---zero-superblock now porperly reports that it cannot find a
-superblock...
+> It does - but I'm confused as I get a number of different values from
+> the devices:
 
-> If it's LVM, you could search the first few hundred megs of your devi=
-ces for
-> the LVM header, that should be the data offset you're looking for.
+You can ignore those that don't even align to 512 bytes.
 
-Ok, but...
+> So I have 5 numbers; minus 512 and converted to kB gives:
+> 
+> Of these, only 136 appears to make sense.  But running
+> 
+> # mdadm --create --verbose /dev/md2 --metadata=1.2 --level=6 --raid-devices=6 --chunk=16 --assume-clean --data-offset=136 /dev/mapper/sd?
+> 
+> ...creates an array, but LVM does not recognise it.
 
-> That's LABELONE at offset 0x200 and you have to substract 512 bytes f=
-rom it,=20
-> so this is actually what it would look like for offset 0.
+So, now here's a puzzle.
 
-That would be the --data-offset=3D parameter?
+First, you can use hexdump after all to have a look at the first chunk 
+(assuming the 136KiB you found is actually the data offset).
 
-> Alternatively this can also be done using
->=20
->     dd bs=3D1M count=3D1024 if=3D... | strings -t d -n 8 | grep LABEL=
-ONE
->     512 LABELONE
->=20
-> if your version of strings supports this option.
+dd bs=136K skip=1 if=/dev/mapper/sda | hexdump -C | less
 
-It does - but I'm confused as I get a number of different values from
-the devices:
+(same for sd?)
 
-# for i in /dev/mapper/sd? ; do
-> echo $i
-> dd bs=3D1M count=3D1024 if=3D$i | strings -t d -n 8 | grep LABELONE
-> done
-/dev/mapper/sda
- 139776 LABELONE
-=2E..
-/dev/mapper/sdb
-=2E..
-/dev/mapper/sdc
-396826104 LABELONE
-=2E..
-/dev/mapper/sdd
-=2E..
-/dev/mapper/sde
-387503608 LABELONE
-389663524 LABELONE
-=2E..
-/dev/mapper/sdf
-398969636 LABELONE
-=2E..
+LVM metadata is in plaintext, example:
 
-So I have 5 numbers; minus 512 and converted to kB gives:
+| 00001200  53 53 44 20 7b 0a 69 64  20 3d 20 22 74 58 4a 43  |SSD {.id = "tXJC|
+| 00001210  77 31 2d 71 51 69 6e 2d  4b 78 31 6b 2d 30 65 78  |w1-qQin-Kx1k-0ex|
+| 00001220  79 2d 32 6e 4d 76 2d 6a  63 57 78 2d 4f 48 70 76  |y-2nMv-jcWx-OHpv|
+| 00001230  76 69 22 0a 73 65 71 6e  6f 20 3d 20 36 38 0a 66  |vi".seqno = 68.f|
+| 00001240  6f 72 6d 61 74 20 3d 20  22 6c 76 6d 32 22 0a 73  |ormat = "lvm2".s|
+| 00001250  74 61 74 75 73 20 3d 20  5b 22 52 45 53 49 5a 45  |tatus = ["RESIZE|
+| 00001260  41 42 4c 45 22 2c 20 22  52 45 41 44 22 2c 20 22  |ABLE", "READ", "|
+| 00001270  57 52 49 54 45 22 5d 0a  66 6c 61 67 73 20 3d 20  |WRITE"].flags = |
 
-   139776 ->    139264 ->    136
-396826104 -> 396825592 -> 887524.99
-387503608 -> 387503096 -> 878410.99
-389663524 -> 389663012 -> 380530.28
-398969636 -> 398969124 -> 889618.28
+For me this starts at offset 0x1200 (roughly 4K) should be well within 
+your 16K chunk. It should look similar for you on one of your disks if 
+the offset is correct.
 
-Of these, only 136 appears to make sense.  But running
+You are using your disks in alphabetical order, are you sure this is 
+the same order your RAID originally used? Maybe the drive letters 
+changed?
 
-# mdadm --create --verbose /dev/md2 --metadata=3D1.2 --level=3D6   --ra=
-id-devices=3D6 --chunk=3D16 --assume-clean --data-offset=3D136 /dev/map=
-per/sd?
-mdadm: layout defaults to left-symmetric
-mdadm: size set to 976762448K
-mdadm: automatically enabling write-intent bitmap on large array
-mdadm: array /dev/md2 started.
+You found LABELONE on sda, which is your first drive (Device Role 0) 
+in your RAID (see mdadm --examine after you create it), but when I 
+create a new RAID based on loop devices, pvcreate and vgcreate it, 
+the LABELONE actually appears on the 2nd drive (Device Role 1).
 
-=2E..creates an array, but LVM does not recognise it.
+| # cat /proc/mdstat 
+| Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4] 
+| md42 : active raid6 loop5[5] loop4[4] loop3[3] loop2[2] loop1[1] loop0[0]
+|       64960 blocks super 1.2 level 6, 16k chunk, algorithm 2 [6/6] [UUUUUU]
 
-Searching the resulting /dev/md2 for the LABELONE does not find any.
+| # strings -t d -n 8 /dev/loop0 | grep LABELONE
+| # strings -t d -n 8 /dev/loop1 | grep LABELONE
+|  139776 LABELONE
 
-Am I misinterpreting your information?
+| # dd bs=136K skip=1 if=/dev/loop1 | hexdump -C -n $((16*1024)) | head
+| 00000000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+| *
+| 00000200  4c 41 42 45 4c 4f 4e 45  01 00 00 00 00 00 00 00  |LABELONE........|
+| 00000210  e0 3d e7 de 20 00 00 00  4c 56 4d 32 20 30 30 31  |.=.. ...LVM2 001|
+| 00000220  58 48 67 41 68 45 70 76  4c 53 36 61 41 62 4d 77  |XHgAhEpvLS6aAbMw|
+| 00000230  50 6e 4c 57 4c 64 4a 46  6d 36 30 54 48 66 6d 75  |PnLWLdJFm60THfmu|
 
-Best regards,
+So I assume in the default left-symmetric layout in RAID6, the first chunk 
+of the first disk actually ends up being a parity chunk...? I'm not too 
+sure about this either right now. ;)
 
-Wolfgang Denk
-
---=20
-DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-The sixth sick sheik=E2=80=99s sixth sheep=E2=80=99s sick.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Regards
+Andreas Klauer
