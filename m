@@ -1,36 +1,67 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Two disk RAID10 inactive on boot if partition is missing
-Date: Tue, 17 May 2016 09:31:53 -0400
-Message-ID: <573B1D49.6090301@turmel.org>
-References: <CAN4OnogXN45Z3UUJyFzGgACPXuQMm1Gfw18kY9bjATrt5tvNqg@mail.gmail.com>
- <alpine.DEB.2.02.1605171038490.28372@uplift.swm.pp.se>
- <CAN4OnoguQMvnuUr7mGYpTi7_SonZ42Z5TSigKaJ0ZfZuiup0Og@mail.gmail.com>
- <alpine.DEB.2.02.1605171209470.28372@uplift.swm.pp.se>
+From: Bill Merriam <lists@billmerriam.com>
+Subject: [PATCH] mdcheck: Send progress messages to system log
+Date: Tue, 17 May 2016 11:12:59 -0400
+Message-ID: <1463497979.31691.7.camel@billmerriam.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1605171209470.28372@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>, Peter Kay <syllopsium@syllopsium.co.uk>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 05/17/2016 06:13 AM, Mikael Abrahamsson wrote:
-> On Tue, 17 May 2016, Peter Kay wrote:
-> 
->> I'm not trying to boot from it, and I'm using Salix (Slackware), not a
->> debian based distribution. My boot partitions are not raided.
-> 
-> The setting would still be valid if your distribution defaults to not
-> assembling and using degraded arrays on boot.
+From 03bec5cfdd87f25b1669a4b62d19cf872403d37a Mon Sep 17 00:00:00 2001
+From: Bill Merriam <bill@merriam.net>
+Date: Tue, 17 May 2016 10:16:13 -0400
+Subject: [PATCH] The mdcheck script now adds messages to the system log
+to
+ report on progress of the array check.  These are issued when mdcheck
+starts
+ or continues a check and when it suspends a check at the expiration of
+ duration.  The messages either report the check has completed or the
+block
+ number of the current and last block in the array and the percentage of
+ completion.
 
-See the "Unclean Shutdown" section of "man md".
+Signed-off-by: Bill Merriam <bill@merriam.net>
+---
+ misc/mdcheck | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-The kernel parameter you need is "md_mod.start_dirty_degraded=1".
+diff --git a/misc/mdcheck b/misc/mdcheck
+index 2c8f54d..c33e3f6 100644
+--- a/misc/mdcheck
++++ b/misc/mdcheck
+@@ -100,6 +100,8 @@ do
+ 		continue
+ 	else
+ 		start=`cat "$fl"`
++		size=$(expr $(cat $sys/md/component_size) \* 2)
++		logger $(echo $dev $start $size | awk '{printf "MDCHECK Continuing
+check on %s at block %i of %i, %6.2f%% complete\n", $1, $2, $3,
+$2/$3*100 }')
+ 	fi
+ 
+ 	cnt=$[cnt+1]
+@@ -129,6 +131,7 @@ do
+ 		then
+ 			eval MD_${i}_fl=
+ 			rm -f $fl
++			logger "MDCHECK check completed on ${sys##*/}, removing $fl"
+ 			continue;
+ 		fi
+ 		read a rest < $sys/md/sync_completed
+@@ -156,4 +159,8 @@ do
+ 	fi
+ 	echo idle > $sys/md/sync_action
+ 	cat $sys/md/sync_min > $fl
++	dev=${sys##*/}
++	start=$(cat $fl)
++	size=$(expr $(cat $sys/md/component_size) \* 2)
++	logger $(echo $dev $start $size | awk '{printf "MDCHECK Suspending
+check on %s at block %i of %i, %6.2f%% complete\n", $1, $2, $3,
+$2/$3*100 }')
+ done
+-- 
 
-Doing this is a really good way to end up with split brain.  Why do you
-need to regularly boot without the devices that were present at shutdown?
-
-Phil
 
