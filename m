@@ -1,51 +1,40 @@
-From: Wolfgang Denk <wd@denx.de>
-Subject: Re: MD RAID6 corrupted by Avago 9260-4i controller [SOLVED]
-Date: Tue, 17 May 2016 20:42:02 +0200
-Message-ID: <20160517184202.7D19C10035C@atlas.denx.de>
-References: <20160515133740.85EC3100879@atlas.denx.de> <20160515153121.GA11365@EIS.leimen.priv> <20160515182524.7B12D100A8E@atlas.denx.de> <20160515183128.GA12823@EIS.leimen.priv> <20160515193516.2C457100879@atlas.denx.de> <20160515203446.GA13218@EIS.leimen.priv> <20160515231046.E3685100A8E@atlas.denx.de> <20160516083903.GA29380@EIS.leimen.priv> <20160516120600.5428910035C@atlas.denx.de> <20160516125801.20A1A100879@atlas.denx.de> <20160516131439.GA2850@metamorpher.de>
+From: Erkki Seppala <flux@modeemi.cs.tut.fi>
+Subject: Re: mdadm - stuck reshape operation
+Date: Tue, 17 May 2016 23:01:44 +0300
+Message-ID: <m49d1oko3mf.fsf@coffee.modeemi.fi>
+References: <CAASHjeD2HqH=8ON_VSy1jbmR9NAK+NXQAmHjFw-PsW-gwNWB9g@mail.gmail.com>
+	<22305.30340.565924.810276@quad.stoffel.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <20160516131439.GA2850@metamorpher.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear Andreas,
+Hi,
 
-In message <20160516131439.GA2850@metamorpher.de> you wrote:
-> On Mon, May 16, 2016 at 02:58:01PM +0200, Wolfgang Denk wrote:
-> > Seems I was lucky - already the second of the 120 possible
-> > combination turned out to be working: b a c d f e
-> 
-> Find a large enough file (disks * chunksize) and verify it.
+"John Stoffel" <john@stoffel.org> writes:
 
-Running "fsck -f -n" over one of the (big, multi million files) file
-systems turned out to be a quick and good enough test.
+> Are there any messages in the logs, or dmesg output after the stuff
+> you showed?  Can you maybe 'strace' the mdadm process, or even go grab
+> the latest version using git from:
+>
+>   git clone git://neil.brown.name/mdadm
 
-> With GPT partition table, I set PARTLABEL to mdnumber-role so that's 
-> another place that has metadata in case mdadm loses its own... 
-> Since GPT lives at beginning and end of the disk it should have a 
-> good chance of surviving accidents, and you can address them as 
-> /dev/disk/by-partlabel/mdnumber-* in the correct order...
+I had a similar issue and tried to set up a reproduction in a virtual
+machine - but then after trying to retry the reproduction after a
+success I failed, constantly.
 
-So far I did not use any partitioning at all on such drives.  never
-needed it...
+So I'm wondering is there some particular patch in that tree that might
+affect this behavior? I'm using the mdadm 3.4 from Debian Unstable. I
+would rather avoid converting my non-test array before I get some
+confidence it won't stop in the middle :).
 
-> Anyway, glad you (hopefully, finally?) got your data back.
-
-Yes, indeed, all data recovered.  And I really owe you a beer...
-
-Best regards,
-
-Wolfgang Denk
+Thanks for insight,
 
 -- 
-DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-Lispers are among  the  best  grads  of  the  Sweep-It-Under-Someone-
-Else's-Carpet  School of Simulated Simplicity. [Was that sufficiently
-incendiary? :-)]  - Larry Wall in <1992Jan10.201804.11926@netlabs.com
+  _____________________________________________________________________
+     / __// /__ ____  __               http://www.modeemi.fi/~flux/\   \
+    / /_ / // // /\ \/ /                                            \  /
+   /_/  /_/ \___/ /_/\_\@modeemi.fi                                  \/
+
