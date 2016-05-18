@@ -1,73 +1,41 @@
-From: ebiederm@xmission.com (Eric W. Biederman)
-Subject: Re: [PATCH v4 03/21] fs: Allow sysfs and cgroupfs to share super blocks between user namespaces
-Date: Wed, 18 May 2016 11:27:12 -0500
-Message-ID: <87bn43qqlb.fsf@x220.int.ebiederm.org>
-References: <1461699046-30485-1-git-send-email-seth.forshee@canonical.com>
-	<1461699046-30485-4-git-send-email-seth.forshee@canonical.com>
-	<87shxgxqai.fsf@x220.int.ebiederm.org>
-	<20160517235834.GA104031@ubuntu-hedt>
-	<8760ubs738.fsf@x220.int.ebiederm.org>
-	<20160518161618.GC129218@ubuntu-hedt>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-bcache-owner@vger.kernel.org>
-In-Reply-To: <20160518161618.GC129218@ubuntu-hedt> (Seth Forshee's message of
-	"Wed, 18 May 2016 11:16:18 -0500")
-Sender: linux-bcache-owner@vger.kernel.org
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jeff Layton <jlayton@poochiereds.net>, "J. Bruce Fields" <bfields@fieldses.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <mszeredi@redhat.com>, Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov, cgroups@vger.kernel.org
+From: Mike Lovell <mlovell@bluehost.com>
+Subject: [PATCH 0/2] Fixes for lots of arrays
+Date: Wed, 18 May 2016 12:23:12 -0600
+Message-ID: <1463595794-17045-1-git-send-email-mlovell@bluehost.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Mike Lovell <mlovell@bluehost.com>
 List-Id: linux-raid.ids
 
-Seth Forshee <seth.forshee@canonical.com> writes:
+This patch series fixes two issues around having more than 127 arrays on a
+system. The first one fixes an issue with using a dev_t as int and the
+number going negative when the array number would be larger than 2<<19. This
+would happen when more than 128 arrays were created on the system without
+creating the arrays by name. Manually specifying the large number would also
+fail.
 
-> On Wed, May 18, 2016 at 10:45:31AM -0500, Eric W. Biederman wrote:
->> > But if we do that it violates some of the assumptions of the patch to
->> > rework MNT_NODEV on your testing branch (and also those behind patch 2
->> > in this series). Something will need to be changed there to prevent a
->> > regression in mount behavior when a user ns tries to mount without
->> > MNT_NODEV when the mount inherited from its parent has it set.
->> 
->> Thank you for pointing that out.  I will look into that.
->> 
->> I believe I know exactly what you are talking about.  Of the choices I
->> think it is better to a minor localized change in the fs_fully_visible
->> logic than it is to cause problems elsewhere.
->
-> Agreed.
->
->> >> Apologies for not catching this earlier.
->> >
->> > Actually this is a more recent patch, so you possibly hadn't seen it
->> > before.
->> >
->> >> I am looking at folding all of this into the patch that introduces
->> >> sget_userns so that even bisects won't have regresssions.
->> >
->> > That's fine with me.
->> 
->> And thank you for keeping everything as separate patches.  That is at
->> least helping me catch up.  Even if I don't agree that these things
->> should be separate come merge time.
->
-> Honestly I probably would have squashed some of them into that first
-> patch myself if you hadn't already applied it to your testing branch, so
-> that's all just luck.
->
-> Keep in mind that I also have that patch for mqueue that isn't in this
-> series, and I haven't yet checked to see if the 4.7 merges introduce
-> anything which is going to require updating these patches. I was
-> planning to wait and send out updates after -rc1, but if you want that
-> stuff sooner just let me know.
+The second patch changes find_free_devnm in mdopen.c to use go to (2<<9)-1
+after 128 arrays have been created. Newer versions of the kernel don't allow
+the user to specify an array number than 511 so mdadm shouldn't automatically
+choose a bigger number. There was discussion about checking for new_array
+in /sys/module/md_mod/parameters on the list but that parameter has been in
+the kernel since 2.6.29. Any kernel from the last 7 years would still be
+limited by the check so it probably isn't worth a special case.
 
-As unfortunately I don't have anything going into -rc1 I am working on
-this right now.
+Mike Lovell (2):
+  Use dev_t for devnm2devid and devid2devnm
+  Change behavior in find_free_devnm when wrapping around.
 
-Let me finish sorting out the sget_userns and mnt nodev mess and I will
-push something out and then we can compare notes.  I think I have mqueue
-covered by other changes.  As it is in the set of filesystems that
-should just use sget_userns.
+ Detail.c  | 4 ++--
+ Grow.c    | 2 +-
+ lib.c     | 2 +-
+ mapfile.c | 2 +-
+ mdadm.h   | 4 ++--
+ mdopen.c  | 6 +++---
+ util.c    | 6 +++---
+ 7 files changed, 13 insertions(+), 13 deletions(-)
 
-I am sorting through the nodev corner of this now.  It should just be a
-day or two.
+-- 
+1.9.1
 
-Eric
