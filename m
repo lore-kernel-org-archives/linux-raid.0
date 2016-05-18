@@ -1,40 +1,79 @@
-From: Peter Kay <syllopsium@syllopsium.co.uk>
-Subject: Re: Two disk RAID10 inactive on boot if partition is missing
-Date: Wed, 18 May 2016 05:16:46 +0100
-Message-ID: <CAN4OnojftdMiFDSJMh_G=OHPQsXGZ0W18ubjG8P_2BDFXDF9Mg@mail.gmail.com>
-References: <CAN4OnogXN45Z3UUJyFzGgACPXuQMm1Gfw18kY9bjATrt5tvNqg@mail.gmail.com>
-	<alpine.DEB.2.02.1605171038490.28372@uplift.swm.pp.se>
-	<CAN4OnoguQMvnuUr7mGYpTi7_SonZ42Z5TSigKaJ0ZfZuiup0Og@mail.gmail.com>
-	<alpine.DEB.2.02.1605171209470.28372@uplift.swm.pp.se>
-	<573B1D49.6090301@turmel.org>
+From: ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org (Eric W. Biederman)
+Subject: Re: [PATCH v4 03/21] fs: Allow sysfs and cgroupfs to share super blocks between user namespaces
+Date: Wed, 18 May 2016 10:45:31 -0500
+Message-ID: <8760ubs738.fsf@x220.int.ebiederm.org>
+References: <1461699046-30485-1-git-send-email-seth.forshee@canonical.com>
+	<1461699046-30485-4-git-send-email-seth.forshee@canonical.com>
+	<87shxgxqai.fsf@x220.int.ebiederm.org>
+	<20160517235834.GA104031@ubuntu-hedt>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <573B1D49.6090301@turmel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Mikael Abrahamsson <swmike@swm.pp.se>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20160517235834.GA104031@ubuntu-hedt> (Seth Forshee's message of
+	"Tue, 17 May 2016 18:58:34 -0500")
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Cc: Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Jeff Layton <jlayton-vpEMnDpepFuMZCB2o+C8xQ@public.gmane.org>, "J. Bruce Fields" <bfields-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Richard Weinberger <richard.weinberger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Miklos Szeredi <mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Pavel Tikhomirov <ptikhomirov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-raid.ids
 
-On 17 May 2016 at 14:31, Phil Turmel <philip@turmel.org> wrote:
-> See the "Unclean Shutdown" section of "man md".
->
-> The kernel parameter you need is "md_mod.start_dirty_degraded=1".
->
-> Doing this is a really good way to end up with split brain.  Why do you
-> need to regularly boot without the devices that were present at shutdown?
-Thanks for the md reference.
+Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org> writes:
 
-I don't need to regularly boot with devices that were present at
-shutdown, but this is RAID! Given that it's not a boot device, and
-frankly even if it was, I would expect the default to be to start up
-anyway and then to be able to replace the missing device to be an
-option. Otherwise it removes a lot of the point of resilience.
+> On Tue, May 17, 2016 at 05:39:33PM -0500, Eric W. Biederman wrote:
+>> Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org> writes:
+>> 
+>> > Both of these filesystems already have use cases for mounting the
+>> > same super block from multiple user namespaces. For sysfs this
+>> > happens when using criu for snapshotting a container, where sysfs
+>> > is mnounted in the containers network ns but the hosts user ns.
+>> > The cgroup filesystem shares the same super block for all mounts
+>> > of the same hierarchy regardless of the namespace.
+>> >
+>> > As a result, the restriction on mounting a super block from a
+>> > single user namespace creates regressions for existing uses of
+>> > these filesystems. For these specific filesystems this
+>> > restriction isn't really necessary since the backing store is
+>> > objects in kernel memory and thus the ids assigned from inodes
+>> > is not subject to translation relative to s_user_ns.
+>> >
+>> > Add a new filesystem flag, FS_USERNS_SHARE_SB, which when set
+>> > causes sget_userns() to skip the check of s_user_ns. Set this
+>> > flag for the sysfs and cgroup filesystems to fix the
+>> > regressions.
+>> 
+>> So this one needs to be sget_userns(..., &init_user_ns, ...).
+>> And not a new special case.
+>
+> This is actually what I wanted to do, but based on a previous discussion
+> where I had suggested doing this (for a different reason) I came away
+> thinking you did not want it that way. So I'm happy with that change.
 
-I'll have a look at this further later tonight. The reason it is
-failing from '-v' is because /dev/sda12 is 'busy'. Looks like I need
-to read the docs further, I got it to come back up by using stop and
-assemble, but yes looks like split brain is a thing when I do that.
-Fortunately I'm not using this for anything important yet - I'm doing
-this precisely so that I know what to do when a device does fail. Once
-it's all working I'm going to leave it alone.
+Yeah.  Somedays it seems like there are a lot of pieces in play here.
+The security labels on sysfs seems to be a very compelling case.
+
+> But if we do that it violates some of the assumptions of the patch to
+> rework MNT_NODEV on your testing branch (and also those behind patch 2
+> in this series). Something will need to be changed there to prevent a
+> regression in mount behavior when a user ns tries to mount without
+> MNT_NODEV when the mount inherited from its parent has it set.
+
+Thank you for pointing that out.  I will look into that.
+
+I believe I know exactly what you are talking about.  Of the choices I
+think it is better to a minor localized change in the fs_fully_visible
+logic than it is to cause problems elsewhere.
+
+>> Apologies for not catching this earlier.
+>
+> Actually this is a more recent patch, so you possibly hadn't seen it
+> before.
+>
+>> I am looking at folding all of this into the patch that introduces
+>> sget_userns so that even bisects won't have regresssions.
+>
+> That's fine with me.
+
+And thank you for keeping everything as separate patches.  That is at
+least helping me catch up.  Even if I don't agree that these things
+should be separate come merge time.
+
+Eric
