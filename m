@@ -1,38 +1,71 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH] IMSM: retry reading sync_completed during reshape
-Date: Thu, 19 May 2016 10:45:39 -0400
-Message-ID: <wrfjwpmqw1gs.fsf@redhat.com>
-References: <146348428075.32064.12075746168157997590.stgit@gklab-154-222.intel.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: [GIT PULL] MD for 4.7-rc1
+Date: Thu, 19 May 2016 11:34:03 -0700
+Message-ID: <20160519183403.GA38667@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <146348428075.32064.12075746168157997590.stgit@gklab-154-222.intel.com>
-	(Pawel Baldysiak's message of "Tue, 17 May 2016 13:24:41 +0200")
-Sender: linux-raid-owner@vger.kernel.org
-To: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Cc: linux-raid@vger.kernel.org, artur.paszkiewicz@intel.com, aleksey.obitotskiy@intel.com, tomasz.majchrzak@intel.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-Pawel Baldysiak <pawel.baldysiak@intel.com> writes:
-> The sync_completed after restarting a reshape
-> (for example - after reboot) is set to "delayed" until
-> mdmon changes the state. Mdadm does not wait for that change with
-> old kernels. If this condition occurs - it exits and reshape
-> is not continuing. This patch adds retry of reading sync_complete
-> with a delay. It gives time for mdmon to change the "delayed" state.
->
-> Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
-> ---
->  super-intel.c |   17 ++++++++++++-----
->  1 file changed, 12 insertions(+), 5 deletions(-)
+Hi Linus,
 
-Hi Pawel,
+pleae pull MD update for 4.7. It includes several patches from Guoqing fixing
+md-cluster bugs and several patches from Heinz fixing dm-raid bugs.
 
-Applied, thanks!
+Thanks,
+Shaohua
 
-I have to admit I don't like this kind of fixes very much, delaying and
-hoping for something to happen in time, but with the APIs we have it's
-probably the best we can do.
+The following changes since commit 4810d9682971e8eee659f96e4f9d9154e3c6c0b4:
 
-Cheers,
-Jes
+  Merge branch 'for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/jmorris/linux-security (2016-05-04 11:14:00 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git tags/md/4.7-rc1
+
+for you to fetch changes up to 1fa9a1ad0a9db3c745fe0c1bfa73fd87901fd7f3:
+
+  md-cluster: check the return value of process_recvd_msg (2016-05-09 09:24:04 -0700)
+
+----------------------------------------------------------------
+Guoqing Jiang (15):
+      md-cluster: change resync lock from asynchronous to synchronous
+      md-cluser: make resync_finish only called after pers->sync_request
+      md-cluster: wake up thread to continue recovery
+      md-cluster: unregister thread if err happened
+      md-cluster: fix locking when node joins cluster during message broadcast
+      md-cluster: change array_sectors and update size are not supported
+      md-cluster: wakeup thread if activated a spare disk
+      md-cluster: always setup in-memory bitmap
+      md-cluster: sync bitmap when node received RESYNCING msg
+      md-cluster/bitmap: fix wrong calcuation of offset
+      md-cluster/bitmap: fix wrong page num in bitmap_file_clear_bit and bitmap_file_set_bit
+      md-cluster/bitmap: unplug bitmap to sync dirty pages to disk
+      md: set MD_CHANGE_PENDING in a atomic region
+      md-cluster: gather resync infos and enable recv_thread after bitmap is ready
+      md-cluster: check the return value of process_recvd_msg
+
+Heinz Mauelshagen (3):
+      md: md.c: fix oops in mddev_suspend for raid0
+      md: raid10: add prerequisite to run underneath dm-raid
+      md: raid5: add prerequisite to run underneath dm-raid
+
+kbuild test robot (1):
+      md-cluster: fix ifnullfree.cocci warnings
+
+ Documentation/md-cluster.txt |  6 +++
+ drivers/md/bitmap.c          | 88 +++++++++++++++++++++++++++++++++++-----
+ drivers/md/bitmap.h          |  3 ++
+ drivers/md/md-cluster.c      | 96 ++++++++++++++++++++++++++++++++++++--------
+ drivers/md/md-cluster.h      |  1 +
+ drivers/md/md.c              | 86 ++++++++++++++++++++++++---------------
+ drivers/md/raid1.c           |  4 +-
+ drivers/md/raid10.c          | 20 +++++----
+ drivers/md/raid5-cache.c     |  4 +-
+ drivers/md/raid5.c           | 10 +++--
+ include/linux/bitops.h       | 16 ++++++++
+ 11 files changed, 257 insertions(+), 77 deletions(-)
