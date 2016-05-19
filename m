@@ -1,37 +1,38 @@
-From: Sitsofe Wheeler <sitsofe@gmail.com>
-Subject: BLKZEROOUT not zeroing md dev on VMDK
-Date: Wed, 18 May 2016 23:39:30 +0100
-Message-ID: <20160518223616.GA409@sucs.org>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH] IMSM: retry reading sync_completed during reshape
+Date: Thu, 19 May 2016 10:45:39 -0400
+Message-ID: <wrfjwpmqw1gs.fsf@redhat.com>
+References: <146348428075.32064.12075746168157997590.stgit@gklab-154-222.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Arvind Kumar <arvindkumar@vmware.com>, VMware PV-Drivers <pv-drivers@vmware.com>, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <146348428075.32064.12075746168157997590.stgit@gklab-154-222.intel.com>
+	(Pawel Baldysiak's message of "Tue, 17 May 2016 13:24:41 +0200")
+Sender: linux-raid-owner@vger.kernel.org
+To: Pawel Baldysiak <pawel.baldysiak@intel.com>
+Cc: linux-raid@vger.kernel.org, artur.paszkiewicz@intel.com, aleksey.obitotskiy@intel.com, tomasz.majchrzak@intel.com
 List-Id: linux-raid.ids
 
-Hi,
+Pawel Baldysiak <pawel.baldysiak@intel.com> writes:
+> The sync_completed after restarting a reshape
+> (for example - after reboot) is set to "delayed" until
+> mdmon changes the state. Mdadm does not wait for that change with
+> old kernels. If this condition occurs - it exits and reshape
+> is not continuing. This patch adds retry of reading sync_complete
+> with a delay. It gives time for mdmon to change the "delayed" state.
+>
+> Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+> ---
+>  super-intel.c |   17 ++++++++++++-----
+>  1 file changed, 12 insertions(+), 5 deletions(-)
 
-With Ubuntu's 4.4.0-22-generic kernel and a Fedora 23
-4.6.0-1.vanilla.knurd.1.fc23.x86_64 kernel I've found that the
-BLKZEROOUT syscall can malfunction and not zero data.
+Hi Pawel,
 
-When BLKZEROOUT is issued to an MD device atop a PVSCSI controller
-supplied VMDK from ESXi 6.0 the call returns immediately and with a zero
-return code. Unfortunately, inspecting the data on the MD device shows
-that it has not been zeroed and is in fact untouched. The easiest way to
-see this behaviour is to boot the VM, create an mdadm device atop
-/dev/sd?, scribble some non-zero value on the disk and then use
-blkdiscard --zeroout /dev/md??? . If you then inspect the MD disk (e.g.
-with hexdump) you will still see the old data and using POSIX_FADV_DONTNEED
-on the MD device doesn't change the outcome.
+Applied, thanks!
 
-The only clue I've seen is that
-/sys/block/sd?/queue/write_same_max_bytes starts out being 33553920 but
-after a WRITE SAME is issued it becomes 0. If the MD device is created
-after write_same_max_bytes has become 0 on the backing disk then
-BLKZEROOUT seems to work correctly.
+I have to admit I don't like this kind of fixes very much, delaying and
+hoping for something to happen in time, but with the APIs we have it's
+probably the best we can do.
 
--- 
-Sitsofe | http://sucs.org/~sits/
+Cheers,
+Jes
