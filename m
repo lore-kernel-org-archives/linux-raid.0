@@ -1,26 +1,25 @@
-From: d tbsky <tbskyd@gmail.com>
-Subject: suggest disk numbers in a raidset?
-Date: Fri, 20 May 2016 13:13:43 +0800
-Message-ID: <CAC6SzHJ8Wi18opzDbzjtT+niM5QKOyOU3AAeo0npbDsV+sQOTQ@mail.gmail.com>
+From: Ankur Bose <ankur.bose@oracle.com>
+Subject: Write intent bitmap algorithm
+Date: Fri, 20 May 2016 00:03:03 -0700 (PDT)
+Message-ID: <cd14f4dd-a88a-4089-9b07-f16a221e003c@default>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi:
-   I need to create a raid6 array with about 20 disks, and it need to
-grow up in the future, maybe add another 20 disks into the array.
+Hi All,
 
-   I wonder how many disks can a software raid6 array handled? the LSI
-hardware raid (2208/3108) can only put 32 disks in an array, and I
-heard it may be just use 16 disks in a array is better in LSI.
+     We are doing performance analysis of MD raid1 and wanted to know the flow/algorithm of the writes with write intent bitmap.
+As per "man md" below lines gives the algo 
 
-  the system will be using to put NVR recording files, so the disk
-speed is not very important.
+"Before  any write  request is honored, md will make sure that the corresponding bit in the log is set.  After a period of time with no writes to an area of the array, the corresponding bit will be cleared."
 
-  thanks a lot for suggestion!
+Here we wanted to know after what period of time and what is the logic to calculate this period of time which MD does ?
 
-Regards,
-tbskyd
+I see a function "void bitmap_daemon_work(struct mddev *mddev)" in bitmap.c file but trying to figure out the logic how it is used.
+
+Thanks,
+ankur.
