@@ -1,66 +1,79 @@
-From: d tbsky <tbskyd@gmail.com>
+From: "John Stoffel" <john@stoffel.org>
 Subject: Re: suggest disk numbers in a raidset?
-Date: Sat, 21 May 2016 15:52:13 +0800
-Message-ID: <CAC6SzH+MEJHmec7_9NF3u7zjW0C46LozJUKfo4Oy3faySCRpXw@mail.gmail.com>
+Date: Sat, 21 May 2016 14:29:17 -0400
+Message-ID: <22336.43261.993642.748570@quad.stoffel.home>
 References: <CAC6SzHJ8Wi18opzDbzjtT+niM5QKOyOU3AAeo0npbDsV+sQOTQ@mail.gmail.com>
 	<22335.8101.224476.822021@quad.stoffel.home>
+	<CAC6SzH+MEJHmec7_9NF3u7zjW0C46LozJUKfo4Oy3faySCRpXw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <22335.8101.224476.822021@quad.stoffel.home>
+In-Reply-To: <CAC6SzH+MEJHmec7_9NF3u7zjW0C46LozJUKfo4Oy3faySCRpXw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: d tbsky <tbskyd@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2016-05-20 22:31 GMT+08:00 John Stoffel <john@stoffel.org>:
-> I wouldn't even think of using hardware RAID in this situation, and
-> I'd also not think about maximizing the size of the RAID6 volumes as
-> well, due to rebuild speed penalty.  Another issue to think about is
-> chunk size as the number of members in a RAID array go up.  Say you
-> have the default 64k block size (number pulled from thin air...), so
-> you need to have N * 64K worth of data before you can write a full
-> stripe of data.  So as your writing data, you'll want to keep the
-> block size down.
+>>>>> "d" == d tbsky <tbskyd@gmail.com> writes:
 
-thanks for sharing the thought. maybe I should lower the chunk size
-for full stripe write.
+d> 2016-05-20 22:31 GMT+08:00 John Stoffel <john@stoffel.org>:
+>> I wouldn't even think of using hardware RAID in this situation, and
+>> I'd also not think about maximizing the size of the RAID6 volumes as
+>> well, due to rebuild speed penalty.  Another issue to think about is
+>> chunk size as the number of members in a RAID array go up.  Say you
+>> have the default 64k block size (number pulled from thin air...), so
+>> you need to have N * 64K worth of data before you can write a full
+>> stripe of data.  So as your writing data, you'll want to keep the
+>> block size down.
 
-> But back to goal.  If you're writing large files, since I think NVR
-> refers to CCTV camera files, please correct me if wrong, you should
-> just stick with the defaults in terms of RAID defaults.
+d> thanks for sharing the thought. maybe I should lower the chunk size
+d> for full stripe write.
 
-yes NVR refers CCTV files.
+Maybe... since you'll be doing large streaming writes, it might not be
+a big problem in the long run.  And esp since it's probably not high
+performance either.  
 
-> What I would do just just create a RAID6 array with 10 disks, so you
-> only have 8 x 4Tb of data, with two parity disks.  Then create another
-> RAID6 with the remainng 10 disks.  Then you would add them as PVs into
-> LVM, and then stripe acroos them.  Something like this:
+>> But back to goal.  If you're writing large files, since I think NVR
+>> refers to CCTV camera files, please correct me if wrong, you should
+>> just stick with the defaults in terms of RAID defaults.
 
-yes I will use lvm to combine the array if necessary.
-but 10 disks with raid6 will use only 80% of disk capacity.
-I had use 16 disks before and it seems ok.
+d> yes NVR refers CCTV files.
 
->   # Since you want large space, make the extents use larger chunks here
->   # in the VG.
->   vgcreate -s 16 NVR /dev/md100 /dev/md101
+>> What I would do just just create a RAID6 array with 10 disks, so you
+>> only have 8 x 4Tb of data, with two parity disks.  Then create another
+>> RAID6 with the remainng 10 disks.  Then you would add them as PVs into
+>> LVM, and then stripe acroos them.  Something like this:
 
-  thanks for the suggestion. I will study it.
+d> yes I will use lvm to combine the array if necessary.  but 10 disks
+d> with raid6 will use only 80% of disk capacity.  I had use 16 disks
+d> before and it seems ok.
 
-> I'd want redundant power supplies, some hot spare disks, a UPS, and a
-> rock solid hardware with plenty of memory.  The other issue is that
-> unless you run a recent linux kernel, you might run into performance
-> problems with the RAID5/6 parity calculations being all done on a
-> single CPU core.  Newer versions should have fixed this, but I don't
-> recall the exact version right now.
+Disk is cheap, but in your case it sounds like space/cost is the
+driving factor.  
 
-   yes server hardware and environment is ready.
+>> # Since you want large space, make the extents use larger chunks here
+>> # in the VG.
+>> vgcreate -s 16 NVR /dev/md100 /dev/md101
 
-> Also, think about backups.  With this size of a system, backups are
-> going to be painful.... but maybe you don't care about backups of NVR
-> files past a certain time?
+d>   thanks for the suggestion. I will study it.
 
-   no backup for this indeed. if the data gone, just let time to re-collect it.
-   thanks again for your sharing!!
+>> I'd want redundant power supplies, some hot spare disks, a UPS, and a
+>> rock solid hardware with plenty of memory.  The other issue is that
+>> unless you run a recent linux kernel, you might run into performance
+>> problems with the RAID5/6 parity calculations being all done on a
+>> single CPU core.  Newer versions should have fixed this, but I don't
+>> recall the exact version right now.
 
-Regards,
-tbskyd
+d>    yes server hardware and environment is ready.
+
+>> Also, think about backups.  With this size of a system, backups are
+>> going to be painful.... but maybe you don't care about backups of NVR
+>> files past a certain time?
+
+d>    no backup for this indeed. if the data gone, just let time to re-collect it.
+d>    thanks again for your sharing!!
+
+In that case, go for broke!  But I'd still layer MD -> LVM ->
+filesystem(s) just to give yourself flexibilty.
+
