@@ -1,77 +1,66 @@
-From: Dallas Clement <dallas.a.clement@gmail.com>
-Subject: Mystery RCWs
-Date: Fri, 20 May 2016 17:46:51 -0500
-Message-ID: <CAE9DZUQCOZN-nX3Z6uQxkFD_yCxDVomCK=G9AnYMTjjWReJRtg@mail.gmail.com>
+From: d tbsky <tbskyd@gmail.com>
+Subject: Re: suggest disk numbers in a raidset?
+Date: Sat, 21 May 2016 15:52:13 +0800
+Message-ID: <CAC6SzH+MEJHmec7_9NF3u7zjW0C46LozJUKfo4Oy3faySCRpXw@mail.gmail.com>
+References: <CAC6SzHJ8Wi18opzDbzjtT+niM5QKOyOU3AAeo0npbDsV+sQOTQ@mail.gmail.com>
+	<22335.8101.224476.822021@quad.stoffel.home>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <22335.8101.224476.822021@quad.stoffel.home>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi All,
+2016-05-20 22:31 GMT+08:00 John Stoffel <john@stoffel.org>:
+> I wouldn't even think of using hardware RAID in this situation, and
+> I'd also not think about maximizing the size of the RAID6 volumes as
+> well, due to rebuild speed penalty.  Another issue to think about is
+> chunk size as the number of members in a RAID array go up.  Say you
+> have the default 64k block size (number pulled from thin air...), so
+> you need to have N * 64K worth of data before you can write a full
+> stripe of data.  So as your writing data, you'll want to keep the
+> block size down.
 
-I've got a new little piece of NAS hardware I am working with and
-trying to evaluate RAID 5, 6 performance on it.  It has an ARM based
-Annapurna Alpine SoC which apparently has a built-in XOR engine to
-help out with RAID 5, 6.  This little box has four spinning drives
-which each have a transfer rate of about 150 MB/s.
+thanks for sharing the thought. maybe I should lower the chunk size
+for full stripe write.
 
-I am only seeing a little over 200 MB/s sequential write throughput
-for RAID 6 as measured with fio.  This is a bit disappointing.  I was
-hoping that if writing stripe-aligned blocks I would get at least 250
-MB/s.
+> But back to goal.  If you're writing large files, since I think NVR
+> refers to CCTV camera files, please correct me if wrong, you should
+> just stick with the defaults in terms of RAID defaults.
 
-I am measuring the peformance of writing 1M blocks to the array.  My
-RAID 6 array was constructed with a 512KB chunk size.
+yes NVR refers CCTV files.
 
-# fio --runtime=30 --ramp_time=5 --numjobs=4 --iodepth=32
---ioengine=libaio --direct=1 --filename=/dev/md10 --bs=1M --rw=write
--name poi
+> What I would do just just create a RAID6 array with 10 disks, so you
+> only have 8 x 4Tb of data, with two parity disks.  Then create another
+> RAID6 with the remainng 10 disks.  Then you would add them as PVs into
+> LVM, and then stripe acroos them.  Something like this:
 
-I am expecting with a 512KB chunk size that I will be writing stripe
-aligned blocks.
+yes I will use lvm to combine the array if necessary.
+but 10 disks with raid6 will use only 80% of disk capacity.
+I had use 16 disks before and it seems ok.
 
-I then used blktrace to see what is going on suspecting that there
-might be excessive RMWs.  I did not see any RMWs but I did see many
-RCWs (about 20K).
+>   # Since you want large space, make the extents use larger chunks here
+>   # in the VG.
+>   vgcreate -s 16 NVR /dev/md100 /dev/md101
 
- 9,10   3       66     0.701873200 22465  Q  WS 347136 + 1024 [fio]
-  9,10   3       67     0.701925540 22465  U   N [fio] 16
-  9,10   3       68     0.702259400 22465  Q  WS 348160 + 1024 [fio]
-  9,10   3       69     0.702324340 22465  Q  WS 349184 + 1024 [fio]
-  9,10   3       70     0.702378960 22465  U   N [fio] 16
-  9,10   3       71     0.702627200 22465  Q  WS 350208 + 1024 [fio]
-  9,10   3       72     0.702668180 22465 UT   N [fio] 10
-  9,10   0      287     0.666149800  6504  C  WS 300032 [0]
-  9,10   0      288     0.666154080  6504  C  WS 299008 [0]
-  9,10   0      289     0.666491900  6504  C  WS 301056 [0]
-  9,10   0      290     0.666495620  6504  C  WS 302080 [0]
-  9,10   0      291     0.669055940  6504  C  WS 305152 [0]
-  9,10   0      292     0.669059720  6504  C  WS 306176 [0]
-  9,10   0        0     0.671655160     0  m   N raid5 rcw 168960 1 1 0
-  9,10   0        0     0.671671240     0  m   N raid5 rcw 169024 1 1 0
-  9,10   0        0     0.671679220     0  m   N raid5 rcw 169088 1 1 0
-  9,10   0        0     0.671684620     0  m   N raid5 rcw 169152 1 1 0
-  9,10   0        0     0.671697260     0  m   N raid5 rcw 169216 1 1 0
-  9,10   0        0     0.671702560     0  m   N raid5 rcw 169280 1 1 0
-  9,10   0        0     0.671708620     0  m   N raid5 rcw 169344 1 1 0
-  9,10   0        0     0.671713600     0  m   N raid5 rcw 169408 1 1 0
+  thanks for the suggestion. I will study it.
 
-It seems that prior to the RCWs, this process 6504 starts doing some
-writes.  It looks like this is the md driver.
+> I'd want redundant power supplies, some hot spare disks, a UPS, and a
+> rock solid hardware with plenty of memory.  The other issue is that
+> unless you run a recent linux kernel, you might run into performance
+> problems with the RAID5/6 parity calculations being all done on a
+> single CPU core.  Newer versions should have fixed this, but I don't
+> recall the exact version right now.
 
-# ps -elf | grep 6504
-1 S root      6504     2  0  80   0 -     0 md_thr May19 ?
-00:00:36 [md10_raid6]
+   yes server hardware and environment is ready.
 
-Can anyone explain what the md driver may be doing and why it's
-triggering all these RCWs?
+> Also, think about backups.  With this size of a system, backups are
+> going to be painful.... but maybe you don't care about backups of NVR
+> files past a certain time?
 
-By the way this is running on a Annapurna modified 3.10 kernel:
+   no backup for this indeed. if the data gone, just let time to re-collect it.
+   thanks again for your sharing!!
 
-     3.10.20-031020-generic-sa #201311201536 SMP
-
-Thanks,
-
-Dallas
+Regards,
+tbskyd
