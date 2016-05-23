@@ -1,106 +1,118 @@
-From: Joey Liao <joeyliao@qnap.com>
-Subject: [BUG] call trace in raid5 do_release_stripe() is triggered during I/O
- stress test in kernel 3.19-rc8
-Date: Mon, 23 May 2016 12:12:46 +0800
-Message-ID: <CAHvN=inrSMjyiwMxGyJ6xXEL+92SDPw_L864GWJiy6F-AV1phg@mail.gmail.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH] Need update superblock on time when deciding to do
+ reshape
+Date: Mon, 23 May 2016 12:02:04 -0700
+Message-ID: <20160523190204.GA129477@kernel.org>
+References: <1463475249-18658-1-git-send-email-xni@redhat.com>
+ <20160520175946.GA76216@kernel.org>
+ <953124641.53356599.1463883247414.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <953124641.53356599.1463883247414.JavaMail.zimbra@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Xiao Ni <xni@redhat.com>
+Cc: linux-raid@vger.kernel.org, Jes Sorensen <Jes.Sorensen@redhat.com>
 List-Id: linux-raid.ids
 
-Hi,
+On Sat, May 21, 2016 at 10:14:07PM -0400, Xiao Ni wrote:
+> 
+> 
+> ----- Original Message -----
+> > From: "Shaohua Li" <shli@kernel.org>
+> > To: "Xiao Ni" <xni@redhat.com>
+> > Cc: linux-raid@vger.kernel.org, "Jes Sorensen" <Jes.Sorensen@redhat.com>
+> > Sent: Saturday, May 21, 2016 1:59:46 AM
+> > Subject: Re: [PATCH] Need update superblock on time when deciding to do reshape
+> > 
+> > On Tue, May 17, 2016 at 04:54:09PM +0800, Xiao Ni wrote:
+> > > Hi all
+> > > 
+> > > If the disks are not enough to have spaces for relocating the data_offset,
+> > > it needs to run start_reshape and then run mdadm --grow --continue by
+> > > systemd. But mdadm --grow --continue fails because it checkes that
+> > > info->reshape_active is 0.
+> > > 
+> > > The info->reshape_active is set to 1 when the superblock feature_map
+> > > have the flag MD_FEATURE_RESHAPE_ACTIVE. Superblock feature_map is set
+> > > MD_FEATURE_RESHAPE_ACTIVE as mddev->reshape_position != MaxSector.
+> > > 
+> > > Function start_reshape calls raid5_start_reshape which changes
+> > > mddev->reshape_position to 0. Then in md_check_recovery it updates the
+> > > superblock to underlying devices. But there is a chance that the superblock
+> > > haven't written to underlying devices, the mdadm reads the superblock data.
+> > > So mdadm --grow --continue fails.
+> > > 
+> > > The steps to reproduce this:
+> > > mdadm -CR /dev/md0 -l5 -n3 /dev/loop[0-2] --bitmap=internal
+> > > mdadm --wait /dev/md0
+> > > mdadm /dev/md0 -a /dev/loop3
+> > > mdadm --grow --raid-devices  4 /dev/md0
+> > > The loop device size is 500MB
+> > > 
+> > > [root@storageqe-09 ~]# cat /proc/mdstat
+> > > Personalities : [raid6] [raid5] [raid4]
+> > > md0 : active raid5 loop3[4] loop2[3] loop1[1] loop0[0]
+> > >       1021952 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/4]
+> > >       [UUUU]
+> > >       [>....................]  reshape =  0.0% (1/510976) finish=0.0min
+> > >       speed=255488K/sec
+> > >       bitmap: 1/1 pages [4KB], 65536KB chunk
+> > 
+> > what's the bad effect of the --continue failure? I think reshape will still
+> > continue. Doing a update super there is ok, but I'm wondering if it's the
+> > good
+> > way. Could mdadm wait for MD_FEATURE_RESHAPE_ACTIVE then let systemd run?
+> > Because sounds like we are working around systemd bug, kernel itself will
+> > write
+> > superblock anyway soon, so we probably working around in userspace.
+> 
+> There is no bad effect if --continue failure. It just miss one chance to 
+> go on reshaping. Yes, as you said we can fix this in userspace. I tried
+> to start mdadm-grow-continue@.service 30 seconds later as mdadm-last-resort@.service
+> does. It can fix this too.
+> 
+> Sure it should be fixed this if mdadm try more times to check MD_FEATURE_RESHAPE_ACTIVE.
+>  
+> > 
+> > > unused devices: <none>
+> > > 
+> > > So if we update the superblock on time, mdadm can read the right superblock
+> > > data.
+> > > 
+> > > Signed-off-by <xni@redhat.com>
+> > > 
+> > > ---
+> > >  drivers/md/md.c | 1 +
+> > >  1 file changed, 1 insertion(+)
+> > > 
+> > > diff --git a/drivers/md/md.c b/drivers/md/md.c
+> > > index 14d3b37..7919606 100644
+> > > --- a/drivers/md/md.c
+> > > +++ b/drivers/md/md.c
+> > > @@ -4350,6 +4350,7 @@ action_store(struct mddev *mddev, const char *page,
+> > > size_t len)
+> > >  			else {
+> > >  				clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+> > >  				err = mddev->pers->start_reshape(mddev);
+> > > +				md_update_sb(mddev, 1);
+> > 
+> > write super even err != 0?
+> 
+> Ah, sorry for this. It should update superblock only err is 0. 
+> 
+> At first I want to fix this in userspace, but I ask myself why shouldn't update
+> the superblock once start_reshape returns. There are some guys waiting for the
+> update. The function action_store should update the superblock in time to tell
+> the colleagues what happens now. Then I checked the places where md_update_sb
+> is called. I found it is indeed called in some places where the md device 
+> changes. So I sent the patch here.
+> 
+> By the way, in size_store it update the superblock when err != 0. Is it right
+> to check err there?
 
-We start to do the I/O stress test for raid5 in kernel 3.19.8. During
-the stress test, the raid5 is clean (not
-resyncing/rebuilding/reshaping) and it is not degraded as well.
+I think we should. probably nobody noticed it before.
 
-However, we meet a machine reboot problem and we believe it hugely
-related to the following call trace:
-
-Ps.
-1. The call trace shows suddenly and the previous messages were 1 hour ago.
-2. It is not easy to reproduce but it has been taken place twice this week.
-
-It is really a serious problem to us, would you please help to provide
-us some suggestions to solve the problem or at least to figure out the
-root cause? Thanks.
-
-=== related source code ===
-
-static void do_release_stripe(struct r5conf *conf, struct stripe_head *sh,
-     struct list_head *temp_inactive_list)
-{
-    BUG_ON(!list_empty(&sh->lru));
-    ....
-}
-
-=== related call trace ===
-
- kernel BUG at drivers/md/raid5.c:299!
-<4>[53230.958843] invalid opcode: 0000 [#1] SMP
-<4>[53230.962991] Modules linked in: thunderbolt xt_mark
-ipt_MASQUERADE iptable_nat nf_nat_masquerade_ipv4 nf_nat_ipv4 nf_nat
-ppp_deflate bsd_comp ppp_mppe ppp_async ppp_generic slhc tun
-iscsi_tcp(O) libiscsi_tcp(O) libiscsi(O) scsi_transport_iscsi(O)
-iscsi_target_mod target_core_file target_core_iblock target_core_mod
-fbdisk(O) bonding bridge stp ipv6 uvcvideo videobuf2_vmalloc
-videobuf2_memops videobuf2_core snd_usb_caiaq snd_usb_audio
-snd_usbmidi_lib snd_seq_midi snd_rawmidi fnotify(PO) udf isofs
-iTCO_wdt psnap llc ufsd(PO) jnl(O) pl2303 usbserial intel_ips drbd(O)
-flashcache(O) dm_thin_pool dm_bio_prison dm_persistent_data
-hal_netlink(O) coretemp ixgbe mdio r8152 usbnet mii igb e1000e(O)
-mpt3sas mpt2sas scsi_transport_sas raid_class uas usb_storage xhci_pci
-xhci_hcd usblp uhci_hcd ehci_pci ehci_hcd
-<4>[53231.035304] CPU: 2 PID: 4316 Comm: md1_raid5 Tainted: P     U
- O   3.19.8 #1
-<4>[53231.042620] Hardware name: Default string Default string/SKYBAY,
-BIOS QX80AT04 03/29/2016
-<4>[53231.050818] task: ffff8802b383a0d0 ti: ffff88029e734000 task.ti:
-ffff88029e734000
-<4>[53231.058308] RIP: 0010:[]  [] do_release_stripe+0x190/0x1a0
-<4>[53231.066953] RSP: 0000:ffff88029e737c48  EFLAGS: 00210006
-<4>[53231.072283] RAX: 000000000000d201 RBX: ffff8802b05aec98 RCX:
-0000000000000001
-<4>[53231.079426] RDX: ffff8802aed74b48 RSI: ffff8802b05aec98 RDI:
-ffff8802aed74800
-<4>[53231.086571] RBP: ffff88029e737c68 R08: 0000000000000000 R09:
-0000000000000000
-<4>[53231.093714] R10: ffff88029e737b28 R11: 0000000000000002 R12:
-ffff8802aed74800
-<4>[53231.100858] R13: ffff8802b05aeca8 R14: ffff8802aed74b48 R15:
-ffff88029e737d08
-<4>[53231.108001] FS:  0000000000000000(0000)
-GS:ffff8802bdd00000(0000) knlGS:0000000000000000
-<4>[53231.116099] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-<4>[53231.121856] CR2: 00000000f76ade38 CR3: 0000000001c7d000 CR4:
-00000000003407e0
-<4>[53231.129017] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
-0000000000000000
-<4>[53231.136161] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7:
-0000000000000400
-<4>[53231.143304] Stack:
-<4>[53231.145326]  ffff88029e737cd0 0000000000000001 ffff8802aed74800
-0000000000000008
-<4>[53231.152818]  ffff88029e737c78 ffffffff81698bbb ffff88029e737d38
-ffffffff816a2318
-<4>[53231.160312]  ffff8802aed74800 ffff8802a903ece8 0000000000000000
-ffff88029e737e58
-<4>[53231.167835] Call Trace:
-<4>[53231.170295]  [] __release_stripe+0x1b/0x30
-<4>[53231.175966]  [] handle_active_stripes+0x3d8/0x450
-<4>[53231.182243]  [] raid5d+0x399/0x630
-<4>[53231.187221]  [] md_thread+0x7d/0x130
-<4>[53231.192369]  [] ? woken_wake_function+0x20/0x20
-<4>[53231.198473]  [] ? errors_store+0x70/0x70
-<4>[53231.203985]  [] kthread+0xe3/0xf0
-<4>[53231.208874]  [] ? kthreadd+0x160/0x160
-<4>[53231.214198]  [] ret_from_fork+0x58/0x90
-<4>[53231.219608]  [] ? kthreadd+0x160/0x160
-<4>[53231.224931] Code: b8 49 8b 44 24 18 48 8b b8 48 01 00 00 e8 89
-fe 00 00 eb a5 48 89 df e8 0f fd ff ff e9 14 ff ff ff 0f 0b eb fe 66
-0f 1f 44 00 00 <0f> 0b eb fe 0f 0b eb fe 0f 1f 84 00 00 00 00 00 55 48
-89 e5 e8
-<1>[53231.245381] RIP  [] do_release_stripe+0x190/0x1a0
-<4>[53231.251681]  RSP
+Thanks,
+Shaohua
