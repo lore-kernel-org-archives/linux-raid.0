@@ -1,291 +1,103 @@
-From: Baolin Wang <baolin.wang@linaro.org>
-Subject: [RFC 3/3] md: dm-crypt: Introduce the bulk mode method when sending request
-Date: Wed, 25 May 2016 14:12:31 +0800
-Message-ID: <70f051223cf882b03b373369b6b65b4a7ebf07b6.1464144791.git.baolin.wang@linaro.org>
+From: Ming Lei <ming.lei@canonical.com>
+Subject: Re: [RFC 1/3] block: Introduce blk_bio_map_sg() to map one bio
+Date: Wed, 25 May 2016 16:52:05 +0800
+Message-ID: <CACVXFVMYm_3rHe5wxs9YA15h+N0EfjMcGQEgnzLZTVbh7HUaRw@mail.gmail.com>
 References: <cover.1464144790.git.baolin.wang@linaro.org>
+	<abe693fad3abb0adfc0cf9ca5b3d287fdb0f2d5b.1464144791.git.baolin.wang@linaro.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1464144790.git.baolin.wang@linaro.org>
-In-Reply-To: <cover.1464144790.git.baolin.wang@linaro.org>
-References: <cover.1464144790.git.baolin.wang@linaro.org>
+In-Reply-To: <abe693fad3abb0adfc0cf9ca5b3d287fdb0f2d5b.1464144791.git.baolin.wang@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: axboe@kernel.dk, agk@redhat.com, snitzer@redhat.com, dm-devel@redhat.com, herbert@gondor.apana.org.au, davem@davemloft.net
-Cc: ebiggers3@gmail.com, js1304@gmail.com, tadeusz.struk@intel.com, smueller@chronox.de, standby24x7@gmail.com, shli@kernel.org, dan.j.williams@intel.com, martin.petersen@oracle.com, sagig@mellanox.com, kent.overstreet@gmail.com, keith.busch@intel.com, tj@kernel.org, ming.lei@canonical.com, broonie@kernel.org, arnd@arndb.de, linux-crypto@vger.kernel.org, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, baolin.wang@linaro.org
+To: Baolin Wang <baolin.wang@linaro.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "open list:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>, Herbert Xu <herbert@gondor.apana.org.au>, David Miller <davem@davemloft.net>, ebiggers3@gmail.com, js1304@gmail.com, tadeusz.struk@intel.com, smueller@chronox.de, standby24x7@gmail.com, Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Kent Overstreet <kent.overstreet@gmail.com>, Keith Busch <keith.busch@intel.com>, Tejun Heo <tj@kernel.org>, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, linux-crypto@vger.kernel.org, linux-block@vger.kernel.org, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-In now dm-crypt code, it is ineffective to map one segment (always one
-sector) of one bio with just only one scatterlist at one time for hardware
-crypto engine. Especially for some encryption mode (like ecb or xts mode)
-cooperating with the crypto engine, they just need one initial IV or null
-IV instead of different IV for each sector. In this situation We can consider
-to use multiple scatterlists to map the whole bio and send all scatterlists
-of one bio to crypto engine to encrypt or decrypt, which can improve the
-hardware engine's efficiency.
+On Wed, May 25, 2016 at 2:12 PM, Baolin Wang <baolin.wang@linaro.org> wrote:
+> In dm-crypt, it need to map one bio to scatterlist for improving the
+> hardware engine encryption efficiency. Thus this patch introduces the
+> blk_bio_map_sg() function to map one bio with scatterlists.
+>
+> Signed-off-by: Baolin Wang <baolin.wang@linaro.org>
+> ---
+>  block/blk-merge.c      |   45 +++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/blkdev.h |    3 +++
+>  2 files changed, 48 insertions(+)
+>
+> diff --git a/block/blk-merge.c b/block/blk-merge.c
+> index 2613531..9b92af4 100644
+> --- a/block/blk-merge.c
+> +++ b/block/blk-merge.c
+> @@ -417,6 +417,51 @@ single_segment:
+>  }
+>
+>  /*
+> + * map a bio to scatterlist, return number of sg entries setup.
+> + */
+> +int blk_bio_map_sg(struct request_queue *q, struct bio *bio,
+> +                  struct scatterlist *sglist,
+> +                  struct scatterlist **sg)
+> +{
+> +       struct bio_vec bvec, bvprv = { NULL };
+> +       struct bvec_iter iter;
+> +       int nsegs, cluster;
+> +
+> +       nsegs = 0;
+> +       cluster = blk_queue_cluster(q);
+> +
+> +       if (bio->bi_rw & REQ_DISCARD) {
+> +               /*
+> +                * This is a hack - drivers should be neither modifying the
+> +                * biovec, nor relying on bi_vcnt - but because of
+> +                * blk_add_request_payload(), a discard bio may or may not have
+> +                * a payload we need to set up here (thank you Christoph) and
+> +                * bi_vcnt is really the only way of telling if we need to.
+> +                */
+> +
+> +               if (bio->bi_vcnt)
+> +                       goto single_segment;
+> +
+> +               return 0;
+> +       }
+> +
+> +       if (bio->bi_rw & REQ_WRITE_SAME) {
+> +single_segment:
+> +               *sg = sglist;
+> +               bvec = bio_iovec(bio);
+> +               sg_set_page(*sg, bvec.bv_page, bvec.bv_len, bvec.bv_offset);
+> +               return 1;
+> +       }
+> +
+> +       bio_for_each_segment(bvec, bio, iter)
+> +               __blk_segment_map_sg(q, &bvec, sglist, &bvprv, sg,
+> +                                    &nsegs, &cluster);
+> +
+> +       return nsegs;
+> +}
+> +EXPORT_SYMBOL(blk_bio_map_sg);
 
-With this optimization, On my test setup (beaglebone black board) using 64KB
-I/Os on an eMMC storage device I saw about 60% improvement in throughput for
-encrypted writes, and about 100% improvement for encrypted reads. But this
-is not fit for other modes which need different IV for each sector.
+You can use __blk_bios_map_sg() to implement blk_bio_map_sg(),
+then code duplication may be avoided.
 
-Signed-off-by: Baolin Wang <baolin.wang@linaro.org>
----
- drivers/md/dm-crypt.c |  188 +++++++++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 176 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
-index 4f3cb35..1c86ea7 100644
---- a/drivers/md/dm-crypt.c
-+++ b/drivers/md/dm-crypt.c
-@@ -33,6 +33,7 @@
- #include <linux/device-mapper.h>
- 
- #define DM_MSG_PREFIX "crypt"
-+#define DM_MAX_SG_LIST	1024
- 
- /*
-  * context holding the current state of a multi-part conversion
-@@ -46,6 +47,8 @@ struct convert_context {
- 	sector_t cc_sector;
- 	atomic_t cc_pending;
- 	struct skcipher_request *req;
-+	struct sg_table sgt_in;
-+	struct sg_table sgt_out;
- };
- 
- /*
-@@ -803,6 +806,108 @@ static struct crypt_iv_operations crypt_iv_tcw_ops = {
- 	.post	   = crypt_iv_tcw_post
- };
- 
-+/*
-+ * Check how many sg entry numbers are needed when map one bio
-+ * with scatterlists in advance.
-+ */
-+static unsigned int crypt_sg_entry(struct bio *bio_t)
-+{
-+	struct request_queue *q = bdev_get_queue(bio_t->bi_bdev);
-+	int cluster = blk_queue_cluster(q);
-+	struct bio_vec bvec, bvprv = { NULL };
-+	struct bvec_iter biter;
-+	unsigned long nbytes = 0, sg_length = 0;
-+	unsigned int sg_cnt = 0, first_bvec = 0;
-+
-+	if (bio_t->bi_rw & REQ_DISCARD) {
-+		if (bio_t->bi_vcnt)
-+			return 1;
-+		return 0;
-+	}
-+
-+	if (bio_t->bi_rw & REQ_WRITE_SAME)
-+		return 1;
-+
-+	bio_for_each_segment(bvec, bio_t, biter) {
-+		nbytes = bvec.bv_len;
-+
-+		if (!cluster) {
-+			sg_cnt++;
-+			continue;
-+		}
-+
-+		if (!first_bvec) {
-+			first_bvec = 1;
-+			goto new_segment;
-+		}
-+
-+		if (sg_length + nbytes > queue_max_segment_size(q))
-+			goto new_segment;
-+
-+		if (!BIOVEC_PHYS_MERGEABLE(&bvprv, &bvec))
-+			goto new_segment;
-+
-+		if (!BIOVEC_SEG_BOUNDARY(q, &bvprv, &bvec))
-+			goto new_segment;
-+
-+		sg_length += nbytes;
-+		continue;
-+
-+new_segment:
-+		memcpy(&bvprv, &bvec, sizeof(struct bio_vec));
-+		sg_length = nbytes;
-+		sg_cnt++;
-+	}
-+
-+	return sg_cnt;
-+}
-+
-+static int crypt_convert_alloc_table(struct crypt_config *cc,
-+				     struct convert_context *ctx)
-+{
-+	struct bio *bio_in = ctx->bio_in;
-+	struct bio *bio_out = ctx->bio_out;
-+	unsigned int mode = skcipher_is_bulk_mode(any_tfm(cc));
-+	unsigned int sg_in_max, sg_out_max;
-+	int ret = 0;
-+
-+	if (!mode)
-+		goto out2;
-+
-+	/*
-+	 * Need to calculate how many sg entry need to be used
-+	 * for this bio.
-+	 */
-+	sg_in_max = crypt_sg_entry(bio_in) + 1;
-+	if (sg_in_max > DM_MAX_SG_LIST || sg_in_max <= 2)
-+		goto out2;
-+
-+	ret = sg_alloc_table(&ctx->sgt_in, sg_in_max, GFP_KERNEL);
-+	if (ret)
-+		goto out2;
-+
-+	if (bio_data_dir(bio_in) == READ)
-+		goto out1;
-+
-+	sg_out_max = crypt_sg_entry(bio_out) + 1;
-+	if (sg_out_max > DM_MAX_SG_LIST || sg_out_max <= 2)
-+		goto out3;
-+
-+	ret = sg_alloc_table(&ctx->sgt_out, sg_out_max, GFP_KERNEL);
-+	if (ret)
-+		goto out3;
-+
-+	return 0;
-+
-+out3:
-+	sg_free_table(&ctx->sgt_in);
-+out2:
-+	ctx->sgt_in.orig_nents = 0;
-+out1:
-+	ctx->sgt_out.orig_nents = 0;
-+	return ret;
-+}
-+
- static void crypt_convert_init(struct crypt_config *cc,
- 			       struct convert_context *ctx,
- 			       struct bio *bio_out, struct bio *bio_in,
-@@ -843,7 +948,13 @@ static int crypt_convert_block(struct crypt_config *cc,
- {
- 	struct bio_vec bv_in = bio_iter_iovec(ctx->bio_in, ctx->iter_in);
- 	struct bio_vec bv_out = bio_iter_iovec(ctx->bio_out, ctx->iter_out);
-+	unsigned int mode = skcipher_is_bulk_mode(any_tfm(cc));
-+	struct bio *bio_in = ctx->bio_in;
-+	struct bio *bio_out = ctx->bio_out;
-+	unsigned int total_bytes = bio_in->bi_iter.bi_size;
- 	struct dm_crypt_request *dmreq;
-+	struct scatterlist *sg_in;
-+	struct scatterlist *sg_out;
- 	u8 *iv;
- 	int r;
- 
-@@ -852,16 +963,6 @@ static int crypt_convert_block(struct crypt_config *cc,
- 
- 	dmreq->iv_sector = ctx->cc_sector;
- 	dmreq->ctx = ctx;
--	sg_init_table(&dmreq->sg_in, 1);
--	sg_set_page(&dmreq->sg_in, bv_in.bv_page, 1 << SECTOR_SHIFT,
--		    bv_in.bv_offset);
--
--	sg_init_table(&dmreq->sg_out, 1);
--	sg_set_page(&dmreq->sg_out, bv_out.bv_page, 1 << SECTOR_SHIFT,
--		    bv_out.bv_offset);
--
--	bio_advance_iter(ctx->bio_in, &ctx->iter_in, 1 << SECTOR_SHIFT);
--	bio_advance_iter(ctx->bio_out, &ctx->iter_out, 1 << SECTOR_SHIFT);
- 
- 	if (cc->iv_gen_ops) {
- 		r = cc->iv_gen_ops->generator(cc, iv, dmreq);
-@@ -869,8 +970,63 @@ static int crypt_convert_block(struct crypt_config *cc,
- 			return r;
- 	}
- 
--	skcipher_request_set_crypt(req, &dmreq->sg_in, &dmreq->sg_out,
--				   1 << SECTOR_SHIFT, iv);
-+	if (mode && ctx->sgt_in.orig_nents > 0) {
-+		struct scatterlist *sg = NULL;
-+		unsigned int total_sg_in, total_sg_out;
-+
-+		total_sg_in = blk_bio_map_sg(bdev_get_queue(bio_in->bi_bdev),
-+					     bio_in, ctx->sgt_in.sgl, &sg);
-+		if ((total_sg_in <= 0) ||
-+		    (total_sg_in > ctx->sgt_in.orig_nents)) {
-+			DMERR("%s in sg map error %d, sg table nents[%d]\n",
-+			      __func__, total_sg_in, ctx->sgt_in.orig_nents);
-+			return -EINVAL;
-+		}
-+
-+		if (sg)
-+			sg_mark_end(sg);
-+
-+		ctx->iter_in.bi_size -= total_bytes;
-+		sg_in = ctx->sgt_in.sgl;
-+		sg_out = ctx->sgt_in.sgl;
-+
-+		if (bio_data_dir(bio_in) == READ)
-+			goto set_crypt;
-+
-+		sg = NULL;
-+		total_sg_out = blk_bio_map_sg(bdev_get_queue(bio_out->bi_bdev),
-+					      bio_out, ctx->sgt_out.sgl, &sg);
-+		if ((total_sg_out <= 0) ||
-+		    (total_sg_out > ctx->sgt_out.orig_nents)) {
-+			DMERR("%s out sg map error %d, sg table nents[%d]\n",
-+			      __func__, total_sg_out, ctx->sgt_out.orig_nents);
-+			return -EINVAL;
-+		}
-+
-+		if (sg)
-+			sg_mark_end(sg);
-+
-+		ctx->iter_out.bi_size -= total_bytes;
-+		sg_out = ctx->sgt_out.sgl;
-+	} else  {
-+		sg_init_table(&dmreq->sg_in, 1);
-+		sg_set_page(&dmreq->sg_in, bv_in.bv_page, 1 << SECTOR_SHIFT,
-+			    bv_in.bv_offset);
-+
-+		sg_init_table(&dmreq->sg_out, 1);
-+		sg_set_page(&dmreq->sg_out, bv_out.bv_page, 1 << SECTOR_SHIFT,
-+			    bv_out.bv_offset);
-+
-+		bio_advance_iter(ctx->bio_in, &ctx->iter_in, 1 << SECTOR_SHIFT);
-+		bio_advance_iter(ctx->bio_out, &ctx->iter_out, 1 << SECTOR_SHIFT);
-+
-+		sg_in = &dmreq->sg_in;
-+		sg_out = &dmreq->sg_out;
-+		total_bytes = 1 << SECTOR_SHIFT;
-+	}
-+
-+set_crypt:
-+	skcipher_request_set_crypt(req, sg_in, sg_out, total_bytes, iv);
- 
- 	if (bio_data_dir(ctx->bio_in) == WRITE)
- 		r = crypto_skcipher_encrypt(req);
-@@ -1081,6 +1237,8 @@ static void crypt_dec_pending(struct dm_crypt_io *io)
- 	if (io->ctx.req)
- 		crypt_free_req(cc, io->ctx.req, base_bio);
- 
-+	sg_free_table(&io->ctx.sgt_in);
-+	sg_free_table(&io->ctx.sgt_out);
- 	base_bio->bi_error = error;
- 	bio_endio(base_bio);
- }
-@@ -1312,6 +1470,9 @@ static void kcryptd_crypt_write_convert(struct dm_crypt_io *io)
- 	io->ctx.iter_out = clone->bi_iter;
- 
- 	sector += bio_sectors(clone);
-+	r = crypt_convert_alloc_table(cc, &io->ctx);
-+	if (r < 0)
-+		io->error = -EIO;
- 
- 	crypt_inc_pending(io);
- 	r = crypt_convert(cc, &io->ctx);
-@@ -1343,6 +1504,9 @@ static void kcryptd_crypt_read_convert(struct dm_crypt_io *io)
- 
- 	crypt_convert_init(cc, &io->ctx, io->base_bio, io->base_bio,
- 			   io->sector);
-+	r = crypt_convert_alloc_table(cc, &io->ctx);
-+	if (r < 0)
-+		io->error = -EIO;
- 
- 	r = crypt_convert(cc, &io->ctx);
- 	if (r < 0)
--- 
-1.7.9.5
+> +
+> +/*
+>   * map a request to scatterlist, return number of sg entries setup. Caller
+>   * must make sure sg can hold rq->nr_phys_segments entries
+>   */
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 1fd8fdf..e5de4f8 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -1013,6 +1013,9 @@ extern void blk_queue_write_cache(struct request_queue *q, bool enabled, bool fu
+>  extern struct backing_dev_info *blk_get_backing_dev_info(struct block_device *bdev);
+>
+>  extern int blk_rq_map_sg(struct request_queue *, struct request *, struct scatterlist *);
+> +extern int blk_bio_map_sg(struct request_queue *q, struct bio *bio,
+> +                         struct scatterlist *sglist,
+> +                         struct scatterlist **sg);
+>  extern void blk_dump_rq_flags(struct request *, char *);
+>  extern long nr_blockdev_pages(void);
+>
+> --
+> 1.7.9.5
+>
