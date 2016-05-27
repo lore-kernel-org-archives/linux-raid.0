@@ -1,40 +1,87 @@
-From: Sitsofe Wheeler <sitsofe@gmail.com>
-Subject: Re: BLKZEROOUT not zeroing md dev on VMDK
-Date: Fri, 27 May 2016 05:45:46 +0100
-Message-ID: <CALjAwxgkgPZdXFkOuD-7Dsbxf9oVEGuXTDLnyqu8rTrJio_4mA@mail.gmail.com>
-References: <20160518223616.GA409@sucs.org>
-	<20160527041824.GC9418@birch.djwong.org>
+From: Song Liu <songliubraving@fb.com>
+Subject: [RFC 1/5] add bio_split_mddev
+Date: Thu, 26 May 2016 22:29:39 -0700
+Message-ID: <1464326983-3798454-2-git-send-email-songliubraving@fb.com>
+References: <1464326983-3798454-1-git-send-email-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160527041824.GC9418@birch.djwong.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@kernel.dk>, Arvind Kumar <arvindkumar@vmware.com>, VMware PV-Drivers <pv-drivers@vmware.com>, linux-raid@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-block@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1464326983-3798454-1-git-send-email-songliubraving@fb.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: shli@fb.com, nfbrown@novell.com, dan.j.williams@intel.com, hch@infradead.org, kernel-team@fb.com, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-On 27 May 2016 at 05:18, Darrick J. Wong <darrick.wong@oracle.com> wrote:
->
-> It's possible that the pvscsi device advertised WRITE SAME, but if the device
-> sends back ILLEGAL REQUEST then the SCSI disk driver will set
-> write_same_max_bytes=0.  Subsequent BLKZEROOUT attempts will then issue writes
-> of zeroes to the drive.
+similar to bio_clone_mddev, bio_alloc_mddev, this patch added
+bio_split_mddev, which uses a local bio set.
 
-Thanks for following up on this but that's not what happens on the md
-device - you can go on to issue as many BLKZEROOUT requests as you
-like but the md disk is never zeroed nor is an error returned.
+Signed-off-by: Song Liu <songliubraving@fb.com>
+Signed-off-by: Shaohua Li <shli@fb.com>
+---
+ drivers/md/md.c    | 14 +++++++++++---
+ drivers/md/md.h    |  2 ++
+ drivers/md/raid5.c |  2 +-
+ 3 files changed, 14 insertions(+), 4 deletions(-)
 
-I filed a bug at https://bugzilla.kernel.org/show_bug.cgi?id=118581
-(see https://bugzilla.kernel.org/show_bug.cgi?id=118581#c6 for
-alternative reproduction steps that use scsi_debug and can be reworked
-to impact device mapper) and Shaohua Li noted that
-blkdev_issue_write_same could return 0 even when the disk didn't
-support write same (see
-https://bugzilla.kernel.org/show_bug.cgi?id=118581#c8 ).
-
-Shaohua went on to create a patch for this ("block: correctly fallback
-for zeroout" - https://patchwork.kernel.org/patch/9137311/ ) which has
-yet to be reviewed.
-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 866825f..f42f8d0 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -158,10 +158,9 @@ static const struct block_device_operations md_fops;
+ 
+ static int start_readonly;
+ 
+-/* bio_clone_mddev
+- * like bio_clone, but with a local bio set
++/* bio_alloc_mddev, bio_clone_mddev, bio_split_mddev
++ * like bio_alloc, bio_clone, bio_split, but with a local bio set
+  */
+-
+ struct bio *bio_alloc_mddev(gfp_t gfp_mask, int nr_iovecs,
+ 			    struct mddev *mddev)
+ {
+@@ -187,6 +186,15 @@ struct bio *bio_clone_mddev(struct bio *bio, gfp_t gfp_mask,
+ }
+ EXPORT_SYMBOL_GPL(bio_clone_mddev);
+ 
++struct bio *bio_split_mddev(struct bio *bio, int sectors,
++			    gfp_t gfp, struct mddev *mddev)
++{
++	if (!mddev || !mddev->bio_set)
++		return bio_split(bio, sectors, gfp, NULL);
++	return bio_split(bio, sectors, gfp, mddev->bio_set);
++}
++EXPORT_SYMBOL_GPL(bio_split_mddev);
++
+ /*
+  * We have a system wide 'event count' that is incremented
+  * on any 'interesting' event, and readers of /proc/mdstat
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index b5c4be7..9e1d4bf 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -642,6 +642,8 @@ extern struct bio *bio_clone_mddev(struct bio *bio, gfp_t gfp_mask,
+ 				   struct mddev *mddev);
+ extern struct bio *bio_alloc_mddev(gfp_t gfp_mask, int nr_iovecs,
+ 				   struct mddev *mddev);
++extern struct bio *bio_split_mddev(struct bio *bio, int sectors,
++				   gfp_t gfp, struct mddev *mddev);
+ 
+ extern void md_unplug(struct blk_plug_cb *cb, bool from_schedule);
+ extern void md_reload_sb(struct mddev *mddev, int raid_disk);
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index ad9e15a..8e25e67 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -4871,7 +4871,7 @@ static struct bio *chunk_aligned_read(struct mddev *mddev, struct bio *raid_bio)
+ 		unsigned sectors = chunk_sects - (sector & (chunk_sects-1));
+ 
+ 		if (sectors < bio_sectors(raid_bio)) {
+-			split = bio_split(raid_bio, sectors, GFP_NOIO, fs_bio_set);
++			split = bio_split_mddev(raid_bio, sectors, GFP_NOIO, mddev);
+ 			bio_chain(split, raid_bio);
+ 		} else
+ 			split = raid_bio;
 -- 
-Sitsofe | http://sucs.org/~sits/
+2.8.0.rc2
+
