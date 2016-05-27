@@ -1,87 +1,49 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [RFC 1/5] add bio_split_mddev
-Date: Thu, 26 May 2016 22:29:39 -0700
-Message-ID: <1464326983-3798454-2-git-send-email-songliubraving@fb.com>
-References: <1464326983-3798454-1-git-send-email-songliubraving@fb.com>
+Subject: [RFC 0/5] raid5-cache: the write cache part
+Date: Thu, 26 May 2016 22:29:38 -0700
+Message-ID: <1464326983-3798454-1-git-send-email-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1464326983-3798454-1-git-send-email-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: shli@fb.com, nfbrown@novell.com, dan.j.williams@intel.com, hch@infradead.org, kernel-team@fb.com, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-similar to bio_clone_mddev, bio_alloc_mddev, this patch added
-bio_split_mddev, which uses a local bio set.
+Hi,
 
-Signed-off-by: Song Liu <songliubraving@fb.com>
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- drivers/md/md.c    | 14 +++++++++++---
- drivers/md/md.h    |  2 ++
- drivers/md/raid5.c |  2 +-
- 3 files changed, 14 insertions(+), 4 deletions(-)
+This is the caching part of raid5-cache. The journal part was released
+with kernel 4.4.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 866825f..f42f8d0 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -158,10 +158,9 @@ static const struct block_device_operations md_fops;
- 
- static int start_readonly;
- 
--/* bio_clone_mddev
-- * like bio_clone, but with a local bio set
-+/* bio_alloc_mddev, bio_clone_mddev, bio_split_mddev
-+ * like bio_alloc, bio_clone, bio_split, but with a local bio set
-  */
--
- struct bio *bio_alloc_mddev(gfp_t gfp_mask, int nr_iovecs,
- 			    struct mddev *mddev)
- {
-@@ -187,6 +186,15 @@ struct bio *bio_clone_mddev(struct bio *bio, gfp_t gfp_mask,
- }
- EXPORT_SYMBOL_GPL(bio_clone_mddev);
- 
-+struct bio *bio_split_mddev(struct bio *bio, int sectors,
-+			    gfp_t gfp, struct mddev *mddev)
-+{
-+	if (!mddev || !mddev->bio_set)
-+		return bio_split(bio, sectors, gfp, NULL);
-+	return bio_split(bio, sectors, gfp, mddev->bio_set);
-+}
-+EXPORT_SYMBOL_GPL(bio_split_mddev);
-+
- /*
-  * We have a system wide 'event count' that is incremented
-  * on any 'interesting' event, and readers of /proc/mdstat
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index b5c4be7..9e1d4bf 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -642,6 +642,8 @@ extern struct bio *bio_clone_mddev(struct bio *bio, gfp_t gfp_mask,
- 				   struct mddev *mddev);
- extern struct bio *bio_alloc_mddev(gfp_t gfp_mask, int nr_iovecs,
- 				   struct mddev *mddev);
-+extern struct bio *bio_split_mddev(struct bio *bio, int sectors,
-+				   gfp_t gfp, struct mddev *mddev);
- 
- extern void md_unplug(struct blk_plug_cb *cb, bool from_schedule);
- extern void md_reload_sb(struct mddev *mddev, int raid_disk);
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index ad9e15a..8e25e67 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4871,7 +4871,7 @@ static struct bio *chunk_aligned_read(struct mddev *mddev, struct bio *raid_bio)
- 		unsigned sectors = chunk_sects - (sector & (chunk_sects-1));
- 
- 		if (sectors < bio_sectors(raid_bio)) {
--			split = bio_split(raid_bio, sectors, GFP_NOIO, fs_bio_set);
-+			split = bio_split_mddev(raid_bio, sectors, GFP_NOIO, mddev);
- 			bio_chain(split, raid_bio);
- 		} else
- 			split = raid_bio;
--- 
+The caching part uses same disk format of raid456 journal, and provides
+acceleration to writes. Write operations are committed (bio_endio) once
+the data is secured in journal. Reconstruct and RMW are postponed to
+reclaim path, which is (hopefully) not on the critical path.
+
+The patch are splitted in 3 major changes: read path (chunk_aligned_read),
+write part (the main changes), and a naive reclaim. I have tested read
+and write patches (0001-0004), including data-verify in degraded modes.
+The reclaim patch still needs some work.
+
+I haven't finished the recovery part of the raid5-cache. But as the
+patch set grows, I would like feedback about current changes.
+
+Thanks,
+Song
+
+Song Liu (5):
+  add bio_split_mddev
+  move stripe cache define and functions to raid5.h
+  r5cache: look up stripe cache for chunk_aligned_read
+  r5cache: write part of r5cache
+  r5cache: naive reclaim approach
+
+ drivers/md/md.c          |  14 +-
+ drivers/md/md.h          |   2 +
+ drivers/md/raid5-cache.c | 711 +++++++++++++++++++++++++++++++++++++++++++++--
+ drivers/md/raid5.c       | 264 ++++++++++++------
+ drivers/md/raid5.h       | 101 ++++++-
+ 5 files changed, 990 insertions(+), 102 deletions(-)
+
+--
 2.8.0.rc2
-
