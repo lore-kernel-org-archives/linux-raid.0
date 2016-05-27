@@ -1,317 +1,369 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [RFC 5/5] r5cache: naive reclaim approach
-Date: Thu, 26 May 2016 22:29:43 -0700
-Message-ID: <1464326983-3798454-6-git-send-email-songliubraving@fb.com>
-References: <1464326983-3798454-1-git-send-email-songliubraving@fb.com>
+From: Baolin Wang <baolin.wang@linaro.org>
+Subject: Re: [RFC 3/3] md: dm-crypt: Introduce the bulk mode method when
+ sending request
+Date: Fri, 27 May 2016 14:03:05 +0800
+Message-ID: <CAMz4kuLJtj_G4Ug+YNXwK_ZvLc74vuGXBj9eJxoFTesE48MMTg@mail.gmail.com>
+References: <cover.1464144790.git.baolin.wang@linaro.org>
+	<70f051223cf882b03b373369b6b65b4a7ebf07b6.1464144791.git.baolin.wang@linaro.org>
+	<20160526140440.GA24865@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1464326983-3798454-1-git-send-email-songliubraving@fb.com>
+In-Reply-To: <20160526140440.GA24865@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@fb.com, nfbrown@novell.com, dan.j.williams@intel.com, hch@infradead.org, kernel-team@fb.com, Song Liu <songliubraving@fb.com>
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Alasdair G Kergon <agk@redhat.com>, "open list:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>, Herbert Xu <herbert@gondor.apana.org.au>, David Miller <davem@davemloft.net>, Sagi Grimberg <sagig@mellanox.com>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Joonsoo Kim <js1304@gmail.com>, tadeusz.struk@intel.com, smueller@chronox.de, Ming Lei <ming.lei@canonical.com>, Eric Biggers <ebiggers3@gmail.com>, linux-block@vger.kernel.org, Keith Busch <keith.busch@intel.com>, LKML <linux-kernel@vger.kernel.org>, Masanari Iida <standby24x7@gmail.com>, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, linux-crypto@vger.kernel.org, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Shaohua Li <shli@kernel.org>, Kent Overstreet <kent.overs>
 List-Id: linux-raid.ids
 
-This patch adds a naive reclaim for r5c cache.
+On 26 May 2016 at 22:04, Mike Snitzer <snitzer@redhat.com> wrote:
+> Comments inlined.
+>
+> In general the most concerning bit is the need for memory allocation in
+> the IO path (see comment/question below near call to sg_alloc_table).
+> In DM targets we make heavy use of .ctr preallocated memory and/or
+> per-bio-data to avoid memory allocations in the IO path.
 
-There are two limited resources, stripe cache and journal disk space.
-For better performance, we priotize reclaim of stripes with more data
-in cache. To free up more journal space, we free earliest data on
-the journal.
+Make sense.
 
-The reclaim thread (r5l_reclaim_thread) wakes up every 5 seconds. In
-this thread, r5c_do_reclaim reclaims stripe cache space, while
-r5l_do_reclaim reclaims journal space.
+>
+> On Wed, May 25 2016 at  2:12am -0400,
+> Baolin Wang <baolin.wang@linaro.org> wrote:
+>
+>> In now dm-crypt code, it is ineffective to map one segment (always one
+>> sector) of one bio with just only one scatterlist at one time for hardware
+>> crypto engine. Especially for some encryption mode (like ecb or xts mode)
+>> cooperating with the crypto engine, they just need one initial IV or null
+>> IV instead of different IV for each sector. In this situation We can consider
+>> to use multiple scatterlists to map the whole bio and send all scatterlists
+>> of one bio to crypto engine to encrypt or decrypt, which can improve the
+>> hardware engine's efficiency.
+>>
+>> With this optimization, On my test setup (beaglebone black board) using 64KB
+>> I/Os on an eMMC storage device I saw about 60% improvement in throughput for
+>> encrypted writes, and about 100% improvement for encrypted reads. But this
+>> is not fit for other modes which need different IV for each sector.
+>>
+>> Signed-off-by: Baolin Wang <baolin.wang@linaro.org>
+>> ---
+>>  drivers/md/dm-crypt.c |  188 +++++++++++++++++++++++++++++++++++++++++++++----
+>>  1 file changed, 176 insertions(+), 12 deletions(-)
+>>
+>> diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
+>> index 4f3cb35..1c86ea7 100644
+>> --- a/drivers/md/dm-crypt.c
+>> +++ b/drivers/md/dm-crypt.c
+>> @@ -33,6 +33,7 @@
+>>  #include <linux/device-mapper.h>
+>>
+>>  #define DM_MSG_PREFIX "crypt"
+>> +#define DM_MAX_SG_LIST       1024
+>>
+>>  /*
+>>   * context holding the current state of a multi-part conversion
+>> @@ -46,6 +47,8 @@ struct convert_context {
+>>       sector_t cc_sector;
+>>       atomic_t cc_pending;
+>>       struct skcipher_request *req;
+>> +     struct sg_table sgt_in;
+>> +     struct sg_table sgt_out;
+>>  };
+>>
+>>  /*
+>> @@ -803,6 +806,108 @@ static struct crypt_iv_operations crypt_iv_tcw_ops = {
+>>       .post      = crypt_iv_tcw_post
+>>  };
+>>
+>> +/*
+>> + * Check how many sg entry numbers are needed when map one bio
+>> + * with scatterlists in advance.
+>> + */
+>> +static unsigned int crypt_sg_entry(struct bio *bio_t)
+>> +{
+>> +     struct request_queue *q = bdev_get_queue(bio_t->bi_bdev);
+>> +     int cluster = blk_queue_cluster(q);
+>> +     struct bio_vec bvec, bvprv = { NULL };
+>> +     struct bvec_iter biter;
+>> +     unsigned long nbytes = 0, sg_length = 0;
+>> +     unsigned int sg_cnt = 0, first_bvec = 0;
+>> +
+>> +     if (bio_t->bi_rw & REQ_DISCARD) {
+>> +             if (bio_t->bi_vcnt)
+>> +                     return 1;
+>> +             return 0;
+>> +     }
+>> +
+>> +     if (bio_t->bi_rw & REQ_WRITE_SAME)
+>> +             return 1;
+>> +
+>> +     bio_for_each_segment(bvec, bio_t, biter) {
+>> +             nbytes = bvec.bv_len;
+>> +
+>> +             if (!cluster) {
+>> +                     sg_cnt++;
+>> +                     continue;
+>> +             }
+>> +
+>> +             if (!first_bvec) {
+>> +                     first_bvec = 1;
+>> +                     goto new_segment;
+>> +             }
+>> +
+>> +             if (sg_length + nbytes > queue_max_segment_size(q))
+>> +                     goto new_segment;
+>> +
+>> +             if (!BIOVEC_PHYS_MERGEABLE(&bvprv, &bvec))
+>> +                     goto new_segment;
+>> +
+>> +             if (!BIOVEC_SEG_BOUNDARY(q, &bvprv, &bvec))
+>> +                     goto new_segment;
+>> +
+>> +             sg_length += nbytes;
+>> +             continue;
+>> +
+>> +new_segment:
+>> +             memcpy(&bvprv, &bvec, sizeof(struct bio_vec));
+>> +             sg_length = nbytes;
+>> +             sg_cnt++;
+>> +     }
+>> +
+>> +     return sg_cnt;
+>> +}
+>> +
+>> +static int crypt_convert_alloc_table(struct crypt_config *cc,
+>> +                                  struct convert_context *ctx)
+>> +{
+>> +     struct bio *bio_in = ctx->bio_in;
+>> +     struct bio *bio_out = ctx->bio_out;
+>> +     unsigned int mode = skcipher_is_bulk_mode(any_tfm(cc));
+>
+> please use: bool bulk_mode = ...
 
-r5c_cache keeps all data in cache (not fully committed to RAID) in
-a list (stripe_in_cache). These stripes are in the order of their
-first appearence on the journal. So the log tail (last_checkpoint)
-should point to the journal_start of the first item in the list.
+OK.
 
-Signed-off-by: Song Liu <songliubraving@fb.com>
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- drivers/md/raid5-cache.c | 96 ++++++++++++++++++++++++++++++++++++++----------
- drivers/md/raid5.c       | 14 ++++++-
- drivers/md/raid5.h       |  2 +
- 3 files changed, 91 insertions(+), 21 deletions(-)
+>
+>> +     unsigned int sg_in_max, sg_out_max;
+>> +     int ret = 0;
+>> +
+>> +     if (!mode)
+>> +             goto out2;
+>
+> Please use more descriptive label names than out[1-3]
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 66a3cd5..272c109 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -34,6 +34,9 @@
- #define RECLAIM_MAX_FREE_SPACE (10 * 1024 * 1024 * 2) /* sector */
- #define RECLAIM_MAX_FREE_SPACE_SHIFT (2)
- 
-+/* wake up reclaim thread periodically */
-+#define RECLAIM_WAKEUP_INTERVAL (5 * HZ)
-+
- /*
-  * We only need 2 bios per I/O unit to make progress, but ensure we
-  * have a few more available to not get too tight.
-@@ -52,6 +55,11 @@ struct r5c_cache {
- 	int flush_threshold;		/* flush the stripe when flush_threshold buffers are dirty  */
- 	int mode;			/* enum r5c_cache_mode */
- 
-+	struct list_head stripe_in_cache; /* all stripes in the cache, with sh->journal_start in order */
-+	spinlock_t stripe_in_cache_lock;  /* lock for stripe_in_cache */
-+
-+	sector_t first_sector;		/* first useful data on journal */
-+
- 	/* read stats */
- 	atomic64_t read_full_hits;	/* the whole chunk in cache */
- 	atomic64_t read_partial_hits;	/* some pages of the chunk in cache */
-@@ -165,6 +173,8 @@ static void init_r5c_cache(struct r5conf *conf, struct r5c_cache *cache)
- {
- 	cache->flush_threshold = conf->raid_disks - conf->max_degraded;  /* full stripe */
- 	cache->mode = R5C_MODE_WRITE_BACK;
-+	INIT_LIST_HEAD(&cache->stripe_in_cache);
-+	spin_lock_init(&cache->stripe_in_cache_lock);
- 
- 	atomic64_set(&cache->read_full_hits, 0);
- 	atomic64_set(&cache->read_partial_hits, 0);
-@@ -497,6 +507,7 @@ static int r5l_log_stripe(struct r5l_log *log, struct stripe_head *sh,
- 	int meta_size;
- 	int ret;
- 	struct r5l_io_unit *io;
-+	unsigned long flags;
- 
- 	meta_size =
- 		((sizeof(struct r5l_payload_data_parity) + sizeof(__le32))
-@@ -542,6 +553,16 @@ static int r5l_log_stripe(struct r5l_log *log, struct stripe_head *sh,
- 	atomic_inc(&io->pending_stripe);
- 	sh->log_io = io;
- 
-+	spin_lock_irqsave(&log->cache.stripe_in_cache_lock, flags);
-+	spin_lock(&sh->stripe_lock);
-+	if (sh->journal_start == -1L) {
-+		BUG_ON(!list_empty(&sh->r5c));
-+		sh->journal_start = log->next_checkpoint;
-+		list_add_tail(&sh->r5c,
-+			      &log->cache.stripe_in_cache);
-+	}
-+	spin_unlock(&sh->stripe_lock);
-+	spin_unlock_irqrestore(&log->cache.stripe_in_cache_lock, flags);
- 	return 0;
- }
- 
-@@ -863,6 +884,10 @@ static void r5l_write_super_and_discard_space(struct r5l_log *log,
- 		blkdev_issue_discard(bdev, log->rdev->data_offset, end,
- 				GFP_NOIO, 0);
- 	}
-+	mutex_lock(&log->io_mutex);
-+	log->last_checkpoint = end;
-+	log->last_cp_seq = log->next_cp_seq;
-+	mutex_unlock(&log->io_mutex);
- }
- 
- static void r5l_do_reclaim(struct r5l_log *log)
-@@ -901,19 +926,32 @@ static void r5l_do_reclaim(struct r5l_log *log)
- 	if (reclaimable == 0)
- 		return;
- 
--	/*
--	 * write_super will flush cache of each raid disk. We must write super
--	 * here, because the log area might be reused soon and we don't want to
--	 * confuse recovery
--	 */
--	r5l_write_super_and_discard_space(log, next_checkpoint);
-+	r5l_run_no_space_stripes(log);
-+}
- 
--	mutex_lock(&log->io_mutex);
--	log->last_checkpoint = next_checkpoint;
--	log->last_cp_seq = next_cp_seq;
--	mutex_unlock(&log->io_mutex);
-+static void r5c_update_super(struct r5conf *conf)
-+{
-+	struct list_head *l;
-+	struct stripe_head *sh;
-+	struct r5l_log *log = conf->log;
-+	sector_t end = -1L;
-+	unsigned long flags;
- 
--	r5l_run_no_space_stripes(log);
-+	if (list_empty(&conf->log->cache.stripe_in_cache)) {
-+		/* all stripes flushed */
-+		r5l_write_super_and_discard_space(log, log->next_checkpoint);
-+		return;
-+	}
-+	spin_lock_irqsave(&log->cache.stripe_in_cache_lock, flags);
-+	l = conf->log->cache.stripe_in_cache.next;
-+	sh = list_entry(l, struct stripe_head, r5c);
-+	spin_lock(&sh->stripe_lock);
-+	end = sh->journal_start;
-+	spin_unlock(&sh->stripe_lock);
-+	spin_unlock_irqrestore(&log->cache.stripe_in_cache_lock, flags);
-+
-+	if (end != log->last_checkpoint && end != -1L)
-+		r5l_write_super_and_discard_space(log, sh->journal_start);
- }
- 
- static void r5l_reclaim_thread(struct md_thread *thread)
-@@ -924,12 +962,11 @@ static void r5l_reclaim_thread(struct md_thread *thread)
- 
- 	if (!log)
- 		return;
--/*
--	spin_lock_irq(&conf->device_lock);
-+
- 	r5c_do_reclaim(conf);
--	spin_unlock_irq(&conf->device_lock);
--*/
- 	r5l_do_reclaim(log);
-+	r5c_update_super(conf);
-+	md_wakeup_thread(mddev->thread);
- }
- 
- void r5l_wake_reclaim(struct r5l_log *log, sector_t space)
-@@ -973,6 +1010,7 @@ void r5l_quiesce(struct r5l_log *log, int state)
- 		r5l_wake_reclaim(log, -1L);
- 		md_unregister_thread(&log->reclaim_thread);
- 		r5l_do_reclaim(log);
-+		r5c_update_super(log->rdev->mddev->private);
- 	}
- }
- 
-@@ -1627,6 +1665,7 @@ void r5c_handle_stripe_flush(struct r5conf *conf,
- 			     int disks) {
- 	int i;
- 	int do_wakeup = 0;
-+	unsigned long flags;
- 
- 	if (sh->r5c_state == R5C_STATE_PARITY_DONE) {
- 		r5c_set_state(sh, R5C_STATE_INRAID);
-@@ -1636,6 +1675,12 @@ void r5c_handle_stripe_flush(struct r5conf *conf,
- 			if (test_and_clear_bit(R5_Overlap, &sh->dev[i].flags))
- 				do_wakeup = 1;
- 		}
-+		spin_lock_irqsave(&conf->log->cache.stripe_in_cache_lock, flags);
-+		list_del_init(&sh->r5c);
-+		spin_unlock_irqrestore(&conf->log->cache.stripe_in_cache_lock, flags);
-+		spin_lock_irqsave(&sh->stripe_lock, flags);
-+		sh->journal_start = -1L;
-+		spin_unlock_irqrestore(&sh->stripe_lock, flags);
- 	}
- 	if (do_wakeup)
- 		wake_up(&conf->wait_for_overlap);
-@@ -1717,6 +1762,9 @@ static void r5c_adjust_flush_threshold(struct r5conf *conf)
- 	else if (atomic_read(&conf->r5c_cached_stripes) * 8 > conf->max_nr_stripes)
- 		new_thres -= 1;
- 
-+	if (test_bit(R5_INACTIVE_BLOCKED, &conf->cache_state))
-+		new_thres = 1;
-+
- 	if (new_thres >= 1)
- 		log->cache.flush_threshold = new_thres;
- }
-@@ -1725,16 +1773,23 @@ void r5c_do_reclaim(struct r5conf *conf)
- {
- 	struct stripe_head *sh, *next;
- 	struct r5l_log *log = conf->log;
--
--	assert_spin_locked(&conf->device_lock);
-+	int count = 0;
-+	unsigned long flags;
- 
- 	if (!log)
- 		return;
- 
-+	spin_lock_irqsave(&conf->device_lock, flags);
- 	r5c_adjust_flush_threshold(conf);
--	list_for_each_entry_safe(sh, next, &conf->r5c_cached_list, lru)
--		if (atomic_read(&sh->dev_in_cache) >= log->cache.flush_threshold)
-+	list_for_each_entry_safe(sh, next, &conf->r5c_cached_list, lru) {
-+		if (atomic_read(&sh->dev_in_cache) >= log->cache.flush_threshold) {
-+			count ++;
- 			r5c_flush_stripe(conf, sh);
-+		}
-+	}
-+	spin_unlock_irqrestore(&conf->device_lock, flags);
-+	if (test_bit(R5_INACTIVE_BLOCKED, &conf->cache_state))
-+		wake_up(&conf->wait_for_overlap);
- }
- 
- static int r5l_load_log(struct r5l_log *log)
-@@ -1849,6 +1904,8 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
- 						 log->rdev->mddev, "reclaim");
- 	if (!log->reclaim_thread)
- 		goto reclaim_thread;
-+	log->reclaim_thread->timeout = RECLAIM_WAKEUP_INTERVAL;
-+
- 	init_waitqueue_head(&log->iounit_wait);
- 
- 	INIT_LIST_HEAD(&log->no_mem_stripes);
-@@ -1857,7 +1914,6 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
- 	spin_lock_init(&log->no_space_stripes_lock);
- 
- 	init_r5c_cache(conf, &log->cache);
--
- 	if (r5l_load_log(log))
- 		goto error;
- 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 127c5c2..3e2bdc5 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -636,6 +636,8 @@ raid5_get_active_stripe(struct r5conf *conf, sector_t sector,
- 			if (!sh) {
- 				set_bit(R5_INACTIVE_BLOCKED,
- 					&conf->cache_state);
-+				if (conf->log)
-+					r5l_wake_reclaim(conf->log, 0);
- 				wait_event_lock_irq(
- 					conf->wait_for_stripe,
- 					!list_empty(conf->inactive_list + hash) &&
-@@ -670,6 +672,15 @@ raid5_get_active_stripe(struct r5conf *conf, sector_t sector,
- 	} while (sh == NULL);
- 
- 	spin_unlock_irq(conf->hash_locks + hash);
-+
-+	if (conf->log &&
-+	    (atomic_read(&conf->active_stripes) +
-+	     atomic_read(&conf->r5c_cached_stripes) >
-+	     conf->max_nr_stripes * 3 / 4)) {
-+		set_bit(R5_INACTIVE_BLOCKED, &conf->cache_state);
-+		r5l_wake_reclaim(conf->log, 0);
-+	}
-+
- 	return sh;
- }
- 
-@@ -1965,8 +1976,10 @@ static struct stripe_head *alloc_stripe(struct kmem_cache *sc, gfp_t gfp)
- 		spin_lock_init(&sh->batch_lock);
- 		INIT_LIST_HEAD(&sh->batch_list);
- 		INIT_LIST_HEAD(&sh->lru);
-+		INIT_LIST_HEAD(&sh->r5c);
- 		atomic_set(&sh->count, 1);
- 		atomic_set(&sh->dev_in_cache, 0);
-+		sh->journal_start = -1L;
- 	}
- 	return sh;
- }
-@@ -5965,7 +5978,6 @@ static void raid5d(struct md_thread *thread)
- 			md_check_recovery(mddev);
- 			spin_lock_irq(&conf->device_lock);
- 		}
--		r5c_do_reclaim(conf);
- 	}
- 	pr_debug("%d stripes handled\n", handled);
- 
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index 78fcc6d..4fe06cc 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -237,6 +237,8 @@ struct stripe_head {
- 	struct r5l_io_unit	*log_io;
- 	struct list_head	log_list;
- 	atomic_t		dev_in_cache;
-+	sector_t		journal_start; /* first meta block on the journal */
-+	struct list_head	r5c; /* for r5c_cache->stripe_in_cache */
- 	/**
- 	 * struct stripe_operations
- 	 * @target - STRIPE_OP_COMPUTE_BLK target
+OK.
+
+>
+>> +
+>> +     /*
+>> +      * Need to calculate how many sg entry need to be used
+>> +      * for this bio.
+>> +      */
+>> +     sg_in_max = crypt_sg_entry(bio_in) + 1;
+>
+> The return from crypt_sg_entry() is pretty awkward, given you just go on
+> to add 1; as is the bounds checking.. the magic value of 2 needs to be
+> be made clearer.
+
+I'll remove the crypt_sg_entry() function.
+
+>
+>> +     if (sg_in_max > DM_MAX_SG_LIST || sg_in_max <= 2)
+>> +             goto out2;
+>> +
+>> +     ret = sg_alloc_table(&ctx->sgt_in, sg_in_max, GFP_KERNEL);
+>
+> Is it safe to be using GFP_KERNEL here?  AFAIK this is in the IO mapping
+> path and we try to avoid memory allocations at all costs -- due to the
+> risk of deadlock when issuing IO to stacked block devices (dm-crypt
+> could be part of a much more elaborate IO stack).
+
+OK. I'll move the sg table allocation to be preallocated in the .ctr function.
+
+>
+>> +     if (ret)
+>> +             goto out2;
+>> +
+>> +     if (bio_data_dir(bio_in) == READ)
+>> +             goto out1;
+>> +
+>> +     sg_out_max = crypt_sg_entry(bio_out) + 1;
+>> +     if (sg_out_max > DM_MAX_SG_LIST || sg_out_max <= 2)
+>> +             goto out3;
+>> +
+>> +     ret = sg_alloc_table(&ctx->sgt_out, sg_out_max, GFP_KERNEL);
+>> +     if (ret)
+>> +             goto out3;
+>> +
+>> +     return 0;
+>> +
+>> +out3:
+>
+> out_free_table?
+>
+>> +     sg_free_table(&ctx->sgt_in);
+>> +out2:
+>
+> out_skip_alloc?
+>
+>> +     ctx->sgt_in.orig_nents = 0;
+>> +out1:
+>
+> out_skip_write?
+>
+>> +     ctx->sgt_out.orig_nents = 0;
+>> +     return ret;
+>> +}
+>> +
+>>  static void crypt_convert_init(struct crypt_config *cc,
+>>                              struct convert_context *ctx,
+>>                              struct bio *bio_out, struct bio *bio_in,
+>> @@ -843,7 +948,13 @@ static int crypt_convert_block(struct crypt_config *cc,
+>>  {
+>>       struct bio_vec bv_in = bio_iter_iovec(ctx->bio_in, ctx->iter_in);
+>>       struct bio_vec bv_out = bio_iter_iovec(ctx->bio_out, ctx->iter_out);
+>> +     unsigned int mode = skcipher_is_bulk_mode(any_tfm(cc));
+>
+> again please use: bool bulk_mode = ...
+
+OK.
+
+>
+>> +     struct bio *bio_in = ctx->bio_in;
+>> +     struct bio *bio_out = ctx->bio_out;
+>> +     unsigned int total_bytes = bio_in->bi_iter.bi_size;
+>>       struct dm_crypt_request *dmreq;
+>> +     struct scatterlist *sg_in;
+>> +     struct scatterlist *sg_out;
+>>       u8 *iv;
+>>       int r;
+>>
+>> @@ -852,16 +963,6 @@ static int crypt_convert_block(struct crypt_config *cc,
+>>
+>>       dmreq->iv_sector = ctx->cc_sector;
+>>       dmreq->ctx = ctx;
+>> -     sg_init_table(&dmreq->sg_in, 1);
+>> -     sg_set_page(&dmreq->sg_in, bv_in.bv_page, 1 << SECTOR_SHIFT,
+>> -                 bv_in.bv_offset);
+>> -
+>> -     sg_init_table(&dmreq->sg_out, 1);
+>> -     sg_set_page(&dmreq->sg_out, bv_out.bv_page, 1 << SECTOR_SHIFT,
+>> -                 bv_out.bv_offset);
+>> -
+>> -     bio_advance_iter(ctx->bio_in, &ctx->iter_in, 1 << SECTOR_SHIFT);
+>> -     bio_advance_iter(ctx->bio_out, &ctx->iter_out, 1 << SECTOR_SHIFT);
+>>
+>>       if (cc->iv_gen_ops) {
+>>               r = cc->iv_gen_ops->generator(cc, iv, dmreq);
+>> @@ -869,8 +970,63 @@ static int crypt_convert_block(struct crypt_config *cc,
+>>                       return r;
+>>       }
+>>
+>> -     skcipher_request_set_crypt(req, &dmreq->sg_in, &dmreq->sg_out,
+>> -                                1 << SECTOR_SHIFT, iv);
+>> +     if (mode && ctx->sgt_in.orig_nents > 0) {
+>> +             struct scatterlist *sg = NULL;
+>> +             unsigned int total_sg_in, total_sg_out;
+>> +
+>> +             total_sg_in = blk_bio_map_sg(bdev_get_queue(bio_in->bi_bdev),
+>> +                                          bio_in, ctx->sgt_in.sgl, &sg);
+>> +             if ((total_sg_in <= 0) ||
+>> +                 (total_sg_in > ctx->sgt_in.orig_nents)) {
+>> +                     DMERR("%s in sg map error %d, sg table nents[%d]\n",
+>> +                           __func__, total_sg_in, ctx->sgt_in.orig_nents);
+>> +                     return -EINVAL;
+>> +             }
+>> +
+>> +             if (sg)
+>> +                     sg_mark_end(sg);
+>> +
+>> +             ctx->iter_in.bi_size -= total_bytes;
+>> +             sg_in = ctx->sgt_in.sgl;
+>> +             sg_out = ctx->sgt_in.sgl;
+>> +
+>> +             if (bio_data_dir(bio_in) == READ)
+>> +                     goto set_crypt;
+>> +
+>> +             sg = NULL;
+>> +             total_sg_out = blk_bio_map_sg(bdev_get_queue(bio_out->bi_bdev),
+>> +                                           bio_out, ctx->sgt_out.sgl, &sg);
+>> +             if ((total_sg_out <= 0) ||
+>> +                 (total_sg_out > ctx->sgt_out.orig_nents)) {
+>> +                     DMERR("%s out sg map error %d, sg table nents[%d]\n",
+>> +                           __func__, total_sg_out, ctx->sgt_out.orig_nents);
+>> +                     return -EINVAL;
+>> +             }
+>> +
+>> +             if (sg)
+>> +                     sg_mark_end(sg);
+>> +
+>> +             ctx->iter_out.bi_size -= total_bytes;
+>> +             sg_out = ctx->sgt_out.sgl;
+>> +     } else  {
+>> +             sg_init_table(&dmreq->sg_in, 1);
+>> +             sg_set_page(&dmreq->sg_in, bv_in.bv_page, 1 << SECTOR_SHIFT,
+>> +                         bv_in.bv_offset);
+>> +
+>> +             sg_init_table(&dmreq->sg_out, 1);
+>> +             sg_set_page(&dmreq->sg_out, bv_out.bv_page, 1 << SECTOR_SHIFT,
+>> +                         bv_out.bv_offset);
+>> +
+>> +             bio_advance_iter(ctx->bio_in, &ctx->iter_in, 1 << SECTOR_SHIFT);
+>> +             bio_advance_iter(ctx->bio_out, &ctx->iter_out, 1 << SECTOR_SHIFT);
+>> +
+>> +             sg_in = &dmreq->sg_in;
+>> +             sg_out = &dmreq->sg_out;
+>> +             total_bytes = 1 << SECTOR_SHIFT;
+>> +     }
+>> +
+>> +set_crypt:
+>> +     skcipher_request_set_crypt(req, sg_in, sg_out, total_bytes, iv);
+>
+> Given how long this code has gotten I'd prefer to see this factored out
+> to a new setup method.
+
+I'll refactor this long function. Thanks for your comments.
+
+>
+>>       if (bio_data_dir(ctx->bio_in) == WRITE)
+>>               r = crypto_skcipher_encrypt(req);
+>> @@ -1081,6 +1237,8 @@ static void crypt_dec_pending(struct dm_crypt_io *io)
+>>       if (io->ctx.req)
+>>               crypt_free_req(cc, io->ctx.req, base_bio);
+>>
+>> +     sg_free_table(&io->ctx.sgt_in);
+>> +     sg_free_table(&io->ctx.sgt_out);
+>>       base_bio->bi_error = error;
+>>       bio_endio(base_bio);
+>>  }
+>> @@ -1312,6 +1470,9 @@ static void kcryptd_crypt_write_convert(struct dm_crypt_io *io)
+>>       io->ctx.iter_out = clone->bi_iter;
+>>
+>>       sector += bio_sectors(clone);
+>> +     r = crypt_convert_alloc_table(cc, &io->ctx);
+>> +     if (r < 0)
+>> +             io->error = -EIO;
+>>
+>>       crypt_inc_pending(io);
+>>       r = crypt_convert(cc, &io->ctx);
+>> @@ -1343,6 +1504,9 @@ static void kcryptd_crypt_read_convert(struct dm_crypt_io *io)
+>>
+>>       crypt_convert_init(cc, &io->ctx, io->base_bio, io->base_bio,
+>>                          io->sector);
+>> +     r = crypt_convert_alloc_table(cc, &io->ctx);
+>> +     if (r < 0)
+>> +             io->error = -EIO;
+>>
+>>       r = crypt_convert(cc, &io->ctx);
+>>       if (r < 0)
+>> --
+>> 1.7.9.5
+>>
+>> --
+>> dm-devel mailing list
+>> dm-devel@redhat.com
+>> https://www.redhat.com/mailman/listinfo/dm-devel
+
+
+
 -- 
-2.8.0.rc2
-
+Baolin.wang
+Best Regards
