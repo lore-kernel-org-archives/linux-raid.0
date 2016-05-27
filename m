@@ -1,64 +1,48 @@
-From: Bryan Hepworth <bryan.hepworth@newcastle.ac.uk>
-Subject: RE: mdadm remove old md details reassemble working drives
-Date: Thu, 26 May 2016 14:21:47 +0000
-Message-ID: <DB5PR07MB128724BB112C7FE5223E404BD5410@DB5PR07MB1287.eurprd07.prod.outlook.com>
-References: <DB5PR07MB1287BD3F72D4FA302118C075D5410@DB5PR07MB1287.eurprd07.prod.outlook.com>
- <20160526114124.GA4028@metamorpher.de>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: BLKZEROOUT not zeroing md dev on VMDK
+Date: Thu, 26 May 2016 21:18:25 -0700
+Message-ID: <20160527041824.GC9418@birch.djwong.org>
+References: <20160518223616.GA409@sucs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160526114124.GA4028@metamorpher.de>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20160518223616.GA409@sucs.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sitsofe Wheeler <sitsofe@gmail.com>
+Cc: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@kernel.dk>, Arvind Kumar <arvindkumar@vmware.com>, VMware PV-Drivers <pv-drivers@vmware.com>, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
->-----Original Message-----
->From: Andreas Klauer [mailto:Andreas.Klauer@metamorpher.de]
->Sent: 26 May 2016 12:41
->To: Bryan Hepworth
->Cc: linux-raid@vger.kernel.org
->Subject: Re: mdadm remove old md details reassemble working drives
->
->On Thu, May 26, 2016 at 09:56:24AM +0000, Bryan Hepworth wrote:
->> /etc/mdadm.conf
->>
->> [root@inscribe5 etc]# cat mdadm.conf
->> ARRAY /dev/md/inscribe5.ncl.ac.uk:130 level=raid5 num-devices=12
->metadata=1.2 name=inscribe5.ncl.ac.uk:130
->UUID=cb850648:d5b35007:dc6000f0:b48ab578
->>
->devices=/dev/sdb,/dev/sdc,/dev/sdd,/dev/sde,/dev/sdf,/dev/sdg,/dev/sdh,
->/dev/sdi,/dev/sdj,/dev/sdk,/dev/sdl,/dev/sdm
->> ARRAY /dev/md/igmimager.ncl.ac.uk:136 level=raid5 num-devices=12
->metadata=1.2 name=igmimager.ncl.ac.uk:136
->UUID=b4cb3aaf:e09885cb:6c0ea8bf:a4118a61
->>
->devices=/dev/sdn,/dev/sdo,/dev/sdp,/dev/sdq,/dev/sdr,/dev/sds,/dev/sdt,
->/dev/sdu,/dev/sdv,/dev/sdw,/dev/sdx,/dev/sdy
->
->That looks a bit overengineered...
->
->You can reduce the mdadm.conf to just use UUID and nothing else
->
->ARRAY /dev/md0 UUID=cb850648:d5b35007:dc6000f0:b48ab578
->
->Keep the /dev/md/name if you need it but everything else
->(num-devices, metadata, devices, level, ...) is part
->of the metadata, no need to duplicate it in the conf.
->
->There doesn't seem to be a problem with the metadata itself
->(all clean, same update time, same event count) so unless
->the devices get detected late or something it should just work
->when assembling by UUID...
->
->Regards
->Andreas Klauer
+On Wed, May 18, 2016 at 11:39:30PM +0100, Sitsofe Wheeler wrote:
+> Hi,
+> 
+> With Ubuntu's 4.4.0-22-generic kernel and a Fedora 23
+> 4.6.0-1.vanilla.knurd.1.fc23.x86_64 kernel I've found that the
+> BLKZEROOUT syscall can malfunction and not zero data.
+> 
+> When BLKZEROOUT is issued to an MD device atop a PVSCSI controller
+> supplied VMDK from ESXi 6.0 the call returns immediately and with a zero
+> return code. Unfortunately, inspecting the data on the MD device shows
+> that it has not been zeroed and is in fact untouched. The easiest way to
+> see this behaviour is to boot the VM, create an mdadm device atop
+> /dev/sd?, scribble some non-zero value on the disk and then use
+> blkdiscard --zeroout /dev/md??? . If you then inspect the MD disk (e.g.
+> with hexdump) you will still see the old data and using POSIX_FADV_DONTNEED
+> on the MD device doesn't change the outcome.
+> 
+> The only clue I've seen is that
+> /sys/block/sd?/queue/write_same_max_bytes starts out being 33553920 but
+> after a WRITE SAME is issued it becomes 0. If the MD device is created
+> after write_same_max_bytes has become 0 on the backing disk then
+> BLKZEROOUT seems to work correctly.
 
-Thanks Andreas
+It's possible that the pvscsi device advertised WRITE SAME, but if the device
+sends back ILLEGAL REQUEST then the SCSI disk driver will set
+write_same_max_bytes=0.  Subsequent BLKZEROOUT attempts will then issue writes
+of zeroes to the drive.
 
-Works like a charm, back up and running thanks so much for your input.
+--D
 
-Bryan
+> 
+> -- 
+> Sitsofe | http://sucs.org/~sits/
