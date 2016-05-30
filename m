@@ -1,18 +1,38 @@
-From: "hi" <jscott11111@aol.com>
-Subject: =?utf-8?B?77mi77mjSGVsbG8=?=
-Date: Sun, 29 May 2016 16:42:05 +0800
-Message-ID: <ACEDBCA4CD1D84B77885FFECD71E0F50@vhbpwi>
+From: Joey Liao <joeyliao@qnap.com>
+Subject: Why does raid0 set max_hw_sectors as chunk size but the other raid
+ types doesn't?
+Date: Mon, 30 May 2016 19:55:43 +0800
+Message-ID: <CAHvN=in80JrXO=tDyxNhq9d_wW1ZCCioENyTLu9tYuYYDof20w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: mariaferrazzi@tiscali.it
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-SGVsbG8NClRWLCBjYW1lcmEsIGxhcHRvcCwgYmlrZSwgZGosIGlwaG9uZSwgc2Ftc3VuZyBwcm9k
-dWN0IC4uLi4uIDUwJSBkaXNjb3VudCBmb3IgYWxsIG91ciBwcm9kdWN0cw0Kd3d3LiBzbG9vb25l
-IC5jb20=
+Hi,
 
+I have no idea why does raid0_run() in raid0.c use
+blk_queue_max_hw_sectors() to set max_hw_sectors as the chunk size,
+but the other raid types doesn't?
 
+What's the purpose to limit the max_hw_sectors in raid0?
+
+Is it related to the source code logic issue or the performance issue?
+
+Besides, I have an interesting observation. If I remove all the
+following queue limitation codes in raid0_run() of raid0.c, the block
+size in iostat is still the same as chunk size even the input block
+size is much larger than the chunk size. Why???
+
+-  blk_queue_max_hw_sectors(mddev->queue, mddev->chunk_sectors);
+-  blk_queue_max_write_same_sectors(mddev->queue, mddev->chunk_sectors);
++  //blk_queue_max_hw_sectors(mddev->queue, mddev->chunk_sectors);
++  //blk_queue_max_write_same_sectors(mddev->queue, mddev->chunk_sectors);
+
+-  blk_queue_io_min(mddev->queue, mddev->chunk_sectors << 9);
+-  blk_queue_io_opt(mddev->queue,
+-                 (mddev->chunk_sectors << 9) * mddev->raid_disks);
++  //blk_queue_io_min(mddev->queue, mddev->chunk_sectors << 9);
++  /*blk_queue_io_opt(mddev->queue,
++              (mddev->chunk_sectors << 9) * mddev->raid_disks);*/
