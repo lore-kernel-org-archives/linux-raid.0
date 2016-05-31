@@ -1,107 +1,47 @@
-From: bobzer <bobzer@gmail.com>
-Subject: Re: raid 5 crashed
-Date: Mon, 30 May 2016 18:00:30 -0400
-Message-ID: <CADzS=arbwpZg=VRcaiLaMJrLzr8pOjFTC-EwUtSpC1A3SmaTcQ@mail.gmail.com>
-References: <CADzS=aoMEaFv5TPYUpYBnLhOpF+u9dtG6aa=JZ5gd=Qv1=OrMQ@mail.gmail.com>
- <20160511131524.GA11811@cthulhu.home.robinhill.me.uk> <CADzS=aoKqrG0QV1-Fe5g_b=n11gmbnerTyZ+eY4rBtJieNz_2w@mail.gmail.com>
- <CADzS=apUB=XZRmCWjpOHuRgvk7EhqrbpRQhHQ+MHf8NHyGCU0w@mail.gmail.com>
- <CADzS=are4kkK5Lpm2WTAnqhE1D3XuMFwTKbO8_FzDbGtmqu2Dw@mail.gmail.com> <574C8EB9.3070706@youngman.org.uk>
+From: "Peckins, Steven E" <speckins@illinois.edu>
+Subject: RAID6 recovery with 6/9 drives out-of-sync
+Date: Tue, 31 May 2016 02:43:33 +0000
+Message-ID: <C50C72C6-FC75-4863-B743-F63F09AF93B0@illinois.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <574C8EB9.3070706@youngman.org.uk>
+Content-Language: en-US
+Content-ID: <1F9F41FCE4303342BB6C1013F75E60E4@mx.uillinois.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Anthonys Lists <antlists@youngman.org.uk>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Mikael Abrahamsson <swmike@swm.pp.se>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I did follow his advice for the smartctl i can't right now but i will
-post the output
-my drives are desktop grade normal seagate, not NAS nor entreprise so
-i will retry but i will limit the speed of reconstruction with :
-echo 40000 > /proc/sys/dev/raid/speed_limit_max
-echo 1000 > /proc/sys/dev/raid/speed_limit_min
-I hope that it will permit to finish the rebuilding
+
+I have a system with a 9+1 disk RAID6 array that has "3 drives and 1 spare - not enough to start the array."  The metadata version is 1.1; mdadm version is v3.3.
+
+The component devices in the array are supposed to be multipath devices (dm-multipath), but for some reason, when the server was restarted, md grabbed both dm-* components and raw devices.  I *think* that this is what caused the problem.
+
+The output from "mdadm --examine" shows that the drives in this array have either 44 events (4 drives, including the spare) or 35 events (6 drives) and have an earlier "Updated Time."  All components have a "clean" State, but the drives with later timestamps regard the other drives as missing (AAA......).
+
+	Six drives report this:
+
+		Update Time : Thu May 26 12:10:15 2016
+			 Events : 35
+	   Array State : AAAAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+
+	Four drives report this:
+
+		Update Time : Thu May 26 15:44:23 2016
+			 Events : 44
+	   Array State : AAA...... ('A' == active, '.' == missing, 'R' == replacing)
 
 
-On Mon, May 30, 2016 at 3:04 PM, Anthonys Lists
-<antlists@youngman.org.uk> wrote:
-> On 30/05/2016 16:01, bobzer wrote:
->>
->> HI,
->>
->> i did a dd_rescue which recovered a lot but not everything :
->> # Rescue Logfile. Created by GNU ddrescue version 1.19
->> # Command line: ddrescue -d -f -r3 /dev/sdf1
->> wdc/9bececcb-d520-ca38-fd88-d9565718e361.dd
->> wdc/9bececcb-d520-ca38-fd88-d9565718e361.mapfile
->> # Start time:   2016-05-29 22:32:38
->> # Current time: 2016-05-29 23:04:49
->> # Finished
->> # current_pos  current_status
->> 0x129F7DB6000     +
->> #      pos        size  status
->> 0x00000000  0x1118E2AB200  +
->> 0x1118E2AB200  0x00001000  -
->> 0x1118E2AC200  0x00090000  +
->> 0x1118E33C200  0x00001000  -
->> 0x1118E33D200  0x00817000  +
->> 0x1118EB54200  0x00001000  -
->> 0x1118EB55200  0x0016B000  +
->> 0x1118ECC0200  0x00001000  -
->> 0x1118ECC1200  0x641976000  +
->> 0x117D0637200  0x00001000  -
->> 0x117D0638200  0x000FE000  +
->> 0x117D0736200  0x00001000  -
->> 0x117D0737200  0x000EC000  +
->> 0x117D0823200  0x00001000  -
->> 0x117D0824200  0x0010C000  +
->> 0x117D0930200  0x00001000  -
->> 0x117D0931200  0x0010C000  +
->> 0x117D0A3D200  0x00001000  -
->> 0x117D0A3E200  0x00375000  +
->> 0x117D0DB3200  0x00001000  -
->> 0x117D0DB4200  0x0010B000  +
->> 0x117D0EBF200  0x00002000  -
->> 0x117D0EC1200  0x0010C000  +
->> 0x117D0FCD200  0x00001000  -
->> 0x117D0FCE200  0x001EB000  +
->> 0x117D11B9200  0x00001000  -
->> 0x117D11BA200  0x00112000  +
->> 0x117D12CC200  0x00001000  -
->> 0x117D12CD200  0x00077000  +
->> 0x117D1344200  0x00001000  -
->> 0x117D1345200  0x000EB000  +
->> 0x117D1430200  0x00001000  -
->> 0x117D1431200  0x000FD000  +
->> 0x117D152E200  0x00001000  -
->> 0x117D152F200  0x0010C000  +
->> 0x117D163B200  0x00001000  -
->> 0x117D163C200  0x00251000  +
->> 0x117D188D200  0x00002000  -
->> 0x117D188F200  0x12264B3000  +
->> 0x129F7D42200  0x00001000  -
->> 0x129F7D43200  0x0004F000  +
->> 0x129F7D92200  0x00001000  -
->> 0x129F7D93200  0x00022000  +
->> 0x129F7DB5200  0x00001000  -
->> 0x129F7DB6200  0xA7C90DA200  +
->>
->> i don't know if i can recover more but i tried to reassemble the raid
->> and it work but during the rebuilding the sdb1 failed again
->> so my data are there but i'm not sure to know what to do to get them all.
->>
->> thanks
->>
->>
-> Did you follow Mikael's advice? Can you do smartctl on the drive (I think
-> the option you want is "smartctl -x" - display "extended all") and post the
-> output?
->
-> We're assuming you're using proper raid-capable drives, but if you aren't
-> then the drives could be fine but giving up under load and causing your raid
-> problems. On the other hand, if your drives are proper raid drives, then
-> they're probably not fit for anything more than the scrapheap.
->
-> Cheers,
-> Wol
+I've used dd to duplicate all but one of the "missing" drives to other spares in the system prior to running any "forceful" mdadm commands on this array.  One of the drives (dm-15) errored-out early in the process with what looks like a bad sector, but the others completed fine.
+
+After making those copies, I ran mdadm --assemble --force, the best it could do was five drives:  "/dev/md10 assembled from 5 drives and 1 spare - not enough to start the array."
+
+Interestingly it says it cleared the "FAULTY" flag from two devices.  But output from --examine showed all components as clean.
+
+(There are five other 9+1 RAID6 arrays in this system, and they all came up without issue.)
+
+I'm seeking advice on how to proceed at this point.  If more information is required, please ask.
+
+Output from --examine:  http://pastebin.com/khvPWrba
+Output from --assemble:  http://pastebin.com/s2GkHkah
+
