@@ -1,52 +1,84 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: raid 5 crashed
-Date: Wed, 1 Jun 2016 13:28:22 -0400
-Message-ID: <574F1B36.4030401@turmel.org>
-References: <CADzS=aoMEaFv5TPYUpYBnLhOpF+u9dtG6aa=JZ5gd=Qv1=OrMQ@mail.gmail.com>
- <20160511131524.GA11811@cthulhu.home.robinhill.me.uk>
- <CADzS=aoKqrG0QV1-Fe5g_b=n11gmbnerTyZ+eY4rBtJieNz_2w@mail.gmail.com>
- <CADzS=apUB=XZRmCWjpOHuRgvk7EhqrbpRQhHQ+MHf8NHyGCU0w@mail.gmail.com>
- <CADzS=are4kkK5Lpm2WTAnqhE1D3XuMFwTKbO8_FzDbGtmqu2Dw@mail.gmail.com>
- <574C8EB9.3070706@youngman.org.uk>
- <CADzS=arbwpZg=VRcaiLaMJrLzr8pOjFTC-EwUtSpC1A3SmaTcQ@mail.gmail.com>
- <574D958F.8060209@turmel.org> <574DDCBD.40801@youngman.org.uk>
- <95079572-f319-ca57-a3e9-e8d00ef40248@fnarfbargle.com>
- <574F0258.5000108@youngman.org.uk>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: RE: [PATCH] dm-log-writes: fix bug with too large bios
+Date: Wed, 1 Jun 2016 13:32:59 -0400 (EDT)
+Message-ID: <alpine.LRH.2.02.1606010621140.6561@file01.intranet.prod.int.rdu2.redhat.com>
+References: <alpine.LRH.2.02.1605271047280.2109@file01.intranet.prod.int.rdu2.redhat.com> <07bf01d1bbbd$53991750$facb45f0$@codenest.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <574F0258.5000108@youngman.org.uk>
-Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, Brad Campbell <lists2009@fnarfbargle.com>, bobzer <bobzer@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Mikael Abrahamsson <swmike@swm.pp.se>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-bcache-owner@vger.kernel.org>
+In-Reply-To: <07bf01d1bbbd$53991750$facb45f0$@codenest.com>
+Sender: linux-bcache-owner@vger.kernel.org
+To: James Johnston <johnstonj.public@codenest.com>
+Cc: "'Alasdair G. Kergon'" <agk@redhat.com>, 'Mike Snitzer' <msnitzer@redhat.com>, 'Josef Bacik' <jbacik@fb.com>, dm-devel@redhat.com, 'Eric Wheeler' <bcache@lists.ewheeler.net>, 'Tim Small' <tim@buttersideup.com>, 'Kent Overstreet' <kent.overstreet@gmail.com>, linux-bcache@vger.kernel.org, dm-crypt@saout.de, 'Neil Brown' <neilb@suse.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 06/01/2016 11:42 AM, Wols Lists wrote:
 
-> Okay - so would this be better (a lot slower, possibly, but safe ...)
+
+On Wed, 1 Jun 2016, James Johnston wrote:
+
+> Hi Mikulas,
 > 
-> Use dd - so it DOES bomb on error! - and only replace the drive once
-> you've got a clean read off it. With 2TB drives, that should work so
-> long as they're not faulty. And if it's - JUST - a timeout issue,
-> this'll work fine?
+> > bio_alloc can allocate a bio with at most BIO_MAX_PAGES (256) vector
+> > entries. However, the incoming bio may have more vector entries if it was
+> > allocated by other means. For example, bcache submits bios with more than
+> > BIO_MAX_PAGES entries. This results in bio_alloc failure.
+> > 
+> > To avoid the failure, change the code so that it allocates bio with at
+> > most BIO_MAX_PAGES entries. If the incoming bio has more entries,
+> > bio_add_page will fail and a new bio will be allocated - the code that
+> > handles bio_add_page failure already exists in the dm-log-writes target.
+> > 
+> > Also, move atomic_inc(&lc->io_blocks) before bio_alloc to fix a bug that
+> > the target hangs if bio_alloc fails. The error path does put_io_block(lc),
+> > so we must do atomic_inc(&lc->io_blocks) before invoking the error path to
+> > avoid underflow of lc->io_blocks.
+> > 
+> > Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+> > Cc: stable@vger.kernel.org	# v4.1+
+> 
+> How does this relate to the previous patch you made to dm-crypt?  How best
+> should I test this?  It looks like the dm-crypt patch fixed the problem.
+> 
+> Should I test by applying this patch ONLY and reverting the dm-crypt patch?
+> (i.e. does this patch also fix the problem.)  Or should I just test with
+> both patches applied simultaneously?
+> 
+> James
 
-If there's errors, you'll never get a clean read.  (Short of the moon
-and stars aligning for a near-miracle.)  ddrescue and similar replace
-those errors with zeros to successfully retrieve less than 100% of your
-data.
+When I found a bug in dm-crypt, I searched the other targets for the same 
+problem and found out that the same bug is also present in dm-log-writes.
 
-The whole point of keeping it in the array is to get the correct data
-from the array's redundancy wherever the disk has unfixed read errors.
-And with correct timeouts, to *FIX* that read error.  Please read *all*
-of the links I posted on why and how this is.
+The bug in dm-log-writes can be reproduced if you make a bcache device 
+with 2MiB bucket size and place in on the dm-log-writes target.
 
-Side note:  In these situations, you should *not* use overlays, as that
-prevents the *FIX* part from happening.
+When the bug is present, the dm-log-writes target reports "device-mapper: 
+log-writes: Couldn't alloc log bio".
 
-Temporarily setting the timeouts for non-raid drives is a one-liner:
+This is a script that triggers the bug for dm-log-writes. Before running 
+the script, create devices /dev/mapper/loop-test1, loop-test2 and 
+loop-test3.
 
-for x in /sys/block/*/device/timeout ; do echo 180 > $x ; done
+Mikulas
 
-Phil
 
+wipefs -a /dev/mapper/loop-test1
+./make-bcache --wipe-bcache --bucket 2M -C /dev/mapper/loop-test1
+dmsetup create backCrypt --table "0 `blockdev --getsize /dev/mapper/loop-test2` log-writes /dev/mapper/loop-test2 /dev/mapper/loop-test3"
+wipefs -a /dev/mapper/backCrypt
+./make-bcache --wipe-bcache -B /dev/mapper/backCrypt
+modprobe bcache
+echo /dev/mapper/loop-test1 > /sys/fs/bcache/register
+echo /dev/mapper/backCrypt > /sys/fs/bcache/register
+./bcache-super-show /dev/mapper/loop-test1 | grep cset.uuid | cut -f 3 >/sys/block/bcache0/bcache/attach
+echo writeback > /sys/block/bcache0/bcache/cache_mode
+
+cd /sys/block/bcache0/bcache
+echo 0 > sequential_cutoff
+# Verify that the cache is attached (i.e. does not say "no cache")
+cat state
+dd if=/dev/urandom of=/dev/bcache0 bs=1M count=250
+cat dirty_data
+cat state
+echo 1 > detach
+cat dirty_data
+cat state
