@@ -1,84 +1,71 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: RE: [PATCH] dm-log-writes: fix bug with too large bios
-Date: Wed, 1 Jun 2016 13:32:59 -0400 (EDT)
-Message-ID: <alpine.LRH.2.02.1606010621140.6561@file01.intranet.prod.int.rdu2.redhat.com>
-References: <alpine.LRH.2.02.1605271047280.2109@file01.intranet.prod.int.rdu2.redhat.com> <07bf01d1bbbd$53991750$facb45f0$@codenest.com>
+From: NeilBrown <nfbrown@novell.com>
+Subject: Re: [RFC 4/5] r5cache: write part of r5cache
+Date: Thu, 02 Jun 2016 08:37:29 +1000
+Message-ID: <87bn3kr0wm.fsf@notabene.neil.brown.name>
+References: <1464326983-3798454-1-git-send-email-songliubraving@fb.com> <1464326983-3798454-5-git-send-email-songliubraving@fb.com> <87zir5r496.fsf@notabene.neil.brown.name> <8FB9AC1E-AB6D-41B2-9411-C924B23FA7AF@fb.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-bcache-owner@vger.kernel.org>
-In-Reply-To: <07bf01d1bbbd$53991750$facb45f0$@codenest.com>
-Sender: linux-bcache-owner@vger.kernel.org
-To: James Johnston <johnstonj.public@codenest.com>
-Cc: "'Alasdair G. Kergon'" <agk@redhat.com>, 'Mike Snitzer' <msnitzer@redhat.com>, 'Josef Bacik' <jbacik@fb.com>, dm-devel@redhat.com, 'Eric Wheeler' <bcache@lists.ewheeler.net>, 'Tim Small' <tim@buttersideup.com>, 'Kent Overstreet' <kent.overstreet@gmail.com>, linux-bcache@vger.kernel.org, dm-crypt@saout.de, 'Neil Brown' <neilb@suse.com>, linux-raid@vger.kernel.org
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <8FB9AC1E-AB6D-41B2-9411-C924B23FA7AF@fb.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Song Liu <songliubraving@fb.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Cc: Shaohua Li <shli@fb.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "hch@infradead.org" <hch@infradead.org>, Kernel Team <Kernel-team@fb.com>
 List-Id: linux-raid.ids
 
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, Jun 01 2016, Song Liu wrote:
+>>
+>>It isn't at all clear to me why you need the extra page.  Could you
+>>explain when and why the ->page and the ->orig_page would contain
+>>different content and both of the content would be needed?
+>>
+>
+> In prexor, we need read old data from the disk to perform the=20
+> substract-xor. In the meanwhile, we need a buffer for the new data.=20
+> When there is no write cache, the new data is in the page of bio.=20
+> With write cache, however, the bio might be already released.=20
+> Therefore, we will need an extra page here: orig_page for new=20
+> Cached data, while newly allocated page just hold old data for prexor.=20
+>
 
-On Wed, 1 Jun 2016, James Johnston wrote:
+Ahh, I get it now - thanks.  The fact that you said "page" rather than
+"pages" threw me.  I assumed it was a page for the parity block only,
+which is wrong.
+So I would write:
 
-> Hi Mikulas,
-> 
-> > bio_alloc can allocate a bio with at most BIO_MAX_PAGES (256) vector
-> > entries. However, the incoming bio may have more vector entries if it was
-> > allocated by other means. For example, bcache submits bios with more than
-> > BIO_MAX_PAGES entries. This results in bio_alloc failure.
-> > 
-> > To avoid the failure, change the code so that it allocates bio with at
-> > most BIO_MAX_PAGES entries. If the incoming bio has more entries,
-> > bio_add_page will fail and a new bio will be allocated - the code that
-> > handles bio_add_page failure already exists in the dm-log-writes target.
-> > 
-> > Also, move atomic_inc(&lc->io_blocks) before bio_alloc to fix a bug that
-> > the target hangs if bio_alloc fails. The error path does put_io_block(lc),
-> > so we must do atomic_inc(&lc->io_blocks) before invoking the error path to
-> > avoid underflow of lc->io_blocks.
-> > 
-> > Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
-> > Cc: stable@vger.kernel.org	# v4.1+
-> 
-> How does this relate to the previous patch you made to dm-crypt?  How best
-> should I test this?  It looks like the dm-crypt patch fixed the problem.
-> 
-> Should I test by applying this patch ONLY and reverting the dm-crypt patch?
-> (i.e. does this patch also fix the problem.)  Or should I just test with
-> both patches applied simultaneously?
-> 
-> James
+ For RMW, the code allocates an extra page for each data block being
+ updated.  This is stored in r5dev->page and the old data is read into
+ it.  Then the prexor calculation subtracts ->page from the parity
+ block, and the reconstruct calculation adds the ->orig_page data back
+ into the parity block.
 
-When I found a bug in dm-crypt, I searched the other targets for the same 
-problem and found out that the same bug is also present in dm-log-writes.
+Or something like that.
 
-The bug in dm-log-writes can be reproduced if you make a bcache device 
-with 2MiB bucket size and place in on the dm-log-writes target.
+Thanks,
+NeilBrown
 
-When the bug is present, the dm-log-writes target reports "device-mapper: 
-log-writes: Couldn't alloc log bio".
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
-This is a script that triggers the bug for dm-log-writes. Before running 
-the script, create devices /dev/mapper/loop-test1, loop-test2 and 
-loop-test3.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-Mikulas
-
-
-wipefs -a /dev/mapper/loop-test1
-./make-bcache --wipe-bcache --bucket 2M -C /dev/mapper/loop-test1
-dmsetup create backCrypt --table "0 `blockdev --getsize /dev/mapper/loop-test2` log-writes /dev/mapper/loop-test2 /dev/mapper/loop-test3"
-wipefs -a /dev/mapper/backCrypt
-./make-bcache --wipe-bcache -B /dev/mapper/backCrypt
-modprobe bcache
-echo /dev/mapper/loop-test1 > /sys/fs/bcache/register
-echo /dev/mapper/backCrypt > /sys/fs/bcache/register
-./bcache-super-show /dev/mapper/loop-test1 | grep cset.uuid | cut -f 3 >/sys/block/bcache0/bcache/attach
-echo writeback > /sys/block/bcache0/bcache/cache_mode
-
-cd /sys/block/bcache0/bcache
-echo 0 > sequential_cutoff
-# Verify that the cache is attached (i.e. does not say "no cache")
-cat state
-dd if=/dev/urandom of=/dev/bcache0 bs=1M count=250
-cat dirty_data
-cat state
-echo 1 > detach
-cat dirty_data
-cat state
+iQIcBAEBCAAGBQJXT2OpAAoJEDnsnt1WYoG5NmAQAK+2VOzbpH/40NcxScUF2ATl
+uUJs2raNOsGxhA68dvxqTbLbes/n9juTlUTB69zHqIDmT6YL903NNmlZYwErAcQe
+JkTcCJPu62tJ1931YP/ZxloRebaIKYisg2538SE3VFbd27QKzGnadKSi0lN9YZl6
+8RCg1TgzSRTfEq7T5j0gFVkC+Cyo6GUiP8VVOG0SDNjfi3/OllMjTKk7BCBj//GJ
+AQ2o2No6UZITCF+HqLJ2Rpl7I9yKP1788aewGmDJ019jhO5XUTa2PjFYVCh32q1i
+Zmhe6R/HhQgduIzk59Lv+W5ZF0ey2JFO0HPV7mIDZgemwbFGN61MJ2YDScaRhfWh
+obFRw+osNBUTg+dbENn+8TGEMhl7gyUKdFGyQJ663aaBo6bXxrXRejEqwItRdRdf
+lvZNjqaSZ94kszbnQzSxJ3hNg3KAQQw8GGvIOitiocS/3ARSJIH9BIUsI3V8WEbX
+1wmVebM/Yx2CrVIiJc4tFjKO8q6OLND5BPN63DhFZ4ZIeAdTavScviEPGSVX7u+J
+RzkovEfTS4mtKaJbA/qsQ1A4IuYVKLwBVbfm2L6SKjBbwICyVAdTZLwCULlUovSS
+yLTsj3s2Dw5AqlqUam7idRrDQFDWvzWF6WtQAIgKZKW9C90L8kKcb/otyJMerVLv
+hj+0q1ssgFF+mT6nsoE6
+=imdY
+-----END PGP SIGNATURE-----
+--=-=-=--
