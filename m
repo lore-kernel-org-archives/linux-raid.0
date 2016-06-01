@@ -1,100 +1,49 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: Re: [RFC 4/5] r5cache: write part of r5cache
-Date: Wed, 1 Jun 2016 13:36:02 +0000
-Message-ID: <8FB9AC1E-AB6D-41B2-9411-C924B23FA7AF@fb.com>
-References: <1464326983-3798454-1-git-send-email-songliubraving@fb.com>
- <1464326983-3798454-5-git-send-email-songliubraving@fb.com>
- <87zir5r496.fsf@notabene.neil.brown.name>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: dm-log-writes: fix bug with too large bios
+Date: Wed, 1 Jun 2016 10:02:43 -0400
+Message-ID: <20160601140243.GC30759@redhat.com>
+References: <alpine.LRH.2.02.1605271047280.2109@file01.intranet.prod.int.rdu2.redhat.com>
+ <07bf01d1bbbd$53991750$facb45f0$@codenest.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87zir5r496.fsf@notabene.neil.brown.name>
-Content-Language: en-US
-Content-ID: <4B7FEFDC857B874496EFE0D55E638E18@namprd15.prod.outlook.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <nfbrown@novell.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-Cc: Shaohua Li <shli@fb.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "hch@infradead.org" <hch@infradead.org>, Kernel Team <Kernel-team@fb.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-bcache-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <07bf01d1bbbd$53991750$facb45f0$@codenest.com>
+Sender: linux-bcache-owner@vger.kernel.org
+To: James Johnston <johnstonj.public@codenest.com>
+Cc: 'Mikulas Patocka' <mpatocka@redhat.com>, "'Alasdair G. Kergon'" <agk@redhat.com>, 'Josef Bacik' <jbacik@fb.com>, 'Eric Wheeler' <bcache@lists.ewheeler.net>, dm-crypt@saout.de, dm-devel@redhat.com, 'Neil Brown' <neilb@suse.com>, linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org, 'Kent Overstreet' <kent.overstreet@gmail.com>, 'Tim Small' <tim@buttersideup.com>
 List-Id: linux-raid.ids
 
-Pj4gcGF0aCBydW5zIGluIHN0YXRlIENMRUFOIGFuZCBSVU5OSU5HIChkYXRhIGluIGNhY2hlKS4g
-Q2FjaGUgd3JpdGVzDQo+PiBzdGFydCBmcm9tIHI1Y19oYW5kbGVfc3RyaXBlX2RpcnR5aW5nKCks
-IHdoZXJlIGJpdCBSNV9XYW50Y2FjaGUgaXMNCj4+IHNldCBmb3IgZGV2aWNlcyB3aXRoIGJpbyBp
-biB0b3dyaXRlLiBUaGVuLCB0aGUgZGF0YSBpcyB3cml0dGVuIHRvDQo+PiB0aGUgam91cm5hbCB0
-aHJvdWdoIHI1bF9sb2cgaW1wbGVtZW50YXRpb24uIE9uY2UgdGhlIGRhdGEgaXMgaW4gdGhlDQo+
-PiBqb3VybmFsLCB3ZSBzZXQgYml0IFI1X0luQ2FjaGUsIGFuZCBwcmVzdWUgYmlvX2VuZGlvIGZv
-ciB0aGVzZQ0KPj4gd3JpdGVzLg0KPg0KPkkgZG9uJ3QgdGhpbmsgdGhpcyBuZXcgc3RhdGUgZmll
-bGQgaXMgYSBnb29kIGlkZWEuICBXZSBhbHJlYWR5IGhhdmUNCj5wbGVudHkgb2Ygc3RhdGUgaW5m
-b3JtYXRpb24gYW5kIGl0IHdvdWxkIGJlIGJlc3QgdG8gZml0IGluIHdpdGggdGhhdC4NCj5XaGVu
-IGhhbmRsZV9zdHJpcGUoKSBydW5zIGl0IGFzc2Vzc2VzIHRoZSBzdGF0ZSBvZiB0aGUgc3RyaXBl
-IGFuZA0KPmRlY2lkZXMgd2hhdCB0byBkbyBuZXh0LiAgVGhlIHNoLT5jb3VudCBpcyBpbmNyZW1l
-bnRlZCBhbmQgaXQgZG9lc24ndA0KPnJldHVybiB0byB6ZXJvIHVudGlsIGFsbCB0aGUgYWN0aW9u
-cyB0aGF0IHdlcmUgZm91bmQgdG8gYmUgbmVjZXNzYXJ5DQo+aGF2ZSBjb21wbGV0ZWx5LiAgV2hl
-biBpdCBkb2VzIHJldHVybiB0byB6ZXJvLCBoYW5kbGVfc3RyaXBlKCkgcnVucw0KPmFnYWluIHRv
-IHNlZSB3aGF0IGVsc2UgaXMgbmVlZGVkLg0KDQpMZXQgbWUgdHJ5IHRvIGF2b2lkIHRoZSBuZXcg
-c3RhdGUgZmllbGQuIA0KDQo+DQo+WW91IG1heSB3ZWxsIG5lZWQgdG8gYWRkIHNoLT5zdGF0ZSBv
-ciBkZXYtPmZsYWdzIGZsYWdzIHRvIHJlY29yZCBuZXcNCj5hc3BlY3RzIG9mIHRoZSBzdGF0ZSwg
-c3VjaCBhcyB3aGV0aGVyIGRhdGEgaXMgc2FmZSBpbiB0aGUgbG9nIG9yIHNhZmUgaW4NCj50aGUg
-UkFJRCwgYnV0IEkgZG9uJ3QgdGhpbmsgYSBuZXcgc3RhdGUgdmFyaWFibGUgd2lsbCByZWFsbHkg
-aGVscC4NCj4NCj4+DQo+PiBUaGUgcmVjbGFpbSBwYXRoIHN0YXJ0cyBieSBmcmVlemluZyB0aGUg
-c3RyaXBlIChubyBtb3JlIHdyaXRlcykuDQo+PiBUaGlzIHN0cmlwZXMgYmFjayB0byByYWlkNSBz
-dGF0ZSBtYWNoaW5lLCB3aGVyZQ0KPj4gaGFuZGxlX3N0cmlwZV9kaXJ0eWluZyB3aWxsIGV2YWx1
-YXRlIHRoZSBzdHJpcGUgZm9yIHJlY29uc3RydWN0DQo+PiB3cml0ZXMgb3IgUk1XIHdyaXRlcyAo
-cmVhZCBkYXRhIGFuZCBjYWxjdWxhdGUgcGFyaXR5KS4NCj4+DQo+PiBGb3IgUk1XLCB0aGUgY29k
-ZSBhbGxvY2F0ZXMgZXh0cmEgcGFnZSBmb3IgcHJleG9yLiBTcGVjaWZpY2FsbHksDQo+PiBhIG5l
-dyBwYWdlIGlzIGFsbG9jYXRlZCBmb3IgcjVkZXYtPnBhZ2UgdG8gZG8gcHJleG9yOyB3aGlsZQ0K
-Pj4gcjVkZXYtPm9yaWdfcGFnZSBrZWVwcyB0aGUgY2FjaGVkIGRhdGEuIFRoZSBleHRyYSBwYWdl
-IGlzIGZyZWVkDQo+PiBhZnRlciBwcmV4b3IuDQo+DQo+SXQgaXNuJ3QgYXQgYWxsIGNsZWFyIHRv
-IG1lIHdoeSB5b3UgbmVlZCB0aGUgZXh0cmEgcGFnZS4gIENvdWxkIHlvdQ0KPmV4cGxhaW4gd2hl
-biBhbmQgd2h5IHRoZSAtPnBhZ2UgYW5kIHRoZSAtPm9yaWdfcGFnZSB3b3VsZCBjb250YWluDQo+
-ZGlmZmVyZW50IGNvbnRlbnQgYW5kIGJvdGggb2YgdGhlIGNvbnRlbnQgd291bGQgYmUgbmVlZGVk
-Pw0KPg0KDQpJbiBwcmV4b3IsIHdlIG5lZWQgcmVhZCBvbGQgZGF0YSBmcm9tIHRoZSBkaXNrIHRv
-IHBlcmZvcm0gdGhlIA0Kc3Vic3RyYWN0LXhvci4gSW4gdGhlIG1lYW53aGlsZSwgd2UgbmVlZCBh
-IGJ1ZmZlciBmb3IgdGhlIG5ldyBkYXRhLiANCldoZW4gdGhlcmUgaXMgbm8gd3JpdGUgY2FjaGUs
-IHRoZSBuZXcgZGF0YSBpcyBpbiB0aGUgcGFnZSBvZiBiaW8uIA0KV2l0aCB3cml0ZSBjYWNoZSwg
-aG93ZXZlciwgdGhlIGJpbyBtaWdodCBiZSBhbHJlYWR5IHJlbGVhc2VkLiANClRoZXJlZm9yZSwg
-d2Ugd2lsbCBuZWVkIGFuIGV4dHJhIHBhZ2UgaGVyZTogb3JpZ19wYWdlIGZvciBuZXcgDQpDYWNo
-ZWQgZGF0YSwgd2hpbGUgbmV3bHkgYWxsb2NhdGVkIHBhZ2UganVzdCBob2xkIG9sZCBkYXRhIGZv
-ciBwcmV4b3IuIA0KDQoNCg0KPj4NCj4+IHI1Y2FjaGUgbmF0dXJhbGx5IGV4Y2x1ZGVzIFNraXBD
-b3B5LiBXaXRoIFI1X1dhbnRjYWNoZSBiaXQgc2V0LA0KPj4gYXN5bmNfY29weV9kYXRhIHdpbGwg
-bm90IHNraXAgY29weS4NCj4+DQo+PiBCZWZvcmUgd3JpdGluZyBkYXRhIHRvIFJBSUQgZGlza3Ms
-IHRoZSByNWxfbG9nIGxvZ2ljIHN0b3Jlcw0KPj4gcGFyaXR5IChhbmQgbm9uLW92ZXJ3cml0ZSBk
-YXRhKSB0byB0aGUgam91cm5hbC4NCj4+DQo+PiBJbnN0ZWFkIG9mIGluYWN0aXZlX2xpc3QsIHN0
-cmlwZXMgd2l0aCBjYWNoZWQgZGF0YSBhcmUgdHJhY2tlZCBpbg0KPj4gcjVjb25mLT5yNWNfY2Fj
-aGVkX2xpc3QuIHI1Y29uZi0+cjVjX2NhY2hlZF9zdHJpcGVzIHRyYWNrcyBob3cNCj4+IG1hbnkg
-c3RyaXBlcyBoYXMgZGlydHkgZGF0YSBpbiB0aGUgY2FjaGUuDQo+Pg0KPj4gVHdvIHN5c2ZzIGVu
-dHJpZXMgYXJlIHByb3ZpZGVkIGZvciB0aGUgd3JpdGUgY2FjaGU6DQo+PiAxLiByNWNfY2FjaGVk
-X3N0cmlwZXMgc2hvd3MgaG93IG1hbnkgc3RyaXBlcyBoYXZlIGNhY2hlZCBkYXRhLg0KPj4gICAg
-V3JpdGluZyBhbnl0aGluZyB0byByNWNfY2FjaGVkX3N0cmlwZXMgd2lsbCBmbHVzaCBhbGwgZGF0
-YQ0KPj4gICAgdG8gUkFJRCBkaXNrcy4NCj4+IDIuIHI1Y19jYWNoZV9tb2RlIHByb3ZpZGVzIGtu
-b2IgdG8gc3dpdGNoIHRoZSBzeXN0ZW0gYmV0d2Vlbg0KPj4gICAgd3JpdGUtYmFjayBvciB3cml0
-ZS10aHJvdWdoIChvbmx5IHdyaXRlLWxvZykuDQo+Pg0KPj4gVGhlcmUgYXJlIHNvbWUga25vd24g
-bGltaXRhdGlvbnMgb2YgdGhlIGNhY2hlIGltcGxlbWVudGF0aW9uOg0KPj4NCj4+IDEuIFdyaXRl
-IGNhY2hlIG9ubHkgY292ZXJzIGZ1bGwgcGFnZSB3cml0ZXMgKFI1X09WRVJXUklURSkuIFdyaXRl
-cw0KPj4gICAgb2Ygc21hbGxlciBncmFudWxhcml0eSBhcmUgd3JpdGUgdGhyb3VnaC4NCj4+IDIu
-IE9ubHkgb25lIGxvZyBpbyAoc2gtPmxvZ19pbykgZm9yIGVhY2ggc3RyaXBlIGF0IGFueXRpbWUu
-IExhdGVyDQo+PiAgICB3cml0ZXMgZm9yIHRoZSBzYW1lIHN0cmlwZSBoYXZlIHRvIHdhaXQuIFRo
-aXMgY2FuIGJlIGltcHJvdmVkIGJ5DQo+PiAgICBtb3ZpbmcgbG9nX2lvIHRvIHI1ZGV2Lg0KPj4N
-Cj4+IFNpZ25lZC1vZmYtYnk6IFNvbmcgTGl1IDxzb25nbGl1YnJhdmluZ0BmYi5jb20+DQo+PiBT
-aWduZWQtb2ZmLWJ5OiBTaGFvaHVhIExpIDxzaGxpQGZiLmNvbT4NCj4+IC0tLQ0KPj4gIGRyaXZl
-cnMvbWQvcmFpZDUtY2FjaGUuYyB8IDM5OSArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKystLQ0KPj4gIGRyaXZlcnMvbWQvcmFpZDUuYyAgICAgICB8IDE3MiArKysr
-KysrKysrKysrKysrKy0tLQ0KPj4gIGRyaXZlcnMvbWQvcmFpZDUuaCAgICAgICB8ICAzOCArKysr
-LQ0KPj4gIDMgZmlsZXMgY2hhbmdlZCwgNTc3IGluc2VydGlvbnMoKyksIDMyIGRlbGV0aW9ucygt
-KQ0KPj4NCj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL21kL3JhaWQ1LWNhY2hlLmMgYi9kcml2ZXJz
-L21kL3JhaWQ1LWNhY2hlLmMNCj4+IGluZGV4IDVmMGQ5NmYuLjY2YTNjZDUgMTAwNjQ0DQo+PiAt
-LS0gYS9kcml2ZXJzL21kL3JhaWQ1LWNhY2hlLmMNCj4+ICsrKyBiL2RyaXZlcnMvbWQvcmFpZDUt
-Y2FjaGUuYw0KPj4gQEAgLTQwLDcgKzQwLDE5IEBADQo+PiAgICovDQo+PiAgI2RlZmluZSBSNUxf
-UE9PTF9TSVpFCTQNCj4+ICANCj4+ICtlbnVtIHI1Y19jYWNoZV9tb2RlIHsNCj4+ICsJUjVDX01P
-REVfTk9fQ0FDSEUgPSAwLA0KPj4gKwlSNUNfTU9ERV9XUklURV9USFJPVUdIID0gMSwNCj4+ICsJ
-UjVDX01PREVfV1JJVEVfQkFDSyA9IDIsDQo+PiArfTsNCj4+ICsNCj4+ICtzdGF0aWMgY2hhciAq
-cjVjX2NhY2hlX21vZGVfc3RyW10gPSB7Im5vLWNhY2hlIiwgIndyaXRlLXRocm91Z2giLCAid3Jp
-dGUtYmFjayJ9Ow0KPj4gKw0KPj4gIHN0cnVjdCByNWNfY2FjaGUgew0KPj4gKwlpbnQgZmx1c2hf
-dGhyZXNob2xkOwkJLyogZmx1c2ggdGhlIHN0cmlwZSB3aGVuIGZsdXNoX3RocmVzaG9sZCBidWZm
-ZXJzIGFyZSBkaXJ0eSAgKi8NCj4+ICsJaW50IG1vZGU7CQkJLyogZW51bSByNWNfY2FjaGVfbW9k
-ZSAqLw0KPg0KPiB3aHkgaXNuJ3QgdGhpcyBqdXN0ICJlbnVtIHI1Y19jYWNoZV9tb2RlIG1vZGU7
-IiA/Pw0KPg0KPkNsZWFybHkgdGhpcyBzdHJ1Y3R1cmUgaXMgbW9yZSB0aGFuIGp1c3Qgc3RhdGlz
-dGljcy4gIEJ1dCBub3cgSSB3b25kZXINCj53aHkgdGhlc2UgZmllbGRzIGFyZW4ndCBzaW1wbHkg
-YWRkZWQgdG8gc3RydWN0IHI1Y29uZi4gIE9yIG1heWJlIGluDQo+cjVsX2xvZy4NCg0KSSB3aWxs
-IHRyeSB3aGV0aGVyIGl0IGlzIGJldHRlciB0byBhZGQgdGhlc2UgdG8gcjVjb25mLiANCg0KVGhh
-bmtzLA0KU29uZ2QNCj4NCj4NCj5OZWlsQnJvd24NCg0K
+On Wed, Jun 01 2016 at 12:23am -0400,
+James Johnston <johnstonj.public@codenest.com> wrote:
+
+> Hi Mikulas,
+> 
+> > bio_alloc can allocate a bio with at most BIO_MAX_PAGES (256) vector
+> > entries. However, the incoming bio may have more vector entries if it was
+> > allocated by other means. For example, bcache submits bios with more than
+> > BIO_MAX_PAGES entries. This results in bio_alloc failure.
+> > 
+> > To avoid the failure, change the code so that it allocates bio with at
+> > most BIO_MAX_PAGES entries. If the incoming bio has more entries,
+> > bio_add_page will fail and a new bio will be allocated - the code that
+> > handles bio_add_page failure already exists in the dm-log-writes target.
+> > 
+> > Also, move atomic_inc(&lc->io_blocks) before bio_alloc to fix a bug that
+> > the target hangs if bio_alloc fails. The error path does put_io_block(lc),
+> > so we must do atomic_inc(&lc->io_blocks) before invoking the error path to
+> > avoid underflow of lc->io_blocks.
+> > 
+> > Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+> > Cc: stable@vger.kernel.org	# v4.1+
+> 
+> How does this relate to the previous patch you made to dm-crypt?  How best
+> should I test this?  It looks like the dm-crypt patch fixed the problem.
+> 
+> Should I test by applying this patch ONLY and reverting the dm-crypt patch?
+> (i.e. does this patch also fix the problem.)  Or should I just test with
+> both patches applied simultaneously?
+
+The dm-log-writes patch has nothing to do with the dm-crypt patch.  It
+is just that both targets have comparable issues with bcache issuing
+really large bios.
