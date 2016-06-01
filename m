@@ -1,50 +1,57 @@
-From: NeilBrown <nfbrown@novell.com>
-Subject: Re: [RFC 5/5] r5cache: naive reclaim approach
-Date: Wed, 01 Jun 2016 13:16:37 +1000
-Message-ID: <87wpm9r42y.fsf@notabene.neil.brown.name>
-References: <1464326983-3798454-1-git-send-email-songliubraving@fb.com> <1464326983-3798454-6-git-send-email-songliubraving@fb.com>
+From: Edward Kuns <eddie.kuns@gmail.com>
+Subject: Re: raid 5 crashed
+Date: Tue, 31 May 2016 22:46:01 -0500
+Message-ID: <CACsGCyQuPEXtgeW6QH-s_-eW9-SZ3J5s2s7CUzZRNemexTt3aw@mail.gmail.com>
+References: <CADzS=aoMEaFv5TPYUpYBnLhOpF+u9dtG6aa=JZ5gd=Qv1=OrMQ@mail.gmail.com>
+	<20160511131524.GA11811@cthulhu.home.robinhill.me.uk>
+	<CADzS=aoKqrG0QV1-Fe5g_b=n11gmbnerTyZ+eY4rBtJieNz_2w@mail.gmail.com>
+	<CADzS=apUB=XZRmCWjpOHuRgvk7EhqrbpRQhHQ+MHf8NHyGCU0w@mail.gmail.com>
+	<CADzS=are4kkK5Lpm2WTAnqhE1D3XuMFwTKbO8_FzDbGtmqu2Dw@mail.gmail.com>
+	<574C8EB9.3070706@youngman.org.uk>
+	<CADzS=arbwpZg=VRcaiLaMJrLzr8pOjFTC-EwUtSpC1A3SmaTcQ@mail.gmail.com>
+	<574D958F.8060209@turmel.org>
+	<574DDCBD.40801@youngman.org.uk>
+	<95079572-f319-ca57-a3e9-e8d00ef40248@fnarfbargle.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1464326983-3798454-6-git-send-email-songliubraving@fb.com>
+In-Reply-To: <95079572-f319-ca57-a3e9-e8d00ef40248@fnarfbargle.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@fb.com, dan.j.williams@intel.com, hch@infradead.org, kernel-team@fb.com, Song Liu <songliubraving@fb.com>
+To: Brad Campbell <lists2009@fnarfbargle.com>
+Cc: Wols Lists <antlists@youngman.org.uk>, Phil Turmel <philip@turmel.org>, bobzer <bobzer@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, Mikael Abrahamsson <swmike@swm.pp.se>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
+On Tue, May 31, 2016 at 8:48 PM, Brad Campbell
+<lists2009@fnarfbargle.com> wrote:
+> Much better to try and get the array running in a read-only state with all
+> disks in place and clone the data from the array rather than the disks after
+> they've been ddrescued. In the case of a running array, a read error on one
+> of the array members will see the RAID attempt to get the data from
+> elsewhere (a reconstruction), whereas a read from a disc cloned with
+> ddrescue will happily just report what was a faulty sector as a big pile of
+> zeros, and *poof* your data is gone.
 
-On Fri, May 27 2016, Song Liu wrote:
+My understanding is that mdraid will kick out a drive with an unrecoverable
+hardware error on a single sector.  (Is this incorrect?)  How do you add
+the drive back in and get the raid in a read-only mode that won't kick out
+drives for failures, thus allowing you to fully recover data on a (say)
+raid5 with bad sectors on every drive at different sectors offsets?
 
-> +	sector_t end = -1L;
+I'm asking hypothetically.  I have my arrays scrubbed weekly to prevent
+this kind of surprise, and I keep multiple backups of my most important and
+irreplaceable data.
 
-Please use "MaxSector", not "-1L".
-sector_t might be "long long" so -1L might be wrong.
+In the past, I had a mirror that kept kicking out one drive.  I never lost
+any data.  Between a decent backup policy and luck, I never experienced two
+drive failures at the same time.  It's likely that the drive was timing out
+on an unrecoverable read error, but the OS gave up first.  This was before
+I knew to fix that default (mis)tuning, as was discussed here recently.
+Last fall, that drive totally failed, and since, I've been paying much more
+attention to care-and-maintenance!
 
-(I haven't looked at much else in this patch)
+          Thanks,
 
-NeilBrown
+           Eddie
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJXTlOVAAoJEDnsnt1WYoG5/HkP/2nO+uHteITWfI5q763cWyYi
-eUX5b+jjNn+RwLNFDgNWFpc1a+u2TCJnV4phjTNacctGl1+VRlCVj1nUK37Ele3B
-z9ylan8YNseSBQcXBB4h76VZ8pG7cdDG1KdY85htZV+R7ywqV0l/vj+uTI+sIBBy
-z6a//5FQdQunF0tSDpV3WxYCOkGJfYj607ctgR+QNZRVOV2KL+VAx/7l+ef/leoQ
-lDL5+DrpWLNgb3Afj78VsbkU/XY9LhEnThjnpKpPa7dlnGMOKetxrLvGhS7K+Nwa
-jHPk6WpLMJn+rV/DOAzbHAnhzujFLFvtkrtnV1r1uyPicl5HFiE+VW9M76kbRCHp
-rsoPa5gwNhvR2PZMBSvjQej2g1HiliINYJ3VN7oiu3Ybd8zqKwrvcQEzeoCBrjzj
-T7uK+kOYKcSwoDDeEJP079A3YifKtd/+LVPsNyX57W3G8qTS8mb5Xz5gKTdXvk9P
-i65UllWrGbaQrHQEYnsVP0ENcdcmltxU7FAmnc1VgOQMUW2T5Q5nxwe9kfE2/PLb
-AVR355N6UwCdMqiCy/yWGA5c/7vjMgv5NGBzZgxTebexuT2VIdqN0r6tzywxZ8ep
-jW64hIpFDl2Lm3/mF/fr+ABAgPd/0O3DdES3GToi5q9EDScUYEUXlo/6jwkLyY/H
-2KfGkyXJlu7SqlGJGj+x
-=pf/G
------END PGP SIGNATURE-----
---=-=-=--
+P.S. Sorry for the double-response to those on the CC list... I forgot
+to tell gmail to use plain text.
