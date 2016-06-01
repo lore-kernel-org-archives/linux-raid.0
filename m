@@ -1,71 +1,51 @@
-From: NeilBrown <nfbrown@novell.com>
-Subject: Re: [RFC 4/5] r5cache: write part of r5cache
-Date: Thu, 02 Jun 2016 08:37:29 +1000
-Message-ID: <87bn3kr0wm.fsf@notabene.neil.brown.name>
-References: <1464326983-3798454-1-git-send-email-songliubraving@fb.com> <1464326983-3798454-5-git-send-email-songliubraving@fb.com> <87zir5r496.fsf@notabene.neil.brown.name> <8FB9AC1E-AB6D-41B2-9411-C924B23FA7AF@fb.com>
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: Re: raid 5 crashed
+Date: Thu, 2 Jun 2016 07:15:32 +0800
+Message-ID: <2f3e2fe6-1810-e7bd-7dc0-483ed4f0d46b@fnarfbargle.com>
+References: <CADzS=aoMEaFv5TPYUpYBnLhOpF+u9dtG6aa=JZ5gd=Qv1=OrMQ@mail.gmail.com>
+ <20160511131524.GA11811@cthulhu.home.robinhill.me.uk>
+ <CADzS=aoKqrG0QV1-Fe5g_b=n11gmbnerTyZ+eY4rBtJieNz_2w@mail.gmail.com>
+ <CADzS=apUB=XZRmCWjpOHuRgvk7EhqrbpRQhHQ+MHf8NHyGCU0w@mail.gmail.com>
+ <CADzS=are4kkK5Lpm2WTAnqhE1D3XuMFwTKbO8_FzDbGtmqu2Dw@mail.gmail.com>
+ <574C8EB9.3070706@youngman.org.uk>
+ <CADzS=arbwpZg=VRcaiLaMJrLzr8pOjFTC-EwUtSpC1A3SmaTcQ@mail.gmail.com>
+ <574D958F.8060209@turmel.org> <574DDCBD.40801@youngman.org.uk>
+ <95079572-f319-ca57-a3e9-e8d00ef40248@fnarfbargle.com>
+ <CACsGCyQuPEXtgeW6QH-s_-eW9-SZ3J5s2s7CUzZRNemexTt3aw@mail.gmail.com>
+ <20b1858b-0cd7-a7de-82af-9167dbcfb09e@fnarfbargle.com>
+ <574F00F5.80801@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8FB9AC1E-AB6D-41B2-9411-C924B23FA7AF@fb.com>
+In-Reply-To: <574F00F5.80801@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-Cc: Shaohua Li <shli@fb.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "hch@infradead.org" <hch@infradead.org>, Kernel Team <Kernel-team@fb.com>
+To: Wols Lists <antlists@youngman.org.uk>, Edward Kuns <eddie.kuns@gmail.com>
+Cc: Phil Turmel <philip@turmel.org>, bobzer <bobzer@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, Mikael Abrahamsson <swmike@swm.pp.se>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Wed, Jun 01 2016, Song Liu wrote:
->>
->>It isn't at all clear to me why you need the extra page.  Could you
->>explain when and why the ->page and the ->orig_page would contain
->>different content and both of the content would be needed?
->>
+
+On 01/06/16 23:36, Wols Lists wrote:
+> On 01/06/16 05:07, Brad Campbell wrote:
+>> I have however done a *lot* of data recovery on single drives over the
+>> years and can absolutely vouch that dd will leave you in tears.
+> Good to know! I've regularly used dd on drives, but not on ones that
+> were in trouble (maybe once ...)
 >
-> In prexor, we need read old data from the disk to perform the=20
-> substract-xor. In the meanwhile, we need a buffer for the new data.=20
-> When there is no write cache, the new data is in the page of bio.=20
-> With write cache, however, the bio might be already released.=20
-> Therefore, we will need an extra page here: orig_page for new=20
-> Cached data, while newly allocated page just hold old data for prexor.=20
->
+> But now drives are at the point that you cannot guarantee an error-free
+> scan even on just one pass,
+People keep saying that. I've never encountered it. I suspect it's just 
+not the problem that the hysterical ranting makes it out to be (either 
+that or the pile of cheap and nasty drives I have here are model citizens).
+I've *never* seen a read error unless the drive was in trouble, and that 
+includes running dd reads in a loop over multiple days continuously.
+If it were that bad I'd see drives failing SMART long tests routinely 
+also, and that does not happen either.
 
-Ahh, I get it now - thanks.  The fact that you said "page" rather than
-"pages" threw me.  I assumed it was a page for the parity block only,
-which is wrong.
-So I would write:
+-- 
 
- For RMW, the code allocates an extra page for each data block being
- updated.  This is stored in r5dev->page and the old data is read into
- it.  Then the prexor calculation subtracts ->page from the parity
- block, and the reconstruct calculation adds the ->orig_page data back
- into the parity block.
+Dolphins are so intelligent that within a few weeks they can
+train Americans to stand at the edge of the pool and throw them
+fish.
 
-Or something like that.
-
-Thanks,
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJXT2OpAAoJEDnsnt1WYoG5NmAQAK+2VOzbpH/40NcxScUF2ATl
-uUJs2raNOsGxhA68dvxqTbLbes/n9juTlUTB69zHqIDmT6YL903NNmlZYwErAcQe
-JkTcCJPu62tJ1931YP/ZxloRebaIKYisg2538SE3VFbd27QKzGnadKSi0lN9YZl6
-8RCg1TgzSRTfEq7T5j0gFVkC+Cyo6GUiP8VVOG0SDNjfi3/OllMjTKk7BCBj//GJ
-AQ2o2No6UZITCF+HqLJ2Rpl7I9yKP1788aewGmDJ019jhO5XUTa2PjFYVCh32q1i
-Zmhe6R/HhQgduIzk59Lv+W5ZF0ey2JFO0HPV7mIDZgemwbFGN61MJ2YDScaRhfWh
-obFRw+osNBUTg+dbENn+8TGEMhl7gyUKdFGyQJ663aaBo6bXxrXRejEqwItRdRdf
-lvZNjqaSZ94kszbnQzSxJ3hNg3KAQQw8GGvIOitiocS/3ARSJIH9BIUsI3V8WEbX
-1wmVebM/Yx2CrVIiJc4tFjKO8q6OLND5BPN63DhFZ4ZIeAdTavScviEPGSVX7u+J
-RzkovEfTS4mtKaJbA/qsQ1A4IuYVKLwBVbfm2L6SKjBbwICyVAdTZLwCULlUovSS
-yLTsj3s2Dw5AqlqUam7idRrDQFDWvzWF6WtQAIgKZKW9C90L8kKcb/otyJMerVLv
-hj+0q1ssgFF+mT6nsoE6
-=imdY
------END PGP SIGNATURE-----
---=-=-=--
