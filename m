@@ -1,91 +1,59 @@
-From: Brad Campbell <lists2009@fnarfbargle.com>
-Subject: Re: raid 5 crashed
-Date: Wed, 1 Jun 2016 12:07:31 +0800
-Message-ID: <20b1858b-0cd7-a7de-82af-9167dbcfb09e@fnarfbargle.com>
-References: <CADzS=aoMEaFv5TPYUpYBnLhOpF+u9dtG6aa=JZ5gd=Qv1=OrMQ@mail.gmail.com>
- <20160511131524.GA11811@cthulhu.home.robinhill.me.uk>
- <CADzS=aoKqrG0QV1-Fe5g_b=n11gmbnerTyZ+eY4rBtJieNz_2w@mail.gmail.com>
- <CADzS=apUB=XZRmCWjpOHuRgvk7EhqrbpRQhHQ+MHf8NHyGCU0w@mail.gmail.com>
- <CADzS=are4kkK5Lpm2WTAnqhE1D3XuMFwTKbO8_FzDbGtmqu2Dw@mail.gmail.com>
- <574C8EB9.3070706@youngman.org.uk>
- <CADzS=arbwpZg=VRcaiLaMJrLzr8pOjFTC-EwUtSpC1A3SmaTcQ@mail.gmail.com>
- <574D958F.8060209@turmel.org> <574DDCBD.40801@youngman.org.uk>
- <95079572-f319-ca57-a3e9-e8d00ef40248@fnarfbargle.com>
- <CACsGCyQuPEXtgeW6QH-s_-eW9-SZ3J5s2s7CUzZRNemexTt3aw@mail.gmail.com>
+From: "James Johnston" <johnstonj.public@codenest.com>
+Subject: RE: [PATCH] dm-crypt: Fix error with too large bios (was: bcache gets stuck flushing writeback cache when used in combination with LUKS/dm-crypt and non-default bucket size)
+Date: Wed, 1 Jun 2016 04:19:11 -0000
+Message-ID: <07be01d1bbbc$c2e37f70$48aa7e50$@codenest.com>
+References: <044401d1a958$ea7ef4e0$bf7cdea0$@codenest.com> <5739F07A.5090608@buttersideup.com> <alpine.LRH.2.11.1605191618560.22436@mx.ewheeler.net> <02b101d1b265$2bc46fb0$834d4f10$@codenest.com> <alpine.LRH.2.11.1605201322530.26328@mx.ewheeler.net> <034e01d1b3e2$1de2f910$59a8eb30$@codenest.com> <alpine.LRH.2.02.1605271037470.2109@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain;
+	charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CACsGCyQuPEXtgeW6QH-s_-eW9-SZ3J5s2s7CUzZRNemexTt3aw@mail.gmail.com>
+In-Reply-To: <alpine.LRH.2.02.1605271037470.2109@file01.intranet.prod.int.rdu2.redhat.com>
+Content-Language: en-us
 Sender: linux-raid-owner@vger.kernel.org
-To: Edward Kuns <eddie.kuns@gmail.com>
-Cc: Wols Lists <antlists@youngman.org.uk>, Phil Turmel <philip@turmel.org>, bobzer <bobzer@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, Mikael Abrahamsson <swmike@swm.pp.se>
+To: 'Mikulas Patocka' <mpatocka@redhat.com>
+Cc: 'Eric Wheeler' <bcache@lists.ewheeler.net>, 'Tim Small' <tim@buttersideup.com>, 'Kent Overstreet' <kent.overstreet@gmail.com>, 'Alasdair Kergon' <agk@redhat.com>, 'Mike Snitzer' <snitzer@redhat.com>, linux-bcache@vger.kernel.org, dm-devel@redhat.com, dm-crypt@saout.de, 'Neil Brown' <neilb@suse.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 01/06/16 11:46, Edward Kuns wrote:
-> On Tue, May 31, 2016 at 8:48 PM, Brad Campbell
-> <lists2009@fnarfbargle.com> wrote:
->> Much better to try and get the array running in a read-only state with all
->> disks in place and clone the data from the array rather than the disks after
->> they've been ddrescued. In the case of a running array, a read error on one
->> of the array members will see the RAID attempt to get the data from
->> elsewhere (a reconstruction), whereas a read from a disc cloned with
->> ddrescue will happily just report what was a faulty sector as a big pile of
->> zeros, and *poof* your data is gone.
->
-> My understanding is that mdraid will kick out a drive with an unrecoverable
-> hardware error on a single sector.  (Is this incorrect?)  How do you add
-> the drive back in and get the raid in a read-only mode that won't kick out
-> drives for failures, thus allowing you to fully recover data on a (say)
-> raid5 with bad sectors on every drive at different sectors offsets?
+On Fri, 27 May 2016, Mikulas Patocka wrote:
+> dm-crypt: Fix error with too large bios
+> 
+> When dm-crypt processes writes, it allocates a new bio in the function
+> crypt_alloc_buffer. The bio is allocated from a bio set and it can have at
+> most BIO_MAX_PAGES vector entries, however the incoming bio can be larger
+> if it was allocated by other means. For example, bcache creates bios
+> larger than BIO_MAX_PAGES. If the incoming bio is larger, bio_alloc_bioset
+> fails and error is returned.
+> 
+> To avoid the error, we test for too large bio in the function crypt_map
+> and dm_accept_partial_bio to split the bio. dm_accept_partial_bio trims
+> the current bio to the desired size and requests that the device mapper
+> core sends another bio with the rest of the data.
+> 
+> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+> Cc: stable@vger.kernel.org	# v3.16+
 
-Yes, that is incorrect. If your timeouts are configured correctly the 
-drive will report an uncorrectable error up the stack. MD will try to 
-get the data from elsewhere and it will try to re-write the bad sector 
-with the reconstructed data.
+Tested-by: James Johnston <johnstonj.public@codenest.com>
 
-If your timeouts are *wrong* however, the drive will go away and try 
-desperately to read the sector. This most often will take well in excess 
-of the default 30 second ata stack timeout. So the ata stack will poke 
-the drive after 30 seconds, but the drive is still tied up trying to 
-recover the data. It sees this as the drive going away, and reports to 
-MD that the drive is gone. *Bang* it's out of the array.
+I tested this patch by:
 
-There are other issues associated with md trying to re-write the sector 
-and failing (and some complexities around whether or not you have a bad 
-block list) that may kick the drive if the write fails, but invariably 
-it's a read timeout issue that causes this problem.
+1.  Building v4.7-rc1 from Torvalds git repo.  Confirmed that original bug
+    still occurs on Ubuntu 15.10.
 
-> I'm asking hypothetically.  I have my arrays scrubbed weekly to prevent
-> this kind of surprise, and I keep multiple backups of my most important and
-> irreplaceable data.
+2.  Applying your patch to v4.7-rc1.  My kill sequence no longer works,
+    and the writeback cache is now successfully flushed to disk, and the
+    cache can be detached from the backing device.
 
-Certainly best practice. I was more lax until I encountered a 
-misbehaving SIL controller that silently corrupted a significant 
-proportion of a 16TB array.
+3.  To check data integrity, copied 250 MB of /dev/urandom to some file
+    on main volume.  Then, dd copy this file to /dev/bcache0.  Then,
+    detached the cache device from the backing device.  Then, rebooted.
+    Then, dd copy /dev/bcache0 to another file on main volume.  Then,
+    diff the files and confirm no changes.
 
-> In the past, I had a mirror that kept kicking out one drive.  I never lost
-> any data.  Between a decent backup policy and luck, I never experienced two
-> drive failures at the same time.  It's likely that the drive was timing out
-> on an unrecoverable read error, but the OS gave up first.  This was before
-> I knew to fix that default (mis)tuning, as was discussed here recently.
-> Last fall, that drive totally failed, and since, I've been paying much more
-> attention to care-and-maintenance!
+So it looks like it works, based on this admittedly brief testing.  Thanks!
 
-I do daily short SMART tests, weekly long SMART tests and monthly 
-"check" scrubs of the RAID(s). I'm not saying it's best practice, but 
-I've had several drives turn up SMART failures and managed to address 
-those before it became an issue on any of the arrays.
+Best regards,
 
-I've used the '--force' parameter to mdadm to assemble an array after a 
-sata controller failure and had good results, but I wasn't dealing with 
-bad drives and the need to make things read-only, so I defer to those 
-with more experience in that regard.
+James Johnston
 
-I have however done a *lot* of data recovery on single drives over the 
-years and can absolutely vouch that dd will leave you in tears.
-
-
-Regards,
-Brad
 
