@@ -1,39 +1,50 @@
-From: Sitsofe Wheeler <sitsofe@gmail.com>
-Subject: Re: BLKZEROOUT not zeroing md dev on VMDK
-Date: Wed, 1 Jun 2016 06:04:54 +0100
-Message-ID: <CALjAwxgdr1zSgZZzNA9BQ8Ta+UuutJ6iuBnqZfmV-BTCDL2PbA@mail.gmail.com>
-References: <20160518223616.GA409@sucs.org>
-	<20160527041824.GC9418@birch.djwong.org>
-	<CALjAwxgkgPZdXFkOuD-7Dsbxf9oVEGuXTDLnyqu8rTrJio_4mA@mail.gmail.com>
-	<CAGnHSEn0ntEw_dwFNqG6CdgwcpHzQie88jgA21uioKhBbcByTg@mail.gmail.com>
+From: Edward Kuns <eddie.kuns@gmail.com>
+Subject: Re: raid 5 crashed
+Date: Wed, 1 Jun 2016 00:23:09 -0500
+Message-ID: <CACsGCySR8NwbwRY=xe32YzyeZPFMmeDbnqp-LbykPoGBc537qA@mail.gmail.com>
+References: <CADzS=aoMEaFv5TPYUpYBnLhOpF+u9dtG6aa=JZ5gd=Qv1=OrMQ@mail.gmail.com>
+	<20160511131524.GA11811@cthulhu.home.robinhill.me.uk>
+	<CADzS=aoKqrG0QV1-Fe5g_b=n11gmbnerTyZ+eY4rBtJieNz_2w@mail.gmail.com>
+	<CADzS=apUB=XZRmCWjpOHuRgvk7EhqrbpRQhHQ+MHf8NHyGCU0w@mail.gmail.com>
+	<CADzS=are4kkK5Lpm2WTAnqhE1D3XuMFwTKbO8_FzDbGtmqu2Dw@mail.gmail.com>
+	<574C8EB9.3070706@youngman.org.uk>
+	<CADzS=arbwpZg=VRcaiLaMJrLzr8pOjFTC-EwUtSpC1A3SmaTcQ@mail.gmail.com>
+	<574D958F.8060209@turmel.org>
+	<574DDCBD.40801@youngman.org.uk>
+	<95079572-f319-ca57-a3e9-e8d00ef40248@fnarfbargle.com>
+	<CACsGCyQuPEXtgeW6QH-s_-eW9-SZ3J5s2s7CUzZRNemexTt3aw@mail.gmail.com>
+	<20b1858b-0cd7-a7de-82af-9167dbcfb09e@fnarfbargle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAGnHSEn0ntEw_dwFNqG6CdgwcpHzQie88jgA21uioKhBbcByTg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@kernel.dk>, Arvind Kumar <arvindkumar@vmware.com>, VMware PV-Drivers <pv-drivers@vmware.com>, linux-raid@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-block@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20b1858b-0cd7-a7de-82af-9167dbcfb09e@fnarfbargle.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Brad Campbell <lists2009@fnarfbargle.com>
+Cc: Wols Lists <antlists@youngman.org.uk>, Phil Turmel <philip@turmel.org>, bobzer <bobzer@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, Mikael Abrahamsson <swmike@swm.pp.se>
 List-Id: linux-raid.ids
 
-On 27 May 2016 at 10:30, Tom Yan <tom.ty89@gmail.com> wrote:
-> There seems to be some sort of race condition between
-> blkdev_issue_zeroout() and the scsi disk driver (disabling write same
-> after an illegal request). On my UAS drive, sometimes `blkdiscard -z
-> /dev/sdX` will return right away, even though if I then check
-> `write_same_max_bytes` it has turned 0. Sometimes it will just write
-> zero with SCSI WRITE even if `write_same_max_bytes` is 33553920 before
-> I issue `blkdiscard -z` (`write_same_max_bytes` also turned 0, as
-> expected).
->
-> Not sure if it is directly related to the case here though.
+On 01/06/16 11:46, Edward Kuns wrote:
+> My understanding is that mdraid will kick out a drive with an
+> unrecoverable hardware error on a single sector.  (Is this incorrect?)
 
-I'm not aware of hitting that particular problem myself directly on
-the underlying "SCSI" device but the patch on
-https://patchwork.kernel.org/patch/9137311/ should be able to resolve
-that issue. Could you test it and follow up on
-http://permalink.gmane.org/gmane.linux.kernel/2229377 ? I'm hoping
-more testing reports will lead to the patch being reviewed and
-accepted sooner rather than later as it's currently stalled...
+On Tue, May 31, 2016 at 11:07 PM, Brad Campbell
+<lists2009@fnarfbargle.com> wrote:
+> Yes, that is incorrect. If your timeouts are configured correctly the drive
+> will report an uncorrectable error up the stack. MD will try to get the data
+> from elsewhere and it will try to re-write the bad sector with the
+> reconstructed data.
 
--- 
-Sitsofe | http://sucs.org/~sits/
+Ah ha.  OK.  That makes a lot more sense.  Thanks.  And I *know* I had
+bad timeouts on consumer drives before I replaced this drive.
+
+> I do daily short SMART tests, weekly long SMART tests and monthly "check"
+> scrubs of the RAID(s). I'm not saying it's best practice, but I've had
+> several drives turn up SMART failures and managed to address those before it
+> became an issue on any of the arrays.
+
+As far as SMART, I'm running with the default Fedora behavior in that
+area.  I don't believe it does any automatic tests, unless the default
+logwatch behavior does SMART tests.  I'll add this to my "todo" list.
+Thanks.
+
+              Eddie
