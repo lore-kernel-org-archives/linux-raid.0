@@ -1,50 +1,59 @@
-From: Brad Campbell <lists2009@fnarfbargle.com>
-Subject: Re: raid 5 crashed
-Date: Wed, 1 Jun 2016 13:28:44 +0800
-Message-ID: <78cf1c9f-671b-727e-9ddd-607b6c8bc14e@fnarfbargle.com>
-References: <CADzS=aoMEaFv5TPYUpYBnLhOpF+u9dtG6aa=JZ5gd=Qv1=OrMQ@mail.gmail.com>
- <20160511131524.GA11811@cthulhu.home.robinhill.me.uk>
- <CADzS=aoKqrG0QV1-Fe5g_b=n11gmbnerTyZ+eY4rBtJieNz_2w@mail.gmail.com>
- <CADzS=apUB=XZRmCWjpOHuRgvk7EhqrbpRQhHQ+MHf8NHyGCU0w@mail.gmail.com>
- <CADzS=are4kkK5Lpm2WTAnqhE1D3XuMFwTKbO8_FzDbGtmqu2Dw@mail.gmail.com>
- <574C8EB9.3070706@youngman.org.uk>
- <CADzS=arbwpZg=VRcaiLaMJrLzr8pOjFTC-EwUtSpC1A3SmaTcQ@mail.gmail.com>
- <574D958F.8060209@turmel.org> <574DDCBD.40801@youngman.org.uk>
- <95079572-f319-ca57-a3e9-e8d00ef40248@fnarfbargle.com>
- <CACsGCyQuPEXtgeW6QH-s_-eW9-SZ3J5s2s7CUzZRNemexTt3aw@mail.gmail.com>
- <20b1858b-0cd7-a7de-82af-9167dbcfb09e@fnarfbargle.com>
- <CACsGCySR8NwbwRY=xe32YzyeZPFMmeDbnqp-LbykPoGBc537qA@mail.gmail.com>
+From: "Peckins, Steven E" <speckins@illinois.edu>
+Subject: Re: RAID6 recovery with 6/9 drives out-of-sync
+Date: Wed, 1 Jun 2016 11:32:41 +0000
+Message-ID: <5D9C8773-D76E-409F-8961-41EB3ACD177A@illinois.edu>
+References: <C50C72C6-FC75-4863-B743-F63F09AF93B0@illinois.edu>
+ <574DE3B0.8000409@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=Windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CACsGCySR8NwbwRY=xe32YzyeZPFMmeDbnqp-LbykPoGBc537qA@mail.gmail.com>
+In-Reply-To: <574DE3B0.8000409@turmel.org>
+Content-Language: en-US
+Content-ID: <A91A3FDE99CD8842B4FE730C65E331F8@mx.uillinois.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Edward Kuns <eddie.kuns@gmail.com>
-Cc: Wols Lists <antlists@youngman.org.uk>, Phil Turmel <philip@turmel.org>, bobzer <bobzer@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, Mikael Abrahamsson <swmike@swm.pp.se>
+To: Phil Turmel <philip@turmel.org>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 01/06/16 13:23, Edward Kuns wrote:
 
->> I do daily short SMART tests, weekly long SMART tests and monthly "check"
->> scrubs of the RAID(s). I'm not saying it's best practice, but I've had
->> several drives turn up SMART failures and managed to address those before it
->> became an issue on any of the arrays.
->
-> As far as SMART, I'm running with the default Fedora behavior in that
-> area.  I don't believe it does any automatic tests, unless the default
-> logwatch behavior does SMART tests.  I'll add this to my "todo" list.
-> Thanks.
+On May 31, 2016, at 2:19 PM, Phil Turmel <philip@turmel.org> wrote:
 
-I just add this into smartd.conf on every machine I have (all Debian 
-based systems). Make sure it's the first DEVICESCAN line as all lines 
-after this are ignored.
+> On 05/30/2016 10:43 PM, Peckins, Steven E wrote:
+>>=20
+>> The component devices in the array are supposed to be multipath devi=
+ces (dm-multipath), but for some reason, when the server was restarted,=
+ md grabbed both dm-* components and raw devices.  I *think* that this =
+is what caused the problem.
+>=20
+> Quite possible.  You probably need a DEVICES clause in your mdadm.con=
+f
+> to exclude the raw devices from the arrays.
 
-Mail to brad, short tests every day at 2am and long tests at 4am on a 
-Sunday.
+I had a typo in the DEVICE glob for the system disks (/dev/sd[ab]* inst=
+ead of /dev/sd[ab][12]).
 
-DEVICESCAN -m brad -s (L/../../7/04|S/../.././02) -M exec 
-/usr/share/smartmontools/smartd-runner
 
-By default I've never had any system schedule smart tests.
+>> I'm seeking advice on how to proceed at this point.  If more informa=
+tion is required, please ask.
+>=20
+> Hmmm.  The partial success on mdadm --force suggests trying that agai=
+n.
+> Possible with --force twice on the command line.
+>=20
+> Forced assembly is precisely what you need -- don't despair and attem=
+pt
+> anything else.
 
+Repeating the command was not successful; it is still reporting "/dev/m=
+d10 assembled from 5 drives and 1 spare - not enough to start the array=
+=2E"  Four drives are listed as =93possibly out of date."  I assume tho=
+se are the four that are not being incorporated.
+
+Output from --assemble --force 1x and 2x:  http://pastebin.com/k1dT2zYC
+
+--steve--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
