@@ -1,29 +1,38 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: Re: [RFC 1/5] add bio_split_mddev
-Date: Wed, 1 Jun 2016 13:18:54 +0000
-Message-ID: <3542A6CA-202B-4374-AA83-CC42E98E3889@fb.com>
-References: <1464326983-3798454-1-git-send-email-songliubraving@fb.com>
- <1464326983-3798454-2-git-send-email-songliubraving@fb.com>
- <574D55AF.1030005@suse.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: RAID6 recovery with 6/9 drives out-of-sync
+Date: Wed, 1 Jun 2016 09:22:06 -0400
+Message-ID: <574EE17E.9060903@turmel.org>
+References: <C50C72C6-FC75-4863-B743-F63F09AF93B0@illinois.edu>
+ <574DE3B0.8000409@turmel.org>
+ <5D9C8773-D76E-409F-8961-41EB3ACD177A@illinois.edu>
+ <574ECFE2.9050602@turmel.org>
+ <5BE0D8AF-C1BF-4DFB-BEAE-8C93898EAC87@illinois.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <574D55AF.1030005@suse.com>
-Content-Language: en-US
-Content-ID: <0860CCF08C4EE64486B11C3E4FF62FDE@namprd15.prod.outlook.com>
+In-Reply-To: <5BE0D8AF-C1BF-4DFB-BEAE-8C93898EAC87@illinois.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-Cc: Shaohua Li <shli@fb.com>, "nfbrown@novell.com" <nfbrown@novell.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "hch@infradead.org" <hch@infradead.org>, Kernel Team <Kernel-team@fb.com>
+To: "Peckins, Steven E" <speckins@illinois.edu>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Pj4gKwlyZXR1cm4gYmlvX3NwbGl0KGJpbywgc2VjdG9ycywgZ2ZwLCBtZGRldi0+YmlvX3NldCk7
-DQo+PiArfQ0KPj4gK0VYUE9SVF9TWU1CT0xfR1BMKGJpb19zcGxpdF9tZGRldik7DQo+PiArDQo+
-DQo+Q29tcGFyZWQgd2l0aCBiaW9fYWxsb2NfbWRkZXYgYW5kIGJpb19jbG9uZV9tZGRldiwgdGhl
-cmUgaXMgbm8gDQo+YmlvX3NwbGl0X2Jpb3NldA0KPmZ1bmMsIEkgdGhpbmsgdXNlIGJpb19zcGxp
-dCBkaXJlY3RseSBpcyBlbm91Z2guIEFsc28gd2h5IHRoZSBsYXN0IA0KPnBhcmFtZXRlciBvZiB0
-aGUNCj5maXJzdCBiaW9fc3BsaXQgaXMgTlVMTCBpbnN0ZWFkIG9mIGZzX2Jpb19zZXQ/DQo+DQo+
-PiAgIC8qDQo+PiAgICAqIFdlIGhhdmUgYSBzeXN0ZW0gd2lkZSAnZXZlbnQgY291bnQnIHRoYXQg
-aXMgaW5jcmVtZW50ZWQNCj4+ICAgICogb24gYW55ICdpbnRlcmVzdGluZycgZXZlbnQsIGFuZCBy
-ZWFkZXJzIG9mIC9wcm9jL21kc3RhdA0KDQpJIHNlZS4gTGV04oCZcyBqdXN0IHVzZSBiaW9fc3Bs
-aXQgZm9yIG5vdy4gDQoNClRoYW5rcywNClNvbmcNCg0KDQo=
+On 06/01/2016 09:16 AM, Peckins, Steven E wrote:
+
+> I activated the lvm volume and mounted the filesystem.  Everything
+> looks intact.
+
+Yay!
+
+> Thanks for your help recovering this array!
+
+You're welcome.
+
+> I had been avoiding updating mdadm while I was recovering this as I
+> had read of potential issues while recovering arrays created with
+> earlier versions.
+
+Viewing bug reports and bug fix patches is the primary reason I'm
+subscribed to this list.  It lets me make my own stable upgrade decisions.
+
+Phil
