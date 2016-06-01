@@ -1,7 +1,7 @@
-From: Wols Lists <antlists@youngman.org.uk>
+From: Phil Turmel <philip@turmel.org>
 Subject: Re: raid 5 crashed
-Date: Wed, 1 Jun 2016 16:42:16 +0100
-Message-ID: <574F0258.5000108@youngman.org.uk>
+Date: Wed, 1 Jun 2016 13:28:22 -0400
+Message-ID: <574F1B36.4030401@turmel.org>
 References: <CADzS=aoMEaFv5TPYUpYBnLhOpF+u9dtG6aa=JZ5gd=Qv1=OrMQ@mail.gmail.com>
  <20160511131524.GA11811@cthulhu.home.robinhill.me.uk>
  <CADzS=aoKqrG0QV1-Fe5g_b=n11gmbnerTyZ+eY4rBtJieNz_2w@mail.gmail.com>
@@ -11,38 +11,42 @@ References: <CADzS=aoMEaFv5TPYUpYBnLhOpF+u9dtG6aa=JZ5gd=Qv1=OrMQ@mail.gmail.com>
  <CADzS=arbwpZg=VRcaiLaMJrLzr8pOjFTC-EwUtSpC1A3SmaTcQ@mail.gmail.com>
  <574D958F.8060209@turmel.org> <574DDCBD.40801@youngman.org.uk>
  <95079572-f319-ca57-a3e9-e8d00ef40248@fnarfbargle.com>
+ <574F0258.5000108@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <95079572-f319-ca57-a3e9-e8d00ef40248@fnarfbargle.com>
+In-Reply-To: <574F0258.5000108@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <lists2009@fnarfbargle.com>, Phil Turmel <philip@turmel.org>, bobzer <bobzer@gmail.com>
+To: Wols Lists <antlists@youngman.org.uk>, Brad Campbell <lists2009@fnarfbargle.com>, bobzer <bobzer@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>, Mikael Abrahamsson <swmike@swm.pp.se>
 List-Id: linux-raid.ids
 
-On 01/06/16 02:48, Brad Campbell wrote:
-> Now, having said that :
+On 06/01/2016 11:42 AM, Wols Lists wrote:
+
+> Okay - so would this be better (a lot slower, possibly, but safe ...)
 > 
-> Much better to try and get the array running in a read-only state with
-> all disks in place and clone the data from the array rather than the
-> disks after they've been ddrescued. In the case of a running array, a
-> read error on one of the array members will see the RAID attempt to get
-> the data from elsewhere (a reconstruction), whereas a read from a disc
-> cloned with ddrescue will happily just report what was a faulty sector
-> as a big pile of zeros, and *poof* your data is gone.
-> 
-> Set the timeouts appropriately (and conservatively) to give the disks
-> time to actually report they can't read the sector. This will allow md
-> to try and get it elsewhere rather than kicking the disc out because the
-> storage stack timed it out as faulty.
+> Use dd - so it DOES bomb on error! - and only replace the drive once
+> you've got a clean read off it. With 2TB drives, that should work so
+> long as they're not faulty. And if it's - JUST - a timeout issue,
+> this'll work fine?
 
-Okay - so would this be better (a lot slower, possibly, but safe ...)
+If there's errors, you'll never get a clean read.  (Short of the moon
+and stars aligning for a near-miracle.)  ddrescue and similar replace
+those errors with zeros to successfully retrieve less than 100% of your
+data.
 
-Use dd - so it DOES bomb on error! - and only replace the drive once
-you've got a clean read off it. With 2TB drives, that should work so
-long as they're not faulty. And if it's - JUST - a timeout issue,
-this'll work fine?
+The whole point of keeping it in the array is to get the correct data
+from the array's redundancy wherever the disk has unfixed read errors.
+And with correct timeouts, to *FIX* that read error.  Please read *all*
+of the links I posted on why and how this is.
 
-Cheers,
-Wol
+Side note:  In these situations, you should *not* use overlays, as that
+prevents the *FIX* part from happening.
+
+Temporarily setting the timeouts for non-raid drives is a one-liner:
+
+for x in /sys/block/*/device/timeout ; do echo 180 > $x ; done
+
+Phil
+
