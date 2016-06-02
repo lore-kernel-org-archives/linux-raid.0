@@ -1,91 +1,48 @@
-From: NeilBrown <nfbrown@novell.com>
-Subject: Re: Why does raid0 set max_hw_sectors as chunk size but the other raid types doesn't?
-Date: Thu, 02 Jun 2016 14:38:29 +1000
-Message-ID: <87lh2op5mi.fsf@notabene.neil.brown.name>
-References: <CAHvN=in80JrXO=tDyxNhq9d_wW1ZCCioENyTLu9tYuYYDof20w@mail.gmail.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: raid 5 crashed
+Date: Thu, 2 Jun 2016 07:52:11 +0200 (CEST)
+Message-ID: <alpine.DEB.2.02.1606020745490.28955@uplift.swm.pp.se>
+References: <CADzS=aoMEaFv5TPYUpYBnLhOpF+u9dtG6aa=JZ5gd=Qv1=OrMQ@mail.gmail.com> <20160511131524.GA11811@cthulhu.home.robinhill.me.uk> <CADzS=aoKqrG0QV1-Fe5g_b=n11gmbnerTyZ+eY4rBtJieNz_2w@mail.gmail.com> <CADzS=apUB=XZRmCWjpOHuRgvk7EhqrbpRQhHQ+MHf8NHyGCU0w@mail.gmail.com>
+ <CADzS=are4kkK5Lpm2WTAnqhE1D3XuMFwTKbO8_FzDbGtmqu2Dw@mail.gmail.com> <574C8EB9.3070706@youngman.org.uk> <CADzS=arbwpZg=VRcaiLaMJrLzr8pOjFTC-EwUtSpC1A3SmaTcQ@mail.gmail.com> <574D958F.8060209@turmel.org> <574DDCBD.40801@youngman.org.uk>
+ <95079572-f319-ca57-a3e9-e8d00ef40248@fnarfbargle.com> <CACsGCyQuPEXtgeW6QH-s_-eW9-SZ3J5s2s7CUzZRNemexTt3aw@mail.gmail.com> <20b1858b-0cd7-a7de-82af-9167dbcfb09e@fnarfbargle.com> <574F00F5.80801@youngman.org.uk>
+ <2f3e2fe6-1810-e7bd-7dc0-483ed4f0d46b@fnarfbargle.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHvN=in80JrXO=tDyxNhq9d_wW1ZCCioENyTLu9tYuYYDof20w@mail.gmail.com>
+In-Reply-To: <2f3e2fe6-1810-e7bd-7dc0-483ed4f0d46b@fnarfbargle.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Joey Liao <joeyliao@qnap.com>, linux-raid@vger.kernel.org
+To: Brad Campbell <lists2009@fnarfbargle.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
+On Thu, 2 Jun 2016, Brad Campbell wrote:
 
-On Mon, May 30 2016, Joey Liao wrote:
+> People keep saying that. I've never encountered it. I suspect it's just not
 
-> Hi,
->
-> I have no idea why does raid0_run() in raid0.c use
-> blk_queue_max_hw_sectors() to set max_hw_sectors as the chunk size,
-> but the other raid types doesn't?
+Well, I have had drives that would occasionally throw a read error, but MD 
+requires that read error to happen three times before re-writing the 
+sector, and that never happened. See earlier discussions I had with Neil 
+on the topic. But you're correct, I don't see this on normally functioning 
+drives. Swapped out that drive (it didn't have any specific SMART errors 
+either) and everything was fine. I don't know what was wrong with it, 
+might have been something flying around in there causing spurious 
+problems.
 
-git is your friend.... admittedly you need the 'history' git tree to go
-back before 2.6.12, but it is available.
+> the problem that the hysterical ranting makes it out to be (either that or 
+> the pile of cheap and nasty drives I have here are model citizens).
+> I've *never* seen a read error unless the drive was in trouble, and that 
+> includes running dd reads in a loop over multiple days continuously.
+> If it were that bad I'd see drives failing SMART long tests routinely also, 
+> and that does not happen either.
 
-http://git.kernel.org/cgit/linux/kernel/git/history/history.git/commit/?id=f556ef000efc90a45a285f4f0b4fd70bb70f
+I've seen enough read errors that I nowadays only run RAID6, never RAID5. 
+I'd also venture to say that considering the amount of people who come on 
+the list and who come on the #linux-raid IRC channel with "raid5, 
+one-drive-failed, and now I have read error on another drive so my array 
+doesn't resync, what should I do?", I'd say this is a real problem. It's 
+not however like "if you have a good drive, reading it 5 times will yield 
+a read error". The vendor bit error rate specification doesn't work like 
+that, so totally agree with you there.
 
-
-
->
-> What's the purpose to limit the max_hw_sectors in raid0?
-
-unfortunately the commit doesn't answer that question.  I think it was
-to ensure requests larger than one chunk were not created.  If they were
-they would just have to be split, so there is no much to gain.
-
->
-> Is it related to the source code logic issue or the performance issue?
->
-> Besides, I have an interesting observation. If I remove all the
-> following queue limitation codes in raid0_run() of raid0.c, the block
-> size in iostat is still the same as chunk size even the input block
-> size is much larger than the chunk size. Why???
-
-Because when you write to a RAID0 you *must* divide each request up into
-chunk-sizes sub-requests, and send them to different devices.
-
-NeilBrown
-
-
->
-> -  blk_queue_max_hw_sectors(mddev->queue, mddev->chunk_sectors);
-> -  blk_queue_max_write_same_sectors(mddev->queue, mddev->chunk_sectors);
-> +  //blk_queue_max_hw_sectors(mddev->queue, mddev->chunk_sectors);
-> +  //blk_queue_max_write_same_sectors(mddev->queue, mddev->chunk_sectors);
->
-> -  blk_queue_io_min(mddev->queue, mddev->chunk_sectors << 9);
-> -  blk_queue_io_opt(mddev->queue,
-> -                 (mddev->chunk_sectors << 9) * mddev->raid_disks);
-> +  //blk_queue_io_min(mddev->queue, mddev->chunk_sectors << 9);
-> +  /*blk_queue_io_opt(mddev->queue,
-> +              (mddev->chunk_sectors << 9) * mddev->raid_disks);*/
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJXT7hGAAoJEDnsnt1WYoG55h8QAJzMQXICQNEZg2fM9nPZ5YSR
-rJ2zUsJwvZuJgiZUXWVesm6PVmXtAiMMggL87jgTd/ZW8/EYL02DOn1ZkvMENxNE
-ftzMKyaPj75a4n/Q2XfwqlL/AxqS7w7y0djXZVSWWWktSaj9qiJHtL8dBP6dkS+N
-IWKfQ8lI9iYO1EgqUKxAVxBqb5xnm8PTAWRuSZ/yub0J0l5J6V8O7v1uMkKaBHX0
-yM1mj920korM7/URWfNfhKDR/ksNvcVbarqnDXayA5Z8+eSiueoadWyQXgM/u8BX
-5SP+UEcwxH3VARLEfrzYU1/yiCQ5J69reTSIUXTxz2sJ3mFLTSREOP16wVbmtTCp
-9BsYE4WPjIG+oKJ160DmZlEqyV929S2N3c/pA0iT6+i4YzOv8JhPBPeqeG70Wlj3
-/W1MJjXCAFiHnLcSKAbbBqbKmJg0diOTGmu0EsMvEjnjW9tj+Gg5OkhVhqUXY3cs
-ogSb1+IMYGDsQS/OiXbAJ3r7MxH2VCj468YURf360gQbgruogOLkD7LBJbocmVrX
-TFeXBlSypbNv4qzYtgyLziRtJtIDrk4OREK9c2CzpN/VsIC86DxR3y1nrvHhKl9m
-vg1ehlGjvB/cZqqjylPlaFA9S50rXEQzsC2EteFyu3xNgYc56HoABjDV0CB6bCdi
-wKVUz7j2zmKyuKjAUvnP
-=Y5f0
------END PGP SIGNATURE-----
---=-=-=--
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
