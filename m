@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [md PATCH 14/18] md/raid5: add rcu protection to rdev accesses in
- want_replace
+Subject: [md PATCH 15/18] md/raid5: add rcu protection to rdev accesses in
+ raid5_status.
 Date: Thu, 02 Jun 2016 16:19:52 +1000
-Message-ID: <20160602061952.2939.2738.stgit@noble>
+Message-ID: <20160602061952.2939.22246.stgit@noble>
 References: <20160602061319.2939.72280.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,36 +14,30 @@ To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Being in the middle of resync is no longer protection against failed
-rdevs disappearing.  So add rcu protection.
-
 Signed-off-by: NeilBrown <neilb@suse.com>
 ---
- drivers/md/raid5.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/md/raid5.c |   10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index e9ad22d64bd7..7da89ee22a31 100644
+index 7da89ee22a31..e9beba258f4f 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -3239,15 +3239,16 @@ static int want_replace(struct stripe_head *sh, int disk_idx)
- {
- 	struct md_rdev *rdev;
- 	int rv = 0;
--	/* Doing recovery so rcu locking not required */
--	rdev = sh->raid_conf->disks[disk_idx].replacement;
-+
+@@ -7069,10 +7069,12 @@ static void raid5_status(struct seq_file *seq, struct mddev *mddev)
+ 	seq_printf(seq, " level %d, %dk chunk, algorithm %d", mddev->level,
+ 		conf->chunk_sectors / 2, mddev->layout);
+ 	seq_printf (seq, " [%d/%d] [", conf->raid_disks, conf->raid_disks - mddev->degraded);
+-	for (i = 0; i < conf->raid_disks; i++)
+-		seq_printf (seq, "%s",
+-			       conf->disks[i].rdev &&
+-			       test_bit(In_sync, &conf->disks[i].rdev->flags) ? "U" : "_");
 +	rcu_read_lock();
-+	rdev = rcu_dereference(sh->raid_conf->disks[disk_idx].replacement);
- 	if (rdev
- 	    && !test_bit(Faulty, &rdev->flags)
- 	    && !test_bit(In_sync, &rdev->flags)
- 	    && (rdev->recovery_offset <= sh->sector
- 		|| rdev->mddev->recovery_cp <= sh->sector))
- 		rv = 1;
--
++	for (i = 0; i < conf->raid_disks; i++) {
++		struct md_rdev *rdev = rcu_dereference(conf->disks[i].rdev);
++		seq_printf (seq, "%s", rdev && test_bit(In_sync, &rdev->flags) ? "U" : "_");
++	}
 +	rcu_read_unlock();
- 	return rv;
+ 	seq_printf (seq, "]");
  }
  
 
