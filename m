@@ -1,51 +1,63 @@
-From: Brad Campbell <lists2009@fnarfbargle.com>
-Subject: Re: raid 5 crashed
-Date: Thu, 2 Jun 2016 07:15:32 +0800
-Message-ID: <2f3e2fe6-1810-e7bd-7dc0-483ed4f0d46b@fnarfbargle.com>
-References: <CADzS=aoMEaFv5TPYUpYBnLhOpF+u9dtG6aa=JZ5gd=Qv1=OrMQ@mail.gmail.com>
- <20160511131524.GA11811@cthulhu.home.robinhill.me.uk>
- <CADzS=aoKqrG0QV1-Fe5g_b=n11gmbnerTyZ+eY4rBtJieNz_2w@mail.gmail.com>
- <CADzS=apUB=XZRmCWjpOHuRgvk7EhqrbpRQhHQ+MHf8NHyGCU0w@mail.gmail.com>
- <CADzS=are4kkK5Lpm2WTAnqhE1D3XuMFwTKbO8_FzDbGtmqu2Dw@mail.gmail.com>
- <574C8EB9.3070706@youngman.org.uk>
- <CADzS=arbwpZg=VRcaiLaMJrLzr8pOjFTC-EwUtSpC1A3SmaTcQ@mail.gmail.com>
- <574D958F.8060209@turmel.org> <574DDCBD.40801@youngman.org.uk>
- <95079572-f319-ca57-a3e9-e8d00ef40248@fnarfbargle.com>
- <CACsGCyQuPEXtgeW6QH-s_-eW9-SZ3J5s2s7CUzZRNemexTt3aw@mail.gmail.com>
- <20b1858b-0cd7-a7de-82af-9167dbcfb09e@fnarfbargle.com>
- <574F00F5.80801@youngman.org.uk>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH 0/2] Fixes for lots of arrays
+Date: Wed, 01 Jun 2016 21:00:04 -0400
+Message-ID: <wrfjeg8g9zhn.fsf@redhat.com>
+References: <1463595794-17045-1-git-send-email-mlovell@bluehost.com>
+	<CAK9wOaA0RaH7yPH83D2BxOLq41d3rC9Ck5E5nNauekSYkOZAng@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <574F00F5.80801@youngman.org.uk>
+In-Reply-To: <CAK9wOaA0RaH7yPH83D2BxOLq41d3rC9Ck5E5nNauekSYkOZAng@mail.gmail.com>
+	(Mike Lovell's message of "Tue, 31 May 2016 11:33:52 -0600")
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, Edward Kuns <eddie.kuns@gmail.com>
-Cc: Phil Turmel <philip@turmel.org>, bobzer <bobzer@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, Mikael Abrahamsson <swmike@swm.pp.se>
+To: Mike Lovell <mlovell@bluehost.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Mike Lovell <mlovell@bluehost.com> writes:
+> ping. its been about 2 week since i posted these. just following up on it.
 
+Hi,
 
-On 01/06/16 23:36, Wols Lists wrote:
-> On 01/06/16 05:07, Brad Campbell wrote:
->> I have however done a *lot* of data recovery on single drives over the
->> years and can absolutely vouch that dd will leave you in tears.
-> Good to know! I've regularly used dd on drives, but not on ones that
-> were in trouble (maybe once ...)
+I think you sent it while I was traveling - I'll try to get to it within
+the next couple of days.
+
+Thanks for the reminder.
+
+Jes
+
 >
-> But now drives are at the point that you cannot guarantee an error-free
-> scan even on just one pass,
-People keep saying that. I've never encountered it. I suspect it's just 
-not the problem that the hysterical ranting makes it out to be (either 
-that or the pile of cheap and nasty drives I have here are model citizens).
-I've *never* seen a read error unless the drive was in trouble, and that 
-includes running dd reads in a loop over multiple days continuously.
-If it were that bad I'd see drives failing SMART long tests routinely 
-also, and that does not happen either.
-
--- 
-
-Dolphins are so intelligent that within a few weeks they can
-train Americans to stand at the edge of the pool and throw them
-fish.
-
+> mike
+>
+> On Wed, May 18, 2016 at 12:23 PM, Mike Lovell <mlovell@bluehost.com> wrote:
+>> This patch series fixes two issues around having more than 127 arrays on a
+>> system. The first one fixes an issue with using a dev_t as int and the
+>> number going negative when the array number would be larger than 2<<19. This
+>> would happen when more than 128 arrays were created on the system without
+>> creating the arrays by name. Manually specifying the large number would also
+>> fail.
+>>
+>> The second patch changes find_free_devnm in mdopen.c to use go to (2<<9)-1
+>> after 128 arrays have been created. Newer versions of the kernel don't allow
+>> the user to specify an array number than 511 so mdadm shouldn't automatically
+>> choose a bigger number. There was discussion about checking for new_array
+>> in /sys/module/md_mod/parameters on the list but that parameter has been in
+>> the kernel since 2.6.29. Any kernel from the last 7 years would still be
+>> limited by the check so it probably isn't worth a special case.
+>>
+>> Mike Lovell (2):
+>>   Use dev_t for devnm2devid and devid2devnm
+>>   Change behavior in find_free_devnm when wrapping around.
+>>
+>>  Detail.c  | 4 ++--
+>>  Grow.c    | 2 +-
+>>  lib.c     | 2 +-
+>>  mapfile.c | 2 +-
+>>  mdadm.h   | 4 ++--
+>>  mdopen.c  | 6 +++---
+>>  util.c    | 6 +++---
+>>  7 files changed, 13 insertions(+), 13 deletions(-)
+>>
+>> --
+>> 1.9.1
+>>
