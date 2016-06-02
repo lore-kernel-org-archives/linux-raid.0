@@ -1,44 +1,37 @@
-From: Vikas Aggarwal <vik.reck@gmail.com>
-Subject: Doubts on async_tx xor offload for raid5/6
-Date: Thu, 2 Jun 2016 11:54:45 +0530
-Message-ID: <CAOid5F-UWP-_jpA3XMFptfKa8=Gh7wBhhPZ1_DR_5UwJAxHriQ@mail.gmail.com>
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Subject: Re: [RFC v2 2/3] crypto: Introduce CRYPTO_ALG_BULK flag
+Date: Thu, 2 Jun 2016 16:26:06 +0800
+Message-ID: <20160602082606.GA15226@gondor.apana.org.au>
+References: <cover.1464346333.git.baolin.wang@linaro.org>
+ <47e9ddd8c9ea9ad9e29c8cb027d19d8459ea1479.1464346333.git.baolin.wang@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, dmaengine@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <47e9ddd8c9ea9ad9e29c8cb027d19d8459ea1479.1464346333.git.baolin.wang@linaro.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Baolin Wang <baolin.wang@linaro.org>
+Cc: axboe@kernel.dk, agk@redhat.com, snitzer@redhat.com, dm-devel@redhat.com, davem@davemloft.net, ebiggers3@gmail.com, js1304@gmail.com, tadeusz.struk@intel.com, smueller@chronox.de, standby24x7@gmail.com, shli@kernel.org, dan.j.williams@intel.com, martin.petersen@oracle.com, sagig@mellanox.com, kent.overstreet@gmail.com, keith.busch@intel.com, tj@kernel.org, ming.lei@canonical.com, broonie@kernel.org, arnd@arndb.de, linux-crypto@vger.kernel.org, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi  list,
-Will appreciate if someone can clear my doubts with "some theoretical
-examples". I am trying to improve XOR/GF offload for a multi-core SoC
-(currently it has single XOR/GF  channel).
+On Fri, May 27, 2016 at 07:11:23PM +0800, Baolin Wang wrote:
+> Now some cipher hardware engines prefer to handle bulk block rather than one
+> sector (512 bytes) created by dm-crypt, cause these cipher engines can handle
+> the intermediate values (IV) by themselves in one bulk block. This means we
+> can increase the size of the request by merging request rather than always 512
+> bytes and thus increase the hardware engine processing speed.
+> 
+> So introduce 'CRYPTO_ALG_BULK' flag to indicate this cipher can support bulk
+> mode.
+> 
+> Signed-off-by: Baolin Wang <baolin.wang@linaro.org>
 
-1) What is the purpose of device_prep_dma_interrupt  callback ?
+I think a better aproach would be to explicitly move the IV generation
+into the crypto API, similar to how we handle IPsec.  Once you do
+that then every algorithm can be handled through the bulk interface.
 
-2) My driver currently polls for posting  xor  completions
-(dma_cookie_complete) and does'nt use  device_prep_dma_interrupt
-callback at all.  What  gains/loss in terms of  latency/cpu
-idleness/WRITE throughput  I can expect  by implementing this callback
-in my async_tx driver.
-
-3) Purpose of DMA_ACK as I read - it is  for higher layers to inform
-dma driver that descriptors can now be freed. Can someone explain this
-with an example as applicable with raid5/6 clients.
-
-4) With example - why dma_run_dependencies(tx) needed  after the
-hardware engine post completion for a descriptor.
-
-5) Purpose of  tx->callback(cb_arg) - again with an example from a
-raid5/6 offload perspective.
-
-I want to use offload engine efficiently with multithreaded raid5/6.
-
-I tried to dig through dma/drivers, crypto/async_xor.c, online
-archives, linux/Documentation etc but could not get satisfactory
-answers. Added two mail-lists as saw issues being discussed on both
-ones.
-
-Thanks and
-Best Regards
-Vikas Aggarwal
+Cheers,
+-- 
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
