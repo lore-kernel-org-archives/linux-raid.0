@@ -1,37 +1,78 @@
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: [RFC v2 2/3] crypto: Introduce CRYPTO_ALG_BULK flag
-Date: Thu, 2 Jun 2016 16:26:06 +0800
-Message-ID: <20160602082606.GA15226@gondor.apana.org.au>
-References: <cover.1464346333.git.baolin.wang@linaro.org>
- <47e9ddd8c9ea9ad9e29c8cb027d19d8459ea1479.1464346333.git.baolin.wang@linaro.org>
+From: Joey Liao <joeyliao@qnap.com>
+Subject: Re: Why does raid0 set max_hw_sectors as chunk size but the other
+ raid types doesn't?
+Date: Thu, 2 Jun 2016 17:30:25 +0800
+Message-ID: <CAHvN=in+xM68+1+326cOFCNb+H-ZOX6HKPHMFkTRsfws6BM1+Q@mail.gmail.com>
+References: <CAHvN=in80JrXO=tDyxNhq9d_wW1ZCCioENyTLu9tYuYYDof20w@mail.gmail.com>
+	<87lh2op5mi.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <47e9ddd8c9ea9ad9e29c8cb027d19d8459ea1479.1464346333.git.baolin.wang@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Baolin Wang <baolin.wang@linaro.org>
-Cc: axboe@kernel.dk, agk@redhat.com, snitzer@redhat.com, dm-devel@redhat.com, davem@davemloft.net, ebiggers3@gmail.com, js1304@gmail.com, tadeusz.struk@intel.com, smueller@chronox.de, standby24x7@gmail.com, shli@kernel.org, dan.j.williams@intel.com, martin.petersen@oracle.com, sagig@mellanox.com, kent.overstreet@gmail.com, keith.busch@intel.com, tj@kernel.org, ming.lei@canonical.com, broonie@kernel.org, arnd@arndb.de, linux-crypto@vger.kernel.org, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87lh2op5mi.fsf@notabene.neil.brown.name>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <nfbrown@novell.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, May 27, 2016 at 07:11:23PM +0800, Baolin Wang wrote:
-> Now some cipher hardware engines prefer to handle bulk block rather than one
-> sector (512 bytes) created by dm-crypt, cause these cipher engines can handle
-> the intermediate values (IV) by themselves in one bulk block. This means we
-> can increase the size of the request by merging request rather than always 512
-> bytes and thus increase the hardware engine processing speed.
-> 
-> So introduce 'CRYPTO_ALG_BULK' flag to indicate this cipher can support bulk
-> mode.
-> 
-> Signed-off-by: Baolin Wang <baolin.wang@linaro.org>
+Hi NeilBrown,
 
-I think a better aproach would be to explicitly move the IV generation
-into the crypto API, similar to how we handle IPsec.  Once you do
-that then every algorithm can be handled through the bulk interface.
+Thanks for your kindly reply.
 
-Cheers,
--- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+Originally, I doubt that would it affect the performance or not, but I
+agree with your point.
+
+Thanks.
+
+2016-06-02 12:38 GMT+08:00 NeilBrown <nfbrown@novell.com>:
+> On Mon, May 30 2016, Joey Liao wrote:
+>
+>> Hi,
+>>
+>> I have no idea why does raid0_run() in raid0.c use
+>> blk_queue_max_hw_sectors() to set max_hw_sectors as the chunk size,
+>> but the other raid types doesn't?
+>
+> git is your friend.... admittedly you need the 'history' git tree to go
+> back before 2.6.12, but it is available.
+>
+> http://git.kernel.org/cgit/linux/kernel/git/history/history.git/commit/?id=f556ef000efc90a45a285f4f0b4fd70bb70f
+>
+>
+>
+>>
+>> What's the purpose to limit the max_hw_sectors in raid0?
+>
+> unfortunately the commit doesn't answer that question.  I think it was
+> to ensure requests larger than one chunk were not created.  If they were
+> they would just have to be split, so there is no much to gain.
+>
+>>
+>> Is it related to the source code logic issue or the performance issue?
+>>
+>> Besides, I have an interesting observation. If I remove all the
+>> following queue limitation codes in raid0_run() of raid0.c, the block
+>> size in iostat is still the same as chunk size even the input block
+>> size is much larger than the chunk size. Why???
+>
+> Because when you write to a RAID0 you *must* divide each request up into
+> chunk-sizes sub-requests, and send them to different devices.
+>
+> NeilBrown
+>
+>
+>>
+>> -  blk_queue_max_hw_sectors(mddev->queue, mddev->chunk_sectors);
+>> -  blk_queue_max_write_same_sectors(mddev->queue, mddev->chunk_sectors);
+>> +  //blk_queue_max_hw_sectors(mddev->queue, mddev->chunk_sectors);
+>> +  //blk_queue_max_write_same_sectors(mddev->queue, mddev->chunk_sectors);
+>>
+>> -  blk_queue_io_min(mddev->queue, mddev->chunk_sectors << 9);
+>> -  blk_queue_io_opt(mddev->queue,
+>> -                 (mddev->chunk_sectors << 9) * mddev->raid_disks);
+>> +  //blk_queue_io_min(mddev->queue, mddev->chunk_sectors << 9);
+>> +  /*blk_queue_io_opt(mddev->queue,
+>> +              (mddev->chunk_sectors << 9) * mddev->raid_disks);*/
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
