@@ -1,8 +1,7 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [md PATCH 07/18] md/raid10: minor code improvement in
- fix_read_error()
+Subject: [md PATCH 08/18] md/raid10: simplify print_conf a little.
 Date: Thu, 02 Jun 2016 16:19:52 +1000
-Message-ID: <20160602061952.2939.53844.stgit@noble>
+Message-ID: <20160602061952.2939.46370.stgit@noble>
 References: <20160602061319.2939.72280.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,25 +13,47 @@ To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-rdev already holds conf->mirrors[d].rdev, so no need to load it again.
+'tmp' is only ever used to extract 'tmp->rdev', so just use 'rdev' directly.
 
 Signed-off-by: NeilBrown <neilb@suse.com>
 ---
- drivers/md/raid10.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/md/raid10.c |   14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 588cf6544f07..819c6d5767a4 100644
+index 819c6d5767a4..61091ab02a4b 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -2262,7 +2262,7 @@ static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10
- 		printk(KERN_NOTICE
- 		       "md/raid10:%s: %s: Failing raid device\n",
- 		       mdname(mddev), b);
--		md_error(mddev, conf->mirrors[d].rdev);
-+		md_error(mddev, rdev);
- 		r10_bio->devs[r10_bio->read_slot].bio = IO_BLOCKED;
- 		return;
+@@ -1598,7 +1598,7 @@ static void raid10_error(struct mddev *mddev, struct md_rdev *rdev)
+ static void print_conf(struct r10conf *conf)
+ {
+ 	int i;
+-	struct raid10_info *tmp;
++	struct md_rdev *rdev;
+ 
+ 	printk(KERN_DEBUG "RAID10 conf printout:\n");
+ 	if (!conf) {
+@@ -1608,14 +1608,16 @@ static void print_conf(struct r10conf *conf)
+ 	printk(KERN_DEBUG " --- wd:%d rd:%d\n", conf->geo.raid_disks - conf->mddev->degraded,
+ 		conf->geo.raid_disks);
+ 
++	/* This is only called with ->reconfix_mutex held, so
++	 * rcu protection of rdev is not needed */
+ 	for (i = 0; i < conf->geo.raid_disks; i++) {
+ 		char b[BDEVNAME_SIZE];
+-		tmp = conf->mirrors + i;
+-		if (tmp->rdev)
++		rdev = conf->mirrors[i].rdev;
++		if (rdev)
+ 			printk(KERN_DEBUG " disk %d, wo:%d, o:%d, dev:%s\n",
+-				i, !test_bit(In_sync, &tmp->rdev->flags),
+-			        !test_bit(Faulty, &tmp->rdev->flags),
+-				bdevname(tmp->rdev->bdev,b));
++				i, !test_bit(In_sync, &rdev->flags),
++			        !test_bit(Faulty, &rdev->flags),
++				bdevname(rdev->bdev,b));
  	}
+ }
+ 
 
 
