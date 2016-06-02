@@ -1,63 +1,91 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH 0/2] Fixes for lots of arrays
-Date: Wed, 01 Jun 2016 21:00:04 -0400
-Message-ID: <wrfjeg8g9zhn.fsf@redhat.com>
-References: <1463595794-17045-1-git-send-email-mlovell@bluehost.com>
-	<CAK9wOaA0RaH7yPH83D2BxOLq41d3rC9Ck5E5nNauekSYkOZAng@mail.gmail.com>
+From: NeilBrown <nfbrown@novell.com>
+Subject: Re: Why does raid0 set max_hw_sectors as chunk size but the other raid types doesn't?
+Date: Thu, 02 Jun 2016 14:38:29 +1000
+Message-ID: <87lh2op5mi.fsf@notabene.neil.brown.name>
+References: <CAHvN=in80JrXO=tDyxNhq9d_wW1ZCCioENyTLu9tYuYYDof20w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAK9wOaA0RaH7yPH83D2BxOLq41d3rC9Ck5E5nNauekSYkOZAng@mail.gmail.com>
-	(Mike Lovell's message of "Tue, 31 May 2016 11:33:52 -0600")
+In-Reply-To: <CAHvN=in80JrXO=tDyxNhq9d_wW1ZCCioENyTLu9tYuYYDof20w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Lovell <mlovell@bluehost.com>
-Cc: linux-raid@vger.kernel.org
+To: Joey Liao <joeyliao@qnap.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mike Lovell <mlovell@bluehost.com> writes:
-> ping. its been about 2 week since i posted these. just following up on it.
+--=-=-=
+Content-Type: text/plain
 
-Hi,
+On Mon, May 30 2016, Joey Liao wrote:
 
-I think you sent it while I was traveling - I'll try to get to it within
-the next couple of days.
+> Hi,
+>
+> I have no idea why does raid0_run() in raid0.c use
+> blk_queue_max_hw_sectors() to set max_hw_sectors as the chunk size,
+> but the other raid types doesn't?
 
-Thanks for the reminder.
+git is your friend.... admittedly you need the 'history' git tree to go
+back before 2.6.12, but it is available.
 
-Jes
+http://git.kernel.org/cgit/linux/kernel/git/history/history.git/commit/?id=f556ef000efc90a45a285f4f0b4fd70bb70f
+
+
 
 >
-> mike
+> What's the purpose to limit the max_hw_sectors in raid0?
+
+unfortunately the commit doesn't answer that question.  I think it was
+to ensure requests larger than one chunk were not created.  If they were
+they would just have to be split, so there is no much to gain.
+
 >
-> On Wed, May 18, 2016 at 12:23 PM, Mike Lovell <mlovell@bluehost.com> wrote:
->> This patch series fixes two issues around having more than 127 arrays on a
->> system. The first one fixes an issue with using a dev_t as int and the
->> number going negative when the array number would be larger than 2<<19. This
->> would happen when more than 128 arrays were created on the system without
->> creating the arrays by name. Manually specifying the large number would also
->> fail.
->>
->> The second patch changes find_free_devnm in mdopen.c to use go to (2<<9)-1
->> after 128 arrays have been created. Newer versions of the kernel don't allow
->> the user to specify an array number than 511 so mdadm shouldn't automatically
->> choose a bigger number. There was discussion about checking for new_array
->> in /sys/module/md_mod/parameters on the list but that parameter has been in
->> the kernel since 2.6.29. Any kernel from the last 7 years would still be
->> limited by the check so it probably isn't worth a special case.
->>
->> Mike Lovell (2):
->>   Use dev_t for devnm2devid and devid2devnm
->>   Change behavior in find_free_devnm when wrapping around.
->>
->>  Detail.c  | 4 ++--
->>  Grow.c    | 2 +-
->>  lib.c     | 2 +-
->>  mapfile.c | 2 +-
->>  mdadm.h   | 4 ++--
->>  mdopen.c  | 6 +++---
->>  util.c    | 6 +++---
->>  7 files changed, 13 insertions(+), 13 deletions(-)
->>
->> --
->> 1.9.1
->>
+> Is it related to the source code logic issue or the performance issue?
+>
+> Besides, I have an interesting observation. If I remove all the
+> following queue limitation codes in raid0_run() of raid0.c, the block
+> size in iostat is still the same as chunk size even the input block
+> size is much larger than the chunk size. Why???
+
+Because when you write to a RAID0 you *must* divide each request up into
+chunk-sizes sub-requests, and send them to different devices.
+
+NeilBrown
+
+
+>
+> -  blk_queue_max_hw_sectors(mddev->queue, mddev->chunk_sectors);
+> -  blk_queue_max_write_same_sectors(mddev->queue, mddev->chunk_sectors);
+> +  //blk_queue_max_hw_sectors(mddev->queue, mddev->chunk_sectors);
+> +  //blk_queue_max_write_same_sectors(mddev->queue, mddev->chunk_sectors);
+>
+> -  blk_queue_io_min(mddev->queue, mddev->chunk_sectors << 9);
+> -  blk_queue_io_opt(mddev->queue,
+> -                 (mddev->chunk_sectors << 9) * mddev->raid_disks);
+> +  //blk_queue_io_min(mddev->queue, mddev->chunk_sectors << 9);
+> +  /*blk_queue_io_opt(mddev->queue,
+> +              (mddev->chunk_sectors << 9) * mddev->raid_disks);*/
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJXT7hGAAoJEDnsnt1WYoG55h8QAJzMQXICQNEZg2fM9nPZ5YSR
+rJ2zUsJwvZuJgiZUXWVesm6PVmXtAiMMggL87jgTd/ZW8/EYL02DOn1ZkvMENxNE
+ftzMKyaPj75a4n/Q2XfwqlL/AxqS7w7y0djXZVSWWWktSaj9qiJHtL8dBP6dkS+N
+IWKfQ8lI9iYO1EgqUKxAVxBqb5xnm8PTAWRuSZ/yub0J0l5J6V8O7v1uMkKaBHX0
+yM1mj920korM7/URWfNfhKDR/ksNvcVbarqnDXayA5Z8+eSiueoadWyQXgM/u8BX
+5SP+UEcwxH3VARLEfrzYU1/yiCQ5J69reTSIUXTxz2sJ3mFLTSREOP16wVbmtTCp
+9BsYE4WPjIG+oKJ160DmZlEqyV929S2N3c/pA0iT6+i4YzOv8JhPBPeqeG70Wlj3
+/W1MJjXCAFiHnLcSKAbbBqbKmJg0diOTGmu0EsMvEjnjW9tj+Gg5OkhVhqUXY3cs
+ogSb1+IMYGDsQS/OiXbAJ3r7MxH2VCj468YURf360gQbgruogOLkD7LBJbocmVrX
+TFeXBlSypbNv4qzYtgyLziRtJtIDrk4OREK9c2CzpN/VsIC86DxR3y1nrvHhKl9m
+vg1ehlGjvB/cZqqjylPlaFA9S50rXEQzsC2EteFyu3xNgYc56HoABjDV0CB6bCdi
+wKVUz7j2zmKyuKjAUvnP
+=Y5f0
+-----END PGP SIGNATURE-----
+--=-=-=--
