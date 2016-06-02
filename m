@@ -1,70 +1,44 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [md PATCH 00/18] Assorted minor fixes, particularly RCU protection.
+Subject: [md PATCH 01/18] md: disconnect device from personality before
+ trying to remove it.
 Date: Thu, 02 Jun 2016 16:19:52 +1000
-Message-ID: <20160602061319.2939.72280.stgit@noble>
+Message-ID: <20160602061952.2939.77544.stgit@noble>
+References: <20160602061319.2939.72280.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20160602061319.2939.72280.stgit@noble>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The 'rdev' fields in each personality's config data are often accessed
-under rcu_read_lock() protection to avoid races with
-->hot_remove_disk() removing the rdev.
+When the HOT_REMOVE_DISK ioctl is used to remove a device, we
+call remove_and_add_spares() which will remove it from the personality
+if possible.  This improves the chances that the removal will succeed.
 
-Originally this was not necessary during resync/recovery etc because
-->hot_remove_disk() was only called from md_check_recovery(), and it
-would only make the call if there was no resync etc happening.
+When writing "remove" to dev-XX/state, we don't.  So that can fail more easily.
 
-However we now call ->hot_remove_disk() (from
-remove_and_add_spares()) from other contexts, so there could be a race
-in the resync code.
+So add the remove_and_add_spares() into "remove" handling.
 
-So this patch set adds a lot of extra rcu_read_lock protection and
-clean up some other bits and pieces on the way.
-
-My goal was the final patch.  If you have a large raid10 array and
-fail half of the devices at once (e.g. unplug a rack with half of the
-mirrors) then synchronize_rcu() will be called once for each device,
-which can add up to a big delay.  A single call should suffice.
-The final patch makes that change.
-
-Thanks,
-NeilBrown
+Signed-off-by: NeilBrown <neilb@suse.com>
 ---
+ drivers/md/md.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-NeilBrown (18):
-      md: disconnect device from personality before trying to remove it.
-      md/raid1,raid10: don't recheck "Faulty" flag in read-balance.
-      md/raid10: fix refounct imbalance when resyncing an array with a replacement device.
-      md/raid10: add rcu protection in raid10_status.
-      md/raid10: add rcu protection to rdev access in raid10_sync_request.
-      md/raid10: add rcu protection to rdev access during reshape.
-      md/raid10: minor code improvement in fix_read_error()
-      md/raid10: simplify print_conf a little.
-      md/raid10: stop print_conf from being too verbose.
-      md/raid1: small cleanup in raid1_end_read/write_request
-      md/raid1: small code cleanup in end_sync_write
-      md/raid1: add rcu protection to rdev in fix_read_error
-      md/raid5: add rcu protection to rdev accesses in handle_failed_sync.
-      md/raid5: add rcu protection to rdev accesses in want_replace
-      md/raid5: add rcu protection to rdev accesses in raid5_status.
-      md/multipath: add rcu protection to rdev access in multipath_status.
-      md: be extra careful not to take a reference to a Faulty device.
-      md: reduce the number of synchronize_rcu() calls when multiple devices fail.
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 866825f10b4c..2d26099e1160 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -2596,6 +2596,8 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
+ 		else
+ 			err = -EBUSY;
+ 	} else if (cmd_match(buf, "remove")) {
++		clear_bit(Blocked, &rdev->flags);
++		remove_and_add_spares(rdev->mddev, rdev);
+ 		if (rdev->raid_disk >= 0)
+ 			err = -EBUSY;
+ 		else {
 
-
- drivers/md/md.c        |   29 ++++++-
- drivers/md/md.h        |    5 +
- drivers/md/multipath.c |   29 ++++---
- drivers/md/raid1.c     |  125 ++++++++++++++--------------
- drivers/md/raid10.c    |  213 +++++++++++++++++++++++++++++-------------------
- drivers/md/raid5.c     |   41 ++++++---
- 6 files changed, 264 insertions(+), 178 deletions(-)
-
---
-Signature
 
