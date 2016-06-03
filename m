@@ -1,113 +1,131 @@
-From: Brad Campbell <lists2009@fnarfbargle.com>
-Subject: Re: raid 5 crashed
-Date: Fri, 3 Jun 2016 09:05:11 +0800
-Message-ID: <40b1ed1e-b0bd-a496-b5c8-6ad1f370b3ee@fnarfbargle.com>
-References: <CADzS=aoMEaFv5TPYUpYBnLhOpF+u9dtG6aa=JZ5gd=Qv1=OrMQ@mail.gmail.com>
- <20160511131524.GA11811@cthulhu.home.robinhill.me.uk>
- <CADzS=aoKqrG0QV1-Fe5g_b=n11gmbnerTyZ+eY4rBtJieNz_2w@mail.gmail.com>
- <CADzS=apUB=XZRmCWjpOHuRgvk7EhqrbpRQhHQ+MHf8NHyGCU0w@mail.gmail.com>
- <CADzS=are4kkK5Lpm2WTAnqhE1D3XuMFwTKbO8_FzDbGtmqu2Dw@mail.gmail.com>
- <574C8EB9.3070706@youngman.org.uk>
- <CADzS=arbwpZg=VRcaiLaMJrLzr8pOjFTC-EwUtSpC1A3SmaTcQ@mail.gmail.com>
- <574D958F.8060209@turmel.org> <574DDCBD.40801@youngman.org.uk>
- <95079572-f319-ca57-a3e9-e8d00ef40248@fnarfbargle.com>
- <CACsGCyQuPEXtgeW6QH-s_-eW9-SZ3J5s2s7CUzZRNemexTt3aw@mail.gmail.com>
- <20b1858b-0cd7-a7de-82af-9167dbcfb09e@fnarfbargle.com>
- <574F00F5.80801@youngman.org.uk>
- <2f3e2fe6-1810-e7bd-7dc0-483ed4f0d46b@fnarfbargle.com>
- <57503C3F.6020005@youngman.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: [PATCH 1/2] md-cluster: fix deadlock issue when add disk to an recoverying array
+Date: Thu,  2 Jun 2016 23:32:04 -0400
+Message-ID: <1464924725-18096-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <57503C3F.6020005@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, Edward Kuns <eddie.kuns@gmail.com>
-Cc: Phil Turmel <philip@turmel.org>, bobzer <bobzer@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, Mikael Abrahamsson <swmike@swm.pp.se>
+To: shli@kernel.org
+Cc: linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-On 02/06/16 22:01, Wols Lists wrote:
-> On 02/06/16 00:15, Brad Campbell wrote:
->> People keep saying that. I've never encountered it. I suspect it's just
->> not the problem that the hysterical ranting makes it out to be (either
->> that or the pile of cheap and nasty drives I have here are model citizens).
->> I've *never* seen a read error unless the drive was in trouble, and that
->> includes running dd reads in a loop over multiple days continuously.
->> If it were that bad I'd see drives failing SMART long tests routinely
->> also, and that does not happen either.
->
-> Note I didn't say you *will* see an error. BUT. If I recall correctly,
-> the specs say that one read error per 10TB read is acceptable for a
-> desktop drive that is designated healthy. In other words, if a 4TB drive
-> throws an error every third pass, then according to the spec it's a
-> perfectly healthy drive.
->
-> Yes. We know that most drives are far better than spec, and if it
-> degrades to spec then it's probably heading for failure, but the fact
-> remains. If you have 3 x 4TB desktop drives in an array, then the spec
-> says you should expect, and be able to deal with, an error EVERY time
-> you scan the array.
+Add a disk to an array which is performing recovery
+is a little complicated, we need to do both reap the
+sync thread and perform add disk for the case, then
+it caused deadlock as follows.
 
-No, it really doesn't. Those URE figures say <' 1 in' 10^14, not '= 1' 
-in 10^14. So that's a statistical worst case rather than a "this is what 
-you should expect". In addition, it's not a linear extrapolation, it's a 
-probability.
+linux44:~ # ps aux|grep md|grep D
+root      1822  0.0  0.0      0     0 ?        D    16:50   0:00 [md127_resync]
+root      1848  0.0  0.0  19860   952 pts/0    D+   16:50   0:00 mdadm --manage /dev/md127 --re-add /dev/vdb
+linux44:~ # cat /proc/1848/stack
+[<ffffffff8107afde>] kthread_stop+0x6e/0x120
+[<ffffffffa051ddb0>] md_unregister_thread+0x40/0x80 [md_mod]
+[<ffffffffa0526e45>] md_reap_sync_thread+0x15/0x150 [md_mod]
+[<ffffffffa05271e0>] action_store+0x260/0x270 [md_mod]
+[<ffffffffa05206b4>] md_attr_store+0xb4/0x100 [md_mod]
+[<ffffffff81214a7e>] sysfs_write_file+0xbe/0x140
+[<ffffffff811a6b98>] vfs_write+0xb8/0x1e0
+[<ffffffff811a75b8>] SyS_write+0x48/0xa0
+[<ffffffff8152a5c9>] system_call_fastpath+0x16/0x1b
+[<00007f068ea1ed30>] 0x7f068ea1ed30
+linux44:~ # cat /proc/1822/stack
+[<ffffffffa05251a6>] md_do_sync+0x846/0xf40 [md_mod]
+[<ffffffffa052402d>] md_thread+0x16d/0x180 [md_mod]
+[<ffffffff8107ad94>] kthread+0xb4/0xc0
+[<ffffffff8152a518>] ret_from_fork+0x58/0x90
 
-By that logic I should "expect" to roll a 6 at least once every 6 dice 
-rolls.
+                        Task1848                                Task1822
+md_attr_store (held reconfig_mutex by call mddev_lock())
+                        action_store
+			md_reap_sync_thread
+			md_unregister_thread
+			kthread_stop                    md_wakeup_thread(mddev->thread);
+						wait_event(mddev->sb_wait, !test_bit(MD_CHANGE_PENDING))
 
-You can't extrapolate statistical figures like that. Just the same as 
-you can't calculate drive failures from MTBF figures.
+md_check_recovery is triggered by wakeup mddev->thread,
+but it can't clear MD_CHANGE_PENDING flag since it can't
+get lock which was held by md_attr_store already.
 
-Just perform regular read tests on all drives and periodic array scrubs 
-and you'll be much better off.
+To solve the deadlock problem, we move "->resync_finish()"
+from md_do_sync to md_reap_sync_thread (after md_update_sb),
+also MD_HELD_RESYNC_LOCK is introduced since it is possible
+that node can't get resync lock in md_do_sync.
 
-I've never had a reported URE on any of my arrays with SAS drvies, most 
-have reallocated sectors. They perform background reads periodically and 
-auto-reallocate anything that is looking dodgy.
+Then we do not need to wait for MD_CHANGE_PENDING is cleared
+or not since metadata should be updated after md_update_sb,
+so just call resync_finish if MD_HELD_RESYNC_LOCK is set.
 
-SATA drives don't do that, but we can manage that externally with long 
-SMART tests and array scrubs to force rewrite/reallocation.
+We also unified the code after skip label, since set PENDING
+for non-clustered case should be harmless.
 
-Just don't go trying to extrapolate from manufacturers probability data. 
-There are plenty of garbage web pages littered around the net where 
-"experts" do that, leading to 'hysterical ranting' about how the world 
-is ending and RAID5 is the devil. Sure RAID5 can be an issue when 
-dealing with a catastrophic drive failure requiring a rebuild if you 
-don't look after your drives, and I use and prefer RAID6 to mitigate 
-that, but it's not the end of the world.
+Reviewed-by: NeilBrown <neilb@suse.com>
+Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+---
+ drivers/md/md.c | 23 +++++++++++------------
+ drivers/md/md.h |  3 +++
+ 2 files changed, 14 insertions(+), 12 deletions(-)
 
-
-Now, on an interesting, related and completely different note. To get 
-back to the concept of using dd or dd_rescue, I had a thought last night 
-and I've never seen it mentioned anywhere.
-
-When you clone a dud drive using dd_rescue, it creates a bad block log.
-
-The reason we don't like doing this is because when you put the 
-replacement drive back into the array, md does not see the errors and 
-will happily return zero data when it reads any sector that was bad on 
-the old drive.
-
-hdparm has a neat feature called --make-bad-sector. It uses a feature of 
-the ATA protocol to write a sector that contains an invalid CRC, so the 
-drive returns an error when you try and read it. The sector is restored 
-by a normal re-write, so no reallocation or permanent damage takes place.
-
-If we took the bad block list from the dd_rescue, and fed it to hdparm 
-to create bad sectors in all those locations on the cloned disk, md 
-would get a bad sector on read and attempt a recovery rather than 
-returning zero, This would "in theory" cause a re-write of good data 
-back to that disk and minimise the chance of data loss.
-
-This might be a useful "last ditch" recovery method to allow you to 
-bring up an array with a cloned disk and minimise data loss. On the 
-other hand, lets say you are using it to bring up a RAID 5 with 2 failed 
-disks. One completely dead and one that you managed to clone most of. 
-When you extract the data from the running and degraded array, md will 
-pass the read error up the stack when it encounters the bad sectors, 
-allowing your copy or rsync session to log which files are affected as 
-you backup the remaining contents rather than just return silently 
-corrupted files.
-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 866825f..25d4542 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -7809,6 +7809,7 @@ void md_do_sync(struct md_thread *thread)
+ 		if (ret)
+ 			goto skip;
+ 
++		set_bit(MD_CLUSTER_RESYNC_LOCKED, &mddev->flags);
+ 		if (!(test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ||
+ 			test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) ||
+ 			test_bit(MD_RECOVERY_RECOVER, &mddev->recovery))
+@@ -8147,18 +8148,11 @@ void md_do_sync(struct md_thread *thread)
+ 		}
+ 	}
+  skip:
+-	if (mddev_is_clustered(mddev) &&
+-	    ret == 0) {
+-		/* set CHANGE_PENDING here since maybe another
+-		 * update is needed, so other nodes are informed */
+-		set_mask_bits(&mddev->flags, 0,
+-			      BIT(MD_CHANGE_PENDING) | BIT(MD_CHANGE_DEVS));
+-		md_wakeup_thread(mddev->thread);
+-		wait_event(mddev->sb_wait,
+-			   !test_bit(MD_CHANGE_PENDING, &mddev->flags));
+-		md_cluster_ops->resync_finish(mddev);
+-	} else
+-		set_bit(MD_CHANGE_DEVS, &mddev->flags);
++	/* set CHANGE_PENDING here since maybe another update is needed,
++	 * so other nodes are informed. It should be harmless for normal
++	 * raid */
++	set_mask_bits(&mddev->flags, 0,
++		      BIT(MD_CHANGE_PENDING) | BIT(MD_CHANGE_DEVS));
+ 
+ 	spin_lock(&mddev->lock);
+ 	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
+@@ -8502,6 +8496,11 @@ void md_reap_sync_thread(struct mddev *mddev)
+ 			rdev->saved_raid_disk = -1;
+ 
+ 	md_update_sb(mddev, 1);
++	/* MD_CHANGE_PENDING should be cleared by md_update_sb, so we can
++	 * call resync_finish here if MD_CLUSTER_RESYNC_LOCKED is set by
++	 * clustered raid */
++	if (test_and_clear_bit(MD_CLUSTER_RESYNC_LOCKED, &mddev->flags))
++		md_cluster_ops->resync_finish(mddev);
+ 	clear_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
+ 	clear_bit(MD_RECOVERY_DONE, &mddev->recovery);
+ 	clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index b5c4be7..03b19aa 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -204,6 +204,9 @@ struct mddev {
+ #define MD_RELOAD_SB	7	/* Reload the superblock because another node
+ 				 * updated it.
+ 				 */
++#define MD_CLUSTER_RESYNC_LOCKED 8 /* cluster raid only, which means node
++				    * already took resync lock, need to
++				    * release the lock */
+ 
+ 	int				suspended;
+ 	atomic_t			active_io;
+-- 
+2.6.6
 
