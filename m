@@ -1,46 +1,48 @@
-From: Baolin Wang <baolin.wang@linaro.org>
-Subject: Re: [RFC v2 2/3] crypto: Introduce CRYPTO_ALG_BULK flag
-Date: Fri, 3 Jun 2016 15:10:31 +0800
-Message-ID: <CAMz4ku+C75VxiO41dBZDm9+PZ_BuUWqY_bmhRDbRwKPVCp+O-g@mail.gmail.com>
-References: <cover.1464346333.git.baolin.wang@linaro.org> <47e9ddd8c9ea9ad9e29c8cb027d19d8459ea1479.1464346333.git.baolin.wang@linaro.org>
- <20160602082606.GA15226@gondor.apana.org.au> <CAMz4kuJsR0OUJFq68B6znmoTfSeaT_Xhmq14Y4yGSWDJcNE6Hw@mail.gmail.com>
- <20160603065146.GA29953@gondor.apana.org.au>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: raid 5 crashed
+Date: Fri, 3 Jun 2016 09:52:02 +0200 (CEST)
+Message-ID: <alpine.DEB.2.02.1606030947180.28955@uplift.swm.pp.se>
+References: <CADzS=aoMEaFv5TPYUpYBnLhOpF+u9dtG6aa=JZ5gd=Qv1=OrMQ@mail.gmail.com> <20160511131524.GA11811@cthulhu.home.robinhill.me.uk> <CADzS=aoKqrG0QV1-Fe5g_b=n11gmbnerTyZ+eY4rBtJieNz_2w@mail.gmail.com> <CADzS=apUB=XZRmCWjpOHuRgvk7EhqrbpRQhHQ+MHf8NHyGCU0w@mail.gmail.com>
+ <CADzS=are4kkK5Lpm2WTAnqhE1D3XuMFwTKbO8_FzDbGtmqu2Dw@mail.gmail.com> <574C8EB9.3070706@youngman.org.uk> <CADzS=arbwpZg=VRcaiLaMJrLzr8pOjFTC-EwUtSpC1A3SmaTcQ@mail.gmail.com> <574D958F.8060209@turmel.org> <574DDCBD.40801@youngman.org.uk>
+ <95079572-f319-ca57-a3e9-e8d00ef40248@fnarfbargle.com> <CACsGCyQuPEXtgeW6QH-s_-eW9-SZ3J5s2s7CUzZRNemexTt3aw@mail.gmail.com> <20b1858b-0cd7-a7de-82af-9167dbcfb09e@fnarfbargle.com> <574F00F5.80801@youngman.org.uk> <2f3e2fe6-1810-e7bd-7dc0-483ed4f0d46b@fnarfbargle.com>
+ <57503C3F.6020005@youngman.org.uk> <40b1ed1e-b0bd-a496-b5c8-6ad1f370b3ee@fnarfbargle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160603065146.GA29953@gondor.apana.org.au>
+In-Reply-To: <40b1ed1e-b0bd-a496-b5c8-6ad1f370b3ee@fnarfbargle.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: Jens Axboe <axboe@kernel.dk>, Alasdair G Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "open list:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>, David Miller <davem@davemloft.net>, Eric Biggers <ebiggers3@gmail.com>, Joonsoo Kim <js1304@gmail.com>, tadeusz.struk@intel.com, smueller@chronox.de, Masanari Iida <standby24x7@gmail.com>, Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Kent Overstreet <kent.overstreet@gmail.com>, Keith Busch <keith.busch@intel.com>, Tejun Heo <tj@kernel.org>, Ming Lei <ming.lei@canonical.com>, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, linux-crypto@vger.kernel.org, linux-block@vger.kernel.org, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, LKML <linux-kernel@vger.ker>
+To: Brad Campbell <lists2009@fnarfbargle.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 3 June 2016 at 14:51, Herbert Xu <herbert@gondor.apana.org.au> wrote:
-> On Fri, Jun 03, 2016 at 02:48:34PM +0800, Baolin Wang wrote:
->>
->> If we move the IV generation into the crypto API, we also can not
->> handle every algorithm with the bulk interface. Cause we also need to
->> use different methods to map one whole bio or map one sector according
->> to the algorithm whether can support bulk mode or not. Please correct
->> me if I misunderstand your points. Thanks.
->
-> Which ones can't be handled this way?
+On Fri, 3 Jun 2016, Brad Campbell wrote:
 
-What I mean is bulk mode and sector mode's difference is not only the
-IV handling method, but also the method to map the data with
-scatterlists.
-Then we have two processes in dm-crypt ( crypt_convert_block() and
-crypt_convert_bulk_block() ) to handle the data, so we can not handle
-every algorithm with the bulk interface.
+> If we took the bad block list from the dd_rescue, and fed it to hdparm 
+> to create bad sectors in all those locations on the cloned disk, md 
+> would get a bad sector on read and attempt a recovery rather than 
+> returning zero, This would "in theory" cause a re-write of good data 
+> back to that disk and minimise the chance of data loss.
 
->
-> Cheers,
-> --
-> Email: Herbert Xu <herbert@gondor.apana.org.au>
-> Home Page: http://gondor.apana.org.au/~herbert/
-> PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+Why would you use dd_rescue on a drive unless you're doing it because 
+you're getting UREs on your remaining component drives on your degraded 
+RAID5 so it won't complete resync? That's at least the most common 
+use-case for ddrescue I've seen in md-raid scenarios.
 
+> This might be a useful "last ditch" recovery method to allow you to 
+> bring up an array with a cloned disk and minimise data loss. On the 
+> other hand, lets say you are using it to bring up a RAID 5 with 2 failed 
+> disks. One completely dead and one that you managed to clone most of. 
+> When you extract the data from the running and degraded array, md will 
+> pass the read error up the stack when it encounters the bad sectors, 
+> allowing your copy or rsync session to log which files are affected as 
+> you backup the remaining contents rather than just return silently 
+> corrupted files.
 
+This use case makes a lot more sense to me than the first one. Knowing 
+what files are now bad would be very useful.
+
+But wouldn't it be better to put the known errors in the new bad_blocks 
+list in md that I believe is a fairly recent feature?
 
 -- 
-Baolin.wang
-Best Regards
+Mikael Abrahamsson    email: swmike@swm.pp.se
