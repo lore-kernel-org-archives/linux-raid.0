@@ -1,47 +1,48 @@
-From: Sarah Newman <srn@prgmr.com>
-Subject: Re: raid 5 crashed
-Date: Fri, 3 Jun 2016 09:31:37 -0700
-Message-ID: <5751B0E9.8040008@prgmr.com>
-References: <CADzS=aoMEaFv5TPYUpYBnLhOpF+u9dtG6aa=JZ5gd=Qv1=OrMQ@mail.gmail.com>
- <20160511131524.GA11811@cthulhu.home.robinhill.me.uk>
- <CADzS=aoKqrG0QV1-Fe5g_b=n11gmbnerTyZ+eY4rBtJieNz_2w@mail.gmail.com>
- <CADzS=apUB=XZRmCWjpOHuRgvk7EhqrbpRQhHQ+MHf8NHyGCU0w@mail.gmail.com>
- <CADzS=are4kkK5Lpm2WTAnqhE1D3XuMFwTKbO8_FzDbGtmqu2Dw@mail.gmail.com>
- <574C8EB9.3070706@youngman.org.uk>
- <CADzS=arbwpZg=VRcaiLaMJrLzr8pOjFTC-EwUtSpC1A3SmaTcQ@mail.gmail.com>
- <574D958F.8060209@turmel.org> <574DDCBD.40801@youngman.org.uk>
- <95079572-f319-ca57-a3e9-e8d00ef40248@fnarfbargle.com>
- <CACsGCyQuPEXtgeW6QH-s_-eW9-SZ3J5s2s7CUzZRNemexTt3aw@mail.gmail.com>
- <20b1858b-0cd7-a7de-82af-9167dbcfb09e@fnarfbargle.com>
- <574F00F5.80801@youngman.org.uk>
- <2f3e2fe6-1810-e7bd-7dc0-483ed4f0d46b@fnarfbargle.com>
- <57503C3F.6020005@youngman.org.uk>
- <40b1ed1e-b0bd-a496-b5c8-6ad1f370b3ee@fnarfbargle.com>
- <alpine.DEB.2.02.1606030947180.28955@uplift.swm.pp.se>
- <CADzS=aowHsk5LhoFMBXaVy5=nBBF5iMn6Axoq8z=okHTo=b9hQ@mail.gmail.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH 0/2] Fixes for lots of arrays
+Date: Fri, 03 Jun 2016 15:37:54 -0400
+Message-ID: <wrfj60tqxdv1.fsf@redhat.com>
+References: <1463595794-17045-1-git-send-email-mlovell@bluehost.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADzS=aowHsk5LhoFMBXaVy5=nBBF5iMn6Axoq8z=okHTo=b9hQ@mail.gmail.com>
+In-Reply-To: <1463595794-17045-1-git-send-email-mlovell@bluehost.com> (Mike
+	Lovell's message of "Wed, 18 May 2016 12:23:12 -0600")
 Sender: linux-raid-owner@vger.kernel.org
-To: bobzer <bobzer@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Mike Lovell <mlovell@bluehost.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 06/03/2016 08:27 AM, bobzer wrote:
+Mike Lovell <mlovell@bluehost.com> writes:
+> This patch series fixes two issues around having more than 127 arrays on a
+> system. The first one fixes an issue with using a dev_t as int and the
+> number going negative when the array number would be larger than 2<<19. This
+> would happen when more than 128 arrays were created on the system without
+> creating the arrays by name. Manually specifying the large number would also
+> fail.
+>
+> The second patch changes find_free_devnm in mdopen.c to use go to (2<<9)-1
+> after 128 arrays have been created. Newer versions of the kernel don't allow
+> the user to specify an array number than 511 so mdadm shouldn't automatically
+> choose a bigger number. There was discussion about checking for new_array
+> in /sys/module/md_mod/parameters on the list but that parameter has been in
+> the kernel since 2.6.29. Any kernel from the last 7 years would still be
+> limited by the check so it probably isn't worth a special case.
+>
+> Mike Lovell (2):
+>   Use dev_t for devnm2devid and devid2devnm
+>   Change behavior in find_free_devnm when wrapping around.
+>
+>  Detail.c  | 4 ++--
+>  Grow.c    | 2 +-
+>  lib.c     | 2 +-
+>  mapfile.c | 2 +-
+>  mdadm.h   | 4 ++--
+>  mdopen.c  | 6 +++---
+>  util.c    | 6 +++---
+>  7 files changed, 13 insertions(+), 13 deletions(-)
 
-> i use losetup to make my dd image a dev/loop device and took the risk
-> of start the raid but it doesn't work:
-> i did :
-> mdadm --assemble --force --name=/dev/md0 /dev/sdb1 /dev/sdd1
-> /dev/loop2 /dev/sdc1
-> it answer :
-> mdadm: device /dev/sdb1 exist but is not an md array
-> 
-> except that is not true, sdb1 and sdd1 are the correct drive. sdc1 is
-> the one saw as a spare
+Applied!
 
-The --name is for if you want to call the device something other than just md0. If you use /dev/md0 instead of --name=/dev/md0 it might work.
-
-
+Thanks,
+Jes
