@@ -1,67 +1,30 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH 1/2] md-cluster: fix deadlock issue when add disk to an
- recoverying array
-Date: Fri, 3 Jun 2016 16:21:32 -0700
-Message-ID: <20160603232132.GA2171@kernel.org>
-References: <1464924725-18096-1-git-send-email-gqjiang@suse.com>
+From: bobzer <bobzer@gmail.com>
+Subject: Re: raid 5 crashed
+Date: Fri, 3 Jun 2016 22:56:07 -0400
+Message-ID: <CADzS=apvkaT_fxJ6=YFVHfqSGEAr9xuDbCZny6z5-u6ST=UJfA@mail.gmail.com>
+References: <CADzS=aoMEaFv5TPYUpYBnLhOpF+u9dtG6aa=JZ5gd=Qv1=OrMQ@mail.gmail.com>
+ <20160511131524.GA11811@cthulhu.home.robinhill.me.uk> <CADzS=aoKqrG0QV1-Fe5g_b=n11gmbnerTyZ+eY4rBtJieNz_2w@mail.gmail.com>
+ <CADzS=apUB=XZRmCWjpOHuRgvk7EhqrbpRQhHQ+MHf8NHyGCU0w@mail.gmail.com>
+ <CADzS=are4kkK5Lpm2WTAnqhE1D3XuMFwTKbO8_FzDbGtmqu2Dw@mail.gmail.com>
+ <574C8EB9.3070706@youngman.org.uk> <CADzS=arbwpZg=VRcaiLaMJrLzr8pOjFTC-EwUtSpC1A3SmaTcQ@mail.gmail.com>
+ <574D958F.8060209@turmel.org> <574DDCBD.40801@youngman.org.uk>
+ <95079572-f319-ca57-a3e9-e8d00ef40248@fnarfbargle.com> <CACsGCyQuPEXtgeW6QH-s_-eW9-SZ3J5s2s7CUzZRNemexTt3aw@mail.gmail.com>
+ <20b1858b-0cd7-a7de-82af-9167dbcfb09e@fnarfbargle.com> <574F00F5.80801@youngman.org.uk>
+ <2f3e2fe6-1810-e7bd-7dc0-483ed4f0d46b@fnarfbargle.com> <57503C3F.6020005@youngman.org.uk>
+ <40b1ed1e-b0bd-a496-b5c8-6ad1f370b3ee@fnarfbargle.com> <alpine.DEB.2.02.1606030947180.28955@uplift.swm.pp.se>
+ <CADzS=aowHsk5LhoFMBXaVy5=nBBF5iMn6Axoq8z=okHTo=b9hQ@mail.gmail.com> <5751B0E9.8040008@prgmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1464924725-18096-1-git-send-email-gqjiang@suse.com>
+In-Reply-To: <5751B0E9.8040008@prgmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: Sarah Newman <srn@prgmr.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Jun 02, 2016 at 11:32:04PM -0400, Guoqing Jiang wrote:
-> Add a disk to an array which is performing recovery
-> is a little complicated, we need to do both reap the
-> sync thread and perform add disk for the case, then
-> it caused deadlock as follows.
-> 
-> linux44:~ # ps aux|grep md|grep D
-> root      1822  0.0  0.0      0     0 ?        D    16:50   0:00 [md127_resync]
-> root      1848  0.0  0.0  19860   952 pts/0    D+   16:50   0:00 mdadm --manage /dev/md127 --re-add /dev/vdb
-> linux44:~ # cat /proc/1848/stack
-> [<ffffffff8107afde>] kthread_stop+0x6e/0x120
-> [<ffffffffa051ddb0>] md_unregister_thread+0x40/0x80 [md_mod]
-> [<ffffffffa0526e45>] md_reap_sync_thread+0x15/0x150 [md_mod]
-> [<ffffffffa05271e0>] action_store+0x260/0x270 [md_mod]
-> [<ffffffffa05206b4>] md_attr_store+0xb4/0x100 [md_mod]
-> [<ffffffff81214a7e>] sysfs_write_file+0xbe/0x140
-> [<ffffffff811a6b98>] vfs_write+0xb8/0x1e0
-> [<ffffffff811a75b8>] SyS_write+0x48/0xa0
-> [<ffffffff8152a5c9>] system_call_fastpath+0x16/0x1b
-> [<00007f068ea1ed30>] 0x7f068ea1ed30
-> linux44:~ # cat /proc/1822/stack
-> [<ffffffffa05251a6>] md_do_sync+0x846/0xf40 [md_mod]
-> [<ffffffffa052402d>] md_thread+0x16d/0x180 [md_mod]
-> [<ffffffff8107ad94>] kthread+0xb4/0xc0
-> [<ffffffff8152a518>] ret_from_fork+0x58/0x90
-> 
->                         Task1848                                Task1822
-> md_attr_store (held reconfig_mutex by call mddev_lock())
->                         action_store
-> 			md_reap_sync_thread
-> 			md_unregister_thread
-> 			kthread_stop                    md_wakeup_thread(mddev->thread);
-> 						wait_event(mddev->sb_wait, !test_bit(MD_CHANGE_PENDING))
-> 
-> md_check_recovery is triggered by wakeup mddev->thread,
-> but it can't clear MD_CHANGE_PENDING flag since it can't
-> get lock which was held by md_attr_store already.
-> 
-> To solve the deadlock problem, we move "->resync_finish()"
-> from md_do_sync to md_reap_sync_thread (after md_update_sb),
-> also MD_HELD_RESYNC_LOCK is introduced since it is possible
-> that node can't get resync lock in md_do_sync.
-> 
-> Then we do not need to wait for MD_CHANGE_PENDING is cleared
-> or not since metadata should be updated after md_update_sb,
-> so just call resync_finish if MD_HELD_RESYNC_LOCK is set.
-> 
-> We also unified the code after skip label, since set PENDING
-> for non-clustered case should be harmless.
+> The --name is for if you want to call the device something other than just md0. If you use /dev/md0 instead of --name=/dev/md0 it might work.
 
-applied the two, thanks!
+thanks in fact it was just that ...
+so i did :
+mdadm --assemble --force /dev/md0 /dev/sdb1 /dev/sdc1 /dev/loop1 /dev/sdd1
+and now i'm just hoping that it will work... every finger crossed :-)
