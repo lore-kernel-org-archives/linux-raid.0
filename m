@@ -1,75 +1,54 @@
-From: Andrew Ryder <tireman@shaw.ca>
-Subject: Re: xfs_repair fails after trying to format log cycle?
-Date: Mon, 6 Jun 2016 15:37:43 -0400
-Message-ID: <5755D107.5060001@shaw.ca>
-References: <56F6DE67.60403@shaw.ca> <20160328085541.GA27040@bfoster.bfoster>
-	<570C8D4D.3060304@shaw.ca> <20160412140512.GA59690@bfoster.bfoster>
-	<570D578D.5010706@shaw.ca> <570DB6CD.1000007@shaw.ca>
-	<20160413045129.GO567@dastard> <57523CE6.7020906@shaw.ca>
-	<20160606173336.027917f5@harpe.intellique.com>
-	<5755CCD7.1000104@shaw.ca>
+From: Marc MERLIN <marc@merlins.org>
+Subject: Re: Raid check didn't fix Current_Pending_Sector, but badblocks -nsv did
+Date: Mon, 6 Jun 2016 15:44:01 -0700
+Message-ID: <20160606224401.GA6672@merlins.org>
+References: <20160606174113.GI12382@merlins.org> <5755CA9F.6090807@prgmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
-Content-Transfer-Encoding: base64
-Return-path: <xfs-bounces@oss.sgi.com>
-In-Reply-To: <5755CCD7.1000104@shaw.ca>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: linux-raid@vger.kernel.org, Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <5755CA9F.6090807@prgmr.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Sarah Newman <srn@prgmr.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-CgpPbiAwNi8wNi8yMDE2IDAzOjE5IFBNLCBBbmRyZXcgUnlkZXIgd3JvdGU6Cj4KPgo+IE9uIDA2
-LzA2LzIwMTYgMTE6MzMgQU0sIEVtbWFudWVsIEZsb3JhYyB3cm90ZToKPj4gTGUgRnJpLCAzIEp1
-biAyMDE2IDIyOjI4OjU0IC0wNDAwCj4+IEFuZHJldyBSeWRlciA8dGlyZW1hbkBzaGF3LmNhPiDD
-qWNyaXZhaXQ6Cj4+Cj4+PiBTb3JyeSB0byBkaWcgdXAgb2xkIHN0dWZmIGhlcmUgYnV0IGFmdGVy
-IHJlcGxhY2luZyBoYXJkd2FyZSBhbmQKPj4+IHB1bGxpbmcgbXkgaGFpciBvdXQgdG8gbm8gZW5k
-LCBJIHRyYWNlZCB0aGUgc291cmNlIG9mIHRoZSBwcm9ibGVtIG91dC4KPj4+Cj4+PiBPbiBldmVy
-eSBkcml2ZSBpbiB0aGUgYXJyYXksIHRoZSBwb2ludHMgb24gdGhlIFBDQiB3aGljaCB0aGUgY29u
-dGFjdHMKPj4+IGZvciB0aGUgZHJpdmVzIG1vdG9ycyBhbmQgaGVhZC9hY3R1YXRvcnMgbWFrZSBj
-b250YWN0IHdpdGggd2VyZQo+Pj4gb3hpZGl6ZWQgZW5vdWdoIHRvIGNhdXNlIHRoZSBpc3N1ZS4g
-SSBlbmRlZCB1cCBwdWxsaW5nIHRoZSBQQ0Igb2ZmCj4+PiBlYWNoIGRyaXZlIGFuZCBjbGVhbmlu
-ZyB0aGVtIGFzIHdlbGwgYXMgY2xlYW5pbmcgb3V0IGFsbCBvdGhlciBjYWJsZQo+Pj4gYW5kIGRy
-aXZlIGNvbm5lY3RvcnMgZnJvbSB0aGUgSEJBIG91dHdhcmQgYW5kIGV2ZXJ5dGhpbmcgaXMgaGFw
-cHkKPj4+IGFnYWluLgo+Pj4KPj4+IGh0dHA6Ly9zMzMucG9zdGltZy5vcmcvdWhqbXZ3NGRyL05v
-dF9DbGVhbmVkLmpwZwo+Pj4gaHR0cDovL3MzMy5wb3N0aW1nLm9yZy94bzk0aWVpaTcvUGFydGlh
-bF9DbGVhbmVkXzEuanBnCj4+PiBodHRwOi8vczMzLnBvc3RpbWcub3JnL2hvcWd5dW1nZi9QYXJ0
-aWFsX0NsZWFuZWRfMi5qcGcKPj4+IGh0dHA6Ly9zMzMucG9zdGltZy5vcmcvNjhrMjB0OGE3L1Bh
-cnRpYWxfQ2xlYW5lZF8zLmpwZwo+Pj4KPj4KPj4gR29vZCBqb2IsIHRoYXQgd2FzIHF1aXRlIHVu
-ZXhwZWN0ZWQgOikgQXJlIHlvdSBuZXh0IHRvIHRoZQo+PiBzZWFzaG9yZT8KPj4KPgo+Cj4gTm8u
-IEknbSB1cCBpbiBOVyBPbnRhcmlvIGluIENhbmFkYSBhY3R1YWxseSwgZmFyIGF3YXkgZnJvbSBh
-bnkgc2FsdAo+IHdhdGVyLiBJJ20gZ3Vlc3NpbmcgaXQgd2FzIGZyb20gdGhlIGNvbWJpbmF0aW9u
-IG9mIGFpcgo+IHBvbGx1dGFudHMvaHVtaWRpdHkgYW5kIGhlYXQgZ2l2ZW4gdGhlIGRyaXZlcyBh
-cmUgbm90IGluIHRoZSBtb3N0Cj4gaG9zcGl0YWJsZSBlbnZpcm9ubWVudCBlc3AgZHVyaW5nIHRo
-ZSBzdW1tZXIgLi4uIGJ1dCBhZnRlciBjbGVhbmluZyB0aGUKPiBib2FyZCBjb250YWN0cyB1cCBh
-cyB3ZWxsIGFzIHRoZSBlc2F0YSBjYWJsZSBlbmRzL3BvcnRzLCBpdHMgd29ya2luZwo+IGdyZWF0
-IGFnYWluLgo+Cj4gSSdtIGJlZ2lubmluZyB0byB0aGluayB3aGVuIEkgZG8gcmVwbGFjZSBhbnkg
-ZHJpdmVzLCBhZnRlciB3YXJyYW50eSBpcwo+IHVwIG9uIHRoZW0sIHB1bGwgb2ZmIHRoZSBQQ0Is
-IGNsZWFuIGl0IHVwIGFuZCBjb2F0IHRoZSBjb250YWN0cyB3aXRoIGEKPiBnb29kIHNtZWFyaW5n
-IG9mIGRpZWxlY3RyaWMgZ3JlYXNlIHRvIGtlZXAgdGhlIGlzc3VlIGZyb20gaGFwcGVuaW5nLgo+
-Cj4gTWFrZXMgbWUgd29uZGVyIGhvdyBtYW55IG90aGVyIHBlb3BsZSBvdXQgdGhlcmUgc3VmZmVy
-IGZyb20gdGhlIHNhbWUKPiBpc3N1ZSBnaXZlbiB0aGUgYW1vdW50IG9mIHVucmVzb2x2ZWQgc2lt
-aWxhciBodyBlcnJvcnMgSSd2ZSBmb3VuZCB3aGlsZQo+IGdvb2dsaW5nIHRoZSBlcnJvcnMuLgo+
-Cj4gVGhhbmtzIGFnYWluLAo+IEFuZHJldwo+CgpPbmUgb3RoZXIgdGhpbmcgbWlnaHQgYmUgd29y
-dGggbm90aW5nLCBiZWZvcmUgSSBjbGVhbmVkIHVwIHRoZSBveGlkYXRpb24gCm9uIHRoZSBkcml2
-ZXMgYm9hcmRzLCB0aGV5IHdvdWxkIHdvcmsgZmluZSBpZiBvbiBkZWRpY2F0ZWQgU0FUQSBjaGFu
-bmVscyAKb2ZmIHRoZSBtYWluYm9hcmQsIGJ1dCB3aGVuIHB1dCBvbiBhbnkgc2F0YSBwb3J0IG11
-bHRpcGxpZXIsIGl0IHdvdWxkIGRvIApub3RoaW5nIGJ1dCBhY3QgdXAuIFdoaWNoIHdhcyByZWFs
-bHkgd2VpcmQuCgpJJ20gYXNzdW1pbmcgdGhlcmUgbXVzdCBiZSBzb21lIGluaGVyZW50IHNlbnNp
-dGl2aXR5IHdpdGggc2F0YSBQTVAgCmNoaXBzL2h3IHRoYXQgbWFrZSB0aGlzIG1vcmUgcHJldmFs
-ZW50Li4gYW5kIEkndmUgdHJpZWQgYm90aCB0aGUgb2xkIGFuZCAKbmV3IHZlcnNpb24gb2YgU2Fu
-c0RpZ2l0YWwncyBUUjhNJ3MgYmFja3BsYW5lcywgMiBkaWZmZXJlbnQgc2F0YSBQTVAgCkhCQXMg
-KHJvY2tldHJhaWQgMjcyMiBhbmQgYWRkb25pY3Mgb2xkZXIgUENJIDQgcG9ydCBzYXRhIHBtcCBo
-YmEpIGFzIAp3ZWxsIGFzIGFuIG9sZGVyIGFkZG9uaWNzIDNnYml0IHNhdGEgcG9ydCBtdWx0aXBs
-aWVyIGZhbiBvdXQgYm9hcmQgLi4KCj4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX18KPiB4ZnMgbWFpbGluZyBsaXN0Cj4geGZzQG9zcy5zZ2kuY29tCj4gaHR0
-cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCgpfX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dp
-LmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Mon, Jun 06, 2016 at 12:10:23PM -0700, Sarah Newman wrote:
+> https://www.kernel.org/doc/Documentation/md.txt shows for sync_action
+> 
+>        check         - A full check of redundancy was requested and is
+>                        happening.  This reads all blocks and checks
+>                        them. A repair may also happen for some raid
+>                        levels.
+>        repair        - A full check and repair is happening.  This is
+>                        similar to 'resync', but was requested by the
+>                        user, and the write-intent bitmap is NOT used to
+> 		       optimise the process.
+> 
+> I think you wanted 'repair' not 'check'.
+
+From what I understand, the only difference between the 2 is that repair
+does not use the write-intent bitmap, but both will repair an error if
+found.
+https://www.thomas-krenn.com/en/wiki/Mdadm_checkarray#Check_vs._Repair
+
+Or are you saying that check after getting a read error from one drive,
+would not rewrite the bad block on that drive? I thought it did...
+
+Either way, it seems that neither would have worked because while those
+blocks were marked as "need to be reallocated" by the drive, I think the
+kernel was actually able to read them without problem, so the md layer never
+saw anything and therefore never did anything either.
+
+Whereas badblocks forced an unconditional rewrite of all blocks, and forced
+the drive to re-allocate those "weak" blocks, even though it was able to
+read them.
+
+Does that sound about right?
+
+Marc
+-- 
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/  
