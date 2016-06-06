@@ -1,45 +1,59 @@
-From: Sarah Newman <srn@prgmr.com>
-Subject: Re: Raid check didn't fix Current_Pending_Sector, but badblocks -nsv
- did
-Date: Mon, 6 Jun 2016 12:10:23 -0700
-Message-ID: <5755CA9F.6090807@prgmr.com>
-References: <20160606174113.GI12382@merlins.org>
+From: Andrew Ryder <tireman@shaw.ca>
+Subject: Re: xfs_repair fails after trying to format log cycle?
+Date: Mon, 6 Jun 2016 15:19:51 -0400
+Message-ID: <5755CCD7.1000104@shaw.ca>
+References: <56F6DE67.60403@shaw.ca> <20160328085541.GA27040@bfoster.bfoster>
+	<570C8D4D.3060304@shaw.ca> <20160412140512.GA59690@bfoster.bfoster>
+	<570D578D.5010706@shaw.ca> <570DB6CD.1000007@shaw.ca>
+	<20160413045129.GO567@dastard> <57523CE6.7020906@shaw.ca>
+	<20160606173336.027917f5@harpe.intellique.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160606174113.GI12382@merlins.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Marc MERLIN <marc@merlins.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Transfer-Encoding: base64
+Return-path: <xfs-bounces@oss.sgi.com>
+In-Reply-To: <20160606173336.027917f5@harpe.intellique.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: linux-raid@vger.kernel.org, Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-On 06/06/2016 10:41 AM, Marc MERLIN wrote:
-> Howdy, I have a raid 5 where one drive reported this:
-> 197 Current_Pending_Sector  0x0032   200   199   000    Old_age   Always -       29
-> 
-> So I did this:
-> myth:~# echo check > /sys/block/md5/md/sync_action
-> [173947.749761] md: data-check of RAID array md5
-> (...)
-> [370316.769230] md: md5: data-check done.
-> 
-> My understanding was that it was supposed to read every block of every
-> drive, and if some blocks were unreadable, use parity to rewrite them on
-> some fresh backup blocks.
-> If a block returned garbage instead, md5 cannot fix this not knowing which
-> block is wrong, but I'm assuming the check would have failed with an error.
-
-https://www.kernel.org/doc/Documentation/md.txt shows for sync_action
-
-       check         - A full check of redundancy was requested and is
-                       happening.  This reads all blocks and checks
-                       them. A repair may also happen for some raid
-                       levels.
-       repair        - A full check and repair is happening.  This is
-                       similar to 'resync', but was requested by the
-                       user, and the write-intent bitmap is NOT used to
-		       optimise the process.
-
-I think you wanted 'repair' not 'check'.
-
---Sarah
+CgpPbiAwNi8wNi8yMDE2IDExOjMzIEFNLCBFbW1hbnVlbCBGbG9yYWMgd3JvdGU6Cj4gTGUgRnJp
+LCAzIEp1biAyMDE2IDIyOjI4OjU0IC0wNDAwCj4gQW5kcmV3IFJ5ZGVyIDx0aXJlbWFuQHNoYXcu
+Y2E+IMOpY3JpdmFpdDoKPgo+PiBTb3JyeSB0byBkaWcgdXAgb2xkIHN0dWZmIGhlcmUgYnV0IGFm
+dGVyIHJlcGxhY2luZyBoYXJkd2FyZSBhbmQKPj4gcHVsbGluZyBteSBoYWlyIG91dCB0byBubyBl
+bmQsIEkgdHJhY2VkIHRoZSBzb3VyY2Ugb2YgdGhlIHByb2JsZW0gb3V0Lgo+Pgo+PiBPbiBldmVy
+eSBkcml2ZSBpbiB0aGUgYXJyYXksIHRoZSBwb2ludHMgb24gdGhlIFBDQiB3aGljaCB0aGUgY29u
+dGFjdHMKPj4gZm9yIHRoZSBkcml2ZXMgbW90b3JzIGFuZCBoZWFkL2FjdHVhdG9ycyBtYWtlIGNv
+bnRhY3Qgd2l0aCB3ZXJlCj4+IG94aWRpemVkIGVub3VnaCB0byBjYXVzZSB0aGUgaXNzdWUuIEkg
+ZW5kZWQgdXAgcHVsbGluZyB0aGUgUENCIG9mZgo+PiBlYWNoIGRyaXZlIGFuZCBjbGVhbmluZyB0
+aGVtIGFzIHdlbGwgYXMgY2xlYW5pbmcgb3V0IGFsbCBvdGhlciBjYWJsZQo+PiBhbmQgZHJpdmUg
+Y29ubmVjdG9ycyBmcm9tIHRoZSBIQkEgb3V0d2FyZCBhbmQgZXZlcnl0aGluZyBpcyBoYXBweQo+
+PiBhZ2Fpbi4KPj4KPj4gaHR0cDovL3MzMy5wb3N0aW1nLm9yZy91aGptdnc0ZHIvTm90X0NsZWFu
+ZWQuanBnCj4+IGh0dHA6Ly9zMzMucG9zdGltZy5vcmcveG85NGllaWk3L1BhcnRpYWxfQ2xlYW5l
+ZF8xLmpwZwo+PiBodHRwOi8vczMzLnBvc3RpbWcub3JnL2hvcWd5dW1nZi9QYXJ0aWFsX0NsZWFu
+ZWRfMi5qcGcKPj4gaHR0cDovL3MzMy5wb3N0aW1nLm9yZy82OGsyMHQ4YTcvUGFydGlhbF9DbGVh
+bmVkXzMuanBnCj4+Cj4KPiBHb29kIGpvYiwgdGhhdCB3YXMgcXVpdGUgdW5leHBlY3RlZCA6KSBB
+cmUgeW91IG5leHQgdG8gdGhlCj4gc2Vhc2hvcmU/Cj4KCgpOby4gSSdtIHVwIGluIE5XIE9udGFy
+aW8gaW4gQ2FuYWRhIGFjdHVhbGx5LCBmYXIgYXdheSBmcm9tIGFueSBzYWx0IAp3YXRlci4gSSdt
+IGd1ZXNzaW5nIGl0IHdhcyBmcm9tIHRoZSBjb21iaW5hdGlvbiBvZiBhaXIgCnBvbGx1dGFudHMv
+aHVtaWRpdHkgYW5kIGhlYXQgZ2l2ZW4gdGhlIGRyaXZlcyBhcmUgbm90IGluIHRoZSBtb3N0IApo
+b3NwaXRhYmxlIGVudmlyb25tZW50IGVzcCBkdXJpbmcgdGhlIHN1bW1lciAuLi4gYnV0IGFmdGVy
+IGNsZWFuaW5nIHRoZSAKYm9hcmQgY29udGFjdHMgdXAgYXMgd2VsbCBhcyB0aGUgZXNhdGEgY2Fi
+bGUgZW5kcy9wb3J0cywgaXRzIHdvcmtpbmcgCmdyZWF0IGFnYWluLgoKSSdtIGJlZ2lubmluZyB0
+byB0aGluayB3aGVuIEkgZG8gcmVwbGFjZSBhbnkgZHJpdmVzLCBhZnRlciB3YXJyYW50eSBpcyAK
+dXAgb24gdGhlbSwgcHVsbCBvZmYgdGhlIFBDQiwgY2xlYW4gaXQgdXAgYW5kIGNvYXQgdGhlIGNv
+bnRhY3RzIHdpdGggYSAKZ29vZCBzbWVhcmluZyBvZiBkaWVsZWN0cmljIGdyZWFzZSB0byBrZWVw
+IHRoZSBpc3N1ZSBmcm9tIGhhcHBlbmluZy4KCk1ha2VzIG1lIHdvbmRlciBob3cgbWFueSBvdGhl
+ciBwZW9wbGUgb3V0IHRoZXJlIHN1ZmZlciBmcm9tIHRoZSBzYW1lIAppc3N1ZSBnaXZlbiB0aGUg
+YW1vdW50IG9mIHVucmVzb2x2ZWQgc2ltaWxhciBodyBlcnJvcnMgSSd2ZSBmb3VuZCB3aGlsZSAK
+Z29vZ2xpbmcgdGhlIGVycm9ycy4uCgpUaGFua3MgYWdhaW4sCkFuZHJldwoKX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNA
+b3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
