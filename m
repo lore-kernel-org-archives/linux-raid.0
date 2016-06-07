@@ -1,34 +1,35 @@
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: [RFC v4 2/4] crypto: Introduce CRYPTO_ALG_BULK flag
-Date: Tue, 7 Jun 2016 22:16:13 +0800
-Message-ID: <20160607141613.GA2237@gondor.apana.org.au>
-References: <cover.1465301616.git.baolin.wang@linaro.org>
- <238ce3d506051c863300b90720c3e103175747cc.1465301616.git.baolin.wang@linaro.org>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: mdadm 3.4-1, error msg. on boot - no /usr/lib/systemd/scripts/mdadm_env.sh
+Date: Tue, 07 Jun 2016 15:31:00 -0400
+Message-ID: <wrfjziqwyex7.fsf@redhat.com>
+References: <5754CBF2.8000309@suddenlinkmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-crypto-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <238ce3d506051c863300b90720c3e103175747cc.1465301616.git.baolin.wang@linaro.org>
-Sender: linux-crypto-owner@vger.kernel.org
-To: Baolin Wang <baolin.wang@linaro.org>
-Cc: axboe@kernel.dk, agk@redhat.com, snitzer@redhat.com, dm-devel@redhat.com, davem@davemloft.net, ebiggers3@gmail.com, js1304@gmail.com, tadeusz.struk@intel.com, smueller@chronox.de, standby24x7@gmail.com, shli@kernel.org, dan.j.williams@intel.com, martin.petersen@oracle.com, sagig@mellanox.com, kent.overstreet@gmail.com, keith.busch@intel.com, tj@kernel.org, ming.lei@canonical.com, broonie@kernel.org, arnd@arndb.de, linux-crypto@vger.kernel.org, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5754CBF2.8000309@suddenlinkmail.com> (David C. Rankin's message
+	of "Sun, 5 Jun 2016 20:03:46 -0500")
+Sender: linux-raid-owner@vger.kernel.org
+To: "David C. Rankin" <drankinatty@suddenlinkmail.com>
+Cc: mdraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Jun 07, 2016 at 08:17:05PM +0800, Baolin Wang wrote:
-> Now some cipher hardware engines prefer to handle bulk block rather than one
-> sector (512 bytes) created by dm-crypt, cause these cipher engines can handle
-> the intermediate values (IV) by themselves in one bulk block. This means we
-> can increase the size of the request by merging request rather than always 512
-> bytes and thus increase the hardware engine processing speed.
-> 
-> So introduce 'CRYPTO_ALG_BULK' flag to indicate this cipher can support bulk
-> mode.
-> 
-> Signed-off-by: Baolin Wang <baolin.wang@linaro.org>
+"David C. Rankin" <drankinatty@suddenlinkmail.com> writes:
+> Neil, All,
+>
+>   I'm chasing down the reason there is no
+> /usr/lib/systemd/scripts/mdadm_env.sh provided with mdadm. This is
+> more a curiosity really as mdmonitor continues to run, but it always
+> throws an error at boot:
+>
+> Jun 05 17:12:47 valhalla systemd[454]: mdmonitor.service: Failed at step EXEC
+> spawning /usr/lib/systemd/scripts/mdadm_env.sh: No such file or directory
+>
+>   I have several Arch servers, all on mdadm 3.4-1. I ran into an issue
+> a year or so ago with a boot error with mdmonitor due to my failure to
+> provide MAILADDR in /etc/mdadm.com, but that has long since been
+> corrected:
 
-Nack.  As I said before, please do it using explicit IV generators
-like we do for IPsec.
--- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+If you're running Arch Linux, you probably want to direct this question
+to the Arch Linux maintainers.
+
+Jes
