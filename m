@@ -1,45 +1,44 @@
-From: Phil Turmel <philip@turmel.org>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
 Subject: Re: Raid check didn't fix Current_Pending_Sector, but badblocks -nsv
  did
-Date: Tue, 7 Jun 2016 09:04:58 -0400
-Message-ID: <5756C67A.2040109@turmel.org>
-References: <20160606174113.GI12382@merlins.org> <5755CA9F.6090807@prgmr.com>
- <20160606224401.GA6672@merlins.org> <57561B38.1070402@turmel.org>
- <20160607045122.GL12382@merlins.org>
+Date: Tue, 7 Jun 2016 15:56:40 +0200 (CEST)
+Message-ID: <alpine.DEB.2.02.1606071551080.28955@uplift.swm.pp.se>
+References: <20160606174113.GI12382@merlins.org> <5755CA9F.6090807@prgmr.com> <20160606224401.GA6672@merlins.org> <57561B38.1070402@turmel.org> <20160607045122.GL12382@merlins.org> <5756C67A.2040109@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160607045122.GL12382@merlins.org>
+In-Reply-To: <5756C67A.2040109@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marc MERLIN <marc@merlins.org>
-Cc: Sarah Newman <srn@prgmr.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Phil Turmel <philip@turmel.org>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 06/07/2016 12:51 AM, Marc MERLIN wrote:
-> On Mon, Jun 06, 2016 at 08:54:16PM -0400, Phil Turmel wrote:
+On Tue, 7 Jun 2016, Phil Turmel wrote:
 
->> Both processes only apply to the actual data area of each member device,
->> which is usually substantially less than the whole disk.  Both processes
->> will read or write (or both) every data area sector.
->  
-> Mmmh, so it keeps track of how much of my block device is used by
-> filesystem blocks and skips the rest? I didn't know that.
+> Or just ignore them.  You aren't using them, so they can't hurt you. 
+> However, do look at the sector numbers in the SMART reports to make sure 
+> they aren't in the data area.  (If you aren't using the whole disk for 
+> mdadm, be sure to adjust for the partition start sector.)  If they *are* 
+> in the data area, watch dmesg while scrubbing to see what's really 
+> happening.
 
-No, it doesn't keep track of anything the filesystem does.  Look at the
-mdadm -E report for one of you member devices -- it shows the location
-of the superblock, the start location and size of the data area, and
-possibly information about the optional bitmap or bad block table.
-Areas outside the data area are not touched by check or repair scrubs.
+I had a similar problem a few years back.
 
-> Right, I understand now, good to know.
-> So I'll use badblocks next time I have this issue.
+I seem to remember that there was a problem that the pending blocks were 
+in the superblock area, and these weren't written out when I did "check" 
+or "repair". I might be misremembering though, but I seem to remember I 
+had some kind of problem that when I tried to add the dive back in again, 
+it got a read error when trying to read the superblock.
 
-Or just ignore them.  You aren't using them, so they can't hurt you.
-However, do look at the sector numbers in the SMART reports to make sure
-they aren't in the data area.  (If you aren't using the whole disk for
-mdadm, be sure to adjust for the partition start sector.)  If they *are*
-in the data area, watch dmesg while scrubbing to see what's really
-happening.
+They might have also been in the offset area. What I did was that I did a 
+--replace to another drive, then I dd:ed /dev/zero to the first gigabyte 
+of the drive, which removed the pending blocks. I then added the drive 
+back in.
 
-Phil
+Could someone confirm whether the entire (actually valuable portion) of 
+the superblock area is written out at any kind of frequency, or when a 
+check/repair is issued? If not, I think that would be a valuable thing to 
+do?
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
