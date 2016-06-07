@@ -1,64 +1,56 @@
-From: Roman Mamedov <rm@romanrm.net>
-Subject: Re: Raid check didn't fix Current_Pending_Sector, but badblocks
- -nsv did
-Date: Tue, 7 Jun 2016 10:35:31 +0500
-Message-ID: <20160607103531.561755d2@natsu>
-References: <20160606174113.GI12382@merlins.org>
+From: Vinod Koul <vinod.koul@intel.com>
+Subject: Re: Doubts on async_tx xor offload for raid5/6
+Date: Tue, 7 Jun 2016 12:49:26 +0530
+Message-ID: <20160607071926.GL16910@localhost>
+References: <CAOid5F-UWP-_jpA3XMFptfKa8=Gh7wBhhPZ1_DR_5UwJAxHriQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/ZbFHwHsgxnhuqR.5GT6iP_V"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160606174113.GI12382@merlins.org>
+Content-Disposition: inline
+In-Reply-To: <CAOid5F-UWP-_jpA3XMFptfKa8=Gh7wBhhPZ1_DR_5UwJAxHriQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marc MERLIN <marc@merlins.org>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Vikas Aggarwal <vik.reck@gmail.com>
+Cc: linux-raid@vger.kernel.org, dmaengine@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/ZbFHwHsgxnhuqR.5GT6iP_V
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Thu, Jun 02, 2016 at 11:54:45AM +0530, Vikas Aggarwal wrote:
+> Hi  list,
+> Will appreciate if someone can clear my doubts with "some theoretical
+> examples". I am trying to improve XOR/GF offload for a multi-core SoC
+> (currently it has single XOR/GF  channel).
+> 
+> 1) What is the purpose of device_prep_dma_interrupt  callback ?
+> 
+> 2) My driver currently polls for posting  xor  completions
+> (dma_cookie_complete) and does'nt use  device_prep_dma_interrupt
+> callback at all.  What  gains/loss in terms of  latency/cpu
+> idleness/WRITE throughput  I can expect  by implementing this callback
+> in my async_tx driver.
+> 
+> 3) Purpose of DMA_ACK as I read - it is  for higher layers to inform
+> dma driver that descriptors can now be freed. Can someone explain this
+> with an example as applicable with raid5/6 clients.
+> 
+> 4) With example - why dma_run_dependencies(tx) needed  after the
+> hardware engine post completion for a descriptor.
+> 
+> 5) Purpose of  tx->callback(cb_arg) - again with an example from a
+> raid5/6 offload perspective.
+> 
+> I want to use offload engine efficiently with multithreaded raid5/6.
+> 
+> I tried to dig through dma/drivers, crypto/async_xor.c, online
+> archives, linux/Documentation etc but could not get satisfactory
+> answers. Added two mail-lists as saw issues being discussed on both
+> ones.
 
-On Mon, 6 Jun 2016 10:41:13 -0700
-Marc MERLIN <marc@merlins.org> wrote:
+Did you read Documentation/crypto/async-tx-api.txt
 
-> However after the check is over, I still have 29 Current_Pending_Sector on
-> that drive.
+Also you should refer to code in crpto for dmaengine usage and other
+RAID examples.
 
-I had that once, even asked on this list (can't find that now), and it turn=
-ed
-out the pending sector(s) were in the gap between the start of the partition
-and the start of the mdadm actual data (which turned out to be surprisingly
-large) -- so naturally neither a check nor repair have ever tried to read or
-write there.
+It would help if you post the code and ask people what you are trying to
+improve..
 
-> More drive details from before I ran badblocks  (not an SMR drive):
-> Device Model:     WDC WD40EFRX-68WT0N0
-> Serial Number:    WD-WCC4E0642444
-
-At least if it's out of warranty, consider checking the contact pads unders=
-ide
-the drive PCB and cleaning them. AFAIK the WD drives in particular are know=
-n to
-develop rust there, which can lead to all sorts of problems including trans=
-ient
-"pending" sectors like that.
-https://www.youtube.com/watch?v=3DqmT32VC22PU
-https://www.youtube.com/watch?v=3DtDTt_yjYYQ8
-
---=20
-With respect,
-Roman
-
---Sig_/ZbFHwHsgxnhuqR.5GT6iP_V
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEARECAAYFAldWXScACgkQTLKSvz+PZwiyZQCfdBjZI0uhzv70XY4+Kf5o4FIK
-GZIAn3kpmBPKElvI1zjggX91fixXUFxb
-=e+Wz
------END PGP SIGNATURE-----
-
---Sig_/ZbFHwHsgxnhuqR.5GT6iP_V--
+-- 
+~Vinod
