@@ -1,42 +1,34 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Raid check didn't fix Current_Pending_Sector, but badblocks -nsv
- did
-Date: Tue, 7 Jun 2016 10:14:52 -0400
-Message-ID: <5756D6DC.5090807@turmel.org>
-References: <20160606174113.GI12382@merlins.org>
- <20160607135731.GA12550@metamorpher.de>
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Subject: Re: [RFC v4 2/4] crypto: Introduce CRYPTO_ALG_BULK flag
+Date: Tue, 7 Jun 2016 22:16:13 +0800
+Message-ID: <20160607141613.GA2237@gondor.apana.org.au>
+References: <cover.1465301616.git.baolin.wang@linaro.org>
+ <238ce3d506051c863300b90720c3e103175747cc.1465301616.git.baolin.wang@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160607135731.GA12550@metamorpher.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>, Marc MERLIN <marc@merlins.org>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-crypto-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <238ce3d506051c863300b90720c3e103175747cc.1465301616.git.baolin.wang@linaro.org>
+Sender: linux-crypto-owner@vger.kernel.org
+To: Baolin Wang <baolin.wang@linaro.org>
+Cc: axboe@kernel.dk, agk@redhat.com, snitzer@redhat.com, dm-devel@redhat.com, davem@davemloft.net, ebiggers3@gmail.com, js1304@gmail.com, tadeusz.struk@intel.com, smueller@chronox.de, standby24x7@gmail.com, shli@kernel.org, dan.j.williams@intel.com, martin.petersen@oracle.com, sagig@mellanox.com, kent.overstreet@gmail.com, keith.busch@intel.com, tj@kernel.org, ming.lei@canonical.com, broonie@kernel.org, arnd@arndb.de, linux-crypto@vger.kernel.org, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 06/07/2016 09:57 AM, Andreas Klauer wrote:
-> On Mon, Jun 06, 2016 at 10:41:13AM -0700, Marc MERLIN wrote:
->> Howdy, I have a raid 5 where one drive reported this:
->> 197 Current_Pending_Sector  0x0032   200   199   000    Old_age   Always -       29
+On Tue, Jun 07, 2016 at 08:17:05PM +0800, Baolin Wang wrote:
+> Now some cipher hardware engines prefer to handle bulk block rather than one
+> sector (512 bytes) created by dm-crypt, cause these cipher engines can handle
+> the intermediate values (IV) by themselves in one bulk block. This means we
+> can increase the size of the request by merging request rather than always 512
+> bytes and thus increase the hardware engine processing speed.
 > 
-> RAID survival depends on healthy drives. This one does not look healthy. 
-> If the data on your RAID is important, I'd replace this drive. Getting 
-> this count back down to zero doesn't make it any more trustworthy.
+> So introduce 'CRYPTO_ALG_BULK' flag to indicate this cipher can support bulk
+> mode.
+> 
+> Signed-off-by: Baolin Wang <baolin.wang@linaro.org>
 
-That's excessively paranoid.  You missed:
-
->   5 Reallocated_Sector_Ct   0x0033   200   200   140    Pre-fail  Always       -       0
-
-In other words, the totally normal accumulation of weak spots on his
-disk aren't being cleaned up by overwriting as expected from raid
-scrubbing.  The vast majority of such flaws are successfully overwritten
-and are not a problem.  When they are overwritten and the drive firmware
-decides to reallocate, then you can start worrying.  I replace drives
-when *reallocations* hit double digits, as my experience says they go to
-hell quickly between 10 and 100.
-
-FWIW, all of my troubles with drives were consumer-grade, mostly w/
-scterc support, @ > 35k hours.  I'll report to the list when my first
-big batch of WD reds starts to die.
-
+Nack.  As I said before, please do it using explicit IV generators
+like we do for IPsec.
+-- 
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
