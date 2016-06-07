@@ -1,56 +1,46 @@
-From: Vinod Koul <vinod.koul@intel.com>
-Subject: Re: Doubts on async_tx xor offload for raid5/6
-Date: Tue, 7 Jun 2016 12:49:26 +0530
-Message-ID: <20160607071926.GL16910@localhost>
-References: <CAOid5F-UWP-_jpA3XMFptfKa8=Gh7wBhhPZ1_DR_5UwJAxHriQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAOid5F-UWP-_jpA3XMFptfKa8=Gh7wBhhPZ1_DR_5UwJAxHriQ@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Vikas Aggarwal <vik.reck@gmail.com>
-Cc: linux-raid@vger.kernel.org, dmaengine@vger.kernel.org
+From: Baolin Wang <baolin.wang@linaro.org>
+Subject: [RFC v4 0/4] Introduce the bulk mode method when sending request to crypto layer
+Date: Tue,  7 Jun 2016 20:17:03 +0800
+Message-ID: <cover.1465301616.git.baolin.wang@linaro.org>
+Return-path: <linux-crypto-owner@vger.kernel.org>
+Sender: linux-crypto-owner@vger.kernel.org
+To: axboe@kernel.dk, agk@redhat.com, snitzer@redhat.com, dm-devel@redhat.com, herbert@gondor.apana.org.au, davem@davemloft.net
+Cc: ebiggers3@gmail.com, js1304@gmail.com, tadeusz.struk@intel.com, smueller@chronox.de, standby24x7@gmail.com, shli@kernel.org, dan.j.williams@intel.com, martin.petersen@oracle.com, sagig@mellanox.com, kent.overstreet@gmail.com, keith.busch@intel.com, tj@kernel.org, ming.lei@canonical.com, broonie@kernel.org, arnd@arndb.de, linux-crypto@vger.kernel.org, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, baolin.wang@linaro.org
 List-Id: linux-raid.ids
 
-On Thu, Jun 02, 2016 at 11:54:45AM +0530, Vikas Aggarwal wrote:
-> Hi  list,
-> Will appreciate if someone can clear my doubts with "some theoretical
-> examples". I am trying to improve XOR/GF offload for a multi-core SoC
-> (currently it has single XOR/GF  channel).
-> 
-> 1) What is the purpose of device_prep_dma_interrupt  callback ?
-> 
-> 2) My driver currently polls for posting  xor  completions
-> (dma_cookie_complete) and does'nt use  device_prep_dma_interrupt
-> callback at all.  What  gains/loss in terms of  latency/cpu
-> idleness/WRITE throughput  I can expect  by implementing this callback
-> in my async_tx driver.
-> 
-> 3) Purpose of DMA_ACK as I read - it is  for higher layers to inform
-> dma driver that descriptors can now be freed. Can someone explain this
-> with an example as applicable with raid5/6 clients.
-> 
-> 4) With example - why dma_run_dependencies(tx) needed  after the
-> hardware engine post completion for a descriptor.
-> 
-> 5) Purpose of  tx->callback(cb_arg) - again with an example from a
-> raid5/6 offload perspective.
-> 
-> I want to use offload engine efficiently with multithreaded raid5/6.
-> 
-> I tried to dig through dma/drivers, crypto/async_xor.c, online
-> archives, linux/Documentation etc but could not get satisfactory
-> answers. Added two mail-lists as saw issues being discussed on both
-> ones.
+This patchset will check if the cipher can support bulk mode, then dm-crypt
+will handle different ways to send requests to crypto layer according to
+cipher mode. For bulk mode, we can use sg table to map the whole bio and
+send all scatterlists of one bio to crypto engine to encrypt or decrypt,
+which can improve the hardware engine's efficiency.
 
-Did you read Documentation/crypto/async-tx-api.txt
+Changes since v3:
+ - Some optimization for blk_bio_map_sg() function.
 
-Also you should refer to code in crpto for dmaengine usage and other
-RAID examples.
+Changes since v2:
+ - Add one cipher user with CRYPTO_ALG_BULK flag to support bulk mode.
+ - Add one atomic variable to avoid the sg table race.
 
-It would help if you post the code and ask people what you are trying to
-improve..
+Changes since v1:
+ - Refactor the blk_bio_map_sg() function to avoid duplicated code.
+ - Move the sg table allocation to crypt_ctr_cipher() function to avoid memory
+ allocation in the IO path.
+ - Remove the crypt_sg_entry() function.
+ - Other optimization.
+
+Baolin Wang (4):
+  block: Introduce blk_bio_map_sg() to map one bio
+  crypto: Introduce CRYPTO_ALG_BULK flag
+  md: dm-crypt: Introduce the bulk mode method when sending request
+  crypto: Add the CRYPTO_ALG_BULK flag for ecb(aes) cipher
+
+ block/blk-merge.c         |   19 ++++++
+ drivers/crypto/omap-aes.c |    2 +-
+ drivers/md/dm-crypt.c     |  159 ++++++++++++++++++++++++++++++++++++++++++++-
+ include/crypto/skcipher.h |    7 ++
+ include/linux/blkdev.h    |    2 +
+ include/linux/crypto.h    |    6 ++
+ 6 files changed, 193 insertions(+), 2 deletions(-)
 
 -- 
-~Vinod
+1.7.9.5
