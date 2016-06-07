@@ -1,54 +1,61 @@
-From: Marc MERLIN <marc@merlins.org>
-Subject: Re: Raid check didn't fix Current_Pending_Sector, but badblocks -nsv did
-Date: Mon, 6 Jun 2016 15:44:01 -0700
-Message-ID: <20160606224401.GA6672@merlins.org>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Raid check didn't fix Current_Pending_Sector, but badblocks -nsv
+ did
+Date: Mon, 6 Jun 2016 20:54:16 -0400
+Message-ID: <57561B38.1070402@turmel.org>
 References: <20160606174113.GI12382@merlins.org> <5755CA9F.6090807@prgmr.com>
+ <20160606224401.GA6672@merlins.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5755CA9F.6090807@prgmr.com>
+In-Reply-To: <20160606224401.GA6672@merlins.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sarah Newman <srn@prgmr.com>
+To: Marc MERLIN <marc@merlins.org>, Sarah Newman <srn@prgmr.com>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Jun 06, 2016 at 12:10:23PM -0700, Sarah Newman wrote:
-> https://www.kernel.org/doc/Documentation/md.txt shows for sync_action
+On 06/06/2016 06:44 PM, Marc MERLIN wrote:
+
+> From what I understand, the only difference between the 2 is that repair
+> does not use the write-intent bitmap, but both will repair an error if
+> found.
+
+Repair doesn't even read the parity (and Q syndrome) blocks if it
+doesn't need them.  It unconditionally recomputes and writes parity (and
+Q) blocks.
+
+Both processes will compute and rewrite a block that reports a read error.
+
+> https://www.thomas-krenn.com/en/wiki/Mdadm_checkarray#Check_vs._Repair
 > 
->        check         - A full check of redundancy was requested and is
->                        happening.  This reads all blocks and checks
->                        them. A repair may also happen for some raid
->                        levels.
->        repair        - A full check and repair is happening.  This is
->                        similar to 'resync', but was requested by the
->                        user, and the write-intent bitmap is NOT used to
-> 		       optimise the process.
-> 
-> I think you wanted 'repair' not 'check'.
+> Or are you saying that check after getting a read error from one drive,
+> would not rewrite the bad block on that drive? I thought it did...
 
-From what I understand, the only difference between the 2 is that repair
-does not use the write-intent bitmap, but both will repair an error if
-found.
-https://www.thomas-krenn.com/en/wiki/Mdadm_checkarray#Check_vs._Repair
+They both do.
 
-Or are you saying that check after getting a read error from one drive,
-would not rewrite the bad block on that drive? I thought it did...
+> Either way, it seems that neither would have worked because while those
+> blocks were marked as "need to be reallocated" by the drive, I think the
+> kernel was actually able to read them without problem, so the md layer never
+> saw anything and therefore never did anything either.
 
-Either way, it seems that neither would have worked because while those
-blocks were marked as "need to be reallocated" by the drive, I think the
-kernel was actually able to read them without problem, so the md layer never
-saw anything and therefore never did anything either.
+Both processes only apply to the actual data area of each member device,
+which is usually substantially less than the whole disk.  Both processes
+will read or write (or both) every data area sector.
 
-Whereas badblocks forced an unconditional rewrite of all blocks, and forced
-the drive to re-allocate those "weak" blocks, even though it was able to
-read them.
+Sectors that haven't ever been deliberately written and aren't read by
+normal mdadm processes are often the first to pop up in disk
+self-diagnostics.  If you look at the sector offsets in the SMART data,
+I bet you find they're all outside the area mdadm is using.
 
-Does that sound about right?
+Magnetism does slowly decay on drive platters, faster in the spots where
+manufacturing didn't maintain the intended oxide thickness.  Completely
+normal and is the basis for URE specifications.
 
-Marc
--- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems ....
-                                      .... what McDonalds is to gourmet cooking
-Home page: http://marc.merlins.org/  
+> Whereas badblocks forced an unconditional rewrite of all blocks, and forced
+> the drive to re-allocate those "weak" blocks, even though it was able to
+> read them.
+
+Probably not.  It got 'em because it wasn't limited to the data area.
+
+Phil
