@@ -1,99 +1,45 @@
-From: Cong Wang <xiyou.wangcong@gmail.com>
-Subject: [PATCH] md: use a mutex to protect a global list
-Date: Wed,  8 Jun 2016 09:20:16 -0700
-Message-ID: <1465402816-10882-1-git-send-email-xiyou.wangcong@gmail.com>
+From: "David C. Rankin" <drankinatty@suddenlinkmail.com>
+Subject: Re: mdadm 3.4-1, error msg. on boot - no
+ /usr/lib/systemd/scripts/mdadm_env.sh
+Date: Wed, 8 Jun 2016 17:06:38 -0500
+Message-ID: <575896EE.4020502@suddenlinkmail.com>
+References: <5754CBF2.8000309@suddenlinkmail.com>
+ <wrfjziqwyex7.fsf@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <wrfjziqwyex7.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Cong Wang <xiyou.wangcong@gmail.com>, Shaohua Li <shli@kernel.org>
+To: mdraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-We saw a list corruption in the list all_detected_devices:
+On 06/07/2016 02:31 PM, Jes Sorensen wrote:
+> "David C. Rankin" <drankinatty@suddenlinkmail.com> writes:
+>> Neil, All,
+>>
+>>   I'm chasing down the reason there is no
+>> /usr/lib/systemd/scripts/mdadm_env.sh provided with mdadm. This is
+>> more a curiosity really as mdmonitor continues to run, but it always
+>> throws an error at boot:
+>>
+>> Jun 05 17:12:47 valhalla systemd[454]: mdmonitor.service: Failed at step EXEC
+>> spawning /usr/lib/systemd/scripts/mdadm_env.sh: No such file or directory
+>>
+>>   I have several Arch servers, all on mdadm 3.4-1. I ran into an issue
+>> a year or so ago with a boot error with mdmonitor due to my failure to
+>> provide MAILADDR in /etc/mdadm.com, but that has long since been
+>> corrected:
+> 
+> If you're running Arch Linux, you probably want to direct this question
+> to the Arch Linux maintainers.
+> 
+> Jes
+> 
 
- WARNING: CPU: 16 PID: 226 at lib/list_debug.c:29 __list_add+0x3c/0xa9()
- list_add corruption. next->prev should be prev (ffff880859d58320), but was ffff880859ce74c0. (next=ffffffff81abfdb0).
- Modules linked in: ahci libahci libata sd_mod scsi_mod
- CPU: 16 PID: 226 Comm: kworker/u241:4 Not tainted 4.1.20 #1
- Hardware name: Dell Inc. PowerEdge C6220/04GD66, BIOS 2.2.3 11/07/2013
- Workqueue: events_unbound async_run_entry_fn
-  0000000000000000 ffff880859a5baf8 ffffffff81502872 ffff880859a5bb48
-  0000000000000009 ffff880859a5bb38 ffffffff810692a5 ffff880859ee8828
-  ffffffff812ad02c ffff880859d58320 ffffffff81abfdb0 ffff880859eb90c0
- Call Trace:
-  [<ffffffff81502872>] dump_stack+0x4d/0x63
-  [<ffffffff810692a5>] warn_slowpath_common+0xa1/0xbb
-  [<ffffffff812ad02c>] ? __list_add+0x3c/0xa9
-  [<ffffffff81069305>] warn_slowpath_fmt+0x46/0x48
-  [<ffffffff812ad02c>] __list_add+0x3c/0xa9
-  [<ffffffff81406f28>] md_autodetect_dev+0x41/0x62
-  [<ffffffff81285862>] rescan_partitions+0x25f/0x29d
-  [<ffffffff81506372>] ? mutex_lock+0x13/0x31
-  [<ffffffff811a090f>] __blkdev_get+0x1aa/0x3cd
-  [<ffffffff811a0b91>] blkdev_get+0x5f/0x294
-  [<ffffffff81377ceb>] ? put_device+0x17/0x19
-  [<ffffffff8128227c>] ? disk_put_part+0x12/0x14
-  [<ffffffff812836f3>] add_disk+0x29d/0x407
-  [<ffffffff81384345>] ? __pm_runtime_use_autosuspend+0x5c/0x64
-  [<ffffffffa004a724>] sd_probe_async+0x115/0x1af [sd_mod]
-  [<ffffffff81083177>] async_run_entry_fn+0x72/0x12c
-  [<ffffffff8107c44c>] process_one_work+0x198/0x2ce
-  [<ffffffff8107cac7>] worker_thread+0x1dd/0x2bb
-  [<ffffffff8107c8ea>] ? cancel_delayed_work_sync+0x15/0x15
-  [<ffffffff8107c8ea>] ? cancel_delayed_work_sync+0x15/0x15
-  [<ffffffff81080d9c>] kthread+0xae/0xb6
-  [<ffffffff81080000>] ? param_array_set+0x40/0xfa
-  [<ffffffff81080cee>] ? __kthread_parkme+0x61/0x61
-  [<ffffffff81508152>] ret_from_fork+0x42/0x70
-  [<ffffffff81080cee>] ? __kthread_parkme+0x61/0x61
+Thank you Jes,
 
-I suspect it is because there is no lock protecting this
-global list, autostart_arrays() is called in ioctl() path
-where there is no lock.
+  I've posed the problem back to the Arch devs.
 
-Cc: Shaohua Li <shli@kernel.org>
-Signed-off-by: Cong Wang <xiyou.wangcong@gmail.com>
----
- drivers/md/md.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 866825f..f2f1912 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -8799,6 +8799,7 @@ EXPORT_SYMBOL(md_reload_sb);
-  * at boot time.
-  */
- 
-+static DEFINE_MUTEX(detected_devices_mutex);
- static LIST_HEAD(all_detected_devices);
- struct detected_devices_node {
- 	struct list_head list;
-@@ -8812,7 +8813,9 @@ void md_autodetect_dev(dev_t dev)
- 	node_detected_dev = kzalloc(sizeof(*node_detected_dev), GFP_KERNEL);
- 	if (node_detected_dev) {
- 		node_detected_dev->dev = dev;
-+		mutex_lock(&detected_devices_mutex);
- 		list_add_tail(&node_detected_dev->list, &all_detected_devices);
-+		mutex_unlock(&detected_devices_mutex);
- 	} else {
- 		printk(KERN_CRIT "md: md_autodetect_dev: kzalloc failed"
- 			", skipping dev(%d,%d)\n", MAJOR(dev), MINOR(dev));
-@@ -8831,6 +8834,7 @@ static void autostart_arrays(int part)
- 
- 	printk(KERN_INFO "md: Autodetecting RAID arrays.\n");
- 
-+	mutex_lock(&detected_devices_mutex);
- 	while (!list_empty(&all_detected_devices) && i_scanned < INT_MAX) {
- 		i_scanned++;
- 		node_detected_dev = list_entry(all_detected_devices.next,
-@@ -8849,6 +8853,7 @@ static void autostart_arrays(int part)
- 		list_add(&rdev->same_set, &pending_raid_disks);
- 		i_passed++;
- 	}
-+	mutex_unlock(&detected_devices_mutex);
- 
- 	printk(KERN_INFO "md: Scanned %d and added %d devices.\n",
- 						i_scanned, i_passed);
 -- 
-2.1.0
-
+David C. Rankin, J.D.,P.E.
