@@ -1,75 +1,99 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Raid check didn't fix Current_Pending_Sector, but badblocks -nsv
- did
-Date: Wed, 8 Jun 2016 08:24:00 -0400
-Message-ID: <57580E60.3040104@turmel.org>
-References: <20160606174113.GI12382@merlins.org> <5755CA9F.6090807@prgmr.com>
- <20160606224401.GA6672@merlins.org> <57561B38.1070402@turmel.org>
- <20160607045122.GL12382@merlins.org> <5756C67A.2040109@turmel.org>
- <2c7e843f-58a9-a9f0-76bf-ff193935d13b@fnarfbargle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+From: Cong Wang <xiyou.wangcong@gmail.com>
+Subject: [PATCH] md: use a mutex to protect a global list
+Date: Wed,  8 Jun 2016 09:20:16 -0700
+Message-ID: <1465402816-10882-1-git-send-email-xiyou.wangcong@gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2c7e843f-58a9-a9f0-76bf-ff193935d13b@fnarfbargle.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <lists2009@fnarfbargle.com>, Marc MERLIN <marc@merlins.org>
-Cc: Sarah Newman <srn@prgmr.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Cong Wang <xiyou.wangcong@gmail.com>, Shaohua Li <shli@kernel.org>
 List-Id: linux-raid.ids
 
-On 06/07/2016 09:39 PM, Brad Campbell wrote:
-> On 07/06/16 21:04, Phil Turmel wrote:
->> On 06/07/2016 12:51 AM, Marc MERLIN wrote:
-> 
->>> Right, I understand now, good to know.
->>> So I'll use badblocks next time I have this issue.
->>
->> Or just ignore them.  You aren't using them, so they can't hurt you.
-> 
-> That's actually not necessarily true.
-> 
-> If you have a dud sector early on the disk (so before the start of the
-> RAID data) you will terminate every SMART long test in the first couple
-> of meg of the disk. So while a dud down there won't necessarily impact
-> your usage from a RAID perspective, it'll knacker your ability to
-> regularly check the disks in their entirety. SMART tests abort on the
-> first bad read.
+We saw a list corruption in the list all_detected_devices:
 
-Don't bother doing long self-tests on drives participating in an array
--- check scrubs do everything a long self-test does on the area of
-interest, plus actually fixing UREs that are found.  And check scrubs
-don't abort on a read failure.
+ WARNING: CPU: 16 PID: 226 at lib/list_debug.c:29 __list_add+0x3c/0xa9()
+ list_add corruption. next->prev should be prev (ffff880859d58320), but was ffff880859ce74c0. (next=ffffffff81abfdb0).
+ Modules linked in: ahci libahci libata sd_mod scsi_mod
+ CPU: 16 PID: 226 Comm: kworker/u241:4 Not tainted 4.1.20 #1
+ Hardware name: Dell Inc. PowerEdge C6220/04GD66, BIOS 2.2.3 11/07/2013
+ Workqueue: events_unbound async_run_entry_fn
+  0000000000000000 ffff880859a5baf8 ffffffff81502872 ffff880859a5bb48
+  0000000000000009 ffff880859a5bb38 ffffffff810692a5 ffff880859ee8828
+  ffffffff812ad02c ffff880859d58320 ffffffff81abfdb0 ffff880859eb90c0
+ Call Trace:
+  [<ffffffff81502872>] dump_stack+0x4d/0x63
+  [<ffffffff810692a5>] warn_slowpath_common+0xa1/0xbb
+  [<ffffffff812ad02c>] ? __list_add+0x3c/0xa9
+  [<ffffffff81069305>] warn_slowpath_fmt+0x46/0x48
+  [<ffffffff812ad02c>] __list_add+0x3c/0xa9
+  [<ffffffff81406f28>] md_autodetect_dev+0x41/0x62
+  [<ffffffff81285862>] rescan_partitions+0x25f/0x29d
+  [<ffffffff81506372>] ? mutex_lock+0x13/0x31
+  [<ffffffff811a090f>] __blkdev_get+0x1aa/0x3cd
+  [<ffffffff811a0b91>] blkdev_get+0x5f/0x294
+  [<ffffffff81377ceb>] ? put_device+0x17/0x19
+  [<ffffffff8128227c>] ? disk_put_part+0x12/0x14
+  [<ffffffff812836f3>] add_disk+0x29d/0x407
+  [<ffffffff81384345>] ? __pm_runtime_use_autosuspend+0x5c/0x64
+  [<ffffffffa004a724>] sd_probe_async+0x115/0x1af [sd_mod]
+  [<ffffffff81083177>] async_run_entry_fn+0x72/0x12c
+  [<ffffffff8107c44c>] process_one_work+0x198/0x2ce
+  [<ffffffff8107cac7>] worker_thread+0x1dd/0x2bb
+  [<ffffffff8107c8ea>] ? cancel_delayed_work_sync+0x15/0x15
+  [<ffffffff8107c8ea>] ? cancel_delayed_work_sync+0x15/0x15
+  [<ffffffff81080d9c>] kthread+0xae/0xb6
+  [<ffffffff81080000>] ? param_array_set+0x40/0xfa
+  [<ffffffff81080cee>] ? __kthread_parkme+0x61/0x61
+  [<ffffffff81508152>] ret_from_fork+0x42/0x70
+  [<ffffffff81080cee>] ? __kthread_parkme+0x61/0x61
 
-My advice stands: ignore the UREs in unused areas of the disk.
+I suspect it is because there is no lock protecting this
+global list, autostart_arrays() is called in ioctl() path
+where there is no lock.
 
-> It's ugly, but in the single instance I had that happen, I removed the
-> drive from the array, wrote zero to the entire disk and then added it
-> back. That forced a reallocation in the affected area.
+Cc: Shaohua Li <shli@kernel.org>
+Signed-off-by: Cong Wang <xiyou.wangcong@gmail.com>
+---
+ drivers/md/md.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-Completely pointless exercise that opened a window of higher-risk of
-failure of your array.  Unless you used --replace with another spare to
-maintain redundancy on your array while that disk was out.
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 866825f..f2f1912 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -8799,6 +8799,7 @@ EXPORT_SYMBOL(md_reload_sb);
+  * at boot time.
+  */
+ 
++static DEFINE_MUTEX(detected_devices_mutex);
+ static LIST_HEAD(all_detected_devices);
+ struct detected_devices_node {
+ 	struct list_head list;
+@@ -8812,7 +8813,9 @@ void md_autodetect_dev(dev_t dev)
+ 	node_detected_dev = kzalloc(sizeof(*node_detected_dev), GFP_KERNEL);
+ 	if (node_detected_dev) {
+ 		node_detected_dev->dev = dev;
++		mutex_lock(&detected_devices_mutex);
+ 		list_add_tail(&node_detected_dev->list, &all_detected_devices);
++		mutex_unlock(&detected_devices_mutex);
+ 	} else {
+ 		printk(KERN_CRIT "md: md_autodetect_dev: kzalloc failed"
+ 			", skipping dev(%d,%d)\n", MAJOR(dev), MINOR(dev));
+@@ -8831,6 +8834,7 @@ static void autostart_arrays(int part)
+ 
+ 	printk(KERN_INFO "md: Autodetecting RAID arrays.\n");
+ 
++	mutex_lock(&detected_devices_mutex);
+ 	while (!list_empty(&all_detected_devices) && i_scanned < INT_MAX) {
+ 		i_scanned++;
+ 		node_detected_dev = list_entry(all_detected_devices.next,
+@@ -8849,6 +8853,7 @@ static void autostart_arrays(int part)
+ 		list_add(&rdev->same_set, &pending_raid_disks);
+ 		i_passed++;
+ 	}
++	mutex_unlock(&detected_devices_mutex);
+ 
+ 	printk(KERN_INFO "md: Scanned %d and added %d devices.\n",
+ 						i_scanned, i_passed);
+-- 
+2.1.0
 
-> Usually if it is in the RAID zone, a check scrub will clear it up.
-> Having said that I've had a very peculiar one here in the last couple of
-> days.
-> 
-> A WD 2TB Green drive with TLER set to 7 seconds. The first read would
-> error out in 7 seconds (as it should), but a second read succeeded.
-> After returning the error, the drive must have kept trying to recover in
-> the background and eventually succeeded and cached the result. So
-> subsequent reads were ok. After reading and writing enough to other
-> parts of the drive to flush the drives cache, the process would repeat.
-
-Pure speculation.  Unless you can show better evidence that those drives
-will cache a read in that case, I would say it was just a mild enough
-weak spot that it randomly succeeded more than not.  And if you follow
-my advice, it doesn't matter:  if the array is the only process reading
-from the disk, the first appearance of the URE would be the last, as the
-array would re-write it immediately.  Whether during a scrub or due to
-normal access.
-
-Regular long self-tests are highly recommended for stand-alone disks and
-for array hot spares.
-
-Phil
