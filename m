@@ -1,52 +1,54 @@
-From: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
-Subject: [PATCH] bcache: Remove deprecated create_workqueue
-Date: Wed, 8 Jun 2016 01:57:19 +0530
-Message-ID: <20160607202719.GA16208@Karyakshetra>
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: Re: Raid check didn't fix Current_Pending_Sector, but badblocks -nsv
+ did
+Date: Wed, 8 Jun 2016 09:39:45 +0800
+Message-ID: <2c7e843f-58a9-a9f0-76bf-ff193935d13b@fnarfbargle.com>
+References: <20160606174113.GI12382@merlins.org> <5755CA9F.6090807@prgmr.com>
+ <20160606224401.GA6672@merlins.org> <57561B38.1070402@turmel.org>
+ <20160607045122.GL12382@merlins.org> <5756C67A.2040109@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-bcache-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-bcache-owner@vger.kernel.org
-To: Kent Overstreet <kent.overstreet@gmail.com>, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, Eric Wheeler <git@linux.ewheeler.net>, Zheng Liu <wenqing.lz@taobao.com>, Hannes Reinecke <hare@suse.de>, Jeff Moyer <jmoyer@redhat.com>, Pekka Enberg <penberg@kernel.org>, Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Tejun Heo <tj@kernel.org>, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5756C67A.2040109@turmel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>, Marc MERLIN <marc@merlins.org>
+Cc: Sarah Newman <srn@prgmr.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-alloc_workqueue replaces deprecated create_workqueue().
+On 07/06/16 21:04, Phil Turmel wrote:
+> On 06/07/2016 12:51 AM, Marc MERLIN wrote:
 
-Dedicated workqueues have been used since bcache_wq and moving_gc_wq
-are workqueues for writes and are being used on a memory reclaim path.
-WQ_MEM_RECLAIM has been set to ensure forward progress under memory
-pressure.
-Since there are only a fixed number of work items, explicit concurrency
-limit is unnecessary here.
+>> Right, I understand now, good to know.
+>> So I'll use badblocks next time I have this issue.
+>
+> Or just ignore them.  You aren't using them, so they can't hurt you.
 
-Signed-off-by: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
----
- drivers/md/bcache/super.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+That's actually not necessarily true.
 
-diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
-index f5dbb4e..055c869 100644
---- a/drivers/md/bcache/super.c
-+++ b/drivers/md/bcache/super.c
-@@ -1518,7 +1518,8 @@ struct cache_set *bch_cache_set_alloc(struct cache_sb *sb)
- 	    !(c->fill_iter = mempool_create_kmalloc_pool(1, iter_size)) ||
- 	    !(c->bio_split = bioset_create(4, offsetof(struct bbio, bio))) ||
- 	    !(c->uuids = alloc_bucket_pages(GFP_KERNEL, c)) ||
--	    !(c->moving_gc_wq = create_workqueue("bcache_gc")) ||
-+	    !(c->moving_gc_wq = alloc_workqueue("bcache_gc",
-+						WQ_MEM_RECLAIM, 0)) ||
- 	    bch_journal_alloc(c) ||
- 	    bch_btree_cache_alloc(c) ||
- 	    bch_open_buckets_alloc(c) ||
-@@ -2097,7 +2098,7 @@ static int __init bcache_init(void)
- 		return bcache_major;
- 	}
+If you have a dud sector early on the disk (so before the start of the 
+RAID data) you will terminate every SMART long test in the first couple 
+of meg of the disk. So while a dud down there won't necessarily impact 
+your usage from a RAID perspective, it'll knacker your ability to 
+regularly check the disks in their entirety. SMART tests abort on the 
+first bad read.
 
--	if (!(bcache_wq = create_workqueue("bcache")) ||
-+	if (!(bcache_wq = alloc_workqueue("bcache", WQ_MEM_RECLAIM, 0)) ||
- 	    !(bcache_kobj = kobject_create_and_add("bcache", fs_kobj)) ||
- 	    sysfs_create_files(bcache_kobj, files) ||
- 	    bch_request_init() ||
---
-2.1.4
+It's ugly, but in the single instance I had that happen, I removed the 
+drive from the array, wrote zero to the entire disk and then added it 
+back. That forced a reallocation in the affected area.
+
+Usually if it is in the RAID zone, a check scrub will clear it up. 
+Having said that I've had a very peculiar one here in the last couple of 
+days.
+
+A WD 2TB Green drive with TLER set to 7 seconds. The first read would 
+error out in 7 seconds (as it should), but a second read succeeded. 
+After returning the error, the drive must have kept trying to recover in 
+the background and eventually succeeded and cached the result. So 
+subsequent reads were ok. After reading and writing enough to other 
+parts of the drive to flush the drives cache, the process would repeat.
+
+In this case, it took about 3 check scrubs to actually hit the read 
+error and force a re-write.
+
+
