@@ -1,45 +1,22 @@
-From: "David C. Rankin" <drankinatty@suddenlinkmail.com>
-Subject: Re: mdadm 3.4-1, error msg. on boot - no
- /usr/lib/systemd/scripts/mdadm_env.sh
-Date: Wed, 8 Jun 2016 17:06:38 -0500
-Message-ID: <575896EE.4020502@suddenlinkmail.com>
-References: <5754CBF2.8000309@suddenlinkmail.com>
- <wrfjziqwyex7.fsf@redhat.com>
+From: "Aggarwal, Vikas" <Vikas.Aggarwal@cavium.com>
+Subject: Multithread raid5: Is check-for-completions also multithreaded (using
+ async_xor) ?
+Date: Thu, 9 Jun 2016 10:55:51 +0000
+Message-ID: <CO2PR0701MB1031757BA3BABB368FEC9FAEF05F0@CO2PR0701MB1031.namprd07.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjziqwyex7.fsf@redhat.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: mdraid <linux-raid@vger.kernel.org>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 06/07/2016 02:31 PM, Jes Sorensen wrote:
-> "David C. Rankin" <drankinatty@suddenlinkmail.com> writes:
->> Neil, All,
->>
->>   I'm chasing down the reason there is no
->> /usr/lib/systemd/scripts/mdadm_env.sh provided with mdadm. This is
->> more a curiosity really as mdmonitor continues to run, but it always
->> throws an error at boot:
->>
->> Jun 05 17:12:47 valhalla systemd[454]: mdmonitor.service: Failed at step EXEC
->> spawning /usr/lib/systemd/scripts/mdadm_env.sh: No such file or directory
->>
->>   I have several Arch servers, all on mdadm 3.4-1. I ran into an issue
->> a year or so ago with a boot error with mdmonitor due to my failure to
->> provide MAILADDR in /etc/mdadm.com, but that has long since been
->> corrected:
-> 
-> If you're running Arch Linux, you probably want to direct this question
-> to the Arch Linux maintainers.
-> 
-> Jes
-> 
+Hello All,
+With multithread raid5 enabled (echo 48 > /sys/block/md51/md/group_thread_cnt)  what I understand is that all the cpu cores will be able to submit   async_xor  instructions in parallel for a single md raid5  device.
 
-Thank you Jes,
+Question: About polling for completion, is that also multi-threaded ? - Does the same number of worker threads (48 in my test) will continue poll for XOR completion as well ? 
+My multi-core SoC  has  XOR/GF offload channel, and I am trying to see how to get the best throughput for raid5 rebuild using multithread functionality.
 
-  I've posed the problem back to the Arch devs.
-
--- 
-David C. Rankin, J.D.,P.E.
+Regards
+Vikas Aggarwal
