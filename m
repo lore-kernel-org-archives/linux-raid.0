@@ -1,48 +1,31 @@
-From: Bryan Hepworth <bryan.hepworth@newcastle.ac.uk>
-Subject: RE: restarting raid arrays with uuid
-Date: Thu, 9 Jun 2016 12:23:56 +0000
-Message-ID: <DB5PR07MB12871D31BEA5758738234478D55F0@DB5PR07MB1287.eurprd07.prod.outlook.com>
-References: <DB5PR07MB1287703757699A1962149D82D55C0@DB5PR07MB1287.eurprd07.prod.outlook.com>
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: Low RAID10 performance during resync
+Date: Thu, 9 Jun 2016 15:45:55 +0200
+Message-ID: <20160609134555.GA9104@proton.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <DB5PR07MB1287703757699A1962149D82D55C0@DB5PR07MB1287.eurprd07.prod.outlook.com>
-Content-Language: en-US
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->-----Original Message-----
->From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
->owner@vger.kernel.org] On Behalf Of Bryan Hepworth
->Sent: 06 June 2016 19:55
->To: linux-raid@vger.kernel.org
->Subject: restarting raid arrays with uuid
->
->Hi All
->
->I'm not entirely sure this is rescuable. This is an old system that was kept on
->for scratch storage space, unfortunately it was discovered some data hadn't
->moved out of this area. The arrays disappeared after taking them offline and
->rebooting the machine.
->
->I've checked /etc/mdadm.conf
->And mdadm --examine across all of the disks
->I've assembled from uuid
->Ran /proc/mdstat
->
->Any suggestions as to what to try next?
->
+A low performance of mkfs has been observed on RAID10 array during resync. It is not so significant for NVMe drives but for my setup of RAID10 consisting of 4 SATA drives format time has increased by 200%.
 
-After carefully looking at the arrays I have two back as they should be.
+I have looked into the problem and I have found out it is caused by this changeset:
 
-I've also discovered that one of the drives with gpt has a partition in it with ext4 data. Gparted has given me the device uuid which I can see in /dev/disk/by-uuid
+commit 09314799e4f0589e52bafcd0ca3556c60468bc0e
+md: remove 'go_faster' option from ->sync_request()
 
-Unfortunately it says no superblock information when I run mdadm --examine /dev/disk/by-uuid/<uuid number>
+It seemed the code had been redundant and could be safely removed due to barriers mechanism but it proved otherwise. The barriers don't provide enough throttle to resync IOs. They only assure non-resync IOs and resync IOs are not being executed at the same time. In result resync IOs take around 25% of CPU time, mostly because there are many of them but only one at a time so a lot of CPU time is simply wasted waiting for a single IO to complete.
 
-gparted  does say ext4 is clean and it does have a --raid tag so my next question is is it safe to mount this drive, or is it best to dd it elsewhere to see what's on it?
+The removed sleep call in resync IO had allowed a lot of non-resync activity to be scheduled (nobody waiting for a barrier). Once sleep call had ended, resync IO had to wait longer to raise a barrier as all non-resync activity had to be completed first. It had nicely throttled a number of resync IOs in favour of non-resync activity. Since we lack it now, the performance has dropped badly.
 
-Thanks
+I would like to revert the changeset. We don't have to put a resync IO to sleep for a second though. I have done some testing and it seems even a delay of 100ms is sufficient. It slows down resync IOs to the same extent as sleep for a second - the sleep call ends sooner but the barrier cannot be raised until non-resync IOs complete.
 
-Bryan
+Is this solution ok?
+
+Regards,
+
+Tomek
+
