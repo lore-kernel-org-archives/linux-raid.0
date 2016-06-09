@@ -1,62 +1,62 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md: use a mutex to protect a global list
-Date: Thu, 9 Jun 2016 09:35:30 -0700
-Message-ID: <20160609163530.GA16840@kernel.org>
-References: <1465402816-10882-1-git-send-email-xiyou.wangcong@gmail.com>
+Subject: Re: Low RAID10 performance during resync
+Date: Thu, 9 Jun 2016 10:31:18 -0700
+Message-ID: <20160609173118.GA17207@kernel.org>
+References: <20160609134555.GA9104@proton.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1465402816-10882-1-git-send-email-xiyou.wangcong@gmail.com>
+In-Reply-To: <20160609134555.GA9104@proton.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Cong Wang <xiyou.wangcong@gmail.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Cc: linux-raid@vger.kernel.org, neilb@suse.com
 List-Id: linux-raid.ids
 
-On Wed, Jun 08, 2016 at 09:20:16AM -0700, Cong Wang wrote:
-> We saw a list corruption in the list all_detected_devices:
+On Thu, Jun 09, 2016 at 03:45:55PM +0200, Tomasz Majchrzak wrote:
+> A low performance of mkfs has been observed on RAID10 array during resync. It
+> is not so significant for NVMe drives but for my setup of RAID10 consisting
+> of 4 SATA drives format time has increased by 200%.
 > 
->  WARNING: CPU: 16 PID: 226 at lib/list_debug.c:29 __list_add+0x3c/0xa9()
->  list_add corruption. next->prev should be prev (ffff880859d58320), but was ffff880859ce74c0. (next=ffffffff81abfdb0).
->  Modules linked in: ahci libahci libata sd_mod scsi_mod
->  CPU: 16 PID: 226 Comm: kworker/u241:4 Not tainted 4.1.20 #1
->  Hardware name: Dell Inc. PowerEdge C6220/04GD66, BIOS 2.2.3 11/07/2013
->  Workqueue: events_unbound async_run_entry_fn
->   0000000000000000 ffff880859a5baf8 ffffffff81502872 ffff880859a5bb48
->   0000000000000009 ffff880859a5bb38 ffffffff810692a5 ffff880859ee8828
->   ffffffff812ad02c ffff880859d58320 ffffffff81abfdb0 ffff880859eb90c0
->  Call Trace:
->   [<ffffffff81502872>] dump_stack+0x4d/0x63
->   [<ffffffff810692a5>] warn_slowpath_common+0xa1/0xbb
->   [<ffffffff812ad02c>] ? __list_add+0x3c/0xa9
->   [<ffffffff81069305>] warn_slowpath_fmt+0x46/0x48
->   [<ffffffff812ad02c>] __list_add+0x3c/0xa9
->   [<ffffffff81406f28>] md_autodetect_dev+0x41/0x62
->   [<ffffffff81285862>] rescan_partitions+0x25f/0x29d
->   [<ffffffff81506372>] ? mutex_lock+0x13/0x31
->   [<ffffffff811a090f>] __blkdev_get+0x1aa/0x3cd
->   [<ffffffff811a0b91>] blkdev_get+0x5f/0x294
->   [<ffffffff81377ceb>] ? put_device+0x17/0x19
->   [<ffffffff8128227c>] ? disk_put_part+0x12/0x14
->   [<ffffffff812836f3>] add_disk+0x29d/0x407
->   [<ffffffff81384345>] ? __pm_runtime_use_autosuspend+0x5c/0x64
->   [<ffffffffa004a724>] sd_probe_async+0x115/0x1af [sd_mod]
->   [<ffffffff81083177>] async_run_entry_fn+0x72/0x12c
->   [<ffffffff8107c44c>] process_one_work+0x198/0x2ce
->   [<ffffffff8107cac7>] worker_thread+0x1dd/0x2bb
->   [<ffffffff8107c8ea>] ? cancel_delayed_work_sync+0x15/0x15
->   [<ffffffff8107c8ea>] ? cancel_delayed_work_sync+0x15/0x15
->   [<ffffffff81080d9c>] kthread+0xae/0xb6
->   [<ffffffff81080000>] ? param_array_set+0x40/0xfa
->   [<ffffffff81080cee>] ? __kthread_parkme+0x61/0x61
->   [<ffffffff81508152>] ret_from_fork+0x42/0x70
->   [<ffffffff81080cee>] ? __kthread_parkme+0x61/0x61
+> I have looked into the problem and I have found out it is caused by this
+> changeset:
 > 
-> I suspect it is because there is no lock protecting this
-> global list, autostart_arrays() is called in ioctl() path
-> where there is no lock.
+> commit 09314799e4f0589e52bafcd0ca3556c60468bc0e md: remove 'go_faster' option
+> from ->sync_request()
 > 
-> Cc: Shaohua Li <shli@kernel.org>
-> Signed-off-by: Cong Wang <xiyou.wangcong@gmail.com>
+> It seemed the code had been redundant and could be safely removed due to
+> barriers mechanism but it proved otherwise. The barriers don't provide enough
+> throttle to resync IOs. They only assure non-resync IOs and resync IOs are
+> not being executed at the same time. In result resync IOs take around 25% of
+> CPU time, mostly because there are many of them but only one at a time so a
+> lot of CPU time is simply wasted waiting for a single IO to complete.
+> 
+> The removed sleep call in resync IO had allowed a lot of non-resync activity
+> to be scheduled (nobody waiting for a barrier). Once sleep call had ended,
+> resync IO had to wait longer to raise a barrier as all non-resync activity
+> had to be completed first. It had nicely throttled a number of resync IOs in
+> favour of non-resync activity. Since we lack it now, the performance has
+> dropped badly.
+> 
+> I would like to revert the changeset. We don't have to put a resync IO to
+> sleep for a second though. I have done some testing and it seems even a delay
+> of 100ms is sufficient. It slows down resync IOs to the same extent as sleep
+> for a second - the sleep call ends sooner but the barrier cannot be raised
+> until non-resync IOs complete.
 
-Applied, thanks! This probably is because deiver can do async probe now.
+Add Neil.
+
+I'd like to make sure I understand the situation. With the change reverted, we
+dispatch a lot of normal IO and then do a resync IO. Without it reverted, we
+dispatch few normal IO and then do a resync IO. In other words, we don't batch
+normal IO currently. Is this what you say?
+
+Agree the barrier doesn't throttle resync IOs, it only assures normal IO and
+resync IO run in different time.
+
+On the other hand, the change makes resync faster. Did you try to revert this one:
+ac8fa4196d205ac8fff3f8932bddbad4f16e4110
+If resync is fast, reverting this one will throttle resync.
+
+Thanks,
+Shaohua
