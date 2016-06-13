@@ -1,87 +1,47 @@
-From: Toshi Kani <toshi.kani@hpe.com>
-Subject: [PATCH 1/6] genhd: Add GENHD_FL_DAX to gendisk flags
-Date: Mon, 13 Jun 2016 16:21:32 -0600
-Message-ID: <1465856497-19698-2-git-send-email-toshi.kani@hpe.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 0/6] Support DAX for device-mapper dm-linear devices
+Date: Mon, 13 Jun 2016 18:57:57 -0400
+Message-ID: <20160613225756.GA18417@redhat.com>
 References: <1465856497-19698-1-git-send-email-toshi.kani@hpe.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <1465856497-19698-1-git-send-email-toshi.kani@hpe.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: agk@redhat.com, snitzer@redhat.com, dan.j.williams@intel.com
-Cc: ross.zwisler@linux.intel.com, viro@zeniv.linux.org.uk, axboe@kernel.dk, toshi.kani@hpe.com, linux-nvdimm@lists.01.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-s390@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Toshi Kani <toshi.kani@hpe.com>
+Cc: agk@redhat.com, dan.j.williams@intel.com, ross.zwisler@linux.intel.com, viro@zeniv.linux.org.uk, axboe@kernel.dk, linux-nvdimm@ml01.01.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Currently, presence of direct_access() in block_device_operations
-indicates support of DAX on its block device.  Because
-block_device_operations is instantiated with 'const', this DAX
-capablity may not be enabled conditinally.
+On Mon, Jun 13 2016 at  6:21pm -0400,
+Toshi Kani <toshi.kani@hpe.com> wrote:
 
-In preparation for supporting DAX to device-mapper devices, add
-GENHD_FL_DAX to gendisk flags to indicate that this block device
-supports DAX.  This will allow to set the DAX capability based on
-how mapped device is composed.
+> This patch-set adds DAX support to device-mapper dm-linear devices
+> used by LVM.  It works with LVM commands as follows:
+>  - Creation of a logical volume with all DAX capable devices (such
+>    as pmem) sets the logical volume DAX capable as well.
+>  - Once a logical volume is set to DAX capable, the volume may not
+>    be extended with non-DAX capable devices.
+> 
+> The direct_access interface is added to dm and dm-linear to map
+> a request to a target device.
+> 
+>  - Patch 1-2 introduce GENHD_FL_DAX flag to indicate DAX capability.
+>  - Patch 3-4 add direct_access functions to dm and dm-linear.
+>  - Patch 5-6 set GENHD_FL_DAX to dm when all targets are DAX capable.
+> 
+> ---
+> Toshi Kani (6):
+>  1/6 genhd: Add GENHD_FL_DAX to gendisk flags
+>  2/6 block: Check GENHD_FL_DAX for DAX capability
+>  3/6 dm: Add dm_blk_direct_access() for mapped device
+>  4/6 dm-linear: Add linear_direct_access()
+>  5/6 dm, dm-linear: Add dax_supported to dm_target
+>  6/6 dm: Enable DAX support for mapper device
 
-Signed-off-by: Toshi Kani <toshi.kani@hpe.com>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>
-Cc: Heiko Carstens <heiko.carstens@de.ibm.com>
-Cc: <linux-s390@vger.kernel.org>
----
- drivers/block/brd.c          |    2 +-
- drivers/nvdimm/pmem.c        |    2 +-
- drivers/s390/block/dcssblk.c |    1 +
- include/linux/genhd.h        |    2 +-
- 4 files changed, 4 insertions(+), 3 deletions(-)
+Thanks a lot for doing this.  I recently added it to my TODO so your
+patches come at a great time.
 
-diff --git a/drivers/block/brd.c b/drivers/block/brd.c
-index c04bd9b..43a6765 100644
---- a/drivers/block/brd.c
-+++ b/drivers/block/brd.c
-@@ -518,7 +518,7 @@ static struct brd_device *brd_alloc(int i)
- 	disk->fops		= &brd_fops;
- 	disk->private_data	= brd;
- 	disk->queue		= brd->brd_queue;
--	disk->flags		= GENHD_FL_EXT_DEVT;
-+	disk->flags		= GENHD_FL_EXT_DEVT | GENHD_FL_DAX;
- 	sprintf(disk->disk_name, "ram%d", i);
- 	set_capacity(disk, rd_size * 2);
- 
-diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-index 608fc44..3847449 100644
---- a/drivers/nvdimm/pmem.c
-+++ b/drivers/nvdimm/pmem.c
-@@ -295,7 +295,7 @@ static int pmem_attach_disk(struct device *dev,
- 
- 	disk->fops		= &pmem_fops;
- 	disk->queue		= q;
--	disk->flags		= GENHD_FL_EXT_DEVT;
-+	disk->flags		= GENHD_FL_EXT_DEVT | GENHD_FL_DAX;
- 	nvdimm_namespace_disk_name(ndns, disk->disk_name);
- 	disk->driverfs_dev = dev;
- 	set_capacity(disk, (pmem->size - pmem->pfn_pad - pmem->data_offset)
-diff --git a/drivers/s390/block/dcssblk.c b/drivers/s390/block/dcssblk.c
-index bed53c4..60b1857 100644
---- a/drivers/s390/block/dcssblk.c
-+++ b/drivers/s390/block/dcssblk.c
-@@ -616,6 +616,7 @@ dcssblk_add_store(struct device *dev, struct device_attribute *attr, const char
- 	dev_info->gd->queue = dev_info->dcssblk_queue;
- 	dev_info->gd->private_data = dev_info;
- 	dev_info->gd->driverfs_dev = &dev_info->dev;
-+	dev_info->gd->flags = GENHD_FL_DAX;
- 	blk_queue_make_request(dev_info->dcssblk_queue, dcssblk_make_request);
- 	blk_queue_logical_block_size(dev_info->dcssblk_queue, 4096);
- 
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index 359a8e4..9dc3a3d 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -131,7 +131,7 @@ struct hd_struct {
- };
- 
- #define GENHD_FL_REMOVABLE			1
--/* 2 is unused */
-+#define GENHD_FL_DAX				2
- #define GENHD_FL_MEDIA_CHANGE_NOTIFY		4
- #define GENHD_FL_CD				8
- #define GENHD_FL_UP				16
+I'll try to get to reviewing/testing your work by the end of this week.
+
+Mike
