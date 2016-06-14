@@ -1,211 +1,182 @@
-From: Nicolas Noble <nicolas@nobis-crew.org>
-Subject: Failure propagation of concatenated raids ?
-Date: Tue, 14 Jun 2016 14:43:27 -0700
-Message-ID: <CAAkR8+s1=P5+4w0JBLs71DFtqQiD+x4mssjvL4utmb0HGOfLEg@mail.gmail.com>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Subject: Re: Failure propagation of concatenated raids ?
+Date: Wed, 15 Jun 2016 00:41:55 +0200
+Message-ID: <20160614224155.GA15661@metamorpher.de>
+References: <CAAkR8+s1=P5+4w0JBLs71DFtqQiD+x4mssjvL4utmb0HGOfLEg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAAkR8+s1=P5+4w0JBLs71DFtqQiD+x4mssjvL4utmb0HGOfLEg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Nicolas Noble <nicolas@nobis-crew.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+On Tue, Jun 14, 2016 at 02:43:27PM -0700, Nicolas Noble wrote:
+> "How can I safely concatenate two raids into a single filesystem, and
+> avoid drastic corruption when one of the two underlying raids fails
+> and goes read only ?"
 
-  I have a somewhat convoluted question, which may take me some lines
-to explain, but the TL;DR version of it is somewhat along the lines of
-"How can I safely concatenate two raids into a single filesystem, and
-avoid drastic corruption when one of the two underlying raids fails
-and goes read only ?" I have done extensive research about that, but I
-haven't been able to get any answer to it.
+I think there may be misunderstanding at this point, the RAID does not 
+go read only when a disk fails. It still happily writes to the 
+remaining disks, giving you time to add a new disk with no harm done 
+to the filesystem.
 
-  My basic expectation when using raids is that if something goes
-wrong, the whole thing goes read-only in order to prevent any further
-damage by writing inconsistent or incomplete metadata. At that point,
-human intervention can try and recover the raid. If the damage was
-caused by partial power failure, or simply a raid controller which
-died, recovery is usually fairly straightforward, with little to no
-errors, and filesystem checks, for the last few writes that failed to
-get committed properly. This works well when having a simple 1:1 path
-between the raid and the filesystem (or whichever process that is
-using the md device), but if I'm trying anything outside that simple
-path, not everything turns read only and the kernel will happily
-continue writing to half of its filesystem, and heavy filesystem
-corruption may occur over the course of time between when the failure
-starts and human intervention begins shutting down everything.
+If too many disks fail it does not go read only either. Once there 
+are not enough disks left to run the array, it's gone completely. 
+Once there are not enough disks to make the RAID work at all, 
+you can neither read nor write.
 
-  Here's a reproducible scenario that explains what I'm talking about,
-using approximately 100MB of disk space.
+Going read only is something filesystems might do when they encouter 
+I/O errors, which might happen on RAID if you have bad block list 
+enabled, or if your filesystem spans several RAIDs and one of them 
+goes away completely.
 
-0. Setting up 8x10MB loopback devices:
+In this case your situation is no different from using a filesystem 
+on a single disk that develops a failure zone... you can only hope 
+for the best at this point.
 
-# dd if=/dev/zero of=mdadm-tests bs=10240 count=$((10*1024))
-10240+0 records in
-10240+0 records out
-104857600 bytes (105 MB, 100 MiB) copied, 0.121364 s, 864 MB/s
-# for p in `seq 1 8` ; do sgdisk -n $p:+0:+10M mdadm-tests ; done > /dev/null
-# kpartx -a -v -s mdadm-tests
-add map loop2p1 (254:7): 0 20480 linear 7:2 2048
-add map loop2p2 (254:8): 0 20480 linear 7:2 22528
-add map loop2p3 (254:9): 0 20480 linear 7:2 43008
-add map loop2p4 (254:10): 0 20480 linear 7:2 63488
-add map loop2p5 (254:11): 0 20480 linear 7:2 83968
-add map loop2p6 (254:12): 0 20480 linear 7:2 104448
-add map loop2p7 (254:13): 0 20480 linear 7:2 124928
-add map loop2p8 (254:14): 0 20480 linear 7:2 145408
+Filesystems go read only as soon as they notice an error (as soon 
+as it matters); this should already be nearly optimal, if you want 
+to improve on that (hit the brakes as soon as the md layer goes south 
+before the filesystem notices) you might be able to do something with 
+an udev rule or by defining a custom PROGRAM in mdadm.conf that does 
+some shenanigans on certain failure events...
 
+> Now we fail the raid device by pulling two drives out of it:
+> # mdadm /dev/md/test-single --fail /dev/mapper/loop2p[78]
 
+It should be gone completely at this point, not just "read-only".
 
-1. The typical, properly working, situation, 1 raid device, 1 process:
+> Now we can try writing to it with random data, but it'll produce a lot
+> of write errors:
+> # shred -n1 /dev/md/test-single 2> /dev/null
 
-First, creating the raid, and "formatting it" (writing zeroes on it):
-# mdadm --create test-single --raid-devices=8 --level=5
-/dev/mapper/loop2p[12345678]
-mdadm: Defaulting to version 1.2 metadata
-mdadm: array /dev/md/test-single started.
-# mdadm --detail /dev/md/test-single | grep State.:
-         State : clean
-# shred -v -n0 -z /dev/md/test-single
-shred: /dev/md/test-single: pass 1/1 (000000)...
+With it gone completely, none of the writes succeed...
+ 
+> And we can start recovering data - nothing changed
 
-We can then "read" the device properly, and grab a status:
-# md5sum /dev/md/test-single
-764ae0318bbdb835b4fa939b70babd4c  /dev/md/test-single
+> First, let's create two raids, of different sizes:
+> Then, let's create a super-raid made of these two.
+> # mdadm --create supertest --level=0 --raid-devices=2 /dev/md/test-part[12]
 
-Now we fail the raid device by pulling two drives out of it:
-# mdadm /dev/md/test-single --fail /dev/mapper/loop2p[78]
+Doing this with RAID0 is of course, super horrible. You lose everything 
+even though only one side of your RAID died. Also RAID on RAID can cause 
+assembly problems, things have to be done in the right order. Consider LVM.
 
-We can see that the raid has successfully be put in failed mode:
-# mdadm --detail /dev/md/test-single | grep State.:
-         State : clean, FAILED
+> Now, we're going to fail only the second raid, again by pulling two
+> drives out of it:
+> # mdadm /dev/md/test-part2 --fail /dev/mapper/loop2p[78]
+> 
+> And here's really the issue I have: the failure doesn't cascade to the
+> superset of the two above:
 
-Now we can try writing to it with random data, but it'll produce a lot
-of write errors:
-# shred -n1 /dev/md/test-single 2> /dev/null
+It will cascade... as soon as the upper layer tries to write on the 
+lower layer which is no longer there. Maybe md could be smarter at 
+this point but who will consider obscure md on md cases?
 
-We stop the raid, examine it, repair it, and re-assemble it:
-# mdadm --stop /dev/md/test-single
-mdadm: stopped /dev/md/test-single
-# mdadm --assemble test-single -f /dev/mapper/loop2p[1234567]
-mdadm: forcing event count in /dev/mapper/loop2p7(6) from 18 upto 38
-mdadm: clearing FAULTY flag for device 6 in /dev/md/test-single for
-/dev/mapper/loop2p7
-mdadm: Marking array /dev/md/test-single as 'clean'
-mdadm: /dev/md/test-single has been started with 7 drives (out of 8).
+There doesn't seem to be a generic mechanisms that informs higher layers of 
+failures, each layer has to find out by itself by encountering I/O errors.
 
-And we can start recovering data - nothing changed, as basically
-expected in that scenario:
-# md5sum /dev/md/test-single
-764ae0318bbdb835b4fa939b70babd4c  /dev/md/test-single
+> # mdadm /dev/md/supertest --fail /dev/md/test-part2
+> mdadm: set device faulty failed for /dev/md/test-part2:  Device or resource busy
 
+Not sure about this one.
 
-Preparing for the next round of commands:
+> So, when we try writing random data to the raid, a good portion of the
+> writes are being refused with write errors, but the ones on the first
+> raid are making it through:
 
-# mdadm --stop /dev/md/test-single
-mdadm: stopped /dev/md/test-single
-# for p in `seq 1 8` ; do shred -n0 -z -v /dev/mapper/loop2p$p ; done
-shred: /dev/mapper/loop2p1: pass 1/1 (000000)...
-shred: /dev/mapper/loop2p2: pass 1/1 (000000)...
-shred: /dev/mapper/loop2p3: pass 1/1 (000000)...
-shred: /dev/mapper/loop2p4: pass 1/1 (000000)...
-shred: /dev/mapper/loop2p5: pass 1/1 (000000)...
-shred: /dev/mapper/loop2p6: pass 1/1 (000000)...
-shred: /dev/mapper/loop2p7: pass 1/1 (000000)...
-shred: /dev/mapper/loop2p8: pass 1/1 (000000)...
+If that really writes random data to every other RAID chunk without 
+ever failing the missing RAID0 disk... it might be a bug that needs 
+looking at.
 
+Until then I'd file it under oddities that are bound to happen when 
+using obscure md on md setups. ;) No one does this, so who tests for 
+such error cases...?
 
+> ... then its content has changed:
+> 
+> # md5sum /dev/md/supertest
+> 78a213cbc76b9c1f78e7f35bc7ae3b73  /dev/md/supertest
 
-2. Concatenating two raids, or when things fail hard:
+A change is expected if the first write (first chunk) succeeds 
+(if you failed the wrong half of the RAID0). If shred managed 
+to write more than one chunk then the RAID didn't fail itself, 
+that would be unexpected.
 
-First, let's create two raids, of different sizes:
-# mdadm --create test-part1 --raid-devices=3 --level=5 /dev/mapper/loop2p[123]
-mdadm: Defaulting to version 1.2 metadata
-mdadm: array /dev/md/test-part1 started.
-# mdadm --create test-part2 --raid-devices=5 --level=5 /dev/mapper/loop2p[45678]
-mdadm: Defaulting to version 1.2 metadata
-mdadm: array /dev/md/test-part2 started.
+If it wasn't shred which just aggressively keeps writing stuff, 
+but a filesystem, you might still be fine since the filesystem 
+is still nice enough to go read-only in this scenario, as long 
+as the RAID0 reports those I/O errors upwards...
 
-Then, let's create a super-raid made of these two. Note that this can
-also be done using lvm2, with similar results.
-# mdadm --create supertest --level=0 --raid-devices=2 /dev/md/test-part[12]
-mdadm: Defaulting to version 1.2 metadata
-mdadm: array /dev/md/supertest started.
+> With the lvm2 concatenation, you would instead get two big chunks:
+> one with the altered content of raid1, and one with the original 
+> content of raid2, which also makes sense given the way lvm2 organizes 
+> its data.
 
-As before, we "format" it (write zeroes to it), and we read it:
-# shred -n0 -z -v /dev/md/supertest
-shred: /dev/md/supertest: pass 1/1 (000000)...
-# md5sum /dev/md/supertest
-57f366e889970e90c22594d859f7847b  /dev/md/supertest
+Same here, if it was a filesystem instead of thread, there should 
+be less damage; shred writes aggressively, filesystems try to keep 
+things intact on their own.
 
-Now, we're going to fail only the second raid, again by pulling two
-drives out of it:
-# mdadm /dev/md/test-part2 --fail /dev/mapper/loop2p[78]
+>   Now, the above log is shrunk down drastically, but is inspired by
+> real events, where a portion of a ~40TB filesystem turned read only
+> because of a controller failure, and went unnoticed for several hours
+> before the kernel turned the filesystem readonly after detecting an
+> inconsistency failure in the filesystem metadata.
 
-And here's really the issue I have: the failure doesn't cascade to the
-superset of the two above:
-# mdadm --detail /dev/md/test-part1 | grep State.:
-         State : clean
-# mdadm --detail /dev/md/test-part2 | grep State.:
-         State : clean, FAILED
-# mdadm --detail /dev/md/supertest | grep State.:
-         State : clean
+If the filesystem didn't notice the problem for a long time, 
+the problem shouldn't have mattered for a long time. Each filesystem 
+has huge amounts of data that aren't ever checked as long as you 
+don't visit the files stored there. If your hard disk has a cavity 
+right in the middle of your aunt's 65th birthday party you won't 
+notice until you watch the video which you never do...
 
-Not that it seems that it could, as failing a raid0 drive isn't
-supposed to work, which kind of bothers me:
-# mdadm /dev/md/supertest --fail /dev/md/test-part2
-mdadm: set device faulty failed for /dev/md/test-part2:  Device or resource busy
+That's why regular self-checks are so important, if you don't 
+run checks you won't notice errors, and won't replace your broken 
+disks until it's too late.
 
-So, when we try writing random data to the raid, a good portion of the
-writes are being refused with write errors, but the ones on the first
-raid are making it through:
-# shred -n1 /dev/md/supertest 2> /dev/null
+Filesystem turning read only as soon as it notices a problem, 
+should still be considered very good. But a read only filesystem 
+will always cause a lot of damage. Any outstanding writes are lost, 
+anything not saved until this point is lost, any database in the 
+middle of a transaction may not be able to cope properly, ...
 
-Now, if we try recovering our cascading raids as before...
-# mdadm --stop /dev/md/supertest
-mdadm: stopped /dev/md/supertest
-# mdadm --stop /dev/md/test-part2
-mdadm: stopped /dev/md/test-part2
-# mdadm --assemble test-part2 -f /dev/mapper/loop2p[4567]
-# mdadm --assemble supertest -f /dev/md/test-part[12]
-mdadm: /dev/md/supertest has been started with 2 drives.
+Going read only does not fix problems, it causes them too.
 
-... then its content has changed:
+Even if you write your own event script that hits the brakes on 
+a failure even before the filesystem notices the problem, it's 
+probably not possible to avoid such damages. It depends a lot on 
+what's actually happening in this filesystem.
 
-# md5sum /dev/md/supertest
-78a213cbc76b9c1f78e7f35bc7ae3b73  /dev/md/supertest
+If you write a PROGRAM to handle such error conditions basically 
+what you need to think about is not just `mount remount,ro` but 
+more like what `shutdown` does, how to get things to end gracefully 
+under the circumstances.
 
-And upon inspecting it further (using a simple hexdump -C on the
-device), one can see that the whole of the first raid has been filled
-with data, while the second one is still fully empty - it's not just a
-few lingering writes that were pending before the failures.
+> So, after this quite long demonstration, I'll reiterate my question
+> at the bottom of this e-mail: is there a way to safely concatenate two
+> software raids into a single filesystem under Linux, so that my basic
+> expectation of "everything goes suddenly read only in case of failure"
+> is being met ?
 
+I would make every effort to prevent such a situation from happening 
+in the first place. RAID failure is not a nice situation to be in, 
+there is no magical remedy.
 
-  As said during this quite long log, concatenating the two raid
-devices by putting them into the same volume group using lvm2 instead
-of trying to create a raid0 will yield the same kind of results,
-albeit a bit different: with a raid0 on top of the two raid5, one can
-see the damage as stripes of interlaced data, which makes sense given
-the way data is being organized in a raid0. With the lvm2
-concatenation, you would instead get two big chunks: one with the
-altered content of raid1, and one with the original content of raid2,
-which also makes sense given the way lvm2 organizes its data.
-Concatenating raids using lvm2 seems more natural, but I would expect
-both mechanisms to behave the same way.
+My own filesystems also span several RAID arrays; I do not have any 
+special measures in place to react on individual RAID failures. 
+I do have regular RAID checks, selective SMART self-tests, and I'm 
+prepared to replace disks as soon as they step one toe out of line. 
 
-  Now, the above log is shrunk down drastically, but is inspired by
-real events, where a portion of a ~40TB filesystem turned read only
-because of a controller failure, and went unnoticed for several hours
-before the kernel turned the filesystem readonly after detecting an
-inconsistency failure in the filesystem metadata. After rebooting, the
-filesystem was so much corrupted that mounting it in emergency mode
-was barely possible, and it took several days of quite painful
-recovery process, involving tape backups. I strongly believe that said
-recovery process would've been much faster / easier if the whole of
-the filesystem turned readonly when one of its two portion failed.
+I'm not taking any chances with reallocated/pending/uncorrectable sectors, 
+if you keep those disks around IMHO you're gambling.
 
-  So, after this quite long demonstration, I'll reiterate my question
-at the bottom of this e-mail: is there a way to safely concatenate two
-software raids into a single filesystem under Linux, so that my basic
-expectation of "everything goes suddenly read only in case of failure"
-is being met ?
+Since you mentioned RAID controllers, if you have several of them, you 
+could use one disk (with RAID-6 maybe 2 disks) per controller for your 
+arrays, so a controller failure would not actually kill a RAID. I think 
+backblaze did something like this in one of their older storage pods...
 
-  Thanks
+Regards
+Andreas Klauer
