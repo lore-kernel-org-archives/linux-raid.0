@@ -1,66 +1,44 @@
-From: "Kani, Toshimitsu" <toshi.kani@hpe.com>
-Subject: Re: [PATCH 0/6] Support DAX for device-mapper dm-linear devices
-Date: Tue, 14 Jun 2016 18:00:06 +0000
-Message-ID: <1465926601.3504.231.camel@hpe.com>
-References: <1465856497-19698-1-git-send-email-toshi.kani@hpe.com>
-	 <CAPcyv4jdM1phR=kGoP2-7tfsVvbNe2C6hHNS5TD28ALGZQQTSw@mail.gmail.com>
-	 <1465861755.3504.185.camel@hpe.com>
-	 <x49fusf282h.fsf@segfault.boston.devel.redhat.com>
-	 <20160614154131.GB25876@redhat.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH 1/1] MDADM:Check mdinfo->reshape_active more times before calling Grow_continue
+Date: Tue, 14 Jun 2016 14:34:09 -0400
+Message-ID: <wrfjbn33ei1q.fsf@redhat.com>
+References: <1465722945-9073-1-git-send-email-xni@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160614154131.GB25876@redhat.com>
-Content-Language: en-US
-Content-ID: <33CEEFCFD9E6D544AC0549754A5686D4@NAMPRD84.PROD.OUTLOOK.COM>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "jmoyer@redhat.com" <jmoyer@redhat.com>, "snitzer@redhat.com" <snitzer@redhat.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "agk@redhat.com" <agk@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1465722945-9073-1-git-send-email-xni@redhat.com> (Xiao Ni's
+	message of "Sun, 12 Jun 2016 17:15:45 +0800")
+Sender: linux-raid-owner@vger.kernel.org
+To: Xiao Ni <xni@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-T24gVHVlLCAyMDE2LTA2LTE0IGF0IDExOjQxIC0wNDAwLCBNaWtlIFNuaXR6ZXIgd3JvdGU6DQo+
-IE9uIFR1ZSwgSnVuIDE0IDIwMTYgYXTCoMKgOTo1MGFtIC0wNDAwLA0KPiBKZWZmIE1veWVyIDxq
-bW95ZXJAcmVkaGF0LmNvbT4gd3JvdGU6DQo+ID4gIkthbmksIFRvc2hpbWl0c3UiIDx0b3NoaS5r
-YW5pQGhwZS5jb20+IHdyaXRlczoNCj4gPiA+ID4gSSBoYWQgZG0tbGluZWFyIGFuZCBtZC1yYWlk
-MCBzdXBwb3J0IG9uIG15IGxpc3Qgb2YgdGhpbmdzIHRvIGxvb2sNCj4gPiA+ID4gYXQsIGRpZCB5
-b3UgaGF2ZSByYWlkMCBpbiB5b3VyIHBsYW5zPw0KPiA+ID4NCj4gPiA+IFllcywgSSBob3BlIHRv
-IGV4dGVuZCBmdXJ0aGVyIGFuZCByYWlkMCBpcyBhIGdvb2QgY2FuZGlkYXRlLiANCj4gPiDCoMKg
-DQo+ID4gZG0tZmxha2V5IHdvdWxkIGFsbG93IG1vcmUgeGZzdGVzdHMgdGVzdCBjYXNlcyB0byBy
-dW4uwqDCoEknZCBzYXkgdGhhdCdzDQo+ID4gbW9yZSBpbXBvcnRhbnQgdGhhbiBsaW5lYXIgb3Ig
-cmFpZDAuwqDCoDstKQ0KPg0KPiBSZWdhcmRsZXNzIG9mIHdoaWNoIHRhcmdldChzKSBncm93IERB
-WCBzdXBwb3J0IHRoZSBtb3N0IHByZXNzaW5nIGluaXRpYWwNCj4gY29uY2VybiBpcyBnZXR0aW5n
-IHRoZSBETSBkZXZpY2Ugc3RhY2tpbmcgY29ycmVjdC7CoMKgQW5kIHZlcmlmeWluZyB0aGF0DQo+
-IElPIHRoYXQgY3Jvc3MgcG1lbSBkZXZpY2UgYm91bmRhcmllcyBhcmUgYmVpbmcgcHJvcGVybHkg
-c3BsaXQgYnkgRE0NCj4gY29yZSAodmlhIGRyaXZlcnMvbWQvZG0uYzpfX3NwbGl0X2FuZF9wcm9j
-ZXNzX25vbl9mbHVzaCgpJ3MgY2FsbCB0bw0KPiBtYXhfaW9fbGVuKS4NCg0KQWdyZWVkLiBJJ3Zl
-IGJyaWVmbHkgdGVzdGVkIHN0YWNraW5nIGFuZCBpdCBzZWVtcyB3b3JraW5nIGZpbmUuIMKgQXMg
-Zm9yIElPDQpjcm9zc2luZyBwbWVtIGRldmljZSBib3VuZGFyaWVzLMKgX19zcGxpdF9hbmRfcHJv
-Y2Vzc19ub25fZmx1c2goKSBpcyB1c2VkDQp3aGVuIHRoZSBkZXZpY2UgaXMgbW91bnRlZCB3aXRo
-b3V0IERBWCBvcHRpb24uIMKgV2l0aCBEQVgsIHRoaXMgY2FzZSBpcw0KaGFuZGxlZCBieSBkbV9i
-bGtfZGlyZWN0X2FjY2VzcygpIHRoYXQgbGltaXRzIHJldHVybiBzaXplLiDCoFRoaXMgbGVhZHMg
-dGhlDQpjYWxsZXIgdG8gaXRlcmF0ZSAocmVhZC93cml0ZSkgb3IgZmFsbGJhY2sgdG8gYSBzbWFs
-bGVyIHNpemUgKG1tYXAgcGZhdWx0KS4NCg0KPiBNeSBob3BlIGlzIHRvIG5haWwgZG93biB0aGUg
-RE0gY29yZSBhbmQgaXRzIGRlcGVuZGVuY2llcyBpbiBibG9jayBldGMuDQo+IERvaW5nIHNvIGlu
-IHRlcm1zIG9mIGRtLWxpbmVhciBkb2Vzbid0IHNlZW0gbGlrZSB3YXN0ZWQgZWZmb3J0DQo+IGNv
-bnNpZGVyaW5nIHlvdSB0b2xkIG1lIGl0J2QgYmUgdXNlZnVsIHRvIGhhdmUgZm9yIHBtZW0gZGV2
-aWNlcy4NCg0KWWVzLCBJIHRoaW5rIGRtLWxpbmVhciBpcyB1c2VmdWwgYXMgaXQgZ2l2ZXMgbW9y
-ZSBmbGV4aWJpbGl0eSwgZXguIGl0IGFsbG93cw0KY3JlYXRpbmcgYSBsYXJnZSBkZXZpY2Ugd2l0
-aCBtdWx0aXBsZSBwbWVtIGRldmljZXMuDQoNCj4gPiBBbHNvLCB0aGUgbmV4dCBzdGVwIGluIHRo
-aXMgd29yayBpcyB0byB0aGVuIGRlY2lkZSBob3cgdG8gZGV0ZXJtaW5lIG9uDQo+ID4gd2hhdCBu
-dW1hIG5vZGUgYW4gTEJBIHJlc2lkZXMuwqDCoFdlIGhhZCBkaXNjdXNzZWQgdGhpcyBhdCBhIHBy
-aW9yDQo+ID4gcGx1bWJlcnMgY29uZmVyZW5jZSwgYW5kIEkgdGhpbmsgdGhlIGNvbnNlbnN1cyB3
-YXMgdG8gdXNlIHhhdHRycy4NCj4gPiBUb3NoaSwgZG8geW91IGFsc28gcGxhbiB0byBkbyB0aGF0
-IHdvcms/DQo+DQo+IEhvdyBkb2VzIHRoZSBhc3NvY2lhdGVkIE5VTUEgbm9kZSByZWxhdGUgdG8g
-dGhpcz/CoMKgRG9lcyB0aGUNCj4gRE0gcmVxdWVzdHNfcXVldWUgbmVlZCB0byBiZSBzZXR1cCB0
-byBvbmx5IGFsbG9jYXRlIGZyb20gdGhlIE5VTUEgbm9kZQ0KPiB0aGUgcG1lbSBkZXZpY2UgaXMg
-YXR0YWNoZWQgdG8/wqDCoEkgcmVjZW50bHkgYWRkZWQgc3VwcG9ydCBmb3IgdGhpcyB0bw0KPiBE
-TS7CoMKgQnV0IHRoZXJlIHdpbGwgbGlrZWx5IGJlIHNvbWUgY29kZSBuZWVkIHRvIHByb3BhZ2F0
-ZSB0aGUgTlVNQSBub2RlDQo+IGlkIGFjY29yZGluZ2x5Lg0KDQpFYWNoIHBtZW0gZGV2aWNlIGhh
-cyBzeXNmcyAibnVtYV9ub2RlIiBzbyB0aGF0IHRvb2xzIGxpa2UgbnVtYWN0bCBjYW4gYmUNCnVz
-ZWQgdG8gYmluZCBhcHBsaWNhdGlvbiB0byBydW4gb24gdGhlIHNhbWUgbG9jYWxpdHkgYXMgcG1l
-bSBkZXZpY2UgKHNpbmNlDQpDUFUgZGlyZWN0bHkgYWNjZXNzZXMgdG8gcG1lbSkuIMKgVGhpcyB3
-b24ndCB3b3JrIHdlbGwgd2l0aCBtYXBwZWQgZGV2aWNlDQpzaW5jZSBpdCBjYW4gYmUgY29tcG9z
-ZWQgd2l0aCBtdWx0aXBsZSBsb2NhbGl0aWVzLiDCoExvY2FsaXR5IGluZm8gd291bGQgbmVlZA0K
-dG8gYmUgbWFuYWdlZCBmaWxlLWJhc2lzIGFzIEplZmYgbWVudGlvbmVkLg0KDQpUaGFua3MsDQot
-VG9zaGk=
+Xiao Ni <xni@redhat.com> writes:
+> Hi 
+>
+> When reshaping a 3 drives raid5 to 4 drives raid5, there is a chance that
+> it can't start the reshape. If the disks are not enough to have spaces for
+> relocating the data_offset, it needs to call start_reshape and then run 
+> mdadm --grow --continue by systemd. But mdadm --grow --continue fails 
+> because it checkes that info->reshape_active is 0. 
+>
+> The info->reshape_active is got from the superblock of underlying devices.
+> Function start_reshape write reshape to /sys/../sync_action. Before writing
+> latest superblock to underlying devices, mdadm --grow --continue is called.
+> There is a chance info->reshape_active is 0. We should wait for superblock
+> updating more time before calling Grow_continue.
+>
+> Regards
+> Xiao
+
+Hi Xiao,
+
+Looks reasonable to retry before giving up.
+
+Unfortunately your patch has some whitespace issues at the end, using
+spaces instead of tabs, and lacks a signed-off-by line.
+
+Would you mind fixing it up and resubmitting it?
+
+Thanks,
+Jes
