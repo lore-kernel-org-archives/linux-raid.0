@@ -1,61 +1,49 @@
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH] mdadm: protecting sys_name overflow
-Date: Wed, 15 Jun 2016 14:40:03 -0400
-Message-ID: <wrfjeg7yuwho.fsf@redhat.com>
-References: <57612976.6030801@redhat.com>
+Subject: Re: [PATCH 1/1] MDADM:Check mdinfo->reshape_active more times before calling Grow_continue
+Date: Wed, 15 Jun 2016 16:27:22 -0400
+Message-ID: <wrfjk2hqtcyd.fsf@redhat.com>
+References: <1465955832-3781-1-git-send-email-xni@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <57612976.6030801@redhat.com> (Nikhil Kshirsagar's message of
-	"Wed, 15 Jun 2016 15:39:58 +0530")
+In-Reply-To: <1465955832-3781-1-git-send-email-xni@redhat.com> (Xiao Ni's
+	message of "Wed, 15 Jun 2016 09:57:12 +0800")
 Sender: linux-raid-owner@vger.kernel.org
-To: Nikhil Kshirsagar <nkshirsa@redhat.com>
+To: Xiao Ni <xni@redhat.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Nikhil Kshirsagar <nkshirsa@redhat.com> writes:
-> Hello,
+Xiao Ni <xni@redhat.com> writes:
+> Hi Jes
 >
-> Devices with names larger than 31 bytes will overflow the sys_name array.
+> Thanks for reminding me. This is the patch after modifying. 
 >
-> This patch enables mdadm to fail and log a message if a long device name
-> is going to cause a buffer overflow.
+> When reshaping a 3 drives raid5 to 4 drives raid5, there is a chance that
+> it can't start the reshape. If the disks are not enough to have spaces for
+> relocating the data_offset, it needs to call start_reshape and then run 
+> mdadm --grow --continue by systemd. But mdadm --grow --continue fails 
+> because it checkes that info->reshape_active is 0. 
 >
-> Signed-off-by: Nikhil Kshirsagar <nkshirsa@redhat.com>
+> The info->reshape_active is got from the superblock of underlying devices.
+> Function start_reshape write reshape to /sys/../sync_action. Before writing
+> latest superblock to underlying devices, mdadm --grow --continue is called.
+> There is a chance info->reshape_active is 0. We should wait for superblock
+> updating more time before calling Grow_continue.
 >
-> From 705aec84c6abf5b09c4202aec7cade9824ca7f12 Mon Sep 17 00:00:00 2001
-> From: root <root@nkshirsa.pnq.csb>
-> Date: Wed, 15 Jun 2016 15:23:12 +0530
-> Subject: [PATCH] Protecting overflow of sys_name. If a long device name is
->  going to cause a buffer overflow, we fail with a log message.
->
-> ---
->  sysfs.c | 9 +++++++++
->  1 file changed, 9 insertions(+)
->
-> diff --git a/sysfs.c b/sysfs.c
-> index 8379ca8..68b8b95 100644
-> --- a/sysfs.c
-> +++ b/sysfs.c
-> @@ -283,6 +283,15 @@ struct mdinfo *sysfs_read(int fd, char *devnm, unsigned long options)
->  			}
->  
->  		}
-> +                /*  strlen computes length of string *not* including the terminating null character. */
-> +
-> +                if(strlen(de->d_name) >= sizeof(dev->sys_name))
-> +                {
-> +                  pr_err("Device name %s larger than currently supported by mdadm\n",de->d_name);
-> +                  free(dev);
-> +                  goto abort;
-> +
-> +                }
+> Regards
+> Xiao
 
-Nikhil,
+Xiao,
 
-Please respect the coding style of mdadm. Code indents at 8 characters
-using a tab, not whitespace, and brackets should be placed correctly.
+Sorry but this version doesn't compile:
 
-Just like with kernel code.
+Grow.c: In function 'Grow_continue_command':
+Grow.c:4838:12: error: 'cnt' undeclared (first use in this function)
+   } while (cnt-- > 0);
+            ^
 
+Also please try to separate the email comments from the patch message. I
+normally save the message and use git am to integrate it.
+
+Thanks,
 Jes
