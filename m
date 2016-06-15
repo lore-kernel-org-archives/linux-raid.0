@@ -1,115 +1,85 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: [PATCH 1/1] MDADM:Check mdinfo->reshape_active more times before calling Grow_continue
-Date: Wed, 15 Jun 2016 09:57:12 +0800
-Message-ID: <1465955832-3781-1-git-send-email-xni@redhat.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@redhat.com
-Cc: linux-raid@vger.kernel.org
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 0/6] Support DAX for device-mapper dm-linear devices
+Date: Tue, 14 Jun 2016 19:07:53 -0700
+Message-ID: <CAPcyv4g6hRciQHA=QMf3BUKxHOpyZCUSX1E9Huc8U2GxqHK4vA@mail.gmail.com>
+References: <1465856497-19698-1-git-send-email-toshi.kani@hpe.com>
+	<CAPcyv4jdM1phR=kGoP2-7tfsVvbNe2C6hHNS5TD28ALGZQQTSw@mail.gmail.com>
+	<1465861755.3504.185.camel@hpe.com>
+	<x49fusf282h.fsf@segfault.boston.devel.redhat.com>
+	<20160614154131.GB25876@redhat.com>
+	<x49inxbzfp4.fsf@segfault.boston.devel.redhat.com>
+	<20160615014658.GA5443@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20160615014658.GA5443@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Jeff Moyer <jmoyer@redhat.com>, "Kani, Toshimitsu" <toshi.kani@hpe.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "agk@redhat.com" <agk@redhat.com>
 List-Id: linux-raid.ids
 
-Hi Jes
+On Tue, Jun 14, 2016 at 6:46 PM, Mike Snitzer <snitzer@redhat.com> wrote:
+> On Tue, Jun 14 2016 at  4:19pm -0400,
+> Jeff Moyer <jmoyer@redhat.com> wrote:
+>
+>> Mike Snitzer <snitzer@redhat.com> writes:
+>>
+>> > On Tue, Jun 14 2016 at  9:50am -0400,
+>> > Jeff Moyer <jmoyer@redhat.com> wrote:
+>> >
+>> >> "Kani, Toshimitsu" <toshi.kani@hpe.com> writes:
+>> >>
+>> >> >> I had dm-linear and md-raid0 support on my list of things to look at,
+>> >> >> did you have raid0 in your plans?
+>> >> >
+>> >> > Yes, I hope to extend further and raid0 is a good candidate.
+>> >>
+>> >> dm-flakey would allow more xfstests test cases to run.  I'd say that's
+>> >> more important than linear or raid0.  ;-)
+>> >
+>> > Regardless of which target(s) grow DAX support the most pressing initial
+>> > concern is getting the DM device stacking correct.  And verifying that
+>> > IO that cross pmem device boundaries are being properly split by DM
+>> > core (via drivers/md/dm.c:__split_and_process_non_flush()'s call to
+>> > max_io_len).
+>>
+>> That was a tongue-in-cheek comment.  You're reading way too much into
+>> it.
+>>
+>> >> Also, the next step in this work is to then decide how to determine on
+>> >> what numa node an LBA resides.  We had discussed this at a prior
+>> >> plumbers conference, and I think the consensus was to use xattrs.
+>> >> Toshi, do you also plan to do that work?
+>> >
+>> > How does the associated NUMA node relate to this?  Does the
+>> > DM requests_queue need to be setup to only allocate from the NUMA node
+>> > the pmem device is attached to?  I recently added support for this to
+>> > DM.  But there will likely be some code need to propagate the NUMA node
+>> > id accordingly.
+>>
+>> I assume you mean allocate memory (the volatile kind).  That should work
+>> the same between pmem and regular block devices, no?
+>
+> This is the commit I made to train DM to be numa node aware:
+> 115485e83f497fdf9b4 ("dm: add 'dm_numa_node' module parameter")
 
-Thanks for reminding me. This is the patch after modifying. 
+Hmm, but this is global for all DM device instances.
 
-When reshaping a 3 drives raid5 to 4 drives raid5, there is a chance that
-it can't start the reshape. If the disks are not enough to have spaces for
-relocating the data_offset, it needs to call start_reshape and then run 
-mdadm --grow --continue by systemd. But mdadm --grow --continue fails 
-because it checkes that info->reshape_active is 0. 
+> As is the DM code is focused on memory allocations.  But I think blk-mq
+> may use the NUMA node for via tag_set->numa_node.  But that is moot
+> given pmem is bio-based right?
 
-The info->reshape_active is got from the superblock of underlying devices.
-Function start_reshape write reshape to /sys/../sync_action. Before writing
-latest superblock to underlying devices, mdadm --grow --continue is called.
-There is a chance info->reshape_active is 0. We should wait for superblock
-updating more time before calling Grow_continue.
+Right.
 
-Regards
-Xiao
+>
+> Steps could be taken to make all threads DM creates for a a given device
+> get pinned to the specified NUMA node too.
 
-Signed-off-by: Xiao Ni <xni@redhat.com>
----
- Grow.c | 67 ++++++++++++++++++++++++++++++++++++------------------------------
- 1 file changed, 37 insertions(+), 30 deletions(-)
+I think it would be useful if a DM instance inherited the numa node
+from the component devices by default (assuming they're all from the
+same node).  A "dev_to_node(disk_to_dev(disk))" conversion works for
+pmem devices.
 
-diff --git a/Grow.c b/Grow.c
-index f184d9c..0945909 100755
---- a/Grow.c
-+++ b/Grow.c
-@@ -4799,36 +4799,43 @@ int Grow_continue_command(char *devname, int fd,
- 		 * FIXME we should really get what we need from
- 		 * sysfs
- 		 */
--		for (d = 0; d < MAX_DISKS; d++) {
--			mdu_disk_info_t disk;
--			char *dv;
--			int err;
--			disk.number = d;
--			if (ioctl(fd, GET_DISK_INFO, &disk) < 0)
--				continue;
--			if (disk.major == 0 && disk.minor == 0)
--				continue;
--			if ((disk.state & (1 << MD_DISK_ACTIVE)) == 0)
--				continue;
--			dv = map_dev(disk.major, disk.minor, 1);
--			if (!dv)
--				continue;
--			fd2 = dev_open(dv, O_RDONLY);
--			if (fd2 < 0)
--				continue;
--			err = st->ss->load_super(st, fd2, NULL);
--			close(fd2);
--			if (err)
--				continue;
--			break;
--		}
--		if (d == MAX_DISKS) {
--			pr_err("Unable to load metadata for %s\n",
--			       devname);
--			ret_val = 1;
--			goto Grow_continue_command_exit;
--		}
--		st->ss->getinfo_super(st, content, NULL);
-+		do {
-+			for (d = 0; d < MAX_DISKS; d++) {
-+				mdu_disk_info_t disk;
-+				char *dv;
-+				int err;
-+				disk.number = d;
-+				if (ioctl(fd, GET_DISK_INFO, &disk) < 0)
-+					continue;
-+				if (disk.major == 0 && disk.minor == 0)
-+					continue;
-+				if ((disk.state & (1 << MD_DISK_ACTIVE)) == 0)
-+					continue;
-+				dv = map_dev(disk.major, disk.minor, 1);
-+				if (!dv)
-+					continue;
-+				fd2 = dev_open(dv, O_RDONLY);
-+				if (fd2 < 0)
-+					continue;
-+				err = st->ss->load_super(st, fd2, NULL);
-+				close(fd2);
-+				if (err)
-+					continue;
-+				break;
-+			}
-+			if (d == MAX_DISKS) {
-+				pr_err("Unable to load metadata for %s\n",
-+				       devname);
-+				ret_val = 1;
-+				goto Grow_continue_command_exit;
-+			}
-+			st->ss->getinfo_super(st, content, NULL);
-+
-+			if (!content->reshape_active)
-+				sleep(3);
-+			else
-+				break;
-+		} while (cnt-- > 0);
- 	} else {
- 		char *container;
- 
--- 
-2.4.3
-
+As far as I understand, Jeff wants to go further and have a linear
+span across component devices from different nodes with an interface
+to do an LBA-to-numa-node conversion.
