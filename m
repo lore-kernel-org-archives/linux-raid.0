@@ -1,49 +1,37 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH 1/1] MDADM:Check mdinfo->reshape_active more times before calling Grow_continue
-Date: Wed, 15 Jun 2016 16:27:22 -0400
-Message-ID: <wrfjk2hqtcyd.fsf@redhat.com>
-References: <1465955832-3781-1-git-send-email-xni@redhat.com>
+From: Sitsofe Wheeler <sitsofe@gmail.com>
+Subject: Re: BLKZEROOUT not zeroing md dev on VMDK
+Date: Wed, 15 Jun 2016 22:33:21 +0100
+Message-ID: <20160615213320.GA9527@sucs.org>
+References: <20160518223616.GA409@sucs.org>
+ <20160527041824.GC9418@birch.djwong.org>
+ <CALjAwxgkgPZdXFkOuD-7Dsbxf9oVEGuXTDLnyqu8rTrJio_4mA@mail.gmail.com>
+ <CAGnHSEn0ntEw_dwFNqG6CdgwcpHzQie88jgA21uioKhBbcByTg@mail.gmail.com>
+ <CALjAwxgdr1zSgZZzNA9BQ8Ta+UuutJ6iuBnqZfmV-BTCDL2PbA@mail.gmail.com>
+ <1466014718999.6976@vmware.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1465955832-3781-1-git-send-email-xni@redhat.com> (Xiao Ni's
-	message of "Wed, 15 Jun 2016 09:57:12 +0800")
-Sender: linux-raid-owner@vger.kernel.org
-To: Xiao Ni <xni@redhat.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1466014718999.6976@vmware.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arvind Kumar <arvindkumar@vmware.com>
+Cc: Tom Yan <tom.ty89@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@kernel.dk>, VMware PV-Drivers <pv-drivers@vmware.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Petr Vandrovec <petr@vmware.com>
 List-Id: linux-raid.ids
 
-Xiao Ni <xni@redhat.com> writes:
-> Hi Jes
->
-> Thanks for reminding me. This is the patch after modifying. 
->
-> When reshaping a 3 drives raid5 to 4 drives raid5, there is a chance that
-> it can't start the reshape. If the disks are not enough to have spaces for
-> relocating the data_offset, it needs to call start_reshape and then run 
-> mdadm --grow --continue by systemd. But mdadm --grow --continue fails 
-> because it checkes that info->reshape_active is 0. 
->
-> The info->reshape_active is got from the superblock of underlying devices.
-> Function start_reshape write reshape to /sys/../sync_action. Before writing
-> latest superblock to underlying devices, mdadm --grow --continue is called.
-> There is a chance info->reshape_active is 0. We should wait for superblock
-> updating more time before calling Grow_continue.
->
-> Regards
-> Xiao
+On Wed, Jun 15, 2016 at 06:17:37PM +0000, Arvind Kumar wrote:
+> It is possibly some race. We saw a WRITE SAME related issue in past
+> for which Petr sent out a patch but looks like the patch didn't make
+> it. :(
+> 
+> https://groups.google.com/forum/#!topic/linux.kernel/1WGDSlyY0y0
 
-Xiao,
+Indeed - the investigation you folks did is linked to within the
+upstream Bugzilla bug (see
+https://bugzilla.kernel.org/show_bug.cgi?id=118581#c2 ). Hopefully this
+issue will be resolved but there's still some debate over on
+http://thread.gmane.org/gmane.linux.kernel/2236800 . The problem is that
+it is causing real problems in stable kernels (data not being correctly
+zero'd) today...
 
-Sorry but this version doesn't compile:
-
-Grow.c: In function 'Grow_continue_command':
-Grow.c:4838:12: error: 'cnt' undeclared (first use in this function)
-   } while (cnt-- > 0);
-            ^
-
-Also please try to separate the email comments from the patch message. I
-normally save the message and use git am to integrate it.
-
-Thanks,
-Jes
+-- 
+Sitsofe | http://sucs.org/~sits/
