@@ -1,45 +1,37 @@
-From: Heinz Mauelshagen <heinzm@redhat.com>
-Subject: Re: [PATCH] dm raid: don't use 'const' in function return
-Date: Thu, 16 Jun 2016 18:21:25 +0200
-Message-ID: <5762D205.9090706@redhat.com>
-References: <20160616090359.984712-1-arnd@arndb.de>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH 1/1] MDADM:Check mdinfo->reshape_active more times before calling Grow_continue
+Date: Thu, 16 Jun 2016 13:54:08 -0400
+Message-ID: <wrfjporhow8v.fsf@redhat.com>
+References: <1466041262-12785-1-git-send-email-xni@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160616090359.984712-1-arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>, Mike Snitzer <snitzer@redhat.com>
-Cc: Alasdair Kergon <agk@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1466041262-12785-1-git-send-email-xni@redhat.com> (Xiao Ni's
+	message of "Thu, 16 Jun 2016 09:41:02 +0800")
+Sender: linux-raid-owner@vger.kernel.org
+To: Xiao Ni <xni@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-Thanks Arnd.
-
-On 06/16/2016 11:03 AM, Arnd Bergmann wrote:
-> A newly introduced function has 'const int' as the return type,
-> but as "make W=1" reports, that has no meaning:
+Xiao Ni <xni@redhat.com> writes:
+> When reshaping a 3 drives raid5 to 4 drives raid5, there is a chance that
+> it can't start the reshape. If the disks are not enough to have spaces for
+> relocating the data_offset, it needs to call start_reshape and then run 
+> mdadm --grow --continue by systemd. But mdadm --grow --continue fails 
+> because it checkes that info->reshape_active is 0. 
 >
-> drivers/md/dm-raid.c:510:18: error: type qualifiers ignored on function return type [-Werror=ignored-qualifiers]
+> The info->reshape_active is got from the superblock of underlying devices.
+> Function start_reshape write reshape to /sys/../sync_action. Before writing
+> latest superblock to underlying devices, mdadm --grow --continue is called.
+> There is a chance info->reshape_active is 0. We should wait for superblock
+> updating more time before calling Grow_continue.
 >
-> This changes the return type to plain 'int'.
->
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: 33e53f06850f ("dm raid: introduce extended superblock and new raid types to support takeover/reshaping")
+> Signed-off-by: Xiao Ni <xni@redhat.com>
 > ---
->   drivers/md/dm-raid.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-> index 96bcff7a0b94..55d25ac87bda 100644
-> --- a/drivers/md/dm-raid.c
-> +++ b/drivers/md/dm-raid.c
-> @@ -507,7 +507,7 @@ static const char *raid10_md_layout_to_format(int layout)
->   }
->   
->   /* Return md raid10 algorithm for @name */
-> -static const int raid10_name_to_format(const char *name)
-> +static int raid10_name_to_format(const char *name)
->   {
->   	if (!strcasecmp(name, "near"))
->   		return ALGORITHM_RAID10_NEAR;
+>  Grow.c | 67 ++++++++++++++++++++++++++++++++++++------------------------------
+>  1 file changed, 37 insertions(+), 30 deletions(-)
+
+Applied!
+
+Thanks,
+Jes
