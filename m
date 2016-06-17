@@ -1,41 +1,92 @@
-From: "Tiezhu Yang" <kernelpatch@126.com>
-Subject: [PATCH] Documentation: fix wrong value in md.txt
-Date: Fri, 17 Jun 2016 09:40:02 +0800 (CST)
-Message-ID: <2b0cf4c2.21fa.1555c03d3e9.Coremail.kernelpatch@126.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: re: dm: raid456 basic support
+Date: Fri, 17 Jun 2016 12:14:05 +0300
+Message-ID: <20160617091405.GA25609@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=GBK
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: corbet@lwn.net, shli@kernel.org
-Cc: linux-doc@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-SW4gdGhlIGN1cnJlbnQgRG9jdW1lbnRhdGlvbi9tZC50eHQsIHRoZSBsb3dlciBsaW1pdCB2YWx1
-ZSBvZgpzdHJpcGVfY2FjaGVfc2l6ZSBpcyAxNiBhbmQgdGhlIGRlZmF1bHQgdmFsdWUgaXMgMTI4
-LCBidXQgd2hlbgpJIHVwZGF0ZSBrZXJuZWwgdG8gdGhlIGxhdGVzdCBtYWlubGluZSB2ZXJzaW9u
-IGFuZCBSQUlENSBhcnJheQppcyBjcmVhdGVkIGJ5IG1kYWRtLCB0aGVuIGV4ZWN1dGUgdGhlIGZv
-bGxvd2luZyBjb21tYW5kcywgaXQKc2hvd3MgYW4gZXJyb3IgYW5kIGEgZGlmZmVyZW5jZSByZXNw
-ZWN0aXZlbHkuCgoxKSBzZXQgc3RyaXBlX2NhY2hlX3NpemUgdG8gMTYKW3Jvb3RAbG9jYWxob3N0
-IH5dIyBlY2hvIDE2ID4gL3N5cy9ibG9jay9tZDAvbWQvc3RyaXBlX2NhY2hlX3NpemUKYmFzaDog
-ZWNobzogd3JpdGUgZXJyb3I6IEludmFsaWQgYXJndW1lbnQKMikgcmVhZCB0aGUgZGVmYXVsdCB2
-YWx1ZSBvZiBzdHJpcGVfY2FjaGVfc2l6ZQpbcm9vdEBsb2NhbGhvc3Qgfl0jIGNhdCAvc3lzL2Js
-b2NrL21kMC9tZC9zdHJpcGVfY2FjaGVfc2l6ZQoyNTYKCkkgcmVhZCBkcml2ZXJzL21kL3JhaWQ1
-LmMgYW5kIGZpbmQgdGhlIGZvbGxvd2luZyByZWxhdGVkIGNvZGU6CjEpIGluIGZ1bmN0aW9uICdy
-YWlkNV9zZXRfY2FjaGVfc2l6ZSc6CmlmIChzaXplIDw9IDE2IHx8IHNpemUgPiAzMjc2OCkKCXJl
-dHVybiAtRUlOVkFMOwoyKSAjZGVmaW5lIE5SX1NUUklQRVMJCTI1NgoKU28gdGhlIGxvd2VyIGxp
-bWl0IHZhbHVlIG9mIHN0cmlwZV9jYWNoZV9zaXplIHNob3VsZCBiZSAxNyBhbmQKdGhlIGRlZmF1
-bHQgdmFsdWUgc2hvdWxkIGJlIDI1Ni4KClNpZ25lZC1vZmYtYnk6IFRpZXpodSBZYW5nIDxrZXJu
-ZWxwYXRjaEAxMjYuY29tPgotLS0KIERvY3VtZW50YXRpb24vbWQudHh0IHwgMiArLQogMSBmaWxl
-IGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAxIGRlbGV0aW9uKC0pCgpkaWZmIC0tZ2l0IGEvRG9j
-dW1lbnRhdGlvbi9tZC50eHQgYi9Eb2N1bWVudGF0aW9uL21kLnR4dAppbmRleCAxYTJhZGE0Li5k
-NmUyZmNmIDEwMDY0NAotLS0gYS9Eb2N1bWVudGF0aW9uL21kLnR4dAorKysgYi9Eb2N1bWVudGF0
-aW9uL21kLnR4dApAQCAtNjAyLDcgKzYwMiw3IEBAIFRoZXNlIGN1cnJlbnRseSBpbmNsdWRlCiAK
-ICAgc3RyaXBlX2NhY2hlX3NpemUgIChjdXJyZW50bHkgcmFpZDUgb25seSkKICAgICAgIG51bWJl
-ciBvZiBlbnRyaWVzIGluIHRoZSBzdHJpcGUgY2FjaGUuICBUaGlzIGlzIHdyaXRhYmxlLCBidXQK
-LSAgICAgIHRoZXJlIGFyZSB1cHBlciBhbmQgbG93ZXIgbGltaXRzICgzMjc2OCwgMTYpLiAgRGVm
-YXVsdCBpcyAxMjguCisgICAgICB0aGVyZSBhcmUgdXBwZXIgYW5kIGxvd2VyIGxpbWl0cyAoMzI3
-NjgsIDE3KS4gIERlZmF1bHQgaXMgMjU2LgogICBzdHJpcF9jYWNoZV9hY3RpdmUgKGN1cnJlbnRs
-eSByYWlkNSBvbmx5KQogICAgICAgbnVtYmVyIG9mIGFjdGl2ZSBlbnRyaWVzIGluIHRoZSBzdHJp
-cGUgY2FjaGUKICAgcHJlcmVhZF9ieXBhc3NfdGhyZXNob2xkIChjdXJyZW50bHkgcmFpZDUgb25s
-eSkKLS0gCjEuOC4zLjE=
+[ No idea why it's only just now complaining about issues from 2011... ]
+
+Hello NeilBrown,
+
+The patch 9d09e663d550: "dm: raid456 basic support" from Jan 13,
+2011, leads to the following static checker warning:
+
+	drivers/md/dm-raid.c:1217 parse_raid_params()
+	warn: no lower bound on 'value'
+
+drivers/md/dm-raid.c
+  1211                                  return -EINVAL;
+  1212                          }
+  1213                          if (!value || (value > MAX_SCHEDULE_TIMEOUT)) {
+
+value is an int.  MAX_SCHEDULE_TIMEOUT is LONG_MAX.  Should it be
+INT_MAX?  What about negatives?
+
+  1214                                  rs->ti->error = "daemon sleep period out of range";
+  1215                                  return -EINVAL;
+  1216                          }
+  1217                          rs->md.bitmap_info.daemon_sleep = value;
+  1218                  } else if (!strcasecmp(key, dm_raid_arg_name_by_flag(CTR_FLAG_DATA_OFFSET))) {
+  1219                          /* Userspace passes new data_offset after having extended the the data image LV */
+  1220                          if (test_and_set_bit(__CTR_FLAG_DATA_OFFSET, &rs->ctr_flags)) {
+  1221                                  rs->ti->error = "Only one data_offset argument pair allowed";
+  1222                                  return -EINVAL;
+  1223                          }
+  1224                          /* Ensure sensible data offset */
+  1225                          if (value < 0) {
+  1226                                  rs->ti->error = "Bogus data_offset value";
+  1227                                  return -EINVAL;
+  1228                          }
+  1229                          rs->data_offset = value;
+  1230                  } else if (!strcasecmp(key, dm_raid_arg_name_by_flag(CTR_FLAG_DELTA_DISKS))) {
+  1231                          /* Define the +/-# of disks to add to/remove from the given raid set */
+  1232                          if (test_and_set_bit(__CTR_FLAG_DELTA_DISKS, &rs->ctr_flags)) {
+  1233                                  rs->ti->error = "Only one delta_disks argument pair allowed";
+  1234                                  return -EINVAL;
+  1235                          }
+  1236                          /* Ensure MAX_RAID_DEVICES and raid type minimal_devs! */
+  1237                          if (!__within_range(abs(value), 1, MAX_RAID_DEVICES - rt->minimal_devs)) {
+  1238                                  rs->ti->error = "Too many delta_disk requested";
+  1239                                  return -EINVAL;
+  1240                          }
+  1241  
+  1242                          rs->delta_disks = value;
+  1243                  } else if (!strcasecmp(key, dm_raid_arg_name_by_flag(CTR_FLAG_STRIPE_CACHE))) {
+  1244                          if (test_and_set_bit(__CTR_FLAG_STRIPE_CACHE, &rs->ctr_flags)) {
+  1245                                  rs->ti->error = "Only one stripe_cache argument pair allowed";
+  1246                                  return -EINVAL;
+  1247                          }
+  1248  
+  1249                          if (!rt_is_raid456(rt)) {
+  1250                                  rs->ti->error = "Inappropriate argument: stripe_cache";
+  1251                                  return -EINVAL;
+  1252                          }
+  1253  
+  1254                          rs->stripe_cache_entries = value;
+  1255                  } else if (!strcasecmp(key, dm_raid_arg_name_by_flag(CTR_FLAG_MIN_RECOVERY_RATE))) {
+  1256                          if (test_and_set_bit(__CTR_FLAG_MIN_RECOVERY_RATE, &rs->ctr_flags)) {
+  1257                                  rs->ti->error = "Only one min_recovery_rate argument pair allowed";
+  1258                                  return -EINVAL;
+  1259                          }
+  1260                          if (value > INT_MAX) {
+                                            ^^^^^^^
+Here we're using INT_MAX.
+
+  1261                                  rs->ti->error = "min_recovery_rate out of range";
+  1262                                  return -EINVAL;
+  1263                          }
+  1264                          rs->md.sync_speed_min = (int)value;
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+This looks like negatives are intentional...  A few lines later as well.
+
+drivers/md/dm-raid.c:1274 parse_raid_params() warn: no lower bound on 'value'
+
+regards,
+dan carpenter
