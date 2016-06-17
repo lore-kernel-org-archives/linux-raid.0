@@ -1,88 +1,41 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH 2/2] imsm: properly handle values of sync_completed
-Date: Thu, 16 Jun 2016 13:59:35 -0400
-Message-ID: <wrfjd1nhovzs.fsf@redhat.com>
-References: <1466069497-29503-1-git-send-email-aleksey.obitotskiy@intel.com>
-	<1466069497-29503-3-git-send-email-aleksey.obitotskiy@intel.com>
+From: "Tiezhu Yang" <kernelpatch@126.com>
+Subject: [PATCH] Documentation: fix wrong value in md.txt
+Date: Fri, 17 Jun 2016 09:40:02 +0800 (CST)
+Message-ID: <2b0cf4c2.21fa.1555c03d3e9.Coremail.kernelpatch@126.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1466069497-29503-3-git-send-email-aleksey.obitotskiy@intel.com>
-	(Alexey Obitotskiy's message of "Thu, 16 Jun 2016 11:31:37 +0200")
-Sender: linux-raid-owner@vger.kernel.org
-To: Alexey Obitotskiy <aleksey.obitotskiy@intel.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=GBK
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: corbet@lwn.net, shli@kernel.org
+Cc: linux-doc@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Alexey Obitotskiy <aleksey.obitotskiy@intel.com> writes:
-> The sync_completed can be set to such values:
-> - two numbers of processed sectors and total during synchronization,
-> separated with '/';
-> - 'none' if synchronization process is stopped;
-> - 'delayed' if synchronization process is delayed.
-> Handle value of sync_completed not only as numbers but
-> also check for 'none' and 'delayed'.
->
-> Signed-off-by: Alexey Obitotskiy <aleksey.obitotskiy@intel.com>
-> Reviewed-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
-> ---
->  super-intel.c | 36 ++++++++++++++++++++++++++++++++++--
->  1 file changed, 34 insertions(+), 2 deletions(-)
->
-> diff --git a/super-intel.c b/super-intel.c
-> index 7950bef..b401f3c 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -10363,6 +10363,33 @@ exit_imsm_reshape_super:
->  	return ret_val;
->  }
->  
-> +#define COMPLETED_OK		0
-> +#define COMPLETED_NONE		1
-> +#define COMPLETED_DELAYED	2
-> +
-> +static int read_completed(int fd, unsigned long long *val)
-> +{
-> +	int ret;
-> +	char buf[50];
-> +
-> +	ret = sysfs_fd_get_str(fd, buf, 50);
-> +	if (ret < 0)
-> +		return ret;
-> +
-> +	ret = COMPLETED_OK;
-> +	if (strncmp(buf, "none", 4) == 0) {
-> +		ret = COMPLETED_NONE;
-> +	} else if (strncmp(buf, "delayed", 7) == 0) {
-> +		ret = COMPLETED_DELAYED;
-> +	} else {
-> +		char *ep;
-> +		*val = strtoull(buf, &ep, 0);
-> +		if (ep == buf || (*ep != 0 && *ep != '\n' && *ep != ' '))
-> +			ret = -1;
-> +	}
-> +	return ret;
-> +}
-> +
->  /*******************************************************************************
->   * Function:	wait_for_reshape_imsm
->   * Description:	Function writes new sync_max value and waits until
-> @@ -10417,7 +10444,9 @@ int wait_for_reshape_imsm(struct mdinfo *sra, int ndata)
->  	}
->  
->  	do {
-> +		int rc;
->  		char action[20];
-> +
->  		int timeout = 3000;
->  		sysfs_wait(fd, &timeout);
->  		if (sysfs_get_str(sra, NULL, "sync_action",
-
-Nit - you shouldn't have a blank line between variable declaration, but
-rather put it between the declarations and the code itself. I fixed it
-up for you.
-
-Applied!
-
-Cheers,
-Jes
+SW4gdGhlIGN1cnJlbnQgRG9jdW1lbnRhdGlvbi9tZC50eHQsIHRoZSBsb3dlciBsaW1pdCB2YWx1
+ZSBvZgpzdHJpcGVfY2FjaGVfc2l6ZSBpcyAxNiBhbmQgdGhlIGRlZmF1bHQgdmFsdWUgaXMgMTI4
+LCBidXQgd2hlbgpJIHVwZGF0ZSBrZXJuZWwgdG8gdGhlIGxhdGVzdCBtYWlubGluZSB2ZXJzaW9u
+IGFuZCBSQUlENSBhcnJheQppcyBjcmVhdGVkIGJ5IG1kYWRtLCB0aGVuIGV4ZWN1dGUgdGhlIGZv
+bGxvd2luZyBjb21tYW5kcywgaXQKc2hvd3MgYW4gZXJyb3IgYW5kIGEgZGlmZmVyZW5jZSByZXNw
+ZWN0aXZlbHkuCgoxKSBzZXQgc3RyaXBlX2NhY2hlX3NpemUgdG8gMTYKW3Jvb3RAbG9jYWxob3N0
+IH5dIyBlY2hvIDE2ID4gL3N5cy9ibG9jay9tZDAvbWQvc3RyaXBlX2NhY2hlX3NpemUKYmFzaDog
+ZWNobzogd3JpdGUgZXJyb3I6IEludmFsaWQgYXJndW1lbnQKMikgcmVhZCB0aGUgZGVmYXVsdCB2
+YWx1ZSBvZiBzdHJpcGVfY2FjaGVfc2l6ZQpbcm9vdEBsb2NhbGhvc3Qgfl0jIGNhdCAvc3lzL2Js
+b2NrL21kMC9tZC9zdHJpcGVfY2FjaGVfc2l6ZQoyNTYKCkkgcmVhZCBkcml2ZXJzL21kL3JhaWQ1
+LmMgYW5kIGZpbmQgdGhlIGZvbGxvd2luZyByZWxhdGVkIGNvZGU6CjEpIGluIGZ1bmN0aW9uICdy
+YWlkNV9zZXRfY2FjaGVfc2l6ZSc6CmlmIChzaXplIDw9IDE2IHx8IHNpemUgPiAzMjc2OCkKCXJl
+dHVybiAtRUlOVkFMOwoyKSAjZGVmaW5lIE5SX1NUUklQRVMJCTI1NgoKU28gdGhlIGxvd2VyIGxp
+bWl0IHZhbHVlIG9mIHN0cmlwZV9jYWNoZV9zaXplIHNob3VsZCBiZSAxNyBhbmQKdGhlIGRlZmF1
+bHQgdmFsdWUgc2hvdWxkIGJlIDI1Ni4KClNpZ25lZC1vZmYtYnk6IFRpZXpodSBZYW5nIDxrZXJu
+ZWxwYXRjaEAxMjYuY29tPgotLS0KIERvY3VtZW50YXRpb24vbWQudHh0IHwgMiArLQogMSBmaWxl
+IGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAxIGRlbGV0aW9uKC0pCgpkaWZmIC0tZ2l0IGEvRG9j
+dW1lbnRhdGlvbi9tZC50eHQgYi9Eb2N1bWVudGF0aW9uL21kLnR4dAppbmRleCAxYTJhZGE0Li5k
+NmUyZmNmIDEwMDY0NAotLS0gYS9Eb2N1bWVudGF0aW9uL21kLnR4dAorKysgYi9Eb2N1bWVudGF0
+aW9uL21kLnR4dApAQCAtNjAyLDcgKzYwMiw3IEBAIFRoZXNlIGN1cnJlbnRseSBpbmNsdWRlCiAK
+ICAgc3RyaXBlX2NhY2hlX3NpemUgIChjdXJyZW50bHkgcmFpZDUgb25seSkKICAgICAgIG51bWJl
+ciBvZiBlbnRyaWVzIGluIHRoZSBzdHJpcGUgY2FjaGUuICBUaGlzIGlzIHdyaXRhYmxlLCBidXQK
+LSAgICAgIHRoZXJlIGFyZSB1cHBlciBhbmQgbG93ZXIgbGltaXRzICgzMjc2OCwgMTYpLiAgRGVm
+YXVsdCBpcyAxMjguCisgICAgICB0aGVyZSBhcmUgdXBwZXIgYW5kIGxvd2VyIGxpbWl0cyAoMzI3
+NjgsIDE3KS4gIERlZmF1bHQgaXMgMjU2LgogICBzdHJpcF9jYWNoZV9hY3RpdmUgKGN1cnJlbnRs
+eSByYWlkNSBvbmx5KQogICAgICAgbnVtYmVyIG9mIGFjdGl2ZSBlbnRyaWVzIGluIHRoZSBzdHJp
+cGUgY2FjaGUKICAgcHJlcmVhZF9ieXBhc3NfdGhyZXNob2xkIChjdXJyZW50bHkgcmFpZDUgb25s
+eSkKLS0gCjEuOC4zLjE=
