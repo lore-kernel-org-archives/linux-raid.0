@@ -1,118 +1,92 @@
-From: Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 0/6] Support DAX for device-mapper dm-linear devices
-Date: Mon, 20 Jun 2016 18:22:36 -0400
-Message-ID: <20160620222236.GA22461@redhat.com>
-References: <1465856497-19698-1-git-send-email-toshi.kani@hpe.com>
- <20160613225756.GA18417@redhat.com>
- <20160620180043.GA21261@redhat.com>
- <1466446861.3504.243.camel@hpe.com>
- <20160620194026.GA21657@redhat.com>
- <20160620195217.GB21657@redhat.com>
- <1466452883.3504.244.camel@hpe.com>
- <1466457467.3504.249.camel@hpe.com>
+From: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Subject: Re: unbalanced RAID5 / performance issues
+Date: Tue, 21 Jun 2016 09:41:11 +1000
+Message-ID: <57687F17.3010002@websitemanagers.com.au>
+References: <57678E2D.9080705@websitemanagers.com.au>
+ <20160620104455.Horde.Cu9WNhgOSFjDC3hgl4ZCm01@www3.nde.ag>
+ <20160620092600.GA3549@metamorpher.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1466457467.3504.249.camel-ZPxbGqLxI0U@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: "Kani, Toshimitsu" <toshi.kani-ZPxbGqLxI0U@public.gmane.org>
-Cc: "axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org" <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "sandeen-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <sandeen-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org" <linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org" <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, "agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20160620092600.GA3549@metamorpher.de>
+Sender: linux-raid-owner@vger.kernel.org
+To: Andreas Klauer <Andreas.Klauer@metamorpher.de>, "Jens-U. Mozdzen" <jmozdzen@nde.ag>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jun 20 2016 at  5:28pm -0400,
-Kani, Toshimitsu <toshi.kani-ZPxbGqLxI0U@public.gmane.org> wrote:
+On 20/06/16 19:26, Andreas Klauer wrote:
+> On Mon, Jun 20, 2016 at 10:44:55AM +0200, Jens-U. Mozdzen wrote:
+>> Zitat von Adam Goryachev <adam@websitemanagers.com.au>:
+>>> As you can see, sdc (and sda) has a much higher utilisation compared
+>>> to all the other drives, but we can see the actual reads/writes are
+>>> similar across all drives.
+>> looking at those numbers, it might not be the (effective) utilization
+>> that's higher, but the time the SSDs spend handling the requests.
+> sdc also happens to be the last drive in your array.
+>
+> When creating raid5, the initial sync will overwrite this drive completely.
+> Are you using fstrim / discard? Without TRIM this SSD might consider itself
+> completely full and take longer for new writes.
+I'm fairly certain that all drives have been completely written to by 
+now. The system is around 4 years old, and we do approx 200GB or more of 
+writes per day....
+I'm also fairly certain that TRIM is not working through the entire stack:
+Windows 2012R2
+Xen GPLPV drivers (old ones)
+Xen 4.1
+Linux open-iSCSI 2.0.873
+Linux iscsitarget (iet) 1.4.20.3+svn502-1
+DRBD 8.4.x
+LVM2
+Linux MD RAID5
+Partitions
+SSD
 
-> On Mon, 2016-06-20 at 14:01 -0600, Kani, Toshimitsu wrote:
-> > On Mon, 2016-06-20 at 15:52 -0400, Mike Snitzer wrote:
-> > > =
+I never really tried to test for TRIM support through the stack, but I'd 
+be shocked if it was working.....
+> Also there might be an issue with SF-2281 controller used by these SSDs:
+>
+> http://www.anandtech.com/show/5508/intel-ssd-520-review-cherryville-brings-reliability-to-sandforce/7
+>
+> They state that even after TRIM the SSD does not return to
+> its prime condition...
+The performance seems better on the 520 series (older series) than the 
+530 one.... I'm not sure which chipset/firmware the 530 series use, but 
+I would have expected it to be better...
+Looking at the spec sheets for each I see:
+Model                    Seq Read    Seq Write    Random Read Random Write
+2.5" 480GB 520Series    540MB/s      490MB/s    41KIOPS        80KIOPS
+2.5" 480GB 530Series    550MB/s      520MB/s 50KIOPS        42KIOPS
 
-> > > On Mon, Jun 20 2016 at=A0=A03:40pm -0400,
-> > > Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
-> > > =A0
-> =A0:
-> > > > If I don't use XFS, and only issue IO directly to the /dev/pmem/lv,=
- I
-> > > > don't see this corruption.
-> > >
-> > > I did the same test with ext4 instead of xfs and it resulted in the s=
-ame
-> > > type of systemic corruption (lvm2 metadata corrupted too):
-> > > =
+For some reason, maybe the Random Write IOPS being almost half is 
+causing the problems?
+> Apart from that, double check that your partitions are aligned.
+> This is usually the case but may be a huge problem if overlooked.
 
-> =A0:
-> > I will look into the issue.
-> =
+All of the drives are partitioned identically:
+Disk /dev/sdh: 480 GB, 480101368320 bytes
+255 heads, 63 sectors/track, 58369 cylinders, total 937697985 sectors
+Units = sectors of 1 * 512 = 512 bytes
 
-> Hi Mike,
-> =
+    Device Boot      Start         End      Blocks   Id  System
+/dev/sdh1              64   937697984   468848961   fd  Lnx RAID auto
 
-> Can you fold the following patch to the dm-linear patch?
-> =
+Not sure if that is "correctly aligned". I note that on newer 
+systems/drives I see partitions starting at 2048 instead of 64, but I 
+think that is just to allow extra space for grub/etc...
+I think I'll try to swap the single 530 drive with another one if I dare 
+(means dropping redundancy on the array during the re-sync....)
 
-> Thanks,
-> -Tsohi
-> =
+My main concern is that it could be due to the way the array is 
+configured, ie, chunk size/etc, but it does also seem to be related to 
+the model number of the drive.
 
-> ------
-> Subject: [PATCH] dm-linear: Fix partition handling for DAX
-> =
+BTW, the array has been grown a couple of times, it wasn't created new 
+with all 8 drives, so originally, sdc wasn't the last drive, it is 
+probably the most recently added drive though.
 
-> Partition handling was missing in linear_direct_access().
-> Call bdev_direct_access(), instead of directly calling
-> target direct_access function.
-> =
-
-> Signed-off-by: Toshi Kani <toshi.kani-ZPxbGqLxI0U@public.gmane.org>
-> ---
-> =A0drivers/md/dm-linear.c |=A0=A0=A014 ++++++++++----
-> =A01 file changed, 10 insertions(+), 4 deletions(-)
-> =
-
-> diff --git a/drivers/md/dm-linear.c b/drivers/md/dm-linear.c
-> index 325aa06..38323e4 100644
-> --- a/drivers/md/dm-linear.c
-> +++ b/drivers/md/dm-linear.c
-> @@ -148,10 +148,16 @@ static long linear_direct_access(struct dm_target *=
-ti,
-> sector_t sector,
-> =A0{
-> =A0	struct linear_c *lc =3D ti->private;
-> =A0	struct block_device *bdev =3D lc->dev->bdev;
-> -	const struct block_device_operations *bd_ops =3D bdev->bd_disk->fops;
-> -
-> -	return bd_ops->direct_access(bdev, linear_map_sector(ti, sector),
-> -				=A0=A0=A0=A0=A0kaddr, pfn, size);
-> +	struct blk_dax_ctl dax =3D {
-> +		.sector =3D linear_map_sector(ti, sector),
-> +		.size =3D size,
-> +	};
-> +	long ret;
-> +
-> +	ret =3D bdev_direct_access(bdev, &dax);
-> +	*kaddr =3D dax.addr;
-> +	*pfn =3D dax.pfn;
-> +	return ret;
-> =A0}
-> =A0
-> =A0static struct target_type linear_target =3D {
-
-Looks good, I folded it in and tested it to work.  Pushed to my 'wip'
-branch.
-
-No longer seeing any corruption in my test that was using partitions to
-span pmem devices with a dm-linear device.
-
-Jens, any chance you'd be open to picking up the first 2 patches in this
-series?  Or would you like to see them folded or something different?
-
-Mike
+Regards,
+Adam
+-- 
+Adam Goryachev Website Managers www.websitemanagers.com.au
