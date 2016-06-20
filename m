@@ -1,62 +1,29 @@
-From: "Kani, Toshimitsu" <toshi.kani-ZPxbGqLxI0U@public.gmane.org>
-Subject: Re: [PATCH 0/6] Support DAX for device-mapper dm-linear devices
-Date: Mon, 20 Jun 2016 21:28:00 +0000
-Message-ID: <1466457467.3504.249.camel@hpe.com>
-References: <1465856497-19698-1-git-send-email-toshi.kani@hpe.com>
- <20160613225756.GA18417@redhat.com> <20160620180043.GA21261@redhat.com>
- <1466446861.3504.243.camel@hpe.com> <20160620194026.GA21657@redhat.com>
- <20160620195217.GB21657@redhat.com> <1466452883.3504.244.camel@hpe.com>
+From: "ts9" <ts9@a.refan188.com>
+Subject: Re:In foreign trade workers should Take the initiative to develop a
+ good understanding of customers around the world!
+Date: Tue, 21 Jun 2016 05:25:00 +0800
+Message-ID: <201606210525002483456@a.refan188.com>
+Reply-To: 3183346925@qq.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain;
+	charset="GB2312"
 Content-Transfer-Encoding: base64
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <1466452883.3504.244.camel-ZPxbGqLxI0U@public.gmane.org>
-Content-Language: en-US
-Content-ID: <6BF6767E1A048D4E8255034D80B96A64-mmYPd6ayCNGroOM5E8FhRbjFIynDaujOfM0AETQt39g@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: "snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: "axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org" <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "sandeen-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <sandeen-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org" <linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org" <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, "agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-T24gTW9uLCAyMDE2LTA2LTIwIGF0IDE0OjAxIC0wNjAwLCBLYW5pLCBUb3NoaW1pdHN1IHdyb3Rl
-Og0KPiBPbiBNb24sIDIwMTYtMDYtMjAgYXQgMTU6NTIgLTA0MDAsIE1pa2UgU25pdHplciB3cm90
-ZToNCj4gPiANCj4gPiBPbiBNb24sIEp1biAyMCAyMDE2IGF0wqDCoDM6NDBwbSAtMDQwMCwNCj4g
-PiBNaWtlIFNuaXR6ZXIgPHNuaXR6ZXJAcmVkaGF0LmNvbT4gd3JvdGU6DQo+ID4gwqANCsKgOg0K
-PiA+ID4gSWYgSSBkb24ndCB1c2UgWEZTLCBhbmQgb25seSBpc3N1ZSBJTyBkaXJlY3RseSB0byB0
-aGUgL2Rldi9wbWVtL2x2LCBJDQo+ID4gPiBkb24ndCBzZWUgdGhpcyBjb3JydXB0aW9uLg0KPiA+
-DQo+ID4gSSBkaWQgdGhlIHNhbWUgdGVzdCB3aXRoIGV4dDQgaW5zdGVhZCBvZiB4ZnMgYW5kIGl0
-IHJlc3VsdGVkIGluIHRoZSBzYW1lDQo+ID4gdHlwZSBvZiBzeXN0ZW1pYyBjb3JydXB0aW9uIChs
-dm0yIG1ldGFkYXRhIGNvcnJ1cHRlZCB0b28pOg0KPiA+IA0KwqA6DQo+IEkgd2lsbCBsb29rIGlu
-dG8gdGhlIGlzc3VlLg0KDQpIaSBNaWtlLA0KDQpDYW4geW91IGZvbGQgdGhlIGZvbGxvd2luZyBw
-YXRjaCB0byB0aGUgZG0tbGluZWFyIHBhdGNoPw0KDQpUaGFua3MsDQotVHNvaGkNCg0KLS0tLS0t
-DQpTdWJqZWN0OiBbUEFUQ0hdIGRtLWxpbmVhcjogRml4IHBhcnRpdGlvbiBoYW5kbGluZyBmb3Ig
-REFYDQoNClBhcnRpdGlvbiBoYW5kbGluZyB3YXMgbWlzc2luZyBpbiBsaW5lYXJfZGlyZWN0X2Fj
-Y2VzcygpLg0KQ2FsbCBiZGV2X2RpcmVjdF9hY2Nlc3MoKSwgaW5zdGVhZCBvZiBkaXJlY3RseSBj
-YWxsaW5nDQp0YXJnZXQgZGlyZWN0X2FjY2VzcyBmdW5jdGlvbi4NCg0KU2lnbmVkLW9mZi1ieTog
-VG9zaGkgS2FuaSA8dG9zaGkua2FuaUBocGUuY29tPg0KLS0tDQrCoGRyaXZlcnMvbWQvZG0tbGlu
-ZWFyLmMgfMKgwqDCoDE0ICsrKysrKysrKystLS0tDQrCoDEgZmlsZSBjaGFuZ2VkLCAxMCBpbnNl
-cnRpb25zKCspLCA0IGRlbGV0aW9ucygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9kbS1s
-aW5lYXIuYyBiL2RyaXZlcnMvbWQvZG0tbGluZWFyLmMNCmluZGV4IDMyNWFhMDYuLjM4MzIzZTQg
-MTAwNjQ0DQotLS0gYS9kcml2ZXJzL21kL2RtLWxpbmVhci5jDQorKysgYi9kcml2ZXJzL21kL2Rt
-LWxpbmVhci5jDQpAQCAtMTQ4LDEwICsxNDgsMTYgQEAgc3RhdGljIGxvbmcgbGluZWFyX2RpcmVj
-dF9hY2Nlc3Moc3RydWN0IGRtX3RhcmdldCAqdGksDQpzZWN0b3JfdCBzZWN0b3IsDQrCoHsNCsKg
-CXN0cnVjdCBsaW5lYXJfYyAqbGMgPSB0aS0+cHJpdmF0ZTsNCsKgCXN0cnVjdCBibG9ja19kZXZp
-Y2UgKmJkZXYgPSBsYy0+ZGV2LT5iZGV2Ow0KLQljb25zdCBzdHJ1Y3QgYmxvY2tfZGV2aWNlX29w
-ZXJhdGlvbnMgKmJkX29wcyA9IGJkZXYtPmJkX2Rpc2stPmZvcHM7DQotDQotCXJldHVybiBiZF9v
-cHMtPmRpcmVjdF9hY2Nlc3MoYmRldiwgbGluZWFyX21hcF9zZWN0b3IodGksIHNlY3RvciksDQot
-CQkJCcKgwqDCoMKgwqBrYWRkciwgcGZuLCBzaXplKTsNCisJc3RydWN0IGJsa19kYXhfY3RsIGRh
-eCA9IHsNCisJCS5zZWN0b3IgPSBsaW5lYXJfbWFwX3NlY3Rvcih0aSwgc2VjdG9yKSwNCisJCS5z
-aXplID0gc2l6ZSwNCisJfTsNCisJbG9uZyByZXQ7DQorDQorCXJldCA9IGJkZXZfZGlyZWN0X2Fj
-Y2VzcyhiZGV2LCAmZGF4KTsNCisJKmthZGRyID0gZGF4LmFkZHI7DQorCSpwZm4gPSBkYXgucGZu
-Ow0KKwlyZXR1cm4gcmV0Ow0KwqB9DQrCoA0KwqBzdGF0aWMgc3RydWN0IHRhcmdldF90eXBlIGxp
-bmVhcl90YXJnZXQgPSB7Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fCkxpbnV4LW52ZGltbSBtYWlsaW5nIGxpc3QKTGludXgtbnZkaW1tQGxpc3RzLjAxLm9y
-ZwpodHRwczovL2xpc3RzLjAxLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LW52ZGltbQo=
+1/bN4sOz1ve2r7P2u/ejrMvRy/e/qreixOO1xMirx/K/zbunDQogICAgsrvE3NfcysfK2NbqtP3N
+w6Os0qrW97avs/a796Os0MLIy7K7xNzX3MrHtcjXxdGvxcy5/cC0o6zSqs2ouf2499bWx/61wMil
+y9HL97/Nu6ejrLeiv6q3otDFo6zU9cO0y9HL96OsZ29vZ2xlutzHv7TzoaO1q7WxZ29vZ2xlo6zR
+xbuio6yx2NOmtci497Tz1qrD+8vRy/fS/cfmvK/T2tK7zOW74dPQ1PXDtNH5tcTM5dHpo78gDQog
+ICAgztLLvsrH1/bSu7/uzeLDs7/Nu6fN4reiyO28/rXEo6y8r7j3tPPWqsP7y9HL99L9x+bT2tK7
+zOWjrLnYvPzX1sq9y9HIq8fy08XWyr/Nu6ehorj809C/zbunudzA7c+1zbPIw8Tjx+HLyc6su6TA
+z7/Nu6ejrM3Y1bnQwr/Nu6eho7bAvNLXqMD7vLzK9aOs0ru8/Lqjwb/Iurei08q8/qOstsDT0LXE
+08q8/si6t6KjrNPKvP7Ny7apvLzK9aOst8DGwbHOo6y3wLfiusWjrMzhuN/TyrW9tO/CyqOszOHJ
+/b/Nu6fRr8XMu/rCyqGjyOe5+8Tju7nU2sPUw6PI57rOssXE3Lj8v+yjrLj8seO93aOsuPzWyrjf
+o6zE47K7t8HBqs+1ztLBy73i0rvPwqGjzuW088Sjv+mjur/Nu6fL0cvYLdPKvP7Tqs/6LdPKvP64
++tfZLdPKvP7Ny7apLb/Nu6e53MDto6wyOLj208W7r7mmxNzSu8K3u6S6vcTjx+HLybP2tqm1paGj
+DQoNCs/rwcu94rj8tuDW97avyr3N4sOzv6q3or/Nu6ejrMfrvNMgUVEtLS0tLS0+IDMyNDYwNzU3
+MDcgINaxvdPR6dakv827p9DFz6Igyse38dXmyrWhotPQ0KcgDQrSsr/JvNPOotDFusWjunN1bnNl
+c29mdHNhbQ==
