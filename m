@@ -1,29 +1,118 @@
-From: "ts9" <ts9@a.refan188.com>
-Subject: Re:In foreign trade workers should Take the initiative to develop a
- good understanding of customers around the world!
-Date: Tue, 21 Jun 2016 05:25:00 +0800
-Message-ID: <201606210525002483456@a.refan188.com>
-Reply-To: 3183346925@qq.com
+From: Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 0/6] Support DAX for device-mapper dm-linear devices
+Date: Mon, 20 Jun 2016 18:22:36 -0400
+Message-ID: <20160620222236.GA22461@redhat.com>
+References: <1465856497-19698-1-git-send-email-toshi.kani@hpe.com>
+ <20160613225756.GA18417@redhat.com>
+ <20160620180043.GA21261@redhat.com>
+ <1466446861.3504.243.camel@hpe.com>
+ <20160620194026.GA21657@redhat.com>
+ <20160620195217.GB21657@redhat.com>
+ <1466452883.3504.244.camel@hpe.com>
+ <1466457467.3504.249.camel@hpe.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="GB2312"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1466457467.3504.249.camel-ZPxbGqLxI0U@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: "Kani, Toshimitsu" <toshi.kani-ZPxbGqLxI0U@public.gmane.org>
+Cc: "axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org" <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "sandeen-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <sandeen-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org" <linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org" <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, "agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-1/bN4sOz1ve2r7P2u/ejrMvRy/e/qreixOO1xMirx/K/zbunDQogICAgsrvE3NfcysfK2NbqtP3N
-w6Os0qrW97avs/a796Os0MLIy7K7xNzX3MrHtcjXxdGvxcy5/cC0o6zSqs2ouf2499bWx/61wMil
-y9HL97/Nu6ejrLeiv6q3otDFo6zU9cO0y9HL96OsZ29vZ2xlutzHv7TzoaO1q7WxZ29vZ2xlo6zR
-xbuio6yx2NOmtci497Tz1qrD+8vRy/fS/cfmvK/T2tK7zOW74dPQ1PXDtNH5tcTM5dHpo78gDQog
-ICAgztLLvsrH1/bSu7/uzeLDs7/Nu6fN4reiyO28/rXEo6y8r7j3tPPWqsP7y9HL99L9x+bT2tK7
-zOWjrLnYvPzX1sq9y9HIq8fy08XWyr/Nu6ehorj809C/zbunudzA7c+1zbPIw8Tjx+HLyc6su6TA
-z7/Nu6ejrM3Y1bnQwr/Nu6eho7bAvNLXqMD7vLzK9aOs0ru8/Lqjwb/Iurei08q8/qOstsDT0LXE
-08q8/si6t6KjrNPKvP7Ny7apvLzK9aOst8DGwbHOo6y3wLfiusWjrMzhuN/TyrW9tO/CyqOszOHJ
-/b/Nu6fRr8XMu/rCyqGjyOe5+8Tju7nU2sPUw6PI57rOssXE3Lj8v+yjrLj8seO93aOsuPzWyrjf
-o6zE47K7t8HBqs+1ztLBy73i0rvPwqGjzuW088Sjv+mjur/Nu6fL0cvYLdPKvP7Tqs/6LdPKvP64
-+tfZLdPKvP7Ny7apLb/Nu6e53MDto6wyOLj208W7r7mmxNzSu8K3u6S6vcTjx+HLybP2tqm1paGj
-DQoNCs/rwcu94rj8tuDW97avyr3N4sOzv6q3or/Nu6ejrMfrvNMgUVEtLS0tLS0+IDMyNDYwNzU3
-MDcgINaxvdPR6dakv827p9DFz6Igyse38dXmyrWhotPQ0KcgDQrSsr/JvNPOotDFusWjunN1bnNl
-c29mdHNhbQ==
+On Mon, Jun 20 2016 at  5:28pm -0400,
+Kani, Toshimitsu <toshi.kani-ZPxbGqLxI0U@public.gmane.org> wrote:
+
+> On Mon, 2016-06-20 at 14:01 -0600, Kani, Toshimitsu wrote:
+> > On Mon, 2016-06-20 at 15:52 -0400, Mike Snitzer wrote:
+> > > =
+
+> > > On Mon, Jun 20 2016 at=A0=A03:40pm -0400,
+> > > Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+> > > =A0
+> =A0:
+> > > > If I don't use XFS, and only issue IO directly to the /dev/pmem/lv,=
+ I
+> > > > don't see this corruption.
+> > >
+> > > I did the same test with ext4 instead of xfs and it resulted in the s=
+ame
+> > > type of systemic corruption (lvm2 metadata corrupted too):
+> > > =
+
+> =A0:
+> > I will look into the issue.
+> =
+
+> Hi Mike,
+> =
+
+> Can you fold the following patch to the dm-linear patch?
+> =
+
+> Thanks,
+> -Tsohi
+> =
+
+> ------
+> Subject: [PATCH] dm-linear: Fix partition handling for DAX
+> =
+
+> Partition handling was missing in linear_direct_access().
+> Call bdev_direct_access(), instead of directly calling
+> target direct_access function.
+> =
+
+> Signed-off-by: Toshi Kani <toshi.kani-ZPxbGqLxI0U@public.gmane.org>
+> ---
+> =A0drivers/md/dm-linear.c |=A0=A0=A014 ++++++++++----
+> =A01 file changed, 10 insertions(+), 4 deletions(-)
+> =
+
+> diff --git a/drivers/md/dm-linear.c b/drivers/md/dm-linear.c
+> index 325aa06..38323e4 100644
+> --- a/drivers/md/dm-linear.c
+> +++ b/drivers/md/dm-linear.c
+> @@ -148,10 +148,16 @@ static long linear_direct_access(struct dm_target *=
+ti,
+> sector_t sector,
+> =A0{
+> =A0	struct linear_c *lc =3D ti->private;
+> =A0	struct block_device *bdev =3D lc->dev->bdev;
+> -	const struct block_device_operations *bd_ops =3D bdev->bd_disk->fops;
+> -
+> -	return bd_ops->direct_access(bdev, linear_map_sector(ti, sector),
+> -				=A0=A0=A0=A0=A0kaddr, pfn, size);
+> +	struct blk_dax_ctl dax =3D {
+> +		.sector =3D linear_map_sector(ti, sector),
+> +		.size =3D size,
+> +	};
+> +	long ret;
+> +
+> +	ret =3D bdev_direct_access(bdev, &dax);
+> +	*kaddr =3D dax.addr;
+> +	*pfn =3D dax.pfn;
+> +	return ret;
+> =A0}
+> =A0
+> =A0static struct target_type linear_target =3D {
+
+Looks good, I folded it in and tested it to work.  Pushed to my 'wip'
+branch.
+
+No longer seeing any corruption in my test that was using partitions to
+span pmem devices with a dm-linear device.
+
+Jens, any chance you'd be open to picking up the first 2 patches in this
+series?  Or would you like to see them folded or something different?
+
+Mike
