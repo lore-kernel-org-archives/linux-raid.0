@@ -1,7 +1,7 @@
 From: Yijing Wang <wangyijing@huawei.com>
-Subject: [RESEND PATCH 3/3] bcache: Remove redundant block_size assignment
-Date: Wed, 22 Jun 2016 10:12:24 +0800
-Message-ID: <1466561544-19155-1-git-send-email-wangyijing@huawei.com>
+Subject: [RESEND PATCH 2/3] bcache: update document info
+Date: Wed, 22 Jun 2016 10:12:14 +0800
+Message-ID: <1466561534-17595-1-git-send-email-wangyijing@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-bcache-owner@vger.kernel.org>
@@ -10,27 +10,40 @@ To: axboe@fb.com, Kent Overstreet <kent.overstreet@gmail.com>
 Cc: Eric Wheeler <git@linux.ewheeler.net>, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>
 List-Id: linux-raid.ids
 
-We have assigned sb->block_size before the switch,
-so remove the redundant one.
+There is no return in continue_at(), update the documentation.
 
-Reviewed-by: Coly Li <colyli@suse.de>
 Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Acked-by: Eric Wheeler <bcache@lists.ewheeler.net>
 ---
- drivers/md/bcache/super.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+ drivers/md/bcache/closure.c |    2 +-
+ drivers/md/bcache/closure.h |    3 ---
+ 2 files changed, 1 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
-index aecaace..bf4b100 100644
---- a/drivers/md/bcache/super.c
-+++ b/drivers/md/bcache/super.c
-@@ -134,7 +134,6 @@ static const char *read_super(struct cache_sb *sb, struct block_device *bdev,
- 	case BCACHE_SB_VERSION_CDEV:
- 	case BCACHE_SB_VERSION_CDEV_WITH_UUID:
- 		sb->nbuckets	= le64_to_cpu(s->nbuckets);
--		sb->block_size	= le16_to_cpu(s->block_size);
- 		sb->bucket_size	= le16_to_cpu(s->bucket_size);
+diff --git a/drivers/md/bcache/closure.c b/drivers/md/bcache/closure.c
+index 9eaf1d6..864e673 100644
+--- a/drivers/md/bcache/closure.c
++++ b/drivers/md/bcache/closure.c
+@@ -112,7 +112,7 @@ bool closure_wait(struct closure_waitlist *waitlist, struct closure *cl)
+ EXPORT_SYMBOL(closure_wait);
  
- 		sb->nr_in_set	= le16_to_cpu(s->nr_in_set);
+ /**
+- * closure_sync - sleep until a closure a closure has nothing left to wait on
++ * closure_sync - sleep until a closure has nothing left to wait on
+  *
+  * Sleeps until the refcount hits 1 - the thread that's running the closure owns
+  * the last refcount.
+diff --git a/drivers/md/bcache/closure.h b/drivers/md/bcache/closure.h
+index 782cc2c..f51188d 100644
+--- a/drivers/md/bcache/closure.h
++++ b/drivers/md/bcache/closure.h
+@@ -31,9 +31,6 @@
+  * passing it, as you might expect, the function to run when nothing is pending
+  * and the workqueue to run that function out of.
+  *
+- * continue_at() also, critically, is a macro that returns the calling function.
+- * There's good reason for this.
+- *
+  * To use safely closures asynchronously, they must always have a refcount while
+  * they are running owned by the thread that is running them. Otherwise, suppose
+  * you submit some bios and wish to have a function run when they all complete:
 -- 
 1.7.1
