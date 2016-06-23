@@ -1,36 +1,30 @@
-From: Alexey Obitotskiy <aleksey.obitotskiy@intel.com>
-Subject: [PATCH] Fix kernel module refcount handling
-Date: Thu, 23 Jun 2016 12:11:01 +0200
-Message-ID: <1466676661-1564-1-git-send-email-aleksey.obitotskiy@intel.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@kernel.org, Aleksey Obitotskiy <aleksey.obitotskiy@intel.com>
+From: Jonathan Corbet <corbet@lwn.net>
+Subject: Re: [PATCH] Documentation: fix wrong value in md.txt
+Date: Thu, 23 Jun 2016 08:08:54 -0600
+Message-ID: <20160623080854.08bf0d4f@lwn.net>
+References: <2b0cf4c2.21fa.1555c03d3e9.Coremail.kernelpatch@126.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-doc-owner@vger.kernel.org>
+In-Reply-To: <2b0cf4c2.21fa.1555c03d3e9.Coremail.kernelpatch@126.com>
+Sender: linux-doc-owner@vger.kernel.org
+To: Tiezhu Yang <kernelpatch@126.com>
+Cc: shli@kernel.org, linux-doc@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-md loads raidX modules and increments module refcount each time level
-has changed but does not decrement it. You are unable to unload raid0
-module after reshape because raid0 reshape changes level to raid4
-and back to raid0.
+On Fri, 17 Jun 2016 09:40:02 +0800 (CST)
+"Tiezhu Yang" <kernelpatch@126.com> wrote:
 
-Signed-off-by: Aleksey Obitotskiy <aleksey.obitotskiy@intel.com>
----
- drivers/md/md.c | 2 ++
- 1 file changed, 2 insertions(+)
+> I read drivers/md/raid5.c and find the following related code:
+> 1) in function 'raid5_set_cache_size':
+> if (size <= 16 || size > 32768)
+> 	return -EINVAL;
+> 2) #define NR_STRIPES		256
+> 
+> So the lower limit value of stripe_cache_size should be 17 and
+> the default value should be 256.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 0963edc..c515e76 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -3590,6 +3590,8 @@ level_store(struct mddev *mddev, const char *buf, size_t len)
- 			mddev->to_remove = &md_redundancy_group;
- 	}
- 
-+	module_put(oldpers->owner);
-+
- 	rdev_for_each(rdev, mddev) {
- 		if (rdev->raid_disk < 0)
- 			continue;
--- 
-2.7.4
+Applied to the docs tree, thanks.
 
+jon
