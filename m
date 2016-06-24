@@ -1,114 +1,176 @@
-From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: [PATCH] raid10: improve random reads performance
-Date: Fri, 24 Jun 2016 14:20:16 +0200
-Message-ID: <1466770816-5227-1-git-send-email-tomasz.majchrzak@intel.com>
+From: Lars Ellenberg <lars.ellenberg@linbit.com>
+Subject: Re: [RFC] block: fix blk_queue_split() resource exhaustion
+Date: Fri, 24 Jun 2016 16:27:11 +0200
+Message-ID: <20160624142711.GF3239@soda.linbit>
+References: <1466583730-28595-1-git-send-email-lars.ellenberg@linbit.com>
+ <CACVXFVOtzcPpmg9Z_P6xN99dW=Sb_cCQNd-VcP0s5Nk0yHbwXQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CACVXFVOtzcPpmg9Z_P6xN99dW=Sb_cCQNd-VcP0s5Nk0yHbwXQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Ming Lei <ming.lei@canonical.com>
+Cc: linux-block@vger.kernel.org, Roland Kammerer <roland.kammerer@linbit.com>, Jens Axboe <axboe@kernel.dk>, NeilBrown <neilb@suse.com>, Kent Overstreet <kent.overstreet@gmail.com>, Shaohua Li <shli@kernel.org>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "open list:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Takashi Iwai <tiwai@suse.de>, Jiri Kosina <jkosina@suse.cz>, Zheng Liu <gnehzuil.liu@gmail.com>, Keith Busch <keith.busch@intel.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "open list:BCACHE (BLOCK LAYER CACHE)" <linux-bcache@vger.kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-RAID10 random read performance is lower than expected due to excessive spinlock
-utilisation which is required mostly for rebuild/resync. Simplify allow_barrier
-as it's in IO path and encounters a lot of unnecessary congestion.
+On Fri, Jun 24, 2016 at 07:36:57PM +0800, Ming Lei wrote:
+> >
+> > This is not a theoretical problem.
+> > At least int DRBD, and an unfortunately high IO concurrency wrt. the
+> > "max-buffers" setting, without this patch we have a reproducible deadlock.
+> 
+> Is there any log about the deadlock? And is there any lockdep warning
+> if it is enabled?
 
-As lower_barrier just takes a lock in order to decrement a counter, convert
-counter (nr_pending) into atomic variable and remove the spin lock. There is
-also a congestion for wake_up (it uses lock internally) so call it only when
-it's really needed. As wake_up is not called constantly anymore, ensure process
-waiting to raise a barrier is notified when there are no more waiting IOs.
+In DRBD, to avoid potentially very long internal queues as we wait for
+our replication peer device and local backend, we limit the number of
+in-flight bios we accept, and block in our ->make_request_fn() if that
+number exceeds a configured watermark ("max-buffers").
 
-Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
----
- drivers/md/raid10.c | 21 ++++++++++++---------
- drivers/md/raid10.h |  3 ++-
- 2 files changed, 14 insertions(+), 10 deletions(-)
+Works fine, as long as we could assume that once our make_request_fn()
+returns, any bios we "recursively" submitted against the local backend
+would be dispatched. Which used to be the case.
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index e3fd725..cdbe504 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -913,7 +913,7 @@ static void raise_barrier(struct r10conf *conf, int force)
- 
- 	/* Now wait for all pending IO to complete */
- 	wait_event_lock_irq(conf->wait_barrier,
--			    !conf->nr_pending && conf->barrier < RESYNC_DEPTH,
-+			    !atomic_read(&conf->nr_pending) && conf->barrier < RESYNC_DEPTH,
- 			    conf->resync_lock);
- 
- 	spin_unlock_irq(&conf->resync_lock);
-@@ -944,23 +944,23 @@ static void wait_barrier(struct r10conf *conf)
- 		 */
- 		wait_event_lock_irq(conf->wait_barrier,
- 				    !conf->barrier ||
--				    (conf->nr_pending &&
-+				    (atomic_read(&conf->nr_pending) &&
- 				     current->bio_list &&
- 				     !bio_list_empty(current->bio_list)),
- 				    conf->resync_lock);
- 		conf->nr_waiting--;
-+		if (!conf->nr_waiting)
-+			wake_up(&conf->wait_barrier);
- 	}
--	conf->nr_pending++;
-+	atomic_inc(&conf->nr_pending);
- 	spin_unlock_irq(&conf->resync_lock);
- }
- 
- static void allow_barrier(struct r10conf *conf)
- {
--	unsigned long flags;
--	spin_lock_irqsave(&conf->resync_lock, flags);
--	conf->nr_pending--;
--	spin_unlock_irqrestore(&conf->resync_lock, flags);
--	wake_up(&conf->wait_barrier);
-+	if ((atomic_dec_and_test(&conf->nr_pending)) ||
-+			(conf->array_freeze_pending))
-+		wake_up(&conf->wait_barrier);
- }
- 
- static void freeze_array(struct r10conf *conf, int extra)
-@@ -978,13 +978,15 @@ static void freeze_array(struct r10conf *conf, int extra)
- 	 * we continue.
- 	 */
- 	spin_lock_irq(&conf->resync_lock);
-+	conf->array_freeze_pending++;
- 	conf->barrier++;
- 	conf->nr_waiting++;
- 	wait_event_lock_irq_cmd(conf->wait_barrier,
--				conf->nr_pending == conf->nr_queued+extra,
-+				atomic_read(&conf->nr_pending) == conf->nr_queued+extra,
- 				conf->resync_lock,
- 				flush_pending_writes(conf));
- 
-+	conf->array_freeze_pending--;
- 	spin_unlock_irq(&conf->resync_lock);
- }
- 
-@@ -3505,6 +3507,7 @@ static struct r10conf *setup_conf(struct mddev *mddev)
- 
- 	spin_lock_init(&conf->resync_lock);
- 	init_waitqueue_head(&conf->wait_barrier);
-+	atomic_set(&conf->nr_pending, 0);
- 
- 	conf->thread = md_register_thread(raid10d, mddev, "raid10");
- 	if (!conf->thread)
-diff --git a/drivers/md/raid10.h b/drivers/md/raid10.h
-index 6fc2c75..18ec1f7 100644
---- a/drivers/md/raid10.h
-+++ b/drivers/md/raid10.h
-@@ -64,10 +64,11 @@ struct r10conf {
- 	int			pending_count;
- 
- 	spinlock_t		resync_lock;
--	int			nr_pending;
-+	atomic_t		nr_pending;
- 	int			nr_waiting;
- 	int			nr_queued;
- 	int			barrier;
-+	int			array_freeze_pending;
- 	sector_t		next_resync;
- 	int			fullsync;  /* set to 1 if a full sync is needed,
- 					    * (fresh device added).
--- 
-1.8.3.1
+commit 54efd50 block: make generic_make_request handle arbitrarily sized bios
+introduced blk_queue_split(), which will split any bio that is
+violating the queue limits into a smaller piece to be processed
+right away, and queue the "rest" on current->bio_list to be
+processed by the iteration in generic_make_request() once the
+current ->make_request_fn() returns.
+
+Before that, any user was supposed to go through bio_add_page(),
+which would call our merge bvec function, and that should already
+be sufficient to not violate queue limits.
+
+Previously, typically the next in line bio to be processed would
+be the cloned one we passed down to our backend device, which in
+case of further stacking devices (e.g. logical volume, raid1 or
+similar) may again push further bios on that list.
+All of which would simply be processed in turn.
+
+Now, with blk_queue_split(), the next-in-line bio would be the
+next piece of the "too big" original bio, so we end up calling
+several times into our ->make_request_fn() without even
+dispatching one bio to the backend.
+
+With highly concurrent IO and/or very small "max-buffers" setting,
+this can deadlock, where the current submit path would wait for
+the completion of the bios supposedly already passed to the
+backend, but which actually are not even dispatched yet, rotting
+away on current->bio_list.
+
+I could code around that in various ways inside the DRBD make_request_fn,
+or always dispatch the backend bios to a different (thread or work_queue)
+context, but I'd rather have the distinction between "recursively
+submitted" bios and "pushed back part of originally passed in bio" as
+implemented in this patch.
+
+Thanks,
+
+    Lars
+
+> > I'm unsure if it could cause problems in md raid in some corner cases
+> > or when a rebuild/scrub/... starts in a "bad" moment.
+> >
+> > It also may increase "stress" on any involved bio_set,
+> > because it may increase the number of bios that are allocated
+> > before the first of them is actually processed, causing more
+> > frequent calls of punt_bios_to_rescuer().
+> >
+> > Alternatively,
+> > a simple one-line change to generic_make_request() would also "fix" it,
+> > by processing all recursive bios in LIFO order.
+> > But that may change the order in which bios reach the "physical" layer,
+> > in case they are in fact split into many smaller pieces, for example in
+> > a striping setup, which may have other performance implications.
+> >
+> >  | diff --git a/block/blk-core.c b/block/blk-core.c
+> >  | index 2475b1c7..a5623f6 100644
+> >  | --- a/block/blk-core.c
+> >  | +++ b/block/blk-core.c
+> >  | @@ -2048,7 +2048,7 @@ blk_qc_t generic_make_request(struct bio *bio)
+> >  |       * should be added at the tail
+> >  |       */
+> >  |      if (current->bio_list) {
+> >  | -            bio_list_add(current->bio_list, bio);
+> >  | +            bio_list_add_head(current->bio_list, bio);
+> >  |              goto out;
+> >  |      }
+
+> > diff --git a/block/blk-core.c b/block/blk-core.c
+> > index 2475b1c7..f03ff4c 100644
+> > --- a/block/blk-core.c
+> > +++ b/block/blk-core.c
+> > @@ -2031,7 +2031,7 @@ end_io:
+> >   */
+> >  blk_qc_t generic_make_request(struct bio *bio)
+> >  {
+> > -       struct bio_list bio_list_on_stack;
+> > +       struct recursion_to_iteration_bio_lists bio_lists_on_stack;
+> >         blk_qc_t ret = BLK_QC_T_NONE;
+> >
+> >         if (!generic_make_request_checks(bio))
+> > @@ -2040,15 +2040,18 @@ blk_qc_t generic_make_request(struct bio *bio)
+
+> > -       if (current->bio_list) {
+> > -               bio_list_add(current->bio_list, bio);
+> > +       if (current->bio_lists) {
+> > +               bio_list_add(&current->bio_lists->recursion, bio);
+> >                 goto out;
+> >         }
+> >
+
+> > @@ -2067,8 +2070,9 @@ blk_qc_t generic_make_request(struct bio *bio)
+> >          * bio_list, and call into ->make_request() again.
+> >          */
+> >         BUG_ON(bio->bi_next);
+> > -       bio_list_init(&bio_list_on_stack);
+> > -       current->bio_list = &bio_list_on_stack;
+> > +       bio_list_init(&bio_lists_on_stack.recursion);
+> > +       bio_list_init(&bio_lists_on_stack.remainder);
+> > +       current->bio_lists = &bio_lists_on_stack;
+> >         do {
+> >                 struct request_queue *q = bdev_get_queue(bio->bi_bdev);
+> >
+> > @@ -2076,16 +2080,14 @@ blk_qc_t generic_make_request(struct bio *bio)
+> >                         ret = q->make_request_fn(q, bio);
+> >
+> >                         blk_queue_exit(q);
+> > -
+> > -                       bio = bio_list_pop(current->bio_list);
+> >                 } else {
+> > -                       struct bio *bio_next = bio_list_pop(current->bio_list);
+> > -
+> >                         bio_io_error(bio);
+> > -                       bio = bio_next;
+> >                 }
+> > +               bio = bio_list_pop(&current->bio_lists->recursion);
+> > +               if (!bio)
+> > +                       bio = bio_list_pop(&current->bio_lists->remainder);
+> >         } while (bio);
+> > -       current->bio_list = NULL; /* deactivate */
+> > +       current->bio_lists = NULL; /* deactivate */
+> >
+> >  out:
+> >         return ret;
+> > diff --git a/block/blk-merge.c b/block/blk-merge.c
+> > index 2613531..8da0c22 100644
+> > --- a/block/blk-merge.c
+> > +++ b/block/blk-merge.c
+> > @@ -172,6 +172,7 @@ void blk_queue_split(struct request_queue *q, struct bio **bio,
+> >         struct bio *split, *res;
+> >         unsigned nsegs;
+> >
+> > +       BUG_ON(!current->bio_lists);
+> >         if ((*bio)->bi_rw & REQ_DISCARD)
+> >                 split = blk_bio_discard_split(q, *bio, bs, &nsegs);
+> >         else if ((*bio)->bi_rw & REQ_WRITE_SAME)
+> > @@ -190,7 +191,7 @@ void blk_queue_split(struct request_queue *q, struct bio **bio,
+> >
+> >                 bio_chain(split, *bio);
+> >                 trace_block_split(q, split, (*bio)->bi_iter.bi_sector);
+> > -               generic_make_request(*bio);
+> > +               bio_list_add_head(&current->bio_lists->remainder, *bio);
+> >                 *bio = split;
 
