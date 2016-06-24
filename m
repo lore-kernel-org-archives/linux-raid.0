@@ -1,59 +1,149 @@
-From: Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: dm stripe: add DAX support
-Date: Fri, 24 Jun 2016 16:02:40 -0400
-Message-ID: <20160624200239.GA15587@redhat.com>
-References: <1466792610-30369-1-git-send-email-toshi.kani@hpe.com>
- <201606250312.OzHHesq4%fengguang.wu@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <201606250312.OzHHesq4%fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, kbuild-all-JC7UmRfGjtg@public.gmane.org, Alasdair Kergon <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+From: Peter Gebhard <pgeb@seas.upenn.edu>
+Subject: Recommendations needed for RAID5 recovery
+Date: Fri, 24 Jun 2016 15:55:15 -0400
+Message-ID: <B1389BE8-B7B5-4AB4-BE12-1636D4B91BB5@seas.upenn.edu>
+Mime-Version: 1.0 (Mac OS X Mail 9.3 \(3124\))
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Jun 24 2016 at  3:58pm -0400,
-kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> wrote:
+Hello,
 
-> Hi,
-> 
-> [auto build test WARNING on dm/for-next]
-> [also build test WARNING on v4.7-rc4 next-20160624]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-> 
-> url:    https://github.com/0day-ci/linux/commits/Toshi-Kani/dm-stripe-add-DAX-support/20160625-022600
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/device-mapper/linux-dm.git for-next
-> config: m68k-sun3_defconfig (attached as .config)
-> compiler: m68k-linux-gcc (GCC) 4.9.0
-> reproduce:
->         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         # save the attached .config to linux build tree
->         make.cross ARCH=m68k 
-> 
-> All warnings (new ones prefixed by >>):
-> 
->    drivers/md/dm-stripe.c:452:2: error: unknown field 'direct_access' specified in initializer
->      .direct_access = stripe_direct_access,
->      ^
->    drivers/md/dm-stripe.c:452:2: warning: missing braces around initializer [-Wmissing-braces]
->    drivers/md/dm-stripe.c:452:2: warning: (near initialization for 'stripe_target.list') [-Wmissing-braces]
-> >> drivers/md/dm-stripe.c:452:2: warning: initialization from incompatible pointer type
->    drivers/md/dm-stripe.c:452:2: warning: (near initialization for 'stripe_target.list.next')
+I have been asked to attempt data recovery on a RAID5 array which appea=
+rs to have had two disk failures (in an array of four disks). I am grat=
+efully hoping that some on this list could offer recommendations for my=
+ next steps. I have provided below the current state of the array per h=
+ttps://raid.wiki.kernel.org/index.php/RAID_Recovery.=20
 
-FYI, overzealous kbuild robot build failure here.. I haven't staged the
-prereq DM core changes yet because I'm waiting for Jens to take the 2
-block changes those depend on.
+It appears from the output below that one of the disks (sdd1) failed la=
+st year and the admin did not notice this. Now, it appears a second dis=
+k (sdg1) has recently had read errors and was kicked out of the array.
 
-Mike
+Should I try to restore the array using the recreate_array.pl script pr=
+ovided on the RAID_Recovery site? Should I then try to recreate the arr=
+ay and/or perform =E2=80=98fsck=E2=80=99?
+
+Thank you greatly in advance!
+
+raid.status:
+
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : bfb03f95:834b520d:60f773d8:ecb6b9e3
+           Name : <->:0
+  Creation Time : Tue Nov 29 17:33:39 2011
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 3907024896 (1863.01 GiB 2000.40 GB)
+     Array Size : 5860535808 (5589.04 GiB 6001.19 GB)
+  Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : ec1a6336:0a991298:5b409bf1:4585ccbe
+
+    Update Time : Sun Jun  7 02:28:00 2015
+       Checksum : f9323080 - correct
+         Events : 96203
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 0
+   Array State : AAAA ('A' =3D=3D active, '.' =3D=3D missing)
+
+/dev/sde1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : bfb03f95:834b520d:60f773d8:ecb6b9e3
+           Name : <->:0
+  Creation Time : Tue Nov 29 17:33:39 2011
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 3907024896 (1863.01 GiB 2000.40 GB)
+     Array Size : 5860535808 (5589.04 GiB 6001.19 GB)
+  Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : ed13b045:ca75ab96:83045f97:e4fd62cb
+
+    Update Time : Sun Jun 19 19:43:31 2016
+       Checksum : bb6a905f - correct
+         Events : 344993
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 3
+   Array State : .A.A ('A' =3D=3D active, '.' =3D=3D missing)
+
+/dev/sdf1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : bfb03f95:834b520d:60f773d8:ecb6b9e3
+           Name : <->:0
+  Creation Time : Tue Nov 29 17:33:39 2011
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 3907024896 (1863.01 GiB 2000.40 GB)
+     Array Size : 5860535808 (5589.04 GiB 6001.19 GB)
+  Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : a1ea11e0:6465fe26:483f133d:680014b3
+
+    Update Time : Sun Jun 19 19:43:31 2016
+       Checksum : 738493f3 - correct
+         Events : 344993
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 1
+   Array State : .A.A ('A' =3D=3D active, '.' =3D=3D missing)
+
+/dev/sdg1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : bfb03f95:834b520d:60f773d8:ecb6b9e3
+           Name : <->:0
+  Creation Time : Tue Nov 29 17:33:39 2011
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 3907024896 (1863.01 GiB 2000.40 GB)
+     Array Size : 5860535808 (5589.04 GiB 6001.19 GB)
+  Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : a9737439:17f81210:484d4f4c:c3d34a8a
+
+    Update Time : Sun Jun 19 12:18:49 2016
+       Checksum : 9c6d24bf - correct
+         Events : 343949
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 2
+   Array State : .AAA ('A' =3D=3D active, '.' =3D=3D missing)
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
