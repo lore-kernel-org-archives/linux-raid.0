@@ -1,66 +1,187 @@
-From: "Kani, Toshimitsu" <toshi.kani-ZPxbGqLxI0U@public.gmane.org>
-Subject: Re: dm stripe: add DAX support
-Date: Fri, 24 Jun 2016 20:46:31 +0000
-Message-ID: <1466801190.3504.411.camel@hpe.com>
-References: <1466792610-30369-1-git-send-email-toshi.kani@hpe.com>
- <201606250312.OzHHesq4%fengguang.wu@intel.com>
- <20160624200239.GA15587@redhat.com>
+From: "John Stoffel" <john@stoffel.org>
+Subject: Re: Recommendations needed for RAID5 recovery
+Date: Fri, 24 Jun 2016 17:37:36 -0400
+Message-ID: <22381.43040.31844.544728@quad.stoffel.home>
+References: <B1389BE8-B7B5-4AB4-BE12-1636D4B91BB5@seas.upenn.edu>
+	<CAOS+5GGxVOWw1nEfEgpVcLY0+tHPVV3d48BzyRATjpApgvSkxg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <20160624200239.GA15587-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Content-Language: en-US
-Content-ID: <02E894F273BD694B959C66D17098EC9E-mmYPd6ayCNGroOM5E8FhRbjFIynDaujOfM0AETQt39g@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: "lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org" <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: "linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org" <linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "kbuild-all-JC7UmRfGjtg@public.gmane.org" <kbuild-all-JC7UmRfGjtg@public.gmane.org>, "agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAOS+5GGxVOWw1nEfEgpVcLY0+tHPVV3d48BzyRATjpApgvSkxg@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Another Sillyname <anothersname@googlemail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-T24gRnJpLCAyMDE2LTA2LTI0IGF0IDE2OjAyIC0wNDAwLCBNaWtlIFNuaXR6ZXIgd3JvdGU6DQo+
-IE9uIEZyaSwgSnVuIDI0IDIwMTYgYXTCoMKgMzo1OHBtIC0wNDAwLA0KPiBrYnVpbGQgdGVzdCBy
-b2JvdCA8bGtwQGludGVsLmNvbT4gd3JvdGU6DQo+IA0KPiA+IA0KPiA+IEhpLA0KPiA+IA0KPiA+
-IFthdXRvIGJ1aWxkIHRlc3QgV0FSTklORyBvbiBkbS9mb3ItbmV4dF0NCj4gPiBbYWxzbyBidWls
-ZCB0ZXN0IFdBUk5JTkcgb24gdjQuNy1yYzQgbmV4dC0yMDE2MDYyNF0NCj4gPiBbaWYgeW91ciBw
-YXRjaCBpcyBhcHBsaWVkIHRvIHRoZSB3cm9uZyBnaXQgdHJlZSwgcGxlYXNlIGRyb3AgdXMgYSBu
-b3RlIHRvDQo+ID4gaGVscCBpbXByb3ZlIHRoZSBzeXN0ZW1dDQo+ID4gDQo+ID4gdXJsOsKgwqDC
-oMKgaHR0cHM6Ly9naXRodWIuY29tLzBkYXktY2kvbGludXgvY29tbWl0cy9Ub3NoaS1LYW5pL2Rt
-LXN0cmlwZS1hZGQtDQo+ID4gREFYLXN1cHBvcnQvMjAxNjA2MjUtMDIyNjAwDQo+ID4gYmFzZTrC
-oMKgwqBodHRwczovL2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9kZXZp
-Y2UtbWFwcGVyL2xpbnUNCj4gPiB4LWRtLmdpdCBmb3ItbmV4dA0KPiA+IGNvbmZpZzogbTY4ay1z
-dW4zX2RlZmNvbmZpZyAoYXR0YWNoZWQgYXMgLmNvbmZpZykNCj4gPiBjb21waWxlcjogbTY4ay1s
-aW51eC1nY2MgKEdDQykgNC45LjANCj4gPiByZXByb2R1Y2U6DQo+ID4gwqDCoMKgwqDCoMKgwqDC
-oHdnZXQgaHR0cHM6Ly9naXQua2VybmVsLm9yZy9jZ2l0L2xpbnV4L2tlcm5lbC9naXQvd2ZnL2xr
-cC10ZXN0cy5naQ0KPiA+IHQvcGxhaW4vc2Jpbi9tYWtlLmNyb3NzIC1PIH4vYmluL21ha2UuY3Jv
-c3MNCj4gPiDCoMKgwqDCoMKgwqDCoMKgY2htb2QgK3ggfi9iaW4vbWFrZS5jcm9zcw0KPiA+IMKg
-wqDCoMKgwqDCoMKgwqAjIHNhdmUgdGhlIGF0dGFjaGVkIC5jb25maWcgdG8gbGludXggYnVpbGQg
-dHJlZQ0KPiA+IMKgwqDCoMKgwqDCoMKgwqBtYWtlLmNyb3NzIEFSQ0g9bTY4a8KgDQo+ID4gDQo+
-ID4gQWxsIHdhcm5pbmdzIChuZXcgb25lcyBwcmVmaXhlZCBieSA+Pik6DQo+ID4gDQo+ID4gwqDC
-oMKgZHJpdmVycy9tZC9kbS1zdHJpcGUuYzo0NTI6MjogZXJyb3I6IHVua25vd24gZmllbGQgJ2Rp
-cmVjdF9hY2Nlc3MnDQo+ID4gc3BlY2lmaWVkIGluIGluaXRpYWxpemVyDQo+ID4gwqDCoMKgwqDC
-oC5kaXJlY3RfYWNjZXNzID0gc3RyaXBlX2RpcmVjdF9hY2Nlc3MsDQo+ID4gwqDCoMKgwqDCoF4N
-Cj4gPiDCoMKgwqBkcml2ZXJzL21kL2RtLXN0cmlwZS5jOjQ1MjoyOiB3YXJuaW5nOiBtaXNzaW5n
-IGJyYWNlcyBhcm91bmQNCj4gPiBpbml0aWFsaXplciBbLVdtaXNzaW5nLWJyYWNlc10NCj4gPiDC
-oMKgwqBkcml2ZXJzL21kL2RtLXN0cmlwZS5jOjQ1MjoyOiB3YXJuaW5nOiAobmVhciBpbml0aWFs
-aXphdGlvbiBmb3INCj4gPiAnc3RyaXBlX3RhcmdldC5saXN0JykgWy1XbWlzc2luZy1icmFjZXNd
-DQo+ID4gPiANCj4gPiA+ID4gDQo+ID4gPiA+IGRyaXZlcnMvbWQvZG0tc3RyaXBlLmM6NDUyOjI6
-IHdhcm5pbmc6IGluaXRpYWxpemF0aW9uIGZyb20NCj4gPiA+ID4gaW5jb21wYXRpYmxlIHBvaW50
-ZXIgdHlwZQ0KPiA+IMKgwqDCoGRyaXZlcnMvbWQvZG0tc3RyaXBlLmM6NDUyOjI6IHdhcm5pbmc6
-IChuZWFyIGluaXRpYWxpemF0aW9uIGZvcg0KPiA+ICdzdHJpcGVfdGFyZ2V0Lmxpc3QubmV4dCcp
-DQo+DQo+IEZZSSwgb3ZlcnplYWxvdXMga2J1aWxkIHJvYm90IGJ1aWxkIGZhaWx1cmUgaGVyZS4u
-IEkgaGF2ZW4ndCBzdGFnZWQgdGhlDQo+IHByZXJlcSBETSBjb3JlIGNoYW5nZXMgeWV0IGJlY2F1
-c2UgSSdtIHdhaXRpbmcgZm9yIEplbnMgdG8gdGFrZSB0aGUgMg0KPiBibG9jayBjaGFuZ2VzIHRo
-b3NlIGRlcGVuZCBvbi4NCg0KVGhpcyBwYXRjaCBhcHBsaWVzIG9uIHRvcCBvZiB3aXAuIMKgQ291
-bGQgdGhpcyBiZSBiZWNhdXNlICdmb3ItbmV4dCcgZG9lcyBub3QNCmhhdmUgdGhlIHByZXZpb3Vz
-IGRtL2RtLWxpbmVhciBzZXJpZXM/DQoNClRoYW5rcywNCi1Ub3NoaSDCoApfX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpMaW51eC1udmRpbW0gbWFpbGluZyBs
-aXN0CkxpbnV4LW52ZGltbUBsaXN0cy4wMS5vcmcKaHR0cHM6Ly9saXN0cy4wMS5vcmcvbWFpbG1h
-bi9saXN0aW5mby9saW51eC1udmRpbW0K
+
+Another> Before attempting any recovery can I suggest that you get 4 x
+Another> 2TB drives and dd the current drives so you have a backup.
+
+Not dd, dd_rescue instead.  But yes, try to get new hardware and clone
+all the suspect drives before you do anything else.  Even just cloning
+the most recently bad drive might be enough to get you going again.
+
+John
+
+
+
+Another> Then you can begin to think about performing the raid recovery=
+ in the
+Another> knowledge you have a fallback position if it blows up.
+
+Another> Regards
+
+Another> Tony
+
+Another> On 24 June 2016 at 20:55, Peter Gebhard <pgeb@seas.upenn.edu> =
+wrote:
+>> Hello,
+>>=20
+>> I have been asked to attempt data recovery on a RAID5 array which ap=
+pears to have had two disk failures (in an array of four disks). I am g=
+ratefully hoping that some on this list could offer recommendations for=
+ my next steps. I have provided below the current state of the array pe=
+r https://raid.wiki.kernel.org/index.php/RAID_Recovery.
+>>=20
+>> It appears from the output below that one of the disks (sdd1) failed=
+ last year and the admin did not notice this. Now, it appears a second =
+disk (sdg1) has recently had read errors and was kicked out of the arra=
+y.
+>>=20
+>> Should I try to restore the array using the recreate_array.pl script=
+ provided on the RAID_Recovery site? Should I then try to recreate the =
+array and/or perform =E2=80=98fsck=E2=80=99?
+>>=20
+>> Thank you greatly in advance!
+>>=20
+>> raid.status:
+>>=20
+>> /dev/sdd1:
+>> Magic : a92b4efc
+>> Version : 1.2
+>> Feature Map : 0x0
+>> Array UUID : bfb03f95:834b520d:60f773d8:ecb6b9e3
+>> Name : <->:0
+>> Creation Time : Tue Nov 29 17:33:39 2011
+>> Raid Level : raid5
+>> Raid Devices : 4
+>>=20
+>> Avail Dev Size : 3907024896 (1863.01 GiB 2000.40 GB)
+>> Array Size : 5860535808 (5589.04 GiB 6001.19 GB)
+>> Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
+>> Data Offset : 2048 sectors
+>> Super Offset : 8 sectors
+>> State : clean
+>> Device UUID : ec1a6336:0a991298:5b409bf1:4585ccbe
+>>=20
+>> Update Time : Sun Jun  7 02:28:00 2015
+>> Checksum : f9323080 - correct
+>> Events : 96203
+>>=20
+>> Layout : left-symmetric
+>> Chunk Size : 512K
+>>=20
+>> Device Role : Active device 0
+>> Array State : AAAA ('A' =3D=3D active, '.' =3D=3D missing)
+>>=20
+>> /dev/sde1:
+>> Magic : a92b4efc
+>> Version : 1.2
+>> Feature Map : 0x0
+>> Array UUID : bfb03f95:834b520d:60f773d8:ecb6b9e3
+>> Name : <->:0
+>> Creation Time : Tue Nov 29 17:33:39 2011
+>> Raid Level : raid5
+>> Raid Devices : 4
+>>=20
+>> Avail Dev Size : 3907024896 (1863.01 GiB 2000.40 GB)
+>> Array Size : 5860535808 (5589.04 GiB 6001.19 GB)
+>> Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
+>> Data Offset : 2048 sectors
+>> Super Offset : 8 sectors
+>> State : clean
+>> Device UUID : ed13b045:ca75ab96:83045f97:e4fd62cb
+>>=20
+>> Update Time : Sun Jun 19 19:43:31 2016
+>> Checksum : bb6a905f - correct
+>> Events : 344993
+>>=20
+>> Layout : left-symmetric
+>> Chunk Size : 512K
+>>=20
+>> Device Role : Active device 3
+>> Array State : .A.A ('A' =3D=3D active, '.' =3D=3D missing)
+>>=20
+>> /dev/sdf1:
+>> Magic : a92b4efc
+>> Version : 1.2
+>> Feature Map : 0x0
+>> Array UUID : bfb03f95:834b520d:60f773d8:ecb6b9e3
+>> Name : <->:0
+>> Creation Time : Tue Nov 29 17:33:39 2011
+>> Raid Level : raid5
+>> Raid Devices : 4
+>>=20
+>> Avail Dev Size : 3907024896 (1863.01 GiB 2000.40 GB)
+>> Array Size : 5860535808 (5589.04 GiB 6001.19 GB)
+>> Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
+>> Data Offset : 2048 sectors
+>> Super Offset : 8 sectors
+>> State : clean
+>> Device UUID : a1ea11e0:6465fe26:483f133d:680014b3
+>>=20
+>> Update Time : Sun Jun 19 19:43:31 2016
+>> Checksum : 738493f3 - correct
+>> Events : 344993
+>>=20
+>> Layout : left-symmetric
+>> Chunk Size : 512K
+>>=20
+>> Device Role : Active device 1
+>> Array State : .A.A ('A' =3D=3D active, '.' =3D=3D missing)
+>>=20
+>> /dev/sdg1:
+>> Magic : a92b4efc
+>> Version : 1.2
+>> Feature Map : 0x0
+>> Array UUID : bfb03f95:834b520d:60f773d8:ecb6b9e3
+>> Name : <->:0
+>> Creation Time : Tue Nov 29 17:33:39 2011
+>> Raid Level : raid5
+>> Raid Devices : 4
+>>=20
+>> Avail Dev Size : 3907024896 (1863.01 GiB 2000.40 GB)
+>> Array Size : 5860535808 (5589.04 GiB 6001.19 GB)
+>> Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
+>> Data Offset : 2048 sectors
+>> Super Offset : 8 sectors
+>> State : active
+>> Device UUID : a9737439:17f81210:484d4f4c:c3d34a8a
+>>=20
+>> Update Time : Sun Jun 19 12:18:49 2016
+>> Checksum : 9c6d24bf - correct
+>> Events : 343949
+>>=20
+>> Layout : left-symmetric
+>> Chunk Size : 512K
+>>=20
+>> Device Role : Active device 2
+>> Array State : .AAA ('A' =3D=3D active, '.' =3D=3D missing)
+>>=20
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Another> --
+Another> To unsubscribe from this list: send the line "unsubscribe linu=
+x-raid" in
+Another> the body of a message to majordomo@vger.kernel.org
+Another> More majordomo info at  http://vger.kernel.org/majordomo-info.=
+html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
