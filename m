@@ -1,201 +1,231 @@
-From: Ming Lei <ming.lei@canonical.com>
-Subject: Re: [RFC] block: fix blk_queue_split() resource exhaustion
-Date: Sat, 25 Jun 2016 17:30:29 +0800
-Message-ID: <CACVXFVMtMi9WXYQLa3_XZi7W8ZsJe1GnnTLX+7tRMhFAMUSHtA@mail.gmail.com>
-References: <1466583730-28595-1-git-send-email-lars.ellenberg@linbit.com>
- <CACVXFVOtzcPpmg9Z_P6xN99dW=Sb_cCQNd-VcP0s5Nk0yHbwXQ@mail.gmail.com> <20160624142711.GF3239@soda.linbit>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: Recommendations needed for RAID5 recovery
+Date: Sat, 25 Jun 2016 12:43:36 +0100
+Message-ID: <576E6E68.9070209@youngman.org.uk>
+References: <B1389BE8-B7B5-4AB4-BE12-1636D4B91BB5@seas.upenn.edu>
+ <CAOS+5GGxVOWw1nEfEgpVcLY0+tHPVV3d48BzyRATjpApgvSkxg@mail.gmail.com>
+ <22381.43040.31844.544728@quad.stoffel.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160624142711.GF3239@soda.linbit>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Lars Ellenberg <lars.ellenberg@linbit.com>
-Cc: linux-block@vger.kernel.org, Roland Kammerer <roland.kammerer@linbit.com>, Jens Axboe <axboe@kernel.dk>, NeilBrown <neilb@suse.com>, Kent Overstreet <kent.overstreet@gmail.com>, Shaohua Li <shli@kernel.org>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "open list:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Takashi Iwai <tiwai@suse.de>, Jiri Kosina <jkosina@suse.cz>, Zheng Liu <gnehzuil.liu@gmail.com>, Keith Busch <keith.busch@intel.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "open list:BCACHE (BLOCK LAYER CACHE)" <linux-bcache@vger.kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <22381.43040.31844.544728@quad.stoffel.home>
+Sender: linux-raid-owner@vger.kernel.org
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Jun 24, 2016 at 10:27 PM, Lars Ellenberg
-<lars.ellenberg@linbit.com> wrote:
-> On Fri, Jun 24, 2016 at 07:36:57PM +0800, Ming Lei wrote:
->> >
->> > This is not a theoretical problem.
->> > At least int DRBD, and an unfortunately high IO concurrency wrt. the
->> > "max-buffers" setting, without this patch we have a reproducible deadlock.
->>
->> Is there any log about the deadlock? And is there any lockdep warning
->> if it is enabled?
->
-> In DRBD, to avoid potentially very long internal queues as we wait for
-> our replication peer device and local backend, we limit the number of
-> in-flight bios we accept, and block in our ->make_request_fn() if that
-> number exceeds a configured watermark ("max-buffers").
->
-> Works fine, as long as we could assume that once our make_request_fn()
-> returns, any bios we "recursively" submitted against the local backend
-> would be dispatched. Which used to be the case.
->
-> commit 54efd50 block: make generic_make_request handle arbitrarily sized bios
-> introduced blk_queue_split(), which will split any bio that is
-> violating the queue limits into a smaller piece to be processed
-> right away, and queue the "rest" on current->bio_list to be
-> processed by the iteration in generic_make_request() once the
-> current ->make_request_fn() returns.
->
-> Before that, any user was supposed to go through bio_add_page(),
-> which would call our merge bvec function, and that should already
-> be sufficient to not violate queue limits.
->
-> Previously, typically the next in line bio to be processed would
-> be the cloned one we passed down to our backend device, which in
-> case of further stacking devices (e.g. logical volume, raid1 or
-> similar) may again push further bios on that list.
-> All of which would simply be processed in turn.
+On 24/06/16 22:37, John Stoffel wrote:
+>=20
+> Another> Before attempting any recovery can I suggest that you get 4 =
+x
+> Another> 2TB drives and dd the current drives so you have a backup.
+>=20
+> Not dd, dd_rescue instead.  But yes, try to get new hardware and clon=
+e
+> all the suspect drives before you do anything else.  Even just clonin=
+g
+> the most recently bad drive might be enough to get you going again.
 
-Could you clarify if the issue is triggered in drbd without dm/md involved?
-Or the issue is always triggered with dm/md over drbd?
+As I got told rather sharply :-) there's a big difference between dd an=
+d
+ddrescue.
 
-As Mike mentioned, there is one known issue with dm-snapshot.
+IFF dd completes successfully (it'll bomb on an error) then you have a
+"known good" copy. In other words the problem with dd is it won't work
+on a bad drive, but if it does work you're home and dry.
 
->
-> Now, with blk_queue_split(), the next-in-line bio would be the
-> next piece of the "too big" original bio, so we end up calling
-> several times into our ->make_request_fn() without even
-> dispatching one bio to the backend.
+ddrescue will ALWAYS work - but if it can't read a block it will leave
+an empty block in the copy! This is a bomb waiting to go off! In other
+words, ddrescue is great at recovering what you can from a damaged
+filesystem - less so at recovering a disk with a complicated setup on t=
+op.
 
-If your ->make_request_fn() is called several times, each time
-at least you should dispatch one bio returnd from blk_queue_split(),
-so I don't understand why even one bio isn't dispatched out.
+I know you're getting conflicting advice, but I'd try to get a good dd
+backup first. I don't know of any utility that will do an md integrity
+check on a ddrescue'd disk :-( so you'd need to do a fsck and hope ...
 
->
-> With highly concurrent IO and/or very small "max-buffers" setting,
-> this can deadlock, where the current submit path would wait for
-> the completion of the bios supposedly already passed to the
-> backend, but which actually are not even dispatched yet, rotting
-> away on current->bio_list.
+Oh - and make sure you new disks are proper raid - eg WD Red or Seagate
+NAS. And are your current disks proper raid? If not, fix the timeout
+problem and your life *may* be made a lot simpler ...
 
-Suppose your ->make_request_fn only handles the bio returned
-from blk_queue_split(), I don't understand why your driver waits
-for the 'rest' bios from the blk_queue_split().
+Have you got spare SATA ports? If not, go out and get an add-in card! I=
+f
+you can force the array to assemble, and create a temporary six-drive
+array (the two dud ones being assembled with the --replace option to
+move them to two new ones) that may be your best bet at recovery. If md
+can get at a clean read from three drives for each block, then it'll be
+able to rebuild the missing block.
 
-Maybe drbd driver calls generic_make_request() in
-->make_request_fn() and supposes the bio is always dispatched
-out once generic_make_request() returns, is it right?
-
->
-> I could code around that in various ways inside the DRBD make_request_fn,
-> or always dispatch the backend bios to a different (thread or work_queue)
-> context, but I'd rather have the distinction between "recursively
-> submitted" bios and "pushed back part of originally passed in bio" as
-> implemented in this patch.
->
-> Thanks,
->
->     Lars
->
->> > I'm unsure if it could cause problems in md raid in some corner cases
->> > or when a rebuild/scrub/... starts in a "bad" moment.
->> >
->> > It also may increase "stress" on any involved bio_set,
->> > because it may increase the number of bios that are allocated
->> > before the first of them is actually processed, causing more
->> > frequent calls of punt_bios_to_rescuer().
->> >
->> > Alternatively,
->> > a simple one-line change to generic_make_request() would also "fix" it,
->> > by processing all recursive bios in LIFO order.
->> > But that may change the order in which bios reach the "physical" layer,
->> > in case they are in fact split into many smaller pieces, for example in
->> > a striping setup, which may have other performance implications.
->> >
->> >  | diff --git a/block/blk-core.c b/block/blk-core.c
->> >  | index 2475b1c7..a5623f6 100644
->> >  | --- a/block/blk-core.c
->> >  | +++ b/block/blk-core.c
->> >  | @@ -2048,7 +2048,7 @@ blk_qc_t generic_make_request(struct bio *bio)
->> >  |       * should be added at the tail
->> >  |       */
->> >  |      if (current->bio_list) {
->> >  | -            bio_list_add(current->bio_list, bio);
->> >  | +            bio_list_add_head(current->bio_list, bio);
->> >  |              goto out;
->> >  |      }
->
->> > diff --git a/block/blk-core.c b/block/blk-core.c
->> > index 2475b1c7..f03ff4c 100644
->> > --- a/block/blk-core.c
->> > +++ b/block/blk-core.c
->> > @@ -2031,7 +2031,7 @@ end_io:
->> >   */
->> >  blk_qc_t generic_make_request(struct bio *bio)
->> >  {
->> > -       struct bio_list bio_list_on_stack;
->> > +       struct recursion_to_iteration_bio_lists bio_lists_on_stack;
->> >         blk_qc_t ret = BLK_QC_T_NONE;
->> >
->> >         if (!generic_make_request_checks(bio))
->> > @@ -2040,15 +2040,18 @@ blk_qc_t generic_make_request(struct bio *bio)
->
->> > -       if (current->bio_list) {
->> > -               bio_list_add(current->bio_list, bio);
->> > +       if (current->bio_lists) {
->> > +               bio_list_add(&current->bio_lists->recursion, bio);
->> >                 goto out;
->> >         }
->> >
->
->> > @@ -2067,8 +2070,9 @@ blk_qc_t generic_make_request(struct bio *bio)
->> >          * bio_list, and call into ->make_request() again.
->> >          */
->> >         BUG_ON(bio->bi_next);
->> > -       bio_list_init(&bio_list_on_stack);
->> > -       current->bio_list = &bio_list_on_stack;
->> > +       bio_list_init(&bio_lists_on_stack.recursion);
->> > +       bio_list_init(&bio_lists_on_stack.remainder);
->> > +       current->bio_lists = &bio_lists_on_stack;
->> >         do {
->> >                 struct request_queue *q = bdev_get_queue(bio->bi_bdev);
->> >
->> > @@ -2076,16 +2080,14 @@ blk_qc_t generic_make_request(struct bio *bio)
->> >                         ret = q->make_request_fn(q, bio);
->> >
->> >                         blk_queue_exit(q);
->> > -
->> > -                       bio = bio_list_pop(current->bio_list);
->> >                 } else {
->> > -                       struct bio *bio_next = bio_list_pop(current->bio_list);
->> > -
->> >                         bio_io_error(bio);
->> > -                       bio = bio_next;
->> >                 }
->> > +               bio = bio_list_pop(&current->bio_lists->recursion);
->> > +               if (!bio)
->> > +                       bio = bio_list_pop(&current->bio_lists->remainder);
->> >         } while (bio);
->> > -       current->bio_list = NULL; /* deactivate */
->> > +       current->bio_lists = NULL; /* deactivate */
->> >
->> >  out:
->> >         return ret;
->> > diff --git a/block/blk-merge.c b/block/blk-merge.c
->> > index 2613531..8da0c22 100644
->> > --- a/block/blk-merge.c
->> > +++ b/block/blk-merge.c
->> > @@ -172,6 +172,7 @@ void blk_queue_split(struct request_queue *q, struct bio **bio,
->> >         struct bio *split, *res;
->> >         unsigned nsegs;
->> >
->> > +       BUG_ON(!current->bio_lists);
->> >         if ((*bio)->bi_rw & REQ_DISCARD)
->> >                 split = blk_bio_discard_split(q, *bio, bs, &nsegs);
->> >         else if ((*bio)->bi_rw & REQ_WRITE_SAME)
->> > @@ -190,7 +191,7 @@ void blk_queue_split(struct request_queue *q, struct bio **bio,
->> >
->> >                 bio_chain(split, *bio);
->> >                 trace_block_split(q, split, (*bio)->bi_iter.bi_sector);
->> > -               generic_make_request(*bio);
->> > +               bio_list_add_head(&current->bio_lists->remainder, *bio);
->> >                 *bio = split;
->
+Cheers,
+Wol
+>=20
+> John
+>=20
+>=20
+>=20
+> Another> Then you can begin to think about performing the raid recove=
+ry in the
+> Another> knowledge you have a fallback position if it blows up.
+>=20
+> Another> Regards
+>=20
+> Another> Tony
+>=20
+> Another> On 24 June 2016 at 20:55, Peter Gebhard <pgeb@seas.upenn.edu=
+> wrote:
+>>> Hello,
+>>>
+>>> I have been asked to attempt data recovery on a RAID5 array which a=
+ppears to have had two disk failures (in an array of four disks). I am =
+gratefully hoping that some on this list could offer recommendations fo=
+r my next steps. I have provided below the current state of the array p=
+er https://raid.wiki.kernel.org/index.php/RAID_Recovery.
+>>>
+>>> It appears from the output below that one of the disks (sdd1) faile=
+d last year and the admin did not notice this. Now, it appears a second=
+ disk (sdg1) has recently had read errors and was kicked out of the arr=
+ay.
+>>>
+>>> Should I try to restore the array using the recreate_array.pl scrip=
+t provided on the RAID_Recovery site? Should I then try to recreate the=
+ array and/or perform =E2=80=98fsck=E2=80=99?
+>>>
+>>> Thank you greatly in advance!
+>>>
+>>> raid.status:
+>>>
+>>> /dev/sdd1:
+>>> Magic : a92b4efc
+>>> Version : 1.2
+>>> Feature Map : 0x0
+>>> Array UUID : bfb03f95:834b520d:60f773d8:ecb6b9e3
+>>> Name : <->:0
+>>> Creation Time : Tue Nov 29 17:33:39 2011
+>>> Raid Level : raid5
+>>> Raid Devices : 4
+>>>
+>>> Avail Dev Size : 3907024896 (1863.01 GiB 2000.40 GB)
+>>> Array Size : 5860535808 (5589.04 GiB 6001.19 GB)
+>>> Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
+>>> Data Offset : 2048 sectors
+>>> Super Offset : 8 sectors
+>>> State : clean
+>>> Device UUID : ec1a6336:0a991298:5b409bf1:4585ccbe
+>>>
+>>> Update Time : Sun Jun  7 02:28:00 2015
+>>> Checksum : f9323080 - correct
+>>> Events : 96203
+>>>
+>>> Layout : left-symmetric
+>>> Chunk Size : 512K
+>>>
+>>> Device Role : Active device 0
+>>> Array State : AAAA ('A' =3D=3D active, '.' =3D=3D missing)
+>>>
+>>> /dev/sde1:
+>>> Magic : a92b4efc
+>>> Version : 1.2
+>>> Feature Map : 0x0
+>>> Array UUID : bfb03f95:834b520d:60f773d8:ecb6b9e3
+>>> Name : <->:0
+>>> Creation Time : Tue Nov 29 17:33:39 2011
+>>> Raid Level : raid5
+>>> Raid Devices : 4
+>>>
+>>> Avail Dev Size : 3907024896 (1863.01 GiB 2000.40 GB)
+>>> Array Size : 5860535808 (5589.04 GiB 6001.19 GB)
+>>> Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
+>>> Data Offset : 2048 sectors
+>>> Super Offset : 8 sectors
+>>> State : clean
+>>> Device UUID : ed13b045:ca75ab96:83045f97:e4fd62cb
+>>>
+>>> Update Time : Sun Jun 19 19:43:31 2016
+>>> Checksum : bb6a905f - correct
+>>> Events : 344993
+>>>
+>>> Layout : left-symmetric
+>>> Chunk Size : 512K
+>>>
+>>> Device Role : Active device 3
+>>> Array State : .A.A ('A' =3D=3D active, '.' =3D=3D missing)
+>>>
+>>> /dev/sdf1:
+>>> Magic : a92b4efc
+>>> Version : 1.2
+>>> Feature Map : 0x0
+>>> Array UUID : bfb03f95:834b520d:60f773d8:ecb6b9e3
+>>> Name : <->:0
+>>> Creation Time : Tue Nov 29 17:33:39 2011
+>>> Raid Level : raid5
+>>> Raid Devices : 4
+>>>
+>>> Avail Dev Size : 3907024896 (1863.01 GiB 2000.40 GB)
+>>> Array Size : 5860535808 (5589.04 GiB 6001.19 GB)
+>>> Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
+>>> Data Offset : 2048 sectors
+>>> Super Offset : 8 sectors
+>>> State : clean
+>>> Device UUID : a1ea11e0:6465fe26:483f133d:680014b3
+>>>
+>>> Update Time : Sun Jun 19 19:43:31 2016
+>>> Checksum : 738493f3 - correct
+>>> Events : 344993
+>>>
+>>> Layout : left-symmetric
+>>> Chunk Size : 512K
+>>>
+>>> Device Role : Active device 1
+>>> Array State : .A.A ('A' =3D=3D active, '.' =3D=3D missing)
+>>>
+>>> /dev/sdg1:
+>>> Magic : a92b4efc
+>>> Version : 1.2
+>>> Feature Map : 0x0
+>>> Array UUID : bfb03f95:834b520d:60f773d8:ecb6b9e3
+>>> Name : <->:0
+>>> Creation Time : Tue Nov 29 17:33:39 2011
+>>> Raid Level : raid5
+>>> Raid Devices : 4
+>>>
+>>> Avail Dev Size : 3907024896 (1863.01 GiB 2000.40 GB)
+>>> Array Size : 5860535808 (5589.04 GiB 6001.19 GB)
+>>> Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
+>>> Data Offset : 2048 sectors
+>>> Super Offset : 8 sectors
+>>> State : active
+>>> Device UUID : a9737439:17f81210:484d4f4c:c3d34a8a
+>>>
+>>> Update Time : Sun Jun 19 12:18:49 2016
+>>> Checksum : 9c6d24bf - correct
+>>> Events : 343949
+>>>
+>>> Layout : left-symmetric
+>>> Chunk Size : 512K
+>>>
+>>> Device Role : Active device 2
+>>> Array State : .AAA ('A' =3D=3D active, '.' =3D=3D missing)
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-rai=
+d" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Another> --
+> Another> To unsubscribe from this list: send the line "unsubscribe li=
+nux-raid" in
+> Another> the body of a message to majordomo@vger.kernel.org
+> Another> More majordomo info at  http://vger.kernel.org/majordomo-inf=
+o.html
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-block" in
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
