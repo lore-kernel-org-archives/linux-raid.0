@@ -1,22 +1,38 @@
-From: " Webmaster" <juanveliz@utm.edu.ec>
-Subject: We Apologize For Any Inconvenience
-Date: Mon, 27 Jun 2016 06:04:49 -0500 (ECT)
-Message-ID: <05e35c2b-cc43-4ece-9dd0-6334b2c3ecb8@mail>
-Reply-To: Webmaster <webmailupgradeteam01@yahoo.com>
+From: iggy <info@kit-it.de>
+Subject: Reshapeing after 4 Days with 0.0% progress
+Date: Mon, 27 Jun 2016 11:21:42 +0000 (UTC)
+Message-ID: <loom.20160627T131058-485@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Your mailbox has exceeded the storage limit 2.GB Founded by the administrator is currently 2.30GB, can not send or receive new messages until you re-validate your email.
+Hello Guys,
 
-Click the link below to Update your email
+i wanted to grow my raid 5 with 3 3tb devices to 4 of 3tb devices.
 
-https://www.formcrafts.com/a/20433
+1) i add a new device
+2) i grow (please ask me not why i do this) with the help of the button in
+webmin instead of the cli 
 
-Thank you!
-Customer Care
-Case number: 8941624
-Copyright @ 2016 all rights reserved
+
+cat /proc/mdstat:....
+
+After 3 Days of 0.0% of reshaping progress i decided to abort this procedure
+- because for me it seems like an error!
+
+
+Now my raid disapears and i'm not able to mount and backup my data, because
+of degraded. So i have no backup file during reshaping.
+
+is there any way to mount my md0 to backup a fews of data before i complete
+recreate my raid array?
+
+i hofe for answers..
+THANKS!
+
+
+
