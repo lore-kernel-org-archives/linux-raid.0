@@ -1,7 +1,8 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: URE, link resets, user hostile defaults
-Date: Mon, 27 Jun 2016 10:42:05 -0600
-Message-ID: <CAJCQCtT1qi1yLjE3Lor3ScVJx7aX4A_S_iM_=VhDtDCD_C9uqw@mail.gmail.com>
+From: dave dowless <ddowless@gmail.com>
+Subject: How assemble this array? All devices listed as spares and busy. Huh?
+ Unclear what this means.
+Date: Mon, 27 Jun 2016 14:16:25 -0400
+Message-ID: <CAM=c-cABEJMShf0m=evmehcfuCM5pBcp5iFOOAi5V1XRa2ekiQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -9,45 +10,142 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+How to assemble this array? Note, mdadm.conf has no array line.
 
-Drives with SCT ERC not supported or unset, result in potentially long
-error recoveries for marginal or bad sectors: upwards of 180 second
-recovers are suggested.
+Originally this was Raid5 with 4disk (sda1, sdb1, sdc1, sdd1)
 
-The kernel's SCSI command timer default of 30 seconds, i.e.
+The current /proc/mdstat list everything as spares:
 
-cat /sys/block/<dev>/device/timeout
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10]
+md0 : inactive sdc1[2](S) sdd1[4](S) sda1[0](S) sdb1[5](S)
+      23441559552 blocks super 1.2
 
-conspires to  undermine the deep recovery of most drives now on the
-market. This by default misconfiguration results in problems list
-regulars are very well aware of. It affects all raid configurations,
-and even affects the non-RAID single drive use case. And it does so in
-a way that doesn't happen on either Windows or macOS. Basically it is
-linux kernel induced data loss, the drive very possibly could present
-the requested data upon deep recovery being permitted, but the
-kernel's command timer is reached before recovery completes, and
-obliterates any possibility of recovering that data. By default.
+The last working /proc/mdstat was (yes with failed disk):
 
-This now seems to affect the majority of use cases. At one time 30
-seconds might have been sane for a world with drives that had less
-than 30 second recoveries for bad sectors. But that's no longer the
-case.
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10]
+md0 : active raid5 sdb1[5](S) sdd1[4] sdc1[2] sda1[0](F)
+      17581168128 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/2] [__UU]
 
-I'm wondering if anyone has floated the idea of changing the kernels
-default SCSI command timer? And if so, if there's a thread discussing
-where that was rejected upstream? Or if this exposes other liabilities
-that merits an alternative work around for what now amounts to a
-defect. Maybe it needs to be a udev rule?
+I ended up rebooting, but a force assemble returns all devices are
+busy. What gives?
 
-Perhaps ideally what we'd like to have is two timers. A timer that
-reports back "slowness" for a drive to complete a queued command,
-which could be used by e.g. scrubs to preemptively overwrite those
-sectors rather than wait for read errors to happen. And then a timer
-with a longer value would be the present timer that results in a link
-reset once it's reached.
+mdadm: /dev/sda1 is busy - skipping
+mdadm: /dev/sdb1 is busy - skipping
+mdadm: /dev/sdc1 is busy - skipping
+mdadm: /dev/sdd1 is busy - skipping
 
-Thanks,
+Also know I that I had set sdb1 faulty and it came back as a spare and
+rebuilt just prior to this problem.
 
--- 
-Chris Murphy
+== Drives examined =========
+
+/dev/sda1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 13d20dae:40e86bdf:437f8b51:bf2b4dd8
+           Name : zippy:0  (local to host zippy)
+  Creation Time : Thu Oct  1 15:37:52 2015
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 11720779776 (5588.90 GiB 6001.04 GB)
+     Array Size : 17581168128 (16766.71 GiB 18003.12 GB)
+  Used Dev Size : 11720778752 (5588.90 GiB 6001.04 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 008c8a3f:9e4295b8:48bdc532:c6c2ab4d
+
+    Update Time : Thu Jun  9 21:22:12 2016
+       Checksum : 6c151ac3 - correct
+         Events : 406
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 0
+   Array State : AAAA ('A' == active, '.' == missing)
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 13d20dae:40e86bdf:437f8b51:bf2b4dd8
+           Name : zippy:0  (local to host zippy)
+  Creation Time : Thu Oct  1 15:37:52 2015
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 11720779776 (5588.90 GiB 6001.04 GB)
+     Array Size : 17581168128 (16766.71 GiB 18003.12 GB)
+  Used Dev Size : 11720778752 (5588.90 GiB 6001.04 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 4f7deb5f:32333098:c97b360f:578ea16f
+
+    Update Time : Fri Jun 10 11:44:26 2016
+       Checksum : 6a7750d8 - correct
+         Events : 412
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : spare
+   Array State : ..AA ('A' == active, '.' == missing)
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 13d20dae:40e86bdf:437f8b51:bf2b4dd8
+           Name : zippy:0  (local to host zippy)
+  Creation Time : Thu Oct  1 15:37:52 2015
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 11720779776 (5588.90 GiB 6001.04 GB)
+     Array Size : 17581168128 (16766.71 GiB 18003.12 GB)
+  Used Dev Size : 11720778752 (5588.90 GiB 6001.04 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 60905555:5d6adfcc:0200168e:5bec3d80
+
+    Update Time : Fri Jun 10 11:44:26 2016
+       Checksum : 240c7d4f - correct
+         Events : 412
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 2
+   Array State : ..AA ('A' == active, '.' == missing)
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 13d20dae:40e86bdf:437f8b51:bf2b4dd8
+           Name : zippy:0  (local to host zippy)
+  Creation Time : Thu Oct  1 15:37:52 2015
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 11720779776 (5588.90 GiB 6001.04 GB)
+     Array Size : 17581168128 (16766.71 GiB 18003.12 GB)
+  Used Dev Size : 11720778752 (5588.90 GiB 6001.04 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : d97144c5:35daac52:2ed50f5a:56b2a67d
+
+    Update Time : Fri Jun 10 11:44:26 2016
+       Checksum : e32b69c8 - correct
+         Events : 412
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 3
+   Array State : ..AA ('A' == active, '.' == missing)
