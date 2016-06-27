@@ -1,29 +1,22 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Recommendations needed for RAID5 recovery
-Date: Mon, 27 Jun 2016 12:05:07 +0200 (CEST)
-Message-ID: <alpine.DEB.2.02.1606271203090.28955@uplift.swm.pp.se>
-References: <B1389BE8-B7B5-4AB4-BE12-1636D4B91BB5@seas.upenn.edu> <CAOS+5GGxVOWw1nEfEgpVcLY0+tHPVV3d48BzyRATjpApgvSkxg@mail.gmail.com> <22381.43040.31844.544728@quad.stoffel.home> <576E6E68.9070209@youngman.org.uk> <576EB5FD.1000309@turmel.org>
- <5770452F.8000109@youngman.org.uk> <5770549C.4060301@turmel.org> <20160627090645.GA3255@metamorpher.de>
+From: " Webmaster" <juanveliz@utm.edu.ec>
+Subject: We Apologize For Any Inconvenience
+Date: Mon, 27 Jun 2016 06:04:49 -0500 (ECT)
+Message-ID: <05e35c2b-cc43-4ece-9dd0-6334b2c3ecb8@mail>
+Reply-To: Webmaster <webmailupgradeteam01@yahoo.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160627090645.GA3255@metamorpher.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 27 Jun 2016, Andreas Klauer wrote:
+Your mailbox has exceeded the storage limit 2.GB Founded by the administrator is currently 2.30GB, can not send or receive new messages until you re-validate your email.
 
-> So you shouldn't use dd on bad disks...
+Click the link below to Update your email
 
-There is no downside to using ddrescue that I can see. If everything works 
-ok, then you get a 0 error copy, and you got the exact same result as with 
-dd.
+https://www.formcrafts.com/a/20433
 
-If you did have errors, then ddrescue will try to do the best of the 
-situation and try to copy as much as possible from the drive You also get 
-a list of the errored sectors that you can use for future reference.
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+Thank you!
+Customer Care
+Case number: 8941624
+Copyright @ 2016 all rights reserved
