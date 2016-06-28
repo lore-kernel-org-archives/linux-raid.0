@@ -1,62 +1,58 @@
-From: kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 1/2] dm: update table type check for dax
-Date: Wed, 29 Jun 2016 04:33:22 +0800
-Message-ID: <201606290444.S7wFsdHl%fengguang.wu@intel.com>
-References: <1467142636-21094-2-git-send-email-toshi.kani@hpe.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: URE, link resets, user hostile defaults
+Date: Tue, 28 Jun 2016 21:46:08 +0100
+Message-ID: <5772E210.4090007@youngman.org.uk>
+References: <CAJCQCtT1qi1yLjE3Lor3ScVJx7aX4A_S_iM_=VhDtDCD_C9uqw@mail.gmail.com>
+ <57721A47.8070203@suse.de>
+ <CAJCQCtQ=DXWg6qK1+9bwQxrzpKUsRvaiaAnatYR-dupg7JOVzQ@mail.gmail.com>
+ <5772C1DE.9000403@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <1467142636-21094-2-git-send-email-toshi.kani-ZPxbGqLxI0U@public.gmane.org>
-Content-Disposition: inline
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Toshi Kani <toshi.kani-ZPxbGqLxI0U@public.gmane.org>
-Cc: snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, kbuild-all-JC7UmRfGjtg@public.gmane.org, agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5772C1DE.9000403@turmel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>, Chris Murphy <lists@colorremedies.com>, Hannes Reinecke <hare@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On 28/06/16 19:28, Phil Turmel wrote:
+> On 06/28/2016 01:33 PM, Chris Murphy wrote:
+> 
+>> > Perhaps there's a better way to do this than change the default
+>> > timeout in the kernel? Maybe what we need is an upstream udev rule
+>> > that polls SCT ERC for each drive, and if it's
+>> > disabled/unsupported/unknown then it sets a much higher command timer
+>> > for that block device. And maybe it only does this on USB and SATA.
+>> > For anything enterprise or NAS grade, they do report (at least to
+>> > smartctl) SCT ERC in deciseconds. The most common value is 70
+>> > deciseconds, so a 30 second command timer is OK. Maybe it could even
+>> > be lower but that's a separate optimization conversation.
+> When Neil retired from maintainership, I mentioned that I would take a
+> stab at this.  You're right, just setting the kernel default timeout to
+> 180 would be a regression.  If I recall correctly, there are network
+> services that would disconnect if storage stacks could delay that long
+> before replying, whether good or bad.
+> 
+> So a device discovery process that examines the drive's parameter pages
+> and makes an intelligent decision would be the way to go.  But as you
+> can see, I haven't dug into the ata & scsi layers to figure it out yet.
+>  It won't hurt my feelings if someone beats me to it.
 
-[auto build test ERROR on dm/for-next]
-[also build test ERROR on v4.7-rc5 next-20160628]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+Talking off the top of my head :-) would it be possible to spawn a
+kernel thread - if it takes longer than an aggressive time-out - that
+just waits for far longer then rewrites it if the read finally completes?
 
-url:    https://github.com/0day-ci/linux/commits/Toshi-Kani/Support-DAX-for-device-mapper-dm-linear-devices/20160629-034110
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/device-mapper/linux-dm.git for-next
-config: x86_64-randconfig-s1-06290340 (attached as .config)
-compiler: gcc-6 (Debian 6.1.1-1) 6.1.1 20160430
-reproduce:
-        # save the attached .config to linux build tree
-        make ARCH=x86_64 
+In other words, wait for say the 70 deciseconds, then spawn the rewrite
+thread, then continue waiting until whatever timeout. The thread could
+actually not even time out but just wait for the drive to time out. If
+the drive (eventually) responds rather than timing out then the rewrite
+would hopefully fix the potential impending URE.
 
-All errors (new ones prefixed by >>):
+So we'd need two timeouts really. Timeout 1 says "if it takes longer
+than this, do a background rewrite when it finally succeeds", and
+timeout 2 says "if it takes longer than this, return an error, but let
+the rewrite thread continue to wait".
 
-   drivers/md/dm-ioctl.c: In function 'is_valid_type':
->> drivers/md/dm-ioctl.c:1273:42: error: 'DM_TYPE_DAX_BIO_BASED' undeclared (first use in this function)
-         (cur == DM_TYPE_BIO_BASED && new == DM_TYPE_DAX_BIO_BASED))
-                                             ^~~~~~~~~~~~~~~~~~~~~
-   drivers/md/dm-ioctl.c:1273:42: note: each undeclared identifier is reported only once for each function it appears in
-
-vim +/DM_TYPE_DAX_BIO_BASED +1273 drivers/md/dm-ioctl.c
-
-  1267		return dm_table_complete(table);
-  1268	}
-  1269	
-  1270	static bool is_valid_type(unsigned cur, unsigned new)
-  1271	{
-  1272		if (cur == new ||
-> 1273		    (cur == DM_TYPE_BIO_BASED && new == DM_TYPE_DAX_BIO_BASED))
-  1274			return true;
-  1275	
-  1276		return false;
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+Cheers,
+Wol
