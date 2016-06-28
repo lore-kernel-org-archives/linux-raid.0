@@ -1,69 +1,55 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: URE, link resets, user hostile defaults
-Date: Tue, 28 Jun 2016 08:33:43 +0200
-Message-ID: <57721A47.8070203@suse.de>
-References: <CAJCQCtT1qi1yLjE3Lor3ScVJx7aX4A_S_iM_=VhDtDCD_C9uqw@mail.gmail.com>
+From: Lars Ellenberg <lars.ellenberg@linbit.com>
+Subject: Re: block: fix blk_queue_split() resource exhaustion
+Date: Tue, 28 Jun 2016 10:24:49 +0200
+Message-ID: <20160628082448.GH3239@soda.linbit>
+References: <1466583730-28595-1-git-send-email-lars.ellenberg@linbit.com>
+ <CACVXFVOtzcPpmg9Z_P6xN99dW=Sb_cCQNd-VcP0s5Nk0yHbwXQ@mail.gmail.com>
+ <20160624142711.GF3239@soda.linbit>
+ <20160624151547.GA13898@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJCQCtT1qi1yLjE3Lor3ScVJx7aX4A_S_iM_=VhDtDCD_C9uqw@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20160624151547.GA13898@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Ming Lei <ming.lei@canonical.com>, linux-block@vger.kernel.org, Roland Kammerer <roland.kammerer@linbit.com>, Jens Axboe <axboe@kernel.dk>, NeilBrown <neilb@suse.com>, Kent Overstreet <kent.overstreet@gmail.com>, Shaohua Li <shli@kernel.org>, Alasdair Kergon <agk@redhat.com>, "open list:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Takashi Iwai <tiwai@suse.de>, Jiri Kosina <jkosina@suse.cz>, Zheng Liu <gnehzuil.liu@gmail.com>, Keith Busch <keith.busch@intel.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "open list:BCACHE (BLOCK LAYER CACHE)" <linux-bcache@vger.kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 06/27/2016 06:42 PM, Chris Murphy wrote:
-> Hi,
->=20
-> Drives with SCT ERC not supported or unset, result in potentially lon=
-g
-> error recoveries for marginal or bad sectors: upwards of 180 second
-> recovers are suggested.
->=20
-> The kernel's SCSI command timer default of 30 seconds, i.e.
->=20
-> cat /sys/block/<dev>/device/timeout
->=20
-> conspires to  undermine the deep recovery of most drives now on the
-> market. This by default misconfiguration results in problems list
-> regulars are very well aware of. It affects all raid configurations,
-> and even affects the non-RAID single drive use case. And it does so i=
-n
-> a way that doesn't happen on either Windows or macOS. Basically it is
-> linux kernel induced data loss, the drive very possibly could present
-> the requested data upon deep recovery being permitted, but the
-> kernel's command timer is reached before recovery completes, and
-> obliterates any possibility of recovering that data. By default.
->=20
-> This now seems to affect the majority of use cases. At one time 30
-> seconds might have been sane for a world with drives that had less
-> than 30 second recoveries for bad sectors. But that's no longer the
-> case.
->=20
-'Majority of use cases'.
-Hardly. I'm not aware of any issues here.
+On Fri, Jun 24, 2016 at 11:15:47AM -0400, Mike Snitzer wrote:
+> On Fri, Jun 24 2016 at 10:27am -0400,
+> Lars Ellenberg <lars.ellenberg@linbit.com> wrote:
+> 
+> > On Fri, Jun 24, 2016 at 07:36:57PM +0800, Ming Lei wrote:
+> > > >
+> > > > This is not a theoretical problem.
+> > > > At least int DRBD, and an unfortunately high IO concurrency wrt. the
+> > > > "max-buffers" setting, without this patch we have a reproducible deadlock.
+> > > 
+> > > Is there any log about the deadlock? And is there any lockdep warning
+> > > if it is enabled?
+> > 
+> > In DRBD, to avoid potentially very long internal queues as we wait for
+> > our replication peer device and local backend, we limit the number of
+> > in-flight bios we accept, and block in our ->make_request_fn() if that
+> > number exceeds a configured watermark ("max-buffers").
+> > 
+> > Works fine, as long as we could assume that once our make_request_fn()
+> > returns, any bios we "recursively" submitted against the local backend
+> > would be dispatched. Which used to be the case.
+> 
+> It'd be useful to know whether this patch fixes your issue:
+> https://patchwork.kernel.org/patch/7398411/
 
-The problem with SCT ERC (or TLER or whatever the currrent acronym of
-the day is called) is that it's a non-standard setting, where every
-vendor basically does its own thing.
-Plus you can only influence this on higher end-disks; on others you are
-at the mercy of the drive firmware, hoping you got the timeout right.
+I would assume so.
+because if current is blocked for any reason,
+it will dispatch all bios that are still on current->bio_list
+to be processed from other contexts.
 
-Can you post a message log detailing this problem?
-We surely have ways of influencing the timeout, but first we need to
-understand what actually is happening.
+Which means we will not deadlock, but make progress,
+if the unblock of current depends on processing of those bios.
 
-Cheers,
+Also see my other mail on the issue,
+where I try to better explain the mechanics of "my" deadlock.
 
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+    Lars
