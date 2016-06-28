@@ -1,42 +1,41 @@
 From: Phil Turmel <philip@turmel.org>
-Subject: Re: RAID 10 / 2 Devices Layout question
-Date: Tue, 28 Jun 2016 14:16:13 -0400
-Message-ID: <5772BEED.9010404@turmel.org>
-References: <CA+3OdkMoF7jZNwsNR282Hvq4qwsKUuPtXaXrKXNUPq_4YD6BDw@mail.gmail.com>
- <5770120D.9050809@turmel.org> <20160628142502.7e69983d@natsu>
+Subject: Re: URE, link resets, user hostile defaults
+Date: Tue, 28 Jun 2016 14:28:46 -0400
+Message-ID: <5772C1DE.9000403@turmel.org>
+References: <CAJCQCtT1qi1yLjE3Lor3ScVJx7aX4A_S_iM_=VhDtDCD_C9uqw@mail.gmail.com>
+ <57721A47.8070203@suse.de>
+ <CAJCQCtQ=DXWg6qK1+9bwQxrzpKUsRvaiaAnatYR-dupg7JOVzQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160628142502.7e69983d@natsu>
+In-Reply-To: <CAJCQCtQ=DXWg6qK1+9bwQxrzpKUsRvaiaAnatYR-dupg7JOVzQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.net>
-Cc: Paul Roland <paulrolandw@gmail.com>, linux-raid@vger.kernel.org
+To: Chris Murphy <lists@colorremedies.com>, Hannes Reinecke <hare@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 06/28/2016 05:25 AM, Roman Mamedov wrote:
-> On Sun, 26 Jun 2016 13:34:05 -0400
-> Phil Turmel <philip@turmel.org> wrote:
-> 
->> On 06/26/2016 01:20 PM, Paul Roland wrote:
->>
->>> I have two SSDs, and I would like to use md/raid10 (2devices) for
->>> performance reasons.
->>
->> Ok, that's reasonable.
-> 
-> Maybe I'm missing something, but how is a RAID10 of just two devices is
-> considered reasonable without any questions or explanation? What is the actual
-> layout that is expected here, and what benefits (or even differences) does it
-> have compared to RAID0? I thought you need at least 3 devices (and h/w RAID
-> controllers might even require 4) for RAID10 to start making sense.
+On 06/28/2016 01:33 PM, Chris Murphy wrote:
 
-Paul made a statement that isn't obviously a problem -- raid10 on SSDs
-makes a blistering fast general purpose redundant setup.  I use
-precisely this setup for my boot and OS devices.  I'd do it for my
-databases too if I could afford it.  (Can't justify it for my
-performance needs -- darn.)
+> Perhaps there's a better way to do this than change the default
+> timeout in the kernel? Maybe what we need is an upstream udev rule
+> that polls SCT ERC for each drive, and if it's
+> disabled/unsupported/unknown then it sets a much higher command timer
+> for that block device. And maybe it only does this on USB and SATA.
+> For anything enterprise or NAS grade, they do report (at least to
+> smartctl) SCT ERC in deciseconds. The most common value is 70
+> deciseconds, so a 30 second command timer is OK. Maybe it could even
+> be lower but that's a separate optimization conversation.
 
-If Paul had asked whether or not to use raid10, I'd have had follow up
-questions on his application.
+When Neil retired from maintainership, I mentioned that I would take a
+stab at this.  You're right, just setting the kernel default timeout to
+180 would be a regression.  If I recall correctly, there are network
+services that would disconnect if storage stacks could delay that long
+before replying, whether good or bad.
 
+So a device discovery process that examines the drive's parameter pages
+and makes an intelligent decision would be the way to go.  But as you
+can see, I haven't dug into the ata & scsi layers to figure it out yet.
+ It won't hurt my feelings if someone beats me to it.
+
+Phil
