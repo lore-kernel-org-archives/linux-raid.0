@@ -1,55 +1,45 @@
-From: Roman Mamedov <rm@romanrm.net>
+From: keld@keldix.com
 Subject: Re: RAID 10 / 2 Devices Layout question
-Date: Tue, 28 Jun 2016 14:25:02 +0500
-Message-ID: <20160628142502.7e69983d@natsu>
-References: <CA+3OdkMoF7jZNwsNR282Hvq4qwsKUuPtXaXrKXNUPq_4YD6BDw@mail.gmail.com>
- <5770120D.9050809@turmel.org>
+Date: Tue, 28 Jun 2016 14:40:17 +0200
+Message-ID: <20160628124017.GA7953@www5.open-std.org>
+References: <CA+3OdkMoF7jZNwsNR282Hvq4qwsKUuPtXaXrKXNUPq_4YD6BDw@mail.gmail.com> <5770120D.9050809@turmel.org> <20160628142502.7e69983d@natsu>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/2RLjwLt4GpyzOjXebTg5Aq4"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5770120D.9050809@turmel.org>
+Content-Disposition: inline
+In-Reply-To: <20160628142502.7e69983d@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Paul Roland <paulrolandw@gmail.com>, linux-raid@vger.kernel.org
+To: Roman Mamedov <rm@romanrm.net>
+Cc: Phil Turmel <philip@turmel.org>, Paul Roland <paulrolandw@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/2RLjwLt4GpyzOjXebTg5Aq4
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Tue, Jun 28, 2016 at 02:25:02PM +0500, Roman Mamedov wrote:
+> On Sun, 26 Jun 2016 13:34:05 -0400
+> Phil Turmel <philip@turmel.org> wrote:
+> 
+> > On 06/26/2016 01:20 PM, Paul Roland wrote:
+> > 
+> > > I have two SSDs, and I would like to use md/raid10 (2devices) for
+> > > performance reasons.
+> > 
+> > Ok, that's reasonable.
+> 
+> Maybe I'm missing something, but how is a RAID10 of just two devices is
+> considered reasonable without any questions or explanation? What is the actual
+> layout that is expected here, and what benefits (or even differences) does it
+> have compared to RAID0? I thought you need at least 3 devices (and h/w RAID
+> controllers might even require 4) for RAID10 to start making sense.
 
-On Sun, 26 Jun 2016 13:34:05 -0400
-Phil Turmel <philip@turmel.org> wrote:
+I think your understanding is a common misunderstanding of the Linux raid10.
+There is more on this subject on:
 
-> On 06/26/2016 01:20 PM, Paul Roland wrote:
->=20
-> > I have two SSDs, and I would like to use md/raid10 (2devices) for
-> > performance reasons.
->=20
-> Ok, that's reasonable.
+https://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_10
 
-Maybe I'm missing something, but how is a RAID10 of just two devices is
-considered reasonable without any questions or explanation? What is the act=
-ual
-layout that is expected here, and what benefits (or even differences) does =
-it
-have compared to RAID0? I thought you need at least 3 devices (and h/w RAID
-controllers might even require 4) for RAID10 to start making sense.
+In short: yes Linux MD RAID10 is a different beast than standard RAID 1+0,
+It can work with improved performance with just 2 disks, and even perform
+like RAID0 for the Linux MD RAID10 far layout
 
---=20
-With respect,
-Roman
+See more on https://raid.wiki.kernel.org/index.php/Performance
 
---Sig_/2RLjwLt4GpyzOjXebTg5Aq4
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEARECAAYFAldyQnAACgkQTLKSvz+PZwgqSgCfW5kyJZd/99tIuyjH5Ks9RID4
-EMEAnAheFlb9NIfd5JhyiGVBI40wece+
-=xpQL
------END PGP SIGNATURE-----
-
---Sig_/2RLjwLt4GpyzOjXebTg5Aq4--
+best regards
+Keld
