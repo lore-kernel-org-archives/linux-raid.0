@@ -1,41 +1,49 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: URE, link resets, user hostile defaults
-Date: Tue, 28 Jun 2016 14:28:46 -0400
-Message-ID: <5772C1DE.9000403@turmel.org>
-References: <CAJCQCtT1qi1yLjE3Lor3ScVJx7aX4A_S_iM_=VhDtDCD_C9uqw@mail.gmail.com>
- <57721A47.8070203@suse.de>
- <CAJCQCtQ=DXWg6qK1+9bwQxrzpKUsRvaiaAnatYR-dupg7JOVzQ@mail.gmail.com>
+From: Toshi Kani <toshi.kani-ZPxbGqLxI0U@public.gmane.org>
+Subject: [PATCH 0/2] Support DAX for device-mapper dm-linear devices
+Date: Tue, 28 Jun 2016 13:37:14 -0600
+Message-ID: <1467142636-21094-1-git-send-email-toshi.kani@hpe.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJCQCtQ=DXWg6qK1+9bwQxrzpKUsRvaiaAnatYR-dupg7JOVzQ@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>, Hannes Reinecke <hare@suse.de>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 List-Id: linux-raid.ids
 
-On 06/28/2016 01:33 PM, Chris Murphy wrote:
+I noticed that dm-snap reloads DM table of target mapped-device, which
+fails for dax-capable device after dax support is added.  Ideally,
+adding dax support to dm-snap solves the issue, but it cannot be done
+easily.  This patch-set allows dm-snap to work with dax-capable target
+devices when bio-based operation is used.
 
-> Perhaps there's a better way to do this than change the default
-> timeout in the kernel? Maybe what we need is an upstream udev rule
-> that polls SCT ERC for each drive, and if it's
-> disabled/unsupported/unknown then it sets a much higher command timer
-> for that block device. And maybe it only does this on USB and SATA.
-> For anything enterprise or NAS grade, they do report (at least to
-> smartctl) SCT ERC in deciseconds. The most common value is 70
-> deciseconds, so a 30 second command timer is OK. Maybe it could even
-> be lower but that's a separate optimization conversation.
+dax operation is unsupported with dm-snap, such that:
+ a) After snapshot is taken, mount with dax option to a target device
+    or a snapshot device fails.  They can be mounted without dax.
+ b) After snapshot is taken to a dax-mounted target device, any writes 
+    to the target device fails (EIO).
 
-When Neil retired from maintainership, I mentioned that I would take a
-stab at this.  You're right, just setting the kernel default timeout to
-180 would be a regression.  If I recall correctly, there are network
-services that would disconnect if storage stacks could delay that long
-before replying, whether good or bad.
+b) can be protected by changing lvcreate to fail when snapshot is
+requested to a dax-mounted target device. 
 
-So a device discovery process that examines the drive's parameter pages
-and makes an intelligent decision would be the way to go.  But as you
-can see, I haven't dug into the ata & scsi layers to figure it out yet.
- It won't hurt my feelings if someone beats me to it.
+- Patch 1 solves an error when lvremove is made to a snapshot device.
+- Patch 2 solves an error when lvcreate --snapshot is made to a dax-
+  capable device.
 
-Phil
+---
+Toshi Kani (2):
+ 1/2 dm: update table type check for dax
+ 2/2 dm snap: add fake origin_direct_access
+
+---
+ drivers/md/dm-ioctl.c | 11 ++++++++++-
+ drivers/md/dm-snap.c  |  8 ++++++++
+ 2 files changed, 18 insertions(+), 1 deletion(-)
