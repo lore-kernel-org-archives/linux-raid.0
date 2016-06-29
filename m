@@ -1,98 +1,104 @@
-From: Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/2] dm: update table type check for dax
-Date: Tue, 28 Jun 2016 20:40:49 -0400
-Message-ID: <20160629004049.GA9721@redhat.com>
-References: <1467142636-21094-1-git-send-email-toshi.kani@hpe.com>
- <1467142636-21094-2-git-send-email-toshi.kani@hpe.com>
- <20160628200714.GC8300@redhat.com>
- <1467145398.3504.439.camel@hpe.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: URE, link resets, user hostile defaults
+Date: Wed, 29 Jun 2016 08:01:56 +0200
+Message-ID: <57736454.6050607@suse.de>
+References: <CAJCQCtT1qi1yLjE3Lor3ScVJx7aX4A_S_iM_=VhDtDCD_C9uqw@mail.gmail.com>
+ <57721A47.8070203@suse.de>
+ <CAJCQCtQ=DXWg6qK1+9bwQxrzpKUsRvaiaAnatYR-dupg7JOVzQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1467145398.3504.439.camel-ZPxbGqLxI0U@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: "Kani, Toshimitsu" <toshi.kani-ZPxbGqLxI0U@public.gmane.org>
-Cc: "linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org" <linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAJCQCtQ=DXWg6qK1+9bwQxrzpKUsRvaiaAnatYR-dupg7JOVzQ@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Chris Murphy <lists@colorremedies.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jun 28 2016 at  4:23pm -0400,
-Kani, Toshimitsu <toshi.kani-ZPxbGqLxI0U@public.gmane.org> wrote:
+On 06/28/2016 07:33 PM, Chris Murphy wrote:
+> On Tue, Jun 28, 2016 at 12:33 AM, Hannes Reinecke <hare@suse.de> wrot=
+e:
+>> On 06/27/2016 06:42 PM, Chris Murphy wrote:
+>>> Hi,
+>>>
+>>> Drives with SCT ERC not supported or unset, result in potentially l=
+ong
+>>> error recoveries for marginal or bad sectors: upwards of 180 second
+>>> recovers are suggested.
+>>>
+>>> The kernel's SCSI command timer default of 30 seconds, i.e.
+>>>
+>>> cat /sys/block/<dev>/device/timeout
+>>>
+>>> conspires to  undermine the deep recovery of most drives now on the
+>>> market. This by default misconfiguration results in problems list
+>>> regulars are very well aware of. It affects all raid configurations=
+,
+>>> and even affects the non-RAID single drive use case. And it does so=
+ in
+>>> a way that doesn't happen on either Windows or macOS. Basically it =
+is
+>>> linux kernel induced data loss, the drive very possibly could prese=
+nt
+>>> the requested data upon deep recovery being permitted, but the
+>>> kernel's command timer is reached before recovery completes, and
+>>> obliterates any possibility of recovering that data. By default.
+>>>
+>>> This now seems to affect the majority of use cases. At one time 30
+>>> seconds might have been sane for a world with drives that had less
+>>> than 30 second recoveries for bad sectors. But that's no longer the
+>>> case.
+>>>
+>> 'Majority of use cases'.
+>> Hardly. I'm not aware of any issues here.
+>=20
+> This list is prolific with this now common misconfiguration. It
+> manifests on average about weekly, as a message from libata that it's
+> "hard resetting link". In every single case where the user is
+> instructed to either set SCT ERC lower than 30 seconds if possible, o=
+r
+> increase the kernel SCSI command timer well above 30 seconds (180 is
+> often recommended on this list), suddenly the user's problems start t=
+o
+> go away.
+>=20
+> Now the md driver gets an explicit read failure from the drive, after
+> 30 seconds, instead of a link reset. And this includes the LBA for th=
+e
+> bad sector, which is apparently what md wants to write the fixup back
+> to that drive.
+>=20
+> However the manifestation of the problem and the nature of this list
+> self-selects the user reports. Of course people with failed mdadm
+> based RAID come here. But this problem is also manifesting on Btrfs
+> for the same reasons. It also manifests, more rarely, with users who
+> have just a single drive if the drive does "deep recovery" reads on
+> marginally bad sectors, but the kernel flips out at 30 seconds
+> preventing that recovery. Of course not every drive model has such
+> deep recoveries, but by now it's extremely common. I have yet to see =
+a
+> single consumer hard drive, ever, configured out of the box with SCT
+> ERC enabled.
+>=20
+So we should rather implement SCT ERC support in libata, and set ERC to
+the scsi command timeout, no?
+Then the user could tweak the scsi command timeout however he likes it
+to, and that timeout would be reflected into the ERC setting.
 
-> On Tue, 2016-06-28 at 16:07 -0400, Mike Snitzer wrote:
-> > On Tue, Jun 28 2016 at=A0=A03:37pm -0400,
-> > Toshi Kani <toshi.kani-ZPxbGqLxI0U@public.gmane.org> wrote:
-> =A0:
-> > You said in the 0th header: "Patch 1 solves an error when lvremove is
-> > made to a snapshot device."
-> > =
+And then we could add an initialisation bit which reads the current ERC
+values, increasing the SCSI command timeout as required.
 
-> > I'm not seeing why this patch 1 fixes anything specific to snapshot
-> > device removal (but I can see why patch 2 makes snapshot creation
-> > "work").=A0=A0I'll apply your 2nd patch and see if I can see what you m=
-ean.
-> > =
+Cheers,
 
-> > I actually see this error, without either of your 2 proposed patches
-> > applied, when I try to create a snapshot of a DAX capable LV:
-> > =
-
-> > # lvcreate -s -n snap -L 100M pmem/lv
-> > =A0 device-mapper: reload ioctl on (253:7) failed: Invalid argument
-> > =A0 Failed to lock logical volume pmem/lv.
-> > =A0 Aborting. Manual intervention required.
-> > Jun 28 15:57:28 rhel-storage-02 kernel: device-mapper: ioctl: can't cha=
-nge
-> > device type after initial table load.
-> =
-
-> Yes, patch 2 fixes this error.
-> =
-
-> I have not looked into why lvremove does this, but lvremove to a snapshot
-> device fails to reload DM table of "<dev>-lvsnap" device (which is marked=
- as
-> DM_TYPE_BIO_BASED) with DM_TYPE_DAX_BIO_BASED. =A0Patch 1 fixes this erro=
-r.
-
-It looks like a strange intermediate state that lvm2 uses during
-snapshot removal.
-
-Full listing of snapshot related DM tables (before lvremove):
-
-pmem-lv-real: 0 6086656 linear 259:0 2048
-pmem-lv: 0 6086656 snapshot-origin 253:5
-pmem-snap-cow: 0 204800 linear 259:0 6088704
-pmem-snap: 0 6086656 snapshot 253:5 253:6 P 8
-
-When removing this snapshot we're wanting to be left with:
-
-pmem-lv: 0 6086656 linear 259:0 2048
-
-I augmented the DM core error to be more expressive, resulting in:
-  device-mapper: ioctl: 253:7: can't change device type (from 1 to 4) after=
- initial table load.
-
-1 is DM_TYPE_BIO_BASED and 4 is DM_TYPE_DAX_BIO_BASED -- which makes
-sense given the linear target is DM_TYPE_DAX_BIO_BASED.
-
-The previous DM table for 253:7 was:
-  pmem-snap: 0 6086656 snapshot 253:5 253:6 P 8
-
-The intermediate table that lvm2 is trying to load for 253:7 is:
-  0 204800 linear 259:0 6088704
-
-(this linear target was previously pmem-snap-cow)
-
-> I think it also generally makes sense to allow this case.
-
-You're probably right but I need to think about it a little bit more.
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
