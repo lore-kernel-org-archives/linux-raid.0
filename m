@@ -1,79 +1,50 @@
-From: "Kani, Toshimitsu" <toshi.kani-ZPxbGqLxI0U@public.gmane.org>
-Subject: Re: [PATCH 1/2] dm: update table type check for dax
-Date: Wed, 29 Jun 2016 15:19:05 +0000
-Message-ID: <1467213538.3504.442.camel@hpe.com>
-References: <1467142636-21094-1-git-send-email-toshi.kani@hpe.com>
- <1467142636-21094-2-git-send-email-toshi.kani@hpe.com>
- <20160628200714.GC8300@redhat.com> <1467145398.3504.439.camel@hpe.com>
- <20160629004049.GA9721@redhat.com>
+From: Edward Kuns <eddie.kuns@gmail.com>
+Subject: Re: URE, link resets, user hostile defaults
+Date: Wed, 29 Jun 2016 13:16:00 -0500
+Message-ID: <CACsGCyRd388u4XXCSnoK4TpNoPibjhdgEJsHS=vR6aztDc=+2A@mail.gmail.com>
+References: <CAJCQCtT1qi1yLjE3Lor3ScVJx7aX4A_S_iM_=VhDtDCD_C9uqw@mail.gmail.com>
+ <57721A47.8070203@suse.de> <CAJCQCtQ=DXWg6qK1+9bwQxrzpKUsRvaiaAnatYR-dupg7JOVzQ@mail.gmail.com>
+ <20160629121751.GT15597@hungrycats.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <20160629004049.GA9721-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Content-Language: en-US
-Content-ID: <55DC4A9F57B87C4B8A7431721C9D1254-mmYPd6ayCNGroOM5E8FhRbjFIynDaujOfM0AETQt39g@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: "snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: "linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org" <linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20160629121751.GT15597@hungrycats.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Zygo Blaxell <u0oo5pgu@umail.furryterror.org>
+Cc: Chris Murphy <lists@colorremedies.com>, Hannes Reinecke <hare@suse.de>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-T24gVHVlLCAyMDE2LTA2LTI4IGF0IDIwOjQwIC0wNDAwLCBNaWtlIFNuaXR6ZXIgd3JvdGU6DQo+
-IE9uIFR1ZSwgSnVuIDI4IDIwMTYgYXTCoMKgNDoyM3BtIC0wNDAwLA0KPiBLYW5pLCBUb3NoaW1p
-dHN1IDx0b3NoaS5rYW5pQGhwZS5jb20+IHdyb3RlOg0KPiANCj4gPiBPbiBUdWUsIDIwMTYtMDYt
-MjggYXQgMTY6MDcgLTA0MDAsIE1pa2UgU25pdHplciB3cm90ZToNCj4gPiA+IA0KPiA+ID4gT24g
-VHVlLCBKdW4gMjggMjAxNiBhdMKgwqAzOjM3cG0gLTA0MDAsDQo+ID4gPiBUb3NoaSBLYW5pIDx0
-b3NoaS5rYW5pQGhwZS5jb20+IHdyb3RlOg0KPiA+IMKgOg0KPiA+ID4gDQo+ID4gPiBZb3Ugc2Fp
-ZCBpbiB0aGUgMHRoIGhlYWRlcjogIlBhdGNoIDEgc29sdmVzIGFuIGVycm9yIHdoZW4gbHZyZW1v
-dmUgaXMNCj4gPiA+IG1hZGUgdG8gYSBzbmFwc2hvdCBkZXZpY2UuIg0KPiA+ID4gDQo+ID4gPiBJ
-J20gbm90IHNlZWluZyB3aHkgdGhpcyBwYXRjaCAxIGZpeGVzIGFueXRoaW5nIHNwZWNpZmljIHRv
-IHNuYXBzaG90DQo+ID4gPiBkZXZpY2UgcmVtb3ZhbCAoYnV0IEkgY2FuIHNlZSB3aHkgcGF0Y2gg
-MiBtYWtlcyBzbmFwc2hvdCBjcmVhdGlvbg0KPiA+ID4gIndvcmsiKS7CoMKgSSdsbCBhcHBseSB5
-b3VyIDJuZCBwYXRjaCBhbmQgc2VlIGlmIEkgY2FuIHNlZSB3aGF0IHlvdSBtZWFuLg0KPiA+ID4g
-DQo+ID4gPiBJIGFjdHVhbGx5IHNlZSB0aGlzIGVycm9yLCB3aXRob3V0IGVpdGhlciBvZiB5b3Vy
-IDIgcHJvcG9zZWQgcGF0Y2hlcw0KPiA+ID4gYXBwbGllZCwgd2hlbiBJIHRyeSB0byBjcmVhdGUg
-YSBzbmFwc2hvdCBvZiBhIERBWCBjYXBhYmxlIExWOg0KPiA+ID4gDQo+ID4gPiAjIGx2Y3JlYXRl
-IC1zIC1uIHNuYXAgLUwgMTAwTSBwbWVtL2x2DQo+ID4gPiDCoCBkZXZpY2UtbWFwcGVyOiByZWxv
-YWQgaW9jdGwgb24gKDI1Mzo3KSBmYWlsZWQ6IEludmFsaWQgYXJndW1lbnQNCj4gPiA+IMKgIEZh
-aWxlZCB0byBsb2NrIGxvZ2ljYWwgdm9sdW1lIHBtZW0vbHYuDQo+ID4gPiDCoCBBYm9ydGluZy4g
-TWFudWFsIGludGVydmVudGlvbiByZXF1aXJlZC4NCj4gPiA+IEp1biAyOCAxNTo1NzoyOCByaGVs
-LXN0b3JhZ2UtMDIga2VybmVsOiBkZXZpY2UtbWFwcGVyOiBpb2N0bDogY2FuJ3QNCj4gPiA+IGNo
-YW5nZSBkZXZpY2UgdHlwZSBhZnRlciBpbml0aWFsIHRhYmxlIGxvYWQuDQo+ID4NCj4gPiBZZXMs
-IHBhdGNoIDIgZml4ZXMgdGhpcyBlcnJvci4NCj4gPiANCj4gPiBJIGhhdmUgbm90IGxvb2tlZCBp
-bnRvIHdoeSBsdnJlbW92ZSBkb2VzIHRoaXMsIGJ1dCBsdnJlbW92ZSB0byBhIHNuYXBzaG90DQo+
-ID4gZGV2aWNlIGZhaWxzIHRvIHJlbG9hZCBETSB0YWJsZSBvZiAiPGRldj4tbHZzbmFwIiBkZXZp
-Y2UgKHdoaWNoIGlzIG1hcmtlZA0KPiA+IGFzIERNX1RZUEVfQklPX0JBU0VEKSB3aXRoIERNX1RZ
-UEVfREFYX0JJT19CQVNFRC4gwqBQYXRjaCAxIGZpeGVzIHRoaXMNCj4gPiBlcnJvci4NCj4NCj4g
-SXQgbG9va3MgbGlrZSBhIHN0cmFuZ2UgaW50ZXJtZWRpYXRlIHN0YXRlIHRoYXQgbHZtMiB1c2Vz
-IGR1cmluZw0KPiBzbmFwc2hvdCByZW1vdmFsLg0KPiANCj4gRnVsbCBsaXN0aW5nIG9mIHNuYXBz
-aG90IHJlbGF0ZWQgRE0gdGFibGVzIChiZWZvcmUgbHZyZW1vdmUpOg0KPiANCj4gcG1lbS1sdi1y
-ZWFsOiAwIDYwODY2NTYgbGluZWFyIDI1OTowIDIwNDgNCj4gcG1lbS1sdjogMCA2MDg2NjU2IHNu
-YXBzaG90LW9yaWdpbiAyNTM6NQ0KPiBwbWVtLXNuYXAtY293OiAwIDIwNDgwMCBsaW5lYXIgMjU5
-OjAgNjA4ODcwNA0KPiBwbWVtLXNuYXA6IDAgNjA4NjY1NiBzbmFwc2hvdCAyNTM6NSAyNTM6NiBQ
-IDgNCj4gDQo+IFdoZW4gcmVtb3ZpbmcgdGhpcyBzbmFwc2hvdCB3ZSdyZSB3YW50aW5nIHRvIGJl
-IGxlZnQgd2l0aDoNCj4gDQo+IHBtZW0tbHY6IDAgNjA4NjY1NiBsaW5lYXIgMjU5OjAgMjA0OA0K
-PiANCj4gSSBhdWdtZW50ZWQgdGhlIERNIGNvcmUgZXJyb3IgdG8gYmUgbW9yZSBleHByZXNzaXZl
-LCByZXN1bHRpbmcgaW46DQo+IMKgIGRldmljZS1tYXBwZXI6IGlvY3RsOiAyNTM6NzogY2FuJ3Qg
-Y2hhbmdlIGRldmljZSB0eXBlIChmcm9tIDEgdG8gNCkgYWZ0ZXINCj4gaW5pdGlhbCB0YWJsZSBs
-b2FkLg0KPiANCj4gMSBpcyBETV9UWVBFX0JJT19CQVNFRCBhbmQgNCBpcyBETV9UWVBFX0RBWF9C
-SU9fQkFTRUQgLS0gd2hpY2ggbWFrZXMNCj4gc2Vuc2UgZ2l2ZW4gdGhlIGxpbmVhciB0YXJnZXQg
-aXMgRE1fVFlQRV9EQVhfQklPX0JBU0VELg0KPiANCj4gVGhlIHByZXZpb3VzIERNIHRhYmxlIGZv
-ciAyNTM6NyB3YXM6DQo+IMKgIHBtZW0tc25hcDogMCA2MDg2NjU2IHNuYXBzaG90IDI1Mzo1IDI1
-Mzo2IFAgOA0KPiANCj4gVGhlIGludGVybWVkaWF0ZSB0YWJsZSB0aGF0IGx2bTIgaXMgdHJ5aW5n
-IHRvIGxvYWQgZm9yIDI1Mzo3IGlzOg0KPiDCoCAwIDIwNDgwMCBsaW5lYXIgMjU5OjAgNjA4ODcw
-NA0KPiANCj4gKHRoaXMgbGluZWFyIHRhcmdldCB3YXMgcHJldmlvdXNseSBwbWVtLXNuYXAtY293
-KQ0KDQpZZXMsIHRoYXQgaXMgY29uc2lzdGVudCB3aXRoIHdoYXQgSSBzYXcuDQoNCj4gPiANCj4g
-PiBJIHRoaW5rIGl0IGFsc28gZ2VuZXJhbGx5IG1ha2VzIHNlbnNlIHRvIGFsbG93IHRoaXMgY2Fz
-ZS4NCj4NCj4gWW91J3JlIHByb2JhYmx5IHJpZ2h0IGJ1dCBJIG5lZWQgdG8gdGhpbmsgYWJvdXQg
-aXQgYSBsaXR0bGUgYml0IG1vcmUuDQoNClNvdW5kcyBnb29kLg0KDQpUaGFua3MhDQotVG9zaGkN
-Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCkxpbnV4LW52
-ZGltbSBtYWlsaW5nIGxpc3QKTGludXgtbnZkaW1tQGxpc3RzLjAxLm9yZwpodHRwczovL2xpc3Rz
-LjAxLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LW52ZGltbQo=
+On Wed, Jun 29, 2016 at 7:17 AM, Zygo Blaxell
+<u0oo5pgu@umail.furryterror.org> wrote:
+> OK, but the two links you provided are not examples of these.
+
+But there *are* plenty of examples of this.  I've run into this
+personally, before I knew to specifically check the ERC/TLER/whatever
+configuration on all my drives and pro-actively configure them
+properly.
+
+When the only two options are 1) long kernel timeout and URE is caught
+and fixed, or 2) short kernel timeout and the drive is detected as
+failed and kicked from all arrays, then I'll take #1 please.
+Obviously, trying to detect misconfiguration and drives that don't
+support ERC/TLER and fixing the timeout accordingly would be better.
+I agree with others, the current default behavior is unintentionally
+user-hostile.
+
+> Long timeouts don't really serve anyone, even in single-disk cases.
+
+This statement is too dogmatic.  It depends on the drive.  For a drive
+with the proper features and settings, that is guaranteed to respond
+in a few seconds unless it has truly totally failed, I agree with you.
+For a drive with those features but misconfigured (e.g., by default),
+best is to configure it properly, so in that case I agree with you but
+changes are needed somewhere to get the configuration to occur
+automatically.  For a consumer drive that lacks those features
+entirely, I disagree with you.  Although for that case, it would be
+worth having an alarm of some sort be triggered perhaps similar to the
+EMails generated when an array degrades.  That would let the user know
+that the drive is responding very slowly (probably indicating
+recoverable read errors) and may fail soon.  Again, changes are needed
+to do that.
+
+              Eddie
