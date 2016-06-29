@@ -1,59 +1,135 @@
-From: Coly Li <i@coly.li>
-Subject: Re: [RESEND PATCH 1/3] bcache: Remove redundant parameter for
- cache_alloc()
-Date: Wed, 29 Jun 2016 18:20:27 +0800
-Message-ID: <bb659bb1-b2ff-6b47-c47e-1b89fe9395b5@coly.li>
-References: <1466561446-30443-1-git-send-email-wangyijing@huawei.com>
+From: Pasi =?iso-8859-1?Q?K=E4rkk=E4inen?= <pasik@iki.fi>
+Subject: Re: URE, link resets, user hostile defaults
+Date: Wed, 29 Jun 2016 13:48:04 +0300
+Message-ID: <20160629104804.GS13212@reaktio.net>
+References: <CAJCQCtT1qi1yLjE3Lor3ScVJx7aX4A_S_iM_=VhDtDCD_C9uqw@mail.gmail.com>
+ <57721A47.8070203@suse.de>
+ <CAJCQCtQ=DXWg6qK1+9bwQxrzpKUsRvaiaAnatYR-dupg7JOVzQ@mail.gmail.com>
+ <57736454.6050607@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=gbk
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1466561446-30443-1-git-send-email-wangyijing@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Yijing Wang <wangyijing@huawei.com>, axboe@fb.com, Kent Overstreet <kent.overstreet@gmail.com>
-Cc: Eric Wheeler <git@linux.ewheeler.net>, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <57736454.6050607@suse.de>
+Sender: linux-raid-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Chris Murphy <lists@colorremedies.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-=D4=DA 16/6/22 =C9=CF=CE=E710:10, Yijing Wang =D0=B4=B5=C0:
-> Cache_sb is not used in cache_alloc, and we have copied
-> sb info to cache->sb already, remove it.
+On Wed, Jun 29, 2016 at 08:01:56AM +0200, Hannes Reinecke wrote:
+> On 06/28/2016 07:33 PM, Chris Murphy wrote:
+> > On Tue, Jun 28, 2016 at 12:33 AM, Hannes Reinecke <hare@suse.de> wr=
+ote:
+> >> On 06/27/2016 06:42 PM, Chris Murphy wrote:
+> >>> Hi,
+> >>>
+> >>> Drives with SCT ERC not supported or unset, result in potentially=
+ long
+> >>> error recoveries for marginal or bad sectors: upwards of 180 seco=
+nd
+> >>> recovers are suggested.
+> >>>
+> >>> The kernel's SCSI command timer default of 30 seconds, i.e.
+> >>>
+> >>> cat /sys/block/<dev>/device/timeout
+> >>>
+> >>> conspires to  undermine the deep recovery of most drives now on t=
+he
+> >>> market. This by default misconfiguration results in problems list
+> >>> regulars are very well aware of. It affects all raid configuratio=
+ns,
+> >>> and even affects the non-RAID single drive use case. And it does =
+so in
+> >>> a way that doesn't happen on either Windows or macOS. Basically i=
+t is
+> >>> linux kernel induced data loss, the drive very possibly could pre=
+sent
+> >>> the requested data upon deep recovery being permitted, but the
+> >>> kernel's command timer is reached before recovery completes, and
+> >>> obliterates any possibility of recovering that data. By default.
+> >>>
+> >>> This now seems to affect the majority of use cases. At one time 3=
+0
+> >>> seconds might have been sane for a world with drives that had les=
+s
+> >>> than 30 second recoveries for bad sectors. But that's no longer t=
+he
+> >>> case.
+> >>>
+> >> 'Majority of use cases'.
+> >> Hardly. I'm not aware of any issues here.
+> >=20
+> > This list is prolific with this now common misconfiguration. It
+> > manifests on average about weekly, as a message from libata that it=
+'s
+> > "hard resetting link". In every single case where the user is
+> > instructed to either set SCT ERC lower than 30 seconds if possible,=
+ or
+> > increase the kernel SCSI command timer well above 30 seconds (180 i=
+s
+> > often recommended on this list), suddenly the user's problems start=
+ to
+> > go away.
+> >=20
+> > Now the md driver gets an explicit read failure from the drive, aft=
+er
+> > 30 seconds, instead of a link reset. And this includes the LBA for =
+the
+> > bad sector, which is apparently what md wants to write the fixup ba=
+ck
+> > to that drive.
+> >=20
+> > However the manifestation of the problem and the nature of this lis=
+t
+> > self-selects the user reports. Of course people with failed mdadm
+> > based RAID come here. But this problem is also manifesting on Btrfs
+> > for the same reasons. It also manifests, more rarely, with users wh=
+o
+> > have just a single drive if the drive does "deep recovery" reads on
+> > marginally bad sectors, but the kernel flips out at 30 seconds
+> > preventing that recovery. Of course not every drive model has such
+> > deep recoveries, but by now it's extremely common. I have yet to se=
+e a
+> > single consumer hard drive, ever, configured out of the box with SC=
+T
+> > ERC enabled.
+> >=20
+> So we should rather implement SCT ERC support in libata, and set ERC =
+to
+> the scsi command timeout, no?
+> Then the user could tweak the scsi command timeout however he likes i=
+t
+> to, and that timeout would be reflected into the ERC setting.
 >=20
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/md/bcache/super.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
-> index f5dbb4e..aecaace 100644
-> --- a/drivers/md/bcache/super.c
-> +++ b/drivers/md/bcache/super.c
-> @@ -1803,7 +1803,7 @@ void bch_cache_release(struct kobject *kobj)
->  	module_put(THIS_MODULE);
->  }
-> =20
-> -static int cache_alloc(struct cache_sb *sb, struct cache *ca)
-> +static int cache_alloc(struct cache *ca)
->  {
->  	size_t free;
->  	struct bucket *b;
-> @@ -1858,7 +1858,7 @@ static int register_cache(struct cache_sb *sb, =
-struct page *sb_page,
->  	if (blk_queue_discard(bdev_get_queue(ca->bdev)))
->  		ca->discard =3D CACHE_DISCARD(&ca->sb);
-> =20
-> -	ret =3D cache_alloc(sb, ca);
-> +	ret =3D cache_alloc(ca);
-
-I am not sure whether struct cache_b *sb will be used in future, I
-suggest to let it be for now.
-
-
-
->  	if (ret !=3D 0)
->  		goto err;
-> =20
+> And then we could add an initialisation bit which reads the current E=
+RC
+> values, increasing the SCSI command timeout as required.
 >=20
 
+But this still leaves the "consumer" (non-NAS, non-RAID) drives broken =
+as a default,
+until the user tweaks the SCSI command timeout for the disk to much big=
+ger value (longer than the drive's internal timeout, whatever it is, 18=
+0 seconds or so..) ?=20
 
---=20
-Coly Li
+
+
+-- Pasi
+
+
+> Cheers,
+>=20
+> Hannes
+> --=20
+> Dr. Hannes Reinecke		   Teamlead Storage & Networking
+> hare@suse.de			               +49 911 74053 688
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+> GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+> HRB 21284 (AG N=FCrnberg)
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
