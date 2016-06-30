@@ -1,7 +1,7 @@
 From: Fam Zheng <famz@redhat.com>
-Subject: [PATCH v2 04/12] axonrom: Generate uevent after attribute available
-Date: Thu, 30 Jun 2016 09:59:45 +0800
-Message-ID: <20160630015953.6888-5-famz@redhat.com>
+Subject: [PATCH v2 06/12] mtip32xx: Generate uevent after attribute available
+Date: Thu, 30 Jun 2016 09:59:47 +0800
+Message-ID: <20160630015953.6888-7-famz@redhat.com>
 References: <20160630015953.6888-1-famz@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -27,29 +27,29 @@ disk_gen_uevents interface.
 
 Signed-off-by: Fam Zheng <famz@redhat.com>
 ---
- arch/powerpc/sysdev/axonram.c | 3 ++-
+ drivers/block/mtip32xx/mtip32xx.c | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/arch/powerpc/sysdev/axonram.c b/arch/powerpc/sysdev/axonram.c
-index 4efd69b..27e7175 100644
---- a/arch/powerpc/sysdev/axonram.c
-+++ b/arch/powerpc/sysdev/axonram.c
-@@ -238,7 +238,7 @@ static int axon_ram_probe(struct platform_device *device)
- 	set_capacity(bank->disk, bank->size >> AXON_RAM_SECTOR_SHIFT);
- 	blk_queue_make_request(bank->disk->queue, axon_ram_make_request);
- 	blk_queue_logical_block_size(bank->disk->queue, AXON_RAM_SECTOR_SIZE);
--	add_disk(bank->disk, true);
-+	add_disk(bank->disk, false);
+diff --git a/drivers/block/mtip32xx/mtip32xx.c b/drivers/block/mtip32xx/mtip32xx.c
+index 2d09fae..8c1cf03 100644
+--- a/drivers/block/mtip32xx/mtip32xx.c
++++ b/drivers/block/mtip32xx/mtip32xx.c
+@@ -4042,7 +4042,7 @@ skip_create_disk:
+ 	set_capacity(dd->disk, capacity);
  
- 	bank->irq_id = irq_of_parse_and_map(device->dev.of_node, 0);
- 	if (bank->irq_id == NO_IRQ) {
-@@ -262,6 +262,7 @@ static int axon_ram_probe(struct platform_device *device)
- 		rc = -EFAULT;
- 		goto failed;
+ 	/* Enable the block device and add it to /dev */
+-	add_disk(dd->disk, true);
++	add_disk(dd->disk, false);
+ 
+ 	dd->bdev = bdget_disk(dd->disk, 0);
+ 	/*
+@@ -4054,6 +4054,7 @@ skip_create_disk:
+ 		mtip_hw_sysfs_init(dd, kobj);
+ 		kobject_put(kobj);
  	}
-+	disk_gen_uevents(bank->disk);
++	disk_gen_uevents(dd->disk);
  
- 	azfs_minor += bank->disk->minors;
- 
+ 	if (dd->mtip_svc_handler) {
+ 		set_bit(MTIP_DDF_INIT_DONE_BIT, &dd->dd_flag);
 -- 
 2.9.0
