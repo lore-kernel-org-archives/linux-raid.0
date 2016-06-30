@@ -1,24 +1,13 @@
 From: Fam Zheng <famz@redhat.com>
-Subject: [PATCH v2 05/12] aoeblk: Generate uevent after attribute available
-Date: Thu, 30 Jun 2016 09:59:46 +0800
-Message-ID: <20160630015953.6888-6-famz@redhat.com>
+Subject: [PATCH v2 10/12] mmc: Generate uevent after attribute available
+Date: Thu, 30 Jun 2016 09:59:51 +0800
+Message-ID: <20160630015953.6888-11-famz@redhat.com>
 References: <20160630015953.6888-1-famz@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20160630015953.6888-1-famz@redhat.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>, "Michael S. Tsirkin" <mst@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-nvme@lists.infradead.org, virtualization@lists.linux-foundation.org, Keith Busch <keith.busch@intel.com>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Christoph Hellwig <hch@infradead.org>, Shaohua Li <shli@kernel.org>, Nitin Gupta <ngupta@vflare.org>, famz@redhat.com, Jiri Kosina <jikos@kernel.org>, linux-block@vger.kernel.org, "Ed L. Cashin" <ed.cashin@acm.org>, Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>, linux-mmc@vger.kernel.org, Minchan Kim <minchan@kernel.org>, linux-mtd@lists.infradead.org, Brian Norris <computersforpeace@gmail.com>, linuxppc-dev@lists.ozlabs.org
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Jens Axboe <axboe@kernel.dk>, "Ed L. Cashin" <ed.cashin@acm.org>, Jiri Kosina <jikos@kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Minchan Kim <minchan@kernel.org>, Nitin Gupta <ngupta@vflare.org>, Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>, Shaohua Li <shli@kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, David Woodhouse <dwmw2@infradead.org>, Brian Norris <computersforpeace@gmail.com>, Keith Busch <keith.busch@intel.com>, linuxppc-dev@lists.ozlabs.org, linux-block@vger.kernel.org, virtualization@lists.linux-foundation.org, linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org, Christoph Hellwig <hch@infradead.org>, famz@redhat.com
 List-Id: linux-raid.ids
 
 It is documented that KOBJ_ADD should be generated after the object's
@@ -27,24 +16,29 @@ disk_gen_uevents interface.
 
 Signed-off-by: Fam Zheng <famz@redhat.com>
 ---
- drivers/block/aoe/aoeblk.c | 3 ++-
+ drivers/mmc/card/block.c | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/block/aoe/aoeblk.c b/drivers/block/aoe/aoeblk.c
-index e91c5f1..f0cf4d6 100644
---- a/drivers/block/aoe/aoeblk.c
-+++ b/drivers/block/aoe/aoeblk.c
-@@ -417,9 +417,10 @@ aoeblk_gdalloc(void *vp)
+diff --git a/drivers/mmc/card/block.c b/drivers/mmc/card/block.c
+index 94cf51e..4007106 100644
+--- a/drivers/mmc/card/block.c
++++ b/drivers/mmc/card/block.c
+@@ -2457,7 +2457,7 @@ static int mmc_add_disk(struct mmc_blk_data *md)
+ 	int ret;
+ 	struct mmc_card *card = md->queue.card;
  
- 	spin_unlock_irqrestore(&d->lock, flags);
+-	add_disk(md->disk, true);
++	add_disk(md->disk, false);
+ 	md->force_ro.show = force_ro_show;
+ 	md->force_ro.store = force_ro_store;
+ 	sysfs_attr_init(&md->force_ro.attr);
+@@ -2466,6 +2466,7 @@ static int mmc_add_disk(struct mmc_blk_data *md)
+ 	ret = device_create_file(disk_to_dev(md->disk), &md->force_ro);
+ 	if (ret)
+ 		goto force_ro_fail;
++	disk_gen_uevents(md->disk);
  
--	add_disk(gd, true);
-+	add_disk(gd, false);
- 	aoedisk_add_sysfs(d);
- 	aoedisk_add_debugfs(d);
-+	disk_gen_uevents(gd);
- 
- 	spin_lock_irqsave(&d->lock, flags);
- 	WARN_ON(!(d->flags & DEVFL_GD_NOW));
+ 	if ((md->area_type & MMC_BLK_DATA_AREA_BOOT) &&
+ 	     card->ext_csd.boot_ro_lockable) {
 -- 
 2.9.0
