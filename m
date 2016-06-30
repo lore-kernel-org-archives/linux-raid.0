@@ -1,32 +1,33 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 00/12] gendisk: Generate uevent after attribute
-	available
-Date: Wed, 29 Jun 2016 23:38:39 -0700
-Message-ID: <20160630063839.GA17205@infradead.org>
-References: <20160630015953.6888-1-famz@redhat.com>
-	<20160630062442.GA19761@infradead.org>
-	<20160630063554.GE23296@ad.usersys.redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <20160630063554.GE23296@ad.usersys.redhat.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Fam Zheng <famz@redhat.com>
-Cc: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>, "Michael S. Tsirkin" <mst@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-nvme@lists.infradead.org, virtualization@lists.linux-foundation.org, Keith Busch <keith.busch@intel.com>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Christoph Hellwig <hch@infradead.org>, Shaohua Li <shli@kernel.org>, Nitin Gupta <ngupta@vflare.org>, Jiri Kosina <jikos@kernel.org>, linux-raid@vger.kernel.org, dan.j.williams@intel.com, "Ed L. Cashin" <ed.cashin@acm.org>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>, linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org, Minchan Kim <minchan@kernel.org>, linux-mtd@lists.infradead.org, Brian Norris <computersforpeace@gmail.com>, linuxppc-dev@lists.ozlabs.org
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH] md: add missing sysfs_notify on array_state update
+Date: Thu, 30 Jun 2016 10:47:09 +0200
+Message-ID: <1467276429-9359-1-git-send-email-tomasz.majchrzak@intel.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jun 30, 2016 at 02:35:54PM +0800, Fam Zheng wrote:
-> also more code and less flexible IMO.  For example, we need at least two
-> variants, for attribute_group and device_attribute separately, right?
+Changeset 6791875e2e53 has added early return from a function so there is no
+sysfs notification for 'active' and 'clean' state change.
 
-Yes, or maybe just a calling convention that just passes both.
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+---
+ drivers/md/md.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index c068f17..8d52f44 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -3930,6 +3930,8 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
+ 			} else
+ 				err = -EBUSY;
+ 		}
++		if (!err)
++			sysfs_notify_dirent_safe(mddev->sysfs_state);
+ 		spin_unlock(&mddev->lock);
+ 		return err ?: len;
+ 	}
+-- 
+1.8.3.1
+
