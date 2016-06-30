@@ -1,7 +1,7 @@
 From: Fam Zheng <famz@redhat.com>
-Subject: [PATCH v2 10/12] mmc: Generate uevent after attribute available
-Date: Thu, 30 Jun 2016 09:59:51 +0800
-Message-ID: <20160630015953.6888-11-famz@redhat.com>
+Subject: [PATCH v2 09/12] md: Generate uevent after attribute available
+Date: Thu, 30 Jun 2016 09:59:50 +0800
+Message-ID: <20160630015953.6888-10-famz@redhat.com>
 References: <20160630015953.6888-1-famz@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20160630015953.6888-1-famz@redhat.com>
@@ -16,29 +16,29 @@ disk_gen_uevents interface.
 
 Signed-off-by: Fam Zheng <famz@redhat.com>
 ---
- drivers/mmc/card/block.c | 3 ++-
+ drivers/md/md.c | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/mmc/card/block.c b/drivers/mmc/card/block.c
-index 94cf51e..4007106 100644
---- a/drivers/mmc/card/block.c
-+++ b/drivers/mmc/card/block.c
-@@ -2457,7 +2457,7 @@ static int mmc_add_disk(struct mmc_blk_data *md)
- 	int ret;
- 	struct mmc_card *card = md->queue.card;
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 1391c72..dcd09ea 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5055,7 +5055,7 @@ static int md_alloc(dev_t dev, char *name)
+ 	 * through to md_open, so make sure it doesn't get too far
+ 	 */
+ 	mutex_lock(&mddev->open_mutex);
+-	add_disk(disk, true);
++	add_disk(disk, false);
  
--	add_disk(md->disk, true);
-+	add_disk(md->disk, false);
- 	md->force_ro.show = force_ro_show;
- 	md->force_ro.store = force_ro_store;
- 	sysfs_attr_init(&md->force_ro.attr);
-@@ -2466,6 +2466,7 @@ static int mmc_add_disk(struct mmc_blk_data *md)
- 	ret = device_create_file(disk_to_dev(md->disk), &md->force_ro);
- 	if (ret)
- 		goto force_ro_fail;
-+	disk_gen_uevents(md->disk);
- 
- 	if ((md->area_type & MMC_BLK_DATA_AREA_BOOT) &&
- 	     card->ext_csd.boot_ro_lockable) {
+ 	error = kobject_init_and_add(&mddev->kobj, &md_ktype,
+ 				     &disk_to_dev(disk)->kobj, "%s", "md");
+@@ -5070,6 +5070,7 @@ static int md_alloc(dev_t dev, char *name)
+ 	if (mddev->kobj.sd &&
+ 	    sysfs_create_group(&mddev->kobj, &md_bitmap_group))
+ 		printk(KERN_DEBUG "pointless warning\n");
++	disk_gen_uevents(disk);
+ 	mutex_unlock(&mddev->open_mutex);
+  abort:
+ 	mutex_unlock(&disks_mutex);
 -- 
 2.9.0
