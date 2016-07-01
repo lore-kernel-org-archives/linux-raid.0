@@ -1,70 +1,49 @@
-From: Soeren Grunewald <soeren.grunewald@desy.de>
-Subject: Re: Assembly of RAID6 with 48 disk fails
-Date: Fri, 1 Jul 2016 09:24:13 +0200
-Message-ID: <c12fbf50-7a19-9f52-1dcb-fe000481ebb8@desy.de>
-References: <1407524886.20708095.1467300814680.JavaMail.zimbra@desy.de>
- <70dae6c2-0137-8436-0625-7a056ddf2779@turmel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v2 2/3] bcache: update document info
+Date: Fri, 1 Jul 2016 17:37:58 +0800
+Message-ID: <1467365878-16348-1-git-send-email-wangyijing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <70dae6c2-0137-8436-0625-7a056ddf2779@turmel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>, linux-raid mailinglist <linux-raid@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-bcache-owner@vger.kernel.org>
+Sender: linux-bcache-owner@vger.kernel.org
+To: axboe@fb.com, Kent Overstreet <kent.overstreet@gmail.com>
+Cc: Eric Wheeler <git@linux.ewheeler.net>, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>
 List-Id: linux-raid.ids
 
-Hi Phil,
+There is no return in continue_at(), update the documentation.
 
-Thanks for your advice, that actually helped. I just build git head, 
-used '--assemble --force' and it was working. All filesystems on the 
-array are still valid, no data loss :) But this is the end for this 
-machine, since it was clearly a controller fault.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/md/bcache/closure.c |    2 +-
+ drivers/md/bcache/closure.h |    3 ++-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-So thank you very very much, also from the users.
+diff --git a/drivers/md/bcache/closure.c b/drivers/md/bcache/closure.c
+index 9eaf1d6..864e673 100644
+--- a/drivers/md/bcache/closure.c
++++ b/drivers/md/bcache/closure.c
+@@ -112,7 +112,7 @@ bool closure_wait(struct closure_waitlist *waitlist, struct closure *cl)
+ EXPORT_SYMBOL(closure_wait);
+ 
+ /**
+- * closure_sync - sleep until a closure a closure has nothing left to wait on
++ * closure_sync - sleep until a closure has nothing left to wait on
+  *
+  * Sleeps until the refcount hits 1 - the thread that's running the closure owns
+  * the last refcount.
+diff --git a/drivers/md/bcache/closure.h b/drivers/md/bcache/closure.h
+index 782cc2c..5935c3c 100644
+--- a/drivers/md/bcache/closure.h
++++ b/drivers/md/bcache/closure.h
+@@ -31,7 +31,8 @@
+  * passing it, as you might expect, the function to run when nothing is pending
+  * and the workqueue to run that function out of.
+  *
+- * continue_at() also, critically, is a macro that returns the calling function.
++ * continue_at() also, critically, is a macro that needs a return followed to 
++ * return the calling function.
+  * There's good reason for this.
+  *
+  * To use safely closures asynchronously, they must always have a refcount while
 -- 
-Cheers,
-Soeren
-
-On 06/30/2016 11:06 PM, Phil Turmel wrote:
-> On 06/30/2016 11:33 AM, Grunewald, Soeren wrote:
->> Hi All,
->>
->> After a crash, probably caused by some raid issue, the array can't be
->> assembled again. It looks like 8 disk were disappearing form the raid at
->> the same time, which then lead to the system crash. Now I'm unable to
->> get the array back to live again. Because the whole system was on the
->> failing array, I can't access any additional information to check what
->> happened. The system is a 8 year old SUN Fire X4540 system running under
->> Ubuntu 12.04.5 (kernel-3.13.0-91 and mdadm-3.2.5-1ubuntu0.3), which is
->> mainly used for data conversion (converting very large files from one
->> format into another). The boot partition is placed on a 2GB ssd and the
->> rest is running on the 48disk raid6 array. I have booted the system from
->> a usb stick with clonezilla (kernel 4.4.x + mdadm 3.3) and started
->> digging...
->>
->> Since this is the first time, that a I face such a large array and such
->> an issue, I better follow the advice from the Linux-Raid-Wiki and
->> request for help.
->>
->> As one can see in the attached log, the 'Events' count of 40 drives is
->> 4391 and 4385 for the 8 others. We have the same picture for the
->> 'State', 40 drives state 'clean' and 8 drives 'active'. So I tried
->> 'mdadm --assemble --force ...'.  This fixed the event count and faulty
->> flag on 4 of the 8 disks. But still the array can't be created.
->>
->> Except one smart error (1 Currently unreadable (pending) sectors) do all
->> other drives pass the extended smart test. I know, this does not mean
->> that the drives are not damaged or broken.
->>
->> Anyway, how should I process to get the array working again?
->>
-> You're the second person in the last month to run into this...  There
-> was a bug in mdadm that makes it fail with --assemble --force when there
-> are several out-of-date devices.
->
-> The fix was to clone the mdadm git tree, compile the latest, and run
-> that stand-alone binary to perform the forced assembly.  I haven't tried
-> to determine which released version has the fix.
->
-> Phil
->
+1.7.1
