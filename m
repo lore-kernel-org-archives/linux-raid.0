@@ -1,45 +1,39 @@
-From: Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v2 1/3] bcache: Remove redundant parameter for cache_alloc()
-Date: Fri, 1 Jul 2016 17:37:46 +0800
-Message-ID: <1467365866-16290-1-git-send-email-wangyijing@huawei.com>
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: URE, link resets, user hostile defaults
+Date: Fri, 1 Jul 2016 14:43:37 -0600
+Message-ID: <CAJCQCtT2Sxi1GgmNaO8i46LuELpA_nrWLnVzAQMz7Qx_mdwXvw@mail.gmail.com>
+References: <CAJCQCtT1qi1yLjE3Lor3ScVJx7aX4A_S_iM_=VhDtDCD_C9uqw@mail.gmail.com>
+ <57721A47.8070203@suse.de> <CAJCQCtQ=DXWg6qK1+9bwQxrzpKUsRvaiaAnatYR-dupg7JOVzQ@mail.gmail.com>
+ <20160629121751.GT15597@hungrycats.org> <CACsGCyRd388u4XXCSnoK4TpNoPibjhdgEJsHS=vR6aztDc=+2A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-bcache-owner@vger.kernel.org>
-Sender: linux-bcache-owner@vger.kernel.org
-To: axboe@fb.com, Kent Overstreet <kent.overstreet@gmail.com>
-Cc: Eric Wheeler <git@linux.ewheeler.net>, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CACsGCyRd388u4XXCSnoK4TpNoPibjhdgEJsHS=vR6aztDc=+2A@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Edward Kuns <eddie.kuns@gmail.com>
+Cc: Zygo Blaxell <u0oo5pgu@umail.furryterror.org>, Chris Murphy <lists@colorremedies.com>, Hannes Reinecke <hare@suse.de>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Cache_sb is not used in cache_alloc, and we have copied
-sb info to cache->sb already, remove it.
+Here's a fun one of these I just got off the Fedora users mailing list
+with a laptop drive that's apparently hanging on *write*. This I would
+not expect to take a long time for a drive to figure out, but... there
+are more resets than there are write errors, and in fact there's no
+discrete write error from the drive, all we know is the failed command
+is a WRITE command.
 
-Reviewed-by: Coly Li <colyli@suse.de>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/md/bcache/super.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+What seems to happen is, everything in the queue gets obliterated in
+the reset, and when ext4 finds out everything failed, not just one
+write, it barfs and goes read only.
 
-diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
-index f5dbb4e..aecaace 100644
---- a/drivers/md/bcache/super.c
-+++ b/drivers/md/bcache/super.c
-@@ -1803,7 +1803,7 @@ void bch_cache_release(struct kobject *kobj)
- 	module_put(THIS_MODULE);
- }
- 
--static int cache_alloc(struct cache_sb *sb, struct cache *ca)
-+static int cache_alloc(struct cache *ca)
- {
- 	size_t free;
- 	struct bucket *b;
-@@ -1858,7 +1858,7 @@ static int register_cache(struct cache_sb *sb, struct page *sb_page,
- 	if (blk_queue_discard(bdev_get_queue(ca->bdev)))
- 		ca->discard = CACHE_DISCARD(&ca->sb);
- 
--	ret = cache_alloc(sb, ca);
-+	ret = cache_alloc(ca);
- 	if (ret != 0)
- 		goto err;
- 
--- 
-1.7.1
+http://pastebin.com/3JAL297z
+
+How might this turn out differently if the drive reported a single
+discrete write error? I don't know how any file system tolerates this
+because it's so rare. Would ext4 just try to write again? Would it try
+to write to the same sector or another one? Or maybe the write finally
+succeeds by resulting in a remap (?) But this sure is dang slow to
+recover from a bad write. I don't understand the engineering rational
+for this. Maybe it's a firmware bug?
+
+
+Chris Murphy
