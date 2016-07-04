@@ -1,62 +1,71 @@
-From: Minfei Huang <mnghuan@gmail.com>
-Subject: [PATCH RESENT] dm: Check kthread_run's return value
-Date: Mon,  4 Jul 2016 23:25:27 +0800
-Message-ID: <1467645927-4143-1-git-send-email-mnghuan@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: agk@redhat.com, snitzer@redhat.com, shli@kernel.org
-Cc: dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Minfei Huang <mnghuan@gmail.com>
+From: Pasi =?iso-8859-1?Q?K=E4rkk=E4inen?= <pasik@iki.fi>
+Subject: Re: URE, link resets, user hostile defaults
+Date: Tue, 5 Jul 2016 00:43:04 +0300
+Message-ID: <20160704214304.GZ13212@reaktio.net>
+References: <CAJCQCtT1qi1yLjE3Lor3ScVJx7aX4A_S_iM_=VhDtDCD_C9uqw@mail.gmail.com>
+ <57721A47.8070203@suse.de>
+ <CAJCQCtQ=DXWg6qK1+9bwQxrzpKUsRvaiaAnatYR-dupg7JOVzQ@mail.gmail.com>
+ <20160629121751.GT15597@hungrycats.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20160629121751.GT15597@hungrycats.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Zygo Blaxell <u0oo5pgu@umail.furryterror.org>
+Cc: Chris Murphy <lists@colorremedies.com>, Hannes Reinecke <hare@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-kthread function is used to process kthread_work. And there is no return
-value checking during create this thread. Add this checking to fix this
-issue.
+On Wed, Jun 29, 2016 at 08:17:51AM -0400, Zygo Blaxell wrote:
+> On Tue, Jun 28, 2016 at 11:33:36AM -0600, Chris Murphy wrote:
+> > On Tue, Jun 28, 2016 at 12:33 AM, Hannes Reinecke <hare@suse.de> wrote:
+> > > Can you post a message log detailing this problem?
+> >
+> > Just over the weekend Phil Turmel posted an email with a bunch of back
+> > reading on the subject of timeout mismatches for someone to read. I've
+> > lost track of how many user emails he's replied to, discovering this
+> > common misconfiguration, and get it straightened out and more often
+> > than not helping the user recover data that otherwise would have been
+> > lost *because* of hard link resetting instead of explicit read errors.
+> 
+> OK, but the two links you provided are not examples of these.
+> 
 
-Signed-off-by: Minfei Huang <mnghuan@gmail.com>
----
- drivers/md/dm.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+Here's one of the threads where Phil explains the issue:
 
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 1b2f962..d68b9d2 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -2654,12 +2654,15 @@ struct queue_limits *dm_get_queue_limits(struct mapped_device *md)
- }
- EXPORT_SYMBOL_GPL(dm_get_queue_limits);
- 
--static void dm_old_init_rq_based_worker_thread(struct mapped_device *md)
-+static int dm_old_init_rq_based_worker_thread(struct mapped_device *md)
- {
- 	/* Initialize the request-based DM worker thread */
- 	init_kthread_worker(&md->kworker);
- 	md->kworker_task = kthread_run(kthread_worker_fn, &md->kworker,
- 				       "kdmwork-%s", dm_device_name(md));
-+	if (IS_ERR(md->kworker_task))
-+		return -ENOMEM;
-+	return 0;
- }
- 
- /*
-@@ -2667,6 +2670,8 @@ static void dm_old_init_rq_based_worker_thread(struct mapped_device *md)
-  */
- static int dm_old_init_request_queue(struct mapped_device *md)
- {
-+	int ret;
-+
- 	/* Fully initialize the queue */
- 	if (!blk_init_allocated_queue(md->queue, dm_request_fn, NULL))
- 		return -EINVAL;
-@@ -2678,7 +2683,9 @@ static int dm_old_init_request_queue(struct mapped_device *md)
- 	blk_queue_softirq_done(md->queue, dm_softirq_done);
- 	blk_queue_prep_rq(md->queue, dm_old_prep_fn);
- 
--	dm_old_init_rq_based_worker_thread(md);
-+	ret = dm_old_init_rq_based_worker_thread(md);
-+	if (ret < 0)
-+		return ret;
- 
- 	elv_register_queue(md->queue);
- 
--- 
-2.6.3
+http://marc.info/?l=linux-raid&m=133665797115876&w=2
+
+quote:
+
+
+"A very common report I see on this mailing list is people who have lost arrays 
+where the drives all appear to be healthy.  
+Given the large size of today's hard drives, even healthy drives will occasionally 
+have an unrecoverable read error.
+
+When this happens in a raid array with a desktop drive without SCTERC,
+the driver times out and reports an error to MD.  MD proceeds to
+reconstruct the missing data and tries to write it back to the bad
+sector.  However, that drive is still trying to read the bad sector and
+ignores the controller.  The write is immediately rejected.  BOOM!  The
+*write* error ejects that member from the array.  And you are now
+degraded.
+
+If you don't notice the degraded array right away, you probably won't
+notice until a URE on another drive pops up.  Once that happens, you
+can't complete a resync to revive the array.
+
+Running a "check" or "repair" on an array without TLER will have the
+opposite of the intended effect: any URE will kick a drive out instead
+of fixing it.
+
+In the same scenario with an enterprise drive, or a drive with SCTERC
+turned on, the drive read times out before the controller driver, the
+controller never resets the link to the drive, and the followup write
+succeeds.  (The sector is either successfully corrected in place, or
+it is relocated by the drive.)  No BOOM."
+
+
+
+-- Pasi
+
