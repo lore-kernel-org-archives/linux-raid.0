@@ -1,83 +1,72 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Request for assistance
-Date: Wed, 6 Jul 2016 13:51:16 +0100
-Message-ID: <577CFEC4.7040704@youngman.org.uk>
-References: <CAPpdf58z4JagWmP=xiUj9qOU-bdyN7W=EvcM9evjCT4ZWp+VxQ@mail.gmail.com>
- <577C64FA.6050504@websitemanagers.com.au>
- <CAPpdf59gF6BMpmCY5SNzNH2O_WFn17hMVnrjHAyA0pU_i+--uA@mail.gmail.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH RESENT] dm: Check kthread_run's return value
+Date: Wed, 6 Jul 2016 09:16:01 -0400
+Message-ID: <20160706131601.GA28379@redhat.com>
+References: <1467645927-4143-1-git-send-email-mnghuan@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPpdf59gF6BMpmCY5SNzNH2O_WFn17hMVnrjHAyA0pU_i+--uA@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <1467645927-4143-1-git-send-email-mnghuan@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: o1bigtenor <o1bigtenor@gmail.com>, Adam Goryachev <mailinglists@websitemanagers.com.au>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Minfei Huang <mnghuan@gmail.com>
+Cc: agk@redhat.com, shli@kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 06/07/16 13:14, o1bigtenor wrote:
-> On Tue, Jul 5, 2016 at 8:55 PM, Adam Goryachev
-> <mailinglists@websitemanagers.com.au> wrote:
->> On 06/07/16 10:13, o1bigtenor wrote:
->>>
->>> Greetings
->>>
->>> Running a Raid 10 array with 4 - 3 TB drives. Have a UPS but this area
->>> gets significant lightning and also brownout (rural power) events.
->>>
-> snip
->>>
->>> Do I just re-create the array?
->>>
->> No, not if you value your data. Only re-create the array if you are told to
->> by someone (knowledgeable) on the list.
->>
->> In your case, I think you should stop the array.
->> mdadm --stop /dev/md0
->> Make sure there is nothing listed in /proc/mdstat
->> Then try to assemble the array, but force the events to match:
->> mdadm --assemble /dev/md0 --force /dev/sd[bcef]1
->>
->> If that doesn't work, then include the output from dmesg as well as
->> /proc/mdstat and any commandline output generated.
->>
->> You might also want to examine why two drives dropped, referring to logs or
->> similar might assist.
->>
-> mdadm --stop /dev/md0
-> cat /proc/mdstat
->     indicated no md (can't remember the exact response but it said
-> nothing there)
-> mdadm --assemble /dev/md0 --force /dev/sd[bcef]1 to
+On Mon, Jul 04 2016 at 11:25am -0400,
+Minfei Huang <mnghuan@gmail.com> wrote:
+
+> kthread function is used to process kthread_work. And there is no return
+> value checking during create this thread. Add this checking to fix this
+> issue.
 > 
-> mdadm :forcing event count in /dev/sde1(2) from 64841 to 64844
-> mdadm :forcing event count in /dev/sdf1(3) from 64841 to 64844
-> mdadm: clearing FAULTY flag for device 3 in /dev/md0 for /dev/sdf1
-> mdadm: Marking array /dev/md0 as 'clean'
-> mdadm: /dev/md0 has been started with 4 drives
+> Signed-off-by: Minfei Huang <mnghuan@gmail.com>
+> ---
+>  drivers/md/dm.c | 11 +++++++++--
+>  1 file changed, 9 insertions(+), 2 deletions(-)
 > 
-> So my array is back up - - - thank you very much for your assistance!!!
-> 
-But why did they drop ... are you using desktop drives? I use Seagate
-Barracudas - NOT a particularly good idea. You should be using WD Red,
-Seagate NAS, or similar.
+> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+> index 1b2f962..d68b9d2 100644
+> --- a/drivers/md/dm.c
+> +++ b/drivers/md/dm.c
+> @@ -2654,12 +2654,15 @@ struct queue_limits *dm_get_queue_limits(struct mapped_device *md)
+>  }
+>  EXPORT_SYMBOL_GPL(dm_get_queue_limits);
+>  
+> -static void dm_old_init_rq_based_worker_thread(struct mapped_device *md)
+> +static int dm_old_init_rq_based_worker_thread(struct mapped_device *md)
+>  {
+>  	/* Initialize the request-based DM worker thread */
+>  	init_kthread_worker(&md->kworker);
+>  	md->kworker_task = kthread_run(kthread_worker_fn, &md->kworker,
+>  				       "kdmwork-%s", dm_device_name(md));
+> +	if (IS_ERR(md->kworker_task))
+> +		return -ENOMEM;
+> +	return 0;
+>  }
+>  
+>  /*
+> @@ -2667,6 +2670,8 @@ static void dm_old_init_rq_based_worker_thread(struct mapped_device *md)
+>   */
+>  static int dm_old_init_request_queue(struct mapped_device *md)
+>  {
+> +	int ret;
+> +
+>  	/* Fully initialize the queue */
+>  	if (!blk_init_allocated_queue(md->queue, dm_request_fn, NULL))
+>  		return -EINVAL;
+> @@ -2678,7 +2683,9 @@ static int dm_old_init_request_queue(struct mapped_device *md)
+>  	blk_queue_softirq_done(md->queue, dm_softirq_done);
+>  	blk_queue_prep_rq(md->queue, dm_old_prep_fn);
+>  
+> -	dm_old_init_rq_based_worker_thread(md);
+> +	ret = dm_old_init_rq_based_worker_thread(md);
+> +	if (ret < 0)
+> +		return ret;
+>  
+>  	elv_register_queue(md->queue);
+>  
 
-"smartctl -x /dev/sdx" will give you an idea of what's going on. Search
-the list for "timeout error" for an idea of the grief you'll get if
-you're using desktop drives ...
-
-If smartctl says smart is disabled, enable it. When I do, my drive comes
-back (using the -x option again) saying "SCT Error Recovery not
-supported". This is a no-no for a decent raid drive. I think the other
-acronyms are ETL or TLS - either way you can control how the drive
-reports an error back to the OS. Which is why you need proper raid
-drives (the manufacturers have downgraded the firmware on desktop drives :-(
-
-You need to fix the WHY or it could easily happen again. And this could
-well be why ... (if you've had a problem on a desktop drive, it WILL
-happen again, and data loss is quite likely ... even if you recover the
-bulk of the drive).
-
-Cheers,
-Wol
-
+This needed rebasing against linux-dm.git's 'for-next'.  I've now staged
+this fix for 4.8 inclusion, see:
+https://git.kernel.org/cgit/linux/kernel/git/device-mapper/linux-dm.git/commit/?h=for-next&id=7193a9defcab6f3d3f1eb64c68bad7534e5a39ad
