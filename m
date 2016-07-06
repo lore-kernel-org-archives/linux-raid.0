@@ -1,172 +1,368 @@
-From: Ming Lei <ming.lei@canonical.com>
-Subject: Re: [RFC] block: fix blk_queue_split() resource exhaustion
-Date: Wed, 6 Jul 2016 23:57:51 +0800
-Message-ID: <CACVXFVPO1mwf9+MKosv_xY8Wz2KeShVVnefffgVr0wr=Tdo57Q@mail.gmail.com>
-References: <1466583730-28595-1-git-send-email-lars.ellenberg@linbit.com>
- <CACVXFVMTp17gcM8HEMrZ+0TJWgpGk+VWDgC7t+rMAancWZEFFw@mail.gmail.com>
- <20160704082006.GN3239@soda.linbit> <CACVXFVNTKsRQ0PQTL47-ceP-KqMR-zR4DO1v-ey5NTUYv8bUog@mail.gmail.com>
- <20160706123841.GA13335@soda.linbit>
+From: o1bigtenor <o1bigtenor@gmail.com>
+Subject: Re: Request for assistance
+Date: Wed, 6 Jul 2016 13:28:55 -0500
+Message-ID: <CAPpdf5-bdvWwp3pSTFgoL++avt-8=3VvzL-Psk2qR7rHRZUBtQ@mail.gmail.com>
+References: <CAPpdf58z4JagWmP=xiUj9qOU-bdyN7W=EvcM9evjCT4ZWp+VxQ@mail.gmail.com>
+ <577C64FA.6050504@websitemanagers.com.au> <CAPpdf59gF6BMpmCY5SNzNH2O_WFn17hMVnrjHAyA0pU_i+--uA@mail.gmail.com>
+ <577CFEC4.7040704@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-bcache-owner@vger.kernel.org>
-In-Reply-To: <20160706123841.GA13335@soda.linbit>
-Sender: linux-bcache-owner@vger.kernel.org
-To: Lars Ellenberg <lars.ellenberg@linbit.com>
-Cc: linux-block <linux-block@vger.kernel.org>, Roland Kammerer <roland.kammerer@linbit.com>, Jens Axboe <axboe@kernel.dk>, NeilBrown <neilb@suse.com>, Kent Overstreet <kent.overstreet@gmail.com>, Shaohua Li <shli@kernel.org>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "open list:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Takashi Iwai <tiwai@suse.de>, Jiri Kosina <jkosina@suse.cz>, Zheng Liu <gnehzuil.liu@gmail.com>, Keith Busch <keith.busch@intel.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "open list:BCACHE (BLOCK LAYER CACHE)" <linux-bcache@vger.kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <577CFEC4.7040704@youngman.org.uk>
+Sender: linux-raid-owner@vger.kernel.org
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: Adam Goryachev <mailinglists@websitemanagers.com.au>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Jul 6, 2016 at 8:38 PM, Lars Ellenberg
-<lars.ellenberg@linbit.com> wrote:
-> On Mon, Jul 04, 2016 at 06:47:29PM +0800, Ming Lei wrote:
->> >> One clean solution may be to convert the loop of generic_make_request()
->> >> into the following way:
->> >>
->> >> do {
->> >>     struct bio *splitted, *remainder = NULL;
->> >>     struct request_queue *q = bdev_get_queue(bio->bi_bdev);
->> >>
->> >>     blk_queue_split(q, &bio, &remainder, q->bio_split);
->> >>
->> >>     ret = q->make_request_fn(q, bio);
->> >>
->> >>     if (remainder)
->> >>          bio_list_add(current->bio_list, remainder);
->> >>     bio = bio_list_pop(current->bio_list);
->> >> } while (bio)
->> >
->> > Not good enough.
->
->
->> > Goal was to first process all "deeper level" bios
->> > before processing the remainder.
+On Wed, Jul 6, 2016 at 7:51 AM, Wols Lists <antlists@youngman.org.uk> wrote:
+> On 06/07/16 13:14, o1bigtenor wrote:
+>> On Tue, Jul 5, 2016 at 8:55 PM, Adam Goryachev
+>> <mailinglists@websitemanagers.com.au> wrote:
+>>> On 06/07/16 10:13, o1bigtenor wrote:
+>>>>
+>>>> Greetings
+>>>>
+>>>> Running a Raid 10 array with 4 - 3 TB drives. Have a UPS but this area
+>>>> gets significant lightning and also brownout (rural power) events.
+>>>>
+>> snip
+snip
 >>
->> For the reported bio splitting issue, I think the goal is to make sure all
->> BIOs generated from 'bio' inside .make_request_fn(bio) are queued
->> before the 'current' remainder. Cause it is the issue introduced by
->> blk_split_bio().
+>> So my array is back up - - - thank you very much for your assistance!!!
+>>
+> But why did they drop ... are you using desktop drives? I use Seagate
+> Barracudas - NOT a particularly good idea. You should be using WD Red,
+> Seagate NAS, or similar.
 
-I believe the above description is correct, but my previous solution
-is wrong, looks what we need is a binary tree, in which left child is
-the splitted bio and the remainder bio is the right child, and the tree
-need to be traversed in pre-order to make sure all BIOs generated
-from 'bio' inside .make_request_fn(bio) are queued before the
-remainder of bio splitting.
+Sorry - - - this system is 4 1 TB WD Red drives
+>
+> "smartctl -x /dev/sdx" will give you an idea of what's going on. Search
+> the list for "timeout error" for an idea of the grief you'll get if
+> you're using desktop drives ...
+>
+> If smartctl says smart is disabled, enable it. When I do, my drive comes
+> back (using the -x option again) saying "SCT Error Recovery not
+> supported". This is a no-no for a decent raid drive. I think the other
+> acronyms are ETL or TLS - either way you can control how the drive
+> reports an error back to the OS. Which is why you need proper raid
+> drives (the manufacturers have downgraded the firmware on desktop drives :-(
+>
+> You need to fix the WHY or it could easily happen again. And this could
+> well be why ... (if you've had a problem on a desktop drive, it WILL
+> happen again, and data loss is quite likely ... even if you recover the
+> bulk of the drive).
 
-Another property of the tree is that if one node has only one child,
-the child has to be left one.
+My best understanding as to the why is - - dirty power - - - fixing that means
+going off-grid. Expensive and not happening any time soon although I would
+really like that.
 
-I will think about it further to see if it is doable to implement.
+As I do not understand the error messages in smartctl I add the following
+(maybe someone would explain what they mean) :
 
->
-> Stacking:
->         qA (limitting layer)
->         -> qB (remapping)
->         -> qC (remapping)
->         -> qD (hardware)
->
-> [in fact you don't even need four layers,
->  this is just to clarify that the stack may be more complex than you
->  assume it would be]
->
-> Columns below:
-> 1) argument to generic_make_request() and its target queue.
-> 2) current->bio_list
-> 3) "in-flight" counter of qA.
->
-> ==== In your new picture, iiuc:
->
-> generic_make_request(bio_orig)
->                 NULL                    in-flight=0
-> bio_orig        empty
->   blk_queue_split()
->   result:
->   bio_s, bio_r
-> qA->make_request_fn(bio_s)
->                                         in-flight=1
->   bio_c = bio_clone(bio_s)
->   generic_make_request(bio_c to qB)
->                 bio_c
-> <-return
->   bio_list_add(bio_r)
->                 bio_c, bio_r
->   bio_list_pop()
->                 bio_r
-> qB->make_request_fn(bio_c)
->   (Assume it does not clone, but only remap.
->   But it may also be a striping layer,
->   and queue more than one bio here.)
->   generic_make_request(bio_c to qC)
->                 bio_r, bio_c
-> <-return
->   bio_list_pop()
->                 bio_c
-> qA->make_request_fn(bio_r)              in-flight still 1
->
->         BLOCKS, because bio_c has not been processed to its final
->         destination qD yet, and not dispatched to hardware.
+smartctl -x /dev/sdf
+smartctl 6.4 2014-10-07 r4002 [x86_64-linux-4.1.0-2-amd64] (local build)
+Copyright (C) 2002-14, Bruce Allen, Christian Franke, www.smartmontools.org
 
-Yes, you are right.
+=== START OF INFORMATION SECTION ===
+Model Family:     Western Digital Red (AF)
+Device Model:     WDC WD10EFRX-68FYTN0
+Serial Number:    WD-WCC4J4XV62F4
+LU WWN Device Id: 5 0014ee 20cd9d7d1
+Firmware Version: 82.00A82
+User Capacity:    1,000,204,886,016 bytes [1.00 TB]
+Sector Sizes:     512 bytes logical, 4096 bytes physical
+Rotation Rate:    5400 rpm
+Device is:        In smartctl database [for details use: -P show]
+ATA Version is:   ACS-2 (minor revision not indicated)
+SATA Version is:  SATA 3.0, 6.0 Gb/s (current: 6.0 Gb/s)
+Local Time is:    Wed Jul  6 13:21:25 2016 CDT
+SMART support is: Available - device has SMART capability.
+SMART support is: Enabled
+AAM feature is:   Unavailable
+APM feature is:   Unavailable
+Rd look-ahead is: Enabled
+Write cache is:   Enabled
+ATA Security is:  Disabled, NOT FROZEN [SEC1]
+Wt Cache Reorder: Enabled
 
->
->
-> ==== my suggestion
->
-> generic_make_request(bio_orig)
->                 NULL                    in-flight=0
-> bio_orig        empty                   in-flight=0
-> qA->make_request_fn(bio_orig)
->   blk_queue_split()
->   result:
->   bio_s, and bio_r stuffed away to head of remainder list.
->                                         in-flight=1
->   bio_c = bio_clone(bio_s)
->   generic_make_request(bio_c to qB)
->                 bio_c
-> <-return
->                 bio_c
->   bio_list_pop()
->                 empty
-> qB->make_request_fn(bio_c)
->   (Assume it does not clone, but only remap.
->   But it may also be a striping layer,
->   and queue more than one bio here.)
->   generic_make_request(bio_c to qC)
->                 bio_c
-> <-return
->   bio_list_pop()
->                 empty
-> qC->make_request_fn(bio_c)
->   generic_make_request(bio_c to qD)
->                 bio_c
-> <-return
->   bio_list_pop()
->                 empty
-> qD->make_request_fn(bio_c)
->         dispatches to hardware
-> <-return
->                 empty
->    bio_list_pop()
->    NULL, great, lets pop from remainder list
-> qA->make_request_fn(bio_r)              in-flight=?
->
->         May block, but only until completion of bio_c.
->         Which may already have happened.
->
->         *makes progress*
+=== START OF READ SMART DATA SECTION ===
+SMART overall-health self-assessment test result: PASSED
 
-I admit your solution is smart, but it isn't easy to prove it as correct
-in theory.  But if the traversal can be mapped into pre-order traversal
-of the above binary tree, it may be correct.
+General SMART Values:
+Offline data collection status:  (0x00) Offline data collection activity
+was never started.
+Auto Offline Data Collection: Disabled.
+Self-test execution status:      (   0) The previous self-test routine completed
+without error or no self-test has ever
+been run.
+Total time to complete Offline
+data collection: (13320) seconds.
+Offline data collection
+capabilities: (0x7b) SMART execute Offline immediate.
+Auto Offline data collection on/off support.
+Suspend Offline collection upon new
+command.
+Offline surface scan supported.
+Self-test supported.
+Conveyance Self-test supported.
+Selective Self-test supported.
+SMART capabilities:            (0x0003) Saves SMART data before entering
+power-saving mode.
+Supports SMART auto save timer.
+Error logging capability:        (0x01) Error logging supported.
+General Purpose Logging supported.
+Short self-test routine
+recommended polling time: (   2) minutes.
+Extended self-test routine
+recommended polling time: ( 152) minutes.
+Conveyance self-test routine
+recommended polling time: (   5) minutes.
+SCT capabilities:       (0x303d) SCT Status supported.
+SCT Error Recovery Control supported.
+SCT Feature Control supported.
+SCT Data Table supported.
 
-Thanks,
-Ming
+SMART Attributes Data Structure revision number: 16
+Vendor Specific SMART Attributes with Thresholds:
+ID# ATTRIBUTE_NAME          FLAGS    VALUE WORST THRESH FAIL RAW_VALUE
+  1 Raw_Read_Error_Rate     POSR-K   200   200   051    -    0
+  3 Spin_Up_Time            POS--K   139   139   021    -    4050
+  4 Start_Stop_Count        -O--CK   100   100   000    -    23
+  5 Reallocated_Sector_Ct   PO--CK   200   200   140    -    0
+  7 Seek_Error_Rate         -OSR-K   200   200   000    -    0
+  9 Power_On_Hours          -O--CK   100   099   000    -    423
+ 10 Spin_Retry_Count        -O--CK   100   253   000    -    0
+ 11 Calibration_Retry_Count -O--CK   100   253   000    -    0
+ 12 Power_Cycle_Count       -O--CK   100   100   000    -    6
+192 Power-Off_Retract_Count -O--CK   200   200   000    -    1
+193 Load_Cycle_Count        -O--CK   198   198   000    -    8922
+194 Temperature_Celsius     -O---K   115   107   000    -    28
+196 Reallocated_Event_Count -O--CK   200   200   000    -    0
+197 Current_Pending_Sector  -O--CK   200   200   000    -    0
+198 Offline_Uncorrectable   ----CK   100   253   000    -    0
+199 UDMA_CRC_Error_Count    -O--CK   200   200   000    -    0
+200 Multi_Zone_Error_Rate   ---R--   100   253   000    -    0
+                            ||||||_ K auto-keep
+                            |||||__ C event count
+                            ||||___ R error rate
+                            |||____ S speed/performance
+                            ||_____ O updated online
+                            |______ P prefailure warning
 
->
-> Thanks,
->
->     Lars
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-block" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+General Purpose Log Directory Version 1
+SMART           Log Directory Version 1 [multi-sector log support]
+Address    Access  R/W   Size  Description
+0x00       GPL,SL  R/O      1  Log Directory
+0x01           SL  R/O      1  Summary SMART error log
+0x02           SL  R/O      5  Comprehensive SMART error log
+0x03       GPL     R/O      6  Ext. Comprehensive SMART error log
+0x04       GPL,SL  R/O      8  Device Statistics log
+0x06           SL  R/O      1  SMART self-test log
+0x07       GPL     R/O      1  Extended self-test log
+0x09           SL  R/W      1  Selective self-test log
+0x10       GPL     R/O      1  SATA NCQ Queued Error log
+0x11       GPL     R/O      1  SATA Phy Event Counters log
+0x21       GPL     R/O      1  Write stream error log
+0x22       GPL     R/O      1  Read stream error log
+0x80-0x9f  GPL,SL  R/W     16  Host vendor specific log
+0xa0-0xa7  GPL,SL  VS      16  Device vendor specific log
+0xa8-0xb7  GPL,SL  VS       1  Device vendor specific log
+0xbd       GPL,SL  VS       1  Device vendor specific log
+0xc0       GPL,SL  VS       1  Device vendor specific log
+0xc1       GPL     VS      93  Device vendor specific log
+0xe0       GPL,SL  R/W      1  SCT Command/Status
+0xe1       GPL,SL  R/W      1  SCT Data Transfer
+
+SMART Extended Comprehensive Error Log Version: 1 (6 sectors)
+Device Error Count: 1
+CR     = Command Register
+FEATR  = Features Register
+COUNT  = Count (was: Sector Count) Register
+LBA_48 = Upper bytes of LBA High/Mid/Low Registers ]  ATA-8
+LH     = LBA High (was: Cylinder High) Register    ]   LBA
+LM     = LBA Mid (was: Cylinder Low) Register      ] Register
+LL     = LBA Low (was: Sector Number) Register     ]
+DV     = Device (was: Device/Head) Register
+DC     = Device Control Register
+ER     = Error register
+ST     = Status register
+Powered_Up_Time is measured from power on, and printed as
+DDd+hh:mm:SS.sss where DD=days, hh=hours, mm=minutes,
+SS=sec, and sss=millisec. It "wraps" after 49.710 days.
+
+Error 1 [0] occurred at disk power-on lifetime: 395 hours (16 days + 11 hours)
+  When the command that caused the error occurred, the device was
+active or idle.
+
+  After command completion occurred, registers were:
+  ER -- ST COUNT  LBA_48  LH LM LL DV DC
+  -- -- -- == -- == == == -- -- -- -- --
+  10 -- 51 00 00 00 00 18 11 28 00 40 00  Error: IDNF at LBA =
+0x18112800 = 403777536
+
+  Commands leading to the command that caused the error were:
+  CR FEATR COUNT  LBA_48  LH LM LL DV DC  Powered_Up_Time  Command/Feature_Name
+  -- == -- == -- == == == -- -- -- -- --  ---------------  --------------------
+  61 51 78 00 e0 00 00 18 06 38 00 40 08  5d+03:01:34.882  WRITE FPDMA QUEUED
+  61 50 00 00 d8 00 00 18 05 e8 00 40 08  5d+03:01:34.882  WRITE FPDMA QUEUED
+  61 50 00 00 d0 00 00 18 05 98 00 40 08  5d+03:01:34.882  WRITE FPDMA QUEUED
+  61 50 00 00 c8 00 00 18 05 48 00 40 08  5d+03:01:34.882  WRITE FPDMA QUEUED
+  61 50 00 00 c0 00 00 18 04 f8 00 40 08  5d+03:01:34.882  WRITE FPDMA QUEUED
+
+SMART Extended Self-test Log Version: 1 (1 sectors)
+No self-tests have been logged.  [To run self-tests, use: smartctl -t]
+
+SMART Selective self-test log data structure revision number 1
+ SPAN  MIN_LBA  MAX_LBA  CURRENT_TEST_STATUS
+    1        0        0  Not_testing
+    2        0        0  Not_testing
+    3        0        0  Not_testing
+    4        0        0  Not_testing
+    5        0        0  Not_testing
+Selective self-test flags (0x0):
+  After scanning selected spans, do NOT read-scan remainder of disk.
+If Selective self-test is pending on power-up, resume after 0 minute delay.
+
+SCT Status Version:                  3
+SCT Version (vendor specific):       258 (0x0102)
+SCT Support Level:                   1
+Device State:                        Active (0)
+Current Temperature:                    28 Celsius
+Power Cycle Min/Max Temperature:     21/28 Celsius
+Lifetime    Min/Max Temperature:     20/36 Celsius
+Under/Over Temperature Limit Count:   0/0
+Vendor specific:
+00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+SCT Temperature History Version:     2
+Temperature Sampling Period:         1 minute
+Temperature Logging Interval:        1 minute
+Min/Max recommended Temperature:      0/60 Celsius
+Min/Max Temperature Limit:           -41/85 Celsius
+Temperature History Size (Index):    478 (237)
+
+Index    Estimated Time   Temperature Celsius
+ 238    2016-07-06 05:24    26  *******
+ ...    ..( 34 skipped).    ..  *******
+ 273    2016-07-06 05:59    26  *******
+ 274    2016-07-06 06:00    27  ********
+ ...    ..(  8 skipped).    ..  ********
+ 283    2016-07-06 06:09    27  ********
+ 284    2016-07-06 06:10    26  *******
+ ...    ..(  3 skipped).    ..  *******
+ 288    2016-07-06 06:14    26  *******
+ 289    2016-07-06 06:15    27  ********
+ ...    ..( 42 skipped).    ..  ********
+ 332    2016-07-06 06:58    27  ********
+ 333    2016-07-06 06:59    28  *********
+ ...    ..( 18 skipped).    ..  *********
+ 352    2016-07-06 07:18    28  *********
+ 353    2016-07-06 07:19    29  **********
+ ...    ..(  3 skipped).    ..  **********
+ 357    2016-07-06 07:23    29  **********
+ 358    2016-07-06 07:24    28  *********
+ ...    ..( 29 skipped).    ..  *********
+ 388    2016-07-06 07:54    28  *********
+ 389    2016-07-06 07:55    29  **********
+ 390    2016-07-06 07:56    28  *********
+ 391    2016-07-06 07:57    28  *********
+ 392    2016-07-06 07:58    29  **********
+ 393    2016-07-06 07:59    28  *********
+ 394    2016-07-06 08:00    28  *********
+ 395    2016-07-06 08:01    29  **********
+ ...    ..(  4 skipped).    ..  **********
+ 400    2016-07-06 08:06    29  **********
+ 401    2016-07-06 08:07     ?  -
+ 402    2016-07-06 08:08    21  **
+ 403    2016-07-06 08:09    21  **
+ 404    2016-07-06 08:10    21  **
+ 405    2016-07-06 08:11    22  ***
+ 406    2016-07-06 08:12    22  ***
+ 407    2016-07-06 08:13    22  ***
+ 408    2016-07-06 08:14    24  *****
+ 409    2016-07-06 08:15    24  *****
+ 410    2016-07-06 08:16    23  ****
+ 411    2016-07-06 08:17    23  ****
+ 412    2016-07-06 08:18    23  ****
+ 413    2016-07-06 08:19    24  *****
+ ...    ..(  2 skipped).    ..  *****
+ 416    2016-07-06 08:22    24  *****
+ 417    2016-07-06 08:23    25  ******
+ ...    ..(  3 skipped).    ..  ******
+ 421    2016-07-06 08:27    25  ******
+ 422    2016-07-06 08:28    26  *******
+ ...    ..( 60 skipped).    ..  *******
+   5    2016-07-06 09:29    26  *******
+   6    2016-07-06 09:30    27  ********
+ ...    ..(106 skipped).    ..  ********
+ 113    2016-07-06 11:17    27  ********
+ 114    2016-07-06 11:18    26  *******
+ ...    ..(113 skipped).    ..  *******
+ 228    2016-07-06 13:12    26  *******
+ 229    2016-07-06 13:13    27  ********
+ ...    ..(  4 skipped).    ..  ********
+ 234    2016-07-06 13:18    27  ********
+ 235    2016-07-06 13:19    26  *******
+ 236    2016-07-06 13:20    26  *******
+ 237    2016-07-06 13:21    26  *******
+
+SCT Error Recovery Control:
+           Read:     70 (7.0 seconds)
+          Write:     70 (7.0 seconds)
+
+Device Statistics (GP Log 0x04)
+Page Offset Size         Value  Description
+  1  =====  =                =  == General Statistics (rev 2) ==
+  1  0x008  4                6  Lifetime Power-On Resets
+  1  0x010  4              423  Power-on Hours
+  1  0x018  6       2044877667  Logical Sectors Written
+  1  0x020  6          2397939  Number of Write Commands
+  1  0x028  6       1961443492  Logical Sectors Read
+  1  0x030  6          9792433  Number of Read Commands
+  3  =====  =                =  == Rotating Media Statistics (rev 1) ==
+  3  0x008  4             2800  Spindle Motor Power-on Hours
+  3  0x010  4             1582  Head Flying Hours
+  3  0x018  4             8924  Head Load Events
+  3  0x020  4              200~ Number of Reallocated Logical Sectors
+  3  0x028  4                0  Read Recovery Attempts
+  3  0x030  4                0  Number of Mechanical Start Failures
+  4  =====  =                =  == General Errors Statistics (rev 1) ==
+  4  0x008  4                1  Number of Reported Uncorrectable Errors
+  4  0x010  4                0  Resets Between Cmd Acceptance and Completion
+  5  =====  =                =  == Temperature Statistics (rev 1) ==
+  5  0x008  1               28  Current Temperature
+  5  0x010  1               27  Average Short Term Temperature
+  5  0x018  1               26  Average Long Term Temperature
+  5  0x020  1               36  Highest Temperature
+  5  0x028  1               20  Lowest Temperature
+  5  0x030  1               33  Highest Average Short Term Temperature
+  5  0x038  1               22  Lowest Average Short Term Temperature
+  5  0x040  1               27  Highest Average Long Term Temperature
+  5  0x048  1               25  Lowest Average Long Term Temperature
+  5  0x050  4                0  Time in Over-Temperature
+  5  0x058  1               60  Specified Maximum Operating Temperature
+  5  0x060  4                0  Time in Under-Temperature
+  5  0x068  1                0  Specified Minimum Operating Temperature
+  6  =====  =                =  == Transport Statistics (rev 1) ==
+  6  0x008  4               96  Number of Hardware Resets
+  6  0x010  4               45  Number of ASR Events
+  6  0x018  4                0  Number of Interface CRC Errors
+                              |_ ~ normalized value
+
+SATA Phy Event Counters (GP Log 0x11)
+ID      Size     Value  Description
+0x0001  2            0  Command failed due to ICRC error
+0x0002  2            0  R_ERR response for data FIS
+0x0003  2            0  R_ERR response for device-to-host data FIS
+0x0004  2            0  R_ERR response for host-to-device data FIS
+0x0005  2            0  R_ERR response for non-data FIS
+0x0006  2            0  R_ERR response for device-to-host non-data FIS
+0x0007  2            0  R_ERR response for host-to-device non-data FIS
+0x0008  2            0  Device-to-host non-data FIS retries
+0x0009  2            8  Transition from drive PhyRdy to drive PhyNRdy
+0x000a  2           14  Device-to-host register FISes sent due to a COMRESET
+0x000b  2            0  CRC errors within host-to-device FIS
+0x000f  2            0  R_ERR response for host-to-device data FIS, CRC
+0x0012  2            0  R_ERR response for host-to-device non-data FIS, CRC
+0x8000  4        24888  Vendor specific
