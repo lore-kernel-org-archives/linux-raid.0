@@ -1,24 +1,50 @@
-From: Jens Axboe <axboe@fb.com>
-Subject: Re: [PATCH v3 1/3] bcache: Remove redundant parameter for
- cache_alloc()
-Date: Tue, 5 Jul 2016 11:35:19 -0600
-Message-ID: <577BEFD7.9050708@fb.com>
-References: <1467595405-20805-1-git-send-email-wangyijing@huawei.com>
+From: o1bigtenor <o1bigtenor@gmail.com>
+Subject: Request for assistance
+Date: Tue, 5 Jul 2016 19:13:23 -0500
+Message-ID: <CAPpdf58z4JagWmP=xiUj9qOU-bdyN7W=EvcM9evjCT4ZWp+VxQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1467595405-20805-1-git-send-email-wangyijing@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Yijing Wang <wangyijing@huawei.com>, Kent Overstreet <kent.overstreet@gmail.com>
-Cc: Eric Wheeler <git@linux.ewheeler.net>, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 07/03/2016 07:23 PM, Yijing Wang wrote:
-> Cache_sb is not used in cache_alloc, and we have copied
-> sb info to cache->sb already, remove it.
+Greetings
 
-Added this, and 2-3/3 for 4.8, thanks.
+Running a Raid 10 array with 4 - 3 TB drives. Have a UPS but this area
+gets significant lightning and also brownout (rural power) events.
 
--- 
-Jens Axboe
+Found the array was read only this morning. Thought that rebooting the
+system might correct things - - - it did not as the array did not
+load.
+
+commands used followed by system response
+
+mdadm --detail /dev/md0
+   mdadm:  md device /dev/md0 does not appear to be active.
+
+cat /proc/mdstat
+   md0  : inactive sdc1[5](S) sdf1[8](S) sde1[7](S) sdb1[4](S)
+
+mdadm -E /dev/sdb1
+                       sdc1
+                       sde1
+                       sdf1
+
+everything is the same except for 2 items
+
+sde and sdf have uptime listed from July 04 05:50:46
+                          events 64841
+                          array state of AAAA
+
+sdb and sdc have uptime listed from July 05 01:57:38
+                           events 64844
+                           array state of AAA.
+
+
+
+Do I just re-create the array?
+
+TIA
+
+Dee
