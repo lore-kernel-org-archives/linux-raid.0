@@ -1,71 +1,64 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
+From: keld@keldix.com
 Subject: Re: Request for assistance
-Date: Wed, 6 Jul 2016 11:55:06 +1000
-Message-ID: <577C64FA.6050504@websitemanagers.com.au>
+Date: Wed, 6 Jul 2016 09:39:34 +0200
+Message-ID: <20160706073934.GA8404@www5.open-std.org>
 References: <CAPpdf58z4JagWmP=xiUj9qOU-bdyN7W=EvcM9evjCT4ZWp+VxQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <CAPpdf58z4JagWmP=xiUj9qOU-bdyN7W=EvcM9evjCT4ZWp+VxQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: o1bigtenor <o1bigtenor@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: o1bigtenor <o1bigtenor@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 06/07/16 10:13, o1bigtenor wrote:
+What operating system and version are you  running?
+
+Best regards
+keld
+
+On Tue, Jul 05, 2016 at 07:13:23PM -0500, o1bigtenor wrote:
 > Greetings
->
+> 
 > Running a Raid 10 array with 4 - 3 TB drives. Have a UPS but this area
 > gets significant lightning and also brownout (rural power) events.
->
+> 
 > Found the array was read only this morning. Thought that rebooting the
 > system might correct things - - - it did not as the array did not
 > load.
->
+> 
 > commands used followed by system response
->
+> 
 > mdadm --detail /dev/md0
->     mdadm:  md device /dev/md0 does not appear to be active.
->
+>    mdadm:  md device /dev/md0 does not appear to be active.
+> 
 > cat /proc/mdstat
->     md0  : inactive sdc1[5](S) sdf1[8](S) sde1[7](S) sdb1[4](S)
->
+>    md0  : inactive sdc1[5](S) sdf1[8](S) sde1[7](S) sdb1[4](S)
+> 
 > mdadm -E /dev/sdb1
->                         sdc1
->                         sde1
->                         sdf1
->
+>                        sdc1
+>                        sde1
+>                        sdf1
+> 
 > everything is the same except for 2 items
->
+> 
 > sde and sdf have uptime listed from July 04 05:50:46
->                            events 64841
->                            array state of AAAA
->
+>                           events 64841
+>                           array state of AAAA
+> 
 > sdb and sdc have uptime listed from July 05 01:57:38
->                             events 64844
->                             array state of AAA.
->
->
->
+>                            events 64844
+>                            array state of AAA.
+> 
+> 
+> 
 > Do I just re-create the array?
->
-No, not if you value your data. Only re-create the array if you are told 
-to by someone (knowledgeable) on the list.
-
-In your case, I think you should stop the array.
-mdadm --stop /dev/md0
-Make sure there is nothing listed in /proc/mdstat
-Then try to assemble the array, but force the events to match:
-mdadm --assemble /dev/md0 --force /dev/sd[bcef]1
-
-If that doesn't work, then include the output from dmesg as well as 
-/proc/mdstat and any commandline output generated.
-
-You might also want to examine why two drives dropped, referring to logs 
-or similar might assist.
-
-Regards,
-Adam
-
--- 
-Adam Goryachev Website Managers www.websitemanagers.com.au
+> 
+> TIA
+> 
+> Dee
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
