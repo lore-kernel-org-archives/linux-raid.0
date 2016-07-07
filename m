@@ -1,35 +1,47 @@
-From: Wols Lists <antlists@youngman.org.uk>
+From: Brad Campbell <lists2009@fnarfbargle.com>
 Subject: Re: Request for assistance
-Date: Wed, 6 Jul 2016 22:31:34 +0100
-Message-ID: <577D78B6.1070104@youngman.org.uk>
+Date: Thu, 7 Jul 2016 10:05:15 +0800
+Message-ID: <1ec7a4d3-a214-942a-4bae-2d57f3167202@fnarfbargle.com>
 References: <CAPpdf58z4JagWmP=xiUj9qOU-bdyN7W=EvcM9evjCT4ZWp+VxQ@mail.gmail.com>
  <577C64FA.6050504@websitemanagers.com.au>
  <CAPpdf59gF6BMpmCY5SNzNH2O_WFn17hMVnrjHAyA0pU_i+--uA@mail.gmail.com>
  <577CFEC4.7040704@youngman.org.uk>
  <CAPpdf5-bdvWwp3pSTFgoL++avt-8=3VvzL-Psk2qR7rHRZUBtQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <CAPpdf5-bdvWwp3pSTFgoL++avt-8=3VvzL-Psk2qR7rHRZUBtQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: o1bigtenor <o1bigtenor@gmail.com>
-Cc: Adam Goryachev <mailinglists@websitemanagers.com.au>, Linux-RAID <linux-raid@vger.kernel.org>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 06/07/16 19:28, o1bigtenor wrote:
-> SCT Error Recovery Control:
->            Read:     70 (7.0 seconds)
->           Write:     70 (7.0 seconds)
+On 07/07/16 02:28, o1bigtenor wrote:
 
-As soon as you said WD Red, that said the drives are good. The SCT says
-the drives will wait at most 7 seconds before returning a problem, so
-that's what you want (My Barracudas can't do that - a problem waiting to
-happen).
+> My best understanding as to the why is - - dirty power - - - fixing that means
+> going off-grid. Expensive and not happening any time soon although I would
+> really like that.
+>
 
-I'll let someone who knows more comment on the rest of the output, but
-that SCT stuff tells us your problem is not the usual one of someone
-using the wrong drives.
+Get a UPS.
+Get a UPS.
+Get a UPS.
+Get a UPS.
 
-Cheers,
-Wol
+I've got some nice full on-line double conversion units, but they are 
+noisy and less efficient. In my experience, a second hand APC SmartUPS 
+will sort enough of the most revolting power to keep things running 
+smoothly, and they are CHEAP. Despite owning several expensive UPS 
+units, all my stuff is behind a couple of second hand SmartUPS.
+
+My last purchase saw me pick up 5 decent line interactive UPS units for 
+about $25 each as a job lot. New batteries for one were less than $100 
+(same brand as the UPS comes with) from the local wholesaler. I get 4-5 
+years out of a set of batteries.
+
+If you had to budget for time, one blip on a RAID and the associated 
+recovery pays for the UPS. Cheap insurance.
+
+Regards,
+Brad
