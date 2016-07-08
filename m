@@ -1,43 +1,35 @@
-From: Sarah Michael <sarahmhl19@gmail.com>
-Subject: Dear Beneficiary,
-Date: Fri, 08 Jul 2016 15:49:44 +0200
-Message-ID: <20160708154944.16771etgyhq2cbjs__15892.2496405014$1467987764$gmane$org@webmail.grpintll.net>
-Mime-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
-Content-Transfer-Encoding: 7bit
+From: Lars Ellenberg <lars.ellenberg@linbit.com>
+Subject: [PATCH 0/1] block: fix blk_queue_split() resource exhaustion
+Date: Fri,  8 Jul 2016 17:04:02 +0200
+Message-ID: <1467990243-3531-1-git-send-email-lars.ellenberg@linbit.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Lars Ellenberg <lars.ellenberg@linbit.com>, NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Jiri Kosina <jkosina@suse.cz>, Ming Lei <ming.lei@canonical.com>, linux-kernel@vger.kernel.org, Zheng Liu <gnehzuil.liu@gmail.com>, linux-block@vger.kernel.org, Takashi Iwai <tiwai@suse.de>, linux-bcache@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Alasdair Kergon <agk@redhat.com>, Keith Busch <keith.busch@intel.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Kent Overstreet <kent.overstreet@gmail.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Roland Kammerer <roland.kammerer@linbit.com>
 List-Id: linux-raid.ids
 
-Dear Beneficiary,
+Result of RFC previously discussed here:
+https://lkml.org/lkml/2016/6/22/172
+[RFC] block: fix blk_queue_split() resource exhaustion
 
-I'm happy to inform you that your email address has been selected  
-among those that have compensation payment of ($2.5 Million USD), The  
-INTERNATIONAL MONETARY FUND contacted us for the release of your money  
-a couple of hours ago due to your allocated security code. We are  
-unable to complete a transfer directed at an email address, so we  
-require some more information in order to complete this transfer, But  
-for security purpose the money has been loaded in a prepaid Visa Debit  
-Card on your behalf, You Withdraw cash at ATMs and make purchases  
-anywhere debit cards are accepted, including retail stores,grocery  
-stores, restaurants and pharmacies, You are advised that a maximum  
-withdrawal value of $10,000.00 USD is permitted daily.
+Rebased to linux-block/for-4.8/core as of today.
+Would also need to go to Stable 4.3 and later.
 
-Therefore arrangements has been perfectly concluded to effect the  
-delivery of your Visa Debit Card to your doorstep as soon as  
-youre-confirm the information's below.
+Lars Ellenberg (1):
+  block: fix blk_queue_split() resource exhaustion
 
-1) Your full name:
-2) Mobile number:
-3) Delivery address:
-4) Zip code:
+ block/bio.c               | 27 +++++++++++++++++--------
+ block/blk-core.c          | 50 +++++++++++++++++++++++++----------------------
+ block/blk-merge.c         |  5 ++++-
+ drivers/md/bcache/btree.c | 12 ++++++------
+ drivers/md/dm-bufio.c     |  2 +-
+ drivers/md/md.h           |  7 +++++++
+ drivers/md/raid1.c        |  5 ++---
+ drivers/md/raid10.c       |  5 ++---
+ include/linux/bio.h       | 18 +++++++++++++++++
+ include/linux/sched.h     |  4 ++--
+ 10 files changed, 88 insertions(+), 47 deletions(-)
 
-I am waiting to hear from you soon,
-
-With Best Regards,
-Ms:Sarah Michael.
+-- 
+1.9.1
 
