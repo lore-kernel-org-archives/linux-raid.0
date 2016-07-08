@@ -1,116 +1,152 @@
-From: NeilBrown <neilb@suse.de>
-Subject: re: dm: raid456 basic support
-Date: Fri, 08 Jul 2016 09:57:15 +1000
-Message-ID: <87mvltf1d0.fsf@notabene.neil.brown.name>
-References: <20160617091405.GA25609@mwanda>
+From: Lars Ellenberg <lars.ellenberg@linbit.com>
+Subject: Re: [dm-devel] [RFC] block: fix blk_queue_split() resource exhaustion
+Date: Fri, 8 Jul 2016 10:02:19 +0200
+Message-ID: <20160708080219.GT13335@soda.linbit>
+References: <1466583730-28595-1-git-send-email-lars.ellenberg@linbit.com>
+ <871t36ggcr.fsf@notabene.neil.brown.name>
+ <20160707081616.GH13335@soda.linbit>
+ <87vb0hf6fb.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160617091405.GA25609@mwanda>
-Sender: linux-raid-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <87vb0hf6fb.fsf@notabene.neil.brown.name>
+Sender: linux-kernel-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Jiri Kosina <jkosina@suse.cz>, Ming Lei <ming.lei@canonical.com>, linux-bcache@vger.kernel.org, Zheng Liu <gnehzuil.liu@gmail.com>, Keith Busch <keith.busch@intel.com>, Takashi Iwai <tiwai@suse.de>, dm-devel@redhat.com, Ingo Molnar <mingo@redhat.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Shaohua Li <shli@kernel.org>, Kent Overstreet <kent.overstreet@gmail.com>, Alasdair Kergon <agk@redhat.com>, Roland Kammerer <roland.kammerer@linbit.com>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Fri, Jul 08, 2016 at 08:07:52AM +1000, NeilBrown wrote:
+> Before I introduced the recursion limiting, requests were handled as an
+> in-order tree walk.  The code I wrote tried to preserve that but didn't
+> for several reasons.  I think we need to restore the original in-order
+> walk because it makes the most sense.
+> So after processing a particular bio, we should then process all the
+> 'child' bios - bios send to underlying devices.  Then the 'sibling'
+> bios, that were split off, and then any remaining parents and ancestors.
+> 
+> You patch created the right structures for doing this, my proposal took
+> it a step closer, but now after more careful analysis I don't think it
+> is quite right.
+> With my previous proposal (and you latest patch - thanks!) requests for
+> "this" level are stacked, but they should be queued.
+> If a make_request_fn only ever submits one request for this level and
+> zero or more lower levels, then the difference between a queue and a
+> stack is irrelevant.  If it submited more that one, a stack would cause
+> them to be handled in the reverse order.
 
-On Fri, Jun 17 2016, Dan Carpenter wrote:
+We have a device stack.
+q_this_level->make_request_fn() cannot possibly submit anything
+on "this_level", or it would create a device loop, I think.
 
-> [ No idea why it's only just now complaining about issues from 2011... ]
->
-> Hello NeilBrown,
+So we start with the initial, "top most" call to generic_make_request().
+That is one single bio. All queues are empty.
 
-Hello ... sorry for the delay in replying.
+This bio is then passed on to its destination queue make_request_fn().
 
+Which may chose to split it (via blk_queue_split, or like dm does, or
+else). If it, like blk_queue_split() does, splits it into
+"piece-I-can-handle-now" and "remainder", both still targeted at the
+top most (current) queue, I think the "remainder" should just be pushed
+back, which will make it look as if upper layers did
+	generic_make_request("piece-I-can-handle-now");
+	generic_make_request("remainder");
+Which I do, by using bio_list_add_head(remainder, bio); (*head*).
 
->
-> The patch 9d09e663d550: "dm: raid456 basic support" from Jan 13,
-> 2011, leads to the following static checker warning:
->
-> 	drivers/md/dm-raid.c:1217 parse_raid_params()
-> 	warn: no lower bound on 'value'
->
-> drivers/md/dm-raid.c
->   1211                                  return -EINVAL;
->   1212                          }
->   1213                          if (!value || (value > MAX_SCHEDULE_TIMEO=
-UT)) {
->
-> value is an int.  MAX_SCHEDULE_TIMEOUT is LONG_MAX.  Should it be
-> INT_MAX?  What about negatives?
+I don't see any other way for a make_request_fn(bio(l=x)) to generate
+"sibling" bios to the same level (l=x) as its own argument.
 
-% $ git show 9d09e663d550 | grep 'value;' | head -n1
-+	unsigned long value;
+This same q(l=x)->make_request_fn(bio(l=x)) may now call
+generic_make_request() for zero or more "child" bios (l=x+1),
+which are queued in order: bio_list_add(recursion, bio); (*tail*).
+Then, once l=x returns, the queue generated by it is spliced
+in front of the "remainder" (*head*).
+All bios are processed in the order they have been queued,
+by peeling off of the head.
 
+After all "child" bios of level l>=x+1 have been processed,
+the next bio to be processed will be the "pushed back" remainder.
 
-I think value is unsigned long.
-It is set on two occasions with:
-  strict_strtoul(argv[0], 10, &value)
+All "Natural order".
 
-and we bail out if that fails.
+> To make the patch "perfect", and maybe even more elegant we could treat
+> ->remainder and ->recursion more alike.
+> i.e.:
+>   - generic make request has a private "stack" of requests.
+>   - before calling ->make_request_fn(), both ->remainder and ->recursion
+>     are initialised
+>   - after ->make_request_fn(), ->remainder are spliced in to top of
+>     'stack', then ->recursion is spliced onto that.
+>   - If stack is not empty, the top request is popped and we loop to top.
+> 
+> This reliably follows in-order execution, and handles siblings correctly
+> (in submitted order) if/when a request splits off multiple siblings.
 
-The first time we assign it to an int ({new_,}chunk_sectors) without
-range checking, which is bad.
+The only splitting that creates siblings on the current level
+is blk_queue_split(), which splits the current bio into
+"front piece" and "remainder", already processed in this order.
 
-We cast it to an int for calling raid5_set_cache_size() without first
-range checking, which is bad.
+Anything else creating "siblings" is not creating siblings for the
+current layer, but for the next deeper layer, which are queue on
+"recursion" and also processed in the order they have been generated.
 
-Might either of these be the cause of the rather peculiar warning?
+> I think that as long a requests are submitted in the order they are
+> created at each level there is no reason to expect performance
+> regressions.
+> All we are doing is changing the ordering between requests generated at
+> different levels, and I think we are restoring a more natural order.
 
-The following patch (against mainline) should fix those issues.
-Do they silence your warning?
+I believe both patches combined are doing exactly this already.
+I could rename .remainder to .todo or .incoming, though.
+
+.incoming = [ bio(l=0) ]
+.recursion = []
+
+split
+
+.incoming = [ bio(l=0,now_1), bio(l=0,remainder_1) ]
+.recursion = []
+
+process head of .incoming
+
+.incoming = [ bio(l=0,remainder_1) ]
+.recursion = [ bio(l=1,a), bio(l=1,b), bio(l=1,c), ... ]
+
+merge_head
+
+.incoming = [ bio(l=1,a), bio(l=1,b), bio(l=1,c), ...,
+		bio(l=0,remainder_1) ]
+.recursion = []
+
+process head of .incoming, potentially split first
+
+.incoming = [ bio(l=1,a,now), bio(l=1,a,remainder), bio(l=1,b), bio(l=1,c), ...,
+		bio(l=0,remainder_1) ]
+...
+.incoming = [ bio(l=1,a,remainder), bio(l=1,b), bio(l=1,c), ...,
+		bio(l=0,remainder_1) ]
+.recursion = [ bio(l=2,aa), bio(l=2,ab), ... ]
+
+merge_head
+
+.incoming = [ bio(l=2,aa), bio(l=2,ab), ...,
+		bio(l=1,a,remainder), bio(l=1,b), bio(l=1,c), ...,
+		bio(l=0,remainder_1) ]
+.recursion = []
+
+...
+
+process away ... until back at l=0
+
+.incoming = [ bio(l=0,remainder_1) ]
+.recursion = []
+
+potentially split further
+.incoming = [ bio(l=0,now_2), bio(l=0,remainder_2) ]
+.recursion = []
+
+rinse, repeat.
 
 Thanks,
-NeilBrown
 
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index 52532745a50f..670d237a26a9 100644
-=2D-- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -520,6 +520,9 @@ static int parse_raid_params(struct raid_set *rs, char =
-**argv,
- 	} else if (value < 8) {
- 		rs->ti->error =3D "Chunk size value is too small";
- 		return -EINVAL;
-+	} else if (value > INT_MAX) {
-+		rs->ti->error =3D "Chunk size value is too large";
-+		return -EINVAL;
- 	}
-=20
- 	rs->md.new_chunk_sectors =3D rs->md.chunk_sectors =3D value;
-@@ -650,7 +653,8 @@ static int parse_raid_params(struct raid_set *rs, char =
-**argv,
- 				rs->ti->error =3D "Inappropriate argument: stripe_cache";
- 				return -EINVAL;
- 			}
-=2D			if (raid5_set_cache_size(&rs->md, (int)value)) {
-+			if (value > INT_MAX ||
-+			    raid5_set_cache_size(&rs->md, (int)value)) {
- 				rs->ti->error =3D "Bad stripe_cache size";
- 				return -EINVAL;
- 			}
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJXfuxbAAoJEDnsnt1WYoG5HKQQAKU2xPNIlpXqq+sEkjxsUCch
-6GqeFxBzCkt1iujaWQ8IOISheE/TEGnfLpeF55a4IAmvXe9wB8aVUcbOThZPKpS9
-X/D+EAdqYFiT1CI3I9u+ItlTC4bC7oQcUdHdMzEfp6GWb41LvtPCiKaYzi0ZrFQh
-U/shpLw2rRbGe5K+euAOhXFPfSH8eeEp6EuG2rIvVDQjdOBfiF9Ie1ODW36O+3om
-GPqbEwVDnkHdwoTJ/YOP1Kb3EbDetzTlMVBV4cPBv9sfQkTgtoFo4LRStkWfoVWC
-AjIUxW8LxNra/DAsPv+4JZBfwtRyO1CvWbcwyMg8euasyuiPEmTOu7u9INlhu6Iv
-8JV6uC2ZQidyR3iC2/StZVPqD1f44S3T9JFekEyACkwHP6JZlgMOZnCro+n8Q87R
-NUbxMO+6CGrz+MTp9IAawkRqTP1RjaQRPOVT3UIuZZHfy20/4aFTcp6y4aTvJShQ
-IgVHkBcMxS2ryDFCXxMj+DhuPnTH7que92zSbzWr2/OZoYZfOX2Pvphs53GxZJU5
-k7BuBTfIbk0qzPxRBvibNG9JYcBkFS4wZM6vbcHFo96ZxSY2T3Fmq2paDxcHEpkv
-0+w+31bSR02oUAC5CzlbZmyCPRTSPddYZvcbrPA/jRD1MeBY8+dnNzdGltJSalSd
-RYkThQ+pY96VCE6WE1I3
-=fzDW
------END PGP SIGNATURE-----
---=-=-=--
+    Lars Ellenberg
