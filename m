@@ -1,186 +1,417 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 1/1] block: fix blk_queue_split() resource exhaustion
-Date: Fri, 8 Jul 2016 14:49:57 -0400
-Message-ID: <20160708184957.GA10765@redhat.com>
-References: <1467990243-3531-1-git-send-email-lars.ellenberg@linbit.com>
- <1467990243-3531-2-git-send-email-lars.ellenberg@linbit.com>
+From: Michel Dubois <michel.dubois.mtl@gmail.com>
+Subject: Recover filenames from failed RAID0
+Date: Sun, 10 Jul 2016 19:03:45 -0400
+Message-ID: <CAAVC+N5m74MyDqZamHgy71vRMhcEY8w_OkiG-GMQKU=JG-QkxA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-bcache-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1467990243-3531-2-git-send-email-lars.ellenberg@linbit.com>
-Sender: linux-bcache-owner@vger.kernel.org
-To: Lars Ellenberg <lars.ellenberg@linbit.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Keith Busch <keith.busch@intel.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Peter Zijlstra <peterz@infradead.org>, Jiri Kosina <jkosina@suse.cz>, Ming Lei <ming.lei@canonical.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, NeilBrown <neilb@suse.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Takashi Iwai <tiwai@suse.de>, linux-bcache@vger.kernel.org, Zheng Liu <gnehzuil.liu@gmail.com>, Kent Overstreet <kent.overstreet@gmail.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Ingo Molnar <mingo@redhat.com>, Alasdair Kergon <agk@redhat.com>, Roland Kammerer <roland.kammerer@linbit.com>
+Content-Type: multipart/mixed; boundary="===============2994197344977923620=="
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: linux-raid@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>, dm-devel@redhat.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Jiri Kosina <jkosina@suse.cz>, Ming Lei <ming.lei@canonical.com>, NeilBrown <neilb@suse.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, Takashi Iwai <tiwai@suse.de>, linux-bcache@vger.kernel.org, Zheng Liu <gnehzuil.liu@gmail.com>, Mike Snitzer <snitzer@redhat.com>, Alasdair Kergon <agk@redhat.com>, Lars Ellenberg <lars.ellenberg@linbit.com>, Shaohua Li <shli@kernel.org>, Kent Overstreet <kent.overstreet@gmail.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Roland Kammerer <roland.kammerer@linbit.com>
 List-Id: linux-raid.ids
 
-On Fri, Jul 08 2016 at 11:04am -0400,
-Lars Ellenberg <lars.ellenberg@linbit.com> wrote:
+--===============2994197344977923620==
+Content-Type: multipart/alternative; boundary=94eb2c13f53047b6f10537500c68
 
-> For a long time, generic_make_request() converts recursion into
-> iteration by queuing recursive arguments on current->bio_list.
-> 
-> This is convenient for stacking drivers,
-> the top-most driver would take the originally submitted bio,
-> and re-submit a re-mapped version of it, or one or more clones,
-> or one or more new allocated bios to its backend(s). Which
-> are then simply processed in turn, and each can again queue
-> more "backend-bios" until we reach the bottom of the driver stack,
-> and actually dispatch to the real backend device.
-> 
-> Any stacking driver ->make_request_fn() could expect that,
-> once it returns, any backend-bios it submitted via recursive calls
-> to generic_make_request() would now be processed and dispatched, before
-> the current task would call into this driver again.
-> 
-> This is changed by commit
->   54efd50 block: make generic_make_request handle arbitrarily sized bios
-> 
-> Drivers may call blk_queue_split() inside their ->make_request_fn(),
-> which may split the current bio into a front-part to be dealt with
-> immediately, and a remainder-part, which may need to be split even
-> further. That remainder-part will simply also be pushed to
-> current->bio_list, and would end up being head-of-queue, in front
-> of any backend-bios the current make_request_fn() might submit during
-> processing of the fron-part.
-> 
-> Which means the current task would immediately end up back in the same
-> make_request_fn() of the same driver again, before any of its backend
-> bios have even been processed.
-> 
-> This can lead to resource starvation deadlock.
-> Drivers could avoid this by learning to not need blk_queue_split(),
-> or by submitting their backend bios in a different context (dedicated
-> kernel thread, work_queue context, ...). Or by playing funny re-ordering
-> games with entries on current->bio_list.
-> 
-> Instead, I suggest to distinguish between recursive calls to
-> generic_make_request(), and pushing back the remainder part in
-> blk_queue_split(), by pointing current->bio_lists to a
-> 	struct recursion_to_iteration_bio_lists {
-> 		struct bio_list recursion;
-> 		struct bio_list queue;
-> 	}
-> 
-> By providing each q->make_request_fn() with an empty "recursion"
-> bio_list, then merging any recursively submitted bios to the
-> head of the "queue" list, we can make the recursion-to-iteration
-> logic in generic_make_request() process deepest level bios first,
-> and "sibling" bios of the same level in "natural" order.
-> 
-> Signed-off-by: Lars Ellenberg <lars.ellenberg@linbit.com>
-> Signed-off-by: Roland Kammerer <roland.kammerer@linbit.com>
-> ---
->  block/bio.c               | 27 +++++++++++++++++--------
->  block/blk-core.c          | 50 +++++++++++++++++++++++++----------------------
->  block/blk-merge.c         |  5 ++++-
->  drivers/md/bcache/btree.c | 12 ++++++------
->  drivers/md/dm-bufio.c     |  2 +-
->  drivers/md/md.h           |  7 +++++++
->  drivers/md/raid1.c        |  5 ++---
->  drivers/md/raid10.c       |  5 ++---
->  include/linux/bio.h       | 18 +++++++++++++++++
->  include/linux/sched.h     |  4 ++--
->  10 files changed, 88 insertions(+), 47 deletions(-)
-> 
-> diff --git a/block/bio.c b/block/bio.c
-> index 848cd35..1f9fcf0 100644
-> --- a/block/bio.c
-> +++ b/block/bio.c
-> @@ -366,12 +366,16 @@ static void punt_bios_to_rescuer(struct bio_set *bs)
->  	 */
->  
->  	bio_list_init(&punt);
-> -	bio_list_init(&nopunt);
->  
-> -	while ((bio = bio_list_pop(current->bio_list)))
-> +	bio_list_init(&nopunt);
-> +	while ((bio = bio_list_pop(&current->bio_lists->recursion)))
->  		bio_list_add(bio->bi_pool == bs ? &punt : &nopunt, bio);
-> +	current->bio_lists->recursion = nopunt;
->  
-> -	*current->bio_list = nopunt;
-> +	bio_list_init(&nopunt);
-> +	while ((bio = bio_list_pop(&current->bio_lists->queue)))
-> +		bio_list_add(bio->bi_pool == bs ? &punt : &nopunt, bio);
-> +	current->bio_lists->queue = nopunt;
->  
->  	spin_lock(&bs->rescue_lock);
->  	bio_list_merge(&bs->rescue_list, &punt);
-> @@ -380,6 +384,13 @@ static void punt_bios_to_rescuer(struct bio_set *bs)
->  	queue_work(bs->rescue_workqueue, &bs->rescue_work);
->  }
->  
-> +static bool current_has_pending_bios(void)
-> +{
-> +	return current->bio_lists &&
-> +		(!bio_list_empty(&current->bio_lists->queue) ||
-> +		 !bio_list_empty(&current->bio_lists->recursion));
-> +}
-> +
+--94eb2c13f53047b6f10537500c68
+Content-Type: text/plain; charset=UTF-8
 
-This should be moved to include/linux/bio.h
+Dear linux-raid mailing list,
 
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index 3cfd67d..74bceea 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -2066,35 +2071,34 @@ blk_qc_t generic_make_request(struct bio *bio)
->  	 * Before entering the loop, bio->bi_next is NULL (as all callers
->  	 * ensure that) so we have a list with a single bio.
->  	 * We pretend that we have just taken it off a longer list, so
-> -	 * we assign bio_list to a pointer to the bio_list_on_stack,
-> -	 * thus initialising the bio_list of new bios to be
-> -	 * added.  ->make_request() may indeed add some more bios
-> -	 * through a recursive call to generic_make_request.  If it
-> -	 * did, we find a non-NULL value in bio_list and re-enter the loop
-> -	 * from the top.  In this case we really did just take the bio
-> -	 * of the top of the list (no pretending) and so remove it from
-> -	 * bio_list, and call into ->make_request() again.
-> +	 * we assign bio_list to a pointer to the bio_lists_on_stack,
-> +	 * thus initialising the bio_lists of new bios to be added.
-> +	 * ->make_request() may indeed add some more bios to .recursion
-> +	 * through a recursive call to generic_make_request.  If it did,
-> +	 * we find a non-NULL value in .recursion, merge .recursion back to the
-> +	 * head of .queue, and re-enter the loop from the top.  In this case we
-> +	 * really did just take the bio of the top of the list (no pretending)
-> +	 * and so remove it from .queue, and call into ->make_request() again.
->  	 */
->  	BUG_ON(bio->bi_next);
-> -	bio_list_init(&bio_list_on_stack);
-> -	current->bio_list = &bio_list_on_stack;
-> +	bio_list_init(&bio_lists_on_stack.queue);
-> +	current->bio_lists = &bio_lists_on_stack;
->  	do {
->  		struct request_queue *q = bdev_get_queue(bio->bi_bdev);
->  
->  		if (likely(blk_queue_enter(q, false) == 0)) {
-> +			bio_list_init(&bio_lists_on_stack.recursion);
->  			ret = q->make_request_fn(q, bio);
-> -
->  			blk_queue_exit(q);
-> -
-> -			bio = bio_list_pop(current->bio_list);
-> +			bio_list_merge_head(&bio_lists_on_stack.queue,
-> +					&bio_lists_on_stack.recursion);
-> +			/* XXX bio_list_init(&bio_lists_on_stack.recursion); */
+I have a RAID0 array of four 3TB disks that failed on the "third" disk.
 
-Please remove this XXX commented code.
+I am aware of the non-redundancy of RAID0 but I would like to recover the
+filenames from that RAID0. If I could recover some data it would be a bonus.
 
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index b4f3352..b62e65f4 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -664,6 +664,13 @@ static inline void rdev_dec_pending(struct md_rdev *rdev, struct mddev *mddev)
->  	}
->  }
->  
-> +static inline bool current_has_pending_bios(void)
-> +{
-> +	return current->bio_lists && (
-> +	      !bio_list_empty(&current->bio_lists->queue) ||
-> +	      !bio_list_empty(&current->bio_lists->recursion));
-> +}
-> +
+Below you'll find the outputs of the following commands
+ mdadm --examine /dev/sd[abcd]1
+ fdisk -l
 
-This can be removed now that include/linux/bio.h exports the same.
+where sda1, sdb1, sdc1 and sdd1 should be the 4 RAID devices.
+
+What could be my next step?
+
+I thank you for your time
+
+Michel Dubois
+
+======================
+mdadm --examine /dev/sd[abcd]1
+/dev/sda1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 7d247a6e:7b5d46c8:f52d9c89:db304b21
+  Creation Time : Mon Apr 23 19:55:36 2012
+     Raid Level : raid1
+  Used Dev Size : 20980800 (20.01 GiB 21.48 GB)
+     Array Size : 20980800 (20.01 GiB 21.48 GB)
+   Raid Devices : 4
+  Total Devices : 3
+Preferred Minor : 0
+
+    Update Time : Mon Jun 27 21:12:23 2016
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : 1a57db60 - correct
+         Events : 164275
+
+
+      Number   Major   Minor   RaidDevice State
+this     0       8        1        0      active sync   /dev/sda1
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       17        1      active sync   /dev/sdb1
+   2     2       0        0        2      faulty removed
+   3     3       8       33        3      active sync   /dev/sdc1
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 7d247a6e:7b5d46c8:f52d9c89:db304b21
+  Creation Time : Mon Apr 23 19:55:36 2012
+     Raid Level : raid1
+  Used Dev Size : 20980800 (20.01 GiB 21.48 GB)
+     Array Size : 20980800 (20.01 GiB 21.48 GB)
+   Raid Devices : 4
+  Total Devices : 3
+Preferred Minor : 0
+
+    Update Time : Mon Jun 27 21:12:23 2016
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : 1a57db72 - correct
+         Events : 164275
+
+
+      Number   Major   Minor   RaidDevice State
+this     1       8       17        1      active sync   /dev/sdb1
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       17        1      active sync   /dev/sdb1
+   2     2       0        0        2      faulty removed
+   3     3       8       33        3      active sync   /dev/sdc1
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 7d247a6e:7b5d46c8:f52d9c89:db304b21
+  Creation Time : Mon Apr 23 19:55:36 2012
+     Raid Level : raid1
+  Used Dev Size : 20980800 (20.01 GiB 21.48 GB)
+     Array Size : 20980800 (20.01 GiB 21.48 GB)
+   Raid Devices : 4
+  Total Devices : 3
+Preferred Minor : 0
+
+    Update Time : Mon Jun 27 21:12:23 2016
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : 1a57db86 - correct
+         Events : 164275
+
+
+      Number   Major   Minor   RaidDevice State
+this     3       8       33        3      active sync   /dev/sdc1
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       17        1      active sync   /dev/sdb1
+   2     2       0        0        2      faulty removed
+   3     3       8       33        3      active sync   /dev/sdc1
+
+======================
+fdisk -l
+
+WARNING: GPT (GUID Partition Table) detected on '/dev/sda'! The util fdisk
+doesn't support GPT. Use GNU Parted.
+
+
+Disk /dev/sda: 3000.5 GB, 3000592982016 bytes
+255 heads, 63 sectors/track, 364801 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0x03afffbe
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1               1      267350  2147483647+  ee  EFI GPT
+
+WARNING: GPT (GUID Partition Table) detected on '/dev/sdb'! The util fdisk
+doesn't support GPT. Use GNU Parted.
+
+
+Disk /dev/sdb: 3000.5 GB, 3000592982016 bytes
+255 heads, 63 sectors/track, 364801 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0x142a889c
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdb1               1      267350  2147483647+  ee  EFI GPT
+
+WARNING: GPT (GUID Partition Table) detected on '/dev/sdc'! The util fdisk
+doesn't support GPT. Use GNU Parted.
+
+
+Disk /dev/sdc: 3000.5 GB, 3000592982016 bytes
+255 heads, 63 sectors/track, 364801 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0x3daebd50
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdc1               1      267350  2147483647+  ee  EFI GPT
+
+Disk /dev/md0: 21.4 GB, 21484339200 bytes
+2 heads, 4 sectors/track, 5245200 cylinders
+Units = cylinders of 8 * 512 = 4096 bytes
+Disk identifier: 0x00000000
+
+Disk /dev/md0 doesn't contain a valid partition table
+
+--94eb2c13f53047b6f10537500c68
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><span style=3D"font-size:12.8px">Dear=C2=A0linux-raid mail=
+ing list,</span><div style=3D"font-size:12.8px"><br></div><div style=3D"fon=
+t-size:12.8px">I have a RAID0 array of four 3TB disks that failed on the &q=
+uot;third&quot; disk.</div><div style=3D"font-size:12.8px"><br></div><div s=
+tyle=3D"font-size:12.8px">I am aware of the non-redundancy of RAID0 but I w=
+ould like to recover the filenames from that RAID0. If I could recover some=
+ data it would be a bonus.</div><div style=3D"font-size:12.8px"><br></div><=
+div style=3D"font-size:12.8px">Below you&#39;ll find the outputs of the fol=
+lowing commands</div><div style=3D"font-size:12.8px">=C2=A0mdadm --examine =
+/dev/sd[abcd]1<br></div><div style=3D"font-size:12.8px">=C2=A0fdisk -l<br><=
+/div><div style=3D"font-size:12.8px"><br></div><div style=3D"font-size:12.8=
+px">where sda1, sdb1, sdc1 and sdd1 should be the 4 RAID devices.</div><div=
+ style=3D"font-size:12.8px"><br></div><div style=3D"font-size:12.8px">What =
+could be my next step?</div><div style=3D"font-size:12.8px"><br></div><div =
+style=3D"font-size:12.8px">I thank you for your time</div><div style=3D"fon=
+t-size:12.8px"><br></div><div style=3D"font-size:12.8px">Michel Dubois</div=
+><div style=3D"font-size:12.8px"><br></div><div style=3D"font-size:12.8px">=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D</div><di=
+v style=3D""><div style=3D"font-size:12.8px">mdadm --examine /dev/sd[abcd]1=
+<br></div><div style=3D""><div style=3D""><span style=3D"font-size:12.8px">=
+/dev/sda1:</span></div><div style=3D""><span style=3D"font-size:12.8px">=C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Magic : a92b4efc</span></div><div style=3D"=
+"><span style=3D"font-size:12.8px">=C2=A0 =C2=A0 =C2=A0 =C2=A0 Version : 00=
+.90.00</span></div><div style=3D""><span style=3D"font-size:12.8px">=C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0UUID : 7d247a6e:7b5d46c8:f52d9c89:db304b2=
+1</span></div><div style=3D""><span style=3D"font-size:12.8px">=C2=A0 Creat=
+ion Time : Mon Apr 23 19:55:36 2012</span></div><div style=3D""><span style=
+=3D"font-size:12.8px">=C2=A0 =C2=A0 =C2=A0Raid Level : raid1</span></div><d=
+iv style=3D""><span style=3D"font-size:12.8px">=C2=A0 Used Dev Size : 20980=
+800 (20.01 GiB 21.48 GB)</span></div><div style=3D""><span style=3D"font-si=
+ze:12.8px">=C2=A0 =C2=A0 =C2=A0Array Size : 20980800 (20.01 GiB 21.48 GB)</=
+span></div><div style=3D""><span style=3D"font-size:12.8px">=C2=A0 =C2=A0Ra=
+id Devices : 4</span></div><div style=3D""><span style=3D"font-size:12.8px"=
+>=C2=A0 Total Devices : 3</span></div><div style=3D""><span style=3D"font-s=
+ize:12.8px">Preferred Minor : 0</span></div><div style=3D""><span style=3D"=
+font-size:12.8px"><br></span></div><div style=3D""><span style=3D"font-size=
+:12.8px">=C2=A0 =C2=A0 Update Time : Mon Jun 27 21:12:23 2016</span></div><=
+div style=3D""><span style=3D"font-size:12.8px">=C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 State : clean</span></div><div style=3D""><span style=3D"font-size:=
+12.8px">=C2=A0Active Devices : 3</span></div><div style=3D""><span style=3D=
+"font-size:12.8px">Working Devices : 3</span></div><div style=3D""><span st=
+yle=3D"font-size:12.8px">=C2=A0Failed Devices : 1</span></div><div style=3D=
+""><span style=3D"font-size:12.8px">=C2=A0 Spare Devices : 0</span></div><d=
+iv style=3D""><span style=3D"font-size:12.8px">=C2=A0 =C2=A0 =C2=A0 =C2=A0C=
+hecksum : 1a57db60 - correct</span></div><div style=3D""><span style=3D"fon=
+t-size:12.8px">=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0Events : 164275</span></di=
+v><div style=3D""><span style=3D"font-size:12.8px"><br></span></div><div st=
+yle=3D""><span style=3D"font-size:12.8px"><br></span></div><div style=3D"">=
+<span style=3D"font-size:12.8px">=C2=A0 =C2=A0 =C2=A0 Number =C2=A0 Major =
+=C2=A0 Minor =C2=A0 RaidDevice State</span></div><div style=3D""><span styl=
+e=3D"font-size:12.8px">this =C2=A0 =C2=A0 0 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A01 =C2=A0 =C2=A0 =C2=A0 =C2=A00 =C2=A0 =C2=A0 =C2=A0acti=
+ve sync =C2=A0 /dev/sda1</span></div><div style=3D""><span style=3D"font-si=
+ze:12.8px"><br></span></div><div style=3D""><span style=3D"font-size:12.8px=
+">=C2=A0 =C2=A00 =C2=A0 =C2=A0 0 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A01 =C2=A0 =C2=A0 =C2=A0 =C2=A00 =C2=A0 =C2=A0 =C2=A0active sync =
+=C2=A0 /dev/sda1</span></div><div style=3D""><span style=3D"font-size:12.8p=
+x">=C2=A0 =C2=A01 =C2=A0 =C2=A0 1 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=
+=A0 17 =C2=A0 =C2=A0 =C2=A0 =C2=A01 =C2=A0 =C2=A0 =C2=A0active sync =C2=A0 =
+/dev/sdb1</span></div><div style=3D""><span style=3D"font-size:12.8px">=C2=
+=A0 =C2=A02 =C2=A0 =C2=A0 2 =C2=A0 =C2=A0 =C2=A0 0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A00 =C2=A0 =C2=A0 =C2=A0 =C2=A02 =C2=A0 =C2=A0 =C2=A0faulty removed</span>=
+</div><div style=3D""><span style=3D"font-size:12.8px">=C2=A0 =C2=A03 =C2=
+=A0 =C2=A0 3 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 33 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A03 =C2=A0 =C2=A0 =C2=A0active sync =C2=A0 /dev/sdc1</span></div=
+><div style=3D""><span style=3D"font-size:12.8px">/dev/sdb1:</span></div><d=
+iv style=3D""><span style=3D"font-size:12.8px">=C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 Magic : a92b4efc</span></div><div style=3D""><span style=3D"font-siz=
+e:12.8px">=C2=A0 =C2=A0 =C2=A0 =C2=A0 Version : 00.90.00</span></div><div s=
+tyle=3D""><span style=3D"font-size:12.8px">=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0UUID : 7d247a6e:7b5d46c8:f52d9c89:db304b21</span></div><div style=
+=3D""><span style=3D"font-size:12.8px">=C2=A0 Creation Time : Mon Apr 23 19=
+:55:36 2012</span></div><div style=3D""><span style=3D"font-size:12.8px">=
+=C2=A0 =C2=A0 =C2=A0Raid Level : raid1</span></div><div style=3D""><span st=
+yle=3D"font-size:12.8px">=C2=A0 Used Dev Size : 20980800 (20.01 GiB 21.48 G=
+B)</span></div><div style=3D""><span style=3D"font-size:12.8px">=C2=A0 =C2=
+=A0 =C2=A0Array Size : 20980800 (20.01 GiB 21.48 GB)</span></div><div style=
+=3D""><span style=3D"font-size:12.8px">=C2=A0 =C2=A0Raid Devices : 4</span>=
+</div><div style=3D""><span style=3D"font-size:12.8px">=C2=A0 Total Devices=
+ : 3</span></div><div style=3D""><span style=3D"font-size:12.8px">Preferred=
+ Minor : 0</span></div><div style=3D""><span style=3D"font-size:12.8px"><br=
+></span></div><div style=3D""><span style=3D"font-size:12.8px">=C2=A0 =C2=
+=A0 Update Time : Mon Jun 27 21:12:23 2016</span></div><div style=3D""><spa=
+n style=3D"font-size:12.8px">=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 State : cle=
+an</span></div><div style=3D""><span style=3D"font-size:12.8px">=C2=A0Activ=
+e Devices : 3</span></div><div style=3D""><span style=3D"font-size:12.8px">=
+Working Devices : 3</span></div><div style=3D""><span style=3D"font-size:12=
+.8px">=C2=A0Failed Devices : 1</span></div><div style=3D""><span style=3D"f=
+ont-size:12.8px">=C2=A0 Spare Devices : 0</span></div><div style=3D""><span=
+ style=3D"font-size:12.8px">=C2=A0 =C2=A0 =C2=A0 =C2=A0Checksum : 1a57db72 =
+- correct</span></div><div style=3D""><span style=3D"font-size:12.8px">=C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0Events : 164275</span></div><div style=3D"">=
+<span style=3D"font-size:12.8px"><br></span></div><div style=3D""><span sty=
+le=3D"font-size:12.8px"><br></span></div><div style=3D""><span style=3D"fon=
+t-size:12.8px">=C2=A0 =C2=A0 =C2=A0 Number =C2=A0 Major =C2=A0 Minor =C2=A0=
+ RaidDevice State</span></div><div style=3D""><span style=3D"font-size:12.8=
+px">this =C2=A0 =C2=A0 1 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 17 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A01 =C2=A0 =C2=A0 =C2=A0active sync =C2=A0 /dev/sdb1<=
+/span></div><div style=3D""><span style=3D"font-size:12.8px"><br></span></d=
+iv><div style=3D""><span style=3D"font-size:12.8px">=C2=A0 =C2=A00 =C2=A0 =
+=C2=A0 0 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 =C2=A01 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A00 =C2=A0 =C2=A0 =C2=A0active sync =C2=A0 /dev/sda1</span></div=
+><div style=3D""><span style=3D"font-size:12.8px">=C2=A0 =C2=A01 =C2=A0 =C2=
+=A0 1 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 17 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A01 =C2=A0 =C2=A0 =C2=A0active sync =C2=A0 /dev/sdb1</span></div><div s=
+tyle=3D""><span style=3D"font-size:12.8px">=C2=A0 =C2=A02 =C2=A0 =C2=A0 2 =
+=C2=A0 =C2=A0 =C2=A0 0 =C2=A0 =C2=A0 =C2=A0 =C2=A00 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A02 =C2=A0 =C2=A0 =C2=A0faulty removed</span></div><div style=3D""><spa=
+n style=3D"font-size:12.8px">=C2=A0 =C2=A03 =C2=A0 =C2=A0 3 =C2=A0 =C2=A0 =
+=C2=A0 8 =C2=A0 =C2=A0 =C2=A0 33 =C2=A0 =C2=A0 =C2=A0 =C2=A03 =C2=A0 =C2=A0=
+ =C2=A0active sync =C2=A0 /dev/sdc1</span></div><div style=3D""><span style=
+=3D"font-size:12.8px">/dev/sdc1:</span></div><div style=3D""><span style=3D=
+"font-size:12.8px">=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Magic : a92b4efc</spa=
+n></div><div style=3D""><span style=3D"font-size:12.8px">=C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 Version : 00.90.00</span></div><div style=3D""><span style=3D"fo=
+nt-size:12.8px">=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0UUID : 7d247a6e:7b=
+5d46c8:f52d9c89:db304b21</span></div><div style=3D""><span style=3D"font-si=
+ze:12.8px">=C2=A0 Creation Time : Mon Apr 23 19:55:36 2012</span></div><div=
+ style=3D""><span style=3D"font-size:12.8px">=C2=A0 =C2=A0 =C2=A0Raid Level=
+ : raid1</span></div><div style=3D""><span style=3D"font-size:12.8px">=C2=
+=A0 Used Dev Size : 20980800 (20.01 GiB 21.48 GB)</span></div><div style=3D=
+""><span style=3D"font-size:12.8px">=C2=A0 =C2=A0 =C2=A0Array Size : 209808=
+00 (20.01 GiB 21.48 GB)</span></div><div style=3D""><span style=3D"font-siz=
+e:12.8px">=C2=A0 =C2=A0Raid Devices : 4</span></div><div style=3D""><span s=
+tyle=3D"font-size:12.8px">=C2=A0 Total Devices : 3</span></div><div style=
+=3D""><span style=3D"font-size:12.8px">Preferred Minor : 0</span></div><div=
+ style=3D""><span style=3D"font-size:12.8px"><br></span></div><div style=3D=
+""><span style=3D"font-size:12.8px">=C2=A0 =C2=A0 Update Time : Mon Jun 27 =
+21:12:23 2016</span></div><div style=3D""><span style=3D"font-size:12.8px">=
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 State : clean</span></div><div style=3D"=
+"><span style=3D"font-size:12.8px">=C2=A0Active Devices : 3</span></div><di=
+v style=3D""><span style=3D"font-size:12.8px">Working Devices : 3</span></d=
+iv><div style=3D""><span style=3D"font-size:12.8px">=C2=A0Failed Devices : =
+1</span></div><div style=3D""><span style=3D"font-size:12.8px">=C2=A0 Spare=
+ Devices : 0</span></div><div style=3D""><span style=3D"font-size:12.8px">=
+=C2=A0 =C2=A0 =C2=A0 =C2=A0Checksum : 1a57db86 - correct</span></div><div s=
+tyle=3D""><span style=3D"font-size:12.8px">=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0Events : 164275</span></div><div style=3D""><span style=3D"font-size:12.=
+8px"><br></span></div><div style=3D""><span style=3D"font-size:12.8px"><br>=
+</span></div><div style=3D""><span style=3D"font-size:12.8px">=C2=A0 =C2=A0=
+ =C2=A0 Number =C2=A0 Major =C2=A0 Minor =C2=A0 RaidDevice State</span></di=
+v><div style=3D""><span style=3D"font-size:12.8px">this =C2=A0 =C2=A0 3 =C2=
+=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 33 =C2=A0 =C2=A0 =C2=A0 =C2=A03 =
+=C2=A0 =C2=A0 =C2=A0active sync =C2=A0 /dev/sdc1</span></div><div style=3D"=
+"><span style=3D"font-size:12.8px"><br></span></div><div style=3D""><span s=
+tyle=3D"font-size:12.8px">=C2=A0 =C2=A00 =C2=A0 =C2=A0 0 =C2=A0 =C2=A0 =C2=
+=A0 8 =C2=A0 =C2=A0 =C2=A0 =C2=A01 =C2=A0 =C2=A0 =C2=A0 =C2=A00 =C2=A0 =C2=
+=A0 =C2=A0active sync =C2=A0 /dev/sda1</span></div><div style=3D""><span st=
+yle=3D"font-size:12.8px">=C2=A0 =C2=A01 =C2=A0 =C2=A0 1 =C2=A0 =C2=A0 =C2=
+=A0 8 =C2=A0 =C2=A0 =C2=A0 17 =C2=A0 =C2=A0 =C2=A0 =C2=A01 =C2=A0 =C2=A0 =
+=C2=A0active sync =C2=A0 /dev/sdb1</span></div><div style=3D""><span style=
+=3D"font-size:12.8px">=C2=A0 =C2=A02 =C2=A0 =C2=A0 2 =C2=A0 =C2=A0 =C2=A0 0=
+ =C2=A0 =C2=A0 =C2=A0 =C2=A00 =C2=A0 =C2=A0 =C2=A0 =C2=A02 =C2=A0 =C2=A0 =
+=C2=A0faulty removed</span></div><div style=3D""><span style=3D"font-size:1=
+2.8px">=C2=A0 =C2=A03 =C2=A0 =C2=A0 3 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =
+=C2=A0 33 =C2=A0 =C2=A0 =C2=A0 =C2=A03 =C2=A0 =C2=A0 =C2=A0active sync =C2=
+=A0 /dev/sdc1</span></div><div style=3D"font-size:12.8px"><br></div></div><=
+div style=3D"font-size:12.8px">=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D</div><div style=3D""><div style=3D""><span style=
+=3D"font-size:12.8px">fdisk -l</span><br></div><div style=3D""><span style=
+=3D"font-size:12.8px"><br></span></div><div style=3D""><span style=3D"font-=
+size:12.8px">WARNING: GPT (GUID Partition Table) detected on &#39;/dev/sda&=
+#39;! The util fdisk doesn&#39;t support GPT. Use GNU Parted.</span></div><=
+div style=3D""><span style=3D"font-size:12.8px"><br></span></div><div style=
+=3D""><span style=3D"font-size:12.8px"><br></span></div><div style=3D""><sp=
+an style=3D"font-size:12.8px">Disk /dev/sda: 3000.5 GB, 3000592982016 bytes=
+</span></div><div style=3D""><span style=3D"font-size:12.8px">255 heads, 63=
+ sectors/track, 364801 cylinders</span></div><div style=3D""><span style=3D=
+"font-size:12.8px">Units =3D cylinders of 16065 * 512 =3D 8225280 bytes</sp=
+an></div><div style=3D""><span style=3D"font-size:12.8px">Disk identifier: =
+0x03afffbe</span></div><div style=3D""><span style=3D"font-size:12.8px"><br=
+></span></div><div style=3D""><span style=3D"font-size:12.8px">=C2=A0 =C2=
+=A0Device Boot =C2=A0 =C2=A0 =C2=A0Start =C2=A0 =C2=A0 =C2=A0 =C2=A0 End =
+=C2=A0 =C2=A0 =C2=A0Blocks =C2=A0 Id =C2=A0System</span></div><div style=3D=
+""><span style=3D"font-size:12.8px">/dev/sda1 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 1 =C2=A0 =C2=A0 =C2=A0267350 =C2=A02147483647+ =C2=A0e=
+e =C2=A0EFI GPT</span></div><div style=3D""><span style=3D"font-size:12.8px=
+"><br></span></div><div style=3D""><span style=3D"font-size:12.8px">WARNING=
+: GPT (GUID Partition Table) detected on &#39;/dev/sdb&#39;! The util fdisk=
+ doesn&#39;t support GPT. Use GNU Parted.</span></div><div style=3D""><span=
+ style=3D"font-size:12.8px"><br></span></div><div style=3D""><span style=3D=
+"font-size:12.8px"><br></span></div><div style=3D""><span style=3D"font-siz=
+e:12.8px">Disk /dev/sdb: 3000.5 GB, 3000592982016 bytes</span></div><div st=
+yle=3D""><span style=3D"font-size:12.8px">255 heads, 63 sectors/track, 3648=
+01 cylinders</span></div><div style=3D""><span style=3D"font-size:12.8px">U=
+nits =3D cylinders of 16065 * 512 =3D 8225280 bytes</span></div><div style=
+=3D""><span style=3D"font-size:12.8px">Disk identifier: 0x142a889c</span></=
+div><div style=3D""><span style=3D"font-size:12.8px"><br></span></div><div =
+style=3D""><span style=3D"font-size:12.8px">=C2=A0 =C2=A0Device Boot =C2=A0=
+ =C2=A0 =C2=A0Start =C2=A0 =C2=A0 =C2=A0 =C2=A0 End =C2=A0 =C2=A0 =C2=A0Blo=
+cks =C2=A0 Id =C2=A0System</span></div><div style=3D""><span style=3D"font-=
+size:12.8px">/dev/sdb1 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 1 =
+=C2=A0 =C2=A0 =C2=A0267350 =C2=A02147483647+ =C2=A0ee =C2=A0EFI GPT</span><=
+/div><div style=3D""><span style=3D"font-size:12.8px"><br></span></div><div=
+ style=3D""><span style=3D"font-size:12.8px">WARNING: GPT (GUID Partition T=
+able) detected on &#39;/dev/sdc&#39;! The util fdisk doesn&#39;t support GP=
+T. Use GNU Parted.</span></div><div style=3D""><span style=3D"font-size:12.=
+8px"><br></span></div><div style=3D""><span style=3D"font-size:12.8px"><br>=
+</span></div><div style=3D""><span style=3D"font-size:12.8px">Disk /dev/sdc=
+: 3000.5 GB, 3000592982016 bytes</span></div><div style=3D""><span style=3D=
+"font-size:12.8px">255 heads, 63 sectors/track, 364801 cylinders</span></di=
+v><div style=3D""><span style=3D"font-size:12.8px">Units =3D cylinders of 1=
+6065 * 512 =3D 8225280 bytes</span></div><div style=3D""><span style=3D"fon=
+t-size:12.8px">Disk identifier: 0x3daebd50</span></div><div style=3D""><spa=
+n style=3D"font-size:12.8px"><br></span></div><div style=3D""><span style=
+=3D"font-size:12.8px">=C2=A0 =C2=A0Device Boot =C2=A0 =C2=A0 =C2=A0Start =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 End =C2=A0 =C2=A0 =C2=A0Blocks =C2=A0 Id =C2=A0=
+System</span></div><div style=3D""><span style=3D"font-size:12.8px">/dev/sd=
+c1 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 1 =C2=A0 =C2=A0 =C2=A02=
+67350 =C2=A02147483647+ =C2=A0ee =C2=A0EFI GPT</span></div><div style=3D"">=
+<span style=3D"font-size:12.8px"><br></span></div><div style=3D""><span sty=
+le=3D"font-size:12.8px">Disk /dev/md0: 21.4 GB, 21484339200 bytes</span></d=
+iv><div style=3D""><span style=3D"font-size:12.8px">2 heads, 4 sectors/trac=
+k, 5245200 cylinders</span></div><div style=3D""><span style=3D"font-size:1=
+2.8px">Units =3D cylinders of 8 * 512 =3D 4096 bytes</span></div><div style=
+=3D""><span style=3D"font-size:12.8px">Disk identifier: 0x00000000</span></=
+div><div style=3D""><span style=3D"font-size:12.8px"><br></span></div><div =
+style=3D""><span style=3D"font-size:12.8px">Disk /dev/md0 doesn&#39;t conta=
+in a valid partition table</span></div></div><div style=3D"font-size:12.8px=
+"><br></div></div></div>
+
+--94eb2c13f53047b6f10537500c68--
+
+
+--===============2994197344977923620==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+
+--===============2994197344977923620==--
