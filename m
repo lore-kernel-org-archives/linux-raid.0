@@ -1,72 +1,83 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: Page Allocation Failures/OOM with dm-crypt on software RAID10
- (Intel Rapid Storage)
-Date: Tue, 12 Jul 2016 11:50:14 +0200
-Message-ID: <20160712095013.GA14591@dhcp22.suse.cz>
-References: <02580b0a303da26b669b4a9892624b13@mail.ud19.udmedia.de>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Re: [PATCH RFC] md/raid1: fix deadlock between freeze_array() and wait_barrier().
+Date: Tue, 12 Jul 2016 13:09:40 +0300
+Message-ID: <CAGRgLy4UgT_gGHL=Lx_By1fqmE4Q4pwvbhBTh0J+u=9gxuQOYQ@mail.gmail.com>
+References: <CAGRgLy6RcG0_DYbd89LK0fWSJkMgqmDYn8ug7pYn+4uRqDRGqg@mail.gmail.com>
+ <87poqpf23c.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <02580b0a303da26b669b4a9892624b13@mail.ud19.udmedia.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matthias Dahl <ml_linux-kernel@binary-island.eu>
-Cc: linux-raid@vger.kernel.org, linux-mm@kvack.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87poqpf23c.fsf@notabene.neil.brown.name>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: =?UTF-8?B?6ams5bu65pyL?= <majianpeng@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, Jes Sorensen <jes.sorensen@redhat.com>
 List-Id: linux-raid.ids
 
-On Tue 12-07-16 10:27:37, Matthias Dahl wrote:
-> Hello,
-> 
-> I posted this issue already on linux-mm, linux-kernel and dm-devel a
-> few days ago and after further investigation it seems like that this
-> issue is somehow related to the fact that I am using an Intel Rapid
-> Storage RAID10, so I am summarizing everything again in this mail
-> and include linux-raid in my post. Sorry for the noise... :(
-> 
-> I am currently setting up a new machine (since my old one broke down)
-> and I ran into a lot of " Unable to allocate memory on node -1" warnings
-> while using dm-crypt. I have attached as much of the full log as I could
-> recover.
-> 
-> The encrypted device is sitting on a RAID10 (software raid, Intel Rapid
-> Storage). I am currently limited to testing via Linux live images since
-> the machine is not yet properly setup but I did my tests across several
-> of those.
-> 
-> Steps to reproduce are:
-> 
-> 1)
-> cryptsetup -s 512 -d /dev/urandom -c aes-xts-plain64 open --type plain
-> /dev/md126p5 test-device
-> 
-> 2)
-> dd if=/dev/zero of=/dev/mapper/test-device status=progress bs=512K
-> 
-> While running and monitoring the memory usage with free, it can be seen
-> that the used memory increases rapidly and after just a few seconds, the
-> system is out of memory and page allocation failures start to be issued
-> as well as the OOM killer gets involved.
+Hello Neil,
 
-Here are two instances of the oom killer Mem-Info:
+Thank you for your response. I read an email about you retiring from
+MD/mdadm maintenance and delegating mdadm maintenance to Jes Sorensen.
+But I was wondering who will be responsible for MD maintenance, and
+was about to send an email asking that.
 
-[18907.592206] Mem-Info:
-[18907.592209] active_anon:110314 inactive_anon:295 isolated_anon:0
-                active_file:27534 inactive_file:819673 isolated_file:160
-                unevictable:13001 dirty:167859 writeback:651864 unstable:0
-                slab_reclaimable:177477 slab_unreclaimable:1817501
-                mapped:934 shmem:588 pagetables:7109 bounce:0
-                free:49928 free_pcp:45 free_cma:0
+On Fri, Jul 8, 2016 at 2:41 AM, NeilBrown <neilb@suse.com> wrote:
+> On Mon, Jun 27 2016, Alexander Lyakas wrote:
+>
+>> When we call wait_barrier, we might have some bios waiting
+>> in current->bio_list, which prevents the array_freeze call to
+>> complete. Those can only be internal READs, which have already
+>> passed the wait_barrier call (thus incrementing nr_pending), but
+>> still were not submitted to the lower level, due to generic_make_request
+>> logic to avoid recursive calls. In such case, we have a deadlock:
+>> - array_frozen is already set to 1, so wait_barrier unconditionally waits, so
+>> - internal READ bios will not be submitted, thus freeze_array will
+>> never completes
+>>
+>> This problem was originally fixed in commit:
+>> d6b42dc md/raid1,raid10: avoid deadlock during resync/recovery.
+>>
+>> But then it was broken in commit:
+>> b364e3d raid1: Add a field array_frozen to indicate whether raid in
+>> freeze state.
+>
+> Thanks for the great analysis.
+> I think this primarily a problem in generic_make_request().  It queues
+> requests in the *wrong* order.
+>
+> Please try the patch from
+>   https://lkml.org/lkml/2016/7/7/428
+>
+> and see if it helps.  If two requests for a raid1 are in the
+> generic_make_request queue, this patch causes the sub-requests created
+> by the first to be handled before the second is attempted.
+I have read this discussion and more or less (probably less than more)
+understood that the second patch by Lars is supposed to address our
+issue. However, we cannot easily apply that patch:
+- The patch is based on structures added by earlier patch "[RFC]
+block: fix blk_queue_split() resource exhaustion".
+- Both patches are not in the mainline tree yet.
+- Both patches are in block core, which requires to recompile the whole kernel.
+- Not sure if these patches are applicable for our production kernel
+3.18 (long term)
 
-[18908.976349] Mem-Info:
-[18908.976352] active_anon:109647 inactive_anon:295 isolated_anon:0
-                active_file:27535 inactive_file:819602 isolated_file:128
-                unevictable:13001 dirty:167672 writeback:652038 unstable:0
-                slab_reclaimable:177477 slab_unreclaimable:1817828
-                mapped:934 shmem:588 pagetables:7109 bounce:0
-                free:50252 free_pcp:91 free_cma:0
+I am sure you understand that for production with our current kernel
+3.18 (long term) we cannot go with these two patches.
 
-This smells like file pages are stuck in the writeback somewhere and the
-anon memory is not reclaimable because you do not have any swap device.
--- 
-Michal Hocko
-SUSE Labs
+Since this issue is a real deadlock we are hitting in a long-term 3.18
+kernel, is there any chance for cc-stable fix? Currently we applied
+the rudimentary fix  I posted. It basically switches context for
+problematic RAID1 READs, and runs them from a different context. With
+this fix we don't see the deadlock anymore.
+
+Also, can you please comment on another concern I expressed:
+freeze_array() is now not reentrant. Meaning that if two threads call
+it in parallel (and it could happen for the same MD), the first thread
+calling unfreeze_array will mess up things for the second thread.
+
+Thank you for your help,
+Alex.
+
+
+>
+> Thanks,
+> NeilBrown
