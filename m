@@ -1,104 +1,117 @@
-From: Vegard Haugland <vegard@haugland.at>
+From: Phil Turmel <philip@turmel.org>
 Subject: Re: Help with assembling a stopped array
-Date: Wed, 13 Jul 2016 21:11:55 +0200
-Message-ID: <CANz1=TEdGxvDo8WRfCwQy4Ymar2Oo7Ct9acBYJcz06XpaFM15w@mail.gmail.com>
+Date: Wed, 13 Jul 2016 15:57:38 -0400
+Message-ID: <69b8afa7-bfeb-e85a-aba6-b6013b2302aa@turmel.org>
 References: <CANz1=TGr3_ayX-CxcjsBx6Q0Ggh5PXp1STmqHW1XuMS8GGE7Lg@mail.gmail.com>
  <caf338d7-cc3f-0aca-e928-7619a64d888c@turmel.org>
+ <CANz1=TEdGxvDo8WRfCwQy4Ymar2Oo7Ct9acBYJcz06XpaFM15w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <caf338d7-cc3f-0aca-e928-7619a64d888c@turmel.org>
+In-Reply-To: <CANz1=TEdGxvDo8WRfCwQy4Ymar2Oo7Ct9acBYJcz06XpaFM15w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
+To: Vegard Haugland <vegard@haugland.at>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Phil.
+Hi Vegard,
 
-Thanks for taking your time to answer my post. I really appreciate it!
+On 07/13/2016 03:11 PM, Vegard Haugland wrote:
+> Hello Phil.
+> 
+> Thanks for taking your time to answer my post. I really appreciate it!
+> 
+>> You'll have to supply more detail.  Uncut mdadm -E /dev/sdXY for each
+>> member device in its current state.  smartctl -iA -l scterc /dev/sdX for
+>> each member device's drive.
+> 
+> Sure. I wrote that post at 03:23 AM local time somewhat panicked, so I
+> didn't think of booting a live distro to easily get the logs you
+> require.
+> 
+> Output from $ for x in /dev/sd?3; do mdadm --examine $x >> output_examine; done;
+> 
+> http://paste.debian.net/780968/
 
-> You'll have to supply more detail.  Uncut mdadm -E /dev/sdXY for each
-> member device in its current state.  smartctl -iA -l scterc /dev/sdX for
-> each member device's drive.
+The device that's popping up as a spare every time really does have the
+spare marker (role #10).  That's the drive that was partially re-added
+when the array crashed again.  Just leave it out of your next attempts.
 
-Sure. I wrote that post at 03:23 AM local time somewhat panicked, so I
-didn't think of booting a live distro to easily get the logs you
-require.
+> Output from $ for x in /dev/sd?3; do echo $x >> output_smartctl;
+> smartctl -iA -l scterc $x >> output_smartctl; done;
+> 
+> http://paste.debian.net/780967/
 
-Output from $ for x in /dev/sd?3; do mdadm --examine $x >> output_examine; done;
+The key is "SCT Error Recovery Control command not supported" on most of
+your drives.  In fact, upgrading model 7200.11 1T drives to your 2T
+Barracudas is precisely the set of models that first bit me in the ass.
+I mention that somewhere in the threads I pointed at.
 
-http://paste.debian.net/780968/
+The key is that you have desktop drives in a raid array, and they don't
+handle read errors in a way friendly to the linux kernel -- they take
+too long.  The one 7200.11 drive can be told to timeout quicker (7.0
+seconds is typical for spinning disks).  The kernel will have to be told
+to wait extra long for all of the others.  2-3 minutes.  Details in the
+reading assignments.  The precise sequence of events that breaks MD raid
+is described in the sixth:
 
-Output from $ for x in /dev/sd?3; do echo $x >> output_smartctl;
-smartctl -iA -l scterc $x >> output_smartctl; done;
+http://marc.info/?l=linux-raid&m=133665797115876&w=2
 
-http://paste.debian.net/780967/
+> Note that since I booted into a live CD, the device names do no longer
+> match what I wrote in my original post.
 
-Note that since I booted into a live CD, the device names do no longer
-match what I wrote in my original post.
+Yes, device names are not guaranteed to remain constant in linux.  MD
+stores metadata in a superblock that includes array role (position) and
+layout details so the name is superfluous once set up.  Getting the
+roles wrong with changed device names is a key reason --create is so
+dangerous.
 
-> You would not believe how often we encounter reports like yours where
-> more member devices fail while trying to rebuild/resync/re-add after a
-> first failure.  There's some reading assignments for you at the at end
-> of this mail that you *must* read and understand or this array will blow
-> up again.
+After you get your array assembled again, I suggest you run the lsdrv[1]
+script to document which drive serial numbers correspond to which array
+roles.  Also consider using the --update=metadata at some point (not
+now) to get away from the v0.90 metadata.  It is unreliable when used on
+partitions that extend to the end of their parent device.
 
-Of the links you posted, only the last one appeared relevant to my
-problem. If your intention was that I read these to increase my
-knowledge of md in general to avoid issues like mine from happening in
-the future, I'm happy to oblige. There were a lot of technical terms
-and details in those threads that I don't yet fully grasp, so please
-bear with me while I take my time to fully digest this. Do you
-recommend I read these in the suggested order?
+>> You would not believe how often we encounter reports like yours where
+>> more member devices fail while trying to rebuild/resync/re-add after a
+>> first failure.  There's some reading assignments for you at the at end
+>> of this mail that you *must* read and understand or this array will blow
+>> up again.
+> 
+> Of the links you posted, only the last one appeared relevant to my
+> problem. If your intention was that I read these to increase my
+> knowledge of md in general to avoid issues like mine from happening in
+> the future, I'm happy to oblige. There were a lot of technical terms
+> and details in those threads that I don't yet fully grasp, so please
+> bear with me while I take my time to fully digest this. Do you
+> recommend I read these in the suggested order?
 
->
-> When you used --assemble --force, did you spell out exactly which
-> devices to use?
->
+Yes.  Your problem is "timeout mismatch", which is use of drives with
+extended error recovery times in any linux software raid array. (I
+understand hardware raid also struggles with this, but I don't know the
+details.)
 
-Yes. I spelled out all the good drives and omitted the faulty ones.
-The result of this was that one of the drives showed up as spare.
-Also, the event counter on all drives specified incremented by one
-except the spare one. The current event counters are, as shown while
-booting the live CD (again, note that the device names differ from my
-original post):
+For now, use at every boot:
 
-/dev/sda3         Events : 32680547
-/dev/sdb3         Events : 32680549
-/dev/sdc3         Events : 32679348
-/dev/sdd3         Events : 32677935
-/dev/sde3         Events : 32680549
-/dev/sdg3         Events : 32680549
-/dev/sdh3         Events : 32680549
-/dev/sdi3         Events : 32680549
-/dev/sdj3         Events : 32680549
-/dev/sdk3         Events : 32680549
+for x in /sys/block/*/device/timeout ; do echo 180 > $x ; done
 
-The "spare" (which isn't a spare) is /dev/sda3. I've attempted forcing
-assembly twice with no prevail. As such, the event counter has
-incremented by 2 on the good drives compared to /dev/sda. The faulty
-drives are /dev/sdc3 and /dev/sdd3 as shown by the event counter.
+You can stop doing that when you've replaced all of your desktop drives.
 
-> Boot from a modern rescueCD or USB drive that lets you save the
-> requested information and output on the console.  Include any dmesg
-> content that involves these devices.  When running mdadm, include the -v
-> option so your console has more info for us.
+> Yes. I spelled out all the good drives and omitted the faulty ones.
 
-Noted. Will do that from now on.
+This time, omit the drive that shows up as "spare".  Use all nine
+others.  You really want nine, so the redundancy in your array can
+reconstruct when it hits the UREs you obviously have.  See "Current
+Pending Sector" != 0 in your smartctl reports.
 
-> Absolutely do not use --create!
+After it assembles the nine, issue "mdadm --run /dev/md4" if it didn't
+start.  Then "echo check >>/sys/block/md4/md/sync_action".
 
-Noted!
+Wait for that to finish.  Then add the spare back to the array.
 
-Again, thanks for helping out.
+Also, in the future, paste drive reports and console output inline in
+your mails, with word wrapping disabled.  That puts the details in the
+archives for future googlers to find.  (This list allows ~ 100k per mail.)
 
-Vegard
-
-
--- 
-Vegard Haugland <vegard@haugland.at>
-Mob. +47 976 68 262
-Web: www.v3gard.com | foto.haugland.at
-
-If you want to send me encrypted email, my public GPG key is located
-at http://v3gard.com/files/gpg.pub
+Phil
