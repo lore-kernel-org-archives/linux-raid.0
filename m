@@ -1,97 +1,92 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Help with assembling a stopped array
-Date: Wed, 13 Jul 2016 11:29:21 -0400
-Message-ID: <caf338d7-cc3f-0aca-e928-7619a64d888c@turmel.org>
-References: <CANz1=TGr3_ayX-CxcjsBx6Q0Ggh5PXp1STmqHW1XuMS8GGE7Lg@mail.gmail.com>
+From: Matthias Dahl <ml_linux-kernel@binary-island.eu>
+Subject: Re: Page Allocation Failures/OOM with dm-crypt on software RAID10
+ (Intel Rapid Storage)
+Date: Wed, 13 Jul 2016 17:32:12 +0200
+Message-ID: <a6e48e37cce530f286e6669fdfc0b3f8@mail.ud19.udmedia.de>
+References: <02580b0a303da26b669b4a9892624b13@mail.ud19.udmedia.de>
+ <20160712095013.GA14591@dhcp22.suse.cz>
+ <d9dbe0328e938eb7544fdb2aa8b5a9c7@mail.ud19.udmedia.de>
+ <20160712114920.GF14586@dhcp22.suse.cz>
+ <e6c2087730e530e77c2b12d50495bdc9@mail.ud19.udmedia.de>
+ <20160712140715.GL14586@dhcp22.suse.cz>
+ <459d501038de4d25db6d140ac5ea5f8d@mail.ud19.udmedia.de>
+ <20160713112126.GH28723@dhcp22.suse.cz>
+ <20160713121828.GI28723@dhcp22.suse.cz>
+ <74b9325c37948cf2b460bd759cff23dd@mail.ud19.udmedia.de>
+ <20160713134717.GL28723@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CANz1=TGr3_ayX-CxcjsBx6Q0Ggh5PXp1STmqHW1XuMS8GGE7Lg@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Vegard Haugland <vegard@haugland.at>, linux-raid@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20160713134717.GL28723@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: linux-raid@vger.kernel.org, linux-mm@kvack.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>
 List-Id: linux-raid.ids
 
-Hello Vegard,
+Hello...
 
-On 07/12/2016 09:23 PM, Vegard Haugland wrote:
-> Hi all,
-> 
-> I have a raid6 setup (called /dev/md4) with 10 harddrives, ranged from
-> sda to sdj.
+On 2016-07-13 15:47, Michal Hocko wrote:
 
-You'll have to supply more detail.  Uncut mdadm -E /dev/sdXY for each
-member device in its current state.  smartctl -iA -l scterc /dev/sdX for
-each member device's drive.
+> This is getting out of my area of expertise so I am not sure I can help
+> you much more, I am afraid.
 
-> One of my drives fell out recently, /dev/sde3/ (not entirely sure how
-> this happened), but I readded it as /dev/sdk3, and the array started
-> rebuilding. This went on for several hours, and it hit 60% completed
-> around 8 hours ago.
-> 
-> However, a few hours after that, I lost both /dev/sdg3 and /dev/sdh3 -
-> and the array stopped completely. My OS was also running on that
-> array, so my entire system freezed forcing me to reboot.
+That's okay. Thank you so much for investing the time.
 
-You would not believe how often we encounter reports like yours where
-more member devices fail while trying to rebuild/resync/re-add after a
-first failure.  There's some reading assignments for you at the at end
-of this mail that you *must* read and understand or this array will blow
-up again.
+For what it is worth, I did some further tests and here is what I came
+up with:
 
-> I've now booted into busybox and md tells me that it cannot reassemble
-> the array as it can only find 7 out of 10 good drives..
-> 
-> I then read the instructions on
-> https://raid.wiki.kernel.org/index.php/RAID_Recovery, I started using
-> mdadm --examine and found that 8 out of 10 drives has identical event
-> counters. The two that deviates from this is /dev/sdg3 and /dev/sdh3.
-> I'm not entirely sure if the disk symbolic names are still the same,
-> so I further assume that the 8/10 drives that are still good are the
-> ones that were running OK before any of this started happening.
-> 
-> As such, I try forcing a reassemble using mdadm -A /dev/md4 --force.
-> When I now run mdadm -D /md4, it lists one device as spare (even
-> though my array does not use any spares) - and I guess this is the
-> main reason the array doesn't start. Can anyone confirm this, or am i
-> missing something?
+If I create the plain dm-crypt device with 
+--perf-submit_from_crypt_cpus,
+I can run the tests for as long as I want but the memory problem never
+occurs, meaning buffer/cache increase accordingly and thus free memory
+decreases but used mem stays pretty constant low. Yet the problem here
+is, the system becomes sluggish and throughput is severely impacted.
+ksoftirqd is hovering at 100% the whole time.
 
-When you used --assemble --force, did you spell out exactly which
-devices to use?
+Somehow my guess is that normally dm-crypt simply takes every request,
+encrypts it and queues it internally by itself. And that queue is then
+slowly emptied to the underlying device kernel queue. That is why I am
+seeing the exploding increase in used memory (rather than in 
+buffer/cache)
+which in the end causes a OOM situation. But that is just my guess. And
+IMHO that is not the right thing to do (tm), as can be seen in this 
+case.
 
-> Also, if I try setting the spare as failed by running mdadm -f
-> /dev/md4 /dev/sde3, I get "no such device" (as recalled from human
-> memory). Removing it works (mdadm -r /dev/md4 /dev/sde3), but every
-> time I reassemble, it gets the "spare" tag. I also tried reassemble
-> with force, but the same happened..
-> 
-> The initrd on this computer does not have networking unfortunately, so
-> I cannot attach any output from any logs.
+No matter what, I have no clue how to further diagnose this issue. And
+given that I already had unsolvable issues with dm-crypt a couple of
+months ago with my old machine where the system simply hang itself or
+went OOM when the swap was encrypted and just a few kilobytes needed to
+be swapped out, I am not so sure anymore I can trust dm-crypt with a
+full disk encryption to the point where I feel "safe"... as-in, nothing
+bad will happen or the system won't suddenly hang itself due to it. Or
+if a bug is introduced, that it will actually be possible to diagnose it
+and help fix it or that it will even be eventually fixed. Which is 
+really
+a pity, since I would really have liked to help solve this. With the
+swap issue, I did git bisects, tests, narrowed it down to kernel 
+versions
+when said bug was introduced... but in the end, the bug is still present
+as far as I know. :(
 
-Boot from a modern rescueCD or USB drive that lets you save the
-requested information and output on the console.  Include any dmesg
-content that involves these devices.  When running mdadm, include the -v
-option so your console has more info for us.
+I will probably look again into ext4 fs encryption. My whole point is
+just that in case any of disks go faulty and needs to be replaced or
+sent in for warranty, I don't have to worry about mails, personal or
+business data still being left on the device (e.g. if it is no longer
+accessible or has reallocated sectors or whatever) in a readable form.
 
-> If you agree with my summary so far, what should be my next action? Is
-> there anything left to try before running mdadm create (with level 6
-> and 2 missing drives)?
+Oh well. Pity, really.
 
-Absolutely do not use --create!
+Thanks again,
+Matthias
 
-mdadm --assemble --force is the correct tool, but you *must* resolve the
-underlying reason your devices are failing.
+-- 
+Dipl.-Inf. (FH) Matthias Dahl | Software Engineer | binary-island.eu
+  services: custom software [desktop, mobile, web], server administration
 
-Phil
-
-Readings for timeout mismatch issues:  (whole threads if possible)
-
-http://marc.info/?l=linux-raid&m=139050322510249&w=2
-http://marc.info/?l=linux-raid&m=135863964624202&w=2
-http://marc.info/?l=linux-raid&m=135811522817345&w=1
-http://marc.info/?l=linux-raid&m=133761065622164&w=2
-http://marc.info/?l=linux-raid&m=132477199207506
-http://marc.info/?l=linux-raid&m=133665797115876&w=2
-http://marc.info/?l=linux-raid&m=142487508806844&w=3
-http://marc.info/?l=linux-raid&m=144535576302583&w=2
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
