@@ -1,8 +1,8 @@
-From: Matthias Dahl <ml_linux-kernel@binary-island.eu>
+From: Michal Hocko <mhocko@kernel.org>
 Subject: Re: Page Allocation Failures/OOM with dm-crypt on software RAID10
  (Intel Rapid Storage)
-Date: Wed, 13 Jul 2016 15:18:11 +0200
-Message-ID: <74b9325c37948cf2b460bd759cff23dd@mail.ud19.udmedia.de>
+Date: Wed, 13 Jul 2016 15:47:17 +0200
+Message-ID: <20160713134717.GL28723@dhcp22.suse.cz>
 References: <02580b0a303da26b669b4a9892624b13@mail.ud19.udmedia.de>
  <20160712095013.GA14591@dhcp22.suse.cz>
  <d9dbe0328e938eb7544fdb2aa8b5a9c7@mail.ud19.udmedia.de>
@@ -12,51 +12,61 @@ References: <02580b0a303da26b669b4a9892624b13@mail.ud19.udmedia.de>
  <459d501038de4d25db6d140ac5ea5f8d@mail.ud19.udmedia.de>
  <20160713112126.GH28723@dhcp22.suse.cz>
  <20160713121828.GI28723@dhcp22.suse.cz>
+ <74b9325c37948cf2b460bd759cff23dd@mail.ud19.udmedia.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20160713121828.GI28723@dhcp22.suse.cz>
+Content-Disposition: inline
+In-Reply-To: <74b9325c37948cf2b460bd759cff23dd@mail.ud19.udmedia.de>
 Sender: owner-linux-mm@kvack.org
-To: Michal Hocko <mhocko@kernel.org>
+To: Matthias Dahl <ml_linux-kernel@binary-island.eu>
 Cc: linux-raid@vger.kernel.org, linux-mm@kvack.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>
 List-Id: linux-raid.ids
 
-Hello Michal,
+On Wed 13-07-16 15:18:11, Matthias Dahl wrote:
+> Hello Michal,
+> 
+> many thanks for all your time and help on this issue. It is very much
+> appreciated and I hope we can track this down somehow.
+> 
+> On 2016-07-13 14:18, Michal Hocko wrote:
+> 
+> > So it seems we are accumulating bios and 256B objects. Buffer heads as
+> > well but so much. Having over 4G worth of bios sounds really suspicious.
+> > Note that they pin pages to be written so this might be consuming the
+> > rest of the unaccounted memory! So the main question is why those bios
+> > do not get dispatched or finished.
+> 
+> Ok. It is the Block IOs that do not get completed. I do get it right
+> that those bio-3 are already the encrypted data that should be written
+> out but do not for some reason?
 
-many thanks for all your time and help on this issue. It is very much
-appreciated and I hope we can track this down somehow.
+Hard to tell. Maybe they are just allocated and waiting for encryption.
+But this is just a wild guessing.
 
-On 2016-07-13 14:18, Michal Hocko wrote:
 
-> So it seems we are accumulating bios and 256B objects. Buffer heads as
-> well but so much. Having over 4G worth of bios sounds really 
-> suspicious.
-> Note that they pin pages to be written so this might be consuming the
-> rest of the unaccounted memory! So the main question is why those bios
-> do not get dispatched or finished.
+> I tried to figure this out myself but
+> couldn't find anything -- what does the number "-3" state? It is the
+> position in some chain or has it a different meaning?
 
-Ok. It is the Block IOs that do not get completed. I do get it right
-that those bio-3 are already the encrypted data that should be written
-out but do not for some reason? I tried to figure this out myself but
-couldn't find anything -- what does the number "-3" state? It is the
-position in some chain or has it a different meaning?
+$ git grep "kmem_cache_create.*bio"
+block/bio-integrity.c:  bip_slab = kmem_cache_create("bio_integrity_payload",
 
-Do you think a trace like you mentioned would help shed some more light
-on this? Or would you recommend something else?
+so there doesn't seem to be any cache like that in the vanilla kernel.
 
-I have also cc' Mike Snitzer who commented on this issue before, maybe
-he can see some pattern here as well. Pity that Neil Brown is no longer
-available as I think this is also somehow related to it being a Intel
-Rapid Storage RAID10... since it is the only way I can reproduce it. :(
+> Do you think a trace like you mentioned would help shed some more light
+> on this? Or would you recommend something else?
 
-Thanks,
-Matthias
+Dunno. Seeing who is allocating those bios might be helpful but it won't
+tell much about what has happened to them after allocation. The tracing
+would be more helpful for a mem leak situation which doesn't seem to be
+the case here.
 
+This is getting out of my area of expertise so I am not sure I can help
+you much more, I am afraid.
 -- 
-Dipl.-Inf. (FH) Matthias Dahl | Software Engineer | binary-island.eu
-  services: custom software [desktop, mobile, web], server administration
+Michal Hocko
+SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
