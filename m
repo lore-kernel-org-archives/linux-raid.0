@@ -1,75 +1,46 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: Page Allocation Failures/OOM with dm-crypt on software RAID10
- (Intel Rapid Storage)
-Date: Wed, 13 Jul 2016 15:47:17 +0200
-Message-ID: <20160713134717.GL28723@dhcp22.suse.cz>
-References: <02580b0a303da26b669b4a9892624b13@mail.ud19.udmedia.de>
- <20160712095013.GA14591@dhcp22.suse.cz>
- <d9dbe0328e938eb7544fdb2aa8b5a9c7@mail.ud19.udmedia.de>
- <20160712114920.GF14586@dhcp22.suse.cz>
- <e6c2087730e530e77c2b12d50495bdc9@mail.ud19.udmedia.de>
- <20160712140715.GL14586@dhcp22.suse.cz>
- <459d501038de4d25db6d140ac5ea5f8d@mail.ud19.udmedia.de>
- <20160713112126.GH28723@dhcp22.suse.cz>
- <20160713121828.GI28723@dhcp22.suse.cz>
- <74b9325c37948cf2b460bd759cff23dd@mail.ud19.udmedia.de>
+From: "Kani, Toshimitsu" <toshi.kani-ZPxbGqLxI0U@public.gmane.org>
+Subject: Re: dm stripe: add DAX support
+Date: Wed, 13 Jul 2016 15:03:31 +0000
+Message-ID: <1468422189.8908.53.camel@hpe.com>
+References: <1466792610-30369-1-git-send-email-toshi.kani@hpe.com>
+ <20160624182859.GD13898@redhat.com> <1468362104.8908.43.camel@hpe.com>
+ <20160713020100.GA5872@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <74b9325c37948cf2b460bd759cff23dd@mail.ud19.udmedia.de>
-Sender: owner-linux-mm@kvack.org
-To: Matthias Dahl <ml_linux-kernel@binary-island.eu>
-Cc: linux-raid@vger.kernel.org, linux-mm@kvack.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <20160713020100.GA5872-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Language: en-US
+Content-ID: <F7B5EE46DC71E74F88AE591FF8F4EAFF-mmYPd6ayCNGroOM5E8FhRbjFIynDaujOfM0AETQt39g@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: "axboe-b10kYP2dOMg@public.gmane.org" <axboe-b10kYP2dOMg@public.gmane.org>, "snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: "dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org" <linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-On Wed 13-07-16 15:18:11, Matthias Dahl wrote:
-> Hello Michal,
-> 
-> many thanks for all your time and help on this issue. It is very much
-> appreciated and I hope we can track this down somehow.
-> 
-> On 2016-07-13 14:18, Michal Hocko wrote:
-> 
-> > So it seems we are accumulating bios and 256B objects. Buffer heads as
-> > well but so much. Having over 4G worth of bios sounds really suspicious.
-> > Note that they pin pages to be written so this might be consuming the
-> > rest of the unaccounted memory! So the main question is why those bios
-> > do not get dispatched or finished.
-> 
-> Ok. It is the Block IOs that do not get completed. I do get it right
-> that those bio-3 are already the encrypted data that should be written
-> out but do not for some reason?
-
-Hard to tell. Maybe they are just allocated and waiting for encryption.
-But this is just a wild guessing.
-
-
-> I tried to figure this out myself but
-> couldn't find anything -- what does the number "-3" state? It is the
-> position in some chain or has it a different meaning?
-
-$ git grep "kmem_cache_create.*bio"
-block/bio-integrity.c:  bip_slab = kmem_cache_create("bio_integrity_payload",
-
-so there doesn't seem to be any cache like that in the vanilla kernel.
-
-> Do you think a trace like you mentioned would help shed some more light
-> on this? Or would you recommend something else?
-
-Dunno. Seeing who is allocating those bios might be helpful but it won't
-tell much about what has happened to them after allocation. The tracing
-would be more helpful for a mem leak situation which doesn't seem to be
-the case here.
-
-This is getting out of my area of expertise so I am not sure I can help
-you much more, I am afraid.
--- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+T24gVHVlLCAyMDE2LTA3LTEyIGF0IDIyOjAxIC0wNDAwLCBNaWtlIFNuaXR6ZXIgd3JvdGU6DQo+
+IE9uIFR1ZSwgSnVsIDEyIDIwMTYgYXTCoMKgNjoyMnBtIC0wNDAwLA0KPiBLYW5pLCBUb3NoaW1p
+dHN1IDx0b3NoaS5rYW5pQGhwZS5jb20+IHdyb3RlOg0KPiA+IE9uIEZyaSwgMjAxNi0wNi0yNCBh
+dCAxNDoyOSAtMDQwMCwgTWlrZSBTbml0emVyIHdyb3RlOg0KPiA+ID4gwqANCsKgOg0KPiBUaGFu
+a3MgZm9yIHB1dHRpbmcgdGhpcyBzdW1tYXJ5IHRvZ2V0aGVyLsKgwqBVbmZvcnR1bmF0ZWx5IG5v
+bmUgb2YgdGhlIERNDQo+IGNoYW5nZXMgY2FuIGJlIHF1ZXVlZCBmb3IgNC44IHVudGlsIEplbnMg
+dGFrZXMgdGhlIDIgYmxvY2sgY29yZSBwYXRjaGVzOg0KPiBodHRwczovL3BhdGNod29yay5rZXJu
+ZWwub3JnL3BhdGNoLzkxOTYwMjEvDQo+IGh0dHBzOi8vcGF0Y2h3b3JrLmtlcm5lbC5vcmcvcGF0
+Y2gvOTE5NjAxOS8NCj4gDQo+IE5vdCBzdXJlIHdoYXQgdGhlIGhvbGQgdXAgYW5kL29yIGlzc3Vl
+IGlzIHdpdGggdGhlbS7CoMKgQnV0IEkndmUgYXNrZWQNCj4gdHdpY2UgKGFuZCBpbXBsaWNpbHR5
+IGEgM3JkIHRpbWUgaGVyZSkuwqDCoEhvcGVmdWxseSB0aGV5IGxhbmQgaW4gdGltZSBmb3INCj4g
+NC44Lg0KDQpIaSBKZW5zLA0KDQpDYW4geW91IHRha2UgdGhlIHR3byBwYXRjaGVzIGFib3ZlPyDC
+oFRoZXNlIHBhdGNoZXMgYWRkIFFVRVVFX0ZMQUdfREFYIGFuZCBpdHMNCnN5c2ZzIHNob3cgZnVu
+Yy4gwqBUaGV5IGFsbG93IGRldmljZS1tYXBwZXIgdG8gc2V0IGRheC1jYXBhYmlsaXR5IGJhc2Vk
+IG9uIGl0cw0KY29uZmlndXJhdGlvbiwgYW5kIGFsc28gYWxsb3cgdXNlciBhcHBsaWNhdGlvbnMg
+dG8gY2hlY2sgZGF4LWNhcGFiaWxpdHkgdmlhDQpzeXNmcy4NCg0KVGhhbmtzLA0KLVRvc2hpwqAN
+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCkxpbnV4LW52
+ZGltbSBtYWlsaW5nIGxpc3QKTGludXgtbnZkaW1tQGxpc3RzLjAxLm9yZwpodHRwczovL2xpc3Rz
+LjAxLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LW52ZGltbQo=
