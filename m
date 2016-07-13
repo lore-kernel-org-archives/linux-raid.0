@@ -1,43 +1,81 @@
-From: Brad Campbell <lists2009@fnarfbargle.com>
-Subject: Re: kernel checksumming performance vs actual raid device performance
-Date: Wed, 13 Jul 2016 11:58:34 +0800
-Message-ID: <25ed91c3-77aa-6046-f10c-565bc7dd85f9@fnarfbargle.com>
-References: <CAJvUf-C-Nr8sSnSPL-5jt1NLOAiZjhZ=bjDRUbX_RjphRL+yWA@mail.gmail.com>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: Page Allocation Failures/OOM with dm-crypt on software RAID10
+ (Intel Rapid Storage)
+Date: Wed, 13 Jul 2016 13:21:26 +0200
+Message-ID: <20160713112126.GH28723@dhcp22.suse.cz>
+References: <02580b0a303da26b669b4a9892624b13@mail.ud19.udmedia.de>
+ <20160712095013.GA14591@dhcp22.suse.cz>
+ <d9dbe0328e938eb7544fdb2aa8b5a9c7@mail.ud19.udmedia.de>
+ <20160712114920.GF14586@dhcp22.suse.cz>
+ <e6c2087730e530e77c2b12d50495bdc9@mail.ud19.udmedia.de>
+ <20160712140715.GL14586@dhcp22.suse.cz>
+ <459d501038de4d25db6d140ac5ea5f8d@mail.ud19.udmedia.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJvUf-C-Nr8sSnSPL-5jt1NLOAiZjhZ=bjDRUbX_RjphRL+yWA@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Matt Garman <matthew.garman@gmail.com>, Mdadm <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <459d501038de4d25db6d140ac5ea5f8d@mail.ud19.udmedia.de>
+Sender: owner-linux-mm@kvack.org
+To: Matthias Dahl <ml_linux-kernel@binary-island.eu>
+Cc: linux-raid@vger.kernel.org, linux-mm@kvack.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 13/07/16 05:09, Matt Garman wrote:
-> We have a system with a 24-disk raid6 array, using 2TB SSDs.  We use
-> this system in a workload that is 99.9% read-only (a few small
-> writes/day, versus countless reads).  This system is an NFS server for
-> about 50 compute nodes that continually read its data.
+On Tue 12-07-16 16:56:32, Matthias Dahl wrote:
+> Hello Michal...
+> 
+> On 2016-07-12 16:07, Michal Hocko wrote:
+> 
+> > /proc/slabinfo could at least point on who is eating that memory.
+> 
+> Thanks. I have made another test (and thus again put the RAID10 out of
+> sync for the 100th time, sigh) and made regular snapshots of slabinfo
+> which I have attached to this mail.
+> 
+> > Direct IO doesn't get throttled like buffered IO.
+> 
+> Is buffered i/o not used in both cases if I don't explicitly request
+> direct i/o?
+> 
+>     dd if=/dev/zero /dev/md126p5 bs=512K
+> and dd if=/dev/zero /dev/mapper/test-device bs=512K
 
+OK, I misunderstood your question though. You were mentioning the direct
+IO earlier so I thought you were referring to it here as well.
+ 
+> Given that the test-device is dm-crypt on md125p5. Aren't both using
+> buffered i/o?
 
-> Perhaps naively, I would expect that second-to-last line:
->
-> [    6.499773] raid6: using algorithm avx2x4 gen() (8648 MB/s)
->
-> to indicate what kind of throughput I could expect in a degraded
-> state, but clearly that is not right---or I have something
-> misconfigured.
->
-> So in other words, what does that gen() 8648 MB/s metric mean in terms
-> of real-world throughput?  Is there a way I can "convert" that number
-> to expected throughput of a degraded array?
+Yes they are.
 
-I can't help you with the throughput calculation, but 24 disks would 
-imply you are striped across 22 disks.
+> > the number of pages under writeback was more or less same throughout
+> > the time but there are some local fluctuations when some pages do get
+> > completed.
+> 
+> The pages under writeback are those directly destined for the disk, so
+> after dm-crypt had done its encryption?
 
-With a reconstruct read, you of course have to read an entire stripe 
-from all present disks to reconstruct that sector. So I would assume 
-your machine IO to go through the roof, in addition to whatever 
-calculations are required to actually do the reconstruction.
+Those are submitted for the IO. dm-crypt will allocate a "shadow" page
+for each of them to perform the encryption and only then submit the IO
+to the storage underneath see
+http://lkml.kernel.org/r/alpine.LRH.2.02.1607121907160.24806@file01.intranet.prod.int.rdu2.redhat.com
 
-What is your chunk size?
+> > If not you can enable allocator trace point for a particular object
+> > size (or range of sizes) and see who is requesting them.
+> 
+> If that support is baked into the Fedora provided kernel that is. If
+> you could give me a few hints or pointers, how to properly do a allocator
+> trace point and get some decent data out of it, that would be nice.
 
+You need to have a kernel with CONFIG_TRACEPOINTS and then enable them
+via debugfs. You are interested in kmalloc tracepoint and specify a size
+as a filter to only see those that are really interesting. I haven't
+checked your slabinfo yet - hope to get to it later today.
+-- 
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
