@@ -1,65 +1,104 @@
-From: Matthias Dahl <ml_linux-kernel@binary-island.eu>
-Subject: Re: [dm-devel] Page Allocation Failures/OOM with dm-crypt on software
- RAID10 (Intel Rapid Storage)
-Date: Wed, 13 Jul 2016 20:24:45 +0200
-Message-ID: <ea16d5fff75b76b4eae2d1b1726c0ea2@mail.ud19.udmedia.de>
-References: <02580b0a303da26b669b4a9892624b13@mail.ud19.udmedia.de>
- <20160712095013.GA14591@dhcp22.suse.cz>
- <d9dbe0328e938eb7544fdb2aa8b5a9c7@mail.ud19.udmedia.de>
- <20160712114920.GF14586@dhcp22.suse.cz>
- <e6c2087730e530e77c2b12d50495bdc9@mail.ud19.udmedia.de>
- <20160712140715.GL14586@dhcp22.suse.cz>
- <459d501038de4d25db6d140ac5ea5f8d@mail.ud19.udmedia.de>
- <20160713112126.GH28723@dhcp22.suse.cz>
- <20160713121828.GI28723@dhcp22.suse.cz>
- <74b9325c37948cf2b460bd759cff23dd@mail.ud19.udmedia.de>
- <20160713134717.GL28723@dhcp22.suse.cz>
- <a6e48e37cce530f286e6669fdfc0b3f8@mail.ud19.udmedia.de>
- <2704a8dd-48c5-82b8-890e-72bf5e1ed1e1@redhat.com>
+From: Vegard Haugland <vegard@haugland.at>
+Subject: Re: Help with assembling a stopped array
+Date: Wed, 13 Jul 2016 21:11:55 +0200
+Message-ID: <CANz1=TEdGxvDo8WRfCwQy4Ymar2Oo7Ct9acBYJcz06XpaFM15w@mail.gmail.com>
+References: <CANz1=TGr3_ayX-CxcjsBx6Q0Ggh5PXp1STmqHW1XuMS8GGE7Lg@mail.gmail.com>
+ <caf338d7-cc3f-0aca-e928-7619a64d888c@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <2704a8dd-48c5-82b8-890e-72bf5e1ed1e1@redhat.com>
-Sender: owner-linux-mm@kvack.org
-To: Ondrej Kozina <okozina@redhat.com>
-Cc: Michal Hocko <mhocko@kernel.org>, linux-raid@vger.kernel.org, linux-mm@kvack.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <caf338d7-cc3f-0aca-e928-7619a64d888c@turmel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Ondrej...
+Hello Phil.
 
-On 2016-07-13 18:24, Ondrej Kozina wrote:
+Thanks for taking your time to answer my post. I really appreciate it!
 
-> One step after another.
+> You'll have to supply more detail.  Uncut mdadm -E /dev/sdXY for each
+> member device in its current state.  smartctl -iA -l scterc /dev/sdX for
+> each member device's drive.
 
-Sorry, it was not meant to be rude or anything... more frustration
-since I cannot be of more help and I really would like to jump in
-head-first and help fixing it... but lack the necessary insight into
-the kernel internals. But who knows, I started reading Robert Love's
-book... so, in a good decade or so. ;-))
+Sure. I wrote that post at 03:23 AM local time somewhat panicked, so I
+didn't think of booting a live distro to easily get the logs you
+require.
 
-> https://marc.info/?l=linux-mm&m=146825178722612&w=2
+Output from $ for x in /dev/sd?3; do mdadm --examine $x >> output_examine; done;
 
-Thanks for that link. I have to read those more closely tomorrow, since
-there are some nice insights into dm-crypt there. :)
+http://paste.debian.net/780968/
 
-Still, you have to admit, it is also rather frustrating/scary if such
-a crucial subsystem can have bugs over several major versions that do
-result in complete hangs (and can thus cause corruption) and are quite
-easily triggerable. It does not instill too much confidence that said
-subsystem is so intensively used/tested after all. That's at least how
-I feel about it...
+Output from $ for x in /dev/sd?3; do echo $x >> output_smartctl;
+smartctl -iA -l scterc $x >> output_smartctl; done;
 
-So long,
-Matthias
+http://paste.debian.net/780967/
+
+Note that since I booted into a live CD, the device names do no longer
+match what I wrote in my original post.
+
+> You would not believe how often we encounter reports like yours where
+> more member devices fail while trying to rebuild/resync/re-add after a
+> first failure.  There's some reading assignments for you at the at end
+> of this mail that you *must* read and understand or this array will blow
+> up again.
+
+Of the links you posted, only the last one appeared relevant to my
+problem. If your intention was that I read these to increase my
+knowledge of md in general to avoid issues like mine from happening in
+the future, I'm happy to oblige. There were a lot of technical terms
+and details in those threads that I don't yet fully grasp, so please
+bear with me while I take my time to fully digest this. Do you
+recommend I read these in the suggested order?
+
+>
+> When you used --assemble --force, did you spell out exactly which
+> devices to use?
+>
+
+Yes. I spelled out all the good drives and omitted the faulty ones.
+The result of this was that one of the drives showed up as spare.
+Also, the event counter on all drives specified incremented by one
+except the spare one. The current event counters are, as shown while
+booting the live CD (again, note that the device names differ from my
+original post):
+
+/dev/sda3         Events : 32680547
+/dev/sdb3         Events : 32680549
+/dev/sdc3         Events : 32679348
+/dev/sdd3         Events : 32677935
+/dev/sde3         Events : 32680549
+/dev/sdg3         Events : 32680549
+/dev/sdh3         Events : 32680549
+/dev/sdi3         Events : 32680549
+/dev/sdj3         Events : 32680549
+/dev/sdk3         Events : 32680549
+
+The "spare" (which isn't a spare) is /dev/sda3. I've attempted forcing
+assembly twice with no prevail. As such, the event counter has
+incremented by 2 on the good drives compared to /dev/sda. The faulty
+drives are /dev/sdc3 and /dev/sdd3 as shown by the event counter.
+
+> Boot from a modern rescueCD or USB drive that lets you save the
+> requested information and output on the console.  Include any dmesg
+> content that involves these devices.  When running mdadm, include the -v
+> option so your console has more info for us.
+
+Noted. Will do that from now on.
+
+> Absolutely do not use --create!
+
+Noted!
+
+Again, thanks for helping out.
+
+Vegard
+
 
 -- 
-Dipl.-Inf. (FH) Matthias Dahl | Software Engineer | binary-island.eu
-  services: custom software [desktop, mobile, web], server administration
+Vegard Haugland <vegard@haugland.at>
+Mob. +47 976 68 262
+Web: www.v3gard.com | foto.haugland.at
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+If you want to send me encrypted email, my public GPG key is located
+at http://v3gard.com/files/gpg.pub
