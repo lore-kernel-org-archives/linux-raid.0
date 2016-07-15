@@ -1,49 +1,33 @@
-From: Alexey Obitotskiy <aleksey.obitotskiy@intel.com>
-Subject: [PATCH] md: Prevent IO hold during accessing to failed raid5 array
-Date: Fri, 15 Jul 2016 15:24:27 +0200
-Message-ID: <1468589067-1966-1-git-send-email-aleksey.obitotskiy@intel.com>
+From: Tahsin Erdogan <tahsin@google.com>
+Subject: [PATCH] dm: fix parameter to blk_delay_queue()
+Date: Fri, 15 Jul 2016 06:27:08 -0700
+Message-ID: <1468589228-20722-1-git-send-email-tahsin@google.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: shli@kernel.org
-Cc: linux-raid@vger.kernel.org
+To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Jens Axboe <axboe@kernel.dk>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Tahsin Erdogan <tahsin@google.com>
 List-Id: linux-raid.ids
 
-After array enters in failed state (e.g. number of failed drives
-becomes more then accepted for raid5 level) it sets error flags
-(one of this flags is MD_CHANGE_PENDING). This flag prevents to
-finish all new or non-finished IOs to array and hold them in
-pending state. In some cases this can leads to deadlock situation.
+Second parameter to blk_delay_queue() must be in msec units not jiffies.
 
-For example udev handle array state changes (drives becomes faulty)
-and blkid started but unable to finish reads due to IO hold.
-At the same time we unable to get exclusive access to array
-(to stop array in our case) because another external application
-still use this array (blkid in our case).
-
-Fix makes possible to return IO with errors immediately.
-So external application can finish working with array and
-give exclusive access to other applications.
-
-Signed-off-by: Alexey Obitotskiy <aleksey.obitotskiy@intel.com>
+Signed-off-by: Tahsin Erdogan <tahsin@google.com>
 ---
- drivers/md/raid5.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/md/dm.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 6c1149d..99471b6 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4692,7 +4692,9 @@ finish:
- 	}
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index 1b2f96205361..17c63265a205 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -2175,7 +2175,7 @@ static void dm_request_fn(struct request_queue *q)
+ 		     md_in_flight(md) && rq->bio && rq->bio->bi_vcnt == 1 &&
+ 		     md->last_rq_pos == pos && md->last_rq_rw == rq_data_dir(rq)) ||
+ 		    (ti->type->busy && ti->type->busy(ti))) {
+-			blk_delay_queue(q, HZ / 100);
++			blk_delay_queue(q, 10);
+ 			return;
+ 		}
  
- 	if (!bio_list_empty(&s.return_bi)) {
--		if (test_bit(MD_CHANGE_PENDING, &conf->mddev->flags)) {
-+		if (test_bit(MD_CHANGE_PENDING, &conf->mddev->flags) &&
-+				(s.failed <= conf->max_degraded ||
-+					conf->mddev->external == 0)) {
- 			spin_lock_irq(&conf->device_lock);
- 			bio_list_merge(&conf->return_bi, &s.return_bi);
- 			spin_unlock_irq(&conf->device_lock);
 -- 
-2.7.4
+2.8.0.rc3.226.g39d4020
 
