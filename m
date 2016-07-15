@@ -1,223 +1,87 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: Recover filenames from failed RAID0
-Date: Fri, 15 Jul 2016 14:07:37 +1000
-Message-ID: <87a8hjczna.fsf@notabene.neil.brown.name>
-References: <CAAVC+N5m74MyDqZamHgy71vRMhcEY8w_OkiG-GMQKU=JG-QkxA@mail.gmail.com>
+From: Matthias Dahl <ml_linux-kernel@binary-island.eu>
+Subject: Re: Page Allocation Failures/OOM with dm-crypt on software RAID10
+ (Intel Rapid Storage) with check/repair/sync
+Date: Fri, 15 Jul 2016 09:11:02 +0200
+Message-ID: <005574d77d3f5dbc2643044a1e2468dc@mail.ud19.udmedia.de>
+References: <02580b0a303da26b669b4a9892624b13@mail.ud19.udmedia.de>
+ <20160712095013.GA14591@dhcp22.suse.cz>
+ <d9dbe0328e938eb7544fdb2aa8b5a9c7@mail.ud19.udmedia.de>
+ <20160712114920.GF14586@dhcp22.suse.cz>
+ <e6c2087730e530e77c2b12d50495bdc9@mail.ud19.udmedia.de>
+ <20160712140715.GL14586@dhcp22.suse.cz>
+ <459d501038de4d25db6d140ac5ea5f8d@mail.ud19.udmedia.de>
+ <20160713112126.GH28723@dhcp22.suse.cz>
+ <20160713121828.GI28723@dhcp22.suse.cz>
+ <74b9325c37948cf2b460bd759cff23dd@mail.ud19.udmedia.de>
+ <20160713134717.GL28723@dhcp22.suse.cz>
+ <9074e82f-bf52-011e-8bd7-5731d2b0dcaa@I-love.SAKURA.ne.jp>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAVC+N5m74MyDqZamHgy71vRMhcEY8w_OkiG-GMQKU=JG-QkxA@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Michel Dubois <michel.dubois.mtl@gmail.com>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <9074e82f-bf52-011e-8bd7-5731d2b0dcaa@I-love.SAKURA.ne.jp>
+Sender: owner-linux-mm@kvack.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, linux-raid@vger.kernel.org, linux-mm@kvack.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
+Hello...
 
-On Mon, Jul 11 2016, Michel Dubois wrote:
+I am rather persistent (stubborn?) when it comes to tracking down bugs,
+if somehow possible... and it seems it paid off... somewhat. ;-)
 
-> Dear linux-raid mailing list,
->
-> I have a RAID0 array of four 3TB disks that failed on the "third" disk.
+So I did quite a lot more further tests and came up with something very
+interesting: As long as the RAID is in sync (as-in: sync_action=idle),
+I can not for the life of me trigger this issue -- the used memory
+still explodes to most of the RAM but it oscillates back and forth.
 
-Posting to the list is sensible.  Posting to lots of over vaguely
-related people like you did is not appreciated.
+I did very stupid things to stress the machine while dd was running as
+usual on the dm-crypt device. I opened a second dd instance with the
+same parameters on the dm-crypt device. I wrote a simple program that
+allocated random amounts of memory (up to 10 GiB), memset them and after
+a random amount of time released it again -- in a continuous loop. I
+put heavy network stress on the machine... whatever I could think of.
 
->
-> I am aware of the non-redundancy of RAID0 but I would like to recover the
-> filenames from that RAID0. If I could recover some data it would be a
-> bonus.
+No matter what, the issue did not trigger. And I repeated said tests
+quite a few times over extended time periods (usually an hour or so).
+Everything worked beautifully with nice speeds and no noticeable system
+slow-downs/lag.
 
-If you lose one drive from a RAID0, you have effectively lost
-everything.  This includes file names and data.
+As soon as I issued a "check" to sync_action of the RAID device, it was
+just a matter of a second until the OOM killer kicked in and all hell
+broke loose again. And basically all of my tests where done while the
+RAID device was syncing -- due to a very unfortunate series of events.
 
-An expert in filesystem forensics might be able to recover some bits,
-but it would be a lot of work very fairly little expected reward.
+I tried to repeat that same test with an external (USB3) connected disk
+with a Linux s/w RAID10 over two partitions... but unfortunately that
+behaves rather differently. I assume it is because it is connected
+through USB and not SATA. While doing those tests on my RAID10 with the
+4 internal SATA3 disks, you can see w/ free that the "used memory" does
+explode to most of the RAM and then oscillates back and forth. With the
+same test on the external disk through, that does not happen at all. The
+used memory stays pretty much constant and only the buffers vary... but
+most of the memory is still free in that case.
 
->
-> Below you'll find the outputs of the following commands
->  mdadm --examine /dev/sd[abcd]1
->  fdisk -l
->
-> where sda1, sdb1, sdc1 and sdd1 should be the 4 RAID devices.
+I hope my persistence on the matter is not annoying and finally leads us
+somewhere where the real issue hides.
 
-The information you provide describes a 4-drive RAID1, not RAID0.
+Any suggestions, opinions and ideas are greatly appreciated as I have
+pretty much exhausted mine at this time.
 
-All the data should equally be on all devices.
+Last but not least: I switched my testing to a OpenSuSE Tumbleweed Live
+system (x86_64 w/ kernel 4.6.3) as Rawhide w/ 4.7.0rcX behaves rather
+strangely and unstable at times.
 
-Can't you just
-  mount /dev/md0 /mnt
+Thanks,
+Matthias
 
-and access the files?
-What does "fsck -n /dev/md0" report?
+-- 
+Dipl.-Inf. (FH) Matthias Dahl | Software Engineer | binary-island.eu
+  services: custom software [desktop, mobile, web], server administration
 
-what sort of filesystem did you have on /dev/md0??
-
-NeilBrown
-
-
->
-> What could be my next step?
->
-> I thank you for your time
->
-> Michel Dubois
->
-> ======================
-> mdadm --examine /dev/sd[abcd]1
-> /dev/sda1:
->           Magic : a92b4efc
->         Version : 00.90.00
->            UUID : 7d247a6e:7b5d46c8:f52d9c89:db304b21
->   Creation Time : Mon Apr 23 19:55:36 2012
->      Raid Level : raid1
->   Used Dev Size : 20980800 (20.01 GiB 21.48 GB)
->      Array Size : 20980800 (20.01 GiB 21.48 GB)
->    Raid Devices : 4
->   Total Devices : 3
-> Preferred Minor : 0
->
->     Update Time : Mon Jun 27 21:12:23 2016
->           State : clean
->  Active Devices : 3
-> Working Devices : 3
->  Failed Devices : 1
->   Spare Devices : 0
->        Checksum : 1a57db60 - correct
->          Events : 164275
->
->
->       Number   Major   Minor   RaidDevice State
-> this     0       8        1        0      active sync   /dev/sda1
->
->    0     0       8        1        0      active sync   /dev/sda1
->    1     1       8       17        1      active sync   /dev/sdb1
->    2     2       0        0        2      faulty removed
->    3     3       8       33        3      active sync   /dev/sdc1
-> /dev/sdb1:
->           Magic : a92b4efc
->         Version : 00.90.00
->            UUID : 7d247a6e:7b5d46c8:f52d9c89:db304b21
->   Creation Time : Mon Apr 23 19:55:36 2012
->      Raid Level : raid1
->   Used Dev Size : 20980800 (20.01 GiB 21.48 GB)
->      Array Size : 20980800 (20.01 GiB 21.48 GB)
->    Raid Devices : 4
->   Total Devices : 3
-> Preferred Minor : 0
->
->     Update Time : Mon Jun 27 21:12:23 2016
->           State : clean
->  Active Devices : 3
-> Working Devices : 3
->  Failed Devices : 1
->   Spare Devices : 0
->        Checksum : 1a57db72 - correct
->          Events : 164275
->
->
->       Number   Major   Minor   RaidDevice State
-> this     1       8       17        1      active sync   /dev/sdb1
->
->    0     0       8        1        0      active sync   /dev/sda1
->    1     1       8       17        1      active sync   /dev/sdb1
->    2     2       0        0        2      faulty removed
->    3     3       8       33        3      active sync   /dev/sdc1
-> /dev/sdc1:
->           Magic : a92b4efc
->         Version : 00.90.00
->            UUID : 7d247a6e:7b5d46c8:f52d9c89:db304b21
->   Creation Time : Mon Apr 23 19:55:36 2012
->      Raid Level : raid1
->   Used Dev Size : 20980800 (20.01 GiB 21.48 GB)
->      Array Size : 20980800 (20.01 GiB 21.48 GB)
->    Raid Devices : 4
->   Total Devices : 3
-> Preferred Minor : 0
->
->     Update Time : Mon Jun 27 21:12:23 2016
->           State : clean
->  Active Devices : 3
-> Working Devices : 3
->  Failed Devices : 1
->   Spare Devices : 0
->        Checksum : 1a57db86 - correct
->          Events : 164275
->
->
->       Number   Major   Minor   RaidDevice State
-> this     3       8       33        3      active sync   /dev/sdc1
->
->    0     0       8        1        0      active sync   /dev/sda1
->    1     1       8       17        1      active sync   /dev/sdb1
->    2     2       0        0        2      faulty removed
->    3     3       8       33        3      active sync   /dev/sdc1
->
-> ======================
-> fdisk -l
->
-> WARNING: GPT (GUID Partition Table) detected on '/dev/sda'! The util fdisk
-> doesn't support GPT. Use GNU Parted.
->
->
-> Disk /dev/sda: 3000.5 GB, 3000592982016 bytes
-> 255 heads, 63 sectors/track, 364801 cylinders
-> Units = cylinders of 16065 * 512 = 8225280 bytes
-> Disk identifier: 0x03afffbe
->
->    Device Boot      Start         End      Blocks   Id  System
-> /dev/sda1               1      267350  2147483647+  ee  EFI GPT
->
-> WARNING: GPT (GUID Partition Table) detected on '/dev/sdb'! The util fdisk
-> doesn't support GPT. Use GNU Parted.
->
->
-> Disk /dev/sdb: 3000.5 GB, 3000592982016 bytes
-> 255 heads, 63 sectors/track, 364801 cylinders
-> Units = cylinders of 16065 * 512 = 8225280 bytes
-> Disk identifier: 0x142a889c
->
->    Device Boot      Start         End      Blocks   Id  System
-> /dev/sdb1               1      267350  2147483647+  ee  EFI GPT
->
-> WARNING: GPT (GUID Partition Table) detected on '/dev/sdc'! The util fdisk
-> doesn't support GPT. Use GNU Parted.
->
->
-> Disk /dev/sdc: 3000.5 GB, 3000592982016 bytes
-> 255 heads, 63 sectors/track, 364801 cylinders
-> Units = cylinders of 16065 * 512 = 8225280 bytes
-> Disk identifier: 0x3daebd50
->
->    Device Boot      Start         End      Blocks   Id  System
-> /dev/sdc1               1      267350  2147483647+  ee  EFI GPT
->
-> Disk /dev/md0: 21.4 GB, 21484339200 bytes
-> 2 heads, 4 sectors/track, 5245200 cylinders
-> Units = cylinders of 8 * 512 = 4096 bytes
-> Disk identifier: 0x00000000
->
-> Disk /dev/md0 doesn't contain a valid partition table
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJXiGGLAAoJEDnsnt1WYoG59ugP/Am//yXowmEi/3WbMnMlrBQT
-aIHXjiFrlx37dw6bXm0ShKB1cMOlEgwU1r6lPy+aOvS1BaY477/vgJzjmco6zmmZ
-JFa3sJZ/JGoYaaxGSn8sXLdFuVQoGo9k9c+V878uE/kcL+aGOnLYxtDu2w/dBNdG
-CWw5qrlnu6q5DKOqIeYJiD+Q8LfYDczffRsi7dZMNQ8oYM6JDnfTJcDOWpEzNMw6
-K5YirUvtaxPJCOZRqsRcWhBxtyo7KmAMz808uECssFPaLZ6QUNesXSFrNG1Yz/f4
-6Q990hP9EO7G4pOi7TIaJ98WBFY82xvWmGXb8q+CDyUyWyQbzNnYHNuLiB7Oz1Dv
-p292yMD7I9XY/r4ivptvvpKV1/135c/AUGg2CwgTTAJcFkSQj5Klha31TrwO49Fh
-c9rHSbESsBJV6sFbMWuPXCWSWbWxSv960zkq/KbGP1rUCUPRswYnNtaajWH48zPn
-hKbGvd5vDJDirc4eu+GCPMebhaBUn0vTLX1Z2o+WQtcc3fnt2EpuEQnjyPn5CiCm
-n9k84RWzLuNDqxMZrl9hVyV50Ovpgwr9/o+m7i2Y15MoeSS3bPzaF9fT8P2uxTTg
-7JH1IEtsv9F7iPRN0RWtXzsntfXnYt4qI5rYfWGnIHtP07o1kXVDrbroe/WlD37X
-AG/NRhJBeUYyPn3aMUre
-=C/2w
------END PGP SIGNATURE-----
---=-=-=--
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
