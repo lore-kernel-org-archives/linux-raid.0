@@ -1,90 +1,169 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Help with assembling a stopped array
-Date: Fri, 15 Jul 2016 17:44:57 -0400
-Message-ID: <4f7c5ad9-5b63-6060-f6ec-1e9a82bb2b27@turmel.org>
-References: <CANz1=TGr3_ayX-CxcjsBx6Q0Ggh5PXp1STmqHW1XuMS8GGE7Lg@mail.gmail.com>
- <caf338d7-cc3f-0aca-e928-7619a64d888c@turmel.org>
- <CANz1=TEdGxvDo8WRfCwQy4Ymar2Oo7Ct9acBYJcz06XpaFM15w@mail.gmail.com>
- <69b8afa7-bfeb-e85a-aba6-b6013b2302aa@turmel.org>
- <CANz1=THkLw6tEYxPhEwb2WTfhfuRXu2E1--tAPGV2hmSSLpyLQ@mail.gmail.com>
+From: Michel Dubois <michel.dubois.mtl@gmail.com>
+Subject: Re: Recover filenames from failed RAID0
+Date: Sun, 17 Jul 2016 15:10:03 -0400
+Message-ID: <CAAVC+N78o675MpkJN=VO_zZhh7ePer1zU-ePLJi4eNH04ih3mw@mail.gmail.com>
+References: <CAAVC+N5m74MyDqZamHgy71vRMhcEY8w_OkiG-GMQKU=JG-QkxA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CANz1=THkLw6tEYxPhEwb2WTfhfuRXu2E1--tAPGV2hmSSLpyLQ@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Vegard Haugland <vegard@haugland.at>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAAVC+N5m74MyDqZamHgy71vRMhcEY8w_OkiG-GMQKU=JG-QkxA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Lars Ellenberg <lars.ellenberg@linbit.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Keith Busch <keith.busch@intel.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Peter Zijlstra <peterz@infradead.org>, Jiri Kosina <jkosina@suse.cz>, Ming Lei <ming.lei@canonical.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, NeilBrown <neilb@suse.com>, linux-kernel@vger.kernel.org, Takashi Iwai <tiwai@suse.de>, linux-bcache@vger.kernel.org, Zheng Liu <gnehzuil.liu@gmail.com>, Kent Overstreet <kent.overstreet@gmail.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Ingo Molnar <mingo@redhat.com>, Alasdair Kergon <agk@redhat.com>, Roland Kammerer <roland.kammerer@linbit.com>, Mike Snitzer <snitzer@redhat.com>
 List-Id: linux-raid.ids
 
-Hi Vegard,
+Dear linux-raid mailing list,
 
-On 07/15/2016 01:02 PM, Vegard Haugland wrote:
->> This time, omit the drive that shows up as "spare".  Use all nine
->> others.  You really want nine, so the redundancy in your array can
->> reconstruct when it hits the UREs you obviously have.  See "Current
->> Pending Sector" != 0 in your smartctl reports.
->>
->> After it assembles the nine, issue "mdadm --run /dev/md4" if it didn't
->> start.  Then "echo check >>/sys/block/md4/md/sync_action".
->>
->> Wait for that to finish.  Then add the spare back to the array.
-> 
-> OK. Here's whats been happening for the past two days. I can this
-> command to rebuild the array
-> 
-> # mdadm -A /dev/md4 /dev/sda3 /dev/sdb3 /dev/sdc3 /dev/sdd3 /dev/sde3
-> /dev/sdg3 /dev/sdh3 /dev/sdi3 /dev/sdj3 --force
-> mdadm: forcing event count in /dev/sdc3(4) from 32679348 upto 32680549
-> mdadm: forcing event count in /dev/sdd3(3) from 32677935 upto 32680549
-> mdadm: clearing FAULTY flag for device 3 in /dev/md4 for /dev/sdd3
-> mdadm: clearing FAULTY flag for device 2 in /dev/md4 for /dev/sdc3
-> mdadm: Marking array /dev/md4 as 'clean'
-> mdadm: /dev/md4 has been started with 8 drives (out of 10) and 1 spare.
+I have a RAID0 array of four 3TB disks that failed on the "third" disk.
 
-Well, that sucks.  I expected 9 drives out of 10 and no spare.  You are
-somewhat screwed.
+I am aware of the non-redundancy of RAID0 but I would like to recover
+the filenames from that RAID0. If I could recover some data it would
+be a bonus.
 
-> As the output mentioned, the array started and I got access to the
-> data again. Yay! In order to start the rebuild, I ran "echo check
->>> /sys/block/md4/md/sync_action".
-> 
-> The array just finished the rebuild, but not with the results I hoped
-> for. Here's the output from mdadm -D /dev/md4
+Below you'll find the outputs of the following commands
+ mdadm --examine /dev/sd[abcd]1
+ fdisk -l
 
-You can't successfully check or rebuild without redundancy if any device
-has an Unrecoverable Read Error.  Which you know you have because
-Pending is greater than zero on sdc (maybe others, I didn't check).
+where sda1, sdb1, sdc1 and sdd1 should be the 4 RAID devices.
 
-> For some reason, the other faulty disk (not the one mentioned below,
-> or the one that initially showed up as spare) also shows up as spare
-> now (like the good one did earlier). Issuing "echo check >>
-> /sys/block/md4/md/sync_action" does not make any attempts to rebuild
-> the array. Should I use mdadm --manage --add to re-add it before I
-> replace the faulty disk with a new one?
+What could be my next step?
 
-It is possible your mdadm is too old to fully --force assembly in this
-case, or it is a side effect of old v0.90 metadata.  With v1.x+ and
-bitmaps, re-add is very fast and unlikely to hit other UREs.  Too late
-for you.
+I thank you for your time
 
-Anyways, you can only use the eight non-spare drives.  Since at least
-one has a URE, you will need to use ddrescue to complete copy those
-drives onto new drives (or your "spares" with their superblocks erased).
- Then assemble the array (8 members) with the new drives and the non-URE
-old drives.  Then add spares one at a time, waiting for rebuild to
-finish for each.
+Michel Dubois
 
-If you have very critical data you want to make sure you retrieve,
-assemble the eight non-spare drives one more time before making copies,
-*don't* do the check, then mount and copy those critical files.  Might
-hit a URE anyways, but is the best way to get a quick backup.
+======================
+mdadm --examine /dev/sd[abcd]1
+/dev/sda1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 7d247a6e:7b5d46c8:f52d9c89:db304b21
+  Creation Time : Mon Apr 23 19:55:36 2012
+     Raid Level : raid1
+  Used Dev Size : 20980800 (20.01 GiB 21.48 GB)
+     Array Size : 20980800 (20.01 GiB 21.48 GB)
+   Raid Devices : 4
+  Total Devices : 3
+Preferred Minor : 0
 
-Once you start copying devices, be very careful that you keep copies and
-roles straight, so that you don't try to assemble with two devices with
-the same role number.
+    Update Time : Mon Jun 27 21:12:23 2016
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : 1a57db60 - correct
+         Events : 164275
 
-You *will* lose some data where the UREs are.  You'll need to fsck to
-fix the corruption, if it happens to be in a file or folder.
 
-Phil
+      Number   Major   Minor   RaidDevice State
+this     0       8        1        0      active sync   /dev/sda1
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       17        1      active sync   /dev/sdb1
+   2     2       0        0        2      faulty removed
+   3     3       8       33        3      active sync   /dev/sdc1
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 7d247a6e:7b5d46c8:f52d9c89:db304b21
+  Creation Time : Mon Apr 23 19:55:36 2012
+     Raid Level : raid1
+  Used Dev Size : 20980800 (20.01 GiB 21.48 GB)
+     Array Size : 20980800 (20.01 GiB 21.48 GB)
+   Raid Devices : 4
+  Total Devices : 3
+Preferred Minor : 0
+
+    Update Time : Mon Jun 27 21:12:23 2016
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : 1a57db72 - correct
+         Events : 164275
+
+
+      Number   Major   Minor   RaidDevice State
+this     1       8       17        1      active sync   /dev/sdb1
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       17        1      active sync   /dev/sdb1
+   2     2       0        0        2      faulty removed
+   3     3       8       33        3      active sync   /dev/sdc1
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 7d247a6e:7b5d46c8:f52d9c89:db304b21
+  Creation Time : Mon Apr 23 19:55:36 2012
+     Raid Level : raid1
+  Used Dev Size : 20980800 (20.01 GiB 21.48 GB)
+     Array Size : 20980800 (20.01 GiB 21.48 GB)
+   Raid Devices : 4
+  Total Devices : 3
+Preferred Minor : 0
+
+    Update Time : Mon Jun 27 21:12:23 2016
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : 1a57db86 - correct
+         Events : 164275
+
+
+      Number   Major   Minor   RaidDevice State
+this     3       8       33        3      active sync   /dev/sdc1
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       17        1      active sync   /dev/sdb1
+   2     2       0        0        2      faulty removed
+   3     3       8       33        3      active sync   /dev/sdc1
+
+======================
+fdisk -l
+
+WARNING: GPT (GUID Partition Table) detected on '/dev/sda'! The util
+fdisk doesn't support GPT. Use GNU Parted.
+
+
+Disk /dev/sda: 3000.5 GB, 3000592982016 bytes
+255 heads, 63 sectors/track, 364801 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0x03afffbe
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1               1      267350  2147483647+  ee  EFI GPT
+
+WARNING: GPT (GUID Partition Table) detected on '/dev/sdb'! The util
+fdisk doesn't support GPT. Use GNU Parted.
+
+
+Disk /dev/sdb: 3000.5 GB, 3000592982016 bytes
+255 heads, 63 sectors/track, 364801 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0x142a889c
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdb1               1      267350  2147483647+  ee  EFI GPT
+
+WARNING: GPT (GUID Partition Table) detected on '/dev/sdc'! The util
+fdisk doesn't support GPT. Use GNU Parted.
+
+
+Disk /dev/sdc: 3000.5 GB, 3000592982016 bytes
+255 heads, 63 sectors/track, 364801 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0x3daebd50
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdc1               1      267350  2147483647+  ee  EFI GPT
+
+Disk /dev/md0: 21.4 GB, 21484339200 bytes
+2 heads, 4 sectors/track, 5245200 cylinders
+Units = cylinders of 8 * 512 = 4096 bytes
+Disk identifier: 0x00000000
+
+Disk /dev/md0 doesn't contain a valid partition table
