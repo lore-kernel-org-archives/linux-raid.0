@@ -1,169 +1,160 @@
-From: Michel Dubois <michel.dubois.mtl@gmail.com>
-Subject: Re: Recover filenames from failed RAID0
-Date: Sun, 17 Jul 2016 15:10:03 -0400
-Message-ID: <CAAVC+N78o675MpkJN=VO_zZhh7ePer1zU-ePLJi4eNH04ih3mw@mail.gmail.com>
-References: <CAAVC+N5m74MyDqZamHgy71vRMhcEY8w_OkiG-GMQKU=JG-QkxA@mail.gmail.com>
+From: Bhatia Amit <amitbhatia@rocketmail.com>
+Subject: Cannot start array on disk
+Date: Sun, 17 Jul 2016 19:59:52 +0000 (UTC)
+Message-ID: <1124605843.526681.1468785592654.JavaMail.yahoo@mail.yahoo.com>
+References: <1124605843.526681.1468785592654.JavaMail.yahoo.ref@mail.yahoo.com>
+Reply-To: Bhatia Amit <amitbhatia@rocketmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAAVC+N5m74MyDqZamHgy71vRMhcEY8w_OkiG-GMQKU=JG-QkxA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Lars Ellenberg <lars.ellenberg@linbit.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Keith Busch <keith.busch@intel.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Peter Zijlstra <peterz@infradead.org>, Jiri Kosina <jkosina@suse.cz>, Ming Lei <ming.lei@canonical.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, NeilBrown <neilb@suse.com>, linux-kernel@vger.kernel.org, Takashi Iwai <tiwai@suse.de>, linux-bcache@vger.kernel.org, Zheng Liu <gnehzuil.liu@gmail.com>, Kent Overstreet <kent.overstreet@gmail.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Ingo Molnar <mingo@redhat.com>, Alasdair Kergon <agk@redhat.com>, Roland Kammerer <roland.kammerer@linbit.com>, Mike Snitzer <snitzer@redhat.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Dear linux-raid mailing list,
+Hi
 
-I have a RAID0 array of four 3TB disks that failed on the "third" disk.
+I have a WD Live duo setup with two 3TB drives in RAID1. After a recent power surge etc, I could not access the enclosure data. I removed the drives out from the enclosure and connected them via esata cable to a Linux laptop. One of the drives had physical noise and failed to connect at all. The other drive was able to connect and showed up as /dev/sdc. Following some online search, I issued the following commands to get some results, but am unable to mount the drive to a linux laptop via esata. Questions:
 
-I am aware of the non-redundancy of RAID0 but I would like to recover
-the filenames from that RAID0. If I could recover some data it would
-be a bonus.
+* Ideally both sdc3 and sdc4 should have shown RAID=RAID1. If sdc4 is showing RAID=linear, is it because the other drive went totally bad, and software decided to reconfigure this drive from RAID1 to linear ?
+* Given the one of the two drives is totally dead, is it still possible to reconfigure, mount and recover data from the single drive?
+* I tried scanning the drive via r-linux and it does show files exist, but does not show any folder information. So data is there on the drive. Is there a way to recreate the setup with just this single drive, so that I can extract files with folder information?
+* Looking at an online "derrick" script, the script seems to call mdadm create with the "missing" flag. Is that something I should be doing to be able to assemble and recover data from the drive ?
+"mdadm --create $rootfsRaid --verbose --metadata=0.9 --raid-devices=2 --level=raid1 --run $diskRoot1 missing"
 
-Below you'll find the outputs of the following commands
- mdadm --examine /dev/sd[abcd]1
- fdisk -l
+Thanks
+Amit
 
-where sda1, sdb1, sdc1 and sdd1 should be the 4 RAID devices.
 
-What could be my next step?
 
-I thank you for your time
+Parted shows missing filesystem for sdc4 :
+$ sudo parted -l
+Model: ATA WDC WD30EZRX-00D (scsi)
+Disk /dev/sdc: 3001GB
+Sector size (logical/physical): 512B/4096B
+Partition Table: gpt
 
-Michel Dubois
+Number  Start   End     Size    File system  Name     Flags
+ 3      15.7MB  528MB   513MB                primary  raid
+ 1      528MB   2576MB  2048MB  ext3         primary  raid
+ 2      2576MB  4624MB  2048MB  ext3         primary  raid
+ 4      4624MB  3001GB  2996GB               primary  raid
 
-======================
-mdadm --examine /dev/sd[abcd]1
-/dev/sda1:
+
+Mdstat shows only sdc3 as active, but sdc4 as inactive:
+$ sudo cat /proc/mdstat
+Personalities : [linear] [raid1]
+md126 : active (auto-read-only) raid1 sdc3[2]
+      500724 blocks super 1.0 [2/1] [_U]
+
+md127 : inactive sdc4[0](S)
+      2925750264 blocks super 1.0
+
+unused devices: <none>
+
+
+Trying to assemble and scan only shows /dev/sdc3 as active:
+$ sudo mdadm --stop /dev/md12[567]
+mdadm: stopped /dev/md126
+mdadm: stopped /dev/md127
+$ sudo cat /proc/mdstat
+Personalities : [linear] [raid1]
+unused devices: <none>
+$ sudo mdadm --assemble --scan
+mdadm: /dev/md/MyBookLiveDuo:3 assembled from 1 drive - not enough to start the array.
+mdadm: /dev/md/MyBookLiveDuo:2 has been started with 1 drive (out of 2).
+mdadm: /dev/md/MyBookLiveDuo:3 assembled from 1 drive - not enough to start the array.
+$ sudo cat /proc/mdstat
+Personalities : [linear] [raid1]
+md127 : active raid1 sdc3[2]
+      500724 blocks super 1.0 [2/1] [_U]
+
+unused devices: <none>
+
+
+Output from examine sdc3 is below, which mdstat says is active. It says RAID level = RAID1.
+$ sudo mdadm --examine /dev/sdc3
+/dev/sdc3:
           Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 7d247a6e:7b5d46c8:f52d9c89:db304b21
-  Creation Time : Mon Apr 23 19:55:36 2012
+        Version : 1.0
+    Feature Map : 0x0
+     Array UUID : 7c040c5e:9c30ac6d:e534a129:20457e22
+           Name : MyBookLiveDuo:2
+  Creation Time : Wed Dec 31 19:01:40 1969
      Raid Level : raid1
-  Used Dev Size : 20980800 (20.01 GiB 21.48 GB)
-     Array Size : 20980800 (20.01 GiB 21.48 GB)
-   Raid Devices : 4
-  Total Devices : 3
-Preferred Minor : 0
+   Raid Devices : 2
 
-    Update Time : Mon Jun 27 21:12:23 2016
+ Avail Dev Size : 1001448 (489.07 MiB 512.74 MB)
+     Array Size : 500724 (489.07 MiB 512.74 MB)
+   Super Offset : 1001456 sectors
           State : clean
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 1
-  Spare Devices : 0
-       Checksum : 1a57db60 - correct
-         Events : 164275
+    Device UUID : 1d9fe3e3:d5ac7387:d9ededba:88ca24a5
+
+    Update Time : Sun Jul  3 11:53:31 2016
+       Checksum : 31589560 - correct
+         Events : 101
 
 
-      Number   Major   Minor   RaidDevice State
-this     0       8        1        0      active sync   /dev/sda1
+   Device Role : Active device 1
+   Array State : .A ('A' == active, '.' == missing)
+$ cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
+md126 : active (auto-read-only) raid1 sdc3[2]
+      500724 blocks super 1.0 [2/1] [_U]
 
-   0     0       8        1        0      active sync   /dev/sda1
-   1     1       8       17        1      active sync   /dev/sdb1
-   2     2       0        0        2      faulty removed
-   3     3       8       33        3      active sync   /dev/sdc1
-/dev/sdb1:
+md127 : inactive sdc4[0](S)
+      2925750264 blocks super 1.0
+
+unused devices: <none>
+
+
+
+But, output from examine sdc4 is below, which says RAID level = linear.
+$ sudo mdadm --examine /dev/sdc4
+/dev/sdc4:
           Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 7d247a6e:7b5d46c8:f52d9c89:db304b21
-  Creation Time : Mon Apr 23 19:55:36 2012
-     Raid Level : raid1
-  Used Dev Size : 20980800 (20.01 GiB 21.48 GB)
-     Array Size : 20980800 (20.01 GiB 21.48 GB)
-   Raid Devices : 4
-  Total Devices : 3
-Preferred Minor : 0
+        Version : 1.0
+    Feature Map : 0x0
+     Array UUID : 374e689e:3bfd050c:ab0b0dce:2d50f5fd
+           Name : MyBookLiveDuo:3
+  Creation Time : Mon Sep 16 14:53:47 2013
+     Raid Level : linear
+   Raid Devices : 2
 
-    Update Time : Mon Jun 27 21:12:23 2016
+ Avail Dev Size : 5851500528 (2790.21 GiB 2995.97 GB)
+  Used Dev Size : 0
+   Super Offset : 5851500528 sectors
           State : clean
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 1
-  Spare Devices : 0
-       Checksum : 1a57db72 - correct
-         Events : 164275
+    Device UUID : 9096f74b:0a8f2b61:93347be3:6d3b6c1b
+
+    Update Time : Mon Sep 16 14:53:47 2013
+       Checksum : 77aa5963 - correct
+         Events : 0
+
+       Rounding : 0K
+
+   Device Role : Active device 0
+   Array State : AA ('A' == active, '.' == missing)
 
 
-      Number   Major   Minor   RaidDevice State
-this     1       8       17        1      active sync   /dev/sdb1
+And partitions output is:
+$ cat /proc/partitions
+major minor  #blocks  name
 
-   0     0       8        1        0      active sync   /dev/sda1
-   1     1       8       17        1      active sync   /dev/sdb1
-   2     2       0        0        2      faulty removed
-   3     3       8       33        3      active sync   /dev/sdc1
-/dev/sdc1:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 7d247a6e:7b5d46c8:f52d9c89:db304b21
-  Creation Time : Mon Apr 23 19:55:36 2012
-     Raid Level : raid1
-  Used Dev Size : 20980800 (20.01 GiB 21.48 GB)
-     Array Size : 20980800 (20.01 GiB 21.48 GB)
-   Raid Devices : 4
-  Total Devices : 3
-Preferred Minor : 0
+   8        0 1953514584 sda
+   8        1     102400 sda1
+   8        2 1953411072 sda2
+   8       16 1953514584 sdb
+   8       17     248832 sdb1
+   8       18          1 sdb2
+   8       21 1953263616 sdb5
+ 252        0 1953261568 dm-0
+ 252        1 1919635456 dm-1
+ 252        2   33488896 dm-2
+   8       32 2930266584 sdc
+   8       33    1999872 sdc1
+   8       34    1999872 sdc2
+   8       35     500736 sdc3
+   8       36 2925750272 sdc4
 
-    Update Time : Mon Jun 27 21:12:23 2016
-          State : clean
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 1
-  Spare Devices : 0
-       Checksum : 1a57db86 - correct
-         Events : 164275
-
-
-      Number   Major   Minor   RaidDevice State
-this     3       8       33        3      active sync   /dev/sdc1
-
-   0     0       8        1        0      active sync   /dev/sda1
-   1     1       8       17        1      active sync   /dev/sdb1
-   2     2       0        0        2      faulty removed
-   3     3       8       33        3      active sync   /dev/sdc1
-
-======================
-fdisk -l
-
-WARNING: GPT (GUID Partition Table) detected on '/dev/sda'! The util
-fdisk doesn't support GPT. Use GNU Parted.
-
-
-Disk /dev/sda: 3000.5 GB, 3000592982016 bytes
-255 heads, 63 sectors/track, 364801 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-Disk identifier: 0x03afffbe
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sda1               1      267350  2147483647+  ee  EFI GPT
-
-WARNING: GPT (GUID Partition Table) detected on '/dev/sdb'! The util
-fdisk doesn't support GPT. Use GNU Parted.
-
-
-Disk /dev/sdb: 3000.5 GB, 3000592982016 bytes
-255 heads, 63 sectors/track, 364801 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-Disk identifier: 0x142a889c
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdb1               1      267350  2147483647+  ee  EFI GPT
-
-WARNING: GPT (GUID Partition Table) detected on '/dev/sdc'! The util
-fdisk doesn't support GPT. Use GNU Parted.
-
-
-Disk /dev/sdc: 3000.5 GB, 3000592982016 bytes
-255 heads, 63 sectors/track, 364801 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-Disk identifier: 0x3daebd50
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdc1               1      267350  2147483647+  ee  EFI GPT
-
-Disk /dev/md0: 21.4 GB, 21484339200 bytes
-2 heads, 4 sectors/track, 5245200 cylinders
-Units = cylinders of 8 * 512 = 4096 bytes
-Disk identifier: 0x00000000
-
-Disk /dev/md0 doesn't contain a valid partition table
+   9      126     500724 md126
