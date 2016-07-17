@@ -1,160 +1,502 @@
-From: Bhatia Amit <amitbhatia@rocketmail.com>
-Subject: Cannot start array on disk
-Date: Sun, 17 Jul 2016 19:59:52 +0000 (UTC)
-Message-ID: <1124605843.526681.1468785592654.JavaMail.yahoo@mail.yahoo.com>
-References: <1124605843.526681.1468785592654.JavaMail.yahoo.ref@mail.yahoo.com>
-Reply-To: Bhatia Amit <amitbhatia@rocketmail.com>
+From: Stewart Ives <ivessm@softecusa.com>
+Subject: Re: Recover filenames from failed RAID0
+Date: Sun, 17 Jul 2016 18:56:25 -0400
+Message-ID: <CAKnfFb2R4cGWjPBBz2q3qv6ny+4dr0K=RFrVYgrAJXBkQ-cwwQ@mail.gmail.com>
+References: <CAAVC+N5m74MyDqZamHgy71vRMhcEY8w_OkiG-GMQKU=JG-QkxA@mail.gmail.com>
+	<CAAVC+N78o675MpkJN=VO_zZhh7ePer1zU-ePLJi4eNH04ih3mw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: multipart/mixed; boundary="===============6215187354937173538=="
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <CAAVC+N78o675MpkJN=VO_zZhh7ePer1zU-ePLJi4eNH04ih3mw@mail.gmail.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Michel Dubois <michel.dubois.mtl@gmail.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Ming Lei <ming.lei@canonical.com>, NeilBrown <neilb@suse.com>, Keith Busch <keith.busch@intel.com>, dm-devel@redhat.com, Alasdair Kergon <agk@redhat.com>, Roland Kammerer <roland.kammerer@linbit.com>, Zheng Liu <gnehzuil.liu@gmail.com>, Takashi Iwai <tiwai@suse.de>, Ingo Molnar <mingo@redhat.com>, Shaohua Li <shli@kernel.org>, Kent Overstreet <kent.overstreet@gmail.com>, linux-block@vger.kernel.org, linux-bcache@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Jiri Kosina <jkosina@suse.cz>, linux-kernel@vger.kernel.org, Lars Ellenberg <lars.ellenberg@linbit.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 List-Id: linux-raid.ids
 
-Hi
+--===============6215187354937173538==
+Content-Type: multipart/alternative; boundary=001a114c6d8c39507d0537dcc5ad
 
-I have a WD Live duo setup with two 3TB drives in RAID1. After a recent power surge etc, I could not access the enclosure data. I removed the drives out from the enclosure and connected them via esata cable to a Linux laptop. One of the drives had physical noise and failed to connect at all. The other drive was able to connect and showed up as /dev/sdc. Following some online search, I issued the following commands to get some results, but am unable to mount the drive to a linux laptop via esata. Questions:
+--001a114c6d8c39507d0537dcc5ad
+Content-Type: text/plain; charset=UTF-8
 
-* Ideally both sdc3 and sdc4 should have shown RAID=RAID1. If sdc4 is showing RAID=linear, is it because the other drive went totally bad, and software decided to reconfigure this drive from RAID1 to linear ?
-* Given the one of the two drives is totally dead, is it still possible to reconfigure, mount and recover data from the single drive?
-* I tried scanning the drive via r-linux and it does show files exist, but does not show any folder information. So data is there on the drive. Is there a way to recreate the setup with just this single drive, so that I can extract files with folder information?
-* Looking at an online "derrick" script, the script seems to call mdadm create with the "missing" flag. Is that something I should be doing to be able to assemble and recover data from the drive ?
-"mdadm --create $rootfsRaid --verbose --metadata=0.9 --raid-devices=2 --level=raid1 --run $diskRoot1 missing"
+Michael,
 
-Thanks
-Amit
+I'll preface my reply with the statement that I am far from an expert at
+this but I can read and understand the descriptions of the different RAID
+levels and it seems to me with a RAID0 you are SOL if you lose a device in
+the array. Just by the very nature of the RAID0 configuration there is
+absolutely NO redundancy. The only reason anyone would configure such a
+system is for SPEED and the only data that should be permitted on a RAID0
+array is temp or working data that is recoverable by other means in the
+event of a failure. I know of many Videographers that use a SSD RAID0 array
+for working on their current project but they also copy that array out
+about every hour for backup.
 
+I pose only one question to you. Did you have a backup?
 
+Good luck.
 
-Parted shows missing filesystem for sdc4 :
-$ sudo parted -l
-Model: ATA WDC WD30EZRX-00D (scsi)
-Disk /dev/sdc: 3001GB
-Sector size (logical/physical): 512B/4096B
-Partition Table: gpt
-
-Number  Start   End     Size    File system  Name     Flags
- 3      15.7MB  528MB   513MB                primary  raid
- 1      528MB   2576MB  2048MB  ext3         primary  raid
- 2      2576MB  4624MB  2048MB  ext3         primary  raid
- 4      4624MB  3001GB  2996GB               primary  raid
+-stew
 
 
-Mdstat shows only sdc3 as active, but sdc4 as inactive:
-$ sudo cat /proc/mdstat
-Personalities : [linear] [raid1]
-md126 : active (auto-read-only) raid1 sdc3[2]
-      500724 blocks super 1.0 [2/1] [_U]
+>>
+>> Stewart M. Ives
+>> SofTEC USA
+>> 1717 Bridge St
+>> New Cumberland, PA 17070 USA
+>>
+>> Tel: 717-910-4600
+>> Fax: 888-371-6022
+>> Skype: softecusa-ivessm
+>> EMail: ivessm@softecusa.com
+>> WebSite: www.softecusa.com
+>>
 
-md127 : inactive sdc4[0](S)
-      2925750264 blocks super 1.0
+On Sun, Jul 17, 2016 at 3:10 PM, Michel Dubois <michel.dubois.mtl@gmail.com>
+wrote:
 
-unused devices: <none>
+> Dear linux-raid mailing list,
+>
+> I have a RAID0 array of four 3TB disks that failed on the "third" disk.
+>
+> I am aware of the non-redundancy of RAID0 but I would like to recover
+> the filenames from that RAID0. If I could recover some data it would
+> be a bonus.
+>
+> Below you'll find the outputs of the following commands
+>  mdadm --examine /dev/sd[abcd]1
+>  fdisk -l
+>
+> where sda1, sdb1, sdc1 and sdd1 should be the 4 RAID devices.
+>
+> What could be my next step?
+>
+> I thank you for your time
+>
+> Michel Dubois
+>
+> ======================
+> mdadm --examine /dev/sd[abcd]1
+> /dev/sda1:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : 7d247a6e:7b5d46c8:f52d9c89:db304b21
+>   Creation Time : Mon Apr 23 19:55:36 2012
+>      Raid Level : raid1
+>   Used Dev Size : 20980800 (20.01 GiB 21.48 GB)
+>      Array Size : 20980800 (20.01 GiB 21.48 GB)
+>    Raid Devices : 4
+>   Total Devices : 3
+> Preferred Minor : 0
+>
+>     Update Time : Mon Jun 27 21:12:23 2016
+>           State : clean
+>  Active Devices : 3
+> Working Devices : 3
+>  Failed Devices : 1
+>   Spare Devices : 0
+>        Checksum : 1a57db60 - correct
+>          Events : 164275
+>
+>
+>       Number   Major   Minor   RaidDevice State
+> this     0       8        1        0      active sync   /dev/sda1
+>
+>    0     0       8        1        0      active sync   /dev/sda1
+>    1     1       8       17        1      active sync   /dev/sdb1
+>    2     2       0        0        2      faulty removed
+>    3     3       8       33        3      active sync   /dev/sdc1
+> /dev/sdb1:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : 7d247a6e:7b5d46c8:f52d9c89:db304b21
+>   Creation Time : Mon Apr 23 19:55:36 2012
+>      Raid Level : raid1
+>   Used Dev Size : 20980800 (20.01 GiB 21.48 GB)
+>      Array Size : 20980800 (20.01 GiB 21.48 GB)
+>    Raid Devices : 4
+>   Total Devices : 3
+> Preferred Minor : 0
+>
+>     Update Time : Mon Jun 27 21:12:23 2016
+>           State : clean
+>  Active Devices : 3
+> Working Devices : 3
+>  Failed Devices : 1
+>   Spare Devices : 0
+>        Checksum : 1a57db72 - correct
+>          Events : 164275
+>
+>
+>       Number   Major   Minor   RaidDevice State
+> this     1       8       17        1      active sync   /dev/sdb1
+>
+>    0     0       8        1        0      active sync   /dev/sda1
+>    1     1       8       17        1      active sync   /dev/sdb1
+>    2     2       0        0        2      faulty removed
+>    3     3       8       33        3      active sync   /dev/sdc1
+> /dev/sdc1:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : 7d247a6e:7b5d46c8:f52d9c89:db304b21
+>   Creation Time : Mon Apr 23 19:55:36 2012
+>      Raid Level : raid1
+>   Used Dev Size : 20980800 (20.01 GiB 21.48 GB)
+>      Array Size : 20980800 (20.01 GiB 21.48 GB)
+>    Raid Devices : 4
+>   Total Devices : 3
+> Preferred Minor : 0
+>
+>     Update Time : Mon Jun 27 21:12:23 2016
+>           State : clean
+>  Active Devices : 3
+> Working Devices : 3
+>  Failed Devices : 1
+>   Spare Devices : 0
+>        Checksum : 1a57db86 - correct
+>          Events : 164275
+>
+>
+>       Number   Major   Minor   RaidDevice State
+> this     3       8       33        3      active sync   /dev/sdc1
+>
+>    0     0       8        1        0      active sync   /dev/sda1
+>    1     1       8       17        1      active sync   /dev/sdb1
+>    2     2       0        0        2      faulty removed
+>    3     3       8       33        3      active sync   /dev/sdc1
+>
+> ======================
+> fdisk -l
+>
+> WARNING: GPT (GUID Partition Table) detected on '/dev/sda'! The util
+> fdisk doesn't support GPT. Use GNU Parted.
+>
+>
+> Disk /dev/sda: 3000.5 GB, 3000592982016 bytes
+> 255 heads, 63 sectors/track, 364801 cylinders
+> Units = cylinders of 16065 * 512 = 8225280 bytes
+> Disk identifier: 0x03afffbe
+>
+>    Device Boot      Start         End      Blocks   Id  System
+> /dev/sda1               1      267350  2147483647+  ee  EFI GPT
+>
+> WARNING: GPT (GUID Partition Table) detected on '/dev/sdb'! The util
+> fdisk doesn't support GPT. Use GNU Parted.
+>
+>
+> Disk /dev/sdb: 3000.5 GB, 3000592982016 bytes
+> 255 heads, 63 sectors/track, 364801 cylinders
+> Units = cylinders of 16065 * 512 = 8225280 bytes
+> Disk identifier: 0x142a889c
+>
+>    Device Boot      Start         End      Blocks   Id  System
+> /dev/sdb1               1      267350  2147483647+  ee  EFI GPT
+>
+> WARNING: GPT (GUID Partition Table) detected on '/dev/sdc'! The util
+> fdisk doesn't support GPT. Use GNU Parted.
+>
+>
+> Disk /dev/sdc: 3000.5 GB, 3000592982016 bytes
+> 255 heads, 63 sectors/track, 364801 cylinders
+> Units = cylinders of 16065 * 512 = 8225280 bytes
+> Disk identifier: 0x3daebd50
+>
+>    Device Boot      Start         End      Blocks   Id  System
+> /dev/sdc1               1      267350  2147483647+  ee  EFI GPT
+>
+> Disk /dev/md0: 21.4 GB, 21484339200 bytes
+> 2 heads, 4 sectors/track, 5245200 cylinders
+> Units = cylinders of 8 * 512 = 4096 bytes
+> Disk identifier: 0x00000000
+>
+> Disk /dev/md0 doesn't contain a valid partition table
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+--001a114c6d8c39507d0537dcc5ad
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">Michael,<input name=3D"virtru-metadata" type=3D"hidden" va=
+lue=3D"{&quot;email-policy&quot;:{&quot;state&quot;:&quot;closed&quot;,&quo=
+t;expirationUnit&quot;:&quot;days&quot;,&quot;disableCopyPaste&quot;:false,=
+&quot;disablePrint&quot;:false,&quot;disableForwarding&quot;:false,&quot;ex=
+pires&quot;:false,&quot;isManaged&quot;:false},&quot;attachments&quot;:{}}"=
+><div><br></div><div>I&#39;ll preface my reply with the statement that I am=
+ far from an expert at this but I can read and understand the descriptions =
+of the different RAID levels and it seems to me with a RAID0 you are SOL if=
+ you lose a device in the array. Just by the very nature of the RAID0 confi=
+guration there is absolutely NO redundancy. The only reason anyone would co=
+nfigure such a system is for SPEED and the only data that should be permitt=
+ed on a RAID0 array is temp or working data that is recoverable by other me=
+ans in the event of a failure. I know of many Videographers that use a SSD =
+RAID0 array for working on their current project but they also copy that ar=
+ray out about every hour for backup.</div><div><br></div><div>I pose only o=
+ne question to you. Did you have a backup?</div><div><br></div><div>Good lu=
+ck.</div><div><br></div><div>-stew</div><div><br></div></div><div class=3D"=
+gmail_extra"><br clear=3D"all"><div><div class=3D"gmail_signature" data-sma=
+rtmail=3D"gmail_signature"><div dir=3D"ltr"><div><font size=3D"2">&gt;&gt;
+ <br>
+&gt;&gt; Stewart M.=20
+Ives
+ <br>
+&gt;&gt; SofTEC=20
+USA
+ <br>
+&gt;&gt; 1717 Bridge=20
+St
+ <br>
+&gt;&gt; New Cumberland, PA=20
+17070 USA<br>
+&gt;&gt;
+ <br>
+&gt;&gt; Tel:=20
+717-910-4600
+ <br>
+&gt;&gt; Fax: 888-371-6022<br>&gt;&gt; Skype: softecusa-ivessm<br>
+&gt;&gt; EMail:=20
+<a href=3D"mailto:ivessm@softecusa.com" target=3D"_blank">ivessm@softecusa.=
+com</a>
+ <br>
+&gt;&gt; WebSite: <a href=3D"http://www.softecusa.com/" target=3D"_blank">w=
+ww.softecusa.com</a>
+ <br>
+&gt;&gt;
+ </font><div></div><div></div><div></div></div></div></div></div>
+<br><div class=3D"gmail_quote">On Sun, Jul 17, 2016 at 3:10 PM, Michel Dubo=
+is <span dir=3D"ltr">&lt;<a href=3D"mailto:michel.dubois.mtl@gmail.com" tar=
+get=3D"_blank">michel.dubois.mtl@gmail.com</a>&gt;</span> wrote:<br><blockq=
+uote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc =
+solid;padding-left:1ex">Dear linux-raid mailing list,<br>
+<br>
+I have a RAID0 array of four 3TB disks that failed on the &quot;third&quot;=
+ disk.<br>
+<br>
+I am aware of the non-redundancy of RAID0 but I would like to recover<br>
+the filenames from that RAID0. If I could recover some data it would<br>
+be a bonus.<br>
+<br>
+Below you&#39;ll find the outputs of the following commands<br>
+=C2=A0mdadm --examine /dev/sd[abcd]1<br>
+=C2=A0fdisk -l<br>
+<br>
+where sda1, sdb1, sdc1 and sdd1 should be the 4 RAID devices.<br>
+<br>
+What could be my next step?<br>
+<br>
+I thank you for your time<br>
+<br>
+Michel Dubois<br>
+<br>
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D<br>
+mdadm --examine /dev/sd[abcd]1<br>
+/dev/sda1:<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Magic : a92b4efc<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 Version : 00.90.00<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0UUID : 7d247a6e:7b5d46c8:f52d9c89:=
+db304b21<br>
+=C2=A0 Creation Time : Mon Apr 23 19:55:36 2012<br>
+=C2=A0 =C2=A0 =C2=A0Raid Level : raid1<br>
+=C2=A0 Used Dev Size : 20980800 (20.01 GiB 21.48 GB)<br>
+=C2=A0 =C2=A0 =C2=A0Array Size : 20980800 (20.01 GiB 21.48 GB)<br>
+=C2=A0 =C2=A0Raid Devices : 4<br>
+=C2=A0 Total Devices : 3<br>
+Preferred Minor : 0<br>
+<br>
+=C2=A0 =C2=A0 Update Time : Mon Jun 27 21:12:23 2016<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 State : clean<br>
+=C2=A0Active Devices : 3<br>
+Working Devices : 3<br>
+=C2=A0Failed Devices : 1<br>
+=C2=A0 Spare Devices : 0<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0Checksum : 1a57db60 - correct<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0Events : 164275<br>
+<br>
+<br>
+=C2=A0 =C2=A0 =C2=A0 Number=C2=A0 =C2=A0Major=C2=A0 =C2=A0Minor=C2=A0 =C2=
+=A0RaidDevice State<br>
+this=C2=A0 =C2=A0 =C2=A00=C2=A0 =C2=A0 =C2=A0 =C2=A08=C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 1=C2=A0 =C2=A0 =C2=A0 =C2=A0 0=C2=A0 =C2=A0 =C2=A0 active sync=C2=A0=
+ =C2=A0/dev/sda1<br>
+<br>
+=C2=A0 =C2=A00=C2=A0 =C2=A0 =C2=A00=C2=A0 =C2=A0 =C2=A0 =C2=A08=C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 1=C2=A0 =C2=A0 =C2=A0 =C2=A0 0=C2=A0 =C2=A0 =C2=A0 active=
+ sync=C2=A0 =C2=A0/dev/sda1<br>
+=C2=A0 =C2=A01=C2=A0 =C2=A0 =C2=A01=C2=A0 =C2=A0 =C2=A0 =C2=A08=C2=A0 =C2=
+=A0 =C2=A0 =C2=A017=C2=A0 =C2=A0 =C2=A0 =C2=A0 1=C2=A0 =C2=A0 =C2=A0 active=
+ sync=C2=A0 =C2=A0/dev/sdb1<br>
+=C2=A0 =C2=A02=C2=A0 =C2=A0 =C2=A02=C2=A0 =C2=A0 =C2=A0 =C2=A00=C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 0=C2=A0 =C2=A0 =C2=A0 =C2=A0 2=C2=A0 =C2=A0 =C2=A0 faulty=
+ removed<br>
+=C2=A0 =C2=A03=C2=A0 =C2=A0 =C2=A03=C2=A0 =C2=A0 =C2=A0 =C2=A08=C2=A0 =C2=
+=A0 =C2=A0 =C2=A033=C2=A0 =C2=A0 =C2=A0 =C2=A0 3=C2=A0 =C2=A0 =C2=A0 active=
+ sync=C2=A0 =C2=A0/dev/sdc1<br>
+/dev/sdb1:<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Magic : a92b4efc<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 Version : 00.90.00<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0UUID : 7d247a6e:7b5d46c8:f52d9c89:=
+db304b21<br>
+=C2=A0 Creation Time : Mon Apr 23 19:55:36 2012<br>
+=C2=A0 =C2=A0 =C2=A0Raid Level : raid1<br>
+=C2=A0 Used Dev Size : 20980800 (20.01 GiB 21.48 GB)<br>
+=C2=A0 =C2=A0 =C2=A0Array Size : 20980800 (20.01 GiB 21.48 GB)<br>
+=C2=A0 =C2=A0Raid Devices : 4<br>
+=C2=A0 Total Devices : 3<br>
+Preferred Minor : 0<br>
+<br>
+=C2=A0 =C2=A0 Update Time : Mon Jun 27 21:12:23 2016<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 State : clean<br>
+=C2=A0Active Devices : 3<br>
+Working Devices : 3<br>
+=C2=A0Failed Devices : 1<br>
+=C2=A0 Spare Devices : 0<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0Checksum : 1a57db72 - correct<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0Events : 164275<br>
+<br>
+<br>
+=C2=A0 =C2=A0 =C2=A0 Number=C2=A0 =C2=A0Major=C2=A0 =C2=A0Minor=C2=A0 =C2=
+=A0RaidDevice State<br>
+this=C2=A0 =C2=A0 =C2=A01=C2=A0 =C2=A0 =C2=A0 =C2=A08=C2=A0 =C2=A0 =C2=A0 =
+=C2=A017=C2=A0 =C2=A0 =C2=A0 =C2=A0 1=C2=A0 =C2=A0 =C2=A0 active sync=C2=A0=
+ =C2=A0/dev/sdb1<br>
+<br>
+=C2=A0 =C2=A00=C2=A0 =C2=A0 =C2=A00=C2=A0 =C2=A0 =C2=A0 =C2=A08=C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 1=C2=A0 =C2=A0 =C2=A0 =C2=A0 0=C2=A0 =C2=A0 =C2=A0 active=
+ sync=C2=A0 =C2=A0/dev/sda1<br>
+=C2=A0 =C2=A01=C2=A0 =C2=A0 =C2=A01=C2=A0 =C2=A0 =C2=A0 =C2=A08=C2=A0 =C2=
+=A0 =C2=A0 =C2=A017=C2=A0 =C2=A0 =C2=A0 =C2=A0 1=C2=A0 =C2=A0 =C2=A0 active=
+ sync=C2=A0 =C2=A0/dev/sdb1<br>
+=C2=A0 =C2=A02=C2=A0 =C2=A0 =C2=A02=C2=A0 =C2=A0 =C2=A0 =C2=A00=C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 0=C2=A0 =C2=A0 =C2=A0 =C2=A0 2=C2=A0 =C2=A0 =C2=A0 faulty=
+ removed<br>
+=C2=A0 =C2=A03=C2=A0 =C2=A0 =C2=A03=C2=A0 =C2=A0 =C2=A0 =C2=A08=C2=A0 =C2=
+=A0 =C2=A0 =C2=A033=C2=A0 =C2=A0 =C2=A0 =C2=A0 3=C2=A0 =C2=A0 =C2=A0 active=
+ sync=C2=A0 =C2=A0/dev/sdc1<br>
+/dev/sdc1:<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Magic : a92b4efc<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 Version : 00.90.00<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0UUID : 7d247a6e:7b5d46c8:f52d9c89:=
+db304b21<br>
+=C2=A0 Creation Time : Mon Apr 23 19:55:36 2012<br>
+=C2=A0 =C2=A0 =C2=A0Raid Level : raid1<br>
+=C2=A0 Used Dev Size : 20980800 (20.01 GiB 21.48 GB)<br>
+=C2=A0 =C2=A0 =C2=A0Array Size : 20980800 (20.01 GiB 21.48 GB)<br>
+=C2=A0 =C2=A0Raid Devices : 4<br>
+=C2=A0 Total Devices : 3<br>
+Preferred Minor : 0<br>
+<br>
+=C2=A0 =C2=A0 Update Time : Mon Jun 27 21:12:23 2016<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 State : clean<br>
+=C2=A0Active Devices : 3<br>
+Working Devices : 3<br>
+=C2=A0Failed Devices : 1<br>
+=C2=A0 Spare Devices : 0<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0Checksum : 1a57db86 - correct<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0Events : 164275<br>
+<br>
+<br>
+=C2=A0 =C2=A0 =C2=A0 Number=C2=A0 =C2=A0Major=C2=A0 =C2=A0Minor=C2=A0 =C2=
+=A0RaidDevice State<br>
+this=C2=A0 =C2=A0 =C2=A03=C2=A0 =C2=A0 =C2=A0 =C2=A08=C2=A0 =C2=A0 =C2=A0 =
+=C2=A033=C2=A0 =C2=A0 =C2=A0 =C2=A0 3=C2=A0 =C2=A0 =C2=A0 active sync=C2=A0=
+ =C2=A0/dev/sdc1<br>
+<br>
+=C2=A0 =C2=A00=C2=A0 =C2=A0 =C2=A00=C2=A0 =C2=A0 =C2=A0 =C2=A08=C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 1=C2=A0 =C2=A0 =C2=A0 =C2=A0 0=C2=A0 =C2=A0 =C2=A0 active=
+ sync=C2=A0 =C2=A0/dev/sda1<br>
+=C2=A0 =C2=A01=C2=A0 =C2=A0 =C2=A01=C2=A0 =C2=A0 =C2=A0 =C2=A08=C2=A0 =C2=
+=A0 =C2=A0 =C2=A017=C2=A0 =C2=A0 =C2=A0 =C2=A0 1=C2=A0 =C2=A0 =C2=A0 active=
+ sync=C2=A0 =C2=A0/dev/sdb1<br>
+=C2=A0 =C2=A02=C2=A0 =C2=A0 =C2=A02=C2=A0 =C2=A0 =C2=A0 =C2=A00=C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 0=C2=A0 =C2=A0 =C2=A0 =C2=A0 2=C2=A0 =C2=A0 =C2=A0 faulty=
+ removed<br>
+=C2=A0 =C2=A03=C2=A0 =C2=A0 =C2=A03=C2=A0 =C2=A0 =C2=A0 =C2=A08=C2=A0 =C2=
+=A0 =C2=A0 =C2=A033=C2=A0 =C2=A0 =C2=A0 =C2=A0 3=C2=A0 =C2=A0 =C2=A0 active=
+ sync=C2=A0 =C2=A0/dev/sdc1<br>
+<br>
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D<br>
+fdisk -l<br>
+<br>
+WARNING: GPT (GUID Partition Table) detected on &#39;/dev/sda&#39;! The uti=
+l<br>
+fdisk doesn&#39;t support GPT. Use GNU Parted.<br>
+<br>
+<br>
+Disk /dev/sda: 3000.5 GB, 3000592982016 bytes<br>
+255 heads, 63 sectors/track, 364801 cylinders<br>
+Units =3D cylinders of 16065 * 512 =3D 8225280 bytes<br>
+Disk identifier: 0x03afffbe<br>
+<br>
+=C2=A0 =C2=A0Device Boot=C2=A0 =C2=A0 =C2=A0 Start=C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0End=C2=A0 =C2=A0 =C2=A0 Blocks=C2=A0 =C2=A0Id=C2=A0 System<br>
+/dev/sda1=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A01=C2=A0 =C2=
+=A0 =C2=A0 267350=C2=A0 2147483647+=C2=A0 ee=C2=A0 EFI GPT<br>
+<br>
+WARNING: GPT (GUID Partition Table) detected on &#39;/dev/sdb&#39;! The uti=
+l<br>
+fdisk doesn&#39;t support GPT. Use GNU Parted.<br>
+<br>
+<br>
+Disk /dev/sdb: 3000.5 GB, 3000592982016 bytes<br>
+255 heads, 63 sectors/track, 364801 cylinders<br>
+Units =3D cylinders of 16065 * 512 =3D 8225280 bytes<br>
+Disk identifier: 0x142a889c<br>
+<br>
+=C2=A0 =C2=A0Device Boot=C2=A0 =C2=A0 =C2=A0 Start=C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0End=C2=A0 =C2=A0 =C2=A0 Blocks=C2=A0 =C2=A0Id=C2=A0 System<br>
+/dev/sdb1=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A01=C2=A0 =C2=
+=A0 =C2=A0 267350=C2=A0 2147483647+=C2=A0 ee=C2=A0 EFI GPT<br>
+<br>
+WARNING: GPT (GUID Partition Table) detected on &#39;/dev/sdc&#39;! The uti=
+l<br>
+fdisk doesn&#39;t support GPT. Use GNU Parted.<br>
+<br>
+<br>
+Disk /dev/sdc: 3000.5 GB, 3000592982016 bytes<br>
+255 heads, 63 sectors/track, 364801 cylinders<br>
+Units =3D cylinders of 16065 * 512 =3D 8225280 bytes<br>
+Disk identifier: 0x3daebd50<br>
+<br>
+=C2=A0 =C2=A0Device Boot=C2=A0 =C2=A0 =C2=A0 Start=C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0End=C2=A0 =C2=A0 =C2=A0 Blocks=C2=A0 =C2=A0Id=C2=A0 System<br>
+/dev/sdc1=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A01=C2=A0 =C2=
+=A0 =C2=A0 267350=C2=A0 2147483647+=C2=A0 ee=C2=A0 EFI GPT<br>
+<br>
+Disk /dev/md0: 21.4 GB, 21484339200 bytes<br>
+2 heads, 4 sectors/track, 5245200 cylinders<br>
+Units =3D cylinders of 8 * 512 =3D 4096 bytes<br>
+Disk identifier: 0x00000000<br>
+<br>
+Disk /dev/md0 doesn&#39;t contain a valid partition table<br>
+--<br>
+To unsubscribe from this list: send the line &quot;unsubscribe linux-raid&q=
+uot; in<br>
+the body of a message to <a href=3D"mailto:majordomo@vger.kernel.org">major=
+domo@vger.kernel.org</a><br>
+More majordomo info at=C2=A0 <a href=3D"http://vger.kernel.org/majordomo-in=
+fo.html" rel=3D"noreferrer" target=3D"_blank">http://vger.kernel.org/majord=
+omo-info.html</a><br>
+</blockquote></div><br></div>
+
+--001a114c6d8c39507d0537dcc5ad--
 
 
-Trying to assemble and scan only shows /dev/sdc3 as active:
-$ sudo mdadm --stop /dev/md12[567]
-mdadm: stopped /dev/md126
-mdadm: stopped /dev/md127
-$ sudo cat /proc/mdstat
-Personalities : [linear] [raid1]
-unused devices: <none>
-$ sudo mdadm --assemble --scan
-mdadm: /dev/md/MyBookLiveDuo:3 assembled from 1 drive - not enough to start the array.
-mdadm: /dev/md/MyBookLiveDuo:2 has been started with 1 drive (out of 2).
-mdadm: /dev/md/MyBookLiveDuo:3 assembled from 1 drive - not enough to start the array.
-$ sudo cat /proc/mdstat
-Personalities : [linear] [raid1]
-md127 : active raid1 sdc3[2]
-      500724 blocks super 1.0 [2/1] [_U]
-
-unused devices: <none>
+--===============6215187354937173538==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 
-Output from examine sdc3 is below, which mdstat says is active. It says RAID level = RAID1.
-$ sudo mdadm --examine /dev/sdc3
-/dev/sdc3:
-          Magic : a92b4efc
-        Version : 1.0
-    Feature Map : 0x0
-     Array UUID : 7c040c5e:9c30ac6d:e534a129:20457e22
-           Name : MyBookLiveDuo:2
-  Creation Time : Wed Dec 31 19:01:40 1969
-     Raid Level : raid1
-   Raid Devices : 2
-
- Avail Dev Size : 1001448 (489.07 MiB 512.74 MB)
-     Array Size : 500724 (489.07 MiB 512.74 MB)
-   Super Offset : 1001456 sectors
-          State : clean
-    Device UUID : 1d9fe3e3:d5ac7387:d9ededba:88ca24a5
-
-    Update Time : Sun Jul  3 11:53:31 2016
-       Checksum : 31589560 - correct
-         Events : 101
-
-
-   Device Role : Active device 1
-   Array State : .A ('A' == active, '.' == missing)
-$ cat /proc/mdstat
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
-md126 : active (auto-read-only) raid1 sdc3[2]
-      500724 blocks super 1.0 [2/1] [_U]
-
-md127 : inactive sdc4[0](S)
-      2925750264 blocks super 1.0
-
-unused devices: <none>
-
-
-
-But, output from examine sdc4 is below, which says RAID level = linear.
-$ sudo mdadm --examine /dev/sdc4
-/dev/sdc4:
-          Magic : a92b4efc
-        Version : 1.0
-    Feature Map : 0x0
-     Array UUID : 374e689e:3bfd050c:ab0b0dce:2d50f5fd
-           Name : MyBookLiveDuo:3
-  Creation Time : Mon Sep 16 14:53:47 2013
-     Raid Level : linear
-   Raid Devices : 2
-
- Avail Dev Size : 5851500528 (2790.21 GiB 2995.97 GB)
-  Used Dev Size : 0
-   Super Offset : 5851500528 sectors
-          State : clean
-    Device UUID : 9096f74b:0a8f2b61:93347be3:6d3b6c1b
-
-    Update Time : Mon Sep 16 14:53:47 2013
-       Checksum : 77aa5963 - correct
-         Events : 0
-
-       Rounding : 0K
-
-   Device Role : Active device 0
-   Array State : AA ('A' == active, '.' == missing)
-
-
-And partitions output is:
-$ cat /proc/partitions
-major minor  #blocks  name
-
-   8        0 1953514584 sda
-   8        1     102400 sda1
-   8        2 1953411072 sda2
-   8       16 1953514584 sdb
-   8       17     248832 sdb1
-   8       18          1 sdb2
-   8       21 1953263616 sdb5
- 252        0 1953261568 dm-0
- 252        1 1919635456 dm-1
- 252        2   33488896 dm-2
-   8       32 2930266584 sdc
-   8       33    1999872 sdc1
-   8       34    1999872 sdc2
-   8       35     500736 sdc3
-   8       36 2925750272 sdc4
-
-   9      126     500724 md126
+--===============6215187354937173538==--
