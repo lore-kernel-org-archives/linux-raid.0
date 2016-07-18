@@ -1,51 +1,154 @@
-From: Matthias Dahl <ml_linux-kernel@binary-island.eu>
-Subject: Re: Page Allocation Failures/OOM with dm-crypt on software RAID10
- (Intel Rapid Storage) with check/repair/sync
-Date: Mon, 18 Jul 2016 09:24:28 +0200
-Message-ID: <3e08f5186a4650775a56bd0aabad6a44@mail.ud19.udmedia.de>
-References: <02580b0a303da26b669b4a9892624b13@mail.ud19.udmedia.de>
- <20160712095013.GA14591@dhcp22.suse.cz>
- <d9dbe0328e938eb7544fdb2aa8b5a9c7@mail.ud19.udmedia.de>
- <20160712114920.GF14586@dhcp22.suse.cz>
- <e6c2087730e530e77c2b12d50495bdc9@mail.ud19.udmedia.de>
- <20160712140715.GL14586@dhcp22.suse.cz>
- <459d501038de4d25db6d140ac5ea5f8d@mail.ud19.udmedia.de>
- <20160713112126.GH28723@dhcp22.suse.cz>
- <20160713121828.GI28723@dhcp22.suse.cz>
- <74b9325c37948cf2b460bd759cff23dd@mail.ud19.udmedia.de>
- <20160713134717.GL28723@dhcp22.suse.cz>
- <9074e82f-bf52-011e-8bd7-5731d2b0dcaa@I-love.SAKURA.ne.jp>
- <005574d77d3f5dbc2643044a1e2468dc@mail.ud19.udmedia.de>
+From: Coly Li <colyli@suse.de>
+Subject: a hard lockup in md raid5 sequential write (v4.7-rc7)
+Date: Mon, 18 Jul 2016 16:55:04 +0800
+Message-ID: <cd2e1d88-683c-81f7-c1e7-674d04ccdda1@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=gbk
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <005574d77d3f5dbc2643044a1e2468dc@mail.ud19.udmedia.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Michal Hocko <mhocko@kernel.org>, Mike Snitzer <snitzer@redhat.com>, linux-mm@kvack.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello again...
+Hi,
 
-So I spent all weekend doing further tests, since this issue is
-really bugging me for obvious reasons.
+These days I observe a hard lockup in md raid5. This issue can be easily
+reproduced in kernel v4.7-rc7 (up to commit:
+47ef4ad2684d380dd6d596140fb79395115c3950) by this fio job file:
 
-I thought it would be beneficial if I created a bug report that
-summarized and centralized everything in one place rather than
-having everything spread across several lists and posts.
+[global]
+direct=1
+thread=1
+[job]
+filename=/dev/md0
+blocksize=8m
+rw=write
+name=raid5
+lockmem=1
+numjobs=40
+write_bw_log=example
+group_reporting=1
+norandommap=1
+log_avg_msec=0
+runtime=600.0
+iodepth=64
+write_lat_log=example
 
-Here the bug report I created:
-https://bugzilla.kernel.org/show_bug.cgi?id=135481
+Where md0 is a raid5 target assembled by 3 Memblaze (PBlaze3) PCIe SSDs.
+This test runs on a dual 10-core processors Dell T7910 machine.
 
-If anyone has any suggestions, ideas or wants me to do further tests,
-please just let me know. There is not much more I can do at this point
-without further help/guidance.
+From the crash dump, dmesg of the panic by nmi watchdog timeout is,
 
-Thanks,
-Matthias
+[ 2330.544036] NMI watchdog: Watchdog detected hard LOCKUP on cpu
+18.dModules linked in: raid456 async_raid6_recov async_memcpy libcrc32c
+async_pq async_xor async_tx joydev st memdisk(O) memcon(O) af_packet
+iscsi_ibft iscsi_boot_sysfs msr snd_hda_codec_hdmi intel_rapl sb_edac
+raid1 edac_core x86_pkg_temp_thermal intel_powerclamp coretemp raid0
+md_mod snd_hda_codec_realtek snd_hda_codec_generic kvm_intel kvm
+snd_hda_intel irqbypass snd_hda_codec crct10dif_pclmul snd_hda_core
+crc32_pclmul ghash_clmulni_intel snd_hwdep dm_mod aesni_intel aes_x86_64
+snd_pcm mei_wdt e1000e igb iTCO_wdt lrw dcdbas iTCO_vendor_support
+snd_timer gf128mul mei_me dell_smm_hwmon glue_helper serio_raw
+ablk_helper cryptd snd lpc_ich pcspkr ptp i2c_i801 mei mptctl dca
+mfd_core pps_core soundcore mptbase shpchp fjes tpm_tis tpm btrfs xor
+raid6_pq hid_generic usbhid crc32c_intel nouveau video mxm_wmi
+i2c_algo_bit drm_kms_helper syscopyarea sysfillrect sysimgblt xhci_pci
+fb_sys_fops ehci_pci xhci_hcd ehci_hcd sr_mod ttm cd
+[ 2330.544036] CPU: 18 PID: 30308 Comm: kworker/u42:4 Tainted: G
+  O    4.7.0-rc7-vanilla #1
+[ 2330.544036] Hardware name: Dell Inc. Precision Tower 7910/0215PR,
+BIOS A07 04/14/2015
+[ 2330.544036] Workqueue: raid5wq raid5_do_work [raid456]
+[ 2330.544036]  0000000000000000 ffff88103f405bb0 ffffffff813a6eea
+0000000000000000
+[ 2330.544036]  0000000000000000 ffff88103f405bc8 ffffffff8113c3e8
+ffff8808dc7d8800
+[ 2330.544036]  ffff88103f405c00 ffffffff81180f8c 0000000000000001
+ffff88103f40a440
+[ 2330.544036] Call Trace:
+[ 2330.544036]  <NMI>  [<ffffffff813a6eea>] dump_stack+0x63/0x89
+[ 2330.544036]  [<ffffffff8113c3e8>] watchdog_overflow_callback+0xc8/0xf0
+[ 2330.544036]  [<ffffffff81180f8c>] __perf_event_overflow+0x7c/0x1b0
+[ 2330.544036]  [<ffffffff8118b644>] perf_event_overflow+0x14/0x20
+[ 2330.544036]  [<ffffffff8100bf57>] intel_pmu_handle_irq+0x1c7/0x460
+[ 2330.544036]  [<ffffffff810053ad>] perf_event_nmi_handler+0x2d/0x50
+[ 2330.544036]  [<ffffffff810312e1>] nmi_handle+0x61/0x140
+[ 2330.544036]  [<ffffffff81031888>] default_do_nmi+0x48/0x130
+[ 2330.544036]  [<ffffffff81031a5b>] do_nmi+0xeb/0x160
+[ 2330.544036]  [<ffffffff816e5c71>] end_repeat_nmi+0x1a/0x1e
+[ 2330.544036]  [<ffffffff810cbcc7>] ?
+native_queued_spin_lock_slowpath+0x117/0x1a0
+[ 2330.544036]  [<ffffffff810cbcc7>] ?
+native_queued_spin_lock_slowpath+0x117/0x1a0
+[ 2330.544036]  [<ffffffff810cbcc7>] ?
+native_queued_spin_lock_slowpath+0x117/0x1a0
+[ 2330.544036]  <<EOE>>  [<ffffffff81193bbf>]
+queued_spin_lock_slowpath+0xb/0xf
+[ 2330.544036]  [<ffffffff816e31ff>] _raw_spin_lock_irq+0x2f/0x40
+[ 2330.544036]  [<ffffffffa084c5d8>]
+handle_active_stripes.isra.51+0x378/0x4f0 [raid456]
+[ 2330.544036]  [<ffffffffa083f1a6>] ?
+raid5_wakeup_stripe_thread+0x96/0x1b0 [raid456]
+[ 2330.544036]  [<ffffffffa084cf1d>] raid5_do_work+0x8d/0x120 [raid456]
+[ 2330.544036]  [<ffffffff8109b5bb>] process_one_work+0x14b/0x450
+[ 2330.544036]  [<ffffffff8109b9eb>] worker_thread+0x12b/0x490
+[ 2330.544036]  [<ffffffff8109b8c0>] ? process_one_work+0x450/0x450
+[ 2330.544036]  [<ffffffff810a1599>] kthread+0xc9/0xe0
+[ 2330.544036]  [<ffffffff816e3a9f>] ret_from_fork+0x1f/0x40
+[ 2330.544036]  [<ffffffff810a14d0>] ? kthread_create_on_node+0x180/0x180
+[ 2330.544036] Kernel panic - not syncing: Hard LOCKUP
+[ 2330.544036] CPU: 18 PID: 30308 Comm: kworker/u42:4 Tainted: G
+  O    4.7.0-rc7-vanilla #1
+[ 2330.544036] Hardware name: Dell Inc. Precision Tower 7910/0215PR,
+BIOS A07 04/14/2015
+[ 2330.544036] Workqueue: raid5wq raid5_do_work [raid456]
+[ 2330.544036]  0000000000000000 ffff88103f405b28 ffffffff813a6eea
+ffffffff81a45241
+[ 2330.544036]  0000000000000000 ffff88103f405ba0 ffffffff81193642
+0000000000000010
+[ 2330.544036]  ffff88103f405bb0 ffff88103f405b50 0000000000000086
+ffffffff81a2a2e2
+[ 2330.544036] Call Trace:
+[ 2330.544036]  <NMI>  [<ffffffff813a6eea>] dump_stack+0x63/0x89
+[ 2330.544036]  [<ffffffff81193642>] panic+0xd2/0x223
+[ 2330.544036]  [<ffffffff810823af>] nmi_panic+0x3f/0x40
+[ 2330.544036]  [<ffffffff8113c401>] watchdog_overflow_callback+0xe1/0xf0
+[ 2330.544036]  [<ffffffff81180f8c>] __perf_event_overflow+0x7c/0x1b0
+[ 2330.544036]  [<ffffffff8118b644>] perf_event_overflow+0x14/0x20
+[ 2330.544036]  [<ffffffff8100bf57>] intel_pmu_handle_irq+0x1c7/0x460
+[ 2330.544036]  [<ffffffff810053ad>] perf_event_nmi_handler+0x2d/0x50
+[ 2330.544036]  [<ffffffff810312e1>] nmi_handle+0x61/0x140
+[ 2330.544036]  [<ffffffff81031888>] default_do_nmi+0x48/0x130
+[ 2330.544036]  [<ffffffff81031a5b>] do_nmi+0xeb/0x160
+[ 2330.544036]  [<ffffffff816e5c71>] end_repeat_nmi+0x1a/0x1e
+[ 2330.544036]  [<ffffffff810cbcc7>] ?
+native_queued_spin_lock_slowpath+0x117/0x1a0
+[ 2330.544036]  [<ffffffff810cbcc7>] ?
+native_queued_spin_lock_slowpath+0x117/0x1a0
+[ 2330.544036]  [<ffffffff810cbcc7>] ?
+native_queued_spin_lock_slowpath+0x117/0x1a0
+[ 2330.544036]  <<EOE>>  [<ffffffff81193bbf>]
+queued_spin_lock_slowpath+0xb/0xf
+[ 2330.544036]  [<ffffffff816e31ff>] _raw_spin_lock_irq+0x2f/0x40
+[ 2330.544036]  [<ffffffffa084c5d8>]
+handle_active_stripes.isra.51+0x378/0x4f0 [raid456]
+[ 2330.544036]  [<ffffffffa083f1a6>] ?
+raid5_wakeup_stripe_thread+0x96/0x1b0 [raid456]
+[ 2330.544036]  [<ffffffffa084cf1d>] raid5_do_work+0x8d/0x120 [raid456]
+[ 2330.544036]  [<ffffffff8109b5bb>] process_one_work+0x14b/0x450
+[ 2330.544036]  [<ffffffff8109b9eb>] worker_thread+0x12b/0x490
+[ 2330.544036]  [<ffffffff8109b8c0>] ? process_one_work+0x450/0x450
+[ 2330.544036]  [<ffffffff810a1599>] kthread+0xc9/0xe0
+[ 2330.544036]  [<ffffffff816e3a9f>] ret_from_fork+0x1f/0x40
+[ 2330.544036]  [<ffffffff810a14d0>] ? kthread_create_on_node+0x180/0x180
 
--- 
-Dipl.-Inf. (FH) Matthias Dahl | Software Engineer | binary-island.eu
-  services: custom software [desktop, mobile, web], server administration
+The crash dump file is quite big (124MB), I need to find a method to
+share, if anyone of you wants it, please let me know.
+
+IMHO, this hard lockup seems related to bitmap allocation, because it
+can be easily reproduced on a new-created md raid5 target, with 40+
+processes doing big size (8MB+) writing.
+
+Thanks.
+
+Coly
