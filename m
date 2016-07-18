@@ -1,73 +1,188 @@
-From: "Vaughan" <cxt9401@163.com>
-Subject: How does md gurantee not miss to free an active stripe_head when md stops?
-Date: Mon, 18 Jul 2016 17:18:22 +0800
-Message-ID: <002501d1e0d5$5543af10$ffcb0d30$@163.com>
+From: keld@keldix.com
+Subject: Re: Recover filenames from failed RAID0
+Date: Mon, 18 Jul 2016 11:37:41 +0200
+Message-ID: <20160718093740.GB24856@www5.open-std.org>
+References: <CAAVC+N5m74MyDqZamHgy71vRMhcEY8w_OkiG-GMQKU=JG-QkxA@mail.gmail.com> <CAAVC+N78o675MpkJN=VO_zZhh7ePer1zU-ePLJi4eNH04ih3mw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: zh-cn
+Content-Disposition: inline
+In-Reply-To: <CAAVC+N78o675MpkJN=VO_zZhh7ePer1zU-ePLJi4eNH04ih3mw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Michel Dubois <michel.dubois.mtl@gmail.com>
+Cc: linux-raid@vger.kernel.org, Lars Ellenberg <lars.ellenberg@linbit.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Keith Busch <keith.busch@intel.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Peter Zijlstra <peterz@infradead.org>, Jiri Kosina <jkosina@suse.cz>, Ming Lei <ming.lei@canonical.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, NeilBrown <neilb@suse.com>, linux-kernel@vger.kernel.org, Takashi Iwai <tiwai@suse.de>, linux-bcache@vger.kernel.org, Zheng Liu <gnehzuil.liu@gmail.com>, Kent Overstreet <kent.overstreet@gmail.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Ingo Molnar <mingo@redhat.com>, Alasdair Kergon <agk@redhat.com>, Roland Kammerer <roland.kammerer@linbit.com>, Mike Snitzer <snitzer@redhat.com>
 List-Id: linux-raid.ids
 
-Hi all,
+Hi
 
-I'm using v3.10 md code for develop. Recently I encounter a problem where an
-read IO usually returned from physical disk after md has been stopped.
-I reviewed the code and find when md stops, it unregister raid5d and call
-shrink_stripes() to free only the *inactive* stripes.
-Why is it sure that there is no active stripes linking in handle_list?
-I know before stop, it uses O_EXCL open the md, but that won't stop others
-open it and send IO to it.
+Which file system did you use?
+I once wrote some code to get files out of an ext3 filesystem, 
+http://www.open-std.org/keld/readme-salvage.html
 
-In my case, an OOPS usually happens like below:
-I keep calling mdadm -stop to stop a md, but lsof shows it's opened by
-systemd-udevd, so "still is inuse".
-30s later, udev  reports timeout and be kicked with SIGKILL.
-systemd-udevd: worker [19335]/devices/virtual/block/md41 timeout; kill it.
+Maybe you can make some corrections for it to work
+as I remember the code, then if you hit a directory, it will salvage the file names and the files
+of that directory.
 
-Then md stop process is able to continue and go passed the free_conf(). But
-there is an active_stripe left.
+Best regards
+keld
 
-kernel:
-shrink_stripes:conf(ffff880004affc00)->md(ffff8802d95b4000,md41)active_strip
-es=1     <== this is my debug print.
-kernel: md41: detected capacity change from 3409128980480 to 0
-mdadm: stopped /dev/md41
-
-After md is stopped, an read IO from underlying returned and OOPS.
-
-[190830.867371] md: unbind<dm-64>
-[190830.876345] md: export_rdev(dm-64)
-[190831.201619] BUG: unable to handle kernel 
-[190831.202875] paging request at 0000000000002050
-[190831.204101] IP: [<ffffffffa089a349>]
-raid5_end_read_request+0xf9/0xdc0[raid456]
-
-I found this returned bio is caused by a user read page, which is caused by
-a fput to kill_bdev.
-PID: 21345  TASK: ffff8803e5a916c0  CPU: 1   COMMAND: "mdadm"
-#0 [ffff88016f777b88] __schedule at ffffffff815f513d
-#1 [ffff88016f777bf0] io_schedule at ffffffff815f599d
-#2 [ffff88016f777c08] sleep_on_page at ffffffff81155f1e
-#3 [ffff88016f777c18] __wait_on_bit_lock at ffffffff815f38ab
-#4 [ffff88016f777c58] __lock_page at ffffffff81156038
-#5 [ffff88016f777cb0] truncate_inode_pages_range at ffffffff8116645e
-#6 [ffff88016f777e00] truncate_inode_pages at ffffffff811664b5
-#7 [ffff88016f777e10] kill_bdev at ffffffff811ffaef
-#8 [ffff88016f777e28] __blkdev_put at ffffffff81201124
-#9 [ffff88016f777e68] blkdev_put at ffffffff81201bae
-#10 [ffff88016f777e98] blkdev_close at ffffffff81201d55
-#11 [ffff88016f777ea8] __fput at ffffffff811c81b9
-#12 [ffff88016f777ef0] ____fput at ffffffff811c847e
-#13 [ffff88016f777f00] task_work_run at ffffffff81093b37
-#14 [ffff88016f777f30] do_notify_resume at ffffffff81013b0c
-#15 [ffff88016f777f50] int_signal at ffffffff8160049d
-
-Anyone can answer my question? Thanks.
-
-Vaughan
-
-
+On Sun, Jul 17, 2016 at 03:10:03PM -0400, Michel Dubois wrote:
+> Dear linux-raid mailing list,
+> 
+> I have a RAID0 array of four 3TB disks that failed on the "third" disk.
+> 
+> I am aware of the non-redundancy of RAID0 but I would like to recover
+> the filenames from that RAID0. If I could recover some data it would
+> be a bonus.
+> 
+> Below you'll find the outputs of the following commands
+>  mdadm --examine /dev/sd[abcd]1
+>  fdisk -l
+> 
+> where sda1, sdb1, sdc1 and sdd1 should be the 4 RAID devices.
+> 
+> What could be my next step?
+> 
+> I thank you for your time
+> 
+> Michel Dubois
+> 
+> ======================
+> mdadm --examine /dev/sd[abcd]1
+> /dev/sda1:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : 7d247a6e:7b5d46c8:f52d9c89:db304b21
+>   Creation Time : Mon Apr 23 19:55:36 2012
+>      Raid Level : raid1
+>   Used Dev Size : 20980800 (20.01 GiB 21.48 GB)
+>      Array Size : 20980800 (20.01 GiB 21.48 GB)
+>    Raid Devices : 4
+>   Total Devices : 3
+> Preferred Minor : 0
+> 
+>     Update Time : Mon Jun 27 21:12:23 2016
+>           State : clean
+>  Active Devices : 3
+> Working Devices : 3
+>  Failed Devices : 1
+>   Spare Devices : 0
+>        Checksum : 1a57db60 - correct
+>          Events : 164275
+> 
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     0       8        1        0      active sync   /dev/sda1
+> 
+>    0     0       8        1        0      active sync   /dev/sda1
+>    1     1       8       17        1      active sync   /dev/sdb1
+>    2     2       0        0        2      faulty removed
+>    3     3       8       33        3      active sync   /dev/sdc1
+> /dev/sdb1:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : 7d247a6e:7b5d46c8:f52d9c89:db304b21
+>   Creation Time : Mon Apr 23 19:55:36 2012
+>      Raid Level : raid1
+>   Used Dev Size : 20980800 (20.01 GiB 21.48 GB)
+>      Array Size : 20980800 (20.01 GiB 21.48 GB)
+>    Raid Devices : 4
+>   Total Devices : 3
+> Preferred Minor : 0
+> 
+>     Update Time : Mon Jun 27 21:12:23 2016
+>           State : clean
+>  Active Devices : 3
+> Working Devices : 3
+>  Failed Devices : 1
+>   Spare Devices : 0
+>        Checksum : 1a57db72 - correct
+>          Events : 164275
+> 
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     1       8       17        1      active sync   /dev/sdb1
+> 
+>    0     0       8        1        0      active sync   /dev/sda1
+>    1     1       8       17        1      active sync   /dev/sdb1
+>    2     2       0        0        2      faulty removed
+>    3     3       8       33        3      active sync   /dev/sdc1
+> /dev/sdc1:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : 7d247a6e:7b5d46c8:f52d9c89:db304b21
+>   Creation Time : Mon Apr 23 19:55:36 2012
+>      Raid Level : raid1
+>   Used Dev Size : 20980800 (20.01 GiB 21.48 GB)
+>      Array Size : 20980800 (20.01 GiB 21.48 GB)
+>    Raid Devices : 4
+>   Total Devices : 3
+> Preferred Minor : 0
+> 
+>     Update Time : Mon Jun 27 21:12:23 2016
+>           State : clean
+>  Active Devices : 3
+> Working Devices : 3
+>  Failed Devices : 1
+>   Spare Devices : 0
+>        Checksum : 1a57db86 - correct
+>          Events : 164275
+> 
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     3       8       33        3      active sync   /dev/sdc1
+> 
+>    0     0       8        1        0      active sync   /dev/sda1
+>    1     1       8       17        1      active sync   /dev/sdb1
+>    2     2       0        0        2      faulty removed
+>    3     3       8       33        3      active sync   /dev/sdc1
+> 
+> ======================
+> fdisk -l
+> 
+> WARNING: GPT (GUID Partition Table) detected on '/dev/sda'! The util
+> fdisk doesn't support GPT. Use GNU Parted.
+> 
+> 
+> Disk /dev/sda: 3000.5 GB, 3000592982016 bytes
+> 255 heads, 63 sectors/track, 364801 cylinders
+> Units = cylinders of 16065 * 512 = 8225280 bytes
+> Disk identifier: 0x03afffbe
+> 
+>    Device Boot      Start         End      Blocks   Id  System
+> /dev/sda1               1      267350  2147483647+  ee  EFI GPT
+> 
+> WARNING: GPT (GUID Partition Table) detected on '/dev/sdb'! The util
+> fdisk doesn't support GPT. Use GNU Parted.
+> 
+> 
+> Disk /dev/sdb: 3000.5 GB, 3000592982016 bytes
+> 255 heads, 63 sectors/track, 364801 cylinders
+> Units = cylinders of 16065 * 512 = 8225280 bytes
+> Disk identifier: 0x142a889c
+> 
+>    Device Boot      Start         End      Blocks   Id  System
+> /dev/sdb1               1      267350  2147483647+  ee  EFI GPT
+> 
+> WARNING: GPT (GUID Partition Table) detected on '/dev/sdc'! The util
+> fdisk doesn't support GPT. Use GNU Parted.
+> 
+> 
+> Disk /dev/sdc: 3000.5 GB, 3000592982016 bytes
+> 255 heads, 63 sectors/track, 364801 cylinders
+> Units = cylinders of 16065 * 512 = 8225280 bytes
+> Disk identifier: 0x3daebd50
+> 
+>    Device Boot      Start         End      Blocks   Id  System
+> /dev/sdc1               1      267350  2147483647+  ee  EFI GPT
+> 
+> Disk /dev/md0: 21.4 GB, 21484339200 bytes
+> 2 heads, 4 sectors/track, 5245200 cylinders
+> Units = cylinders of 8 * 512 = 4096 bytes
+> Disk identifier: 0x00000000
+> 
+> Disk /dev/md0 doesn't contain a valid partition table
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
