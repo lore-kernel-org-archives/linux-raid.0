@@ -1,73 +1,129 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: [PATCH] Remove: container should wait for an array to release a drive
-Date: Mon, 18 Jul 2016 09:37:38 -0400
-Message-ID: <22412.56226.478064.375583@quad.stoffel.home>
-References: <1468843890-30425-1-git-send-email-tomasz.majchrzak@intel.com>
+From: Bryan Hepworth <bryan.hepworth@newcastle.ac.uk>
+Subject: superblock help
+Date: Mon, 18 Jul 2016 13:33:24 +0000
+Message-ID: <DB5PR07MB1287750A7AA38F7154BCCC56D5360@DB5PR07MB1287.eurprd07.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1468843890-30425-1-git-send-email-tomasz.majchrzak@intel.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Cc: linux-raid@vger.kernel.org, Jes.Sorensen@redhat.com, aleksey.obitotskiy@intel.com, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
->>>>> "Tomasz" == Tomasz Majchrzak <tomasz.majchrzak@intel.com> writes:
+Hi
 
-Tomasz> A 'faulty' drive is being removed from a container after it
-Tomasz> has been released by an array, however there is a race
-Tomasz> there. The drive is released asynchronously by a monitor but
-Tomasz> sometimes it doesn't happen before container checks it. It
-Tomasz> results in a container refusing to remove a drive as it still
-Tomasz> seems to be a part of some array.
+I'm trying to salvage some data from disk from a raid I didn't assemble. This is the only disk that has information on. It gets picked up ok as a linux ext4 raid partition in gparted. I was expecting to see raid 5 over four disks, sadly not - the other disks have gpt partitions but report as being unallocated in gparted and gdisk.
 
-Tomasz> It seems 'ping_monitor' could be a solution here to assure
-Tomasz> monitor has had a chance to process the events, however it
-Tomasz> doesn't resolve the problem - sometimes an array has to
-Tomasz> request a release of the drive few times (as the array is
-Tomasz> busy) and single 'ping_monitor' call is not sufficient. As
-Tomasz> there is no way to query monitor progress, it forces us to
-Tomasz> retry a check several times before an error is returned.
+Any suggestions as to what to try next in finding a superblock?
 
-Tomasz> Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Tomasz> ---
-Tomasz>  Manage.c | 38 +++++++++++++++++++++++++-------------
-Tomasz>  1 file changed, 25 insertions(+), 13 deletions(-)
+Thanks
 
-Tomasz> diff --git a/Manage.c b/Manage.c
-Tomasz> index e2e88b8..7f8eb88 100644
-Tomasz> --- a/Manage.c
-Tomasz> +++ b/Manage.c
-Tomasz> @@ -1125,19 +1125,31 @@ int Manage_remove(struct supertype *tst, int fd, struct mddev_dev *dv,
-Tomasz>  		 */
-Tomasz>  		if (rdev == 0)
-Tomasz>  			ret = -1;
-Tomasz> -		else
-Tomasz> -			ret = sysfs_unique_holder(devnm, rdev);
-Tomasz> -		if (ret == 0) {
-Tomasz> -			pr_err("%s is not a member, cannot remove.\n",
-Tomasz> -			       dv->devname);
-Tomasz> -			close(lfd);
-Tomasz> -			return -1;
-Tomasz> -		}
-Tomasz> -		if (ret >= 2) {
-Tomasz> -			pr_err("%s is still in use, cannot remove.\n",
-Tomasz> -			       dv->devname);
-Tomasz> -			close(lfd);
-Tomasz> -			return -1;
-Tomasz> +		else {
-Tomasz> +			/* The drive has already been set to 'faulty', however monitor might
-Tomasz> +			 * not have had time to process it and the drive might still have
-Tomasz> +			 * an entry in the 'holders' directory. Try a few times to avoid
-Tomasz> +			 * a false error */
-Tomasz> +			int count = 20;
-Tomasz> +			do {
-Tomasz> +				ret = sysfs_unique_holder(devnm, rdev);
-Tomasz> +				if (ret < 2)
-Tomasz> +					break;
-Tomasz> +				usleep(100000);
+Bryan
 
-Really, you're sleeping 10 seconds without telling the user?  That
-seems to be a bit obnoxious.  Logging something here would be good.
+<i>Filesystem volume name:   inscribe_data1
+Last mounted on:          <not available>
+Filesystem UUID:          95c359b0-66bf-4394-89da-4d7866a92475
+Filesystem magic number:  0xEF53
+Filesystem revision #:    1 (dynamic)
+Filesystem features:      has_journal ext_attr resize_inode dir_index filetype extent flex_bg sparse_super large_file huge_file uninit_bg dir_nlink extra_isize
+Filesystem flags:         signed_directory_hash 
+Default mount options:    (none)
+Filesystem state:         clean
+Errors behavior:          Continue
+Filesystem OS type:       Linux
+Inode count:              122101760
+Block count:              488378368
+Reserved block count:     24418918
+Free blocks:              480664949
+Free inodes:              122101749
+First block:              0
+Block size:               4096
+Fragment size:            4096
+Reserved GDT blocks:      907
+Blocks per group:         32768
+Fragments per group:      32768
+Inodes per group:         8192
+Inode blocks per group:   512
+Flex block group size:    16
+Filesystem created:       Thu Aug 28 13:57:16 2014
+Last mount time:          n/a
+Last write time:          Thu Aug 28 14:01:42 2014
+Mount count:              0
+Maximum mount count:      33
+Last checked:             Thu Aug 28 13:57:16 2014
+Check interval:           15552000 (6 months)
+Next check after:         Tue Feb 24 12:57:16 2015
+Lifetime writes:          29 GB
+Reserved blocks uid:      0 (user root)
+Reserved blocks gid:      0 (group root)
+First inode:              11
+Inode size:	          256
+Required extra isize:     28
+Desired extra isize:      28
+Journal inode:            8
+Default directory hash:   half_md4
+Directory Hash Seed:      8c787fea-f93e-453d-ac45-d49a339628ab
+Journal backup:           inode blocks</i>
+
+<i>dumpe2fs 1.41.12 (17-May-2010)
+Journal superblock magic number invalid!</i>
+
+<i>Unable to read the contents of this file system!
+Because of this some operations may be unavailable.
+The cause might be a missing software package.
+The following list of software packages is required for ext4 file system support:  e2fsprogs v1.41+.</i>
+
+[root@igmimager sbin]# ./gdisk /dev/sdn
+GPT fdisk (gdisk) version 0.8.10
+
+Partition table scan:
+  MBR: protective
+  BSD: not present
+  APM: not present
+  GPT: present
+
+Found valid GPT with protective MBR; using GPT.
+
+Command (? for help): ?
+b	back up GPT data to a file
+c	change a partition's name
+d	delete a partition
+i	show detailed information on a partition
+l	list known partition types
+n	add a new partition
+o	create a new empty GUID partition table (GPT)
+p	print the partition table
+q	quit without saving changes
+r	recovery and transformation options (experts only)
+s	sort partitions
+t	change a partition's type code
+v	verify disk
+w	write table to disk and exit
+x	extra functionality (experts only)
+?	print this menu
+
+Command (? for help): p
+Disk /dev/sdn: 3907029168 sectors, 1.8 TiB
+Logical sector size: 512 bytes
+Disk identifier (GUID): E6755AAC-5295-4417-BA21-E1016486CBDB
+Partition table holds up to 128 entries
+First usable sector is 34, last usable sector is 3907029134
+Partitions will be aligned on 2048-sector boundaries
+Total free space is 2157 sectors (1.1 MiB)
+
+Number  Start (sector)    End (sector)  Size       Code  Name
+   1            2048      3907028991   1.8 TiB     FD00  
+
+Command (? for help): i
+Using 1
+Partition GUID code: A19D880F-05FC-4D3B-A006-743F0F84911E (Linux RAID)
+Partition unique GUID: 911F59F3-AB98-4A40-9F0B-B191B5C5010E
+First sector: 2048 (at 1024.0 KiB)
+Last sector: 3907028991 (at 1.8 TiB)
+Partition size: 3907026944 sectors (1.8 TiB)
+Attribute flags: 0000000000000000
+Partition name: ''
+
+Command (? for help): 
 
