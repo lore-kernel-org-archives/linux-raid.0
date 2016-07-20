@@ -1,83 +1,77 @@
-From: "Vaughan" <cxt9401@163.com>
-Subject: Re: How does md gurantee not miss to free an active stripe_head when md stops?
-Date: Wed, 20 Jul 2016 18:53:41 +0800
-Message-ID: <004e01d1e274$faa33a20$efe9ae60$@163.com>
+From: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Subject: Re: [PATCH v4 18/21] fuse: Add support for pid namespaces
+Date: Wed, 20 Jul 2016 07:52:01 -0500
+Message-ID: <20160720125201.GA52079@ubuntu-hedt>
+References: <1461699396-33000-1-git-send-email-seth.forshee@canonical.com>
+ <1461699396-33000-19-git-send-email-seth.forshee@canonical.com>
+ <CA+2rt426_pshAauQizcxkfAq16vmEpB4sJ4genW_ucosH3j=zQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: zh-cn
-Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.com
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CA+2rt426_pshAauQizcxkfAq16vmEpB4sJ4genW_ucosH3j=zQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Sheng Yang <sheng-bA7cAZRAfhAdnm+yROfE0A@public.gmane.org>
+Cc: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Miklos Szeredi <miklos-sUDqSbJrdHQHWmgEVkV9KA@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Richard Weinberger <richard.weinberger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Miklos Szeredi <mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Pavel Tikhomirov <ptikhomirov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, kernel list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+On Tue, Jul 19, 2016 at 07:44:11PM -0700, Sheng Yang wrote:
+> On Tue, Apr 26, 2016 at 12:36 PM, Seth Forshee
+> <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org> wrote:
+> > When the userspace process servicing fuse requests is running in
+> > a pid namespace then pids passed via the fuse fd are not being
+> > translated into that process' namespace. Translation is necessary
+> > for the pid to be useful to that process.
+> >
+> > Since no use case currently exists for changing namespaces all
+> > translations can be done relative to the pid namespace in use
+> > when fuse_conn_init() is called. For fuse this translates to
+> > mount time, and for cuse this is when /dev/cuse is opened. IO for
+> > this connection from another namespace will return errors.
+> >
+> > Requests from processes whose pid cannot be translated into the
+> > target namespace are not permitted, except for requests
+> > allocated via fuse_get_req_nofail_nopages. For no-fail requests
+> > in.h.pid will be 0 if the pid translation fails.
+> 
+> Hi Seth,
+> 
+> This patch caused a regression in our major container use case with
+> FUSE in Ubuntu 16.04, as patch was checked in as Ubuntu Sauce in
+> Ubuntu 4.4.0-6.21 kernel.
+> 
+> The use case is:
+> 1. Create a Docker container.
+> 2. Inside the container, start the FUSE backend, and mounted fs.
+> 3. Following step 2 in the container, create a loopback device to map
+> a file in the mounted fuse to create a block device, which will be
+> available to the whole system.
+> 
+> It works well before this commit.
+> 
+> The use case is broken because no matter which namespace losetup runs,
+> the real request from loopback device seems always come from init ns,
+> thus it will be in different ns running fuse backend. So the request
+> will got denied, because the ns running fuse won't able to see the
+> things from higher level(level 0 in fact) pid namespace.
+> 
+> I think since init pid ns has ability to access any process in the
+> system, it should able to access the fuse mounted by any pid namespace
+> process as well.
+> 
+> What you think?
 
-I'm using v3.10 md code for develop. Recently I encounter a problem where an
-read IO usually returned from physical disk after md has been stopped.
-I reviewed the code and find when md stops, it unregister raid5d
-unconditionally and call shrink_stripes() to free only the *inactive*
-stripes.
-I know before stop, it uses O_EXCL open the md, but that won't stop others
-open it and send IO to it.
-So I think it's possible that some active stripes will be still running.
+It sounds like we need to remove the restriction on accessing the
+filesystem from a different pid namespace. I don't think this poses a
+security problem. However there's no pid mapping that is usable by the
+userspace fuse process, so what do we put in the fuse request? Probably
+the only candidates are 0 and 0xffffffff.
 
-And I also found
-commit 5aa61f427e4979be733e4847b9199ff9cc48a47e
-Author: NeilBrown <neilb@suse.de>
-Date:   Mon Dec 15 12:56:57 2014 +1100
-    md: split detach operation out from ->stop.
+So a question for the fuse developers - is one value or the other
+preferrable for fuse_in_header.pid when the pid cannot be mapped, and is
+this going to cause problems for any fuse filesystems? I suspect that
+few filesystems actually look at the pid anyway, and already for a
+filesystem mounted in a pid namespace the values being given to
+userspace won't be correct for the namespace of the fuse process.
 
-add calling a quiesce before unregister raid5d in __md_stop, which not
-exists there before.
-Does this fix the hole when md stop?
-
-
-In my case, an OOPS usually happens like below:
-I keep calling mdadm -stop to stop a md, but lsof shows it's opened by
-systemd-udevd, so "still is inuse".
-30s later, udev  reports timeout and be kicked with SIGKILL.
-systemd-udevd: worker [19335]/devices/virtual/block/md41 timeout; kill it.
-
-Then md stop process is able to continue and go passed the free_conf(). But
-there is an active_stripe left.
-
-kernel:
-shrink_stripes:conf(ffff880004affc00)->md(ffff8802d95b4000,md41)active_strip
-es=1     <== this is my debug print.
-kernel: md41: detected capacity change from 3409128980480 to 0
-mdadm: stopped /dev/md41
-
-After md is stopped, an read IO from underlying returned and OOPS.
-
-[190830.867371] md: unbind<dm-64>
-[190830.876345] md: export_rdev(dm-64)
-[190831.201619] BUG: unable to handle kernel [190831.202875] paging request
-at 0000000000002050 [190831.204101] IP: [<ffffffffa089a349>]
-raid5_end_read_request+0xf9/0xdc0[raid456]
-
-I found this returned bio is caused by a user read page, which is caused by
-a fput to kill_bdev.
-PID: 21345  TASK: ffff8803e5a916c0  CPU: 1   COMMAND: "mdadm"
-#0 [ffff88016f777b88] __schedule at ffffffff815f513d
-#1 [ffff88016f777bf0] io_schedule at ffffffff815f599d
-#2 [ffff88016f777c08] sleep_on_page at ffffffff81155f1e
-#3 [ffff88016f777c18] __wait_on_bit_lock at ffffffff815f38ab
-#4 [ffff88016f777c58] __lock_page at ffffffff81156038
-#5 [ffff88016f777cb0] truncate_inode_pages_range at ffffffff8116645e
-#6 [ffff88016f777e00] truncate_inode_pages at ffffffff811664b5
-#7 [ffff88016f777e10] kill_bdev at ffffffff811ffaef
-#8 [ffff88016f777e28] __blkdev_put at ffffffff81201124
-#9 [ffff88016f777e68] blkdev_put at ffffffff81201bae
-#10 [ffff88016f777e98] blkdev_close at ffffffff81201d55
-#11 [ffff88016f777ea8] __fput at ffffffff811c81b9
-#12 [ffff88016f777ef0] ____fput at ffffffff811c847e
-#13 [ffff88016f777f00] task_work_run at ffffffff81093b37
-#14 [ffff88016f777f30] do_notify_resume at ffffffff81013b0c
-#15 [ffff88016f777f50] int_signal at ffffffff8160049d
-
-
-
-
+Seth
