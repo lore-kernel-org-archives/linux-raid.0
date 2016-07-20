@@ -1,80 +1,55 @@
-From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: [PATCH v2] Remove: container should wait for an array to release a drive
-Date: Wed, 20 Jul 2016 10:01:05 +0200
-Message-ID: <1469001665-13648-1-git-send-email-tomasz.majchrzak@intel.com>
+From: Zhengyuan Liu <liuzhengyuang521@gmail.com>
+Subject: [PATCH] raid5: fix incorrectly counter of conf->empty_inactive_list_nr
+Date: Wed, 20 Jul 2016 17:22:00 +0800
+Message-ID: <CAOOPZo5B8EF0C3+Yg1WVYJx_jerR6zjNjbixpHhvQx4zOJqvxw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Jes.Sorensen@redhat.com, aleksey.obitotskiy@intel.com, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com
+To: "shli@kernel.org" <shli@kernel.org>, linux-raid@vger.kernel.org
+Cc: =?UTF-8?B?5YiY5LqR?= <liuyun01@kylinos.cn>, =?UTF-8?B?6IOh5rW3?= <huhai@kylinos.cn>
 List-Id: linux-raid.ids
 
-A 'faulty' drive is being removed from a container after it has been
-released by an array, however there is a race there. The drive is
-released asynchronously by a monitor but sometimes it doesn't happen
-before container checks it. It results in a container refusing to remove
-a drive as it still seems to be a part of some array.
+The counter conf->empty_inactive_list_nr is only used for determine if
+the raid5 is congested which is deal with in function
+raid5_congested(). It was increased in get_free_stripe() when
+conf->inactive_list got emptied and decreased in
+release_inactive_stripe_list() when  splice temp_inactive_list to
+conf->inactive_list. However, this could cause to problem when
+raid5_get_active_stripe was called, this function may call
+list_del_init(&sh->lru) to delete sh from  "conf->inactive_list +
+hash" which may cause  "conf->inactive_list + hash" to be empty when
+atomic_inc_not_zero(&sh->count) got false.
+ I have found conf->empty_inactive_list_nr to be negative number
+during my random test.
+Is there anything out of my thinking?
 
-It seems 'ping_monitor' could be a solution here to assure monitor has
-had a chance to process the events, however it doesn't resolve the
-problem - sometimes an array has to request a release of the drive few
-times (as the array is busy) and single 'ping_monitor' call is not
-sufficient. As there is no way to query monitor progress, it forces us
-to retry a check several times before an error is returned.
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -659,6 +659,7 @@ raid5_get_active_stripe(struct r5conf *conf,
+sector_t sector,
+ {
+        struct stripe_head *sh;
+        int hash = stripe_hash_locks_hash(sector);
++       int inc_empty_inactive_list_flag;
 
-Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
----
- Manage.c | 38 +++++++++++++++++++++++++-------------
- 1 file changed, 25 insertions(+), 13 deletions(-)
+        pr_debug("get_stripe, sector %llu\n", (unsigned long long)sector);
 
-diff --git a/Manage.c b/Manage.c
-index e2e88b8..7f8eb88 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -1125,19 +1125,31 @@ int Manage_remove(struct supertype *tst, int fd, struct mddev_dev *dv,
- 		 */
- 		if (rdev == 0)
- 			ret = -1;
--		else
--			ret = sysfs_unique_holder(devnm, rdev);
--		if (ret == 0) {
--			pr_err("%s is not a member, cannot remove.\n",
--			       dv->devname);
--			close(lfd);
--			return -1;
--		}
--		if (ret >= 2) {
--			pr_err("%s is still in use, cannot remove.\n",
--			       dv->devname);
--			close(lfd);
--			return -1;
-+		else {
-+			/* The drive has already been set to 'faulty', however monitor might
-+			 * not have had time to process it and the drive might still have
-+			 * an entry in the 'holders' directory. Try a few times to avoid
-+			 * a false error */
-+			int count = 20;
-+			do {
-+				ret = sysfs_unique_holder(devnm, rdev);
-+				if (ret < 2)
-+					break;
-+				usleep(100 * 1000);	//100ms
-+			} while (--count > 0);
+@@ -703,7 +704,14 @@ raid5_get_active_stripe(struct r5conf *conf,
+sector_t sector,
+                                        atomic_inc(&conf->active_stripes);
+                                BUG_ON(list_empty(&sh->lru) &&
+                                       !test_bit(STRIPE_EXPANDING, &sh->state));
 +
-+			if (ret == 0) {
-+				pr_err("%s is not a member, cannot remove.\n",
-+					dv->devname);
-+				close(lfd);
-+				return -1;
-+			}
-+			if (ret >= 2) {
-+				pr_err("%s is still in use, cannot remove.\n",
-+					dv->devname);
-+				close(lfd);
-+				return -1;
-+			}
- 		}
- 	}
- 	/* FIXME check that it is a current member */
--- 
-1.8.3.1
-
++                               inc_empty_inactive_list_flag = 0;
++                               if(!list_empty(conf->inactive_list + hash))
++                                       inc_empty_inactive_list_flag = 1;
+                                list_del_init(&sh->lru);
++                               if(list_empty(conf->inactive_list +
+hash) && inc_empty_inactive_list_flag)
++
+atomic_inc(&conf->empty_inactive_list_nr);
++
+                                if (sh->group) {
+                                        sh->group->stripes_cnt--;
+                                        sh->group = NULL;
