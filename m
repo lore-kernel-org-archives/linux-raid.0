@@ -1,77 +1,81 @@
-From: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Subject: Re: [PATCH v4 18/21] fuse: Add support for pid namespaces
-Date: Wed, 20 Jul 2016 07:52:01 -0500
-Message-ID: <20160720125201.GA52079@ubuntu-hedt>
-References: <1461699396-33000-1-git-send-email-seth.forshee@canonical.com>
- <1461699396-33000-19-git-send-email-seth.forshee@canonical.com>
- <CA+2rt426_pshAauQizcxkfAq16vmEpB4sJ4genW_ucosH3j=zQ@mail.gmail.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: Recovering RAID Volumes from 6 Disks
+Date: Wed, 20 Jul 2016 15:31:09 +0100
+Message-ID: <578F8B2D.5070003@youngman.org.uk>
+References: <CADsVfeyiiAgxeeATrX9UqmWb+Hr3MCf2_eMPjL8hbD7Gpj5Ksg@mail.gmail.com>
+ <578E8616.4000908@youngman.org.uk>
+ <CADsVfeyz=KiAqSBe11jjBT-yOWpZp_eyP_BctkjvWC5UPNLXuQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CA+2rt426_pshAauQizcxkfAq16vmEpB4sJ4genW_ucosH3j=zQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Sheng Yang <sheng-bA7cAZRAfhAdnm+yROfE0A@public.gmane.org>
-Cc: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Miklos Szeredi <miklos-sUDqSbJrdHQHWmgEVkV9KA@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Richard Weinberger <richard.weinberger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Miklos Szeredi <mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Pavel Tikhomirov <ptikhomirov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, kernel list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CADsVfeyz=KiAqSBe11jjBT-yOWpZp_eyP_BctkjvWC5UPNLXuQ@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Amit Biswas <abiswas@nyu.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jul 19, 2016 at 07:44:11PM -0700, Sheng Yang wrote:
-> On Tue, Apr 26, 2016 at 12:36 PM, Seth Forshee
-> <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org> wrote:
-> > When the userspace process servicing fuse requests is running in
-> > a pid namespace then pids passed via the fuse fd are not being
-> > translated into that process' namespace. Translation is necessary
-> > for the pid to be useful to that process.
-> >
-> > Since no use case currently exists for changing namespaces all
-> > translations can be done relative to the pid namespace in use
-> > when fuse_conn_init() is called. For fuse this translates to
-> > mount time, and for cuse this is when /dev/cuse is opened. IO for
-> > this connection from another namespace will return errors.
-> >
-> > Requests from processes whose pid cannot be translated into the
-> > target namespace are not permitted, except for requests
-> > allocated via fuse_get_req_nofail_nopages. For no-fail requests
-> > in.h.pid will be 0 if the pid translation fails.
-> 
-> Hi Seth,
-> 
-> This patch caused a regression in our major container use case with
-> FUSE in Ubuntu 16.04, as patch was checked in as Ubuntu Sauce in
-> Ubuntu 4.4.0-6.21 kernel.
-> 
-> The use case is:
-> 1. Create a Docker container.
-> 2. Inside the container, start the FUSE backend, and mounted fs.
-> 3. Following step 2 in the container, create a loopback device to map
-> a file in the mounted fuse to create a block device, which will be
-> available to the whole system.
-> 
-> It works well before this commit.
-> 
-> The use case is broken because no matter which namespace losetup runs,
-> the real request from loopback device seems always come from init ns,
-> thus it will be in different ns running fuse backend. So the request
-> will got denied, because the ns running fuse won't able to see the
-> things from higher level(level 0 in fact) pid namespace.
-> 
-> I think since init pid ns has ability to access any process in the
-> system, it should able to access the fuse mounted by any pid namespace
-> process as well.
-> 
-> What you think?
+Ummmmm ...
 
-It sounds like we need to remove the restriction on accessing the
-filesystem from a different pid namespace. I don't think this poses a
-security problem. However there's no pid mapping that is usable by the
-userspace fuse process, so what do we put in the fuse request? Probably
-the only candidates are 0 and 0xffffffff.
+b,e and f are Barracudas ... I know my 3TB Barracudas are vulnerable to
+the timeout problem. It looks like the 1TB ones probably are as well ...
 
-So a question for the fuse developers - is one value or the other
-preferrable for fuse_in_header.pid when the pid cannot be mapped, and is
-this going to cause problems for any fuse filesystems? I suspect that
-few filesystems actually look at the pid anyway, and already for a
-filesystem mounted in a pid namespace the values being given to
-userspace won't be correct for the namespace of the fuse process.
+While you're waiting for someone else to chime in, read the following
+... not the best reading ... about why your Barracudas are probably a
+bad choice :-(
 
-Seth
+http://marc.info/?l=linux-raid&m=139050322510249&w=2
+http://marc.info/?l=linux-raid&m=135863964624202&w=2
+http://marc.info/?l=linux-raid&m=135811522817345&w=1
+http://marc.info/?l=linux-raid&m=133761065622164&w=2
+http://marc.info/?l=linux-raid&m=132477199207506
+http://marc.info/?l=linux-raid&m=133665797115876&w=2
+http://marc.info/?l=linux-raid&m=142487508806844&w=3
+http://marc.info/?l=linux-raid&m=144535576302583&w=2
+
+Have you got a spare Constellation lying around? If not, can you get a
+proper raid drive - WD Red or Seagate NAS? Do a ddrescue to copy sda to
+the replacement drive if you can. You don't want to use that to recover
+the array if you can help it, but you might not have much choice, and at
+least you'll have it to hand.
+
+And do NOT do this until the experts chime in and help, but hopefully
+it's just a case of making sure all your arrays are stopped, running the
+following script
+
+for x in /sys/block/sd[a-z] ; do
+        echo 180  > $x/device/timeout
+done
+
+echo 4096 > /sys/block/md0/md/stripe_cache_size
+
+on the barracudas and re-assembling the array(s). At which point,
+backing up and replacing the barracudas should be extremely high on the
+agenda! It's probably a good idea to go Raid-6 and get 2 or 3TB drives.
+
+Cheers,
+Wol
+
+
+On 19/07/16 23:34, Amit Biswas wrote:
+> Here are the smart reports for all six drives. drive sda was not co-operating...
+> 
+> /dev/sda
+> 
+> smartctl 6.2 2013-07-26 r3841 [x86_64-linux-4.2.0-27-generic] (local build)
+> Copyright (C) 2002-13, Bruce Allen, Christian Franke, www.smartmontools.org
+> 
+> === START OF INFORMATION SECTION ===
+> Vendor:               /2:0:0:0
+> Product:
+> User Capacity:        600,332,565,813,390,450 bytes [600 PB]
+> Logical block size:   774843950 bytes
+>>> Terminate command early due to bad response to IEC mode page
+> 
+> === START OF READ SMART DATA SECTION ===
+> 
+> Error Counter logging not supported
+> 
+> Device does not support Self Test logging
+> 
+
