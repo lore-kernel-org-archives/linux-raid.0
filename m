@@ -1,88 +1,81 @@
-From: Sheng Yang <sheng@yasker.org>
-Subject: Re: [PATCH v4 18/21] fuse: Add support for pid namespaces
-Date: Wed, 20 Jul 2016 15:28:21 -0700
-Message-ID: <CA+2rt423x-EiF=9x2zRTM35hzWOv=rH1urifRTCdpE_p=GO9FQ@mail.gmail.com>
-References: <1461699396-33000-1-git-send-email-seth.forshee@canonical.com>
- <1461699396-33000-19-git-send-email-seth.forshee@canonical.com>
- <CA+2rt426_pshAauQizcxkfAq16vmEpB4sJ4genW_ucosH3j=zQ@mail.gmail.com> <20160720125201.GA52079@ubuntu-hedt>
+From: Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: dm stripe: add DAX support
+Date: Wed, 20 Jul 2016 20:01:42 -0400
+Message-ID: <20160721000142.GA21913@redhat.com>
+References: <1466792610-30369-1-git-send-email-toshi.kani@hpe.com>
+ <20160624182859.GD13898@redhat.com>
+ <1468362104.8908.43.camel@hpe.com>
+ <20160713020100.GA5872@redhat.com>
+ <1468422189.8908.53.camel@hpe.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20160720125201.GA52079@ubuntu-hedt>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Miklos Szeredi <miklos@szeredi.hu>, Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <mszeredi@redhat.com>, Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, kernel list <linux-kernel@vger.kernel.org>, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1468422189.8908.53.camel-ZPxbGqLxI0U@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: axboe-b10kYP2dOMg@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: "linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org" <linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-On Wed, Jul 20, 2016 at 5:52 AM, Seth Forshee
-<seth.forshee@canonical.com> wrote:
-> On Tue, Jul 19, 2016 at 07:44:11PM -0700, Sheng Yang wrote:
->> On Tue, Apr 26, 2016 at 12:36 PM, Seth Forshee
->> <seth.forshee@canonical.com> wrote:
->> > When the userspace process servicing fuse requests is running in
->> > a pid namespace then pids passed via the fuse fd are not being
->> > translated into that process' namespace. Translation is necessary
->> > for the pid to be useful to that process.
->> >
->> > Since no use case currently exists for changing namespaces all
->> > translations can be done relative to the pid namespace in use
->> > when fuse_conn_init() is called. For fuse this translates to
->> > mount time, and for cuse this is when /dev/cuse is opened. IO for
->> > this connection from another namespace will return errors.
->> >
->> > Requests from processes whose pid cannot be translated into the
->> > target namespace are not permitted, except for requests
->> > allocated via fuse_get_req_nofail_nopages. For no-fail requests
->> > in.h.pid will be 0 if the pid translation fails.
->>
->> Hi Seth,
->>
->> This patch caused a regression in our major container use case with
->> FUSE in Ubuntu 16.04, as patch was checked in as Ubuntu Sauce in
->> Ubuntu 4.4.0-6.21 kernel.
->>
->> The use case is:
->> 1. Create a Docker container.
->> 2. Inside the container, start the FUSE backend, and mounted fs.
->> 3. Following step 2 in the container, create a loopback device to map
->> a file in the mounted fuse to create a block device, which will be
->> available to the whole system.
->>
->> It works well before this commit.
->>
->> The use case is broken because no matter which namespace losetup runs,
->> the real request from loopback device seems always come from init ns,
->> thus it will be in different ns running fuse backend. So the request
->> will got denied, because the ns running fuse won't able to see the
->> things from higher level(level 0 in fact) pid namespace.
->>
->> I think since init pid ns has ability to access any process in the
->> system, it should able to access the fuse mounted by any pid namespace
->> process as well.
->>
->> What you think?
->
-> It sounds like we need to remove the restriction on accessing the
-> filesystem from a different pid namespace. I don't think this poses a
-> security problem. However there's no pid mapping that is usable by the
-> userspace fuse process, so what do we put in the fuse request? Probably
-> the only candidates are 0 and 0xffffffff.
+On Wed, Jul 13 2016 at 11:03am -0400,
+Kani, Toshimitsu <toshi.kani-ZPxbGqLxI0U@public.gmane.org> wrote:
 
-Thanks Seth, I don't think it will be a security problem either, if we
-remove the restriction.
+> On Tue, 2016-07-12 at 22:01 -0400, Mike Snitzer wrote:
+> > On Tue, Jul 12 2016 at=A0=A06:22pm -0400,
+> > Kani, Toshimitsu <toshi.kani-ZPxbGqLxI0U@public.gmane.org> wrote:
+> > > On Fri, 2016-06-24 at 14:29 -0400, Mike Snitzer wrote:
+> > > > =A0
+> =A0:
+> > Thanks for putting this summary together.=A0=A0Unfortunately none of th=
+e DM
+> > changes can be queued for 4.8 until Jens takes the 2 block core patches:
+> > https://patchwork.kernel.org/patch/9196021/
+> > https://patchwork.kernel.org/patch/9196019/
+> > =
 
->
-> So a question for the fuse developers - is one value or the other
-> preferrable for fuse_in_header.pid when the pid cannot be mapped, and is
-> this going to cause problems for any fuse filesystems? I suspect that
-> few filesystems actually look at the pid anyway, and already for a
-> filesystem mounted in a pid namespace the values being given to
-> userspace won't be correct for the namespace of the fuse process.
->
+> > Not sure what the hold up and/or issue is with them.=A0=A0But I've asked
+> > twice (and implicilty a 3rd time here).=A0=A0Hopefully they land in tim=
+e for
+> > 4.8.
+> =
 
-At least in our system we're not looking into the pid at all.
+> Hi Jens,
+> =
 
---Sheng
+> Can you take the two patches above? =A0These patches add QUEUE_FLAG_DAX a=
+nd its
+> sysfs show func. =A0They allow device-mapper to set dax-capability based =
+on its
+> configuration, and also allow user applications to check dax-capability v=
+ia
+> sysfs.
 
-> Seth
->
+Hi Jens,
+
+As I shared with you before, here are the 2 patches I staged in
+linux-next via linux-dm.git's 'for-next' (same as in the patchwork
+references above) -- these were staged just so we had linux-next
+coverage until you picked them up.
+
+Please pick these up for 4.8 -- the changes are straightforward, are
+required for DM's DAX support, and Dan Williams has also acked them:
+
+https://git.kernel.org/cgit/linux/kernel/git/device-mapper/linux-dm.git/com=
+mit/?h=3Dfor-next&id=3D6c00531c6affa42b165df73a1eac3289bc45f4c4
+https://git.kernel.org/cgit/linux/kernel/git/device-mapper/linux-dm.git/com=
+mit/?h=3Dfor-next&id=3D51d1a5abcd0e88cb4528f35643245ea59cf234f1
+
+Feel free to pick them up from patchwork or cherry-pick from
+linux-dm.git
+
+Thanks!
+Mike
