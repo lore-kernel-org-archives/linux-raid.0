@@ -1,45 +1,83 @@
-From: Miklos Szeredi <mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v4 18/21] fuse: Add support for pid namespaces
-Date: Thu, 21 Jul 2016 09:25:17 +0200
-Message-ID: <CAOssrKfJrQuf_exBVGtn-EBOBnRhhNWe+2P=VkEqtp3qmGYiFA@mail.gmail.com>
-References: <1461699396-33000-1-git-send-email-seth.forshee@canonical.com>
- <1461699396-33000-19-git-send-email-seth.forshee@canonical.com>
- <CA+2rt426_pshAauQizcxkfAq16vmEpB4sJ4genW_ucosH3j=zQ@mail.gmail.com> <20160720125201.GA52079@ubuntu-hedt>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20160720125201.GA52079@ubuntu-hedt>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Cc: Sheng Yang <sheng-bA7cAZRAfhAdnm+yROfE0A@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Miklos Szeredi <miklos-sUDqSbJrdHQHWmgEVkV9KA@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Richard Weinberger <richard.weinberger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Pavel Tikhomirov <ptikhomirov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, kernel list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, fuse-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH v3] Remove: container should wait for an array to release a drive
+Date: Thu, 21 Jul 2016 09:59:42 +0200
+Message-ID: <1469087982-2102-1-git-send-email-tomasz.majchrzak@intel.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Jes.Sorensen@redhat.com, aleksey.obitotskiy@intel.com, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com
 List-Id: linux-raid.ids
 
-On Wed, Jul 20, 2016 at 2:52 PM, Seth Forshee
-<seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org> wrote:
+A 'faulty' drive is being removed from a container after it has been
+released by an array, however there is a race there. The drive is
+released asynchronously by a monitor but sometimes it doesn't happen
+before container checks it. It results in a container refusing to remove
+a drive as it still seems to be a part of some array.
 
-> It sounds like we need to remove the restriction on accessing the
-> filesystem from a different pid namespace. I don't think this poses a
-> security problem. However there's no pid mapping that is usable by the
-> userspace fuse process, so what do we put in the fuse request? Probably
-> the only candidates are 0 and 0xffffffff.
->
-> So a question for the fuse developers - is one value or the other
-> preferrable for fuse_in_header.pid when the pid cannot be mapped, and is
-> this going to cause problems for any fuse filesystems? I suspect that
-> few filesystems actually look at the pid anyway, and already for a
-> filesystem mounted in a pid namespace the values being given to
-> userspace won't be correct for the namespace of the fuse process.
+It seems 'ping_monitor' could be a solution here to assure monitor has
+had a chance to process the events, however it doesn't resolve the
+problem - sometimes an array has to request a release of the drive few
+times (as the array is busy) and single 'ping_monitor' call is not
+sufficient. As there is no way to query monitor progress, it forces us
+to retry a check several times before an error is returned.
 
-pid = 0 sounds good.
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+---
+ Manage.c | 41 ++++++++++++++++++++++++++++-------------
+ 1 file changed, 28 insertions(+), 13 deletions(-)
 
-The pid from the request is used for example to get the auxiliary
-group list by libfuse (fuse_req_getgroups()).   That's not used by all
-filesystems and it will return an error in case it can't find the proc
-entry (which it won't for pid == 0).
+diff --git a/Manage.c b/Manage.c
+index e2e88b8..33e343d 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -1125,19 +1125,34 @@ int Manage_remove(struct supertype *tst, int fd, struct mddev_dev *dv,
+ 		 */
+ 		if (rdev == 0)
+ 			ret = -1;
+-		else
+-			ret = sysfs_unique_holder(devnm, rdev);
+-		if (ret == 0) {
+-			pr_err("%s is not a member, cannot remove.\n",
+-			       dv->devname);
+-			close(lfd);
+-			return -1;
+-		}
+-		if (ret >= 2) {
+-			pr_err("%s is still in use, cannot remove.\n",
+-			       dv->devname);
+-			close(lfd);
+-			return -1;
++		else {
++			/*
++			 * The drive has already been set to 'faulty', however
++			 * monitor might not have had time to process it and the
++			 * drive might still have an entry in the 'holders'
++			 * directory. Try a few times to avoid a false error
++			 */
++			int count = 20;
++
++			do {
++				ret = sysfs_unique_holder(devnm, rdev);
++				if (ret < 2)
++					break;
++				usleep(100 * 1000);	/* 100ms */
++			} while (--count > 0);
++
++			if (ret == 0) {
++				pr_err("%s is not a member, cannot remove.\n",
++					dv->devname);
++				close(lfd);
++				return -1;
++			}
++			if (ret >= 2) {
++				pr_err("%s is still in use, cannot remove.\n",
++					dv->devname);
++				close(lfd);
++				return -1;
++			}
+ 		}
+ 	}
+ 	/* FIXME check that it is a current member */
+-- 
+1.8.3.1
 
-It would be nice if we could transfer the group list through the
-userspace/kernel protocol, since then it wouldn't depend on proc and
-on being in the same pid namespace.  But that's another story.
-
-Thanks,
-Miklos
