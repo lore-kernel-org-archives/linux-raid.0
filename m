@@ -1,39 +1,218 @@
-From: Bhatia Amit <amitbhatia@rocketmail.com>
-Subject: Re: Cannot start array on disk
-Date: Sat, 23 Jul 2016 22:47:22 +0000 (UTC)
-Message-ID: <330476394.3563695.1469314042611.JavaMail.yahoo@mail.yahoo.com>
-References: <1124605843.526681.1468785592654.JavaMail.yahoo.ref@mail.yahoo.com> <1124605843.526681.1468785592654.JavaMail.yahoo@mail.yahoo.com> <73583e52-ca6b-b043-cbae-02c8a122be24@turmel.org> <1436537429.1672198.1468980612541.JavaMail.yahoo@mail.yahoo.com> <1537154003.1687848.1468983169996.JavaMail.yahoo@mail.yahoo.com> <6b958d9f-ec61-3b87-fcd7-ff63c0af32fe@turmel.org> <1334935791.2305089.1469066429563.JavaMail.yahoo@mail.yahoo.com> <48687c4e-792c-7cdc-7374-3020964f1892@turmel.org> <1152956900.3399623.1469246417006.JavaMail.yahoo@mail.yahoo.com> <b151a240-c3a4-3b59-0ba5-b6ac5776a16d@turmel.org> <578225037.3489302.1469312496573.JavaMail.yahoo@mail.yahoo.com> <bc8e09fe-c489-e85d-bb8a-c3c9ff0b9588@turmel.org>
-Reply-To: Bhatia Amit <amitbhatia@rocketmail.com>
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [PATCH v2 1/1] block: fix blk_queue_split() resource exhaustion
+Date: Mon, 25 Jul 2016 16:39:50 -0400
+Message-ID: <x49fuqxlaeh.fsf@segfault.boston.devel.redhat.com>
+References: <1467990243-3531-1-git-send-email-lars.ellenberg@linbit.com>
+	<1467990243-3531-2-git-send-email-lars.ellenberg@linbit.com>
+	<20160711141042.GY13335@soda.linbit>
+	<87lh17efap.fsf@notabene.neil.brown.name>
+	<alpine.LRH.2.11.1607121834220.16228@mail.ewheeler.net>
+	<20160713023232.GA6034@redhat.com>
+	<20160719090024.GB20868@soda.linbit>
+	<alpine.LRH.2.11.1607211547450.21453@mail.ewheeler.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <bc8e09fe-c489-e85d-bb8a-c3c9ff0b9588@turmel.org>
+In-Reply-To: <alpine.LRH.2.11.1607211547450.21453@mail.ewheeler.net> (Eric
+	Wheeler's message of "Thu, 21 Jul 2016 15:53:39 -0700 (PDT)")
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Eric Wheeler <bcache@lists.ewheeler.net>
+Cc: Lars Ellenberg <lars.ellenberg@linbit.com>, Mike Snitzer <snitzer@redhat.com>, NeilBrown <neilb@suse.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Peter Zijlstra <peterz@infradead.org>, Jiri Kosina <jkosina@suse.cz>, Ming Lei <ming.lei@canonical.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Takashi Iwai <tiwai@suse.de>, linux-bcache@vger.kernel.org, Zheng Liu <gnehzuil.liu@gmail.com>, Kent Overstreet <kent.overstreet@gmail.com>, Keith Busch <keith.busch@intel.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Ingo Molnar <mingo@redhat.com>, Alasdair Kergon <agk@redhat.com>, Roland Kammerer <roland.kammerer@linbit.com>, Mikulas Patocka <mpatocka@redhat.com>
 List-Id: linux-raid.ids
 
+Eric Wheeler <bcache@lists.ewheeler.net> writes:
 
+> [+cc Mikulas Patocka, Jeff Moyer; Do either of you have any input on Lars' 
+> commentary related to patchwork #'s 9204125 and 7398411 and BZ#119841? ]
 
+Sorry, I don't have any time to look at this right now.
 
-> The old and new data are completely different filesystems, I believe.
-> And I suspect the folder data for the latter half of the disk is in the
-> (missing) first half of the disk.  Certainly the root folder.  If
+Cheers,
+Jeff
 
-> r-linux can recover file contents, that's better than I've got.  I doubt
-> you have any folder data for the new < half disk.
 >
-> > In an earlier email, you had suggested possibly running fsck on sdc4
-> > partition. Is that something I should be considering?
+> On Tue, 19 Jul 2016, Lars Ellenberg wrote:
 >
-> No, I don't believe it can handle anything like this.  You might want to
-> share this thread with the ext4 list.
-
-
-Hi Phil
-
-
-I think I understand the issue you are describing here. Also, I will share this thread with the ext4 list to get their suggestion.
-
-Thanks for the all help.
-Amit
+>> On Tue, Jul 12, 2016 at 10:32:33PM -0400, Mike Snitzer wrote:
+>> > On Tue, Jul 12 2016 at 10:18pm -0400,
+>> > Eric Wheeler <bcache@lists.ewheeler.net> wrote:
+>> > 
+>> > > On Tue, 12 Jul 2016, NeilBrown wrote:
+>> > > 
+>> > > > On Tue, Jul 12 2016, Lars Ellenberg wrote:
+>> > > > ....
+>> > > > >
+>> > > > > Instead, I suggest to distinguish between recursive calls to
+>> > > > > generic_make_request(), and pushing back the remainder part in
+>> > > > > blk_queue_split(), by pointing current->bio_lists to a
+>> > > > > 	struct recursion_to_iteration_bio_lists {
+>> > > > > 		struct bio_list recursion;
+>> > > > > 		struct bio_list queue;
+>> > > > > 	}
+>> > > > >
+>> > > > > By providing each q->make_request_fn() with an empty "recursion"
+>> > > > > bio_list, then merging any recursively submitted bios to the
+>> > > > > head of the "queue" list, we can make the recursion-to-iteration
+>> > > > > logic in generic_make_request() process deepest level bios first,
+>> > > > > and "sibling" bios of the same level in "natural" order.
+>> > > > >
+>> > > > > Signed-off-by: Lars Ellenberg <lars.ellenberg@linbit.com>
+>> > > > > Signed-off-by: Roland Kammerer <roland.kammerer@linbit.com>
+>> > > > 
+>> > > > Reviewed-by: NeilBrown <neilb@suse.com>
+>> > > > 
+>> > > > Thanks again for doing this - I think this is a very significant
+>> > > > improvement and could allow other simplifications.
+>> > > 
+>> > > Thank you Lars for all of this work!  
+>> > > 
+>> > > It seems like there have been many 4.3+ blockdev stacking issues and this 
+>> > > will certainly address some of those (maybe all of them?).  (I think we 
+>> > > hit this while trying drbd in 4.4 so we dropped back to 4.1 without 
+>> > > issue.)  It would be great to hear 4.4.y stable pick this up if 
+>> > > compatible.
+>> > > 
+>> > > 
+>> > > Do you believe that this patch would solve any of the proposals by others 
+>> > > since 4.3 related to bio splitting/large bios?  I've been collecting a 
+>> > > list, none of which appear have landed yet as of 4.7-rc7 (but correct me 
+>> > > if I'm wrong):
+>> > > 
+>> > > A.  [PATCH v2] block: make sure big bio is splitted into at most 256 bvecs
+>> > > 	by Ming Lei: https://patchwork.kernel.org/patch/9169483/
+>> 
+>> That's an independend issue.
+>> 
+>> > > B.  block: don't make BLK_DEF_MAX_SECTORS too big
+>> > > 	by Shaohua Li: http://www.spinics.net/lists/linux-bcache/msg03525.html
+>> 
+>> Yet an other independend issue.
+>> 
+>> > > C.  [1/3] block: flush queued bios when process blocks to avoid deadlock
+>> > > 	by Mikulas Patocka: https://patchwork.kernel.org/patch/9204125/
+>> > > 		(was https://patchwork.kernel.org/patch/7398411/)
+>> 
+>> As it stands now,
+>> this is yet an other issue, but related.
+>> 
+>> From the link above:
+>> 
+>> | ** Here is the dm-snapshot deadlock that was observed:
+>> | 
+>> | 1) Process A sends one-page read bio to the dm-snapshot target. The bio
+>> | spans snapshot chunk boundary and so it is split to two bios by device
+>> | mapper.
+>> | 
+>> | 2) Device mapper creates the first sub-bio and sends it to the snapshot
+>> | driver.
+>> | 
+>> | 3) The function snapshot_map calls track_chunk (that allocates a
+>> | structure
+>> | dm_snap_tracked_chunk and adds it to tracked_chunk_hash) and then remaps
+>> | the bio to the underlying device and exits with DM_MAPIO_REMAPPED.
+>> | 
+>> | 4) The remapped bio is submitted with generic_make_request, but it isn't
+>> | issued - it is added to current->bio_list instead.
+>> | 
+>> | 5) Meanwhile, process B (dm's kcopyd) executes pending_complete for the
+>> | chunk affected be the first remapped bio, it takes down_write(&s->lock)
+>> | and then loops in __check_for_conflicting_io, waiting for
+>> | dm_snap_tracked_chunk created in step 3) to be released.
+>> | 
+>> | 6) Process A continues, it creates a second sub-bio for the rest of the
+>> | original bio.
+>> 
+>> Aha.
+>> Here is the relation.
+>> If "A" had only ever processed "just the chunk it can handle now",
+>> and "pushed back" the rest of the incoming bio,
+>> it could rely on all deeper level bios to have been submitted already.
+>> 
+>> But this does not look like it easily fits into the current DM model.
+>> 
+>> | 7) snapshot_map is called for this new bio, it waits on
+>> | down_write(&s->lock) that is held by Process B (in step 5).
+>> 
+>> There is an other suggestion:
+>> Use down_trylock (or down_timeout),
+>> and if it fails, push back the currently to-be-processed bio.
+>> We can introduce a new bio helper for that.
+>> Kind of what blk_queue_split() does with my patch applied.
+>> 
+>> Or even better, ignore the down_trylock suggestion,
+>> simply not iterate over all pieces first,
+>> but process one piece, and return back the the
+>> iteration in generic_make_request.
+>> 
+>> A bit of conflict here may be that DM has all its own
+>> split and clone and queue magic, and wants to process
+>> "all of the bio" before returning back to generic_make_request().
+>> 
+>> To change that, __split_and_process_bio() and all its helpers
+>> would need to learn to "push back" (pieces of) the bio they are
+>> currently working on, and not push back via "DM_ENDIO_REQUEUE",
+>> but by bio_list_add_head(&current->bio_lists->queue, piece_to_be_done_later).
+>> 
+>> Then, after they processed each piece,
+>> *return* all the way up to the top-level generic_make_request(),
+>> where the recursion-to-iteration logic would then
+>> make sure that all deeper level bios, submitted via
+>> recursive calls to generic_make_request() will be processed, before the
+>> next, pushed back, piece of the "original incoming" bio.
+>> 
+>> And *not* do their own iteration over all pieces first.
+>> 
+>> Probably not as easy as dropping the while loop,
+>> using bio_advance, and pushing that "advanced" bio back to
+>> current->...queue?
+>> 
+>> static void __split_and_process_bio(struct mapped_device *md,
+>> 				    struct dm_table *map, struct bio *bio)
+>> ...
+>> 		ci.bio = bio;
+>> 		ci.sector_count = bio_sectors(bio);
+>> 		while (ci.sector_count && !error)
+>> 			error = __split_and_process_non_flush(&ci);
+>> ...
+>> 		error = __split_and_process_non_flush(&ci);
+>> 		if (ci.sector_count)
+>> 			bio_advance()
+>> 			bio_list_add_head(&current->bio_lists->queue, )
+>> ...
+>> 
+>> Something like that, maybe?
+>> Just a thought.
+>> 
+>> > > D.  dm-crypt: Fix error with too large bios
+>> > > 	by Mikulas Patocka: https://patchwork.kernel.org/patch/9138595/
+>> > > 
+>> > > The A,B,D are known to fix large bio issues when stacking dm+bcache 
+>> > > (though the B,D are trivial and probably necessary even with your patch).
+>> > > 
+>> > > Patch C was mentioned earlier in this thread by Mike Snitzer and you 
+>> > > commented briefly that his patch might solve the issue; given that, and in 
+>> > > the interest of minimizing duplicate effort, which of the following best 
+>> > > describes the situation?
+>> > > 
+>> > >   1. Your patch could supersede Mikulas's patch; they address the same 
+>> > > issue.
+>> > > 
+>> > >   2. Mikulas's patch addresses different issues such and both patches 
+>> > > should be applied.
+>> > > 
+>> > >   3. There is overlap between both your patch and Mikulas's such that both 
+>> > > #1,#2 are true and effort to solve this has been duplicated.
+>> > > 
+>> > > 
+>> > > If #3, then what might be done to resolve the overlap?
+>> > 
+>> > Mikulas confirmed to me that he believes Lars' v2 patch will fix the
+>> > dm-snapshot problem, which is being tracked with this BZ:
+>> > https://bugzilla.kernel.org/show_bug.cgi?id=119841
+>> > 
+>> > We'll see how testing goes (currently underway).
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-bcache" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> 
