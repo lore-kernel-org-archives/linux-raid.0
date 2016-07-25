@@ -1,20 +1,20 @@
-From: Wols Lists <antlists@youngman.org.uk>
+From: Adam Goryachev <mailinglists@websitemanagers.com.au>
 Subject: Re: migration of raid 5 to raid 6 and disk of 2TB to 4TB
-Date: Mon, 25 Jul 2016 23:48:48 +0100
-Message-ID: <57969750.5080804@youngman.org.uk>
+Date: Tue, 26 Jul 2016 09:08:35 +1000
+Message-ID: <31663d09-eead-9e57-f1d7-34c19c901b91@websitemanagers.com.au>
 References: <CADzS=aqYQEoqxHbp7keeuYqN2dLur1O=RfctfuFsraggxiWTKg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <CADzS=aqYQEoqxHbp7keeuYqN2dLur1O=RfctfuFsraggxiWTKg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: bobzer <bobzer@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 25/07/16 22:14, bobzer wrote:
+On 26/07/16 07:14, bobzer wrote:
 > Hi,
-> 
+>
 > I'm looking for advice to not mess up my migration. because
 > unfortunately i miss drive
 > I wanna migrate all my data from a raid 5 of 4x2TB (actually 3 because
@@ -25,48 +25,49 @@ On 25/07/16 22:14, bobzer wrote:
 > not start right now but is clean)
 > - 2 disk of 4TB
 > - the raid 5 use lvm2 on top of mdadm
-> 
+>
 > I want a raid 6 so i thought i could create a raid 6 degraded with the
 > 2x4TB and after copy the data to this new raid and after add the third
 > 4TB and finally add the 2  2TB as a raid 0 to get a 4TB
 > I know it's an ideal solution to get 3x4TB + 2x2TB to do my raid but
 > it give me time to invest.
-> 
+>
 > So my question is :
 > - is it a really bad idea ?
 > - do you have a better idea? solution ?
 > - maybe i can migrate instead of copy a raid to another ?
-
-Yup. You should be able to migrate.
-
-Add in one of the 4TB drives as 4TB. It'll only use 2TB because it
-matches the other drives, but it'll get your raid 5 back fully redundant.
-
-Now replace the two 2TB drives with the 4TB drives. Use the --replace
-option to mdadm - it's fairly new.
-
-Then I think you'll have to fail the 2TB image in order to add the last
-4TB drive in - maybe you won't - others might be able to help here ...
-or you might be able to just remove the 2TB image and convert it to a
-full raid 5 on 3 x 4TB disks - that's the best option if you can because
-at no point are you surrendering a working raid and risking a failure.
-
-(The thing to remember, is that raid will take the smallest drive, and
-use that amount of space on all the drives. If you replace all the 2TBs
-with 4TBs, suddenly the raid can use the full 4TB.)
-
-Now you're using half your raid-space for your array, you should be able
-to convert to raid 6, then expand the array to use the new space. I'm
-not sure exactly how all this works, but having replaced all 2TB drives
-with 4TB drives, I'm sure mdadm can claim the expanded space.
-
-JUST MAKE SURE YOUR NEW DRIVES ARE ENTERPRISE RAID DRIVES! What are
-they? WD Reds? Seagate NAS? If they don't support SCT/ERC or whatever
-it's called, then your array will be a time bomb!
-
+>
 > thank you very much
 > Math
+My head hurts, I don't understand what you currently have, but I think 
+you have:
+RAID5 with three members, sda1(2TB), sdb1(2TB) and an 2TB image stored 
+on sdc1(4TB)
+Two spare 4TB drives sdd1 and sde1.
 
-Cheers,
-Wol
+I would do a replace from the image on sdc1 to sde1
+Do a replace from sda1 to sdc1
+Do a replace from sdb1 to sdd1
+Create a RAID0 array on sda1 + sdb1 (linear or stripe, guess it doesn't 
+matter much either way, though if performance matters, then think about 
+this as it will throw out the expected performance of your array).
+Do a add of the RAID0 to the RAID5 (it will add as a spare)
+Do a grow of the RAID5 to RAID6
+Do a grow --size=max to increase capacity to the smallest drive (don't 
+do the grow earlier, the RAID0 might be slightly smaller).
 
+The above means at no point is your RAID5 degraded, and you end up with 
+RAID6.
+It will probably take some time to do all that, I'm not sure if the 2nd 
+and 3rd steps can be done in parallel or not...
+
+PS, you should take a copy of all your RAID information and drive member 
+details (lsdrv script) before commencing so that if something goes 
+wrong, you have the best chance of recovery.
+!!!Also, definitely ensure you have SCT/ERC configured properly on both 
+the old and new drives!!!
+
+Regards,
+Adam
+-- 
+Adam Goryachev Website Managers www.websitemanagers.com.au
