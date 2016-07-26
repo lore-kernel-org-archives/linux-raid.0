@@ -1,88 +1,52 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: migration of raid 5 to raid 6 and disk of 2TB to 4TB
-Date: Tue, 26 Jul 2016 21:19:26 +0100
-Message-ID: <5797C5CE.6020300@youngman.org.uk>
-References: <CADzS=aqYQEoqxHbp7keeuYqN2dLur1O=RfctfuFsraggxiWTKg@mail.gmail.com>
- <22423.44287.974770.114127@tree.ty.sabi.co.uk>
+From: "David C. Rankin" <drankinatty@suddenlinkmail.com>
+Subject: Re: GPT corruption on Primary Header, backup OK, fixing primary nuked
+ array -- help?
+Date: Tue, 26 Jul 2016 15:24:52 -0500
+Message-ID: <5797C714.30409@suddenlinkmail.com>
+References: <5796B46B.6060905@suddenlinkmail.com>
+ <413b1150-ca38-1907-ea5d-b68ad2f75710@websitemanagers.com.au>
+ <5796F4E0.9070206@suddenlinkmail.com> <57971D3C.8040602@suddenlinkmail.com>
+ <ff6872cd-98eb-aad2-a71a-7af52050ff30@websitemanagers.com.au>
+ <54ca746c-36eb-c1cb-1975-9ecc619fb1b2@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <22423.44287.974770.114127@tree.ty.sabi.co.uk>
+In-Reply-To: <54ca746c-36eb-c1cb-1975-9ecc619fb1b2@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Grandi <pg@lxra2.for.sabi.co.uk>, Linux RAID <linux-raid@vger.kernel.org>
+To: mdraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 26/07/16 19:33, Peter Grandi wrote:
-> [ ... ]
->> migrate all my data from a raid 5 of 4x2TB (actually 3 because
->> i'm degraded right now) to a raid 6 of 4x4TB so exactly i got :
->> - raid 5, should be 4 disk of 2T but got problem and so right
->>   now it's just 2x2T and a 2Tb disk image in a 4T disk (the
->>   raid crashed and is not start right now but is clean)
->> - 2 disk of 4TB
->> - the raid 5 use lvm2 on top of mdadm
->> I want a raid 6 [ ... ]
->=20
-> In general an in-place migration is a very dangerous operation
-> because it stresses existing hardware a lot plus it uses code
-> that is rarely used and is quite complex. Given that your
-> situation is already compromised.
+On 07/26/2016 12:14 PM, Phil Turmel wrote:
+> The drive probably came with a single large partition in a GPT table.
+> mdadm was created using the whole disk, which neither needs nor expects
+> there to be a partition table.  (I do not use partitions for my big
+> arrays -- whole disks only.)
+> 
+> When mdadm created the array, it probably wiped out the starting table,
+> but not the GPT backup.  Which may or may not be outside the used data
+> area of the array.  So you allowed a partition tool to "fix" a partition
+> table that isn't being used.  The simplest solution is to zero the first
+> 4k of the disk and zero the GPT backup partition table location.
+> 
+> I suggest re-adding /dev/sdd to the array (not /dev/sdd1, and not
+> --add), whether you delete the table or not.  A --re-add will probably
+> be nearly instant, since there is a bitmap.
 
-But copying everything off will stress it just as much, surely? The
-alternatives imho are worse ...
->=20
-> Plus your goal does not make a lot of sense: from a RAID5 of 4
-> drives to a RAID6 of 4 drives. Very strange.
->=20
-=46rom a 6TB raid5 to an 8TB raid6? What's strange about that?
+Well, no, that was my stupidity in forgetting to add the '1' at the end of
+sdc/sdd during mdadm --create. So you are saying it would be OK to add sdd back
+into the array and just use the whole drive, even though there is an
+empty/unformatted sdd1 (as there was all along) and that the whole-drive array
+is OK?
 
-> Also I note that you currently don't have 4 drives of 4TB, but
-> 3, so there you get your wish 2 drives of 2TB as the fourth
-> member as in =AB2 2TB as a raid 0=BB
->=20
-> The good thing about your plan is to use the larger drives to
-> make a *copy* of your data, so you don't quite do an in-place
-> migration.
->=20
-So beg or borrow a 2TB (or larger) drive, provided you have enough slot=
-s
-for 6 drives. Borrow or buy (they're cheap enough) an add-in SATA card
-if you need to.
+Will adding it back into the array overwrite the primary PT again, or was that
+just a result of initial array creation due to the fact I was using the whole
+drive _and_ sdd1 existed as well.
 
-Now he can add the second 4TB drive to complete his raid5.
+(Well that looks to be the gdisk complaint, the sdd1 table was overwritten, but
+that didn't effect the array operation because it was using the whole drive. --
+so I could have ignored the gdisk warning and gone about my merry way without
+this day of learning and angst? Ah, but what's the fun in that...?)
 
-Add in the third 4TB to replace the 2TB partition and free up the partl=
-y
-used 4TB drive.
-
-Use the now-free first 4TB drive to replace one of the 2TB drives. Sham=
-e
-he can't reshape the resulting array into a 3 x 4TB raid5 (at least, I
-don't think he can).
-
-Use the borrowed drive to replace the last 2TB drive.
-
-Combine the 2 2TB drives into a 4TB raid0 array, and use that to replac=
-e
-the borrowed drive.
-
-We now have a 4 x 4TB raid5 array which he can convert to raid6.
-
-If the worst comes to the worst and he can't get that spare drive, he
-could always fail the last 2TB drive (taking it back to degraded raid5
-:-( then combine the 2 x 2TB and add them back to get a fully working
-array again.
-
-Unfortunately, I can't think of any way to get to the planned final
-config without either borrowing an extra drive, or having (at some
-point) a degraded array.
-
-Cheers,
-Wol
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+David C. Rankin, J.D.,P.E.
