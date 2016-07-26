@@ -1,73 +1,162 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: migration of raid 5 to raid 6 and disk of 2TB to 4TB
-Date: Tue, 26 Jul 2016 09:08:35 +1000
-Message-ID: <31663d09-eead-9e57-f1d7-34c19c901b91@websitemanagers.com.au>
-References: <CADzS=aqYQEoqxHbp7keeuYqN2dLur1O=RfctfuFsraggxiWTKg@mail.gmail.com>
+From: "David C. Rankin" <drankinatty@suddenlinkmail.com>
+Subject: GPT corruption on Primary Header, backup OK, fixing primary nuked
+ array -- help?
+Date: Mon, 25 Jul 2016 19:52:59 -0500
+Message-ID: <5796B46B.6060905@suddenlinkmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADzS=aqYQEoqxHbp7keeuYqN2dLur1O=RfctfuFsraggxiWTKg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: bobzer <bobzer@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: mdraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 26/07/16 07:14, bobzer wrote:
-> Hi,
->
-> I'm looking for advice to not mess up my migration. because
-> unfortunately i miss drive
-> I wanna migrate all my data from a raid 5 of 4x2TB (actually 3 because
-> i'm degraded right now) to a raid 6 of 4x4TB
-> so exactly i got :
-> - raid 5, should be 4 disk of 2T but got problem and so right now it's
-> just 2x2T and a 2Tb disk image in a 4T disk (the raid crashed and is
-> not start right now but is clean)
-> - 2 disk of 4TB
-> - the raid 5 use lvm2 on top of mdadm
->
-> I want a raid 6 so i thought i could create a raid 6 degraded with the
-> 2x4TB and after copy the data to this new raid and after add the third
-> 4TB and finally add the 2  2TB as a raid 0 to get a 4TB
-> I know it's an ideal solution to get 3x4TB + 2x2TB to do my raid but
-> it give me time to invest.
->
-> So my question is :
-> - is it a really bad idea ?
-> - do you have a better idea? solution ?
-> - maybe i can migrate instead of copy a raid to another ?
->
-> thank you very much
-> Math
-My head hurts, I don't understand what you currently have, but I think 
-you have:
-RAID5 with three members, sda1(2TB), sdb1(2TB) and an 2TB image stored 
-on sdc1(4TB)
-Two spare 4TB drives sdd1 and sde1.
+Neil, all,
 
-I would do a replace from the image on sdc1 to sde1
-Do a replace from sda1 to sdc1
-Do a replace from sdb1 to sdd1
-Create a RAID0 array on sda1 + sdb1 (linear or stripe, guess it doesn't 
-matter much either way, though if performance matters, then think about 
-this as it will throw out the expected performance of your array).
-Do a add of the RAID0 to the RAID5 (it will add as a spare)
-Do a grow of the RAID5 to RAID6
-Do a grow --size=max to increase capacity to the smallest drive (don't 
-do the grow earlier, the RAID0 might be slightly smaller).
+  I really stepped in it this time. I have had a 3T raid1 array with 2 disks
+sdc/sdd that has worked fine since the new disks were partitioned and the arrays
+were created in August of last year. (simple 2-disk, raid1, ext4 - no
+encryption) Current kernel info on Archlinux is:
 
-The above means at no point is your RAID5 degraded, and you end up with 
-RAID6.
-It will probably take some time to do all that, I'm not sure if the 2nd 
-and 3rd steps can be done in parallel or not...
+# uname -a
+Linux valkyrie 4.6.4-1-ARCH #1 SMP PREEMPT Mon Jul 11 19:12:32 CEST 2016 x86_64
+GNU/Linux
 
-PS, you should take a copy of all your RAID information and drive member 
-details (lsdrv script) before commencing so that if something goes 
-wrong, you have the best chance of recovery.
-!!!Also, definitely ensure you have SCT/ERC configured properly on both 
-the old and new drives!!!
+When the disks were partitioned originally and the arrays created, listing the
+partitioning showed no partition table problems. Today, a simple check of the
+partitioning by listing the partitions on sdc with 'gdisk -l /dev/sdc' brought
+up a curious error:
 
-Regards,
-Adam
+# gdisk -l /dev/sdc
+GPT fdisk (gdisk) version 1.0.1
+
+Caution: invalid main GPT header, but valid backup; regenerating main header
+from backup!
+
+Caution! After loading partitions, the CRC doesn't check out!
+Warning! Main partition table CRC mismatch! Loaded backup partition table
+instead of main partition table!
+
+Warning! One or more CRCs don't match. You should repair the disk!
+
+Partition table scan:
+  MBR: protective
+  BSD: not present
+  APM: not present
+  GPT: damaged
+
+****************************************************************************
+Caution: Found protective or hybrid MBR and corrupt GPT. Using GPT, but disk
+verification and recovery are STRONGLY recommended.
+****************************************************************************
+Disk /dev/sdc: 5860533168 sectors, 2.7 TiB
+Logical sector size: 512 bytes
+Disk identifier (GUID): 3F835DD0-AA89-4F86-86BF-181F53FA1847
+Partition table holds up to 128 entries
+First usable sector is 34, last usable sector is 5860533134
+Partitions will be aligned on 2048-sector boundaries
+Total free space is 212958 sectors (104.0 MiB)
+
+Number  Start (sector)    End (sector)  Size       Code  Name
+   1            8192      5860328334   2.7 TiB     FD00  Linux RAID
+
+(sdd showed the same - it was probably fine all along and just the result of
+creating the arrays, but that would be par for my day...)
+
+Huh? All was functioning fine, even with the error -- until I tried to "fix" it.
+First, I searched for possible reasons on how the primary GPT table became
+corrupt. The reasons range from some non-GPT aware app tried to access the table
+(not anything I can think of here) or perhaps the Gigabyte "virtual bios" wrote
+a copy of the bios within the larger GPT table causing the issue, see:
+https://francisfisher.me.uk/problem/2014/warning-about-large-hard-discs-gpt-and-gigabyte-motherboards-such-as-ga-p35-ds4/)
+That sounds flaky, but I do have a Gigabyte GA-990FXA-UD3 Rev. 4 board.
+
+So after reading the posts, and reading the unix.stackexchange, superuser, etc.
+posts on the subject:
+
+ http://www.rodsbooks.com/gdisk/repairing.html
+ http://askubuntu.com/questions/465510/gpt-talbe-corrupt-after-raid1-setup
+ https://ubuntuforums.org/showthread.php?t=1956173
+ ...
+
+and various parted bugs about the opposite:
+
+ https://lists.gnu.org/archive/html/bug-parted/2015-07/msg00003.html
+
+I came up with a plan to:
+
+ - boot the Archlinux recovery cd 20160301 release CD
+ - use gdisk /dev/sdd; r; v; c; w; to correct the table
+ - --fail and --remove the disk from the array, and
+ - readd the new disk, let it sync, then do the same for /dev/sdc
+
+(steps 1 & 2 went fine, but that's where I screwed up...).
+
+Now I'm left with an array (/dev/md4) in an inactive and probably
+un-salvageable. The data on the disks is backed up, so if there is no way to
+assemble and recover the data, I'm only out the time to recopy it. If I can save
+that, fine, but it isn't pressing. The current array state is:
+
+# cat /proc/mdstat
+Personalities : [raid1]
+md1 : active raid1 sdb6[1] sda6[0]
+      52396032 blocks super 1.2 [2/2] [UU]
+
+md0 : active raid1 sdb5[1] sda5[0]
+      511680 blocks super 1.2 [2/2] [UU]
+
+md3 : active raid1 sdb8[1] sda8[0]
+      2115584 blocks super 1.2 [2/2] [UU]
+
+md2 : active raid1 sdb7[1] sda7[0]
+      921030656 blocks super 1.2 [2/2] [UU]
+      bitmap: 0/7 pages [0KB], 65536KB chunk
+
+md4 : inactive sdc[0](S)
+      2930135512 blocks super 1.2
+
+unused devices: <none>
+
+This is where I'm stuck. I've got the primary partition table issue on sdd
+fixed, I have not touched sdc (it is in the same state it was, when it was
+functioning with the complaint about the primary gpt partition table. I have
+tried activating the array with sdd1 "missing", but no joy. After correcting the
+partition table on sdd, it still contains the original partition, but I cannot
+get it (or sdc) to assemble in degraded or raid mode.
+
+I need help. Is there anything I can try to salvage the array? (at least one
+disk of the array?) If not, is there a way I can activate (or at least mount
+either sdc or sdd? -- it would be easier to dump the data rather than copying
+from multiple sources. It's ~258G, not huge, but not small)
+
+I know worst case is to wipe both disks (gdisk /dev/sd[cd] x; z; yes; yes) and
+start over, but with one disk of md4 that I haven't touched, it seems like I
+should be able to recover something?
+
+If the answer is just no, no, ..., then what is the best approach? zap with
+gdisk, wipe the superblocks and start over?
+
+If you need any other information that I haven't included, just let me know. I
+have the binary dumps of partition tables from sdc and sdd (from gdisk written
+to disk before any changes to sdd). Anyway, if there is anything else, just let
+me know and I'll post it.
+
+The server on which this array resides is running (this was just a data array,
+the boot, root, and home arrays are fine (they are mbr). I've just commented the
+mdadm.conf and fstab entries for the effected array.
+
+Last, but less important, any idea where this primary GPT corruption originated?
+(or was it fine all along and the error just a result of them being members of
+the array?) There are numerous posts over the last year related to:
+
+    "invalid main GPT header, but valid backup"
+
+(and relating to raid1)
+
+but not many answers as to why. (if this was just a normal gdisk response from a
+raided disk, then there is a lot of 'bad' info out there. What is my best
+approach for attempting recovery from this self-created mess? Thanks.
+
+
 -- 
-Adam Goryachev Website Managers www.websitemanagers.com.au
+David C. Rankin, J.D.,P.E.
