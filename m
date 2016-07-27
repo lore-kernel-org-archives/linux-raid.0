@@ -1,145 +1,314 @@
-From: "David C. Rankin" <drankinatty@suddenlinkmail.com>
-Subject: SOLVED [was Re: GPT corruption on Primary Header, backup OK, fixing
- primary nuked array -- help?]
-Date: Wed, 27 Jul 2016 02:13:20 -0500
-Message-ID: <57985F10.4070706@suddenlinkmail.com>
-References: <5796B46B.6060905@suddenlinkmail.com>
- <413b1150-ca38-1907-ea5d-b68ad2f75710@websitemanagers.com.au>
- <5796F4E0.9070206@suddenlinkmail.com> <57971D3C.8040602@suddenlinkmail.com>
- <ff6872cd-98eb-aad2-a71a-7af52050ff30@websitemanagers.com.au>
- <5797C415.8010206@suddenlinkmail.com>
- <CAJCQCtSkE+-C5U9OEm0-zazLW2KHCMUqduDTA=UHsMxmf4DVrQ@mail.gmail.com>
- <5797E869.8080403@suddenlinkmail.com>
- <CAJCQCtQpGVf2Tj13o57T4=raF=czYr-V99tEDSkJ-_buk7JtTg@mail.gmail.com>
+From: Alex Owen <alex@alexxx.co.uk>
+Subject: Lost RAID6 disks when moving to new PC
+Date: Wed, 27 Jul 2016 11:35:34 +0100
+Message-ID: <CAFmAqNtzaWBhAkYoNEdyV0VMniEVt0Xv_4mOHoeTsCYbmecReg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJCQCtQpGVf2Tj13o57T4=raF=czYr-V99tEDSkJ-_buk7JtTg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: mdraid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/26/2016 06:18 PM, Chris Murphy wrote:
-> To get rid of the backup GPT you'll zero the last two sectors of the
-> drive. So first get the total number of sectors from something like
-> gdisk -l which gets you this information (in part):
-> 
-> Disk /dev/sda: 1953525168 sectors, 931.5 GiB
-> 
-> And do
-> dd if=/dev/zero of=/dev/sda seek=1953525167
-> 
-> That'll erase ..67 and ..68, but the header is in ..67, one sector
-> before the last one. Nothing should be in the last sector anyway but
-> I'd check first! I don't know if ext4 put something there. And do not
-> use the "last usable sector" because that's full 34 sectors from the
-> end and there very well may be ext4 metadata in there that you do not
-> want to step on with /dev/sdc.
+Hello everyone,
 
-Chris, Phil, All,
+Thank you in advance for any help you might be able to give. I'm
+another person with a broken RAID array and potentially lots of lost
+data. I'm really stuck and would be very grateful for any help you
+might be able to give.
 
-  Thank you. For anyone else that is faced with the problem where you are using
-whole disks in your raid1 array over the top of unused sub-partitions, here is
-the 5 minute fix.
+Earlier I tried to move my mdadm array from a Ubuntu Server to a
+virtualised Ubuntu Server running on an ESXi host.
 
-  In my circumstance, I had partitioned a pair of 3T WD Black drives for use in
-a raid1 array. I then created the array, but instead of using the partitions
-(sdc1/sdd1), I used the whole disk for the array (sdc/sdd). The array worked
-flawlessly for a year, and while collecting partition/geometry info to squirrel
-away for disaster recovery, I noticed gdisk -l /dev/sdc complained that the
-primary GPT header was corrupt, but the backup was fine. (examples of the gdisk
-output can be found earlier in this thread). The robust and flexible mdadm came
-through with flying colors. Had I done this correct to begin with, it could have
-been completed without a resync (saving several hours)
+I connected them and could see the disks in ESXi, then used
+passthrough to get them to the Ubuntu Server instance, but this didn't
+work and I could only see three of them.
 
-How I solved the problem:
+Then I moved the disks back into the old server and booted it up,
+where it failed to see the array on boot, and it still fails to
+assemble it.
 
-  (1) do NOT attempt to alter the disk in a partitioning package like fdisk,
-sfdisk, gdisk, parted, etc.. A write after you delete the unused partitions with
-adversely affect the md data and will require a long and painful resync
-depending on the size of your drive.
+The array should be RAID6 on /dev/sd{a-f}.
 
-  (2) simply --fail and --remove one drive from the array. My array was
-/dev/md4, and failing and removing /dev/sdd from the array was as simple as:
+I have backups of the most important 2TB, but there is a lot of data
+for which this is the only copy (which I can afford to lose, but
+hopefully won't have to).
 
-# mdadm /dev/md4 --fail /dev/sdd
-# mdadm /dev/md4 --remove /dev/sdd
+I've tried:
 
-  (3) To remove the inadvertent partition on the drive while keeping the raid
-data in tact, you must remove the PMBR and primary Partition tables from the
-drive. You can use `wipefs` or simply use `dd` to overwite the first 4096 bytes
-on the drive with zeros and then the last 1024 bytes before the end of the disk
-to remove the backup GPT header. (I overwote the last 4096 bytes on the disk,
-just to make sure -- I had nothing in the last 100M of the disk, so that seemed
-fine) You can look at the disk geometry reported by gdisk to find the end of the
-disk (the number of logical sectors -- make sure the disk has 512-byte sectors,
-or dd option adjustments will be needed) (then just subtract 8 from that number
-(or 2 if you wish to limit the write to 1024 bytes) and use that as the 'seek'
-offset with 'dd', so
+mdadm --assemble --scan --verbose :
 
-  # dd of=/dev/sdd if=/dev/zero bs=4096 count=1
-  # dd of=/dev/sdd if=/dev/zero bs=512 count=8 seek=5860533160
+----------
 
-  I also wrote over the last 8 sectors at the reported end of sdd1 as well (not
-sure if this had any relation to the problem, but I wanted to make sure if there
-was any GPT header at the end of the partition, it was zeroed as well)
+mdadm: looking for devices for /dev/md0
+mdadm: no RAID superblock on /dev/sdg1
+mdadm: no RAID superblock on /dev/sdg
+mdadm: /dev/sdf requires wrong number of drives.
+mdadm: /dev/sde requires wrong number of drives.
+mdadm: no RAID superblock on /dev/sdd2
+mdadm: no RAID superblock on /dev/sdd1
+mdadm: no RAID superblock on /dev/sdd
+mdadm: no RAID superblock on /dev/sdb2
+mdadm: no RAID superblock on /dev/sdb1
+mdadm: no RAID superblock on /dev/sdb
+mdadm: no RAID superblock on /dev/sdc2
+mdadm: no RAID superblock on /dev/sdc1
+mdadm: no RAID superblock on /dev/sdc
+mdadm: /dev/sda requires wrong number of drives.
 
-  # dd of=/dev/sdd if=/dev/zero bs=512 count=8 seek=5860328334
+----------
 
-  (4) then simply --re-add the drive to the array (no resync will be required)
+Which gives this in /cat/mdstat:
 
-  # mdadm /dev/md4 --re-add /dev/sdd
-  mdadm: re-added /dev/sdd
+----------
+
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10]
+unused devices: <none>
+
+----------
+
+Occasionally it will assemble md0, but with three spares and no data.
+
+fdisk -l :
+
+----------
+
+WARNING: GPT (GUID Partition Table) detected on '/dev/sda'! The util
+fdisk doesn't support GPT. Use GNU Parted.
 
 
-  (5) Now simply repeat the process with /dev/sdc
+Disk /dev/sda: 3000.6 GB, 3000592982016 bytes
+5 heads, 3 sectors/track, 390702211 cylinders, total 5860533168 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+Disk identifier: 0x00000000
 
-  When you are done, you will have two drives, using the whole disk for the
-array without the unintended empty partitions on the drive. Now gdisk reports
-correctly, e.g.
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1            2048  4294967294  2147482623+  8e  Linux LVM
 
-# gdisk -l /dev/sdc
-GPT fdisk (gdisk) version 1.0.1
+WARNING: GPT (GUID Partition Table) detected on '/dev/sdc'! The util
+fdisk doesn't support GPT. Use GNU Parted.
 
-Partition table scan:
-  MBR: not present
-  BSD: not present
-  APM: not present
-  GPT: not present
 
-and you array will be active and clean:
+Disk /dev/sdc: 3000.6 GB, 3000592982016 bytes
+256 heads, 63 sectors/track, 363376 cylinders, total 5860533168 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+Disk identifier: 0x7b8883da
 
-# mdadm -D /dev/md4
-/dev/md4:
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdc1               1  4294967295  2147483647+  ee  GPT
+Partition 1 does not start on physical sector boundary.
+
+WARNING: GPT (GUID Partition Table) detected on '/dev/sdb'! The util
+fdisk doesn't support GPT. Use GNU Parted.
+
+
+Disk /dev/sdb: 3000.6 GB, 3000592982016 bytes
+256 heads, 63 sectors/track, 363376 cylinders, total 5860533168 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+Disk identifier: 0x7b8883db
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdb1               1  4294967295  2147483647+  ee  GPT
+Partition 1 does not start on physical sector boundary.
+
+WARNING: GPT (GUID Partition Table) detected on '/dev/sdd'! The util
+fdisk doesn't support GPT. Use GNU Parted.
+
+
+Disk /dev/sdd: 3000.6 GB, 3000592982016 bytes
+256 heads, 63 sectors/track, 363376 cylinders, total 5860533168 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+Disk identifier: 0x453c133d
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdd1               1  4294967295  2147483647+  ee  GPT
+Partition 1 does not start on physical sector boundary.
+
+WARNING: GPT (GUID Partition Table) detected on '/dev/sde'! The util
+fdisk doesn't support GPT. Use GNU Parted.
+
+
+Disk /dev/sde: 3000.6 GB, 3000592982016 bytes
+5 heads, 3 sectors/track, 390702211 cylinders, total 5860533168 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+Disk identifier: 0x00000000
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sde1            2048  4294967294  2147482623+  8e  Linux LVM
+
+Disk /dev/sdf: 3000.6 GB, 3000592982016 bytes
+255 heads, 63 sectors/track, 364801 cylinders, total 5860533168 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+Disk identifier: 0x00000000
+
+Disk /dev/sdf doesn't contain a valid partition table
+
+----------
+
+parted -l
+
+Warning: /dev/sda contains GPT signatures, indicating that it has a GPT table.
+However, it does not have a valid fake msdos partition table, as it should.
+Perhaps it was corrupted -- possibly by a program that doesn't understand GPT
+partition tables.  Or perhaps you deleted the GPT table, and are now using an
+msdos partition table.  Is this a GPT partition table?
+Yes/No? n
+
+Model: ATA WDC WD30EZRX-00D (scsi)
+Disk /dev/sdb: 3001GB
+Sector size (logical/physical): 512B/4096B
+Partition Table: gpt
+
+Number  Start   End     Size    File system  Name                          Flags
+ 1      17.4kB  134MB   134MB                Microsoft reserved
+partition  msftres
+ 2      135MB   3001GB  3000GB               Basic data partition
+    msftdata
+
+
+Model: ATA WDC WD30EZRX-00D (scsi)
+Disk /dev/sdc: 3001GB
+Sector size (logical/physical): 512B/4096B
+Partition Table: gpt
+
+Number  Start   End     Size    File system  Name                          Flags
+ 1      17.4kB  134MB   134MB                Microsoft reserved
+partition  msftres
+ 2      135MB   3001GB  3000GB               Basic data partition
+    msftdata
+
+
+Model: ATA WDC WD30EZRX-00M (scsi)
+Disk /dev/sdd: 3001GB
+Sector size (logical/physical): 512B/4096B
+Partition Table: gpt
+
+Number  Start   End     Size    File system  Name                          Flags
+ 1      17.4kB  134MB   134MB                Microsoft reserved
+partition  msftres
+ 2      135MB   3001GB  3000GB               Basic data partition
+    msftdata
+
+
+Warning: /dev/sde contains GPT signatures, indicating that it has a
+GPT table.  However, it does not have a valid fake msdos partition
+table, as it should.  Perhaps it was corrupted --
+possibly by a program that doesn't understand GPT partition tables.
+Or perhaps you deleted the GPT table, and are now using an msdos
+partition table.  Is this a GPT partition table?
+Yes/No? n
+
+Error: /dev/sdf: unrecognised disk label
+
+----------
+
+And the output of mdadm --examine /dev/sd[a-f]
+
+----------
+
+/dev/sda:
+          Magic : a92b4efc
         Version : 1.2
-  Creation Time : Mon Mar 21 02:27:21 2016
-     Raid Level : raid1
-     Array Size : 2930135488 (2794.39 GiB 3000.46 GB)
-  Used Dev Size : 2930135488 (2794.39 GiB 3000.46 GB)
-   Raid Devices : 2
-  Total Devices : 2
-    Persistence : Superblock is persistent
+    Feature Map : 0x0
+     Array UUID : b377d975:86beb86c:9da9f21d:f73b2451
+           Name : NAS:0  (local to host NAS)
+  Creation Time : Sat Jan 23 17:57:37 2016
+     Raid Level : raid6
+   Raid Devices : 6
 
-  Intent Bitmap : Internal
-
-    Update Time : Wed Jul 27 01:36:56 2016
+ Avail Dev Size : 5860271024 (2794.40 GiB 3000.46 GB)
+     Array Size : 11720540160 (11177.58 GiB 12001.83 GB)
+  Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
           State : clean
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
+    Device UUID : 013740d6:5cc445e7:625f3257:8608daec
 
-           Name : valkyrie:4  (local to host valkyrie)
-           UUID : 6e520607:f152d8b9:dd2a3bec:5f9dc875
-         Events : 7984
+    Update Time : Tue Jul 26 04:09:29 2016
+       Checksum : 14ba6ebd - correct
+         Events : 2949004
 
-    Number   Major   Minor   RaidDevice State
-       0       8       32        0      active sync   /dev/sdc
-       2       8       48        1      active sync   /dev/sdd
+         Layout : left-symmetric
+     Chunk Size : 512K
 
+   Device Role : Active device 2
+   Array State : AAAAAA ('A' == active, '.' == missing)
+/dev/sdb:
+   MBR Magic : aa55
+Partition[0] :   4294967295 sectors at            1 (type ee)
+/dev/sdc:
+   MBR Magic : aa55
+Partition[0] :   4294967295 sectors at            1 (type ee)
+/dev/sdd:
+   MBR Magic : aa55
+Partition[0] :   4294967295 sectors at            1 (type ee)
+/dev/sde:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : b377d975:86beb86c:9da9f21d:f73b2451
+           Name : NAS:0  (local to host NAS)
+  Creation Time : Sat Jan 23 17:57:37 2016
+     Raid Level : raid6
+   Raid Devices : 6
 
-  Thank you again to all that helped.
+ Avail Dev Size : 5860271024 (2794.40 GiB 3000.46 GB)
+     Array Size : 11720540160 (11177.58 GiB 12001.83 GB)
+  Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 19096ab0:3e3aac62:7afdfc97:86eeb5f6
 
--- 
-David C. Rankin, J.D.,P.E.
+    Update Time : Tue Jul 26 04:09:29 2016
+       Checksum : b4f13acc - correct
+         Events : 2949004
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 0
+   Array State : AAAAAA ('A' == active, '.' == missing)
+/dev/sdf:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : b377d975:86beb86c:9da9f21d:f73b2451
+           Name : NAS:0  (local to host NAS)
+  Creation Time : Sat Jan 23 17:57:37 2016
+     Raid Level : raid6
+   Raid Devices : 6
+
+ Avail Dev Size : 5860271024 (2794.40 GiB 3000.46 GB)
+     Array Size : 11720540160 (11177.58 GiB 12001.83 GB)
+  Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : dc424c5a:b4845f55:373a04e0:78d96723
+
+    Update Time : Tue Jul 26 04:09:29 2016
+       Checksum : c63fe6b9 - correct
+         Events : 2949004
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 1
+   Array State : AAAAAA ('A' == active, '.' == missing)
+
+----------
+
+Thank you
