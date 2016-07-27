@@ -1,81 +1,45 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: Re: The subarray is loaded container by load_container
-Date: Wed, 27 Jul 2016 21:19:25 +0800
-Message-ID: <5798B4DD.6030702@redhat.com>
-References: <1782686607.3885369.1467882826743.JavaMail.zimbra@redhat.com>
- <4f57d953-8545-4647-49e7-c434e1892fb6@intel.com>
+From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
+Subject: Re: migration of raid 5 to raid 6 and disk of 2TB to 4TB
+Date: Wed, 27 Jul 2016 13:55:49 +0100
+Message-ID: <22424.44885.515889.315155@tree.ty.sabi.co.uk>
+References: <CADzS=aqYQEoqxHbp7keeuYqN2dLur1O=RfctfuFsraggxiWTKg@mail.gmail.com>
+	<22423.44287.974770.114127@tree.ty.sabi.co.uk>
+	<5797C5CE.6020300@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4f57d953-8545-4647-49e7-c434e1892fb6@intel.com>
+In-Reply-To: <5797C5CE.6020300@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, linux-raid <linux-raid@vger.kernel.org>
-Cc: Jes Sorensen <jes.sorensen@redhat.com>, tomasz.majchrzak@intel.com, aleksey.obitotskiy@intel.com, pawel.baldysiak@intel.com
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
+>> In general an in-place migration is a very dangerous operation
+>> because it stresses existing hardware a lot plus it uses code
+>> that is rarely used and is quite complex.
 
-On 07/07/2016 06:16 PM, Artur Paszkiewicz wrote:
-> On 07/07/2016 11:13 AM, Xiao Ni wrote:
->> Hi all
->>
->> We encountered one problem at booting time:
->>
->> Run MD devices:  mdadm: array /dev/md/OSVOLUME0 now has 2 devices (0 new) [FAILED]
->>
->> mdadm -IRs returns 1 at the booting time. In fact the array is already running. The
->> command mdadm -IRs shouldn't return 1 if all the arrays are running, right?
->>
->> In IncrementalScan function, it scans all the raid in /run/mdadm/map. It contains the
->> subarray too. The return value is 1 from function load_container. So the return value
->> of IncrementalScan rv is set to 1. If all arrays are running already, I think mdadm -IRs
->> should return 0, not 1.
->>
->> Should we checks earlier whether it's a container or not before calling load_container?
->>
->> Best Regards
->> Xiao
->>
-> Hi Xiao,
->
-> I think you're right that mdadm -IRs should return 0 in this case.
-> IncrementalScan should not try loading a container from a member array,
-> because that will always fail. Can you check if this fixes the problem
-> for you?
->
-> diff --git a/Incremental.c b/Incremental.c
-> index ba97b00..cc01d41 100644
-> --- a/Incremental.c
-> +++ b/Incremental.c
-> @@ -1347,8 +1347,12 @@ restart:
->   
->                  if (devnm && strcmp(devnm, me->devnm) != 0)
->                          continue;
-> -               if (devnm && me->metadata[0] == '/') {
-> +               if (me->metadata[0] == '/') {
->                          char *sl;
-> +
-> +                       if (!devnm)
-> +                               continue;
-> +
->                          /* member array, need to work on container */
->                          strncpy(container, me->metadata+1, 32);
->                          container[31] = 0;
->
-> Thanks,
-> Artur
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Hi Artur
+> But copying everything off will stress it just as much,
+> surely? The alternatives imho are worse ...
 
-Sorry for late response. I have been waiting the result from customer 
-and the customer haven't give me the answer. I tested this in my 
-environment and this patch can fix this problem.
+* The very different access patterns of a block-by-block copy to
+  new fresh disks and the migration-in-place having to rewrite by
+  moving around the contents of all involved disks.
 
-Best Regards
-Xiao
+* That in a copy there is always the original to fall back on, a
+  migration-in-place that fails can be fatal.
 
+I am giving for granted here that one way or another at least one
+copy of all the data has to be done; and block-by-block device
+sequential copy is probably the best, followed by file-by-file
+sequential copy, followed by in-place migration.
+
+Note: RAID5 in-place migration does not mean that existing blocks
+stay where they are, it means that (nearly) all blocks get moved,
+but inside the existing device set.
+
+So probably the best combination here, because the O.P. does not
+currently have any redundancy, is to first ensure there is some
+kind of copy of the data and/or redundancy, on the way to getting
+a new storage layout. Because *any* whole-content data operation
+stresses the storage system.
