@@ -1,42 +1,81 @@
-From: Anthony Youngman <antlists@youngman.org.uk>
-Subject: Re: GPT corruption on Primary Header, backup OK, fixing primary nuked
- array -- help?
-Date: Wed, 27 Jul 2016 14:10:16 +0100
-Message-ID: <fb64b6c0-40e7-e12d-f077-ca501ad7befb@youngman.org.uk>
-References: <5796B46B.6060905@suddenlinkmail.com>
- <413b1150-ca38-1907-ea5d-b68ad2f75710@websitemanagers.com.au>
- <5796F4E0.9070206@suddenlinkmail.com> <57971D3C.8040602@suddenlinkmail.com>
- <ff6872cd-98eb-aad2-a71a-7af52050ff30@websitemanagers.com.au>
- <5797C415.8010206@suddenlinkmail.com>
- <CAJCQCtSkE+-C5U9OEm0-zazLW2KHCMUqduDTA=UHsMxmf4DVrQ@mail.gmail.com>
- <5797E869.8080403@suddenlinkmail.com>
- <CAJCQCtQpGVf2Tj13o57T4=raF=czYr-V99tEDSkJ-_buk7JtTg@mail.gmail.com>
+From: Xiao Ni <xni@redhat.com>
+Subject: Re: The subarray is loaded container by load_container
+Date: Wed, 27 Jul 2016 21:19:25 +0800
+Message-ID: <5798B4DD.6030702@redhat.com>
+References: <1782686607.3885369.1467882826743.JavaMail.zimbra@redhat.com>
+ <4f57d953-8545-4647-49e7-c434e1892fb6@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJCQCtQpGVf2Tj13o57T4=raF=czYr-V99tEDSkJ-_buk7JtTg@mail.gmail.com>
+In-Reply-To: <4f57d953-8545-4647-49e7-c434e1892fb6@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: mdraid <linux-raid@vger.kernel.org>
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, linux-raid <linux-raid@vger.kernel.org>
+Cc: Jes Sorensen <jes.sorensen@redhat.com>, tomasz.majchrzak@intel.com, aleksey.obitotskiy@intel.com, pawel.baldysiak@intel.com
 List-Id: linux-raid.ids
 
 
 
-On 27/07/16 00:18, Chris Murphy wrote:
->>    The real question for me is what is the effect of having /dev/sdc1 and
->> >/dev/sdd1 as unused partitions on the drive while I'm using the whole drive. Is
->> >that something that can bite me later?
-> It already bit you. All you have to do is forget again that you're not
-> using this partition table for anything, and then try to repair it and
-> you're back in this same situation. You or someone else who ends up
-> managing the drive. So yeah, it's not an in-use valid structure so I'd
-> invalidate it so that libblkid unambiguously tells you the only
-> signatures that matter onthe drive -> drives are not partitioned, they
-> are completely under the control of mdadm, and the logical array from
-> those members is ext4 or whatever.
-And once you've blown away the GPT, those partitions won't exist anyway. 
-The only way anything should be able to find any trace of them will be 
-if you run a forensic data recovery tool.
+On 07/07/2016 06:16 PM, Artur Paszkiewicz wrote:
+> On 07/07/2016 11:13 AM, Xiao Ni wrote:
+>> Hi all
+>>
+>> We encountered one problem at booting time:
+>>
+>> Run MD devices:  mdadm: array /dev/md/OSVOLUME0 now has 2 devices (0 new) [FAILED]
+>>
+>> mdadm -IRs returns 1 at the booting time. In fact the array is already running. The
+>> command mdadm -IRs shouldn't return 1 if all the arrays are running, right?
+>>
+>> In IncrementalScan function, it scans all the raid in /run/mdadm/map. It contains the
+>> subarray too. The return value is 1 from function load_container. So the return value
+>> of IncrementalScan rv is set to 1. If all arrays are running already, I think mdadm -IRs
+>> should return 0, not 1.
+>>
+>> Should we checks earlier whether it's a container or not before calling load_container?
+>>
+>> Best Regards
+>> Xiao
+>>
+> Hi Xiao,
+>
+> I think you're right that mdadm -IRs should return 0 in this case.
+> IncrementalScan should not try loading a container from a member array,
+> because that will always fail. Can you check if this fixes the problem
+> for you?
+>
+> diff --git a/Incremental.c b/Incremental.c
+> index ba97b00..cc01d41 100644
+> --- a/Incremental.c
+> +++ b/Incremental.c
+> @@ -1347,8 +1347,12 @@ restart:
+>   
+>                  if (devnm && strcmp(devnm, me->devnm) != 0)
+>                          continue;
+> -               if (devnm && me->metadata[0] == '/') {
+> +               if (me->metadata[0] == '/') {
+>                          char *sl;
+> +
+> +                       if (!devnm)
+> +                               continue;
+> +
+>                          /* member array, need to work on container */
+>                          strncpy(container, me->metadata+1, 32);
+>                          container[31] = 0;
+>
+> Thanks,
+> Artur
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hi Artur
 
-Cheers,
-Wol
+Sorry for late response. I have been waiting the result from customer 
+and the customer haven't give me the answer. I tested this in my 
+environment and this patch can fix this problem.
+
+Best Regards
+Xiao
+
