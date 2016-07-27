@@ -1,115 +1,140 @@
-From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Subject: Re: Lost RAID6 disks when moving to new PC
-Date: Wed, 27 Jul 2016 13:57:40 +0200
-Message-ID: <20160727115740.bnwi4hntyjnb4jy3@metamorpher.de>
-References: <CAFmAqNtzaWBhAkYoNEdyV0VMniEVt0Xv_4mOHoeTsCYbmecReg@mail.gmail.com>
+From: Yi Zhang <yizhan@redhat.com>
+Subject: test file disappeared after -f, -r, --add-journal for write-journal
+ device
+Date: Wed, 27 Jul 2016 08:07:19 -0400 (EDT)
+Message-ID: <1403590832.9411207.1469621239264.JavaMail.zimbra@redhat.com>
+References: <678915290.9410266.1469620858173.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAFmAqNtzaWBhAkYoNEdyV0VMniEVt0Xv_4mOHoeTsCYbmecReg@mail.gmail.com>
+In-Reply-To: <678915290.9410266.1469620858173.JavaMail.zimbra@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alex Owen <alex@alexxx.co.uk>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: shli@fb.com, neilb@suse.com, Jes.Sorensen@redhat.com
 List-Id: linux-raid.ids
 
-On Wed, Jul 27, 2016 at 11:35:34AM +0100, Alex Owen wrote:
-> The array should be RAID6 on /dev/sd{a-f}.
+Hello maintainer
 
-Full disk raid sucks. Zero advantages, lots of additional risk. 
-There are too many programs out there that expect every disk to have 
-a partition table, and will use it unasked if it looks unpartitioned.
+Here is another strange phenomenon I found after do -f, -r, --add-journal for write-journal device.
 
-You seem to have lost your md metadata to some partitioner/installer, 
-you're also the third person with this problem in a row. Congrats. ;)
+Kernel version: 4.7.0-rc7 
+Steps I used:
+mdadm --create --run /dev/md0 --level 4 --metadata 1.2 --raid-devices 7 /dev/loop1 /dev/loop2 /dev/loop3 /dev/loop4 /dev/loop5 /dev/loop6 /dev/loop7 --write-journal /dev/loop0 --bitmap=internal --bitmap-chunk=64M --chunk 512
+mdadm --wait /dev/md0
+mkfs.ext4 /dev/md0
+mount -t ext4 /dev/md0 /mnt/fortest
+cp bigfile /mnt/fortest &
+wait
+md5sum /mnt/fortest/bigfile > md5sum3
+mdadm /dev/md0 -f /dev/loop0
+mdadm /dev/md0 -r /dev/loop0
+umount /dev/md0 -l
+mdadm -o /dev/md0
+mdadm /dev/md0 --add-journal /dev/loop0
+mdadm --wait /dev/md0
+mdadm -D /dev/md0
+mount /dev/md0 /mnt/fortest
+md5sum /mnt/fortest/bigfile > md5sum2   #<----this test file disappeared
 
-> fdisk -l :
+kernel log:
+<6>[ 3452.198142] md: bind<loop1>
+<6>[ 3452.198176] md: bind<loop2>
+<6>[ 3452.198202] md: bind<loop3>
+<6>[ 3452.198224] md: bind<loop4>
+<6>[ 3452.198244] md: bind<loop5>
+<6>[ 3452.198265] md: bind<loop6>
+<6>[ 3452.198289] md: bind<loop0>
+<6>[ 3452.198317] md: bind<loop7>
+<6>[ 3452.203183] md/raid:md0: device loop6 operational as raid disk 5
+<6>[ 3452.203186] md/raid:md0: device loop5 operational as raid disk 4
+<6>[ 3452.203187] md/raid:md0: device loop4 operational as raid disk 3
+<6>[ 3452.203188] md/raid:md0: device loop3 operational as raid disk 2
+<6>[ 3452.203189] md/raid:md0: device loop2 operational as raid disk 1
+<6>[ 3452.203190] md/raid:md0: device loop1 operational as raid disk 0
+<6>[ 3452.203684] md/raid:md0: allocated 7548kB
+<1>[ 3452.203796] md/raid:md0: raid level 4 active with 6 out of 7 devices, algorithm 0
+<7>[ 3452.203800] RAID conf printout:
+<7>[ 3452.203801]  --- level:4 rd:7 wd:6
+<7>[ 3452.203802]  disk 0, o:1, dev:loop1
+<7>[ 3452.203803]  disk 1, o:1, dev:loop2
+<7>[ 3452.203804]  disk 2, o:1, dev:loop3
+<7>[ 3452.203805]  disk 3, o:1, dev:loop4
+<7>[ 3452.203806]  disk 4, o:1, dev:loop5
+<7>[ 3452.203807]  disk 5, o:1, dev:loop6
+<6>[ 3452.203815] md/raid456: discard support disabled due to uncertainty.
+<6>[ 3452.203816] Set raid456.devices_handle_discard_safely=Y to override.
+<6>[ 3452.203819] md/raid:md0: using device loop0 as journal
+<6>[ 3452.204161] created bitmap (1 pages) for device md0
+<6>[ 3452.204202] md0: bitmap initialized from disk: read 1 pages, set 8 of 8 bits
+<6>[ 3452.271446] md0: detected capacity change from 0 to 3214934016
+<7>[ 3452.271474] RAID conf printout:
+<7>[ 3452.271477]  --- level:4 rd:7 wd:6
+<7>[ 3452.271478]  disk 0, o:1, dev:loop1
+<7>[ 3452.271479]  disk 1, o:1, dev:loop2
+<7>[ 3452.271480]  disk 2, o:1, dev:loop3
+<7>[ 3452.271481]  disk 3, o:1, dev:loop4
+<7>[ 3452.271482]  disk 4, o:1, dev:loop5
+<7>[ 3452.271483]  disk 5, o:1, dev:loop6
+<7>[ 3452.271484]  disk 6, o:1, dev:loop7
+<6>[ 3452.271613] md: recovery of RAID array md0
+<6>[ 3452.271616] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+<6>[ 3452.271617] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
+<6>[ 3452.271625] md: using 128k window, over a total of 523264k.
+<4>[ 3452.484361] md: couldn't update array info. -22
+<4>[ 3452.536719] md: couldn't update array info. -22
+<4>[ 3452.550794] md: couldn't update array info. -22
+<4>[ 3453.276007] md: couldn't update array info. -22
+<4>[ 3454.076132] md: couldn't update array info. -22
+<4>[ 3454.859359] md: couldn't update array info. -22
+<4>[ 3455.638082] md: couldn't update array info. -22
+<6>[ 3465.044292] md: md0: recovery done.
+<7>[ 3465.996564] RAID conf printout:
+<7>[ 3465.996567]  --- level:4 rd:7 wd:7
+<7>[ 3465.996568]  disk 0, o:1, dev:loop1
+<7>[ 3465.996569]  disk 1, o:1, dev:loop2
+<7>[ 3465.996570]  disk 2, o:1, dev:loop3
+<7>[ 3465.996571]  disk 3, o:1, dev:loop4
+<7>[ 3465.996572]  disk 4, o:1, dev:loop5
+<7>[ 3465.996572]  disk 5, o:1, dev:loop6
+<7>[ 3465.996573]  disk 6, o:1, dev:loop7
+<6>[ 3470.361924] EXT4-fs (md0): mounted filesystem with ordered data mode. Opts: (null)
+<1>[ 3471.084961] md/raid:md0: Disk failure on loop0, disabling device.
+<1>[ 3471.084961] md/raid:md0: Operation continuing on 7 devices.
+<7>[ 3471.253666] RAID conf printout:
+<7>[ 3471.253669]  --- level:4 rd:7 wd:7
+<7>[ 3471.253671]  disk 0, o:1, dev:loop1
+<7>[ 3471.253672]  disk 1, o:1, dev:loop2
+<7>[ 3471.253672]  disk 2, o:1, dev:loop3
+<7>[ 3471.253686]  disk 3, o:1, dev:loop4
+<7>[ 3471.253687]  disk 4, o:1, dev:loop5
+<7>[ 3471.253688]  disk 5, o:1, dev:loop6
+<7>[ 3471.253689]  disk 6, o:1, dev:loop7
+<3>[ 3475.771451] Buffer I/O error on dev md0, logical block 327680, lost sync page write
+<3>[ 3475.771458] JBD2: Error -5 detected when updating journal superblock for md0-8.
+<3>[ 3475.771461] Aborting journal on device md0-8.
+<3>[ 3475.771471] Buffer I/O error on dev md0, logical block 327680, lost sync page write
+<3>[ 3475.771475] JBD2: Error -5 detected when updating journal superblock for md0-8.
+<6>[ 3476.104774] md: unbind<loop0>
+<6>[ 3476.107402] md: export_rdev(loop0)
+<3>[ 3476.459554] Buffer I/O error on dev md0, logical block 0, lost sync page write
+<2>[ 3476.459563] EXT4-fs error (device md0): ext4_journal_check_start:56: Detected aborted journal
+<2>[ 3476.459567] EXT4-fs (md0): Remounting filesystem read-only
+<3>[ 3476.459570] EXT4-fs (md0): previous I/O error to superblock detected
+<3>[ 3476.459581] Buffer I/O error on dev md0, logical block 0, lost sync page write
+<2>[ 3476.459587] EXT4-fs (md0): ext4_writepages: jbd2_start: 9223372036854775807 pages, ino 12; err -30
+<3>[ 3476.495441] EXT4-fs (md0): previous I/O error to superblock detected
+<3>[ 3476.495500] Buffer I/O error on dev md0, logical block 0, lost sync page write
+<2>[ 3476.495508] EXT4-fs error (device md0): ext4_put_super:837: Couldn't clean up the journal
+<6>[ 3476.904587] md: bind<loop0>
+<6>[ 3476.919462] md/raid:md0: using device loop0 as journal
+<6>[ 3476.919531] md: md0 switched to read-write mode.
+<6>[ 3477.317614] EXT4-fs (md0): recovery complete
+<6>[ 3477.317618] EXT4-fs (md0): mounted filesystem with ordered data mode. Opts: (null)
 
-Your fdisk doesn't support GPT, don't use it.
 
-> parted
-> Disk /dev/sd[bcd]: 3001GB
-> Sector size (logical/physical): 512B/4096B
-> Partition Table: gpt
-> 
-> Number  Start   End     Size    File system  Name                          Flags
->  1      17.4kB  134MB   134MB                Microsoft reserved
-> partition  msftres
->  2      135MB   3001GB  3000GB               Basic data partition
->     msftdata
 
-Well, something put GPT partition table on those. GPT overwrites start 
-and end of the disk. You're using 1.2 metadata which is located 4K from 
-the start, can you show some hexdump for those disks?
+Best Regards,
+  Yi Zhang
 
-hexdump -C -s 4096 -n 4096 /dev/sdb
 
-> And the output of mdadm --examine /dev/sd[a-f]
-> 
-> ----------
-> 
-> /dev/sda:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : b377d975:86beb86c:9da9f21d:f73b2451
->            Name : NAS:0  (local to host NAS)
->   Creation Time : Sat Jan 23 17:57:37 2016
->      Raid Level : raid6
->    Raid Devices : 6
-> 
->  Avail Dev Size : 5860271024 (2794.40 GiB 3000.46 GB)
->      Array Size : 11720540160 (11177.58 GiB 12001.83 GB)
->   Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
->     Data Offset : 262144 sectors
->    Super Offset : 8 sectors
->           State : clean
->     Device UUID : 013740d6:5cc445e7:625f3257:8608daec
-> 
->     Update Time : Tue Jul 26 04:09:29 2016
->        Checksum : 14ba6ebd - correct
->          Events : 2949004
-> 
->          Layout : left-symmetric
->      Chunk Size : 512K
-> 
->    Device Role : Active device 2
->    Array State : AAAAAA ('A' == active, '.' == missing)
-
-> /dev/sdb:
->    MBR Magic : aa55
-> Partition[0] :   4294967295 sectors at            1 (type ee)
-> /dev/sdc:
->    MBR Magic : aa55
-> Partition[0] :   4294967295 sectors at            1 (type ee)
-> /dev/sdd:
->    MBR Magic : aa55
-> Partition[0] :   4294967295 sectors at            1 (type ee)
-
-Basically what we know is... your disk order for three disks 
-
-(/dev/sde = role 0, /dev/sdf = role 1, /dev/sda= role 2)
-
-and what we don't know is the disk order of /dev/sd[bcd].
-
-If the metadata is lost completely, only thing you can do is re-create 
-the RAID with all possible orders efa{bcd,bdc,cbd,cdb,dbc,dcb}.
-
-Re-creating is dangerous so you should use an overlay: https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID#Making_the_harddisks_read-only_using_an_overlay_file
-
-When re-creating you have to specify all variables (level, layout, chunksize, 
-data offset, order, ...) since the defaults picked by mdadm might differ 
-depending on your mdadm version.
-
-Example command: (untested)
-
-mdadm --create /dev/md42 --assume-clean \
-      --level=6 --chunk=512 --data-offset=128M --layout=ls \
-      /dev/overlay/sd{e,f,a,b,c,d}
-
-Then you check if it can be mounted, and once mounted if big files 
-(larger than chunksize * number of disks) are intact or no. If you 
-switch the wrong two disks it may mount but data is garbage anyway.
-
-Regards
-Andreas Klauer
