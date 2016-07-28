@@ -1,37 +1,57 @@
-From: Anthony Youngman <antlists@youngman.org.uk>
+From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
 Subject: Re: RAID5 Performance
-Date: Thu, 28 Jul 2016 14:08:23 +0100
-Message-ID: <354d54b6-31ce-a047-be0c-1e820d5b030e@youngman.org.uk>
+Date: Thu, 28 Jul 2016 14:28:23 +0100
+Message-ID: <22426.2167.369879.756599@tree.ty.sabi.co.uk>
 References: <7b7d730f-2951-ba5f-7f6b-33624b59a02d@websitemanagers.com.au>
- <CAFx4rwR0+wR_0GXh3Y7j1hZyv0_Gy7b4OD-D2+bfxV9MRp+b3Q@mail.gmail.com>
- <7af0cc98-e395-9446-05eb-a6c0ca20f187@websitemanagers.com.au>
- <CAFx4rwTMySfR27gT6You7f2T28Hq8m5Zxme1p43Fv1vtcpt_-Q@mail.gmail.com>
+	<22424.50313.900162.715200@tree.ty.sabi.co.uk>
+	<CAFx4rwSRYDACX631eLpX7Jr9jB2u4jbC7dr-0rdi9U1nV9og3Q@mail.gmail.com>
+	<22425.63565.439521.592849@tree.ty.sabi.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAFx4rwTMySfR27gT6You7f2T28Hq8m5Zxme1p43Fv1vtcpt_-Q@mail.gmail.com>
+In-Reply-To: <22425.63565.439521.592849@tree.ty.sabi.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: doug@easyco.com, Adam Goryachev <mailinglists@websitemanagers.com.au>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 28/07/16 01:11, Doug Dumitru wrote:
-> I don't know about you, but I do have SSDs, even from major vendors,
-> that fail.  They usually "just fall off the bus" with no warning.  So
-> I dislike skipping redundancy.  RAID turned an emergency into a
-> mundane task.  It is really a cost issue.  If you can afford RAID-10
-> and extra space, that will work best.  I don't think RAID-50 with this
-> few drives makes much sense.
-I came across an article about testing SSDs to destruction. First the 
-good news - they tended to last much longer than expected. And the bad 
-news? They typically contain a self-destruct switch. Once they start 
-failing, a power-cycle will (intentionally) kill them dead. ESPECIALLY 
-if they're from a major vendor.
+[ ... ]
+> That largely explains why in the tests I have mentioned small
+> sync write IOPS for many "consumerish" flash SSDs top at around
+> 100, instead of the usual > 10,000 for small non-sync writes.
+[ ... ]
 
-So if you don't notice they're dying, or (as in the case of the tester) 
-you have power problems that tip them over the edge, your data WILL be 
-gone without warning.
+To summarize the preceding long discussion:
 
-Cheers,
-Wol
+* The stats reported show a low level of IOPS being carried out.
+
+* The critical part of the workload seems to be synchronous
+  small writes.
+
+* Probably then the primary issue is the use of flash SSDs that
+  have a limited number of IOPS for small synchronous writes.
+
+* A secondary issue is that RAID5 results in RMW for small
+  writes.
+
+There are two possible options:
+
+* Replace the flash SSDs with those that are known to deliver
+  high (at least > 10,000 single threaded) small synchronous
+  write IOPS.
+
+* Relax the requirement for synchronous writes on *both* the
+  primary and secondary DRBD servers, if feeling lucky.
+
+The third option, which is to change the workload so that it
+does not emit small synchronous writes to the storage layer,
+seems not practical in the context.
+
+Ideally the system would also be switched from RAID5 to RAID10
+to avoid the large penalty on small writes at the RAID level
+too.
+
+That may be considered expensive, but as I wrote:
+
+> [ ... ] it requires a storage layer that has to cover all
+> possible IO workloads optimally, [ ... ]
