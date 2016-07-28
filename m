@@ -1,7 +1,7 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH 5/8] md: changes for MD_STILL_CLOSED flag
-Date: Thu, 28 Jul 2016 02:16:49 -0400
-Message-ID: <1469686612-16126-5-git-send-email-gqjiang@suse.com>
+Subject: [PATCH 7/8] md-cluster: clean related infos of cluster
+Date: Thu, 28 Jul 2016 02:16:51 -0400
+Message-ID: <1469686612-16126-7-git-send-email-gqjiang@suse.com>
 References: <1469686612-16126-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1469686612-16126-1-git-send-email-gqjiang@suse.com>
@@ -10,98 +10,34 @@ To: shli@kernel.org
 Cc: linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-When stop clustered raid while it is pending on resync,
-MD_STILL_CLOSED flag could be cleared since udev rule
-is triggered to open the mddev. So obviously array can't
-be stopped soon and returns EBUSY.
-
-	mdadm -Ss          md-raid-arrays.rules
-  set MD_STILL_CLOSED          md_open()
-	... ... ...          clear MD_STILL_CLOSED
-	do_md_stop
-
-We make below changes to resolve this issue:
-
-1. rename MD_STILL_CLOSED to MD_CLOSING since it is set
-   when stop array and it means we are stopping array.
-2. let md_open returns early if CLOSING is set, so no
-   other threads will open array if one thread is trying
-   to close it.
-3. no need to clear CLOSING bit in md_open because 1 has
-   ensure the bit is cleared, then we also don't need to
-   test CLOSING bit in do_md_stop.
+cluster_info and bitmap_info.nodes also need to be
+cleared when array is stopped.
 
 Reviewed-by: NeilBrown <neilb@suse.com>
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- drivers/md/md.c | 14 ++++++++------
- drivers/md/md.h |  5 ++---
- 2 files changed, 10 insertions(+), 9 deletions(-)
+ drivers/md/md.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 743cd21..0f046ed 100644
+index 0f046ed..ec46f4e 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -5567,8 +5567,7 @@ static int md_set_readonly(struct mddev *mddev, struct block_device *bdev)
- 	mutex_lock(&mddev->open_mutex);
- 	if ((mddev->pers && atomic_read(&mddev->openers) > !!bdev) ||
- 	    mddev->sync_thread ||
--	    test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) ||
--	    (bdev && !test_bit(MD_STILL_CLOSED, &mddev->flags))) {
-+	    test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
- 		printk("md: %s still in use.\n",mdname(mddev));
- 		if (did_freeze) {
- 			clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-@@ -5630,8 +5629,7 @@ static int do_md_stop(struct mddev *mddev, int mode,
- 	if ((mddev->pers && atomic_read(&mddev->openers) > !!bdev) ||
- 	    mddev->sysfs_active ||
- 	    mddev->sync_thread ||
--	    test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) ||
--	    (bdev && !test_bit(MD_STILL_CLOSED, &mddev->flags))) {
-+	    test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
- 		printk("md: %s still in use.\n",mdname(mddev));
- 		mutex_unlock(&mddev->open_mutex);
- 		if (did_freeze) {
-@@ -6814,7 +6812,7 @@ static int md_ioctl(struct block_device *bdev, fmode_t mode,
- 			err = -EBUSY;
- 			goto out;
- 		}
--		set_bit(MD_STILL_CLOSED, &mddev->flags);
-+		set_bit(MD_CLOSING, &mddev->flags);
- 		mutex_unlock(&mddev->open_mutex);
- 		sync_blockdev(bdev);
- 	}
-@@ -7063,9 +7061,13 @@ static int md_open(struct block_device *bdev, fmode_t mode)
- 	if ((err = mutex_lock_interruptible(&mddev->open_mutex)))
- 		goto out;
+@@ -5448,12 +5448,14 @@ static void md_clean(struct mddev *mddev)
+ 	mddev->degraded = 0;
+ 	mddev->safemode = 0;
+ 	mddev->private = NULL;
++	mddev->cluster_info = NULL;
+ 	mddev->bitmap_info.offset = 0;
+ 	mddev->bitmap_info.default_offset = 0;
+ 	mddev->bitmap_info.default_space = 0;
+ 	mddev->bitmap_info.chunksize = 0;
+ 	mddev->bitmap_info.daemon_sleep = 0;
+ 	mddev->bitmap_info.max_write_behind = 0;
++	mddev->bitmap_info.nodes = 0;
+ }
  
-+	if (test_bit(MD_CLOSING, &mddev->flags)) {
-+		mutex_unlock(&mddev->open_mutex);
-+		return -ENODEV;
-+	}
-+
- 	err = 0;
- 	atomic_inc(&mddev->openers);
--	clear_bit(MD_STILL_CLOSED, &mddev->flags);
- 	mutex_unlock(&mddev->open_mutex);
- 
- 	check_disk_change(bdev);
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index dc65ca6..0481f9a 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -201,9 +201,8 @@ struct mddev {
- #define MD_CHANGE_PENDING 2	/* switch from 'clean' to 'active' in progress */
- #define MD_UPDATE_SB_FLAGS (1 | 2 | 4)	/* If these are set, md_update_sb needed */
- #define MD_ARRAY_FIRST_USE 3    /* First use of array, needs initialization */
--#define MD_STILL_CLOSED	4	/* If set, then array has not been opened since
--				 * md_ioctl checked on it.
--				 */
-+#define MD_CLOSING	4	/* If set, we are closing the array, do not open
-+				 * it then */
- #define MD_JOURNAL_CLEAN 5	/* A raid with journal is already clean */
- #define MD_HAS_JOURNAL	6	/* The raid array has journal feature set */
- #define MD_RELOAD_SB	7	/* Reload the superblock because another node
+ static void __md_stop_writes(struct mddev *mddev)
 -- 
 2.6.2
 
