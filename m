@@ -1,48 +1,42 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: Kernel deadlock during mdadm reshape
-Date: Wed, 27 Jul 2016 17:04:59 -0700
-Message-ID: <1a648537-e31e-875b-642b-b68ff83a32f6@sandisk.com>
-References: <bbcfb493-cdee-54cd-99aa-b1f9217b3b43@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: [PATCH 1/8] md-cluster: call md_kick_rdev_from_array once ack failed
+Date: Thu, 28 Jul 2016 02:16:45 -0400
+Message-ID: <1469686612-16126-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <bbcfb493-cdee-54cd-99aa-b1f9217b3b43@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Shaver <jmshaver@gmail.com>, mdraid <linux-raid@vger.kernel.org>
+To: shli@kernel.org
+Cc: linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-On 07/26/2016 07:18 PM, Michael Shaver wrote:
-> I am experiencing the exact same problem reported in this thread:
->
-> http://www.spinics.net/lists/raid/msg52235.html
->
-> Also reported here:
->
-> https://forums.gentoo.org/viewtopic-t-1043706.html
->
-> And here:
->
-> https://bbs.archlinux.org/viewtopic.php?id=212108
->
-> I have a raid5 array of 2TB disks currently stuck at 94% of a mdadm
-> reshape squeal to a grow operation from 4 disks to 5.  In my case, I did
-> have a drive drop out of the array during the reshape.
->
-> [ ... ]
-> [<ffffffff811cb8dd>] truncate_inode_pages_range+0x46d/0x880
-> [<ffffffff811cbd05>] truncate_inode_pages+0x15/0x20
-> [ ... ]
+The new_disk_ack could return failure if WAITING_FOR_NEWDISK
+is not set, so we need to kick the dev from array in case
+failure happened.
 
-Hello Michael,
+Reviewed-by: NeilBrown <neilb@suse.com>
+Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+---
+ drivers/md/md.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-I ran into a similar lockup while retesting the dm-mpath driver. So we 
-either ran into a different lockup or the lockup was not related to the 
-md driver. Were you using a distro kernel or a kernel you built 
-yourself? Anyway, was THP (transparent huge page) support enabled? If 
-so, can you repeat your test with THP support disabled and see whether 
-that makes a difference?
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 2ed547f..743cd21 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6092,9 +6092,11 @@ static int add_new_disk(struct mddev *mddev, mdu_disk_info_t *info)
+ 			export_rdev(rdev);
+ 
+ 		if (mddev_is_clustered(mddev)) {
+-			if (info->state & (1 << MD_DISK_CANDIDATE))
+-				md_cluster_ops->new_disk_ack(mddev, (err == 0));
+-			else {
++			if (info->state & (1 << MD_DISK_CANDIDATE)) {
++				err = md_cluster_ops->new_disk_ack(mddev, (err == 0));
++				if (err)
++					md_kick_rdev_from_array(rdev);
++			} else {
+ 				if (err)
+ 					md_cluster_ops->add_new_disk_cancel(mddev);
+ 				else
+-- 
+2.6.2
 
-Thanks,
-
-Bart.
