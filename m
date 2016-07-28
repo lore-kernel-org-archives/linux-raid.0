@@ -1,42 +1,63 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH 1/8] md-cluster: call md_kick_rdev_from_array once ack failed
-Date: Thu, 28 Jul 2016 02:16:45 -0400
-Message-ID: <1469686612-16126-1-git-send-email-gqjiang@suse.com>
+Subject: [PATCH 3/8] md-cluster: remove some unnecessary dlm_unlock_sync
+Date: Thu, 28 Jul 2016 02:16:47 -0400
+Message-ID: <1469686612-16126-3-git-send-email-gqjiang@suse.com>
+References: <1469686612-16126-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1469686612-16126-1-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: shli@kernel.org
 Cc: linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-The new_disk_ack could return failure if WAITING_FOR_NEWDISK
-is not set, so we need to kick the dev from array in case
-failure happened.
+Since DLM_LKF_FORCEUNLOCK is used in lockres_free,
+we don't need to call dlm_unlock_sync before free
+lock resource.
 
 Reviewed-by: NeilBrown <neilb@suse.com>
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- drivers/md/md.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/md/md-cluster.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 2ed547f..743cd21 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -6092,9 +6092,11 @@ static int add_new_disk(struct mddev *mddev, mdu_disk_info_t *info)
- 			export_rdev(rdev);
+diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+index 0a0605f..ea2699e 100644
+--- a/drivers/md/md-cluster.c
++++ b/drivers/md/md-cluster.c
+@@ -281,7 +281,7 @@ static void recover_bitmaps(struct md_thread *thread)
+ 		ret = bitmap_copy_from_slot(mddev, slot, &lo, &hi, true);
+ 		if (ret) {
+ 			pr_err("md-cluster: Could not copy data from bitmap %d\n", slot);
+-			goto dlm_unlock;
++			goto clear_bit;
+ 		}
+ 		if (hi > 0) {
+ 			if (lo < mddev->recovery_cp)
+@@ -293,8 +293,6 @@ static void recover_bitmaps(struct md_thread *thread)
+ 			    md_wakeup_thread(mddev->thread);
+ 			}
+ 		}
+-dlm_unlock:
+-		dlm_unlock_sync(bm_lockres);
+ clear_bit:
+ 		lockres_free(bm_lockres);
+ 		clear_bit(slot, &cinfo->recovery_map);
+@@ -763,7 +761,6 @@ static int gather_all_resync_info(struct mddev *mddev, int total_slots)
+ 			md_check_recovery(mddev);
+ 		}
  
- 		if (mddev_is_clustered(mddev)) {
--			if (info->state & (1 << MD_DISK_CANDIDATE))
--				md_cluster_ops->new_disk_ack(mddev, (err == 0));
--			else {
-+			if (info->state & (1 << MD_DISK_CANDIDATE)) {
-+				err = md_cluster_ops->new_disk_ack(mddev, (err == 0));
-+				if (err)
-+					md_kick_rdev_from_array(rdev);
-+			} else {
- 				if (err)
- 					md_cluster_ops->add_new_disk_cancel(mddev);
- 				else
+-		dlm_unlock_sync(bm_lockres);
+ 		lockres_free(bm_lockres);
+ 	}
+ out:
+@@ -1173,7 +1170,6 @@ static void unlock_all_bitmaps(struct mddev *mddev)
+ 	if (cinfo->other_bitmap_lockres) {
+ 		for (i = 0; i < mddev->bitmap_info.nodes - 1; i++) {
+ 			if (cinfo->other_bitmap_lockres[i]) {
+-				dlm_unlock_sync(cinfo->other_bitmap_lockres[i]);
+ 				lockres_free(cinfo->other_bitmap_lockres[i]);
+ 			}
+ 		}
 -- 
 2.6.2
 
