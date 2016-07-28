@@ -1,79 +1,63 @@
-From: ZhengYuan Liu <liuzhengyuan@kylinos.cn>
-Subject: [PATCH] raid5: fix incorrectly counter of conf->empty_inactive_list_nr
-Date: Thu, 28 Jul 2016 14:22:14 +0800
-Message-ID: <1469686934-1937-1-git-send-email-liuzhengyuan@kylinos.cn>
+From: yizhan <yizhan@redhat.com>
+Subject: Re: test file disappeared after -f, -r, --add-journal for
+ write-journal device
+Date: Thu, 28 Jul 2016 15:04:23 +0800
+Message-ID: <22a737af-1ad8-94ce-de31-abdb9c6187d4@redhat.com>
+References: <678915290.9410266.1469620858173.JavaMail.zimbra@redhat.com>
+ <1403590832.9411207.1469621239264.JavaMail.zimbra@redhat.com>
+ <20160728012225.GB48473@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20160728012225.GB48473@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.com
-Cc: shli@kernel.org, liuzhengyuang521@gmail.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, ZhengYuan Liu <liuzhengyuan@kylinos.cn>
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, neilb@suse.com, Jes.Sorensen@redhat.com
 List-Id: linux-raid.ids
 
-The counter conf->empty_inactive_list_nr is only used for determine if the
-raid5 is congested which is deal with in function raid5_congested().
-It was increased in get_free_stripe() when conf->inactive_list got to be
-empty and decreased in release_inactive_stripe_list() when splice
-temp_inactive_list to conf->inactive_list. However, this may have a
-problem when raid5_get_active_stripe or stripe_add_to_batch_list was called,
-because these two functions may call list_del_init(&sh->lru) to delete sh from
-"conf->inactive_list + hash" which may cause "conf->inactive_list + hash" to
-be empty when atomic_inc_not_zero(&sh->count) got false. So a check should be
-done at these two point and increase empty_inactive_list_nr accordingly.
-Otherwise the counter may get to be negative number which would influence
-async readahead from VFS.
-
-Signed-off-by: ZhengYuan Liu <liuzhengyuan@kylinos.cn>
----
- drivers/md/raid5.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 7c53861..1656c44 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -659,6 +659,7 @@ raid5_get_active_stripe(struct r5conf *conf, sector_t sector,
- {
- 	struct stripe_head *sh;
- 	int hash = stripe_hash_locks_hash(sector);
-+	int inc_empty_inactive_list_flag;
- 
- 	pr_debug("get_stripe, sector %llu\n", (unsigned long long)sector);
- 
-@@ -703,7 +704,12 @@ raid5_get_active_stripe(struct r5conf *conf, sector_t sector,
- 					atomic_inc(&conf->active_stripes);
- 				BUG_ON(list_empty(&sh->lru) &&
- 				       !test_bit(STRIPE_EXPANDING, &sh->state));
-+				inc_empty_inactive_list_flag = 0;
-+				if (!list_empty(conf->inactive_list + hash))
-+					inc_empty_inactive_list_flag = 1;
- 				list_del_init(&sh->lru);
-+				if (list_empty(conf->inactive_list + hash) && inc_empty_inactive_list_flag)
-+					atomic_inc(&conf->empty_inactive_list_nr);
- 				if (sh->group) {
- 					sh->group->stripes_cnt--;
- 					sh->group = NULL;
-@@ -762,6 +768,7 @@ static void stripe_add_to_batch_list(struct r5conf *conf, struct stripe_head *sh
- 	sector_t head_sector, tmp_sec;
- 	int hash;
- 	int dd_idx;
-+	int inc_empty_inactive_list_flag;
- 
- 	if (!stripe_can_batch(sh))
- 		return;
-@@ -781,7 +788,11 @@ static void stripe_add_to_batch_list(struct r5conf *conf, struct stripe_head *sh
- 				atomic_inc(&conf->active_stripes);
- 			BUG_ON(list_empty(&head->lru) &&
- 			       !test_bit(STRIPE_EXPANDING, &head->state));
-+			if (!list_empty(conf->inactive_list + hash))
-+				inc_empty_inactive_list_flag = 1;
- 			list_del_init(&head->lru);
-+			if (list_empty(conf->inactive_list + hash) && inc_empty_inactive_list_flag)
-+				atomic_inc(&conf->empty_inactive_list_nr);
- 			if (head->group) {
- 				head->group->stripes_cnt--;
- 				head->group = NULL;
--- 
-1.9.1
 
 
+On 07/28/2016 09:22 AM, Shaohua Li wrote:
+> On Wed, Jul 27, 2016 at 08:07:19AM -0400, Yi Zhang wrote:
+>> Hello maintainer
+>>
+>> Here is another strange phenomenon I found after do -f, -r, --add-journal for write-journal device.
+>>
+>> Kernel version: 4.7.0-rc7
+>> Steps I used:
+>> mdadm --create --run /dev/md0 --level 4 --metadata 1.2 --raid-devices 7 /dev/loop1 /dev/loop2 /dev/loop3 /dev/loop4 /dev/loop5 /dev/loop6 /dev/loop7 --write-journal /dev/loop0 --bitmap=internal --bitmap-chunk=64M --chunk 512
+>> mdadm --wait /dev/md0
+>> mkfs.ext4 /dev/md0
+>> mount -t ext4 /dev/md0 /mnt/fortest
+>> cp bigfile /mnt/fortest &
+>> wait
+>> md5sum /mnt/fortest/bigfile > md5sum3
+>> mdadm /dev/md0 -f /dev/loop0
+> since loop0 is the journal device and it fails, we will mark the md0 readonly
+> at this point. Filesystem can't do any write. It's possible the fortest/md5sum3
+> files not hit disk yet, and are lost. I think your test should do a sync before
+> mark journal disk failure.
+I add sync operation before mark journal disk failure, this issue cannot 
+be reproduced any more,
 
+thanks
+Yi
+>> mdadm /dev/md0 -r /dev/loop0
+>> umount /dev/md0 -l
+>> mdadm -o /dev/md0
+>> mdadm /dev/md0 --add-journal /dev/loop0
+>> mdadm --wait /dev/md0
+>> mdadm -D /dev/md0
+>> mount /dev/md0 /mnt/fortest
+>> md5sum /mnt/fortest/bigfile > md5sum2   #<----this test file disappeared
+> If a sync is done before journal disk fails and you still see the file
+> disappeared, it's a bug.
+>
+> Thanks,
+> Shaohua
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
