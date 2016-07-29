@@ -1,53 +1,70 @@
-From: "Obitotskiy, Aleksey" <aleksey.obitotskiy@intel.com>
-Subject: Re: [PATCH] md: Prevent IO hold during accessing to failed raid5
- array
-Date: Fri, 29 Jul 2016 09:07:43 +0000
-Message-ID: <1469783178.2660.21.camel@intel.com>
-References: <1468589067-1966-1-git-send-email-aleksey.obitotskiy@intel.com>
-	 <20160719224603.GB79792@kernel.org>
+From: Kai Krakow <hurikhan77@gmail.com>
+Subject: Re: To add, or not to add, a bio REQ_ROTATIONAL flag
+Date: Fri, 29 Jul 2016 18:28:11 +0200
+Message-ID: <20160729182811.27c0595c@jupiter.sol.kaishome.de>
+References: <alpine.LRH.2.11.1607281603530.10662@mail.ewheeler.net>
+	<579AABAA.2020200@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160719224603.GB79792@kernel.org>
-Content-Language: en-US
-Content-ID: <746348CDEE76BD42BE63130EFED1DE8B@intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "shli@kernel.org" <shli@kernel.org>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-bcache-owner@vger.kernel.org>
+Sender: linux-bcache-owner@vger.kernel.org
+To: linux-bcache@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, linux-block@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.orglinux-raid@vger.kernel.orglinux-block@vger.kernel.orgdm-devel@redhat.comlinux-raid@vger.kernel.orgdm-devel@redhat.comlinux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-SGVsbG8sDQoNCkkgd291bGQgbGlrZSB0byBrbm93IHdoYXQgdGhlIHN0YXR1cyBvZiB0aGlzIHBh
-dGNoLg0KTWF5YmUgSSBzaG91bGQgcHJvdmlkZSBtb3JlIGluZm8gYWJvdXQ/DQoNClJlZ2FyZHMs
-DQpBbGVrc2V5DQoNCk9uIFR1ZSwgMjAxNi0wNy0xOSBhdCAxNTo0NiAtMDcwMCwgU2hhb2h1YSBM
-aSB3cm90ZToNCj4gT24gRnJpLCBKdWwgMTUsIDIwMTYgYXQgMDM6MjQ6MjdQTSArMDIwMCwgQWxl
-eGV5IE9iaXRvdHNraXkgd3JvdGU6DQo+ID4gDQo+ID4gQWZ0ZXIgYXJyYXkgZW50ZXJzIGluIGZh
-aWxlZCBzdGF0ZSAoZS5nLiBudW1iZXIgb2YgZmFpbGVkIGRyaXZlcw0KPiA+IGJlY29tZXMgbW9y
-ZSB0aGVuIGFjY2VwdGVkIGZvciByYWlkNSBsZXZlbCkgaXQgc2V0cyBlcnJvciBmbGFncw0KPiA+
-IChvbmUgb2YgdGhpcyBmbGFncyBpcyBNRF9DSEFOR0VfUEVORElORykuIFRoaXMgZmxhZyBwcmV2
-ZW50cyB0bw0KPiA+IGZpbmlzaCBhbGwgbmV3IG9yIG5vbi1maW5pc2hlZCBJT3MgdG8gYXJyYXkg
-YW5kIGhvbGQgdGhlbSBpbg0KPiA+IHBlbmRpbmcgc3RhdGUuIEluIHNvbWUgY2FzZXMgdGhpcyBj
-YW4gbGVhZHMgdG8gZGVhZGxvY2sgc2l0dWF0aW9uLg0KPiA+IA0KPiA+IEZvciBleGFtcGxlIHVk
-ZXYgaGFuZGxlIGFycmF5IHN0YXRlIGNoYW5nZXMgKGRyaXZlcyBiZWNvbWVzIGZhdWx0eSkNCj4g
-PiBhbmQgYmxraWQgc3RhcnRlZCBidXQgdW5hYmxlIHRvIGZpbmlzaCByZWFkcyBkdWUgdG8gSU8g
-aG9sZC4NCj4gPiBBdCB0aGUgc2FtZSB0aW1lIHdlIHVuYWJsZSB0byBnZXQgZXhjbHVzaXZlIGFj
-Y2VzcyB0byBhcnJheQ0KPiA+ICh0byBzdG9wIGFycmF5IGluIG91ciBjYXNlKSBiZWNhdXNlIGFu
-b3RoZXIgZXh0ZXJuYWwgYXBwbGljYXRpb24NCj4gPiBzdGlsbCB1c2UgdGhpcyBhcnJheSAoYmxr
-aWQgaW4gb3VyIGNhc2UpLg0KPiA+IA0KPiA+IEZpeCBtYWtlcyBwb3NzaWJsZSB0byByZXR1cm4g
-SU8gd2l0aCBlcnJvcnMgaW1tZWRpYXRlbHkuDQo+ID4gU28gZXh0ZXJuYWwgYXBwbGljYXRpb24g
-Y2FuIGZpbmlzaCB3b3JraW5nIHdpdGggYXJyYXkgYW5kDQo+ID4gZ2l2ZSBleGNsdXNpdmUgYWNj
-ZXNzIHRvIG90aGVyIGFwcGxpY2F0aW9ucy4NCj4gPiANCj4gPiBTaWduZWQtb2ZmLWJ5OiBBbGV4
-ZXkgT2JpdG90c2tpeSA8YWxla3NleS5vYml0b3Rza2l5QGludGVsLmNvbT4NCj4gPiAtLS0NCj4g
-PiDCoGRyaXZlcnMvbWQvcmFpZDUuYyB8IDQgKysrLQ0KPiA+IMKgMSBmaWxlIGNoYW5nZWQsIDMg
-aW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQ0KPiA+IA0KPiA+IGRpZmYgLS1naXQgYS9kcml2
-ZXJzL21kL3JhaWQ1LmMgYi9kcml2ZXJzL21kL3JhaWQ1LmMNCj4gPiBpbmRleCA2YzExNDlkLi45
-OTQ3MWI2IDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvbWQvcmFpZDUuYw0KPiA+ICsrKyBiL2Ry
-aXZlcnMvbWQvcmFpZDUuYw0KPiA+IEBAIC00NjkyLDcgKzQ2OTIsOSBAQCBmaW5pc2g6DQo+ID4g
-wqAJfQ0KPiA+IMKgDQo+ID4gwqAJaWYgKCFiaW9fbGlzdF9lbXB0eSgmcy5yZXR1cm5fYmkpKSB7
-DQo+ID4gLQkJaWYgKHRlc3RfYml0KE1EX0NIQU5HRV9QRU5ESU5HLCAmY29uZi0+bWRkZXYtDQo+
-ID4gPmZsYWdzKSkgew0KPiA+ICsJCWlmICh0ZXN0X2JpdChNRF9DSEFOR0VfUEVORElORywgJmNv
-bmYtPm1kZGV2LQ0KPiA+ID5mbGFncykgJiYNCj4gPiArCQkJCShzLmZhaWxlZCA8PSBjb25mLT5t
-YXhfZGVncmFkZWQgfHwNCj4gPiArCQkJCQljb25mLT5tZGRldi0+ZXh0ZXJuYWwgPT0NCj4gPiAw
-KSkgew0KPiA+IMKgCQkJc3Bpbl9sb2NrX2lycSgmY29uZi0+ZGV2aWNlX2xvY2spOw0KPiA+IMKg
-CQkJYmlvX2xpc3RfbWVyZ2UoJmNvbmYtPnJldHVybl9iaSwNCj4gPiAmcy5yZXR1cm5fYmkpOw0K
-PiA+IMKgCQkJc3Bpbl91bmxvY2tfaXJxKCZjb25mLT5kZXZpY2VfbG9jayk7
+Am Fri, 29 Jul 2016 02:04:42 +0100
+schrieb Wols Lists <antlists@youngman.org.uk>:
+
+> On 29/07/16 01:50, Eric Wheeler wrote:
+> > Hello all,
+> > 
+> > With the many SSD caching layers being developed (bcache, dm-cache, 
+> > dm-writeboost, etc), how could we flag a bio from userspace to
+> > indicate whether the bio is preferred to hit spinning disks instead
+> > of an SSD?
+> > 
+> > Unnecessary promotions, evections, and writeback increase the write
+> > burden on the caching layer and burns out SSDs too fast (TBW), thus
+> > requring equipment replacement.  
+> 
+> What's the spec of these devices? How long are they expected to last?
+> 
+> Other recent posts on this (linux-raid) mailing list refer to tests on
+> SSDs that indicates their typical life is way beyond their nominal
+> life, and that in normal usage they are actually likely to outlive
+> "spinning rust".
+
+Well, using SSD as a caching layer is probably everything else but
+normal usage. Caching involves writing a lot of data given the fact
+that it usually backs huge storage pools and is there to eliminate/hide
+inefficient usage patterns of rotational media. Caching layers like
+bcache do its best to turn writes to the device into optimal write
+patterns at best - but still, it writes a lot of data.
+
+> http://techreport.com/review/24841/introducing-the-ssd-endurance-experiment
+> 
+> http://techreport.com/review/27909/the-ssd-endurance-experiment-theyre-all-dead/3
+> 
+> Looking at the results, the FIRST drives only started failing once
+> they'd written some 700 Terabytes. How long is it going to take you to
+> write that much data over a SATA3 link?
+
+I had a Crucial MX100 128GB SSD as bcache (writeback mode) in the past.
+It lasted exactly 12-13 months when I was forced to replace it: The
+lifetime of the SSD reached around 95% according to smartctl. The specs
+say, it has a lifetime guarantee of 85TB written. I guess it could have
+lasted longer due to bcache's optimized access patterns - but I didn't
+want to test it. Bigger SSDs usually last a lot longer, so now I'm
+using a Samsung 850 Evo 500GB which has a guarantee of 150TBW.
+According to tests, it probably goes a lot higher before failing (like
+250TBW estimated) but I don't want to test this is writeback mode.
+
+So the idea of reducing writes to the caching layer, or better
+eliminate useless writes altogether, would be very welcome.
+
+-- 
+Regards,
+Kai
+
+Replies to list-only preferred.
