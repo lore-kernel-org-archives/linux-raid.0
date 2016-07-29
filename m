@@ -1,50 +1,53 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: To add, or not to add, a bio REQ_ROTATIONAL flag
-Date: Thu, 28 Jul 2016 21:16:16 -0400
-Message-ID: <yq1y44l2qhr.fsf@sermon.lab.mkp.net>
-References: <alpine.LRH.2.11.1607281603530.10662@mail.ewheeler.net>
+From: "Obitotskiy, Aleksey" <aleksey.obitotskiy@intel.com>
+Subject: Re: [PATCH] md: Prevent IO hold during accessing to failed raid5
+ array
+Date: Fri, 29 Jul 2016 09:07:43 +0000
+Message-ID: <1469783178.2660.21.camel@intel.com>
+References: <1468589067-1966-1-git-send-email-aleksey.obitotskiy@intel.com>
+	 <20160719224603.GB79792@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <alpine.LRH.2.11.1607281603530.10662@mail.ewheeler.net> (Eric
-	Wheeler's message of "Thu, 28 Jul 2016 17:50:14 -0700 (PDT)")
-Sender: linux-block-owner@vger.kernel.org
-To: Eric Wheeler <bcache@lists.ewheeler.net>
-Cc: linux-block@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20160719224603.GB79792@kernel.org>
+Content-Language: en-US
+Content-ID: <746348CDEE76BD42BE63130EFED1DE8B@intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "shli@kernel.org" <shli@kernel.org>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
->>>>> "Eric" == Eric Wheeler <bcache@lists.ewheeler.net> writes:
-
-Eric,
-
-Eric> However, just because FADV_SEQUENTIAL is flagged doesn't mean the
-Eric> cache should bypass.  Filesystems can fragment, and while the file
-Eric> being read may be read sequentially, the blocks on which it
-Eric> resides may not be.  Same thing for higher-level block devices
-Eric> such as dm-thinp where one might sequentially read a thin volume
-Eric> but its _tdata might not be in linear order.  This may imply that
-Eric> we need a new way to flag cache bypass from userspace that is
-Eric> neither io-priority nor fadvise driven.
-
-Why conflate the two? Something being a background task is orthogonal to
-whether it is being read sequentially or not.
-
-Eric> So what are our options?  What might be the best way to do this?
-
-For the SCSI I/O hints I use the idle I/O priority to classify
-backups. Works fine.
-
-Eric> Are FADV_NOREUSE/FADV_DONTNEED reasonable candidates?
-
-FADV_DONTNEED was intended for this. There have been patches posted in
-the past that tied the loop between the fadvise flags and the bio. I
-would like to see those revived.
-
-Eric> Perhaps ionice could be used used, but the concept of "priority"
-Eric> doesn't exactly encompass the concept of cache-bypass---so is
-Eric> something else needed?
-
-The idle class explicitly does not have a priority.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+SGVsbG8sDQoNCkkgd291bGQgbGlrZSB0byBrbm93IHdoYXQgdGhlIHN0YXR1cyBvZiB0aGlzIHBh
+dGNoLg0KTWF5YmUgSSBzaG91bGQgcHJvdmlkZSBtb3JlIGluZm8gYWJvdXQ/DQoNClJlZ2FyZHMs
+DQpBbGVrc2V5DQoNCk9uIFR1ZSwgMjAxNi0wNy0xOSBhdCAxNTo0NiAtMDcwMCwgU2hhb2h1YSBM
+aSB3cm90ZToNCj4gT24gRnJpLCBKdWwgMTUsIDIwMTYgYXQgMDM6MjQ6MjdQTSArMDIwMCwgQWxl
+eGV5IE9iaXRvdHNraXkgd3JvdGU6DQo+ID4gDQo+ID4gQWZ0ZXIgYXJyYXkgZW50ZXJzIGluIGZh
+aWxlZCBzdGF0ZSAoZS5nLiBudW1iZXIgb2YgZmFpbGVkIGRyaXZlcw0KPiA+IGJlY29tZXMgbW9y
+ZSB0aGVuIGFjY2VwdGVkIGZvciByYWlkNSBsZXZlbCkgaXQgc2V0cyBlcnJvciBmbGFncw0KPiA+
+IChvbmUgb2YgdGhpcyBmbGFncyBpcyBNRF9DSEFOR0VfUEVORElORykuIFRoaXMgZmxhZyBwcmV2
+ZW50cyB0bw0KPiA+IGZpbmlzaCBhbGwgbmV3IG9yIG5vbi1maW5pc2hlZCBJT3MgdG8gYXJyYXkg
+YW5kIGhvbGQgdGhlbSBpbg0KPiA+IHBlbmRpbmcgc3RhdGUuIEluIHNvbWUgY2FzZXMgdGhpcyBj
+YW4gbGVhZHMgdG8gZGVhZGxvY2sgc2l0dWF0aW9uLg0KPiA+IA0KPiA+IEZvciBleGFtcGxlIHVk
+ZXYgaGFuZGxlIGFycmF5IHN0YXRlIGNoYW5nZXMgKGRyaXZlcyBiZWNvbWVzIGZhdWx0eSkNCj4g
+PiBhbmQgYmxraWQgc3RhcnRlZCBidXQgdW5hYmxlIHRvIGZpbmlzaCByZWFkcyBkdWUgdG8gSU8g
+aG9sZC4NCj4gPiBBdCB0aGUgc2FtZSB0aW1lIHdlIHVuYWJsZSB0byBnZXQgZXhjbHVzaXZlIGFj
+Y2VzcyB0byBhcnJheQ0KPiA+ICh0byBzdG9wIGFycmF5IGluIG91ciBjYXNlKSBiZWNhdXNlIGFu
+b3RoZXIgZXh0ZXJuYWwgYXBwbGljYXRpb24NCj4gPiBzdGlsbCB1c2UgdGhpcyBhcnJheSAoYmxr
+aWQgaW4gb3VyIGNhc2UpLg0KPiA+IA0KPiA+IEZpeCBtYWtlcyBwb3NzaWJsZSB0byByZXR1cm4g
+SU8gd2l0aCBlcnJvcnMgaW1tZWRpYXRlbHkuDQo+ID4gU28gZXh0ZXJuYWwgYXBwbGljYXRpb24g
+Y2FuIGZpbmlzaCB3b3JraW5nIHdpdGggYXJyYXkgYW5kDQo+ID4gZ2l2ZSBleGNsdXNpdmUgYWNj
+ZXNzIHRvIG90aGVyIGFwcGxpY2F0aW9ucy4NCj4gPiANCj4gPiBTaWduZWQtb2ZmLWJ5OiBBbGV4
+ZXkgT2JpdG90c2tpeSA8YWxla3NleS5vYml0b3Rza2l5QGludGVsLmNvbT4NCj4gPiAtLS0NCj4g
+PiDCoGRyaXZlcnMvbWQvcmFpZDUuYyB8IDQgKysrLQ0KPiA+IMKgMSBmaWxlIGNoYW5nZWQsIDMg
+aW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQ0KPiA+IA0KPiA+IGRpZmYgLS1naXQgYS9kcml2
+ZXJzL21kL3JhaWQ1LmMgYi9kcml2ZXJzL21kL3JhaWQ1LmMNCj4gPiBpbmRleCA2YzExNDlkLi45
+OTQ3MWI2IDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvbWQvcmFpZDUuYw0KPiA+ICsrKyBiL2Ry
+aXZlcnMvbWQvcmFpZDUuYw0KPiA+IEBAIC00NjkyLDcgKzQ2OTIsOSBAQCBmaW5pc2g6DQo+ID4g
+wqAJfQ0KPiA+IMKgDQo+ID4gwqAJaWYgKCFiaW9fbGlzdF9lbXB0eSgmcy5yZXR1cm5fYmkpKSB7
+DQo+ID4gLQkJaWYgKHRlc3RfYml0KE1EX0NIQU5HRV9QRU5ESU5HLCAmY29uZi0+bWRkZXYtDQo+
+ID4gPmZsYWdzKSkgew0KPiA+ICsJCWlmICh0ZXN0X2JpdChNRF9DSEFOR0VfUEVORElORywgJmNv
+bmYtPm1kZGV2LQ0KPiA+ID5mbGFncykgJiYNCj4gPiArCQkJCShzLmZhaWxlZCA8PSBjb25mLT5t
+YXhfZGVncmFkZWQgfHwNCj4gPiArCQkJCQljb25mLT5tZGRldi0+ZXh0ZXJuYWwgPT0NCj4gPiAw
+KSkgew0KPiA+IMKgCQkJc3Bpbl9sb2NrX2lycSgmY29uZi0+ZGV2aWNlX2xvY2spOw0KPiA+IMKg
+CQkJYmlvX2xpc3RfbWVyZ2UoJmNvbmYtPnJldHVybl9iaSwNCj4gPiAmcy5yZXR1cm5fYmkpOw0K
+PiA+IMKgCQkJc3Bpbl91bmxvY2tfaXJxKCZjb25mLT5kZXZpY2VfbG9jayk7
