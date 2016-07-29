@@ -1,57 +1,70 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: SOLVED [was Re: GPT corruption on Primary Header, backup OK,
- fixing primary nuked array -- help?]
-Date: Thu, 28 Jul 2016 17:25:07 -0400
-Message-ID: <f160baa9-e360-bd4a-f0e4-b760d669f5f2@turmel.org>
-References: <5796B46B.6060905@suddenlinkmail.com>
- <413b1150-ca38-1907-ea5d-b68ad2f75710@websitemanagers.com.au>
- <5796F4E0.9070206@suddenlinkmail.com> <57971D3C.8040602@suddenlinkmail.com>
- <ff6872cd-98eb-aad2-a71a-7af52050ff30@websitemanagers.com.au>
- <5797C415.8010206@suddenlinkmail.com>
- <CAJCQCtSkE+-C5U9OEm0-zazLW2KHCMUqduDTA=UHsMxmf4DVrQ@mail.gmail.com>
- <5797E869.8080403@suddenlinkmail.com>
- <CAJCQCtQpGVf2Tj13o57T4=raF=czYr-V99tEDSkJ-_buk7JtTg@mail.gmail.com>
- <57985F10.4070706@suddenlinkmail.com>
- <ac25abf7-b97e-1db4-d227-2ee57a02ed90@youngman.org.uk>
- <57993F58.1050704@suddenlinkmail.com>
- <0d00162b-6726-924a-a84d-016871563d09@youngman.org.uk>
+From: Eric Wheeler <bcache@lists.ewheeler.net>
+Subject: To add, or not to add, a bio REQ_ROTATIONAL flag
+Date: Thu, 28 Jul 2016 17:50:14 -0700 (PDT)
+Message-ID: <alpine.LRH.2.11.1607281603530.10662@mail.ewheeler.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <0d00162b-6726-924a-a84d-016871563d09@youngman.org.uk>
-Sender: linux-raid-owner@vger.kernel.org
-To: Anthony Youngman <antlists@youngman.org.uk>, "David C. Rankin" <drankinatty@suddenlinkmail.com>, mdraid <linux-raid@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: linux-block@vger.kernel.org
+Cc: dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/28/2016 08:53 AM, Anthony Youngman wrote:
-> I'll just say I don't think the past 16 years is a good guide at all ...
-> (but I will add I'm doing exactly the same as you - two 3TB desktop
-> drives in a mirror :-).
-> 
-> The timeout problem seems to be relatively recent. MOST 1TB or less
-> drives don't seem to have an issue. It's bigger drives that will bite you.
+Hello all,
 
-This is not a recent issue.  I was first bitten by this in the summer of
-2011 when upgrading some Seagate drives from 1T to 2T:
+With the many SSD caching layers being developed (bcache, dm-cache, 
+dm-writeboost, etc), how could we flag a bio from userspace to indicate 
+whether the bio is preferred to hit spinning disks instead of an SSD?
 
-http://marc.info/?l=linux-raid&m=133761065622164&w=2
+Unnecessary promotions, evections, and writeback increase the write burden 
+on the caching layer and burns out SSDs too fast (TBW), thus requring 
+equipment replacement.
 
-Prior to this, the problem existed in the sense that SCTERC wasn't
-commonly disabled on powerup for desktop drives.  More recent desktop
-drives don't support it at all.
+Is there already a mechanism for this that could be added to the various 
+caching mechanisms' promote/demote/bypass logic?
 
-Run "smartctl -l scterc /dev/sdX" on your drives shortly after power-up.
- You should see a short time setting like this:
+For example, I would like to prevent backups from influencing the cache 
+eviction logic. Neither do I wish to evict cache due to a bio from a 
+backup process, nor do I wish a bio from the backup process to be cached 
+on the SSD.  
 
-> SCT Error Recovery Control:
->            Read:     70 (7.0 seconds)
->           Write:     70 (7.0 seconds
 
-If you see anything else, you will need boot time scripting or udev
-scripts that will either enable the above, or reset the drive's kernel
-timeout.  If you have this problem and fail to script the corrections,
-your array will eventually go BOOM, even though your drives aren't
-actually failed.
+We would want to bypass the cache for IO that is somehow flagged to bypass 
+block-layer caches and use the rotational disk unless the referenced block 
+already exists on the SSD.
 
-Phil
+There might be two cases here that would be ideal to unify without 
+touching filesystem code:
+
+  1) open() of a block device
+
+  2) open() on a file such that a filesystem must flag the bio
+
+I had considered writing something to detect FADV_SEQUENTIAL/FADV_NOREUSE 
+or `ionice -c3` on a process hitting bcache and modifying 
+check_should_bypass()/should_writeback() to behave as such.
+
+However, just because FADV_SEQUENTIAL is flagged doesn't mean the cache 
+should bypass.  Filesystems can fragment, and while the file being read 
+may be read sequentially, the blocks on which it resides may not be.  
+Same thing for higher-level block devices such as dm-thinp where one might 
+sequentially read a thin volume but its _tdata might not be in linear 
+order.  This may imply that we need a new way to flag cache bypass from 
+userspace that is neither io-priority nor fadvise driven.
+
+So what are our options?  What might be the best way to do this?
+
+If fadvise is the better option, how can a block device driver lookup the 
+fadvise advice from a given bio struct?  Can we add an FADV_NOSSD flag 
+since FADV_SEQUENTIAL may be insufficent?  Are FADV_NOREUSE/FADV_DONTNEED 
+reasonable candidates?
+
+Perhaps ionice could be used used, but the concept of "priority" 
+doesn't exactly encompass the concept of cache-bypass---so is something 
+else needed?
+
+Other ideas?  
+
+
+--
+Eric Wheeler
