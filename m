@@ -1,56 +1,79 @@
-From: Glenn Enright <glenn.enright@gmail.com>
-Subject: Re: xosview
-Date: Sat, 30 Jul 2016 11:23:19 +1200
-Message-ID: <CAN7jt23SW57ZZObwbVnPsD9ZOzDcXjp=UrL-DX_SUqva+hJW_A@mail.gmail.com>
-References: <ffd06b83-0692-d5a4-1daa-126abf53edfa@youngman.org.uk>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH] md: Prevent IO hold during accessing to failed raid5
+ array
+Date: Sat, 30 Jul 2016 14:01:20 -0700
+Message-ID: <20160730210120.GA9149@kernel.org>
+References: <1468589067-1966-1-git-send-email-aleksey.obitotskiy@intel.com>
+ <20160719224603.GB79792@kernel.org>
+ <1469783178.2660.21.camel@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ffd06b83-0692-d5a4-1daa-126abf53edfa@youngman.org.uk>
+Content-Disposition: inline
+In-Reply-To: <1469783178.2660.21.camel@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Anthony Youngman <antlists@youngman.org.uk>
-Cc: mdraid <linux-raid@vger.kernel.org>, mike.romberg@comcast.net
+To: "Obitotskiy, Aleksey" <aleksey.obitotskiy@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 30 July 2016 at 04:52, Anthony Youngman <antlists@youngman.org.uk> wrote:
->
-> I don't know how many of you use this ancient nifty utility, but I've been using it for as long as I can remember. Unfortunately, the raid monitor code no longer works ... :-(
->
-> I emailed the maintainer privately and he was pleased that I'd got in touch even though it was with the bad news, and he'd like to fix it, but he has no system with raid to test it on.
->
-> It works by parsing /proc/mdstat. From what I can see of the code, it would be very easy to test it by pointing it at a fake mdstat. I've got three arrays on a two disk mirror, so that's easy for me to test, but I'd like to test it on other setups.
->
-> So if people wouldn't mind, could you email your mdstat files? Preferably on the list so people can see what has and has not been sent - obviously I'd like standard setups like raid10, raid5, raid6, both named and numbered. And if people have them, mdstats showing broken arrays, rebuilds, complicated setups with lvm, etc.
->
-> Dunno about other people, but I have xosview running on my desktop all the time (I feel naked without it :-) so if that can give me a continuous monitor of my raid state that's great. And hopefully, if other people use it, we might reduce the number of "I didn't realise my raid was degraded, and then it suffered another failure" type emails.
->
-> Cheers,
-> Wol
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Fri, Jul 29, 2016 at 09:07:43AM +0000, Obitotskiy, Aleksey wrote:
+> Hello,
+> 
+> I would like to know what the status of this patch.
+> Maybe I should provide more info about?
 
+I'm in vacation, so response is slow, sorry. Please reorganize the patch log
+and mention this is for external managed array. What's the s.failed <=
+conf->max_degraded check for?
 
-There are a number of good examples on
-https://raid.wiki.kernel.org/index.php/Mdstat
+Thanks,
+Shaohua
 
-This is from my desktop... (boot root and swap)
-
-$ cat /proc/mdstat
-Personalities : [raid1] [linear] [multipath] [raid0] [raid6] [raid5]
-[raid4] [raid10]
-md1 : active raid1 sdb2[1] sda2[0]
-      4194240 blocks [2/2] [UU]
-
-md2 : active raid1 sdb3[1] sda3[0]
-      62914496 blocks [2/2] [UU]
-
-md0 : active raid1 sda1[0] sdb1[1]
-      204736 blocks [2/2] [UU]
-
-unused devices: <none>
-
-Best
---Glenn
+> 
+> Regards,
+> Aleksey
+> 
+> On Tue, 2016-07-19 at 15:46 -0700, Shaohua Li wrote:
+> > On Fri, Jul 15, 2016 at 03:24:27PM +0200, Alexey Obitotskiy wrote:
+> > > 
+> > > After array enters in failed state (e.g. number of failed drives
+> > > becomes more then accepted for raid5 level) it sets error flags
+> > > (one of this flags is MD_CHANGE_PENDING). This flag prevents to
+> > > finish all new or non-finished IOs to array and hold them in
+> > > pending state. In some cases this can leads to deadlock situation.
+> > > 
+> > > For example udev handle array state changes (drives becomes faulty)
+> > > and blkid started but unable to finish reads due to IO hold.
+> > > At the same time we unable to get exclusive access to array
+> > > (to stop array in our case) because another external application
+> > > still use this array (blkid in our case).
+> > > 
+> > > Fix makes possible to return IO with errors immediately.
+> > > So external application can finish working with array and
+> > > give exclusive access to other applications.
+> > > 
+> > > Signed-off-by: Alexey Obitotskiy <aleksey.obitotskiy@intel.com>
+> > > ---
+> > >  drivers/md/raid5.c | 4 +++-
+> > >  1 file changed, 3 insertions(+), 1 deletion(-)
+> > > 
+> > > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> > > index 6c1149d..99471b6 100644
+> > > --- a/drivers/md/raid5.c
+> > > +++ b/drivers/md/raid5.c
+> > > @@ -4692,7 +4692,9 @@ finish:
+> > >  	}
+> > >  
+> > >  	if (!bio_list_empty(&s.return_bi)) {
+> > > -		if (test_bit(MD_CHANGE_PENDING, &conf->mddev-
+> > > >flags)) {
+> > > +		if (test_bit(MD_CHANGE_PENDING, &conf->mddev-
+> > > >flags) &&
+> > > +				(s.failed <= conf->max_degraded ||
+> > > +					conf->mddev->external ==
+> > > 0)) {
+> > >  			spin_lock_irq(&conf->device_lock);
+> > >  			bio_list_merge(&conf->return_bi,
+> > > &s.return_bi);
+> > >  			spin_unlock_irq(&conf->device_lock);
