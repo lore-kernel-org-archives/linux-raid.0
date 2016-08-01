@@ -1,21 +1,34 @@
-From: Guoqing Jiang <gqjiang@suse.com>
+From: Yi Zhang <yizhan@redhat.com>
 Subject: Re: WARNING: CPU: 4 PID: 10512 at drivers/md/raid5-cache.c:728
  r5l_do_reclaim+0x415/0x430 [raid456]
-Date: Mon, 1 Aug 2016 05:01:30 -0400
-Message-ID: <579F0FEA.8000500@suse.com>
-References: <2099656990.9407283.1469619529240.JavaMail.zimbra@redhat.com>
+Date: Mon, 1 Aug 2016 08:32:30 -0400 (EDT)
+Message-ID: <1493590170.10517025.1470054750923.JavaMail.zimbra@redhat.com>
+References: <2099656990.9407283.1469619529240.JavaMail.zimbra@redhat.com> <579F0E52.8090704@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2099656990.9407283.1469619529240.JavaMail.zimbra@redhat.com>
+In-Reply-To: <579F0E52.8090704@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Yi Zhang <yizhan@redhat.com>, linux-raid@vger.kernel.org
+To: Guoqing Jiang <gqjiang@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
 
-On 07/27/2016 07:38 AM, Yi Zhang wrote:
+Best Regards,
+  Yi Zhang
+
+
+----- Original Message -----
+From: "Guoqing Jiang" <gqjiang@suse.com>
+To: "Yi Zhang" <yizhan@redhat.com>, linux-raid@vger.kernel.org
+Sent: Monday, August 1, 2016 4:54:42 PM
+Subject: Re: WARNING: CPU: 4 PID: 10512 at drivers/md/raid5-cache.c:728 r5l_do_reclaim+0x415/0x430 [raid456]
+
+
+
+On 07/27/2016 07:38 PM, Yi Zhang wrote:
 > Hello everyone
 >
 > I'm testing raid5-cache recently and found below issue on 4.7.0-rc7.
@@ -31,9 +44,12 @@ On 07/27/2016 07:38 AM, Yi Zhang wrote:
 > [  902.705975] md/raid:md0: device sdd1 operational as raid disk 1
 > [  902.705976] md/raid:md0: device sdb1 operational as raid disk 0
 > [  902.706312] md/raid:md0: allocated 4374kB
-> [  902.706371] md/raid:md0: raid level 6 active with 4 out of 4 devices, algorithm 2
+> [  902.706371] md/raid:md0: raid level*6*  active with 4 out of 4 devices, algorithm 2
 
-This is level 6 not 4 as you said in the end.
+This is level 6 not 4.
+
+Yi: Sorry for that, but both level 6 and leve4 can be reproduced on my environment.
+
 
 > [  902.706372] RAID conf printout:
 > [  902.706380]  --- level:6 rd:4 wd:4
@@ -147,14 +163,34 @@ the WARNING or not.
 > mdadm /dev/md0 -a /dev/sdb1
 
 I tried above cmds in my VM machine (with set level as 6), but can't
-see the calltrace with below versions. Maybe it is a regression issue,
-if so, I would suggest to do bisect to narrow down the issue.
+see the calltrace with below versions.
 
 linux135:~ # uname -r
 4.4.13-46-default
 linux135:~ # mdadm --version
 mdadm - v3.4-47-g8718fc3 - 11th May 2016
 
-Thanks,
-Guoqing
+Yi: Could you try with 4.7.0, it's very easy to reproduce on my side
+below is my env:
+#lsblk /dev/sd[b-f]
+NAME    MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINT
+sdb       8:16   0 931.5G  0 disk 
+└─sdb1    8:17   0    10G  0 part 
+  └─md0   9:0    0    30G  0 raid4
+sdc       8:32   0 186.3G  0 disk 
+└─sdc1    8:33   0    10G  0 part 
+  └─md0   9:0    0    30G  0 raid4
+sdd       8:48   0 111.8G  0 disk 
+└─sdd1    8:49   0    10G  0 part 
+  └─md0   9:0    0    30G  0 raid4
+sde       8:64   0 931.5G  0 disk 
+└─sde1    8:65   0    10G  0 part 
+  └─md0   9:0    0    30G  0 raid4
+sdf       8:80   0 931.5G  0 disk 
+└─sdf1    8:81   0    10G  0 part 
+  └─md0   9:0    0    30G  0 raid4
+# uname -r
+4.7.0
+# mdadm --version
+mdadm - v3.4-63-g52209d6 - 21st July 2016
 
