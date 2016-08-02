@@ -1,38 +1,54 @@
-From: Baole Ni <baolex.ni@intel.com>
-Subject: [PATCH 0314/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 18:59:15 +0800
-Message-ID: <20160802105915.2474-1-baolex.ni@intel.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: agk@redhat.com, snitzer@redhat.com, shli@kernel.org, dm-devel@redhat.com, hal.rosenstock@gmail.com, dledford@redhat.com, sean.hefty@intel.com, bp@alien8.de
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, chuansheng.liu@intel.com, baolex.ni@intel.com
+From: "Kammela, Gayatri" <gayatri.kammela@intel.com>
+Subject: RE: [PATCH 0/4] Add AVX512 optimized gen_syndrome and recovery
+ functions
+Date: Tue, 2 Aug 2016 21:08:39 +0000
+Message-ID: <2824B99DC70CE746926327C52CA42F7613649559@ORSMSX111.amr.corp.intel.com>
+References: <1468005353-26194-1-git-send-email-gayatri.kammela@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1468005353-26194-1-git-send-email-gayatri.kammela@intel.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Cc: "shli@kernel.org" <shli@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+Hi shaohua,
+I am wondering if there are any comments on this patch series ?
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
----
- drivers/md/dm-raid.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks,
+Gayatri Kammela
 
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index 5253274..b01f1e9 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -1754,7 +1754,7 @@ static void __exit dm_raid_exit(void)
- module_init(dm_raid_init);
- module_exit(dm_raid_exit);
- 
--module_param(devices_handle_discard_safely, bool, 0644);
-+module_param(devices_handle_discard_safely, bool, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(devices_handle_discard_safely,
- 		 "Set to Y if all devices in each array reliably return zeroes on reads from discarded regions");
- 
--- 
-2.9.2
+-----Original Message-----
+From: Kammela, Gayatri 
+Sent: Friday, July 8, 2016 12:16 PM
+To: linux-raid@vger.kernel.org
+Cc: shli@kernel.org; linux-kernel@vger.kernel.org; Kammela, Gayatri <gayatri.kammela@intel.com>
+Subject: [PATCH 0/4] Add AVX512 optimized gen_syndrome and recovery functions
 
+This is the patch set for adding AVX512 optimized gen_syndrome and recovery functions.
+
+Optimization of RAID6 using AVX512 instructions should improve the
+RAID6 performance.These patches are tested and observed the improvement in performance.
+
+Gayatri Kammela (4):
+  lib/raid6: Add AVX512 optimized gen_syndrome functions
+  lib/raid6: Add AVX512 optimized recovery functions
+  lib/raid6/test/Makefile: Add avx512 gen_syndrome and recovery
+    functions
+  lib/raid6: Add unroll by 8 to AVX512 optimized gen_syndrome functions
+
+ arch/x86/Makefile        |   5 +-
+ include/linux/raid/pq.h  |   5 +
+ lib/raid6/Makefile       |   2 +-
+ lib/raid6/algos.c        |  13 ++
+ lib/raid6/avx512.c       | 466 +++++++++++++++++++++++++++++++++++++++++++++++
+ lib/raid6/recov_avx512.c | 335 ++++++++++++++++++++++++++++++++++
+ lib/raid6/test/Makefile  |   5 +-
+ lib/raid6/x86.h          |  10 +
+ 8 files changed, 837 insertions(+), 4 deletions(-)  create mode 100644 lib/raid6/avx512.c  create mode 100644 lib/raid6/recov_avx512.c
+
+--
+1.9.1
