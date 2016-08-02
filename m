@@ -1,113 +1,40 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH 4/8] md-cluster: introduce dlm_lock_sync_interruptible to
- fix tasks hang
-Date: Tue, 2 Aug 2016 15:36:31 -0700
-Message-ID: <20160802223631.GC98613@kernel.org>
-References: <1469686612-16126-1-git-send-email-gqjiang@suse.com>
- <1469686612-16126-4-git-send-email-gqjiang@suse.com>
- <20160801222042.GB18810@kernel.org>
- <57A01272.4010209@suse.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Gayatri Kammela <gayatri.kammela@intel.com>
+Subject: [PATCH 0/4] Add AVX512 optimized gen_syndrome and recovery functions
+Date: Tue,  2 Aug 2016 16:28:59 -0700
+Message-ID: <1470180539-7417-1-git-send-email-gayatri.kammela@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <57A01272.4010209@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: shli@kernel.org, linux-kernel@vger.kernel.org, hpa@zytor.com, james.t.kukunas@linux.intel.com, fenghua.yu@intel.com, megha.dey@linux.intel.com, ravi.v.shankar@intel.com, Gayatri Kammela <gayatri.kammela@intel.com>
 List-Id: linux-raid.ids
 
-On Mon, Aug 01, 2016 at 11:24:34PM -0400, Guoqing Jiang wrote:
-> 
-> 
-> On 08/01/2016 06:20 PM, Shaohua Li wrote:
-> >On Thu, Jul 28, 2016 at 02:16:48AM -0400, Guoqing Jiang wrote:
-> >>When some node leaves cluster, then it's bitmap need to be
-> >>synced by another node, so "md*_recover" thread is triggered
-> >>for the purpose. However, with below steps. we can find tasks
-> >>hang happened either in B or C.
-> >>
-> >>1. Node A create a resyncing cluster raid1, assemble it in
-> >>    other two nodes (B and C).
-> >>2. stop array in B and C.
-> >>3. stop array in A.
-> >>
-> >>linux44:~ # ps aux|grep md|grep D
-> >>root	5938	0.0  0.1  19852  1964 pts/0    D+   14:52   0:00 mdadm -S md0
-> >>root	5939	0.0  0.0      0     0 ?        D    14:52   0:00 [md0_recover]
-> >>
-> >>linux44:~ # cat /proc/5939/stack
-> >>[<ffffffffa04cf321>] dlm_lock_sync+0x71/0x90 [md_cluster]
-> >>[<ffffffffa04d0705>] recover_bitmaps+0x125/0x220 [md_cluster]
-> >>[<ffffffffa052105d>] md_thread+0x16d/0x180 [md_mod]
-> >>[<ffffffff8107ad94>] kthread+0xb4/0xc0
-> >>[<ffffffff8152a518>] ret_from_fork+0x58/0x90
-> >>
-> >>linux44:~ # cat /proc/5938/stack
-> >>[<ffffffff8107afde>] kthread_stop+0x6e/0x120
-> >>[<ffffffffa0519da0>] md_unregister_thread+0x40/0x80 [md_mod]
-> >>[<ffffffffa04cfd20>] leave+0x70/0x120 [md_cluster]
-> >>[<ffffffffa0525e24>] md_cluster_stop+0x14/0x30 [md_mod]
-> >>[<ffffffffa05269ab>] bitmap_free+0x14b/0x150 [md_mod]
-> >>[<ffffffffa0523f3b>] do_md_stop+0x35b/0x5a0 [md_mod]
-> >>[<ffffffffa0524e83>] md_ioctl+0x873/0x1590 [md_mod]
-> >>[<ffffffff81288464>] blkdev_ioctl+0x214/0x7d0
-> >>[<ffffffff811dd3dd>] block_ioctl+0x3d/0x40
-> >>[<ffffffff811b92d4>] do_vfs_ioctl+0x2d4/0x4b0
-> >>[<ffffffff811b9538>] SyS_ioctl+0x88/0xa0
-> >>[<ffffffff8152a5c9>] system_call_fastpath+0x16/0x1b
-> >>
-> >>The problem is caused by recover_bitmaps can't reliably abort
-> >>when the thread is unregistered. So dlm_lock_sync_interruptible
-> >>is introduced to detect the thread's situation to fix the problem.
-> >>
-> >>Reviewed-by: NeilBrown <neilb@suse.com>
-> >>Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-> >>---
-> >>  drivers/md/md-cluster.c | 38 +++++++++++++++++++++++++++++++++++++-
-> >>  1 file changed, 37 insertions(+), 1 deletion(-)
-> >>
-> >>diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-> >>index ea2699e..f3d584e 100644
-> >>--- a/drivers/md/md-cluster.c
-> >>+++ b/drivers/md/md-cluster.c
-> >>@@ -10,6 +10,8 @@
-> >>  #include <linux/module.h>
-> >>+#include <linux/completion.h>
-> >>+#include <linux/kthread.h>
-> >>  #include <linux/dlm.h>
-> >>  #include <linux/sched.h>
-> >>  #include <linux/raid/md_p.h>
-> >>@@ -141,6 +143,40 @@ static int dlm_unlock_sync(struct dlm_lock_resource *res)
-> >>  	return dlm_lock_sync(res, DLM_LOCK_NL);
-> >>  }
-> >>+/* An variation of dlm_lock_sync, which make lock request could
-> >>+ * be interrupted */
-> >>+static int dlm_lock_sync_interruptible(struct dlm_lock_resource *res, int mode,
-> >>+				       struct mddev *mddev)
-> >>+{
-> >>+	int ret = 0;
-> >>+
-> >>+	ret = dlm_lock(res->ls, mode, &res->lksb,
-> >>+			res->flags, res->name, strlen(res->name),
-> >>+			0, sync_ast, res, res->bast);
-> >>+	if (ret)
-> >>+		return ret;
-> >>+
-> >>+	wait_event(res->completion.wait,
-> >>+		   res->completion.done || kthread_should_stop());
-> >can you convert it to a waitq? Directly using the .wait/.done of completion is
-> >really intrusive.
-> 
-> Maybe, but we still need completion for dlm_lock_resource otherwise there
-> are different types of dlm_lock_resource, we also need to keep align with
-> sync_ast as dlm_lock_sync did.
+This is the patch set for adding AVX512 optimized gen_syndrome
+and recovery functions.
 
-Yes, we need a waitq and variable like completion.done to indicate the event is
-done, and convert the completion API to waitq API in other places like
-sync_ast. The point is not using the opaque data structure of 'struct
-completion'. Diving into implementation details of a unrelated data structure
-(completion here) is really intrusive.
+Optimization of RAID6 using AVX512 instructions should improve the
+RAID6 performance.These patches are tested and observed the improvement
+in performance.
 
-Thanks,
-Shaohua
+Gayatri Kammela (4):
+  lib/raid6: Add AVX512 optimized gen_syndrome functions
+  lib/raid6: Add AVX512 optimized recovery functions
+  lib/raid6/test/Makefile: Add avx512 gen_syndrome and recovery
+    functions
+  (DO NOT APPLY) lib/raid6: Add unroll by 8 to AVX512 optimized 
+    gen_syndrome functions
+
+ arch/x86/Makefile        |   5 +-
+ include/linux/raid/pq.h  |   5 +
+ lib/raid6/Makefile       |   2 +-
+ lib/raid6/algos.c        |  13 ++
+ lib/raid6/avx512.c       | 466 +++++++++++++++++++++++++++++++++++++++++++++++
+ lib/raid6/recov_avx512.c | 335 ++++++++++++++++++++++++++++++++++
+ lib/raid6/test/Makefile  |   5 +-
+ lib/raid6/x86.h          |  10 +
+ 8 files changed, 837 insertions(+), 4 deletions(-)
+ create mode 100644 lib/raid6/avx512.c
+ create mode 100644 lib/raid6/recov_avx512.c
+
+-- 
+1.9.1
+
