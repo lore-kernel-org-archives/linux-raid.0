@@ -1,25 +1,38 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH] mdadm:add 'clustered' in typo prompt when specify wrong param for bitmap
-Date: Tue, 02 Aug 2016 10:08:21 -0400
-Message-ID: <wrfj1t27felm.fsf@redhat.com>
-References: <1470129520-17502-1-git-send-email-zlliu@suse.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Baole Ni <baolex.ni@intel.com>
+Subject: [PATCH 0314/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 18:59:15 +0800
+Message-ID: <20160802105915.2474-1-baolex.ni@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1470129520-17502-1-git-send-email-zlliu@suse.com> (Zhilong Liu's
-	message of "Tue, 2 Aug 2016 05:18:40 -0400")
 Sender: linux-raid-owner@vger.kernel.org
-To: Zhilong Liu <zlliu@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: agk@redhat.com, snitzer@redhat.com, shli@kernel.org, dm-devel@redhat.com, hal.rosenstock@gmail.com, dledford@redhat.com, sean.hefty@intel.com, bp@alien8.de
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, chuansheng.liu@intel.com, baolex.ni@intel.com
 List-Id: linux-raid.ids
 
-Zhilong Liu <zlliu@suse.com> writes:
->   mdadm: 'clustered' bitmap has already supported, thus add the
->          prompt if users specify wrong value for bitmap param.
->
-> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+I find that the developers often just specified the numeric value
+when calling a macro which is defined with a parameter for access permission.
+As we know, these numeric value for access permission have had the corresponding macro,
+and that using macro can improve the robustness and readability of the code,
+thus, I suggest replacing the numeric parameter with the macro.
 
-Applied!
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+Signed-off-by: Baole Ni <baolex.ni@intel.com>
+---
+ drivers/md/dm-raid.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
-Jes
+diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+index 5253274..b01f1e9 100644
+--- a/drivers/md/dm-raid.c
++++ b/drivers/md/dm-raid.c
+@@ -1754,7 +1754,7 @@ static void __exit dm_raid_exit(void)
+ module_init(dm_raid_init);
+ module_exit(dm_raid_exit);
+ 
+-module_param(devices_handle_discard_safely, bool, 0644);
++module_param(devices_handle_discard_safely, bool, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(devices_handle_discard_safely,
+ 		 "Set to Y if all devices in each array reliably return zeroes on reads from discarded regions");
+ 
+-- 
+2.9.2
+
