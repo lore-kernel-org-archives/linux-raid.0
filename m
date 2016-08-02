@@ -1,66 +1,69 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH 1/8] md-cluster: call md_kick_rdev_from_array once ack
- failed
-Date: Tue, 2 Aug 2016 15:17:08 -0700
-Message-ID: <20160802221708.GB98613@kernel.org>
-References: <1469686612-16126-1-git-send-email-gqjiang@suse.com>
- <20160801215828.GA18810@kernel.org>
- <579FF771.4060007@suse.com>
+Subject: Re: [PATCH 3/3] MD: hold mddev lock for md-cluster receive thread
+Date: Tue, 2 Aug 2016 15:44:56 -0700
+Message-ID: <20160802224456.GD98613@kernel.org>
+References: <515fa68e5c4784b08f2ce99c082c923f6b02a3c9.1469922791.git.shli@fb.com>
+ <7763e508fb97d44bd61e826912055617b8be2c2d.1469922791.git.shli@fb.com>
+ <579F0AA3.5090806@suse.com>
+ <20160801214522.GA129828@kernel.org>
+ <57A06D69.2040703@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <579FF771.4060007@suse.com>
+In-Reply-To: <57A06D69.2040703@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Guoqing Jiang <gqjiang@suse.com>
-Cc: linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, NeilBrown <neilb@suse.com>
 List-Id: linux-raid.ids
 
-On Mon, Aug 01, 2016 at 09:29:21PM -0400, Guoqing Jiang wrote:
+On Tue, Aug 02, 2016 at 05:52:41PM +0800, Guoqing Jiang wrote:
 > 
 > 
-> On 08/01/2016 05:58 PM, Shaohua Li wrote:
-> >On Thu, Jul 28, 2016 at 02:16:45AM -0400, Guoqing Jiang wrote:
-> >>The new_disk_ack could return failure if WAITING_FOR_NEWDISK
-> >>is not set, so we need to kick the dev from array in case
-> >>failure happened.
+> On 08/02/2016 05:45 AM, Shaohua Li wrote:
+> >On Mon, Aug 01, 2016 at 04:38:59PM +0800, Guoqing Jiang wrote:
+> >>Hi,
 > >>
-> >>Reviewed-by: NeilBrown <neilb@suse.com>
-> >>Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-> >>---
-> >>  drivers/md/md.c | 8 +++++---
-> >>  1 file changed, 5 insertions(+), 3 deletions(-)
+> >>On 07/31/2016 07:54 AM, shli@kernel.org wrote:
+> >>>From: Shaohua Li <shli@fb.com>
+> >>>
+> >>>md-cluster receive thread calls .quiesce too, let it hold mddev lock.
+> >>I'd suggest hold on for the patchset, I can find lock problem easily with
+> >>the patchset applied. Take a resyncing  clusteed raid1 as example.
 > >>
-> >>diff --git a/drivers/md/md.c b/drivers/md/md.c
-> >>index 2ed547f..743cd21 100644
-> >>--- a/drivers/md/md.c
-> >>+++ b/drivers/md/md.c
-> >>@@ -6092,9 +6092,11 @@ static int add_new_disk(struct mddev *mddev, mdu_disk_info_t *info)
-> >>  			export_rdev(rdev);
-> >>  		if (mddev_is_clustered(mddev)) {
-> >>-			if (info->state & (1 << MD_DISK_CANDIDATE))
-> >>-				md_cluster_ops->new_disk_ack(mddev, (err == 0));
-> >>-			else {
-> >>+			if (info->state & (1 << MD_DISK_CANDIDATE)) {
-> >if err != 0, we already do export_rdev, do we need to do md_kick_rdev_from_array in that case?
+> >>md127_raid1 thread held reconfig_mutex then update sb, so it needs dlm
+> >>token lock. Meanwhile md127_resync thread got token lock and wants
+> >>EX on ack lock but recv_daemon can't release ack lock since recv_daemon
+> >>doesn't get reconfig_mutex.
+> >Thansk, I'll drop this one. Other two patches are still safe for md-cluster,
+> >right?
 > 
-> I suppose you mean the export_rdev before new_disk_ack, it doesn't need to
-> call md_kick_rdev_from_array
-> since we don't bind rdev to array successfully.
-> 
->                  err = bind_rdev_to_array(rdev, mddev);
-> 
->                 if (err)
-> *export_rdev*(rdev);
+> From the latest test, I can't find  lock issues with the first two patches,
+> but I doubt it would have side effect for the performance of resync.
 
-Let's assume bind_rdev_to_array fails, err != 0, we export_rdev 
->                 if (mddev_is_clustered(mddev)) {
->                         if (info->state & (1 << MD_DISK_CANDIDATE))
-> md_cluster_ops->new_disk_ack(mddev, (err == 0));
- 
-we don't check err here, so we could call ->new_disk_ack, then if
-new_disk_ack() fails, we will call md_kick_rdev_from_array(rdev) again with
-your patch. we are kicking out rdev which isn't bound yet in this case.
+That's not need to be worried. The .quiesce() call is way heavier than
+hold/release the mutex.
+
+> >I really hope to have consistent locking for .quiesce. For the
+> >process_recvd_msg, I'm wondering what's protecting the datas? for example,
+> >md-cluster uses md_find_rdev_nr_rcu, which access the disks list without
+> >locking. Is there a race?
+> 
+> Yes, it should be protected by rcu lock, I will post a patch for it, thanks
+> for reminder.
+> 
+> >Does it work if we move the mddev lock to
+> >process_recvd_msg?
+> 
+> I tried that, but It still have lock issue, eg, when node B and C have
+> status
+> as "resync=PENDING", then try to stop the resyncing array in node A.
+
+can you elaborate it?
+
+For the raid5-cache issue, ignoring the md-cluster .quiesce() call is fine
+currently as we don't support raid5 cluster. We probably should add another
+parameter for .quiesce to indicate if the mddev lock is hold in the future.
 
 Thanks,
 Shaohua
