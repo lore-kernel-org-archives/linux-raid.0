@@ -1,69 +1,113 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH 3/3] MD: hold mddev lock for md-cluster receive thread
-Date: Tue, 2 Aug 2016 15:44:56 -0700
-Message-ID: <20160802224456.GD98613@kernel.org>
-References: <515fa68e5c4784b08f2ce99c082c923f6b02a3c9.1469922791.git.shli@fb.com>
- <7763e508fb97d44bd61e826912055617b8be2c2d.1469922791.git.shli@fb.com>
- <579F0AA3.5090806@suse.com>
- <20160801214522.GA129828@kernel.org>
- <57A06D69.2040703@suse.com>
+Subject: Re: [PATCH 4/8] md-cluster: introduce dlm_lock_sync_interruptible to
+ fix tasks hang
+Date: Tue, 2 Aug 2016 15:36:31 -0700
+Message-ID: <20160802223631.GC98613@kernel.org>
+References: <1469686612-16126-1-git-send-email-gqjiang@suse.com>
+ <1469686612-16126-4-git-send-email-gqjiang@suse.com>
+ <20160801222042.GB18810@kernel.org>
+ <57A01272.4010209@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <57A06D69.2040703@suse.com>
+In-Reply-To: <57A01272.4010209@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Guoqing Jiang <gqjiang@suse.com>
-Cc: linux-raid@vger.kernel.org, NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Aug 02, 2016 at 05:52:41PM +0800, Guoqing Jiang wrote:
+On Mon, Aug 01, 2016 at 11:24:34PM -0400, Guoqing Jiang wrote:
 > 
 > 
-> On 08/02/2016 05:45 AM, Shaohua Li wrote:
-> >On Mon, Aug 01, 2016 at 04:38:59PM +0800, Guoqing Jiang wrote:
-> >>Hi,
+> On 08/01/2016 06:20 PM, Shaohua Li wrote:
+> >On Thu, Jul 28, 2016 at 02:16:48AM -0400, Guoqing Jiang wrote:
+> >>When some node leaves cluster, then it's bitmap need to be
+> >>synced by another node, so "md*_recover" thread is triggered
+> >>for the purpose. However, with below steps. we can find tasks
+> >>hang happened either in B or C.
 > >>
-> >>On 07/31/2016 07:54 AM, shli@kernel.org wrote:
-> >>>From: Shaohua Li <shli@fb.com>
-> >>>
-> >>>md-cluster receive thread calls .quiesce too, let it hold mddev lock.
-> >>I'd suggest hold on for the patchset, I can find lock problem easily with
-> >>the patchset applied. Take a resyncing  clusteed raid1 as example.
+> >>1. Node A create a resyncing cluster raid1, assemble it in
+> >>    other two nodes (B and C).
+> >>2. stop array in B and C.
+> >>3. stop array in A.
 > >>
-> >>md127_raid1 thread held reconfig_mutex then update sb, so it needs dlm
-> >>token lock. Meanwhile md127_resync thread got token lock and wants
-> >>EX on ack lock but recv_daemon can't release ack lock since recv_daemon
-> >>doesn't get reconfig_mutex.
-> >Thansk, I'll drop this one. Other two patches are still safe for md-cluster,
-> >right?
+> >>linux44:~ # ps aux|grep md|grep D
+> >>root	5938	0.0  0.1  19852  1964 pts/0    D+   14:52   0:00 mdadm -S md0
+> >>root	5939	0.0  0.0      0     0 ?        D    14:52   0:00 [md0_recover]
+> >>
+> >>linux44:~ # cat /proc/5939/stack
+> >>[<ffffffffa04cf321>] dlm_lock_sync+0x71/0x90 [md_cluster]
+> >>[<ffffffffa04d0705>] recover_bitmaps+0x125/0x220 [md_cluster]
+> >>[<ffffffffa052105d>] md_thread+0x16d/0x180 [md_mod]
+> >>[<ffffffff8107ad94>] kthread+0xb4/0xc0
+> >>[<ffffffff8152a518>] ret_from_fork+0x58/0x90
+> >>
+> >>linux44:~ # cat /proc/5938/stack
+> >>[<ffffffff8107afde>] kthread_stop+0x6e/0x120
+> >>[<ffffffffa0519da0>] md_unregister_thread+0x40/0x80 [md_mod]
+> >>[<ffffffffa04cfd20>] leave+0x70/0x120 [md_cluster]
+> >>[<ffffffffa0525e24>] md_cluster_stop+0x14/0x30 [md_mod]
+> >>[<ffffffffa05269ab>] bitmap_free+0x14b/0x150 [md_mod]
+> >>[<ffffffffa0523f3b>] do_md_stop+0x35b/0x5a0 [md_mod]
+> >>[<ffffffffa0524e83>] md_ioctl+0x873/0x1590 [md_mod]
+> >>[<ffffffff81288464>] blkdev_ioctl+0x214/0x7d0
+> >>[<ffffffff811dd3dd>] block_ioctl+0x3d/0x40
+> >>[<ffffffff811b92d4>] do_vfs_ioctl+0x2d4/0x4b0
+> >>[<ffffffff811b9538>] SyS_ioctl+0x88/0xa0
+> >>[<ffffffff8152a5c9>] system_call_fastpath+0x16/0x1b
+> >>
+> >>The problem is caused by recover_bitmaps can't reliably abort
+> >>when the thread is unregistered. So dlm_lock_sync_interruptible
+> >>is introduced to detect the thread's situation to fix the problem.
+> >>
+> >>Reviewed-by: NeilBrown <neilb@suse.com>
+> >>Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+> >>---
+> >>  drivers/md/md-cluster.c | 38 +++++++++++++++++++++++++++++++++++++-
+> >>  1 file changed, 37 insertions(+), 1 deletion(-)
+> >>
+> >>diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+> >>index ea2699e..f3d584e 100644
+> >>--- a/drivers/md/md-cluster.c
+> >>+++ b/drivers/md/md-cluster.c
+> >>@@ -10,6 +10,8 @@
+> >>  #include <linux/module.h>
+> >>+#include <linux/completion.h>
+> >>+#include <linux/kthread.h>
+> >>  #include <linux/dlm.h>
+> >>  #include <linux/sched.h>
+> >>  #include <linux/raid/md_p.h>
+> >>@@ -141,6 +143,40 @@ static int dlm_unlock_sync(struct dlm_lock_resource *res)
+> >>  	return dlm_lock_sync(res, DLM_LOCK_NL);
+> >>  }
+> >>+/* An variation of dlm_lock_sync, which make lock request could
+> >>+ * be interrupted */
+> >>+static int dlm_lock_sync_interruptible(struct dlm_lock_resource *res, int mode,
+> >>+				       struct mddev *mddev)
+> >>+{
+> >>+	int ret = 0;
+> >>+
+> >>+	ret = dlm_lock(res->ls, mode, &res->lksb,
+> >>+			res->flags, res->name, strlen(res->name),
+> >>+			0, sync_ast, res, res->bast);
+> >>+	if (ret)
+> >>+		return ret;
+> >>+
+> >>+	wait_event(res->completion.wait,
+> >>+		   res->completion.done || kthread_should_stop());
+> >can you convert it to a waitq? Directly using the .wait/.done of completion is
+> >really intrusive.
 > 
-> From the latest test, I can't find  lock issues with the first two patches,
-> but I doubt it would have side effect for the performance of resync.
+> Maybe, but we still need completion for dlm_lock_resource otherwise there
+> are different types of dlm_lock_resource, we also need to keep align with
+> sync_ast as dlm_lock_sync did.
 
-That's not need to be worried. The .quiesce() call is way heavier than
-hold/release the mutex.
-
-> >I really hope to have consistent locking for .quiesce. For the
-> >process_recvd_msg, I'm wondering what's protecting the datas? for example,
-> >md-cluster uses md_find_rdev_nr_rcu, which access the disks list without
-> >locking. Is there a race?
-> 
-> Yes, it should be protected by rcu lock, I will post a patch for it, thanks
-> for reminder.
-> 
-> >Does it work if we move the mddev lock to
-> >process_recvd_msg?
-> 
-> I tried that, but It still have lock issue, eg, when node B and C have
-> status
-> as "resync=PENDING", then try to stop the resyncing array in node A.
-
-can you elaborate it?
-
-For the raid5-cache issue, ignoring the md-cluster .quiesce() call is fine
-currently as we don't support raid5 cluster. We probably should add another
-parameter for .quiesce to indicate if the mddev lock is hold in the future.
+Yes, we need a waitq and variable like completion.done to indicate the event is
+done, and convert the completion API to waitq API in other places like
+sync_ast. The point is not using the opaque data structure of 'struct
+completion'. Diving into implementation details of a unrelated data structure
+(completion here) is really intrusive.
 
 Thanks,
 Shaohua
