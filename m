@@ -1,40 +1,431 @@
 From: Gayatri Kammela <gayatri.kammela@intel.com>
-Subject: [PATCH 0/4] Add AVX512 optimized gen_syndrome and recovery functions
-Date: Tue,  2 Aug 2016 16:28:59 -0700
-Message-ID: <1470180539-7417-1-git-send-email-gayatri.kammela@intel.com>
+Subject: [PATCH 1/4] lib/raid6: Add AVX512 optimized gen_syndrome functions
+Date: Tue,  2 Aug 2016 16:29:58 -0700
+Message-ID: <1470180598-7503-1-git-send-email-gayatri.kammela@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: shli@kernel.org, linux-kernel@vger.kernel.org, hpa@zytor.com, james.t.kukunas@linux.intel.com, fenghua.yu@intel.com, megha.dey@linux.intel.com, ravi.v.shankar@intel.com, Gayatri Kammela <gayatri.kammela@intel.com>
 List-Id: linux-raid.ids
 
-This is the patch set for adding AVX512 optimized gen_syndrome
-and recovery functions.
+Optimize RAID6 gen_syndrom functions to take advantage of
+the 512-bit ZMM integer instructions introduced in AVX512.
 
-Optimization of RAID6 using AVX512 instructions should improve the
-RAID6 performance.These patches are tested and observed the improvement
-in performance.
+AVX512 optimized gen_syndrom functions, which is simply based
+on avx2.c written by Yuanhan Liu and sse2.c written by hpa.
 
-Gayatri Kammela (4):
-  lib/raid6: Add AVX512 optimized gen_syndrome functions
-  lib/raid6: Add AVX512 optimized recovery functions
-  lib/raid6/test/Makefile: Add avx512 gen_syndrome and recovery
-    functions
-  (DO NOT APPLY) lib/raid6: Add unroll by 8 to AVX512 optimized 
-    gen_syndrome functions
+The patch was tested and benchmarked before submission on
+a hardware that has AVX512 flags to support such instructions
 
- arch/x86/Makefile        |   5 +-
- include/linux/raid/pq.h  |   5 +
- lib/raid6/Makefile       |   2 +-
- lib/raid6/algos.c        |  13 ++
- lib/raid6/avx512.c       | 466 +++++++++++++++++++++++++++++++++++++++++++++++
- lib/raid6/recov_avx512.c | 335 ++++++++++++++++++++++++++++++++++
- lib/raid6/test/Makefile  |   5 +-
- lib/raid6/x86.h          |  10 +
- 8 files changed, 837 insertions(+), 4 deletions(-)
+Cc: H. Peter Anvin <hpa@zytor.com>
+Cc: Jim Kukunas <james.t.kukunas@linux.intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Signed-off-by: Megha Dey <megha.dey@linux.intel.com>
+Signed-off-by: Gayatri Kammela <gayatri.kammela@intel.com>
+---
+ arch/x86/Makefile       |   5 +-
+ include/linux/raid/pq.h |   3 +
+ lib/raid6/Makefile      |   2 +-
+ lib/raid6/algos.c       |   9 ++
+ lib/raid6/avx512.c      | 294 ++++++++++++++++++++++++++++++++++++++++++++++++
+ lib/raid6/x86.h         |  10 ++
+ 6 files changed, 320 insertions(+), 3 deletions(-)
  create mode 100644 lib/raid6/avx512.c
- create mode 100644 lib/raid6/recov_avx512.c
 
+diff --git a/arch/x86/Makefile b/arch/x86/Makefile
+index 6fce7f0..3fd807b 100644
+--- a/arch/x86/Makefile
++++ b/arch/x86/Makefile
+@@ -171,11 +171,12 @@ asinstr += $(call as-instr,pshufb %xmm0$(comma)%xmm0,-DCONFIG_AS_SSSE3=1)
+ asinstr += $(call as-instr,crc32l %eax$(comma)%eax,-DCONFIG_AS_CRC32=1)
+ avx_instr := $(call as-instr,vxorps %ymm0$(comma)%ymm1$(comma)%ymm2,-DCONFIG_AS_AVX=1)
+ avx2_instr :=$(call as-instr,vpbroadcastb %xmm0$(comma)%ymm1,-DCONFIG_AS_AVX2=1)
++avx512_instr :=$(call as-instr,vpmovm2b %k1$(comma)%zmm5,-DCONFIG_AS_AVX512=1)
+ sha1_ni_instr :=$(call as-instr,sha1msg1 %xmm0$(comma)%xmm1,-DCONFIG_AS_SHA1_NI=1)
+ sha256_ni_instr :=$(call as-instr,sha256msg1 %xmm0$(comma)%xmm1,-DCONFIG_AS_SHA256_NI=1)
+ 
+-KBUILD_AFLAGS += $(cfi) $(cfi-sigframe) $(cfi-sections) $(asinstr) $(avx_instr) $(avx2_instr) $(sha1_ni_instr) $(sha256_ni_instr)
+-KBUILD_CFLAGS += $(cfi) $(cfi-sigframe) $(cfi-sections) $(asinstr) $(avx_instr) $(avx2_instr) $(sha1_ni_instr) $(sha256_ni_instr)
++KBUILD_AFLAGS += $(cfi) $(cfi-sigframe) $(cfi-sections) $(asinstr) $(avx_instr) $(avx2_instr) $(avx512_instr) $(sha1_ni_instr) $(sha256_ni_instr)
++KBUILD_CFLAGS += $(cfi) $(cfi-sigframe) $(cfi-sections) $(asinstr) $(avx_instr) $(avx2_instr) $(avx512_instr) $(sha1_ni_instr) $(sha256_ni_instr)
+ 
+ LDFLAGS := -m elf_$(UTS_MACHINE)
+ 
+diff --git a/include/linux/raid/pq.h b/include/linux/raid/pq.h
+index a0118d5..0c529a5 100644
+--- a/include/linux/raid/pq.h
++++ b/include/linux/raid/pq.h
+@@ -102,6 +102,9 @@ extern const struct raid6_calls raid6_altivec8;
+ extern const struct raid6_calls raid6_avx2x1;
+ extern const struct raid6_calls raid6_avx2x2;
+ extern const struct raid6_calls raid6_avx2x4;
++extern const struct raid6_calls raid6_avx512x1;
++extern const struct raid6_calls raid6_avx512x2;
++extern const struct raid6_calls raid6_avx512x4;
+ extern const struct raid6_calls raid6_tilegx8;
+ 
+ struct raid6_recov_calls {
+diff --git a/lib/raid6/Makefile b/lib/raid6/Makefile
+index 3b10a48..8948268 100644
+--- a/lib/raid6/Makefile
++++ b/lib/raid6/Makefile
+@@ -3,7 +3,7 @@ obj-$(CONFIG_RAID6_PQ)	+= raid6_pq.o
+ raid6_pq-y	+= algos.o recov.o tables.o int1.o int2.o int4.o \
+ 		   int8.o int16.o int32.o
+ 
+-raid6_pq-$(CONFIG_X86) += recov_ssse3.o recov_avx2.o mmx.o sse1.o sse2.o avx2.o
++raid6_pq-$(CONFIG_X86) += recov_ssse3.o recov_avx2.o mmx.o sse1.o sse2.o avx2.o avx512.o
+ raid6_pq-$(CONFIG_ALTIVEC) += altivec1.o altivec2.o altivec4.o altivec8.o
+ raid6_pq-$(CONFIG_KERNEL_MODE_NEON) += neon.o neon1.o neon2.o neon4.o neon8.o
+ raid6_pq-$(CONFIG_TILEGX) += tilegx8.o
+diff --git a/lib/raid6/algos.c b/lib/raid6/algos.c
+index 975c6e0..f5f090c 100644
+--- a/lib/raid6/algos.c
++++ b/lib/raid6/algos.c
+@@ -49,6 +49,10 @@ const struct raid6_calls * const raid6_algos[] = {
+ 	&raid6_avx2x1,
+ 	&raid6_avx2x2,
+ #endif
++#ifdef CONFIG_AS_AVX512
++	&raid6_avx512x1,
++	&raid6_avx512x2,
++#endif
+ #endif
+ #if defined(__x86_64__) && !defined(__arch_um__)
+ 	&raid6_sse2x1,
+@@ -59,6 +63,11 @@ const struct raid6_calls * const raid6_algos[] = {
+ 	&raid6_avx2x2,
+ 	&raid6_avx2x4,
+ #endif
++#ifdef CONFIG_AS_AVX512
++	&raid6_avx512x1,
++	&raid6_avx512x2,
++	&raid6_avx512x4,
++#endif
+ #endif
+ #ifdef CONFIG_ALTIVEC
+ 	&raid6_altivec1,
+diff --git a/lib/raid6/avx512.c b/lib/raid6/avx512.c
+new file mode 100644
+index 0000000..b1188a6
+--- /dev/null
++++ b/lib/raid6/avx512.c
+@@ -0,0 +1,294 @@
++/* -*- linux-c -*- --------------------------------------------------------
++ *
++ *   Copyright (C) 2016 Intel Corporation
++ *
++ *   Author: Gayatri Kammela <gayatri.kammela@intel.com>
++ *   Author: Megha Dey <megha.dey@linux.intel.com>
++ *
++ *   Based on avx2.c: Copyright 2012 Yuanhan Liu All Rights Reserved
++ *   Based on sse2.c: Copyright 2002 H. Peter Anvin - All Rights Reserved
++ *
++ *   This program is free software; you can redistribute it and/or modify
++ *   it under the terms of the GNU General Public License as published by
++ *   the Free Software Foundation, Inc., 53 Temple Place Ste 330,
++ *   Boston MA 02111-1307, USA; either version 2 of the License, or
++ *   (at your option) any later version; incorporated herein by reference.
++ *
++ * -----------------------------------------------------------------------
++ */
++
++/*
++ * AVX512 implementation of RAID-6 syndrome functions
++ *
++ */
++
++#ifdef CONFIG_AS_AVX512
++
++#include <linux/raid/pq.h>
++#include "x86.h"
++
++static const struct raid6_avx512_constants {
++	u64 x1d[8];
++} raid6_avx512_constants __aligned(512) = {
++	{ 0x1d1d1d1d1d1d1d1dULL, 0x1d1d1d1d1d1d1d1dULL,
++	  0x1d1d1d1d1d1d1d1dULL, 0x1d1d1d1d1d1d1d1dULL,
++	  0x1d1d1d1d1d1d1d1dULL, 0x1d1d1d1d1d1d1d1dULL,
++	  0x1d1d1d1d1d1d1d1dULL, 0x1d1d1d1d1d1d1d1dULL,},
++};
++
++static int raid6_have_avx512(void)
++{
++	return boot_cpu_has(X86_FEATURE_AVX2) &&
++		boot_cpu_has(X86_FEATURE_AVX) &&
++		boot_cpu_has(X86_FEATURE_AVX512F) &&
++		boot_cpu_has(X86_FEATURE_AVX512BW) &&
++		boot_cpu_has(X86_FEATURE_AVX512VL) &&
++		boot_cpu_has(X86_FEATURE_AVX512DQ);
++}
++
++static void raid6_avx5121_gen_syndrome(int disks, size_t bytes, void **ptrs)
++{
++	u8 **dptr = (u8 **)ptrs;
++	u8 *p, *q;
++	int d, z, z0;
++
++	z0 = disks - 3;         /* Highest data disk */
++	p = dptr[z0+1];         /* XOR parity */
++	q = dptr[z0+2];         /* RS syndrome */
++
++	kernel_fpu_begin();
++
++	asm volatile("vmovdqa64 %0,%%zmm0\n\t"
++		     "vpxorq %%zmm1,%%zmm1,%%zmm1" /* Zero temp */
++		     :
++		     : "m" (raid6_avx512_constants.x1d[0]));
++
++	for (d = 0; d < bytes; d += 64) {
++		asm volatile("prefetchnta %0\n\t"
++			     "vmovdqa64 %0,%%zmm2\n\t"     /* P[0] */
++			     "prefetchnta %1\n\t"
++			     "vmovdqa64 %%zmm2,%%zmm4\n\t" /* Q[0] */
++			     "vmovdqa64 %1,%%zmm6"
++			     :
++			     : "m" (dptr[z0][d]), "m" (dptr[z0-1][d]));
++		for (z = z0-2; z >= 0; z--) {
++			asm volatile("prefetchnta %0\n\t"
++				     "vpcmpgtb %%zmm4,%%zmm1,%%k1\n\t"
++				     "vpmovm2b %%k1,%%zmm5\n\t"
++				     "vpaddb %%zmm4,%%zmm4,%%zmm4\n\t"
++				     "vpandq %%zmm0,%%zmm5,%%zmm5\n\t"
++				     "vpxorq %%zmm5,%%zmm4,%%zmm4\n\t"
++				     "vpxorq %%zmm6,%%zmm2,%%zmm2\n\t"
++				     "vpxorq %%zmm6,%%zmm4,%%zmm4\n\t"
++				     "vmovdqa64 %0,%%zmm6"
++				     :
++				     : "m" (dptr[z][d]));
++		}
++		asm volatile("vpcmpgtb %%zmm4,%%zmm1,%%k1\n\t"
++			     "vpmovm2b %%k1,%%zmm5\n\t"
++			     "vpaddb %%zmm4,%%zmm4,%%zmm4\n\t"
++			     "vpandq %%zmm0,%%zmm5,%%zmm5\n\t"
++			     "vpxorq %%zmm5,%%zmm4,%%zmm4\n\t"
++			     "vpxorq %%zmm6,%%zmm2,%%zmm2\n\t"
++			     "vpxorq %%zmm6,%%zmm4,%%zmm4\n\t"
++			     "vmovntdq %%zmm2,%0\n\t"
++			     "vpxorq %%zmm2,%%zmm2,%%zmm2\n\t"
++			     "vmovntdq %%zmm4,%1\n\t"
++			     "vpxorq %%zmm4,%%zmm4,%%zmm4"
++			     :
++			     : "m" (p[d]), "m" (q[d]));
++	}
++
++	asm volatile("sfence" : : : "memory");
++	kernel_fpu_end();
++}
++
++const struct raid6_calls raid6_avx512x1 = {
++	raid6_avx5121_gen_syndrome,
++	NULL,                   /* XOR not yet implemented */
++	raid6_have_avx512,
++	"avx512x1",
++	1                       /* Has cache hints */
++};
++
++/*
++ * Unrolled-by-2 AVX512 implementation
++ */
++static void raid6_avx5122_gen_syndrome(int disks, size_t bytes, void **ptrs)
++{
++	u8 **dptr = (u8 **)ptrs;
++	u8 *p, *q;
++	int d, z, z0;
++
++	z0 = disks - 3;         /* Highest data disk */
++	p = dptr[z0+1];         /* XOR parity */
++	q = dptr[z0+2];         /* RS syndrome */
++
++	kernel_fpu_begin();
++
++	asm volatile("vmovdqa64 %0,%%zmm0\n\t"
++		     "vpxorq %%zmm1,%%zmm1,%%zmm1" /* Zero temp */
++		     :
++		     : "m" (raid6_avx512_constants.x1d[0]));
++
++	/* We uniformly assume a single prefetch covers at least 64 bytes */
++	for (d = 0; d < bytes; d += 128) {
++		asm volatile("prefetchnta %0\n\t"
++			     "prefetchnta %1\n\t"
++			     "vmovdqa64 %0,%%zmm2\n\t"      /* P[0] */
++			     "vmovdqa64 %1,%%zmm3\n\t"      /* P[1] */
++			     "vmovdqa64 %%zmm2,%%zmm4\n\t"  /* Q[0] */
++			     "vmovdqa64 %%zmm3,%%zmm6"      /* Q[1] */
++			     :
++			     : "m" (dptr[z0][d]), "m" (dptr[z0][d+64]));
++		for (z = z0-1; z >= 0; z--) {
++			asm volatile("prefetchnta %0\n\t"
++				     "prefetchnta %1\n\t"
++				     "vpcmpgtb %%zmm4,%%zmm1,%%k1\n\t"
++				     "vpcmpgtb %%zmm6,%%zmm1,%%k2\n\t"
++				     "vpmovm2b %%k1,%%zmm5\n\t"
++				     "vpmovm2b %%k2,%%zmm7\n\t"
++				     "vpaddb %%zmm4,%%zmm4,%%zmm4\n\t"
++				     "vpaddb %%zmm6,%%zmm6,%%zmm6\n\t"
++				     "vpandq %%zmm0,%%zmm5,%%zmm5\n\t"
++				     "vpandq %%zmm0,%%zmm7,%%zmm7\n\t"
++				     "vpxorq %%zmm5,%%zmm4,%%zmm4\n\t"
++				     "vpxorq %%zmm7,%%zmm6,%%zmm6\n\t"
++				     "vmovdqa64 %0,%%zmm5\n\t"
++				     "vmovdqa64 %1,%%zmm7\n\t"
++				     "vpxorq %%zmm5,%%zmm2,%%zmm2\n\t"
++				     "vpxorq %%zmm7,%%zmm3,%%zmm3\n\t"
++				     "vpxorq %%zmm5,%%zmm4,%%zmm4\n\t"
++				     "vpxorq %%zmm7,%%zmm6,%%zmm6"
++				     :
++				     : "m" (dptr[z][d]), "m" (dptr[z][d+64]));
++		}
++		asm volatile("vmovntdq %%zmm2,%0\n\t"
++			     "vmovntdq %%zmm3,%1\n\t"
++			     "vmovntdq %%zmm4,%2\n\t"
++			     "vmovntdq %%zmm6,%3"
++			     :
++			     : "m" (p[d]), "m" (p[d+64]), "m" (q[d]),
++			       "m" (q[d+64]));
++	}
++
++	asm volatile("sfence" : : : "memory");
++	kernel_fpu_end();
++}
++
++const struct raid6_calls raid6_avx512x2 = {
++	raid6_avx5122_gen_syndrome,
++	NULL,                   /* XOR not yet implemented */
++	raid6_have_avx512,
++	"avx512x2",
++	1                       /* Has cache hints */
++};
++
++#ifdef CONFIG_X86_64
++
++/*
++ * Unrolled-by-4 AVX2 implementation
++ */
++static void raid6_avx5124_gen_syndrome(int disks, size_t bytes, void **ptrs)
++{
++	u8 **dptr = (u8 **)ptrs;
++	u8 *p, *q;
++	int d, z, z0;
++
++	z0 = disks - 3;         /* Highest data disk */
++	p = dptr[z0+1];         /* XOR parity */
++	q = dptr[z0+2];         /* RS syndrome */
++
++	kernel_fpu_begin();
++
++	asm volatile("vmovdqa64 %0,%%zmm0\n\t"
++		     "vpxorq %%zmm1,%%zmm1,%%zmm1\n\t"       /* Zero temp */
++		     "vpxorq %%zmm2,%%zmm2,%%zmm2\n\t"       /* P[0] */
++		     "vpxorq %%zmm3,%%zmm3,%%zmm3\n\t"       /* P[1] */
++		     "vpxorq %%zmm4,%%zmm4,%%zmm4\n\t"       /* Q[0] */
++		     "vpxorq %%zmm6,%%zmm6,%%zmm6\n\t"       /* Q[1] */
++		     "vpxorq %%zmm10,%%zmm10,%%zmm10\n\t"    /* P[2] */
++		     "vpxorq %%zmm11,%%zmm11,%%zmm11\n\t"    /* P[3] */
++		     "vpxorq %%zmm12,%%zmm12,%%zmm12\n\t"    /* Q[2] */
++		     "vpxorq %%zmm14,%%zmm14,%%zmm14"        /* Q[3] */
++		     :
++		     : "m" (raid6_avx512_constants.x1d[0]));
++
++	for (d = 0; d < bytes; d += 256) {
++		for (z = z0; z >= 0; z--) {
++		asm volatile("prefetchnta %0\n\t"
++			     "prefetchnta %1\n\t"
++			     "prefetchnta %2\n\t"
++			     "prefetchnta %3\n\t"
++			     "vpcmpgtb %%zmm4,%%zmm1,%%k1\n\t"
++			     "vpcmpgtb %%zmm6,%%zmm1,%%k2\n\t"
++			     "vpcmpgtb %%zmm12,%%zmm1,%%k3\n\t"
++			     "vpcmpgtb %%zmm14,%%zmm1,%%k4\n\t"
++			     "vpmovm2b %%k1,%%zmm5\n\t"
++			     "vpmovm2b %%k2,%%zmm7\n\t"
++			     "vpmovm2b %%k3,%%zmm13\n\t"
++			     "vpmovm2b %%k4,%%zmm15\n\t"
++			     "vpaddb %%zmm4,%%zmm4,%%zmm4\n\t"
++			     "vpaddb %%zmm6,%%zmm6,%%zmm6\n\t"
++			     "vpaddb %%zmm12,%%zmm12,%%zmm12\n\t"
++			     "vpaddb %%zmm14,%%zmm14,%%zmm14\n\t"
++			     "vpandq %%zmm0,%%zmm5,%%zmm5\n\t"
++			     "vpandq %%zmm0,%%zmm7,%%zmm7\n\t"
++			     "vpandq %%zmm0,%%zmm13,%%zmm13\n\t"
++			     "vpandq %%zmm0,%%zmm15,%%zmm15\n\t"
++			     "vpxorq %%zmm5,%%zmm4,%%zmm4\n\t"
++			     "vpxorq %%zmm7,%%zmm6,%%zmm6\n\t"
++			     "vpxorq %%zmm13,%%zmm12,%%zmm12\n\t"
++			     "vpxorq %%zmm15,%%zmm14,%%zmm14\n\t"
++			     "vmovdqa64 %0,%%zmm5\n\t"
++			     "vmovdqa64 %1,%%zmm7\n\t"
++			     "vmovdqa64 %2,%%zmm13\n\t"
++			     "vmovdqa64 %3,%%zmm15\n\t"
++			     "vpxorq %%zmm5,%%zmm2,%%zmm2\n\t"
++			     "vpxorq %%zmm7,%%zmm3,%%zmm3\n\t"
++			     "vpxorq %%zmm13,%%zmm10,%%zmm10\n\t"
++			     "vpxorq %%zmm15,%%zmm11,%%zmm11\n"
++			     "vpxorq %%zmm5,%%zmm4,%%zmm4\n\t"
++			     "vpxorq %%zmm7,%%zmm6,%%zmm6\n\t"
++			     "vpxorq %%zmm13,%%zmm12,%%zmm12\n\t"
++			     "vpxorq %%zmm15,%%zmm14,%%zmm14"
++			     :
++			     : "m" (dptr[z][d]), "m" (dptr[z][d+64]),
++			       "m" (dptr[z][d+128]), "m" (dptr[z][d+192]));
++		}
++		asm volatile("vmovntdq %%zmm2,%0\n\t"
++			     "vpxorq %%zmm2,%%zmm2,%%zmm2\n\t"
++			     "vmovntdq %%zmm3,%1\n\t"
++			     "vpxorq %%zmm3,%%zmm3,%%zmm3\n\t"
++			     "vmovntdq %%zmm10,%2\n\t"
++			     "vpxorq %%zmm10,%%zmm10,%%zmm10\n\t"
++			     "vmovntdq %%zmm11,%3\n\t"
++			     "vpxorq %%zmm11,%%zmm11,%%zmm11\n\t"
++			     "vmovntdq %%zmm4,%4\n\t"
++			     "vpxorq %%zmm4,%%zmm4,%%zmm4\n\t"
++			     "vmovntdq %%zmm6,%5\n\t"
++			     "vpxorq %%zmm6,%%zmm6,%%zmm6\n\t"
++			     "vmovntdq %%zmm12,%6\n\t"
++			     "vpxorq %%zmm12,%%zmm12,%%zmm12\n\t"
++			     "vmovntdq %%zmm14,%7\n\t"
++			     "vpxorq %%zmm14,%%zmm14,%%zmm14"
++			     :
++			     : "m" (p[d]), "m" (p[d+64]), "m" (p[d+128]),
++			       "m" (p[d+192]), "m" (q[d]), "m" (q[d+64]),
++			       "m" (q[d+128]), "m" (q[d+192]));
++	}
++
++	asm volatile("sfence" : : : "memory");
++	kernel_fpu_end();
++}
++
++const struct raid6_calls raid6_avx512x4 = {
++	raid6_avx5124_gen_syndrome,
++	NULL,                   /* XOR not yet implemented */
++	raid6_have_avx512,
++	"avx512x4",
++	1                       /* Has cache hints */
++};
++#endif
++
++#endif /* CONFIG_AS_AVX512 */
+diff --git a/lib/raid6/x86.h b/lib/raid6/x86.h
+index 8fe9d96..834d268 100644
+--- a/lib/raid6/x86.h
++++ b/lib/raid6/x86.h
+@@ -46,6 +46,16 @@ static inline void kernel_fpu_end(void)
+ #define X86_FEATURE_SSSE3	(4*32+ 9) /* Supplemental SSE-3 */
+ #define X86_FEATURE_AVX	(4*32+28) /* Advanced Vector Extensions */
+ #define X86_FEATURE_AVX2        (9*32+ 5) /* AVX2 instructions */
++#define X86_FEATURE_AVX512F     (9*32+16) /* AVX-512 Foundation */
++#define X86_FEATURE_AVX512DQ    (9*32+17) /* AVX-512 DQ (Double/Quad granular)
++					   * Instructions
++					   */
++#define X86_FEATURE_AVX512BW    (9*32+30) /* AVX-512 BW (Byte/Word granular)
++					   * Instructions
++					   */
++#define X86_FEATURE_AVX512VL    (9*32+31) /* AVX-512 VL (128/256 Vector Length)
++					   * Extensions
++					   */
+ #define X86_FEATURE_MMXEXT	(1*32+22) /* AMD MMX extensions */
+ 
+ /* Should work well enough on modern CPUs for testing */
 -- 
 1.9.1
 
