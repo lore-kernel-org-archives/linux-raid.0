@@ -1,234 +1,158 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Inactive arrays
-Date: Tue, 2 Aug 2016 11:17:41 +0100
-Message-ID: <57A07345.4040708@youngman.org.uk>
-References: <CAHscji0ddZT-aq5fEp8aG030+F7UqGzMgRnm4QP1Lr1AsGy61Q@mail.gmail.com>
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: Re: WARNING: CPU: 4 PID: 10512 at drivers/md/raid5-cache.c:728
+ r5l_do_reclaim+0x415/0x430 [raid456]
+Date: Tue, 2 Aug 2016 04:36:00 -0400
+Message-ID: <57A05B70.9060500@suse.com>
+References: <2099656990.9407283.1469619529240.JavaMail.zimbra@redhat.com>
+ <579F0E52.8090704@suse.com> <7d0acb42-1209-0722-7740-0fa03d44106b@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHscji0ddZT-aq5fEp8aG030+F7UqGzMgRnm4QP1Lr1AsGy61Q@mail.gmail.com>
+In-Reply-To: <7d0acb42-1209-0722-7740-0fa03d44106b@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Daniel Sanabria <sanabria.d@gmail.com>, linux-raid@vger.kernel.org
+To: yizhan <yizhan@redhat.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Just a quick first response. I see md128 and md129 are both down, and
-are both listed as one drive, raid0. Bit odd, that ...
 
-What version of mdadm are you using? One of them had a bug (3.2.3 era?)
-that would split an array in two. Is it possible that you should have
-one raid0 array with sdf1 and sdf2? But that's a bit of a weird setup...
 
-I notice also that md126 is raid10 across two drives. That's odd, too.
+On 08/01/2016 08:28 AM, yizhan wrote:
+>
+>
+>>> [  902.706372] RAID conf printout:
+>>> [  902.706380]  --- level:6 rd:4 wd:4
+>>> [  902.706381]  disk 0, o:1, dev:sdb1
+>>> [  902.706382]  disk 1, o:1, dev:sdd1
+>>> [  902.706383]  disk 2, o:1, dev:sde1
+>>> [  902.706384]  disk 3, o:1, dev:sdf1
+>>> [  902.706393] md/raid456: discard support disabled due to uncertainty.
+>>> [  902.706394] Set raid456.devices_handle_discard_safely=Y to override.
+>>> [  902.706396] md/raid:md0: using device sdc1 as journal
+>>> [  902.707354] created bitmap (1 pages) for device md0
+>>> [  902.707401] md0: bitmap initialized from disk: read 1 pages, set 8 of 8 bits
+>>> [  902.781331] md0: detected capacity change from 0 to 1071644672
+>>> [  902.781465] md: resync of RAID array md0
+>>> [  902.781468] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+>>> [  902.781469] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for resync.
+>>> [  902.781475] md: using 128k window, over a total of 523264k.
+>>> [  902.829618] md: couldn't update array info. -22
+>>> [  902.876797] md: couldn't update array info. -22
+>>> [  902.896926] md: couldn't update array info. -22
+>>
+>> Errors happened when update array info, not sure it have relationship 
+>> with
+>> the WARNING or not.
+>>
+[snip]
+>>> [ 1548.486067] ------------[ cut here ]------------
+>>> [ 1548.486076] WARNING: CPU: 4 PID: 10512 at drivers/md/raid5-cache.c:728 r5l_do_reclaim+0x415/0x430 [raid456]
+>>> [ 1548.486077] Modules linked in: fuse btrfs vfat msdos fat ext4 jbd2 mbcache binfmt_misc raid456 async_raid6_recov async_memcpy async_pq async_xor xor async_tx raid6_pq xt_CHECKSUM ipt_MASQUERADE nf_nat_masquerade_ipv4 tun ipt_REJECT nf_reject_ipv4 ip6t_rpfilter ip6t_REJECT nf_reject_ipv6 xt_conntrack ip_set nfnetlink ebtable_nat ebtable_broute bridge stp llc ip6table_nat nf_conntrack_ipv6 nf_defrag_ipv6 nf_nat_ipv6 ip6table_mangle ip6table_security ip6table_raw iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack iptable_mangle iptable_security iptable_raw ebtable_filter ebtables ip6table_filter ip6_tables iptable_filter sb_edac edac_core snd_hda_codec_realtek snd_hda_codec_hdmi snd_hda_codec_generic x86_pkg_temp_thermal snd_hda_intel intel_powerclamp coretemp
+  snd_hda_codec
+>>> [ 1548.486117]  kvm_intel kvm snd_hda_core irqbypass crct10dif_pclmul crc32_pclmul snd_hwdep ghash_clmulni_intel snd_seq aesni_intel lrw snd_seq_device gf128mul glue_helper snd_pcm ablk_helper hp_wmi iTCO_wdt snd_timer sparse_keymap rfkill cryptd iTCO_vendor_support mei_me ioatdma snd mei shpchp pcspkr sg soundcore i2c_i801 tpm_infineon lpc_ich mfd_core dca nfsd auth_rpcgss nfs_acl lockd grace sunrpc ip_tables xfs libcrc32c sd_mod nouveau video mxm_wmi i2c_algo_bit drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops ttm drm isci e1000e ata_generic libsas pata_acpi ahci libahci scsi_transport_sas firewire_ohci libata firewire_core ptp crc32c_intel serio_raw pps_core i2c_core crc_itu_t wmi fjes dm_mirror dm_region_hash dm_log dm_mod
+>>> [ 1548.486152] CPU: 4 PID: 10512 Comm: md0_resync Tainted: G        W       4.7.0-rc7 #1
+>>> [ 1548.486153] Hardware name: Hewlett-Packard HP Z620 Workstation/158A, BIOS J61 v03.69 03/25/2014
+>>> [ 1548.486155]  0000000000000286 000000002369dfe1 ffff88079d713b40 ffffffff8134caec
+>>> [ 1548.486157]  0000000000000000 0000000000000000 ffff88079d713b80 ffffffff8108c351
+>>> [ 1548.486159]  000002d8a6ae4d80 000000008f0c904f ffff8807f64b0000 ffff8807c4ab6888
+>>> [ 1548.486161] Call Trace:
+>>> [ 1548.486166]  [<ffffffff8134caec>] dump_stack+0x63/0x87
+>>> [ 1548.486169]  [<ffffffff8108c351>] __warn+0xd1/0xf0
+>>> [ 1548.486172]  [<ffffffff8108c48d>] warn_slowpath_null+0x1d/0x20
+>>> [ 1548.486175]  [<ffffffffa097d805>] r5l_do_reclaim+0x415/0x430 [raid456]
+>>> [ 1548.486178]  [<ffffffff811f9c50>] ? kfree+0x120/0x170
+>>> [ 1548.486181]  [<ffffffffa097e33b>] r5l_quiesce+0x7b/0xa0 [raid456]
+>>> [ 1548.486183]  [<ffffffffa0970da0>] raid5_quiesce+0x50/0x2a0 [raid456]
+>>> [ 1548.486186]  [<ffffffff810d0250>] ? prepare_to_wait_event+0xf0/0xf0
+>>> [ 1548.486189]  [<ffffffff8156d00e>] md_do_sync+0xe7e/0xf60
+>>> [ 1548.486192]  [<ffffffff810c4370>] ? enqueue_entity+0x2a0/0xcc0
+>>> [ 1548.486194]  [<ffffffff810c201d>] ? update_curr+0xed/0x180
+>>> [ 1548.486196]  [<ffffffff810c026e>] ? account_entity_dequeue+0xae/0xd0
+>>> [ 1548.486197]  [<ffffffff810c27f6>] ? dequeue_entity+0x266/0x980
+>>> [ 1548.486200]  [<ffffffff810b5ef5>] ? check_preempt_curr+0x75/0x90
+>>> [ 1548.486202]  [<ffffffff810b5f29>] ? ttwu_do_wakeup+0x19/0xe0
+>>> [ 1548.486204]  [<ffffffff810c2fce>] ? dequeue_task_fair+0xbe/0x830
+>>> [ 1548.486206]  [<ffffffff810c3995>] ? put_prev_entity+0x35/0x730
+>>> [ 1548.486209]  [<ffffffff8102c6d9>] ? __switch_to+0x219/0x5c0
+>>> [ 1548.486211]  [<ffffffff81098d43>] ? kernel_sigaction+0x43/0xe0
+>>> [ 1548.486214]  [<ffffffff81566aa6>] md_thread+0x136/0x150
+>>> [ 1548.486216]  [<ffffffff81566970>] ? find_pers+0x70/0x70
+>>> [ 1548.486219]  [<ffffffff810ab698>] kthread+0xd8/0xf0
+>>> [ 1548.486221]  [<ffffffff816e873f>] ret_from_fork+0x1f/0x40
+>>> [ 1548.486223]  [<ffffffff810ab5c0>] ? kthread_park+0x60/0x60
+>>> [ 1548.486224] ---[ end trace 242e9516e36acb1e ]---
+>>> [ 1548.543855] md: recovery of RAID array md0
+>>> [ 1548.543857] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+>>> [ 1548.543859] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
+>>> [ 1548.543864] md: using 128k window, over a total of 523264k.
+>>> [ 1548.543868] md: md0: recovery done.
+>>> [ 1548.574961] RAID conf printout:
+>>> [ 1548.574964]  --- level:6 rd:4 wd:4
+>>> [ 1548.574966]  disk 0, o:1, dev:sdb1
+>>> [ 1548.574967]  disk 1, o:1, dev:sdd1
+>>> [ 1548.574968]  disk 2, o:1, dev:sde1
+>>> [ 1548.574969]  disk 3, o:1, dev:sdf1
+>>>
+>>> Steps I used:
+>>>
+>>> mdadm --create --run /dev/md0 --level 4 --metadata 1.2 --raid-devices 4
+>>> /dev/sdb1 /dev/sd[d-f]1 --write-journal /dev/sdc1 --bitmap=internal
+>>> --bitmap-chunk=64M --chunk 512
+>>> mdadm --wait /dev/md0
+>>> mkfs.ext4 /dev/md0
+>>> mdadm /dev/md0 -f /dev/sdb1
+>>> mdadm /dev/md0 -r /dev/sdb1
+>>> mdadm /dev/md0 -a /dev/sdb1
+>>
+>> I tried above cmds in my VM machine (with set level as 6), but can't
+>> see the calltrace with below versions.
+>>
+>> linux135:~ # uname -r
+>> 4.4.13-46-default
+>> linux135:~ # mdadm --version
+>> mdadm - v3.4-47-g8718fc3 - 11th May 2016
+>>
+>> Thanks,
+>> Guoqing
+>>
+> Could you try with 4.7.0, it's very easy to reproduce on my side
+> below is my env:
+> #lsblk /dev/sd[b-f]
+> NAME    MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINT
+> sdb       8:16   0 931.5G  0 disk
+> └─sdb1    8:17   0    10G  0 part
+>   └─md0   9:0    0    30G  0 raid4
+> sdc       8:32   0 186.3G  0 disk
+> └─sdc1    8:33   0    10G  0 part
+>   └─md0   9:0    0    30G  0 raid4
+> sdd       8:48   0 111.8G  0 disk
+> └─sdd1    8:49   0    10G  0 part
+>   └─md0   9:0    0    30G  0 raid4
+> sde       8:64   0 931.5G  0 disk
+> └─sde1    8:65   0    10G  0 part
+>   └─md0   9:0    0    30G  0 raid4
+> sdf       8:80   0 931.5G  0 disk
+> └─sdf1    8:81   0    10G  0 part
+>   └─md0   9:0    0    30G  0 raid4
+> # uname -r
+> 4.7.0
+> # mdadm --version
+> mdadm - v3.4-63-g52209d6 - 21st July 2016
+>
 
-How much do you know about what the setup should be, and why it was set
-up that way?
+I tried with latest Linus's tree 
+(731c7d3a205ba89b475b2aa71b5f13dd6ae3de56), but still can't find the 
+warning.
 
-Download lspci by Phil Turmel (it requires python2.7, if your machine is
-python3 a quick fix to the shebang at the start should get it to work).
-Post the output from that here.
+linux241:~ # uname -r
+4.7.0-11-default+
+linux241:~ # mdadm --version
+mdadm - v3.4-41-gf96b130 - 30th March 2016
 
-Cheers,
-Wol
+The biggest difference is that I am using VM machine while you were 
+testing with real hardware, though I am not
+sure it was caused by hardware or not. Do you always see the "couldn't 
+update array info" info during test? If so,
+pls try to make it disappear.
 
-On 02/08/16 08:36, Daniel Sanabria wrote:
-> Hi All,
-> 
-> I have a box that I believe was not powered down correctly and after
-> transporting it to a different location it doesn't boot anymore
-> stopping at BIOS check "Verifying DMI Pool Data".
-> 
-> The box have 6 drives and after instructing the BIOS to boot from the
-> first drive I managed to boot the OS (Fedora 23) after commenting out
-> 2 /etc/fstab entries , output for "uname -a; cat /etc/fstab" follows:
-> 
-> [root@lamachine ~]# uname -a; cat /etc/fstab
-> Linux lamachine 4.3.3-303.fc23.x86_64 #1 SMP Tue Jan 19 18:31:55 UTC
-> 2016 x86_64 x86_64 x86_64 GNU/Linux
-> 
-> #
-> # /etc/fstab
-> # Created by anaconda on Tue Mar 24 19:31:21 2015
-> #
-> # Accessible filesystems, by reference, are maintained under '/dev/disk'
-> # See man pages fstab(5), findfs(8), mount(8) and/or blkid(8) for more info
-> #
-> /dev/mapper/vg_bigblackbox-LogVol_root /                       ext4
-> defaults        1 1
-> UUID=4e51f903-37ca-4479-9197-fac7b2280557 /boot                   ext4
->    defaults        1 2
-> /dev/mapper/vg_bigblackbox-LogVol_opt /opt                    ext4
-> defaults        1 2
-> /dev/mapper/vg_bigblackbox-LogVol_tmp /tmp                    ext4
-> defaults        1 2
-> /dev/mapper/vg_bigblackbox-LogVol_var /var                    ext4
-> defaults        1 2
-> UUID=9194f492-881a-4fc3-ac09-ca4e1cc2985a swap                    swap
->    defaults        0 0
-> /dev/md2 /home          ext4    defaults        1 2
-> #/dev/vg_media/lv_media  /mnt/media      ext4    defaults        1 2
-> #/dev/vg_virt_dir/lv_virt_dir1 /mnt/guest_images/ ext4 defaults 1 2
-> [root@lamachine ~]#
-> 
-> When checking mdstat I can see that 2 of the arrays are showing up as
-> inactive, but not sure how to safely activate these so looking for
-> some knowledgeable advice on how to proceed here.
-> 
-> Thanks in advance,
-> 
-> Daniel
-> 
-> Below some more relevant outputs:
-> 
-> [root@lamachine ~]# cat /proc/mdstat
-> Personalities : [raid10] [raid6] [raid5] [raid4] [raid0]
-> md127 : active raid0 sda5[0] sdc5[2] sdb5[1]
->       94367232 blocks super 1.2 512k chunks
-> 
-> md2 : active raid5 sda3[0] sdc2[2] sdb2[1]
->       511999872 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
-> 
-> md128 : inactive sdf1[3](S)
->       2147352576 blocks super 1.2
-> 
-> md129 : inactive sdf2[2](S)
->       524156928 blocks super 1.2
-> 
-> md126 : active raid10 sda2[0] sdc1[1]
->       30719936 blocks 2 near-copies [2/2] [UU]
-> 
-> unused devices: <none>
-> [root@lamachine ~]# cat /etc/mdadm.conf
-> # mdadm.conf written out by anaconda
-> MAILADDR root
-> AUTO +imsm +1.x -all
-> ARRAY /dev/md2 level=raid5 num-devices=3
-> UUID=2cff15d1:e411447b:fd5d4721:03e44022
-> ARRAY /dev/md126 level=raid10 num-devices=2
-> UUID=9af006ca:8845bbd3:bfe78010:bc810f04
-> ARRAY /dev/md127 level=raid0 num-devices=3
-> UUID=acd5374f:72628c93:6a906c4b:5f675ce5
-> ARRAY /dev/md128 metadata=1.2 spares=1 name=lamachine:128
-> UUID=f2372cb9:d3816fd6:ce86d826:882ec82e
-> ARRAY /dev/md129 metadata=1.2 name=lamachine:129
-> UUID=895dae98:d1a496de:4f590b8b:cb8ac12a
-> [root@lamachine ~]# mdadm --detail /dev/md1*
-> /dev/md126:
->         Version : 0.90
->   Creation Time : Thu Dec  3 22:12:12 2009
->      Raid Level : raid10
->      Array Size : 30719936 (29.30 GiB 31.46 GB)
->   Used Dev Size : 30719936 (29.30 GiB 31.46 GB)
->    Raid Devices : 2
->   Total Devices : 2
-> Preferred Minor : 126
->     Persistence : Superblock is persistent
-> 
->     Update Time : Tue Aug  2 07:46:39 2016
->           State : clean
->  Active Devices : 2
-> Working Devices : 2
->  Failed Devices : 0
->   Spare Devices : 0
-> 
->          Layout : near=2
->      Chunk Size : 64K
-> 
->            UUID : 9af006ca:8845bbd3:bfe78010:bc810f04
->          Events : 0.264152
-> 
->     Number   Major   Minor   RaidDevice State
->        0       8        2        0      active sync set-A   /dev/sda2
->        1       8       33        1      active sync set-B   /dev/sdc1
-> /dev/md127:
->         Version : 1.2
->   Creation Time : Tue Jul 26 19:00:28 2011
->      Raid Level : raid0
->      Array Size : 94367232 (90.00 GiB 96.63 GB)
->    Raid Devices : 3
->   Total Devices : 3
->     Persistence : Superblock is persistent
-> 
->     Update Time : Tue Jul 26 19:00:28 2011
->           State : clean
->  Active Devices : 3
-> Working Devices : 3
->  Failed Devices : 0
->   Spare Devices : 0
-> 
->      Chunk Size : 512K
-> 
->            Name : reading.homeunix.com:3
->            UUID : acd5374f:72628c93:6a906c4b:5f675ce5
->          Events : 0
-> 
->     Number   Major   Minor   RaidDevice State
->        0       8        5        0      active sync   /dev/sda5
->        1       8       21        1      active sync   /dev/sdb5
->        2       8       37        2      active sync   /dev/sdc5
-> /dev/md128:
->         Version : 1.2
->      Raid Level : raid0
->   Total Devices : 1
->     Persistence : Superblock is persistent
-> 
->           State : inactive
-> 
->            Name : lamachine:128  (local to host lamachine)
->            UUID : f2372cb9:d3816fd6:ce86d826:882ec82e
->          Events : 4154
-> 
->     Number   Major   Minor   RaidDevice
-> 
->        -       8       81        -        /dev/sdf1
-> /dev/md129:
->         Version : 1.2
->      Raid Level : raid0
->   Total Devices : 1
->     Persistence : Superblock is persistent
-> 
->           State : inactive
-> 
->            Name : lamachine:129  (local to host lamachine)
->            UUID : 895dae98:d1a496de:4f590b8b:cb8ac12a
->          Events : 0
-> 
->     Number   Major   Minor   RaidDevice
-> 
->        -       8       82        -        /dev/sdf2
-> [root@lamachine ~]# mdadm --detail /dev/md2
-> /dev/md2:
->         Version : 0.90
->   Creation Time : Mon Feb 11 07:54:36 2013
->      Raid Level : raid5
->      Array Size : 511999872 (488.28 GiB 524.29 GB)
->   Used Dev Size : 255999936 (244.14 GiB 262.14 GB)
->    Raid Devices : 3
->   Total Devices : 3
-> Preferred Minor : 2
->     Persistence : Superblock is persistent
-> 
->     Update Time : Mon Aug  1 20:24:23 2016
->           State : clean
->  Active Devices : 3
-> Working Devices : 3
->  Failed Devices : 0
->   Spare Devices : 0
-> 
->          Layout : left-symmetric
->      Chunk Size : 64K
-> 
->            UUID : 2cff15d1:e411447b:fd5d4721:03e44022 (local to host lamachine)
->          Events : 0.611
-> 
->     Number   Major   Minor   RaidDevice State
->        0       8        3        0      active sync   /dev/sda3
->        1       8       18        1      active sync   /dev/sdb2
->        2       8       34        2      active sync   /dev/sdc2
-> [root@lamachine ~]#
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+Thanks,
+Guoqing
