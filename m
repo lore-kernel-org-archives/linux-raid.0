@@ -1,90 +1,258 @@
-From: Mike Christie <mchristi@redhat.com>
-Subject: Re: [PATCH 42/45] block, fs, drivers: remove REQ_OP compat defs and
-	related code
-Date: Wed, 3 Aug 2016 12:28:39 -0500
-Message-ID: <57A229C7.6010102@redhat.com>
-References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
-	<1465155145-10812-43-git-send-email-mchristi@redhat.com>
-	<CAOxpaSVzkR+9anramDg7nHxjb5hp0q_oKGRdEpiU07jWM=tzdQ@mail.gmail.com>
+From: Daniel Sanabria <sanabria.d@gmail.com>
+Subject: Re: Inactive arrays
+Date: Wed, 3 Aug 2016 20:18:58 +0100
+Message-ID: <CAHscji3CMO=ZREJypdUhsyKN0TmHWsEybdVLwWCbMZqWGdngOA@mail.gmail.com>
+References: <CAHscji0ddZT-aq5fEp8aG030+F7UqGzMgRnm4QP1Lr1AsGy61Q@mail.gmail.com>
+ <57A07345.4040708@youngman.org.uk> <CAHscji0BQuyKQbLYZ9Ah16hHday_seTaajm8LOn6+HRFqinTyQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounces@oss.sgi.com>
-In-Reply-To: <CAOxpaSVzkR+9anramDg7nHxjb5hp0q_oKGRdEpiU07jWM=tzdQ@mail.gmail.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Ross Zwisler <zwisler@gmail.com>, axboe@fb.com, Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, XFS Developers <xfs@oss.sgi.com>, ocfs2-devel@oss.oracle.com, linux-scsi@vger.kernel.org, konrad.wilk@oracle.com, LKML <linux-kernel@vger.kernel.org>, philipp.reisner@linbit.com, linux-f2fs-devel@lists.sourceforge.net, linux-raid@vger.kernel.org, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, osd-dev@open-osd.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, lars.ellenberg@linbit.com, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs@vger.kernel.org, drbd-dev@lists.linbit.com
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAHscji0BQuyKQbLYZ9Ah16hHday_seTaajm8LOn6+HRFqinTyQ@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 08/03/2016 11:25 AM, Ross Zwisler wrote:
->  run fstests generic/008 at 2016-08-03 09:54:56
-> page:ffffea0017af04c0 count:3 mapcount:0 mapping:ffff8805eb059200 index:0x0
-> flags: 0x3fff8000002828(uptodate|lru|private|writeback)
-> page dumped because: VM_BUG_ON_PAGE(!PageLocked(page))
-> page->mem_cgroup:ffff8806098e0800
-> ------------[ cut here ]------------
-> kernel BUG at mm/filemap.c:833!
-> invalid opcode: 0000 [#1] SMP
-> Modules linked in: brd dax_pmem nd_pmem dax nd_btt nd_e820 libnvdimm
-> CPU: 0 PID: 2522 Comm: xfs_io Not tainted 4.7.0-rc2-00042-g4e1b2d52 #18
-> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
-> rel-1.9.1-0-gb3ef39f-prebuilt.qemu-project.org 04/01/2014
-> task: ffff8805ebae4ec0 ti: ffff8805eba3c000 task.ti: ffff8805eba3c000
-> RIP: 0010:[<ffffffff811de115>] [<ffffffff811de115>] unlock_page+0xa5/0xb0
-> RSP: 0018:ffff8805eba3fa60 EFLAGS: 00010282
-> RAX: 0000000000000021 RBX: 0000000000000000 RCX: 0000000000000006
-> RDX: 0000000000000000 RSI: 0000000000000001 RDI: ffff8806109ce200
-> RBP: ffff8805eba3fa60 R08: 0000000000000001 R09: 0000000000000001
-> R10: ffff8805ebae4ec0 R11: 0000000000000001 R12: ffffea0017af04c0
-> R13: 0000000000028000 R14: ffffffffa00202c0 R15: ffff88060eff1200
-> FS: 00007f87a31cf700(0000) GS:ffff880610800000(0000) knlGS:0000000000000000
-> CS: 0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: 00007f87a31e6000 CR3: 000000060da31000 CR4: 00000000001406f0
-> Stack:
-> ffff8805eba3fa98 ffffffff812bd782 ffff8805eba3fdb0 0000000000001000
-> ffffea0017af04c0 0000000000000000 0000000000000088 ffff8805eba3fbe0
-> ffffffff812c3ff1 ffff8805eba3fd00 0000000000028000 0000000c00000000
-> Call Trace:
-> [<ffffffff812bd782>] bdev_write_page+0xb2/0xe0 fs/block_dev.c:462
-> [<ffffffff812c3ff1>] __mpage_writepage+0x5c1/0x750 fs/mpage.c:604
-> [<ffffffff811eedbd>] write_cache_pages+0x20d/0x5f0 mm/page-writeback.c:2261
-> [<ffffffff812c3955>] mpage_writepages+0x75/0xe0 fs/mpage.c:703
-> [<ffffffff8137951b>] ext2_writepages+0x3b/0x40 fs/ext2/inode.c:887
-> [<ffffffff811f27a1>] do_writepages+0x21/0x30 mm/page-writeback.c:2361
-> [<ffffffff811e1396>] __filemap_fdatawrite_range+0xc6/0x100 mm/filemap.c:300
-> [<ffffffff811e1514>] filemap_write_and_wait_range+0x44/0x90 mm/filemap.c:490
-> [<ffffffff812a7707>] __generic_file_fsync+0x27/0x90 fs/libfs.c:937
-> [<ffffffff812a7789>] generic_file_fsync+0x19/0x40 fs/libfs.c:974
-> [<ffffffff81377e9e>] ext2_fsync+0x2e/0x70 fs/ext2/file.c:149
-> [<ffffffff812b549b>] vfs_fsync_range+0x4b/0xb0 fs/sync.c:195
-> [< inline >] vfs_fsync fs/sync.c:209
-> [<ffffffff812b555d>] do_fsync+0x3d/0x70 fs/sync.c:219
-> [< inline >] SYSC_fsync fs/sync.c:227
-> [<ffffffff812b5810>] SyS_fsync+0x10/0x20 fs/sync.c:225
-> [<ffffffff81acd33c>] entry_SYSCALL_64_fastpath+0x1f/0xbd
-> arch/x86/entry/entry_64.S:207
-> Code: 00 00 48 d3 ea 89 d2 48 8d 0c 92 48 8d 14 4a 48 8d 3c d0 31 d2
-> e8 bc fc f1 ff 5d c3 48 c7 c6 20 1d ec 81 4c 89 c7 e8 bb 8d 03 00 <0f>
-> 0b 66 0f 1f 84 00 00 00 00 00 66 66 66 66 90 55 b9 08 00 00
-> RIP [<ffffffff811de115>] unlock_page+0xa5/0xb0 mm/filemap.c:833
-> RSP <ffff8805eba3fa60>
-> ---[ end trace d419bf59bba263fb ]---
+Ok,
 
+Unfortunately the PSU replacement didn't help and I could be facing a
+failed motherboard/cpu :( My question now is, is it possible to
+restore the arrays in a new machine?
 
-Thanks for testing and the detailed bug report. Looks like I missed the
-rw_page callback. Testing a patch right now. Should be done in a couple
-of hours.
+Daniel
 
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+On 2 August 2016 at 11:45, Daniel Sanabria <sanabria.d@gmail.com> wrote:
+> Thanks very much for the response Wol.
+>
+> It looks like the PSU is dead (server automatically powers off a few
+> seconds after power on).
+>
+> I'm planning to order a PSU replacement to resume troubleshooting so
+> please bear with me;  maybe the PSU was degraded and couldn't power
+> some of drives?
+>
+> Cheers,
+>
+> Daniel
+>
+> On 2 August 2016 at 11:17, Wols Lists <antlists@youngman.org.uk> wrote:
+>> Just a quick first response. I see md128 and md129 are both down, and
+>> are both listed as one drive, raid0. Bit odd, that ...
+>>
+>> What version of mdadm are you using? One of them had a bug (3.2.3 era?)
+>> that would split an array in two. Is it possible that you should have
+>> one raid0 array with sdf1 and sdf2? But that's a bit of a weird setup...
+>>
+>> I notice also that md126 is raid10 across two drives. That's odd, too.
+>>
+>> How much do you know about what the setup should be, and why it was set
+>> up that way?
+>>
+>> Download lspci by Phil Turmel (it requires python2.7, if your machine is
+>> python3 a quick fix to the shebang at the start should get it to work).
+>> Post the output from that here.
+>>
+>> Cheers,
+>> Wol
+>>
+>> On 02/08/16 08:36, Daniel Sanabria wrote:
+>>> Hi All,
+>>>
+>>> I have a box that I believe was not powered down correctly and after
+>>> transporting it to a different location it doesn't boot anymore
+>>> stopping at BIOS check "Verifying DMI Pool Data".
+>>>
+>>> The box have 6 drives and after instructing the BIOS to boot from the
+>>> first drive I managed to boot the OS (Fedora 23) after commenting out
+>>> 2 /etc/fstab entries , output for "uname -a; cat /etc/fstab" follows:
+>>>
+>>> [root@lamachine ~]# uname -a; cat /etc/fstab
+>>> Linux lamachine 4.3.3-303.fc23.x86_64 #1 SMP Tue Jan 19 18:31:55 UTC
+>>> 2016 x86_64 x86_64 x86_64 GNU/Linux
+>>>
+>>> #
+>>> # /etc/fstab
+>>> # Created by anaconda on Tue Mar 24 19:31:21 2015
+>>> #
+>>> # Accessible filesystems, by reference, are maintained under '/dev/disk'
+>>> # See man pages fstab(5), findfs(8), mount(8) and/or blkid(8) for more info
+>>> #
+>>> /dev/mapper/vg_bigblackbox-LogVol_root /                       ext4
+>>> defaults        1 1
+>>> UUID=4e51f903-37ca-4479-9197-fac7b2280557 /boot                   ext4
+>>>    defaults        1 2
+>>> /dev/mapper/vg_bigblackbox-LogVol_opt /opt                    ext4
+>>> defaults        1 2
+>>> /dev/mapper/vg_bigblackbox-LogVol_tmp /tmp                    ext4
+>>> defaults        1 2
+>>> /dev/mapper/vg_bigblackbox-LogVol_var /var                    ext4
+>>> defaults        1 2
+>>> UUID=9194f492-881a-4fc3-ac09-ca4e1cc2985a swap                    swap
+>>>    defaults        0 0
+>>> /dev/md2 /home          ext4    defaults        1 2
+>>> #/dev/vg_media/lv_media  /mnt/media      ext4    defaults        1 2
+>>> #/dev/vg_virt_dir/lv_virt_dir1 /mnt/guest_images/ ext4 defaults 1 2
+>>> [root@lamachine ~]#
+>>>
+>>> When checking mdstat I can see that 2 of the arrays are showing up as
+>>> inactive, but not sure how to safely activate these so looking for
+>>> some knowledgeable advice on how to proceed here.
+>>>
+>>> Thanks in advance,
+>>>
+>>> Daniel
+>>>
+>>> Below some more relevant outputs:
+>>>
+>>> [root@lamachine ~]# cat /proc/mdstat
+>>> Personalities : [raid10] [raid6] [raid5] [raid4] [raid0]
+>>> md127 : active raid0 sda5[0] sdc5[2] sdb5[1]
+>>>       94367232 blocks super 1.2 512k chunks
+>>>
+>>> md2 : active raid5 sda3[0] sdc2[2] sdb2[1]
+>>>       511999872 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+>>>
+>>> md128 : inactive sdf1[3](S)
+>>>       2147352576 blocks super 1.2
+>>>
+>>> md129 : inactive sdf2[2](S)
+>>>       524156928 blocks super 1.2
+>>>
+>>> md126 : active raid10 sda2[0] sdc1[1]
+>>>       30719936 blocks 2 near-copies [2/2] [UU]
+>>>
+>>> unused devices: <none>
+>>> [root@lamachine ~]# cat /etc/mdadm.conf
+>>> # mdadm.conf written out by anaconda
+>>> MAILADDR root
+>>> AUTO +imsm +1.x -all
+>>> ARRAY /dev/md2 level=raid5 num-devices=3
+>>> UUID=2cff15d1:e411447b:fd5d4721:03e44022
+>>> ARRAY /dev/md126 level=raid10 num-devices=2
+>>> UUID=9af006ca:8845bbd3:bfe78010:bc810f04
+>>> ARRAY /dev/md127 level=raid0 num-devices=3
+>>> UUID=acd5374f:72628c93:6a906c4b:5f675ce5
+>>> ARRAY /dev/md128 metadata=1.2 spares=1 name=lamachine:128
+>>> UUID=f2372cb9:d3816fd6:ce86d826:882ec82e
+>>> ARRAY /dev/md129 metadata=1.2 name=lamachine:129
+>>> UUID=895dae98:d1a496de:4f590b8b:cb8ac12a
+>>> [root@lamachine ~]# mdadm --detail /dev/md1*
+>>> /dev/md126:
+>>>         Version : 0.90
+>>>   Creation Time : Thu Dec  3 22:12:12 2009
+>>>      Raid Level : raid10
+>>>      Array Size : 30719936 (29.30 GiB 31.46 GB)
+>>>   Used Dev Size : 30719936 (29.30 GiB 31.46 GB)
+>>>    Raid Devices : 2
+>>>   Total Devices : 2
+>>> Preferred Minor : 126
+>>>     Persistence : Superblock is persistent
+>>>
+>>>     Update Time : Tue Aug  2 07:46:39 2016
+>>>           State : clean
+>>>  Active Devices : 2
+>>> Working Devices : 2
+>>>  Failed Devices : 0
+>>>   Spare Devices : 0
+>>>
+>>>          Layout : near=2
+>>>      Chunk Size : 64K
+>>>
+>>>            UUID : 9af006ca:8845bbd3:bfe78010:bc810f04
+>>>          Events : 0.264152
+>>>
+>>>     Number   Major   Minor   RaidDevice State
+>>>        0       8        2        0      active sync set-A   /dev/sda2
+>>>        1       8       33        1      active sync set-B   /dev/sdc1
+>>> /dev/md127:
+>>>         Version : 1.2
+>>>   Creation Time : Tue Jul 26 19:00:28 2011
+>>>      Raid Level : raid0
+>>>      Array Size : 94367232 (90.00 GiB 96.63 GB)
+>>>    Raid Devices : 3
+>>>   Total Devices : 3
+>>>     Persistence : Superblock is persistent
+>>>
+>>>     Update Time : Tue Jul 26 19:00:28 2011
+>>>           State : clean
+>>>  Active Devices : 3
+>>> Working Devices : 3
+>>>  Failed Devices : 0
+>>>   Spare Devices : 0
+>>>
+>>>      Chunk Size : 512K
+>>>
+>>>            Name : reading.homeunix.com:3
+>>>            UUID : acd5374f:72628c93:6a906c4b:5f675ce5
+>>>          Events : 0
+>>>
+>>>     Number   Major   Minor   RaidDevice State
+>>>        0       8        5        0      active sync   /dev/sda5
+>>>        1       8       21        1      active sync   /dev/sdb5
+>>>        2       8       37        2      active sync   /dev/sdc5
+>>> /dev/md128:
+>>>         Version : 1.2
+>>>      Raid Level : raid0
+>>>   Total Devices : 1
+>>>     Persistence : Superblock is persistent
+>>>
+>>>           State : inactive
+>>>
+>>>            Name : lamachine:128  (local to host lamachine)
+>>>            UUID : f2372cb9:d3816fd6:ce86d826:882ec82e
+>>>          Events : 4154
+>>>
+>>>     Number   Major   Minor   RaidDevice
+>>>
+>>>        -       8       81        -        /dev/sdf1
+>>> /dev/md129:
+>>>         Version : 1.2
+>>>      Raid Level : raid0
+>>>   Total Devices : 1
+>>>     Persistence : Superblock is persistent
+>>>
+>>>           State : inactive
+>>>
+>>>            Name : lamachine:129  (local to host lamachine)
+>>>            UUID : 895dae98:d1a496de:4f590b8b:cb8ac12a
+>>>          Events : 0
+>>>
+>>>     Number   Major   Minor   RaidDevice
+>>>
+>>>        -       8       82        -        /dev/sdf2
+>>> [root@lamachine ~]# mdadm --detail /dev/md2
+>>> /dev/md2:
+>>>         Version : 0.90
+>>>   Creation Time : Mon Feb 11 07:54:36 2013
+>>>      Raid Level : raid5
+>>>      Array Size : 511999872 (488.28 GiB 524.29 GB)
+>>>   Used Dev Size : 255999936 (244.14 GiB 262.14 GB)
+>>>    Raid Devices : 3
+>>>   Total Devices : 3
+>>> Preferred Minor : 2
+>>>     Persistence : Superblock is persistent
+>>>
+>>>     Update Time : Mon Aug  1 20:24:23 2016
+>>>           State : clean
+>>>  Active Devices : 3
+>>> Working Devices : 3
+>>>  Failed Devices : 0
+>>>   Spare Devices : 0
+>>>
+>>>          Layout : left-symmetric
+>>>      Chunk Size : 64K
+>>>
+>>>            UUID : 2cff15d1:e411447b:fd5d4721:03e44022 (local to host lamachine)
+>>>          Events : 0.611
+>>>
+>>>     Number   Major   Minor   RaidDevice State
+>>>        0       8        3        0      active sync   /dev/sda3
+>>>        1       8       18        1      active sync   /dev/sdb2
+>>>        2       8       34        2      active sync   /dev/sdc2
+>>> [root@lamachine ~]#
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>
