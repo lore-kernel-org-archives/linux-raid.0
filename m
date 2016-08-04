@@ -1,49 +1,57 @@
-From: Shaun Tancheff <shaun.tancheff@seagate.com>
-Subject: Re: [PATCH 37/45] drivers: use req op accessor
-Date: Thu, 4 Aug 2016 11:32:16 -0500
-Message-ID: <CAJVOszAqEw3UK6HV4bPvYfHeO6jvP0d-OtfXxRuve=5-Kmaokw@mail.gmail.com>
-References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
-	<1465155145-10812-38-git-send-email-mchristi@redhat.com>
-	<CAOxpaSUMsgfTYsL0bL6VCnwxz7bpgpKO-ZfC5J8dFG9PN-hzvg@mail.gmail.com>
-	<87fbe31f-27b3-ff7a-e381-34fc1aad337e@redhat.com>
-	<CAJVOszAd9Eu88P2=QoNVArd0jwDH7KRe=OB82tCNMpjfv9B4KA@mail.gmail.com>
-	<20160804154622.GB15656@infradead.org>
+From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Subject: [PATCH RFC] mm,
+ writeback: flush plugged IO in wakeup_flusher_threads()
+Date: Thu, 04 Aug 2016 21:36:05 +0300
+Message-ID: <147033576532.682609.2277943215598867297.stgit@buzz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <ocfs2-devel-bounces@oss.oracle.com>
-In-Reply-To: <20160804154622.GB15656@infradead.org>
-List-Unsubscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
-	<mailto:ocfs2-devel-request@oss.oracle.com?subject=unsubscribe>
-List-Archive: <http://oss.oracle.com/pipermail/ocfs2-devel>
-List-Post: <mailto:ocfs2-devel@oss.oracle.com>
-List-Help: <mailto:ocfs2-devel-request@oss.oracle.com?subject=help>
-List-Subscribe: <https://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
-	<mailto:ocfs2-devel-request@oss.oracle.com?subject=subscribe>
-Sender: ocfs2-devel-bounces@oss.oracle.com
-Errors-To: ocfs2-devel-bounces@oss.oracle.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: philipp.reisner@linbit.com, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, drbd-dev@lists.linbit.com, linux-scsi@vger.kernel.org, Mike Christie <mchristi@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>, konrad.wilk@oracle.com, XFS Developers <xfs@oss.sgi.com>, linux-block@vger.kernel.org, linux-bcache@vger.kernel.org, osd-dev@open-osd.org, Ross Zwisler <zwisler@gmail.com>, Jens Axboe <axboe@fb.com>, linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-f2fs-devel@lists.sourceforge.net, linux-btrfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, lars.ellenberg@linbit.com, ocfs2-devel@oss.oracle.com
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
+To: linux-mm@kvack.org
+Cc: Jens Axboe <axboe@kernel.dk>, Michal Hocko <mhocko@suse.com>, Mel Gorman <mgorman@techsingularity.net>, linux-raid@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Shaohua Li <shli@kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Aug 4, 2016 at 10:46 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Wed, Aug 03, 2016 at 07:30:29PM -0500, Shaun Tancheff wrote:
->> I think the translation in loop.c is suspicious here:
->>
->>     "if use DIO && not (a flush_flag or discard_flag)"
->> should translate to:
->>     "if use DIO && not ((a flush_flag) || op == discard)"
->>
->> But in the patch I read:
->>     "if use DIO && ((not a flush_flag) || op == discard)
->>
->> Which would have DIO && discards follow the AIO path?
->
-> Indeed.  Sorry for missing out on your patch, I just sent a fix
-> in reply to Dave's other report earlier which is pretty similar to
-> yours.
+I've found funny live-lock between raid10 barriers during resync and memory
+controller hard limits. Inside mpage_readpages() task holds on its plug bio
+which blocks barrier in raid10. Its memory cgroup have no free memory thus
+task goes into reclaimer but all reclaimable pages are dirty and cannot be
+written because raid10 is rebuilding and stuck on barrier.
 
-No worries. I prefer your switch to a an if conditional here.
+Common flush of such IO in schedule() never happens because machine where
+that happened has a lot of free cpus and task never goes sleep.
 
--- 
-Shaun Tancheff
+Lock is 'live' because changing memory limit or killing tasks which holds
+that stuck bio unblock whole progress.
+
+That was happened in 3.18.x but I see no difference in upstream logic.
+Theoretically this might happen even without memory cgroup.
+
+Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+---
+ fs/fs-writeback.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index 56c8fda436c0..ed58863cdb5d 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -1948,6 +1948,12 @@ void wakeup_flusher_threads(long nr_pages, enum wb_reason reason)
+ {
+ 	struct backing_dev_info *bdi;
+ 
++	/*
++	 * If we are expecting writeback progress we must submit plugged IO.
++	 */
++	if (blk_needs_flush_plug(current))
++		blk_schedule_flush_plug(current);
++
+ 	if (!nr_pages)
+ 		nr_pages = get_nr_dirty_pages();
+ 
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
