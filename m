@@ -1,99 +1,153 @@
-From: Mike Christie <mchristi@redhat.com>
-Subject: Re: [PATCH 37/45] drivers: use req op accessor
-Date: Thu, 4 Aug 2016 00:47:03 -0500
-Message-ID: <57A2D6D7.8040807@redhat.com>
-References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
- <1465155145-10812-38-git-send-email-mchristi@redhat.com>
- <CAOxpaSUMsgfTYsL0bL6VCnwxz7bpgpKO-ZfC5J8dFG9PN-hzvg@mail.gmail.com>
- <87fbe31f-27b3-ff7a-e381-34fc1aad337e@redhat.com>
- <CAJVOszAd9Eu88P2=QoNVArd0jwDH7KRe=OB82tCNMpjfv9B4KA@mail.gmail.com>
+From: Yi Zhang <yizhan@redhat.com>
+Subject: journal disk become the first of --detail list after fail/remove
+ one disk
+Date: Thu, 4 Aug 2016 06:52:12 -0400 (EDT)
+Message-ID: <1933083404.11265226.1470307932889.JavaMail.zimbra@redhat.com>
+References: <1597878292.11264554.1470307437177.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-bcache-owner@vger.kernel.org>
-In-Reply-To: <CAJVOszAd9Eu88P2=QoNVArd0jwDH7KRe=OB82tCNMpjfv9B4KA@mail.gmail.com>
-Sender: linux-bcache-owner@vger.kernel.org
-To: Shaun Tancheff <shaun.tancheff@seagate.com>
-Cc: Ross Zwisler <zwisler@gmail.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Chinner <david@fromorbit.com>, Jens Axboe <axboe@fb.com>, linux-f2fs-devel@lists.sourceforge.net, linux-ext4 <linux-ext4@vger.kernel.org>, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, XFS Developers <xfs@oss.sgi.com>, ocfs2-devel@oss.oracle.com
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1597878292.11264554.1470307437177.JavaMail.zimbra@redhat.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: songliubraving@fb.com, shli@fb.com, Jes.Sorensen@redhat.com
 List-Id: linux-raid.ids
 
-On 08/03/2016 07:30 PM, Shaun Tancheff wrote:
-> On Wed, Aug 3, 2016 at 6:47 PM, Mike Christie <mchristi@redhat.com> wrote:
->> On 08/03/2016 05:33 PM, Ross Zwisler wrote:
->>> On Sun, Jun 5, 2016 at 1:32 PM,  <mchristi@redhat.com> wrote:
->>>> From: Mike Christie <mchristi@redhat.com>
->>>>
->>>> The req operation REQ_OP is separated from the rq_flag_bits
->>>> definition. This converts the block layer drivers to
->>>> use req_op to get the op from the request struct.
->>>>
->>>> Signed-off-by: Mike Christie <mchristi@redhat.com>
->>>> ---
->>>>  drivers/block/loop.c              |  6 +++---
->>>>  drivers/block/mtip32xx/mtip32xx.c |  2 +-
->>>>  drivers/block/nbd.c               |  2 +-
->>>>  drivers/block/rbd.c               |  4 ++--
->>>>  drivers/block/xen-blkfront.c      |  8 +++++---
->>>>  drivers/ide/ide-floppy.c          |  2 +-
->>>>  drivers/md/dm.c                   |  2 +-
->>>>  drivers/mmc/card/block.c          |  7 +++----
->>>>  drivers/mmc/card/queue.c          |  6 ++----
->>>
->>> Dave Chinner reported a deadlock with XFS + DAX, which I reproduced
->>> and bisected to this commit:
->>>
->>> commit c2df40dfb8c015211ec55f4b1dd0587f875c7b34
->>> Author: Mike Christie <mchristi@redhat.com>
->>> Date:   Sun Jun 5 14:32:17 2016 -0500
->>> drivers: use req op accessor
->>>
->>> Here are the steps to reproduce the deadlock with a BRD ramdisk:
->>>
->>> mkfs.xfs -f /dev/ram0
->>> mount -o dax /dev/ram0 /mnt/scratch
->>
->> When using ramdisks, we need the attached patch like in your other bug
->> report. I think it will fix some hangs people are seeing.
->>
->> I do not think that it should cause the failure to run issue you saw
->> when doing generic/008 and ext2.
->>
-> 
-> I think the translation in loop.c is suspicious here:
-> 
->     "if use DIO && not (a flush_flag or discard_flag)"
-> should translate to:
->     "if use DIO && not ((a flush_flag) || op == discard)"
-> 
-> But in the patch I read:
->     "if use DIO && ((not a flush_flag) || op == discard)
-> 
-> Which would have DIO && discards follow the AIO path?
-> 
-> So I would humbly suggest something like the following
->     (on top of commit c2df40dfb8c015211ec55f4b1dd0587f875c7b34):
-> [Please excuse the messed up patch format ... gmail eats tabs]
-> 
-> diff --git a/drivers/block/loop.c b/drivers/block/loop.c
-> index b9b737c..0754d83 100644
-> --- a/drivers/block/loop.c
-> +++ b/drivers/block/loop.c
-> @@ -1659,8 +1659,9 @@ static int loop_queue_rq(struct blk_mq_hw_ctx *hctx,
->         if (lo->lo_state != Lo_bound)
->                 return -EIO;
-> 
-> -       if (lo->use_dio && (!(cmd->rq->cmd_flags & REQ_FLUSH) ||
-> -           req_op(cmd->rq) == REQ_OP_DISCARD))
-> +       if (lo->use_dio && !(
-> +           (cmd->rq->cmd_flags & REQ_FLUSH) ||
-> +            req_op(cmd->rq) == REQ_OP_DISCARD))
->                 cmd->use_aio = true;
->         else
->                 cmd->use_aio = false;
-> 
+Hi folks
 
-You are right. The translation was bad and your code above is correct.
+patch[1] has move journal to end of --detail list, but I found after fail/remove the one of the disk, 
+the journal disk change to be the fisrt one, detailed steps pls refer[2]
 
-I think we need my patch in the other mail though too, because for the
-rw_page user case if WB_SYNC_ALL is set, then the IO gets sent down as a
-read instead of a write.
+[1]
+commit 6fe4c6160399c94a15eda6092371e0ac9a38a4bc
+Author: Song Liu <songliubraving@fb.com>
+Date:   Mon Dec 21 11:23:41 2015 -0800
+
+    move journal to end of --detail list
+
+[2]
+Reproduce steps
+# uname -r
+4.7.0
+# mdadm --version
+mdadm - v3.4-63-g52209d6 - 21st July 2016
+# mdadm --create --run /dev/md0 --level 4 --metadata 1.2 --raid-devices 7 /dev/loop1 /dev/loop2 /dev/loop3 /dev/loop4 /dev/loop5 /dev/loop6 /dev/loop7 --write-journal /dev/loop0 --bitmap=internal --bitmap-chunk=64M --chunk 512
+mdadm: array /dev/md0 started.
+# mdadm --wait /dev/md0 
+# mdadm -D /dev/md0 
+/dev/md0:
+        Version : 1.2
+  Creation Time : Thu Aug  4 18:42:19 2016
+     Raid Level : raid4
+     Array Size : 3139584 (2.99 GiB 3.21 GB)
+  Used Dev Size : 523264 (511.00 MiB 535.82 MB)
+   Raid Devices : 7
+  Total Devices : 8
+    Persistence : Superblock is persistent
+
+  Intent Bitmap : Internal
+
+    Update Time : Thu Aug  4 18:42:34 2016
+          State : clean 
+ Active Devices : 7
+Working Devices : 8
+ Failed Devices : 0
+  Spare Devices : 1
+
+     Chunk Size : 512K
+
+           Name : dhcp-12-125.nay.redhat.com:0  (local to host dhcp-12-125.nay.redhat.com)
+           UUID : 29a267c2:04e91998:639e6eef:64ddbab0
+         Events : 20
+
+    Number   Major   Minor   RaidDevice State
+       0       7        1        0      active sync   /dev/loop1
+       1       7        2        1      active sync   /dev/loop2
+       2       7        3        2      active sync   /dev/loop3
+       3       7        4        3      active sync   /dev/loop4
+       4       7        5        4      active sync   /dev/loop5
+       5       7        6        5      active sync   /dev/loop6
+       8       7        7        6      active sync   /dev/loop7
+
+       7       7        0        -      journal   /dev/loop0
+# mdadm /dev/md0 -f /dev/loop1 
+mdadm: set /dev/loop1 faulty in /dev/md0
+# mdadm -D /dev/md0 
+/dev/md0:
+        Version : 1.2
+  Creation Time : Thu Aug  4 18:42:19 2016
+     Raid Level : raid4
+     Array Size : 3139584 (2.99 GiB 3.21 GB)
+  Used Dev Size : 523264 (511.00 MiB 535.82 MB)
+   Raid Devices : 7
+  Total Devices : 8
+    Persistence : Superblock is persistent
+
+  Intent Bitmap : Internal
+
+    Update Time : Thu Aug  4 18:43:07 2016
+          State : clean, degraded 
+ Active Devices : 6
+Working Devices : 7
+ Failed Devices : 1
+  Spare Devices : 1
+
+     Chunk Size : 512K
+
+           Name : dhcp-12-125.nay.redhat.com:0  (local to host dhcp-12-125.nay.redhat.com)
+           UUID : 29a267c2:04e91998:639e6eef:64ddbab0
+         Events : 22
+
+    Number   Major   Minor   RaidDevice State
+       7       7        0        -      journal   /dev/loop0
+       1       7        2        1      active sync   /dev/loop2
+       2       7        3        2      active sync   /dev/loop3
+       3       7        4        3      active sync   /dev/loop4
+       4       7        5        4      active sync   /dev/loop5
+       5       7        6        5      active sync   /dev/loop6
+       8       7        7        6      active sync   /dev/loop7
+
+       0       7        1        -      faulty   /dev/loop1
+# mdadm /dev/md0 -r /dev/loop1 
+mdadm: hot removed /dev/loop1 from /dev/md0
+# mdadm -D /dev/md0 
+/dev/md0:
+        Version : 1.2
+  Creation Time : Thu Aug  4 18:42:19 2016
+     Raid Level : raid4
+     Array Size : 3139584 (2.99 GiB 3.21 GB)
+  Used Dev Size : 523264 (511.00 MiB 535.82 MB)
+   Raid Devices : 7
+  Total Devices : 7
+    Persistence : Superblock is persistent
+
+  Intent Bitmap : Internal
+
+    Update Time : Thu Aug  4 18:43:22 2016
+          State : clean, degraded 
+ Active Devices : 6
+Working Devices : 7
+ Failed Devices : 0
+  Spare Devices : 1
+
+     Chunk Size : 512K
+
+           Name : dhcp-12-125.nay.redhat.com:0  (local to host dhcp-12-125.nay.redhat.com)
+           UUID : 29a267c2:04e91998:639e6eef:64ddbab0
+         Events : 23
+
+    Number   Major   Minor   RaidDevice State
+       7       7        0        -      journal   /dev/loop0
+       1       7        2        1      active sync   /dev/loop2
+       2       7        3        2      active sync   /dev/loop3
+       3       7        4        3      active sync   /dev/loop4
+       4       7        5        4      active sync   /dev/loop5
+       5       7        6        5      active sync   /dev/loop6
+       8       7        7        6      active sync   /dev/loop7
+
+
+Best Regards,
+  Yi Zhang
+
+
