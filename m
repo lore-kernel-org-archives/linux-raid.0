@@ -1,63 +1,48 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: journal disk become the first of --detail list after fail/remove
- one disk
-Date: Thu, 4 Aug 2016 21:34:49 +1000
-Message-ID: <8ca13969-9e4f-b01e-6456-68a23512836f@websitemanagers.com.au>
-References: <1933083404.11265226.1470307932889.JavaMail.zimbra@redhat.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 37/45] drivers: use req op accessor
+Date: Thu, 4 Aug 2016 08:46:22 -0700
+Message-ID: <20160804154622.GB15656@infradead.org>
+References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
+	<1465155145-10812-38-git-send-email-mchristi@redhat.com>
+	<CAOxpaSUMsgfTYsL0bL6VCnwxz7bpgpKO-ZfC5J8dFG9PN-hzvg@mail.gmail.com>
+	<87fbe31f-27b3-ff7a-e381-34fc1aad337e@redhat.com>
+	<CAJVOszAd9Eu88P2=QoNVArd0jwDH7KRe=OB82tCNMpjfv9B4KA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1933083404.11265226.1470307932889.JavaMail.zimbra@redhat.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Yi Zhang <yizhan@redhat.com>, linux-raid@vger.kernel.org
-Cc: songliubraving@fb.com, shli@fb.com, Jes.Sorensen@redhat.com
+Return-path: <xfs-bounces@oss.sgi.com>
+Content-Disposition: inline
+In-Reply-To: <CAJVOszAd9Eu88P2=QoNVArd0jwDH7KRe=OB82tCNMpjfv9B4KA@mail.gmail.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Shaun Tancheff <shaun.tancheff@seagate.com>
+Cc: philipp.reisner@linbit.com, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, drbd-dev@lists.linbit.com, linux-scsi@vger.kernel.org, Mike Christie <mchristi@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>, konrad.wilk@oracle.com, XFS Developers <xfs@oss.sgi.com>, linux-block@vger.kernel.org, linux-bcache@vger.kernel.org, osd-dev@open-osd.org, Ross Zwisler <zwisler@gmail.com>, Jens Axboe <axboe@fb.com>, linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-f2fs-devel@lists.sourceforge.net, linux-btrfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, lars.ellenberg@linbit.com, ocfs2-devel@oss.oracle.com
 List-Id: linux-raid.ids
 
+On Wed, Aug 03, 2016 at 07:30:29PM -0500, Shaun Tancheff wrote:
+> I think the translation in loop.c is suspicious here:
+> 
+>     "if use DIO && not (a flush_flag or discard_flag)"
+> should translate to:
+>     "if use DIO && not ((a flush_flag) || op == discard)"
+> 
+> But in the patch I read:
+>     "if use DIO && ((not a flush_flag) || op == discard)
+> 
+> Which would have DIO && discards follow the AIO path?
 
+Indeed.  Sorry for missing out on your patch, I just sent a fix
+in reply to Dave's other report earlier which is pretty similar to
+yours.
 
-On 4/08/2016 20:52, Yi Zhang wrote:
-> # mdadm -D /dev/md0
-> /dev/md0:
->          Version : 1.2
->    Creation Time : Thu Aug  4 18:42:19 2016
->       Raid Level : raid4
->       Array Size : 3139584 (2.99 GiB 3.21 GB)
->    Used Dev Size : 523264 (511.00 MiB 535.82 MB)
->     Raid Devices : 7
->    Total Devices : 7
->      Persistence : Superblock is persistent
->
->    Intent Bitmap : Internal
->
->      Update Time : Thu Aug  4 18:43:22 2016
->            State : clean, degraded
->   Active Devices : 6
-> Working Devices : 7
->   Failed Devices : 0
->    Spare Devices : 1
->
->       Chunk Size : 512K
->
->             Name : dhcp-12-125.nay.redhat.com:0  (local to host dhcp-12-125.nay.redhat.com)
->             UUID : 29a267c2:04e91998:639e6eef:64ddbab0
->           Events : 23
->
->      Number   Major   Minor   RaidDevice State
->         7       7        0        -      journal   /dev/loop0
->         1       7        2        1      active sync   /dev/loop2
->         2       7        3        2      active sync   /dev/loop3
->         3       7        4        3      active sync   /dev/loop4
->         4       7        5        4      active sync   /dev/loop5
->         5       7        6        5      active sync   /dev/loop6
->         8       7        7        6      active sync   /dev/loop7
->
-
-I'm not really sure about the journal/your report, but also why does the 
-above show 1 spare device? I would expect spare should mean that there 
-is a device available to take over automatically if one of the active 
-devices becomes faulty, but that doesn't seem to be the case. Should a 
-journal device be counted as Active & Working (or faulty) instead of Spare?
-
-Regards,
-Adam
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
