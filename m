@@ -1,72 +1,94 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: Re: journal disk become the first of --detail list after fail/remove
- one disk
-Date: Fri, 5 Aug 2016 04:49:13 -0400
-Message-ID: <57A45309.4020402@suse.com>
-References: <1933083404.11265226.1470307932889.JavaMail.zimbra@redhat.com>
- <8ca13969-9e4f-b01e-6456-68a23512836f@websitemanagers.com.au>
+From: "Jens-U. Mozdzen" <jmozdzen@nde.ag>
+Subject: RAID 6 "Bad block number requested"
+Date: Fri, 05 Aug 2016 17:37:01 +0200
+Message-ID: <20160805173701.Horde.ShX_bZ6WY2UKHOO1Leh-sZy@www3.nde.ag>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8; format=flowed; DelSp=Yes
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8ca13969-9e4f-b01e-6456-68a23512836f@websitemanagers.com.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <mailinglists@websitemanagers.com.au>, Yi Zhang <yizhan@redhat.com>, linux-raid@vger.kernel.org
-Cc: songliubraving@fb.com, shli@fb.com, Jes.Sorensen@redhat.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hello list,
 
+one of my server started getting many messages in dmesg, reporting  
+"Bad block number requested", like
 
-On 08/04/2016 07:34 AM, Adam Goryachev wrote:
->
->
-> On 4/08/2016 20:52, Yi Zhang wrote:
->> # mdadm -D /dev/md0
->> /dev/md0:
->>          Version : 1.2
->>    Creation Time : Thu Aug  4 18:42:19 2016
->>       Raid Level : raid4
->>       Array Size : 3139584 (2.99 GiB 3.21 GB)
->>    Used Dev Size : 523264 (511.00 MiB 535.82 MB)
->>     Raid Devices : 7
->>    Total Devices : 7
->>      Persistence : Superblock is persistent
->>
->>    Intent Bitmap : Internal
->>
->>      Update Time : Thu Aug  4 18:43:22 2016
->>            State : clean, degraded
->>   Active Devices : 6
->> Working Devices : 7
->>   Failed Devices : 0
->>    Spare Devices : 1
->>
->>       Chunk Size : 512K
->>
->>             Name : dhcp-12-125.nay.redhat.com:0  (local to host 
->> dhcp-12-125.nay.redhat.com)
->>             UUID : 29a267c2:04e91998:639e6eef:64ddbab0
->>           Events : 23
->>
->>      Number   Major   Minor   RaidDevice State
->>         7       7        0        -      journal   /dev/loop0
->>         1       7        2        1      active sync /dev/loop2
->>         2       7        3        2      active sync /dev/loop3
->>         3       7        4        3      active sync /dev/loop4
->>         4       7        5        4      active sync /dev/loop5
->>         5       7        6        5      active sync /dev/loop6
->>         8       7        7        6      active sync /dev/loop7
->>
->
-> I'm not really sure about the journal/your report, but also why does 
-> the above show 1 spare device? I would expect spare should mean that 
-> there is a device available to take over automatically if one of the 
-> active devices becomes faulty, but that doesn't seem to be the case. 
-> Should a journal device be counted as Active & Working (or faulty) 
-> instead of Spare?
+--- cut here ---
+[7749965.585075] sd 10:0:0:0: [sda] Bad block number requested
+[7750561.279143] sd 10:0:2:0: [sdc] Bad block number requested
+[7751481.566408] sd 10:0:2:0: [sdc] Bad block number requested
+[7752774.458062] sd 10:0:2:0: [sdc] Bad block number requested
+[7754296.938131] sd 10:0:5:0: [sdf] Bad block number requested
+[7755557.728901] sd 10:0:4:0: [sde] Bad block number requested
+[7756230.809538] sd 10:0:5:0: [sdf] Bad block number requested
+--- cut here ---
 
-Agree,  or maybe "Journal Devices" can be added for it (but both kernel 
-and mdadm need to modify md_u.h I think).
+I've had about 10k of those messages during the past 10 hours alone.
+
+These messages appear only for those devices that run a MD-RAID 6 and  
+seem to be almost evenly distributed across all related devices
+
+--- cut here ---
+    1680 [sda]
+    1790 [sdb]
+    1755 [sdc]
+    1855 [sdd]
+    1695 [sde]
+    1700 [sdf]
+--- cut here ---
+
+But interestingly. the incidents are not spread evenly across the day,  
+here's what I have for the last few hours:
+
+--- cut here ---
+   9029 05
+    1224 06
+      59 07
+      33 09
+      31 10
+      29 11
+      53 12
+       5 13
+       2 14
+       7 15
+--- cut here ---
+
+So the majority of these occurred from 5:00 to 5:59 AM. There's no  
+rate increase while I run RAID checks.
+
+Neither "mdadm --examine" for the devices nor "mdadm --detail" for the  
+RAID device show anything out of place. I'll add these infos once  
+somebody mentions that MD-RAID might be the source of the messages.
+
+I had check runs on this RAID6 (echo check >  
+/sys/block/md126/md/sync_action), no problems were returned. No other  
+evident problems can be seen, either - no failing writes, no file  
+system corruption, nothing.
+
+What baffles me: As it is a RAID6, MD should control all writes,  
+shouldn't it? Or can it be that some upper layer tries to write beyond  
+the end of the RAID device, resulting in the reported syslog messages?
+
+Some words about the stack this server runs:
+
+- sda1-sdf1 assemble to /dev/md126, RAID6 from 6 Seagate ST1000NX0323  
+(SAS HDDs)
+- sdg1,sdh1 assemble to /dev/md127, RAID1 from two Toshiba PX02SMF020  
+(SAS SSDs)
+- md126,127 joined as a bcache'd device (/dev/bcache0)
+- /dev/bcache0 is the only PV in an LVM
+- some LVs are used directly (OS partitions, Ceph OSDs)
+- some LVs are local storage for a DRBD setup (this node being primary)
+
+We have a second server with identical hardware and software stack,  
+just different LVs - I see none of these problems there.
+
+Can someone confirm/deny that MD tests against writes beyond the end  
+of the /dev/md* devices? Or do I have to check the upper layers to see  
+if someone tries to write outside the available space?
 
 Regards,
-Guoqing
+Jens
+
