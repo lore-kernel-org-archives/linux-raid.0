@@ -1,182 +1,73 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: INFO: task systemd-udevd:794 blocked for more than 600 seconds
- observed after mdadm -G operation
-Date: Fri, 5 Aug 2016 21:45:55 -0700
-Message-ID: <20160806044555.GC9281@kernel.org>
-References: <1363340670.11420734.1470326479339.JavaMail.zimbra@redhat.com>
- <57A434A9.2020501@suse.com>
- <40d28573-38a6-25ad-7956-95bd0c74b996@redhat.com>
+Subject: Re: [PATCH 1/3] MD: hold mddev lock for .quiesce in md_do_sync
+Date: Fri, 5 Aug 2016 21:14:28 -0700
+Message-ID: <20160806041428.GB9281@kernel.org>
+References: <515fa68e5c4784b08f2ce99c082c923f6b02a3c9.1469922791.git.shli@fb.com>
+ <87y44epwb5.fsf@notabene.neil.brown.name>
+ <87y44dnrz2.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <40d28573-38a6-25ad-7956-95bd0c74b996@redhat.com>
+In-Reply-To: <87y44dnrz2.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: yizhan <yizhan@redhat.com>
-Cc: Guoqing Jiang <gqjiang@suse.com>, linux-raid@vger.kernel.org, shli@fb.com, NeilBrown <neilb@suse.com>, songliubraving@fb.com
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>
 List-Id: linux-raid.ids
 
-On Fri, Aug 05, 2016 at 03:05:40PM +0800, yizhan wrote:
+On Thu, Aug 04, 2016 at 01:16:49PM +1000, Neil Brown wrote:
+> On Wed, Aug 03 2016, NeilBrown wrote:
 > 
+> > [ Unknown signature status ]
+> > On Sun, Jul 31 2016, shli@kernel.org wrote:
+> >
+> >> From: Shaohua Li <shli@fb.com>
+> >>
+> >> .quiesce is called with mddev lock hold at most places. There are few
+> >> exceptions. Calling .quesce without the lock hold could create races. For
+> >> example, the .quesce of raid1 can't be recursively. The purpose of the patches
+> >> is to fix a race in raid5-cache. The raid5-cache .quesce will write md
+> >> superblock and should be called with mddev lock hold.
+> >>
+> >> Cc: NeilBrown <neilb@suse.com>
+> >> Signed-off-by: Shaohua Li <shli@fb.com>
+> >
+> > Acked-by: NeilBrown <neilb@suse.com>
+> >
+> > This should be safe but I'm not sure I really like it.
+> > The raid1 quiesce could be changed so that it can be called recursively.
+> > The raid5-cache situation would be harder to get right and maybe this is
+> > the best solution... It's just that 'quiesce' should be a fairly
+> > light-weight operation, just waiting for pending requests to flush.  It
+> > shouldn't really *need* a lock.
 > 
-> On 08/05/2016 02:39 PM, Guoqing Jiang wrote:
-> >
-> >
-> >On 08/04/2016 12:01 PM, Yi Zhang wrote:
-> >
-> >>[ 1201.734199] INFO: task systemd-udevd:794 blocked for more than 600
-> >>seconds.
-> >>[ 1201.734204]       Not tainted 4.7.0 #5
-> >>[ 1201.734204] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
-> >>disables this message.
-> >>[ 1201.734206] systemd-udevd   D ffff8800310a77b0     0 794      1
-> >>0x00000000
-> >>[ 1201.734209]  ffff8800310a77b0 0000000000000001 ffff880031de0000
-> >>ffff8807cd3c5688
-> >>[ 1201.734211]  ffff8800310a8000 0000000000000000 0000000000000002
-> >>ffff8807c3e4c100
-> >>[ 1201.734213]  0000000000000000 ffff8800310a77c8 ffffffff816e4935
-> >>ffff8807cd3c5400
-> >>[ 1201.734214] Call Trace:
-> >>[ 1201.734220]  [<ffffffff816e4935>] schedule+0x35/0x80
-> >>[ 1201.734226]  [<ffffffffa09a0ba9>] raid5_make_request+0x8b9/0xce0
-> >>[raid456]
-> >>[ 1201.734229]  [<ffffffff810d0240>] ? prepare_to_wait_event+0xf0/0xf0
-> >>[ 1201.734233]  [<ffffffff8156758e>] md_make_request+0xee/0x230
-> >>[ 1201.734236]  [<ffffffff81320803>] generic_make_request+0x103/0x1d0
-> >>[ 1201.734237]  [<ffffffff81320947>] submit_bio+0x77/0x150
-> >>[ 1201.734240]  [<ffffffff813183bb>] ? bio_alloc_bioset+0x1ab/0x2d0
-> >>[ 1201.734242]  [<ffffffff81254ecd>] ? alloc_page_buffers+0x5d/0xb0
-> >>[ 1201.734244]  [<ffffffff81256a1f>] submit_bh_wbc+0x12f/0x160
-> >>[ 1201.734246]  [<ffffffff81256d58>] block_read_full_page+0x208/0x380
-> >>[ 1201.734248]  [<ffffffff81259000>] ? I_BDEV+0x20/0x20
-> >>[ 1201.734250]  [<ffffffff812597e8>] blkdev_readpage+0x18/0x20
-> >>[ 1201.734253]  [<ffffffff81197718>] do_read_cache_page+0x138/0x300
-> >>[ 1201.734255]  [<ffffffff812597d0>] ? blkdev_writepages+0x40/0x40
-> >>[ 1201.734257]  [<ffffffff811978f9>] read_cache_page+0x19/0x20
-> >>[ 1201.734259]  [<ffffffff81333b50>] read_dev_sector+0x80/0xb0
-> >>[ 1201.734261]  [<ffffffff81337f14>] read_lba+0x104/0x1c0
-> >>[ 1201.734263]  [<ffffffff8133852a>] find_valid_gpt+0xfa/0x710
-> >>[ 1201.734266]  [<ffffffff811d7d00>] ?
-> >>vmap_page_range_noflush+0x190/0x380
-> >>[ 1201.734267]  [<ffffffff81338b40>] ? find_valid_gpt+0x710/0x710
-> >>[ 1201.734269]  [<ffffffff81338bc9>] efi_partition+0x89/0x440
-> >>[ 1201.734271]  [<ffffffff81359209>] ? snprintf+0x49/0x70
-> >>[ 1201.734273]  [<ffffffff81338b40>] ? find_valid_gpt+0x710/0x710
-> >>[ 1201.734275]  [<ffffffff81335b31>] check_partition+0x101/0x1f0
-> >>[ 1201.734277]  [<ffffffff81334462>] rescan_partitions+0xc2/0x2c0
-> >>[ 1201.734279]  [<ffffffff8132f294>] __blkdev_reread_part+0x64/0x70
-> >>[ 1201.734281]  [<ffffffff8132f2c3>] blkdev_reread_part+0x23/0x40
-> >>[ 1201.734282]  [<ffffffff8132fd3a>] blkdev_ioctl+0x46a/0x8f0
-> >>[ 1201.734284]  [<ffffffff81259aa1>] block_ioctl+0x41/0x50
-> >>[ 1201.734286]  [<ffffffff812323b6>] do_vfs_ioctl+0xa6/0x5c0
-> >>[ 1201.734288]  [<ffffffff81232949>] SyS_ioctl+0x79/0x90
-> >>[ 1201.734290]  [<ffffffff81274d67>] ? SyS_flock+0x117/0x1a0
-> >>[ 1201.734292]  [<ffffffff816e86b2>] entry_SYSCALL_64_fastpath+0x1a/0xa4
-> >>[ 1201.734305] INFO: task md0_reshape:4089 blocked for more than 600
-> >>seconds.
-> >>[ 1201.734306]       Not tainted 4.7.0 #5
-> >>[ 1201.734307] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
-> >>disables this message.
-> >>[ 1201.734308] md0_reshape     D ffff88080db77ac0     0 4089      2
-> >>0x00000080
-> >>[ 1201.734310]  ffff88080db77ac0 0000000000000000 ffff8807d6724380
-> >>ffff8807cd3c5670
-> >>[ 1201.734311]  ffff88080db78000 ffff88080db77b20 ffff8807cd3c5670
-> >>0000000000000c20
-> >>[ 1201.734313]  ffff8807cd3c5418 ffff88080db77ad8 ffffffff816e4935
-> >>ffff8807cd3c5400
-> >>[ 1201.734314] Call Trace:
-> >>[ 1201.734316]  [<ffffffff816e4935>] schedule+0x35/0x80
-> >>[ 1201.734319]  [<ffffffffa099fe8b>] raid5_get_active_stripe+0x20b/0x670
-> >>[raid456]
-> >>[ 1201.734321]  [<ffffffff810d0240>] ? prepare_to_wait_event+0xf0/0xf0
-> >>[ 1201.734323]  [<ffffffffa09a4733>] reshape_request+0x4d3/0x8a0
-> >>[raid456]
-> >>[ 1201.734326]  [<ffffffffa09a4e21>] raid5_sync_request+0x321/0x3a0
-> >>[raid456]
-> >>[ 1201.734327]  [<ffffffff810cfc54>] ? __wake_up+0x44/0x50
-> >>[ 1201.734329]  [<ffffffff8156ce97>] md_do_sync+0x9e7/0xf60
-> >>[ 1201.734332]  [<ffffffff810c200d>] ? update_curr+0xed/0x180
-> >>[ 1201.734333]  [<ffffffff810c025e>] ? account_entity_dequeue+0xae/0xd0
-> >>[ 1201.734336]  [<ffffffff81098d43>] ? kernel_sigaction+0x43/0xe0
-> >>[ 1201.734339]  [<ffffffff81566dc6>] md_thread+0x136/0x150
-> >>[ 1201.734341]  [<ffffffff81566c90>] ? find_pers+0x70/0x70
-> >>[ 1201.734343]  [<ffffffff810ab678>] kthread+0xd8/0xf0
-> >>[ 1201.734344]  [<ffffffff816e88bf>] ret_from_fork+0x1f/0x40
-> >>[ 1201.734346]  [<ffffffff810ab5a0>] ? kthread_park+0x60/0x60
-> >>
-> >>
-> >>Reproduce steps:
-> >>
-> >>#mdadm -CR /dev/md0 -l5 -n4 /dev/sd[b-e]1 --write-journal /dev/sdf1
-> >>#mdadm --wait /dev/md0
-> >>#mdadm /dev/md0 -f /dev/sdf1
-> >>#mdadm /dev/md0 -r /dev/sdf1
-> >>#mdadm /dev/md0 -a /dev/sdf1
-> >>#mdadm -D /dev/md0
-> >>/dev/md0:
-> >>         Version : 1.2
-> >>   Creation Time : Thu Aug  4 20:37:41 2016
-> >>      Raid Level : raid5
-> >>      Array Size : 31432704 (29.98 GiB 32.19 GB)
-> >>   Used Dev Size : 10477568 (9.99 GiB 10.73 GB)
-> >>    Raid Devices : 4
-> >>   Total Devices : 5
-> >>     Persistence : Superblock is persistent
-> >>
-> >>     Update Time : Thu Aug  4 20:40:16 2016
-> >>           State : clean
-> >>  Active Devices : 4
-> >>Working Devices : 5
-> >>  Failed Devices : 0
-> >>   Spare Devices : 1
-> >>
-> >>          Layout : left-symmetric
-> >>      Chunk Size : 512K
-> >>
-> >>            Name : dhcp-12-125.nay.redhat.com:0  (local to host
-> >>dhcp-12-125.nay.redhat.com)
-> >>            UUID : 09607542:a8dccc81:f5d2f80c:c586923f
-> >>          Events : 22
-> >>
-> >>     Number   Major   Minor   RaidDevice State
-> >>        0       8       17        0      active sync   /dev/sdb1
-> >>        1       8       33        1      active sync   /dev/sdc1
-> >>        2       8       49        2      active sync   /dev/sdd1
-> >>        5       8       65        3      active sync   /dev/sde1
-> >>
-> >>        4       8       81        -      spare   /dev/sdf1
-> >>
-> >>#mdadm -G -n5 /dev/md0
-> >
-> >Also with 4.7+, I can't find the same issue, but md0_reshape is in 'D'
-> >state from my side
-> >(actually I can't find reshape is in-progress by 'cat /proc/mdstat').
-> >
-> Hi guoqing
-> Thanks for you detailed log.
-> The trace cannot be print soon, I think you need wait for more time, the
-> time from below is more than 15m.
-> Aug  4 20:39:37 dhcp-12-125 kernel: md/raid:md0: Disk failure on sdf1,
-> disabling device.#012md/raid:md0: Operation continuing on 4 devices.
-> Aug  4 20:39:56 dhcp-12-125 kernel: md: unbind<sdf1>
-> Aug  4 20:39:56 dhcp-12-125 kernel: md: export_rdev(sdf1)
-> Aug  4 20:40:16 dhcp-12-125 kernel: md: bind<sdf1>
-> Aug  4 20:40:47 dhcp-12-125 kernel: md: reshape of RAID array md0
-> Aug  4 20:40:47 dhcp-12-125 kernel: md: minimum _guaranteed_  speed: 1000
-> KB/sec/disk.
-> Aug  4 20:40:47 dhcp-12-125 kernel: md: using maximum available idle IO
-> bandwidth (but not more than 200000 KB/sec) for reshape.
-> Aug  4 20:40:47 dhcp-12-125 kernel: md: using 128k window, over a total of
-> 10477568k
-> Aug  4 20:55:56 dhcp-12-125 kernel: INFO: task systemd-udevd:794 blocked for
-> more than 600 seconds.
+> Actually, the more I think about this, the less I like it.
+> 
+> I would much rather make .quiesce lighter weight so that no locking was
+> needed.
+> 
+> For r5l_quiesce, that probable means removed the "r5l_do_reclaim()".
+> Stopping and restarting the reclaim thread seems reasonable, but calling
+> r5l_do_reclaim() should not be needed.  It should be done periodically
+> by the thread, and at 'stop' time, but otherwise isn't needed.
+> You would need to hold some mutex while calling md_register_thread, but
+> that could be probably be log->io_mutex, or maybe even some other new
+> mutex
 
-Adding Song who knows a lot in this side.
+We will have the same deadlock issue with just stopping/restarting the reclaim
+thread. As stopping the thread will wait for the thread, which probably is
+doing r5l_do_reclaim and writting the superblock. Since we are writting the
+superblock, we must hold the reconfig_mutex.
 
-If an array is created with journal and journal disk fails, we will make the
-array read-only. So we should disable reshape too. Likely we have a bug here.
+Letting raid5_quiesce call r5l_do_reclaim gives us a clean log. Just
+stop/restart the reclaim thread can't guarantee this, as it's possible some
+space aren't reclaimed yet. A clean log will simplify a lot of things, for
+example we change the layout of the array. The log doesn't need to remember
+which part is for the old layout and which part is the new layout.
+
+I think we can add a new parameter for .quiesce to indicate if reconfig_mutex
+is hold. raid5_quiesce can check the parameter and hold reconfig_mutex if
+necessary.
 
 Thanks,
 Shaohua
