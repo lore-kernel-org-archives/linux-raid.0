@@ -1,128 +1,60 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH 4/8] md-cluster: introduce dlm_lock_sync_interruptible to
- fix tasks hang
-Date: Fri, 5 Aug 2016 20:59:41 -0700
-Message-ID: <20160806035941.GA9281@kernel.org>
-References: <1469686612-16126-1-git-send-email-gqjiang@suse.com>
- <1469686612-16126-4-git-send-email-gqjiang@suse.com>
- <20160801222042.GB18810@kernel.org>
- <57A01272.4010209@suse.com>
- <20160802223631.GC98613@kernel.org>
- <57A15977.205@suse.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: migration of raid 5 to raid 6 and disk of 2TB to 4TB
+Date: Sat, 6 Aug 2016 19:04:03 +0100
+Message-ID: <57A62693.5040209@youngman.org.uk>
+References: <CADzS=aqYQEoqxHbp7keeuYqN2dLur1O=RfctfuFsraggxiWTKg@mail.gmail.com>
+ <22423.44287.974770.114127@tree.ty.sabi.co.uk>
+ <5797C5CE.6020300@youngman.org.uk>
+ <CADzS=arvFWy-9_e8L3ngdrYxwGxVNm=zTqoLusvwKmmkUnBfQQ@mail.gmail.com>
+ <22424.53061.186858.220134@tree.ty.sabi.co.uk>
+ <CADzS=aqLeMibSf-=U1+-_pcoGDu043exZ9ytUR6XLUwZ=VDOWw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <57A15977.205@suse.com>
+In-Reply-To: <CADzS=aqLeMibSf-=U1+-_pcoGDu043exZ9ytUR6XLUwZ=VDOWw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: bobzer <bobzer@gmail.com>, Peter Grandi <pg@lxra2.to.sabi.co.uk>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Aug 03, 2016 at 10:39:51AM +0800, Guoqing Jiang wrote:
+On 06/08/16 00:32, bobzer wrote:
+> thank you very much for all your help
 > 
+> I manage to borrow 2  3TB drive
+> So i was thinking of dd copie my image to one, use the other to
+> reconstruct my raid
+> so at this point i got my first raid5 clean
+> then i prepare my raid6 degraded with the the 3  4TB and do a rsync
 > 
-> On 08/03/2016 06:36 AM, Shaohua Li wrote:
-> >On Mon, Aug 01, 2016 at 11:24:34PM -0400, Guoqing Jiang wrote:
-> >>
-> >>On 08/01/2016 06:20 PM, Shaohua Li wrote:
-> >>>On Thu, Jul 28, 2016 at 02:16:48AM -0400, Guoqing Jiang wrote:
-> >>>>When some node leaves cluster, then it's bitmap need to be
-> >>>>synced by another node, so "md*_recover" thread is triggered
-> >>>>for the purpose. However, with below steps. we can find tasks
-> >>>>hang happened either in B or C.
-> >>>>
-> >>>>1. Node A create a resyncing cluster raid1, assemble it in
-> >>>>    other two nodes (B and C).
-> >>>>2. stop array in B and C.
-> >>>>3. stop array in A.
-> >>>>
-> >>>>linux44:~ # ps aux|grep md|grep D
-> >>>>root	5938	0.0  0.1  19852  1964 pts/0    D+   14:52   0:00 mdadm -S md0
-> >>>>root	5939	0.0  0.0      0     0 ?        D    14:52   0:00 [md0_recover]
-> >>>>
-> >>>>linux44:~ # cat /proc/5939/stack
-> >>>>[<ffffffffa04cf321>] dlm_lock_sync+0x71/0x90 [md_cluster]
-> >>>>[<ffffffffa04d0705>] recover_bitmaps+0x125/0x220 [md_cluster]
-> >>>>[<ffffffffa052105d>] md_thread+0x16d/0x180 [md_mod]
-> >>>>[<ffffffff8107ad94>] kthread+0xb4/0xc0
-> >>>>[<ffffffff8152a518>] ret_from_fork+0x58/0x90
-> >>>>
-> >>>>linux44:~ # cat /proc/5938/stack
-> >>>>[<ffffffff8107afde>] kthread_stop+0x6e/0x120
-> >>>>[<ffffffffa0519da0>] md_unregister_thread+0x40/0x80 [md_mod]
-> >>>>[<ffffffffa04cfd20>] leave+0x70/0x120 [md_cluster]
-> >>>>[<ffffffffa0525e24>] md_cluster_stop+0x14/0x30 [md_mod]
-> >>>>[<ffffffffa05269ab>] bitmap_free+0x14b/0x150 [md_mod]
-> >>>>[<ffffffffa0523f3b>] do_md_stop+0x35b/0x5a0 [md_mod]
-> >>>>[<ffffffffa0524e83>] md_ioctl+0x873/0x1590 [md_mod]
-> >>>>[<ffffffff81288464>] blkdev_ioctl+0x214/0x7d0
-> >>>>[<ffffffff811dd3dd>] block_ioctl+0x3d/0x40
-> >>>>[<ffffffff811b92d4>] do_vfs_ioctl+0x2d4/0x4b0
-> >>>>[<ffffffff811b9538>] SyS_ioctl+0x88/0xa0
-> >>>>[<ffffffff8152a5c9>] system_call_fastpath+0x16/0x1b
-> >>>>
-> >>>>The problem is caused by recover_bitmaps can't reliably abort
-> >>>>when the thread is unregistered. So dlm_lock_sync_interruptible
-> >>>>is introduced to detect the thread's situation to fix the problem.
-> >>>>
-> >>>>Reviewed-by: NeilBrown <neilb@suse.com>
-> >>>>Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-> >>>>---
-> >>>>  drivers/md/md-cluster.c | 38 +++++++++++++++++++++++++++++++++++++-
-> >>>>  1 file changed, 37 insertions(+), 1 deletion(-)
-> >>>>
-> >>>>diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-> >>>>index ea2699e..f3d584e 100644
-> >>>>--- a/drivers/md/md-cluster.c
-> >>>>+++ b/drivers/md/md-cluster.c
-> >>>>@@ -10,6 +10,8 @@
-> >>>>  #include <linux/module.h>
-> >>>>+#include <linux/completion.h>
-> >>>>+#include <linux/kthread.h>
-> >>>>  #include <linux/dlm.h>
-> >>>>  #include <linux/sched.h>
-> >>>>  #include <linux/raid/md_p.h>
-> >>>>@@ -141,6 +143,40 @@ static int dlm_unlock_sync(struct dlm_lock_resource *res)
-> >>>>  	return dlm_lock_sync(res, DLM_LOCK_NL);
-> >>>>  }
-> >>>>+/* An variation of dlm_lock_sync, which make lock request could
-> >>>>+ * be interrupted */
-> >>>>+static int dlm_lock_sync_interruptible(struct dlm_lock_resource *res, int mode,
-> >>>>+				       struct mddev *mddev)
-> >>>>+{
-> >>>>+	int ret = 0;
-> >>>>+
-> >>>>+	ret = dlm_lock(res->ls, mode, &res->lksb,
-> >>>>+			res->flags, res->name, strlen(res->name),
-> >>>>+			0, sync_ast, res, res->bast);
-> >>>>+	if (ret)
-> >>>>+		return ret;
-> >>>>+
-> >>>>+	wait_event(res->completion.wait,
-> >>>>+		   res->completion.done || kthread_should_stop());
-> >>>can you convert it to a waitq? Directly using the .wait/.done of completion is
-> >>>really intrusive.
-> >>Maybe, but we still need completion for dlm_lock_resource otherwise there
-> >>are different types of dlm_lock_resource, we also need to keep align with
-> >>sync_ast as dlm_lock_sync did.
-> >Yes, we need a waitq and variable like completion.done to indicate the event is
-> >done, and convert the completion API to waitq API in other places like
-> >sync_ast. The point is not using the opaque data structure of 'struct
-> >completion'. Diving into implementation details of a unrelated data structure
-> >(completion here) is really intrusive.
+> another solution could be to move the image disk to one 3TB
+> create the raid6 degraded with the 3 4TB
+> move the image in the raid 6
+> replace the 2 2TB with the 2 3TB (with a DD copy ?)
+> reuse the 2 2TB to have a clean raid 6
+> rsync from the degraded raid5 to the clean raid6
 > 
-> I don't want to argue about the intrusive, but we have to create something
-> which could be achieved by the existed thing.
-> 
-> OTOH, convert completion to waitqueue should be done in a new patch,
-> and it is a big change though achieveable, we need to do full test for it.
+> I prefere the first solution because the raid 5 is clean and so it
+> should be safer but i worrying about the stress of rebuild the raid
 
-I can't see why this is a big change. Simply adding a waitq and a variable,
-replace wait_for_completion with wait_event checking the condition and replace
-complete with setting the variable and wake_up. That's pretty straightforward
-and no risk. I'd rather see the first patch converts completion to waitq and
-this patch addes the kthread_should_stop() check.
+Okay. So rebuilding a raid could tip it over the edge.
 
-Thanks,
-Shaohua
+But you now have four spare drives. So the obvious solution is
+
+create a new raid6 with 2 x 4TB and 2 x 3TB drives.
+Copy from the old raid to the new one - the reads won't stress the old
+raid anywhere near as much as a rebuild.
+Replace one of the 3TB disks with the 4TB that's currently in the old raid.
+Raid0 the 2 x 2TB disks from the old raid, and replace the second 3TB disk.
+
+At no point are you rebuilding a degraded raid, and when your data is at
+its greatest risk (no backup, raid reshaping) you have a raid6 so you
+could survive a disk failure. Oh - and always use mdadm --replace so the
+raid always has spare disks ...
+
+If you want to do it in place, ddrescue the two 2TB drives on to the two
+3TB drives, so again you can raid0 the 2 x 2TB together, but I think
+that's still taking a risk.
+
+Cheers,
+Wol
