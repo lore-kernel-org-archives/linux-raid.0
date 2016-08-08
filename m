@@ -1,26 +1,41 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Raid5 reshape stuck at 0% - SuSE leap 42.1
-Date: Mon, 8 Aug 2016 13:40:30 +0200 (CEST)
-Message-ID: <alpine.DEB.2.02.1608081339310.3593@uplift.swm.pp.se>
-References: <57A69012.1010406@youngman.org.uk> <alpine.DEB.2.02.1608071154110.3593@uplift.swm.pp.se> <57A719CC.6080301@youngman.org.uk> <57A724ED.5070808@youngman.org.uk> <alpine.DEB.2.02.1608071630050.3593@uplift.swm.pp.se> <57A766DC.4000207@youngman.org.uk>
- <alpine.DEB.2.02.1608071923410.3593@uplift.swm.pp.se> <57A776AE.3050308@youngman.org.uk> <alpine.DEB.2.02.1608072002400.3593@uplift.swm.pp.se> <57A7869D.2090203@youngman.org.uk>
+From: Wei Yongjun <weiyj.lk@gmail.com>
+Subject: [PATCH -next] dm flakey: fix error return code in flakey_ctr()
+Date: Mon,  8 Aug 2016 14:09:27 +0000
+Message-ID: <1470665367-12771-1-git-send-email-weiyj.lk@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <57A7869D.2090203@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Shaohua Li <shli@kernel.org>, Vivek Goyal <vgoyal@redhat.com>
+Cc: Wei Yongjun <weiyj.lk@gmail.com>, dm-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 7 Aug 2016, Wols Lists wrote:
+Fix to return error code -EINVAL instead of 0(r is overwrote to
+0 by dm_read_arg() call), as done elsewhere in this function.
 
-> Note that I think this dmesg stuff overlaps with the last lot, namely 
-> the start of this is the tail end of the array starting successfully 
-> last time.
+Fixes: e80d1c805a3b ("dm: do not override error code returned
+from dm_get_device()")
+Signed-off-by: Wei Yongjun <weiyj.lk@gmail.com>
+---
+ drivers/md/dm-flakey.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-It helps if you supply output of /proc/mdstat before each operation, and 
-also adding verbose output to mdadm command.
+diff --git a/drivers/md/dm-flakey.c b/drivers/md/dm-flakey.c
+index 19db13e..f0cb0fe 100644
+--- a/drivers/md/dm-flakey.c
++++ b/drivers/md/dm-flakey.c
+@@ -200,11 +200,13 @@ static int flakey_ctr(struct dm_target *ti, unsigned int argc, char **argv)
+ 
+ 	if (!(fc->up_interval + fc->down_interval)) {
+ 		ti->error = "Total (up + down) interval is zero";
++		r = -EINVAL;
+ 		goto bad;
+ 	}
+ 
+ 	if (fc->up_interval + fc->down_interval < fc->up_interval) {
+ 		ti->error = "Interval overflow";
++		r = -EINVAL;
+ 		goto bad;
+ 	}
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
