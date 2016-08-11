@@ -1,22 +1,20 @@
-From: John Dawson <linux@celticblues.com>
-Subject: Can't mount Old RHEL 6 Raid with new install of CentOS 7, now can't
- mount with original RHEL 6
-Date: Thu, 11 Aug 2016 06:19:06 -0600
-Message-ID: <42cee2e2d85a5b0e39efc34117e597a2@celticblues.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2] block: make sure big bio is splitted into at most 256
+ bvecs
+Date: Thu, 11 Aug 2016 07:02:53 -0700
+Message-ID: <20160811140253.GA2867@infradead.org>
+References: <1459914212-9330-1-git-send-email-ming.lei@canonical.com>
+ <alpine.LRH.2.11.1608102132120.10662@mail.ewheeler.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-bcache-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.LRH.2.11.1608102132120.10662@mail.ewheeler.net>
+Sender: linux-bcache-owner@vger.kernel.org
+To: Eric Wheeler <bcache@lists.ewheeler.net>
+Cc: Ming Lei <ming.lei@canonical.com>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, kent.overstreet@gmail.com, Christoph Hellwig <hch@infradead.org>, Sebastian Roesner <sroesner-kernelorg@roesner-online.de>, "4.3+" <stable@vger.kernel.org>, Shaohua Li <shli@fb.com>
 List-Id: linux-raid.ids
 
-I have a machine which had a drive with RHEL 6.X installed with a raid 
-device setup on separate disk(s).  Installed a new hard disk in machine 
-and installed CentOS 7.  CentOS 7 wouldn't mount the raid.  Put the old 
-drive back in and now RHEL 6.X won't mount the raid.  Is the raid 
-permanently hosed?  Can I get the data on it back? How? Thx.
-
-JD
-
+Please just fix bcache to not submit bios larger than BIO_MAX_PAGES for
+now, until we can support such callers in general and enable common
+used code to do so.
