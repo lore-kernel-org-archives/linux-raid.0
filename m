@@ -1,58 +1,35 @@
-From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: [PATCH] raid10: record correct address of bad block
-Date: Fri, 12 Aug 2016 11:03:53 +0200
-Message-ID: <1470992633-8903-1-git-send-email-tomasz.majchrzak@intel.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@kernel.org, aleksey.obitotskiy@intel.com, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com
+From: Ming Lei <ming.lei@canonical.com>
+Subject: Re: [PATCH v2] block: make sure big bio is splitted into at most 256 bvecs
+Date: Fri, 12 Aug 2016 19:12:10 +0800
+Message-ID: <CACVXFVNUpsht4LmGeOOwvWJ65tZGVQTRFsyd-SXGKHxkpUCHSw@mail.gmail.com>
+References: <1459914212-9330-1-git-send-email-ming.lei@canonical.com>
+ <alpine.LRH.2.11.1608102132120.10662@mail.ewheeler.net> <20160811140253.GA2867@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20160811140253.GA2867@infradead.org>
+Sender: linux-block-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Eric Wheeler <bcache@lists.ewheeler.net>, Jens Axboe <axboe@fb.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, "open list:BCACHE (BLOCK LAYER CACHE)" <linux-bcache@vger.kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, Kent Overstreet <kent.overstreet@gmail.com>, Sebastian Roesner <sroesner-kernelorg@roesner-online.de>, "4.3+" <stable@vger.kernel.org>, Shaohua Li <shli@fb.com>
 List-Id: linux-raid.ids
 
-For failed write request record block address on a device, not block
-address in an array.
+On Thu, Aug 11, 2016 at 10:02 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> Please just fix bcache to not submit bios larger than BIO_MAX_PAGES for
+> now, until we can support such callers in general and enable common
+> used code to do so.
 
-Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
----
- drivers/md/raid10.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+IMO it can't be efficient to do that in bcache because it need to figure out
+how many bvecs one bio includes.
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index cfa96b5..d18b26d 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -2449,6 +2449,7 @@ static int narrow_write_error(struct r10bio *r10_bio, int i)
- 
- 	int block_sectors;
- 	sector_t sector;
-+	sector_t data_offset;
- 	int sectors;
- 	int sect_to_write = r10_bio->sectors;
- 	int ok = 1;
-@@ -2462,6 +2463,7 @@ static int narrow_write_error(struct r10bio *r10_bio, int i)
- 	sectors = ((r10_bio->sector + block_sectors)
- 		   & ~(sector_t)(block_sectors - 1))
- 		- sector;
-+	data_offset = choose_data_offset(r10_bio, rdev);
- 
- 	while (sect_to_write) {
- 		struct bio *wbio;
-@@ -2471,13 +2473,12 @@ static int narrow_write_error(struct r10bio *r10_bio, int i)
- 		wbio = bio_clone_mddev(bio, GFP_NOIO, mddev);
- 		bio_trim(wbio, sector - bio->bi_iter.bi_sector, sectors);
- 		wbio->bi_iter.bi_sector = (r10_bio->devs[i].addr+
--				   choose_data_offset(r10_bio, rdev) +
--				   (sector - r10_bio->sector));
-+				   data_offset + (sector - r10_bio->sector));
- 		wbio->bi_bdev = rdev->bdev;
- 		if (submit_bio_wait(WRITE, wbio) < 0)
- 			/* Failure! */
--			ok = rdev_set_badblocks(rdev, sector,
--						sectors, 0)
-+			ok = rdev_set_badblocks(rdev, wbio->bi_iter.bi_sector -
-+						data_offset, sectors, 0)
- 				&& ok;
- 
- 		bio_put(wbio);
--- 
-1.8.3.1
+This patch(block: make sure big bio is splitted into at most 256 bvecs)
+can support such callers.
 
+Also this kind of usage does simplify drivers.
+
+Thanks,
+Ming
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-block" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
