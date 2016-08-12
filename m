@@ -1,36 +1,48 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH V2 00/10] The latest changes for md-cluster
-Date: Fri, 12 Aug 2016 13:42:33 +0800
-Message-ID: <1470980563-26062-1-git-send-email-gqjiang@suse.com>
+Subject: [PATCH V2 07/10] md: remove obsolete ret in md_start_sync
+Date: Fri, 12 Aug 2016 13:42:40 +0800
+Message-ID: <1470980563-26062-8-git-send-email-gqjiang@suse.com>
+References: <1470980563-26062-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1470980563-26062-1-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: shli@fb.com, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-This version addresses comments from Shaohua, and the 7th
-patch is added as well.
+The ret is not needed anymore since we have already
+move resync_start into md_do_sync in commit 41a9a0d.
 
-Thanks,
-Guoqing
+Reviewed-by: NeilBrown <neilb@suse.com>
+Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+---
+ drivers/md/md.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-Guoqing Jiang (10):
-  md-cluster: call md_kick_rdev_from_array once ack failed
-  md-cluster: use FORCEUNLOCK in lockres_free
-  md-cluster: remove some unnecessary dlm_unlock_sync
-  md: changes for MD_STILL_CLOSED flag
-  md-cluster: clean related infos of cluster
-  md-cluster: protect md_find_rdev_nr_rcu with rcu lock
-  md: remove obsolete ret in md_start_sync
-  md-cluster: convert the completion to wait queue
-  md-cluster: introduce dlm_lock_sync_interruptible to fix tasks hang
-  md-cluster: make resync lock also could be interruptted
-
- drivers/md/md-cluster.c | 93 +++++++++++++++++++++++++++++++++----------------
- drivers/md/md.c         | 34 ++++++++++--------
- drivers/md/md.h         |  5 ++-
- 3 files changed, 85 insertions(+), 47 deletions(-)
-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index f95e5ed..cceaaf4 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -8283,16 +8283,14 @@ no_add:
+ static void md_start_sync(struct work_struct *ws)
+ {
+ 	struct mddev *mddev = container_of(ws, struct mddev, del_work);
+-	int ret = 0;
+ 
+ 	mddev->sync_thread = md_register_thread(md_do_sync,
+ 						mddev,
+ 						"resync");
+ 	if (!mddev->sync_thread) {
+-		if (!(mddev_is_clustered(mddev) && ret == -EAGAIN))
+-			printk(KERN_ERR "%s: could not start resync"
+-			       " thread...\n",
+-			       mdname(mddev));
++		printk(KERN_ERR "%s: could not start resync"
++		       " thread...\n",
++		       mdname(mddev));
+ 		/* leave the spares where they are, it shouldn't hurt */
+ 		clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
+ 		clear_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
 -- 
 2.6.2
 
