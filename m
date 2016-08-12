@@ -1,7 +1,7 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH V2 06/10] md-cluster: protect md_find_rdev_nr_rcu with rcu lock
-Date: Fri, 12 Aug 2016 13:42:39 +0800
-Message-ID: <1470980563-26062-7-git-send-email-gqjiang@suse.com>
+Subject: [PATCH V2 03/10] md-cluster: remove some unnecessary dlm_unlock_sync
+Date: Fri, 12 Aug 2016 13:42:36 +0800
+Message-ID: <1470980563-26062-4-git-send-email-gqjiang@suse.com>
 References: <1470980563-26062-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1470980563-26062-1-git-send-email-gqjiang@suse.com>
@@ -10,57 +10,54 @@ To: linux-raid@vger.kernel.org
 Cc: shli@fb.com, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-We need to use rcu_read_lock/unlock to avoid potential
-race.
+Since DLM_LKF_FORCEUNLOCK is used in lockres_free,
+we don't need to call dlm_unlock_sync before free
+lock resource.
 
-Reported-by: Shaohua Li <shli@fb.com>
 Reviewed-by: NeilBrown <neilb@suse.com>
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- drivers/md/md-cluster.c | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+ drivers/md/md-cluster.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
 diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index ea2699e..8972413 100644
+index 0a0605f..ea2699e 100644
 --- a/drivers/md/md-cluster.c
 +++ b/drivers/md/md-cluster.c
-@@ -486,9 +486,10 @@ static void process_metadata_update(struct mddev *mddev, struct cluster_msg *msg
+@@ -281,7 +281,7 @@ static void recover_bitmaps(struct md_thread *thread)
+ 		ret = bitmap_copy_from_slot(mddev, slot, &lo, &hi, true);
+ 		if (ret) {
+ 			pr_err("md-cluster: Could not copy data from bitmap %d\n", slot);
+-			goto dlm_unlock;
++			goto clear_bit;
+ 		}
+ 		if (hi > 0) {
+ 			if (lo < mddev->recovery_cp)
+@@ -293,8 +293,6 @@ static void recover_bitmaps(struct md_thread *thread)
+ 			    md_wakeup_thread(mddev->thread);
+ 			}
+ 		}
+-dlm_unlock:
+-		dlm_unlock_sync(bm_lockres);
+ clear_bit:
+ 		lockres_free(bm_lockres);
+ 		clear_bit(slot, &cinfo->recovery_map);
+@@ -763,7 +761,6 @@ static int gather_all_resync_info(struct mddev *mddev, int total_slots)
+ 			md_check_recovery(mddev);
+ 		}
  
- static void process_remove_disk(struct mddev *mddev, struct cluster_msg *msg)
- {
--	struct md_rdev *rdev = md_find_rdev_nr_rcu(mddev,
--						   le32_to_cpu(msg->raid_slot));
-+	struct md_rdev *rdev;
- 
-+	rcu_read_lock();
-+	rdev = md_find_rdev_nr_rcu(mddev, le32_to_cpu(msg->raid_slot));
- 	if (rdev) {
- 		set_bit(ClusterRemove, &rdev->flags);
- 		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-@@ -497,18 +498,21 @@ static void process_remove_disk(struct mddev *mddev, struct cluster_msg *msg)
- 	else
- 		pr_warn("%s: %d Could not find disk(%d) to REMOVE\n",
- 			__func__, __LINE__, le32_to_cpu(msg->raid_slot));
-+	rcu_read_unlock();
- }
- 
- static void process_readd_disk(struct mddev *mddev, struct cluster_msg *msg)
- {
--	struct md_rdev *rdev = md_find_rdev_nr_rcu(mddev,
--						   le32_to_cpu(msg->raid_slot));
-+	struct md_rdev *rdev;
- 
-+	rcu_read_lock();
-+	rdev = md_find_rdev_nr_rcu(mddev, le32_to_cpu(msg->raid_slot));
- 	if (rdev && test_bit(Faulty, &rdev->flags))
- 		clear_bit(Faulty, &rdev->flags);
- 	else
- 		pr_warn("%s: %d Could not find disk(%d) which is faulty",
- 			__func__, __LINE__, le32_to_cpu(msg->raid_slot));
-+	rcu_read_unlock();
- }
- 
- static int process_recvd_msg(struct mddev *mddev, struct cluster_msg *msg)
+-		dlm_unlock_sync(bm_lockres);
+ 		lockres_free(bm_lockres);
+ 	}
+ out:
+@@ -1173,7 +1170,6 @@ static void unlock_all_bitmaps(struct mddev *mddev)
+ 	if (cinfo->other_bitmap_lockres) {
+ 		for (i = 0; i < mddev->bitmap_info.nodes - 1; i++) {
+ 			if (cinfo->other_bitmap_lockres[i]) {
+-				dlm_unlock_sync(cinfo->other_bitmap_lockres[i]);
+ 				lockres_free(cinfo->other_bitmap_lockres[i]);
+ 			}
+ 		}
 -- 
 2.6.2
 
