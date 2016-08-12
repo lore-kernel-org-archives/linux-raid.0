@@ -1,53 +1,58 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH V2 10/10] md-cluster: make resync lock also could be interruptted
-Date: Fri, 12 Aug 2016 13:42:43 +0800
-Message-ID: <1470980563-26062-11-git-send-email-gqjiang@suse.com>
-References: <1470980563-26062-1-git-send-email-gqjiang@suse.com>
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH] raid10: record correct address of bad block
+Date: Fri, 12 Aug 2016 11:03:53 +0200
+Message-ID: <1470992633-8903-1-git-send-email-tomasz.majchrzak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1470980563-26062-1-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: shli@fb.com, Guoqing Jiang <gqjiang@suse.com>
+Cc: shli@kernel.org, aleksey.obitotskiy@intel.com, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com
 List-Id: linux-raid.ids
 
-When one node is perform resync or recovery, other nodes
-can't get resync lock and could block for a while before
-it holds the lock, so we can't stop array immediately for
-this scenario.
+For failed write request record block address on a device, not block
+address in an array.
 
-To make array could be stop quickly, we check MD_CLOSING
-in dlm_lock_sync_interruptible to make us can interrupt
-the lock request.
-
-Reviewed-by: NeilBrown <neilb@suse.com>
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 ---
- drivers/md/md-cluster.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/md/raid10.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index 149d19a..16d892d 100644
---- a/drivers/md/md-cluster.c
-+++ b/drivers/md/md-cluster.c
-@@ -159,7 +159,8 @@ static int dlm_lock_sync_interruptible(struct dlm_lock_resource *res, int mode,
- 		return ret;
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index cfa96b5..d18b26d 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -2449,6 +2449,7 @@ static int narrow_write_error(struct r10bio *r10_bio, int i)
  
- 	wait_event(res->sync_locking, res->sync_locking_done
--				      || kthread_should_stop());
-+				      || kthread_should_stop()
-+				      || test_bit(MD_CLOSING, &mddev->flags));
- 	if (!res->sync_locking_done) {
- 		/*
- 		 * the convert queue contains the lock request when request is
-@@ -1033,7 +1034,7 @@ static void metadata_update_cancel(struct mddev *mddev)
- static int resync_start(struct mddev *mddev)
- {
- 	struct md_cluster_info *cinfo = mddev->cluster_info;
--	return dlm_lock_sync(cinfo->resync_lockres, DLM_LOCK_EX);
-+	return dlm_lock_sync_interruptible(cinfo->resync_lockres, DLM_LOCK_EX, mddev);
- }
+ 	int block_sectors;
+ 	sector_t sector;
++	sector_t data_offset;
+ 	int sectors;
+ 	int sect_to_write = r10_bio->sectors;
+ 	int ok = 1;
+@@ -2462,6 +2463,7 @@ static int narrow_write_error(struct r10bio *r10_bio, int i)
+ 	sectors = ((r10_bio->sector + block_sectors)
+ 		   & ~(sector_t)(block_sectors - 1))
+ 		- sector;
++	data_offset = choose_data_offset(r10_bio, rdev);
  
- static int resync_info_update(struct mddev *mddev, sector_t lo, sector_t hi)
+ 	while (sect_to_write) {
+ 		struct bio *wbio;
+@@ -2471,13 +2473,12 @@ static int narrow_write_error(struct r10bio *r10_bio, int i)
+ 		wbio = bio_clone_mddev(bio, GFP_NOIO, mddev);
+ 		bio_trim(wbio, sector - bio->bi_iter.bi_sector, sectors);
+ 		wbio->bi_iter.bi_sector = (r10_bio->devs[i].addr+
+-				   choose_data_offset(r10_bio, rdev) +
+-				   (sector - r10_bio->sector));
++				   data_offset + (sector - r10_bio->sector));
+ 		wbio->bi_bdev = rdev->bdev;
+ 		if (submit_bio_wait(WRITE, wbio) < 0)
+ 			/* Failure! */
+-			ok = rdev_set_badblocks(rdev, sector,
+-						sectors, 0)
++			ok = rdev_set_badblocks(rdev, wbio->bi_iter.bi_sector -
++						data_offset, sectors, 0)
+ 				&& ok;
+ 
+ 		bio_put(wbio);
 -- 
-2.6.2
+1.8.3.1
 
