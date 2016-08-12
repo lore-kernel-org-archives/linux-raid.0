@@ -1,7 +1,7 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH V2 01/10] md-cluster: call md_kick_rdev_from_array once ack failed
-Date: Fri, 12 Aug 2016 13:42:34 +0800
-Message-ID: <1470980563-26062-2-git-send-email-gqjiang@suse.com>
+Subject: [PATCH V2 02/10] md-cluster: use FORCEUNLOCK in lockres_free
+Date: Fri, 12 Aug 2016 13:42:35 +0800
+Message-ID: <1470980563-26062-3-git-send-email-gqjiang@suse.com>
 References: <1470980563-26062-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1470980563-26062-1-git-send-email-gqjiang@suse.com>
@@ -10,41 +10,56 @@ To: linux-raid@vger.kernel.org
 Cc: shli@fb.com, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-The new_disk_ack could return failure if WAITING_FOR_NEWDISK
-is not set, so we need to kick the dev from array in case
-failure happened.
+For dlm_unlock, we need to pass flag to dlm_unlock as the
+third parameter instead of set res->flags.
 
-And we missed to check err before call new_disk_ack othwise
-we could kick a rdev which isn't in array, thanks for the
-reminder from Shaohua.
+Also, DLM_LKF_FORCEUNLOCK is more suitable for dlm_unlock
+since it works even the lock is on waiting or convert queue.
 
-Reviewed-by: NeilBrown <neilb@suse.com>
+Acked-by: NeilBrown <neilb@suse.com>
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- drivers/md/md.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ drivers/md/md-cluster.c | 23 ++++++++---------------
+ 1 file changed, 8 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 2c3ab6f..d6ae9bc 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -6101,9 +6101,13 @@ static int add_new_disk(struct mddev *mddev, mdu_disk_info_t *info)
- 			export_rdev(rdev);
+diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+index 41573f1..0a0605f 100644
+--- a/drivers/md/md-cluster.c
++++ b/drivers/md/md-cluster.c
+@@ -194,25 +194,18 @@ out_err:
  
- 		if (mddev_is_clustered(mddev)) {
--			if (info->state & (1 << MD_DISK_CANDIDATE))
--				md_cluster_ops->new_disk_ack(mddev, (err == 0));
--			else {
-+			if (info->state & (1 << MD_DISK_CANDIDATE)) {
-+				if (!err) {
-+					err = md_cluster_ops->new_disk_ack(mddev, (err == 0));
-+					if (err)
-+						md_kick_rdev_from_array(rdev);
-+				}
-+			} else {
- 				if (err)
- 					md_cluster_ops->add_new_disk_cancel(mddev);
- 				else
+ static void lockres_free(struct dlm_lock_resource *res)
+ {
+-	int ret;
++	int ret = 0;
+ 
+ 	if (!res)
+ 		return;
+ 
+-	/* cancel a lock request or a conversion request that is blocked */
+-	res->flags |= DLM_LKF_CANCEL;
+-retry:
+-	ret = dlm_unlock(res->ls, res->lksb.sb_lkid, 0, &res->lksb, res);
+-	if (unlikely(ret != 0)) {
+-		pr_info("%s: failed to unlock %s return %d\n", __func__, res->name, ret);
+-
+-		/* if a lock conversion is cancelled, then the lock is put
+-		 * back to grant queue, need to ensure it is unlocked */
+-		if (ret == -DLM_ECANCEL)
+-			goto retry;
+-	}
+-	res->flags &= ~DLM_LKF_CANCEL;
+-	wait_for_completion(&res->completion);
++	/* use FORCEUNLOCK flag, so we can unlock even the lock is on the
++	 * waiting or convert queue */
++	ret = dlm_unlock(res->ls, res->lksb.sb_lkid, DLM_LKF_FORCEUNLOCK, &res->lksb, res);
++	if (unlikely(ret != 0))
++		pr_err("failed to unlock %s return %d\n", res->name, ret);
++	else
++		wait_for_completion(&res->completion);
+ 
+ 	kfree(res->name);
+ 	kfree(res->lksb.sb_lvbptr);
 -- 
 2.6.2
 
