@@ -1,40 +1,43 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Can't mount Old RHEL 6 Raid with new install of CentOS 7, now
- can't mount with original RHEL 6
-Date: Thu, 11 Aug 2016 20:38:41 -0600
-Message-ID: <CAJCQCtQfBjhKh2Fu+W76JyXODFJJ9Qxjbyn7KK0i3ALs1xREgQ@mail.gmail.com>
-References: <42cee2e2d85a5b0e39efc34117e597a2@celticblues.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: [PATCH V2 05/10] md-cluster: clean related infos of cluster
+Date: Fri, 12 Aug 2016 13:42:38 +0800
+Message-ID: <1470980563-26062-6-git-send-email-gqjiang@suse.com>
+References: <1470980563-26062-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <42cee2e2d85a5b0e39efc34117e597a2@celticblues.com>
+In-Reply-To: <1470980563-26062-1-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Dawson <linux@celticblues.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: shli@fb.com, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-On Thu, Aug 11, 2016 at 6:19 AM, John Dawson <linux@celticblues.com> wrote:
-> I have a machine which had a drive with RHEL 6.X installed with a raid
-> device setup on separate disk(s).  Installed a new hard disk in machine and
-> installed CentOS 7.  CentOS 7 wouldn't mount the raid.  Put the old drive
-> back in and now RHEL 6.X won't mount the raid.  Is the raid permanently
-> hosed?  Can I get the data on it back? How? Thx.
+cluster_info and bitmap_info.nodes also need to be
+cleared when array is stopped.
 
-RHEL comes with a support contract so you should contact Red Hat about
-that part.
+Reviewed-by: NeilBrown <neilb@suse.com>
+Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+---
+ drivers/md/md.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Also, not anywhere near enough information has been provided, almost
-like you think what you're experiencing is a widely known problem with
-a known solution. But it isn't. So you should provide mdadm -E
-information for each member block device, whether or not the array
-assembles manually, if not what error do you get in user and kernel
-space, and what command you're using to mount the array that you say
-fails, and what the error message is.
-
-Also include mdadm version on both systems because few people will
-have any idea what mdadm version is on the particular installation of
-RHEL and CentOS you're using, as these things aren't standardized at
-all across distros.
-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index da5741c..f95e5ed 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5457,12 +5457,14 @@ static void md_clean(struct mddev *mddev)
+ 	mddev->degraded = 0;
+ 	mddev->safemode = 0;
+ 	mddev->private = NULL;
++	mddev->cluster_info = NULL;
+ 	mddev->bitmap_info.offset = 0;
+ 	mddev->bitmap_info.default_offset = 0;
+ 	mddev->bitmap_info.default_space = 0;
+ 	mddev->bitmap_info.chunksize = 0;
+ 	mddev->bitmap_info.daemon_sleep = 0;
+ 	mddev->bitmap_info.max_write_behind = 0;
++	mddev->bitmap_info.nodes = 0;
+ }
+ 
+ static void __md_stop_writes(struct mddev *mddev)
 -- 
-Chris Murphy
+2.6.2
+
