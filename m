@@ -1,7 +1,7 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH V2 07/10] md: remove obsolete ret in md_start_sync
-Date: Fri, 12 Aug 2016 13:42:40 +0800
-Message-ID: <1470980563-26062-8-git-send-email-gqjiang@suse.com>
+Subject: [PATCH V2 08/10] md-cluster: convert the completion to wait queue
+Date: Fri, 12 Aug 2016 13:42:41 +0800
+Message-ID: <1470980563-26062-9-git-send-email-gqjiang@suse.com>
 References: <1470980563-26062-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1470980563-26062-1-git-send-email-gqjiang@suse.com>
@@ -10,39 +10,71 @@ To: linux-raid@vger.kernel.org
 Cc: shli@fb.com, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-The ret is not needed anymore since we have already
-move resync_start into md_do_sync in commit 41a9a0d.
+Previously, we used completion to sync between require dlm lock
+and sync_ast, however we will have to expose completion.wait
+and completion.done in dlm_lock_sync_interruptible (introduced
+later), it is not a common usage for completion, so convert
+related things to wait queue.
 
 Reviewed-by: NeilBrown <neilb@suse.com>
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- drivers/md/md.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ drivers/md/md-cluster.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index f95e5ed..cceaaf4 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -8283,16 +8283,14 @@ no_add:
- static void md_start_sync(struct work_struct *ws)
- {
- 	struct mddev *mddev = container_of(ws, struct mddev, del_work);
--	int ret = 0;
+diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+index 8972413..03a51e7 100644
+--- a/drivers/md/md-cluster.c
++++ b/drivers/md/md-cluster.c
+@@ -25,7 +25,8 @@ struct dlm_lock_resource {
+ 	struct dlm_lksb lksb;
+ 	char *name; /* lock name. */
+ 	uint32_t flags; /* flags to pass to dlm_lock() */
+-	struct completion completion; /* completion for synchronized locking */
++	wait_queue_head_t sync_locking; /* wait queue for synchronized locking */
++	bool sync_locking_done;
+ 	void (*bast)(void *arg, int mode); /* blocking AST function pointer*/
+ 	struct mddev *mddev; /* pointing back to mddev. */
+ 	int mode;
+@@ -118,7 +119,8 @@ static void sync_ast(void *arg)
+ 	struct dlm_lock_resource *res;
  
- 	mddev->sync_thread = md_register_thread(md_do_sync,
- 						mddev,
- 						"resync");
- 	if (!mddev->sync_thread) {
--		if (!(mddev_is_clustered(mddev) && ret == -EAGAIN))
--			printk(KERN_ERR "%s: could not start resync"
--			       " thread...\n",
--			       mdname(mddev));
-+		printk(KERN_ERR "%s: could not start resync"
-+		       " thread...\n",
-+		       mdname(mddev));
- 		/* leave the spares where they are, it shouldn't hurt */
- 		clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
- 		clear_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+ 	res = arg;
+-	complete(&res->completion);
++	res->sync_locking_done = true;
++	wake_up(&res->sync_locking);
+ }
+ 
+ static int dlm_lock_sync(struct dlm_lock_resource *res, int mode)
+@@ -130,7 +132,8 @@ static int dlm_lock_sync(struct dlm_lock_resource *res, int mode)
+ 			0, sync_ast, res, res->bast);
+ 	if (ret)
+ 		return ret;
+-	wait_for_completion(&res->completion);
++	wait_event(res->sync_locking, res->sync_locking_done);
++	res->sync_locking_done = false;
+ 	if (res->lksb.sb_status == 0)
+ 		res->mode = mode;
+ 	return res->lksb.sb_status;
+@@ -151,7 +154,8 @@ static struct dlm_lock_resource *lockres_init(struct mddev *mddev,
+ 	res = kzalloc(sizeof(struct dlm_lock_resource), GFP_KERNEL);
+ 	if (!res)
+ 		return NULL;
+-	init_completion(&res->completion);
++	init_waitqueue_head(&res->sync_locking);
++	res->sync_locking_done = false;
+ 	res->ls = cinfo->lockspace;
+ 	res->mddev = mddev;
+ 	res->mode = DLM_LOCK_IV;
+@@ -205,7 +209,7 @@ static void lockres_free(struct dlm_lock_resource *res)
+ 	if (unlikely(ret != 0))
+ 		pr_err("failed to unlock %s return %d\n", res->name, ret);
+ 	else
+-		wait_for_completion(&res->completion);
++		wait_event(res->sync_locking, res->sync_locking_done);
+ 
+ 	kfree(res->name);
+ 	kfree(res->lksb.sb_lvbptr);
 -- 
 2.6.2
 
