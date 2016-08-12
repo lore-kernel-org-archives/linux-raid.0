@@ -1,51 +1,25 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH] mdadm: put journal device in right place of --detail
-Date: Fri, 12 Aug 2016 10:59:41 -0400
-Message-ID: <wrfjoa4y823m.fsf@redhat.com>
-References: <1470960853-2859579-1-git-send-email-songliubraving@fb.com>
+From: Kent Overstreet <kent.overstreet@gmail.com>
+Subject: Re: [PATCH v2] block: make sure big bio is splitted into at most 256
+ bvecs
+Date: Fri, 12 Aug 2016 08:36:56 -0800
+Message-ID: <20160812163656.GA13370@kmo-pixel>
+References: <1459914212-9330-1-git-send-email-ming.lei@canonical.com>
+ <alpine.LRH.2.11.1608102132120.10662@mail.ewheeler.net>
+ <20160811140253.GA2867@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1470960853-2859579-1-git-send-email-songliubraving@fb.com> (Song
-	Liu's message of "Thu, 11 Aug 2016 17:14:13 -0700")
-Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>
-Cc: linux-raid@vger.kernel.org, yizhan@redhat.com, Shaohua Li <shli@fb.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20160811140253.GA2867@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Eric Wheeler <bcache@lists.ewheeler.net>, Ming Lei <ming.lei@canonical.com>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, Sebastian Roesner <sroesner-kernelorg@roesner-online.de>, "4.3+" <stable@vger.kernel.org>, Shaohua Li <shli@fb.com>
 List-Id: linux-raid.ids
 
-Song Liu <songliubraving@fb.com> writes:
-> When there is failed HDDs, journal device showed in wrong place
-> of --detail:
->
->     Number   Major   Minor   RaidDevice State
->        4       8       24        -      journal   /dev/sdb8
->        1       8       18        1      active sync   /dev/sdb2
->        2       8       19        2      active sync   /dev/sdb3
->        3       8       21        3      active sync   /dev/sdb5
->
->        0       8       17        -      faulty   /dev/sdb1
->
-> This patch fixed the output as:
->
->     Number   Major   Minor   RaidDevice State
->        -       0        0        0      removed
->        1       8       18        1      active sync   /dev/sdb2
->        2       8       19        2      active sync   /dev/sdb3
->        3       8       21        3      active sync   /dev/sdb5
->
->        0       8       17        -      faulty   /dev/sdb1
->        4       8       24        -      journal   /dev/sdb8
->
-> Reported-by: Yi Zhang <yizhan@redhat.com>
-> Signed-off-by: Song Liu <songliubraving@fb.com>
-> Signed-off-by: Shaohua Li <shli@fb.com>
-> ---
->  Detail.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+On Thu, Aug 11, 2016 at 07:02:53AM -0700, Christoph Hellwig wrote:
+> Please just fix bcache to not submit bios larger than BIO_MAX_PAGES for
+> now, until we can support such callers in general and enable common
+> used code to do so.
 
-Applied, thanks!
-
-Jes
-
-PS: If you CC me directly in mdadm patches I am likely to see them
-faster, ie. before I get to the linux-raid list.
+Christoph, what's wrong with Ming's patch? Leaving bcache aside, just
+considering the block layer, do you think that patch is the wrong approach?
