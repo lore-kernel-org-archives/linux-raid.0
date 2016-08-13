@@ -1,35 +1,45 @@
-From: bobzer <bobzer@gmail.com>
-Subject: best kernel ??
-Date: Fri, 12 Aug 2016 20:00:11 -0400
-Message-ID: <CADzS=arXe-bPGHfGSnAsJ1ysk=1-5XPZ6DFetwynpiv41_56aw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+From: Gayatri Kammela <gayatri.kammela@intel.com>
+Subject: [PATCH v2 0/6] Add AVX512 optimized gen_syndrome, xor_syndrome and recovery functions
+Date: Fri, 12 Aug 2016 18:03:18 -0700
+Message-ID: <1471050204-26361-1-git-send-email-gayatri.kammela@intel.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: shli@kernel.org, linux-kernel@vger.kernel.org, ravi.v.shankar@intel.com, Gayatri Kammela <gayatri.kammela@intel.com>
 List-Id: linux-raid.ids
 
-Hi,
+This is the version 2 patch series for adding AVX512 optimized gen_syndrome,
+xor_syndrome and recovery functions.
 
-I need to update my kernel to get full ext4 support.
-I'm on debian, so i compiled my the last stable version 4.7 and also mdadm 3.4
-everything is good until i did ./test --keep-going there i got a lot of error
-i saw that kernel betwen 4.1 and 4.4 has problems about raid :
-http://www.linuxfromscratch.org/blfs/view/svn/postlfs/mdadm.html
-So i'm wondering which kernel should i get ?
-my debian is jessie (8) and it's a vm in esx, so i don't need to
-support a lot of things but at least raid :-)
+Optimization of RAID6 using AVX512 instructions should improve the
+RAID6 performance.These patches are tested and observed the improvement
+in performance.
 
-what version do you run ??
-any advice ?
+Changes since v1:
+1) Added xor_syndrome functions to avx512 optimized raid6.
 
-about the compilation i simply download the last version untar
-check that mdadm was stop
-make
-make install
-./test -keep-going
+Gayatri Kammela (6):
+  lib/raid6: Add AVX512 optimized gen_syndrome functions
+  lib/raid6: Add AVX512 optimized recovery functions
+  lib/raid6/test/Makefile: Add avx512 gen_syndrome and recovery
+    functions
+  lib/raid6: Add AVX512 optimized xor_syndrome functions
+  (DO NOT APPLY) lib/raid6: Add unroll by 8 to AVX512 optimized
+    gen_syndrome functions
+  (DO NOT APPLY) lib/raid6: Add unroll by 8 to AVX512 optimized    
+    xor_syndrome functions.
 
-the things that i don't understand it's that i ran the test a few time
-and never get the same result..
+ arch/x86/Makefile        |   5 +-
+ include/linux/raid/pq.h  |   5 +
+ lib/raid6/Makefile       |   2 +-
+ lib/raid6/algos.c        |  13 +
+ lib/raid6/avx512.c       | 972 +++++++++++++++++++++++++++++++++++++++++++++++
+ lib/raid6/recov_avx512.c | 388 +++++++++++++++++++
+ lib/raid6/test/Makefile  |   5 +-
+ lib/raid6/x86.h          |  10 +
+ 8 files changed, 1396 insertions(+), 4 deletions(-)
+ create mode 100644 lib/raid6/avx512.c
+ create mode 100644 lib/raid6/recov_avx512.c
 
-thanks
+-- 
+2.7.4
