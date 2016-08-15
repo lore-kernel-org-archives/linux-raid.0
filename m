@@ -1,66 +1,62 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: read errors with md RAID5 array
-Date: Mon, 15 Aug 2016 10:23:33 -0600
-Message-ID: <CAJCQCtSDEWr6Tp0Hd+Jifw4h_aoM6Tqroav_vLmfwfqjoEe8Rg@mail.gmail.com>
-References: <78aab29c-9b7b-ff8b-f9c7-fab286f16243@buttersideup.com>
- <CAJCQCtSggAsQMSH9Ufa=Vjmu13cBm58+Q-RBZ4WRXm9UF=Yd+Q@mail.gmail.com> <b353161b-255e-e359-e3f4-800eac848847@buttersideup.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: Re: [PATCH] mdadm: add man page for --add-journal
+Date: Mon, 15 Aug 2016 17:16:14 +0000
+Message-ID: <1D3210FF-27ED-4551-A8EB-58A09E238217@fb.com>
+References: <1470960604-2852450-1-git-send-email-songliubraving@fb.com>
+ <wrfjshua825o.fsf@redhat.com>
+ <defa4365-a771-f4e8-4375-b67bc933767b@websitemanagers.com.au>
+ <wrfj60r25c15.fsf@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <b353161b-255e-e359-e3f4-800eac848847@buttersideup.com>
+In-Reply-To: <wrfj60r25c15.fsf@redhat.com>
+Content-Language: en-US
+Content-ID: <D35048BAB9DBA24FB41F4BB0A409A845@namprd15.prod.outlook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tim Small <tim@buttersideup.com>
-Cc: Chris Murphy <lists@colorremedies.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>, Adam Goryachev <mailinglists@websitemanagers.com.au>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "yizhan@redhat.com" <yizhan@redhat.com>, Shaohua Li <shli@fb.com>
 List-Id: linux-raid.ids
 
-On Mon, Aug 15, 2016 at 8:42 AM, Tim Small <tim@buttersideup.com> wrote:
-> On 15/08/16 14:57, Chris Murphy wrote:
->> $ sudo smartctl -l scterc <dev>   ## for each device used in the array
->> $ sudo cat /sys/block/<dev>/device/timeout   ## for each device used
->> in the array
->
-> These were all reporting:
->
-> SCT Error Recovery Control:
->            Read: Disabled
->           Write: Disabled
-
-
-You failed to provide the value for the 2nd command. Is it something
-other than 30 for each device?
-
-
-
->
-> However I'm not sure how this would cause a read error from the md
-> device itself?  There are no timeout/reset messages in the kernel logs
-> for the underlying SATA devices?
-
-Nevertheless it's a misconfiguration that inhibits proper read error
-reporting by the drive, thereby preventing the md driver from fixing
-bad sectors via writing good data over them and causing the drive
-firmware to sort it out. So you should issue 'smartctl -l scterc,70,70
-<dev>' for all devices and make sure this is made persistent at boot
-time.
-
-
-
-
->
-> To check, I've set the ERC on all drives to 6.5 seconds for both reads
-> and writes, and restarted the "dd if=/dev/md2 of=/dev/null
-> conv=noerror", and it's just produced read failures at exactly the same
-> places, with no further kernel messages.
-
-
-Well it isn't really a read error, it's a buffer io error that happens
-to be triggered when reading, so it's a little more specific than a
-read error. It sounds to me you've run into a bug or there's some kind
-of hardware problem somewhere. It might be helpful if you provide the
-entire dmesg from boot until the first error message. As well as the
-stuff Andreas asked for.
-
-
-
--- 
-Chris Murphy
+VGhhbmtzIEFkYW0gYW5kIEplcy4gDQoNClRoZXNlIGxvb2tzIGdvb2QgdG8gbWUuIA0KDQpQUzog
+d2Ugd2lsbCBtYWtlIOKAnGFkZC1qb3VybmFs4oCdIG1vcmUgZmxleGlibGUsIGFuZCByZXZpc2Ug
+dGhlIG1hbiBwYWdlIGFjY29yZGluZ2x5LiANCg0KU29uZw0KDQo+PiBPbiA4LzE1LzE2LCA3OjQy
+IEFNLCAiSmVzIFNvcmVuc2VuIiA8SmVzLlNvcmVuc2VuQHJlZGhhdC5jb20+IHdyb3RlOg0KDQog
+ICAgQWRhbSBHb3J5YWNoZXYgPG1haWxpbmdsaXN0c0B3ZWJzaXRlbWFuYWdlcnMuY29tLmF1PiB3
+cml0ZXM6DQogICAgPiBPbiAxMy8wOC8yMDE2IDAwOjU4LCBKZXMgU29yZW5zZW4gd3JvdGU6DQog
+ICAgPj4gU29uZyBMaXUgPHNvbmdsaXVicmF2aW5nQGZiLmNvbT4gd3JpdGVzOg0KICAgID4+PiBB
+ZGQgdGhlIGZvbGxvd2luZyB0byBtYW4gcGFnZToNCiAgICA+Pj4NCiAgICA+Pj4gLS1hZGQtam91
+cm5hbA0KICAgID4+PiAgICAgICAgUmVjcmVhdGUgam91cm5hbCBmb3IgUkFJRC00LzUvNiBhcnJh
+eSB0aGF0IGxvc3RzIGpvdXJuYWwNCiAgICA+Pj4gICAgICAgIGRldmljZXMuIEluIGN1cnJlbnQg
+aW1wbGVtZW50YXRpb24sIHRoaXMgY29tbWFuZCBjYW5ub3QNCiAgICA+Pj4gICAgICAgIGFkZCBq
+b3VybmFsIHRvIGFuIGFycmF5IHRoYXQgaGFkIGZhaWxlZCBqb3VybmFsLiAgVG8NCiAgICA+Pj4g
+ICAgICAgIGF2b2lkICBpbnRlcnJ1cHRpbmcgIG9uLWdvaW5nICB3cml0ZSAgb3BlcnRpb25zLA0K
+ICAgID4+PiAgICAgICAgLS1hZGQtam91cm5hbCBvbmx5IHdvcmtzIGZvciBhcnJheSBpbiBSZWFk
+LU9ubHkgc3RhdGUuDQogICAgPj4+DQogICAgPj4+IFJlcG9ydGVkLWJ5OiBZaSBaaGFuZyA8eWl6
+aGFuQHJlZGhhdC5jb20+DQogICAgPj4+IFNpZ25lZC1vZmYtYnk6IFNvbmcgTGl1IDxzb25nbGl1
+YnJhdmluZ0BmYi5jb20+DQogICAgPj4+IFNpZ25lZC1vZmYtYnk6IFNoYW9odWEgTGkgPHNobGlA
+ZmIuY29tPg0KICAgID4+PiAtLS0NCiAgICA+Pj4gICBtZGFkbS44LmluIHwgOCArKysrKysrKw0K
+ICAgID4+PiAgIDEgZmlsZSBjaGFuZ2VkLCA4IGluc2VydGlvbnMoKykNCiAgICA+PiBBcHBsaWVk
+LCB3aXRoIGEgZmV3IG1pbm9yIG1vZHMuDQogICAgPj4NCiAgICA+PiBJIGNoYW5nZWQgaXQgdG8g
+c2F5IHRoaXMsIEkgaG9wZSB5b3UgYXJlIGZpbmUgd2l0aCB0aGF0Og0KICAgID4+DQogICAgPj4g
+IlJlY3JlYXRlIGpvdXJuYWwgZm9yIFJBSUQtNC81LzYgYXJyYXkgdGhhdCBsb3N0IGEgam91cm5h
+bCBkZXZpY2UuIEluIHRoZQ0KICAgID4+IGN1cnJlbnQgaW1wbGVtZW50YXRpb24sIHRoaXMgY29t
+bWFuZCBjYW5ub3QgYWRkIGEgam91cm5hbCB0byBhbiBhcnJheQ0KICAgID4+IHRoYXQgaGFkIGEg
+ZmFpbGVkIGpvdXJuYWwuIFRvIGF2b2lkIGludGVycnVwdGluZyBvbi1nb2luZyB3cml0ZQ0KICAg
+ID4+IG9wZXJ0aW9ucywgIg0KICAgID4gSSB0aGluayB0aGlzIG1pZ2h0IGJlIG1vcmUgY29ycmVj
+dDoNCiAgICA+DQogICAgPiAiUmVjcmVhdGUgam91cm5hbCBmb3IgUkFJRC00LzUvNiBhcnJheSB0
+aGF0IGxvc3QgYSBqb3VybmFsIGRldmljZS4gSW4gdGhlDQogICAgPiBjdXJyZW50IGltcGxlbWVu
+dGF0aW9uLCB0aGlzIGNvbW1hbmQgY2Fubm90IGFkZCBhIGpvdXJuYWwgdG8gYW4gYXJyYXkNCiAg
+ICA+IHRoYXQgKmhhcyogYSBmYWlsZWQgam91cm5hbC4gVG8gYXZvaWQgaW50ZXJydXB0aW5nIG9u
+LWdvaW5nIHdyaXRlDQogICAgPiAqb3BlcmF0aW9ucyosICINCiAgICA+DQogICAgPg0KICAgID4g
+Tm90ZSB0aGUgdHdvIHdvcmRzIG1vZGlmaWVkIGhhdmUgKioNCiAgICA+IGhhcyBtZWFuIGN1cnJl
+bnRseSwgaWYgaXQgaGFkIChwYXN0KSBhIGZhaWxlZCBqb3VybmFsLCBidXQgdGhhdCBoYXMNCiAg
+ICA+IGFscmVhZHkgYmVlbiBmaXhlZCwgdGhlbiBpdCBjdXJyZW50bHkgaGFzIGEgd29ya2luZyBq
+b3VybmFsLCBhbmQgc28gSQ0KICAgID4gYXNzdW1lIHRoaXMgcGF0Y2ggaXMgbm90IHJlbGV2YW50
+LiBJdCdzIG9ubHkgcmVsYXRlZCB0byBpZiB0aGUgYXJyYXkNCiAgICA+IGlzIGN1cnJlbnRseSBt
+aXNzaW5nIGEgam91cm5hbC4uLg0KICAgID4gVGhlIHNlY29uZCBvcGVyYXRpb25zIGlzIGp1c3Qg
+YSB0eXBvLi4uDQogICAgPg0KICAgID4gSG9wZSB5b3UgZG9uJ3QgbWluZCBteSBqdW1waW5nIGlu
+IGhlcmUsIEkgY2FuJ3QgaGVscCBtdWNoIHdpdGggY29kZSwNCiAgICA+IGJ1dCBob3BlZnVsbHkg
+Y29udHJpYnV0aW9uIGlzIHN0aWxsIGhlbHBmdWwuDQogICAgDQogICAgSWYgU29uZyBpcyBoYXBw
+eSB3aXRoIHRoaXMgYW5kIHlvdSBzZW5kIG1lIGEgcGF0Y2gsIEknbGwgYmUgaGFwcHkgdG8NCiAg
+ICBhcHBseSBpdC4NCiAgICANCiAgICBDaGVlcnMsDQogICAgSmVzDQogICAgDQoNCg==
