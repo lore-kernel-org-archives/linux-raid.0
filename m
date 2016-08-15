@@ -1,62 +1,61 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: Re: [PATCH] mdadm: add man page for --add-journal
-Date: Mon, 15 Aug 2016 17:16:14 +0000
-Message-ID: <1D3210FF-27ED-4551-A8EB-58A09E238217@fb.com>
-References: <1470960604-2852450-1-git-send-email-songliubraving@fb.com>
- <wrfjshua825o.fsf@redhat.com>
- <defa4365-a771-f4e8-4375-b67bc933767b@websitemanagers.com.au>
- <wrfj60r25c15.fsf@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: Ram Pai <linuxram@us.ibm.com>
+Subject: [RFC PATCH 00/16] dm-inplace-compression block device
+Date: Mon, 15 Aug 2016 10:36:37 -0700
+Message-ID: <1471282613-31006-1-git-send-email-linuxram@us.ibm.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfj60r25c15.fsf@redhat.com>
-Content-Language: en-US
-Content-ID: <D35048BAB9DBA24FB41F4BB0A409A845@namprd15.prod.outlook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>, Adam Goryachev <mailinglists@websitemanagers.com.au>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "yizhan@redhat.com" <yizhan@redhat.com>, Shaohua Li <shli@fb.com>
+To: LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-doc@vger.kernel.org
+Cc: shli@kernel.org, agk@redhat.com, snitzer@redhat.com, corbet@lwn.net, Ram Pai <linuxram@us.ibm.com>
 List-Id: linux-raid.ids
 
-VGhhbmtzIEFkYW0gYW5kIEplcy4gDQoNClRoZXNlIGxvb2tzIGdvb2QgdG8gbWUuIA0KDQpQUzog
-d2Ugd2lsbCBtYWtlIOKAnGFkZC1qb3VybmFs4oCdIG1vcmUgZmxleGlibGUsIGFuZCByZXZpc2Ug
-dGhlIG1hbiBwYWdlIGFjY29yZGluZ2x5LiANCg0KU29uZw0KDQo+PiBPbiA4LzE1LzE2LCA3OjQy
-IEFNLCAiSmVzIFNvcmVuc2VuIiA8SmVzLlNvcmVuc2VuQHJlZGhhdC5jb20+IHdyb3RlOg0KDQog
-ICAgQWRhbSBHb3J5YWNoZXYgPG1haWxpbmdsaXN0c0B3ZWJzaXRlbWFuYWdlcnMuY29tLmF1PiB3
-cml0ZXM6DQogICAgPiBPbiAxMy8wOC8yMDE2IDAwOjU4LCBKZXMgU29yZW5zZW4gd3JvdGU6DQog
-ICAgPj4gU29uZyBMaXUgPHNvbmdsaXVicmF2aW5nQGZiLmNvbT4gd3JpdGVzOg0KICAgID4+PiBB
-ZGQgdGhlIGZvbGxvd2luZyB0byBtYW4gcGFnZToNCiAgICA+Pj4NCiAgICA+Pj4gLS1hZGQtam91
-cm5hbA0KICAgID4+PiAgICAgICAgUmVjcmVhdGUgam91cm5hbCBmb3IgUkFJRC00LzUvNiBhcnJh
-eSB0aGF0IGxvc3RzIGpvdXJuYWwNCiAgICA+Pj4gICAgICAgIGRldmljZXMuIEluIGN1cnJlbnQg
-aW1wbGVtZW50YXRpb24sIHRoaXMgY29tbWFuZCBjYW5ub3QNCiAgICA+Pj4gICAgICAgIGFkZCBq
-b3VybmFsIHRvIGFuIGFycmF5IHRoYXQgaGFkIGZhaWxlZCBqb3VybmFsLiAgVG8NCiAgICA+Pj4g
-ICAgICAgIGF2b2lkICBpbnRlcnJ1cHRpbmcgIG9uLWdvaW5nICB3cml0ZSAgb3BlcnRpb25zLA0K
-ICAgID4+PiAgICAgICAgLS1hZGQtam91cm5hbCBvbmx5IHdvcmtzIGZvciBhcnJheSBpbiBSZWFk
-LU9ubHkgc3RhdGUuDQogICAgPj4+DQogICAgPj4+IFJlcG9ydGVkLWJ5OiBZaSBaaGFuZyA8eWl6
-aGFuQHJlZGhhdC5jb20+DQogICAgPj4+IFNpZ25lZC1vZmYtYnk6IFNvbmcgTGl1IDxzb25nbGl1
-YnJhdmluZ0BmYi5jb20+DQogICAgPj4+IFNpZ25lZC1vZmYtYnk6IFNoYW9odWEgTGkgPHNobGlA
-ZmIuY29tPg0KICAgID4+PiAtLS0NCiAgICA+Pj4gICBtZGFkbS44LmluIHwgOCArKysrKysrKw0K
-ICAgID4+PiAgIDEgZmlsZSBjaGFuZ2VkLCA4IGluc2VydGlvbnMoKykNCiAgICA+PiBBcHBsaWVk
-LCB3aXRoIGEgZmV3IG1pbm9yIG1vZHMuDQogICAgPj4NCiAgICA+PiBJIGNoYW5nZWQgaXQgdG8g
-c2F5IHRoaXMsIEkgaG9wZSB5b3UgYXJlIGZpbmUgd2l0aCB0aGF0Og0KICAgID4+DQogICAgPj4g
-IlJlY3JlYXRlIGpvdXJuYWwgZm9yIFJBSUQtNC81LzYgYXJyYXkgdGhhdCBsb3N0IGEgam91cm5h
-bCBkZXZpY2UuIEluIHRoZQ0KICAgID4+IGN1cnJlbnQgaW1wbGVtZW50YXRpb24sIHRoaXMgY29t
-bWFuZCBjYW5ub3QgYWRkIGEgam91cm5hbCB0byBhbiBhcnJheQ0KICAgID4+IHRoYXQgaGFkIGEg
-ZmFpbGVkIGpvdXJuYWwuIFRvIGF2b2lkIGludGVycnVwdGluZyBvbi1nb2luZyB3cml0ZQ0KICAg
-ID4+IG9wZXJ0aW9ucywgIg0KICAgID4gSSB0aGluayB0aGlzIG1pZ2h0IGJlIG1vcmUgY29ycmVj
-dDoNCiAgICA+DQogICAgPiAiUmVjcmVhdGUgam91cm5hbCBmb3IgUkFJRC00LzUvNiBhcnJheSB0
-aGF0IGxvc3QgYSBqb3VybmFsIGRldmljZS4gSW4gdGhlDQogICAgPiBjdXJyZW50IGltcGxlbWVu
-dGF0aW9uLCB0aGlzIGNvbW1hbmQgY2Fubm90IGFkZCBhIGpvdXJuYWwgdG8gYW4gYXJyYXkNCiAg
-ICA+IHRoYXQgKmhhcyogYSBmYWlsZWQgam91cm5hbC4gVG8gYXZvaWQgaW50ZXJydXB0aW5nIG9u
-LWdvaW5nIHdyaXRlDQogICAgPiAqb3BlcmF0aW9ucyosICINCiAgICA+DQogICAgPg0KICAgID4g
-Tm90ZSB0aGUgdHdvIHdvcmRzIG1vZGlmaWVkIGhhdmUgKioNCiAgICA+IGhhcyBtZWFuIGN1cnJl
-bnRseSwgaWYgaXQgaGFkIChwYXN0KSBhIGZhaWxlZCBqb3VybmFsLCBidXQgdGhhdCBoYXMNCiAg
-ICA+IGFscmVhZHkgYmVlbiBmaXhlZCwgdGhlbiBpdCBjdXJyZW50bHkgaGFzIGEgd29ya2luZyBq
-b3VybmFsLCBhbmQgc28gSQ0KICAgID4gYXNzdW1lIHRoaXMgcGF0Y2ggaXMgbm90IHJlbGV2YW50
-LiBJdCdzIG9ubHkgcmVsYXRlZCB0byBpZiB0aGUgYXJyYXkNCiAgICA+IGlzIGN1cnJlbnRseSBt
-aXNzaW5nIGEgam91cm5hbC4uLg0KICAgID4gVGhlIHNlY29uZCBvcGVyYXRpb25zIGlzIGp1c3Qg
-YSB0eXBvLi4uDQogICAgPg0KICAgID4gSG9wZSB5b3UgZG9uJ3QgbWluZCBteSBqdW1waW5nIGlu
-IGhlcmUsIEkgY2FuJ3QgaGVscCBtdWNoIHdpdGggY29kZSwNCiAgICA+IGJ1dCBob3BlZnVsbHkg
-Y29udHJpYnV0aW9uIGlzIHN0aWxsIGhlbHBmdWwuDQogICAgDQogICAgSWYgU29uZyBpcyBoYXBw
-eSB3aXRoIHRoaXMgYW5kIHlvdSBzZW5kIG1lIGEgcGF0Y2gsIEknbGwgYmUgaGFwcHkgdG8NCiAg
-ICBhcHBseSBpdC4NCiAgICANCiAgICBDaGVlcnMsDQogICAgSmVzDQogICAgDQoNCg==
+This patch series provides a generic device-mapper inplace compression device.
+Originally written by Shaohua Li.
+https://www.redhat.com/archives/dm-devel/2013-December/msg00143.html
+
+I have optimized the code and used it as a compressed swap device supporting
+exterme levels of swap traffic using a NVMe device as a backend.
+
+Comments from Alasdair have been incorporated.
+https://www.redhat.com/archives/dm-devel/2013-December/msg00144.html
+
+Testing:
+
+This patch is tested thoroughly as a swap device on Power machine only.  More
+testing is needed before it can be used as a generic compression device.
+
+Your comments to improve the code is very much appreciated.
+
+Ram Pai (15):
+  DM: Ability to choose the compressor.
+  DM: Error if enough space is not available.
+  DM: Ensure that the read request is within the device range.
+  DM: allocation/free helper routines.
+  DM: separate out compression and decompression routines.
+  DM: Optimize memory allocated to hold compressed buffer.
+  DM: Tag a magicmarker at the end of each compressed segment.
+  DM: Delay allocation of decompression buffer during read.
+  DM: Try to use the bio buffer for decompression instead of allocating
+    one.
+  DM: Try to avoid temporary buffer allocation to hold compressed data.
+  DM: release unneeded buffer as soon as possible.
+  DM: macros to set and get the state of the request.
+  DM: Wasted bio copy.
+  DM: Add sysfs parameters to track total memory saved and allocated.
+  DM: add documentation for dm-inplace-compress.
+
+Shaohua Li (1):
+  DM: dm-inplace-compress: a compressed DM target for SSD
+
+ .../device-mapper/dm-inplace-compress.text         |  138 ++
+ drivers/md/Kconfig                                 |    6 +
+ drivers/md/Makefile                                |    1 +
+ drivers/md/dm-inplace-compress.c                   | 1792 ++++++++++++++++++++
+ drivers/md/dm-inplace-compress.h                   |  162 ++
+ 5 files changed, 2099 insertions(+)
+ create mode 100644 Documentation/device-mapper/dm-inplace-compress.text
+ create mode 100644 drivers/md/dm-inplace-compress.c
+ create mode 100644 drivers/md/dm-inplace-compress.h
+
+-- 
+1.8.3.1
+
