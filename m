@@ -1,71 +1,81 @@
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH] md: don't print the same repeated messages about delayed sync operation
-Date: Tue, 16 Aug 2016 14:26:08 +0200
-Message-ID: <20160816122608.14435-1-artur.paszkiewicz@intel.com>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Subject: Re: read errors with md RAID5 array
+Date: Tue, 16 Aug 2016 14:27:49 +0200
+Message-ID: <20160816122749.konfspsxudorrurk@metamorpher.de>
+References: <78aab29c-9b7b-ff8b-f9c7-fab286f16243@buttersideup.com>
+ <20160815145937.dsjtzpjdnwfpmxyv@metamorpher.de>
+ <d1ccb93d-6856-4b07-04ea-3c4ff9541d60@buttersideup.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <d1ccb93d-6856-4b07-04ea-3c4ff9541d60@buttersideup.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: shli@kernel.org
-Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+To: Tim Small <tim@buttersideup.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-This fixes a long-standing bug that caused a flood of messages like:
-"md: delaying data-check of md1 until md2 has finished (they share one
-or more physical units)"
+On Tue, Aug 16, 2016 at 12:40:45PM +0100, Tim Small wrote:
+> I didn't know about the bad block functionality in md.
 
-It can be reproduced like this:
-1. Create at least 3 raid1 arrays on a pair of disks, each on different
-   partitions.
-2. Request a sync operation like 'check' or 'repair' on 2 arrays by
-   writing to their md/sync_action attribute files. One operation should
-   start and one should be delayed and a message like the above will be
-   printed.
-3. Issue a write to the third array. Each write will cause 2 copies of
-   the message to be printed.
+I don't know how it's supposed to work either. I disable it everywhere.
+(the option was --update=no-bbl but if I remember correctly it will 
+accept that only if the bbl is empty)
 
-This happens when wake_up(&resync_wait) is called, usually by
-md_check_recovery(). Then the delayed sync thread again prints the
-message and is put to sleep. This patch adds a check in md_do_sync() to
-prevent printing this message more than once for the same pair of
-devices.
+I don't want arrays to have bad blocks. I don't want disks with bad blocks 
+to be left in the array. I don't trust disks that develop defects or lose 
+data so the only choice for me is to replace it with a new one.
 
-Reported-by: Sven Koehler <sven.koehler@gmail.com>
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=151801
-Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
----
- drivers/md/md.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+Silently ignoring disk errors, silently fixing errors in the background, 
+keeping bad disks around, in my point of view this will only cause much 
+more trouble later on.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 2c3ab6f..5096b48 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -7862,6 +7862,7 @@ void md_do_sync(struct md_thread *thread)
- 	 */
- 
- 	do {
-+		int mddev2_minor = -1;
- 		mddev->curr_resync = 2;
- 
- 	try_again:
-@@ -7891,10 +7892,14 @@ void md_do_sync(struct md_thread *thread)
- 				prepare_to_wait(&resync_wait, &wq, TASK_INTERRUPTIBLE);
- 				if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
- 				    mddev2->curr_resync >= mddev->curr_resync) {
--					printk(KERN_INFO "md: delaying %s of %s"
--					       " until %s has finished (they"
--					       " share one or more physical units)\n",
--					       desc, mdname(mddev), mdname(mddev2));
-+					if (mddev2_minor != mddev2->md_minor) {
-+						mddev2_minor = mddev2->md_minor;
-+						printk(KERN_INFO "md: delaying %s of %s"
-+						       " until %s has finished (they"
-+						       " share one or more physical units)\n",
-+						       desc, mdname(mddev),
-+						       mdname(mddev2));
-+					}
- 					mddev_put(mddev2);
- 					if (signal_pending(current))
- 						flush_signals(current);
--- 
-2.9.2
+I want to be notified about any and all problems md encounters so I can 
+decide what to do... unfortunately not many people seem to share this 
+view and the "read errors are normal" faction seems to be growing...
 
+Identical bad blocks on multiple devices should be the reason why your 
+md is reporting I/O layers; those blocks are already marked bad by md, 
+it does not even try to read them from the disks.
+
+The last time I encountered these I ended up editing metadata 
+or doing a (dangerous) re-create since I found no other way to 
+get rid of them.
+
+> In the meantime I'm trying to work out what data (if any) is now
+> inaccessible.  This is made slightly more interesting because this array
+> has 'bcache' sitting in front of it, so I might have good data in the
+> cache on the SSD which is marked bad/inaccessible on the raid5 md device.
+
+md won't be able to use that to repair by itself. Does bcache have some 
+recovery mode that makes it dump back everything that is cached to disk? 
+This comes with its own dangers, if the cache is wrong or other bugs...
+
+Usually for such dangerous experiments you would use an overlay 
+https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID#Making_the_harddisks_read-only_using_an_overlay_file
+but I'm not sure how well that plays together with bcache either.
+
+If you want to go with re-create in your case it would be something like
+
+mdadm --create /dev/md42 --assume-clean \
+    --metadata=1.2 --data-offset=128M --level=5 --chunk=512 --layout=ls \
+    --raid-devices=3 /dev/overlay/sd{a,c,d}2
+
+You have to specify all varaibles because mdadm defaults change over time.
+
+Then --stop and --assemble with --update=no-bbl before the horrors repeat...
+
+Mount and verify files for correctness (files larger than disks*chunksize).
+
+Then --add a fourth drive and --replace the one you said has bad sectors 
+according to SMART. Book a flight to Olympics in Rio and win a gold medal 
+in hard disk long-cast throwing.
+
+Once your RAID is running with three drives that are fully operational 
+you can do your RAID6 or whatever.
+
+If you don't have a backup, make one before doing anything else, 
+as long as you still have somewhat access to your stuff.
+
+Regards
+Andreas Klauer
