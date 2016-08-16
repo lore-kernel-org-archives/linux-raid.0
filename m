@@ -1,241 +1,201 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Raid5 reshape stuck at 0% - SuSE leap 42.1
-Date: Tue, 16 Aug 2016 11:57:04 +0100
-Message-ID: <57B2F180.1080804@youngman.org.uk>
-References: <57A69012.1010406@youngman.org.uk>
- <alpine.DEB.2.02.1608071154110.3593@uplift.swm.pp.se>
- <57A719CC.6080301@youngman.org.uk> <57A724ED.5070808@youngman.org.uk>
- <alpine.DEB.2.02.1608071630050.3593@uplift.swm.pp.se>
- <57A766DC.4000207@youngman.org.uk>
- <alpine.DEB.2.02.1608071923410.3593@uplift.swm.pp.se>
- <57A776AE.3050308@youngman.org.uk>
- <alpine.DEB.2.02.1608072002400.3593@uplift.swm.pp.se>
- <57A7869D.2090203@youngman.org.uk>
- <alpine.DEB.2.02.1608081339310.3593@uplift.swm.pp.se>
+From: Tim Small <tim@buttersideup.com>
+Subject: Re: read errors with md RAID5 array
+Date: Tue, 16 Aug 2016 12:40:45 +0100
+Message-ID: <d1ccb93d-6856-4b07-04ea-3c4ff9541d60@buttersideup.com>
+References: <78aab29c-9b7b-ff8b-f9c7-fab286f16243@buttersideup.com>
+ <20160815145937.dsjtzpjdnwfpmxyv@metamorpher.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1608081339310.3593@uplift.swm.pp.se>
+In-Reply-To: <20160815145937.dsjtzpjdnwfpmxyv@metamorpher.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-raid <linux-raid@vger.kernel.org>, NeilBrown <nfbrown@novell.com>
+To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 08/08/16 12:40, Mikael Abrahamsson wrote:
-> On Sun, 7 Aug 2016, Wols Lists wrote:
-> 
->> Note that I think this dmesg stuff overlaps with the last lot, namely
->> the start of this is the tail end of the array starting successfully
->> last time.
-> 
-> It helps if you supply output of /proc/mdstat before each operation, and
-> also adding verbose output to mdadm command.
-> 
-Okay. Just tried to do this - and do Neil's thing where I was trying to
-reduce the number of raid devices ... I now have a wedged 2-device raid
-5 that I can't revert back to raid 1, or set off the required reshape.
-Mikael - your --update=revert-reshape that worked fine last time, now
-refuses to work ... :-( so I can't try Neil's --raid-devices=2 because I
-can't get a clean full-working-order array. (The array is working fine,
-so if it was a real live array I wouldn't be worried about losing
-anything, but a wedged array is a wedged array - not good!)
 
-As before, OS = SuSE Leap 42.1, "mdadm" is what comes with the OS,
-"./mdadm" is Neil's git tree (a week or so old).
+On 15/08/16 15:59, Andreas Klauer wrote:
+> On Mon, Aug 15, 2016 at 02:12:23PM +0100, Tim Small wrote:
+>> > I'm seeing some strange read errors whilst reading from an md RAID5
+>> > array (3x 2TB SATA Drives, Intel AHCI controller).
+> mdadm --examine and --examine-badblocks for all disks/partitions?
+> 
 
-Attached is my xterm trace and the associated output from dmesg.
 
-kanga:/home/anthony/mdadm # mdadm --stop /dev/md127
-mdadm: stopped /dev/md127
-kanga:/home/anthony/mdadm # ./mdadm --assemble /dev/md127 --verbose
---force --update=revert-reshape --invalid-backup
---backup-file=../raidbackup /dev/sdb /dev/sdc /dev/sdd /dev/sde
-mdadm: looking for devices for /dev/md127
-mdadm: No active reshape to revert on /dev/sdb
-kanga:/home/anthony/mdadm # ./mdadm --assemble /dev/md127 --verbose
---force --update=revert-reshape --invalid-backup
---backup-file=../raidbackup /dev/sdc /dev/sdd /dev/sde     mdadm:
-looking for devices for /dev/md127
-mdadm: Merging with already-assembled /dev/md/testarray
-mdadm: No active reshape to revert on /dev/sdb
-kanga:/home/anthony/mdadm # mdadm --assemble --scan
-mdadm: Merging with already-assembled /dev/md/testarray
-mdadm: /dev/md/testarray has been started with 2 drives and 2 spares.
-kanga:/home/anthony/mdadm # mdadm - D /dev/md127
-mdadm: An option must be given to set the mode before a second device
-       (D) is listed
-kanga:/home/anthony/mdadm # mdadm -D /dev/md127
-/dev/md127:
+Hi,
+
+Thanks very much for your suggestions...
+
+
+# for i in a c d ; do mdadm --examine-badblocks  /dev/sd${i}2 ; done
+Bad-blocks on /dev/sda2:
+          2321554488 for 512 sectors
+          2321555000 for 512 sectors
+          2321555512 for 152 sectors
+Bad-blocks on /dev/sdc2:
+             1656848 for 128 sectors
+            28490768 for 512 sectors
+            28491280 for 392 sectors
+            28572344 for 120 sectors
+            32760864 for 128 sectors
+          2321554488 for 512 sectors
+          2321555000 for 512 sectors
+          2321555512 for 152 sectors
+Bad-blocks on /dev/sdd2:
+             1656848 for 128 sectors
+            28490768 for 512 sectors
+            28491280 for 392 sectors
+            28572344 for 120 sectors
+            32760864 for 128 sectors
+          2321554488 for 512 sectors
+          2321555000 for 512 sectors
+          2321555512 for 152 sectors
+
+I didn't know about the bad block functionality in md.  The mdadm manual
+page doesn't say much, so is this the canonical document?
+
+http://neil.brown.name/blog/20100519043730
+
+Until recently, two of the drives (sda, sdc) were running a firmware
+version which (as far as I can work out) made them occasionally lock up
+and disappear from the OS (requiring a power cycle), this firmware has
+now been updated, so hopefully they'll now behave.
+
+Degraded array reporting was also broken on this machine for a couple of
+weeks due to an email misconfiguration (now fixed), so last week I found
+it with sda (ML0220F30ZE35D) apparently missing from the machine, and
+also with pending sectors on sdb (ML0220F31085KD).  The array rebuilt
+quite quickly from the bitmap, and then I turned to trying to resolve
+the pending sectors...
+
+When the 'check' action didn't force the reallocations, I ran a 'repair'
+action instead (thinking that perhaps the check wasn't attempting the
+read+recontruct+write for some reason, however I now assume that this
+was the wrong thing to do in the light of the bad block list entries).
+
+I'm not really sure from the blog post, under what circumstances a bad
+block entry would end up being written to multiple devices in the array,
+and under what circumstances it might be written to all devices in an
+array?  There are no entries on these array members which appear on only
+one array member, and some are present on all three drives - which seems
+strange to me.
+
+I suppose a combination of the "Firstly" and "Secondly" paragraphs would
+result in the same block being marked as bad on two devices.
+
+Will the detection of an inconsistency (e.g. via a check) mark the
+stripe which was impacted as bad on all active array members?
+
+FWIW, what I'd like to do in the future with this array, is to reshape
+it into a 4 drive RAID6, and then grow it to a 5 drive RAID6, and
+possibly replace one or both of sda (ML0220F30ZE35D) and sdc
+(ML0220F31085KD).  However I'd like to try and do this without losing
+any data which is currently on the array but marked as inaccessible.
+I'd also like to avoid losing the entire array, if the reshape fails
+when the array is in this state with unreadable portions.
+
+In the meantime I'm trying to work out what data (if any) is now
+inaccessible.  This is made slightly more interesting because this array
+has 'bcache' sitting in front of it, so I might have good data in the
+cache on the SSD which is marked bad/inaccessible on the raid5 md device.
+
+Tim.
+
+
+# for i in a c d ; do mdadm --examine  /dev/sd${i}2 ; done
+
+
+/dev/sda2:
+          Magic : a92b4efc
         Version : 1.2
-  Creation Time : Fri Aug  5 18:16:24 2016
+    Feature Map : 0x9
+     Array UUID : ad7ef7fa:e78344ea:a8778f06:abf07bf5
+           Name : magic:2  (local to host magic)
+  Creation Time : Wed Jul 15 14:43:06 2015
      Raid Level : raid5
-     Array Size : 8380416 (7.99 GiB 8.58 GB)
-  Used Dev Size : 8380416 (7.99 GiB 8.58 GB)
-   Raid Devices : 2
-  Total Devices : 4
-    Persistence : Superblock is persistent
+   Raid Devices : 3
 
-    Update Time : Tue Aug 16 11:32:52 2016
+ Avail Dev Size : 3885793456 (1852.89 GiB 1989.53 GB)
+     Array Size : 3885793280 (3705.78 GiB 3979.05 GB)
+  Used Dev Size : 3885793280 (1852.89 GiB 1989.53 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=262056 sectors, after=176 sectors
           State : clean
- Active Devices : 2
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 2
+    Device UUID : fcc77733:e7e3582c:e8bff1ce:dd8d5232
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Tue Aug 16 09:05:35 2016
+  Bad Block Log : 512 entries available at offset 72 sectors - bad
+blocks present.
+       Checksum : d18d7379 - correct
+         Events : 520706
 
          Layout : left-symmetric
-     Chunk Size : 64K
+     Chunk Size : 512K
 
-           Name : kanga:testarray  (local to host kanga)
-           UUID : cf52ebc0:886a35cd:688274b4:3f16096c
-         Events : 160
+   Device Role : Active device 0
+   Array State : AAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdc2:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x9
+     Array UUID : ad7ef7fa:e78344ea:a8778f06:abf07bf5
+           Name : magic:2  (local to host magic)
+  Creation Time : Wed Jul 15 14:43:06 2015
+     Raid Level : raid5
+   Raid Devices : 3
 
-    Number   Major   Minor   RaidDevice State
-       4       8       16        0      active sync   /dev/sdb
-       1       8       32        1      active sync   /dev/sdc
+ Avail Dev Size : 3885793456 (1852.89 GiB 1989.53 GB)
+     Array Size : 3885793280 (3705.78 GiB 3979.05 GB)
+  Used Dev Size : 3885793280 (1852.89 GiB 1989.53 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=262056 sectors, after=176 sectors
+          State : clean
+    Device UUID : 55004cc7:b2e691de:c612612a:675ea2f3
 
-       2       8       48        -      spare   /dev/sdd
-       3       8       64        -      spare   /dev/sde
-kanga:/home/anthony/mdadm # mdadm --grow /dev/md127 --continue
-kanga:/home/anthony/mdadm # cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-md127 : active raid5 sdd[2](S) sde[3](S) sdc[1] sdb[4]
-      8380416 blocks super 1.2 level 5, 64k chunk, algorithm 2 [2/2] [UU]
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Tue Aug 16 09:05:35 2016
+  Bad Block Log : 512 entries available at offset 72 sectors - bad
+blocks present.
+       Checksum : 345a1f90 - correct
+         Events : 520706
 
-unused devices: <none>
-kanga:/home/anthony/mdadm # mdadm --stop /dev/md127
-mdadm: stopped /dev/md127
-kanga:/home/anthony/mdadm # ./mdadm --assemble /dev/md127 --verbose
---force --update=revert-reshape --invalid-backup
---backup-file=../raidbackup /dev/sdb /dev/sdc /dev/sdd /dev/sde
-mdadm: looking for devices for /dev/md127
-mdadm: No active reshape to revert on /dev/sdb
-kanga:/home/anthony/mdadm # ./mdadm --grow /dev/md127 --continue
-mdadm: /dev/md127 is not an active md array - aborting
-kanga:/home/anthony/mdadm # ./mdadm --assemble --scan
-mdadm: Merging with already-assembled /dev/md/testarray
-mdadm: /dev/md/testarray has been started with 2 drives and 2 spares.
-kanga:/home/anthony/mdadm # ./mdadm --grow /dev/md127 --continue
-kanga:/home/anthony/mdadm # cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-md127 : active raid5 sdd[2](S) sde[3](S) sdc[1] sdb[4]
-      8380416 blocks super 1.2 level 5, 64k chunk, algorithm 2 [2/2] [UU]
+         Layout : left-symmetric
+     Chunk Size : 512K
 
-unused devices: <none>
-kanga:/home/anthony/mdadm # ps -fea | grep mdadm
-root      1484  1855  0 11:42 pts/0    00:00:00 grep --color=auto mdadm
-root      3586     1  0 09:53 ?        00:00:00 /sbin/mdadm --monitor -d
-60 -m root@localhost --scan -c /etc/mdadm.conf
-kanga:/home/anthony/mdadm #
+   Device Role : Active device 1
+   Array State : AAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdd2:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x9
+     Array UUID : ad7ef7fa:e78344ea:a8778f06:abf07bf5
+           Name : magic:2  (local to host magic)
+  Creation Time : Wed Jul 15 14:43:06 2015
+     Raid Level : raid5
+   Raid Devices : 3
 
+ Avail Dev Size : 3885793456 (1852.89 GiB 1989.53 GB)
+     Array Size : 3885793280 (3705.78 GiB 3979.05 GB)
+  Used Dev Size : 3885793280 (1852.89 GiB 1989.53 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=262056 sectors, after=176 sectors
+          State : clean
+    Device UUID : 9abd8f30:29cb5ff5:2742646f:df56aa87
 
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Tue Aug 16 09:05:35 2016
+  Bad Block Log : 512 entries available at offset 72 sectors - bad
+blocks present.
+       Checksum : 8d769b9e - correct
+         Events : 520706
 
+         Layout : left-symmetric
+     Chunk Size : 512K
 
-00:00:00.000257 main     Log opened 2016-08-07T18:07:43.777555000Z
-[22244.641971] 00:00:00.000481 main     OS Product: Linux
-[22244.642016] 00:00:00.000526 main     OS Release: 4.1.15-8-default
-[22244.642056] 00:00:00.000564 main     OS Version: #1 SMP PREEMPT Wed
-Jan 20 16:41:00 UTC 2016 (0e3b3ab)
-[22244.642206] 00:00:00.000604 main     Executable: /usr/sbin/VBoxService
-00:00:00.000605 main     Process ID: 12443
-00:00:00.000606 main     Package type: LINUX_64BITS_GENERIC (OSE)
-[22244.643245] 00:00:00.001736 main     5.0.24_SUSE r108355 started.
-Verbose level = 0
-[22567.452608] SFW2-INext-DROP-DEFLT IN=eth0 OUT=
-MAC=08:00:27:0b:0f:57:52:54:00:12:35:02:08:00 SRC=10.0.2.2 DST=10.0.2.15
-LEN=576 TOS=0x10 PREC=0x00 TTL=64 ID=2252 PROTO=UDP SPT=67 DPT=68 LEN=556
-[25196.727211] RAID conf printout:
-[25196.727217]  --- level:5 rd:2 wd:2
-[25196.727238]  disk 0, o:1, dev:sdb
-[25196.727240]  disk 1, o:1, dev:sdc
-[25196.727246] RAID conf printout:
-[25196.727248]  --- level:5 rd:2 wd:2
-[25196.727250]  disk 0, o:1, dev:sdb
-[25196.727251]  disk 1, o:1, dev:sdc
-[27195.944364] usb 2-1: USB disconnect, device number 2
-[27196.148347] e1000: eth0 NIC Link is Down
-[27196.572099] usb 2-1: new full-speed USB device number 3 using ohci-pci
-[27196.832714] usb 2-1: New USB device found, idVendor=80ee, idProduct=0021
-[27196.832721] usb 2-1: New USB device strings: Mfr=1, Product=3,
-SerialNumber=0
-[27196.832723] usb 2-1: Product: USB Tablet
-[27196.832725] usb 2-1: Manufacturer: VirtualBox
-[27196.841815] input: VirtualBox USB Tablet as
-/devices/pci0000:00/0000:00:06.0/usb2/2-1/2-1:1.0/0003:80EE:0021.0002/input/input9
-[27196.842185] hid-generic 0003:80EE:0021.0002: input,hidraw0: USB HID
-v1.10 Mouse [VirtualBox USB Tablet] on usb-0000:00:06.0-1/input0
-[27202.148448] e1000: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow
-Control: RX
-[27202.152800] SFW2-INext-DROP-DEFLT IN=eth0 OUT=
-MAC=08:00:27:0b:0f:57:52:54:00:12:35:02:08:00 SRC=10.0.2.2 DST=10.0.2.15
-LEN=576 TOS=0x10 PREC=0x00 TTL=64 ID=0 PROTO=UDP SPT=67 DPT=68 LEN=556
-[27265.599076] BTRFS info (device sda2): relocating block group
-16202596352 flags 36
-[27266.319748] BTRFS info (device sda2): relocating block group
-12410945536 flags 34
-[27266.439613] BTRFS info (device sda2): relocating block group
-16202596352 flags 34
-[27266.542733] BTRFS info (device sda2): relocating block group
-16236150784 flags 34
-[27266.649202] BTRFS info (device sda2): relocating block group
-16269705216 flags 34
-[27266.757287] BTRFS info (device sda2): relocating block group
-12444499968 flags 36
-[27271.176254] BTRFS info (device sda2): found 1011 extents
-[27271.426455] BTRFS info (device sda2): relocating block group
-16303259648 flags 34
-[27271.707481] BTRFS info (device sda2): relocating block group
-14994636800 flags 36
-[27277.442719] BTRFS info (device sda2): found 2417 extents
-[27277.862520] BTRFS info (device sda2): relocating block group
-13652459520 flags 36
-[27283.603832] BTRFS info (device sda2): found 1696 extents
-[27366.620131] md127: detected capacity change from 8581545984 to 0
-[27366.620131] md: md127 stopped.
-[27366.620131] md: unbind<sdb>
-[27366.624318] md: export_rdev(sdb)
-[27366.624318] md: unbind<sdd>
-[27366.632107] md: export_rdev(sdd)
-[27366.632137] md: unbind<sde>
-[27366.640248] md: export_rdev(sde)
-[27366.640248] md: unbind<sdc>
-[27366.644324] md: export_rdev(sdc)
-[27373.643627] md: md127 stopped.
-[27373.775068] md: bind<sdb>
-[27437.466705] md: array md127 already has disks!
-[27437.467188] md: bind<sdc>
-[27437.467593] md: bind<sde>
-[27437.467976] md: bind<sdd>
-[27437.509156] md/raid:md127: device sdc operational as raid disk 1
-[27437.509161] md/raid:md127: device sdb operational as raid disk 0
-[27437.509679] md/raid:md127: allocated 2250kB
-[27437.520845] md/raid:md127: raid level 5 active with 2 out of 2
-devices, algorithm 2
-[27437.520850] RAID conf printout:
-[27437.520852]  --- level:5 rd:2 wd:2
-[27437.520854]  disk 0, o:1, dev:sdb
-[27437.520856]  disk 1, o:1, dev:sdc
-[27437.521657] md127: detected capacity change from 0 to 8581545984
-[27437.523369] RAID conf printout:
-[27437.523378]  --- level:5 rd:2 wd:2
-[27437.523380]  disk 0, o:1, dev:sdb
-[27437.523382]  disk 1, o:1, dev:sdc
-[27437.523383] RAID conf printout:
-[27437.523384]  --- level:5 rd:2 wd:2
-[27437.523384]  disk 0, o:1, dev:sdb
-[27437.523385]  disk 1, o:1, dev:sdc
-[27587.102558] md127: detected capacity change from 8581545984 to 0
-[27587.102569] md: md127 stopped.
-[27587.102575] md: unbind<sdd>
-[27587.108084] md: export_rdev(sdd)
-[27587.108132] md: unbind<sde>
-[27587.120239] md: export_rdev(sde)
-[27587.120239] md: unbind<sdc>
-[27587.128050] md: export_rdev(sdc)
-[27587.128069] md: unbind<sdb>
-[27587.132042] md: export_rdev(sdb)
-[27603.862527] md: md127 stopped.
-[27603.963036] md: bind<sdb>
-anthony@kanga:/mnt/anthony>
-
-
+   Device Role : Active device 2
+   Array State : AAA ('A' == active, '.' == missing, 'R' == replacing)
