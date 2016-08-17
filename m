@@ -1,62 +1,63 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: How to get md to attempt to scrub blocks in its bad blocks list
-Date: Thu, 18 Aug 2016 02:05:44 +1000
-Message-ID: <7a7286bb-dc33-3431-8e7a-90a434973239@websitemanagers.com.au>
-References: <b6c01e91-9786-9705-a452-253794f65bc6@buttersideup.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH] raid10: record correct address of bad block
+Date: Wed, 17 Aug 2016 09:52:54 -0700
+Message-ID: <20160817165254.GA35041@kernel.org>
+References: <1470992633-8903-1-git-send-email-tomasz.majchrzak@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <b6c01e91-9786-9705-a452-253794f65bc6@buttersideup.com>
+Content-Disposition: inline
+In-Reply-To: <1470992633-8903-1-git-send-email-tomasz.majchrzak@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tim Small <tim@buttersideup.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Cc: linux-raid@vger.kernel.org, aleksey.obitotskiy@intel.com, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com
 List-Id: linux-raid.ids
 
+On Fri, Aug 12, 2016 at 11:03:53AM +0200, Tomasz Majchrzak wrote:
+> For failed write request record block address on a device, not block
+> address in an array.
+> 
+> Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+> ---
+>  drivers/md/raid10.c | 9 +++++----
+>  1 file changed, 5 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index cfa96b5..d18b26d 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -2449,6 +2449,7 @@ static int narrow_write_error(struct r10bio *r10_bio, int i)
+>  
+>  	int block_sectors;
+>  	sector_t sector;
+> +	sector_t data_offset;
+>  	int sectors;
+>  	int sect_to_write = r10_bio->sectors;
+>  	int ok = 1;
+> @@ -2462,6 +2463,7 @@ static int narrow_write_error(struct r10bio *r10_bio, int i)
+>  	sectors = ((r10_bio->sector + block_sectors)
+>  		   & ~(sector_t)(block_sectors - 1))
+>  		- sector;
+> +	data_offset = choose_data_offset(r10_bio, rdev);
+>  
+>  	while (sect_to_write) {
+>  		struct bio *wbio;
+> @@ -2471,13 +2473,12 @@ static int narrow_write_error(struct r10bio *r10_bio, int i)
+>  		wbio = bio_clone_mddev(bio, GFP_NOIO, mddev);
+>  		bio_trim(wbio, sector - bio->bi_iter.bi_sector, sectors);
+>  		wbio->bi_iter.bi_sector = (r10_bio->devs[i].addr+
+> -				   choose_data_offset(r10_bio, rdev) +
+> -				   (sector - r10_bio->sector));
+> +				   data_offset + (sector - r10_bio->sector));
+>  		wbio->bi_bdev = rdev->bdev;
+>  		if (submit_bio_wait(WRITE, wbio) < 0)
+>  			/* Failure! */
+> -			ok = rdev_set_badblocks(rdev, sector,
+> -						sectors, 0)
+> +			ok = rdev_set_badblocks(rdev, wbio->bi_iter.bi_sector -
+> +						data_offset, sectors, 0)
 
+bi_iter is immutable after submit_bio, so please not use it
 
-On 18/08/2016 00:59, Tim Small wrote:
-> Hello,
->
-> I have had a look around at the other md arrays I manage following the
-> problems I've recently written about...
->
-> I have a machine with a single local SATA disk (an old laptop which only
-> has capacity for a single disk, and is used for backups), and a remote
-> iSCSI disk.  Both devices are members of a RAID1, with the remote drive
-> having the write-mostly flag set.
->
-> The iSCSI device had a write error during a resync, due to a transient
-> memory allocation failure on the remote machine.
->
-> I've cleared the write_error and want_replacement flags for the device
-> according to the kernel md docs, but can't see how to provoke md into
-> attempting to scrub the bad blocks?
->
-> Also in general, are there any mechanisms to get md to retry for longer?
->   I've done this so-far:
->
-> ISCSIDISK=$(basename `readlink
-> /dev/disk/by-id/wwn-0x60014059ba55d40d7fc416d928211f5b`)
-> echo 600 > /sys/block/${ISCSIDISK}/device/timeout
->
-> in an attempt to work-around transient write errors due to memory
-> allocation failures, target machine reboots, network errors etc.
->
-> Should I be doing anything else (e.g. can I configure retries for failed
-> writes)?
->
-In the past I've done this with NBD and eNBD (Network Block Device and 
-Enhanced...), both worked really well. Any remote error/problem meant 
-that the remote disk was failed, and fixing the remote issue, and then 
-re-add to the array, (with the bitmap enabled) meant a quick resync.
-
-More recently, I use DRBD for the same thing, it seems to be a lot more 
-reliable, automatic, etc (8.4.x version, the 9.0.x versions is still a 
-bit experimental in my experience).
-
-So, I can't directly answer your questions, other than to suggest you 
-consider looking at other technologies that are more directly designed 
-to do that.
-
-Regards,
-Adam
+Thanks,
+Shaohua
