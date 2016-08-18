@@ -1,60 +1,49 @@
-From: Zhengyuan Liu <liuzhengyuang521@gmail.com>
-Subject: raid6 algorithm issues with 64K page_size
-Date: Thu, 18 Aug 2016 16:06:49 +0800
-Message-ID: <CAOOPZo6WJgMu-UoVrMfOfZWOABLNzDoYj-eEdiuSRk06Yxfeqg@mail.gmail.com>
+From: Yi Zhang <yizhan@redhat.com>
+Subject: OOM/panic observed durintg creating RAID4 with DIF/DIX enabled disk
+Date: Thu, 18 Aug 2016 05:44:02 -0400 (EDT)
+Message-ID: <2137210845.2497446.1471513442879.JavaMail.zimbra@redhat.com>
+References: <2062708428.2492143.1471511559011.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
-Cc: Shaohua Li <shli@kernel.org>, linux-kernel@vger.kernel.org, ravi.v.shankar@intel.com, Gayatri Kammela <gayatri.kammela@intel.com>, "H . Peter Anvin" <hpa@zytor.com>, Jim Kukunas <james.t.kukunas@linux.intel.com>, Fenghua Yu <fenghua.yu@intel.com>, Megha Dey <megha.dey@linux.intel.com>, =?UTF-8?B?5YiY5LqR?= <liuyun01@kylinos.cn>, =?UTF-8?B?6IOh5rW3?= <huhai@kylinos.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <2062708428.2492143.1471511559011.JavaMail.zimbra@redhat.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: shli@fb.com, jmoyer@redhat.com, Jes Sorensen <jes.sorensen@redhat.com>, Xiao Ni <xni@redhat.com>
 List-Id: linux-raid.ids
 
-G' day all,
+hello 
 
-The kernel would try to pick the best algorithm for raid6 to compute two
-syndromes, generally referred to P and Q  at boot time. Part of the algorithm
-code was showed bellow from lib/raid6/algos.c:
+I observed OOM/panic during create RAID4 with DIF/DIX enabled disk, here I used scsi-debug to created the DIF/DIX disk.
 
-   int __init raid6_select_algo(void)
-   {
-        const int disks = (65536/PAGE_SIZE)+2;
+Full log:
+http://pastebin.com/uP3rJcHX
 
-        const struct raid6_calls *gen_best;
-        const struct raid6_recov_calls *rec_best;
-        char *syndromes;
-        void *dptrs[(65536/PAGE_SIZE)+2];
-        int i;
+Environment:
+4.8.0-rc2
+32Gb phycial memory
 
-        for (i = 0; i < disks-2; i++)
-                dptrs[i] = ((char *)raid6_gfmul) + PAGE_SIZE*i;
+Reproduced at Iteration:19
 
-        /* Normal code - use a 2-page allocation to avoid D$ conflict */
-        syndromes = (void *) __get_free_pages(GFP_KERNEL, 1);
+Reproduce steps:
 
-        if (!syndromes) {
-                pr_err("raid6: Yikes!  No memory available.\n");
-                return -ENOMEM;
-        }
+#!/bin/bash
+modprobe scsi_debug dev_size_mb=16384  num_parts=4 dif=1 dix=1
+sleep 5
+num=0
+while [ $num -lt 100 ]; do
+	echo "********************Iteration:$num****************"
+	mdadm --create --run /dev/md0 --level 4 --metadata 1.2 --raid-devices 4  /dev/sdc[1-4]  --bitmap=internal --bitmap-chunk=64M --chunk 512
+	mdadm --wait /dev/md0
+	cat /proc/mdstat
+	mdadm -Ss
+	mdadm --zero-superblock /dev/sdc[1-4]
+	sleep 1
+       ((num++))
+done
 
-        dptrs[disks-2] = syndromes;
-        dptrs[disks-1] = syndromes + PAGE_SIZE;
+Best Regards,
+  Yi Zhang
 
-        /* select raid gen_syndrome function */
-        gen_best = raid6_choose_gen(&dptrs, disks);
 
-        /* select raid recover functions */
-        rec_best = raid6_choose_recov()
-
-The data set to use for computing syndromes  is gfmul table, it was defined as
-"u8 raid6_gfmul[256][256]" and size to be 65536 Bytes or 64KB . From
-the code we can see it use gfmul table size and PAGE_SIZE to determine
-the disk number.  If the PAGE_SIZE is 4K, then the number of disks got
-to be 18 and 10 for 8K, 3 for 64K. As we all know, raid6 needs at
-least 4 disks.
-
-Could we just define a constantly macro for disks as the test program does in
-lib/raid6/test/test.c, not depend on page size  and not use gfmul
-table as the data source of disks?
-
-Move further, bigger page size like 128K would encounter the same problem.
