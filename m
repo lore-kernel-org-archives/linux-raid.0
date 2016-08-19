@@ -1,27 +1,64 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: URE, link resets, user hostile defaults
-Date: Fri, 19 Aug 2016 08:36:01 -0400
-Message-ID: <282d39e3-8c7c-b871-0be8-9acd63d3a52c@turmel.org>
-References: <CAJCQCtT1qi1yLjE3Lor3ScVJx7aX4A_S_iM_=VhDtDCD_C9uqw@mail.gmail.com>
- <57721A47.8070203@suse.de>
- <CAJCQCtQ=DXWg6qK1+9bwQxrzpKUsRvaiaAnatYR-dupg7JOVzQ@mail.gmail.com>
- <20160629121751.GT15597@hungrycats.org> <20160704214304.GZ13212@reaktio.net>
- <20160819100010.GA5195@reaktio.net>
+From: Chris Dunlop <chris@onthe.net.au>
+Subject: Re: Rewrite md raid1 member
+Date: Fri, 19 Aug 2016 22:46:15 +1000
+Message-ID: <20160819124615.GA23247@onthe.net.au>
+References: <20160818030451.GA17225@onthe.net.au>
+ <2dca8e1f-8e80-408f-900e-36f9b1dd6f95@fnarfbargle.com>
+ <20160818040151.GA21256@onthe.net.au>
+ <57B6F2F5.8090800@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160819100010.GA5195@reaktio.net>
+Content-Disposition: inline
+In-Reply-To: <57B6F2F5.8090800@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?UGFzaSBLw6Rya2vDpGluZW4=?= <pasik@iki.fi>, Zygo Blaxell <u0oo5pgu@umail.furryterror.org>
-Cc: Chris Murphy <lists@colorremedies.com>, Hannes Reinecke <hare@suse.de>, linux-raid@vger.kernel.org
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: Brad Campbell <lists2009@fnarfbargle.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 08/19/2016 06:00 AM, Pasi Kärkkäinen wrote:
+On Fri, Aug 19, 2016 at 12:52:21PM +0100, Wols Lists wrote:
+> On 18/08/16 05:01, Chris Dunlop wrote:
+>> I'm interested to see if there's a way of essentially doing the above on a
+>> live system, assuming there's appropriate care taken to not trash any
+>> existing data (including superblocks).
+>> 
+>> I.e. is it *theoretically* possible to write the same data back to the whole
+>> disk safely. E.g. using 'dd' from/to the same disk is almost there, but, as
+>> described, there's a window of opportunity where you could get stale data on
+>> the disk and a raid repair could then copy that stale data to the good disk.
 > 
-> ping
-> 
-> Let's not forget this thread :)
+> There is something called "scrub". My superficial knowledge of raid
+> doesn't let me know what it is, but as far as I can make out it forces a
+> whole-disk-write or somesuch. Explicitly to flush out such problems. If
+> someone else can tell you how to scrub your disks, I'd try that.
 
-Not forgotten.  Just busy working to the pay the bills... :-(
+A scrub will read the RAID members to check that both sides match (raid 1,
+10), or that the checksum is correct (raid 4,5,6).
 
+To initiate a scrub of md0:
+
+echo repair > /sys/block/md0/md/sync_action
+
+You can watch it using /proc/mdstat, e.g.:
+
+watch cat /proc/mdstat
+
+It won't write anything if it doesn't detect any errors.
+
+In my case, I want it to write everything.
+
+If I do my 'dd' to write everything as previously described, with the window
+of opportunity for stale data to end up on the written disk, one option
+would to run a scrub / repair to check the data is the same - but if I'm
+unlucky with my dd and the data isn't the same for some sector[s], I want to
+ensure the correct data is copied over the stale data and not the other way
+around, e.g. to specify "in the event of a mismatch, use the data from sda
+and overwrite the data on sdb".
+
+Unfortunately I don't know how that can be done.
+
+Does anyone know?
+
+Cheers,
+
+Chris
