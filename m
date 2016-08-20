@@ -1,49 +1,43 @@
 From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Assistance Reviewing Proposed Recovery Measures
-Date: Sat, 20 Aug 2016 11:16:39 +0100
-Message-ID: <57B82E07.4080109@youngman.org.uk>
-References: <alpine.LRH.2.11.1608191717050.23388@bluenose.cs.dal.ca>
+Subject: Re: Rewrite md raid1 member
+Date: Sat, 20 Aug 2016 11:44:32 +0100
+Message-ID: <57B83490.2040704@youngman.org.uk>
+References: <20160818030451.GA17225@onthe.net.au>
+ <2dca8e1f-8e80-408f-900e-36f9b1dd6f95@fnarfbargle.com>
+ <20160818040151.GA21256@onthe.net.au> <57B6F2F5.8090800@youngman.org.uk>
+ <20160819124615.GA23247@onthe.net.au>
+ <CAJCQCtQs+z6rso4pc7CgRSia4tM5KK=T8ckh93X9HiDHytkcrw@mail.gmail.com>
+ <20160820014336.GA30642@onthe.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.LRH.2.11.1608191717050.23388@bluenose.cs.dal.ca>
+In-Reply-To: <20160820014336.GA30642@onthe.net.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Maxwell <cmaxwell@dal.ca>, linux-raid@vger.kernel.org
+To: Chris Dunlop <chris@onthe.net.au>, Chris Murphy <lists@colorremedies.com>
+Cc: Brad Campbell <lists2009@fnarfbargle.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 19/08/16 21:18, Chris Maxwell wrote:
-> However, the it also says
-> 
->> Recreating should be considered a *last* resort, only to be used when
->> everything else fails. People getting this wrong is one of the primary
->> reasons people lose data. It is very commonly used way too early in
->> the fault finding process. You have been warned! It's better to send
->> an email to the linux-raid mailing list with detailed information
->> (mdadm --examine from all component drives plus log entries from when
->> the failure happened, including mdadm and kernel version) and ask for
->> advice than to try to use --create --assume-clean and getting it wrong.
-> 
-> 
-> 
-> So before I messed things up even worse, I figured I would consult the
-> experts to see what my next step should be.
-> 
-Download Phil Turmel's lsdrv. It should be easy to find with google. If
-your default Python is 3, just edit the shebang line to make it run.
+On 20/08/16 02:43, Chris Dunlop wrote:
+> Then again, I guess in the end what I'd really like is to be able to
+> flag a particular disk to md for "write repair", and tell md to repair.
+> Then md would read data from unflagged disks to write to the flagged
+> disk (that could work for parity raids as well as mirrors).
 
-SAVE THE HARD COPY IN A SAFE PLACE!!!
+I had that idea. I'm probably better at understanding and documenting
+things, hence my interest in the raid wiki, but I'm looking at this
+exact thing as a project for my first foray into kernel programming. Is
+that wise? :-)
 
-If anything does go wrong (Sarah's comments about wiping superblocks etc
-etc unnerve me) this *should* have all the information you need to
-recreate the drives and recover what's recoverable.
+Basically, do a stripe integrity check, and optionally rewrite it? I
+don't to what extent linux raid actually implements a lot of interesting
+theoretical abilities, and if I can document it, I can then identify
+holes and try and fill them. Especially when you're trying to recover a
+broken array, the more options you have, the better ...
 
-(Oh - and the linux raid wiki is a bit of a cobweb site at the moment
-:-( so take anything on it with a pinch of salt - it could well be out
-of date.)
-
-Also download the latest mdadm from Neil Brown's site. Most distros are
-a bit out of date, and the bug fixes might matter.
+Unfortunately the raid wiki admin is MIA at the moment, and I really
+want to hack that as a learning exercise before I start messing about
+with kernel code.
 
 Cheers,
 Wol
