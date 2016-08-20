@@ -1,185 +1,52 @@
-From: Robert LeBlanc <robert@leblancnet.us>
-Subject: [RFC] Some fixes to allow for more than 128 md devices.
-Date: Fri, 19 Aug 2016 20:10:31 -0600
-Message-ID: <1471659031-30688-2-git-send-email-robert@leblancnet.us>
-References: <1471659031-30688-1-git-send-email-robert@leblancnet.us>
+From: Sarah Newman <srn@prgmr.com>
+Subject: Re: Assistance Reviewing Proposed Recovery Measures
+Date: Fri, 19 Aug 2016 19:48:15 -0700
+Message-ID: <ab06c6a7-f1ac-3775-d415-bbd08fd6e4ec@prgmr.com>
+References: <alpine.LRH.2.11.1608191717050.23388@bluenose.cs.dal.ca>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1471659031-30688-1-git-send-email-robert@leblancnet.us>
+In-Reply-To: <alpine.LRH.2.11.1608191717050.23388@bluenose.cs.dal.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: dm-devel@redhat.com, robert@leblancnet.us
+To: Chris Maxwell <cmaxwell@dal.ca>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
----
- Manage.c |  5 +++--
- lib.c    |  2 +-
- mdadm.h  |  6 +++---
- util.c   | 25 +++++++++++++------------
- 4 files changed, 20 insertions(+), 18 deletions(-)
+On 08/19/2016 01:18 PM, Chris Maxwell wrote:
+<snip>
 
-diff --git a/Manage.c b/Manage.c
-index 30adc99..51d0eae 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -1380,7 +1380,8 @@ int Manage_subdevs(char *devname, int fd,
- 	for (dv = devlist; dv; dv = dv->next) {
- 		unsigned long rdev = 0; /* device to add/remove etc */
- 		int rv;
--		int mj,mn;
-+		int mj;
-+		unsigned long mn;
- 
- 		raid_slot = -1;
- 		if (dv->disposition == 'c') {
-@@ -1486,7 +1487,7 @@ int Manage_subdevs(char *devname, int fd,
- 			if (sysfd >= 0) {
- 				char dn[20];
- 				if (sysfs_fd_get_str(sysfd, dn, 20) > 0 &&
--				    sscanf(dn, "%d:%d", &mj,&mn) == 2) {
-+				    sscanf(dn, "%d:%lu", &mj,&mn) == 2) {
- 					rdev = makedev(mj,mn);
- 					found = 1;
- 				}
-diff --git a/lib.c b/lib.c
-index 621edf3..e0df6fd 100644
---- a/lib.c
-+++ b/lib.c
-@@ -99,7 +99,7 @@ char *fd2kname(int fd)
- 	return NULL;
- }
- 
--char *devid2devnm(int devid)
-+char *devid2devnm(unsigned long devid)
- {
- 	char path[30];
- 	char link[200];
-diff --git a/mdadm.h b/mdadm.h
-index d209488..7de6589 100755
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -1348,7 +1348,7 @@ extern int check_partitions(int fd, char *dname,
- 			    unsigned long long size);
- 
- extern int get_mdp_major(void);
--extern int get_maj_min(char *dev, int *major, int *minor);
-+extern int get_maj_min(char *dev, int *major, unsigned long *minor);
- extern int dev_open(char *dev, int flags);
- extern int open_dev(char *devnm);
- extern void reopen_mddev(int mdfd);
-@@ -1438,8 +1438,8 @@ extern char *find_free_devnm(int use_partitions);
- 
- extern void put_md_name(char *name);
- extern char *devid2kname(int devid);
--extern char *devid2devnm(int devid);
--extern int devnm2devid(char *devnm);
-+extern char *devid2devnm(unsigned long devid);
-+extern unsigned long devnm2devid(char *devnm);
- extern char *get_md_name(char *devnm);
- 
- extern char DefaultConfFile[];
-diff --git a/util.c b/util.c
-index 2bcb81f..939cf52 100644
---- a/util.c
-+++ b/util.c
-@@ -928,7 +928,7 @@ int get_data_disks(int level, int layout, int raid_disks)
- 	return data_disks;
- }
- 
--int devnm2devid(char *devnm)
-+unsigned long devnm2devid(char *devnm)
- {
- 	/* First look in /sys/block/$DEVNM/dev for %d:%d
- 	 * If that fails, try parsing out a number
-@@ -936,7 +936,8 @@ int devnm2devid(char *devnm)
- 	char path[100];
- 	char *ep;
- 	int fd;
--	int mjr,mnr;
-+	int mjr;
-+	unsigned long mnr;
- 
- 	sprintf(path, "/sys/block/%s/dev", devnm);
- 	fd = open(path, O_RDONLY);
-@@ -946,18 +947,18 @@ int devnm2devid(char *devnm)
- 		close(fd);
- 		if (n > 0)
- 			buf[n] = 0;
--		if (n > 0 && sscanf(buf, "%d:%d\n", &mjr, &mnr) == 2)
-+		if (n > 0 && sscanf(buf, "%d:%lu\n", &mjr, &mnr) == 2)
- 			return makedev(mjr, mnr);
- 	}
- 	if (strncmp(devnm, "md_d", 4) == 0 &&
- 	    isdigit(devnm[4]) &&
--	    (mnr = strtoul(devnm+4, &ep, 10)) >= 0 &&
-+	    (mnr = strtoul(devnm+4, &ep, 10)) &&
- 	    ep > devnm && *ep == 0)
- 		return makedev(get_mdp_major(), mnr << MdpMinorShift);
- 
- 	if (strncmp(devnm, "md", 2) == 0 &&
- 	    isdigit(devnm[2]) &&
--	    (mnr = strtoul(devnm+2, &ep, 10)) >= 0 &&
-+	    (mnr = strtoul(devnm+2, &ep, 10)) &&
- 	    ep > devnm && *ep == 0)
- 		return makedev(MD_MAJOR, mnr);
- 
-@@ -1020,12 +1021,12 @@ void put_md_name(char *name)
- }
- #endif /* !defined(MDASSEMBLE) || defined(MDASSEMBLE) && defined(MDASSEMBLE_AUTO) */
- 
--int get_maj_min(char *dev, int *major, int *minor)
-+int get_maj_min(char *dev, int *major, unsigned long *minor)
- {
- 	char *e;
- 	*major = strtoul(dev, &e, 0);
- 	return (e > dev && *e == ':' && e[1] &&
--		(*minor = strtoul(e+1, &e, 0)) >= 0 &&
-+		(*minor = strtoul(e+1, &e, 0)) &&
- 		*e == 0);
- }
- 
-@@ -1037,13 +1038,13 @@ int dev_open(char *dev, int flags)
- 	int fd = -1;
- 	char devname[32];
- 	int major;
--	int minor;
-+	unsigned long minor;
- 
- 	if (!dev) return -1;
- 	flags |= O_DIRECT;
- 
- 	if (get_maj_min(dev, &major, &minor)) {
--		snprintf(devname, sizeof(devname), "/dev/.tmp.md.%d:%d:%d",
-+		snprintf(devname, sizeof(devname), "/dev/.tmp.md.%d:%d:%lu",
- 			 (int)getpid(), major, minor);
- 		if (mknod(devname, S_IFBLK|0600, makedev(major, minor)) == 0) {
- 			fd = open(devname, flags);
-@@ -1051,7 +1052,7 @@ int dev_open(char *dev, int flags)
- 		}
- 		if (fd < 0) {
- 			/* Try /tmp as /dev appear to be read-only */
--			snprintf(devname, sizeof(devname), "/tmp/.tmp.md.%d:%d:%d",
-+			snprintf(devname, sizeof(devname), "/tmp/.tmp.md.%d:%d:%lu",
- 				 (int)getpid(), major, minor);
- 			if (mknod(devname, S_IFBLK|0600, makedev(major, minor)) == 0) {
- 				fd = open(devname, flags);
-@@ -1069,7 +1070,7 @@ int open_dev_flags(char *devnm, int flags)
- 	char buf[20];
- 
- 	devid = devnm2devid(devnm);
--	sprintf(buf, "%d:%d", major(devid), minor(devid));
-+	sprintf(buf, "%d:%lu", major(devid), (unsigned long)minor(devid));
- 	return dev_open(buf, flags);
- }
- 
-@@ -1083,7 +1084,7 @@ int open_dev_excl(char *devnm)
- 	char buf[20];
- 	int i;
- 	int flags = O_RDWR;
--	int devid = devnm2devid(devnm);
-+	unsigned long devid = devnm2devid(devnm);
- 	long delay = 1000;
- 
- 	sprintf(buf, "%d:%d", major(devid), minor(devid));
--- 
-2.8.1
+> https://raid.wiki.kernel.org/index.php/RAID_Recovery suggest one can create rather than assemble a sw raid. (Not sure whether to call it md0 or md1)
+> mdadm --create /dev/md0 --metadata=0.90 --raid-devices=2 --level=raid1 /dev/sdb1 missing
+> 
+> However, the it also says
+> 
+>> Recreating should be considered a *last* resort, only to be used when everything else fails. People getting this wrong is one of the primary reasons
+>> people lose data. It is very commonly used way too early in the fault finding process. You have been warned! It's better to send an email to the
+>> linux-raid mailing list with detailed information (mdadm --examine from all component drives plus log entries from when the failure happened,
+>> including mdadm and kernel version) and ask for advice than to try to use --create --assume-clean and getting it wrong.
+> 
+> 
+> 
+> So before I messed things up even worse, I figured I would consult the experts to see what my next step should be.
 
+I am not an expert but 0.9 metadata is at the end, and the md device is a simple mirror. I don't know why the underlying device couldn't be used directly.
+
+I think this should work, depending on your hardware raid:
+
+* verify exact size of md device by looking at size of /dev/md0 block device assembled from failing /dev/sdc1
+* copy partition layout from /dev/sdc using sfdisk -d
+* pull both sdb1 and sdc1 drives (mark which drive goes where)
+* put in 2 new drives to replace failing sdc
+* initialize new drives in hardware raid
+* observe no existing partition table on new device
+* create partition table on new device using sfdisk
+* create a new md device /dev/md1 on the new /dev/sd?1, verifying size of /dev/md1 block device is same or bigger than original /dev/md0
+* add good drives from original sdb back
+* make an overlay of the first partition of the good device
+https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID#Making_the_harddisks_read-only_using_an_overlay_file
+* zero the metadata on the overlay with mdadm --zero-superblock /path/to/overlay
+* dd data from /path/to/overlay onto /dev/md1. This will run out of room if the new md device is exactly the same size as the old one, but should copy
+all the actual data.
+
+--Sarah
