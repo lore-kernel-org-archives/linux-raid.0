@@ -1,43 +1,36 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Rewrite md raid1 member
-Date: Sat, 20 Aug 2016 11:44:32 +0100
-Message-ID: <57B83490.2040704@youngman.org.uk>
-References: <20160818030451.GA17225@onthe.net.au>
- <2dca8e1f-8e80-408f-900e-36f9b1dd6f95@fnarfbargle.com>
- <20160818040151.GA21256@onthe.net.au> <57B6F2F5.8090800@youngman.org.uk>
- <20160819124615.GA23247@onthe.net.au>
- <CAJCQCtQs+z6rso4pc7CgRSia4tM5KK=T8ckh93X9HiDHytkcrw@mail.gmail.com>
- <20160820014336.GA30642@onthe.net.au>
+From: Robert David <clarkraymond377@gmail.com>
+Subject: Attention Beneficially
+Date: Sun, 21 Aug 2016 06:50:47 +0000 (UTC)
+Message-ID: <908285276.426230.1471762247322__28489.3992044546$1471762796$gmane$org@mail.yahoo.com>
+References: <908285276.426230.1471762247322.ref@mail.yahoo.com>
+Reply-To: Robert David <dhlservicesbenindhl@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160820014336.GA30642@onthe.net.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Dunlop <chris@onthe.net.au>, Chris Murphy <lists@colorremedies.com>
-Cc: Brad Campbell <lists2009@fnarfbargle.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 20/08/16 02:43, Chris Dunlop wrote:
-> Then again, I guess in the end what I'd really like is to be able to
-> flag a particular disk to md for "write repair", and tell md to repair.
-> Then md would read data from unflagged disks to write to the flagged
-> disk (that could work for parity raids as well as mirrors).
+Attention Beneficially
 
-I had that idea. I'm probably better at understanding and documenting
-things, hence my interest in the raid wiki, but I'm looking at this
-exact thing as a project for my first foray into kernel programming. Is
-that wise? :-)
 
-Basically, do a stripe integrity check, and optionally rewrite it? I
-don't to what extent linux raid actually implements a lot of interesting
-theoretical abilities, and if I can document it, I can then identify
-holes and try and fill them. Especially when you're trying to recover a
-broken array, the more options you have, the better ...
+WESTERN UNION
 
-Unfortunately the raid wiki admin is MIA at the moment, and I really
-want to hack that as a learning exercise before I start messing about
-with kernel code.
+This is very urgent Our Operation manager has sent your first payment of $5000.00 to you. Here is what we need from you to complete the
+transfer, Your Name, Your Address,A Copy Of Your ID and Your Telephone Number: Noted That Only Fee Request from You Is to
+Reactivate Transfer Files which is Sum Of $65Only, No More Fee again after that.
+Western Union Agent: Mr. Peterson Godwin
+Direct phone line is: + 229 98782817
+E-mail ::(westernunion8087@gmail.com)
 
-Cheers,
-Wol
+Bellow is your first payment for $5000usd sent today in your name.
+Sender Name: Mr. 
+MTCN: 
+Question
+Answer
+Amount Sent: $5000.00
+
+You can use this link to confirm the payment,
+
+Best Regards,
+Mr.Joseph Ezo
