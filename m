@@ -1,191 +1,52 @@
-From: Shaohua Li <shli@kernel.org>
+From: Song Liu <songliubraving@fb.com>
 Subject: Re: [PATCH 2/2] r5cache: remove journal support
-Date: Mon, 22 Aug 2016 22:32:14 -0700
-Message-ID: <20160823053214.GB2314@kernel.org>
+Date: Tue, 23 Aug 2016 06:12:48 +0000
+Message-ID: <4D8C4547-F57C-4DE4-B8D8-B011730FDCB8@fb.com>
 References: <1471646042-2366825-1-git-send-email-songliubraving@fb.com>
  <1471646042-2366825-2-git-send-email-songliubraving@fb.com>
+ <20160823053214.GB2314@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1471646042-2366825-2-git-send-email-songliubraving@fb.com>
+In-Reply-To: <20160823053214.GB2314@kernel.org>
+Content-Language: en-US
+Content-ID: <88572B240FE0914CB0EFDACA10BCC489@namprd15.prod.outlook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>
-Cc: linux-raid@vger.kernel.org, shli@fb.com
+To: Shaohua Li <shli@kernel.org>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Shaohua Li <shli@fb.com>
 List-Id: linux-raid.ids
 
-On Fri, Aug 19, 2016 at 03:34:02PM -0700, Song Liu wrote:
-> In current r5cache, when the journal device is broken, the raid
-> array is forced in readonly mode. There is no way to remove the
-> "journal feature", and thus make the array read-write without
-> journal.
-> 
-> This patch provides sysfs entry r5c_cache_mode that can be used
-> to remove journal feature.
-> 
-> r5c_cache_mode has 4 different values:
-> * no-cache;
-> * write-through (write journal only);
-> * write-back (w/ write cache feature, which will be added soon);
-> * broken-cache (journal missing or Faulty)
-> 
-> By writing into r5c_cache_mode, the array can transit from
-> broken-cache to no-cache, which removes journal feature for the
-> array.
-> 
-> Signed-off-by: Song Liu <songliubraving@fb.com>
-> ---
->  drivers/md/raid5-cache.c | 64 ++++++++++++++++++++++++++++++++++++++++++++++++
->  drivers/md/raid5.c       |  5 ++++
->  drivers/md/raid5.h       |  6 +++++
->  3 files changed, 75 insertions(+)
-> 
-> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index 5504ce2..508d470 100644
-> --- a/drivers/md/raid5-cache.c
-> +++ b/drivers/md/raid5-cache.c
-> @@ -40,6 +40,16 @@
->   */
->  #define R5L_POOL_SIZE	4
->  
-> +enum r5c_cache_mode {
-> +	R5C_MODE_NO_CACHE = 0,
-> +	R5C_MODE_WRITE_THROUGH = 1,
-> +	R5C_MODE_WRITE_BACK = 2,
-> +	R5C_MODE_BROKEN_CACHE = 3,
-The idea of setting different modes makes sense.
-But this is a little confusing. The first three are modes, the last one is status.
-We can't set BROKEN_CACHE mode, right?
-
-> +};
-> +
-> +static char *r5c_cache_mode_str[] = {"no-cache", "write-through",
-> +				     "write-back", "broken-cache"};
-> +
->  struct r5l_log {
->  	struct md_rdev *rdev;
->  
-> @@ -97,6 +107,8 @@ struct r5l_log {
->  
->  	bool need_cache_flush;
->  	bool in_teardown;
-> +
-> +	enum r5c_cache_mode cache_mode;
->  };
->  
->  /*
-> @@ -1193,6 +1205,56 @@ ioerr:
->  	return ret;
->  }
->  
-> +ssize_t r5c_show_cache_mode(struct mddev *mddev, char *page)
-> +{
-> +	struct r5conf *conf = mddev->private;
-> +	int val = 0;
-> +	int ret = 0;
-> +
-> +	if (conf->log)
-> +		val = conf->log->cache_mode;
-> +	else if (test_bit(MD_HAS_JOURNAL, &mddev->flags))
-> +		val = R5C_MODE_BROKEN_CACHE;
-> +	ret += snprintf(page, PAGE_SIZE - ret, "%d: %s\n",
-> +			val, r5c_cache_mode_str[val]);
-> +	return ret;
-> +}
-> +
-> +ssize_t r5c_store_cache_mode(struct mddev *mddev, const char *page, size_t len)
-> +{
-> +	struct r5conf *conf = mddev->private;
-> +	struct r5l_log *log = conf->log;
-> +	int val;
-> +
-> +	if (kstrtoint(page, 10, &val))
-> +		return -EINVAL;
-> +	if (!log && val != R5C_MODE_NO_CACHE)
-> +		return -EINVAL;
-> +	/* currently only support write through (write journal) */
-> +	if (val < R5C_MODE_NO_CACHE || val > R5C_MODE_WRITE_THROUGH)
-> +		return -EINVAL;
-> +	if (val == R5C_MODE_NO_CACHE) {
-> +		if (conf->log &&
-> +		    !test_bit(Faulty, &log->rdev->flags)) {
-> +			pr_err("md/raid:%s: journal device is in use, cannot remove it\n",
-> +			       mdname(mddev));
-> +			return -EINVAL;
-> +		}
-> +	}
-> +
-> +	spin_lock_irq(&conf->device_lock);
-> +	if (log)
-> +		conf->log->cache_mode = val;
-> +	if (val == R5C_MODE_NO_CACHE) {
-> +		clear_bit(MD_HAS_JOURNAL, &mddev->flags);
-> +		set_bit(MD_UPDATE_SB_FLAGS, &mddev->flags);
-
-If the journal disk is Faulty and we clear HAS_JOURNAL, what's role of journal
-disk?
-
-This sounds incomplete. If we assemble the array and journal disk is missing,
-can we set the mode to NO_CACHE and allow the array writeable?
-
-> +	}
-> +	spin_unlock_irq(&conf->device_lock);
-> +	pr_info("%s: setting r5c cache mode to %d: %s\n",
-> +		       mdname(mddev), val, r5c_cache_mode_str[val]);
-> +	return len;
-> +}
-> +
->  int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
->  {
->  	struct request_queue *q = bdev_get_queue(rdev->bdev);
-> @@ -1246,6 +1308,8 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
->  	INIT_LIST_HEAD(&log->no_space_stripes);
->  	spin_lock_init(&log->no_space_stripes_lock);
->  
-> +	log->cache_mode = R5C_MODE_WRITE_THROUGH;
-> +
->  	if (r5l_load_log(log))
->  		goto error;
->  
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 2119e09..665d853 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -6230,6 +6230,10 @@ raid5_group_thread_cnt = __ATTR(group_thread_cnt, S_IRUGO | S_IWUSR,
->  				raid5_show_group_thread_cnt,
->  				raid5_store_group_thread_cnt);
->  
-> +static struct md_sysfs_entry
-> +r5c_cache_mode = __ATTR(r5c_cache_mode, S_IRUGO | S_IWUSR,
-> +			r5c_show_cache_mode, r5c_store_cache_mode);
-> +
->  static struct attribute *raid5_attrs[] =  {
->  	&raid5_stripecache_size.attr,
->  	&raid5_stripecache_active.attr,
-> @@ -6237,6 +6241,7 @@ static struct attribute *raid5_attrs[] =  {
->  	&raid5_group_thread_cnt.attr,
->  	&raid5_skip_copy.attr,
->  	&raid5_rmw_level.attr,
-> +	&r5c_cache_mode.attr,
->  	NULL,
->  };
->  static struct attribute_group raid5_attrs_group = {
-> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-> index 517d4b6..ace9675 100644
-> --- a/drivers/md/raid5.h
-> +++ b/drivers/md/raid5.h
-> @@ -635,4 +635,10 @@ extern void r5l_stripe_write_finished(struct stripe_head *sh);
->  extern int r5l_handle_flush_request(struct r5l_log *log, struct bio *bio);
->  extern void r5l_quiesce(struct r5l_log *log, int state);
->  extern bool r5l_log_disk_error(struct r5conf *conf);
-> +
-> +
-> +extern ssize_t r5c_show_cache_mode(struct mddev *mddev, char *page);
-> +extern ssize_t
-> +r5c_store_cache_mode(struct mddev *mddev, const char *page, size_t len);
-
-Instead of export two functions, you can move r5c_cache_mode sysfs entry to raid5-cache.c
-and export it.
-
-Thanks,
-Shaohua
+DQo+Pj4gT24gOC8yMi8xNiwgMTA6MzIgUE0sICJTaGFvaHVhIExpIiA8c2hsaUBrZXJuZWwub3Jn
+PiB3cm90ZToNCj4+ICANCj4gICAgPiArZW51bSByNWNfY2FjaGVfbW9kZSB7DQo+ICAgID4gKwlS
+NUNfTU9ERV9OT19DQUNIRSA9IDAsDQo+ICAgID4gKwlSNUNfTU9ERV9XUklURV9USFJPVUdIID0g
+MSwNCj4gICAgPiArCVI1Q19NT0RFX1dSSVRFX0JBQ0sgPSAyLA0KPiAgICA+ICsJUjVDX01PREVf
+QlJPS0VOX0NBQ0hFID0gMywNCj4gICAgVGhlIGlkZWEgb2Ygc2V0dGluZyBkaWZmZXJlbnQgbW9k
+ZXMgbWFrZXMgc2Vuc2UuDQo+ICAgIEJ1dCB0aGlzIGlzIGEgbGl0dGxlIGNvbmZ1c2luZy4gVGhl
+IGZpcnN0IHRocmVlIGFyZSBtb2RlcywgdGhlIGxhc3Qgb25lIGlzIHN0YXR1cy4NCj4gICAgV2Ug
+Y2FuJ3Qgc2V0IEJST0tFTl9DQUNIRSBtb2RlLCByaWdodD8NCg0KSG93IGFib3V0IHdlIG5hbWUg
+aXQgYXMgcjVjX2NhY2hlX3N0YXRlPyBTcGxpdHRpbmcgaXQgaW50byB0d28gZW50cmllcyANCnNl
+ZW1zIGFuIG92ZXJraWxsIHRvIG1lLiANCg0KPj4gKwlzcGluX2xvY2tfaXJxKCZjb25mLT5kZXZp
+Y2VfbG9jayk7DQo+ICAgID4gKwlpZiAobG9nKQ0KPiAgICA+ICsJCWNvbmYtPmxvZy0+Y2FjaGVf
+bW9kZSA9IHZhbDsNCj4gICAgPiArCWlmICh2YWwgPT0gUjVDX01PREVfTk9fQ0FDSEUpIHsNCj4g
+ICAgPiArCQljbGVhcl9iaXQoTURfSEFTX0pPVVJOQUwsICZtZGRldi0+ZmxhZ3MpOw0KPiAgICA+
+ICsJCXNldF9iaXQoTURfVVBEQVRFX1NCX0ZMQUdTLCAmbWRkZXYtPmZsYWdzKTsNCiAgICANCj4g
+ICAgSWYgdGhlIGpvdXJuYWwgZGlzayBpcyBGYXVsdHkgYW5kIHdlIGNsZWFyIEhBU19KT1VSTkFM
+LCB3aGF0J3Mgcm9sZSBvZiBqb3VybmFsDQo+ICAgIGRpc2s/DQoNClRoZSBvbiBkaXNrIHJvbGUg
+aXMgZmF1bHR5ICgweGZmZmYpLiBUaGUgaW4gbWVtb3J5IGRhdGEgc3RydWN0dXJlIHdpbGwgc2hv
+dyBib3RoIA0KRmF1bHR5IGFuZCBKb3VybmFsLiBJdCB3b3JrcyBpbiBteSB0ZXN0IChjcmVhdGUg
+LT4gZmFpbCBqb3VybmFsIC0+IHJlbW92ZSBqb3VybmFsIC0+IA0Kd3JpdGUgLT4gc3RvcCAtPiBh
+c3NlbWJsZSkuICANCiAgICANCj4gICAgVGhpcyBzb3VuZHMgaW5jb21wbGV0ZS4gSWYgd2UgYXNz
+ZW1ibGUgdGhlIGFycmF5IGFuZCBqb3VybmFsIGRpc2sgaXMgbWlzc2luZywNCj4gICAgY2FuIHdl
+IHNldCB0aGUgbW9kZSB0byBOT19DQUNIRSBhbmQgYWxsb3cgdGhlIGFycmF5IHdyaXRlYWJsZT8N
+Cg0KRG8geW91IG1lYW4gc2V0dGluZyB0byBOT19DQUNIRSBhdXRvbWF0aWNhbGx5PyBJIHRoaW5r
+IGl0IGlzIG5vdCBzYWZlLCBhcyB3ZSANCm1heSBhc3NlbWJsZSBhbmQgcnVuIHRoZSBhcnJheSBh
+Y2NpZGVudGFsbHkgd2l0aG91dCB0aGUgam91cm5hbC4gSWYgdGhlIGFycmF5IA0KaXMgc2V0IHRv
+IE5PX0NBQ0hFLCB3ZSB3aWxsIGxvc3QgcGVuZGluZyBkYXRhIG9uIHRoZSBqb3VybmFsLiANCiAg
+ICANCj4+ICtleHRlcm4gc3NpemVfdCByNWNfc2hvd19jYWNoZV9tb2RlKHN0cnVjdCBtZGRldiAq
+bWRkZXYsIGNoYXIgKnBhZ2UpOw0KPiAgICA+ICtleHRlcm4gc3NpemVfdA0KPiAgICA+ICtyNWNf
+c3RvcmVfY2FjaGVfbW9kZShzdHJ1Y3QgbWRkZXYgKm1kZGV2LCBjb25zdCBjaGFyICpwYWdlLCBz
+aXplX3QgbGVuKTsNCj4gICAgDQo+ICAgIEluc3RlYWQgb2YgZXhwb3J0IHR3byBmdW5jdGlvbnMs
+IHlvdSBjYW4gbW92ZSByNWNfY2FjaGVfbW9kZSBzeXNmcyBlbnRyeSB0byByYWlkNS1jYWNoZS5j
+DQo+ICAgIGFuZCBleHBvcnQgaXQuDQoNCldpbGwgZml4IGl0IGluIHRoZSBuZXh0IHZlcnNpb24u
+IA0KDQpUaGFua3MsIA0KU29uZw0KDQo=
