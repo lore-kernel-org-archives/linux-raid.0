@@ -1,52 +1,49 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: Re: [PATCH 2/2] r5cache: remove journal support
-Date: Tue, 23 Aug 2016 06:12:48 +0000
-Message-ID: <4D8C4547-F57C-4DE4-B8D8-B011730FDCB8@fb.com>
-References: <1471646042-2366825-1-git-send-email-songliubraving@fb.com>
- <1471646042-2366825-2-git-send-email-songliubraving@fb.com>
- <20160823053214.GB2314@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH v2] raid10: record correct address of bad block
+Date: Tue, 23 Aug 2016 10:53:57 +0200
+Message-ID: <1471942437-16720-1-git-send-email-tomasz.majchrzak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160823053214.GB2314@kernel.org>
-Content-Language: en-US
-Content-ID: <88572B240FE0914CB0EFDACA10BCC489@namprd15.prod.outlook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Shaohua Li <shli@fb.com>
+To: linux-raid@vger.kernel.org
+Cc: shli@kernel.org, aleksey.obitotskiy@intel.com, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com, maksymilian.kunt@intel.com
 List-Id: linux-raid.ids
 
-DQo+Pj4gT24gOC8yMi8xNiwgMTA6MzIgUE0sICJTaGFvaHVhIExpIiA8c2hsaUBrZXJuZWwub3Jn
-PiB3cm90ZToNCj4+ICANCj4gICAgPiArZW51bSByNWNfY2FjaGVfbW9kZSB7DQo+ICAgID4gKwlS
-NUNfTU9ERV9OT19DQUNIRSA9IDAsDQo+ICAgID4gKwlSNUNfTU9ERV9XUklURV9USFJPVUdIID0g
-MSwNCj4gICAgPiArCVI1Q19NT0RFX1dSSVRFX0JBQ0sgPSAyLA0KPiAgICA+ICsJUjVDX01PREVf
-QlJPS0VOX0NBQ0hFID0gMywNCj4gICAgVGhlIGlkZWEgb2Ygc2V0dGluZyBkaWZmZXJlbnQgbW9k
-ZXMgbWFrZXMgc2Vuc2UuDQo+ICAgIEJ1dCB0aGlzIGlzIGEgbGl0dGxlIGNvbmZ1c2luZy4gVGhl
-IGZpcnN0IHRocmVlIGFyZSBtb2RlcywgdGhlIGxhc3Qgb25lIGlzIHN0YXR1cy4NCj4gICAgV2Ug
-Y2FuJ3Qgc2V0IEJST0tFTl9DQUNIRSBtb2RlLCByaWdodD8NCg0KSG93IGFib3V0IHdlIG5hbWUg
-aXQgYXMgcjVjX2NhY2hlX3N0YXRlPyBTcGxpdHRpbmcgaXQgaW50byB0d28gZW50cmllcyANCnNl
-ZW1zIGFuIG92ZXJraWxsIHRvIG1lLiANCg0KPj4gKwlzcGluX2xvY2tfaXJxKCZjb25mLT5kZXZp
-Y2VfbG9jayk7DQo+ICAgID4gKwlpZiAobG9nKQ0KPiAgICA+ICsJCWNvbmYtPmxvZy0+Y2FjaGVf
-bW9kZSA9IHZhbDsNCj4gICAgPiArCWlmICh2YWwgPT0gUjVDX01PREVfTk9fQ0FDSEUpIHsNCj4g
-ICAgPiArCQljbGVhcl9iaXQoTURfSEFTX0pPVVJOQUwsICZtZGRldi0+ZmxhZ3MpOw0KPiAgICA+
-ICsJCXNldF9iaXQoTURfVVBEQVRFX1NCX0ZMQUdTLCAmbWRkZXYtPmZsYWdzKTsNCiAgICANCj4g
-ICAgSWYgdGhlIGpvdXJuYWwgZGlzayBpcyBGYXVsdHkgYW5kIHdlIGNsZWFyIEhBU19KT1VSTkFM
-LCB3aGF0J3Mgcm9sZSBvZiBqb3VybmFsDQo+ICAgIGRpc2s/DQoNClRoZSBvbiBkaXNrIHJvbGUg
-aXMgZmF1bHR5ICgweGZmZmYpLiBUaGUgaW4gbWVtb3J5IGRhdGEgc3RydWN0dXJlIHdpbGwgc2hv
-dyBib3RoIA0KRmF1bHR5IGFuZCBKb3VybmFsLiBJdCB3b3JrcyBpbiBteSB0ZXN0IChjcmVhdGUg
-LT4gZmFpbCBqb3VybmFsIC0+IHJlbW92ZSBqb3VybmFsIC0+IA0Kd3JpdGUgLT4gc3RvcCAtPiBh
-c3NlbWJsZSkuICANCiAgICANCj4gICAgVGhpcyBzb3VuZHMgaW5jb21wbGV0ZS4gSWYgd2UgYXNz
-ZW1ibGUgdGhlIGFycmF5IGFuZCBqb3VybmFsIGRpc2sgaXMgbWlzc2luZywNCj4gICAgY2FuIHdl
-IHNldCB0aGUgbW9kZSB0byBOT19DQUNIRSBhbmQgYWxsb3cgdGhlIGFycmF5IHdyaXRlYWJsZT8N
-Cg0KRG8geW91IG1lYW4gc2V0dGluZyB0byBOT19DQUNIRSBhdXRvbWF0aWNhbGx5PyBJIHRoaW5r
-IGl0IGlzIG5vdCBzYWZlLCBhcyB3ZSANCm1heSBhc3NlbWJsZSBhbmQgcnVuIHRoZSBhcnJheSBh
-Y2NpZGVudGFsbHkgd2l0aG91dCB0aGUgam91cm5hbC4gSWYgdGhlIGFycmF5IA0KaXMgc2V0IHRv
-IE5PX0NBQ0hFLCB3ZSB3aWxsIGxvc3QgcGVuZGluZyBkYXRhIG9uIHRoZSBqb3VybmFsLiANCiAg
-ICANCj4+ICtleHRlcm4gc3NpemVfdCByNWNfc2hvd19jYWNoZV9tb2RlKHN0cnVjdCBtZGRldiAq
-bWRkZXYsIGNoYXIgKnBhZ2UpOw0KPiAgICA+ICtleHRlcm4gc3NpemVfdA0KPiAgICA+ICtyNWNf
-c3RvcmVfY2FjaGVfbW9kZShzdHJ1Y3QgbWRkZXYgKm1kZGV2LCBjb25zdCBjaGFyICpwYWdlLCBz
-aXplX3QgbGVuKTsNCj4gICAgDQo+ICAgIEluc3RlYWQgb2YgZXhwb3J0IHR3byBmdW5jdGlvbnMs
-IHlvdSBjYW4gbW92ZSByNWNfY2FjaGVfbW9kZSBzeXNmcyBlbnRyeSB0byByYWlkNS1jYWNoZS5j
-DQo+ICAgIGFuZCBleHBvcnQgaXQuDQoNCldpbGwgZml4IGl0IGluIHRoZSBuZXh0IHZlcnNpb24u
-IA0KDQpUaGFua3MsIA0KU29uZw0KDQo=
+For failed write request record block address on a device, not block
+address in an array.
+
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+---
+ drivers/md/raid10.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index cfa96b5..cd8d197 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -2465,18 +2465,19 @@ static int narrow_write_error(struct r10bio *r10_bio, int i)
+ 
+ 	while (sect_to_write) {
+ 		struct bio *wbio;
++		sector_t wsector;
+ 		if (sectors > sect_to_write)
+ 			sectors = sect_to_write;
+ 		/* Write at 'sector' for 'sectors' */
+ 		wbio = bio_clone_mddev(bio, GFP_NOIO, mddev);
+ 		bio_trim(wbio, sector - bio->bi_iter.bi_sector, sectors);
+-		wbio->bi_iter.bi_sector = (r10_bio->devs[i].addr+
+-				   choose_data_offset(r10_bio, rdev) +
+-				   (sector - r10_bio->sector));
++		wsector = r10_bio->devs[i].addr + (sector - r10_bio->sector);
++		wbio->bi_iter.bi_sector = wsector +
++				   choose_data_offset(r10_bio, rdev);
+ 		wbio->bi_bdev = rdev->bdev;
+ 		if (submit_bio_wait(WRITE, wbio) < 0)
+ 			/* Failure! */
+-			ok = rdev_set_badblocks(rdev, sector,
++			ok = rdev_set_badblocks(rdev, wsector,
+ 						sectors, 0)
+ 				&& ok;
+ 
+-- 
+1.8.3.1
+
