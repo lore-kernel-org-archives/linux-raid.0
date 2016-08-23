@@ -1,61 +1,46 @@
-From: Matt Garman <matthew.garman@gmail.com>
+From: Chris Murphy <lists@colorremedies.com>
 Subject: Re: kernel checksumming performance vs actual raid device performance
-Date: Tue, 23 Aug 2016 09:54:56 -0500
-Message-ID: <CAJvUf-BoEJte8TF7_Su90CnjAiJ6q57m+PdGhxHA4cx5AEtxSg@mail.gmail.com>
+Date: Tue, 23 Aug 2016 09:02:14 -0600
+Message-ID: <CAJCQCtRkHstmmJXOd8pVbuZSQnH-RDnkePb1gkFT_Vt0kSsH-A@mail.gmail.com>
 References: <CAJvUf-C-Nr8sSnSPL-5jt1NLOAiZjhZ=bjDRUbX_RjphRL+yWA@mail.gmail.com>
  <CAFx4rwQj3_JTNiS0zsQjp_sPXWkrp0ggjg_UiR7oJ8u0X9PQVA@mail.gmail.com>
- <CAJvUf-Dqesy2TJX7W-bPakzeDcOoNy0VoSWWM06rKMYMhyhY7g@mail.gmail.com> <CAFx4rwSQQuqeCFm+60+Gm75D49tg+mVjU=BnQSZThdE7E6KqPQ@mail.gmail.com>
+ <CAJvUf-C7CMqUBe+kPaxxTtmvuCXSRes73kMcAnZw7x8=6DNCdw@mail.gmail.com>
+ <CAFx4rwTawqrBOWVwtPnGhRRAM1XiGQkS-o3YykmD0AftR45YkA@mail.gmail.com> <CAJvUf-C8ov4tHRGj5SPamJE8PF0Qsr4Cwuv02-9F0SV1yp4ccQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAFx4rwSQQuqeCFm+60+Gm75D49tg+mVjU=BnQSZThdE7E6KqPQ@mail.gmail.com>
+In-Reply-To: <CAJvUf-C8ov4tHRGj5SPamJE8PF0Qsr4Cwuv02-9F0SV1yp4ccQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Dumitru <doug@easyco.com>, Mdadm <linux-raid@vger.kernel.org>
+To: Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Aug 16, 2016 at 11:36 AM, Doug Dumitru <doug@easyco.com> wrote:
-> The RAID rebuild for a single bad drive "should" be an XOR and should run at
-> 200,000 kb/sec (the default speed_limit_max).  I might be wrong on this and
-> this might still need a full RAID-6 syndrome compute, but I dont think so.
+On Tue, Aug 23, 2016 at 8:34 AM, Matt Garman <matthew.garman@gmail.com> wrote:
+> On Tue, Aug 16, 2016 at 5:43 PM, Doug Dumitru <doug@easyco.com> wrote:
+>> One last thing I would highly recommend is:
+>>
+>> Secure erase the replacement disk before rebuilding onto it.
+>>
+>> If the replacement disk is "pre conditioned" with random writes, even if
+>> very slowly, this will lower the write performance of the disk during the
+>> rebuild.
 >
-> The rebuild might not hit 200MB/sec if the drive you replaced is
-> "conditioned".  Be sure to secure erase any non-new drive before you replace
-> it.
+> Does that also apply to brand-new disks from the manufacturer?
 >
-> Your read IOPS will compete with now busy drives which may increase the IO
-> latency a lot, and slow you down a lot.
->
-> One out of 22 read OPS will be to the bad drive, so this will now take 22
-> reads to re-construct the IO.  The reconstruction is XOR, so pretty cheap
-> from a CPU point of view.  Regardless, your IOPS total will double.
->
-> You can probably mitigate the amount of degradation by lowering the rebuild
-> speed, but this will make the rebuild take longer, so you are messed up
-> either way.  If the server has "down time" at night, you might lower the
-> rebuild to a really small value during the day, and up it at night.
+> I.e., should we just always do a secure erase, or sometimes depending
+> on how the drive was sourced?
 
-OK, right now I'm looking purely at performance in a degraded state,
-no rebuild taking place.
+The main issue is to get rid of previous fs signatures so there are no
+longer stale file systems. If the drive is/was ever partitioned, those
+signatures could be anywhere on the drive, so the ATA secure erase is
+a way to clobber all of them. An alternative is fully encrypting the
+drive. If you merely change the encryption key, cipher text on the
+drive becomes different "cipher text" as it's decrypted, so again
+everything that was on the drive is effectively obliterated, but is
+much faster. If security isn't a big concern, you can automate opening
+the LUKS device with a keyfile to avoid manually typing in
+passphrases. The other nice thing about it is if you ever have to
+return such a drive under warranty, or otherwise decommission it, you
+don't have to worry about drive contents.
 
-We have designed a simple read load test to simulate the actual
-production workload.  (It's not perfect of course, but a reasonable
-approximation.  I can share with the list if there's interest.)  But
-basically it just runs multiple threads of reading random files
-continuously.
-
-When the array is in a pristine state, we can achieve read throughput
-of 8000 MB/sec (at the array level, per iostat with 5 second samples).
-
-Now I failed a single drive.  Running the same test, read performance
-drops all the way down to 200 MB/sec.
-
-I understand that IOPS should double, which to me says we should
-expect a roughly 50% read performance drop (napkin math).  But this is
-a drop of over 95%.
-
-Again, this is with no rebuild taking place...
-
-Thoughts?
-
-Thanks again,
-Matt
+-- 
+Chris Murphy
