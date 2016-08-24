@@ -1,121 +1,91 @@
-From: travis+ml-linux-raid@subspacefield.org
-Subject: Re: bootsect replicated in p1, RAID enclosure suggestions?
-Date: Tue, 23 Aug 2016 19:14:13 -0700
-Message-ID: <20160824021413.GM32250@subspacefield.org>
-References: <20160823050947.GL32250@subspacefield.org>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH 1/3] MD: hold mddev lock for .quiesce in md_do_sync
+Date: Wed, 24 Aug 2016 14:49:57 +1000
+Message-ID: <87k2f6g496.fsf@notabene.neil.brown.name>
+References: <515fa68e5c4784b08f2ce99c082c923f6b02a3c9.1469922791.git.shli@fb.com> <87y44epwb5.fsf@notabene.neil.brown.name> <87y44dnrz2.fsf@notabene.neil.brown.name> <20160806041428.GB9281@kernel.org> <87h9aqluoa.fsf@notabene.neil.brown.name> <20160817012803.GA86961@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20160823050947.GL32250@subspacefield.org>
+In-Reply-To: <20160817012803.GA86961@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>
 List-Id: linux-raid.ids
 
-$ mdadm --version
-mdadm - v3.2.5 - 18th May 2012
-$ uname -a
-Linux hostname 3.2.0-107-generic #148-Ubuntu SMP Mon Jul 18 20:22:08 UTC 2016 x86_64 x86_64 x86_64 GNU/Linux
-$ cat /etc/lsb-release 
-DISTRIB_ID=Ubuntu
-DISTRIB_RELEASE=12.04
-DISTRIB_CODENAME=precise
-DISTRIB_DESCRIPTION="Ubuntu 12.04.5 LTS"
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-And I think there must be a bug in referencing the beginning of a
-partition vs the beginning of the disk which leads to this.  Back when
-I was using raw disk devices I had corruption in the first cylinders
-which also held the mdlabel and I thought the lack of a partition
-table was the problem... obviously not.
+On Wed, Aug 17 2016, Shaohua Li wrote:
+>> >
+>> > We will have the same deadlock issue with just stopping/restarting the=
+ reclaim
+>> > thread. As stopping the thread will wait for the thread, which probabl=
+y is
+>> > doing r5l_do_reclaim and writting the superblock. Since we are writtin=
+g the
+>> > superblock, we must hold the reconfig_mutex.
+>>=20
+>> When you say "writing the superblock" you presumably mean "blocked in
+>> r5l_write_super_and_discard_space(), waiting for  MD_CHANGE_PENDING to
+>> be cleared" ??
+> right
+>> With a bit of care you could wait for MD_CHANGE_PENDING to clear, or for
+>> ->quiesce to be set, and then exit gracefully.
+>
+> Can you give details about this please? .quiesce is called with reconfig_=
+mutex
+> hold, so the MD_CHANGE_PENDING will never get cleared.
 
-Could very well be a bug in USB enclosure firmware too.  Hard to know
-how to proceed.
+raid5_quiesce(mddev, 1) sets conf->quiesce and then calls r5l_quiesce().
 
-On Mon, Aug 22, 2016 at 10:09:47PM -0700, travis+ml-linux-raid@subspacefield.org wrote:
-> Hello all,
-> 
-> So I have an Intel NUC (for low power Linux) plugged via USB into a 4
-> bay enclosure doing linear (yeah I know; it's the backup server, the
-> primary is raid10).
-> 
-> And every once in a while, this happens (*see end).  The partition 1
-> that would normally contain a MD slice ends up being a replica of the
-> boot cylinder.  I can't tell if it's the mdraid linear impl, the
-> kernel doing something weird, the USB drivers, the enclosure firmware,
-> or what.
-> 
-> Anyway, this happened while I was restoring a Windows machine whose
-> root drive suddenly took a nosedive, and it happens every 6 months
-> or so.  Today it happened while I was in the middle of recovering
-> a Windows machine whose 1TB SSD threw up on C: and totally nuked
-> the data.
-> 
-> The last low-power option I tried was an OpenRD Ultimate based around
-> ARMv5TE which was basically unsupported by debian by the time I got
-> it, and subsequently became ultra-flaky due to what seemed to be RAM
-> problems - it was crashing every 3 days with kernel panics, and every
-> once in a while would do something worse.
-> 
-> Any recommendations on a low power hardware with a well-supported
-> distro, that matches up well with a real backplane and SATA
-> connections instead of USB.  The only caveat is that I want to encrypt
-> raw disks and it has to not be very noisy - so no rackmount gear
-> with 65dB 1" dog whistle fans.  Obviously, whatever backplane must
-> be well-supported by the distro.
-> 
-> Also, does anyone have experience with cryptsetup on multiple
-> partitions?  I can do that but get prompted multiple times and I was
-> wondering if anyone knew an easy way to fix the boot time scripts to
-> avoid that, only prompting once per unique underlying crypttab.
-> 
-> And finally, I have a story about buggy drive firmware that you
-> might enjoy, especially if you were doing this sort of stuff in
-> the 90s as well.  Cheers:
-> 
-> http://www.subspacefield.org/security/hard_drives_of_doom/
-> 
-> 
-> [*]
-> 
-> # parted /dev/sde
-> GNU Parted 2.3
-> Using /dev/sde
-> Welcome to GNU Parted! Type 'help' to view a list of commands.
-> (parted) p                                                                
-> Model: WDC WD40 EFRX-68WT0N0 (scsi)
-> Disk /dev/sde: 4001GB
-> Sector size (logical/physical): 512B/512B
-> Partition Table: gpt
-> 
-> Number  Start   End     Size    File system  Name        Flags
->  1      1049kB  4001GB  4001GB               Linux RAID  raid
-> 
-> (parted) q                                                                
-> # parted /dev/sdd1
-> GNU Parted 2.3
-> Using /dev/sdd1
-> Welcome to GNU Parted! Type 'help' to view a list of commands.
-> (parted) p                                                                
-> Model: Unknown (unknown)
-> Disk /dev/sdd1: 4001GB
-> Sector size (logical/physical): 512B/512B
-> Partition Table: gpt
-> 
-> Number  Start   End     Size    File system  Name        Flags
->  1      1049kB  4001GB  4001GB               Linux RAID  raid
-> 
-> -- 
-> http://www.subspacefield.org/~travis/ | if spammer then john@subspacefield.org
-> "Computer crime, the glamor crime of the 1970s, will become in the
-> 1980s one of the greatest sources of preventable business loss."
-> John M. Carroll, "Computer Security", first edition cover flap, 1977
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+r5l_quiesce() tells the reclaim_thread to exit and waits for it to do so.
 
--- 
-http://www.subspacefield.org/~travis/ | if spammer then john@subspacefield.org
-"Computer crime, the glamor crime of the 1970s, will become in the
-1980s one of the greatest sources of preventable business loss."
-John M. Carroll, "Computer Security", first edition cover flap, 1977
+But the reclaim thread might be in
+   r5l_do_reclaim() -> r5l_write_super_and_discard_space()
+waiting for MD_CHANGE_PENDING to clear.  That will only get cleared when
+the main thread can get the reconfig_mutex, which the thread calling
+raid5_quiesce() might hold.  So we get a deadlock.
+
+My suggestion is to change r5l_write_super_and_discard_space() so that
+it waits for *either* MD_CHANGE_PENDING to be clear, or conf->quiesce
+to be set.  That will avoid the deadlock.
+
+Whatever thread called raid5_quiesce() will now be in control of the
+array without any async IO going on.  If it needs the metadata to be
+sync, it can do that itself.  If not, then it doesn't really matter that
+r5l_write_super_and_discard_space() didn't wait.
+
+r5l_write_super_and_discard_space() shouldn't call discard if the
+superblock write didn't complete, and probably r5l_do_reclaim()
+shouldn't update last_checkpoint and last_cp_seq in that case.
+This is what I mean by "with a bit of care" and "exit gracefully".
+Maybe I should have said "abort cleanly".  The goal is to get the thread
+to exit.  It doesn't need to complete what it was doing, it just needs
+to make sure that it leaves things in a tidy state so that when it
+starts up again, it can pick up where it left off.
+
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJXvSd1AAoJEDnsnt1WYoG5ulkQAJWEd68Xt0ka2qW0d5/h7DQY
+FdPw922SGxn21iCrJN1VgyiyPwUq0NAd4AoR9XQcIScef8mSgsN0sh8kdO82HEGd
+1wdjmTv+tPrH/fK5R8BxeXcOflWyrz+qudiA2vG/7/VK+MpAoq7EFkKoDdPIWxqQ
+8VsbvmSv0Eb7fKoZUvuwQQWJKKXhtn2pNuOvLArPd4wetDBgKwcFSIYRoD7KYHiC
+zRprDPLGMqQple1soRIOdpEDvPaU+IqICDLPO981VdyXekArbGC8VOty2knWPrOY
+YpnPhQNLWM8riDk4q81a5Jt9ewfQQ9h378Bkv4PigdbpXhy82xGg31Kt3Lpfv72D
+12rUXO+QjeeM+bEJbTeBY7lwVh0rlPThS032p5a7Q4l7+gt5rKce/elNG9k5IJ6N
+DzJsQgfrlo+kPG0yGWyzmWqyLvhMDTgCCnLg+NUUZNYHiyC6/oH1gLL7StjcpB3H
+QgGWZ1OkmC2m27RXWHN6lQk43FAIx+iH/p5++eLnAmYwf9wOy512WPNoF+ajqNA4
+i7ykgyb6pbVF9rIm9l+qOg4GX8bwyqOV5bnfoEmrqzSvIa35rNdZLeN5KZVlYj5H
+hV+aS+0PpiiwrJOOM1qP5iCTOsnZlpwz8y+dg1jynRW/JYMxH9a03Ip3aZaBta3e
+7GtLvsncxmYV0rU7ygWW
+=rX7R
+-----END PGP SIGNATURE-----
+--=-=-=--
