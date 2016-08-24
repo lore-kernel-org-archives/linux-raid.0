@@ -1,157 +1,99 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH 1/3] MD: hold mddev lock for .quiesce in md_do_sync
-Date: Tue, 23 Aug 2016 22:25:12 -0700
-Message-ID: <20160824052512.GA1921@kernel.org>
-References: <515fa68e5c4784b08f2ce99c082c923f6b02a3c9.1469922791.git.shli@fb.com>
- <87y44epwb5.fsf@notabene.neil.brown.name>
- <87y44dnrz2.fsf@notabene.neil.brown.name>
- <20160806041428.GB9281@kernel.org>
- <87h9aqluoa.fsf@notabene.neil.brown.name>
- <20160817012803.GA86961@kernel.org>
- <87k2f6g496.fsf@notabene.neil.brown.name>
+From: "=?utf-8?B?bGl1emhlbmd5dWFu?=" <liuzhengyuan@kylinos.cn>
+Subject: Re: [PATCH] raid6: fix the input of raid6 algorithm
+Date: Wed, 24 Aug 2016 15:58:14 +0800
+Message-ID: <tencent_49881858786A20CD621D53AD@qq.com>
+References: <1471922577-18512-1-git-send-email-liuzhengyuan@kylinos.cn>
+        <FAA53096-C767-4142-B45C-01889986EDAF@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87k2f6g496.fsf@notabene.neil.brown.name>
+In-Reply-To: <FAA53096-C767-4142-B45C-01889986EDAF@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: =?utf-8?B?SC4gUGV0ZXIgQW52aW4=?= <hpa@zytor.com>
+Cc: =?utf-8?B?c2hsaQ==?= <shli@kernel.org>, =?utf-8?B?bGludXgtcmFpZA==?= <linux-raid@vger.kernel.org>, =?utf-8?B?ZmVuZ2h1YS55dQ==?= <fenghua.yu@intel.com>, =?utf-8?B?bGludXgta2VybmVs?= <linux-kernel@vger.kernel.org>, =?utf-8?B?bGl1emhlbmd5dWFuZzUyMQ==?= <liuzhengyuang521@gmail.com>
 List-Id: linux-raid.ids
 
-On Wed, Aug 24, 2016 at 02:49:57PM +1000, Neil Brown wrote:
-> On Wed, Aug 17 2016, Shaohua Li wrote:
-> >> >
-> >> > We will have the same deadlock issue with just stopping/restarting the reclaim
-> >> > thread. As stopping the thread will wait for the thread, which probably is
-> >> > doing r5l_do_reclaim and writting the superblock. Since we are writting the
-> >> > superblock, we must hold the reconfig_mutex.
-> >> 
-> >> When you say "writing the superblock" you presumably mean "blocked in
-> >> r5l_write_super_and_discard_space(), waiting for  MD_CHANGE_PENDING to
-> >> be cleared" ??
-> > right
-> >> With a bit of care you could wait for MD_CHANGE_PENDING to clear, or for
-> >> ->quiesce to be set, and then exit gracefully.
-> >
-> > Can you give details about this please? .quiesce is called with reconfig_mutex
-> > hold, so the MD_CHANGE_PENDING will never get cleared.
-> 
-> raid5_quiesce(mddev, 1) sets conf->quiesce and then calls r5l_quiesce().
-> 
-> r5l_quiesce() tells the reclaim_thread to exit and waits for it to do so.
-> 
-> But the reclaim thread might be in
->    r5l_do_reclaim() -> r5l_write_super_and_discard_space()
-> waiting for MD_CHANGE_PENDING to clear.  That will only get cleared when
-> the main thread can get the reconfig_mutex, which the thread calling
-> raid5_quiesce() might hold.  So we get a deadlock.
-> 
-> My suggestion is to change r5l_write_super_and_discard_space() so that
-> it waits for *either* MD_CHANGE_PENDING to be clear, or conf->quiesce
-> to be set.  That will avoid the deadlock.
-> 
-> Whatever thread called raid5_quiesce() will now be in control of the
-> array without any async IO going on.  If it needs the metadata to be
-> sync, it can do that itself.  If not, then it doesn't really matter that
-> r5l_write_super_and_discard_space() didn't wait.
+T2gsIGdldF9yYW5kb21fKigpIGlzIHJlYWxseSBleHBlbnNpdmUuIFRoYW5rcyBmb3IgeW91
+ciB0aXBzLiBUaGUgYm9vdCBsb2cgb24gbXkgYWFyY2g2NCBzaG93ZWQgYmVsbG93DQp0b2xk
+IGl0IHRha2VkIGFib3V0IDAuNiBzZWNvbmQgdG8gZmlsbCB3aXRoIGRpc2sgZGF0YS4gDQog
+IA0KICBbICAgIDAuMTcyODMxXSBETUE6IHByZWFsbG9jYXRlZCAyNTYgS2lCIHBvb2wgZm9y
+IGF0b21pYyBhbGxvY2F0aW9ucw0KICBbICAgIDAuNzg4NjY0XSByYWlkNjogaW50NjR4MSAg
+Z2VuKCkgICAxMjEgTUIvcw0KICBbICAgIDAuODU2NjEzXSByYWlkNjogaW50NjR4MSAgeG9y
+KCkgICAgNzQgTUIvcw0KICBbICAgIDAuOTI0NjY1XSByYWlkNjogaW50NjR4MiAgZ2VuKCkg
+ICAxNjYgTUIvcw0KICBbICAgIDAuOTkyODQ2XSByYWlkNjogaW50NjR4MiAgeG9yKCkgICAg
+OTUgTUIvcw0KICBbICAgIDEuMDYwNjgxXSByYWlkNjogaW50NjR4NCAgZ2VuKCkgICAyOTAg
+TUIvcw0KICBbICAgIDEuMTI4Nzc0XSByYWlkNjogaW50NjR4NCAgeG9yKCkgICAxNjAgTUIv
+cw0KICBbICAgIDEuMTk2OTMzXSByYWlkNjogaW50NjR4OCAgZ2VuKCkgICAyMzggTUIvcw0K
+ICBbICAgIDEuMjY0OTM3XSByYWlkNjogaW50NjR4OCAgeG9yKCkgICAxNDggTUIvcw0KICBb
+ICAgIDEuMzMyODc4XSByYWlkNjogbmVvbngxICAgZ2VuKCkgICAyNTYgTUIvcw0KICBbICAg
+IDEuNDAwOTc1XSByYWlkNjogbmVvbngxICAgeG9yKCkgICAxMzAgTUIvcw0KICBbICAgIDEu
+NDY4OTUxXSByYWlkNjogbmVvbngyICAgZ2VuKCkgICAzMzMgTUIvcw0KICBbICAgIDEuNTM3
+MDg1XSByYWlkNjogbmVvbngyICAgeG9yKCkgICAxODEgTUIvcw0KICBbICAgIDEuNjA1MDQy
+XSByYWlkNjogbmVvbng0ICAgZ2VuKCkgICA0NTEgTUIvcw0KICBbICAgIDEuNjczMTIxXSBy
+YWlkNjogbmVvbng0ICAgeG9yKCkgICAyODkgTUIvcw0KICBbICAgIDEuNzQxMTQzXSByYWlk
+NjogbmVvbng4ICAgZ2VuKCkgICA0NTIgTUIvcw0KICBbICAgIDEuODA5MTUxXSByYWlkNjog
+bmVvbng4ICAgeG9yKCkgICAyNzcgTUIvcw0KICBbICAgIDEuODA5MTU0XSByYWlkNjogdXNp
+bmcgYWxnb3JpdGhtIG5lb254OCBnZW4oKSA0NTIgTUIvcw0KICBbICAgIDEuODA5MTU3XSBy
+YWlkNjogLi4uLiB4b3IoKSAyNzcgTUIvcywgcm13IGVuYWJsZWQNCiAgWyAgICAxLjgwOTE2
+MF0gcmFpZDY6IHVzaW5nIGludHgxIHJlY292ZXJ5IGFsZ29yaXRobQ0KDQogSSByZXBsYWNl
+ZCBnZXRfcmFuZG9tXyogd2l0aCBhIGxvY2FsIFBSTkcgYmFzZWQgb24gd2VsbC1rbm93IA0K
+ImxpbmVhciBjb25ncnVlbnRpYWwgYml0Ii4gVGhlIHBhdGNoIHdhcyBsaWtlIHRoaXM6DQoN
+CiAgKy8qIHVzZSB0aGUgbGluZWFyIGNvbmdydWVudGlhbCBiaXQuICovDQogICtzdGF0aWMg
+aW50MzJfdCBnZXRfcmFuZG9tX251bWJlcl9ieV9sY2Iodm9pZCkNCiAgK3sNCiAgKyAgICAg
+ICAgc3RhdGljIGludDMyX3Qgc2VlZCA9IDE7DQogICsgICAgICAgIGludDMyX3QgcmV0ID0g
+MDsNCiAgKyAgICAgICAgcmV0ID0gKChzZWVkICogMTEwMzUxNTI0NSkgKyAxMjM0NSkgJiAw
+eDdmZmZmZmZmOw0KICArICAgICAgICBzZWVkID0gcmV0Ow0KICArICAgICAgICByZXR1cm4g
+cmV0Ow0KICArfQ0KIA0KICAgLyogVHJ5IHRvIHBpY2sgdGhlIGJlc3QgYWxnb3JpdGhtICov
+DQogICAvKiBUaGlzIGNvZGUgdXNlcyB0aGUgZ2ZtdWwgdGFibGUgYXMgY29udmVuaWVudCBk
+YXRhIHNldCB0byBhYnVzZSAqLw0KICBAQCAtMjI5LDggKzIzOCw4IEBAIGludCBfX2luaXQg
+cmFpZDZfc2VsZWN0X2FsZ28odm9pZCkNCiAgICAgICAgICBmb3IgKGkgPSAwOyBpIDwgZGlz
+a3MtMjsgaSsrKSB7DQogICAgICAgICAgICAgICAgICBkcHRyc1tpXSA9IGRpc2tfcHRyICsg
+UEFHRV9TSVpFKmk7DQogIC0gICAgICAgICAgICAgICBmb3IgKGogPSAwOyBqIDwgUEFHRV9T
+SVpFOyBqKyspDQogIC0gICAgICAgICAgICAgICAgICAgICAgIGdldF9yYW5kb21fYnl0ZXMo
+ZHB0cnNbaV0raiwgMSk7DQogICsgICAgICAgICAgICAgICBmb3IgKGogPSAwOyBqIDwgUEFH
+RV9TSVpFOyBqID0gaiArIDQpDQogICsgICAgICAgICAgICAgICAgICAgICAgICooaW50MzJf
+dCAqKShkcHRyc1tpXStqKSA9IGdldF9yYW5kb21fbnVtYmVyX2J5X2xjYigpOw0KICAgICAg
+ICAgIH0NCiAgIA0KICAgICAgICAgIGRwdHJzW2Rpc2tzLTJdID0gZGlza19wdHIgKyBQQUdF
+X1NJWkUqKGRpc2tzLTIpOw0KDQpUaGUgYm9vdCBsb2cgd2l0aCB0aGlzIHBhdGNoIHdhcyBz
+aG93ZCBiZWxsb3csIGl0IHRha2VkIGFib3V0IDAuMDggc2Vjb25kLg0KDQogIFsgICAgMC4x
+NzI4NThdIERNQTogcHJlYWxsb2NhdGVkIDI1NiBLaUIgcG9vbCBmb3IgYXRvbWljIGFsbG9j
+YXRpb25zDQogIFsgICAgMC4yNTY2NzNdIHJhaWQ2OiBpbnQ2NHgxICBnZW4oKSAgIDEyMSBN
+Qi9zDQogIFsgICAgMC4zMjQ0ODRdIHJhaWQ2OiBpbnQ2NHgxICB4b3IoKSAgICA3MyBNQi9z
+DQogIFsgICAgMC4zOTI2MDZdIHJhaWQ2OiBpbnQ2NHgyICBnZW4oKSAgIDE2NiBNQi9zDQog
+IFsgICAgMC40NjAzMDldIHJhaWQ2OiBpbnQ2NHgyICB4b3IoKSAgICA5MiBNQi9zDQogIFsg
+ICAgMC41MjgzNjhdIHJhaWQ2OiBpbnQ2NHg0ICBnZW4oKSAgIDI5MCBNQi9zDQogIFsgICAg
+MC41OTY0MDFdIHJhaWQ2OiBpbnQ2NHg0ICB4b3IoKSAgIDE1NiBNQi9zDQogIFsgICAgMC42
+NjQ2MDFdIHJhaWQ2OiBpbnQ2NHg4ICBnZW4oKSAgIDIzOCBNQi9zDQogIFsgICAgMC43MzI2
+MDldIHJhaWQ2OiBpbnQ2NHg4ICB4b3IoKSAgIDE0OCBNQi9zDQogIFsgICAgMC44MDA1MjNd
+IHJhaWQ2OiBuZW9ueDEgICBnZW4oKSAgIDI1NiBNQi9zDQogIFsgICAgMC44Njg3MzBdIHJh
+aWQ2OiBuZW9ueDEgICB4b3IoKSAgIDEyOSBNQi9zDQogIFsgICAgMC45MzY3NDFdIHJhaWQ2
+OiBuZW9ueDIgICBnZW4oKSAgIDMzNCBNQi9zDQogIFsgICAgMS4wMDQ3MTddIHJhaWQ2OiBu
+ZW9ueDIgICB4b3IoKSAgIDIwMiBNQi9zDQogIFsgICAgMS4wNzI2OTJdIHJhaWQ2OiBuZW9u
+eDQgICBnZW4oKSAgIDQ1MSBNQi9zDQogIFsgICAgMS4xNDA3NjNdIHJhaWQ2OiBuZW9ueDQg
+ICB4b3IoKSAgIDI2MCBNQi9zDQogIFsgICAgMS4yMDg4NDJdIHJhaWQ2OiBuZW9ueDggICBn
+ZW4oKSAgIDQ1MiBNQi9zDQogIFsgICAgMS4yNzY4ODddIHJhaWQ2OiBuZW9ueDggICB4b3Io
+KSAgIDI3NyBNQi9zDQogIFsgICAgMS4yNzY4OTBdIHJhaWQ2OiB1c2luZyBhbGdvcml0aG0g
+bmVvbng4IGdlbigpIDQ1MiBNQi9zDQogIFsgICAgMS4yNzY4OTRdIHJhaWQ2OiAuLi4uIHhv
+cigpIDI3NyBNQi9zLCBybXcgZW5hYmxlZA0KICBbICAgIDEuMjc2ODk3XSByYWlkNjogdXNp
+bmcgaW50eDEgcmVjb3ZlcnkgYWxnb3JpdGhtDQogIFsgICAgMS4yNzY5NDFdIEFDUEk6IElu
+dGVycHJldGVyIGRpc2FibGVkLg0KDQpJJ20gbm90IGZhbWlsaWFyIHdpdGggIHNwdXJpb3Vz
+IEQkIGNvbmZsaWN0cyBhbmQgQ1BVIGNhY2hlIGJlaGF2aW9yLiBIb3cgZG8geW91IA0KdGhp
+bmsgdGhpcyBQUk5HIG9yIGFueXRoaW5nIGVsc2UgSSBuZWVkIHRvIGRvPw0KDQotLS0tLS0t
+LS0tLS0tLS0tLS0gT3JpZ2luYWwgLS0tLS0tLS0tLS0tLS0tLS0tDQpGcm9tOiAgIkguIFBl
+dGVyIEFudmluIjxocGFAenl0b3IuY29tPjsNCkRhdGU6ICBUdWUsIEF1ZyAyMywgMjAxNiAx
+MTo1MyBBTQ0KVG86ICAibGl1emhlbmd5dWFuIjxsaXV6aGVuZ3l1YW5Aa3lsaW5vcy5jbj47
+DQpDYzogICJzaGxpIjxzaGxpQGtlcm5lbC5vcmc+OyAibGludXgtcmFpZCI8bGludXgtcmFp
+ZEB2Z2VyLmtlcm5lbC5vcmc+OyAiZmVuZ2h1YS55dSI8ZmVuZ2h1YS55dUBpbnRlbC5jb20+
+OyAibGludXgta2VybmVsIjxsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnPjsgImxpdXpo
+ZW5neXVhbmc1MjEiPGxpdXpoZW5neXVhbmc1MjFAZ21haWwuY29tPjsNClN1YmplY3Q6ICBS
+ZTogW1BBVENIXSByYWlkNjogZml4IHRoZSBpbnB1dCBvZiByYWlkNiBhbGdvcml0aG0NCiAN
+CkRvIHlvdSBoYXZlIGFueSBpZGVhIGhvdyBsb25nIHRoaXMgdGFrZXMgdG8gcnVuPyAgUGVv
+cGxlIGFyZSBhbHJlYWR5IGNvbXBsYWluaW5nIGFib3V0IHRoZSBib290IHRpbWUgcGVuYWx0
+eS4gIGdldF9yYW5kb21fKigpIGlzIHF1aXRlIGV4cGVuc2l2ZSBhbmQgaXMgb3ZlcmtpbGwu
+Li4NCi0tIA0KU2VudCBmcm9tIG15IEFuZHJvaWQgZGV2aWNlIHdpdGggSy05IE1haWwuIFBs
+ZWFzZSBleGN1c2UgYnJldml0eSBhbmQgZm9ybWF0dGluZy4=
 
-I'm afraid waiting conf->quiesce set isn't safe. The reason to wait for
-superblock write isn't because of async IO. discard could zero data, so before
-we do discard, we must make sure superblock points to correct log tail,
-otherwise recovery will not work. This is the reason we wait for superblock
-write.
-
-> r5l_write_super_and_discard_space() shouldn't call discard if the
-> superblock write didn't complete, and probably r5l_do_reclaim()
-> shouldn't update last_checkpoint and last_cp_seq in that case.
-> This is what I mean by "with a bit of care" and "exit gracefully".
-> Maybe I should have said "abort cleanly".  The goal is to get the thread
-> to exit.  It doesn't need to complete what it was doing, it just needs
-> to make sure that it leaves things in a tidy state so that when it
-> starts up again, it can pick up where it left off.
-
-Agree, we could ignore discard sometime, which happens occasionally, so impact
-is little. I tested something like below recently. Assume this is the solution
-we agree on?
 
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 5504ce2..cd34e66 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -96,7 +96,6 @@ struct r5l_log {
- 	spinlock_t no_space_stripes_lock;
- 
- 	bool need_cache_flush;
--	bool in_teardown;
- };
- 
- /*
-@@ -703,32 +702,22 @@ static void r5l_write_super_and_discard_space(struct r5l_log *log,
- 		return;
- 
- 	mddev = log->rdev->mddev;
-+
- 	/*
--	 * This is to avoid a deadlock. r5l_quiesce holds reconfig_mutex and
--	 * wait for this thread to finish. This thread waits for
--	 * MD_CHANGE_PENDING clear, which is supposed to be done in
--	 * md_check_recovery(). md_check_recovery() tries to get
--	 * reconfig_mutex. Since r5l_quiesce already holds the mutex,
--	 * md_check_recovery() fails, so the PENDING never get cleared. The
--	 * in_teardown check workaround this issue.
-+	 * Discard could zero data, so before discard we must make sure
-+	 * superblock is updated to new log tail. Updating superblock (either
-+	 * directly call md_update_sb() or depend on md thread) must hold
-+	 * reconfig mutex. On the other hand, raid5_quiesce is called with
-+	 * reconfig_mutex hold. The first step of raid5_quiesce() is waitting
-+	 * for all IO finish, hence waitting for reclaim thread, while reclaim
-+	 * thread is calling this function and waitting for reconfig mutex. So
-+	 * there is a deadlock. We workaround this issue with a trylock.
-+	 * FIXME: we could miss discard if we can't take reconfig mutex
- 	 */
--	if (!log->in_teardown) {
--		set_mask_bits(&mddev->flags, 0,
--			      BIT(MD_CHANGE_DEVS) | BIT(MD_CHANGE_PENDING));
--		md_wakeup_thread(mddev->thread);
--		wait_event(mddev->sb_wait,
--			!test_bit(MD_CHANGE_PENDING, &mddev->flags) ||
--			log->in_teardown);
--		/*
--		 * r5l_quiesce could run after in_teardown check and hold
--		 * mutex first. Superblock might get updated twice.
--		 */
--		if (log->in_teardown)
--			md_update_sb(mddev, 1);
--	} else {
--		WARN_ON(!mddev_is_locked(mddev));
--		md_update_sb(mddev, 1);
--	}
-+	if (!mddev_trylock(mddev))
-+		return;
-+	md_update_sb(mddev, 1);
-+	mddev_unlock(mddev);
- 
- 	/* discard IO error really doesn't matter, ignore it */
- 	if (log->last_checkpoint < end) {
-@@ -827,7 +816,6 @@ void r5l_quiesce(struct r5l_log *log, int state)
- 	if (!log || state == 2)
- 		return;
- 	if (state == 0) {
--		log->in_teardown = 0;
- 		/*
- 		 * This is a special case for hotadd. In suspend, the array has
- 		 * no journal. In resume, journal is initialized as well as the
-@@ -838,11 +826,6 @@ void r5l_quiesce(struct r5l_log *log, int state)
- 		log->reclaim_thread = md_register_thread(r5l_reclaim_thread,
- 					log->rdev->mddev, "reclaim");
- 	} else if (state == 1) {
--		/*
--		 * at this point all stripes are finished, so io_unit is at
--		 * least in STRIPE_END state
--		 */
--		log->in_teardown = 1;
- 		/* make sure r5l_write_super_and_discard_space exits */
- 		mddev = log->rdev->mddev;
- 		wake_up(&mddev->sb_wait);
