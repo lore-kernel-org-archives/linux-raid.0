@@ -1,93 +1,68 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: kernel checksumming performance vs actual raid device performance
-Date: Tue, 23 Aug 2016 17:42:54 -0400
-Message-ID: <9f7e40ae-3117-a936-2a9f-10e363e9f9a6@turmel.org>
-References: <CAJvUf-C-Nr8sSnSPL-5jt1NLOAiZjhZ=bjDRUbX_RjphRL+yWA@mail.gmail.com>
- <CAFx4rwQj3_JTNiS0zsQjp_sPXWkrp0ggjg_UiR7oJ8u0X9PQVA@mail.gmail.com>
- <CAJvUf-Dqesy2TJX7W-bPakzeDcOoNy0VoSWWM06rKMYMhyhY7g@mail.gmail.com>
- <CAFx4rwSQQuqeCFm+60+Gm75D49tg+mVjU=BnQSZThdE7E6KqPQ@mail.gmail.com>
- <CAJvUf-BoEJte8TF7_Su90CnjAiJ6q57m+PdGhxHA4cx5AEtxSg@mail.gmail.com>
- <51443e5b-3eef-c35f-8ee7-ad3e85e4e76c@redhat.com>
- <CAFx4rwT0jt9NCu4imruPUhfAR71=cvHwx-kdZxoTniZaQcPByQ@mail.gmail.com>
- <CAJvUf-ApkKJXm7Jjiq=gXY9b9RrEvwA5u35xrMUjX2x0btVL4g@mail.gmail.com>
- <3e239b96-b06e-d33b-2e99-42ffa170d804@redhat.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH -next] md-cluster: fix error return code in join()
+Date: Tue, 23 Aug 2016 17:09:31 -0700
+Message-ID: <20160824000931.GA57645@kernel.org>
+References: <1471790545-3301-1-git-send-email-weiyj.lk@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3e239b96-b06e-d33b-2e99-42ffa170d804@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <1471790545-3301-1-git-send-email-weiyj.lk@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>, Matt Garman <matthew.garman@gmail.com>, Doug Dumitru <doug@easyco.com>
-Cc: Mdadm <linux-raid@vger.kernel.org>
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Cc: Wei Yongjun <weiyongjun1@huawei.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 08/23/2016 04:15 PM, Doug Ledford wrote:
+On Sun, Aug 21, 2016 at 02:42:25PM +0000, Wei Yongjun wrote:
+> From: Wei Yongjun <weiyongjun1@huawei.com>
+> 
+> Fix to return error code -ENOMEM from the lockres_init() error
+> handling case instead of 0, as done elsewhere in this function.
+> 
+> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+> ---
+>  drivers/md/md-cluster.c | 12 +++++++++---
+>  1 file changed, 9 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+> index 333f0cf..2b13117 100644
+> --- a/drivers/md/md-cluster.c
+> +++ b/drivers/md/md-cluster.c
+> @@ -874,8 +874,10 @@ static int join(struct mddev *mddev, int nodes)
+>  		goto err;
+>  	}
+>  	cinfo->ack_lockres = lockres_init(mddev, "ack", ack_bast, 0);
+> -	if (!cinfo->ack_lockres)
+> +	if (!cinfo->ack_lockres) {
+> +		ret = -ENOMEM;
+>  		goto err;
+> +	}
+>  	/* get sync CR lock on ACK. */
+>  	if (dlm_lock_sync(cinfo->ack_lockres, DLM_LOCK_CR))
+>  		pr_err("md-cluster: failed to get a sync CR lock on ACK!(%d)\n",
+> @@ -889,8 +891,10 @@ static int join(struct mddev *mddev, int nodes)
+>  	pr_info("md-cluster: Joined cluster %s slot %d\n", str, cinfo->slot_number);
+>  	snprintf(str, 64, "bitmap%04d", cinfo->slot_number - 1);
+>  	cinfo->bitmap_lockres = lockres_init(mddev, str, NULL, 1);
+> -	if (!cinfo->bitmap_lockres)
+> +	if (!cinfo->bitmap_lockres) {
+> +		ret = -ENOMEM;
+>  		goto err;
+> +	}
+>  	if (dlm_lock_sync(cinfo->bitmap_lockres, DLM_LOCK_PW)) {
+>  		pr_err("Failed to get bitmap lock\n");
+>  		ret = -EINVAL;
+> @@ -898,8 +902,10 @@ static int join(struct mddev *mddev, int nodes)
+>  	}
+>  
+>  	cinfo->resync_lockres = lockres_init(mddev, "resync", NULL, 0);
+> -	if (!cinfo->resync_lockres)
+> +	if (!cinfo->resync_lockres) {
+> +		ret = -ENOMEM;
+>  		goto err;
+> +	}
+>  
+>  	return 0;
+>  err:
 
-> You're raid device has a good chunk size for your usage pattern.  If you
-> had a smallish chunk size (like 64k or 32k), I would actually expect
-> things to behave differently.  But, then again, maybe I'm wrong and that
-> would help.  With a smaller chunk size, you would be able to fit more
-> stripes in the stripe cache using less memory.
-
-This is not correct.  Parity operations in MD raid4/5/6 operate on 4k
-blocks.  The stripe cache for an array is a collection of 4k elements
-per member device.  Chunk size doesn't factor into the cache itself.
-
-But see below....
-
-> Makes sense.  I know the stripe cache size is conservative by default
-> because of the fact that it's not shared with the page cache, so you
-> might as well consider it's memory lost.  When you upped it to 64k, and
-> you have 22 disks at 512k chunk, that 11MB per stripe and 65536 total
-> allowed stripes which is a maximum memory consumption of around 700GB
-> RAM.  I doubt you have that much in your machine, so I'm guessing it's
-> simply using all available RAM that the page cache or something else
-> isn't already using.  That's also explains why setting it higher doesn't
-> provide any additional benefits ;-).
-
-More likely the parity thread saturated and no more speed was possible.
-Also possible that there would be a step change in performance again at
-a much larger cache size.
-
->> While 200 MB/s of XOR sounds high, the kernel is "advertising" over
->> 8000 MB/s, per dmesg:
->>
->> [    6.386820] xor: automatically using best checksumming function:
->> [    6.396690]    avx       : 24064.000 MB/sec
->> [    6.414706] raid6: sse2x1   gen()  7636 MB/s
->> [    6.431725] raid6: sse2x2   gen()  3656 MB/s
->> [    6.448742] raid6: sse2x4   gen()  3917 MB/s
->> [    6.465753] raid6: avx2x1   gen()  5425 MB/s
->> [    6.482766] raid6: avx2x2   gen()  7593 MB/s
->> [    6.499773] raid6: avx2x4   gen()  8648 MB/s
->> [    6.499773] raid6: using algorithm avx2x4 gen() (8648 MB/s)
->> [    6.499774] raid6: using avx2x2 recovery algorithm
->>
->> (CPU is: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz.)
-
-Parity operations in raid must always involve all (available) member
-devices.  Read operations when not degraded won't generate any parity
-operations.  Most large write operations and any degraded read
-operations will involve all members, even if those members' data is not
-part of the larger read/write request.
-
-As chunk sizes get larger the odds grow that any given array I/O will
-touch a fraction of the slice, causing I/O to members purely for parity
-math.  Also, the odds rise that the starting point or ending point of an
-array I/O operation will not be aligned to the stripe, making more
-member I/O solely for parity math.
-
-Then add in the fact that dd issues I/O requests one block at a time,
-per the bs=? parameter.  So it is possible that data that would have
-been sequential without parallel pressure (still in the stripe cache for
-later reads) generates multiple parity calculations for fractional
-stripe operations, just due to stripe size/alignment mismatch on single
-dd dispatches.
-
-What bs=? value are you using in your dd commands?  Based on your 512k
-chunk, it should be 10240k for aligned operations and much larger than
-that for unaligned.
-
-FWIW, I use small chunk sizes -- usually 16k.
-
-Phil
+applied, thanks! 
