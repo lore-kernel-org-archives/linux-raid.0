@@ -1,53 +1,81 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v2] raid10: record correct address of bad block
-Date: Tue, 23 Aug 2016 17:12:48 -0700
-Message-ID: <20160824001248.GB57645@kernel.org>
-References: <1471942437-16720-1-git-send-email-tomasz.majchrzak@intel.com>
+Subject: Re: kernel checksumming performance vs actual raid device performance
+Date: Tue, 23 Aug 2016 18:02:41 -0700
+Message-ID: <20160824010241.GC57645@kernel.org>
+References: <CAJvUf-C-Nr8sSnSPL-5jt1NLOAiZjhZ=bjDRUbX_RjphRL+yWA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1471942437-16720-1-git-send-email-tomasz.majchrzak@intel.com>
+In-Reply-To: <CAJvUf-C-Nr8sSnSPL-5jt1NLOAiZjhZ=bjDRUbX_RjphRL+yWA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Cc: linux-raid@vger.kernel.org, aleksey.obitotskiy@intel.com, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com, maksymilian.kunt@intel.com
+To: Matt Garman <matthew.garman@gmail.com>
+Cc: Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Aug 23, 2016 at 10:53:57AM +0200, Tomasz Majchrzak wrote:
-> For failed write request record block address on a device, not block
-> address in an array.
+On Tue, Jul 12, 2016 at 04:09:25PM -0500, Matt Garman wrote:
+> We have a system with a 24-disk raid6 array, using 2TB SSDs.  We use
+> this system in a workload that is 99.9% read-only (a few small
+> writes/day, versus countless reads).  This system is an NFS server for
+> about 50 compute nodes that continually read its data.
 > 
-> Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-> ---
->  drivers/md/raid10.c | 9 +++++----
->  1 file changed, 5 insertions(+), 4 deletions(-)
+> In a non-degraded state, the system works wonderfully: the md0_raid6
+> process uses less than 1% CPU, each drive is around 20% utilization
+> (via iostat), no swapping is taking place.  The outbound throughput
+> averages around 2.0 GB/sec, with 2.5 GB/sec peaks.
 > 
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index cfa96b5..cd8d197 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -2465,18 +2465,19 @@ static int narrow_write_error(struct r10bio *r10_bio, int i)
->  
->  	while (sect_to_write) {
->  		struct bio *wbio;
-> +		sector_t wsector;
->  		if (sectors > sect_to_write)
->  			sectors = sect_to_write;
->  		/* Write at 'sector' for 'sectors' */
->  		wbio = bio_clone_mddev(bio, GFP_NOIO, mddev);
->  		bio_trim(wbio, sector - bio->bi_iter.bi_sector, sectors);
-> -		wbio->bi_iter.bi_sector = (r10_bio->devs[i].addr+
-> -				   choose_data_offset(r10_bio, rdev) +
-> -				   (sector - r10_bio->sector));
-> +		wsector = r10_bio->devs[i].addr + (sector - r10_bio->sector);
-> +		wbio->bi_iter.bi_sector = wsector +
-> +				   choose_data_offset(r10_bio, rdev);
->  		wbio->bi_bdev = rdev->bdev;
->  		if (submit_bio_wait(WRITE, wbio) < 0)
->  			/* Failure! */
-> -			ok = rdev_set_badblocks(rdev, sector,
-> +			ok = rdev_set_badblocks(rdev, wsector,
->  						sectors, 0)
->  				&& ok;
+> However, we had a disk fail, and the throughput dropped considerably,
+> with the md0_raid6 process pegged at 100% CPU.
+> 
+> I understand that data from the failed disk will need to be
+> reconstructed from parity, and this will cause the md0_raid6 process
+> to consume considerable CPU.
+> 
+> What I don't understand is how I can determine what kind of actual MD
+> device performance (throughput) I can expect in this state?
+> 
+> Dmesg seems to give some hints:
+> 
+> [    6.386820] xor: automatically using best checksumming function:
+> [    6.396690]    avx       : 24064.000 MB/sec
+> [    6.414706] raid6: sse2x1   gen()  7636 MB/s
+> [    6.431725] raid6: sse2x2   gen()  3656 MB/s
+> [    6.448742] raid6: sse2x4   gen()  3917 MB/s
+> [    6.465753] raid6: avx2x1   gen()  5425 MB/s
+> [    6.482766] raid6: avx2x2   gen()  7593 MB/s
+> [    6.499773] raid6: avx2x4   gen()  8648 MB/s
+> [    6.499773] raid6: using algorithm avx2x4 gen() (8648 MB/s)
+> [    6.499774] raid6: using avx2x2 recovery algorithm
+> 
+> (CPU is: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz.)
+> 
+> Perhaps naively, I would expect that second-to-last line:
+> 
+> [    6.499773] raid6: using algorithm avx2x4 gen() (8648 MB/s)
+> 
+> to indicate what kind of throughput I could expect in a degraded
+> state, but clearly that is not right---or I have something
+> misconfigured.
+> 
+> So in other words, what does that gen() 8648 MB/s metric mean in terms
+> of real-world throughput?  Is there a way I can "convert" that number
+> to expected throughput of a degraded array?
 
-Applied, thanks!
+In non-degrade mode, raid6 just directly dispatch IO to raid disks, software
+involvement is very small. In degrade mode, the data is calculated. There are a
+lot of factors impacting the performance:
+1. enter the raid6 state machine, which has a long code path. (this is
+debatable, if a read doesn't read the faulty disk and it's a small random read,
+raid6 doesn't need to run the state machine. Fixing this could hugely improve
+the performance)
+2. the state machine runs in a single thread, which is a bottleneck. try to
+increase group_thread_cnt, which will make the handling multi-thread.
+3. stripe cache involves. try to increase stripe_cache_size.
+4. the faulty disk data must be calculated, which involves read from other
+disks. If this is a numa machine, and each disk interrupts to different
+cpus/nodes, there will be big impact (cache, wakeup IPI)
+5. the xor calculation overhead. Actually I don't think the impact is big,
+mordern cpu can do the calculation fast.
+
+Thanks,
+Shaohua
