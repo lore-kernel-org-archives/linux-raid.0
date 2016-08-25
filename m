@@ -1,41 +1,31 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH v2] mdopen: Prevent overrunning the devname
-	buffer when copying devnm into it for long md names.
-Date: Thu, 25 Aug 2016 13:45:23 -0400
-Message-ID: <wrfjfups7nf0.fsf@redhat.com>
-References: <20160824161044.20887-1-robert@leblancnet.us>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: bootsect replicated in p1, RAID enclosure suggestions?
+Date: Thu, 25 Aug 2016 22:06:11 +0100
+Message-ID: <57BF5DC3.3010904@youngman.org.uk>
+References: <20160823050947.GL32250@subspacefield.org>
+ <CAJCQCtSY=D-ASQ22km8GJjfju4jUgJSOBTAH5+XveCZq1BvT7w@mail.gmail.com>
+ <20160825062501.GN32250@subspacefield.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20160824161044.20887-1-robert@leblancnet.us> (Robert LeBlanc's
-	message of "Wed, 24 Aug 2016 10:10:44 -0600")
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Robert LeBlanc <robert@leblancnet.us>
-Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20160825062501.GN32250@subspacefield.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>, travis+ml-linux-raid@subspacefield.org
 List-Id: linux-raid.ids
 
-Robert LeBlanc <robert@leblancnet.us> writes:
-> Linux allows for 32 character device names. When using the maximum size device name and also
-> storing "/dev/", devname needs to be 37 character long to store the complete device name.
-> i.e. "/dev/md_abcdefghijklmnopqrstuvwxyz12\0"
->
-> Signed-Off: Robert LeBlanc<robert@leblancnet.us>
-> ---
->  mdopen.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+On 25/08/16 07:25, travis+ml-linux-raid@subspacefield.org wrote:
+> I understand and can probably acquire the most recent stable and
+> compile from source, if you think that would prove useful enough to
+> justify the effort.  TBH once GPT came out I lost track of which
+> partitioning tool was appropriate to use, it seemed like (IIRC)
+> cfdisk, sfdisk, parted were all vying for my attention... is parted
+> now the standard?
 
-Looks good - I corrected your comment to fit into a proper editor width
-of 80 characters, and also fixed up the SOB since it needs to say
-Signed-off-by rather than signed-off.
+To add to the fun, I use gdisk (or is it gfdisk?).
 
-Applied!
-Jes
+Like so many things gnu, when I looked at parted I ran away screaming
+from the feature overkill ... :-)
+
+Cheers,
+Wol
