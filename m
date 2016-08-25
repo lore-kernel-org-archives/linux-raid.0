@@ -1,164 +1,125 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: bootsect replicated in p1, RAID enclosure suggestions?
-Date: Wed, 24 Aug 2016 11:15:58 -0600
-Message-ID: <CAJCQCtSY=D-ASQ22km8GJjfju4jUgJSOBTAH5+XveCZq1BvT7w@mail.gmail.com>
-References: <20160823050947.GL32250@subspacefield.org>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH 1/3] MD: hold mddev lock for .quiesce in md_do_sync
+Date: Thu, 25 Aug 2016 14:59:13 +1000
+Message-ID: <87bn0hfnq6.fsf@notabene.neil.brown.name>
+References: <515fa68e5c4784b08f2ce99c082c923f6b02a3c9.1469922791.git.shli@fb.com> <87y44epwb5.fsf@notabene.neil.brown.name> <87y44dnrz2.fsf@notabene.neil.brown.name> <20160806041428.GB9281@kernel.org> <87h9aqluoa.fsf@notabene.neil.brown.name> <20160817012803.GA86961@kernel.org> <87k2f6g496.fsf@notabene.neil.brown.name> <20160824052512.GA1921@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160823050947.GL32250@subspacefield.org>
+In-Reply-To: <20160824052512.GA1921@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Aug 22, 2016 at 11:09 PM,
-<travis+ml-linux-raid@subspacefield.org> wrote:
-> Hello all,
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, Aug 24 2016, Shaohua Li wrote:
+
+> On Wed, Aug 24, 2016 at 02:49:57PM +1000, Neil Brown wrote:
+>> On Wed, Aug 17 2016, Shaohua Li wrote:
+>> >> >
+>> >> > We will have the same deadlock issue with just stopping/restarting =
+the reclaim
+>> >> > thread. As stopping the thread will wait for the thread, which prob=
+ably is
+>> >> > doing r5l_do_reclaim and writting the superblock. Since we are writ=
+ting the
+>> >> > superblock, we must hold the reconfig_mutex.
+>> >>=20
+>> >> When you say "writing the superblock" you presumably mean "blocked in
+>> >> r5l_write_super_and_discard_space(), waiting for  MD_CHANGE_PENDING to
+>> >> be cleared" ??
+>> > right
+>> >> With a bit of care you could wait for MD_CHANGE_PENDING to clear, or =
+for
+>> >> ->quiesce to be set, and then exit gracefully.
+>> >
+>> > Can you give details about this please? .quiesce is called with reconf=
+ig_mutex
+>> > hold, so the MD_CHANGE_PENDING will never get cleared.
+>>=20
+>> raid5_quiesce(mddev, 1) sets conf->quiesce and then calls r5l_quiesce().
+>>=20
+>> r5l_quiesce() tells the reclaim_thread to exit and waits for it to do so.
+>>=20
+>> But the reclaim thread might be in
+>>    r5l_do_reclaim() -> r5l_write_super_and_discard_space()
+>> waiting for MD_CHANGE_PENDING to clear.  That will only get cleared when
+>> the main thread can get the reconfig_mutex, which the thread calling
+>> raid5_quiesce() might hold.  So we get a deadlock.
+>>=20
+>> My suggestion is to change r5l_write_super_and_discard_space() so that
+>> it waits for *either* MD_CHANGE_PENDING to be clear, or conf->quiesce
+>> to be set.  That will avoid the deadlock.
+>>=20
+>> Whatever thread called raid5_quiesce() will now be in control of the
+>> array without any async IO going on.  If it needs the metadata to be
+>> sync, it can do that itself.  If not, then it doesn't really matter that
+>> r5l_write_super_and_discard_space() didn't wait.
 >
-> So I have an Intel NUC (for low power Linux) plugged via USB into a 4
-> bay enclosure doing linear (yeah I know; it's the backup server, the
-> primary is raid10).
+> I'm afraid waiting conf->quiesce set isn't safe. The reason to wait for
+> superblock write isn't because of async IO. discard could zero data, so b=
+efore
+> we do discard, we must make sure superblock points to correct log tail,
+> otherwise recovery will not work. This is the reason we wait for superblo=
+ck
+> write.
 >
-> And every once in a while, this happens (*see end).  The partition 1
-> that would normally contain a MD slice ends up being a replica of the
-> boot cylinder.  I can't tell if it's the mdraid linear impl, the
-> kernel doing something weird, the USB drivers, the enclosure firmware,
-> or what.
-
-OK well you don't tell us what the mdadm create command was, there's
-no information on the metadata version, no mdadm -E or -D output, etc.
-There's really nothing to go on here. So we can't tell what the
-problem is either, or what your question is.
-
+>> r5l_write_super_and_discard_space() shouldn't call discard if the
+>> superblock write didn't complete, and probably r5l_do_reclaim()
+>> shouldn't update last_checkpoint and last_cp_seq in that case.
+>> This is what I mean by "with a bit of care" and "exit gracefully".
+>> Maybe I should have said "abort cleanly".  The goal is to get the thread
+>> to exit.  It doesn't need to complete what it was doing, it just needs
+>> to make sure that it leaves things in a tidy state so that when it
+>> starts up again, it can pick up where it left off.
 >
-> Anyway, this happened while I was restoring a Windows machine whose
-> root drive suddenly took a nosedive, and it happens every 6 months
-> or so.  Today it happened while I was in the middle of recovering
-> a Windows machine whose 1TB SSD threw up on C: and totally nuked
-> the data.
+> Agree, we could ignore discard sometime, which happens occasionally, so i=
+mpact
+> is little. I tested something like below recently. Assume this is the sol=
+ution
+> we agree on?
 
-OK? I don't follow this at all, how it relates to the NUC, how it
-relates to the USB drives connected to the NUC.
+Yes, this definitely looks like it is heading in the right direction.
 
+I thought that
 
->
-> The last low-power option I tried was an OpenRD Ultimate based around
-> ARMv5TE which was basically unsupported by debian by the time I got
-> it, and subsequently became ultra-flaky due to what seemed to be RAM
-> problems - it was crashing every 3 days with kernel panics, and every
-> once in a while would do something worse.
+> -		set_mask_bits(&mddev->flags, 0,
+> -			      BIT(MD_CHANGE_DEVS) | BIT(MD_CHANGE_PENDING));
+> -		md_wakeup_thread(mddev->thread);
 
-This is definitely superfluous information that just clutters the thread...
+would still be there in the case that the lock cannot be claimed.
 
+You could even record the ->events value before setting the flags,
+and record the range that needs to be discarded.  Next time
+r5l_do_reclaim is entered, if ->events has moved on, then it should be
+safe to discard the recorded range.  Maybe.
 
+Thanks,
+NeilBrown
 
-> Any recommendations on a low power hardware with a well-supported
-> distro, that matches up well with a real backplane and SATA
-> connections instead of USB.  The only caveat is that I want to encrypt
-> raw disks and it has to not be very noisy - so no rackmount gear
-> with 65dB 1" dog whistle fans.  Obviously, whatever backplane must
-> be well-supported by the distro.
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
-OK so you just want to give up on the existing setup and you want
-advice on a whole new setup? From my perspective you're basically on
-three separate threads at this point.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-
->
-> Also, does anyone have experience with cryptsetup on multiple
-> partitions?  I can do that but get prompted multiple times and I was
-> wondering if anyone knew an easy way to fix the boot time scripts to
-> avoid that, only prompting once per unique underlying crypttab.
-
-And now you're on your fourth subject for an entirely new thread that
-also has nothing to do with this list. This is probably a distribution
-question. On the distribution I use, the thing that prompts for a
-passphrase tries that passphrase on all cryptluks devices, so in the
-event they share the same passphrase, they're all opened just by
-entering the passphrase one time. If the passphrase is entered
-incorrectly, now I'm stuck and have to enter the passphrase per LUKS
-instance.
-
-
->
-> And finally, I have a story about buggy drive firmware that you
-> might enjoy, especially if you were doing this sort of stuff in
-> the 90s as well.  Cheers:
-
-OK...fifth subject and thread.
-
-
-
-> # parted /dev/sde
-> GNU Parted 2.3
-
-I would start out by using a non-ancient version of parted. This is 6 years old.
-
-
-> Using /dev/sde
-> Welcome to GNU Parted! Type 'help' to view a list of commands.
-> (parted) p
-> Model: WDC WD40 EFRX-68WT0N0 (scsi)
-> Disk /dev/sde: 4001GB
-> Sector size (logical/physical): 512B/512B
-
-It's a WDC Red with a physical sector size of 4096B, so it looks like
-the USB enclosure is doing the typical thing of masking the try
-physical sector size from the kernel. This is better than the opposite
-where the enclosure reports the drive as 4096B/4096B logical/physical,
-where the drive itself has 512B logical sectors, as this will cause
-problems if the drive is ever removed from that enclosure, or put into
-one that doesn't report 4096B logical sectors.
-
-
-> Partition Table: gpt
->
-> Number  Start   End     Size    File system  Name        Flags
->  1      1049kB  4001GB  4001GB               Linux RAID  raid
->
-> (parted) q
-> # parted /dev/sdd1
-> GNU Parted 2.3
-> Using /dev/sdd1
-> Welcome to GNU Parted! Type 'help' to view a list of commands.
-> (parted) p
-> Model: Unknown (unknown)
-> Disk /dev/sdd1: 4001GB
-> Sector size (logical/physical): 512B/512B
-> Partition Table: gpt
->
-> Number  Start   End     Size    File system  Name        Flags
->  1      1049kB  4001GB  4001GB               Linux RAID  raid
-
-
-It's purely speculation, but it sounds like to me in the history of
-one or more drives, the previous signatures weren't removed before the
-drive was retasked for its new purpose. That's the folly of not wiping
-the signatures in the reverse order they were created, and just
-expecting that starting over will wipe those old signatures.
-
-But I think there is a legitimate gripe that parted probably should
-not operate on partitions like this. It's not valid to have nested
-GPTs like this. And I have no idea if parted is showing you valid or
-bogus information. You'd need to do something like:
-
-dd if=/dev/sdd1 count=2 2>/dev/null | hexdump -C
-
-And then we can see if there really is a PMBR and GPT in that first
-sector that parted is picking up. But where it could be coming from in
-an mdadm linear layout? No idea.
-
-The other thing to check is the end of the partition, because GPT has
-a primary and backup. So the 2nd to last sector of sdd1 may have a
-backup GPT on it, and possibly something is wrongly restoring it
-sometimes.
-
-In any case I would still look to using something much much newer than
-parted 2.3, it's basically Pleistocene old, and the version of mdadm
-is also likewise old. But this is what happens with LTS releases,
-ancient software for which no one except its maintainers remember the
-state and history.
-
-
--- 
-Chris Murphy
+iQIcBAEBCAAGBQJXvnshAAoJEDnsnt1WYoG50lsP/0HLC17moELzN+vPA3mBNqQW
+Bw78MxwzotDaLwn65T5/Wkke3hrY5eOluNawePmQlbB7tlMk3o4Zic8qTw0cWhfL
+VuKL/b8jzrwTUdOYDgtXZISw7jXgbWGt5I4S8GfNU/hDLMyNI2QmvuSBdtHOAinl
+DY3T3yTuA8KYF9c0i/TDpKADhvyl9Ijd484/sV0W0acc13Y68HkeB0tQGCmAKX6u
+1uaqD26I0M+C6JlFg2Fe5JcZKM9cRrLrHFHJw/Vq+mCDBmgCPAru+hWOYKAkgc4x
+VrxR8FoJdPveS11/U3F5jOb0CiusxDu6YZQerPO2+T+4hOg1m9tFwRFF3ad1V2Zy
+++kjpHjymjQRbHTjoTDzgm65qGS65Fp4r5/fslzzFhm1uRqhV9dESbQOcB8U0tWX
+PpgV0KcmS+YonjE42ejBB0NMxMlmgwyyvmVhBDLfzAimUz9eFdvGXBtz9N5oGD20
+irg/3jeCen+G7b8DHF1XjubAm75aeZcuiErSJmm3OK7K0JXfCGrZ4p7eSBc5/iep
+dy27/xZsrxfCbaflXgkvCO8BCBNvL4AGydFYheCbyUchq3PyDNCe4pvYbqgy4mDd
+MaHcrlrR6YUAI3ZqvmEW1T/ODXGmJEddsso9UWfUtQjJdCG7rtYY7p4r2ScVMHZX
+yyHjZUYlhEAtWM9jv7JC
+=NT2l
+-----END PGP SIGNATURE-----
+--=-=-=--
