@@ -1,74 +1,147 @@
-From: Benjammin2068 <benjammin2068@gmail.com>
-Subject: Re: Need Help with crashed RAID5 (that was rebuilding and then had
- SATA error on another drive)
-Date: Thu, 25 Aug 2016 21:54:45 -0500
-Message-ID: <57BFAF75.1080807@gmail.com>
-References: <CADDTLRB9z6J0F6+uO3k-u74qnjZxiagbNLWrg_tP5GSZt-Vd5A@mail.gmail.com>
- <215fd175-65b6-e24b-338f-0c44ae030573@websitemanagers.com.au>
- <CADDTLRBf9NPO6OuF4a3b+xffZgeZRqHRG+pJdPmbc9-Jat0HVQ@mail.gmail.com>
- <d6d3fe0d-3f9f-985f-9bfb-051428cf221b@websitemanagers.com.au>
- <57BBDA5B.3020706@gmail.com> <57BBDC15.5030301@gmail.com>
- <b8c6a380-7e6a-fda9-5834-b85271b26892@websitemanagers.com.au>
- <57BC61F7.8070102@gmail.com>
- <aca4e83f-9a3f-c200-7c16-3b5d9df52c1e@websitemanagers.com.au>
- <57BE450B.4030700@gmail.com>
- <56e86db5-456d-e9c1-339d-ba8903fe5dde@websitemanagers.com.au>
- <57BE52BC.6040908@gmail.com>
- <933228e0-bce4-ffad-f48d-034bf89bc07f@websitemanagers.com.au>
- <57BF9965.1020403@gmail.com>
- <f3d5add5-cfad-e33f-2f75-934189fa501d@turmel.org>
+From: travis@subspacefield.org
+Subject: Re: bootsect replicated in p1, RAID enclosure suggestions?
+Date: Thu, 25 Aug 2016 19:50:12 -0700
+Message-ID: <20160826025012.GO32250@subspacefield.org>
+References: <20160823050947.GL32250@subspacefield.org>
+ <CAJCQCtSY=D-ASQ22km8GJjfju4jUgJSOBTAH5+XveCZq1BvT7w@mail.gmail.com>
+ <20160825062501.GN32250@subspacefield.org>
+ <CAJCQCtSWOwf6pHD2O7CtaNwF4BDbHO+hh7XrXpcaRsqPkvmFrQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f3d5add5-cfad-e33f-2f75-934189fa501d@turmel.org>
+Content-Disposition: inline
+In-Reply-To: <CAJCQCtSWOwf6pHD2O7CtaNwF4BDbHO+hh7XrXpcaRsqPkvmFrQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Chris Murphy <lists@colorremedies.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Thu, Aug 25, 2016 at 04:32:12PM -0600, Chris Murphy wrote:
+> that's not good, but not unfixable. The mdadm super block starts at
+> LBA 8, 4096 bytes from the start of that partition, so it's safe to
+> zero the first 4096 bytes. The GPT is mainly in the first three
+> sectors so you could just write zeros for a count of 3, although it is
+> more complete to zero with a count=8, for the partition, not the whole
+> device.
 
+Useful info, thanks.
 
-On 08/25/2016 09:22 PM, Phil Turmel wrote:
-> On 08/25/2016 09:20 PM, Ben wrote:
->
->> I read a lot of conflicting info on SCT/ERC online (well, TLER anyway)
->> -- Adam likes it enabled. What say the rest of you?
-> Adam is correct, and it's not a matter of "like".  
+> Looks like the mdadm super block might have been stepped on by
+> something. You'd need to look for some evidence of it using something
+> like
+> 
+> dd if=/dev/sdf1 count=9 2>/dev/null | hexdump -C
+> 
+> If it's intact it should be at offset x1000 and again just a matter of
+> wiping the first 8 sectors, again of the partition, not the whole
+> device.
 
-"like" was just an expression.
+> > Sadly, I can't do a mdadm -D because I can't assemble the RAID.
+> > $ sudo mdadm -E /dev/md127
+> 
+> Again, wrong command, you should use -D for this.
 
->
->
-> You either must have
-> it enabled, or you *must* apply the kernel driver timeout work-around
-> (180 seconds) for that drive.  Failure to do so results in crashed arrays.
+# mdadm -D /dev/md127 
+mdadm: md device /dev/md127 does not appear to be active.
 
-For the ST1000DM003, its SMART capabilities states "SCT Status Supported" -- What does that mean in comparison with the other HD103SJ drives?
+> This is not a bug report. There's no reproduce steps, there's no
+> evidence of a bug. I'm not experiencing random replacement of mdadm
+> superblock data with MBR and GPT signatures.
 
-It does SCT but doesn't let the user control it or it doesn't do it at all?
+I realize it's not terribly actionable.  But enough circumstantial
+evidence from enough people and one starts looking for things which
+can exhibit that behavior.
 
-(smartctl -l scterc /dev/sde yields a message that implies control is not supported)
+> That's not really what
+> I'd expect of drive or enclosure firmware which by design should be
+> partition agnostic, as there's more than one or two valid kinds of
+> partitioning. Plus, it'd be scary even if it picked the right one, it
+> could clobber a legitimate existing one.
 
->
-> Enterprise and NAS drives work out of the box.  Desktop/green drives do not.
+I've had some weird shit, but you're right that it's odd that it'd
+write a partition table out to /dev/sdd1 instead of /dev/sdd, that
+almost sounds like something that would require the OS to get
+involved, to get that offset confused.
 
-Yea - I didn't buy any green drives (purposefully anyway) for this system.
+> So I'd say it's something else.
 
->
-> Some reading assignments from old discussions (read whole threads if you
-> have time):
->
-> http://marc.info/?l=linux-raid&m=139050322510249&w=2
-> http://marc.info/?l=linux-raid&m=135863964624202&w=2
-> http://marc.info/?l=linux-raid&m=135811522817345&w=1
-> http://marc.info/?l=linux-raid&m=133761065622164&w=2
-> http://marc.info/?l=linux-raid&m=132477199207506
-> http://marc.info/?l=linux-raid&m=133665797115876&w=2
-> http://marc.info/?l=linux-raid&m=142487508806844&w=3
-> http://marc.info/?l=linux-raid&m=144535576302583&w=2
->
+Do you have any idea what that could be?  I haven't logged into this
+box in months, and nobody else has either.  If it's not USB or drive
+firmware, I'm fresh out of ideas.  Repartitioning disks isn't exactly
+something most stuff does automatically and without prompting, as it's
+pretty dangerous.
 
-Thanks, will go read.
+> In every case I've seen, it was user error. I haven't heard of things
+> putting GPTs in partitions, and in a sense I'd say it's a bug if any
+> utility lets a user do that. Nesting GPT's in partitions, bad idea,
+> although it *should* be innocuous because it shouldn't be seen/honored
+> by anything that doesn't go looking for it because it doesn't belong
+> there.
 
+That's entirely possible.  When I had this problem the _first_ few times
+I assumed it was the fact I was using raw disks and not partitioned disks.
+I had a very similar problem, where something would wipe out the mdlabel,
+but only on the last two drives of the array.
 
-  -Ben
+In fact, I decided to grep around for /dev/sdd1 and /dev/sde1 which seem
+to get trounced (but not /dev/sd[bc]1) and what do you know:
+
+# grep -R /dev/sde1 /etc/
+/etc/lvm/cache/.cache:          "/dev/sde1",
+
+That certainly looks promising.  I wonder if you just solved my problem
+without hardware upgrade.
+
+> > I've certainly encountered this "GPT outside cylinder 0" on these two
+> > drives before,
+> 
+> Keep in mind cylinders are gone, they don't exist anymore. Drives all
+> speak in LBAs now. *shrug* The GPT typically involves LBAs 0, 1 and 2
+> at least, more if there are more than 4 partitions.
+
+Shorthand for "before partition 1".
+
+> I don't recognize the above stuff, so I'm not sure what it is. I'd
+> usually expect it to be zeros if it's not a boot drive.
+
+It was used as a raw disk in an encrypted RAID before.
+
+> OK it does in fact have a PMBR and GPT in the 1st and 2nd sector of
+> this partition. Pretty weird how it got there. There is a UUID
+> starting at offset 0x238 so you can look around and see if anything
+> else has that UUID or if that UUID ever changed or comes back after
+> you fix this. If it's not the same UUID, something is creating it with
+> a random UUID each time, which would mean it's not just being copied
+> from somewhere.
+
+Got it.  Good idea.
+
+> We kinda expect sdd to have a valid PMBR and GPT though... so that's
+> sane. I just don't know what to make of the stuff in LBA 0 before the
+> PMBR.
+
+It's just random fill from a previous incarnation.
+
+> It is common. I prefer gdisk, which has a nomenclature similar to
+> fdisk. The nomenclature of parted is confusing.
+
+I think somewhere in learning parted and repartitioning all the disks,
+I managed to type /dev/sdX1 instead of /dev/sdX when creating the
+partitions.
+
+> FWIW it's probably a lot simpler layout if you wanted to do either
+> linear or raid0, to just blow away all four drives with hdparm and ATA
+> security erase to get rid of all signatures; and then make all of them
+> into LVM physical volumes without any partitioning first, and then
+> make a logical volume, which by default is linear/concat, or you can
+> choose to use raid0 (this is a per logical volume characteristic), and
+> then encrypt the LV, and then format the LUKS volume. There's no
+> advantage to adding either partitions or mdadm RAIDs if you're going
+> to use LVM anyway and this is a Linux only storage enclosure.
+
+Good call, reduces the diversity of layers in the stack too.  Thanks.
+-- 
+http://www.subspacefield.org/~travis/ | if spammer then john@subspacefield.org
+"Computer crime, the glamor crime of the 1970s, will become in the
+1980s one of the greatest sources of preventable business loss."
+John M. Carroll, "Computer Security", first edition cover flap, 1977
