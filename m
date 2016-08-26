@@ -1,53 +1,78 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: bootsect replicated in p1, RAID enclosure suggestions?
-Date: Thu, 25 Aug 2016 22:25:35 -0600
-Message-ID: <CAJCQCtQLLJEoovBtks0ft9XArHwwZTMqBGobW5WavsQydbqSBQ@mail.gmail.com>
-References: <20160823050947.GL32250@subspacefield.org> <CAJCQCtSY=D-ASQ22km8GJjfju4jUgJSOBTAH5+XveCZq1BvT7w@mail.gmail.com>
- <20160825062501.GN32250@subspacefield.org> <CAJCQCtSWOwf6pHD2O7CtaNwF4BDbHO+hh7XrXpcaRsqPkvmFrQ@mail.gmail.com>
- <20160826025012.GO32250@subspacefield.org> <CAJCQCtRwF1XCNQRxibFGZ0SVQ8=RKo1birv5ZWZBvZGpuu0ndQ@mail.gmail.com>
- <20160826035850.GQ32250@subspacefield.org> <20160826040619.GR32250@subspacefield.org>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Need Help with crashed RAID5 (that was rebuilding and then had
+ SATA error on another drive)
+Date: Fri, 26 Aug 2016 08:38:27 -0400
+Message-ID: <c26db3f3-a991-006e-833e-b2a79022fbd2@turmel.org>
+References: <CADDTLRB9z6J0F6+uO3k-u74qnjZxiagbNLWrg_tP5GSZt-Vd5A@mail.gmail.com>
+ <215fd175-65b6-e24b-338f-0c44ae030573@websitemanagers.com.au>
+ <CADDTLRBf9NPO6OuF4a3b+xffZgeZRqHRG+pJdPmbc9-Jat0HVQ@mail.gmail.com>
+ <d6d3fe0d-3f9f-985f-9bfb-051428cf221b@websitemanagers.com.au>
+ <57BBDA5B.3020706@gmail.com> <57BBDC15.5030301@gmail.com>
+ <b8c6a380-7e6a-fda9-5834-b85271b26892@websitemanagers.com.au>
+ <57BC61F7.8070102@gmail.com>
+ <aca4e83f-9a3f-c200-7c16-3b5d9df52c1e@websitemanagers.com.au>
+ <57BE450B.4030700@gmail.com>
+ <56e86db5-456d-e9c1-339d-ba8903fe5dde@websitemanagers.com.au>
+ <57BE52BC.6040908@gmail.com>
+ <933228e0-bce4-ffad-f48d-034bf89bc07f@websitemanagers.com.au>
+ <57BF9965.1020403@gmail.com>
+ <f3d5add5-cfad-e33f-2f75-934189fa501d@turmel.org>
+ <57BFAF75.1080807@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160826040619.GR32250@subspacefield.org>
+In-Reply-To: <57BFAF75.1080807@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Benjammin2068 <benjammin2068@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Aug 25, 2016 at 10:06 PM,
-<travis+ml-linux-raid@subspacefield.org> wrote:
-> On Thu, Aug 25, 2016 at 08:58:50PM -0700, travis@subspacefield.org wrote:
->> Yeah, *when I created this disk layout* I might have created a GPT in
->> partition 1.
+On 08/25/2016 10:54 PM, Benjammin2068 wrote:
+>> You either must have
+>> it enabled, or you *must* apply the kernel driver timeout work-around
+>> (180 seconds) for that drive.  Failure to do so results in crashed arrays.
+> 
+> For the ST1000DM003, its SMART capabilities states "SCT Status Supported" -- What does that mean in comparison with the other HD103SJ drives?
+> 
+> It does SCT but doesn't let the user control it or it doesn't do it at all?
+
+ERC is a feature within the SCT standard.  For modern hard drives,
+claiming "SCT" support is comparable to a bottled water supplier
+advertising that their product is wet.
+
+> (smartctl -l scterc /dev/sde yields a message that implies control is not supported)
+
+ERC on the other hand is a valuable feature that modern drive
+manufacturers make you pay extra for.
+
+>> Enterprise and NAS drives work out of the box.  Desktop/green drives do not.
+> 
+> Yea - I didn't buy any green drives (purposefully anyway) for this system.
+
+I originally wrote that sentence as "Desktop drives do not."  I added
+"/green" to clarify that some non-enterprise, non-NAS drives aren't
+marketed as desktop drives, but still lack ERC functionality.
+
+Your ST1000DM003 is marketed as a desktop drive.  Seagate's product page
+for this model has links to other models for specialty use cases,
+including NAS.
+
+>> Some reading assignments from old discussions (read whole threads if you
+>> have time):
 >>
->> That was probably a year or more ago.
->>
->> That has nothing to do with this crash, which is perhaps the fourth of
->> its kind.
->>
->> I haven't touched the box in weeks before this happened, when I was
->> away on vacation.  Although, it could have lurked for some time,
->> and only been uncovered by a crash or kpanic.
->
-> I certainly have not repartitioned the disks multiple times.  There's
-> no need for that.  It leads to these sort of problems.
->
-> The kernel does panic from time to time.
->
-> To repeat, this box was *completely unattended* for several weeks
-> before the crash.  No administration at all.  I simply rsync'd things
-> off it as necessary.  As a non-root user.
->
-> I am curious about the fact that /dev/sdd1 and /dev/sde1 were listed
-> together in this lvm cache, and those are the two disks that normally
-> get blasted every 6 months or so.  That's an odd coincidence, and my
-> best lead yet.
+>> http://marc.info/?l=linux-raid&m=139050322510249&w=2
+>> http://marc.info/?l=linux-raid&m=135863964624202&w=2
+>> http://marc.info/?l=linux-raid&m=135811522817345&w=1
+>> http://marc.info/?l=linux-raid&m=133761065622164&w=2
+>> http://marc.info/?l=linux-raid&m=132477199207506
+>> http://marc.info/?l=linux-raid&m=133665797115876&w=2
+>> http://marc.info/?l=linux-raid&m=142487508806844&w=3
+>> http://marc.info/?l=linux-raid&m=144535576302583&w=2
+> 
+> Thanks, will go read.
 
-Well that file does seem stale, because those partitions aren't
-actually part of LVM. They're members of an mdadm array. I don't know
-where LVM comes into this because we don't have the complete layout.
+You will find detailed explanations for my comments above in these old
+threads.
 
+Phil
 
-
--- 
-Chris Murphy
