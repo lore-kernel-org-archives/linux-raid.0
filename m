@@ -1,50 +1,74 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: bootsect replicated in p1, RAID enclosure suggestions?
-Date: Thu, 25 Aug 2016 20:48:24 -0600
-Message-ID: <CAJCQCtQyqH2eOmyqmpz0sZzD9ia4Q8RsA8eb+6inuDY6QP+Tyg@mail.gmail.com>
-References: <20160823050947.GL32250@subspacefield.org> <CAJCQCtSY=D-ASQ22km8GJjfju4jUgJSOBTAH5+XveCZq1BvT7w@mail.gmail.com>
- <20160825062501.GN32250@subspacefield.org> <CAJCQCtSWOwf6pHD2O7CtaNwF4BDbHO+hh7XrXpcaRsqPkvmFrQ@mail.gmail.com>
- <e75dcc05-f0c2-2152-9d24-5ff42ea02657@turmel.org>
+From: Benjammin2068 <benjammin2068@gmail.com>
+Subject: Re: Need Help with crashed RAID5 (that was rebuilding and then had
+ SATA error on another drive)
+Date: Thu, 25 Aug 2016 21:54:45 -0500
+Message-ID: <57BFAF75.1080807@gmail.com>
+References: <CADDTLRB9z6J0F6+uO3k-u74qnjZxiagbNLWrg_tP5GSZt-Vd5A@mail.gmail.com>
+ <215fd175-65b6-e24b-338f-0c44ae030573@websitemanagers.com.au>
+ <CADDTLRBf9NPO6OuF4a3b+xffZgeZRqHRG+pJdPmbc9-Jat0HVQ@mail.gmail.com>
+ <d6d3fe0d-3f9f-985f-9bfb-051428cf221b@websitemanagers.com.au>
+ <57BBDA5B.3020706@gmail.com> <57BBDC15.5030301@gmail.com>
+ <b8c6a380-7e6a-fda9-5834-b85271b26892@websitemanagers.com.au>
+ <57BC61F7.8070102@gmail.com>
+ <aca4e83f-9a3f-c200-7c16-3b5d9df52c1e@websitemanagers.com.au>
+ <57BE450B.4030700@gmail.com>
+ <56e86db5-456d-e9c1-339d-ba8903fe5dde@websitemanagers.com.au>
+ <57BE52BC.6040908@gmail.com>
+ <933228e0-bce4-ffad-f48d-034bf89bc07f@websitemanagers.com.au>
+ <57BF9965.1020403@gmail.com>
+ <f3d5add5-cfad-e33f-2f75-934189fa501d@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e75dcc05-f0c2-2152-9d24-5ff42ea02657@turmel.org>
+In-Reply-To: <f3d5add5-cfad-e33f-2f75-934189fa501d@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Chris Murphy <lists@colorremedies.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Aug 25, 2016 at 8:33 PM, Phil Turmel <philip@turmel.org> wrote:
-> On 08/25/2016 06:32 PM, Chris Murphy wrote:
+
+
+On 08/25/2016 09:22 PM, Phil Turmel wrote:
+> On 08/25/2016 09:20 PM, Ben wrote:
 >
->>> It's possible, but why would you ever end up with a GPT in a partition?
->>
->> In every case I've seen, it was user error. I haven't heard of things
->> putting GPTs in partitions, and in a sense I'd say it's a bug if any
->> utility lets a user do that. Nesting GPT's in partitions, bad idea,
->> although it *should* be innocuous because it shouldn't be seen/honored
->> by anything that doesn't go looking for it because it doesn't belong
->> there.
+>> I read a lot of conflicting info on SCT/ERC online (well, TLER anyway)
+>> -- Adam likes it enabled. What say the rest of you?
+> Adam is correct, and it's not a matter of "like".  
+
+"like" was just an expression.
+
 >
-> It is possible to run gdisk or parted on /dev/sdX1 accidentally instead
-> of /dev/sdX.  Pretty simple user error.
 >
-> It is also possible and appropriate if using v0.90 or v1.0 metadata on
-> an array and you partition the array itself.  Then it'll show up on
-> member 0, any mirror of member 0, and possibly on a parity disk (if
-> intervening blocks are zero).
+> You either must have
+> it enabled, or you *must* apply the kernel driver timeout work-around
+> (180 seconds) for that drive.  Failure to do so results in crashed arrays.
 
-Right, so something like GPT on /dev/sda and /dev/sdb to create sda1
-and sdb1, then mdadm -C /dev/md0 --metadata=1.0 ... /dev/sda1
-/dev/sdb1, and then create a GPT on /dev/md0. The result is /dev/md0,
-/dev/sda1, and /dev/sda2 will all appear to have the same GPT on them.
+For the ST1000DM003, its SMART capabilities states "SCT Status Supported" -- What does that mean in comparison with the other HD103SJ drives?
 
-I would say that's probably a bad idea, I know some tools allow it,
-but it creates an ambiguity. It could be argued to be inconsistent
-with the UEFI spec. The only nesting it describes is MBR on a GPT
-partition, not GPT nested in a GPT partition. This is probably also
-better done using LVM. Otherwise we get nutty things...
+It does SCT but doesn't let the user control it or it doesn't do it at all?
+
+(smartctl -l scterc /dev/sde yields a message that implies control is not supported)
+
+>
+> Enterprise and NAS drives work out of the box.  Desktop/green drives do not.
+
+Yea - I didn't buy any green drives (purposefully anyway) for this system.
+
+>
+> Some reading assignments from old discussions (read whole threads if you
+> have time):
+>
+> http://marc.info/?l=linux-raid&m=139050322510249&w=2
+> http://marc.info/?l=linux-raid&m=135863964624202&w=2
+> http://marc.info/?l=linux-raid&m=135811522817345&w=1
+> http://marc.info/?l=linux-raid&m=133761065622164&w=2
+> http://marc.info/?l=linux-raid&m=132477199207506
+> http://marc.info/?l=linux-raid&m=133665797115876&w=2
+> http://marc.info/?l=linux-raid&m=142487508806844&w=3
+> http://marc.info/?l=linux-raid&m=144535576302583&w=2
+>
+
+Thanks, will go read.
 
 
--- 
-Chris Murphy
+  -Ben
