@@ -1,41 +1,57 @@
 From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: kernel checksumming performance vs actual raid device performance
-Date: Fri, 26 Aug 2016 19:11:47 +0100
-Message-ID: <57C08663.1000106@youngman.org.uk>
-References: <CAJvUf-C-Nr8sSnSPL-5jt1NLOAiZjhZ=bjDRUbX_RjphRL+yWA@mail.gmail.com>
- <20160824010241.GC57645@kernel.org>
- <CAJvUf-DXC6AtO3a=ox2XOinpRWgAv5NMPkRWAcsSZmBggF5_Dw@mail.gmail.com>
- <83f67452-9f09-2d6f-f82a-77d83309f618@websitemanagers.com.au>
+Subject: Re: Need Help with crashed RAID5 (that was rebuilding and then had
+ SATA error on another drive)
+Date: Fri, 26 Aug 2016 19:07:41 +0100
+Message-ID: <57C0856D.8050209@youngman.org.uk>
+References: <CADDTLRB9z6J0F6+uO3k-u74qnjZxiagbNLWrg_tP5GSZt-Vd5A@mail.gmail.com>
+ <215fd175-65b6-e24b-338f-0c44ae030573@websitemanagers.com.au>
+ <CADDTLRBf9NPO6OuF4a3b+xffZgeZRqHRG+pJdPmbc9-Jat0HVQ@mail.gmail.com>
+ <d6d3fe0d-3f9f-985f-9bfb-051428cf221b@websitemanagers.com.au>
+ <57BBDA5B.3020706@gmail.com> <57BBDC15.5030301@gmail.com>
+ <b8c6a380-7e6a-fda9-5834-b85271b26892@websitemanagers.com.au>
+ <57BC61F7.8070102@gmail.com>
+ <aca4e83f-9a3f-c200-7c16-3b5d9df52c1e@websitemanagers.com.au>
+ <57BE450B.4030700@gmail.com>
+ <56e86db5-456d-e9c1-339d-ba8903fe5dde@websitemanagers.com.au>
+ <57BE52BC.6040908@gmail.com>
+ <933228e0-bce4-ffad-f48d-034bf89bc07f@websitemanagers.com.au>
+ <57BF9965.1020403@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <83f67452-9f09-2d6f-f82a-77d83309f618@websitemanagers.com.au>
+In-Reply-To: <57BF9965.1020403@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <mailinglists@websitemanagers.com.au>, Matt Garman <matthew.garman@gmail.com>
-Cc: Mdadm <linux-raid@vger.kernel.org>
+To: Ben <benjammin2068@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 26/08/16 00:39, Adam Goryachev wrote:
-> You should find out if you are swapping with vmstat:
-> vmstat 5
-> Watch the Swap (SI and SO) columns, if they are non-zero, then you are
-> indeed swapping.
+On 26/08/16 02:20, Ben wrote:
+> [root@quantum ~]# smartctl -a /dev/sde
+> smartctl 5.43 2012-06-30 r3573 [x86_64-linux-2.6.32-642.el6.centos.plus.x86_64] (local build)
+> Copyright (C) 2002-12 by Bruce Allen, http://smartmontools.sourceforge.net
 > 
-> You might find that if there is insufficient memory, then the kernel
-> will automatically reduce/limit the value for the stripe_cache_size (I'm
-> only guessing, but my memory tells me that the kernel locks this memory
-> and it can't be swapped/etc).
+> === START OF INFORMATION SECTION ===
+> Model Family:     Seagate Barracuda (SATA 3Gb/s, 4K Sectors)
+> Device Model:     ST1000DM003-1ER162
+> Serial Number:    Z4YDLXWJ
+> LU WWN Device Id: 5 000c50 091877801
+> Firmware Version: CC45
+> User Capacity:    1,000,204,886,016 bytes [1.00 TB]
+> Sector Sizes:     512 bytes logical, 4096 bytes physical
+> Device is:        In smartctl database [for details use: -P show]
 
-Are you using a gui :-) ?
+Sorry Ben - that drive was NOT a smart buy !!! Seagate Barracuda :-(
 
-Download and build the latest version of xosview (assuming it builds,
-when I last tried, "bleeding edge" was bleeding ... :-(
+You MUST enable the timeout on this drive :-(
 
-git://github.com/mromberg/xosview
+Gut feel tells me most 1TB or less drives are okay in a raid - the
+Barracudas are an exception :-( I've got two 3TB Barracudas mirrored,
+and from reading the list, there's no way I'd go raid5 for more capacity
+without ditching them.
 
-That'll give you a nice little overview of both raid and swap. The
-current version of xosview is fine for swap, but the raid monitor is broken.
+Most people seem to get WD Reds - I've asked about Seagate NAS but I've
+not picked up on any reports about them - good or bad. Barracudas - the
+news is pretty much all bad :-(
 
 Cheers,
 Wol
