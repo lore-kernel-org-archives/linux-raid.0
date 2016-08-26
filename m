@@ -1,57 +1,86 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Need Help with crashed RAID5 (that was rebuilding and then had
- SATA error on another drive)
-Date: Fri, 26 Aug 2016 19:07:41 +0100
-Message-ID: <57C0856D.8050209@youngman.org.uk>
-References: <CADDTLRB9z6J0F6+uO3k-u74qnjZxiagbNLWrg_tP5GSZt-Vd5A@mail.gmail.com>
- <215fd175-65b6-e24b-338f-0c44ae030573@websitemanagers.com.au>
- <CADDTLRBf9NPO6OuF4a3b+xffZgeZRqHRG+pJdPmbc9-Jat0HVQ@mail.gmail.com>
- <d6d3fe0d-3f9f-985f-9bfb-051428cf221b@websitemanagers.com.au>
- <57BBDA5B.3020706@gmail.com> <57BBDC15.5030301@gmail.com>
- <b8c6a380-7e6a-fda9-5834-b85271b26892@websitemanagers.com.au>
- <57BC61F7.8070102@gmail.com>
- <aca4e83f-9a3f-c200-7c16-3b5d9df52c1e@websitemanagers.com.au>
- <57BE450B.4030700@gmail.com>
- <56e86db5-456d-e9c1-339d-ba8903fe5dde@websitemanagers.com.au>
- <57BE52BC.6040908@gmail.com>
- <933228e0-bce4-ffad-f48d-034bf89bc07f@websitemanagers.com.au>
- <57BF9965.1020403@gmail.com>
+From: Doug Dumitru <doug@easyco.com>
+Subject: Re: kernel checksumming performance vs actual raid device performance
+Date: Fri, 26 Aug 2016 13:04:15 -0700
+Message-ID: <CAFx4rwTekSp6mNUtt7UfEmTi93Fu+25rYLGrp63XwoxYvwV54g@mail.gmail.com>
+References: <CAJvUf-C-Nr8sSnSPL-5jt1NLOAiZjhZ=bjDRUbX_RjphRL+yWA@mail.gmail.com>
+ <20160824010241.GC57645@kernel.org> <CAJvUf-DXC6AtO3a=ox2XOinpRWgAv5NMPkRWAcsSZmBggF5_Dw@mail.gmail.com>
+ <83f67452-9f09-2d6f-f82a-77d83309f618@websitemanagers.com.au> <CAJvUf-DJJ4ZqR+kS6SCqgaq9_MXuQxFwyHJbv7YH7hVx5xbBRQ@mail.gmail.com>
+Reply-To: doug@easyco.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <57BF9965.1020403@gmail.com>
+In-Reply-To: <CAJvUf-DJJ4ZqR+kS6SCqgaq9_MXuQxFwyHJbv7YH7hVx5xbBRQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ben <benjammin2068@gmail.com>, linux-raid@vger.kernel.org
+To: Matt Garman <matthew.garman@gmail.com>
+Cc: Adam Goryachev <mailinglists@websitemanagers.com.au>, Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 26/08/16 02:20, Ben wrote:
-> [root@quantum ~]# smartctl -a /dev/sde
-> smartctl 5.43 2012-06-30 r3573 [x86_64-linux-2.6.32-642.el6.centos.plus.x86_64] (local build)
-> Copyright (C) 2002-12 by Bruce Allen, http://smartmontools.sourceforge.net
-> 
-> === START OF INFORMATION SECTION ===
-> Model Family:     Seagate Barracuda (SATA 3Gb/s, 4K Sectors)
-> Device Model:     ST1000DM003-1ER162
-> Serial Number:    Z4YDLXWJ
-> LU WWN Device Id: 5 000c50 091877801
-> Firmware Version: CC45
-> User Capacity:    1,000,204,886,016 bytes [1.00 TB]
-> Sector Sizes:     512 bytes logical, 4096 bytes physical
-> Device is:        In smartctl database [for details use: -P show]
+On Fri, Aug 26, 2016 at 6:01 AM, Matt Garman <matthew.garman@gmail.com> wrote:
+> On Thu, Aug 25, 2016 at 6:39 PM, Adam Goryachev
+> <mailinglists@websitemanagers.com.au> wrote:
+>>> Do you think more RAM might be beneficial then?
+>>
+>> I'm not sure of this, but I can suggest that you try various sizes for the
+>> stripe_cache_size, in my testing, I tried various values up to 64k, but 4k
+>> ended up being the optimal value (I only have 8 disks with 64k chunk
+>> size)...
+>>
+>> You should find out if you are swapping with vmstat:
+>> vmstat 5
+>> Watch the Swap (SI and SO) columns, if they are non-zero, then you are
+>> indeed swapping.
+>>
+>> You might find that if there is insufficient memory, then the kernel will
+>> automatically reduce/limit the value for the stripe_cache_size (I'm only
+>> guessing, but my memory tells me that the kernel locks this memory and it
+>> can't be swapped/etc).
+>
+> Good ideas.  I actually halved the amount of physical memory in this
+> machine.  I replaced the original eight 8GB DIMMs with eight 4GB
+> DIMMs.  So no change in number of modules, but total RAM went from 64
+> GB to 32 GB.
+>
+> I then cranked the stripe_cache_size up to 32k, degraded the array,
+> and kicked off my reader test.
+>
+> Performance is basically the same.  And I'm definitely not swapping,
+> vmstat shows both swap values constant at zero.  So it appears the
+> kernel is smart enough to scale back the stripe_cache_size to avoid
+> swapping.
 
-Sorry Ben - that drive was NOT a smart buy !!! Seagate Barracuda :-(
+The documentation implies that 32K is the upper limit for stripe_cache_size.
 
-You MUST enable the timeout on this drive :-(
+It is not immediately clear from the documentation or the code whether
+a "stripe" is a page, a control structure, or a chunk.  I "think" it
+is a control structure with a bio plus a single page.
 
-Gut feel tells me most 1TB or less drives are okay in a raid - the
-Barracudas are an exception :-( I've got two 3TB Barracudas mirrored,
-and from reading the list, there's no way I'd go raid5 for more capacity
-without ditching them.
+I took a simple array from stripe_cache_size 256 => 32K and the system
+allocated 265 MB of RAM (crude number via free), so this implies that
+the stripe cache is 8K per entry.  The stripe cache struct appears to
+have a bio plus a bunch of other control items in the struct.  I am
+not sure if it has a statically allocated page, but at 8K it looks
+like it does.  So I think the minimum/static memory allocated by the
+stripe cache is 8K per entry.  This "might" also be the maximum, or
+the cache size might grow to handle longer requests.
 
-Most people seem to get WD Reds - I've asked about Seagate NAS but I've
-not picked up on any reports about them - good or bad. Barracudas - the
-news is pretty much all bad :-(
+My test array is 16K chunks, and 8K is lower than 16K, so the max
+might be (4K+stripe_cache_size) * chunk_size, but I suspect it is
+actually (4K+4K) * stripe_cache_size.  Others write and breath this
+code more than me, so clarification would be helpful.
 
-Cheers,
-Wol
+It is were actually chunk size, the upper limits would be really bad
+(32K * 512K) = 16GB.  Raid/5/6 is "compatible as a swap device", so
+memory allocates during IO are generally not allowed.  So I think that
+the stripe cache gets bumped and just stays there with little (or no)
+dynamic allocation during operation.  If you run out of stripe cache
+buckets, the driver "stalls" the calling IO operations until stripe
+caches become available.  This "stall" of calling IOs will lower the
+number of outstanding IOs to the member drives, which probably
+explains your performance at 200 MB/sec.  Once stripe_cache_size gets
+big enough to handle your workload, additional allocate does not help.
+You can look at stripe_cache_active to see what is in use during your
+run.
+
+Doug
+
+[... rest snipped ...]
