@@ -1,111 +1,70 @@
-From: liuzhengyuan@kylinos.cn
-Subject: [PATCH v2] raid6: fix the input of raid6 algorithm
-Date: Sun, 28 Aug 2016 14:51:04 +0800
-Message-ID: <1472367064-10935-1-git-send-email-liuzhengyuan@kylinos.cn>
+From: Benjammin2068 <benjammin2068@gmail.com>
+Subject: Re: Need Help with crashed RAID5 (that was rebuilding and then had
+ SATA error on another drive)
+Date: Sun, 28 Aug 2016 13:29:34 -0500
+Message-ID: <57C32D8E.9030102@gmail.com>
+References: <CADDTLRB9z6J0F6+uO3k-u74qnjZxiagbNLWrg_tP5GSZt-Vd5A@mail.gmail.com>
+ <215fd175-65b6-e24b-338f-0c44ae030573@websitemanagers.com.au>
+ <CADDTLRBf9NPO6OuF4a3b+xffZgeZRqHRG+pJdPmbc9-Jat0HVQ@mail.gmail.com>
+ <d6d3fe0d-3f9f-985f-9bfb-051428cf221b@websitemanagers.com.au>
+ <57BBDA5B.3020706@gmail.com> <57BBDC15.5030301@gmail.com>
+ <b8c6a380-7e6a-fda9-5834-b85271b26892@websitemanagers.com.au>
+ <57BC61F7.8070102@gmail.com>
+ <aca4e83f-9a3f-c200-7c16-3b5d9df52c1e@websitemanagers.com.au>
+ <57BE450B.4030700@gmail.com>
+ <56e86db5-456d-e9c1-339d-ba8903fe5dde@websitemanagers.com.au>
+ <57BE52BC.6040908@gmail.com>
+ <933228e0-bce4-ffad-f48d-034bf89bc07f@websitemanagers.com.au>
+ <57BF9965.1020403@gmail.com> <57C0856D.8050209@youngman.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <57C0856D.8050209@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: hpa@zytor.com
-Cc: shli@kernel.org, linux-raid@vger.kernel.org, fenghua.yu@intel.com, linux-kernel@vger.kernel.org, liuzhengyuang521@gmail.com, ZhengYuan Liu <liuzhengyuan@kylinos.cn>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: ZhengYuan Liu <liuzhengyuan@kylinos.cn>
-
-To test and choose the best algorithm for raid6, disks number
-and disks data must be offered. These input depend on page
-size and gfmul table at current time. It would cause the disk
-number less than 4 when the page size is more than 64KB.This
-patch would support arbitrarily page size by defining a macro
-for disks number and using a PRNG based on linear congruential
-bit to fill the disks data.
-
-Signed-off-by: ZhengYuan Liu <liuzhengyuan@kylinos.cn>
----
- lib/raid6/algos.c | 39 +++++++++++++++++++++++++--------------
- 1 file changed, 25 insertions(+), 14 deletions(-)
-
-diff --git a/lib/raid6/algos.c b/lib/raid6/algos.c
-index 975c6e0..3991ac6 100644
---- a/lib/raid6/algos.c
-+++ b/lib/raid6/algos.c
-@@ -30,6 +30,8 @@ EXPORT_SYMBOL(raid6_empty_zero_page);
- #endif
- #endif
- 
-+#define RAID6_DISKS	8
-+
- struct raid6_calls raid6_call;
- EXPORT_SYMBOL_GPL(raid6_call);
- 
-@@ -129,7 +131,7 @@ static inline const struct raid6_recov_calls *raid6_choose_recov(void)
- }
- 
- static inline const struct raid6_calls *raid6_choose_gen(
--	void *(*const dptrs)[(65536/PAGE_SIZE)+2], const int disks)
-+	void *(*const dptrs)[RAID6_DISKS], const int disks)
- {
- 	unsigned long perf, bestgenperf, bestxorperf, j0, j1;
- 	int start = (disks>>1)-1, stop = disks-3;	/* work on the second half of the disks */
-@@ -206,27 +208,36 @@ static inline const struct raid6_calls *raid6_choose_gen(
- 
- int __init raid6_select_algo(void)
- {
--	const int disks = (65536/PAGE_SIZE)+2;
-+	const int disks = RAID6_DISKS;
- 
- 	const struct raid6_calls *gen_best;
- 	const struct raid6_recov_calls *rec_best;
--	char *syndromes;
--	void *dptrs[(65536/PAGE_SIZE)+2];
--	int i;
--
--	for (i = 0; i < disks-2; i++)
--		dptrs[i] = ((char *)raid6_gfmul) + PAGE_SIZE*i;
-+	char *disk_ptr;
-+	void *dptrs[RAID6_DISKS];
-+	int32_t seed;
-+	int i, j;
- 
--	/* Normal code - use a 2-page allocation to avoid D$ conflict */
--	syndromes = (void *) __get_free_pages(GFP_KERNEL, 1);
-+	/* use a 8-page allocation, The first 6 pages for disks
-+	   and the last 2 pages for syndromes */
-+	disk_ptr = (void *) __get_free_pages(GFP_KERNEL, 3);
- 
--	if (!syndromes) {
-+	if (!disk_ptr) {
- 		pr_err("raid6: Yikes!  No memory available.\n");
- 		return -ENOMEM;
- 	}
- 
--	dptrs[disks-2] = syndromes;
--	dptrs[disks-1] = syndromes + PAGE_SIZE;
-+	/*use a PRNG based on LCB to fill the disks*/
-+	seed = 1;
-+	for (i = 0; i < disks-2; i++) {
-+		dptrs[i] = disk_ptr + PAGE_SIZE*i;
-+		for (j = 0; j < PAGE_SIZE; j = j + 4) {
-+			seed = ((seed * 1103515245) + 12345) & 0x7fffffff;
-+			*(int32_t *)(dptrs[i]+j) = seed;
-+		}
-+	}
-+
-+	dptrs[disks-2] = disk_ptr + PAGE_SIZE*(disks-2);
-+	dptrs[disks-1] = disk_ptr + PAGE_SIZE*(disks-1);
- 
- 	/* select raid gen_syndrome function */
- 	gen_best = raid6_choose_gen(&dptrs, disks);
-@@ -234,7 +245,7 @@ int __init raid6_select_algo(void)
- 	/* select raid recover functions */
- 	rec_best = raid6_choose_recov();
- 
--	free_pages((unsigned long)syndromes, 1);
-+	free_pages((unsigned long)disk_ptr, 3);
- 
- 	return gen_best && rec_best ? 0 : -EINVAL;
- }
--- 
-1.9.1
 
 
+On 08/26/2016 01:07 PM, Wols Lists wrote:
+> On 26/08/16 02:20, Ben wrote:
+>> [root@quantum ~]# smartctl -a /dev/sde
+>> smartctl 5.43 2012-06-30 r3573 [x86_64-linux-2.6.32-642.el6.centos.plus.x86_64] (local build)
+>> Copyright (C) 2002-12 by Bruce Allen, http://smartmontools.sourceforge.net
+>>
+>> === START OF INFORMATION SECTION ===
+>> Model Family:     Seagate Barracuda (SATA 3Gb/s, 4K Sectors)
+>> Device Model:     ST1000DM003-1ER162
+>> Serial Number:    Z4YDLXWJ
+>> LU WWN Device Id: 5 000c50 091877801
+>> Firmware Version: CC45
+>> User Capacity:    1,000,204,886,016 bytes [1.00 TB]
+>> Sector Sizes:     512 bytes logical, 4096 bytes physical
+>> Device is:        In smartctl database [for details use: -P show]
+> Sorry Ben - that drive was NOT a smart buy !!! Seagate Barracuda :-(
+>
+> You MUST enable the timeout on this drive :-(
+>
+> Gut feel tells me most 1TB or less drives are okay in a raid - the
+> Barracudas are an exception :-( I've got two 3TB Barracudas mirrored,
+> and from reading the list, there's no way I'd go raid5 for more capacity
+> without ditching them.
+>
+> Most people seem to get WD Reds - I've asked about Seagate NAS but I've
+> not picked up on any reports about them - good or bad. Barracudas - the
+> news is pretty much all bad :-(
+>
+>
+
+Yea, I figured that out -- just couldn't find a decent detailed reference with what "SCT status supported" means versus the more fully featured.
+
+And this drive (sort of  - but not this sub model -- and that's the replacement that Seagate recommended.) is not going to stay in the array.
+
+I'm going to get some more WD red's (or decent NAS friendly mechs) and pull this puppy out of the stack and use it elsewhere.
+
+Thanks for the confirmations!
+
+ -Ben
 
 
