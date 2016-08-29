@@ -1,8 +1,8 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
+From: Benjammin2068 <benjammin2068@gmail.com>
 Subject: Re: Need Help with crashed RAID5 (that was rebuilding and then had
  SATA error on another drive)
-Date: Mon, 29 Aug 2016 09:54:21 +1000
-Message-ID: <3b008fb0-1fb3-f12f-d973-3657de6e6923@websitemanagers.com.au>
+Date: Sun, 28 Aug 2016 20:23:51 -0500
+Message-ID: <57C38EA7.7030000@gmail.com>
 References: <CADDTLRB9z6J0F6+uO3k-u74qnjZxiagbNLWrg_tP5GSZt-Vd5A@mail.gmail.com>
  <215fd175-65b6-e24b-338f-0c44ae030573@websitemanagers.com.au>
  <CADDTLRBf9NPO6OuF4a3b+xffZgeZRqHRG+pJdPmbc9-Jat0HVQ@mail.gmail.com>
@@ -17,64 +17,30 @@ References: <CADDTLRB9z6J0F6+uO3k-u74qnjZxiagbNLWrg_tP5GSZt-Vd5A@mail.gmail.com>
  <933228e0-bce4-ffad-f48d-034bf89bc07f@websitemanagers.com.au>
  <57BF9965.1020403@gmail.com> <57C0856D.8050209@youngman.org.uk>
  <57C32D8E.9030102@gmail.com>
+ <5c02d44b-eb51-4388-eab4-6715760ee6be@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <57C32D8E.9030102@gmail.com>
+In-Reply-To: <5c02d44b-eb51-4388-eab4-6715760ee6be@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Benjammin2068 <benjammin2068@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 29/08/16 04:29, Benjammin2068 wrote:
+On 08/28/2016 02:20 PM, Anthony Youngman wrote:
+> On 28/08/16 19:29, Benjammin2068 wrote:
+>> And this drive (sort of  - but not this sub model -- and that's the replacement that Seagate recommended.) is not going to stay in the array.
 >
-> On 08/26/2016 01:07 PM, Wols Lists wrote:
->> On 26/08/16 02:20, Ben wrote:
->>> [root@quantum ~]# smartctl -a /dev/sde
->>> smartctl 5.43 2012-06-30 r3573 [x86_64-linux-2.6.32-642.el6.centos.plus.x86_64] (local build)
->>> Copyright (C) 2002-12 by Bruce Allen, http://smartmontools.sourceforge.net
->>>
->>> === START OF INFORMATION SECTION ===
->>> Model Family:     Seagate Barracuda (SATA 3Gb/s, 4K Sectors)
->>> Device Model:     ST1000DM003-1ER162
->>> Serial Number:    Z4YDLXWJ
->>> LU WWN Device Id: 5 000c50 091877801
->>> Firmware Version: CC45
->>> User Capacity:    1,000,204,886,016 bytes [1.00 TB]
->>> Sector Sizes:     512 bytes logical, 4096 bytes physical
->>> Device is:        In smartctl database [for details use: -P show]
->> Sorry Ben - that drive was NOT a smart buy !!! Seagate Barracuda :-(
->>
->> You MUST enable the timeout on this drive :-(
->>
->> Gut feel tells me most 1TB or less drives are okay in a raid - the
->> Barracudas are an exception :-( I've got two 3TB Barracudas mirrored,
->> and from reading the list, there's no way I'd go raid5 for more capacity
->> without ditching them.
->>
->> Most people seem to get WD Reds - I've asked about Seagate NAS but I've
->> not picked up on any reports about them - good or bad. Barracudas - the
->> news is pretty much all bad :-(
->>
->>
-> Yea, I figured that out -- just couldn't find a decent detailed reference with what "SCT status supported" means versus the more fully featured.
-When I saw this, I assume it means you can ask for the status, and it 
-will tell you it is disabled, but there is no support to modify the 
-status (ie, turn it on). Totally useless for all intents and purposes....
+> If they knew you were using it in a raid, and recommended it, then I don't know about your laws but over here in the UK I'd send it back as "unfit for purpose". Under SOGA (Sale Of Goods Act) they've sold you a pup and it's their problem, not yours.
+>
+> (UK law assumes the salesman knows more than you, and so long as you tell them what you want, that forms part of the contract. Which means if they sell you something that does not meet the requirements you told them, they have to put matters right - either swap the drive for something that is suitable, or give you a refund. They can charge the difference if "suitable" means a more expensive drive, but a lot of UK shops would swallow the loss if they had recommended the wrong drive.)
+>
 
-Then again, I could be wrong... but compared to your other drive which 
-showed additional supports, or on my one here:
-SCT capabilities:              (0x0039) SCT Status supported.
-                                         SCT Error Recovery Control 
-supported.
-                                         SCT Feature Control supported.
-                                         SCT Data Table supported.
+In the US.
 
-ie, the second one is probably what you want, the third allows you to 
-turn it on/off, and no idea about the last option....
+I'll have to look at my receipt. The recommendation was went I purchase the *last* drive.. not this current set. But I copied and pasted part numbers. So I'll have to look to see what's up.
 
-Regards,
-Adam
+Like I said, I can find a use for them elsewhere. It's not a huge deal.
 
--- 
-Adam Goryachev Website Managers www.websitemanagers.com.au
+ -Ben
+
