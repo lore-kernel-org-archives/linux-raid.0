@@ -1,48 +1,72 @@
-From: Benjammin2068 <benjammin2068@gmail.com>
-Subject: Re: Need Help with crashed RAID5 (that was rebuilding and then had
- SATA error on another drive)
-Date: Sun, 28 Aug 2016 20:25:09 -0500
-Message-ID: <57C38EF5.7020005@gmail.com>
-References: <CADDTLRB9z6J0F6+uO3k-u74qnjZxiagbNLWrg_tP5GSZt-Vd5A@mail.gmail.com>
- <215fd175-65b6-e24b-338f-0c44ae030573@websitemanagers.com.au>
- <CADDTLRBf9NPO6OuF4a3b+xffZgeZRqHRG+pJdPmbc9-Jat0HVQ@mail.gmail.com>
- <d6d3fe0d-3f9f-985f-9bfb-051428cf221b@websitemanagers.com.au>
- <57BBDA5B.3020706@gmail.com> <57BBDC15.5030301@gmail.com>
- <b8c6a380-7e6a-fda9-5834-b85271b26892@websitemanagers.com.au>
- <57BC61F7.8070102@gmail.com>
- <aca4e83f-9a3f-c200-7c16-3b5d9df52c1e@websitemanagers.com.au>
- <57BE450B.4030700@gmail.com>
- <56e86db5-456d-e9c1-339d-ba8903fe5dde@websitemanagers.com.au>
- <57BE52BC.6040908@gmail.com>
- <933228e0-bce4-ffad-f48d-034bf89bc07f@websitemanagers.com.au>
- <57BF9965.1020403@gmail.com> <57C0856D.8050209@youngman.org.uk>
- <57C32D8E.9030102@gmail.com>
- <3b008fb0-1fb3-f12f-d973-3657de6e6923@websitemanagers.com.au>
+From: o1bigtenor <o1bigtenor@gmail.com>
+Subject: Re: Raid settings
+Date: Sun, 28 Aug 2016 21:28:10 -0500
+Message-ID: <CAPpdf5-pCNLQXmnNQGTVufCKMULcjFPKL8riTnd8Aba4ORtW2g@mail.gmail.com>
+References: <CAPpdf5_T=JjjUw2H5pAShmj4V6b5U8aALxDsiZvjyTUYy58DmQ@mail.gmail.com>
+ <57C35ED0.2030107@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3b008fb0-1fb3-f12f-d973-3657de6e6923@websitemanagers.com.au>
+In-Reply-To: <57C35ED0.2030107@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 08/28/2016 06:54 PM, Adam Goryachev wrote:
-> When I saw this, I assume it means you can ask for the status, and it will tell you it is disabled, but there is no support to modify the status (ie, turn it on). Totally useless for all intents and purposes....
+On Sun, Aug 28, 2016 at 4:59 PM, Wols Lists <antlists@youngman.org.uk> wrote:
+> On 28/08/16 22:43, o1bigtenor wrote:
+>> Greetings
+>>
+>> I have been doing some research thinking toward the future.
+>>
+>> Is there a 'best' raid setup?
 >
-> Then again, I could be wrong... but compared to your other drive which showed additional supports, or on my one here:
-> SCT capabilities:              (0x0039) SCT Status supported.
->                                         SCT Error Recovery Control supported.
->                                         SCT Feature Control supported.
->                                         SCT Data Table supported.
+> What do you want to achieve? There's no such thing as "best" - there's
+> only "most suitable for the circumstances".
+>>
+>> It seems to me (a noob) that each of the options carries some negatives with it.
+>>
+>> Is there a good option for say:
+>>
+>> 2 - 5 disks
+>> 4 - 8 disks
+>> 6 - 12 disks
+>> 10 - 30 disks
+>> etc.
+>>
+>> I looked at raid 5/6/10/50/60/100 and I am wondering where is the
+>> 'best' use of each of these options?
+>>
+> Ignoring linear or stripe (which you seem to have done), with 2 disks
+> the only option is raid 1 (mirror). 3 disks gives you raid 5, and 4
+> disks gives you raid 6.
 >
-> ie, the second one is probably what you want, the third allows you to turn it on/off, and no idea about the last option....
+> But do you want to make maximum use of the disk space (raid 6 is your
+> friend) or do you want maximum redundancy (raid 1)?
 >
+> For my home system I've got 2 x 3TB in a raid1 config. I had intended to
+> add a 3rd drive and go raid5, but with two Barracudas I'd be an idiot
+> :-( If I want to go that route, I need three new proper raid drives :-(
+> I want maximum disk capacity with some redundancy, so raid 5 or 6 makes
+> most sense for me.
+>
+> Without knowing what you want, we can't know what's best for you.
 
+That's what it seems like - - - its possible to justify any setup.
 
-Right - I get that. But not knowing *for sure* I thought I would go look it up and google wasn't exactly helpful for a developer style description of what exactly the difference was.
+I have 2 - 4 disc setups both running raid 10 trying to get s fairly high level
+of security yet also some through put.
 
-again, no worries. I'll get me some of the right drives one way or another.
+I'm asking because what do I do if I need to have say 10 to 25 TB of online
+storage.
 
- -Ben
+Do I go for my raid 10 with 2 sets of 6 TB discs or is there a better way to
+achieve high levels of security AND throughput?
 
+What about for the next level of storage (my thinking here) or at 35 to 100 TB?
+
+Maybe the better question is - - - how do I decide what I want?
+
+TIA
+
+Dee
