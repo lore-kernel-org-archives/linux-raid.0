@@ -1,8 +1,8 @@
 From: Benjammin2068 <benjammin2068@gmail.com>
 Subject: Re: Need Help with crashed RAID5 (that was rebuilding and then had
  SATA error on another drive)
-Date: Sun, 28 Aug 2016 20:23:51 -0500
-Message-ID: <57C38EA7.7030000@gmail.com>
+Date: Sun, 28 Aug 2016 20:25:09 -0500
+Message-ID: <57C38EF5.7020005@gmail.com>
 References: <CADDTLRB9z6J0F6+uO3k-u74qnjZxiagbNLWrg_tP5GSZt-Vd5A@mail.gmail.com>
  <215fd175-65b6-e24b-338f-0c44ae030573@websitemanagers.com.au>
  <CADDTLRBf9NPO6OuF4a3b+xffZgeZRqHRG+pJdPmbc9-Jat0HVQ@mail.gmail.com>
@@ -17,30 +17,32 @@ References: <CADDTLRB9z6J0F6+uO3k-u74qnjZxiagbNLWrg_tP5GSZt-Vd5A@mail.gmail.com>
  <933228e0-bce4-ffad-f48d-034bf89bc07f@websitemanagers.com.au>
  <57BF9965.1020403@gmail.com> <57C0856D.8050209@youngman.org.uk>
  <57C32D8E.9030102@gmail.com>
- <5c02d44b-eb51-4388-eab4-6715760ee6be@youngman.org.uk>
+ <3b008fb0-1fb3-f12f-d973-3657de6e6923@websitemanagers.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5c02d44b-eb51-4388-eab4-6715760ee6be@youngman.org.uk>
+In-Reply-To: <3b008fb0-1fb3-f12f-d973-3657de6e6923@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 08/28/2016 02:20 PM, Anthony Youngman wrote:
-> On 28/08/16 19:29, Benjammin2068 wrote:
->> And this drive (sort of  - but not this sub model -- and that's the replacement that Seagate recommended.) is not going to stay in the array.
+On 08/28/2016 06:54 PM, Adam Goryachev wrote:
+> When I saw this, I assume it means you can ask for the status, and it will tell you it is disabled, but there is no support to modify the status (ie, turn it on). Totally useless for all intents and purposes....
 >
-> If they knew you were using it in a raid, and recommended it, then I don't know about your laws but over here in the UK I'd send it back as "unfit for purpose". Under SOGA (Sale Of Goods Act) they've sold you a pup and it's their problem, not yours.
+> Then again, I could be wrong... but compared to your other drive which showed additional supports, or on my one here:
+> SCT capabilities:              (0x0039) SCT Status supported.
+>                                         SCT Error Recovery Control supported.
+>                                         SCT Feature Control supported.
+>                                         SCT Data Table supported.
 >
-> (UK law assumes the salesman knows more than you, and so long as you tell them what you want, that forms part of the contract. Which means if they sell you something that does not meet the requirements you told them, they have to put matters right - either swap the drive for something that is suitable, or give you a refund. They can charge the difference if "suitable" means a more expensive drive, but a lot of UK shops would swallow the loss if they had recommended the wrong drive.)
+> ie, the second one is probably what you want, the third allows you to turn it on/off, and no idea about the last option....
 >
 
-In the US.
 
-I'll have to look at my receipt. The recommendation was went I purchase the *last* drive.. not this current set. But I copied and pasted part numbers. So I'll have to look to see what's up.
+Right - I get that. But not knowing *for sure* I thought I would go look it up and google wasn't exactly helpful for a developer style description of what exactly the difference was.
 
-Like I said, I can find a use for them elsewhere. It's not a huge deal.
+again, no worries. I'll get me some of the right drives one way or another.
 
  -Ben
 
