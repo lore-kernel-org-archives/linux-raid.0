@@ -1,41 +1,42 @@
 From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Raid settings
-Date: Mon, 29 Aug 2016 12:16:47 +0100
-Message-ID: <57C4199F.5030601@youngman.org.uk>
-References: <CAPpdf5_T=JjjUw2H5pAShmj4V6b5U8aALxDsiZvjyTUYy58DmQ@mail.gmail.com>
- <57C35ED0.2030107@youngman.org.uk>
- <CAPpdf5-pCNLQXmnNQGTVufCKMULcjFPKL8riTnd8Aba4ORtW2g@mail.gmail.com>
- <038ec076-aa03-993f-7c9a-15f09fac02b4@websitemanagers.com.au>
- <CAPpdf59b4Cd4CTa5Mfg=1qQk_Gvk4pr+Tm5YJ_5OD5STufzX2g@mail.gmail.com>
+Subject: Re: Need Help with crashed RAID5 (that was rebuilding and then had
+ SATA error on another drive)
+Date: Mon, 29 Aug 2016 12:19:35 +0100
+Message-ID: <57C41A47.5050506@youngman.org.uk>
+References: <CADDTLRB9z6J0F6+uO3k-u74qnjZxiagbNLWrg_tP5GSZt-Vd5A@mail.gmail.com>
+ <215fd175-65b6-e24b-338f-0c44ae030573@websitemanagers.com.au>
+ <CADDTLRBf9NPO6OuF4a3b+xffZgeZRqHRG+pJdPmbc9-Jat0HVQ@mail.gmail.com>
+ <d6d3fe0d-3f9f-985f-9bfb-051428cf221b@websitemanagers.com.au>
+ <57BBDA5B.3020706@gmail.com> <57BBDC15.5030301@gmail.com>
+ <b8c6a380-7e6a-fda9-5834-b85271b26892@websitemanagers.com.au>
+ <57BC61F7.8070102@gmail.com>
+ <aca4e83f-9a3f-c200-7c16-3b5d9df52c1e@websitemanagers.com.au>
+ <57BE450B.4030700@gmail.com>
+ <56e86db5-456d-e9c1-339d-ba8903fe5dde@websitemanagers.com.au>
+ <57BE52BC.6040908@gmail.com>
+ <933228e0-bce4-ffad-f48d-034bf89bc07f@websitemanagers.com.au>
+ <57BF9965.1020403@gmail.com> <57C0856D.8050209@youngman.org.uk>
+ <57C32D8E.9030102@gmail.com>
+ <3b008fb0-1fb3-f12f-d973-3657de6e6923@websitemanagers.com.au>
+ <57C38EF5.7020005@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPpdf59b4Cd4CTa5Mfg=1qQk_Gvk4pr+Tm5YJ_5OD5STufzX2g@mail.gmail.com>
+In-Reply-To: <57C38EF5.7020005@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: o1bigtenor <o1bigtenor@gmail.com>, Adam Goryachev <mailinglists@websitemanagers.com.au>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Benjammin2068 <benjammin2068@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 29/08/16 10:26, o1bigtenor wrote:
-> I've looked but haven't been able to find anything that discusses the
-> points that
-> have been raised so far. Would you point me to a, or some, documents that
-> discuss these options?
-> What are the options besides the 2 you mentioned?
+On 29/08/16 02:25, Benjammin2068 wrote:
+> Right - I get that. But not knowing *for sure* I thought I would go look it up and google wasn't exactly helpful for a developer style description of what exactly the difference was.
 > 
-> What I'm looking for is a methodology for the decision rather than a blanket
-> answer at this point. Thought initially that there might be a 'best' answer but
-> now its looking like a much much more fluid thing.
+> again, no worries. I'll get me some of the right drives one way or another.
 
-Apropos all this, I should be getting write access to the linux raid
-wiki sometime soon. At the moment, as I mentioned before, it seems to be
-a cobweb site, with the admin MIA and stuck in the days of kernel 2.6,
-LILO, and parallel ATA drives ... :-)
-
-So I'm planning on a major update/rewrite, and I'll probably be bugging
-the list for info :-) but this is exactly the sort of thing that might
-well go on there, if I can find the info or get someone to write it for me.
+I don't know whether you can still get them, but there was a post about
+a crashed raid1 array here not long ago, and the array contained a
+couple of 1TB Seagate Constellations. Those DID support raid, but
+they're probably discontinued now :-(
 
 Cheers,
 Wol
