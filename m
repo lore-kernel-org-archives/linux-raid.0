@@ -1,43 +1,46 @@
-From: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
-Subject: [PATCH] dm-bufio: Remove deprecated create_singlethread_workqueue
-Date: Tue, 30 Aug 2016 22:19:11 +0530
-Message-ID: <20160830164911.GA26756@Karyakshetra>
+From: Shaohua Li <shli@fb.com>
+Subject: [PATCH] raid5: guarantee enough stripes to avoid reshape hang
+Date: Tue, 30 Aug 2016 10:29:33 -0700
+Message-ID: <e855bdf2ccb11e440191e9512de460f3c5355dd2.1472578078.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>
-Cc: Tejun Heo <tj@kernel.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Kernel-team@fb.com
 List-Id: linux-raid.ids
 
-The workqueue "dm_bufio_wq" queues a single work item &dm_bufio_work and
-hence it doesn't require execution ordering. Hence, alloc_workqueue has
-been used to replace the deprecated create_singlethread_workqueue instance.
+If there aren't enough stripes, reshape will hang. We have a check for
+this in new reshape, but miss it for reshape resume, hence we could see
+hang in reshape resume. This patch forces enough stripes existed if
+reshape resumes.
 
-The WQ_MEM_RECLAIM flag has been set since md / dm are block multi disk
-drivers and require forward progress under memory pressure.
-
-Since there are fixed number of work items, explicit concurrency
-limit is unnecessary here.
-
-Signed-off-by: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
+Signed-off-by: Shaohua Li <shli@fb.com>
 ---
- drivers/md/dm-bufio.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/md/raid5.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
-index cd77216..d073ec1 100644
---- a/drivers/md/dm-bufio.c
-+++ b/drivers/md/dm-bufio.c
-@@ -1876,7 +1876,7 @@ static int __init dm_bufio_init(void)
- 	__cache_size_refresh();
- 	mutex_unlock(&dm_bufio_clients_lock);
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 62febe8..2fdb97b 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6639,6 +6639,16 @@ static struct r5conf *setup_conf(struct mddev *mddev)
+ 	}
+ 
+ 	conf->min_nr_stripes = NR_STRIPES;
++	if (mddev->reshape_position != MaxSector) {
++		int stripes = max_t(int,
++			((mddev->chunk_sectors << 9) / STRIPE_SIZE) * 4,
++			((mddev->new_chunk_sectors << 9) / STRIPE_SIZE) * 4);
++		conf->min_nr_stripes = max(NR_STRIPES, stripes);
++		if (conf->min_nr_stripes != NR_STRIPES)
++			printk(KERN_INFO
++				"md/raid:%s: force stripe size %d for reshape\n",
++				mdname(mddev), conf->min_nr_stripes);
++	}
+ 	memory = conf->min_nr_stripes * (sizeof(struct stripe_head) +
+ 		 max_disks * ((sizeof(struct bio) + PAGE_SIZE))) / 1024;
+ 	atomic_set(&conf->empty_inactive_list_nr, NR_STRIPE_HASH_LOCKS);
+-- 
+2.8.0.rc2
 
--	dm_bufio_wq = create_singlethread_workqueue("dm_bufio_cache");
-+	dm_bufio_wq = alloc_workqueue("dm_bufio_cache", WQ_MEM_RECLAIM, 0);
- 	if (!dm_bufio_wq)
- 		return -ENOMEM;
-
---
-2.1.4
