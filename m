@@ -1,59 +1,62 @@
-From: Chris Murphy <lists@colorremedies.com>
+From: travis+ml-linux-raid@subspacefield.org
 Subject: Re: bootsect replicated in p1, RAID enclosure suggestions?
-Date: Thu, 1 Sep 2016 17:10:40 -0600
-Message-ID: <CAJCQCtTSkD=R0-mCR1wOTDKreujMh-bgRbW9XTCfePx5dXSHCg@mail.gmail.com>
-References: <20160823050947.GL32250@subspacefield.org> <57C863D2.2010802@youngman.org.uk>
+Date: Thu, 1 Sep 2016 19:18:07 -0700
+Message-ID: <20160902021807.GS32250@subspacefield.org>
+References: <20160823050947.GL32250@subspacefield.org>
+ <CAJCQCtSY=D-ASQ22km8GJjfju4jUgJSOBTAH5+XveCZq1BvT7w@mail.gmail.com>
+ <20160825062501.GN32250@subspacefield.org>
+ <CAJCQCtSWOwf6pHD2O7CtaNwF4BDbHO+hh7XrXpcaRsqPkvmFrQ@mail.gmail.com>
+ <20160826025012.GO32250@subspacefield.org>
+ <CAJCQCtRwF1XCNQRxibFGZ0SVQ8=RKo1birv5ZWZBvZGpuu0ndQ@mail.gmail.com>
+ <20160826035850.GQ32250@subspacefield.org>
+ <20160826040619.GR32250@subspacefield.org>
+ <CAJCQCtQLLJEoovBtks0ft9XArHwwZTMqBGobW5WavsQydbqSBQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <57C863D2.2010802@youngman.org.uk>
+Content-Disposition: inline
+In-Reply-To: <CAJCQCtQLLJEoovBtks0ft9XArHwwZTMqBGobW5WavsQydbqSBQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
+To: Chris Murphy <lists@colorremedies.com>
 Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Sep 1, 2016 at 11:22 AM, Wols Lists <antlists@youngman.org.uk> wrote:
-> On 23/08/16 06:09, travis+ml-linux-raid@subspacefield.org wrote:
->> Hello all,
->>
->> So I have an Intel NUC (for low power Linux) plugged via USB into a 4
->> bay enclosure doing linear (yeah I know; it's the backup server, the
->> primary is raid10).
->>
->> And every once in a while, this happens (*see end).  The partition 1
->> that would normally contain a MD slice ends up being a replica of the
->> boot cylinder.  I can't tell if it's the mdraid linear impl, the
->> kernel doing something weird, the USB drivers, the enclosure firmware,
->> or what.
->
-> Interesting snippet from LWN ...
->
-> The Btrfs CRC checking means that a read from a corrupted sector will
-> cause an I/O error rather than return garbage. Facebook had some storage
-> devices that would appear to store data correctly in a set of logical
-> block addresses (LBAs) until the next reboot, at which point reads to
-> those blocks would return GUID partition table (GPT) data instead.
+On Thu, Aug 25, 2016 at 10:25:35PM -0600, Chris Murphy wrote:
+> Well that file does seem stale, because those partitions aren't
+> actually part of LVM. They're members of an mdadm array. I don't know
+> where LVM comes into this because we don't have the complete layout.
 
-Wow that's right in between bizarre and hilarious. Maybe Travis should
-check for firmware updates (for the computer, and the enclosure if it
-offers such a thing, and maybe even the drives).
+md127 = /dev/sd{b,c,d,e}1
+LUKS on that
+PV/VG/LV on that.
 
+/dev/sda5 is also a LUKS partition with LVM on it for root.
 
- >He
-> did not name the device maker because it turned out to actually be a
-> BIOS problem. In any case, the CRCs allowed the Facebook team to quickly
-> figure out that the problem was not in Btrfs when it affected thousands
-> of machines as they were rebooted for a kernel upgrade.
+I wonder if it's possible that whatever restored a GPT also restored a
+LVM header, and somehow that picked it up?
 
-Yeah even in a recent case on linux-btrfs where there's two drives
-with bad sectors causing grief, the volume (somewhat surprisingly)
-mounted ro,degraded and appears to be mostly recoverable, but the main
-thing is that even in that case, other than nocow files, it's expected
-anything that copies over (cp, rsync, btrfs send) is not corrupt. If
-it were corrupt even after reconstruction from parity (even bad
-parity), Brfs will give an I/O error and not submit the data to user
-space.
+Anyway, after doing bitwise backups of disks, I did a create
+--assume-clean with --level=raid0 and the thing seems fine.
 
+# fsck /dev/V_hostname/L_bu
+fsck from util-linux 2.20.1
+e2fsck 1.42 (29-Nov-2011)
+/dev/mapper/V_hostname-L_bu contains a file system with errors, check forced.
+Pass 1: Checking inodes, blocks, and sizes
+Pass 2: Checking directory structure
+Pass 3: Checking directory connectivity
+Pass 3A: Optimizing directories
+Pass 4: Checking reference counts
+Pass 5: Checking group summary information
+Free blocks count wrong for group #67095 (65535, counted=0).
+Fix<y>? yes
 
+Free blocks count wrong (496207637, counted=496207638).
+Fix<y>? yes
+
+And that was pretty much it.
 -- 
-Chris Murphy
+http://www.subspacefield.org/~travis/ | if spammer then john@subspacefield.org
+"Computer crime, the glamor crime of the 1970s, will become in the
+1980s one of the greatest sources of preventable business loss."
+John M. Carroll, "Computer Security", first edition cover flap, 1977
