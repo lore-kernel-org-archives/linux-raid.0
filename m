@@ -1,62 +1,27 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH V2] md-cluster: make md-cluster also can work when compiled into kernel
-Date: Sat,  3 Sep 2016 10:03:30 -0400
-Message-ID: <1472911410-15469-1-git-send-email-gqjiang@suse.com>
-References: <1472813500-4921-1-git-send-email-gqjiang@suse.com>
+From: nidingshi <maxautom@tf1.abstractdns.com>
+Subject: =?UTF-8?B?5r6z6Zeo6YeR5rKZ6ZuG5Zui77yM55S15a2Q5ri46Im6562J5oKo5p2l5oiY?=  =?UTF-8?B?77yM6LCB5piv55yf5q2j55qE5omT4oCc6JmO4oCd6Iux6ZuE77yBKEFEKQ==?=
+Date: Sun, 04 Sep 2016 02:22:47 +0200
+Message-ID: <20160904002248.A747956694@ezpublish15.no.webdeal.no>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1472813500-4921-1-git-send-email-gqjiang@suse.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: shli@kernel.org, Guoqing Jiang <gqjiang@suse.com>, stable@vger.kernel.org#v4.1+, NeilBrown <neilb@suse.com>
 List-Id: linux-raid.ids
 
-The md-cluster is compiled as module by default,
-if it is compiled by built-in way, then we can't
-make md-cluster works.
+Du har fått denne meldingen fordi "nidingshi <maxautom@tf1.abstractdns.com>" tror siden "– Sjefsrollen forsvinner i fremtiden" på www.pressenytt.no vil være interessant for deg.
 
-[64782.630008] md/raid1:md127: active with 2 out of 2 mirrors
-[64782.630528] md-cluster module not found.
-[64782.630530] md127: Could not setup cluster service (-2)
+Dette er linken til siden:
+http://www.pressenytt.no/nor/Artikler/Jobb-og-utdanning/Sjefsrollen-forsvinner-i-fremtiden
 
-Fixes: edb39c9 ("Introduce md_cluster_operations to handle cluster functions")
-Cc: stable@vger.kernel.org # v4.1+
-Cc: NeilBrown <neilb@suse.com>
-Reported-by: Marc Smith <marc.smith@mcc.edu>
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
----
-Changes:
-1. call try_module_get if md_cluster_ops is already set,
-otherwise try_module_get/module_put are unbalanced.
+Kommentar fra "nidingshi <maxautom@tf1.abstractdns.com>":
+★2016澳门金沙集团全新改版，手机畅玩：【BB、MG、GNS】电子游艺、【BB、AG、沙龙、欧博、OG、GD】视讯、彩票投注。【微信、支付宝】二维码扫一扫秒到，最低存款10元，入款即送1.2%，品牌信誉，大额无忧！ 
+五大联赛来了，新增【SBT体育】。联合【bb体育、体育投注】，为您带来更高的投注体验。
+电子游艺周投注5000洗码量以上，即可获得高达1288元奖金回馈，VIP开户网址：http://www.855369.com/?linux-raid@vger.kernel.org 
 
- drivers/md/md.c | 14 +++++---------
- 1 file changed, 5 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 67642ba..6ac5abe 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -7610,16 +7610,12 @@ EXPORT_SYMBOL(unregister_md_cluster_operations);
- 
- int md_setup_cluster(struct mddev *mddev, int nodes)
- {
--	int err;
--
--	err = request_module("md-cluster");
--	if (err) {
--		pr_err("md-cluster module not found.\n");
--		return -ENOENT;
--	}
--
-+	if (!md_cluster_ops)
-+		request_module("md-cluster");
- 	spin_lock(&pers_lock);
--	if (!md_cluster_ops || !try_module_get(md_cluster_mod)) {
-+	/* ensure module won't be unloaded */
-+	if (!try_module_get(md_cluster_mod)) {
-+		pr_err("can't get md-cluster module reference.\n");
- 		spin_unlock(&pers_lock);
- 		return -ENOENT;
- 	}
--- 
-2.6.6
+------------------------------------------
+                    生命对某些人来说是美丽的，这些人的一生都为某个奋斗。
 
