@@ -1,7 +1,7 @@
 From: Francisco Parada <advanceandconquer@gmail.com>
 Subject: RAID6 - CPU At 100% Usage After Reassembly
-Date: Sat, 3 Sep 2016 22:56:43 -0400
-Message-ID: <CAOW94uth0iJEvqf34foW4TPoLKOMyVi3dp+DO+qjyGtDbjrM3Q@mail.gmail.com>
+Date: Sun, 4 Sep 2016 00:04:34 -0400
+Message-ID: <CAOW94ut0uHS8+k0jutOT9bfT__WLbbOJmQC2CFa15HVVe9L4fg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -136,8 +136,7 @@ Tasks: 317 total,   4 running, 313 sleeping,   0 stopped,   0 zombie
 KiB Mem :  1521584 total,   220812 free,   774868 used,   525904 buff/cache
 KiB Swap: 25153532 total, 25000764 free,   152768 used.   477708 avail Mem
 
-  PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+
-COMMAND
+  PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+   COMMAND
   435 root      20   0       0      0      0 R  98.0  0.0   5:27.12
 md127_raid6
 28941 cisco     20   0  546436  34336  25080 R   2.9  2.3   0:18.32
