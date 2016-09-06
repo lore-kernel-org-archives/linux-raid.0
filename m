@@ -1,31 +1,50 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: RE: Checkarray doesn't seem to do anything
-Date: Mon, 5 Sep 2016 10:15:12 +0200 (CEST)
-Message-ID: <alpine.DEB.2.02.1609051010420.1477@uplift.swm.pp.se>
-References: <20160302125329.0a91db92e0d9ae1e5e3fde0508678719.6af0e5bebc.wbe@email03.secureserver.net>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160302125329.0a91db92e0d9ae1e5e3fde0508678719.6af0e5bebc.wbe@email03.secureserver.net>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+From: Minfei Huang <mnghuan@gmail.com>
+Subject: [PATCH] dm: Return correct value in retry loop
+Date: Tue,  6 Sep 2016 16:00:29 +0800
+Message-ID: <1473148829-3317-1-git-send-email-mnghuan@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: agk@redhat.com, snitzer@redhat.com, shli@kernel.org
+Cc: dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Minfei Huang <mnghuan@gmail.com>
 List-Id: linux-raid.ids
 
+dm_resume will return sliently in retry loop's failure. Assign a correct
+return value in the failed loop.
 
-I just wanted to say I ran into this on Ubuntu 16.04 just now, and it's 
-still not fixed.
+Remove a useless assignment as well.
 
-Seems there are multiple bug id:s
+Signed-off-by: Minfei Huang <mnghuan@gmail.com>
+---
+ drivers/md/dm.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=787950#10
-https://bugs.launchpad.net/debian/+source/mdadm/+bug/1550823
-
-But this is still not fixed in Ubuntu 16.04, potentially in Debian as 
-well.
-
-So it might be good for everybody to know that their arrays most likely 
-aren't being periodically checked if you upgrade to Ubuntu 16.04 
-currently.
-
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index fa9b1cb..c935cc8 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -2249,10 +2249,11 @@ static int __dm_resume(struct mapped_device *md, struct dm_table *map)
+ 
+ int dm_resume(struct mapped_device *md)
+ {
+-	int r = -EINVAL;
++	int r;
+ 	struct dm_table *map = NULL;
+ 
+ retry:
++	r = -EINVAL;
+ 	mutex_lock_nested(&md->suspend_lock, SINGLE_DEPTH_NESTING);
+ 
+ 	if (!dm_suspended_md(md))
+@@ -2277,10 +2278,8 @@ retry:
+ 
+ 	clear_bit(DMF_SUSPENDED, &md->flags);
+ 
+-	r = 0;
+ out:
+ 	mutex_unlock(&md->suspend_lock);
+-
+ 	return r;
+ }
+ 
 -- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+2.7.4 (Apple Git-66)
