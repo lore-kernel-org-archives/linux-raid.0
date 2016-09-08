@@ -1,38 +1,41 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v2] mdadm: fix a buffer overflow
-Date: Thu, 8 Sep 2016 10:56:36 -0700
-Message-ID: <20160908175636.GA21973@kernel.org>
-References: <1473295415-1859888-1-git-send-email-songliubraving@fb.com>
+Subject: Re: [PATCH V3] md-cluster: make md-cluster also can work when
+ compiled into kernel
+Date: Thu, 8 Sep 2016 11:03:24 -0700
+Message-ID: <20160908180324.GB21973@kernel.org>
+References: <1472813500-4921-1-git-send-email-gqjiang@suse.com>
+ <1473041848-28009-1-git-send-email-gqjiang@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1473295415-1859888-1-git-send-email-songliubraving@fb.com>
+In-Reply-To: <1473041848-28009-1-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>
-Cc: linux-raid@vger.kernel.org, Jes.Sorensen@redhat.com, shli@fb.com
+To: Guoqing Jiang <gqjiang@suse.com>
+Cc: linux-raid@vger.kernel.org, "v4.1+" <stable@vger.kernel.org>, NeilBrown <neilb@suse.com>
 List-Id: linux-raid.ids
 
-On Wed, Sep 07, 2016 at 05:43:35PM -0700, Song Liu wrote:
-> struct mdp_superblock_1.set_name is 32B long, but struct mdinfo.name
-> is 33B long. So we need strncpy instead strcpy to avoid buffer
-> overflow.
+On Sun, Sep 04, 2016 at 10:17:28PM -0400, Guoqing Jiang wrote:
+> The md-cluster is compiled as module by default,
+> if it is compiled by built-in way, then we can't
+> make md-cluster works.
 > 
-> Signed-off-by: Song Liu <songliubraving@fb.com>
+> [64782.630008] md/raid1:md127: active with 2 out of 2 mirrors
+> [64782.630528] md-cluster module not found.
+> [64782.630530] md127: Could not setup cluster service (-2)
+> 
+> Fixes: edb39c9 ("Introduce md_cluster_operations to handle cluster functions")
+> Cc: stable@vger.kernel.org (v4.1+)
+> Cc: NeilBrown <neilb@suse.com>
+> Reported-by: Marc Smith <marc.smith@mcc.edu>
+> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 > ---
->  super1.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+> V3 changes:
+> 1. add the "!md_cluster_ops" test back
+> 2. fix wrong mail info of stable kernel
 > 
-> diff --git a/super1.c b/super1.c
-> index f3e4023..46fed54 100644
-> --- a/super1.c
-> +++ b/super1.c
-> @@ -1294,7 +1294,7 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
->  			strcat(sb->set_name, ":");
->  			strcat(sb->set_name, info->name);
->  		} else
-> -			strcpy(sb->set_name, info->name);
-> +			strncpy(sb->set_name, info->name, 32);
+> V2 changes:
+> 1. call try_module_get if md_cluster_ops is already set,
+>    otherwise try_module_get/module_put are unbalanced.
 
-strncpy(sb->set_name, info->name, sizeof(sb->set_name)); ?
-
+applied, thanks!
