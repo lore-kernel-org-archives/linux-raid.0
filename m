@@ -1,38 +1,38 @@
-From: Shaohua Li <shli@fb.com>
-Subject: [PATCH] raid5: allow arbitrary max_hw_sectors
-Date: Thu, 8 Sep 2016 10:49:06 -0700
-Message-ID: <fc28382b625fc4efe7549c9385a1c9edaf128d5a.1473356605.git.shli@fb.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH v2] mdadm: fix a buffer overflow
+Date: Thu, 8 Sep 2016 10:56:36 -0700
+Message-ID: <20160908175636.GA21973@kernel.org>
+References: <1473295415-1859888-1-git-send-email-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1473295415-1859888-1-git-send-email-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Kernel-team@fb.com
+To: Song Liu <songliubraving@fb.com>
+Cc: linux-raid@vger.kernel.org, Jes.Sorensen@redhat.com, shli@fb.com
 List-Id: linux-raid.ids
 
-raid5 will split bio to proper size internally, there is no point to use
-underlayer disk's max_hw_sectors. In my qemu system, without the change,
-the raid5 only receives 128k size bio, which reduces the chance of bio
-merge sending to underlayer disks.
+On Wed, Sep 07, 2016 at 05:43:35PM -0700, Song Liu wrote:
+> struct mdp_superblock_1.set_name is 32B long, but struct mdinfo.name
+> is 33B long. So we need strncpy instead strcpy to avoid buffer
+> overflow.
+> 
+> Signed-off-by: Song Liu <songliubraving@fb.com>
+> ---
+>  super1.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/super1.c b/super1.c
+> index f3e4023..46fed54 100644
+> --- a/super1.c
+> +++ b/super1.c
+> @@ -1294,7 +1294,7 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+>  			strcat(sb->set_name, ":");
+>  			strcat(sb->set_name, info->name);
+>  		} else
+> -			strcpy(sb->set_name, info->name);
+> +			strncpy(sb->set_name, info->name, 32);
 
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- drivers/md/raid5.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index b95c54c..fc0b600 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -7066,6 +7066,8 @@ static int raid5_run(struct mddev *mddev)
- 		else
- 			queue_flag_clear_unlocked(QUEUE_FLAG_DISCARD,
- 						mddev->queue);
-+
-+		blk_queue_max_hw_sectors(mddev->queue, UINT_MAX);
- 	}
- 
- 	if (journal_dev) {
--- 
-2.8.0.rc2
+strncpy(sb->set_name, info->name, sizeof(sb->set_name)); ?
 
