@@ -1,36 +1,46 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: Re: [PATCH v2] mdadm: fix a buffer overflow
-Date: Thu, 8 Sep 2016 18:20:43 +0000
-Message-ID: <C6111D12-D9A6-44AF-B2CE-84DC5C657089@fb.com>
-References: <1473295415-1859888-1-git-send-email-songliubraving@fb.com>
- <20160908175636.GA21973@kernel.org>
+Subject: [PATCH v3] mdadm: fix a buffer overflow
+Date: Thu, 8 Sep 2016 11:21:07 -0700
+Message-ID: <1473358867-4114379-1-git-send-email-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160908175636.GA21973@kernel.org>
-Content-Language: en-US
-Content-ID: <175DE1F2E2A24642A4DF797FBBFCD5B7@namprd15.prod.outlook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Jes.Sorensen@redhat.com" <Jes.Sorensen@redhat.com>, Shaohua Li <shli@fb.com>
+To: linux-raid@vger.kernel.org
+Cc: Jes.Sorensen@redhat.com, shli@fb.com, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-U291bmRzIGdvb2QuIExldCBtZSByZXNlbmQuIA0KIA0KVGhhbmtzLA0KU29uZw0KDQoNCj4+IE9u
-IDkvOC8xNiwgMTA6NTYgQU0sICJTaGFvaHVhIExpIiA8c2hsaUBrZXJuZWwub3JnPiB3cm90ZToN
-Cg0KICAgIE9uIFdlZCwgU2VwIDA3LCAyMDE2IGF0IDA1OjQzOjM1UE0gLTA3MDAsIFNvbmcgTGl1
-IHdyb3RlOg0KICAgID4gc3RydWN0IG1kcF9zdXBlcmJsb2NrXzEuc2V0X25hbWUgaXMgMzJCIGxv
-bmcsIGJ1dCBzdHJ1Y3QgbWRpbmZvLm5hbWUNCiAgICA+IGlzIDMzQiBsb25nLiBTbyB3ZSBuZWVk
-IHN0cm5jcHkgaW5zdGVhZCBzdHJjcHkgdG8gYXZvaWQgYnVmZmVyDQogICAgPiBvdmVyZmxvdy4N
-CiAgICA+IA0KICAgID4gU2lnbmVkLW9mZi1ieTogU29uZyBMaXUgPHNvbmdsaXVicmF2aW5nQGZi
-LmNvbT4NCiAgICA+IC0tLQ0KICAgID4gIHN1cGVyMS5jIHwgNCArKy0tDQogICAgPiAgMSBmaWxl
-IGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkNCiAgICA+IA0KICAgID4g
-ZGlmZiAtLWdpdCBhL3N1cGVyMS5jIGIvc3VwZXIxLmMNCiAgICA+IGluZGV4IGYzZTQwMjMuLjQ2
-ZmVkNTQgMTAwNjQ0DQogICAgPiAtLS0gYS9zdXBlcjEuYw0KICAgID4gKysrIGIvc3VwZXIxLmMN
-CiAgICA+IEBAIC0xMjk0LDcgKzEyOTQsNyBAQCBzdGF0aWMgaW50IHVwZGF0ZV9zdXBlcjEoc3Ry
-dWN0IHN1cGVydHlwZSAqc3QsIHN0cnVjdCBtZGluZm8gKmluZm8sDQogICAgPiAgCQkJc3RyY2F0
-KHNiLT5zZXRfbmFtZSwgIjoiKTsNCiAgICA+ICAJCQlzdHJjYXQoc2ItPnNldF9uYW1lLCBpbmZv
-LT5uYW1lKTsNCiAgICA+ICAJCX0gZWxzZQ0KICAgID4gLQkJCXN0cmNweShzYi0+c2V0X25hbWUs
-IGluZm8tPm5hbWUpOw0KICAgID4gKwkJCXN0cm5jcHkoc2ItPnNldF9uYW1lLCBpbmZvLT5uYW1l
-LCAzMik7DQogICAgDQogICAgc3RybmNweShzYi0+c2V0X25hbWUsIGluZm8tPm5hbWUsIHNpemVv
-ZihzYi0+c2V0X25hbWUpKTsgPw0KICAgIA0KICAgIA0KDQoNCg==
+struct mdp_superblock_1.set_name is 32B long, but struct mdinfo.name
+is 33B long. So we need strncpy instead strcpy to avoid buffer
+overflow.
+
+Signed-off-by: Song Liu <songliubraving@fb.com>
+---
+ super1.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/super1.c b/super1.c
+index f3e4023..9f62d23 100644
+--- a/super1.c
++++ b/super1.c
+@@ -1294,7 +1294,7 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+ 			strcat(sb->set_name, ":");
+ 			strcat(sb->set_name, info->name);
+ 		} else
+-			strcpy(sb->set_name, info->name);
++			strncpy(sb->set_name, info->name, sizeof(sb->set_name));
+ 	} else if (strcmp(update, "devicesize") == 0 &&
+ 	    __le64_to_cpu(sb->super_offset) <
+ 	    __le64_to_cpu(sb->data_offset)) {
+@@ -1444,7 +1444,7 @@ static int init_super1(struct supertype *st, mdu_array_info_t *info,
+ 		strcat(sb->set_name, ":");
+ 		strcat(sb->set_name, name);
+ 	} else
+-		strcpy(sb->set_name, name);
++		strncpy(sb->set_name, name, sizeof(sb->set_name));
+ 
+ 	sb->ctime = __cpu_to_le64((unsigned long long)time(0));
+ 	sb->level = __cpu_to_le32(info->level);
+-- 
+2.8.0.rc2
+
