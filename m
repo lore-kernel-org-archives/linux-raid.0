@@ -1,37 +1,36 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH] mdadm: fix a buffer overflow
-Date: Wed, 7 Sep 2016 17:28:29 -0700
-Message-ID: <1473294509-1828100-1-git-send-email-songliubraving@fb.com>
+Subject: Re: [PATCH] mdadm: fix a buffer overflow
+Date: Thu, 8 Sep 2016 00:39:43 +0000
+Message-ID: <76A734D8-80DD-4514-8E01-360661C39EA3@fb.com>
+References: <1473294509-1828100-1-git-send-email-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1473294509-1828100-1-git-send-email-songliubraving@fb.com>
+Content-Language: en-US
+Content-ID: <BB0223D265789A498455B0CB8C56DA82@namprd15.prod.outlook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Jes.Sorensen@redhat.com, shli@fb.com, Song Liu <songliubraving@fb.com>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Cc: "Jes.Sorensen@redhat.com" <Jes.Sorensen@redhat.com>, Shaohua Li <shli@fb.com>
 List-Id: linux-raid.ids
 
-struct mdp_superblock_1.set_name is 32B long, but struct mdinfo.name
-is 33B long. So we need strncpy instead strcpy to avoid buffer
-overflow.
-
-Signed-off-by: Song Liu <songliubraving@fb.com>
----
- super1.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/super1.c b/super1.c
-index f3e4023..942f0d2 100644
---- a/super1.c
-+++ b/super1.c
-@@ -1294,7 +1294,7 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
- 			strcat(sb->set_name, ":");
- 			strcat(sb->set_name, info->name);
- 		} else
--			strcpy(sb->set_name, info->name);
-+			strncpy(sb->set_name, info->name, 32);
- 	} else if (strcmp(update, "devicesize") == 0 &&
- 	    __le64_to_cpu(sb->super_offset) <
- 	    __le64_to_cpu(sb->data_offset)) {
--- 
-2.8.0.rc2
-
+QWN0dWFsbHksIHRoZXJlIGFyZSBtb3JlIG9mIHNpbWlsYXIgY29kZS4gTGV0IG1lIHJlc2VuZCBh
+IHBhdGNoIHRoYXQgZml4IHRoZW0gdG9nZXRoZXIuIA0KIA0KVGhhbmtzLA0KU29uZw0KDQoNCj4+
+IE9uIDkvNy8xNiwgNToyOCBQTSwgIlNvbmcgTGl1IiA8c29uZ2xpdWJyYXZpbmdAZmIuY29tPiB3
+cm90ZToNCg0KICAgIHN0cnVjdCBtZHBfc3VwZXJibG9ja18xLnNldF9uYW1lIGlzIDMyQiBsb25n
+LCBidXQgc3RydWN0IG1kaW5mby5uYW1lDQogICAgaXMgMzNCIGxvbmcuIFNvIHdlIG5lZWQgc3Ry
+bmNweSBpbnN0ZWFkIHN0cmNweSB0byBhdm9pZCBidWZmZXINCiAgICBvdmVyZmxvdy4NCiAgICAN
+CiAgICBTaWduZWQtb2ZmLWJ5OiBTb25nIExpdSA8c29uZ2xpdWJyYXZpbmdAZmIuY29tPg0KICAg
+IC0tLQ0KICAgICBzdXBlcjEuYyB8IDIgKy0NCiAgICAgMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0
+aW9uKCspLCAxIGRlbGV0aW9uKC0pDQogICAgDQogICAgZGlmZiAtLWdpdCBhL3N1cGVyMS5jIGIv
+c3VwZXIxLmMNCiAgICBpbmRleCBmM2U0MDIzLi45NDJmMGQyIDEwMDY0NA0KICAgIC0tLSBhL3N1
+cGVyMS5jDQogICAgKysrIGIvc3VwZXIxLmMNCiAgICBAQCAtMTI5NCw3ICsxMjk0LDcgQEAgc3Rh
+dGljIGludCB1cGRhdGVfc3VwZXIxKHN0cnVjdCBzdXBlcnR5cGUgKnN0LCBzdHJ1Y3QgbWRpbmZv
+ICppbmZvLA0KICAgICAJCQlzdHJjYXQoc2ItPnNldF9uYW1lLCAiOiIpOw0KICAgICAJCQlzdHJj
+YXQoc2ItPnNldF9uYW1lLCBpbmZvLT5uYW1lKTsNCiAgICAgCQl9IGVsc2UNCiAgICAtCQkJc3Ry
+Y3B5KHNiLT5zZXRfbmFtZSwgaW5mby0+bmFtZSk7DQogICAgKwkJCXN0cm5jcHkoc2ItPnNldF9u
+YW1lLCBpbmZvLT5uYW1lLCAzMik7DQogICAgIAl9IGVsc2UgaWYgKHN0cmNtcCh1cGRhdGUsICJk
+ZXZpY2VzaXplIikgPT0gMCAmJg0KICAgICAJICAgIF9fbGU2NF90b19jcHUoc2ItPnN1cGVyX29m
+ZnNldCkgPA0KICAgICAJICAgIF9fbGU2NF90b19jcHUoc2ItPmRhdGFfb2Zmc2V0KSkgew0KICAg
+IC0tIA0KICAgIDIuOC4wLnJjMg0KICAgIA0KICAgIA0KDQoNCg==
