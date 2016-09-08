@@ -1,41 +1,36 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH V3] md-cluster: make md-cluster also can work when
- compiled into kernel
-Date: Thu, 8 Sep 2016 11:03:24 -0700
-Message-ID: <20160908180324.GB21973@kernel.org>
-References: <1472813500-4921-1-git-send-email-gqjiang@suse.com>
- <1473041848-28009-1-git-send-email-gqjiang@suse.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: Re: [PATCH v2] mdadm: fix a buffer overflow
+Date: Thu, 8 Sep 2016 18:20:43 +0000
+Message-ID: <C6111D12-D9A6-44AF-B2CE-84DC5C657089@fb.com>
+References: <1473295415-1859888-1-git-send-email-songliubraving@fb.com>
+ <20160908175636.GA21973@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1473041848-28009-1-git-send-email-gqjiang@suse.com>
+In-Reply-To: <20160908175636.GA21973@kernel.org>
+Content-Language: en-US
+Content-ID: <175DE1F2E2A24642A4DF797FBBFCD5B7@namprd15.prod.outlook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>
-Cc: linux-raid@vger.kernel.org, "v4.1+" <stable@vger.kernel.org>, NeilBrown <neilb@suse.com>
+To: Shaohua Li <shli@kernel.org>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Jes.Sorensen@redhat.com" <Jes.Sorensen@redhat.com>, Shaohua Li <shli@fb.com>
 List-Id: linux-raid.ids
 
-On Sun, Sep 04, 2016 at 10:17:28PM -0400, Guoqing Jiang wrote:
-> The md-cluster is compiled as module by default,
-> if it is compiled by built-in way, then we can't
-> make md-cluster works.
-> 
-> [64782.630008] md/raid1:md127: active with 2 out of 2 mirrors
-> [64782.630528] md-cluster module not found.
-> [64782.630530] md127: Could not setup cluster service (-2)
-> 
-> Fixes: edb39c9 ("Introduce md_cluster_operations to handle cluster functions")
-> Cc: stable@vger.kernel.org (v4.1+)
-> Cc: NeilBrown <neilb@suse.com>
-> Reported-by: Marc Smith <marc.smith@mcc.edu>
-> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-> ---
-> V3 changes:
-> 1. add the "!md_cluster_ops" test back
-> 2. fix wrong mail info of stable kernel
-> 
-> V2 changes:
-> 1. call try_module_get if md_cluster_ops is already set,
->    otherwise try_module_get/module_put are unbalanced.
-
-applied, thanks!
+U291bmRzIGdvb2QuIExldCBtZSByZXNlbmQuIA0KIA0KVGhhbmtzLA0KU29uZw0KDQoNCj4+IE9u
+IDkvOC8xNiwgMTA6NTYgQU0sICJTaGFvaHVhIExpIiA8c2hsaUBrZXJuZWwub3JnPiB3cm90ZToN
+Cg0KICAgIE9uIFdlZCwgU2VwIDA3LCAyMDE2IGF0IDA1OjQzOjM1UE0gLTA3MDAsIFNvbmcgTGl1
+IHdyb3RlOg0KICAgID4gc3RydWN0IG1kcF9zdXBlcmJsb2NrXzEuc2V0X25hbWUgaXMgMzJCIGxv
+bmcsIGJ1dCBzdHJ1Y3QgbWRpbmZvLm5hbWUNCiAgICA+IGlzIDMzQiBsb25nLiBTbyB3ZSBuZWVk
+IHN0cm5jcHkgaW5zdGVhZCBzdHJjcHkgdG8gYXZvaWQgYnVmZmVyDQogICAgPiBvdmVyZmxvdy4N
+CiAgICA+IA0KICAgID4gU2lnbmVkLW9mZi1ieTogU29uZyBMaXUgPHNvbmdsaXVicmF2aW5nQGZi
+LmNvbT4NCiAgICA+IC0tLQ0KICAgID4gIHN1cGVyMS5jIHwgNCArKy0tDQogICAgPiAgMSBmaWxl
+IGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkNCiAgICA+IA0KICAgID4g
+ZGlmZiAtLWdpdCBhL3N1cGVyMS5jIGIvc3VwZXIxLmMNCiAgICA+IGluZGV4IGYzZTQwMjMuLjQ2
+ZmVkNTQgMTAwNjQ0DQogICAgPiAtLS0gYS9zdXBlcjEuYw0KICAgID4gKysrIGIvc3VwZXIxLmMN
+CiAgICA+IEBAIC0xMjk0LDcgKzEyOTQsNyBAQCBzdGF0aWMgaW50IHVwZGF0ZV9zdXBlcjEoc3Ry
+dWN0IHN1cGVydHlwZSAqc3QsIHN0cnVjdCBtZGluZm8gKmluZm8sDQogICAgPiAgCQkJc3RyY2F0
+KHNiLT5zZXRfbmFtZSwgIjoiKTsNCiAgICA+ICAJCQlzdHJjYXQoc2ItPnNldF9uYW1lLCBpbmZv
+LT5uYW1lKTsNCiAgICA+ICAJCX0gZWxzZQ0KICAgID4gLQkJCXN0cmNweShzYi0+c2V0X25hbWUs
+IGluZm8tPm5hbWUpOw0KICAgID4gKwkJCXN0cm5jcHkoc2ItPnNldF9uYW1lLCBpbmZvLT5uYW1l
+LCAzMik7DQogICAgDQogICAgc3RybmNweShzYi0+c2V0X25hbWUsIGluZm8tPm5hbWUsIHNpemVv
+ZihzYi0+c2V0X25hbWUpKTsgPw0KICAgIA0KICAgIA0KDQoNCg==
