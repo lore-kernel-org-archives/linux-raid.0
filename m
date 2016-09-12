@@ -1,32 +1,59 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH v3] mdadm: fix a buffer overflow
-Date: Mon, 12 Sep 2016 12:51:55 -0400
-Message-ID: <wrfj8tuxgixg.fsf@redhat.com>
-References: <1473358867-4114379-1-git-send-email-songliubraving@fb.com>
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: Question about commit f9a67b1182e5 ("md/bitmap: clear bitmap if
+ bitmap_create failed").
+Date: Mon, 12 Sep 2016 21:09:48 +0200
+Message-ID: <752ab1d9-412a-149b-a241-e604040ebaff@wanadoo.fr>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1473358867-4114379-1-git-send-email-songliubraving@fb.com> (Song
-        Liu's message of "Thu, 8 Sep 2016 11:21:07 -0700")
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>
-Cc: linux-raid@vger.kernel.org, shli@fb.com
+To: shli@kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Song Liu <songliubraving@fb.com> writes:
-> struct mdp_superblock_1.set_name is 32B long, but struct mdinfo.name
-> is 33B long. So we need strncpy instead strcpy to avoid buffer
-> overflow.
->
-> Signed-off-by: Song Liu <songliubraving@fb.com>
-> ---
->  super1.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+Hi,
 
-Applied thanks!
+I'm puzzled by commit f9a67b1182e5 ("md/bitmap: clear bitmap if 
+bitmap_create failed").
 
-Note there is at least one place with a str operation hardcoding the
-length of set_name to 32. Would you mind fixing that too?
+Part of the commit is:
 
-Cheers,
-Jes
+@@ -1865,8 +1866,10 @@ int bitmap_copy_from_slot(struct mddev *mddev, 
+int slot,
+      struct bitmap_counts *counts;
+      struct bitmap *bitmap = bitmap_create(mddev, slot);
+
+-    if (IS_ERR(bitmap))
++    if (IS_ERR(bitmap)) {
++        bitmap_free(bitmap);
+          return PTR_ERR(bitmap);
++    }
+
+but if 'bitmap' is an error, I think that bad things will happen in 
+'bitmap_free()' when, at the beginning of the function, we will execute:
+
+     if (bitmap->sysfs_can_clear) <-----------------
+         sysfs_put(bitmap->sysfs_can_clear);
+
+
+However, the commit log message is really explicit and adding this call 
+to 'bitmap_free' has really been done one purpose. ("If bitmap_create 
+returns an error, we need to call either bitmap_destroy or bitmap_free 
+to do clean up, ...")
+
+
+It is also not consistent with the comment before function bitmap_create():
+
+     * if this returns an error, bitmap_destroy must be called to do 
+clean up
+     * once mddev->bitmap is set
+
+
+I may have missed something, but I don't see what.
+
+Is this commit correct?
+
+
+Best regards,
+CJ
+
