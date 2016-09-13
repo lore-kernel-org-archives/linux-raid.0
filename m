@@ -1,25 +1,49 @@
-From: Francisco Parada <advanceandconquer@gmail.com>
-Subject: Re: RAID6 - CPU At 100% Usage After Reassembly
-Date: Tue, 13 Sep 2016 11:22:17 -0400
-Message-ID: <CAOW94utnY1zCR7gUCx1K0p2YfDhi3tXTsE6J_mT6rNz1TuTZEQ@mail.gmail.com>
-References: <CAOW94ut0uHS8+k0jutOT9bfT__WLbbOJmQC2CFa15HVVe9L4fg@mail.gmail.com>
- <CADEsfxrKeSv5dRNfBoyybHaemPSqCcamTmSZ4P+Yey-rLd8hEg@mail.gmail.com>
- <CAOW94uv4zSGs+6be3zhcQaGZdiAgg-s4ZHZ=mszcURo6pqJyqA@mail.gmail.com> <CAOW94ute6CZafnAC6AVauqUGsEgVrnO3B27Gn3eVzdWFBJPCQw@mail.gmail.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: [GIT PULL] MD update for 4.8-rc6
+Date: Tue, 13 Sep 2016 09:56:23 -0700
+Message-ID: <20160913165623.GA13578@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAOW94ute6CZafnAC6AVauqUGsEgVrnO3B27Gn3eVzdWFBJPCQw@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "Michael J. Shaver" <jmshaver@gmail.com>
-Cc: mdraid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-Hi all,
+Hi Linus,
+A few bug fixes for MD.
+- Guoqing fixed a bug compiling md-cluster in kernel
+- I fixed a potential deadlock in raid5-cache superblock write, a hang in raid5
+  reshape resume and a race condition introduced in -rc4
 
-I've tried the suggestions mentioned and also tried booting into an
-older version of Ubuntu (14.04.5 instead of my current 16.04.1), which
-has an older kernel per a private suggestion, but that too was
-unsuccessful.  Just wanted to give a quick update that all of the
-mentioned workarounds were unfruitful.
+Please pull!
 
-Does anyone else have any suggestions or workarounds?
+Thanks,
+Shaohua
+
+The following changes since commit 86a1679860babbacd61fc1e8c0c0f43641d5860d:
+
+  Merge tag 'md/4.8-rc4' of git://git.kernel.org/pub/scm/linux/kernel/git/shli/md (2016-08-30 11:24:04 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git tags/md/4.8-rc6
+
+for you to fetch changes up to c94455558337eece474eebb6a16b905f98930418:
+
+  raid5: fix a small race condition (2016-09-09 11:09:19 -0700)
+
+----------------------------------------------------------------
+Guoqing Jiang (1):
+      md-cluster: make md-cluster also can work when compiled into kernel
+
+Shaohua Li (3):
+      raid5-cache: fix a deadlock in superblock write
+      raid5: guarantee enough stripes to avoid reshape hang
+      raid5: fix a small race condition
+
+ drivers/md/md.c          | 12 ++++--------
+ drivers/md/raid5-cache.c | 46 +++++++++++++++-------------------------------
+ drivers/md/raid5.c       | 14 ++++++++++++--
+ 3 files changed, 31 insertions(+), 41 deletions(-)
