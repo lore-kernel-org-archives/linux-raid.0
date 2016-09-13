@@ -1,7 +1,7 @@
 From: Daniel Sanabria <sanabria.d@gmail.com>
 Subject: Re: Inactive arrays
-Date: Tue, 13 Sep 2016 21:29:04 +0100
-Message-ID: <CAHscji1iJu7+HAM+abneTCwEEp3_h1-eyYpKN9vB8eTRM+BeSw@mail.gmail.com>
+Date: Tue, 13 Sep 2016 21:36:08 +0100
+Message-ID: <CAHscji3LX3+c_ighYMMDQo1E4ygdepr=Gt2wVmWzdLj+F+tVsQ@mail.gmail.com>
 References: <CAHscji0ddZT-aq5fEp8aG030+F7UqGzMgRnm4QP1Lr1AsGy61Q@mail.gmail.com>
  <57A07345.4040708@youngman.org.uk> <CAHscji0BQuyKQbLYZ9Ah16hHday_seTaajm8LOn6+HRFqinTyQ@mail.gmail.com>
  <CAHscji3C4Cygs=xh4d4PtREp9mGSBjNS0o7SatW_QotzYShA_Q@mail.gmail.com>
@@ -22,163 +22,146 @@ To: Chris Murphy <lists@colorremedies.com>
 Cc: Wols Lists <antlists@youngman.org.uk>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Thanks for the help Chris,
-
-> Have you told us the entire story about how you got into
-> this situation?
-
-I think I have but I can see how it can be confusing since I have
-provided non requested info - including old records from where arrays
-were working (more on that below). Basically the system was moved
-meaning it was offline for a few days, on first boot after the move I
-ended up with md128 and md129 inactive
-
-> Have you use 'mdadm create' trying to fix this? If you
-> haven't, don't do it.
-
-I haven't
-
-> I see a lot of conflicting information. For example:
->
->> /dev/md129:
->>         Version : 1.2
->>   Creation Time : Mon Nov 10 16:28:11 2014
->>      Raid Level : raid0
->>      Array Size : 1572470784 (1499.63 GiB 1610.21 GB)
->>    Raid Devices : 3
->>   Total Devices : 3
->>     Persistence : Superblock is persistent
->>
->>     Update Time : Mon Nov 10 16:28:11 2014
->>           State : clean
->>  Active Devices : 3
->> Working Devices : 3
->>  Failed Devices : 0
->>   Spare Devices : 0
->>
->>      Chunk Size : 512K
->>
->>            Name : lamachine:129  (local to host lamachine)
->>            UUID : 895dae98:d1a496de:4f590b8b:cb8ac12a
->>          Events : 0
->>
->>     Number   Major   Minor   RaidDevice State
->>        0       8       50        0      active sync   /dev/sdd2
->>        1       8       66        1      active sync   /dev/sde2
->>        2       8       82        2      active sync   /dev/sdf
->
->
->
->>> /dev/md129:
->>>         Version : 1.2
->>>      Raid Level : raid0
->>>   Total Devices : 1
->>>     Persistence : Superblock is persistent
->>>
->>>           State : inactive
->>>
->>>            Name : lamachine:129  (local to host lamachine)
->>>            UUID : 895dae98:d1a496de:4f590b8b:cb8ac12a
->>>          Events : 0
->>>
->>>     Number   Major   Minor   RaidDevice
->>>
->>>        -       8       50        -        /dev/sdd2
->
->
-> The same md device, one raid0 one raid5. The same sdd2, one in the
-> raid0, and it's also in the raid5. Which is true?
-
-So the first record for /dev/md129 is from the time the array was
-working ok and the second is the current status. I think both records
-shows Raid Level: raid0
-
-> It sounds to me like
-> you've tried recovery and did something wrong; or about as bad is
-> you've had these drives in more than one software raid setup, and you
-> didn't zero out old superblocks first.
-
-The only thing that comes to mind is that at first the system wasn't
-coming up because so I tried to boot from individual drives while
-trying to locate the boot device.
-
 > Maybe start out with 'mdadm -D' on everything... literally everything,
 > every whole drive (i.e. /dev/sdd, /dev/sdc, all of them) and also
 > everyone of their partitions; and see if it's possible to sort out
 > this mess.
 
-Will run on devices "a to f"
+[root@lamachine ~]# mdadm -D /dev/md*
+/dev/md126:
+        Version : 0.90
+  Creation Time : Thu Dec  3 22:12:12 2009
+     Raid Level : raid10
+     Array Size : 30719936 (29.30 GiB 31.46 GB)
+  Used Dev Size : 30719936 (29.30 GiB 31.46 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 126
+    Persistence : Superblock is persistent
 
-On 13 September 2016 at 21:13, Chris Murphy <lists@colorremedies.com> wrote:
-> An invalid backup GPT suggests it was stepped on by something that was
-> used on the whole block device. The backup GPT is at the end of the
-> drive. And if you were to use mdadm create on the entire drive rather
-> than a partition, you'd step on that GPT and also incorrectly recreate
-> the array. Have you told us the entire story about how you got into
-> this situation? Have you use 'mdadm create' trying to fix this? If you
-> haven't, don't do it.
->
-> I see a lot of conflicting information. For example:
->
->> /dev/md129:
->>         Version : 1.2
->>   Creation Time : Mon Nov 10 16:28:11 2014
->>      Raid Level : raid0
->>      Array Size : 1572470784 (1499.63 GiB 1610.21 GB)
->>    Raid Devices : 3
->>   Total Devices : 3
->>     Persistence : Superblock is persistent
->>
->>     Update Time : Mon Nov 10 16:28:11 2014
->>           State : clean
->>  Active Devices : 3
->> Working Devices : 3
->>  Failed Devices : 0
->>   Spare Devices : 0
->>
->>      Chunk Size : 512K
->>
->>            Name : lamachine:129  (local to host lamachine)
->>            UUID : 895dae98:d1a496de:4f590b8b:cb8ac12a
->>          Events : 0
->>
->>     Number   Major   Minor   RaidDevice State
->>        0       8       50        0      active sync   /dev/sdd2
->>        1       8       66        1      active sync   /dev/sde2
->>        2       8       82        2      active sync   /dev/sdf
->
->
->
->>> /dev/md129:
->>>         Version : 1.2
->>>      Raid Level : raid0
->>>   Total Devices : 1
->>>     Persistence : Superblock is persistent
->>>
->>>           State : inactive
->>>
->>>            Name : lamachine:129  (local to host lamachine)
->>>            UUID : 895dae98:d1a496de:4f590b8b:cb8ac12a
->>>          Events : 0
->>>
->>>     Number   Major   Minor   RaidDevice
->>>
->>>        -       8       50        -        /dev/sdd2
->
->
-> The same md device, one raid0 one raid5. The same sdd2, one in the
-> raid0, and it's also in the raid5. Which is true? It sounds to me like
-> you've tried recovery and did something wrong; or about as bad is
-> you've had these drives in more than one software raid setup, and you
-> didn't zero out old superblocks first. If you leave old signatures
-> intact you end up with this sort of ambiguity, which signature is
-> correct. So now you have to figure out which one is correct and which
-> one is wrong...
->
-> Maybe start out with 'mdadm -D' on everything... literally everything,
-> every whole drive (i.e. /dev/sdd, /dev/sdc, all of them) and also
-> everyone of their partitions; and see if it's possible to sort out
-> this mess.
->
->
-> Chris Murphy
+    Update Time : Tue Sep 13 21:33:13 2016
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : near=2
+     Chunk Size : 64K
+
+           UUID : 9af006ca:8845bbd3:bfe78010:bc810f04
+         Events : 0.264152
+
+    Number   Major   Minor   RaidDevice State
+       0       8       82        0      active sync set-A   /dev/sdf2
+       1       8        1        1      active sync set-B   /dev/sda1
+/dev/md127:
+        Version : 1.2
+  Creation Time : Tue Jul 26 19:00:28 2011
+     Raid Level : raid0
+     Array Size : 94367232 (90.00 GiB 96.63 GB)
+   Raid Devices : 3
+  Total Devices : 3
+    Persistence : Superblock is persistent
+
+    Update Time : Tue Jul 26 19:00:28 2011
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 0
+  Spare Devices : 0
+
+     Chunk Size : 512K
+
+           Name : reading.homeunix.com:3
+           UUID : acd5374f:72628c93:6a906c4b:5f675ce5
+         Events : 0
+
+    Number   Major   Minor   RaidDevice State
+       0       8       85        0      active sync   /dev/sdf5
+       1       8       21        1      active sync   /dev/sdb5
+       2       8        5        2      active sync   /dev/sda5
+/dev/md128:
+        Version : 1.2
+     Raid Level : raid0
+  Total Devices : 1
+    Persistence : Superblock is persistent
+
+          State : inactive
+
+           Name : lamachine:128  (local to host lamachine)
+           UUID : f2372cb9:d3816fd6:ce86d826:882ec82e
+         Events : 4154
+
+    Number   Major   Minor   RaidDevice
+
+       -       8       49        -        /dev/sdd1
+/dev/md129:
+        Version : 1.2
+     Raid Level : raid0
+  Total Devices : 1
+    Persistence : Superblock is persistent
+
+          State : inactive
+
+           Name : lamachine:129  (local to host lamachine)
+           UUID : 895dae98:d1a496de:4f590b8b:cb8ac12a
+         Events : 0
+
+    Number   Major   Minor   RaidDevice
+
+       -       8       50        -        /dev/sdd2
+/dev/md2:
+        Version : 0.90
+  Creation Time : Mon Feb 11 07:54:36 2013
+     Raid Level : raid5
+     Array Size : 511999872 (488.28 GiB 524.29 GB)
+  Used Dev Size : 255999936 (244.14 GiB 262.14 GB)
+   Raid Devices : 3
+  Total Devices : 3
+Preferred Minor : 2
+    Persistence : Superblock is persistent
+
+    Update Time : Tue Sep 13 20:29:02 2016
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+           UUID : 2cff15d1:e411447b:fd5d4721:03e44022 (local to host lamachine)
+         Events : 0.611
+
+    Number   Major   Minor   RaidDevice State
+       0       8       83        0      active sync   /dev/sdf3
+       1       8       18        1      active sync   /dev/sdb2
+       2       8        2        2      active sync   /dev/sda2
+[root@lamachine ~]# mdadm -D /dev/sd*
+mdadm: /dev/sda does not appear to be an md device
+mdadm: /dev/sda1 does not appear to be an md device
+mdadm: /dev/sda2 does not appear to be an md device
+mdadm: /dev/sda3 does not appear to be an md device
+mdadm: /dev/sda5 does not appear to be an md device
+mdadm: /dev/sda6 does not appear to be an md device
+mdadm: /dev/sdb does not appear to be an md device
+mdadm: /dev/sdb2 does not appear to be an md device
+mdadm: /dev/sdb3 does not appear to be an md device
+mdadm: /dev/sdb4 does not appear to be an md device
+mdadm: /dev/sdb5 does not appear to be an md device
+mdadm: /dev/sdb6 does not appear to be an md device
+mdadm: /dev/sdc does not appear to be an md device
+mdadm: /dev/sdd does not appear to be an md device
+mdadm: /dev/sdd1 does not appear to be an md device
+mdadm: /dev/sdd2 does not appear to be an md device
+mdadm: /dev/sde does not appear to be an md device
+mdadm: /dev/sdf does not appear to be an md device
+mdadm: /dev/sdf1 does not appear to be an md device
+mdadm: /dev/sdf2 does not appear to be an md device
+mdadm: /dev/sdf3 does not appear to be an md device
+mdadm: /dev/sdf4 does not appear to be an md device
+mdadm: /dev/sdf5 does not appear to be an md device
+mdadm: /dev/sdf6 does not appear to be an md device
+[root@lamachine ~]#
