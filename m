@@ -1,49 +1,58 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: [GIT PULL] MD update for 4.8-rc6
-Date: Tue, 13 Sep 2016 09:56:23 -0700
-Message-ID: <20160913165623.GA13578@kernel.org>
+Subject: Re: Question about commit f9a67b1182e5 ("md/bitmap: clear bitmap if
+ bitmap_create failed").
+Date: Tue, 13 Sep 2016 10:24:33 -0700
+Message-ID: <20160913172433.GB24264@kernel.org>
+References: <752ab1d9-412a-149b-a241-e604040ebaff@wanadoo.fr>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <752ab1d9-412a-149b-a241-e604040ebaff@wanadoo.fr>
 Sender: linux-kernel-owner@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
+To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, gqjiang@suse.com
 List-Id: linux-raid.ids
 
-Hi Linus,
-A few bug fixes for MD.
-- Guoqing fixed a bug compiling md-cluster in kernel
-- I fixed a potential deadlock in raid5-cache superblock write, a hang in raid5
-  reshape resume and a race condition introduced in -rc4
+On Mon, Sep 12, 2016 at 09:09:48PM +0200, Christophe JAILLET wrote:
+> Hi,
+> 
+> I'm puzzled by commit f9a67b1182e5 ("md/bitmap: clear bitmap if
+> bitmap_create failed").
+Hi Christophe,
+Thank you very much to help check this!
 
-Please pull!
+> Part of the commit is:
+> 
+> @@ -1865,8 +1866,10 @@ int bitmap_copy_from_slot(struct mddev *mddev, int
+> slot,
+>      struct bitmap_counts *counts;
+>      struct bitmap *bitmap = bitmap_create(mddev, slot);
+> 
+> -    if (IS_ERR(bitmap))
+> +    if (IS_ERR(bitmap)) {
+> +        bitmap_free(bitmap);
+>          return PTR_ERR(bitmap);
+> +    }
+> 
+> but if 'bitmap' is an error, I think that bad things will happen in
+> 'bitmap_free()' when, at the beginning of the function, we will execute:
+> 
+>     if (bitmap->sysfs_can_clear) <-----------------
+>         sysfs_put(bitmap->sysfs_can_clear);
+
+Add Guoqing.
+
+Yeah, you are right, this bitmap_free isn't required. This must be something
+slip in in the v2 patch. I'll delete that line.
+
+> However, the commit log message is really explicit and adding this call to
+> 'bitmap_free' has really been done one purpose. ("If bitmap_create returns
+> an error, we need to call either bitmap_destroy or bitmap_free to do clean
+> up, ...")
+
+this log is a little confusing, I thought it really means the bitmap_free called
+in bitmap_create. The V1 patch calls bitmap_destroy in bitmap_create.
 
 Thanks,
 Shaohua
-
-The following changes since commit 86a1679860babbacd61fc1e8c0c0f43641d5860d:
-
-  Merge tag 'md/4.8-rc4' of git://git.kernel.org/pub/scm/linux/kernel/git/shli/md (2016-08-30 11:24:04 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git tags/md/4.8-rc6
-
-for you to fetch changes up to c94455558337eece474eebb6a16b905f98930418:
-
-  raid5: fix a small race condition (2016-09-09 11:09:19 -0700)
-
-----------------------------------------------------------------
-Guoqing Jiang (1):
-      md-cluster: make md-cluster also can work when compiled into kernel
-
-Shaohua Li (3):
-      raid5-cache: fix a deadlock in superblock write
-      raid5: guarantee enough stripes to avoid reshape hang
-      raid5: fix a small race condition
-
- drivers/md/md.c          | 12 ++++--------
- drivers/md/raid5-cache.c | 46 +++++++++++++++-------------------------------
- drivers/md/raid5.c       | 14 ++++++++++++--
- 3 files changed, 31 insertions(+), 41 deletions(-)
