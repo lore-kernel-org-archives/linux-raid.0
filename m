@@ -1,58 +1,41 @@
-From: Roman Mamedov <rm@romanrm.net>
+From: Wols Lists <antlists@youngman.org.uk>
 Subject: Re: moving spares into group and checking spares
-Date: Wed, 14 Sep 2016 23:22:49 +0500
-Message-ID: <20160914232249.6e5fc568@natsu>
+Date: Wed, 14 Sep 2016 19:35:30 +0100
+Message-ID: <57D99872.3000802@youngman.org.uk>
 References: <nramjg$n07$1@blaine.gmane.org>
-        <20160914092959.GA3584@metamorpher.de>
-        <nrc2pm$2a9$1@blaine.gmane.org>
+ <20160914092959.GA3584@metamorpher.de> <nrc2pm$2a9$1@blaine.gmane.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/NMrfV7JCyeINKcngcqFuu9N"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <nrc2pm$2a9$1@blaine.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: scar <scar@drigon.com>
-Cc: linux-raid@vger.kernel.org
+To: scar <scar@drigon.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/NMrfV7JCyeINKcngcqFuu9N
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 14/09/16 18:52, scar wrote:
+> i'm not sure what you're suggesting, that 4x 11+1 RAID5 arrays should be
+> changed to 1x 46+2 RAID6 array?  that doesn't seem as safe to me.  and
+> checkarray isn't going to check the spare disks just as it's not doing
+> now.... also that would require me to backup/restore the data so i can
+> create a new array
 
-On Wed, 14 Sep 2016 10:52:55 -0700
-scar <scar@drigon.com> wrote:
+No. The suggestion is to convert your 4x 11+1 raid5's to 4x 12 raid6's.
+(or do you mean 11 drives plus 1 parity? If that's the case I mean 11
+plus 2 parity)
 
-> i'm not sure what you're suggesting, that 4x 11+1 RAID5 arrays should be=
-=20
-> changed to 1x 46+2 RAID6 array?  that doesn't seem as safe to me
+That way you're using all the drives, they all get tested, and if a
+drive fails, you're left with a degraded raid6 aka raid5 aka redundant
+array. With your current setup, if a drive fails you're left with a
+degraded raid5 aka raid0 aka a "disaster in waiting".
 
-But you think an 11-member RAID5, let alone four of them joined by LVM is
-safe? From a resiliency standpoint that setup is like insanity squared.
+And then you can add just the one spare disk to a spares group, so if
+any drive does fail, it will get rebuilt straight away.
 
-Considering that your expenses for redundancy are 8 disks at the moment, you
-could go with 3x15-disk RAID6 with 2 shared hotspares, making overall
-redundancy expense the same 8 disks -- but for a massively safer setup.
+The only problem I can see (and I should warn you) is that there seems
+to be a little "upgrading in place" problem at the moment. My gut
+feeling is it's down to some interaction with systemd, so if you're not
+running systemd I hope it won't bite ...
 
-Also don't plan on having anything survive any of the joined arrays failure
-(expecting to recover data from an FS which suddenly lost a third of itself
-should never be part of any plan), and for that reason there is no point in
-using LVM concatenation, might just as well join them using mdadm RAID0 and
-at least gain the improved linear performance.
-
---=20
-With respect,
-Roman
-
---Sig_/NMrfV7JCyeINKcngcqFuu9N
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEARECAAYFAlfZlXwACgkQTLKSvz+PZwijqACfa3XihVrTkNUOLbLpWs34LcRh
-dG0AnAnhMCjR9dP4I1AhS4cqMDHoRaRa
-=ptsq
------END PGP SIGNATURE-----
-
---Sig_/NMrfV7JCyeINKcngcqFuu9N--
+Cheers,
+Wol
