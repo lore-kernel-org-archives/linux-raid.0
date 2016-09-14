@@ -1,117 +1,85 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Inactive arrays
-Date: Tue, 13 Sep 2016 22:33:31 -0600
-Message-ID: <CAJCQCtRdbWg7HgX=wghd8OBUcauiVfES6NSOKOZj38HMWVg65A@mail.gmail.com>
-References: <CAHscji0ddZT-aq5fEp8aG030+F7UqGzMgRnm4QP1Lr1AsGy61Q@mail.gmail.com>
- <57A07345.4040708@youngman.org.uk> <CAHscji0BQuyKQbLYZ9Ah16hHday_seTaajm8LOn6+HRFqinTyQ@mail.gmail.com>
- <CAHscji3C4Cygs=xh4d4PtREp9mGSBjNS0o7SatW_QotzYShA_Q@mail.gmail.com>
- <CAHscji3HdHaJAvwtYNU=Ykc_qohBkfFfrbP0M=FNhuFMK+d-Jg@mail.gmail.com>
- <CAHscji35kySP4Q8cUpYCXR2P9DBwPcYeWjr_HX==TNX9CPW9NA@mail.gmail.com>
- <CAHscji2k9FyrOs+96XQWEUWU3W0EWxkanaHakjsGhij0hXiVGw@mail.gmail.com>
- <57D72092.20704@youngman.org.uk> <CAHscji3KfFfO8CxZTbLX6u-bfA57pOR5i6qvc0NhNODH5tGeEg@mail.gmail.com>
- <CAJCQCtTzPpt0krPxCZY_TB-Xa6PcG0YsdDPnneq5dEB30wy8hw@mail.gmail.com>
- <CAHscji0H7kEDzhg3KpUYrdk5MA06k-F5Xe95=EL7mo-_mS3y5A@mail.gmail.com>
- <CAJCQCtS-aYNgy7MM990CTKFqcNk8bf+ggzX3QRrD+yQZfdVxnA@mail.gmail.com> <CAHscji1vy55L_BgH=y4X=FMeEgHyxzckhAgLu=BojtTn_2mPug@mail.gmail.com>
+From: scar <scar-47zfDnpWZoPQT0dZR+AlfA@public.gmane.org>
+Subject: moving spares into group and checking spares
+Date: Tue, 13 Sep 2016 22:18:41 -0700
+Message-ID: <nramjg$n07$1@blaine.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHscji1vy55L_BgH=y4X=FMeEgHyxzckhAgLu=BojtTn_2mPug@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Daniel Sanabria <sanabria.d@gmail.com>
-Cc: Chris Murphy <lists@colorremedies.com>, Wols Lists <antlists@youngman.org.uk>, Linux-RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-raid-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-raid.ids
 
-On Tue, Sep 13, 2016 at 2:04 PM, Daniel Sanabria <sanabria.d@gmail.com> wrote:
+i currently have four RAID-5 md arrays which i concatenated into one 
+logical volume (lvm2), essentially creating a RAID-50.  each md array 
+was created with one spare disk.
 
-> [root@lamachine ~]# gdisk -l /dev/sdc
-> GPT fdisk (gdisk) version 1.0.1
->
-> Warning! Disk size is smaller than the main header indicates!
+instead, i would like to move the four spare disks into one group that 
+each of the four arrays can have access to when needed.  i was wondering 
+how to safely accomplish this, preferably without unmounting/disrupting 
+the filesystem.
 
-This is true...
+secondly, i have the checkarray script scheduled via cron to 
+periodically check each of the four arrays.  i noticed in the output of 
+checkarray that it doesn't list the spare disk(s).  so i'm guessing they 
+are not being checked?  i was wondering, then, how i could also check 
+the spare disks to make sure they are healthy and ready to be used if 
+needed?
 
-> Disk /dev/sdc: 5860531055 sectors, 2.7 TiB
-> First usable sector is 2048, last usable sector is 5860533134
+below is output of /proc/mdstat and mdadm.conf
 
-The last usable sector LBA is bigger than the total number of LBAs. So
-either there's a bug in whatever partitioned this or maybe the
-partition map was copied from one disk to another somehow? Hard to
-say, but it happened twice as sde has the exact same problem.
+thanks
+--
 
-> [root@lamachine ~]# gdisk -l /dev/sde
-> GPT fdisk (gdisk) version 1.0.1
->
-> Warning! Disk size is smaller than the main header indicates!
+# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md3 : active (auto-read-only) raid5 sdal1[0] sdaw1[11](S) sdav1[10] 
+sdau1[9] sdat1[8] sdas1[7] sdar1[6] sdaq1[5] sdap1[4] sdao1[3] sdan1[2] 
+sdam1[1]
+       9766297600 blocks super 1.2 level 5, 512k chunk, algorithm 2 
+[11/11] [UUUUUUUUUUU]
+       bitmap: 0/8 pages [0KB], 65536KB chunk
 
-> Disk /dev/sde: 5860531055 sectors, 2.7 TiB
-> First usable sector is 2048, last usable sector is 5860533134
+md2 : active raid5 sdaa1[0] sdak1[11](S) sdz1[10] sdaj1[9] sdai1[8] 
+sdah1[7] sdag1[6] sdaf1[5] sdae1[4] sdad1[3] sdac1[2] sdab1[1]
+       9766297600 blocks super 1.2 level 5, 512k chunk, algorithm 2 
+[11/11] [UUUUUUUUUUU]
+       bitmap: 1/8 pages [4KB], 65536KB chunk
 
-Pretty weird.  Any ideas how that happened? My guess is sdd was
-partitioned first, and its partition was copied to sdc and sde, and
-the tool blindly did not recompute the last usable sector LBA, it used
-the value from sdd.
+md1 : active raid5 sdn1[0] sdy1[11](S) sdx1[10] sdw1[9] sdv1[8] sdu1[7] 
+sdt1[6] sds1[5] sdr1[4] sdq1[3] sdp1[2] sdo1[1]
+       9766297600 blocks super 1.2 level 5, 512k chunk, algorithm 2 
+[11/11] [UUUUUUUUUUU]
+       bitmap: 1/8 pages [4KB], 65536KB chunk
 
-Anyway...
+md0 : active raid5 sdb1[0] sdm1[11](S) sdl1[10] sdk1[9] sdj1[8] sdi1[7] 
+sdh1[6] sdg1[5] sdf1[4] sde1[3] sdd1[2] sdc1[1]
+       9766297600 blocks super 1.2 level 5, 512k chunk, algorithm 2 
+[11/11] [UUUUUUUUUUU]
+       bitmap: 0/8 pages [0KB], 65536KB chunk
 
-sdd1 is 2TB
-sdd2 is 500MB
+unused devices: <none>
 
-And it looks like sdc and sde, if we believe the backup GPT, have the
-same exact partition scheme.
+# cat /etc/mdadm/mdadm.conf
+CREATE owner=root group=disk mode=0660 auto=yes
+HOMEHOST <system>
+MAILADDR root
+ARRAY /dev/md/0  metadata=1.2 UUID=6dd6eba5:50fd8c6d:33ad61ee:e84763a8 
+name=hind:0
+    spares=1
+ARRAY /dev/md/1  metadata=1.2 UUID=9336c73a:8b8993bf:ea6cfc3d:bf9f7441 
+name=hind:1
+    spares=1
+ARRAY /dev/md/2  metadata=1.2 UUID=817bf91c:4f14fcb0:9ba8b112:768321ee 
+name=hind:2
+    spares=1
+ARRAY /dev/md/3  metadata=1.2 UUID=1251c6b7:36aca0eb:b66b4c8c:830793ad 
+name=hind:3
+    spares=1
 
-sdd1 has mdadm v1.2 metadata indicating it's a raid5 with two other
-members, logically that means sdc1 and sde1 are the missing members
-for md128.
-sdd2 has mdadm v1.2 metadata indicating it's a raid0 with two other
-members, logically that means sdc2 and sde2 are the missing members
-for md129.
+#
 
-This is consistent with the metadata that's been found on sdd1 and
-sdd2. So now the question is really how to go about fixing sdc and sde
-partition tables, so that their partitions appear?
-
-Weirdly enough the safest way to fix it is to replace the PMBR with a
-conventional MBR with two primary partitions with start and end LBAs
-just as gdisk shows them for sdc, sdd and sde. Why? Well, by spec,
-even if you don't remove the GPT signatures, if an MBR is present and
-is not a protective MBR, then it is supposed to be honored over the
-GPT. That 'd let you keep the GPT untouched, and only alter the MBR
-which right now doesn't contain any valuable information anyway. The
-trick though is you need to use an old version of fdisk that won't
-check for the GPT first; OR you can use wipefs to wipe the GPT
-signatures only, and then use fdisk to create a new MBR (msdos disk
-label it's sometimes called).
-
-Hint with wipefs. First, use it with -n to see what it will do. And
-then when you're ready to act, replace -n with -b which will create a
-backup file for what it's wiping. The signature is a small amount of
-data that's easily replaced and not unique to the table being wiped so
-it's still possible to use the GPT later should it be necessary. i.e.
-everything I'm describing is reversible.
-
-wipefs -a -n /dev/sdc
-wipefs -a -n /dev/sde
-
-So what do you get for that?
-
-When you get ready to use fdisk to create the new partitions, since
-both use metadata 1.2, use 0xda as the partition type code (although
-0x83 is OK also, 0xfd technically only applies to 0.9 metadata for
-kernel autodetect).
-
-Chances are you could just use gdisk to verify and fix the primary and
-backup GPTs on sdc and sde, it looks like there's nothing in the
-vicinity that'll get stepped on by doing this. But the above is one
-part being strict about being able to reverse each step, and 1 part
-ass covering.
-
-When it's all done and working with the new MBR you can either leave
-it alone, or you can run gdisk on it and it will immediately convert
-it (in memory) and you can commit it to disk with the w command to go
-back to GPT - which I personally prefer just because there are two
-copies of everything, and each copy is separately checksummed.
-
-
-
--- 
-Chris Murphy
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
