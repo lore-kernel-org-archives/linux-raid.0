@@ -1,42 +1,77 @@
-From: scar <scar-47zfDnpWZoPQT0dZR+AlfA@public.gmane.org>
-Subject: Re: moving spares into group and checking spares
-Date: Wed, 14 Sep 2016 14:05:13 -0700
-Message-ID: <nrce27$2km$1@blaine.gmane.org>
-References: <nramjg$n07$1@blaine.gmane.org>
- <20160914092959.GA3584@metamorpher.de> <nrc2pm$2a9$1@blaine.gmane.org>
- <20160914232249.6e5fc568@natsu>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: lots of "md: export_rdev(sde)" printed after create IMSM RAID10 with missing
+Date: Wed, 14 Sep 2016 17:05:33 -0400
+Message-ID: <wrfjy42u2nvm.fsf@redhat.com>
+References: <338941973.7699634.1473230038475.JavaMail.zimbra@redhat.com>
+        <1648084319.7702644.1473230621059.JavaMail.zimbra@redhat.com>
+        <20160908225607.GA66921@kernel.org>
+        <7910bc85-f9c4-1ea3-76a6-40b819738537@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20160914232249.6e5fc568@natsu>
-Sender: linux-raid-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <7910bc85-f9c4-1ea3-76a6-40b819738537@intel.com> (Artur
+        Paszkiewicz's message of "Fri, 9 Sep 2016 14:56:12 +0200")
+Sender: linux-raid-owner@vger.kernel.org
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: Shaohua Li <shli@kernel.org>, Yi Zhang <yizhan@redhat.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Roman Mamedov wrote on 09/14/2016 11:22 AM:
-> But you think an 11-member RAID5, let alone four of them joined by LVM is
-> safe? From a resiliency standpoint that setup is like insanity squared.
+Artur Paszkiewicz <artur.paszkiewicz@intel.com> writes:
+> On 09/09/2016 12:56 AM, Shaohua Li wrote:
+>> On Wed, Sep 07, 2016 at 02:43:41AM -0400, Yi Zhang wrote:
+>>> Hello
+>>>
+>>> I tried create one IMSM RAID10 with missing, found lots of "md:
+>>> export_rdev(sde)" printed, anyone could help check it?
+>>>
+>>> Steps I used:
+>>> mdadm -CR /dev/md0 /dev/sd[b-f] -n5 -e imsm
+>>> mdadm -CR /dev/md/Volume0 -l10 -n4 /dev/sd[b-d] missing
+>>>
+>>> Version:
+>>> 4.8.0-rc5
+>>> mdadm - v3.4-84-gbd1fd72 - 25th August 2016
+>> 
+>> can't reproduce with old mdadm but can with upstream mdadm. Looks mdadm is
+>> keeping write the new_dev sysfs entry.
+>> 
+>> Jes, any idea?
+>> 
+>> Thanks,
+>> Shaohua 
 
-yeah it seems fine?  disks are healthy and regularly checked, just 
-wondering how to check the spares.  use cron to schedule weekly smartctl 
-long test?
+[snip]
 
+> Can you check if this fix works for you? If it does I'll send a proper
+> patch for this.
+>
+> Thanks,
+> Artur
 
-> Considering that your expenses for redundancy are 8 disks at the moment, you
-> could go with 3x15-disk RAID6 with 2 shared hotspares, making overall
-> redundancy expense the same 8 disks -- but for a massively safer setup.
+Artur,
 
-actually it would be 9 disks (3x15 +2 = 47 not 48) but i'm ok with that. 
-  but rebuilding the array right now is not an option
+You were too fast :) Did you intend to post a patch with a commit
+message?
 
-> might just as well join them using mdadm RAID0 and
-> at least gain the improved linear performance.
+Cheers,
+Jes
 
-i did want to do that but debian-installer didn't seem to support it...
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> diff --git a/super-intel.c b/super-intel.c
+> index 92817e9..ffa71f6 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -7789,6 +7789,9 @@ static struct mdinfo *imsm_activate_spare(struct active_array *a,
+>  			IMSM_T_STATE_DEGRADED)
+>  		return NULL;
+>  
+> +	if (get_imsm_map(dev, MAP_0)->map_state == IMSM_T_STATE_UNINITIALIZED)
+> +		return NULL;
+> +
+>  	/*
+>  	 * If there are any failed disks check state of the other volume.
+>  	 * Block rebuild if the another one is failed until failed disks
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
