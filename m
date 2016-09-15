@@ -1,39 +1,36 @@
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH] imsm: do not activate spares for uninitialized member arrays
-Date: Thu, 15 Sep 2016 09:53:58 +0200
-Message-ID: <20160915075358.16948-1-artur.paszkiewicz@intel.com>
+Subject: Re: lots of "md: export_rdev(sde)" printed after create IMSM RAID10
+ with missing
+Date: Thu, 15 Sep 2016 10:01:44 +0200
+Message-ID: <d4b81424-a77f-5ee9-446c-119657a3fb26@intel.com>
+References: <338941973.7699634.1473230038475.JavaMail.zimbra@redhat.com>
+ <1648084319.7702644.1473230621059.JavaMail.zimbra@redhat.com>
+ <20160908225607.GA66921@kernel.org>
+ <7910bc85-f9c4-1ea3-76a6-40b819738537@intel.com>
+ <wrfjy42u2nvm.fsf@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <wrfjy42u2nvm.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: jes.sorensen@redhat.com
-Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Shaohua Li <shli@kernel.org>, Yi Zhang <yizhan@redhat.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This fixes some issues when a member array is created with "missing"
-devices in a container that has more devices than used in the member
-array.
+On 09/14/2016 11:05 PM, Jes Sorensen wrote:
+> Artur,
+> 
+> You were too fast :) Did you intend to post a patch with a commit
+> message?
+> 
+> Cheers,
+> Jes
+> 
 
-Reported-by: Yi Zhang <yizhan@redhat.com>
-Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
----
- super-intel.c | 5 +++++
- 1 file changed, 5 insertions(+)
+Hi Jes,
 
-diff --git a/super-intel.c b/super-intel.c
-index 92817e9..032ef00 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -7789,6 +7789,11 @@ static struct mdinfo *imsm_activate_spare(struct active_array *a,
- 			IMSM_T_STATE_DEGRADED)
- 		return NULL;
- 
-+	if (get_imsm_map(dev, MAP_0)->map_state == IMSM_T_STATE_UNINITIALIZED) {
-+		dprintf("imsm: No spare activation allowed. Volume is not initialized.\n");
-+		return NULL;
-+	}
-+
- 	/*
- 	 * If there are any failed disks check state of the other volume.
- 	 * Block rebuild if the another one is failed until failed disks
--- 
-2.10.0
+I wanted to wait for feedback from Yi first. I just sent a proper patch
+with a commit message.
 
+Artur
