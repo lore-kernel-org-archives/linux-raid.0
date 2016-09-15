@@ -1,36 +1,51 @@
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: Re: lots of "md: export_rdev(sde)" printed after create IMSM RAID10
- with missing
-Date: Thu, 15 Sep 2016 10:01:44 +0200
-Message-ID: <d4b81424-a77f-5ee9-446c-119657a3fb26@intel.com>
-References: <338941973.7699634.1473230038475.JavaMail.zimbra@redhat.com>
- <1648084319.7702644.1473230621059.JavaMail.zimbra@redhat.com>
- <20160908225607.GA66921@kernel.org>
- <7910bc85-f9c4-1ea3-76a6-40b819738537@intel.com>
- <wrfjy42u2nvm.fsf@redhat.com>
+From: Lloyds TSB Bank PLC <yunestri@kalstaronline.com>
+Subject: lening bieden 3%
+Date: Thu, 15 Sep 2016 15:59:35 +0700 (WIT)
+Message-ID: <348075872.377266.1473929975219.JavaMail.zimbra@kalstaronline.com>
+Reply-To: "lloyds26tsb@gmail.com" <lloyds26tsb@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjy42u2nvm.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Shaohua Li <shli@kernel.org>, Yi Zhang <yizhan@redhat.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 09/14/2016 11:05 PM, Jes Sorensen wrote:
-> Artur,
-> 
-> You were too fast :) Did you intend to post a patch with a commit
-> message?
-> 
-> Cheers,
-> Jes
-> 
+Goede dag,
 
-Hi Jes,
+ Dit is Lloyd's TSB Bank plc leningen aan te bieden.
 
-I wanted to wait for feedback from Yi first. I just sent a proper patch
-with a commit message.
+   Lloyds TSB biedt flexibele en betaalbare leningen voor welk doel u te he=
+lpen uw doelen te bereiken. we lening tegen lage rente van 3%. Hier zijn ee=
+n aantal belangrijke kenmerken van de persoonlijke lening aangeboden door L=
+loyd's TSB. Hier zijn de Loan Factoren we werken met de toonaangevende Brit=
+se makelaars die toegang hebben tot de top kredietverstrekkers hebben en in=
+ staat zijn om de beste financi=C3=ABle oplossing tegen een betaalbare pric=
+e.Please vinden als u ge=C3=AFnteresseerd bent vriendelijk contact met ons =
+op via deze e-mail: lloyds26tsb@gmail.com
 
-Artur
+
+Na de reactie, zal u een aanvraag voor een lening te vullen ontvangen. Geen=
+ sociale zekerheid en geen credit check, 100% gegarandeerd.
+
+Het zal ons een eer zijn als u ons toelaten om u van dienst zijn.
+
+
+INFORMATIE NODIG
+
+Jullie namen:
+Adres: ...........
+Telefoon: ...........
+Benodigd ........
+Duur: ...............
+Bezetting: ...........
+Maandelijks Inkomen Level: ........
+Geslacht: ...............
+Geboortedatum: ........
+Staat: ..................
+Land: ..........
+Doel: .........
+
+Ontmoeting uw financi=C3=ABle behoeften is onze trots.
+
+
+Dr.John Mahama.
