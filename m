@@ -1,51 +1,52 @@
-From: Lloyds TSB Bank PLC <yunestri@kalstaronline.com>
-Subject: lening bieden 3%
-Date: Thu, 15 Sep 2016 16:25:16 +0700 (WIT)
-Message-ID: <1618837052.380862.1473931516756.JavaMail.zimbra@kalstaronline.com>
-Reply-To: "lloyds26tsb@gmail.com" <lloyds26tsb@gmail.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH] mdadm: replace hard coded string length
+Date: Thu, 15 Sep 2016 12:15:30 -0400
+Message-ID: <wrfjr38lxhp9.fsf@redhat.com>
+References: <1473898407-3049094-1-git-send-email-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1473898407-3049094-1-git-send-email-songliubraving@fb.com> (Song
+        Liu's message of "Wed, 14 Sep 2016 17:13:27 -0700")
 Sender: linux-raid-owner@vger.kernel.org
+To: Song Liu <songliubraving@fb.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Goede dag,
+Song Liu <songliubraving@fb.com> writes:
+> This patch replaces hard coded 32 with sizeof(sb->set_name) in a
+> couple places.
+>
+> Signed-off-by: Song Liu <songliubraving@fb.com>
+> ---
+>  super1.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/super1.c b/super1.c
+> index 9f62d23..7d03b1f 100644
+> --- a/super1.c
+> +++ b/super1.c
+> @@ -1030,7 +1030,7 @@ static void getinfo_super1(struct supertype *st, struct mdinfo *info, char *map)
+>  
+>  	memcpy(info->uuid, sb->set_uuid, 16);
+>  
+> -	strncpy(info->name, sb->set_name, 32);
+> +	strncpy(info->name, sb->set_name, sizeof(sb->set_name));
+>  	info->name[32] = 0;
+>  
+>  	if ((__le32_to_cpu(sb->feature_map)&MD_FEATURE_REPLACEMENT)) {
+> @@ -1124,7 +1124,7 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+>  		if (c)
+>  			strncpy(info->name, c+1, 31 - (c-sb->set_name));
+>  		else
+> -			strncpy(info->name, sb->set_name, 32);
+> +			strncpy(info->name, sb->set_name, sizeof(sb->set_name));
+>  		info->name[32] = 0;
+>  	}
 
- Dit is Lloyd's TSB Bank plc leningen aan te bieden.
+I was about to apply this, but this is actually wrong. You need to use
+the size of the destination, not of the source as the limit.
 
-   Lloyds TSB biedt flexibele en betaalbare leningen voor welk doel u te he=
-lpen uw doelen te bereiken. we lening tegen lage rente van 3%. Hier zijn ee=
-n aantal belangrijke kenmerken van de persoonlijke lening aangeboden door L=
-loyd's TSB. Hier zijn de Loan Factoren we werken met de toonaangevende Brit=
-se makelaars die toegang hebben tot de top kredietverstrekkers hebben en in=
- staat zijn om de beste financi=C3=ABle oplossing tegen een betaalbare pric=
-e.Please vinden als u ge=C3=AFnteresseerd bent vriendelijk contact met ons =
-op via deze e-mail: lloyds26tsb@gmail.com
+Sorry for the hassle.
 
-
-Na de reactie, zal u een aanvraag voor een lening te vullen ontvangen. Geen=
- sociale zekerheid en geen credit check, 100% gegarandeerd.
-
-Het zal ons een eer zijn als u ons toelaten om u van dienst zijn.
-
-
-INFORMATIE NODIG
-
-Jullie namen:
-Adres: ...........
-Telefoon: ...........
-Benodigd ........
-Duur: ...............
-Bezetting: ...........
-Maandelijks Inkomen Level: ........
-Geslacht: ...............
-Geboortedatum: ........
-Staat: ..................
-Land: ..........
-Doel: .........
-
-Ontmoeting uw financi=C3=ABle behoeften is onze trots.
-
-
-Dr.John Mahama.
+Jes
