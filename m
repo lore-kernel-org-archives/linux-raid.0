@@ -1,7 +1,7 @@
 From: Lloyds TSB Bank PLC <yunestri@kalstaronline.com>
 Subject: lening bieden 3%
-Date: Thu, 15 Sep 2016 15:59:35 +0700 (WIT)
-Message-ID: <348075872.377266.1473929975219.JavaMail.zimbra@kalstaronline.com>
+Date: Thu, 15 Sep 2016 16:03:12 +0700 (WIT)
+Message-ID: <431287663.377833.1473930192119.JavaMail.zimbra@kalstaronline.com>
 Reply-To: "lloyds26tsb@gmail.com" <lloyds26tsb@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
