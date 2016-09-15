@@ -1,52 +1,47 @@
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH] mdadm: replace hard coded string length
-Date: Thu, 15 Sep 2016 12:15:30 -0400
-Message-ID: <wrfjr38lxhp9.fsf@redhat.com>
-References: <1473898407-3049094-1-git-send-email-songliubraving@fb.com>
+Subject: Re: [PATCH] imsm: do not activate spares for uninitialized member arrays
+Date: Thu, 15 Sep 2016 12:16:35 -0400
+Message-ID: <wrfjk2edxhng.fsf@redhat.com>
+References: <20160915075358.16948-1-artur.paszkiewicz@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1473898407-3049094-1-git-send-email-songliubraving@fb.com> (Song
-        Liu's message of "Wed, 14 Sep 2016 17:13:27 -0700")
+In-Reply-To: <20160915075358.16948-1-artur.paszkiewicz@intel.com> (Artur
+        Paszkiewicz's message of "Thu, 15 Sep 2016 09:53:58 +0200")
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Song Liu <songliubraving@fb.com> writes:
-> This patch replaces hard coded 32 with sizeof(sb->set_name) in a
-> couple places.
+Artur Paszkiewicz <artur.paszkiewicz@intel.com> writes:
+> This fixes some issues when a member array is created with "missing"
+> devices in a container that has more devices than used in the member
+> array.
 >
-> Signed-off-by: Song Liu <songliubraving@fb.com>
+> Reported-by: Yi Zhang <yizhan@redhat.com>
+> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 > ---
->  super1.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/super1.c b/super1.c
-> index 9f62d23..7d03b1f 100644
-> --- a/super1.c
-> +++ b/super1.c
-> @@ -1030,7 +1030,7 @@ static void getinfo_super1(struct supertype *st, struct mdinfo *info, char *map)
->  
->  	memcpy(info->uuid, sb->set_uuid, 16);
->  
-> -	strncpy(info->name, sb->set_name, 32);
-> +	strncpy(info->name, sb->set_name, sizeof(sb->set_name));
->  	info->name[32] = 0;
->  
->  	if ((__le32_to_cpu(sb->feature_map)&MD_FEATURE_REPLACEMENT)) {
-> @@ -1124,7 +1124,7 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
->  		if (c)
->  			strncpy(info->name, c+1, 31 - (c-sb->set_name));
->  		else
-> -			strncpy(info->name, sb->set_name, 32);
-> +			strncpy(info->name, sb->set_name, sizeof(sb->set_name));
->  		info->name[32] = 0;
->  	}
+>  super-intel.c | 5 +++++
+>  1 file changed, 5 insertions(+)
 
-I was about to apply this, but this is actually wrong. You need to use
-the size of the destination, not of the source as the limit.
+Applied!
 
-Sorry for the hassle.
-
+Thanks,
 Jes
+
+> diff --git a/super-intel.c b/super-intel.c
+> index 92817e9..032ef00 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -7789,6 +7789,11 @@ static struct mdinfo *imsm_activate_spare(struct active_array *a,
+>  			IMSM_T_STATE_DEGRADED)
+>  		return NULL;
+>  
+> +	if (get_imsm_map(dev, MAP_0)->map_state == IMSM_T_STATE_UNINITIALIZED) {
+> +		dprintf("imsm: No spare activation allowed. Volume is not initialized.\n");
+> +		return NULL;
+> +	}
+> +
+>  	/*
+>  	 * If there are any failed disks check state of the other volume.
+>  	 * Block rebuild if the another one is failed until failed disks
