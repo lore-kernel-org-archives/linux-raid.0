@@ -1,45 +1,37 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH v2] mdadm: replace hard coded string length
-Date: Fri, 16 Sep 2016 08:51:51 -0700
-Message-ID: <1474041111-4029795-1-git-send-email-songliubraving@fb.com>
+From: Wei Yongjun <weiyj.lk@gmail.com>
+Subject: [PATCH -next] dm cache policy smq: remove duplicated include from dm-cache-policy-smq.c
+Date: Sat, 17 Sep 2016 04:48:23 +0000
+Message-ID: <1474087703-22600-1-git-send-email-weiyj.lk@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Jes.Sorensen@redhat.com, Song Liu <songliubraving@fb.com>
+To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Shaohua Li <shli@kernel.org>
+Cc: Wei Yongjun <weiyongjun1@huawei.com>, dm-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This patch replaces hard coded 32 with sizeof(sb->set_name) in a
-couple places.
+From: Wei Yongjun <weiyongjun1@huawei.com>
 
-Signed-off-by: Song Liu <songliubraving@fb.com>
+Remove duplicated include.
+
+Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
 ---
- super1.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/md/dm-cache-policy-smq.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/super1.c b/super1.c
-index 9f62d23..729596f 100644
---- a/super1.c
-+++ b/super1.c
-@@ -1030,7 +1030,7 @@ static void getinfo_super1(struct supertype *st, struct mdinfo *info, char *map)
+diff --git a/drivers/md/dm-cache-policy-smq.c b/drivers/md/dm-cache-policy-smq.c
+index 8de5bd9..c33f4a6 100644
+--- a/drivers/md/dm-cache-policy-smq.c
++++ b/drivers/md/dm-cache-policy-smq.c
+@@ -14,7 +14,6 @@
+ #include <linux/mutex.h>
+ #include <linux/vmalloc.h>
+ #include <linux/math64.h>
+-#include <linux/hash.h>
  
- 	memcpy(info->uuid, sb->set_uuid, 16);
+ #define DM_MSG_PREFIX "cache-policy-smq"
  
--	strncpy(info->name, sb->set_name, 32);
-+	strncpy(info->name, sb->set_name, sizeof(info->name) - 1);
- 	info->name[32] = 0;
- 
- 	if ((__le32_to_cpu(sb->feature_map)&MD_FEATURE_REPLACEMENT)) {
-@@ -1124,7 +1124,7 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
- 		if (c)
- 			strncpy(info->name, c+1, 31 - (c-sb->set_name));
- 		else
--			strncpy(info->name, sb->set_name, 32);
-+			strncpy(info->name, sb->set_name, sizeof(info->name) - 1);
- 		info->name[32] = 0;
- 	}
- 
--- 
-2.8.0.rc2
+
+
 
