@@ -1,11 +1,10 @@
-From: Benjammin2068 <benjammin2068@gmail.com>
+From: Wols Lists <antlists@youngman.org.uk>
 Subject: Re: Best tool to partition Drives with new sector geometry - (WAS:
  Need Help with crashed RAID5 (that was rebuilding and then had SATA error on
  another drive))
-Date: Sun, 18 Sep 2016 14:58:45 -0500
-Message-ID: <4e08d03d-6759-84fd-6467-3bb2d1d9d320@gmail.com>
+Date: Sun, 18 Sep 2016 22:21:34 +0100
+Message-ID: <57DF055E.9060102@youngman.org.uk>
 References: <CADDTLRB9z6J0F6+uO3k-u74qnjZxiagbNLWrg_tP5GSZt-Vd5A@mail.gmail.com>
- <d6d3fe0d-3f9f-985f-9bfb-051428cf221b@websitemanagers.com.au>
  <57BBDA5B.3020706@gmail.com> <57BBDC15.5030301@gmail.com>
  <b8c6a380-7e6a-fda9-5834-b85271b26892@websitemanagers.com.au>
  <57BC61F7.8070102@gmail.com>
@@ -22,55 +21,47 @@ References: <CADDTLRB9z6J0F6+uO3k-u74qnjZxiagbNLWrg_tP5GSZt-Vd5A@mail.gmail.com>
  <CAJCQCtQAazjCmXfSgbcJNDxtM2pHRcqbmEo1j=Og-dQRPEAzaQ@mail.gmail.com>
  <484e25ca-0a8e-f666-b1c8-ebc92a49f999@gmail.com>
  <57DEE853.4060001@youngman.org.uk>
+ <4e08d03d-6759-84fd-6467-3bb2d1d9d320@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <57DEE853.4060001@youngman.org.uk>
+In-Reply-To: <4e08d03d-6759-84fd-6467-3bb2d1d9d320@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, Chris Murphy <lists@colorremedies.com>
+To: Benjammin2068 <benjammin2068@gmail.com>, Chris Murphy <lists@colorremedies.com>
 Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On 18/09/16 20:58, Benjammin2068 wrote:
+> Aha! That's what I needed to know.
+> 
+> I was wondering if I can make a partition (I think) that's 3/4 of a block larger (3072bytes) than the original /dev/sdX1's on the old HD103SJs drives.
 
+Good. It's a bit like string logic - if the buffer is bigger than the
+string everything's fine, but if the string is bigger than the buffer,
+well, ooopppssssss.
 
-On 09/18/2016 02:17 PM, Wols Lists wrote:
->
-> I'm sure you know this, but getting the physical/logical block size
-> out-of-sync hurts disk performance. And copying a smaller partition into
-> a larger allocated space is perfectly harmless. So...
->
-> I'd simply use a modern partition manager (such as gdisk) to partition
-> your new drives such that the new partitions are larger than the
-> existing ones, and are properly aligned relative to the drive geometry.
->
-> Then copy the old partitions across however you were planning - whether
-> it's "mdadm --replace" or stopping the array and "dd old-device
-> new-device" or whatever.
->
-> If you've got a bit of wasted space, or whatever, who cares.
-> You can resize your file-systems to use all available space, if you wish
-> (can't remember how, whenever I've done that sort of stuff it hasn't
-> been hard).
->
-> But I'd certainly try and avoid those offset warnings - it smacks to me
-> of a mismatch between 512-byte blocks and 4K disk sectors, and I
-> wouldn't want the drive firmware messing about correcting mismatches
-> between OS 4K blocks and drive 4K blocks. I don't fully understand it
-> but I know there was a lot of grief with exactly this sort of thing in
-> the transition from 512-byte to 4K.
->
+Basically, I think the root cause of all this mess is that drive
+sectors/blocks/whatever used to be 512 bytes. So, obviously, it made
+sense to have sector 0 be the boot sector, and your first partition
+started in sector 1. If your drives are small, you don't want to waste
+space.
 
+Then the new drives came along with 4K sectors. Aarghh. Put an old-style
+partition scheme on a new-style drive, and every OS 4K block would start
+in the 2nd 512-byte block of a 4K drive sector. So every disk write from
+the OS would force the drive to read two sectors from disk, overlay the
+OS block over them, and write them both back. Not nice. And the latest
+drives refuse to do that!
 
-Aha! That's what I needed to know.
+Which is one of the reasons why modern partitioning programs start the
+first partition - iirc - at the start of the 3rd megabyte of the disk.
+Leaving plenty of space for the boot/startup code.
 
-I was wondering if I can make a partition (I think) that's 3/4 of a block larger (3072bytes) than the original /dev/sdX1's on the old HD103SJs drives.
+So it's not worth replicating your old partitions directly on the new
+drives. Just make sure the new drives are the same size (or a bit
+larger) than the old ones, and move the data across. Bit like copying a
+string :-)
 
-You've answered my question perfectly.
-
-I can use sfdisk or parted to get that done...
-
-Thanks a bunch!
-
- -Ben
-
+Cheers,
+Wol
