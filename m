@@ -1,37 +1,71 @@
-From: Anthony DeRobertis <anthony@derobert.net>
-Subject: Re: 95a05b3 broke mdadm --add on my superblock 1.0 array
-Date: Tue, 20 Sep 2016 13:52:10 -0400
-Message-ID: <656fe196-b2fb-5ae6-797a-79f46dd1f6d7@derobert.net>
-References: <20160919163229.uccdr6bxiwetqvwo@derobert.net>
- <57E0CB6C.2040000@suse.com>
- <63417807-ae42-ed60-8c8b-3b699994c34c@derobert.net>
- <57E10311.7040601@suse.com>
+From: Thomas Fjellstrom <thomas@fjellstrom.ca>
+Subject: Re: [PATCH] mdadm: replace hard coded string length
+Date: Tue, 20 Sep 2016 12:03:18 -0600
+Message-ID: <1794768.TENJQ1DrVS@natasha>
+References: <1473898407-3049094-1-git-send-email-songliubraving@fb.com> <5328253.xG1N6xNRzL@natasha> <wrfjpoo4qazf.fsf@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <57E10311.7040601@suse.com>
+In-Reply-To: <wrfjpoo4qazf.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>, linux-raid@vger.kernel.org, 837964@bugs.debian.org
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-BTW: the change from apparently working but spewing errors back to not 
-working is:
+On Friday, September 16, 2016 8:34:44 AM MDT Jes Sorensen wrote:
+> Thomas Fjellstrom <thomas@fjellstrom.ca> writes:
+> > On Thursday, September 15, 2016 12:15:30 PM MDT Jes Sorensen wrote:
+> >> Song Liu <songliubraving@fb.com> writes:
+> >> > @@ -1124,7 +1124,7 @@ static int update_super1(struct supertype *st,
+> >> > struct mdinfo *info,>
+> >> > 
+> >> >  		if (c)
+> >> >  		
+> >> >  			strncpy(info->name, c+1, 31 - (c-sb->set_name));
+> >> >  		
+> >> >  		else
+> >> > 
+> >> > -			strncpy(info->name, sb->set_name, 32);
+> >> > +			strncpy(info->name, sb->set_name, sizeof(sb->set_name));
+> >> > 
+> >> >  		info->name[32] = 0;
+> >> >  	
+> >> >  	}
+> >> 
+> >> I was about to apply this, but this is actually wrong. You need to use
+> >> the size of the destination, not of the source as the limit.
+> >> 
+> >> Sorry for the hassle.
+> > 
+> > I'm not aware of the full details, but either they are the same size, or
+> > they aren't, and you need to use the minimum size of both to avoid any
+> > kind of overflow (source or dest, read and write). I presume the
+> > destination is smaller?
+> 
+> When copying a null terminated string, you need to check against the
+> size of the destination, not the source. It may happen to be they are
+> the same size here, but if code is later moved around you could get into
+> a situation where that is no longer the case. Checking against the size
+> of the destination is the correct way.
 
-bbc24bb35020793b9e6fa2111b15882f0dbfe36e is the first broken commit
-commit bbc24bb35020793b9e6fa2111b15882f0dbfe36e
-Author: Guoqing Jiang <gqjiang@suse.com>
-Date:   Mon May 9 10:22:58 2016 +0800
+Yes, I wasn't paying close enough attention, str*cpy does the check on the 
+source length so yes, you want to check against just the destination length in 
+this case. In essense, you're checking both and clamping to the minimum of 
+either buffer.
 
-     super1: make the check for NodeNumUpdate more accurate
-     
-     We missed to check the version is BITMAP_MAJOR_CLUSTERED
-     or not, otherwise mdadm can't create array with other 1.x
-     metadatas (1.0 and 1.1).
-     
-     Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-     Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+> Second, when you reply to a mailing list posting, kindly refrain from
+> removing the person you respond to from the CC list.
 
-:100644 100644 972b4700455426d47f52141416d873b6c745fa07 fa933676621f6431398192b1c0b26f3ce53deac3 M      super1.c
+Sorry, I felt like it'd be spamming the two other people.
+
+> Jes
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
+-- 
+Thomas Fjellstrom
+thomas@fjellstrom.ca
