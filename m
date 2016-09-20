@@ -1,306 +1,250 @@
-From: Anthony DeRobertis <anthony@derobert.net>
-Subject: Re: 95a05b3 broke mdadm --add on my superblock 1.0 array
-Date: Tue, 20 Sep 2016 14:31:26 -0400
-Message-ID: <1931152f-f5bc-bc1f-76a8-91921ffc1bed@derobert.net>
-References: <20160919163229.uccdr6bxiwetqvwo@derobert.net>
- <57E0CB6C.2040000@suse.com>
- <63417807-ae42-ed60-8c8b-3b699994c34c@derobert.net>
- <57E10311.7040601@suse.com>
+From: Ramon Hofer <ramonhofer@bluewin.ch>
+Subject: Enlarging device of linear array again (Thank you Stan!)
+Date: Tue, 20 Sep 2016 21:34:42 +0200
+Message-ID: <20160920213442.1559310f@hoferr-X240.hofer.rummelring>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------C419B44863BFFF1A8F884FC8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <57E10311.7040601@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>, linux-raid@vger.kernel.org, 837964@bugs.debian.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------C419B44863BFFF1A8F884FC8
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Hi all
 
-Sorry for the amount of emails I'm sending, but I noticed something 
-that's probably important. I'm also appending some gdb log from tracing 
-through the function (trying to answer why it's doing cluster mode stuff 
-at all).
+In 2012 this list - especially Stan Hoeppner - helped me setting up a
+linear RAID containing four RAID5. Thank you so much again! It is still
+working amazingly well :-D
 
-While tracing through, I noticed that *before* the write-bitmap loop, 
-mdadm -E considers the superblock valid. That agrees with what I saw 
-from strace, I suppose. To my first glance, it figures out how much to 
-write by calling this function:
+Now I am at the point where I want to add more storage but have no more
+slots. As discussed in 2013 I will replace four discs with partitions
+from a larger HDD and add the remaining space to a new RAID5.
 
-static unsigned int calc_bitmap_size(bitmap_super_t *bms, unsigned int boundary)
-{
-	unsigned long long bits, bytes;
+md2 should be replaced:
 
-	bits = __le64_to_cpu(bms->sync_size) / (__le32_to_cpu(bms->chunksize)>>9);
-	bytes = (bits+7) >> 3;
-	bytes += sizeof(bitmap_super_t);
-	bytes = ROUND_UP(bytes, boundary);
+$ sudo mdadm -D /dev/md2
+/dev/md2:
+        Version : 1.2
+  Creation Time : Sun Jun 17 20:08:48 2012
+     Raid Level : raid5
+     Array Size : 4395412224 (4191.79 GiB 4500.90 GB)
+  Used Dev Size : 1465137408 (1397.26 GiB 1500.30 GB)
+   Raid Devices : 4
+  Total Devices : 4
+    Persistence : Superblock is persistent
 
-	return bytes;
-}
+    Update Time : Tue Sep 20 09:12:16 2016
+          State : clean
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
 
-That code looked familiar, and I figured out where—it's also in 
-95a05b37e8eb2bc0803b1a0298fce6adc60eff16, the commit that I found 
-originally broke it. But that commit is making a change to it: it 
-changed the ROUND_UP line from 512 to 4096 (and from the gdb trace, 
-boundary==4096).
+         Layout : left-symmetric
+     Chunk Size : 128K
 
-I tested changing that line to "bytes = ROUND_UP(bytes, 512);", and it 
-works. Adds the new disk to the array and produces no warnings or errors.
+           Name : media-server:2  (local to host media-server)
+           UUID : 1c74447b:33070712:cfcfa5af:cbfea660
+         Events : 2449
 
---------------C419B44863BFFF1A8F884FC8
-Content-Type: text/plain; charset=UTF-8;
- name="gdb.txt"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="gdb.txt"
+    Number   Major   Minor   RaidDevice State
+       0       8       64        0      active sync   /dev/sde
+       1       8       80        1      active sync   /dev/sdf
+       2       8       96        2      active sync   /dev/sdg
+       4       8      112        3      active sync   /dev/sdh
 
-U3RhcnRpbmcgcHJvZ3JhbTogL3Zhci90bXAvbWRhZG0vbWRhZG0vbWRhZG0gLWEgL2Rldi9t
-ZC9wdjAgL2Rldi9zZGMzCgpCcmVha3BvaW50IDEsIHdyaXRlX2JpdG1hcDEgKHN0PTB4NmIw
-NzgwLCBmZD01LCB1cGRhdGU9Tm9kZU51bVVwZGF0ZSkgYXQgc3VwZXIxLmM6MjM1MQoyMzUx
-CQlzdHJ1Y3QgbWRwX3N1cGVyYmxvY2tfMSAqc2IgPSBzdC0+c2I7CnN0ID0gMHg2YjA3ODAK
-ZmQgPSA1CnVwZGF0ZSA9IE5vZGVOdW1VcGRhdGUKJDEgPSAoc3RydWN0IHN1cGVydHlwZSAq
-KSAweDZiMDc4MAokMiA9IHtzcyA9IDB4NjljMDYwIDxzdXBlcjE+LCBtaW5vcl92ZXJzaW9u
-ID0gMCwgbWF4X2RldnMgPSAxOTIwLCBjb250YWluZXJfZGV2bm0gPSAnXDAwMCcgPHJlcGVh
-dHMgMzEgdGltZXM+LCBzYiA9IDB4NmM3MDAwLCAKICBpbmZvID0gMHg2YzY0NTAsIG90aGVy
-ID0gMHgwLCBkZXZzaXplID0gMCwgZGF0YV9vZmZzZXQgPSAwLCBpZ25vcmVfaHdfY29tcGF0
-ID0gMCwgdXBkYXRlcyA9IDB4MCwgdXBkYXRlX3RhaWwgPSAweDAsIGFycmF5cyA9IDB4MCwg
-CiAgc29jayA9IDAsIGRldm5tID0gIm1kMTI3IiwgJ1wwMDAnIDxyZXBlYXRzIDI2IHRpbWVz
-PiwgZGV2Y250ID0gMCwgcmV0cnlfc29vbiA9IDAsIG5vZGVzID0gMCwgY2x1c3Rlcl9uYW1l
-ID0gMHgwLCBkZXZzID0gMHgwfQojMCAgd3JpdGVfYml0bWFwMSAoc3Q9MHg2YjA3ODAsIGZk
-PTUsIHVwZGF0ZT1Ob2RlTnVtVXBkYXRlKSBhdCBzdXBlcjEuYzoyMzUxCiAgICAgICAgc2Ig
-PSAweDZjODAwMAogICAgICAgIGJtcyA9IDB4OGU2NDkyYzgwMDAwMDQwMAogICAgICAgIHJ2
-ID0gMAogICAgICAgIGJ1ZiA9IDB4MTUyNTBhMmIKICAgICAgICB0b3dyaXRlID0gMTk1MzAw
-NTk2OAogICAgICAgIG4gPSAwCiAgICAgICAgbGVuID0gMAogICAgICAgIGFmZCA9IHtmZCA9
-IDI0MzMyODY5NCwgYmxrX3N6ID0gNX0KICAgICAgICBpID0gNzEwNjU2MAogICAgICAgIHRv
-dGFsX2JtX3NwYWNlID0gMjE5OTAyMzI1NTU1NwogICAgICAgIGJtX3NwYWNlX3Blcl9ub2Rl
-ID0gNzExMDY1NgojMSAgMHgwMDAwMDAwMDAwNDQ1MzBjIGluIHdyaXRlX2luaXRfc3VwZXIx
-IChzdD0weDZiMDc4MCkgYXQgc3VwZXIxLmM6MTg1MQogICAgICAgIHNiID0gMHg2YzcwMDAK
-ICAgICAgICByZWZzdCA9IDB4NmM2NDkwCiAgICAgICAgcnYgPSAwCiAgICAgICAgYm1fc3Bh
-Y2UgPSAyNjQKICAgICAgICBkaSA9IDB4NmM2NDUwCiAgICAgICAgZHNpemUgPSAxOTUzMDA1
-OTg1CiAgICAgICAgYXJyYXlfc2l6ZSA9IDE5NTMwMDU1NjgKICAgICAgICBzYl9vZmZzZXQg
-PSAxOTUzMDA1OTY4CiAgICAgICAgZGF0YV9vZmZzZXQgPSAwCiMyICAweDAwMDAwMDAwMDA0
-MTY5ZDAgaW4gTWFuYWdlX2FkZCAoZmQ9MywgdGZkPTQsIGR2PTB4NmIwMDQwLCB0c3Q9MHg2
-YjA3ODAsIGFycmF5PTB4N2ZmZmZmZmZkYTQwLCBmb3JjZT0wLCB2ZXJib3NlPTAsIAogICAg
-ZGV2bmFtZT0weDdmZmZmZmZmZTRiNyAiL2Rldi9tZC9wdjAiLCB1cGRhdGU9MHgwLCByZGV2
-PTIwODMsIGFycmF5X3NpemU9MTk1MzAwNTU2OCwgcmFpZF9zbG90PS0xKSBhdCBNYW5hZ2Uu
-Yzo5NzEKICAgICAgICBkZmQgPSA1CiAgICAgICAgbGRzaXplID0gOTk5OTM5MDY0MzIwCiAg
-ICAgICAgZGV2X3N0ID0gMHg2YzYzOTAKICAgICAgICBqID0gOAogICAgICAgIGRpc2MgPSB7
-bnVtYmVyID0gOCwgbWFqb3IgPSA4LCBtaW5vciA9IDM1LCByYWlkX2Rpc2sgPSAtMSwgc3Rh
-dGUgPSAwfQojMyAgMHgwMDAwMDAwMDAwNDE4M2Y1IGluIE1hbmFnZV9zdWJkZXZzIChkZXZu
-YW1lPTB4N2ZmZmZmZmZlNGI3ICIvZGV2L21kL3B2MCIsIGZkPTMsIGRldmxpc3Q9MHg2YjAw
-NDAsIHZlcmJvc2U9MCwgdGVzdD0wLCB1cGRhdGU9MHgwLCAKICAgIGZvcmNlPTApIGF0IE1h
-bmFnZS5jOjE2MTcKICAgICAgICByZGV2ID0gMjA4MwogICAgICAgIHJ2ID0gMAogICAgICAg
-IG1qID0gLTE0MjM3NzYwMAogICAgICAgIG1uID0gMzI3NjcKICAgICAgICBhcnJheSA9IHtt
-YWpvcl92ZXJzaW9uID0gMSwgbWlub3JfdmVyc2lvbiA9IDAsIHBhdGNoX3ZlcnNpb24gPSAz
-LCBjdGltZSA9IDEyNzY3MTI3MDgsIGxldmVsID0gMTAsIHNpemUgPSA5NzY1MDI3ODQsIG5y
-X2Rpc2tzID0gNCwgCiAgICAgICAgICByYWlkX2Rpc2tzID0gNCwgbWRfbWlub3IgPSAxMjcs
-IG5vdF9wZXJzaXN0ZW50ID0gMCwgdXRpbWUgPSAxNDc0MzkzODc3LCBzdGF0ZSA9IDI1Niwg
-YWN0aXZlX2Rpc2tzID0gNCwgd29ya2luZ19kaXNrcyA9IDQsIAogICAgICAgICAgZmFpbGVk
-X2Rpc2tzID0gMCwgc3BhcmVfZGlza3MgPSAwLCBsYXlvdXQgPSA1MTMsIGNodW5rX3NpemUg
-PSA1MjQyODh9CiAgICAgICAgYXJyYXlfc2l6ZSA9IDE5NTMwMDU1NjgKICAgICAgICBkdiA9
-IDB4NmIwMDQwCiAgICAgICAgdGZkID0gNAogICAgICAgIHRzdCA9IDB4NmIwNzgwCiAgICAg
-ICAgc3ViYXJyYXkgPSAweDAKICAgICAgICBzeXNmZCA9IC0xCiAgICAgICAgY291bnQgPSAw
-CiAgICAgICAgaW5mbyA9IHthcnJheSA9IHttYWpvcl92ZXJzaW9uID0gLTk3ODQsIG1pbm9y
-X3ZlcnNpb24gPSAzMjc2NywgcGF0Y2hfdmVyc2lvbiA9IC0xMzY0MzQyODksIGN0aW1lID0g
-MzI3NjcsIGxldmVsID0gMiwgc2l6ZSA9IDAsIAogICAgICAgICAgICBucl9kaXNrcyA9IC0x
-MzQyNTQ3NzYsIHJhaWRfZGlza3MgPSAzMjc2NywgbWRfbWlub3IgPSAxLCBub3RfcGVyc2lz
-dGVudCA9IDAsIHV0aW1lID0gMCwgc3RhdGUgPSAwLCBhY3RpdmVfZGlza3MgPSAxLCAKICAg
-ICAgICAgICAgd29ya2luZ19kaXNrcyA9IDAsIGZhaWxlZF9kaXNrcyA9IC0xMzQyMjU1NjAs
-IHNwYXJlX2Rpc2tzID0gMzI3NjcsIGxheW91dCA9IC03ODI0LCBjaHVua19zaXplID0gMzI3
-Njd9LCBkaXNrID0gewogICAgICAgICAgICBudW1iZXIgPSAtMTAwMzIsIG1ham9yID0gMzI3
-NjcsIG1pbm9yID0gLTExNzE3Nzg0OSwgcmFpZF9kaXNrID0gMCwgc3RhdGUgPSAwfSwgZXZl
-bnRzID0gMTQwNzM3MzU0MTMwNjI0LCB1dWlkID0gey05OTY4LCAzMjc2NywgCiAgICAgICAg
-ICAgIDAsIDF9LCAKICAgICAgICAgIG5hbWUgPSAiXDAwMFwzMzFcMzc3XDM3N1wzNzdcMTc3
-XDAwMFwwMDBcMzU0XDIyMnNcMzYwXDAwMFwwMDBcMDAwXDAwMFwyMjNcMDI0QFwwMDBcMDAw
-XDAwMFwwMDBcMDAwXDM3N1wzNzdcMzc3XDM3N1wwMDBcMDAwXDAwMFwwMDBAIiwgZGF0YV9v
-ZmZzZXQgPSAxNDA3MzczNDYwMTY3NzYsIG5ld19kYXRhX29mZnNldCA9IDE0MDczNzM1NDA5
-OTEyMCwgY29tcG9uZW50X3NpemUgPSAxNDA3Mzc0ODgzNDU3NjAsIGN1c3RvbV9hcnJheV9z
-aXplID0gMTQwNzM3MzUxOTQyNzg4LCAKICAgICAgICAgIHJlc2hhcGVfYWN0aXZlID0gMSwg
-cmVzaGFwZV9wcm9ncmVzcyA9IDE0MDczNzM1NDEyOTM0NCwgcmVjb3ZlcnlfYmxvY2tlZCA9
-IDAsIGpvdXJuYWxfZGV2aWNlX3JlcXVpcmVkID0gMCwgCiAgICAgICAgICBqb3VybmFsX2Ns
-ZWFuID0gLTEzNjQ3ODUxMiwgc3BhY2VfYmVmb3JlID0gMTQwNzM3MzUxODc2ODI0LCBzcGFj
-ZV9hZnRlciA9IDE0MDczNzM1MTg3NjgwOCwge3Jlc3luY19zdGFydCA9IDE0MDczNzM0OTc3
-MDkxMiwgCiAgICAgICAgICAgIHJlY292ZXJ5X3N0YXJ0ID0gMTQwNzM3MzQ5NzcwOTEyfSwg
-Yml0bWFwX29mZnNldCA9IDE0MDczNzQ4ODM0NTc2MCwgc2FmZV9tb2RlX2RlbGF5ID0gMCwg
-bmV3X2xldmVsID0gNjkwNTgwOCwgZGVsdGFfZGlza3MgPSAwLCAKICAgICAgICAgIG5ld19s
-YXlvdXQgPSA0MjA2MzM2LCBuZXdfY2h1bmsgPSAwLCBlcnJvcnMgPSAtNzg3MiwgY2FjaGVf
-c2l6ZSA9IDAsIG1pc21hdGNoX2NudCA9IDAsIAogICAgICAgICAgdGV4dF92ZXJzaW9uID0g
-IlwwMDBcMDAwXDAwMFwwMDBgXDM0MFwzNzdcMzc3XDM3N1wxNzdcMDAwXDAwMFwzMjZ3XDMz
-NlwzNjdcMzc3XDE3N1wwMDBcMDAwXDAwMSIsICdcMDAwJyA8cmVwZWF0cyAyMyB0aW1lcz4s
-ICJcYlwwMjZcMjA0XDM2N1wzNzdcMTc3IiwgY29udGFpbmVyX21lbWJlciA9IC05NTA0LCBj
-b250YWluZXJfZW5vdWdoID0gMzI3NjcsIHN5c19uYW1lID0gIm1kMTI3IiwgJ1wwMDAnIDxy
-ZXBlYXRzIDI2IHRpbWVzPiwgCiAgICAgICAgICBkZXZzID0gMHhmZjAwMDAwMDAwMDAwMCwg
-bmV4dCA9IDB4MCwgcmVjb3ZlcnlfZmQgPSAtMTY3NzcyMTYsIHN0YXRlX2ZkID0gLTY1NTM2
-LCBwcmV2X3N0YXRlID0gMCwgY3Vycl9zdGF0ZSA9IDAsIG5leHRfc3RhdGUgPSAwLCAKICAg
-ICAgICAgIHN5c2ZzX2FycmF5X3N0YXRlID0gIlwwMDBcMDAwXDM3N1wzNzciLCAnXDAwMCcg
-PHJlcGVhdHMgMTUgdGltZXM+fQogICAgICAgIGRldmluZm8gPSB7YXJyYXkgPSB7bWFqb3Jf
-dmVyc2lvbiA9IC0xNDIzMjM3NjgsIG1pbm9yX3ZlcnNpb24gPSAzMjc2NywgcGF0Y2hfdmVy
-c2lvbiA9IDAsIGN0aW1lID0gMCwgbGV2ZWwgPSAtMjE0NzQ4MzY0Niwgc2l6ZSA9IDAsIAog
-ICAgICAgICAgICBucl9kaXNrcyA9IDQ3MDYxNDIsIHJhaWRfZGlza3MgPSAwLCBtZF9taW5v
-ciA9IDQsIG5vdF9wZXJzaXN0ZW50ID0gMCwgdXRpbWUgPSA0MjcyMjAzLCBzdGF0ZSA9IDAs
-IGFjdGl2ZV9kaXNrcyA9IC0xMDAwMCwgCiAgICAgICAgICAgIHdvcmtpbmdfZGlza3MgPSAz
-Mjc2NywgZmFpbGVkX2Rpc2tzID0gLTEzNjQxMjU0MCwgc3BhcmVfZGlza3MgPSAzMjc2Nywg
-bGF5b3V0ID0gLTE0MjMyMzc2OCwgY2h1bmtfc2l6ZSA9IDMyNzY3fSwgZGlzayA9IHsKICAg
-ICAgICAgICAgbnVtYmVyID0gLTEzNDIyNTk4NCwgbWFqb3IgPSAzMjc2NywgbWlub3IgPSAt
-OTg1NiwgcmFpZF9kaXNrID0gMzI3NjcsIHN0YXRlID0gLTEwMTQ0fSwgZXZlbnRzID0gMTQw
-NzM3NDg4MzQ1MTkyLCB1dWlkID0gewogICAgICAgICAgICAtMTAxNDUsIDMyNzY3LCAtMTM2
-Mzk1MDg4LCAzMjc2N30sIAogICAgICAgICAgbmFtZSA9ICJwXDMzMFwzNzdcMzc3XDM3N1wx
-NzdcMDAwXDAwMFwzMTBkXDM3N1wzNjdcMzc3XDE3N1wwMDBcMDAwXDIyNVdcMjc1XDM2N1ww
-MDJcMDAwXDAwMFwwMDBgXDMzMFwzNzdcMzc3XDM3N1wxNzdcMDAwXDAwMHQiLCAKICAgICAg
-ICAgIGRhdGFfb2Zmc2V0ID0gMTQwNzM3NDg4MzQ1MTgzLCBuZXdfZGF0YV9vZmZzZXQgPSAx
-NjI3LCBjb21wb25lbnRfc2l6ZSA9IDE0MDczNzM1NDA5OTEyMCwgY3VzdG9tX2FycmF5X3Np
-emUgPSAxNDA3MzczNDU5Nzc3MjgsIAogICAgICAgICAgcmVzaGFwZV9hY3RpdmUgPSAtMTQy
-MzIzNzY4LCByZXNoYXBlX3Byb2dyZXNzID0gMTQwNzM3MzUxOTE5Nzg3LCByZWNvdmVyeV9i
-bG9ja2VkID0gMTYyNywgam91cm5hbF9kZXZpY2VfcmVxdWlyZWQgPSAwLCAKICAgICAgICAg
-IGpvdXJuYWxfY2xlYW4gPSAtMTQyMzIzNzY4LCBzcGFjZV9iZWZvcmUgPSAxNDA3MzczNTQw
-OTkxMjAsIHNwYWNlX2FmdGVyID0gMTQwNzM3NDg4MzQ1MTQ0LCB7cmVzeW5jX3N0YXJ0ID0g
-MTQwNzM3NDg4MzQ1MTQwLCAKICAgICAgICAgICAgcmVjb3Zlcnlfc3RhcnQgPSAxNDA3Mzc0
-ODgzNDUxNDB9LCBiaXRtYXBfb2Zmc2V0ID0gMTQwNzM3MzUxOTE4MTQ1LCBzYWZlX21vZGVf
-ZGVsYXkgPSA3LCBuZXdfbGV2ZWwgPSA0MTk5NTcxLCBkZWx0YV9kaXNrcyA9IDAsIAogICAg
-ICAgICAgbmV3X2xheW91dCA9IDQxOTYxMjAsIG5ld19jaHVuayA9IDAsIGVycm9ycyA9IC0x
-MDE4NCwgY2FjaGVfc2l6ZSA9IDQwMzQxMDYwOTIsIG1pc21hdGNoX2NudCA9IDYzMDMyOTA3
-LCAKICAgICAgICAgIHRleHRfdmVyc2lvbiA9ICJcMDAwXDAwMFwwMDBcMDAwLFwwMDBcMDAw
-XDAwMFwwMDBcMDAwXDAwMFwwMDBcMDIwXDMzMVwzNzdcMzc3XDM3N1wxNzdcMDAwXDAwMFwz
-MTBPXDIwNFwzNjdcMzc3XDE3N1wwMDBcMDAwXDIwMH1cMjAzXDM2N1wzNzdcMTc3XDAwMFww
-MDBcMDY0XDMzMFwzNzdcMzc3XDM3N1wxNzdcMDAwXDAwMFwwMDBcMzMxXDM3N1wzNzdcMzc3
-XDE3NyIsIGNvbnRhaW5lcl9tZW1iZXIgPSAtMTM0MjU0ODU2LCBjb250YWluZXJfZW5vdWdo
-ID0gMzI3NjcsIAogICAgICAgICAgc3lzX25hbWUgPSAiXDAwNFwwMDBcMDAwXDAwMFwwMDBc
-MDAwXDAwMFwwMDBpYmNtXDAwMFwwMDBcMDAwXDAwMG8uNFwwMDBcMzc3XDE3N1wwMDBcMDAw
-XDM3NlwzNzdcMzc3XDM3N1wwMDBcMDAwXDAwMCIsIGRldnMgPSAweDAsIAogICAgICAgICAg
-bmV4dCA9IDB4N2ZmZmZmZmZkOTk4LCByZWNvdmVyeV9mZCA9IC0xMzQyMjQ3MDQsIHN0YXRl
-X2ZkID0gMzI3NjcsIHByZXZfc3RhdGUgPSAtOTgyNCwgY3Vycl9zdGF0ZSA9IDMyNzY3LCAK
-ICAgICAgICAgIG5leHRfc3RhdGUgPSAtMTM0MjU0Nzc2LCBzeXNmc19hcnJheV9zdGF0ZSA9
-ICJcMzc3XDE3N1wwMDBcMDAwXDAwMFwwMDBcMDAwXDAwMFwwMDBcMDAwXDAwMFwwMDBoXDM0
-MVwzNzdcMzY3XDM3N1wxNzdcMDAwIn0KICAgICAgICBmcm96ZW4gPSAxCiAgICAgICAgYnVz
-eSA9IDAKICAgICAgICByYWlkX3Nsb3QgPSAtMQojNCAgMHgwMDAwMDAwMDAwNDA2OTQ4IGlu
-IG1haW4gKGFyZ2M9NCwgYXJndj0weDdmZmZmZmZmZTE0OCkgYXQgbWRhZG0uYzoxMzY4CiAg
-ICAgICAgbW9kZSA9IDQKICAgICAgICBvcHQgPSAtMQogICAgICAgIG9wdGlvbl9pbmRleCA9
-IC0xCiAgICAgICAgcnYgPSAwCiAgICAgICAgaSA9IDAKICAgICAgICBhcnJheV9zaXplID0g
-MAogICAgICAgIGRhdGFfb2Zmc2V0ID0gMQogICAgICAgIGlkZW50ID0ge2Rldm5hbWUgPSAw
-eDdmZmZmZmZmZGZmOCAiXDM0MENcMjA0IiwgPGluY29tcGxldGUgc2VxdWVuY2UgXDM2Nz4s
-IHV1aWRfc2V0ID0gMCwgdXVpZCA9IHszMjc2NywgMiwgMCwgLTEzNDI1NDc3Nn0sIAogICAg
-ICAgICAgbmFtZSA9ICJcMDAwXDE3N1wwMDBcMDAwXDAwMSIsICdcMDAwJyA8cmVwZWF0cyAx
-NSB0aW1lcz4sICJcMDAxXDAwMFwwMDBcMDAwXDAwMFwwMDBcMDAwXDAwMGhcMzQxXDM3N1wz
-NjdcMzc3IiwgCiAgICAgICAgICBzdXBlcl9taW5vciA9IDY1NTM0LCBkZXZpY2VzID0gMHgw
-LCBsZXZlbCA9IDY1NTM0LCByYWlkX2Rpc2tzID0gNjU1MzQsIHNwYXJlX2Rpc2tzID0gMCwg
-c3QgPSAweDAsIGF1dG9mID0gMCwgc3BhcmVfZ3JvdXAgPSAweDAsIAogICAgICAgICAgYml0
-bWFwX2ZpbGUgPSAweDAsIGJpdG1hcF9mZCA9IC0xLCBjb250YWluZXIgPSAweDAsIG1lbWJl
-ciA9IDB4MCwgbmV4dCA9IDB4N2ZmZmY3ZmZlMTY4LCB7YXNzZW1ibGVkID0gLTE0MjMyNjgx
-Nn19CiAgICAgICAgY29uZmlnZmlsZSA9IDB4MAogICAgICAgIGRldm1vZGUgPSA5NwogICAg
-ICAgIGJpdG1hcF9mZCA9IC0xCiAgICAgICAgZGV2bGlzdCA9IDB4NmIwMDEwCiAgICAgICAg
-ZGV2bGlzdGVuZCA9IDB4NmIwMDYwCiAgICAgICAgZHYgPSAweDZiMDA0MAogICAgICAgIGRl
-dnNfZm91bmQgPSAyCiAgICAgICAgc3ltbGlua3MgPSAweDAKICAgICAgICBncm93X2NvbnRp
-bnVlID0gMAogICAgICAgIGMgPSB7cmVhZG9ubHkgPSAwLCBydW5zdG9wID0gMCwgdmVyYm9z
-ZSA9IDAsIGJyaWVmID0gMCwgZm9yY2UgPSAwLCBob21laG9zdCA9IDB4N2ZmZmZmZmZkY2Qw
-ICJaaWEiLCByZXF1aXJlX2hvbWVob3N0ID0gMSwgCiAgICAgICAgICBwcmVmZXIgPSAweDAs
-IGV4cG9ydCA9IDAsIHRlc3QgPSAwLCBzdWJhcnJheSA9IDB4MCwgdXBkYXRlID0gMHgwLCBz
-Y2FuID0gMCwgU3BhcmNBZGp1c3QgPSAwLCBhdXRvZiA9IDAsIGRlbGF5ID0gMCwgCiAgICAg
-ICAgICBmcmVlemVfcmVzaGFwZSA9IDAsIGJhY2t1cF9maWxlID0gMHgwLCBpbnZhbGlkX2Jh
-Y2t1cCA9IDAsIGFjdGlvbiA9IDB4MCwgbm9kZXMgPSAwLCBob21lY2x1c3RlciA9IDB4MH0K
-ICAgICAgICBzID0ge3JhaWRkaXNrcyA9IDAsIHNwYXJlZGlza3MgPSAwLCBqb3VybmFsZGlz
-a3MgPSAwLCBsZXZlbCA9IDY1NTM0LCBsYXlvdXQgPSA2NTUzNCwgbGF5b3V0X3N0ciA9IDB4
-MCwgY2h1bmsgPSAwLCAKICAgICAgICAgIGJpdG1hcF9jaHVuayA9IDY1NTM0LCBiaXRtYXBf
-ZmlsZSA9IDB4MCwgYXNzdW1lX2NsZWFuID0gMCwgd3JpdGVfYmVoaW5kID0gMCwgc2l6ZSA9
-IDB9CiAgICAgICAgc3lzX2hvc3RuYW1lID0gIlppYVwwMDBcMzc3XDE3N1wwMDBcMDAwXDM2
-MFwzMDNcMzczXDM2N1wzNzdcMTc3XDAwMFwwMDBcMDAwXDAwMFwwMDBcMDAwXDAwMFwwMDBc
-MDAwXDAwMFwzMzBcMzMxXDM3N1wzNjdcMzc3XDE3N1wwMDBcMDAwXDM0MFwzMzZcMzc3XDM3
-N1wzNzdcMTc3XDAwMFwwMDBcMjE3LVwzMzZcMzY3XDM3N1wxNzdcMDAwXDAwMFwwMDJcMDAw
-XDAwMFwwMDBcMDAwXDAwMFwwMDBcMDAwXDM2MFwzMDNcMzczXDM2N1wzNzdcMTc3XDAwMFww
-MDBcMDAxIiwgJ1wwMDAnIDxyZXBlYXRzIDE1IHRpbWVzPiwgIlwwMDFcMDAwXDAwMFwwMDBc
-MDAwXDAwMFwwMDBcMDAwXDMzMFwzMzFcMzc3XDM2N1wzNzdcMTc3XDAwMFwwMDBcMDAwXDAw
-MCBcMjcxXDM3N1wzNzdcMzc3XDM3N1wwMDBcMDAwXDM0MlwwMDRcMjc1XDM1N1wzNzdcMzc3
-YFxcaSIsICdcMDAwJyA8cmVwZWF0cyAxMyB0aW1lcz4sICJcMzAwXDM0NFwzNzdcMzY3XDM3
-N1wxNzdcMDAwXDAwMFwyMjBcMzM1XDM3N1wzNzdcMzc3XDE3N1wwMDBcMDAwXDAwMFwwMDBc
-MjAwXDI3MVwwMDFcMDAwXDAwMFwwMDBcMjAwXDMzNVwzNzdcMzc3XDM3N1wxNzdcMDAwXDAw
-MFwzMDdcMDE2XDM0MD1cMDAwXDAwMFwwMDBcMDAwdCBcMzM2XDM2N1wzNzdcMTc3XDAwMFww
-MDBcMzc3XDM3N1wzNzdcMzc3XDAwMFwwMDBcMDAwXDAwMERcYlwwMDBcMDAwXDAwMFwwMDBc
-MDAwXDAwMFwyNjBpXDM3N1wzNjdcMzc3XDE3N1wwMDBcMDAwIi4uLgogICAgICAgIG1haWxh
-ZGRyID0gMHgwCiAgICAgICAgcHJvZ3JhbSA9IDB4MAogICAgICAgIGluY3JlbWVudHMgPSAy
-MAogICAgICAgIGRhZW1vbmlzZSA9IDAKICAgICAgICBwaWRmaWxlID0gMHgwCiAgICAgICAg
-b25lc2hvdCA9IDAKICAgICAgICBzcGFyZV9zaGFyaW5nID0gMQogICAgICAgIHNzID0gMHgw
-CiAgICAgICAgd3JpdGVtb3N0bHkgPSAwCiAgICAgICAgc2hvcnRvcHQgPSAweDY5NjVhMCA8
-c2hvcnRfYml0bWFwX29wdGlvbnM+ICItQUJDREVGR0lRaFZYWVdaOnZxYjpjOmk6bDpwOm06
-bjp4OnU6YzpkOno6VTpOOnNhcmZSU293MXR5ZToiCiAgICAgICAgZG9zeXNsb2cgPSAwCiAg
-ICAgICAgcmVidWlsZF9tYXAgPSAwCiAgICAgICAgcmVtb3ZlX3BhdGggPSAweDAKICAgICAg
-ICB1ZGV2X2ZpbGVuYW1lID0gMHgwCiAgICAgICAgZHVtcF9kaXJlY3RvcnkgPSAweDAKICAg
-ICAgICBwcmludF9oZWxwID0gMAogICAgICAgIG91dGYgPSAweDAKICAgICAgICBtZGZkID0g
-MwoyMzUyCQliaXRtYXBfc3VwZXJfdCAqYm1zID0gKGJpdG1hcF9zdXBlcl90KikoKChjaGFy
-KilzYikrTUFYX1NCX1NJWkUpOwoyMzUzCQlpbnQgcnYgPSAwOwokMyA9IHttYWdpYyA9IDE4
-MzYzNDU2OTgsIHZlcnNpb24gPSA0LCB1dWlkID0gIlwzMTBAXDMyMFwzMzZcMDA2JteDP1ww
-MzMoXDMzNFwzMDVcMzU0ZFwyMzIiLCBldmVudHMgPSAxMTI0NDg2LCBldmVudHNfY2xlYXJl
-ZCA9IDExMjQ0ODYsIAogIHN5bmNfc2l6ZSA9IDM5MDYwMTExMzYsIHN0YXRlID0gMCwgY2h1
-bmtzaXplID0gMjA5NzE1MiwgZGFlbW9uX3NsZWVwID0gNSwgd3JpdGVfYmVoaW5kID0gMCwg
-c2VjdG9yc19yZXNlcnZlZCA9IDAsIG5vZGVzID0gMCwgCiAgY2x1c3Rlcl9uYW1lID0gJ1ww
-MDAnIDxyZXBlYXRzIDYzIHRpbWVzPiwgcGFkID0gJ1wwMDAnIDxyZXBlYXRzIDExOSB0aW1l
-cz59CiQ0ID0gKHZvaWQgKikgMHg2YzcwMDAKMjM1NwkJdW5zaWduZWQgaW50IGkgPSAwOwoy
-MzYwCQlzd2l0Y2ggKHVwZGF0ZSkgewoyMzczCQkJaWYgKHN0LT5taW5vcl92ZXJzaW9uICE9
-IDIgJiYgYm1zLT52ZXJzaW9uID09IEJJVE1BUF9NQUpPUl9DTFVTVEVSRUQpIHsKMjM3OAkJ
-CWlmIChibXMtPnZlcnNpb24gPT0gQklUTUFQX01BSk9SX0NMVVNURVJFRCkgewoyMzk0CQkJ
-CWlmIChzdC0+bm9kZXMpCk5vIHN5bWJvbCAiQklUTUFQX01BSk9SX0NMVVNURVJFRCIgaW4g
-Y3VycmVudCBjb250ZXh0LgokNSA9IDQKMjM5NgkJCQlicmVhazsKMjQxOQkJaW5pdF9hZmQo
-JmFmZCwgZmQpOwoyNDIxCQlsb2NhdGVfYml0bWFwMShzdCwgZmQsIDApOwokNiA9IHtmZCA9
-IDUsIGJsa19zeiA9IDUxMn0KMjQyMwkJaWYgKHBvc2l4X21lbWFsaWduKCZidWYsIDQwOTYs
-IDQwOTYpKQokNyA9IChzdHJ1Y3Qgc3VwZXJ0eXBlICopIDB4NmIwNzgwCiQ4ID0ge3NzID0g
-MHg2OWMwNjAgPHN1cGVyMT4sIG1pbm9yX3ZlcnNpb24gPSAwLCBtYXhfZGV2cyA9IDE5MjAs
-IGNvbnRhaW5lcl9kZXZubSA9ICdcMDAwJyA8cmVwZWF0cyAzMSB0aW1lcz4sIHNiID0gMHg2
-YzcwMDAsIAogIGluZm8gPSAweDZjNjQ1MCwgb3RoZXIgPSAweDAsIGRldnNpemUgPSAwLCBk
-YXRhX29mZnNldCA9IDAsIGlnbm9yZV9od19jb21wYXQgPSAwLCB1cGRhdGVzID0gMHgwLCB1
-cGRhdGVfdGFpbCA9IDB4MCwgYXJyYXlzID0gMHgwLCAKICBzb2NrID0gMCwgZGV2bm0gPSAi
-bWQxMjciLCAnXDAwMCcgPHJlcGVhdHMgMjYgdGltZXM+LCBkZXZjbnQgPSAwLCByZXRyeV9z
-b29uID0gMCwgbm9kZXMgPSAwLCBjbHVzdGVyX25hbWUgPSAweDAsIGRldnMgPSAweDB9CjI0
-MzAJCQlpZiAoaSkKMjQzMwkJCQltZW1zZXQoYnVmLCAweGZmLCA0MDk2KTsKMjQzNAkJCW1l
-bWNweShidWYsIChjaGFyICopYm1zLCBzaXplb2YoYml0bWFwX3N1cGVyX3QpKTsKMjQzNgkJ
-CXRvd3JpdGUgPSBjYWxjX2JpdG1hcF9zaXplKGJtcywgNDA5Nik7CjI0MzcJCQl3aGlsZSAo
-dG93cml0ZSA+IDApIHsKJDkgPSAxMjI4ODAKMjQzOAkJCQluID0gdG93cml0ZTsKMjQzOQkJ
-CQlpZiAobiA+IDQwOTYpCjI0NDAJCQkJCW4gPSA0MDk2OwoyNDQxCQkJCW4gPSBhd3JpdGUo
-JmFmZCwgYnVmLCBuKTsKMjQ0MgkJCQlpZiAobiA+IDApCjI0NDMJCQkJCXRvd3JpdGUgLT0g
-bjsKMjQ0NgkJCQlpZiAoaSkKMjQ0OQkJCQkJbWVtc2V0KGJ1ZiwgMHhmZiwgNDA5Nik7CjI0
-MzcJCQl3aGlsZSAodG93cml0ZSA+IDApIHsKMjQzOAkJCQluID0gdG93cml0ZTsKMjQzOQkJ
-CQlpZiAobiA+IDQwOTYpCjI0NDAJCQkJCW4gPSA0MDk2OwoyNDQxCQkJCW4gPSBhd3JpdGUo
-JmFmZCwgYnVmLCBuKTsKMjQ0MgkJCQlpZiAobiA+IDApCjI0NDMJCQkJCXRvd3JpdGUgLT0g
-bjsKMjQ0NgkJCQlpZiAoaSkKMjQ0OQkJCQkJbWVtc2V0KGJ1ZiwgMHhmZiwgNDA5Nik7CjI0
-MzcJCQl3aGlsZSAodG93cml0ZSA+IDApIHsKMjQzOAkJCQluID0gdG93cml0ZTsKMjQzOQkJ
-CQlpZiAobiA+IDQwOTYpCjI0NDAJCQkJCW4gPSA0MDk2OwoyNDQxCQkJCW4gPSBhd3JpdGUo
-JmFmZCwgYnVmLCBuKTsKMjQ0MgkJCQlpZiAobiA+IDApCjI0NDMJCQkJCXRvd3JpdGUgLT0g
-bjsKMjQ0NgkJCQlpZiAoaSkKMjQ0OQkJCQkJbWVtc2V0KGJ1ZiwgMHhmZiwgNDA5Nik7CjI0
-MzcJCQl3aGlsZSAodG93cml0ZSA+IDApIHsKMjQzOAkJCQluID0gdG93cml0ZTsKMjQzOQkJ
-CQlpZiAobiA+IDQwOTYpCiQxMCA9IDExMDU5MgpDb250aW51ZSBwcm9ncmFtIGJlaW5nIGRl
-YnVnZ2VkLCBhZnRlciBzaWduYWwgb3IgYnJlYWtwb2ludC4KVXNhZ2U6IGNvbnRpbnVlIFtO
-XQpJZiBwcm9jZWVkaW5nIGZyb20gYnJlYWtwb2ludCwgYSBudW1iZXIgTiBtYXkgYmUgdXNl
-ZCBhcyBhbiBhcmd1bWVudCwKd2hpY2ggbWVhbnMgdG8gc2V0IHRoZSBpZ25vcmUgY291bnQg
-b2YgdGhhdCBicmVha3BvaW50IHRvIE4gLSAxIChzbyB0aGF0CnRoZSBicmVha3BvaW50IHdv
-bid0IGJyZWFrIHVudGlsIHRoZSBOdGggdGltZSBpdCBpcyByZWFjaGVkKS4KCklmIG5vbi1z
-dG9wIG1vZGUgaXMgZW5hYmxlZCwgY29udGludWUgb25seSB0aGUgY3VycmVudCB0aHJlYWQs
-Cm90aGVyd2lzZSBhbGwgdGhlIHRocmVhZHMgaW4gdGhlIHByb2dyYW0gYXJlIGNvbnRpbnVl
-ZC4gIFRvIApjb250aW51ZSBhbGwgc3RvcHBlZCB0aHJlYWRzIGluIG5vbi1zdG9wIG1vZGUs
-IHVzZSB0aGUgLWEgb3B0aW9uLgpTcGVjaWZ5aW5nIC1hIGFuZCBhbiBpZ25vcmUgY291bnQg
-c2ltdWx0YW5lb3VzbHkgaXMgYW4gZXJyb3IuCkV4ZWN1dGUgdW50aWwgdGhlIHByb2dyYW0g
-cmVhY2hlcyBhIHNvdXJjZSBsaW5lIGdyZWF0ZXIgdGhhbiB0aGUgY3VycmVudApvciBhIHNw
-ZWNpZmllZCBsb2NhdGlvbiAoc2FtZSBhcmdzIGFzIGJyZWFrIGNvbW1hbmQpIHdpdGhpbiB0
-aGUgY3VycmVudCBmcmFtZS4Kd3JpdGVfYml0bWFwMSAoc3Q9MHg2YjA3ODAsIGZkPTUsIHVw
-ZGF0ZT1Ob2RlTnVtVXBkYXRlKSBhdCBzdXBlcjEuYzoyNDUxCjI0NTEJCQlmc3luYyhmZCk7
-CkNvbnRpbnVpbmcuCltJbmZlcmlvciAxIChwcm9jZXNzIDIzODY2KSBleGl0ZWQgd2l0aCBj
-b2RlIDAxXQpCcmVha3BvaW50IDIgYXQgMHg0NDBkMjU6IGZpbGUgc3VwZXIxLmMsIGxpbmUg
-MTY1LgpTdGFydGluZyBwcm9ncmFtOiAvdmFyL3RtcC9tZGFkbS9tZGFkbS9tZGFkbSAtYSAv
-ZGV2L21kL3B2MCAvZGV2L3NkYzMKCkJyZWFrcG9pbnQgMSwgd3JpdGVfYml0bWFwMSAoc3Q9
-MHg2YjA3ODAsIGZkPTUsIHVwZGF0ZT1Ob2RlTnVtVXBkYXRlKSBhdCBzdXBlcjEuYzoyMzUx
-CjIzNTEJCXN0cnVjdCBtZHBfc3VwZXJibG9ja18xICpzYiA9IHN0LT5zYjsKQ29udGludWlu
-Zy4KCkJyZWFrcG9pbnQgMiwgY2FsY19iaXRtYXBfc2l6ZSAoYm1zPTB4NmM4MDAwLCBib3Vu
-ZGFyeT00MDk2KSBhdCBzdXBlcjEuYzoxNjUKMTY1CQliaXRzID0gX19sZTY0X3RvX2NwdShi
-bXMtPnN5bmNfc2l6ZSkgLyAoX19sZTMyX3RvX2NwdShibXMtPmNodW5rc2l6ZSk+PjkpOwpi
-bXMgPSAweDZjODAwMApib3VuZGFyeSA9IDQwOTYKJDExID0ge21hZ2ljID0gMTgzNjM0NTY5
-OCwgdmVyc2lvbiA9IDQsIHV1aWQgPSAiXDMxMEBcMzIwXDMzNlwwMDYm14M/XDAzMyhcMzM0
-XDMwNVwzNTRkXDIzMiIsIGV2ZW50cyA9IDExMjQ0ODYsIGV2ZW50c19jbGVhcmVkID0gMTEy
-NDQ4NiwgCiAgc3luY19zaXplID0gMzkwNjAxMTEzNiwgc3RhdGUgPSAwLCBjaHVua3NpemUg
-PSAyMDk3MTUyLCBkYWVtb25fc2xlZXAgPSA1LCB3cml0ZV9iZWhpbmQgPSAwLCBzZWN0b3Jz
-X3Jlc2VydmVkID0gMCwgbm9kZXMgPSAwLCAKICBjbHVzdGVyX25hbWUgPSAnXDAwMCcgPHJl
-cGVhdHMgNjMgdGltZXM+LCBwYWQgPSAnXDAwMCcgPHJlcGVhdHMgMTE5IHRpbWVzPn0KMTY2
-CQlieXRlcyA9IChiaXRzKzcpID4+IDM7CjE2NwkJYnl0ZXMgKz0gc2l6ZW9mKGJpdG1hcF9z
-dXBlcl90KTsKMTY4CQlieXRlcyA9IFJPVU5EX1VQKGJ5dGVzLCBib3VuZGFyeSk7CiQxMiA9
-IDExOTQ1OAoxNzAJCXJldHVybiBieXRlczsKJDEzID0gMTIyODgwCkNvbnRpbnVpbmcuCltJ
-bmZlcmlvciAxIChwcm9jZXNzIDI1MDQwKSBleGl0ZWQgd2l0aCBjb2RlIDAxXQpxdWl0Cg==
---------------C419B44863BFFF1A8F884FC8--
+
+$ sudo fdisk -l /dev/sd[efgh]
+
+Disk /dev/sde: 1.4 TiB, 1500301910016 bytes, 2930277168 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: dos
+Disk identifier: 0x00097014
+
+
+Disk /dev/sdf: 1.4 TiB, 1500301910016 bytes, 2930277168 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: dos
+Disk identifier: 0x0007694c
+
+
+Disk /dev/sdg: 1.4 TiB, 1500301910016 bytes, 2930277168 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: dos
+Disk identifier: 0x000da169
+
+
+Disk /dev/sdh: 1.4 TiB, 1500301910016 bytes, 2930277168 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: dos
+Disk identifier: 0x000beebc
+
+
+$ sudo mdadm --examine /dev/sd[efgh]
+/dev/sde:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 1c74447b:33070712:cfcfa5af:cbfea660
+           Name : media-server:2  (local to host media-server)
+  Creation Time : Sun Jun 17 20:08:48 2012
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 2930275120 (1397.26 GiB 1500.30 GB)
+     Array Size : 4395412224 (4191.79 GiB 4500.90 GB)
+  Used Dev Size : 2930274816 (1397.26 GiB 1500.30 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=1968 sectors, after=304 sectors
+          State : clean
+    Device UUID : 270f29c9:0a36cd7a:27324b70:7f4e929b
+
+    Update Time : Tue Sep 20 09:12:16 2016
+       Checksum : dc24915c - correct
+         Events : 2449
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 0
+   Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdf:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 1c74447b:33070712:cfcfa5af:cbfea660
+           Name : media-server:2  (local to host media-server)
+  Creation Time : Sun Jun 17 20:08:48 2012
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 2930275120 (1397.26 GiB 1500.30 GB)
+     Array Size : 4395412224 (4191.79 GiB 4500.90 GB)
+  Used Dev Size : 2930274816 (1397.26 GiB 1500.30 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=1968 sectors, after=304 sectors
+          State : clean
+    Device UUID : fe2fffdc:6d072a9d:87757913:ae7365db
+
+    Update Time : Tue Sep 20 09:12:16 2016
+       Checksum : f558ec26 - correct
+         Events : 2449
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 1
+   Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdg:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 1c74447b:33070712:cfcfa5af:cbfea660
+           Name : media-server:2  (local to host media-server)
+  Creation Time : Sun Jun 17 20:08:48 2012
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 2930275120 (1397.26 GiB 1500.30 GB)
+     Array Size : 4395412224 (4191.79 GiB 4500.90 GB)
+  Used Dev Size : 2930274816 (1397.26 GiB 1500.30 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=1968 sectors, after=304 sectors
+          State : clean
+    Device UUID : f27f55c2:f66f5fe9:02943932:2cf47cca
+
+    Update Time : Tue Sep 20 09:12:16 2016
+       Checksum : 34bc439e - correct
+         Events : 2449
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 2
+   Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdh:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 1c74447b:33070712:cfcfa5af:cbfea660
+           Name : media-server:2  (local to host media-server)
+  Creation Time : Sun Jun 17 20:08:48 2012
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 2930275120 (1397.26 GiB 1500.30 GB)
+     Array Size : 4395412224 (4191.79 GiB 4500.90 GB)
+  Used Dev Size : 2930274816 (1397.26 GiB 1500.30 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=1968 sectors, after=304 sectors
+          State : clean
+    Device UUID : 642511df:7f5d1022:a1b40e7b:6ebd37c6
+
+    Update Time : Tue Sep 20 09:12:16 2016
+       Checksum : ceb8c19b - correct
+         Events : 2449
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 3
+   Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+
+
+
+
+I hope to simply do the following steps:
+
+## Replace old disk with new partitions
+
+# Step 1: Create partitions on disk
+$ sudo fdisk /dev/sde
+create 1465137408 (1397.26 GiB 1500.30 GB) partition and a second on
+with the rest
+
+# Step 2: Replace old disk with new partition
+$ sudo mdadm --manage /dev/md4 --add /dev/sde1
+
+# Step 3: Wait until rebuilt
+
+# Step 4: Repeat steps 1-3 for /dev/sd[fgh]
+
+
+## Add new partitions
+
+# Step 5: Create new Raid5
+sudo mdadm -C /dev/md5 -c 128 -n4 -l5 /dev/sd[efgh]2
+
+# Step 6: Add new Raid5 to linear
+sudo mdadm --grow /dev/md0 --add /dev/md5
+
+# Step 7: Grow filesystem
+sudo xfs_growfs /mnt/media-raid
+
+
+
+I am using 4 TB WD red to replace the 1.5 TB disks.
+
+Do you think this could work?
+Are there any pitfalls?
+Should I unmount the array to perform all these steps? It might be
+safer since there is no redundancy during the replacement?
+
+I just wanted to check first before making any mistakes. Instead of
+maybe afterwards asking for help recovering my data :-P
+
+
+Best regards,
+Ramon
