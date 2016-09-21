@@ -1,64 +1,64 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: Re: 95a05b3 broke mdadm --add on my superblock 1.0 array
-Date: Wed, 21 Sep 2016 02:45:10 -0400
-Message-ID: <57E22C76.6040600@suse.com>
-References: <20160919163229.uccdr6bxiwetqvwo@derobert.net>
- <57E0CB6C.2040000@suse.com>
- <63417807-ae42-ed60-8c8b-3b699994c34c@derobert.net>
- <57E10311.7040601@suse.com>
- <1931152f-f5bc-bc1f-76a8-91921ffc1bed@derobert.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+From: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
+Subject: [PATCH][RESEND] Fix RAID metadata check
+Date: Wed, 21 Sep 2016 09:17:00 +0200
+Message-ID: <1474442220-28895-1-git-send-email-mariusz.dabrowski@intel.com>
+References: <1473849811-29110-1-git-send-email-mariusz.dabrowski@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1931152f-f5bc-bc1f-76a8-91921ffc1bed@derobert.net>
+In-Reply-To: <1473849811-29110-1-git-send-email-mariusz.dabrowski@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Anthony DeRobertis <anthony@derobert.net>, linux-raid@vger.kernel.org, 837964@bugs.debian.org
+To: linux-raid@vger.kernel.org
+Cc: Jes.Sorensen@redhat.com, tomasz.majchrzak@intel.com, aleksey.obitotskiy@intel.com, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com, maksymilian.kunt@intel.com, Mariusz Dabrowski <mariusz.dabrowski@intel.com>
 List-Id: linux-raid.ids
 
+mdadm recognizes devices with partition table as part of an RAID array
+and invalid warning message is displayed. After this fix proper warning
+messages are being displayed for MBR/GPT disks and devices with RAID
+metadata.
 
+Signed-off-by: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
+---
+ util.c | 28 +++++++++++++++++-----------
+ 1 file changed, 17 insertions(+), 11 deletions(-)
 
-On 09/20/2016 02:31 PM, Anthony DeRobertis wrote:
-> Sorry for the amount of emails I'm sending, but I noticed something 
-> that's probably important. I'm also appending some gdb log from 
-> tracing through the function (trying to answer why it's doing cluster 
-> mode stuff at all).
->
-> While tracing through, I noticed that *before* the write-bitmap loop, 
-> mdadm -E considers the superblock valid. That agrees with what I saw 
-> from strace, I suppose. To my first glance, it figures out how much to 
-> write by calling this function:
->
-> static unsigned int calc_bitmap_size(bitmap_super_t *bms, unsigned int 
-> boundary)
-> {
->     unsigned long long bits, bytes;
->
->     bits = __le64_to_cpu(bms->sync_size) / 
-> (__le32_to_cpu(bms->chunksize)>>9);
->     bytes = (bits+7) >> 3;
->     bytes += sizeof(bitmap_super_t);
->     bytes = ROUND_UP(bytes, boundary);
->
->     return bytes;
-> }
->
-> That code looked familiar, and I figured out where—it's also in 
-> 95a05b37e8eb2bc0803b1a0298fce6adc60eff16, the commit that I found 
-> originally broke it. But that commit is making a change to it: it 
-> changed the ROUND_UP line from 512 to 4096 (and from the gdb trace, 
-> boundary==4096).
->
-> I tested changing that line to "bytes = ROUND_UP(bytes, 512);", and it 
-> works. Adds the new disk to the array and produces no warnings or errors.
+diff --git a/util.c b/util.c
+index c38ede7..5c845a0 100644
+--- a/util.c
++++ b/util.c
+@@ -710,17 +710,23 @@ int check_raid(int fd, char *name)
+ 
+ 	if (!st)
+ 		return 0;
+-	st->ss->load_super(st, fd, name);
+-	/* Looks like a raid array .. */
+-	pr_err("%s appears to be part of a raid array:\n",
+-		name);
+-	st->ss->getinfo_super(st, &info, NULL);
+-	st->ss->free_super(st);
+-	crtime = info.array.ctime;
+-	level = map_num(pers, info.array.level);
+-	if (!level) level = "-unknown-";
+-	cont_err("level=%s devices=%d ctime=%s",
+-		 level, info.array.raid_disks, ctime(&crtime));
++	if (st->ss->add_to_super != NULL) {
++		st->ss->load_super(st, fd, name);
++		/* Looks like a raid array .. */
++		pr_err("%s appears to be part of a raid array:\n",
++			name);
++		st->ss->getinfo_super(st, &info, NULL);
++		st->ss->free_super(st);
++		crtime = info.array.ctime;
++		level = map_num(pers, info.array.level);
++		if (!level) level = "-unknown-";
++		cont_err("level=%s devices=%d ctime=%s",
++		level, info.array.raid_disks, ctime(&crtime));
++	}
++	else {
++		/* Looks like GPT or MBR */
++		pr_err("partition table exists on %s\n", name);
++	}
+ 	return 1;
+ }
+ 
+-- 
+1.8.3.1
 
-I think it is is a coincidence that above change works,  4a3d29e commit made
-the change but it didn't change the logic at all. Also seems the problem 
-is not
-related to md-cluster code as your gdb debug shows it run into below part
-because the version is 4.
-
-/* no need to change bms->nodes for other bitmap types */
-
-Thanks,
-Guoqing
