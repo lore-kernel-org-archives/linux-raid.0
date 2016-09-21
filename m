@@ -1,54 +1,86 @@
-From: Benjamin ESTRABAUD <ben.estrabaud@mpstor.com>
-Subject: Re: restore 3disk raid5 after raidpartitions have been setup with
- xfs filesystem by accident
-Date: Wed, 21 Sep 2016 14:34:33 +0100
-Message-ID: <57E28C69.1040500@mpstor.com>
-References: <CAKA=zHqbFv_RQvyR4o4HPS2UrP4xrRWLiy2nR+gudDguk+JLog@mail.gmail.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH][RESEND] Fix RAID metadata check
+Date: Wed, 21 Sep 2016 10:42:41 -0400
+Message-ID: <wrfjoa3h9uvy.fsf@redhat.com>
+References: <1473849811-29110-1-git-send-email-mariusz.dabrowski@intel.com>
+        <1474442220-28895-1-git-send-email-mariusz.dabrowski@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAKA=zHqbFv_RQvyR4o4HPS2UrP4xrRWLiy2nR+gudDguk+JLog@mail.gmail.com>
+In-Reply-To: <1474442220-28895-1-git-send-email-mariusz.dabrowski@intel.com>
+        (Mariusz Dabrowski's message of "Wed, 21 Sep 2016 09:17:00 +0200")
 Sender: linux-raid-owner@vger.kernel.org
-To: Simon Becks <beckssimon5@gmail.com>, linux-raid@vger.kernel.org
+To: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
+Cc: linux-raid@vger.kernel.org, tomasz.majchrzak@intel.com, aleksey.obitotskiy@intel.com, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com, maksymilian.kunt@intel.com
 List-Id: linux-raid.ids
 
-On 21/09/16 11:39, Simon Becks wrote:
-> Dear Developers & Gurus & Gods,
->
-> i had a 3 disk software raid 5 (mdadm) on a buffalo terrastation. By
-> accident I reset the raid and the NAS put on a xfs filesystem on each
-> of the 3 partitions.
->
-> sda6 sdb6 and sdc6 have been the raid5 member partitions.
->
-> Now sda6 sdb6 and sdc6 only contain a xfs filesystem with some empty
-> default folder structure - my NAS created during the "reset".
->
+Mariusz Dabrowski <mariusz.dabrowski@intel.com> writes:
+> mdadm recognizes devices with partition table as part of an RAID array
+> and invalid warning message is displayed. After this fix proper warning
+> messages are being displayed for MBR/GPT disks and devices with RAID
+> metadata.
 
-This is clearly not ideal, but hopefully you can recreate the MD 
-superblocks and re-assemble the RAID as it was before, but that will 
-imply you knowing exactly what order the devices were in your array and 
-what RAID level and chunksize you used. There are procedures online to 
-attempt this somewhat safe (by telling MD to assemble read only) but 
-really the first step in this case is usually to backup the raw 
-partitions to files or new devices in case you mess up something during 
-recovery.
+A couple of issues here - in general please respect proper coding
+style. This patch is a mess :(
 
-> Am I screwed or is there a chance to recreate the raid with the 3
-> disks end up with the raid and the filesystem i had before?
+> Signed-off-by: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
+> ---
+>  util.c | 28 +++++++++++++++++-----------
+>  1 file changed, 17 insertions(+), 11 deletions(-)
 >
-Even if you manage to recreate the RAID superblocks and re-assemble as 
-it used to be, part of the on RAID data will have been overwritten by 
-the format of the individual partitions. Maybe enough that your 
-filesystem will be corrupted beyond repair (at which point you can use 
-utilities like the excellent "testdisk").
+> diff --git a/util.c b/util.c
+> index c38ede7..5c845a0 100644
+> --- a/util.c
+> +++ b/util.c
+> @@ -710,17 +710,23 @@ int check_raid(int fd, char *name)
+>  
+>  	if (!st)
+>  		return 0;
+> -	st->ss->load_super(st, fd, name);
+> -	/* Looks like a raid array .. */
+> -	pr_err("%s appears to be part of a raid array:\n",
+> -		name);
+> -	st->ss->getinfo_super(st, &info, NULL);
+> -	st->ss->free_super(st);
+> -	crtime = info.array.ctime;
+> -	level = map_num(pers, info.array.level);
+> -	if (!level) level = "-unknown-";
+> -	cont_err("level=%s devices=%d ctime=%s",
+> -		 level, info.array.raid_disks, ctime(&crtime));
+> +	if (st->ss->add_to_super != NULL) {
+> +		st->ss->load_super(st, fd, name);
+> +		/* Looks like a raid array .. */
+> +		pr_err("%s appears to be part of a raid array:\n",
+> +			name);
 
-> any help is greatly appreciated.
->
-Good luck!
+Code lines are 80 characters - again when moving code around like this,
+please do it properly.
 
-> Simon
->
-Regards,
-Ben.
+> +		st->ss->getinfo_super(st, &info, NULL);
+> +		st->ss->free_super(st);
+> +		crtime = info.array.ctime;
+> +		level = map_num(pers, info.array.level);
+> +		if (!level) level = "-unknown-";
+
+if () and action should never be on the same line. Yes I know it was in
+the old code, but then please fix it up when you move it around.
+
+> +		cont_err("level=%s devices=%d ctime=%s",
+> +		level, info.array.raid_disks, ctime(&crtime));
+
+The indentation here is not acceptable, please do it properly like you
+would in the kernel too.
+
+> +	}
+> +	else {
+
+Ehm?
+
+> +		/* Looks like GPT or MBR */
+> +		pr_err("partition table exists on %s\n", name);
+> +	}
+>  	return 1;
+>  }
+
+Cheers,
+Jes
