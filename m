@@ -1,31 +1,38 @@
-From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Subject: Re: RAID5 grow interrupted.
-Date: Thu, 22 Sep 2016 21:45:17 +0200
-Message-ID: <20160922194517.GA6019@metamorpher.de>
-References: <36947ef9-64e2-f084-4949-476107e2771e@spallek.org>
- <9c618b69-1e84-60a8-d25c-55171058c855@websitemanagers.com.au>
- <af2cbd12-ba6c-0e39-ba1d-651feda5d07c@spallek.org>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Linux raid wiki
+Date: Fri, 23 Sep 2016 00:31:44 +0100
+Message-ID: <57E469E0.4020005@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <af2cbd12-ba6c-0e39-ba1d-651feda5d07c@spallek.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Axel Spallek <axel@spallek.org>
-Cc: Adam Goryachev <mailinglists@websitemanagers.com.au>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Sep 22, 2016 at 08:41:59PM +0200, Axel Spallek wrote:
-> root@s10:~# mdadm --assemble /dev/md1 /dev/sd[a-h]1
-> mdadm: /dev/md1: Need a backup file to complete reshape of this array.
-> mdadm: Please provided one with "--backup-file=..."
+I've finally got myself access to the wiki :-) and have been working on 
+bringing it a bit more up-to-date.
 
-I assume it was assembled anyway at this point so --stop again...
+I've somewhat updated the overview section, so by all means be critical, 
+but it's not mostly my work.
 
-> root@s10:~# mdadm --assemble /dev/md1 /dev/sd[a-h]1 
-> --backup-file=/var/backups/mdadm.backup
-> mdadm: /dev/sda1 is busy - skipping
-> mdadm: /dev/sdb1 is busy - skipping
+I've added the "When Things Go Wrogn" section, but so far only the first 
+two pages - "Asking for help" and "Timeout Mismatch" - are all my work. 
+The other three pages were already there, but I moved them here because 
+I felt they belonged here.
 
-regards
-Andreas Klauer
+Please feel free to criticize it (or offer bouquets :-), and give advice 
+as how to improve things, either in private email or on the list.
+
+I know we're a friendly bunch, but so many people seem to keep coming 
+for the same problems over and over again, and I want this to be an 
+up-to-date resource we can point people at to try and help them help 
+themselves.
+
+(And if you think any stuff is out-of-date and misleading, tell me. I'm 
+planning to create a "softtware archaeology" section for all the stuff 
+that is no longer relevant, but might be wanted by people looking after 
+old systems.)
+
+Cheers,
+Wol
