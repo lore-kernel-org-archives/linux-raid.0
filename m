@@ -1,185 +1,89 @@
-From: Simon Becks <beckssimon5@gmail.com>
-Subject: Re: restore 3disk raid5 after raidpartitions have been setup with xfs
- filesystem by accident
-Date: Wed, 21 Sep 2016 23:30:02 +0200
-Message-ID: <CAKA=zHr-dwudU5bENHF_3QSG9vYi4Tib8Sg2Jq_rfqOjuF7vew@mail.gmail.com>
-References: <CAKA=zHqbFv_RQvyR4o4HPS2UrP4xrRWLiy2nR+gudDguk+JLog@mail.gmail.com>
- <CAJCQCtR4NoCebcDLD-ovT+hZY=NKRtj1cP693wHQTbmiERDAXw@mail.gmail.com>
- <CAKA=zHpgVoNA5Y6MBmB4fnG85F-z=hj4FXEiUOggsWUn3tfWXg@mail.gmail.com>
- <20160921171511.GA6381@metamorpher.de> <CAKA=zHq7OgZ+oVAqn7zVmBM0gSQedNk2kZ3dkuBG7V89G-G3Rg@mail.gmail.com>
- <20160921180318.GA6633@metamorpher.de> <CAKA=zHoJu2vTXQa4yvbJDA2nmQwXLHyw2DfUJ+cVgTDr_gu2XQ@mail.gmail.com>
- <20160921190035.GA6949@metamorpher.de> <CAKA=zHryc+hqie_VZDsU4HGQP9Cw7Oo_J3S4mjJHyZbGX1K1PA@mail.gmail.com>
- <CAKA=zHoKE69Q01oEVOCpKWzp6gQ7zO8rvY=NzuD0YoqLJdgTTQ@mail.gmail.com> <CAJCQCtSE1m4k_zpQxa59fZ8CK6biFSX0AUPkKCTUkNLT5y+MSA@mail.gmail.com>
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: Re: 95a05b3 broke mdadm --add on my superblock 1.0 array
+Date: Wed, 21 Sep 2016 22:40:22 -0400
+Message-ID: <57E34496.8020108@suse.com>
+References: <20160919163229.uccdr6bxiwetqvwo@derobert.net>
+ <57E0CB6C.2040000@suse.com>
+ <63417807-ae42-ed60-8c8b-3b699994c34c@derobert.net>
+ <57E10311.7040601@suse.com>
+ <1931152f-f5bc-bc1f-76a8-91921ffc1bed@derobert.net>
+ <57E22C76.6040600@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJCQCtSE1m4k_zpQxa59fZ8CK6biFSX0AUPkKCTUkNLT5y+MSA@mail.gmail.com>
+In-Reply-To: <57E22C76.6040600@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Anthony DeRobertis <anthony@derobert.net>, linux-raid@vger.kernel.org, 837964@bugs.debian.org
 List-Id: linux-raid.ids
 
-I tried all possible orders but xfs_repair found in no round instantly
-a superblock or did the repair with flying colors.
-
-sda,sdb,sdc
-sda,sdc,sdb
-sdc,sda,sdb
-sdb,sda,sdc
-sdc,sdb,sda
-sdb,sdc,sda
 
 
-will give photorec a try and go to bed for now :/
+On 09/21/2016 02:45 AM, Guoqing Jiang wrote:
+>
+>
+> On 09/20/2016 02:31 PM, Anthony DeRobertis wrote:
+>> Sorry for the amount of emails I'm sending, but I noticed something 
+>> that's probably important. I'm also appending some gdb log from 
+>> tracing through the function (trying to answer why it's doing cluster 
+>> mode stuff at all).
+>>
+>> While tracing through, I noticed that *before* the write-bitmap loop, 
+>> mdadm -E considers the superblock valid. That agrees with what I saw 
+>> from strace, I suppose. To my first glance, it figures out how much 
+>> to write by calling this function:
+>>
+>> static unsigned int calc_bitmap_size(bitmap_super_t *bms, unsigned 
+>> int boundary)
+>> {
+>>     unsigned long long bits, bytes;
+>>
+>>     bits = __le64_to_cpu(bms->sync_size) / 
+>> (__le32_to_cpu(bms->chunksize)>>9);
+>>     bytes = (bits+7) >> 3;
+>>     bytes += sizeof(bitmap_super_t);
+>>     bytes = ROUND_UP(bytes, boundary);
+>>
+>>     return bytes;
+>> }
+>>
+>> That code looked familiar, and I figured out where—it's also in 
+>> 95a05b37e8eb2bc0803b1a0298fce6adc60eff16, the commit that I found 
+>> originally broke it. But that commit is making a change to it: it 
+>> changed the ROUND_UP line from 512 to 4096 (and from the gdb trace, 
+>> boundary==4096).
+>>
+>> I tested changing that line to "bytes = ROUND_UP(bytes, 512);", and 
+>> it works. Adds the new disk to the array and produces no warnings or 
+>> errors.
+>
+> I think it is is a coincidence that above change works,  4a3d29e 
+> commit made
+> the change but it didn't change the logic at all.
 
-2016-09-21 23:07 GMT+02:00 Chris Murphy <lists@colorremedies.com>:
-> On Wed, Sep 21, 2016 at 2:41 PM, Simon Becks <beckssimon5@gmail.com> wrote:
->> So the old disk i removed 2 month ago reports
->>
->> /dev/loop1: SGI XFS filesystem data (blksz 4096, inosz 256, v2 dirs)
->>
->> So the filesystem on the raid is/was XFS.  gave xfs_repair a shot but
->> it segfaults:
->>
->> i guess thats good, that it found at least the superblock?
->
-> There's more than one and they're spread across the array. So it's
-> possible you got the first device order correct, so it finds a
-> superblock there, but then when it goes to the next position the drive
-> is out of order so it gets confused.
->
-> To me this sounds like one drive is in the correct position but the
-> two others are reversed. But I'm not an XFS expert you'd have to ask
-> on their list.
->
->
->
->>
->> root@grml ~ # xfs_repair /dev/md42
->> Phase 1 - find and verify superblock...
->> bad primary superblock - bad magic number !!!
->>
->> attempting to find secondary superblock...
->> ...........................................
->> found candidate secondary superblock...
->> unable to verify superblock, continuing...
->> found candidate secondary superblock...
->> error reading superblock 22 -- seek to offset 2031216754688 failed
->> unable to verify superblock, continuing...
->> found candidate secondary superblock...
->> unable to verify superblock, continuing...
->> ..found candidate secondary superblock...
->> verified secondary superblock...
->> writing modified primary superblock
->>         - reporting progress in intervals of 15 minutes
->> sb root inode value 18446744073709551615 (NULLFSINO) inconsistent with
->> calculated value 2048
->> resetting superblock root inode pointer to 2048
->> sb realtime bitmap inode 18446744073709551615 (NULLFSINO) inconsistent
->
-> Those big ones strike me as imaginary numbers.
->
->> with calculated value 2049
->> resetting superblock realtime bitmap ino pointer to 2049
->> sb realtime summary inode 18446744073709551615 (NULLFSINO)
->> inconsistent with calculated value 2050
->> resetting superblock realtime summary ino pointer to 2050
->> Phase 2 - using internal log
->>         - zero log...
->> totally zeroed log
->>         - scan filesystem freespace and inode maps...
->> bad magic number
->> bad magic number
->> bad magic number
->> Metadata corruption detected at block 0x8/0x1000
->> bad magic number
->> Metadata corruption detected at block 0x23d3f408/0x1000
->> bad magic numberbad magic number
->>
->> Metadata corruption detected at block 0x2afe5808/0x1000
->> bad magic number
->> bad magic number
->> bad magic number
->> bad magic number
->> bad magic number
->> bad magic number
->> bad magic number
->> bad magic number
->> bad magic number
->> bad magic number
->> bad magic number
->> bad magic number
->> bad magic number
->> Metadata corruption detected at block 0x10/0x1000
->> Metadata corruption detected at block 0xe54c808/0x1000
->> bad magic # 0x494e81f6 for agf 0
->> bad version # 16908289 for agf 0
->> bad sequence # 99 for agf 0
->> bad length 99 for agf 0, should be 15027328
->> flfirst 1301384768 in agf 0 too large (max = 1024)
->> bad magic # 0x494e81f6 for agi 0
->> bad version # 16908289 for agi 0
->> bad sequence # 99 for agi 0
->> bad length # 99 for agi 0, should be 15027328
->> reset bad agf for ag 0
->> reset bad agi for ag 0
->> Metadata corruption detected at block 0xd6f7b808/0x1000
->> Metadata corruption detected at block 0x2afe5810/0x1000
->> bad on-disk superblock 6 - bad magic number
->> primary/secondary superblock 6 conflict - AG superblock geometry info
->> conflicts with filesystem geometry
->> zeroing unused portion of secondary superblock (AG #6)
->> [1]    23110 segmentation fault  xfs_repair /dev/md42
->> xfs_repair /dev/md42
->>
->>
->>
->> 2016-09-21 21:50 GMT+02:00 Simon Becks <beckssimon5@gmail.com>:
->>> Thank you. I already learned a lot. Your command only shows data for
->>> all of the 3 disks.
->>>
->>> Out of curiosity i used strings /dev/loop42 | grep mp3 and many of my
->>> songs showed up - is that a good sign?
->>>
->>> Just tried the 5 orders like a,b,c a,c,b and so on and receive the
->>> same output about mount: wrong fs type, bad option, bad superblock on
->>> /dev/md42 and fsck.ext2: Superblock invalid, trying backup blocks....
->>>
->>> Then used photorec in all 5 combinations of disks for several minutes
->>> without a single file found.
->>>
->>> Is it possible that i have to keep something else in mind, while
->>> assembling the raid? I expected at least some files with photorec when
->>> the raid was assembled in the right order.
->>>
->>>
->>> 2016-09-21 21:00 GMT+02:00 Andreas Klauer <Andreas.Klauer@metamorpher.de>:
->>>> On Wed, Sep 21, 2016 at 08:31:23PM +0200, Simon Becks wrote:
->>>>> Maybe i just assembled it in the wrong order?
->>>>
->>>> Yes, or maybe the superblock was overwritten by XFS after all.
->>>>
->>>> You could check what's at offset 1M for each disk.
->>>>
->>>> losetup --find --show --read-only --offset=$((2048*512)) /the/disk
->>>> file -s /dev/loop42
->>>>
->>>> If the superblock was still intact it should say ext4 or whatever
->>>> your filesystem was for at least one of them.
->>>>
->>>> You can also try this for the disk you removed 2 month ago.
->>>>
->>>> If that is not the case and fsck with backup superblock also
->>>> is not successful then you'll have to see if you find anything
->>>> valid in the raw data.
->>>>
->>>> Regards
->>>> Andreas Klauer
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->
-> --
-> Chris Murphy
+Hmm, seems bitmap is aligned to 512 in previous mdadm, but with commit 
+95a05b3
+we made it aligned to 4k, so it causes the latest mdadm can't work with 
+previous
+created array.
+
+Does the below change work? Thanks.
+
+diff --git a/super1.c b/super1.c
+index 9f62d23..6a0b075 100644
+--- a/super1.c
++++ b/super1.c
+@@ -2433,7 +2433,10 @@ static int write_bitmap1(struct supertype *st, 
+int fd, enum bitmap_update update
+                         memset(buf, 0xff, 4096);
+                 memcpy(buf, (char *)bms, sizeof(bitmap_super_t));
+
+-               towrite = calc_bitmap_size(bms, 4096);
++               if (__le32_to_cpu(bms->nodes) == 0)
++                       towrite = calc_bitmap_size(bms, 512);
++               else
++                       towrite = calc_bitmap_size(bms, 4096);
+                 while (towrite > 0) {
+
+Regards,
+Guoqing
