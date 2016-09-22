@@ -1,51 +1,68 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: RAID5 grow interrupted.
-Date: Thu, 22 Sep 2016 16:18:06 +0100
-Message-ID: <57E3F62E.10706@youngman.org.uk>
-References: <36947ef9-64e2-f084-4949-476107e2771e@spallek.org>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH v2] Fix RAID metadata check
+Date: Thu, 22 Sep 2016 11:35:32 -0400
+Message-ID: <wrfjtwd82bi3.fsf@redhat.com>
+References: <1474527731-29542-1-git-send-email-mariusz.dabrowski@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <36947ef9-64e2-f084-4949-476107e2771e@spallek.org>
+In-Reply-To: <1474527731-29542-1-git-send-email-mariusz.dabrowski@intel.com>
+        (Mariusz Dabrowski's message of "Thu, 22 Sep 2016 09:02:11 +0200")
 Sender: linux-raid-owner@vger.kernel.org
-To: Axel Spallek <axel@spallek.org>, linux-raid@vger.kernel.org
+To: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
+Cc: linux-raid@vger.kernel.org, tomasz.majchrzak@intel.com, aleksey.obitotskiy@intel.com, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com, maksymilian.kunt@intel.com
 List-Id: linux-raid.ids
 
-On 22/09/16 15:11, Axel Spallek wrote:
-> The server came up again, but without /dev/md1.
-> 
-> I had made a Backup, which is 2 days old. Not so bad, because I have the
-> seafile data on several computers. But to get the RAID back to work
-> would be better.
-> 
-> How do I restart the rebuild process with the backup-file?
-> 
-> This is what I get in the console:
-> 
-> root@s10:~# cat /proc/mdstat
-> Personalities :
-> md1 : inactive sdh1[0](S) sda1[5](S) sdb1[6](S) sdc1[7](S) sdd1[8](S)
-> sdf1[4](S) sde1[2](S) sdg1[1](S)
->       31255059140 blocks super 1.2
-> 
-> unused devices: <none>
+Mariusz Dabrowski <mariusz.dabrowski@intel.com> writes:
+> mdadm recognizes devices with partition table as part of an RAID array
+> and invalid warning message is displayed. After this fix proper warning
+> messages are being displayed for MBR/GPT disks and devices with RAID
+> metadata.
+>
+> Signed-off-by: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
+> ---
+>  util.c | 27 ++++++++++++++++-----------
+>  1 file changed, 16 insertions(+), 11 deletions(-)
 
-Okay, quick response here. Won't do any damage, might work.
+Looks good, applied!
 
-Stop and reassemble the array ...
+Thanks,
+Jes
 
-mdadm --stop /dev/md1
-
-mdadm --assemble --scan
-
-What you describe sounds like something tried to start the array while
-it was half-assembled. There's a bunch of interactions between udev,
-systemd, and mdadm, which seem to get badly off-kilter if something
-hiccups anywhere.
-
-My suggestion won't do any harm - it might fix the problem, and it'll
-give the experts the chance to chime in.
-
-Cheers,
-Wol
+> diff --git a/util.c b/util.c
+> index 8b52242..a238a21 100644
+> --- a/util.c
+> +++ b/util.c
+> @@ -710,17 +710,22 @@ int check_raid(int fd, char *name)
+>  
+>  	if (!st)
+>  		return 0;
+> -	st->ss->load_super(st, fd, name);
+> -	/* Looks like a raid array .. */
+> -	pr_err("%s appears to be part of a raid array:\n",
+> -		name);
+> -	st->ss->getinfo_super(st, &info, NULL);
+> -	st->ss->free_super(st);
+> -	crtime = info.array.ctime;
+> -	level = map_num(pers, info.array.level);
+> -	if (!level) level = "-unknown-";
+> -	cont_err("level=%s devices=%d ctime=%s",
+> -		 level, info.array.raid_disks, ctime(&crtime));
+> +	if (st->ss->add_to_super != NULL) {
+> +		st->ss->load_super(st, fd, name);
+> +		/* Looks like a raid array .. */
+> +		pr_err("%s appears to be part of a raid array:\n", name);
+> +		st->ss->getinfo_super(st, &info, NULL);
+> +		st->ss->free_super(st);
+> +		crtime = info.array.ctime;
+> +		level = map_num(pers, info.array.level);
+> +		if (!level)
+> +			level = "-unknown-";
+> +		cont_err("level=%s devices=%d ctime=%s",
+> +			level, info.array.raid_disks, ctime(&crtime));
+> +	} else {
+> +		/* Looks like GPT or MBR */
+> +		pr_err("partition table exists on %s\n", name);
+> +	}
+>  	return 1;
+>  }
