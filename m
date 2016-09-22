@@ -1,75 +1,31 @@
-From: Axel Spallek <axel@spallek.org>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
 Subject: Re: RAID5 grow interrupted.
-Date: Thu, 22 Sep 2016 20:59:36 +0200
-Message-ID: <0fa1cbf2-a633-29cd-b340-e44395c36da1@spallek.org>
+Date: Thu, 22 Sep 2016 21:45:17 +0200
+Message-ID: <20160922194517.GA6019@metamorpher.de>
 References: <36947ef9-64e2-f084-4949-476107e2771e@spallek.org>
- <20160922171915.GA5392@metamorpher.de>
+ <9c618b69-1e84-60a8-d25c-55171058c855@websitemanagers.com.au>
+ <af2cbd12-ba6c-0e39-ba1d-651feda5d07c@spallek.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160922171915.GA5392@metamorpher.de>
+Content-Disposition: inline
+In-Reply-To: <af2cbd12-ba6c-0e39-ba1d-651feda5d07c@spallek.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>, linux-raid@vger.kernel.org
+To: Axel Spallek <axel@spallek.org>
+Cc: Adam Goryachev <mailinglists@websitemanagers.com.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thu, Sep 22, 2016 at 08:41:59PM +0200, Axel Spallek wrote:
+> root@s10:~# mdadm --assemble /dev/md1 /dev/sd[a-h]1
+> mdadm: /dev/md1: Need a backup file to complete reshape of this array.
+> mdadm: Please provided one with "--backup-file=..."
 
+I assume it was assembled anyway at this point so --stop again...
 
-Am 22.09.2016 um 19:19 schrieb Andreas Klauer:
-> On Thu, Sep 22, 2016 at 04:11:28PM +0200, Axel Spallek wrote:
->> I tried to get a disk out of a RAID5 with 8 hdds (4TB) to get a Hotspare
->> to change to RAID6 afterwards.
-> I'm a bit confused here.
->
-> You started out with 8 disk RAID-5? And final result is to be what?
-> RAID-6 with 8 disks?
-Correct.
->
->> Therefore I issued the following commands:
->>
->> mdadm --grow -n7 /dev/md1  <-- just to get the size for the next command.
->>
->> mdadm --grow /dev/md1 --array-size 23441292288
->>
->> mdadm --grow -n7 /dev/md1 --backup-file /var/backups/mdadm.backup
-> I'm not sure, but you might not have needed any of these intermediate steps.
-Hmmm. Had RAID5 with 8 disks. To convert to RAID6 you need a Hotspare, 
-but all my drive-cage is full.
-> But now you started it you might have to finish them.
-> That said there is a reshape revert (which is not yet in the manpage?)
-> which might help if the regular reshape just won't resume.
-Yes. That info would help.
->
->> root@s10:~# mdadm -A --scan --verbose
->> mdadm: looking for devices for further assembly
->> mdadm: /dev/sdg1 is busy - skipping
-> It says busy because already assembled (or in use by something else).
-> So you have to stop first before assembeling again.
->
-> I didn't see anything out of place in your --examine.
-> It seems to be in sync, event count identical, ....
->
-> Good luck
-> Andreas Klauer
+> root@s10:~# mdadm --assemble /dev/md1 /dev/sd[a-h]1 
+> --backup-file=/var/backups/mdadm.backup
+> mdadm: /dev/sda1 is busy - skipping
+> mdadm: /dev/sdb1 is busy - skipping
 
--- 
-
-Mit freundlichem Gruß,
-
-Axel Spallek
-Dipl.-Ing. FH IE
-
-Hochdorfer Straße 34
-88477 Schönebürg
-
-Mobil: 01577 7929886
-E-Mail: axel@spallek.org
-
-Bankverbindung:
-Volksbank Schwendi
-IBAN: DE20654913200095195009
-BIC: GENODES1VBL
-
-Steuernummer: 5438000091
-UST.-ID.:     DE290536647
-
+regards
+Andreas Klauer
