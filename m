@@ -1,46 +1,49 @@
-From: Anthony DeRobertis <anthony@derobert.net>
-Subject: Re: 95a05b3 broke mdadm --add on my superblock 1.0 array
-Date: Thu, 22 Sep 2016 12:53:34 -0400
-Message-ID: <20160922165334.fuxch2eyxnlru5iu@derobert.net>
-References: <20160919163229.uccdr6bxiwetqvwo@derobert.net>
- <57E0CB6C.2040000@suse.com>
- <63417807-ae42-ed60-8c8b-3b699994c34c@derobert.net>
- <57E10311.7040601@suse.com>
- <1931152f-f5bc-bc1f-76a8-91921ffc1bed@derobert.net>
- <57E22C76.6040600@suse.com>
- <57E34496.8020108@suse.com>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Subject: Re: RAID5 grow interrupted.
+Date: Thu, 22 Sep 2016 19:19:15 +0200
+Message-ID: <20160922171915.GA5392@metamorpher.de>
+References: <36947ef9-64e2-f084-4949-476107e2771e@spallek.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <57E34496.8020108@suse.com>
+In-Reply-To: <36947ef9-64e2-f084-4949-476107e2771e@spallek.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>
-Cc: linux-raid@vger.kernel.org, 837964@bugs.debian.org
+To: Axel Spallek <axel@spallek.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Sep 21, 2016 at 10:40:22PM -0400, Guoqing Jiang wrote:
-> 
-> Does the below change work? Thanks.
+On Thu, Sep 22, 2016 at 04:11:28PM +0200, Axel Spallek wrote:
+> I tried to get a disk out of a RAID5 with 8 hdds (4TB) to get a Hotspare 
+> to change to RAID6 afterwards.
 
-Yes, this patch (after un-email-mangling it) fixes it.
+I'm a bit confused here.
 
+You started out with 8 disk RAID-5? And final result is to be what?
+RAID-6 with 8 disks?
+
+> Therefore I issued the following commands:
 > 
-> diff --git a/super1.c b/super1.c
-> index 9f62d23..6a0b075 100644
-> --- a/super1.c
-> +++ b/super1.c
-> @@ -2433,7 +2433,10 @@ static int write_bitmap1(struct supertype *st, int
-> fd, enum bitmap_update update
->                         memset(buf, 0xff, 4096);
->                 memcpy(buf, (char *)bms, sizeof(bitmap_super_t));
+> mdadm --grow -n7 /dev/md1  <-- just to get the size for the next command.
 > 
-> -               towrite = calc_bitmap_size(bms, 4096);
-> +               if (__le32_to_cpu(bms->nodes) == 0)
-> +                       towrite = calc_bitmap_size(bms, 512);
-> +               else
-> +                       towrite = calc_bitmap_size(bms, 4096);
->                 while (towrite > 0) {
+> mdadm --grow /dev/md1 --array-size 23441292288
 > 
-> Regards,
-> Guoqing
+> mdadm --grow -n7 /dev/md1 --backup-file /var/backups/mdadm.backup
+
+I'm not sure, but you might not have needed any of these intermediate steps. 
+But now you started it you might have to finish them.
+That said there is a reshape revert (which is not yet in the manpage?) 
+which might help if the regular reshape just won't resume.
+
+> root@s10:~# mdadm -A --scan --verbose
+> mdadm: looking for devices for further assembly
+> mdadm: /dev/sdg1 is busy - skipping
+
+It says busy because already assembled (or in use by something else).
+So you have to stop first before assembeling again.
+
+I didn't see anything out of place in your --examine.
+It seems to be in sync, event count identical, ....
+
+Good luck
+Andreas Klauer
