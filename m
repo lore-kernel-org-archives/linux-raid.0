@@ -1,61 +1,47 @@
-From: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
-Subject: [PATCH v2] Fix RAID metadata check
-Date: Thu, 22 Sep 2016 09:02:11 +0200
-Message-ID: <1474527731-29542-1-git-send-email-mariusz.dabrowski@intel.com>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Subject: Re: restore 3disk raid5 after raidpartitions have been setup with
+ xfs filesystem by accident
+Date: Thu, 22 Sep 2016 11:56:13 +0200
+Message-ID: <20160922095613.GA3608@metamorpher.de>
+References: <CAKA=zHpgVoNA5Y6MBmB4fnG85F-z=hj4FXEiUOggsWUn3tfWXg@mail.gmail.com>
+ <20160921171511.GA6381@metamorpher.de>
+ <CAKA=zHq7OgZ+oVAqn7zVmBM0gSQedNk2kZ3dkuBG7V89G-G3Rg@mail.gmail.com>
+ <20160921180318.GA6633@metamorpher.de>
+ <CAKA=zHoJu2vTXQa4yvbJDA2nmQwXLHyw2DfUJ+cVgTDr_gu2XQ@mail.gmail.com>
+ <20160921190035.GA6949@metamorpher.de>
+ <CAKA=zHryc+hqie_VZDsU4HGQP9Cw7Oo_J3S4mjJHyZbGX1K1PA@mail.gmail.com>
+ <CAKA=zHoKE69Q01oEVOCpKWzp6gQ7zO8rvY=NzuD0YoqLJdgTTQ@mail.gmail.com>
+ <CAJCQCtSE1m4k_zpQxa59fZ8CK6biFSX0AUPkKCTUkNLT5y+MSA@mail.gmail.com>
+ <CAKA=zHr-dwudU5bENHF_3QSG9vYi4Tib8Sg2Jq_rfqOjuF7vew@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAKA=zHr-dwudU5bENHF_3QSG9vYi4Tib8Sg2Jq_rfqOjuF7vew@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Jes.Sorensen@redhat.com, tomasz.majchrzak@intel.com, aleksey.obitotskiy@intel.com, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com, maksymilian.kunt@intel.com, Mariusz Dabrowski <mariusz.dabrowski@intel.com>
+To: Simon Becks <beckssimon5@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-mdadm recognizes devices with partition table as part of an RAID array
-and invalid warning message is displayed. After this fix proper warning
-messages are being displayed for MBR/GPT disks and devices with RAID
-metadata.
+On Wed, Sep 21, 2016 at 11:30:02PM +0200, Simon Becks wrote:
+> I tried all possible orders but xfs_repair found in no round instantly
+> a superblock or did the repair with flying colors.
 
-Signed-off-by: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
----
- util.c | 27 ++++++++++++++++-----------
- 1 file changed, 16 insertions(+), 11 deletions(-)
+You could also transfer the first 512K chunk of your removed disk over, 
+or use the removed disk as first disk, just to see if that changes any.
 
-diff --git a/util.c b/util.c
-index 8b52242..a238a21 100644
---- a/util.c
-+++ b/util.c
-@@ -710,17 +710,22 @@ int check_raid(int fd, char *name)
- 
- 	if (!st)
- 		return 0;
--	st->ss->load_super(st, fd, name);
--	/* Looks like a raid array .. */
--	pr_err("%s appears to be part of a raid array:\n",
--		name);
--	st->ss->getinfo_super(st, &info, NULL);
--	st->ss->free_super(st);
--	crtime = info.array.ctime;
--	level = map_num(pers, info.array.level);
--	if (!level) level = "-unknown-";
--	cont_err("level=%s devices=%d ctime=%s",
--		 level, info.array.raid_disks, ctime(&crtime));
-+	if (st->ss->add_to_super != NULL) {
-+		st->ss->load_super(st, fd, name);
-+		/* Looks like a raid array .. */
-+		pr_err("%s appears to be part of a raid array:\n", name);
-+		st->ss->getinfo_super(st, &info, NULL);
-+		st->ss->free_super(st);
-+		crtime = info.array.ctime;
-+		level = map_num(pers, info.array.level);
-+		if (!level)
-+			level = "-unknown-";
-+		cont_err("level=%s devices=%d ctime=%s",
-+			level, info.array.raid_disks, ctime(&crtime));
-+	} else {
-+		/* Looks like GPT or MBR */
-+		pr_err("partition table exists on %s\n", name);
-+	}
- 	return 1;
- }
- 
--- 
-1.8.3.1
+You could also use only two disks (third disk missing) in case one of 
+the disks had more data overwritten than the others.
 
+But photorec not finding anything, there are two possibilities, 
+one is the RAID is wrong, the other is that too much was overwritten.
+
+You could run a mdadm check and see the number in mismatch_cnt. 
+There should be some since parts were overwritten, but if the data 
+were mostly intact there should not be too many.
+
+But if it was zeroed there won't be mismatches either so you should 
+probably check raw data itself too...
+
+Regards
+Andreas Klauer
