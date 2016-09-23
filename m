@@ -1,38 +1,46 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Linux raid wiki
-Date: Fri, 23 Sep 2016 00:31:44 +0100
-Message-ID: <57E469E0.4020005@youngman.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+From: Gayatri Kammela <gayatri.kammela@intel.com>
+Subject: [PATCH v2] raid6/test/test.c: bug fix: Specify aligned(alignment) attributes to the char arrays
+Date: Thu, 22 Sep 2016 17:07:55 -0700
+Message-ID: <1474589275-12045-1-git-send-email-gayatri.kammela@intel.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: shli@kernel.org, h.peter.anvin@intel.com, ravi.v.shankar@intel.com, fenghua.yu@intel.com, Gayatri Kammela <gayatri.kammela@intel.com>, "H . Peter Anvin" <hpa@zytor.com>, Yu-cheng Yu <yu-cheng.yu@intel.com>
 List-Id: linux-raid.ids
 
-I've finally got myself access to the wiki :-) and have been working on 
-bringing it a bit more up-to-date.
+Specifying the aligned attributes to the char recovi[PAGE_SIZE]
+and char recovi[PAGE_SIZE] arrays, so that all malloc memory is page
+boundary aligned.
 
-I've somewhat updated the overview section, so by all means be critical, 
-but it's not mostly my work.
+Without these alignment attributes, the test causes a segfault in
+userspace when the NDISKS are changed to 4 from 16.
 
-I've added the "When Things Go Wrogn" section, but so far only the first 
-two pages - "Asking for help" and "Timeout Mismatch" - are all my work. 
-The other three pages were already there, but I moved them here because 
-I felt they belonged here.
+Cc: H. Peter Anvin <hpa@zytor.com>
+Cc: Yu-cheng Yu <yu-cheng.yu@intel.com>
+Signed-off-by: Gayatri Kammela <gayatri.kammela@intel.com>
+---
+ lib/raid6/test/test.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Please feel free to criticize it (or offer bouquets :-), and give advice 
-as how to improve things, either in private email or on the list.
-
-I know we're a friendly bunch, but so many people seem to keep coming 
-for the same problems over and over again, and I want this to be an 
-up-to-date resource we can point people at to try and help them help 
-themselves.
-
-(And if you think any stuff is out-of-date and misleading, tell me. I'm 
-planning to create a "softtware archaeology" section for all the stuff 
-that is no longer relevant, but might be wanted by people looking after 
-old systems.)
-
-Cheers,
-Wol
+diff --git a/lib/raid6/test/test.c b/lib/raid6/test/test.c
+index 3bebbabdb510..32a00f11ac50 100644
+--- a/lib/raid6/test/test.c
++++ b/lib/raid6/test/test.c
+@@ -21,12 +21,13 @@
+ 
+ #define NDISKS		16	/* Including P and Q */
+ 
+-const char raid6_empty_zero_page[PAGE_SIZE] __attribute__((aligned(256)));
++const char raid6_empty_zero_page[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
+ struct raid6_calls raid6_call;
+ 
+ char *dataptrs[NDISKS];
+ char data[NDISKS][PAGE_SIZE];
+-char recovi[PAGE_SIZE], recovj[PAGE_SIZE];
++char recovi[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
++char recovj[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
+ 
+ static void makedata(int start, int stop)
+ {
+-- 
+2.7.4
