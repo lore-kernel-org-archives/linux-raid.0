@@ -1,78 +1,55 @@
-From: Axel Spallek <axel@spallek.org>
-Subject: Re: RAID5 grow interrupted.
-Date: Fri, 23 Sep 2016 07:23:43 +0200
-Message-ID: <85788342-4b87-b6f8-c717-0cf36f1be201@spallek.org>
-References: <36947ef9-64e2-f084-4949-476107e2771e@spallek.org>
- <9c618b69-1e84-60a8-d25c-55171058c855@websitemanagers.com.au>
- <af2cbd12-ba6c-0e39-ba1d-651feda5d07c@spallek.org>
- <20160922194517.GA6019@metamorpher.de>
+From: "WNSDEV" <pete@wnsdev.com>
+Subject: RE: Linux raid wiki
+Date: Fri, 23 Sep 2016 10:35:32 -0700
+Message-ID: <002a01d215c0$e3f20980$abd61c80$@wnsdev.com>
+References: <57E469E0.4020005@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160922194517.GA6019@metamorpher.de>
+In-Reply-To: <57E469E0.4020005@youngman.org.uk>
+Content-Language: en-us
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>, linux-raid@vger.kernel.org
+To: 'Wols Lists' <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This one did it, but not the first time I issued this command. Maybe 
---assemble --scan was needed first.
+Hi Wol,
 
-Thanks to all!
+Thanks for your work on the wiki... I'm sending a virtual bouquet.   I've been tracking down an issue regarding role numbers which I've posted to the list http://marc.info/?l=linux-raid&m=147439325405842&w=2.  In that process I've come across other postings that say information in the wiki is incorrect so maybe this is an opportunity to update this part of the wiki.
 
+According to  https://raid.wiki.kernel.org/index.php/Mdstat  we find:
 
-root@s10:~# mdadm --assemble /dev/md1 /dev/sd[a-h]1 
---backup-file=/var/backups/mdadm.backup
-mdadm: Need to backup 21504K of critical section..
-mdadm: /dev/md1 has been started with 8 drives.
-root@s10:~# cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-md1 : active raid5 sdh1[0] sda1[5] sdb1[6] sdc1[7] sdd1[8] sdf1[4] 
-sde1[2] sdg1[1]
-       23441292288 blocks super 1.2 level 5, 512k chunk, algorithm 2 
-[7/7] [UUUUUUU]
-       [>....................]  reshape =  4.0% (159293440/3906882048) 
-finish=50748595.7min speed=0K/sec
+"The raid role numbers [#] following each device indicate its role, or function, within the raid set. Any device with "n" or higher are spare disks. 0,1,..,n-1 are for the working array. Notice that there is no device 3."
 
-unused devices: <none>
+But according to the following two postings, http://www.spinics.net/lists/raid/msg44491.html and http://www.spinics.net/lists/raid/msg49766.html
+the information in the wiki about the numbers in brackets (role numbers ) is wrong.
 
-Aksels
+Thanks,
+Peter Sangas
 
 
+-----Original Message-----
+From: Wols Lists [mailto:antlists@youngman.org.uk] 
+Sent: Thursday, September 22, 2016 4:32 PM
+To: linux-raid@vger.kernel.org
+Subject: Linux raid wiki
 
+I've finally got myself access to the wiki :-) and have been working on bringing it a bit more up-to-date.
 
-Am 22.09.2016 um 21:45 schrieb Andreas Klauer:
-> On Thu, Sep 22, 2016 at 08:41:59PM +0200, Axel Spallek wrote:
->> root@s10:~# mdadm --assemble /dev/md1 /dev/sd[a-h]1
->> mdadm: /dev/md1: Need a backup file to complete reshape of this array.
->> mdadm: Please provided one with "--backup-file=..."
-> I assume it was assembled anyway at this point so --stop again...
->
->> root@s10:~# mdadm --assemble /dev/md1 /dev/sd[a-h]1
->> --backup-file=/var/backups/mdadm.backup
->> mdadm: /dev/sda1 is busy - skipping
->> mdadm: /dev/sdb1 is busy - skipping
-> regards
-> Andreas Klauer
+I've somewhat updated the overview section, so by all means be critical, but it's not mostly my work.
 
--- 
+I've added the "When Things Go Wrogn" section, but so far only the first two pages - "Asking for help" and "Timeout Mismatch" - are all my work. 
+The other three pages were already there, but I moved them here because I felt they belonged here.
 
-Mit freundlichem Gruß,
+Please feel free to criticize it (or offer bouquets :-), and give advice as how to improve things, either in private email or on the list.
 
-Axel Spallek
-Dipl.-Ing. FH IE
+I know we're a friendly bunch, but so many people seem to keep coming for the same problems over and over again, and I want this to be an up-to-date resource we can point people at to try and help them help themselves.
 
-Hochdorfer Straße 34
-88477 Schönebürg
+(And if you think any stuff is out-of-date and misleading, tell me. I'm planning to create a "softtware archaeology" section for all the stuff that is no longer relevant, but might be wanted by people looking after old systems.)
 
-Mobil: 01577 7929886
-E-Mail: axel@spallek.org
-
-Bankverbindung:
-Volksbank Schwendi
-IBAN: DE20654913200095195009
-BIC: GENODES1VBL
-
-Steuernummer: 5438000091
-UST.-ID.:     DE290536647
+Cheers,
+Wol
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
