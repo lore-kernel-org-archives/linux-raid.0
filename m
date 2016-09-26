@@ -1,57 +1,25 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v2] raid6/test/test.c: bug fix: Specify
- aligned(alignment) attributes to the char arrays
-Date: Mon, 26 Sep 2016 10:47:45 -0700
-Message-ID: <20160926174745.GA16209@kernel.org>
-References: <1474589275-12045-1-git-send-email-gayatri.kammela@intel.com>
+From: Benjammin2068 <benjammin2068@gmail.com>
+Subject: Re: WARNING: mismatch_cnt is not 0 on <array device>
+Date: Mon, 26 Sep 2016 14:47:00 -0500
+Message-ID: <c72d3567-7c9c-39dc-c2e1-722bc267bdd6@gmail.com>
+References: <26b91420-97c9-f405-aa71-16cd5cda3a67@gmail.com>
+ <409d9f5f-6f72-a399-93ab-2b10323f4122@fnarfbargle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1474589275-12045-1-git-send-email-gayatri.kammela@intel.com>
+In-Reply-To: <409d9f5f-6f72-a399-93ab-2b10323f4122@fnarfbargle.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gayatri Kammela <gayatri.kammela@intel.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, h.peter.anvin@intel.com, ravi.v.shankar@intel.com, fenghua.yu@intel.com, "H . Peter Anvin" <hpa@zytor.com>, Yu-cheng Yu <yu-cheng.yu@intel.com>
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Sep 22, 2016 at 05:07:55PM -0700, Gayatri Kammela wrote:
-> Specifying the aligned attributes to the char recovi[PAGE_SIZE]
-> and char recovi[PAGE_SIZE] arrays, so that all malloc memory is page
-> boundary aligned.
-> 
-> Without these alignment attributes, the test causes a segfault in
-> userspace when the NDISKS are changed to 4 from 16.
-> 
-> Cc: H. Peter Anvin <hpa@zytor.com>
-> Cc: Yu-cheng Yu <yu-cheng.yu@intel.com>
-> Signed-off-by: Gayatri Kammela <gayatri.kammela@intel.com>
-> ---
->  lib/raid6/test/test.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/lib/raid6/test/test.c b/lib/raid6/test/test.c
-> index 3bebbabdb510..32a00f11ac50 100644
-> --- a/lib/raid6/test/test.c
-> +++ b/lib/raid6/test/test.c
-> @@ -21,12 +21,13 @@
->  
->  #define NDISKS		16	/* Including P and Q */
->  
-> -const char raid6_empty_zero_page[PAGE_SIZE] __attribute__((aligned(256)));
-> +const char raid6_empty_zero_page[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
->  struct raid6_calls raid6_call;
->  
->  char *dataptrs[NDISKS];
->  char data[NDISKS][PAGE_SIZE];
+Well that instills fear and doubt...
 
-shouldn't this one be page aligned too?
+the mismatch_cnt was 8.
 
-> -char recovi[PAGE_SIZE], recovj[PAGE_SIZE];
-> +char recovi[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
-> +char recovj[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
->  
->  static void makedata(int start, int stop)
->  {
-> -- 
-> 2.7.4
-> 
+I did a repair and then a check and now it's 10704....
+
+:(
+
+ -Ben
+
