@@ -1,52 +1,48 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Linux raid wiki
-Date: Mon, 26 Sep 2016 22:37:49 +0100
-Message-ID: <57E9952D.6020703@youngman.org.uk>
-References: <57E469E0.4020005@youngman.org.uk>
- <57E67D32.30108@youngman.org.uk>
- <c6d53f0f-4434-9703-cfab-b148dd8dd68b@turmel.org>
- <57E95054.4020903@youngman.org.uk>
- <33ee0032-11a7-3637-170a-a9da94c7bda9@turmel.org>
+From: Song Liu <songliubraving@fb.com>
+Subject: [PATCH v2 6/6] md/r5cache: decrease the counter after full-write stripe was reclaimed
+Date: Mon, 26 Sep 2016 16:30:50 -0700
+Message-ID: <20160926233050.3351081-7-songliubraving@fb.com>
+References: <20160926233050.3351081-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <33ee0032-11a7-3637-170a-a9da94c7bda9@turmel.org>
+In-Reply-To: <20160926233050.3351081-1-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuang521@gmail.com, liuzhengyuan@kylinos.cn, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-On 26/09/16 22:19, Phil Turmel wrote:
-> On 09/26/2016 12:44 PM, Wols Lists wrote:
->> The next section -
->>
->> https://raid.wiki.kernel.org/index.php/Assemble_Run
->>
->> addresses what to do if the array is messed up in some way. Would you
->> mind taking a look at that now too :-)
-> 
-> Hmmm.  The last bit is less than ideal.  If all drives are faulty, but
-> runnable in the array with at least one drive of redundancy, the best
-> way to put good drives in service is one-by-one mdadm --replace.  That
-> lets the redundancy fix any errors, and doesn't load down the problem
-> drive any more than ddrescue would.  And it has the benefit of
-> increasing reliability as you go.
-> 
-> If you don't have any redundancy left, then ddrescue of all readable
-> drives is reasonable.
-> 
-Which is the state this page is meant to cover. I'm assuming that if you
-get this far, you have at an absolute minimum had to have done a
-"--force --assemble" just to get a working array.
+From: ZhengYuan Liu <liuzhengyuan@kylinos.cn>
 
-Each page has been intended to successively cover the state of the array
-getting worse. The next page is "my metadata is trashed - mdadm says the
-drive doesn't exist". I'm really not sure how to tackle that, but I know
-there are several threads which cover damaged or trashed superblocks. I
-think I'll just have to say "this is how you track down a GPT. This is
-how you track down a superblock. This is how you interpret it. Get the
-experts to help you put the array together again."
+Once the data was written to cache device, r5c_handle_cached_data_endio would
+be called to set dev->written with null and return the bio to up layer. As a
+result, handle_stripe_clean_event has no chance to be called to decrease the
+counter of conf->pending_full_writes when the stripe was written to raid disks
+at reclaim stage. It should test the STRIPE_FULL_WRITE state and decrease the
+counter at somewhere when the full-write stripe was reclaimed,
+r5c_handle_stripe_written may be the right place to do that.
 
-Cheers,
-Wol
+Signed-off-by: ZhengYuan Liu <liuzhengyuan@kylinos.cn>
+Signed-off-by: Song Liu <songliubraving@fb.com>
+---
+ drivers/md/raid5-cache.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index a94585d..8a035da 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -2044,6 +2044,10 @@ void r5c_handle_stripe_written(struct r5conf *conf,
+ 		spin_unlock_irqrestore(&conf->log->stripe_in_cache_lock, flags);
+ 		sh->log_start = MaxSector;
+ 		clear_bit(STRIPE_R5C_PRIORITY, &sh->state);
++
++		if (test_and_clear_bit(STRIPE_FULL_WRITE, &sh->state))
++			if (atomic_dec_and_test(&conf->pending_full_writes))
++				md_wakeup_thread(conf->mddev->thread);
+ 	}
+ 
+ 	if (do_wakeup)
+-- 
+2.9.3
 
