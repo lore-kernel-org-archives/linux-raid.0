@@ -1,36 +1,37 @@
 From: Phil Turmel <philip@turmel.org>
-Subject: Re: WARNING: mismatch_cnt is not 0 on <array device>
-Date: Mon, 26 Sep 2016 17:15:05 -0400
-Message-ID: <74e5712f-e89e-97af-8aa4-ae2948c02e94@turmel.org>
-References: <26b91420-97c9-f405-aa71-16cd5cda3a67@gmail.com>
- <409d9f5f-6f72-a399-93ab-2b10323f4122@fnarfbargle.com>
- <c72d3567-7c9c-39dc-c2e1-722bc267bdd6@gmail.com>
+Subject: Re: Linux raid wiki
+Date: Mon, 26 Sep 2016 17:19:32 -0400
+Message-ID: <33ee0032-11a7-3637-170a-a9da94c7bda9@turmel.org>
+References: <57E469E0.4020005@youngman.org.uk>
+ <57E67D32.30108@youngman.org.uk>
+ <c6d53f0f-4434-9703-cfab-b148dd8dd68b@turmel.org>
+ <57E95054.4020903@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <c72d3567-7c9c-39dc-c2e1-722bc267bdd6@gmail.com>
+In-Reply-To: <57E95054.4020903@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Benjammin2068 <benjammin2068@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 09/26/2016 03:47 PM, Benjammin2068 wrote:
-> Well that instills fear and doubt...
+On 09/26/2016 12:44 PM, Wols Lists wrote:
+> The next section -
 > 
-> the mismatch_cnt was 8.
+> https://raid.wiki.kernel.org/index.php/Assemble_Run
 > 
-> I did a repair and then a check and now it's 10704....
-> 
-> :(
+> addresses what to do if the array is messed up in some way. Would you
+> mind taking a look at that now too :-)
 
-Danger Will Robinson!
+Hmmm.  The last bit is less than ideal.  If all drives are faulty, but
+runnable in the array with at least one drive of redundancy, the best
+way to put good drives in service is one-by-one mdadm --replace.  That
+lets the redundancy fix any errors, and doesn't load down the problem
+drive any more than ddrescue would.  And it has the benefit of
+increasing reliability as you go.
 
-Seriously.  You very likely have a hardware problem corrupting your
-data.  Do you have ECC RAM, and if not, when was the last time you did
-an exhaustive memtest?
-
-Recheck all of your data cables and if using an add-on controller, check
-for a secure install in the PCIe slot.
+If you don't have any redundancy left, then ddrescue of all readable
+drives is reasonable.
 
 Phil
 
