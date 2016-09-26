@@ -1,65 +1,49 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: Linux raid wiki - setting up a system - advice wanted :-)
-Date: Mon, 26 Sep 2016 13:40:53 +1000
-Message-ID: <2f6bd11c-3232-7548-288e-3a503c160d31@websitemanagers.com.au>
-References: <57E83EA8.9060809@youngman.org.uk>
- <20160926021622.GA25056@metamorpher.de>
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: Re: WARNING: mismatch_cnt is not 0 on <array device>
+Date: Mon, 26 Sep 2016 11:42:14 +0800
+Message-ID: <409d9f5f-6f72-a399-93ab-2b10323f4122@fnarfbargle.com>
+References: <26b91420-97c9-f405-aa71-16cd5cda3a67@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160926021622.GA25056@metamorpher.de>
+In-Reply-To: <26b91420-97c9-f405-aa71-16cd5cda3a67@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>, Wols Lists <antlists@youngman.org.uk>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Benjammin2068 <benjammin2068@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 26/09/16 12:16, Andreas Klauer wrote:
-> On Sun, Sep 25, 2016 at 10:16:24PM +0100, Wols Lists wrote:
->> I need to know what will happen if you give entire drives to mdadm.
-> Installers will pick unpartitioned disks first. Forget just trashing
-> the metadata, easy to accidentally write across the entire disk.
+On 26/09/16 10:43, Benjammin2068 wrote:
+> Hey all,
 >
-> This is what it looks like when installing Windows: http://imgur.com/a/GtcR2
 >
-> Same can happen with Linux installers. Unpartitioned disks are just unusual.
+>  So the RAID5 which I upgraded to RAID6 was humming along all week just fine (I did the change last weekend) and this weekend I got this:
 >
-> Not sure why this is a thing anyway. There's no downside to partitions.
-> Adds a safety margin, is yet another place that has metadata (with GPT
-> you can use mdnumber-role as partition name / partlabel), doesn't harm
-> performance in any way...
+> WARNING: mismatch_cnt is not 0 on /dev/md127
 >
-> People panic too much about partition alignment? But alignment is something
-> you need to provide through all layers, all the way down to the filesystem,
-> not just partitions. Besides, MiB alignment has been standard for years now,
-> so this shouldn't be a problem.
+> The array seems happy and clean:
 >
-> The only other obscure issue with partition tables I can think of is
-> enclosures for USB-HDD that emulate the wrong sector size (4K vs 512)
-> and unfortunately GPT still depends on the sector size; and Linux is
-> not flexible/smart enough to support alien sector size GPT partitions.
->
-> So if you switch HDD enclosures you might be forced to recreate
-> the partition table before you can access your data.
->
-Personally, I agree, avoiding a partition table has almost zero benefit. 
-Having a partition table can help massively (ie, clearly identifies the 
-drive as in-use, shows the content of the drive/partition (RAID), etc....
-I would think using a USB interfaced drive in a raid array is hopefully 
-not common, and changing the enclosure should be even less common, 
-though perhaps likely when dealing with failures.... Can you comment on 
-the behaviour of removing the drive from the enclosure and direct 
-connecting it? What is the worst case scenario here?
-When you say forced to recreate the partition table, I assume in the 
-majority of cases it is just delete and re-create using 100% of 
-available space, or is there some other difference (eg, the gap at the 
-beginning of the drive that might require some searching for the right 
-value)?
+
+You best find out what it is to start with. Example from mine :
+
+brad@srv:~$ cat /sys/block/md2/md/mismatch_cnt
+8171392
+
+This is a bad example because it's a RAID10 of 6 SSDs. 3 support zero 
+after TRIM and the other 3 don't, so after a TRIM of the filesystem the 
+mismatch count is through the roof.
+
+Unless you are swapping to an array or you have some known issue like 
+the one I mention above, a mismatch count of non-zero is not good.
+
+I lost most of a RAID6 due to a faulty SIL SATA controller and it was 
+the high mismatch counts that alerted me. Unfortunately I was about 6 
+months in and had only checked for the first time. It was silently 
+corrupting reads under load, and so the read-modify-write cycles were 
+quietly corrupting the array.
+
+Check the mismatch count, run a "check" on the array and check it again. 
+If they vary wildly something odd is going on. If they are the same then 
+you might want to figure out what might have caused it.
 
 Regards,
-Adam
-
-
-
--- 
-Adam Goryachev Website Managers www.websitemanagers.com.au
+Brad.
