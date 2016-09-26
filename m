@@ -1,47 +1,45 @@
-From: Francisco Parada <advanceandconquer@gmail.com>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
 Subject: Re: Linux raid wiki - setting up a system - advice wanted :-)
-Date: Sun, 25 Sep 2016 20:59:27 -0400
-Message-ID: <CAOW94uvBEWZP4aN3jJT7ya68As6XGXPO1oJWFFPQnRmGg41ffg@mail.gmail.com>
+Date: Mon, 26 Sep 2016 04:16:22 +0200
+Message-ID: <20160926021622.GA25056@metamorpher.de>
 References: <57E83EA8.9060809@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <57E83EA8.9060809@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
 To: Wols Lists <antlists@youngman.org.uk>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Wols,
+On Sun, Sep 25, 2016 at 10:16:24PM +0100, Wols Lists wrote:
+> I need to know what will happen if you give entire drives to mdadm.
 
-Based on my own experience, you can do it without trashing the array.
-However, I should note, that I have never done it this way to an array
-that I was booting from.  But, as long as you've set up GPT to account
-for the 2MB boundary.  If you use "parted" or the graphical
-equivalent, "gparted", you can account for that in newer drives above
-the 2TerraByte capacity anyway with 1MB instead of 2MB.  So if you add
-a little extra padding, say 3MB (2MB for your grub, 1MB for a blank
-section that all drives above 2TB require), you should be in good
-shape.
+Installers will pick unpartitioned disks first. Forget just trashing 
+the metadata, easy to accidentally write across the entire disk.
 
-Perhaps someone else can chime in also, to confirm.
+This is what it looks like when installing Windows: http://imgur.com/a/GtcR2 
 
-On Sun, Sep 25, 2016 at 5:16 PM, Wols Lists <antlists@youngman.org.uk> wrote:
-> This is a great way for learning lots about raid :-)
->
-> I'm planning a section on setting up a new system, and I need to know
-> what will happen if you give entire drives to mdadm.
->
-> Does it leave the first 2 megs empty? Basically, what I'm asking is if I do
->
-> mdadm --create /dev/md/bigarray -add /dev/sda /dev/sdb /dev/sdc
->
-> (note I am passing the entire drive, not the first partition) and then I
-> install grub on those drives, will I trash the array?
->
-> Cheers,
-> Wol
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Same can happen with Linux installers. Unpartitioned disks are just unusual. 
+
+Not sure why this is a thing anyway. There's no downside to partitions. 
+Adds a safety margin, is yet another place that has metadata (with GPT 
+you can use mdnumber-role as partition name / partlabel), doesn't harm 
+performance in any way...
+
+People panic too much about partition alignment? But alignment is something 
+you need to provide through all layers, all the way down to the filesystem, 
+not just partitions. Besides, MiB alignment has been standard for years now, 
+so this shouldn't be a problem.
+
+The only other obscure issue with partition tables I can think of is 
+enclosures for USB-HDD that emulate the wrong sector size (4K vs 512) 
+and unfortunately GPT still depends on the sector size; and Linux is 
+not flexible/smart enough to support alien sector size GPT partitions.
+
+So if you switch HDD enclosures you might be forced to recreate 
+the partition table before you can access your data.
+
+Regards
+Andreas Klauer
