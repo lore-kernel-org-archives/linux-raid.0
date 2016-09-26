@@ -1,64 +1,43 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Linux raid wiki - setting up a system - advice wanted :-)
-Date: Mon, 26 Sep 2016 07:50:56 +0100
-Message-ID: <57E8C550.8000509@youngman.org.uk>
-References: <57E83EA8.9060809@youngman.org.uk>
- <20160926021622.GA25056@metamorpher.de>
+From: Benjammin2068 <benjammin2068@gmail.com>
+Subject: Re: WARNING: mismatch_cnt is not 0 on <array device>
+Date: Mon, 26 Sep 2016 02:19:33 -0500
+Message-ID: <4118791e-e1d8-1261-2920-560f22ec7b6f@gmail.com>
+References: <26b91420-97c9-f405-aa71-16cd5cda3a67@gmail.com>
+ <409d9f5f-6f72-a399-93ab-2b10323f4122@fnarfbargle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160926021622.GA25056@metamorpher.de>
+In-Reply-To: <409d9f5f-6f72-a399-93ab-2b10323f4122@fnarfbargle.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 26/09/16 03:16, Andreas Klauer wrote:
-> On Sun, Sep 25, 2016 at 10:16:24PM +0100, Wols Lists wrote:
->> > I need to know what will happen if you give entire drives to mdadm.
-> Installers will pick unpartitioned disks first. Forget just trashing 
-> the metadata, easy to accidentally write across the entire disk.
-> 
-> This is what it looks like when installing Windows: http://imgur.com/a/GtcR2 
-> 
-> Same can happen with Linux installers. Unpartitioned disks are just unusual. 
-> 
-> Not sure why this is a thing anyway. There's no downside to partitions. 
-> Adds a safety margin, is yet another place that has metadata (with GPT 
-> you can use mdnumber-role as partition name / partlabel), doesn't harm 
-> performance in any way...
 
-Actually, there IS a downside, which is what I'm getting at.
 
-Bare metal -> partitions -> raid -> lvm -> partions ...
+On 09/25/2016 10:42 PM, Brad Campbell wrote:
+>
+> You best find out what it is to start with. Example from mine :
+>
+> brad@srv:~$ cat /sys/block/md2/md/mismatch_cnt
+> 8171392
+>
+> This is a bad example because it's a RAID10 of 6 SSDs. 3 support zero after TRIM and the other 3 don't, so after a TRIM of the filesystem the mismatch count is through the roof.
+>
+> Unless you are swapping to an array or you have some known issue like the one I mention above, a mismatch count of non-zero is not good.
+>
+> I lost most of a RAID6 due to a faulty SIL SATA controller and it was the high mismatch counts that alerted me. Unfortunately I was about 6 months in and had only checked for the first time. It was silently corrupting reads under load, and so the read-modify-write cycles were quietly corrupting the array.
+>
+> Check the mismatch count, run a "check" on the array and check it again. If they vary wildly something odd is going on. If they are the same then you might want to figure out what might have caused it.
 
-I'm a DB guy by trade. I hate relational DBs with a vengeance - because
-they are necessarily complex thanks to relational theory but because
-they are also so totally UNnecessary if people weren't wedded to the
-(totally impractical in the real world) maths!
+Mine is 8.
 
-I know what I'm doing here. I'm very bright. And I'm trying to work out
-how to explain myself without leaving your "bear of very little brain"
-in charge of sys-adminning a server scratching his head in confusion
-trying to work out what goes where.
+besides moving from a RAID5 to a RAID6, I also recently installed a new HD controller (Marvell 88SE9485) from SuperMicro. (onto a SuperMicro Motherboard)
 
-As far as linux is concerned, a block device is a block device. But the
-poor sysadmin has got to get his head round what goes where, and my
-experience with DBs tells me that most people probably aren't as bright
-as us ...
+Previously, the RAID was contained with 4 SATA ports all on the motherboard (also SuperMicro) -- only with this move to RAID6, I needed the extra ports, so this is the card I got.
 
-At the end of the day, I don't want to recommend anything. I simply want
-to know - is it *possible*. Unfortunately, I don't have the hardware to
-try it myself :-( The setup I want to know is
+I'll go run a check (and repair)...
 
-Bare metal -> raid [-> lvm] -> /
+Will report back when it's all done.
 
-Is there any room on the disk to install grub?
-
-(Note that - and I know you shouldn't believe everything you read on the
-internet - apparently Neil Brown prefers passing the entire
-unpartitioned disk to raid ...)
-
-Cheers,
-Wol
+ -Ben
