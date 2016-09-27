@@ -1,46 +1,37 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 00/16] md/bitmap: Fine-tuning for several function
- implementations
-Date: Tue, 27 Sep 2016 18:44:06 +0200
-Message-ID: <30938c84-20a7-0f13-bdda-a2d2109a6dac@users.sourceforge.net>
-References: <566ABCD9.1060404@users.sourceforge.net>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: WARNING: mismatch_cnt is not 0 on <array device>
+Date: Tue, 27 Sep 2016 17:45:08 +0100
+Message-ID: <57EAA214.8030603@youngman.org.uk>
+References: <26b91420-97c9-f405-aa71-16cd5cda3a67@gmail.com>
+ <409d9f5f-6f72-a399-93ab-2b10323f4122@fnarfbargle.com>
+ <c72d3567-7c9c-39dc-c2e1-722bc267bdd6@gmail.com>
+ <74e5712f-e89e-97af-8aa4-ae2948c02e94@turmel.org>
+ <c7bfde3e-0605-96d0-4e3d-fb76a9a8c724@gmail.com>
+ <27577b8a-1b63-8f1a-9b68-b056622a5268@fnarfbargle.com>
+ <41c176d2-0235-6ff0-996c-b32dc95d487d@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <566ABCD9.1060404@users.sourceforge.net>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <41c176d2-0235-6ff0-996c-b32dc95d487d@gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Benjammin2068 <benjammin2068@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Tue, 27 Sep 2016 18:29:08 +0200
+On 27/09/16 17:27, Benjammin2068 wrote:
+> p.s. The Linux RAID Wiki doesn't cover mismatch_cnt at all.... would be kinda nice considering how critical (or not) this is... and what to do about it.
 
-Several update suggestions were taken into account
-from static source code analysis.
+I'm thinking about all this. The second section is all about recovering
+a failing/ed array, and is new. The first section is the original,
+that's being updated. It just feels totally wrong to me now, as it's
+becoming a jumbled mess of old and new.
 
-Markus Elfring (16):
-  Use kmalloc_array() in bitmap_storage_alloc()
-  Move an assignment for the variable "offset" in bitmap_storage_alloc()
-  Delete an unnecessary variable initialisation in bitmap_storage_alloc()
-  Improve another size determination in bitmap_storage_alloc()
-  Return directly after a failed bitmap_storage_alloc() in bitmap_resize()
-  Return directly after a failed kzalloc() in bitmap_resize()
-  Replace a kzalloc() call by kcalloc() in bitmap_resize()
-  Rename a jump label in location_store()
-  Rename a jump label in bitmap_copy_from_slot()
-  Rename a jump label in bitmap_create()
-  Rename a jump label in bitmap_init_from_disk()
-  One check less in read_page() at the end
-  Adjust checks for null pointers in 11 functions
-  Delete unnecessary braces in bitmap_resize()
-  Add spaces around three comparison operators
-  Delete an unwanted space in read_sb_page()
+What I'm probably going to do, is create a new first section about
+setting up a raid system. That means that a section on monitoring will
+actually make sense and fit between setting it up, and fixing problems.
 
- drivers/md/bitmap.c | 110 +++++++++++++++++++++++++---------------------------
- 1 file changed, 52 insertions(+), 58 deletions(-)
+(And all the old stuff will end up in the "software archaeology"
+section, so people who are still running ancient systems can find it :-)
 
--- 
-2.10.0
-
+Cheers,
+Wol
