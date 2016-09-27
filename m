@@ -1,44 +1,59 @@
-From: Benjammin2068 <benjammin2068@gmail.com>
+From: Roman Mamedov <rm@romanrm.net>
 Subject: Re: WARNING: mismatch_cnt is not 0 on <array device>
-Date: Tue, 27 Sep 2016 11:27:13 -0500
-Message-ID: <41c176d2-0235-6ff0-996c-b32dc95d487d@gmail.com>
+Date: Tue, 27 Sep 2016 21:36:24 +0500
+Message-ID: <20160927213624.739f80ba@natsu>
 References: <26b91420-97c9-f405-aa71-16cd5cda3a67@gmail.com>
- <409d9f5f-6f72-a399-93ab-2b10323f4122@fnarfbargle.com>
- <c72d3567-7c9c-39dc-c2e1-722bc267bdd6@gmail.com>
- <74e5712f-e89e-97af-8aa4-ae2948c02e94@turmel.org>
- <c7bfde3e-0605-96d0-4e3d-fb76a9a8c724@gmail.com>
- <27577b8a-1b63-8f1a-9b68-b056622a5268@fnarfbargle.com>
+        <409d9f5f-6f72-a399-93ab-2b10323f4122@fnarfbargle.com>
+        <c72d3567-7c9c-39dc-c2e1-722bc267bdd6@gmail.com>
+        <74e5712f-e89e-97af-8aa4-ae2948c02e94@turmel.org>
+        <c7bfde3e-0605-96d0-4e3d-fb76a9a8c724@gmail.com>
+        <27577b8a-1b63-8f1a-9b68-b056622a5268@fnarfbargle.com>
+        <41c176d2-0235-6ff0-996c-b32dc95d487d@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/RBriPU5._2Otn_utBLtv84I"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <27577b8a-1b63-8f1a-9b68-b056622a5268@fnarfbargle.com>
+In-Reply-To: <41c176d2-0235-6ff0-996c-b32dc95d487d@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: Benjammin2068 <benjammin2068@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 09/27/2016 04:16 AM, Brad Campbell wrote:
-> On 27/09/16 09:08, Benjammin2068 wrote:
->>
->
->> Also, I just did a "repair" and the mismatch is now back to 8... which seems like a suspicious number considering the filesystem on this new drive (because it's a WD10 series with 4096byte sectors) has a slightly larger FS than the Samsung HD103SJ (and Seagate equivalents) in the array too.
->
-> See that is a bad thing to do if you even remotely suspect you have a problem. All a "repair" does is check the parity on a stripe and if there is a mismatch it re-writes it. You are writing to an array that apparently has issues.
->
-> I'd be checking the filesystem and file contents very carefully for corruption, and running several sequential check actions to keep an eye on the mismatch count.
->
+--Sig_/RBriPU5._2Otn_utBLtv84I
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Yep.
+On Tue, 27 Sep 2016 11:27:13 -0500
+Benjammin2068 <benjammin2068@gmail.com> wrote:
 
-Once I reconfig'd the hardware and checked the cables in the system on boot the number is now 0. (which makes sense at boot - but is creepy) I put a monitor into munin which I'll be watching closely for when it changes.
+> I think I did find the problem. The card was running hot due to airflow.
+> That's been remedied (I hope) -- the temp sensor on the heat-sink for the
+> PCIe controller now sits around 45'C which is fine. Before it was >=3D
+> 60'C . :O
 
-BUT... I think I did find the problem. The card was running hot due to airflow. That's been remedied (I hope) -- the temp sensor on the heat-sink for the PCIe controller now sits around 45'C which is fine. Before it was >= 60'C . :O
+I wouldn't trust such controller anyway. 15 degrees difference and it
+(allegedly) gives you silent data corruption? What if you have a particular=
+ly
+hot day, and/or the AC is out for a few hours.
+There is a lot of better failure modes than this (honestly reported read or
+CRC errors for a start, or heck, even complete lock-up of the controller wo=
+uld
+be more preferrable).
 
-Thanks again everyone,
+--=20
+With respect,
+Roman
 
- -Ben
+--Sig_/RBriPU5._2Otn_utBLtv84I
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
 
-p.s. The Linux RAID Wiki doesn't cover mismatch_cnt at all.... would be kinda nice considering how critical (or not) this is... and what to do about it.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
+iEYEARECAAYFAlfqoAoACgkQTLKSvz+PZwjmWQCfRZP5wUTjh2CuFfyPdCFvoaUr
+i9UAn07n0EhllNAimrRH6h/9shPLEa4S
+=Xe44
+-----END PGP SIGNATURE-----
 
-
+--Sig_/RBriPU5._2Otn_utBLtv84I--
