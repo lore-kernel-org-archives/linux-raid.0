@@ -1,86 +1,32 @@
-From: JackieLiu <liuyun01@kylinos.cn>
-Subject: [PATCH] md/raid5: use bool instead of int for some flags
-Date: Tue, 27 Sep 2016 09:40:20 +0800
-Message-ID: <20160927014020.7209-1-liuyun01@kylinos.cn>
+From: Benjammin2068 <benjammin2068@gmail.com>
+Subject: Re: WARNING: mismatch_cnt is not 0 on <array device>
+Date: Tue, 27 Sep 2016 01:42:18 -0500
+Message-ID: <0ac77bdb-0095-b114-b0dd-b6b0aa512ca9@gmail.com>
+References: <26b91420-97c9-f405-aa71-16cd5cda3a67@gmail.com>
+ <409d9f5f-6f72-a399-93ab-2b10323f4122@fnarfbargle.com>
+ <c72d3567-7c9c-39dc-c2e1-722bc267bdd6@gmail.com>
+ <74e5712f-e89e-97af-8aa4-ae2948c02e94@turmel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <74e5712f-e89e-97af-8aa4-ae2948c02e94@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: shli@fb.com
-Cc: linux-raid@vger.kernel.org, JackieLiu <liuyun01@kylinos.cn>
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-For flags, bool is a little better more or less than int.
 
-Signed-off-by: JackieLiu <liuyun01@kylinos.cn>
----
- drivers/md/raid5.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+Well, I maybe found the problem.
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index ee7fc37..2861c3f 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -659,7 +659,7 @@ raid5_get_active_stripe(struct r5conf *conf, sector_t sector,
- {
- 	struct stripe_head *sh;
- 	int hash = stripe_hash_locks_hash(sector);
--	int inc_empty_inactive_list_flag;
-+	bool inc_empty_inactive_list_flag;
- 
- 	pr_debug("get_stripe, sector %llu\n", (unsigned long long)sector);
- 
-@@ -704,9 +704,9 @@ raid5_get_active_stripe(struct r5conf *conf, sector_t sector,
- 					atomic_inc(&conf->active_stripes);
- 				BUG_ON(list_empty(&sh->lru) &&
- 				       !test_bit(STRIPE_EXPANDING, &sh->state));
--				inc_empty_inactive_list_flag = 0;
-+				inc_empty_inactive_list_flag = false;
- 				if (!list_empty(conf->inactive_list + hash))
--					inc_empty_inactive_list_flag = 1;
-+					inc_empty_inactive_list_flag = true;
- 				list_del_init(&sh->lru);
- 				if (list_empty(conf->inactive_list + hash) && inc_empty_inactive_list_flag)
- 					atomic_inc(&conf->empty_inactive_list_nr);
-@@ -768,7 +768,7 @@ static void stripe_add_to_batch_list(struct r5conf *conf, struct stripe_head *sh
- 	sector_t head_sector, tmp_sec;
- 	int hash;
- 	int dd_idx;
--	int inc_empty_inactive_list_flag;
-+	bool inc_empty_inactive_list_flag;
- 
- 	/* Don't cross chunks, so stripe pd_idx/qd_idx is the same */
- 	tmp_sec = sh->sector;
-@@ -786,9 +786,9 @@ static void stripe_add_to_batch_list(struct r5conf *conf, struct stripe_head *sh
- 				atomic_inc(&conf->active_stripes);
- 			BUG_ON(list_empty(&head->lru) &&
- 			       !test_bit(STRIPE_EXPANDING, &head->state));
--			inc_empty_inactive_list_flag = 0;
-+			inc_empty_inactive_list_flag = false;
- 			if (!list_empty(conf->inactive_list + hash))
--				inc_empty_inactive_list_flag = 1;
-+				inc_empty_inactive_list_flag = true;
- 			list_del_init(&head->lru);
- 			if (list_empty(conf->inactive_list + hash) && inc_empty_inactive_list_flag)
- 				atomic_inc(&conf->empty_inactive_list_nr);
-@@ -905,7 +905,7 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
- 		return;
- 	for (i = disks; i--; ) {
- 		int op, op_flags = 0;
--		int replace_only = 0;
-+		bool replace_only = false;
- 		struct bio *bi, *rbi;
- 		struct md_rdev *rdev, *rrdev = NULL;
- 
-@@ -921,7 +921,7 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
- 		else if (test_and_clear_bit(R5_WantReplace,
- 					    &sh->dev[i].flags)) {
- 			op = REQ_OP_WRITE;
--			replace_only = 1;
-+			replace_only = true;
- 		} else
- 			continue;
- 		if (test_and_clear_bit(R5_SyncIO, &sh->dev[i].flags))
--- 
-2.10.0
+1: I had an unhappy fan in the system -- and it's the one that cools the card slot area...
 
+2: I think the controller card was getting warm anyway -- so I also changed the venting and put a temp sensor (CrystalFontz SCAB don'tcha know.. with dallas 1820 1-wire thermometers)... so I'm gonna keep an eye on it now.
 
+3: I set up Munin to keep track of mismatch_cnt on all volumes. Didn't even know it existed.. :( wish I had history. I will now going forward.
+
+I'll let ya'all know.
+
+As usually... awesome help -- thanks!
+
+ -Ben
 
