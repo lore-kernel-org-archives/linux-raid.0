@@ -1,121 +1,57 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v2 2/6] r5cache: sysfs entry r5c_state
-Date: Tue, 27 Sep 2016 15:58:40 -0700
-Message-ID: <20160927225840.GB98100@kernel.org>
-References: <20160926233050.3351081-1-songliubraving@fb.com>
- <20160926233050.3351081-3-songliubraving@fb.com>
+From: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Subject: Re: WARNING: mismatch_cnt is not 0 on <array device>
+Date: Wed, 28 Sep 2016 09:09:59 +1000
+Message-ID: <be044941-8097-7d6f-5216-294fe2cac4d9@websitemanagers.com.au>
+References: <26b91420-97c9-f405-aa71-16cd5cda3a67@gmail.com>
+ <409d9f5f-6f72-a399-93ab-2b10323f4122@fnarfbargle.com>
+ <c72d3567-7c9c-39dc-c2e1-722bc267bdd6@gmail.com>
+ <74e5712f-e89e-97af-8aa4-ae2948c02e94@turmel.org>
+ <c7bfde3e-0605-96d0-4e3d-fb76a9a8c724@gmail.com>
+ <27577b8a-1b63-8f1a-9b68-b056622a5268@fnarfbargle.com>
+ <41c176d2-0235-6ff0-996c-b32dc95d487d@gmail.com>
+ <57EAA214.8030603@youngman.org.uk>
+ <5427ce35-f222-8a2c-486e-441c4c6ec9a6@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20160926233050.3351081-3-songliubraving@fb.com>
+In-Reply-To: <5427ce35-f222-8a2c-486e-441c4c6ec9a6@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>
-Cc: linux-raid@vger.kernel.org, neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuang521@gmail.com, liuzhengyuan@kylinos.cn
+To: Benjammin2068 <benjammin2068@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Sep 26, 2016 at 04:30:46PM -0700, Song Liu wrote:
-> r5c_state have 4 states:
-> * no-cache;
-> * write-through (write journal only);
-> * write-back (w/ write cache);
-> * cache-broken (journal missing or Faulty)
-> 
-> When there is functional write cache, r5c_state is a knob to
-> switch between write-back and write-through.
-> 
-> When the journal device is broken, the raid array is forced
-> in readonly mode. In this case, r5c_state can be used to
-> remove "journal feature", and thus make the array read-write
-> without journal. By writing into r5c_cache_mode, the array
-> can transit from cache-broken to no-cache, which removes
-> journal feature for the array.
+On 28/09/16 03:30, Benjammin2068 wrote:
+> On 09/27/2016 11:45 AM, Wols Lists wrote:
+>> I'm thinking about all this. The second section is all about recovering
+>> a failing/ed array, and is new. The first section is the original,
+>> that's being updated. It just feels totally wrong to me now, as it's
+>> becoming a jumbled mess of old and new.
+>>
+>> What I'm probably going to do, is create a new first section about
+>> setting up a raid system. That means that a section on monitoring will
+>> actually make sense and fit between setting it up, and fixing problems.
+>>
+>> (And all the old stuff will end up in the "software archaeology"
+>> section, so people who are still running ancient systems can find it :-)
+>>
+> That would be awesome.
+>
+>   There was a shell script out there already for MUNIN, but I modified it a little to add thresholds that throw up flags. I might change some more to handle different thresholds for different devices or the ability to monitor only RAIDs that matter.
+>
+> I have smartctl running for all my drives -- but that doesn't help me at the mdadm level.
+>
+> While you're in the docs adding stuff about mismatch_cnt, is there anything that can help someone backtrace which block cause the count to go up? This would help us mere mortals maybe go back to inspect a block or a file or something to make sure it's not corrupted.
+>
+Just out of interest, but I'm not sure how useful your munin monitoring 
+will be... AFAIK, the mismatch_cnt value is only updated when you run a 
+check, which would probably take some number of hours to complete. I 
+would guess that you are unlikely to run more than one check a week or 
+month.... and as soon as there is any change (unless you know the 
+explanation) then you should be looking to resolve that.
 
-How will user use the new interface? I suppose
--raid array is forced readonly mode (by kernel)
--user uses the new interface to remove journal
--user forces array read-write
--kernel will update superblock and array can run read/write
+Unless of course I'm wrong about when the count is updated?
 
-please describe
-> 
-> Signed-off-by: Song Liu <songliubraving@fb.com>
-> ---
->  drivers/md/raid5-cache.c | 57 ++++++++++++++++++++++++++++++++++++++++++++++++
->  drivers/md/raid5.c       |  1 +
->  drivers/md/raid5.h       |  2 ++
->  3 files changed, 60 insertions(+)
-> 
-> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index 6b28461..0a0b16a 100644
-> --- a/drivers/md/raid5-cache.c
-> +++ b/drivers/md/raid5-cache.c
-> @@ -54,6 +54,9 @@ enum r5c_state {
->  	R5C_STATE_CACHE_BROKEN = 3,
->  };
->  
-> +static char *r5c_state_str[] = {"no-cache", "write-through",
-> +				"write-back", "cache-broken"};
-> +
->  struct r5l_log {
->  	struct md_rdev *rdev;
->  
-> @@ -1242,6 +1245,60 @@ int r5c_flush_cache(struct r5conf *conf, int num)
->  	return count;
->  }
->  
-> +ssize_t r5c_state_show(struct mddev *mddev, char *page)
-> +{
-> +	struct r5conf *conf = mddev->private;
-> +	int val = 0;
-> +	int ret = 0;
-> +
-> +	if (conf->log)
-> +		val = conf->log->r5c_state;
-> +	else if (test_bit(MD_HAS_JOURNAL, &mddev->flags))
-> +		val = R5C_STATE_CACHE_BROKEN;
-> +	ret += snprintf(page, PAGE_SIZE - ret, "%d: %s\n",
-> +			val, r5c_state_str[val]);
-> +	return ret;
-> +}
-> +
-> +ssize_t r5c_state_store(struct mddev *mddev, const char *page, size_t len)
-> +{
-> +	struct r5conf *conf = mddev->private;
-> +	struct r5l_log *log = conf->log;
-> +	int val;
-> +
-> +	if (kstrtoint(page, 10, &val))
-> +		return -EINVAL;
-> +	if (!log && val != R5C_STATE_NO_CACHE)
-> +		return -EINVAL;
-> +
-> +	if (val < R5C_STATE_NO_CACHE || val > R5C_STATE_WRITE_BACK)
-> +		return -EINVAL;
-> +	if (val == R5C_STATE_NO_CACHE) {
-> +		if (conf->log &&
-> +		    !test_bit(Faulty, &log->rdev->flags)) {
-> +			pr_err("md/raid:%s: journal device is in use, cannot remove it\n",
-> +			       mdname(mddev));
-> +			return -EINVAL;
-> +		}
-> +	}
-> +
-> +	spin_lock_irq(&conf->device_lock);
-> +	if (log)
-> +		conf->log->r5c_state = val;
-> +	if (val == R5C_STATE_NO_CACHE) {
-> +		clear_bit(MD_HAS_JOURNAL, &mddev->flags);
-> +		set_bit(MD_UPDATE_SB_FLAGS, &mddev->flags);
-> +	}
-> +	spin_unlock_irq(&conf->device_lock);
-> +	pr_info("md/raid:%s: setting r5c cache mode to %d: %s\n",
-> +		mdname(mddev), val, r5c_state_str[val]);
-> +	return len;
-> +}
-
-Is this safe? Eg, switching from writethrough to writeback or vice versa in
-runtime with IO running? I think you'd better call mddev_suspend/mddev_resume.
-
-Thanks,
-Shaohua
+Regards,
+Adam
+-- 
+Adam Goryachev Website Managers www.websitemanagers.com.au
