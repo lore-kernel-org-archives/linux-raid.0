@@ -1,321 +1,62 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH v2 5/6] r5cache: handle SYNC and FUA
-Date: Mon, 26 Sep 2016 16:30:49 -0700
-Message-ID: <20160926233050.3351081-6-songliubraving@fb.com>
-References: <20160926233050.3351081-1-songliubraving@fb.com>
+From: Benjammin2068 <benjammin2068@gmail.com>
+Subject: Re: WARNING: mismatch_cnt is not 0 on <array device>
+Date: Mon, 26 Sep 2016 20:08:24 -0500
+Message-ID: <c7bfde3e-0605-96d0-4e3d-fb76a9a8c724@gmail.com>
+References: <26b91420-97c9-f405-aa71-16cd5cda3a67@gmail.com>
+ <409d9f5f-6f72-a399-93ab-2b10323f4122@fnarfbargle.com>
+ <c72d3567-7c9c-39dc-c2e1-722bc267bdd6@gmail.com>
+ <74e5712f-e89e-97af-8aa4-ae2948c02e94@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160926233050.3351081-1-songliubraving@fb.com>
+In-Reply-To: <74e5712f-e89e-97af-8aa4-ae2948c02e94@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuang521@gmail.com, liuzhengyuan@kylinos.cn, Song Liu <songliubraving@fb.com>
+To: Phil Turmel <philip@turmel.org>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-With raid5 cache, we committing data from journal device. When
-there is flush request, we need to flush journal device's cache.
-This was not needed in raid5 journal, because we will flush the
-journal before committing data to raid disks.
 
-This is similar to FUA, except that we also need flush journal for
-FUA. Otherwise, corruptions in earlier meta data will stop recovery
-from reaching FUA data.
 
-Signed-off-by: Song Liu <songliubraving@fb.com>
----
- drivers/md/raid5-cache.c | 134 +++++++++++++++++++++++++++++++++++++++++++----
- drivers/md/raid5.c       |   8 +++
- drivers/md/raid5.h       |   1 +
- 3 files changed, 133 insertions(+), 10 deletions(-)
+On 09/26/2016 04:15 PM, Phil Turmel wrote:
+> On 09/26/2016 03:47 PM, Benjammin2068 wrote:
+>> Well that instills fear and doubt...
+>>
+>> the mismatch_cnt was 8.
+>>
+>> I did a repair and then a check and now it's 10704....
+>>
+>> :(
+> Danger Will Robinson!
+>
+> Seriously.  You very likely have a hardware problem corrupting your
+> data.  Do you have ECC RAM, and if not, when was the last time you did
+> an exhaustive memtest?
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index eff5bad..a94585d 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -19,6 +19,7 @@
- #include <linux/raid/md_p.h>
- #include <linux/crc32c.h>
- #include <linux/random.h>
-+#include <trace/events/block.h>
- #include "md.h"
- #include "raid5.h"
- 
-@@ -119,6 +120,9 @@ struct r5l_log {
- 	struct list_head stripe_in_cache; /* all stripes in the cache, with
- 					   * sh->log_start in order */
- 	spinlock_t stripe_in_cache_lock;  /* lock for stripe_in_cache */
-+
-+	/* to submit async io_units, to fulfill ordering of flush */
-+	struct work_struct deferred_io_work;
- };
- 
- /*
-@@ -145,6 +149,18 @@ struct r5l_io_unit {
- 
- 	int state;
- 	bool need_split_bio;
-+	struct bio *split_bio;
-+
-+	unsigned int has_flush:1;      /* include flush request */
-+	unsigned int has_fua:1;        /* include fua request */
-+	unsigned int has_null_flush:1; /* include empty flush request */
-+	/*
-+	 * io isn't sent yet, flush/fua request can only be submitted till it's
-+	 * the first IO in running_ios list
-+	 */
-+	unsigned int io_deferred:1;
-+
-+	struct bio_list flush_barriers;   /* size == 0 flush bios */
- };
- 
- /* r5l_io_unit state */
-@@ -358,9 +374,11 @@ static void r5l_move_to_end_ios(struct r5l_log *log)
- 	}
- }
- 
-+static void __r5l_stripe_write_finished(struct r5l_io_unit *io);
- static void r5l_log_endio(struct bio *bio)
- {
- 	struct r5l_io_unit *io = bio->bi_private;
-+	struct r5l_io_unit *io_deferred;
- 	struct r5l_log *log = io->log;
- 	unsigned long flags;
- 
-@@ -376,18 +394,89 @@ static void r5l_log_endio(struct bio *bio)
- 		r5l_move_to_end_ios(log);
- 	else
- 		r5l_log_run_stripes(log);
-+	if (!list_empty(&log->running_ios)) {
-+		/*
-+		 * FLUSH/FUA io_unit is deferred because of ordering, now we
-+		 * can dispatch it
-+		 */
-+		io_deferred = list_first_entry(&log->running_ios,
-+					       struct r5l_io_unit, log_sibling);
-+		if (io_deferred->io_deferred)
-+			schedule_work(&log->deferred_io_work);
-+	}
-+
- 	spin_unlock_irqrestore(&log->io_list_lock, flags);
- 
- 	if (log->need_cache_flush)
- 		md_wakeup_thread(log->rdev->mddev->thread);
-+
-+	if (io->has_null_flush) {
-+		struct bio *bi;
-+
-+		WARN_ON(bio_list_empty(&io->flush_barriers));
-+		while ((bi = bio_list_pop(&io->flush_barriers)) != NULL) {
-+			bio_endio(bi);
-+			atomic_dec(&io->pending_stripe);
-+		}
-+		if (atomic_read(&io->pending_stripe) == 0)
-+			__r5l_stripe_write_finished(io);
-+	}
-+}
-+
-+static void r5l_do_submit_io(struct r5l_log *log, struct r5l_io_unit *io)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&log->io_list_lock, flags);
-+	__r5l_set_io_unit_state(io, IO_UNIT_IO_START);
-+	spin_unlock_irqrestore(&log->io_list_lock, flags);
-+
-+	if (io->has_flush)
-+		bio_set_op_attrs(io->current_bio, REQ_OP_WRITE, WRITE_FLUSH);
-+	if (io->has_fua)
-+		bio_set_op_attrs(io->current_bio, REQ_OP_WRITE, WRITE_FUA);
-+	submit_bio(io->current_bio);
-+
-+	if (!io->split_bio)
-+		return;
-+
-+	if (io->has_flush)
-+		bio_set_op_attrs(io->split_bio, REQ_OP_WRITE, WRITE_FLUSH);
-+	if (io->has_fua)
-+		bio_set_op_attrs(io->split_bio, REQ_OP_WRITE, WRITE_FUA);
-+	submit_bio(io->split_bio);
-+}
-+
-+/* deferred io_unit will be dispatched here */
-+static void r5l_submit_io_async(struct work_struct *work)
-+{
-+	struct r5l_log *log = container_of(work, struct r5l_log,
-+					   deferred_io_work);
-+	struct r5l_io_unit *io = NULL;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&log->io_list_lock, flags);
-+	if (!list_empty(&log->running_ios)) {
-+		io = list_first_entry(&log->running_ios, struct r5l_io_unit,
-+				      log_sibling);
-+		if (!io->io_deferred)
-+			io = NULL;
-+		else
-+			io->io_deferred = 0;
-+	}
-+	spin_unlock_irqrestore(&log->io_list_lock, flags);
-+	if (io)
-+		r5l_do_submit_io(log, io);
- }
- 
- static void r5l_submit_current_io(struct r5l_log *log)
- {
- 	struct r5l_io_unit *io = log->current_io;
-+	struct bio *bio;
- 	struct r5l_meta_block *block;
- 	unsigned long flags;
- 	u32 crc;
-+	bool do_submit = true;
- 
- 	if (!io)
- 		return;
-@@ -396,13 +485,20 @@ static void r5l_submit_current_io(struct r5l_log *log)
- 	block->meta_size = cpu_to_le32(io->meta_offset);
- 	crc = crc32c_le(log->uuid_checksum, block, PAGE_SIZE);
- 	block->checksum = cpu_to_le32(crc);
-+	bio = io->current_bio;
- 
- 	log->current_io = NULL;
- 	spin_lock_irqsave(&log->io_list_lock, flags);
--	__r5l_set_io_unit_state(io, IO_UNIT_IO_START);
-+	if (io->has_flush || io->has_fua) {
-+		if (io != list_first_entry(&log->running_ios,
-+					   struct r5l_io_unit, log_sibling)) {
-+			io->io_deferred = 1;
-+			do_submit = false;
-+		}
-+	}
- 	spin_unlock_irqrestore(&log->io_list_lock, flags);
--
--	submit_bio(io->current_bio);
-+	if (do_submit)
-+		r5l_do_submit_io(log, io);
- }
- 
- static struct bio *r5l_bio_alloc(struct r5l_log *log)
-@@ -449,6 +545,7 @@ static struct r5l_io_unit *r5l_new_meta(struct r5l_log *log)
- 	io->log = log;
- 	INIT_LIST_HEAD(&io->log_sibling);
- 	INIT_LIST_HEAD(&io->stripe_list);
-+	bio_list_init(&io->flush_barriers);
- 	io->state = IO_UNIT_RUNNING;
- 
- 	io->meta_page = mempool_alloc(log->meta_pool, GFP_NOIO);
-@@ -519,12 +616,11 @@ static void r5l_append_payload_page(struct r5l_log *log, struct page *page)
- 	struct r5l_io_unit *io = log->current_io;
- 
- 	if (io->need_split_bio) {
--		struct bio *prev = io->current_bio;
--
-+		BUG_ON(io->split_bio);
-+		io->split_bio = io->current_bio;
- 		io->current_bio = r5l_bio_alloc(log);
--		bio_chain(io->current_bio, prev);
--
--		submit_bio(prev);
-+		bio_chain(io->current_bio, io->split_bio);
-+		io->need_split_bio = false;
- 	}
- 
- 	if (!bio_add_page(io->current_bio, page, PAGE_SIZE, 0))
-@@ -554,12 +650,22 @@ static int r5l_log_stripe(struct r5l_log *log, struct stripe_head *sh,
- 
- 	io = log->current_io;
- 
-+	if (test_and_clear_bit(STRIPE_R5C_PREFLUSH, &sh->state))
-+		io->has_flush = 1;
-+
- 	for (i = 0; i < sh->disks; i++) {
- 		if (!test_bit(R5_Wantwrite, &sh->dev[i].flags) &&
- 		    !test_bit(R5_Wantcache, &sh->dev[i].flags))
- 			continue;
- 		if (i == sh->pd_idx || i == sh->qd_idx)
- 			continue;
-+		if (test_bit(R5_WantFUA, &sh->dev[i].flags)) {
-+			io->has_fua = 1;
-+			/* we need to flush journal to make sure recovery can
-+			 * reach the data with fua flag
-+			 */
-+			io->has_flush = 1;
-+		}
- 		r5l_append_payload_meta(log, R5LOG_PAYLOAD_DATA,
- 					raid5_compute_blocknr(sh, i, 0),
- 					sh->dev[i].log_checksum, 0, false);
-@@ -716,10 +822,16 @@ int r5l_handle_flush_request(struct r5l_log *log, struct bio *bio)
- 	 * don't need to flush again
- 	 */
- 	if (bio->bi_iter.bi_size == 0) {
--		bio_endio(bio);
-+		mutex_lock(&log->io_mutex);
-+		r5l_get_meta(log, 0);
-+		bio_list_add(&log->current_io->flush_barriers, bio);
-+		log->current_io->has_flush = 1;
-+		log->current_io->has_null_flush = 1;
-+		atomic_inc(&log->current_io->pending_stripe);
-+		r5l_submit_current_io(log);
-+		mutex_unlock(&log->io_mutex);
- 		return 0;
- 	}
--	bio->bi_opf &= ~REQ_PREFLUSH;
- 	return -EAGAIN;
- }
- 
-@@ -2186,6 +2298,8 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
- 	INIT_LIST_HEAD(&log->no_space_stripes);
- 	spin_lock_init(&log->no_space_stripes_lock);
- 
-+	INIT_WORK(&log->deferred_io_work, r5l_submit_io_async);
-+
- 	/* flush full stripe */
- 	log->r5c_state = R5C_STATE_WRITE_BACK;
- 	INIT_LIST_HEAD(&log->stripe_in_cache);
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index a3d26ec..df31bfa 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5321,6 +5321,7 @@ static void raid5_make_request(struct mddev *mddev, struct bio * bi)
- 	int remaining;
- 	DEFINE_WAIT(w);
- 	bool do_prepare;
-+	bool do_flush = false;
- 
- 	if (unlikely(bi->bi_opf & REQ_PREFLUSH)) {
- 		int ret = r5l_handle_flush_request(conf->log, bi);
-@@ -5332,6 +5333,7 @@ static void raid5_make_request(struct mddev *mddev, struct bio * bi)
- 			return;
- 		}
- 		/* ret == -EAGAIN, fallback */
-+		do_flush = true;
- 	}
- 
- 	md_write_start(mddev, bi);
-@@ -5470,6 +5472,12 @@ static void raid5_make_request(struct mddev *mddev, struct bio * bi)
- 				do_prepare = true;
- 				goto retry;
- 			}
-+			if (do_flush) {
-+				set_bit(STRIPE_R5C_PREFLUSH, &sh->state);
-+				/* we only need flush for one stripe */
-+				do_flush = false;
-+			}
-+
- 			set_bit(STRIPE_HANDLE, &sh->state);
- 			clear_bit(STRIPE_DELAYED, &sh->state);
- 			if ((!sh->batch_head || sh == sh->batch_head) &&
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index 2d8222c..bbb2536 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -359,6 +359,7 @@ enum {
- 	STRIPE_R5C_FROZEN,	/* r5c_cache frozen and being written out */
- 	STRIPE_R5C_WRITTEN,	/* ready for r5c_handle_stripe_written() */
- 	STRIPE_R5C_PRIORITY,	/* high priority stripe for log reclaim */
-+	STRIPE_R5C_PREFLUSH,	/* need to flush journal device */
- };
- 
- #define STRIPE_EXPAND_SYNC_FLAGS \
--- 
-2.9.3
+ECC RAM: Yes.
+
+MEMtest - not for a while. Will do. Have to take my server down for that.
+
+This problem has only popped up since putting in this new controller *AND* expanding the RAID to a drive on this controller when changing RAID5 with 4 members (using MB SATA ports) to RAID6 using 5 members that includes 2 drives on new controller of which 1 is a hot spare.
+
+(and the controller is a Marvell 88SE9485 - anyone know of any problems with this controller? It's a x8 controller living in a x8 slot.
+
+> Recheck all of your data cables and if using an add-on controller, check
+> for a secure install in the PCIe slot.
+>
+
+Will do.
+
+Is there way to verify if that 5th drive is "the problem drive"?
+
+Also, I just did a "repair" and the mismatch is now back to 8... which seems like a suspicious number considering the filesystem on this new drive (because it's a WD10 series with 4096byte sectors) has a slightly larger FS than the Samsung HD103SJ (and Seagate equivalents) in the array too.
+
+And I just found this:
+
+https://www.thomas-krenn.com/en/wiki/Mdadm_checkarray
+
+Which says, "It could simply be that the system does not care what is stored on that part of the array - it is unused space."
+
+I have WD10 drives that have this "extra space" thing going on because of their 4096byte sector size thing. (see previous posts about that to this list.)
+
+ -Ben
 
