@@ -1,43 +1,48 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 03/16] md/bitmap: Delete an unnecessary variable
- initialisation in bitmap_storage_alloc()
-Date: Tue, 27 Sep 2016 18:49:14 +0200
-Message-ID: <dbf966a0-1c5a-1565-7657-3ad94f849ac1@users.sourceforge.net>
+Subject: [PATCH 04/16] md/bitmap: Improve another size determination in
+ bitmap_storage_alloc()
+Date: Tue, 27 Sep 2016 18:50:06 +0200
+Message-ID: <6ca5ea5b-6348-2d17-4cb5-f1c3a512995c@users.sourceforge.net>
 References: <566ABCD9.1060404@users.sourceforge.net>
  <30938c84-20a7-0f13-bdda-a2d2109a6dac@users.sourceforge.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <30938c84-20a7-0f13-bdda-a2d2109a6dac@users.sourceforge.net>
-Sender: kernel-janitors-owner@vger.kernel.org
+Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>
 Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-raid.ids
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Tue, 27 Sep 2016 13:20:23 +0200
+Date: Tue, 27 Sep 2016 14:19:00 +0200
 
-The local variable "offset" will be set to an appropriate value a bit later.
-Thus omit the explicit initialisation at the beginning.
+Replace the specification of a data type by a pointer dereference
+as the parameter for the operator "sizeof" to make the corresponding size
+determination a bit safer according to the Linux coding style convention.
 
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/md/bitmap.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/md/bitmap.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index 78512c6..9b3f723 100644
+index 9b3f723..c278865 100644
 --- a/drivers/md/bitmap.c
 +++ b/drivers/md/bitmap.c
-@@ -750,7 +750,7 @@ static int bitmap_storage_alloc(struct bitmap_storage *store,
- 				unsigned long chunks, int with_super,
- 				int slot_number)
- {
--	int pnum, offset = 0;
-+	int pnum, offset;
- 	unsigned long num_pages;
- 	unsigned long bytes;
+@@ -791,9 +791,9 @@ static int bitmap_storage_alloc(struct bitmap_storage *store,
+ 
+ 	/* We need 4 bits per page, rounded up to a multiple
+ 	 * of sizeof(unsigned long) */
+-	store->filemap_attr = kzalloc(
+-		roundup(DIV_ROUND_UP(num_pages*4, 8), sizeof(unsigned long)),
+-		GFP_KERNEL);
++	store->filemap_attr = kzalloc(roundup(DIV_ROUND_UP(num_pages * 4, 8),
++					      sizeof(*store->filemap_attr)),
++				      GFP_KERNEL);
+ 	if (!store->filemap_attr)
+ 		return -ENOMEM;
  
 -- 
 2.10.0
