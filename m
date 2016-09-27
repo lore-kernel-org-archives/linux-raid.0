@@ -1,32 +1,33 @@
-From: Benjammin2068 <benjammin2068@gmail.com>
+From: Brad Campbell <lists2009@fnarfbargle.com>
 Subject: Re: WARNING: mismatch_cnt is not 0 on <array device>
-Date: Tue, 27 Sep 2016 01:42:18 -0500
-Message-ID: <0ac77bdb-0095-b114-b0dd-b6b0aa512ca9@gmail.com>
+Date: Tue, 27 Sep 2016 17:16:07 +0800
+Message-ID: <27577b8a-1b63-8f1a-9b68-b056622a5268@fnarfbargle.com>
 References: <26b91420-97c9-f405-aa71-16cd5cda3a67@gmail.com>
  <409d9f5f-6f72-a399-93ab-2b10323f4122@fnarfbargle.com>
  <c72d3567-7c9c-39dc-c2e1-722bc267bdd6@gmail.com>
  <74e5712f-e89e-97af-8aa4-ae2948c02e94@turmel.org>
+ <c7bfde3e-0605-96d0-4e3d-fb76a9a8c724@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <74e5712f-e89e-97af-8aa4-ae2948c02e94@turmel.org>
+In-Reply-To: <c7bfde3e-0605-96d0-4e3d-fb76a9a8c724@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: Benjammin2068 <benjammin2068@gmail.com>, Phil Turmel <philip@turmel.org>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On 27/09/16 09:08, Benjammin2068 wrote:
+>
 
-Well, I maybe found the problem.
+> Also, I just did a "repair" and the mismatch is now back to 8... which seems like a suspicious number considering the filesystem on this new drive (because it's a WD10 series with 4096byte sectors) has a slightly larger FS than the Samsung HD103SJ (and Seagate equivalents) in the array too.
 
-1: I had an unhappy fan in the system -- and it's the one that cools the card slot area...
+See that is a bad thing to do if you even remotely suspect you have a 
+problem. All a "repair" does is check the parity on a stripe and if 
+there is a mismatch it re-writes it. You are writing to an array that 
+apparently has issues.
 
-2: I think the controller card was getting warm anyway -- so I also changed the venting and put a temp sensor (CrystalFontz SCAB don'tcha know.. with dallas 1820 1-wire thermometers)... so I'm gonna keep an eye on it now.
+I'd be checking the filesystem and file contents very carefully for 
+corruption, and running several sequential check actions to keep an eye 
+on the mismatch count.
 
-3: I set up Munin to keep track of mismatch_cnt on all volumes. Didn't even know it existed.. :( wish I had history. I will now going forward.
-
-I'll let ya'all know.
-
-As usually... awesome help -- thanks!
-
- -Ben
 
