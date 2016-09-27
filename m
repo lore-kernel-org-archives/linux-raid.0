@@ -1,7 +1,7 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 15/16] md/bitmap: Add spaces around three comparison operators
-Date: Tue, 27 Sep 2016 19:03:17 +0200
-Message-ID: <746915d9-5895-8d39-f50f-6889b7889bab@users.sourceforge.net>
+Subject: [PATCH 16/16] md/bitmap: Delete an unwanted space in read_sb_page()
+Date: Tue, 27 Sep 2016 19:04:13 +0200
+Message-ID: <1a74d5fc-af55-e497-1d9f-fa4c79a01864@users.sourceforge.net>
 References: <566ABCD9.1060404@users.sourceforge.net>
  <30938c84-20a7-0f13-bdda-a2d2109a6dac@users.sourceforge.net>
 Mime-Version: 1.0
@@ -15,49 +15,31 @@ Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia 
 List-Id: linux-raid.ids
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Tue, 27 Sep 2016 18:08:04 +0200
+Date: Tue, 27 Sep 2016 18:18:16 +0200
 
 The script "checkpatch.pl" can point information out like the following.
 
-ERROR: spaces required around that '==' (ctx:VxV)
+ERROR: space prohibited after that '!' (ctx:BxW)
 
-Thus fix the affected source code places.
+Thus fix the affected source code place.
 
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/md/bitmap.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/md/bitmap.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index 9d77f16..d029576 100644
+index d029576..c6a6d59 100644
 --- a/drivers/md/bitmap.c
 +++ b/drivers/md/bitmap.c
-@@ -303,7 +303,7 @@ static void write_page(struct bitmap *bitmap, struct page *page, int wait)
+@@ -154,7 +154,7 @@ static int read_sb_page(struct mddev *mddev, loff_t offset,
+ 	sector_t target;
  
- 		if (wait)
- 			wait_event(bitmap->write_wait,
--				   atomic_read(&bitmap->pending_writes)==0);
-+				   atomic_read(&bitmap->pending_writes) == 0);
- 	}
- 	if (test_bit(BITMAP_WRITE_ERROR, &bitmap->flags))
- 		bitmap_file_kick(bitmap);
-@@ -400,7 +400,7 @@ static int read_page(struct file *file, unsigned long index,
- 	page->index = index;
- 
- 	wait_event(bitmap->write_wait,
--		   atomic_read(&bitmap->pending_writes)==0);
-+		   atomic_read(&bitmap->pending_writes) == 0);
- 	if (test_bit(BITMAP_WRITE_ERROR, &bitmap->flags)) {
- 		ret = -EIO;
- report_failure:
-@@ -1003,7 +1003,7 @@ void bitmap_unplug(struct bitmap *bitmap)
- 	}
- 	if (bitmap->storage.file)
- 		wait_event(bitmap->write_wait,
--			   atomic_read(&bitmap->pending_writes)==0);
-+			   atomic_read(&bitmap->pending_writes) == 0);
- 	else
- 		md_super_wait(bitmap->mddev);
+ 	rdev_for_each(rdev, mddev) {
+-		if (! test_bit(In_sync, &rdev->flags)
++		if (!test_bit(In_sync, &rdev->flags)
+ 		    || test_bit(Faulty, &rdev->flags))
+ 			continue;
  
 -- 
 2.10.0
