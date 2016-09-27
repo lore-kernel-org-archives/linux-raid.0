@@ -1,59 +1,46 @@
-From: Roman Mamedov <rm@romanrm.net>
-Subject: Re: WARNING: mismatch_cnt is not 0 on <array device>
-Date: Tue, 27 Sep 2016 21:36:24 +0500
-Message-ID: <20160927213624.739f80ba@natsu>
-References: <26b91420-97c9-f405-aa71-16cd5cda3a67@gmail.com>
-        <409d9f5f-6f72-a399-93ab-2b10323f4122@fnarfbargle.com>
-        <c72d3567-7c9c-39dc-c2e1-722bc267bdd6@gmail.com>
-        <74e5712f-e89e-97af-8aa4-ae2948c02e94@turmel.org>
-        <c7bfde3e-0605-96d0-4e3d-fb76a9a8c724@gmail.com>
-        <27577b8a-1b63-8f1a-9b68-b056622a5268@fnarfbargle.com>
-        <41c176d2-0235-6ff0-996c-b32dc95d487d@gmail.com>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH 00/16] md/bitmap: Fine-tuning for several function
+ implementations
+Date: Tue, 27 Sep 2016 18:44:06 +0200
+Message-ID: <30938c84-20a7-0f13-bdda-a2d2109a6dac@users.sourceforge.net>
+References: <566ABCD9.1060404@users.sourceforge.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/RBriPU5._2Otn_utBLtv84I"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41c176d2-0235-6ff0-996c-b32dc95d487d@gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Benjammin2068 <benjammin2068@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <566ABCD9.1060404@users.sourceforge.net>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-raid.ids
 
---Sig_/RBriPU5._2Otn_utBLtv84I
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Tue, 27 Sep 2016 18:29:08 +0200
 
-On Tue, 27 Sep 2016 11:27:13 -0500
-Benjammin2068 <benjammin2068@gmail.com> wrote:
+Several update suggestions were taken into account
+from static source code analysis.
 
-> I think I did find the problem. The card was running hot due to airflow.
-> That's been remedied (I hope) -- the temp sensor on the heat-sink for the
-> PCIe controller now sits around 45'C which is fine. Before it was >=3D
-> 60'C . :O
+Markus Elfring (16):
+  Use kmalloc_array() in bitmap_storage_alloc()
+  Move an assignment for the variable "offset" in bitmap_storage_alloc()
+  Delete an unnecessary variable initialisation in bitmap_storage_alloc()
+  Improve another size determination in bitmap_storage_alloc()
+  Return directly after a failed bitmap_storage_alloc() in bitmap_resize()
+  Return directly after a failed kzalloc() in bitmap_resize()
+  Replace a kzalloc() call by kcalloc() in bitmap_resize()
+  Rename a jump label in location_store()
+  Rename a jump label in bitmap_copy_from_slot()
+  Rename a jump label in bitmap_create()
+  Rename a jump label in bitmap_init_from_disk()
+  One check less in read_page() at the end
+  Adjust checks for null pointers in 11 functions
+  Delete unnecessary braces in bitmap_resize()
+  Add spaces around three comparison operators
+  Delete an unwanted space in read_sb_page()
 
-I wouldn't trust such controller anyway. 15 degrees difference and it
-(allegedly) gives you silent data corruption? What if you have a particular=
-ly
-hot day, and/or the AC is out for a few hours.
-There is a lot of better failure modes than this (honestly reported read or
-CRC errors for a start, or heck, even complete lock-up of the controller wo=
-uld
-be more preferrable).
+ drivers/md/bitmap.c | 110 +++++++++++++++++++++++++---------------------------
+ 1 file changed, 52 insertions(+), 58 deletions(-)
 
---=20
-With respect,
-Roman
+-- 
+2.10.0
 
---Sig_/RBriPU5._2Otn_utBLtv84I
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEARECAAYFAlfqoAoACgkQTLKSvz+PZwjmWQCfRZP5wUTjh2CuFfyPdCFvoaUr
-i9UAn07n0EhllNAimrRH6h/9shPLEa4S
-=Xe44
------END PGP SIGNATURE-----
-
---Sig_/RBriPU5._2Otn_utBLtv84I--
