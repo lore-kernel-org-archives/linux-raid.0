@@ -1,37 +1,55 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: WARNING: mismatch_cnt is not 0 on <array device>
-Date: Tue, 27 Sep 2016 17:45:08 +0100
-Message-ID: <57EAA214.8030603@youngman.org.uk>
-References: <26b91420-97c9-f405-aa71-16cd5cda3a67@gmail.com>
- <409d9f5f-6f72-a399-93ab-2b10323f4122@fnarfbargle.com>
- <c72d3567-7c9c-39dc-c2e1-722bc267bdd6@gmail.com>
- <74e5712f-e89e-97af-8aa4-ae2948c02e94@turmel.org>
- <c7bfde3e-0605-96d0-4e3d-fb76a9a8c724@gmail.com>
- <27577b8a-1b63-8f1a-9b68-b056622a5268@fnarfbargle.com>
- <41c176d2-0235-6ff0-996c-b32dc95d487d@gmail.com>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH 01/16] md/bitmap: Use kmalloc_array() in
+ bitmap_storage_alloc()
+Date: Tue, 27 Sep 2016 18:45:51 +0200
+Message-ID: <c8f8d7c1-c62b-d889-9800-2da8358c1f50@users.sourceforge.net>
+References: <566ABCD9.1060404@users.sourceforge.net>
+ <30938c84-20a7-0f13-bdda-a2d2109a6dac@users.sourceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41c176d2-0235-6ff0-996c-b32dc95d487d@gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Benjammin2068 <benjammin2068@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <30938c84-20a7-0f13-bdda-a2d2109a6dac@users.sourceforge.net>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-raid.ids
 
-On 27/09/16 17:27, Benjammin2068 wrote:
-> p.s. The Linux RAID Wiki doesn't cover mismatch_cnt at all.... would be kinda nice considering how critical (or not) this is... and what to do about it.
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Tue, 27 Sep 2016 13:01:07 +0200
 
-I'm thinking about all this. The second section is all about recovering
-a failing/ed array, and is new. The first section is the original,
-that's being updated. It just feels totally wrong to me now, as it's
-becoming a jumbled mess of old and new.
+* A multiplication for the size determination of a memory allocation
+  indicated that an array data structure should be processed.
+  Thus use the corresponding function "kmalloc_array".
 
-What I'm probably going to do, is create a new first section about
-setting up a raid system. That means that a section on monitoring will
-actually make sense and fit between setting it up, and fixing problems.
+  This issue was detected by using the Coccinelle software.
 
-(And all the old stuff will end up in the "software archaeology"
-section, so people who are still running ancient systems can find it :-)
+* Replace the specification of a data type by a pointer dereference
+  to make the corresponding size determination a bit safer according to
+  the Linux coding style convention.
 
-Cheers,
-Wol
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+---
+ drivers/md/bitmap.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index 13041ee..8cfb02c 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -760,9 +760,9 @@ static int bitmap_storage_alloc(struct bitmap_storage *store,
+ 
+ 	num_pages = DIV_ROUND_UP(bytes, PAGE_SIZE);
+ 	offset = slot_number * num_pages;
+-
+-	store->filemap = kmalloc(sizeof(struct page *)
+-				 * num_pages, GFP_KERNEL);
++	store->filemap = kmalloc_array(num_pages,
++				       sizeof(*store->filemap),
++				       GFP_KERNEL);
+ 	if (!store->filemap)
+ 		return -ENOMEM;
+ 
+-- 
+2.10.0
+
