@@ -1,48 +1,33 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 10/10] md/dm-crypt: Delete unnecessary variable
- initialisations in crypt_iv_essiv_ctr()
-Date: Wed, 28 Sep 2016 17:47:05 +0200
-Message-ID: <3ce9ee21-2c4e-2b3b-1193-93dbec6fc8d1@users.sourceforge.net>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <7c232017-e291-fd2d-5516-26e5150d90df@users.sourceforge.net>
+From: Benjammin2068 <benjammin2068@gmail.com>
+Subject: Re: WARNING: mismatch_cnt is not 0 on <array device>
+Date: Wed, 28 Sep 2016 10:55:06 -0500
+Message-ID: <b87f3f0d-e9a9-8ece-d708-9b8730157bfb@gmail.com>
+References: <26b91420-97c9-f405-aa71-16cd5cda3a67@gmail.com>
+ <409d9f5f-6f72-a399-93ab-2b10323f4122@fnarfbargle.com>
+ <c72d3567-7c9c-39dc-c2e1-722bc267bdd6@gmail.com>
+ <74e5712f-e89e-97af-8aa4-ae2948c02e94@turmel.org>
+ <c7bfde3e-0605-96d0-4e3d-fb76a9a8c724@gmail.com>
+ <27577b8a-1b63-8f1a-9b68-b056622a5268@fnarfbargle.com>
+ <41c176d2-0235-6ff0-996c-b32dc95d487d@gmail.com>
+ <57EAA214.8030603@youngman.org.uk>
+ <5427ce35-f222-8a2c-486e-441c4c6ec9a6@gmail.com>
+ <be044941-8097-7d6f-5216-294fe2cac4d9@websitemanagers.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <7c232017-e291-fd2d-5516-26e5150d90df@users.sourceforge.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: dm-devel@redhat.com, linux-raid@vger.kernel.org, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Shaohua Li <shli@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <be044941-8097-7d6f-5216-294fe2cac4d9@websitemanagers.com.au>
+Sender: linux-raid-owner@vger.kernel.org
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Wed, 28 Sep 2016 16:44:32 +0200
+On 09/27/2016 06:09 PM, Adam Goryachev wrote:
+> Just out of interest, but I'm not sure how useful your munin monitoring will be... AFAIK, the mismatch_cnt value is only updated when you run a check, which would probably take some number of hours to complete. I would guess that you are unlikely to run more than one check a week or month.... and as soon as there is any change (unless you know the explanation) then you should be looking to resolve that.
+>
+> Unless of course I'm wrong about when the count is updated?
 
-Three local variables will be set to an appropriate pointer a bit later.
-Thus omit the explicit initialisation which became unnecessary with
-a previous update step.
+You would be correct - only during checks - but it's an easy way for me to just keep track of it..
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/md/dm-crypt.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+And a check takes about 3hrs on this array. (and it happens every weekend)
 
-diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
-index 53a9155..d27716e 100644
---- a/drivers/md/dm-crypt.c
-+++ b/drivers/md/dm-crypt.c
-@@ -361,9 +361,9 @@ static void crypt_iv_essiv_dtr(struct crypt_config *cc)
- static int crypt_iv_essiv_ctr(struct crypt_config *cc, struct dm_target *ti,
- 			      const char *opts)
- {
--	struct crypto_cipher *essiv_tfm = NULL;
--	struct crypto_ahash *hash_tfm = NULL;
--	u8 *salt = NULL;
-+	struct crypto_cipher *essiv_tfm;
-+	struct crypto_ahash *hash_tfm;
-+	u8 *salt;
- 	int err;
- 
- 	if (!opts) {
--- 
-2.10.0
+ -Ben
