@@ -1,57 +1,65 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: WARNING: mismatch_cnt is not 0 on <array device>
-Date: Wed, 28 Sep 2016 09:09:59 +1000
-Message-ID: <be044941-8097-7d6f-5216-294fe2cac4d9@websitemanagers.com.au>
-References: <26b91420-97c9-f405-aa71-16cd5cda3a67@gmail.com>
- <409d9f5f-6f72-a399-93ab-2b10323f4122@fnarfbargle.com>
- <c72d3567-7c9c-39dc-c2e1-722bc267bdd6@gmail.com>
- <74e5712f-e89e-97af-8aa4-ae2948c02e94@turmel.org>
- <c7bfde3e-0605-96d0-4e3d-fb76a9a8c724@gmail.com>
- <27577b8a-1b63-8f1a-9b68-b056622a5268@fnarfbargle.com>
- <41c176d2-0235-6ff0-996c-b32dc95d487d@gmail.com>
- <57EAA214.8030603@youngman.org.uk>
- <5427ce35-f222-8a2c-486e-441c4c6ec9a6@gmail.com>
+From: scar <scar-47zfDnpWZoPQT0dZR+AlfA@public.gmane.org>
+Subject: Re: moving spares into group and checking spares
+Date: Tue, 27 Sep 2016 17:19:03 -0700
+Message-ID: <nsf29k$f6s$1@blaine.gmane.org>
+References: <nramjg$n07$1@blaine.gmane.org>
+ <20160914092959.GA3584@metamorpher.de> <nrc2pm$2a9$1@blaine.gmane.org>
+ <20160914232249.6e5fc568@natsu> <nrce27$2km$1@blaine.gmane.org>
+ <CAJCQCtQJwOTYsWubd0rV-6PRL4kmVRKLfLr3=7ZPr1Zb3SrwtQ@mail.gmail.com>
+ <nrckp2$k8e$1@blaine.gmane.org>
+ <CAJCQCtQ1GHdQtShbW3U1o-fmXhT3fHrC7S9BxsxrrOG=0H_p3A@mail.gmail.com>
+ <nrd5ak$e8c$1@blaine.gmane.org>
+ <CAJCQCtRW9REafzmyk+W6aVxqxMUWCdXNkrST1e7udrH-zp26Uw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5427ce35-f222-8a2c-486e-441c4c6ec9a6@gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Benjammin2068 <benjammin2068@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+Return-path: <linux-raid-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAJCQCtRW9REafzmyk+W6aVxqxMUWCdXNkrST1e7udrH-zp26Uw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-raid-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-raid.ids
 
-On 28/09/16 03:30, Benjammin2068 wrote:
-> On 09/27/2016 11:45 AM, Wols Lists wrote:
->> I'm thinking about all this. The second section is all about recovering
->> a failing/ed array, and is new. The first section is the original,
->> that's being updated. It just feels totally wrong to me now, as it's
->> becoming a jumbled mess of old and new.
+Chris Murphy wrote on 09/14/2016 08:51 PM:
+> On Wed, Sep 14, 2016 at 9:42 PM, scar <scar-47zfDnpWZoPQT0dZR+AlfA@public.gmane.org> wrote:
+>
+>> 00 80 00
+>> Sep 12 08:05:34 hind kernel: [1350051.023847] end_request: critical medium
+>> error, dev sdk, sector 598457896
+>> Sep 12 08:05:35 hind kernel: [1350051.385810] md/raid:md0: read error
+>> corrected (8 sectors at 598455848 on sdk1)
+>> Sep 12 08:05:35 hind kernel: [1350051.385826] md/raid:md0: read error
+>> corrected (8 sectors at 598455856 on sdk1)
+>> Sep 12 08:05:35 hind kernel: [1350051.385834] md/raid:md0: read error
+>> corrected (8 sectors at 598455864 on sdk1)
+>> Sep 12 08:05:35 hind kernel: [1350051.385840] md/raid:md0: read error
+>> corrected (8 sectors at 598455872 on sdk1)
+>> Sep 12 08:05:35 hind kernel: [1350051.385847] md/raid:md0: read error
+>> corrected (8 sectors at 598455880 on sdk1)
+>> Sep 12 08:05:35 hind kernel: [1350051.385853] md/raid:md0: read error
+>> corrected (8 sectors at 598455888 on sdk1)
+>> Sep 12 08:05:35 hind kernel: [1350051.385859] md/raid:md0: read error
+>> corrected (8 sectors at 598455896 on sdk1)
+>> Sep 12 08:05:35 hind kernel: [1350051.385865] md/raid:md0: read error
+>> corrected (8 sectors at 598455904 on sdk1)
+>> Sep 12 08:05:35 hind kernel: [1350051.385873] md/raid:md0: read error
+>> corrected (8 sectors at 598455912 on sdk1)
+>> Sep 12 08:05:35 hind kernel: [1350051.385880] md/raid:md0: read error
+>> corrected (8 sectors at 598455920 on sdk1)
+>> Sep 12 13:39:43 hind kernel: [1370087.022160] md: md0: data-check done.
 >>
->> What I'm probably going to do, is create a new first section about
->> setting up a raid system. That means that a section on monitoring will
->> actually make sense and fit between setting it up, and fixing problems.
 >>
->> (And all the old stuff will end up in the "software archaeology"
->> section, so people who are still running ancient systems can find it :-)
->>
-> That would be awesome.
+>> so it seems to be working?  although the sector reported by libata is
+>> different than what md corrected
 >
->   There was a shell script out there already for MUNIN, but I modified it a little to add thresholds that throw up flags. I might change some more to handle different thresholds for different devices or the ability to monitor only RAIDs that matter.
+> Looks like it replaced the entire chunk that includes the bad sector.
+> Is the chunk size 32KiB?
 >
-> I have smartctl running for all my drives -- but that doesn't help me at the mdadm level.
->
-> While you're in the docs adding stuff about mismatch_cnt, is there anything that can help someone backtrace which block cause the count to go up? This would help us mere mortals maybe go back to inspect a block or a file or something to make sure it's not corrupted.
->
-Just out of interest, but I'm not sure how useful your munin monitoring 
-will be... AFAIK, the mismatch_cnt value is only updated when you run a 
-check, which would probably take some number of hours to complete. I 
-would guess that you are unlikely to run more than one check a week or 
-month.... and as soon as there is any change (unless you know the 
-explanation) then you should be looking to resolve that.
 
-Unless of course I'm wrong about when the count is updated?
+No it is 512K, and the sector reported by libata is almost 2000 sectors 
+different than what mdadm reported
 
-Regards,
-Adam
--- 
-Adam Goryachev Website Managers www.websitemanagers.com.au
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
