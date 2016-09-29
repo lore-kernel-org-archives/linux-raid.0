@@ -1,72 +1,41 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: moving spares into group and checking spares
-Date: Thu, 29 Sep 2016 11:21:17 +1000
-Message-ID: <8760pf7b76.fsf@notabene.neil.brown.name>
-References: <nramjg$n07$1@blaine.gmane.org>
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: Re: [PATCH 08/16] md/bitmap: Rename a jump label in location_store()
+Date: Wed, 28 Sep 2016 23:16:01 -0400
+Message-ID: <57EC8771.3000700@suse.com>
+References: <566ABCD9.1060404@users.sourceforge.net>
+ <30938c84-20a7-0f13-bdda-a2d2109a6dac@users.sourceforge.net>
+ <d4de2fd9-93a6-9731-13a4-9b02a6c7f971@users.sourceforge.net>
+ <wrfjy42b94uu.fsf@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <nramjg$n07$1@blaine.gmane.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: scar <scar@drigon.com>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <wrfjy42b94uu.fsf@redhat.com>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Jes Sorensen <Jes.Sorensen@redhat.com>, SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Wed, Sep 14 2016, scar wrote:
 
-> i currently have four RAID-5 md arrays which i concatenated into one=20
-> logical volume (lvm2), essentially creating a RAID-50.  each md array=20
-> was created with one spare disk.
+On 09/28/2016 03:55 PM, Jes Sorensen wrote:
+> SF Markus Elfring <elfring@users.sourceforge.net> writes:
+>> From: Markus Elfring <elfring@users.sourceforge.net>
+>> Date: Tue, 27 Sep 2016 15:46:22 +0200
+>>
+>> Adjust jump labels according to the current Linux coding style convention.
+>>
+>> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+>> ---
+>>   drivers/md/bitmap.c | 18 +++++++++---------
+>>   1 file changed, 9 insertions(+), 9 deletions(-)
+> Sorry but this patch is just plain ridiculous. It does not improve the
+> code in any shape or form.
 >
-> instead, i would like to move the four spare disks into one group that=20
-> each of the four arrays can have access to when needed.  i was wondering=
-=20
-> how to safely accomplish this, preferably without unmounting/disrupting=20
-> the filesystem.
+> 'out' as a label is perfectly legitimate and just as good as 'unlock'.
 
-You don't need to move the devices.  Just use the spare-group=3D setting
-in mdadm.conf to tell mdadm that all arrays should be considered part of
-the same spare-group.  Then "mdadm --monitor" will freely move spares
-between arrays as needed.
+Agree, I also curious which document recorded the coding style convention.
 
->
-> secondly, i have the checkarray script scheduled via cron to=20
-> periodically check each of the four arrays.  i noticed in the output of=20
-> checkarray that it doesn't list the spare disk(s).  so i'm guessing they=
-=20
-> are not being checked?  i was wondering, then, how i could also check=20
-> the spare disks to make sure they are healthy and ready to be used if=20
-> needed?
+Thanks,
+Guoqing
 
-mdadm doesn't provide any automatic support for this.
-You would need to e.g.
- - remove a spare from an array
- - test it in some way: e.g. use dd to read every block.
- - if satisfied, add it back to the array.
-
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAEBCAAGBQJX7GyOAAoJEDnsnt1WYoG5jtsP/j2hwJ38/RPYdBh4WeJyq48o
-Wv8qVbz5yQW5fuKHO2MFK1Q3YJqyN8aEfEevsLbXFZarI5jrByTDIRUbHv49zztK
-T9L+CjBCET0SD896eF5UbcRYaMKhTCOjUeNj9o2ZzNfN3O6Q8lzAYL+jicxknXJA
-+ZtnZwcGRn0ajA+Egu456TEuzA5BE1WaDu+5olsT/Wt2x4P27lc6HJlkwUwcMjob
-YsjqyLnAyPgi2M1B/Vwc+J+e4Q518RFaIoirZEjYXWBRbJ5dO1TeDOtTYxINpbLY
-RHbfBej9sjPvxtJjlniKeUEYokBdI+m5wjVIVmRDigL0qlLv7m4Qf/ifGKPOINGt
-Et9KWQmsSPlxZ1YeufWQ4UZJBocutrlZP1mQqvR4ng/zV4IcqtqAUHSOvmJL8B2y
-J2QdZxh1R7ZMpgDkvCi8U6pVquHxQU7YLqrfdcAcNo4thAz51hVZrHVM4tVplpv5
-+ViUQV0dNOJb54dC0NPppT6v+/4+3DpcVXQ0ZVtJJECYlvAKtHhAN8VqPpSwPcy/
-ko40of13MJO0fRLvxjdmbf4/AyDdXi+Agsq+B67UMJuCvxUkyqrMlVqMO/YUIdI5
-++ohRsB89d3GCCALQZjohAi6COp9JTruFnmRW8RaV8CrAQOlRrYeN2kth5n2jhgM
-GErNmniD59Ba4V78egL6
-=6R7c
------END PGP SIGNATURE-----
---=-=-=--
