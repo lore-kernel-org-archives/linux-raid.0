@@ -1,41 +1,40 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: Re: [PATCH 08/16] md/bitmap: Rename a jump label in location_store()
-Date: Wed, 28 Sep 2016 23:16:01 -0400
-Message-ID: <57EC8771.3000700@suse.com>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH 00/10] dm snapshot: Fine-tuning for several function
+ implementations
+Date: Thu, 29 Sep 2016 11:02:56 +0200
+Message-ID: <080668d9-1e1e-e208-f9ea-ff718e8070e5@users.sourceforge.net>
 References: <566ABCD9.1060404@users.sourceforge.net>
- <30938c84-20a7-0f13-bdda-a2d2109a6dac@users.sourceforge.net>
- <d4de2fd9-93a6-9731-13a4-9b02a6c7f971@users.sourceforge.net>
- <wrfjy42b94uu.fsf@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <wrfjy42b94uu.fsf@redhat.com>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>, SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <566ABCD9.1060404@users.sourceforge.net>
+Sender: linux-raid-owner@vger.kernel.org
+To: dm-devel@redhat.com, linux-raid@vger.kernel.org, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Shaohua Li <shli@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-raid.ids
 
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Thu, 29 Sep 2016 10:35:43 +0200
 
+Some update suggestions were taken into account
+from static source code analysis.
 
-On 09/28/2016 03:55 PM, Jes Sorensen wrote:
-> SF Markus Elfring <elfring@users.sourceforge.net> writes:
->> From: Markus Elfring <elfring@users.sourceforge.net>
->> Date: Tue, 27 Sep 2016 15:46:22 +0200
->>
->> Adjust jump labels according to the current Linux coding style convention.
->>
->> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
->> ---
->>   drivers/md/bitmap.c | 18 +++++++++---------
->>   1 file changed, 9 insertions(+), 9 deletions(-)
-> Sorry but this patch is just plain ridiculous. It does not improve the
-> code in any shape or form.
->
-> 'out' as a label is perfectly legitimate and just as good as 'unlock'.
+Markus Elfring (10):
+  Use kmalloc_array() in init_origin_hash()
+  Delete two error messages for a failed memory allocation
+  Delete an unnecessary variable initialisation in snapshot_map()
+  Rename a jump label in pending_complete()
+  Delete unnecessary variable initialisations in pending_complete()
+  Delete an unnecessary variable initialisation in snapshot_ctr()
+  Delete an unnecessary variable initialisation in merge_callback()
+  Delete an unnecessary variable initialisation in remove_single_exception_chunk()
+  Combine substrings for seven error messages
+  Delete five unwanted spaces behind "list_for_each_entry"
 
-Agree, I also curious which document recorded the coding style convention.
+ drivers/md/dm-snap.c | 69 +++++++++++++++++++++++-----------------------------
+ 1 file changed, 30 insertions(+), 39 deletions(-)
 
-Thanks,
-Guoqing
+-- 
+2.10.0
 
