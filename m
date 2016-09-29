@@ -1,8 +1,8 @@
-From: Joe Perches <joe@perches.com>
+From: Paul Bolle <pebolle@tiscali.nl>
 Subject: Re: [PATCH 01/10] dm snapshot: Use kmalloc_array() in
  init_origin_hash()
-Date: Thu, 29 Sep 2016 14:21:22 -0700
-Message-ID: <1475184082.1954.5.camel@perches.com>
+Date: Thu, 29 Sep 2016 23:42:45 +0200
+Message-ID: <1475185365.31297.50.camel@tiscali.nl>
 References: <566ABCD9.1060404@users.sourceforge.net>
          <080668d9-1e1e-e208-f9ea-ff718e8070e5@users.sourceforge.net>
          <3861d349-48fd-162b-a749-83e007f70b41@users.sourceforge.net>
@@ -15,50 +15,34 @@ References: <566ABCD9.1060404@users.sourceforge.net>
          <1475181593.31297.25.camel@tiscali.nl>
          <1475182586.1954.3.camel@perches.com>
          <1475183693.31297.36.camel@tiscali.nl>
+         <1475184082.1954.5.camel@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <1475183693.31297.36.camel@tiscali.nl>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Paul Bolle <pebolle@tiscali.nl>, Andy Whitcroft <apw@canonical.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1475184082.1954.5.camel@perches.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Joe Perches <joe@perches.com>, Andy Whitcroft <apw@canonical.com>
 Cc: SF Markus Elfring <elfring@users.sourceforge.net>, dm-devel@redhat.com, linux-raid@vger.kernel.org, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Shaohua Li <shli@kernel.org>, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-raid.ids
 
-On Thu, 2016-09-29 at 23:14 +0200, Paul Bolle wrote:
-> On Thu, 2016-09-29 at 13:56 -0700, Joe Perches wrote:
-> > It doesn't matter match either way to me.
-> Why does this stop you fixing an apparently wrong checkpatch rule,
-> crude as parts of it are (ie, uppercase identifier must be a constant)?
+On Thu, 2016-09-29 at 14:21 -0700, Joe Perches wrote:
+> > > It doesn't matter match either way to me.
+> > Why does this stop you fixing an apparently wrong checkpatch rule,
+> > crude as parts of it are (ie, uppercase identifier must be a
+> > constant)?
+> 
+> It doesn't.  It just doesn't matter much (match) to me.
 
-It doesn't.  It just doesn't matter much (match) to me.
-Here:
----
- scripts/checkpatch.pl | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Joe, please.
 
-diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
-index 3373c65fef1c..fc931d89152e 100755
---- a/scripts/checkpatch.pl
-+++ b/scripts/checkpatch.pl
-@@ -5835,8 +5835,8 @@ sub process {
- 		if ($^V && $^V ge 5.10.0 &&
- 		    $line =~ /\b($Lval)\s*\=\s*(?:$balanced_parens)?\s*(k[mz]alloc)\s*\(\s*($FuncArg)\s*\*\s*($FuncArg)\s*,/) {
- 			my $oldfunc = $3;
--			my $a1 = $4;
--			my $a2 = $10;
-+			my $a1 = trim($4);
-+			my $a2 = trim($10);
- 			my $newfunc = "kmalloc_array";
- 			$newfunc = "kcalloc" if ($oldfunc eq "kzalloc");
- 			my $r1 = $a1;
-@@ -5850,7 +5850,7 @@ sub process {
- 				if (WARN("ALLOC_WITH_MULTIPLY",
- 					 "Prefer $newfunc over $oldfunc with multiply\n" . $herecurr) &&
- 				    $fix) {
--					$fixed[$fixlinenr] =~ s/\b($Lval)\s*\=\s*(?:$balanced_parens)?\s*(k[mz]alloc)\s*\(\s*($FuncArg)\s*\*\s*($FuncArg)/$1 . ' = ' . "$newfunc(" . trim($r1) . ', ' . trim($r2)/e;
-+					$fixed[$fixlinenr] =~ s/\b($Lval)\s*\=\s*(?:$balanced_parens)?\s*(k[mz]alloc)\s*\(\s*($FuncArg)\s*\*\s*($FuncArg)/$1 . ' = ' . "$newfunc(" . $r1 . ', ' . $r2/e;
- 
- 				}
- 			}
+I've recently ping-ponged with the kernel's "resident wrong bot of the
+day" over this very rule (kmalloc_array() is safer than kmalloc(), so
+change your driver now!). Could we just give wrong bots a bit less
+ammunition whenever that's feasible?
 
+Even if you don't care about my ping-pong experiences: this checkpatch
+test is broken, please just fix it!
+
+
+Paul Bolle
