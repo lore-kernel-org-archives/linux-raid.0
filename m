@@ -1,108 +1,86 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH 08/16] md/bitmap: Rename a jump label in location_store()
-Date: Wed, 28 Sep 2016 15:55:21 -0400
-Message-ID: <wrfjy42b94uu.fsf@redhat.com>
-References: <566ABCD9.1060404@users.sourceforge.net>
-        <30938c84-20a7-0f13-bdda-a2d2109a6dac@users.sourceforge.net>
-        <d4de2fd9-93a6-9731-13a4-9b02a6c7f971@users.sourceforge.net>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: moving spares into group and checking spares
+Date: Thu, 29 Sep 2016 11:17:53 +1000
+Message-ID: <878tub7bcu.fsf@notabene.neil.brown.name>
+References: <nramjg$n07$1@blaine.gmane.org> <20160914092959.GA3584@metamorpher.de> <nrc2pm$2a9$1@blaine.gmane.org> <20160914232249.6e5fc568@natsu> <nrce27$2km$1@blaine.gmane.org> <CAJCQCtQJwOTYsWubd0rV-6PRL4kmVRKLfLr3=7ZPr1Zb3SrwtQ@mail.gmail.com> <nrckp2$k8e$1@blaine.gmane.org> <CAJCQCtQ1GHdQtShbW3U1o-fmXhT3fHrC7S9BxsxrrOG=0H_p3A@mail.gmail.com> <nrd5ak$e8c$1@blaine.gmane.org> <CAJCQCtRW9REafzmyk+W6aVxqxMUWCdXNkrST1e7udrH-zp26Uw@mail.gmail.com> <nsf29k$f6s$1@blaine.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <d4de2fd9-93a6-9731-13a4-9b02a6c7f971@users.sourceforge.net> (SF
-        Markus Elfring's message of "Tue, 27 Sep 2016 18:55:36 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <nsf29k$f6s$1@blaine.gmane.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: scar <scar@drigon.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-SF Markus Elfring <elfring@users.sourceforge.net> writes:
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Tue, 27 Sep 2016 15:46:22 +0200
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, Sep 28 2016, scar wrote:
+
+> Chris Murphy wrote on 09/14/2016 08:51 PM:
+>> On Wed, Sep 14, 2016 at 9:42 PM, scar <scar@drigon.com> wrote:
+>>
+>>> 00 80 00
+>>> Sep 12 08:05:34 hind kernel: [1350051.023847] end_request: critical med=
+ium
+>>> error, dev sdk, sector 598457896
+>>> Sep 12 08:05:35 hind kernel: [1350051.385810] md/raid:md0: read error
+>>> corrected (8 sectors at 598455848 on sdk1)
+>>> Sep 12 08:05:35 hind kernel: [1350051.385826] md/raid:md0: read error
+>>> corrected (8 sectors at 598455856 on sdk1)
+>>> Sep 12 08:05:35 hind kernel: [1350051.385834] md/raid:md0: read error
+>>> corrected (8 sectors at 598455864 on sdk1)
+>>> Sep 12 08:05:35 hind kernel: [1350051.385840] md/raid:md0: read error
+>>> corrected (8 sectors at 598455872 on sdk1)
+>>> Sep 12 08:05:35 hind kernel: [1350051.385847] md/raid:md0: read error
+>>> corrected (8 sectors at 598455880 on sdk1)
+>>> Sep 12 08:05:35 hind kernel: [1350051.385853] md/raid:md0: read error
+>>> corrected (8 sectors at 598455888 on sdk1)
+>>> Sep 12 08:05:35 hind kernel: [1350051.385859] md/raid:md0: read error
+>>> corrected (8 sectors at 598455896 on sdk1)
+>>> Sep 12 08:05:35 hind kernel: [1350051.385865] md/raid:md0: read error
+>>> corrected (8 sectors at 598455904 on sdk1)
+>>> Sep 12 08:05:35 hind kernel: [1350051.385873] md/raid:md0: read error
+>>> corrected (8 sectors at 598455912 on sdk1)
+>>> Sep 12 08:05:35 hind kernel: [1350051.385880] md/raid:md0: read error
+>>> corrected (8 sectors at 598455920 on sdk1)
+>>> Sep 12 13:39:43 hind kernel: [1370087.022160] md: md0: data-check done.
+>>>
+>>>
+>>> so it seems to be working?  although the sector reported by libata is
+>>> different than what md corrected
+>>
+>> Looks like it replaced the entire chunk that includes the bad sector.
+>> Is the chunk size 32KiB?
+>>
 >
-> Adjust jump labels according to the current Linux coding style convention.
->
-> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
-> ---
->  drivers/md/bitmap.c | 18 +++++++++---------
->  1 file changed, 9 insertions(+), 9 deletions(-)
+> No it is 512K, and the sector reported by libata is almost 2000 sectors=20
+> different than what mdadm reported
 
-Sorry but this patch is just plain ridiculous. It does not improve the
-code in any shape or form.
+The difference is probably the Data Offset.
+libata reports a sector in the device.
+md reports a sector in the data section of the device.
 
-'out' as a label is perfectly legitimate and just as good as 'unlock'.
+NeilBrown
 
-Jes
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
-> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-> index 41d99fd..22fa09a 100644
-> --- a/drivers/md/bitmap.c
-> +++ b/drivers/md/bitmap.c
-> @@ -2187,11 +2187,11 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
->  	if (mddev->pers) {
->  		if (!mddev->pers->quiesce) {
->  			rv = -EBUSY;
-> -			goto out;
-> +			goto unlock;
->  		}
->  		if (mddev->recovery || mddev->sync_thread) {
->  			rv = -EBUSY;
-> -			goto out;
-> +			goto unlock;
->  		}
->  	}
->  
-> @@ -2200,7 +2200,7 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
->  		/* bitmap already configured.  Only option is to clear it */
->  		if (strncmp(buf, "none", 4) != 0) {
->  			rv = -EBUSY;
-> -			goto out;
-> +			goto unlock;
->  		}
->  		if (mddev->pers) {
->  			mddev->pers->quiesce(mddev, 1);
-> @@ -2221,23 +2221,23 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
->  		else if (strncmp(buf, "file:", 5) == 0) {
->  			/* Not supported yet */
->  			rv = -EINVAL;
-> -			goto out;
-> +			goto unlock;
->  		} else {
->  			if (buf[0] == '+')
->  				rv = kstrtoll(buf+1, 10, &offset);
->  			else
->  				rv = kstrtoll(buf, 10, &offset);
->  			if (rv)
-> -				goto out;
-> +				goto unlock;
->  			if (offset == 0) {
->  				rv = -EINVAL;
-> -				goto out;
-> +				goto unlock;
->  			}
->  			if (mddev->bitmap_info.external == 0 &&
->  			    mddev->major_version == 0 &&
->  			    offset != mddev->bitmap_info.default_offset) {
->  				rv = -EINVAL;
-> -				goto out;
-> +				goto unlock;
->  			}
->  			mddev->bitmap_info.offset = offset;
->  			if (mddev->pers) {
-> @@ -2255,7 +2255,7 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
->  				mddev->pers->quiesce(mddev, 0);
->  				if (rv) {
->  					bitmap_destroy(mddev);
-> -					goto out;
-> +					goto unlock;
->  				}
->  			}
->  		}
-> @@ -2268,7 +2268,7 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
->  		md_wakeup_thread(mddev->thread);
->  	}
->  	rv = 0;
-> -out:
-> +unlock:
->  	mddev_unlock(mddev);
->  	if (rv)
->  		return rv;
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAEBCAAGBQJX7GvCAAoJEDnsnt1WYoG5JrAQALUnhHbAeSyJtyKXJDWU+4oN
+CzEwBTzQF8xOYEDf1QZ0Yxeyl4Kq99coCCLHKFN5s2dqtITaADe9FRateyDxBX2o
+F47FwCfFYctLkxt1bTOMicm9knp1VD6qKsv+gpvV9BZ7jT678oJDlxE2ly9w8POc
+shCitqN2txumRt+3pF3pG62CnxqSWD5+Eka/0x9DHW8yILPGijWl0QykfHTt+zpS
+iK0Yqwarsj5ldzL4EEwgSL8urr4CVuDx5k9xXmpjs6u8SYUEs/WcQrR/thnT5iQV
+8FK6B+PiIjTf8kNTaskljWBlBvIIoCMde04onltjhKv7Hw/4JjknP0mHTBjeD3Xg
+4PPqmHmcf6ArGWVYAQJBJ39tcuRKWEo7xzTg/sz4gBhPNkHcEgt+EqRLgue2HSem
+1/8ChI8ck4fhVKhRucjsWezo2gQ75av38kLCTEcB+cPGJUDJrwMQiu1Ddcz1mxER
+D6UDQYvRdQvrWbnN8zqxF/q08KUhnBwArOdnDuoLJ/E97Qk9pFKHS9PgqdXG8pD9
+QJLY8SayhXts3DoQgav2fY0ktZDlur2npEfgSq/I1+t3xKcg71JCKRDcVjLQq6so
+ESyimlPRMPc2x6I421nJS0+eNklxhiPZMLJlUspZIPc5PMa1lO0bXGMUtQ/Ty1Bk
+cOCGXMugizyCvLdjVUyu
+=VyUr
+-----END PGP SIGNATURE-----
+--=-=-=--
