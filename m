@@ -1,52 +1,48 @@
-From: Shaohua Li <shli@fb.com>
-Subject: [PATCH] md: set rotational bit
-Date: Fri, 30 Sep 2016 09:45:40 -0700
-Message-ID: <475298bb0650722bf38a2bf0d260a20579ee14e3.1475253807.git.shli@fb.com>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH] md/dm-stats: Use kmalloc_array() in parse_histogram()
+Date: Sat, 1 Oct 2016 06:06:26 +0200
+Message-ID: <5edaeddf-218f-1a98-d600-84941214db89@users.sourceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Kernel-team@fb.com
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: dm-devel@redhat.com, linux-raid@vger.kernel.org, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Shaohua Li <shli@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-raid.ids
 
-if all disks in an array are non-rotational, set the array
-non-rotational.
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Sat, 1 Oct 2016 05:55:05 +0200
 
-This only works for array with all disks populated at startup. Support
-for disk hotadd/hotremove could be added later if necessary.
+* A multiplication for the size determination of a memory allocation
+  indicated that an array data structure should be processed.
+  Thus use the corresponding function "kmalloc_array".
 
-Signed-off-by: Shaohua Li <shli@fb.com>
+  This issue was detected by using the Coccinelle software.
+
+* Replace the specification of a data type by a pointer dereference
+  to make the corresponding size determination a bit safer according to
+  the Linux coding style convention.
+
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/md/md.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ drivers/md/dm-stats.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 457b538..eac84d8 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5297,6 +5297,21 @@ int md_run(struct mddev *mddev)
- 		return err;
- 	}
- 	if (mddev->queue) {
-+		bool nonrot = true;
-+
-+		rdev_for_each(rdev, mddev) {
-+			if (rdev->raid_disk >= 0 &&
-+			    !blk_queue_nonrot(bdev_get_queue(rdev->bdev))) {
-+				nonrot = false;
-+				break;
-+			}
-+		}
-+		if (mddev->degraded)
-+			nonrot = false;
-+		if (nonrot)
-+			queue_flag_set_unlocked(QUEUE_FLAG_NONROT, mddev->queue);
-+		else
-+			queue_flag_clear_unlocked(QUEUE_FLAG_NONROT, mddev->queue);
- 		mddev->queue->backing_dev_info.congested_data = mddev;
- 		mddev->queue->backing_dev_info.congested_fn = md_congested;
- 	}
+diff --git a/drivers/md/dm-stats.c b/drivers/md/dm-stats.c
+index 38b05f2..7b79425 100644
+--- a/drivers/md/dm-stats.c
++++ b/drivers/md/dm-stats.c
+@@ -917,7 +917,9 @@ static int parse_histogram(const char *h, unsigned *n_histogram_entries,
+ 		if (*q == ',')
+ 			(*n_histogram_entries)++;
+ 
+-	*histogram_boundaries = kmalloc(*n_histogram_entries * sizeof(unsigned long long), GFP_KERNEL);
++	*histogram_boundaries = kmalloc_array(*n_histogram_entries,
++					      sizeof(**histogram_boundaries),
++					      GFP_KERNEL);
+ 	if (!*histogram_boundaries)
+ 		return -ENOMEM;
+ 
 -- 
-2.9.3
-
+2.10.0
