@@ -1,44 +1,32 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 9/9] md/dm-table: Delete an unwanted space in
- dm_table_get_integrity_disk()
-Date: Sat, 1 Oct 2016 09:53:34 +0200
-Message-ID: <03f6a9f1-6bd4-fed0-7232-8d537b69753b@users.sourceforge.net>
-References: <45984567-4421-5f8d-ddf3-eb2a769a1860@users.sourceforge.net>
+From: Tejun Heo <htejun@fb.com>
+Subject: Re: [PATCH] md: set rotational bit
+Date: Sat, 1 Oct 2016 12:50:59 +0200
+Message-ID: <20161001105058.GA12172@mtj.duckdns.org>
+References: <475298bb0650722bf38a2bf0d260a20579ee14e3.1475253807.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <45984567-4421-5f8d-ddf3-eb2a769a1860@users.sourceforge.net>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: dm-devel@redhat.com, linux-raid@vger.kernel.org, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Shaohua Li <shli@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <475298bb0650722bf38a2bf0d260a20579ee14e3.1475253807.git.shli@fb.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Shaohua Li <shli@fb.com>
+Cc: linux-raid@vger.kernel.org, Kernel-team@fb.com
 List-Id: linux-raid.ids
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sat, 1 Oct 2016 09:24:56 +0200
+On Fri, Sep 30, 2016 at 09:45:40AM -0700, Shaohua Li wrote:
+> if all disks in an array are non-rotational, set the array
+> non-rotational.
+> 
+> This only works for array with all disks populated at startup. Support
+> for disk hotadd/hotremove could be added later if necessary.
+> 
+> Signed-off-by: Shaohua Li <shli@fb.com>
 
-The script "checkpatch.pl" pointed information out like the following.
+FWIW,
 
-ERROR: "foo * bar" should be "foo *bar"
+Acked-by: Tejun Heo <tj@kernel.org>
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/md/dm-table.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks.
 
-diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
-index a948ffb..3ad1b1a 100644
---- a/drivers/md/dm-table.c
-+++ b/drivers/md/dm-table.c
-@@ -1117,7 +1117,7 @@ static bool integrity_profile_exists(struct gendisk *disk)
-  * Get a disk whose integrity profile reflects the table's profile.
-  * Returns NULL if integrity support was inconsistent or unavailable.
-  */
--static struct gendisk * dm_table_get_integrity_disk(struct dm_table *t)
-+static struct gendisk *dm_table_get_integrity_disk(struct dm_table *t)
- {
- 	struct list_head *devices = dm_table_get_devices(t);
- 	struct dm_dev_internal *dd = NULL;
 -- 
-2.10.0
-
+tejun
