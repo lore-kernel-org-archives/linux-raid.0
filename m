@@ -1,8 +1,8 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 08/15] md-cluster: Improve determination of sizes in
- read_resync_info()
-Date: Sat, 1 Oct 2016 16:53:10 +0200
-Message-ID: <8319afa1-438c-03c7-3526-be25bc3171dd@users.sourceforge.net>
+Subject: [PATCH 09/15] md-cluster: Improve another size determination in
+ lockres_init()
+Date: Sat, 1 Oct 2016 16:54:07 +0200
+Message-ID: <9c4e9391-324d-8e88-14fb-691035e27a05@users.sourceforge.net>
 References: <566ABCD9.1060404@users.sourceforge.net>
  <3a03df66-92ce-20fb-17f3-fb79b9d43c8e@users.sourceforge.net>
 Mime-Version: 1.0
@@ -16,35 +16,30 @@ Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia 
 List-Id: linux-raid.ids
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sat, 1 Oct 2016 12:52:58 +0200
+Date: Sat, 1 Oct 2016 13:02:18 +0200
 
-Replace the specification of data structures by either a pointer
-dereference or a variable name as the parameter for the operator "sizeof"
-to make the corresponding size determination a bit safer according to
-the Linux coding style convention.
+Replace the specification of a data structure by a pointer dereference
+as the parameter for the operator "sizeof" to make the corresponding size
+determination a bit safer according to the Linux coding style convention.
 
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/md/md-cluster.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/md/md-cluster.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index e965e78..0918108 100644
+index 0918108..bec8035 100644
 --- a/drivers/md/md-cluster.c
 +++ b/drivers/md/md-cluster.c
-@@ -275,10 +275,10 @@ static struct suspend_info *read_resync_info(struct mddev *mddev, struct dlm_loc
- 	sector_t hi = 0;
+@@ -190,7 +190,7 @@ static struct dlm_lock_resource *lockres_init(struct mddev *mddev,
+ 	int ret, namelen;
+ 	struct md_cluster_info *cinfo = mddev->cluster_info;
  
- 	dlm_lock_sync(lockres, DLM_LOCK_CR);
--	memcpy(&ri, lockres->lksb.sb_lvbptr, sizeof(struct resync_info));
-+	memcpy(&ri, lockres->lksb.sb_lvbptr, sizeof(ri));
- 	hi = le64_to_cpu(ri.hi);
- 	if (hi > 0) {
--		s = kzalloc(sizeof(struct suspend_info), GFP_KERNEL);
-+		s = kzalloc(sizeof(*s), GFP_KERNEL);
- 		if (!s)
- 			goto out;
- 		s->hi = hi;
+-	res = kzalloc(sizeof(struct dlm_lock_resource), GFP_KERNEL);
++	res = kzalloc(sizeof(*res), GFP_KERNEL);
+ 	if (!res)
+ 		return NULL;
+ 	init_waitqueue_head(&res->sync_locking);
 -- 
 2.10.0
 
