@@ -1,8 +1,8 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 6/13] md/multipath: Delete 13 unwanted spaces behind function
- names
-Date: Sun, 2 Oct 2016 14:02:09 +0200
-Message-ID: <d9a69429-c73e-1e2e-d2cf-0129a7ef9206@users.sourceforge.net>
+Subject: [PATCH 7/13] md/multipath: Delete two unwanted spaces behind
+ asterisks
+Date: Sun, 2 Oct 2016 14:03:12 +0200
+Message-ID: <427b06a9-32a2-66d2-73d8-b480754010a7@users.sourceforge.net>
 References: <566ABCD9.1060404@users.sourceforge.net>
  <4a31d7a7-f70c-12f7-202f-963bd8706066@users.sourceforge.net>
 Mime-Version: 1.0
@@ -16,123 +16,34 @@ Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia 
 List-Id: linux-raid.ids
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sun, 2 Oct 2016 08:14:48 +0200
+Date: Sun, 2 Oct 2016 09:39:39 +0200
 
 The script "checkpatch.pl" pointed information out like the following.
 
-WARNING: space prohibited between function name and open parenthesis '('
-
-Thus fix the affected source code places.
+ERROR: "foo * bar" should be "foo *bar"
 
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/md/multipath.c | 30 ++++++++++++++++--------------
- 1 file changed, 16 insertions(+), 14 deletions(-)
+ drivers/md/multipath.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
-index 2e4ceb9..7e10603 100644
+index 7e10603..cb5141f 100644
 --- a/drivers/md/multipath.c
 +++ b/drivers/md/multipath.c
-@@ -31,7 +31,7 @@
- 
- #define	NR_RESERVED_BUFS	32
- 
--static int multipath_map (struct mpconf *conf)
-+static int multipath_map(struct mpconf *conf)
- {
- 	int i, disks = conf->raid_disks;
- 
-@@ -56,7 +56,7 @@ static int multipath_map (struct mpconf *conf)
- 	return (-1);
+@@ -106,10 +106,10 @@ static void multipath_end_request(struct bio *bio)
+ 	rdev_dec_pending(rdev, conf->mddev);
  }
  
--static void multipath_reschedule_retry (struct multipath_bh *mp_bh)
-+static void multipath_reschedule_retry(struct multipath_bh *mp_bh)
- {
- 	unsigned long flags;
- 	struct mddev *mddev = mp_bh->mddev;
-@@ -73,7 +73,7 @@ static void multipath_reschedule_retry (struct multipath_bh *mp_bh)
-  * operation and are ready to return a success/failure code to the buffer
-  * cache layer.
-  */
--static void multipath_end_bh_io (struct multipath_bh *mp_bh, int err)
-+static void multipath_end_bh_io(struct multipath_bh *mp_bh, int err)
- {
- 	struct bio *bio = mp_bh->master_bio;
- 	struct mpconf *conf = mp_bh->mddev->private;
-@@ -96,7 +96,7 @@ static void multipath_end_request(struct bio *bio)
- 		 * oops, IO error:
- 		 */
- 		char b[BDEVNAME_SIZE];
--		md_error (mp_bh->mddev, rdev);
-+		md_error(mp_bh->mddev, rdev);
- 		printk(KERN_ERR "multipath: %s: rescheduling sector %llu\n",
- 		       bdevname(rdev->bdev,b),
- 		       (unsigned long long)bio->bi_iter.bi_sector);
-@@ -147,12 +147,14 @@ static void multipath_status(struct seq_file *seq, struct mddev *mddev)
- 	struct mpconf *conf = mddev->private;
- 	int i;
- 
--	seq_printf (seq, " [%d/%d] [", conf->raid_disks,
--		    conf->raid_disks - mddev->degraded);
-+	seq_printf(seq, " [%d/%d] [", conf->raid_disks,
-+		   conf->raid_disks - mddev->degraded);
- 	rcu_read_lock();
- 	for (i = 0; i < conf->raid_disks; i++) {
- 		struct md_rdev *rdev = rcu_dereference(conf->multipaths[i].rdev);
--		seq_printf (seq, "%s", rdev && test_bit(In_sync, &rdev->flags) ? "U" : "_");
-+		seq_printf(seq,
-+			   "%s",
-+			   rdev && test_bit(In_sync, &rdev->flags) ? "U" : "_");
- 	}
- 	rcu_read_unlock();
- 	seq_printf (seq, "]");
-@@ -183,7 +185,7 @@ static int multipath_congested(struct mddev *mddev, int bits)
- /*
-  * Careful, this can execute in IRQ contexts as well!
-  */
--static void multipath_error (struct mddev *mddev, struct md_rdev *rdev)
-+static void multipath_error(struct mddev *mddev, struct md_rdev *rdev)
+-static void multipath_make_request(struct mddev *mddev, struct bio * bio)
++static void multipath_make_request(struct mddev *mddev, struct bio *bio)
  {
  	struct mpconf *conf = mddev->private;
- 	char b[BDEVNAME_SIZE];
-@@ -218,7 +220,7 @@ static void multipath_error (struct mddev *mddev, struct md_rdev *rdev)
- 	       conf->raid_disks - mddev->degraded);
- }
+-	struct multipath_bh * mp_bh;
++	struct multipath_bh *mp_bh;
+ 	struct multipath_info *multipath;
  
--static void print_multipath_conf (struct mpconf *conf)
-+static void print_multipath_conf(struct mpconf *conf)
- {
- 	int i;
- 	struct multipath_info *tmp;
-@@ -377,7 +379,7 @@ static sector_t multipath_size(struct mddev *mddev, sector_t sectors, int raid_d
- 	return mddev->dev_sectors;
- }
- 
--static int multipath_run (struct mddev *mddev)
-+static int multipath_run(struct mddev *mddev)
- {
- 	struct mpconf *conf;
- 	int disk_idx;
-@@ -496,14 +498,14 @@ static struct md_personality multipath_personality =
- 	.congested	= multipath_congested,
- };
- 
--static int __init multipath_init (void)
-+static int __init multipath_init(void)
- {
--	return register_md_personality (&multipath_personality);
-+	return register_md_personality(&multipath_personality);
- }
- 
--static void __exit multipath_exit (void)
-+static void __exit multipath_exit(void)
- {
--	unregister_md_personality (&multipath_personality);
-+	unregister_md_personality(&multipath_personality);
- }
- 
- module_init(multipath_init);
+ 	if (unlikely(bio->bi_opf & REQ_PREFLUSH)) {
 -- 
 2.10.0
 
