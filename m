@@ -1,8 +1,8 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 5/13] md/multipath: Less function calls in multipath_run()
- after error detection
-Date: Sun, 2 Oct 2016 14:01:06 +0200
-Message-ID: <0e0d240c-a386-25f4-9415-6185aabbcf21@users.sourceforge.net>
+Subject: [PATCH 6/13] md/multipath: Delete 13 unwanted spaces behind function
+ names
+Date: Sun, 2 Oct 2016 14:02:09 +0200
+Message-ID: <d9a69429-c73e-1e2e-d2cf-0129a7ef9206@users.sourceforge.net>
 References: <566ABCD9.1060404@users.sourceforge.net>
  <4a31d7a7-f70c-12f7-202f-963bd8706066@users.sourceforge.net>
 Mime-Version: 1.0
@@ -16,72 +16,123 @@ Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia 
 List-Id: linux-raid.ids
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sat, 1 Oct 2016 21:48:59 +0200
+Date: Sun, 2 Oct 2016 08:14:48 +0200
 
-The functions "kfree" and "mempool_destroy" were called in a few cases
-by the function "multipath_run" during error handling even if
-the passed data structure member contained a null pointer.
+The script "checkpatch.pl" pointed information out like the following.
 
-Adjust jump targets according to the Linux coding style convention.
+WARNING: space prohibited between function name and open parenthesis '('
+
+Thus fix the affected source code places.
 
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/md/multipath.c | 15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
+ drivers/md/multipath.c | 30 ++++++++++++++++--------------
+ 1 file changed, 16 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
-index 7900426..2e4ceb9 100644
+index 2e4ceb9..7e10603 100644
 --- a/drivers/md/multipath.c
 +++ b/drivers/md/multipath.c
-@@ -408,7 +408,7 @@ static int multipath_run (struct mddev *mddev)
- 				   sizeof(*conf->multipaths),
- 				   GFP_KERNEL);
- 	if (!conf->multipaths)
--		goto out_free_conf;
-+		goto free_conf;
+@@ -31,7 +31,7 @@
  
- 	working_disks = 0;
- 	rdev_for_each(rdev, mddev) {
-@@ -434,18 +434,18 @@ static int multipath_run (struct mddev *mddev)
- 	if (!working_disks) {
- 		printk(KERN_ERR "multipath: no operational IO paths for %s\n",
- 			mdname(mddev));
--		goto out_free_conf;
-+		goto free_multipaths;
+ #define	NR_RESERVED_BUFS	32
+ 
+-static int multipath_map (struct mpconf *conf)
++static int multipath_map(struct mpconf *conf)
+ {
+ 	int i, disks = conf->raid_disks;
+ 
+@@ -56,7 +56,7 @@ static int multipath_map (struct mpconf *conf)
+ 	return (-1);
+ }
+ 
+-static void multipath_reschedule_retry (struct multipath_bh *mp_bh)
++static void multipath_reschedule_retry(struct multipath_bh *mp_bh)
+ {
+ 	unsigned long flags;
+ 	struct mddev *mddev = mp_bh->mddev;
+@@ -73,7 +73,7 @@ static void multipath_reschedule_retry (struct multipath_bh *mp_bh)
+  * operation and are ready to return a success/failure code to the buffer
+  * cache layer.
+  */
+-static void multipath_end_bh_io (struct multipath_bh *mp_bh, int err)
++static void multipath_end_bh_io(struct multipath_bh *mp_bh, int err)
+ {
+ 	struct bio *bio = mp_bh->master_bio;
+ 	struct mpconf *conf = mp_bh->mddev->private;
+@@ -96,7 +96,7 @@ static void multipath_end_request(struct bio *bio)
+ 		 * oops, IO error:
+ 		 */
+ 		char b[BDEVNAME_SIZE];
+-		md_error (mp_bh->mddev, rdev);
++		md_error(mp_bh->mddev, rdev);
+ 		printk(KERN_ERR "multipath: %s: rescheduling sector %llu\n",
+ 		       bdevname(rdev->bdev,b),
+ 		       (unsigned long long)bio->bi_iter.bi_sector);
+@@ -147,12 +147,14 @@ static void multipath_status(struct seq_file *seq, struct mddev *mddev)
+ 	struct mpconf *conf = mddev->private;
+ 	int i;
+ 
+-	seq_printf (seq, " [%d/%d] [", conf->raid_disks,
+-		    conf->raid_disks - mddev->degraded);
++	seq_printf(seq, " [%d/%d] [", conf->raid_disks,
++		   conf->raid_disks - mddev->degraded);
+ 	rcu_read_lock();
+ 	for (i = 0; i < conf->raid_disks; i++) {
+ 		struct md_rdev *rdev = rcu_dereference(conf->multipaths[i].rdev);
+-		seq_printf (seq, "%s", rdev && test_bit(In_sync, &rdev->flags) ? "U" : "_");
++		seq_printf(seq,
++			   "%s",
++			   rdev && test_bit(In_sync, &rdev->flags) ? "U" : "_");
  	}
- 	mddev->degraded = conf->raid_disks - working_disks;
+ 	rcu_read_unlock();
+ 	seq_printf (seq, "]");
+@@ -183,7 +185,7 @@ static int multipath_congested(struct mddev *mddev, int bits)
+ /*
+  * Careful, this can execute in IRQ contexts as well!
+  */
+-static void multipath_error (struct mddev *mddev, struct md_rdev *rdev)
++static void multipath_error(struct mddev *mddev, struct md_rdev *rdev)
+ {
+ 	struct mpconf *conf = mddev->private;
+ 	char b[BDEVNAME_SIZE];
+@@ -218,7 +220,7 @@ static void multipath_error (struct mddev *mddev, struct md_rdev *rdev)
+ 	       conf->raid_disks - mddev->degraded);
+ }
  
- 	conf->pool = mempool_create_kmalloc_pool(NR_RESERVED_BUFS,
- 						 sizeof(struct multipath_bh));
- 	if (!conf->pool)
--		goto out_free_conf;
-+		goto free_multipaths;
+-static void print_multipath_conf (struct mpconf *conf)
++static void print_multipath_conf(struct mpconf *conf)
+ {
+ 	int i;
+ 	struct multipath_info *tmp;
+@@ -377,7 +379,7 @@ static sector_t multipath_size(struct mddev *mddev, sector_t sectors, int raid_d
+ 	return mddev->dev_sectors;
+ }
  
- 	mddev->thread = md_register_thread(multipathd, mddev, "multipath");
- 	if (!mddev->thread)
--		goto out_free_conf;
-+		goto destroy_pool;
+-static int multipath_run (struct mddev *mddev)
++static int multipath_run(struct mddev *mddev)
+ {
+ 	struct mpconf *conf;
+ 	int disk_idx;
+@@ -496,14 +498,14 @@ static struct md_personality multipath_personality =
+ 	.congested	= multipath_congested,
+ };
  
- 	printk(KERN_INFO
- 		"multipath: array %s active with %d out of %d IO paths\n",
-@@ -457,13 +457,14 @@ static int multipath_run (struct mddev *mddev)
- 	md_set_array_sectors(mddev, multipath_size(mddev, 0, 0));
+-static int __init multipath_init (void)
++static int __init multipath_init(void)
+ {
+-	return register_md_personality (&multipath_personality);
++	return register_md_personality(&multipath_personality);
+ }
  
- 	if (md_integrity_register(mddev))
--		goto out_free_conf;
-+		goto destroy_pool;
+-static void __exit multipath_exit (void)
++static void __exit multipath_exit(void)
+ {
+-	unregister_md_personality (&multipath_personality);
++	unregister_md_personality(&multipath_personality);
+ }
  
- 	return 0;
--
--out_free_conf:
-+destroy_pool:
- 	mempool_destroy(conf->pool);
-+free_multipaths:
- 	kfree(conf->multipaths);
-+free_conf:
- 	kfree(conf);
- 	mddev->private = NULL;
- out:
+ module_init(multipath_init);
 -- 
 2.10.0
 
