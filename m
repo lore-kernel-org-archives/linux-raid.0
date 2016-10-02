@@ -1,57 +1,152 @@
-From: Benjammin2068 <benjammin2068@gmail.com>
-Subject: Re: WARNING: mismatch_cnt is not 0 on <array device>
-Date: Sun, 2 Oct 2016 12:33:57 -0500
-Message-ID: <e51999b2-9a41-a675-b544-95d48ba992b5@gmail.com>
-References: <26b91420-97c9-f405-aa71-16cd5cda3a67@gmail.com>
- <409d9f5f-6f72-a399-93ab-2b10323f4122@fnarfbargle.com>
- <c72d3567-7c9c-39dc-c2e1-722bc267bdd6@gmail.com>
- <74e5712f-e89e-97af-8aa4-ae2948c02e94@turmel.org>
- <c7bfde3e-0605-96d0-4e3d-fb76a9a8c724@gmail.com>
- <27577b8a-1b63-8f1a-9b68-b056622a5268@fnarfbargle.com>
- <41c176d2-0235-6ff0-996c-b32dc95d487d@gmail.com>
- <57EAA214.8030603@youngman.org.uk>
- <5427ce35-f222-8a2c-486e-441c4c6ec9a6@gmail.com>
- <be044941-8097-7d6f-5216-294fe2cac4d9@websitemanagers.com.au>
- <b87f3f0d-e9a9-8ece-d708-9b8730157bfb@gmail.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH] Fix bus error when accessing MBR partition records
+Date: Mon, 03 Oct 2016 09:32:23 +1100
+Message-ID: <87r37y5qmg.fsf@notabene.neil.brown.name>
+References: <20160929122838.66975-1-jrtc27@jrtc27.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <b87f3f0d-e9a9-8ece-d708-9b8730157bfb@gmail.com>
+In-Reply-To: <20160929122838.66975-1-jrtc27@jrtc27.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: James Clarke <jrtc27@jrtc27.com>
 List-Id: linux-raid.ids
 
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On 09/28/2016 10:55 AM, Benjammin2068 wrote:
-> On 09/27/2016 06:09 PM, Adam Goryachev wrote:
->> Just out of interest, but I'm not sure how useful your munin monitoring will be... AFAIK, the mismatch_cnt value is only updated when you run a check, which would probably take some number of hours to complete. I would guess that you are unlikely to run more than one check a week or month.... and as soon as there is any change (unless you know the explanation) then you should be looking to resolve that.
->>
->> Unless of course I'm wrong about when the count is updated?
-> You would be correct - only during checks - but it's an easy way for me to just keep track of it..
->
-> And a check takes about 3hrs on this array. (and it happens every weekend)
->
->
+On Thu, Sep 29 2016, James Clarke wrote:
 
-Ok... so as an update....
+> Since the MBR layout only has partition records as 2-byte aligned, the 32=
+-bit
+> fields in them are not aligned. Thus, they cannot be accessed on some
+> architectures (such as SPARC) by using a "struct MBR_part_record *" point=
+er,
+> as the compiler can assume that the pointer is properly aligned. Instead,=
+ the
+> records must be accessed by going through the MBR struct itself every tim=
+e.
 
-I ran 2 checks during the week after fixing the thermal issues I was seeing that I think were part of the problem. Both checks resulted in the mismatch_cnt remaining at 0.
+Weird....
 
-The usual CRON automated check ran this weekend -- and bumped the count to 24 on my RAID6 (there's a RAID1 swap that went to 160, but I've read for something like SWAP, this can be ignored. I just thought I'd mention it since it feels a bit like Schrodinger's drive array.)
+Can you see if adding "__attribute__((packed))" to struct
+MBR_part_record also fixes the problem?
 
-So... I've emailed the Vendor for a replacement since this SAS/SATA add-on card is new. And maybe it's just flaky.
+It seems strange that the compiler lets you take a pointer, but then
+doesn't use it correctly.  Maybe it is an inconsistency in the types.
 
-IN the meantime, is it possible to shrink the array back to RAID5 (4 members) so I can run it on the MB's controller only -- where I never seemed to have a mismatch count problem? (I kind need the array to be up and running since I need to work. :P)
-
-Also -- for academic reasons, is it possible to get a list of the the blocks that causes the count to increase to try confirm it's the new add-on card that's the problem?
-If there's a way to list what blocks and drive that were the issue, then I could go check those files....
-
-Otherwise, the mdadm reports the array as clean and happy and FSCK reports the partition as clean and happy.
-
-How disconcerting is that?
+I don't necessarily disagree with your fix, but I'd like to understand
+why the current code is wrong.
 
 Thanks,
+NeilBrown
 
- -Ben
 
+>
+> Signed-off-by: James Clarke <jrtc27@jrtc27.com>
+> ---
+>  super-mbr.c |  6 ++++++
+>  util.c      | 14 +++++++-------
+>  2 files changed, 13 insertions(+), 7 deletions(-)
+>
+> diff --git a/super-mbr.c b/super-mbr.c
+> index 62b3f03..303dde4 100644
+> --- a/super-mbr.c
+> +++ b/super-mbr.c
+> @@ -57,6 +57,9 @@ static void examine_mbr(struct supertype *st, char *hom=
+ehost)
+>=20=20
+>  	printf("   MBR Magic : %04x\n", sb->magic);
+>  	for (i =3D 0; i < MBR_PARTITIONS; i++)
+> +		/* Have to make every access through sb rather than using a pointer to
+> +		 * the partition table (or an entry), since the entries are not
+> +		 * properly aligned. */
+>  		if (sb->parts[i].blocks_num)
+>  			printf("Partition[%d] : %12lu sectors at %12lu (type %02x)\n",
+>  			       i,
+> @@ -151,6 +154,9 @@ static void getinfo_mbr(struct supertype *st, struct =
+mdinfo *info, char *map)
+>  	info->component_size =3D 0;
+>=20=20
+>  	for (i =3D 0; i < MBR_PARTITIONS ; i++)
+> +		/* Have to make every access through sb rather than using a pointer to
+> +		 * the partition table (or an entry), since the entries are not
+> +		 * properly aligned. */
+>  		if (sb->parts[i].blocks_num) {
+>  			unsigned long last =3D
+>  				(unsigned long)__le32_to_cpu(sb->parts[i].blocks_num)
+> diff --git a/util.c b/util.c
+> index a238a21..08adbd5 100644
+> --- a/util.c
+> +++ b/util.c
+> @@ -1412,7 +1412,6 @@ static int get_gpt_last_partition_end(int fd, unsig=
+ned long long *endofpart)
+>  static int get_last_partition_end(int fd, unsigned long long *endofpart)
+>  {
+>  	struct MBR boot_sect;
+> -	struct MBR_part_record *part;
+>  	unsigned long long curr_part_end;
+>  	unsigned part_nr;
+>  	int retval =3D 0;
+> @@ -1429,21 +1428,22 @@ static int get_last_partition_end(int fd, unsigne=
+d long long *endofpart)
+>  	if (boot_sect.magic =3D=3D MBR_SIGNATURE_MAGIC) {
+>  		retval =3D 1;
+>  		/* found the correct signature */
+> -		part =3D boot_sect.parts;
+>=20=20
+>  		for (part_nr =3D 0; part_nr < MBR_PARTITIONS; part_nr++) {
+> +			/* Have to make every access through boot_sect rather than using a
+> +			 * pointer to the partition table (or an entry), since the entries
+> +			 * are not properly aligned. */
+> +
+>  			/* check for GPT type */
+> -			if (part->part_type =3D=3D MBR_GPT_PARTITION_TYPE) {
+> +			if (boot_sect.parts[part_nr].part_type =3D=3D MBR_GPT_PARTITION_TYPE)=
+ {
+>  				retval =3D get_gpt_last_partition_end(fd, endofpart);
+>  				break;
+>  			}
+>  			/* check the last used lba for the current partition  */
+> -			curr_part_end =3D __le32_to_cpu(part->first_sect_lba) +
+> -				__le32_to_cpu(part->blocks_num);
+> +			curr_part_end =3D __le32_to_cpu(boot_sect.parts[part_nr].first_sect_l=
+ba) +
+> +				__le32_to_cpu(boot_sect.parts[part_nr].blocks_num);
+>  			if (curr_part_end > *endofpart)
+>  				*endofpart =3D curr_part_end;
+> -
+> -			part++;
+>  		}
+>  	} else {
+>  		/* Unknown partition table */
+> --=20
+> 2.10.0
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAEBCAAGBQJX8Yr3AAoJEDnsnt1WYoG5Ik8P/0gTFpwmTzfjCTsWKBPeNIPC
+zwOrPVhpeM+0I9XggWqPRxaaKRFHCYNJLZb3nPBr4VMcHY+2zqjfPMmjMsObD2kP
+tOHDGauEhBBSomSwck7x6UQqKrKuRAVzJLz+T2JpKU0ncSazvctErzR8POhI4DRR
+l69SDRUynY+h4IQxnapoyT/UFwsAS8zCG3zgTc+4w6Q46RnObxcGz+N1KIB7nwxf
+LcHljU6dOOb6l2VEImO83RyyieNHxnBHEsLjN+P0A8e0/Vo+aI8E3/QiH3Xw4RPP
+yeoho5K6MZ3rikYGPkSDOqANEJKxb7kdn3JOsBQvgjjurEqOyAWHNIjZECdxjc+z
+FcG3Dp39cBM07jICF54XMk/Cktkyto5PTZCPmfUZafzZb8srP8HlYeVS6NkuAP9R
+BmslGq7C5Oo/GlNiH4tSFPoHFlSNYpil+2EEe0lTQHKSB0+9QuTgAbEMJOHw29qt
+7Pq+N6l6mjGSP8Dct8+T+v6KoIU1vgcbjRYBc4EkLNeXgYRLFGT00bcqb0bHRVyZ
++VR6E0EMg6bxc0zNRHzC9dSQ0hL/14/Esuo0KOjVqofc4kddHN6H+Km6y01pz+iU
+vj6E6bGNrShOwdAn/iXlw/yVIAT/3FWYAecsiiTO6tD/mONeteU/vgfrRLGNGVZ7
++/JVm7h7mmNiGvRKYn/H
+=q7Pc
+-----END PGP SIGNATURE-----
+--=-=-=--
