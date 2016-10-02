@@ -1,7 +1,8 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 11/13] md/multipath: Move a brace for a designated initialiser
-Date: Sun, 2 Oct 2016 14:08:26 +0200
-Message-ID: <ff5aa5a5-8bcb-6a69-b4a5-4f5f15fc51f9@users.sourceforge.net>
+Subject: [PATCH 12/13] md/multipath: Delete an unnecessary return statement in
+ multipath_make_request()
+Date: Sun, 2 Oct 2016 14:09:23 +0200
+Message-ID: <5a9f8014-6eec-fba1-4e33-37d6b83da8db@users.sourceforge.net>
 References: <566ABCD9.1060404@users.sourceforge.net>
  <4a31d7a7-f70c-12f7-202f-963bd8706066@users.sourceforge.net>
 Mime-Version: 1.0
@@ -15,31 +16,31 @@ Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia 
 List-Id: linux-raid.ids
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sun, 2 Oct 2016 10:43:28 +0200
+Date: Sun, 2 Oct 2016 10:55:06 +0200
 
 The script "checkpatch.pl" pointed information out like the following.
 
-ERROR: that open brace { should be on the previous line
+WARNING: void function return statements are not generally useful
+
+Thus remove such a statement here.
 
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/md/multipath.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/md/multipath.c | 1 -
+ 1 file changed, 1 deletion(-)
 
 diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
-index 23c7c29..ab6487c 100644
+index ab6487c..85f6c85 100644
 --- a/drivers/md/multipath.c
 +++ b/drivers/md/multipath.c
-@@ -485,8 +485,7 @@ static void multipath_free(struct mddev *mddev, void *priv)
- 	kfree(conf);
+@@ -139,7 +139,6 @@ static void multipath_make_request(struct mddev *mddev, struct bio *bio)
+ 	mp_bh->bio.bi_end_io = multipath_end_request;
+ 	mp_bh->bio.bi_private = mp_bh;
+ 	generic_make_request(&mp_bh->bio);
+-	return;
  }
  
--static struct md_personality multipath_personality =
--{
-+static struct md_personality multipath_personality = {
- 	.name            = "multipath",
- 	.level           = LEVEL_MULTIPATH,
- 	.owner           = THIS_MODULE,
+ static void multipath_status(struct seq_file *seq, struct mddev *mddev)
 -- 
 2.10.0
 
