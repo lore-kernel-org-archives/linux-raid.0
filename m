@@ -1,34 +1,48 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Linux raid wiki - advice again please
-Date: Tue, 4 Oct 2016 00:42:50 +0100
-Message-ID: <57F2ECFA.9080100@youngman.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+From: Justin Maggard <jmaggard10@gmail.com>
+Subject: [PATCH] async_pq_val: fix DMA memory leak
+Date: Tue,  4 Oct 2016 13:17:58 -0700
+Message-ID: <20161004201758.13876-1-jmaggard@netgear.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: dan.j.williams@intel.com
+Cc: linux-raid@vger.kernel.org, dmaengine@vger.kernel.org, Justin Maggard <jmaggard@netgear.com>
 List-Id: linux-raid.ids
 
-I want to move the old hardware issues page into the archive section,
-copying anything of modern relevance into a new page. Unfortunately, I
-don't know enough about the issues involved. I strongly suspect,
-however, that things like udev have rendered large chunks of the text
-obsolete.
+Add missing dmaengine_unmap_put(), so we don't OOM during RAID6 sync.
 
-https://raid.wiki.kernel.org/index.php/Hardware_issues
+Fixes: 1786b943dad0 ("async_pq_val: convert to dmaengine_unmap_data")
+Signed-off-by: Justin Maggard <jmaggard@netgear.com>
+---
+ crypto/async_tx/async_pq.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-The first bit, "drive selection", is an update I did, which I'll be
-moving elsewhere.
+diff --git a/crypto/async_tx/async_pq.c b/crypto/async_tx/async_pq.c
+index 08b3ac6..f83de99 100644
+--- a/crypto/async_tx/async_pq.c
++++ b/crypto/async_tx/async_pq.c
+@@ -368,8 +368,6 @@ async_syndrome_val(struct page **blocks, unsigned int offset, int disks,
+ 
+ 		dma_set_unmap(tx, unmap);
+ 		async_tx_submit(chan, tx, submit);
+-
+-		return tx;
+ 	} else {
+ 		struct page *p_src = P(blocks, disks);
+ 		struct page *q_src = Q(blocks, disks);
+@@ -424,9 +422,11 @@ async_syndrome_val(struct page **blocks, unsigned int offset, int disks,
+ 		submit->cb_param = cb_param_orig;
+ 		submit->flags = flags_orig;
+ 		async_tx_sync_epilog(submit);
+-
+-		return NULL;
++		tx = NULL;
+ 	}
++	dmaengine_unmap_put(unmap);
++
++	return tx;
+ }
+ EXPORT_SYMBOL_GPL(async_syndrome_val);
+ 
+-- 
+2.10.1
 
-The section "SATA Configuration" mentions port multipliers, which I know
-nothing about. Is this still relevant?
-
-And the bit about "hot swap" - sata, sas, and sca - feels to me like
-it's now obsolete because udev will do all that for you - am I right?
-
-I won't be deleting the page, it'll just be tucked away where no-one
-will stumble over it and be misled.
-
-Cheers,
-Wol
