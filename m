@@ -1,49 +1,51 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: kernel BUG at block/bio.c:1785 while trying to issue a discard
- to LVM on RAID1 md
-Date: Wed, 5 Oct 2016 14:39:45 -0700
-Message-ID: <20161005213945.GA84123@kernel.org>
-References: <CALjAwxgg-m2bgFf10hLB3j=2ntVxqt0vDSKuQyOavqvKXC2G5Q@mail.gmail.com>
- <CALjAwxhYh0JDKh7E_t9sm-vBBPX-3dzL5hDMi4rA6uE2RqaJoQ@mail.gmail.com>
+Subject: Re: Prefetch in /lib/raid6/avx2.c
+Date: Wed, 5 Oct 2016 16:17:10 -0700
+Message-ID: <20161005231710.GB2804@kernel.org>
+References: <CAFx4rwS5-TCWKxRYpXHeRsfTiJ=mTV0gxoL-yUuqoEbpXst08A@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CALjAwxhYh0JDKh7E_t9sm-vBBPX-3dzL5hDMi4rA6uE2RqaJoQ@mail.gmail.com>
+In-Reply-To: <CAFx4rwS5-TCWKxRYpXHeRsfTiJ=mTV0gxoL-yUuqoEbpXst08A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sitsofe Wheeler <sitsofe@gmail.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, linux-block@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Doug Dumitru <doug@easyco.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, gayatri.kammela@intel.com, ravi.v.shankar@intel.com, hpa@zytor.com, yu-cheng.yu@intel.com, yuanhan.liu@intel.com
 List-Id: linux-raid.ids
 
-On Wed, Oct 05, 2016 at 10:31:11PM +0100, Sitsofe Wheeler wrote:
-> On 3 October 2016 at 17:47, Sitsofe Wheeler <sitsofe@gmail.com> wrote:
-> >
-> > While trying to do a discard (via blkdiscard --length 1048576
-> > /dev/<pathtodevice>) to an LVM device atop a two disk md RAID1 the
-> > following oops was generated:
-> >
-> > [  103.306243] md: resync of RAID array md127
-> > [  103.306246] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-> > [  103.306248] md: using maximum available idle IO bandwidth (but not
-> > more than 200000 KB/sec) for resync.
-> > [  103.306251] md: using 128k window, over a total of 244194432k.
-> > [  103.308158] ------------[ cut here ]------------
-> > [  103.308205] kernel BUG at block/bio.c:1785!
+On Sun, Oct 02, 2016 at 03:40:09PM -0700, Doug Dumitru wrote:
+> I have been doing some high bandwidth testing of raid-6, and the
+> pretetch in raid6_avx24_gen_syndrome appears to be less than optimal.
 > 
-> This still seems to be here but slightly modified with a 4.8.0 kernel:
+> This is my patch (against 4.4.0-38 [Ubuntu 16.04LTS)
+> 
+> --- cut here ---
+> --- lib/raid6/avx2.c0   2016-10-01 21:42:25.280347868 -0700
+> +++ lib/raid6/avx2.c    2016-10-02 15:35:48.168480760 -0700
+> @@ -189,10 +189,8 @@
+> 
+>                 for (z = z0; z >= 0; z--) {
+> 
+> -                       asm volatile("prefetchnta %0" : : "m" (dptr[z][d]));
+> -                       asm volatile("prefetchnta %0" : : "m" (dptr[z][d+32]));
+> -                       asm volatile("prefetchnta %0" : : "m" (dptr[z][d+64]));
+> -                       asm volatile("prefetchnta %0" : : "m" (dptr[z][d+96]));
+> +                       asm volatile("prefetchnta %0" : : "m" (dptr[z][d+128]));
+> +                       asm volatile("prefetchnta %0" : : "m" (dptr[z][d+192]));
+> 
+>                         asm volatile("vpcmpgtb %ymm4,%ymm1,%ymm5");
+>                         asm volatile("vpcmpgtb %ymm6,%ymm1,%ymm7");
+> --- cut here ---
+> 
+> In perf, the cpu cycles goes from 5.3% to 3.0% for
+> raid6_avx24_gen_syndrome in my test and throughput increases from
+> about 8.2GB/sec to almost 10GB/sec.  It is a very "synthetic" test,
+> but the avx2 code does seem to be a factor.
+> 
+> I suspect other SSE and AVX "unroll variants" have similar issues, but
+> I have not tested those.
+> 
+> My test system is an E5-1650 v3 (single socket) with DDR4.  This might
+> help dual sockets even more.
 
-Does this fix the issue? Looks there is IO error
-
-
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 21dc00e..349eb11 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -2196,7 +2196,6 @@ static int narrow_write_error(struct r1bio *r1_bio, int i)
- 			wbio = bio_clone_mddev(r1_bio->master_bio, GFP_NOIO, mddev);
- 		}
- 
--		bio_set_op_attrs(wbio, REQ_OP_WRITE, 0);
- 		wbio->bi_iter.bi_sector = r1_bio->sector;
- 		wbio->bi_iter.bi_size = r1_bio->sectors << 9;
- 
+CC some intel folks to see if they have ideas
