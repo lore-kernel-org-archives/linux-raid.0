@@ -1,290 +1,166 @@
-From: Francisco Parada <advanceandconquer@gmail.com>
-Subject: Re: RAID6 - CPU At 100% Usage After Reassembly
-Date: Wed, 5 Oct 2016 07:12:59 -0400
-Message-ID: <CAOW94uuALbxOpfb5Rgzp=Fgvy8zfKt94zCcgs7T=U-m8jWGq3g@mail.gmail.com>
-References: <CAOW94ut0uHS8+k0jutOT9bfT__WLbbOJmQC2CFa15HVVe9L4fg@mail.gmail.com>
- <CADEsfxrKeSv5dRNfBoyybHaemPSqCcamTmSZ4P+Yey-rLd8hEg@mail.gmail.com>
- <CAOW94uv4zSGs+6be3zhcQaGZdiAgg-s4ZHZ=mszcURo6pqJyqA@mail.gmail.com>
- <CAOW94ute6CZafnAC6AVauqUGsEgVrnO3B27Gn3eVzdWFBJPCQw@mail.gmail.com>
- <CAOW94utnY1zCR7gUCx1K0p2YfDhi3tXTsE6J_mT6rNz1TuTZEQ@mail.gmail.com>
- <20160913174352.GA43576@kernel.org> <CAOW94us2=5F8BbLhQSN_mC0wghZA8Z6qFQHBP5Y1csJuQ4pfKg@mail.gmail.com>
- <CAOW94utVBcLz191ifzKkjn+nsSthPWDAQF8R-PabcS2uPareag@mail.gmail.com>
- <CAOW94usC2AFt4uGRZRidcXN1Gii0PqSqfGAjL6_2Y1m6GAcZsg@mail.gmail.com> <CAOW94uvFaiL9FO=k=gOsGzH0q1Qhw4X3n7ZFURj9_eTgGa656g@mail.gmail.com>
+From: Marc Smith <marc.smith@mcc.edu>
+Subject: md-cluster - Assemble/Scan During Resync
+Date: Wed, 5 Oct 2016 16:43:46 -0400
+Message-ID: <CAHkw+Lc3XGqTL5pLX=UhQ+-kdHiVDPO8Z+EbTkWjyk6RgW5tug@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAOW94uvFaiL9FO=k=gOsGzH0q1Qhw4X3n7ZFURj9_eTgGa656g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: mdraid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
+Hi,
 
-Just wanted to send one last ping on this.  I didn't hear back and
-really don't know where else to turn to before abandoning hope.
-Should I just start wiping the drives so I can start from scratch at
-this point?
+First, I believe this issue may have been reported/solved with this
+thread ("[PATCH 3/3] MD: hold mddev lock for md-cluster receive
+thread"):
+http://www.spinics.net/lists/raid/msg53121.html
 
-I rebuilt the kernel with debug patch that Shaohua provided and I sent
-the list the output of the trace.  Does any one have any other
-suggestions?
+But I'm not totally sure, and I'm looking for confirmation, or maybe
+this is a new one... I'm trying to hold out for Linux 4.9 in my
+project, and I am hoping to just cherry pick any patches until then.
 
-Thank you once again,
-Cisco
+Testing md-cluster with Linux 4.5.2 (yes, I know its dated)... two
+nodes connected to shared SAS storage, and I'm using DM Multipath in
+front of the individual SAS disks (two I/O modules with dual-domain
+SAS disks).
+
+On tgtnode2 I created the array like this: mdadm --create --verbose
+--run /dev/md/test4 --name=test4 --level=raid1 --raid-devices=2
+--chunk=64 --bitmap=clustered /dev/dm-4 /dev/dm-5
+
+And then, without waiting for the resync to complete, on the second
+node (tgtnode1) I do this: mdadm --assemble --scan
+
+Then I end up with this on tgtnode1:
+--snip--
+Oct  5 16:02:26 tgtnode1 kernel: [687524.358611] BUG: unable to handle
+kernel NULL pointer dereference at 0000000000000098
+Oct  5 16:02:26 tgtnode1 kernel: [687524.358637] IP:
+[<ffffffff8182434a>] recv_daemon+0x104/0x366
+Oct  5 16:02:26 tgtnode1 kernel: [687524.358660] PGD 0
+Oct  5 16:02:26 tgtnode1 kernel: [687524.358669] Oops: 0000 [#1] SMP
+Oct  5 16:02:26 tgtnode1 kernel: [687524.358683] Modules linked in:
+fcst(O) scst_changer(O) scst_tape(O) scst_vdisk(O) scst_disk(O)
+ib_srpt(O) iscsi_scst(O) qla2x00tgt(O) scst(O) qla2xxx bonding
+mlx5_core bna ib_umad rdma_ucm ib_uverbs ib_srp iw_nes iw_cxgb4 cxgb4
+iw_cxgb3 ib_qib mlx4_ib ib_mthca [last unloaded: scst]
+Oct  5 16:02:26 tgtnode1 kernel: [687524.358791] CPU: 8 PID: 4840
+Comm: md127_cluster_r Tainted: G           O    4.5.2-esos.prod #1
+Oct  5 16:02:26 tgtnode1 kernel: [687524.358809] Hardware name: Dell
+Inc. PowerEdge R710/00NH4P, BIOS 6.4.0 07/23/2013
+Oct  5 16:02:26 tgtnode1 kernel: [687524.359038] task:
+ffff880618991600 ti: ffff8806198a0000 task.ti: ffff8806198a0000
+Oct  5 16:02:26 tgtnode1 kernel: [687524.359271] RIP:
+0010:[<ffffffff8182434a>]  [<ffffffff8182434a>]
+recv_daemon+0x104/0x366
+Oct  5 16:02:26 tgtnode1 kernel: [687524.359515] RSP:
+0018:ffff8806198a3df8  EFLAGS: 00010286
+Oct  5 16:02:26 tgtnode1 kernel: [687524.359639] RAX: 0000000000000000
+RBX: ffff8806189ce000 RCX: 00000000004cd980
+Oct  5 16:02:26 tgtnode1 kernel: [687524.359885] RDX: 00000000004dd980
+RSI: 0000000000000001 RDI: ffff8806189ce000
+Oct  5 16:02:26 tgtnode1 kernel: [687524.360124] RBP: ffff88031a5ce700
+R08: 0000000000016ec0 R09: ffff88061e85dfc0
+Oct  5 16:02:26 tgtnode1 kernel: [687524.360367] R10: ffffffff8182431d
+R11: 0000000000000002 R12: ffff88061e85dfc0
+Oct  5 16:02:26 tgtnode1 kernel: [687524.360600] R13: ffff8800aeb60480
+R14: 0000000000000000 R15: ffff8800aeb60b80
+Oct  5 16:02:26 tgtnode1 kernel: [687524.360827] FS:
+0000000000000000(0000) GS:ffff88062fc80000(0000)
+knlGS:0000000000000000
+Oct  5 16:02:26 tgtnode1 kernel: [687524.361059] CS:  0010 DS: 0000
+ES: 0000 CR0: 000000008005003b
+Oct  5 16:02:26 tgtnode1 kernel: [687524.361184] CR2: 0000000000000098
+CR3: 0000000002012000 CR4: 00000000000006e0
+Oct  5 16:02:26 tgtnode1 kernel: [687524.361422] Stack:
+Oct  5 16:02:26 tgtnode1 kernel: [687524.361535]  ffff88031a5ce730
+00000000004dd980 00000000004cd980 0000000000000001
+Oct  5 16:02:26 tgtnode1 kernel: [687524.361771]  00000000004cd980
+00000000004dd980 0000000000000000 0000000000000000
+Oct  5 16:02:26 tgtnode1 kernel: [687524.362007]  0000000000000000
+0000000093f3fcfe ffff88061efde3c0 7fffffffffffffff
+Oct  5 16:02:26 tgtnode1 kernel: [687524.362251] Call Trace:
+Oct  5 16:02:26 tgtnode1 kernel: [687524.362369]  [<ffffffff8183df32>]
+? md_thread+0x112/0x128
+Oct  5 16:02:26 tgtnode1 kernel: [687524.362491]  [<ffffffff8108b4d6>]
+? wait_woken+0x69/0x69
+Oct  5 16:02:26 tgtnode1 kernel: [687524.362611]  [<ffffffff8183de20>]
+? md_wait_for_blocked_rdev+0x102/0x102
+Oct  5 16:02:26 tgtnode1 kernel: [687524.362736]  [<ffffffff81077eb1>]
+? kthread+0xc1/0xc9
+Oct  5 16:02:26 tgtnode1 kernel: [687524.362855]  [<ffffffff81077df0>]
+? kthread_create_on_node+0x163/0x163
+Oct  5 16:02:26 tgtnode1 kernel: [687524.362979]  [<ffffffff81a3111f>]
+? ret_from_fork+0x3f/0x70
+Oct  5 16:02:26 tgtnode1 kernel: [687524.363099]  [<ffffffff81077df0>]
+? kthread_create_on_node+0x163/0x163
+Oct  5 16:02:26 tgtnode1 kernel: [687524.363223] Code: c0 49 89 c4 0f
+84 86 00 00 00 48 8b 54 24 08 48 8b 4c 24 10 48 89 df 44 89 30 be 01
+00 00 00 48 89 48 08 48 89 50 10 48 8b 43 08 <ff> 90 98 00 00 00 48 8b
+43 08 31 f6 48 89 df ff 90 98 00 00 00
+Oct  5 16:02:26 tgtnode1 kernel: [687524.363707] RIP
+[<ffffffff8182434a>] recv_daemon+0x104/0x366
+Oct  5 16:02:26 tgtnode1 kernel: [687524.363832]  RSP <ffff8806198a3df8>
+Oct  5 16:02:26 tgtnode1 kernel: [687524.363952] CR2: 0000000000000098
+Oct  5 16:02:26 tgtnode1 kernel: [687524.364395] ---[ end trace
+18dcff928d33f203 ]---
+Oct  5 16:02:27 tgtnode1 kernel: [687525.358844]
+gather_all_resync_info:700 Resync[5036416..5101952] in progress on 0
+Oct  5 16:02:27 tgtnode1 kernel: [687525.758862] bitmap_read_sb:587 bm
+slot: 2 offset: 24
+Oct  5 16:02:27 tgtnode1 kernel: [687525.759203] created bitmap (1
+pages) for device md127
+Oct  5 16:02:27 tgtnode1 kernel: [687525.759536] md127: bitmap
+initialized from disk: read 1 pages, set 0 of 1093 bits
+Oct  5 16:02:27 tgtnode1 kernel: [687525.759990] bitmap_read_sb:587 bm
+slot: 3 offset: 32
+Oct  5 16:02:27 tgtnode1 kernel: [687525.760335] created bitmap (1
+pages) for device md127
+Oct  5 16:02:27 tgtnode1 kernel: [687525.760650] md127: bitmap
+initialized from disk: read 1 pages, set 0 of 1093 bits
+Oct  5 16:02:27 tgtnode1 kernel: [687525.761137] bitmap_read_sb:587 bm
+slot: 1 offset: 16
+Oct  5 16:02:27 tgtnode1 kernel: [687525.761459] created bitmap (1
+pages) for device md127
+Oct  5 16:02:27 tgtnode1 kernel: [687525.761793] md127: bitmap
+initialized from disk: read 1 pages, set 0 of 1093 bits
+Oct  5 16:03:22 tgtnode1 kernel: <28>[687580.180227] udevd[482]:
+worker [4803] /devices/virtual/block/dm-5 is taking a long time
+Oct  5 16:03:22 tgtnode1 kernel: <28>[687580.180515] udevd[482]:
+worker [4804] /devices/virtual/block/dm-4 is taking a long time
+--snip--
+
+And it appears the resync task hangs then and makes no more progress...
+
+On tgtnode2:
+# cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+md127 : active raid1 dm-5[1] dm-4[0]
+      71621824 blocks super 1.2 [2/2] [UU]
+      [>....................]  resync =  3.5% (2518208/71621824)
+finish=212.1min speed=5427K/sec
+      bitmap: 1/1 pages [4KB], 65536KB chunk
+
+unused devices: <none>
 
 
-On Fri, Sep 30, 2016 at 9:06 AM, Francisco Parada
-<advanceandconquer@gmail.com> wrote:
-> Hello Shaohua and all,
->
-> Was anyone able to take a look at the trace I provided?  Curious if I
-> should just give up hope and start from scratch.  Any feedback is
-> appreciated.
->
-> Thank you,
-> Cisco
->
-> On Mon, Sep 26, 2016 at 10:29 AM, Francisco Parada
-> <advanceandconquer@gmail.com> wrote:
->> Hi all,
->>
->> It doesn't seem like my response from last night, made it to the list:
->>
->>
->> Hi Shaohua and all,
->>
->> I was finally able to upgrade my Ubuntu server to a newer version of
->> the kernel and mdadm:
->> ==========================
->> $ uname -r; mdadm -V
->>
->> 4.8.0-rc7-custom
->>
->> mdadm - v3.4 - 28th January 2016
->> ==========================
->>
->>
->> I rebuilt the kernel with the options that Shaohua asked me to build it with:
->> ======================================
->> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> index 5883ef0..db484ca 100644
->> --- a/drivers/md/raid5.c
->> +++ b/drivers/md/raid5.c
->> @@ -62,6 +62,9 @@
->>  #include "raid0.h"
->>  #include "bitmap.h"
->>
->> +#undef pr_debug
->> +#define pr_debug trace_printk
->> +
->>  #define cpu_to_group(cpu) cpu_to_node(cpu)
->>  #define ANY_GROUP NUMA_NO_NODE
->> ======================================
->>
->>
->> Here's how things look so far, nothing different yet:
->> ======================================
->> $ cat /proc/mdstat
->> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
->> [raid4] [raid10]
->> md127 : inactive sdd[10](S) sdk[0](S) sdj[2](S) sdh[3](S) sde[11](S)
->> sdg[9](S) sdf[7](S) sdb[13](S) sdc[12](S)
->>       26371219608 blocks super 1.2
->>
->> unused devices: <none>
->> ======================================
->>
->>
->> Here's an event snapshot of my array, just keep in mind that
->> "/dev/sdi" is my failed drive, so I omitted it from the examination:
->> ======================================
->> # mdadm -E /dev/sd[b-h,j,k] |grep Events
->>          Events : 280033
->>          Events : 280033
->>          Events : 280033
->>          Events : 280033
->>          Events : 280033
->>          Events : 280033
->>          Events : 280011
->>          Events : 280033
->>          Events : 280033
->> ======================================
->>
->>
->> It's important to note, that since I haven't done anything yet, my CPU is idle:
->> ======================================
->> top - 20:22:00 up  5:56,  2 users,  load average: 0.04, 0.03, 0.00
->>
->> Tasks: 221 total,   1 running, 220 sleeping,   0 stopped,   0 zombie
->>
->> %Cpu(s):  1.0 us,  1.0 sy,  0.0 ni, 97.5 id,  0.5 wa,  0.0 hi,  0.0 si,  0.0 st
->>
->> KiB Mem :  1525400 total,   103836 free,   696208 used,   725356 buff/cache
->>
->> KiB Swap: 25153532 total, 25117380 free,    36152 used.   454808 avail Mem
->>  PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
->>  2093 cisco     20   0 1761112 153108  55640 S   1.0 10.0   0:12.61 gnome-shell
->>  4322 root      20   0   40520   3684   3100 R   1.0  0.2   0:00.22 top
->>     1 root      20   0  119692   5540   3992 S   0.0  0.4   0:02.44 systemd
->>     2 root      20   0       0      0      0 S   0.0  0.0   0:00.00 kthreadd
->>     3 root      20   0       0      0      0 S   0.0  0.0   0:00.09 ksoftirqd/0
->>     5 root       0 -20       0      0      0 S   0.0  0.0   0:00.00 kworker/0:
->> ======================================
->>
->>
->> Now onto the fun part.  I stopped "/dev/md127":
->> ======================================
->> # mdadm --stop /dev/md127
->> mdadm: stopped /dev/md127
->> # cat /proc/mdstat
->> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
->> [raid4] [raid10]
->> unused devices: <none>
->> ======================================
->>
->>
->> For completion, here's the trace output after stopping the array, and
->> before reassembling:
->> ======================================
->> # tracer: nop
->> #
->> # entries-in-buffer/entries-written: 0/0   #P:2
->> #
->> #                              _-----=> irqs-off
->> #                             / _----=> need-resched
->> #                            | / _---=> hardirq/softirq
->> #                            || / _--=> preempt-depth
->> #                            ||| /     delay
->> #           TASK-PID   CPU#  ||||    TIMESTAMP  FUNCTION
->> #              | |       |   ||||       |         |
->> /sys/kernel/debug/tracing/trace (END)
->> ======================================
->>
->>
->> Then I reassembled the array:
->> ======================================
->> # mdadm -Afv /dev/md127 /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf
->> /dev/sdg /dev/sdh /dev/sdj /dev/sdk
->> mdadm: looking for devices for /dev/md127
->> mdadm: /dev/sdb is busy - skipping
->> mdadm: Merging with already-assembled /dev/md/en1
->> mdadm: /dev/sdb is identified as a member of /dev/md/en1, slot 7.
->> mdadm: /dev/sdc is identified as a member of /dev/md/en1, slot 8.
->> mdadm: /dev/sdd is identified as a member of /dev/md/en1, slot 6.
->> mdadm: /dev/sde is identified as a member of /dev/md/en1, slot 9.
->> mdadm: /dev/sdf is identified as a member of /dev/md/en1, slot 4.
->> mdadm: /dev/sdg is identified as a member of /dev/md/en1, slot 1.
->> mdadm: /dev/sdh is identified as a member of /dev/md/en1, slot 3.
->> mdadm: /dev/sdj is identified as a member of /dev/md/en1, slot 2.
->> mdadm: /dev/sdk is identified as a member of /dev/md/en1, slot 0.
->> mdadm: Marking array /dev/md/en1 as 'clean'
->> mdadm: /dev/md/en1 has an active reshape - checking if critical
->> section needs to be restored
->> mdadm: No backup metadata on device-7
->> mdadm: No backup metadata on device-8
->> mdadm: No backup metadata on device-9
->> mdadm: added /dev/sdg to /dev/md/en1 as 1
->> mdadm: added /dev/sdj to /dev/md/en1 as 2
->> mdadm: added /dev/sdh to /dev/md/en1 as 3 (possibly out of date)
->> mdadm: added /dev/sdf to /dev/md/en1 as 4
->> mdadm: no uptodate device for slot 5 of /dev/md/en1
->> mdadm: added /dev/sdd to /dev/md/en1 as 6
->> mdadm: /dev/sdb is already in /dev/md/en1 as 7
->> mdadm: added /dev/sdc to /dev/md/en1 as 8
->> mdadm: added /dev/sde to /dev/md/en1 as 9
->> mdadm: added /dev/sdk to /dev/md/en1 as 0
->> ======================================
->>
->>
->> And of course, CPU shoots to 100%:
->> ======================================
->> top - 20:38:44 up  6:13,  3 users,  load average: 5.05, 3.25, 1.41
->> Tasks: 239 total,   3 running, 236 sleeping,   0 stopped,   0 zombie
->> %Cpu(s):  5.9 us, 52.7 sy,  0.0 ni,  0.0 id, 41.4 wa,  0.0 hi,  0.0 si,  0.0 st
->> KiB Mem :  1525400 total,    73124 free,   739576 used,   712700 buff/cache
->> KiB Swap: 25153532 total, 25111140 free,    42392 used.   415840 avail Mem
->>
->>  PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
->>  6423 root      20   0       0      0      0 R  99.0  0.0   4:43.51 md127_raid6
->>  1166 root      20   0  280588   8780   6192 S   3.0  0.6   0:06.56 polkitd
->>  4022 cisco     20   0  394756  32884  26064 S   3.0  2.2   0:08.77 gnome-disks
->>  1903 cisco     20   0  256660  34060  26280 S   2.0  2.2   0:29.56 Xorg
->>  2093 cisco     20   0 1760364 153572  55572 S   2.0 10.1   0:17.96 gnome-shell
->> ======================================
->>
->>
->> Then surely the array reshape speed goes back down to nothing:
->> ======================================
->> # cat /proc/mdstat
->> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
->> [raid4] [raid10]
->> md127 : active raid6 sdk[0] sde[11] sdc[12] sdd[10] sdf[7] sdj[2] sdg[9] sdb[13]
->>       14650675200 blocks super 1.2 level 6, 512k chunk, algorithm 2
->> [10/8] [UUU_U_UUUU]
->>       [=======>.............]  reshape = 39.1% (1146348512/2930135040)
->> finish=22057575.1min speed=1K/sec
->>       bitmap: 0/22 pages [0KB], 65536KB chunk
->>
->> unused devices: <none>
->> ======================================
->>
->>
->> The size of the trace file is gigantic, so hopefully it doesn't get
->> trimmed in the email, but any help would be appreciated, thanks in
->> advance:
->> ================
->> # tracer: nop
->> #
->> # entries-in-buffer/entries-written: 44739/81554230   #P:2
->> #
->> #                              _-----=> irqs-off
->> #                             / _----=> need-resched
->> #                            | / _---=> hardirq/softirq
->> #                            || / _--=> preempt-depth
->> #                            ||| /     delay
->> #           TASK-PID   CPU#  ||||    TIMESTAMP  FUNCTION
->> #              | |       |   ||||       |         |
->>      md127_raid6-6423  [001] .... 22228.159918: analyse_stripe: check
->> 7: state 0x13 read           (null) write           (null) written
->>       (null)
->>      md127_raid6-6423  [001] .... 22228.159919: analyse_stripe: check
->> 6: state 0xa01 read           (null) write           (null) written
->>        (null)
->>      md127_raid6-6423  [001] .... 22228.159919: analyse_stripe: check
->> 5: state 0x801 read           (null) write           (null) written
->>        (null)
->>      md127_raid6-6423  [001] .... 22228.159920: analyse_stripe: check
->> 4: state 0x811 read           (null) write           (null) written
->>        (null)
->>      md127_raid6-6423  [001] .... 22228.159921: analyse_stripe: check
->> 3: state 0x801 read           (null) write           (null) written
->>        (null)
->>      md127_raid6-6423  [001] .... 22228.159921: analyse_stripe: check
->> 2: state 0x811 read           (null) write           (null) written
->>        (null)
->>      md127_raid6-6423  [001] .... 22228.159922: analyse_stripe: check
->> 1: state 0xa01 read           (null) write           (null) written
->>        (null)
->>      md127_raid6-6423  [001] .... 22228.159923: analyse_stripe: check
->> 0: state 0x811 read           (null) write           (null) written
->>        (null)
->>      md127_raid6-6423  [001] .... 22228.159924: handle_stripe:
->> locked=2 uptodate=10 to_read=0 to_write=0 failed=4 failed_num=6,5
->>      md127_raid6-6423  [001] .... 22228.159925:
->> schedule_reconstruction: schedule_reconstruction: stripe 2292697672
->> locked: 4 ops_request: 10
->>      md127_raid6-6423  [001] .... 22228.159925: raid_run_ops:
->> ops_run_reconstruct6: stripe 2292697672
->>      md127_raid6-6423  [001] .... 22228.159943:
->> ops_complete_reconstruct: ops_complete_reconstruct: stripe 2292697672
->>      md127_raid6-6423  [001] .... 22228.159944: handle_stripe:
->> handling stripe 2292697680, state=0x1401 cnt=1, pd_idx=7, qd_idx=8
->> , check:0, reconstruct:6
->> ===========================================
->>
->> I trimmed it because of the failure to send issue.  However, if
->> someone needs a lengthier snip of the trace, let me know.
->>
->> Thanks,
->>
->> 'Cisco
+On tgtnode1:
+# cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+md127 : active raid1 dm-4[0] dm-5[1]
+      71621824 blocks super 1.2 [2/2] [UU]
+        resync=PENDING
+      bitmap: 0/1 pages [0KB], 65536KB chunk
+
+unused devices: <none>
+
+
+So, again, this may already be fixed, just looking for confirmation if
+the aforementioned patch / thread is related to this bug (or maybe
+another).
+
+I appreciate your time.
+
+
+--Marc
