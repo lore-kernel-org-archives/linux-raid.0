@@ -1,114 +1,290 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH] Fix bus error when accessing MBR partition records
-Date: Wed, 05 Oct 2016 13:21:08 +1100
-Message-ID: <871szv5yej.fsf@notabene.neil.brown.name>
-References: <20160929122838.66975-1-jrtc27@jrtc27.com> <87r37y5qmg.fsf@notabene.neil.brown.name> <CB9B156B-28E1-4EDE-9738-9B03ECC60291@jrtc27.com>
+From: Francisco Parada <advanceandconquer@gmail.com>
+Subject: Re: RAID6 - CPU At 100% Usage After Reassembly
+Date: Wed, 5 Oct 2016 07:12:59 -0400
+Message-ID: <CAOW94uuALbxOpfb5Rgzp=Fgvy8zfKt94zCcgs7T=U-m8jWGq3g@mail.gmail.com>
+References: <CAOW94ut0uHS8+k0jutOT9bfT__WLbbOJmQC2CFa15HVVe9L4fg@mail.gmail.com>
+ <CADEsfxrKeSv5dRNfBoyybHaemPSqCcamTmSZ4P+Yey-rLd8hEg@mail.gmail.com>
+ <CAOW94uv4zSGs+6be3zhcQaGZdiAgg-s4ZHZ=mszcURo6pqJyqA@mail.gmail.com>
+ <CAOW94ute6CZafnAC6AVauqUGsEgVrnO3B27Gn3eVzdWFBJPCQw@mail.gmail.com>
+ <CAOW94utnY1zCR7gUCx1K0p2YfDhi3tXTsE6J_mT6rNz1TuTZEQ@mail.gmail.com>
+ <20160913174352.GA43576@kernel.org> <CAOW94us2=5F8BbLhQSN_mC0wghZA8Z6qFQHBP5Y1csJuQ4pfKg@mail.gmail.com>
+ <CAOW94utVBcLz191ifzKkjn+nsSthPWDAQF8R-PabcS2uPareag@mail.gmail.com>
+ <CAOW94usC2AFt4uGRZRidcXN1Gii0PqSqfGAjL6_2Y1m6GAcZsg@mail.gmail.com> <CAOW94uvFaiL9FO=k=gOsGzH0q1Qhw4X3n7ZFURj9_eTgGa656g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CB9B156B-28E1-4EDE-9738-9B03ECC60291@jrtc27.com>
+In-Reply-To: <CAOW94uvFaiL9FO=k=gOsGzH0q1Qhw4X3n7ZFURj9_eTgGa656g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: James Clarke <jrtc27@jrtc27.com>
-Cc: linux-raid@vger.kernel.org, debian-sparc <debian-sparc@lists.debian.org>, Jes Sorensen <Jes.Sorensen@redhat.com>
+To: mdraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Hi all,
 
-On Mon, Oct 03 2016, James Clarke wrote:
+Just wanted to send one last ping on this.  I didn't hear back and
+really don't know where else to turn to before abandoning hope.
+Should I just start wiping the drives so I can start from scratch at
+this point?
 
-> Hi Neil,
+I rebuilt the kernel with debug patch that Shaohua provided and I sent
+the list the output of the trace.  Does any one have any other
+suggestions?
+
+Thank you once again,
+Cisco
+
+
+On Fri, Sep 30, 2016 at 9:06 AM, Francisco Parada
+<advanceandconquer@gmail.com> wrote:
+> Hello Shaohua and all,
 >
->> On 2 Oct 2016, at 23:32, NeilBrown <neilb@suse.com> wrote:
->>=20
->>> On Thu, Sep 29 2016, James Clarke wrote:
->>>=20
->>> Since the MBR layout only has partition records as 2-byte aligned, the =
-32-bit
->>> fields in them are not aligned. Thus, they cannot be accessed on some
->>> architectures (such as SPARC) by using a "struct MBR_part_record *" poi=
-nter,
->>> as the compiler can assume that the pointer is properly aligned. Instea=
-d, the
->>> records must be accessed by going through the MBR struct itself every t=
-ime.
->>=20
->> Weird....
->>=20
->> Can you see if adding "__attribute__((packed))" to struct
->> MBR_part_record also fixes the problem?
+> Was anyone able to take a look at the trace I provided?  Curious if I
+> should just give up hope and start from scratch.  Any feedback is
+> appreciated.
 >
-> That also works. When I wrote the patch initially, I wasn=E2=80=99t sure =
-if it was a
-> "correct" fix, but having looked into it more I *believe* it is conforman=
-t. The
-> alignment of a packed struct is 1-byte, so, while the compiler may know t=
-hat the
-> 32-bit fields are 8-byte aligned within the struct, the pointer to the st=
-ruct
-> need not be aligned, and so the correct conservative code is generated.
+> Thank you,
+> Cisco
 >
->> It seems strange that the compiler lets you take a pointer, but then
->> doesn't use it correctly.  Maybe it is an inconsistency in the types.
->
-> Yes, the type doesn=E2=80=99t include the provenance of the pointer, so i=
-n general the
-> compiler can=E2=80=99t know it came from a packed struct (although in thi=
-s case not much
-> static analysis would be needed). See [1] and [2].
->
->> I don't necessarily disagree with your fix, but I'd like to understand
->> why the current code is wrong.
->
-> Hopefully the links make it clearer.
->
-> Regards,
-> James
->
-> [1] https://gcc.gnu.org/bugzilla/show_bug.cgi?id=3D51628
-> [2] https://llvm.org/bugs/show_bug.cgi?id=3D22821
-
-Thanks.
-
-It looks as though the type change I suggested would work, but probably isn=
-'t
-the best solution.
-Your patch is probably safest, though adding the __attribute__((packed))
-as well wouldn't hurt.
-
-I'll leave it for Jes to decide what exactly to apply, but I can offer
-a
-
-  Reviewed-by: NeilBrown <neilb@suse.com>
-
-for you patch.
-
-BTW I tried compiling mdadm with clang to see if my clang was new enough
-to give a warning (it isn't) but it found a few other things to give
-errors about ... I should post patches.
-
-Thanks,
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAEBCAAGBQJX9GOUAAoJEDnsnt1WYoG5+wwP/RhCvsAJdbx8F0LmyXGte+Re
-nHfwnoVTF7fdRikAAotTyzyEwOLrV/oUKWZjfKfEzGEYL0SfnrG8qxUIqfrj8q7u
-vbZiK6vWNYzBSHISH5JUMxaTBJVtGzWITDudwGUSwj/PpSTYhnofgdhFaHe+slVj
-m04I9wfnEL6xbuWP2Bv96E3RIdE+ejJku/Bc8dEMdzCJeeDtC26jmWw+QbCLNtnM
-EGugZEtub7Kq7EyHeikEeiVpvBSL+TOjE/6Y5sby7E35VBG4iWAaeLqCO2Z3SJ4p
-gdFOEwE2TBh9JAMgLPgG6+LumcEne+zr9uzZQVa7f3bm1fNW2inF4rFSpZA5TABu
-yuEMh5US0QtHE0+dsU1CHe15krGUs1YfPrYviW1wZW0OlMlg2LDXaPC1SBEiRoeh
-tOweHT1tQdsX9orM0qBKG1QgvLABavrMjdV+3+gbPFE/N6S5E5uVQQmvQJOAFvbl
-d5FAwzS2u162TC6p9GyKTn4D2TyXhr97Sbp1LuJ5h+CWp1vj/wjM4LU/qJ6OTo/U
-icAWCUa1Cr8l29HIIsXkYKxLuzGG+LApStlb2jHcTZUu4SuYnMHB32TcXdPXGZcC
-9XJk4V/MQ25MgmnTfiUEsM6koiVTv5J5boAdkrM2dCXhgV8usfJcERBAcCnqpZ7B
-bucTIQrGSUXw6hyAy1Ny
-=Wbr8
------END PGP SIGNATURE-----
---=-=-=--
+> On Mon, Sep 26, 2016 at 10:29 AM, Francisco Parada
+> <advanceandconquer@gmail.com> wrote:
+>> Hi all,
+>>
+>> It doesn't seem like my response from last night, made it to the list:
+>>
+>>
+>> Hi Shaohua and all,
+>>
+>> I was finally able to upgrade my Ubuntu server to a newer version of
+>> the kernel and mdadm:
+>> ==========================
+>> $ uname -r; mdadm -V
+>>
+>> 4.8.0-rc7-custom
+>>
+>> mdadm - v3.4 - 28th January 2016
+>> ==========================
+>>
+>>
+>> I rebuilt the kernel with the options that Shaohua asked me to build it with:
+>> ======================================
+>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>> index 5883ef0..db484ca 100644
+>> --- a/drivers/md/raid5.c
+>> +++ b/drivers/md/raid5.c
+>> @@ -62,6 +62,9 @@
+>>  #include "raid0.h"
+>>  #include "bitmap.h"
+>>
+>> +#undef pr_debug
+>> +#define pr_debug trace_printk
+>> +
+>>  #define cpu_to_group(cpu) cpu_to_node(cpu)
+>>  #define ANY_GROUP NUMA_NO_NODE
+>> ======================================
+>>
+>>
+>> Here's how things look so far, nothing different yet:
+>> ======================================
+>> $ cat /proc/mdstat
+>> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+>> [raid4] [raid10]
+>> md127 : inactive sdd[10](S) sdk[0](S) sdj[2](S) sdh[3](S) sde[11](S)
+>> sdg[9](S) sdf[7](S) sdb[13](S) sdc[12](S)
+>>       26371219608 blocks super 1.2
+>>
+>> unused devices: <none>
+>> ======================================
+>>
+>>
+>> Here's an event snapshot of my array, just keep in mind that
+>> "/dev/sdi" is my failed drive, so I omitted it from the examination:
+>> ======================================
+>> # mdadm -E /dev/sd[b-h,j,k] |grep Events
+>>          Events : 280033
+>>          Events : 280033
+>>          Events : 280033
+>>          Events : 280033
+>>          Events : 280033
+>>          Events : 280033
+>>          Events : 280011
+>>          Events : 280033
+>>          Events : 280033
+>> ======================================
+>>
+>>
+>> It's important to note, that since I haven't done anything yet, my CPU is idle:
+>> ======================================
+>> top - 20:22:00 up  5:56,  2 users,  load average: 0.04, 0.03, 0.00
+>>
+>> Tasks: 221 total,   1 running, 220 sleeping,   0 stopped,   0 zombie
+>>
+>> %Cpu(s):  1.0 us,  1.0 sy,  0.0 ni, 97.5 id,  0.5 wa,  0.0 hi,  0.0 si,  0.0 st
+>>
+>> KiB Mem :  1525400 total,   103836 free,   696208 used,   725356 buff/cache
+>>
+>> KiB Swap: 25153532 total, 25117380 free,    36152 used.   454808 avail Mem
+>>  PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
+>>  2093 cisco     20   0 1761112 153108  55640 S   1.0 10.0   0:12.61 gnome-shell
+>>  4322 root      20   0   40520   3684   3100 R   1.0  0.2   0:00.22 top
+>>     1 root      20   0  119692   5540   3992 S   0.0  0.4   0:02.44 systemd
+>>     2 root      20   0       0      0      0 S   0.0  0.0   0:00.00 kthreadd
+>>     3 root      20   0       0      0      0 S   0.0  0.0   0:00.09 ksoftirqd/0
+>>     5 root       0 -20       0      0      0 S   0.0  0.0   0:00.00 kworker/0:
+>> ======================================
+>>
+>>
+>> Now onto the fun part.  I stopped "/dev/md127":
+>> ======================================
+>> # mdadm --stop /dev/md127
+>> mdadm: stopped /dev/md127
+>> # cat /proc/mdstat
+>> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+>> [raid4] [raid10]
+>> unused devices: <none>
+>> ======================================
+>>
+>>
+>> For completion, here's the trace output after stopping the array, and
+>> before reassembling:
+>> ======================================
+>> # tracer: nop
+>> #
+>> # entries-in-buffer/entries-written: 0/0   #P:2
+>> #
+>> #                              _-----=> irqs-off
+>> #                             / _----=> need-resched
+>> #                            | / _---=> hardirq/softirq
+>> #                            || / _--=> preempt-depth
+>> #                            ||| /     delay
+>> #           TASK-PID   CPU#  ||||    TIMESTAMP  FUNCTION
+>> #              | |       |   ||||       |         |
+>> /sys/kernel/debug/tracing/trace (END)
+>> ======================================
+>>
+>>
+>> Then I reassembled the array:
+>> ======================================
+>> # mdadm -Afv /dev/md127 /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf
+>> /dev/sdg /dev/sdh /dev/sdj /dev/sdk
+>> mdadm: looking for devices for /dev/md127
+>> mdadm: /dev/sdb is busy - skipping
+>> mdadm: Merging with already-assembled /dev/md/en1
+>> mdadm: /dev/sdb is identified as a member of /dev/md/en1, slot 7.
+>> mdadm: /dev/sdc is identified as a member of /dev/md/en1, slot 8.
+>> mdadm: /dev/sdd is identified as a member of /dev/md/en1, slot 6.
+>> mdadm: /dev/sde is identified as a member of /dev/md/en1, slot 9.
+>> mdadm: /dev/sdf is identified as a member of /dev/md/en1, slot 4.
+>> mdadm: /dev/sdg is identified as a member of /dev/md/en1, slot 1.
+>> mdadm: /dev/sdh is identified as a member of /dev/md/en1, slot 3.
+>> mdadm: /dev/sdj is identified as a member of /dev/md/en1, slot 2.
+>> mdadm: /dev/sdk is identified as a member of /dev/md/en1, slot 0.
+>> mdadm: Marking array /dev/md/en1 as 'clean'
+>> mdadm: /dev/md/en1 has an active reshape - checking if critical
+>> section needs to be restored
+>> mdadm: No backup metadata on device-7
+>> mdadm: No backup metadata on device-8
+>> mdadm: No backup metadata on device-9
+>> mdadm: added /dev/sdg to /dev/md/en1 as 1
+>> mdadm: added /dev/sdj to /dev/md/en1 as 2
+>> mdadm: added /dev/sdh to /dev/md/en1 as 3 (possibly out of date)
+>> mdadm: added /dev/sdf to /dev/md/en1 as 4
+>> mdadm: no uptodate device for slot 5 of /dev/md/en1
+>> mdadm: added /dev/sdd to /dev/md/en1 as 6
+>> mdadm: /dev/sdb is already in /dev/md/en1 as 7
+>> mdadm: added /dev/sdc to /dev/md/en1 as 8
+>> mdadm: added /dev/sde to /dev/md/en1 as 9
+>> mdadm: added /dev/sdk to /dev/md/en1 as 0
+>> ======================================
+>>
+>>
+>> And of course, CPU shoots to 100%:
+>> ======================================
+>> top - 20:38:44 up  6:13,  3 users,  load average: 5.05, 3.25, 1.41
+>> Tasks: 239 total,   3 running, 236 sleeping,   0 stopped,   0 zombie
+>> %Cpu(s):  5.9 us, 52.7 sy,  0.0 ni,  0.0 id, 41.4 wa,  0.0 hi,  0.0 si,  0.0 st
+>> KiB Mem :  1525400 total,    73124 free,   739576 used,   712700 buff/cache
+>> KiB Swap: 25153532 total, 25111140 free,    42392 used.   415840 avail Mem
+>>
+>>  PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
+>>  6423 root      20   0       0      0      0 R  99.0  0.0   4:43.51 md127_raid6
+>>  1166 root      20   0  280588   8780   6192 S   3.0  0.6   0:06.56 polkitd
+>>  4022 cisco     20   0  394756  32884  26064 S   3.0  2.2   0:08.77 gnome-disks
+>>  1903 cisco     20   0  256660  34060  26280 S   2.0  2.2   0:29.56 Xorg
+>>  2093 cisco     20   0 1760364 153572  55572 S   2.0 10.1   0:17.96 gnome-shell
+>> ======================================
+>>
+>>
+>> Then surely the array reshape speed goes back down to nothing:
+>> ======================================
+>> # cat /proc/mdstat
+>> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+>> [raid4] [raid10]
+>> md127 : active raid6 sdk[0] sde[11] sdc[12] sdd[10] sdf[7] sdj[2] sdg[9] sdb[13]
+>>       14650675200 blocks super 1.2 level 6, 512k chunk, algorithm 2
+>> [10/8] [UUU_U_UUUU]
+>>       [=======>.............]  reshape = 39.1% (1146348512/2930135040)
+>> finish=22057575.1min speed=1K/sec
+>>       bitmap: 0/22 pages [0KB], 65536KB chunk
+>>
+>> unused devices: <none>
+>> ======================================
+>>
+>>
+>> The size of the trace file is gigantic, so hopefully it doesn't get
+>> trimmed in the email, but any help would be appreciated, thanks in
+>> advance:
+>> ================
+>> # tracer: nop
+>> #
+>> # entries-in-buffer/entries-written: 44739/81554230   #P:2
+>> #
+>> #                              _-----=> irqs-off
+>> #                             / _----=> need-resched
+>> #                            | / _---=> hardirq/softirq
+>> #                            || / _--=> preempt-depth
+>> #                            ||| /     delay
+>> #           TASK-PID   CPU#  ||||    TIMESTAMP  FUNCTION
+>> #              | |       |   ||||       |         |
+>>      md127_raid6-6423  [001] .... 22228.159918: analyse_stripe: check
+>> 7: state 0x13 read           (null) write           (null) written
+>>       (null)
+>>      md127_raid6-6423  [001] .... 22228.159919: analyse_stripe: check
+>> 6: state 0xa01 read           (null) write           (null) written
+>>        (null)
+>>      md127_raid6-6423  [001] .... 22228.159919: analyse_stripe: check
+>> 5: state 0x801 read           (null) write           (null) written
+>>        (null)
+>>      md127_raid6-6423  [001] .... 22228.159920: analyse_stripe: check
+>> 4: state 0x811 read           (null) write           (null) written
+>>        (null)
+>>      md127_raid6-6423  [001] .... 22228.159921: analyse_stripe: check
+>> 3: state 0x801 read           (null) write           (null) written
+>>        (null)
+>>      md127_raid6-6423  [001] .... 22228.159921: analyse_stripe: check
+>> 2: state 0x811 read           (null) write           (null) written
+>>        (null)
+>>      md127_raid6-6423  [001] .... 22228.159922: analyse_stripe: check
+>> 1: state 0xa01 read           (null) write           (null) written
+>>        (null)
+>>      md127_raid6-6423  [001] .... 22228.159923: analyse_stripe: check
+>> 0: state 0x811 read           (null) write           (null) written
+>>        (null)
+>>      md127_raid6-6423  [001] .... 22228.159924: handle_stripe:
+>> locked=2 uptodate=10 to_read=0 to_write=0 failed=4 failed_num=6,5
+>>      md127_raid6-6423  [001] .... 22228.159925:
+>> schedule_reconstruction: schedule_reconstruction: stripe 2292697672
+>> locked: 4 ops_request: 10
+>>      md127_raid6-6423  [001] .... 22228.159925: raid_run_ops:
+>> ops_run_reconstruct6: stripe 2292697672
+>>      md127_raid6-6423  [001] .... 22228.159943:
+>> ops_complete_reconstruct: ops_complete_reconstruct: stripe 2292697672
+>>      md127_raid6-6423  [001] .... 22228.159944: handle_stripe:
+>> handling stripe 2292697680, state=0x1401 cnt=1, pd_idx=7, qd_idx=8
+>> , check:0, reconstruct:6
+>> ===========================================
+>>
+>> I trimmed it because of the failure to send issue.  However, if
+>> someone needs a lengthier snip of the trace, let me know.
+>>
+>> Thanks,
+>>
+>> 'Cisco
