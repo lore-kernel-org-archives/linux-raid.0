@@ -1,8 +1,7 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 16/54] md/raid1: Delete an error message for a failed memory
- allocation
-Date: Thu, 6 Oct 2016 11:12:58 +0200
-Message-ID: <d8ac64c7-88ae-ae2d-c625-4603abaa4126@users.sourceforge.net>
+Subject: [PATCH 17/54] md/raid1: Move a brace for a designated initialiser
+Date: Thu, 6 Oct 2016 11:14:29 +0200
+Message-ID: <431b46c0-06d4-646b-35cc-b0f24c7be4b0@users.sourceforge.net>
 References: <566ABCD9.1060404@users.sourceforge.net>
  <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
 Mime-Version: 1.0
@@ -12,35 +11,35 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Guoqing Jiang <gqjiang@suse.com>, Jens Axboe <axboe@fb.com>, Mike Christie <mchristi@redhat.com>, Neil Brown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>, Wolfram Sang <wsa@the-dreams.de>
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-raid.ids
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Tue, 4 Oct 2016 18:15:20 +0200
+Date: Tue, 4 Oct 2016 18:25:05 +0200
 
-Omit an extra message for a memory allocation failure in this function.
+The script "checkpatch.pl" pointed information out like the following.
 
-Link: http://events.linuxfoundation.org/sites/events/files/slides/LCJ16-Refactor_Strings-WSang_0.pdf
+ERROR: that open brace { should be on the previous line
 
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/md/raid1.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/md/raid1.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 7dc45ba..15b9652 100644
+index 15b9652..958bf41 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -2882,9 +2882,6 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+@@ -3176,8 +3176,7 @@ static void *raid1_takeover(struct mddev *mddev)
+ 	return ERR_PTR(-EINVAL);
+ }
  
- 	conf->thread = md_register_thread(raid1d, mddev, "raid1");
- 	if (!conf->thread) {
--		printk(KERN_ERR
--		       "md/raid1:%s: couldn't allocate thread\n",
--		       mdname(mddev));
- 		err = -ENOMEM;
- 		goto destroy_pool;
- 	}
+-static struct md_personality raid1_personality =
+-{
++static struct md_personality raid1_personality = {
+ 	.name		= "raid1",
+ 	.level		= 1,
+ 	.owner		= THIS_MODULE,
 -- 
 2.10.1
 
