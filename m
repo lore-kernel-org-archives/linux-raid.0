@@ -1,7 +1,8 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 12/54] md/raid1: Use kcalloc() in setup_conf()
-Date: Thu, 6 Oct 2016 11:07:45 +0200
-Message-ID: <1d9f7914-b224-9329-d132-ae4c07d3b512@users.sourceforge.net>
+Subject: [PATCH 13/54] md/raid1: Return directly after a failed kzalloc() in
+ setup_conf()
+Date: Thu, 6 Oct 2016 11:09:18 +0200
+Message-ID: <7bc6f8e0-5e74-08fc-74f3-33284786ea1e@users.sourceforge.net>
 References: <566ABCD9.1060404@users.sourceforge.net>
  <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
 Mime-Version: 1.0
@@ -15,37 +16,52 @@ Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia 
 List-Id: linux-raid.ids
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Tue, 4 Oct 2016 15:30:28 +0200
+Date: Tue, 4 Oct 2016 15:56:41 +0200
 
-* A multiplication for the size determination of a memory allocation
-  indicated that an array data structure should be processed.
-  Thus use the corresponding function "kcalloc".
+* Return directly after a call of the function "kzalloc" failed
+  at the beginning.
 
-* Replace the specification of a data structure by a pointer dereference
-  to make the corresponding size determination a bit safer according to
-  the Linux coding style convention.
+* Delete a repeated check for the local variable "conf"
+  which became unnecessary with this refactoring.
+
+* Reorder two calls for the function "kfree" at the end.
 
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/md/raid1.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/md/raid1.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index e75ae87..5969711 100644
+index 5969711..74346f5 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -2781,9 +2781,9 @@ static struct r1conf *setup_conf(struct mddev *mddev)
- 	if (!conf)
- 		goto abort;
+@@ -2779,7 +2779,7 @@ static struct r1conf *setup_conf(struct mddev *mddev)
  
--	conf->mirrors = kzalloc(sizeof(struct raid1_info)
--				* mddev->raid_disks * 2,
--				 GFP_KERNEL);
-+	conf->mirrors = kcalloc(mddev->raid_disks * 2,
-+				sizeof(*conf->mirrors),
-+				GFP_KERNEL);
- 	if (!conf->mirrors)
- 		goto abort;
+ 	conf = kzalloc(sizeof(struct r1conf), GFP_KERNEL);
+ 	if (!conf)
+-		goto abort;
++		return ERR_PTR(-ENOMEM);
+ 
+ 	conf->mirrors = kcalloc(mddev->raid_disks * 2,
+ 				sizeof(*conf->mirrors),
+@@ -2880,13 +2880,11 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+ 	return conf;
+ 
+  abort:
+-	if (conf) {
+-		mempool_destroy(conf->r1bio_pool);
+-		kfree(conf->mirrors);
+-		safe_put_page(conf->tmppage);
+-		kfree(conf->poolinfo);
+-		kfree(conf);
+-	}
++	mempool_destroy(conf->r1bio_pool);
++	kfree(conf->poolinfo);
++	safe_put_page(conf->tmppage);
++	kfree(conf->mirrors);
++	kfree(conf);
+ 	return ERR_PTR(err);
+ }
  
 -- 
 2.10.1
