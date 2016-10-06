@@ -1,8 +1,8 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 45/54] md/raid10: Move assignments for the variable "err" in
- setup_conf()
-Date: Thu, 6 Oct 2016 11:45:24 +0200
-Message-ID: <aaf54edd-9051-e72d-90b3-3c2755e0736c@users.sourceforge.net>
+Subject: [PATCH 46/54] md/raid10: Less function calls in setup_conf() after
+ error detection
+Date: Thu, 6 Oct 2016 11:46:15 +0200
+Message-ID: <fbf4bcd3-1505-d959-eaa2-f6688a0aec2c@users.sourceforge.net>
 References: <566ABCD9.1060404@users.sourceforge.net>
  <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
 Mime-Version: 1.0
@@ -16,69 +16,78 @@ Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia 
 List-Id: linux-raid.ids
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Wed, 5 Oct 2016 18:26:45 +0200
+Date: Wed, 5 Oct 2016 18:32:30 +0200
 
-One local variable was set to an error code before a concrete
-error situation was detected. Thus move the corresponding assignments
-into if branches to indicate a memory allocation failure there.
+Resource release functions were called in up to three cases
+by the setup_conf() function during error handling even if
+the passed data structure members contained a null pointer.
+
+Adjust jump targets according to the Linux coding style convention.
 
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/md/raid10.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
+ drivers/md/raid10.c | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index abe75c2..7e512d4 100644
+index 7e512d4..9b8d11f 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -3498,7 +3498,6 @@ static struct r10conf *setup_conf(struct mddev *mddev)
- 		return ERR_PTR(-EINVAL);
+@@ -3508,13 +3508,13 @@ static struct r10conf *setup_conf(struct mddev *mddev)
+ 				GFP_KERNEL);
+ 	if (!conf->mirrors) {
+ 		err = -ENOMEM;
+-		goto out;
++		goto free_conf;
  	}
  
--	err = -ENOMEM;
- 	conf = kzalloc(sizeof(*conf), GFP_KERNEL);
- 	if (!conf)
- 		return ERR_PTR(-ENOMEM);
-@@ -3507,19 +3506,25 @@ static struct r10conf *setup_conf(struct mddev *mddev)
- 	conf->mirrors = kcalloc(mddev->raid_disks + max(0, -mddev->delta_disks),
- 				sizeof(*conf->mirrors),
- 				GFP_KERNEL);
--	if (!conf->mirrors)
-+	if (!conf->mirrors) {
-+		err = -ENOMEM;
- 		goto out;
-+	}
- 
  	conf->tmppage = alloc_page(GFP_KERNEL);
--	if (!conf->tmppage)
-+	if (!conf->tmppage) {
-+		err = -ENOMEM;
- 		goto out;
-+	}
+ 	if (!conf->tmppage) {
+ 		err = -ENOMEM;
+-		goto out;
++		goto kfree_mirrors;
+ 	}
  
  	conf->geo = geo;
- 	conf->copies = copies;
- 	conf->r10bio_pool = mempool_create(NR_RAID10_BIOS, r10bio_pool_alloc,
+@@ -3523,7 +3523,7 @@ static struct r10conf *setup_conf(struct mddev *mddev)
  					   r10bio_pool_free, conf);
--	if (!conf->r10bio_pool)
-+	if (!conf->r10bio_pool) {
-+		err = -ENOMEM;
- 		goto out;
-+	}
+ 	if (!conf->r10bio_pool) {
+ 		err = -ENOMEM;
+-		goto out;
++		goto put_page;
+ 	}
  
  	calc_sectors(conf, mddev->dev_sectors);
- 	if (mddev->reshape_position == MaxSector) {
-@@ -3547,8 +3552,10 @@ static struct r10conf *setup_conf(struct mddev *mddev)
- 	atomic_set(&conf->nr_pending, 0);
- 
+@@ -3533,7 +3533,7 @@ static struct r10conf *setup_conf(struct mddev *mddev)
+ 	} else {
+ 		if (setup_geo(&conf->prev, mddev, geo_old) != conf->copies) {
+ 			err = -EINVAL;
+-			goto out;
++			goto destroy_pool;
+ 		}
+ 		conf->reshape_progress = mddev->reshape_position;
+ 		if (conf->prev.far_offset)
+@@ -3554,16 +3554,18 @@ static struct r10conf *setup_conf(struct mddev *mddev)
  	conf->thread = md_register_thread(raid10d, mddev, "raid10");
--	if (!conf->thread)
-+	if (!conf->thread) {
-+		err = -ENOMEM;
- 		goto out;
-+	}
+ 	if (!conf->thread) {
+ 		err = -ENOMEM;
+-		goto out;
++		goto destroy_pool;
+ 	}
  
  	conf->mddev = mddev;
  	return conf;
+-
+- out:
++destroy_pool:
+ 	mempool_destroy(conf->r10bio_pool);
++put_page:
+ 	safe_put_page(conf->tmppage);
++kfree_mirrors:
+ 	kfree(conf->mirrors);
++free_conf:
+ 	kfree(conf);
+ 	return ERR_PTR(err);
+ }
 -- 
 2.10.1
