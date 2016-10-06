@@ -1,8 +1,8 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 13/54] md/raid1: Return directly after a failed kzalloc() in
+Subject: [PATCH 14/54] md/raid1: Move assignments for the variable "err" in
  setup_conf()
-Date: Thu, 6 Oct 2016 11:09:18 +0200
-Message-ID: <7bc6f8e0-5e74-08fc-74f3-33284786ea1e@users.sourceforge.net>
+Date: Thu, 6 Oct 2016 11:10:17 +0200
+Message-ID: <3af74de2-8347-4833-740e-2602f8f0f971@users.sourceforge.net>
 References: <566ABCD9.1060404@users.sourceforge.net>
  <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
 Mime-Version: 1.0
@@ -16,52 +16,122 @@ Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia 
 List-Id: linux-raid.ids
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Tue, 4 Oct 2016 15:56:41 +0200
+Date: Tue, 4 Oct 2016 17:34:10 +0200
 
-* Return directly after a call of the function "kzalloc" failed
-  at the beginning.
-
-* Delete a repeated check for the local variable "conf"
-  which became unnecessary with this refactoring.
-
-* Reorder two calls for the function "kfree" at the end.
+One local variable was set to an error code in a few cases before
+a concrete error situation was detected. Thus move the corresponding
+assignments into if branches to indicate a software failure there.
 
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/md/raid1.c | 14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
+ drivers/md/raid1.c | 40 ++++++++++++++++++++++++++--------------
+ 1 file changed, 26 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 5969711..74346f5 100644
+index 74346f5..4d2fcbc 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -2779,7 +2779,7 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+@@ -2775,7 +2775,7 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+ 	int i;
+ 	struct raid1_info *disk;
+ 	struct md_rdev *rdev;
+-	int err = -ENOMEM;
++	int err;
  
  	conf = kzalloc(sizeof(struct r1conf), GFP_KERNEL);
  	if (!conf)
--		goto abort;
-+		return ERR_PTR(-ENOMEM);
- 
+@@ -2784,26 +2784,33 @@ static struct r1conf *setup_conf(struct mddev *mddev)
  	conf->mirrors = kcalloc(mddev->raid_disks * 2,
  				sizeof(*conf->mirrors),
-@@ -2880,13 +2880,11 @@ static struct r1conf *setup_conf(struct mddev *mddev)
- 	return conf;
+ 				GFP_KERNEL);
+-	if (!conf->mirrors)
++	if (!conf->mirrors) {
++		err = -ENOMEM;
+ 		goto abort;
++	}
  
-  abort:
--	if (conf) {
--		mempool_destroy(conf->r1bio_pool);
--		kfree(conf->mirrors);
--		safe_put_page(conf->tmppage);
--		kfree(conf->poolinfo);
--		kfree(conf);
--	}
-+	mempool_destroy(conf->r1bio_pool);
-+	kfree(conf->poolinfo);
-+	safe_put_page(conf->tmppage);
-+	kfree(conf->mirrors);
-+	kfree(conf);
- 	return ERR_PTR(err);
- }
+ 	conf->tmppage = alloc_page(GFP_KERNEL);
+-	if (!conf->tmppage)
++	if (!conf->tmppage) {
++		err = -ENOMEM;
+ 		goto abort;
++	}
+ 
+ 	conf->poolinfo = kzalloc(sizeof(*conf->poolinfo), GFP_KERNEL);
+-	if (!conf->poolinfo)
++	if (!conf->poolinfo) {
++		err = -ENOMEM;
+ 		goto abort;
++	}
++
+ 	conf->poolinfo->raid_disks = mddev->raid_disks * 2;
+ 	conf->r1bio_pool = mempool_create(NR_RAID1_BIOS, r1bio_pool_alloc,
+ 					  r1bio_pool_free,
+ 					  conf->poolinfo);
+-	if (!conf->r1bio_pool)
++	if (!conf->r1bio_pool) {
++		err = -ENOMEM;
+ 		goto abort;
++	}
+ 
+ 	conf->poolinfo->mddev = mddev;
+-
+-	err = -EINVAL;
+ 	spin_lock_init(&conf->device_lock);
+ 	rdev_for_each(rdev, mddev) {
+ 		struct request_queue *q;
+@@ -2816,8 +2823,11 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+ 		else
+ 			disk = conf->mirrors + disk_idx;
+ 
+-		if (disk->rdev)
++		if (disk->rdev) {
++			err = -EINVAL;
+ 			goto abort;
++		}
++
+ 		disk->rdev = rdev;
+ 		q = bdev_get_queue(rdev->bdev);
+ 
+@@ -2838,8 +2848,6 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+ 
+ 	conf->start_next_window = MaxSector;
+ 	conf->current_window_requests = conf->next_window_requests = 0;
+-
+-	err = -EIO;
+ 	for (i = 0; i < conf->raid_disks * 2; i++) {
+ 
+ 		disk = conf->mirrors + i;
+@@ -2854,9 +2862,13 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+ 				disk->rdev =
+ 					disk[conf->raid_disks].rdev;
+ 				disk[conf->raid_disks].rdev = NULL;
+-			} else if (!test_bit(In_sync, &disk->rdev->flags))
+-				/* Original is not in_sync - bad */
+-				goto abort;
++			} else {
++				if (!test_bit(In_sync, &disk->rdev->flags)) {
++					/* Original is not in_sync - bad */
++					err = -EIO;
++					goto abort;
++				}
++			}
+ 		}
+ 
+ 		if (!disk->rdev ||
+@@ -2868,12 +2880,12 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+ 		}
+ 	}
+ 
+-	err = -ENOMEM;
+ 	conf->thread = md_register_thread(raid1d, mddev, "raid1");
+ 	if (!conf->thread) {
+ 		printk(KERN_ERR
+ 		       "md/raid1:%s: couldn't allocate thread\n",
+ 		       mdname(mddev));
++		err = -ENOMEM;
+ 		goto abort;
+ 	}
  
 -- 
 2.10.1
