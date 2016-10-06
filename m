@@ -1,8 +1,8 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 02/54] md/raid0: Less function calls in create_strip_zones()
- after error detection
-Date: Thu, 6 Oct 2016 10:53:29 +0200
-Message-ID: <95367971-fdc2-7bb8-e34e-bf54e480420d@users.sourceforge.net>
+Subject: [PATCH 03/54] md/raid0: Move a variable assignment in
+ create_strip_zones()
+Date: Thu, 6 Oct 2016 10:54:48 +0200
+Message-ID: <6df6dd93-d71d-0a14-e5d7-9ee664d6b040@users.sourceforge.net>
 References: <566ABCD9.1060404@users.sourceforge.net>
  <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
 Mime-Version: 1.0
@@ -16,90 +16,45 @@ Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia 
 List-Id: linux-raid.ids
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Tue, 4 Oct 2016 10:43:33 +0200
+Date: Tue, 4 Oct 2016 12:02:29 +0200
 
-The kfree() function was called in up to two cases
-by the create_strip_zones() function during error handling even if
-the passed data structure member (or variable) contained a null pointer.
-
-Adjust jump targets according to the Linux coding style convention.
+One local variable was set to an error code before a concrete
+error situation was detected. Thus move the corresponding assignment into
+two if branches to indicate a memory allocation failure there.
 
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/md/raid0.c | 20 +++++++++++---------
- 1 file changed, 11 insertions(+), 9 deletions(-)
+ drivers/md/raid0.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index 50e8a63..3c76451 100644
+index 3c76451..71bd398 100644
 --- a/drivers/md/raid0.c
 +++ b/drivers/md/raid0.c
-@@ -146,7 +146,7 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
- 		       mdname(mddev),
- 		       mddev->chunk_sectors << 9, blksize);
- 		err = -EINVAL;
--		goto abort;
-+		goto free_conf;
+@@ -149,17 +149,21 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
+ 		goto free_conf;
  	}
  
- 	err = -ENOMEM;
-@@ -154,12 +154,12 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
+-	err = -ENOMEM;
+ 	conf->strip_zone = kcalloc(conf->nr_strip_zones,
  				   sizeof(*conf->strip_zone),
  				   GFP_KERNEL);
- 	if (!conf->strip_zone)
--		goto abort;
-+		goto free_conf;
+-	if (!conf->strip_zone)
++	if (!conf->strip_zone) {
++		err = -ENOMEM;
+ 		goto free_conf;
++	}
++
  	conf->devlist = kcalloc(conf->nr_strip_zones * mddev->raid_disks,
  				sizeof(*conf->devlist),
  				GFP_KERNEL);
- 	if (!conf->devlist)
--		goto abort;
-+		goto free_zone;
+-	if (!conf->devlist)
++	if (!conf->devlist) {
++		err = -ENOMEM;
+ 		goto free_zone;
++	}
  
  	/* The first zone must contain all devices, so here we check that
  	 * there is a proper alignment of slots to devices and find them all
-@@ -190,17 +190,17 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
- 			printk(KERN_ERR
- 			       "md/raid0:%s: remove inactive devices before converting to RAID0\n",
- 			       mdname(mddev));
--			goto abort;
-+			goto free_device_list;
- 		}
- 		if (j >= mddev->raid_disks) {
- 			printk(KERN_ERR "md/raid0:%s: bad disk number %d - "
- 			       "aborting!\n", mdname(mddev), j);
--			goto abort;
-+			goto free_device_list;
- 		}
- 		if (dev[j]) {
- 			printk(KERN_ERR "md/raid0:%s: multiple devices for %d - "
- 			       "aborting!\n", mdname(mddev), j);
--			goto abort;
-+			goto free_device_list;
- 		}
- 		dev[j] = rdev1;
- 
-@@ -211,7 +211,7 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
- 	if (cnt != mddev->raid_disks) {
- 		printk(KERN_ERR "md/raid0:%s: too few disks (%d of %d) - "
- 		       "aborting!\n", mdname(mddev), cnt, mddev->raid_disks);
--		goto abort;
-+		goto free_device_list;
- 	}
- 	zone->nb_dev = cnt;
- 	zone->zone_end = smallest->sectors * cnt;
-@@ -271,9 +271,11 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
- 	*private_conf = conf;
- 
- 	return 0;
--abort:
--	kfree(conf->strip_zone);
-+free_device_list:
- 	kfree(conf->devlist);
-+free_zone:
-+	kfree(conf->strip_zone);
-+free_conf:
- 	kfree(conf);
- 	*private_conf = ERR_PTR(err);
- 	return err;
 -- 
 2.10.1
