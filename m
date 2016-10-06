@@ -1,8 +1,8 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 46/54] md/raid10: Less function calls in setup_conf() after
- error detection
-Date: Thu, 6 Oct 2016 11:46:15 +0200
-Message-ID: <fbf4bcd3-1505-d959-eaa2-f6688a0aec2c@users.sourceforge.net>
+Subject: [PATCH 47/54] md/raid10: Improve another size determination in
+ raid10_start_reshape()
+Date: Thu, 6 Oct 2016 11:47:01 +0200
+Message-ID: <f0fcea7b-2ebb-24c7-981d-91867d4dd350@users.sourceforge.net>
 References: <566ABCD9.1060404@users.sourceforge.net>
  <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
 Mime-Version: 1.0
@@ -16,78 +16,29 @@ Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia 
 List-Id: linux-raid.ids
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Wed, 5 Oct 2016 18:32:30 +0200
+Date: Wed, 5 Oct 2016 18:48:17 +0200
 
-Resource release functions were called in up to three cases
-by the setup_conf() function during error handling even if
-the passed data structure members contained a null pointer.
-
-Adjust jump targets according to the Linux coding style convention.
+Replace the specification of a data structure by a pointer dereference
+as the parameter for the operator "sizeof" to make the corresponding size
+determination a bit safer.
 
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/md/raid10.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+ drivers/md/raid10.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 7e512d4..9b8d11f 100644
+index 9b8d11f..62cd159 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -3508,13 +3508,13 @@ static struct r10conf *setup_conf(struct mddev *mddev)
- 				GFP_KERNEL);
- 	if (!conf->mirrors) {
- 		err = -ENOMEM;
--		goto out;
-+		goto free_conf;
- 	}
- 
- 	conf->tmppage = alloc_page(GFP_KERNEL);
- 	if (!conf->tmppage) {
- 		err = -ENOMEM;
--		goto out;
-+		goto kfree_mirrors;
- 	}
- 
- 	conf->geo = geo;
-@@ -3523,7 +3523,7 @@ static struct r10conf *setup_conf(struct mddev *mddev)
- 					   r10bio_pool_free, conf);
- 	if (!conf->r10bio_pool) {
- 		err = -ENOMEM;
--		goto out;
-+		goto put_page;
- 	}
- 
- 	calc_sectors(conf, mddev->dev_sectors);
-@@ -3533,7 +3533,7 @@ static struct r10conf *setup_conf(struct mddev *mddev)
- 	} else {
- 		if (setup_geo(&conf->prev, mddev, geo_old) != conf->copies) {
- 			err = -EINVAL;
--			goto out;
-+			goto destroy_pool;
- 		}
- 		conf->reshape_progress = mddev->reshape_position;
- 		if (conf->prev.far_offset)
-@@ -3554,16 +3554,18 @@ static struct r10conf *setup_conf(struct mddev *mddev)
- 	conf->thread = md_register_thread(raid10d, mddev, "raid10");
- 	if (!conf->thread) {
- 		err = -ENOMEM;
--		goto out;
-+		goto destroy_pool;
- 	}
- 
- 	conf->mddev = mddev;
- 	return conf;
--
-- out:
-+destroy_pool:
- 	mempool_destroy(conf->r10bio_pool);
-+put_page:
- 	safe_put_page(conf->tmppage);
-+kfree_mirrors:
- 	kfree(conf->mirrors);
-+free_conf:
- 	kfree(conf);
- 	return ERR_PTR(err);
- }
+@@ -4065,7 +4065,7 @@ static int raid10_start_reshape(struct mddev *mddev)
+ 	spin_lock_irq(&conf->device_lock);
+ 	if (conf->mirrors_new) {
+ 		memcpy(conf->mirrors_new, conf->mirrors,
+-		       sizeof(struct raid10_info)*conf->prev.raid_disks);
++		       sizeof(*conf->mirrors_new) * conf->prev.raid_disks);
+ 		smp_mb();
+ 		kfree(conf->mirrors_old);
+ 		conf->mirrors_old = conf->mirrors;
 -- 
 2.10.1
