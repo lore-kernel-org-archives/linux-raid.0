@@ -1,8 +1,8 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 43/54] md/raid10: Return directly after detection of
- unsupported settings in setup_conf()
-Date: Thu, 6 Oct 2016 11:43:39 +0200
-Message-ID: <cb82c166-a267-dbb7-adac-f9d741bbda13@users.sourceforge.net>
+Subject: [PATCH 44/54] md/raid10: Return directly after a failed kzalloc() in
+ setup_conf()
+Date: Thu, 6 Oct 2016 11:44:30 +0200
+Message-ID: <6885c0ba-458f-23aa-883d-d1571c398bc5@users.sourceforge.net>
 References: <566ABCD9.1060404@users.sourceforge.net>
  <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
 Mime-Version: 1.0
@@ -16,49 +16,51 @@ Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia 
 List-Id: linux-raid.ids
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Wed, 5 Oct 2016 17:32:49 +0200
+Date: Wed, 5 Oct 2016 17:46:02 +0200
 
-* Return directly after unsupported system settings were detected
+* Return directly after a call of the function "kzalloc" failed
   at the beginning.
 
-* Delete the explicit initialisation for the local variables "conf"
-  and "err" which became unnecessary with this refactoring.
+* Delete a repeated check for the local variable "conf"
+  which became unnecessary with this refactoring.
+
+* Reorder calls for the functions "kfree" and "safe_put_page"
+  at the end.
 
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/md/raid10.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/md/raid10.c | 12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 1f712f7..8326e68 100644
+index 8326e68..abe75c2 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -3478,8 +3478,8 @@ static int setup_geo(struct geom *geo, struct mddev *mddev, enum geo_type new)
- 
- static struct r10conf *setup_conf(struct mddev *mddev)
- {
--	struct r10conf *conf = NULL;
--	int err = -EINVAL;
-+	struct r10conf *conf;
-+	int err;
- 	struct geom geo;
- 	int copies;
- 
-@@ -3489,13 +3489,13 @@ static struct r10conf *setup_conf(struct mddev *mddev)
- 		printk(KERN_ERR "md/raid10:%s: chunk size must be "
- 		       "at least PAGE_SIZE(%ld) and be a power of 2.\n",
- 		       mdname(mddev), PAGE_SIZE);
--		goto out;
-+		return ERR_PTR(-EINVAL);
- 	}
- 
- 	if (copies < 2 || copies > mddev->raid_disks) {
- 		printk(KERN_ERR "md/raid10:%s: unsupported raid10 layout: 0x%8x\n",
- 		       mdname(mddev), mddev->new_layout);
--		goto out;
-+		return ERR_PTR(-EINVAL);
- 	}
- 
+@@ -3501,7 +3501,7 @@ static struct r10conf *setup_conf(struct mddev *mddev)
  	err = -ENOMEM;
+ 	conf = kzalloc(sizeof(*conf), GFP_KERNEL);
+ 	if (!conf)
+-		goto out;
++		return ERR_PTR(-ENOMEM);
+ 
+ 	/* FIXME calc properly */
+ 	conf->mirrors = kcalloc(mddev->raid_disks + max(0, -mddev->delta_disks),
+@@ -3554,12 +3554,10 @@ static struct r10conf *setup_conf(struct mddev *mddev)
+ 	return conf;
+ 
+  out:
+-	if (conf) {
+-		mempool_destroy(conf->r10bio_pool);
+-		kfree(conf->mirrors);
+-		safe_put_page(conf->tmppage);
+-		kfree(conf);
+-	}
++	mempool_destroy(conf->r10bio_pool);
++	safe_put_page(conf->tmppage);
++	kfree(conf->mirrors);
++	kfree(conf);
+ 	return ERR_PTR(err);
+ }
+ 
 -- 
 2.10.1
