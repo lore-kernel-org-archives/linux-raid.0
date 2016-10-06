@@ -1,62 +1,67 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 31/54] md/raid5: Adjust two function calls together with a
- variable assignment
-Date: Thu, 6 Oct 2016 11:31:11 +0200
-Message-ID: <529972b2-5251-4cb5-e5cb-70de6628fe71@users.sourceforge.net>
+Subject: [PATCH 32/54] md/raid5: Move a brace for three designated
+ initialisers
+Date: Thu, 6 Oct 2016 11:32:04 +0200
+Message-ID: <8840baf8-f954-0051-c082-26bcca99bb45@users.sourceforge.net>
 References: <566ABCD9.1060404@users.sourceforge.net>
  <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <kernel-janitors-owner@vger.kernel.org>
 In-Reply-To: <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: kernel-janitors-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Guoqing Jiang <gqjiang@suse.com>, Jens Axboe <axboe@fb.com>, Mike Christie <mchristi@redhat.com>, Neil Brown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-raid.ids
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Wed, 5 Oct 2016 10:00:07 +0200
+Date: Wed, 5 Oct 2016 10:20:05 +0200
 
 The script "checkpatch.pl" pointed information out like the following.
 
-ERROR: do not use assignment in if condition
-
-Thus fix the affected source code places.
+ERROR: that open brace { should be on the previous line
 
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/md/raid5.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ drivers/md/raid5.c | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index ef180c0..a37f1f9 100644
+index a37f1f9..f2473fa0 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -501,11 +501,10 @@ static int grow_buffers(struct stripe_head *sh, gfp_t gfp)
- 	int num = sh->raid_conf->pool_size;
+@@ -7868,8 +7868,7 @@ static void *raid6_takeover(struct mddev *mddev)
+ 	return setup_conf(mddev);
+ }
  
- 	for (i = 0; i < num; i++) {
--		struct page *page;
-+		struct page *page = alloc_page(gfp);
- 
--		if (!(page = alloc_page(gfp))) {
-+		if (!page)
- 			return 1;
--		}
- 		sh->dev[i].page = page;
- 		sh->dev[i].orig_page = page;
- 	}
-@@ -6525,8 +6524,8 @@ static struct r5conf *setup_conf(struct mddev *mddev)
- 		goto free_conf;
- 
- 	conf->mddev = mddev;
+-static struct md_personality raid6_personality =
+-{
++static struct md_personality raid6_personality = {
+ 	.name		= "raid6",
+ 	.level		= 6,
+ 	.owner		= THIS_MODULE,
+@@ -7891,8 +7890,7 @@ static struct md_personality raid6_personality =
+ 	.takeover	= raid6_takeover,
+ 	.congested	= raid5_congested,
+ };
+-static struct md_personality raid5_personality =
+-{
++static struct md_personality raid5_personality = {
+ 	.name		= "raid5",
+ 	.level		= 5,
+ 	.owner		= THIS_MODULE,
+@@ -7914,9 +7912,7 @@ static struct md_personality raid5_personality =
+ 	.takeover	= raid5_takeover,
+ 	.congested	= raid5_congested,
+ };
 -
--	if ((conf->stripe_hashtbl = kzalloc(PAGE_SIZE, GFP_KERNEL)) == NULL)
-+	conf->stripe_hashtbl = kzalloc(PAGE_SIZE, GFP_KERNEL);
-+	if (!conf->stripe_hashtbl)
- 		goto free_conf;
- 
- 	/* We init hash_locks[0] separately to that it can be used
+-static struct md_personality raid4_personality =
+-{
++static struct md_personality raid4_personality = {
+ 	.name		= "raid4",
+ 	.level		= 4,
+ 	.owner		= THIS_MODULE,
 -- 
 2.10.1
+
