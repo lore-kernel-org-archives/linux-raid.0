@@ -1,8 +1,7 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 52/54] md/raid10: Replace a seq_printf() call by seq_puts() in
- raid10_status()
-Date: Thu, 6 Oct 2016 11:52:03 +0200
-Message-ID: <69fc2ab2-ddde-068f-1aca-398aa4ce811e@users.sourceforge.net>
+Subject: [PATCH 53/54] md/raid10: Delete two unwanted spaces behind asterisks
+Date: Thu, 6 Oct 2016 11:53:01 +0200
+Message-ID: <6fc3525c-ac06-cc07-a322-c8ef84a96882@users.sourceforge.net>
 References: <566ABCD9.1060404@users.sourceforge.net>
  <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
 Mime-Version: 1.0
@@ -16,29 +15,38 @@ Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia 
 List-Id: linux-raid.ids
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Wed, 5 Oct 2016 21:41:09 +0200
+Date: Wed, 5 Oct 2016 22:02:18 +0200
 
 The script "checkpatch.pl" pointed information out like the following.
 
-WARNING: Prefer seq_puts to seq_printf
+ERROR: "foo * bar" should be "foo *bar"
 
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/md/raid10.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/md/raid10.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 82d79f5..554b6d2 100644
+index 554b6d2..09c0e2f 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -1502,7 +1502,7 @@ static void raid10_status(struct seq_file *seq, struct mddev *mddev)
- 		seq_printf(seq, "%s", rdev && test_bit(In_sync, &rdev->flags) ? "U" : "_");
- 	}
- 	rcu_read_unlock();
--	seq_printf(seq, "]");
-+	seq_puts(seq, "]");
- }
+@@ -107,7 +107,7 @@ static void reshape_request_write(struct mddev *mddev, struct r10bio *r10_bio);
+ static void end_reshape_write(struct bio *bio);
+ static void end_reshape(struct r10conf *conf);
  
- /* check if there are enough drives for
+-static void * r10bio_pool_alloc(gfp_t gfp_flags, void *data)
++static void *r10bio_pool_alloc(gfp_t gfp_flags, void *data)
+ {
+ 	struct r10conf *conf = data;
+ 	int size = offsetof(struct r10bio, devs[conf->copies]);
+@@ -137,7 +137,7 @@ static void r10bio_pool_free(void *r10_bio, void *data)
+  * one for write (we recover only one drive per r10buf)
+  *
+  */
+-static void * r10buf_pool_alloc(gfp_t gfp_flags, void *data)
++static void *r10buf_pool_alloc(gfp_t gfp_flags, void *data)
+ {
+ 	struct r10conf *conf = data;
+ 	struct page *page;
 -- 
 2.10.1
