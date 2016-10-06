@@ -1,64 +1,82 @@
-From: Sitsofe Wheeler <sitsofe@gmail.com>
-Subject: Re: kernel BUG at block/bio.c:1785 while trying to issue a discard to
- LVM on RAID1 md
-Date: Thu, 6 Oct 2016 07:57:59 +0100
-Message-ID: <CALjAwxjRVs0ozLwe-avrure85+y4Ajg-KNf2a7a__jfsL2BspQ@mail.gmail.com>
-References: <CALjAwxgg-m2bgFf10hLB3j=2ntVxqt0vDSKuQyOavqvKXC2G5Q@mail.gmail.com>
- <CALjAwxhYh0JDKh7E_t9sm-vBBPX-3dzL5hDMi4rA6uE2RqaJoQ@mail.gmail.com> <20161005213945.GA84123@kernel.org>
+From: Song Liu <songliubraving@fb.com>
+Subject: [PATCH v3 1/8] md/r5cache: Check array size in r5l_init_log
+Date: Thu, 6 Oct 2016 00:14:09 -0700
+Message-ID: <20161006071416.3295093-2-songliubraving@fb.com>
+References: <20161006071416.3295093-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20161005213945.GA84123@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, linux-block@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20161006071416.3295093-1-songliubraving@fb.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuang521@gmail.com, liuzhengyuan@kylinos.cn, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-On 5 October 2016 at 22:39, Shaohua Li <shli@kernel.org> wrote:
-> On Wed, Oct 05, 2016 at 10:31:11PM +0100, Sitsofe Wheeler wrote:
->> On 3 October 2016 at 17:47, Sitsofe Wheeler <sitsofe@gmail.com> wrote:
->> >
->> > While trying to do a discard (via blkdiscard --length 1048576
->> > /dev/<pathtodevice>) to an LVM device atop a two disk md RAID1 the
->> > following oops was generated:
->> >
->> > [  103.306243] md: resync of RAID array md127
->> > [  103.306246] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
->> > [  103.306248] md: using maximum available idle IO bandwidth (but not
->> > more than 200000 KB/sec) for resync.
->> > [  103.306251] md: using 128k window, over a total of 244194432k.
->> > [  103.308158] ------------[ cut here ]------------
->> > [  103.308205] kernel BUG at block/bio.c:1785!
->>
->> This still seems to be here but slightly modified with a 4.8.0 kernel:
->
-> Does this fix the issue? Looks there is IO error
->
->
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 21dc00e..349eb11 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -2196,7 +2196,6 @@ static int narrow_write_error(struct r1bio *r1_bio, int i)
->                         wbio = bio_clone_mddev(r1_bio->master_bio, GFP_NOIO, mddev);
->                 }
->
-> -               bio_set_op_attrs(wbio, REQ_OP_WRITE, 0);
->                 wbio->bi_iter.bi_sector = r1_bio->sector;
->                 wbio->bi_iter.bi_size = r1_bio->sectors << 9;
->
+Currently, r5l_write_stripe checks meta size for each stripe write,
+which is not necessary.
 
-Yes the patch above fixes the issue and make blkdiscard just report
-that the BLKDISCARD ioctl failed. Since having this patch applied
-means the issue seen in
-http://www.gossamer-threads.com/lists/linux/kernel/2538757?do=post_view_threaded#2538757
-(BUG at arch/x86/kernel/pci-nommu.c:66 / BUG at
-./include/linux/scatterlist.h:90) can't be reached does that mean
-whatever was seen there is also spurious?
+With this patch, r5l_init_log checks maximal meta size of the array,
+which is (r5l_meta_block + raid_disks x r5l_payload_data_parity).
+If this is too big to fit in one page, r5l_init_log aborts.
 
-Additionally as this issue seems to have been a problem going back to
-at least the 3.18 kernels, would a fix similar to this be eligible for
-stable kernels?
+With current meta data, r5l_log support raid_disks up to 203.
 
+Signed-off-by: Song Liu <songliubraving@fb.com>
+---
+ drivers/md/raid5-cache.c | 26 ++++++++++++++++----------
+ 1 file changed, 16 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 1b1ab4a..7557791b 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -441,7 +441,6 @@ int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh)
+ {
+ 	int write_disks = 0;
+ 	int data_pages, parity_pages;
+-	int meta_size;
+ 	int reserve;
+ 	int i;
+ 	int ret = 0;
+@@ -473,15 +472,6 @@ int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh)
+ 	parity_pages = 1 + !!(sh->qd_idx >= 0);
+ 	data_pages = write_disks - parity_pages;
+ 
+-	meta_size =
+-		((sizeof(struct r5l_payload_data_parity) + sizeof(__le32))
+-		 * data_pages) +
+-		sizeof(struct r5l_payload_data_parity) +
+-		sizeof(__le32) * parity_pages;
+-	/* Doesn't work with very big raid array */
+-	if (meta_size + sizeof(struct r5l_meta_block) > PAGE_SIZE)
+-		return -EINVAL;
+-
+ 	set_bit(STRIPE_LOG_TRAPPED, &sh->state);
+ 	/*
+ 	 * The stripe must enter state machine again to finish the write, so
+@@ -1184,6 +1174,22 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+ 
+ 	if (PAGE_SIZE != 4096)
+ 		return -EINVAL;
++
++	/*
++	 * The PAGE_SIZE must be big enough to hold 1 r5l_meta_block and
++	 * raid_disks r5l_payload_data_parity.
++	 *
++	 * Write journal and cache does not work for very big array
++	 * (raid_disks > 203)
++	 */
++	if (sizeof(struct r5l_meta_block) +
++	    ((sizeof(struct r5l_payload_data_parity) + sizeof(__le32)) *
++	     conf->raid_disks) > PAGE_SIZE) {
++		pr_err("md/raid:%s: write journal/cache doesn't work for array with %d disks\n",
++		       mdname(conf->mddev), conf->raid_disks);
++		return -EINVAL;
++	}
++
+ 	log = kzalloc(sizeof(*log), GFP_KERNEL);
+ 	if (!log)
+ 		return -ENOMEM;
 -- 
-Sitsofe | http://sucs.org/~sits/
+2.9.3
+
