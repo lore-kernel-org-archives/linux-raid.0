@@ -1,7 +1,8 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 07/54] md/raid0: Move two misplaced braces
-Date: Thu, 6 Oct 2016 11:00:16 +0200
-Message-ID: <ee219dfd-1176-b67b-ff87-4f25a6f2cd30@users.sourceforge.net>
+Subject: [PATCH 08/54] md/raid0: Delete an unnecessary return statement in
+ raid0_status()
+Date: Thu, 6 Oct 2016 11:01:57 +0200
+Message-ID: <ec7f893d-a9bb-6cdd-a5af-11a48fed7c36@users.sourceforge.net>
 References: <566ABCD9.1060404@users.sourceforge.net>
  <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
 Mime-Version: 1.0
@@ -15,41 +16,31 @@ Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia 
 List-Id: linux-raid.ids
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Tue, 4 Oct 2016 14:25:01 +0200
+Date: Tue, 4 Oct 2016 14:34:33 +0200
 
 The script "checkpatch.pl" pointed information out like the following.
 
-ERROR: that open brace { should be on the previous line
+WARNING: void function return statements are not generally useful
+
+Thus remove such a statement here.
 
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/md/raid0.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/md/raid0.c | 1 -
+ 1 file changed, 1 deletion(-)
 
 diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index 06cb172..9b76eae 100644
+index 9b76eae..1abe1ee 100644
 --- a/drivers/md/raid0.c
 +++ b/drivers/md/raid0.c
-@@ -222,8 +222,7 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
- 	curr_zone_end = zone->zone_end;
- 
- 	/* now do the other zones */
--	for (i = 1; i < conf->nr_strip_zones; i++)
--	{
-+	for (i = 1; i < conf->nr_strip_zones; i++) {
- 		int j;
- 
- 		zone = conf->strip_zone + i;
-@@ -665,8 +664,7 @@ static void raid0_quiesce(struct mddev *mddev, int state)
+@@ -503,7 +503,6 @@ static void raid0_make_request(struct mddev *mddev, struct bio *bio)
+ static void raid0_status(struct seq_file *seq, struct mddev *mddev)
  {
+ 	seq_printf(seq, " %dk chunks", mddev->chunk_sectors / 2);
+-	return;
  }
  
--static struct md_personality raid0_personality=
--{
-+static struct md_personality raid0_personality = {
- 	.name		= "raid0",
- 	.level		= 0,
- 	.owner		= THIS_MODULE,
+ static void *raid0_takeover_raid45(struct mddev *mddev)
 -- 
 2.10.1
 
