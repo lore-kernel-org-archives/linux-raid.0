@@ -1,59 +1,66 @@
-From: Bernd Petrovitsch <bernd@petrovitsch.priv.at>
-Subject: Re: [PATCH 37/54] md/raid5: Replace a seq_printf() call by
- seq_puts() in raid5_status()
-Date: Thu, 06 Oct 2016 20:33:28 +0200
-Message-ID: <1475778808.2520.10.camel@petrovitsch.priv.at>
-References: <566ABCD9.1060404@users.sourceforge.net>
-         <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
-         <92c52f1d-d151-cea6-e9ac-31378e6862d0@users.sourceforge.net>
-         <1475771699.1914.10.camel@perches.com>
-         <d896b697-6735-e50d-00b0-2b3d9f371c99@users.sourceforge.net>
-         <1475775403.1914.13.camel@perches.com>
-         <c158cfe0-d8d8-e433-0cea-2ef1fc51e48b@users.sourceforge.net>
+From: Shaohua Li <shli@fb.com>
+Subject: [PATCH 2/2] RAID10: ignore discard error
+Date: Thu, 6 Oct 2016 14:20:26 -0700
+Message-ID: <b5d38675aed142807e25fde1dc5b11a5d31dad71.1475788662.git.shli@fb.com>
+References: <36b0390e404e6021f2aec98ee87c074eef6dc6bb.1475788662.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <c158cfe0-d8d8-e433-0cea-2ef1fc51e48b@users.sourceforge.net>
-Sender: linux-raid-owner@vger.kernel.org
-To: SF Markus Elfring <elfring@users.sourceforge.net>, Joe Perches <joe@perches.com>
-Cc: linux-raid@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Guoqing Jiang <gqjiang@suse.com>, Jens Axboe <axboe@fb.com>, Mike Christie <mchristi@redhat.com>, Neil Brown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, Tomasz Majchrzak <tomasz.majchrzak@intel.com>, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+Content-Type: text/plain
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <36b0390e404e6021f2aec98ee87c074eef6dc6bb.1475788662.git.shli@fb.com>
+Sender: stable-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Kernel-team@fb.com, sitsofe@gmail.com, "v3.6" <stable@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi all!
+This is the counterpart of raid10 fix. If a write error occurs, raid10
+will try to rewrite the bio in small chunk size. If the rewrite fails,
+raid10 will record the error in bad block. narrow_write_error will
+always use WRITE for the bio, but actually it could be a discard. Since
+discard bio hasn't payload, write the bio will cause different issues.
+But discard error isn't fatal, we can safely ignore it. This is what
+this patch does.
 
-On Thu, 2016-10-06 at 19:49 +0200, SF Markus Elfring wrote:
-> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> > > > []
-> > > > > 
-> > > > > @@ -7044,7 +7044,7 @@ static void raid5_status(struct
-> > > > > seq_file *seq, struct mddev *mddev)
-> > > > >  			   rdev && test_bit(In_sync, &rdev-
-> > > > > >flags) ? "U" : "_");
-> > > > >  	}
-> > > > >  	rcu_read_unlock();
-> > > > > -	seq_printf (seq, "]");
-> > > > > +	seq_puts(seq, "]");
-> > > > seq_putc
-> > > How do you think about the possibility that the script
-> > > "checkpatch.pl" can also point
-> > > such a source code transformation out directly?
-> > 
-> > Why don't _you_ try to implement that in checkpatch instead?
-> 
-> How are the chances that any other software developer would be
-> quicker (than me) for such
-> an addition because of more practical knowledge for the programming
-> language "Perl"?
+This issue should exist since discard is added, but only exposed with
+recent arbitrary bio size feature.
 
-The above is BTW a pretty simple thing and thus good for a learning
-experience for regular expressions and copy-pasting a few lines in that
-perl-script and editing them.
+Cc: Sitsofe Wheeler <sitsofe@gmail.com>
+Cc: stable@vger.kernel.org (v3.6)
+Signed-off-by: Shaohua Li <shli@fb.com>
+---
+ drivers/md/raid10.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-MfG,
-	Bernd
-
-PS: Sry for the noise - it's somewhat OT here ....
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index be1a9fc..39fddda 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -447,6 +447,9 @@ static void raid10_end_write_request(struct bio *bio)
+ 	struct r10conf *conf = r10_bio->mddev->private;
+ 	int slot, repl;
+ 	struct md_rdev *rdev = NULL;
++	bool discard_error;
++
++	discard_error = bio->bi_error && bio_op(bio) == REQ_OP_DISCARD;
+ 
+ 	dev = find_bio_disk(conf, r10_bio, bio, &slot, &repl);
+ 
+@@ -460,7 +463,7 @@ static void raid10_end_write_request(struct bio *bio)
+ 	/*
+ 	 * this branch is our 'one mirror IO has finished' event handler:
+ 	 */
+-	if (bio->bi_error) {
++	if (bio->bi_error && !discard_error) {
+ 		if (repl)
+ 			/* Never record new bad blocks to replacement,
+ 			 * just fail it.
+@@ -503,7 +506,7 @@ static void raid10_end_write_request(struct bio *bio)
+ 		if (is_badblock(rdev,
+ 				r10_bio->devs[slot].addr,
+ 				r10_bio->sectors,
+-				&first_bad, &bad_sectors)) {
++				&first_bad, &bad_sectors) && !discard_error) {
+ 			bio_put(bio);
+ 			if (repl)
+ 				r10_bio->devs[slot].repl_bio = IO_MADE_GOOD;
 -- 
-Bernd Petrovitsch                  Email : bernd@petrovitsch.priv.at
-                     LUGA : http://www.luga.at
+2.9.3
