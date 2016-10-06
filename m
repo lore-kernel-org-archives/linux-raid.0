@@ -1,68 +1,45 @@
-From: Shaohua Li <shli@fb.com>
-Subject: [PATCH 1/2] RAID1: ignore discard error
-Date: Thu, 6 Oct 2016 14:20:25 -0700
-Message-ID: <36b0390e404e6021f2aec98ee87c074eef6dc6bb.1475788662.git.shli@fb.com>
+From: Dark Penguin <darkpenguin@yandex.ru>
+Subject: Why not just return an error?
+Date: Fri, 7 Oct 2016 02:32:40 +0300
+Message-ID: <57F6DF18.40703@yandex.ru>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Kernel-team@fb.com, sitsofe@gmail.com, "v3.6" <stable@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Sitsofe,
-could you try if this patch fixes the issue too please?
+Greetings!
 
-Thanks,
-Shaohua
+The more I read about md-raid, the more I notice that the biggest 
+problem of it: if you hit an error on a degraded RAID, it falls apart. 
+Because of this, it is possible to lose a huge amount of data due to one 
+tiny read error, which particularly makes raid5 the sword of Damocles.
+
+But one question keeps me increasingly frustrated. Yes, during its 
+normal functioning, it totally makes sense to kick a faulty device out 
+of an array. But if we're running a degraded array, and doing so will 
+definitely result is massive data loss, why not just return a read error 
+instead? Just add a little check: on error, if degraded -> then just 
+return an error. I believe this is the dream of everyone who had ever 
+dealt with RAIDs.
+
+With RAID, the first proprity is keeping data safe. Yes, it's not an 
+alternative to backups and all that, but still - if we hit an error on a 
+degraded array, the array should scream and panic and send all kinds of 
+warnings, but definitely NOT collapse and warrant a visit to the RAID 
+recovery laboratory (or this mailing list). Imagine how much headache 
+and lost hair would that relieve!..
+
+Now, I'm probably not the first one to think of such a bright idea. So 
+there must be a very good reason why this is not possible; I don't think 
+the problem is just that "the existing behaviour is preferred, and 
+anyone who does not agree is an idiot". If not for enterprise use, then 
+at least it would be very useful for the "home archive" scenario when 
+"uptime" and "absense of errors" hold much less meaning than "losing one 
+file and not all the data". So, why is this not possible?..
 
 
-If a write error occurs, raid1 will try to rewrite the bio in small
-chunk size. If the rewrite fails, raid1 will record the error in bad
-block. narrow_write_error will always use WRITE for the bio, but
-actually it could be a discard. Since discard bio hasn't payload, write
-the bio will cause different issues. But discard error isn't fatal, we
-can safely ignore it. This is what this patch does.
-
-This issue should exist since discard is added, but only exposed with
-recent arbitrary bio size feature.
-
-Reported-by: Sitsofe Wheeler <sitsofe@gmail.com>
-Cc: stable@vger.kernel.org (v3.6)
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- drivers/md/raid1.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 21dc00e..95bf4cd 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -407,11 +407,14 @@ static void raid1_end_write_request(struct bio *bio)
- 	struct bio *to_put = NULL;
- 	int mirror = find_bio_disk(r1_bio, bio);
- 	struct md_rdev *rdev = conf->mirrors[mirror].rdev;
-+	bool discard_error;
-+
-+	discard_error = bio->bi_error && bio_op(bio) == REQ_OP_DISCARD;
- 
- 	/*
- 	 * 'one mirror IO has finished' event handler:
- 	 */
--	if (bio->bi_error) {
-+	if (bio->bi_error && !discard_error) {
- 		set_bit(WriteErrorSeen,	&rdev->flags);
- 		if (!test_and_set_bit(WantReplacement, &rdev->flags))
- 			set_bit(MD_RECOVERY_NEEDED, &
-@@ -448,7 +451,7 @@ static void raid1_end_write_request(struct bio *bio)
- 
- 		/* Maybe we can clear some bad blocks. */
- 		if (is_badblock(rdev, r1_bio->sector, r1_bio->sectors,
--				&first_bad, &bad_sectors)) {
-+				&first_bad, &bad_sectors) && !discard_error) {
- 			r1_bio->bios[mirror] = IO_MADE_GOOD;
- 			set_bit(R1BIO_MadeGood, &r1_bio->state);
- 		}
 -- 
-2.9.3
-
+darkpenguin
