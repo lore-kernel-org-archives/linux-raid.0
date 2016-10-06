@@ -1,7 +1,7 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 01/54] md/raid0: Use kcalloc() in create_strip_zones()
-Date: Thu, 6 Oct 2016 10:51:25 +0200
-Message-ID: <2eaf3755-ff33-39e0-517c-c968d148f862@users.sourceforge.net>
+Subject: [PATCH 25/54] md/raid5: Use kcalloc() in three functions
+Date: Thu, 6 Oct 2016 11:23:52 +0200
+Message-ID: <820e039e-c1bc-5586-f4f8-cf3d0ca71604@users.sourceforge.net>
 References: <566ABCD9.1060404@users.sourceforge.net>
  <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
 Mime-Version: 1.0
@@ -15,7 +15,7 @@ Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia 
 List-Id: linux-raid.ids
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Tue, 4 Oct 2016 10:10:52 +0200
+Date: Tue, 4 Oct 2016 22:30:12 +0200
 
 * Multiplications for the size determination of memory allocations
   indicated that array data structures should be processed.
@@ -23,36 +23,62 @@ Date: Tue, 4 Oct 2016 10:10:52 +0200
 
   This issue was detected by using the Coccinelle software.
 
-* Replace the specification of data types by pointer dereferences
+* Replace the specification of data structures by pointer dereferences
   to make the corresponding size determination a bit safer according to
   the Linux coding style convention.
 
+* Delete the local variable "size" which became unnecessary with
+  this refactoring.
+
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/md/raid0.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ drivers/md/raid5.c | 13 ++++---------
+ 1 file changed, 4 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index 258986a..50e8a63 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -150,12 +150,13 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
- 	}
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 92ac251..9a43006 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -2243,7 +2243,7 @@ static int resize_stripes(struct r5conf *conf, int newsize)
+ 	 * is completely stalled, so now is a good time to resize
+ 	 * conf->disks and the scribble region
+ 	 */
+-	ndisks = kzalloc(newsize * sizeof(struct disk_info), GFP_NOIO);
++	ndisks = kcalloc(newsize, sizeof(*ndisks), GFP_NOIO);
+ 	if (ndisks) {
+ 		for (i=0; i<conf->raid_disks; i++)
+ 			ndisks[i] = conf->disks[i];
+@@ -6255,7 +6255,6 @@ static int alloc_thread_groups(struct r5conf *conf, int cnt,
+ 			       struct r5worker_group **worker_groups)
+ {
+ 	int i, j, k;
+-	ssize_t size;
+ 	struct r5worker *workers;
  
- 	err = -ENOMEM;
--	conf->strip_zone = kzalloc(sizeof(struct strip_zone)*
--				conf->nr_strip_zones, GFP_KERNEL);
-+	conf->strip_zone = kcalloc(conf->nr_strip_zones,
-+				   sizeof(*conf->strip_zone),
-+				   GFP_KERNEL);
- 	if (!conf->strip_zone)
+ 	*worker_cnt_per_group = cnt;
+@@ -6265,10 +6264,8 @@ static int alloc_thread_groups(struct r5conf *conf, int cnt,
+ 		return 0;
+ 	}
+ 	*group_cnt = num_possible_nodes();
+-	size = sizeof(struct r5worker) * cnt;
+-	workers = kzalloc(size * *group_cnt, GFP_NOIO);
+-	*worker_groups = kzalloc(sizeof(struct r5worker_group) *
+-				*group_cnt, GFP_NOIO);
++	workers = kcalloc(cnt * *group_cnt, sizeof(*workers), GFP_NOIO);
++	*worker_groups = kcalloc(*group_cnt, sizeof(**worker_groups), GFP_NOIO);
+ 	if (!*worker_groups || !workers) {
+ 		kfree(workers);
+ 		kfree(*worker_groups);
+@@ -6519,9 +6516,7 @@ static struct r5conf *setup_conf(struct mddev *mddev)
+ 	else
+ 		conf->previous_raid_disks = mddev->raid_disks - mddev->delta_disks;
+ 	max_disks = max(conf->raid_disks, conf->previous_raid_disks);
+-
+-	conf->disks = kzalloc(max_disks * sizeof(struct disk_info),
+-			      GFP_KERNEL);
++	conf->disks = kcalloc(max_disks, sizeof(*conf->disks), GFP_KERNEL);
+ 	if (!conf->disks)
  		goto abort;
--	conf->devlist = kzalloc(sizeof(struct md_rdev*)*
--				conf->nr_strip_zones*mddev->raid_disks,
-+	conf->devlist = kcalloc(conf->nr_strip_zones * mddev->raid_disks,
-+				sizeof(*conf->devlist),
- 				GFP_KERNEL);
- 	if (!conf->devlist)
- 		goto abort;
+ 
 -- 
 2.10.1
