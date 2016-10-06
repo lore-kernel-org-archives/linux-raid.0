@@ -1,45 +1,43 @@
-From: Dark Penguin <darkpenguin@yandex.ru>
-Subject: Why not just return an error?
-Date: Fri, 7 Oct 2016 02:32:40 +0300
-Message-ID: <57F6DF18.40703@yandex.ru>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: RAID6 - CPU At 100% Usage After Reassembly
+Date: Thu, 6 Oct 2016 16:55:30 -0700
+Message-ID: <20161006235530.GA109312@kernel.org>
+References: <CADEsfxrKeSv5dRNfBoyybHaemPSqCcamTmSZ4P+Yey-rLd8hEg@mail.gmail.com>
+ <CAOW94uv4zSGs+6be3zhcQaGZdiAgg-s4ZHZ=mszcURo6pqJyqA@mail.gmail.com>
+ <CAOW94ute6CZafnAC6AVauqUGsEgVrnO3B27Gn3eVzdWFBJPCQw@mail.gmail.com>
+ <CAOW94utnY1zCR7gUCx1K0p2YfDhi3tXTsE6J_mT6rNz1TuTZEQ@mail.gmail.com>
+ <20160913174352.GA43576@kernel.org>
+ <CAOW94us2=5F8BbLhQSN_mC0wghZA8Z6qFQHBP5Y1csJuQ4pfKg@mail.gmail.com>
+ <CAOW94utVBcLz191ifzKkjn+nsSthPWDAQF8R-PabcS2uPareag@mail.gmail.com>
+ <CAOW94usC2AFt4uGRZRidcXN1Gii0PqSqfGAjL6_2Y1m6GAcZsg@mail.gmail.com>
+ <CAOW94uvFaiL9FO=k=gOsGzH0q1Qhw4X3n7ZFURj9_eTgGa656g@mail.gmail.com>
+ <CAOW94uuALbxOpfb5Rgzp=Fgvy8zfKt94zCcgs7T=U-m8jWGq3g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAOW94uuALbxOpfb5Rgzp=Fgvy8zfKt94zCcgs7T=U-m8jWGq3g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Francisco Parada <advanceandconquer@gmail.com>
+Cc: mdraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Greetings!
+On Wed, Oct 05, 2016 at 07:12:59AM -0400, Francisco Parada wrote:
+> Hi all,
+> 
+> Just wanted to send one last ping on this.  I didn't hear back and
+> really don't know where else to turn to before abandoning hope.
+> Should I just start wiping the drives so I can start from scratch at
+> this point?
+> 
+> I rebuilt the kernel with debug patch that Shaohua provided and I sent
+> the list the output of the trace.  Does any one have any other
+> suggestions?
 
-The more I read about md-raid, the more I notice that the biggest 
-problem of it: if you hit an error on a degraded RAID, it falls apart. 
-Because of this, it is possible to lose a huge amount of data due to one 
-tiny read error, which particularly makes raid5 the sword of Damocles.
+Sorry for the long delay. I got a chance to look at the log today. Looks it shows
+there are read errors in two disks and the raid6 thread is keeping loop to
+handle the case, but doesn't success. The disks are sdd and sdg. I have no idea
+how to fix this so far though, sorry.
 
-But one question keeps me increasingly frustrated. Yes, during its 
-normal functioning, it totally makes sense to kick a faulty device out 
-of an array. But if we're running a degraded array, and doing so will 
-definitely result is massive data loss, why not just return a read error 
-instead? Just add a little check: on error, if degraded -> then just 
-return an error. I believe this is the dream of everyone who had ever 
-dealt with RAIDs.
-
-With RAID, the first proprity is keeping data safe. Yes, it's not an 
-alternative to backups and all that, but still - if we hit an error on a 
-degraded array, the array should scream and panic and send all kinds of 
-warnings, but definitely NOT collapse and warrant a visit to the RAID 
-recovery laboratory (or this mailing list). Imagine how much headache 
-and lost hair would that relieve!..
-
-Now, I'm probably not the first one to think of such a bright idea. So 
-there must be a very good reason why this is not possible; I don't think 
-the problem is just that "the existing behaviour is preferred, and 
-anyone who does not agree is an idiot". If not for enterprise use, then 
-at least it would be very useful for the "home archive" scenario when 
-"uptime" and "absense of errors" hold much less meaning than "losing one 
-file and not all the data". So, why is this not possible?..
-
-
--- 
-darkpenguin
+Thanks,
+Shaohua
