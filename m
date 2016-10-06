@@ -1,8 +1,8 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 44/54] md/raid10: Return directly after a failed kzalloc() in
+Subject: [PATCH 45/54] md/raid10: Move assignments for the variable "err" in
  setup_conf()
-Date: Thu, 6 Oct 2016 11:44:30 +0200
-Message-ID: <6885c0ba-458f-23aa-883d-d1571c398bc5@users.sourceforge.net>
+Date: Thu, 6 Oct 2016 11:45:24 +0200
+Message-ID: <aaf54edd-9051-e72d-90b3-3c2755e0736c@users.sourceforge.net>
 References: <566ABCD9.1060404@users.sourceforge.net>
  <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
 Mime-Version: 1.0
@@ -16,51 +16,69 @@ Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia 
 List-Id: linux-raid.ids
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Wed, 5 Oct 2016 17:46:02 +0200
+Date: Wed, 5 Oct 2016 18:26:45 +0200
 
-* Return directly after a call of the function "kzalloc" failed
-  at the beginning.
-
-* Delete a repeated check for the local variable "conf"
-  which became unnecessary with this refactoring.
-
-* Reorder calls for the functions "kfree" and "safe_put_page"
-  at the end.
+One local variable was set to an error code before a concrete
+error situation was detected. Thus move the corresponding assignments
+into if branches to indicate a memory allocation failure there.
 
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/md/raid10.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
+ drivers/md/raid10.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 8326e68..abe75c2 100644
+index abe75c2..7e512d4 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -3501,7 +3501,7 @@ static struct r10conf *setup_conf(struct mddev *mddev)
- 	err = -ENOMEM;
+@@ -3498,7 +3498,6 @@ static struct r10conf *setup_conf(struct mddev *mddev)
+ 		return ERR_PTR(-EINVAL);
+ 	}
+ 
+-	err = -ENOMEM;
  	conf = kzalloc(sizeof(*conf), GFP_KERNEL);
  	if (!conf)
--		goto out;
-+		return ERR_PTR(-ENOMEM);
- 
- 	/* FIXME calc properly */
+ 		return ERR_PTR(-ENOMEM);
+@@ -3507,19 +3506,25 @@ static struct r10conf *setup_conf(struct mddev *mddev)
  	conf->mirrors = kcalloc(mddev->raid_disks + max(0, -mddev->delta_disks),
-@@ -3554,12 +3554,10 @@ static struct r10conf *setup_conf(struct mddev *mddev)
+ 				sizeof(*conf->mirrors),
+ 				GFP_KERNEL);
+-	if (!conf->mirrors)
++	if (!conf->mirrors) {
++		err = -ENOMEM;
+ 		goto out;
++	}
+ 
+ 	conf->tmppage = alloc_page(GFP_KERNEL);
+-	if (!conf->tmppage)
++	if (!conf->tmppage) {
++		err = -ENOMEM;
+ 		goto out;
++	}
+ 
+ 	conf->geo = geo;
+ 	conf->copies = copies;
+ 	conf->r10bio_pool = mempool_create(NR_RAID10_BIOS, r10bio_pool_alloc,
+ 					   r10bio_pool_free, conf);
+-	if (!conf->r10bio_pool)
++	if (!conf->r10bio_pool) {
++		err = -ENOMEM;
+ 		goto out;
++	}
+ 
+ 	calc_sectors(conf, mddev->dev_sectors);
+ 	if (mddev->reshape_position == MaxSector) {
+@@ -3547,8 +3552,10 @@ static struct r10conf *setup_conf(struct mddev *mddev)
+ 	atomic_set(&conf->nr_pending, 0);
+ 
+ 	conf->thread = md_register_thread(raid10d, mddev, "raid10");
+-	if (!conf->thread)
++	if (!conf->thread) {
++		err = -ENOMEM;
+ 		goto out;
++	}
+ 
+ 	conf->mddev = mddev;
  	return conf;
- 
-  out:
--	if (conf) {
--		mempool_destroy(conf->r10bio_pool);
--		kfree(conf->mirrors);
--		safe_put_page(conf->tmppage);
--		kfree(conf);
--	}
-+	mempool_destroy(conf->r10bio_pool);
-+	safe_put_page(conf->tmppage);
-+	kfree(conf->mirrors);
-+	kfree(conf);
- 	return ERR_PTR(err);
- }
- 
 -- 
 2.10.1
