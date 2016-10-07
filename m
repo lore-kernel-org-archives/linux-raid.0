@@ -1,54 +1,39 @@
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH] Fix bus error when accessing MBR partition records
-Date: Fri, 07 Oct 2016 11:14:44 -0400
-Message-ID: <wrfjshs8dwd7.fsf@redhat.com>
-References: <20160929122838.66975-1-jrtc27@jrtc27.com>
+Subject: Re: [PATCH] imsm: retrieve nvme serial from sysfs
+Date: Fri, 07 Oct 2016 11:19:00 -0400
+Message-ID: <wrfjoa2wdw63.fsf@redhat.com>
+References: <20161006091309.27263-1-artur.paszkiewicz@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160929122838.66975-1-jrtc27@jrtc27.com> (James Clarke's
-        message of "Thu, 29 Sep 2016 13:28:38 +0100")
+In-Reply-To: <20161006091309.27263-1-artur.paszkiewicz@intel.com> (Artur
+        Paszkiewicz's message of "Thu, 6 Oct 2016 11:13:09 +0200")
 Sender: linux-raid-owner@vger.kernel.org
-To: James Clarke <jrtc27@jrtc27.com>
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-James Clarke <jrtc27@jrtc27.com> writes:
-> Since the MBR layout only has partition records as 2-byte aligned, the 32-bit
-> fields in them are not aligned. Thus, they cannot be accessed on some
-> architectures (such as SPARC) by using a "struct MBR_part_record *" pointer,
-> as the compiler can assume that the pointer is properly aligned. Instead, the
-> records must be accessed by going through the MBR struct itself every time.
+Artur Paszkiewicz <artur.paszkiewicz@intel.com> writes:
+> Don't rely on SCSI ioctl for reading NVMe serials - SCSI emulation for
+> NVMe devices can be disabled in the kernel config. Instead, try to get a
+> serial from /sys/block/nvme*/device/serial. If that fails for whatever
+> reason (i.e. no such attribute in old kernels) - fall back to the SCSI
+> method.
 >
-> Signed-off-by: James Clarke <jrtc27@jrtc27.com>
+> This also moves some SCSI-specific code from imsm_read_serial() to
+> scsi_get_serial().
+>
+> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+> Reviewed-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+> Reviewed-by: Alexey Obitotskiy <aleksey.obitotskiy@intel.com>
 > ---
->  super-mbr.c |  6 ++++++
->  util.c      | 14 +++++++-------
->  2 files changed, 13 insertions(+), 7 deletions(-)
->
-> diff --git a/super-mbr.c b/super-mbr.c
-> index 62b3f03..303dde4 100644
-> --- a/super-mbr.c
-> +++ b/super-mbr.c
-> @@ -57,6 +57,9 @@ static void examine_mbr(struct supertype *st, char *homehost)
->  
->  	printf("   MBR Magic : %04x\n", sb->magic);
->  	for (i = 0; i < MBR_PARTITIONS; i++)
-> +		/* Have to make every access through sb rather than using a pointer to
-> +		 * the partition table (or an entry), since the entries are not
-> +		 * properly aligned. */
->  		if (sb->parts[i].blocks_num)
->  			printf("Partition[%d] : %12lu sectors at %12lu (type %02x)\n",
->  			       i,
+>  sg_io.c       | 23 +++++++++++++++++++----
+>  super-intel.c | 46 +++++++++++++++++++++++++++-------------------
+>  2 files changed, 46 insertions(+), 23 deletions(-)
 
-Reading through this thread and Neil's comments, I think it's reasonable
-to do what you are doing with pointer access. However I also believe
-that packed should be applied as Neil suggests.
+Hi Artur,
 
-Second, as code lines per definition are 80 characters wide, please make
-sure your patch complies with this. I know some of the older code
-violates this, but we shouldn't be adding more code which does so.
+Looks quite reasonable - applied!
 
-If you send me an updated patch I shall be happy to apply it.
-
+Thanks,
 Jes
