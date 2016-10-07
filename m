@@ -1,33 +1,65 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: Re: md/raid1: Improve another size determination in setup_conf()
-Date: Fri, 7 Oct 2016 12:50:09 +0200
-Message-ID: <522db506-1e1c-0563-7595-da6dc701d706@users.sourceforge.net>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
- <9831fce9-d689-89e4-dec8-50cadcd13fdd@users.sourceforge.net>
- <CAFLxGvx0Fr-WNvKYACdvNiZwYzHW4ocna9HPH8J_WPSXWc+ngg@mail.gmail.com>
- <20161007075345.GB6039@mwanda>
- <77d68bcd-1ae4-4808-fc0b-6183ae5fb6c4@users.sourceforge.net>
- <e5cddb79-1267-b2d8-c05b-1480096db21e@nod.at>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Subject: Re: Why not just return an error?
+Date: Fri, 7 Oct 2016 13:21:51 +0200
+Message-ID: <20161007112151.GA4405@metamorpher.de>
+References: <57F6DF18.40703@yandex.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e5cddb79-1267-b2d8-c05b-1480096db21e@nod.at>
+Content-Disposition: inline
+In-Reply-To: <57F6DF18.40703@yandex.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Richard Weinberger <richard@nod.at>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Guoqing Jiang <gqjiang@suse.com>, Jens Axboe <axboe@fb.com>, Mike Christie <mchristi@redhat.com>, Neil Brown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, Tomasz Majchrzak <tomasz.majchrzak@intel.com>, LKML <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, Julia Lawall <julia.lawall@lip6.fr>
+To: Dark Penguin <darkpenguin@yandex.ru>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Linux has tons of issues, fixes for real problems are very welcome.
+On Fri, Oct 07, 2016 at 02:32:40AM +0300, Dark Penguin wrote:
+> why not just return a read error instead?
 
-Is a spectrum of software improvements to reconsider there?
+You make it sound like it solves all problems, but it does not.
+Errors are just not part of the concept anywhere really.
 
+If a filesystem encounters one, it might flip into read only mode;
+if a program encounters one it might do whatever.
+You still have a huge data loss, corrupt databases, et cetera.
 
-> But coding style bike shedding is just a waste of time.
+Even so, is that not what you have with "bad block log" enabled, 
+within reason? I disable it everywhere. I want my disks kicked.
 
-Why do various software developers bother about coding style specifications
-at all then?
+Using cosmetics to hide errors only works to a certain limit. 
+In the end, RAID only works if the disks work. RAID 5 with 
+two dead disks is dead, no way to get around that. Disks go bad 
+and need to be replaced, if you don't do that, you'll just fail 
+even more horribly later on.
 
-Regards,
-Markus
+> I believe this is the dream of everyone who had ever 
+> dealt with RAIDs.
+
+My dream is different. I don't want errors. I want it to work. ;)
+And it does, as long as you make sure your disks are healthy.
+
+And if you make every effort to keep broken disks in your arrays, 
+it just won't work. All promises are off - RAID promises to survive 
+one or two dead disks, but that's only if all other disks are in 
+perfect working order for the time it takes to rebuild.
+
+Your disk produces read errors, or needs 3 minutes to read a single sector, 
+what use is it to anyone? I'm not letting those disks stay, no matter how 
+many more people preach that "read errors are normal". No. They're not. 
+Such disks are utter and complete trash and have to go.
+
+Don't wait for MD to kick disks out either. Check your disks. 
+Actually replace them if they have errors. Most RAIDs die due 
+to people not monitoring their disks, or delaying replacements.
+
+Replacing disks costs money but that is the price you have to pay 
+for the luxury of using RAID (especially at home) in the first place. 
+When buying a RAID system, the money for the next replacement disk 
+should always be planned into your budget. If you max it out or 
+overdraw your budget for those fancy enterprise RAID disks, 
+you'll find they die just the same.
+
+Also make backups. RAID never replaces backups.
+
+Regards
+Andreas Klauer
