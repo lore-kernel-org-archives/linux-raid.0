@@ -1,37 +1,57 @@
-From: "Austin S. Hemmelgarn" <ahferroin7@gmail.com>
-Subject: Re: md/raid1: Improve another size determination in setup_conf()
-Date: Fri, 7 Oct 2016 07:52:22 -0400
-Message-ID: <6e2c26bc-d765-6225-af72-157832ab8785@gmail.com>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
- <9831fce9-d689-89e4-dec8-50cadcd13fdd@users.sourceforge.net>
- <CAFLxGvx0Fr-WNvKYACdvNiZwYzHW4ocna9HPH8J_WPSXWc+ngg@mail.gmail.com>
- <20161007075345.GB6039@mwanda>
- <77d68bcd-1ae4-4808-fc0b-6183ae5fb6c4@users.sourceforge.net>
- <e5cddb79-1267-b2d8-c05b-1480096db21e@nod.at>
- <522db506-1e1c-0563-7595-da6dc701d706@users.sourceforge.net>
+From: walter harms <wharms@bfs.de>
+Subject: Re: md-cluster: Delete unnecessary braces in unlock_all_bitmaps()
+Date: Fri, 07 Oct 2016 15:21:14 +0200
+Message-ID: <57F7A14A.3070207@bfs.de>
+References: <566ABCD9.1060404@users.sourceforge.net> <3a03df66-92ce-20fb-17f3-fb79b9d43c8e@users.sourceforge.net> <ba60b210-40c6-b021-780c-33ecea7bee9e@users.sourceforge.net> <20161007074646.GA6039@mwanda> <9e1de37a-d98d-c885-b4ff-5a8b2aa1f7a8@users.sourceforge.net>
+Reply-To: wharms@bfs.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <522db506-1e1c-0563-7595-da6dc701d706@users.sourceforge.net>
-Sender: linux-raid-owner@vger.kernel.org
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, Richard Weinberger <richard@nod.at>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Guoqing Jiang <gqjiang@suse.com>, Jens Axboe <axboe@fb.com>, Mike Christie <mchristi@redhat.com>, Neil Brown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, Tomasz Majchrzak <tomasz.majchrzak@intel.com>, LKML <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, Julia Lawall <julia.lawall@lip6.fr>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <9e1de37a-d98d-c885-b4ff-5a8b2aa1f7a8@users.sourceforge.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: kernel-janitors@vger.kernel.org
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>, Shaohua Li <shli@kernel.org>, LKML <linux-kernel@vger.kernel.org>, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-raid.ids
 
-On 2016-10-07 06:50, SF Markus Elfring wrote:
->> Linux has tons of issues, fixes for real problems are very welcome.
->
-> Is a spectrum of software improvements to reconsider there?
->
->
->> But coding style bike shedding is just a waste of time.
->
-> Why do various software developers bother about coding style specifications
-> at all then?
-Coding style is important, but patches that just fix coding style are a 
-bad thing because they break things like `git blame` and run the risk of 
-introducing new bugs without any net benefit to end users.  This goes 
-double for code you don't actually work on regularly or don't completely 
-understand.
+
+
+Am 07.10.2016 10:37, schrieb SF Markus Elfring:
+>>> Do not use curly brackets at one source code place
+>>> where a single statement should be sufficient.
+>>
+>> The original style was correct and this is wrong.  I have explained this before.
+> 
+> Did I change a bit too much in the proposed step according to the following
+> update suggestion?
+> 
+> elfring@Sonne:~/Projekte/Linux/next-patched> git checkout d6385db94196b253ae5eb3678fa95cdf1f839fcc && scripts/checkpatch.pl --types BRACES -f drivers/md/md-cluster.c
+> …
+> WARNING: braces {} are not necessary for single statement blocks
+> #1228: FILE: drivers/md/md-cluster.c:1228:
+> +			if (cinfo->other_bitmap_lockres[i]) {
+> +				lockres_free(cinfo->other_bitmap_lockres[i]);
+> +			}
+> …
+> 
+> 
+> How do you think about to adjust this source code place a bit?
+> 
+
+perhaps we can agree to delete the if() block ?
+
+static void lockres_free(struct dlm_lock_resource *res)
+{
+        int ret;
+
+       if (!res)
+                return;
+
+....
+
+
+@marcus: is can not send mail to you sf.net adresse because sf.net
+         mark my domain als spam (note: nobody else does)
+
+re,
+ wh
