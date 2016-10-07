@@ -1,65 +1,67 @@
-From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Subject: Re: Why not just return an error?
-Date: Fri, 7 Oct 2016 13:21:51 +0200
-Message-ID: <20161007112151.GA4405@metamorpher.de>
-References: <57F6DF18.40703@yandex.ru>
+From: Francisco Parada <advanceandconquer@gmail.com>
+Subject: Re: RAID6 - CPU At 100% Usage After Reassembly
+Date: Fri, 7 Oct 2016 07:23:49 -0400
+Message-ID: <CAOW94uvxPH9dhpd=-t+eMfOc3YPLxasViz29idZmbQn-GkP5vg@mail.gmail.com>
+References: <CADEsfxrKeSv5dRNfBoyybHaemPSqCcamTmSZ4P+Yey-rLd8hEg@mail.gmail.com>
+ <CAOW94uv4zSGs+6be3zhcQaGZdiAgg-s4ZHZ=mszcURo6pqJyqA@mail.gmail.com>
+ <CAOW94ute6CZafnAC6AVauqUGsEgVrnO3B27Gn3eVzdWFBJPCQw@mail.gmail.com>
+ <CAOW94utnY1zCR7gUCx1K0p2YfDhi3tXTsE6J_mT6rNz1TuTZEQ@mail.gmail.com>
+ <20160913174352.GA43576@kernel.org> <CAOW94us2=5F8BbLhQSN_mC0wghZA8Z6qFQHBP5Y1csJuQ4pfKg@mail.gmail.com>
+ <CAOW94utVBcLz191ifzKkjn+nsSthPWDAQF8R-PabcS2uPareag@mail.gmail.com>
+ <CAOW94usC2AFt4uGRZRidcXN1Gii0PqSqfGAjL6_2Y1m6GAcZsg@mail.gmail.com>
+ <CAOW94uvFaiL9FO=k=gOsGzH0q1Qhw4X3n7ZFURj9_eTgGa656g@mail.gmail.com>
+ <CAOW94uuALbxOpfb5Rgzp=Fgvy8zfKt94zCcgs7T=U-m8jWGq3g@mail.gmail.com> <20161006235530.GA109312@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <57F6DF18.40703@yandex.ru>
+In-Reply-To: <20161006235530.GA109312@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dark Penguin <darkpenguin@yandex.ru>
-Cc: linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: mdraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Oct 07, 2016 at 02:32:40AM +0300, Dark Penguin wrote:
-> why not just return a read error instead?
+> Sorry for the long delay.
 
-You make it sound like it solves all problems, but it does not.
-Errors are just not part of the concept anywhere really.
+No worries at all, Shaohua!!!! I really appreciate you getting back to me.
 
-If a filesystem encounters one, it might flip into read only mode;
-if a program encounters one it might do whatever.
-You still have a huge data loss, corrupt databases, et cetera.
+> Looks it showsthere are read errors in two disks and the raid6 thread is keeping loop to
+handle the case, but doesn't success. The disks are sdd and sdg. I have no idea
+how to fix this so far though, sorry.
 
-Even so, is that not what you have with "bad block log" enabled, 
-within reason? I disable it everywhere. I want my disks kicked.
+OK, let me try running diagnostics on the disks again.  I ran
+"badblocks" on them with the "-sv" options when I originally
+encountered the issue, and only had found errors on one drive.  But
+I'll run them again just in case, as well as a few other diagnostics.
+I'll have to come up with something to try and detect the errors.  I'm
+wondering if these read errors are caused by the controller, or the
+drives themselves.  I can try swapping controllers.  Unless it's an
+issue with the model drives that I'm using.  I've got WD 3TB Green
+EZRX drives, which I recently found out via the RAID Wiki, that they
+didn't have error correction (after I spent over a thousand dollars on
+the drives in 3 years) ... Had I known better, I would have opted for
+different models.
 
-Using cosmetics to hide errors only works to a certain limit. 
-In the end, RAID only works if the disks work. RAID 5 with 
-two dead disks is dead, no way to get around that. Disks go bad 
-and need to be replaced, if you don't do that, you'll just fail 
-even more horribly later on.
+Thanks a million, Shaohua!
 
-> I believe this is the dream of everyone who had ever 
-> dealt with RAIDs.
 
-My dream is different. I don't want errors. I want it to work. ;)
-And it does, as long as you make sure your disks are healthy.
 
-And if you make every effort to keep broken disks in your arrays, 
-it just won't work. All promises are off - RAID promises to survive 
-one or two dead disks, but that's only if all other disks are in 
-perfect working order for the time it takes to rebuild.
-
-Your disk produces read errors, or needs 3 minutes to read a single sector, 
-what use is it to anyone? I'm not letting those disks stay, no matter how 
-many more people preach that "read errors are normal". No. They're not. 
-Such disks are utter and complete trash and have to go.
-
-Don't wait for MD to kick disks out either. Check your disks. 
-Actually replace them if they have errors. Most RAIDs die due 
-to people not monitoring their disks, or delaying replacements.
-
-Replacing disks costs money but that is the price you have to pay 
-for the luxury of using RAID (especially at home) in the first place. 
-When buying a RAID system, the money for the next replacement disk 
-should always be planned into your budget. If you max it out or 
-overdraw your budget for those fancy enterprise RAID disks, 
-you'll find they die just the same.
-
-Also make backups. RAID never replaces backups.
-
-Regards
-Andreas Klauer
+On Thu, Oct 6, 2016 at 7:55 PM, Shaohua Li <shli@kernel.org> wrote:
+> On Wed, Oct 05, 2016 at 07:12:59AM -0400, Francisco Parada wrote:
+>> Hi all,
+>>
+>> Just wanted to send one last ping on this.  I didn't hear back and
+>> really don't know where else to turn to before abandoning hope.
+>> Should I just start wiping the drives so I can start from scratch at
+>> this point?
+>>
+>> I rebuilt the kernel with debug patch that Shaohua provided and I sent
+>> the list the output of the trace.  Does any one have any other
+>> suggestions?
+>
+> Sorry for the long delay. I got a chance to look at the log today. Looks it shows
+> there are read errors in two disks and the raid6 thread is keeping loop to
+> handle the case, but doesn't success. The disks are sdd and sdg. I have no idea
+> how to fix this so far though, sorry.
+>
+> Thanks,
+> Shaohua
