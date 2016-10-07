@@ -1,67 +1,37 @@
-From: Francisco Parada <advanceandconquer@gmail.com>
-Subject: Re: RAID6 - CPU At 100% Usage After Reassembly
-Date: Fri, 7 Oct 2016 07:23:49 -0400
-Message-ID: <CAOW94uvxPH9dhpd=-t+eMfOc3YPLxasViz29idZmbQn-GkP5vg@mail.gmail.com>
-References: <CADEsfxrKeSv5dRNfBoyybHaemPSqCcamTmSZ4P+Yey-rLd8hEg@mail.gmail.com>
- <CAOW94uv4zSGs+6be3zhcQaGZdiAgg-s4ZHZ=mszcURo6pqJyqA@mail.gmail.com>
- <CAOW94ute6CZafnAC6AVauqUGsEgVrnO3B27Gn3eVzdWFBJPCQw@mail.gmail.com>
- <CAOW94utnY1zCR7gUCx1K0p2YfDhi3tXTsE6J_mT6rNz1TuTZEQ@mail.gmail.com>
- <20160913174352.GA43576@kernel.org> <CAOW94us2=5F8BbLhQSN_mC0wghZA8Z6qFQHBP5Y1csJuQ4pfKg@mail.gmail.com>
- <CAOW94utVBcLz191ifzKkjn+nsSthPWDAQF8R-PabcS2uPareag@mail.gmail.com>
- <CAOW94usC2AFt4uGRZRidcXN1Gii0PqSqfGAjL6_2Y1m6GAcZsg@mail.gmail.com>
- <CAOW94uvFaiL9FO=k=gOsGzH0q1Qhw4X3n7ZFURj9_eTgGa656g@mail.gmail.com>
- <CAOW94uuALbxOpfb5Rgzp=Fgvy8zfKt94zCcgs7T=U-m8jWGq3g@mail.gmail.com> <20161006235530.GA109312@kernel.org>
+From: "Austin S. Hemmelgarn" <ahferroin7@gmail.com>
+Subject: Re: md/raid1: Improve another size determination in setup_conf()
+Date: Fri, 7 Oct 2016 07:52:22 -0400
+Message-ID: <6e2c26bc-d765-6225-af72-157832ab8785@gmail.com>
+References: <566ABCD9.1060404@users.sourceforge.net>
+ <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
+ <9831fce9-d689-89e4-dec8-50cadcd13fdd@users.sourceforge.net>
+ <CAFLxGvx0Fr-WNvKYACdvNiZwYzHW4ocna9HPH8J_WPSXWc+ngg@mail.gmail.com>
+ <20161007075345.GB6039@mwanda>
+ <77d68bcd-1ae4-4808-fc0b-6183ae5fb6c4@users.sourceforge.net>
+ <e5cddb79-1267-b2d8-c05b-1480096db21e@nod.at>
+ <522db506-1e1c-0563-7595-da6dc701d706@users.sourceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161006235530.GA109312@kernel.org>
+In-Reply-To: <522db506-1e1c-0563-7595-da6dc701d706@users.sourceforge.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: mdraid <linux-raid@vger.kernel.org>
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, Richard Weinberger <richard@nod.at>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Guoqing Jiang <gqjiang@suse.com>, Jens Axboe <axboe@fb.com>, Mike Christie <mchristi@redhat.com>, Neil Brown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, Tomasz Majchrzak <tomasz.majchrzak@intel.com>, LKML <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-raid.ids
 
-> Sorry for the long delay.
-
-No worries at all, Shaohua!!!! I really appreciate you getting back to me.
-
-> Looks it showsthere are read errors in two disks and the raid6 thread is keeping loop to
-handle the case, but doesn't success. The disks are sdd and sdg. I have no idea
-how to fix this so far though, sorry.
-
-OK, let me try running diagnostics on the disks again.  I ran
-"badblocks" on them with the "-sv" options when I originally
-encountered the issue, and only had found errors on one drive.  But
-I'll run them again just in case, as well as a few other diagnostics.
-I'll have to come up with something to try and detect the errors.  I'm
-wondering if these read errors are caused by the controller, or the
-drives themselves.  I can try swapping controllers.  Unless it's an
-issue with the model drives that I'm using.  I've got WD 3TB Green
-EZRX drives, which I recently found out via the RAID Wiki, that they
-didn't have error correction (after I spent over a thousand dollars on
-the drives in 3 years) ... Had I known better, I would have opted for
-different models.
-
-Thanks a million, Shaohua!
-
-
-
-On Thu, Oct 6, 2016 at 7:55 PM, Shaohua Li <shli@kernel.org> wrote:
-> On Wed, Oct 05, 2016 at 07:12:59AM -0400, Francisco Parada wrote:
->> Hi all,
->>
->> Just wanted to send one last ping on this.  I didn't hear back and
->> really don't know where else to turn to before abandoning hope.
->> Should I just start wiping the drives so I can start from scratch at
->> this point?
->>
->> I rebuilt the kernel with debug patch that Shaohua provided and I sent
->> the list the output of the trace.  Does any one have any other
->> suggestions?
+On 2016-10-07 06:50, SF Markus Elfring wrote:
+>> Linux has tons of issues, fixes for real problems are very welcome.
 >
-> Sorry for the long delay. I got a chance to look at the log today. Looks it shows
-> there are read errors in two disks and the raid6 thread is keeping loop to
-> handle the case, but doesn't success. The disks are sdd and sdg. I have no idea
-> how to fix this so far though, sorry.
+> Is a spectrum of software improvements to reconsider there?
 >
-> Thanks,
-> Shaohua
+>
+>> But coding style bike shedding is just a waste of time.
+>
+> Why do various software developers bother about coding style specifications
+> at all then?
+Coding style is important, but patches that just fix coding style are a 
+bad thing because they break things like `git blame` and run the risk of 
+introducing new bugs without any net benefit to end users.  This goes 
+double for code you don't actually work on regularly or don't completely 
+understand.
