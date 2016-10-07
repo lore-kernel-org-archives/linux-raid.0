@@ -1,102 +1,119 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Why not just return an error?
-Date: Fri, 7 Oct 2016 12:52:06 -0400
-Message-ID: <94b1a4f4-adec-90b7-e804-2d8d2c94a7af@turmel.org>
-References: <57F6DF18.40703@yandex.ru> <20161007112151.GA4405@metamorpher.de>
- <e887908f-ba51-0f88-f891-f60e8bac50bd@turmel.org>
- <57F7CC10.3050607@yandex.ru>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [GIT PULL] MD update for 4.9
+Date: Fri, 7 Oct 2016 10:39:57 -0700
+Message-ID: <20161007173957.GA37192@kernel.org>
+References: <20161007003850.GA7197@kernel.org>
+ <CAFx4rwTo7s7uVH3PuGF-ys52QaEdxHoP2viYuJteRQqmeiEyqA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <57F7CC10.3050607@yandex.ru>
+Content-Disposition: inline
+In-Reply-To: <CAFx4rwTo7s7uVH3PuGF-ys52QaEdxHoP2viYuJteRQqmeiEyqA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dark Penguin <darkpenguin@yandex.ru>, Andreas Klauer <Andreas.Klauer@metamorpher.de>, Rudy Zijlstra <rudy@grumpydevil.homelinux.org>, keld@keldix.com
-Cc: linux-raid@vger.kernel.org
+To: Doug Dumitru <doug@easyco.com>
+Cc: torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>, neilb@suse.de
 List-Id: linux-raid.ids
 
-Hi DP,
-
-{It's good that you are trimming replies, but don't cut the ID of who
-wrote what. }
-
-On 10/07/2016 12:23 PM, Dark Penguin wrote:
->> Likewise, when the first disk fails, one could mark it as kind of in
->> an error state,
->> and keep it running, and if one gets a read error, then you could get
->> the data from the good disks.
+On Thu, Oct 06, 2016 at 10:39:21PM -0700, Doug Dumitru wrote:
+> Mr. Li,
 > 
-> Yes!! If a drive is "faulty", it means "you should replace it because it
-> is failing"; there is no need to actually stop using it and degrade the
-> whole RAID operation! What's more, it would be extremely useful at
-> rebuilding without any performance loss: let the array work in degraded
-> mode, while the faulty drive is being copied to the new one, with only
-> read errors reconstructed from the rest of the drives! But that's a
-> different issue, and not a very good idea for other reasons.
-
-MD raid already does as much of this as it can, as I described.
-
->> One big reason is human behaviour. And it is human behaviour that in the
->> end causes all the collapsed raids.
+> There is another thread in [linux-raid] discussing pre-fetches in the
+> raid-6 AVX2 code.  My testing implies that the prefetch distance is
+> too short.  In your new AVX512 code, it looks like there are 24
+> instructions, each with latencies of 1, between the prefetch and the
+> actual memory load.  I don't have a AVX512 CPU to try this on, but the
+> prefetch might do better at a bigger distance.  If I am not mistaken,
+> it takes a lot longer than 24 clocks to fetch 4 cache lines.
 > 
-> "Human behaviour", that's what I'm talking about. If the only reason to
-> do it is to force people to do what is necessary, that approach is
-> called "Windows". :) And I do not suggest that it should be the default
-> behaviour; instead, we should have an option "--idiotmode
-> --yes-i-know-what-i-am-doing" at RAID creation for those who
-> specifically want to take the risks.
+> Just a comment while the code is still fluid.
+
+I did try your patch and it improved 10% in my machine, but this isn't
+relevent to the pull. We can do the tunning later if necessary. I'm
+hoping the intel guys can share some hints, but apparently Linus isn't a
+fan for such tuning.
+
+Thanks,
+Shaohua
+
+> On Thu, Oct 6, 2016 at 5:38 PM, Shaohua Li <shli@kernel.org> wrote:
+> > Hi Linus,
+> > Please pull MD update for 4.9. This update includes:
+> > - new AVX512 instruction based raid6 gen/recovery algorithm
+> > - A couple of md-cluster related bug fixes
+> > - Fix a potential deadlock
+> > - Set nonrotational bit for raid array with SSD
+> > - Set correct max_hw_sectors for raid5/6, which hopefuly can improve
+> >   performance a little bit
+> > - Other minor fixes
+> >
+> > Thanks,
+> > Shaohua
+> >
+> > The following changes since commit 7d1e042314619115153a0f6f06e4552c09a50e13:
+> >
+> >   Merge tag 'usercopy-v4.8-rc8' of git://git.kernel.org/pub/scm/linux/kernel/git/kees/linux (2016-09-20 17:11:19 -0700)
+> >
+> > are available in the git repository at:
+> >
+> >   git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git tags/md/4.9-rc1
+> >
+> > for you to fetch changes up to bb086a89a406b5d877ee616f1490fcc81f8e1b2b:
+> >
+> >   md: set rotational bit (2016-10-03 10:20:27 -0700)
+> >
+> > ----------------------------------------------------------------
+> > Chao Yu (1):
+> >       raid5: fix to detect failure of register_shrinker
+> >
+> > Gayatri Kammela (5):
+> >       lib/raid6: Add AVX512 optimized gen_syndrome functions
+> >       lib/raid6: Add AVX512 optimized recovery functions
+> >       lib/raid6/test/Makefile: Add avx512 gen_syndrome and recovery functions
+> >       lib/raid6: Add AVX512 optimized xor_syndrome functions
+> >       raid6/test/test.c: bug fix: Specify aligned(alignment) attributes to the char arrays
+> >
+> > Guoqing Jiang (9):
+> >       md-cluster: call md_kick_rdev_from_array once ack failed
+> >       md-cluster: use FORCEUNLOCK in lockres_free
+> >       md-cluster: remove some unnecessary dlm_unlock_sync
+> >       md: changes for MD_STILL_CLOSED flag
+> >       md-cluster: clean related infos of cluster
+> >       md-cluster: protect md_find_rdev_nr_rcu with rcu lock
+> >       md-cluster: convert the completion to wait queue
+> >       md-cluster: introduce dlm_lock_sync_interruptible to fix tasks hang
+> >       md-cluster: make resync lock also could be interruptted
+> >
+> > Shaohua Li (5):
+> >       raid5: allow arbitrary max_hw_sectors
+> >       md/bitmap: fix wrong cleanup
+> >       md: fix a potential deadlock
+> >       raid5: handle register_shrinker failure
+> >       md: set rotational bit
+> >
+> >  arch/x86/Makefile        |   5 +-
+> >  drivers/md/bitmap.c      |   4 +-
+> >  drivers/md/md-cluster.c  |  99 ++++++---
+> >  drivers/md/md.c          |  44 +++-
+> >  drivers/md/md.h          |   5 +-
+> >  drivers/md/raid5.c       |  11 +-
+> >  include/linux/raid/pq.h  |   4 +
+> >  lib/raid6/Makefile       |   2 +-
+> >  lib/raid6/algos.c        |  12 +
+> >  lib/raid6/avx512.c       | 569 +++++++++++++++++++++++++++++++++++++++++++++++
+> >  lib/raid6/recov_avx512.c | 388 ++++++++++++++++++++++++++++++++
+> >  lib/raid6/test/Makefile  |   5 +-
+> >  lib/raid6/test/test.c    |   7 +-
+> >  lib/raid6/x86.h          |  10 +
+> >  14 files changed, 1111 insertions(+), 54 deletions(-)
+> >  create mode 100644 lib/raid6/avx512.c
+> >  create mode 100644 lib/raid6/recov_avx512.c
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> And of course, no broken files will appear if we suffer from read
-> *errors*. We do not suffer from *incorrect reads*, right?..
-
-You want to push the failure condition from being "broken raid with
-likely salvageable data, except for one sector" to "repeated errors to
-the upper layers with unknowable corruption as side effects".
-
->> You make it sound like it solves all problems, but it does not.
->> Errors are just not part of the concept anywhere really.
 > 
-> It does not "solve all problems", but it lets me solve my problems my
-> way, and not "the only correct and intended way" - which is what Linux
-> is good at. :)
-
-Then patch your kernel with your desired behavior.  "Free software"
-doesn't mean someone writes what you want for free.  And I disagree with
-you, so would object to it being put in the mainline kernel.
-
->>> > I believe this is the dream of everyone who had ever dealt with RAIDs.
->>
->> My dream is different. I don't want errors. I want it to work. ;)
->> And it does, as long as you make sure your disks are healthy.
 > 
-> I do not suggest that we do it my way and not yours - we have an option
-> to do it your way, but we do not have one to do it my way, that's the
-> problem. :)
-
-Write the code to add the option you want.
-
-> Anyway, if I had a collapsed RAID-5, I would want to at least have an
-> easy option to start it in a read-only mode in the last-known working
-> state, while the faulty drives are still not out of sync, and recover
-> data easily (to my single backup drive), or continue using the array for
-> a while, manually deleting one "bad" file if necessary; this is of
-> course not a "good thing" to do, but this way, RAID would be at least
-> not worse than single drives with faulty sectors, which are capable of
-> that, while RAIDs are not! I would be fine with that in my archive - as
-> I'm fine with some less importand parts of the archive being on faulty
-> single drives. It's just that I don't want to lose the whole drive due
-> to a hardware failure - and RAID adds more causes other than that,
-> instead of offering more protection against that.
-
-MD raid has no idea what is at any given sector.  And with a
-near-infinite variety of layering choices, there's no way it's going to.
- That's why *you* have to do this.  You trimmed my description of the
-only "easy option" actually trustable.
-
-> It's just that everyone has their own opinion on where to draw the line,
-> and the "intended" one should of course be preached, but not forced!
-
-The "line" I was referring to is the decision of when to throw away a
-drive vs. recondition it.  That's already in your hands.
-
-Phil
+> -- 
+> Doug Dumitru
+> EasyCo LLC
