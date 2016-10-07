@@ -1,50 +1,33 @@
-From: Sitsofe Wheeler <sitsofe@gmail.com>
-Subject: Re: [PATCH 1/2] RAID1: ignore discard error
-Date: Fri, 7 Oct 2016 11:53:07 +0100
-Message-ID: <CALjAwxhSrcCaePBW0co1wSTNh0i3o0q09BKXeyeKtO_PRn+5_w@mail.gmail.com>
-References: <36b0390e404e6021f2aec98ee87c074eef6dc6bb.1475788662.git.shli@fb.com>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: Re: md/raid1: Improve another size determination in setup_conf()
+Date: Fri, 7 Oct 2016 12:50:09 +0200
+Message-ID: <522db506-1e1c-0563-7595-da6dc701d706@users.sourceforge.net>
+References: <566ABCD9.1060404@users.sourceforge.net>
+ <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
+ <9831fce9-d689-89e4-dec8-50cadcd13fdd@users.sourceforge.net>
+ <CAFLxGvx0Fr-WNvKYACdvNiZwYzHW4ocna9HPH8J_WPSXWc+ngg@mail.gmail.com>
+ <20161007075345.GB6039@mwanda>
+ <77d68bcd-1ae4-4808-fc0b-6183ae5fb6c4@users.sourceforge.net>
+ <e5cddb79-1267-b2d8-c05b-1480096db21e@nod.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <36b0390e404e6021f2aec98ee87c074eef6dc6bb.1475788662.git.shli@fb.com>
+In-Reply-To: <e5cddb79-1267-b2d8-c05b-1480096db21e@nod.at>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>
-Cc: linux-raid@vger.kernel.org, Kernel-team@fb.com, "v3.6" <stable@vger.kernel.org>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Richard Weinberger <richard@nod.at>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Guoqing Jiang <gqjiang@suse.com>, Jens Axboe <axboe@fb.com>, Mike Christie <mchristi@redhat.com>, Neil Brown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, Tomasz Majchrzak <tomasz.majchrzak@intel.com>, LKML <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-raid.ids
 
-On 6 October 2016 at 22:20, Shaohua Li <shli@fb.com> wrote:
-> Sitsofe,
-> could you try if this patch fixes the issue too please?
+> Linux has tons of issues, fixes for real problems are very welcome.
 
-As with with the previous patch the BUG_ON/crash is fixed and as
-before dmesg only says this now:
-[   17.884175] sd 0:0:1:0: [sdb] tag#0 FAILED Result: hostbyte=DID_OK
-driverbyte=DRIVER_SENSE
-[   17.884180] sd 0:0:1:0: [sdb] tag#0 Sense Key : Illegal Request [current]
-[   17.884185] sd 0:0:1:0: [sdb] tag#0 Add. Sense: Invalid command
-operation code
-[   17.884190] sd 0:0:1:0: [sdb] tag#0 CDB: Write same(16) 93 08 00 00
-00 00 00 00 40 80 00 00 08 00 00 00
-[   17.884196] blk_update_request: critical target error, dev sdb, sector 16512
-[   17.884205] sd 0:0:2:0: [sdc] tag#1 FAILED Result: hostbyte=DID_OK
-driverbyte=DRIVER_SENSE
-[   17.884208] sd 0:0:2:0: [sdc] tag#1 Sense Key : Illegal Request [current]
-[   17.884211] sd 0:0:2:0: [sdc] tag#1 Add. Sense: Invalid command
-operation code
-[   17.884215] sd 0:0:2:0: [sdc] tag#1 CDB: Write same(16) 93 08 00 00
-00 00 00 00 40 80 00 00 08 00 00 00
-[   17.884217] blk_update_request: critical target error, dev sdc, sector 16512
-[   17.924716] Buffer I/O error on dev dm-0, logical block 0, async page read
+Is a spectrum of software improvements to reconsider there?
 
-(sd[bc] are the devices the RAID is using)
 
-However this time around blkdiscard doesn't return an error (despite
-the discard not being done) and is quiet. It's hard to say if this is
-desirable given that the underlying devices switch to saying they
-don't support discard but perhaps that's part of a different
-discussion.
+> But coding style bike shedding is just a waste of time.
 
-Tested-by: Sitsofe Wheeler <sitsofe@gmail.com>
+Why do various software developers bother about coding style specifications
+at all then?
 
--- 
-Sitsofe | http://sucs.org/~sits/
+Regards,
+Markus
