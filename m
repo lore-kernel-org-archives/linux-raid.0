@@ -1,112 +1,78 @@
-From: Doug Dumitru <doug@easyco.com>
-Subject: Re: [GIT PULL] MD update for 4.9
-Date: Thu, 6 Oct 2016 22:39:21 -0700
-Message-ID: <CAFx4rwTo7s7uVH3PuGF-ys52QaEdxHoP2viYuJteRQqmeiEyqA@mail.gmail.com>
-References: <20161007003850.GA7197@kernel.org>
-Reply-To: doug@easyco.com
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 30/54] md/raid5: Delete two error messages for a failed
+ memory allocation
+Date: Fri, 7 Oct 2016 07:51:49 +0200
+Message-ID: <e1c4daf1-97da-fd29-3085-9097a847686e@suse.de>
+References: <566ABCD9.1060404@users.sourceforge.net>
+ <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
+ <46ceb7a1-5b8e-989b-a896-9a6ff7fdf833@users.sourceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161007003850.GA7197@kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>, neilb@suse.de
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <46ceb7a1-5b8e-989b-a896-9a6ff7fdf833@users.sourceforge.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: SF Markus Elfring <elfring@users.sourceforge.net>, linux-raid@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Guoqing Jiang <gqjiang@suse.com>, Jens Axboe <axboe@fb.com>, Mike Christie <mchristi@redhat.com>, Neil Brown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>, Wolfram Sang <wsa@the-dreams.de>
 List-Id: linux-raid.ids
 
-Mr. Li,
+On 10/06/2016 11:30 AM, SF Markus Elfring wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Wed, 5 Oct 2016 09:43:40 +0200
+>
+> Omit extra messages for a memory allocation failure in this function.
+>
+> Link: http://events.linuxfoundation.org/sites/events/files/slides/LCJ16-Refactor_Strings-WSang_0.pdf
+>
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+> ---
+>  drivers/md/raid5.c | 13 +++----------
+>  1 file changed, 3 insertions(+), 10 deletions(-)
+>
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index d864871..ef180c0 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -6613,12 +6613,9 @@ static struct r5conf *setup_conf(struct mddev *mddev)
+>  	memory = conf->min_nr_stripes * (sizeof(struct stripe_head) +
+>  		 max_disks * ((sizeof(struct bio) + PAGE_SIZE))) / 1024;
+>  	atomic_set(&conf->empty_inactive_list_nr, NR_STRIPE_HASH_LOCKS);
+> -	if (grow_stripes(conf, conf->min_nr_stripes)) {
+> -		printk(KERN_ERR
+> -		       "md/raid:%s: couldn't allocate %dkB for buffers\n",
+> -		       mdname(mddev), memory);
+> +	if (grow_stripes(conf, conf->min_nr_stripes))
+>  		goto free_conf;
+> -	} else
+> +	else
+>  		printk(KERN_INFO "md/raid:%s: allocated %dkB\n",
+>  		       mdname(mddev), memory);
+>  	/*
+> @@ -6640,12 +6637,8 @@ static struct r5conf *setup_conf(struct mddev *mddev)
+>
+>  	sprintf(pers_name, "raid%d", mddev->new_level);
+>  	conf->thread = md_register_thread(raid5d, mddev, pers_name);
+> -	if (!conf->thread) {
+> -		printk(KERN_ERR
+> -		       "md/raid:%s: couldn't allocate thread.\n",
+> -		       mdname(mddev));
+> +	if (!conf->thread)
+>  		goto free_conf;
+> -	}
+>
+>  	return conf;
+>  free_conf:
+>
+Actually I prefer having error messages, especially if you have several 
+possible failures all leading to the same return value.
+Without it debugging becomes really hard.
 
-There is another thread in [linux-raid] discussing pre-fetches in the
-raid-6 AVX2 code.  My testing implies that the prefetch distance is
-too short.  In your new AVX512 code, it looks like there are 24
-instructions, each with latencies of 1, between the prefetch and the
-actual memory load.  I don't have a AVX512 CPU to try this on, but the
-prefetch might do better at a bigger distance.  If I am not mistaken,
-it takes a lot longer than 24 clocks to fetch 4 cache lines.
+Cheers,
 
-Just a comment while the code is still fluid.
-
-Doug Dumitru
-EasyCo LLC
-
-On Thu, Oct 6, 2016 at 5:38 PM, Shaohua Li <shli@kernel.org> wrote:
-> Hi Linus,
-> Please pull MD update for 4.9. This update includes:
-> - new AVX512 instruction based raid6 gen/recovery algorithm
-> - A couple of md-cluster related bug fixes
-> - Fix a potential deadlock
-> - Set nonrotational bit for raid array with SSD
-> - Set correct max_hw_sectors for raid5/6, which hopefuly can improve
->   performance a little bit
-> - Other minor fixes
->
-> Thanks,
-> Shaohua
->
-> The following changes since commit 7d1e042314619115153a0f6f06e4552c09a50e13:
->
->   Merge tag 'usercopy-v4.8-rc8' of git://git.kernel.org/pub/scm/linux/kernel/git/kees/linux (2016-09-20 17:11:19 -0700)
->
-> are available in the git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git tags/md/4.9-rc1
->
-> for you to fetch changes up to bb086a89a406b5d877ee616f1490fcc81f8e1b2b:
->
->   md: set rotational bit (2016-10-03 10:20:27 -0700)
->
-> ----------------------------------------------------------------
-> Chao Yu (1):
->       raid5: fix to detect failure of register_shrinker
->
-> Gayatri Kammela (5):
->       lib/raid6: Add AVX512 optimized gen_syndrome functions
->       lib/raid6: Add AVX512 optimized recovery functions
->       lib/raid6/test/Makefile: Add avx512 gen_syndrome and recovery functions
->       lib/raid6: Add AVX512 optimized xor_syndrome functions
->       raid6/test/test.c: bug fix: Specify aligned(alignment) attributes to the char arrays
->
-> Guoqing Jiang (9):
->       md-cluster: call md_kick_rdev_from_array once ack failed
->       md-cluster: use FORCEUNLOCK in lockres_free
->       md-cluster: remove some unnecessary dlm_unlock_sync
->       md: changes for MD_STILL_CLOSED flag
->       md-cluster: clean related infos of cluster
->       md-cluster: protect md_find_rdev_nr_rcu with rcu lock
->       md-cluster: convert the completion to wait queue
->       md-cluster: introduce dlm_lock_sync_interruptible to fix tasks hang
->       md-cluster: make resync lock also could be interruptted
->
-> Shaohua Li (5):
->       raid5: allow arbitrary max_hw_sectors
->       md/bitmap: fix wrong cleanup
->       md: fix a potential deadlock
->       raid5: handle register_shrinker failure
->       md: set rotational bit
->
->  arch/x86/Makefile        |   5 +-
->  drivers/md/bitmap.c      |   4 +-
->  drivers/md/md-cluster.c  |  99 ++++++---
->  drivers/md/md.c          |  44 +++-
->  drivers/md/md.h          |   5 +-
->  drivers/md/raid5.c       |  11 +-
->  include/linux/raid/pq.h  |   4 +
->  lib/raid6/Makefile       |   2 +-
->  lib/raid6/algos.c        |  12 +
->  lib/raid6/avx512.c       | 569 +++++++++++++++++++++++++++++++++++++++++++++++
->  lib/raid6/recov_avx512.c | 388 ++++++++++++++++++++++++++++++++
->  lib/raid6/test/Makefile  |   5 +-
->  lib/raid6/test/test.c    |   7 +-
->  lib/raid6/x86.h          |  10 +
->  14 files changed, 1111 insertions(+), 54 deletions(-)
->  create mode 100644 lib/raid6/avx512.c
->  create mode 100644 lib/raid6/recov_avx512.c
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+Hannes
 -- 
-Doug Dumitru
-EasyCo LLC
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
