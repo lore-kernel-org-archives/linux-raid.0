@@ -1,40 +1,46 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: Re: md/raid1: Improve another size determination in setup_conf()
-Date: Fri, 7 Oct 2016 18:38:52 +0200
-Message-ID: <dd69629f-abf4-cc03-dddb-b2f3e7cb92fd@users.sourceforge.net>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
- <9831fce9-d689-89e4-dec8-50cadcd13fdd@users.sourceforge.net>
- <CAFLxGvx0Fr-WNvKYACdvNiZwYzHW4ocna9HPH8J_WPSXWc+ngg@mail.gmail.com>
- <20161007075345.GB6039@mwanda>
- <77d68bcd-1ae4-4808-fc0b-6183ae5fb6c4@users.sourceforge.net>
- <e5cddb79-1267-b2d8-c05b-1480096db21e@nod.at>
- <522db506-1e1c-0563-7595-da6dc701d706@users.sourceforge.net>
- <6e2c26bc-d765-6225-af72-157832ab8785@gmail.com>
- <a3d1b5a7-4b4e-a37d-2952-bb2e01828c39@users.sourceforge.net>
- <alpine.LRH.2.00.1610071729340.8015@gjva.wvxbf.pm>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [GIT PULL] MD update for 4.9
+Date: Fri, 7 Oct 2016 09:44:15 -0700
+Message-ID: <CA+55aFxocN1pqucTfOSGe5RLsB0QsRnwr9TANJQkYAiibMty-w@mail.gmail.com>
+References: <20161007003850.GA7197@kernel.org> <CAFx4rwTo7s7uVH3PuGF-ys52QaEdxHoP2viYuJteRQqmeiEyqA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <alpine.LRH.2.00.1610071729340.8015@gjva.wvxbf.pm>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Jiri Kosina <jikos@kernel.org>
-Cc: "Austin S. Hemmelgarn" <ahferroin7@gmail.com>, Dan Carpenter <dan.carpenter@oracle.com>, Richard Weinberger <richard@nod.at>, linux-raid@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Guoqing Jiang <gqjiang@suse.com>, Jens Axboe <axboe@fb.com>, Mike Christie <mchristi@redhat.com>, Neil Brown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, Tomasz Majchrzak <tomasz.majchrzak@intel.com>, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAFx4rwTo7s7uVH3PuGF-ys52QaEdxHoP2viYuJteRQqmeiEyqA@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: doug@easyco.com
+Cc: Shaohua Li <shli@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
->>> but patches that just fix coding style are a bad thing
->>
->> When you find such a change opportunity so "bad", are there any 
->> circumstances left over where you would dare to touch the corresponding 
->> source code line.
-> 
-> If you actually rewrite the code or fix some real bug there.
+On Thu, Oct 6, 2016 at 10:39 PM, Doug Dumitru <doug@easyco.com> wrote:
+>
+> There is another thread in [linux-raid] discussing pre-fetches in the
+> raid-6 AVX2 code.  My testing implies that the prefetch distance is
+> too short.  In your new AVX512 code, it looks like there are 24
+> instructions, each with latencies of 1, between the prefetch and the
+> actual memory load.  I don't have a AVX512 CPU to try this on, but the
+> prefetch might do better at a bigger distance.  If I am not mistaken,
+> it takes a lot longer than 24 clocks to fetch 4 cache lines.
 
-Do the proposed update steps 12 - 16 for the function "setup_conf"
-(in this software module) fit to your condition?
+We have basically never had a case where prefetches were actually a good idea.
 
-Do you reject this update step?
+If the hardware doesn't do prefetching on its own (partly with just
+physical memory patterns in the memory controller, partly just with
+aggressive OoO), software isn't going to be able to improve on the
+situation in general.
 
-Regards,
-Markus
+SW prefetching is a broken concept. You can make big differences for
+very specific microarchitectures (usually the broken shit ones are the
+ones that show it best), but in the general case it's pretty much
+always a lost cause. We've had real cases where prefetching just then
+made things worse on other hardware.
+
+So just don't do it. It's benchmarketing for specific hardware, it's
+not worth worrying about in the bigger picture. You'll find people
+spend a lot of time tuning things for their particular hardware, and
+it not helping at all on anything else.
+
+Waste of time. Life is too short (and software is too complex) to try
+to work around broken microarchitectures with sw prefetching.
+
+              Linus
