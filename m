@@ -1,59 +1,59 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: Re: md-cluster - Assemble/Scan During Resync
-Date: Sat, 8 Oct 2016 02:57:14 -0400
-Message-ID: <57F898CA.30806@suse.com>
-References: <CAHkw+Lc3XGqTL5pLX=UhQ+-kdHiVDPO8Z+EbTkWjyk6RgW5tug@mail.gmail.com>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Subject: Re: How to fix mistake on raid: mdadm create instead of assemble?
+Date: Sat, 8 Oct 2016 14:30:40 +0200
+Message-ID: <20161008123040.GA4603@metamorpher.de>
+References: <CAJh8RqUaT_D3GEkj9dWGY5d4e4icUKzyidV2JTVToKN=MpCRyQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHkw+Lc3XGqTL5pLX=UhQ+-kdHiVDPO8Z+EbTkWjyk6RgW5tug@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <CAJh8RqUaT_D3GEkj9dWGY5d4e4icUKzyidV2JTVToKN=MpCRyQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marc Smith <marc.smith@mcc.edu>, linux-raid@vger.kernel.org
+To: Santiago DIEZ <santiago.diez@caoba.fr>
+Cc: Linux Raid LIST <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Marc,
+On Fri, Oct 07, 2016 at 05:37:32PM +0200, Santiago DIEZ wrote:
+> First thing I did is ddrescue the remaining partitions sd[abc]10 .
+> ddrescue did not stumble into any read error so I assume all remaining
+> partitions are perfectly safe.
 
-On 10/05/2016 04:43 PM, Marc Smith wrote:
-> Hi,
->
-> First, I believe this issue may have been reported/solved with this
-> thread ("[PATCH 3/3] MD: hold mddev lock for md-cluster receive
-> thread"):
-> http://www.spinics.net/lists/raid/msg53121.html
->
-> But I'm not totally sure, and I'm looking for confirmation, or maybe
-> this is a new one... I'm trying to hold out for Linux 4.9 in my
-> project, and I am hoping to just cherry pick any patches until then.
->
-> Testing md-cluster with Linux 4.5.2 (yes, I know its dated)... two
-> nodes connected to shared SAS storage, and I'm using DM Multipath in
-> front of the individual SAS disks (two I/O modules with dual-domain
-> SAS disks).
+So ... don't you still have a good copy?
 
-For cluster-md, there are lots of changes since v4.5, and there are some
-fixes which are just merged in 4.9 window (I personally think it should
-be stable).
+You only killed one of them, right? Did not make same mistake twice?
 
-> On tgtnode2 I created the array like this: mdadm --create --verbose
-> --run /dev/md/test4 --name=test4 --level=raid1 --raid-devices=2
-> --chunk=64 --bitmap=clustered /dev/dm-4 /dev/dm-5
->
-> And then, without waiting for the resync to complete, on the second
-> node (tgtnode1) I do this: mdadm --assemble --scan
+> There comes my mistake: I ran the --create command instead of --assemble :
+> 
+> ================================================================================
+> # mdadm --create --verbose /dev/md1 --raid-devices=4 --level=raid5
+> --run --readonly /dev/loop0 /dev/loop1 /dev/loop2 missing
+> 
+> mdadm: layout defaults to left-symmetric
+> mdadm: layout defaults to left-symmetric
+> mdadm: chunk size defaults to 512K
+> mdadm: /dev/loop0 appears to contain an ext2fs file system
+>        size=5778741888K  mtime=Sat Sep  3 11:00:22 2016
+> mdadm: /dev/loop0 appears to be part of a raid array:
+>        level=raid5 devices=4 ctime=Wed Jan 25 09:08:11 2012
+> mdadm: /dev/loop1 appears to be part of a raid array:
+>        level=raid5 devices=4 ctime=Wed Jan 25 09:08:11 2012
+> mdadm: /dev/loop2 appears to be part of a raid array:
+>        level=raid5 devices=4 ctime=Wed Jan 25 09:08:11 2012
+> mdadm: size set to 1926115840K
+> mdadm: automatically enabling write-intent bitmap on large array
+> mdadm: creation continuing despite oddities due to --run
+> mdadm: Defaulting to version 1.2 metadata
+> mdadm: array /dev/md1 started.
+> ================================================================================
 
-I can't reproduce it with latest code, pls let me know if you see it again
-with v4.9 (also send the stack of md related process which are in 'D'
-state).
+You had 0.90 metadata before, that is metadata at the end of the device. 
+1.2 metadata is at the start of the device (4K from start). So you have 
+overwritten your filesystem superblock...
 
-[snip]
+You can --create again with --metadata=0.90 --chunk=64K options and 
+see what is left to the rescue.
 
-> So, again, this may already be fixed, just looking for confirmation if
-> the aforementioned patch / thread is related to this bug (or maybe
-> another).
+But it would be much better if you still had your good copy of the original.
 
-Not the one you mentioned (it was not merged), actually there are lots
-of changes for resync, you can bisect them to find the related commit.
-
-Thanks,
-Guoqing
+Regards
+Andreas Klauer
