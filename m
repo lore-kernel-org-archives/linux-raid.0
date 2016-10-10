@@ -1,45 +1,55 @@
 From: Anthony Youngman <antlists@youngman.org.uk>
-Subject: Re: RAID6 - CPU At 100% Usage After Reassembly
-Date: Mon, 10 Oct 2016 20:52:33 +0100
-Message-ID: <9a0fdb33-e722-6e1b-6fab-d2ccace8386d@youngman.org.uk>
-References: <CADEsfxrKeSv5dRNfBoyybHaemPSqCcamTmSZ4P+Yey-rLd8hEg@mail.gmail.com>
- <CAOW94uv4zSGs+6be3zhcQaGZdiAgg-s4ZHZ=mszcURo6pqJyqA@mail.gmail.com>
- <CAOW94ute6CZafnAC6AVauqUGsEgVrnO3B27Gn3eVzdWFBJPCQw@mail.gmail.com>
- <CAOW94utnY1zCR7gUCx1K0p2YfDhi3tXTsE6J_mT6rNz1TuTZEQ@mail.gmail.com>
- <20160913174352.GA43576@kernel.org>
- <CAOW94us2=5F8BbLhQSN_mC0wghZA8Z6qFQHBP5Y1csJuQ4pfKg@mail.gmail.com>
- <CAOW94utVBcLz191ifzKkjn+nsSthPWDAQF8R-PabcS2uPareag@mail.gmail.com>
- <CAOW94usC2AFt4uGRZRidcXN1Gii0PqSqfGAjL6_2Y1m6GAcZsg@mail.gmail.com>
- <CAOW94uvFaiL9FO=k=gOsGzH0q1Qhw4X3n7ZFURj9_eTgGa656g@mail.gmail.com>
- <CAOW94uuALbxOpfb5Rgzp=Fgvy8zfKt94zCcgs7T=U-m8jWGq3g@mail.gmail.com>
- <20161006235530.GA109312@kernel.org>
- <CAOW94uvxPH9dhpd=-t+eMfOc3YPLxasViz29idZmbQn-GkP5vg@mail.gmail.com>
+Subject: Re: Why not just return an error?
+Date: Mon, 10 Oct 2016 21:47:04 +0100
+Message-ID: <b9e7054f-8d68-c576-41a5-aec60c53aa9b@youngman.org.uk>
+References: <57F6DF18.40703@yandex.ru> <20161007112151.GA4405@metamorpher.de>
+ <e887908f-ba51-0f88-f891-f60e8bac50bd@turmel.org>
+ <57F7CC10.3050607@yandex.ru>
+ <94b1a4f4-adec-90b7-e804-2d8d2c94a7af@turmel.org>
+ <57F7DF05.8090605@yandex.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAOW94uvxPH9dhpd=-t+eMfOc3YPLxasViz29idZmbQn-GkP5vg@mail.gmail.com>
+In-Reply-To: <57F7DF05.8090605@yandex.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Francisco Parada <advanceandconquer@gmail.com>, Shaohua Li <shli@kernel.org>
-Cc: mdraid <linux-raid@vger.kernel.org>
+To: Dark Penguin <darkpenguin@yandex.ru>, Phil Turmel <philip@turmel.org>, Andreas Klauer <Andreas.Klauer@metamorpher.de>, Rudy Zijlstra <rudy@grumpydevil.homelinux.org>, keld@keldix.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
 
-On 07/10/16 12:23, Francisco Parada wrote:
-> I've got WD 3TB Green
-> EZRX drives, which I recently found out via the RAID Wiki, that they
-> didn't have error correction (after I spent over a thousand dollars on
-> the drives in 3 years) ... Had I known better, I would have opted for
-> different models.
+On 07/10/16 18:44, Dark Penguin wrote:
+>
+> I actually wanted to ask about that. Can you really ddrescue a drive
+> with a "hole" in it, re-add it and expect it to work?.. What happens if
+> you try to read from that "hole" again? And while I'm talking about
+> re-adding, when does it become impossible to "re-add" a drive?..
 
-There's more to greens than that. Apart from not having error recovery, 
-they also apparently have a habit of going to sleep. Search the list for 
-greens, but you need to do something else to stop them going to sleep, 
-as that will also interfere with the raid.
+If you want to do some kernel development work, this is something you 
+can do something about :-)
 
-I'll probably be adding that to the wiki at some point - I want to add a 
-section on drives readily available, with that sort of information.
+ddrescue creates a log of sectors that failed to copy. I've been 
+thinking a bit about this, not least because other people have mentioned it.
+
+Modern disk partitioning tools usually leave a chunk of space. What we 
+want is some way of making ddrescue dump a signature on the disk, along 
+with a list of all blocks that failed to copy. Then we need to patch the 
+low-level disk access code so that it reads this list of "bad blocks" 
+and returns a read error if any attempt is made to read one. If a block 
+is written, it's removed from the list. In effect, this is a "bad block" 
+list, only instead of being at the disk firmware level, it's at the OS's 
+disk driver level.
+
+That way, at least you know, if you copy a damaged disk with errors, 
+then the filesystem layer will be told that the file is damaged, rather 
+than returning duff data with no indication that it is duff.
+
+THIS IS NOT THERE TODAY, but if you want a kernel project, this isn't a 
+bad one. This will mean that you can recover a broken raid with no data 
+loss, provided you have enough drives to be able to assemble a redundant 
+array, and you aren't unlucky enough to have two drives have an error in 
+the same place.
 
 Cheers,
 Wol
