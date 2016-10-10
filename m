@@ -1,54 +1,46 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: How to fix mistake on raid: mdadm create instead of assemble?
-Date: Sun, 9 Oct 2016 23:39:54 +0100
-Message-ID: <57FAC73A.6020603@youngman.org.uk>
-References: <CAJh8RqUaT_D3GEkj9dWGY5d4e4icUKzyidV2JTVToKN=MpCRyQ@mail.gmail.com>
- <20161008123040.GA4603@metamorpher.de>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH 24/54] md/raid1: Improve another size determination in
+ setup_conf()
+Date: Mon, 10 Oct 2016 14:12:34 +0300
+Message-ID: <20161010110050.GA5687@mwanda>
+References: <566ABCD9.1060404@users.sourceforge.net>
+ <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
+ <9831fce9-d689-89e4-dec8-50cadcd13fdd@users.sourceforge.net>
+ <CAFLxGvx0Fr-WNvKYACdvNiZwYzHW4ocna9HPH8J_WPSXWc+ngg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161008123040.GA4603@metamorpher.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>, Santiago DIEZ <santiago.diez@caoba.fr>
-Cc: Linux Raid LIST <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAFLxGvx0Fr-WNvKYACdvNiZwYzHW4ocna9HPH8J_WPSXWc+ngg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Richard Weinberger <richard.weinberger@gmail.com>
+Cc: SF Markus Elfring <elfring@users.sourceforge.net>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Guoqing Jiang <gqjiang@suse.com>, Jens Axboe <axboe@fb.com>, Mike Christie <mchristi@redhat.com>, Neil Brown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, Tomasz Majchrzak <tomasz.majchrzak@intel.com>, LKML <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-raid.ids
 
-On 08/10/16 13:30, Andreas Klauer wrote:
-> On Fri, Oct 07, 2016 at 05:37:32PM +0200, Santiago DIEZ wrote:
->> > First thing I did is ddrescue the remaining partitions sd[abc]10 .
->> > ddrescue did not stumble into any read error so I assume all remaining
->> > partitions are perfectly safe.
-> So ... don't you still have a good copy?
+On Thu, Oct 06, 2016 at 11:29:20AM +0200, Richard Weinberger wrote:
+> On Thu, Oct 6, 2016 at 11:22 AM, SF Markus Elfring
+> <elfring@users.sourceforge.net> wrote:
+> > From: Markus Elfring <elfring@users.sourceforge.net>
+> > Date: Tue, 4 Oct 2016 21:46:18 +0200
+> >
+> > Replace the specification of a data structure by a pointer dereference
+> > as the parameter for the operator "sizeof" to make the corresponding size
+> > determination a bit safer.
 > 
-> You only killed one of them, right? Did not make same mistake twice?
+> Isn't this pure matter of taste?
+> Some developers prefer sizeof(*ptr) because it is easier to type, other
+> developers prefer sizeof(struct foo) because you can determine the type
+> at first sight and makes review more easy.
 > 
->> > There comes my mistake: I ran the --create command instead of --assemble :
->> > 
->> > ================================================================================
->> > # mdadm --create --verbose /dev/md1 --raid-devices=4 --level=raid5
->> > --run --readonly /dev/loop0 /dev/loop1 /dev/loop2 missing
 
-One oddity I've noticed. You've created the array using loop devices.
-What are these?
+I am ignoring Markus patches and have told him that he should focus on
+bug fixes.  These patches don't add any value and regularly introduce
+bugs.
 
-The reason I ask is that using loopback devices is a standard technique
-for rebuilding a damaged array, specifically to prevent md from actually
-writing to the drive. So is it possible that "mdadm --create" only wrote
-to ram, and a reboot will recover your ddrescue copies untouched?
+That said, "sizeof(*ptr)" is sort of official style.  It's slightly
+more obvious and easier to review because all the information you need
+is on that one line.  Also if we change the datatype of ptr then that
+format is slightly more future proof.
 
-My raid-fu isn't enough to tell me whether I'm right or not ... :-)
-
-If necessary you'll have to do another ddrescue from the original
-drives, and you should then be able to assemble the array from the
-copies. Don't use "missing", use "--force" and you should get a working,
-degraded, array to which you can add a new drive and rebuild the array.
-
-mdadm --assemble /dev/md0 /dev/sd[efg]10 --force
-
-if I'm right ... so long as it's the copies, you can always recover
-again from the original disks, and if there's a problem with the copies
-mdadm should complain when it assembles the array.
-
-Cheers,
-Wol
+regards,
+dan carpenter
