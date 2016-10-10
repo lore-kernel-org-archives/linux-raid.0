@@ -1,45 +1,50 @@
-From: Tahsin Erdogan <tahsin@google.com>
-Subject: [PATCH] dm: free io_barrier after blk_cleanup_queue call
-Date: Mon, 10 Oct 2016 05:35:19 -0700
-Message-ID: <1476102919-25112-1-git-send-email-tahsin@google.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Tahsin Erdogan <tahsin@google.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: md/raid1: Improve another size determination in setup_conf()
+Date: Mon, 10 Oct 2016 09:06:30 -0400
+Message-ID: <wrfjzimcbbft.fsf@redhat.com>
+References: <566ABCD9.1060404@users.sourceforge.net>
+        <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
+        <9831fce9-d689-89e4-dec8-50cadcd13fdd@users.sourceforge.net>
+        <CAFLxGvx0Fr-WNvKYACdvNiZwYzHW4ocna9HPH8J_WPSXWc+ngg@mail.gmail.com>
+        <20161007075345.GB6039@mwanda>
+        <77d68bcd-1ae4-4808-fc0b-6183ae5fb6c4@users.sourceforge.net>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <77d68bcd-1ae4-4808-fc0b-6183ae5fb6c4@users.sourceforge.net> (SF
+        Markus Elfring's message of "Fri, 7 Oct 2016 10:53:15 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, Richard Weinberger <richard.weinberger@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Guoqing Jiang <gqjiang@suse.com>, Jens Axboe <axboe@fb.com>, Mike Christie <mchristi@redhat.com>, Neil Brown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, Tomasz Majchrzak <tomasz.majchrzak@intel.com>, LKML <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-raid.ids
 
-dm_old_request_fn() has paths that access md->io_barrier. The party
-destroying io_barrier should ensure that no future execution
-of dm_old_request_fn() is possible. Move destruction to below
-blk_cleanup_queue() to ensure this.
+SF Markus Elfring <elfring@users.sourceforge.net> writes:
+>>>> Replace the specification of a data structure by a pointer dereference
+>>>> as the parameter for the operator "sizeof" to make the corresponding size
+>>>> determination a bit safer.
+>>>
+>>> Isn't this pure matter of taste?
+>>> Some developers prefer sizeof(*ptr) because it is easier to type, other
+>>> developers prefer sizeof(struct foo) because you can determine the type
+>>> at first sight and makes review more easy.
+>> 
+>> sizeof(*ptr) is more future proof and normally more obvious and easier
+>> to review.
+>
+> Is it interesting to see how different the software development opinions
+> can be for such an implementation detail?
+>
+>> That said, I've tried to tell Markus to only send bugfix patches
+>
+> Can any deviations from the Linux coding style become "bugs" also in
+> your view of the software situation?
+>
+>> because these are a waste of time
+>
+> How do you value compliance with coding styles?
 
-Signed-off-by: Tahsin Erdogan <tahsin@google.com>
----
- drivers/md/dm.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+The Linux Coding Style is not a law, nor is it at all perfect. You
+clearly misunderstood how Linux development work and you are doing a
+great job wasting everyone's time with this patchset.
 
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index be35258324c1..ec513ee864f2 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -1423,8 +1423,6 @@ static void cleanup_mapped_device(struct mapped_device *md)
- 	if (md->bs)
- 		bioset_free(md->bs);
- 
--	cleanup_srcu_struct(&md->io_barrier);
--
- 	if (md->disk) {
- 		spin_lock(&_minor_lock);
- 		md->disk->private_data = NULL;
-@@ -1436,6 +1434,8 @@ static void cleanup_mapped_device(struct mapped_device *md)
- 	if (md->queue)
- 		blk_cleanup_queue(md->queue);
- 
-+	cleanup_srcu_struct(&md->io_barrier);
-+
- 	if (md->bdev) {
- 		bdput(md->bdev);
- 		md->bdev = NULL;
--- 
-2.8.0.rc3.226.g39d4020
-
+Jes
