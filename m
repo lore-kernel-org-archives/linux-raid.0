@@ -1,48 +1,54 @@
-From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-Subject: Re: [PATCH 24/54] md/raid1: Improve another size determination in setup_conf()
-Date: Mon, 10 Oct 2016 15:57:57 +0200
-Message-ID: <87y41wqpay.fsf@miraculix.mork.no>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: md/raid1: Improve another size determination in setup_conf()
+Date: Mon, 10 Oct 2016 10:01:46 -0400
+Message-ID: <wrfjeg3ob8vp.fsf@redhat.com>
 References: <566ABCD9.1060404@users.sourceforge.net>
         <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
         <9831fce9-d689-89e4-dec8-50cadcd13fdd@users.sourceforge.net>
         <CAFLxGvx0Fr-WNvKYACdvNiZwYzHW4ocna9HPH8J_WPSXWc+ngg@mail.gmail.com>
-        <20161010110050.GA5687@mwanda>
+        <20161007075345.GB6039@mwanda>
+        <77d68bcd-1ae4-4808-fc0b-6183ae5fb6c4@users.sourceforge.net>
+        <wrfjzimcbbft.fsf@redhat.com>
+        <10ff33b4-44f0-eaea-8549-79a6ba250a2a@users.sourceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161010110050.GA5687@mwanda> (Dan Carpenter's message of "Mon,
-        10 Oct 2016 14:12:34 +0300")
-Sender: linux-raid-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Richard Weinberger <richard.weinberger@gmail.com>, SF Markus Elfring <elfring@users.sourceforge.net>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Guoqing Jiang <gqjiang@suse.com>, Jens Axboe <axboe@fb.com>, Mike Christie <mchristi@redhat.com>, Neil Brown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, Tomasz Majchrzak <tomasz.majchrzak@intel.com>, LKML <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, Julia Lawall <julia.lawall@lip6.fr>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <10ff33b4-44f0-eaea-8549-79a6ba250a2a@users.sourceforge.net> (SF
+        Markus Elfring's message of "Mon, 10 Oct 2016 15:20:16 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, Richard Weinberger <richard.weinberger@gmail.com>, linux-raid@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Guoqing Jiang <gqjiang@suse.com>, Jens Axboe <axboe@fb.com>, Mike Christie <mchristi@redhat.com>, Neil Brown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, Tomasz Majchrzak <tomasz.majchrzak@intel.com>, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-raid.ids
 
-Dan Carpenter <dan.carpenter@oracle.com> writes:
+SF Markus Elfring <elfring@users.sourceforge.net> writes:
+>>> How do you value compliance with coding styles?
+>>
+>> The Linux Coding Style is not a law,
+>
+> How serious can such guidelines become for software developers?
+>
+>> nor is it at all perfect.
+>
+> I got a similar impression. But are there enough items where a mostly clear
+> guidance is specified?
+>
+>> You clearly misunderstood how Linux development work
+>
+> I got an other impression.
+>
+>> and you are doing a great job wasting everyone's time with this patchset.
+>
+> Would you like to reject any update steps for the affected source files
+> from this patch series?
+>
+> Can it "accidentally" happen that some of them will be really worth
+> also for your precious software development attention?
 
-> I am ignoring Markus patches and have told him that he should focus on
-> bug fixes.  These patches don't add any value and regularly introduce
-> bugs.
+Given that none of your patches fix any real bugs and you do your best
+to ignore any guidance you have been given, I do reject your entire
+patchset and you can consider this a NACK for this entire series.
 
-I think there should be a big fat warning in CodingStyle:
+I get the impression you obtain your response to any email from M-x
+doctor.
 
- THIS DOCUMENT DOES NOT APPLY TO ANY EXISTING KERNEL CODE.
-
-
-Preserving existing style is more important than any minor style issue
-anyway.  Style changes for the only purpose of style change should be
-considered harmful and destructive behaviour. You'd think that is bloody
-obvious, but evidently it isn't.  Not only are the untested, buggy,
-churning patches still being submitted - some of them are even applied!
-
-Adding such a statement will not prevent style changes, even changes
-to bring code more in line with CodingStyle, as long as the patches are
-part of some work of substance.  E.g. cleaning up before fixing bugs. If
-you submit new code, then you can of course fix the style of any touched
-context.
-
-Oh well, I can dream..
-
-
-Bj=C3=B8rn
-
+Jes
