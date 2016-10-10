@@ -1,49 +1,45 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: Re: md/raid1: Improve another size determination in setup_conf()
-Date: Mon, 10 Oct 2016 14:28:37 +0200
-Message-ID: <526621dc-ce01-77eb-035d-fd884bf31d2c@users.sourceforge.net>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
- <9831fce9-d689-89e4-dec8-50cadcd13fdd@users.sourceforge.net>
- <CAFLxGvx0Fr-WNvKYACdvNiZwYzHW4ocna9HPH8J_WPSXWc+ngg@mail.gmail.com>
- <20161010110050.GA5687@mwanda>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20161010110050.GA5687@mwanda>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Richard Weinberger <richard.weinberger@gmail.com>, linux-raid@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Guoqing Jiang <gqjiang@suse.com>, Jens Axboe <axboe@fb.com>, Mike Christie <mchristi@redhat.com>, Neil Brown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, Tomasz Majchrzak <tomasz.majchrzak@intel.com>, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+From: Tahsin Erdogan <tahsin@google.com>
+Subject: [PATCH] dm: free io_barrier after blk_cleanup_queue call
+Date: Mon, 10 Oct 2016 05:35:19 -0700
+Message-ID: <1476102919-25112-1-git-send-email-tahsin@google.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Tahsin Erdogan <tahsin@google.com>
 List-Id: linux-raid.ids
 
-> I am ignoring Markus patches
+dm_old_request_fn() has paths that access md->io_barrier. The party
+destroying io_barrier should ensure that no future execution
+of dm_old_request_fn() is possible. Move destruction to below
+blk_cleanup_queue() to ensure this.
 
-It's a pity that you chose such a reaction.
+Signed-off-by: Tahsin Erdogan <tahsin@google.com>
+---
+ drivers/md/dm.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-
-> and have told him that he should focus on bug fixes.
-
-I find that I suggest to improve something. Could you admit a few times
-that I found a "bug" you care also about at other source code places?
-
-
-> These patches don't add any value
-
-Can it be that you express a lower value for the Linux coding style here
-than desired as there might be other concerns behind such negative feedback?
-
-
-> and regularly introduce bugs.
-
-How do you think about to discuss corresponding facts further?
-
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index be35258324c1..ec513ee864f2 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -1423,8 +1423,6 @@ static void cleanup_mapped_device(struct mapped_device *md)
+ 	if (md->bs)
+ 		bioset_free(md->bs);
  
-> That said, "sizeof(*ptr)" is sort of official style.
+-	cleanup_srcu_struct(&md->io_barrier);
+-
+ 	if (md->disk) {
+ 		spin_lock(&_minor_lock);
+ 		md->disk->private_data = NULL;
+@@ -1436,6 +1434,8 @@ static void cleanup_mapped_device(struct mapped_device *md)
+ 	if (md->queue)
+ 		blk_cleanup_queue(md->queue);
+ 
++	cleanup_srcu_struct(&md->io_barrier);
++
+ 	if (md->bdev) {
+ 		bdput(md->bdev);
+ 		md->bdev = NULL;
+-- 
+2.8.0.rc3.226.g39d4020
 
-When this implementation detail is so official, I wonder then why some
-software developers can become "special" about the proposed update step
-like for this module.
-
-Regards,
-Markus
