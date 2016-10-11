@@ -1,48 +1,60 @@
 From: Brad Campbell <lists2009@fnarfbargle.com>
-Subject: Re: RAID6 - CPU At 100% Usage After Reassembly
-Date: Tue, 11 Oct 2016 11:53:53 +0800
-Message-ID: <63380999-4291-97e9-41e4-363903e5c07b@fnarfbargle.com>
-References: <CADEsfxrKeSv5dRNfBoyybHaemPSqCcamTmSZ4P+Yey-rLd8hEg@mail.gmail.com>
- <CAOW94uv4zSGs+6be3zhcQaGZdiAgg-s4ZHZ=mszcURo6pqJyqA@mail.gmail.com>
- <CAOW94ute6CZafnAC6AVauqUGsEgVrnO3B27Gn3eVzdWFBJPCQw@mail.gmail.com>
- <CAOW94utnY1zCR7gUCx1K0p2YfDhi3tXTsE6J_mT6rNz1TuTZEQ@mail.gmail.com>
- <20160913174352.GA43576@kernel.org>
- <CAOW94us2=5F8BbLhQSN_mC0wghZA8Z6qFQHBP5Y1csJuQ4pfKg@mail.gmail.com>
- <CAOW94utVBcLz191ifzKkjn+nsSthPWDAQF8R-PabcS2uPareag@mail.gmail.com>
- <CAOW94usC2AFt4uGRZRidcXN1Gii0PqSqfGAjL6_2Y1m6GAcZsg@mail.gmail.com>
- <CAOW94uvFaiL9FO=k=gOsGzH0q1Qhw4X3n7ZFURj9_eTgGa656g@mail.gmail.com>
- <CAOW94uuALbxOpfb5Rgzp=Fgvy8zfKt94zCcgs7T=U-m8jWGq3g@mail.gmail.com>
- <20161006235530.GA109312@kernel.org>
- <CAOW94uvxPH9dhpd=-t+eMfOc3YPLxasViz29idZmbQn-GkP5vg@mail.gmail.com>
+Subject: Re: Why not just return an error?
+Date: Tue, 11 Oct 2016 12:00:47 +0800
+Message-ID: <a1fd81ef-c52e-8d10-e754-984e3f7be60e@fnarfbargle.com>
+References: <57F6DF18.40703@yandex.ru> <20161007112151.GA4405@metamorpher.de>
+ <e887908f-ba51-0f88-f891-f60e8bac50bd@turmel.org>
+ <57F7CC10.3050607@yandex.ru>
+ <94b1a4f4-adec-90b7-e804-2d8d2c94a7af@turmel.org>
+ <57F7DF05.8090605@yandex.ru>
+ <b9e7054f-8d68-c576-41a5-aec60c53aa9b@youngman.org.uk>
+ <20161010213726.GA3757@metamorpher.de> <57FC0E65.1050407@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAOW94uvxPH9dhpd=-t+eMfOc3YPLxasViz29idZmbQn-GkP5vg@mail.gmail.com>
+In-Reply-To: <57FC0E65.1050407@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Francisco Parada <advanceandconquer@gmail.com>
-Cc: mdraid <linux-raid@vger.kernel.org>
+To: Wols Lists <antlists@youngman.org.uk>, Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Cc: Dark Penguin <darkpenguin@yandex.ru>, Phil Turmel <philip@turmel.org>, Rudy Zijlstra <rudy@grumpydevil.homelinux.org>, keld@keldix.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/10/16 19:23, Francisco Parada wrote:
+On 11/10/16 05:55, Wols Lists wrote:
+> On 10/10/16 22:37, Andreas Klauer wrote:
+>> On Mon, Oct 10, 2016 at 09:47:04PM +0100, Anthony Youngman wrote:
+>>> with a list of all blocks that failed to copy. Then we need to patch the
+>>> low-level disk access code so that it reads this list of "bad blocks"
+>>> and returns a read error if any attempt is made to read one. If a block
+>>
+>> hdparm has that feature to mark sectors as bad (--make-bad-sector).
+>> not sure how that behaves on a re-write by md. I never tried it myself.
+>
+> I'm guessing it's useless ...
 
-> issue with the model drives that I'm using.  I've got WD 3TB Green
-> EZRX drives, which I recently found out via the RAID Wiki, that they
-> didn't have error correction (after I spent over a thousand dollars on
-> the drives in 3 years) ... Had I known better, I would have opted for
-> different models.
+Not useless at all.
 
-That's not entirely true. EZRX drives have just as much "error 
-correction" as any other drive. What they don't have is the ability to 
-rapidly terminate their error correction (WD call it Time Limited Error 
-Recovery or TLER). Nothing wrong with that provided your OS storage 
-stack timeouts are set appropriately, as without that the drives will 
-take longer to process the error than the OS will wait and things get 
-ugly resulting in drives kicked from arrays.
+> The point is that the disk sector is not bad. So you don't want to mark
+> it as bad on the disk. But you know that the *data* in that block is
+> bad, so you want the disk access layer to fake a read error when you try
+> to read it. The intent is to deliberately trigger a rewrite by md.
 
-Sure, they're not the best drives for the job, and buying new I wouldn't 
-recommend them; but disable periodic head parking and spindown, set the 
-timeouts appropriately and they'll do the job until they need replacing.
+I suggested this a while ago. Take the badblocks log, use hdparm to mark 
+each bad sector as bad and put the drive back in the array. I even 
+suggested potentially adding a feature to ddrescue to auto-mark the 
+blocks as bad on the target drive.
+
+When md reads from that bad sector it will get an immediate error from 
+the drive, reconstruct the data and rewrite it, clearing the bad sector.
+
+This absolutely prevents a rescued disk from returning zeros rather than 
+bad data, and allows the good parts of the disk to participate in the 
+array redundancy while stuff gets rectified.
+
+This is only useful where you have several dud disks in an array and the 
+bad sectors are not in the same stripes, but for that pathological case 
+it would allow ddrescuing onto new drives and reconstructing the array 
+without data loss. Whereas simply using ddrescued disks will happily 
+return zeros where the holes are.
 
 Regards,
 Brad
