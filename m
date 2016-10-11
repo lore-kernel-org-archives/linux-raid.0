@@ -1,7 +1,7 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH v4 1/8] md/r5cache: Check array size in r5l_init_log
-Date: Mon, 10 Oct 2016 17:24:39 -0700
-Message-ID: <20161011002446.2002428-2-songliubraving@fb.com>
+Subject: [PATCH v4 6/8] md/r5cache: sysfs entry r5c_state
+Date: Mon, 10 Oct 2016 17:24:44 -0700
+Message-ID: <20161011002446.2002428-7-songliubraving@fb.com>
 References: <20161011002446.2002428-1-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,71 +12,136 @@ To: linux-raid@vger.kernel.org
 Cc: neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuang521@gmail.com, liuzhengyuan@kylinos.cn, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-Currently, r5l_write_stripe checks meta size for each stripe write,
-which is not necessary.
+r5c_state have 4 states:
+* no-cache;
+* write-through (write journal only);
+* write-back (w/ write cache);
+* cache-broken (journal missing or Faulty)
 
-With this patch, r5l_init_log checks maximal meta size of the array,
-which is (r5l_meta_block + raid_disks x r5l_payload_data_parity).
-If this is too big to fit in one page, r5l_init_log aborts.
+When there is functional write cache, r5c_state is a knob to
+switch between write-back and write-through.
 
-With current meta data, r5l_log support raid_disks up to 203.
+When the journal device is broken, the raid array is forced
+in readonly mode. In this case, r5c_state can be used to
+remove "journal feature", and thus make the array read-write
+without journal. By writing into r5c_cache_mode, the array
+can transit from cache-broken to no-cache, which removes
+journal feature for the array.
+
+To remove the journal feature:
+- When journal fails, the raid array is forced readonly mode
+  (enforced by kernel)
+- User uses the new interface to remove journal (writing 0
+  to r5c_state, I will add a mdadm option for that later)
+- User forces array read-write;
+- Kernel updates superblock and array can run read/write.
 
 Signed-off-by: Song Liu <songliubraving@fb.com>
 ---
- drivers/md/raid5-cache.c | 26 ++++++++++++++++----------
- 1 file changed, 16 insertions(+), 10 deletions(-)
+ drivers/md/raid5-cache.c | 58 ++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/md/raid5.c       |  1 +
+ drivers/md/raid5.h       |  1 +
+ 3 files changed, 60 insertions(+)
 
 diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 1b1ab4a..7557791b 100644
+index 2774f93..b19024c 100644
 --- a/drivers/md/raid5-cache.c
 +++ b/drivers/md/raid5-cache.c
-@@ -441,7 +441,6 @@ int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh)
- {
- 	int write_disks = 0;
- 	int data_pages, parity_pages;
--	int meta_size;
- 	int reserve;
- 	int i;
- 	int ret = 0;
-@@ -473,15 +472,6 @@ int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh)
- 	parity_pages = 1 + !!(sh->qd_idx >= 0);
- 	data_pages = write_disks - parity_pages;
+@@ -57,6 +57,8 @@ enum r5c_state {
+ 	R5C_STATE_CACHE_BROKEN = 3,
+ };
  
--	meta_size =
--		((sizeof(struct r5l_payload_data_parity) + sizeof(__le32))
--		 * data_pages) +
--		sizeof(struct r5l_payload_data_parity) +
--		sizeof(__le32) * parity_pages;
--	/* Doesn't work with very big raid array */
--	if (meta_size + sizeof(struct r5l_meta_block) > PAGE_SIZE)
--		return -EINVAL;
--
- 	set_bit(STRIPE_LOG_TRAPPED, &sh->state);
- 	/*
- 	 * The stripe must enter state machine again to finish the write, so
-@@ -1184,6 +1174,22 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
++static char *r5c_state_str[] = {"no-cache", "write-through",
++				"write-back", "cache-broken"};
+ /*
+  * raid5 cache state machine
+  *
+@@ -1519,6 +1521,62 @@ int r5c_flush_cache(struct r5conf *conf, int num)
+ 	return count;
+ }
  
- 	if (PAGE_SIZE != 4096)
- 		return -EINVAL;
++ssize_t r5c_state_show(struct mddev *mddev, char *page)
++{
++	struct r5conf *conf = mddev->private;
++	int val = 0;
++	int ret = 0;
 +
-+	/*
-+	 * The PAGE_SIZE must be big enough to hold 1 r5l_meta_block and
-+	 * raid_disks r5l_payload_data_parity.
-+	 *
-+	 * Write journal and cache does not work for very big array
-+	 * (raid_disks > 203)
-+	 */
-+	if (sizeof(struct r5l_meta_block) +
-+	    ((sizeof(struct r5l_payload_data_parity) + sizeof(__le32)) *
-+	     conf->raid_disks) > PAGE_SIZE) {
-+		pr_err("md/raid:%s: write journal/cache doesn't work for array with %d disks\n",
-+		       mdname(conf->mddev), conf->raid_disks);
++	if (conf->log)
++		val = conf->log->r5c_state;
++	else if (test_bit(MD_HAS_JOURNAL, &mddev->flags))
++		val = R5C_STATE_CACHE_BROKEN;
++	ret += snprintf(page, PAGE_SIZE - ret, "%d: %s\n",
++			val, r5c_state_str[val]);
++	return ret;
++}
++
++ssize_t r5c_state_store(struct mddev *mddev, const char *page, size_t len)
++{
++	struct r5conf *conf = mddev->private;
++	struct r5l_log *log = conf->log;
++	int val;
++
++	if (kstrtoint(page, 10, &val))
 +		return -EINVAL;
++	if (!log && val != R5C_STATE_NO_CACHE)
++		return -EINVAL;
++
++	if (val < R5C_STATE_NO_CACHE || val > R5C_STATE_WRITE_BACK)
++		return -EINVAL;
++	if (val == R5C_STATE_NO_CACHE) {
++		if (conf->log &&
++		    !test_bit(Faulty, &log->rdev->flags)) {
++			pr_err("md/raid:%s: journal device is in use, cannot remove it\n",
++			       mdname(mddev));
++			return -EINVAL;
++		}
 +	}
 +
- 	log = kzalloc(sizeof(*log), GFP_KERNEL);
- 	if (!log)
- 		return -ENOMEM;
++	if (log) {
++		mddev_suspend(mddev);
++		conf->log->r5c_state = val;
++		mddev_resume(mddev);
++	}
++
++	if (val == R5C_STATE_NO_CACHE) {
++		clear_bit(MD_HAS_JOURNAL, &mddev->flags);
++		set_bit(MD_UPDATE_SB_FLAGS, &mddev->flags);
++	}
++	pr_info("md/raid:%s: setting r5c cache mode to %d: %s\n",
++		mdname(mddev), val, r5c_state_str[val]);
++	return len;
++}
++
++struct md_sysfs_entry
++r5c_state = __ATTR(r5c_state, S_IRUGO | S_IWUSR,
++		   r5c_state_show, r5c_state_store);
++
+ int r5c_handle_stripe_dirtying(struct r5conf *conf,
+ 			       struct stripe_head *sh,
+ 			       struct stripe_head_state *s,
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 0f3b0f4..ffabde9 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6295,6 +6295,7 @@ static struct attribute *raid5_attrs[] =  {
+ 	&raid5_group_thread_cnt.attr,
+ 	&raid5_skip_copy.attr,
+ 	&raid5_rmw_level.attr,
++	&r5c_state.attr,
+ 	NULL,
+ };
+ static struct attribute_group raid5_attrs_group = {
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index d17eed4..6898a76 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -758,5 +758,6 @@ extern void r5c_do_reclaim(struct r5conf *conf);
+ extern int r5c_flush_cache(struct r5conf *conf, int num);
+ extern void r5c_check_stripe_cache_usage(struct r5conf *conf);
+ extern void r5c_check_cached_full_stripe(struct r5conf *conf);
++extern struct md_sysfs_entry r5c_state;
+ 
+ #endif
 -- 
 2.9.3
 
