@@ -1,7 +1,7 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH v4 2/8] md/r5cache: move some code to raid5.h
-Date: Mon, 10 Oct 2016 17:24:40 -0700
-Message-ID: <20161011002446.2002428-3-songliubraving@fb.com>
+Subject: [PATCH v4 1/8] md/r5cache: Check array size in r5l_init_log
+Date: Mon, 10 Oct 2016 17:24:39 -0700
+Message-ID: <20161011002446.2002428-2-songliubraving@fb.com>
 References: <20161011002446.2002428-1-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,192 +12,71 @@ To: linux-raid@vger.kernel.org
 Cc: neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuang521@gmail.com, liuzhengyuan@kylinos.cn, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-Move some define and inline functions to raid5.h, so they can be
-used in raid5-cache.c
+Currently, r5l_write_stripe checks meta size for each stripe write,
+which is not necessary.
+
+With this patch, r5l_init_log checks maximal meta size of the array,
+which is (r5l_meta_block + raid_disks x r5l_payload_data_parity).
+If this is too big to fit in one page, r5l_init_log aborts.
+
+With current meta data, r5l_log support raid_disks up to 203.
 
 Signed-off-by: Song Liu <songliubraving@fb.com>
 ---
- drivers/md/raid5.c | 71 -------------------------------------------------
- drivers/md/raid5.h | 77 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 77 insertions(+), 71 deletions(-)
+ drivers/md/raid5-cache.c | 26 ++++++++++++++++----------
+ 1 file changed, 16 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index f94472d..67d4f49 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -70,19 +70,6 @@ module_param(devices_handle_discard_safely, bool, 0644);
- MODULE_PARM_DESC(devices_handle_discard_safely,
- 		 "Set to Y if all devices in each array reliably return zeroes on reads from discarded regions");
- static struct workqueue_struct *raid5_wq;
--/*
-- * Stripe cache
-- */
--
--#define NR_STRIPES		256
--#define STRIPE_SIZE		PAGE_SIZE
--#define STRIPE_SHIFT		(PAGE_SHIFT - 9)
--#define STRIPE_SECTORS		(STRIPE_SIZE>>9)
--#define	IO_THRESHOLD		1
--#define BYPASS_THRESHOLD	1
--#define NR_HASH			(PAGE_SIZE / sizeof(struct hlist_head))
--#define HASH_MASK		(NR_HASH - 1)
--#define MAX_STRIPE_BATCH	8
- 
- static inline struct hlist_head *stripe_hash(struct r5conf *conf, sector_t sect)
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 1b1ab4a..7557791b 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -441,7 +441,6 @@ int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh)
  {
-@@ -126,64 +113,6 @@ static inline void unlock_all_device_hash_locks_irq(struct r5conf *conf)
- 	local_irq_enable();
- }
+ 	int write_disks = 0;
+ 	int data_pages, parity_pages;
+-	int meta_size;
+ 	int reserve;
+ 	int i;
+ 	int ret = 0;
+@@ -473,15 +472,6 @@ int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh)
+ 	parity_pages = 1 + !!(sh->qd_idx >= 0);
+ 	data_pages = write_disks - parity_pages;
  
--/* bio's attached to a stripe+device for I/O are linked together in bi_sector
-- * order without overlap.  There may be several bio's per stripe+device, and
-- * a bio could span several devices.
-- * When walking this list for a particular stripe+device, we must never proceed
-- * beyond a bio that extends past this device, as the next bio might no longer
-- * be valid.
-- * This function is used to determine the 'next' bio in the list, given the sector
-- * of the current stripe+device
-- */
--static inline struct bio *r5_next_bio(struct bio *bio, sector_t sector)
--{
--	int sectors = bio_sectors(bio);
--	if (bio->bi_iter.bi_sector + sectors < sector + STRIPE_SECTORS)
--		return bio->bi_next;
--	else
--		return NULL;
--}
+-	meta_size =
+-		((sizeof(struct r5l_payload_data_parity) + sizeof(__le32))
+-		 * data_pages) +
+-		sizeof(struct r5l_payload_data_parity) +
+-		sizeof(__le32) * parity_pages;
+-	/* Doesn't work with very big raid array */
+-	if (meta_size + sizeof(struct r5l_meta_block) > PAGE_SIZE)
+-		return -EINVAL;
 -
--/*
-- * We maintain a biased count of active stripes in the bottom 16 bits of
-- * bi_phys_segments, and a count of processed stripes in the upper 16 bits
-- */
--static inline int raid5_bi_processed_stripes(struct bio *bio)
--{
--	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
--	return (atomic_read(segments) >> 16) & 0xffff;
--}
--
--static inline int raid5_dec_bi_active_stripes(struct bio *bio)
--{
--	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
--	return atomic_sub_return(1, segments) & 0xffff;
--}
--
--static inline void raid5_inc_bi_active_stripes(struct bio *bio)
--{
--	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
--	atomic_inc(segments);
--}
--
--static inline void raid5_set_bi_processed_stripes(struct bio *bio,
--	unsigned int cnt)
--{
--	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
--	int old, new;
--
--	do {
--		old = atomic_read(segments);
--		new = (old & 0xffff) | (cnt << 16);
--	} while (atomic_cmpxchg(segments, old, new) != old);
--}
--
--static inline void raid5_set_bi_stripes(struct bio *bio, unsigned int cnt)
--{
--	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
--	atomic_set(segments, cnt);
--}
--
- /* Find first data disk in a raid6 stripe */
- static inline int raid6_d0(struct stripe_head *sh)
- {
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index 517d4b6..46cfe93 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -410,6 +410,83 @@ struct disk_info {
- 	struct md_rdev	*rdev, *replacement;
- };
+ 	set_bit(STRIPE_LOG_TRAPPED, &sh->state);
+ 	/*
+ 	 * The stripe must enter state machine again to finish the write, so
+@@ -1184,6 +1174,22 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
  
-+/*
-+ * Stripe cache
-+ */
+ 	if (PAGE_SIZE != 4096)
+ 		return -EINVAL;
 +
-+#define NR_STRIPES		256
-+#define STRIPE_SIZE		PAGE_SIZE
-+#define STRIPE_SHIFT		(PAGE_SHIFT - 9)
-+#define STRIPE_SECTORS		(STRIPE_SIZE>>9)
-+#define	IO_THRESHOLD		1
-+#define BYPASS_THRESHOLD	1
-+#define NR_HASH			(PAGE_SIZE / sizeof(struct hlist_head))
-+#define HASH_MASK		(NR_HASH - 1)
-+#define MAX_STRIPE_BATCH	8
++	/*
++	 * The PAGE_SIZE must be big enough to hold 1 r5l_meta_block and
++	 * raid_disks r5l_payload_data_parity.
++	 *
++	 * Write journal and cache does not work for very big array
++	 * (raid_disks > 203)
++	 */
++	if (sizeof(struct r5l_meta_block) +
++	    ((sizeof(struct r5l_payload_data_parity) + sizeof(__le32)) *
++	     conf->raid_disks) > PAGE_SIZE) {
++		pr_err("md/raid:%s: write journal/cache doesn't work for array with %d disks\n",
++		       mdname(conf->mddev), conf->raid_disks);
++		return -EINVAL;
++	}
 +
-+/* bio's attached to a stripe+device for I/O are linked together in bi_sector
-+ * order without overlap.  There may be several bio's per stripe+device, and
-+ * a bio could span several devices.
-+ * When walking this list for a particular stripe+device, we must never proceed
-+ * beyond a bio that extends past this device, as the next bio might no longer
-+ * be valid.
-+ * This function is used to determine the 'next' bio in the list, given the
-+ * sector of the current stripe+device
-+ */
-+static inline struct bio *r5_next_bio(struct bio *bio, sector_t sector)
-+{
-+	int sectors = bio_sectors(bio);
-+
-+	if (bio->bi_iter.bi_sector + sectors < sector + STRIPE_SECTORS)
-+		return bio->bi_next;
-+	else
-+		return NULL;
-+}
-+
-+/*
-+ * We maintain a biased count of active stripes in the bottom 16 bits of
-+ * bi_phys_segments, and a count of processed stripes in the upper 16 bits
-+ */
-+static inline int raid5_bi_processed_stripes(struct bio *bio)
-+{
-+	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
-+
-+	return (atomic_read(segments) >> 16) & 0xffff;
-+}
-+
-+static inline int raid5_dec_bi_active_stripes(struct bio *bio)
-+{
-+	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
-+
-+	return atomic_sub_return(1, segments) & 0xffff;
-+}
-+
-+static inline void raid5_inc_bi_active_stripes(struct bio *bio)
-+{
-+	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
-+
-+	atomic_inc(segments);
-+}
-+
-+static inline void raid5_set_bi_processed_stripes(struct bio *bio,
-+	unsigned int cnt)
-+{
-+	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
-+	int old, new;
-+
-+	do {
-+		old = atomic_read(segments);
-+		new = (old & 0xffff) | (cnt << 16);
-+	} while (atomic_cmpxchg(segments, old, new) != old);
-+}
-+
-+static inline void raid5_set_bi_stripes(struct bio *bio, unsigned int cnt)
-+{
-+	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
-+
-+	atomic_set(segments, cnt);
-+}
-+
- /* NOTE NR_STRIPE_HASH_LOCKS must remain below 64.
-  * This is because we sometimes take all the spinlocks
-  * and creating that much locking depth can cause
+ 	log = kzalloc(sizeof(*log), GFP_KERNEL);
+ 	if (!log)
+ 		return -ENOMEM;
 -- 
 2.9.3
 
