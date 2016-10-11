@@ -1,7 +1,7 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH v4 4/8] md/r5cache: write part of r5cache
-Date: Mon, 10 Oct 2016 17:24:42 -0700
-Message-ID: <20161011002446.2002428-5-songliubraving@fb.com>
+Subject: [PATCH v4 5/8] md/r5cache: reclaim support
+Date: Mon, 10 Oct 2016 17:24:43 -0700
+Message-ID: <20161011002446.2002428-6-songliubraving@fb.com>
 References: <20161011002446.2002428-1-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,764 +12,787 @@ To: linux-raid@vger.kernel.org
 Cc: neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuang521@gmail.com, liuzhengyuan@kylinos.cn, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-This is the write part of r5cache. The cache is integrated with
-stripe cache of raid456. It leverages code of r5l_log to write
-data to journal device.
+There are two limited resources, stripe cache and journal disk space.
+For better performance, we priotize reclaim of full stripe writes.
+To free up more journal space, we free earliest data on the journal.
 
-r5cache split current write path into 2 parts: the write path
-and the reclaim path. The write path is as following:
-1. write data to journal
-   (r5c_handle_stripe_dirtying, r5c_cache_data)
-2. call bio_endio
-   (r5c_handle_data_cached, r5c_return_dev_pending_writes).
+In current implementation, reclaim happens when:
+1. every R5C_RECLAIM_WAKEUP_INTERVAL (5 seconds)
+2. when there are R5C_FULL_STRIPE_FLUSH_BATCH (8) cached full stripes
+   (r5c_check_cached_full_stripe)
+3. when raid5_get_active_stripe sees pressure in stripe cache space
+   (r5c_check_stripe_cache_usage)
+4. when there is pressure in journal space.
 
-Then the reclaim path is as:
-1. Freeze the stripe (r5c_freeze_stripe_for_reclaim)
-2. Calcualte parity (reconstruct or RMW)
-3. Write parity (and maybe some other data) to journal device
-4. Write data and parity to RAID disks
+1-3 above are straightforward. The following explains details of 4.
 
-Reclaim path of the cache is implemented in the next patch.
+To avoid deadlock due to log space, we need to reserve enough space
+to flush cached data. The size of required log space depends on total
+number of cached stripes (stripe_in_cache_count). In current
+implementation, the reclaim path automatically include pending
+data writes with parity writes (similar to write through case).
+Therefore, we need up to (conf->raid_disks + 1) pages for each cached
+stripe (1 page for meta data, raid_disks pages for all data and
+parity). r5c_log_required_to_flush_cache() calculates log space
+required to flush cache. In the following, we refer to the space
+calculated by r5c_log_required_to_flush_cache() as
+reclaim_required_space.
 
-With r5cache, write operation does not wait for parity calculation
-and write out, so the write latency is lower (1 write to journal
-device vs. read and then write to raid disks). Also, r5cache will
-reduce RAID overhead (multipile IO due to read-modify-write of
-parity) and provide more opportunities of full stripe writes.
+Two flags are added to r5conf->cache_state: R5C_LOG_TIGHT and
+R5C_LOG_CRITICAL. R5C_LOG_TIGHT is set when free space on the log
+device is less than 3x of reclaim_required_space. R5C_LOG_CRITICAL
+is set when free space on the log device is less than 2x of
+reclaim_required_space.
 
-This patch adds 2 flags to stripe_head.state:
- - STRIPE_R5C_PARTIAL_STRIPE,
- - STRIPE_R5C_FULL_STRIPE,
+r5c_cache keeps all data in cache (not fully committed to RAID) in
+a list (stripe_in_cache_list). These stripes are in the order of their
+first appearance on the journal. So the log tail (last_checkpoint)
+should point to the journal_start of the first item in the list.
 
-Instead of inactive_list, stripes with cached data are tracked in
-r5conf->r5c_full_stripe_list and r5conf->r5c_partial_stripe_list.
-STRIPE_R5C_FULL_STRIPE and STRIPE_R5C_PARTIAL_STRIPE are flags for
-stripes in these lists. Note: stripes in r5c_full/partial_stripe_list
-are not considered as "active".
-
-For RMW, the code allocates an extra page for each data block
-being updated.  This is stored in r5dev->page and the old data
-is read into it.  Then the prexor calculation subtracts ->page
-from the parity block, and the reconstruct calculation adds the
-->orig_page data back into the parity block.
-
-r5cache naturally excludes SkipCopy. With R5_Wantcache bit set,
-async_copy_data will not skip copy.
-
-There are some known limitations of the cache implementation:
-
-1. Write cache only covers full page writes (R5_OVERWRITE). Writes
-   of smaller granularity are write through.
-2. Only one log io (sh->log_io) for each stripe at anytime. Later
-   writes for the same stripe have to wait. This can be improved by
-   moving log_io to r5dev.
-3. With writeback cache, read path must enter state machine, which
-   is a significant bottleneck for some workloads.
-4. There is no per stripe checkpoint (with r5l_payload_flush) in
-   the log, so recovery code has to replay more than necessary data
-   (sometimes all the log from last_checkpoint). This reduces
-   availability of the array.
-
-This patch includes a fix proposed by ZhengYuan Liu
-<liuzhengyuan@kylinos.cn>
+When R5C_LOG_TIGHT is set, r5l_reclaim_thread starts flushing out
+stripes at the head of stripe_in_cache. When R5C_LOG_CRITICAL is
+set, the state machine only writes data that are already in the
+log device (in stripe_in_cache_list).
 
 Signed-off-by: Song Liu <songliubraving@fb.com>
 ---
- drivers/md/raid5-cache.c | 204 +++++++++++++++++++++++++++++++++++++++++++++--
- drivers/md/raid5.c       | 137 ++++++++++++++++++++++++++-----
- drivers/md/raid5.h       |  22 +++++
- 3 files changed, 336 insertions(+), 27 deletions(-)
+ drivers/md/raid5-cache.c | 363 +++++++++++++++++++++++++++++++++++++++++++----
+ drivers/md/raid5.c       |  17 +++
+ drivers/md/raid5.h       |  39 +++--
+ 3 files changed, 383 insertions(+), 36 deletions(-)
 
 diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 9e05850..92d3d7b 100644
+index 92d3d7b..2774f93 100644
 --- a/drivers/md/raid5-cache.c
 +++ b/drivers/md/raid5-cache.c
-@@ -20,6 +20,7 @@
- #include <linux/random.h>
- #include "md.h"
- #include "raid5.h"
-+#include "bitmap.h"
+@@ -29,12 +29,21 @@
+ #define BLOCK_SECTORS (8)
  
  /*
-  * metadata/data stored in disk with 4k size unit (a block) regardless
-@@ -217,6 +218,44 @@ static void __r5l_set_io_unit_state(struct r5l_io_unit *io,
- 	io->state = state;
+- * reclaim runs every 1/4 disk size or 10G reclaimable space. This can prevent
+- * recovery scans a very long log
++ * log->max_free_space is min(1/4 disk size, 10G reclaimable space).
++ *
++ * In write through mode, the reclaim runs every log->max_free_space.
++ * This can prevent the recovery scans for too long
+  */
+ #define RECLAIM_MAX_FREE_SPACE (10 * 1024 * 1024 * 2) /* sector */
+ #define RECLAIM_MAX_FREE_SPACE_SHIFT (2)
+ 
++/* wake up reclaim thread periodically */
++#define R5C_RECLAIM_WAKEUP_INTERVAL (5 * HZ)
++/* start flush with these full stripes */
++#define R5C_FULL_STRIPE_FLUSH_BATCH 8
++/* reclaim stripes in groups */
++#define R5C_RECLAIM_STRIPE_GROUP (NR_STRIPE_HASH_LOCKS * 2)
++
+ /*
+  * We only need 2 bios per I/O unit to make progress, but ensure we
+  * have a few more available to not get too tight.
+@@ -141,6 +150,11 @@ struct r5l_log {
+ 
+ 	/* for r5c_cache */
+ 	enum r5c_state r5c_state;
++	struct list_head stripe_in_cache_list;	/* all stripes in r5cache, with
++						 * sh->log_start in order
++						 */
++	spinlock_t stripe_in_cache_lock;
++	atomic_t stripe_in_cache_count;
+ };
+ 
+ /*
+@@ -257,6 +271,84 @@ void r5c_handle_cached_data_endio(struct r5conf *conf,
  }
  
-+static void
-+r5c_return_dev_pending_writes(struct r5conf *conf, struct r5dev *dev,
-+			      struct bio_list *return_bi)
-+{
-+	struct bio *wbi, *wbi2;
-+
-+	wbi = dev->written;
-+	dev->written = NULL;
-+	while (wbi && wbi->bi_iter.bi_sector <
-+	       dev->sector + STRIPE_SECTORS) {
-+		wbi2 = r5_next_bio(wbi, dev->sector);
-+		if (!raid5_dec_bi_active_stripes(wbi)) {
-+			md_write_end(conf->mddev);
-+			bio_list_add(return_bi, wbi);
-+		}
-+		wbi = wbi2;
-+	}
-+}
-+
-+void r5c_handle_cached_data_endio(struct r5conf *conf,
-+	  struct stripe_head *sh, int disks, struct bio_list *return_bi)
-+{
-+	int i;
-+
-+	for (i = sh->disks; i--; ) {
-+		if (test_bit(R5_InCache, &sh->dev[i].flags) &&
-+		    sh->dev[i].written) {
-+			set_bit(R5_UPTODATE, &sh->dev[i].flags);
-+			r5c_return_dev_pending_writes(conf, &sh->dev[i],
-+						      return_bi);
-+			bitmap_endwrite(conf->mddev->bitmap, sh->sector,
-+					STRIPE_SECTORS,
-+					!test_bit(STRIPE_DEGRADED, &sh->state),
-+					0);
-+		}
-+	}
-+}
-+
  /*
-  * Freeze the stripe, thus send the stripe into reclaim path.
-  *
-@@ -233,6 +272,48 @@ void r5c_freeze_stripe_for_reclaim(struct stripe_head *sh)
- 		return;
- 	WARN_ON(test_bit(STRIPE_R5C_FROZEN, &sh->state));
- 	set_bit(STRIPE_R5C_FROZEN, &sh->state);
-+
-+	if (log->r5c_state == R5C_STATE_WRITE_THROUGH)
-+		return;
-+
-+	if (!test_and_set_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
-+		atomic_inc(&conf->preread_active_stripes);
-+
-+	if (test_and_clear_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state)) {
-+		BUG_ON(atomic_read(&conf->r5c_cached_partial_stripes) == 0);
-+		atomic_dec(&conf->r5c_cached_partial_stripes);
-+	}
-+
-+	if (test_and_clear_bit(STRIPE_R5C_FULL_STRIPE, &sh->state)) {
-+		BUG_ON(atomic_read(&conf->r5c_cached_full_stripes) == 0);
-+		atomic_dec(&conf->r5c_cached_full_stripes);
-+	}
-+}
-+
-+static void r5c_handle_data_cached(struct stripe_head *sh)
++ * check whether we should flush some stripes to free up stripe cache
++ */
++void r5c_check_stripe_cache_usage(struct r5conf *conf)
 +{
-+	int i;
-+
-+	for (i = sh->disks; i--; )
-+		if (test_and_clear_bit(R5_Wantcache, &sh->dev[i].flags)) {
-+			set_bit(R5_InCache, &sh->dev[i].flags);
-+			clear_bit(R5_LOCKED, &sh->dev[i].flags);
-+			atomic_inc(&sh->dev_in_cache);
-+		}
++	if (!r5c_is_writeback(conf->log))
++		return;
++	spin_lock(&conf->device_lock);
++	if ((atomic_read(&conf->r5c_cached_partial_stripes) +
++	     atomic_read(&conf->r5c_cached_full_stripes) >
++	     conf->min_nr_stripes * 3 / 4) ||
++	    atomic_read(&conf->empty_inactive_list_nr) > 0)
++		r5c_flush_cache(conf, R5C_RECLAIM_STRIPE_GROUP);
++	spin_unlock(&conf->device_lock);
 +}
 +
 +/*
-+ * this journal write must contain full parity,
-+ * it may also contain some data pages
++ * flush cache when there are R5C_FULL_STRIPE_FLUSH_BATCH or more full
++ * stripes in the cache
 + */
-+static void r5c_handle_parity_cached(struct stripe_head *sh)
++void r5c_check_cached_full_stripe(struct r5conf *conf)
 +{
-+	int i;
++	if (!r5c_is_writeback(conf->log))
++		return;
++	if (atomic_read(&conf->r5c_cached_full_stripes) >=
++	    R5C_FULL_STRIPE_FLUSH_BATCH)
++		r5l_wake_reclaim(conf->log, 0);
++}
 +
-+	for (i = sh->disks; i--; )
-+		if (test_bit(R5_InCache, &sh->dev[i].flags))
-+			set_bit(R5_Wantwrite, &sh->dev[i].flags);
-+	set_bit(STRIPE_R5C_WRITTEN, &sh->state);
++/*
++ * Total log space (in sectors) needed to flush all data in cache
++ *
++ * Currently, reclaim path automatically includes all pending writes
++ * to the same sector. So the reclaim of each stripe takes up to
++ * (conf->raid_disks + 1) pages of log space.
++ *
++ * To totally avoid deadlock due to log space, the code reserves
++ * (conf->raid_disks + 1) pages for each stripe in cache, which is not
++ * necessary in most cases.
++ *
++ * To improve this, we will need reclaim path to be able to NOT include
++ * pending writes, which will reduce the requirement to
++ * (conf->max_degraded + 1) pages per stripe in cache.
++ */
++static sector_t r5c_log_required_to_flush_cache(struct r5conf *conf)
++{
++	struct r5l_log *log = conf->log;
++
++	if (!r5c_is_writeback(log))
++		return 0;
++
++	return BLOCK_SECTORS * (conf->raid_disks + 1) *
++		atomic_read(&log->stripe_in_cache_count);
++}
++
++/* evaluate log space usage and update R5C_LOG_TIGHT and R5C_LOG_CRITICAL */
++static inline void r5c_update_log_state(struct r5l_log *log)
++{
++	struct r5conf *conf = log->rdev->mddev->private;
++	sector_t free_space = r5l_ring_distance(log, log->log_start,
++						log->last_checkpoint);
++	sector_t reclaim_space = r5c_log_required_to_flush_cache(conf);
++
++	if (!r5c_is_writeback(log))
++		return;
++	else if (free_space < 2 * reclaim_space) {
++		set_bit(R5C_LOG_CRITICAL, &conf->cache_state);
++		set_bit(R5C_LOG_TIGHT, &conf->cache_state);
++	} else if (free_space < 3 * reclaim_space) {
++		clear_bit(R5C_LOG_CRITICAL, &conf->cache_state);
++		set_bit(R5C_LOG_TIGHT, &conf->cache_state);
++	} else if (free_space > 4 * reclaim_space) {
++		clear_bit(R5C_LOG_TIGHT, &conf->cache_state);
++		clear_bit(R5C_LOG_CRITICAL, &conf->cache_state);
++	} else
++		clear_bit(R5C_LOG_CRITICAL, &conf->cache_state);
++}
++
++/*
+  * Freeze the stripe, thus send the stripe into reclaim path.
+  *
+  * In current implementation, STRIPE_R5C_FROZEN is also set in write through
+@@ -290,6 +382,19 @@ void r5c_freeze_stripe_for_reclaim(struct stripe_head *sh)
+ 	}
  }
  
- static void r5c_finish_cache_stripe(struct stripe_head *sh)
-@@ -242,8 +323,10 @@ static void r5c_finish_cache_stripe(struct stripe_head *sh)
- 	if (log->r5c_state == R5C_STATE_WRITE_THROUGH) {
- 		BUG_ON(!test_bit(STRIPE_R5C_FROZEN, &sh->state));
- 		set_bit(STRIPE_R5C_WRITTEN, &sh->state);
--	} else
--		BUG(); /* write back logic in next patch */
-+	} else if (test_bit(STRIPE_R5C_FROZEN, &sh->state))
-+		r5c_handle_parity_cached(sh);
-+	else
-+		r5c_handle_data_cached(sh);
- }
++/*
++ * do not release a stripe to cached lists in quiesce
++ */
++void r5c_prepare_stripe_for_release_in_quiesce(struct stripe_head *sh)
++{
++	if (!test_bit(STRIPE_HANDLE, &sh->state) &&
++	    atomic_read(&sh->dev_in_cache) != 0) {
++		if (!test_bit(STRIPE_R5C_FROZEN, &sh->state))
++			r5c_freeze_stripe_for_reclaim(sh);
++		set_bit(STRIPE_HANDLE, &sh->state);
++	}
++}
++
+ static void r5c_handle_data_cached(struct stripe_head *sh)
+ {
+ 	int i;
+@@ -435,6 +540,7 @@ static void r5_reserve_log_entry(struct r5l_log *log, struct r5l_io_unit *io)
+ {
+ 	log->log_start = r5l_ring_add(log, log->log_start, BLOCK_SECTORS);
  
- static void r5l_io_run_stripes(struct r5l_io_unit *io)
-@@ -483,7 +566,8 @@ static int r5l_log_stripe(struct r5l_log *log, struct stripe_head *sh,
- 	io = log->current_io;
++	r5c_update_log_state(log);
+ 	/*
+ 	 * If we filled up the log device start from the beginning again,
+ 	 * which will require a new bio.
+@@ -552,6 +658,7 @@ static int r5l_log_stripe(struct r5l_log *log, struct stripe_head *sh,
+ 	int meta_size;
+ 	int ret;
+ 	struct r5l_io_unit *io;
++	unsigned long flags;
  
- 	for (i = 0; i < sh->disks; i++) {
--		if (!test_bit(R5_Wantwrite, &sh->dev[i].flags))
-+		if (!test_bit(R5_Wantwrite, &sh->dev[i].flags) &&
-+		    !test_bit(R5_Wantcache, &sh->dev[i].flags))
- 			continue;
- 		if (i == sh->pd_idx || i == sh->qd_idx)
- 			continue;
-@@ -514,7 +598,6 @@ static int r5l_log_stripe(struct r5l_log *log, struct stripe_head *sh,
+ 	meta_size =
+ 		((sizeof(struct r5l_payload_data_parity) + sizeof(__le32))
+@@ -595,20 +702,42 @@ static int r5l_log_stripe(struct r5l_log *log, struct stripe_head *sh,
+ 	atomic_inc(&io->pending_stripe);
+ 	sh->log_io = io;
+ 
++	if (log->r5c_state == R5C_STATE_WRITE_THROUGH)
++		return 0;
++
++	if (sh->log_start == MaxSector) {
++		BUG_ON(!list_empty(&sh->r5c));
++		sh->log_start = io->log_start;
++		spin_lock_irqsave(&log->stripe_in_cache_lock, flags);
++		list_add_tail(&sh->r5c,
++			      &log->stripe_in_cache_list);
++		spin_unlock_irqrestore(&log->stripe_in_cache_lock, flags);
++		atomic_inc(&log->stripe_in_cache_count);
++	}
  	return 0;
  }
  
--static void r5l_wake_reclaim(struct r5l_log *log, sector_t space);
++/* add stripe to no_space_stripes, and then wake up reclaim */
++static inline void r5l_add_no_space_stripe(struct r5l_log *log, struct stripe_head *sh)
++{
++	spin_lock(&log->no_space_stripes_lock);
++	list_add_tail(&sh->log_list, &log->no_space_stripes);
++	spin_unlock(&log->no_space_stripes_lock);
++}
++
  /*
   * running in raid5d, where reclaim could wait for raid5d too (when it flushes
   * data from log to raid disks), so we shouldn't wait for reclaim here
-@@ -544,6 +627,10 @@ int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh)
- 
- 		if (!test_bit(R5_Wantwrite, &sh->dev[i].flags))
- 			continue;
-+
-+		if (test_bit(R5_InCache, &sh->dev[i].flags))
-+			continue;
-+
- 		write_disks++;
- 		/* checksum is already calculated in last run */
- 		if (test_bit(STRIPE_LOG_TRAPPED, &sh->state))
-@@ -809,7 +896,6 @@ static void r5l_write_super_and_discard_space(struct r5l_log *log,
- 	}
- }
- 
--
- static void r5l_do_reclaim(struct r5l_log *log)
+  */
+ int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh)
  {
- 	sector_t reclaim_target = xchg(&log->reclaim_target, 0);
-@@ -872,7 +958,7 @@ static void r5l_reclaim_thread(struct md_thread *thread)
- 	r5l_do_reclaim(log);
- }
++	struct r5conf *conf = sh->raid_conf;
+ 	int write_disks = 0;
+ 	int data_pages, parity_pages;
+ 	int reserve;
+ 	int i;
+ 	int ret = 0;
++	bool wake_reclaim = false;
  
--static void r5l_wake_reclaim(struct r5l_log *log, sector_t space)
-+void r5l_wake_reclaim(struct r5l_log *log, sector_t space)
- {
- 	unsigned long target;
- 	unsigned long new = (unsigned long)space; /* overflow in theory */
-@@ -1191,6 +1277,8 @@ int r5c_handle_stripe_dirtying(struct r5conf *conf,
- 			       int disks)
- {
- 	struct r5l_log *log = conf->log;
-+	int i;
-+	struct r5dev *dev;
- 
- 	if (!log || test_bit(STRIPE_R5C_FROZEN, &sh->state))
+ 	if (!log)
  		return -EAGAIN;
-@@ -1201,21 +1289,121 @@ int r5c_handle_stripe_dirtying(struct r5conf *conf,
- 		r5c_freeze_stripe_for_reclaim(sh);
- 		return -EAGAIN;
+@@ -654,22 +783,49 @@ int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh)
+ 	mutex_lock(&log->io_mutex);
+ 	/* meta + data */
+ 	reserve = (1 + write_disks) << (PAGE_SHIFT - 9);
+-	if (!r5l_has_free_space(log, reserve)) {
+-		spin_lock(&log->no_space_stripes_lock);
+-		list_add_tail(&sh->log_list, &log->no_space_stripes);
+-		spin_unlock(&log->no_space_stripes_lock);
+ 
+-		r5l_wake_reclaim(log, reserve);
+-	} else {
+-		ret = r5l_log_stripe(log, sh, data_pages, parity_pages);
+-		if (ret) {
+-			spin_lock_irq(&log->io_list_lock);
+-			list_add_tail(&sh->log_list, &log->no_mem_stripes);
+-			spin_unlock_irq(&log->io_list_lock);
++	if (log->r5c_state == R5C_STATE_WRITE_THROUGH) {
++		if (!r5l_has_free_space(log, reserve)) {
++			r5l_add_no_space_stripe(log, sh);
++			wake_reclaim = true;
++		} else {
++			ret = r5l_log_stripe(log, sh, data_pages, parity_pages);
++			if (ret) {
++				spin_lock_irq(&log->io_list_lock);
++				list_add_tail(&sh->log_list,
++					      &log->no_mem_stripes);
++				spin_unlock_irq(&log->io_list_lock);
++			}
++		}
++	} else {  /* R5C_STATE_WRITE_BACK */
++		/*
++		 * log space critical, do not process stripes that are
++		 * not in cache yet (sh->log_start == MaxSector).
++		 */
++		if (test_bit(R5C_LOG_CRITICAL, &conf->cache_state) &&
++		    sh->log_start == MaxSector) {
++			r5l_add_no_space_stripe(log, sh);
++			wake_reclaim = true;
++			reserve = 0;
++		} else if (!r5l_has_free_space(log, reserve)) {
++			if (sh->log_start == log->last_checkpoint)
++				BUG();
++			else {
++				r5l_add_no_space_stripe(log, sh);
++			}
++		} else {
++			ret = r5l_log_stripe(log, sh, data_pages, parity_pages);
++			if (ret) {
++				spin_lock_irq(&log->io_list_lock);
++				list_add_tail(&sh->log_list, &log->no_mem_stripes);
++				spin_unlock_irq(&log->io_list_lock);
++			}
+ 		}
  	}
--	BUG();  /* write back logic in next commit */
-+
-+	s->to_cache = 0;
-+
-+	for (i = disks; i--; ) {
-+		dev = &sh->dev[i];
-+		/* if none-overwrite, use the reclaim path (write through) */
-+		if (dev->towrite && !test_bit(R5_OVERWRITE, &dev->flags) &&
-+		    !test_bit(R5_InCache, &dev->flags)) {
-+			r5c_freeze_stripe_for_reclaim(sh);
-+			return -EAGAIN;
-+		}
-+	}
-+
-+	for (i = disks; i--; ) {
-+		dev = &sh->dev[i];
-+		if (dev->towrite) {
-+			set_bit(R5_Wantcache, &dev->flags);
-+			set_bit(R5_Wantdrain, &dev->flags);
-+			set_bit(R5_LOCKED, &dev->flags);
-+			s->to_cache++;
-+		}
-+	}
-+
-+	if (s->to_cache)
-+		set_bit(STRIPE_OP_BIODRAIN, &s->ops_request);
-+
+ 
+ 	mutex_unlock(&log->io_mutex);
++	if (wake_reclaim)
++		r5l_wake_reclaim(log, reserve);
  	return 0;
  }
  
- /*
-  * clean up the stripe (clear STRIPE_R5C_FROZEN etc.) after the stripe is
-  * committed to RAID disks
--*/
+@@ -709,6 +865,7 @@ static void r5l_run_no_space_stripes(struct r5l_log *log)
+ 	while (!list_empty(&log->no_space_stripes)) {
+ 		sh = list_first_entry(&log->no_space_stripes,
+ 				      struct stripe_head, log_list);
++		set_bit(STRIPE_PREREAD_ACTIVE, &sh->state);
+ 		list_del_init(&sh->log_list);
+ 		set_bit(STRIPE_HANDLE, &sh->state);
+ 		raid5_release_stripe(sh);
+@@ -716,10 +873,40 @@ static void r5l_run_no_space_stripes(struct r5l_log *log)
+ 	spin_unlock(&log->no_space_stripes_lock);
+ }
+ 
++/*
++ * calculate new last_checkpoint
++ * for write through mode, returns log->next_checkpoint
++ * for write back, returns log_start of first sh in stripe_in_cache_list
 + */
- void r5c_handle_stripe_written(struct r5conf *conf,
- 			       struct stripe_head *sh)
- {
-+	int i;
-+	int do_wakeup = 0;
++static sector_t r5c_calculate_new_cp(struct r5conf *conf)
++{
++	struct stripe_head *sh;
++	struct r5l_log *log = conf->log;
++	sector_t end = MaxSector;
++	unsigned long flags;
 +
++	if (log->r5c_state == R5C_STATE_WRITE_THROUGH)
++		return log->next_checkpoint;
++
++	spin_lock_irqsave(&log->stripe_in_cache_lock, flags);
++	if (list_empty(&conf->log->stripe_in_cache_list)) {
++		/* all stripes flushed */
++		spin_unlock_irqrestore(&log->stripe_in_cache_lock, flags);
++		return log->next_checkpoint;
++	}
++	sh = list_first_entry(&conf->log->stripe_in_cache_list,
++			      struct stripe_head, r5c);
++	end = sh->log_start;
++	spin_unlock_irqrestore(&log->stripe_in_cache_lock, flags);
++	return end;
++}
++
+ static sector_t r5l_reclaimable_space(struct r5l_log *log)
+ {
++	struct r5conf *conf = log->rdev->mddev->private;
++
+ 	return r5l_ring_distance(log, log->last_checkpoint,
+-				 log->next_checkpoint);
++				 r5c_calculate_new_cp(conf));
+ }
+ 
+ static void r5l_run_no_mem_stripe(struct r5l_log *log)
+@@ -765,6 +952,7 @@ static bool r5l_complete_finished_ios(struct r5l_log *log)
+ static void __r5l_stripe_write_finished(struct r5l_io_unit *io)
+ {
+ 	struct r5l_log *log = io->log;
++	struct r5conf *conf = log->rdev->mddev->private;
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&log->io_list_lock, flags);
+@@ -775,7 +963,8 @@ static void __r5l_stripe_write_finished(struct r5l_io_unit *io)
+ 		return;
+ 	}
+ 
+-	if (r5l_reclaimable_space(log) > log->max_free_space)
++	if (r5l_reclaimable_space(log) > log->max_free_space ||
++	    test_bit(R5C_LOG_TIGHT, &conf->cache_state))
+ 		r5l_wake_reclaim(log, 0);
+ 
+ 	spin_unlock_irqrestore(&log->io_list_lock, flags);
+@@ -898,10 +1087,10 @@ static void r5l_write_super_and_discard_space(struct r5l_log *log,
+ 
+ static void r5l_do_reclaim(struct r5l_log *log)
+ {
++	struct r5conf *conf = log->rdev->mddev->private;
+ 	sector_t reclaim_target = xchg(&log->reclaim_target, 0);
+ 	sector_t reclaimable;
+ 	sector_t next_checkpoint;
+-	u64 next_cp_seq;
+ 
+ 	spin_lock_irq(&log->io_list_lock);
+ 	/*
+@@ -924,8 +1113,7 @@ static void r5l_do_reclaim(struct r5l_log *log)
+ 				    log->io_list_lock);
+ 	}
+ 
+-	next_checkpoint = log->next_checkpoint;
+-	next_cp_seq = log->next_cp_seq;
++	next_checkpoint = r5c_calculate_new_cp(conf);
+ 	spin_unlock_irq(&log->io_list_lock);
+ 
+ 	BUG_ON(reclaimable < 0);
+@@ -941,7 +1129,7 @@ static void r5l_do_reclaim(struct r5l_log *log)
+ 
+ 	mutex_lock(&log->io_mutex);
+ 	log->last_checkpoint = next_checkpoint;
+-	log->last_cp_seq = next_cp_seq;
++	r5c_update_log_state(log);
+ 	mutex_unlock(&log->io_mutex);
+ 
+ 	r5l_run_no_space_stripes(log);
+@@ -955,6 +1143,7 @@ static void r5l_reclaim_thread(struct md_thread *thread)
+ 
+ 	if (!log)
+ 		return;
++	r5c_do_reclaim(conf);
+ 	r5l_do_reclaim(log);
+ }
+ 
+@@ -963,6 +1152,8 @@ void r5l_wake_reclaim(struct r5l_log *log, sector_t space)
+ 	unsigned long target;
+ 	unsigned long new = (unsigned long)space; /* overflow in theory */
+ 
++	if (!log)
++		return;
+ 	do {
+ 		target = log->reclaim_target;
+ 		if (new < target)
+@@ -986,11 +1177,12 @@ void r5l_quiesce(struct r5l_log *log, int state)
+ 			return;
+ 		log->reclaim_thread = md_register_thread(r5l_reclaim_thread,
+ 					log->rdev->mddev, "reclaim");
++		log->reclaim_thread->timeout = R5C_RECLAIM_WAKEUP_INTERVAL;
+ 	} else if (state == 1) {
+ 		/* make sure r5l_write_super_and_discard_space exits */
+ 		mddev = log->rdev->mddev;
+ 		wake_up(&mddev->sb_wait);
+-		r5l_wake_reclaim(log, -1L);
++		r5l_wake_reclaim(log, MaxSector);
+ 		md_unregister_thread(&log->reclaim_thread);
+ 		r5l_do_reclaim(log);
+ 	}
+@@ -1271,6 +1463,62 @@ static void r5l_write_super(struct r5l_log *log, sector_t cp)
+ 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
+ }
+ 
++/*
++ * r5c_flush_stripe moves stripe from cached list to handle_list. When called,
++ * the stripe must be on r5c_cached_full_stripes or r5c_cached_partial_stripes.
++ *
++ * must hold conf->device_lock
++ */
++static void r5c_flush_stripe(struct r5conf *conf, struct stripe_head *sh)
++{
++	BUG_ON(list_empty(&sh->lru));
++	BUG_ON(test_bit(STRIPE_R5C_FROZEN, &sh->state));
++	BUG_ON(test_bit(STRIPE_HANDLE, &sh->state));
++	assert_spin_locked(&conf->device_lock);
++
++	list_del_init(&sh->lru);
++	atomic_inc(&sh->count);
++
++	set_bit(STRIPE_HANDLE, &sh->state);
++	atomic_inc(&conf->active_stripes);
++	r5c_freeze_stripe_for_reclaim(sh);
++
++	set_bit(STRIPE_PREREAD_ACTIVE, &sh->state);
++	raid5_release_stripe(sh);
++}
++
++/*
++ * if num <= 0, flush all stripes
++ * if num > 0, flush at most num stripes
++ */
++int r5c_flush_cache(struct r5conf *conf, int num)
++{
++	int count = 0;
++	struct stripe_head *sh, *next;
++
++	assert_spin_locked(&conf->device_lock);
++	if (!conf->log)
++		return 0;
++
++	list_for_each_entry_safe(sh, next, &conf->r5c_full_stripe_list, lru) {
++		r5c_flush_stripe(conf, sh);
++		count++;
++		if (num > 0 && count >= num && count >=
++		    R5C_FULL_STRIPE_FLUSH_BATCH)
++			return count;
++	}
++
++	list_for_each_entry_safe(sh, next,
++				 &conf->r5c_partial_stripe_list, lru) {
++		r5c_flush_stripe(conf, sh);
++		count++;
++		if (num > 0 && count == num)
++			return count;
++	}
++
++	return count;
++}
++
+ int r5c_handle_stripe_dirtying(struct r5conf *conf,
+ 			       struct stripe_head *sh,
+ 			       struct stripe_head_state *s,
+@@ -1327,6 +1575,7 @@ void r5c_handle_stripe_written(struct r5conf *conf,
+ {
+ 	int i;
+ 	int do_wakeup = 0;
++	unsigned long flags;
+ 
  	if (!test_and_clear_bit(STRIPE_R5C_WRITTEN, &sh->state))
  		return;
- 	WARN_ON(!test_bit(STRIPE_R5C_FROZEN, &sh->state));
- 	clear_bit(STRIPE_R5C_FROZEN, &sh->state);
+@@ -1349,12 +1598,22 @@ void r5c_handle_stripe_written(struct r5conf *conf,
+ 
+ 	if (do_wakeup)
+ 		wake_up(&conf->wait_for_overlap);
 +
 +	if (conf->log->r5c_state == R5C_STATE_WRITE_THROUGH)
 +		return;
 +
-+	for (i = sh->disks; i--; ) {
-+		if (test_and_clear_bit(R5_InCache, &sh->dev[i].flags))
-+			atomic_dec(&sh->dev_in_cache);
-+		if (test_and_clear_bit(R5_Overlap, &sh->dev[i].flags))
-+			do_wakeup = 1;
++	spin_lock_irqsave(&conf->log->stripe_in_cache_lock, flags);
++	list_del_init(&sh->r5c);
++	spin_unlock_irqrestore(&conf->log->stripe_in_cache_lock, flags);
++	sh->log_start = MaxSector;
++	atomic_dec(&conf->log->stripe_in_cache_count);
+ }
+ 
+ int
+ r5c_cache_data(struct r5l_log *log, struct stripe_head *sh,
+ 	       struct stripe_head_state *s)
+ {
++	struct r5conf *conf = sh->raid_conf;
+ 	int pages;
+ 	int reserve;
+ 	int i;
+@@ -1387,12 +1646,15 @@ r5c_cache_data(struct r5l_log *log, struct stripe_head *sh,
+ 	mutex_lock(&log->io_mutex);
+ 	/* meta + data */
+ 	reserve = (1 + pages) << (PAGE_SHIFT - 9);
+-	if (!r5l_has_free_space(log, reserve)) {
+-		spin_lock(&log->no_space_stripes_lock);
+-		list_add_tail(&sh->log_list, &log->no_space_stripes);
+-		spin_unlock(&log->no_space_stripes_lock);
+ 
+-		r5l_wake_reclaim(log, reserve);
++	if (test_bit(R5C_LOG_CRITICAL, &conf->cache_state) &&
++	    sh->log_start == MaxSector)
++		r5l_add_no_space_stripe(log, sh);
++	else if (!r5l_has_free_space(log, reserve)) {
++		if (sh->log_start == log->last_checkpoint)
++			BUG();
++		else
++			r5l_add_no_space_stripe(log, sh);
+ 	} else {
+ 		ret = r5l_log_stripe(log, sh, pages, 0);
+ 		if (ret) {
+@@ -1406,6 +1668,49 @@ r5c_cache_data(struct r5l_log *log, struct stripe_head *sh,
+ 	return 0;
+ }
+ 
++void r5c_do_reclaim(struct r5conf *conf)
++{
++	struct r5l_log *log = conf->log;
++	struct stripe_head *sh, *next;
++	int count = 0;
++	unsigned long flags;
++
++	if (!r5c_is_writeback(log))
++		return;
++
++	/* flush all full stripes */
++	spin_lock_irqsave(&conf->device_lock, flags);
++	list_for_each_entry_safe(sh, next, &conf->r5c_full_stripe_list, lru)
++		r5c_flush_stripe(conf, sh);
++	spin_unlock_irqrestore(&conf->device_lock, flags);
++
++	/* if log space is tight, flush stripes on stripe_in_cache_list */
++	if (test_bit(R5C_LOG_TIGHT, &conf->cache_state)) {
++		spin_lock_irqsave(&log->stripe_in_cache_lock, flags);
++		spin_lock(&conf->device_lock);
++		list_for_each_entry(sh, &log->stripe_in_cache_list, r5c) {
++			/*
++			 * stripes on stripe_in_cache_list could be in any
++			 * state of the stripe_cache state machine. In this
++			 * case, we only want to flush stripe on
++			 * r5c_cached_full/partial_stripes. The following
++			 * condition makes sure the stripe is on one of the
++			 * two lists.
++			 */
++			if (!list_empty(&sh->lru) &&
++			    !test_bit(STRIPE_HANDLE, &sh->state) &&
++			    atomic_read(&sh->count) == 0) {
++				r5c_flush_stripe(conf, sh);
++			}
++			if (count++ >= R5C_RECLAIM_STRIPE_GROUP)
++				break;
++		}
++		spin_unlock(&conf->device_lock);
++		spin_unlock_irqrestore(&log->stripe_in_cache_lock, flags);
 +	}
-+
-+	if (test_and_clear_bit(STRIPE_FULL_WRITE, &sh->state))
-+		if (atomic_dec_and_test(&conf->pending_full_writes))
-+			md_wakeup_thread(conf->mddev->thread);
-+
-+	if (do_wakeup)
-+		wake_up(&conf->wait_for_overlap);
++	md_wakeup_thread(conf->mddev->thread);
 +}
 +
-+int
-+r5c_cache_data(struct r5l_log *log, struct stripe_head *sh,
-+	       struct stripe_head_state *s)
-+{
-+	int pages;
-+	int reserve;
-+	int i;
-+	int ret = 0;
-+	int page_count = 0;
-+
-+	BUG_ON(!log);
-+
-+	for (i = 0; i < sh->disks; i++) {
-+		void *addr;
-+
-+		if (!test_bit(R5_Wantcache, &sh->dev[i].flags))
-+			continue;
-+		addr = kmap_atomic(sh->dev[i].page);
-+		sh->dev[i].log_checksum = crc32c_le(log->uuid_checksum,
-+						    addr, PAGE_SIZE);
-+		kunmap_atomic(addr);
-+		page_count++;
-+	}
-+	WARN_ON(page_count != s->to_cache);
-+	pages = s->to_cache;
-+
-+	/*
-+	 * The stripe must enter state machine again to call endio, so
-+	 * don't delay.
-+	 */
-+	clear_bit(STRIPE_DELAYED, &sh->state);
-+	atomic_inc(&sh->count);
-+
-+	mutex_lock(&log->io_mutex);
-+	/* meta + data */
-+	reserve = (1 + pages) << (PAGE_SHIFT - 9);
-+	if (!r5l_has_free_space(log, reserve)) {
-+		spin_lock(&log->no_space_stripes_lock);
-+		list_add_tail(&sh->log_list, &log->no_space_stripes);
-+		spin_unlock(&log->no_space_stripes_lock);
-+
-+		r5l_wake_reclaim(log, reserve);
-+	} else {
-+		ret = r5l_log_stripe(log, sh, pages, 0);
-+		if (ret) {
-+			spin_lock_irq(&log->io_list_lock);
-+			list_add_tail(&sh->log_list, &log->no_mem_stripes);
-+			spin_unlock_irq(&log->io_list_lock);
-+		}
-+	}
-+
-+	mutex_unlock(&log->io_mutex);
-+	return 0;
- }
- 
  static int r5l_load_log(struct r5l_log *log)
+ {
+ 	struct md_rdev *rdev = log->rdev;
+@@ -1463,6 +1768,9 @@ create:
+ 	if (log->max_free_space > RECLAIM_MAX_FREE_SPACE)
+ 		log->max_free_space = RECLAIM_MAX_FREE_SPACE;
+ 	log->last_checkpoint = cp;
++	mutex_lock(&log->io_mutex);
++	r5c_update_log_state(log);
++	mutex_unlock(&log->io_mutex);
+ 
+ 	__free_page(page);
+ 
+@@ -1534,6 +1842,8 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+ 						 log->rdev->mddev, "reclaim");
+ 	if (!log->reclaim_thread)
+ 		goto reclaim_thread;
++	log->reclaim_thread->timeout = R5C_RECLAIM_WAKEUP_INTERVAL;
++
+ 	init_waitqueue_head(&log->iounit_wait);
+ 
+ 	INIT_LIST_HEAD(&log->no_mem_stripes);
+@@ -1542,6 +1852,9 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+ 	spin_lock_init(&log->no_space_stripes_lock);
+ 
+ 	log->r5c_state = R5C_STATE_WRITE_THROUGH;
++	INIT_LIST_HEAD(&log->stripe_in_cache_list);
++	spin_lock_init(&log->stripe_in_cache_lock);
++	atomic_set(&log->stripe_in_cache_count, 0);
+ 
+ 	if (r5l_load_log(log))
+ 		goto error;
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 2e3e61a..27fd183 100644
+index 27fd183..0f3b0f4 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -245,8 +245,25 @@ static void do_release_stripe(struct r5conf *conf, struct stripe_head *sh,
- 			    < IO_THRESHOLD)
- 				md_wakeup_thread(conf->mddev->thread);
- 		atomic_dec(&conf->active_stripes);
--		if (!test_bit(STRIPE_EXPANDING, &sh->state))
--			list_add_tail(&sh->lru, temp_inactive_list);
-+		if (!test_bit(STRIPE_EXPANDING, &sh->state)) {
-+			if (atomic_read(&sh->dev_in_cache) == 0) {
-+				list_add_tail(&sh->lru, temp_inactive_list);
-+			} else if (atomic_read(&sh->dev_in_cache) ==
-+				   conf->raid_disks - conf->max_degraded) {
-+				/* full stripe */
-+				if (!test_and_set_bit(STRIPE_R5C_FULL_STRIPE, &sh->state))
-+					atomic_inc(&conf->r5c_cached_full_stripes);
-+				if (test_and_clear_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state))
-+					atomic_dec(&conf->r5c_cached_partial_stripes);
-+				list_add_tail(&sh->lru, &conf->r5c_full_stripe_list);
-+			} else {
-+				/* partial stripe */
-+				if (!test_and_set_bit(STRIPE_R5C_PARTIAL_STRIPE,
-+						      &sh->state))
-+					atomic_inc(&conf->r5c_cached_partial_stripes);
-+				list_add_tail(&sh->lru, &conf->r5c_partial_stripe_list);
-+			}
-+		}
- 	}
- }
- 
-@@ -830,6 +847,11 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
- 
- 	might_sleep();
- 
-+	if (s->to_cache) {
-+		r5c_cache_data(conf->log, sh, s);
-+		return;
-+	}
+@@ -220,6 +220,11 @@ static void do_release_stripe(struct r5conf *conf, struct stripe_head *sh,
+ {
+ 	BUG_ON(!list_empty(&sh->lru));
+ 	BUG_ON(atomic_read(&conf->active_stripes)==0);
 +
++	/* When quiesce in r5c write back, make sure the stripe is handled*/
++	if (conf->quiesce && r5c_is_writeback(conf->log))
++		r5c_prepare_stripe_for_release_in_quiesce(sh);
++
+ 	if (test_bit(STRIPE_HANDLE, &sh->state)) {
+ 		if (test_bit(STRIPE_DELAYED, &sh->state) &&
+ 		    !test_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
+@@ -256,6 +261,7 @@ static void do_release_stripe(struct r5conf *conf, struct stripe_head *sh,
+ 				if (test_and_clear_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state))
+ 					atomic_dec(&conf->r5c_cached_partial_stripes);
+ 				list_add_tail(&sh->lru, &conf->r5c_full_stripe_list);
++				r5c_check_cached_full_stripe(conf);
+ 			} else {
+ 				/* partial stripe */
+ 				if (!test_and_set_bit(STRIPE_R5C_PARTIAL_STRIPE,
+@@ -626,9 +632,12 @@ raid5_get_active_stripe(struct r5conf *conf, sector_t sector,
+ 			}
+ 			if (noblock && sh == NULL)
+ 				break;
++
++			r5c_check_stripe_cache_usage(conf);
+ 			if (!sh) {
+ 				set_bit(R5_INACTIVE_BLOCKED,
+ 					&conf->cache_state);
++				r5l_wake_reclaim(conf->log, 0);
+ 				wait_event_lock_irq(
+ 					conf->wait_for_stripe,
+ 					!list_empty(conf->inactive_list + hash) &&
+@@ -854,6 +863,7 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+ 
  	if (r5l_write_stripe(conf->log, sh) == 0)
  		return;
++
  	for (i = disks; i--; ) {
-@@ -1044,7 +1066,7 @@ again:
- static struct dma_async_tx_descriptor *
- async_copy_data(int frombio, struct bio *bio, struct page **page,
- 	sector_t sector, struct dma_async_tx_descriptor *tx,
--	struct stripe_head *sh)
-+	struct stripe_head *sh, int no_skipcopy)
- {
- 	struct bio_vec bvl;
- 	struct bvec_iter iter;
-@@ -1084,7 +1106,8 @@ async_copy_data(int frombio, struct bio *bio, struct page **page,
- 			if (frombio) {
- 				if (sh->raid_conf->skip_copy &&
- 				    b_offset == 0 && page_offset == 0 &&
--				    clen == STRIPE_SIZE)
-+				    clen == STRIPE_SIZE &&
-+				    !no_skipcopy)
- 					*page = bio_page;
- 				else
- 					tx = async_memcpy(*page, bio_page, page_offset,
-@@ -1166,7 +1189,7 @@ static void ops_run_biofill(struct stripe_head *sh)
- 			while (rbi && rbi->bi_iter.bi_sector <
- 				dev->sector + STRIPE_SECTORS) {
- 				tx = async_copy_data(0, rbi, &dev->page,
--					dev->sector, tx, sh);
-+						     dev->sector, tx, sh, 0);
- 				rbi = r5_next_bio(rbi, dev->sector);
- 			}
- 		}
-@@ -1293,7 +1316,8 @@ static int set_syndrome_sources(struct page **srcs,
- 		if (i == sh->qd_idx || i == sh->pd_idx ||
- 		    (srctype == SYNDROME_SRC_ALL) ||
- 		    (srctype == SYNDROME_SRC_WANT_DRAIN &&
--		     test_bit(R5_Wantdrain, &dev->flags)) ||
-+		     (test_bit(R5_Wantdrain, &dev->flags) ||
-+		      test_bit(R5_InCache, &dev->flags))) ||
- 		    (srctype == SYNDROME_SRC_WRITTEN &&
- 		     dev->written))
- 			srcs[slot] = sh->dev[i].page;
-@@ -1472,9 +1496,25 @@ ops_run_compute6_2(struct stripe_head *sh, struct raid5_percpu *percpu)
- static void ops_complete_prexor(void *stripe_head_ref)
- {
- 	struct stripe_head *sh = stripe_head_ref;
-+	int i;
- 
- 	pr_debug("%s: stripe %llu\n", __func__,
- 		(unsigned long long)sh->sector);
-+
-+	if (!r5c_is_writeback(sh->raid_conf->log))
-+		return;
-+
-+	/*
-+	 * raid5-cache write back uses orig_page during prexor. after prexor,
-+	 * it is time to free orig_page
-+	 */
-+	for (i = sh->disks; i--; )
-+		if (sh->dev[i].page != sh->dev[i].orig_page) {
-+			struct page *p = sh->dev[i].page;
-+
-+			sh->dev[i].page = sh->dev[i].orig_page;
-+			put_page(p);
-+		}
- }
- 
- static struct dma_async_tx_descriptor *
-@@ -1496,7 +1536,8 @@ ops_run_prexor5(struct stripe_head *sh, struct raid5_percpu *percpu,
- 	for (i = disks; i--; ) {
- 		struct r5dev *dev = &sh->dev[i];
- 		/* Only process blocks that are known to be uptodate */
--		if (test_bit(R5_Wantdrain, &dev->flags))
-+		if (test_bit(R5_Wantdrain, &dev->flags) ||
-+		    test_bit(R5_InCache, &dev->flags))
- 			xor_srcs[count++] = dev->page;
- 	}
- 
-@@ -1547,6 +1588,10 @@ ops_run_biodrain(struct stripe_head *sh, struct dma_async_tx_descriptor *tx)
- 
- again:
- 			dev = &sh->dev[i];
-+			if (test_and_clear_bit(R5_InCache, &dev->flags)) {
-+				BUG_ON(atomic_read(&sh->dev_in_cache) == 0);
-+				atomic_dec(&sh->dev_in_cache);
-+			}
- 			spin_lock_irq(&sh->stripe_lock);
- 			chosen = dev->towrite;
- 			dev->towrite = NULL;
-@@ -1554,7 +1599,13 @@ again:
- 			BUG_ON(dev->written);
- 			wbi = dev->written = chosen;
- 			spin_unlock_irq(&sh->stripe_lock);
--			WARN_ON(dev->page != dev->orig_page);
-+
-+			/*
-+			 * in biodrain stage, prexor for data in raid5-cache
-+			 * is the only case where page != orig_page
-+			 */
-+			if (!test_bit(R5_Wantcache, &dev->flags))
-+				WARN_ON(dev->page != dev->orig_page);
- 
- 			while (wbi && wbi->bi_iter.bi_sector <
- 				dev->sector + STRIPE_SECTORS) {
-@@ -1566,8 +1617,10 @@ again:
- 					set_bit(R5_Discard, &dev->flags);
- 				else {
- 					tx = async_copy_data(1, wbi, &dev->page,
--						dev->sector, tx, sh);
--					if (dev->page != dev->orig_page) {
-+							     dev->sector, tx, sh,
-+							     test_bit(R5_Wantcache, &dev->flags));
-+					if (dev->page != dev->orig_page &&
-+					    !test_bit(R5_Wantcache, &dev->flags)) {
- 						set_bit(R5_SkipCopy, &dev->flags);
- 						clear_bit(R5_UPTODATE, &dev->flags);
- 						clear_bit(R5_OVERWRITE, &dev->flags);
-@@ -1675,7 +1728,8 @@ again:
- 		xor_dest = xor_srcs[count++] = sh->dev[pd_idx].page;
- 		for (i = disks; i--; ) {
- 			struct r5dev *dev = &sh->dev[i];
--			if (head_sh->dev[i].written)
-+			if (head_sh->dev[i].written ||
-+			    test_bit(R5_InCache, &head_sh->dev[i].flags))
- 				xor_srcs[count++] = dev->page;
- 		}
- 	} else {
-@@ -1930,6 +1984,7 @@ static struct stripe_head *alloc_stripe(struct kmem_cache *sc, gfp_t gfp,
+ 		int op, op_flags = 0;
+ 		int replace_only = 0;
+@@ -1983,8 +1993,10 @@ static struct stripe_head *alloc_stripe(struct kmem_cache *sc, gfp_t gfp,
+ 		spin_lock_init(&sh->batch_lock);
  		INIT_LIST_HEAD(&sh->batch_list);
  		INIT_LIST_HEAD(&sh->lru);
++		INIT_LIST_HEAD(&sh->r5c);
  		atomic_set(&sh->count, 1);
-+		atomic_set(&sh->dev_in_cache, 0);
+ 		atomic_set(&sh->dev_in_cache, 0);
++		sh->log_start = MaxSector;
  		for (i = 0; i < disks; i++) {
  			struct r5dev *dev = &sh->dev[i];
  
-@@ -2816,6 +2871,9 @@ schedule_reconstruction(struct stripe_head *sh, struct stripe_head_state *s,
- 				if (!expand)
- 					clear_bit(R5_UPTODATE, &dev->flags);
- 				s->locked++;
-+			} else if (test_bit(R5_InCache, &dev->flags)) {
-+				set_bit(R5_LOCKED, &dev->flags);
-+				s->locked++;
- 			}
- 		}
- 		/* if we are not expanding this is a proper write request, and
-@@ -2855,6 +2913,9 @@ schedule_reconstruction(struct stripe_head *sh, struct stripe_head_state *s,
- 				set_bit(R5_LOCKED, &dev->flags);
- 				clear_bit(R5_UPTODATE, &dev->flags);
- 				s->locked++;
-+			} else if (test_bit(R5_InCache, &dev->flags)) {
-+				set_bit(R5_LOCKED, &dev->flags);
-+				s->locked++;
- 			}
- 		}
- 		if (!s->locked)
-@@ -3529,9 +3590,12 @@ static void handle_stripe_dirtying(struct r5conf *conf,
- 	} else for (i = disks; i--; ) {
- 		/* would I have to read this buffer for read_modify_write */
- 		struct r5dev *dev = &sh->dev[i];
--		if ((dev->towrite || i == sh->pd_idx || i == sh->qd_idx) &&
-+		if ((dev->towrite || i == sh->pd_idx || i == sh->qd_idx ||
-+		     test_bit(R5_InCache, &dev->flags)) &&
- 		    !test_bit(R5_LOCKED, &dev->flags) &&
--		    !(test_bit(R5_UPTODATE, &dev->flags) ||
-+		    !((test_bit(R5_UPTODATE, &dev->flags) &&
-+		       (!test_bit(R5_InCache, &dev->flags) ||
-+			dev->page != dev->orig_page)) ||
- 		      test_bit(R5_Wantcompute, &dev->flags))) {
- 			if (test_bit(R5_Insync, &dev->flags))
- 				rmw++;
-@@ -3543,13 +3607,15 @@ static void handle_stripe_dirtying(struct r5conf *conf,
- 		    i != sh->pd_idx && i != sh->qd_idx &&
- 		    !test_bit(R5_LOCKED, &dev->flags) &&
- 		    !(test_bit(R5_UPTODATE, &dev->flags) ||
--		    test_bit(R5_Wantcompute, &dev->flags))) {
-+		      test_bit(R5_InCache, &dev->flags) ||
-+		      test_bit(R5_Wantcompute, &dev->flags))) {
- 			if (test_bit(R5_Insync, &dev->flags))
- 				rcw++;
- 			else
- 				rcw += 2*disks;
- 		}
- 	}
+@@ -4739,6 +4751,10 @@ static int raid5_congested(struct mddev *mddev, int bits)
+ 
+ 	if (test_bit(R5_INACTIVE_BLOCKED, &conf->cache_state))
+ 		return 1;
 +
- 	pr_debug("for sector %llu, rmw=%d rcw=%d\n",
- 		(unsigned long long)sh->sector, rmw, rcw);
- 	set_bit(STRIPE_HANDLE, &sh->state);
-@@ -3561,10 +3627,18 @@ static void handle_stripe_dirtying(struct r5conf *conf,
- 					  (unsigned long long)sh->sector, rmw);
- 		for (i = disks; i--; ) {
- 			struct r5dev *dev = &sh->dev[i];
--			if ((dev->towrite || i == sh->pd_idx || i == sh->qd_idx) &&
-+			if (test_bit(R5_InCache, &dev->flags) &&
-+			    dev->page == dev->orig_page)
-+				dev->page = alloc_page(GFP_NOIO);  /* prexor */
-+
-+			if ((dev->towrite ||
-+			     i == sh->pd_idx || i == sh->qd_idx ||
-+			     test_bit(R5_InCache, &dev->flags)) &&
- 			    !test_bit(R5_LOCKED, &dev->flags) &&
--			    !(test_bit(R5_UPTODATE, &dev->flags) ||
--			    test_bit(R5_Wantcompute, &dev->flags)) &&
-+			    !((test_bit(R5_UPTODATE, &dev->flags) &&
-+			       (!test_bit(R5_InCache, &dev->flags) ||
-+				dev->page != dev->orig_page)) ||
-+			      test_bit(R5_Wantcompute, &dev->flags)) &&
- 			    test_bit(R5_Insync, &dev->flags)) {
- 				if (test_bit(STRIPE_PREREAD_ACTIVE,
- 					     &sh->state)) {
-@@ -3590,6 +3664,7 @@ static void handle_stripe_dirtying(struct r5conf *conf,
- 			    i != sh->pd_idx && i != sh->qd_idx &&
- 			    !test_bit(R5_LOCKED, &dev->flags) &&
- 			    !(test_bit(R5_UPTODATE, &dev->flags) ||
-+			      test_bit(R5_InCache, &dev->flags) ||
- 			      test_bit(R5_Wantcompute, &dev->flags))) {
- 				rcw++;
- 				if (test_bit(R5_Insync, &dev->flags) &&
-@@ -3629,7 +3704,7 @@ static void handle_stripe_dirtying(struct r5conf *conf,
- 	 */
- 	if ((s->req_compute || !test_bit(STRIPE_COMPUTE_RUN, &sh->state)) &&
- 	    (s->locked == 0 && (rcw == 0 || rmw == 0) &&
--	    !test_bit(STRIPE_BIT_DELAY, &sh->state)))
-+	     !test_bit(STRIPE_BIT_DELAY, &sh->state)))
- 		schedule_reconstruction(sh, s, rcw == 0, 0);
- }
- 
-@@ -4120,6 +4195,10 @@ static void analyse_stripe(struct stripe_head *sh, struct stripe_head_state *s)
- 			if (rdev && !test_bit(Faulty, &rdev->flags))
- 				do_recovery = 1;
- 		}
-+		if (test_bit(R5_InCache, &dev->flags) && dev->written)
-+			s->just_cached++;
-+		if (test_bit(R5_Wantcache, &dev->flags) && dev->written)
-+			s->want_cache++;
- 	}
- 	if (test_bit(STRIPE_SYNCING, &sh->state)) {
- 		/* If there is a failed device being replaced,
-@@ -4285,6 +4364,17 @@ static void handle_stripe(struct stripe_head *sh)
- 
- 	analyse_stripe(sh, &s);
- 
-+	if (s.want_cache) {
-+		/* In last run of handle_stripe, we have finished
-+		 * r5c_handle_stripe_dirtying and ops_run_biodrain, but
-+		 * r5c_cache_data didn't finish because the journal device
-+		 * didn't have enough space. This time we should continue
-+		 * r5c_cache_data
-+		 */
-+		s.to_cache = s.want_cache;
-+		goto finish;
-+	}
-+
- 	if (test_bit(STRIPE_LOG_TRAPPED, &sh->state))
- 		goto finish;
- 
-@@ -4348,7 +4438,7 @@ static void handle_stripe(struct stripe_head *sh)
- 			struct r5dev *dev = &sh->dev[i];
- 			if (test_bit(R5_LOCKED, &dev->flags) &&
- 				(i == sh->pd_idx || i == sh->qd_idx ||
--				 dev->written)) {
-+				 dev->written || test_bit(R5_InCache, &dev->flags))) {
- 				pr_debug("Writing block %d\n", i);
- 				set_bit(R5_Wantwrite, &dev->flags);
- 				if (prexor)
-@@ -4388,6 +4478,10 @@ static void handle_stripe(struct stripe_head *sh)
- 				 test_bit(R5_Discard, &qdev->flags))))))
- 		handle_stripe_clean_event(conf, sh, disks, &s.return_bi);
- 
-+	if (s.just_cached)
-+		r5c_handle_cached_data_endio(conf, sh, disks, &s.return_bi);
-+	r5l_stripe_write_finished(sh);
-+
- 	/* Now we might consider reading some blocks, either to check/generate
- 	 * parity, or to satisfy requests
- 	 * or to load a block that is being partially written.
-@@ -6526,6 +6620,11 @@ static struct r5conf *setup_conf(struct mddev *mddev)
- 	for (i = 0; i < NR_STRIPE_HASH_LOCKS; i++)
- 		INIT_LIST_HEAD(conf->temp_inactive_list + i);
- 
-+	atomic_set(&conf->r5c_cached_full_stripes, 0);
-+	INIT_LIST_HEAD(&conf->r5c_full_stripe_list);
-+	atomic_set(&conf->r5c_cached_partial_stripes, 0);
-+	INIT_LIST_HEAD(&conf->r5c_partial_stripe_list);
-+
- 	conf->level = mddev->new_level;
- 	conf->chunk_sectors = mddev->new_chunk_sectors;
- 	if (raid5_alloc_percpu(conf) != 0)
++	/* Also checks whether there is pressure on r5cache log space */
++	if (test_bit(R5C_LOG_TIGHT, &conf->cache_state))
++		return 1;
+ 	if (conf->quiesce)
+ 		return 1;
+ 	if (atomic_read(&conf->empty_inactive_list_nr))
+@@ -7704,6 +7720,7 @@ static void raid5_quiesce(struct mddev *mddev, int state)
+ 		/* '2' tells resync/reshape to pause so that all
+ 		 * active stripes can drain
+ 		 */
++		r5c_flush_cache(conf, 0);
+ 		conf->quiesce = 2;
+ 		wait_event_cmd(conf->wait_for_quiescent,
+ 				    atomic_read(&conf->active_stripes) == 0 &&
 diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index 8bae64b..ac6d7c7 100644
+index ac6d7c7..d17eed4 100644
 --- a/drivers/md/raid5.h
 +++ b/drivers/md/raid5.h
-@@ -226,6 +226,7 @@ struct stripe_head {
- 
+@@ -227,6 +227,8 @@ struct stripe_head {
  	struct r5l_io_unit	*log_io;
  	struct list_head	log_list;
-+	atomic_t		dev_in_cache;
+ 	atomic_t		dev_in_cache;
++	sector_t		log_start; /* first meta block on the journal */
++	struct list_head	r5c; /* for r5c_cache->stripe_in_cache */
  	/**
  	 * struct stripe_operations
  	 * @target - STRIPE_OP_COMPUTE_BLK target
-@@ -263,6 +264,7 @@ struct stripe_head_state {
- 	 */
- 	int syncing, expanding, expanded, replacing;
- 	int locked, uptodate, to_read, to_write, failed, written;
-+	int to_cache, want_cache, just_cached;
- 	int to_fill, compute, req_compute, non_overwrite;
- 	int failed_num[2];
- 	int p_failed, q_failed;
-@@ -313,6 +315,8 @@ enum r5dev_flags {
- 			 */
- 	R5_Discard,	/* Discard the stripe */
- 	R5_SkipCopy,	/* Don't copy data from bio to stripe cache */
-+	R5_Wantcache,	/* Want write data to write cache */
-+	R5_InCache,	/* Data in cache */
+@@ -521,6 +523,26 @@ struct r5worker_group {
+ 	int stripes_cnt;
  };
  
- /*
-@@ -348,6 +352,12 @@ enum {
- 	STRIPE_LOG_TRAPPED,	/* trapped into log */
- 	STRIPE_R5C_FROZEN,	/* r5c_cache frozen and being written out */
- 	STRIPE_R5C_WRITTEN,	/* ready for r5c_handle_stripe_written() */
-+	STRIPE_R5C_PARTIAL_STRIPE,	/* in r5c cache (to-be/being handled or
-+					 * in conf->r5c_partial_stripe_list)
-+					 */
-+	STRIPE_R5C_FULL_STRIPE,	/* in r5c cache (to-be/being handled or
-+				 * in conf->r5c_full_stripe_list)
++enum r5_cache_state {
++	R5_INACTIVE_BLOCKED,	/* release of inactive stripes blocked,
++				 * waiting for 25% to be free
 +				 */
- };
- 
- #define STRIPE_EXPAND_SYNC_FLAGS \
-@@ -600,6 +610,12 @@ struct r5conf {
- 	 */
- 	atomic_t		active_stripes;
- 	struct list_head	inactive_list[NR_STRIPE_HASH_LOCKS];
++	R5_ALLOC_MORE,		/* It might help to allocate another
++				 * stripe.
++				 */
++	R5_DID_ALLOC,		/* A stripe was allocated, don't allocate
++				 * more until at least one has been
++				 * released.  This avoids flooding
++				 * the cache.
++				 */
++	R5C_LOG_TIGHT,		/* journal device space tight, need to
++				 * prioritize stripes at last_checkpoint
++				 */
++	R5C_LOG_CRITICAL,	/* journal device is running out of space,
++				 * only process stripes at last_checkpoint
++				 */
++};
 +
-+	atomic_t		r5c_cached_full_stripes;
-+	struct list_head	r5c_full_stripe_list;
-+	atomic_t		r5c_cached_partial_stripes;
-+	struct list_head	r5c_partial_stripe_list;
+ struct r5conf {
+ 	struct hlist_head	*stripe_hashtbl;
+ 	/* only protect corresponding hash list and inactive_list */
+@@ -622,17 +644,6 @@ struct r5conf {
+ 	wait_queue_head_t	wait_for_stripe;
+ 	wait_queue_head_t	wait_for_overlap;
+ 	unsigned long		cache_state;
+-#define R5_INACTIVE_BLOCKED	1	/* release of inactive stripes blocked,
+-					 * waiting for 25% to be free
+-					 */
+-#define R5_ALLOC_MORE		2	/* It might help to allocate another
+-					 * stripe.
+-					 */
+-#define R5_DID_ALLOC		4	/* A stripe was allocated, don't allocate
+-					 * more until at least one has been
+-					 * released.  This avoids flooding
+-					 * the cache.
+-					 */
+ 	struct shrinker		shrinker;
+ 	int			pool_size; /* number of disks in stripeheads in pool */
+ 	spinlock_t		device_lock;
+@@ -742,4 +753,10 @@ extern void r5c_handle_cached_data_endio(struct r5conf *conf,
+ extern int r5c_cache_data(struct r5l_log *log, struct stripe_head *sh,
+ 			  struct stripe_head_state *s);
+ extern void r5c_freeze_stripe_for_reclaim(struct stripe_head *sh);
++extern void r5c_prepare_stripe_for_release_in_quiesce(struct stripe_head *sh);
++extern void r5c_do_reclaim(struct r5conf *conf);
++extern int r5c_flush_cache(struct r5conf *conf, int num);
++extern void r5c_check_stripe_cache_usage(struct r5conf *conf);
++extern void r5c_check_cached_full_stripe(struct r5conf *conf);
 +
- 	atomic_t		empty_inactive_list_nr;
- 	struct llist_head	released_stripes;
- 	wait_queue_head_t	wait_for_quiescent;
-@@ -720,4 +736,10 @@ r5c_handle_stripe_dirtying(struct r5conf *conf, struct stripe_head *sh,
- 			   struct stripe_head_state *s, int disks);
- extern void
- r5c_handle_stripe_written(struct r5conf *conf, struct stripe_head *sh);
-+extern void r5l_wake_reclaim(struct r5l_log *log, sector_t space);
-+extern void r5c_handle_cached_data_endio(struct r5conf *conf,
-+	struct stripe_head *sh, int disks, struct bio_list *return_bi);
-+extern int r5c_cache_data(struct r5l_log *log, struct stripe_head *sh,
-+			  struct stripe_head_state *s);
-+extern void r5c_freeze_stripe_for_reclaim(struct stripe_head *sh);
  #endif
 -- 
 2.9.3
