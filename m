@@ -1,71 +1,118 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 1/1] dm raid: fix compat_features validation
-Date: Tue, 11 Oct 2016 13:44:22 -0400
-Message-ID: <20161011174421.GA25738@redhat.com>
-References: <20161011142835.11620-1-apw@canonical.com>
-	<1c517f14-1234-7844-fc6a-cd1b9698fb8b@redhat.com>
-	<20161011153808.nmyf6hafjaadcemw@brain>
-	<591b9d8d-2036-2d0f-14f2-af176b5beaea@redhat.com>
+From: Anthony Youngman <antlists@youngman.org.uk>
+Subject: Re: growing a RAID-10 array with mdadm 3.3.1+ ?
+Date: Tue, 11 Oct 2016 19:29:26 +0100
+Message-ID: <a09a7ce1-8adf-e00c-7787-eb7ccc1a9e63@youngman.org.uk>
+References: <1476206815.989242.752665505.6525EE00@webmail.messagingengine.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <591b9d8d-2036-2d0f-14f2-af176b5beaea@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Heinz Mauelshagen <heinzm@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, Andy Whitcroft <apw@canonical.com>, Shaohua Li <shli@kernel.org>, Alasdair Kergon <agk@redhat.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1476206815.989242.752665505.6525EE00@webmail.messagingengine.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: moft@fmailbox.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Oct 11 2016 at 11:44am -0400,
-Heinz Mauelshagen <heinzm@redhat.com> wrote:
+Okay, this is a first response, so you'll probably need more experienced 
+people to chime in, but
 
-> 
-> 
-> On 10/11/2016 05:38 PM, Andy Whitcroft wrote:
-> >On Tue, Oct 11, 2016 at 05:04:34PM +0200, Heinz Mauelshagen wrote:
-> >>Andy,
-> >>
-> >>good catch.
-> >>
-> >>We should rather check for  V190 support only in case any
-> >>compat feature flags are actually set.
-> >>
-> >>{
-> >>+       if (le32_to_cpu(sb->compat_features) &&
-> >>+           le32_to_cpu(sb->compat_features) != FEATURE_FLAG_SUPPORTS_V190)
-> >>{
-> >>                 rs->ti->error = "Unable to assemble array: Unknown flag(s)
-> >>in compatible feature flags";
-> >>                 return -EINVAL;
-> >>         }
-> >If the feature flags are single bit combinations then I believe the
-> >below does check exactly that.  Checking for no 1s outside of the
-> >expected features, caring not for the value of the valid bits:
-> >
-> >+     if (le32_to_cpu(sb->compat_features) & ~(FEATURE_FLAG_SUPPORTS_V190)) {
-> >
-> >with the possibilty to or in additional feature bits as they are added.
-> 
-> Thanks,
-> I prefer this to be easier readable.
+FIRST - BACKUP BACKUP!! BACKUP!!!!
 
-Readable or not, the code with the != is _not_ future-proof.  Whereas
-Andy's solution is.  If/when a new compat feature comes along then
-FEATURE_FLAG_SUPPORTS_V190 would be replaced to be a macro that ORs all
-the new compat features together (e.g. FEATURE_FLAG_COMPAT).  E.g. how
-dm-thin-metadata.c:__check_incompat_features() does.
+Growing an array is pretty safe, but like anything here, it does have 
+its dangers.
 
-We can go with the != code for now, since any future changes would
-likely cause this test to be changed.  Or we could fix it now _for
-real_.
+Second, what distro are you running? Is it a systemd-based distro?
 
-Mike
+There are a few problems with resizing arrays at the moment, and my gut 
+feeling is that systemd is "to blame". It's very unlikely you'll lose 
+data, but you might well find the resize fails and you have copy to a 
+new array anyway.
+
+More notes inline ...
+
+On 11/10/16 18:26, moft@fmailbox.com wrote:
+> Hi
+>
+> I have a 4-disk RAID10 array
+>
+> 	md0 : active raid10 sda1[4] sdb1[3] sdc1[2] sdd1[1]
+> 	      1953259520 blocks super 1.2 512K chunks 2 far-copies [4/4] [UUUU]
+> 	      bitmap: 0/15 pages [0KB], 65536KB chunk
+>
+> It was created with this command
+>
+> 	mdadm --create /dev/md0 --level=raid10 --raid-devices=4 \
+> 	 --name=md0 --homehost="<none>" \
+> 	 --metadata=1.2 --bitmap=internal --layout=f2 --chunk=512  \
+> 	 /dev/sd[abcd]1
+>
+> It's running on a linux machine
+>
+> 	uname -rm
+> 		4.8.1-2.g4861355-default x86_64
+> 	mdadm --version
+> 		mdadm - v3.3.1 - 5th June 2014
+>
+> I need to add storage to the array.
+>
+> I'd like to grow it by adding two disks (/dev/sd[ef]), to end up with a 6-disk array.
+>
+> I know I can completely wipe it out and recreate it with 6-disks.
+>
+> But I'd rather grow/extend it, Instead.
+>
+> *CAN* I safely grow/expand it?
+
+Bugs excepted - yes you should be able to, without problems.
+>
+> The ChangeLog for mdadm 3.3.1 says
+>
+> 	Changes Prior to release 3.3
+> 	- Some array reshapes can proceed without needing backup file.
+> 	  This is done by changing the 'data_offset' so we never need to write
+> 	  any data back over where it was before.  If there is no "head space"
+> 	  or "tail space" to allow data_offset to change, the old mechanism
+> 	  with a backup file can still be used.
+
+If you're growing the array, you shouldn't need a backup file. You might 
+need a backup for the first second or so, but then it's no longer 
+necessary. And mdadm can probably use the space in the two new disks to 
+store the backup data.
+
+(What I understand happens, is that mdadm will read old stripes 1 & 2. 
+It then writes new stripe 1 and sets the watermark to stripe 1. That 
+says that the new array is complete up to 1, and if the data isn't 
+there, fetch it from the old array. It then reads old stripe 3 and 
+writes new stripe 2, then sets the watermark to 2. Old 4 & 5 become new 
+3, then old 6 makes new 4. Etc etc. Plus, of course, all the locking and 
+safeguards to make sure nothing reads the stripe that's actively being 
+updated ... :-)
+
+Anyways, if it needs a backup file, it will tell you.
+
+> 	- RAID10 arrays can be reshaped to change the number of devices,
+> 	  change the chunk size, or change the layout between 'near'
+> 	  and 'offset'.
+> 	  This will always change data_offset, and will fail if there is no
+> 	  room for data_offset to be moved.
+>
+> So far I haven't found any specific "how to" for this process.
+
+mdadm /dev/md0 --add /dev/sde1 /dev/sdf1
+mdadm --grow /dev/md0 --raid-devices=6
+
+The first command will add your two drives as spares. The second will 
+make them part of the array. It's the second command that's the risky 
+one... and bearing in mind I don't know raid10, it might just add them 
+on the end and not need any reconstruction at all ...
+>
+> (1) The changelog refers to 'near' and 'offset' layouts, but doesn't mention 'far'.
+>
+> CAN I safely grow this layout=f2 array ?
+>
+> (2) If I can, what's the detailed procedure to do it?
+>
+I'll be interested in knowing how this pans out, too, so I can add it to 
+the wiki :-)
+
+Cheers,
+Wol
