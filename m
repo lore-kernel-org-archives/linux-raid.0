@@ -1,38 +1,85 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCH 24/54] md/raid1: Improve another size determination in
- setup_conf()
-Date: Wed, 12 Oct 2016 11:28:39 +0300
-Message-ID: <20161012074307.GB5687@mwanda>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
- <9831fce9-d689-89e4-dec8-50cadcd13fdd@users.sourceforge.net>
- <CAFLxGvx0Fr-WNvKYACdvNiZwYzHW4ocna9HPH8J_WPSXWc+ngg@mail.gmail.com>
- <20161007075345.GB6039@mwanda>
- <wrfjvax0bbb4.fsf@redhat.com>
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: Re: [PATCH] badblocks: fix overlapping check for clearing
+Date: Wed, 12 Oct 2016 12:26:21 +0200
+Message-ID: <20161012102621.GA30839@proton.igk.intel.com>
+References: <1473152338-30539-1-git-send-email-tomasz.majchrzak@intel.com>
+ <87wphk3gpx.fsf@notabene.neil.brown.name>
+ <CAA9_cmcnQjKv=tdBF+Jkd6WoFh+aKCVzq7NPQBStwtcv_j0Qyg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <wrfjvax0bbb4.fsf@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Richard Weinberger <richard.weinberger@gmail.com>, SF Markus Elfring <elfring@users.sourceforge.net>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Guoqing Jiang <gqjiang@suse.com>, Jens Axboe <axboe@fb.com>, Mike Christie <mchristi@redhat.com>, Neil Brown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, Tomasz Majchrzak <tomasz.majchrzak@intel.com>, LKML <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, Julia Lawall <julia.lawall@lip6.fr>
+In-Reply-To: <CAA9_cmcnQjKv=tdBF+Jkd6WoFh+aKCVzq7NPQBStwtcv_j0Qyg@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>, linux-block@vger.kernel.org
+Cc: NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Compare:
+On Mon, Oct 10, 2016 at 03:32:58PM -0700, Dan Williams wrote:
+> > On Tue, Sep 06 2016, Tomasz Majchrzak wrote:
+> >> ---
+> >>  block/badblocks.c | 6 ++++--
+> >>  1 file changed, 4 insertions(+), 2 deletions(-)
+> >>
+> >> diff --git a/block/badblocks.c b/block/badblocks.c
+> >> index 7be53cb..b2ffcc7 100644
+> >> --- a/block/badblocks.c
+> >> +++ b/block/badblocks.c
+> >> @@ -354,7 +354,8 @@ int badblocks_clear(struct badblocks *bb, sector_t s, int sectors)
+> >>                * current range.  Earlier ranges could also overlap,
+> >>                * but only this one can overlap the end of the range.
+> >>                */
+> >> -             if (BB_OFFSET(p[lo]) + BB_LEN(p[lo]) > target) {
+> >> +             if ((BB_OFFSET(p[lo]) + BB_LEN(p[lo]) > target) &&
+> >> +                 (BB_OFFSET(p[lo]) <= target)) {
+> >
+> > hmmm..
+> > 'target' is the sector just beyond the set of sectors to remove from the
+> > list.
+> > BB_OFFSET(p[lo]) is the first sector in a range that was found in the
+> > list.
+> > If these are equal, then are aren't clearing anything in this range.
+> > So I would have '<', not '<='.
+> >
+> > I don't think this makes the code wrong as we end up assigning to p[lo]
+> > the value that is already there.  But it might be confusing.
+> >
+> >
+> >>                       /* Partial overlap, leave the tail of this range */
+> >>                       int ack = BB_ACK(p[lo]);
+> >>                       sector_t a = BB_OFFSET(p[lo]);
+> >> @@ -377,7 +378,8 @@ int badblocks_clear(struct badblocks *bb, sector_t s, int sectors)
+> >>                       lo--;
+> >>               }
+> >>               while (lo >= 0 &&
+> >> -                    BB_OFFSET(p[lo]) + BB_LEN(p[lo]) > s) {
+> >> +                    (BB_OFFSET(p[lo]) + BB_LEN(p[lo]) > s) &&
+> >> +                    (BB_OFFSET(p[lo]) <= target)) {
+> >
+> > Ditto.
+> >
+> > But the code is, I think, correct. Just not how I would have written it.
+> > So
+> >
+> >  Acked-by: NeilBrown <neilb@suse.com>
+> 
+> I agree with the comments to change "<=" to "<".  Tomasz, care to
+> re-send with those changes?
 
-	foo = kmalloc(sizeof(*foo), GFP_KERNEL);
+I have just resent the patch with your suggestions included.
 
-This says you are allocating enough space for foo.  It can be reviewed
-by looking at one line.  If you change the type of foo it will still
-work.
+> > In the original md context, it would only ever be called on a block that
+> > was already in the list.
 
-	foo = kmalloc(sizeof(struct whatever), GFP_KERNEL);
+Actually MD RAID10 calls it this way. See handle_write_completed, it iterates
+over all copies and clears the bad block if error has not been returned. I have
+a test case which fails for that reason - existing bad block is modified by
+clear block. It is very unlikely to happen in real life as it depends on
+specific layout of bad blocks and their discovery order, however it's a gap that
+needs to be closed.
 
-There isn't enough information to say if this is correct.  If you change
-the type of foo then you have to update the allocation as well.
+I had put some effort to see if clearing of non-existing bad block in RAID10 can
+lead to some incorrect behaviour but I haven't found any. It seems that my patch
+is sufficient to fix the problem.
 
-It's not a super common type of bug, but I see it occasionally.
-
-regards,
-dan carpenter
+Tomek
