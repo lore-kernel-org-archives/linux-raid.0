@@ -1,53 +1,38 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH] super1: make write_bitmap1 compatible with previous mdadm versions
-Date: Wed, 12 Oct 2016 02:24:07 -0400
-Message-ID: <1476253447-19865-1-git-send-email-gqjiang@suse.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@redhat.com
-Cc: linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>, Neil Brown <neilb@suse.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH 24/54] md/raid1: Improve another size determination in
+ setup_conf()
+Date: Wed, 12 Oct 2016 11:28:39 +0300
+Message-ID: <20161012074307.GB5687@mwanda>
+References: <566ABCD9.1060404@users.sourceforge.net>
+ <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
+ <9831fce9-d689-89e4-dec8-50cadcd13fdd@users.sourceforge.net>
+ <CAFLxGvx0Fr-WNvKYACdvNiZwYzHW4ocna9HPH8J_WPSXWc+ngg@mail.gmail.com>
+ <20161007075345.GB6039@mwanda>
+ <wrfjvax0bbb4.fsf@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <wrfjvax0bbb4.fsf@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Richard Weinberger <richard.weinberger@gmail.com>, SF Markus Elfring <elfring@users.sourceforge.net>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Guoqing Jiang <gqjiang@suse.com>, Jens Axboe <axboe@fb.com>, Mike Christie <mchristi@redhat.com>, Neil Brown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, Tomasz Majchrzak <tomasz.majchrzak@intel.com>, LKML <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-raid.ids
 
-For older mdadm version, v1.x metadata has different bitmap_offset,
-we can't ensure all the bitmaps are on a 4K boundary since writing
-4K for bitmap could corrupt the superblock, and Anthony reported
-the bug about it at below link.
+Compare:
 
-https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=837964
+	foo = kmalloc(sizeof(*foo), GFP_KERNEL);
 
-So let's check about the alignment for bitmap_offset before set
-the boundary to 4096 unconditionally. Thanks for Neil's detailed
-explanation.
+This says you are allocating enough space for foo.  It can be reviewed
+by looking at one line.  If you change the type of foo it will still
+work.
 
-Reported-by: Anthony DeRobertis <anthony@derobert.net>
-Fixes: 95a05b37e8eb ("Create n bitmaps for clustered mode")
-Cc: Neil Brown <neilb@suse.com>
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
----
- super1.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+	foo = kmalloc(sizeof(struct whatever), GFP_KERNEL);
 
-diff --git a/super1.c b/super1.c
-index 9f62d23..4fef378 100644
---- a/super1.c
-+++ b/super1.c
-@@ -2433,7 +2433,15 @@ static int write_bitmap1(struct supertype *st, int fd, enum bitmap_update update
- 			memset(buf, 0xff, 4096);
- 		memcpy(buf, (char *)bms, sizeof(bitmap_super_t));
- 
--		towrite = calc_bitmap_size(bms, 4096);
-+		/*
-+		 * use 4096 boundary if bitmap_offset is aligned
-+		 * with 8 sectors, then it should compatible with
-+		 * older mdadm.
-+		 */
-+		if (__le32_to_cpu(sb->bitmap_offset) & 7)
-+			towrite = calc_bitmap_size(bms, 512);
-+		else
-+			towrite = calc_bitmap_size(bms, 4096);
- 		while (towrite > 0) {
- 			n = towrite;
- 			if (n > 4096)
--- 
-2.6.6
+There isn't enough information to say if this is correct.  If you change
+the type of foo then you have to update the allocation as well.
 
+It's not a super common type of bug, but I see it occasionally.
+
+regards,
+dan carpenter
