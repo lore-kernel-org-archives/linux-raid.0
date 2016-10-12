@@ -1,45 +1,54 @@
 From: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
-Subject: [PATCH] imsm: block chunk size change for RAID 10
-Date: Wed, 12 Oct 2016 14:28:42 +0200
-Message-ID: <1476275322-1251-1-git-send-email-mariusz.dabrowski@intel.com>
+Subject: [PATCH] Allow level migration only for single-array container
+Date: Wed, 12 Oct 2016 14:29:42 +0200
+Message-ID: <1476275382-1566-1-git-send-email-mariusz.dabrowski@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: Jes.Sorensen@redhat.com, tomasz.majchrzak@intel.com, aleksey.obitotskiy@intel.com, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com, maksymilian.kunt@intel.com, Mariusz Dabrowski <mariusz.dabrowski@intel.com>
 List-Id: linux-raid.ids
 
-Chunk size change of RAID 10 array fails because it is not supported but
-invalid values still are being written to metadata and array cannot be
-assembled after stop. Operation should be blocked before metadata update.
+IMSM doesn't allow to change RAID level of array in container with two
+arrays but array count check is being done too late (after removing disks)
+and in some cases (e. g. RAID 0 and RAID 1 migrated to RAID 0) both arrays
+become degraded. This patch adds array count check before disks are being
+removed.
 
 Signed-off-by: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
 ---
- super-intel.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ Grow.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-diff --git a/super-intel.c b/super-intel.c
-index 92817e9..0b3b2b1 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -10074,10 +10074,16 @@ enum imsm_reshape_type imsm_analyze_change(struct supertype *st,
- 	}
+diff --git a/Grow.c b/Grow.c
+index 628f0e7..bcd27f5 100755
+--- a/Grow.c
++++ b/Grow.c
+@@ -777,6 +777,25 @@ int remove_disks_for_takeover(struct supertype *st,
+ 	struct mdinfo *remaining;
+ 	int slot;
  
- 	if ((geo->chunksize > 0) && (geo->chunksize != UnSet)
--	    && (geo->chunksize != info.array.chunk_size))
-+	    && (geo->chunksize != info.array.chunk_size)) {
-+		if (info.array.level == 10) {
-+			pr_err("Error. Chunk size change for RAID 10 is not supported.\n");
-+			change = -1;
-+			goto analyse_change_exit;
++	if (st->ss->external) {
++		int rv = 0;
++		struct mdinfo *arrays = st->ss->container_content(st, NULL);
++		/* containter_content returns list of arrays in container
++		 * If arrays->next is not NULL it means that there are 2 arrays in
++		 * container and operation should be blocked
++		 */
++		if (arrays) {
++			if (arrays->next)
++				rv = 1;
++			sysfs_free(arrays);
++			if (rv) {
++				pr_err("Error. Cannot perform operation on /dev/%s\n", st->devnm);
++				pr_err("For this operation it MUST be single array in container\n");
++				return rv;
++			}
 +		}
- 		change = CH_MIGRATION;
--	else
-+	} else {
- 		geo->chunksize = info.array.chunk_size;
 +	}
- 
- 	chunk = geo->chunksize / 1024;
- 
++
+ 	if (sra->array.level == 10)
+ 		nr_of_copies = layout & 0xff;
+ 	else if (sra->array.level == 1)
 -- 
 1.8.3.1
 
