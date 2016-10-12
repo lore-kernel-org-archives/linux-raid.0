@@ -1,32 +1,53 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: growing a RAID-10 array with mdadm 3.3.1+ ?
-Date: Tue, 11 Oct 2016 16:26:49 -0400
-Message-ID: <dca8ee98-3561-aa97-8e09-7b23eb3b969a@turmel.org>
-References: <1476206815.989242.752665505.6525EE00@webmail.messagingengine.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: [PATCH] super1: make write_bitmap1 compatible with previous mdadm versions
+Date: Wed, 12 Oct 2016 02:24:07 -0400
+Message-ID: <1476253447-19865-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1476206815.989242.752665505.6525EE00@webmail.messagingengine.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: moft@fmailbox.com, linux-raid@vger.kernel.org
+To: Jes.Sorensen@redhat.com
+Cc: linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>, Neil Brown <neilb@suse.com>
 List-Id: linux-raid.ids
 
-On 10/11/2016 01:26 PM, moft@fmailbox.com wrote:
-> (1) The changelog refers to 'near' and 'offset' layouts, but doesn't mention 'far'.
+For older mdadm version, v1.x metadata has different bitmap_offset,
+we can't ensure all the bitmaps are on a 4K boundary since writing
+4K for bitmap could corrupt the superblock, and Anthony reported
+the bug about it at below link.
 
-Historically "far" has not been reshapeable at all.  I don't recall
-seeing a patch that implemented it.  If you attempt it and it doesn't
-support it, mdadm will refuse without hurting your array.  Same is true
-for other reasons to reject growing.  mdadm gives an error before
-touching the array.
+https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=837964
 
-You can get a definitive answer by setting up a set of small loop
-devices in an array that mimics your setup and attempting to grow that
-test array.
+So let's check about the alignment for bitmap_offset before set
+the boundary to 4096 unconditionally. Thanks for Neil's detailed
+explanation.
 
-There have been bugs with SElinux and systemd preventing the reshape
-task from forking properly from the command line tool.  The array is
-then stuck at reshape position 0.
+Reported-by: Anthony DeRobertis <anthony@derobert.net>
+Fixes: 95a05b37e8eb ("Create n bitmaps for clustered mode")
+Cc: Neil Brown <neilb@suse.com>
+Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+---
+ super1.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-Phil
+diff --git a/super1.c b/super1.c
+index 9f62d23..4fef378 100644
+--- a/super1.c
++++ b/super1.c
+@@ -2433,7 +2433,15 @@ static int write_bitmap1(struct supertype *st, int fd, enum bitmap_update update
+ 			memset(buf, 0xff, 4096);
+ 		memcpy(buf, (char *)bms, sizeof(bitmap_super_t));
+ 
+-		towrite = calc_bitmap_size(bms, 4096);
++		/*
++		 * use 4096 boundary if bitmap_offset is aligned
++		 * with 8 sectors, then it should compatible with
++		 * older mdadm.
++		 */
++		if (__le32_to_cpu(sb->bitmap_offset) & 7)
++			towrite = calc_bitmap_size(bms, 512);
++		else
++			towrite = calc_bitmap_size(bms, 4096);
+ 		while (towrite > 0) {
+ 			n = towrite;
+ 			if (n > 4096)
+-- 
+2.6.6
+
