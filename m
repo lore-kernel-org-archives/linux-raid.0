@@ -1,50 +1,82 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: Re: [PATCH v4 6/8] md/r5cache: sysfs entry r5c_state
-Date: Wed, 12 Oct 2016 21:23:03 +0000
-Message-ID: <C830059D-2187-4CCA-9596-CFF2E7FC883D@fb.com>
-References: <20161011002446.2002428-1-songliubraving@fb.com>
- <20161011002446.2002428-7-songliubraving@fb.com>
- <20161012165647.GB15323@kernel.org>
+Subject: [PATCH v5 1/8] md/r5cache: Check array size in r5l_init_log
+Date: Wed, 12 Oct 2016 22:49:37 -0700
+Message-ID: <20161013054944.1038806-2-songliubraving@fb.com>
+References: <20161013054944.1038806-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161012165647.GB15323@kernel.org>
-Content-Language: en-US
-Content-ID: <5F6FA894F8AEA54589C40271493504B3@namprd15.prod.outlook.com>
+In-Reply-To: <20161013054944.1038806-1-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "neilb@suse.com" <neilb@suse.com>, Shaohua Li <shli@fb.com>, Kernel Team <Kernel-team@fb.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "hch@infradead.org" <hch@infradead.org>, "liuzhengyuang521@gmail.com" <liuzhengyuang521@gmail.com>, "liuzhengyuan@kylinos.cn" <liuzhengyuan@kylinos.cn>
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuang521@gmail.com, liuzhengyuan@kylinos.cn, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
+Currently, r5l_write_stripe checks meta size for each stripe write,
+which is not necessary.
 
-> On Oct 12, 2016, at 9:56 AM, Shaohua Li <shli@kernel.org> wrote:
->=20
->>=20
->=20
-> This isn't how sysfs entry is supposed to output. You can either show the=
- value
-> or the string, not both with format. I'd prefer the string though, and ma=
-ke
-> store accept string.
+With this patch, r5l_init_log checks maximal meta size of the array,
+which is (r5l_meta_block + raid_disks x r5l_payload_data_parity).
+If this is too big to fit in one page, r5l_init_log aborts.
 
-I implemented something like the following:
+With current meta data, r5l_log support raid_disks up to 203.
 
-root@virt-test:~/md# cat /sys/block/md0/md/r5c_state
-[write-through] write-back
-root@virt-test:~/md# echo write-back > /sys/block/md0/md/r5c_state
-root@virt-test:~/md# cat /sys/block/md0/md/r5c_state
-write-through [write-back]
+Signed-off-by: Song Liu <songliubraving@fb.com>
+---
+ drivers/md/raid5-cache.c | 26 ++++++++++++++++----------
+ 1 file changed, 16 insertions(+), 10 deletions(-)
 
-root@virt-test:~/md# ./mdadm --fail /dev/md0 /dev/loop4
-mdadm: set /dev/loop4 faulty in /dev/md0
-root@virt-test:~/md# cat /sys/block/md0/md/r5c_state
-no-cache [cache-broken]
-root@virt-test:~/md# echo no-cache > /sys/block/md0/md/r5c_state
-root@virt-test:~/md# cat /sys/block/md0/md/r5c_state
-no-cache
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 1b1ab4a..7557791b 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -441,7 +441,6 @@ int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh)
+ {
+ 	int write_disks = 0;
+ 	int data_pages, parity_pages;
+-	int meta_size;
+ 	int reserve;
+ 	int i;
+ 	int ret = 0;
+@@ -473,15 +472,6 @@ int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh)
+ 	parity_pages = 1 + !!(sh->qd_idx >= 0);
+ 	data_pages = write_disks - parity_pages;
+ 
+-	meta_size =
+-		((sizeof(struct r5l_payload_data_parity) + sizeof(__le32))
+-		 * data_pages) +
+-		sizeof(struct r5l_payload_data_parity) +
+-		sizeof(__le32) * parity_pages;
+-	/* Doesn't work with very big raid array */
+-	if (meta_size + sizeof(struct r5l_meta_block) > PAGE_SIZE)
+-		return -EINVAL;
+-
+ 	set_bit(STRIPE_LOG_TRAPPED, &sh->state);
+ 	/*
+ 	 * The stripe must enter state machine again to finish the write, so
+@@ -1184,6 +1174,22 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+ 
+ 	if (PAGE_SIZE != 4096)
+ 		return -EINVAL;
++
++	/*
++	 * The PAGE_SIZE must be big enough to hold 1 r5l_meta_block and
++	 * raid_disks r5l_payload_data_parity.
++	 *
++	 * Write journal and cache does not work for very big array
++	 * (raid_disks > 203)
++	 */
++	if (sizeof(struct r5l_meta_block) +
++	    ((sizeof(struct r5l_payload_data_parity) + sizeof(__le32)) *
++	     conf->raid_disks) > PAGE_SIZE) {
++		pr_err("md/raid:%s: write journal/cache doesn't work for array with %d disks\n",
++		       mdname(conf->mddev), conf->raid_disks);
++		return -EINVAL;
++	}
++
+ 	log = kzalloc(sizeof(*log), GFP_KERNEL);
+ 	if (!log)
+ 		return -ENOMEM;
+-- 
+2.9.3
 
-It will be part of next version.=20
-
-Thanks,
-Song=
