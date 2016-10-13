@@ -1,7 +1,7 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH v5 8/8] md/r5cache: handle SYNC and FUA
-Date: Wed, 12 Oct 2016 22:49:44 -0700
-Message-ID: <20161013054944.1038806-9-songliubraving@fb.com>
+Subject: [PATCH v5 6/8] md/r5cache: sysfs entry r5c_state
+Date: Wed, 12 Oct 2016 22:49:42 -0700
+Message-ID: <20161013054944.1038806-7-songliubraving@fb.com>
 References: <20161013054944.1038806-1-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,337 +12,165 @@ To: linux-raid@vger.kernel.org
 Cc: neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuang521@gmail.com, liuzhengyuan@kylinos.cn, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-With raid5 cache, we committing data from journal device. When
-there is flush request, we need to flush journal device's cache.
-This was not needed in raid5 journal, because we will flush the
-journal before committing data to raid disks.
+r5c_state have 4 states:
+* no-cache;
+* write-through (write journal only);
+* write-back (w/ write cache);
+* cache-broken (journal missing or Faulty)
 
-This is similar to FUA, except that we also need flush journal for
-FUA. Otherwise, corruptions in earlier meta data will stop recovery
-from reaching FUA data.
+When there is functional write cache, r5c_state is a knob to
+switch between write-back and write-through.
+
+When the journal device is broken, the raid array is forced
+in readonly mode. In this case, r5c_state can be used to
+remove "journal feature", and thus make the array read-write
+without journal. By writing into r5c_cache_mode, the array
+can transit from cache-broken to no-cache, which removes
+journal feature for the array.
+
+To remove the journal feature:
+- When journal fails, the raid array is forced readonly mode
+  (enforced by kernel)
+- User uses the new interface to remove journal (writing 0
+  to r5c_state, I will add a mdadm option for that later)
+- User forces array read-write;
+- Kernel updates superblock and array can run read/write.
 
 Signed-off-by: Song Liu <songliubraving@fb.com>
 ---
- drivers/md/raid5-cache.c | 162 +++++++++++++++++++++++++++++++++++++++++------
- drivers/md/raid5.c       |   8 +++
- drivers/md/raid5.h       |   1 +
- 3 files changed, 153 insertions(+), 18 deletions(-)
+ drivers/md/raid5-cache.c | 87 ++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/md/raid5.c       |  1 +
+ drivers/md/raid5.h       |  1 +
+ 3 files changed, 89 insertions(+)
 
 diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index d3a68da..49e637e 100644
+index 9f29bfd2..e2fc9f5 100644
 --- a/drivers/md/raid5-cache.c
 +++ b/drivers/md/raid5-cache.c
-@@ -19,6 +19,7 @@
- #include <linux/raid/md_p.h>
- #include <linux/crc32c.h>
- #include <linux/random.h>
-+#include <trace/events/block.h>
- #include "md.h"
- #include "raid5.h"
- #include "bitmap.h"
-@@ -159,6 +160,9 @@ struct r5l_log {
- 
- 	spinlock_t stripe_in_cache_lock;
- 	atomic_t stripe_in_cache_count;
-+
-+	/* to submit async io_units, to fulfill ordering of flush */
-+	struct work_struct deferred_io_work;
+@@ -57,6 +57,8 @@ enum r5c_state {
+ 	R5C_STATE_CACHE_BROKEN = 3,
  };
  
++static char *r5c_state_str[] = {"no-cache", "write-through",
++				"write-back", "cache-broken"};
  /*
-@@ -185,6 +189,18 @@ struct r5l_io_unit {
- 
- 	int state;
- 	bool need_split_bio;
-+	struct bio *split_bio;
-+
-+	unsigned int has_flush:1;      /* include flush request */
-+	unsigned int has_fua:1;        /* include fua request */
-+	unsigned int has_null_flush:1; /* include empty flush request */
-+	/*
-+	 * io isn't sent yet, flush/fua request can only be submitted till it's
-+	 * the first IO in running_ios list
-+	 */
-+	unsigned int io_deferred:1;
-+
-+	struct bio_list flush_barriers;   /* size == 0 flush bios */
- };
- 
- /* r5l_io_unit state */
-@@ -483,9 +499,11 @@ static void r5l_move_to_end_ios(struct r5l_log *log)
+  * raid5 cache state machine
+  *
+@@ -1522,6 +1524,91 @@ void r5c_flush_cache(struct r5conf *conf, int num)
  	}
  }
  
-+static void __r5l_stripe_write_finished(struct r5l_io_unit *io);
- static void r5l_log_endio(struct bio *bio)
- {
- 	struct r5l_io_unit *io = bio->bi_private;
-+	struct r5l_io_unit *io_deferred;
- 	struct r5l_log *log = io->log;
- 	unsigned long flags;
- 
-@@ -501,18 +519,89 @@ static void r5l_log_endio(struct bio *bio)
- 		r5l_move_to_end_ios(log);
- 	else
- 		r5l_log_run_stripes(log);
-+	if (!list_empty(&log->running_ios)) {
-+		/*
-+		 * FLUSH/FUA io_unit is deferred because of ordering, now we
-+		 * can dispatch it
-+		 */
-+		io_deferred = list_first_entry(&log->running_ios,
-+					       struct r5l_io_unit, log_sibling);
-+		if (io_deferred->io_deferred)
-+			schedule_work(&log->deferred_io_work);
++ssize_t r5c_state_show(struct mddev *mddev, char *page)
++{
++	struct r5conf *conf = mddev->private;
++	int val = 0;
++	int ret;
++
++	if (conf->log)
++		val = conf->log->r5c_state;
++	else if (test_bit(MD_HAS_JOURNAL, &mddev->flags))
++		val = R5C_STATE_CACHE_BROKEN;
++
++	switch (val) {
++	case R5C_STATE_NO_CACHE:
++		ret = snprintf(page, PAGE_SIZE, "%s\n", r5c_state_str[val]);
++		break;
++	case R5C_STATE_CACHE_BROKEN:
++		ret = snprintf(page, PAGE_SIZE, "%s [%s]\n",
++			       r5c_state_str[R5C_STATE_NO_CACHE],
++			       r5c_state_str[R5C_STATE_CACHE_BROKEN]);
++		break;
++	case R5C_STATE_WRITE_THROUGH:
++		ret = snprintf(page, PAGE_SIZE, "[%s] %s\n",
++			       r5c_state_str[R5C_STATE_WRITE_THROUGH],
++			       r5c_state_str[R5C_STATE_WRITE_BACK]);
++		break;
++	case R5C_STATE_WRITE_BACK:
++		ret = snprintf(page, PAGE_SIZE, "%s [%s]\n",
++			       r5c_state_str[R5C_STATE_WRITE_THROUGH],
++			       r5c_state_str[R5C_STATE_WRITE_BACK]);
++		break;
++	default:
++		pr_err("md/raid:%s: Detected invalid r5c_state %d\n",
++		       mdname(mddev), val);
 +	}
-+
- 	spin_unlock_irqrestore(&log->io_list_lock, flags);
- 
- 	if (log->need_cache_flush)
- 		md_wakeup_thread(log->rdev->mddev->thread);
-+
-+	if (io->has_null_flush) {
-+		struct bio *bi;
-+
-+		WARN_ON(bio_list_empty(&io->flush_barriers));
-+		while ((bi = bio_list_pop(&io->flush_barriers)) != NULL) {
-+			bio_endio(bi);
-+			atomic_dec(&io->pending_stripe);
-+		}
-+		if (atomic_read(&io->pending_stripe) == 0)
-+			__r5l_stripe_write_finished(io);
-+	}
++	return ret;
 +}
 +
-+static void r5l_do_submit_io(struct r5l_log *log, struct r5l_io_unit *io)
++ssize_t r5c_state_store(struct mddev *mddev, const char *page, size_t len)
 +{
-+	unsigned long flags;
++	struct r5conf *conf = mddev->private;
++	struct r5l_log *log = conf->log;
++	int val = -1, i;
 +
-+	spin_lock_irqsave(&log->io_list_lock, flags);
-+	__r5l_set_io_unit_state(io, IO_UNIT_IO_START);
-+	spin_unlock_irqrestore(&log->io_list_lock, flags);
++	for (i = 0; i < sizeof(r5c_state_str) / sizeof(r5c_state_str[0]); i++)
++		if (strlen(r5c_state_str[i]) == len - 1 &&
++		    strncmp(page, r5c_state_str[i], len - 1) == 0) {
++			val = i;
++			break;
++		}
++	if (val == -1)
++		return -EINVAL;
 +
-+	if (io->has_flush)
-+		bio_set_op_attrs(io->current_bio, REQ_OP_WRITE, WRITE_FLUSH);
-+	if (io->has_fua)
-+		bio_set_op_attrs(io->current_bio, REQ_OP_WRITE, WRITE_FUA);
-+	submit_bio(io->current_bio);
++	if (!log && val != R5C_STATE_NO_CACHE)
++		return -EINVAL;
 +
-+	if (!io->split_bio)
-+		return;
++	if (val < R5C_STATE_NO_CACHE || val > R5C_STATE_WRITE_BACK)
++		return -EINVAL;
++	if (val == R5C_STATE_NO_CACHE) {
++		if (conf->log &&
++		    !test_bit(Faulty, &log->rdev->flags)) {
++			pr_err("md/raid:%s: journal device is in use, cannot remove it\n",
++			       mdname(mddev));
++			return -EINVAL;
++		}
++	}
 +
-+	if (io->has_flush)
-+		bio_set_op_attrs(io->split_bio, REQ_OP_WRITE, WRITE_FLUSH);
-+	if (io->has_fua)
-+		bio_set_op_attrs(io->split_bio, REQ_OP_WRITE, WRITE_FUA);
-+	submit_bio(io->split_bio);
++	if (log) {
++		mddev_suspend(mddev);
++		conf->log->r5c_state = val;
++		mddev_resume(mddev);
++	}
++
++	if (val == R5C_STATE_NO_CACHE) {
++		clear_bit(MD_HAS_JOURNAL, &mddev->flags);
++		set_bit(MD_UPDATE_SB_FLAGS, &mddev->flags);
++	}
++	pr_info("md/raid:%s: setting r5c cache mode to %d: %s\n",
++		mdname(mddev), val, r5c_state_str[val]);
++	return len;
 +}
 +
-+/* deferred io_unit will be dispatched here */
-+static void r5l_submit_io_async(struct work_struct *work)
-+{
-+	struct r5l_log *log = container_of(work, struct r5l_log,
-+					   deferred_io_work);
-+	struct r5l_io_unit *io = NULL;
-+	unsigned long flags;
++struct md_sysfs_entry
++r5c_state = __ATTR(r5c_state, S_IRUGO | S_IWUSR,
++		   r5c_state_show, r5c_state_store);
 +
-+	spin_lock_irqsave(&log->io_list_lock, flags);
-+	if (!list_empty(&log->running_ios)) {
-+		io = list_first_entry(&log->running_ios, struct r5l_io_unit,
-+				      log_sibling);
-+		if (!io->io_deferred)
-+			io = NULL;
-+		else
-+			io->io_deferred = 0;
-+	}
-+	spin_unlock_irqrestore(&log->io_list_lock, flags);
-+	if (io)
-+		r5l_do_submit_io(log, io);
- }
- 
- static void r5l_submit_current_io(struct r5l_log *log)
- {
- 	struct r5l_io_unit *io = log->current_io;
-+	struct bio *bio;
- 	struct r5l_meta_block *block;
- 	unsigned long flags;
- 	u32 crc;
-+	bool do_submit = true;
- 
- 	if (!io)
- 		return;
-@@ -521,13 +610,20 @@ static void r5l_submit_current_io(struct r5l_log *log)
- 	block->meta_size = cpu_to_le32(io->meta_offset);
- 	crc = crc32c_le(log->uuid_checksum, block, PAGE_SIZE);
- 	block->checksum = cpu_to_le32(crc);
-+	bio = io->current_bio;
- 
- 	log->current_io = NULL;
- 	spin_lock_irqsave(&log->io_list_lock, flags);
--	__r5l_set_io_unit_state(io, IO_UNIT_IO_START);
-+	if (io->has_flush || io->has_fua) {
-+		if (io != list_first_entry(&log->running_ios,
-+					   struct r5l_io_unit, log_sibling)) {
-+			io->io_deferred = 1;
-+			do_submit = false;
-+		}
-+	}
- 	spin_unlock_irqrestore(&log->io_list_lock, flags);
--
--	submit_bio(io->current_bio);
-+	if (do_submit)
-+		r5l_do_submit_io(log, io);
- }
- 
- static struct bio *r5l_bio_alloc(struct r5l_log *log)
-@@ -572,6 +668,7 @@ static struct r5l_io_unit *r5l_new_meta(struct r5l_log *log)
- 	io->log = log;
- 	INIT_LIST_HEAD(&io->log_sibling);
- 	INIT_LIST_HEAD(&io->stripe_list);
-+	bio_list_init(&io->flush_barriers);
- 	io->state = IO_UNIT_RUNNING;
- 
- 	io->meta_page = mempool_alloc(log->meta_pool, GFP_NOIO);
-@@ -642,12 +739,11 @@ static void r5l_append_payload_page(struct r5l_log *log, struct page *page)
- 	struct r5l_io_unit *io = log->current_io;
- 
- 	if (io->need_split_bio) {
--		struct bio *prev = io->current_bio;
--
-+		BUG_ON(io->split_bio);
-+		io->split_bio = io->current_bio;
- 		io->current_bio = r5l_bio_alloc(log);
--		bio_chain(io->current_bio, prev);
--
--		submit_bio(prev);
-+		bio_chain(io->current_bio, io->split_bio);
-+		io->need_split_bio = false;
- 	}
- 
- 	if (!bio_add_page(io->current_bio, page, PAGE_SIZE, 0))
-@@ -677,12 +773,23 @@ static int r5l_log_stripe(struct r5l_log *log, struct stripe_head *sh,
- 
- 	io = log->current_io;
- 
-+	if (test_and_clear_bit(STRIPE_R5C_PREFLUSH, &sh->state))
-+		io->has_flush = 1;
-+
- 	for (i = 0; i < sh->disks; i++) {
- 		if (!test_bit(R5_Wantwrite, &sh->dev[i].flags) &&
- 		    !test_bit(R5_Wantcache, &sh->dev[i].flags))
- 			continue;
- 		if (i == sh->pd_idx || i == sh->qd_idx)
- 			continue;
-+		if (test_bit(R5_WantFUA, &sh->dev[i].flags)) {
-+			io->has_fua = 1;
-+			/*
-+			 * we need to flush journal to make sure recovery can
-+			 * reach the data with fua flag
-+			 */
-+			io->has_flush = 1;
-+		}
- 		r5l_append_payload_meta(log, R5LOG_PAYLOAD_DATA,
- 					raid5_compute_blocknr(sh, i, 0),
- 					sh->dev[i].log_checksum, 0, false);
-@@ -847,17 +954,34 @@ int r5l_handle_flush_request(struct r5l_log *log, struct bio *bio)
- {
- 	if (!log)
- 		return -ENODEV;
--	/*
--	 * we flush log disk cache first, then write stripe data to raid disks.
--	 * So if bio is finished, the log disk cache is flushed already. The
--	 * recovery guarantees we can recovery the bio from log disk, so we
--	 * don't need to flush again
--	 */
--	if (bio->bi_iter.bi_size == 0) {
--		bio_endio(bio);
--		return 0;
-+
-+	if (log->r5c_state == R5C_STATE_WRITE_THROUGH) {
-+		/*
-+		 * in write through (journal only)
-+		 * we flush log disk cache first, then write stripe data to
-+		 * raid disks. So if bio is finished, the log disk cache is
-+		 * flushed already. The recovery guarantees we can recovery
-+		 * the bio from log disk, so we don't need to flush again
-+		 */
-+		if (bio->bi_iter.bi_size == 0) {
-+			bio_endio(bio);
-+			return 0;
-+		}
-+		bio->bi_opf &= ~REQ_PREFLUSH;
-+	} else {
-+		/* write back (with cache) */
-+		if (bio->bi_iter.bi_size == 0) {
-+			mutex_lock(&log->io_mutex);
-+			r5l_get_meta(log, 0);
-+			bio_list_add(&log->current_io->flush_barriers, bio);
-+			log->current_io->has_flush = 1;
-+			log->current_io->has_null_flush = 1;
-+			atomic_inc(&log->current_io->pending_stripe);
-+			r5l_submit_current_io(log);
-+			mutex_unlock(&log->io_mutex);
-+			return 0;
-+		}
- 	}
--	bio->bi_opf &= ~REQ_PREFLUSH;
- 	return -EAGAIN;
- }
- 
-@@ -2370,6 +2494,8 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
- 	INIT_LIST_HEAD(&log->no_space_stripes);
- 	spin_lock_init(&log->no_space_stripes_lock);
- 
-+	INIT_WORK(&log->deferred_io_work, r5l_submit_io_async);
-+
- 	log->r5c_state = R5C_STATE_WRITE_THROUGH;
- 	INIT_LIST_HEAD(&log->stripe_in_cache_list);
- 	spin_lock_init(&log->stripe_in_cache_lock);
+ int r5c_handle_stripe_dirtying(struct r5conf *conf,
+ 			       struct stripe_head *sh,
+ 			       struct stripe_head_state *s,
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 187843c..e21fccc 100644
+index beebec1..187843c 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -5233,6 +5233,7 @@ static void raid5_make_request(struct mddev *mddev, struct bio * bi)
- 	int remaining;
- 	DEFINE_WAIT(w);
- 	bool do_prepare;
-+	bool do_flush = false;
- 
- 	if (unlikely(bi->bi_opf & REQ_PREFLUSH)) {
- 		int ret = r5l_handle_flush_request(conf->log, bi);
-@@ -5244,6 +5245,7 @@ static void raid5_make_request(struct mddev *mddev, struct bio * bi)
- 			return;
- 		}
- 		/* ret == -EAGAIN, fallback */
-+		do_flush = true;
- 	}
- 
- 	md_write_start(mddev, bi);
-@@ -5383,6 +5385,12 @@ static void raid5_make_request(struct mddev *mddev, struct bio * bi)
- 				do_prepare = true;
- 				goto retry;
- 			}
-+			if (do_flush) {
-+				set_bit(STRIPE_R5C_PREFLUSH, &sh->state);
-+				/* we only need flush for one stripe */
-+				do_flush = false;
-+			}
-+
- 			set_bit(STRIPE_HANDLE, &sh->state);
- 			clear_bit(STRIPE_DELAYED, &sh->state);
- 			if ((!sh->batch_head || sh == sh->batch_head) &&
+@@ -6304,6 +6304,7 @@ static struct attribute *raid5_attrs[] =  {
+ 	&raid5_group_thread_cnt.attr,
+ 	&raid5_skip_copy.attr,
+ 	&raid5_rmw_level.attr,
++	&r5c_state.attr,
+ 	NULL,
+ };
+ static struct attribute_group raid5_attrs_group = {
 diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index 6311892..b396c5d 100644
+index e63a7b0..6311892 100644
 --- a/drivers/md/raid5.h
 +++ b/drivers/md/raid5.h
-@@ -360,6 +360,7 @@ enum {
- 	STRIPE_R5C_FULL_STRIPE,	/* in r5c cache (to-be/being handled or
- 				 * in conf->r5c_full_stripe_list)
- 				 */
-+	STRIPE_R5C_PREFLUSH,	/* need to flush journal device */
- };
+@@ -758,5 +758,6 @@ extern void r5c_do_reclaim(struct r5conf *conf);
+ extern void r5c_flush_cache(struct r5conf *conf, int num);
+ extern void r5c_check_stripe_cache_usage(struct r5conf *conf);
+ extern void r5c_check_cached_full_stripe(struct r5conf *conf);
++extern struct md_sysfs_entry r5c_state;
  
- #define STRIPE_EXPAND_SYNC_FLAGS \
+ #endif
 -- 
 2.9.3
 
