@@ -1,38 +1,46 @@
-From: Ramon Hofer <ramonhofer@bluewin.ch>
-Subject: Re: "bitmap" line in /proc/mdstat
-Date: Fri, 14 Oct 2016 16:23:32 +0200
-Message-ID: <5800EA64.50902@bluewin.ch>
-References: <5800AE09.70608@bluewin.ch>
- <8922e2e1-b612-fa32-6932-9f4158f52fe6@turmel.org>
- <5800D045.9060602@bluewin.ch> <5800E4B8.9040205@bluewin.ch>
- <20161014141000.GA23227@metamorpher.de>
+From: "Peter Sangas" <pete@wnsdev.com>
+Subject: RE: "bitmap" line in /proc/mdstat
+Date: Fri, 14 Oct 2016 09:08:25 -0700
+Message-ID: <003401d22635$32b7bc70$98273550$@wnsdev.com>
+References: <5800AE09.70608@bluewin.ch> <8922e2e1-b612-fa32-6932-9f4158f52fe6@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161014141000.GA23227@metamorpher.de>
+In-Reply-To: <8922e2e1-b612-fa32-6932-9f4158f52fe6@turmel.org>
+Content-Language: en-us
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Cc: linux-raid@vger.kernel.org
+To: 'Phil Turmel' <philip@turmel.org>, 'Ramon Hofer' <ramonhofer@bluewin.ch>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks for the advice, Andreas.
+Can you quantify the performance decrease and if rebuild time is not as important as performance how does one remove the bitmap?
 
-On 14/10/16 16:10, Andreas Klauer wrote:
-> The main issue is performance impact... it's a tradeoff for additional
-> bitmap updates each write, or long resync time after a power loss or
-> similar event.
->
-> If performance is not critical (e.g. it's a NAS, not a database)
-> then you can enable it without worries.
+Thank you,
+Peter
 
-Yes, it is some sort of NAS.
-I also have a database for ownCloud on it but I am the only user.
-And I use an USV for that machine so I am also not really concerned 
-about power loss.
+-----Original Message-----
+From: Phil Turmel [mailto:philip@turmel.org] 
+Sent: Friday, October 14, 2016 4:53 AM
+To: Ramon Hofer; linux-raid@vger.kernel.org
+Subject: Re: "bitmap" line in /proc/mdstat
 
-Best probably to roll a dice :-)
+On 10/14/2016 06:06 AM, Ramon Hofer wrote:
 
+> From what I was reading [1,2] it is useful for faster rebuilds.
+> But why is it not present for md[1234] as I used the same command to 
+> create these RAIDs?
+> Is it only possible for the last of the linear devices, or is it only 
+> used for almost empty devices, or was the bitmap introduced in a 
+> recent update?
 
-Regards,
-Ramon
+Bitmaps have been available for a long time, but including them on a new array by default is recent.  They are most useful if a device is unexpectedly disconnected but otherwise OK.  mdadm --re-add will allow that device to rejoin the array and only the missing data (tracked by the bitmap) will have to be written to sync it up.
+
+> I wonder if I should and could add a bitmap for the other devices as well?
+
+There is a performance hit, so it should be considered on a case by case basis.
+
+Phil
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
