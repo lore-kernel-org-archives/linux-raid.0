@@ -1,46 +1,28 @@
-From: "Peter Sangas" <pete@wnsdev.com>
-Subject: RE: "bitmap" line in /proc/mdstat
-Date: Fri, 14 Oct 2016 09:08:25 -0700
-Message-ID: <003401d22635$32b7bc70$98273550$@wnsdev.com>
-References: <5800AE09.70608@bluewin.ch> <8922e2e1-b612-fa32-6932-9f4158f52fe6@turmel.org>
+From: Ramon Hofer <ramonhofer@bluewin.ch>
+Subject: Re: "bitmap" line in /proc/mdstat
+Date: Fri, 14 Oct 2016 18:29:46 +0200
+Message-ID: <580107FA.40901@bluewin.ch>
+References: <5800AE09.70608@bluewin.ch>
+ <8922e2e1-b612-fa32-6932-9f4158f52fe6@turmel.org>
+ <003401d22635$32b7bc70$98273550$@wnsdev.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8922e2e1-b612-fa32-6932-9f4158f52fe6@turmel.org>
-Content-Language: en-us
+In-Reply-To: <003401d22635$32b7bc70$98273550$@wnsdev.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Phil Turmel' <philip@turmel.org>, 'Ramon Hofer' <ramonhofer@bluewin.ch>, linux-raid@vger.kernel.org
+To: Peter Sangas <pete@wnsdev.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Can you quantify the performance decrease and if rebuild time is not as important as performance how does one remove the bitmap?
+On 14/10/16 18:08, Peter Sangas wrote:
+> Can you quantify the performance decrease and if rebuild time is not as important as performance how does one remove the bitmap?
 
-Thank you,
-Peter
+ From the Linux RAID wiki:
+"Some limited measurements I have done suggest up to 10% slowdown, 
+though usually less. Possibly some tuning can make it much better." [1]
 
------Original Message-----
-From: Phil Turmel [mailto:philip@turmel.org] 
-Sent: Friday, October 14, 2016 4:53 AM
-To: Ramon Hofer; linux-raid@vger.kernel.org
-Subject: Re: "bitmap" line in /proc/mdstat
+[1] 
+https://raid.wiki.kernel.org/index.php/Write-intent_bitmap#How_Bitmaps_Work_by_Q.26A
 
-On 10/14/2016 06:06 AM, Ramon Hofer wrote:
-
-> From what I was reading [1,2] it is useful for faster rebuilds.
-> But why is it not present for md[1234] as I used the same command to 
-> create these RAIDs?
-> Is it only possible for the last of the linear devices, or is it only 
-> used for almost empty devices, or was the bitmap introduced in a 
-> recent update?
-
-Bitmaps have been available for a long time, but including them on a new array by default is recent.  They are most useful if a device is unexpectedly disconnected but otherwise OK.  mdadm --re-add will allow that device to rejoin the array and only the missing data (tracked by the bitmap) will have to be written to sync it up.
-
-> I wonder if I should and could add a bitmap for the other devices as well?
-
-There is a performance hit, so it should be considered on a case by case basis.
-
-Phil
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Regards,
+Ramon
