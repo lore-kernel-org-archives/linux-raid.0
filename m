@@ -1,70 +1,43 @@
-From: Heinz Mauelshagen <heinzm@redhat.com>
-Subject: Re: [PATCH 1/1] dm raid: fix compat_features validation
-Date: Fri, 14 Oct 2016 19:14:32 +0200
-Message-ID: <dc788138-ba1f-339f-52e5-0cc763462496@redhat.com>
-References: <20161011142835.11620-1-apw@canonical.com>
- <1c517f14-1234-7844-fc6a-cd1b9698fb8b@redhat.com>
- <20161011153808.nmyf6hafjaadcemw@brain>
- <591b9d8d-2036-2d0f-14f2-af176b5beaea@redhat.com>
- <20161011174421.GA25738@redhat.com>
+From: "Peter Sangas" <pete@wnsdev.com>
+Subject: RE: "bitmap" line in /proc/mdstat
+Date: Fri, 14 Oct 2016 10:32:47 -0700
+Message-ID: <005501d22640$fc4d6a20$f4e83e60$@wnsdev.com>
+References: <5800AE09.70608@bluewin.ch> <8922e2e1-b612-fa32-6932-9f4158f52fe6@turmel.org> <003401d22635$32b7bc70$98273550$@wnsdev.com> <580107FA.40901@bluewin.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20161011174421.GA25738@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Andy Whitcroft <apw@canonical.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Alasdair Kergon <agk@redhat.com>
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <580107FA.40901@bluewin.ch>
+Content-Language: en-us
+Sender: linux-raid-owner@vger.kernel.org
+To: 'Ramon Hofer' <ramonhofer@bluewin.ch>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Thanks Ramon.
 
+Do you know why some of your mds were created with bitmaps and others were not?  When I installed Ubuntu 16.04 and used the installer to create a RAID1 some of the mds had bitmaps and some did not.
 
-On 10/11/2016 07:44 PM, Mike Snitzer wrote:
-> On Tue, Oct 11 2016 at 11:44am -0400,
-> Heinz Mauelshagen <heinzm@redhat.com> wrote:
->
->>
->> On 10/11/2016 05:38 PM, Andy Whitcroft wrote:
->>> On Tue, Oct 11, 2016 at 05:04:34PM +0200, Heinz Mauelshagen wrote:
->>>> Andy,
->>>>
->>>> good catch.
->>>>
->>>> We should rather check for  V190 support only in case any
->>>> compat feature flags are actually set.
->>>>
->>>> {
->>>> +       if (le32_to_cpu(sb->compat_features) &&
->>>> +           le32_to_cpu(sb->compat_features) != FEATURE_FLAG_SUPPORTS_V190)
->>>> {
->>>>                  rs->ti->error = "Unable to assemble array: Unknown flag(s)
->>>> in compatible feature flags";
->>>>                  return -EINVAL;
->>>>          }
->>> If the feature flags are single bit combinations then I believe the
->>> below does check exactly that.  Checking for no 1s outside of the
->>> expected features, caring not for the value of the valid bits:
->>>
->>> +     if (le32_to_cpu(sb->compat_features) & ~(FEATURE_FLAG_SUPPORTS_V190)) {
->>>
->>> with the possibilty to or in additional feature bits as they are added.
->> Thanks,
->> I prefer this to be easier readable.
-> Readable or not, the code with the != is _not_ future-proof.  Whereas
-> Andy's solution is.  If/when a new compat feature comes along then
-> FEATURE_FLAG_SUPPORTS_V190 would be replaced to be a macro that ORs all
-> the new compat features together (e.g. FEATURE_FLAG_COMPAT).  E.g. how
-> dm-thin-metadata.c:__check_incompat_features() does.
+Thanks,
+Pete
 
-If we'll have to introduce more feature flags in the future (e.g. for 
-clustered raid1
-support), this is going to be based on the test_bit() API for consistency
-with any other flag processing we do in the target.
+-----Original Message-----
+From: Ramon Hofer [mailto:ramonhofer@bluewin.ch] 
+Sent: Friday, October 14, 2016 9:30 AM
+To: Peter Sangas; linux-raid@vger.kernel.org
+Subject: Re: "bitmap" line in /proc/mdstat
 
-Heinz
+On 14/10/16 18:08, Peter Sangas wrote:
+> Can you quantify the performance decrease and if rebuild time is not as important as performance how does one remove the bitmap?
 
-> We can go with the != code for now, since any future changes would
-> likely cause this test to be changed.  Or we could fix it now _for
-> real_.
->
-> Mike
+ From the Linux RAID wiki:
+"Some limited measurements I have done suggest up to 10% slowdown, though usually less. Possibly some tuning can make it much better." [1]
+
+[1]
+https://raid.wiki.kernel.org/index.php/Write-intent_bitmap#How_Bitmaps_Work_by_Q.26A
+
+Regards,
+Ramon
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
