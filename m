@@ -1,35 +1,38 @@
-From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Subject: Re: "bitmap" line in /proc/mdstat
-Date: Fri, 14 Oct 2016 19:43:14 +0200
-Message-ID: <20161014174314.GA24243@metamorpher.de>
-References: <5800AE09.70608@bluewin.ch>
- <8922e2e1-b612-fa32-6932-9f4158f52fe6@turmel.org>
- <003401d22635$32b7bc70$98273550$@wnsdev.com>
- <580107FA.40901@bluewin.ch>
- <005501d22640$fc4d6a20$f4e83e60$@wnsdev.com>
+From: "=?utf-8?B?bGl1emhlbmd5dWFu?=" <liuzhengyuan@kylinos.cn>
+Subject: Superblock of raid5 log can't be updated when array stoped
+Date: Sat, 15 Oct 2016 10:19:36 +0800
+Message-ID: <tencent_382FBBB34581DF7E1F5EC9A2@qq.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <005501d22640$fc4d6a20$f4e83e60$@wnsdev.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Sangas <pete@wnsdev.com>
-Cc: 'Ramon Hofer' <ramonhofer@bluewin.ch>, linux-raid@vger.kernel.org
+To: =?utf-8?B?c2hsaQ==?= <shli@fb.com>
+Cc: =?utf-8?B?U29uZyBMaXU=?= <songliubraving@fb.com>, =?utf-8?B?bGludXgtcmFpZA==?= <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Oct 14, 2016 at 10:32:47AM -0700, Peter Sangas wrote:
-> I installed Ubuntu 16.04 and used the installer to create a RAID1 some of the mds had bitmaps and some did not.
+SGksIFNoYW9odWEuDQoNCndoZW4gd2Ugc3RvcCByYWlkNSBhcnJheSB3aXRoICJtZGFkbSAt
+UyIgb3IgcmVib290IHRoZSBzeXN0ZW0sICBtZCBtb2R1bGUgd2lsbCANCmNhbGwgcmFpZDVf
+cXVpZXNjZSBhbmQgcjVsX3F1aWVzY2UgdG8gZG8gc29tZSBjbGVhbiB3b3JrLiBTb21lIGNv
+ZGUgb2YgcjVsX3F1aWVzY2UNCndhcyBwYXN0ZWQgYmVsbG93Lg0KDQogICAgICAgICAgICAg
+ICAgLyogbWFrZSBzdXJlIHI1bF93cml0ZV9zdXBlcl9hbmRfZGlzY2FyZF9zcGFjZSBleGl0
+cyAqLw0KICAgICAgICAgICAgICAgIG1kZGV2ID0gbG9nLT5yZGV2LT5tZGRldjsNCiAgICAg
+ICAgICAgICAgICB3YWtlX3VwKCZtZGRldi0+c2Jfd2FpdCk7DQogICAgICAgICAgICAgICAg
+cjVsX3dha2VfcmVjbGFpbShsb2csIC0xTCk7DQogICAgICAgICAgICAgICAgbWRfdW5yZWdp
+c3Rlcl90aHJlYWQoJmxvZy0+cmVjbGFpbV90aHJlYWQpOw0KICAgICAgICAgICAgICAgIHI1
+bF9kb19yZWNsYWltKGxvZyk7DQorICAgICAgICAgICAgICAgIG1kX3VwZGF0ZV9zYihtZGRl
+diwgMSk7DQoNCkl0IHdpbGwgcmVjbGFpbSBhbGwgdXNlZCBzcGFjZSBvZiBsb2cgYW5kIGNh
+bGwgcjVsX3dyaXRlX3N1cGVyIHRvIHJlc2V0IHJkZXYtPmpvdXJuYWxfdGFpbA0KdG8gbG9n
+LT5uZXh0X2NoZWNrcG9pbnQgLiBIb3dldmVyLCBuZXcgcmRldi0+am91cm5hbF90YWlsIHdv
+dWxkIG5vdCBiZSB3cml0dGVuIHRvIA0Kam91cm5hbCBkZXZpY2UgZm9yIHBlcnNpc3RlbnQg
+YmVjYXVzZSBqb3VybmFsIGRldmljZSBtYXkgbm90IHN1cHBvcnQgZGlzY2FyZCBvcGVyYXRp
+b24NCm9yIGR1ZSB0byBtZGRldl90cnlsb2NrIGZhaWwgKHRoaXMgdHJ5bG9jayBzaG91bGQg
+YWx3YXlzIGdldCBmYWlsZWQgc2luY2UgcmFpZDVfcXVpZXNjZSANCndhcyBjYWxsZWQgd2l0
+aCAgcmVjb25maWdfbXV0ZXggaG9sZCwgaXNuJ3QgaXQ/KS4gQXMgYSByZXN1bHQsIGl0IHdp
+bGwgdGFrZSBhIGxvbmcgdGltZSB0bw0KIHJlY292ZXJ5IHRoZSBsb2cgd2hlbiB0aGUgYXJy
+YXJ5IHdhcyByZXN0YXJ0ZWQuIFNob3VsZCByNWxfcXVpZXNjZSBjYWxsIG1kX3VwZGF0ZV9z
+Yg0KIGRpcmVjdGx5IHRvIGd1YXJhbnRlZSAgc3VwZXJibG9jayAgdXBkYXRlPw==
 
-Small ones (/boot, swap) might not get a bitmap by default.
-According to the manpage it needs 100G or larger.
-
-|       -b, --bitmap=
-|[...]
-|              When  creating  an  array  on  devices which are 100G or larger,
-|              mdadm automatically adds an internal bitmap as it  will  usually
-|              be beneficial.  This can be suppressed with --bitmap=none .
 
 
-
-Regards
-Andreas Klauer
