@@ -1,38 +1,76 @@
-From: "=?utf-8?B?bGl1emhlbmd5dWFu?=" <liuzhengyuan@kylinos.cn>
-Subject: Superblock of raid5 log can't be updated when array stoped
-Date: Sat, 15 Oct 2016 10:19:36 +0800
-Message-ID: <tencent_382FBBB34581DF7E1F5EC9A2@qq.com>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH] MD-RAID: Use seq_putc() in three status functions
+Date: Sun, 16 Oct 2016 10:20:10 +0200
+Message-ID: <77fb6fdc-7480-8607-0af1-42f73c125b9d@users.sourceforge.net>
+References: <566ABCD9.1060404@users.sourceforge.net>
+ <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
+ <92c52f1d-d151-cea6-e9ac-31378e6862d0@users.sourceforge.net>
+ <1475771699.1914.10.camel@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1475771699.1914.10.camel@perches.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?utf-8?B?c2hsaQ==?= <shli@fb.com>
-Cc: =?utf-8?B?U29uZyBMaXU=?= <songliubraving@fb.com>, =?utf-8?B?bGludXgtcmFpZA==?= <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Guoqing Jiang <gqjiang@suse.com>, Jens Axboe <axboe@fb.com>, Joe Perches <coupons@perches.com>, Mike Christie <mchristi@redhat.com>, Neil Brown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
 List-Id: linux-raid.ids
 
-SGksIFNoYW9odWEuDQoNCndoZW4gd2Ugc3RvcCByYWlkNSBhcnJheSB3aXRoICJtZGFkbSAt
-UyIgb3IgcmVib290IHRoZSBzeXN0ZW0sICBtZCBtb2R1bGUgd2lsbCANCmNhbGwgcmFpZDVf
-cXVpZXNjZSBhbmQgcjVsX3F1aWVzY2UgdG8gZG8gc29tZSBjbGVhbiB3b3JrLiBTb21lIGNv
-ZGUgb2YgcjVsX3F1aWVzY2UNCndhcyBwYXN0ZWQgYmVsbG93Lg0KDQogICAgICAgICAgICAg
-ICAgLyogbWFrZSBzdXJlIHI1bF93cml0ZV9zdXBlcl9hbmRfZGlzY2FyZF9zcGFjZSBleGl0
-cyAqLw0KICAgICAgICAgICAgICAgIG1kZGV2ID0gbG9nLT5yZGV2LT5tZGRldjsNCiAgICAg
-ICAgICAgICAgICB3YWtlX3VwKCZtZGRldi0+c2Jfd2FpdCk7DQogICAgICAgICAgICAgICAg
-cjVsX3dha2VfcmVjbGFpbShsb2csIC0xTCk7DQogICAgICAgICAgICAgICAgbWRfdW5yZWdp
-c3Rlcl90aHJlYWQoJmxvZy0+cmVjbGFpbV90aHJlYWQpOw0KICAgICAgICAgICAgICAgIHI1
-bF9kb19yZWNsYWltKGxvZyk7DQorICAgICAgICAgICAgICAgIG1kX3VwZGF0ZV9zYihtZGRl
-diwgMSk7DQoNCkl0IHdpbGwgcmVjbGFpbSBhbGwgdXNlZCBzcGFjZSBvZiBsb2cgYW5kIGNh
-bGwgcjVsX3dyaXRlX3N1cGVyIHRvIHJlc2V0IHJkZXYtPmpvdXJuYWxfdGFpbA0KdG8gbG9n
-LT5uZXh0X2NoZWNrcG9pbnQgLiBIb3dldmVyLCBuZXcgcmRldi0+am91cm5hbF90YWlsIHdv
-dWxkIG5vdCBiZSB3cml0dGVuIHRvIA0Kam91cm5hbCBkZXZpY2UgZm9yIHBlcnNpc3RlbnQg
-YmVjYXVzZSBqb3VybmFsIGRldmljZSBtYXkgbm90IHN1cHBvcnQgZGlzY2FyZCBvcGVyYXRp
-b24NCm9yIGR1ZSB0byBtZGRldl90cnlsb2NrIGZhaWwgKHRoaXMgdHJ5bG9jayBzaG91bGQg
-YWx3YXlzIGdldCBmYWlsZWQgc2luY2UgcmFpZDVfcXVpZXNjZSANCndhcyBjYWxsZWQgd2l0
-aCAgcmVjb25maWdfbXV0ZXggaG9sZCwgaXNuJ3QgaXQ/KS4gQXMgYSByZXN1bHQsIGl0IHdp
-bGwgdGFrZSBhIGxvbmcgdGltZSB0bw0KIHJlY292ZXJ5IHRoZSBsb2cgd2hlbiB0aGUgYXJy
-YXJ5IHdhcyByZXN0YXJ0ZWQuIFNob3VsZCByNWxfcXVpZXNjZSBjYWxsIG1kX3VwZGF0ZV9z
-Yg0KIGRpcmVjdGx5IHRvIGd1YXJhbnRlZSAgc3VwZXJibG9jayAgdXBkYXRlPw==
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Sun, 16 Oct 2016 10:10:28 +0200
 
+A single character (a closing square bracket) should be put into a sequence
+at the end in these functions.
+Thus use the corresponding function "seq_putc".
 
+This issue was detected also by using the Coccinelle software.
+
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+---
+ drivers/md/raid1.c  | 2 +-
+ drivers/md/raid10.c | 2 +-
+ drivers/md/raid5.c  | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 1961d82..fd97f65 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1418,7 +1418,7 @@ static void raid1_status(struct seq_file *seq, struct mddev *mddev)
+ 			   rdev && test_bit(In_sync, &rdev->flags) ? "U" : "_");
+ 	}
+ 	rcu_read_unlock();
+-	seq_printf(seq, "]");
++	seq_putc(seq, ']');
+ }
+ 
+ static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index be1a9fc..7490b28 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1499,7 +1499,7 @@ static void raid10_status(struct seq_file *seq, struct mddev *mddev)
+ 		seq_printf(seq, "%s", rdev && test_bit(In_sync, &rdev->flags) ? "U" : "_");
+ 	}
+ 	rcu_read_unlock();
+-	seq_printf(seq, "]");
++	seq_putc(seq, ']');
+ }
+ 
+ /* check if there are enough drives for
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 92ac251..9eb45c4 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -7077,7 +7077,7 @@ static void raid5_status(struct seq_file *seq, struct mddev *mddev)
+ 		seq_printf (seq, "%s", rdev && test_bit(In_sync, &rdev->flags) ? "U" : "_");
+ 	}
+ 	rcu_read_unlock();
+-	seq_printf (seq, "]");
++	seq_putc(seq, ']');
+ }
+ 
+ static void print_raid5_conf (struct r5conf *conf)
+-- 
+2.10.1
 
