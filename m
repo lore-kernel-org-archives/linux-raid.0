@@ -1,9 +1,8 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
+From: Hannes Reinecke <hare@suse.de>
 Subject: Re: MD-RAID: Use seq_putc() in three status functions?
-Date: Mon, 17 Oct 2016 18:08:09 +0200
-Message-ID: <bf6c54f1-7af4-747c-a58b-be13ab74563e@users.sourceforge.net>
+Date: Mon, 17 Oct 2016 19:18:35 +0200
+Message-ID: <665cd40a-4562-a015-78c6-12976c12b626@suse.de>
 References: <566ABCD9.1060404@users.sourceforge.net>
- <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
  <92c52f1d-d151-cea6-e9ac-31378e6862d0@users.sourceforge.net>
  <1475771699.1914.10.camel@perches.com>
  <77fb6fdc-7480-8607-0af1-42f73c125b9d@users.sourceforge.net>
@@ -20,42 +19,59 @@ References: <566ABCD9.1060404@users.sourceforge.net>
  <57299b72-8e6b-0b92-4374-1b7a0907e810@suse.de>
  <cb9beadc-3ea2-c09c-f621-a54cd73e3647@users.sourceforge.net>
  <05d0cade-7922-9d8a-a974-34b2cc9150fb@suse.de>
+ <bf6c54f1-7af4-747c-a58b-be13ab74563e@users.sourceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <05d0cade-7922-9d8a-a974-34b2cc9150fb@suse.de>
+In-Reply-To: <bf6c54f1-7af4-747c-a58b-be13ab74563e@users.sourceforge.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, linux-raid@vger.kernel.org
+To: SF Markus Elfring <elfring@users.sourceforge.net>, linux-raid@vger.kernel.org
 Cc: Bernd Petrovitsch <bernd@petrovitsch.priv.at>, Christoph Hellwig <hch@lst.de>, Guoqing Jiang <gqjiang@suse.com>, Jens Axboe <axboe@fb.com>, Joe Perches <coupons@perches.com>, Mike Christie <mchristi@redhat.com>, Neil Brown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, Tomasz Majchrzak <tomasz.majchrzak@intel.com>, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, kbuild-all@01.org, ltp@lists.linux.it
 List-Id: linux-raid.ids
 
->> * Would you really like to know under which circumstances data processing
->>   will be faster for a single character instead of using a string pointer
->>   and corresponding two characters?
->>
-> It's not a problem of the interface, it's a problem of the resulting code
-> (ie assembler output).
+On 10/17/2016 06:08 PM, SF Markus Elfring wrote:
+>>> * Would you really like to know under which circumstances data processing
+>>>   will be faster for a single character instead of using a string pointer
+>>>   and corresponding two characters?
+>>>
+>> It's not a problem of the interface, it's a problem of the resulting code
+>> (ie assembler output).
+>
+> How do you think about to discuss concrete generated code any further?
+>
+Sure. Show me the generated code and point out where the benefits are.
 
-How do you think about to discuss concrete generated code any further?
+>> We can discuss all we like, if the compiler decides to throw in
+>> an optimisation none of the arguments even apply.
+>
+> Would it make sense to clarify assembler output with optimisation switched off?
+>
+> Do you eventually care for code from non-optimising compilers?
+>
+No. This is the linux kernel. There is a very, _very_ limited benefit of 
+trying to use a non-standard compiler.
 
+>
+>>> * Will it occasionally be useful to avoid the storage for another string literal?
+>>>
+>> Occasionally: yes.
+>> In this particular case: hardly.
+>
+> I am curious when such a software design aspect can become more relevant.
+> Would it be nice to get rid of three questionable string terminators (null bytes)
+> for example?
+>
+Again, all this does it trying to out-guess what the compiler might be 
+doing during compilation. For which the easiest method is checking.
+So back to the original task for you: Show me in the generated output 
+where the benefits are.
 
-> We can discuss all we like, if the compiler decides to throw in
-> an optimisation none of the arguments even apply.
+Cheers,
 
-Would it make sense to clarify assembler output with optimisation switched off?
-
-Do you eventually care for code from non-optimising compilers?
-
-
->> * Will it occasionally be useful to avoid the storage for another string literal?
->>
-> Occasionally: yes.
-> In this particular case: hardly.
-
-I am curious when such a software design aspect can become more relevant.
-Would it be nice to get rid of three questionable string terminators (null bytes)
-for example?
-
-Regards,
-Markus
+Hannes
+-- 
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
