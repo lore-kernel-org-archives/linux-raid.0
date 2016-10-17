@@ -1,89 +1,52 @@
-From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: [PATCH 2/2] md: unblock array if bad blocks have been acknowledged
-Date: Mon, 17 Oct 2016 16:29:40 +0200
-Message-ID: <1476714580-15167-1-git-send-email-tomasz.majchrzak@intel.com>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: Re: MD-RAID: Use seq_putc() in three status functions?
+Date: Mon, 17 Oct 2016 16:30:43 +0200
+Message-ID: <cb9beadc-3ea2-c09c-f621-a54cd73e3647@users.sourceforge.net>
+References: <566ABCD9.1060404@users.sourceforge.net>
+ <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
+ <92c52f1d-d151-cea6-e9ac-31378e6862d0@users.sourceforge.net>
+ <1475771699.1914.10.camel@perches.com>
+ <77fb6fdc-7480-8607-0af1-42f73c125b9d@users.sourceforge.net>
+ <688764a4-072d-2faf-37ba-a222b190a5d9@suse.de>
+ <59d71170-c48d-a084-c748-b6ab74a2bee4@users.sourceforge.net>
+ <1e151094-e228-5307-ae2f-b376b31f5628@suse.de>
+ <83e720c6-9037-a3c1-6e83-27505805f37f@users.sourceforge.net>
+ <2cc42b2f-1f1a-e95c-91fa-54e1dd3b6d49@suse.de>
+ <653e60ee-f862-8828-3e4f-498c7cc34bdc@users.sourceforge.net>
+ <c2500336-5848-66c3-ecf0-1ade04decf75@suse.de>
+ <a0f96e19-fa24-8507-2b77-344a342113aa@users.sourceforge.net>
+ <1476703920.2520.105.camel@petrovitsch.priv.at>
+ <97f31b70-e3ff-f194-c753-54da1fe3e664@users.sourceforge.net>
+ <57299b72-8e6b-0b92-4374-1b7a0907e810@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <57299b72-8e6b-0b92-4374-1b7a0907e810@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@kernel.org, aleksey.obitotskiy@intel.com, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com, maksymilian.kunt@intel.com, mariusz.dabrowski@intel.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+To: Hannes Reinecke <hare@suse.de>, linux-raid@vger.kernel.org
+Cc: Bernd Petrovitsch <bernd@petrovitsch.priv.at>, Christoph Hellwig <hch@lst.de>, Guoqing Jiang <gqjiang@suse.com>, Jens Axboe <axboe@fb.com>, Joe Perches <coupons@perches.com>, Mike Christie <mchristi@redhat.com>, Neil Brown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, Tomasz Majchrzak <tomasz.majchrzak@intel.com>, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, kbuild-all@01.org, ltp@lists.linux.it
 List-Id: linux-raid.ids
 
-Once external metadata handler acknowledges all bad blocks (by writing
-to rdev 'bad_blocks' sysfs file), it requests to unblock the array.
-Check if all bad blocks are actually acknowledged as there might be a
-race if new bad blocks are notified at the same time. If all bad blocks
-are acknowledged, just unblock the array and continue. If not, ignore
-the request to unblock (do not fail an array). External metadata handler
-is expected to either process remaining bad blocks and try to unblock
-again or remove bad block support for a disk (which will cause disk to
-fail as in no-support case).
+>> Am I the only software developer so far who would dare to reconsider
+>> implementation details from three status functions?
+>>
+> No.
 
-Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
----
- drivers/md/md.c | 43 ++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 36 insertions(+), 7 deletions(-)
+Thanks for this kind of promising feedback.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index f375d1b..81b4c33 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -2629,19 +2629,48 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
- 		set_bit(Blocked, &rdev->flags);
- 		err = 0;
- 	} else if (cmd_match(buf, "-blocked")) {
--		if (!test_bit(Faulty, &rdev->flags) &&
-+		int unblock = 1;
-+
-+		if ((test_bit(ExternalBbl, &rdev->flags) &&
-+			 rdev->badblocks.changed)) {
-+			struct badblocks *bb = &rdev->badblocks;
-+			int ack = 1;
-+
-+			write_seqlock_irq(&bb->lock);
-+			if (bb->unacked_exist) {
-+				u64 *p = bb->page;
-+				int i;
-+
-+				for (i = 0; i < bb->count ; i++) {
-+					if (!BB_ACK(p[i])) {
-+						ack = 0;
-+						break;
-+					}
-+				}
-+				if (ack) {
-+					bb->unacked_exist = 0;
-+					bb->changed = 0;
-+				}
-+			}
-+			write_sequnlock_irq(&bb->lock);
-+		}
-+		if ((test_bit(ExternalBbl, &rdev->flags) &&
-+			rdev->badblocks.unacked_exist)) {
-+			unblock = 0;
-+		} else if (!test_bit(Faulty, &rdev->flags) &&
- 		    rdev->badblocks.unacked_exist) {
- 			/* metadata handler doesn't understand badblocks,
- 			 * so we need to fail the device
- 			 */
- 			md_error(rdev->mddev, rdev);
- 		}
--		clear_bit(Blocked, &rdev->flags);
--		clear_bit(BlockedBadBlocks, &rdev->flags);
--		wake_up(&rdev->blocked_wait);
--		set_bit(MD_RECOVERY_NEEDED, &rdev->mddev->recovery);
--		md_wakeup_thread(rdev->mddev->thread);
--
-+		if (unblock) {
-+			clear_bit(Blocked, &rdev->flags);
-+			clear_bit(BlockedBadBlocks, &rdev->flags);
-+			wake_up(&rdev->blocked_wait);
-+			set_bit(MD_RECOVERY_NEEDED, &rdev->mddev->recovery);
-+			md_wakeup_thread(rdev->mddev->thread);
-+		}
- 		err = 0;
- 	} else if (cmd_match(buf, "insync") && rdev->raid_disk == -1) {
- 		set_bit(In_sync, &rdev->flags);
--- 
-1.8.3.1
 
+> But we're waiting for you showing is that it is an improvement.
+
+Can this aspect also be clarified to some degree from a logical point of view?
+
+* Would you really like to know under which circumstances data processing
+  will be faster for a single character instead of using a string pointer
+  and corresponding two characters?
+
+* Do you care for a changed memory allocation characteristic?
+
+* Will it occasionally be useful to avoid the storage for another string literal?
+
+Regards,
+Markus
