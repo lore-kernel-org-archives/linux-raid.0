@@ -1,101 +1,97 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: MD-RAID: Use seq_putc() in three status functions?
-Date: Mon, 17 Oct 2016 16:00:14 +0200
-Message-ID: <f0cdb05a-a1b7-8962-fb9c-cc4739178e8b@suse.de>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <786843ef-4b6f-eb04-7326-2f6f5b408826@users.sourceforge.net>
- <92c52f1d-d151-cea6-e9ac-31378e6862d0@users.sourceforge.net>
- <1475771699.1914.10.camel@perches.com>
- <77fb6fdc-7480-8607-0af1-42f73c125b9d@users.sourceforge.net>
- <688764a4-072d-2faf-37ba-a222b190a5d9@suse.de>
- <59d71170-c48d-a084-c748-b6ab74a2bee4@users.sourceforge.net>
- <1e151094-e228-5307-ae2f-b376b31f5628@suse.de>
- <83e720c6-9037-a3c1-6e83-27505805f37f@users.sourceforge.net>
- <2cc42b2f-1f1a-e95c-91fa-54e1dd3b6d49@suse.de>
- <653e60ee-f862-8828-3e4f-498c7cc34bdc@users.sourceforge.net>
- <c2500336-5848-66c3-ecf0-1ade04decf75@suse.de>
- <a0f96e19-fa24-8507-2b77-344a342113aa@users.sourceforge.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <a0f96e19-fa24-8507-2b77-344a342113aa@users.sourceforge.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: SF Markus Elfring <elfring@users.sourceforge.net>, linux-raid@vger.kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, Guoqing Jiang <gqjiang@suse.com>, Jens Axboe <axboe@fb.com>, Joe Perches <coupons@perches.com>, Mike Christie <mchristi@redhat.com>, Neil Brown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, Tomasz Majchrzak <tomasz.majchrzak@intel.com>, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, kbuild-all@01.org, ltp@lists.linux.it
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH 1/2] md: add bad block support for external metadata
+Date: Mon, 17 Oct 2016 16:29:09 +0200
+Message-ID: <1476714549-15057-1-git-send-email-tomasz.majchrzak@intel.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: shli@kernel.org, aleksey.obitotskiy@intel.com, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com, maksymilian.kunt@intel.com, mariusz.dabrowski@intel.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
-On 10/17/2016 01:10 PM, SF Markus Elfring wrote:
->>> * Is a string pointer often longer than a byte?
->>>
->> Always.
-> 
-> I have got doubts for this specific information.
-> 
-> 
->> (Which up to now I thought was basic programming knowledge...)
-> 
-> By the way:
-> Run time environments still exist where the size of a pointer can be also
-> just one byte, don't they?
-> 
-Really? Name one.
-You can only fit a point in one byte if you are on an 8-bit system.
-Which I don't think linux is running on.
+Add new rdev flag which external metadata handler can use to switch
+on/off bad block support. If new bad block is encountered, notify it via
+rdev 'unacknowledged_bad_blocks' sysfs file. If bad block has been
+cleared, notify update to rdev 'bad_blocks' sysfs file.
 
->>> How many results would we like to clarify from various hardware
->>> and software combinations?
->>>
->> See above. At the moment _any_ test result from your side would do.
-> 
-> I imagine that another single result might not be representative.
-> How many lessons from test statistics will usually be also relevant here?
-> 
-> 
-As said above, _any_ statistic will do at this point.
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+---
+ drivers/md/md.c | 22 ++++++++++++++++++++--
+ drivers/md/md.h |  3 +++
+ 2 files changed, 23 insertions(+), 2 deletions(-)
 
->>> How important are the mentioned functions for you within the Linux
->>> programming interface so far?
->>>
->> Not very. The interface is only used in a slow path, and the execution
->> time doesn't affect I/O performance in any way.
-> 
-> Thanks for another interesting information.
-> 
-> 
->>>> Case in point: with your patch the x86_64 compiler generates nearly
->>>> identical code for driver/md/raid1.c, but with one instruction _more_
->>>> after your patch has been applied.
->>>
->>> Which software versions and command parameters did you try out
->>> for this information (from an unspecified run time environment)?
->>>
->> # gcc --version
->> gcc (SUSE Linux) 4.8.5
-> 
-> Thanks for this detail.
-> 
-> * Did you choose any special optimisation settings for your quick check?
-> 
-> * Will any compilation results matter if "optimisation" would be
->   switched off there?
-> 
-> 
-These were the results when calling 'make' in the kernel source tree.
-With all applicable options.
-
->> I'm still waiting from results from your side.
-> 
-> Would any other software developers or testers dare to add related information?
-> 
-No. It's your patch, _you_ have to do it.
-
-Cheers,
-
-Hannes
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index eac84d8..f375d1b 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -2568,6 +2568,10 @@ state_show(struct md_rdev *rdev, char *page)
+ 		len += sprintf(page+len, "%sreplacement", sep);
+ 		sep = ",";
+ 	}
++	if (test_bit(ExternalBbl, &flags)) {
++		len += sprintf(page+len, "%sexternal_bbl", sep);
++		sep = ",";
++	}
+ 
+ 	return len+sprintf(page+len, "\n");
+ }
+@@ -2708,6 +2712,14 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
+ 			}
+ 		} else
+ 			err = -EBUSY;
++	} else if (cmd_match(buf, "external_bbl") && (rdev->mddev->external)) {
++		set_bit(ExternalBbl, &rdev->flags);
++		rdev->badblocks.shift = 0;
++		err = 0;
++	} else if (cmd_match(buf, "-external_bbl") && (rdev->mddev->external)) {
++		clear_bit(ExternalBbl, &rdev->flags);
++		rdev->badblocks.shift = -1;
++		err = 0;
+ 	}
+ 	if (!err)
+ 		sysfs_notify_dirent_safe(rdev->sysfs_state);
+@@ -8614,6 +8626,9 @@ int rdev_set_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
+ 	rv = badblocks_set(&rdev->badblocks, s, sectors, 0);
+ 	if (rv == 0) {
+ 		/* Make sure they get written out promptly */
++		if (test_bit(ExternalBbl, &rdev->flags))
++			sysfs_notify(&rdev->kobj, NULL,
++				     "unacknowledged_bad_blocks");
+ 		sysfs_notify_dirent_safe(rdev->sysfs_state);
+ 		set_mask_bits(&mddev->flags, 0,
+ 			      BIT(MD_CHANGE_CLEAN) | BIT(MD_CHANGE_PENDING));
+@@ -8627,12 +8642,15 @@ EXPORT_SYMBOL_GPL(rdev_set_badblocks);
+ int rdev_clear_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
+ 			 int is_new)
+ {
++	int rv;
+ 	if (is_new)
+ 		s += rdev->new_data_offset;
+ 	else
+ 		s += rdev->data_offset;
+-	return badblocks_clear(&rdev->badblocks,
+-				  s, sectors);
++	rv = badblocks_clear(&rdev->badblocks, s, sectors);
++	if ((rv == 0) && test_bit(ExternalBbl, &rdev->flags))
++		sysfs_notify(&rdev->kobj, NULL, "bad_blocks");
++	return rv;
+ }
+ EXPORT_SYMBOL_GPL(rdev_clear_badblocks);
+ 
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 2b20417..21bd94f 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -168,6 +168,9 @@ enum flag_bits {
+ 				 * so it is safe to remove without
+ 				 * another synchronize_rcu() call.
+ 				 */
++	ExternalBbl,            /* External metadata provides bad
++				 * block management for a disk
++				 */
+ };
+ 
+ static inline int is_badblock(struct md_rdev *rdev, sector_t s, int sectors,
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+1.8.3.1
+
