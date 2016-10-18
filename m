@@ -1,76 +1,86 @@
-From: "=?utf-8?B?Wmhlbmd5dWFuIExpdQ==?=" <liuzhengyuan@kylinos.cn>
-Subject: Re: Superblock of raid5 log can't be updated when array stoped
-Date: Tue, 18 Oct 2016 13:51:57 +0800
-Message-ID: <tencent_5F7A406104D26FAD7587F1C4@qq.com>
-References: <tencent_382FBBB34581DF7E1F5EC9A2@qq.com>
-        <20161018002814.GC106864@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161018002814.GC106864@kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: =?utf-8?B?U2hhb2h1YSBMaQ==?= <shli@kernel.org>
-Cc: =?utf-8?B?c2hsaQ==?= <shli@fb.com>, =?utf-8?B?U29uZyBMaXU=?= <songliubraving@fb.com>, =?utf-8?B?bGludXgtcmFpZA==?= <linux-raid@vger.kernel.org>
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH 1/3 v2] badblocks: add function to check for unacked badblocks
+Date: Tue, 18 Oct 2016 16:08:45 +0200
+Message-ID: <1476799725-6266-1-git-send-email-tomasz.majchrzak@intel.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: linux-block@vger.kernel.org
+Cc: shli@kernel.org, aleksey.obitotskiy@intel.com, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com, maksymilian.kunt@intel.com, mariusz.dabrowski@intel.com, axboe@kernel.dk, dan.j.williams@intel.com, linux-raid@vger.kernel.org, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
-SWYgdGhhdCdzIHRoZSBwcm9ibGVtLCBJIHRoaW5rIHRoZXJlIGlzIGFub3RoZXIgcHJvYmxl
-bSBhYm91dCBuZXh0X2NoZWNrcG9pbnQgaW5pdGlhbGl6YXRpb24uDQpObyBpbml0aWFsIG9w
-ZXJhdGlvbiB3YXMgZG9uZSB0byB0aGlzIGZpZWxkIHdoZW4gd2UgbG9hZGVkL3JlY292ZXJ5
-ICB0aGUgbG9nICwgaXQgZ290DQphc3NpZ25tZW50ICBvbmx5IHdoZW4gSU8gdG8gcmFpZCBk
-aXNrIHdhcyBmaW5pc2hlZC4gIFNvIHI1bF9xdWllc2NlIG1heSB1c2Ugd3JvbmcgDQpuZXh0
-X2NoZWNrcG9pbnQgdG8gcmVjbGFpbSBsb2cgc3BhY2UsIHRoYXQgd291bGQgY29uZnVzZSBs
-b2cgcmVjb3ZlcnkuICBCZWxsb3cgcGF0Y2gNCm1heSBoZWxwIHRoZSBleHByZXNzaW9uLg0K
-DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkNS1jYWNoZS5jIGIvZHJpdmVycy9tZC9y
-YWlkNS1jYWNoZS5jDQppbmRleCAxYjFhYjRhLi45OThlYTAwIDEwMDY0NA0KLS0tIGEvZHJp
-dmVycy9tZC9yYWlkNS1jYWNoZS5jDQorKysgYi9kcml2ZXJzL21kL3JhaWQ1LWNhY2hlLmMN
-CkBAIC0xMDk2LDYgKzEwOTYsOCBAQCBzdGF0aWMgaW50IHI1bF9yZWNvdmVyeV9sb2coc3Ry
-dWN0IHI1bF9sb2cgKmxvZykNCiAgICAgICAgICAgICAgICBsb2ctPnNlcSA9IGN0eC5zZXEg
-KyAxMTsNCiAgICAgICAgICAgICAgICBsb2ctPmxvZ19zdGFydCA9IHI1bF9yaW5nX2FkZChs
-b2csIGN0eC5wb3MsIEJMT0NLX1NFQ1RPUlMpOw0KICAgICAgICAgICAgICAgIHI1bF93cml0
-ZV9zdXBlcihsb2csIGN0eC5wb3MpOw0KKyAgICAgICAgICAgICAgIGxvZy0+bGFzdF9jaGVj
-a3BvaW50ID0gY3R4LnBvczsNCisgICAgICAgICAgICAgICBsb2ctPm5leHRfY2hlY2twb2lu
-dCA9IGN0eC5wb3M7DQogICAgICAgIH0gZWxzZSB7DQogICAgICAgICAgICAgICAgbG9nLT5s
-b2dfc3RhcnQgPSBjdHgucG9zOw0KICAgICAgICAgICAgICAgIGxvZy0+c2VxID0gY3R4LnNl
-cTsNCkBAIC0xMTY4LDYgKzExNzAsNyBAQCBjcmVhdGU6DQogICAgICAgIGlmIChsb2ctPm1h
-eF9mcmVlX3NwYWNlID4gUkVDTEFJTV9NQVhfRlJFRV9TUEFDRSkNCiAgICAgICAgICAgICAg
-ICBsb2ctPm1heF9mcmVlX3NwYWNlID0gUkVDTEFJTV9NQVhfRlJFRV9TUEFDRTsNCiAgICAg
-ICAgbG9nLT5sYXN0X2NoZWNrcG9pbnQgPSBjcDsNCisgICAgICAgbG9nLT5uZXh0X2NoZWNr
-cG9pbnQgPSBjcDsNCiANCiAgICAgICAgX19mcmVlX3BhZ2UocGFnZSk7DQoNClRoYW5rcywN
-Ci0tWmhlbmd5dWFuDQoNCi0tLS0tLS0tLS0tLS0tLS0tLSBPcmlnaW5hbCAtLS0tLS0tLS0t
-LS0tLS0tLS0NCkZyb206ICAiU2hhb2h1YSBMaSI8c2hsaUBrZXJuZWwub3JnPjsNCkRhdGU6
-ICBUdWUsIE9jdCAxOCwgMjAxNiAwODoyOCBBTQ0KVG86ICAiWmhlbmd5dWFuIExpdSI8bGl1
-emhlbmd5dWFuQGt5bGlub3MuY24+Ow0KQ2M6ICAic2hsaSI8c2hsaUBmYi5jb20+OyAiU29u
-ZyBMaXUiPHNvbmdsaXVicmF2aW5nQGZiLmNvbT47ICJsaW51eC1yYWlkIjxsaW51eC1yYWlk
-QHZnZXIua2VybmVsLm9yZz47DQpTdWJqZWN0OiAgUmU6IFN1cGVyYmxvY2sgb2YgcmFpZDUg
-bG9nIGNhbid0IGJlIHVwZGF0ZWQgd2hlbiBhcnJheSBzdG9wZWQNCiANCk9uIFNhdCwgT2N0
-IDE1LCAyMDE2IGF0IDEwOjE5OjM2QU0gKzA4MDAsIGxpdXpoZW5neXVhbiB3cm90ZToNCj4g
-SGksIFNoYW9odWEuDQo+IA0KPiB3aGVuIHdlIHN0b3AgcmFpZDUgYXJyYXkgd2l0aCAibWRh
-ZG0gLVMiIG9yIHJlYm9vdCB0aGUgc3lzdGVtLCAgbWQgbW9kdWxlIHdpbGwgDQo+IGNhbGwg
-cmFpZDVfcXVpZXNjZSBhbmQgcjVsX3F1aWVzY2UgdG8gZG8gc29tZSBjbGVhbiB3b3JrLiBT
-b21lIGNvZGUgb2YgcjVsX3F1aWVzY2UNCj4gd2FzIHBhc3RlZCBiZWxsb3cuDQo+IA0KPiAg
-ICAgICAgICAgICAgICAgLyogbWFrZSBzdXJlIHI1bF93cml0ZV9zdXBlcl9hbmRfZGlzY2Fy
-ZF9zcGFjZSBleGl0cyAqLw0KPiAgICAgICAgICAgICAgICAgbWRkZXYgPSBsb2ctPnJkZXYt
-Pm1kZGV2Ow0KPiAgICAgICAgICAgICAgICAgd2FrZV91cCgmbWRkZXYtPnNiX3dhaXQpOw0K
-PiAgICAgICAgICAgICAgICAgcjVsX3dha2VfcmVjbGFpbShsb2csIC0xTCk7DQo+ICAgICAg
-ICAgICAgICAgICBtZF91bnJlZ2lzdGVyX3RocmVhZCgmbG9nLT5yZWNsYWltX3RocmVhZCk7
-DQo+ICAgICAgICAgICAgICAgICByNWxfZG9fcmVjbGFpbShsb2cpOw0KPiArICAgICAgICAg
-ICAgICAgIG1kX3VwZGF0ZV9zYihtZGRldiwgMSk7DQo+IA0KPiBJdCB3aWxsIHJlY2xhaW0g
-YWxsIHVzZWQgc3BhY2Ugb2YgbG9nIGFuZCBjYWxsIHI1bF93cml0ZV9zdXBlciB0byByZXNl
-dCByZGV2LT5qb3VybmFsX3RhaWwNCj4gdG8gbG9nLT5uZXh0X2NoZWNrcG9pbnQgLiBIb3dl
-dmVyLCBuZXcgcmRldi0+am91cm5hbF90YWlsIHdvdWxkIG5vdCBiZSB3cml0dGVuIHRvIA0K
-PiBqb3VybmFsIGRldmljZSBmb3IgcGVyc2lzdGVudCBiZWNhdXNlIGpvdXJuYWwgZGV2aWNl
-IG1heSBub3Qgc3VwcG9ydCBkaXNjYXJkIG9wZXJhdGlvbg0KPiBvciBkdWUgdG8gbWRkZXZf
-dHJ5bG9jayBmYWlsICh0aGlzIHRyeWxvY2sgc2hvdWxkIGFsd2F5cyBnZXQgZmFpbGVkIHNp
-bmNlIHJhaWQ1X3F1aWVzY2UgDQo+IHdhcyBjYWxsZWQgd2l0aCAgcmVjb25maWdfbXV0ZXgg
-aG9sZCwgaXNuJ3QgaXQ/KS4gQXMgYSByZXN1bHQsIGl0IHdpbGwgdGFrZSBhIGxvbmcgdGlt
-ZSB0bw0KPiAgcmVjb3ZlcnkgdGhlIGxvZyB3aGVuIHRoZSBhcnJhcnkgd2FzIHJlc3RhcnRl
-ZC4gU2hvdWxkIHI1bF9xdWllc2NlIGNhbGwgbWRfdXBkYXRlX3NiDQo+ICBkaXJlY3RseSB0
-byBndWFyYW50ZWUgIHN1cGVyYmxvY2sgIHVwZGF0ZT8NCg0KWWVwLCB0aGF0J3MgcHJvYmxl
-bSBoZXJlLiBVbmZvcnR1bmF0ZWx5IHdlIGNhbid0IGNhbGwgbWRfdXBkYXRlX3NiIGhlcmUs
-DQpiZWNhdXNlIHdlIG1pZ2h0IG5vdCBob2xkIHRoZSBtZGRldiBsb2NrLiBJIHRoaW5rIHdl
-IHNob3VsZCBjYWxsIGl0IGF0IGRvX21kX3N0b3AuDQoNClRoYW5rcywNClNoYW9odWE=
+Add new function that checks if unacknowledged badblocks exist in a list
+and clears ->unacked_exists flag if possible. It is required for storing
+badblock information by userspace metadata handlers. Similar function
+ack_all_badblocks is of no use in this case as userspace reads badblocks
+data from sysfs file so it cannot be sure if the list available in sysfs
+at the moment is complete (potential race with other badblocks reported
+at the same time).
 
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+---
+ block/badblocks.c         | 36 ++++++++++++++++++++++++++++++++++++
+ include/linux/badblocks.h |  1 +
+ 2 files changed, 37 insertions(+)
 
+diff --git a/block/badblocks.c b/block/badblocks.c
+index 7be53cb..1f4a193 100644
+--- a/block/badblocks.c
++++ b/block/badblocks.c
+@@ -439,6 +439,42 @@ void ack_all_badblocks(struct badblocks *bb)
+ EXPORT_SYMBOL_GPL(ack_all_badblocks);
+ 
+ /**
++ * check_if_badblocks_acked() - Check if all badblocks in list are acknowledged
++ * @bb:		the badblocks structure that holds all badblock information
++ *
++ * It clears ->changed and ->unacked_exist if successful. It is used by
++ * userspace metadata updates
++ *
++ *  Return:
++ *   True if all badblocks are acknowledged, false otherwise
++ */
++int check_if_badblocks_acked(struct badblocks *bb)
++{
++	int acked = 1;
++
++	write_seqlock_irq(&bb->lock);
++	if (bb->unacked_exist) {
++		u64 *p = bb->page;
++		int i;
++
++		for (i = 0; i < bb->count ; i++) {
++			if (!BB_ACK(p[i])) {
++				acked = 0;
++				break;
++			}
++		}
++		if (acked) {
++			bb->unacked_exist = 0;
++			bb->changed = 0;
++		}
++	}
++	write_sequnlock_irq(&bb->lock);
++
++	return acked;
++}
++EXPORT_SYMBOL_GPL(check_if_badblocks_acked);
++
++/**
+  * badblocks_show() - sysfs access to bad-blocks list
+  * @bb:		the badblocks structure that holds all badblock information
+  * @page:	buffer received from sysfs
+diff --git a/include/linux/badblocks.h b/include/linux/badblocks.h
+index c3bdf8c..6569d4e 100644
+--- a/include/linux/badblocks.h
++++ b/include/linux/badblocks.h
+@@ -46,6 +46,7 @@ int badblocks_set(struct badblocks *bb, sector_t s, int sectors,
+ 			int acknowledged);
+ int badblocks_clear(struct badblocks *bb, sector_t s, int sectors);
+ void ack_all_badblocks(struct badblocks *bb);
++int check_if_badblocks_acked(struct badblocks *bb);
+ ssize_t badblocks_show(struct badblocks *bb, char *page, int unack);
+ ssize_t badblocks_store(struct badblocks *bb, const char *page, size_t len,
+ 			int unack);
+-- 
+1.8.3.1
 
