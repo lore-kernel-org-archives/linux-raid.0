@@ -1,43 +1,95 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: Superblock of raid5 log can't be updated when array stoped
-Date: Mon, 17 Oct 2016 17:28:14 -0700
-Message-ID: <20161018002814.GC106864@kernel.org>
-References: <tencent_382FBBB34581DF7E1F5EC9A2@qq.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <tencent_382FBBB34581DF7E1F5EC9A2@qq.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: liuzhengyuan <liuzhengyuan@kylinos.cn>
-Cc: shli <shli@fb.com>, Song Liu <songliubraving@fb.com>, linux-raid <linux-raid@vger.kernel.org>
+From: Tahsin Erdogan <tahsin@google.com>
+Subject: [PATCH] dm: do not assign error to md->kworker_task
+Date: Mon, 17 Oct 2016 18:16:48 -0700
+Message-ID: <1476753409-16111-1-git-send-email-tahsin@google.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Tahsin Erdogan <tahsin@google.com>
 List-Id: linux-raid.ids
 
-On Sat, Oct 15, 2016 at 10:19:36AM +0800, liuzhengyuan wrote:
-> Hi, Shaohua.
-> 
-> when we stop raid5 array with "mdadm -S" or reboot the system,  md module will 
-> call raid5_quiesce and r5l_quiesce to do some clean work. Some code of r5l_quiesce
-> was pasted bellow.
-> 
->                 /* make sure r5l_write_super_and_discard_space exits */
->                 mddev = log->rdev->mddev;
->                 wake_up(&mddev->sb_wait);
->                 r5l_wake_reclaim(log, -1L);
->                 md_unregister_thread(&log->reclaim_thread);
->                 r5l_do_reclaim(log);
-> +                md_update_sb(mddev, 1);
-> 
-> It will reclaim all used space of log and call r5l_write_super to reset rdev->journal_tail
-> to log->next_checkpoint . However, new rdev->journal_tail would not be written to 
-> journal device for persistent because journal device may not support discard operation
-> or due to mddev_trylock fail (this trylock should always get failed since raid5_quiesce 
-> was called with  reconfig_mutex hold, isn't it?). As a result, it will take a long time to
->  recovery the log when the arrary was restarted. Should r5l_quiesce call md_update_sb
->  directly to guarantee  superblock  update?
+cleanup_mapped_device() calls kthread_stop() if kworker_task is
+non-NULL. Currently the assigned value could be a valid task struct or
+an error code. Do not assign in case of error.
 
-Yep, that's problem here. Unfortunately we can't call md_update_sb here,
-because we might not hold the mddev lock. I think we should call it at do_md_stop.
+Example failure when kthread_run() returns -ENOMEM:
 
-Thanks,
-Shaohua
+[   22.255939] BUG: unable to handle kernel NULL pointer dereference at 000000000000000c
+[   22.258847] IP: [<ffffffff802973a4>] kthread_stop+0x34/0x260
+[   22.260130] PGD 78a23067 PUD 78b56067 PMD 0
+[   22.260130] Oops: 0002 [#1] SMP
+[   22.260130] CPU: 1 PID: 1849 Comm: dmsetup Tainted: G        W 4.8.0+ #3
+[   22.260130] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
+[   22.260130] task: ffff880078966400 task.stack: ffffc90001898000
+[   22.260130] RIP: 0010:[<ffffffff802973a4>]  [<ffffffff802973a4>] kthread_stop+0x34/0x260
+[   22.260130] RSP: 0018:ffffc9000189bc40  EFLAGS: 00010202
+[   22.260130] RAX: 0000000000000001 RBX: fffffffffffffff4 RCX: 0000000000000003
+[   22.260130] RDX: ffff88007fd18600 RSI: 0000000000000001 RDI: ffffffff81037080
+[   22.260130] RBP: ffffc9000189bc50 R08: 0000000000000000 R09: 0000000000000000
+[   22.260130] R10: 0000000000000001 R11: 0000000000000000 R12: 0000000000000000
+[   22.260130] R13: 0000000000000001 R14: ffff880077f539d8 R15: 0000000000000004
+[   22.260130] FS:  00007fc9ef2e2840(0000) GS:ffff88007fd00000(0000) knlGS:0000000000000000
+[   22.260130] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   22.260130] CR2: 000000000000000c CR3: 0000000077fa2000 CR4: 00000000000006e0
+[   22.260130] Stack:
+[   22.260130]  ffff880077f53800 0000000000000000 ffffc9000189bc68 ffffffff808b26fa
+[   22.260130]  ffff880077f53800 ffffc9000189bcb0 ffffffff808b3c58 0000000000000000
+[   22.260130]  00000000808b534b ffffc9000189bd20 ffff880077f53800 0000000000000000
+[   22.260130] Call Trace:
+[   22.260130]  [<ffffffff808b26fa>] cleanup_mapped_device+0x2a/0xe0
+[   22.260130]  [<ffffffff808b3c58>] __dm_destroy+0x1a8/0x2b0
+[   22.260130]  [<ffffffff808b4b6e>] dm_destroy+0xe/0x10
+[   22.260130]  [<ffffffff808b9f49>] dev_remove+0xd9/0x120
+[   22.260130]  [<ffffffff808b9e70>] ? dev_suspend+0x210/0x210
+[   22.260130]  [<ffffffff808ba576>] ctl_ioctl+0x206/0x500
+[   22.260130]  [<ffffffff808ba87e>] dm_ctl_ioctl+0xe/0x20
+[   22.260130]  [<ffffffff803bca40>] do_vfs_ioctl+0x90/0x6b0
+[   22.260130]  [<ffffffff80b11fd7>] ?  entry_SYSCALL_64_fastpath+0x5/0xad
+[   22.260130]  [<ffffffff802bd974>] ?  trace_hardirqs_on_caller+0xf4/0x1c0
+[   22.260130]  [<ffffffff803bd0d4>] SyS_ioctl+0x74/0x80
+[   22.260130]  [<ffffffff80b11fea>] entry_SYSCALL_64_fastpath+0x18/0xad
+[   22.260130] Code: e5 41 54 85 c0 53 48 89 fb 0f 8f bb 01 00 00 65 8b
+05 a1 2d d7 7f 89 c0 48 0f a3 05 9f 94 e8 00 0f 92 c0 84 c0 0f 85 a3 00
+00 00 <f0> ff 43 18 48 89 df e8 10 f8 ff ff 48 85 c0 49 89 c4 74 29 f0
+[   22.260130] RIP  [<ffffffff802973a4>] kthread_stop+0x34/0x260
+[   22.260130]  RSP <ffffc9000189bc40>
+[   22.260130] CR2: 000000000000000c
+[   22.301062] ---[ end trace 22b4f4f62c04f3cf ]---
+
+Signed-off-by: Tahsin Erdogan <tahsin@google.com>
+---
+ drivers/md/dm-rq.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/md/dm-rq.c b/drivers/md/dm-rq.c
+index 5eacce1ef88b..6e5197414a57 100644
+--- a/drivers/md/dm-rq.c
++++ b/drivers/md/dm-rq.c
+@@ -841,6 +841,8 @@ static void dm_old_request_fn(struct request_queue *q)
+  */
+ int dm_old_init_request_queue(struct mapped_device *md)
+ {
++	struct task_struct *task;
++
+ 	/* Fully initialize the queue */
+ 	if (!blk_init_allocated_queue(md->queue, dm_old_request_fn, NULL))
+ 		return -EINVAL;
+@@ -854,11 +856,12 @@ int dm_old_init_request_queue(struct mapped_device *md)
+ 
+ 	/* Initialize the request-based DM worker thread */
+ 	init_kthread_worker(&md->kworker);
+-	md->kworker_task = kthread_run(kthread_worker_fn, &md->kworker,
+-				       "kdmwork-%s", dm_device_name(md));
+-	if (IS_ERR(md->kworker_task))
+-		return PTR_ERR(md->kworker_task);
++	task = kthread_run(kthread_worker_fn, &md->kworker, "kdmwork-%s",
++			   dm_device_name(md));
++	if (IS_ERR(task))
++		return PTR_ERR(task);
+ 
++	md->kworker_task = task;
+ 	elv_register_queue(md->queue);
+ 
+ 	return 0;
+-- 
+2.8.0.rc3.226.g39d4020
