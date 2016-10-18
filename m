@@ -1,115 +1,63 @@
-From: James Clarke <jrtc27@jrtc27.com>
-Subject: [PATCH v2] Fix bus error when accessing MBR partition records
-Date: Mon, 17 Oct 2016 21:16:01 +0100
-Message-ID: <20161017201601.93258-1-jrtc27@jrtc27.com>
-References: <wrfjshs8dwd7.fsf@redhat.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH 1/2] md: add bad block support for external metadata
+Date: Mon, 17 Oct 2016 17:23:14 -0700
+Message-ID: <20161018002314.GA106864@kernel.org>
+References: <1476714549-15057-1-git-send-email-tomasz.majchrzak@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjshs8dwd7.fsf@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <1476714549-15057-1-git-send-email-tomasz.majchrzak@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: James Clarke <jrtc27@jrtc27.com>, linux-raid@vger.kernel.org
+To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Cc: linux-raid@vger.kernel.org, aleksey.obitotskiy@intel.com, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com, maksymilian.kunt@intel.com, mariusz.dabrowski@intel.com
 List-Id: linux-raid.ids
 
-Since the MBR layout only has partition records as 2-byte aligned, the 32-bit
-fields in them are not aligned. Thus, they cannot be accessed on some
-architectures (such as SPARC) by using a "struct MBR_part_record *" pointer,
-as the compiler can assume that the pointer is properly aligned. Instead, the
-records must be accessed by going through the MBR struct itself every time.
+On Mon, Oct 17, 2016 at 04:29:09PM +0200, Tomasz Majchrzak wrote:
+> Add new rdev flag which external metadata handler can use to switch
+> on/off bad block support. If new bad block is encountered, notify it via
+> rdev 'unacknowledged_bad_blocks' sysfs file. If bad block has been
+> cleared, notify update to rdev 'bad_blocks' sysfs file.
+> 
+> Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+> Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+> ---
+>  drivers/md/md.c | 22 ++++++++++++++++++++--
+>  drivers/md/md.h |  3 +++
+>  2 files changed, 23 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index eac84d8..f375d1b 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -2568,6 +2568,10 @@ state_show(struct md_rdev *rdev, char *page)
+>  		len += sprintf(page+len, "%sreplacement", sep);
+>  		sep = ",";
+>  	}
+> +	if (test_bit(ExternalBbl, &flags)) {
+> +		len += sprintf(page+len, "%sexternal_bbl", sep);
+> +		sep = ",";
+> +	}
 
-Signed-off-by: James Clarke <jrtc27@jrtc27.com>
----
-Changes from v1:
-
- * Added packed attribute to MBR_part_record
-
- * Reformatted changes to fit the 80-character line limit (assuming a tab stop
-   of 4; if it's 8 I can try and cut the line lengths down, though with the
-   extra verbosity that's going to be more awkward...)
-
- part.h      |  2 +-
- super-mbr.c |  6 ++++++
- util.c      | 15 ++++++++-------
- 3 files changed, 15 insertions(+), 8 deletions(-)
-
-diff --git a/part.h b/part.h
-index 862a14c..e697fb4 100644
---- a/part.h
-+++ b/part.h
-@@ -40,7 +40,7 @@ struct MBR_part_record {
-   __u8 last_cyl;
-   __u32 first_sect_lba;
-   __u32 blocks_num;
--};
-+} __attribute__((packed));
+that sep assignment isn't needed, please delete it and the previous occurences.
  
- struct MBR {
- 	__u8 pad[446];
-diff --git a/super-mbr.c b/super-mbr.c
-index 62b3f03..303dde4 100644
---- a/super-mbr.c
-+++ b/super-mbr.c
-@@ -57,6 +57,9 @@ static void examine_mbr(struct supertype *st, char *homehost)
- 
- 	printf("   MBR Magic : %04x\n", sb->magic);
- 	for (i = 0; i < MBR_PARTITIONS; i++)
-+		/* Have to make every access through sb rather than using a pointer to
-+		 * the partition table (or an entry), since the entries are not
-+		 * properly aligned. */
- 		if (sb->parts[i].blocks_num)
- 			printf("Partition[%d] : %12lu sectors at %12lu (type %02x)\n",
- 			       i,
-@@ -151,6 +154,9 @@ static void getinfo_mbr(struct supertype *st, struct mdinfo *info, char *map)
- 	info->component_size = 0;
- 
- 	for (i = 0; i < MBR_PARTITIONS ; i++)
-+		/* Have to make every access through sb rather than using a pointer to
-+		 * the partition table (or an entry), since the entries are not
-+		 * properly aligned. */
- 		if (sb->parts[i].blocks_num) {
- 			unsigned long last =
- 				(unsigned long)__le32_to_cpu(sb->parts[i].blocks_num)
-diff --git a/util.c b/util.c
-index a238a21..4a8767b 100644
---- a/util.c
-+++ b/util.c
-@@ -1412,7 +1412,6 @@ static int get_gpt_last_partition_end(int fd, unsigned long long *endofpart)
- static int get_last_partition_end(int fd, unsigned long long *endofpart)
- {
- 	struct MBR boot_sect;
--	struct MBR_part_record *part;
- 	unsigned long long curr_part_end;
- 	unsigned part_nr;
- 	int retval = 0;
-@@ -1429,21 +1428,23 @@ static int get_last_partition_end(int fd, unsigned long long *endofpart)
- 	if (boot_sect.magic == MBR_SIGNATURE_MAGIC) {
- 		retval = 1;
- 		/* found the correct signature */
--		part = boot_sect.parts;
- 
- 		for (part_nr = 0; part_nr < MBR_PARTITIONS; part_nr++) {
-+			/* Have to make every access through boot_sect rather than using a
-+			 * pointer to the partition table (or an entry), since the entries
-+			 * are not properly aligned. */
-+
- 			/* check for GPT type */
--			if (part->part_type == MBR_GPT_PARTITION_TYPE) {
-+			if (boot_sect.parts[part_nr].part_type == MBR_GPT_PARTITION_TYPE) {
- 				retval = get_gpt_last_partition_end(fd, endofpart);
- 				break;
- 			}
- 			/* check the last used lba for the current partition  */
--			curr_part_end = __le32_to_cpu(part->first_sect_lba) +
--				__le32_to_cpu(part->blocks_num);
-+			curr_part_end =
-+				__le32_to_cpu(boot_sect.parts[part_nr].first_sect_lba) +
-+				__le32_to_cpu(boot_sect.parts[part_nr].blocks_num);
- 			if (curr_part_end > *endofpart)
- 				*endofpart = curr_part_end;
--
--			part++;
- 		}
- 	} else {
- 		/* Unknown partition table */
--- 
-2.10.1
+>  	return len+sprintf(page+len, "\n");
+>  }
+> @@ -2708,6 +2712,14 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
+>  			}
+>  		} else
+>  			err = -EBUSY;
+> +	} else if (cmd_match(buf, "external_bbl") && (rdev->mddev->external)) {
+> +		set_bit(ExternalBbl, &rdev->flags);
+> +		rdev->badblocks.shift = 0;
+> +		err = 0;
+> +	} else if (cmd_match(buf, "-external_bbl") && (rdev->mddev->external)) {
+> +		clear_bit(ExternalBbl, &rdev->flags);
+> +		rdev->badblocks.shift = -1;
+> +		err = 0;
 
+How is this safe? If md is clearing badblocks and in the meaningtime we set
+badblocks.shift = -1 here, we have a trouble.
+
+Thanks,
+Shaohua
