@@ -1,86 +1,171 @@
 From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: [PATCH 1/3 v2] badblocks: add function to check for unacked badblocks
-Date: Tue, 18 Oct 2016 16:08:45 +0200
-Message-ID: <1476799725-6266-1-git-send-email-tomasz.majchrzak@intel.com>
+Subject: [PATCH 2/3 v2] md: add bad block support for external metadata
+Date: Tue, 18 Oct 2016 16:09:45 +0200
+Message-ID: <1476799785-6339-1-git-send-email-tomasz.majchrzak@intel.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 Sender: linux-block-owner@vger.kernel.org
-To: linux-block@vger.kernel.org
-Cc: shli@kernel.org, aleksey.obitotskiy@intel.com, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com, maksymilian.kunt@intel.com, mariusz.dabrowski@intel.com, axboe@kernel.dk, dan.j.williams@intel.com, linux-raid@vger.kernel.org, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+To: linux-raid@vger.kernel.org
+Cc: shli@kernel.org, aleksey.obitotskiy@intel.com, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com, maksymilian.kunt@intel.com, mariusz.dabrowski@intel.com, axboe@kernel.dk, dan.j.williams@intel.com, linux-block@vger.kernel.org, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
-Add new function that checks if unacknowledged badblocks exist in a list
-and clears ->unacked_exists flag if possible. It is required for storing
-badblock information by userspace metadata handlers. Similar function
-ack_all_badblocks is of no use in this case as userspace reads badblocks
-data from sysfs file so it cannot be sure if the list available in sysfs
-at the moment is complete (potential race with other badblocks reported
-at the same time).
+Add new rdev flag which external metadata handler can use to switch
+on/off bad block support. If new bad block is encountered, notify it via
+rdev 'unacknowledged_bad_blocks' sysfs file. If bad block has been
+cleared, notify update to rdev 'bad_blocks' sysfs file.
+
+When bad blocks support is being removed, just clear rdev flag. It is
+not necessary to reset badblocks->shift field. If there are bad blocks
+cleared or added at the same time, it is ok for those changes to be
+applied to the structure. The array is in blocked state and the drive
+which cannot handle bad blocks any more will be removed from the array
+before it is unlocked.
+
+Simplify state_show function by adding a separator at the end of each
+string and overwrite last separator with new line.
 
 Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- block/badblocks.c         | 36 ++++++++++++++++++++++++++++++++++++
- include/linux/badblocks.h |  1 +
- 2 files changed, 37 insertions(+)
+ drivers/md/md.c | 78 ++++++++++++++++++++++++++++-----------------------------
+ drivers/md/md.h |  3 +++
+ 2 files changed, 42 insertions(+), 39 deletions(-)
 
-diff --git a/block/badblocks.c b/block/badblocks.c
-index 7be53cb..1f4a193 100644
---- a/block/badblocks.c
-+++ b/block/badblocks.c
-@@ -439,6 +439,42 @@ void ack_all_badblocks(struct badblocks *bb)
- EXPORT_SYMBOL_GPL(ack_all_badblocks);
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index eac84d8..cc05236 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -2523,51 +2523,38 @@ struct rdev_sysfs_entry {
+ static ssize_t
+ state_show(struct md_rdev *rdev, char *page)
+ {
+-	char *sep = "";
++	char *sep = ",";
+ 	size_t len = 0;
+ 	unsigned long flags = ACCESS_ONCE(rdev->flags);
  
- /**
-+ * check_if_badblocks_acked() - Check if all badblocks in list are acknowledged
-+ * @bb:		the badblocks structure that holds all badblock information
-+ *
-+ * It clears ->changed and ->unacked_exist if successful. It is used by
-+ * userspace metadata updates
-+ *
-+ *  Return:
-+ *   True if all badblocks are acknowledged, false otherwise
-+ */
-+int check_if_badblocks_acked(struct badblocks *bb)
-+{
-+	int acked = 1;
+ 	if (test_bit(Faulty, &flags) ||
+-	    rdev->badblocks.unacked_exist) {
+-		len+= sprintf(page+len, "%sfaulty",sep);
+-		sep = ",";
+-	}
+-	if (test_bit(In_sync, &flags)) {
+-		len += sprintf(page+len, "%sin_sync",sep);
+-		sep = ",";
+-	}
+-	if (test_bit(Journal, &flags)) {
+-		len += sprintf(page+len, "%sjournal",sep);
+-		sep = ",";
+-	}
+-	if (test_bit(WriteMostly, &flags)) {
+-		len += sprintf(page+len, "%swrite_mostly",sep);
+-		sep = ",";
+-	}
++	    rdev->badblocks.unacked_exist)
++		len += sprintf(page+len, "faulty%s", sep);
++	if (test_bit(In_sync, &flags))
++		len += sprintf(page+len, "in_sync%s", sep);
++	if (test_bit(Journal, &flags))
++		len += sprintf(page+len, "journal%s", sep);
++	if (test_bit(WriteMostly, &flags))
++		len += sprintf(page+len, "write_mostly%s", sep);
+ 	if (test_bit(Blocked, &flags) ||
+ 	    (rdev->badblocks.unacked_exist
+-	     && !test_bit(Faulty, &flags))) {
+-		len += sprintf(page+len, "%sblocked", sep);
+-		sep = ",";
+-	}
++	     && !test_bit(Faulty, &flags)))
++		len += sprintf(page+len, "blocked%s", sep);
+ 	if (!test_bit(Faulty, &flags) &&
+ 	    !test_bit(Journal, &flags) &&
+-	    !test_bit(In_sync, &flags)) {
+-		len += sprintf(page+len, "%sspare", sep);
+-		sep = ",";
+-	}
+-	if (test_bit(WriteErrorSeen, &flags)) {
+-		len += sprintf(page+len, "%swrite_error", sep);
+-		sep = ",";
+-	}
+-	if (test_bit(WantReplacement, &flags)) {
+-		len += sprintf(page+len, "%swant_replacement", sep);
+-		sep = ",";
+-	}
+-	if (test_bit(Replacement, &flags)) {
+-		len += sprintf(page+len, "%sreplacement", sep);
+-		sep = ",";
+-	}
++	    !test_bit(In_sync, &flags))
++		len += sprintf(page+len, "spare%s", sep);
++	if (test_bit(WriteErrorSeen, &flags))
++		len += sprintf(page+len, "write_error%s", sep);
++	if (test_bit(WantReplacement, &flags))
++		len += sprintf(page+len, "want_replacement%s", sep);
++	if (test_bit(Replacement, &flags))
++		len += sprintf(page+len, "replacement%s", sep);
++	if (test_bit(ExternalBbl, &flags))
++		len += sprintf(page+len, "external_bbl%s", sep);
 +
-+	write_seqlock_irq(&bb->lock);
-+	if (bb->unacked_exist) {
-+		u64 *p = bb->page;
-+		int i;
-+
-+		for (i = 0; i < bb->count ; i++) {
-+			if (!BB_ACK(p[i])) {
-+				acked = 0;
-+				break;
-+			}
-+		}
-+		if (acked) {
-+			bb->unacked_exist = 0;
-+			bb->changed = 0;
-+		}
-+	}
-+	write_sequnlock_irq(&bb->lock);
-+
-+	return acked;
-+}
-+EXPORT_SYMBOL_GPL(check_if_badblocks_acked);
-+
-+/**
-  * badblocks_show() - sysfs access to bad-blocks list
-  * @bb:		the badblocks structure that holds all badblock information
-  * @page:	buffer received from sysfs
-diff --git a/include/linux/badblocks.h b/include/linux/badblocks.h
-index c3bdf8c..6569d4e 100644
---- a/include/linux/badblocks.h
-+++ b/include/linux/badblocks.h
-@@ -46,6 +46,7 @@ int badblocks_set(struct badblocks *bb, sector_t s, int sectors,
- 			int acknowledged);
- int badblocks_clear(struct badblocks *bb, sector_t s, int sectors);
- void ack_all_badblocks(struct badblocks *bb);
-+int check_if_badblocks_acked(struct badblocks *bb);
- ssize_t badblocks_show(struct badblocks *bb, char *page, int unack);
- ssize_t badblocks_store(struct badblocks *bb, const char *page, size_t len,
- 			int unack);
++	if (len)
++		len -= strlen(sep);
+ 
+ 	return len+sprintf(page+len, "\n");
+ }
+@@ -2708,6 +2695,13 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
+ 			}
+ 		} else
+ 			err = -EBUSY;
++	} else if (cmd_match(buf, "external_bbl") && (rdev->mddev->external)) {
++		set_bit(ExternalBbl, &rdev->flags);
++		rdev->badblocks.shift = 0;
++		err = 0;
++	} else if (cmd_match(buf, "-external_bbl") && (rdev->mddev->external)) {
++		clear_bit(ExternalBbl, &rdev->flags);
++		err = 0;
+ 	}
+ 	if (!err)
+ 		sysfs_notify_dirent_safe(rdev->sysfs_state);
+@@ -8614,6 +8608,9 @@ int rdev_set_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
+ 	rv = badblocks_set(&rdev->badblocks, s, sectors, 0);
+ 	if (rv == 0) {
+ 		/* Make sure they get written out promptly */
++		if (test_bit(ExternalBbl, &rdev->flags))
++			sysfs_notify(&rdev->kobj, NULL,
++				     "unacknowledged_bad_blocks");
+ 		sysfs_notify_dirent_safe(rdev->sysfs_state);
+ 		set_mask_bits(&mddev->flags, 0,
+ 			      BIT(MD_CHANGE_CLEAN) | BIT(MD_CHANGE_PENDING));
+@@ -8627,12 +8624,15 @@ EXPORT_SYMBOL_GPL(rdev_set_badblocks);
+ int rdev_clear_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
+ 			 int is_new)
+ {
++	int rv;
+ 	if (is_new)
+ 		s += rdev->new_data_offset;
+ 	else
+ 		s += rdev->data_offset;
+-	return badblocks_clear(&rdev->badblocks,
+-				  s, sectors);
++	rv = badblocks_clear(&rdev->badblocks, s, sectors);
++	if ((rv == 0) && test_bit(ExternalBbl, &rdev->flags))
++		sysfs_notify(&rdev->kobj, NULL, "bad_blocks");
++	return rv;
+ }
+ EXPORT_SYMBOL_GPL(rdev_clear_badblocks);
+ 
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 2b20417..21bd94f 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -168,6 +168,9 @@ enum flag_bits {
+ 				 * so it is safe to remove without
+ 				 * another synchronize_rcu() call.
+ 				 */
++	ExternalBbl,            /* External metadata provides bad
++				 * block management for a disk
++				 */
+ };
+ 
+ static inline int is_badblock(struct md_rdev *rdev, sector_t s, int sectors,
 -- 
 1.8.3.1
 
