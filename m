@@ -1,13 +1,13 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH v5 6/8] md/r5cache: sysfs entry r5c_state
-Date: Wed, 19 Oct 2016 13:19:30 +1100
-Message-ID: <87lgxlxeq5.fsf@notabene.neil.brown.name>
-References: <20161013054944.1038806-1-songliubraving@fb.com> <20161013054944.1038806-7-songliubraving@fb.com>
+Subject: Re: [PATCH v5 7/8] md/r5cache: r5c recovery
+Date: Wed, 19 Oct 2016 13:32:48 +1100
+Message-ID: <87inspxe3z.fsf@notabene.neil.brown.name>
+References: <20161013054944.1038806-1-songliubraving@fb.com> <20161013054944.1038806-8-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161013054944.1038806-7-songliubraving@fb.com>
+In-Reply-To: <20161013054944.1038806-8-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuang521@gmail.com, liuzhengyuan@kylinos.cn, Song Liu <songliubraving@fb.com>
@@ -18,26 +18,46 @@ Content-Type: text/plain
 
 On Thu, Oct 13 2016, Song Liu wrote:
 
-> r5c_state have 4 states:
-> * no-cache;
-> * write-through (write journal only);
-> * write-back (w/ write cache);
-> * cache-broken (journal missing or Faulty)
+> This is the recovery part of raid5-cache.
+>
+> With cache feature, there are 2 different scenarios of recovery:
+> 1. Data-Parity stripe: a stripe with complete parity in journal.
+> 2. Data-Only stripe: a stripe with only data in journal (or partial
+>    parity).
+>
+> The code differentiate Data-Parity stripe from Data-Only stripe with
+> flag (STRIPE_R5C_WRITTEN).
+>
+> For Data-Parity stripes, we use the same procedure as raid5 journal,
+> where all the data and parity are replayed to the RAID devices.
+>
+> For Data-Only strips, we need to finish complete calculate parity and
+> finish the full reconstruct write or RMW write. For simplicity, in
+> the recovery, we load the stripe to stripe cache. Once the array is
+> started, the stripe cache state machine will handle these stripes
+> through normal write path.
+>
+> r5c_recovery_flush_log contains the main procedure of recovery. The
+> recovery code first scans through the journal and loads data to
+> stripe cache. The code keeps tracks of all these stripes in a list
+> (use sh->lru and ctx->cached_list), stripes in the list are
+> organized in the order of its first appearance on the journal.
+> During the scan, the recovery code assesses each stripe as
+> Data-Parity or Data-Only.
+>
+> During scan, the array may run out of stripe cache. In these cases,
+> the recovery code will also call raid5_set_cache_size to increase
+> stripe cache size.
 
-I don't like this.
+What if this fails.  Maybe the array was created on a machine with lots
+or memory, but that machine died and you are trying to recovery you data
+on a much less capable machine.
 
-We already have a mechanism for removing a failed device from
-an array: write 'remove' to the 'state' file in the relevant dev-*
-subdirectory.
-You can also use that file to tell if the journal has failed.
+I don't think there is an easy answer, but at least you need to fail
+gracefully.
 
-Please call the file something a little more obvious that 'r5c_state',
-maybe 'journal_mode', and use it only to switch between write-through
-and write-back.
-If there is no journal, then either remove the file, or have writes fail
-and reads return something obvious ... maybe ENODEV.
+I'll try to look at the rest tomorrow.
 
-Thanks,
 NeilBrown
 
 --=-=-=
@@ -45,18 +65,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAEBCAAGBQJYBtgyAAoJEDnsnt1WYoG5GuMP/3XC4tuRvJa21mOjrPUUaB27
-MkZ5RWPNuEfHUWbNYAOgPcDYTb/mxs616d6H1fCrJn5i0hACmEZQ9iiKpMxWPPZN
-W2QkoVfuAoysd/OpluOBSA1zDVMfILd22G1IIkriGQaS5LrtippMYS74lQHBHYCQ
-pZ7+efbJToquRDc4ph++wKJ8iB+59jFHzHFNAeSXx+HqE7DrIgHLchPHo+ItcET/
-1h7YD02MDyHaTEesFUf0TtmYlfN52IW3Wha6R6lLFwHuQiZjwzM9PIyUJisPiINF
-1qHd4Evk9Q/kXde51jRfWN9+I8LCaia3eY543AYL0mWGa5ND31yM9TRnkHTneq++
-rys4g0rjD5y5cgcqKwMHzMAmFp39CDlrA07GVJBqDD7Bv2vStn3uYZJqVrHoN91J
-3qFx5+Tv1USO9psZLxHAJIeTJYF0wBft7MLigjbWIJEhjUpjAGLblni0GYag2523
-kIS33+GKRqBefTE3fSsRNaQuzesBwsifYbx3IlNu8wFVDKDSegQU6IqyZCMkn6Tg
-nEUNWyVFk8uuWwZrrp6nF/zrX+1aSI+6vhAW2hzAJba1LdtlNfKn+SVa04iJW7r6
-sSzCg8E4Xhusr5jBkMpPFYIl2Zmu+Fj9BJYrLSB663St1o42cQNAKeGxpy9Abrdx
-muqJcQX/rk/K5A9nFAdQ
-=QMYP
+iQIcBAEBCAAGBQJYBttQAAoJEDnsnt1WYoG5oE4QALhfm5+3rP7Ac9pZMwl9iJI8
+8Kpu0MVFl2SNIUZn/YJgnpziC3aEiJbpx2ZuOzcluN+Rp6PSSgCFDVjpSLOgsb35
+8jNEaQLRqTawT44anxlJfMSdqAlkIMi6knGTU8pNwiUZ0ZYmbpp4LRWc4UYxN68W
+tp8hovYhAenvoo6F5xgl16T+Icja5nLL5BUwy6rr6HIaulWrNF5pgOqEjGrqJlPw
+iduMgNSm7sZueYnTdybeBnKsa3J+SSqLZxAUwffDPq8HgFt819OexL4125XUBEt+
+lnHQy00jJ57FwNIcHWzBHYemKSbNtMNZZzrgOvkCfFlgH2yRhBLVXDmodFPNLHQO
+NmV3P1owKOOZE0Zm9EU1Hzmr6YHJonc5ghJ3KUPEm4BMSZChehSHR+hsZKbq8xPJ
+My4CPaxuTeHxA6F7yz0JLxu8SqtqzD69T+U/7PC57bp+RtAX/c2bvDzWS0wn7Ysu
+I0HLKn5+HpyVsI8201cBhFU3F+zoRtESU4JzjJJLluhKIg+SpD95+R8Rnt3GNRMV
+4tLqApbXVLu/NaQxc41Vs0kIhF3XxGZPNbNJmghRfRir8iTT8/ihpO5jD1n70Prr
+xlEpAFQ/x+6tCPT8lX1qvgcH9x2XucWOYRQ/OH7WN+JnTc4/WwnOG3E5h6gYN5lX
+5FogaJHWLnjZNBnnOCdv
+=US/J
 -----END PGP SIGNATURE-----
 --=-=-=--
