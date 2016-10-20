@@ -1,119 +1,98 @@
 From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: [PATCH 1/4] mdadm: bad block support for external metadata - initialization
-Date: Thu, 20 Oct 2016 15:03:46 +0200
-Message-ID: <1476968626-19233-1-git-send-email-tomasz.majchrzak@intel.com>
+Subject: [PATCH 2/4] mdmon: bad block support for external metadata - sysfs file open
+Date: Thu, 20 Oct 2016 15:04:21 +0200
+Message-ID: <1476968661-19285-1-git-send-email-tomasz.majchrzak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: Jes.Sorensen@redhat.com, aleksey.obitotskiy@intel.com, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com, maksymilian.kunt@intel.com, mariusz.dabrowski@intel.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
-If metadata handler provides support for bad blocks, tell md by writing
-'external_bbl' to rdev state file (both on create and assemble),
-followed by a list of known bad blocks written via sysfs 'bad_blocks'
-file.
+Open 'badblocks' and 'unacknowledged_bad_blocks' sysfs files for each
+disk in the array. Add them to the list of files observed by monitor.
 
 Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- mdadm.h | 13 +++++++++++++
- sysfs.c | 29 ++++++++++++++++++++++++++++-
- 2 files changed, 41 insertions(+), 1 deletion(-)
+ managemon.c | 17 +++++++++++++++++
+ mdadm.h     |  2 ++
+ monitor.c   |  7 ++++++-
+ 3 files changed, 25 insertions(+), 1 deletion(-)
 
+diff --git a/managemon.c b/managemon.c
+index 6d1b3d8..3c1d4cb 100644
+--- a/managemon.c
++++ b/managemon.c
+@@ -115,6 +115,8 @@ static void close_aa(struct active_array *aa)
+ 	for (d = aa->info.devs; d; d = d->next) {
+ 		close(d->recovery_fd);
+ 		close(d->state_fd);
++		close(d->bb_fd);
++		close(d->ubb_fd);
+ 	}
+ 
+ 	if (aa->action_fd >= 0)
+@@ -433,6 +435,21 @@ static int disk_init_and_add(struct mdinfo *disk, struct mdinfo *clone,
+ 		close(disk->recovery_fd);
+ 		return -1;
+ 	}
++	disk->bb_fd = sysfs_open2(aa->info.sys_name, disk->sys_name,
++				 "bad_blocks");
++	if (disk->bb_fd < 0) {
++		close(disk->recovery_fd);
++		close(disk->state_fd);
++		return -1;
++	}
++	disk->ubb_fd = sysfs_open2(aa->info.sys_name, disk->sys_name,
++				  "unacknowledged_bad_blocks");
++	if (disk->ubb_fd < 0) {
++		close(disk->recovery_fd);
++		close(disk->state_fd);
++		close(disk->bb_fd);
++		return -1;
++	}
+ 	disk->prev_state = read_dev_state(disk->state_fd);
+ 	disk->curr_state = disk->prev_state;
+ 	disk->next = aa->info.devs;
 diff --git a/mdadm.h b/mdadm.h
-index 0516c82..5156ea4 100755
+index 5156ea4..1a1c7af 100755
 --- a/mdadm.h
 +++ b/mdadm.h
-@@ -237,6 +237,17 @@ struct dlm_lksb {
- 
- extern const char Name[];
- 
-+struct md_bb_entry {
-+	unsigned long long sector;
-+	int length;
-+};
-+
-+struct md_bb {
-+	int supported;
-+	int count;
-+	struct md_bb_entry *entries;
-+};
-+
- /* general information that might be extracted from a superblock */
- struct mdinfo {
- 	mdu_array_info_t	array;
-@@ -311,6 +322,8 @@ struct mdinfo {
- 
- 	/* info read from sysfs */
- 	char		sysfs_array_state[20];
-+
-+	struct md_bb bb;
- };
- 
- struct createinfo {
-diff --git a/sysfs.c b/sysfs.c
-index d28e21a..c7a8e66 100644
---- a/sysfs.c
-+++ b/sysfs.c
-@@ -50,8 +50,12 @@ void sysfs_free(struct mdinfo *sra)
- 		while (sra->devs) {
- 			struct mdinfo *d = sra->devs;
- 			sra->devs = d->next;
-+			if (d->bb.entries)
-+				free(d->bb.entries);
- 			free(d);
- 		}
-+		if (sra->bb.entries)
-+			free(sra->bb.entries);
- 		free(sra);
- 		sra = sra2;
- 	}
-@@ -259,7 +263,7 @@ struct mdinfo *sysfs_read(int fd, char *devnm, unsigned long options)
- 		dbase = base + strlen(base);
- 		*dbase++ = '/';
- 
--		dev = xmalloc(sizeof(*dev));
-+		dev = xcalloc(1, sizeof(*dev));
- 
- 		/* Always get slot, major, minor */
- 		strcpy(dbase, "slot");
-@@ -687,6 +691,7 @@ int sysfs_add_disk(struct mdinfo *sra, struct mdinfo *sd, int resume)
- 	char nm[PATH_MAX];
- 	char *dname;
- 	int rv;
-+	int i;
- 
- 	sprintf(dv, "%d:%d", sd->disk.major, sd->disk.minor);
- 	rv = sysfs_set_str(sra, NULL, "new_dev", dv);
-@@ -718,6 +723,28 @@ int sysfs_add_disk(struct mdinfo *sra, struct mdinfo *sd, int resume)
- 		if (resume)
- 			sysfs_set_num(sra, sd, "recovery_start", sd->recovery_start);
- 	}
-+	if (sd->bb.supported) {
-+		if (sysfs_set_str(sra, sd, "state", "external_bbl")) {
-+			/*
-+			 * backward compatibility - if kernel doesn't support
-+			 * bad blocks for external metadata, let it continue
-+			 * as long as there are none known so far
-+			 */
-+			if (sd->bb.count) {
-+				pr_err("The kernel has no support for bad blocks in external metadata\n");
-+				return -1;
-+			}
+@@ -311,6 +311,8 @@ struct mdinfo {
+ 	/* Device info for mdmon: */
+ 	int recovery_fd;
+ 	int state_fd;
++	int bb_fd;
++	int ubb_fd;
+ 	#define DS_FAULTY	1
+ 	#define	DS_INSYNC	2
+ 	#define	DS_WRITE_MOSTLY	4
+diff --git a/monitor.c b/monitor.c
+index 4c79ce2..56c6500 100644
+--- a/monitor.c
++++ b/monitor.c
+@@ -454,6 +454,8 @@ static int read_and_act(struct active_array *a)
+ 				dprintf_cont(" %d:removed", mdi->disk.raid_disk);
+ 				close(mdi->state_fd);
+ 				close(mdi->recovery_fd);
++				close(mdi->bb_fd);
++				close(mdi->ubb_fd);
+ 				mdi->state_fd = -1;
+ 			} else
+ 				ret |= ARRAY_BUSY;
+@@ -583,8 +585,11 @@ static int wait_and_act(struct supertype *container, int nowait)
+ 		add_fd(&rfds, &maxfd, a->info.state_fd);
+ 		add_fd(&rfds, &maxfd, a->action_fd);
+ 		add_fd(&rfds, &maxfd, a->sync_completed_fd);
+-		for (mdi = a->info.devs ; mdi ; mdi = mdi->next)
++		for (mdi = a->info.devs ; mdi ; mdi = mdi->next) {
+ 			add_fd(&rfds, &maxfd, mdi->state_fd);
++			add_fd(&rfds, &maxfd, mdi->bb_fd);
++			add_fd(&rfds, &maxfd, mdi->ubb_fd);
 +		}
-+
-+		for (i = 0; i < sd->bb.count; i++) {
-+			char s[30];
-+			const struct md_bb_entry *entry = &sd->bb.entries[i];
-+
-+			snprintf(s, sizeof(s) - 1, "%llu %d\n", entry->sector,
-+				 entry->length);
-+			rv |= sysfs_set_str(sra, sd, "bad_blocks", s);
-+		}
-+	}
- 	return rv;
- }
  
+ 		ap = &(*ap)->next;
+ 	}
 -- 
 1.8.3.1
 
