@@ -1,152 +1,72 @@
-From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: Re: [PATCH 1/4] mdadm: bad block support for external metadata -
- initialization
-Date: Thu, 20 Oct 2016 16:26:11 +0200
-Message-ID: <20161020142611.GA23120@proton.igk.intel.com>
-References: <1476968626-19233-1-git-send-email-tomasz.majchrzak@intel.com>
- <20161020140220.GB17867@www5.open-std.org>
+From: Shaohua Li <shli@fb.com>
+Subject: [PATCH] badblocks: badblocks_set/clear update unacked_exist
+Date: Thu, 20 Oct 2016 14:40:06 -0700
+Message-ID: <39f303dcb7bdf2958b6f82a0646467dfbc8d1abd.1476999400.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20161020140220.GB17867@www5.open-std.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: keld@keldix.com
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org, linux-block@vger.kernel.org
+Cc: tomasz.majchrzak@intel.com
 List-Id: linux-raid.ids
 
-I cannot see how badblocks program is related to this patch. It is a generic
-code for bad blocks support in IMSM metadata. It introduces 64-bit value for
-sector address, the same size as in kernel. All it does is syncing kernel bad
-block list with raid metadata.
+When bandblocks_set acknowledges a range or badblocks_clear a range,
+it's possible all badblocks are acknowledged. We should update
+unacked_exist if this occurs.
 
-Tomek
+Signed-off-by: Shaohua Li <shli@fb.com>
+---
+ block/badblocks.c | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-On Thu, Oct 20, 2016 at 04:02:20PM +0200, keld@keldix.com wrote:
-> Is this safe for 2TB+ arrays?
-> I think the badblocks program does not handle 2TB+ partitions?
-> 
-> best regards
-> Keld
-> 
-> Best regards
-> Keld
-> 
-> On Thu, Oct 20, 2016 at 03:03:46PM +0200, Tomasz Majchrzak wrote:
-> > If metadata handler provides support for bad blocks, tell md by writing
-> > 'external_bbl' to rdev state file (both on create and assemble),
-> > followed by a list of known bad blocks written via sysfs 'bad_blocks'
-> > file.
-> > 
-> > Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-> > Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-> > ---
-> >  mdadm.h | 13 +++++++++++++
-> >  sysfs.c | 29 ++++++++++++++++++++++++++++-
-> >  2 files changed, 41 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/mdadm.h b/mdadm.h
-> > index 0516c82..5156ea4 100755
-> > --- a/mdadm.h
-> > +++ b/mdadm.h
-> > @@ -237,6 +237,17 @@ struct dlm_lksb {
-> >  
-> >  extern const char Name[];
-> >  
-> > +struct md_bb_entry {
-> > +	unsigned long long sector;
-> > +	int length;
-> > +};
-> > +
-> > +struct md_bb {
-> > +	int supported;
-> > +	int count;
-> > +	struct md_bb_entry *entries;
-> > +};
-> > +
-> >  /* general information that might be extracted from a superblock */
-> >  struct mdinfo {
-> >  	mdu_array_info_t	array;
-> > @@ -311,6 +322,8 @@ struct mdinfo {
-> >  
-> >  	/* info read from sysfs */
-> >  	char		sysfs_array_state[20];
-> > +
-> > +	struct md_bb bb;
-> >  };
-> >  
-> >  struct createinfo {
-> > diff --git a/sysfs.c b/sysfs.c
-> > index d28e21a..c7a8e66 100644
-> > --- a/sysfs.c
-> > +++ b/sysfs.c
-> > @@ -50,8 +50,12 @@ void sysfs_free(struct mdinfo *sra)
-> >  		while (sra->devs) {
-> >  			struct mdinfo *d = sra->devs;
-> >  			sra->devs = d->next;
-> > +			if (d->bb.entries)
-> > +				free(d->bb.entries);
-> >  			free(d);
-> >  		}
-> > +		if (sra->bb.entries)
-> > +			free(sra->bb.entries);
-> >  		free(sra);
-> >  		sra = sra2;
-> >  	}
-> > @@ -259,7 +263,7 @@ struct mdinfo *sysfs_read(int fd, char *devnm, unsigned long options)
-> >  		dbase = base + strlen(base);
-> >  		*dbase++ = '/';
-> >  
-> > -		dev = xmalloc(sizeof(*dev));
-> > +		dev = xcalloc(1, sizeof(*dev));
-> >  
-> >  		/* Always get slot, major, minor */
-> >  		strcpy(dbase, "slot");
-> > @@ -687,6 +691,7 @@ int sysfs_add_disk(struct mdinfo *sra, struct mdinfo *sd, int resume)
-> >  	char nm[PATH_MAX];
-> >  	char *dname;
-> >  	int rv;
-> > +	int i;
-> >  
-> >  	sprintf(dv, "%d:%d", sd->disk.major, sd->disk.minor);
-> >  	rv = sysfs_set_str(sra, NULL, "new_dev", dv);
-> > @@ -718,6 +723,28 @@ int sysfs_add_disk(struct mdinfo *sra, struct mdinfo *sd, int resume)
-> >  		if (resume)
-> >  			sysfs_set_num(sra, sd, "recovery_start", sd->recovery_start);
-> >  	}
-> > +	if (sd->bb.supported) {
-> > +		if (sysfs_set_str(sra, sd, "state", "external_bbl")) {
-> > +			/*
-> > +			 * backward compatibility - if kernel doesn't support
-> > +			 * bad blocks for external metadata, let it continue
-> > +			 * as long as there are none known so far
-> > +			 */
-> > +			if (sd->bb.count) {
-> > +				pr_err("The kernel has no support for bad blocks in external metadata\n");
-> > +				return -1;
-> > +			}
-> > +		}
-> > +
-> > +		for (i = 0; i < sd->bb.count; i++) {
-> > +			char s[30];
-> > +			const struct md_bb_entry *entry = &sd->bb.entries[i];
-> > +
-> > +			snprintf(s, sizeof(s) - 1, "%llu %d\n", entry->sector,
-> > +				 entry->length);
-> > +			rv |= sysfs_set_str(sra, sd, "bad_blocks", s);
-> > +		}
-> > +	}
-> >  	return rv;
-> >  }
-> >  
-> > -- 
-> > 1.8.3.1
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/block/badblocks.c b/block/badblocks.c
+index 7be53cb..139115d2 100644
+--- a/block/badblocks.c
++++ b/block/badblocks.c
+@@ -133,6 +133,26 @@ int badblocks_check(struct badblocks *bb, sector_t s, int sectors,
+ }
+ EXPORT_SYMBOL_GPL(badblocks_check);
+ 
++static void badblocks_update_acked(struct badblocks *bb)
++{
++	u64 *p = bb->page;
++	int i;
++	bool unacked = false;
++
++	if (!bb->unacked_exist)
++		return;
++
++	for (i = 0; i < bb->count ; i++) {
++		if (!BB_ACK(p[i])) {
++			unacked = true;
++			break;
++		}
++	}
++
++	if (!unacked)
++		bb->unacked_exist = 0;
++}
++
+ /**
+  * badblocks_set() - Add a range of bad blocks to the table.
+  * @bb:		the badblocks structure that holds all badblock information
+@@ -294,6 +314,8 @@ int badblocks_set(struct badblocks *bb, sector_t s, int sectors,
+ 	bb->changed = 1;
+ 	if (!acknowledged)
+ 		bb->unacked_exist = 1;
++	else
++		badblocks_update_acked(bb);
+ 	write_sequnlock_irqrestore(&bb->lock, flags);
+ 
+ 	return rv;
+@@ -399,6 +421,7 @@ int badblocks_clear(struct badblocks *bb, sector_t s, int sectors)
+ 		}
+ 	}
+ 
++	badblocks_update_acked(bb);
+ 	bb->changed = 1;
+ out:
+ 	write_sequnlock_irq(&bb->lock);
+-- 
+2.9.3
+
