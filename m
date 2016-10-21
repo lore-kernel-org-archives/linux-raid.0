@@ -1,50 +1,38 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: Re: [PATCH v5 6/8] md/r5cache: sysfs entry r5c_state
-Date: Fri, 21 Oct 2016 21:20:43 +0000
-Message-ID: <9EB7E283-3368-47A6-BAA4-ADC1FD456617@fb.com>
-References: <20161013054944.1038806-1-songliubraving@fb.com>
- <20161013054944.1038806-7-songliubraving@fb.com>
- <87lgxlxeq5.fsf@notabene.neil.brown.name>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH 1/2 v3] md: add bad block support for external metadata
+Date: Fri, 21 Oct 2016 15:30:06 -0700
+Message-ID: <20161021223006.GA105663@kernel.org>
+References: <1477060017-8217-1-git-send-email-tomasz.majchrzak@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87lgxlxeq5.fsf@notabene.neil.brown.name>
-Content-Language: en-US
-Content-ID: <806BDCA8C83AE444A45FF9CB03AE8101@namprd15.prod.outlook.com>
+Content-Disposition: inline
+In-Reply-To: <1477060017-8217-1-git-send-email-tomasz.majchrzak@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Shaohua Li <shli@fb.com>, Kernel Team <Kernel-team@fb.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "hch@infradead.org" <hch@infradead.org>, "liuzhengyuang521@gmail.com" <liuzhengyuang521@gmail.com>, "liuzhengyuan@kylinos.cn" <liuzhengyuan@kylinos.cn>
+To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Fri, Oct 21, 2016 at 04:26:57PM +0200, Tomasz Majchrzak wrote:
+> Add new rdev flag which external metadata handler can use to switch
+> on/off bad block support. If new bad block is encountered, notify it via
+> rdev 'unacknowledged_bad_blocks' sysfs file. If bad block has been
+> cleared, notify update to rdev 'bad_blocks' sysfs file.
+> 
+> When bad blocks support is being removed, just clear rdev flag. It is
+> not necessary to reset badblocks->shift field. If there are bad blocks
+> cleared or added at the same time, it is ok for those changes to be
+> applied to the structure. The array is in blocked state and the drive
+> which cannot handle bad blocks any more will be removed from the array
+> before it is unlocked.
+> 
+> Simplify state_show function by adding a separator at the end of each
+> string and overwrite last separator with new line.
+> 
+> Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+> Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 
-> On Oct 18, 2016, at 7:19 PM, NeilBrown <neilb@suse.com> wrote:
->=20
-> On Thu, Oct 13 2016, Song Liu wrote:
->=20
->> r5c_state have 4 states:
->> * no-cache;
->> * write-through (write journal only);
->> * write-back (w/ write cache);
->> * cache-broken (journal missing or Faulty)
->=20
-> I don't like this.
->=20
-> We already have a mechanism for removing a failed device from
-> an array: write 'remove' to the 'state' file in the relevant dev-*
-> subdirectory.
-> You can also use that file to tell if the journal has failed.
-
-I think we would like an separate mechanism to remove "journal feature",
-not "journal device".  Maybe we should put it in an different sysfs file.=20
-
-
-> Please call the file something a little more obvious that 'r5c_state',
-> maybe 'journal_mode', and use it only to switch between write-through
-> and write-back.
-> If there is no journal, then either remove the file, or have writes fail
-> and reads return something obvious ... maybe ENODEV.
+Thanks, applied. After the badblocks patch upstream, I'll push these two.
 
 Thanks,
-Song
-
+Shaohua
