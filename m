@@ -1,191 +1,120 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: Re: [PATCH v5 5/8] md/r5cache: reclaim support
-Date: Fri, 21 Oct 2016 21:04:21 +0000
-Message-ID: <8B0D1660-3389-4A62-8616-D9F7604684FB@fb.com>
+Subject: Re: [PATCH v5 7/8] md/r5cache: r5c recovery
+Date: Fri, 21 Oct 2016 21:12:58 +0000
+Message-ID: <3F2550E2-584B-495F-BD65-F25BC1C18BFC@fb.com>
 References: <20161013054944.1038806-1-songliubraving@fb.com>
- <20161013054944.1038806-6-songliubraving@fb.com>
- <87oa2hxfg6.fsf@notabene.neil.brown.name>
+ <20161013054944.1038806-8-songliubraving@fb.com>
+ <87vawnwwlq.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87oa2hxfg6.fsf@notabene.neil.brown.name>
+In-Reply-To: <87vawnwwlq.fsf@notabene.neil.brown.name>
 Content-Language: en-US
-Content-ID: <56EF69486624F348897543BE9206B717@namprd15.prod.outlook.com>
+Content-ID: <CDB1B39EAA886844A1EEC61D913FB91C@namprd15.prod.outlook.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.com>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Shaohua Li <shli@fb.com>, Kernel Team <Kernel-team@fb.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "hch@infradead.org" <hch@infradead.org>, "liuzhengyuang521@gmail.com" <liuzhengyuang521@gmail.com>, "liuzhengyuan@kylinos.cn" <liuzhengyuan@kylinos.cn>
 List-Id: linux-raid.ids
 
 
-> On Oct 18, 2016, at 7:03 PM, NeilBrown <neilb@suse.com> wrote:
+> On Oct 19, 2016, at 8:03 PM, NeilBrown <neilb@suse.com> wrote:
 >=20
->> AL, 5 seconds) reclaim
->>   if there is no reclaim in the past 5 seconds.
+> On Thu, Oct 13 2016, Song Liu wrote:
 >=20
-> 5 seconds is an arbitrary number.  I don't think it needs to be made
-> configurable, but it might help to justify it.
-> I would probably make it closer to 30 seconds.  There really isn't any
-> rush.  If there is much load, it will never wait this long.  If there is
-> not much load ... then it probably doesn't matter.
-
-Yeah, 30 second should work here.=20
->=20
->=20
->> 2. when there are R5C_FULL_STRIPE_FLUSH_BATCH (32) cached full stripes
->>   (r5c_check_cached_full_stripe)
->=20
-> This is another arbitrary number, but I think it needs more
-> justification.  Why 32?  That's 128K per device, which isn't very much.
-> It might make sense to set the batch size based on the stripe size
-> (e.g. at least on stripe?) or on the cache size.
-
-How about we use something like min(stripe_cache_size / 8, 256)? Journal sp=
-ace
-will trigger reclaim in other conditions (#4 below).=20
-
->=20
->> 3. when there is pressure on stripe cache (r5c_check_stripe_cache_usage)
->> 4. when there is pressure on journal space (r5l_write_stripe, r5c_cache_=
-data)
+>> This is the recovery part of raid5-cache.
 >>=20
->> r5c_do_reclaim() contains new logic of reclaim.
+>> With cache feature, there are 2 different scenarios of recovery:
+>> 1. Data-Parity stripe: a stripe with complete parity in journal.
+>> 2. Data-Only stripe: a stripe with only data in journal (or partial
+>>   parity).
 >>=20
->> For stripe cache:
+>> The code differentiate Data-Parity stripe from Data-Only stripe with
+>> flag (STRIPE_R5C_WRITTEN).
 >>=20
->> When stripe cache pressure is high (more than 3/4 stripes are cached,
->=20
-> You say "3/4" here bit I think the code says "1/2"
->> +	if (total_cached > conf->min_nr_stripes * 1 / 2 ||
-> But there is also
->> +	if (total_cached > conf->min_nr_stripes * 3 / 4 ||
->> +	    atomic_read(&conf->empty_inactive_list_nr) > 0)
->=20
-> so maybe you do mean 3/4..  Maybe some comments closer to the different
-> fractions would help.
-
-There are level of cache pressure:
-high pressure: total_cached > 3/4 || empty_inactivelist_nr > 0
-moderate pressure: total_cached > 1/2.=20
-
-The condition:
-+	if (total_cached > conf->min_nr_stripes * 1 / 2 ||
-+	    atomic_read(&conf->empty_inactive_list_nr) > 0)
-
-covers "either high or moderate pressure".=20
-
-
->> @@ -141,6 +150,12 @@ struct r5l_log {
+>> For Data-Parity stripes, we use the same procedure as raid5 journal,
+>> where all the data and parity are replayed to the RAID devices.
 >>=20
->> 	/* for r5c_cache */
->> 	enum r5c_state r5c_state;
->> +
->> +	/* all stripes in r5cache, in the order of seq at sh->log_start */
->> +	struct list_head stripe_in_cache_list;
->> +
->> +	spinlock_t stripe_in_cache_lock;
->=20
-> You use the _irqsave / _irqrestore versions of spinlock for this lock,
-> but I cannot see where it is takes from interrupt-context.
-> What did I miss?
-
-Let me fix them.=20
-
->=20
->> +/* evaluate log space usage and update R5C_LOG_TIGHT and R5C_LOG_CRITIC=
-AL */
->> +static inline void r5c_update_log_state(struct r5l_log *log)
->> +{
->> +	struct r5conf *conf =3D log->rdev->mddev->private;
->> +	sector_t free_space =3D r5l_ring_distance(log, log->log_start,
->> +						log->last_checkpoint);
->> +	sector_t reclaim_space =3D r5c_log_required_to_flush_cache(conf);
->> +
->> +	if (!r5c_is_writeback(log))
->> +		return;
->> +	else if (free_space < 2 * reclaim_space) {
->> +		set_bit(R5C_LOG_CRITICAL, &conf->cache_state);
->> +		set_bit(R5C_LOG_TIGHT, &conf->cache_state);
->> +	} else if (free_space < 3 * reclaim_space) {
->> +		clear_bit(R5C_LOG_CRITICAL, &conf->cache_state);
->> +		set_bit(R5C_LOG_TIGHT, &conf->cache_state);
->> +	} else if (free_space > 4 * reclaim_space) {
->> +		clear_bit(R5C_LOG_TIGHT, &conf->cache_state);
->> +		clear_bit(R5C_LOG_CRITICAL, &conf->cache_state);
->> +	} else
->> +		clear_bit(R5C_LOG_CRITICAL, &conf->cache_state);
->=20
-> Hmmm...
-> We set LOG_CRITICAL if free_space < 2*reclaim_space, else we clear it.
-> We set LOG_TIGHT if free_space < 3*reclaim_space and clear it if > 4*recl=
-aim_space
->=20
-> Would the code be clearer if you just made that explicit.
->=20
-> At the very least, change
->> +	} else if (free_space > 4 * reclaim_space) {
->> +		clear_bit(R5C_LOG_TIGHT, &conf->cache_state);
->> +		clear_bit(R5C_LOG_CRITICAL, &conf->cache_state);
->> +	} else
->> +		clear_bit(R5C_LOG_CRITICAL, &conf->cache_state);
->=20
-> to
->=20
->> +	} else if (free_space < 4 * reclaim_space) {
->> +		clear_bit(R5C_LOG_CRITICAL, &conf->cache_state);
->> +	} else {
->> +		clear_bit(R5C_LOG_TIGHT, &conf->cache_state);
->> +		clear_bit(R5C_LOG_CRITICAL, &conf->cache_state);
->> +     }
->=20
-> so the order of the branches is consistent and all the tests a '<'.
-
-I will revise the code and the comments.=20
-
->=20
+>> For Data-Only strips, we need to finish complete calculate parity and
+>> finish the full reconstruct write or RMW write. For simplicity, in
+>> the recovery, we load the stripe to stripe cache. Once the array is
+>> started, the stripe cache state machine will handle these stripes
+>> through normal write path.
 >>=20
->> 	BUG_ON(reclaimable < 0);
->> @@ -941,7 +1131,7 @@ static void r5l_do_reclaim(struct r5l_log *log)
+>> r5c_recovery_flush_log contains the main procedure of recovery. The
+>> recovery code first scans through the journal and loads data to
+>> stripe cache. The code keeps tracks of all these stripes in a list
+>> (use sh->lru and ctx->cached_list), stripes in the list are
+>> organized in the order of its first appearance on the journal.
+>> During the scan, the recovery code assesses each stripe as
+>> Data-Parity or Data-Only.
 >>=20
->> 	mutex_lock(&log->io_mutex);
->> 	log->last_checkpoint =3D next_checkpoint;
->> -	log->last_cp_seq =3D next_cp_seq;
+>> During scan, the array may run out of stripe cache. In these cases,
+>> the recovery code will also call raid5_set_cache_size to increase
+>> stripe cache size.
+>>=20
+>> At the end of scan, the recovery code replays all Data-Parity
+>> stripes, and sets proper states for Data-Only stripes. The recovery
+>> code also increases seq number by 10 and rewrites all Data-Only
+>> stripes to journal. This is to avoid confusion after repeated
+>> crashes. More details is explained in raid5-cache.c before
+>> r5c_recovery_rewrite_data_only_stripes().
+>>=20
+>> Signed-off-by: Song Liu <songliubraving@fb.com>
 >=20
-> Why don't we update last_cp_seq here any more?
+>=20
+> This patch seems to do a number of different things.
+> I think it re-factors the journal reading code.
+> It adds code to write a new "empty" journal metadata block
+> and it adds support for recovery of cached data.
+>=20
+> All this together makes it hard to review.  I'd rather more smaller
+> patches.
+>=20
 
-There are two reasons:=20
-1. We are not using last_cp_seq after recovery is done. So it is not necess=
-ary
-    to update it. Shaohua had some idea to use it for reclaim (keep orderin=
-g of=20
-    stripes). But my initial implementation uses sh->log_start and=20
-    r5l_ring_distance() instead.=20
-2. With write back cache, last_cp_seq will be the seq of first stripe in=20
-    stripe_in_cache_list. To track last_cp_seq, we will need an extra first=
-_seq_in_cache
-    in stripe_head. I feel it is a waste of memory.=20
-  =20
+I will try to split the patch into meaningful smaller patches.=20
 >=20
->> +
->> +/*
->> + * if num < 0, flush all stripes
->> + * if num =3D=3D 0, flush all full stripes
->> + * if num > 0, flush all full stripes. If less than num full stripes ar=
-e
->> + *             flushed, flush some partial stripes until totally num st=
-ripes are
->> + *             flushed or there is no more cached stripes.
->> + */
+>> +	/* stripes only have parity are already flushed to RAID */
+>> +	if (data_count =3D=3D 0)
+>> +		goto out;
 >=20
-> I'm not very keen on the idea of having "num < 0".
->=20
-> I'd rather the meaning was:
->  flush all full stripes, and a total of at least num stripes.
->=20
-> To flush all stripes, pass MAX_INT for num (or similar).
+> Can you explain why that is?  When were they flushed to the RAID, and
+> how was the parity determined?
 
-This is a great idea. I will fix it.=20
+It happens like this: say two stripes on journal: 100 and 200. The data (D)
+and parity (P) pages are store in journal as:
+
+      --->  D100   D200   P100  P200 ---->  newer data
+
+Before we flush D100, journal_start points as D100. Then we flush D100,=20
+and new journal_start points as D200. Now the system fails, so next=20
+recovery starts from D200. Recovery code will find stripe 100 only has
+parity. This means, stripe 100 is already flushed to raid. so we can ignore=
+ it.=20
+
+>=20
+>> +/* returns 0 for match; 1 for mismtach */
+>=20
+> No, please don't do that.
+> You can return an negative error if you like, and call it as
+>   function_name() < 0
+> or
+>   function_name() =3D=3D 0
+>=20
+> or give the function a name that describes what it tests
+> i.e.
+>   r5l_data_checksum_is_correct()
+> or
+>   r5l_data_checksum_does_not_match()
+>=20
+> and then return 0 if the test fails and 1 if it succeeds.
+>=20
+>> +static int
+>> +r5l_recovery_verify_data_checksum(struct r5l_log *log, struct page *pag=
+e,
+>> +				  sector_t log_offset, __le32 log_checksum)
+
+I will fix this.=20
 
 Thanks,
-Song
-
+Song=
