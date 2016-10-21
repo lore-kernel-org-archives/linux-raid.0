@@ -1,86 +1,73 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+From: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
 Subject: Re: [PATCH] IMSM: Add warning message when x8-type device is used
-Date: Fri, 21 Oct 2016 08:47:37 -0400
-Message-ID: <wrfj4m45q36e.fsf@redhat.com>
+Date: Fri, 21 Oct 2016 14:17:20 +0000
+Message-ID: <1477059381.15890.9.camel@intel.com>
 References: <1477042671-12934-1-git-send-email-pawel.baldysiak@intel.com>
+         <wrfj4m45q36e.fsf@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1477042671-12934-1-git-send-email-pawel.baldysiak@intel.com>
-        (Pawel Baldysiak's message of "Fri, 21 Oct 2016 11:37:48 +0200")
+In-Reply-To: <wrfj4m45q36e.fsf@redhat.com>
+Content-Language: en-US
+Content-ID: <6BC227B15AEE9946915D5244C65E1697@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Cc: linux-raid@vger.kernel.org
+To: "Jes.Sorensen@redhat.com" <Jes.Sorensen@redhat.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Pawel Baldysiak <pawel.baldysiak@intel.com> writes:
-> This patch adds the warning message when x8-type device
-> is used with IMSM metadata. x8 device is a special
-> NVMe drive - two of them on a single PCIe card.
-> This card could be a single point of failure for
-> RAID levels different than RAID0. x8 devices have
-> serial number ending with "-A/-B" or "-1/-2".
->
-> Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
-> Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-> ---
->  super-intel.c | 42 ++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 42 insertions(+)
-Hi Pawel,
-
-When posting a multi-patch series, it would be helpful to have it sent
-with appropriate headers staging the set is X/Y patches and a cover
-letter.
-
-I normally use -n --cover-letter
-
-> diff --git a/super-intel.c b/super-intel.c
-> index 5c6ab05..e860e75 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -5139,9 +5139,51 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
->  	rv = imsm_read_serial(fd, devname, dd->serial);
->  	if (rv) {
->  		pr_err("failed to retrieve scsi serial, aborting\n");
-> +		if (dd->devname)
-> +			free(dd->devname);
->  		free(dd);
->  		abort();
->  	}
-> +	if (super->hba && ((super->hba->type == SYS_DEV_NVME) ||
-> +	   (super->hba->type == SYS_DEV_VMD))) {
-> +		int i;
-> +		char *devpath = diskfd_to_devpath(fd);
-> +		char controller_path[PATH_MAX];
-> +
-> +		if (!devpath) {
-> +			pr_err("failed to get devpath, aborting\n");
-> +			if (dd->devname)
-> +				free(dd->devname);
-> +			free(dd);
-> +			return 1;
-> +		}
-> +
-> +		snprintf(controller_path, PATH_MAX-1, "%s/device", devpath);
-> +		free(devpath);
-> +
-> +		if (devpath_to_vendor(controller_path) == 0x8086) {
-> +			/*
-> +			 * If Intel's NVMe drive has serial ended with
-> +			 * "-A","-B","-1" or "-2" it means that this is "x8"
-> +			 * device (double drive on single PCIe card).
-> +			 * User should be warned about potential data loss.
-> +			 */
-> +			for (i = MAX_RAID_SERIAL_LEN-1; i > 0; i--) {
-> +				/* Skip empty character at the end */
-> +				if (dd->serial[i] == 0)
-> +					continue;
-> +
-> +				if (((dd->serial[i] == 'A') || (dd->serial[i] == 'B') ||
-> +				   (dd->serial[i] == '1') || (dd->serial[i] == '2')) &&
-> +				   (dd->serial[i-1] == '-'))
-
-Minor nit here - please keep this within 80 characters.
-
-Thanks,
-Jes
+T24gRnJpLCAyMDE2LTEwLTIxIGF0IDA4OjQ3IC0wNDAwLCBKZXMgU29yZW5zZW4gd3JvdGU6DQo+
+IFBhd2VsIEJhbGR5c2lhayA8cGF3ZWwuYmFsZHlzaWFrQGludGVsLmNvbT4gd3JpdGVzOg0KPiA+
+IFRoaXMgcGF0Y2ggYWRkcyB0aGUgd2FybmluZyBtZXNzYWdlIHdoZW4geDgtdHlwZSBkZXZpY2UN
+Cj4gPiBpcyB1c2VkIHdpdGggSU1TTSBtZXRhZGF0YS4geDggZGV2aWNlIGlzIGEgc3BlY2lhbA0K
+PiA+IE5WTWUgZHJpdmUgLSB0d28gb2YgdGhlbSBvbiBhIHNpbmdsZSBQQ0llIGNhcmQuDQo+ID4g
+VGhpcyBjYXJkIGNvdWxkIGJlIGEgc2luZ2xlIHBvaW50IG9mIGZhaWx1cmUgZm9yDQo+ID4gUkFJ
+RCBsZXZlbHMgZGlmZmVyZW50IHRoYW4gUkFJRDAuIHg4IGRldmljZXMgaGF2ZQ0KPiA+IHNlcmlh
+bCBudW1iZXIgZW5kaW5nIHdpdGggIi1BLy1CIiBvciAiLTEvLTIiLg0KPiA+DQo+ID4gU2lnbmVk
+LW9mZi1ieTogUGF3ZWwgQmFsZHlzaWFrIDxwYXdlbC5iYWxkeXNpYWtAaW50ZWwuY29tPg0KPiA+
+IFJldmlld2VkLWJ5OiBBcnR1ciBQYXN6a2lld2ljeiA8YXJ0dXIucGFzemtpZXdpY3pAaW50ZWwu
+Y29tPg0KPiA+IC0tLQ0KPiA+wqDCoHN1cGVyLWludGVsLmMgfCA0MiArKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysNCj4gPsKgwqAxIGZpbGUgY2hhbmdlZCwgNDIgaW5z
+ZXJ0aW9ucygrKQ0KPiBIaSBQYXdlbCwNCj4gDQo+IFdoZW4gcG9zdGluZyBhIG11bHRpLXBhdGNo
+IHNlcmllcywgaXQgd291bGQgYmUgaGVscGZ1bCB0byBoYXZlIGl0IHNlbnQNCj4gd2l0aCBhcHBy
+b3ByaWF0ZSBoZWFkZXJzIHN0YWdpbmcgdGhlIHNldCBpcyBYL1kgcGF0Y2hlcyBhbmQgYSBjb3Zl
+cg0KPiBsZXR0ZXIuDQo+IA0KPiBJIG5vcm1hbGx5IHVzZSAtbiAtLWNvdmVyLWxldHRlcg0KSGkg
+SmVzLA0KDQpTb3JyeSBhYm91dCB0aGF0LiBUaG9zZSBwYXRjaGVzIHN1cHBvc2VkIHRvIGJlIHNl
+bnQgc2VwYXJhdGVseSwgYnV0IEkgdXNlDQpvbmUgZ2l0IHNlbmQtbWFpbCBjb21tYW5kIHRvIHNl
+bnQgdGhlbSBhbGwuIE5vdyBJIGtub3cgdGhhdCB0aGlzIHdhcyBub3QNCnRoZSBtb3N0IGNsZXZl
+ciB0aGluZyB0byBkbyA6KSBQbGVhc2UgdHJlYXQgdGhlbSBhcyBzZXBhcmF0ZSBwYXRjaGVzLg0K
+DQo+IA0KPiA+IGRpZmYgLS1naXQgYS9zdXBlci1pbnRlbC5jIGIvc3VwZXItaW50ZWwuYw0KPiA+
+IGluZGV4IDVjNmFiMDUuLmU4NjBlNzUgMTAwNjQ0DQo+ID4gLS0tIGEvc3VwZXItaW50ZWwuYw0K
+PiA+ICsrKyBiL3N1cGVyLWludGVsLmMNCj4gPiBAQCAtNTEzOSw5ICs1MTM5LDUxIEBAIHN0YXRp
+YyBpbnQgYWRkX3RvX3N1cGVyX2ltc20oc3RydWN0IHN1cGVydHlwZSAqc3QsIG1kdV9kaXNrX2lu
+Zm9fdCAqZGssDQo+ID7CoMKgCXJ2ID0gaW1zbV9yZWFkX3NlcmlhbChmZCwgZGV2bmFtZSwgZGQt
+PnNlcmlhbCk7DQo+ID7CoMKgCWlmIChydikgew0KPiA+wqDCoAkJcHJfZXJyKCJmYWlsZWQgdG8g
+cmV0cmlldmUgc2NzaSBzZXJpYWwsIGFib3J0aW5nXG4iKTsNCj4gPiArCQlpZiAoZGQtPmRldm5h
+bWUpDQo+ID4gKwkJCWZyZWUoZGQtPmRldm5hbWUpOw0KPiA+wqDCoAkJZnJlZShkZCk7DQo+ID7C
+oMKgCQlhYm9ydCgpOw0KPiA+wqDCoAl9DQo+ID4gKwlpZiAoc3VwZXItPmhiYSAmJiAoKHN1cGVy
+LT5oYmEtPnR5cGUgPT0gU1lTX0RFVl9OVk1FKSB8fA0KPiA+ICsJwqDCoMKgKHN1cGVyLT5oYmEt
+PnR5cGUgPT0gU1lTX0RFVl9WTUQpKSkgew0KPiA+ICsJCWludCBpOw0KPiA+ICsJCWNoYXIgKmRl
+dnBhdGggPSBkaXNrZmRfdG9fZGV2cGF0aChmZCk7DQo+ID4gKwkJY2hhciBjb250cm9sbGVyX3Bh
+dGhbUEFUSF9NQVhdOw0KPiA+ICsNCj4gPiArCQlpZiAoIWRldnBhdGgpIHsNCj4gPiArCQkJcHJf
+ZXJyKCJmYWlsZWQgdG8gZ2V0IGRldnBhdGgsIGFib3J0aW5nXG4iKTsNCj4gPiArCQkJaWYgKGRk
+LT5kZXZuYW1lKQ0KPiA+ICsJCQkJZnJlZShkZC0+ZGV2bmFtZSk7DQo+ID4gKwkJCWZyZWUoZGQp
+Ow0KPiA+ICsJCQlyZXR1cm4gMTsNCj4gPiArCQl9DQo+ID4gKw0KPiA+ICsJCXNucHJpbnRmKGNv
+bnRyb2xsZXJfcGF0aCwgUEFUSF9NQVgtMSwgIiVzL2RldmljZSIsIGRldnBhdGgpOw0KPiA+ICsJ
+CWZyZWUoZGV2cGF0aCk7DQo+ID4gKw0KPiA+ICsJCWlmIChkZXZwYXRoX3RvX3ZlbmRvcihjb250
+cm9sbGVyX3BhdGgpID09IDB4ODA4Nikgew0KPiA+ICsJCQkvKg0KPiA+ICsJCQnCoCogSWYgSW50
+ZWwncyBOVk1lIGRyaXZlIGhhcyBzZXJpYWwgZW5kZWQgd2l0aA0KPiA+ICsJCQnCoCogIi1BIiwi
+LUIiLCItMSIgb3IgIi0yIiBpdCBtZWFucyB0aGF0IHRoaXMgaXMgIng4Ig0KPiA+ICsJCQnCoCog
+ZGV2aWNlIChkb3VibGUgZHJpdmUgb24gc2luZ2xlIFBDSWUgY2FyZCkuDQo+ID4gKwkJCcKgKiBV
+c2VyIHNob3VsZCBiZSB3YXJuZWQgYWJvdXQgcG90ZW50aWFsIGRhdGEgbG9zcy4NCj4gPiArCQkJ
+wqAqLw0KPiA+ICsJCQlmb3IgKGkgPSBNQVhfUkFJRF9TRVJJQUxfTEVOLTE7IGkgPiAwOyBpLS0p
+IHsNCj4gPiArCQkJCS8qIFNraXAgZW1wdHkgY2hhcmFjdGVyIGF0IHRoZSBlbmQgKi8NCj4gPiAr
+CQkJCWlmIChkZC0+c2VyaWFsW2ldID09IDApDQo+ID4gKwkJCQkJY29udGludWU7DQo+ID4gKw0K
+PiA+ICsJCQkJaWYgKCgoZGQtPnNlcmlhbFtpXSA9PSAnQScpIHx8IChkZC0+c2VyaWFsW2ldID09
+ICdCJykgfHwNCj4gPiArCQkJCcKgwqDCoChkZC0+c2VyaWFsW2ldID09ICcxJykgfHwgKGRkLT5z
+ZXJpYWxbaV0gPT0gJzInKSkgJiYNCj4gPiArCQkJCcKgwqDCoChkZC0+c2VyaWFsW2ktMV0gPT0g
+Jy0nKSkNCj4gDQo+IE1pbm9yIG5pdCBoZXJlIC0gcGxlYXNlIGtlZXAgdGhpcyB3aXRoaW4gODAg
+Y2hhcmFjdGVycy4NCg0KV291bGQgeW91IGxpa2UgbWUgdG8gcmVzZW5kIGNvcnJlY3RlZCB2ZXJz
+aW9uPw0KSSBzYXcgdGhhdCB0aG9zZSBsaW5lcyBhcmUgb3ZlciA4MCBjaGFycywgYnV0IEkga2Vw
+dCBpdCB0aGlzIHdheS4NCkkgdGhpbmsgdGhhdCBpdHMgbW9yZSByZWFkYWJsZSByaWdodCBub3cs
+IGJ1dCBpZiB5b3UgcHJlZmVyIEkgY2FuIGJyZWFrIHRob3NlIGxpbmVzLg0KDQpUaGFua3MNClBh
+d2VsDQo+IA0KPiBUaGFua3MsDQo+IEplcw==
