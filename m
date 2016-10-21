@@ -1,119 +1,191 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: Re: [PATCH v5 4/8] md/r5cache: write part of r5cache
-Date: Fri, 21 Oct 2016 20:42:08 +0000
-Message-ID: <91067ABE-F658-4C6E-8856-8D32ADD986B5@fb.com>
+Subject: Re: [PATCH v5 5/8] md/r5cache: reclaim support
+Date: Fri, 21 Oct 2016 21:04:21 +0000
+Message-ID: <8B0D1660-3389-4A62-8616-D9F7604684FB@fb.com>
 References: <20161013054944.1038806-1-songliubraving@fb.com>
- <20161013054944.1038806-5-songliubraving@fb.com>
- <87lgxrzaja.fsf@notabene.neil.brown.name>
- <00D21118-73D2-42D1-8062-D468D0C134B4@fb.com>
- <87r37dxipq.fsf@notabene.neil.brown.name>
+ <20161013054944.1038806-6-songliubraving@fb.com>
+ <87oa2hxfg6.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87r37dxipq.fsf@notabene.neil.brown.name>
+In-Reply-To: <87oa2hxfg6.fsf@notabene.neil.brown.name>
 Content-Language: en-US
-Content-ID: <219E04D3662D0541B2268CED8333E1B1@namprd15.prod.outlook.com>
+Content-ID: <56EF69486624F348897543BE9206B717@namprd15.prod.outlook.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.com>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Shaohua Li <shli@fb.com>, Kernel Team <Kernel-team@fb.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "hch@infradead.org" <hch@infradead.org>, "liuzhengyuang521@gmail.com" <liuzhengyuang521@gmail.com>, "liuzhengyuan@kylinos.cn" <liuzhengyuan@kylinos.cn>
 List-Id: linux-raid.ids
 
 
-> On Oct 18, 2016, at 5:53 PM, NeilBrown <neilb@suse.com> wrote:
+> On Oct 18, 2016, at 7:03 PM, NeilBrown <neilb@suse.com> wrote:
 >=20
-> On Fri, Oct 14 2016, Song Liu wrote:
+>> AL, 5 seconds) reclaim
+>>   if there is no reclaim in the past 5 seconds.
 >=20
->>> On Oct 1st of the work.=20
+> 5 seconds is an arbitrary number.  I don't think it needs to be made
+> configurable, but it might help to justify it.
+> I would probably make it closer to 30 seconds.  There really isn't any
+> rush.  If there is much load, it will never wait this long.  If there is
+> not much load ... then it probably doesn't matter.
+
+Yeah, 30 second should work here.=20
+>=20
+>=20
+>> 2. when there are R5C_FULL_STRIPE_FLUSH_BATCH (32) cached full stripes
+>>   (r5c_check_cached_full_stripe)
+>=20
+> This is another arbitrary number, but I think it needs more
+> justification.  Why 32?  That's 128K per device, which isn't very much.
+> It might make sense to set the batch size based on the stripe size
+> (e.g. at least on stripe?) or on the cache size.
+
+How about we use something like min(stripe_cache_size / 8, 256)? Journal sp=
+ace
+will trigger reclaim in other conditions (#4 below).=20
+
+>=20
+>> 3. when there is pressure on stripe cache (r5c_check_stripe_cache_usage)
+>> 4. when there is pressure on journal space (r5l_write_stripe, r5c_cache_=
+data)
 >>=20
->> Or we can force the code to rcw, which does not need extra page.=20
->> But rcw, does not always work in degraded mode. So, this is a good=20
->> reason not to do write-back in degraded mode...
->=20
-> Prohibiting write-back in degraded mode would not be enough to ensure
-> that you can always use rcw.  The array can become degraded after you
-> make the decision to use caching, and before to need to read old data
-> for rmw.
->=20
-> I would suggest a small (2 entry?) mempool where each entry in the
-> mempool holds enough pages to complete an rmw.  Only use the mempool if
-> an alloc_page() fails.
->=20
-This is a great idea. I will try it.=20
-
-
->>>=20
->>>> +
->>>> +void r5c_handle_cached_data_endio(struct r5conf *conf,
->>>> +	  struct stripe_head *sh, int disks, struct bio_list *return_bi)
->>>> +{
->>>> +	int i;
->>>> +
->>>> +	for (i =3D sh->disks; i--; ) {
->>>> +		if (test_bit(R5_InCache, &sh->dev[i].flags) &&
->>>> +		    sh->dev[i].written) {
->>>=20
->>> Is it possible for R5_InCache to be set, but 'written' to be NULL ???
+>> r5c_do_reclaim() contains new logic of reclaim.
 >>=20
->> Yes, it is possible. A stripe may go through "write data to journal, ret=
-urn IO" multiple
->> times before parity calculation. When it comes here the second time, dev=
- written in the=20
->> first time will have R5_InCache set, but its written will be NULL.=20
->=20
-> OK, that makes sense.
-> So is it possible for 'written' to be set, but R5_InCache to be clear?
-> i.e. do we really need to test R5_InCache here?
-
-In current implementation, there is only one log_io per sh, so we should be=
- fine just check=20
-'written'. Let me double check.=20
-
->=20
->>>>=20
->>>> static void r5l_io_run_stripes(struct r5l_io_unit *io)
->>>> @@ -483,7 +566,8 @@ static int r5l_log_stripe(struct r5l_log *log, str=
-uct stripe_head *sh,
->>>> 	io =3D log->current_io;
->>>>=20
->>>> 	for (i =3D 0; i < sh->disks; i++) {
->>>> -		if (!test_bit(R5_Wantwrite, &sh->dev[i].flags))
->>>> +		if (!test_bit(R5_Wantwrite, &sh->dev[i].flags) &&
->>>> +		    !test_bit(R5_Wantcache, &sh->dev[i].flags))
->>>> 			continue;
->>>=20
->>> If changed R5_Wantcache to R5_Wantjournal, and always set it on blocks
->>> that were destined for the journal, then this would just be
->>>=20
->>> 		if (!test_bit(R5_Wantjournal, &sh->dev[i].flags))
->>>=20
->>> which would make lots of sense...  Just a thought.
+>> For stripe cache:
 >>=20
->> We set R5_Wantwrite in multiple places. If we simplify the code here, we=
- will need to make
->> those places aware of journal. I guess that is not ideal either?=20
+>> When stripe cache pressure is high (more than 3/4 stripes are cached,
 >=20
-> Maybe...
-> We have so many state flags that I like to be very cautious about adding
-> more, and to make sure they have a very well defined meaning that
-> doesn't overlap with other flags too much.
-> The above code suggests that Wantwrite and Wantcache overlap to some
-> extent.
+> You say "3/4" here bit I think the code says "1/2"
+>> +	if (total_cached > conf->min_nr_stripes * 1 / 2 ||
+> But there is also
+>> +	if (total_cached > conf->min_nr_stripes * 3 / 4 ||
+>> +	    atomic_read(&conf->empty_inactive_list_nr) > 0)
 >=20
-> Could we discard Wantcache and just use Wantwrite combined with InCache?
-> Wantwrite means that the block needed to be written to the RAID.
-> If InCache isn't set, it also needs to be written to the cache (if the
-> cache is being used).
-> Then the above code would be
->   if (!test_bit(R5_Wantwrite) || test_bit(R5_InCache))
->      continue;
->=20
-> which means "if we don't want to write this, or if it is already in the
-> cache, then nothing to do here".
->=20
-> Maybe.
+> so maybe you do mean 3/4..  Maybe some comments closer to the different
+> fractions would help.
 
-I am not sure whether we can totally remove Wantcache. Let me try it.=20
+There are level of cache pressure:
+high pressure: total_cached > 3/4 || empty_inactivelist_nr > 0
+moderate pressure: total_cached > 1/2.=20
+
+The condition:
++	if (total_cached > conf->min_nr_stripes * 1 / 2 ||
++	    atomic_read(&conf->empty_inactive_list_nr) > 0)
+
+covers "either high or moderate pressure".=20
+
+
+>> @@ -141,6 +150,12 @@ struct r5l_log {
+>>=20
+>> 	/* for r5c_cache */
+>> 	enum r5c_state r5c_state;
+>> +
+>> +	/* all stripes in r5cache, in the order of seq at sh->log_start */
+>> +	struct list_head stripe_in_cache_list;
+>> +
+>> +	spinlock_t stripe_in_cache_lock;
+>=20
+> You use the _irqsave / _irqrestore versions of spinlock for this lock,
+> but I cannot see where it is takes from interrupt-context.
+> What did I miss?
+
+Let me fix them.=20
+
+>=20
+>> +/* evaluate log space usage and update R5C_LOG_TIGHT and R5C_LOG_CRITIC=
+AL */
+>> +static inline void r5c_update_log_state(struct r5l_log *log)
+>> +{
+>> +	struct r5conf *conf =3D log->rdev->mddev->private;
+>> +	sector_t free_space =3D r5l_ring_distance(log, log->log_start,
+>> +						log->last_checkpoint);
+>> +	sector_t reclaim_space =3D r5c_log_required_to_flush_cache(conf);
+>> +
+>> +	if (!r5c_is_writeback(log))
+>> +		return;
+>> +	else if (free_space < 2 * reclaim_space) {
+>> +		set_bit(R5C_LOG_CRITICAL, &conf->cache_state);
+>> +		set_bit(R5C_LOG_TIGHT, &conf->cache_state);
+>> +	} else if (free_space < 3 * reclaim_space) {
+>> +		clear_bit(R5C_LOG_CRITICAL, &conf->cache_state);
+>> +		set_bit(R5C_LOG_TIGHT, &conf->cache_state);
+>> +	} else if (free_space > 4 * reclaim_space) {
+>> +		clear_bit(R5C_LOG_TIGHT, &conf->cache_state);
+>> +		clear_bit(R5C_LOG_CRITICAL, &conf->cache_state);
+>> +	} else
+>> +		clear_bit(R5C_LOG_CRITICAL, &conf->cache_state);
+>=20
+> Hmmm...
+> We set LOG_CRITICAL if free_space < 2*reclaim_space, else we clear it.
+> We set LOG_TIGHT if free_space < 3*reclaim_space and clear it if > 4*recl=
+aim_space
+>=20
+> Would the code be clearer if you just made that explicit.
+>=20
+> At the very least, change
+>> +	} else if (free_space > 4 * reclaim_space) {
+>> +		clear_bit(R5C_LOG_TIGHT, &conf->cache_state);
+>> +		clear_bit(R5C_LOG_CRITICAL, &conf->cache_state);
+>> +	} else
+>> +		clear_bit(R5C_LOG_CRITICAL, &conf->cache_state);
+>=20
+> to
+>=20
+>> +	} else if (free_space < 4 * reclaim_space) {
+>> +		clear_bit(R5C_LOG_CRITICAL, &conf->cache_state);
+>> +	} else {
+>> +		clear_bit(R5C_LOG_TIGHT, &conf->cache_state);
+>> +		clear_bit(R5C_LOG_CRITICAL, &conf->cache_state);
+>> +     }
+>=20
+> so the order of the branches is consistent and all the tests a '<'.
+
+I will revise the code and the comments.=20
+
+>=20
+>>=20
+>> 	BUG_ON(reclaimable < 0);
+>> @@ -941,7 +1131,7 @@ static void r5l_do_reclaim(struct r5l_log *log)
+>>=20
+>> 	mutex_lock(&log->io_mutex);
+>> 	log->last_checkpoint =3D next_checkpoint;
+>> -	log->last_cp_seq =3D next_cp_seq;
+>=20
+> Why don't we update last_cp_seq here any more?
+
+There are two reasons:=20
+1. We are not using last_cp_seq after recovery is done. So it is not necess=
+ary
+    to update it. Shaohua had some idea to use it for reclaim (keep orderin=
+g of=20
+    stripes). But my initial implementation uses sh->log_start and=20
+    r5l_ring_distance() instead.=20
+2. With write back cache, last_cp_seq will be the seq of first stripe in=20
+    stripe_in_cache_list. To track last_cp_seq, we will need an extra first=
+_seq_in_cache
+    in stripe_head. I feel it is a waste of memory.=20
+  =20
+>=20
+>> +
+>> +/*
+>> + * if num < 0, flush all stripes
+>> + * if num =3D=3D 0, flush all full stripes
+>> + * if num > 0, flush all full stripes. If less than num full stripes ar=
+e
+>> + *             flushed, flush some partial stripes until totally num st=
+ripes are
+>> + *             flushed or there is no more cached stripes.
+>> + */
+>=20
+> I'm not very keen on the idea of having "num < 0".
+>=20
+> I'd rather the meaning was:
+>  flush all full stripes, and a total of at least num stripes.
+>=20
+> To flush all stripes, pass MAX_INT for num (or similar).
+
+This is a great idea. I will fix it.=20
 
 Thanks,
-Song=
+Song
+
