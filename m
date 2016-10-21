@@ -1,100 +1,88 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: How to fix mistake on raid: mdadm create instead of assemble?
-Date: Fri, 21 Oct 2016 15:35:24 -0700
-Message-ID: <20161021223524.GB105663@kernel.org>
-References: <CAJh8RqUaT_D3GEkj9dWGY5d4e4icUKzyidV2JTVToKN=MpCRyQ@mail.gmail.com>
- <20161008123040.GA4603@metamorpher.de>
- <57FAC73A.6020603@youngman.org.uk>
- <CAJh8RqU7kcTrp_1Rgorx02OR5H5bm-a8=DSvQz-Bkrg7S3357w@mail.gmail.com>
+Subject: Re: Superblock of raid5 log can't be updated when array stoped
+Date: Fri, 21 Oct 2016 15:43:41 -0700
+Message-ID: <20161021224341.GC105663@kernel.org>
+References: <tencent_382FBBB34581DF7E1F5EC9A2@qq.com>
+ <20161018002814.GC106864@kernel.org>
+ <tencent_5F7A406104D26FAD7587F1C4@qq.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CAJh8RqU7kcTrp_1Rgorx02OR5H5bm-a8=DSvQz-Bkrg7S3357w@mail.gmail.com>
+In-Reply-To: <tencent_5F7A406104D26FAD7587F1C4@qq.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Santiago DIEZ <santiago.diez@caoba.fr>
-Cc: Linux Raid LIST <linux-raid@vger.kernel.org>, songliubraving@fb.com, Jes.Sorensen@redhat.com
+To: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
+Cc: shli <shli@fb.com>, Song Liu <songliubraving@fb.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Oct 21, 2016 at 10:45:10AM +0200, Santiago DIEZ wrote:
-> Hi,
-> 
-> Thanks Andreas,
-> 
-> Yes apparently, 3/4 of the original disks seem to be safe. But I'm
-> terrified at the idea of doing something wrong assembling them.
-> Incidentally, I indeed did a mistake trying to assemble the ddrescue
-> images of the 3 safe disks. I tried to create again with proper
-> metadata and chunck but it did not work. I'm still scared at the idea
-> of restarting the original raid. I'm currently ddrescuing again the 3
-> partitions to then try and *assemble* them rather than *create*.
-> 
-> 
-> Thanks Wol,
-> 
-> I use loop devices because I work on partition images, not on actual partitions:
-> I use ddrescue to copy data from /dev/sd[abc]10 to
-> some.other.server:/home/sd[abc].img
-> Then I go to some.other.server and turn the images into loop devices :
-> losetup /dev/loop0 /home/sda10.img
-> losetup /dev/loop1 /home/sdb10.img
-> losetup /dev/loop2 /home/sdc10.img
-> Then I tried to created the raid, it worked but as I said, the
-> filesystem was unreadable.
-> I know the idea of using loop devices works because I tested it before.
-> I'm doing the whole procedure all over again (takes 5 days to ddrescue
-> the 3 partitions to another server) and then I will use the command
-> you recommended :
-> mdadm --assemble /dev/md0 /dev/loop0 /dev/loop1 /dev/loop2 --force
-> 
-> 
-> Will keep you posted
-> 
-> -------------------------
-> Santiago DIEZ
-> Quark Systems & CAOBA
-> 23 rue du Buisson Saint-Louis, 75010 Paris
-> -------------------------
-> 
-> On Mon, Oct 10, 2016 at 12:39 AM, Wols Lists <antlists@youngman.org.uk> wrote:
-> >
-> > On 08/10/16 13:30, Andreas Klauer wrote:
-> > > On Fri, Oct 07, 2016 at 05:37:32PM +0200, Santiago DIEZ wrote:
-> > >> > First thing I did is ddrescue the remaining partitions sd[abc]10 .
-> > >> > ddrescue did not stumble into any read error so I assume all remaining
-> > >> > partitions are perfectly safe.
-> > > So ... don't you still have a good copy?
-> > >
-> > > You only killed one of them, right? Did not make same mistake twice?
-> > >
-> > >> > There comes my mistake: I ran the --create command instead of --assemble :
-> > >> >
-> > >> > ================================================================================
-> > >> > # mdadm --create --verbose /dev/md1 --raid-devices=4 --level=raid5
-> > >> > --run --readonly /dev/loop0 /dev/loop1 /dev/loop2 missing
-> >
-> > One oddity I've noticed. You've created the array using loop devices.
-> > What are these?
-> >
-> > The reason I ask is that using loopback devices is a standard technique
-> > for rebuilding a damaged array, specifically to prevent md from actually
-> > writing to the drive. So is it possible that "mdadm --create" only wrote
-> > to ram, and a reboot will recover your ddrescue copies untouched?
-> >
-> > My raid-fu isn't enough to tell me whether I'm right or not ... :-)
-> >
-> > If necessary you'll have to do another ddrescue from the original
-> > drives, and you should then be able to assemble the array from the
-> > copies. Don't use "missing", use "--force" and you should get a working,
-> > degraded, array to which you can add a new drive and rebuild the array.
-> >
-> > mdadm --assemble /dev/md0 /dev/sd[efg]10 --force
-> >
-> > if I'm right ... so long as it's the copies, you can always recover
-> > again from the original disks, and if there's a problem with the copies
-> > mdadm should complain when it assembles the array.
+On Tue, Oct 18, 2016 at 01:51:57PM +0800, Zhengyuan Liu wrote:
+> If that's the problem, I think there is another problem about next_checkpoint initialization.
+> No initial operation was done to this field when we loaded/recovery  the log , it got
+> assignment  only when IO to raid disk was finished.  So r5l_quiesce may use wrong 
+> next_checkpoint to reclaim log space, that would confuse log recovery.  Bellow patch
+> may help the expression.
 
-Hmm, those commands work for me. I'm adding Song and Jes if they have ideas.
+Good catch. This doesn't confuse log recovery but maks reclaimable space
+calculation confused. Could you please send a formal patch?
 
 Thanks,
-Shaohua
+Shaohua 
+> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+> index 1b1ab4a..998ea00 100644
+> --- a/drivers/md/raid5-cache.c
+> +++ b/drivers/md/raid5-cache.c
+> @@ -1096,6 +1096,8 @@ static int r5l_recovery_log(struct r5l_log *log)
+>                 log->seq = ctx.seq + 11;
+>                 log->log_start = r5l_ring_add(log, ctx.pos, BLOCK_SECTORS);
+>                 r5l_write_super(log, ctx.pos);
+> +               log->last_checkpoint = ctx.pos;
+> +               log->next_checkpoint = ctx.pos;
+>         } else {
+>                 log->log_start = ctx.pos;
+>                 log->seq = ctx.seq;
+> @@ -1168,6 +1170,7 @@ create:
+>         if (log->max_free_space > RECLAIM_MAX_FREE_SPACE)
+>                 log->max_free_space = RECLAIM_MAX_FREE_SPACE;
+>         log->last_checkpoint = cp;
+> +       log->next_checkpoint = cp;
+>  
+>         __free_page(page);
+> 
+> Thanks,
+> --Zhengyuan
+> 
+> ------------------ Original ------------------
+> From:  "Shaohua Li"<shli@kernel.org>;
+> Date:  Tue, Oct 18, 2016 08:28 AM
+> To:  "Zhengyuan Liu"<liuzhengyuan@kylinos.cn>;
+> Cc:  "shli"<shli@fb.com>; "Song Liu"<songliubraving@fb.com>; "linux-raid"<linux-raid@vger.kernel.org>;
+> Subject:  Re: Superblock of raid5 log can't be updated when array stoped
+>  
+> On Sat, Oct 15, 2016 at 10:19:36AM +0800, liuzhengyuan wrote:
+> > Hi, Shaohua.
+> > 
+> > when we stop raid5 array with "mdadm -S" or reboot the system,  md module will 
+> > call raid5_quiesce and r5l_quiesce to do some clean work. Some code of r5l_quiesce
+> > was pasted bellow.
+> > 
+> >                 /* make sure r5l_write_super_and_discard_space exits */
+> >                 mddev = log->rdev->mddev;
+> >                 wake_up(&mddev->sb_wait);
+> >                 r5l_wake_reclaim(log, -1L);
+> >                 md_unregister_thread(&log->reclaim_thread);
+> >                 r5l_do_reclaim(log);
+> > +                md_update_sb(mddev, 1);
+> > 
+> > It will reclaim all used space of log and call r5l_write_super to reset rdev->journal_tail
+> > to log->next_checkpoint . However, new rdev->journal_tail would not be written to 
+> > journal device for persistent because journal device may not support discard operation
+> > or due to mddev_trylock fail (this trylock should always get failed since raid5_quiesce 
+> > was called with  reconfig_mutex hold, isn't it?). As a result, it will take a long time to
+> >  recovery the log when the arrary was restarted. Should r5l_quiesce call md_update_sb
+> >  directly to guarantee  superblock  update?
+> 
+> Yep, that's problem here. Unfortunately we can't call md_update_sb here,
+> because we might not hold the mddev lock. I think we should call it at do_md_stop.
+> 
+> Thanks,
+> Shaohua
