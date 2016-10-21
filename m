@@ -1,38 +1,100 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH 1/2 v3] md: add bad block support for external metadata
-Date: Fri, 21 Oct 2016 15:30:06 -0700
-Message-ID: <20161021223006.GA105663@kernel.org>
-References: <1477060017-8217-1-git-send-email-tomasz.majchrzak@intel.com>
+Subject: Re: How to fix mistake on raid: mdadm create instead of assemble?
+Date: Fri, 21 Oct 2016 15:35:24 -0700
+Message-ID: <20161021223524.GB105663@kernel.org>
+References: <CAJh8RqUaT_D3GEkj9dWGY5d4e4icUKzyidV2JTVToKN=MpCRyQ@mail.gmail.com>
+ <20161008123040.GA4603@metamorpher.de>
+ <57FAC73A.6020603@youngman.org.uk>
+ <CAJh8RqU7kcTrp_1Rgorx02OR5H5bm-a8=DSvQz-Bkrg7S3357w@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1477060017-8217-1-git-send-email-tomasz.majchrzak@intel.com>
+In-Reply-To: <CAJh8RqU7kcTrp_1Rgorx02OR5H5bm-a8=DSvQz-Bkrg7S3357w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Cc: linux-raid@vger.kernel.org
+To: Santiago DIEZ <santiago.diez@caoba.fr>
+Cc: Linux Raid LIST <linux-raid@vger.kernel.org>, songliubraving@fb.com, Jes.Sorensen@redhat.com
 List-Id: linux-raid.ids
 
-On Fri, Oct 21, 2016 at 04:26:57PM +0200, Tomasz Majchrzak wrote:
-> Add new rdev flag which external metadata handler can use to switch
-> on/off bad block support. If new bad block is encountered, notify it via
-> rdev 'unacknowledged_bad_blocks' sysfs file. If bad block has been
-> cleared, notify update to rdev 'bad_blocks' sysfs file.
+On Fri, Oct 21, 2016 at 10:45:10AM +0200, Santiago DIEZ wrote:
+> Hi,
 > 
-> When bad blocks support is being removed, just clear rdev flag. It is
-> not necessary to reset badblocks->shift field. If there are bad blocks
-> cleared or added at the same time, it is ok for those changes to be
-> applied to the structure. The array is in blocked state and the drive
-> which cannot handle bad blocks any more will be removed from the array
-> before it is unlocked.
+> Thanks Andreas,
 > 
-> Simplify state_show function by adding a separator at the end of each
-> string and overwrite last separator with new line.
+> Yes apparently, 3/4 of the original disks seem to be safe. But I'm
+> terrified at the idea of doing something wrong assembling them.
+> Incidentally, I indeed did a mistake trying to assemble the ddrescue
+> images of the 3 safe disks. I tried to create again with proper
+> metadata and chunck but it did not work. I'm still scared at the idea
+> of restarting the original raid. I'm currently ddrescuing again the 3
+> partitions to then try and *assemble* them rather than *create*.
 > 
-> Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-> Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+> 
+> Thanks Wol,
+> 
+> I use loop devices because I work on partition images, not on actual partitions:
+> I use ddrescue to copy data from /dev/sd[abc]10 to
+> some.other.server:/home/sd[abc].img
+> Then I go to some.other.server and turn the images into loop devices :
+> losetup /dev/loop0 /home/sda10.img
+> losetup /dev/loop1 /home/sdb10.img
+> losetup /dev/loop2 /home/sdc10.img
+> Then I tried to created the raid, it worked but as I said, the
+> filesystem was unreadable.
+> I know the idea of using loop devices works because I tested it before.
+> I'm doing the whole procedure all over again (takes 5 days to ddrescue
+> the 3 partitions to another server) and then I will use the command
+> you recommended :
+> mdadm --assemble /dev/md0 /dev/loop0 /dev/loop1 /dev/loop2 --force
+> 
+> 
+> Will keep you posted
+> 
+> -------------------------
+> Santiago DIEZ
+> Quark Systems & CAOBA
+> 23 rue du Buisson Saint-Louis, 75010 Paris
+> -------------------------
+> 
+> On Mon, Oct 10, 2016 at 12:39 AM, Wols Lists <antlists@youngman.org.uk> wrote:
+> >
+> > On 08/10/16 13:30, Andreas Klauer wrote:
+> > > On Fri, Oct 07, 2016 at 05:37:32PM +0200, Santiago DIEZ wrote:
+> > >> > First thing I did is ddrescue the remaining partitions sd[abc]10 .
+> > >> > ddrescue did not stumble into any read error so I assume all remaining
+> > >> > partitions are perfectly safe.
+> > > So ... don't you still have a good copy?
+> > >
+> > > You only killed one of them, right? Did not make same mistake twice?
+> > >
+> > >> > There comes my mistake: I ran the --create command instead of --assemble :
+> > >> >
+> > >> > ================================================================================
+> > >> > # mdadm --create --verbose /dev/md1 --raid-devices=4 --level=raid5
+> > >> > --run --readonly /dev/loop0 /dev/loop1 /dev/loop2 missing
+> >
+> > One oddity I've noticed. You've created the array using loop devices.
+> > What are these?
+> >
+> > The reason I ask is that using loopback devices is a standard technique
+> > for rebuilding a damaged array, specifically to prevent md from actually
+> > writing to the drive. So is it possible that "mdadm --create" only wrote
+> > to ram, and a reboot will recover your ddrescue copies untouched?
+> >
+> > My raid-fu isn't enough to tell me whether I'm right or not ... :-)
+> >
+> > If necessary you'll have to do another ddrescue from the original
+> > drives, and you should then be able to assemble the array from the
+> > copies. Don't use "missing", use "--force" and you should get a working,
+> > degraded, array to which you can add a new drive and rebuild the array.
+> >
+> > mdadm --assemble /dev/md0 /dev/sd[efg]10 --force
+> >
+> > if I'm right ... so long as it's the copies, you can always recover
+> > again from the original disks, and if there's a problem with the copies
+> > mdadm should complain when it assembles the array.
 
-Thanks, applied. After the badblocks patch upstream, I'll push these two.
+Hmm, those commands work for me. I'm adding Song and Jes if they have ideas.
 
 Thanks,
 Shaohua
