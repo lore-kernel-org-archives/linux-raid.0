@@ -1,48 +1,44 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md/raid5: write an empty meta-block when creating log
- super-block
-Date: Mon, 24 Oct 2016 14:23:45 -0700
-Message-ID: <20161024212345.dehpl26uweujlmsl@kernel.org>
-References: <1477296959-20123-1-git-send-email-liuzhengyuan@kylinos.cn>
+Subject: Re: [PATCH] md: report 'write_pending' state when array in sync
+Date: Mon, 24 Oct 2016 15:24:35 -0700
+Message-ID: <20161024222435.jadcmbypln3baw7c@kernel.org>
+References: <1477306048-26097-1-git-send-email-tomasz.majchrzak@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1477296959-20123-1-git-send-email-liuzhengyuan@kylinos.cn>
+In-Reply-To: <1477306048-26097-1-git-send-email-tomasz.majchrzak@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
-Cc: shli@fb.com, songliubraving@fb.com, linux-raid@vger.kernel.org, liuzhengyuang521@gmail.com
+To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Oct 24, 2016 at 04:15:59PM +0800, Zhengyuan Liu wrote:
-> If superblock points to an invalid meta block, r5l_load_log will set
-> create_super with true and create an new superblock, this runtime path
-> would always happen if we do no writing I/O to this array since it was
-> created. Writing an empty meta block could avoid this unnecessary
-> action at the first time we created log superblock.
+On Mon, Oct 24, 2016 at 12:47:28PM +0200, Tomasz Majchrzak wrote:
+> If there is a bad block on a disk and there is a recovery performed from
+> this disk, the same bad block is reported for a new disk. It involves
+> setting MD_CHANGE_PENDING flag in rdev_set_badblocks. For external
+> metadata this flag is not being cleared as array state is reported as
+> 'clean'. The read request to bad block in RAID5 array gets stuck as it
+> is waiting for a flag to be cleared - as per commit c3cce6cda162
+> ("md/raid5: ensure device failure recorded before write request
+> returns.").
 > 
-> Another reason is for the corretness of log recovery. Currently we have
-> bellow code to guarantee log revocery to be correct.
+> The meaning of MD_CHANGE_PENDING and MD_CHANGE_CLEAN flags has been
+> clarified in commit 070dc6dd7103 ("md: resolve confusion of
+> MD_CHANGE_CLEAN"), however MD_CHANGE_PENDING flag has been used in
+> personality error handlers since and it doesn't fully comply with
+> initial purpose. It was supposed to notify that write request is about
+> to start, however now it is also used to request metadata update.
+> Initially (in md_allow_write, md_write_start) MD_CHANGE_PENDING flag has
+> been set and in_sync has been set to 0 at the same time. Error handlers
+> just set the flag without modifying in_sync value. Sysfs array state is
+> a single value so now it reports 'clean' when MD_CHANGE_PENDING flag is
+> set and in_sync is set to 1. Userspace has no idea it is expected to
+> take some action.
 > 
->         if (ctx.seq > log->last_cp_seq + 1) {
->                 int ret;
-> 
->                 ret = r5l_log_write_empty_meta_block(log, ctx.pos, ctx.seq + 10);
->                 if (ret)
->                         return ret;
->                 log->seq = ctx.seq + 11;
->                 log->log_start = r5l_ring_add(log, ctx.pos, BLOCK_SECTORS);
->                 r5l_write_super(log, ctx.pos);
->         } else {
->                 log->log_start = ctx.pos;
->                 log->seq = ctx.seq;
->         }
-> 
-> If we just created a array with a journal device, log->log_start and
-> log->last_checkpoint should all be 0, then we write three meta block
-> which are valid except mid one and supposed crash happened. The ctx.seq
-> would equal to log->last_cp_seq + 1 and log->log_start would be set to
-> position of mid invalid meta block after we did a recovery, this will
-> lead to problems which could be avoided with this patch.
+> Swap the order that array state is checked so 'write_pending' is
+> reported ahead of 'clean' ('write_pending' is a misleading name but it
+> is too late to rename it now).
 
-This would be very unlikely, but better to fix. Applied, thanks!
+
+Applied, thanks!
