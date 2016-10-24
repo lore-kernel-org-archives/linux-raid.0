@@ -1,45 +1,60 @@
 From: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
-Subject: [PATCH] md/raid5: initialize next_checkpoint field before use
-Date: Mon, 24 Oct 2016 09:55:20 +0800
-Message-ID: <1477274120-7236-1-git-send-email-liuzhengyuan@kylinos.cn>
+Subject: [PATCH] md/raid5: write an empty meta-block when creating log super-block
+Date: Mon, 24 Oct 2016 16:15:59 +0800
+Message-ID: <1477296959-20123-1-git-send-email-liuzhengyuan@kylinos.cn>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: shli@kernel.org
-Cc: shli@fb.com, songliubraving@fb.com, linux-raid@vger.kernel.org, liuzhengyuang521@gmail.com, Zhengyuan Liu <liuzhengyuan@kylinos.cn>
+Cc: shli@fb.com, songliubraving@fb.com, linux-raid@vger.kernel.org, liuzhengyuang521@gmail.com
 List-Id: linux-raid.ids
 
-No initial operation was done to this field when we
-load/recovery the log, it got assignment only when IO
-to raid disk was finished. So r5l_quiesce may use wrong
-next_checkpoint to reclaim log space, that would make
-reclaimable space calculation confused.
+If superblock points to an invalid meta block, r5l_load_log will set
+create_super with true and create an new superblock, this runtime path
+would always happen if we do no writing I/O to this array since it was
+created. Writing an empty meta block could avoid this unnecessary
+action at the first time we created log superblock.
+
+Another reason is for the corretness of log recovery. Currently we have
+bellow code to guarantee log revocery to be correct.
+
+        if (ctx.seq > log->last_cp_seq + 1) {
+                int ret;
+
+                ret = r5l_log_write_empty_meta_block(log, ctx.pos, ctx.seq + 10);
+                if (ret)
+                        return ret;
+                log->seq = ctx.seq + 11;
+                log->log_start = r5l_ring_add(log, ctx.pos, BLOCK_SECTORS);
+                r5l_write_super(log, ctx.pos);
+        } else {
+                log->log_start = ctx.pos;
+                log->seq = ctx.seq;
+        }
+
+If we just created a array with a journal device, log->log_start and
+log->last_checkpoint should all be 0, then we write three meta block
+which are valid except mid one and supposed crash happened. The ctx.seq
+would equal to log->last_cp_seq + 1 and log->log_start would be set to
+position of mid invalid meta block after we did a recovery, this will
+lead to problems which could be avoided with this patch.
 
 Signed-off-by: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
 ---
- drivers/md/raid5-cache.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/md/raid5-cache.c | 1 +
+ 1 file changed, 1 insertion(+)
 
 diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 1b1ab4a..998ea00 100644
+index 998ea00..981f855 100644
 --- a/drivers/md/raid5-cache.c
 +++ b/drivers/md/raid5-cache.c
-@@ -1096,6 +1096,8 @@ static int r5l_recovery_log(struct r5l_log *log)
- 		log->seq = ctx.seq + 11;
- 		log->log_start = r5l_ring_add(log, ctx.pos, BLOCK_SECTORS);
- 		r5l_write_super(log, ctx.pos);
-+		log->last_checkpoint = ctx.pos;
-+		log->next_checkpoint = ctx.pos;
- 	} else {
- 		log->log_start = ctx.pos;
- 		log->seq = ctx.seq;
-@@ -1168,6 +1170,7 @@ create:
- 	if (log->max_free_space > RECLAIM_MAX_FREE_SPACE)
- 		log->max_free_space = RECLAIM_MAX_FREE_SPACE;
- 	log->last_checkpoint = cp;
-+	log->next_checkpoint = cp;
- 
- 	__free_page(page);
- 
+@@ -1156,6 +1156,7 @@ create:
+ 	if (create_super) {
+ 		log->last_cp_seq = prandom_u32();
+ 		cp = 0;
++		r5l_log_write_empty_meta_block(log, cp, log->last_cp_seq);
+ 		/*
+ 		 * Make sure super points to correct address. Log might have
+ 		 * data very soon. If super hasn't correct log tail address,
 -- 
 2.7.4
 
