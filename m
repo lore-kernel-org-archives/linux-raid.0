@@ -1,62 +1,137 @@
-From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: [PATCH] md: report 'write_pending' state when array in sync
-Date: Mon, 24 Oct 2016 12:47:28 +0200
-Message-ID: <1477306048-26097-1-git-send-email-tomasz.majchrzak@intel.com>
+From: Santiago DIEZ <santiago.diez@caoba.fr>
+Subject: Re: How to fix mistake on raid: mdadm create instead of assemble?
+Date: Mon, 24 Oct 2016 15:02:53 +0200
+Message-ID: <CAJh8RqW0aK-BeEENRFHk+Oz1u5K+2msbroEpiRm4hAMrBGq6NQ@mail.gmail.com>
+References: <CAJh8RqUaT_D3GEkj9dWGY5d4e4icUKzyidV2JTVToKN=MpCRyQ@mail.gmail.com>
+ <20161008123040.GA4603@metamorpher.de> <57FAC73A.6020603@youngman.org.uk>
+ <CAJh8RqU7kcTrp_1Rgorx02OR5H5bm-a8=DSvQz-Bkrg7S3357w@mail.gmail.com> <20161021223524.GB105663@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20161021223524.GB105663@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@kernel.org, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+To: Shaohua Li <shli@kernel.org>
+Cc: Linux Raid LIST <linux-raid@vger.kernel.org>, songliubraving@fb.com, Jes.Sorensen@redhat.com
 List-Id: linux-raid.ids
 
-If there is a bad block on a disk and there is a recovery performed from
-this disk, the same bad block is reported for a new disk. It involves
-setting MD_CHANGE_PENDING flag in rdev_set_badblocks. For external
-metadata this flag is not being cleared as array state is reported as
-'clean'. The read request to bad block in RAID5 array gets stuck as it
-is waiting for a flag to be cleared - as per commit c3cce6cda162
-("md/raid5: ensure device failure recorded before write request
-returns.").
+Fantastic! I ran the following command:
 
-The meaning of MD_CHANGE_PENDING and MD_CHANGE_CLEAN flags has been
-clarified in commit 070dc6dd7103 ("md: resolve confusion of
-MD_CHANGE_CLEAN"), however MD_CHANGE_PENDING flag has been used in
-personality error handlers since and it doesn't fully comply with
-initial purpose. It was supposed to notify that write request is about
-to start, however now it is also used to request metadata update.
-Initially (in md_allow_write, md_write_start) MD_CHANGE_PENDING flag has
-been set and in_sync has been set to 0 at the same time. Error handlers
-just set the flag without modifying in_sync value. Sysfs array state is
-a single value so now it reports 'clean' when MD_CHANGE_PENDING flag is
-set and in_sync is set to 1. Userspace has no idea it is expected to
-take some action.
+mdadm --assemble /dev/md10 --verbose --force --run /dev/loop0
+/dev/loop1 /dev/loop2
 
-Swap the order that array state is checked so 'write_pending' is
-reported ahead of 'clean' ('write_pending' is a misleading name but it
-is too late to rename it now).
+and it returned
 
-Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
----
- drivers/md/md.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+mdadm: looking for devices for /dev/md10
+mdadm: /dev/loop0 is identified as a member of /dev/md10, slot 0.
+mdadm: /dev/loop1 is identified as a member of /dev/md10, slot 1.
+mdadm: /dev/loop2 is identified as a member of /dev/md10, slot 2.
+mdadm: forcing event count in /dev/loop0(0) from 81589 upto 81626
+mdadm: forcing event count in /dev/loop2(2) from 81589 upto 81626
+mdadm: added /dev/loop1 to /dev/md10 as 1
+mdadm: added /dev/loop2 to /dev/md10 as 2
+mdadm: no uptodate device for slot 6 of /dev/md10
+mdadm: added /dev/loop0 to /dev/md10 as 0
+mdadm: /dev/md10 has been started with 3 drives (out of 4).
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 457b538..48f25d8 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -3887,10 +3887,10 @@ array_state_show(struct mddev *mddev, char *page)
- 			st = read_auto;
- 			break;
- 		case 0:
--			if (mddev->in_sync)
--				st = clean;
--			else if (test_bit(MD_CHANGE_PENDING, &mddev->flags))
-+			if (test_bit(MD_CHANGE_PENDING, &mddev->flags))
- 				st = write_pending;
-+			else if (mddev->in_sync)
-+				st = clean;
- 			else if (mddev->safemode)
- 				st = active_idle;
- 			else
--- 
-1.8.3.1
+I can mount /dev/md10 and I have access to my data.
 
+Now that I know my data is safe.
+I need to restart the original array on the server.
+The array is completely deactivated on the original server.
+The company that I rent the dedicated server from is waiting for my GO
+to replace disk sdd with a new one.
+I'm giving then the GO now.
+After I reboot the server, what is it I need to do to rebuild sdd as
+the fourth disk of the array?
+
+Regards
+-------------------------
+Santiago DIEZ
+Quark Systems & CAOBA
+23 rue du Buisson Saint-Louis, 75010 Paris
+-------------------------
+
+
+On Sat, Oct 22, 2016 at 12:35 AM, Shaohua Li <shli@kernel.org> wrote:
+> On Fri, Oct 21, 2016 at 10:45:10AM +0200, Santiago DIEZ wrote:
+>> Hi,
+>>
+>> Thanks Andreas,
+>>
+>> Yes apparently, 3/4 of the original disks seem to be safe. But I'm
+>> terrified at the idea of doing something wrong assembling them.
+>> Incidentally, I indeed did a mistake trying to assemble the ddrescue
+>> images of the 3 safe disks. I tried to create again with proper
+>> metadata and chunck but it did not work. I'm still scared at the idea
+>> of restarting the original raid. I'm currently ddrescuing again the 3
+>> partitions to then try and *assemble* them rather than *create*.
+>>
+>>
+>> Thanks Wol,
+>>
+>> I use loop devices because I work on partition images, not on actual partitions:
+>> I use ddrescue to copy data from /dev/sd[abc]10 to
+>> some.other.server:/home/sd[abc].img
+>> Then I go to some.other.server and turn the images into loop devices :
+>> losetup /dev/loop0 /home/sda10.img
+>> losetup /dev/loop1 /home/sdb10.img
+>> losetup /dev/loop2 /home/sdc10.img
+>> Then I tried to created the raid, it worked but as I said, the
+>> filesystem was unreadable.
+>> I know the idea of using loop devices works because I tested it before.
+>> I'm doing the whole procedure all over again (takes 5 days to ddrescue
+>> the 3 partitions to another server) and then I will use the command
+>> you recommended :
+>> mdadm --assemble /dev/md0 /dev/loop0 /dev/loop1 /dev/loop2 --force
+>>
+>>
+>> Will keep you posted
+>>
+>> -------------------------
+>> Santiago DIEZ
+>> Quark Systems & CAOBA
+>> 23 rue du Buisson Saint-Louis, 75010 Paris
+>> -------------------------
+>>
+>> On Mon, Oct 10, 2016 at 12:39 AM, Wols Lists <antlists@youngman.org.uk> wrote:
+>> >
+>> > On 08/10/16 13:30, Andreas Klauer wrote:
+>> > > On Fri, Oct 07, 2016 at 05:37:32PM +0200, Santiago DIEZ wrote:
+>> > >> > First thing I did is ddrescue the remaining partitions sd[abc]10 .
+>> > >> > ddrescue did not stumble into any read error so I assume all remaining
+>> > >> > partitions are perfectly safe.
+>> > > So ... don't you still have a good copy?
+>> > >
+>> > > You only killed one of them, right? Did not make same mistake twice?
+>> > >
+>> > >> > There comes my mistake: I ran the --create command instead of --assemble :
+>> > >> >
+>> > >> > ================================================================================
+>> > >> > # mdadm --create --verbose /dev/md1 --raid-devices=4 --level=raid5
+>> > >> > --run --readonly /dev/loop0 /dev/loop1 /dev/loop2 missing
+>> >
+>> > One oddity I've noticed. You've created the array using loop devices.
+>> > What are these?
+>> >
+>> > The reason I ask is that using loopback devices is a standard technique
+>> > for rebuilding a damaged array, specifically to prevent md from actually
+>> > writing to the drive. So is it possible that "mdadm --create" only wrote
+>> > to ram, and a reboot will recover your ddrescue copies untouched?
+>> >
+>> > My raid-fu isn't enough to tell me whether I'm right or not ... :-)
+>> >
+>> > If necessary you'll have to do another ddrescue from the original
+>> > drives, and you should then be able to assemble the array from the
+>> > copies. Don't use "missing", use "--force" and you should get a working,
+>> > degraded, array to which you can add a new drive and rebuild the array.
+>> >
+>> > mdadm --assemble /dev/md0 /dev/sd[efg]10 --force
+>> >
+>> > if I'm right ... so long as it's the copies, you can always recover
+>> > again from the original disks, and if there's a problem with the copies
+>> > mdadm should complain when it assembles the array.
+>
+> Hmm, those commands work for me. I'm adding Song and Jes if they have ideas.
+>
+> Thanks,
+> Shaohua
