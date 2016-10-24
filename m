@@ -1,62 +1,84 @@
-From: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
-Subject: [PATCH] md/raid5: write an empty meta-block when creating log super-block
-Date: Mon, 24 Oct 2016 16:15:59 +0800
-Message-ID: <1477296959-20123-1-git-send-email-liuzhengyuan@kylinos.cn>
+From: Pawel Baldysiak <pawel.baldysiak@intel.com>
+Subject: [PATCH v2] IMSM: Add warning message when x8-type device is used
+Date: Mon, 24 Oct 2016 10:19:52 +0200
+Message-ID: <1477297192-5646-1-git-send-email-pawel.baldysiak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: shli@kernel.org
-Cc: shli@fb.com, songliubraving@fb.com, linux-raid@vger.kernel.org, liuzhengyuang521@gmail.com
+To: jes.sorensen@redhat.com
+Cc: linux-raid@vger.kernel.org, Pawel Baldysiak <pawel.baldysiak@intel.com>
 List-Id: linux-raid.ids
 
-If superblock points to an invalid meta block, r5l_load_log will set
-create_super with true and create an new superblock, this runtime path
-would always happen if we do no writing I/O to this array since it was
-created. Writing an empty meta block could avoid this unnecessary
-action at the first time we created log superblock.
+This patch adds the warning message when x8-type device
+is used with IMSM metadata. x8 device is a special
+NVMe drive - two of them on a single PCIe card.
+This card could be a single point of failure for
+RAID levels different than RAID0. x8 devices have
+serial number ending with "-A/-B" or "-1/-2".
 
-Another reason is for the corretness of log recovery. Currently we have
-bellow code to guarantee log revocery to be correct.
-
-        if (ctx.seq > log->last_cp_seq + 1) {
-                int ret;
-
-                ret = r5l_log_write_empty_meta_block(log, ctx.pos, ctx.seq + 10);
-                if (ret)
-                        return ret;
-                log->seq = ctx.seq + 11;
-                log->log_start = r5l_ring_add(log, ctx.pos, BLOCK_SECTORS);
-                r5l_write_super(log, ctx.pos);
-        } else {
-                log->log_start = ctx.pos;
-                log->seq = ctx.seq;
-        }
-
-If we just created a array with a journal device, log->log_start and
-log->last_checkpoint should all be 0, then we write three meta block
-which are valid except mid one and supposed crash happened. The ctx.seq
-would equal to log->last_cp_seq + 1 and log->log_start would be set to
-position of mid invalid meta block after we did a recovery, this will
-lead to problems which could be avoided with this patch.
-
-Signed-off-by: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
+Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- drivers/md/raid5-cache.c | 1 +
- 1 file changed, 1 insertion(+)
+ super-intel.c | 44 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 44 insertions(+)
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 998ea00..981f855 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -1156,6 +1156,7 @@ create:
- 	if (create_super) {
- 		log->last_cp_seq = prandom_u32();
- 		cp = 0;
-+		r5l_log_write_empty_meta_block(log, cp, log->last_cp_seq);
- 		/*
- 		 * Make sure super points to correct address. Log might have
- 		 * data very soon. If super hasn't correct log tail address,
+diff --git a/super-intel.c b/super-intel.c
+index 5c6ab05..700cc61 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -5139,9 +5139,53 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
+ 	rv = imsm_read_serial(fd, devname, dd->serial);
+ 	if (rv) {
+ 		pr_err("failed to retrieve scsi serial, aborting\n");
++		if (dd->devname)
++			free(dd->devname);
+ 		free(dd);
+ 		abort();
+ 	}
++	if (super->hba && ((super->hba->type == SYS_DEV_NVME) ||
++	   (super->hba->type == SYS_DEV_VMD))) {
++		int i;
++		char *devpath = diskfd_to_devpath(fd);
++		char controller_path[PATH_MAX];
++
++		if (!devpath) {
++			pr_err("failed to get devpath, aborting\n");
++			if (dd->devname)
++				free(dd->devname);
++			free(dd);
++			return 1;
++		}
++
++		snprintf(controller_path, PATH_MAX-1, "%s/device", devpath);
++		free(devpath);
++
++		if (devpath_to_vendor(controller_path) == 0x8086) {
++			/*
++			 * If Intel's NVMe drive has serial ended with
++			 * "-A","-B","-1" or "-2" it means that this is "x8"
++			 * device (double drive on single PCIe card).
++			 * User should be warned about potential data loss.
++			 */
++			for (i = MAX_RAID_SERIAL_LEN-1; i > 0; i--) {
++				/* Skip empty character at the end */
++				if (dd->serial[i] == 0)
++					continue;
++
++				if (((dd->serial[i] == 'A') ||
++				   (dd->serial[i] == 'B') ||
++				   (dd->serial[i] == '1') ||
++				   (dd->serial[i] == '2')) &&
++				   (dd->serial[i-1] == '-'))
++					pr_err("\tThe action you are about to take may put your data at risk.\n"
++						"\tPlease note that x8 devices may consist of two separate x4 devices "
++						"located on a single PCIe port.\n"
++						"\tRAID 0 is the only supported configuration for this type of x8 device.\n");
++				break;
++			}
++		}
++	}
+ 
+ 	get_dev_size(fd, NULL, &size);
+ 	/* clear migr_rec when adding disk to container */
 -- 
 2.7.4
-
-
 
