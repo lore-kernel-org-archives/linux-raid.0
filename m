@@ -1,58 +1,62 @@
 From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: [PATCH] imsm: load migration record from right disk
-Date: Mon, 24 Oct 2016 12:00:17 +0200
-Message-ID: <1477303217-7968-1-git-send-email-tomasz.majchrzak@intel.com>
+Subject: [PATCH] md: report 'write_pending' state when array in sync
+Date: Mon, 24 Oct 2016 12:47:28 +0200
+Message-ID: <1477306048-26097-1-git-send-email-tomasz.majchrzak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Jes.Sorensen@redhat.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Cc: shli@kernel.org, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
-Migration record is only stored on disks in first and second metadata
-slot. The function to load the record incorrectly passes disk slot as
-disk index. If rebuilt has taken place for a container, disk slot
-doesn't match disk index so it causes migration record to be read from a
-disk it has not been written to. As a result reshape operation fails.
+If there is a bad block on a disk and there is a recovery performed from
+this disk, the same bad block is reported for a new disk. It involves
+setting MD_CHANGE_PENDING flag in rdev_set_badblocks. For external
+metadata this flag is not being cleared as array state is reported as
+'clean'. The read request to bad block in RAID5 array gets stuck as it
+is waiting for a flag to be cleared - as per commit c3cce6cda162
+("md/raid5: ensure device failure recorded before write request
+returns.").
+
+The meaning of MD_CHANGE_PENDING and MD_CHANGE_CLEAN flags has been
+clarified in commit 070dc6dd7103 ("md: resolve confusion of
+MD_CHANGE_CLEAN"), however MD_CHANGE_PENDING flag has been used in
+personality error handlers since and it doesn't fully comply with
+initial purpose. It was supposed to notify that write request is about
+to start, however now it is also used to request metadata update.
+Initially (in md_allow_write, md_write_start) MD_CHANGE_PENDING flag has
+been set and in_sync has been set to 0 at the same time. Error handlers
+just set the flag without modifying in_sync value. Sysfs array state is
+a single value so now it reports 'clean' when MD_CHANGE_PENDING flag is
+set and in_sync is set to 1. Userspace has no idea it is expected to
+take some action.
+
+Swap the order that array state is checked so 'write_pending' is
+reported ahead of 'clean' ('write_pending' is a misleading name but it
+is too late to rename it now).
 
 Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 ---
- super-intel.c | 12 +++---------
- 1 file changed, 3 insertions(+), 9 deletions(-)
+ drivers/md/md.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c
-index ac3330a..4859950 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -2656,19 +2656,12 @@ static int load_imsm_migr_rec(struct intel_super *super, struct mdinfo *info)
- 	*/
- 	if (dev == NULL)
- 		return -2;
--	map = get_imsm_map(dev, MAP_0);
- 
- 	if (info) {
- 		for (sd = info->devs ; sd ; sd = sd->next) {
--			/* skip spare and failed disks
--			 */
--			if (sd->disk.raid_disk < 0)
--				continue;
- 			/* read only from one of the first two slots */
--			if (map)
--				slot = get_imsm_disk_slot(map,
--							  sd->disk.raid_disk);
--			if (map == NULL || slot > 1 || slot < 0)
-+			if ((sd->disk.raid_disk < 0) ||
-+			    (sd->disk.raid_disk > 1))
- 				continue;
- 
- 			sprintf(nm, "%d:%d", sd->disk.major, sd->disk.minor);
-@@ -2678,6 +2671,7 @@ static int load_imsm_migr_rec(struct intel_super *super, struct mdinfo *info)
- 		}
- 	}
- 	if (fd < 0) {
-+		map = get_imsm_map(dev, MAP_0);
- 		for (dl = super->disks; dl; dl = dl->next) {
- 			/* skip spare and failed disks
- 			*/
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 457b538..48f25d8 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -3887,10 +3887,10 @@ array_state_show(struct mddev *mddev, char *page)
+ 			st = read_auto;
+ 			break;
+ 		case 0:
+-			if (mddev->in_sync)
+-				st = clean;
+-			else if (test_bit(MD_CHANGE_PENDING, &mddev->flags))
++			if (test_bit(MD_CHANGE_PENDING, &mddev->flags))
+ 				st = write_pending;
++			else if (mddev->in_sync)
++				st = clean;
+ 			else if (mddev->safemode)
+ 				st = active_idle;
+ 			else
 -- 
 1.8.3.1
 
