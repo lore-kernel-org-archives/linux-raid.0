@@ -1,51 +1,68 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: data loss+inode recovery using RAID6 write journal
-Date: Tue, 25 Oct 2016 13:36:44 +0100
-Message-ID: <580F51DC.3010308@youngman.org.uk>
-References: <20161024235505.rb4fucq24ybbn5aq@schwarzgerat.orthanc>
+From: "=?utf-8?B?Wmhlbmd5dWFuIExpdQ==?=" <liuzhengyuan@kylinos.cn>
+Subject: Re: [PATCH] md/raid5: write an empty meta-block when creating logsuper-block
+Date: Tue, 25 Oct 2016 20:43:50 +0800
+Message-ID: <tencent_048678816CFA01ED3101C078@qq.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161024235505.rb4fucq24ybbn5aq@schwarzgerat.orthanc>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nick Black <dankamongmen@gmail.com>, linux-raid@vger.kernel.org
+To: =?utf-8?B?U2hhb2h1YSBMaQ==?= <shli@kernel.org>
+Cc: =?utf-8?B?c2hsaQ==?= <shli@fb.com>, =?utf-8?B?U29uZyBMaXU=?= <songliubraving@fb.com>, =?utf-8?B?bGludXgtcmFpZA==?= <linux-raid@vger.kernel.org>, =?utf-8?B?bGl1emhlbmd5dWFuZzUyMQ==?= <liuzhengyuang521@gmail.com>
 List-Id: linux-raid.ids
 
-On 25/10/16 00:55, Nick Black wrote:
-> I moved a ~20GB tarball from my home directory (located on another
-> device, a NVMe md RAID1) to /media/trap/backups. The mv completed
-> successfully. A short time after that, I hard rebooted the machine
-> due to X lockup (I'm experimenting with compiz). By "short time", I
-> mean "possibly within the time window before 20GB could be written
-> out to the backing store, but I'm unsure about that". Upon restart,
-> the machine engaged in minutes of disk activity, spat out some fsck
-> inode recovery messages (I'm trying to find these in my logs), and
-> finally mounted the filesystem. The moved file is nowhere to be
-> found.
+QWZ0ZXIgZGlzY3Vzc2lvbiB3aXRoIG15IGNvbGxlYWd1ZSwgSSB0aGluayB0aGVyZSBpcyBz
+dGlsbCBhIHByb2JsZW0gdGhhdA0KbWF5IGhhcHBlbiB2ZXJ5IHVubGlrZWx5LlRoZSBzdXBl
+cmJsb2NrIHNob3VsZCBwb2ludCB0byB0aGUgbGFzdCBtZXRhDQpibG9jayB3ZSBoYXZlIHdy
+aXR0ZW4gYWZ0ZXIgbG9nIHJlY2xhaW0gb3IgcG9pbnQgdG8gdGhlIGVtdHB5IG1ldGEgYmxv
+Y2sNCmFmdGVyIGxvZyByZWNvdmVyeSwganVzdCBjb25zaWRlciB3ZSB3cml0ZSBzb21lIG1l
+dGEgYmxvY2sgYmVoaW5kIHRoZQ0Kc3VwZXJibG9jayBwb3NpdGlvbiBhbmQgc3VwcG9zZSBj
+cmFzaCBoYXBwZW5zLiBJZiB0aGUgZmlyc3QgbWV0YSBibG9jayB3ZQ0KaGF2ZSB3cml0dGVu
+IG5laWdoYm9yaW5nIHRoZSBzdXBlcmJsb2NrIHBvc2l0aW9uIGlzIGludmFsaWQsICBjdHgu
+c2VxIHdvdWxkIA0KYWxzbyBlcXVhbCB0byBsYXN0X2NwX3NlcSsxIGFmdGVyIHdlIGRpZCBh
+IHJlY292ZXJ5IC4gU28gdGhlIHNhZmVzdCB3YXkgaXMgDQp3ZSBhbHdheXMgd3JpdGUgYW4g
+ZW1wdHkgbWV0YSBibG9jayBhdCBjdHgucG9zIG5vIG1hdHRlciBob3cgbXVjaA0KY3R4LnJl
+cSBpcyBtb3JlIHRoYW4gbGFzdF9jcF9zZXEgYWZ0ZXIgd2UgZGlkIGEgcmVjb3ZlcnkuIA0K
+SG93IGRvIHlvdSB0aGluaywgU2hhb2h1YT8gSWYgaXQgaXMgbmVjZXNzYXJ5LCBJJ2QgcmV2
+ZXJ0IHRoaXMgcGF0Y2ggYW5kDQpyZXNlbmQgb25lLg0KDQotLS0tLS0tLS0tLS0tLS0tLS0g
+T3JpZ2luYWwgLS0tLS0tLS0tLS0tLS0tLS0tDQpGcm9tOiAgIlNoYW9odWEgTGkiPHNobGlA
+a2VybmVsLm9yZz47DQpEYXRlOiAgVHVlLCBPY3QgMjUsIDIwMTYgMDU6MjMgQU0NClRvOiAg
+IlpoZW5neXVhbiBMaXUiPGxpdXpoZW5neXVhbkBreWxpbm9zLmNuPjsNCkNjOiAgInNobGki
+PHNobGlAZmIuY29tPjsgIlNvbmcgTGl1Ijxzb25nbGl1YnJhdmluZ0BmYi5jb20+OyAibGlu
+dXgtcmFpZCI8bGludXgtcmFpZEB2Z2VyLmtlcm5lbC5vcmc+OyAibGl1emhlbmd5dWFuZzUy
+MSI8bGl1emhlbmd5dWFuZzUyMUBnbWFpbC5jb20+Ow0KU3ViamVjdDogIFJlOiBbUEFUQ0hd
+IG1kL3JhaWQ1OiB3cml0ZSBhbiBlbXB0eSBtZXRhLWJsb2NrIHdoZW4gY3JlYXRpbmcgbG9n
+c3VwZXItYmxvY2sNCiANCk9uIE1vbiwgT2N0IDI0LCAyMDE2IGF0IDA0OjE1OjU5UE0gKzA4
+MDAsIFpoZW5neXVhbiBMaXUgd3JvdGU6DQo+IElmIHN1cGVyYmxvY2sgcG9pbnRzIHRvIGFu
+IGludmFsaWQgbWV0YSBibG9jaywgcjVsX2xvYWRfbG9nIHdpbGwgc2V0DQo+IGNyZWF0ZV9z
+dXBlciB3aXRoIHRydWUgYW5kIGNyZWF0ZSBhbiBuZXcgc3VwZXJibG9jaywgdGhpcyBydW50
+aW1lIHBhdGgNCj4gd291bGQgYWx3YXlzIGhhcHBlbiBpZiB3ZSBkbyBubyB3cml0aW5nIEkv
+TyB0byB0aGlzIGFycmF5IHNpbmNlIGl0IHdhcw0KPiBjcmVhdGVkLiBXcml0aW5nIGFuIGVt
+cHR5IG1ldGEgYmxvY2sgY291bGQgYXZvaWQgdGhpcyB1bm5lY2Vzc2FyeQ0KPiBhY3Rpb24g
+YXQgdGhlIGZpcnN0IHRpbWUgd2UgY3JlYXRlZCBsb2cgc3VwZXJibG9jay4NCj4gDQo+IEFu
+b3RoZXIgcmVhc29uIGlzIGZvciB0aGUgY29ycmV0bmVzcyBvZiBsb2cgcmVjb3ZlcnkuIEN1
+cnJlbnRseSB3ZSBoYXZlDQo+IGJlbGxvdyBjb2RlIHRvIGd1YXJhbnRlZSBsb2cgcmV2b2Nl
+cnkgdG8gYmUgY29ycmVjdC4NCj4gDQo+ICAgICAgICAgaWYgKGN0eC5zZXEgPiBsb2ctPmxh
+c3RfY3Bfc2VxICsgMSkgew0KPiAgICAgICAgICAgICAgICAgaW50IHJldDsNCj4gDQo+ICAg
+ICAgICAgICAgICAgICByZXQgPSByNWxfbG9nX3dyaXRlX2VtcHR5X21ldGFfYmxvY2sobG9n
+LCBjdHgucG9zLCBjdHguc2VxICsgMTApOw0KPiAgICAgICAgICAgICAgICAgaWYgKHJldCkN
+Cj4gICAgICAgICAgICAgICAgICAgICAgICAgcmV0dXJuIHJldDsNCj4gICAgICAgICAgICAg
+ICAgIGxvZy0+c2VxID0gY3R4LnNlcSArIDExOw0KPiAgICAgICAgICAgICAgICAgbG9nLT5s
+b2dfc3RhcnQgPSByNWxfcmluZ19hZGQobG9nLCBjdHgucG9zLCBCTE9DS19TRUNUT1JTKTsN
+Cj4gICAgICAgICAgICAgICAgIHI1bF93cml0ZV9zdXBlcihsb2csIGN0eC5wb3MpOw0KPiAg
+ICAgICAgIH0gZWxzZSB7DQo+ICAgICAgICAgICAgICAgICBsb2ctPmxvZ19zdGFydCA9IGN0
+eC5wb3M7DQo+ICAgICAgICAgICAgICAgICBsb2ctPnNlcSA9IGN0eC5zZXE7DQo+ICAgICAg
+ICAgfQ0KPiANCj4gSWYgd2UganVzdCBjcmVhdGVkIGEgYXJyYXkgd2l0aCBhIGpvdXJuYWwg
+ZGV2aWNlLCBsb2ctPmxvZ19zdGFydCBhbmQNCj4gbG9nLT5sYXN0X2NoZWNrcG9pbnQgc2hv
+dWxkIGFsbCBiZSAwLCB0aGVuIHdlIHdyaXRlIHRocmVlIG1ldGEgYmxvY2sNCj4gd2hpY2gg
+YXJlIHZhbGlkIGV4Y2VwdCBtaWQgb25lIGFuZCBzdXBwb3NlZCBjcmFzaCBoYXBwZW5lZC4g
+VGhlIGN0eC5zZXENCj4gd291bGQgZXF1YWwgdG8gbG9nLT5sYXN0X2NwX3NlcSArIDEgYW5k
+IGxvZy0+bG9nX3N0YXJ0IHdvdWxkIGJlIHNldCB0bw0KPiBwb3NpdGlvbiBvZiBtaWQgaW52
+YWxpZCBtZXRhIGJsb2NrIGFmdGVyIHdlIGRpZCBhIHJlY292ZXJ5LCB0aGlzIHdpbGwNCj4g
+bGVhZCB0byBwcm9ibGVtcyB3aGljaCBjb3VsZCBiZSBhdm9pZGVkIHdpdGggdGhpcyBwYXRj
+aC4NCg0KVGhpcyB3b3VsZCBiZSB2ZXJ5IHVubGlrZWx5LCBidXQgYmV0dGVyIHRvIGZpeC4g
+QXBwbGllZCwgdGhhbmtzIQ==
 
-I can't see what filesystem you're using. It could easily be down to that.
 
-If the reboot interrupted the "write to disk" before the directory
-containing the i-node had been flushed, that would explain your
-observations, I believe.
 
-Personally, I think that explanation is actually unlikely, as the
-kernel devs go to great lengths to preserve metadata, so you're more
-likely to get the situation where the file exists but is empty.
-
-This ties in with my impression of the kernel devs - especially the
-file system guys - placing great emphasis on protecting the computer
-at the expense of the data the user stores there. imho that's daft,
-but hey they're system guys, they protect the system. "We can reboot
-the system in a clean state in one hour instead of 24 now we no longer
-need a fsck". They forget that that 24 hours gave the user a usable
-system, now the admins need to run a 72-hour user-space integrity
-check before they hand the system back ... :-(
-
-I guess what I'm saying is, don't assume it's the raid, as it could
-well be something else entirely (although there are probably plenty of
-people here who could help you with that).
-
-Cheers,
-Wol
