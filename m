@@ -1,97 +1,42 @@
-From: Yilong Ren <yilongx.ren@intel.com>
-Subject: Re: [PATCH mdadm] raid6check.c: fix "misleading-indentation" error
-Date: Tue, 25 Oct 2016 21:21:45 +0800
-Message-ID: <20161025132145.GE19823@localhost.localdomain>
-References: <1477374077-4195-1-git-send-email-yilongx.ren@intel.com>
- <wrfjmvhsskou.fsf@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH] md: wake up personality thread after array state update
+Date: Tue, 25 Oct 2016 17:07:08 +0200
+Message-ID: <1477408028-3694-1-git-send-email-tomasz.majchrzak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <wrfjmvhsskou.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: LKP <lkp@eclists.intel.com>, NeilBrown <neilb@suse.com>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: shli@kernel.org, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
-On Tue, Oct 25, 2016 at 08:00:01AM -0400, Jes Sorensen wrote:
-> renyl <yilongx.ren@intel.com> writes:
-> > From: Yilong Ren <yilongx.ren@intel.com>
-> >
-> > To fix the following error info:
-> >
-> > root@vm-lkp-nex04-8G-7 /tmp/mdadm# make test
-> > cc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter -ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" -DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" -DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" -DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DNO_COROSYNC -DNO_DLM -DVERSION=\"3.4-43-g1dcee1c\" -DVERS_DATE="\"06th April 2016\"" -DUSE_PTHREADS -DBINDIR=\"/sbin\"  -c -o raid6check.o raid6check.c
-> > raid6check.c: In function 'manual_repair':
-> > raid6check.c:267:4: error: this 'else' clause does not guard... [-Werror=misleading-indentation]
-> >     else
-> >     ^~~~
-> > raid6check.c:269:5: note: ...this statement, but the latter is misleadingly indented as if it is guarded by the 'else'
-> >      printf("Repairing D(%d) and P\n", failed_data);
-> >      ^~~~~~
-> > cc1: all warnings being treated as errors
-> > <builtin>: recipe for target 'raid6check.o' failed
-> > make: *** [raid6check.o] Error 1
-> > root@vm-lkp-nex04-8G-7 /tmp/mdadm# 
-> >
-> >
-> > Cc: NeilBrown <neilb@suse.com>
-> > Cc: linux-raid <linux-raid@vger.kernel.org>
-> > Cc: LKP <lkp@eclists.intel.com>
-> > Signed-off-by: Yilong Ren <yilongx.ren@intel.com>
-> > ---
-> >  raid6check.c | 3 ++-
-> >  1 file changed, 2 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/raid6check.c b/raid6check.c
-> > index ad7ffe7..acfc9a3 100644
-> > --- a/raid6check.c
-> > +++ b/raid6check.c
-> > @@ -264,9 +264,10 @@ int manual_repair(int chunk_size, int syndrome_disks,
-> >  			int failed_data;
-> >  			if (failed_slot1 == -1)
-> >  				failed_data = failed_slot2;
-> > -			else
-> > +			else {
-> >  				failed_data = failed_slot1;
-> >  				printf("Repairing D(%d) and P\n", failed_data);
-> > +			}
-> >  			raid6_datap_recov(syndrome_disks+2, chunk_size,
-> >  					  failed_data, (uint8_t**)blocks, 1);
-> >  		} else {
-> 
-> Hi,
-> 
-> I suspect this patch is wrong and the code is meant to print in either
-> case.
+When raid1/raid10 array fails to write to one of the drives, the request
+is added to bio_end_io_list and finished by personality thread. The
+thread doesn't handle it as long as MD_CHANGE_PENDING flag is set. In
+case of external metadata this flag is cleared, however the thread is
+not woken up. It causes request to be blocked for few seconds (until
+another action on the array wakes up the thread) or to get stuck
+indefinitely.
 
-Oops, should like below:
+Wake up personality thread once MD_CHANGE_PENDING has been cleared.
+Moving 'restart_array' call after the flag is cleared it not a solution
+because in read-write mode the call doesn't wake up the thread.
 
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+---
+ drivers/md/md.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/raid6check.c b/raid6check.c
-index ad7ffe7..551f835 100644
---- a/raid6check.c
-+++ b/raid6check.c
-@@ -266,7 +266,8 @@ int manual_repair(int chunk_size, int syndrome_disks,
-                                failed_data = failed_slot2;
-                        else
-                                failed_data = failed_slot1;
--                               printf("Repairing D(%d) and P\n", failed_data);
-+
-+                       printf("Repairing D(%d) and P\n", failed_data);
-                        raid6_datap_recov(syndrome_disks+2, chunk_size,
-                                          failed_data, (uint8_t**)blocks, 1);
-                } else {
---
-
-will send v2 after Neil confirm this point, thanks.
-
-> 
-> Neil?
-> 
-> Cheers,
-> Jes
-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 5655f83..c17efaf 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -3930,6 +3930,7 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
+ 		if (st == active) {
+ 			restart_array(mddev);
+ 			clear_bit(MD_CHANGE_PENDING, &mddev->flags);
++			md_wakeup_thread(mddev->thread);
+ 			wake_up(&mddev->sb_wait);
+ 			err = 0;
+ 		} else /* st == clean */ {
 -- 
-Thanks
-Ren Yilong
+1.8.3.1
+
