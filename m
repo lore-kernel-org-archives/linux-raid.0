@@ -1,68 +1,53 @@
-From: "=?utf-8?B?Wmhlbmd5dWFuIExpdQ==?=" <liuzhengyuan@kylinos.cn>
-Subject: Re: [PATCH] md/raid5: write an empty meta-block when creating logsuper-block
-Date: Tue, 25 Oct 2016 20:43:50 +0800
-Message-ID: <tencent_048678816CFA01ED3101C078@qq.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: Problems with a RAID5 array
+Date: Tue, 25 Oct 2016 13:48:24 +0100
+Message-ID: <580F5498.40902@youngman.org.uk>
+References: <5C95474C-8A2A-4472-9629-2DD6B2143D28@GMAIL.COM>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5C95474C-8A2A-4472-9629-2DD6B2143D28@GMAIL.COM>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?utf-8?B?U2hhb2h1YSBMaQ==?= <shli@kernel.org>
-Cc: =?utf-8?B?c2hsaQ==?= <shli@fb.com>, =?utf-8?B?U29uZyBMaXU=?= <songliubraving@fb.com>, =?utf-8?B?bGludXgtcmFpZA==?= <linux-raid@vger.kernel.org>, =?utf-8?B?bGl1emhlbmd5dWFuZzUyMQ==?= <liuzhengyuang521@gmail.com>
+To: Nicolas Nicolaou <nicolaoun@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-QWZ0ZXIgZGlzY3Vzc2lvbiB3aXRoIG15IGNvbGxlYWd1ZSwgSSB0aGluayB0aGVyZSBpcyBz
-dGlsbCBhIHByb2JsZW0gdGhhdA0KbWF5IGhhcHBlbiB2ZXJ5IHVubGlrZWx5LlRoZSBzdXBl
-cmJsb2NrIHNob3VsZCBwb2ludCB0byB0aGUgbGFzdCBtZXRhDQpibG9jayB3ZSBoYXZlIHdy
-aXR0ZW4gYWZ0ZXIgbG9nIHJlY2xhaW0gb3IgcG9pbnQgdG8gdGhlIGVtdHB5IG1ldGEgYmxv
-Y2sNCmFmdGVyIGxvZyByZWNvdmVyeSwganVzdCBjb25zaWRlciB3ZSB3cml0ZSBzb21lIG1l
-dGEgYmxvY2sgYmVoaW5kIHRoZQ0Kc3VwZXJibG9jayBwb3NpdGlvbiBhbmQgc3VwcG9zZSBj
-cmFzaCBoYXBwZW5zLiBJZiB0aGUgZmlyc3QgbWV0YSBibG9jayB3ZQ0KaGF2ZSB3cml0dGVu
-IG5laWdoYm9yaW5nIHRoZSBzdXBlcmJsb2NrIHBvc2l0aW9uIGlzIGludmFsaWQsICBjdHgu
-c2VxIHdvdWxkIA0KYWxzbyBlcXVhbCB0byBsYXN0X2NwX3NlcSsxIGFmdGVyIHdlIGRpZCBh
-IHJlY292ZXJ5IC4gU28gdGhlIHNhZmVzdCB3YXkgaXMgDQp3ZSBhbHdheXMgd3JpdGUgYW4g
-ZW1wdHkgbWV0YSBibG9jayBhdCBjdHgucG9zIG5vIG1hdHRlciBob3cgbXVjaA0KY3R4LnJl
-cSBpcyBtb3JlIHRoYW4gbGFzdF9jcF9zZXEgYWZ0ZXIgd2UgZGlkIGEgcmVjb3ZlcnkuIA0K
-SG93IGRvIHlvdSB0aGluaywgU2hhb2h1YT8gSWYgaXQgaXMgbmVjZXNzYXJ5LCBJJ2QgcmV2
-ZXJ0IHRoaXMgcGF0Y2ggYW5kDQpyZXNlbmQgb25lLg0KDQotLS0tLS0tLS0tLS0tLS0tLS0g
-T3JpZ2luYWwgLS0tLS0tLS0tLS0tLS0tLS0tDQpGcm9tOiAgIlNoYW9odWEgTGkiPHNobGlA
-a2VybmVsLm9yZz47DQpEYXRlOiAgVHVlLCBPY3QgMjUsIDIwMTYgMDU6MjMgQU0NClRvOiAg
-IlpoZW5neXVhbiBMaXUiPGxpdXpoZW5neXVhbkBreWxpbm9zLmNuPjsNCkNjOiAgInNobGki
-PHNobGlAZmIuY29tPjsgIlNvbmcgTGl1Ijxzb25nbGl1YnJhdmluZ0BmYi5jb20+OyAibGlu
-dXgtcmFpZCI8bGludXgtcmFpZEB2Z2VyLmtlcm5lbC5vcmc+OyAibGl1emhlbmd5dWFuZzUy
-MSI8bGl1emhlbmd5dWFuZzUyMUBnbWFpbC5jb20+Ow0KU3ViamVjdDogIFJlOiBbUEFUQ0hd
-IG1kL3JhaWQ1OiB3cml0ZSBhbiBlbXB0eSBtZXRhLWJsb2NrIHdoZW4gY3JlYXRpbmcgbG9n
-c3VwZXItYmxvY2sNCiANCk9uIE1vbiwgT2N0IDI0LCAyMDE2IGF0IDA0OjE1OjU5UE0gKzA4
-MDAsIFpoZW5neXVhbiBMaXUgd3JvdGU6DQo+IElmIHN1cGVyYmxvY2sgcG9pbnRzIHRvIGFu
-IGludmFsaWQgbWV0YSBibG9jaywgcjVsX2xvYWRfbG9nIHdpbGwgc2V0DQo+IGNyZWF0ZV9z
-dXBlciB3aXRoIHRydWUgYW5kIGNyZWF0ZSBhbiBuZXcgc3VwZXJibG9jaywgdGhpcyBydW50
-aW1lIHBhdGgNCj4gd291bGQgYWx3YXlzIGhhcHBlbiBpZiB3ZSBkbyBubyB3cml0aW5nIEkv
-TyB0byB0aGlzIGFycmF5IHNpbmNlIGl0IHdhcw0KPiBjcmVhdGVkLiBXcml0aW5nIGFuIGVt
-cHR5IG1ldGEgYmxvY2sgY291bGQgYXZvaWQgdGhpcyB1bm5lY2Vzc2FyeQ0KPiBhY3Rpb24g
-YXQgdGhlIGZpcnN0IHRpbWUgd2UgY3JlYXRlZCBsb2cgc3VwZXJibG9jay4NCj4gDQo+IEFu
-b3RoZXIgcmVhc29uIGlzIGZvciB0aGUgY29ycmV0bmVzcyBvZiBsb2cgcmVjb3ZlcnkuIEN1
-cnJlbnRseSB3ZSBoYXZlDQo+IGJlbGxvdyBjb2RlIHRvIGd1YXJhbnRlZSBsb2cgcmV2b2Nl
-cnkgdG8gYmUgY29ycmVjdC4NCj4gDQo+ICAgICAgICAgaWYgKGN0eC5zZXEgPiBsb2ctPmxh
-c3RfY3Bfc2VxICsgMSkgew0KPiAgICAgICAgICAgICAgICAgaW50IHJldDsNCj4gDQo+ICAg
-ICAgICAgICAgICAgICByZXQgPSByNWxfbG9nX3dyaXRlX2VtcHR5X21ldGFfYmxvY2sobG9n
-LCBjdHgucG9zLCBjdHguc2VxICsgMTApOw0KPiAgICAgICAgICAgICAgICAgaWYgKHJldCkN
-Cj4gICAgICAgICAgICAgICAgICAgICAgICAgcmV0dXJuIHJldDsNCj4gICAgICAgICAgICAg
-ICAgIGxvZy0+c2VxID0gY3R4LnNlcSArIDExOw0KPiAgICAgICAgICAgICAgICAgbG9nLT5s
-b2dfc3RhcnQgPSByNWxfcmluZ19hZGQobG9nLCBjdHgucG9zLCBCTE9DS19TRUNUT1JTKTsN
-Cj4gICAgICAgICAgICAgICAgIHI1bF93cml0ZV9zdXBlcihsb2csIGN0eC5wb3MpOw0KPiAg
-ICAgICAgIH0gZWxzZSB7DQo+ICAgICAgICAgICAgICAgICBsb2ctPmxvZ19zdGFydCA9IGN0
-eC5wb3M7DQo+ICAgICAgICAgICAgICAgICBsb2ctPnNlcSA9IGN0eC5zZXE7DQo+ICAgICAg
-ICAgfQ0KPiANCj4gSWYgd2UganVzdCBjcmVhdGVkIGEgYXJyYXkgd2l0aCBhIGpvdXJuYWwg
-ZGV2aWNlLCBsb2ctPmxvZ19zdGFydCBhbmQNCj4gbG9nLT5sYXN0X2NoZWNrcG9pbnQgc2hv
-dWxkIGFsbCBiZSAwLCB0aGVuIHdlIHdyaXRlIHRocmVlIG1ldGEgYmxvY2sNCj4gd2hpY2gg
-YXJlIHZhbGlkIGV4Y2VwdCBtaWQgb25lIGFuZCBzdXBwb3NlZCBjcmFzaCBoYXBwZW5lZC4g
-VGhlIGN0eC5zZXENCj4gd291bGQgZXF1YWwgdG8gbG9nLT5sYXN0X2NwX3NlcSArIDEgYW5k
-IGxvZy0+bG9nX3N0YXJ0IHdvdWxkIGJlIHNldCB0bw0KPiBwb3NpdGlvbiBvZiBtaWQgaW52
-YWxpZCBtZXRhIGJsb2NrIGFmdGVyIHdlIGRpZCBhIHJlY292ZXJ5LCB0aGlzIHdpbGwNCj4g
-bGVhZCB0byBwcm9ibGVtcyB3aGljaCBjb3VsZCBiZSBhdm9pZGVkIHdpdGggdGhpcyBwYXRj
-aC4NCg0KVGhpcyB3b3VsZCBiZSB2ZXJ5IHVubGlrZWx5LCBidXQgYmV0dGVyIHRvIGZpeC4g
-QXBwbGllZCwgdGhhbmtzIQ==
+On 25/10/16 08:45, Nicolas Nicolaou wrote:
+> Hi all,
+> 
+> I am a newbie in the RAID field but i encountered some problems 
+> with my RAID5 configuration on a QNAP NAS machine. 
+> 
+> In particular i added a 3TB drive and the array seemed to be rebuilt 
+> automatically. Originally i had 3 3TB drives on it. 
+> The rebuilt finished and i was able to access my data. For some weird reason
+> one of the drives was not added and i tried to expand the RAID capacity. 
+> The expand failed but still no problems...
+> 
+> When i rebooted the system however the RAID became inactive and 
+> now i cannot access any of the data. 
+> 
+> Below you can see the mdadm —examine information for the 4 drives. 
+> 
+> I saw a thread that recreating the RAID may solve the issue 
+> (https://raid.wiki.kernel.org/index.php/RAID_Recovery). 
+> Before going to that path though i wanted to see your take. 
+> 
+Firstly, using "--force" is not necessarily a bad idea, though you want
+to avoid it if you can. Using "--create" is an absolutely crazy idea
+unless you are being hand-held by an expert. DO NOT attempt that on your
+own unless you really want to lose everything.
 
+Secondly, if you *are* going to be mad enough to try "--create", make
+sure you've run Phil's lsdrv utility and you have a hard copy of the
+output saved somewhere safe!
 
+Go back to the raid wiki, go to the home page, and read section 4, "When
+things go wrogn". Read the entire section. It includes the page you've
+referenced, but that's an old page that will be deprecated. It's a
+moderately safe bet that when the experts chime in, they will want a lot
+of the information that tells you to gather. And hopefully, working
+through this will give you a few clues yourself.
 
+Cheers,
+Wol
