@@ -1,40 +1,54 @@
-From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: [PATCH] raid5: revert commit 11367799f3d1
-Date: Tue, 25 Oct 2016 17:17:18 +0200
-Message-ID: <1477408638-4539-1-git-send-email-tomasz.majchrzak@intel.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] dm block manager: use do/while(0) for empty macros
+Date: Tue, 25 Oct 2016 17:54:10 +0200
+Message-ID: <20161025155434.21727-1-arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@kernel.org, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Alasdair Kergon <agk@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>, Joe Thornber <ejt@redhat.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Revert commit 11367799f3d1 ("md: Prevent IO hold during accessing to faulty
-raid5 array") as it doesn't comply with commit c3cce6cda162 ("md/raid5:
-ensure device failure recorded before write request returns."). That change
-is not required anymore as the problem is resolved by commit 16f889499a52
-("md: report 'write_pending' state when array in sync") - read request is
-stuck as array state is not reported correctly via sysfs attribute.
+make W=1 reports a new warning for the dm-block-manager:
 
-Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+drivers/md/persistent-data/dm-block-manager.c: In function ‘dm_bm_unlock’:
+drivers/md/persistent-data/dm-block-manager.c:598:3: error: suggest braces around empty body in an ‘else’ statement [-Werror=empty-body]
+
+This is completely harmless, but generally speaking it's a good idea to
+address this warning as it can often detect nasty bugs, and replacing
+empty macros with "do { } while (0)" is generally considered good style
+to make code more robust anyway.
+
+Fixes: f94bdb2e26b6 ("dm block manager: make block locking optional")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/md/raid5.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/md/persistent-data/dm-block-manager.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index f94472d..323d3c7 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4645,9 +4645,7 @@ finish:
- 	}
+diff --git a/drivers/md/persistent-data/dm-block-manager.c b/drivers/md/persistent-data/dm-block-manager.c
+index b619c383d88d..a6dde7cab458 100644
+--- a/drivers/md/persistent-data/dm-block-manager.c
++++ b/drivers/md/persistent-data/dm-block-manager.c
+@@ -306,13 +306,13 @@ static void report_recursive_bug(dm_block_t b, int r)
  
- 	if (!bio_list_empty(&s.return_bi)) {
--		if (test_bit(MD_CHANGE_PENDING, &conf->mddev->flags) &&
--				(s.failed <= conf->max_degraded ||
--					conf->mddev->external == 0)) {
-+		if (test_bit(MD_CHANGE_PENDING, &conf->mddev->flags))
- 			spin_lock_irq(&conf->device_lock);
- 			bio_list_merge(&conf->return_bi, &s.return_bi);
- 			spin_unlock_irq(&conf->device_lock);
+ #else  /* !CONFIG_DM_DEBUG_BLOCK_MANAGER_LOCKING */
+ 
+-#define bl_init(x)
++#define bl_init(x) do { } while (0)
+ #define bl_down_read(x) 0
+ #define bl_down_read_nonblock(x) 0
+-#define bl_up_read(x)
++#define bl_up_read(x) do { } while (0)
+ #define bl_down_write(x) 0
+-#define bl_up_write(x)
+-#define report_recursive_bug(x, y)
++#define bl_up_write(x) do { } while (0)
++#define report_recursive_bug(x, y) do { } while (0)
+ 
+ #endif /* CONFIG_DM_DEBUG_BLOCK_MANAGER_LOCKING */
+ 
 -- 
-1.8.3.1
+2.9.0
 
