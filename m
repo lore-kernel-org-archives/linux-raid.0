@@ -1,69 +1,51 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH mdadm] raid6check.c: fix "misleading-indentation" error
-Date: Tue, 25 Oct 2016 08:00:01 -0400
-Message-ID: <wrfjmvhsskou.fsf@redhat.com>
-References: <1477374077-4195-1-git-send-email-yilongx.ren@intel.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: data loss+inode recovery using RAID6 write journal
+Date: Tue, 25 Oct 2016 13:36:44 +0100
+Message-ID: <580F51DC.3010308@youngman.org.uk>
+References: <20161024235505.rb4fucq24ybbn5aq@schwarzgerat.orthanc>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1477374077-4195-1-git-send-email-yilongx.ren@intel.com> (renyl's
-        message of "Tue, 25 Oct 2016 13:41:17 +0800")
+In-Reply-To: <20161024235505.rb4fucq24ybbn5aq@schwarzgerat.orthanc>
 Sender: linux-raid-owner@vger.kernel.org
-To: renyl <yilongx.ren@intel.com>
-Cc: LKP <lkp@eclists.intel.com>, NeilBrown <neilb@suse.com>, linux-raid <linux-raid@vger.kernel.org>
+To: Nick Black <dankamongmen@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-renyl <yilongx.ren@intel.com> writes:
-> From: Yilong Ren <yilongx.ren@intel.com>
->
-> To fix the following error info:
->
-> root@vm-lkp-nex04-8G-7 /tmp/mdadm# make test
-> cc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter -ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" -DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" -DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" -DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DNO_COROSYNC -DNO_DLM -DVERSION=\"3.4-43-g1dcee1c\" -DVERS_DATE="\"06th April 2016\"" -DUSE_PTHREADS -DBINDIR=\"/sbin\"  -c -o raid6check.o raid6check.c
-> raid6check.c: In function 'manual_repair':
-> raid6check.c:267:4: error: this 'else' clause does not guard... [-Werror=misleading-indentation]
->     else
->     ^~~~
-> raid6check.c:269:5: note: ...this statement, but the latter is misleadingly indented as if it is guarded by the 'else'
->      printf("Repairing D(%d) and P\n", failed_data);
->      ^~~~~~
-> cc1: all warnings being treated as errors
-> <builtin>: recipe for target 'raid6check.o' failed
-> make: *** [raid6check.o] Error 1
-> root@vm-lkp-nex04-8G-7 /tmp/mdadm# 
->
->
-> Cc: NeilBrown <neilb@suse.com>
-> Cc: linux-raid <linux-raid@vger.kernel.org>
-> Cc: LKP <lkp@eclists.intel.com>
-> Signed-off-by: Yilong Ren <yilongx.ren@intel.com>
-> ---
->  raid6check.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/raid6check.c b/raid6check.c
-> index ad7ffe7..acfc9a3 100644
-> --- a/raid6check.c
-> +++ b/raid6check.c
-> @@ -264,9 +264,10 @@ int manual_repair(int chunk_size, int syndrome_disks,
->  			int failed_data;
->  			if (failed_slot1 == -1)
->  				failed_data = failed_slot2;
-> -			else
-> +			else {
->  				failed_data = failed_slot1;
->  				printf("Repairing D(%d) and P\n", failed_data);
-> +			}
->  			raid6_datap_recov(syndrome_disks+2, chunk_size,
->  					  failed_data, (uint8_t**)blocks, 1);
->  		} else {
+On 25/10/16 00:55, Nick Black wrote:
+> I moved a ~20GB tarball from my home directory (located on another
+> device, a NVMe md RAID1) to /media/trap/backups. The mv completed
+> successfully. A short time after that, I hard rebooted the machine
+> due to X lockup (I'm experimenting with compiz). By "short time", I
+> mean "possibly within the time window before 20GB could be written
+> out to the backing store, but I'm unsure about that". Upon restart,
+> the machine engaged in minutes of disk activity, spat out some fsck
+> inode recovery messages (I'm trying to find these in my logs), and
+> finally mounted the filesystem. The moved file is nowhere to be
+> found.
 
-Hi,
+I can't see what filesystem you're using. It could easily be down to that.
 
-I suspect this patch is wrong and the code is meant to print in either
-case.
+If the reboot interrupted the "write to disk" before the directory
+containing the i-node had been flushed, that would explain your
+observations, I believe.
 
-Neil?
+Personally, I think that explanation is actually unlikely, as the
+kernel devs go to great lengths to preserve metadata, so you're more
+likely to get the situation where the file exists but is empty.
+
+This ties in with my impression of the kernel devs - especially the
+file system guys - placing great emphasis on protecting the computer
+at the expense of the data the user stores there. imho that's daft,
+but hey they're system guys, they protect the system. "We can reboot
+the system in a clean state in one hour instead of 24 now we no longer
+need a fsck". They forget that that 24 hours gave the user a usable
+system, now the admins need to run a 72-hour user-space integrity
+check before they hand the system back ... :-(
+
+I guess what I'm saying is, don't assume it's the raid, as it could
+well be something else entirely (although there are probably plenty of
+people here who could help you with that).
 
 Cheers,
-Jes
+Wol
