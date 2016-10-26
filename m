@@ -1,43 +1,53 @@
-From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: [PATCH v2] raid5: revert commit 11367799f3d1
-Date: Wed, 26 Oct 2016 09:20:39 +0200
-Message-ID: <1477466439-1797-1-git-send-email-tomasz.majchrzak@intel.com>
+From: Yilong Ren <yilongx.ren@intel.com>
+Subject: [PATCH v2 mdadm] raid6check.c: fix "misleading-indentation" error
+Date: Wed, 26 Oct 2016 16:10:38 +0800
+Message-ID: <1477469438-62688-1-git-send-email-yilongx.ren@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@kernel.org, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: LKP <lkp@eclists.intel.com>, Yilong Ren <yilongx.ren@intel.com>, NeilBrown <neilb@suse.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Revert commit 11367799f3d1 ("md: Prevent IO hold during accessing to faulty
-raid5 array") as it doesn't comply with commit c3cce6cda162 ("md/raid5:
-ensure device failure recorded before write request returns."). That change
-is not required anymore as the problem is resolved by commit 16f889499a52
-("md: report 'write_pending' state when array in sync") - read request is
-stuck as array state is not reported correctly via sysfs attribute.
+To fix the following error info:
 
-Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+root@vm-lkp-nex04-8G-7 /tmp/mdadm# make test
+cc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter -ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" -DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" -DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" -DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DNO_COROSYNC -DNO_DLM -DVERSION=\"3.4-43-g1dcee1c\" -DVERS_DATE="\"06th April 2016\"" -DUSE_PTHREADS -DBINDIR=\"/sbin\"  -c -o raid6check.o raid6check.c
+raid6check.c: In function 'manual_repair':
+raid6check.c:267:4: error: this 'else' clause does not guard... [-Werror=misleading-indentation]
+    else
+    ^~~~
+raid6check.c:269:5: note: ...this statement, but the latter is misleadingly indented as if it is guarded by the 'else'
+     printf("Repairing D(%d) and P\n", failed_data);
+     ^~~~~~
+cc1: all warnings being treated as errors
+<builtin>: recipe for target 'raid6check.o' failed
+make: *** [raid6check.o] Error 1
+root@vm-lkp-nex04-8G-7 /tmp/mdadm# 
+
+
+Cc: NeilBrown <neilb@suse.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
+Cc: LKP <lkp@eclists.intel.com>
+Reviewed-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Yilong Ren <yilongx.ren@intel.com>
 ---
- drivers/md/raid5.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ raid6check.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-v2:
-	The previous patch was corrupted and didn't compile
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index f94472d..323d3c7 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4645,9 +4645,7 @@ finish:
- 	}
- 
- 	if (!bio_list_empty(&s.return_bi)) {
--		if (test_bit(MD_CHANGE_PENDING, &conf->mddev->flags) &&
--				(s.failed <= conf->max_degraded ||
--					conf->mddev->external == 0)) {
-+		if (test_bit(MD_CHANGE_PENDING, &conf->mddev->flags)) {
- 			spin_lock_irq(&conf->device_lock);
- 			bio_list_merge(&conf->return_bi, &s.return_bi);
- 			spin_unlock_irq(&conf->device_lock);
+diff --git a/raid6check.c b/raid6check.c
+index ad7ffe7..551f835 100644
+--- a/raid6check.c
++++ b/raid6check.c
+@@ -266,7 +266,8 @@ int manual_repair(int chunk_size, int syndrome_disks,
+ 				failed_data = failed_slot2;
+ 			else
+ 				failed_data = failed_slot1;
+-				printf("Repairing D(%d) and P\n", failed_data);
++
++			printf("Repairing D(%d) and P\n", failed_data);
+ 			raid6_datap_recov(syndrome_disks+2, chunk_size,
+ 					  failed_data, (uint8_t**)blocks, 1);
+ 		} else {
 -- 
-1.8.3.1
+2.1.4
 
