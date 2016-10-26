@@ -1,166 +1,74 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH 1/4] mdadm: bad block support for external metadata - initialization
-Date: Wed, 26 Oct 2016 14:00:47 -0400
-Message-ID: <wrfj4m3zkn1s.fsf@redhat.com>
-References: <1476968626-19233-1-git-send-email-tomasz.majchrzak@intel.com>
-        <20161020140220.GB17867@www5.open-std.org>
-        <20161020142611.GA23120@proton.igk.intel.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH] md/raid5: write an empty meta-block when creating
+ logsuper-block
+Date: Wed, 26 Oct 2016 11:35:52 -0700
+Message-ID: <20161026183552.hxx5zu2r4g4a46is@kernel.org>
+References: <tencent_048678816CFA01ED3101C078@qq.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161020142611.GA23120@proton.igk.intel.com> (Tomasz Majchrzak's
-        message of "Thu, 20 Oct 2016 16:26:11 +0200")
+Content-Disposition: inline
+In-Reply-To: <tencent_048678816CFA01ED3101C078@qq.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Cc: keld@keldix.com, linux-raid@vger.kernel.org
+To: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
+Cc: Song Liu <songliubraving@fb.com>, linux-raid <linux-raid@vger.kernel.org>, liuzhengyuang521 <liuzhengyuang521@gmail.com>
 List-Id: linux-raid.ids
 
-Tomasz Majchrzak <tomasz.majchrzak@intel.com> writes:
-> I cannot see how badblocks program is related to this patch. It is a generic
-> code for bad blocks support in IMSM metadata. It introduces 64-bit value for
-> sector address, the same size as in kernel. All it does is syncing kernel bad
-> block list with raid metadata.
->
-> Tomek
+On Tue, Oct 25, 2016 at 08:43:50PM +0800, Zhengyuan Liu wrote:
+> After discussion with my colleague, I think there is still a problem that
+> may happen very unlikely.The superblock should point to the last meta
+> block we have written after log reclaim or point to the emtpy meta block
+> after log recovery, just consider we write some meta block behind the
+> superblock position and suppose crash happens. If the first meta block we
+> have written neighboring the superblock position is invalid,  ctx.seq would 
+> also equal to last_cp_seq+1 after we did a recovery . So the safest way is 
+> we always write an empty meta block at ctx.pos no matter how much
+> ctx.req is more than last_cp_seq after we did a recovery. 
+> How do you think, Shaohua? If it is necessary, I'd revert this patch and
+> resend one.
 
-I was waiting for this response, but you cut me off the CC list so
-missed it.
+I didn't get the point. Could you please elaborate it again?
 
-In this case I'll go ahead and apply these patches to mdadm.
+Thanks,
+Shaohua
 
-Cheers,
-Jes
-
->
-> On Thu, Oct 20, 2016 at 04:02:20PM +0200, keld@keldix.com wrote:
->> Is this safe for 2TB+ arrays?
->> I think the badblocks program does not handle 2TB+ partitions?
->> 
->> best regards
->> Keld
->> 
->> Best regards
->> Keld
->> 
->> On Thu, Oct 20, 2016 at 03:03:46PM +0200, Tomasz Majchrzak wrote:
->> > If metadata handler provides support for bad blocks, tell md by writing
->> > 'external_bbl' to rdev state file (both on create and assemble),
->> > followed by a list of known bad blocks written via sysfs 'bad_blocks'
->> > file.
->> > 
->> > Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
->> > Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
->> > ---
->> >  mdadm.h | 13 +++++++++++++
->> >  sysfs.c | 29 ++++++++++++++++++++++++++++-
->> >  2 files changed, 41 insertions(+), 1 deletion(-)
->> > 
->> > diff --git a/mdadm.h b/mdadm.h
->> > index 0516c82..5156ea4 100755
->> > --- a/mdadm.h
->> > +++ b/mdadm.h
->> > @@ -237,6 +237,17 @@ struct dlm_lksb {
->> >  
->> >  extern const char Name[];
->> >  
->> > +struct md_bb_entry {
->> > +	unsigned long long sector;
->> > +	int length;
->> > +};
->> > +
->> > +struct md_bb {
->> > +	int supported;
->> > +	int count;
->> > +	struct md_bb_entry *entries;
->> > +};
->> > +
->> >  /* general information that might be extracted from a superblock */
->> >  struct mdinfo {
->> >  	mdu_array_info_t	array;
->> > @@ -311,6 +322,8 @@ struct mdinfo {
->> >  
->> >  	/* info read from sysfs */
->> >  	char		sysfs_array_state[20];
->> > +
->> > +	struct md_bb bb;
->> >  };
->> >  
->> >  struct createinfo {
->> > diff --git a/sysfs.c b/sysfs.c
->> > index d28e21a..c7a8e66 100644
->> > --- a/sysfs.c
->> > +++ b/sysfs.c
->> > @@ -50,8 +50,12 @@ void sysfs_free(struct mdinfo *sra)
->> >  		while (sra->devs) {
->> >  			struct mdinfo *d = sra->devs;
->> >  			sra->devs = d->next;
->> > +			if (d->bb.entries)
->> > +				free(d->bb.entries);
->> >  			free(d);
->> >  		}
->> > +		if (sra->bb.entries)
->> > +			free(sra->bb.entries);
->> >  		free(sra);
->> >  		sra = sra2;
->> >  	}
->> > @@ -259,7 +263,7 @@ struct mdinfo *sysfs_read(int fd, char *devnm, unsigned long options)
->> >  		dbase = base + strlen(base);
->> >  		*dbase++ = '/';
->> >  
->> > -		dev = xmalloc(sizeof(*dev));
->> > +		dev = xcalloc(1, sizeof(*dev));
->> >  
->> >  		/* Always get slot, major, minor */
->> >  		strcpy(dbase, "slot");
->> > @@ -687,6 +691,7 @@ int sysfs_add_disk(struct mdinfo *sra, struct mdinfo *sd, int resume)
->> >  	char nm[PATH_MAX];
->> >  	char *dname;
->> >  	int rv;
->> > +	int i;
->> >  
->> >  	sprintf(dv, "%d:%d", sd->disk.major, sd->disk.minor);
->> >  	rv = sysfs_set_str(sra, NULL, "new_dev", dv);
->> > @@ -718,6 +723,28 @@ int sysfs_add_disk(struct mdinfo *sra, struct mdinfo *sd, int resume)
->> >  		if (resume)
->> >  			sysfs_set_num(sra, sd, "recovery_start", sd->recovery_start);
->> >  	}
->> > +	if (sd->bb.supported) {
->> > +		if (sysfs_set_str(sra, sd, "state", "external_bbl")) {
->> > +			/*
->> > +			 * backward compatibility - if kernel doesn't support
->> > +			 * bad blocks for external metadata, let it continue
->> > +			 * as long as there are none known so far
->> > +			 */
->> > +			if (sd->bb.count) {
->> > +				pr_err("The kernel has no support for bad blocks in external metadata\n");
->> > +				return -1;
->> > +			}
->> > +		}
->> > +
->> > +		for (i = 0; i < sd->bb.count; i++) {
->> > +			char s[30];
->> > +			const struct md_bb_entry *entry = &sd->bb.entries[i];
->> > +
->> > +			snprintf(s, sizeof(s) - 1, "%llu %d\n", entry->sector,
->> > +				 entry->length);
->> > +			rv |= sysfs_set_str(sra, sd, "bad_blocks", s);
->> > +		}
->> > +	}
->> >  	return rv;
->> >  }
->> >  
->> > -- 
->> > 1.8.3.1
->> > 
->> > --
->> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> > the body of a message to majordomo@vger.kernel.org
->> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> ------------------ Original ------------------
+> From:  "Shaohua Li"<shli@kernel.org>;
+> Date:  Tue, Oct 25, 2016 05:23 AM
+> To:  "Zhengyuan Liu"<liuzhengyuan@kylinos.cn>;
+> Cc:  "shli"<shli@fb.com>; "Song Liu"<songliubraving@fb.com>; "linux-raid"<linux-raid@vger.kernel.org>; "liuzhengyuang521"<liuzhengyuang521@gmail.com>;
+> Subject:  Re: [PATCH] md/raid5: write an empty meta-block when creating logsuper-block
+>  
+> On Mon, Oct 24, 2016 at 04:15:59PM +0800, Zhengyuan Liu wrote:
+> > If superblock points to an invalid meta block, r5l_load_log will set
+> > create_super with true and create an new superblock, this runtime path
+> > would always happen if we do no writing I/O to this array since it was
+> > created. Writing an empty meta block could avoid this unnecessary
+> > action at the first time we created log superblock.
+> > 
+> > Another reason is for the corretness of log recovery. Currently we have
+> > bellow code to guarantee log revocery to be correct.
+> > 
+> >         if (ctx.seq > log->last_cp_seq + 1) {
+> >                 int ret;
+> > 
+> >                 ret = r5l_log_write_empty_meta_block(log, ctx.pos, ctx.seq + 10);
+> >                 if (ret)
+> >                         return ret;
+> >                 log->seq = ctx.seq + 11;
+> >                 log->log_start = r5l_ring_add(log, ctx.pos, BLOCK_SECTORS);
+> >                 r5l_write_super(log, ctx.pos);
+> >         } else {
+> >                 log->log_start = ctx.pos;
+> >                 log->seq = ctx.seq;
+> >         }
+> > 
+> > If we just created a array with a journal device, log->log_start and
+> > log->last_checkpoint should all be 0, then we write three meta block
+> > which are valid except mid one and supposed crash happened. The ctx.seq
+> > would equal to log->last_cp_seq + 1 and log->log_start would be set to
+> > position of mid invalid meta block after we did a recovery, this will
+> > lead to problems which could be avoided with this patch.
+> 
+> This would be very unlikely, but better to fix. Applied, thanks!
