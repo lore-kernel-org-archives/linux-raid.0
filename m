@@ -1,69 +1,34 @@
-From: Nick Black <dankamongmen@gmail.com>
-Subject: Re: data loss+inode recovery using RAID6 write journal
-Date: Wed, 26 Oct 2016 14:51:33 -0400
-Message-ID: <20161026185133.thjrnsrtzlagegen@schwarzgerat.orthanc>
-References: <20161024235505.rb4fucq24ybbn5aq@schwarzgerat.orthanc>
- <20161026184359.u7pwbxzz7i5mcbfm@kernel.org>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH] md: wake up personality thread after array state update
+Date: Wed, 26 Oct 2016 12:14:55 -0700
+Message-ID: <20161026191455.wja223ageiwfnqiu@kernel.org>
+References: <1477408028-3694-1-git-send-email-tomasz.majchrzak@intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="pp6y3ye3frkpsr5v"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20161026184359.u7pwbxzz7i5mcbfm@kernel.org>
+In-Reply-To: <1477408028-3694-1-git-send-email-tomasz.majchrzak@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
+To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Tue, Oct 25, 2016 at 05:07:08PM +0200, Tomasz Majchrzak wrote:
+> When raid1/raid10 array fails to write to one of the drives, the request
+> is added to bio_end_io_list and finished by personality thread. The
+> thread doesn't handle it as long as MD_CHANGE_PENDING flag is set. In
+> case of external metadata this flag is cleared, however the thread is
+> not woken up. It causes request to be blocked for few seconds (until
+> another action on the array wakes up the thread) or to get stuck
+> indefinitely.
+> 
+> Wake up personality thread once MD_CHANGE_PENDING has been cleared.
+> Moving 'restart_array' call after the flag is cleared it not a solution
+> because in read-write mode the call doesn't wake up the thread.
 
---pp6y3ye3frkpsr5v
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The patch looks good. However can you elaborate how userspace handles the case?
+I'd like to understand what the user interface should be to support external
+metadata array.
 
-Shaohua Li left as an exercise for the reader:
-> Thanks for the testing. We can't improve the quality of the new feature if
-> nobody tests it. Yep, the write journal isn't mature yet, but I can't ima=
-gine
-> the data loss. With write journal, data is written to the ssd first, then=
- to
-> raid disks and IO is finished at that time. So if IO is finished, the data
-> should be in raid disks. The only possible way to data loss is the recove=
-ry.
-> But it's also possible filesystem/writeback hasn't flushed data to disk y=
-et.
-> I'm wondering if you can reproduce it with/without journal, so we can nar=
-row
-> down it a bit.
-
-I doubt it can be replaced without the journal -- like I said, I've been
-using mdadm RAID[56] for over a decade, and never seen such a problem.
-
-I'll attempt to reproduce with the journal enabled. Assuming I can, I can
-try to reproduce without, but I doubt it'll be fruitful. Are there any
-debugging options / flags I should enable prior reproducing in order to get
-a more complete report? Some state I should dump from my array and
-filesystems? Feel free to be technical.
-
-I owe a lot to Linux MD RAID, and am happy to put some effort into running
-this down.
-
-I'll report whether I can at least reproduce ASAP.
-
---nick
-
---=20
-nick black -=3D- http://www.nick-black.com
-to make an apple pie from scratch, you need first invent a universe.
-
---pp6y3ye3frkpsr5v
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iEYEABECAAYFAlgQ+yIACgkQzjCRTpolKGsN+ACffsIKu0ZDHTqGwAF3PTM8WIoC
-ovIAniRDx8lxVpqHj0/uNwQ6nFH2GETy
-=4gjl
------END PGP SIGNATURE-----
-
---pp6y3ye3frkpsr5v--
+Thanks,
+Shaohua
