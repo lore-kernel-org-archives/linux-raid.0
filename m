@@ -1,77 +1,182 @@
-From: Santiago DIEZ <santiago.diez@caoba.fr>
-Subject: Re: Fail to assemble raid4 with replaced disk
-Date: Thu, 27 Oct 2016 16:11:24 +0200
-Message-ID: <CAJh8RqXV4_v-zAu9Us_K6oTS_N_bR6vd97G4msN00qXn_vtXEQ@mail.gmail.com>
-References: <CAJh8RqUjr7L_Of0fbW_mAXshmmgcPdXvhtsvhFXKF+XxjOTrFw@mail.gmail.com>
- <580F9B68.9010105@youngman.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH 3/4 v2] mdmon: bad block support for external metadata - store bad blocks
+Date: Thu, 27 Oct 2016 10:53:44 +0200
+Message-ID: <1477558425-13332-3-git-send-email-tomasz.majchrzak@intel.com>
+References: <1477558425-13332-1-git-send-email-tomasz.majchrzak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <580F9B68.9010105@youngman.org.uk>
+In-Reply-To: <1477558425-13332-1-git-send-email-tomasz.majchrzak@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: Linux Raid LIST <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: Jes.Sorensen@redhat.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
-Hi,
+If md has changed the state to 'blocked' and metadata handler supports
+bad blocks, try process them first. If metadata handler has successfully
+stored bad block, acknowledge it to md via 'badblocks' sysfs file. If
+metadata handler has failed to store the new bad block (ie. lack of
+space), remove bad block support for a disk by writing "-external_bbl"
+to state sysfs file. If all bad blocks have been acknowledged, request
+to unblock the array.
 
-Indeed, here is what I had in terms of event count:
-/dev/sda10: 81589
-/dev/sdb10: 81626
-/dev/sdc10: 81589
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Acked-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+---
+ mdadm.h   |   4 +++
+ monitor.c | 112 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 116 insertions(+)
 
-Then the following procedure worked quite straightforward:
---------------------------------------------------------------------------------
-# mdadm --assemble /dev/md10 --verbose --force /dev/sda10 /dev/sdb10 /dev/sdc10
-# mdadm --manage /dev/md10 --add /dev/sdd10
---------------------------------------------------------------------------------
+diff --git a/mdadm.h b/mdadm.h
+index 1a1c7af..05a2e3e 100755
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -1050,6 +1050,10 @@ extern struct superswitch {
+ 	/* validate container after assemble */
+ 	int (*validate_container)(struct mdinfo *info);
+ 
++	/* records new bad block in metadata */
++	int (*record_bad_block)(struct active_array *a, int n,
++					unsigned long long sector, int length);
++
+ 	int swapuuid; /* true if uuid is bigending rather than hostendian */
+ 	int external;
+ 	const char *name; /* canonical metadata name */
+diff --git a/monitor.c b/monitor.c
+index 56c6500..9de9c8d 100644
+--- a/monitor.c
++++ b/monitor.c
+@@ -31,6 +31,10 @@ static char *sync_actions[] = {
+ 	"idle", "reshape", "resync", "recover", "check", "repair", NULL
+ };
+ 
++enum bb_action {
++	RECORD_BB = 1,
++};
++
+ static int write_attr(char *attr, int fd)
+ {
+ 	return write(fd, attr, strlen(attr));
+@@ -158,6 +162,104 @@ int read_dev_state(int fd)
+ 	return rv;
+ }
+ 
++int process_ubb(struct active_array *a, struct mdinfo *mdi, const unsigned long
++		long sector, const int length, const char *buf,
++		const int buf_len)
++{
++	struct superswitch *ss = a->container->ss;
++
++	/*
++	 * record bad block in metadata first, then acknowledge it to the driver
++	 * via sysfs file
++	 */
++	if ((ss->record_bad_block(a, mdi->disk.raid_disk, sector, length)) &&
++	    (write(mdi->bb_fd, buf, buf_len) == buf_len))
++		return 1;
++
++	/*
++	 * failed to store or acknowledge bad block, switch of bad block support
++	 * to get it out of blocked state
++	 */
++	sysfs_set_str(&a->info, mdi, "state", "-external_bbl");
++	return -1;
++}
++
++static int read_bb_file(int fd, struct active_array *a, struct mdinfo *mdi,
++			enum bb_action action, void *arg)
++{
++	char buf[30];
++	int n = 0;
++	int ret = 0;
++	int read_again = 0;
++	int off = 0;
++	int pos = 0;
++	int preserve_pos = (action == RECORD_BB ? 0 : 1);
++
++	if (lseek(fd, 0, SEEK_SET) == (off_t) -1)
++		return -1;
++
++	do {
++		read_again = 0;
++		n = read(fd, buf + pos, sizeof(buf) - 1 - pos);
++		if (n < 0)
++			return -1;
++		n += pos;
++
++		buf[n] = '\0';
++		off = 0;
++
++		while (off < n) {
++			unsigned long long sector;
++			int length;
++			char newline;
++			int consumed;
++			int matched;
++			int rc;
++
++			/* kernel sysfs file format: "sector length\n" */
++			matched = sscanf(buf + off, "%llu %d%c%n", &sector,
++					 &length, &newline, &consumed);
++			if ((matched != 3) && (off > 0)) {
++				/* truncated entry, read again */
++				if (preserve_pos) {
++					pos = sizeof(buf) - off - 1;
++					memmove(buf, buf + off, pos);
++				} else {
++					if (lseek(fd, 0, SEEK_SET) ==
++					    (off_t) -1)
++						return -1;
++				}
++				read_again = 1;
++				break;
++			}
++			if (matched != 3)
++				return -1;
++			if (newline != '\n')
++				return -1;
++			if (length <= 0)
++				return -1;
++
++			if (action == RECORD_BB)
++				rc = process_ubb(a, mdi, sector, length,
++						  buf + off, consumed);
++			else
++				rc = -1;
++
++			if (rc < 0)
++				return rc;
++			ret += rc;
++			off += consumed;
++		}
++	} while (read_again);
++
++	return ret;
++}
++
++static int process_dev_ubb(struct active_array *a, struct mdinfo *mdi)
++{
++	return read_bb_file(mdi->ubb_fd, a, mdi, RECORD_BB, NULL);
++}
++
+ static void signal_manager(void)
+ {
+ 	/* tgkill(getpid(), mon_tid, SIGUSR1); */
+@@ -256,6 +358,16 @@ static int read_and_act(struct active_array *a)
+ 					  &mdi->recovery_start);
+ 			mdi->curr_state = read_dev_state(mdi->state_fd);
+ 		}
++		/*
++		 * If array is blocked and metadata handler is able to handle
++		 * BB, check if you can acknowledge them to md driver. If
++		 * successful, clear faulty state and unblock the array.
++		 */
++		if ((mdi->curr_state & DS_BLOCKED) &&
++		    a->container->ss->record_bad_block &&
++		    (process_dev_ubb(a, mdi) > 0)) {
++			mdi->next_state |= DS_UNBLOCK;
++		}
+ 	}
+ 
+ 	gettimeofday(&tv, NULL);
+-- 
+1.8.3.1
 
-And 6h+ later:
---------------------------------------------------------------------------------
-# cat /proc/mdstat
-Personalities : [raid1] [raid6] [raid5] [raid4]
-md10 : active raid5 sdd10[3] sda10[0] sdc10[2] sdb10[1]
-      5778741888 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
---------------------------------------------------------------------------------
-
-Then I ran:
---------------------------------------------------------------------------------
-# e2fsck -f -n -t -v /dev/md10
-e2fsck 1.42.5 (29-Jul-2012)
-Pass 1: Checking inodes, blocks, and sizes
-Pass 2: Checking directory structure
-Pass 3: Checking directory connectivity
-Pass 4: Checking reference counts
-Pass 5: Checking group summary information
-
-    15675837 inodes used (4.34%, out of 361177088)
-      188798 non-contiguous files (1.2%)
-       14751 non-contiguous directories (0.1%)
-             # of inodes with ind/dind/tind blocks: 0/0/0
-             Extent depth histogram: 15626455/47037/15
-  1281308341 blocks used (88.69%, out of 1444685472)
-           0 bad blocks
-         101 large files
-
-    15311457 regular files
-      361754 directories
-           0 character device files
-           0 block device files
-           0 fifos
-           0 links
-        2607 symbolic links (2310 fast symbolic links)
-          10 sockets
-------------
-    15675828 files
-Memory used: 50976k/1912k (20541k/30436k), time: 1304.00/334.06/ 8.00
-I/O read: 4891MB, write: 0MB, rate: 3.75MB/s
---------------------------------------------------------------------------------
-
-Does it look OK enough to launch the mount?
-
-Regards and thanks for your help
--------------------------
-Santiago DIEZ
-Quark Systems & CAOBA
-23 rue du Buisson Saint-Louis, 75010 Paris
--------------------------
