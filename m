@@ -1,41 +1,75 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: recovering failed raid5
-Date: Thu, 27 Oct 2016 21:34:34 +0100
-Message-ID: <20161027203433.GA19489@cthulhu.home.robinhill.me.uk>
-References: <CAM97BgQLPUN=t7VKHaVG-=SrJmS_tvaxGDbo3yqMwHm8B-do_Q@mail.gmail.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH] md: wake up personality thread after array state update
+Date: Thu, 27 Oct 2016 15:02:35 -0700
+Message-ID: <20161027220235.o64c3ei454l2y4xi@kernel.org>
+References: <1477408028-3694-1-git-send-email-tomasz.majchrzak@intel.com>
+ <20161026191455.wja223ageiwfnqiu@kernel.org>
+ <20161027085206.GA11138@proton.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CAM97BgQLPUN=t7VKHaVG-=SrJmS_tvaxGDbo3yqMwHm8B-do_Q@mail.gmail.com>
+In-Reply-To: <20161027085206.GA11138@proton.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Shenkin <al@shenkin.org>
-Cc: linux-raid@vger.kernel.org
+To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Cc: linux-raid@vger.kernel.org, Jes.Sorensen@redhat.com
 List-Id: linux-raid.ids
 
-On Thu Oct 27, 2016 at 04:06:14PM +0100, Alexander Shenkin wrote:
-
-> Hello all,
+On Thu, Oct 27, 2016 at 10:52:06AM +0200, Tomasz Majchrzak wrote:
+> On Wed, Oct 26, 2016 at 12:14:55PM -0700, Shaohua Li wrote:
+> > On Tue, Oct 25, 2016 at 05:07:08PM +0200, Tomasz Majchrzak wrote:
+> > > When raid1/raid10 array fails to write to one of the drives, the request
+> > > is added to bio_end_io_list and finished by personality thread. The
+> > > thread doesn't handle it as long as MD_CHANGE_PENDING flag is set. In
+> > > case of external metadata this flag is cleared, however the thread is
+> > > not woken up. It causes request to be blocked for few seconds (until
+> > > another action on the array wakes up the thread) or to get stuck
+> > > indefinitely.
+> > > 
+> > > Wake up personality thread once MD_CHANGE_PENDING has been cleared.
+> > > Moving 'restart_array' call after the flag is cleared it not a solution
+> > > because in read-write mode the call doesn't wake up the thread.
+> > 
+> > The patch looks good. However can you elaborate how userspace handles the case?
+> > I'd like to understand what the user interface should be to support external
+> > metadata array.
 > 
-> A RAID newbie here - apologies in advance for any bonehead questions.
-> I have 4 3TB disks that participate in 3 raid arrays.  md2 is failing.
-> I'm hoping someone here might be able to give me pointers for the
-> right direction to take to avoid data loss, if possible, and recover
-> the array.
+> 1. Kernel encounters new bad block that needs to be acknowledged.
 > 
-<- snip ->
-> SCT Error Recovery Control command not supported
-> SCT Error Recovery Control command not supported
-> SCT Error Recovery Control command not supported
-> SCT Error Recovery Control command not supported
+> 	sysfs array state == "write-pending" (as MD_CHANGE_PENDING set)
+> 	sysfs rdev state == "blocked" (as unacked_exists + external_bbl set)
+> 
+> 2. mdmon wakes up as there is an update to sysfs array state and unacknowledged
+> bad blocks list.
+> 
+> 3. mdmon checks the state of each disk. If any is 'blocked' and there is a
+> support for bad blocks in metadata, it reads unacknowledged bad block list and
+> records new bad blocks in metadata. If successful, it acknowledges bad blocks by
+> writing to sysfs bad block file. If all bad blocks have been acknowledged, it
+> schedules disk unblock.
+> 
+> As soon as kernel marks all bad blocks as acknowledged, it will clear
+> unacked_exists flag.
+> 
+> 4. mdmon checks 'faulty' flag for each disk. If it is set, the disk is removed
+> from array and unblock is scheduled.
+> 
+> 5. mdmon requests to unblock the array by writing '-blocked' to sysfs disk
+> state.
+> 
+> Requests awaiting for bad block confirmation are woken up in kernel.
 
-Others have already chimed in about the recovery process. I just wanted
-to make sure you were aware that none of your drives support
-TLER/SCTERC. See https://raid.wiki.kernel.org/index.php/Timeout_Mismatch
-for details on why this is an issue and how to work around it. You'll
-need to do this before attempting any sort of recovery or you're likely
-to run into further problems.
+Why this step? 3 step writes bad block file, which already wakeup threads
+waiting for bad block confirmation.
 
-Cheers,
-    Robin
+> 6. mdmon writes 'active' to sysfs array state.
+> 
+> MD_CHANGE_PENDING flag is cleared by this step but personality thread is not
+> woken up. The patch resolves this problem.
+> 
+> I hope it answers your question.
+
+This is clear, thanks! I applied this patch.
+
+Thanks,
+Shaohua
