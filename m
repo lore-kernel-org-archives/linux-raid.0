@@ -1,46 +1,76 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH 1/4] mdadm: bad block support for external metadata - initialization
-Date: Wed, 26 Oct 2016 15:57:39 -0400
-Message-ID: <wrfjvawekhn0.fsf@redhat.com>
-References: <1476968626-19233-1-git-send-email-tomasz.majchrzak@intel.com>
-        <20161020140220.GB17867@www5.open-std.org>
-        <20161020142611.GA23120@proton.igk.intel.com>
-        <wrfj4m3zkn1s.fsf@redhat.com>
-        <20161026192316.wntpx6jcyay756j7@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH] Increase buffer for sysfs disk state
+Date: Thu, 27 Oct 2016 11:34:16 +0200
+Message-ID: <1477560856-17310-1-git-send-email-tomasz.majchrzak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161026192316.wntpx6jcyay756j7@kernel.org> (Shaohua Li's
-        message of "Wed, 26 Oct 2016 12:23:16 -0700")
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: Tomasz Majchrzak <tomasz.majchrzak@intel.com>, keld@keldix.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Jes.Sorensen@redhat.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
-Shaohua Li <shli@kernel.org> writes:
-> On Wed, Oct 26, 2016 at 02:00:47PM -0400, Jes Sorensen wrote:
->> Tomasz Majchrzak <tomasz.majchrzak@intel.com> writes:
->> > I cannot see how badblocks program is related to this patch. It is a generic
->> > code for bad blocks support in IMSM metadata. It introduces 64-bit value for
->> > sector address, the same size as in kernel. All it does is syncing
->> > kernel bad
->> > block list with raid metadata.
->> >
->> > Tomek
->> 
->> I was waiting for this response, but you cut me off the CC list so
->> missed it.
->> 
->> In this case I'll go ahead and apply these patches to mdadm.
->
-> Thomasz,
->
-> So your original kernel patch to support bad block for external metadata writes
-> '-blocked' to state. We agreed it's not required later and the applied kernel
-> patches don't support that interface. Don't you need change of the mdadm
-> patches?
+Bad block support has incremented sysfs disk state reported by kernel
+("external_bbl") so it became longer than 20 bytes. It causes reshape to
+fail as it reads truncated entry from sysfs.
 
-Well I'll wait until this is resolved then :)
+Increase buffer so it can accommodate the string including all state
+values currently implemented in kernel at the same time.
 
-Cheers,
-Jes
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+---
+ Grow.c        | 6 ++++--
+ monitor.c     | 4 ++--
+ super-intel.c | 5 +++--
+ 3 files changed, 9 insertions(+), 6 deletions(-)
+
+diff --git a/Grow.c b/Grow.c
+index 7402597..9f1570e 100755
+--- a/Grow.c
++++ b/Grow.c
+@@ -4017,8 +4017,10 @@ static int grow_backup(struct mdinfo *sra,
+ 			if (sd->disk.state & (1<<MD_DISK_FAULTY))
+ 				continue;
+ 			if (sd->disk.state & (1<<MD_DISK_SYNC)) {
+-				char sbuf[20];
+-				if (sysfs_get_str(sra, sd, "state", sbuf, 20) < 0 ||
++				char sbuf[100];
++
++				if (sysfs_get_str(sra, sd, "state",
++						  sbuf, sizeof(sbuf)) < 0 ||
+ 				    strstr(sbuf, "faulty") ||
+ 				    strstr(sbuf, "in_sync") == NULL) {
+ 					/* this device is dead */
+diff --git a/monitor.c b/monitor.c
+index 1704a59..15181ce 100644
+--- a/monitor.c
++++ b/monitor.c
+@@ -136,8 +136,8 @@ static enum sync_action read_action( int fd)
+ 
+ int read_dev_state(int fd)
+ {
+-	char buf[60];
+-	int n = read_attr(buf, 60, fd);
++	char buf[100];
++	int n = read_attr(buf, sizeof(buf), fd);
+ 	char *cp;
+ 	int rv = 0;
+ 
+diff --git a/super-intel.c b/super-intel.c
+index 4bb9059..f9d0a04 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -11408,9 +11408,10 @@ int check_degradation_change(struct mdinfo *info,
+ 			if (sd->disk.state & (1<<MD_DISK_FAULTY))
+ 				continue;
+ 			if (sd->disk.state & (1<<MD_DISK_SYNC)) {
+-				char sbuf[20];
++				char sbuf[100];
++
+ 				if (sysfs_get_str(info,
+-					sd, "state", sbuf, 20) < 0 ||
++					sd, "state", sbuf, sizeof(sbuf)) < 0 ||
+ 					strstr(sbuf, "faulty") ||
+ 					strstr(sbuf, "in_sync") == NULL) {
+ 					/* this device is dead */
+-- 
+1.8.3.1
+
