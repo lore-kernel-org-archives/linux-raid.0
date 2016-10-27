@@ -1,61 +1,119 @@
 From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: Re: [PATCH 1/4] mdadm: bad block support for external metadata -
- initialization
-Date: Thu, 27 Oct 2016 11:26:03 +0200
-Message-ID: <20161027092603.GA13413@proton.igk.intel.com>
-References: <1476968626-19233-1-git-send-email-tomasz.majchrzak@intel.com>
- <20161020140220.GB17867@www5.open-std.org>
- <20161020142611.GA23120@proton.igk.intel.com>
- <wrfj4m3zkn1s.fsf@redhat.com>
- <20161026192316.wntpx6jcyay756j7@kernel.org>
- <wrfjvawekhn0.fsf@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Subject: [PATCH 1/4 v2] mdadm: bad block support for external metadata - initialization
+Date: Thu, 27 Oct 2016 10:53:42 +0200
+Message-ID: <1477558425-13332-1-git-send-email-tomasz.majchrzak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <wrfjvawekhn0.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>, shli@kernel.org
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Jes.Sorensen@redhat.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
-On Wed, Oct 26, 2016 at 03:57:39PM -0400, Jes Sorensen wrote:
-> Shaohua Li <shli@kernel.org> writes:
-> > On Wed, Oct 26, 2016 at 02:00:47PM -0400, Jes Sorensen wrote:
-> >> Tomasz Majchrzak <tomasz.majchrzak@intel.com> writes:
-> >> > I cannot see how badblocks program is related to this patch. It is a generic
-> >> > code for bad blocks support in IMSM metadata. It introduces 64-bit value for
-> >> > sector address, the same size as in kernel. All it does is syncing
-> >> > kernel bad
-> >> > block list with raid metadata.
-> >> >
-> >> > Tomek
-> >> 
-> >> I was waiting for this response, but you cut me off the CC list so
-> >> missed it.
-> >> 
-> >> In this case I'll go ahead and apply these patches to mdadm.
-> >
-> > Thomasz,
-> >
-> > So your original kernel patch to support bad block for external metadata writes
-> > '-blocked' to state. We agreed it's not required later and the applied kernel
-> > patches don't support that interface. Don't you need change of the mdadm
-> > patches?
-> 
-> Well I'll wait until this is resolved then :)
+If metadata handler provides support for bad blocks, tell md by writing
+'external_bbl' to rdev state file (both on create and assemble),
+followed by a list of known bad blocks written via sysfs 'bad_blocks'
+file.
 
-I have explained the process in detail in the other email. I haven't done any
-change to '-blocked' action. It is still requested by mdmon as disk is in
-blocked state when bad block is awaiting for confirmation. However my accepted
-patch stopped reporting disk as faulty if there are unacknowledged bad blocks.
-I have realized that disk should be shown as faulty only for unrecoverable
-state. Unacknowledged bad block can still be handled so this state is not
-adequate. My first mdadm patch set ignored this flag if all bad blocks have
-been successfully acknowledged. It was not fully correct as it would not work
-if bad block and unrecoverable error happen at the same time.
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+---
+ mdadm.h | 13 +++++++++++++
+ sysfs.c | 29 ++++++++++++++++++++++++++++-
+ 2 files changed, 41 insertions(+), 1 deletion(-)
 
-I have resent the patches that don't ignore faulty state after acknowledging
-bad blocks.
+diff --git a/mdadm.h b/mdadm.h
+index 0516c82..5156ea4 100755
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -237,6 +237,17 @@ struct dlm_lksb {
+ 
+ extern const char Name[];
+ 
++struct md_bb_entry {
++	unsigned long long sector;
++	int length;
++};
++
++struct md_bb {
++	int supported;
++	int count;
++	struct md_bb_entry *entries;
++};
++
+ /* general information that might be extracted from a superblock */
+ struct mdinfo {
+ 	mdu_array_info_t	array;
+@@ -311,6 +322,8 @@ struct mdinfo {
+ 
+ 	/* info read from sysfs */
+ 	char		sysfs_array_state[20];
++
++	struct md_bb bb;
+ };
+ 
+ struct createinfo {
+diff --git a/sysfs.c b/sysfs.c
+index d28e21a..c7a8e66 100644
+--- a/sysfs.c
++++ b/sysfs.c
+@@ -50,8 +50,12 @@ void sysfs_free(struct mdinfo *sra)
+ 		while (sra->devs) {
+ 			struct mdinfo *d = sra->devs;
+ 			sra->devs = d->next;
++			if (d->bb.entries)
++				free(d->bb.entries);
+ 			free(d);
+ 		}
++		if (sra->bb.entries)
++			free(sra->bb.entries);
+ 		free(sra);
+ 		sra = sra2;
+ 	}
+@@ -259,7 +263,7 @@ struct mdinfo *sysfs_read(int fd, char *devnm, unsigned long options)
+ 		dbase = base + strlen(base);
+ 		*dbase++ = '/';
+ 
+-		dev = xmalloc(sizeof(*dev));
++		dev = xcalloc(1, sizeof(*dev));
+ 
+ 		/* Always get slot, major, minor */
+ 		strcpy(dbase, "slot");
+@@ -687,6 +691,7 @@ int sysfs_add_disk(struct mdinfo *sra, struct mdinfo *sd, int resume)
+ 	char nm[PATH_MAX];
+ 	char *dname;
+ 	int rv;
++	int i;
+ 
+ 	sprintf(dv, "%d:%d", sd->disk.major, sd->disk.minor);
+ 	rv = sysfs_set_str(sra, NULL, "new_dev", dv);
+@@ -718,6 +723,28 @@ int sysfs_add_disk(struct mdinfo *sra, struct mdinfo *sd, int resume)
+ 		if (resume)
+ 			sysfs_set_num(sra, sd, "recovery_start", sd->recovery_start);
+ 	}
++	if (sd->bb.supported) {
++		if (sysfs_set_str(sra, sd, "state", "external_bbl")) {
++			/*
++			 * backward compatibility - if kernel doesn't support
++			 * bad blocks for external metadata, let it continue
++			 * as long as there are none known so far
++			 */
++			if (sd->bb.count) {
++				pr_err("The kernel has no support for bad blocks in external metadata\n");
++				return -1;
++			}
++		}
++
++		for (i = 0; i < sd->bb.count; i++) {
++			char s[30];
++			const struct md_bb_entry *entry = &sd->bb.entries[i];
++
++			snprintf(s, sizeof(s) - 1, "%llu %d\n", entry->sector,
++				 entry->length);
++			rv |= sysfs_set_str(sra, sd, "bad_blocks", s);
++		}
++	}
+ 	return rv;
+ }
+ 
+-- 
+1.8.3.1
 
-Tomek
