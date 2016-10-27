@@ -1,67 +1,61 @@
 From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: Re: [PATCH] md: wake up personality thread after array state update
-Date: Thu, 27 Oct 2016 10:52:06 +0200
-Message-ID: <20161027085206.GA11138@proton.igk.intel.com>
-References: <1477408028-3694-1-git-send-email-tomasz.majchrzak@intel.com>
- <20161026191455.wja223ageiwfnqiu@kernel.org>
+Subject: Re: [PATCH 1/4] mdadm: bad block support for external metadata -
+ initialization
+Date: Thu, 27 Oct 2016 11:26:03 +0200
+Message-ID: <20161027092603.GA13413@proton.igk.intel.com>
+References: <1476968626-19233-1-git-send-email-tomasz.majchrzak@intel.com>
+ <20161020140220.GB17867@www5.open-std.org>
+ <20161020142611.GA23120@proton.igk.intel.com>
+ <wrfj4m3zkn1s.fsf@redhat.com>
+ <20161026192316.wntpx6jcyay756j7@kernel.org>
+ <wrfjvawekhn0.fsf@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20161026191455.wja223ageiwfnqiu@kernel.org>
+In-Reply-To: <wrfjvawekhn0.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, Jes.Sorensen@redhat.com
+To: Jes Sorensen <Jes.Sorensen@redhat.com>, shli@kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Oct 26, 2016 at 12:14:55PM -0700, Shaohua Li wrote:
-> On Tue, Oct 25, 2016 at 05:07:08PM +0200, Tomasz Majchrzak wrote:
-> > When raid1/raid10 array fails to write to one of the drives, the request
-> > is added to bio_end_io_list and finished by personality thread. The
-> > thread doesn't handle it as long as MD_CHANGE_PENDING flag is set. In
-> > case of external metadata this flag is cleared, however the thread is
-> > not woken up. It causes request to be blocked for few seconds (until
-> > another action on the array wakes up the thread) or to get stuck
-> > indefinitely.
-> > 
-> > Wake up personality thread once MD_CHANGE_PENDING has been cleared.
-> > Moving 'restart_array' call after the flag is cleared it not a solution
-> > because in read-write mode the call doesn't wake up the thread.
+On Wed, Oct 26, 2016 at 03:57:39PM -0400, Jes Sorensen wrote:
+> Shaohua Li <shli@kernel.org> writes:
+> > On Wed, Oct 26, 2016 at 02:00:47PM -0400, Jes Sorensen wrote:
+> >> Tomasz Majchrzak <tomasz.majchrzak@intel.com> writes:
+> >> > I cannot see how badblocks program is related to this patch. It is a generic
+> >> > code for bad blocks support in IMSM metadata. It introduces 64-bit value for
+> >> > sector address, the same size as in kernel. All it does is syncing
+> >> > kernel bad
+> >> > block list with raid metadata.
+> >> >
+> >> > Tomek
+> >> 
+> >> I was waiting for this response, but you cut me off the CC list so
+> >> missed it.
+> >> 
+> >> In this case I'll go ahead and apply these patches to mdadm.
+> >
+> > Thomasz,
+> >
+> > So your original kernel patch to support bad block for external metadata writes
+> > '-blocked' to state. We agreed it's not required later and the applied kernel
+> > patches don't support that interface. Don't you need change of the mdadm
+> > patches?
 > 
-> The patch looks good. However can you elaborate how userspace handles the case?
-> I'd like to understand what the user interface should be to support external
-> metadata array.
+> Well I'll wait until this is resolved then :)
 
-1. Kernel encounters new bad block that needs to be acknowledged.
+I have explained the process in detail in the other email. I haven't done any
+change to '-blocked' action. It is still requested by mdmon as disk is in
+blocked state when bad block is awaiting for confirmation. However my accepted
+patch stopped reporting disk as faulty if there are unacknowledged bad blocks.
+I have realized that disk should be shown as faulty only for unrecoverable
+state. Unacknowledged bad block can still be handled so this state is not
+adequate. My first mdadm patch set ignored this flag if all bad blocks have
+been successfully acknowledged. It was not fully correct as it would not work
+if bad block and unrecoverable error happen at the same time.
 
-	sysfs array state == "write-pending" (as MD_CHANGE_PENDING set)
-	sysfs rdev state == "blocked" (as unacked_exists + external_bbl set)
-
-2. mdmon wakes up as there is an update to sysfs array state and unacknowledged
-bad blocks list.
-
-3. mdmon checks the state of each disk. If any is 'blocked' and there is a
-support for bad blocks in metadata, it reads unacknowledged bad block list and
-records new bad blocks in metadata. If successful, it acknowledges bad blocks by
-writing to sysfs bad block file. If all bad blocks have been acknowledged, it
-schedules disk unblock.
-
-As soon as kernel marks all bad blocks as acknowledged, it will clear
-unacked_exists flag.
-
-4. mdmon checks 'faulty' flag for each disk. If it is set, the disk is removed
-from array and unblock is scheduled.
-
-5. mdmon requests to unblock the array by writing '-blocked' to sysfs disk
-state.
-
-Requests awaiting for bad block confirmation are woken up in kernel.
-
-6. mdmon writes 'active' to sysfs array state.
-
-MD_CHANGE_PENDING flag is cleared by this step but personality thread is not
-woken up. The patch resolves this problem.
-
-I hope it answers your question.
+I have resent the patches that don't ignore faulty state after acknowledging
+bad blocks.
 
 Tomek
