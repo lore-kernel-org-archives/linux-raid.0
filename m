@@ -1,107 +1,77 @@
-From: "=?utf-8?B?Wmhlbmd5dWFuIExpdQ==?=" <liuzhengyuan@kylinos.cn>
-Subject: Re: [PATCH] md/raid5: write an empty meta-block when creatinglogsuper-block
-Date: Thu, 27 Oct 2016 22:05:06 +0800
-Message-ID: <tencent_647E309D0106DEBE08875B26@qq.com>
+From: Santiago DIEZ <santiago.diez@caoba.fr>
+Subject: Re: Fail to assemble raid4 with replaced disk
+Date: Thu, 27 Oct 2016 16:11:24 +0200
+Message-ID: <CAJh8RqXV4_v-zAu9Us_K6oTS_N_bR6vd97G4msN00qXn_vtXEQ@mail.gmail.com>
+References: <CAJh8RqUjr7L_Of0fbW_mAXshmmgcPdXvhtsvhFXKF+XxjOTrFw@mail.gmail.com>
+ <580F9B68.9010105@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <580F9B68.9010105@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?utf-8?B?U2hhb2h1YSBMaQ==?= <shli@kernel.org>
-Cc: =?utf-8?B?U29uZyBMaXU=?= <songliubraving@fb.com>, =?utf-8?B?bGludXgtcmFpZA==?= <linux-raid@vger.kernel.org>, =?utf-8?B?bGl1emhlbmd5dWFuZzUyMQ==?= <liuzhengyuang521@gmail.com>
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: Linux Raid LIST <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-U29ycnkgZm9yIHRoZSB1bmNsZWFyIGV4cHJlc3Npb24uDQoNClRoZSBsb2cgbWlnaHQgbG9v
-ayBsaWtlIHRoaXMgYmVmb3JlIHdlIGRpZCBhIHJlY292ZXJ5IDoNCnwgbWIxIHwgbWIyIHwg
-bWIzICB8ICAgICAgICAgICB8ICAgICAgICAgICAgfCAgICAgICAgICAgfCANCiBsYXN0X2No
-ZWNrcG9pbnQgPSBtYjEncG9zdGlvbiwgICAgbGFzdF9jcF9zZXEgPSBtYjEnc2VxDQpBZnRl
-ciB3ZSBkaWQgYSByZWNvdmVyeSh3ZSB3b3VsZCB3cml0ZSBhIGVtcHR5IG1ldGEgYmxvY2sg
-ZW1iIGF0IGxvZyB0YWlsKToNCnwgbWIxIHwgbWIyIHwgbWIzIHwgIGVtYiB8ICAgICAgICAg
-ICAgfCAgICAgICAgICAgfCANCmxhc3RfY2hlY2twb2ludCA9IGVtYidwb3NpdGlvbiwgIGxh
-c3RfY3Bfc2VxID0gbWIxJ3NlcSArIDExDQpUaGVuIHdlIHdyaXRlIHR3byBtZXRhIGJsb2Nr
-cyBhbmQgc3VwcG9zZSBjcmFzaCBoYXBwZW5zOg0KfCBtYjEgfCBtYjIgfCBtYjMgfCAgZW1i
-IHwgIG1iNCB8IG1iNSB8IA0KbGFzdF9jaGVja3BvaW50ID0gZW1iJ3Bvc2l0aW9uLCAgbGFz
-dF9jcF9zZXEgPSBtYjEnc2VxICsgMTENCk5vdyB3ZSBkaWQgYW5vdGhlciByZWNvdmVyeSBh
-ZnRlciByZXN0YXJ0IGFuZCBzdXBwb3NlIG1iNCB3YXMgaW52YWxpZDogDQp8IG1iMSB8IG1i
-MiB8IG1iMyB8ICBlbWIgfCAgbWI0IHwgbWI1IHwgDQpsYXN0X2NoZWNrcG9pbnQgPSBlbWIn
-cG9zaXRpb24sICBsYXN0X2NwX3NlcSA9IG1iMSdzZXEgKyAxMQ0KU2luY2UgbWI0IHdhcyBp
-bnZhbGlkLCB3ZSB3b3VsZCBzdG9wIHJlY292ZXJpbmcgbWI1IHdoaWNoIHNob3VsZCBiZSBk
-aXNjYXJkZWQuDQpBZnRlciByZWNvdmVyeSwgbG9nX3N0YXJ0IHBvaW50cyB0byBtYjQgYW5k
-IHdlIHdvdWxkbid0IHdyaXRlIGEgZW1wdHkgbWV0YSBibG9jaw0KYmVjYXVzZSBjb25kaXRp
-b24gImN0eC5zZXEgPiBsb2ctPmxhc3RfY3Bfc2VxICsgMSIgZG9lc24ndCBzYXRpc2Z5LiBJ
-ZiB3ZSBhcmUgZ29pbmcgdG8NCndyaXRlIGEgdmFsaWQgbWV0YSBibG9jayBhbmQgY3Jhc2gg
-aGFwcGVucyBhZ2FpbiwgdGhlIG5ldyBtZXRhIGJsb2NrIHdpbGwgZmFsbCBpbnRvDQpwb3Np
-dGlvbiBvZiBtYjQgYW5kIHJlY292ZXJ5IHByb2Nlc3MgbWF5IGRvIGEgcmVjb3ZlcnkgdG8g
-bWI1IHNpbmNlIGl0J3Mgc2VxDQppcyBtYXRjaGVkLg0KDQpXaGF0IEkgdHJ5IHRvIHNheSBp
-cyB0aGF0IGlmIHRoZSBmaXJzdCBtZXRhIGJsb2NrICxub3Qgb25seSB0aGUgbWlkIG9uZSwg
-d2Ugd3JpdHRlbiB3YXMNCmludmFsaWQsIHRoZSBsb2cgcmVjb3ZlcnkgY291bGQgYnJpbmcg
-cHJvYmxlbSBoZXJlIHRvbyAuIEkgdGhpbmsgdGhlIGNvbmRpdGlvbiBmb3IgDQp3cml0ZSBh
-IGVtcHR5IG1ldGEgYmxvY2sgc2hvdWxkIGxpa2UgdGhpczoNCiAgICAtIGlmIChjdHguc2Vx
-ID4gbG9nLT5sYXN0X2NwX3NlcSArIDEpIHsNCiAgICArIGlmIChjdHguc2VxID4gbG9nLT5s
-YXN0X2NwX3Nlce+8iSB7DQoNCi0tLS0tLS0tLS0tLS0tLS0tLSBPcmlnaW5hbCAtLS0tLS0t
-LS0tLS0tLS0tLS0NCkZyb206ICAiU2hhb2h1YSBMaSI8c2hsaUBrZXJuZWwub3JnPjsNCkRh
-dGU6ICBUaHUsIE9jdCAyNywgMjAxNiAwMjozNSBBTQ0KVG86ICAiWmhlbmd5dWFuIExpdSI8
-bGl1emhlbmd5dWFuQGt5bGlub3MuY24+Ow0KQ2M6ICAiU29uZyBMaXUiPHNvbmdsaXVicmF2
-aW5nQGZiLmNvbT47ICJsaW51eC1yYWlkIjxsaW51eC1yYWlkQHZnZXIua2VybmVsLm9yZz47
-ICJsaXV6aGVuZ3l1YW5nNTIxIjxsaXV6aGVuZ3l1YW5nNTIxQGdtYWlsLmNvbT47DQpTdWJq
-ZWN0OiAgUmU6IFtQQVRDSF0gbWQvcmFpZDU6IHdyaXRlIGFuIGVtcHR5IG1ldGEtYmxvY2sg
-d2hlbiBjcmVhdGluZ2xvZ3N1cGVyLWJsb2NrDQogDQpPbiBUdWUsIE9jdCAyNSwgMjAxNiBh
-dCAwODo0Mzo1MFBNICswODAwLCBaaGVuZ3l1YW4gTGl1IHdyb3RlOg0KPiBBZnRlciBkaXNj
-dXNzaW9uIHdpdGggbXkgY29sbGVhZ3VlLCBJIHRoaW5rIHRoZXJlIGlzIHN0aWxsIGEgcHJv
-YmxlbSB0aGF0DQo+IG1heSBoYXBwZW4gdmVyeSB1bmxpa2VseS5UaGUgc3VwZXJibG9jayBz
-aG91bGQgcG9pbnQgdG8gdGhlIGxhc3QgbWV0YQ0KPiBibG9jayB3ZSBoYXZlIHdyaXR0ZW4g
-YWZ0ZXIgbG9nIHJlY2xhaW0gb3IgcG9pbnQgdG8gdGhlIGVtdHB5IG1ldGEgYmxvY2sNCj4g
-YWZ0ZXIgbG9nIHJlY292ZXJ5LCBqdXN0IGNvbnNpZGVyIHdlIHdyaXRlIHNvbWUgbWV0YSBi
-bG9jayBiZWhpbmQgdGhlDQo+IHN1cGVyYmxvY2sgcG9zaXRpb24gYW5kIHN1cHBvc2UgY3Jh
-c2ggaGFwcGVucy4gSWYgdGhlIGZpcnN0IG1ldGEgYmxvY2sgd2UNCj4gaGF2ZSB3cml0dGVu
-IG5laWdoYm9yaW5nIHRoZSBzdXBlcmJsb2NrIHBvc2l0aW9uIGlzIGludmFsaWQsICBjdHgu
-c2VxIHdvdWxkIA0KPiBhbHNvIGVxdWFsIHRvIGxhc3RfY3Bfc2VxKzEgYWZ0ZXIgd2UgZGlk
-IGEgcmVjb3ZlcnkgLiBTbyB0aGUgc2FmZXN0IHdheSBpcyANCj4gd2UgYWx3YXlzIHdyaXRl
-IGFuIGVtcHR5IG1ldGEgYmxvY2sgYXQgY3R4LnBvcyBubyBtYXR0ZXIgaG93IG11Y2gNCj4g
-Y3R4LnJlcSBpcyBtb3JlIHRoYW4gbGFzdF9jcF9zZXEgYWZ0ZXIgd2UgZGlkIGEgcmVjb3Zl
-cnkuIA0KPiBIb3cgZG8geW91IHRoaW5rLCBTaGFvaHVhPyBJZiBpdCBpcyBuZWNlc3Nhcnks
-IEknZCByZXZlcnQgdGhpcyBwYXRjaCBhbmQNCj4gcmVzZW5kIG9uZS4NCg0KSSBkaWRuJ3Qg
-Z2V0IHRoZSBwb2ludC4gQ291bGQgeW91IHBsZWFzZSBlbGFib3JhdGUgaXQgYWdhaW4/DQoN
-ClRoYW5rcywNClNoYW9odWENCg0KPiANCj4gLS0tLS0tLS0tLS0tLS0tLS0tIE9yaWdpbmFs
-IC0tLS0tLS0tLS0tLS0tLS0tLQ0KPiBGcm9tOiAgIlNoYW9odWEgTGkiPHNobGlAa2VybmVs
-Lm9yZz47DQo+IERhdGU6ICBUdWUsIE9jdCAyNSwgMjAxNiAwNToyMyBBTQ0KPiBUbzogICJa
-aGVuZ3l1YW4gTGl1IjxsaXV6aGVuZ3l1YW5Aa3lsaW5vcy5jbj47DQo+IENjOiAgInNobGki
-PHNobGlAZmIuY29tPjsgIlNvbmcgTGl1Ijxzb25nbGl1YnJhdmluZ0BmYi5jb20+OyAibGlu
-dXgtcmFpZCI8bGludXgtcmFpZEB2Z2VyLmtlcm5lbC5vcmc+OyAibGl1emhlbmd5dWFuZzUy
-MSI8bGl1emhlbmd5dWFuZzUyMUBnbWFpbC5jb20+Ow0KPiBTdWJqZWN0OiAgUmU6IFtQQVRD
-SF0gbWQvcmFpZDU6IHdyaXRlIGFuIGVtcHR5IG1ldGEtYmxvY2sgd2hlbiBjcmVhdGluZyBs
-b2dzdXBlci1ibG9jaw0KPiAgDQo+IE9uIE1vbiwgT2N0IDI0LCAyMDE2IGF0IDA0OjE1OjU5
-UE0gKzA4MDAsIFpoZW5neXVhbiBMaXUgd3JvdGU6DQo+ID4gSWYgc3VwZXJibG9jayBwb2lu
-dHMgdG8gYW4gaW52YWxpZCBtZXRhIGJsb2NrLCByNWxfbG9hZF9sb2cgd2lsbCBzZXQNCj4g
-PiBjcmVhdGVfc3VwZXIgd2l0aCB0cnVlIGFuZCBjcmVhdGUgYW4gbmV3IHN1cGVyYmxvY2ss
-IHRoaXMgcnVudGltZSBwYXRoDQo+ID4gd291bGQgYWx3YXlzIGhhcHBlbiBpZiB3ZSBkbyBu
-byB3cml0aW5nIEkvTyB0byB0aGlzIGFycmF5IHNpbmNlIGl0IHdhcw0KPiA+IGNyZWF0ZWQu
-IFdyaXRpbmcgYW4gZW1wdHkgbWV0YSBibG9jayBjb3VsZCBhdm9pZCB0aGlzIHVubmVjZXNz
-YXJ5DQo+ID4gYWN0aW9uIGF0IHRoZSBmaXJzdCB0aW1lIHdlIGNyZWF0ZWQgbG9nIHN1cGVy
-YmxvY2suDQo+ID4gDQo+ID4gQW5vdGhlciByZWFzb24gaXMgZm9yIHRoZSBjb3JyZXRuZXNz
-IG9mIGxvZyByZWNvdmVyeS4gQ3VycmVudGx5IHdlIGhhdmUNCj4gPiBiZWxsb3cgY29kZSB0
-byBndWFyYW50ZWUgbG9nIHJldm9jZXJ5IHRvIGJlIGNvcnJlY3QuDQo+ID4gDQo+ID4gICAg
-ICAgICBpZiAoY3R4LnNlcSA+IGxvZy0+bGFzdF9jcF9zZXEgKyAxKSB7DQo+ID4gICAgICAg
-ICAgICAgICAgIGludCByZXQ7DQo+ID4gDQo+ID4gICAgICAgICAgICAgICAgIHJldCA9IHI1
-bF9sb2dfd3JpdGVfZW1wdHlfbWV0YV9ibG9jayhsb2csIGN0eC5wb3MsIGN0eC5zZXEgKyAx
-MCk7DQo+ID4gICAgICAgICAgICAgICAgIGlmIChyZXQpDQo+ID4gICAgICAgICAgICAgICAg
-ICAgICAgICAgcmV0dXJuIHJldDsNCj4gPiAgICAgICAgICAgICAgICAgbG9nLT5zZXEgPSBj
-dHguc2VxICsgMTE7DQo+ID4gICAgICAgICAgICAgICAgIGxvZy0+bG9nX3N0YXJ0ID0gcjVs
-X3JpbmdfYWRkKGxvZywgY3R4LnBvcywgQkxPQ0tfU0VDVE9SUyk7DQo+ID4gICAgICAgICAg
-ICAgICAgIHI1bF93cml0ZV9zdXBlcihsb2csIGN0eC5wb3MpOw0KPiA+ICAgICAgICAgfSBl
-bHNlIHsNCj4gPiAgICAgICAgICAgICAgICAgbG9nLT5sb2dfc3RhcnQgPSBjdHgucG9zOw0K
-PiA+ICAgICAgICAgICAgICAgICBsb2ctPnNlcSA9IGN0eC5zZXE7DQo+ID4gICAgICAgICB9
-DQo+ID4gDQo+ID4gSWYgd2UganVzdCBjcmVhdGVkIGEgYXJyYXkgd2l0aCBhIGpvdXJuYWwg
-ZGV2aWNlLCBsb2ctPmxvZ19zdGFydCBhbmQNCj4gPiBsb2ctPmxhc3RfY2hlY2twb2ludCBz
-aG91bGQgYWxsIGJlIDAsIHRoZW4gd2Ugd3JpdGUgdGhyZWUgbWV0YSBibG9jaw0KPiA+IHdo
-aWNoIGFyZSB2YWxpZCBleGNlcHQgbWlkIG9uZSBhbmQgc3VwcG9zZWQgY3Jhc2ggaGFwcGVu
-ZWQuIFRoZSBjdHguc2VxDQo+ID4gd291bGQgZXF1YWwgdG8gbG9nLT5sYXN0X2NwX3NlcSAr
-IDEgYW5kIGxvZy0+bG9nX3N0YXJ0IHdvdWxkIGJlIHNldCB0bw0KPiA+IHBvc2l0aW9uIG9m
-IG1pZCBpbnZhbGlkIG1ldGEgYmxvY2sgYWZ0ZXIgd2UgZGlkIGEgcmVjb3ZlcnksIHRoaXMg
-d2lsbA0KPiA+IGxlYWQgdG8gcHJvYmxlbXMgd2hpY2ggY291bGQgYmUgYXZvaWRlZCB3aXRo
-IHRoaXMgcGF0Y2guDQo+IA0KPiBUaGlzIHdvdWxkIGJlIHZlcnkgdW5saWtlbHksIGJ1dCBi
-ZXR0ZXIgdG8gZml4LiBBcHBsaWVkLCB0aGFua3Mh
+Hi,
 
+Indeed, here is what I had in terms of event count:
+/dev/sda10: 81589
+/dev/sdb10: 81626
+/dev/sdc10: 81589
 
+Then the following procedure worked quite straightforward:
+--------------------------------------------------------------------------------
+# mdadm --assemble /dev/md10 --verbose --force /dev/sda10 /dev/sdb10 /dev/sdc10
+# mdadm --manage /dev/md10 --add /dev/sdd10
+--------------------------------------------------------------------------------
 
+And 6h+ later:
+--------------------------------------------------------------------------------
+# cat /proc/mdstat
+Personalities : [raid1] [raid6] [raid5] [raid4]
+md10 : active raid5 sdd10[3] sda10[0] sdc10[2] sdb10[1]
+      5778741888 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
+--------------------------------------------------------------------------------
+
+Then I ran:
+--------------------------------------------------------------------------------
+# e2fsck -f -n -t -v /dev/md10
+e2fsck 1.42.5 (29-Jul-2012)
+Pass 1: Checking inodes, blocks, and sizes
+Pass 2: Checking directory structure
+Pass 3: Checking directory connectivity
+Pass 4: Checking reference counts
+Pass 5: Checking group summary information
+
+    15675837 inodes used (4.34%, out of 361177088)
+      188798 non-contiguous files (1.2%)
+       14751 non-contiguous directories (0.1%)
+             # of inodes with ind/dind/tind blocks: 0/0/0
+             Extent depth histogram: 15626455/47037/15
+  1281308341 blocks used (88.69%, out of 1444685472)
+           0 bad blocks
+         101 large files
+
+    15311457 regular files
+      361754 directories
+           0 character device files
+           0 block device files
+           0 fifos
+           0 links
+        2607 symbolic links (2310 fast symbolic links)
+          10 sockets
+------------
+    15675828 files
+Memory used: 50976k/1912k (20541k/30436k), time: 1304.00/334.06/ 8.00
+I/O read: 4891MB, write: 0MB, rate: 3.75MB/s
+--------------------------------------------------------------------------------
+
+Does it look OK enough to launch the mount?
+
+Regards and thanks for your help
+-------------------------
+Santiago DIEZ
+Quark Systems & CAOBA
+23 rue du Buisson Saint-Louis, 75010 Paris
+-------------------------
