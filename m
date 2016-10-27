@@ -1,76 +1,107 @@
-From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: [PATCH] Increase buffer for sysfs disk state
-Date: Thu, 27 Oct 2016 11:34:16 +0200
-Message-ID: <1477560856-17310-1-git-send-email-tomasz.majchrzak@intel.com>
+From: "=?utf-8?B?Wmhlbmd5dWFuIExpdQ==?=" <liuzhengyuan@kylinos.cn>
+Subject: Re: [PATCH] md/raid5: write an empty meta-block when creatinglogsuper-block
+Date: Thu, 27 Oct 2016 22:05:06 +0800
+Message-ID: <tencent_647E309D0106DEBE08875B26@qq.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Jes.Sorensen@redhat.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+To: =?utf-8?B?U2hhb2h1YSBMaQ==?= <shli@kernel.org>
+Cc: =?utf-8?B?U29uZyBMaXU=?= <songliubraving@fb.com>, =?utf-8?B?bGludXgtcmFpZA==?= <linux-raid@vger.kernel.org>, =?utf-8?B?bGl1emhlbmd5dWFuZzUyMQ==?= <liuzhengyuang521@gmail.com>
 List-Id: linux-raid.ids
 
-Bad block support has incremented sysfs disk state reported by kernel
-("external_bbl") so it became longer than 20 bytes. It causes reshape to
-fail as it reads truncated entry from sysfs.
+U29ycnkgZm9yIHRoZSB1bmNsZWFyIGV4cHJlc3Npb24uDQoNClRoZSBsb2cgbWlnaHQgbG9v
+ayBsaWtlIHRoaXMgYmVmb3JlIHdlIGRpZCBhIHJlY292ZXJ5IDoNCnwgbWIxIHwgbWIyIHwg
+bWIzICB8ICAgICAgICAgICB8ICAgICAgICAgICAgfCAgICAgICAgICAgfCANCiBsYXN0X2No
+ZWNrcG9pbnQgPSBtYjEncG9zdGlvbiwgICAgbGFzdF9jcF9zZXEgPSBtYjEnc2VxDQpBZnRl
+ciB3ZSBkaWQgYSByZWNvdmVyeSh3ZSB3b3VsZCB3cml0ZSBhIGVtcHR5IG1ldGEgYmxvY2sg
+ZW1iIGF0IGxvZyB0YWlsKToNCnwgbWIxIHwgbWIyIHwgbWIzIHwgIGVtYiB8ICAgICAgICAg
+ICAgfCAgICAgICAgICAgfCANCmxhc3RfY2hlY2twb2ludCA9IGVtYidwb3NpdGlvbiwgIGxh
+c3RfY3Bfc2VxID0gbWIxJ3NlcSArIDExDQpUaGVuIHdlIHdyaXRlIHR3byBtZXRhIGJsb2Nr
+cyBhbmQgc3VwcG9zZSBjcmFzaCBoYXBwZW5zOg0KfCBtYjEgfCBtYjIgfCBtYjMgfCAgZW1i
+IHwgIG1iNCB8IG1iNSB8IA0KbGFzdF9jaGVja3BvaW50ID0gZW1iJ3Bvc2l0aW9uLCAgbGFz
+dF9jcF9zZXEgPSBtYjEnc2VxICsgMTENCk5vdyB3ZSBkaWQgYW5vdGhlciByZWNvdmVyeSBh
+ZnRlciByZXN0YXJ0IGFuZCBzdXBwb3NlIG1iNCB3YXMgaW52YWxpZDogDQp8IG1iMSB8IG1i
+MiB8IG1iMyB8ICBlbWIgfCAgbWI0IHwgbWI1IHwgDQpsYXN0X2NoZWNrcG9pbnQgPSBlbWIn
+cG9zaXRpb24sICBsYXN0X2NwX3NlcSA9IG1iMSdzZXEgKyAxMQ0KU2luY2UgbWI0IHdhcyBp
+bnZhbGlkLCB3ZSB3b3VsZCBzdG9wIHJlY292ZXJpbmcgbWI1IHdoaWNoIHNob3VsZCBiZSBk
+aXNjYXJkZWQuDQpBZnRlciByZWNvdmVyeSwgbG9nX3N0YXJ0IHBvaW50cyB0byBtYjQgYW5k
+IHdlIHdvdWxkbid0IHdyaXRlIGEgZW1wdHkgbWV0YSBibG9jaw0KYmVjYXVzZSBjb25kaXRp
+b24gImN0eC5zZXEgPiBsb2ctPmxhc3RfY3Bfc2VxICsgMSIgZG9lc24ndCBzYXRpc2Z5LiBJ
+ZiB3ZSBhcmUgZ29pbmcgdG8NCndyaXRlIGEgdmFsaWQgbWV0YSBibG9jayBhbmQgY3Jhc2gg
+aGFwcGVucyBhZ2FpbiwgdGhlIG5ldyBtZXRhIGJsb2NrIHdpbGwgZmFsbCBpbnRvDQpwb3Np
+dGlvbiBvZiBtYjQgYW5kIHJlY292ZXJ5IHByb2Nlc3MgbWF5IGRvIGEgcmVjb3ZlcnkgdG8g
+bWI1IHNpbmNlIGl0J3Mgc2VxDQppcyBtYXRjaGVkLg0KDQpXaGF0IEkgdHJ5IHRvIHNheSBp
+cyB0aGF0IGlmIHRoZSBmaXJzdCBtZXRhIGJsb2NrICxub3Qgb25seSB0aGUgbWlkIG9uZSwg
+d2Ugd3JpdHRlbiB3YXMNCmludmFsaWQsIHRoZSBsb2cgcmVjb3ZlcnkgY291bGQgYnJpbmcg
+cHJvYmxlbSBoZXJlIHRvbyAuIEkgdGhpbmsgdGhlIGNvbmRpdGlvbiBmb3IgDQp3cml0ZSBh
+IGVtcHR5IG1ldGEgYmxvY2sgc2hvdWxkIGxpa2UgdGhpczoNCiAgICAtIGlmIChjdHguc2Vx
+ID4gbG9nLT5sYXN0X2NwX3NlcSArIDEpIHsNCiAgICArIGlmIChjdHguc2VxID4gbG9nLT5s
+YXN0X2NwX3Nlce+8iSB7DQoNCi0tLS0tLS0tLS0tLS0tLS0tLSBPcmlnaW5hbCAtLS0tLS0t
+LS0tLS0tLS0tLS0NCkZyb206ICAiU2hhb2h1YSBMaSI8c2hsaUBrZXJuZWwub3JnPjsNCkRh
+dGU6ICBUaHUsIE9jdCAyNywgMjAxNiAwMjozNSBBTQ0KVG86ICAiWmhlbmd5dWFuIExpdSI8
+bGl1emhlbmd5dWFuQGt5bGlub3MuY24+Ow0KQ2M6ICAiU29uZyBMaXUiPHNvbmdsaXVicmF2
+aW5nQGZiLmNvbT47ICJsaW51eC1yYWlkIjxsaW51eC1yYWlkQHZnZXIua2VybmVsLm9yZz47
+ICJsaXV6aGVuZ3l1YW5nNTIxIjxsaXV6aGVuZ3l1YW5nNTIxQGdtYWlsLmNvbT47DQpTdWJq
+ZWN0OiAgUmU6IFtQQVRDSF0gbWQvcmFpZDU6IHdyaXRlIGFuIGVtcHR5IG1ldGEtYmxvY2sg
+d2hlbiBjcmVhdGluZ2xvZ3N1cGVyLWJsb2NrDQogDQpPbiBUdWUsIE9jdCAyNSwgMjAxNiBh
+dCAwODo0Mzo1MFBNICswODAwLCBaaGVuZ3l1YW4gTGl1IHdyb3RlOg0KPiBBZnRlciBkaXNj
+dXNzaW9uIHdpdGggbXkgY29sbGVhZ3VlLCBJIHRoaW5rIHRoZXJlIGlzIHN0aWxsIGEgcHJv
+YmxlbSB0aGF0DQo+IG1heSBoYXBwZW4gdmVyeSB1bmxpa2VseS5UaGUgc3VwZXJibG9jayBz
+aG91bGQgcG9pbnQgdG8gdGhlIGxhc3QgbWV0YQ0KPiBibG9jayB3ZSBoYXZlIHdyaXR0ZW4g
+YWZ0ZXIgbG9nIHJlY2xhaW0gb3IgcG9pbnQgdG8gdGhlIGVtdHB5IG1ldGEgYmxvY2sNCj4g
+YWZ0ZXIgbG9nIHJlY292ZXJ5LCBqdXN0IGNvbnNpZGVyIHdlIHdyaXRlIHNvbWUgbWV0YSBi
+bG9jayBiZWhpbmQgdGhlDQo+IHN1cGVyYmxvY2sgcG9zaXRpb24gYW5kIHN1cHBvc2UgY3Jh
+c2ggaGFwcGVucy4gSWYgdGhlIGZpcnN0IG1ldGEgYmxvY2sgd2UNCj4gaGF2ZSB3cml0dGVu
+IG5laWdoYm9yaW5nIHRoZSBzdXBlcmJsb2NrIHBvc2l0aW9uIGlzIGludmFsaWQsICBjdHgu
+c2VxIHdvdWxkIA0KPiBhbHNvIGVxdWFsIHRvIGxhc3RfY3Bfc2VxKzEgYWZ0ZXIgd2UgZGlk
+IGEgcmVjb3ZlcnkgLiBTbyB0aGUgc2FmZXN0IHdheSBpcyANCj4gd2UgYWx3YXlzIHdyaXRl
+IGFuIGVtcHR5IG1ldGEgYmxvY2sgYXQgY3R4LnBvcyBubyBtYXR0ZXIgaG93IG11Y2gNCj4g
+Y3R4LnJlcSBpcyBtb3JlIHRoYW4gbGFzdF9jcF9zZXEgYWZ0ZXIgd2UgZGlkIGEgcmVjb3Zl
+cnkuIA0KPiBIb3cgZG8geW91IHRoaW5rLCBTaGFvaHVhPyBJZiBpdCBpcyBuZWNlc3Nhcnks
+IEknZCByZXZlcnQgdGhpcyBwYXRjaCBhbmQNCj4gcmVzZW5kIG9uZS4NCg0KSSBkaWRuJ3Qg
+Z2V0IHRoZSBwb2ludC4gQ291bGQgeW91IHBsZWFzZSBlbGFib3JhdGUgaXQgYWdhaW4/DQoN
+ClRoYW5rcywNClNoYW9odWENCg0KPiANCj4gLS0tLS0tLS0tLS0tLS0tLS0tIE9yaWdpbmFs
+IC0tLS0tLS0tLS0tLS0tLS0tLQ0KPiBGcm9tOiAgIlNoYW9odWEgTGkiPHNobGlAa2VybmVs
+Lm9yZz47DQo+IERhdGU6ICBUdWUsIE9jdCAyNSwgMjAxNiAwNToyMyBBTQ0KPiBUbzogICJa
+aGVuZ3l1YW4gTGl1IjxsaXV6aGVuZ3l1YW5Aa3lsaW5vcy5jbj47DQo+IENjOiAgInNobGki
+PHNobGlAZmIuY29tPjsgIlNvbmcgTGl1Ijxzb25nbGl1YnJhdmluZ0BmYi5jb20+OyAibGlu
+dXgtcmFpZCI8bGludXgtcmFpZEB2Z2VyLmtlcm5lbC5vcmc+OyAibGl1emhlbmd5dWFuZzUy
+MSI8bGl1emhlbmd5dWFuZzUyMUBnbWFpbC5jb20+Ow0KPiBTdWJqZWN0OiAgUmU6IFtQQVRD
+SF0gbWQvcmFpZDU6IHdyaXRlIGFuIGVtcHR5IG1ldGEtYmxvY2sgd2hlbiBjcmVhdGluZyBs
+b2dzdXBlci1ibG9jaw0KPiAgDQo+IE9uIE1vbiwgT2N0IDI0LCAyMDE2IGF0IDA0OjE1OjU5
+UE0gKzA4MDAsIFpoZW5neXVhbiBMaXUgd3JvdGU6DQo+ID4gSWYgc3VwZXJibG9jayBwb2lu
+dHMgdG8gYW4gaW52YWxpZCBtZXRhIGJsb2NrLCByNWxfbG9hZF9sb2cgd2lsbCBzZXQNCj4g
+PiBjcmVhdGVfc3VwZXIgd2l0aCB0cnVlIGFuZCBjcmVhdGUgYW4gbmV3IHN1cGVyYmxvY2ss
+IHRoaXMgcnVudGltZSBwYXRoDQo+ID4gd291bGQgYWx3YXlzIGhhcHBlbiBpZiB3ZSBkbyBu
+byB3cml0aW5nIEkvTyB0byB0aGlzIGFycmF5IHNpbmNlIGl0IHdhcw0KPiA+IGNyZWF0ZWQu
+IFdyaXRpbmcgYW4gZW1wdHkgbWV0YSBibG9jayBjb3VsZCBhdm9pZCB0aGlzIHVubmVjZXNz
+YXJ5DQo+ID4gYWN0aW9uIGF0IHRoZSBmaXJzdCB0aW1lIHdlIGNyZWF0ZWQgbG9nIHN1cGVy
+YmxvY2suDQo+ID4gDQo+ID4gQW5vdGhlciByZWFzb24gaXMgZm9yIHRoZSBjb3JyZXRuZXNz
+IG9mIGxvZyByZWNvdmVyeS4gQ3VycmVudGx5IHdlIGhhdmUNCj4gPiBiZWxsb3cgY29kZSB0
+byBndWFyYW50ZWUgbG9nIHJldm9jZXJ5IHRvIGJlIGNvcnJlY3QuDQo+ID4gDQo+ID4gICAg
+ICAgICBpZiAoY3R4LnNlcSA+IGxvZy0+bGFzdF9jcF9zZXEgKyAxKSB7DQo+ID4gICAgICAg
+ICAgICAgICAgIGludCByZXQ7DQo+ID4gDQo+ID4gICAgICAgICAgICAgICAgIHJldCA9IHI1
+bF9sb2dfd3JpdGVfZW1wdHlfbWV0YV9ibG9jayhsb2csIGN0eC5wb3MsIGN0eC5zZXEgKyAx
+MCk7DQo+ID4gICAgICAgICAgICAgICAgIGlmIChyZXQpDQo+ID4gICAgICAgICAgICAgICAg
+ICAgICAgICAgcmV0dXJuIHJldDsNCj4gPiAgICAgICAgICAgICAgICAgbG9nLT5zZXEgPSBj
+dHguc2VxICsgMTE7DQo+ID4gICAgICAgICAgICAgICAgIGxvZy0+bG9nX3N0YXJ0ID0gcjVs
+X3JpbmdfYWRkKGxvZywgY3R4LnBvcywgQkxPQ0tfU0VDVE9SUyk7DQo+ID4gICAgICAgICAg
+ICAgICAgIHI1bF93cml0ZV9zdXBlcihsb2csIGN0eC5wb3MpOw0KPiA+ICAgICAgICAgfSBl
+bHNlIHsNCj4gPiAgICAgICAgICAgICAgICAgbG9nLT5sb2dfc3RhcnQgPSBjdHgucG9zOw0K
+PiA+ICAgICAgICAgICAgICAgICBsb2ctPnNlcSA9IGN0eC5zZXE7DQo+ID4gICAgICAgICB9
+DQo+ID4gDQo+ID4gSWYgd2UganVzdCBjcmVhdGVkIGEgYXJyYXkgd2l0aCBhIGpvdXJuYWwg
+ZGV2aWNlLCBsb2ctPmxvZ19zdGFydCBhbmQNCj4gPiBsb2ctPmxhc3RfY2hlY2twb2ludCBz
+aG91bGQgYWxsIGJlIDAsIHRoZW4gd2Ugd3JpdGUgdGhyZWUgbWV0YSBibG9jaw0KPiA+IHdo
+aWNoIGFyZSB2YWxpZCBleGNlcHQgbWlkIG9uZSBhbmQgc3VwcG9zZWQgY3Jhc2ggaGFwcGVu
+ZWQuIFRoZSBjdHguc2VxDQo+ID4gd291bGQgZXF1YWwgdG8gbG9nLT5sYXN0X2NwX3NlcSAr
+IDEgYW5kIGxvZy0+bG9nX3N0YXJ0IHdvdWxkIGJlIHNldCB0bw0KPiA+IHBvc2l0aW9uIG9m
+IG1pZCBpbnZhbGlkIG1ldGEgYmxvY2sgYWZ0ZXIgd2UgZGlkIGEgcmVjb3ZlcnksIHRoaXMg
+d2lsbA0KPiA+IGxlYWQgdG8gcHJvYmxlbXMgd2hpY2ggY291bGQgYmUgYXZvaWRlZCB3aXRo
+IHRoaXMgcGF0Y2guDQo+IA0KPiBUaGlzIHdvdWxkIGJlIHZlcnkgdW5saWtlbHksIGJ1dCBi
+ZXR0ZXIgdG8gZml4LiBBcHBsaWVkLCB0aGFua3Mh
 
-Increase buffer so it can accommodate the string including all state
-values currently implemented in kernel at the same time.
 
-Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
----
- Grow.c        | 6 ++++--
- monitor.c     | 4 ++--
- super-intel.c | 5 +++--
- 3 files changed, 9 insertions(+), 6 deletions(-)
-
-diff --git a/Grow.c b/Grow.c
-index 7402597..9f1570e 100755
---- a/Grow.c
-+++ b/Grow.c
-@@ -4017,8 +4017,10 @@ static int grow_backup(struct mdinfo *sra,
- 			if (sd->disk.state & (1<<MD_DISK_FAULTY))
- 				continue;
- 			if (sd->disk.state & (1<<MD_DISK_SYNC)) {
--				char sbuf[20];
--				if (sysfs_get_str(sra, sd, "state", sbuf, 20) < 0 ||
-+				char sbuf[100];
-+
-+				if (sysfs_get_str(sra, sd, "state",
-+						  sbuf, sizeof(sbuf)) < 0 ||
- 				    strstr(sbuf, "faulty") ||
- 				    strstr(sbuf, "in_sync") == NULL) {
- 					/* this device is dead */
-diff --git a/monitor.c b/monitor.c
-index 1704a59..15181ce 100644
---- a/monitor.c
-+++ b/monitor.c
-@@ -136,8 +136,8 @@ static enum sync_action read_action( int fd)
- 
- int read_dev_state(int fd)
- {
--	char buf[60];
--	int n = read_attr(buf, 60, fd);
-+	char buf[100];
-+	int n = read_attr(buf, sizeof(buf), fd);
- 	char *cp;
- 	int rv = 0;
- 
-diff --git a/super-intel.c b/super-intel.c
-index 4bb9059..f9d0a04 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -11408,9 +11408,10 @@ int check_degradation_change(struct mdinfo *info,
- 			if (sd->disk.state & (1<<MD_DISK_FAULTY))
- 				continue;
- 			if (sd->disk.state & (1<<MD_DISK_SYNC)) {
--				char sbuf[20];
-+				char sbuf[100];
-+
- 				if (sysfs_get_str(info,
--					sd, "state", sbuf, 20) < 0 ||
-+					sd, "state", sbuf, sizeof(sbuf)) < 0 ||
- 					strstr(sbuf, "faulty") ||
- 					strstr(sbuf, "in_sync") == NULL) {
- 					/* this device is dead */
--- 
-1.8.3.1
 
