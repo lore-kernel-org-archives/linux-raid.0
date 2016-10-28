@@ -1,93 +1,99 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: Resync issue in RAID1
-Date: Fri, 28 Oct 2016 15:01:52 +1100
-Message-ID: <8760odt93j.fsf@notabene.neil.brown.name>
-References: <CAF9xHmRCKzBXE5_tdqNY9BJJn7LyC8bOv8OaFXpxc1BvGUTCeQ@mail.gmail.com>
+Subject: [PATCH] md: be careful not lot leak internal curr_resync value into metadata.
+Date: Fri, 28 Oct 2016 15:59:41 +1100
+Message-ID: <8737jht6f6.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAF9xHmRCKzBXE5_tdqNY9BJJn7LyC8bOv8OaFXpxc1BvGUTCeQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: V <viswesh.vichu@gmail.com>, linux-raid@vger.kernel.org
+To: Shaohua Li <shli@fb.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>, Viswesh <viswesh.vichu@gmail.com>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Sat, Oct 22 2016, V wrote:
 
-> Hi,
->
-> I am facing an issue during RAID1 resync. I have an ubuntu
-> 4.4.0-31-generic running with raid1 configured with 2 disks as active
-> and 2 as spares. On the first powercycle, after installing RAID, i see
-> the following messages in kern.log
->
->
-> My disks are configured with 4K sector size (both logical and
-> physical) (sda and sdb are active disks for this raid)
->
->
-> ===========
-> Oct 18 03:52:56  kernel: [   52.869113] md: using 128k window, over a
-> total of 51167104k.
-> Oct 18 03:52:56  kernel: [   52.869114] md: resuming resync of md2 from checkpoint.
 
-This line (above) combined with ...
+mddev->curr_resync usually records where the current resync is up to,
+but during the starting phase it has some "magic" values.
 
-> Oct 18 03:52:56  kernel: [   52.869536] md/raid1:md2: sda: unrecoverable I/O read error for block 3
+ 1 - means that the array is trying to start a resync, but has yielded
+     to another array which shares physical devices, and also needs to
+     start a resync
+ 2 - means the array is trying to start resync, but has found another
+     array which shares physical devices and has already started resync.
 
-this line suggests that when you shut down, md had already started a
-resync, and it had checkpointed at block '3'.
+ 3 - means that resync has commensed, but it is possible that nothing
+     has actually been resynced yet.
 
-The subsequent error are:
+It is important that this value not be visible to user-space and
+particularly that it doesn't get written to the metadata, as the
+resync or recovery checkpoint.  In part, this is because it may be
+slightly higher than the correct value, though this is very rare.
+In part, because it is not a multiple of 4K, and some devices only
+support 4K aligned accesses.
 
-> Oct 18 03:52:56  kernel: [   52.869692] md/raid1:md2: sda: unrecoverable I/O read error for block 131
-> Oct 18 03:52:56  kernel: [   52.869837] md/raid1:md2: sda: unrecoverable I/O read error for block 259
-> Oct 18 03:52:56  kernel: [   52.870022] md/raid1:md2: sda: unrecoverable I/O read error for block 387
+There are two places where this value is propagates into either
+=2D>curr_resync_completed or ->recovery_cp or ->recovery_offset.
+These currently avoid the propagation of values 1 and 3, but will
+allow 3 to leak through.
 
-which are every 128 blocks (aka sectors) from '3'.
-I know what caused that.  The patch below will stop it happening again.
+Change them to only propagate the value if it is > 3.
 
-You might be able get your array working again by stopping it
-and assembling with --update=resync.
-That will reset the checkpoint to 0.
+As this can cause an array to fail, the patch is suitable for -stable.
 
-NeilBrown
+Cc: stable@vger.kernel.org
+Reported-by: Viswesh <viswesh.vichu@gmail.com>
+Signed-off-by: NeilBrown <neilb@suse.com>
+=2D--
+ drivers/md/md.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 2cf0e1c00b9a..aa2ca23463f4 100644
---- a/drivers/md/md.c
+index eac84d8ff724..18d0c4adbd7b 100644
+=2D-- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -8099,7 +8099,8 @@ void md_do_sync(struct md_thread *thread)
- 	    mddev->curr_resync > 2) {
+@@ -8144,14 +8144,14 @@ void md_do_sync(struct md_thread *thread)
+=20
+ 	if (!test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
+ 	    !test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
+=2D	    mddev->curr_resync > 2) {
++	    mddev->curr_resync > 3) {
+ 		mddev->curr_resync_completed =3D mddev->curr_resync;
+ 		sysfs_notify(&mddev->kobj, NULL, "sync_completed");
+ 	}
+ 	mddev->pers->sync_request(mddev, max_sectors, &skipped);
+=20
+ 	if (!test_bit(MD_RECOVERY_CHECK, &mddev->recovery) &&
+=2D	    mddev->curr_resync > 2) {
++	    mddev->curr_resync > 3) {
  		if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
  			if (test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
--				if (mddev->curr_resync >= mddev->recovery_cp) {
-+				if (mddev->curr_resync >= mddev->recovery_cp &&
-+				    mddev->curr_resync > 3) {
- 					printk(KERN_INFO
- 					       "md: checkpointing %s of %s.\n",
- 					       desc, mdname(mddev));
+ 				if (mddev->curr_resync >=3D mddev->recovery_cp) {
+=2D-=20
+2.10.1
+
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAEBCAAGBQJYEs2wAAoJEDnsnt1WYoG5+esQAKW/d9YI94jlfmiCo9+LxWdE
-4x4Hk3kb5UuWo0uMbedZFQxmMVHMGEa0t2ZtxSSa0vZ8BMm3LMi3ZC+NbbBaRftu
-rJ0ehrJ6x9JdNRrMJk6SX0kSfM/Czz2FyTMt4g0zUuYOgge+OLoZQBwSNCQGFYvR
-XrqfumVJhThfVxGFZZ2YQHbUuGxdNUkdAieVqgBzgsxZl4N3tw6kk2NPxeGoS1yG
-pd6IwM4SJaQq6UzS/mVOM/59fwUjKc6V0+r3SW0tcF6XlqUJ/wN+JKukYxkbY+e0
-nXwTcPAThDo9DYRzGcFt2PucjE/coTuuZtdy0vDyHu5lgQx/ktjqh23rju0Jm556
-bmgJMLK0A0/p5L7Dj9qKmEWfvHZ74gFMcm1TAT4oybmq73NtElERuybJ6Lfp/L9M
-ovH3meZU7b5AMBd4ywTdepDPDrQQoVTaFdW/ORPTlZBUen7NZ0wc+zdADZQTIDPN
-NQce84cQjj1qUU54Xs/fB7qv7SJiKkZ9TPK6vOk6Syp/HyNUtZyVlpgHJ5fGRHy2
-7D8h9jk8gvqx0YQ0npog/EQz3Ddia1UUid799a0+9QDJo87gIfId0qf0V2+rsT3c
-3BShUpGKzwCW6xqLgLoDe8uS5rfPsorxdDtnsfWMwmY3bl7lNw7EBaRGVZmPQwfy
-23e0EjHdVhWkf07dp+HA
-=LRdJ
+iQIcBAEBCAAGBQJYEts9AAoJEDnsnt1WYoG5aWsP/iCRJN73A2WpGeaQoLUYdvFU
+7g0NneOajD9Tjbmf3f9kc0T/EF8sMwNIU0O3Eb2KfS8xSOY99kCXKZD7ScNWkdG9
+jCKQvJOXBFnlGKK6lacQv7NINoJl5t86XRT+9Tt6rJb/RJi4ddglpMYMCgCjtCN8
+K/15MMDR7FlomfTlhmkQBd+FZoOTGrhnOYpYQTyYgOad7hiYhBjr2WEtq82x6u0S
+GGwJsYXgoe31o/cPa+2Mhw9M54Fqf28/FOnrDzdD50r+bH0Lf94Cr6fbktfeTB11
+INbfWyhfiOsCZKISgMcXabfmuInWhOmW1zdWIyFlUNawNju8YWbAup/yJrN2Z/2X
+WaKWxEOpFkCx/xqqgDwlJ+nr08iMZEVQPirm2jFFmM+KC1CvGOAbo8M4XBlIF51/
+jT0knAFWZlXrQbCBtNYR06ZQfhyQmUTdLuBtjiDOo4ak6fmB213KsDR49azzWurM
+iFRV+t9fkFRp6aiDxeq4JbYUIMlRhN+dlerXGXXj0SUCwJkTk5kR3cxRhSXk1ANe
+9NXc8UjKoqlCpYg0mgSqY6ynpP+jqurcxkYC2ilUzZBdZ+0ya0EZ9l5EsttnbVg6
+0s+C35H6SrRrzZgYyx0QzvvR5NuI8urgmDkq6lhACYe5T/9biTvKS8cPkPDFffaM
+Nu4z2NmEKGF5gCpDg3DP
+=1rWj
 -----END PGP SIGNATURE-----
 --=-=-=--
