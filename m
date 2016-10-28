@@ -1,90 +1,85 @@
-From: V <viswesh.vichu@gmail.com>
-Subject: Re: Resync issue in RAID1
-Date: Thu, 27 Oct 2016 22:33:50 -0700
-Message-ID: <CAF9xHmQfUDOYFNa1uehqsz=arx-x24DuavX1sdBY313mdt0GEw@mail.gmail.com>
-References: <CAF9xHmRCKzBXE5_tdqNY9BJJn7LyC8bOv8OaFXpxc1BvGUTCeQ@mail.gmail.com>
- <8760odt93j.fsf@notabene.neil.brown.name>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: query re: resync not persisting over reboot in rescue mode
+Date: Fri, 28 Oct 2016 16:36:38 +1100
+Message-ID: <87zilprq55.fsf@notabene.neil.brown.name>
+References: <1477266640.7137.13.camel@adelaide.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8760odt93j.fsf@notabene.neil.brown.name>
+In-Reply-To: <1477266640.7137.13.camel@adelaide.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: Dan Kortschak <dan.kortschak@adelaide.edu.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+--=-=-=
+Content-Type: text/plain
 
-Thanks for the response. But during this phase, why is the scsi driver
-complaining about bad block number ?
+On Mon, Oct 24 2016, Dan Kortschak wrote:
 
-Oct 18 03:52:56  kernel: [  52.869378] sd 0:0:0:0: [sda] Bad block
-number requested
-Oct 18 03:52:56  kernel: [  52.869414] sd 0:0:0:0: [sda] Bad block
-number requested
-Oct 18 03:52:56  kernel: [  52.869436] sd 0:0:0:0: [sda] Bad block
-number requested
-Oct 18 03:52:56  kernel: [  52.869465] sd 0:0:0:0: [sda] Bad block
-number requested
-Oct 18 03:52:56  kernel: [  52.869503] sd 0:0:1:0: [sdb] Bad block
-number requested
+> First, I'll start with an apology - I have little (~nothing) in the way
+> of hard data to back up this question, but it is now just a matter of
+> personal interest as the problem appears to be fixed.
+>
+>
+> Background:
+>
+> Last week I tried to upgrade a kernel (ubuntu distro 16.04) but that
+> failed due to out of space (the system was originally built when
+> kernels were much smaller and I have now got to the point where it is
+> not possible to have two kernels on the /boot partitian).
+>
+> On reboot the boot failed with a great deal of disk noise which
+> persisted. Booting into recovery worked, and the noise was now knowable
 
-Thanks,
-V
+Disk noise shouldn't cause the boot to fail....
 
-On Thu, Oct 27, 2016 at 9:01 PM, NeilBrown <neilb@suse.com> wrote:
-> On Sat, Oct 22 2016, V wrote:
+
+> to be coming from a RAID resync of /dev/md0 (RAID10) after I dropped
+> into a root shell. I allowed this to complete and then went back to
+> resume the normal boot. This failed as before.
 >
->> Hi,
->>
->> I am facing an issue during RAID1 resync. I have an ubuntu
->> 4.4.0-31-generic running with raid1 configured with 2 disks as active
->> and 2 as spares. On the first powercycle, after installing RAID, i see
->> the following messages in kern.log
->>
->>
->> My disks are configured with 4K sector size (both logical and
->> physical) (sda and sdb are active disks for this raid)
->>
->>
->> ===========
->> Oct 18 03:52:56  kernel: [   52.869113] md: using 128k window, over a
->> total of 51167104k.
->> Oct 18 03:52:56  kernel: [   52.869114] md: resuming resync of md2 from checkpoint.
+> Repeating the process above, I found that the RAID was again unsynced
+> an doing a resync.
 >
-> This line (above) combined with ...
+> This has now resolved - I again allowed the resync to complete and then
+> did a /sbin/reboot from the CLI rather than going back to the recovery
+> menu and continuing the boot from the menu.
 >
->> Oct 18 03:52:56  kernel: [   52.869536] md/raid1:md2: sda: unrecoverable I/O read error for block 3
 >
-> this line suggests that when you shut down, md had already started a
-> resync, and it had checkpointed at block '3'.
+> Question:
 >
-> The subsequent error are:
->
->> Oct 18 03:52:56  kernel: [   52.869692] md/raid1:md2: sda: unrecoverable I/O read error for block 131
->> Oct 18 03:52:56  kernel: [   52.869837] md/raid1:md2: sda: unrecoverable I/O read error for block 259
->> Oct 18 03:52:56  kernel: [   52.870022] md/raid1:md2: sda: unrecoverable I/O read error for block 387
->
-> which are every 128 blocks (aka sectors) from '3'.
-> I know what caused that.  The patch below will stop it happening again.
->
-> You might be able get your array working again by stopping it
-> and assembling with --update=resync.
-> That will reset the checkpoint to 0.
->
-> NeilBrown
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 2cf0e1c00b9a..aa2ca23463f4 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -8099,7 +8099,8 @@ void md_do_sync(struct md_thread *thread)
->             mddev->curr_resync > 2) {
->                 if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
->                         if (test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
-> -                               if (mddev->curr_resync >= mddev->recovery_cp) {
-> +                               if (mddev->curr_resync >= mddev->recovery_cp &&
-> +                                   mddev->curr_resync > 3) {
->                                         printk(KERN_INFO
->                                                "md: checkpointing %s of %s.\n",
->                                                desc, mdname(mddev));
+> What is a/are likely cause(s) for a resync to not persist over a
+> reboot?
+
+If /sbin/reboot works and the menu-thing doesn't then the menu-thing
+much be doing something very seriously wrong.
+You might be able to get the resync status to be forgotten if you
+write something to the array and then quickly run "reboot -f -n", or
+maybe "echo b > /proc/sysrq-trigger".
+
+Given that /sbin/reboot works, I suggest you report this to ubuntu as a
+bug.
+
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAEBCAAGBQJYEuPmAAoJEDnsnt1WYoG5IYUQALp+o5mi5VqF3kUi1XAZ80oC
+CAJ2Uz3LrHaLVnHKi3n6m1piow8kKBG7Hl1gMkucnkui3ta1iZ8BR/3r+Vgk0KyD
++gpxT76YMTK2WesiynHiqJnIuxL6vuWVBt1FeHmvgvvC8TmbLqzIDk6pMy784dWT
+niLG7RsD1i4PKl5gRVZyIQuoQgzAoxqxFRo1ZmatOPixlogDFL/kgTer/FvHP7CJ
+YkcgZe4ZMBET5gLXkXWiNw3aEmYIRsZ/HMZCvG8FyJVqJLXs/vujO0iR8Ea9bMvz
+60yc8JYEPZ2ORV2Y749TeEZSbiLSVgbsLTGbfblGv6FuQQomQCoYjEgSUWIS09SS
+nrBNrxCOweQxU31JoFMmjV1sDrdMDs5SNt7Jue3ocU/fyDZ4YM30aXLgW+tRJu13
+7hcxyJ7bn+qyiRt8yIReOHt681DByEw0hYYA2c0L7DK31cVI6G+d5+gwqxsNkB7E
+BoWunnJb9AbmVhkRIERkOTTEn5rwRvrtuaJq3vGK8MJqxOVIYatrh9xfMtqBYKSc
+B6KdtMvPitgQrHMTvZc8ylhLeQTBlaXbNiuIghPLhc0941MF/AyPEO1Xb/UfzjM1
+wBaAwDVwegOvScstCC0aFORAr1mwyXPHaGNgGNNE5NeHsZlGbKiktFUSB/NZ3VM8
+dLBcRzmh2/Ec3ZfbzI4a
+=6v1D
+-----END PGP SIGNATURE-----
+--=-=-=--
