@@ -1,223 +1,99 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: recovering failed raid5
-Date: Fri, 28 Oct 2016 14:36:26 +0100
-Message-ID: <20161028133626.GA27462@cthulhu.home.robinhill.me.uk>
-References: <CAM97BgQLPUN=t7VKHaVG-=SrJmS_tvaxGDbo3yqMwHm8B-do_Q@mail.gmail.com>
- <20161027160400.GA21042@metamorpher.de>
- <715b259f-1e56-9606-edc4-3e5c4d57744b@shenkin.org>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: Re: MD-RAID: Use seq_putc() in three status functions?
+Date: Fri, 28 Oct 2016 22:04:33 +0200
+Message-ID: <69acd529-fc75-bd74-17ae-bedd8796e706@users.sourceforge.net>
+References: <566ABCD9.1060404@users.sourceforge.net>
+ <688764a4-072d-2faf-37ba-a222b190a5d9@suse.de>
+ <59d71170-c48d-a084-c748-b6ab74a2bee4@users.sourceforge.net>
+ <1e151094-e228-5307-ae2f-b376b31f5628@suse.de>
+ <83e720c6-9037-a3c1-6e83-27505805f37f@users.sourceforge.net>
+ <2cc42b2f-1f1a-e95c-91fa-54e1dd3b6d49@suse.de>
+ <653e60ee-f862-8828-3e4f-498c7cc34bdc@users.sourceforge.net>
+ <c2500336-5848-66c3-ecf0-1ade04decf75@suse.de>
+ <a0f96e19-fa24-8507-2b77-344a342113aa@users.sourceforge.net>
+ <1476703920.2520.105.camel@petrovitsch.priv.at>
+ <97f31b70-e3ff-f194-c753-54da1fe3e664@users.sourceforge.net>
+ <57299b72-8e6b-0b92-4374-1b7a0907e810@suse.de>
+ <cb9beadc-3ea2-c09c-f621-a54cd73e3647@users.sourceforge.net>
+ <05d0cade-7922-9d8a-a974-34b2cc9150fb@suse.de>
+ <bf6c54f1-7af4-747c-a58b-be13ab74563e@users.sourceforge.net>
+ <665cd40a-4562-a015-78c6-12976c12b626@suse.de>
+ <cc24736e-2227-2a49-e131-386775c942d9@users.sourceforge.net>
+ <e264883f-d1b9-4bf3-aa9f-45fce5dab18e@users.sourceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <715b259f-1e56-9606-edc4-3e5c4d57744b@shenkin.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Shenkin <al@shenkin.org>
-Cc: linux-raid@vger.kernel.org, Andreas Klauer <Andreas.Klauer@metamorpher.de>, rm@romanrm.net, robin@robinhill.me.uk
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <e264883f-d1b9-4bf3-aa9f-45fce5dab18e@users.sourceforge.net>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, linux-raid@vger.kernel.org
+Cc: Bernd Petrovitsch <bernd@petrovitsch.priv.at>, Christoph Hellwig <hch@lst.de>, Guoqing Jiang <gqjiang@suse.com>, Jens Axboe <axboe@fb.com>, Joe Perches <coupons@perches.com>, Mike Christie <mchristi@redhat.com>, Neil Brown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, Tomasz Majchrzak <tomasz.majchrzak@intel.com>, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, kbuild-all@01.org, ltp@lists.linux.it
 List-Id: linux-raid.ids
 
-On Fri Oct 28, 2016 at 01:22:31PM +0100, Alexander Shenkin wrote:
+>>> So back to the original task for you: Show me in the generated output where the benefits are.
 
-> Thanks Andreas, much appreciated.  Your points about selftests and smart 
-> are well taken, and i'll implement them once i get this back up.  I'll 
-> buy yet another new, non drive-from-hell (yes Roman, I did buy the same 
-> damn drive again.  Will try to return it, thanks for the heads up...) 
-> and follow your instructions below.
-> 
-> One remaining question: is sdc definitely toast?  Or, is it possible 
-> that the Timeout Mismatch (as mentioned by Robin Hill; thanks Robin) is 
-> flagging the drive as failed, when something else is at play and perhaps 
-> the drive is actually fine?
-> 
-It's not definitely toast, no (but this is unrelated to the Timeout
-mismatches). It has some pending reallocations, which means the drive
-was unable to read from some blocks - if a write to the blocks fails
-then one of the spare blocks will be reallocated instead, but a write
-will often succeed and the pending reallocation will just be cleared.
+I can offer another bit of information for this software development discussion.
 
-Unfortunately, reconstruction of the array depends on this data being
-readable, so the fact the drive isn't toast doesn't necessarily help.
-I'd suggest replicating (using ddrescue) that drive to the new one (when
-it arrives) as a first step. It's possible ddrescue will manage to read
-the data (it'll make several attempts, so can sometimes read data that
-fails initially), otherwise you'll end up with some missing data
-(possibly corrupt files, possibly corrupt filesystem metadata, possibly
-just a bit of extra noise in an audio/video file). Once that's done, you
-can do a proper check on sdc (e.g. a badblocks read/write test), which
-will either lead to sector actually being reallocated, or to clearing
-the pending reallocations. Unless you get a lot more reallocated sectors
-than are currently pending, you can put the drive back into use if you
-like (bearing in mind the reputation of these drives and weighing the
-replacement cost against the value of your data).
+The following build settings were active in my "Makefile" for this Linux test case.
 
-If you run a regular selftest on the array, these sort of issues would
-be picked up and repaired automatically (the read errors will trigger
-rewrites and either reallocate blocks, clear the pending reallocations,
-or fail the drive). Otherwise they're liable to come back to bite you
-when you're trying to recover from a different failure.
+…
+HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O0 -fomit-frame-pointer -std=gnu89
+…
 
-Timeout Mismatches will lead to drives being failed from an otherwise
-healthy array - a read failure on the drive can't be corrected as the
-drive is still busy trying when the write request goes through, so the
-drive gets kicked out of the array. You didn't say what the issue was
-with your original sdb, but if it wasn't a definite fault then it may
-have been affected by a timeout mismatch.
 
-Cheers,
-    Robin
+The afffected source files can be compiled for the processor architecture "x86_64"
+by a tool like "GCC 6.2.1+r239849-1.5" from the software distribution
+"openSUSE Tumbleweed" with the following command example.
 
-> To everyone: sorry for the multiple posts.  Was having majordomo issues...
-> 
-> On 10/27/2016 5:04 PM, Andreas Klauer wrote:
-> > On Thu, Oct 27, 2016 at 04:06:14PM +0100, Alexander Shenkin wrote:
-> >> md2: raid5 mounted on /, via sd[abcd]3
-> >
-> > Two failed disks...
-> >
-> >> md0: raid1 mounted on /boot, via sd[abcd]1
-> >
-> > Actually only two disks active in that one, the other two are spares.
-> > It hardly matters for /boot, but you could grow it to a 4 disk raid1.
-> > Spares are not useful.
-> >
-> >> My sdb was recently reporting problems.  Instead of second guessing
-> >> those problems, I just got a new disk, replaced it, and added it to
-> >> the arrays.
-> >
-> > Replacing right away is the right thing to do.
-> > Unfortunately it seems you have another disk that is broke too.
-> >
-> >> 2) smartctl (disabled on drives - can enable once back up.  should I?)
-> >> note: SMART only enabled after problems started cropping up.
-> >
-> > But... why? Why disable smart? And if you do, is it a surprise that you
-> > only notice disk failures when it's already too late?
-> 
-> yeah, i asked myself that same question.  there was probably some reason 
-> I did, but i don't remember what it was.  i'll keep smart enabled from 
-> now on...
-> 
-> > You should enable smart, and not only that, also run regular selftests,
-> > and have smartd running, and have it send you mail when something happens.
-> > Same with raid checks, raid checks are at least something but it won't
-> > tell you about how many reallocated sectors your drive has.
-> 
-> will do
-> 
-> >> root@machinename:/home/username# smartctl --xall /dev/sda
-> >
-> > Looks fine but never ran a selftest.
-> >
-> >> root@machinename:/home/username# smartctl --xall /dev/sdb
-> >
-> > Looks new. (New drives need selftests too.)
-> >
-> >> root@machinename:/home/username# smartctl --xall /dev/sdc
-> >> smartctl 6.2 2013-07-26 r3841 [x86_64-linux-3.19.0-39-generic] (local build)
-> >> Copyright (C) 2002-13, Bruce Allen, Christian Franke, www.smartmontools.org
-> >>
-> >> === START OF INFORMATION SECTION ===
-> >> Model Family:     Seagate Barracuda 7200.14 (AF)
-> >> Device Model:     ST3000DM001-1CH166
-> >> Serial Number:    W1F1N909
-> >>
-> >> 197 Current_Pending_Sector  -O--C-   100   100   000    -    8
-> >> 198 Offline_Uncorrectable   ----C-   100   100   000    -    8
-> >
-> > This one is faulty and probably the reason why your resync failed.
-> > You have no redundancy left, so an option here would be to get a
-> > new drive and ddrescue it over.
-> >
-> > That's exactly the kind of thing you should be notified instantly
-> > about via mail. And it should be discovered when running selftests.
-> > Without full surface scan of the media, the disk itself won't know.
-> >
-> >> ==> WARNING: A firmware update for this drive may be available,
-> >> see the following Seagate web pages:
-> >> http://knowledge.seagate.com/articles/en_US/FAQ/207931en
-> >> http://knowledge.seagate.com/articles/en_US/FAQ/223651en
-> >
-> > About this, *shrug*
-> > I don't have these drives, you might want to check that out.
-> > But it probably won't fix bad sectors.
-> >
-> >> root@machinename:/home/username# smartctl --xall /dev/sdd
-> >
-> > Some strange things in the error log here, but old.
-> > Still, same as for all others - selftest.
-> >
-> >> ################### mdadm --examine ###########################
-> >>
-> >> /dev/sda1:
-> >>      Raid Level : raid1
-> >>    Raid Devices : 2
-> >
-> > A RAID 1 with two drives, could be four.
-> >
-> >> /dev/sdb1:
-> >> /dev/sdc1:
-> >
-> > So these would also have data instead of being spare.
-> >
-> >> /dev/sda3:
-> >>      Raid Level : raid5
-> >>    Raid Devices : 4
-> >>
-> >>     Update Time : Mon Oct 24 09:02:52 2016
-> >>          Events : 53547
-> >>
-> >>    Device Role : Active device 0
-> >>    Array State : A..A ('A' == active, '.' == missing)
-> >
-> > RAID-5 with two failed disks.
-> >
-> >> /dev/sdc3:
-> >>      Raid Level : raid5
-> >>    Raid Devices : 4
-> >>
-> >>     Update Time : Mon Oct 24 08:53:57 2016
-> >>          Events : 53539
-> >>
-> >>    Device Role : Active device 2
-> >>    Array State : AAAA ('A' == active, '.' == missing)
-> >
-> > This one failed, 8:53.
-> >
-> >> ############ /proc/mdstat ############################################
-> >>
-> >> md2 : active raid5 sda3[0] sdc3[2](F) sdd3[3]
-> >>       8760565248 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/2]
-> >> [U__U]
-> >
-> > [U__U] refers to device roles as in [0123],
-> > so device role 0 and 3 is okay, 1 and 2 missing.
-> >
-> >> md0 : active raid1 sdb1[4](S) sdc1[2](S) sda1[0] sdd1[3]
-> >>       1950656 blocks super 1.2 [2/2] [UU]
-> >
-> > Those two spares again, could be [UUUU] instead.
-> >
-> > tl;dr
-> > stop it all,
-> > ddrescue /dev/sdc to your new disk,
-> > try your luck with --assemble --force (not using /dev/sdc!),
-> > get yet another new disk, add, sync, cross fingers.
-> >
-> > There's also mdadm --replace instead of --remove, --add,
-> > that sometimes helps if there's only a few bad sectors
-> > on each disk. If the disk you already removed wasn't
-> > already kicked from the array by the time you replaced,
-> > maybe it would have avoided this problem.
-> >
-> > But good disk monitoring and testing is even more important.
-> 
-> thanks a bunch, Andreas.  I'll monitor and test from now on...
-> 
-> > Regards
-> > Andreas Klauer
-> 
+my_original=${my_build_dir}unchanged/test/ \
+&& my_fixing=${my_build_dir}patched/test/ \
+&& mkdir -p ${my_original} ${my_fixing} \
+&& my_cc=/usr/bin/gcc-6 \
+&& my_module=drivers/md/raid1.s \
+&& git checkout next-20161014 \
+&& make -j6 O="${my_original}" CC="${my_cc}" HOSTCC="${my_cc}" allmodconfig "${my_module}" \
+&& git checkout next_usage_of_seq_putc_in_md_raid_1 \
+&& make -j6 O="${my_fixing}" CC="${my_cc}" HOSTCC="${my_cc}" allmodconfig "${my_module}" \
+&& diff -u "${my_original}${my_module}" "${my_fixing}${my_module}" > "${my_build_dir}assembler_code_comparison_$(date -I)_3.diff"
 
--- 
-     ___        
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+
+The generated file got the size "25.4 KiB" this time. I guess that only
+the following two diff hunks are interesting then to show desired effects
+for the suggested software refactoring around data output of a single character
+(instead of a similar string).
+
+
+…
+@@ -4402,10 +4402,6 @@
+ .LC19:
+ 	.string	"%s"
+ 	.zero	61
+-	.align 32
+-.LC20:
+-	.string	"]"
+-	.zero	62
+ 	.text
+ 	.p2align 4,,15
+ 	.type	raid1_status, @function
+@@ -4564,8 +4560,8 @@
+ 	movq	$rcu_lock_map, %rdi	#,
+ 	call	lock_release	#
+ 	movq	%r14, %rdi	# seq,
+-	movq	$.LC20, %rsi	#,
+-	call	seq_printf	#
++	movl	$93, %esi	#,
++	call	seq_putc	#
+ 	addq	$16, %rsp	#,
+ 	popq	%rbx	#
+ 	popq	%r12	#
+…
+
+
+* Is this kind of assembler code comparison useful to clarify relevant
+  differences further?
+
+* Are any software development concerns left over for such a transformation?
+
+Regards,
+Markus
+
