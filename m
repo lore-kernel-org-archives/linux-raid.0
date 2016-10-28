@@ -1,177 +1,72 @@
-From: Alexander Shenkin <al@shenkin.org>
-Subject: Re: recovering failed raid5
-Date: Fri, 28 Oct 2016 13:22:31 +0100
-Message-ID: <715b259f-1e56-9606-edc4-3e5c4d57744b@shenkin.org>
-References: <CAM97BgQLPUN=t7VKHaVG-=SrJmS_tvaxGDbo3yqMwHm8B-do_Q@mail.gmail.com>
- <20161027160400.GA21042@metamorpher.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH] raid1: handle read error also in readonly mode
+Date: Fri, 28 Oct 2016 14:45:58 +0200
+Message-ID: <1477658758-22637-1-git-send-email-tomasz.majchrzak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161027160400.GA21042@metamorpher.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Andreas Klauer <Andreas.Klauer@metamorpher.de>, rm@romanrm.net, robin@robinhill.me.uk
+Cc: shli@kernel.org, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
-Thanks Andreas, much appreciated.  Your points about selftests and smart 
-are well taken, and i'll implement them once i get this back up.  I'll 
-buy yet another new, non drive-from-hell (yes Roman, I did buy the same 
-damn drive again.  Will try to return it, thanks for the heads up...) 
-and follow your instructions below.
+If write is the first operation on a disk and it happens not to be
+aligned to page size, block layer sends read request first. If read
+operation fails, the disk is set as failed as no attempt to fix the
+error is made because array is in auto-readonly mode. Similarily, the
+disk is set as failed for read-only array.
 
-One remaining question: is sdc definitely toast?  Or, is it possible 
-that the Timeout Mismatch (as mentioned by Robin Hill; thanks Robin) is 
-flagging the drive as failed, when something else is at play and perhaps 
-the drive is actually fine?
+Take the same approach as in raid10. Don't fail the disk if array is in
+readonly or auto-readonly mode. Try to redirect the request first and if
+unsuccessful, return a read error.
 
-To everyone: sorry for the multiple posts.  Was having majordomo issues...
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+---
+ drivers/md/raid1.c | 19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
 
-On 10/27/2016 5:04 PM, Andreas Klauer wrote:
-> On Thu, Oct 27, 2016 at 04:06:14PM +0100, Alexander Shenkin wrote:
->> md2: raid5 mounted on /, via sd[abcd]3
->
-> Two failed disks...
->
->> md0: raid1 mounted on /boot, via sd[abcd]1
->
-> Actually only two disks active in that one, the other two are spares.
-> It hardly matters for /boot, but you could grow it to a 4 disk raid1.
-> Spares are not useful.
->
->> My sdb was recently reporting problems.  Instead of second guessing
->> those problems, I just got a new disk, replaced it, and added it to
->> the arrays.
->
-> Replacing right away is the right thing to do.
-> Unfortunately it seems you have another disk that is broke too.
->
->> 2) smartctl (disabled on drives - can enable once back up.  should I?)
->> note: SMART only enabled after problems started cropping up.
->
-> But... why? Why disable smart? And if you do, is it a surprise that you
-> only notice disk failures when it's already too late?
-
-yeah, i asked myself that same question.  there was probably some reason 
-I did, but i don't remember what it was.  i'll keep smart enabled from 
-now on...
-
-> You should enable smart, and not only that, also run regular selftests,
-> and have smartd running, and have it send you mail when something happens.
-> Same with raid checks, raid checks are at least something but it won't
-> tell you about how many reallocated sectors your drive has.
-
-will do
-
->> root@machinename:/home/username# smartctl --xall /dev/sda
->
-> Looks fine but never ran a selftest.
->
->> root@machinename:/home/username# smartctl --xall /dev/sdb
->
-> Looks new. (New drives need selftests too.)
->
->> root@machinename:/home/username# smartctl --xall /dev/sdc
->> smartctl 6.2 2013-07-26 r3841 [x86_64-linux-3.19.0-39-generic] (local build)
->> Copyright (C) 2002-13, Bruce Allen, Christian Franke, www.smartmontools.org
->>
->> === START OF INFORMATION SECTION ===
->> Model Family:     Seagate Barracuda 7200.14 (AF)
->> Device Model:     ST3000DM001-1CH166
->> Serial Number:    W1F1N909
->>
->> 197 Current_Pending_Sector  -O--C-   100   100   000    -    8
->> 198 Offline_Uncorrectable   ----C-   100   100   000    -    8
->
-> This one is faulty and probably the reason why your resync failed.
-> You have no redundancy left, so an option here would be to get a
-> new drive and ddrescue it over.
->
-> That's exactly the kind of thing you should be notified instantly
-> about via mail. And it should be discovered when running selftests.
-> Without full surface scan of the media, the disk itself won't know.
->
->> ==> WARNING: A firmware update for this drive may be available,
->> see the following Seagate web pages:
->> http://knowledge.seagate.com/articles/en_US/FAQ/207931en
->> http://knowledge.seagate.com/articles/en_US/FAQ/223651en
->
-> About this, *shrug*
-> I don't have these drives, you might want to check that out.
-> But it probably won't fix bad sectors.
->
->> root@machinename:/home/username# smartctl --xall /dev/sdd
->
-> Some strange things in the error log here, but old.
-> Still, same as for all others - selftest.
->
->> ################### mdadm --examine ###########################
->>
->> /dev/sda1:
->>      Raid Level : raid1
->>    Raid Devices : 2
->
-> A RAID 1 with two drives, could be four.
->
->> /dev/sdb1:
->> /dev/sdc1:
->
-> So these would also have data instead of being spare.
->
->> /dev/sda3:
->>      Raid Level : raid5
->>    Raid Devices : 4
->>
->>     Update Time : Mon Oct 24 09:02:52 2016
->>          Events : 53547
->>
->>    Device Role : Active device 0
->>    Array State : A..A ('A' == active, '.' == missing)
->
-> RAID-5 with two failed disks.
->
->> /dev/sdc3:
->>      Raid Level : raid5
->>    Raid Devices : 4
->>
->>     Update Time : Mon Oct 24 08:53:57 2016
->>          Events : 53539
->>
->>    Device Role : Active device 2
->>    Array State : AAAA ('A' == active, '.' == missing)
->
-> This one failed, 8:53.
->
->> ############ /proc/mdstat ############################################
->>
->> md2 : active raid5 sda3[0] sdc3[2](F) sdd3[3]
->>       8760565248 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/2]
->> [U__U]
->
-> [U__U] refers to device roles as in [0123],
-> so device role 0 and 3 is okay, 1 and 2 missing.
->
->> md0 : active raid1 sdb1[4](S) sdc1[2](S) sda1[0] sdd1[3]
->>       1950656 blocks super 1.2 [2/2] [UU]
->
-> Those two spares again, could be [UUUU] instead.
->
-> tl;dr
-> stop it all,
-> ddrescue /dev/sdc to your new disk,
-> try your luck with --assemble --force (not using /dev/sdc!),
-> get yet another new disk, add, sync, cross fingers.
->
-> There's also mdadm --replace instead of --remove, --add,
-> that sometimes helps if there's only a few bad sectors
-> on each disk. If the disk you already removed wasn't
-> already kicked from the array by the time you replaced,
-> maybe it would have avoided this problem.
->
-> But good disk monitoring and testing is even more important.
-
-thanks a bunch, Andreas.  I'll monitor and test from now on...
-
-> Regards
-> Andreas Klauer
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index db536a6..29e2df5 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -2297,17 +2297,23 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
+ 	 * This is all done synchronously while the array is
+ 	 * frozen
+ 	 */
++
++	bio = r1_bio->bios[r1_bio->read_disk];
++	bdevname(bio->bi_bdev, b);
++	bio_put(bio);
++	r1_bio->bios[r1_bio->read_disk] = NULL;
++
+ 	if (mddev->ro == 0) {
+ 		freeze_array(conf, 1);
+ 		fix_read_error(conf, r1_bio->read_disk,
+ 			       r1_bio->sector, r1_bio->sectors);
+ 		unfreeze_array(conf);
+-	} else
+-		md_error(mddev, conf->mirrors[r1_bio->read_disk].rdev);
++	} else {
++		r1_bio->bios[r1_bio->read_disk] = IO_BLOCKED;
++	}
++
+ 	rdev_dec_pending(conf->mirrors[r1_bio->read_disk].rdev, conf->mddev);
+ 
+-	bio = r1_bio->bios[r1_bio->read_disk];
+-	bdevname(bio->bi_bdev, b);
+ read_more:
+ 	disk = read_balance(conf, r1_bio, &max_sectors);
+ 	if (disk == -1) {
+@@ -2318,11 +2324,6 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
+ 	} else {
+ 		const unsigned long do_sync
+ 			= r1_bio->master_bio->bi_opf & REQ_SYNC;
+-		if (bio) {
+-			r1_bio->bios[r1_bio->read_disk] =
+-				mddev->ro ? IO_BLOCKED : NULL;
+-			bio_put(bio);
+-		}
+ 		r1_bio->read_disk = disk;
+ 		bio = bio_clone_mddev(r1_bio->master_bio, GFP_NOIO, mddev);
+ 		bio_trim(bio, r1_bio->sector - bio->bi_iter.bi_sector,
+-- 
+1.8.3.1
 
