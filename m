@@ -1,90 +1,86 @@
-From: Dan Kortschak <dan.kortschak@adelaide.edu.au>
-Subject: Re: query re: resync not persisting over reboot in rescue mode
-Date: Fri, 28 Oct 2016 16:17:28 +1030
-Message-ID: <1477633648.22165.12.camel@adelaide.edu.au>
-References: <1477266640.7137.13.camel@adelaide.edu.au>
-         <87zilprq55.fsf@notabene.neil.brown.name>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: Bitmap in RAM?
+Date: Fri, 28 Oct 2016 16:58:35 +1100
+Message-ID: <87twbxrp4k.fsf@notabene.neil.brown.name>
+References: <57F8EC82.9010804@yandex.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87zilprq55.fsf@notabene.neil.brown.name>
+In-Reply-To: <57F8EC82.9010804@yandex.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
+To: Dark Penguin <darkpenguin@yandex.ru>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thank you.
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2016-10-28 at 16:36 +1100, NeilBrown wrote:
-> On Mon, Oct 24 2016, Dan Kortschak wrote:
-> 
-> > 
-> > First, I'll start with an apology - I have little (~nothing) in the
-> > way
-> > of hard data to back up this question, but it is now just a matter
-> > of
-> > personal interest as the problem appears to be fixed.
-> > 
-> > 
-> > Background:
-> > 
-> > Last week I tried to upgrade a kernel (ubuntu distro 16.04) but
-> > that
-> > failed due to out of space (the system was originally built when
-> > kernels were much smaller and I have now got to the point where it
-> > is
-> > not possible to have two kernels on the /boot partitian).
-> > 
-> > On reboot the boot failed with a great deal of disk noise which
-> > persisted. Booting into recovery worked, and the noise was now
-> > knowable
-> Disk noise shouldn't cause the boot to fail....
+On Sat, Oct 08 2016, Dark Penguin wrote:
 
-No. That was not the suggestion :).
+> After researching write-intent bitmaps for a while, my understanding is=20
+> that they are used only to speed up "re-adding" drives by avoiding a=20
+> full resync, and to enable --write-mostly --write-behind. However, it=20
 
-Rather that I was able to know what was causing the noise - the raid is
-quite noise when resyncing, so the resyncing explained the noise,
-rather than the noise explaining the failure.
-
-> > 
-> > to be coming from a RAID resync of /dev/md0 (RAID10) after I
-> > dropped
-> > into a root shell. I allowed this to complete and then went back to
-> > resume the normal boot. This failed as before.
-> > 
-> > Repeating the process above, I found that the RAID was again
-> > unsynced
-> > an doing a resync.
-> > 
-> > This has now resolved - I again allowed the resync to complete and
-> > then
-> > did a /sbin/reboot from the CLI rather than going back to the
-> > recovery
-> > menu and continuing the boot from the menu.
-> > 
-> > 
-> > Question:
-> > 
-> > What is a/are likely cause(s) for a resync to not persist over a
-> > reboot?
-> If /sbin/reboot works and the menu-thing doesn't then the menu-thing
-> much be doing something very seriously wrong.
-> You might be able to get the resync status to be forgotten if you
-> write something to the array and then quickly run "reboot -f -n", or
-> maybe "echo b > /proc/sysrq-trigger".
-> 
-> Given that /sbin/reboot works, I suggest you report this to ubuntu as
-> a
-> bug.
-> 
-
-This is probably true, though I doubt there is much that can be done
-from a report given the absence of data that I could provide to help
-resolve the issue. I think this may just be "one of those things".
-
-Thanks for your answer.
+This is not correct.  Speeding up re-adding is certainly one benefit.
+The other benefit is speeding up resync after a system crash.
 
 
-Dan
+> does introduce some pretty heavy load on whatever device it's on,=20
+> especially if it's an internal bitmap, because the head would have to=20
+> fly all the way to the superblock twice per each write. If it's an=20
+> external bitmap, then the device it's on would be too busy just serving=20
+> it to do anything else.
+
+It doesn't update the bitmap immediately before and after every write.
+Writes are batched, and the bitmap is updated once before each batch of
+writes.
+There does need to be another update to record that the write has
+completed, but that is delayed and usually merged with the update at the
+start of the next batch of writes.
+So the bitmap is usually updated once per batch of writes.
 
 
+>
+> So if I were to place it on a tmpfs, I could eliminate this problem only=
+=20
+> at the expense of being unable to re-add drives after a reboot, right?..=
+=20
+> I've read somewhere that bitmaps only work correctly on ext2 or ext3=20
+> filesystems, but that probably means that it's not a good idea to put it=
+=20
+> on a filesystem with delayed allocation like ext4 of zfs, otherwise I=20
+> don't understand why - and so I don't know if there would be any problem=
+=20
+> with it running on tmpfs. Is there?..
+
+You could create a ramdisk, create an ext2 filesystem on that, and put
+the bitmap file there.
+
+It probably would make sense to support in-memory bitmaps which never
+get written to disk.  It would be fairly easy to do, and would allow
+expedited re-add.  I just hasn't been done.
+(patches welcome :-)
+
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAEBCAAGBQJYEukLAAoJEDnsnt1WYoG5mZMP/3PYwVCh9hSkzb8fE0+d38Gd
+Pfr2pJoFnGRgJJG68yhnLnvZ8+ul610U/9WxaDedjD6vZsM68h0+wRPgAXjA3vXe
+TfEhncHC5VVRR6k2272qdGuVHXfUI4yPWHFtdge48hUEcmjxWLCwzkMwGmo6ogYt
+MoVa6FMvmYDRCKoVtwNNi+vaCEnbFO/JcnF7VRVheIRB4mQf0vB0BAIpn7qbqlDI
+rNlzdqhYJFH37IUdfar3X0A3ABNYD2j+A6TQKCu5fCVQr90YM8UjLC4vqO7IT9Tb
+qxoFs1Hb4XhtXPBy9xg06bQL6Mkt0haozOmWNDPkhCrx7cCOO9zATnUSWBURvZLk
+C4ufLfnoZoXTb6NwTdDTCZlJW0DzFZUIVZB02RhTXWVwKno9AVGm4I9p2OE+KI0U
+rEfjLQjZGBZizecdrBU4UjcEFfYxz5gLQaW8lzC04ySUrHfswvGPwVLZFNQrRE4q
+dKnd8wYOnMp8si2NrVAR/TAHGEtE5hD2u7wxGyEX4Wt8eKhDFP2kA+kDcd7CBRdN
++DL8J+ruiVJ7s3FE0/Kvh1UM+eQ+b92AzhK9kQTcAsz5xhA6ViFzAAjDvDZcXwAb
+m58oA9IY/hks7GCYMRqs7vIc/01MGn19PR4rMhtp4KrzU/BDJxuQVSYrvybuts+e
+Ygn2pQ599tUQoaqqOLaP
+=dzKa
+-----END PGP SIGNATURE-----
+--=-=-=--
