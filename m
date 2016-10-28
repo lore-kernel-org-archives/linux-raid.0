@@ -1,86 +1,127 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: Bitmap in RAM?
-Date: Fri, 28 Oct 2016 16:58:35 +1100
-Message-ID: <87twbxrp4k.fsf@notabene.neil.brown.name>
-References: <57F8EC82.9010804@yandex.ru>
+Subject: Re: Resync issue in RAID1
+Date: Fri, 28 Oct 2016 17:01:06 +1100
+Message-ID: <87r371rp0d.fsf@notabene.neil.brown.name>
+References: <CAF9xHmRCKzBXE5_tdqNY9BJJn7LyC8bOv8OaFXpxc1BvGUTCeQ@mail.gmail.com> <8760odt93j.fsf@notabene.neil.brown.name> <CAF9xHmQfUDOYFNa1uehqsz=arx-x24DuavX1sdBY313mdt0GEw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <57F8EC82.9010804@yandex.ru>
+In-Reply-To: <CAF9xHmQfUDOYFNa1uehqsz=arx-x24DuavX1sdBY313mdt0GEw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dark Penguin <darkpenguin@yandex.ru>, linux-raid@vger.kernel.org
+To: V <viswesh.vichu@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Sat, Oct 08 2016, Dark Penguin wrote:
+On Fri, Oct 28 2016, V wrote:
 
-> After researching write-intent bitmaps for a while, my understanding is=20
-> that they are used only to speed up "re-adding" drives by avoiding a=20
-> full resync, and to enable --write-mostly --write-behind. However, it=20
-
-This is not correct.  Speeding up re-adding is certainly one benefit.
-The other benefit is speeding up resync after a system crash.
-
-
-> does introduce some pretty heavy load on whatever device it's on,=20
-> especially if it's an internal bitmap, because the head would have to=20
-> fly all the way to the superblock twice per each write. If it's an=20
-> external bitmap, then the device it's on would be too busy just serving=20
-> it to do anything else.
-
-It doesn't update the bitmap immediately before and after every write.
-Writes are batched, and the bitmap is updated once before each batch of
-writes.
-There does need to be another update to record that the write has
-completed, but that is delayed and usually merged with the update at the
-start of the next batch of writes.
-So the bitmap is usually updated once per batch of writes.
-
-
+> Hi Neil,
 >
-> So if I were to place it on a tmpfs, I could eliminate this problem only=
-=20
-> at the expense of being unable to re-add drives after a reboot, right?..=
-=20
-> I've read somewhere that bitmaps only work correctly on ext2 or ext3=20
-> filesystems, but that probably means that it's not a good idea to put it=
-=20
-> on a filesystem with delayed allocation like ext4 of zfs, otherwise I=20
-> don't understand why - and so I don't know if there would be any problem=
-=20
-> with it running on tmpfs. Is there?..
+> Thanks for the response. But during this phase, why is the scsi driver
+> complaining about bad block number ?
+>
+> Oct 18 03:52:56  kernel: [  52.869378] sd 0:0:0:0: [sda] Bad block
+> number requested
 
-You could create a ramdisk, create an ext2 filesystem on that, and put
-the bitmap file there.
-
-It probably would make sense to support in-memory bitmaps which never
-get written to disk.  It would be fairly easy to do, and would allow
-expedited re-add.  I just hasn't been done.
-(patches welcome :-)
+Because md is asking to read blocks are offsets which are not a multiple
+of 8 sectors.
 
 NeilBrown
+
+
+> Oct 18 03:52:56  kernel: [  52.869414] sd 0:0:0:0: [sda] Bad block
+> number requested
+> Oct 18 03:52:56  kernel: [  52.869436] sd 0:0:0:0: [sda] Bad block
+> number requested
+> Oct 18 03:52:56  kernel: [  52.869465] sd 0:0:0:0: [sda] Bad block
+> number requested
+> Oct 18 03:52:56  kernel: [  52.869503] sd 0:0:1:0: [sdb] Bad block
+> number requested
+>
+> Thanks,
+> V
+>
+> On Thu, Oct 27, 2016 at 9:01 PM, NeilBrown <neilb@suse.com> wrote:
+>> On Sat, Oct 22 2016, V wrote:
+>>
+>>> Hi,
+>>>
+>>> I am facing an issue during RAID1 resync. I have an ubuntu
+>>> 4.4.0-31-generic running with raid1 configured with 2 disks as active
+>>> and 2 as spares. On the first powercycle, after installing RAID, i see
+>>> the following messages in kern.log
+>>>
+>>>
+>>> My disks are configured with 4K sector size (both logical and
+>>> physical) (sda and sdb are active disks for this raid)
+>>>
+>>>
+>>> ===========
+>>> Oct 18 03:52:56  kernel: [   52.869113] md: using 128k window, over a
+>>> total of 51167104k.
+>>> Oct 18 03:52:56  kernel: [   52.869114] md: resuming resync of md2 from checkpoint.
+>>
+>> This line (above) combined with ...
+>>
+>>> Oct 18 03:52:56  kernel: [   52.869536] md/raid1:md2: sda: unrecoverable I/O read error for block 3
+>>
+>> this line suggests that when you shut down, md had already started a
+>> resync, and it had checkpointed at block '3'.
+>>
+>> The subsequent error are:
+>>
+>>> Oct 18 03:52:56  kernel: [   52.869692] md/raid1:md2: sda: unrecoverable I/O read error for block 131
+>>> Oct 18 03:52:56  kernel: [   52.869837] md/raid1:md2: sda: unrecoverable I/O read error for block 259
+>>> Oct 18 03:52:56  kernel: [   52.870022] md/raid1:md2: sda: unrecoverable I/O read error for block 387
+>>
+>> which are every 128 blocks (aka sectors) from '3'.
+>> I know what caused that.  The patch below will stop it happening again.
+>>
+>> You might be able get your array working again by stopping it
+>> and assembling with --update=resync.
+>> That will reset the checkpoint to 0.
+>>
+>> NeilBrown
+>>
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index 2cf0e1c00b9a..aa2ca23463f4 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -8099,7 +8099,8 @@ void md_do_sync(struct md_thread *thread)
+>>             mddev->curr_resync > 2) {
+>>                 if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
+>>                         if (test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
+>> -                               if (mddev->curr_resync >= mddev->recovery_cp) {
+>> +                               if (mddev->curr_resync >= mddev->recovery_cp &&
+>> +                                   mddev->curr_resync > 3) {
+>>                                         printk(KERN_INFO
+>>                                                "md: checkpointing %s of %s.\n",
+>>                                                desc, mdname(mddev));
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAEBCAAGBQJYEukLAAoJEDnsnt1WYoG5mZMP/3PYwVCh9hSkzb8fE0+d38Gd
-Pfr2pJoFnGRgJJG68yhnLnvZ8+ul610U/9WxaDedjD6vZsM68h0+wRPgAXjA3vXe
-TfEhncHC5VVRR6k2272qdGuVHXfUI4yPWHFtdge48hUEcmjxWLCwzkMwGmo6ogYt
-MoVa6FMvmYDRCKoVtwNNi+vaCEnbFO/JcnF7VRVheIRB4mQf0vB0BAIpn7qbqlDI
-rNlzdqhYJFH37IUdfar3X0A3ABNYD2j+A6TQKCu5fCVQr90YM8UjLC4vqO7IT9Tb
-qxoFs1Hb4XhtXPBy9xg06bQL6Mkt0haozOmWNDPkhCrx7cCOO9zATnUSWBURvZLk
-C4ufLfnoZoXTb6NwTdDTCZlJW0DzFZUIVZB02RhTXWVwKno9AVGm4I9p2OE+KI0U
-rEfjLQjZGBZizecdrBU4UjcEFfYxz5gLQaW8lzC04ySUrHfswvGPwVLZFNQrRE4q
-dKnd8wYOnMp8si2NrVAR/TAHGEtE5hD2u7wxGyEX4Wt8eKhDFP2kA+kDcd7CBRdN
-+DL8J+ruiVJ7s3FE0/Kvh1UM+eQ+b92AzhK9kQTcAsz5xhA6ViFzAAjDvDZcXwAb
-m58oA9IY/hks7GCYMRqs7vIc/01MGn19PR4rMhtp4KrzU/BDJxuQVSYrvybuts+e
-Ygn2pQ599tUQoaqqOLaP
-=dzKa
+iQIcBAEBCAAGBQJYEumiAAoJEDnsnt1WYoG5MoAP/RJsBkKK9IqYbFacssdx68o/
+hXQI0HJ54coaaVGlTj/5FRO2r4lTn7+AoF8H17ZZk245KpiOOO0ek6or1NAe9Ns7
+Wp2qMCCF5kAeyoimIGh1ZyYwvCmoDh3zmM7cnAuDSHY+U8OA5a88WL6YQsMkCJZn
+qJcKOYX54g/lmM02XVFwDIi4QUs2swMucelam4wdUMCS1GweTEHyEz+sv5pGhkEq
+B+jBBcUkDJ8v4eRcMiHMKR6dERyMdXZwPpsye6xcx2PmXAGsFCc6D/kvSw+Rsr/G
+o6lqYOWsVPNey1gS6d+4ZD5nTwZoPMIxX+86lk+7a8qJ5LKh5KBQaFJdswWixLda
+z4TA9Wzn2f3eXU5muZU7/pTAJDNwAKw8ac3tRNavqLEXG8bMP7XUHfimqMCHVOHk
+ETssO+LDEdAyvMY7AYEUR8aObjEUZ2mBM4ngQMAZSBlhHfztiflFLHOSCaBj/9Wi
+iuXIvaWrOJ+baM/LK6kpZDIpx4TzKFtn+Y7rQCof9I+12SJ6k0EfSsBXN821FB6y
+veluvkGRat/esm7Rc88kT5g3nNNsDS0NAfOTWNA06XBhhjMEOWZjEWzzvHmCF/mH
+kfpLyiw6InWCV4LCmXusc0jpK2jiBKmatxCcg/whejQTxlPpkwTZCEoxpaJdfjUp
+64vWyTUffasYugrZymER
+=6+uC
 -----END PGP SIGNATURE-----
 --=-=-=--
