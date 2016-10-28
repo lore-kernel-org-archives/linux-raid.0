@@ -1,112 +1,131 @@
-From: V <viswesh.vichu@gmail.com>
-Subject: Re: Resync issue in RAID1
-Date: Thu, 27 Oct 2016 23:07:08 -0700
-Message-ID: <CAF9xHmTGFXvQnKX5ZK5+ino4977SpHxMffCc0YPMxJGEhwGLuw@mail.gmail.com>
-References: <CAF9xHmRCKzBXE5_tdqNY9BJJn7LyC8bOv8OaFXpxc1BvGUTCeQ@mail.gmail.com>
- <8760odt93j.fsf@notabene.neil.brown.name> <CAF9xHmQfUDOYFNa1uehqsz=arx-x24DuavX1sdBY313mdt0GEw@mail.gmail.com>
- <87r371rp0d.fsf@notabene.neil.brown.name>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH] Increase buffer for sysfs path
+Date: Fri, 28 Oct 2016 10:35:50 +0200
+Message-ID: <1477643750-4381-1-git-send-email-tomasz.majchrzak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87r371rp0d.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Jes.Sorensen@redhat.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
-Is there any reason, why this happens in the resync flow. Normally the
-upper layer driver tries to align with device block size for the
-request. So could there be an issue in this path ?
+'unacknowledged_bad_blocks' is a long name for sysfs property and it
+makes sysfs path over 50 characters long. Increase buffer to the double
+length of the longest path available in sysfs at the moment.
 
-Thanks,
-V
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+---
+ sysfs.c | 36 ++++++++++++++++++++----------------
+ 1 file changed, 20 insertions(+), 16 deletions(-)
 
-On Thu, Oct 27, 2016 at 11:01 PM, NeilBrown <neilb@suse.com> wrote:
-> On Fri, Oct 28 2016, V wrote:
->
->> Hi Neil,
->>
->> Thanks for the response. But during this phase, why is the scsi driver
->> complaining about bad block number ?
->>
->> Oct 18 03:52:56  kernel: [  52.869378] sd 0:0:0:0: [sda] Bad block
->> number requested
->
-> Because md is asking to read blocks are offsets which are not a multiple
-> of 8 sectors.
->
-> NeilBrown
->
->
->> Oct 18 03:52:56  kernel: [  52.869414] sd 0:0:0:0: [sda] Bad block
->> number requested
->> Oct 18 03:52:56  kernel: [  52.869436] sd 0:0:0:0: [sda] Bad block
->> number requested
->> Oct 18 03:52:56  kernel: [  52.869465] sd 0:0:0:0: [sda] Bad block
->> number requested
->> Oct 18 03:52:56  kernel: [  52.869503] sd 0:0:1:0: [sdb] Bad block
->> number requested
->>
->> Thanks,
->> V
->>
->> On Thu, Oct 27, 2016 at 9:01 PM, NeilBrown <neilb@suse.com> wrote:
->>> On Sat, Oct 22 2016, V wrote:
->>>
->>>> Hi,
->>>>
->>>> I am facing an issue during RAID1 resync. I have an ubuntu
->>>> 4.4.0-31-generic running with raid1 configured with 2 disks as active
->>>> and 2 as spares. On the first powercycle, after installing RAID, i see
->>>> the following messages in kern.log
->>>>
->>>>
->>>> My disks are configured with 4K sector size (both logical and
->>>> physical) (sda and sdb are active disks for this raid)
->>>>
->>>>
->>>> ===========
->>>> Oct 18 03:52:56  kernel: [   52.869113] md: using 128k window, over a
->>>> total of 51167104k.
->>>> Oct 18 03:52:56  kernel: [   52.869114] md: resuming resync of md2 from checkpoint.
->>>
->>> This line (above) combined with ...
->>>
->>>> Oct 18 03:52:56  kernel: [   52.869536] md/raid1:md2: sda: unrecoverable I/O read error for block 3
->>>
->>> this line suggests that when you shut down, md had already started a
->>> resync, and it had checkpointed at block '3'.
->>>
->>> The subsequent error are:
->>>
->>>> Oct 18 03:52:56  kernel: [   52.869692] md/raid1:md2: sda: unrecoverable I/O read error for block 131
->>>> Oct 18 03:52:56  kernel: [   52.869837] md/raid1:md2: sda: unrecoverable I/O read error for block 259
->>>> Oct 18 03:52:56  kernel: [   52.870022] md/raid1:md2: sda: unrecoverable I/O read error for block 387
->>>
->>> which are every 128 blocks (aka sectors) from '3'.
->>> I know what caused that.  The patch below will stop it happening again.
->>>
->>> You might be able get your array working again by stopping it
->>> and assembling with --update=resync.
->>> That will reset the checkpoint to 0.
->>>
->>> NeilBrown
->>>
->>> diff --git a/drivers/md/md.c b/drivers/md/md.c
->>> index 2cf0e1c00b9a..aa2ca23463f4 100644
->>> --- a/drivers/md/md.c
->>> +++ b/drivers/md/md.c
->>> @@ -8099,7 +8099,8 @@ void md_do_sync(struct md_thread *thread)
->>>             mddev->curr_resync > 2) {
->>>                 if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
->>>                         if (test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
->>> -                               if (mddev->curr_resync >= mddev->recovery_cp) {
->>> +                               if (mddev->curr_resync >= mddev->recovery_cp &&
->>> +                                   mddev->curr_resync > 3) {
->>>                                         printk(KERN_INFO
->>>                                                "md: checkpointing %s of %s.\n",
->>>                                                desc, mdname(mddev));
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/sysfs.c b/sysfs.c
+index c7a8e66..fc1f01e 100644
+--- a/sysfs.c
++++ b/sysfs.c
+@@ -27,6 +27,8 @@
+ #include	<dirent.h>
+ #include	<ctype.h>
+ 
++#define MAX_SYSFS_PATH_LEN	120
++
+ int load_sys(char *path, char *buf, int len)
+ {
+ 	int fd = open(path, O_RDONLY);
+@@ -63,15 +65,15 @@ void sysfs_free(struct mdinfo *sra)
+ 
+ int sysfs_open(char *devnm, char *devname, char *attr)
+ {
+-	char fname[50];
++	char fname[MAX_SYSFS_PATH_LEN];
+ 	int fd;
+ 
+-	sprintf(fname, "/sys/block/%s/md/", devnm);
++	snprintf(fname, MAX_SYSFS_PATH_LEN, "/sys/block/%s/md/", devnm);
+ 	if (devname) {
+-		strcat(fname, devname);
+-		strcat(fname, "/");
++		strncat(fname, devname, MAX_SYSFS_PATH_LEN - strlen(fname));
++		strncat(fname, "/", MAX_SYSFS_PATH_LEN - strlen(fname));
+ 	}
+-	strcat(fname, attr);
++	strncat(fname, attr, MAX_SYSFS_PATH_LEN - strlen(fname));
+ 	fd = open(fname, O_RDWR);
+ 	if (fd < 0 && errno == EACCES)
+ 		fd = open(fname, O_RDONLY);
+@@ -396,15 +398,17 @@ unsigned long long get_component_size(int fd)
+ 	 * This returns in units of sectors.
+ 	 */
+ 	struct stat stb;
+-	char fname[50];
++	char fname[MAX_SYSFS_PATH_LEN];
+ 	int n;
+ 	if (fstat(fd, &stb))
+ 		return 0;
+ 	if (major(stb.st_rdev) != (unsigned)get_mdp_major())
+-		sprintf(fname, "/sys/block/md%d/md/component_size",
++		snprintf(fname, MAX_SYSFS_PATH_LEN,
++			"/sys/block/md%d/md/component_size",
+ 			(int)minor(stb.st_rdev));
+ 	else
+-		sprintf(fname, "/sys/block/md_d%d/md/component_size",
++		snprintf(fname, MAX_SYSFS_PATH_LEN,
++			"/sys/block/md_d%d/md/component_size",
+ 			(int)minor(stb.st_rdev)>>MdpMinorShift);
+ 	fd = open(fname, O_RDONLY);
+ 	if (fd < 0)
+@@ -420,11 +424,11 @@ unsigned long long get_component_size(int fd)
+ int sysfs_set_str(struct mdinfo *sra, struct mdinfo *dev,
+ 		  char *name, char *val)
+ {
+-	char fname[50];
++	char fname[MAX_SYSFS_PATH_LEN];
+ 	unsigned int n;
+ 	int fd;
+ 
+-	sprintf(fname, "/sys/block/%s/md/%s/%s",
++	snprintf(fname, MAX_SYSFS_PATH_LEN, "/sys/block/%s/md/%s/%s",
+ 		sra->sys_name, dev?dev->sys_name:"", name);
+ 	fd = open(fname, O_WRONLY);
+ 	if (fd < 0)
+@@ -457,11 +461,11 @@ int sysfs_set_num_signed(struct mdinfo *sra, struct mdinfo *dev,
+ 
+ int sysfs_uevent(struct mdinfo *sra, char *event)
+ {
+-	char fname[50];
++	char fname[MAX_SYSFS_PATH_LEN];
+ 	int n;
+ 	int fd;
+ 
+-	sprintf(fname, "/sys/block/%s/uevent",
++	snprintf(fname, MAX_SYSFS_PATH_LEN, "/sys/block/%s/uevent",
+ 		sra->sys_name);
+ 	fd = open(fname, O_WRONLY);
+ 	if (fd < 0)
+@@ -478,10 +482,10 @@ int sysfs_uevent(struct mdinfo *sra, char *event)
+ 
+ int sysfs_attribute_available(struct mdinfo *sra, struct mdinfo *dev, char *name)
+ {
+-	char fname[50];
++	char fname[MAX_SYSFS_PATH_LEN];
+ 	struct stat st;
+ 
+-	sprintf(fname, "/sys/block/%s/md/%s/%s",
++	snprintf(fname, MAX_SYSFS_PATH_LEN, "/sys/block/%s/md/%s/%s",
+ 		sra->sys_name, dev?dev->sys_name:"", name);
+ 
+ 	return stat(fname, &st) == 0;
+@@ -490,10 +494,10 @@ int sysfs_attribute_available(struct mdinfo *sra, struct mdinfo *dev, char *name
+ int sysfs_get_fd(struct mdinfo *sra, struct mdinfo *dev,
+ 		       char *name)
+ {
+-	char fname[50];
++	char fname[MAX_SYSFS_PATH_LEN];
+ 	int fd;
+ 
+-	sprintf(fname, "/sys/block/%s/md/%s/%s",
++	snprintf(fname, MAX_SYSFS_PATH_LEN, "/sys/block/%s/md/%s/%s",
+ 		sra->sys_name, dev?dev->sys_name:"", name);
+ 	fd = open(fname, O_RDWR);
+ 	if (fd < 0)
+-- 
+1.8.3.1
+
