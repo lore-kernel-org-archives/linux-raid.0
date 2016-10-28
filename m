@@ -1,84 +1,113 @@
-From: Phil Turmel <philip@turmel.org>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
 Subject: Re: recovering failed raid5
-Date: Fri, 28 Oct 2016 17:16:27 -0400
-Message-ID: <b878efa4-2581-9284-90ca-170ece7219b5@turmel.org>
+Date: Sat, 29 Oct 2016 01:45:29 +0200
+Message-ID: <20161028234529.GA3909@metamorpher.de>
 References: <CAM97BgQLPUN=t7VKHaVG-=SrJmS_tvaxGDbo3yqMwHm8B-do_Q@mail.gmail.com>
  <20161027160400.GA21042@metamorpher.de>
  <715b259f-1e56-9606-edc4-3e5c4d57744b@shenkin.org>
  <20161028133304.GA11564@metamorpher.de>
+ <b878efa4-2581-9284-90ca-170ece7219b5@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161028133304.GA11564@metamorpher.de>
+Content-Disposition: inline
+In-Reply-To: <b878efa4-2581-9284-90ca-170ece7219b5@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>, Alexander Shenkin <al@shenkin.org>
-Cc: linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: Alexander Shenkin <al@shenkin.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Good afternoon Alexander,
+On Fri, Oct 28, 2016 at 05:16:27PM -0400, Phil Turmel wrote:
+> Andreas' approach is rather expensive in practice
 
-On 10/28/2016 09:33 AM, Andreas Klauer wrote:
-> On Fri, Oct 28, 2016 at 01:22:31PM +0100, Alexander Shenkin wrote:
->> One remaining question: is sdc definitely toast?
-> 
-> In my opinion a drive is toast starting from the very first reallocated/ 
-> pending/uncorrectable sector, your drive has several of those and that's 
-> only the ones the drive already knows about - there may be more.
+Not really. Currently all of my disks are out of their warranty period. 
+Whenever I bring this up the first thing I hear is that I'm just 
+not noticing these errors that are happening all the time... oh well.
 
-Actual vs. Pending relocations are very different things.  Andreas'
-approach is rather expensive in practice, as manufacturers of
-consumer-grade drives specify an error rate of less than 1 per 10^14
-bits read.  That's only 12.5TB.  A moderately used media server will
-encounter many of these in a four to five year life span.  Few at first,
-then more as the drive ages.  If you insist on replacing drives at the
-first "pending" relocation, expect to purchase many more drives than
-everyone else.
+I run SMART selftests daily (select,cont), I run mdadm checks and check 
+for mismatch_cnt afterwards (always 0 thus far). Not sure what else to 
+do... haven't gone as far as patching the kernel to be more verbose. 
+There's only so much you can do.
 
-Enterprise drives work the same way, BTW, just with a spec of 1 per
-10^15 bits read.  Since enterprise drives are typically in constant
-heavy use, a similar count in a normal lifespan is expected.
+I'm mainly using cheap WD Green drives. I don't like enterprise drives, 
+there's nothing that makes them more reliable, and in a home use where 
+they twiddle their thumbs most of the time what's the point of it all? 
+Expensive drives are more likely to turn you into a penny-pincher 
+when replacement would be the right thing to do...
 
->> Or, is it possible that the Timeout Mismatch (as mentioned by Robin Hill; 
->> thanks Robin) is flagging the drive as failed, when something else is at 
->> play and perhaps the drive is actually fine?
+> manufacturers of consumer-grade drives specify an error rate of less
+> than 1 per 10^14 bits read.  That's only 12.5TB.
 
-Pending relocations are often just glitches that are gone after the
-sector is rewritten.  if your drives have an error timeout that is
-shorter than the OS device driver timeout, a raid array will silently
-fix these errors for you and you'll never notice.  If your array is
-lightly used, a weekly or monthly "check" scrub will help flush them out
-in a timely fashion.
+Yes, according to that math you get stuff like that:
 
-If you have green or desktop drive that has a long timeout (greater than
-the 30-second default linux driver timeout), your array will crash when
-your drives age just enough to pop up their first UREs.  Please read the
-list archives linked in the wiki to help you understand how and why this
-happens.
+    http://www.zdnet.com/article/why-raid-5-stops-working-in-2009/
 
-> I don't believe in timeout mismatches, either. The timeouts are generous. 
-> Waiting for a disk to wake from standby is not a problem, and that takes 
-> ages already. If a disk gets stuck even longer in error correction limbo 
-> and it gets kicked because of it - IMHO that's the right call.
+Or perhaps that just isn't how failures happen.
 
-Alex, I strongly recommend you ignore Andreas' advice on this one topic.
- Use the work-arounds for the drives you have, and buy friendlier drives
-as age and capacity increases demand.  { If your livelihood or marriage
-depends on the security of the contents of your array, buy enterprise
-drives and verify your backup system... }
+    https://www.high-rely.com/blog/why-raid-5-stops-working-in-2009-not/
 
-[trim /]
+I'm sure there are better links on the topic.
 
-> Your RAID did not fail because of timeouts or not. It's not important. 
-> It failed because you didn't notice broken disks in time and you had two. 
-> Testing, monitoring, actually acting on the first error, is important. 
+If there actually was one failure for every 12.5TB, this technology 
+would be unusable. It's a LOT more reliable than that, thankfully. 
+So no, I don't replace my disks every 12.5TB. That'd be ridiculous.
 
-Andreas' is flat-out wrong on this.  If you had the work-arounds in
-place on your array, your pending errors would have been silently fixed
-and your array would almost certainly never have failed.  With or
-without SMART enabled.
+Maybe you didn't mean it this way.
 
-Not that I recommend running without the SMART features -- you will
-still want to know when your drives have real problems.
+> Pending relocations are often just glitches that are gone after the
+> sector is rewritten.
 
-Phil
+That's the other opinion I was referring to.
+
+There's no way to tell what caused sectors to become unreadable. 
+Is it just a glitch in the matrix, never happen again once fixed? 
+Or is it a serious issue, likely to reoccur or get even worse.
+Who knows? It's not like you can open it and check. 
+
+> a weekly or monthly "check" scrub will help flush them out 
+> in a timely fashion.
+
+Our advice is not that different. You recommend regular checks. 
+I recommend regular checks.
+
+I just don't believe in the "it will magically fix itself and 
+never happen again" kind of story. It's a trust issue, I just 
+can't bring myself to trust disks that have already lost data 
+once. Elsewhere people add checksums to filesystems because 
+they worry about single bit flips, not entire sectors gone... 
+how come one is completely fine but not the other.
+(I'm not worried about bit flips, either.)
+
+I see this timeout thing as a fad, it's brought up in every 
+other thread about raid failures on this list, regardless 
+how little / none indication there was that timeouts were 
+related in any way at all to the failure in question.
+
+You'd think timeouts would solve all problems. They probably don't. 
+In some exceedingly rare cases, they might not even matter at all.
+
+> Andreas' is flat-out wrong on this.
+
+I say his raid failed due to not running checks, 
+running checks is something you recommend too.
+There is some common ground there, however tiny.
+
+> Not that I recommend running without the SMART features
+
+That's the general gist I get from reading your posts, though.
+
+> -- you will still want to know when your drives have real problems.
+
+What's a real problem then, when pending sectors and read failures 
+in selftest are not real enough?
+
+Some arbitrarily chosen number of errors...
+
+Disks just go bad. You can make up whatever reasons to not replace them, 
+but whether your RAID will survive it, seems like a gamble to me.
+Backups are a failsafe. I like the safe part, I try to avoid the fail.
+
+Everyone has to find their own approach to things.
+
+Regards
+Andreas Klauer
