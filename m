@@ -1,81 +1,90 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: growing a RAID-10 array with mdadm 3.3.1+ ?
-Date: Fri, 28 Oct 2016 16:47:11 +1100
-Message-ID: <87wpgtrpnk.fsf@notabene.neil.brown.name>
-References: <1476206815.989242.752665505.6525EE00@webmail.messagingengine.com> <a09a7ce1-8adf-e00c-7787-eb7ccc1a9e63@youngman.org.uk> <1476211037.1004490.752738017.68CF1E3E@webmail.messagingengine.com>
+From: Dan Kortschak <dan.kortschak@adelaide.edu.au>
+Subject: Re: query re: resync not persisting over reboot in rescue mode
+Date: Fri, 28 Oct 2016 16:17:28 +1030
+Message-ID: <1477633648.22165.12.camel@adelaide.edu.au>
+References: <1477266640.7137.13.camel@adelaide.edu.au>
+         <87zilprq55.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1476211037.1004490.752738017.68CF1E3E@webmail.messagingengine.com>
+In-Reply-To: <87zilprq55.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: moft@fmailbox.com, Anthony Youngman <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Thank you.
 
-On Wed, Oct 12 2016, moft@fmailbox.com wrote:
+On Fri, 2016-10-28 at 16:36 +1100, NeilBrown wrote:
+> On Mon, Oct 24 2016, Dan Kortschak wrote:
+> 
+> > 
+> > First, I'll start with an apology - I have little (~nothing) in the
+> > way
+> > of hard data to back up this question, but it is now just a matter
+> > of
+> > personal interest as the problem appears to be fixed.
+> > 
+> > 
+> > Background:
+> > 
+> > Last week I tried to upgrade a kernel (ubuntu distro 16.04) but
+> > that
+> > failed due to out of space (the system was originally built when
+> > kernels were much smaller and I have now got to the point where it
+> > is
+> > not possible to have two kernels on the /boot partitian).
+> > 
+> > On reboot the boot failed with a great deal of disk noise which
+> > persisted. Booting into recovery worked, and the noise was now
+> > knowable
+> Disk noise shouldn't cause the boot to fail....
 
-> On Tue, Oct 11, 2016, at 11:29 AM, Anthony Youngman wrote:
->> Growing an array is pretty safe, but like anything here, it does have  i=
-ts dangers.
->>=20
->> Second, what distro are you running? Is it a systemd-based distro?
->
-> Opensuse. Yes.
+No. That was not the suggestion :).
 
-Specifically, which openSUSE.  What version of mdadm. >=20
+Rather that I was able to know what was causing the noise - the raid is
+quite noise when resyncing, so the resyncing explained the noise,
+rather than the noise explaining the failure.
 
->
->> feeling is that systemd is "to blame".=20
->
-> I have no idea why that'd be the case.  That's the first time I've heard =
-anybody suggest that.
+> > 
+> > to be coming from a RAID resync of /dev/md0 (RAID10) after I
+> > dropped
+> > into a root shell. I allowed this to complete and then went back to
+> > resume the normal boot. This failed as before.
+> > 
+> > Repeating the process above, I found that the RAID was again
+> > unsynced
+> > an doing a resync.
+> > 
+> > This has now resolved - I again allowed the resync to complete and
+> > then
+> > did a /sbin/reboot from the CLI rather than going back to the
+> > recovery
+> > menu and continuing the boot from the menu.
+> > 
+> > 
+> > Question:
+> > 
+> > What is a/are likely cause(s) for a resync to not persist over a
+> > reboot?
+> If /sbin/reboot works and the menu-thing doesn't then the menu-thing
+> much be doing something very seriously wrong.
+> You might be able to get the resync status to be forgotten if you
+> write something to the array and then quickly run "reboot -f -n", or
+> maybe "echo b > /proc/sysrq-trigger".
+> 
+> Given that /sbin/reboot works, I suggest you report this to ubuntu as
+> a
+> bug.
+> 
 
-Debian bug 840743 helped me see a possible reason.
+This is probably true, though I doubt there is much that can be done
+from a report given the absence of data that I could provide to help
+resolve the issue. I think this may just be "one of those things".
 
-In some cases mdadm need to remain running in the background to monitor
-the reshape.  Systemd doesn't like us to do that (it likes to kill
-background tasks when you log off).
-So on systemd installs we use a systemd service to run
-  mdadm --grow --continue
-There was a bug in mdadm 3.3.x, fixed in 3.4, which caused that mdadm to
-fail (at least in some circumstances).
-The the reshape froze at the start.
+Thanks for your answer.
 
 
->
->> > *CAN* I safely grow/expand it?
->>=20
->> Bugs excepted - yes you should be able to, without problems.
->
-> So grouwing 'far' layouts are now supported?  Do have a
-> reference/source for that?
+Dan
 
-No, 'far' layout RAID10 cannot be reshaped.  There are some messy issues
-with making that work sensibly which I never bothered to resolve.
 
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAEBCAAGBQJYEuZfAAoJEDnsnt1WYoG5UpgQAIfLZmO6mZAzwrvDFLUQ5cGz
-q+cyMETSawAxeyEmfX4suv6oAuAILozBND7kzpmpPRvnzPRd5I4+UV/5Jfm6L21T
-7T88i4kW6YjNKtj1EHRnf5YBM1d/Zz6miHxn0gAryswqn7U9orhk4ywNYfBj5fVd
-RVG5SMsXR8FRqDIX1S6zZLIGx26d5fC+tZzC33+s5Rc+9krI3rvQka3XL5NNxgeT
-xW8mLglQJGoXpvM76OqP3DRYtBC6WECykSkrwkU2lOdXxTYIK6iS3k1WRycG8j0g
-FxJ7fTYKqqM1Um08s4M8jmsqaasgVXsF9FLlQZY81tUDyMXY/wqM8MWWBs3IAPbv
-0BtpLY0XWraedqe2rULx/SyMtvf4YNhHijQ9ZDWpiSNvEIhcoWpJyRerUtCZaVui
-idbeKMUYEEnahn2Uo7A3i5gWSCjTx9CVA0UNYfSKJFeqpH3anpKB2NmG7vqDE7EP
-JGlYo55bi9TjJ0H2CJshIOwGDPTopYmzlHymlwzGFknGBPGBTwCsAqJszb4j35cR
-wCPanKhJK2msmCrQsFvt0osxu9MIIu7yXH8AhIv5Fe7GsqlGs4FKrcmGPtfpX0ia
-wRnJLq8QNWmFAFUu0G0MtaEK+MZ9xkVa9dfTYJJOVPTwYSr2CMXFsTlvzz+/oRCb
-57mvG3H7iT3Ch3kkxHCu
-=nOwm
------END PGP SIGNATURE-----
---=-=-=--
