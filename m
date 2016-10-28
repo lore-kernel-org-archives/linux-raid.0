@@ -1,72 +1,55 @@
-From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: [PATCH] raid1: handle read error also in readonly mode
-Date: Fri, 28 Oct 2016 14:45:58 +0200
-Message-ID: <1477658758-22637-1-git-send-email-tomasz.majchrzak@intel.com>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Subject: Re: recovering failed raid5
+Date: Fri, 28 Oct 2016 15:33:04 +0200
+Message-ID: <20161028133304.GA11564@metamorpher.de>
+References: <CAM97BgQLPUN=t7VKHaVG-=SrJmS_tvaxGDbo3yqMwHm8B-do_Q@mail.gmail.com>
+ <20161027160400.GA21042@metamorpher.de>
+ <715b259f-1e56-9606-edc4-3e5c4d57744b@shenkin.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <715b259f-1e56-9606-edc4-3e5c4d57744b@shenkin.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@kernel.org, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+To: Alexander Shenkin <al@shenkin.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If write is the first operation on a disk and it happens not to be
-aligned to page size, block layer sends read request first. If read
-operation fails, the disk is set as failed as no attempt to fix the
-error is made because array is in auto-readonly mode. Similarily, the
-disk is set as failed for read-only array.
+On Fri, Oct 28, 2016 at 01:22:31PM +0100, Alexander Shenkin wrote:
+> One remaining question: is sdc definitely toast?
 
-Take the same approach as in raid10. Don't fail the disk if array is in
-readonly or auto-readonly mode. Try to redirect the request first and if
-unsuccessful, return a read error.
+In my opinion a drive is toast starting from the very first reallocated/ 
+pending/uncorrectable sector, your drive has several of those and that's 
+only the ones the drive already knows about - there may be more.
 
-Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
----
- drivers/md/raid1.c | 19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
+> Or, is it possible that the Timeout Mismatch (as mentioned by Robin Hill; 
+> thanks Robin) is flagging the drive as failed, when something else is at 
+> play and perhaps the drive is actually fine?
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index db536a6..29e2df5 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -2297,17 +2297,23 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
- 	 * This is all done synchronously while the array is
- 	 * frozen
- 	 */
-+
-+	bio = r1_bio->bios[r1_bio->read_disk];
-+	bdevname(bio->bi_bdev, b);
-+	bio_put(bio);
-+	r1_bio->bios[r1_bio->read_disk] = NULL;
-+
- 	if (mddev->ro == 0) {
- 		freeze_array(conf, 1);
- 		fix_read_error(conf, r1_bio->read_disk,
- 			       r1_bio->sector, r1_bio->sectors);
- 		unfreeze_array(conf);
--	} else
--		md_error(mddev, conf->mirrors[r1_bio->read_disk].rdev);
-+	} else {
-+		r1_bio->bios[r1_bio->read_disk] = IO_BLOCKED;
-+	}
-+
- 	rdev_dec_pending(conf->mirrors[r1_bio->read_disk].rdev, conf->mddev);
- 
--	bio = r1_bio->bios[r1_bio->read_disk];
--	bdevname(bio->bi_bdev, b);
- read_more:
- 	disk = read_balance(conf, r1_bio, &max_sectors);
- 	if (disk == -1) {
-@@ -2318,11 +2324,6 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
- 	} else {
- 		const unsigned long do_sync
- 			= r1_bio->master_bio->bi_opf & REQ_SYNC;
--		if (bio) {
--			r1_bio->bios[r1_bio->read_disk] =
--				mddev->ro ? IO_BLOCKED : NULL;
--			bio_put(bio);
--		}
- 		r1_bio->read_disk = disk;
- 		bio = bio_clone_mddev(r1_bio->master_bio, GFP_NOIO, mddev);
- 		bio_trim(bio, r1_bio->sector - bio->bi_iter.bi_sector,
--- 
-1.8.3.1
+I don't believe in timeout mismatches, either. The timeouts are generous. 
+Waiting for a disk to wake from standby is not a problem, and that takes 
+ages already. If a disk gets stuck even longer in error correction limbo 
+and it gets kicked because of it - IMHO that's the right call.
 
+A disk that is unable to read its data, a disk that refuses to write data, 
+a disk that needs help from the RAID layer to correct its errors, 
+should be kicked because it's not able to pull its own weight.
+
+You need drives that work without errors, without outside help, because 
+during a rebuild, when the RAID is already degraded, there won't be any 
+outside help. Either the disks work or your RAID is dead.
+
+RAID redundancy is supposed to allow disks be replaced. (mdadm --replace)
+If you use it instead to keep fixing errors on other disks, there is not 
+any real redundancy left. In a RAID, if one of your disks has errors, 
+you get rid of it as soon as possible.
+
+Your RAID did not fail because of timeouts or not. It's not important. 
+It failed because you didn't notice broken disks in time and you had two. 
+Testing, monitoring, actually acting on the first error, is important. 
+
+People have different opinions on this. Someone might argue.
+It's up to you what risks to take.
+
+Regards
+Andreas Klauer
