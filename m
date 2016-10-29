@@ -1,40 +1,40 @@
-From: Roman Mamedov <rm@romanrm.net>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
 Subject: Re: recovering failed raid5
-Date: Sat, 29 Oct 2016 15:29:51 +0500
-Message-ID: <20161029152951.62add3ca@natsu>
+Date: Sat, 29 Oct 2016 14:02:30 +0200
+Message-ID: <20161029120230.GA4725@metamorpher.de>
 References: <CAM97BgQLPUN=t7VKHaVG-=SrJmS_tvaxGDbo3yqMwHm8B-do_Q@mail.gmail.com>
  <20161027160400.GA21042@metamorpher.de>
  <715b259f-1e56-9606-edc4-3e5c4d57744b@shenkin.org>
  <20161028133304.GA11564@metamorpher.de>
+ <20161029152951.62add3ca@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161028133304.GA11564@metamorpher.de>
+Content-Disposition: inline
+In-Reply-To: <20161029152951.62add3ca@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+To: Roman Mamedov <rm@romanrm.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 28 Oct 2016 15:33:04 +0200
-Andreas Klauer <Andreas.Klauer@metamorpher.de> wrote:
+On Sat, Oct 29, 2016 at 03:29:51PM +0500, Roman Mamedov wrote:
+> And if there's an unreadable sector on rebuild as a drive found its 8th bad
+> sector after 3 more years of perfect operation, that's not a problem either,
+> because the setup they run in, is RAID6.
 
-> On Fri, Oct 28, 2016 at 01:22:31PM +0100, Alexander Shenkin wrote:
-> > One remaining question: is sdc definitely toast?
-> 
-> In my opinion a drive is toast starting from the very first reallocated/ 
-> pending/uncorrectable sector, your drive has several of those and that's 
-> only the ones the drive already knows about - there may be more.
+But if such disks are acceptable to run in a RAID, and you advertize it 
+as such, you have to expect to see RAIDs where every single disk has a 
+dozen reallocated sectors and a history of read errors to go with it.
+Is that still fine? Do you expect to be lucky every time?
 
-I'd say you are overly cautious on this. Yes there are drives for which one
-reallocated sector is a sign of the coming avalanche of them, but then there
-are also ones (e.g. my Hitachi 2TB) which work for years, over than period
-develop 3-5-7 reallocated sectors, and THAT'S IT, they just continue to work.
-And if there's an unreadable sector on rebuild as a drive found its 8th bad
-sector after 3 more years of perfect operation, that's not a problem either,
-because the setup they run in, is RAID6. (Not to compensate for this, but I
-wouldn't be running a 8-10 drive RAID5 in any case).
+RAID-6 is not magic, either. Sooner or later, it will fail, too. 
 
--- 
-With respect,
-Roman
+Keep ignoring errors in RAID-5 and you'll see double failure.
+Keep ignoring errors in RAID-6 long enough and you'll see triple failure.
+All disks fail and many of them do silently, undetected if untested.
+
+If you rented a server in a datacenter, thus entitled to working hardware, 
+would you create a ticket on read failure or not?
+
+Regards
+Andreas Klauer
