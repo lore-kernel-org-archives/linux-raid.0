@@ -1,40 +1,30 @@
-From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Subject: Re: recovering failed raid5
-Date: Sat, 29 Oct 2016 14:02:30 +0200
-Message-ID: <20161029120230.GA4725@metamorpher.de>
-References: <CAM97BgQLPUN=t7VKHaVG-=SrJmS_tvaxGDbo3yqMwHm8B-do_Q@mail.gmail.com>
- <20161027160400.GA21042@metamorpher.de>
- <715b259f-1e56-9606-edc4-3e5c4d57744b@shenkin.org>
- <20161028133304.GA11564@metamorpher.de>
- <20161029152951.62add3ca@natsu>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 23/60] block: introduce flag QUEUE_FLAG_NO_MP
+Date: Sat, 29 Oct 2016 08:29:33 -0700
+Message-ID: <20161029152933.GA17241@infradead.org>
+References: <1477728600-12938-1-git-send-email-tom.leiming@gmail.com>
+ <1477728600-12938-24-git-send-email-tom.leiming@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20161029152951.62add3ca@natsu>
+In-Reply-To: <1477728600-12938-24-git-send-email-tom.leiming@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.net>
-Cc: linux-raid@vger.kernel.org
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.de>, Dan Williams <dan.j.williams@intel.com>, Toshi Kani <toshi.kani@hpe.com>, shli@kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Oct 29, 2016 at 03:29:51PM +0500, Roman Mamedov wrote:
-> And if there's an unreadable sector on rebuild as a drive found its 8th bad
-> sector after 3 more years of perfect operation, that's not a problem either,
-> because the setup they run in, is RAID6.
+On Sat, Oct 29, 2016 at 04:08:22PM +0800, Ming Lei wrote:
+> MD(especially raid1 and raid10) is a bit difficult to support
+> multipage bvec, so introduce this flag for not enabling multipage
+> bvec, then MD can still accept singlepage bvec only, and once
+> direct access to bvec table in MD and other fs/drivers are cleanuped,
+> the flag can be removed. BTRFS has the similar issue too.
 
-But if such disks are acceptable to run in a RAID, and you advertize it 
-as such, you have to expect to see RAIDs where every single disk has a 
-dozen reallocated sectors and a history of read errors to go with it.
-Is that still fine? Do you expect to be lucky every time?
+There is really no good reason for that.  The RAID1 and 10 code really
+just needs some love to use the bio cloning infrastructure, bio
+iterators and generally recent bio apis.  btrfs just needs a tiny little
+bit of help and I'll send patches soon.
 
-RAID-6 is not magic, either. Sooner or later, it will fail, too. 
-
-Keep ignoring errors in RAID-5 and you'll see double failure.
-Keep ignoring errors in RAID-6 long enough and you'll see triple failure.
-All disks fail and many of them do silently, undetected if untested.
-
-If you rented a server in a datacenter, thus entitled to working hardware, 
-would you create a ticket on read failure or not?
-
-Regards
-Andreas Klauer
+Having two different code path is just asking for trouble in the long
+run.
