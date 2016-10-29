@@ -1,41 +1,53 @@
 From: Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH 30/60] bcache: set flag of QUEUE_FLAG_SPLIT_MP
-Date: Sat, 29 Oct 2016 16:08:29 +0800
-Message-ID: <1477728600-12938-31-git-send-email-tom.leiming@gmail.com>
+Subject: [PATCH 24/60] md: set NO_MP for request queue of md
+Date: Sat, 29 Oct 2016 16:08:23 +0800
+Message-ID: <1477728600-12938-25-git-send-email-tom.leiming@gmail.com>
 References: <1477728600-12938-1-git-send-email-tom.leiming@gmail.com>
-Return-path: <linux-bcache-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1477728600-12938-1-git-send-email-tom.leiming@gmail.com>
-Sender: linux-bcache-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org
-Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Ming Lei <tom.leiming@gmail.com>, Kent Overstreet <kent.overstreet@gmail.com>, Shaohua Li <shli@kernel.org>, Eric Wheeler <git@linux.ewheeler.net>, Coly Li <colyli@suse.de>, Yijing Wang <wangyijing@huawei.com>, Zheng Liu <wenqing.lz@taobao.com>, Mike Christie <mchristi@redhat.com>, "open list:BCACHE BLOCK LAYER CACHE" <linux-bcache@vger.kernel.org>, "open list:SOFTWARE RAID Multiple Disks
+Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Ming Lei <tom.leiming@gmail.com>, Shaohua Li <shli@kernel.org>, "open list:SOFTWARE RAID Multiple Disks
         SUPPORT" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-It isn't safe(such as bch_data_verify()) to let bcache deal with
-more than 1M bio from multipage bvec, so set this flag and size of
-incoming bio won't be bigger than BIO_SP_MAX_SECTORS.
+MD isn't ready for multipage bvecs, so mark it as
+NO_MP.
 
 Signed-off-by: Ming Lei <tom.leiming@gmail.com>
 ---
- drivers/md/bcache/super.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/md/md.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
-index 52876fcf2b36..fca023a1a026 100644
---- a/drivers/md/bcache/super.c
-+++ b/drivers/md/bcache/super.c
-@@ -821,6 +821,12 @@ static int bcache_device_init(struct bcache_device *d, unsigned block_size,
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index eac84d8ff724..f8d98098dff8 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5128,6 +5128,16 @@ static void md_safemode_timeout(unsigned long data)
  
- 	blk_queue_write_cache(q, true, true);
+ static int start_dirty_degraded;
  
-+	/*
-+	 * Once bcache is audited that it is ready to deal with big
-+	 * incoming bio with multipage bvecs, we can remove the flag.
-+	 */
-+	set_bit(QUEUE_FLAG_SPLIT_MP,	&d->disk->queue->queue_flags);
++/*
++ * MD isn't ready for multipage bvecs yet, and set the flag
++ * so that MD still can see singlepage bvecs bio
++ */
++static inline void md_set_no_mp(struct mddev *mddev)
++{
++	if (mddev->queue)
++		set_bit(QUEUE_FLAG_NO_MP, &mddev->queue->queue_flags);
++}
 +
- 	return 0;
- }
+ int md_run(struct mddev *mddev)
+ {
+ 	int err;
+@@ -5353,6 +5363,8 @@ int md_run(struct mddev *mddev)
+ 	if (mddev->flags & MD_UPDATE_SB_FLAGS)
+ 		md_update_sb(mddev, 0);
  
++	md_set_no_mp(mddev);
++
+ 	md_new_event(mddev);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_state);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_action);
 -- 
 2.7.4
