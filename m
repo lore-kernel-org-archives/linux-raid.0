@@ -1,42 +1,52 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: recovering failed raid5
-Date: Fri, 28 Oct 2016 22:53:42 -0400
-Message-ID: <699f5daa-22f4-3bef-c5ef-e1bf9df5af6d@turmel.org>
-References: <CAM97BgQLPUN=t7VKHaVG-=SrJmS_tvaxGDbo3yqMwHm8B-do_Q@mail.gmail.com>
- <20161027160400.GA21042@metamorpher.de>
- <715b259f-1e56-9606-edc4-3e5c4d57744b@shenkin.org>
- <20161028133304.GA11564@metamorpher.de>
- <b878efa4-2581-9284-90ca-170ece7219b5@turmel.org>
- <20161028234529.GA3909@metamorpher.de>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH] md: be careful not lot leak internal curr_resync value
+ into metadata.
+Date: Fri, 28 Oct 2016 22:01:08 -0700
+Message-ID: <20161029050108.fdfawfxgbxp4cad7@kernel.org>
+References: <8737jht6f6.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161028234529.GA3909@metamorpher.de>
+Content-Disposition: inline
+In-Reply-To: <8737jht6f6.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Cc: Alexander Shenkin <al@shenkin.org>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: Shaohua Li <shli@fb.com>, Linux-RAID <linux-raid@vger.kernel.org>, Viswesh <viswesh.vichu@gmail.com>
 List-Id: linux-raid.ids
 
-Sigh.
+On Fri, Oct 28, 2016 at 03:59:41PM +1100, Neil Brown wrote:
+> 
+> 
+> mddev->curr_resync usually records where the current resync is up to,
+> but during the starting phase it has some "magic" values.
+> 
+>  1 - means that the array is trying to start a resync, but has yielded
+>      to another array which shares physical devices, and also needs to
+>      start a resync
+>  2 - means the array is trying to start resync, but has found another
+>      array which shares physical devices and has already started resync.
+> 
+>  3 - means that resync has commensed, but it is possible that nothing
+>      has actually been resynced yet.
+> 
+> It is important that this value not be visible to user-space and
+> particularly that it doesn't get written to the metadata, as the
+> resync or recovery checkpoint.  In part, this is because it may be
+> slightly higher than the correct value, though this is very rare.
+> In part, because it is not a multiple of 4K, and some devices only
+> support 4K aligned accesses.
+> 
+> There are two places where this value is propagates into either
+> ->curr_resync_completed or ->recovery_cp or ->recovery_offset.
+> These currently avoid the propagation of values 1 and 3, but will
+> allow 3 to leak through.
+> 
+> Change them to only propagate the value if it is > 3.
+> 
+> As this can cause an array to fail, the patch is suitable for -stable.
+> 
+> Cc: stable@vger.kernel.org
+> Reported-by: Viswesh <viswesh.vichu@gmail.com>
+> Signed-off-by: NeilBrown <neilb@suse.com>
 
-On 10/28/2016 07:45 PM, Andreas Klauer wrote:
-
-> Everyone has to find their own approach to things.
-
-Humanity advances by learning from other peoples mistakes.  If we all
-had to learn from scratch the technology we use every day, we'd still be
-living in huts.
-
-Please read this archived mail, and if you can, the whole thread:
-
-http://marc.info/?l=linux-raid&m=135811522817345&w=1
-
-The read the rest of the archived links in the wiki here:
-
-https://raid.wiki.kernel.org/index.php/Timeout_Mismatch
-
-Maybe you'll get it.  Maybe you won't.  I just don't want innocent
-bystanders to take your undisputed commentary as gospel.
-
-Phil
+Good catch, applied, thanks!
