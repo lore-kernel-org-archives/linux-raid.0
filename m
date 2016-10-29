@@ -1,45 +1,46 @@
 From: Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH 39/60] bcache: debug: switch to bio_clone_sp()
-Date: Sat, 29 Oct 2016 16:08:38 +0800
-Message-ID: <1477728600-12938-40-git-send-email-tom.leiming@gmail.com>
+Subject: [PATCH 29/60] dm: limit the max bio size as BIO_SP_MAX_SECTORS << SECTOR_SHIFT
+Date: Sat, 29 Oct 2016 16:08:28 +0800
+Message-ID: <1477728600-12938-30-git-send-email-tom.leiming@gmail.com>
 References: <1477728600-12938-1-git-send-email-tom.leiming@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1477728600-12938-1-git-send-email-tom.leiming@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org
-Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Ming Lei <tom.leiming@gmail.com>, Kent Overstreet <kent.overstreet@gmail.com>, Shaohua Li <shli@kernel.org>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.com>, Guoqing Jiang <gqjiang@suse.com>, "open list:BCACHE BLOCK LAYER CACHE" <linux-bcache@vger.kernel.org>, "open list:SOFTWARE RAID Multiple Disks
+Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Ming Lei <tom.leiming@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "maintainer:DEVICE-MAPPER LVM" <dm-devel@redhat.com>, Shaohua Li <shli@kernel.org>, "open list:SOFTWARE RAID Multiple Disks
         SUPPORT" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-The cloned bio has to be singlepage bvec based, so
-use bio_clone_sp(), and the allocated bvec table
-is enough for hold the bvecs because QUEUE_FLAG_SPLIT_MP
-is set for bcache.
+For BIO based DM, some targets aren't ready for dealing with
+bigger incoming bio than 1Mbyte, such as crypt and log write
+targets.
 
 Signed-off-by: Ming Lei <tom.leiming@gmail.com>
 ---
- drivers/md/bcache/debug.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ drivers/md/dm.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/md/bcache/debug.c b/drivers/md/bcache/debug.c
-index 71a9f05918eb..0735015b0842 100644
---- a/drivers/md/bcache/debug.c
-+++ b/drivers/md/bcache/debug.c
-@@ -111,12 +111,10 @@ void bch_data_verify(struct cached_dev *dc, struct bio *bio)
- 	struct bvec_iter iter, citer = { 0 };
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index ef7bf1dd6900..ce454c6c1a4e 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -899,7 +899,16 @@ int dm_set_target_max_io_len(struct dm_target *ti, sector_t len)
+ 		return -EINVAL;
+ 	}
  
- 	/*
--	 * Once multipage bvec is supported, the bio_clone()
--	 * has to make sure page count in this bio can be held
--	 * in the new cloned bio because each single page need
--	 * to assign to each bvec of the new bio.
-+	 * QUEUE_FLAG_SPLIT_MP can make the cloned singlepage
-+	 * bvecs to be held in the allocated bvec table.
- 	 */
--	check = bio_clone(bio, GFP_NOIO);
-+	check = bio_clone_sp(bio, GFP_NOIO);
- 	if (!check)
- 		return;
- 	bio_set_op_attrs(check, REQ_OP_READ, READ_SYNC);
+-	ti->max_io_len = (uint32_t) len;
++	/*
++	 * BIO based queue uses its own splitting. When multipage bvecs
++	 * is switched on, size of the incoming bio may be too big to
++	 * be handled in some targets, such as crypt and log write.
++	 *
++	 * When these targets are ready for the big bio, we can remove
++	 * the limit.
++	 */
++	ti->max_io_len = min_t(uint32_t, len,
++			       BIO_SP_MAX_SECTORS << SECTOR_SHIFT);
+ 
+ 	return 0;
+ }
 -- 
 2.7.4
