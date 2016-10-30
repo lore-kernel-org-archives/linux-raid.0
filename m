@@ -1,42 +1,32 @@
-From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Subject: Re: Buffer I/O error on dev md5, logical block 7073536, async page
- read
-Date: Sun, 30 Oct 2016 17:19:29 +0100
-Message-ID: <20161030161929.GA5582@metamorpher.de>
-References: <20161030021614.asws67j34ji64qle@merlins.org>
- <20161030093337.GA3627@metamorpher.de>
- <20161030153857.GB28648@merlins.org>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: recovering failed raid5
+Date: Sun, 30 Oct 2016 12:18:36 -0400
+Message-ID: <647a6de0-010b-918d-ec2f-ddc117a8169e@turmel.org>
+References: <CAM97BgQLPUN=t7VKHaVG-=SrJmS_tvaxGDbo3yqMwHm8B-do_Q@mail.gmail.com>
+ <20161027160400.GA21042@metamorpher.de>
+ <715b259f-1e56-9606-edc4-3e5c4d57744b@shenkin.org>
+ <20161028133304.GA11564@metamorpher.de> <20161029152951.62add3ca@natsu>
+ <20161029120230.GA4725@metamorpher.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20161030153857.GB28648@merlins.org>
+In-Reply-To: <20161029120230.GA4725@metamorpher.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marc MERLIN <marc@merlins.org>
+To: Andreas Klauer <Andreas.Klauer@metamorpher.de>, Roman Mamedov <rm@romanrm.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Oct 30, 2016 at 08:38:57AM -0700, Marc MERLIN wrote:
-> (mmmh, but even so, rebuilding the spare should have cleared the bad blocks
-> on at least one drive, no?)
+On 10/29/2016 08:02 AM, Andreas Klauer wrote:
 
-If n+1 disks have bad blocks there's no data to sync over, so they just 
-propagate and stay bad forever. Or at least that's how it seemed to work 
-last time I tried it. I'm not familiar with bad blocks. I just turn it off.
+> If you rented a server in a datacenter, thus entitled to working hardware, 
+> would you create a ticket on read failure or not?
 
-As long as the bad block list is empty you can --update=no-bbl.
-If everything else fails - edit the metadata or carefully recreate.
-Which I don't recommend because you can go wrong in a hundred ways.
+If the rate of read errors is within the manufacturer specs, it *is*
+"working hardware", by definition.  I would expect if you did file such
+a ticket, without a pattern of multiple read errors outside the hardware
+spec, for it to be rejected.  And if you made a nuisance of yourself in
+such a professional environment when you are so clearly wrong, to find
+your server rental contract cancelled.
 
-I don't remember if anyone ever had a proper solution to this.
-It came up a couple of times on the list so you could search.
-
-If you've replaced drives since, the drive that has been part of the array 
-the longest is probably the most likely to still have valid data in there. 
-That could be synced over to the other drives once the bbl is cleared. 
-It might not matter, you'd have to check with your filesystems if they 
-believe any files located there. (Filesystems sometimes maintain their 
-own bad block lists so you'd have to check those too.)
-
-Regards
-Andreas Klauer
+Phil
