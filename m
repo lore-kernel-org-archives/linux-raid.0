@@ -1,72 +1,57 @@
-From: TomK <tk@mdevsys.com>
-Subject: Re: [ LR] Kernel 4.8.4: INFO: task kworker/u16:8:289 blocked for more
- than 120 seconds.
-Date: Sun, 30 Oct 2016 17:08:46 -0400
-Message-ID: <6da81a22-8a07-7e6f-cd93-ddc5a97b2366@mdevsys.com>
-References: <73e35e17-80aa-c7e6-535c-3665d9789e16@mdevsys.com>
- <20161030201302.GB6727@metamorpher.de>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Subject: Re: Panicked and deleted superblock
+Date: Sun, 30 Oct 2016 22:11:03 +0100
+Message-ID: <20161030211103.GA7196@metamorpher.de>
+References: <0e68051d-1008-cf9b-1f8f-0a0736b1c58f@gmx.net>
+ <20161030194326.GA6727@metamorpher.de>
+ <7f1dd791-ed1c-5db6-555d-ed377995420e@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161030201302.GB6727@metamorpher.de>
+Content-Disposition: inline
+In-Reply-To: <7f1dd791-ed1c-5db6-555d-ed377995420e@gmx.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+To: Peter Hoffmann <Hoffmann.P@gmx.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/30/2016 4:13 PM, Andreas Klauer wrote:
-> On Sun, Oct 30, 2016 at 02:56:58PM -0400, TomK wrote:
->> So the question is how come the mdadm RAID did not catch this disk as a
->> failed disk and pull it out of the array?
->
-> RAID doesn't know about SMART. It's that simple.
->
-> If SMART already knows about errors - too bad, RAID doesn't care.
-> It also doesn't know about anything else really. You ddrescue the
-> member disk directly and it finds tons of errors... RAID isn't involved.
->
-> RAID will only kick when it by itself stumbles over an error that does
-> not go away when rewriting data. Or when the drive just doesn't respond
-> anymore for an extended period of time. And that timeout is per request
-> so a bad disk can grind the entire system to a halt without ever kicked.
->
-> ddrescue has this nice --min-read-rate option, any zone that yields data
-> slower will be considered a hopeless case, RAID does not have such magic.
-> If your drive always responds and always claims to successfully write
-> even when it doesn't, then RAID will never kick it.
->
-> If you never run array checks or smart selftests, errors won't show.
-> RAID will show them as healthy, SMART will show them as healthy,
-> doesn't mean diddly-squat until you actually test it. Regularly.
->
-> Kicking drives yourself is quite normal. RAID only does so much.
-> This is why we have mdadm --replace, that way even a semi-broken disk
-> can help with the rebuild effort and bad sectors on other disks won't
-> result in an even bigger problem, or at least, not right away.
->
-> If you leave RAID to its own devices, it has a much higher chance of dying
-> than if you run tests, and actually decide to do something once *you're*
-> aware that there are problems that RAID itself isn't aware of.
->
->> On a separate topic, if I eventually expand the array to 6 2TB disks,
->> will the array be smart enough to allow me to expand it to the new size?
->
-> Yes. Perhaps after an additional --grow --size=max.
->
-> Regards
-> Andreas Klauer
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-Very clear. Thanks Andreas!
+On Sun, Oct 30, 2016 at 09:45:27PM +0100, Peter Hoffmann wrote:
+> there shouldn't anything be lost as growing consumes more
+> than it writes, stripe wise speaking
 
--- 
-Cheers,
-Tom K.
--------------------------------------------------------------------------------------
+That's what I meant by 'overlap' - it's the wrong word I guess.
 
-Living on earth is expensive, but it includes a free trip around the sun.
+> /dev/sda2 --luks--> /dev/mapper/HDD_0 \
+> /dev/sdb2 --luks--> /dev/mapper/HDD_1 --raid--> /dev/md127 -ext4-> /raid
+> /dev/sdc2 --luks--> /dev/mapper/HDD_2 /
 
+You're hoping it be faster since three threads instead of one?
+Adds the overhead of encrypting parity. Not sure if worth it.
+This idea belongs to another era (before AES-NI).
+
+But it's good, that way, you have "unencrypted" data on your RAID and can 
+make deductions from that raw data as to chunk size and such things. 
+
+> * anything else?
+
+This is where I don't know how to provide specific help.
+Since you did not provide specific data I can work with.
+Your data offset sounds strange to me but with overlay, 
+it's faster to just go ahead and try.
+
+You'll have to figure out the details by yourself, pretty much.
+
+Once you have the correct offset you might be able to deduct the other 
+offset. Create 4 loop devices size of your disks (sparse files in tmpfs, 
+truncate -s thefile, losetup), create a 3 disk raid, grow to 4 disks, 
+check with mdadm --examine if & how the data offset changed.
+
+> So I'm looking for a sequence of bytes that is duplicated on both
+> overlays. This way I find the border between both parts.
+
+Yes, there should be an identical region (let's hope not zeroes)
+and you should roughly determine the end of that region and that's 
+your entry point for a linear device mapping.
+
+Regards
+Andreas Klauer
