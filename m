@@ -1,32 +1,44 @@
 From: Phil Turmel <philip@turmel.org>
-Subject: Re: recovering failed raid5
-Date: Sun, 30 Oct 2016 12:18:36 -0400
-Message-ID: <647a6de0-010b-918d-ec2f-ddc117a8169e@turmel.org>
-References: <CAM97BgQLPUN=t7VKHaVG-=SrJmS_tvaxGDbo3yqMwHm8B-do_Q@mail.gmail.com>
- <20161027160400.GA21042@metamorpher.de>
- <715b259f-1e56-9606-edc4-3e5c4d57744b@shenkin.org>
- <20161028133304.GA11564@metamorpher.de> <20161029152951.62add3ca@natsu>
- <20161029120230.GA4725@metamorpher.de>
+Subject: Re: Buffer I/O error on dev md5, logical block 7073536, async page
+ read
+Date: Sun, 30 Oct 2016 12:34:56 -0400
+Message-ID: <f6b83548-cb8b-be21-ee4f-cae9f7fa2950@turmel.org>
+References: <20161030021614.asws67j34ji64qle@merlins.org>
+ <20161030093337.GA3627@metamorpher.de> <20161030153857.GB28648@merlins.org>
+ <20161030161929.GA5582@metamorpher.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161029120230.GA4725@metamorpher.de>
+In-Reply-To: <20161030161929.GA5582@metamorpher.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>, Roman Mamedov <rm@romanrm.net>
+To: Andreas Klauer <Andreas.Klauer@metamorpher.de>, Marc MERLIN <marc@merlins.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/29/2016 08:02 AM, Andreas Klauer wrote:
+On 10/30/2016 12:19 PM, Andreas Klauer wrote:
+> On Sun, Oct 30, 2016 at 08:38:57AM -0700, Marc MERLIN wrote:
+>> (mmmh, but even so, rebuilding the spare should have cleared the bad blocks
+>> on at least one drive, no?)
+> 
+> If n+1 disks have bad blocks there's no data to sync over, so they just 
+> propagate and stay bad forever. Or at least that's how it seemed to work 
+> last time I tried it. I'm not familiar with bad blocks. I just turn it off.
 
-> If you rented a server in a datacenter, thus entitled to working hardware, 
-> would you create a ticket on read failure or not?
+I, too, turn it off.  (I never let it turn on, actually.)
 
-If the rate of read errors is within the manufacturer specs, it *is*
-"working hardware", by definition.  I would expect if you did file such
-a ticket, without a pattern of multiple read errors outside the hardware
-spec, for it to be rejected.  And if you made a nuisance of yourself in
-such a professional environment when you are so clearly wrong, to find
-your server rental contract cancelled.
+I'm a little disturbed that this feature has become the default on new
+arrays.  This feature was introduced specifically to support underlying
+storage technologies that cannot perform their own bad block management.
+ And since it doesn't implement any relocation algorithm for blocks
+marked bad, it simply gives up any redundancy for affected sectors.  And
+when there's no remaining redundancy, it simply passes the error up the
+stack.  In this case, your errors were created by known communications
+weaknesses that should always be recoverable with --assemble --force.
+
+As far as I'm concerned, the bad block system is an incomplete feature
+that should never be used in production, and certainly not on top of any
+storage technology that implements error detection, correction, and
+relocation.  Like, every modern SATA and SAS drive.
 
 Phil
