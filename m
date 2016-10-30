@@ -1,61 +1,82 @@
-From: Marc MERLIN <marc@merlins.org>
-Subject: Re: clearing blocks wrongfully marked as bad if --update=no-bbl can't be used?
-Date: Sun, 30 Oct 2016 10:16:54 -0700
-Message-ID: <20161030171654.GE28648@merlins.org>
-References: <20161030153857.GB28648@merlins.org> <20161030161929.GA5582@metamorpher.de> <20161030164342.GC28648@merlins.org> <20161030170242.GA5724@metamorpher.de> <20161030021614.asws67j34ji64qle@merlins.org> <20161030093337.GA3627@metamorpher.de> <20161030153857.GB28648@merlins.org> <20161030161929.GA5582@metamorpher.de> <f6b83548-cb8b-be21-ee4f-cae9f7fa2950@turmel.org> <20161030171234.GD28648@merlins.org>
+From: Peter Hoffmann <Hoffmann.P@gmx.net>
+Subject: Panicked and deleted superblock
+Date: Sun, 30 Oct 2016 19:23:00 +0100
+Message-ID: <0e68051d-1008-cf9b-1f8f-0a0736b1c58f@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20161030170242.GA5724@metamorpher.de> <20161030171234.GD28648@merlins.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>, Neil Brown <neilb@suse.de>, Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Oct 30, 2016 at 10:12:34AM -0700, Marc MERLIN wrote:
-> Hi Neil,
-> 
-> Could you offer any guidance here? Is there somethign else I can do to clear
-> those fake bad blocks (the underlying disks are fine, I scanned them)
-> without rebuilding the array?
+My problem is the result of working late and not informing myself
+previously, I'm fully aware that I should have had a backup, be less
+spontaneous and more cautious.
 
-On Sun, Oct 30, 2016 at 06:02:42PM +0100, Andreas Klauer wrote:
-> > There should be some --update=no-bbl --force if the admin knows the bad
-> > block list is wrong and due to IO issues not related to the drive.
-> 
-> Good point. And hey, there it is.
-> 
-> mdadm.c
-> 
-> |                       	if (strcmp(c.update, "bbl") == 0)
-> |                               	continue;
-> |                       	if (strcmp(c.update, "no-bbl") == 0)
-> |                                continue;
-> |                       	if (strcmp(c.update, "force-no-bbl") == 0)
-> |                               	continue;
-> 
-> force-no-bbl. It's in mdadm v3.4, not sure about older ones.
+The initial situation is a RAID-5 array with three disks. I assume it to
+look follows:
 
-Oh, very nice, thank you. It's not in the man page, but it works:
+| Disk 1   | Disk 2   | Disk 3   |
+|----------|----------|----------|
+|    out   | Block 2  | P(1,2)   |
+|    of    | P(3,4)   | Block 4  |	degenerated but working
+|   sync   | Block 5  | Block 6  |
 
-myth:~# mdadm --assemble --update=force-no-bbl /dev/md5
-mdadm: /dev/md5 has been started with 5 drives.
-myth:~# 
-myth:~# mdadm --examine-badblocks /dev/sd[defgh]1
-No bad-blocks list configured on /dev/sdd1
-No bad-blocks list configured on /dev/sde1
-No bad-blocks list configured on /dev/sdf1
-No bad-blocks list configured on /dev/sdg1
-No bad-blocks list configured on /dev/sdh1
 
-Now I'll make sure to turn off this feature on all my other arrays
-in case it got turned on without my asking for it.
+Then I started the re-sync:
 
-Thanks,
-Marc
--- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems ....
-                                      .... what McDonalds is to gourmet cooking
-Home page: http://marc.merlins.org/  
+| Disk 1   | Disk 2   | Disk 3   |
+|----------|----------|----------|
+| Block 1  | Block 2  | P(1,2)   |
+| Block 3  | P(3,4)   | Block 4  |   	already synced
+| P(5,6)   | Block 5  | Block 6  |
+               . . .
+|    out   | Block b  | P(a,b)   |
+|    of    | P(c,d)   | Block d  |	not yet synced
+|   sync   | Block e  | Block f  |
+
+But I didn't wait for it to finish as I actually wanted to add a fourth
+disk and so started a grow process. But I just changed the size of the
+array, I didn't actually add the fourth disk (don't ask why I cannot
+recall it). I assume that both processes - re-sync  and grow - raced
+through the array and did their job.
+
+| Disk 1   | Disk 2   | Disk 3   |
+|----------|----------|----------|
+| Block 1  | Block 2  | Block 3  |
+| Block 4  | Block 5  | P(4,5,6) |	with four disks but degenerated
+| Block 7  | P(7,8,9) | Block 8  |
+               . . .
+| Block a  | Block b  | P(a,b)   |
+| Block c  | P(c,d)   | Block d  |	not yet grown but synced
+| P(e,f)   | Block e  | Block f  |
+               . . .
+|    out   | Block V  | P(U,V)   |
+|    of    | P(W,X)   | Block X  |		not yet synced
+|   sync   | Block Y  | Block Z  |
+
+And after running for a while - my NAS is very slow (partly because all
+disks are LUKS'd), mdstat showed around 1GiB of Data processed - we had
+a blackout. Water dropped in a distribution socket and *poff*. After a
+reboot I wanted to resemble everything, didn't know what I was doing so
+the RAID superblock is now lost and I failed to reassemble (this is the
+part I really can't recall, I panicked). I never wrote anything to the
+actual array so I assume, better hope that no actual data is lost.
+
+I have a plan but wanted to check with you before doing anything stupid
+again.
+My idea is to look for that magic number of the ext4-fs to find the
+beginning of Block 1 on Disk 1, then I would copy an reasonable amount
+of data and try to figure out how big Block 1 and hence chunk-size is -
+perhaps fsck.ext4 can help do that? After that I copy another reasonable
+amount of data from Disks 1-3 to figure out the border between the grown
+Stripes and the synced Stripes. And from there on I'd have my data in a
+defined state from which I can save the whole file system.
+One thing I'm wondering is if I got the layout right. And the other
+might be rather a case for the ext4-mailing list but I'd ask it anyway:
+how can I figure where the file system starts to be corrupted?
+
+embarrassed Greetings,
+Peter Hoffmann
+
