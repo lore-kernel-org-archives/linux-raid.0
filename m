@@ -1,32 +1,51 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH 09/60] dm: dm.c: replace 'bio->bi_vcnt == 1' with !bio_multiple_segments
-Date: Tue, 1 Nov 2016 06:59:52 +0800
-Message-ID: <CACVXFVOBUBqZ4VZk=STsk+NeLshcid2_a494_mEg7O7JwAphpg@mail.gmail.com>
-References: <1477728600-12938-1-git-send-email-tom.leiming@gmail.com>
- <1477728600-12938-10-git-send-email-tom.leiming@gmail.com> <20161031152901.GD30919@infradead.org>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Subject: Re: Panicked and deleted superblock
+Date: Tue, 1 Nov 2016 00:03:55 +0100
+Message-ID: <20161031230355.GA1825@metamorpher.de>
+References: <0e68051d-1008-cf9b-1f8f-0a0736b1c58f@gmx.net>
+ <20161030194326.GA6727@metamorpher.de>
+ <7f1dd791-ed1c-5db6-555d-ed377995420e@gmx.net>
+ <20161030211103.GA7196@metamorpher.de>
+ <9d0bf300-73e8-9109-c630-03f392fc820e@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20161031152901.GD30919@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@fb.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "maintainer:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>, Shaohua Li <shli@kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <9d0bf300-73e8-9109-c630-03f392fc820e@gmx.net>
+Sender: linux-raid-owner@vger.kernel.org
+To: Peter Hoffmann <Hoffmann.P@gmx.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Oct 31, 2016 at 11:29 PM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Sat, Oct 29, 2016 at 04:08:08PM +0800, Ming Lei wrote:
->> Avoid to access .bi_vcnt directly, because it may be not what
->> the driver expected any more after supporting multipage bvec.
->>
->> Signed-off-by: Ming Lei <tom.leiming@gmail.com>
->
-> It would be really nice to have a comment in the code why it's
-> even checking for multiple segments.
->
+On Mon, Oct 31, 2016 at 11:36:39PM +0100, Peter Hoffmann wrote:
+> I'm a bit confused using the overlay function.
 
-OK, will add comment about using !bio_multiple_segments(rq->bio)
-to replace 'rq->bio->bi_vcnt == 1'.
+There really needs to be a standard utility for this.
 
+Well, the "overlay manipulation functions" on that wiki page come close. 
+You can paste/source those once in the shell and use them like commands. 
+You need two sets of overlays, so you'd also have to create two sets of 
+those functions (using different mapper names).
 
-Thanks,
-Ming Lei
+You should verify that the overlay itself is good by comparing the size 
+(blockdev --getsize64 /dev/thing /dev/mapper/overlaything) as well as 
+the content (cmp /dev/thing /dev/mapper/thething, no output if there is 
+no difference, you can ctrl-c).
+
+>     mdadm --create --assume-clean --level=5 --raid-devices=4 /dev/md0
+
+This is wrong, or rather, when re-creating RAID you must be much more 
+verbose with the options. http://unix.stackexchange.com/a/131927/30851
+
+> Both ways should look exactly the same at least for the first 1200M,
+> shouldn't they?
+
+If you deliberately created smaller overlays, mdadm uses different 
+defaults depending on device size too. If you expect it to be identical 
+also check that --examine (data offset etc.) looks identical.
+
+There's no point in using overlays that are not identical to the 
+devices they're overlaying.
+
+Regards
+Andreas Klauer
