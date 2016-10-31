@@ -1,39 +1,39 @@
 From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Buffer I/O error on dev md5, logical block 7073536, async page
- read
-Date: Mon, 31 Oct 2016 19:24:59 +0000
-Message-ID: <58179A8B.6010507@youngman.org.uk>
+Subject: Re: [ LR] Kernel 4.8.4: INFO: task kworker/u16:8:289 blocked for more
+ than 120 seconds.
+Date: Mon, 31 Oct 2016 19:29:35 +0000
+Message-ID: <58179B9F.8090809@youngman.org.uk>
 References: <20161030021614.asws67j34ji64qle@merlins.org>
  <20161030093337.GA3627@metamorpher.de> <20161030153857.GB28648@merlins.org>
- <20161030161929.GA5582@metamorpher.de> <20161030164342.GC28648@merlins.org>
+ <20161030161929.GA5582@metamorpher.de>
+ <f6b83548-cb8b-be21-ee4f-cae9f7fa2950@turmel.org>
+ <73e35e17-80aa-c7e6-535c-3665d9789e16@mdevsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161030164342.GC28648@merlins.org>
+In-Reply-To: <73e35e17-80aa-c7e6-535c-3665d9789e16@mdevsys.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marc MERLIN <marc@merlins.org>, Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Cc: linux-raid@vger.kernel.org
+To: TomK <tk@mdevsys.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 30/10/16 16:43, Marc MERLIN wrote:
-> And here isn't one good drive between the 2, the bad blocks are identical on
-> both drives and must have happened at the same time due to those cable
-> induced IO errors I mentionned.
-> Too bad that mdadm doesn't seem to account for the fact that it could be
-> wrong when marking blocks as bad and does not seem to give a way to recover
-> from this easily....
-> I'll do more reading, thanks.
+On 30/10/16 18:56, TomK wrote:
+> 
+> We did not do a thorough R/W test to see how the error and bad disk
+> affected the data stored on the array but did notice pauses and
+> slowdowns on the CIFS share presented from it with pauses and generally
+> difficulty in reading data, however no data errors that we could see.
+> Since then we replaced the 2TB Seagate with a new 2TB WD and everything
+> is fine even if the array is degraded.  But as soon as we put in this
+> bad disk, it degraded to it's previous behaviour.  Yet the array didn't
+> catch it as a failed disk until the disk was nearly completely
+> inaccessible.
 
-Reading the list, I've picked up that somehow badblocks seem to get
-propagated from one drive to another. So if one drive gets a badblock,
-that seems to get marked as bad on other drives too :-(
-
-Oh - and as for badblocks being obsolete, isn't there a load of work
-being done on it at the moment? For hardware raid I believe, which
-presumably does not handle badblocks the way Phil thinks all modern
-drives do? (Not surprising - hardware raid is regularly slated for being
-buggy and not a good idea, this is probably more of the same...)
+What is this 2TB Seagate? A Barracuda? There's your problem, quite
+possibly. Sounds like you've got your timeouts correctly matched, so
+this drive is responding, but taking ages to do so. And that's why it
+doesn't get kicked, but it knackers system response times - the kernel
+is correctly configured to wait for the geriatric to respond.
 
 Cheers,
 Wol
