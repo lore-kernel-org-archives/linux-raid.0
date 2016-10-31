@@ -1,44 +1,28 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: recovering failed raid5
-Date: Mon, 31 Oct 2016 15:19:53 +0000
-Message-ID: <20161031151953.GA18926@cthulhu.home.robinhill.me.uk>
-References: <CAM97BgQLPUN=t7VKHaVG-=SrJmS_tvaxGDbo3yqMwHm8B-do_Q@mail.gmail.com>
- <20161027160400.GA21042@metamorpher.de>
- <715b259f-1e56-9606-edc4-3e5c4d57744b@shenkin.org>
- <20161028133626.GA27462@cthulhu.home.robinhill.me.uk>
- <af2bf92d-c944-2269-1925-50baa44755a2@shenkin.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 00/60] block: support multipage bvec
+Date: Mon, 31 Oct 2016 08:25:19 -0700
+Message-ID: <20161031152519.GA25791@infradead.org>
+References: <1477728600-12938-1-git-send-email-tom.leiming@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <af2bf92d-c944-2269-1925-50baa44755a2@shenkin.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Shenkin <al@shenkin.org>
-Cc: linux-raid@vger.kernel.org, Andreas Klauer <Andreas.Klauer@metamorpher.de>, rm@romanrm.net, robin@robinhill.me.uk
+In-Reply-To: <1477728600-12938-1-git-send-email-tom.leiming@gmail.com>
+Sender: owner-linux-mm@kvack.org
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Al Viro <viro@ZenIV.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Bart Van Assche <bart.vanassche@sandisk.com>, "open list:GFS2 FILE SYSTEM" <cluster-devel@redhat.com>, Coly Li <colyli@suse.de>, Dan Williams <dan.j.williams@intel.com>, "open list:DEVICE-MAPPER  (LVM)" <dm-devel@redhat.com>, "open list:DRBD DRIVER" <drbd-dev@lists.linbit.com>, Eric Wheeler <git@linux.ewheeler.net>, Guoqing Jiang <gqjiang@suse.com>, Hannes Reinecke <hare@suse.com>, Hannes Reinecke <hare@suse.de>, Jiri Kosina <jkosina@suse.cz>, Joe Perches <joe@perches.com>, Johannes Berg <johannes.berg@intel.com>, Johannes Thumshirn <jthumshirn@suse.de>, Keith Busch <keith.busch@in>
 List-Id: linux-raid.ids
 
-On Mon Oct 31, 2016 at 10:44:38AM +0000, Alexander Shenkin wrote:
+Hi Ming,
 
-> Thanks to everyone for their input.  I need to get a new, non-horrible 
-> 3TB drive to ddrescue to.  The question: can I get a different 3TB drive 
-> (e.g. Toshiba P300 3TB, 
-> https://www.amazon.co.uk/Toshiba-P300-7200RPM-SATA-Drive/dp/B0151KM6F0), 
-> or are sizes of 3TB slightly different enough for that to cause me 
-> headaches when adding it back into the array?  If the latter is the 
-> case, then perhaps I need to aim for a 4TB drive replacement...
-> 
-> Thanks,
-> Allie
-> 
+can you send a first patch just doing the obvious cleanups like
+converting to bio_add_page and replacing direct poking into the
+bio with the proper accessors?  That should help reducing the
+actual series to a sane size, and it should also help to cut
+down the Cc list.
 
-Any 3TB drive should be exactly the same size. Somewhere around the 1TB
-drive size they stopped using different sizes and standardised across
-the industry.
-
-Cheers,
-    Robin
--- 
-     ___        
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
