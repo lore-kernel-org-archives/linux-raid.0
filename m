@@ -1,87 +1,74 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Fail to assemble raid4 with replaced disk
-Date: Mon, 31 Oct 2016 15:57:21 +0000
-Message-ID: <581769E1.6060403@youngman.org.uk>
-References: <CAJh8RqUjr7L_Of0fbW_mAXshmmgcPdXvhtsvhFXKF+XxjOTrFw@mail.gmail.com>
- <580F9B68.9010105@youngman.org.uk>
- <CAJh8RqXV4_v-zAu9Us_K6oTS_N_bR6vd97G4msN00qXn_vtXEQ@mail.gmail.com>
+From: Doug Herr <gmane@wombatz.com>
+Subject: "SCT Error Recovery Control" disabled by suspend.
+Date: Mon, 31 Oct 2016 16:16:29 +0000 (UTC)
+Message-ID: <nv7qos$9t7$1@blaine.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJh8RqXV4_v-zAu9Us_K6oTS_N_bR6vd97G4msN00qXn_vtXEQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Santiago DIEZ <santiago.diez@caoba.fr>
-Cc: Linux Raid LIST <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 27/10/16 15:11, Santiago DIEZ wrote:
-> Hi,
-> 
-> Indeed, here is what I had in terms of event count:
-> /dev/sda10: 81589
-> /dev/sdb10: 81626
-> /dev/sdc10: 81589
-> 
-> Then the following procedure worked quite straightforward:
-> --------------------------------------------------------------------------------
-> # mdadm --assemble /dev/md10 --verbose --force /dev/sda10 /dev/sdb10 /dev/sdc10
-> # mdadm --manage /dev/md10 --add /dev/sdd10
-> --------------------------------------------------------------------------------
-> 
-> And 6h+ later:
-> --------------------------------------------------------------------------------
-> # cat /proc/mdstat
-> Personalities : [raid1] [raid6] [raid5] [raid4]
-> md10 : active raid5 sdd10[3] sda10[0] sdc10[2] sdb10[1]
->       5778741888 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
-> --------------------------------------------------------------------------------
-> 
-> Then I ran:
-> --------------------------------------------------------------------------------
-> # e2fsck -f -n -t -v /dev/md10
-> e2fsck 1.42.5 (29-Jul-2012)
-> Pass 1: Checking inodes, blocks, and sizes
-> Pass 2: Checking directory structure
-> Pass 3: Checking directory connectivity
-> Pass 4: Checking reference counts
-> Pass 5: Checking group summary information
-> 
->     15675837 inodes used (4.34%, out of 361177088)
->       188798 non-contiguous files (1.2%)
->        14751 non-contiguous directories (0.1%)
->              # of inodes with ind/dind/tind blocks: 0/0/0
->              Extent depth histogram: 15626455/47037/15
->   1281308341 blocks used (88.69%, out of 1444685472)
->            0 bad blocks
->          101 large files
-> 
->     15311457 regular files
->       361754 directories
->            0 character device files
->            0 block device files
->            0 fifos
->            0 links
->         2607 symbolic links (2310 fast symbolic links)
->           10 sockets
-> ------------
->     15675828 files
-> Memory used: 50976k/1912k (20541k/30436k), time: 1304.00/334.06/ 8.00
-> I/O read: 4891MB, write: 0MB, rate: 3.75MB/s
-> --------------------------------------------------------------------------------
-> 
-> Does it look OK enough to launch the mount?
-> 
-sorry - I've been away for the weekend - daughter's wedding :-)
+Mostly just a note for others like myself that are using software RAID in 
+a more "desktop" setting. Short version is "Oops, I forgot that the 
+drives needed to have volatile settings reset on wake up...
 
-But yes, that looks great. No errors on fsck either, I think :-)
+Some months back I learned about setting smartctl -l scterc /dev/sd[ab] 
+in rc.local. This is a home desktop system with Fedora 24 using two 
+single terabyte drives with raid 1.
 
-I think your array looks fine. Just look at the output from smartctl for
-your old drives and make sure that it doesn't look like another drive is
-going to fail soon. I'm not quite sure what to look for, mostly bad
-blocks and relocates, I think, but if you compare it with your new drive
-and stuff looks dodgy, you can always ask for help.
+The other day I checked in on this group to see if there is anything new 
+I should be aware of and found a thread that had me double checking my 
+work and I found:
 
-Cheers,
-Wol
+>sudo smartctl -l scterc /dev/sda
+[sudo] password for doug: 
+smartctl 6.5 2016-05-07 r4318 [x86_64-linux-4.7.9-200.fc24.x86_64] (local 
+build)
+Copyright (C) 2002-16, Bruce Allen, Christian Franke, 
+www.smartmontools.org
+
+SCT Error Recovery Control:
+           Read: Disabled
+          Write: Disabled
+
+
+>sudo smartctl -l scterc /dev/sdb
+smartctl 6.5 2016-05-07 r4318 [x86_64-linux-4.7.9-200.fc24.x86_64] (local 
+build)
+Copyright (C) 2002-16, Bruce Allen, Christian Franke, 
+www.smartmontools.org
+
+SCT Error Recovery Control:
+           Read: Disabled
+          Write: Disabled
+
+
+
+I verified that the rc.local entries worked correctly and I rebooted to 
+make sure that the settings were going in on reboot.  I am using:
+
+>grep smartctl /etc/rc.d/rc.local 
+/sbin/smartctl -l scterc,70,70 /dev/sda
+/sbin/smartctl -l scterc,70,70 /dev/sdb
+
+
+When I discovered them being "Disabled" I had a six day uptime so I let 
+it sit with a note to recheck periodically and this morning I found that 
+it is disabled again. After getting a Raspberry Pi I no longer run my 
+desktop like a server and am currently using "systemctl suspend" every 
+day. I just confirmed that the scterc setting gets lost during supspend. 
+I also realize that this should have been obvious since the drive is 
+fully powered off by suspend and only the RAM is powered (at least that 
+is my understanding).
+
+I already added something to be run at wake up to "tickle" the screen 
+saver so I will see about adding this.
+
+I would be happy to learn about any best practices regarding this.
+
+
+-- 
+Doug Herr 
 
