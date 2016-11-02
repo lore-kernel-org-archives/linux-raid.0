@@ -1,29 +1,60 @@
-From: Kent Overstreet <kent.overstreet@gmail.com>
-Subject: Re: [PATCH 09/60] dm: dm.c: replace 'bio->bi_vcnt == 1' with
- !bio_multiple_segments
-Date: Tue, 1 Nov 2016 19:09:06 -0800
-Message-ID: <20161102030906.22vwlv3ktp6l4bcy@kmo-pixel>
-References: <1477728600-12938-1-git-send-email-tom.leiming@gmail.com>
- <1477728600-12938-10-git-send-email-tom.leiming@gmail.com>
- <20161031152901.GD30919@infradead.org>
+From: NeilBrown <neilb@suse.com>
+Subject: [md PATCH 0/9] replace printk() with pr_*()
+Date: Wed, 02 Nov 2016 14:16:48 +1100
+Message-ID: <147805657658.23566.1748253447749986766.stgit@noble>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20161031152901.GD30919@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Ming Lei <tom.leiming@gmail.com>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "maintainer:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>, Shaohua Li <shli@kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Oct 31, 2016 at 08:29:01AM -0700, Christoph Hellwig wrote:
-> On Sat, Oct 29, 2016 at 04:08:08PM +0800, Ming Lei wrote:
-> > Avoid to access .bi_vcnt directly, because it may be not what
-> > the driver expected any more after supporting multipage bvec.
-> > 
-> > Signed-off-by: Ming Lei <tom.leiming@gmail.com>
-> 
-> It would be really nice to have a comment in the code why it's
-> even checking for multiple segments.
+This series removes all printk() calls from md code, preferring
+pr_warn(), pr_err() etc.
 
-Or ideally refactor the code to not care about multiple segments at all.
+All strings that were split over multiple lines are not joined
+back together because being able to search for a message is more
+important that not having long lines in the code.
+Lots of printk(KERN_DEBUG... are not pr_debug() which means the
+messages won't get printed unless they are explicitly disabled.
+
+I included some rough guidelines on which pr_* to choose in md.c.
+Many things became pr_debug(), most of the rest are pr_warn().
+pr_err() and pr_crit() are used sparingly.
+
+I simplified some code in multipath.c too.
+
+A particular benefit of this is that the various "print_conf()"
+functions are not silent by default.
+On very large arrays (raid10 with hundreds of devices), these can
+be very noisy.
+
+---
+
+NeilBrown (9):
+      md: fix some issues with alloc_disk_sb()
+      md: change all printk() to pr_err() or pr_warn() etc.
+      md/bitmap: change all printk() to pr_*()
+      md/linear: replace printk() with pr_*()
+      md/multipath: replace printk() with pr_*()
+      md/raid0: replace printk() with pr_*()
+      md/raid1: change printk() to pr_*()
+      md/raid10: change printk() to pr_*()
+      md/raid5: change printk() to pr_*()
+
+
+ drivers/md/bitmap.c    |  107 ++++++-------
+ drivers/md/linear.c    |   13 +-
+ drivers/md/md.c        |  409 +++++++++++++++++++++---------------------------
+ drivers/md/multipath.c |   90 ++++-------
+ drivers/md/raid0.c     |   89 +++++-----
+ drivers/md/raid1.c     |   99 +++++-------
+ drivers/md/raid10.c    |  141 +++++++----------
+ drivers/md/raid5.c     |  207 ++++++++++--------------
+ 8 files changed, 495 insertions(+), 660 deletions(-)
+
+--
+Signature
+
