@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [md PATCH 3/9] md/bitmap: change all printk() to pr_*()
+Subject: [md PATCH 5/9] md/multipath: replace printk() with pr_*()
 Date: Wed, 02 Nov 2016 14:16:49 +1100
-Message-ID: <147805660938.23566.6912498415559861048.stgit@noble>
+Message-ID: <147805660975.23566.1121081718689529677.stgit@noble>
 References: <147805657658.23566.1748253447749986766.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,227 +13,203 @@ To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Follow err/warn distinction introduced in md.c
-Join multi-part strings into single string.
+Also remove all messages about memory allocation failure.
+page_alloc() reports those.
 
 Signed-off-by: NeilBrown <neilb@suse.com>
 ---
- drivers/md/bitmap.c |  107 ++++++++++++++++++++++++---------------------------
- 1 file changed, 50 insertions(+), 57 deletions(-)
+ drivers/md/multipath.c |   90 ++++++++++++++++++------------------------------
+ 1 file changed, 33 insertions(+), 57 deletions(-)
 
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index 2d826927a3bf..3ceb0c51891e 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -405,10 +405,10 @@ static int read_page(struct file *file, unsigned long index,
- 		ret = -EIO;
- out:
- 	if (ret)
--		printk(KERN_ALERT "md: bitmap read error: (%dB @ %llu): %d\n",
--			(int)PAGE_SIZE,
--			(unsigned long long)index << PAGE_SHIFT,
--			ret);
-+		pr_err("md: bitmap read error: (%dB @ %llu): %d\n",
-+		       (int)PAGE_SIZE,
-+		       (unsigned long long)index << PAGE_SHIFT,
-+		       ret);
- 	return ret;
+diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
+index 673efbd6fc47..589b80775d3f 100644
+--- a/drivers/md/multipath.c
++++ b/drivers/md/multipath.c
+@@ -52,7 +52,7 @@ static int multipath_map (struct mpconf *conf)
+ 	}
+ 	rcu_read_unlock();
+ 
+-	printk(KERN_ERR "multipath_map(): no more operational IO paths?\n");
++	pr_crit_ratelimited("multipath_map(): no more operational IO paths?\n");
+ 	return (-1);
  }
  
-@@ -455,24 +455,24 @@ void bitmap_print_sb(struct bitmap *bitmap)
- 	if (!bitmap || !bitmap->storage.sb_page)
+@@ -97,9 +97,9 @@ static void multipath_end_request(struct bio *bio)
+ 		 */
+ 		char b[BDEVNAME_SIZE];
+ 		md_error (mp_bh->mddev, rdev);
+-		printk(KERN_ERR "multipath: %s: rescheduling sector %llu\n",
+-		       bdevname(rdev->bdev,b),
+-		       (unsigned long long)bio->bi_iter.bi_sector);
++		pr_info("multipath: %s: rescheduling sector %llu\n",
++			bdevname(rdev->bdev,b),
++			(unsigned long long)bio->bi_iter.bi_sector);
+ 		multipath_reschedule_retry(mp_bh);
+ 	} else
+ 		multipath_end_bh_io(mp_bh, bio->bi_error);
+@@ -194,8 +194,7 @@ static void multipath_error (struct mddev *mddev, struct md_rdev *rdev)
+ 		 * first check if this is a queued request for a device
+ 		 * which has just failed.
+ 		 */
+-		printk(KERN_ALERT
+-		       "multipath: only one IO path left and IO error.\n");
++		pr_warn("multipath: only one IO path left and IO error.\n");
+ 		/* leave it active... it's all we have */
  		return;
- 	sb = kmap_atomic(bitmap->storage.sb_page);
--	printk(KERN_DEBUG "%s: bitmap file superblock:\n", bmname(bitmap));
--	printk(KERN_DEBUG "         magic: %08x\n", le32_to_cpu(sb->magic));
--	printk(KERN_DEBUG "       version: %d\n", le32_to_cpu(sb->version));
--	printk(KERN_DEBUG "          uuid: %08x.%08x.%08x.%08x\n",
--					*(__u32 *)(sb->uuid+0),
--					*(__u32 *)(sb->uuid+4),
--					*(__u32 *)(sb->uuid+8),
--					*(__u32 *)(sb->uuid+12));
--	printk(KERN_DEBUG "        events: %llu\n",
--			(unsigned long long) le64_to_cpu(sb->events));
--	printk(KERN_DEBUG "events cleared: %llu\n",
--			(unsigned long long) le64_to_cpu(sb->events_cleared));
--	printk(KERN_DEBUG "         state: %08x\n", le32_to_cpu(sb->state));
--	printk(KERN_DEBUG "     chunksize: %d B\n", le32_to_cpu(sb->chunksize));
--	printk(KERN_DEBUG "  daemon sleep: %ds\n", le32_to_cpu(sb->daemon_sleep));
--	printk(KERN_DEBUG "     sync size: %llu KB\n",
--			(unsigned long long)le64_to_cpu(sb->sync_size)/2);
--	printk(KERN_DEBUG "max write behind: %d\n", le32_to_cpu(sb->write_behind));
-+	pr_debug("%s: bitmap file superblock:\n", bmname(bitmap));
-+	pr_debug("         magic: %08x\n", le32_to_cpu(sb->magic));
-+	pr_debug("       version: %d\n", le32_to_cpu(sb->version));
-+	pr_debug("          uuid: %08x.%08x.%08x.%08x\n",
-+		 *(__u32 *)(sb->uuid+0),
-+		 *(__u32 *)(sb->uuid+4),
-+		 *(__u32 *)(sb->uuid+8),
-+		 *(__u32 *)(sb->uuid+12));
-+	pr_debug("        events: %llu\n",
-+		 (unsigned long long) le64_to_cpu(sb->events));
-+	pr_debug("events cleared: %llu\n",
-+		 (unsigned long long) le64_to_cpu(sb->events_cleared));
-+	pr_debug("         state: %08x\n", le32_to_cpu(sb->state));
-+	pr_debug("     chunksize: %d B\n", le32_to_cpu(sb->chunksize));
-+	pr_debug("  daemon sleep: %ds\n", le32_to_cpu(sb->daemon_sleep));
-+	pr_debug("     sync size: %llu KB\n",
-+		 (unsigned long long)le64_to_cpu(sb->sync_size)/2);
-+	pr_debug("max write behind: %d\n", le32_to_cpu(sb->write_behind));
- 	kunmap_atomic(sb);
+ 	}
+@@ -210,10 +209,8 @@ static void multipath_error (struct mddev *mddev, struct md_rdev *rdev)
+ 	}
+ 	set_bit(Faulty, &rdev->flags);
+ 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
+-	printk(KERN_ALERT "multipath: IO failure on %s,"
+-	       " disabling IO path.\n"
+-	       "multipath: Operation continuing"
+-	       " on %d IO paths.\n",
++	pr_err("multipath: IO failure on %s, disabling IO path.\n"
++	       "multipath: Operation continuing on %d IO paths.\n",
+ 	       bdevname(rdev->bdev, b),
+ 	       conf->raid_disks - mddev->degraded);
+ }
+@@ -223,21 +220,21 @@ static void print_multipath_conf (struct mpconf *conf)
+ 	int i;
+ 	struct multipath_info *tmp;
+ 
+-	printk("MULTIPATH conf printout:\n");
++	pr_debug("MULTIPATH conf printout:\n");
+ 	if (!conf) {
+-		printk("(conf==NULL)\n");
++		pr_debug("(conf==NULL)\n");
+ 		return;
+ 	}
+-	printk(" --- wd:%d rd:%d\n", conf->raid_disks - conf->mddev->degraded,
+-			 conf->raid_disks);
++	pr_debug(" --- wd:%d rd:%d\n", conf->raid_disks - conf->mddev->degraded,
++		 conf->raid_disks);
+ 
+ 	for (i = 0; i < conf->raid_disks; i++) {
+ 		char b[BDEVNAME_SIZE];
+ 		tmp = conf->multipaths + i;
+ 		if (tmp->rdev)
+-			printk(" disk%d, o:%d, dev:%s\n",
+-				i,!test_bit(Faulty, &tmp->rdev->flags),
+-			       bdevname(tmp->rdev->bdev,b));
++			pr_debug(" disk%d, o:%d, dev:%s\n",
++				 i,!test_bit(Faulty, &tmp->rdev->flags),
++				 bdevname(tmp->rdev->bdev,b));
+ 	}
  }
  
-@@ -506,14 +506,14 @@ static int bitmap_new_disk_sb(struct bitmap *bitmap)
- 	BUG_ON(!chunksize);
- 	if (!is_power_of_2(chunksize)) {
- 		kunmap_atomic(sb);
--		printk(KERN_ERR "bitmap chunksize not a power of 2\n");
-+		pr_warn("bitmap chunksize not a power of 2\n");
+@@ -292,8 +289,7 @@ static int multipath_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 	if (rdev == p->rdev) {
+ 		if (test_bit(In_sync, &rdev->flags) ||
+ 		    atomic_read(&rdev->nr_pending)) {
+-			printk(KERN_ERR "hot-remove-disk, slot %d is identified"
+-			       " but is still operational!\n", number);
++			pr_warn("hot-remove-disk, slot %d is identified but is still operational!\n", number);
+ 			err = -EBUSY;
+ 			goto abort;
+ 		}
+@@ -346,16 +342,14 @@ static void multipathd(struct md_thread *thread)
+ 		bio->bi_iter.bi_sector = mp_bh->master_bio->bi_iter.bi_sector;
+ 
+ 		if ((mp_bh->path = multipath_map (conf))<0) {
+-			printk(KERN_ALERT "multipath: %s: unrecoverable IO read"
+-				" error for block %llu\n",
+-				bdevname(bio->bi_bdev,b),
+-				(unsigned long long)bio->bi_iter.bi_sector);
++			pr_err("multipath: %s: unrecoverable IO read error for block %llu\n",
++			       bdevname(bio->bi_bdev,b),
++			       (unsigned long long)bio->bi_iter.bi_sector);
+ 			multipath_end_bh_io(mp_bh, -EIO);
+ 		} else {
+-			printk(KERN_ERR "multipath: %s: redirecting sector %llu"
+-				" to another IO path\n",
+-				bdevname(bio->bi_bdev,b),
+-				(unsigned long long)bio->bi_iter.bi_sector);
++			pr_err("multipath: %s: redirecting sector %llu to another IO path\n",
++			       bdevname(bio->bi_bdev,b),
++			       (unsigned long long)bio->bi_iter.bi_sector);
+ 			*bio = *(mp_bh->master_bio);
+ 			bio->bi_iter.bi_sector +=
+ 				conf->multipaths[mp_bh->path].rdev->data_offset;
+@@ -389,8 +383,8 @@ static int multipath_run (struct mddev *mddev)
  		return -EINVAL;
- 	}
- 	sb->chunksize = cpu_to_le32(chunksize);
  
- 	daemon_sleep = bitmap->mddev->bitmap_info.daemon_sleep;
- 	if (!daemon_sleep || (daemon_sleep > MAX_SCHEDULE_TIMEOUT)) {
--		printk(KERN_INFO "Choosing daemon_sleep default (5 sec)\n");
-+		pr_debug("Choosing daemon_sleep default (5 sec)\n");
- 		daemon_sleep = 5 * HZ;
- 	}
- 	sb->daemon_sleep = cpu_to_le32(daemon_sleep);
-@@ -584,7 +584,7 @@ static int bitmap_read_sb(struct bitmap *bitmap)
- 		/* to 4k blocks */
- 		bm_blocks = DIV_ROUND_UP_SECTOR_T(bm_blocks, 4096);
- 		offset = bitmap->mddev->bitmap_info.offset + (bitmap->cluster_slot * (bm_blocks << 3));
--		pr_info("%s:%d bm slot: %d offset: %llu\n", __func__, __LINE__,
-+		pr_debug("%s:%d bm slot: %d offset: %llu\n", __func__, __LINE__,
- 			bitmap->cluster_slot, offset);
- 	}
- 
-@@ -634,7 +634,7 @@ static int bitmap_read_sb(struct bitmap *bitmap)
- 	else if (write_behind > COUNTER_MAX)
- 		reason = "write-behind limit out of range (0 - 16383)";
- 	if (reason) {
--		printk(KERN_INFO "%s: invalid bitmap file superblock: %s\n",
-+		pr_warn("%s: invalid bitmap file superblock: %s\n",
- 			bmname(bitmap), reason);
+ 	if (mddev->level != LEVEL_MULTIPATH) {
+-		printk("multipath: %s: raid level not set to multipath IO (%d)\n",
+-		       mdname(mddev), mddev->level);
++		pr_warn("multipath: %s: raid level not set to multipath IO (%d)\n",
++			mdname(mddev), mddev->level);
  		goto out;
  	}
-@@ -648,18 +648,15 @@ static int bitmap_read_sb(struct bitmap *bitmap)
- 		 * bitmap's UUID and event counter to the mddev's
- 		 */
- 		if (memcmp(sb->uuid, bitmap->mddev->uuid, 16)) {
--			printk(KERN_INFO
--			       "%s: bitmap superblock UUID mismatch\n",
--			       bmname(bitmap));
-+			pr_warn("%s: bitmap superblock UUID mismatch\n",
-+				bmname(bitmap));
- 			goto out;
- 		}
- 		events = le64_to_cpu(sb->events);
- 		if (!nodes && (events < bitmap->mddev->events)) {
--			printk(KERN_INFO
--			       "%s: bitmap file is out of date (%llu < %llu) "
--			       "-- forcing full recovery\n",
--			       bmname(bitmap), events,
--			       (unsigned long long) bitmap->mddev->events);
-+			pr_warn("%s: bitmap file is out of date (%llu < %llu) -- forcing full recovery\n",
-+				bmname(bitmap), events,
-+				(unsigned long long) bitmap->mddev->events);
- 			set_bit(BITMAP_STALE, &bitmap->flags);
- 		}
+ 	/*
+@@ -401,21 +395,13 @@ static int multipath_run (struct mddev *mddev)
+ 
+ 	conf = kzalloc(sizeof(struct mpconf), GFP_KERNEL);
+ 	mddev->private = conf;
+-	if (!conf) {
+-		printk(KERN_ERR
+-			"multipath: couldn't allocate memory for %s\n",
+-			mdname(mddev));
++	if (!conf)
+ 		goto out;
+-	}
+ 
+ 	conf->multipaths = kzalloc(sizeof(struct multipath_info)*mddev->raid_disks,
+ 				   GFP_KERNEL);
+-	if (!conf->multipaths) {
+-		printk(KERN_ERR
+-			"multipath: couldn't allocate memory for %s\n",
+-			mdname(mddev));
++	if (!conf->multipaths)
+ 		goto out_free_conf;
+-	}
+ 
+ 	working_disks = 0;
+ 	rdev_for_each(rdev, mddev) {
+@@ -439,7 +425,7 @@ static int multipath_run (struct mddev *mddev)
+ 	INIT_LIST_HEAD(&conf->retry_list);
+ 
+ 	if (!working_disks) {
+-		printk(KERN_ERR "multipath: no operational IO paths for %s\n",
++		pr_warn("multipath: no operational IO paths for %s\n",
+ 			mdname(mddev));
+ 		goto out_free_conf;
  	}
-@@ -679,8 +676,8 @@ static int bitmap_read_sb(struct bitmap *bitmap)
- 	if (err == 0 && nodes && (bitmap->cluster_slot < 0)) {
- 		err = md_setup_cluster(bitmap->mddev, nodes);
- 		if (err) {
--			pr_err("%s: Could not setup cluster service (%d)\n",
--					bmname(bitmap), err);
-+			pr_warn("%s: Could not setup cluster service (%d)\n",
-+				bmname(bitmap), err);
- 			goto out_no_sb;
- 		}
- 		bitmap->cluster_slot = md_cluster_ops->slot_number(bitmap->mddev);
-@@ -847,15 +844,13 @@ static void bitmap_file_kick(struct bitmap *bitmap)
- 				ptr = file_path(bitmap->storage.file,
- 					     path, PAGE_SIZE);
+@@ -447,27 +433,17 @@ static int multipath_run (struct mddev *mddev)
  
--			printk(KERN_ALERT
--			      "%s: kicking failed bitmap file %s from array!\n",
--			      bmname(bitmap), IS_ERR(ptr) ? "" : ptr);
-+			pr_warn("%s: kicking failed bitmap file %s from array!\n",
-+				bmname(bitmap), IS_ERR(ptr) ? "" : ptr);
+ 	conf->pool = mempool_create_kmalloc_pool(NR_RESERVED_BUFS,
+ 						 sizeof(struct multipath_bh));
+-	if (conf->pool == NULL) {
+-		printk(KERN_ERR
+-			"multipath: couldn't allocate memory for %s\n",
+-			mdname(mddev));
++	if (conf->pool == NULL)
+ 		goto out_free_conf;
+-	}
  
- 			kfree(path);
- 		} else
--			printk(KERN_ALERT
--			       "%s: disabling internal bitmap due to errors\n",
--			       bmname(bitmap));
-+			pr_warn("%s: disabling internal bitmap due to errors\n",
-+				bmname(bitmap));
- 	}
- }
+-	{
+-		mddev->thread = md_register_thread(multipathd, mddev,
+-						   "multipath");
+-		if (!mddev->thread) {
+-			printk(KERN_ERR "multipath: couldn't allocate thread"
+-				" for %s\n", mdname(mddev));
+-			goto out_free_conf;
+-		}
+-	}
++	mddev->thread = md_register_thread(multipathd, mddev,
++					   "multipath");
++	if (!mddev->thread)
++		goto out_free_conf;
  
-@@ -1056,14 +1051,13 @@ static int bitmap_init_from_disk(struct bitmap *bitmap, sector_t start)
- 
- 	outofdate = test_bit(BITMAP_STALE, &bitmap->flags);
- 	if (outofdate)
--		printk(KERN_INFO "%s: bitmap file is out of date, doing full "
--			"recovery\n", bmname(bitmap));
-+		pr_warn("%s: bitmap file is out of date, doing full recovery\n", bmname(bitmap));
- 
- 	if (file && i_size_read(file->f_mapping->host) < store->bytes) {
--		printk(KERN_INFO "%s: bitmap file too short %lu < %lu\n",
--		       bmname(bitmap),
--		       (unsigned long) i_size_read(file->f_mapping->host),
--		       store->bytes);
-+		pr_warn("%s: bitmap file too short %lu < %lu\n",
-+			bmname(bitmap),
-+			(unsigned long) i_size_read(file->f_mapping->host),
-+			store->bytes);
- 		goto err;
- 	}
- 
-@@ -1137,16 +1131,15 @@ static int bitmap_init_from_disk(struct bitmap *bitmap, sector_t start)
- 		offset = 0;
- 	}
- 
--	printk(KERN_INFO "%s: bitmap initialized from disk: "
--	       "read %lu pages, set %lu of %lu bits\n",
--	       bmname(bitmap), store->file_pages,
--	       bit_cnt, chunks);
-+	pr_debug("%s: bitmap initialized from disk: read %lu pages, set %lu of %lu bits\n",
-+		 bmname(bitmap), store->file_pages,
-+		 bit_cnt, chunks);
- 
- 	return 0;
- 
-  err:
--	printk(KERN_INFO "%s: bitmap initialisation failed: %d\n",
--	       bmname(bitmap), ret);
-+	pr_warn("%s: bitmap initialisation failed: %d\n",
-+		bmname(bitmap), ret);
- 	return ret;
- }
- 
-@@ -1825,8 +1818,8 @@ struct bitmap *bitmap_create(struct mddev *mddev, int slot)
- 	if (err)
- 		goto error;
- 
--	printk(KERN_INFO "created bitmap (%lu pages) for device %s\n",
--	       bitmap->counts.pages, bmname(bitmap));
-+	pr_debug("created bitmap (%lu pages) for device %s\n",
-+		 bitmap->counts.pages, bmname(bitmap));
- 
- 	err = test_bit(BITMAP_WRITE_ERROR, &bitmap->flags) ? -EIO : 0;
- 	if (err)
-@@ -2089,7 +2082,7 @@ int bitmap_resize(struct bitmap *bitmap, sector_t blocks,
- 				bitmap->mddev->bitmap_info.chunksize = 1 << (old_counts.chunkshift +
- 									     BITMAP_BLOCK_SHIFT);
- 				blocks = old_counts.chunks << old_counts.chunkshift;
--				pr_err("Could not pre-allocate in-memory bitmap for cluster raid\n");
-+				pr_warn("Could not pre-allocate in-memory bitmap for cluster raid\n");
- 				break;
- 			} else
- 				bitmap->counts.bp[page].count += 1;
+-	printk(KERN_INFO
+-		"multipath: array %s active with %d out of %d IO paths\n",
++	pr_info("multipath: array %s active with %d out of %d IO paths\n",
+ 		mdname(mddev), conf->raid_disks - mddev->degraded,
+-	       mddev->raid_disks);
++		mddev->raid_disks);
+ 	/*
+ 	 * Ok, everything is just fine now
+ 	 */
 
 
