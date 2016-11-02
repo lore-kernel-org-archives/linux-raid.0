@@ -1,108 +1,48 @@
-From: JackieLiu <liuyun01@kylinos.cn>
-Subject: [PATCH] Restrict the use area of the log_offset variable
-Date: Wed,  2 Nov 2016 17:02:39 +0800
-Message-ID: <20161102090239.11137-1-liuyun01@kylinos.cn>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [md PATCH 0/9] replace printk() with pr_*()
+Date: Wed, 2 Nov 2016 13:36:21 +0100
+Message-ID: <5cd6d570-6d72-07b4-34a4-5b75503fcbf4@suse.de>
+References: <147805657658.23566.1748253447749986766.stgit@noble>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <147805657658.23566.1748253447749986766.stgit@noble>
 Sender: linux-raid-owner@vger.kernel.org
-To: shli@fb.com
-Cc: liuzhengyuan@kylinos.cn, linux-raid@vger.kernel.org, JackieLiu <liuyun01@kylinos.cn>
+To: NeilBrown <neilb@suse.com>, Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-We can calculate this offset by using ctx->meta_total_blocks,
-without passing in from the function
+On 11/02/2016 04:16 AM, NeilBrown wrote:
+> This series removes all printk() calls from md code, preferring
+> pr_warn(), pr_err() etc.
+>
+> All strings that were split over multiple lines are not joined
+> back together because being able to search for a message is more
+> important that not having long lines in the code.
+> Lots of printk(KERN_DEBUG... are not pr_debug() which means the
+> messages won't get printed unless they are explicitly disabled.
+>
+> I included some rough guidelines on which pr_* to choose in md.c.
+> Many things became pr_debug(), most of the rest are pr_warn().
+> pr_err() and pr_crit() are used sparingly.
+>
+> I simplified some code in multipath.c too.
+>
+> A particular benefit of this is that the various "print_conf()"
+> functions are not silent by default.
+> On very large arrays (raid10 with hundreds of devices), these can
+> be very noisy.
+>
+Any specify reason why you didn't move to use dev_*() style of errors?
+Generally I prefer having the messages prefixed with the device which 
+caused them; making debugging _so_ much easier ...
 
-Signed-off-by: JackieLiu <liuyun01@kylinos.cn>
----
- drivers/md/raid5-cache.c | 19 ++++++++-----------
- 1 file changed, 8 insertions(+), 11 deletions(-)
+Cheers,
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 1b1ab4a..03267c3 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -895,7 +895,7 @@ static int r5l_read_meta_block(struct r5l_log *log,
- static int r5l_recovery_flush_one_stripe(struct r5l_log *log,
- 					 struct r5l_recovery_ctx *ctx,
- 					 sector_t stripe_sect,
--					 int *offset, sector_t *log_offset)
-+					 int *offset)
- {
- 	struct r5conf *conf = log->rdev->mddev->private;
- 	struct stripe_head *sh;
-@@ -904,6 +904,8 @@ static int r5l_recovery_flush_one_stripe(struct r5l_log *log,
- 
- 	sh = raid5_get_active_stripe(conf, stripe_sect, 0, 0, 0);
- 	while (1) {
-+		sector_t log_offset = r5l_ring_add(log, ctx->pos,
-+				ctx->meta_total_blocks);
- 		payload = page_address(ctx->meta_page) + *offset;
- 
- 		if (le16_to_cpu(payload->header.type) == R5LOG_PAYLOAD_DATA) {
-@@ -911,16 +913,15 @@ static int r5l_recovery_flush_one_stripe(struct r5l_log *log,
- 					     le64_to_cpu(payload->location), 0,
- 					     &disk_index, sh);
- 
--			sync_page_io(log->rdev, *log_offset, PAGE_SIZE,
-+			sync_page_io(log->rdev, log_offset, PAGE_SIZE,
- 				     sh->dev[disk_index].page, REQ_OP_READ, 0,
- 				     false);
- 			sh->dev[disk_index].log_checksum =
- 				le32_to_cpu(payload->checksum[0]);
- 			set_bit(R5_Wantwrite, &sh->dev[disk_index].flags);
--			ctx->meta_total_blocks += BLOCK_SECTORS;
- 		} else {
- 			disk_index = sh->pd_idx;
--			sync_page_io(log->rdev, *log_offset, PAGE_SIZE,
-+			sync_page_io(log->rdev, log_offset, PAGE_SIZE,
- 				     sh->dev[disk_index].page, REQ_OP_READ, 0,
- 				     false);
- 			sh->dev[disk_index].log_checksum =
-@@ -930,7 +931,7 @@ static int r5l_recovery_flush_one_stripe(struct r5l_log *log,
- 			if (sh->qd_idx >= 0) {
- 				disk_index = sh->qd_idx;
- 				sync_page_io(log->rdev,
--					     r5l_ring_add(log, *log_offset, BLOCK_SECTORS),
-+					     r5l_ring_add(log, log_offset, BLOCK_SECTORS),
- 					     PAGE_SIZE, sh->dev[disk_index].page,
- 					     REQ_OP_READ, 0, false);
- 				sh->dev[disk_index].log_checksum =
-@@ -938,11 +939,9 @@ static int r5l_recovery_flush_one_stripe(struct r5l_log *log,
- 				set_bit(R5_Wantwrite,
- 					&sh->dev[disk_index].flags);
- 			}
--			ctx->meta_total_blocks += BLOCK_SECTORS * conf->max_degraded;
- 		}
- 
--		*log_offset = r5l_ring_add(log, *log_offset,
--					   le32_to_cpu(payload->size));
-+		ctx->meta_total_blocks += le32_to_cpu(payload->size);
- 		*offset += sizeof(struct r5l_payload_data_parity) +
- 			sizeof(__le32) *
- 			(le32_to_cpu(payload->size) >> (PAGE_SHIFT - 9));
-@@ -999,12 +998,10 @@ static int r5l_recovery_flush_one_meta(struct r5l_log *log,
- 	struct r5l_payload_data_parity *payload;
- 	struct r5l_meta_block *mb;
- 	int offset;
--	sector_t log_offset;
- 	sector_t stripe_sector;
- 
- 	mb = page_address(ctx->meta_page);
- 	offset = sizeof(struct r5l_meta_block);
--	log_offset = r5l_ring_add(log, ctx->pos, BLOCK_SECTORS);
- 
- 	while (offset < le32_to_cpu(mb->meta_size)) {
- 		int dd;
-@@ -1013,7 +1010,7 @@ static int r5l_recovery_flush_one_meta(struct r5l_log *log,
- 		stripe_sector = raid5_compute_sector(conf,
- 						     le64_to_cpu(payload->location), 0, &dd, NULL);
- 		if (r5l_recovery_flush_one_stripe(log, ctx, stripe_sector,
--						  &offset, &log_offset))
-+						  &offset))
- 			return -EINVAL;
- 	}
- 	return 0;
+Hannes
 -- 
-2.10.2
-
-
-
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
