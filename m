@@ -1,50 +1,108 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH 09/60] dm: dm.c: replace 'bio->bi_vcnt == 1' with !bio_multiple_segments
-Date: Wed, 2 Nov 2016 15:56:41 +0800
-Message-ID: <CACVXFVNxwL1Dm9Mbf=YXpjV4X5G45Ed_TOE1A=wAORWkEdaHCA@mail.gmail.com>
-References: <1477728600-12938-1-git-send-email-tom.leiming@gmail.com>
- <1477728600-12938-10-git-send-email-tom.leiming@gmail.com>
- <20161031152901.GD30919@infradead.org> <20161102030906.22vwlv3ktp6l4bcy@kmo-pixel>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20161102030906.22vwlv3ktp6l4bcy@kmo-pixel>
-Sender: linux-block-owner@vger.kernel.org
-To: Kent Overstreet <kent.overstreet@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@fb.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "maintainer:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>, Shaohua Li <shli@kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>
+From: JackieLiu <liuyun01@kylinos.cn>
+Subject: [PATCH] Restrict the use area of the log_offset variable
+Date: Wed,  2 Nov 2016 17:02:39 +0800
+Message-ID: <20161102090239.11137-1-liuyun01@kylinos.cn>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: shli@fb.com
+Cc: liuzhengyuan@kylinos.cn, linux-raid@vger.kernel.org, JackieLiu <liuyun01@kylinos.cn>
 List-Id: linux-raid.ids
 
-On Wed, Nov 2, 2016 at 11:09 AM, Kent Overstreet
-<kent.overstreet@gmail.com> wrote:
-> On Mon, Oct 31, 2016 at 08:29:01AM -0700, Christoph Hellwig wrote:
->> On Sat, Oct 29, 2016 at 04:08:08PM +0800, Ming Lei wrote:
->> > Avoid to access .bi_vcnt directly, because it may be not what
->> > the driver expected any more after supporting multipage bvec.
->> >
->> > Signed-off-by: Ming Lei <tom.leiming@gmail.com>
->>
->> It would be really nice to have a comment in the code why it's
->> even checking for multiple segments.
->
-> Or ideally refactor the code to not care about multiple segments at all.
+We can calculate this offset by using ctx->meta_total_blocks,
+without passing in from the function
 
-The check on 'bio->bi_vcnt == 1' is introduced in commit de3ec86dff160(dm:
-don't start current request if it would've merged with the previous), which
-fixed one performance issue.[1]
+Signed-off-by: JackieLiu <liuyun01@kylinos.cn>
+---
+ drivers/md/raid5-cache.c | 19 ++++++++-----------
+ 1 file changed, 8 insertions(+), 11 deletions(-)
 
-Looks the idea of the patch is to delay dispatching the rq if it
-would've merged with previous request and the rq is small(single bvec).
-I guess the motivation is to try to increase chance of merging with the delay.
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 1b1ab4a..03267c3 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -895,7 +895,7 @@ static int r5l_read_meta_block(struct r5l_log *log,
+ static int r5l_recovery_flush_one_stripe(struct r5l_log *log,
+ 					 struct r5l_recovery_ctx *ctx,
+ 					 sector_t stripe_sect,
+-					 int *offset, sector_t *log_offset)
++					 int *offset)
+ {
+ 	struct r5conf *conf = log->rdev->mddev->private;
+ 	struct stripe_head *sh;
+@@ -904,6 +904,8 @@ static int r5l_recovery_flush_one_stripe(struct r5l_log *log,
+ 
+ 	sh = raid5_get_active_stripe(conf, stripe_sect, 0, 0, 0);
+ 	while (1) {
++		sector_t log_offset = r5l_ring_add(log, ctx->pos,
++				ctx->meta_total_blocks);
+ 		payload = page_address(ctx->meta_page) + *offset;
+ 
+ 		if (le16_to_cpu(payload->header.type) == R5LOG_PAYLOAD_DATA) {
+@@ -911,16 +913,15 @@ static int r5l_recovery_flush_one_stripe(struct r5l_log *log,
+ 					     le64_to_cpu(payload->location), 0,
+ 					     &disk_index, sh);
+ 
+-			sync_page_io(log->rdev, *log_offset, PAGE_SIZE,
++			sync_page_io(log->rdev, log_offset, PAGE_SIZE,
+ 				     sh->dev[disk_index].page, REQ_OP_READ, 0,
+ 				     false);
+ 			sh->dev[disk_index].log_checksum =
+ 				le32_to_cpu(payload->checksum[0]);
+ 			set_bit(R5_Wantwrite, &sh->dev[disk_index].flags);
+-			ctx->meta_total_blocks += BLOCK_SECTORS;
+ 		} else {
+ 			disk_index = sh->pd_idx;
+-			sync_page_io(log->rdev, *log_offset, PAGE_SIZE,
++			sync_page_io(log->rdev, log_offset, PAGE_SIZE,
+ 				     sh->dev[disk_index].page, REQ_OP_READ, 0,
+ 				     false);
+ 			sh->dev[disk_index].log_checksum =
+@@ -930,7 +931,7 @@ static int r5l_recovery_flush_one_stripe(struct r5l_log *log,
+ 			if (sh->qd_idx >= 0) {
+ 				disk_index = sh->qd_idx;
+ 				sync_page_io(log->rdev,
+-					     r5l_ring_add(log, *log_offset, BLOCK_SECTORS),
++					     r5l_ring_add(log, log_offset, BLOCK_SECTORS),
+ 					     PAGE_SIZE, sh->dev[disk_index].page,
+ 					     REQ_OP_READ, 0, false);
+ 				sh->dev[disk_index].log_checksum =
+@@ -938,11 +939,9 @@ static int r5l_recovery_flush_one_stripe(struct r5l_log *log,
+ 				set_bit(R5_Wantwrite,
+ 					&sh->dev[disk_index].flags);
+ 			}
+-			ctx->meta_total_blocks += BLOCK_SECTORS * conf->max_degraded;
+ 		}
+ 
+-		*log_offset = r5l_ring_add(log, *log_offset,
+-					   le32_to_cpu(payload->size));
++		ctx->meta_total_blocks += le32_to_cpu(payload->size);
+ 		*offset += sizeof(struct r5l_payload_data_parity) +
+ 			sizeof(__le32) *
+ 			(le32_to_cpu(payload->size) >> (PAGE_SHIFT - 9));
+@@ -999,12 +998,10 @@ static int r5l_recovery_flush_one_meta(struct r5l_log *log,
+ 	struct r5l_payload_data_parity *payload;
+ 	struct r5l_meta_block *mb;
+ 	int offset;
+-	sector_t log_offset;
+ 	sector_t stripe_sector;
+ 
+ 	mb = page_address(ctx->meta_page);
+ 	offset = sizeof(struct r5l_meta_block);
+-	log_offset = r5l_ring_add(log, ctx->pos, BLOCK_SECTORS);
+ 
+ 	while (offset < le32_to_cpu(mb->meta_size)) {
+ 		int dd;
+@@ -1013,7 +1010,7 @@ static int r5l_recovery_flush_one_meta(struct r5l_log *log,
+ 		stripe_sector = raid5_compute_sector(conf,
+ 						     le64_to_cpu(payload->location), 0, &dd, NULL);
+ 		if (r5l_recovery_flush_one_stripe(log, ctx, stripe_sector,
+-						  &offset, &log_offset))
++						  &offset))
+ 			return -EINVAL;
+ 	}
+ 	return 0;
+-- 
+2.10.2
 
-But why does the code check on 'bio->bi_vcnt == 1'? Once the bio is
-submitted, .bi_vcnt isn't changed any more and merging doesn't change
-it too. So should the check have been on blk_rq_bytes(rq)?
-
-Mike, please correct me if my understanding is wrong.
 
 
-[1] https://www.redhat.com/archives/dm-devel/2015-March/msg00014.html
-
-
-thanks,
-Ming Lei
