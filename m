@@ -1,80 +1,50 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: RAID boot documentation
-Date: Wed, 02 Nov 2016 17:29:04 +1100
-Message-ID: <87funaqtsf.fsf@notabene.neil.brown.name>
-References: <CAFx4rwS4xWDcRbWpnq__zTw5FqXA1SUNW1bJgWpxWotJiRKzdA@mail.gmail.com>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: [PATCH 09/60] dm: dm.c: replace 'bio->bi_vcnt == 1' with !bio_multiple_segments
+Date: Wed, 2 Nov 2016 15:56:41 +0800
+Message-ID: <CACVXFVNxwL1Dm9Mbf=YXpjV4X5G45Ed_TOE1A=wAORWkEdaHCA@mail.gmail.com>
+References: <1477728600-12938-1-git-send-email-tom.leiming@gmail.com>
+ <1477728600-12938-10-git-send-email-tom.leiming@gmail.com>
+ <20161031152901.GD30919@infradead.org> <20161102030906.22vwlv3ktp6l4bcy@kmo-pixel>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAFx4rwS4xWDcRbWpnq__zTw5FqXA1SUNW1bJgWpxWotJiRKzdA@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: doug@easyco.com, linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20161102030906.22vwlv3ktp6l4bcy@kmo-pixel>
+Sender: linux-block-owner@vger.kernel.org
+To: Kent Overstreet <kent.overstreet@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@fb.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "maintainer:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>, Shaohua Li <shli@kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-
-On Wed, Nov 02 2016, Doug Dumitru wrote:
-
-> Does anyone have any documentation on when a non-root RAID device
-> mounts and how this is triggered?
+On Wed, Nov 2, 2016 at 11:09 AM, Kent Overstreet
+<kent.overstreet@gmail.com> wrote:
+> On Mon, Oct 31, 2016 at 08:29:01AM -0700, Christoph Hellwig wrote:
+>> On Sat, Oct 29, 2016 at 04:08:08PM +0800, Ming Lei wrote:
+>> > Avoid to access .bi_vcnt directly, because it may be not what
+>> > the driver expected any more after supporting multipage bvec.
+>> >
+>> > Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+>>
+>> It would be really nice to have a comment in the code why it's
+>> even checking for multiple segments.
 >
-> I have dug around looking for calls to 'mdadm' and or references to
-> mdadm.conf to read the array details, but am not finding the obvious
-> things.  Then again, the new boot services still confuses me.
->
+> Or ideally refactor the code to not care about multiple segments at all.
 
-This depends on what the distro you are using chooses to implement.
+The check on 'bio->bi_vcnt == 1' is introduced in commit de3ec86dff160(dm:
+don't start current request if it would've merged with the previous), which
+fixed one performance issue.[1]
 
-If your distro that uses systemd and uses the udev rules and unit files
-that are distrubuted with upstream mdadm, then:
+Looks the idea of the patch is to delay dispatching the rq if it
+would've merged with previous request and the rq is small(single bvec).
+I guess the motivation is to try to increase chance of merging with the delay.
 
-When a device is discovered that contains raid metadata, udev will run
-  mdadm --incremental --export /dev/whatever
-(or similar)
+But why does the code check on 'bio->bi_vcnt == 1'? Once the bio is
+submitted, .bi_vcnt isn't changed any more and merging doesn't change
+it too. So should the check have been on blk_rq_bytes(rq)?
 
-See /usr/lib/udev/rules.d/64-md-raid-assembly.rules for details.
+Mike, please correct me if my understanding is wrong.
 
-Once this has happened for all devices in an array, the array will be
-started by mdadm.
 
-If mdadm notices that the array *could* be started if needed, but that
-it still expects more devices to appear, it reports
-    MD_STARTED=*unsafe*
-and the udev rules file uses this to trigger a message to systemd to
-start "mdadm-last-resort@devicename.timer"
-This sets a timer.  When the timer fires, the array is started even
-though some devices might be missing.
-If the array gets started before that (because the missing devices
-appeared) the timer is canceled.
+[1] https://www.redhat.com/archives/dm-devel/2015-March/msg00014.html
 
-When an md array (or any other device) appear, some other udev handling,
-possibly involving udisks, might cause the filesystem to be mounted.
-That is completely outside of the control of mdadm.  mdadm just
-assembles the device.
 
-Hope that helps.
-
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAEBCAAGBQJYGYexAAoJEDnsnt1WYoG5j/sQAKq+CAPCFi159SISNYegT5ZJ
-rTw6KEku+Y+aBoeYJ8pRUAFwt5L2Kd1rBtejgAW/lCU0Urxdt2+2VVrDExNHBV2n
-zsyfTW3HuGbBbBxEvvwOJyPBJgt7+c8rqFhApx2nW7QVfAz0KGCwKMhV4MlSE+8D
-QRmdqCXHyQwQ8oQSu29fF2NyUrEMzJYpiAzOQ45lVSA9UgimMyhTMa0VwgyvfZWX
-KGLy29qKhit2Gv18xNt3kny7nxsayOCng7jdEiIk4oNY1u1HVPImPrN2c9FofW9c
-6wFBpQDJ3Q7j0r26kQApK/ZXuFuaDZE8TeuW3v+1rvO2xuhx2W26cJJF6LJy+WhB
-kGm/SPCp9HPcBtHyDh8uJxiZkvhTZ1CZNqMUzSOEP6sIbQgLK5QAuDgiKNF1SP+p
-UnuKl4SFT39/ohawDmMpoSuB59mibnYryPuHKm+9lkJkKlY9rsjqVWsUBLS2NgWP
-wbJhDGWFnWJgM+LLemMegXFbbXlV+ocDXfRcateMzk1Tl0z0gEhOQBKnMcQkiyYx
-U81C8R2q8vqvjAmu3069iZUSgzq7nI9DZW27yFS019vox69Wft6t4nNYQoOg53G8
-PTeuHBC96CuveRO9r6OZHbjWJpfOgzo7etu77leT+Ge4vyiwoLHSsne5//8ANIZf
-sd0tiawAvDKqS6ro0Sxe
-=3FRy
------END PGP SIGNATURE-----
---=-=-=--
+thanks,
+Ming Lei
