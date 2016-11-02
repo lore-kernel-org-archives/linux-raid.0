@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [md PATCH 6/9] md/raid0: replace printk() with pr_*()
+Subject: [md PATCH 7/9] md/raid1: change printk() to pr_*()
 Date: Wed, 02 Nov 2016 14:16:50 +1100
-Message-ID: <147805660992.23566.9912952115762737883.stgit@noble>
+Message-ID: <147805661013.23566.14989893961440455026.stgit@noble>
 References: <147805657658.23566.1748253447749986766.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,212 +13,202 @@ To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This makes md/raid0 much less verbose as the messages about
-the array geometry are now pr_debug()
-
 Signed-off-by: NeilBrown <neilb@suse.com>
 ---
- drivers/md/raid0.c |   89 ++++++++++++++++++++++++++--------------------------
- 1 file changed, 44 insertions(+), 45 deletions(-)
+ drivers/md/raid1.c |   99 ++++++++++++++++++++++------------------------------
+ 1 file changed, 41 insertions(+), 58 deletions(-)
 
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index 258986a2699d..b3ba77a3c3bc 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -51,20 +51,21 @@ static void dump_zones(struct mddev *mddev)
- 	char b[BDEVNAME_SIZE];
- 	struct r0conf *conf = mddev->private;
- 	int raid_disks = conf->strip_zone[0].nb_dev;
--	printk(KERN_INFO "md: RAID0 configuration for %s - %d zone%s\n",
--	       mdname(mddev),
--	       conf->nr_strip_zones, conf->nr_strip_zones==1?"":"s");
-+	pr_debug("md: RAID0 configuration for %s - %d zone%s\n",
-+		 mdname(mddev),
-+		 conf->nr_strip_zones, conf->nr_strip_zones==1?"":"s");
- 	for (j = 0; j < conf->nr_strip_zones; j++) {
--		printk(KERN_INFO "md: zone%d=[", j);
-+		char line[200];
-+		int len = 0;
-+
- 		for (k = 0; k < conf->strip_zone[j].nb_dev; k++)
--			printk(KERN_CONT "%s%s", k?"/":"",
--			bdevname(conf->devlist[j*raid_disks
--						+ k]->bdev, b));
--		printk(KERN_CONT "]\n");
-+			len += snprintf(line+len, 200-len, "%s%s", k?"/":"",
-+					bdevname(conf->devlist[j*raid_disks
-+							       + k]->bdev, b));
-+		pr_debug("md: zone%d=[%s]\n", j, line);
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 1961d827dbd1..86ecf57ec612 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -347,13 +347,10 @@ static void raid1_end_read_request(struct bio *bio)
+ 		 * oops, read error:
+ 		 */
+ 		char b[BDEVNAME_SIZE];
+-		printk_ratelimited(
+-			KERN_ERR "md/raid1:%s: %s: "
+-			"rescheduling sector %llu\n",
+-			mdname(conf->mddev),
+-			bdevname(rdev->bdev,
+-				 b),
+-			(unsigned long long)r1_bio->sector);
++		pr_err_ratelimited("md/raid1:%s: %s: rescheduling sector %llu\n",
++				   mdname(conf->mddev),
++				   bdevname(rdev->bdev, b),
++				   (unsigned long long)r1_bio->sector);
+ 		set_bit(R1BIO_ReadError, &r1_bio->state);
+ 		reschedule_retry(r1_bio);
+ 		/* don't drop the reference on read_disk yet */
+@@ -1458,34 +1455,33 @@ static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
+ 	set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+ 	set_mask_bits(&mddev->flags, 0,
+ 		      BIT(MD_CHANGE_DEVS) | BIT(MD_CHANGE_PENDING));
+-	printk(KERN_ALERT
+-	       "md/raid1:%s: Disk failure on %s, disabling device.\n"
+-	       "md/raid1:%s: Operation continuing on %d devices.\n",
+-	       mdname(mddev), bdevname(rdev->bdev, b),
+-	       mdname(mddev), conf->raid_disks - mddev->degraded);
++	pr_crit("md/raid1:%s: Disk failure on %s, disabling device.\n"
++		"md/raid1:%s: Operation continuing on %d devices.\n",
++		mdname(mddev), bdevname(rdev->bdev, b),
++		mdname(mddev), conf->raid_disks - mddev->degraded);
+ }
  
- 		zone_size  = conf->strip_zone[j].zone_end - zone_start;
--		printk(KERN_INFO "      zone-offset=%10lluKB, "
--				"device-offset=%10lluKB, size=%10lluKB\n",
-+		pr_debug("      zone-offset=%10lluKB, device-offset=%10lluKB, size=%10lluKB\n",
- 			(unsigned long long)zone_start>>1,
- 			(unsigned long long)conf->strip_zone[j].dev_start>>1,
- 			(unsigned long long)zone_size>>1);
-@@ -142,9 +143,9 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
- 	 * chunk size is a multiple of that sector size
- 	 */
- 	if ((mddev->chunk_sectors << 9) % blksize) {
--		printk(KERN_ERR "md/raid0:%s: chunk_size of %d not multiple of block size %d\n",
--		       mdname(mddev),
--		       mddev->chunk_sectors << 9, blksize);
-+		pr_warn("md/raid0:%s: chunk_size of %d not multiple of block size %d\n",
-+			mdname(mddev),
-+			mddev->chunk_sectors << 9, blksize);
- 		err = -EINVAL;
+ static void print_conf(struct r1conf *conf)
+ {
+ 	int i;
+ 
+-	printk(KERN_DEBUG "RAID1 conf printout:\n");
++	pr_debug("RAID1 conf printout:\n");
+ 	if (!conf) {
+-		printk(KERN_DEBUG "(!conf)\n");
++		pr_debug("(!conf)\n");
+ 		return;
+ 	}
+-	printk(KERN_DEBUG " --- wd:%d rd:%d\n", conf->raid_disks - conf->mddev->degraded,
+-		conf->raid_disks);
++	pr_debug(" --- wd:%d rd:%d\n", conf->raid_disks - conf->mddev->degraded,
++		 conf->raid_disks);
+ 
+ 	rcu_read_lock();
+ 	for (i = 0; i < conf->raid_disks; i++) {
+ 		char b[BDEVNAME_SIZE];
+ 		struct md_rdev *rdev = rcu_dereference(conf->mirrors[i].rdev);
+ 		if (rdev)
+-			printk(KERN_DEBUG " disk %d, wo:%d, o:%d, dev:%s\n",
+-			       i, !test_bit(In_sync, &rdev->flags),
+-			       !test_bit(Faulty, &rdev->flags),
+-			       bdevname(rdev->bdev,b));
++			pr_debug(" disk %d, wo:%d, o:%d, dev:%s\n",
++				 i, !test_bit(In_sync, &rdev->flags),
++				 !test_bit(Faulty, &rdev->flags),
++				 bdevname(rdev->bdev,b));
+ 	}
+ 	rcu_read_unlock();
+ }
+@@ -1822,11 +1818,10 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
+ 			 * work just disable and interrupt the recovery.
+ 			 * Don't fail devices as that won't really help.
+ 			 */
+-			printk(KERN_ALERT "md/raid1:%s: %s: unrecoverable I/O read error"
+-			       " for block %llu\n",
+-			       mdname(mddev),
+-			       bdevname(bio->bi_bdev, b),
+-			       (unsigned long long)r1_bio->sector);
++			pr_crit_ratelimited("md/raid1:%s: %s: unrecoverable I/O read error for block %llu\n",
++					    mdname(mddev),
++					    bdevname(bio->bi_bdev, b),
++					    (unsigned long long)r1_bio->sector);
+ 			for (d = 0; d < conf->raid_disks * 2; d++) {
+ 				rdev = conf->mirrors[d].rdev;
+ 				if (!rdev || test_bit(Faulty, &rdev->flags))
+@@ -2119,13 +2114,11 @@ static void fix_read_error(struct r1conf *conf, int read_disk,
+ 				if (r1_sync_page_io(rdev, sect, s,
+ 						    conf->tmppage, READ)) {
+ 					atomic_add(s, &rdev->corrected_errors);
+-					printk(KERN_INFO
+-					       "md/raid1:%s: read error corrected "
+-					       "(%d sectors at %llu on %s)\n",
+-					       mdname(mddev), s,
+-					       (unsigned long long)(sect +
+-								    rdev->data_offset),
+-					       bdevname(rdev->bdev, b));
++					pr_info("md/raid1:%s: read error corrected (%d sectors at %llu on %s)\n",
++						mdname(mddev), s,
++						(unsigned long long)(sect +
++								     rdev->data_offset),
++						bdevname(rdev->bdev, b));
+ 				}
+ 				rdev_dec_pending(rdev, mddev);
+ 			} else
+@@ -2308,9 +2301,8 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
+ read_more:
+ 	disk = read_balance(conf, r1_bio, &max_sectors);
+ 	if (disk == -1) {
+-		printk(KERN_ALERT "md/raid1:%s: %s: unrecoverable I/O"
+-		       " read error for block %llu\n",
+-		       mdname(mddev), b, (unsigned long long)r1_bio->sector);
++		pr_crit_ratelimited("md/raid1:%s: %s: unrecoverable I/O read error for block %llu\n",
++				    mdname(mddev), b, (unsigned long long)r1_bio->sector);
+ 		raid_end_bio_io(r1_bio);
+ 	} else {
+ 		const unsigned long do_sync
+@@ -2326,12 +2318,10 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
+ 			 max_sectors);
+ 		r1_bio->bios[r1_bio->read_disk] = bio;
+ 		rdev = conf->mirrors[disk].rdev;
+-		printk_ratelimited(KERN_ERR
+-				   "md/raid1:%s: redirecting sector %llu"
+-				   " to other mirror: %s\n",
+-				   mdname(mddev),
+-				   (unsigned long long)r1_bio->sector,
+-				   bdevname(rdev->bdev, b));
++		pr_info_ratelimited("md/raid1:%s: redirecting sector %llu to other mirror: %s\n",
++				    mdname(mddev),
++				    (unsigned long long)r1_bio->sector,
++				    bdevname(rdev->bdev, b));
+ 		bio->bi_iter.bi_sector = r1_bio->sector + rdev->data_offset;
+ 		bio->bi_bdev = rdev->bdev;
+ 		bio->bi_end_io = raid1_end_read_request;
+@@ -2871,12 +2861,8 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+ 
+ 	err = -ENOMEM;
+ 	conf->thread = md_register_thread(raid1d, mddev, "raid1");
+-	if (!conf->thread) {
+-		printk(KERN_ERR
+-		       "md/raid1:%s: couldn't allocate thread\n",
+-		       mdname(mddev));
++	if (!conf->thread)
  		goto abort;
- 	}
-@@ -186,19 +187,18 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
- 		}
+-	}
  
- 		if (j < 0) {
--			printk(KERN_ERR
--			       "md/raid0:%s: remove inactive devices before converting to RAID0\n",
--			       mdname(mddev));
-+			pr_warn("md/raid0:%s: remove inactive devices before converting to RAID0\n",
-+				mdname(mddev));
- 			goto abort;
- 		}
- 		if (j >= mddev->raid_disks) {
--			printk(KERN_ERR "md/raid0:%s: bad disk number %d - "
--			       "aborting!\n", mdname(mddev), j);
-+			pr_warn("md/raid0:%s: bad disk number %d - aborting!\n",
-+				mdname(mddev), j);
- 			goto abort;
- 		}
- 		if (dev[j]) {
--			printk(KERN_ERR "md/raid0:%s: multiple devices for %d - "
--			       "aborting!\n", mdname(mddev), j);
-+			pr_warn("md/raid0:%s: multiple devices for %d - aborting!\n",
-+				mdname(mddev), j);
- 			goto abort;
- 		}
- 		dev[j] = rdev1;
-@@ -208,8 +208,8 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
- 		cnt++;
- 	}
- 	if (cnt != mddev->raid_disks) {
--		printk(KERN_ERR "md/raid0:%s: too few disks (%d of %d) - "
--		       "aborting!\n", mdname(mddev), cnt, mddev->raid_disks);
-+		pr_warn("md/raid0:%s: too few disks (%d of %d) - aborting!\n",
-+			mdname(mddev), cnt, mddev->raid_disks);
- 		goto abort;
- 	}
- 	zone->nb_dev = cnt;
-@@ -357,8 +357,7 @@ static int raid0_run(struct mddev *mddev)
- 	int ret;
+ 	return conf;
  
- 	if (mddev->chunk_sectors == 0) {
--		printk(KERN_ERR "md/raid0:%s: chunk size must be set.\n",
+@@ -2901,13 +2887,13 @@ static int raid1_run(struct mddev *mddev)
+ 	bool discard_supported = false;
+ 
+ 	if (mddev->level != 1) {
+-		printk(KERN_ERR "md/raid1:%s: raid level not set to mirroring (%d)\n",
+-		       mdname(mddev), mddev->level);
++		pr_warn("md/raid1:%s: raid level not set to mirroring (%d)\n",
++			mdname(mddev), mddev->level);
+ 		return -EIO;
+ 	}
+ 	if (mddev->reshape_position != MaxSector) {
+-		printk(KERN_ERR "md/raid1:%s: reshape_position set but not supported\n",
 -		       mdname(mddev));
-+		pr_warn("md/raid0:%s: chunk size must be set.\n", mdname(mddev));
- 		return -EINVAL;
- 	}
- 	if (md_check_no_bitmap(mddev))
-@@ -399,9 +398,9 @@ static int raid0_run(struct mddev *mddev)
- 	/* calculate array device size */
- 	md_set_array_sectors(mddev, raid0_size(mddev, 0, 0));
- 
--	printk(KERN_INFO "md/raid0:%s: md_size is %llu sectors.\n",
--	       mdname(mddev),
--	       (unsigned long long)mddev->array_sectors);
-+	pr_debug("md/raid0:%s: md_size is %llu sectors.\n",
-+		 mdname(mddev),
-+		 (unsigned long long)mddev->array_sectors);
- 
- 	if (mddev->queue) {
- 		/* calculate the max read-ahead size.
-@@ -509,17 +508,17 @@ static void *raid0_takeover_raid45(struct mddev *mddev)
- 	struct r0conf *priv_conf;
- 
- 	if (mddev->degraded != 1) {
--		printk(KERN_ERR "md/raid0:%s: raid5 must be degraded! Degraded disks: %d\n",
--		       mdname(mddev),
--		       mddev->degraded);
-+		pr_warn("md/raid0:%s: raid5 must be degraded! Degraded disks: %d\n",
-+			mdname(mddev),
-+			mddev->degraded);
- 		return ERR_PTR(-EINVAL);
- 	}
- 
- 	rdev_for_each(rdev, mddev) {
- 		/* check slot number for a disk */
- 		if (rdev->raid_disk == mddev->raid_disks-1) {
--			printk(KERN_ERR "md/raid0:%s: raid5 must have missing parity disk!\n",
--			       mdname(mddev));
-+			pr_warn("md/raid0:%s: raid5 must have missing parity disk!\n",
-+				mdname(mddev));
- 			return ERR_PTR(-EINVAL);
- 		}
- 		rdev->sectors = mddev->dev_sectors;
-@@ -549,19 +548,19 @@ static void *raid0_takeover_raid10(struct mddev *mddev)
- 	 *  - all mirrors must be already degraded
- 	 */
- 	if (mddev->layout != ((1 << 8) + 2)) {
--		printk(KERN_ERR "md/raid0:%s:: Raid0 cannot takeover layout: 0x%x\n",
--		       mdname(mddev),
--		       mddev->layout);
-+		pr_warn("md/raid0:%s:: Raid0 cannot takeover layout: 0x%x\n",
-+			mdname(mddev),
-+			mddev->layout);
- 		return ERR_PTR(-EINVAL);
- 	}
- 	if (mddev->raid_disks & 1) {
--		printk(KERN_ERR "md/raid0:%s: Raid0 cannot takeover Raid10 with odd disk number.\n",
--		       mdname(mddev));
-+		pr_warn("md/raid0:%s: Raid0 cannot takeover Raid10 with odd disk number.\n",
++		pr_warn("md/raid1:%s: reshape_position set but not supported\n",
 +			mdname(mddev));
- 		return ERR_PTR(-EINVAL);
+ 		return -EIO;
  	}
- 	if (mddev->degraded != (mddev->raid_disks>>1)) {
--		printk(KERN_ERR "md/raid0:%s: All mirrors must be already degraded!\n",
+ 	/*
+@@ -2946,11 +2932,9 @@ static int raid1_run(struct mddev *mddev)
+ 		mddev->recovery_cp = MaxSector;
+ 
+ 	if (mddev->recovery_cp != MaxSector)
+-		printk(KERN_NOTICE "md/raid1:%s: not clean"
+-		       " -- starting background reconstruction\n",
 -		       mdname(mddev));
-+		pr_warn("md/raid0:%s: All mirrors must be already degraded!\n",
+-	printk(KERN_INFO
+-		"md/raid1:%s: active with %d out of %d mirrors\n",
++		pr_info("md/raid1:%s: not clean -- starting background reconstruction\n",
 +			mdname(mddev));
- 		return ERR_PTR(-EINVAL);
- 	}
++	pr_info("md/raid1:%s: active with %d out of %d mirrors\n",
+ 		mdname(mddev), mddev->raid_disks - mddev->degraded,
+ 		mddev->raid_disks);
  
-@@ -588,7 +587,7 @@ static void *raid0_takeover_raid1(struct mddev *mddev)
- 	 *  - (N - 1) mirror drives must be already faulty
- 	 */
- 	if ((mddev->raid_disks - 1) != mddev->degraded) {
--		printk(KERN_ERR "md/raid0:%s: (N - 1) mirrors drives must be already faulty!\n",
-+		pr_err("md/raid0:%s: (N - 1) mirrors drives must be already faulty!\n",
- 		       mdname(mddev));
- 		return ERR_PTR(-EINVAL);
- 	}
-@@ -631,8 +630,8 @@ static void *raid0_takeover(struct mddev *mddev)
- 	 */
- 
- 	if (mddev->bitmap) {
--		printk(KERN_ERR "md/raid0: %s: cannot takeover array with bitmap\n",
--		       mdname(mddev));
-+		pr_warn("md/raid0: %s: cannot takeover array with bitmap\n",
-+			mdname(mddev));
- 		return ERR_PTR(-EBUSY);
- 	}
- 	if (mddev->level == 4)
-@@ -642,8 +641,8 @@ static void *raid0_takeover(struct mddev *mddev)
- 		if (mddev->layout == ALGORITHM_PARITY_N)
- 			return raid0_takeover_raid45(mddev);
- 
--		printk(KERN_ERR "md/raid0:%s: Raid can only takeover Raid5 with layout: %d\n",
--		       mdname(mddev), ALGORITHM_PARITY_N);
-+		pr_warn("md/raid0:%s: Raid can only takeover Raid5 with layout: %d\n",
-+			mdname(mddev), ALGORITHM_PARITY_N);
- 	}
- 
- 	if (mddev->level == 10)
-@@ -652,7 +651,7 @@ static void *raid0_takeover(struct mddev *mddev)
- 	if (mddev->level == 1)
- 		return raid0_takeover_raid1(mddev);
- 
--	printk(KERN_ERR "Takeover from raid%i to raid0 not supported\n",
-+	pr_warn("Takeover from raid%i to raid0 not supported\n",
- 		mddev->level);
- 
- 	return ERR_PTR(-EINVAL);
+@@ -3103,9 +3087,8 @@ static int raid1_reshape(struct mddev *mddev)
+ 			rdev->raid_disk = d2;
+ 			sysfs_unlink_rdev(mddev, rdev);
+ 			if (sysfs_link_rdev(mddev, rdev))
+-				printk(KERN_WARNING
+-				       "md/raid1:%s: cannot register rd%d\n",
+-				       mdname(mddev), rdev->raid_disk);
++				pr_warn("md/raid1:%s: cannot register rd%d\n",
++					mdname(mddev), rdev->raid_disk);
+ 		}
+ 		if (rdev)
+ 			newmirrors[d2++].rdev = rdev;
 
 
