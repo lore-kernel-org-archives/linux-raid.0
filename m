@@ -1,7 +1,8 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [md PATCH 3/4] md/raid10: abort delayed writes when device fails.
+Subject: [md PATCH 4/4] md/bitmap: Don't write bitmap while earlier writes
+ might be in-flight
 Date: Fri, 04 Nov 2016 16:46:03 +1100
-Message-ID: <147823836337.6764.17955870514313168348.stgit@noble>
+Message-ID: <147823836359.6764.7855525110697020696.stgit@noble>
 References: <147823807607.6764.8460942745584467311.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,84 +14,80 @@ To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-When writing to an array with a bitmap enabled, the writes are grouped
-in batches which are preceded by an update to the bitmap.
+As we don't wait for writes to complete in bitmap_daemon_work, they
+could still be in-flight when bitmap_unplug writes again.  Or when
+bitmap_daemon_work tries to write again.
+This can be confusing and could risk the wrong data being written last.
 
-It is quite likely if that a drive develops a problem which is not
-media related, that the bitmap write will be the first to report an
-error and cause the device to be marked faulty (as the bitmap write is
-at the start of a batch).
+So make sure we wait for old writes to complete before new writes start.
 
-In this case, there is point submiting the subsequent writes to the
-failed device - that just wastes times.
-
-So re-check the Faulty state of a device before submitting a
-delayed write.
-
-This requires that we keep the 'rdev', rather than the 'bdev' in the
-bio, then swap in the bdev just before final submission.
-
-Reported-by: Hannes Reinecke <hare@suse.com>
 Signed-off-by: NeilBrown <neilb@suse.com>
 ---
- drivers/md/raid10.c |   22 ++++++++++++++++------
- 1 file changed, 16 insertions(+), 6 deletions(-)
+ drivers/md/bitmap.c |   27 ++++++++++++++++++++++-----
+ 1 file changed, 22 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index bf6980ad8c00..225d762d61b7 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -855,9 +855,14 @@ static void flush_pending_writes(struct r10conf *conf)
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index 3ceb0c51891e..e224186d767f 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -416,6 +416,21 @@ static int read_page(struct file *file, unsigned long index,
+  * bitmap file superblock operations
+  */
  
- 		while (bio) { /* submit pending writes */
- 			struct bio *next = bio->bi_next;
-+			struct md_rdev *rdev = (void*)bio->bi_bdev;
- 			bio->bi_next = NULL;
--			if (unlikely((bio_op(bio) ==  REQ_OP_DISCARD) &&
--			    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
-+			bio->bi_bdev = rdev->bdev;
-+			if (test_bit(Faulty, &rdev->flags)) {
-+				bio->bi_error = -EIO;
-+				bio_endio(bio);
-+			} else if (unlikely((bio_op(bio) ==  REQ_OP_DISCARD) &&
-+					    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
- 				/* Just ignore it */
- 				bio_endio(bio);
- 			else
-@@ -1033,9 +1038,14 @@ static void raid10_unplug(struct blk_plug_cb *cb, bool from_schedule)
++/*
++ * bitmap_wait_writes() should be called before writing any bitmap
++ * blocks, to ensure previous writes, particularly from
++ * bitmap_daemon_work(), have completed.
++ */
++static void bitmap_wait_writes(struct bitmap *bitmap)
++{
++	if (bitmap->storage.file)
++		wait_event(bitmap->write_wait,
++			   atomic_read(&bitmap->pending_writes)==0);
++	else
++		md_super_wait(bitmap->mddev);
++}
++
++
+ /* update the event counter and sync the superblock to disk */
+ void bitmap_update_sb(struct bitmap *bitmap)
+ {
+@@ -978,6 +993,7 @@ void bitmap_unplug(struct bitmap *bitmap)
+ {
+ 	unsigned long i;
+ 	int dirty, need_write;
++	int writing = 0;
  
- 	while (bio) { /* submit pending writes */
- 		struct bio *next = bio->bi_next;
-+		struct md_rdev *rdev = (void*)bio->bi_bdev;
- 		bio->bi_next = NULL;
--		if (unlikely((bio_op(bio) ==  REQ_OP_DISCARD) &&
--		    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
-+		bio->bi_bdev = rdev->bdev;
-+		if (test_bit(Faulty, &rdev->flags)) {
-+			bio->bi_error = -EIO;
-+			bio_endio(bio);
-+		} else if (unlikely((bio_op(bio) ==  REQ_OP_DISCARD) &&
-+				    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
- 			/* Just ignore it */
- 			bio_endio(bio);
- 		else
-@@ -1354,7 +1364,7 @@ static void __make_request(struct mddev *mddev, struct bio *bio)
- 			mbio->bi_iter.bi_sector	= (r10_bio->devs[i].addr+
- 					   choose_data_offset(r10_bio,
- 							      rdev));
--			mbio->bi_bdev = rdev->bdev;
-+			mbio->bi_bdev = (void*)rdev;
- 			mbio->bi_end_io	= raid10_end_write_request;
- 			bio_set_op_attrs(mbio, op, do_sync | do_fua);
- 			mbio->bi_private = r10_bio;
-@@ -1396,7 +1406,7 @@ static void __make_request(struct mddev *mddev, struct bio *bio)
- 			mbio->bi_iter.bi_sector	= (r10_bio->devs[i].addr +
- 					   choose_data_offset(
- 						   r10_bio, rdev));
--			mbio->bi_bdev = rdev->bdev;
-+			mbio->bi_bdev = (void*)rdev;
- 			mbio->bi_end_io	= raid10_end_write_request;
- 			bio_set_op_attrs(mbio, op, do_sync | do_fua);
- 			mbio->bi_private = r10_bio;
+ 	if (!bitmap || !bitmap->storage.filemap ||
+ 	    test_bit(BITMAP_STALE, &bitmap->flags))
+@@ -992,15 +1008,15 @@ void bitmap_unplug(struct bitmap *bitmap)
+ 		need_write = test_and_clear_page_attr(bitmap, i,
+ 						      BITMAP_PAGE_NEEDWRITE);
+ 		if (dirty || need_write) {
++			if (!writing)
++				bitmap_wait_writes(bitmap);
+ 			clear_page_attr(bitmap, i, BITMAP_PAGE_PENDING);
+ 			write_page(bitmap, bitmap->storage.filemap[i], 0);
++			writing = 1;
+ 		}
+ 	}
+-	if (bitmap->storage.file)
+-		wait_event(bitmap->write_wait,
+-			   atomic_read(&bitmap->pending_writes)==0);
+-	else
+-		md_super_wait(bitmap->mddev);
++	if (writing)
++		bitmap_wait_writes(bitmap);
+ 
+ 	if (test_bit(BITMAP_WRITE_ERROR, &bitmap->flags))
+ 		bitmap_file_kick(bitmap);
+@@ -1282,6 +1298,7 @@ void bitmap_daemon_work(struct mddev *mddev)
+ 	}
+ 	spin_unlock_irq(&counts->lock);
+ 
++	bitmap_wait_writes(bitmap);
+ 	/* Now start writeout on any page in NEEDWRITE that isn't DIRTY.
+ 	 * DIRTY pages need to be written by bitmap_unplug so it can wait
+ 	 * for them.
 
 
