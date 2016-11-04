@@ -1,143 +1,100 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: Panicked and deleted superblock
-Date: Fri, 04 Nov 2016 15:34:24 +1100
-Message-ID: <87h97nq2wf.fsf@notabene.neil.brown.name>
-References: <0e68051d-1008-cf9b-1f8f-0a0736b1c58f@gmx.net>
+Subject: Re: [PATCH] Change the option from NoUpdate to NodeNumUpdate
+Date: Fri, 04 Nov 2016 16:35:24 +1100
+Message-ID: <87bmxvq02r.fsf@notabene.neil.brown.name>
+References: <1458813635-14175-1-git-send-email-gqjiang@suse.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <0e68051d-1008-cf9b-1f8f-0a0736b1c58f@gmx.net>
+In-Reply-To: <1458813635-14175-1-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Hoffmann <Hoffmann.P@gmx.net>, linux-raid@vger.kernel.org
+To: Guoqing Jiang <gqjiang@suse.com>, Jes.Sorensen@redhat.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, Oct 31 2016, Peter Hoffmann wrote:
+On Thu, Mar 24 2016, Guoqing Jiang wrote:
 
-> My problem is the result of working late and not informing myself
-> previously, I'm fully aware that I should have had a backup, be less
-> spontaneous and more cautious.
+> Actually, we need to use NodeNumUpdate here to
+> ensure there are enough spaces for those nodes.
 >
-> The initial situation is a RAID-5 array with three disks. I assume it to
-> look follows:
+> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+> ---
+>  Grow.c   | 2 +-
+>  super1.c | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
 >
-> | Disk 1   | Disk 2   | Disk 3   |
-> |----------|----------|----------|
-> |    out   | Block 2  | P(1,2)   |
-> |    of    | P(3,4)   | Block 4  |	degenerated but working
-> |   sync   | Block 5  | Block 6  |
+> diff --git a/Grow.c b/Grow.c
+> index 5953db2..f58c753 100755
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -425,7 +425,7 @@ int Grow_addbitmap(char *devname, int fd, struct cont=
+ext *c, struct shape *s)
+>  						    bitmapsize, offset_setable,
+>  						    major)
+>  						)
+> -						st->ss->write_bitmap(st, fd2, NoUpdate);
+> +						st->ss->write_bitmap(st, fd2, NodeNumUpdate);
+>  					else {
+>  						pr_err("failed to create internal bitmap - chunksize problem.\n");
+>  						close(fd2);
+> diff --git a/super1.c b/super1.c
+> index baa9a96..d6f3c93 100644
+> --- a/super1.c
+> +++ b/super1.c
+> @@ -1867,7 +1867,7 @@ static int write_init_super1(struct supertype *st)
+>  		}
+>=20=20
+>  		if (rv =3D=3D 0 && (__le32_to_cpu(sb->feature_map) & 1))
+> -			rv =3D st->ss->write_bitmap(st, di->fd, NoUpdate);
+> +			rv =3D st->ss->write_bitmap(st, di->fd, NodeNumUpdate);
 
-The default RAID5 layout (there a 4 to choose from) is
-#define ALGORITHM_LEFT_SYMMETRIC	2 /* Rotating Parity N with Data Continuation */
+This is wrong.
+It might be correct for a clustered array, but it caused failure for
+non-clustered arrays.
+If you run the mdadm self tests, several will fail with errors like
 
-The first data block on a stripe is always located after the parity
-block.
-So if data is D0 D1 D2 D3.... then
+mdadm: Warning: cluster md only works with superblock 1.2
+mdadm: Warning: cluster md only works with superblock 1.2
+mdadm: failed to set internal bitmap.
 
-   D0   D1   P01
-   D3   P23  D2
-   P45  D4   D5
-
->
->
-> Then I started the re-sync:
->
-> | Disk 1   | Disk 2   | Disk 3   |
-> |----------|----------|----------|
-> | Block 1  | Block 2  | P(1,2)   |
-> | Block 3  | P(3,4)   | Block 4  |   	already synced
-> | P(5,6)   | Block 5  | Block 6  |
->                . . .
-> |    out   | Block b  | P(a,b)   |
-> |    of    | P(c,d)   | Block d  |	not yet synced
-> |   sync   | Block e  | Block f  |
->
-> But I didn't wait for it to finish as I actually wanted to add a fourth
-> disk and so started a grow process. But I just changed the size of the
-> array, I didn't actually add the fourth disk (don't ask why I cannot
-> recall it). I assume that both processes - re-sync  and grow - raced
-> through the array and did their job.
-
-So you ran
-  mdadm --grow /dev/md0 --raid-disks 4 --force
-
-???
-You would need --force or mdadm would refuse to do such a silly thing.
-
-Also, the kernel would refuse to let a reshape start while a resync was
-on-going, so the reshape attempt should have been rejected anyway.
-
->
-> | Disk 1   | Disk 2   | Disk 3   |
-> |----------|----------|----------|
-> | Block 1  | Block 2  | Block 3  |
-> | Block 4  | Block 5  | P(4,5,6) |	with four disks but degenerated
-> | Block 7  | P(7,8,9) | Block 8  |
->                . . .
-> | Block a  | Block b  | P(a,b)   |
-> | Block c  | P(c,d)   | Block d  |	not yet grown but synced
-> | P(e,f)   | Block e  | Block f  |
->                . . .
-> |    out   | Block V  | P(U,V)   |
-> |    of    | P(W,X)   | Block X  |		not yet synced
-> |   sync   | Block Y  | Block Z  |
->
-> And after running for a while - my NAS is very slow (partly because all
-> disks are LUKS'd), mdstat showed around 1GiB of Data processed - we had
-> a blackout. Water dropped in a distribution socket and *poff*. After a
-> reboot I wanted to resemble everything, didn't know what I was doing so
-> the RAID superblock is now lost and I failed to reassemble (this is the
-> part I really can't recall, I panicked). I never wrote anything to the
-> actual array so I assume, better hope that no actual data is lost.
-
-So you deliberately erased the RAID superblock?  Presumably not.
-Maybe you ran "mdadm --create ...." to try to create a new array?  That
-would do it.
-
-If the reshape hadn't actually started, then you have some chance of
-recovering your data.  If it had, then recovery is virtually impossible
-because you don't know how far it got.
-
->
-> I have a plan but wanted to check with you before doing anything stupid
-> again.
-> My idea is to look for that magic number of the ext4-fs to find the
-> beginning of Block 1 on Disk 1, then I would copy an reasonable amount
-> of data and try to figure out how big Block 1 and hence chunk-size is -
-> perhaps fsck.ext4 can help do that? After that I copy another reasonable
-> amount of data from Disks 1-3 to figure out the border between the grown
-> Stripes and the synced Stripes. And from there on I'd have my data in a
-> defined state from which I can save the whole file system.
-> One thing I'm wondering is if I got the layout right. And the other
-> might be rather a case for the ext4-mailing list but I'd ask it anyway:
-> how can I figure where the file system starts to be corrupted?
-
-You might be able to make something like this work .. if reshape hadn't
-started.  But if you can live without recovering the data, then that is
-probably the more cost effective option.
+Reverting this commit made the errors go away.
 
 NeilBrown
+
+
+>  		close(di->fd);
+>  		di->fd =3D -1;
+>  		if (rv)
+> --=20
+> 2.6.2
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAEBCAAGBQJYHA/QAAoJEDnsnt1WYoG59ZsQALCPnB795jvUV6D+L/Qvk5qq
-jRAqrMKsnfwhGS8zUCvxXtgxZHA3k9bo78RfXLELeHc8XMXC3UxwVdezzh9MnGeI
-qyHvhKkm7iYmv01RK0EiYSCVnZTuXOgV22XToCkYKhZgp33iyKJG3HWGfo3WtFCc
-qoEQlN28VKgijifMzLgWEeHgcWz6vfz5rxXxUEelgJ2elvEKiMQO+y8qQP+jWER2
-dwanYmfwBJXonwSclcALlqqe+zd51mwbMRL+ecMBrdMg1YWgS49FvfrXccI7JrwP
-H0twFEi0oPebJJ7ZrHHINrfuTNiKWHElPB/8BYenVHMknKusXlpLU1T9AKBSYEx2
-7e94MQ6fYIQIH4yHpWthcYMeKmytAGRTj35HMuDPrkhC7xH9P34RvkkDCzRoefN2
-LiUX99KheUW/5lXvrOariA7iQq8zlWg99fm8Ovj6T1sUzoSnSFLPq6BqsHV4eg4E
-K2aGgJHl4FFAjWzYGex6IuNsvFGVQW/SCr2CVM3ZlCNgj/c5AR3gVdjmm26vLZh8
-siMjLftQB2uJo+Rg2kKoyDlk/Jv5ddXxVtaBVqrkJlkDDq05Iopw+PScBlY6Wd99
-XjeyxYRKagXKR+rFaMZ3QSflKQaQaCFXZR87hIuc8vBMM+whc8rmtfG+jcS9Vzav
-nyG+oZ+JL8vhRmf1tp2F
-=3hZu
+iQIcBAEBCAAGBQJYHB4dAAoJEDnsnt1WYoG54tQP/2JGdR/aVXhyhq8fKsjgABG/
+k6e0kJuz3NPa7eIn0LBnLpR6wkYUV+G8qb5YiLZv4hNva27dp+aiME6cDCZlyGfP
+7p//Li2xq+9/HrQ9AEpJCGJcxJb1cDl+dpOYGzc8DT4DGKvIqslU0vcoUFBLxqhg
+J4Cysh4jTLS1BTu/bc4nedRW6Ufdt54YI0+Bxhwy/w5s0gIu07IGCp14+H7JbS+u
+AudrHTLMRV0iUl5O5ZUykb8R6FfvYXwvxlMtL1O/n5r6N1kp9s5UtllAKqr0j5SL
+1T0rpvOU1h/M69a9pnCTh3dEzUCN4g0RrGoJoTTkHfPL7Hrwqc9nKAJAazmHgEs8
+VmOcIOS68FXhTaIDCz52sPySg/tgHGd976Y+Hp9IoyPtShppbdn6n0n00Jc6+SMt
+9eXlplu4talatq7TyZ8AIwndyZW36TaLjuQ4KC6aQ7WwpeFIxOPXosla1KgS5b5r
+8ZVJveUk0iLqq7k56twEddZyza7THvsFHCP0iYh+aUKKtPJ0zyt21U9CZpYh4rlO
+2FYj9+9y6eaj4pyqZnl/+2kxR+W7ttYpIpMw2M+UbPMe0eI/gIyc4AHwlWQzB5ck
+ZE+R8uI2MKlNVOE4BMFewA4IWQWE+fjY8Lr1pj222oQ/DGo5NQhtEXdXJJHOvOku
+XvuX0FgNdS2nKPWuYdje
+=HuQx
 -----END PGP SIGNATURE-----
 --=-=-=--
