@@ -1,8 +1,7 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [md PATCH 1/4] md: perform async updates for metadata where
- possible.
+Subject: [md PATCH 2/4] md/raid1: abort delayed writes when device fails.
 Date: Fri, 04 Nov 2016 16:46:03 +1100
-Message-ID: <147823836295.6764.10561299893409401720.stgit@noble>
+Message-ID: <147823836318.6764.11299201570249221246.stgit@noble>
 References: <147823807607.6764.8460942745584467311.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,60 +13,74 @@ To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-When adding devices to, or removing device from, an array we need to
-update the metadata.  However we don't need to do it synchronously as
-data integrity doesn't depend on these changes being recorded
-instantly.  So avoid the synchronous call to md_update_sb and just set
-a flag so that the thread will do it.
+When writing to an array with a bitmap enabled, the writes are grouped
+in batches which are preceded by an update to the bitmap.
 
-This can reduce the number of updates performed when lots of devices
-are being added or removed.
+It is quite likely if that a drive develops a problem which is not
+media related, that the bitmap write will be the first to report an
+error and cause the device to be marked faulty (as the bitmap write is
+at the start of a batch).
+
+In this case, there is point submiting the subsequent writes to the
+failed device - that just wastes times.
+
+So re-check the Faulty state of a device before submitting a
+delayed write.
+
+This requires that we keep the 'rdev', rather than the 'bdev' in the
+bio, then swap in the bdev just before final submission.
 
 Signed-off-by: NeilBrown <neilb@suse.com>
 ---
- drivers/md/md.c |   16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
+ drivers/md/raid1.c |   20 +++++++++++++++-----
+ 1 file changed, 15 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 0354a92636aa..5ea8063587e9 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -2611,8 +2611,10 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 86ecf57ec612..9a73634a99a7 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -739,9 +739,14 @@ static void flush_pending_writes(struct r1conf *conf)
  
- 			if (err == 0) {
- 				md_kick_rdev_from_array(rdev);
--				if (mddev->pers)
--					md_update_sb(mddev, 1);
-+				if (mddev->pers) {
-+					set_bit(MD_CHANGE_DEVS, &mddev->flags);
-+					md_wakeup_thread(mddev->thread);
-+				}
- 				md_new_event(mddev);
- 			}
- 		}
-@@ -6178,7 +6180,11 @@ static int hot_remove_disk(struct mddev *mddev, dev_t dev)
- 		md_cluster_ops->remove_disk(mddev, rdev);
+ 		while (bio) { /* submit pending writes */
+ 			struct bio *next = bio->bi_next;
++			struct md_rdev *rdev = (void*)bio->bi_bdev;
+ 			bio->bi_next = NULL;
+-			if (unlikely((bio_op(bio) == REQ_OP_DISCARD) &&
+-			    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
++			bio->bi_bdev = rdev->bdev;
++			if (test_bit(Faulty, &rdev->flags)) {
++				bio->bi_error = -EIO;
++				bio_endio(bio);
++			} else if (unlikely((bio_op(bio) == REQ_OP_DISCARD) &&
++					    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
+ 				/* Just ignore it */
+ 				bio_endio(bio);
+ 			else
+@@ -1013,9 +1018,14 @@ static void raid1_unplug(struct blk_plug_cb *cb, bool from_schedule)
  
- 	md_kick_rdev_from_array(rdev);
--	md_update_sb(mddev, 1);
-+	set_bit(MD_CHANGE_DEVS, &mddev->flags);
-+	if (mddev->thread)
-+		md_wakeup_thread(mddev->thread);
-+	else
-+		md_update_sb(mddev, 1);
- 	md_new_event(mddev);
+ 	while (bio) { /* submit pending writes */
+ 		struct bio *next = bio->bi_next;
++		struct md_rdev *rdev = (void*)bio->bi_bdev;
+ 		bio->bi_next = NULL;
+-		if (unlikely((bio_op(bio) == REQ_OP_DISCARD) &&
+-		    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
++		bio->bi_bdev = rdev->bdev;
++		if (test_bit(Faulty, &rdev->flags)) {
++			bio->bi_error = -EIO;
++			bio_endio(bio);
++		} else if (unlikely((bio_op(bio) == REQ_OP_DISCARD) &&
++				    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
+ 			/* Just ignore it */
+ 			bio_endio(bio);
+ 		else
+@@ -1354,7 +1364,7 @@ static void raid1_make_request(struct mddev *mddev, struct bio * bio)
  
- 	return 0;
-@@ -6243,7 +6249,9 @@ static int hot_add_disk(struct mddev *mddev, dev_t dev)
- 
- 	rdev->raid_disk = -1;
- 
--	md_update_sb(mddev, 1);
-+	set_bit(MD_CHANGE_DEVS, &mddev->flags);
-+	if (!mddev->thread)
-+		md_update_sb(mddev, 1);
- 	/*
- 	 * Kick recovery, maybe this spare has to be added to the
- 	 * array immediately.
+ 		mbio->bi_iter.bi_sector	= (r1_bio->sector +
+ 				   conf->mirrors[i].rdev->data_offset);
+-		mbio->bi_bdev = conf->mirrors[i].rdev->bdev;
++		mbio->bi_bdev = (void*)conf->mirrors[i].rdev;
+ 		mbio->bi_end_io	= raid1_end_write_request;
+ 		bio_set_op_attrs(mbio, op, do_flush_fua | do_sync);
+ 		mbio->bi_private = r1_bio;
 
 
