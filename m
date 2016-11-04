@@ -1,52 +1,73 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [md PATCH 0/4] Assorted minor improvements.
-Date: Fri, 04 Nov 2016 16:46:02 +1100
-Message-ID: <147823807607.6764.8460942745584467311.stgit@noble>
+Subject: [md PATCH 1/4] md: perform async updates for metadata where
+ possible.
+Date: Fri, 04 Nov 2016 16:46:03 +1100
+Message-ID: <147823836295.6764.10561299893409401720.stgit@noble>
+References: <147823807607.6764.8460942745584467311.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <147823807607.6764.8460942745584467311.stgit@noble>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-There is no real pattern to these patches except that they are fairly
-boring but occasionally useful.
+When adding devices to, or removing device from, an array we need to
+update the metadata.  However we don't need to do it synchronously as
+data integrity doesn't depend on these changes being recorded
+instantly.  So avoid the synchronous call to md_update_sb and just set
+a flag so that the thread will do it.
 
-The first allows --add and --remove commands to succeed without
-waiting for a metadata write, which is just wasted time.  This can be
-useful when adding/removes hundreds of devices on a large RAID10
-array.
+This can reduce the number of updates performed when lots of devices
+are being added or removed.
 
-The next two abort some writes which have become pointless.  If a
-device fails in a way that causes long retries, this can reduce the
-total time  for recovery
-
-The last is a small correctness fix bitmap_daemon_work() doesn't wait
-for writes to complete, so they might still be pending when the next
-writes is sent, and two writes to the same location might not be
-handled properly.  So we insert waits in the rare case that they are
-needed.
-
-Thanks,
-NeilBrown
-
+Signed-off-by: NeilBrown <neilb@suse.com>
 ---
+ drivers/md/md.c |   16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
-NeilBrown (4):
-      md: perform async updates for metadata where possible.
-      md/raid1: abort delayed writes when device fails.
-      md/raid10: abort delayed writes when device fails.
-      md/bitmap: Don't write bitmap while earlier writes might be in-flight
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 0354a92636aa..5ea8063587e9 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -2611,8 +2611,10 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
+ 
+ 			if (err == 0) {
+ 				md_kick_rdev_from_array(rdev);
+-				if (mddev->pers)
+-					md_update_sb(mddev, 1);
++				if (mddev->pers) {
++					set_bit(MD_CHANGE_DEVS, &mddev->flags);
++					md_wakeup_thread(mddev->thread);
++				}
+ 				md_new_event(mddev);
+ 			}
+ 		}
+@@ -6178,7 +6180,11 @@ static int hot_remove_disk(struct mddev *mddev, dev_t dev)
+ 		md_cluster_ops->remove_disk(mddev, rdev);
+ 
+ 	md_kick_rdev_from_array(rdev);
+-	md_update_sb(mddev, 1);
++	set_bit(MD_CHANGE_DEVS, &mddev->flags);
++	if (mddev->thread)
++		md_wakeup_thread(mddev->thread);
++	else
++		md_update_sb(mddev, 1);
+ 	md_new_event(mddev);
+ 
+ 	return 0;
+@@ -6243,7 +6249,9 @@ static int hot_add_disk(struct mddev *mddev, dev_t dev)
+ 
+ 	rdev->raid_disk = -1;
+ 
+-	md_update_sb(mddev, 1);
++	set_bit(MD_CHANGE_DEVS, &mddev->flags);
++	if (!mddev->thread)
++		md_update_sb(mddev, 1);
+ 	/*
+ 	 * Kick recovery, maybe this spare has to be added to the
+ 	 * array immediately.
 
-
- drivers/md/bitmap.c |   27 ++++++++++++++++++++++-----
- drivers/md/md.c     |   16 ++++++++++++----
- drivers/md/raid1.c  |   20 +++++++++++++++-----
- drivers/md/raid10.c |   22 ++++++++++++++++------
- 4 files changed, 65 insertions(+), 20 deletions(-)
-
---
-Signature
 
