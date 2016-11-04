@@ -1,100 +1,98 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH] Change the option from NoUpdate to NodeNumUpdate
-Date: Fri, 04 Nov 2016 16:35:24 +1100
-Message-ID: <87bmxvq02r.fsf@notabene.neil.brown.name>
-References: <1458813635-14175-1-git-send-email-gqjiang@suse.com>
+From: Robert LeBlanc <robert@leblancnet.us>
+Subject: Re: [PATCH 2/2] mdadm: raid10.c Remove near atomic break
+Date: Thu, 3 Nov 2016 23:37:48 -0600
+Message-ID: <CAANLjFrXjS3HX-qv_FAXBapD6PE-n+y=d=6kzCwO3pSjajafWQ@mail.gmail.com>
+References: <20161103234508.12641-1-robert@leblancnet.us> <20161103234508.12641-3-robert@leblancnet.us>
+ <87k2cjq4eh.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1458813635-14175-1-git-send-email-gqjiang@suse.com>
+In-Reply-To: <87k2cjq4eh.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>, Jes.Sorensen@redhat.com
+To: NeilBrown <neilb@suse.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, Mar 24 2016, Guoqing Jiang wrote:
-
-> Actually, we need to use NodeNumUpdate here to
-> ensure there are enough spaces for those nodes.
+On Thu, Nov 3, 2016 at 10:01 PM, NeilBrown <neilb@suse.com> wrote:
+> On Fri, Nov 04 2016, Robert LeBlanc wrote:
 >
-> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-> ---
->  Grow.c   | 2 +-
->  super1.c | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
+>> This is always triggered for small reads preventing spreading the reads
+>> across all available drives. The comments are also confusing as it is
+>> supposed to apply only to 'far' layouts, but really only applies to 'near'
+>> layouts. Since there isn't problems with 'far' layouts, there shouldn't
+>> be a problem for 'near' layouts either. This change fairly distributes
+>> reads across all drives where before only came from the first drive.
 >
-> diff --git a/Grow.c b/Grow.c
-> index 5953db2..f58c753 100755
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -425,7 +425,7 @@ int Grow_addbitmap(char *devname, int fd, struct cont=
-ext *c, struct shape *s)
->  						    bitmapsize, offset_setable,
->  						    major)
->  						)
-> -						st->ss->write_bitmap(st, fd2, NoUpdate);
-> +						st->ss->write_bitmap(st, fd2, NodeNumUpdate);
->  					else {
->  						pr_err("failed to create internal bitmap - chunksize problem.\n");
->  						close(fd2);
-> diff --git a/super1.c b/super1.c
-> index baa9a96..d6f3c93 100644
-> --- a/super1.c
-> +++ b/super1.c
-> @@ -1867,7 +1867,7 @@ static int write_init_super1(struct supertype *st)
->  		}
->=20=20
->  		if (rv =3D=3D 0 && (__le32_to_cpu(sb->feature_map) & 1))
-> -			rv =3D st->ss->write_bitmap(st, di->fd, NoUpdate);
-> +			rv =3D st->ss->write_bitmap(st, di->fd, NodeNumUpdate);
+> Why is "fairness" an issue?
+> The current code will use a device if it finds that it is completely
+> idle. i.e. if nr_pending is 0.
+> Why is that ever the wrong thing to do?
 
-This is wrong.
-It might be correct for a clustered array, but it caused failure for
-non-clustered arrays.
-If you run the mdadm self tests, several will fail with errors like
+The code also looks for a drive that is closest to the requested
+sector which doesn't get a chance to happen without this patch. The
+way this part of code is written, as soon as it finds a good disk, it
+cuts out of the loop searching for a better disk. So it doesn't even
+look for another disk. In a healthy array with array-disks X and -p
+nX, this means that the first disk gets all the reads for small I/O.
+Where nY is less than X, it may be covered up because the data is
+naturally striped, but it still may be picking a disk that is farther
+away from the selected sector causing extra head seeks.
 
-mdadm: Warning: cluster md only works with superblock 1.2
-mdadm: Warning: cluster md only works with superblock 1.2
-mdadm: failed to set internal bitmap.
+> Does your testing show that overall performance is improved?  If so,
+> that would certainly be useful.
+> But it isn't clear (to me) that simply spreading the load more "fairly"
+> is a worthy goal.
 
-Reverting this commit made the errors go away.
+I'll see if I have some mechanical drives somewhere to test (I've been
+testing four loopback devices on a single NVME drive so you don't see
+an improvement). You can see from the fio I posted [1] that before the
+patch, one drive had all the I/O and after the patch the I/O was
+distributed between all the drives (it doesn't have to be exactly
+even, just not as skewed as it was before is good enough). I would
+expect similar results to the 'far' tests done here [0]. Based on the
+previous tests I did, when I saw this code, it just made complete
+sense to me why we had great performance with 'far' and subpar
+performance with 'near'. I'll come back with some results tomorrow.
 
-NeilBrown
+[0] https://raid.wiki.kernel.org/index.php/Performance
+[1] http://marc.info/?l=linux-raid&m=147821671817947&w=2
 
-
->  		close(di->fd);
->  		di->fd =3D -1;
->  		if (rv)
-> --=20
-> 2.6.2
+----------------
+Robert LeBlanc
+PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
 >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAEBCAAGBQJYHB4dAAoJEDnsnt1WYoG54tQP/2JGdR/aVXhyhq8fKsjgABG/
-k6e0kJuz3NPa7eIn0LBnLpR6wkYUV+G8qb5YiLZv4hNva27dp+aiME6cDCZlyGfP
-7p//Li2xq+9/HrQ9AEpJCGJcxJb1cDl+dpOYGzc8DT4DGKvIqslU0vcoUFBLxqhg
-J4Cysh4jTLS1BTu/bc4nedRW6Ufdt54YI0+Bxhwy/w5s0gIu07IGCp14+H7JbS+u
-AudrHTLMRV0iUl5O5ZUykb8R6FfvYXwvxlMtL1O/n5r6N1kp9s5UtllAKqr0j5SL
-1T0rpvOU1h/M69a9pnCTh3dEzUCN4g0RrGoJoTTkHfPL7Hrwqc9nKAJAazmHgEs8
-VmOcIOS68FXhTaIDCz52sPySg/tgHGd976Y+Hp9IoyPtShppbdn6n0n00Jc6+SMt
-9eXlplu4talatq7TyZ8AIwndyZW36TaLjuQ4KC6aQ7WwpeFIxOPXosla1KgS5b5r
-8ZVJveUk0iLqq7k56twEddZyza7THvsFHCP0iYh+aUKKtPJ0zyt21U9CZpYh4rlO
-2FYj9+9y6eaj4pyqZnl/+2kxR+W7ttYpIpMw2M+UbPMe0eI/gIyc4AHwlWQzB5ck
-ZE+R8uI2MKlNVOE4BMFewA4IWQWE+fjY8Lr1pj222oQ/DGo5NQhtEXdXJJHOvOku
-XvuX0FgNdS2nKPWuYdje
-=HuQx
------END PGP SIGNATURE-----
---=-=-=--
+> Thanks,
+> NeilBrown
+>
+>
+>>
+>> Signed-off-by: Robert LeBlanc <robert@leblancnet.us>
+>> ---
+>>  drivers/md/raid10.c | 7 -------
+>>  1 file changed, 7 deletions(-)
+>>
+>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+>> index be1a9fc..8d83802 100644
+>> --- a/drivers/md/raid10.c
+>> +++ b/drivers/md/raid10.c
+>> @@ -777,13 +777,6 @@ static struct md_rdev *read_balance(struct r10conf *conf,
+>>               if (!do_balance)
+>>                       break;
+>>
+>> -             /* This optimisation is debatable, and completely destroys
+>> -              * sequential read speed for 'far copies' arrays.  So only
+>> -              * keep it for 'near' arrays, and review those later.
+>> -              */
+>> -             if (geo->near_copies > 1 && !atomic_read(&rdev->nr_pending))
+>> -                     break;
+>> -
+>>               /* for far > 1 always use the lowest address */
+>>               if (geo->far_copies > 1)
+>>                       new_distance = r10_bio->devs[slot].addr;
+>> --
+>> 2.10.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
