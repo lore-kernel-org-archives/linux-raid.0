@@ -1,32 +1,59 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [md PATCH 4/4] md/bitmap: Don't write bitmap while earlier
- writes might be in-flight
-Date: Fri, 4 Nov 2016 17:33:25 -0700
-Message-ID: <20161105003325.qnmcu363ocbli74x@kernel.org>
-References: <147823807607.6764.8460942745584467311.stgit@noble>
- <147823836359.6764.7855525110697020696.stgit@noble>
+Subject: [GIT PULL] MD update for 4.9-rc3
+Date: Fri, 4 Nov 2016 17:43:51 -0700
+Message-ID: <20161105004351.ck7ikmhhqdtel6qe@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <147823836359.6764.7855525110697020696.stgit@noble>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-On Fri, Nov 04, 2016 at 04:46:03PM +1100, Neil Brown wrote:
-> As we don't wait for writes to complete in bitmap_daemon_work, they
-> could still be in-flight when bitmap_unplug writes again.  Or when
-> bitmap_daemon_work tries to write again.
-> This can be confusing and could risk the wrong data being written last.
+Hi Linus,
 
-Applied the first 3 patches, thanks!
-
-This one seems not completely solving the race condition. It's still possible
-bitmap_daemon_work clears BITMAP_PAGE_NEEDWRITE but hasn't dispatch the IO yet,
-bitmap_unplug then does nothing and thinks bitmap is updated to disk. Why don't
-we add locking here?
+Please pull MD changes for 4.9-rc3. There are several bug fixes queued:
+- Fix raid5-cache recovery bugs
+- Fix discard IO error handling for raid1/10
+- Fix array sync writes bogus position to superblock
+- Fix IO error handling for raid array with external metadata
 
 Thanks,
-Shaohua 
+Shaohua
+
+
+The following changes since commit 07d9a380680d1c0eb51ef87ff2eab5c994949e69:
+
+  Linux 4.9-rc2 (2016-10-23 17:10:14 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git tags/md/4.9-rc3
+
+for you to fetch changes up to 1217e1d1999ed6c9c1e1b1acae0a74ab70464ae2:
+
+  md: be careful not lot leak internal curr_resync value into metadata. -- (all) (2016-10-28 22:04:05 -0700)
+
+----------------------------------------------------------------
+NeilBrown (1):
+      md: be careful not lot leak internal curr_resync value into metadata. -- (all)
+
+Shaohua Li (3):
+      RAID1: ignore discard error
+      RAID10: ignore discard error
+      raid5-cache: correct condition for empty metadata write
+
+Tomasz Majchrzak (2):
+      md: report 'write_pending' state when array in sync
+      raid1: handle read error also in readonly mode
+
+Zhengyuan Liu (2):
+      md/raid5: initialize next_checkpoint field before use
+      md/raid5: write an empty meta-block when creating log super-block
+
+ drivers/md/md.c          | 10 +++++-----
+ drivers/md/raid1.c       | 26 +++++++++++++++-----------
+ drivers/md/raid10.c      |  7 +++++--
+ drivers/md/raid5-cache.c |  6 +++++-
+ 4 files changed, 30 insertions(+), 19 deletions(-)
