@@ -1,52 +1,75 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [md PATCH 4/4] md/bitmap: Don't write bitmap while earlier writes might be in-flight
-Date: Mon, 07 Nov 2016 09:53:42 +1100
-Message-ID: <87r36onrt5.fsf@notabene.neil.brown.name>
-References: <147823807607.6764.8460942745584467311.stgit@noble> <147823836359.6764.7855525110697020696.stgit@noble> <20161105003325.qnmcu363ocbli74x@kernel.org>
+Subject: Re: [PATCH 2/2] mdadm: raid10.c Remove near atomic break
+Date: Mon, 07 Nov 2016 10:03:42 +1100
+Message-ID: <87oa1snrch.fsf@notabene.neil.brown.name>
+References: <20161103234508.12641-1-robert@leblancnet.us> <20161103234508.12641-3-robert@leblancnet.us> <87k2cjq4eh.fsf@notabene.neil.brown.name> <CAANLjFrXjS3HX-qv_FAXBapD6PE-n+y=d=6kzCwO3pSjajafWQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161105003325.qnmcu363ocbli74x@kernel.org>
+In-Reply-To: <CAANLjFrXjS3HX-qv_FAXBapD6PE-n+y=d=6kzCwO3pSjajafWQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
+To: Robert LeBlanc <robert@leblancnet.us>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 
-On Sat, Nov 05 2016, Shaohua Li wrote:
+On Fri, Nov 04 2016, Robert LeBlanc wrote:
 
-> On Fri, Nov 04, 2016 at 04:46:03PM +1100, Neil Brown wrote:
->> As we don't wait for writes to complete in bitmap_daemon_work, they
->> could still be in-flight when bitmap_unplug writes again.  Or when
->> bitmap_daemon_work tries to write again.
->> This can be confusing and could risk the wrong data being written last.
+> On Thu, Nov 3, 2016 at 10:01 PM, NeilBrown <neilb@suse.com> wrote:
+>> On Fri, Nov 04 2016, Robert LeBlanc wrote:
+>>
+>>> This is always triggered for small reads preventing spreading the reads
+>>> across all available drives. The comments are also confusing as it is
+>>> supposed to apply only to 'far' layouts, but really only applies to 'near'
+>>> layouts. Since there isn't problems with 'far' layouts, there shouldn't
+>>> be a problem for 'near' layouts either. This change fairly distributes
+>>> reads across all drives where before only came from the first drive.
+>>
+>> Why is "fairness" an issue?
+>> The current code will use a device if it finds that it is completely
+>> idle. i.e. if nr_pending is 0.
+>> Why is that ever the wrong thing to do?
 >
-> Applied the first 3 patches, thanks!
+> The code also looks for a drive that is closest to the requested
+> sector which doesn't get a chance to happen without this patch. The
+> way this part of code is written, as soon as it finds a good disk, it
+> cuts out of the loop searching for a better disk. So it doesn't even
+> look for another disk. In a healthy array with array-disks X and -p
+> nX, this means that the first disk gets all the reads for small I/O.
+> Where nY is less than X, it may be covered up because the data is
+> naturally striped, but it still may be picking a disk that is farther
+> away from the selected sector causing extra head seeks.
 >
-> This one seems not completely solving the race condition. It's still possible
-> bitmap_daemon_work clears BITMAP_PAGE_NEEDWRITE but hasn't dispatch the IO yet,
-> bitmap_unplug then does nothing and thinks bitmap is updated to disk. Why don't
-> we add locking here?
+>> Does your testing show that overall performance is improved?  If so,
+>> that would certainly be useful.
+>> But it isn't clear (to me) that simply spreading the load more "fairly"
+>> is a worthy goal.
+>
+> I'll see if I have some mechanical drives somewhere to test (I've been
+> testing four loopback devices on a single NVME drive so you don't see
+> an improvement). You can see from the fio I posted [1] that before the
+> patch, one drive had all the I/O and after the patch the I/O was
+> distributed between all the drives (it doesn't have to be exactly
+> even, just not as skewed as it was before is good enough). I would
+> expect similar results to the 'far' tests done here [0]. Based on the
+> previous tests I did, when I saw this code, it just made complete
+> sense to me why we had great performance with 'far' and subpar
+> performance with 'near'. I'll come back with some results tomorrow.
 
-Thanks for the review!
+The whole point of the "far" layout is to provide better read
+performance than "near" because reads get spread out over all devices
+like they do with RAID0.  So I wouldn't expect the make "near" close to
+"far", but it certainly doesn't hurt to improve it.
 
-BITMAP_PAGE_NEEDWRITE is set for pages that need to be written out in
-order to clear bits that don't need to be set any more.  There is never
-any urgency to do this.
-BITMAP_PAGE_DIRTY is set of pages that need to be written out in order
-to set bits representing regions that are about to be written to.  These
-have to be flushed by bitmap_unplug().
-Pages can have both bits set, in which case bitmap_daemon_work() will
-leave them for bitmap_unplug() to deal with.
+As Shaohua notes, we you two different algorithms in RAID1, depending on
+whether there are rotational devices or not.  Introducing similar logic
+to RAID10 would seem to make sense.
 
-So if bitmap_daemon_work() clears BITMAP_PAGE_PENDING on a page, then it
-is a page that bitmap_unplug() doesn't need to wait for.
-
-
-Does that answer your concerns?
+Patches for performance improvements are always more convincing when
+they come with numbers.  I'll look forward to your test results.
 
 Thanks,
 NeilBrown
@@ -56,18 +79,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAEBCAAGBQJYH7R2AAoJEDnsnt1WYoG56NQP/iUbemlGcTia7pt/7LZviUax
-Uj4QZNXW9QTFFJdhs+QWwsX7tUpRWZvQ1hZ0xOLQI7psYp4QiWuLqz0BIS3DIkS8
-/rKIf4Uf0xi432jFGSPBpM0obY035iymlclVSgrgmPSlKlHt/me/s0BzDTz85GeO
-pEPcdKLIBl2mCeQNmq25Xz8/MUFKaifLopd/wv6JOab/GBRowhg7vaozP7OtCJyX
-kNPkshvn+QKq2uEJFo7SC6XnOo+bq1Cv9bFjz92mvL7pOOznfGZqw1Z/9SnnyD1x
-RXh+AvfMib2Ejv3vOWv0yDCYr5ceqAO23ECM/N1yvSDzzbhRwAAd9gfS+h0wTVKI
-TyNkk8VF8+UQpsKFdnCcCeEQXe7je+fHqW045JtXzQ0owxbF7LdLDKoe9iqWddcd
-TWTBjlk8E2sel7rf6APPlLQXJYUT/hVTHIivGH/9zBeVSPOViq2l56UdP5tnbygl
-+lc7i8/VuVGrFMXnMKNsx+HEV1FTrjH8ZXHWQZ6W/nojgqWC47aBX3TIqs2vbVnG
-C25Y63O+HL7Ol4H/TCUOGFkAErvfF3xTOpj/ASyPvfywjtKaE/LuvLDzK5ZEkTUS
-isqva6PVEkiKD2BWbTncZAE4n6PnHgweINAGu5V8LrRsYFrNWtiX3OPCEVmZ7shq
-R/2LoBCCUiBc9XxY7ML0
-=3UgV
+iQIcBAEBCAAGBQJYH7bOAAoJEDnsnt1WYoG5Z/0QALImY3SW7j80rxmroH42eS6d
+1rq0BPp7zt64wcK/czQZ31hjdMp4xl4QNyN76Qe3csK0N4BAlmElKuWpOSBE9HvT
+qD4Ca7nkDqR9TqO2VHrSF+oqzcSLMn32/XbmadmnqTOoFIcRIfKQLlLOK9bTyaUz
+59EJ8IzBFr9PJ5RsbSNdTMkPCTvKI/e+4sUJPhoC5S8k6NxWfuBNpYTOo+mSw+sP
+z/e1h2ydd/vfux0rpP3hXQpRF75PTff7fKj6/nbWiESpIyfitkiyqmSGpzZmqTUC
+Qjf0srRbTKDp9XiJqFmsHelA+K331khij4wjmEIEg9KiONnxkcVGPhKgmy8n/uHp
+y067sHtuDnnlFyhpSy/pgsPb3yAVIxf1m3MJsMH6dR7JkY6vrYhaPbZfe5D9cHqC
+xxT+rmsiwr3CicBNX3vfV2dOy8XGnhJ1r+e5Y7a7h1eM6fyrqamUXgwYPRxHnNTl
+ZsHzjaTR0FTHBIZlG9pAMaY0M8q0ngkNh2eJaMNzT7mspTpEjqm4JGvSGbf2/qto
+k8nKxkiDwcAfEHYzQ123BUmP2Gq35WH+F70omCBQsGSnmxi9nGW5fgvmaio6cuLy
+LQWrqMIulv31S1nPCiykcZVC20l8xyj2l/XNut5oTd37i5jleI5ezwXr6PnwY3xl
+UoMxEFwC7G0oC8LzLc9l
+=PKcp
 -----END PGP SIGNATURE-----
 --=-=-=--
