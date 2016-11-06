@@ -1,65 +1,67 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: RAID10 with 2 drives auto-assembled as RAID1
-Date: Sat, 5 Nov 2016 18:54:21 -0400
-Message-ID: <e23d3b3a-c357-bd74-6bc5-f2e04255c96d@turmel.org>
-References: <0487f9a4-c04a-8a4d-78ad-0191995d4be9@luketic.de>
- <57ce55da-fadc-db02-289e-db44bf6fb7d7@turmel.org>
- <fdfd254f-bdcf-80a7-2265-893c8ee781fc@luketic.de>
+From: Dennis Dataopslag <dennisdataopslag@gmail.com>
+Subject: (unknown)
+Date: Sun, 6 Nov 2016 22:00:59 +0100
+Message-ID: <CAGELip+rb=Ztv2K8jPdn608Li_RakEq9Gp5Jyof9eC_bO5QMrQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <fdfd254f-bdcf-80a7-2265-893c8ee781fc@luketic.de>
+Subject: 
 Sender: linux-raid-owner@vger.kernel.org
-To: Darko Luketic <darko@luketic.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-{ Convention on kernel.org lists is reply-to-all, interleave or bottom
-post, and trim replies. Please do. }
+Help wanted very much!
 
-On 11/05/2016 05:10 PM, Darko Luketic wrote:
-> Ok Phil,
-> 
-> sorry for that.
+My setup:
+Thecus N5550 NAS with 5 1TB drives installed.
 
-NP.
+MD0: RAID 5 config of 4 drives (SD[ABCD]2)
+MD10: RAID 1 config of all 5 drives (SD..1), system generated array
+MD50: RAID 1 config of 4 drives (SD[ABCD]3), system generated array
 
-> In the meantime I tried to use mdadm with the --build option.
-> mdadm --build --level=10 --raid-devices=2 --chunk=64 /dev/md0 /dev/sde1
-> /dev/sde2
+1 drive (SDE) set as global hot spare.
 
-Ew.  Not a good idea.
 
-> after about 1% I stopped it and did the same with just /dev/sde and
-> /dev/sdf because I remembered I had used the whole drives previously but
-> that wasn't that case here -> stopped quickly.
+What happened:
+This weekend I thought it might be a good idea to do a SMART test for
+the drives in my NAS.
+I started the test on 1 drive and after it ran for a while I started
+the other ones.
+While the test was running drive 3 failed. I got a message the RAID
+was degraded and started rebuilding. (My assumption is that at this
+moment the global hot spare will automatically be added to the array)
 
-I can't remember any case where "stopping quickly" was helpful. )-:
-Critical structures are at the beginnings of disks and partitions and
-are always written over first.
+I stopped the SMART tests of all drives at this moment since it seemed
+logical to me the SMART test (or the outcomes) made the drive fail.
+In stopping the tests, drive 1 also failed!!
+I let it for a little but the admin interface kept telling me it was
+degraded, did not seem to take any actions to start rebuilding.
+At this point I started googling and found I should remove and reseat
+the drives. This is also what I did but nothing seemd to happen.
+The turned up as new drives in the admin interface and I re-added them
+to the array, they were added as spares.
+Even after adding them the array didn't start rebuilding.
+I checked stat in mdadm and it told me clean FAILED opposed to the
+degraded in the admin interface.
 
-[trim ]
+I rebooted the NAS since it didn't seem to be doing anything I might interrupt.
+after rebooting it seemed as if the entire array had disappeared!!
+I started looking for options in MDADM and tried every "normal"option
+to rebuild the array (--assemble --scan for example)
+Unfortunately I cannot produce a complete list since I cannot find how
+to get it from the logging.
 
-> # mdadm -E /dev/sde1
-> /dev/sde1:
+Finally I mdadm --create a new array with the original 4 drives with
+all the right settings. (Got them from 1 of the original volumes)
+The creation worked but after creation it doesn't seem to have a valid
+partition table. This is the point where I realized I probably fucked
+it up big-time and should call in the help squad!!!
+What I think went wrong is that I re-created an array with the
+original 4 drives from before the first failure but the hot-spare was
+already added?
 
->   Creation Time : Sat Nov  5 17:58:30 2016
+The most important data from the array is saved in an offline backup
+luckily but I would very much like it if there is any way I could
+restore the data from the array.
 
-> # mdadm -E /dev/sdf1
-> /dev/sdf1:
-
->   Creation Time : Sat Nov  5 17:58:30 2016
-
-You might be toast.  The creation timestamps are today, meaning there's
-no usable clues to your old setup.  Next step would be to try to figure
-out the data offset by hunting for filesystem superblock signatures.
-The saving grace in your case is that raid10,n2 on two devices is laid
-out the same as raid1 on two devices.  That is, each device is a mirror.
- Assuming you had an ext2/3/4 filesystem in the array, try this one-liner:
-
-for x in /dev/sd[ef]1; do echo -e "\nDevice $x"; dd if=$x bs=1M
-count=16k |hexdump -C |egrep '^[0-9a-f]+30  .+  53 ef'; done
-
-Cross your fingers.
-
-Phil
+Is there any way I could get it back online?
