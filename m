@@ -1,67 +1,73 @@
-From: Dennis Dataopslag <dennisdataopslag@gmail.com>
-Subject: (unknown)
-Date: Sun, 6 Nov 2016 22:00:59 +0100
-Message-ID: <CAGELip+rb=Ztv2K8jPdn608Li_RakEq9Gp5Jyof9eC_bO5QMrQ@mail.gmail.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [md PATCH 4/4] md/bitmap: Don't write bitmap while earlier writes might be in-flight
+Date: Mon, 07 Nov 2016 09:53:42 +1100
+Message-ID: <87r36onrt5.fsf@notabene.neil.brown.name>
+References: <147823807607.6764.8460942745584467311.stgit@noble> <147823836359.6764.7855525110697020696.stgit@noble> <20161105003325.qnmcu363ocbli74x@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Subject: 
+In-Reply-To: <20161105003325.qnmcu363ocbli74x@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Help wanted very much!
+--=-=-=
+Content-Type: text/plain
 
-My setup:
-Thecus N5550 NAS with 5 1TB drives installed.
+On Sat, Nov 05 2016, Shaohua Li wrote:
 
-MD0: RAID 5 config of 4 drives (SD[ABCD]2)
-MD10: RAID 1 config of all 5 drives (SD..1), system generated array
-MD50: RAID 1 config of 4 drives (SD[ABCD]3), system generated array
+> On Fri, Nov 04, 2016 at 04:46:03PM +1100, Neil Brown wrote:
+>> As we don't wait for writes to complete in bitmap_daemon_work, they
+>> could still be in-flight when bitmap_unplug writes again.  Or when
+>> bitmap_daemon_work tries to write again.
+>> This can be confusing and could risk the wrong data being written last.
+>
+> Applied the first 3 patches, thanks!
+>
+> This one seems not completely solving the race condition. It's still possible
+> bitmap_daemon_work clears BITMAP_PAGE_NEEDWRITE but hasn't dispatch the IO yet,
+> bitmap_unplug then does nothing and thinks bitmap is updated to disk. Why don't
+> we add locking here?
 
-1 drive (SDE) set as global hot spare.
+Thanks for the review!
+
+BITMAP_PAGE_NEEDWRITE is set for pages that need to be written out in
+order to clear bits that don't need to be set any more.  There is never
+any urgency to do this.
+BITMAP_PAGE_DIRTY is set of pages that need to be written out in order
+to set bits representing regions that are about to be written to.  These
+have to be flushed by bitmap_unplug().
+Pages can have both bits set, in which case bitmap_daemon_work() will
+leave them for bitmap_unplug() to deal with.
+
+So if bitmap_daemon_work() clears BITMAP_PAGE_PENDING on a page, then it
+is a page that bitmap_unplug() doesn't need to wait for.
 
 
-What happened:
-This weekend I thought it might be a good idea to do a SMART test for
-the drives in my NAS.
-I started the test on 1 drive and after it ran for a while I started
-the other ones.
-While the test was running drive 3 failed. I got a message the RAID
-was degraded and started rebuilding. (My assumption is that at this
-moment the global hot spare will automatically be added to the array)
+Does that answer your concerns?
 
-I stopped the SMART tests of all drives at this moment since it seemed
-logical to me the SMART test (or the outcomes) made the drive fail.
-In stopping the tests, drive 1 also failed!!
-I let it for a little but the admin interface kept telling me it was
-degraded, did not seem to take any actions to start rebuilding.
-At this point I started googling and found I should remove and reseat
-the drives. This is also what I did but nothing seemd to happen.
-The turned up as new drives in the admin interface and I re-added them
-to the array, they were added as spares.
-Even after adding them the array didn't start rebuilding.
-I checked stat in mdadm and it told me clean FAILED opposed to the
-degraded in the admin interface.
+Thanks,
+NeilBrown
 
-I rebooted the NAS since it didn't seem to be doing anything I might interrupt.
-after rebooting it seemed as if the entire array had disappeared!!
-I started looking for options in MDADM and tried every "normal"option
-to rebuild the array (--assemble --scan for example)
-Unfortunately I cannot produce a complete list since I cannot find how
-to get it from the logging.
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
-Finally I mdadm --create a new array with the original 4 drives with
-all the right settings. (Got them from 1 of the original volumes)
-The creation worked but after creation it doesn't seem to have a valid
-partition table. This is the point where I realized I probably fucked
-it up big-time and should call in the help squad!!!
-What I think went wrong is that I re-created an array with the
-original 4 drives from before the first failure but the hot-spare was
-already added?
+-----BEGIN PGP SIGNATURE-----
 
-The most important data from the array is saved in an offline backup
-luckily but I would very much like it if there is any way I could
-restore the data from the array.
-
-Is there any way I could get it back online?
+iQIcBAEBCAAGBQJYH7R2AAoJEDnsnt1WYoG56NQP/iUbemlGcTia7pt/7LZviUax
+Uj4QZNXW9QTFFJdhs+QWwsX7tUpRWZvQ1hZ0xOLQI7psYp4QiWuLqz0BIS3DIkS8
+/rKIf4Uf0xi432jFGSPBpM0obY035iymlclVSgrgmPSlKlHt/me/s0BzDTz85GeO
+pEPcdKLIBl2mCeQNmq25Xz8/MUFKaifLopd/wv6JOab/GBRowhg7vaozP7OtCJyX
+kNPkshvn+QKq2uEJFo7SC6XnOo+bq1Cv9bFjz92mvL7pOOznfGZqw1Z/9SnnyD1x
+RXh+AvfMib2Ejv3vOWv0yDCYr5ceqAO23ECM/N1yvSDzzbhRwAAd9gfS+h0wTVKI
+TyNkk8VF8+UQpsKFdnCcCeEQXe7je+fHqW045JtXzQ0owxbF7LdLDKoe9iqWddcd
+TWTBjlk8E2sel7rf6APPlLQXJYUT/hVTHIivGH/9zBeVSPOViq2l56UdP5tnbygl
++lc7i8/VuVGrFMXnMKNsx+HEV1FTrjH8ZXHWQZ6W/nojgqWC47aBX3TIqs2vbVnG
+C25Y63O+HL7Ol4H/TCUOGFkAErvfF3xTOpj/ASyPvfywjtKaE/LuvLDzK5ZEkTUS
+isqva6PVEkiKD2BWbTncZAE4n6PnHgweINAGu5V8LrRsYFrNWtiX3OPCEVmZ7shq
+R/2LoBCCUiBc9XxY7ML0
+=3UgV
+-----END PGP SIGNATURE-----
+--=-=-=--
