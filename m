@@ -1,73 +1,110 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: RAID10 with 2 drives auto-assembled as RAID1
-Date: Mon, 7 Nov 2016 08:49:16 -0500
-Message-ID: <c2c0659b-9dd6-1f5f-9309-8a47ea3400f4@turmel.org>
-References: <0487f9a4-c04a-8a4d-78ad-0191995d4be9@luketic.de>
- <57ce55da-fadc-db02-289e-db44bf6fb7d7@turmel.org>
- <fdfd254f-bdcf-80a7-2265-893c8ee781fc@luketic.de>
- <e23d3b3a-c357-bd74-6bc5-f2e04255c96d@turmel.org>
- <904643ba-b712-0c8a-249d-a78e7fc68876@luketic.de>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re:
+Date: Mon, 7 Nov 2016 16:50:56 +0000
+Message-ID: <5820B0F0.2050306@youngman.org.uk>
+References: <CAGELip+rb=Ztv2K8jPdn608Li_RakEq9Gp5Jyof9eC_bO5QMrQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <904643ba-b712-0c8a-249d-a78e7fc68876@luketic.de>
+In-Reply-To: <CAGELip+rb=Ztv2K8jPdn608Li_RakEq9Gp5Jyof9eC_bO5QMrQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Darko Luketic <darko@luketic.de>, linux-raid@vger.kernel.org
+To: Dennis Dataopslag <dennisdataopslag@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Good morning,
+On 06/11/16 21:00, Dennis Dataopslag wrote:
+> Help wanted very much!
 
-On 11/07/2016 08:36 AM, Darko Luketic wrote:
-> On 11/05/2016 11:54 PM, Phil Turmel wrote:
->>  Assuming you had an ext2/3/4 filesystem in the array, try this
->> one-liner:
->>
->> for x in /dev/sd[ef]1; do echo -e "\nDevice $x"; dd if=$x bs=1M
->> count=16k |hexdump -C |egrep '^[0-9a-f]+30  .+  53 ef'; done
-
-> There are many lines of output.
-> Meanwhile I went the commercial route. Managed so save all important
-> stuff but the software (rdata product version 6 for Windows) didn't do
-> it properly.
-> I'll have to start a new restore.
-> I also used a free product for gnu/linux called R-Linux which is able to
-> find most dirs and files but hangs at 1.03TB and is unable to find the
-> most important .thunderbird dir .
-> Also tried sleuthkit with autopsy2 without success.
-
-Ok.
-
-> For now I can cope with the 128GB ssd as a temporary solution, but life
-> must go on and in the long run I need more space and to use the drives.
+Quick response ...
 > 
-> What was I searching for with this chain of commands?
+> My setup:
+> Thecus N5550 NAS with 5 1TB drives installed.
+> 
+> MD0: RAID 5 config of 4 drives (SD[ABCD]2)
+> MD10: RAID 1 config of all 5 drives (SD..1), system generated array
+> MD50: RAID 1 config of 4 drives (SD[ABCD]3), system generated array
+> 
+> 1 drive (SDE) set as global hot spare.
+> 
+Bit late now, but you would probably have been better with raid-6.
+> 
+> What happened:
+> This weekend I thought it might be a good idea to do a SMART test for
+> the drives in my NAS.
+> I started the test on 1 drive and after it ran for a while I started
+> the other ones.
+> While the test was running drive 3 failed. I got a message the RAID
+> was degraded and started rebuilding. (My assumption is that at this
+> moment the global hot spare will automatically be added to the array)
+> 
+> I stopped the SMART tests of all drives at this moment since it seemed
+> logical to me the SMART test (or the outcomes) made the drive fail.
+> In stopping the tests, drive 1 also failed!!
+> I let it for a little but the admin interface kept telling me it was
+> degraded, did not seem to take any actions to start rebuilding.
 
-Magic number for an ext2/3/4 filesystem at a suitable offset within a
-sector.
+It can't - there's no spare drive to rebuild on, and there aren't enough
+drives to build a working array.
 
-> Device /dev/sde1
-> 07f00430  b5 9b 1c 58 7a 02 ff ff  53 ef 01 00 01 00 00 00
-> |...Xz...S.......|
+> At this point I started googling and found I should remove and reseat
+> the drives. This is also what I did but nothing seemd to happen.
+> The turned up as new drives in the admin interface and I re-added them
+> to the array, they were added as spares.
+> Even after adding them the array didn't start rebuilding.
+> I checked stat in mdadm and it told me clean FAILED opposed to the
+> degraded in the admin interface.
 
-This is a candidate, with a last write timestamp of Fri, 04 Nov 2016
-14:31:17 GMT.
+Yup. You've only got two drives of a four-drive raid 5.
 
+Where did you google? Did you read the linux raid wiki?
 
-> 0ff00030  c4 36 78 52 00 00 ff ff  53 ef 00 00 01 00 00 00
-> |.6xR....S.......|
+https://raid.wiki.kernel.org/index.php/Linux_Raid
+> 
+> I rebooted the NAS since it didn't seem to be doing anything I might interrupt.
+> after rebooting it seemed as if the entire array had disappeared!!
+> I started looking for options in MDADM and tried every "normal"option
+> to rebuild the array (--assemble --scan for example)
+> Unfortunately I cannot produce a complete list since I cannot find how
+> to get it from the logging.
+> 
+> Finally I mdadm --create a new array with the original 4 drives with
+> all the right settings. (Got them from 1 of the original volumes)
 
-And another candidate with a last write @ Tue, 05 Nov 2013 00:07:32 GMT.
+OUCH OUCH OUCH!
 
-> 1ff00030  c4 36 78 52 00 00 ff ff  53 ef 00 00 01 00 00 00
-> |.6xR....S.......|
+Are you sure you've got the right settings? A lot of "hidden" settings
+have changed their values over the years. Do you know which mdadm was
+used to create the array in the first place?
 
-And this one appears to be a backup superblock for the 2013 filesystem.
-The spacing between these two make me wonder if they are both backups
-for a superblock that's been overwritten.
+> The creation worked but after creation it doesn't seem to have a valid
+> partition table. This is the point where I realized I probably fucked
+> it up big-time and should call in the help squad!!!
+> What I think went wrong is that I re-created an array with the
+> original 4 drives from before the first failure but the hot-spare was
+> already added?
 
-I'd suggest sharing these emails with the Ext4 mailing list to see if
-you can get some more specific recovery help.  I'd say the odds are fair
-to good.
+Nope. You've probably used a newer version of mdadm. That's assuming the
+array is still all the original drives. If some of them have been
+replaced you've got a still messier problem.
+> 
+> The most important data from the array is saved in an offline backup
+> luckily but I would very much like it if there is any way I could
+> restore the data from the array.
+> 
+> Is there any way I could get it back online?
 
-Phil
+You're looking at a big forensic job. I've moved the relevant page to
+the archaeology area - probably a bit too soon - but you need to read
+the following page
+
+https://raid.wiki.kernel.org/index.php/Reconstruction
+
+Especially the bit about overlays. And wait for the experts to chime in
+about how to do a hexdump and work out the values you need to pass to
+mdadm to get the array back. It's a lot of work and you could be looking
+at a week what with the delays as you wait for replies.
+
+I think it's recoverable. Is it worth it?
+
+Cheers,
+Wol
