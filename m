@@ -1,77 +1,72 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH 2/2] mdadm: raid10.c Remove near atomic break
-Date: Mon, 07 Nov 2016 10:03:42 +1100
-Message-ID: <87oa1snrch.fsf@notabene.neil.brown.name>
-References: <20161103234508.12641-1-robert@leblancnet.us> <20161103234508.12641-3-robert@leblancnet.us> <87k2cjq4eh.fsf@notabene.neil.brown.name> <CAANLjFrXjS3HX-qv_FAXBapD6PE-n+y=d=6kzCwO3pSjajafWQ@mail.gmail.com>
+Subject: Re: clearing blocks wrongfully marked as bad if --update=no-bbl can't be used?
+Date: Mon, 07 Nov 2016 11:16:56 +1100
+Message-ID: <87lgwwnnyf.fsf@notabene.neil.brown.name>
+References: <20161030093337.GA3627@metamorpher.de> <20161030153857.GB28648@merlins.org> <20161030161929.GA5582@metamorpher.de> <f6b83548-cb8b-be21-ee4f-cae9f7fa2950@turmel.org> <20161030171234.GD28648@merlins.org> <20161030171654.GE28648@merlins.org> <20161104181808.lplrtmafwlub3ck4@merlins.org> <90cf5c8f-fcd3-d510-7f6e-6be6ade3969f@turmel.org> <20161104185040.yrznk3j4rvtwsxbk@merlins.org> <20161104235917.2d6d0fcc@natsu> <20161104195127.ymenm7ezmhscbzn6@merlins.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAANLjFrXjS3HX-qv_FAXBapD6PE-n+y=d=6kzCwO3pSjajafWQ@mail.gmail.com>
+In-Reply-To: <20161104195127.ymenm7ezmhscbzn6@merlins.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robert LeBlanc <robert@leblancnet.us>
-Cc: linux-raid@vger.kernel.org
+To: Marc MERLIN <marc@merlins.org>, Roman Mamedov <rm@romanrm.net>
+Cc: Phil Turmel <philip@turmel.org>, Neil Brown <neilb@suse.de>, Andreas Klauer <Andreas.Klauer@metamorpher.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Nov 04 2016, Robert LeBlanc wrote:
-
-> On Thu, Nov 3, 2016 at 10:01 PM, NeilBrown <neilb@suse.com> wrote:
->> On Fri, Nov 04 2016, Robert LeBlanc wrote:
->>
->>> This is always triggered for small reads preventing spreading the reads
->>> across all available drives. The comments are also confusing as it is
->>> supposed to apply only to 'far' layouts, but really only applies to 'near'
->>> layouts. Since there isn't problems with 'far' layouts, there shouldn't
->>> be a problem for 'near' layouts either. This change fairly distributes
->>> reads across all drives where before only came from the first drive.
->>
->> Why is "fairness" an issue?
->> The current code will use a device if it finds that it is completely
->> idle. i.e. if nr_pending is 0.
->> Why is that ever the wrong thing to do?
+On Sat, Nov 05 2016, Marc MERLIN wrote:
 >
-> The code also looks for a drive that is closest to the requested
-> sector which doesn't get a chance to happen without this patch. The
-> way this part of code is written, as soon as it finds a good disk, it
-> cuts out of the loop searching for a better disk. So it doesn't even
-> look for another disk. In a healthy array with array-disks X and -p
-> nX, this means that the first disk gets all the reads for small I/O.
-> Where nY is less than X, it may be covered up because the data is
-> naturally striped, but it still may be picking a disk that is farther
-> away from the selected sector causing extra head seeks.
+> What's interesting is that it started exactly at 50%, which is also
+> likely where my reads were failing.
 >
->> Does your testing show that overall performance is improved?  If so,
->> that would certainly be useful.
->> But it isn't clear (to me) that simply spreading the load more "fairly"
->> is a worthy goal.
+> myth:/sys/block/md5/md# echo repair > sync_action=20
 >
-> I'll see if I have some mechanical drives somewhere to test (I've been
-> testing four loopback devices on a single NVME drive so you don't see
-> an improvement). You can see from the fio I posted [1] that before the
-> patch, one drive had all the I/O and after the patch the I/O was
-> distributed between all the drives (it doesn't have to be exactly
-> even, just not as skewed as it was before is good enough). I would
-> expect similar results to the 'far' tests done here [0]. Based on the
-> previous tests I did, when I saw this code, it just made complete
-> sense to me why we had great performance with 'far' and subpar
-> performance with 'near'. I'll come back with some results tomorrow.
+> md5 : active raid5 sdg1[0] sdd1[5] sde1[3] sdf1[2] sdh1[6]
+>       15627542528 blocks super 1.2 level 5, 512k chunk, algorithm 2 [5/5]=
+ [UUUUU]
+>       [=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D>..........]  resync =3D 50.0% (1953=
+925916/3906885632) finish=3D1899.1min speed=3D17138K/sec
+>       bitmap: 0/30 pages [0KB], 65536KB chunk
 
-The whole point of the "far" layout is to provide better read
-performance than "near" because reads get spread out over all devices
-like they do with RAID0.  So I wouldn't expect the make "near" close to
-"far", but it certainly doesn't hurt to improve it.
+Yep, that is weird.
 
-As Shaohua notes, we you two different algorithms in RAID1, depending on
-whether there are rotational devices or not.  Introducing similar logic
-to RAID10 would seem to make sense.
+You can cause that to happen by e.g
+   echo 7813771264 > /sys/block/md5/md/sync_min
 
-Patches for performance improvements are always more convincing when
-they come with numbers.  I'll look forward to your test results.
+but you are unlikely to have done that deliberately.
 
-Thanks,
+
+>
+> That said, as this resync is processing, I'd think/hope it would move
+> the error forward, but it does not seem to:
+> myth:/sys/block/md5/md# dd if=3D/dev/md5 of=3D/dev/null bs=3D1GiB skip=3D=
+8190
+> dd: reading `/dev/md5': Invalid argument
+> 2+0 records in
+> 2+0 records out
+> 2147483648 bytes (2.1 GB) copied, 27.8491 s, 77.1 MB/s
+
+EINVAL from a read() system call is surprising in this context.....
+
+do_generic_file_read can return it:
+	if (unlikely(*ppos >=3D inode->i_sb->s_maxbytes))
+		return -EINVAL;
+
+s_maxbytes will be MAX_LFS_FILESIZE which, on a 32bit system, is
+
+#define MAX_LFS_FILESIZE        (((loff_t)PAGE_SIZE << (BITS_PER_LONG-1))-1)
+
+That is 2^(12+31) or 2^43 or 8TB.
+
+Is this a 32bit system you are using?  Such systems can only support
+buffered IO up to 8TB.  If you use iflags=3Ddirect to avoid buffering, you
+should get access to the whole device.
+
+If this is a 64bit system, then the problem must be elsewhere.
+
 NeilBrown
 
 --=-=-=
@@ -79,18 +74,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAEBCAAGBQJYH7bOAAoJEDnsnt1WYoG5Z/0QALImY3SW7j80rxmroH42eS6d
-1rq0BPp7zt64wcK/czQZ31hjdMp4xl4QNyN76Qe3csK0N4BAlmElKuWpOSBE9HvT
-qD4Ca7nkDqR9TqO2VHrSF+oqzcSLMn32/XbmadmnqTOoFIcRIfKQLlLOK9bTyaUz
-59EJ8IzBFr9PJ5RsbSNdTMkPCTvKI/e+4sUJPhoC5S8k6NxWfuBNpYTOo+mSw+sP
-z/e1h2ydd/vfux0rpP3hXQpRF75PTff7fKj6/nbWiESpIyfitkiyqmSGpzZmqTUC
-Qjf0srRbTKDp9XiJqFmsHelA+K331khij4wjmEIEg9KiONnxkcVGPhKgmy8n/uHp
-y067sHtuDnnlFyhpSy/pgsPb3yAVIxf1m3MJsMH6dR7JkY6vrYhaPbZfe5D9cHqC
-xxT+rmsiwr3CicBNX3vfV2dOy8XGnhJ1r+e5Y7a7h1eM6fyrqamUXgwYPRxHnNTl
-ZsHzjaTR0FTHBIZlG9pAMaY0M8q0ngkNh2eJaMNzT7mspTpEjqm4JGvSGbf2/qto
-k8nKxkiDwcAfEHYzQ123BUmP2Gq35WH+F70omCBQsGSnmxi9nGW5fgvmaio6cuLy
-LQWrqMIulv31S1nPCiykcZVC20l8xyj2l/XNut5oTd37i5jleI5ezwXr6PnwY3xl
-UoMxEFwC7G0oC8LzLc9l
-=PKcp
+iQIcBAEBCAAGBQJYH8f4AAoJEDnsnt1WYoG5EyoP/10mbJNy2xzpvUhNZU0Yc5+M
+WzZwN+OOFJZnq/raPRxgJ3XhlLK9D5qWeFHNKdibnMdMnPqi4aA0R0nksYjt6Lrh
+LiYkk4udc/fltZPGWUnDunFvvaa7ZXhmv7sod2wHmJXe9MN01HjiuwKhDVHYPvTS
+8PRjVA6ORATuzrWyOZABk/6yGNCACtIc5fmXX/kLN+1JkgEgqXmKM3jngBg/lfu+
+dNqAsV63GorzxFYv7IjoS24IDuL4QPGb66X6icwHVTWJwVF2yLqP5/1QY12Ki6Mf
+uBuF+3XS5CSM9gMOkWbB24zWYqYxp0s3MGLGuxRMDcOvkqo1ly1R4lK1SUaJuM8g
+hm9n5kCw5Q930SxfJxSgdjZgECkliajZOEt237IEy51GCc2AfJajqC+o2OkXlOFf
+W2hDXn9583tabhXaxK/soXrtFfKoAKBBY8CoYyIJuQ2BBEUeqVU1l9z+f5v7LODW
+TZf4woNQ65hRKZGU70MXo6/e6giwn0J3BB/QuyRcQV/8nE8UBoeb+9LQ8pPIXNel
+QitsdhyArRXWXNwin6nF/ZbM0k+8bxfSgfjPGoYbzqfUs4NEWp+9jMdP2PqbBICk
+GaYpsbjHAvYVPDjjkbksLRc/7g+p5dTn9BmiCBZmMtclLY9hQqRpF3UGcgRrvblF
+b6GRpPLBY6b5Vkihm3DT
+=YcmN
 -----END PGP SIGNATURE-----
 --=-=-=--
