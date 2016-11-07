@@ -1,91 +1,73 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: MD Remnants After --stop
-Date: Mon, 07 Nov 2016 16:44:18 +1100
-Message-ID: <87fun3ond9.fsf@notabene.neil.brown.name>
-References: <CAHkw+Lf1SErbGro4bq5MM5LyB-Zqyqi4E90R7c+uAZHv1WgSrA@mail.gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: RAID10 with 2 drives auto-assembled as RAID1
+Date: Mon, 7 Nov 2016 08:49:16 -0500
+Message-ID: <c2c0659b-9dd6-1f5f-9309-8a47ea3400f4@turmel.org>
+References: <0487f9a4-c04a-8a4d-78ad-0191995d4be9@luketic.de>
+ <57ce55da-fadc-db02-289e-db44bf6fb7d7@turmel.org>
+ <fdfd254f-bdcf-80a7-2265-893c8ee781fc@luketic.de>
+ <e23d3b3a-c357-bd74-6bc5-f2e04255c96d@turmel.org>
+ <904643ba-b712-0c8a-249d-a78e7fc68876@luketic.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHkw+Lf1SErbGro4bq5MM5LyB-Zqyqi4E90R7c+uAZHv1WgSrA@mail.gmail.com>
+In-Reply-To: <904643ba-b712-0c8a-249d-a78e7fc68876@luketic.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marc Smith <marc.smith@mcc.edu>, linux-raid@vger.kernel.org
+To: Darko Luketic <darko@luketic.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
+Good morning,
 
-On Sat, Nov 05 2016, Marc Smith wrote:
+On 11/07/2016 08:36 AM, Darko Luketic wrote:
+> On 11/05/2016 11:54 PM, Phil Turmel wrote:
+>>  Assuming you had an ext2/3/4 filesystem in the array, try this
+>> one-liner:
+>>
+>> for x in /dev/sd[ef]1; do echo -e "\nDevice $x"; dd if=$x bs=1M
+>> count=16k |hexdump -C |egrep '^[0-9a-f]+30  .+  53 ef'; done
 
-> Hi,
->
-> It may be that I've never noticed this before, so maybe its not a
-> problem... after using '--stop' to deactivate/stop an MD array, there
-> are remnants of it lingering, namely an entry in /sys/block (eg,
-> /sys/block/md127) and the device node in /dev remains (eg,
-> /dev/md127).
->
-> Is this normal? Like I said, it probably is, and I've just never
-> noticed it before. I assume its not going to hurt anything, but is
-> there a way to clean it up, without rebooting? Obviously I could
-> remove the /dev entry, but what about /sys/block?
->
+> There are many lines of output.
+> Meanwhile I went the commercial route. Managed so save all important
+> stuff but the software (rdata product version 6 for Windows) didn't do
+> it properly.
+> I'll have to start a new restore.
+> I also used a free product for gnu/linux called R-Linux which is able to
+> find most dirs and files but hangs at 1.03TB and is unable to find the
+> most important .thunderbird dir .
+> Also tried sleuthkit with autopsy2 without success.
 
-You can remove them both by running
-  mdadm -S /dev/md127
+Ok.
 
-but they'll probably just reappear again.
+> For now I can cope with the 128GB ssd as a temporary solution, but life
+> must go on and in the long run I need more space and to use the drives.
+> 
+> What was I searching for with this chain of commands?
 
-This seems to be an on-going battle between md and udev.  I've "fixed"
-it at least once, but it keeps coming back.
+Magic number for an ext2/3/4 filesystem at a suitable offset within a
+sector.
 
-When md removes the md127 device, a message is sent to udev.
-As part of its response to this message, udev tries to open /dev/md127.
-Because of the rather unusual way that md devices are created (it made
-sense nearly 20 years ago when it was designed), opening /dev/md127
-causes md to create device md127 again.
+> Device /dev/sde1
+> 07f00430  b5 9b 1c 58 7a 02 ff ff  53 ef 01 00 01 00 00 00
+> |...Xz...S.......|
 
-You could
-  mv /dev/md127 /dev/md127X
-  mdadm -S /dev/md127X
-  rm /dev/md127X
-that stop udev from opening /dev/md127.  It seems to work reliably.
+This is a candidate, with a last write timestamp of Fri, 04 Nov 2016
+14:31:17 GMT.
 
-md used to generate a CHANGE event before the REMOVE event, and only the
-CHANGE event caused udev to open the device file.  I removed that and
-the problem went away.  Apparently some change has happened to udev and
-now it opens the file in response to REMOVE as well.
 
-So to "fix" it again, you need to figure out what udev is doing and fix
-that.
+> 0ff00030  c4 36 78 52 00 00 ff ff  53 ef 00 00 01 00 00 00
+> |.6xR....S.......|
 
-Alternately... place "create names=yes" in your mdadm.conf
-and always use names, not numbers, to work with md arrays.
-e.g. /dev/md/home /dev/md/root /dev/md/scratch etc.
+And another candidate with a last write @ Tue, 05 Nov 2013 00:07:32 GMT.
 
-When will trigger the use of an alternate scheme for creating md devices
-(using minor numbers >= 512) which udev cannot break so easily.  When it
-tries to open /dev/md_home, that will fail.
+> 1ff00030  c4 36 78 52 00 00 ff ff  53 ef 00 00 01 00 00 00
+> |.6xR....S.......|
 
-NeilBrown
+And this one appears to be a backup superblock for the 2013 filesystem.
+The spacing between these two make me wonder if they are both backups
+for a superblock that's been overwritten.
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+I'd suggest sharing these emails with the Ext4 mailing list to see if
+you can get some more specific recovery help.  I'd say the odds are fair
+to good.
 
------BEGIN PGP SIGNATURE-----
-
-iQIcBAEBCAAGBQJYIBSyAAoJEDnsnt1WYoG5eSkP/3YTvflENh+HTRLWv1s78GDZ
-eSJGW00FBW7jP5HHk741OS+mvBNDxl9nU2xLHME84YsIllN4rkWa9p3jgC+0DQGx
-rfc5Owf5awMr4xOPHM52lmhZPEadeWEGlHIWoYWIUMhM/0IrbEM5DD0HifaRz8Rw
-Z6nqoLjdjVwkLlu9PvWHc+HFZS0gPGfPZMnb5FaeBuPJ0XEZL1RPvU9vRmnUJS2p
-uATHMtZt/PswD05yCEjzCsfVS7t4gu7l6+p8QC7mEBJZ1pB0XwI5wUlQXMiFBl2W
-8PZ0YK5OnXMzgOegN5zZjTAl2MXvt91gEQII4egNGKL/2xpr7F03tl/nbPx2KYOI
-nTtEeZFazpZxhqsUjTSNTJGkAShqJjkI7WkiiDljdrqa7Hi++yhMcliGYnrxNtST
-aUSSlJEPAAo3Hf2CasBePulFN5+UTtbchVvor4+QabSmmGOvN2zzc3DL63lcDYxm
-1Ja3cc98v/sxeX99DEayIKovZyzF/O/UYFO3jlWovqimr7+4wVp9DgfxbJu8h94B
-aO0OdyKPupj71AXCa9h6/HSPzz1NAyUu2+laevvFKiOjKUIo3CrBjntl1yLwG65z
-XNLoMi+0Y6FXohmsqu+I8hrRQb9Yr0Om86lG0k7FFrK4qe12y1h7mHXvogUtaTk7
-Tb+uRW8aqfcc4KQA84Vj
-=0OEY
------END PGP SIGNATURE-----
---=-=-=--
+Phil
