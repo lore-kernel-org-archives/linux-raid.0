@@ -1,83 +1,56 @@
-From: Darko Luketic <darko@luketic.de>
-Subject: Re: RAID10 with 2 drives auto-assembled as RAID1
-Date: Mon, 7 Nov 2016 18:13:57 +0100
-Message-ID: <27046c36-09a3-821f-059b-acaa578972b9@luketic.de>
-References: <0487f9a4-c04a-8a4d-78ad-0191995d4be9@luketic.de>
- <57ce55da-fadc-db02-289e-db44bf6fb7d7@turmel.org>
- <fdfd254f-bdcf-80a7-2265-893c8ee781fc@luketic.de>
- <e23d3b3a-c357-bd74-6bc5-f2e04255c96d@turmel.org>
- <904643ba-b712-0c8a-249d-a78e7fc68876@luketic.de>
- <c2c0659b-9dd6-1f5f-9309-8a47ea3400f4@turmel.org>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [md PATCH 4/4] md/bitmap: Don't write bitmap while earlier
+ writes might be in-flight
+Date: Mon, 7 Nov 2016 11:19:47 -0800
+Message-ID: <20161107191947.mzdkby6kbqpqssbv@kernel.org>
+References: <147823807607.6764.8460942745584467311.stgit@noble>
+ <147823836359.6764.7855525110697020696.stgit@noble>
+ <20161105003325.qnmcu363ocbli74x@kernel.org>
+ <87r36onrt5.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <c2c0659b-9dd6-1f5f-9309-8a47ea3400f4@turmel.org>
+Content-Disposition: inline
+In-Reply-To: <87r36onrt5.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/07/2016 02:49 PM, Phil Turmel wrote:
-> Good morning,
->
-Good morning Phil
+On Mon, Nov 07, 2016 at 09:53:42AM +1100, Neil Brown wrote:
+> On Sat, Nov 05 2016, Shaohua Li wrote:
+> 
+> > On Fri, Nov 04, 2016 at 04:46:03PM +1100, Neil Brown wrote:
+> >> As we don't wait for writes to complete in bitmap_daemon_work, they
+> >> could still be in-flight when bitmap_unplug writes again.  Or when
+> >> bitmap_daemon_work tries to write again.
+> >> This can be confusing and could risk the wrong data being written last.
+> >
+> > Applied the first 3 patches, thanks!
+> >
+> > This one seems not completely solving the race condition. It's still possible
+> > bitmap_daemon_work clears BITMAP_PAGE_NEEDWRITE but hasn't dispatch the IO yet,
+> > bitmap_unplug then does nothing and thinks bitmap is updated to disk. Why don't
+> > we add locking here?
+> 
+> Thanks for the review!
+> 
+> BITMAP_PAGE_NEEDWRITE is set for pages that need to be written out in
+> order to clear bits that don't need to be set any more.  There is never
+> any urgency to do this.
+> BITMAP_PAGE_DIRTY is set of pages that need to be written out in order
+> to set bits representing regions that are about to be written to.  These
+> have to be flushed by bitmap_unplug().
+> Pages can have both bits set, in which case bitmap_daemon_work() will
+> leave them for bitmap_unplug() to deal with.
+> 
+> So if bitmap_daemon_work() clears BITMAP_PAGE_PENDING on a page, then it
+> is a page that bitmap_unplug() doesn't need to wait for.
 
-> On 11/07/2016 08:36 AM, Darko Luketic wrote:
->> On 11/05/2016 11:54 PM, Phil Turmel wrote:
->>>  Assuming you had an ext2/3/4 filesystem in the array, try this
->>> one-liner:
->>>
->>> for x in /dev/sd[ef]1; do echo -e "\nDevice $x"; dd if=$x bs=1M
->>> count=16k |hexdump -C |egrep '^[0-9a-f]+30  .+  53 ef'; done
->
->> There are many lines of output.
->> Meanwhile I went the commercial route. Managed so save all important
->> stuff but the software (rdata product version 6 for Windows) didn't do
->> it properly.
->> I'll have to start a new restore.
->> I also used a free product for gnu/linux called R-Linux which is able to
->> find most dirs and files but hangs at 1.03TB and is unable to find the
->> most important .thunderbird dir .
->> Also tried sleuthkit with autopsy2 without success.
->
-> Ok.
->
->> For now I can cope with the 128GB ssd as a temporary solution, but life
->> must go on and in the long run I need more space and to use the drives.
->>
->> What was I searching for with this chain of commands?
->
-> Magic number for an ext2/3/4 filesystem at a suitable offset within a
-> sector.
->
->> Device /dev/sde1
->> 07f00430  b5 9b 1c 58 7a 02 ff ff  53 ef 01 00 01 00 00 00
->> |...Xz...S.......|
->
-> This is a candidate, with a last write timestamp of Fri, 04 Nov 2016
-> 14:31:17 GMT.
->
->
->> 0ff00030  c4 36 78 52 00 00 ff ff  53 ef 00 00 01 00 00 00
->> |.6xR....S.......|
->
-> And another candidate with a last write @ Tue, 05 Nov 2013 00:07:32 GMT.
->
->> 1ff00030  c4 36 78 52 00 00 ff ff  53 ef 00 00 01 00 00 00
->> |.6xR....S.......|
->
-> And this one appears to be a backup superblock for the 2013 filesystem.
-> The spacing between these two make me wonder if they are both backups
-> for a superblock that's been overwritten.
->
-> I'd suggest sharing these emails with the Ext4 mailing list to see if
-> you can get some more specific recovery help.  I'd say the odds are fair
-> to good.
->
-> Phil
+Oops, I misread the code. Yes, this is very clear, thanks for the explaination.
 
-Yes (probably) the array was created in 2013.
+So I can understand the patch fixes the confusion. when is there risk wrong
+data is written?
 
-Thank you so much for your help Phil.
-
-Darko
+Thanks,
+Shaohua
