@@ -1,41 +1,91 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: clearing blocks wrongfully marked as bad if --update=no-bbl can't
- be used?
-Date: Sun, 6 Nov 2016 22:36:38 -0500
-Message-ID: <19a0bd5b-5046-46ba-3050-078330fa8682@turmel.org>
-References: <20161030161929.GA5582@metamorpher.de>
- <f6b83548-cb8b-be21-ee4f-cae9f7fa2950@turmel.org>
- <20161030171234.GD28648@merlins.org> <20161030171654.GE28648@merlins.org>
- <20161104181808.lplrtmafwlub3ck4@merlins.org>
- <90cf5c8f-fcd3-d510-7f6e-6be6ade3969f@turmel.org>
- <20161104185040.yrznk3j4rvtwsxbk@merlins.org> <20161104235917.2d6d0fcc@natsu>
- <20161104195127.ymenm7ezmhscbzn6@merlins.org>
- <87lgwwnnyf.fsf@notabene.neil.brown.name>
- <20161107011342.fld53ntd3djrctb2@merlins.org>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: MD Remnants After --stop
+Date: Mon, 07 Nov 2016 16:44:18 +1100
+Message-ID: <87fun3ond9.fsf@notabene.neil.brown.name>
+References: <CAHkw+Lf1SErbGro4bq5MM5LyB-Zqyqi4E90R7c+uAZHv1WgSrA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161107011342.fld53ntd3djrctb2@merlins.org>
+In-Reply-To: <CAHkw+Lf1SErbGro4bq5MM5LyB-Zqyqi4E90R7c+uAZHv1WgSrA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marc MERLIN <marc@merlins.org>, NeilBrown <neilb@suse.com>
-Cc: Roman Mamedov <rm@romanrm.net>, Neil Brown <neilb@suse.de>, Andreas Klauer <Andreas.Klauer@metamorpher.de>, linux-raid@vger.kernel.org
+To: Marc Smith <marc.smith@mcc.edu>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/06/2016 08:13 PM, Marc MERLIN wrote:
-> On Mon, Nov 07, 2016 at 11:16:56AM +1100, NeilBrown wrote:
+--=-=-=
+Content-Type: text/plain
 
->> Is this a 32bit system you are using?  Such systems can only support
->> buffered IO up to 8TB.  If you use iflags=direct to avoid buffering, you
->> should get access to the whole device.
-> 
-> You found the problem, and you also found the reason why btrfs_tools
-> also fails past 8GB. It is indeed a 32bit distro. If I put a 64bit
-> kernel with the 32bit userland, there is a weird problem with a sound
-> driver/video driver sync, so I've stuck with 32bits.
+On Sat, Nov 05 2016, Marc Smith wrote:
 
-Huh.  Learn something new every day, I suppose.  Never would have
-thought of this.  Thanks, Neil.
+> Hi,
+>
+> It may be that I've never noticed this before, so maybe its not a
+> problem... after using '--stop' to deactivate/stop an MD array, there
+> are remnants of it lingering, namely an entry in /sys/block (eg,
+> /sys/block/md127) and the device node in /dev remains (eg,
+> /dev/md127).
+>
+> Is this normal? Like I said, it probably is, and I've just never
+> noticed it before. I assume its not going to hurt anything, but is
+> there a way to clean it up, without rebooting? Obviously I could
+> remove the /dev entry, but what about /sys/block?
+>
 
-Phil
+You can remove them both by running
+  mdadm -S /dev/md127
 
+but they'll probably just reappear again.
+
+This seems to be an on-going battle between md and udev.  I've "fixed"
+it at least once, but it keeps coming back.
+
+When md removes the md127 device, a message is sent to udev.
+As part of its response to this message, udev tries to open /dev/md127.
+Because of the rather unusual way that md devices are created (it made
+sense nearly 20 years ago when it was designed), opening /dev/md127
+causes md to create device md127 again.
+
+You could
+  mv /dev/md127 /dev/md127X
+  mdadm -S /dev/md127X
+  rm /dev/md127X
+that stop udev from opening /dev/md127.  It seems to work reliably.
+
+md used to generate a CHANGE event before the REMOVE event, and only the
+CHANGE event caused udev to open the device file.  I removed that and
+the problem went away.  Apparently some change has happened to udev and
+now it opens the file in response to REMOVE as well.
+
+So to "fix" it again, you need to figure out what udev is doing and fix
+that.
+
+Alternately... place "create names=yes" in your mdadm.conf
+and always use names, not numbers, to work with md arrays.
+e.g. /dev/md/home /dev/md/root /dev/md/scratch etc.
+
+When will trigger the use of an alternate scheme for creating md devices
+(using minor numbers >= 512) which udev cannot break so easily.  When it
+tries to open /dev/md_home, that will fail.
+
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAEBCAAGBQJYIBSyAAoJEDnsnt1WYoG5eSkP/3YTvflENh+HTRLWv1s78GDZ
+eSJGW00FBW7jP5HHk741OS+mvBNDxl9nU2xLHME84YsIllN4rkWa9p3jgC+0DQGx
+rfc5Owf5awMr4xOPHM52lmhZPEadeWEGlHIWoYWIUMhM/0IrbEM5DD0HifaRz8Rw
+Z6nqoLjdjVwkLlu9PvWHc+HFZS0gPGfPZMnb5FaeBuPJ0XEZL1RPvU9vRmnUJS2p
+uATHMtZt/PswD05yCEjzCsfVS7t4gu7l6+p8QC7mEBJZ1pB0XwI5wUlQXMiFBl2W
+8PZ0YK5OnXMzgOegN5zZjTAl2MXvt91gEQII4egNGKL/2xpr7F03tl/nbPx2KYOI
+nTtEeZFazpZxhqsUjTSNTJGkAShqJjkI7WkiiDljdrqa7Hi++yhMcliGYnrxNtST
+aUSSlJEPAAo3Hf2CasBePulFN5+UTtbchVvor4+QabSmmGOvN2zzc3DL63lcDYxm
+1Ja3cc98v/sxeX99DEayIKovZyzF/O/UYFO3jlWovqimr7+4wVp9DgfxbJu8h94B
+aO0OdyKPupj71AXCa9h6/HSPzz1NAyUu2+laevvFKiOjKUIo3CrBjntl1yLwG65z
+XNLoMi+0Y6FXohmsqu+I8hrRQb9Yr0Om86lG0k7FFrK4qe12y1h7mHXvogUtaTk7
+Tb+uRW8aqfcc4KQA84Vj
+=0OEY
+-----END PGP SIGNATURE-----
+--=-=-=--
