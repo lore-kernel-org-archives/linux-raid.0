@@ -1,7 +1,7 @@
-From: Phil Turmel <philip@turmel.org>
+From: Wols Lists <antlists@youngman.org.uk>
 Subject: Re: WARNING: mismatch_cnt is not 0 on <array device>
-Date: Tue, 8 Nov 2016 15:38:41 -0500
-Message-ID: <1497737a-a307-4501-4158-9703a051ef67@turmel.org>
+Date: Tue, 8 Nov 2016 21:01:29 +0000
+Message-ID: <58223D29.6030401@youngman.org.uk>
 References: <26b91420-97c9-f405-aa71-16cd5cda3a67@gmail.com>
  <409d9f5f-6f72-a399-93ab-2b10323f4122@fnarfbargle.com>
  <c72d3567-7c9c-39dc-c2e1-722bc267bdd6@gmail.com>
@@ -14,40 +14,24 @@ References: <26b91420-97c9-f405-aa71-16cd5cda3a67@gmail.com>
  <be044941-8097-7d6f-5216-294fe2cac4d9@websitemanagers.com.au>
  <0f6bd6f6-20ee-1720-23fc-27d206063bfc@gmail.com>
  <287df6d6-3850-1142-5c69-c7b54a8a22d4@gmail.com>
+ <1497737a-a307-4501-4158-9703a051ef67@turmel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <287df6d6-3850-1142-5c69-c7b54a8a22d4@gmail.com>
+In-Reply-To: <1497737a-a307-4501-4158-9703a051ef67@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Benjammin2068 <benjammin2068@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Phil Turmel <philip@turmel.org>, Benjammin2068 <benjammin2068@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 11/08/2016 02:53 PM, Benjammin2068 wrote:
-> On 11/08/2016 12:47 PM, Benjammin2068 wrote:
+On 08/11/16 20:38, Phil Turmel wrote:
+> Have you added up the peak current draws of your drives to make sure
+> your power supply keeps up when all drives are writing simultaneously
+> (common with parity raid)?
 
-> Now that I think about it -- and have been talking out loud to myself (I don't think I'm crazy)...
-> 
-> A parallel to all this is:
-> 
-> I don't think the mismatch_cnt started showing up until I moved from RAID5 to RAID6.
-> 
-> :O
-> 
-> How painful is it to switch back to RAID5 to test that theory?
+On that point, be aware that many power supplies quote the sum of the
+power to all rails. It could well be that the supply is nominally plenty
+powerful enough, but the load on an individual rail is too high.
 
-Don't.  Sounds like raid6's stricter calculations are catching a real
-problem.  Do you have ECC RAM?  If so, are you getting any machine check
-exceptions?  If not, have you done a thorough memtest any time in the
-recent past?
-
-If it's not memory, can you exercise the controller channels heavily to
-see if they drop from errors?
-
-Have you added up the peak current draws of your drives to make sure
-your power supply keeps up when all drives are writing simultaneously
-(common with parity raid)?
-
-One more: do you have swap on top of md raid?
-
-Phil
+Cheers,
+Wol
