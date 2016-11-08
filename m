@@ -1,85 +1,95 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [md PATCH 4/4] md/bitmap: Don't write bitmap while earlier
- writes might be in-flight
-Date: Mon, 7 Nov 2016 14:57:24 -0800
-Message-ID: <20161107225724.giqgpwz5awq5ljw5@kernel.org>
-References: <147823807607.6764.8460942745584467311.stgit@noble>
- <147823836359.6764.7855525110697020696.stgit@noble>
- <20161105003325.qnmcu363ocbli74x@kernel.org>
- <87r36onrt5.fsf@notabene.neil.brown.name>
- <20161107191947.mzdkby6kbqpqssbv@kernel.org>
- <87d1i7niva.fsf@notabene.neil.brown.name>
+From: Robert LeBlanc <robert@leblancnet.us>
+Subject: Re: [PATCH 2/2] mdadm: raid10.c Remove near atomic break
+Date: Mon, 7 Nov 2016 17:12:42 -0700
+Message-ID: <CAANLjFrSsNY4T231_Q8Htyx=U98NynxHaPjYCdPYSOgjgZ=1Ng@mail.gmail.com>
+References: <20161103234508.12641-1-robert@leblancnet.us> <20161103234508.12641-3-robert@leblancnet.us>
+ <87k2cjq4eh.fsf@notabene.neil.brown.name> <CAANLjFrXjS3HX-qv_FAXBapD6PE-n+y=d=6kzCwO3pSjajafWQ@mail.gmail.com>
+ <87oa1snrch.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87d1i7niva.fsf@notabene.neil.brown.name>
+In-Reply-To: <87oa1snrch.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Nov 08, 2016 at 07:19:05AM +1100, Neil Brown wrote:
-> On Tue, Nov 08 2016, Shaohua Li wrote:
-> 
-> > On Mon, Nov 07, 2016 at 09:53:42AM +1100, Neil Brown wrote:
-> >> On Sat, Nov 05 2016, Shaohua Li wrote:
-> >> 
-> >> > On Fri, Nov 04, 2016 at 04:46:03PM +1100, Neil Brown wrote:
-> >> >> As we don't wait for writes to complete in bitmap_daemon_work, they
-> >> >> could still be in-flight when bitmap_unplug writes again.  Or when
-> >> >> bitmap_daemon_work tries to write again.
-> >> >> This can be confusing and could risk the wrong data being written last.
-> >> >
-> >> > Applied the first 3 patches, thanks!
-> >> >
-> >> > This one seems not completely solving the race condition. It's still possible
-> >> > bitmap_daemon_work clears BITMAP_PAGE_NEEDWRITE but hasn't dispatch the IO yet,
-> >> > bitmap_unplug then does nothing and thinks bitmap is updated to disk. Why don't
-> >> > we add locking here?
-> >> 
-> >> Thanks for the review!
-> >> 
-> >> BITMAP_PAGE_NEEDWRITE is set for pages that need to be written out in
-> >> order to clear bits that don't need to be set any more.  There is never
-> >> any urgency to do this.
-> >> BITMAP_PAGE_DIRTY is set of pages that need to be written out in order
-> >> to set bits representing regions that are about to be written to.  These
-> >> have to be flushed by bitmap_unplug().
-> >> Pages can have both bits set, in which case bitmap_daemon_work() will
-> >> leave them for bitmap_unplug() to deal with.
-> >> 
-> >> So if bitmap_daemon_work() clears BITMAP_PAGE_PENDING on a page, then it
-> >> is a page that bitmap_unplug() doesn't need to wait for.
-> >
-> > Oops, I misread the code. Yes, this is very clear, thanks for the explaination.
-> >
-> > So I can understand the patch fixes the confusion. when is there risk wrong
-> > data is written?
-> 
-> The goal is to avoid the possibility that two writes to the same
-> location are in flight at the same time.
-> It isn't clear that this would cause a problem, but it isn't clear that
-> it is completely safe either.
-> In general, this doesn't happen - certainly not from the page cache - so
-> drivers will not be prepared for it.
-> As an extreme example, suppose that the target device is a multi-path
-> device.
-> One write is sent and just after it is DMAed to one path, the in-memory
-> page is changed and a second write is submitted, and the data is DMAed
-> down the other path.  Are we certain the two will be committed to
-> storage in the intended order?
-> Probably they will be.  But maybe with a more complex stack, the chance
-> of one IO overtaking the other (even after the first DMA) increases.
-> 
-> So I cannot argue very strongly for this code, but it seems like a good
-> idea and is reasonably simple....
+I'm not sure why 'near' performance can't be close to 'far'
+performance. Here is the results from some tests I did today. These
+are 6TB SAS drives that I filled with 5TB of fio data (took all day
+Friday to fill them) so that I prevent short stroking drives.
 
-I didn't try to argue about the patch, it makes things clear actually. Just
-want to know where the data corruption comes from. I think I have an answer
-now.
+The format of the name is
+[NVME-]RAID(level)-(num_drives)[-parity_layout]. The NVME test was an
+afterthought so there may be some variance between tests not seen in
+the others. I usually do several tests and average the results and do
+a distribution to get what is significant, but I didn't have a lot of
+time.
 
-I'll add this patch.
+Pre-patch                                    clat (usec)
+Seq                 io(MB)  bw(KB/s)  iops   min      max     avg    stdev
+Single               12762   217801  54450     0    60462   17.71   156.30
+RAID1-4              12903   220216  55053     0    42778   17.75   160.62
+RAID10-4-n4          20057   342298  85574     0    50977   11.52   283.84
+RAID10-4-f4          48711   831319 207829     0    74020    4.62   175.52
+RAID10-3-n2          18439   314684  78671     0    61328   12.45   340.17
+RAID10-3-f2          37169   634293 158573     0    65365    6.10   210.42
+NVME-RAID10-4-n4    171950  2934682 733641     0     8016    1.16    14.15
+NVME-RAID10-4-f4    172480  2943693 735903     0     7309    1.16    16.78
 
-Thanks,
-Shaohua
+Post-patch
+Seq
+Single               12898   220118  55029     0    47805   17.85   159.62
+RAID1-4              12895   220067  55016     0    51156   17.85   168.47
+RAID10-4-n4          12797   218385  54596     0    65610   18.01   377.55
+RAID10-4-f4          48751   832000 208000     0    90652    4.61   183.18
+RAID10-3-n2          18656   318388  79596     0    62684   12.30   262.32
+RAID10-3-f2          37181   634487 158621     0    72696    6.11   211.63
+NVME-RAID10-4-n4    172738  2947174 737001     0     1057    1.16    13.08
+NVME-RAID10-4-f4    188423  3215770 803926     0     1242    1.05    16.33
+
+Pre-patch
+Random
+Single                19.5    333.3     83  1000    48000   12000     4010
+RAID1-4               19.4    331.6     82  2000    49000   12060     4110
+RAID10-4-n4           19.5    332.9     83  1000    38000   12010     4210
+RAID10-4-f4           27.2    463.9    115  1000    50000    8620     3190
+RAID10-3-n2           22.6    385.6     96  1000    44000   10370     3620
+RAID10-3-f2           26.1    444.7    111  1000   366000    8990     5430
+NVME-RAID10-4-n4    2458.3  41954.0  10488    77      414      94       10
+NVME-RAID10-4-f4    2509.7  42830.0  10707    74      373      93       14
+
+Post-patch
+Random
+Single                19.5    332.5     83  2000    37000   12020     4040
+RAID1-4               19.4    331.0     82  2000    34000   12080     4070
+RAID10-4-n4           27.0    460.6    115   178    50950    8678     3278
+RAID10-4-f4           27.0    460.1    115  1000    43000    8690     3260
+RAID10-3-n2           25.3    431.6    107  1000    46000    9260     3330
+RAID10-3-f2           26.1    445.4    111  1000    44000    8970     3270
+NVME-RAID10-4-n4    2334.5  39840.0   9960    47      308     100       13
+NVME-RAID10-4-f4    2376.6  40551.0  10137    73     2675      97       18
+
+With this patch, 'near' performance is almost exactly 'far'
+performance for random reads. The sequential reads suffer from this
+patch, but not worse than the the RAID1 or bare drive. RAID10-4-n4 has
+38% random performance increase, RAID10-3-n2 has 12% random read
+performance increase and RAID-4-n4 has 36% sequential performance
+degradation where the RAID10-3-n2 seq performance has a 1% performance
+increase (probably insignificant).
+
+Interesting note:
+Pre-patch Seq RAID10-4-n4 split the reads between the drives pretty
+good and pre-patch random RAID10-4-n4 has all I/O going to one drive.
+Post-patch these results are swapped with Seq RAID10-4-n4 being
+serviced from a single drive and random RAID10-4-n4 spreading I/O to
+all drives.
+
+The patch doesn't really seem to impact NVME, there is possibly some
+error in this test that throws doubts on the results in my mind since
+both 'far' and 'near' have the same amount of change (~5%).
+
+I hope this helps explain my reasoning. Just need to keep/improve the
+original seq performance but get the improved random performance.
+
+Robert LeBlanc
