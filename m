@@ -1,7 +1,7 @@
 From: Benjammin2068 <benjammin2068@gmail.com>
 Subject: Re: WARNING: mismatch_cnt is not 0 on <array device>
-Date: Wed, 9 Nov 2016 13:00:03 -0600
-Message-ID: <ff119b2a-bc7d-e0bc-0831-29e11e17f68c@gmail.com>
+Date: Wed, 9 Nov 2016 13:00:46 -0600
+Message-ID: <3c6197d4-a90c-0e7e-995f-6df7d0280e28@gmail.com>
 References: <26b91420-97c9-f405-aa71-16cd5cda3a67@gmail.com>
  <409d9f5f-6f72-a399-93ab-2b10323f4122@fnarfbargle.com>
  <c72d3567-7c9c-39dc-c2e1-722bc267bdd6@gmail.com>
@@ -15,73 +15,28 @@ References: <26b91420-97c9-f405-aa71-16cd5cda3a67@gmail.com>
  <0f6bd6f6-20ee-1720-23fc-27d206063bfc@gmail.com>
  <287df6d6-3850-1142-5c69-c7b54a8a22d4@gmail.com>
  <1497737a-a307-4501-4158-9703a051ef67@turmel.org>
+ <58223D29.6030401@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1497737a-a307-4501-4158-9703a051ef67@turmel.org>
+In-Reply-To: <58223D29.6030401@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
 To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 11/08/2016 02:38 PM, Phil Turmel wrote:
-> On 11/08/2016 02:53 PM, Benjammin2068 wrote:
->> On 11/08/2016 12:47 PM, Benjammin2068 wrote:
->> Now that I think about it -- and have been talking out loud to myself (I don't think I'm crazy)...
->>
->> A parallel to all this is:
->>
->> I don't think the mismatch_cnt started showing up until I moved from RAID5 to RAID6.
->>
->> :O
->>
->> How painful is it to switch back to RAID5 to test that theory?
-> Don't.  Sounds like raid6's stricter calculations are catching a real problem.
-
-Ok -- no switching back to RAID5.
-
-> Do you have ECC RAM?
-
-Yes.
+On 11/08/2016 03:01 PM, Wols Lists wrote:
+> On 08/11/16 20:38, Phil Turmel wrote:
+>> Have you added up the peak current draws of your drives to make sure
+>> your power supply keeps up when all drives are writing simultaneously
+>> (common with parity raid)?
+> On that point, be aware that many power supplies quote the sum of the
+> power to all rails. It could well be that the supply is nominally plenty
+> powerful enough, but the load on an individual rail is too high.
 >
-> If so, are you getting any machine check exceptions?
+>
 
-not getting any machine check problems (I looked)
+Right.. I'll check that when I do the math on the supplies.
 
-> If not, have you done a thorough memtest any time in the recent past?
-
-Yes. When I started getting the mismatch counts, I took the system down and ran MEMtest on this through a couple of passes.
-
-no problem.
-
-> If it's not memory, can you exercise the controller channels heavily to
-> see if they drop from errors?
-
-I could but haven't -- any recommendations on tools out there?
-
-Also, I've also wondered if the raid-check that happens on Sunday isn't actually part of that kind of problem.
-
-i.e. if I didn't do the weekly check, the drives don't get slammed anywhere  near as much the rest of the week.
-
-Does mismatch_cnt only change value during a check -- or does it happen with each operation?
-
-> Have you added up the peak current draws of your drives to make sure
-> your power supply keeps up when all drives are writing simultaneously
-> (common with parity raid)?
-
-Not exactly. but can do that. The system has a 650W supply -- I'll go do a power check and work that against the known drives in the system.
-
-This is a "server chassis" though which came with the 8 slots in the front to power drives - so it's not exactly a "home chassis" that I put in a 300W and then jammed full of drives.
-
-Still -- that's a reasonable question and I'll investigate.
-
-> One more: do you have swap on top of md raid?
-
-No. I've seen about mismatch on RAID1 causing mismatch counts.
-
-However, I am running a VM on this RAID volume (VirtualBox and a reasonably sleepy instance of Win7_64) and have pondered that.
-
-
- -Ben
-
+  -Ben
 
