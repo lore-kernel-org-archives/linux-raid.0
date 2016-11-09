@@ -1,43 +1,42 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [md PATCH 1/3] md/raid1: fix: IO can block resync indefinitely
-Date: Wed, 9 Nov 2016 12:50:36 -0800
-Message-ID: <20161109205036.6do6roypkhpbyv2n@kernel.org>
+Subject: Re: [md PATCH 2/3] md: remove md_super_wait() call after
+ bitmap_flush()
+Date: Wed, 9 Nov 2016 12:51:20 -0800
+Message-ID: <20161109205120.kodctkb5xn5x55rd@kernel.org>
 References: <147864718560.1076.2148299631932240330.stgit@noble>
- <147864729272.1076.727849896269121517.stgit@noble>
+ <147864729285.1076.27654779060287129.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <147864729272.1076.727849896269121517.stgit@noble>
+In-Reply-To: <147864729285.1076.27654779060287129.stgit@noble>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 On Wed, Nov 09, 2016 at 10:21:32AM +1100, Neil Brown wrote:
-> While performing a resync/recovery, raid1 divides the
-> array space into three regions:
->  - before the resync
->  - at or shortly after the resync point
->  - much further ahead of the resync point.
+> bitmap_flush() finishes with bitmap_update_sb(), and that finishes
+> with write_page(..., 1), so write_page() will wait for all writes
+> to complete.  So there is no point calling md_super_wait()
+> immediately afterwards.
 > 
-> Write requests to the first or third do not need to wait.  Write
-> requests to the middle region do need to wait if resync requests are
-> pending.
+> Signed-off-by: NeilBrown <neilb@suse.com>
+> ---
+>  drivers/md/md.c |    1 -
+>  1 file changed, 1 deletion(-)
 > 
-> If there are any active write requests in the middle region, resync
-> will wait for them.
-> 
-> Due to an accounting error, there is a small range of addresses,
-> between conf->next_resync and conf->start_next_window, where write
-> requests will *not* be blocked, but *will* be counted in the middle
-> region.  This can effectively block resync indefinitely if filesystem
-> writes happen repeatedly to this region.
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index f389d8abe137..1f1c7f007b68 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -5472,7 +5472,6 @@ static void __md_stop_writes(struct mddev *mddev)
+>  	del_timer_sync(&mddev->safemode_timer);
+>  
+>  	bitmap_flush(mddev);
+> -	md_super_wait(mddev);
 
-Good catch, thanks Neil! 
-> As ->next_window_requests is incremented when the sector is before
-
-I changed 'before' to 'after' when applying this patch
+bitmap_flush() could be null if there is no bitmap, is this safe?
 
 Thanks,
 Shaohua
