@@ -1,92 +1,43 @@
-From: Benjammin2068 <benjammin2068@gmail.com>
-Subject: Re: WARNING: mismatch_cnt is not 0 on <array device>
-Date: Wed, 9 Nov 2016 13:52:47 -0600
-Message-ID: <6f0ddc28-3349-6643-69e4-8f0b4fe770b8@gmail.com>
-References: <26b91420-97c9-f405-aa71-16cd5cda3a67@gmail.com>
- <409d9f5f-6f72-a399-93ab-2b10323f4122@fnarfbargle.com>
- <c72d3567-7c9c-39dc-c2e1-722bc267bdd6@gmail.com>
- <74e5712f-e89e-97af-8aa4-ae2948c02e94@turmel.org>
- <c7bfde3e-0605-96d0-4e3d-fb76a9a8c724@gmail.com>
- <27577b8a-1b63-8f1a-9b68-b056622a5268@fnarfbargle.com>
- <41c176d2-0235-6ff0-996c-b32dc95d487d@gmail.com>
- <57EAA214.8030603@youngman.org.uk>
- <5427ce35-f222-8a2c-486e-441c4c6ec9a6@gmail.com>
- <be044941-8097-7d6f-5216-294fe2cac4d9@websitemanagers.com.au>
- <0f6bd6f6-20ee-1720-23fc-27d206063bfc@gmail.com>
- <287df6d6-3850-1142-5c69-c7b54a8a22d4@gmail.com>
- <1497737a-a307-4501-4158-9703a051ef67@turmel.org>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [md PATCH 1/3] md/raid1: fix: IO can block resync indefinitely
+Date: Wed, 9 Nov 2016 12:50:36 -0800
+Message-ID: <20161109205036.6do6roypkhpbyv2n@kernel.org>
+References: <147864718560.1076.2148299631932240330.stgit@noble>
+ <147864729272.1076.727849896269121517.stgit@noble>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1497737a-a307-4501-4158-9703a051ef67@turmel.org>
+Content-Disposition: inline
+In-Reply-To: <147864729272.1076.727849896269121517.stgit@noble>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/08/2016 02:38 PM, Phil Turmel wrote:
->
-> Have you added up the peak current draws of your drives to make sure
-> your power supply keeps up when all drives are writing simultaneously
-> (common with parity raid)?
+On Wed, Nov 09, 2016 at 10:21:32AM +1100, Neil Brown wrote:
+> While performing a resync/recovery, raid1 divides the
+> array space into three regions:
+>  - before the resync
+>  - at or shortly after the resync point
+>  - much further ahead of the resync point.
+> 
+> Write requests to the first or third do not need to wait.  Write
+> requests to the middle region do need to wait if resync requests are
+> pending.
+> 
+> If there are any active write requests in the middle region, resync
+> will wait for them.
+> 
+> Due to an accounting error, there is a small range of addresses,
+> between conf->next_resync and conf->start_next_window, where write
+> requests will *not* be blocked, but *will* be counted in the middle
+> region.  This can effectively block resync indefinitely if filesystem
+> writes happen repeatedly to this region.
 
-Keeping in mind this is a pretty empty box that's pretty sleepy until I hit compile doing FPGA/SoC development.
-(i.e. no power hungry graphics cards -- it's a home file server more than a desktop)
+Good catch, thanks Neil! 
+> As ->next_window_requests is incremented when the sector is before
 
-Here's them power numbers -- all of the drives are listed as peak (as in start up) where average was much less... but using those hypothetically as worst case:
+I changed 'before' to 'after' when applying this patch
 
-They still don't touch the supply rails even after considering fans (which spin at very low PWM duty cycles) (not sure this table will print -- let me know if it doesn't)
-
-
-	
-	
-	
-	
-	
-	
-
-	*_Model:_* 	*_Wattage_* 	*_+5V_* 	*_+12V_* 	*_+3.3V_* 	*_5V StdBy_*
-
-	PWS-652-2H 	650W 	30A 	54A 	20A 	4A
-
-	
-	
-	
-	
-	
-	
-Slot 1 	WD2500AAJS 	21.24 	
-	1.77 	N/A 	N/A
-Slot 2 	WD10EZEX 	30 	
-	2.5 	N/A 	N/A
-Slot 3 	ST1000DM005 	24 	
-	2 	N/A 	N/A
-Slot 4 	HD103SJ 	36.4 	2 	2.2 	N/A 	N/A
-Slot 5 	WD10EFRX-68F 	14.4 	
-	1.2 	N/A 	N/A
-Slot 6 	HD103SJ 	36.4 	2 	2.2 	N/A 	N/A
-Slot 7 	WD10EFRX-68F 	14.4 	
-	1.2 	N/A 	N/A
-Slot 8 	WD10EFRX-68F 	14.4 	
-	1.2 	N/A 	N/A
-Slot 9 	Empty 	
-	
-	
-	N/A 	N/A
-Slot 10 	Empty 	
-	
-	
-	N/A 	N/A
-Slot 11 	WD10JFCX-68N 	5 	1 	0 	N/A 	N/A
-Slot 12 	WD10JFCX-68N 	5 	1 	0 	N/A 	N/A
-
-	
-	
-	
-	
-	
-	
-
-	*Totals:* 	*201.24* 	*6* 	*14.27* 	
-	
-
+Thanks,
+Shaohua
