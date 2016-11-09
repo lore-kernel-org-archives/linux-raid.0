@@ -1,7 +1,7 @@
 From: Benjammin2068 <benjammin2068@gmail.com>
 Subject: Re: WARNING: mismatch_cnt is not 0 on <array device>
-Date: Wed, 9 Nov 2016 13:00:46 -0600
-Message-ID: <3c6197d4-a90c-0e7e-995f-6df7d0280e28@gmail.com>
+Date: Wed, 9 Nov 2016 13:52:47 -0600
+Message-ID: <6f0ddc28-3349-6643-69e4-8f0b4fe770b8@gmail.com>
 References: <26b91420-97c9-f405-aa71-16cd5cda3a67@gmail.com>
  <409d9f5f-6f72-a399-93ab-2b10323f4122@fnarfbargle.com>
  <c72d3567-7c9c-39dc-c2e1-722bc267bdd6@gmail.com>
@@ -15,28 +15,78 @@ References: <26b91420-97c9-f405-aa71-16cd5cda3a67@gmail.com>
  <0f6bd6f6-20ee-1720-23fc-27d206063bfc@gmail.com>
  <287df6d6-3850-1142-5c69-c7b54a8a22d4@gmail.com>
  <1497737a-a307-4501-4158-9703a051ef67@turmel.org>
- <58223D29.6030401@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <58223D29.6030401@youngman.org.uk>
+In-Reply-To: <1497737a-a307-4501-4158-9703a051ef67@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 11/08/2016 03:01 PM, Wols Lists wrote:
-> On 08/11/16 20:38, Phil Turmel wrote:
->> Have you added up the peak current draws of your drives to make sure
->> your power supply keeps up when all drives are writing simultaneously
->> (common with parity raid)?
-> On that point, be aware that many power supplies quote the sum of the
-> power to all rails. It could well be that the supply is nominally plenty
-> powerful enough, but the load on an individual rail is too high.
+On 11/08/2016 02:38 PM, Phil Turmel wrote:
 >
->
+> Have you added up the peak current draws of your drives to make sure
+> your power supply keeps up when all drives are writing simultaneously
+> (common with parity raid)?
 
-Right.. I'll check that when I do the math on the supplies.
+Keeping in mind this is a pretty empty box that's pretty sleepy until I hit compile doing FPGA/SoC development.
+(i.e. no power hungry graphics cards -- it's a home file server more than a desktop)
 
-  -Ben
+Here's them power numbers -- all of the drives are listed as peak (as in start up) where average was much less... but using those hypothetically as worst case:
+
+They still don't touch the supply rails even after considering fans (which spin at very low PWM duty cycles) (not sure this table will print -- let me know if it doesn't)
+
+
+	
+	
+	
+	
+	
+	
+
+	*_Model:_* 	*_Wattage_* 	*_+5V_* 	*_+12V_* 	*_+3.3V_* 	*_5V StdBy_*
+
+	PWS-652-2H 	650W 	30A 	54A 	20A 	4A
+
+	
+	
+	
+	
+	
+	
+Slot 1 	WD2500AAJS 	21.24 	
+	1.77 	N/A 	N/A
+Slot 2 	WD10EZEX 	30 	
+	2.5 	N/A 	N/A
+Slot 3 	ST1000DM005 	24 	
+	2 	N/A 	N/A
+Slot 4 	HD103SJ 	36.4 	2 	2.2 	N/A 	N/A
+Slot 5 	WD10EFRX-68F 	14.4 	
+	1.2 	N/A 	N/A
+Slot 6 	HD103SJ 	36.4 	2 	2.2 	N/A 	N/A
+Slot 7 	WD10EFRX-68F 	14.4 	
+	1.2 	N/A 	N/A
+Slot 8 	WD10EFRX-68F 	14.4 	
+	1.2 	N/A 	N/A
+Slot 9 	Empty 	
+	
+	
+	N/A 	N/A
+Slot 10 	Empty 	
+	
+	
+	N/A 	N/A
+Slot 11 	WD10JFCX-68N 	5 	1 	0 	N/A 	N/A
+Slot 12 	WD10JFCX-68N 	5 	1 	0 	N/A 	N/A
+
+	
+	
+	
+	
+	
+	
+
+	*Totals:* 	*201.24* 	*6* 	*14.27* 	
+	
 
