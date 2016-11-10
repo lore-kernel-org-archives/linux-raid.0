@@ -1,32 +1,78 @@
 From: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Subject: [PATCH 0/4] IMSM: Add support for 4Kn sector size drives
-Date: Thu, 10 Nov 2016 15:28:14 +0100
-Message-ID: <1478788098-32041-1-git-send-email-pawel.baldysiak@intel.com>
+Subject: [PATCH 1/4] Add function for getting member drive sector size
+Date: Thu, 10 Nov 2016 15:28:15 +0100
+Message-ID: <1478788098-32041-2-git-send-email-pawel.baldysiak@intel.com>
+References: <1478788098-32041-1-git-send-email-pawel.baldysiak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1478788098-32041-1-git-send-email-pawel.baldysiak@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: jes.sorensen@redhat.com
 Cc: linux-raid@vger.kernel.org, Pawel Baldysiak <pawel.baldysiak@intel.com>
 List-Id: linux-raid.ids
 
-This patch set adds support for IMSM with 4Kn sector size drives
-First patch adds the generic function for receiving sector size,
-rest are IMSM specific.
-Internal calculation are still based on 512-bytes sector,
-variables are converted during read/write from/to member drive.
-Mixing of devices with different sector size is not allowed.
+This patch introduces the function for getting sector size of
+given device (fd).
 
-Pawel Baldysiak (4):
-  Add function for getting member drive sector size
-  IMSM: Read and store device sector size
-  IMSM: Add support for 4Kn sector size drives
-  IMSM: 4Kn drives support - adapt general migration record
+Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+---
+ mdadm.h  |  1 +
+ super1.c |  3 +--
+ util.c   | 16 ++++++++++++++++
+ 3 files changed, 18 insertions(+), 2 deletions(-)
 
- mdadm.h       |   1 +
- super-intel.c | 315 +++++++++++++++++++++++++++++++++++++++++++++-------------
- super1.c      |   3 +-
- util.c        |  16 +++
- 4 files changed, 265 insertions(+), 70 deletions(-)
-
+diff --git a/mdadm.h b/mdadm.h
+index 0516c82..1aeb232 100755
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -1112,6 +1112,7 @@ static inline struct supertype *guess_super(int fd) {
+ }
+ extern struct supertype *dup_super(struct supertype *st);
+ extern int get_dev_size(int fd, char *dname, unsigned long long *sizep);
++extern int get_dev_sector_size(int fd, char *dname, unsigned int *sectsizep);
+ extern int must_be_container(int fd);
+ extern int dev_size_from_id(dev_t id, unsigned long long *size);
+ void wait_for(char *dev, int fd);
+diff --git a/super1.c b/super1.c
+index 4fef378..8f800b5 100644
+--- a/super1.c
++++ b/super1.c
+@@ -212,8 +212,7 @@ struct align_fd {
+ static void init_afd(struct align_fd *afd, int fd)
+ {
+ 	afd->fd = fd;
+-
+-	if (ioctl(afd->fd, BLKSSZGET, &afd->blk_sz) != 0)
++	if (!get_dev_sector_size(afd->fd, NULL, (unsigned int *)&afd->blk_sz))
+ 		afd->blk_sz = 512;
+ }
+ 
+diff --git a/util.c b/util.c
+index 9e4718f..092854a 100644
+--- a/util.c
++++ b/util.c
+@@ -1333,6 +1333,22 @@ int get_dev_size(int fd, char *dname, unsigned long long *sizep)
+ 	return 1;
+ }
+ 
++/* Return sector size of device in bytes */
++int get_dev_sector_size(int fd, char *dname, unsigned int *sectsizep)
++{
++	unsigned int sectsize;
++
++	if (ioctl(fd, BLKSSZGET, &sectsize) != 0) {
++		if (dname)
++			pr_err("Cannot get sector size of %s: %s\b",
++				dname, strerror(errno));
++		return 0;
++	}
++
++	*sectsizep = sectsize;
++	return 1;
++}
++
+ /* Return true if this can only be a container, not a member device.
+  * i.e. is and md device and size is zero
+  */
 -- 
 2.7.4
 
