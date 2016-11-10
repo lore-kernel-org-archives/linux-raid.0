@@ -1,56 +1,135 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH v6 00/11] raid5-cache: enabling cache features
-Date: Thu, 10 Nov 2016 12:46:12 -0800
-Message-ID: <20161110204623.3484694-1-songliubraving@fb.com>
+Subject: [PATCH v6 06/11] md/r5cache: sysfs entry r5c_journal_mode
+Date: Thu, 10 Nov 2016 12:46:18 -0800
+Message-ID: <20161110204623.3484694-7-songliubraving@fb.com>
+References: <20161110204623.3484694-1-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20161110204623.3484694-1-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuang521@gmail.com, liuzhengyuan@kylinos.cn, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-These are the 5th version of patches to enable write cache part of
-raid5-cache. The journal part was released with kernel 4.4.
+With write cache, r5c_journal_mode is the knob to switch between
+write-back and write-through.
 
-The caching part uses same disk format of raid456 journal, and provides
-acceleration to writes. Write operations are committed (bio_endio) once
-the data is secured in journal. Reconstruct and RMW are postponed to
-writing-out phase, which is usually not on the critical path.
+Below is an example:
 
-The changes are organized in 11 patches (details below).
+root@virt-test:~/# cat /sys/block/md0/md/r5c_state
+[write-through] write-back
+root@virt-test:~/# echo write-back > /sys/block/md0/md/r5c_state
+root@virt-test:~/# cat /sys/block/md0/md/r5c_state
+write-through [write-back]
 
-Patch for chunk_aligned_read in earlier RFC is not included yet
-(http://marc.info/?l=linux-raid&m=146432700719277). But we may still need
-some optimizations later, especially for SSD raid devices.
+Signed-off-by: Song Liu <songliubraving@fb.com>
+---
+ drivers/md/raid5-cache.c | 60 ++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/md/raid5.c       |  1 +
+ drivers/md/raid5.h       |  1 +
+ 3 files changed, 62 insertions(+)
 
-Changes between v5 and v4 (http://marc.info/?l=linux-raid&m=147629531615172):
- 1. Incorporate feedbacks;
- 2. Split reclaim patch into 3 smaller patches for (hopefully) easier review;
- 3. Rename different modes of a stripe to "caching" and "writing-out";
- 4. Remove flag R5_WantCache;
- 5. Rename flag R5_InCache to R5_InJournal;
- 6. Remove flag STRIPE_R5C_WRITTEN and use R5_InJournal bit of dev[pd_idx].flags instead;
- 7. Remove dev_in_cache from stripe_head;
- 8. Add logic to handle alloc_page() failure in handle_stripe_dirtying();
-
-Song Liu (11):
-  md/r5cache: Check array size in r5l_init_log
-  md/r5cache: move some code to raid5.h
-  md/r5cache: State machine for raid5-cache write back mode
-  md/r5cache: caching mode of r5cache
-  md/r5cache: write-out mode and reclaim support
-  md/r5cache: sysfs entry r5c_journal_mode
-  md/r5cache: refactoring journal recovery code
-  md/r5cache: r5cache recovery: part 1
-  md/r5cache: r5cache recovery: part 2
-  md/r5cache: handle SYNC and FUA
-  md/r5cache: handle alloc_page failure
-
- drivers/md/raid5-cache.c | 1822 +++++++++++++++++++++++++++++++++++++++++-----
- drivers/md/raid5.c       |  322 +++++---
- drivers/md/raid5.h       |  154 +++-
- 3 files changed, 1987 insertions(+), 311 deletions(-)
-
---
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 8330053..d2acb69 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -60,6 +60,8 @@ enum r5c_journal_mode {
+ 	R5C_JOURNAL_MODE_WRITE_BACK = 1,
+ };
+ 
++static char *r5c_journal_mode_str[] = {"write-through",
++				       "write-back"};
+ /*
+  * raid5 cache state machine
+  *
+@@ -1602,6 +1604,64 @@ static void r5l_write_super(struct r5l_log *log, sector_t cp)
+ 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
+ }
+ 
++static ssize_t r5c_journal_mode_show(struct mddev *mddev, char *page)
++{
++	struct r5conf *conf = mddev->private;
++	int ret;
++
++	if (!conf->log)
++		return 0;
++
++	switch (conf->log->r5c_journal_mode) {
++	case R5C_JOURNAL_MODE_WRITE_THROUGH:
++		ret = snprintf(page, PAGE_SIZE, "[%s] %s\n",
++			       r5c_journal_mode_str[R5C_JOURNAL_MODE_WRITE_THROUGH],
++			       r5c_journal_mode_str[R5C_JOURNAL_MODE_WRITE_BACK]);
++		break;
++	case R5C_JOURNAL_MODE_WRITE_BACK:
++		ret = snprintf(page, PAGE_SIZE, "%s [%s]\n",
++			       r5c_journal_mode_str[R5C_JOURNAL_MODE_WRITE_THROUGH],
++			       r5c_journal_mode_str[R5C_JOURNAL_MODE_WRITE_BACK]);
++		break;
++	default:
++		ret = 0;
++	}
++	return ret;
++}
++
++static ssize_t r5c_journal_mode_store(struct mddev *mddev,
++				      const char *page, size_t len)
++{
++	struct r5conf *conf = mddev->private;
++	struct r5l_log *log = conf->log;
++	int val = -1, i;
++
++	if (!log)
++		return -ENODEV;
++
++	for (i = 0; i < sizeof(r5c_journal_mode_str) / sizeof(r5c_journal_mode_str[0]); i++)
++		if (strlen(r5c_journal_mode_str[i]) == len - 1 &&
++		    strncmp(page, r5c_journal_mode_str[i], len - 1) == 0) {
++			val = i;
++			break;
++		}
++	if (val < R5C_JOURNAL_MODE_WRITE_THROUGH ||
++	    val > R5C_JOURNAL_MODE_WRITE_BACK)
++		return -EINVAL;
++
++	mddev_suspend(mddev);
++	conf->log->r5c_journal_mode = val;
++	mddev_resume(mddev);
++
++	pr_debug("md/raid:%s: setting r5c cache mode to %d: %s\n",
++		 mdname(mddev), val, r5c_journal_mode_str[val]);
++	return len;
++}
++
++struct md_sysfs_entry
++r5c_journal_mode = __ATTR(r5c_journal_mode, S_IRUGO | S_IWUSR,
++			  r5c_journal_mode_show, r5c_journal_mode_store);
++
+ int r5c_handle_stripe_dirtying(struct r5conf *conf,
+ 			       struct stripe_head *sh,
+ 			       struct stripe_head_state *s,
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 49414f9..e8dace5 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6306,6 +6306,7 @@ static struct attribute *raid5_attrs[] =  {
+ 	&raid5_group_thread_cnt.attr,
+ 	&raid5_skip_copy.attr,
+ 	&raid5_rmw_level.attr,
++	&r5c_journal_mode.attr,
+ 	NULL,
+ };
+ static struct attribute_group raid5_attrs_group = {
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index 8a913f9..801722a 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -754,4 +754,5 @@ extern void r5c_make_stripe_write_out(struct stripe_head *sh);
+ extern void r5c_flush_cache(struct r5conf *conf, int num);
+ extern void r5c_check_stripe_cache_usage(struct r5conf *conf);
+ extern void r5c_check_cached_full_stripe(struct r5conf *conf);
++extern struct md_sysfs_entry r5c_journal_mode;
+ #endif
+-- 
 2.9.3
+
