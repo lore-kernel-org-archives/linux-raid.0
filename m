@@ -1,7 +1,7 @@
 From: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Subject: [PATCH 1/4] Add function for getting member drive sector size
-Date: Thu, 10 Nov 2016 15:28:15 +0100
-Message-ID: <1478788098-32041-2-git-send-email-pawel.baldysiak@intel.com>
+Subject: [PATCH 2/4] IMSM: Read and store device sector size
+Date: Thu, 10 Nov 2016 15:28:16 +0100
+Message-ID: <1478788098-32041-3-git-send-email-pawel.baldysiak@intel.com>
 References: <1478788098-32041-1-git-send-email-pawel.baldysiak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1478788098-32041-1-git-send-email-pawel.baldysiak@intel.com>
@@ -10,69 +10,83 @@ To: jes.sorensen@redhat.com
 Cc: linux-raid@vger.kernel.org, Pawel Baldysiak <pawel.baldysiak@intel.com>
 List-Id: linux-raid.ids
 
-This patch introduces the function for getting sector size of
-given device (fd).
+This patch adds retriving device sector size at startup
+and set it in intel_super, so it can be used in other places.
 
 Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
 ---
- mdadm.h  |  1 +
- super1.c |  3 +--
- util.c   | 16 ++++++++++++++++
- 3 files changed, 18 insertions(+), 2 deletions(-)
+ super-intel.c | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-diff --git a/mdadm.h b/mdadm.h
-index 0516c82..1aeb232 100755
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -1112,6 +1112,7 @@ static inline struct supertype *guess_super(int fd) {
- }
- extern struct supertype *dup_super(struct supertype *st);
- extern int get_dev_size(int fd, char *dname, unsigned long long *sizep);
-+extern int get_dev_sector_size(int fd, char *dname, unsigned int *sectsizep);
- extern int must_be_container(int fd);
- extern int dev_size_from_id(dev_t id, unsigned long long *size);
- void wait_for(char *dev, int fd);
-diff --git a/super1.c b/super1.c
-index 4fef378..8f800b5 100644
---- a/super1.c
-+++ b/super1.c
-@@ -212,8 +212,7 @@ struct align_fd {
- static void init_afd(struct align_fd *afd, int fd)
- {
- 	afd->fd = fd;
--
--	if (ioctl(afd->fd, BLKSSZGET, &afd->blk_sz) != 0)
-+	if (!get_dev_sector_size(afd->fd, NULL, (unsigned int *)&afd->blk_sz))
- 		afd->blk_sz = 512;
- }
+diff --git a/super-intel.c b/super-intel.c
+index 21e8532..8a2d993 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -366,6 +366,7 @@ struct intel_super {
+ 	unsigned long long create_offset; /* common start for 'current_vol' */
+ 	__u32 random; /* random data for seeding new family numbers */
+ 	struct intel_dev *devlist;
++	unsigned int sector_size; /* sector size of used member drives */
+ 	struct dl {
+ 		struct dl *next;
+ 		int index;
+@@ -4491,6 +4492,7 @@ static int get_super_block(struct intel_super **super_list, char *devnm, char *d
+ 		goto error;
+ 	}
  
-diff --git a/util.c b/util.c
-index 9e4718f..092854a 100644
---- a/util.c
-+++ b/util.c
-@@ -1333,6 +1333,22 @@ int get_dev_size(int fd, char *dname, unsigned long long *sizep)
- 	return 1;
- }
++	get_dev_sector_size(dfd, NULL, &s->sector_size);
+ 	find_intel_hba_capability(dfd, s, devname);
+ 	err = load_and_parse_mpb(dfd, s, NULL, keep_fd);
  
-+/* Return sector size of device in bytes */
-+int get_dev_sector_size(int fd, char *dname, unsigned int *sectsizep)
-+{
-+	unsigned int sectsize;
+@@ -4570,6 +4572,7 @@ static int load_super_imsm(struct supertype *st, int fd, char *devname)
+ 	free_super_imsm(st);
+ 
+ 	super = alloc_super();
++	get_dev_sector_size(fd, NULL, &super->sector_size);
+ 	/* Load hba and capabilities if they exist.
+ 	 * But do not preclude loading metadata in case capabilities or hba are
+ 	 * non-compliant and ignore_hw_compat is set.
+@@ -5102,6 +5105,7 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
+ 	struct intel_super *super = st->sb;
+ 	struct dl *dd;
+ 	unsigned long long size;
++	unsigned int member_sector_size;
+ 	__u32 id;
+ 	int rv;
+ 	struct stat stb;
+@@ -5182,6 +5186,19 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
+ 	}
+ 
+ 	get_dev_size(fd, NULL, &size);
++	get_dev_sector_size(fd, NULL, &member_sector_size);
 +
-+	if (ioctl(fd, BLKSSZGET, &sectsize) != 0) {
-+		if (dname)
-+			pr_err("Cannot get sector size of %s: %s\b",
-+				dname, strerror(errno));
++	if (super->sector_size == 0) {
++		/* this a first device, so sector_size is not set yet */
++		super->sector_size = member_sector_size;
++	} else if (member_sector_size != super->sector_size) {
++		pr_err("Mixing between different sector size is forbidden, aborting...");
++		if (dd->devname)
++			free(dd->devname);
++		free(dd);
++		return 1;
++	}
++
+ 	/* clear migr_rec when adding disk to container */
+ 	memset(super->migr_rec_buf, 0, MIGR_REC_BUF_SIZE);
+ 	if (lseek64(fd, size - MIGR_REC_POSITION, SEEK_SET) >= 0) {
+@@ -5529,6 +5546,12 @@ static int validate_geometry_imsm_container(struct supertype *st, int level,
+ 	 * note that there is no fd for the disks in array.
+ 	 */
+ 	super = alloc_super();
++	if (!get_dev_sector_size(fd, NULL, &super->sector_size)) {
++		close(fd);
++		free_imsm(super);
 +		return 0;
 +	}
 +
-+	*sectsizep = sectsize;
-+	return 1;
-+}
-+
- /* Return true if this can only be a container, not a member device.
-  * i.e. is and md device and size is zero
-  */
+ 	rv = find_intel_hba_capability(fd, super, verbose > 0 ? dev : NULL);
+ 	if (rv != 0) {
+ #if DEBUG
 -- 
 2.7.4
 
