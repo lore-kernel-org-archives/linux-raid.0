@@ -1,530 +1,577 @@
-From: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Subject: [PATCH 3/4] IMSM: Add support for 4Kn sector size drives
-Date: Thu, 10 Nov 2016 15:28:17 +0100
-Message-ID: <1478788098-32041-4-git-send-email-pawel.baldysiak@intel.com>
-References: <1478788098-32041-1-git-send-email-pawel.baldysiak@intel.com>
+From: Felipe Kich <fkich1977@gmail.com>
+Subject: Help in recovering a RAID5 volume
+Date: Thu, 10 Nov 2016 15:41:25 +0000
+Message-ID: <CA+GmhESH-2hDJrOjvNzVBsgCP65BnUE2AbfOZ1Bbrp02jyBNUQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1478788098-32041-1-git-send-email-pawel.baldysiak@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: jes.sorensen@redhat.com
-Cc: linux-raid@vger.kernel.org, Pawel Baldysiak <pawel.baldysiak@intel.com>, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This patch adds support for drives with 4Kn sector size
-for IMSM metadata. Mixing member drives with 4Kn and 512
-is not allowed. Some offsets were aligned with sector size.
-Internal metadata representation and all calculations
-are still based on 512-byte sector sizes. This
-implementation converts only sector based values
-when reading/writing to drive, because they needs to be
-stored in metadata according to accual member drive sector size.
+Hello,
 
-Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
----
- super-intel.c | 199 +++++++++++++++++++++++++++++++++++++++++++++-------------
- 1 file changed, 154 insertions(+), 45 deletions(-)
+I have an Iomega IX4-200D bought in 2009 with 4 Seagate Barracuda LP
+1TB drives that came pre-installed, and since then it's been working
+fine, never had had real complaints about it in those 7 years. This
+week, the samba shares disappeared. Accessing the web admin page, I
+saw that the shares were gone, but the disk usage was correct (1,2TB
+in use / 1,5TB free), and the status of the disks was the problem.
+Disks 1, 2 and 4 had an alert and disk 3 was offline. Problem is that
+until then, the unit never gave any warnings or signs that the disks
+could fail. Well, doesn't really matter now. So, I turned off the unit
+and started reading about what can be done to recover the files
+inside.
 
-diff --git a/super-intel.c b/super-intel.c
-index 8a2d993..fa3e96d 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -318,14 +318,15 @@ static void set_migr_type(struct imsm_dev *dev, __u8 migr_type)
- 	}
- }
- 
--static unsigned int sector_count(__u32 bytes)
-+static unsigned int sector_count(__u32 bytes, unsigned int sector_size)
- {
--	return ROUND_UP(bytes, 512) / 512;
-+	return ROUND_UP(bytes, sector_size) / sector_size;
- }
- 
--static unsigned int mpb_sectors(struct imsm_super *mpb)
-+static unsigned int mpb_sectors(struct imsm_super *mpb,
-+					unsigned int sector_size)
- {
--	return sector_count(__le32_to_cpu(mpb->mpb_size));
-+	return sector_count(__le32_to_cpu(mpb->mpb_size), sector_size);
- }
- 
- struct intel_dev {
-@@ -915,12 +916,12 @@ static unsigned long long num_data_stripes(struct imsm_map *map)
- 		return 0;
- 	return join_u32(map->num_data_stripes_lo, map->num_data_stripes_hi);
- }
-+#endif
- 
- static void set_total_blocks(struct imsm_disk *disk, unsigned long long n)
- {
- 	split_ull(n, &disk->total_blocks_lo, &disk->total_blocks_hi);
- }
--#endif
- 
- static void set_pba_of_lba0(struct imsm_map *map, unsigned long long n)
- {
-@@ -1122,6 +1123,8 @@ static unsigned long long min_acceptable_spare_size_imsm(struct supertype *st)
- 
- static int is_gen_migration(struct imsm_dev *dev);
- 
-+#define IMSM_4K_DIV 8
-+
- #ifndef MDASSEMBLE
- static __u64 blocks_per_migr_unit(struct intel_super *super,
- 				  struct imsm_dev *dev);
-@@ -1253,6 +1256,48 @@ static void print_imsm_disk(struct imsm_disk *disk, int index, __u32 reserved)
- 	       human_size(sz * 512));
- }
- 
-+void convert_to_4k_imsm_disk(struct imsm_disk *disk)
-+{
-+	set_total_blocks(disk, (total_blocks(disk)/IMSM_4K_DIV));
-+}
-+
-+void convert_to_4k(struct intel_super *super)
-+{
-+	struct imsm_super *mpb = super->anchor;
-+	struct imsm_disk *disk;
-+	int i;
-+
-+	for (i = 0; i < mpb->num_disks ; i++) {
-+		disk = __get_imsm_disk(mpb, i);
-+		/* disk */
-+		convert_to_4k_imsm_disk(disk);
-+	}
-+	for (i = 0; i < mpb->num_raid_devs; i++) {
-+		struct imsm_dev *dev = __get_imsm_dev(mpb, i);
-+		struct imsm_map *map = get_imsm_map(dev, MAP_0);
-+		/* dev */
-+		split_ull((join_u32(dev->size_low, dev->size_high)/IMSM_4K_DIV),
-+				 &dev->size_low, &dev->size_high);
-+		dev->vol.curr_migr_unit /= IMSM_4K_DIV;
-+
-+		/* map0 */
-+		set_blocks_per_member(map, blocks_per_member(map)/IMSM_4K_DIV);
-+		map->blocks_per_strip /= IMSM_4K_DIV;
-+		set_pba_of_lba0(map, pba_of_lba0(map)/IMSM_4K_DIV);
-+
-+		if (dev->vol.migr_state) {
-+			/* map1 */
-+			map = get_imsm_map(dev, MAP_1);
-+			set_blocks_per_member(map,
-+			    blocks_per_member(map)/IMSM_4K_DIV);
-+			map->blocks_per_strip /= IMSM_4K_DIV;
-+			set_pba_of_lba0(map, pba_of_lba0(map)/IMSM_4K_DIV);
-+		}
-+	}
-+
-+	mpb->check_sum = __gen_imsm_checksum(mpb);
-+}
-+
- void examine_migr_rec_imsm(struct intel_super *super)
- {
- 	struct migr_record *migr_rec = super->migr_rec;
-@@ -1310,6 +1355,45 @@ void examine_migr_rec_imsm(struct intel_super *super)
- 	}
- }
- #endif /* MDASSEMBLE */
-+
-+void convert_from_4k(struct intel_super *super)
-+{
-+	struct imsm_super *mpb = super->anchor;
-+	struct imsm_disk *disk;
-+	int i;
-+
-+	for (i = 0; i < mpb->num_disks ; i++) {
-+		disk = __get_imsm_disk(mpb, i);
-+		/* disk */
-+		set_total_blocks(disk, (total_blocks(disk)*IMSM_4K_DIV));
-+	}
-+
-+	for (i = 0; i < mpb->num_raid_devs; i++) {
-+		struct imsm_dev *dev = __get_imsm_dev(mpb, i);
-+		struct imsm_map *map = get_imsm_map(dev, MAP_0);
-+		/* dev */
-+		split_ull((join_u32(dev->size_low, dev->size_high)*IMSM_4K_DIV),
-+				 &dev->size_low, &dev->size_high);
-+		dev->vol.curr_migr_unit *= IMSM_4K_DIV;
-+
-+		/* map0 */
-+		set_blocks_per_member(map, blocks_per_member(map)*IMSM_4K_DIV);
-+		map->blocks_per_strip *= IMSM_4K_DIV;
-+		set_pba_of_lba0(map, pba_of_lba0(map)*IMSM_4K_DIV);
-+
-+		if (dev->vol.migr_state) {
-+			/* map1 */
-+			map = get_imsm_map(dev, MAP_1);
-+			set_blocks_per_member(map,
-+			    blocks_per_member(map)*IMSM_4K_DIV);
-+			map->blocks_per_strip *= IMSM_4K_DIV;
-+			set_pba_of_lba0(map, pba_of_lba0(map)*IMSM_4K_DIV);
-+		}
-+	}
-+
-+	mpb->check_sum = __gen_imsm_checksum(mpb);
-+}
-+
- /*******************************************************************************
-  * function: imsm_check_attributes
-  * Description: Function checks if features represented by attributes flags
-@@ -1430,7 +1514,7 @@ static void examine_super_imsm(struct supertype *st, char *homehost)
- 	sum = __le32_to_cpu(mpb->check_sum);
- 	printf("       Checksum : %08x %s\n", sum,
- 		__gen_imsm_checksum(mpb) == sum ? "correct" : "incorrect");
--	printf("    MPB Sectors : %d\n", mpb_sectors(mpb));
-+	printf("    MPB Sectors : %d\n", mpb_sectors(mpb, super->sector_size));
- 	printf("          Disks : %d\n", mpb->num_disks);
- 	printf("   RAID Devices : %d\n", mpb->num_raid_devs);
- 	print_imsm_disk(__get_imsm_disk(mpb, super->disks->index), super->disks->index, reserved);
-@@ -1527,7 +1611,7 @@ static void export_examine_super_imsm(struct supertype *st)
- 
- static int copy_metadata_imsm(struct supertype *st, int from, int to)
- {
--	/* The second last 512byte sector of the device contains
-+	/* The second last sector of the device contains
- 	 * the "struct imsm_super" metadata.
- 	 * This contains mpb_size which is the size in bytes of the
- 	 * extended metadata.  This is located immediately before
-@@ -1540,7 +1624,9 @@ static int copy_metadata_imsm(struct supertype *st, int from, int to)
- 	unsigned long long dsize, offset;
- 	int sectors;
- 	struct imsm_super *sb;
--	int written = 0;
-+	struct intel_super *super = st->sb;
-+	unsigned int sector_size = super->sector_size;
-+	unsigned int written = 0;
- 
- 	if (posix_memalign(&buf, 4096, 4096) != 0)
- 		return 1;
-@@ -1548,21 +1634,21 @@ static int copy_metadata_imsm(struct supertype *st, int from, int to)
- 	if (!get_dev_size(from, NULL, &dsize))
- 		goto err;
- 
--	if (lseek64(from, dsize-1024, 0) < 0)
-+	if (lseek64(from, dsize-(2*sector_size), 0) < 0)
- 		goto err;
--	if (read(from, buf, 512) != 512)
-+	if (read(from, buf, sector_size) != sector_size)
- 		goto err;
- 	sb = buf;
- 	if (strncmp((char*)sb->sig, MPB_SIGNATURE, MPB_SIG_LEN) != 0)
- 		goto err;
- 
--	sectors = mpb_sectors(sb) + 2;
--	offset = dsize - sectors * 512;
-+	sectors = mpb_sectors(sb, sector_size) + 2;
-+	offset = dsize - sectors * sector_size;
- 	if (lseek64(from, offset, 0) < 0 ||
- 	    lseek64(to, offset, 0) < 0)
- 		goto err;
--	while (written < sectors * 512) {
--		int n = sectors*512 - written;
-+	while (written < sectors * sector_size) {
-+		int n = sectors*sector_size - written;
- 		if (n > 4096)
- 			n = 4096;
- 		if (read(from, buf, n) != n)
-@@ -2678,13 +2764,14 @@ int imsm_reshape_blocks_arrays_changes(struct intel_super *super)
- }
- static unsigned long long imsm_component_size_aligment_check(int level,
- 					      int chunk_size,
-+					      unsigned int sector_size,
- 					      unsigned long long component_size)
- {
- 	unsigned int component_size_alligment;
- 
- 	/* check component size aligment
- 	*/
--	component_size_alligment = component_size % (chunk_size/512);
-+	component_size_alligment = component_size % (chunk_size/sector_size);
- 
- 	dprintf("(Level: %i, chunk_size = %i, component_size = %llu), component_size_alligment = %u\n",
- 		level, chunk_size, component_size,
-@@ -2795,6 +2882,7 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
- 	info->component_size = imsm_component_size_aligment_check(
- 							info->array.level,
- 							info->array.chunk_size,
-+							super->sector_size,
- 							info->component_size);
- 
- 	memset(info->uuid, 0, sizeof(info->uuid));
-@@ -3615,8 +3703,9 @@ static int parse_raid_devices(struct intel_super *super)
- 	if (__le32_to_cpu(mpb->mpb_size) + space_needed > super->len) {
- 		void *buf;
- 
--		len = ROUND_UP(__le32_to_cpu(mpb->mpb_size) + space_needed, 512);
--		if (posix_memalign(&buf, 512, len) != 0)
-+		len = ROUND_UP(__le32_to_cpu(mpb->mpb_size) + space_needed,
-+			      super->sector_size);
-+		if (posix_memalign(&buf, 4096, len) != 0)
- 			return 1;
- 
- 		memcpy(buf, super->buf, super->len);
-@@ -3689,31 +3778,32 @@ static int load_imsm_mpb(int fd, struct intel_super *super, char *devname)
- {
- 	unsigned long long dsize;
- 	unsigned long long sectors;
-+	unsigned int sector_size = super->sector_size;
- 	struct stat;
- 	struct imsm_super *anchor;
- 	__u32 check_sum;
- 
- 	get_dev_size(fd, NULL, &dsize);
--	if (dsize < 1024) {
-+	if (dsize < 2*sector_size) {
- 		if (devname)
- 			pr_err("%s: device to small for imsm\n",
- 			       devname);
- 		return 1;
- 	}
- 
--	if (lseek64(fd, dsize - (512 * 2), SEEK_SET) < 0) {
-+	if (lseek64(fd, dsize - (sector_size * 2), SEEK_SET) < 0) {
- 		if (devname)
- 			pr_err("Cannot seek to anchor block on %s: %s\n",
- 			       devname, strerror(errno));
- 		return 1;
- 	}
- 
--	if (posix_memalign((void**)&anchor, 512, 512) != 0) {
-+	if (posix_memalign((void **)&anchor, sector_size, sector_size) != 0) {
- 		if (devname)
- 			pr_err("Failed to allocate imsm anchor buffer on %s\n", devname);
- 		return 1;
- 	}
--	if (read(fd, anchor, 512) != 512) {
-+	if (read(fd, anchor, sector_size) != sector_size) {
- 		if (devname)
- 			pr_err("Cannot read anchor block on %s: %s\n",
- 			       devname, strerror(errno));
-@@ -3733,17 +3823,17 @@ static int load_imsm_mpb(int fd, struct intel_super *super, char *devname)
- 
- 	/* capability and hba must be updated with new super allocation */
- 	find_intel_hba_capability(fd, super, devname);
--	super->len = ROUND_UP(anchor->mpb_size, 512);
--	if (posix_memalign(&super->buf, 512, super->len) != 0) {
-+	super->len = ROUND_UP(anchor->mpb_size, sector_size);
-+	if (posix_memalign(&super->buf, 4096, super->len) != 0) {
- 		if (devname)
- 			pr_err("unable to allocate %zu byte mpb buffer\n",
- 			       super->len);
- 		free(anchor);
- 		return 2;
- 	}
--	memcpy(super->buf, anchor, 512);
-+	memcpy(super->buf, anchor, sector_size);
- 
--	sectors = mpb_sectors(anchor) - 1;
-+	sectors = mpb_sectors(anchor, sector_size) - 1;
- 	free(anchor);
- 
- 	if (posix_memalign(&super->migr_rec_buf, 512, MIGR_REC_BUF_SIZE) != 0) {
-@@ -3768,14 +3858,15 @@ static int load_imsm_mpb(int fd, struct intel_super *super, char *devname)
- 	}
- 
- 	/* read the extended mpb */
--	if (lseek64(fd, dsize - (512 * (2 + sectors)), SEEK_SET) < 0) {
-+	if (lseek64(fd, dsize - (sector_size * (2 + sectors)), SEEK_SET) < 0) {
- 		if (devname)
- 			pr_err("Cannot seek to extended mpb on %s: %s\n",
- 			       devname, strerror(errno));
- 		return 1;
- 	}
- 
--	if ((unsigned)read(fd, super->buf + 512, super->len - 512) != super->len - 512) {
-+	if ((unsigned int)read(fd, super->buf + sector_size,
-+		    super->len - sector_size) != super->len - sector_size) {
- 		if (devname)
- 			pr_err("Cannot read extended mpb on %s: %s\n",
- 			       devname, strerror(errno));
-@@ -3836,6 +3927,8 @@ load_and_parse_mpb(int fd, struct intel_super *super, char *devname, int keep_fd
- 	err = load_imsm_mpb(fd, super, devname);
- 	if (err)
- 		return err;
-+	if (super->sector_size == 4096)
-+		convert_from_4k(super);
- 	err = load_imsm_disk(fd, super, devname, keep_fd);
- 	if (err)
- 		return err;
-@@ -4733,6 +4826,7 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
- 	 * so st->sb is already set.
- 	 */
- 	struct intel_super *super = st->sb;
-+	unsigned int sector_size = super->sector_size;
- 	struct imsm_super *mpb = super->anchor;
- 	struct intel_dev *dv;
- 	struct imsm_dev *dev;
-@@ -4754,9 +4848,9 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
- 	size_new = disks_to_mpb_size(info->nr_disks);
- 	if (size_new > size_old) {
- 		void *mpb_new;
--		size_t size_round = ROUND_UP(size_new, 512);
-+		size_t size_round = ROUND_UP(size_new, sector_size);
- 
--		if (posix_memalign(&mpb_new, 512, size_round) != 0) {
-+		if (posix_memalign(&mpb_new, sector_size, size_round) != 0) {
- 			pr_err("could not allocate new mpb\n");
- 			return 0;
- 		}
-@@ -4911,10 +5005,10 @@ static int init_super_imsm(struct supertype *st, mdu_array_info_t *info,
- 	if (info)
- 		mpb_size = disks_to_mpb_size(info->nr_disks);
- 	else
--		mpb_size = 512;
-+		mpb_size = 4096;
- 
- 	super = alloc_super();
--	if (super && posix_memalign(&super->buf, 512, mpb_size) != 0) {
-+	if (super && posix_memalign(&super->buf, 4096, mpb_size) != 0) {
- 		free(super);
- 		super = NULL;
- 	}
-@@ -5261,9 +5355,9 @@ static int remove_from_super_imsm(struct supertype *st, mdu_disk_info_t *dk)
- static int store_imsm_mpb(int fd, struct imsm_super *mpb);
- 
- static union {
--	char buf[512];
-+	char buf[4096];
- 	struct imsm_super anchor;
--} spare_record __attribute__ ((aligned(512)));
-+} spare_record __attribute__ ((aligned(4096)));
- 
- /* spare records have their own family number and do not have any defined raid
-  * devices
-@@ -5294,6 +5388,9 @@ static int write_super_imsm_spares(struct intel_super *super, int doclose)
- 		if (__le32_to_cpu(d->disk.total_blocks_hi) > 0)
- 			spare->attributes |= MPB_ATTRIB_2TB_DISK;
- 
-+		if (super->sector_size == 4096)
-+			convert_to_4k_imsm_disk(&spare->disk[0]);
-+
- 		sum = __gen_imsm_checksum(spare);
- 		spare->family_num = __cpu_to_le32(sum);
- 		spare->orig_family_num = 0;
-@@ -5317,6 +5414,7 @@ static int write_super_imsm_spares(struct intel_super *super, int doclose)
- static int write_super_imsm(struct supertype *st, int doclose)
- {
- 	struct intel_super *super = st->sb;
-+	unsigned int sector_size = super->sector_size;
- 	struct imsm_super *mpb = super->anchor;
- 	struct dl *d;
- 	__u32 generation;
-@@ -5377,6 +5475,9 @@ static int write_super_imsm(struct supertype *st, int doclose)
- 	if (clear_migration_record)
- 		memset(super->migr_rec_buf, 0, MIGR_REC_BUF_SIZE);
- 
-+	if (sector_size == 4096)
-+		convert_to_4k(super);
-+
- 	/* write the mpb for disks that compose raid devices */
- 	for (d = super->disks; d ; d = d->next) {
- 		if (d->index < 0 || is_failed(&d->disk))
-@@ -5500,6 +5601,8 @@ static int store_super_imsm(struct supertype *st, int fd)
- 		return 1;
- 
- #ifndef MDASSEMBLE
-+	if (super->sector_size == 4096)
-+		convert_to_4k(super);
- 	return store_imsm_mpb(fd, mpb);
- #else
- 	return 1;
-@@ -7574,27 +7677,30 @@ static int store_imsm_mpb(int fd, struct imsm_super *mpb)
- 	__u32 mpb_size = __le32_to_cpu(mpb->mpb_size);
- 	unsigned long long dsize;
- 	unsigned long long sectors;
-+	unsigned int sector_size;
- 
-+	get_dev_sector_size(fd, NULL, &sector_size);
- 	get_dev_size(fd, NULL, &dsize);
- 
--	if (mpb_size > 512) {
-+	if (mpb_size > sector_size) {
- 		/* -1 to account for anchor */
--		sectors = mpb_sectors(mpb) - 1;
-+		sectors = mpb_sectors(mpb, sector_size) - 1;
- 
- 		/* write the extended mpb to the sectors preceeding the anchor */
--		if (lseek64(fd, dsize - (512 * (2 + sectors)), SEEK_SET) < 0)
-+		if (lseek64(fd, dsize - (sector_size * (2 + sectors)),
-+		   SEEK_SET) < 0)
- 			return 1;
- 
--		if ((unsigned long long)write(fd, buf + 512, 512 * sectors)
--		    != 512 * sectors)
-+		if ((unsigned long long)write(fd, buf + sector_size,
-+		   sector_size * sectors) != sector_size * sectors)
- 			return 1;
- 	}
- 
- 	/* first block is stored on second to last sector of the disk */
--	if (lseek64(fd, dsize - (512 * 2), SEEK_SET) < 0)
-+	if (lseek64(fd, dsize - (sector_size * 2), SEEK_SET) < 0)
- 		return 1;
- 
--	if (write(fd, buf, 512) != 512)
-+	if (write(fd, buf, sector_size) != sector_size)
- 		return 1;
- 
- 	return 0;
-@@ -8830,6 +8936,7 @@ static int imsm_prepare_update(struct supertype *st,
- 	 */
- 	enum imsm_update_type type;
- 	struct intel_super *super = st->sb;
-+	unsigned int sector_size = super->sector_size;
- 	struct imsm_super *mpb = super->anchor;
- 	size_t buf_len;
- 	size_t len = 0;
-@@ -9066,12 +9173,13 @@ static int imsm_prepare_update(struct supertype *st,
- 		 * if this allocation fails process_update will notice that
- 		 * ->next_len is set and ->next_buf is NULL
- 		 */
--		buf_len = ROUND_UP(__le32_to_cpu(mpb->mpb_size) + len, 512);
-+		buf_len = ROUND_UP(__le32_to_cpu(mpb->mpb_size) + len,
-+				  sector_size);
- 		if (super->next_buf)
- 			free(super->next_buf);
- 
- 		super->next_len = buf_len;
--		if (posix_memalign(&super->next_buf, 512, buf_len) == 0)
-+		if (posix_memalign(&super->next_buf, sector_size, buf_len) == 0)
- 			memset(super->next_buf, 0, buf_len);
- 		else
- 			super->next_buf = NULL;
-@@ -9566,6 +9674,7 @@ int recover_backup_imsm(struct supertype *st, struct mdinfo *info)
- 	int new_disks, i, err;
- 	char *buf = NULL;
- 	int retval = 1;
-+	unsigned int sector_size = super->sector_size;
- 	unsigned long curr_migr_unit = __le32_to_cpu(migr_rec->curr_migr_unit);
- 	unsigned long num_migr_units = __le32_to_cpu(migr_rec->num_migr_units);
- 	char buffer[20];
-@@ -9602,7 +9711,7 @@ int recover_backup_imsm(struct supertype *st, struct mdinfo *info)
- 			pba_of_lba0(map_dest)) * 512;
- 
- 	unit_len = __le32_to_cpu(migr_rec->dest_depth_per_unit) * 512;
--	if (posix_memalign((void **)&buf, 512, unit_len) != 0)
-+	if (posix_memalign((void **)&buf, sector_size, unit_len) != 0)
- 		goto abort;
- 	targets = xcalloc(new_disks, sizeof(int));
- 
-@@ -10148,7 +10257,7 @@ enum imsm_reshape_type imsm_analyze_change(struct supertype *st,
- 		 */
- 		geo->size = imsm_component_size_aligment_check(
- 				    get_imsm_raid_level(dev->vol.map),
--				    chunk * 1024,
-+				    chunk * 1024, super->sector_size,
- 				    geo->size * 2);
- 		if (geo->size == 0) {
- 			pr_err("Error. Size expansion is supported only (current size is %llu, requested size /rounded/ is 0).\n",
-@@ -10182,7 +10291,7 @@ enum imsm_reshape_type imsm_analyze_change(struct supertype *st,
- 			 */
- 			max_size = imsm_component_size_aligment_check(
- 					get_imsm_raid_level(dev->vol.map),
--					chunk * 1024,
-+					chunk * 1024, super->sector_size,
- 					max_size);
- 		}
- 		if (geo->size == MAX_SIZE) {
--- 
-2.7.4
+I've set up a Linux PC, connected all disks, and began collecting
+information about the condition of the HDDs, partitions, all I could
+find. After reading the Linux Raid wiki and lots of threads on the
+topic I'm still unable to mount the RAID5 volume in question. So, I'm
+posting below the info I gathered from the RAID config in hopes
+someone can give me some advice. Before posting the info, I've already
+read about using hard disks designed for NAS usage, SCT Error Recovery
+Control support, Desktop vs Enterprise drives, etc, but that's what we
+could afford to buy at the time, unfortunately.
 
+So, here's the info I got so far:
+
+---------------------------------------------------------------------------=
+-----
+Index
+---------------------------------------------------------------------------=
+-----
+1) smartctl -H -i -l scterc (for all disks)
+2a) mdadm --examine /dev/sda (for the disk and both partitions)
+2b) mdadm --examine /dev/sdb (for the disk and both partitions)
+2c) mdadm --examine /dev/sdc (for the disk and both partitions)
+2d) mdadm --examine /dev/sdd (for the disk and both partitions)
+3) lsdrv
+4) cat /proc/mdstat
+
+---------------------------------------------------------------------------=
+-----
+1) smartcl -H -i -l scterc
+---------------------------------------------------------------------------=
+-----
+root@it:/home/it/Desktop# smartctl -H -i -l scterc /dev/sda
+smartctl 6.5 2016-01-24 r4214 [i686-linux-4.4.0-31-generic] (local build)
+Copyright (C) 2002-16, Bruce Allen, Christian Franke, www.smartmontools.org
+
+=3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
+Model Family:     Seagate Barracuda LP
+Device Model:     ST31000520AS
+Serial Number:    9VX0Y8JW
+LU WWN Device Id: 5 000c50 026dca9fb
+Firmware Version: CC37
+User Capacity:    1.000.204.886.016 bytes [1,00 TB]
+Sector Size:      512 bytes logical/physical
+Rotation Rate:    5900 rpm
+Device is:        In smartctl database [for details use: -P show]
+ATA Version is:   ATA8-ACS T13/1699-D revision 4
+SATA Version is:  SATA 2.6, 3.0 Gb/s
+Local Time is:    Thu Nov 10 14:53:37 2016 UTC
+SMART support is: Available - device has SMART capability.
+SMART support is: Enabled
+
+=3D=3D=3D START OF READ SMART DATA SECTION =3D=3D=3D
+SMART overall-health self-assessment test result: PASSED
+
+SCT Error Recovery Control:
+           Read: Disabled
+          Write: Disabled
+
+root@it:/home/it/Desktop# smartctl -H -i -l scterc /dev/sdb
+smartctl 6.5 2016-01-24 r4214 [i686-linux-4.4.0-31-generic] (local build)
+Copyright (C) 2002-16, Bruce Allen, Christian Franke, www.smartmontools.org
+
+=3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
+Model Family:     Seagate Barracuda LP
+Device Model:     ST31000520AS
+Serial Number:    9VX0WRVM
+LU WWN Device Id: 5 000c50 026ca4019
+Firmware Version: CC37
+User Capacity:    1.000.204.886.016 bytes [1,00 TB]
+Sector Size:      512 bytes logical/physical
+Rotation Rate:    5900 rpm
+Device is:        In smartctl database [for details use: -P show]
+ATA Version is:   ATA8-ACS T13/1699-D revision 4
+SATA Version is:  SATA 2.6, 3.0 Gb/s
+Local Time is:    Thu Nov 10 14:54:07 2016 UTC
+SMART support is: Available - device has SMART capability.
+SMART support is: Enabled
+
+=3D=3D=3D START OF READ SMART DATA SECTION =3D=3D=3D
+SMART overall-health self-assessment test result: PASSED
+
+SCT Error Recovery Control:
+           Read: Disabled
+          Write: Disabled
+
+root@it:/home/it/Desktop# smartctl -H -i -l scterc /dev/sdc
+smartctl 6.5 2016-01-24 r4214 [i686-linux-4.4.0-31-generic] (local build)
+Copyright (C) 2002-16, Bruce Allen, Christian Franke, www.smartmontools.org
+
+=3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
+Model Family:     Seagate Barracuda LP
+Device Model:     ST31000520AS
+Serial Number:    9VX0XD1S
+LU WWN Device Id: 5 000c50 026dbdbf0
+Firmware Version: CC38
+User Capacity:    1.000.204.886.016 bytes [1,00 TB]
+Sector Size:      512 bytes logical/physical
+Rotation Rate:    5900 rpm
+Device is:        In smartctl database [for details use: -P show]
+ATA Version is:   ATA8-ACS T13/1699-D revision 4
+SATA Version is:  SATA 2.6, 3.0 Gb/s
+Local Time is:    Thu Nov 10 14:54:09 2016 UTC
+SMART support is: Available - device has SMART capability.
+SMART support is: Enabled
+
+=3D=3D=3D START OF READ SMART DATA SECTION =3D=3D=3D
+SMART overall-health self-assessment test result: FAILED!
+Drive failure expected in less than 24 hours. SAVE ALL DATA.
+Failed Attributes:
+ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE
+UPDATED  WHEN_FAILED RAW_VALUE
+  5 Reallocated_Sector_Ct   0x0033   002   002   036    Pre-fail
+Always   FAILING_NOW 4033
+
+SCT Error Recovery Control:
+           Read: Disabled
+          Write: Disabled
+
+root@it:/home/it/Desktop# smartctl -H -i -l scterc /dev/sdd
+smartctl 6.5 2016-01-24 r4214 [i686-linux-4.4.0-31-generic] (local build)
+Copyright (C) 2002-16, Bruce Allen, Christian Franke, www.smartmontools.org
+
+=3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
+Model Family:     Seagate Barracuda LP
+Device Model:     ST31000520AS
+Serial Number:    9VX0Y9JW
+LU WWN Device Id: 5 000c50 026d7169b
+Firmware Version: CC38
+User Capacity:    1.000.204.886.016 bytes [1,00 TB]
+Sector Size:      512 bytes logical/physical
+Rotation Rate:    5900 rpm
+Device is:        In smartctl database [for details use: -P show]
+ATA Version is:   ATA8-ACS T13/1699-D revision 4
+SATA Version is:  SATA 2.6, 3.0 Gb/s
+Local Time is:    Thu Nov 10 14:54:10 2016 UTC
+SMART support is: Available - device has SMART capability.
+SMART support is: Enabled
+
+=3D=3D=3D START OF READ SMART DATA SECTION =3D=3D=3D
+SMART overall-health self-assessment test result: FAILED!
+Drive failure expected in less than 24 hours. SAVE ALL DATA.
+Failed Attributes:
+ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE
+UPDATED  WHEN_FAILED RAW_VALUE
+  5 Reallocated_Sector_Ct   0x0033   003   003   036    Pre-fail
+Always   FAILING_NOW 4013
+
+SCT Error Recovery Control:
+           Read: Disabled
+          Write: Disabled
+
+---------------------------------------------------------------------------=
+-----
+2a) mdadm --examine /dev/sda (for the disk and both partitions)
+---------------------------------------------------------------------------=
+-----
+
+root@it:/home/it/Desktop# mdadm --examine /dev/sda
+/dev/sda:
+   MBR Magic : aa55
+Partition[0] :      4080509 sectors at            1 (type 83)
+Partition[1] :   1949444658 sectors at      4080510 (type 83)
+
+
+root@it:/home/it/Desktop# mdadm --examine /dev/sda1
+/dev/sda1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : ab0d7fdf:373ee9f2:5d8fd52f:304e1b90
+  Creation Time : Thu May  6 20:34:46 2010
+     Raid Level : raid1
+  Used Dev Size : 2040128 (1992.65 MiB 2089.09 MB)
+     Array Size : 2040128 (1992.65 MiB 2089.09 MB)
+   Raid Devices : 4
+  Total Devices : 3
+Preferred Minor : 0
+
+    Update Time : Wed Nov  9 16:49:29 2016
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : bd7c68c8 - correct
+         Events : 37056
+
+      Number   Major   Minor   RaidDevice State
+this     0       8        1        0      active sync   /dev/sda1
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       49        1      active sync   /dev/sdd1
+   2     2       0        0        2      faulty removed
+   3     3       8       17        3      active sync   /dev/sdb1
+
+
+root@it:/home/it/Desktop# mdadm --examine /dev/sda2
+/dev/sda2:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x0
+     Array UUID : b570d224:d61d7f45:8352223d:f9c68ac4
+           Name : storage:1
+  Creation Time : Thu Feb 17 10:22:16 2011
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 1949444384 (929.57 GiB 998.12 GB)
+     Array Size : 2924166528 (2788.70 GiB 2994.35 GB)
+  Used Dev Size : 1949444352 (929.57 GiB 998.12 GB)
+   Super Offset : 1949444640 sectors
+   Unused Space : before=3D0 sectors, after=3D288 sectors
+          State : clean
+    Device UUID : e0b08740:62497ceb:c107ad71:6bade30e
+
+    Update Time : Wed Nov  9 16:05:03 2016
+       Checksum : 70a9b667 - correct
+         Events : 161174
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+   Device Role : Active device 0
+   Array State : AA.. ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D re=
+placing)
+
+---------------------------------------------------------------------------=
+-----
+2b) mdadm --examine /dev/sdb (for the disk and both partitions)
+---------------------------------------------------------------------------=
+-----
+
+root@it:/home/it/Desktop# mdadm --examine /dev/sdb
+/dev/sdb:
+   MBR Magic : aa55
+Partition[0] :      4080447 sectors at           63 (type 83)
+Partition[1] :   1949444658 sectors at      4080510 (type 83)
+
+
+root@it:/home/it/Desktop# mdadm --examine /dev/sdb1
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : ab0d7fdf:373ee9f2:5d8fd52f:304e1b90
+  Creation Time : Thu May  6 20:34:46 2010
+     Raid Level : raid1
+  Used Dev Size : 2040128 (1992.65 MiB 2089.09 MB)
+     Array Size : 2040128 (1992.65 MiB 2089.09 MB)
+   Raid Devices : 4
+  Total Devices : 3
+Preferred Minor : 0
+
+    Update Time : Wed Nov  9 16:49:29 2016
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : bd7c68de - correct
+         Events : 37056
+
+      Number   Major   Minor   RaidDevice State
+this     3       8       17        3      active sync   /dev/sdb1
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       49        1      active sync   /dev/sdd1
+   2     2       0        0        2      faulty removed
+   3     3       8       17        3      active sync   /dev/sdb1
+
+
+root@it:/home/it/Desktop# mdadm --examine /dev/sdb2
+/dev/sdb2:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x0
+     Array UUID : b570d224:d61d7f45:8352223d:f9c68ac4
+           Name : storage:1
+  Creation Time : Thu Feb 17 10:22:16 2011
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 1949444384 (929.57 GiB 998.12 GB)
+     Array Size : 2924166528 (2788.70 GiB 2994.35 GB)
+  Used Dev Size : 1949444352 (929.57 GiB 998.12 GB)
+   Super Offset : 1949444640 sectors
+   Unused Space : before=3D0 sectors, after=3D288 sectors
+          State : clean
+    Device UUID : c07ecc29:5939c5c0:dda4e6fd:343fbf57
+
+    Update Time : Wed Nov  9 16:05:03 2016
+       Checksum : 44ca328 - correct
+         Events : 161174
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+   Device Role : Active device 1
+   Array State : AA.. ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D re=
+placing)
+
+---------------------------------------------------------------------------=
+-----
+2c) mdadm --examine /dev/sdc (for the disk and both partitions)
+---------------------------------------------------------------------------=
+-----
+
+root@it:/home/it/Desktop# mdadm --examine /dev/sdc
+/dev/sdc:
+   MBR Magic : aa55
+Partition[0] :      4080509 sectors at            1 (type 83)
+Partition[1] :   1949444658 sectors at      4080510 (type 83)
+
+
+root@it:/home/it/Desktop# mdadm --examine /dev/sdc1
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : ab0d7fdf:373ee9f2:5d8fd52f:304e1b90
+  Creation Time : Thu May  6 20:34:46 2010
+     Raid Level : raid1
+  Used Dev Size : 2040128 (1992.65 MiB 2089.09 MB)
+     Array Size : 2040128 (1992.65 MiB 2089.09 MB)
+   Raid Devices : 4
+  Total Devices : 3
+Preferred Minor : 0
+
+    Update Time : Wed Nov  9 12:55:15 2016
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : bd7c31b0 - correct
+         Events : 37022
+
+      Number   Major   Minor   RaidDevice State
+this     1       8       33        1      active sync   /dev/sdc1
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       33        1      active sync   /dev/sdc1
+   2     2       0        0        2      faulty removed
+   3     3       8       17        3      active sync   /dev/sdb1
+
+
+root@it:/home/it/Desktop# mdadm --examine /dev/sdc2
+/dev/sdc2:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x0
+     Array UUID : b570d224:d61d7f45:8352223d:f9c68ac4
+           Name : storage:1
+  Creation Time : Thu Feb 17 10:22:16 2011
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 1949444384 (929.57 GiB 998.12 GB)
+     Array Size : 2924166528 (2788.70 GiB 2994.35 GB)
+  Used Dev Size : 1949444352 (929.57 GiB 998.12 GB)
+   Super Offset : 1949444640 sectors
+   Unused Space : before=3D0 sectors, after=3D288 sectors
+          State : active
+    Device UUID : ceb844db:855e415a:cfc9efe5:4c2db02d
+
+    Update Time : Wed Nov  9 12:55:49 2016
+       Checksum : d39e909 - correct
+         Events : 161163
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+   Device Role : Active device 2
+   Array State : AAA. ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D re=
+placing)
+
+---------------------------------------------------------------------------=
+-----
+2d) mdadm --examine /dev/sdd (for the disk and both partitions)
+---------------------------------------------------------------------------=
+-----
+
+root@it:/home/it/Desktop# mdadm --examine /dev/sdd
+/dev/sdd:
+   MBR Magic : aa55
+Partition[0] :      4080509 sectors at            1 (type 83)
+Partition[1] :   1949444658 sectors at      4080510 (type 83)
+
+
+root@it:/home/it/Desktop# mdadm --examine /dev/sdd1
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : ab0d7fdf:373ee9f2:5d8fd52f:304e1b90
+  Creation Time : Thu May  6 20:34:46 2010
+     Raid Level : raid1
+  Used Dev Size : 2040128 (1992.65 MiB 2089.09 MB)
+     Array Size : 2040128 (1992.65 MiB 2089.09 MB)
+   Raid Devices : 4
+  Total Devices : 3
+Preferred Minor : 0
+
+    Update Time : Wed Nov  9 16:49:29 2016
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : bd7c68fa - correct
+         Events : 37056
+
+      Number   Major   Minor   RaidDevice State
+this     1       8       49        1      active sync   /dev/sdd1
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       49        1      active sync   /dev/sdd1
+   2     2       0        0        2      faulty removed
+   3     3       8       17        3      active sync   /dev/sdb1
+
+
+root@it:/home/it/Desktop# mdadm --examine /dev/sdd2
+/dev/sdd2:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x0
+     Array UUID : b570d224:d61d7f45:8352223d:f9c68ac4
+           Name : storage:1
+  Creation Time : Thu Feb 17 10:22:16 2011
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 1949444384 (929.57 GiB 998.12 GB)
+     Array Size : 2924166528 (2788.70 GiB 2994.35 GB)
+  Used Dev Size : 1949444352 (929.57 GiB 998.12 GB)
+   Super Offset : 1949444640 sectors
+   Unused Space : before=3D0 sectors, after=3D288 sectors
+          State : clean
+    Device UUID : c95e2f61:d146c52c:dc6336fc:c2987aab
+
+    Update Time : Wed Nov  9 16:05:03 2016
+       Checksum : f9bab3b4 - correct
+         Events : 161174
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+   Device Role : spare
+   Array State : AA.. ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D re=
+placing)
+
+---------------------------------------------------------------------------=
+-----
+3) lsdrv
+---------------------------------------------------------------------------=
+-----
+
+root@it:/home/it/Desktop# ./lsdrv
+PCI [ahci] 00:11.0 SATA controller: Advanced Micro Devices, Inc. [AMD]
+FCH SATA Controller [AHCI mode] (rev 40)
+=E2=94=9Cscsi 0:0:0:0 ATA      ST31000520AS     {9VX0Y8JW}
+=E2=94=82=E2=94=94sda 931.51g [8:0] Partitioned (dos)
+=E2=94=82 =E2=94=9Csda1 1.95g [8:1] MD raid1 (4) inactive {ab0d7fdf-373e-e9=
+f2-5d8f-d52f304e1b90}
+=E2=94=82 =E2=94=94sda2 929.57g [8:2] MD raid5 (4) inactive 'storage:1'
+{b570d224-d61d-7f45-8352-223df9c68ac4}
+=E2=94=9Cscsi 1:0:0:0 ATA      ST31000520AS     {9VX0WRVM}
+=E2=94=82=E2=94=94sdb 931.51g [8:16] Partitioned (dos)
+=E2=94=82 =E2=94=9Csdb1 1.95g [8:17] MD raid1 (4) inactive
+{ab0d7fdf-373e-e9f2-5d8f-d52f304e1b90}
+=E2=94=82 =E2=94=94sdb2 929.57g [8:18] MD raid5 (4) inactive 'storage:1'
+{b570d224-d61d-7f45-8352-223df9c68ac4}
+=E2=94=9Cscsi 2:0:0:0 ATA      ST31000520AS     {9VX0XD1S}
+=E2=94=82=E2=94=94sdc 931.51g [8:32] Partitioned (dos)
+=E2=94=82 =E2=94=9Csdc1 1.95g [8:33] MD raid1 (4) inactive
+{ab0d7fdf-373e-e9f2-5d8f-d52f304e1b90}
+=E2=94=82 =E2=94=94sdc2 929.57g [8:34] MD raid5 (4) inactive 'storage:1'
+{b570d224-d61d-7f45-8352-223df9c68ac4}
+=E2=94=94scsi 3:0:0:0 ATA      ST31000520AS     {9VX0Y9JW}
+ =E2=94=94sdd 931.51g [8:48] Partitioned (dos)
+  =E2=94=9Csdd1 1.95g [8:49] MD raid1 (4) inactive
+{ab0d7fdf-373e-e9f2-5d8f-d52f304e1b90}
+  =E2=94=94sdd2 929.57g [8:50] MD raid5 (4) inactive 'storage:1'
+{b570d224-d61d-7f45-8352-223df9c68ac4}
+USB [usb-storage] Bus 002 Device 002: ID 0781:5530 SanDisk Corp.
+Cruzer {2005244391081570854A}
+=E2=94=94scsi 4:0:0:0 SanDisk  Cruzer
+ =E2=94=94sde 14.91g [8:64] Partitioned (dos)
+  =E2=94=94sde1 14.91g [8:65] vfat 'FK16GB_LIVE' {1214-3C58}
+   =E2=94=94Mounted as /dev/sde1 @ /cdrom
+Other Block Devices
+=E2=94=9Cloop0 820.33m [7:0] squashfs
+=E2=94=82=E2=94=94Mounted as /dev/loop0 @ /rofs
+=E2=94=9Cloop1 0.00k [7:1] Empty/Unknown
+=E2=94=9Cloop2 0.00k [7:2] Empty/Unknown
+=E2=94=9Cloop3 0.00k [7:3] Empty/Unknown
+=E2=94=9Cloop4 0.00k [7:4] Empty/Unknown
+=E2=94=9Cloop5 0.00k [7:5] Empty/Unknown
+=E2=94=9Cloop6 0.00k [7:6] Empty/Unknown
+=E2=94=9Cloop7 0.00k [7:7] Empty/Unknown
+=E2=94=9Cmd0 0.00k [9:0] MD vnone  () clear, None (None) None {None}
+=E2=94=82                Empty/Unknown
+=E2=94=9Cmd1 0.00k [9:1] MD vnone  () clear, None (None) None {None}
+=E2=94=82                Empty/Unknown
+=E2=94=9Cmd5 0.00k [9:5] MD vnone  () clear, None (None) None {None}
+=E2=94=82                Empty/Unknown
+=E2=94=9Cram0 64.00m [1:0] Empty/Unknown
+=E2=94=9Cram1 64.00m [1:1] Empty/Unknown
+=E2=94=9Cram2 64.00m [1:2] Empty/Unknown
+=E2=94=9Cram3 64.00m [1:3] Empty/Unknown
+=E2=94=9Cram4 64.00m [1:4] Empty/Unknown
+=E2=94=9Cram5 64.00m [1:5] Empty/Unknown
+=E2=94=9Cram6 64.00m [1:6] Empty/Unknown
+=E2=94=9Cram7 64.00m [1:7] Empty/Unknown
+=E2=94=9Cram8 64.00m [1:8] Empty/Unknown
+=E2=94=9Cram9 64.00m [1:9] Empty/Unknown
+=E2=94=9Cram10 64.00m [1:10] Empty/Unknown
+=E2=94=9Cram11 64.00m [1:11] Empty/Unknown
+=E2=94=9Cram12 64.00m [1:12] Empty/Unknown
+=E2=94=9Cram13 64.00m [1:13] Empty/Unknown
+=E2=94=9Cram14 64.00m [1:14] Empty/Unknown
+=E2=94=9Cram15 64.00m [1:15] Empty/Unknown
+=E2=94=9Czram0 910.69m [251:0] swap {dd565600-cbd9-4d3c-bfa8-d534f6b0edea}
+=E2=94=9Czram1 910.69m [251:1] swap {6cc52777-6aef-4046-8acf-fd7b88eb5d74}
+=E2=94=9Czram2 910.69m [251:2] swap {7d6eba27-e88b-46a9-9edc-b36fc273b63a}
+=E2=94=94zram3 910.69m [251:3] swap {ce871e97-37f7-4a37-b09d-bef1f1e288b9}
+
+---------------------------------------------------------------------------=
+-----
+4) cat /proc/mdstat
+---------------------------------------------------------------------------=
+-----
+
+root@it:/home/it/Desktop# cat /proc/mdstat
+Personalities : [raid1]
+unused devices: <none>
+
+---------------------------------------------------------------------------=
+-----
+
+
+So, with that info, I could verify some things that are frequently
+mentioned on the posts:
+- SCT Error Recovery Control is disabled for both Read and Write operations=
+;
+- Events counter in the devices are the same, except for one disk, but
+the difference is small (<50);
+- Magic Numbers and Checksums are all correct;
+
+Hope someone can give some advice as how to proceed next.
+
+Best regards.
+
+-
+Felipe Kich
+51-9622-2067
