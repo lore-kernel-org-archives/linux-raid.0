@@ -1,7 +1,7 @@
 From: Theophanis Kontogiannis <tkonto@gmail.com>
 Subject: Re: Question on blocks periodic writes
-Date: Fri, 11 Nov 2016 14:11:32 +0200
-Message-ID: <CAOzB0-6YcVvVuFCUQZAUpeA08Cppv4XfvziA1x_WyHrx+9VuDA@mail.gmail.com>
+Date: Fri, 11 Nov 2016 14:13:10 +0200
+Message-ID: <CAOzB0-7U76Mw7aoB9CUF3TzakGZjuAphK0X7uhEWxYRUC-vx0Q@mail.gmail.com>
 References: <CAOzB0-6NYUqrzUyx3iQ8CbPwFh-dctKTVwE6GKupdYM-8AfOrg@mail.gmail.com>
  <8760nwm6vu.fsf@notabene.neil.brown.name> <58249BD9.8000303@youngman.org.uk> <87a8d6lr4t.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
@@ -14,85 +14,48 @@ To: NeilBrown <neilb@suse.com>
 Cc: Wols Lists <antlists@youngman.org.uk>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Neil,
-
-Hi Community,
+Have also run the following for about 6 hours:
 
 
-Regarding XFS we can ignore it. That file system will be moved to an
-ext2 file system on a CF.
-
-So we are left with the rest:
-
-
--bash-4.2# mdadm --detail /dev/md1
-/dev/md1:
-        Version : 1.2
-  Creation Time : Thu Jun 16 18:02:57 2016
-     Raid Level : raid6
-     Array Size : 9397248 (8.96 GiB 9.62 GB)
-  Used Dev Size : 3132416 (2.99 GiB 3.21 GB)
-   Raid Devices : 5
-  Total Devices : 5
-    Persistence : Superblock is persistent
-
-    Update Time : Fri Nov 11 14:05:33 2016
-          State : clean
- Active Devices : 5
-Working Devices : 5
- Failed Devices : 0
-  Spare Devices : 0
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-           Name : tweety.example.com:1  (local to host tweety.example.com)
-           UUID : 98e2af83:dc074310:d1639adb:3f19f0d3
-         Events : 127
-
-    Number   Major   Minor   RaidDevice State
-       0       8        1        0      active sync   /dev/sda1
-       1       8       49        1      active sync   /dev/sdd1
-       2       8       65        2      active sync   /dev/sde1
-       3       8       81        3      active sync   /dev/sdf1
-       4       8       97        4      active sync   /dev/sdg1
-
-
-
--bash-4.2# mdadm --examine /dev/sda1
-/dev/sda1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 98e2af83:dc074310:d1639adb:3f19f0d3
-           Name : tweety.example.com:1  (local to host tweety.example.com)
-  Creation Time : Thu Jun 16 18:02:57 2016
-     Raid Level : raid6
-   Raid Devices : 5
-
- Avail Dev Size : 6264832 (2.99 GiB 3.21 GB)
-     Array Size : 9397248 (8.96 GiB 9.62 GB)
-    Data Offset : 4096 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=3D4008 sectors, after=3D0 sectors
-          State : clean
-    Device UUID : 5ff290a3:68faf9d0:22edd403:abbaf970
-
-    Update Time : Fri Nov 11 14:05:59 2016
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : 55812945 - correct
-         Events : 127
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 0
-   Array State : AAAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D r=
-eplacing)
-
-
-Thank you ALL
-
+-bash-4.2# cat iotop-results
+Total DISK READ :    0.00 B/s | Total DISK WRITE :       0.00 B/s
+Actual DISK READ:    0.00 B/s | Actual DISK WRITE:       0.00 B/s
+  PID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN     IO>    COMMAND
+  696 be/3 root          0.00 B    956.00 K  0.00 %  0.31 % [jbd2/md0-8]
+  750 be/4 root          0.00 B      0.00 B  0.00 %  0.05 % smartd -n -q ne=
+ver
+ 2134 be/4 mysql       624.00 K    344.85 M  0.00 %  0.01 % mysqld
+--basedir=3D/usr --datadir=3D/mnt/md/md0/DBs/mys~riadb/mariadb.pid
+--socket=3D/var/lib/mysql/mysql.sock
+14110 be/4 root          0.00 B      0.00 B  0.00 %  0.01 % udisksd --no-de=
+bug
+ 5217 be/4 root          0.00 B      0.00 B  0.00 %  0.29 % [kworker/1:0]
+ 2454 be/4 root          0.00 B      0.00 B  0.00 %  0.04 % [kworker/0:2]
+31764 be/4 root          4.00 K      0.00 B  0.00 %  0.00 % -bash
+ 2368 be/4 root          0.00 B      0.00 B  0.00 %  0.01 % [kworker/1:3]
+ 4584 be/4 root          0.00 B      0.00 B  0.00 %  0.00 % [kworker/1:1]
+ 5265 be/4 root          0.00 B      0.00 B  0.00 %  0.00 % [kworker/0:0]
+ 4595 be/4 root          0.00 B      0.00 B  0.00 %  0.00 % [kworker/0:1]
+31747 be/4 root          0.00 B      8.00 K  0.00 %  0.00 % sshd: root@pts/=
+3
+  761 be/4 root          0.00 B     10.20 M  0.00 %  0.00 % rsyslogd -n
+ 7437 be/4 apache        0.00 B     24.00 K  0.00 %  0.00 % httpd -DFOREGRO=
+UND
+14625 be/4 apache        0.00 B     20.00 K  0.00 %  0.00 % httpd -DFOREGRO=
+UND
+10059 be/4 apache        0.00 B      8.00 K  0.00 %  0.00 % httpd -DFOREGRO=
+UND
+10062 be/4 apache        0.00 B     24.00 K  0.00 %  0.00 % httpd -DFOREGRO=
+UND
+10094 be/4 apache        0.00 B     16.00 K  0.00 %  0.00 % httpd -DFOREGRO=
+UND
+10095 be/4 apache        0.00 B     20.00 K  0.00 %  0.00 % httpd -DFOREGRO=
+UND
+10141 be/4 apache        0.00 B     24.00 K  0.00 %  0.00 % httpd -DFOREGRO=
+UND
+12220 be/4 root          0.00 B      9.99 M  0.00 %  0.00 % python
+/usr/bin/weewxd --daemon --pidfile=3D/var/run/weewx.pid
+/etc/weewx/weewx.conf
 
 ---
 Best regards,
