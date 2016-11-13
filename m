@@ -1,111 +1,110 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: What to do about Offline_Uncorrectable and Pending_Sector in
- RAID1
-Date: Sun, 13 Nov 2016 21:06:34 +0000
-Message-ID: <5828D5DA.1070406@youngman.org.uk>
-References: <CAHy4j_7_nRMxOSW16VTAY7bzdW_VMap=Jeb2M0wMiNDoNXcijQ@mail.gmail.com>
- <942ab8be-cd5c-c6d1-d077-cd295b355c0c@youngman.org.uk>
- <CAHy4j_7F=gN9=7mEH-TsdVJR0YFxBzJK98WeJfuwtANoDEy93w@mail.gmail.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: "creative" bio usage in the RAID code
+Date: Mon, 14 Nov 2016 09:53:46 +1100
+Message-ID: <87vavrj8jp.fsf@notabene.neil.brown.name>
+References: <20161110194636.GA32241@infradead.org> <20161111190223.4xrq3vvvvohzgs5e@kernel.org> <20161112174238.GA11518@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHy4j_7F=gN9=7mEH-TsdVJR0YFxBzJK98WeJfuwtANoDEy93w@mail.gmail.com>
+In-Reply-To: <20161112174238.GA11518@infradead.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bruce Merry <bmerry@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-raid@vger.kernel.org, linux-block@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 13/11/16 20:51, Bruce Merry wrote:
-> On 13 November 2016 at 22:18, Anthony Youngman <antlists@youngman.org.uk> wrote:
->> Quick first response ...
->>
->> On 13/11/16 18:46, Bruce Merry wrote:
->>>
->>> Hi
->>>
->>> I'm running software RAID1 across two drives in my home machine (LVM
->>> on LUKS on RAID1). I've just installed smartmontools and run short
->>> tests, and promptly received emails to tell me that one of the drives
->>> has 4 offline uncorrectable sectors and 3 current pending sectors.
->>> I've attached smartctl --xall output for sda (good) and sdb (bad).
->>>
->>> These drives are pretty old (over 5 years) so I'm going to replace
->>> them as soon as I have time (and yes, I have backups), but in the
->>> meantime I'd like advice on:
->>>
->> What drives are they? I'm guessing they're hunky-dory, but they don't fall
->> foul of timeout mismatch, do they?
->>
->> https://raid.wiki.kernel.org/index.php/Timeout_Mismatch
-> 
-> smartctl reports "SCT Error Recovery Control command not supported".
-> Does that mean I should be worried? Is there any way to tell whether a
-> given drive I can buy online supports it?
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-You need drives that explicitly support raid. WD Reds, Seagate NAS, some
-Toshibas - my 2TB laptop drive does ... Try and find a friend with a
-drive you like, and check it out, or ask on this list :-)
+On Sun, Nov 13 2016, Christoph Hellwig wrote:
 
-Did you run that script to increase the kernel timeout?
-> 
->>> 1. What exactly this means. My understanding is that some data has
->>> been lost (or may have been lost) on the drive, but the drive still
->>> has spare sectors to remap things once the failed sectors are written
->>> to. Is that correct?
->>
->>
->> It may also mean that the four sectors at least, have already been remapped
->> ... I'll let the experts confirm. The three pending errors might be where a
->> read has failed but there's not yet been a re-write - and you won't have
->> noticed because the raid dealt with it.
-> 
-> I'm guessing nothing has been remapped yet, because the
-> Reallocated_Sector_Ct and Reallocator_Event_ct are both zero.
-> 
->>> 3. Assuming my understanding is correct, and that the sector falls
->>> within the RAID1 partition on the drive, is there some way I can
->>> recover the sectors from the other drive in the RAID1? As a last
->>> resort I imagine I could wipe the suspect drive and then rebuild it
->>> from the good one, but I'm hoping there's something less risky I can
->>> do.
->>
->>
->> Do a scrub? You've got seven errors total, which some people will say "panic
->> on the first error" and others will say "so what, the odd error every now
->> and then is nothing to worry about". The point of a scrub is it will
->> background-scan the entire array, and if it can't read anything, it will
->> re-calculate and re-write it.
-> 
-> Yes, that sounds like what I need. Thanks to Google I found
-> /usr/share/mdadm/checkarray to trigger this. It still has a few hours
-> to go, but now the bad drive has pending sectors == 65535 (which is
-> suspiciously power-of-two and I assume means it's actually higher and
-> is being clamped), and /sys/block/md0/md/mismatch_cnt is currently at
-> 1408. If scrubbing is supposed to rewrite on failed reads I would have
-> expected pending sectors to go down rather than up, so I'm not sure
-> what's happening.
-> 
-Ummm....
+> On Fri, Nov 11, 2016 at 11:02:23AM -0800, Shaohua Li wrote:
+>> > It's mostly about the RAID1 and RAID10 code which does a lot of funny
+>> > things with the bi_iov_vec and bi_vcnt fields, which we'd prefer that
+>> > drivers don't touch.  One example is the r1buf_pool_alloc code,
+>> > which I think should simply use bio_clone for the MD_RECOVERY_REQUESTED
+>> > case, which would also take care of r1buf_pool_free.  I'm not sure
+>> > about all the others cases, as some bits don't fully make sense to me,
+>>=20
+>> The problem is we use the iov_vec to track the pages allocated. We will =
+read
+>> data to the pages and write out later for resync. If we add new fields t=
+o track
+>> the pages in r1bio, we could use standard API bio_kmalloc/bio_add_page a=
+nd
+>> avoid the tricky parts. This should work for both the resync and writebe=
+hind
+>> cases.
+>
+> I don't think we need to track the pages specificly - if we clone
+> a bio we share the bio_vec, e.g. for the !MD_RECOVERY_REQUESTED
+> we do one bio_kmalloc, then bio_alloc_pages then clone it for the
+> others bios.  for MD_RECOVERY_REQUESTED we do a bio_kmalloc +
+> bio_alloc_pages for each.
 
-Sounds like that drive could need replacing. I'd get a new drive and do
-that as soon as possible - use the --replace option of mdadm - don't
-fail the old drive and add the new. Dunno where you're based, but 5mins
-on the internet ordering a new drive is probably time well spent.
+Part of the reason for the oddities in this code is that I wanted a
+collection of bios, one per device, which were all the same size.  As
+different devices might impose different restrictions on the size of the
+bios, I built them carefully, step by step.
 
-Note that Seagate Barracudas don't have the best of reputations if
-they're the drive you've already got, and the 3TB drives are best
-avoided. Sod's law, I've got two of them ...
+Now that those restrictions are gone, we can - as you say - just
+allocate a suitably sized bio and then clone it for each device.
 
-Advice I always give ... if you're getting new drives, always consider
-increasing capacity. I don't know what size your current drives are, but
-look at prices of drives a bit larger than what they are, and is it
-worth paying the extra?
+>
+> While we're at it - I find the way MD_RECOVERY_REQUESTED is used highly
+> confusing, and I'm not 100% sure it's correct.  After all we check it
+> in r1buf_pool_alloc, which is a mempool alloc callback, so we rely
+> on these callbacks being done after the flag has been raise / cleared,
+> which makes me bit suspicious, and also question why we even need the
+> mempool.
 
-If you do get bigger drives, there's nothing stopping you making the
-paritions on it bigger before you add them in to the array. It'll be
-wasted space until you increase the size of all the drives, but once
-you've replaced both drives, you can use mdadm to increase the array
-size. I don't know about LUKS, but I would expect you can grow that, and
-then you can expand your data partitions within that.
+MD_RECOVERY_REQUEST is only set or cleared when no recovery is running.
+The ->reconfig_mutex and MD_RECOVERY_RUNNING flags ensure there are no
+races there.
+The r1buf_pool mempool is created are the start of resync, so at that
+time MD_RECOVERY_RUNNING will be stable, and it will remain stable until
+after the mempool is freed.
 
+To perform a resync we need a pool of memory buffers.  We don't want to
+have to cope with kmalloc failing, but are quite able to cope with
+mempool_alloc() blocking.
+We probably don't need nearly as many bufs as we allocate (4 is probably
+plenty), but having a pool is certainly convenient.
+
+>
+>>=20
+>> > e.g. why we're trying to do single page I/O out of a bigger bio.
+>>=20
+>> what's this one?
+>
+> fix_sync_read_error
+
+The "bigger bio" might cover a large number of sectors.  If there are
+media errors, there might be only one sector that is bad.  So we repeat
+the read with finer granularity (pages in the current code, though
+device block would be ideal) and only recovery bad blocks for individual
+pages which are bad and cannot be fixed.
+
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAEBCAAGBQJYKO76AAoJEDnsnt1WYoG5CZMP/R6xt+ti1dlBb+j5WYaEseyt
+ZBEtvrGkOaY451lXdEyfUDd+ytDeSnT20Vdd4JLp3SOjzVFRkc478Gt4J8hEx9fk
+UvLV2Ac77qf8zq0aO4Pj+X04MrqM++UYQEyujj61kiR5bhrn/PMhCnLB06sticnF
+id9q8g+WH1HaVtNqhcdp0bNPfbmGUkbpoMRvXRBvIcoyWcVNb4XM4KCVCFrzqeN2
+jdIHShSADNOIWYkQTmC/DS/lHm5cSuDyiYt4Jj7FKz9SKa126WYD/KI8pS5nn6XG
+2xvXxUNxaKBtLlTwKfeSLa2nDTC0s1hLUHQfm5PpZ3rua8NOqff6UgWQT/SM+9yj
+h87p4xFdJT+d7yVUzJwuwuJhXj8rAf8x6+1XFIaBCBOE9bOjjvCh7y2UV+NQCT1X
+k1jjc4LidpYtFp9rFbghiGVLC3FMUXzImVqaV7Gqoc2jDsomKPM7skBVwZu8s4XW
+x08o3SBtrGVwBUGV+y8h06zJfWTvC+i5vawE+sVfVBl3jeEtPYHuyB5K7VISpxDx
+u8du2U1BVt3WFroe62RF8kIXZbN40n0Ri8xwhuzbAvmWH4fj+xXyAnymR3IrIwy3
+0BGYgUrmSDkrDBVNUiZd1aOu5YSbKhjFSOfsNOI8CQbXWsyPYo2v4ri0NQuu8L/M
+eMGveoZh3vUD6YEuWuBr
+=L3PC
+-----END PGP SIGNATURE-----
+--=-=-=--
