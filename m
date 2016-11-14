@@ -1,66 +1,51 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [md PATCH 3/4] md/bitmap: add blktrace event for writes to the
- bitmap.
-Date: Mon, 14 Nov 2016 16:30:21 +1100
-Message-ID: <147910142125.27168.1639109067364223445.stgit@noble>
-References: <147910131504.27168.6566119701315109161.stgit@noble>
+Subject: Re: Ddf based RAID management software
+Date: Mon, 14 Nov 2016 16:48:49 +1100
+Message-ID: <877f86k3we.fsf@notabene.neil.brown.name>
+References: <CAPO=kN3xzv_MmbTSLT0bfxOpdZ+yvmybSXb6L-goBUasm+1NoQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <147910131504.27168.6566119701315109161.stgit@noble>
+In-Reply-To: <CAPO=kN3xzv_MmbTSLT0bfxOpdZ+yvmybSXb6L-goBUasm+1NoQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
+To: Arka Sharma <arka.sw1988@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-We trace wheneven bitmap_unplug() finds that it needs to write
-to the bitmap, or when bitmap_daemon_work() find there is work
-to do.
+--=-=-=
+Content-Type: text/plain
 
-This makes it easier to correlate bitmap updates with data writes.
+On Sun, Nov 13 2016, Arka Sharma wrote:
 
-Signed-off-by: NeilBrown <neilb@suse.com>
----
- drivers/md/bitmap.c |   11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+> Hello All,
+>
+> Is there any tool apart from mdadm available which can create software
+> RAID based on Ddf metadata. We want to dump the metadata content and
+> tally with metadata written by mdadm and our application.
 
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index 1a7f402b79ba..cf77cbf9ed22 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -27,6 +27,7 @@
- #include <linux/mount.h>
- #include <linux/buffer_head.h>
- #include <linux/seq_file.h>
-+#include <trace/events/block.h>
- #include "md.h"
- #include "bitmap.h"
- 
-@@ -1008,8 +1009,12 @@ void bitmap_unplug(struct bitmap *bitmap)
- 		need_write = test_and_clear_page_attr(bitmap, i,
- 						      BITMAP_PAGE_NEEDWRITE);
- 		if (dirty || need_write) {
--			if (!writing)
-+			if (!writing) {
- 				bitmap_wait_writes(bitmap);
-+				if (bitmap->mddev->queue)
-+					blk_add_trace_msg(bitmap->mddev->queue,
-+							  "md bitmap_unplug");
-+			}
- 			clear_page_attr(bitmap, i, BITMAP_PAGE_PENDING);
- 			write_page(bitmap, bitmap->storage.filemap[i], 0);
- 			writing = 1;
-@@ -1234,6 +1239,10 @@ void bitmap_daemon_work(struct mddev *mddev)
- 	}
- 	bitmap->allclean = 1;
- 
-+	if (bitmap->mddev->queue)
-+		blk_add_trace_msg(bitmap->mddev->queue,
-+				  "md bitmap_daemon_work");
-+
- 	/* Any file-page which is PENDING now needs to be written.
- 	 * So set NEEDWRITE now, then after we make any last-minute changes
- 	 * we will write it.
+Not that I'm aware of.
+dmraid can read some ddf metadata, but I don't think it will create new
+metadata.
 
+NeilBrown
 
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAEBCAAGBQJYKVBBAAoJEDnsnt1WYoG5c5gP/0Hx6gjc26rdKXpzEzB6dv/n
+2WJ+9g75JDyyAO7M/sGlLYoXyudfkyeUpJS64i8jZiuMsywOAmewbjwF31rZCYgJ
+yGX5tfmxF/8ebA896rMqT31tycjPYqg6mpUN+pJrK2wlvLzYVPMlMEkwud1ltNVp
+jR1IU/P3+T2rWrEGWhMsHWv1VKPJhouQsGywTQSZ6OH93aEJfp7Jxw/Ep5r+yj9o
+AFGkxOk9EuC789EsRNONukRtXrtWdV1bjpf/KUV+B5+/ZzVvts/44T4n4waCLWx8
+6UY9Y2xFqfEHV4s/Qr3CLa6fZCbtRHUSFc8ZZSHThqjlkBODdtnBTRlnyBVQLI+A
+OE6bypITQl93LnuROfoMt5hxrNOK1yl0N8JDqnsqNnq4o9Wq8+iCbdUImlKdtzjA
+YXdzc9WYLE0NtMUwqHOO6PziCIn3aynCeXSYWdvJHUyR3ltG5D3tmUQ8wMkH/mHN
+Rv8fm700509ji+eldBWBOXOaQ2SuBISdt3/1ueI2atPp4ERWvpkgpak5l2ckuJJk
+prc6yfMh8bkG2c/K74Y/C5JKMxOxSw7UxvSc1+Byl+e9XcME/+U3QfyX3Ijw7WQo
+geDwl19RZP+drDNLkhlXt/WoqHAwXoMbo5xtRYbPcHDDiPiPuhL6pB8VEGrfkDTf
+XG5A30BU75uOWjRSzp/S
+=GeJi
+-----END PGP SIGNATURE-----
+--=-=-=--
