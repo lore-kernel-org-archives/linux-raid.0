@@ -1,72 +1,83 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: mdadm I/O error with Ddf RAID
-Date: Mon, 14 Nov 2016 17:00:45 +1100
-Message-ID: <874m3ak3ci.fsf@notabene.neil.brown.name>
-References: <CAPO=kN2QDLEMgo9p9pU3=MeLQ=J6R8eeDL1Pw9m2pHjbVsuFGg@mail.gmail.com>
+From: Bruce Merry <bmerry@gmail.com>
+Subject: Re: What to do about Offline_Uncorrectable and Pending_Sector in RAID1
+Date: Mon, 14 Nov 2016 08:50:21 +0200
+Message-ID: <CAHy4j_6q2mmQ_y-xkh1Zx6CrP1vByQMadCXLJwibeeO85T3JgQ@mail.gmail.com>
+References: <CAHy4j_7_nRMxOSW16VTAY7bzdW_VMap=Jeb2M0wMiNDoNXcijQ@mail.gmail.com>
+ <942ab8be-cd5c-c6d1-d077-cd295b355c0c@youngman.org.uk> <CAHy4j_7F=gN9=7mEH-TsdVJR0YFxBzJK98WeJfuwtANoDEy93w@mail.gmail.com>
+ <5828D5DA.1070406@youngman.org.uk> <bdd9358d-2141-eb4f-e765-52177b1ec852@turmel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPO=kN2QDLEMgo9p9pU3=MeLQ=J6R8eeDL1Pw9m2pHjbVsuFGg@mail.gmail.com>
+In-Reply-To: <bdd9358d-2141-eb4f-e765-52177b1ec852@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Arka Sharma <arka.sw1988@gmail.com>, linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-
-On Fri, Nov 11 2016, Arka Sharma wrote:
-
-> Hi All,
+On 14 November 2016 at 01:03, Phil Turmel <philip@turmel.org> wrote:
+> Hi Bruce,
 >
-> We have developed a RAID creation application which create RAID with
-> Ddf RAID metadata. We are using PCIe ssd as physical disks. We are
-> writing the anchor, primary, secondary headers, virtual and physical
-> records, configuration record and physical disk data. The offsets of
-> the headers are updated in the primary, secondary and anchor headers
-> correctly. The problem is when we try to boot to Ubuntu server and we
-> observe that mdadm is throwing a disk failure error message and from
-> block layer we are getting rw=0, want=7, limit=1000215216. We also
-> confirmed using there is no I/O error is coming from the PCIe ssd,
-> using a logic analyzer. Also the limit value 1000215216 is the
-> capacity of the ssd in 512 byte blocks. Any insight will be highly
-> appreciated.
+> On 11/13/2016 04:06 PM, Wols Lists wrote:
+>> On 13/11/16 20:51, Bruce Merry wrote:
+>>> On 13 November 2016 at 22:18, Anthony Youngman <antlists@youngman.org.uk> wrote:
+>>>> Quick first response ...
 >
+>>>> https://raid.wiki.kernel.org/index.php/Timeout_Mismatch
+>>>
+>>> smartctl reports "SCT Error Recovery Control command not supported".
+>>> Does that mean I should be worried? Is there any way to tell whether a
+>>> given drive I can buy online supports it?
+>
+> You should be worried.  It is vital for proper MD raid operation that
+> drive timeouts be shorter than the kernel timeout for that device.  If
+> you can't make the drive timeout short, you *must* make the kernel
+> timeout long.
 
-It looks like mdadm is attempting a 4K read starting at the last sector.
+Okay, I'll give that script a go to increase my kernel timeout. If I
+understand correctly, it's not the end of the world if the drive
+doesn't support SCTERC, provided I have a long kernel timeout (and
+when things go wrong it might take much longer to recover, but I can
+live with that). Is that correct?
 
-Possibly the ssd's report a physical sector size of 4K.
+>>> Yes, that sounds like what I need. Thanks to Google I found
+>>> /usr/share/mdadm/checkarray to trigger this. It still has a few hours
+>>> to go, but now the bad drive has pending sectors == 65535 (which is
+>>> suspiciously power-of-two and I assume means it's actually higher and
+>>> is being clamped), and /sys/block/md0/md/mismatch_cnt is currently at
+>>> 1408. If scrubbing is supposed to rewrite on failed reads I would have
+>>> expected pending sectors to go down rather than up, so I'm not sure
+>>> what's happening.
+>>>
+>> Ummm....
+>>
+>> Sounds like that drive could need replacing. I'd get a new drive and do
+>> that as soon as possible - use the --replace option of mdadm - don't
+>> fail the old drive and add the new. Dunno where you're based, but 5mins
+>> on the internet ordering a new drive is probably time well spent.
 
-I don't know how DDF is supposed to work on a device like that.
-Should the anchor be at the start of the last 4K block,
-or in the last 512byte virtual block?
+Oh don't worry, I wasted no time in ordering new drives already.
 
-DDF support in mdadm was written with the assumption of 512 byte blocks.
+> You have two other possibilities:
+>
+> 1) Swap volumes in the raid.  These are known to drop unneeded writes
+> when the data isn't needed, even if it made it to one of the mirrors.
+> That makes harmless mismatches.
 
-I'm not at all certain this is the cause of the problem though.
+It won't be that - I keep have separate non-RAIDed partitions for swap.
 
-I would suggest starting by finding out which READ request in mdadm is
-causing the error.
+> 2) Trim.  Well-behaved drive firmware guarantees zeros for trimmed
+> sectors, but many drives return random data instead.  Zing, mismatches.
+> It's often unhelpful with encrypted volumes, as even well-behaved
+> firmware can't deliver zeroed sectors *inside* the encryption.
 
-NeilBrown
+Weee, sounds like fun. I hope it's that. Is there any way to tell
+which blocks mismatch, so that I can tell which files are in trouble
+(assuming I can figure out how to map through LVM, LUKS and
+debuge2fs).
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAEBCAAGBQJYKVMNAAoJEDnsnt1WYoG5q5sQALLKxgqhpjZKdiCG6ITBAvzl
-Z9owGFypsVw5MoH8tW9wqOqpRsDgE+GHVGfxhyQgPY8Xpdnd9UrSAxlHGgJkZe97
-qztwftdaxDZ5ODAx6NqODyP+59SY89ikYCIBCkFn/dvu2+KAAa8ZiD+Gx8i+Dl1d
-l1QAzBzMiO5pcPZuqb+Yj+s0AWEtZWnt+8zZ1pzuNpW6oJxoMie196+8kE+Gr6kT
-U4UczSxU9IgFrfHMMCb40dmfNhXXPIYkZ6sNAVo3JTihJxK9+Oo4U5kgtVtZbpLQ
-bQbnvgFQAzM75J2xwd+v/g+zAh8BcVt8SwYqXg0irAKOitmN2Y7BOQobiF6s4+ir
-slZtteZ/5FcQVWFDMlM6ltTiV9ZUpOzenaePAapNM1WLJbNymizWgs5WoOJ5SwWt
-a++qoy1wTZ0KJ75ob6CPUCDfoPBWrX9kQEfxHII4pXoGFqe/gAL5B5PNlRrblwzU
-3QulKzf/evVTDhgvvLuD+vRebKjQJdbxOErVY6qEbB2jB7oAJVJguO0lcFhRZdYj
-pwPVcM4Xmz15+tlZ8YG3FHlTV/NhDGkBezDNxos8NjrAspH6vW2zX+rEgslTJxrD
-AiiKrmr+06Hfp4gnQbKMI5rLGksA7gsxBAM3++31RT1cSSecqvyZcN3j77IPiuwF
-Eh3ThMI+8bBsLcOcqnHy
-=xyd3
------END PGP SIGNATURE-----
---=-=-=--
+Bruce
+-- 
+Dr Bruce Merry
+bmerry <@> gmail <.> com
+http://www.brucemerry.org.za/
+http://blog.brucemerry.org.za/
