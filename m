@@ -1,13 +1,13 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: Ddf based RAID management software
-Date: Mon, 14 Nov 2016 16:48:49 +1100
-Message-ID: <877f86k3we.fsf@notabene.neil.brown.name>
-References: <CAPO=kN3xzv_MmbTSLT0bfxOpdZ+yvmybSXb6L-goBUasm+1NoQ@mail.gmail.com>
+Subject: Re: mdadm I/O error with Ddf RAID
+Date: Mon, 14 Nov 2016 17:00:45 +1100
+Message-ID: <874m3ak3ci.fsf@notabene.neil.brown.name>
+References: <CAPO=kN2QDLEMgo9p9pU3=MeLQ=J6R8eeDL1Pw9m2pHjbVsuFGg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPO=kN3xzv_MmbTSLT0bfxOpdZ+yvmybSXb6L-goBUasm+1NoQ@mail.gmail.com>
+In-Reply-To: <CAPO=kN2QDLEMgo9p9pU3=MeLQ=J6R8eeDL1Pw9m2pHjbVsuFGg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Arka Sharma <arka.sw1988@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
@@ -15,17 +15,38 @@ List-Id: linux-raid.ids
 --=-=-=
 Content-Type: text/plain
 
-On Sun, Nov 13 2016, Arka Sharma wrote:
+On Fri, Nov 11 2016, Arka Sharma wrote:
 
-> Hello All,
+> Hi All,
 >
-> Is there any tool apart from mdadm available which can create software
-> RAID based on Ddf metadata. We want to dump the metadata content and
-> tally with metadata written by mdadm and our application.
+> We have developed a RAID creation application which create RAID with
+> Ddf RAID metadata. We are using PCIe ssd as physical disks. We are
+> writing the anchor, primary, secondary headers, virtual and physical
+> records, configuration record and physical disk data. The offsets of
+> the headers are updated in the primary, secondary and anchor headers
+> correctly. The problem is when we try to boot to Ubuntu server and we
+> observe that mdadm is throwing a disk failure error message and from
+> block layer we are getting rw=0, want=7, limit=1000215216. We also
+> confirmed using there is no I/O error is coming from the PCIe ssd,
+> using a logic analyzer. Also the limit value 1000215216 is the
+> capacity of the ssd in 512 byte blocks. Any insight will be highly
+> appreciated.
+>
 
-Not that I'm aware of.
-dmraid can read some ddf metadata, but I don't think it will create new
-metadata.
+It looks like mdadm is attempting a 4K read starting at the last sector.
+
+Possibly the ssd's report a physical sector size of 4K.
+
+I don't know how DDF is supposed to work on a device like that.
+Should the anchor be at the start of the last 4K block,
+or in the last 512byte virtual block?
+
+DDF support in mdadm was written with the assumption of 512 byte blocks.
+
+I'm not at all certain this is the cause of the problem though.
+
+I would suggest starting by finding out which READ request in mdadm is
+causing the error.
 
 NeilBrown
 
@@ -34,18 +55,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAEBCAAGBQJYKVBBAAoJEDnsnt1WYoG5c5gP/0Hx6gjc26rdKXpzEzB6dv/n
-2WJ+9g75JDyyAO7M/sGlLYoXyudfkyeUpJS64i8jZiuMsywOAmewbjwF31rZCYgJ
-yGX5tfmxF/8ebA896rMqT31tycjPYqg6mpUN+pJrK2wlvLzYVPMlMEkwud1ltNVp
-jR1IU/P3+T2rWrEGWhMsHWv1VKPJhouQsGywTQSZ6OH93aEJfp7Jxw/Ep5r+yj9o
-AFGkxOk9EuC789EsRNONukRtXrtWdV1bjpf/KUV+B5+/ZzVvts/44T4n4waCLWx8
-6UY9Y2xFqfEHV4s/Qr3CLa6fZCbtRHUSFc8ZZSHThqjlkBODdtnBTRlnyBVQLI+A
-OE6bypITQl93LnuROfoMt5hxrNOK1yl0N8JDqnsqNnq4o9Wq8+iCbdUImlKdtzjA
-YXdzc9WYLE0NtMUwqHOO6PziCIn3aynCeXSYWdvJHUyR3ltG5D3tmUQ8wMkH/mHN
-Rv8fm700509ji+eldBWBOXOaQ2SuBISdt3/1ueI2atPp4ERWvpkgpak5l2ckuJJk
-prc6yfMh8bkG2c/K74Y/C5JKMxOxSw7UxvSc1+Byl+e9XcME/+U3QfyX3Ijw7WQo
-geDwl19RZP+drDNLkhlXt/WoqHAwXoMbo5xtRYbPcHDDiPiPuhL6pB8VEGrfkDTf
-XG5A30BU75uOWjRSzp/S
-=GeJi
+iQIcBAEBCAAGBQJYKVMNAAoJEDnsnt1WYoG5q5sQALLKxgqhpjZKdiCG6ITBAvzl
+Z9owGFypsVw5MoH8tW9wqOqpRsDgE+GHVGfxhyQgPY8Xpdnd9UrSAxlHGgJkZe97
+qztwftdaxDZ5ODAx6NqODyP+59SY89ikYCIBCkFn/dvu2+KAAa8ZiD+Gx8i+Dl1d
+l1QAzBzMiO5pcPZuqb+Yj+s0AWEtZWnt+8zZ1pzuNpW6oJxoMie196+8kE+Gr6kT
+U4UczSxU9IgFrfHMMCb40dmfNhXXPIYkZ6sNAVo3JTihJxK9+Oo4U5kgtVtZbpLQ
+bQbnvgFQAzM75J2xwd+v/g+zAh8BcVt8SwYqXg0irAKOitmN2Y7BOQobiF6s4+ir
+slZtteZ/5FcQVWFDMlM6ltTiV9ZUpOzenaePAapNM1WLJbNymizWgs5WoOJ5SwWt
+a++qoy1wTZ0KJ75ob6CPUCDfoPBWrX9kQEfxHII4pXoGFqe/gAL5B5PNlRrblwzU
+3QulKzf/evVTDhgvvLuD+vRebKjQJdbxOErVY6qEbB2jB7oAJVJguO0lcFhRZdYj
+pwPVcM4Xmz15+tlZ8YG3FHlTV/NhDGkBezDNxos8NjrAspH6vW2zX+rEgslTJxrD
+AiiKrmr+06Hfp4gnQbKMI5rLGksA7gsxBAM3++31RT1cSSecqvyZcN3j77IPiuwF
+Eh3ThMI+8bBsLcOcqnHy
+=xyd3
 -----END PGP SIGNATURE-----
 --=-=-=--
