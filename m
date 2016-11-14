@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [md PATCH 4/4] md/raid1,
- raid10: add blktrace records when IO is delayed.
+Subject: [md PATCH 3/4] md/bitmap: add blktrace event for writes to the
+ bitmap.
 Date: Mon, 14 Nov 2016 16:30:21 +1100
-Message-ID: <147910142139.27168.5325871080844069318.stgit@noble>
+Message-ID: <147910142125.27168.1639109067364223445.stgit@noble>
 References: <147910131504.27168.6566119701315109161.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,125 +14,53 @@ To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Both raid1 and raid10 will sometimes delay handling an IO request,
-such as when resync is happening or there are too many requests queued.
+We trace wheneven bitmap_unplug() finds that it needs to write
+to the bitmap, or when bitmap_daemon_work() find there is work
+to do.
 
-Add some blktrace messsages so we can see when that is happening when
-looking for performance artefacts.
+This makes it easier to correlate bitmap updates with data writes.
 
 Signed-off-by: NeilBrown <neilb@suse.com>
 ---
- drivers/md/raid1.c  |    8 ++++++++
- drivers/md/raid10.c |    8 ++++++++
- 2 files changed, 16 insertions(+)
+ drivers/md/bitmap.c |   11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 0674e5a0142e..e94db92a4dbf 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -71,6 +71,9 @@ static void allow_barrier(struct r1conf *conf, sector_t start_next_window,
- 			  sector_t bi_sector);
- static void lower_barrier(struct r1conf *conf);
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index 1a7f402b79ba..cf77cbf9ed22 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -27,6 +27,7 @@
+ #include <linux/mount.h>
+ #include <linux/buffer_head.h>
+ #include <linux/seq_file.h>
++#include <trace/events/block.h>
+ #include "md.h"
+ #include "bitmap.h"
  
-+#define raid1_log(md, fmt, args...)				\
-+	do { if ((md)->queue) blk_add_trace_msg((md)->queue, "raid1 " fmt, ##args); } while (0)
-+
- static void * r1bio_pool_alloc(gfp_t gfp_flags, void *data)
- {
- 	struct pool_info *pi = data;
-@@ -868,6 +871,7 @@ static sector_t wait_barrier(struct r1conf *conf, struct bio *bio)
- 		 * that queue to allow conf->start_next_window
- 		 * to increase.
- 		 */
-+		raid1_log(conf->mddev, "wait barrier");
- 		wait_event_lock_irq(conf->wait_barrier,
- 				    !conf->array_frozen &&
- 				    (!conf->barrier ||
-@@ -947,6 +951,7 @@ static void freeze_array(struct r1conf *conf, int extra)
- 	 */
- 	spin_lock_irq(&conf->resync_lock);
- 	conf->array_frozen = 1;
-+	raid1_log(conf->mddev, "wait freeze");
- 	wait_event_lock_irq_cmd(conf->wait_barrier,
- 				conf->nr_pending == conf->nr_queued+extra,
- 				conf->resync_lock,
-@@ -1157,6 +1162,7 @@ static void raid1_make_request(struct mddev *mddev, struct bio * bio)
- 			 * take care not to over-take any writes
- 			 * that are 'behind'
- 			 */
-+			raid1_log(mddev, "wait behind writes");
- 			wait_event(bitmap->behind_wait,
- 				   atomic_read(&bitmap->behind_writes) == 0);
- 		}
-@@ -1221,6 +1227,7 @@ static void raid1_make_request(struct mddev *mddev, struct bio * bio)
- 	 */
- 	if (conf->pending_count >= max_queued_requests) {
- 		md_wakeup_thread(mddev->thread);
-+		raid1_log(mddev, "wait queued");
- 		wait_event(conf->wait_barrier,
- 			   conf->pending_count < max_queued_requests);
+@@ -1008,8 +1009,12 @@ void bitmap_unplug(struct bitmap *bitmap)
+ 		need_write = test_and_clear_page_attr(bitmap, i,
+ 						      BITMAP_PAGE_NEEDWRITE);
+ 		if (dirty || need_write) {
+-			if (!writing)
++			if (!writing) {
+ 				bitmap_wait_writes(bitmap);
++				if (bitmap->mddev->queue)
++					blk_add_trace_msg(bitmap->mddev->queue,
++							  "md bitmap_unplug");
++			}
+ 			clear_page_attr(bitmap, i, BITMAP_PAGE_PENDING);
+ 			write_page(bitmap, bitmap->storage.filemap[i], 0);
+ 			writing = 1;
+@@ -1234,6 +1239,10 @@ void bitmap_daemon_work(struct mddev *mddev)
  	}
-@@ -1312,6 +1319,7 @@ static void raid1_make_request(struct mddev *mddev, struct bio * bio)
- 				rdev_dec_pending(conf->mirrors[j].rdev, mddev);
- 		r1_bio->state = 0;
- 		allow_barrier(conf, start_next_window, bio->bi_iter.bi_sector);
-+		raid1_log(mddev, "wait rdev %d blocked", blocked_rdev->raid_disk);
- 		md_wait_for_blocked_rdev(blocked_rdev, mddev);
- 		start_next_window = wait_barrier(conf, bio);
- 		/*
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index c3036099ff9a..15e55488a9d2 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -106,6 +106,9 @@ static void reshape_request_write(struct mddev *mddev, struct r10bio *r10_bio);
- static void end_reshape_write(struct bio *bio);
- static void end_reshape(struct r10conf *conf);
+ 	bitmap->allclean = 1;
  
-+#define raid10_log(md, fmt, args...)				\
-+	do { if ((md)->queue) blk_add_trace_msg((md)->queue, "raid10 " fmt, ##args); } while (0)
++	if (bitmap->mddev->queue)
++		blk_add_trace_msg(bitmap->mddev->queue,
++				  "md bitmap_daemon_work");
 +
- static void * r10bio_pool_alloc(gfp_t gfp_flags, void *data)
- {
- 	struct r10conf *conf = data;
-@@ -949,6 +952,7 @@ static void wait_barrier(struct r10conf *conf)
- 		 * that queue to get the nr_pending
- 		 * count down.
- 		 */
-+		raid10_log(conf->mddev, "wait barrier");
- 		wait_event_lock_irq(conf->wait_barrier,
- 				    !conf->barrier ||
- 				    (atomic_read(&conf->nr_pending) &&
-@@ -1106,6 +1110,7 @@ static void __make_request(struct mddev *mddev, struct bio *bio)
- 		/* IO spans the reshape position.  Need to wait for
- 		 * reshape to pass
- 		 */
-+		raid10_log(conf->mddev, "wait reshape");
- 		allow_barrier(conf);
- 		wait_event(conf->wait_barrier,
- 			   conf->reshape_progress <= bio->bi_iter.bi_sector ||
-@@ -1125,6 +1130,7 @@ static void __make_request(struct mddev *mddev, struct bio *bio)
- 		set_mask_bits(&mddev->flags, 0,
- 			      BIT(MD_CHANGE_DEVS) | BIT(MD_CHANGE_PENDING));
- 		md_wakeup_thread(mddev->thread);
-+		raid10_log(conf->mddev, "wait reshape metadata");
- 		wait_event(mddev->sb_wait,
- 			   !test_bit(MD_CHANGE_PENDING, &mddev->flags));
- 
-@@ -1222,6 +1228,7 @@ static void __make_request(struct mddev *mddev, struct bio *bio)
- 	 */
- 	if (conf->pending_count >= max_queued_requests) {
- 		md_wakeup_thread(mddev->thread);
-+		raid10_log(mddev, "wait queued");
- 		wait_event(conf->wait_barrier,
- 			   conf->pending_count < max_queued_requests);
- 	}
-@@ -1349,6 +1356,7 @@ static void __make_request(struct mddev *mddev, struct bio *bio)
- 			}
- 		}
- 		allow_barrier(conf);
-+		raid10_log(conf->mddev, "wait rdev %d blocked", blocked_rdev->raid_disk);
- 		md_wait_for_blocked_rdev(blocked_rdev, mddev);
- 		wait_barrier(conf);
- 		goto retry_write;
+ 	/* Any file-page which is PENDING now needs to be written.
+ 	 * So set NEEDWRITE now, then after we make any last-minute changes
+ 	 * we will write it.
 
 
