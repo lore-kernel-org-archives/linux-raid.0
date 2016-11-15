@@ -1,71 +1,25 @@
-From: "Peter Sangas" <pete@wnsdev.com>
-Subject: RE: What to do about Offline_Uncorrectable and Pending_Sector in RAID1
-Date: Tue, 15 Nov 2016 10:14:51 -0800
-Message-ID: <008001d23f6c$298b5260$7ca1f720$@wnsdev.com>
-References: <CAHy4j_7_nRMxOSW16VTAY7bzdW_VMap=Jeb2M0wMiNDoNXcijQ@mail.gmail.com> <942ab8be-cd5c-c6d1-d077-cd295b355c0c@youngman.org.uk> <CAHy4j_7F=gN9=7mEH-TsdVJR0YFxBzJK98WeJfuwtANoDEy93w@mail.gmail.com> <5828D5DA.1070406@youngman.org.uk> <CAHy4j_7aC+DCqMRkmK12HPP-wY5kAmLf7W3UG_Nn=TK7ry7ARQ@mail.gmail.com> <5829DF1F.7030109@youngman.org.uk>
+From: "Bob" <alu_casting@163.com>
+Subject: Aluminum die casting parts
+Date: Tue, 15 Nov 2016 13:35:54 +0800
+Message-ID: <201611151335548909371@a.wmqrg.com>
+Reply-To: alu_casting@163.com
 Mime-Version: 1.0
 Content-Type: text/plain;
-        charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+        charset="GB2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5829DF1F.7030109@youngman.org.uk>
-Content-Language: en-us
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Wols Lists' <antlists@youngman.org.uk>, 'Bruce Merry' <bmerry@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Wol,
-
-
------Original Message-----
-From: Wols Lists [mailto:antlists@youngman.org.uk] 
-Sent: Monday, November 14, 2016 7:58 AM
-To: Bruce Merry
-Cc: linux-raid@vger.kernel.org
-Subject: Re: What to do about Offline_Uncorrectable and Pending_Sector in RAID1
-
-On 14/11/16 15:52, Bruce Merry wrote:
-> On 13 November 2016 at 23:06, Wols Lists <antlists@youngman.org.uk> wrote:
->> > Sounds like that drive could need replacing. I'd get a new drive 
->> > and do that as soon as possible - use the --replace option of mdadm 
->> > - don't fail the old drive and add the new.
-> Would you mind explaining why I should use --replace instead of taking 
-> out the suspect drive? I guess I lose redundancy for any writes that 
-> occur while the rebuild is happening, but I'd plan to do this with the 
-> filesystem unmounted so there wouldn't be any writes.
-
->Because a replace will copy from the old drive to the new, recovering any failures from the rest of the array. A fail-and-add will have to rebuild the entire new array >from what's left of the old, stressing the old array much more.
-
->Okay, in your case, it probably won't make an awful lot of difference, but it does make you vulnerable to problems on the "good" drive. To alter your wording >slightly, you lose redundancy for writes AND READS that occur while the array is rebuilding. It's just good practice (and I point it out because --replace is new and >not well known at present).
-
->Cheers,
->Wol
-
-With respect to the --replace switch and "replacing a failed drive" documented on the wiki here:
-https://raid.wiki.kernel.org/index.php/Replacing_a_failed_drive  Can you clear a few things up for me ?
-
-1. If I just want to replace a working drive in a RAID1 and the array is still redundant I can 
-issue the following command as in your example:
-
-mdadm /dev/mdN [--fail /dev/sdx1] --remove /dev/sdx1 --add /dev/sdy1
-
-which fails and removes sdx1 and replaces it with sdy1.
-
-Question1. How is this different from first doing a fail/remove on sdx1, physically replacing sdx1 with sdy1 and doing an add on sdy1?
-
-
-2. If one of the drives as an error in a RAID1 and gets kicked out of the array and the array loses redundancy the wiki has the following example:
-
-mdmad /dev/mdN --re-add /dev/sdX1
-mdadm /dev/mdN --add /dev/sdY1 --replace /dev/sdX1 --with /dev/sdY1
-
-Question2.   Is this point here to first try and re-add sdX1 with the "--re-add" (first line above) and if that fails do a replace (second line above)?
-
-
-Thanks,
-Peter
-
-
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+SGVsbG8sDQoNCg0KSGVyZSBpcyB0aGUgZXhwZXJpZW5jZWQgbWFudWZhY3R1ZXIgb2YgYWx1bWlu
+dW0gY2FzdGluZ3MuDQoNCk91ciBjYXN0aW5nIHBhcnRzIGluIGdlYXIgYm94LCBoZWF0IHRyYW5z
+ZmVycyBhbmQgYXV0b21hdGlvbnMgIGhhdmUgc3VwcGxpZWQgY2xpZW50cyBpbiBVU0EsIENhbmFk
+YSwgR2VybWFueSBhbmQgc28gb24gZm9yIG1vcmUgdGhlbiAxMCB5ZWFycy4gYW5kIGhhdmUgZ290
+IHBlcmZlY3QgcmVwdXRhdGlvbiBmcm9tIHRoZW0uIFdlIGFyZSBhYmxlIHRvIG9mZmVyIGZyb20g
+Y2FzdGluZywgc2FuZCBibGFzdGluZywgaGVhdCB0cmVhdG1lbnQgYW5kIG1hY2hpbmluZyB0aGUg
+d2hvbGUgcHJvY2Vzcy4NCg0KU2hhbGwgeW91IGhhdmUgYW55IGludGVyZXN0aW5nLCBwbHMgZG9u
+J3QgaGVzaXRhdGUgYW5kIGxldCB1cyBrbm93Lg0KDQpiLnJnZHMgDQpCb2IgSHUgDQpOaW5nYm8g
+WWluemhvdSBYdXNoZW5nIE1hY2hpbmVyeSBGYWN0b3J5IA0KU2t5cGU6IGJvYmh1MQ0KQ2VsbDog
+MDA4Ni0xMzk1ODMyIDc3NzQgDQpUZWw6IDAwODYtNTc0LTg4MTI4NjAzIA0KYm9iQHhzLWFsdW1p
+bnVtY2FzdGluZy5jb20gDQp3d3cueHMtYWx1bWludW1jYXN0aW5nLmNvbQ==
