@@ -1,46 +1,97 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: "creative" bio usage in the RAID code
-Date: Mon, 14 Nov 2016 16:13:57 -0800
-Message-ID: <20161115001357.sb5242j5t7bsurjd@kernel.org>
-References: <20161110194636.GA32241@infradead.org>
- <20161111190223.4xrq3vvvvohzgs5e@kernel.org>
- <20161112174238.GA11518@infradead.org>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: [PATCH 07/12] dm: use bvec iterator helpers to implement
+ .get_page and .next_page
+Date: Tue, 15 Nov 2016 09:01:53 +0800
+Message-ID: <CACVXFVPbG6Dz2F=tc9o=jPdNCcXWDmtReaWGWQeTPa9HaGjh0A@mail.gmail.com>
+References: <1478865957-25252-1-git-send-email-tom.leiming@gmail.com> <1478865957-25252-8-git-send-email-tom.leiming@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20161112174238.GA11518@infradead.org>
+In-Reply-To: <1478865957-25252-8-git-send-email-tom.leiming@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-raid@vger.kernel.org, linux-block@vger.kernel.org, neilb@suse.com
+To: Jens Axboe <axboe@fb.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: linux-block <linux-block@vger.kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Ming Lei <tom.leiming@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "maintainer:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>, Shaohua Li <shli@kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, Nov 12, 2016 at 09:42:38AM -0800, Christoph Hellwig wrote:
-> On Fri, Nov 11, 2016 at 11:02:23AM -0800, Shaohua Li wrote:
-> > > It's mostly about the RAID1 and RAID10 code which does a lot of funny
-> > > things with the bi_iov_vec and bi_vcnt fields, which we'd prefer that
-> > > drivers don't touch.  One example is the r1buf_pool_alloc code,
-> > > which I think should simply use bio_clone for the MD_RECOVERY_REQUESTED
-> > > case, which would also take care of r1buf_pool_free.  I'm not sure
-> > > about all the others cases, as some bits don't fully make sense to me,
-> > 
-> > The problem is we use the iov_vec to track the pages allocated. We will read
-> > data to the pages and write out later for resync. If we add new fields to track
-> > the pages in r1bio, we could use standard API bio_kmalloc/bio_add_page and
-> > avoid the tricky parts. This should work for both the resync and writebehind
-> > cases.
-> 
-> I don't think we need to track the pages specificly - if we clone
-> a bio we share the bio_vec, e.g. for the !MD_RECOVERY_REQUESTED
-> we do one bio_kmalloc, then bio_alloc_pages then clone it for the
-> others bios.  for MD_RECOVERY_REQUESTED we do a bio_kmalloc +
-> bio_alloc_pages for each.
+On Fri, Nov 11, 2016 at 8:05 PM, Ming Lei <tom.leiming@gmail.com> wrote:
+> Firstly we have mature bvec/bio iterator helper for iterate each
+> page in one bio, not necessary to reinvent a wheel to do that.
+>
+> Secondly the coming multipage bvecs requires this patch.
+>
+> Also add comments about the direct access to bvec table.
+>
+> Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+> ---
+>  drivers/md/dm-io.c | 34 ++++++++++++++++++++++++----------
+>  1 file changed, 24 insertions(+), 10 deletions(-)
+>
+> diff --git a/drivers/md/dm-io.c b/drivers/md/dm-io.c
+> index 0bf1a12e35fe..2ef573c220fc 100644
+> --- a/drivers/md/dm-io.c
+> +++ b/drivers/md/dm-io.c
+> @@ -162,7 +162,10 @@ struct dpages {
+>                          struct page **p, unsigned long *len, unsigned *offset);
+>         void (*next_page)(struct dpages *dp);
+>
+> -       unsigned context_u;
+> +       union {
+> +               unsigned context_u;
+> +               struct bvec_iter context_bi;
+> +       };
+>         void *context_ptr;
+>
+>         void *vma_invalidate_address;
+> @@ -204,25 +207,36 @@ static void list_dp_init(struct dpages *dp, struct page_list *pl, unsigned offse
+>  static void bio_get_page(struct dpages *dp, struct page **p,
+>                          unsigned long *len, unsigned *offset)
+>  {
+> -       struct bio_vec *bvec = dp->context_ptr;
+> -       *p = bvec->bv_page;
+> -       *len = bvec->bv_len - dp->context_u;
+> -       *offset = bvec->bv_offset + dp->context_u;
+> +       struct bio_vec bv = bvec_iter_bvec((struct bio_vec *)dp->context_ptr,
+> +                       dp->context_bi);
+> +
+> +       *p = bv.bv_page;
+> +       *len = bv.bv_len;
+> +       *offset = bv.bv_offset;
+> +
+> +       /* avoid to figure out it in bio_next_page() again */
+> +       dp->context_bi.bi_sector = (sector_t)bv.bv_len;
+>  }
+>
+>  static void bio_next_page(struct dpages *dp)
+>  {
+> -       struct bio_vec *bvec = dp->context_ptr;
+> -       dp->context_ptr = bvec + 1;
+> -       dp->context_u = 0;
+> +       unsigned int len = (unsigned int)dp->context_bi.bi_sector;
+> +
+> +       bvec_iter_advance((struct bio_vec *)dp->context_ptr,
+> +                       &dp->context_bi, len);
+>  }
+>
+>  static void bio_dp_init(struct dpages *dp, struct bio *bio)
+>  {
+>         dp->get_page = bio_get_page;
+>         dp->next_page = bio_next_page;
+> -       dp->context_ptr = __bvec_iter_bvec(bio->bi_io_vec, bio->bi_iter);
+> -       dp->context_u = bio->bi_iter.bi_bvec_done;
+> +
+> +       /*
+> +        * We just use bvec iterator to retrieve pages, so it is ok to
+> +        * access the bvec table directly here
+> +        */
+> +       dp->context_ptr = bio->bi_io_vec;
+> +       dp->context_bi = bio->bi_iter;
+>  }
 
-Sure, for r1buf_pool_alloc, what you suggested should work well. There are a
-lot of other places we are using bi_vcnt/bi_io_vec. I'm not sure if it's easy
-to replace them with bio iterator. But having a separate data structue to track
-the memory we read/rewite/sync and so on definitively will make things easier.
-I'm not saying to add the extra data structure in bio but instead in r1bio.
+Hi Alasdair, Mike, Christoph and anyone,
+
+Could you give this one a review?
+
+From my test, it just works fine, and I believe it is a good cleanup.
 
 Thanks,
-Shaohua
+Ming Lei
