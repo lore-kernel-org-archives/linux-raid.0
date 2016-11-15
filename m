@@ -1,93 +1,166 @@
-From: "Peter Sangas" <pete@wnsdev.com>
-Subject: RE: What to do about Offline_Uncorrectable and Pending_Sector in RAID1
-Date: Tue, 15 Nov 2016 11:22:53 -0800
-Message-ID: <009301d23f75$aaf656c0$00e30440$@wnsdev.com>
-References: <CAHy4j_7_nRMxOSW16VTAY7bzdW_VMap=Jeb2M0wMiNDoNXcijQ@mail.gmail.com> <942ab8be-cd5c-c6d1-d077-cd295b355c0c@youngman.org.uk> <CAHy4j_7F=gN9=7mEH-TsdVJR0YFxBzJK98WeJfuwtANoDEy93w@mail.gmail.com> <5828D5DA.1070406@youngman.org.uk> <CAHy4j_7aC+DCqMRkmK12HPP-wY5kAmLf7W3UG_Nn=TK7ry7ARQ@mail.gmail.com> <5829DF1F.7030109@youngman.org.uk> <008001d23f6c$298b5260$7ca1f720$@wnsdev.com> <f5c66009-956a-6751-2164-3249b8454208@youngman.org.uk>
+From: Shaohua Li <shli@fb.com>
+Subject: Re: [PATCH v6 04/11] md/r5cache: caching mode of r5cache
+Date: Tue, 15 Nov 2016 13:49:20 -0800
+Message-ID: <20161115214919.GA28086@shli-mbp.local>
+References: <20161110204623.3484694-1-songliubraving@fb.com>
+ <20161110204623.3484694-5-songliubraving@fb.com>
+ <20161115170330.kdjxussdau54ekus@kernel.org>
+ <0A3E2AC9-966D-4EC3-A16D-CE8AC7B85DB7@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f5c66009-956a-6751-2164-3249b8454208@youngman.org.uk>
-Content-Language: en-us
+Content-Disposition: inline
+In-Reply-To: <0A3E2AC9-966D-4EC3-A16D-CE8AC7B85DB7@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Anthony Youngman' <antlists@youngman.org.uk>
-Cc: linux-raid@vger.kernel.org
+To: Song Liu <songliubraving@fb.com>
+Cc: Shaohua Li <shli@kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.com>, Kernel Team <Kernel-team@fb.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "hch@infradead.org" <hch@infradead.org>, "liuzhengyuang521@gmail.com" <liuzhengyuang521@gmail.com>, "liuzhengyuan@kylinos.cn" <liuzhengyuan@kylinos.cn>
 List-Id: linux-raid.ids
 
-Got it. Thanks again.
+On Tue, Nov 15, 2016 at 07:08:29PM +0000, Song Liu wrote:
+> 
+> > On Nov 15, 2016, at 9:03 AM, Shaohua Li <shli@kernel.org> wrote:
+> > 
+> > On Thu, Nov 10, 2016 at 12:46:16PM -0800, Song Liu wrote:
+> >> As described in previous patch, write back cache operates in two
+> >> modes: caching and writing-out. The caching mode works as:
+> >> 1. write data to journal
+> >>   (r5c_handle_stripe_dirtying, r5c_cache_data)
+> >> 2. call bio_endio
+> >>   (r5c_handle_data_cached, r5c_return_dev_pending_writes).
+> >> 
+> >> Then the writing-out path is as:
+> >> 1. Mark the stripe as write-out (r5c_make_stripe_write_out)
+> >> 2. Calcualte parity (reconstruct or RMW)
+> >> 3. Write parity (and maybe some other data) to journal device
+> >> 4. Write data and parity to RAID disks
+> >> 
+> >> This patch implements caching mode. The cache is integrated with
+> >> stripe cache of raid456. It leverages code of r5l_log to write
+> >> data to journal device.
+> >> 
+> >> Writing-out mode of the cache is implemented in the next patch.
+> >> 
+> >> With r5cache, write operation does not wait for parity calculation
+> >> and write out, so the write latency is lower (1 write to journal
+> >> device vs. read and then write to raid disks). Also, r5cache will
+> >> reduce RAID overhead (multipile IO due to read-modify-write of
+> >> parity) and provide more opportunities of full stripe writes.
+> >> 
+> >> This patch adds 2 flags to stripe_head.state:
+> >> - STRIPE_R5C_PARTIAL_STRIPE,
+> >> - STRIPE_R5C_FULL_STRIPE,
+> >> 
+> >> Instead of inactive_list, stripes with cached data are tracked in
+> >> r5conf->r5c_full_stripe_list and r5conf->r5c_partial_stripe_list.
+> >> STRIPE_R5C_FULL_STRIPE and STRIPE_R5C_PARTIAL_STRIPE are flags for
+> >> stripes in these lists. Note: stripes in r5c_full/partial_stripe_list
+> >> are not considered as "active".
+> >> 
+> >> For RMW, the code allocates an extra page for each data block
+> >> being updated.  This is stored in r5dev->page and the old data
+> >> is read into it.  Then the prexor calculation subtracts ->page
+> >> from the parity block, and the reconstruct calculation adds the
+> >> ->orig_page data back into the parity block.
+> >> 
+> >> r5cache naturally excludes SkipCopy. When the array has write back
+> >> cache, async_copy_data() will not skip copy.
+> >> 
+> >> There are some known limitations of the cache implementation:
+> >> 
+> >> 1. Write cache only covers full page writes (R5_OVERWRITE). Writes
+> >>   of smaller granularity are write through.
+> >> 2. Only one log io (sh->log_io) for each stripe at anytime. Later
+> >>   writes for the same stripe have to wait. This can be improved by
+> >>   moving log_io to r5dev.
+> >> 3. With writeback cache, read path must enter state machine, which
+> >>   is a significant bottleneck for some workloads.
+> >> 4. There is no per stripe checkpoint (with r5l_payload_flush) in
+> >>   the log, so recovery code has to replay more than necessary data
+> >>   (sometimes all the log from last_checkpoint). This reduces
+> >>   availability of the array.
+> >> 
+> >> This patch includes a fix proposed by ZhengYuan Liu
+> >> <liuzhengyuan@kylinos.cn>
+> >> 
+> >> Signed-off-by: Song Liu <songliubraving@fb.com>
+> >> ---
+> >> 
+> >> +				if (injournal == 0)
+> >> +					list_add_tail(&sh->lru, temp_inactive_list);
+> >> +				else if (uptodate == conf->raid_disks - conf->max_degraded) {
+> >> +					/* full stripe */
+> >> +					if (!test_and_set_bit(STRIPE_R5C_FULL_STRIPE, &sh->state))
+> >> +						atomic_inc(&conf->r5c_cached_full_stripes);
+> >> +					if (test_and_clear_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state))
+> >> +						atomic_dec(&conf->r5c_cached_partial_stripes);
+> >> +					list_add_tail(&sh->lru, &conf->r5c_full_stripe_list);
+> > 
+> > Using the R5_UPTODATE bit to determine full stripe is skeptical. Read enters
+> > into the state machine with writeback. After data is is read into stripe cache,
+> > the R5_UPTODATE bit is set. So here we could put stripe which is never written
+> > into r5c_cached_full_stripes. why not just use injournal to do the determination?
+> 
+> Here, we first test if (injournal == 0). If so, this stripe is released to temp_inactive_list. So I think
+> it is not problem?
 
+The read case could still happen. We could read data from one disk, so the disk
+has the UPTODATE set. Then we can write another disk of the stripe, at that
+time the 'uptodate' isn't correct. The UPTODATE bit doesn't mean the stripe
+data is in journal, so this is an abuse of the bit.
 
------Original Message-----
-From: Anthony Youngman [mailto:antlists@youngman.org.uk] 
-Sent: Tuesday, November 15, 2016 10:50 AM
-To: Peter Sangas
-Cc: linux-raid@vger.kernel.org
-Subject: Re: What to do about Offline_Uncorrectable and Pending_Sector in RAID1
+> >> 
+> >> 	might_sleep();
+> >> 
+> >> -	if (r5l_write_stripe(conf->log, sh) == 0)
+> >> -		return;
+> >> +	if (test_bit(STRIPE_R5C_WRITE_OUT, &sh->state)) {
+> >> +		/* writing out mode */
+> >> +		if (r5l_write_stripe(conf->log, sh) == 0)
+> >> +			return;
+> >> +	} else {
+> >> +		/* caching mode */
+> >> +		if (test_bit(STRIPE_LOG_TRAPPED, &sh->state)) {
+> > 
+> > The STRIPE_LOG_TRAPPED bit isn't designed for this, maybe it just works, I have
+> > to double check. but this one is a little confusing.
+> 
+> This is somehow reuse the flag in caching mode/phase. In handle_stripe(), a large part of the 
+> logic is skipped with STRIPE_LOG_TRAPPED. This behavior is the same in caching mode/phase
+> and write_out mode/phase. 
 
+I'd think this is another abuse of the bit. Both writeout mode and the caching
+mode could set the bit. Here you are using the bit to determine if entering
+caching mode. This isn't clear at all to me. I'd add another bit to indicate
+the caching mode if necessary.
 
+> >> static struct dma_async_tx_descriptor *
+> >> @@ -1496,7 +1558,8 @@ ops_run_prexor5(struct stripe_head *sh, struct raid5_percpu *percpu,
+> >> 	for (i = disks; i--; ) {
+> >> 		struct r5dev *dev = &sh->dev[i];
+> >> 		/* Only process blocks that are known to be uptodate */
+> >> -		if (test_bit(R5_Wantdrain, &dev->flags))
+> >> +		if (test_bit(R5_Wantdrain, &dev->flags) ||
+> >> +		    test_bit(R5_InJournal, &dev->flags))
+> >> 			xor_srcs[count++] = dev->page;
+> >> 	}
+> >> 
+> >> @@ -1530,6 +1593,7 @@ ops_run_prexor6(struct stripe_head *sh, struct raid5_percpu *percpu,
+> >> static struct dma_async_tx_descriptor *
+> >> ops_run_biodrain(struct stripe_head *sh, struct dma_async_tx_descriptor *tx)
+> >> {
+> >> +	struct r5conf *conf = sh->raid_conf;
+> >> 	int disks = sh->disks;
+> >> 	int i;
+> >> 	struct stripe_head *head_sh = sh;
+> >> @@ -1547,6 +1611,7 @@ ops_run_biodrain(struct stripe_head *sh, struct dma_async_tx_descriptor *tx)
+> >> 
+> >> again:
+> >> 			dev = &sh->dev[i];
+> >> +			clear_bit(R5_InJournal, &dev->flags);
+> > 
+> > why clear the bit here? isn't this bit cleared when the stripe is initialized?
+> 
+> This is necessary when we rewrite a page that is already in journal. This means there is new data coming to 
+> this stripe and dev, so we should not consider the page is secured in journal. 
 
-On 15/11/16 18:14, Peter Sangas wrote:
-> Hi Wol,
->
->
-> -----Original Message-----
-> From: Wols Lists [mailto:antlists@youngman.org.uk]
-> Sent: Monday, November 14, 2016 7:58 AM
-> To: Bruce Merry
-> Cc: linux-raid@vger.kernel.org
-> Subject: Re: What to do about Offline_Uncorrectable and Pending_Sector 
-> in RAID1
->
-> On 14/11/16 15:52, Bruce Merry wrote:
->> On 13 November 2016 at 23:06, Wols Lists <antlists@youngman.org.uk> wrote:
->>>> Sounds like that drive could need replacing. I'd get a new drive 
->>>> and do that as soon as possible - use the --replace option of mdadm
->>>> - don't fail the old drive and add the new.
->> Would you mind explaining why I should use --replace instead of 
->> taking out the suspect drive? I guess I lose redundancy for any 
->> writes that occur while the rebuild is happening, but I'd plan to do 
->> this with the filesystem unmounted so there wouldn't be any writes.
->
->> Because a replace will copy from the old drive to the new, recovering any failures from the rest of the array. A fail-and-add will have to rebuild the entire new array >from what's left of the old, stressing the old array much more.
->
->> Okay, in your case, it probably won't make an awful lot of difference, but it does make you vulnerable to problems on the "good" drive. To alter your wording >slightly, you lose redundancy for writes AND READS that occur while the array is rebuilding. It's just good practice (and I point it out because --replace is new and >not well known at present).
->
->> Cheers,
->> Wol
->
-> With respect to the --replace switch and "replacing a failed drive" documented on the wiki here:
-> https://raid.wiki.kernel.org/index.php/Replacing_a_failed_drive  Can you clear a few things up for me ?
->
-> 1. If I just want to replace a working drive in a RAID1 and the array 
-> is still redundant I can issue the following command as in your example:
->
-> mdadm /dev/mdN [--fail /dev/sdx1] --remove /dev/sdx1 --add /dev/sdy1
->
-> which fails and removes sdx1 and replaces it with sdy1.
->
-> Question1. How is this different from first doing a fail/remove on sdx1, physically replacing sdx1 with sdy1 and doing an add on sdy1?
->
-Not really different at all. It's just that you (obviously) can't do the remove and add in the same command if you physically swap the drive in the middle.
-
-But I bang on a bit about having access to spare port to stick a drive on, so I've assumed you can have both the old and the new drive physically (and logically) in the system at the same time.
->
-> 2. If one of the drives as an error in a RAID1 and gets kicked out of the array and the array loses redundancy the wiki has the following example:
->
-> mdmad /dev/mdN --re-add /dev/sdX1
-> mdadm /dev/mdN --add /dev/sdY1 --replace /dev/sdX1 --with /dev/sdY1
->
-> Question2.   Is this point here to first try and re-add sdX1 with the "--re-add" (first line above) and if that fails do a replace (second line above)?
->
-Correct. You've lost redundancy, and (you NEED a bitmap here) the idea is to get sdX1 back in to the array to restore redundancy before you copy its contents to sdY1.
-
-You need the bitmap because, without it, a re-add becomes a normal add, and it's not only a waste of time, it adds stress to the array and increases your chances of a total failure.
->
-> Thanks,
-> Peter
->
-Cheers,
-Wol
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+This sounds suggest we should clear the bit after writeout is done.
