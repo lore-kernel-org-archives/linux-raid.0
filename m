@@ -1,100 +1,50 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: Re: [PATCH v6 04/11] md/r5cache: caching mode of r5cache
-Date: Wed, 16 Nov 2016 19:55:25 +0000
-Message-ID: <504BBD2B-D9C8-4D54-992D-6CF460015C32@fb.com>
-References: <20161110204623.3484694-1-songliubraving@fb.com>
- <20161110204623.3484694-5-songliubraving@fb.com>
- <20161115170330.kdjxussdau54ekus@kernel.org>
- <0A3E2AC9-966D-4EC3-A16D-CE8AC7B85DB7@fb.com>
- <20161115214919.GA28086@shli-mbp.local>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH v2] RAID1: Avoid unnecessary loop to decrease
+ conf->nr_queued in raid1d()
+Date: Wed, 16 Nov 2016 12:05:19 -0800
+Message-ID: <20161116200519.v6y6t4dsbl2zshk2@kernel.org>
+References: <1479305968-18473-1-git-send-email-colyli@suse.de>
+ <785b7474-2e3a-e423-08d7-26cb6136a235@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161115214919.GA28086@shli-mbp.local>
-Content-Language: en-US
-Content-ID: <4F5B572E25472742A9B236094B048064@namprd15.prod.outlook.com>
+Content-Disposition: inline
+In-Reply-To: <785b7474-2e3a-e423-08d7-26cb6136a235@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>
-Cc: Shaohua Li <shli@kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.com>, Kernel Team <Kernel-team@fb.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "hch@infradead.org" <hch@infradead.org>, "liuzhengyuang521@gmail.com" <liuzhengyuang521@gmail.com>, "liuzhengyuan@kylinos.cn" <liuzhengyuan@kylinos.cn>
+To: Coly Li <colyli@suse.de>
+Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
+On Wed, Nov 16, 2016 at 10:36:32PM +0800, Coly Li wrote:
+> 在 2016/11/16 下午10:19, Coly Li 写道:
+> [snip]
+> > ---
+> >  drivers/md/raid1.c | 9 +++++----
+> >  1 file changed, 5 insertions(+), 4 deletions(-)
+> > 
+> > Index: linux-raid1/drivers/md/raid1.c
+> > ===================================================================
+> > --- linux-raid1.orig/drivers/md/raid1.c
+> > +++ linux-raid1/drivers/md/raid1.c
+> > @@ -2387,17 +2387,17 @@ static void raid1d(struct md_thread *thr
+> [snip]
+> >  		while (!list_empty(&tmp)) {
+> >  			r1_bio = list_first_entry(&tmp, struct r1bio,
+> >  						  retry_list);
+> >  			list_del(&r1_bio->retry_list);
+> > +			spin_lock_irqsave(&conf->device_lock, flags);
+> > +			conf->nr_queued--;
+> > +			spin_unlock_irqrestore(&conf->device_lock, flags);
+> [snip]
+> 
+> Now I work on another 2 patches for a simpler I/O barrier, and a
+> lockless I/O submit on raid1, where conf->nr_queued will be in atomic_t.
+> So spin lock expense will not exist any more. Just FYI.
 
-> On Nov 15, 2016, at 1:49 PM, Shaohua Li <shli@fb.com> wrote:
->=20
-> On Tue, Nov 15, 2016 at 07:08:29PM +0000, Song Liu wrote:
->=20
->>>>=20
->>>> 	might_sleep();
->>>>=20
->>>> -	if (r5l_write_stripe(conf->log, sh) =3D=3D 0)
->>>> -		return;
->>>> +	if (test_bit(STRIPE_R5C_WRITE_OUT, &sh->state)) {
->>>> +		/* writing out mode */
->>>> +		if (r5l_write_stripe(conf->log, sh) =3D=3D 0)
->>>> +			return;
->>>> +	} else {
->>>> +		/* caching mode */
->>>> +		if (test_bit(STRIPE_LOG_TRAPPED, &sh->state)) {
->>>=20
->>> The STRIPE_LOG_TRAPPED bit isn't designed for this, maybe it just works=
-, I have
->>> to double check. but this one is a little confusing.
->>=20
->> This is somehow reuse the flag in caching mode/phase. In handle_stripe()=
-, a large part of the=20
->> logic is skipped with STRIPE_LOG_TRAPPED. This behavior is the same in c=
-aching mode/phase
->> and write_out mode/phase.=20
->=20
-> I'd think this is another abuse of the bit. Both writeout mode and the ca=
-ching
-> mode could set the bit. Here you are using the bit to determine if enteri=
-ng
-> caching mode. This isn't clear at all to me. I'd add another bit to indic=
-ate
-> the caching mode if necessary.
+I'd like to hold this patch till you post the simpler I/O barrier, as the patch
+itself currently doesn't make the process faster (lock/unlock is much heavier
+than the loop).
 
-I guess the comment made it confusing... STRIPE_LOG_TRAPPED is not=20
-used to determine where it is in caching phase. The /* caching phase */ is=
-=20
-for the "else" statement:
-
-        if (test_bit(STRIPE_R5C_WRITE_OUT, &sh->state)) {
-                /* writing out phase */
-                if (r5l_write_stripe(conf->log, sh) =3D=3D 0)
-                        return;
-        } else {  /* caching phase   i.e.  STRIPE_R5C_WRITE_OUT =3D=3D 0 */
-                if (test_bit(STRIPE_LOG_TRAPPED, &sh->state)) {
-                        r5c_cache_data(conf->log, sh, s);
-                        return;
-                }
-        }
-
-In caching phase, STRIPE_LOG_TRAPPED is used as a gate of=20
-r5c_cache_data(). It is set in r5c_handle_dirtying() and cleared in=20
-endio of journal writes. It is kind similar to the name "log trapped"
-meaning it is time to write data to the log.=20
-
->=20
->>>> @@ -1547,6 +1611,7 @@ ops_run_biodrain(struct stripe_head *sh, struct =
-dma_async_tx_descriptor *tx)
->>>>=20
->>>> again:
->>>> 			dev =3D &sh->dev[i];
->>>> +			clear_bit(R5_InJournal, &dev->flags);
->>>=20
->>> why clear the bit here? isn't this bit cleared when the stripe is initi=
-alized?
->>=20
->> This is necessary when we rewrite a page that is already in journal. Thi=
-s means there is new data coming to=20
->> this stripe and dev, so we should not consider the page is secured in jo=
-urnal.=20
->=20
-> This sounds suggest we should clear the bit after writeout is done.
-
-That may also work. Let me confirm.=20
-
-Thanks,=20
-Song=
+Thanks,
+Shaohua
