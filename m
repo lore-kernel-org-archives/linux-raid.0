@@ -1,63 +1,32 @@
-From: Coly Li <colyli@suse.de>
-Subject: [PATCH v2] RAID1: Avoid unnecessary loop to decrease conf->nr_queued in raid1d()
-Date: Wed, 16 Nov 2016 22:19:28 +0800
-Message-ID: <1479305968-18473-1-git-send-email-colyli@suse.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [md PATCH 2/4] md: add bio completion tracing for raid1/raid10
+Date: Wed, 16 Nov 2016 06:32:33 -0800
+Message-ID: <20161116143233.GA28615@infradead.org>
+References: <147910131504.27168.6566119701315109161.stgit@noble>
+ <147910142112.27168.16834874155342134173.stgit@noble>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <147910142112.27168.16834874155342134173.stgit@noble>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Coly Li <colyli@suse.de>, Shaohua Li <shli@fb.com>, Neil Brown <neilb@suse.de>
+To: NeilBrown <neilb@suse.com>
+Cc: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-commit ccfc7bf1f0 points out bios from conf->bio_end_io_list also
-contribute to conf->nr_queued counter, that's right. But the fix
-could be improved. The original fix replaces list_add() by a while()
-loop to iterate every bio on conf->bio_end_io_list, and decrease
-conf->nr_queued. If we look at the code several lines after, we may
-find there is another while() loop to iterate every node from tmp
-list which contains the original content of conf->bio_end_io_list.
-Yes, we can decrease conf->nr_queued here, then we can avoid the
-previous extra while() loop, which consumes more CPU cycles and hold
-a spin lock longer time when conf->bio_end_io_list is not tiny. 
+On Mon, Nov 14, 2016 at 04:30:21PM +1100, NeilBrown wrote:
+> raid5 already has this, as does dm.
+> linear and raid0 do no see completions, only bio_chain_end() or bio_endio()
+> see those.
+> So just add it for raid1 and raid10.
+> 
+> Between
+>  Commit: 3a366e614d08 ("block: add missing block_bio_complete() tracepoint")
+> and
+>  Commit: 0a82a8d132b2 ("Revert "block: add missing block_bio_complete() tracepoint"")
+> in the 3.9-rc series, this was done centrally in bio_endio().
+> Until/unless that is resurected, do the tracing in the md/raid code.
 
-This patch changes to decrease conf->nr_queued in loop of
-while(!list_empty(&tmp)){}, it avoids an extra loop execution, and
-avoids holding conf->device_lock for too long time.
-
-By suggestion from Neil, in this version of the patch, I use
-list_splice_init() interface to operate conf->bio_end_io_list. 
-
-Signed-off-by: Coly Li <colyli@suse.de>
-Cc: Shaohua Li <shli@fb.com>
-Cc: Neil Brown <neilb@suse.de>
----
- drivers/md/raid1.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
-
-Index: linux-raid1/drivers/md/raid1.c
-===================================================================
---- linux-raid1.orig/drivers/md/raid1.c
-+++ linux-raid1/drivers/md/raid1.c
-@@ -2387,17 +2387,17 @@ static void raid1d(struct md_thread *thr
- 	    !test_bit(MD_CHANGE_PENDING, &mddev->flags)) {
- 		LIST_HEAD(tmp);
- 		spin_lock_irqsave(&conf->device_lock, flags);
--		if (!test_bit(MD_CHANGE_PENDING, &mddev->flags)) {
--			while (!list_empty(&conf->bio_end_io_list)) {
--				list_move(conf->bio_end_io_list.prev, &tmp);
--				conf->nr_queued--;
--			}
--		}
-+		if (!test_bit(MD_CHANGE_PENDING, &mddev->flags))
-+			list_splice_init(&conf->bio_end_io_list, &tmp);
- 		spin_unlock_irqrestore(&conf->device_lock, flags);
-+	
- 		while (!list_empty(&tmp)) {
- 			r1_bio = list_first_entry(&tmp, struct r1bio,
- 						  retry_list);
- 			list_del(&r1_bio->retry_list);
-+			spin_lock_irqsave(&conf->device_lock, flags);
-+			conf->nr_queued--;
-+			spin_unlock_irqrestore(&conf->device_lock, flags);
- 			if (mddev->degraded)
- 				set_bit(R1BIO_Degraded, &r1_bio->state);
- 			if (test_bit(R1BIO_WriteError, &r1_bio->state))
+We're working on getting it back for 4.10, so please don't add these
+tracepoints to the MD driver for now.  Next time please also ask
+linux-block first and/or Cc the list on a patch like this.
