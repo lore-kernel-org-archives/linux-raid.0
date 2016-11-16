@@ -1,33 +1,52 @@
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: Ddf based RAID management software
-Date: Wed, 16 Nov 2016 10:00:53 -0500
-Message-ID: <wrfjzikzlba2.fsf@redhat.com>
-References: <CAPO=kN3xzv_MmbTSLT0bfxOpdZ+yvmybSXb6L-goBUasm+1NoQ@mail.gmail.com>
-        <877f86k3we.fsf@notabene.neil.brown.name>
+Subject: Re: [PATCH 0/4] IMSM: Add support for 4Kn sector size drives
+Date: Wed, 16 Nov 2016 10:14:36 -0500
+Message-ID: <wrfj1syblan7.fsf@redhat.com>
+References: <1478788098-32041-1-git-send-email-pawel.baldysiak@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <877f86k3we.fsf@notabene.neil.brown.name> (NeilBrown's message of
-        "Mon, 14 Nov 2016 16:48:49 +1100")
+In-Reply-To: <1478788098-32041-1-git-send-email-pawel.baldysiak@intel.com>
+        (Pawel Baldysiak's message of "Thu, 10 Nov 2016 15:28:14 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Arka Sharma <arka.sw1988@gmail.com>, linux-raid@vger.kernel.org
+To: Pawel Baldysiak <pawel.baldysiak@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.com> writes:
-> On Sun, Nov 13 2016, Arka Sharma wrote:
+Pawel Baldysiak <pawel.baldysiak@intel.com> writes:
+> This patch set adds support for IMSM with 4Kn sector size drives
+> First patch adds the generic function for receiving sector size,
+> rest are IMSM specific.
+> Internal calculation are still based on 512-bytes sector,
+> variables are converted during read/write from/to member drive.
+> Mixing of devices with different sector size is not allowed.
 >
->> Hello All,
->>
->> Is there any tool apart from mdadm available which can create software
->> RAID based on Ddf metadata. We want to dump the metadata content and
->> tally with metadata written by mdadm and our application.
+> Pawel Baldysiak (4):
+>   Add function for getting member drive sector size
+>   IMSM: Read and store device sector size
+>   IMSM: Add support for 4Kn sector size drives
+>   IMSM: 4Kn drives support - adapt general migration record
 >
-> Not that I'm aware of.
-> dmraid can read some ddf metadata, but I don't think it will create new
-> metadata.
+>  mdadm.h       |   1 +
+>  super-intel.c | 315 +++++++++++++++++++++++++++++++++++++++++++++-------------
+>  super1.c      |   3 +-
+>  util.c        |  16 +++
+>  4 files changed, 265 insertions(+), 70 deletions(-)
 
-I thought some BIOS code would be able to do it, similar to how Intel's
-IMSM BIOS does it?
+Hi Pawel,
 
+This set mostly looks good - a couple of comments:
+
++int get_dev_sector_size(int fd, char *dname, unsigned int *sectsizep)
+
+This introduces a *dname but nowhere in your code is it actually used. I
+am not necessarily against this, and it looks like we do it in some
+places, but not others. However do you anticipate using it in future
+changes you have lined up?
+
+I noticed you changed hard coded 512 byte limits to hard coded 4096
+when rounding up sizes for posix_memalign() etc. Wouldn't it be cleaner
+to introduce a MAX_SECTOR_SIZE or similar?
+
+Cheers,
 Jes
