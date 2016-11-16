@@ -1,129 +1,86 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH v6 03/11] md/r5cache: State machine for raid5-cache write back mode
-Date: Wed, 16 Nov 2016 11:17:13 +1100
-Message-ID: <87bmxgi8hi.fsf@notabene.neil.brown.name>
-References: <20161110204623.3484694-1-songliubraving@fb.com> <20161110204623.3484694-4-songliubraving@fb.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH v6 08/11] md/r5cache: r5cache recovery: part 1
+Date: Tue, 15 Nov 2016 16:33:31 -0800
+Message-ID: <20161116003331.pzqxktfjwcqyx6wo@kernel.org>
+References: <20161110204623.3484694-1-songliubraving@fb.com>
+ <20161110204623.3484694-9-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161110204623.3484694-4-songliubraving@fb.com>
+Content-Disposition: inline
+In-Reply-To: <20161110204623.3484694-9-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuang521@gmail.com, liuzhengyuan@kylinos.cn, Song Liu <songliubraving@fb.com>
+To: Song Liu <songliubraving@fb.com>
+Cc: linux-raid@vger.kernel.org, neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuang521@gmail.com, liuzhengyuan@kylinos.cn
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Thu, Nov 10, 2016 at 12:46:20PM -0800, Song Liu wrote:
+> Recovery of write-back cache has different logic to write-through only
+> cache. Specifically, for write-back cache, the recovery need to scan
+> through all active journal entries before flushing data out. Therefore,
+> large portion of the recovery logic is rewritten here.
+> 
+> To make the diffs cleaner, we split the rewrite as follows:
+> 
+> 1. In this patch, we:
+>       - add new data to r5l_recovery_ctx
+>       - add new functions to recovery write-back cache
+>    The new functions are not used in this patch, so this patch does not
+>    change the behavior of recovery.
+> 
+> 2. In next patch, we:
+>       - modify main recovery procedure r5l_recovery_log() to call new
+>         functions
+>       - remove old functions
+> 
+> With cache feature, there are 2 different scenarios of recovery:
+> 1. Data-Parity stripe: a stripe with complete parity in journal.
+> 2. Data-Only stripe: a stripe with only data in journal (or partial
+>    parity).
+> 
+> The code differentiate Data-Parity stripe from Data-Only stripe with
+> flag STRIPE_R5C_WRITE_OUT.
+> 
+> For Data-Parity stripes, we use the same procedure as raid5 journal,
+> where all the data and parity are replayed to the RAID devices.
+> 
+> For Data-Only strips, we need to finish complete calculate parity and
+> finish the full reconstruct write or RMW write. For simplicity, in
+> the recovery, we load the stripe to stripe cache. Once the array is
+> started, the stripe cache state machine will handle these stripes
+> through normal write path.
+> 
+> r5c_recovery_flush_log contains the main procedure of recovery. The
+> recovery code first scans through the journal and loads data to
+> stripe cache. The code keeps tracks of all these stripes in a list
+> (use sh->lru and ctx->cached_list), stripes in the list are
+> organized in the order of its first appearance on the journal.
+> During the scan, the recovery code assesses each stripe as
+> Data-Parity or Data-Only.
+> 
+> During scan, the array may run out of stripe cache. In these cases,
+> the recovery code will also call raid5_set_cache_size to increase
+> stripe cache size. If the array still runs out of stripe cache
+> because there isn't enough memory, the array will not assemble.
+> 
+> At the end of scan, the recovery code replays all Data-Parity
+> stripes, and sets proper states for Data-Only stripes. The recovery
+> code also increases seq number by 10 and rewrites all Data-Only
+> stripes to journal. This is to avoid confusion after repeated
+> crashes. More details is explained in raid5-cache.c before
+> r5c_recovery_rewrite_data_only_stripes().
 
-On Fri, Nov 11 2016, Song Liu wrote:
+I'm ok with this patch in current stage. This one has a lot of areas to
+improve:
+- the r5c_recovery_lookup_stripe algorithm looks silly
+- r5c_recovery_analyze_meta_block will read the data twice. One in verify
+  checksum and the other in loading to stripe. We could estimate the maximum
+  pages a meata could use, then read data to the pages. we could do the read in
+  very checksum and then copy the data to stripe.
+- r5c_recovery_rewrite_data_only_stripes doesn't need to use sync io, we can
+  dispatch several io and wait in batch.
 
-> This patch adds state machine for raid5-cache. With log device, the
-> raid456 array could operate in two different modes (r5c_journal_mode):
->   - write-back (R5C_MODE_WRITE_BACK)
->   - write-through (R5C_MODE_WRITE_THROUGH)
->
-> Existing code of raid5-cache only has write-through mode. For write-back
-> cache, it is necessary to extend the state machine.
->
-> With write-back cache, every stripe could operate in two different
-> modes:
->   - caching
->   - writing-out
->
-> In caching mode, the stripe handles writes as:
->   - write to journal
->   - return IO
->
-> In writing-out mode, the stripe behaviors as a stripe in write through
-> mode R5C_MODE_WRITE_THROUGH.
->
-> STRIPE_R5C_WRITE_OUT is added to sh->state to differentiate caching and
-> writing-out mode.
->
-> When the array is write-through, stripes also go between caching mode
-> and writing-out mode.
-
-This bothers me.  Why would a stripe *ever* be in "caching mode" (or
-"caching phase") when the array is in write-through?  It doesn't seem to
-make sense.
-
-A stripe_head goes through several states/stages/phases/things.
-
- 1/ write data blocks to journal
- 2/ reading missing data blocks and compute parity
- 3/ write data and parity to journal
- 4/ write data and parity to RAID
-
-When there is no log, we only perform 2 and 4
-When there is a log in WRITE_THOUGH we perform 2,3,4
-When there is a log in WRITE_BACK we perform 1 (maybe several times) 2 3 4.
-
-Step 2 is initiated by calling handle_stripe_dirtying().
-A new function is introduced "r5c_handle_stripe_dirtying()" which
-determines if handle_stripe_dirtying() should do anything.
-(It returns '0' if it shouldn't proceed, and -EAGAIN if it should,
- which seems a little strange).
-
-If there is no log, or if STRIPE_R5C_WRITE_OUT is set, -EAGAIN is
-returned.
-Otherwise if in MODE_WRITE_THROUGH, STRIPE_R5C_WRITE_OUT is set and
-=2DEAGAIN is returned.
-else (in next patch) are more complex determination is made, but
-=2DEAGAIN is only ever returns with STRIPE_R5C_WRITE_OUT set, or if log =3D=
-=3D NULL.
-
-So STRIPE_R5C_WRITE_OUT is (sometimes) set to enter step 2, and cleared
-when step 4 completes.
-
-STRIPE_R5C_WRITE_OUT means that the 2(3)4 writeout sequence has
-commenced and not yet completed.  I would like to see it *always* set
-when that happens, including when log=3D=3DNULL.
-I would probably even rename r5c_handle_stripe_dirtying() to something
-like  r5c_check_need_writeout() which would check to see if writeout was
-needed, and would set STRIPE_R5C_WRITE_OUT if it was.
-Then handle_stripe_dirtying() would be called iff STRIPE_R5C_WRITE_OUT
-were set. (it could even be named to handle_stripe_writeout()??)
-
-There are two actions that can be taken when where are ->towrite blocks
-on a stripe.  We can enter WRITE_OUT, or they can be cached in the
-journal.  Also we can enter WRITE_OUT when a stripe needs to be removed
-From=20memory or from the journal.
-This makes "writeout" and "cache" seem more like "actions" than states,
-modes, or phases.  Naming is hard.
-
-Trying to understand R5_InJournal:
- It is set (on pd_idx) when step 3 completes.
- It is only used (in this patch) in r5c_finish_stripe_write_out()
-   to make sure WRITE_OUT isn't cleared until after InJournal is
- cleared.
-
-So setting InJournal[pd_idx] marks the end of step 3 and clearing WRITE_OUT
-marks the end of step 4.
-
-I think that observation helps me understand the code a bit better.
+Please remember to fix these later.
 
 Thanks,
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAEBCAAGBQJYK6WJAAoJEDnsnt1WYoG5jxQQAKRi0o5sAk+iXxk4ak8y245C
-DSFu5KCphh+8g1GHUDZ9Usr8NHiazDaq6C6EWRilcrIlN4te8sfoNhHypuXQdFG0
-Q3YfTiSQZzm1hS03zmu0WgWe+G3B4s189ihWjrTr6iDuvJ+ze94RlZfi8rIndZFp
-by6rwAkYG18Pmgc7tK+0Tu41qOLg2QDZ1pvdb8olnARn4HOLZCyw4zbHk93a0g4r
-7i1AXZrfIjh3yoOxqdgKDBnSf28Hi7TKrYwFpBsZQpkT6242d0eCRoVwBXIZ98Xd
-+0jNaOYQyWdR51iRIw1mk+7ilqnAPlrmUw6h+a+9kbyE8IOOfzXHxx7pvdor7TTB
-4HiiH9mpd/7KJqUAHPrymPr2pUOKmunFztzpvQeHpppTIA7S4dsRiS1vHbCPm1Tj
-wUqjVul/6FZrpN0zAmn8si4iTIQbA2edviT6VEX3+73cv+AzYNIlOCpn7nuoQKnl
-J7/JjSVsJC41EKcHz+9FSHPtRAQlCwchW6pFF9uvZ7nytAP5bNtVzJp27eRDQluO
-1it6EOqKDSmdXTjhee7i9zkQ2P+7KAdKLKwtpryhNjwCQ/EOagLf6wVkglDwQ5Ai
-lOPobP3Ndb57kUE2uy4kc90QPckYP4OwPeolxRXZJ9TeytWBcIrCze5nhL+x90ac
-vYr65FPQWun10pHJgwgU
-=4w4l
------END PGP SIGNATURE-----
---=-=-=--
+Shaohua
