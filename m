@@ -1,50 +1,39 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v2] RAID1: Avoid unnecessary loop to decrease
- conf->nr_queued in raid1d()
-Date: Wed, 16 Nov 2016 12:05:19 -0800
-Message-ID: <20161116200519.v6y6t4dsbl2zshk2@kernel.org>
-References: <1479305968-18473-1-git-send-email-colyli@suse.de>
- <785b7474-2e3a-e423-08d7-26cb6136a235@suse.de>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Just a thought - linux raid wiki - raid 5 grows getting stuck at 0%
+Date: Wed, 16 Nov 2016 23:51:01 +0000
+Message-ID: <582CF0E5.2030605@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <785b7474-2e3a-e423-08d7-26cb6136a235@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Coly Li <colyli@suse.de>
-Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Neil Brown <neilb@suse.de>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Nov 16, 2016 at 10:36:32PM +0800, Coly Li wrote:
-> 在 2016/11/16 下午10:19, Coly Li 写道:
-> [snip]
-> > ---
-> >  drivers/md/raid1.c | 9 +++++----
-> >  1 file changed, 5 insertions(+), 4 deletions(-)
-> > 
-> > Index: linux-raid1/drivers/md/raid1.c
-> > ===================================================================
-> > --- linux-raid1.orig/drivers/md/raid1.c
-> > +++ linux-raid1/drivers/md/raid1.c
-> > @@ -2387,17 +2387,17 @@ static void raid1d(struct md_thread *thr
-> [snip]
-> >  		while (!list_empty(&tmp)) {
-> >  			r1_bio = list_first_entry(&tmp, struct r1bio,
-> >  						  retry_list);
-> >  			list_del(&r1_bio->retry_list);
-> > +			spin_lock_irqsave(&conf->device_lock, flags);
-> > +			conf->nr_queued--;
-> > +			spin_unlock_irqrestore(&conf->device_lock, flags);
-> [snip]
-> 
-> Now I work on another 2 patches for a simpler I/O barrier, and a
-> lockless I/O submit on raid1, where conf->nr_queued will be in atomic_t.
-> So spin lock expense will not exist any more. Just FYI.
+I've just been doing a bit of work on the wiki when I put 2 and 2
+together, and hope I haven't made 5 ...
 
-I'd like to hold this patch till you post the simpler I/O barrier, as the patch
-itself currently doesn't make the process faster (lock/unlock is much heavier
-than the loop).
+Bitmaps interfere with grow operations, I believe ...
 
-Thanks,
-Shaohua
+And mdadm has recently been modified so that bitmaps are switched on by
+default, I also believe ...
+
+Could this be silently blocking the grow, so you don't get any error and
+it just sits there doing nothing?
+
+But that brings up two points. Should mdadm now explicitly look for a
+bitmap when growing an array, and warn that the bitmap needs to be
+disabled? Apparently it currently comes up with some errors that hint at
+the cause rather than explicitly say so.
+
+And secondly, I'm sure someone sent an email to the list that explained
+when a bitmap was created. I can't find it in my archives. The man page
+says it's created if the array is over 100G, but I'm sure the email gave
+rather more detail than that and that the figure actually varied.
+
+But I'm sure you can see from this that I'm updating this bit of the
+wiki. Is there anything else I ought to know about bitmaps, so I can
+document it? :-)
+
+Cheers,
+Wol
