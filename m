@@ -1,68 +1,153 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [md PATCH 2/4] md: add bio completion tracing for raid1/raid10
-Date: Thu, 17 Nov 2016 16:35:47 +1100
-Message-ID: <87r36ahdn0.fsf@notabene.neil.brown.name>
-References: <147910131504.27168.6566119701315109161.stgit@noble> <147910142112.27168.16834874155342134173.stgit@noble> <20161116143233.GA28615@infradead.org>
+Subject: Re: mdadm I/O error with Ddf RAID
+Date: Thu, 17 Nov 2016 16:49:29 +1100
+Message-ID: <87oa1ehd06.fsf@notabene.neil.brown.name>
+References: <CAPO=kN2QDLEMgo9p9pU3=MeLQ=J6R8eeDL1Pw9m2pHjbVsuFGg@mail.gmail.com> <874m3ak3ci.fsf@notabene.neil.brown.name> <CAPO=kN3psOzSYzbKZ5dAGK5uEk3JfTSf-Ec+S_UTL0iaD78Pdg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161116143233.GA28615@infradead.org>
+In-Reply-To: <CAPO=kN3psOzSYzbKZ5dAGK5uEk3JfTSf-Ec+S_UTL0iaD78Pdg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
+To: Arka Sharma <arka.sw1988@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Thu, Nov 17 2016, Christoph Hellwig wrote:
+On Thu, Nov 17 2016, Arka Sharma wrote:
 
-> On Mon, Nov 14, 2016 at 04:30:21PM +1100, NeilBrown wrote:
->> raid5 already has this, as does dm.
->> linear and raid0 do no see completions, only bio_chain_end() or bio_endi=
-o()
->> see those.
->> So just add it for raid1 and raid10.
->>=20
->> Between
->>  Commit: 3a366e614d08 ("block: add missing block_bio_complete() tracepoi=
-nt")
->> and
->>  Commit: 0a82a8d132b2 ("Revert "block: add missing block_bio_complete() =
-tracepoint"")
->> in the 3.9-rc series, this was done centrally in bio_endio().
->> Until/unless that is resurected, do the tracing in the md/raid code.
+> Thanks Neil for you response. The devices we are using have physical
+> sector size of 512 bytes. We are writing the anchor header at last LBA
+> of the devices. We also written the controller data, physical records,
+> virtual records, physical data, config data to both primary and
+> secondary. We have also dumped 32 MB of metadata for RAID created by
+> mdadm and our tool. The guid's, crc's, timestamps are different as
+> expected, and the other fields are mostly similar, except in between
+> some header mdadm is writing 'FF' and we are writing 0's. We have also
+> dumped the call trace in block layer and put following prints,
 >
-> We're working on getting it back for 4.10, so please don't add these
-> tracepoints to the MD driver for now.  Next time please also ask
-> linux-block first and/or Cc the list on a patch like this.
+> [   10.312362] generic_make_request: bio->bi_iter.bi_sector=18446744073709551615
+> [   10.312363] generic_make_request_checks:
+> bio->bi_iter.bi_sector=18446744073709551615
+> [   10.312364] bio_check_eod: nr_sector=8, max_sector=1000215216,
+> bio->bi_iter.bi_sector=18446744073709551615
 
-Oh good, thanks for letting me know. I'll drop that one.
-Do you know if there is any plan to include trace_block_split() in
-bio_split()??
+It might help if you provide A LOT more details.  Don't leave me
+guessing.
 
-Thanks,
+You have shown me the output of some printks, but you haven't shown me
+the patch which added the printks, so I cannot be sure how to interpret
+them.
+
+You originally said that mdadm was causing the error, but now it seems
+that the error is coming after mdadm has already assembled the array and
+something else is accessing it.
+
+Have you tried running "mdadm --exmaine" on a component device?  I
+previously assumed this would just crash because your original problem
+report seemed to suggest that mdadm was getting a read error, but now
+that doesn't seem to be the case.
+
+Please be accurate and provide details.  Don't be afraid to send several
+kilobytes of logs.  Err on the side of sending too much, not too
+little.  Don't ever trim logs.
+
 NeilBrown
+
+
+>
+> and following is the call trace
+>
+> [   10.312372]  [<ffffffff983d4b5c>] dump_stack+0x63/0x87
+
+> [   10.312374]  [<ffffffff983a06c1>] generic_make_request_checks+0x2a1/0x550
+> [   10.312375]  [<ffffffff980d54a9>] ? vprintk_default+0x29/0x40
+> [   10.312377]  [<ffffffff983a2cf2>] generic_make_request+0x52/0x210
+> [   10.312378]  [<ffffffff9839c0bf>] ? bio_clone_bioset+0x12f/0x320
+> [   10.312380]  [<ffffffffc031ed6a>] raid1_make_request+0xa2a/0xe00 [raid1]
+> [   10.312382]  [<ffffffff98192fcc>] ? get_page_from_freelist+0x36c/0xa50
+> [   10.312383]  [<ffffffff9822f8d5>] ? __d_alloc+0x25/0x1d0
+> [   10.312385]  [<ffffffff986739f2>] md_make_request+0xe2/0x230
+> [   10.312387]  [<ffffffff980be164>] ? __wake_up+0x44/0x50
+> [   10.312391]  [<ffffffff983a2dc6>] generic_make_request+0x126/0x210
+> [   10.312395]  [<ffffffff98325e3b>] ? d_lookup_done.part.24+0x26/0x2b
+> [   10.312398]  [<ffffffff983a2f3b>] submit_bio+0x8b/0x1a0
+> [   10.312401]  [<ffffffff9839ab48>] ? bio_alloc_bioset+0x168/0x2a0
+> [   10.312405]  [<ffffffff9824d9ac>] submit_bh_wbc+0x15c/0x1a0
+> [   10.312408]  [<ffffffff9824e26c>] block_read_full_page+0x1ec/0x370
+> [   10.312411]  [<ffffffff98250230>] ? I_BDEV+0x20/0x20
+> [   10.312414]  [<ffffffff9818ad60>] ? find_get_entry+0x20/0x140
+> [   10.312417]  [<ffffffff98250a18>] blkdev_readpage+0x18/0x20
+> [   10.312420]  [<ffffffff9818cc7b>] generic_file_read_iter+0x1ab/0x850
+> [   10.312423]  [<ffffffff98250c77>] blkdev_read_iter+0x37/0x40
+> [   10.312427]  [<ffffffff9821571e>] __vfs_read+0xbe/0x130
+> [   10.312430]  [<ffffffff9821674e>] vfs_read+0x8e/0x140
+> [   10.312433]  [<ffffffff98217b56>] SyS_read+0x46/0xa0
+> [   10.312437]  [<ffffffff98216437>] ? SyS_lseek+0x87/0xb0
+> [   10.312440]  [<ffffffff988106f6>] entry_SYSCALL_64_fastpath+0x1e/0xa8
+>
+> Is it some header field our application is not writing correctly for
+> which mdadm is reading wrong data and invalid sector value is formed
+> in bio ?
+>
+> Regards,
+> Arka
+>
+> On Mon, Nov 14, 2016 at 11:30 AM, NeilBrown <neilb@suse.com> wrote:
+>> On Fri, Nov 11 2016, Arka Sharma wrote:
+>>
+>>> Hi All,
+>>>
+>>> We have developed a RAID creation application which create RAID with
+>>> Ddf RAID metadata. We are using PCIe ssd as physical disks. We are
+>>> writing the anchor, primary, secondary headers, virtual and physical
+>>> records, configuration record and physical disk data. The offsets of
+>>> the headers are updated in the primary, secondary and anchor headers
+>>> correctly. The problem is when we try to boot to Ubuntu server and we
+>>> observe that mdadm is throwing a disk failure error message and from
+>>> block layer we are getting rw=0, want=7, limit=1000215216. We also
+>>> confirmed using there is no I/O error is coming from the PCIe ssd,
+>>> using a logic analyzer. Also the limit value 1000215216 is the
+>>> capacity of the ssd in 512 byte blocks. Any insight will be highly
+>>> appreciated.
+>>>
+>>
+>> It looks like mdadm is attempting a 4K read starting at the last sector.
+>>
+>> Possibly the ssd's report a physical sector size of 4K.
+>>
+>> I don't know how DDF is supposed to work on a device like that.
+>> Should the anchor be at the start of the last 4K block,
+>> or in the last 512byte virtual block?
+>>
+>> DDF support in mdadm was written with the assumption of 512 byte blocks.
+>>
+>> I'm not at all certain this is the cause of the problem though.
+>>
+>> I would suggest starting by finding out which READ request in mdadm is
+>> causing the error.
+>>
+>> NeilBrown
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAEBCAAGBQJYLUGzAAoJEDnsnt1WYoG5RdoQAKbhK8zUYChVpAYnlR0Mnn8j
-b9qKWmTntw/uc0QfC8mKxfRdlgzR4FM7UGK9v85+1/LgtdZHtnck2LYBTape4CvZ
-mwcMcxPi/pGxtT6VWk9DxlCdyvSk46d4mz13s9CdEal3Gt0hN33HGPRQU66zf0CT
-dOccGw3dKkTjuHuN00Rv6NBa/nIPd4CFh8vJ4hZ0IA1+u60AMsbQEzA74kNwYCRu
-bLnm3hMpcS4tQ1Bp6JeeDV2VkogNC8cOyWtUJ+CXYCf/RO4d3J1ma6RzqSCQSbd0
-JR8b6sjjE6BLvc0YZunLIsu1wbLuoobrU0pqVmbX2V2iWxG9Uqqkp0fkY/tHsp9Q
-duBoplmgU/NJQwfFNHT/42iihvQTDiKgG1D8/4wLXqRH2NNvYXSHuXlmSjip4zT0
-kWj0+w7P+HVbgKiwwkTQ5OKqfASRZfWYr2XSd38/6rknFqZshAHdJflOQz7JmRyj
-ic96Ec3lgp5xlf87rwEOQjbDjVNnpe7lyn46XAlYn7RugfEVD6xFUtv+TYkOS4q/
-3ETBTP0b2sx5D3m2AQvj2VfEgZYRXzfcpVNMF9h4dz3dEpK67HzokEpT8n1AsN1T
-oxx2KLtPvcp+6Oe6aO36jDKo7KsNSzZwy7XqYKnQz7c9TzAj74nuJ3iFbk0bfLzy
-s0nMWVuUXq29zQ2YI2py
-=jK28
+iQIcBAEBCAAGBQJYLUTpAAoJEDnsnt1WYoG5y4kP/iF6pUnIq5OCV72sUTB6/QSG
+x6cKOg5gevS2zFmatsq2MuooaZwXh9VbXi/G4b4NL7QjjyDPnwU2qujPxu5YYNv5
+zWqC1F9ERgCAjXGynthTprtrZXBXAV/Bc0mNQHibxjNCcKNzBi87wFcqHhMxIdbn
+h9rEdhxnY+TQ57pVNWpJiUDoTeYBmttNs1R6uzhynqWMhHfp2aFK/oal0Mj7a525
+F5GJtye7vc5G7H5t5XXza96gtHiwzGAmBwXQO5V4GoZDXimp1FGmWWHfJr0xZ47T
+h+Si33C0yWfWZedSV3xfUX2IFue59R6r1rmX1B/Yr3k6zfz+gMf0HKye5XP3D/qc
+6xopTXKDvyhUFfLHH0UbtwI3w7lsNwMDv9oASKxTQW02j0RGmbfAhEiyUmJC71rq
+D/cm+BAF3lWhMdXzP0qeijwAhkcG60aV7XPEgiMtvUc4R8osxsgIKzYob5/ohgcM
+9E3MpojDZ7T6I15uJef1cYHQaKLIQokQqhVoDGW6pXOSHllSoSmB4yAY962DNy2f
+AOFDt8UM+z0Mvh4ORbxNOCo6S07qNg/wyXkC8CG/1Soor1bRNLSlVEfm7ZwCaEbb
+E+oTHTdcINCbf+zZHjtBV+wZIeXulvCy2sh+cti3GK8rnaS77fOuJZH/VoYndbb7
+iE6OJ7kb1gWd30tAqhIA
+=0PJ7
 -----END PGP SIGNATURE-----
 --=-=-=--
