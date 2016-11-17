@@ -1,44 +1,25 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH v2 0/4] IMSM: Add support for 4Kn sector size drives
-Date: Thu, 17 Nov 2016 09:30:08 -0500
-Message-ID: <wrfj7f82gowf.fsf@redhat.com>
-References: <1479391118-31600-1-git-send-email-pawel.baldysiak@intel.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [md PATCH 2/4] md: add bio completion tracing for raid1/raid10
+Date: Thu, 17 Nov 2016 04:51:31 -0800
+Message-ID: <20161117125131.GC14814@infradead.org>
+References: <147910131504.27168.6566119701315109161.stgit@noble>
+ <147910142112.27168.16834874155342134173.stgit@noble>
+ <20161116143233.GA28615@infradead.org>
+ <87r36ahdn0.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1479391118-31600-1-git-send-email-pawel.baldysiak@intel.com>
-        (Pawel Baldysiak's message of "Thu, 17 Nov 2016 14:58:34 +0100")
+Content-Disposition: inline
+In-Reply-To: <87r36ahdn0.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Pawel Baldysiak <pawel.baldysiak@intel.com> writes:
-> This patch set adds support for IMSM with 4Kn sector size drives
-> First patch adds the generic function for receiving sector size,
-> rest are IMSM specific.
-> Internal calculation are still based on 512-bytes sector,
-> variables are converted during read/write from/to member drive.
-> Mixing of devices with different sector size is not allowed.
->
-> v2: Adjustments according to Jes' comments:
-> Patch 1/4: Fixed typo in original and copy-pasted function ("\b"->"\n");
-> Patch 2/4: Added missing "\n" at the end of error msg;
-> Patch 3/4, 4/4: Switched hardcoded 4k to #define;
->
-> Pawel Baldysiak (4):
->   Add function for getting member drive sector size
->   IMSM: Read and store device sector size
->   IMSM: Add support for 4Kn sector size drives
->   IMSM: 4Kn drives support - adapt general migration record
->
->  mdadm.h       |   1 +
->  super-intel.c | 323 +++++++++++++++++++++++++++++++++++++++++++++-------------
->  super1.c      |   3 +-
->  util.c        |  18 +++-
->  4 files changed, 271 insertions(+), 74 deletions(-)
+On Thu, Nov 17, 2016 at 04:35:47PM +1100, NeilBrown wrote:
+> Oh good, thanks for letting me know. I'll drop that one.
+> Do you know if there is any plan to include trace_block_split() in
+> bio_split()??
 
-Looks good - applied!
-
-Thanks,
-Jes
+Not that I know off.  But doing so seems sensible, and I'm pretty
+sure patches would be welcome.
