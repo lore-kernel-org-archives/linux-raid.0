@@ -1,182 +1,205 @@
-From: Andy Smith <andy@strugglers.net>
-Subject: Newly-created arrays don't auto-assemble - related to hostname
- change?
-Date: Thu, 17 Nov 2016 03:52:30 +0000
-Message-ID: <20161117035230.GG21587@bitfolk.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH 1/2] raid5-cache: update superblock at shutdown/reboot
+Date: Thu, 17 Nov 2016 16:18:15 +1100
+Message-ID: <87wpg2heg8.fsf@notabene.neil.brown.name>
+References: <5d6f023fb1d1398317d07f02634f90b055e26f4b.1479345454.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <5d6f023fb1d1398317d07f02634f90b055e26f4b.1479345454.git.shli@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
+Cc: songliubraving@fb.com, Zhengyuan Liu <liuzhengyuan@kylinos.cn>
 List-Id: linux-raid.ids
 
-Hi,
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I feel I am missing something very simple here, as I usually don't
-have this issue, but here goes…
+On Thu, Nov 17 2016, Shaohua Li wrote:
 
-I've got a Debian jessie host on which I created four arrays during
-install (md{0,1,2,3}), using the Debian installer and partman. These
-auto-assemble fine.
+> Currently raid5-cache update superblock in .quiesce. But since at
+> shutdown/reboot, .quiesce is called with reconfig mutex locked,
+> superblock isn't guaranteed to be called in reclaim thread (see
+> 8e018c21da3). This will make assemble do unnecessary journal recovery.
+> It doesn't corrupt data but is annoying.  This adds an extra hook to
+> guarantee journal is flushed to raid disks.  And since this hook is
+> called before superblock update, this will guarantee we have a uptodate
+> superblock in shutdown/reboot
 
-After install the name of the server was changed from "tbd" to
-"jfd". Another array was then created (md5), added to
-/etc/mdadm/mdadm.conf and the initramfs was rebuilt
-(update-initramfs -u).
+Hi.
+I don't quite follow some of the reasoning here.
+In particular, the ->stop_writes() that you have implemented
+does almost exactly the same thing as r5l_quiesce(1).
+So why not simply call ->quiesce(mddev, 1) in __md_stop_writes()??
+You probably need to also call ->quiesce(mddev, 0) to keep things
+balanced.
 
-md5 does not auto-assemble. It can be started fine after boot with:
+Also you have introduced a static mutex (which isn't my favourite sort
+of thing) without giving any explanation why in the changelog comment.
+So I cannot easily see if that addition is at all justified.
 
-    # mdadm --assemble /dev/md5
+Thanks,
+NeilBrown
 
-or:
+>
+> Signed-off-by: Shaohua Li <shli@fb.com>
+> Cc: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
+> Cc: NeilBrown <neilb@suse.com>
+> ---
+>  drivers/md/md.c          |  3 +++
+>  drivers/md/md.h          |  2 ++
+>  drivers/md/raid5-cache.c | 19 ++++++++++++++++++-
+>  drivers/md/raid5.c       |  3 +++
+>  drivers/md/raid5.h       |  1 +
+>  5 files changed, 27 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 1f1c7f0..155dd42 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -5471,6 +5471,9 @@ static void __md_stop_writes(struct mddev *mddev)
+>=20=20
+>  	del_timer_sync(&mddev->safemode_timer);
+>=20=20
+> +	if (mddev->pers && mddev->pers->stop_writes)
+> +		mddev->pers->stop_writes(mddev);
+> +
+>  	bitmap_flush(mddev);
+>=20=20
+>  	if (mddev->ro =3D=3D 0 &&
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index af6b33c..8da6fe9 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -512,6 +512,8 @@ struct md_personality
+>  	/* congested implements bdi.congested_fn().
+>  	 * Will not be called while array is 'suspended' */
+>  	int (*congested)(struct mddev *mddev, int bits);
+> +	/* stop touching raid disks */
+> +	void (*stop_writes)(struct mddev *mddev);
+>  };
+>=20=20
+>  struct md_sysfs_entry {
+> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+> index 2e270e6..641dec8 100644
+> --- a/drivers/md/raid5-cache.c
+> +++ b/drivers/md/raid5-cache.c
+> @@ -738,11 +738,13 @@ static void r5l_write_super_and_discard_space(struc=
+t r5l_log *log,
+>=20=20
+>  static void r5l_do_reclaim(struct r5l_log *log)
+>  {
+> +	static DEFINE_MUTEX(lock);
+>  	sector_t reclaim_target =3D xchg(&log->reclaim_target, 0);
+>  	sector_t reclaimable;
+>  	sector_t next_checkpoint;
+>  	u64 next_cp_seq;
+>=20=20
+> +	mutex_lock(&lock);
+>  	spin_lock_irq(&log->io_list_lock);
+>  	/*
+>  	 * move proper io_unit to reclaim list. We should not change the order.
+> @@ -769,8 +771,10 @@ static void r5l_do_reclaim(struct r5l_log *log)
+>  	spin_unlock_irq(&log->io_list_lock);
+>=20=20
+>  	BUG_ON(reclaimable < 0);
+> -	if (reclaimable =3D=3D 0)
+> +	if (reclaimable =3D=3D 0) {
+> +		mutex_unlock(&lock);
+>  		return;
+> +	}
+>=20=20
+>  	/*
+>  	 * write_super will flush cache of each raid disk. We must write super
+> @@ -784,6 +788,8 @@ static void r5l_do_reclaim(struct r5l_log *log)
+>  	log->last_cp_seq =3D next_cp_seq;
+>  	mutex_unlock(&log->io_mutex);
+>=20=20
+> +	mutex_unlock(&lock);
+> +
+>  	r5l_run_no_space_stripes(log);
+>  }
+>=20=20
+> @@ -836,6 +842,17 @@ void r5l_quiesce(struct r5l_log *log, int state)
+>  	}
+>  }
+>=20=20
+> +void r5l_stop_writes(struct mddev *mddev)
+> +{
+> +	struct r5conf *conf =3D mddev->private;
+> +	struct r5l_log *log =3D conf->log;
+> +
+> +	if (!log)
+> +		return;
+> +	r5l_wake_reclaim(log, -1L);
+> +	r5l_do_reclaim(log);
+> +}
+> +
+>  bool r5l_log_disk_error(struct r5conf *conf)
+>  {
+>  	struct r5l_log *log;
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index df88656..3d27338 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -7866,6 +7866,7 @@ static struct md_personality raid6_personality =3D
+>  	.quiesce	=3D raid5_quiesce,
+>  	.takeover	=3D raid6_takeover,
+>  	.congested	=3D raid5_congested,
+> +	.stop_writes	=3D r5l_stop_writes,
+>  };
+>  static struct md_personality raid5_personality =3D
+>  {
+> @@ -7889,6 +7890,7 @@ static struct md_personality raid5_personality =3D
+>  	.quiesce	=3D raid5_quiesce,
+>  	.takeover	=3D raid5_takeover,
+>  	.congested	=3D raid5_congested,
+> +	.stop_writes	=3D r5l_stop_writes,
+>  };
+>=20=20
+>  static struct md_personality raid4_personality =3D
+> @@ -7913,6 +7915,7 @@ static struct md_personality raid4_personality =3D
+>  	.quiesce	=3D raid5_quiesce,
+>  	.takeover	=3D raid4_takeover,
+>  	.congested	=3D raid5_congested,
+> +	.stop_writes	=3D r5l_stop_writes,
+>  };
+>=20=20
+>  static int __init raid5_init(void)
+> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+> index 57ec49f..0643cc0 100644
+> --- a/drivers/md/raid5.h
+> +++ b/drivers/md/raid5.h
+> @@ -633,4 +633,5 @@ extern void r5l_stripe_write_finished(struct stripe_h=
+ead *sh);
+>  extern int r5l_handle_flush_request(struct r5l_log *log, struct bio *bio=
+);
+>  extern void r5l_quiesce(struct r5l_log *log, int state);
+>  extern bool r5l_log_disk_error(struct r5conf *conf);
+> +extern void r5l_stop_writes(struct mddev *mddev);
+>  #endif
+> --=20
+> 2.9.3
 
-    # mdadm --incremental /dev/sdc
-    # mdadm --incremental /dev/sdd
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
-/etc/mdadm/mdadm.conf:
+-----BEGIN PGP SIGNATURE-----
 
-    DEVICE /dev/sd*
-    CREATE owner=root group=disk mode=0660 auto=yes
-    HOMEHOST <ignore>
-    MAILADDR root
-    ARRAY /dev/md/0  metadata=1.2 UUID=400bac1d:e2c5d6ef:fea3b8c8:bcb70f8f
-    ARRAY /dev/md/1  metadata=1.2 UUID=e29c8b89:705f0116:d888f77e:2b6e32f5
-    ARRAY /dev/md/2  metadata=1.2 UUID=039b3427:4be5157a:6e2d53bd:fe898803
-    ARRAY /dev/md/3  metadata=1.2 UUID=30f745ce:7ed41b53:4df72181:7406ea1d
-    ARRAY /dev/md/5  metadata=1.2 UUID=957030cf:c09f023d:ceaebb27:e546f095
-
-I've unpacked the initramfs and looked at the mdadm.conf in there
-and it is identical.
-
-Initially HOMEHOST was set to <system> (the default), but I noticed
-when looking at --detail that md5 has:
-
-           Name : jfd:5  (local to host jfd)
-
-whereas the others have:
-
-           Name : tbd:0
-
-…so I changed it to <ignore> to see if that would help. It didn't.
-
-So, I'd really appreciate any hints as to what I've missed here!
-
-Here follows --detail and --examine of md5 and its members, then the
-contents of /proc/mdstat after I have manually assembled md5.
-
-$ sudo mdadm --detail /dev/md5
-/dev/md5:
-        Version : 1.2
-  Creation Time : Thu Nov 17 02:35:15 2016
-     Raid Level : raid10
-     Array Size : 1875243008 (1788.37 GiB 1920.25 GB)
-  Used Dev Size : 1875243008 (1788.37 GiB 1920.25 GB)
-   Raid Devices : 2
-  Total Devices : 2
-    Persistence : Superblock is persistent
-
-  Intent Bitmap : Internal
-
-    Update Time : Thu Nov 17 02:35:15 2016
-          State : clean 
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-
-         Layout : far=2
-     Chunk Size : 512K
-
-           Name : jfd:5  (local to host jfd)
-           UUID : 957030cf:c09f023d:ceaebb27:e546f095
-         Events : 0
-
-    Number   Major   Minor   RaidDevice State
-       0       8       48        0      active sync   /dev/sdd
-       1       8       32        1      active sync   /dev/sdc
-
-$ sudo mdadm --examine /dev/sd{c,d}
-/dev/sdc:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 957030cf:c09f023d:ceaebb27:e546f095
-           Name : jfd:5  (local to host jfd)
-  Creation Time : Thu Nov 17 02:35:15 2016
-     Raid Level : raid10
-   Raid Devices : 2
-
- Avail Dev Size : 3750486704 (1788.37 GiB 1920.25 GB)
-     Array Size : 1875243008 (1788.37 GiB 1920.25 GB)
-  Used Dev Size : 3750486016 (1788.37 GiB 1920.25 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=262056 sectors, after=688 sectors
-          State : clean
-    Device UUID : 4ac82c29:2d109465:7fff9b22:8c411c1e
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Thu Nov 17 02:35:15 2016
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : 96d669f1 - correct
-         Events : 0
-
-         Layout : far=2
-     Chunk Size : 512K
-
-   Device Role : Active device 1
-   Array State : AA ('A' == active, '.' == missing, 'R' == replacing)
-/dev/sdd:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 957030cf:c09f023d:ceaebb27:e546f095
-           Name : jfd:5  (local to host jfd)
-  Creation Time : Thu Nov 17 02:35:15 2016
-     Raid Level : raid10
-   Raid Devices : 2
- Avail Dev Size : 3750486704 (1788.37 GiB 1920.25 GB)
-     Array Size : 1875243008 (1788.37 GiB 1920.25 GB)
-  Used Dev Size : 3750486016 (1788.37 GiB 1920.25 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=262056 sectors, after=688 sectors
-          State : clean
-    Device UUID : 3a067652:6e88afae:82722342:0036bae0
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Thu Nov 17 02:35:15 2016
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : eb608799 - correct
-         Events : 0
-
-         Layout : far=2
-     Chunk Size : 512K
-
-   Device Role : Active device 0
-   Array State : AA ('A' == active, '.' == missing, 'R' == replacing)
-
-$ cat /proc/mdstat 
-Personalities : [raid1] [raid10] 
-md5 : active (auto-read-only) raid10 sdd[0] sdc[1]
-      1875243008 blocks super 1.2 512K chunks 2 far-copies [2/2] [UU]
-      bitmap: 0/14 pages [0KB], 65536KB chunk
-
-md3 : active raid10 sda5[0] sdb5[1]
-      12199936 blocks super 1.2 512K chunks 2 far-copies [2/2] [UU]
-      
-md2 : active (auto-read-only) raid10 sda3[0] sdb3[1]
-      975872 blocks super 1.2 512K chunks 2 far-copies [2/2] [UU]
-      
-md1 : active raid10 sda2[0] sdb2[1]
-      1951744 blocks super 1.2 512K chunks 2 far-copies [2/2] [UU]
-      
-md0 : active raid1 sda1[0] sdb1[1]
-      498368 blocks super 1.2 [2/2] [UU]
-      
-unused devices: <none>
-
-Cheers,
-Andy
+iQIcBAEBCAAGBQJYLT2YAAoJEDnsnt1WYoG57l4QAL2v87MZG5iKmyBd5WKt2/ki
+bpomIYYSJfmb32NJkuHCor7VlChfWKATkmTU5//BG++0GidSg00CpUWhp5Akecpv
+kyluACsxARty+MWSOv9HoPDD45qRjqxbwWHscjVrhjy9qiEqqJubkAHtYOJkS67J
+o5RkwL3n3WyB4XgeRhiFi0NoE3bV4CP0+tvapssiNt+zDHRtBtSzHHH0mZg0EDkf
+E9ykXiPD0aSzOZDyX/5+h76mMSdjWpd0iXgzaqmmPebl6HmG4N0ODBYEKzUUUKV3
+BMS5qWOM+vytTqRLGT4NwM16njC/+mh4pPIaeAIfOO76EHj0FtImvO9A9KvSIjLn
+/DpdKreBrnEbOrnemupDsLvsZHn05Jtb3uIKzJZrv8RiAGrujGV3J4evdz+6e2t3
+Yfh/FgvDTxX6gZLvChe0+a/YGQn3d0yqBOJJ81tOuMBSYPiblEVpS11+3JfIJB6/
++eksSHWzS3d4icoySEJYKXLcV0zM2Dz+n04ipO+7oHOLlp644Pzo01gG0A//cTBe
+s7t+lkzatH9Swl9hPUnyl9yoqlYMe+/YI1t0EBZPWRgAksT1hVXP9kLn35J33q1P
+DkQ5G5Mfdkyo1IuP2+CX2SG77kKgTezUyzTp9y+7e4vLyJOJgBL148tjwArO0+mz
+gvuKSkLVCjWRZYrz+lO4
+=87Q3
+-----END PGP SIGNATURE-----
+--=-=-=--
