@@ -1,141 +1,206 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: dm: Avoid sleeping while holding the dm_bufio lock
-Date: Thu, 17 Nov 2016 15:28:00 -0500
-Message-ID: <20161117202800.GA30170@redhat.com>
-References: <1479410660-31408-1-git-send-email-dianders@chromium.org>
+From: Dennis Dataopslag <dennisdataopslag@gmail.com>
+Subject: Re:
+Date: Thu, 17 Nov 2016 21:33:35 +0100
+Message-ID: <CAGELipKk-J3yD7aoc0=w-JgMHaW6OGWhtmhjehGVV4kQ0a3g_Q@mail.gmail.com>
+References: <CAGELip+rb=Ztv2K8jPdn608Li_RakEq9Gp5Jyof9eC_bO5QMrQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1479410660-31408-1-git-send-email-dianders@chromium.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Douglas Anderson <dianders@chromium.org>
-Cc: Alasdair Kergon <agk@redhat.com>, David Rientjes <rientjes@google.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Sonny Rao <sonnyrao@chromium.org>, linux@roeck-us.net, dm-devel@redhat.com, shli@kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAGELip+rb=Ztv2K8jPdn608Li_RakEq9Gp5Jyof9eC_bO5QMrQ@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Nov 17 2016 at  2:24pm -0500,
-Douglas Anderson <dianders@chromium.org> wrote:
+CHeers for the reaction and sorry for my late response, I've been out
+for business.
 
-> We've seen in-field reports showing _lots_ (18 in one case, 41 in
-> another) of tasks all sitting there blocked on:
-> 
->   mutex_lock+0x4c/0x68
->   dm_bufio_shrink_count+0x38/0x78
->   shrink_slab.part.54.constprop.65+0x100/0x464
->   shrink_zone+0xa8/0x198
-> 
-> In the two cases analyzed, we see one task that looks like this:
-> 
->   Workqueue: kverityd verity_prefetch_io
-> 
->   __switch_to+0x9c/0xa8
->   __schedule+0x440/0x6d8
->   schedule+0x94/0xb4
->   schedule_timeout+0x204/0x27c
->   schedule_timeout_uninterruptible+0x44/0x50
->   wait_iff_congested+0x9c/0x1f0
->   shrink_inactive_list+0x3a0/0x4cc
->   shrink_lruvec+0x418/0x5cc
->   shrink_zone+0x88/0x198
->   try_to_free_pages+0x51c/0x588
->   __alloc_pages_nodemask+0x648/0xa88
->   __get_free_pages+0x34/0x7c
->   alloc_buffer+0xa4/0x144
->   __bufio_new+0x84/0x278
->   dm_bufio_prefetch+0x9c/0x154
->   verity_prefetch_io+0xe8/0x10c
->   process_one_work+0x240/0x424
->   worker_thread+0x2fc/0x424
->   kthread+0x10c/0x114
-> 
-> ...and that looks to be the one holding the mutex.
-> 
-> The problem has been reproduced on fairly easily:
-> 0. Be running Chrome OS w/ verity enabled on the root filesystem
-> 1. Pick test patch: http://crosreview.com/412360
-> 2. Install launchBalloons.sh and balloon.arm from
->      http://crbug.com/468342
->    ...that's just a memory stress test app.
-> 3. On a 4GB rk3399 machine, run
->      nice ./launchBalloons.sh 4 900 100000
->    ...that tries to eat 4 * 900 MB of memory and keep accessing.
-> 4. Login to the Chrome web browser and restore many tabs
-> 
-> With that, I've seen printouts like:
->   DOUG: long bufio 90758 ms
-> ...and stack trace always show's we're in dm_bufio_prefetch().
-> 
-> The problem is that we try to allocate memory with GFP_NOIO while
-> we're holding the dm_bufio lock.  Instead we should be using
-> GFP_NOWAIT.  Using GFP_NOIO can cause us to sleep while holding the
-> lock and that causes the above problems.
-> 
-> The current behavior explained by David Rientjes:
-> 
->   It will still try reclaim initially because __GFP_WAIT (or
->   __GFP_KSWAPD_RECLAIM) is set by GFP_NOIO.  This is the cause of
->   contention on dm_bufio_lock() that the thread holds.  You want to
->   pass GFP_NOWAIT instead of GFP_NOIO to alloc_buffer() when holding a
->   mutex that can be contended by a concurrent slab shrinker (if
->   count_objects didn't use a trylock, this pattern would trivially
->   deadlock).
-> 
-> Suggested-by: David Rientjes <rientjes@google.com>
-> Signed-off-by: Douglas Anderson <dianders@chromium.org>
-> ---
-> Note that this change was developed and tested against the Chrome OS
-> 4.4 kernel tree, not mainline.  Due to slight differences in verity
-> between mainline and Chrome OS it became too difficult to reproduce my
-> testing setup on mainline.  This patch still seems correct and
-> relevant to upstream, so I'm posting it.  If this is not acceptible to
-> you then please ignore this patch.
-> 
-> Also note that when I tested the Chrome OS 3.14 kernel tree I couldn't
-> reproduce the long delays described in the patch.  Presumably
-> something changed in either the kernel config or the memory management
-> code between the two kernel versions that made this crop up.  In a
-> similar vein, it is possible that problems described in this patch are
-> no longer reproducible upstream.  However, the arguments made in this
-> patch (that we don't want to block while holding the mutex) still
-> apply so I think the patch may still have merit.
-> 
->  drivers/md/dm-bufio.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
-> index b3ba142e59a4..3c767399cc59 100644
-> --- a/drivers/md/dm-bufio.c
-> +++ b/drivers/md/dm-bufio.c
-> @@ -827,7 +827,8 @@ static struct dm_buffer *__alloc_buffer_wait_no_callback(struct dm_bufio_client
->  	 * dm-bufio is resistant to allocation failures (it just keeps
->  	 * one buffer reserved in cases all the allocations fail).
->  	 * So set flags to not try too hard:
-> -	 *	GFP_NOIO: don't recurse into the I/O layer
-> +	 *	GFP_NOWAIT: don't wait; if we need to sleep we'll release our
-> +	 *		    mutex and wait ourselves.
->  	 *	__GFP_NORETRY: don't retry and rather return failure
->  	 *	__GFP_NOMEMALLOC: don't use emergency reserves
->  	 *	__GFP_NOWARN: don't print a warning in case of failure
-> @@ -837,7 +838,8 @@ static struct dm_buffer *__alloc_buffer_wait_no_callback(struct dm_bufio_client
->  	 */
->  	while (1) {
->  		if (dm_bufio_cache_size_latch != 1) {
-> -			b = alloc_buffer(c, GFP_NOIO | __GFP_NORETRY | __GFP_NOMEMALLOC | __GFP_NOWARN);
-> +			b = alloc_buffer(c, GFP_NOWAIT | __GFP_NORETRY |
-> +					 __GFP_NOMEMALLOC | __GFP_NOWARN);
->  			if (b)
->  				return b;
->  		}
-> -- 
-> 2.8.0.rc3.226.g39d4020
-> 
+Trying to rebuild this RAID is definately worth it for me. The
+learning experience alone already makes it worth.
 
-I have one report of a very low-memory system hitting issues with bufio
-(in the context of DM-thinp, due to bufio shrinker) but nothing
-implicating alloc_buffer().
+I did read the wiki page and tried several steps that are on there but
+it didn't seem to get me out of trouble.
 
-In any case, I'm fine with your patch given that we'll just retry.  BUT
-spinning in __alloc_buffer_wait_no_callback() doesn't really change the
-fact that you're starved for memory.  It just makes this less visible
-right?  Meaning that you won't see hung task timeouts?  Or were you
-seeing these tasks manifest this back-pressure through other means?
+I used this information from the drive, obviously didn't search for
+any "hidden" settings:
+" Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 36fdeb4b:c5360009:0958ad1e:17da451b
+           Name : TRD106:0  (local to host TRD106)
+  Creation Time : Fri Oct 10 12:27:27 2014
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 1948250112 (929.00 GiB 997.50 GB)
+     Array Size : 5844750336 (2786.99 GiB 2992.51 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : b49e2752:d37dac6c:8764c52a:372277bd
+
+    Update Time : Sat Nov  5 14:40:33 2016
+       Checksum : d47a9ad4 - correct
+         Events : 14934
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+   Device Role : Active device 0
+   Array State : AAAA ('A' == active, '.' == missing)"
+
+Anybody that can give me a little extra push?
+
+On 06/11/16 21:00, Dennis Dataopslag wrote:
+> Help wanted very much!
+
+Quick response ...
+>
+> My setup:
+> Thecus N5550 NAS with 5 1TB drives installed.
+>
+> MD0: RAID 5 config of 4 drives (SD[ABCD]2)
+> MD10: RAID 1 config of all 5 drives (SD..1), system generated array
+> MD50: RAID 1 config of 4 drives (SD[ABCD]3), system generated array
+>
+> 1 drive (SDE) set as global hot spare.
+>
+Bit late now, but you would probably have been better with raid-6.
+>
+> What happened:
+> This weekend I thought it might be a good idea to do a SMART test for
+> the drives in my NAS.
+> I started the test on 1 drive and after it ran for a while I started
+> the other ones.
+> While the test was running drive 3 failed. I got a message the RAID
+> was degraded and started rebuilding. (My assumption is that at this
+> moment the global hot spare will automatically be added to the array)
+>
+> I stopped the SMART tests of all drives at this moment since it seemed
+> logical to me the SMART test (or the outcomes) made the drive fail.
+> In stopping the tests, drive 1 also failed!!
+> I let it for a little but the admin interface kept telling me it was
+> degraded, did not seem to take any actions to start rebuilding.
+
+It can't - there's no spare drive to rebuild on, and there aren't enough
+drives to build a working array.
+
+> At this point I started googling and found I should remove and reseat
+> the drives. This is also what I did but nothing seemd to happen.
+> The turned up as new drives in the admin interface and I re-added them
+> to the array, they were added as spares.
+> Even after adding them the array didn't start rebuilding.
+> I checked stat in mdadm and it told me clean FAILED opposed to the
+> degraded in the admin interface.
+
+Yup. You've only got two drives of a four-drive raid 5.
+
+Where did you google? Did you read the linux raid wiki?
+
+https://raid.wiki.kernel.org/index.php/Linux_Raid
+>
+> I rebooted the NAS since it didn't seem to be doing anything I might interrupt.
+> after rebooting it seemed as if the entire array had disappeared!!
+> I started looking for options in MDADM and tried every "normal"option
+> to rebuild the array (--assemble --scan for example)
+> Unfortunately I cannot produce a complete list since I cannot find how
+> to get it from the logging.
+>
+> Finally I mdadm --create a new array with the original 4 drives with
+> all the right settings. (Got them from 1 of the original volumes)
+
+OUCH OUCH OUCH!
+
+Are you sure you've got the right settings? A lot of "hidden" settings
+have changed their values over the years. Do you know which mdadm was
+used to create the array in the first place?
+
+> The creation worked but after creation it doesn't seem to have a valid
+> partition table. This is the point where I realized I probably fucked
+> it up big-time and should call in the help squad!!!
+> What I think went wrong is that I re-created an array with the
+> original 4 drives from before the first failure but the hot-spare was
+> already added?
+
+Nope. You've probably used a newer version of mdadm. That's assuming the
+array is still all the original drives. If some of them have been
+replaced you've got a still messier problem.
+>
+> The most important data from the array is saved in an offline backup
+> luckily but I would very much like it if there is any way I could
+> restore the data from the array.
+>
+> Is there any way I could get it back online?
+
+You're looking at a big forensic job. I've moved the relevant page to
+the archaeology area - probably a bit too soon - but you need to read
+the following page
+
+https://raid.wiki.kernel.org/index.php/Reconstruction
+
+Especially the bit about overlays. And wait for the experts to chime in
+about how to do a hexdump and work out the values you need to pass to
+mdadm to get the array back. It's a lot of work and you could be looking
+at a week what with the delays as you wait for replies.
+
+I think it's recoverable. Is it worth it?
+
+Cheers,
+Wol
+
+On Sun, Nov 6, 2016 at 10:00 PM, Dennis Dataopslag
+<dennisdataopslag@gmail.com> wrote:
+> Help wanted very much!
+>
+> My setup:
+> Thecus N5550 NAS with 5 1TB drives installed.
+>
+> MD0: RAID 5 config of 4 drives (SD[ABCD]2)
+> MD10: RAID 1 config of all 5 drives (SD..1), system generated array
+> MD50: RAID 1 config of 4 drives (SD[ABCD]3), system generated array
+>
+> 1 drive (SDE) set as global hot spare.
+>
+>
+> What happened:
+> This weekend I thought it might be a good idea to do a SMART test for
+> the drives in my NAS.
+> I started the test on 1 drive and after it ran for a while I started
+> the other ones.
+> While the test was running drive 3 failed. I got a message the RAID
+> was degraded and started rebuilding. (My assumption is that at this
+> moment the global hot spare will automatically be added to the array)
+>
+> I stopped the SMART tests of all drives at this moment since it seemed
+> logical to me the SMART test (or the outcomes) made the drive fail.
+> In stopping the tests, drive 1 also failed!!
+> I let it for a little but the admin interface kept telling me it was
+> degraded, did not seem to take any actions to start rebuilding.
+> At this point I started googling and found I should remove and reseat
+> the drives. This is also what I did but nothing seemd to happen.
+> The turned up as new drives in the admin interface and I re-added them
+> to the array, they were added as spares.
+> Even after adding them the array didn't start rebuilding.
+> I checked stat in mdadm and it told me clean FAILED opposed to the
+> degraded in the admin interface.
+>
+> I rebooted the NAS since it didn't seem to be doing anything I might interrupt.
+> after rebooting it seemed as if the entire array had disappeared!!
+> I started looking for options in MDADM and tried every "normal"option
+> to rebuild the array (--assemble --scan for example)
+> Unfortunately I cannot produce a complete list since I cannot find how
+> to get it from the logging.
+>
+> Finally I mdadm --create a new array with the original 4 drives with
+> all the right settings. (Got them from 1 of the original volumes)
+> The creation worked but after creation it doesn't seem to have a valid
+> partition table. This is the point where I realized I probably fucked
+> it up big-time and should call in the help squad!!!
+> What I think went wrong is that I re-created an array with the
+> original 4 drives from before the first failure but the hot-spare was
+> already added?
+>
+> The most important data from the array is saved in an offline backup
+> luckily but I would very much like it if there is any way I could
+> restore the data from the array.
+>
+> Is there any way I could get it back online?
