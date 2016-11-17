@@ -1,77 +1,112 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [PATCH] RFC: dm: avoid the mutex lock in
- dm_bufio_shrink_count()
-Date: Thu, 17 Nov 2016 14:20:08 -0800 (PST)
-Message-ID: <alpine.DEB.2.10.1611171413450.99747@chino.kir.corp.google.com>
-References: <1479417398-2593-1-git-send-email-dianders@chromium.org>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: Newly-created arrays don't auto-assemble - related to hostname change?
+Date: Fri, 18 Nov 2016 09:43:44 +1100
+Message-ID: <87d1hthgm7.fsf@notabene.neil.brown.name>
+References: <20161117035230.GG21587@bitfolk.com> <87lgwihc2v.fsf@notabene.neil.brown.name> <20161117150954.GH21587@bitfolk.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1479417398-2593-1-git-send-email-dianders@chromium.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Douglas Anderson <dianders@chromium.org>
-Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Sonny Rao <sonnyrao@chromium.org>, linux@roeck-us.net, dm-devel@redhat.com, shli@kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20161117150954.GH21587@bitfolk.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Andy Smith <andy@strugglers.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 17 Nov 2016, Douglas Anderson wrote:
+--=-=-=
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-> diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
-> index b3ba142e59a4..885ba5482d9f 100644
-> --- a/drivers/md/dm-bufio.c
-> +++ b/drivers/md/dm-bufio.c
-> @@ -89,6 +89,7 @@ struct dm_bufio_client {
->  
->  	struct list_head lru[LIST_SIZE];
->  	unsigned long n_buffers[LIST_SIZE];
-> +	unsigned long n_all_buffers;
->  
->  	struct block_device *bdev;
->  	unsigned block_size;
-> @@ -485,6 +486,7 @@ static void __link_buffer(struct dm_buffer *b, sector_t block, int dirty)
->  	struct dm_bufio_client *c = b->c;
->  
->  	c->n_buffers[dirty]++;
-> +	c->n_all_buffers++;
->  	b->block = block;
->  	b->list_mode = dirty;
->  	list_add(&b->lru_list, &c->lru[dirty]);
-> @@ -502,6 +504,7 @@ static void __unlink_buffer(struct dm_buffer *b)
->  	BUG_ON(!c->n_buffers[b->list_mode]);
->  
->  	c->n_buffers[b->list_mode]--;
-> +	c->n_all_buffers--;
->  	__remove(b->c, b);
->  	list_del(&b->lru_list);
->  }
-> @@ -515,6 +518,7 @@ static void __relink_lru(struct dm_buffer *b, int dirty)
->  
->  	BUG_ON(!c->n_buffers[b->list_mode]);
->  
-> +	/* NOTE: don't update n_all_buffers: -1 + 1 = 0 */
->  	c->n_buffers[b->list_mode]--;
->  	c->n_buffers[dirty]++;
->  	b->list_mode = dirty;
-> @@ -1588,17 +1592,10 @@ static unsigned long
->  dm_bufio_shrink_count(struct shrinker *shrink, struct shrink_control *sc)
->  {
->  	struct dm_bufio_client *c;
-> -	unsigned long count;
->  
->  	c = container_of(shrink, struct dm_bufio_client, shrinker);
-> -	if (sc->gfp_mask & __GFP_FS)
-> -		dm_bufio_lock(c);
-> -	else if (!dm_bufio_trylock(c))
-> -		return 0;
->  
-> -	count = c->n_buffers[LIST_CLEAN] + c->n_buffers[LIST_DIRTY];
-> -	dm_bufio_unlock(c);
-> -	return count;
-> +	return c->n_all_buffers;
->  }
->  
->  /*
+On Fri, Nov 18 2016, Andy Smith wrote:
 
-Would be better to just avoid taking the mutex at all and returning 
-c->n_buffers[LIST_CLEAN] + c->n_buffers[LIST_DIRTY] with a comment that 
-the estimate might be wrong, but the actual count may vary between 
-->count_objects() and ->scan_objects() anyway, so we don't actually care?
+> Hi Neil,
+>
+> On Thu, Nov 17, 2016 at 05:09:28PM +1100, NeilBrown wrote:
+>> On Thu, Nov 17 2016, Andy Smith wrote:
+>> > After install the name of the server was changed from "tbd" to
+>> > "jfd". Another array was then created (md5), added to
+>> > /etc/mdadm/mdadm.conf and the initramfs was rebuilt
+>> > (update-initramfs -u).
+>> >
+>> > md5 does not auto-assemble. It can be started fine after boot with:
+>> >
+>> >     # mdadm --assemble /dev/md5
+>> >
+>> > or:
+>> >
+>> >     # mdadm --incremental /dev/sdc
+>> >     # mdadm --incremental /dev/sdd
+>>=20
+>> This is almost exactly what udev does when the devices are discovered,
+>> so if it works here, it should work when udev does it.
+>
+> Indeed. So confusing. :(
+>
+>> My only guess is that maybe the "DEVICE /dev/sd*" line in the mdadm.conf
+>> is causing confusion.  udev might be using a different name, though that
+>> would be odd.
+>>=20
+>> Can you try removing that line and see if it makes a difference?
+>
+> I've now tried that and it hasn't made a difference.
+>
+> I don't know anything about udev but I guess that assembly is
+> handled by /lib/udev/rules.d/64-md-raid-assembly.rules whose only
+> relevant ACTION lines are:
+>
+> # remember you can limit what gets auto/incrementally assembled by
+> # mdadm.conf(5)'s 'AUTO' and selectively whitelist using 'ARRAY'
+> ACTION=3D=3D"add|change", IMPORT{program}=3D"/sbin/mdadm --incremental --=
+export $tempnode --offroot ${DEVLINKS}"
+> ACTION=3D=3D"add|change", ENV{MD_STARTED}=3D=3D"*unsafe*", ENV{MD_FOREIGN=
+}=3D=3D"no", ENV{SYSTEMD_WANTS}+=3D"mdadm-last-resort@$env{MD_DEVICE}.timer"
+>
+> =E2=80=A6but I can't work out why they wouldn't be working here.
+>
+> Time for a Debian bug report?
+
+Maybe, though as they are using *exactly* the upstream mdadm-udev files
+it probably isn't something they've broken.
+Something you could try, after boot and while the arrays are still not
+assembled, is
+
+  echo change > /sys/block/sdc/uevent
+  echo change > /sys/block/sdd/uevent
+
+That should cause udev to assemble the array.
+If you had "udevadm monitor" running at the same time, you would even
+see the events.
+
+Alternately you could use "udevadm trigger" instead of the "echo"
+commands. That effectively sends 'change' to all devices.
+
+If that doesn't work, the looking over the udev logs, and possibly
+turning on extra udev logging, might lead to an answer.
+
+If it does work, then we need to work out why it doesn't work earlier in
+boot.
+/etc/init.d/udev runs "udevadm trigger --action=3Dadd" which should pick
+up anything that the initrd missed.  Maybe adding some tracing around
+that would help.
+
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAEBCAAGBQJYLjKhAAoJEDnsnt1WYoG5meMQAIt8g9+Ir6Mb4xWkrcjzyt+z
+w6qsw+hsLIDAmWGjUGgp36Uttvheq8IuBmOUOZSg5rZMV0JZo9hTYRq5tutNXaYI
+eLguLF4LsC7hM7UI45krGVRzsuqixlVLvnBe/00vo7ES99atckcc7FZTtzs/uhIh
+FeWfa7nZrdExRxx8/UxTISxaaO/glPkawzy9vrnl383PNUwQ/PNPDEcpbi+d17jD
+psCCpZRl3ER1FRDIGQG+A6aHG/HkUAKV6IrMnXpX+BYVZgKCN+ilbvJKtwbGoesZ
+pGtKJMj32m4r58C58HrNN675SITSDnyLueLPfGIO/LSO4LsYqZziOU1EOMxrLv6k
+azy2Z6zPgJZ9fwqON/fwx5ob3ZZ8oqnv+EvBVwQg+GNi6Z+X84Rh9nq/L9DkH8kC
+gxx0jodLXo3hCxz3QYivErunJ6V6SO/faf2dX0gsl+vSu3nWtCHa/DW86KUHxzPB
+mCCpUjsa9wTrQ3YRETy2RmuTwbQkd+DJVQGzmMiVkGglc1h7K0XEXecnHOmjBddl
+9nB1N54M794tWfd4txNWE7UsxMD8JReYzis7tFWPNGFaYSbPJEeLfd4wT0v5sJWV
+lxq5JIRVVeBy8I99xsl/9o5gM+7VwJl+bXk7vaUPDKGoTqm3695IwbNqeq8a64rH
+4BZXJdCrpsDIsZN1IHB3
+=D9e6
+-----END PGP SIGNATURE-----
+--=-=-=--
