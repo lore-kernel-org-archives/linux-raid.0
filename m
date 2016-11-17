@@ -1,112 +1,87 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: Newly-created arrays don't auto-assemble - related to hostname change?
-Date: Fri, 18 Nov 2016 09:43:44 +1100
-Message-ID: <87d1hthgm7.fsf@notabene.neil.brown.name>
-References: <20161117035230.GG21587@bitfolk.com> <87lgwihc2v.fsf@notabene.neil.brown.name> <20161117150954.GH21587@bitfolk.com>
+Subject: Re: Just a thought - linux raid wiki - raid 5 grows getting stuck at 0%
+Date: Fri, 18 Nov 2016 09:54:17 +1100
+Message-ID: <878tshhg4m.fsf@notabene.neil.brown.name>
+References: <582CF0E5.2030605@youngman.org.uk> <87inrmhbnh.fsf@notabene.neil.brown.name> <582D74F0.6080107@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161117150954.GH21587@bitfolk.com>
+In-Reply-To: <582D74F0.6080107@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andy Smith <andy@strugglers.net>, linux-raid@vger.kernel.org
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 --=-=-=
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, Nov 18 2016, Andy Smith wrote:
+On Thu, Nov 17 2016, Wols Lists wrote:
 
-> Hi Neil,
+> On 17/11/16 06:18, NeilBrown wrote:
+>>> > But I'm sure you can see from this that I'm updating this bit of the
+>>> > wiki. Is there anything else I ought to know about bitmaps, so I can
+>>> > document it? :-)
 >
-> On Thu, Nov 17, 2016 at 05:09:28PM +1100, NeilBrown wrote:
->> On Thu, Nov 17 2016, Andy Smith wrote:
->> > After install the name of the server was changed from "tbd" to
->> > "jfd". Another array was then created (md5), added to
->> > /etc/mdadm/mdadm.conf and the initramfs was rebuilt
->> > (update-initramfs -u).
->> >
->> > md5 does not auto-assemble. It can be started fine after boot with:
->> >
->> >     # mdadm --assemble /dev/md5
->> >
->> > or:
->> >
->> >     # mdadm --incremental /dev/sdc
->> >     # mdadm --incremental /dev/sdd
+>> If only I could run "diff" between my brain and the wiki....
+>
+> :-)
 >>=20
->> This is almost exactly what udev does when the devices are discovered,
->> so if it works here, it should work when udev does it.
->
-> Indeed. So confusing. :(
->
->> My only guess is that maybe the "DEVICE /dev/sd*" line in the mdadm.conf
->> is causing confusion.  udev might be using a different name, though that
->> would be odd.
+>> Thanks for doing this!
 >>=20
->> Can you try removing that line and see if it makes a difference?
+>> NeilBrown
 >
-> I've now tried that and it hasn't made a difference.
+> I'll update the wiki in the next day or so.
 >
-> I don't know anything about udev but I guess that assembly is
-> handled by /lib/udev/rules.d/64-md-raid-assembly.rules whose only
-> relevant ACTION lines are:
+> I'm a bit worried I'll spread myself too thin, but I've been following
+> the threads on the recent patch sets, and I've also picked up on the new
+> Sphinx kernel documentation stuff.
 >
-> # remember you can limit what gets auto/incrementally assembled by
-> # mdadm.conf(5)'s 'AUTO' and selectively whitelist using 'ARRAY'
-> ACTION=3D=3D"add|change", IMPORT{program}=3D"/sbin/mdadm --incremental --=
-export $tempnode --offroot ${DEVLINKS}"
-> ACTION=3D=3D"add|change", ENV{MD_STARTED}=3D=3D"*unsafe*", ENV{MD_FOREIGN=
-}=3D=3D"no", ENV{SYSTEMD_WANTS}+=3D"mdadm-last-resort@$env{MD_DEVICE}.timer"
+> So my aim now is, on top of generally updating the wiki, to link it in
+> to the kernel doc, and update a lot of that doc using re-structured text
+> in the md source files. That's not going to be a problem, I hope?
 >
-> =E2=80=A6but I can't work out why they wouldn't be working here.
->
-> Time for a Debian bug report?
+> I'm going to dig and find out more, but if anybody can point me to some
+> kerneldoc code in the md source, and the corresponding links to the doc
+> on the kernel.org website, that'll be wonderful. It'll just give me a
+> leg up on the hardest part - actually getting started.
 
-Maybe, though as they are using *exactly* the upstream mdadm-udev files
-it probably isn't something they've broken.
-Something you could try, after boot and while the arrays are still not
-assembled, is
+There is no kerneldoc documentation in md - just a few ad-hoc large
+comments.
+Even Documentation/md.txt isn't in very good shape.
 
-  echo change > /sys/block/sdc/uevent
-  echo change > /sys/block/sdd/uevent
+I would be nice to have more documentation, but documentation can so
+quickly become stale....
 
-That should cause udev to assemble the array.
-If you had "udevadm monitor" running at the same time, you would even
-see the events.
-
-Alternately you could use "udevadm trigger" instead of the "echo"
-commands. That effectively sends 'change' to all devices.
-
-If that doesn't work, the looking over the udev logs, and possibly
-turning on extra udev logging, might lead to an answer.
-
-If it does work, then we need to work out why it doesn't work earlier in
-boot.
-/etc/init.d/udev runs "udevadm trigger --action=3Dadd" which should pick
-up anything that the initrd missed.  Maybe adding some tracing around
-that would help.
-
+Thanks,
 NeilBrown
+
+
+>
+> And if there isn't any at present, it'll just tell me it's needed even
+> more :-)
+>
+> Cheers,
+> Wol
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAEBCAAGBQJYLjKhAAoJEDnsnt1WYoG5meMQAIt8g9+Ir6Mb4xWkrcjzyt+z
-w6qsw+hsLIDAmWGjUGgp36Uttvheq8IuBmOUOZSg5rZMV0JZo9hTYRq5tutNXaYI
-eLguLF4LsC7hM7UI45krGVRzsuqixlVLvnBe/00vo7ES99atckcc7FZTtzs/uhIh
-FeWfa7nZrdExRxx8/UxTISxaaO/glPkawzy9vrnl383PNUwQ/PNPDEcpbi+d17jD
-psCCpZRl3ER1FRDIGQG+A6aHG/HkUAKV6IrMnXpX+BYVZgKCN+ilbvJKtwbGoesZ
-pGtKJMj32m4r58C58HrNN675SITSDnyLueLPfGIO/LSO4LsYqZziOU1EOMxrLv6k
-azy2Z6zPgJZ9fwqON/fwx5ob3ZZ8oqnv+EvBVwQg+GNi6Z+X84Rh9nq/L9DkH8kC
-gxx0jodLXo3hCxz3QYivErunJ6V6SO/faf2dX0gsl+vSu3nWtCHa/DW86KUHxzPB
-mCCpUjsa9wTrQ3YRETy2RmuTwbQkd+DJVQGzmMiVkGglc1h7K0XEXecnHOmjBddl
-9nB1N54M794tWfd4txNWE7UsxMD8JReYzis7tFWPNGFaYSbPJEeLfd4wT0v5sJWV
-lxq5JIRVVeBy8I99xsl/9o5gM+7VwJl+bXk7vaUPDKGoTqm3695IwbNqeq8a64rH
-4BZXJdCrpsDIsZN1IHB3
-=D9e6
+iQIcBAEBCAAGBQJYLjUZAAoJEDnsnt1WYoG5OLEQALmedF+jU4Csod0rKywdurXG
+B/pXT/vfPWnu2t01jsZwS7/R+Kq5SWIFQks5KlyErKSoXZ9+ZYmUDlhI+qfkWaFg
+6yOZKDrgFydooKS5eLVS2o4DUgVaLlX1vAtUfVWbBaSeRKD2QdJDex8mABhNtdSE
+mNEE+3zesZYbuT8oSoTyzx5GMCrvBP98OmvUUL+DC/2Tdg4O9A+msZsqYtAkC2O8
+KiPsspNtcC9rzGKjbqpzkNEuskID5YTAr9FDlS9DJEvPcJhKEXRRcrA4Wpp2Taq0
+LqH9oBMKhHq4QGzxGQcuqMXyfP7fYr8LMK5tR0wQO1OQJ0hi7Vw7zpwxfNf7A9D4
+kFybmdKs5jioWEmUePrN634KukkQ4CyLegwemyTYuT60vH4XlUkAzSGTOLGVeE43
+JSe9w4lZphzcyQsToRYXCKzHqnbKiPQfbNDhQeMHYCrG9N9kRGI+jh0VmTlfI+U4
+eupep6e8qZwKGCcyUWPX8d7DiEDjrk7sHawBGWlGVeXKaxYuQP35W4YcOihluPsF
+rmz7O+o5VJNfFv4XEwjq9iKlTM5HJdaS9wVUhrUU0hkLf9Lm4AQEpECMM17eU60V
+eFiMAkzPkGrmvhiAKm40BFrTwSmVenfetdhcUzHzjcFujKPS+GlB/IbRHlZrVN5p
+lNkiyjnRS/NLOwh3ZOu0
+=T9sO
 -----END PGP SIGNATURE-----
 --=-=-=--
