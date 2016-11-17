@@ -1,68 +1,77 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re:
-Date: Thu, 17 Nov 2016 22:12:18 +0000
-Message-ID: <582E2B42.9070804@youngman.org.uk>
-References: <CAGELip+rb=Ztv2K8jPdn608Li_RakEq9Gp5Jyof9eC_bO5QMrQ@mail.gmail.com>
- <CAGELipKk-J3yD7aoc0=w-JgMHaW6OGWhtmhjehGVV4kQ0a3g_Q@mail.gmail.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [PATCH] RFC: dm: avoid the mutex lock in
+ dm_bufio_shrink_count()
+Date: Thu, 17 Nov 2016 14:20:08 -0800 (PST)
+Message-ID: <alpine.DEB.2.10.1611171413450.99747@chino.kir.corp.google.com>
+References: <1479417398-2593-1-git-send-email-dianders@chromium.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGELipKk-J3yD7aoc0=w-JgMHaW6OGWhtmhjehGVV4kQ0a3g_Q@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Dennis Dataopslag <dennisdataopslag@gmail.com>, linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1479417398-2593-1-git-send-email-dianders@chromium.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Douglas Anderson <dianders@chromium.org>
+Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Sonny Rao <sonnyrao@chromium.org>, linux@roeck-us.net, dm-devel@redhat.com, shli@kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 17/11/16 20:33, Dennis Dataopslag wrote:
-> CHeers for the reaction and sorry for my late response, I've been out
-> for business.
-> 
-> Trying to rebuild this RAID is definately worth it for me. The
-> learning experience alone already makes it worth.
-> 
-> I did read the wiki page and tried several steps that are on there but
-> it didn't seem to get me out of trouble.
-> 
-> I used this information from the drive, obviously didn't search for
-> any "hidden" settings:
-> " Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : 36fdeb4b:c5360009:0958ad1e:17da451b
->            Name : TRD106:0  (local to host TRD106)
->   Creation Time : Fri Oct 10 12:27:27 2014
->      Raid Level : raid5
->    Raid Devices : 4
-> 
->  Avail Dev Size : 1948250112 (929.00 GiB 997.50 GB)
->      Array Size : 5844750336 (2786.99 GiB 2992.51 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->           State : clean
->     Device UUID : b49e2752:d37dac6c:8764c52a:372277bd
-> 
->     Update Time : Sat Nov  5 14:40:33 2016
->        Checksum : d47a9ad4 - correct
->          Events : 14934
-> 
->          Layout : left-symmetric
->      Chunk Size : 64K
-> 
->    Device Role : Active device 0
->    Array State : AAAA ('A' == active, '.' == missing)"
-> 
-> Anybody that can give me a little extra push?
-> 
-Others will be able to help better than me, but you might want to look
-for the thread "RAID10 with 2 drives auto-assembled as RAID1".
+On Thu, 17 Nov 2016, Douglas Anderson wrote:
 
-This will give you some information about how to run hexdump and find
-where your filesystems are on the array.
+> diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
+> index b3ba142e59a4..885ba5482d9f 100644
+> --- a/drivers/md/dm-bufio.c
+> +++ b/drivers/md/dm-bufio.c
+> @@ -89,6 +89,7 @@ struct dm_bufio_client {
+>  
+>  	struct list_head lru[LIST_SIZE];
+>  	unsigned long n_buffers[LIST_SIZE];
+> +	unsigned long n_all_buffers;
+>  
+>  	struct block_device *bdev;
+>  	unsigned block_size;
+> @@ -485,6 +486,7 @@ static void __link_buffer(struct dm_buffer *b, sector_t block, int dirty)
+>  	struct dm_bufio_client *c = b->c;
+>  
+>  	c->n_buffers[dirty]++;
+> +	c->n_all_buffers++;
+>  	b->block = block;
+>  	b->list_mode = dirty;
+>  	list_add(&b->lru_list, &c->lru[dirty]);
+> @@ -502,6 +504,7 @@ static void __unlink_buffer(struct dm_buffer *b)
+>  	BUG_ON(!c->n_buffers[b->list_mode]);
+>  
+>  	c->n_buffers[b->list_mode]--;
+> +	c->n_all_buffers--;
+>  	__remove(b->c, b);
+>  	list_del(&b->lru_list);
+>  }
+> @@ -515,6 +518,7 @@ static void __relink_lru(struct dm_buffer *b, int dirty)
+>  
+>  	BUG_ON(!c->n_buffers[b->list_mode]);
+>  
+> +	/* NOTE: don't update n_all_buffers: -1 + 1 = 0 */
+>  	c->n_buffers[b->list_mode]--;
+>  	c->n_buffers[dirty]++;
+>  	b->list_mode = dirty;
+> @@ -1588,17 +1592,10 @@ static unsigned long
+>  dm_bufio_shrink_count(struct shrinker *shrink, struct shrink_control *sc)
+>  {
+>  	struct dm_bufio_client *c;
+> -	unsigned long count;
+>  
+>  	c = container_of(shrink, struct dm_bufio_client, shrinker);
+> -	if (sc->gfp_mask & __GFP_FS)
+> -		dm_bufio_lock(c);
+> -	else if (!dm_bufio_trylock(c))
+> -		return 0;
+>  
+> -	count = c->n_buffers[LIST_CLEAN] + c->n_buffers[LIST_DIRTY];
+> -	dm_bufio_unlock(c);
+> -	return count;
+> +	return c->n_all_buffers;
+>  }
+>  
+>  /*
 
-There's plenty of other threads with this sort of information, but this
-will give you a starting point. If Phil Turmel sees this, he'll chime in
-with better detail.
-
-Cheers,
-Wol
-
+Would be better to just avoid taking the mutex at all and returning 
+c->n_buffers[LIST_CLEAN] + c->n_buffers[LIST_DIRTY] with a comment that 
+the estimate might be wrong, but the actual count may vary between 
+->count_objects() and ->scan_objects() anyway, so we don't actually care?
