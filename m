@@ -1,153 +1,233 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: mdadm I/O error with Ddf RAID
-Date: Thu, 17 Nov 2016 16:49:29 +1100
-Message-ID: <87oa1ehd06.fsf@notabene.neil.brown.name>
-References: <CAPO=kN2QDLEMgo9p9pU3=MeLQ=J6R8eeDL1Pw9m2pHjbVsuFGg@mail.gmail.com> <874m3ak3ci.fsf@notabene.neil.brown.name> <CAPO=kN3psOzSYzbKZ5dAGK5uEk3JfTSf-Ec+S_UTL0iaD78Pdg@mail.gmail.com>
+Subject: Re: Newly-created arrays don't auto-assemble - related to hostname change?
+Date: Thu, 17 Nov 2016 17:09:28 +1100
+Message-ID: <87lgwihc2v.fsf@notabene.neil.brown.name>
+References: <20161117035230.GG21587@bitfolk.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPO=kN3psOzSYzbKZ5dAGK5uEk3JfTSf-Ec+S_UTL0iaD78Pdg@mail.gmail.com>
+In-Reply-To: <20161117035230.GG21587@bitfolk.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Arka Sharma <arka.sw1988@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Andy Smith <andy@strugglers.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Nov 17 2016, Arka Sharma wrote:
+On Thu, Nov 17 2016, Andy Smith wrote:
 
-> Thanks Neil for you response. The devices we are using have physical
-> sector size of 512 bytes. We are writing the anchor header at last LBA
-> of the devices. We also written the controller data, physical records,
-> virtual records, physical data, config data to both primary and
-> secondary. We have also dumped 32 MB of metadata for RAID created by
-> mdadm and our tool. The guid's, crc's, timestamps are different as
-> expected, and the other fields are mostly similar, except in between
-> some header mdadm is writing 'FF' and we are writing 0's. We have also
-> dumped the call trace in block layer and put following prints,
+> Hi,
 >
-> [   10.312362] generic_make_request: bio->bi_iter.bi_sector=18446744073709551615
-> [   10.312363] generic_make_request_checks:
-> bio->bi_iter.bi_sector=18446744073709551615
-> [   10.312364] bio_check_eod: nr_sector=8, max_sector=1000215216,
-> bio->bi_iter.bi_sector=18446744073709551615
+> I feel I am missing something very simple here, as I usually don't
+> have this issue, but here goes=E2=80=A6
+>
+> I've got a Debian jessie host on which I created four arrays during
+> install (md{0,1,2,3}), using the Debian installer and partman. These
+> auto-assemble fine.
+>
+> After install the name of the server was changed from "tbd" to
+> "jfd". Another array was then created (md5), added to
+> /etc/mdadm/mdadm.conf and the initramfs was rebuilt
+> (update-initramfs -u).
+>
+> md5 does not auto-assemble. It can be started fine after boot with:
+>
+>     # mdadm --assemble /dev/md5
+>
+> or:
+>
+>     # mdadm --incremental /dev/sdc
+>     # mdadm --incremental /dev/sdd
 
-It might help if you provide A LOT more details.  Don't leave me
-guessing.
+This is almost exactly what udev does when the devices are discovered,
+so if it works here, it should work when udev does it.
 
-You have shown me the output of some printks, but you haven't shown me
-the patch which added the printks, so I cannot be sure how to interpret
-them.
+My only guess is that maybe the "DEVICE /dev/sd*" line in the mdadm.conf
+is causing confusion.  udev might be using a different name, though that
+would be odd.
 
-You originally said that mdadm was causing the error, but now it seems
-that the error is coming after mdadm has already assembled the array and
-something else is accessing it.
-
-Have you tried running "mdadm --exmaine" on a component device?  I
-previously assumed this would just crash because your original problem
-report seemed to suggest that mdadm was getting a read error, but now
-that doesn't seem to be the case.
-
-Please be accurate and provide details.  Don't be afraid to send several
-kilobytes of logs.  Err on the side of sending too much, not too
-little.  Don't ever trim logs.
+Can you try removing that line and see if it makes a difference?
 
 NeilBrown
 
 
 >
-> and following is the call trace
+> /etc/mdadm/mdadm.conf:
 >
-> [   10.312372]  [<ffffffff983d4b5c>] dump_stack+0x63/0x87
-
-> [   10.312374]  [<ffffffff983a06c1>] generic_make_request_checks+0x2a1/0x550
-> [   10.312375]  [<ffffffff980d54a9>] ? vprintk_default+0x29/0x40
-> [   10.312377]  [<ffffffff983a2cf2>] generic_make_request+0x52/0x210
-> [   10.312378]  [<ffffffff9839c0bf>] ? bio_clone_bioset+0x12f/0x320
-> [   10.312380]  [<ffffffffc031ed6a>] raid1_make_request+0xa2a/0xe00 [raid1]
-> [   10.312382]  [<ffffffff98192fcc>] ? get_page_from_freelist+0x36c/0xa50
-> [   10.312383]  [<ffffffff9822f8d5>] ? __d_alloc+0x25/0x1d0
-> [   10.312385]  [<ffffffff986739f2>] md_make_request+0xe2/0x230
-> [   10.312387]  [<ffffffff980be164>] ? __wake_up+0x44/0x50
-> [   10.312391]  [<ffffffff983a2dc6>] generic_make_request+0x126/0x210
-> [   10.312395]  [<ffffffff98325e3b>] ? d_lookup_done.part.24+0x26/0x2b
-> [   10.312398]  [<ffffffff983a2f3b>] submit_bio+0x8b/0x1a0
-> [   10.312401]  [<ffffffff9839ab48>] ? bio_alloc_bioset+0x168/0x2a0
-> [   10.312405]  [<ffffffff9824d9ac>] submit_bh_wbc+0x15c/0x1a0
-> [   10.312408]  [<ffffffff9824e26c>] block_read_full_page+0x1ec/0x370
-> [   10.312411]  [<ffffffff98250230>] ? I_BDEV+0x20/0x20
-> [   10.312414]  [<ffffffff9818ad60>] ? find_get_entry+0x20/0x140
-> [   10.312417]  [<ffffffff98250a18>] blkdev_readpage+0x18/0x20
-> [   10.312420]  [<ffffffff9818cc7b>] generic_file_read_iter+0x1ab/0x850
-> [   10.312423]  [<ffffffff98250c77>] blkdev_read_iter+0x37/0x40
-> [   10.312427]  [<ffffffff9821571e>] __vfs_read+0xbe/0x130
-> [   10.312430]  [<ffffffff9821674e>] vfs_read+0x8e/0x140
-> [   10.312433]  [<ffffffff98217b56>] SyS_read+0x46/0xa0
-> [   10.312437]  [<ffffffff98216437>] ? SyS_lseek+0x87/0xb0
-> [   10.312440]  [<ffffffff988106f6>] entry_SYSCALL_64_fastpath+0x1e/0xa8
+>     DEVICE /dev/sd*
+>     CREATE owner=3Droot group=3Ddisk mode=3D0660 auto=3Dyes
+>     HOMEHOST <ignore>
+>     MAILADDR root
+>     ARRAY /dev/md/0  metadata=3D1.2 UUID=3D400bac1d:e2c5d6ef:fea3b8c8:bcb=
+70f8f
+>     ARRAY /dev/md/1  metadata=3D1.2 UUID=3De29c8b89:705f0116:d888f77e:2b6=
+e32f5
+>     ARRAY /dev/md/2  metadata=3D1.2 UUID=3D039b3427:4be5157a:6e2d53bd:fe8=
+98803
+>     ARRAY /dev/md/3  metadata=3D1.2 UUID=3D30f745ce:7ed41b53:4df72181:740=
+6ea1d
+>     ARRAY /dev/md/5  metadata=3D1.2 UUID=3D957030cf:c09f023d:ceaebb27:e54=
+6f095
 >
-> Is it some header field our application is not writing correctly for
-> which mdadm is reading wrong data and invalid sector value is formed
-> in bio ?
+> I've unpacked the initramfs and looked at the mdadm.conf in there
+> and it is identical.
 >
-> Regards,
-> Arka
+> Initially HOMEHOST was set to <system> (the default), but I noticed
+> when looking at --detail that md5 has:
 >
-> On Mon, Nov 14, 2016 at 11:30 AM, NeilBrown <neilb@suse.com> wrote:
->> On Fri, Nov 11 2016, Arka Sharma wrote:
->>
->>> Hi All,
->>>
->>> We have developed a RAID creation application which create RAID with
->>> Ddf RAID metadata. We are using PCIe ssd as physical disks. We are
->>> writing the anchor, primary, secondary headers, virtual and physical
->>> records, configuration record and physical disk data. The offsets of
->>> the headers are updated in the primary, secondary and anchor headers
->>> correctly. The problem is when we try to boot to Ubuntu server and we
->>> observe that mdadm is throwing a disk failure error message and from
->>> block layer we are getting rw=0, want=7, limit=1000215216. We also
->>> confirmed using there is no I/O error is coming from the PCIe ssd,
->>> using a logic analyzer. Also the limit value 1000215216 is the
->>> capacity of the ssd in 512 byte blocks. Any insight will be highly
->>> appreciated.
->>>
->>
->> It looks like mdadm is attempting a 4K read starting at the last sector.
->>
->> Possibly the ssd's report a physical sector size of 4K.
->>
->> I don't know how DDF is supposed to work on a device like that.
->> Should the anchor be at the start of the last 4K block,
->> or in the last 512byte virtual block?
->>
->> DDF support in mdadm was written with the assumption of 512 byte blocks.
->>
->> I'm not at all certain this is the cause of the problem though.
->>
->> I would suggest starting by finding out which READ request in mdadm is
->> causing the error.
->>
->> NeilBrown
+>            Name : jfd:5  (local to host jfd)
+>
+> whereas the others have:
+>
+>            Name : tbd:0
+>
+> =E2=80=A6so I changed it to <ignore> to see if that would help. It didn't.
+>
+> So, I'd really appreciate any hints as to what I've missed here!
+>
+> Here follows --detail and --examine of md5 and its members, then the
+> contents of /proc/mdstat after I have manually assembled md5.
+>
+> $ sudo mdadm --detail /dev/md5
+> /dev/md5:
+>         Version : 1.2
+>   Creation Time : Thu Nov 17 02:35:15 2016
+>      Raid Level : raid10
+>      Array Size : 1875243008 (1788.37 GiB 1920.25 GB)
+>   Used Dev Size : 1875243008 (1788.37 GiB 1920.25 GB)
+>    Raid Devices : 2
+>   Total Devices : 2
+>     Persistence : Superblock is persistent
+>
+>   Intent Bitmap : Internal
+>
+>     Update Time : Thu Nov 17 02:35:15 2016
+>           State : clean=20
+>  Active Devices : 2
+> Working Devices : 2
+>  Failed Devices : 0
+>   Spare Devices : 0
+>
+>          Layout : far=3D2
+>      Chunk Size : 512K
+>
+>            Name : jfd:5  (local to host jfd)
+>            UUID : 957030cf:c09f023d:ceaebb27:e546f095
+>          Events : 0
+>
+>     Number   Major   Minor   RaidDevice State
+>        0       8       48        0      active sync   /dev/sdd
+>        1       8       32        1      active sync   /dev/sdc
+>
+> $ sudo mdadm --examine /dev/sd{c,d}
+> /dev/sdc:
+>           Magic : a92b4efc
+>         Version : 1.2
+>     Feature Map : 0x1
+>      Array UUID : 957030cf:c09f023d:ceaebb27:e546f095
+>            Name : jfd:5  (local to host jfd)
+>   Creation Time : Thu Nov 17 02:35:15 2016
+>      Raid Level : raid10
+>    Raid Devices : 2
+>
+>  Avail Dev Size : 3750486704 (1788.37 GiB 1920.25 GB)
+>      Array Size : 1875243008 (1788.37 GiB 1920.25 GB)
+>   Used Dev Size : 3750486016 (1788.37 GiB 1920.25 GB)
+>     Data Offset : 262144 sectors
+>    Super Offset : 8 sectors
+>    Unused Space : before=3D262056 sectors, after=3D688 sectors
+>           State : clean
+>     Device UUID : 4ac82c29:2d109465:7fff9b22:8c411c1e
+>
+> Internal Bitmap : 8 sectors from superblock
+>     Update Time : Thu Nov 17 02:35:15 2016
+>   Bad Block Log : 512 entries available at offset 72 sectors
+>        Checksum : 96d669f1 - correct
+>          Events : 0
+>
+>          Layout : far=3D2
+>      Chunk Size : 512K
+>
+>    Device Role : Active device 1
+>    Array State : AA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D re=
+placing)
+> /dev/sdd:
+>           Magic : a92b4efc
+>         Version : 1.2
+>     Feature Map : 0x1
+>      Array UUID : 957030cf:c09f023d:ceaebb27:e546f095
+>            Name : jfd:5  (local to host jfd)
+>   Creation Time : Thu Nov 17 02:35:15 2016
+>      Raid Level : raid10
+>    Raid Devices : 2
+>  Avail Dev Size : 3750486704 (1788.37 GiB 1920.25 GB)
+>      Array Size : 1875243008 (1788.37 GiB 1920.25 GB)
+>   Used Dev Size : 3750486016 (1788.37 GiB 1920.25 GB)
+>     Data Offset : 262144 sectors
+>    Super Offset : 8 sectors
+>    Unused Space : before=3D262056 sectors, after=3D688 sectors
+>           State : clean
+>     Device UUID : 3a067652:6e88afae:82722342:0036bae0
+>
+> Internal Bitmap : 8 sectors from superblock
+>     Update Time : Thu Nov 17 02:35:15 2016
+>   Bad Block Log : 512 entries available at offset 72 sectors
+>        Checksum : eb608799 - correct
+>          Events : 0
+>
+>          Layout : far=3D2
+>      Chunk Size : 512K
+>
+>    Device Role : Active device 0
+>    Array State : AA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D re=
+placing)
+>
+> $ cat /proc/mdstat=20
+> Personalities : [raid1] [raid10]=20
+> md5 : active (auto-read-only) raid10 sdd[0] sdc[1]
+>       1875243008 blocks super 1.2 512K chunks 2 far-copies [2/2] [UU]
+>       bitmap: 0/14 pages [0KB], 65536KB chunk
+>
+> md3 : active raid10 sda5[0] sdb5[1]
+>       12199936 blocks super 1.2 512K chunks 2 far-copies [2/2] [UU]
+>=20=20=20=20=20=20=20
+> md2 : active (auto-read-only) raid10 sda3[0] sdb3[1]
+>       975872 blocks super 1.2 512K chunks 2 far-copies [2/2] [UU]
+>=20=20=20=20=20=20=20
+> md1 : active raid10 sda2[0] sdb2[1]
+>       1951744 blocks super 1.2 512K chunks 2 far-copies [2/2] [UU]
+>=20=20=20=20=20=20=20
+> md0 : active raid1 sda1[0] sdb1[1]
+>       498368 blocks super 1.2 [2/2] [UU]
+>=20=20=20=20=20=20=20
+> unused devices: <none>
+>
+> Cheers,
+> Andy
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAEBCAAGBQJYLUTpAAoJEDnsnt1WYoG5y4kP/iF6pUnIq5OCV72sUTB6/QSG
-x6cKOg5gevS2zFmatsq2MuooaZwXh9VbXi/G4b4NL7QjjyDPnwU2qujPxu5YYNv5
-zWqC1F9ERgCAjXGynthTprtrZXBXAV/Bc0mNQHibxjNCcKNzBi87wFcqHhMxIdbn
-h9rEdhxnY+TQ57pVNWpJiUDoTeYBmttNs1R6uzhynqWMhHfp2aFK/oal0Mj7a525
-F5GJtye7vc5G7H5t5XXza96gtHiwzGAmBwXQO5V4GoZDXimp1FGmWWHfJr0xZ47T
-h+Si33C0yWfWZedSV3xfUX2IFue59R6r1rmX1B/Yr3k6zfz+gMf0HKye5XP3D/qc
-6xopTXKDvyhUFfLHH0UbtwI3w7lsNwMDv9oASKxTQW02j0RGmbfAhEiyUmJC71rq
-D/cm+BAF3lWhMdXzP0qeijwAhkcG60aV7XPEgiMtvUc4R8osxsgIKzYob5/ohgcM
-9E3MpojDZ7T6I15uJef1cYHQaKLIQokQqhVoDGW6pXOSHllSoSmB4yAY962DNy2f
-AOFDt8UM+z0Mvh4ORbxNOCo6S07qNg/wyXkC8CG/1Soor1bRNLSlVEfm7ZwCaEbb
-E+oTHTdcINCbf+zZHjtBV+wZIeXulvCy2sh+cti3GK8rnaS77fOuJZH/VoYndbb7
-iE6OJ7kb1gWd30tAqhIA
-=0PJ7
+iQIcBAEBCAAGBQJYLUmYAAoJEDnsnt1WYoG5zVYQALzf/t9USSc5AYB7YKbZ9SJa
+e2uyLKc7otDVe8pB3dXlpbLJwNxugUitcfFvTqkRVVLywXsaU+PANv8GdpddOhGB
+7fDxafDm4cg53gA+imQuswxmYEgHRpsknS3Sl0BnEmByqIFXB7gY3V8dYFa1i89X
+cMkk1PteJem4y0jN86MFq23EQwZyFe2+PNLzxiLW6g9c8jw0ckNQ7/X64gVgAdVm
+W2o3WjN7t4tJhlkxSr7T/tjF2Pan/6itsJkAJFa3wxbQ0IxW3ca34vPMegj5lSn/
+y6Owvgp6jvfKRsrlGWfYsNTx+GT8zuZxXL4QmWc3Qi06v+ce0gAxypm0tTjl2kWY
+IkHfpOP5bXDRsg3W5uPHpHHB282fXDxWqWC8G4cZO1HRFE8eiPW81K0yjgUuXk0D
+sdLGT4WofhYHnWOt0AlGhfuWLwd/PJzthZjC7L/2HuDCJs6mIGpvyr6BW9+MEESJ
+vfslSxhsJesp5vfTA8Wn2WH63U6kjsiFYFHChsdP5w0OfJGmu1Zlx2DLsQFu24OB
+PU5nXh76K9kY4xg0A7MXn7yErUK/vNJnbl1xZYYdqGHzEXuJ3zUAW/l0FDuPUEmB
+bqJUF1DXUppOkFlzynDtmL52qTWSyTdMqfKL+TJhc/Q0cnq+FHqj70aeseW5kM2y
+sCyvMl4ZZJqV0NmWTg0X
+=y4rw
 -----END PGP SIGNATURE-----
 --=-=-=--
