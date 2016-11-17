@@ -1,102 +1,81 @@
-From: Arka Sharma <arka.sw1988@gmail.com>
-Subject: Re: mdadm I/O error with Ddf RAID
-Date: Thu, 17 Nov 2016 10:51:59 +0530
-Message-ID: <CAPO=kN3psOzSYzbKZ5dAGK5uEk3JfTSf-Ec+S_UTL0iaD78Pdg@mail.gmail.com>
-References: <CAPO=kN2QDLEMgo9p9pU3=MeLQ=J6R8eeDL1Pw9m2pHjbVsuFGg@mail.gmail.com>
- <874m3ak3ci.fsf@notabene.neil.brown.name>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [md PATCH 1/4] md: add block tracing for bio_remapping
+Date: Thu, 17 Nov 2016 16:33:33 +1100
+Message-ID: <87twb6hdqq.fsf@notabene.neil.brown.name>
+References: <147910131504.27168.6566119701315109161.stgit@noble> <147910142095.27168.11356591734977480053.stgit@noble> <20161116192922.ylqx32zocag4xp4b@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <874m3ak3ci.fsf@notabene.neil.brown.name>
+In-Reply-To: <20161116192922.ylqx32zocag4xp4b@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
+To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks Neil for you response. The devices we are using have physical
-sector size of 512 bytes. We are writing the anchor header at last LBA
-of the devices. We also written the controller data, physical records,
-virtual records, physical data, config data to both primary and
-secondary. We have also dumped 32 MB of metadata for RAID created by
-mdadm and our tool. The guid's, crc's, timestamps are different as
-expected, and the other fields are mostly similar, except in between
-some header mdadm is writing 'FF' and we are writing 0's. We have also
-dumped the call trace in block layer and put following prints,
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-[   10.312362] generic_make_request: bio->bi_iter.bi_sector=18446744073709551615
-[   10.312363] generic_make_request_checks:
-bio->bi_iter.bi_sector=18446744073709551615
-[   10.312364] bio_check_eod: nr_sector=8, max_sector=1000215216,
-bio->bi_iter.bi_sector=18446744073709551615
+On Thu, Nov 17 2016, Shaohua Li wrote:
 
-And following is the call trace
+> On Mon, Nov 14, 2016 at 04:30:21PM +1100, Neil Brown wrote:
+>> The block tracing infrastructure (accessed with blktrace/blkparse)
+>> supports the tracing of mapping bios from one device to another.
+>> This is currently used when a bio in a partition is mapped to the
+>> whole device, when bios are mapped by dm, and for mapping in md/raid5.
+>> Other md personalities do not include this tracing yet, so add it.
+>>=20
+>> When a read-error is detected we redirect the request to a different dev=
+ice.
+>> This could justifiably be seen as a new mapping for the originial bio,
+>> or a secondary mapping for the bio that errors.  This patch uses
+>> the second option.
+>>=20
+>> When md is used under dm-raid, the mappings are not traced as we do
+>> not have access to the block device number of the parent.
+>
+> Looks the the original sector (the last parameter of trace_block_bio_rema=
+p)
+> isn't correct.
+> - in linear/raid0, bio_split already updated bio->bi_iter.bi_sector
 
-[   10.312372]  [<ffffffff983d4b5c>] dump_stack+0x63/0x87
-[   10.312374]  [<ffffffff983a06c1>] generic_make_request_checks+0x2a1/0x550
-[   10.312375]  [<ffffffff980d54a9>] ? vprintk_default+0x29/0x40
-[   10.312377]  [<ffffffff983a2cf2>] generic_make_request+0x52/0x210
-[   10.312378]  [<ffffffff9839c0bf>] ? bio_clone_bioset+0x12f/0x320
-[   10.312380]  [<ffffffffc031ed6a>] raid1_make_request+0xa2a/0xe00 [raid1]
-[   10.312382]  [<ffffffff98192fcc>] ? get_page_from_freelist+0x36c/0xa50
-[   10.312383]  [<ffffffff9822f8d5>] ? __d_alloc+0x25/0x1d0
-[   10.312385]  [<ffffffff986739f2>] md_make_request+0xe2/0x230
-[   10.312387]  [<ffffffff980be164>] ? __wake_up+0x44/0x50
-[   10.312391]  [<ffffffff983a2dc6>] generic_make_request+0x126/0x210
-[   10.312395]  [<ffffffff98325e3b>] ? d_lookup_done.part.24+0x26/0x2b
-[   10.312398]  [<ffffffff983a2f3b>] submit_bio+0x8b/0x1a0
-[   10.312401]  [<ffffffff9839ab48>] ? bio_alloc_bioset+0x168/0x2a0
-[   10.312405]  [<ffffffff9824d9ac>] submit_bh_wbc+0x15c/0x1a0
-[   10.312408]  [<ffffffff9824e26c>] block_read_full_page+0x1ec/0x370
-[   10.312411]  [<ffffffff98250230>] ? I_BDEV+0x20/0x20
-[   10.312414]  [<ffffffff9818ad60>] ? find_get_entry+0x20/0x140
-[   10.312417]  [<ffffffff98250a18>] blkdev_readpage+0x18/0x20
-[   10.312420]  [<ffffffff9818cc7b>] generic_file_read_iter+0x1ab/0x850
-[   10.312423]  [<ffffffff98250c77>] blkdev_read_iter+0x37/0x40
-[   10.312427]  [<ffffffff9821571e>] __vfs_read+0xbe/0x130
-[   10.312430]  [<ffffffff9821674e>] vfs_read+0x8e/0x140
-[   10.312433]  [<ffffffff98217b56>] SyS_read+0x46/0xa0
-[   10.312437]  [<ffffffff98216437>] ? SyS_lseek+0x87/0xb0
-[   10.312440]  [<ffffffff988106f6>] entry_SYSCALL_64_fastpath+0x1e/0xa8
+Oh yes, of course.  in the common case 'split =3D=3D bio' so when
+split->bi_iter.bi_sector  is adjusted, bio->.... is as well.
+I'll fix that, and also add calls to trace_block_split() as appropriate.
 
-Is it some header field our application is not writing correctly for
-which mdadm is reading wrong data and invalid sector value is formed
-in bio ?
 
-Regards,
-Arka
+> - in raid1/raid10, r1_bio->sector is updated before the bio is sent.
 
-On Mon, Nov 14, 2016 at 11:30 AM, NeilBrown <neilb@suse.com> wrote:
-> On Fri, Nov 11 2016, Arka Sharma wrote:
+Here I really think my code is correct.  r1_bio->sector is always the
+address in the array of the request.  It is only set once for each
+r1_bio, and that is before the call to trace_block_io_remap().
+
+Thanks,
+NeilBrown
+
+
 >
->> Hi All,
->>
->> We have developed a RAID creation application which create RAID with
->> Ddf RAID metadata. We are using PCIe ssd as physical disks. We are
->> writing the anchor, primary, secondary headers, virtual and physical
->> records, configuration record and physical disk data. The offsets of
->> the headers are updated in the primary, secondary and anchor headers
->> correctly. The problem is when we try to boot to Ubuntu server and we
->> observe that mdadm is throwing a disk failure error message and from
->> block layer we are getting rw=0, want=7, limit=1000215216. We also
->> confirmed using there is no I/O error is coming from the PCIe ssd,
->> using a logic analyzer. Also the limit value 1000215216 is the
->> capacity of the ssd in 512 byte blocks. Any insight will be highly
->> appreciated.
->>
->
-> It looks like mdadm is attempting a 4K read starting at the last sector.
->
-> Possibly the ssd's report a physical sector size of 4K.
->
-> I don't know how DDF is supposed to work on a device like that.
-> Should the anchor be at the start of the last 4K block,
-> or in the last 512byte virtual block?
->
-> DDF support in mdadm was written with the assumption of 512 byte blocks.
->
-> I'm not at all certain this is the cause of the problem though.
->
-> I would suggest starting by finding out which READ request in mdadm is
-> causing the error.
->
-> NeilBrown
+> Thanks,
+> Shaohua
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAEBCAAGBQJYLUEtAAoJEDnsnt1WYoG5EvgP/3MoCHvnru3ENId+Nu+h45HO
+osMP9zUwCVXBCf/OhA6icUXW75iN3RpiCd31jnlIjclca58XjBcoBiN6QpQGrWLK
+KZMMBC8SeQ55lUZ5c7d/A4vmJDFu76eteAnwTo71/egsZZ+4W7qduVS5Cnx3vmXP
+3PR0ArYXLmC/PAGg0D4fVzAAtNCymY7gE1gW5gYdCRYVjBj69HX3FKNje/I87woE
+8/Hz0A0jsrptIFVaZGXMA4Nm9FjPGKQ9dl7kyxo+LZsHk3kMZuuD//LtlazBZkCt
+zj53xy/afbbTFWETZxstOV7j78nYlQeyYz3prGc0grR7fWIicMr2aHoVACb0+osI
+TNDDOJDs8Kio1gSi5lGIUb7bAljt2931dxYJZb8DvStD6umwpBAi7aC61YJ/PH4h
+sgTRXnux6+oWGj4zyxKLObIKMuyaFH2zk3iLaFAQBNY+8ugn9sWp1OkXf5Bq2V7K
+yNy4rjlZL8jlGN54UcxAgAk3+uzsGlKwLdpIxe0psOPZNhuTNg61vCIeH1rUdoob
+CfCf4tEn7zP4g+MUbADSS5I4QtRRQusVsgNa/kPKYgSFQYMzeWWWgY4dSkv+P1n0
+uGJwELE9DaKLHFpzOb8rrHMvjG08cvRXNYWcNeuodjessnV+hV1KT9Hmdcs+ZRW+
+4q4ZN52hCbK96wwWsJIk
+=NPPL
+-----END PGP SIGNATURE-----
+--=-=-=--
