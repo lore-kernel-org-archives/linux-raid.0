@@ -1,205 +1,102 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH 1/2] raid5-cache: update superblock at shutdown/reboot
-Date: Thu, 17 Nov 2016 16:18:15 +1100
-Message-ID: <87wpg2heg8.fsf@notabene.neil.brown.name>
-References: <5d6f023fb1d1398317d07f02634f90b055e26f4b.1479345454.git.shli@fb.com>
+From: Arka Sharma <arka.sw1988@gmail.com>
+Subject: Re: mdadm I/O error with Ddf RAID
+Date: Thu, 17 Nov 2016 10:51:59 +0530
+Message-ID: <CAPO=kN3psOzSYzbKZ5dAGK5uEk3JfTSf-Ec+S_UTL0iaD78Pdg@mail.gmail.com>
+References: <CAPO=kN2QDLEMgo9p9pU3=MeLQ=J6R8eeDL1Pw9m2pHjbVsuFGg@mail.gmail.com>
+ <874m3ak3ci.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5d6f023fb1d1398317d07f02634f90b055e26f4b.1479345454.git.shli@fb.com>
+In-Reply-To: <874m3ak3ci.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
-Cc: songliubraving@fb.com, Zhengyuan Liu <liuzhengyuan@kylinos.cn>
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Thanks Neil for you response. The devices we are using have physical
+sector size of 512 bytes. We are writing the anchor header at last LBA
+of the devices. We also written the controller data, physical records,
+virtual records, physical data, config data to both primary and
+secondary. We have also dumped 32 MB of metadata for RAID created by
+mdadm and our tool. The guid's, crc's, timestamps are different as
+expected, and the other fields are mostly similar, except in between
+some header mdadm is writing 'FF' and we are writing 0's. We have also
+dumped the call trace in block layer and put following prints,
 
-On Thu, Nov 17 2016, Shaohua Li wrote:
+[   10.312362] generic_make_request: bio->bi_iter.bi_sector=18446744073709551615
+[   10.312363] generic_make_request_checks:
+bio->bi_iter.bi_sector=18446744073709551615
+[   10.312364] bio_check_eod: nr_sector=8, max_sector=1000215216,
+bio->bi_iter.bi_sector=18446744073709551615
 
-> Currently raid5-cache update superblock in .quiesce. But since at
-> shutdown/reboot, .quiesce is called with reconfig mutex locked,
-> superblock isn't guaranteed to be called in reclaim thread (see
-> 8e018c21da3). This will make assemble do unnecessary journal recovery.
-> It doesn't corrupt data but is annoying.  This adds an extra hook to
-> guarantee journal is flushed to raid disks.  And since this hook is
-> called before superblock update, this will guarantee we have a uptodate
-> superblock in shutdown/reboot
+And following is the call trace
 
-Hi.
-I don't quite follow some of the reasoning here.
-In particular, the ->stop_writes() that you have implemented
-does almost exactly the same thing as r5l_quiesce(1).
-So why not simply call ->quiesce(mddev, 1) in __md_stop_writes()??
-You probably need to also call ->quiesce(mddev, 0) to keep things
-balanced.
+[   10.312372]  [<ffffffff983d4b5c>] dump_stack+0x63/0x87
+[   10.312374]  [<ffffffff983a06c1>] generic_make_request_checks+0x2a1/0x550
+[   10.312375]  [<ffffffff980d54a9>] ? vprintk_default+0x29/0x40
+[   10.312377]  [<ffffffff983a2cf2>] generic_make_request+0x52/0x210
+[   10.312378]  [<ffffffff9839c0bf>] ? bio_clone_bioset+0x12f/0x320
+[   10.312380]  [<ffffffffc031ed6a>] raid1_make_request+0xa2a/0xe00 [raid1]
+[   10.312382]  [<ffffffff98192fcc>] ? get_page_from_freelist+0x36c/0xa50
+[   10.312383]  [<ffffffff9822f8d5>] ? __d_alloc+0x25/0x1d0
+[   10.312385]  [<ffffffff986739f2>] md_make_request+0xe2/0x230
+[   10.312387]  [<ffffffff980be164>] ? __wake_up+0x44/0x50
+[   10.312391]  [<ffffffff983a2dc6>] generic_make_request+0x126/0x210
+[   10.312395]  [<ffffffff98325e3b>] ? d_lookup_done.part.24+0x26/0x2b
+[   10.312398]  [<ffffffff983a2f3b>] submit_bio+0x8b/0x1a0
+[   10.312401]  [<ffffffff9839ab48>] ? bio_alloc_bioset+0x168/0x2a0
+[   10.312405]  [<ffffffff9824d9ac>] submit_bh_wbc+0x15c/0x1a0
+[   10.312408]  [<ffffffff9824e26c>] block_read_full_page+0x1ec/0x370
+[   10.312411]  [<ffffffff98250230>] ? I_BDEV+0x20/0x20
+[   10.312414]  [<ffffffff9818ad60>] ? find_get_entry+0x20/0x140
+[   10.312417]  [<ffffffff98250a18>] blkdev_readpage+0x18/0x20
+[   10.312420]  [<ffffffff9818cc7b>] generic_file_read_iter+0x1ab/0x850
+[   10.312423]  [<ffffffff98250c77>] blkdev_read_iter+0x37/0x40
+[   10.312427]  [<ffffffff9821571e>] __vfs_read+0xbe/0x130
+[   10.312430]  [<ffffffff9821674e>] vfs_read+0x8e/0x140
+[   10.312433]  [<ffffffff98217b56>] SyS_read+0x46/0xa0
+[   10.312437]  [<ffffffff98216437>] ? SyS_lseek+0x87/0xb0
+[   10.312440]  [<ffffffff988106f6>] entry_SYSCALL_64_fastpath+0x1e/0xa8
 
-Also you have introduced a static mutex (which isn't my favourite sort
-of thing) without giving any explanation why in the changelog comment.
-So I cannot easily see if that addition is at all justified.
+Is it some header field our application is not writing correctly for
+which mdadm is reading wrong data and invalid sector value is formed
+in bio ?
 
-Thanks,
-NeilBrown
+Regards,
+Arka
 
+On Mon, Nov 14, 2016 at 11:30 AM, NeilBrown <neilb@suse.com> wrote:
+> On Fri, Nov 11 2016, Arka Sharma wrote:
 >
-> Signed-off-by: Shaohua Li <shli@fb.com>
-> Cc: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
-> Cc: NeilBrown <neilb@suse.com>
-> ---
->  drivers/md/md.c          |  3 +++
->  drivers/md/md.h          |  2 ++
->  drivers/md/raid5-cache.c | 19 ++++++++++++++++++-
->  drivers/md/raid5.c       |  3 +++
->  drivers/md/raid5.h       |  1 +
->  5 files changed, 27 insertions(+), 1 deletion(-)
+>> Hi All,
+>>
+>> We have developed a RAID creation application which create RAID with
+>> Ddf RAID metadata. We are using PCIe ssd as physical disks. We are
+>> writing the anchor, primary, secondary headers, virtual and physical
+>> records, configuration record and physical disk data. The offsets of
+>> the headers are updated in the primary, secondary and anchor headers
+>> correctly. The problem is when we try to boot to Ubuntu server and we
+>> observe that mdadm is throwing a disk failure error message and from
+>> block layer we are getting rw=0, want=7, limit=1000215216. We also
+>> confirmed using there is no I/O error is coming from the PCIe ssd,
+>> using a logic analyzer. Also the limit value 1000215216 is the
+>> capacity of the ssd in 512 byte blocks. Any insight will be highly
+>> appreciated.
+>>
 >
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 1f1c7f0..155dd42 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -5471,6 +5471,9 @@ static void __md_stop_writes(struct mddev *mddev)
->=20=20
->  	del_timer_sync(&mddev->safemode_timer);
->=20=20
-> +	if (mddev->pers && mddev->pers->stop_writes)
-> +		mddev->pers->stop_writes(mddev);
-> +
->  	bitmap_flush(mddev);
->=20=20
->  	if (mddev->ro =3D=3D 0 &&
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index af6b33c..8da6fe9 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -512,6 +512,8 @@ struct md_personality
->  	/* congested implements bdi.congested_fn().
->  	 * Will not be called while array is 'suspended' */
->  	int (*congested)(struct mddev *mddev, int bits);
-> +	/* stop touching raid disks */
-> +	void (*stop_writes)(struct mddev *mddev);
->  };
->=20=20
->  struct md_sysfs_entry {
-> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index 2e270e6..641dec8 100644
-> --- a/drivers/md/raid5-cache.c
-> +++ b/drivers/md/raid5-cache.c
-> @@ -738,11 +738,13 @@ static void r5l_write_super_and_discard_space(struc=
-t r5l_log *log,
->=20=20
->  static void r5l_do_reclaim(struct r5l_log *log)
->  {
-> +	static DEFINE_MUTEX(lock);
->  	sector_t reclaim_target =3D xchg(&log->reclaim_target, 0);
->  	sector_t reclaimable;
->  	sector_t next_checkpoint;
->  	u64 next_cp_seq;
->=20=20
-> +	mutex_lock(&lock);
->  	spin_lock_irq(&log->io_list_lock);
->  	/*
->  	 * move proper io_unit to reclaim list. We should not change the order.
-> @@ -769,8 +771,10 @@ static void r5l_do_reclaim(struct r5l_log *log)
->  	spin_unlock_irq(&log->io_list_lock);
->=20=20
->  	BUG_ON(reclaimable < 0);
-> -	if (reclaimable =3D=3D 0)
-> +	if (reclaimable =3D=3D 0) {
-> +		mutex_unlock(&lock);
->  		return;
-> +	}
->=20=20
->  	/*
->  	 * write_super will flush cache of each raid disk. We must write super
-> @@ -784,6 +788,8 @@ static void r5l_do_reclaim(struct r5l_log *log)
->  	log->last_cp_seq =3D next_cp_seq;
->  	mutex_unlock(&log->io_mutex);
->=20=20
-> +	mutex_unlock(&lock);
-> +
->  	r5l_run_no_space_stripes(log);
->  }
->=20=20
-> @@ -836,6 +842,17 @@ void r5l_quiesce(struct r5l_log *log, int state)
->  	}
->  }
->=20=20
-> +void r5l_stop_writes(struct mddev *mddev)
-> +{
-> +	struct r5conf *conf =3D mddev->private;
-> +	struct r5l_log *log =3D conf->log;
-> +
-> +	if (!log)
-> +		return;
-> +	r5l_wake_reclaim(log, -1L);
-> +	r5l_do_reclaim(log);
-> +}
-> +
->  bool r5l_log_disk_error(struct r5conf *conf)
->  {
->  	struct r5l_log *log;
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index df88656..3d27338 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -7866,6 +7866,7 @@ static struct md_personality raid6_personality =3D
->  	.quiesce	=3D raid5_quiesce,
->  	.takeover	=3D raid6_takeover,
->  	.congested	=3D raid5_congested,
-> +	.stop_writes	=3D r5l_stop_writes,
->  };
->  static struct md_personality raid5_personality =3D
->  {
-> @@ -7889,6 +7890,7 @@ static struct md_personality raid5_personality =3D
->  	.quiesce	=3D raid5_quiesce,
->  	.takeover	=3D raid5_takeover,
->  	.congested	=3D raid5_congested,
-> +	.stop_writes	=3D r5l_stop_writes,
->  };
->=20=20
->  static struct md_personality raid4_personality =3D
-> @@ -7913,6 +7915,7 @@ static struct md_personality raid4_personality =3D
->  	.quiesce	=3D raid5_quiesce,
->  	.takeover	=3D raid4_takeover,
->  	.congested	=3D raid5_congested,
-> +	.stop_writes	=3D r5l_stop_writes,
->  };
->=20=20
->  static int __init raid5_init(void)
-> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-> index 57ec49f..0643cc0 100644
-> --- a/drivers/md/raid5.h
-> +++ b/drivers/md/raid5.h
-> @@ -633,4 +633,5 @@ extern void r5l_stripe_write_finished(struct stripe_h=
-ead *sh);
->  extern int r5l_handle_flush_request(struct r5l_log *log, struct bio *bio=
-);
->  extern void r5l_quiesce(struct r5l_log *log, int state);
->  extern bool r5l_log_disk_error(struct r5conf *conf);
-> +extern void r5l_stop_writes(struct mddev *mddev);
->  #endif
-> --=20
-> 2.9.3
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAEBCAAGBQJYLT2YAAoJEDnsnt1WYoG57l4QAL2v87MZG5iKmyBd5WKt2/ki
-bpomIYYSJfmb32NJkuHCor7VlChfWKATkmTU5//BG++0GidSg00CpUWhp5Akecpv
-kyluACsxARty+MWSOv9HoPDD45qRjqxbwWHscjVrhjy9qiEqqJubkAHtYOJkS67J
-o5RkwL3n3WyB4XgeRhiFi0NoE3bV4CP0+tvapssiNt+zDHRtBtSzHHH0mZg0EDkf
-E9ykXiPD0aSzOZDyX/5+h76mMSdjWpd0iXgzaqmmPebl6HmG4N0ODBYEKzUUUKV3
-BMS5qWOM+vytTqRLGT4NwM16njC/+mh4pPIaeAIfOO76EHj0FtImvO9A9KvSIjLn
-/DpdKreBrnEbOrnemupDsLvsZHn05Jtb3uIKzJZrv8RiAGrujGV3J4evdz+6e2t3
-Yfh/FgvDTxX6gZLvChe0+a/YGQn3d0yqBOJJ81tOuMBSYPiblEVpS11+3JfIJB6/
-+eksSHWzS3d4icoySEJYKXLcV0zM2Dz+n04ipO+7oHOLlp644Pzo01gG0A//cTBe
-s7t+lkzatH9Swl9hPUnyl9yoqlYMe+/YI1t0EBZPWRgAksT1hVXP9kLn35J33q1P
-DkQ5G5Mfdkyo1IuP2+CX2SG77kKgTezUyzTp9y+7e4vLyJOJgBL148tjwArO0+mz
-gvuKSkLVCjWRZYrz+lO4
-=87Q3
------END PGP SIGNATURE-----
---=-=-=--
+> It looks like mdadm is attempting a 4K read starting at the last sector.
+>
+> Possibly the ssd's report a physical sector size of 4K.
+>
+> I don't know how DDF is supposed to work on a device like that.
+> Should the anchor be at the start of the last 4K block,
+> or in the last 512byte virtual block?
+>
+> DDF support in mdadm was written with the assumption of 512 byte blocks.
+>
+> I'm not at all certain this is the cause of the problem though.
+>
+> I would suggest starting by finding out which READ request in mdadm is
+> causing the error.
+>
+> NeilBrown
