@@ -1,53 +1,57 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: Re: [PATCH v6 04/11] md/r5cache: caching mode of r5cache
-Date: Thu, 17 Nov 2016 17:25:13 +0000
-Message-ID: <529A29AD-9526-4FCD-9218-B478B46C1FD4@fb.com>
-References: <20161110204623.3484694-1-songliubraving@fb.com>
- <20161110204623.3484694-5-songliubraving@fb.com>
- <20161115170330.kdjxussdau54ekus@kernel.org>
- <0A3E2AC9-966D-4EC3-A16D-CE8AC7B85DB7@fb.com>
- <20161115214919.GA28086@shli-mbp.local>
- <504BBD2B-D9C8-4D54-992D-6CF460015C32@fb.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [md PATCH 1/4] md: add block tracing for bio_remapping
+Date: Thu, 17 Nov 2016 10:04:23 -0800
+Message-ID: <20161117180423.tzmeqpgklihgh7vp@kernel.org>
+References: <147910131504.27168.6566119701315109161.stgit@noble>
+ <147910142095.27168.11356591734977480053.stgit@noble>
+ <20161116192922.ylqx32zocag4xp4b@kernel.org>
+ <87twb6hdqq.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <504BBD2B-D9C8-4D54-992D-6CF460015C32@fb.com>
-Content-Language: en-US
-Content-ID: <F6519EF190C9364A93171A584AAD5AF4@namprd15.prod.outlook.com>
+Content-Disposition: inline
+In-Reply-To: <87twb6hdqq.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>
-Cc: Shaohua Li <shli@kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.com>, Kernel Team <Kernel-team@fb.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "hch@infradead.org" <hch@infradead.org>, "liuzhengyuang521@gmail.com" <liuzhengyuang521@gmail.com>, "liuzhengyuan@kylinos.cn" <liuzhengyuan@kylinos.cn>
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->=20
->>=20
->>>>> @@ -1547,6 +1611,7 @@ ops_run_biodrain(struct stripe_head *sh, struct=
- dma_async_tx_descriptor *tx)
->>>>>=20
->>>>> again:
->>>>> 			dev =3D &sh->dev[i];
->>>>> +			clear_bit(R5_InJournal, &dev->flags);
->>>>=20
->>>> why clear the bit here? isn't this bit cleared when the stripe is init=
-ialized?
->>>=20
->>> This is necessary when we rewrite a page that is already in journal. Th=
-is means there is new data coming to=20
->>> this stripe and dev, so we should not consider the page is secured in j=
-ournal.=20
->>=20
->> This sounds suggest we should clear the bit after writeout is done.
->=20
-> That may also work. Let me confirm.=20
->=20
+On Thu, Nov 17, 2016 at 04:33:33PM +1100, Neil Brown wrote:
+> On Thu, Nov 17 2016, Shaohua Li wrote:
+> 
+> > On Mon, Nov 14, 2016 at 04:30:21PM +1100, Neil Brown wrote:
+> >> The block tracing infrastructure (accessed with blktrace/blkparse)
+> >> supports the tracing of mapping bios from one device to another.
+> >> This is currently used when a bio in a partition is mapped to the
+> >> whole device, when bios are mapped by dm, and for mapping in md/raid5.
+> >> Other md personalities do not include this tracing yet, so add it.
+> >> 
+> >> When a read-error is detected we redirect the request to a different device.
+> >> This could justifiably be seen as a new mapping for the originial bio,
+> >> or a secondary mapping for the bio that errors.  This patch uses
+> >> the second option.
+> >> 
+> >> When md is used under dm-raid, the mappings are not traced as we do
+> >> not have access to the block device number of the parent.
+> >
+> > Looks the the original sector (the last parameter of trace_block_bio_remap)
+> > isn't correct.
+> > - in linear/raid0, bio_split already updated bio->bi_iter.bi_sector
+> 
+> Oh yes, of course.  in the common case 'split == bio' so when
+> split->bi_iter.bi_sector  is adjusted, bio->.... is as well.
+> I'll fix that, and also add calls to trace_block_split() as appropriate.
+> 
+> 
+> > - in raid1/raid10, r1_bio->sector is updated before the bio is sent.
+> 
+> Here I really think my code is correct.  r1_bio->sector is always the
+> address in the array of the request.  It is only set once for each
+> r1_bio, and that is before the call to trace_block_io_remap().
 
-I think we still need clear R5_InJournal in ops_run_biodrain(). r5l_write_s=
-tripe() and r5l_log_stripe() uses=20
-R5_InJournal as a flag of "no need to write journal again". If we do not cl=
-ear R5_InJournal in=20
-ops_run_biodrain(), newer data will not be written to journal.=20
+Oh, you are right, sorry. I think moving the trace_remap right before we add
+the bio to plug or pending list is better. It will make the code simpler. The
+timing of the trace doesn't matter.
 
 Thanks,
-Song
-
+Shaohua
