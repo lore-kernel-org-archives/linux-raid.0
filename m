@@ -1,70 +1,87 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: [PATCH 1/2] raid5-cache: update superblock at shutdown/reboot
-Date: Thu, 17 Nov 2016 09:44:39 +0000
-Message-ID: <582D7C07.8060507@youngman.org.uk>
-References: <5d6f023fb1d1398317d07f02634f90b055e26f4b.1479345454.git.shli@fb.com>
- <87wpg2heg8.fsf@notabene.neil.brown.name>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+From: Pawel Baldysiak <pawel.baldysiak@intel.com>
+Subject: [PATCH v2 1/4] Add function for getting member drive sector size
+Date: Thu, 17 Nov 2016 14:58:35 +0100
+Message-ID: <1479391118-31600-2-git-send-email-pawel.baldysiak@intel.com>
+References: <1479391118-31600-1-git-send-email-pawel.baldysiak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87wpg2heg8.fsf@notabene.neil.brown.name>
+In-Reply-To: <1479391118-31600-1-git-send-email-pawel.baldysiak@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
-Cc: songliubraving@fb.com, Zhengyuan Liu <liuzhengyuan@kylinos.cn>
+To: jes.sorensen@redhat.com
+Cc: linux-raid@vger.kernel.org, Pawel Baldysiak <pawel.baldysiak@intel.com>
 List-Id: linux-raid.ids
 
-On 17/11/16 05:18, NeilBrown wrote:
-> On Thu, Nov 17 2016, Shaohua Li wrote:
-> 
->> Currently raid5-cache update superblock in .quiesce. But since at
->> shutdown/reboot, .quiesce is called with reconfig mutex locked,
->> superblock isn't guaranteed to be called in reclaim thread (see
->> 8e018c21da3). This will make assemble do unnecessary journal recovery.
->> It doesn't corrupt data but is annoying.  This adds an extra hook to
->> guarantee journal is flushed to raid disks.  And since this hook is
->> called before superblock update, this will guarantee we have a uptodate
->> superblock in shutdown/reboot
-> 
-> Hi.
-> I don't quite follow some of the reasoning here.
-> In particular, the ->stop_writes() that you have implemented
-> does almost exactly the same thing as r5l_quiesce(1).
-> So why not simply call ->quiesce(mddev, 1) in __md_stop_writes()??
-> You probably need to also call ->quiesce(mddev, 0) to keep things
-> balanced.
-> 
-> Also you have introduced a static mutex (which isn't my favourite sort
-> of thing) without giving any explanation why in the changelog comment.
-> So I cannot easily see if that addition is at all justified.
-> 
-> Thanks,
-> NeilBrown
-> 
-I need to be careful I don't ruffle any feathers here ...
+This patch introduces the function for getting sector size of
+given device (fd).
 
-But this is saying to me this is a nice feature that hasn't been
-properly spec'd and thought through. Don't get me wrong, I know that -
-in typical linux fashion - people have been adding things, and raid has
-"just growed" topsy fashion. So it's incredibly difficult to spec a new
-feature when you don't have a spec for the stuff you're building it on.
+Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+---
+ mdadm.h  |  1 +
+ super1.c |  3 +--
+ util.c   | 18 +++++++++++++++++-
+ 3 files changed, 19 insertions(+), 3 deletions(-)
 
-Anyways, what I'm saying is, it seems to me this caching stuff (it's a
-new feature, iirc) would be great for trying to write out a proper spec
-of what's meant to be going on. It'll roll over into spec'ing the stuff
-it relies on ...
-
-And yes, I *AM* volunteering to do the work - as I said elsewhere, I
-want to put a load of kerneldoc into the raid source, and get to
-understand it all, but the downside is you'll get a lot of newbie-ish
-questions from me trying to get to grips with what's going on. I'm an
-experienced C programmer but kernel style is alien to me - you know the
-disconnect when you're reading something, you can read the words easily,
-but you can't decipher the meaning. That's how I feel reading the kernel
-source at the moment.
-
-Are we up for it?
-
-Cheers,
-Wol
+diff --git a/mdadm.h b/mdadm.h
+index 0516c82..1aeb232 100755
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -1112,6 +1112,7 @@ static inline struct supertype *guess_super(int fd) {
+ }
+ extern struct supertype *dup_super(struct supertype *st);
+ extern int get_dev_size(int fd, char *dname, unsigned long long *sizep);
++extern int get_dev_sector_size(int fd, char *dname, unsigned int *sectsizep);
+ extern int must_be_container(int fd);
+ extern int dev_size_from_id(dev_t id, unsigned long long *size);
+ void wait_for(char *dev, int fd);
+diff --git a/super1.c b/super1.c
+index 4fef378..8f800b5 100644
+--- a/super1.c
++++ b/super1.c
+@@ -212,8 +212,7 @@ struct align_fd {
+ static void init_afd(struct align_fd *afd, int fd)
+ {
+ 	afd->fd = fd;
+-
+-	if (ioctl(afd->fd, BLKSSZGET, &afd->blk_sz) != 0)
++	if (!get_dev_sector_size(afd->fd, NULL, (unsigned int *)&afd->blk_sz))
+ 		afd->blk_sz = 512;
+ }
+ 
+diff --git a/util.c b/util.c
+index 9e4718f..883eaa4 100644
+--- a/util.c
++++ b/util.c
+@@ -1324,7 +1324,7 @@ int get_dev_size(int fd, char *dname, unsigned long long *sizep)
+ 			ldsize <<= 9;
+ 		} else {
+ 			if (dname)
+-				pr_err("Cannot get size of %s: %s\b",
++				pr_err("Cannot get size of %s: %s\n",
+ 					dname, strerror(errno));
+ 			return 0;
+ 		}
+@@ -1333,6 +1333,22 @@ int get_dev_size(int fd, char *dname, unsigned long long *sizep)
+ 	return 1;
+ }
+ 
++/* Return sector size of device in bytes */
++int get_dev_sector_size(int fd, char *dname, unsigned int *sectsizep)
++{
++	unsigned int sectsize;
++
++	if (ioctl(fd, BLKSSZGET, &sectsize) != 0) {
++		if (dname)
++			pr_err("Cannot get sector size of %s: %s\n",
++				dname, strerror(errno));
++		return 0;
++	}
++
++	*sectsizep = sectsize;
++	return 1;
++}
++
+ /* Return true if this can only be a container, not a member device.
+  * i.e. is and md device and size is zero
+  */
+-- 
+2.7.4
 
