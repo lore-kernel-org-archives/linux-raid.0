@@ -1,49 +1,70 @@
 From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Just a thought - linux raid wiki - raid 5 grows getting stuck at
- 0%
-Date: Thu, 17 Nov 2016 09:14:24 +0000
-Message-ID: <582D74F0.6080107@youngman.org.uk>
-References: <582CF0E5.2030605@youngman.org.uk>
- <87inrmhbnh.fsf@notabene.neil.brown.name>
+Subject: Re: [PATCH 1/2] raid5-cache: update superblock at shutdown/reboot
+Date: Thu, 17 Nov 2016 09:44:39 +0000
+Message-ID: <582D7C07.8060507@youngman.org.uk>
+References: <5d6f023fb1d1398317d07f02634f90b055e26f4b.1479345454.git.shli@fb.com>
+ <87wpg2heg8.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87inrmhbnh.fsf@notabene.neil.brown.name>
+In-Reply-To: <87wpg2heg8.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.com>, Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
+Cc: songliubraving@fb.com, Zhengyuan Liu <liuzhengyuan@kylinos.cn>
 List-Id: linux-raid.ids
 
-On 17/11/16 06:18, NeilBrown wrote:
->> > But I'm sure you can see from this that I'm updating this bit of the
->> > wiki. Is there anything else I ought to know about bitmaps, so I can
->> > document it? :-)
-
-> If only I could run "diff" between my brain and the wiki....
-
-:-)
+On 17/11/16 05:18, NeilBrown wrote:
+> On Thu, Nov 17 2016, Shaohua Li wrote:
 > 
-> Thanks for doing this!
+>> Currently raid5-cache update superblock in .quiesce. But since at
+>> shutdown/reboot, .quiesce is called with reconfig mutex locked,
+>> superblock isn't guaranteed to be called in reclaim thread (see
+>> 8e018c21da3). This will make assemble do unnecessary journal recovery.
+>> It doesn't corrupt data but is annoying.  This adds an extra hook to
+>> guarantee journal is flushed to raid disks.  And since this hook is
+>> called before superblock update, this will guarantee we have a uptodate
+>> superblock in shutdown/reboot
 > 
+> Hi.
+> I don't quite follow some of the reasoning here.
+> In particular, the ->stop_writes() that you have implemented
+> does almost exactly the same thing as r5l_quiesce(1).
+> So why not simply call ->quiesce(mddev, 1) in __md_stop_writes()??
+> You probably need to also call ->quiesce(mddev, 0) to keep things
+> balanced.
+> 
+> Also you have introduced a static mutex (which isn't my favourite sort
+> of thing) without giving any explanation why in the changelog comment.
+> So I cannot easily see if that addition is at all justified.
+> 
+> Thanks,
 > NeilBrown
+> 
+I need to be careful I don't ruffle any feathers here ...
 
-I'll update the wiki in the next day or so.
+But this is saying to me this is a nice feature that hasn't been
+properly spec'd and thought through. Don't get me wrong, I know that -
+in typical linux fashion - people have been adding things, and raid has
+"just growed" topsy fashion. So it's incredibly difficult to spec a new
+feature when you don't have a spec for the stuff you're building it on.
 
-I'm a bit worried I'll spread myself too thin, but I've been following
-the threads on the recent patch sets, and I've also picked up on the new
-Sphinx kernel documentation stuff.
+Anyways, what I'm saying is, it seems to me this caching stuff (it's a
+new feature, iirc) would be great for trying to write out a proper spec
+of what's meant to be going on. It'll roll over into spec'ing the stuff
+it relies on ...
 
-So my aim now is, on top of generally updating the wiki, to link it in
-to the kernel doc, and update a lot of that doc using re-structured text
-in the md source files. That's not going to be a problem, I hope?
+And yes, I *AM* volunteering to do the work - as I said elsewhere, I
+want to put a load of kerneldoc into the raid source, and get to
+understand it all, but the downside is you'll get a lot of newbie-ish
+questions from me trying to get to grips with what's going on. I'm an
+experienced C programmer but kernel style is alien to me - you know the
+disconnect when you're reading something, you can read the words easily,
+but you can't decipher the meaning. That's how I feel reading the kernel
+source at the moment.
 
-I'm going to dig and find out more, but if anybody can point me to some
-kerneldoc code in the md source, and the corresponding links to the doc
-on the kernel.org website, that'll be wonderful. It'll just give me a
-leg up on the hardest part - actually getting started.
-
-And if there isn't any at present, it'll just tell me it's needed even
-more :-)
+Are we up for it?
 
 Cheers,
 Wol
+
