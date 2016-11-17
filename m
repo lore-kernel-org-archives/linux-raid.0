@@ -1,7 +1,7 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH v7 07/10] md/r5cache: refactoring journal recovery code
-Date: Thu, 17 Nov 2016 15:24:42 -0800
-Message-ID: <20161117232445.1798305-8-songliubraving@fb.com>
+Subject: [PATCH v7 06/10] md/r5cache: sysfs entry journal_mode
+Date: Thu, 17 Nov 2016 15:24:41 -0800
+Message-ID: <20161117232445.1798305-7-songliubraving@fb.com>
 References: <20161117232445.1798305-1-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,82 +12,129 @@ To: linux-raid@vger.kernel.org
 Cc: neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuang521@gmail.com, liuzhengyuan@kylinos.cn, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-1. rename r5l_read_meta_block() as r5l_recovery_read_meta_block();
-2. pull the code that initialize r5l_meta_block from
-   r5l_log_write_empty_meta_block() to a separate function
-   r5l_recovery_create_empty_meta_block(), so that we can reuse this
-   piece of code.
+With write cache, journal_mode is the knob to switch between
+write-back and write-through.
+
+Below is an example:
+
+root@virt-test:~/# cat /sys/block/md0/md/journal_mode
+[write-through] write-back
+root@virt-test:~/# echo write-back > /sys/block/md0/md/journal_mode
+root@virt-test:~/# cat /sys/block/md0/md/journal_mode
+write-through [write-back]
 
 Signed-off-by: Song Liu <songliubraving@fb.com>
 ---
- drivers/md/raid5-cache.c | 27 ++++++++++++++++++---------
- 1 file changed, 18 insertions(+), 9 deletions(-)
+ drivers/md/raid5-cache.c | 65 ++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/md/raid5.c       |  1 +
+ drivers/md/raid5.h       |  1 +
+ 3 files changed, 67 insertions(+)
 
 diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index b9ad0e8..390be84 100644
+index 7dec2a0..b9ad0e8 100644
 --- a/drivers/md/raid5-cache.c
 +++ b/drivers/md/raid5-cache.c
-@@ -1356,8 +1356,8 @@ struct r5l_recovery_ctx {
- 	u64 seq;			/* recovery position seq */
+@@ -60,6 +60,8 @@ enum r5c_journal_mode {
+ 	R5C_JOURNAL_MODE_WRITE_BACK = 1,
  };
  
--static int r5l_read_meta_block(struct r5l_log *log,
--			       struct r5l_recovery_ctx *ctx)
-+static int r5l_recovery_read_meta_block(struct r5l_log *log,
-+					struct r5l_recovery_ctx *ctx)
- {
- 	struct page *page = ctx->meta_page;
- 	struct r5l_meta_block *mb;
-@@ -1530,7 +1530,7 @@ static void r5l_recovery_flush_log(struct r5l_log *log,
- 				   struct r5l_recovery_ctx *ctx)
- {
- 	while (1) {
--		if (r5l_read_meta_block(log, ctx))
-+		if (r5l_recovery_read_meta_block(log, ctx))
- 			return;
- 		if (r5l_recovery_flush_one_meta(log, ctx))
- 			return;
-@@ -1539,17 +1539,16 @@ static void r5l_recovery_flush_log(struct r5l_log *log,
- 	}
++static char *r5c_journal_mode_str[] = {"write-through",
++				       "write-back"};
+ /*
+  * raid5 cache state machine
+  *
+@@ -1617,6 +1619,69 @@ static void r5l_write_super(struct r5l_log *log, sector_t cp)
+ 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
  }
  
--static int r5l_log_write_empty_meta_block(struct r5l_log *log, sector_t pos,
--					  u64 seq)
-+static void
-+r5l_recovery_create_empty_meta_block(struct r5l_log *log,
-+				     struct page *page,
-+				     sector_t pos, u64 seq)
- {
--	struct page *page;
- 	struct r5l_meta_block *mb;
- 	u32 crc;
- 
--	page = alloc_page(GFP_KERNEL | __GFP_ZERO);
--	if (!page)
--		return -ENOMEM;
- 	mb = page_address(page);
-+	clear_page(mb);
- 	mb->magic = cpu_to_le32(R5LOG_MAGIC);
- 	mb->version = R5LOG_VERSION;
- 	mb->meta_size = cpu_to_le32(sizeof(struct r5l_meta_block));
-@@ -1557,7 +1556,17 @@ static int r5l_log_write_empty_meta_block(struct r5l_log *log, sector_t pos,
- 	mb->position = cpu_to_le64(pos);
- 	crc = crc32c_le(log->uuid_checksum, mb, PAGE_SIZE);
- 	mb->checksum = cpu_to_le32(crc);
-+}
- 
-+static int r5l_log_write_empty_meta_block(struct r5l_log *log, sector_t pos,
-+					  u64 seq)
++static ssize_t r5c_journal_mode_show(struct mddev *mddev, char *page)
 +{
-+	struct page *page;
++	struct r5conf *conf = mddev->private;
++	int ret;
 +
-+	page = alloc_page(GFP_KERNEL);
-+	if (!page)
-+		return -ENOMEM;
-+	r5l_recovery_create_empty_meta_block(log, page, pos, seq);
- 	if (!sync_page_io(log->rdev, pos, PAGE_SIZE, page, REQ_OP_WRITE,
- 			  WRITE_FUA, false)) {
- 		__free_page(page);
++	if (!conf->log)
++		return 0;
++
++	switch (conf->log->r5c_journal_mode) {
++	case R5C_JOURNAL_MODE_WRITE_THROUGH:
++		ret = snprintf(
++			page, PAGE_SIZE, "[%s] %s\n",
++			r5c_journal_mode_str[R5C_JOURNAL_MODE_WRITE_THROUGH],
++			r5c_journal_mode_str[R5C_JOURNAL_MODE_WRITE_BACK]);
++		break;
++	case R5C_JOURNAL_MODE_WRITE_BACK:
++		ret = snprintf(
++			page, PAGE_SIZE, "%s [%s]\n",
++			r5c_journal_mode_str[R5C_JOURNAL_MODE_WRITE_THROUGH],
++			r5c_journal_mode_str[R5C_JOURNAL_MODE_WRITE_BACK]);
++		break;
++	default:
++		ret = 0;
++	}
++	return ret;
++}
++
++static ssize_t r5c_journal_mode_store(struct mddev *mddev,
++				      const char *page, size_t length)
++{
++	struct r5conf *conf = mddev->private;
++	struct r5l_log *log = conf->log;
++	int val = -1, i;
++	int len = length;
++
++	if (!log)
++		return -ENODEV;
++
++	if (len && page[len - 1] == '\n')
++		len -= 1;
++	for (i = 0; i < ARRAY_SIZE(r5c_journal_mode_str); i++)
++		if (strlen(r5c_journal_mode_str[i]) == len &&
++		    strncmp(page, r5c_journal_mode_str[i], len) == 0) {
++			val = i;
++			break;
++		}
++	if (val < R5C_JOURNAL_MODE_WRITE_THROUGH ||
++	    val > R5C_JOURNAL_MODE_WRITE_BACK)
++		return -EINVAL;
++
++	mddev_suspend(mddev);
++	conf->log->r5c_journal_mode = val;
++	mddev_resume(mddev);
++
++	pr_debug("md/raid:%s: setting r5c cache mode to %d: %s\n",
++		 mdname(mddev), val, r5c_journal_mode_str[val]);
++	return length;
++}
++
++struct md_sysfs_entry
++r5c_journal_mode = __ATTR(journal_mode, 0644,
++			  r5c_journal_mode_show, r5c_journal_mode_store);
++
+ /*
+  * Try handle write operation in caching phase. This function should only
+  * be called in write-back mode.
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 90638ba..17cf98e 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6319,6 +6319,7 @@ static struct attribute *raid5_attrs[] =  {
+ 	&raid5_group_thread_cnt.attr,
+ 	&raid5_skip_copy.attr,
+ 	&raid5_rmw_level.attr,
++	&r5c_journal_mode.attr,
+ 	NULL,
+ };
+ static struct attribute_group raid5_attrs_group = {
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index 35b4c0f..a698113 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -773,4 +773,5 @@ extern void r5c_make_stripe_write_out(struct stripe_head *sh);
+ extern void r5c_flush_cache(struct r5conf *conf, int num);
+ extern void r5c_check_stripe_cache_usage(struct r5conf *conf);
+ extern void r5c_check_cached_full_stripe(struct r5conf *conf);
++extern struct md_sysfs_entry r5c_journal_mode;
+ #endif
 -- 
 2.9.3
 
