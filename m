@@ -1,80 +1,56 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH/RFC] add "failfast" support for raid1/raid10.
-Date: Fri, 18 Nov 2016 08:09:41 +0100
-Message-ID: <df842afd-c15a-b37d-269a-dba7d08e59e0@suse.de>
-References: <147944614789.3302.1959091446949640579.stgit@noble>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] block: call trace_block_split() from bio_split()
+Date: Fri, 18 Nov 2016 04:55:33 -0800
+Message-ID: <20161118125533.GA27741@infradead.org>
+References: <87vavlfsar.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <147944614789.3302.1959091446949640579.stgit@noble>
-Sender: linux-kernel-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <87vavlfsar.fsf@notabene.neil.brown.name>
+Sender: linux-block-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-(Seeing that it was me who initiated those patches I guess I should
-speak up here)
-
-On 11/18/2016 06:16 AM, NeilBrown wrote:
-> Hi,
+On Fri, Nov 18, 2016 at 01:14:20PM +1100, NeilBrown wrote:
 > 
->  I've been sitting on these patches for a while because although they
->  solve a real problem, it is a fairly limited use-case, and I don't
->  really like some of the details.
 > 
->  So I'm posting them as RFC in the hope that a different perspective
->  might help me like them better, or find a better approach.
+> Somewhere around
+> Commit: 20d0189b1012 ("block: Introduce new bio_split()")
+> and
+> Commit: 4b1faf931650 ("block: Kill bio_pair_split()")
 > 
-[ .. ]
->  My two main concerns are:
->   - does this functionality have any use-case outside of mirrored
->     storage arrays, and are there other storage arrays which
->     occasionally inserted excessive latency (seems like a serious
->     misfeature to me, but I know few of the details)?
-Yes, there are.
-I've come across some storage arrays which really take some liberty when
-doing internal error recovery; some even take up to 20 minutes
-before sending a command completion (the response was "there's nothing
-in the SCSI spec which forbids us to do so")
-
->   - would it be at all possible to have "real" failfast functionality
->     in the block layer?  I.e. something that is based on time rather
->     than retry count.  Maybe in some cases a retry would be
->     appropriate if the first failure was very fast.
->     I.e. it would reduce timeouts and decide on retries based on
->     elapsed time rather than number of attempts.
->     With this would come the question of "how fast is fast" and I
->     don't have a really good answer.  Maybe md would need to set a
->     timeout, which it would double whenever it got failures on all
->     drives.  Otherwise the timeout would drift towards (say) 10 times
->     the typical response time.
+> in 3.14 we lost the call to trace_block_split() from bio_split().
 > 
-The current 'failfast' is rather a 'do not attempt error recovery' flag;
-ie the SCSI stack should _not_ start error recovery but rather pass the
-request upwards in case of failure.
-Problem is that there is no real upper limit on the time error recovery
-could take, and it's virtually impossible to give an I/O response time
-guarantees once error recovery had been invoked.
-And to make matters worse, in most cases error recovery won't work
-_anyway_ if the transport is severed.
-So this is more to do with error recovery, and not so much on the time
-each request can/should spend on the fly.
+> Commit: cda22646adaa ("block: add call to split trace point")
+> 
+> in 4.5 added it back for blk_queue_split(), but not for other users of
+> bio_split(), and particularly not for md/raid.
+> 
+> This patch moves the trace_block_split() call from blk_queue_split()
+> to bio_split().
+> As blk_queue_split() calls bio_split() (via various helper functions)
+> the same events that were traced before will still be traced.
+> 
+> Signed-off-by: NeilBrown <neilb@suse.com>
+> ---
+>  block/bio.c       | 1 +
+>  block/blk-merge.c | 1 -
+>  2 files changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/block/bio.c b/block/bio.c
+> index db85c5753a76..212ea95a7401 100644
+> --- a/block/bio.c
+> +++ b/block/bio.c
+> @@ -1804,6 +1804,7 @@ struct bio *bio_split(struct bio *bio, int sectors,
+>  		bio_integrity_trim(split, 0, sectors);
+>  
+>  	bio_advance(bio, split->bi_iter.bi_size);
+> +	trace_block_split(bdev_get_queue(bio->bi_bdev), split, bio->bi_iter.bi_sector);
 
-The S/390 DASD case is even worse, as the DASD driver _by design_ will
-always have to wait for an answer from the storage array. So if the link
-to the array is severed you are in deep trouble, as you'll never get a
-completion (or any status, for that matter) until the array is reconnected.
+This line needs to be wrapped.
 
-So while the FAILFAST flag is a mere convenience for SCSI, it's a
-positive must for S/390 if you want to have a functional RAID.
+Otherwise looks fine:
 
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+Reviewed-by: Christoph Hellwig <hch@lst.de>
