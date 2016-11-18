@@ -1,104 +1,62 @@
-From: Marc Smith <marc.smith@mcc.edu>
-Subject: Re: MD Remnants After --stop
-Date: Fri, 18 Nov 2016 14:31:45 -0500
-Message-ID: <CAHkw+LcfszsWDGQJzDaQU0-PsL+8K7t5msW_bLbv+YyDEFmn8Q@mail.gmail.com>
-References: <CAHkw+Lf1SErbGro4bq5MM5LyB-Zqyqi4E90R7c+uAZHv1WgSrA@mail.gmail.com>
- <87fun3ond9.fsf@notabene.neil.brown.name>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH v7 00/10] raid5-cache: enabling cache features
+Date: Fri, 18 Nov 2016 13:22:48 -0800
+Message-ID: <20161118212248.fabrldq5r5xclly4@kernel.org>
+References: <20161117232445.1798305-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87fun3ond9.fsf@notabene.neil.brown.name>
+Content-Disposition: inline
+In-Reply-To: <20161117232445.1798305-1-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: Song Liu <songliubraving@fb.com>
+Cc: linux-raid@vger.kernel.org, neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuang521@gmail.com, liuzhengyuan@kylinos.cn
 List-Id: linux-raid.ids
 
-On Mon, Nov 7, 2016 at 12:44 AM, NeilBrown <neilb@suse.com> wrote:
-> On Sat, Nov 05 2016, Marc Smith wrote:
->
->> Hi,
->>
->> It may be that I've never noticed this before, so maybe its not a
->> problem... after using '--stop' to deactivate/stop an MD array, there
->> are remnants of it lingering, namely an entry in /sys/block (eg,
->> /sys/block/md127) and the device node in /dev remains (eg,
->> /dev/md127).
->>
->> Is this normal? Like I said, it probably is, and I've just never
->> noticed it before. I assume its not going to hurt anything, but is
->> there a way to clean it up, without rebooting? Obviously I could
->> remove the /dev entry, but what about /sys/block?
->>
->
-> You can remove them both by running
->   mdadm -S /dev/md127
->
-> but they'll probably just reappear again.
->
-> This seems to be an on-going battle between md and udev.  I've "fixed"
-> it at least once, but it keeps coming back.
->
-> When md removes the md127 device, a message is sent to udev.
-> As part of its response to this message, udev tries to open /dev/md127.
-> Because of the rather unusual way that md devices are created (it made
-> sense nearly 20 years ago when it was designed), opening /dev/md127
-> causes md to create device md127 again.
->
-> You could
->   mv /dev/md127 /dev/md127X
->   mdadm -S /dev/md127X
->   rm /dev/md127X
-> that stop udev from opening /dev/md127.  It seems to work reliably.
->
-> md used to generate a CHANGE event before the REMOVE event, and only the
-> CHANGE event caused udev to open the device file.  I removed that and
-> the problem went away.  Apparently some change has happened to udev and
-> now it opens the file in response to REMOVE as well.
+On Thu, Nov 17, 2016 at 03:24:35PM -0800, Song Liu wrote:
+> These are the 7th version of patches to enable write cache part of
+> raid5-cache. The journal part was released with kernel 4.4.
+> 
+> The caching part uses same disk format of raid456 journal, and provides
+> acceleration to writes. Write operations are committed (bio_endio) once
+> the data is secured in journal. Reconstruct and RMW are postponed to
+> writing-out phase, which is usually not on the critical path.
+> 
+> The changes are organized in 10 patches (details below).
+> 
+> Patch for chunk_aligned_read in earlier RFC is not included yet
+> (http://marc.info/?l=linux-raid&m=146432700719277). But we may still need
+> some optimizations later, especially for SSD raid devices.
+> 
+> Changes between v7 and v6 (http://marc.info/?l=linux-raid&m=147881079931937):
+>  1. Incorprate feedbacks;
+>  2. Modify representation of write-back state machine to use STRIPE_R5C_CACHING
+>     instead of STRIPE_R5C_WRITE_OUT. This reduces state trasitions in
+>     write-through mode;
+>  3. For prexor, allocate extra orig_page instead of page;
+>  4. Rename and refactor of some functions and variables;
+>  5. Remove path 11 (handle alloc_page failure). I will propose a simpler retry
+>     patch later.
 
-I used "udevadm monitor -pku" to watch the events when running "mdadm
---stop /dev/md127" and this is what I see:
+Thanks for doing this, Song! And thanks Neil for the code review! I think this
+series are in good shape. We do have a lot of todo stuffes to make these work
+well, but we can always improve based on these. And since the default setting
+is write-through, there should be no regression (hopefully). I'm going to apply
+them to my for-next tree. If you have further bug fixes/improvements, please do
+them against the for-next tree.
 
---snip--
-KERNEL[163074.119778] change   /devices/virtual/block/md127 (block)
-ACTION=change
-DEVNAME=/dev/md127
-DEVPATH=/devices/virtual/block/md127
-DEVTYPE=disk
-MAJOR=9
-MINOR=127
-SEQNUM=3701
-SUBSYSTEM=block
+I don't apply the last patch though. That one doesn't work well for !write-back
+case (sorry, didn't notice it in last review), as for write-through, we don't
+need do any flush/fua. Please send an updated patch, I'll apply.
 
-UDEV  [163074.121569] change   /devices/virtual/block/md127 (block)
-ACTION=change
-DEVNAME=/dev/md127
-DEVPATH=/devices/virtual/block/md127
-DEVTYPE=disk
-MAJOR=9
-MINOR=127
-SEQNUM=3701
-SUBSYSTEM=block
-SYSTEMD_READY=0
-USEC_INITIALIZED=370470
---snip--
+I'll list the todo here so we don't forget:
+- makes read not enter state machine
+- write checkpoint block to make recovery faster
+- improve recovery
+- handle memory allocation failure
+- allow removing journal capability if journal disk fails
 
-I don't see any 'remove' event generated. I should mention if I hadn't
-already that I'm testing md-cluster (--bitmap=clustered), and
-currently using Linux 4.9-rc3.
+And of course performance tuning.
 
-
---Marc
-
->
-> So to "fix" it again, you need to figure out what udev is doing and fix
-> that.
->
-> Alternately... place "create names=yes" in your mdadm.conf
-> and always use names, not numbers, to work with md arrays.
-> e.g. /dev/md/home /dev/md/root /dev/md/scratch etc.
->
-> When will trigger the use of an alternate scheme for creating md devices
-> (using minor numbers >= 512) which udev cannot break so easily.  When it
-> tries to open /dev/md_home, that will fail.
->
-> NeilBrown
+Thanks,
+Shaohua 
