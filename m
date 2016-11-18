@@ -1,56 +1,113 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] block: call trace_block_split() from bio_split()
-Date: Fri, 18 Nov 2016 04:55:33 -0800
-Message-ID: <20161118125533.GA27741@infradead.org>
-References: <87vavlfsar.fsf@notabene.neil.brown.name>
+From: Jack Wang <jack.wang.usish@gmail.com>
+Subject: Re: [PATCH/RFC] add "failfast" support for raid1/raid10.
+Date: Fri, 18 Nov 2016 16:41:18 +0100
+Message-ID: <CA+res+TZD2Lx4CaGPx6SjTc6VKGLUc=qyYBgi15oSYU1bBuHew@mail.gmail.com>
+References: <147944614789.3302.1959091446949640579.stgit@noble>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87vavlfsar.fsf@notabene.neil.brown.name>
-Sender: linux-block-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <147944614789.3302.1959091446949640579.stgit@noble>
+Sender: linux-kernel-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, linux-raid <linux-raid@vger.kernel.org>, linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, hare@suse.de
 List-Id: linux-raid.ids
 
-On Fri, Nov 18, 2016 at 01:14:20PM +1100, NeilBrown wrote:
-> 
-> 
-> Somewhere around
-> Commit: 20d0189b1012 ("block: Introduce new bio_split()")
-> and
-> Commit: 4b1faf931650 ("block: Kill bio_pair_split()")
-> 
-> in 3.14 we lost the call to trace_block_split() from bio_split().
-> 
-> Commit: cda22646adaa ("block: add call to split trace point")
-> 
-> in 4.5 added it back for blk_queue_split(), but not for other users of
-> bio_split(), and particularly not for md/raid.
-> 
-> This patch moves the trace_block_split() call from blk_queue_split()
-> to bio_split().
-> As blk_queue_split() calls bio_split() (via various helper functions)
-> the same events that were traced before will still be traced.
-> 
-> Signed-off-by: NeilBrown <neilb@suse.com>
-> ---
->  block/bio.c       | 1 +
->  block/blk-merge.c | 1 -
->  2 files changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/block/bio.c b/block/bio.c
-> index db85c5753a76..212ea95a7401 100644
-> --- a/block/bio.c
-> +++ b/block/bio.c
-> @@ -1804,6 +1804,7 @@ struct bio *bio_split(struct bio *bio, int sectors,
->  		bio_integrity_trim(split, 0, sectors);
->  
->  	bio_advance(bio, split->bi_iter.bi_size);
-> +	trace_block_split(bdev_get_queue(bio->bi_bdev), split, bio->bi_iter.bi_sector);
+2016-11-18 6:16 GMT+01:00 NeilBrown <neilb@suse.com>:
+> Hi,
+>
+>  I've been sitting on these patches for a while because although they
+>  solve a real problem, it is a fairly limited use-case, and I don't
+>  really like some of the details.
+>
+>  So I'm posting them as RFC in the hope that a different perspective
+>  might help me like them better, or find a better approach.
+>
+>  The core idea is that when you have multiple copies of data
+>  (i.e. mirrored drives) it doesn't make sense to wait for a read from
+>  a drive that seems to be having problems.  It will probably be faster
+>  to just cancel that read, and read from the other device.
+>  Similarly, in some circumstances, it might be better to fail a drive
+>  that is being slow to respond to writes, rather than cause all writes
+>  to be very slow.
+>
+>  The particular context where this comes up is when mirroring across
+>  storage arrays, where the storage arrays can temporarily take an
+>  unusually long time to respond to requests (firmware updates have
+>  been mentioned).  As the array will have redundancy internally, there
+>  is little risk to the data.  The mirrored pair is really only for
+>  disaster recovery, and it is deemed better to lose the last few
+>  minutes of updates in the case of a serious disaster, rather than
+>  occasionally having latency issues because one array needs to do some
+>  maintenance for a few minutes.  The particular storage arrays in
+>  question are DASD devices which are part of the s390 ecosystem.
 
-This line needs to be wrapped.
+Hi Neil,
 
-Otherwise looks fine:
+Thanks for pushing this feature also to mainline.
+We at Profitbricks use raid1 across IB network, one pserver with
+raid1, both legs on 2 remote storages.
+We've noticed if one remote storage crash , and raid1 still keep
+sending IO to the faulty leg, even after 5 minutes,
+md still redirect I/Os, and md refuse to remove active disks, eg:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+2016-10-27T19:47:07.776233+02:00 pserver25 kernel: [184749.101984]
+md/raid1:md23: Disk failure on ibnbd47, disabling device.
+
+2016-10-27T19:47:07.776243+02:00 pserver25 kernel: [184749.101984]
+md/raid1:md23: Operation continuing on 1 devices.
+
+[...]
+
+2016-10-27T19:47:16.171694+02:00 pserver25 kernel: [184757.498693]
+md/raid1:md23: redirecting sector 79104 to other mirror: ibnbd46
+
+[...]
+
+2016-10-27T19:47:21.301732+02:00 pserver25 kernel: [184762.627288]
+md/raid1:md23: redirecting sector 79232 to other mirror: ibnbd46
+
+[...]
+
+2016-10-27T19:47:35.501725+02:00 pserver25 kernel: [184776.829069] md:
+cannot remove active disk ibnbd47 from md23 ...
+
+2016-10-27T19:47:36.801769+02:00 pserver25 kernel: [184778.128856] md:
+cannot remove active disk ibnbd47 from md23 ...
+
+[...]
+
+2016-10-27T19:52:33.401816+02:00 pserver25 kernel: [185074.727859]
+md/raid1:md23: redirecting sector 72832 to other mirror: ibnbd46
+
+2016-10-27T19:52:36.601693+02:00 pserver25 kernel: [185077.924835]
+md/raid1:md23: redirecting sector 78336 to other mirror: ibnbd46
+
+2016-10-27T19:52:36.601728+02:00 pserver25 kernel: [185077.925083]
+RAID1 conf printout:
+
+2016-10-27T19:52:36.601731+02:00 pserver25 kernel: [185077.925087]
+--- wd:1 rd:2
+
+2016-10-27T19:52:36.601733+02:00 pserver25 kernel: [185077.925091]
+disk 0, wo:0, o:1, dev:ibnbd46
+
+2016-10-27T19:52:36.601735+02:00 pserver25 kernel: [185077.925093]
+disk 1, wo:1, o:0, dev:ibnbd47
+
+2016-10-27T19:52:36.681691+02:00 pserver25 kernel: [185078.003392]
+RAID1 conf printout:
+
+2016-10-27T19:52:36.681706+02:00 pserver25 kernel: [185078.003404]
+--- wd:1 rd:2
+
+2016-10-27T19:52:36.681709+02:00 pserver25 kernel: [185078.003409]
+disk 0, wo:0, o:1, dev:ibnbd46
+
+I tried to port you patch from SLES[1], with the patchset, it reduce
+the time to ~30 seconds.
+
+I'm happy to see this feature upstream :)
+I will test again this new patchset.
+
+Cheers,
+Jack Wang
