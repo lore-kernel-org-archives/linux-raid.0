@@ -1,87 +1,119 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: Newly-created arrays don't auto-assemble - related to hostname change?
-Date: Fri, 18 Nov 2016 14:02:34 +1100
-Message-ID: <87poltfq2d.fsf@notabene.neil.brown.name>
-References: <20161117035230.GG21587@bitfolk.com> <87lgwihc2v.fsf@notabene.neil.brown.name> <20161117150954.GH21587@bitfolk.com> <87d1hthgm7.fsf@notabene.neil.brown.name> <20161118023144.GC1804@bitfolk.com>
+From: Andy Smith <andy@strugglers.net>
+Subject: Re: Newly-created arrays don't auto-assemble - related to hostname
+ change?
+Date: Fri, 18 Nov 2016 03:47:16 +0000
+Message-ID: <20161118034716.GI21587@bitfolk.com>
+References: <20161117035230.GG21587@bitfolk.com>
+ <87lgwihc2v.fsf@notabene.neil.brown.name>
+ <20161117150954.GH21587@bitfolk.com>
+ <87d1hthgm7.fsf@notabene.neil.brown.name>
+ <20161118023144.GC1804@bitfolk.com>
+ <87poltfq2d.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161118023144.GC1804@bitfolk.com>
+Content-Disposition: inline
+In-Reply-To: <87poltfq2d.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andy Smith <andy@strugglers.net>
+To: NeilBrown <neilb@suse.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hi Neil,
 
-On Fri, Nov 18 2016, Andy Smith wrote:
+I've managed to workaround the issue.
 
-> Hi Neil,
->
-> On Fri, Nov 18, 2016 at 09:43:44AM +1100, NeilBrown wrote:
->> Something you could try, after boot and while the arrays are still not
->> assembled, is
->>=20
->>   echo change > /sys/block/sdc/uevent
->>   echo change > /sys/block/sdd/uevent
->>=20
->> That should cause udev to assemble the array.
->
-> Nothing appeared to happen. There was nothing interesting in syslog
-> or systemd's journal. Here's the output from "udevadm monitor":
+In scrolling back on the serial console to view the early boot
+messages and debug logging from udev, I noticed that only sd{a,b}
+drives were detected during the initramfs stage. sd{c,d,e,f} were
+absent.
 
-OK, we are getting closer.  That is good.
+This server has two internal flash devices, then the rest of the
+drives are on a SAS controller. Evidently the initramfs does not
+contain the driver for the SAS controller (mpt3sas). Possibly the
+initramfs script correctly deduced that the system could be booted
+with only sd{a,b} and did not bother including mpt3sas.
 
->
-> $ sudo udevadm monitor
-> monitor will print the received events for:
-> UDEV - the event which udev sends out after rule processing
-> KERNEL - the kernel uevent
->
-> KERNEL[12376.719100] change   /devices/pci0000:00/0000:00:01.0/0000:01:00=
-.0/host10/port-10:0/end_device-10:0/target10:0:0/10:0:0:0/block/sdc (block)
-> UDEV  [12376.722996] change   /devices/pci0000:00/0000:00:01.0/0000:01:00=
-.0/host10/port-10:0/end_device-10:0/target10:0:0/10:0:0:0/block/sdc (block)
-> KERNEL[12388.329566] change   /devices/pci0000:00/0000:00:01.0/0000:01:00=
-.0/host10/port-10:1/end_device-10:1/target10:0:1/10:0:1:0/block/sdd (block)
-> UDEV  [12388.333441] change   /devices/pci0000:00/0000:00:01.0/0000:01:00=
-.0/host10/port-10:1/end_device-10:1/target10:0:1/10:0:1:0/block/sdd (block)
->
->> If that doesn't work, the looking over the udev logs, and possibly
->> turning on extra udev logging, might lead to an answer.
->
-> I don't know how to do that, but I'll look into it - thanks.
+Anyway, I added mpt3sas to /etc/initramfs-tools/modules and rebuilt
+the initramfs, and now all drives appear at boot time and all arrays
+are assembled:
 
- udevadm control -l debug
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... Begin: Assembling all MD arrays ... [   40.1
+58317] random: nonblocking pool is initialized
+[   40.161795] md: bind<sdf1>
+[   40.162161] md: bind<sde1>
+[   40.163226] md: raid1 personality registered for level 1
+[   40.163654] md/raid1:md0: active with 2 out of 2 mirrors
+[   40.163745] md0: detected capacity change from 0 to 510328832
+[   40.164259]  md0: unknown partition table
+mdadm: /dev/md/0 has been started with 2 drives.
+[   40.176662] md: bind<sdf2>
+[   40.177235] md: bind<sde2>
+[   40.178332] md: raid10 personality registered for level 10
+[   40.178656] md/raid10:md1: active with 2 out of 2 devices
+[   40.178746] md1: detected capacity change from 0 to 1998585856
+[   40.179170]  md1: unknown partition table
+mdadm: /dev/md/1 has been started with 2 drives.
+[   40.189887] md: md2 stopped.
+[   40.191292] md: bind<sdf3>
+[   40.191498] md: bind<sde3>
+[   40.192705] md/raid10:md2: active with 2 out of 2 devices
+[   40.192797] md2: detected capacity change from 0 to 999292928
+[   40.193128]  md2: unknown partition table
+mdadm: /dev/md/2 has been started with 2 drives.
+[   40.204234] md: md3 stopped.
+[   40.205278] md: bind<sdf5>
+[   40.205695] md: bind<sde5>
+[   40.206613] md/raid10:md3: active with 2 out of 2 devices
+[   40.206704] md3: detected capacity change from 0 to 12492734464
+[   40.207094]  md3: unknown partition table
+mdadm: /dev/md/3 has been started with 2 drives.
+[   40.218963] md: md5 stopped.
+[   40.223807]  sdb: unknown partition table
+[   40.228841]  sda: unknown partition table
+[   40.229044] md: bind<sda>
+[   40.229613] md: bind<sdb>
+[   40.234024]  sdb: unknown partition table
+[   40.243686] md/raid10:md5: active with 2 out of 2 devices
+[   40.243867] created bitmap (14 pages) for device md5
+[   40.244684] md5: bitmap initialized from disk: read 1 pages, set 0 of 28614 bits
+[   40.245376] md5: detected capacity change from 0 to 1920248840192
+[   40.248331]  md5: unknown partition table
+mdadm: /dev/md/5 has been started with 2 drives.
+Success: assembled all arrays.
+done.
+[   40.260413] device-mapper: uevent: version 1.0.3
+[   40.260540] device-mapper: ioctl: 4.27.0-ioctl (2013-10-30) initialised: dm-devel@redhat.com
+done.
+Begin: Running /scripts/local-premount ... [   40.265067] PM: Starting manual resume from disk
+done.
+Begin: Will now check root file system ... fsck from util-linux 2.25.2
+[/sbin/fsck.ext4 (1) -- /dev/md1] fsck.ext4 -a -C0 /dev/md1
+root: clean, 44775/122160 files, 265568/487936 blocks
+done.
+[   40.296866] EXT4-fs (md1): mounted filesystem with ordered data mode. Opts: (null)
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+[   40.350701] systemd[1]: systemd 215 running in system mode. (+PAM +AUDIT +SELINUX +IMA +SYSVINIT +LIBCRYPTSETUP +GCR
+YPT +ACL +XZ -SECCOMP -APPARMOR)
+[   40.350843] systemd[1]: Detected virtualization 'xen'.
+[   40.350920] systemd[1]: Detected architecture 'x86-64'.
 
-might help.
+Welcome to Debian GNU/Linux 8 (jessie)!
 
-NeilBrown
+Am I right in thinking this is not incremental assembly by udev, but
+kernel auto-assembly?
 
->
-> Cheers,
-> Andy
+Also, in the previous configuration, mpt3sas was being loaded once
+the root filesystem had been mounted. All the drives on the SAS
+controller were then available, so udev should have assembled md5 at
+that point, right? So I think there is still a problem here, just
+one which I have worked around in some other way.
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+If that is the case, would you like me to continue debugging udev?
 
------BEGIN PGP SIGNATURE-----
-
-iQIcBAEBCAAGBQJYLm9LAAoJEDnsnt1WYoG5bxIP/1TeRpzo0unixSaTrGTDDf/6
-inq7QgdgaBHORJ4igUOR1RXazDQSQS7pxH3GxFpNrh5wRSoU9VeV0Cq5ZhQK4U0h
-w+3aEQ/vvxZ6R35kjzk0itIuQvfFvWgaU1h8ZN3zxIIRL7zEvYJOJXp8YPjZI3p9
-v40aOm+PfbKA8UNiuXvKHVHMRs6u3PKa/XusPRRKFk2ffKgDC/OZTXl7w7BUvt2N
-zGANk5n68UEXJ4VaGh4W0u0Wc4HwYS6BtuoZS3wBpHk1+KQqtbYJ65zCLc9WtdmB
-Hub7UlnXNyWuknRxUFvC+WtbynxVMfJN0IH4abBzbL0X7W5ff7OPatX7hneYBhmX
-5vaEVgQUP2AU12mh5GeesKTSR/k22R12KDZWITv1MZ52IeifHwqiA7pDoTAPGkGb
-3RoCujabKeKS8AwZBnk5E1CB4V0j3bq8/vdtP3l/ONymv5OM7qZY9pJL3kaGLATJ
-y1xfAh+kBHv7Gd2Ylc3LaVQWn9eTJX5de+81PtMIUE8LAab2Ku9wMQ8PDXfRBKmL
-jcSquq3rYddFemkLJPG/auPepCTEavyjPOeFd8KzMdjxYIRSI3OUdzKNUUEmptbi
-nwtlRGuQfNWlKvzFno2ZJK7adLi4O7S1mB1d0e7UUWgmJSbdF9tDHkQx59nXFmlN
-odPuhjbIUWYqox6jx0+j
-=/nKp
------END PGP SIGNATURE-----
---=-=-=--
+Cheers,
+Andy
