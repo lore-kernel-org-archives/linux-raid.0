@@ -1,94 +1,71 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [md PATCH 1/4] md: add block tracing for bio_remapping
-Date: Fri, 18 Nov 2016 11:45:34 +1100
-Message-ID: <871sy9haz5.fsf@notabene.neil.brown.name>
-References: <147910131504.27168.6566119701315109161.stgit@noble> <147910142095.27168.11356591734977480053.stgit@noble> <20161116192922.ylqx32zocag4xp4b@kernel.org> <87twb6hdqq.fsf@notabene.neil.brown.name> <20161117180423.tzmeqpgklihgh7vp@kernel.org>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH 1/2] raid5-cache: update superblock at shutdown/reboot
+Date: Thu, 17 Nov 2016 17:41:51 -0800
+Message-ID: <20161118014151.d6f3garrxovzrz66@kernel.org>
+References: <5d6f023fb1d1398317d07f02634f90b055e26f4b.1479345454.git.shli@fb.com>
+ <87wpg2heg8.fsf@notabene.neil.brown.name>
+ <20161117181353.z7mgiynosyb664oc@kernel.org>
+ <8760nlhd18.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161117180423.tzmeqpgklihgh7vp@kernel.org>
+Content-Disposition: inline
+In-Reply-To: <8760nlhd18.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org, songliubraving@fb.com, Zhengyuan Liu <liuzhengyuan@kylinos.cn>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Fri, Nov 18, 2016 at 11:01:07AM +1100, Neil Brown wrote:
+> On Fri, Nov 18 2016, Shaohua Li wrote:
+> 
+> > On Thu, Nov 17, 2016 at 04:18:15PM +1100, Neil Brown wrote:
+> >> On Thu, Nov 17 2016, Shaohua Li wrote:
+> >> 
+> >> > Currently raid5-cache update superblock in .quiesce. But since at
+> >> > shutdown/reboot, .quiesce is called with reconfig mutex locked,
+> >> > superblock isn't guaranteed to be called in reclaim thread (see
+> >> > 8e018c21da3). This will make assemble do unnecessary journal recovery.
+> >> > It doesn't corrupt data but is annoying.  This adds an extra hook to
+> >> > guarantee journal is flushed to raid disks.  And since this hook is
+> >> > called before superblock update, this will guarantee we have a uptodate
+> >> > superblock in shutdown/reboot
+> >> 
+> >> Hi.
+> >> I don't quite follow some of the reasoning here.
+> >> In particular, the ->stop_writes() that you have implemented
+> >> does almost exactly the same thing as r5l_quiesce(1).
+> >> So why not simply call ->quiesce(mddev, 1) in __md_stop_writes()??
+> >> You probably need to also call ->quiesce(mddev, 0) to keep things
+> >> balanced.
+> >
+> > reboot (md_notify_reboot) doesn't call .quiesce, maybe we should do though. And
+> > in stop, we hold reconfig_mutex before calling .quiesce. And with commit
+> > 8e018c21da3, r5l_write_super_and_discard_space tries to hold the reconfig_mutex
+> > before write super, which it can't hold, so superblock write is skipped. After
+> > .quiesce we don't write superblock. To fix the shutdown case, we can add a
+> > superblock write after .quiesce. But I think it's more generic to add a
+> > ->stop_writes since it will work for the reboot case.
+> 
+> I hadn't quite processed that this was about md_notify_reboot().
+> I would be very wary of optimizing this code.  It should certainly avoid
+> data loss, but anything more doesn't belong here.
+> During a clean shutdown the array should be stopped properly.
+> md_notify_reboot() is only meant for minimizing damaged caused by a
+> hasty "reboot -f -n".
 
-On Fri, Nov 18 2016, Shaohua Li wrote:
+yep, this isn't the priority. So do you still suggest we ignore the reboot case
+and add the journal flush after .quiesce() is called in stop?
 
-> On Thu, Nov 17, 2016 at 04:33:33PM +1100, Neil Brown wrote:
->> On Thu, Nov 17 2016, Shaohua Li wrote:
->>=20
->> > On Mon, Nov 14, 2016 at 04:30:21PM +1100, Neil Brown wrote:
->> >> The block tracing infrastructure (accessed with blktrace/blkparse)
->> >> supports the tracing of mapping bios from one device to another.
->> >> This is currently used when a bio in a partition is mapped to the
->> >> whole device, when bios are mapped by dm, and for mapping in md/raid5.
->> >> Other md personalities do not include this tracing yet, so add it.
->> >>=20
->> >> When a read-error is detected we redirect the request to a different =
-device.
->> >> This could justifiably be seen as a new mapping for the originial bio,
->> >> or a secondary mapping for the bio that errors.  This patch uses
->> >> the second option.
->> >>=20
->> >> When md is used under dm-raid, the mappings are not traced as we do
->> >> not have access to the block device number of the parent.
->> >
->> > Looks the the original sector (the last parameter of trace_block_bio_r=
-emap)
->> > isn't correct.
->> > - in linear/raid0, bio_split already updated bio->bi_iter.bi_sector
->>=20
->> Oh yes, of course.  in the common case 'split =3D=3D bio' so when
->> split->bi_iter.bi_sector  is adjusted, bio->.... is as well.
->> I'll fix that, and also add calls to trace_block_split() as appropriate.
->>=20
->>=20
->> > - in raid1/raid10, r1_bio->sector is updated before the bio is sent.
->>=20
->> Here I really think my code is correct.  r1_bio->sector is always the
->> address in the array of the request.  It is only set once for each
->> r1_bio, and that is before the call to trace_block_io_remap().
->
-> Oh, you are right, sorry. I think moving the trace_remap right before we =
-add
-> the bio to plug or pending list is better. It will make the code simpler.=
- The
-> timing of the trace doesn't matter.
+> A "clean" shutdown currently includes systemd/mdadm.shutdown (in the
+> mdadm package) running "mdadm --wait-clean --scan".
+> "mdadm --wait-clean" changes the "safe_mode_delay" so that the array
+> will become "clean" more quickly.
+> Possibly we should add something to that to trigger a flush of the
+> journal, and to wait for the flush to complete.
 
-I agree the timing doesn't matter
-
-The reason I didn't do that before is that bio->bi_bdev points to the
-rdev when the write bio is queued to the pending list.  I'm not sure if
-trace_block_bio_remap() accesses ->bi_bdev, but it could.
-
-So I'm not completely sure that it makes the code simpler, but I'll post
-a version like that to see what you think.
+I'm not sure how we can do this. But adding a different state in 'array_state'
+indicating journal isn't clean makes sense.
 
 Thanks,
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAEBCAAGBQJYLk8vAAoJEDnsnt1WYoG5phoQAKV8Uug81od6R7PNHRNyKo28
-/oJdjGnlH9a5BjdvRuJMfb+WzLBi6XnnfA/mn6fFeCC10ui1LM6gIlqdadTSEALl
-u7+aaNYN0YIhmhvBcR+P6QIIn4kn7spSwhyDWHWb2HyiSMkgBF8XJt1MkYlp1XJ3
-nPB3T2xnFfqfTGckCMzoQNyoHhl9vmd/2urMvTsKYqYpBEl4AsWnBsjQ2aO/dmN8
-3UJx8M786pTIOND8uFyKn2fLF8BZVllL/wYgd/aZFvXTojqIQbmg9Y9SA3UJaLDY
-qB15FzVBDvQ1Tc5+Fudiu0P21K0S5RXfqLiyAL4iyQvcCk445BOgWEAigddPKplb
-ivYmCOi6HA0+lEjH0pEflrU6mdKalRd3pqibA9dYU0cKmN25wiGFwLPGHJApAPe9
-YSZCEKWnIAVCldL5v65Kx7r5Rva6B9U9EnhgHIGMCcjXSnXq6dAHXifR8AM1J6Fa
-nPEJxnh27UC/XE31z8F954vBEAfgAw5U+oA9cLOjTnDEV5LsqcTkLexywIH7naZO
-iJ/hLBrpvpicVOAlFl1Prx4sAzEp/nmBwdeR8iNgJQsnKGrLP5dG1ysVd67PHLqE
-hg23Sm6VMY47cuPvMR1CS9UNN+muKye3cohrMQwS1QCwAhpm8Qb5JSUJttPZBhAA
-VH5rr1yE86QWdyeC1o+Y
-=QEuM
------END PGP SIGNATURE-----
---=-=-=--
+Shaohua
