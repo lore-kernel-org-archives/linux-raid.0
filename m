@@ -1,226 +1,92 @@
-From: Glenn Enright <glenn.enright@gmail.com>
-Subject: Re: Newly-created arrays don't auto-assemble - related to hostname change?
-Date: Fri, 18 Nov 2016 15:03:26 +1300
-Message-ID: <CAN7jt20bDPmrm7rAGXnPzoNtfRYhcR3_k-gT=mouToRhN2svbA@mail.gmail.com>
-References: <20161117035230.GG21587@bitfolk.com> <014d01d24129$7a9b2c20$6fd18460$@wnsdev.com>
+From: NeilBrown <neilb@suse.com>
+Subject: [PATCH] block: call trace_block_split() from bio_split()
+Date: Fri, 18 Nov 2016 13:14:20 +1100
+Message-ID: <87vavlfsar.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <014d01d24129$7a9b2c20$6fd18460$@wnsdev.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: mdraid <linux-raid@vger.kernel.org>
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>
+Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Could the /usr/share/mdadm/mkconf script help? It can be used to print
-out the running equivalent of mdadm.conf
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-It might be a good thing to use for comparisons, I use it a fair bit
-in my scripting with good results.
 
-Regards, Glenn
 
-On 18 November 2016 at 12:22, Peter Sangas <pete@wnsdev.com> wrote:
-> Andy, Your question as prompted me to think about the following:   I'm us=
-ing Ubuntu 16 and have a running system with RAID1.   If I change the hostn=
-ame of the system do I need to make any changes to /etc/mdadm/mdadm.conf fi=
-le and if so how do I do that?
->
-> I see the host name is listed at the end of /etc/mdadm/mdadm.conf (name=
-=3Dhostname:0) for example.
->
-> Thank you,
-> Pete
->
->
-> -----Original Message-----
-> From: Andy Smith [mailto:andy@strugglers.net]
-> Sent: Wednesday, November 16, 2016 7:53 PM
-> To: linux-raid@vger.kernel.org
-> Subject: Newly-created arrays don't auto-assemble - related to hostname c=
-hange?
->
-> Hi,
->
-> I feel I am missing something very simple here, as I usually don't have t=
-his issue, but here goes=E2=80=A6
->
-> I've got a Debian jessie host on which I created four arrays during insta=
-ll (md{0,1,2,3}), using the Debian installer and partman. These auto-assemb=
-le fine.
->
-> After install the name of the server was changed from "tbd" to "jfd". Ano=
-ther array was then created (md5), added to /etc/mdadm/mdadm.conf and the i=
-nitramfs was rebuilt (update-initramfs -u).
->
-> md5 does not auto-assemble. It can be started fine after boot with:
->
->     # mdadm --assemble /dev/md5
->
-> or:
->
->     # mdadm --incremental /dev/sdc
->     # mdadm --incremental /dev/sdd
->
-> /etc/mdadm/mdadm.conf:
->
->     DEVICE /dev/sd*
->     CREATE owner=3Droot group=3Ddisk mode=3D0660 auto=3Dyes
->     HOMEHOST <ignore>
->     MAILADDR root
->     ARRAY /dev/md/0  metadata=3D1.2 UUID=3D400bac1d:e2c5d6ef:fea3b8c8:bcb=
-70f8f
->     ARRAY /dev/md/1  metadata=3D1.2 UUID=3De29c8b89:705f0116:d888f77e:2b6=
-e32f5
->     ARRAY /dev/md/2  metadata=3D1.2 UUID=3D039b3427:4be5157a:6e2d53bd:fe8=
-98803
->     ARRAY /dev/md/3  metadata=3D1.2 UUID=3D30f745ce:7ed41b53:4df72181:740=
-6ea1d
->     ARRAY /dev/md/5  metadata=3D1.2 UUID=3D957030cf:c09f023d:ceaebb27:e54=
-6f095
->
-> I've unpacked the initramfs and looked at the mdadm.conf in there and it =
-is identical.
->
-> Initially HOMEHOST was set to <system> (the default), but I noticed when =
-looking at --detail that md5 has:
->
->            Name : jfd:5  (local to host jfd)
->
-> whereas the others have:
->
->            Name : tbd:0
->
-> =E2=80=A6so I changed it to <ignore> to see if that would help. It didn't=
-.
->
-> So, I'd really appreciate any hints as to what I've missed here!
->
-> Here follows --detail and --examine of md5 and its members, then the cont=
-ents of /proc/mdstat after I have manually assembled md5.
->
-> $ sudo mdadm --detail /dev/md5
-> /dev/md5:
->         Version : 1.2
->   Creation Time : Thu Nov 17 02:35:15 2016
->      Raid Level : raid10
->      Array Size : 1875243008 (1788.37 GiB 1920.25 GB)
->   Used Dev Size : 1875243008 (1788.37 GiB 1920.25 GB)
->    Raid Devices : 2
->   Total Devices : 2
->     Persistence : Superblock is persistent
->
->   Intent Bitmap : Internal
->
->     Update Time : Thu Nov 17 02:35:15 2016
->           State : clean
->  Active Devices : 2
-> Working Devices : 2
->  Failed Devices : 0
->   Spare Devices : 0
->
->          Layout : far=3D2
->      Chunk Size : 512K
->
->            Name : jfd:5  (local to host jfd)
->            UUID : 957030cf:c09f023d:ceaebb27:e546f095
->          Events : 0
->
->     Number   Major   Minor   RaidDevice State
->        0       8       48        0      active sync   /dev/sdd
->        1       8       32        1      active sync   /dev/sdc
->
-> $ sudo mdadm --examine /dev/sd{c,d}
-> /dev/sdc:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x1
->      Array UUID : 957030cf:c09f023d:ceaebb27:e546f095
->            Name : jfd:5  (local to host jfd)
->   Creation Time : Thu Nov 17 02:35:15 2016
->      Raid Level : raid10
->    Raid Devices : 2
->
->  Avail Dev Size : 3750486704 (1788.37 GiB 1920.25 GB)
->      Array Size : 1875243008 (1788.37 GiB 1920.25 GB)
->   Used Dev Size : 3750486016 (1788.37 GiB 1920.25 GB)
->     Data Offset : 262144 sectors
->    Super Offset : 8 sectors
->    Unused Space : before=3D262056 sectors, after=3D688 sectors
->           State : clean
->     Device UUID : 4ac82c29:2d109465:7fff9b22:8c411c1e
->
-> Internal Bitmap : 8 sectors from superblock
->     Update Time : Thu Nov 17 02:35:15 2016
->   Bad Block Log : 512 entries available at offset 72 sectors
->        Checksum : 96d669f1 - correct
->          Events : 0
->
->          Layout : far=3D2
->      Chunk Size : 512K
->
->    Device Role : Active device 1
->    Array State : AA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D re=
-placing)
-> /dev/sdd:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x1
->      Array UUID : 957030cf:c09f023d:ceaebb27:e546f095
->            Name : jfd:5  (local to host jfd)
->   Creation Time : Thu Nov 17 02:35:15 2016
->      Raid Level : raid10
->    Raid Devices : 2
->  Avail Dev Size : 3750486704 (1788.37 GiB 1920.25 GB)
->      Array Size : 1875243008 (1788.37 GiB 1920.25 GB)
->   Used Dev Size : 3750486016 (1788.37 GiB 1920.25 GB)
->     Data Offset : 262144 sectors
->    Super Offset : 8 sectors
->    Unused Space : before=3D262056 sectors, after=3D688 sectors
->           State : clean
->     Device UUID : 3a067652:6e88afae:82722342:0036bae0
->
-> Internal Bitmap : 8 sectors from superblock
->     Update Time : Thu Nov 17 02:35:15 2016
->   Bad Block Log : 512 entries available at offset 72 sectors
->        Checksum : eb608799 - correct
->          Events : 0
->
->          Layout : far=3D2
->      Chunk Size : 512K
->
->    Device Role : Active device 0
->    Array State : AA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D re=
-placing)
->
-> $ cat /proc/mdstat
-> Personalities : [raid1] [raid10]
-> md5 : active (auto-read-only) raid10 sdd[0] sdc[1]
->       1875243008 blocks super 1.2 512K chunks 2 far-copies [2/2] [UU]
->       bitmap: 0/14 pages [0KB], 65536KB chunk
->
-> md3 : active raid10 sda5[0] sdb5[1]
->       12199936 blocks super 1.2 512K chunks 2 far-copies [2/2] [UU]
->
-> md2 : active (auto-read-only) raid10 sda3[0] sdb3[1]
->       975872 blocks super 1.2 512K chunks 2 far-copies [2/2] [UU]
->
-> md1 : active raid10 sda2[0] sdb2[1]
->       1951744 blocks super 1.2 512K chunks 2 far-copies [2/2] [UU]
->
-> md0 : active raid1 sda1[0] sdb1[1]
->       498368 blocks super 1.2 [2/2] [UU]
->
-> unused devices: <none>
->
-> Cheers,
-> Andy
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in =
-the body of a message to majordomo@vger.kernel.org More majordomo info at  =
-http://vger.kernel.org/majordomo-info.html
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Somewhere around
+Commit: 20d0189b1012 ("block: Introduce new bio_split()")
+and
+Commit: 4b1faf931650 ("block: Kill bio_pair_split()")
+
+in 3.14 we lost the call to trace_block_split() from bio_split().
+
+Commit: cda22646adaa ("block: add call to split trace point")
+
+in 4.5 added it back for blk_queue_split(), but not for other users of
+bio_split(), and particularly not for md/raid.
+
+This patch moves the trace_block_split() call from blk_queue_split()
+to bio_split().
+As blk_queue_split() calls bio_split() (via various helper functions)
+the same events that were traced before will still be traced.
+
+Signed-off-by: NeilBrown <neilb@suse.com>
+=2D--
+ block/bio.c       | 1 +
+ block/blk-merge.c | 1 -
+ 2 files changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/block/bio.c b/block/bio.c
+index db85c5753a76..212ea95a7401 100644
+=2D-- a/block/bio.c
++++ b/block/bio.c
+@@ -1804,6 +1804,7 @@ struct bio *bio_split(struct bio *bio, int sectors,
+ 		bio_integrity_trim(split, 0, sectors);
+=20
+ 	bio_advance(bio, split->bi_iter.bi_size);
++	trace_block_split(bdev_get_queue(bio->bi_bdev), split, bio->bi_iter.bi_se=
+ctor);
+=20
+ 	return split;
+ }
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index 2642e5fc8b69..82cdd35a9f07 100644
+=2D-- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -217,7 +217,6 @@ void blk_queue_split(struct request_queue *q, struct bi=
+o **bio,
+ 		split->bi_opf |=3D REQ_NOMERGE;
+=20
+ 		bio_chain(split, *bio);
+=2D		trace_block_split(q, split, (*bio)->bi_iter.bi_sector);
+ 		generic_make_request(*bio);
+ 		*bio =3D split;
+ 	}
+=2D-=20
+2.10.2
+
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAEBCAAGBQJYLmP8AAoJEDnsnt1WYoG5VO0P/19yp1KHtbwbCmgVLzYcV6zA
+XjH6FMD4Y4aWol8fL4uZS4o4/WiIoyjgTpRiUu8d1Gnxc0tQsxSFDiW4/KzrHfFI
+/R02IJ0+H6cVv6a0+h2JqXU5O7J+NSGy/brHCPaB8OACh6v29h/p+XRp7r3YcN0A
+nIXNQkcoPPj9Ko7HtKFgDrZ+adX4Bwf6o4YvQmHFHFnTHVtRYwvgNwC7bs4iqVt0
+AFJrueOyWz7JZ9UXCJ4IlYO4u0YYDujpCdMx1xR2gR0YoN9+uekSHK8+lmasuh02
+ym7xqeD0w5FisTi8P1Pmj/6UvahEzZV/i38F+kkrbZu+BQT02efjWRaXAOW0zm8N
+avhLemq4KZZjL/i9ah8tm7GGtCpTMWcyVSL+IFRKVfJ68u5ntqQZu+psB8N7U4dZ
+4SlLbKssGgFwXx/GJRsiqDD2RflXmb/IL4FVbkaUQzJ3xA3yUpHAJx1sE8700J/v
+vNcIMm2HkK02AHRRpOmW5bGyHHaM13YXDddSrJf6o6jjcX7lEuB3y5lbHfGByEgT
+2P4yUzkbSDb64UpXIHuZeGiQBV3cBhENdOyq5YfqelD35gSqZzGFNFwC+/+bfQhO
+bx9lHnWcrVcRGrEzi+5ddBLB7YYC5oR9c+qUS3uCV5qjbQSPIP9kOg1/1GbP2C04
+Fo3c7+eSYl7vV89/jcl9
+=B6gP
+-----END PGP SIGNATURE-----
+--=-=-=--
