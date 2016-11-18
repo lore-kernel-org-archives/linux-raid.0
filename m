@@ -1,264 +1,237 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [md PATCH 2/6] md: Use REQ_FAILFAST_* on metadata writes where
- appropriate
-Date: Fri, 18 Nov 2016 16:16:11 +1100
-Message-ID: <147944617167.3302.15513574606815740403.stgit@noble>
+Subject: [md PATCH 3/6] md/raid1: add failfast handling for reads.
+Date: Fri, 18 Nov 2016 16:16:12 +1100
+Message-ID: <147944617189.3302.1561958089968622672.stgit@noble>
 References: <147944614789.3302.1959091446949640579.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <147944614789.3302.1959091446949640579.stgit@noble>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, hare@suse.de
 List-Id: linux-raid.ids
 
-This can only be supported on personalities which ensure
-that md_error() never causes an array to enter the 'failed'
-state.  i.e. if marking a device Faulty would cause some
-data to be inaccessible, the device is status is left as
-non-Faulty.  This is true for RAID1 and RAID10.
+If a device is marked FailFast and it is not the only device
+we can read from, we mark the bio with REQ_FAILFAST_* flags.
 
-If we get a failure writing metadata but the device doesn't
-fail, it must be the last device so we re-write without
-FAILFAST to improve chance of success.  We also flag the
-device as LastDev so that future metadata updates don't
-waste time on failfast writes.
+If this does fail, we don't try read repair but just allow
+failure.  If it was the last device it doesn't fail of
+course, so the retry happens on the same device - this time
+without FAILFAST.  A subsequent failure will not retry but
+will just pass up the error.
+
+During resync we may use FAILFAST requests and on a failure
+we will simply use the other device(s).
+
+During recovery we will only use FAILFAST in the unusual
+case were there are multiple places to read from - i.e. if
+there are > 2 devices.  If we get a failure we will fail the
+device and complete the resync/recovery with remaining
+devices.
+
+The new R1BIO_FailFast flag is set on read reqest to suggest
+the a FAILFAST request might be acceptable.  The rdev needs
+to have FailFast set as well for the read to actually use
+REQ_FAILFAST_*.
+
+We need to know there are at least two working devices
+before we can set R1BIO_FailFast, so we mustn't stop looking
+at the first device we find.  So the "min_pending == 0"
+handling to not exit early, but too always choose the
+best_pending_disk if min_pending == 0.
+
+The spinlocked region in raid1_error() in enlarged to ensure
+that if two bios, reading from two different devices, fail
+at the same time, then there is no risk that both devices
+will be marked faulty, leaving zero "In_sync" devices.
 
 Signed-off-by: NeilBrown <neilb@suse.com>
 ---
- drivers/md/bitmap.c |   15 ++++++++++++---
- drivers/md/md.c     |   44 ++++++++++++++++++++++++++++++++++----------
- drivers/md/md.h     |   21 ++++++++++++++++++++-
- drivers/md/raid1.c  |    1 +
- drivers/md/raid10.c |    1 +
- 5 files changed, 68 insertions(+), 14 deletions(-)
+ drivers/md/raid1.c |   52 ++++++++++++++++++++++++++++++++++++++++++----------
+ drivers/md/raid1.h |    1 +
+ 2 files changed, 43 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index cf77cbf9ed22..c4621571b718 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -209,11 +209,13 @@ static struct md_rdev *next_active_rdev(struct md_rdev *rdev, struct mddev *mdde
- 
- static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
- {
--	struct md_rdev *rdev = NULL;
-+	struct md_rdev *rdev;
- 	struct block_device *bdev;
- 	struct mddev *mddev = bitmap->mddev;
- 	struct bitmap_storage *store = &bitmap->storage;
- 
-+restart:
-+	rdev = NULL;
- 	while ((rdev = next_active_rdev(rdev, mddev)) != NULL) {
- 		int size = PAGE_SIZE;
- 		loff_t offset = mddev->bitmap_info.offset;
-@@ -269,8 +271,8 @@ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
- 			       page);
- 	}
- 
--	if (wait)
--		md_super_wait(mddev);
-+	if (wait && md_super_wait(mddev) < 0)
-+		goto restart;
- 	return 0;
- 
-  bad_alignment:
-@@ -428,6 +430,13 @@ static void bitmap_wait_writes(struct bitmap *bitmap)
- 		wait_event(bitmap->write_wait,
- 			   atomic_read(&bitmap->pending_writes)==0);
- 	else
-+		/* Note that we ignore the return value.  The writes
-+		 * might have failed, but that would just mean that
-+		 * some bits which should be cleared haven't been,
-+		 * which is safe.  The relevant bitmap blocks will
-+		 * probably get written again, but there is no great
-+		 * loss if they aren't.
-+		 */
- 		md_super_wait(bitmap->mddev);
- }
- 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 0d1a9fd9d1c1..047e7db1381b 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -726,7 +726,13 @@ static void super_written(struct bio *bio)
- 	if (bio->bi_error) {
- 		pr_err("md: super_written gets error=%d\n", bio->bi_error);
- 		md_error(mddev, rdev);
--	}
-+		if (!test_bit(Faulty, &rdev->flags)
-+		    && (bio->bi_opf & MD_FAILFAST)) {
-+			set_bit(MD_NEED_REWRITE, &mddev->flags);
-+			set_bit(LastDev, &rdev->flags);
-+		}
-+	} else
-+		clear_bit(LastDev, &rdev->flags);
- 
- 	if (atomic_dec_and_test(&mddev->pending_writes))
- 		wake_up(&mddev->sb_wait);
-@@ -743,7 +749,13 @@ void md_super_write(struct mddev *mddev, struct md_rdev *rdev,
- 	 * if zero is reached.
- 	 * If an error occurred, call md_error
- 	 */
--	struct bio *bio = bio_alloc_mddev(GFP_NOIO, 1, mddev);
-+	struct bio *bio;
-+	int ff = 0;
-+
-+	if (test_bit(Faulty, &rdev->flags))
-+		return;
-+
-+	bio = bio_alloc_mddev(GFP_NOIO, 1, mddev);
- 
- 	atomic_inc(&rdev->nr_pending);
- 
-@@ -752,16 +764,24 @@ void md_super_write(struct mddev *mddev, struct md_rdev *rdev,
- 	bio_add_page(bio, page, size, 0);
- 	bio->bi_private = rdev;
- 	bio->bi_end_io = super_written;
--	bio_set_op_attrs(bio, REQ_OP_WRITE, WRITE_FLUSH_FUA);
-+
-+	if (test_bit(MD_FAILFAST_SUPPORTED, &mddev->flags) &&
-+	    test_bit(FailFast, &rdev->flags) &&
-+	    !test_bit(LastDev, &rdev->flags))
-+		ff = MD_FAILFAST;
-+	bio_set_op_attrs(bio, REQ_OP_WRITE, WRITE_FLUSH_FUA | ff);
- 
- 	atomic_inc(&mddev->pending_writes);
- 	submit_bio(bio);
- }
- 
--void md_super_wait(struct mddev *mddev)
-+int md_super_wait(struct mddev *mddev)
- {
- 	/* wait for all superblock writes that were scheduled to complete */
- 	wait_event(mddev->sb_wait, atomic_read(&mddev->pending_writes)==0);
-+	if (test_and_clear_bit(MD_NEED_REWRITE, &mddev->flags))
-+		return -EAGAIN;
-+	return 0;
- }
- 
- int sync_page_io(struct md_rdev *rdev, sector_t sector, int size,
-@@ -1333,9 +1353,10 @@ super_90_rdev_size_change(struct md_rdev *rdev, sector_t num_sectors)
- 	if (IS_ENABLED(CONFIG_LBDAF) && (u64)num_sectors >= (2ULL << 32) &&
- 	    rdev->mddev->level >= 1)
- 		num_sectors = (sector_t)(2ULL << 32) - 2;
--	md_super_write(rdev->mddev, rdev, rdev->sb_start, rdev->sb_size,
-+	do
-+		md_super_write(rdev->mddev, rdev, rdev->sb_start, rdev->sb_size,
- 		       rdev->sb_page);
--	md_super_wait(rdev->mddev);
-+	while (md_super_wait(rdev->mddev) < 0);
- 	return num_sectors;
- }
- 
-@@ -1876,9 +1897,10 @@ super_1_rdev_size_change(struct md_rdev *rdev, sector_t num_sectors)
- 	sb->data_size = cpu_to_le64(num_sectors);
- 	sb->super_offset = rdev->sb_start;
- 	sb->sb_csum = calc_sb_1_csum(sb);
--	md_super_write(rdev->mddev, rdev, rdev->sb_start, rdev->sb_size,
--		       rdev->sb_page);
--	md_super_wait(rdev->mddev);
-+	do
-+		md_super_write(rdev->mddev, rdev, rdev->sb_start, rdev->sb_size,
-+			       rdev->sb_page);
-+	while (md_super_wait(rdev->mddev) < 0);
- 	return num_sectors;
- 
- }
-@@ -2413,6 +2435,7 @@ void md_update_sb(struct mddev *mddev, int force_change)
- 	pr_debug("md: updating %s RAID superblock on device (in sync %d)\n",
- 		 mdname(mddev), mddev->in_sync);
- 
-+rewrite:
- 	bitmap_update_sb(mddev->bitmap);
- 	rdev_for_each(rdev, mddev) {
- 		char b[BDEVNAME_SIZE];
-@@ -2444,7 +2467,8 @@ void md_update_sb(struct mddev *mddev, int force_change)
- 			/* only need to write one superblock... */
- 			break;
- 	}
--	md_super_wait(mddev);
-+	if (md_super_wait(mddev) < 0)
-+		goto rewrite;
- 	/* if there was a failure, MD_CHANGE_DEVS was set, and we re-write super */
- 
- 	if (mddev_is_clustered(mddev) && ret == 0)
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index bc6712ef8c81..5c08f84101fa 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -30,6 +30,16 @@
- #define MaxSector (~(sector_t)0)
- 
- /*
-+ * These flags should really be called "NO_RETRY" rather than
-+ * "FAILFAST" because they don't make any promise about time lapse,
-+ * only about the number of retries, which will be zero.
-+ * REQ_FAILFAST_DRIVER is not included because
-+ * Commit: 4a27446f3e39 ("[SCSI] modify scsi to handle new fail fast flags.")
-+ * seems to suggest that the errors it avoids retrying should usually
-+ * be retried.
-+ */
-+#define	MD_FAILFAST	(REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT)
-+/*
-  * MD's 'extended' device
-  */
- struct md_rdev {
-@@ -177,6 +187,10 @@ enum flag_bits {
- 				 * It is expects that no bad block log
- 				 * is present.
- 				 */
-+	LastDev,		/* Seems to be the last working dev as
-+				 * it didn't fail, so don't use FailFast
-+				 * any more for metadata
-+				 */
- };
- 
- static inline int is_badblock(struct md_rdev *rdev, sector_t s, int sectors,
-@@ -213,6 +227,11 @@ enum mddev_flags {
- 	MD_CLUSTER_RESYNC_LOCKED, /* cluster raid only, which means node
- 				   * already took resync lock, need to
- 				   * release the lock */
-+	MD_FAILFAST_SUPPORTED,	/* Using MD_FAILFAST on metadata writes is
-+				 * supported as calls to md_error() will
-+				 * never cause the array to become failed.
-+				 */
-+	MD_NEED_REWRITE,	/* metadata write needs to be repeated */
- };
- #define MD_UPDATE_SB_FLAGS (BIT(MD_CHANGE_DEVS) | \
- 			    BIT(MD_CHANGE_CLEAN) | \
-@@ -628,7 +647,7 @@ extern int mddev_congested(struct mddev *mddev, int bits);
- extern void md_flush_request(struct mddev *mddev, struct bio *bio);
- extern void md_super_write(struct mddev *mddev, struct md_rdev *rdev,
- 			   sector_t sector, int size, struct page *page);
--extern void md_super_wait(struct mddev *mddev);
-+extern int md_super_wait(struct mddev *mddev);
- extern int sync_page_io(struct md_rdev *rdev, sector_t sector, int size,
- 			struct page *page, int op, int op_flags,
- 			bool metadata_op);
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 96474f0af1b8..cfd73730e6af 100644
+index cfd73730e6af..44f93297698d 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -2989,6 +2989,7 @@ static int raid1_run(struct mddev *mddev)
- 	mddev->thread = conf->thread;
- 	conf->thread = NULL;
- 	mddev->private = conf;
-+	set_bit(MD_FAILFAST_SUPPORTED, &mddev->flags);
+@@ -330,6 +330,11 @@ static void raid1_end_read_request(struct bio *bio)
  
- 	md_set_array_sectors(mddev, raid1_size(mddev, 0, 0));
+ 	if (uptodate)
+ 		set_bit(R1BIO_Uptodate, &r1_bio->state);
++	else if (test_bit(FailFast, &rdev->flags) &&
++		 test_bit(R1BIO_FailFast, &r1_bio->state))
++		/* This was a fail-fast read so we definitely
++		 * want to retry */
++		;
+ 	else {
+ 		/* If all other devices have failed, we want to return
+ 		 * the error upwards rather than fail the last device.
+@@ -536,6 +541,7 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+ 	best_good_sectors = 0;
+ 	has_nonrot_disk = 0;
+ 	choose_next_idle = 0;
++	clear_bit(R1BIO_FailFast, &r1_bio->state);
  
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index b53610c59104..763ca45b6b32 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -3728,6 +3728,7 @@ static int raid10_run(struct mddev *mddev)
- 	size = raid10_size(mddev, 0, 0);
- 	md_set_array_sectors(mddev, size);
- 	mddev->resync_max_sectors = size;
-+	set_bit(MD_FAILFAST_SUPPORTED, &mddev->flags);
+ 	if ((conf->mddev->recovery_cp < this_sector + sectors) ||
+ 	    (mddev_is_clustered(conf->mddev) &&
+@@ -609,6 +615,10 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+ 		} else
+ 			best_good_sectors = sectors;
  
- 	if (mddev->queue) {
- 		int stripe = conf->geo.raid_disks *
++		if (best_disk >= 0)
++			/* At least two disks to choose from so failfast is OK */
++			set_bit(R1BIO_FailFast, &r1_bio->state);
++
+ 		nonrot = blk_queue_nonrot(bdev_get_queue(rdev->bdev));
+ 		has_nonrot_disk |= nonrot;
+ 		pending = atomic_read(&rdev->nr_pending);
+@@ -647,11 +657,6 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+ 			}
+ 			break;
+ 		}
+-		/* If device is idle, use it */
+-		if (pending == 0) {
+-			best_disk = disk;
+-			break;
+-		}
+ 
+ 		if (choose_next_idle)
+ 			continue;
+@@ -674,7 +679,7 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+ 	 * mixed ratation/non-rotational disks depending on workload.
+ 	 */
+ 	if (best_disk == -1) {
+-		if (has_nonrot_disk)
++		if (has_nonrot_disk || min_pending == 0)
+ 			best_disk = best_pending_disk;
+ 		else
+ 			best_disk = best_dist_disk;
+@@ -1168,6 +1173,9 @@ static void raid1_make_request(struct mddev *mddev, struct bio * bio)
+ 		read_bio->bi_bdev = mirror->rdev->bdev;
+ 		read_bio->bi_end_io = raid1_end_read_request;
+ 		bio_set_op_attrs(read_bio, op, do_sync);
++		if (test_bit(FailFast, &mirror->rdev->flags) &&
++		    test_bit(R1BIO_FailFast, &r1_bio->state))
++			read_bio->bi_opf |= MD_FAILFAST;
+ 		read_bio->bi_private = r1_bio;
+ 
+ 		if (mddev->gendisk)
+@@ -1465,6 +1473,7 @@ static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
+ 	 * next level up know.
+ 	 * else mark the drive as failed
+ 	 */
++	spin_lock_irqsave(&conf->device_lock, flags);
+ 	if (test_bit(In_sync, &rdev->flags)
+ 	    && (conf->raid_disks - mddev->degraded) == 1) {
+ 		/*
+@@ -1474,10 +1483,10 @@ static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
+ 		 * it is very likely to fail.
+ 		 */
+ 		conf->recovery_disabled = mddev->recovery_disabled;
++		spin_unlock_irqrestore(&conf->device_lock, flags);
+ 		return;
+ 	}
+ 	set_bit(Blocked, &rdev->flags);
+-	spin_lock_irqsave(&conf->device_lock, flags);
+ 	if (test_and_clear_bit(In_sync, &rdev->flags)) {
+ 		mddev->degraded++;
+ 		set_bit(Faulty, &rdev->flags);
+@@ -1816,12 +1825,24 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
+ 	sector_t sect = r1_bio->sector;
+ 	int sectors = r1_bio->sectors;
+ 	int idx = 0;
++	struct md_rdev *rdev;
++
++	rdev = conf->mirrors[r1_bio->read_disk].rdev;
++	if (test_bit(FailFast, &rdev->flags)) {
++		/* Don't try recovering from here - just fail it
++		 * ... unless it is the last working device of course */
++		md_error(mddev, rdev);
++		if (test_bit(Faulty, &rdev->flags))
++			/* Don't try to read from here, but make sure
++			 * put_buf does it's thing
++			 */
++			bio->bi_end_io = end_sync_write;
++	}
+ 
+ 	while(sectors) {
+ 		int s = sectors;
+ 		int d = r1_bio->read_disk;
+ 		int success = 0;
+-		struct md_rdev *rdev;
+ 		int start;
+ 
+ 		if (s > (PAGE_SIZE>>9))
+@@ -2332,7 +2353,9 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
+ 	bio_put(bio);
+ 	r1_bio->bios[r1_bio->read_disk] = NULL;
+ 
+-	if (mddev->ro == 0) {
++	rdev = conf->mirrors[r1_bio->read_disk].rdev;
++	if (mddev->ro == 0
++	    && !test_bit(FailFast, &rdev->flags)) {
+ 		freeze_array(conf, 1);
+ 		fix_read_error(conf, r1_bio->read_disk,
+ 			       r1_bio->sector, r1_bio->sectors);
+@@ -2341,7 +2364,7 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
+ 		r1_bio->bios[r1_bio->read_disk] = IO_BLOCKED;
+ 	}
+ 
+-	rdev_dec_pending(conf->mirrors[r1_bio->read_disk].rdev, conf->mddev);
++	rdev_dec_pending(rdev, conf->mddev);
+ 
+ read_more:
+ 	disk = read_balance(conf, r1_bio, &max_sectors);
+@@ -2366,6 +2389,9 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
+ 		bio->bi_bdev = rdev->bdev;
+ 		bio->bi_end_io = raid1_end_read_request;
+ 		bio_set_op_attrs(bio, REQ_OP_READ, do_sync);
++		if (test_bit(FailFast, &rdev->flags) &&
++		    test_bit(R1BIO_FailFast, &r1_bio->state))
++			bio->bi_opf |= MD_FAILFAST;
+ 		bio->bi_private = r1_bio;
+ 		if (max_sectors < r1_bio->sectors) {
+ 			/* Drat - have to split this up more */
+@@ -2654,6 +2680,8 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 			bio->bi_iter.bi_sector = sector_nr + rdev->data_offset;
+ 			bio->bi_bdev = rdev->bdev;
+ 			bio->bi_private = r1_bio;
++			if (test_bit(FailFast, &rdev->flags))
++				bio->bi_opf |= MD_FAILFAST;
+ 		}
+ 	}
+ 	rcu_read_unlock();
+@@ -2784,6 +2812,8 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 			if (bio->bi_end_io == end_sync_read) {
+ 				read_targets--;
+ 				md_sync_acct(bio->bi_bdev, nr_sectors);
++				if (read_targets == 1)
++					bio->bi_opf &= ~MD_FAILFAST;
+ 				generic_make_request(bio);
+ 			}
+ 		}
+@@ -2791,6 +2821,8 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 		atomic_set(&r1_bio->remaining, 1);
+ 		bio = r1_bio->bios[r1_bio->read_disk];
+ 		md_sync_acct(bio->bi_bdev, nr_sectors);
++		if (read_targets == 1)
++			bio->bi_opf &= ~MD_FAILFAST;
+ 		generic_make_request(bio);
+ 
+ 	}
+diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
+index 5ec19449779d..c52ef424a24b 100644
+--- a/drivers/md/raid1.h
++++ b/drivers/md/raid1.h
+@@ -183,5 +183,6 @@ enum r1bio_state {
+  */
+ 	R1BIO_MadeGood,
+ 	R1BIO_WriteError,
++	R1BIO_FailFast,
+ };
+ #endif
+
+
