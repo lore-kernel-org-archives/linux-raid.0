@@ -1,71 +1,104 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v2] md: add block tracing for bio_remapping
-Date: Fri, 18 Nov 2016 09:50:05 -0800
-Message-ID: <20161118175005.dodwcprytycwyuyq@kernel.org>
-References: <87shqpfrxv.fsf@notabene.neil.brown.name>
- <20161118172622.hzvmtt5rbtmdh7hh@kernel.org>
+From: Marc Smith <marc.smith@mcc.edu>
+Subject: Re: MD Remnants After --stop
+Date: Fri, 18 Nov 2016 14:31:45 -0500
+Message-ID: <CAHkw+LcfszsWDGQJzDaQU0-PsL+8K7t5msW_bLbv+YyDEFmn8Q@mail.gmail.com>
+References: <CAHkw+Lf1SErbGro4bq5MM5LyB-Zqyqi4E90R7c+uAZHv1WgSrA@mail.gmail.com>
+ <87fun3ond9.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20161118172622.hzvmtt5rbtmdh7hh@kernel.org>
+In-Reply-To: <87fun3ond9.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Nov 18, 2016 at 09:26:22AM -0800, Shaohua Li wrote:
-> On Fri, Nov 18, 2016 at 01:22:04PM +1100, Neil Brown wrote:
-> > 
-> > The block tracing infrastructure (accessed with blktrace/blkparse)
-> > supports the tracing of mapping bios from one device to another.
-> > This is currently used when a bio in a partition is mapped to the
-> > whole device, when bios are mapped by dm, and for mapping in md/raid5.
-> > Other md personalities do not include this tracing yet, so add it.
-> > 
-> > When a read-error is detected we redirect the request to a different device.
-> > This could justifiably be seen as a new mapping for the originial bio,
-> > or a secondary mapping for the bio that errors.  This patch uses
-> > the second option.
-> > 
-> > When md is used under dm-raid, the mappings are not traced as we do
-> > not have access to the block device number of the parent.
-> 
-> thanks, applied patch 1, 3, 4.
+On Mon, Nov 7, 2016 at 12:44 AM, NeilBrown <neilb@suse.com> wrote:
+> On Sat, Nov 05 2016, Marc Smith wrote:
+>
+>> Hi,
+>>
+>> It may be that I've never noticed this before, so maybe its not a
+>> problem... after using '--stop' to deactivate/stop an MD array, there
+>> are remnants of it lingering, namely an entry in /sys/block (eg,
+>> /sys/block/md127) and the device node in /dev remains (eg,
+>> /dev/md127).
+>>
+>> Is this normal? Like I said, it probably is, and I've just never
+>> noticed it before. I assume its not going to hurt anything, but is
+>> there a way to clean it up, without rebooting? Obviously I could
+>> remove the /dev entry, but what about /sys/block?
+>>
+>
+> You can remove them both by running
+>   mdadm -S /dev/md127
+>
+> but they'll probably just reappear again.
+>
+> This seems to be an on-going battle between md and udev.  I've "fixed"
+> it at least once, but it keeps coming back.
+>
+> When md removes the md127 device, a message is sent to udev.
+> As part of its response to this message, udev tries to open /dev/md127.
+> Because of the rather unusual way that md devices are created (it made
+> sense nearly 20 years ago when it was designed), opening /dev/md127
+> causes md to create device md127 again.
+>
+> You could
+>   mv /dev/md127 /dev/md127X
+>   mdadm -S /dev/md127X
+>   rm /dev/md127X
+> that stop udev from opening /dev/md127.  It seems to work reliably.
+>
+> md used to generate a CHANGE event before the REMOVE event, and only the
+> CHANGE event caused udev to open the device file.  I removed that and
+> the problem went away.  Apparently some change has happened to udev and
+> now it opens the file in response to REMOVE as well.
 
-BTW, I added below patch
+I used "udevadm monitor -pku" to watch the events when running "mdadm
+--stop /dev/md127" and this is what I see:
+
+--snip--
+KERNEL[163074.119778] change   /devices/virtual/block/md127 (block)
+ACTION=change
+DEVNAME=/dev/md127
+DEVPATH=/devices/virtual/block/md127
+DEVTYPE=disk
+MAJOR=9
+MINOR=127
+SEQNUM=3701
+SUBSYSTEM=block
+
+UDEV  [163074.121569] change   /devices/virtual/block/md127 (block)
+ACTION=change
+DEVNAME=/dev/md127
+DEVPATH=/devices/virtual/block/md127
+DEVTYPE=disk
+MAJOR=9
+MINOR=127
+SEQNUM=3701
+SUBSYSTEM=block
+SYSTEMD_READY=0
+USEC_INITIALIZED=370470
+--snip--
+
+I don't see any 'remove' event generated. I should mention if I hadn't
+already that I'm testing md-cluster (--bitmap=clustered), and
+currently using Linux 4.9-rc3.
 
 
-commit 504634f60f463e73e7d58c6810a04437da942dba
-Author: Shaohua Li <shli@fb.com>
-Date:   Fri Nov 18 09:44:08 2016 -0800
+--Marc
 
-    md: add blktrace event for writes to superblock
-    
-    superblock write is an expensive operation. With raid5-cache, it can be called
-    regularly. Tracing to help performance debug.
-    
-    Signed-off-by: Shaohua Li <shli@fb.com>
-    Cc: NeilBrown <neilb@suse.com>
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 1f1c7f0..d3cef77 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -64,6 +64,7 @@
- #include <linux/raid/md_p.h>
- #include <linux/raid/md_u.h>
- #include <linux/slab.h>
-+#include <trace/events/block.h>
- #include "md.h"
- #include "bitmap.h"
- #include "md-cluster.h"
-@@ -2403,6 +2404,8 @@ void md_update_sb(struct mddev *mddev, int force_change)
- 	pr_debug("md: updating %s RAID superblock on device (in sync %d)\n",
- 		 mdname(mddev), mddev->in_sync);
- 
-+	if (mddev->queue)
-+		blk_add_trace_msg(mddev->queue, "md md_update_sb");
- 	bitmap_update_sb(mddev->bitmap);
- 	rdev_for_each(rdev, mddev) {
- 		char b[BDEVNAME_SIZE];
+>
+> So to "fix" it again, you need to figure out what udev is doing and fix
+> that.
+>
+> Alternately... place "create names=yes" in your mdadm.conf
+> and always use names, not numbers, to work with md arrays.
+> e.g. /dev/md/home /dev/md/root /dev/md/scratch etc.
+>
+> When will trigger the use of an alternate scheme for creating md devices
+> (using minor numbers >= 512) which udev cannot break so easily.  When it
+> tries to open /dev/md_home, that will fail.
+>
+> NeilBrown
