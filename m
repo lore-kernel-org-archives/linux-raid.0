@@ -1,362 +1,310 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v8] md/r5cache: handle SYNC and FUA
-Date: Fri, 18 Nov 2016 17:00:30 -0800
-Message-ID: <20161119010030.wpzvb3tt5vnlikj6@kernel.org>
-References: <20161119004650.557540-1-songliubraving@fb.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: [PATCH] md/r5cache: handle alloc_page failure
+Date: Fri, 18 Nov 2016 23:20:57 -0800
+Message-ID: <20161119072057.1302854-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20161119004650.557540-1-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>
-Cc: linux-raid@vger.kernel.org, neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuang521@gmail.com, liuzhengyuan@kylinos.cn
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuang521@gmail.com, liuzhengyuan@kylinos.cn, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-On Fri, Nov 18, 2016 at 04:46:50PM -0800, Song Liu wrote:
-> With raid5 cache, we committing data from journal device. When
-> there is flush request, we need to flush journal device's cache.
-> This was not needed in raid5 journal, because we will flush the
-> journal before committing data to raid disks.
-> 
-> This is similar to FUA, except that we also need flush journal for
-> FUA. Otherwise, corruptions in earlier meta data will stop recovery
-> from reaching FUA data.
+RMW of r5c write back cache uses an extra page to store old data for
+prexor. handle_stripe_dirtying() allocates this page by calling
+alloc_page(). However, alloc_page() may fail.
 
-Looks good, applied!
+To handle alloc_page() failures, this patch adds a small mempool
+in r5l_log. When alloc_page fails, the stripe is added to a waiting
+list. Then, these stripes get pages from the mempool (from work queue).
 
-> 
-> Signed-off-by: Song Liu <songliubraving@fb.com>
-> ---
->  drivers/md/raid5-cache.c | 163 +++++++++++++++++++++++++++++++++++++++++------
->  drivers/md/raid5.c       |  12 ++++
->  drivers/md/raid5.h       |   1 +
->  3 files changed, 158 insertions(+), 18 deletions(-)
-> 
-> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index 6b99570..a904268 100644
-> --- a/drivers/md/raid5-cache.c
-> +++ b/drivers/md/raid5-cache.c
-> @@ -19,6 +19,7 @@
->  #include <linux/raid/md_p.h>
->  #include <linux/crc32c.h>
->  #include <linux/random.h>
-> +#include <trace/events/block.h>
->  #include "md.h"
->  #include "raid5.h"
->  #include "bitmap.h"
-> @@ -159,6 +160,9 @@ struct r5l_log {
->  
->  	spinlock_t stripe_in_journal_lock;
->  	atomic_t stripe_in_journal_count;
-> +
-> +	/* to submit async io_units, to fulfill ordering of flush */
-> +	struct work_struct deferred_io_work;
->  };
->  
->  /*
-> @@ -185,6 +189,18 @@ struct r5l_io_unit {
->  
->  	int state;
->  	bool need_split_bio;
-> +	struct bio *split_bio;
-> +
-> +	unsigned int has_flush:1;      /* include flush request */
-> +	unsigned int has_fua:1;        /* include fua request */
-> +	unsigned int has_null_flush:1; /* include empty flush request */
-> +	/*
-> +	 * io isn't sent yet, flush/fua request can only be submitted till it's
-> +	 * the first IO in running_ios list
-> +	 */
-> +	unsigned int io_deferred:1;
-> +
-> +	struct bio_list flush_barriers;   /* size == 0 flush bios */
->  };
->  
->  /* r5l_io_unit state */
-> @@ -494,9 +510,11 @@ static void r5l_move_to_end_ios(struct r5l_log *log)
->  	}
->  }
->  
-> +static void __r5l_stripe_write_finished(struct r5l_io_unit *io);
->  static void r5l_log_endio(struct bio *bio)
->  {
->  	struct r5l_io_unit *io = bio->bi_private;
-> +	struct r5l_io_unit *io_deferred;
->  	struct r5l_log *log = io->log;
->  	unsigned long flags;
->  
-> @@ -512,18 +530,89 @@ static void r5l_log_endio(struct bio *bio)
->  		r5l_move_to_end_ios(log);
->  	else
->  		r5l_log_run_stripes(log);
-> +	if (!list_empty(&log->running_ios)) {
-> +		/*
-> +		 * FLUSH/FUA io_unit is deferred because of ordering, now we
-> +		 * can dispatch it
-> +		 */
-> +		io_deferred = list_first_entry(&log->running_ios,
-> +					       struct r5l_io_unit, log_sibling);
-> +		if (io_deferred->io_deferred)
-> +			schedule_work(&log->deferred_io_work);
-> +	}
-> +
->  	spin_unlock_irqrestore(&log->io_list_lock, flags);
->  
->  	if (log->need_cache_flush)
->  		md_wakeup_thread(log->rdev->mddev->thread);
-> +
-> +	if (io->has_null_flush) {
-> +		struct bio *bi;
-> +
-> +		WARN_ON(bio_list_empty(&io->flush_barriers));
-> +		while ((bi = bio_list_pop(&io->flush_barriers)) != NULL) {
-> +			bio_endio(bi);
-> +			atomic_dec(&io->pending_stripe);
-> +		}
-> +		if (atomic_read(&io->pending_stripe) == 0)
-> +			__r5l_stripe_write_finished(io);
-> +	}
-> +}
-> +
-> +static void r5l_do_submit_io(struct r5l_log *log, struct r5l_io_unit *io)
-> +{
-> +	unsigned long flags;
-> +
-> +	spin_lock_irqsave(&log->io_list_lock, flags);
-> +	__r5l_set_io_unit_state(io, IO_UNIT_IO_START);
-> +	spin_unlock_irqrestore(&log->io_list_lock, flags);
-> +
-> +	if (io->has_flush)
-> +		bio_set_op_attrs(io->current_bio, REQ_OP_WRITE, WRITE_FLUSH);
-> +	if (io->has_fua)
-> +		bio_set_op_attrs(io->current_bio, REQ_OP_WRITE, WRITE_FUA);
-> +	submit_bio(io->current_bio);
-> +
-> +	if (!io->split_bio)
-> +		return;
-> +
-> +	if (io->has_flush)
-> +		bio_set_op_attrs(io->split_bio, REQ_OP_WRITE, WRITE_FLUSH);
-> +	if (io->has_fua)
-> +		bio_set_op_attrs(io->split_bio, REQ_OP_WRITE, WRITE_FUA);
-> +	submit_bio(io->split_bio);
-> +}
-> +
-> +/* deferred io_unit will be dispatched here */
-> +static void r5l_submit_io_async(struct work_struct *work)
-> +{
-> +	struct r5l_log *log = container_of(work, struct r5l_log,
-> +					   deferred_io_work);
-> +	struct r5l_io_unit *io = NULL;
-> +	unsigned long flags;
-> +
-> +	spin_lock_irqsave(&log->io_list_lock, flags);
-> +	if (!list_empty(&log->running_ios)) {
-> +		io = list_first_entry(&log->running_ios, struct r5l_io_unit,
-> +				      log_sibling);
-> +		if (!io->io_deferred)
-> +			io = NULL;
-> +		else
-> +			io->io_deferred = 0;
-> +	}
-> +	spin_unlock_irqrestore(&log->io_list_lock, flags);
-> +	if (io)
-> +		r5l_do_submit_io(log, io);
->  }
->  
->  static void r5l_submit_current_io(struct r5l_log *log)
->  {
->  	struct r5l_io_unit *io = log->current_io;
-> +	struct bio *bio;
->  	struct r5l_meta_block *block;
->  	unsigned long flags;
->  	u32 crc;
-> +	bool do_submit = true;
->  
->  	if (!io)
->  		return;
-> @@ -532,13 +621,20 @@ static void r5l_submit_current_io(struct r5l_log *log)
->  	block->meta_size = cpu_to_le32(io->meta_offset);
->  	crc = crc32c_le(log->uuid_checksum, block, PAGE_SIZE);
->  	block->checksum = cpu_to_le32(crc);
-> +	bio = io->current_bio;
->  
->  	log->current_io = NULL;
->  	spin_lock_irqsave(&log->io_list_lock, flags);
-> -	__r5l_set_io_unit_state(io, IO_UNIT_IO_START);
-> +	if (io->has_flush || io->has_fua) {
-> +		if (io != list_first_entry(&log->running_ios,
-> +					   struct r5l_io_unit, log_sibling)) {
-> +			io->io_deferred = 1;
-> +			do_submit = false;
-> +		}
-> +	}
->  	spin_unlock_irqrestore(&log->io_list_lock, flags);
-> -
-> -	submit_bio(io->current_bio);
-> +	if (do_submit)
-> +		r5l_do_submit_io(log, io);
->  }
->  
->  static struct bio *r5l_bio_alloc(struct r5l_log *log)
-> @@ -583,6 +679,7 @@ static struct r5l_io_unit *r5l_new_meta(struct r5l_log *log)
->  	io->log = log;
->  	INIT_LIST_HEAD(&io->log_sibling);
->  	INIT_LIST_HEAD(&io->stripe_list);
-> +	bio_list_init(&io->flush_barriers);
->  	io->state = IO_UNIT_RUNNING;
->  
->  	io->meta_page = mempool_alloc(log->meta_pool, GFP_NOIO);
-> @@ -653,12 +750,11 @@ static void r5l_append_payload_page(struct r5l_log *log, struct page *page)
->  	struct r5l_io_unit *io = log->current_io;
->  
->  	if (io->need_split_bio) {
-> -		struct bio *prev = io->current_bio;
-> -
-> +		BUG_ON(io->split_bio);
-> +		io->split_bio = io->current_bio;
->  		io->current_bio = r5l_bio_alloc(log);
-> -		bio_chain(io->current_bio, prev);
-> -
-> -		submit_bio(prev);
-> +		bio_chain(io->current_bio, io->split_bio);
-> +		io->need_split_bio = false;
->  	}
->  
->  	if (!bio_add_page(io->current_bio, page, PAGE_SIZE, 0))
-> @@ -687,12 +783,24 @@ static int r5l_log_stripe(struct r5l_log *log, struct stripe_head *sh,
->  
->  	io = log->current_io;
->  
-> +	if (test_and_clear_bit(STRIPE_R5C_PREFLUSH, &sh->state))
-> +		io->has_flush = 1;
-> +
->  	for (i = 0; i < sh->disks; i++) {
->  		if (!test_bit(R5_Wantwrite, &sh->dev[i].flags) ||
->  		    test_bit(R5_InJournal, &sh->dev[i].flags))
->  			continue;
->  		if (i == sh->pd_idx || i == sh->qd_idx)
->  			continue;
-> +		if (test_bit(R5_WantFUA, &sh->dev[i].flags) &&
-> +		    log->r5c_journal_mode == R5C_JOURNAL_MODE_WRITE_BACK) {
-> +			io->has_fua = 1;
-> +			/*
-> +			 * we need to flush journal to make sure recovery can
-> +			 * reach the data with fua flag
-> +			 */
-> +			io->has_flush = 1;
-> +		}
->  		r5l_append_payload_meta(log, R5LOG_PAYLOAD_DATA,
->  					raid5_compute_blocknr(sh, i, 0),
->  					sh->dev[i].log_checksum, 0, false);
-> @@ -856,17 +964,34 @@ int r5l_handle_flush_request(struct r5l_log *log, struct bio *bio)
->  {
->  	if (!log)
->  		return -ENODEV;
-> -	/*
-> -	 * we flush log disk cache first, then write stripe data to raid disks.
-> -	 * So if bio is finished, the log disk cache is flushed already. The
-> -	 * recovery guarantees we can recovery the bio from log disk, so we
-> -	 * don't need to flush again
-> -	 */
-> -	if (bio->bi_iter.bi_size == 0) {
-> -		bio_endio(bio);
-> -		return 0;
-> +
-> +	if (log->r5c_journal_mode == R5C_JOURNAL_MODE_WRITE_THROUGH) {
-> +		/*
-> +		 * in write through (journal only)
-> +		 * we flush log disk cache first, then write stripe data to
-> +		 * raid disks. So if bio is finished, the log disk cache is
-> +		 * flushed already. The recovery guarantees we can recovery
-> +		 * the bio from log disk, so we don't need to flush again
-> +		 */
-> +		if (bio->bi_iter.bi_size == 0) {
-> +			bio_endio(bio);
-> +			return 0;
-> +		}
-> +		bio->bi_opf &= ~REQ_PREFLUSH;
-> +	} else {
-> +		/* write back (with cache) */
-> +		if (bio->bi_iter.bi_size == 0) {
-> +			mutex_lock(&log->io_mutex);
-> +			r5l_get_meta(log, 0);
-> +			bio_list_add(&log->current_io->flush_barriers, bio);
-> +			log->current_io->has_flush = 1;
-> +			log->current_io->has_null_flush = 1;
-> +			atomic_inc(&log->current_io->pending_stripe);
-> +			r5l_submit_current_io(log);
-> +			mutex_unlock(&log->io_mutex);
-> +			return 0;
-> +		}
->  	}
-> -	bio->bi_opf &= ~REQ_PREFLUSH;
->  	return -EAGAIN;
->  }
->  
-> @@ -2470,6 +2595,8 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
->  	INIT_LIST_HEAD(&log->no_space_stripes);
->  	spin_lock_init(&log->no_space_stripes_lock);
->  
-> +	INIT_WORK(&log->deferred_io_work, r5l_submit_io_async);
-> +
->  	log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_THROUGH;
->  	INIT_LIST_HEAD(&log->stripe_in_journal_list);
->  	spin_lock_init(&log->stripe_in_journal_lock);
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index aa4968c..a850663 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -5248,6 +5248,7 @@ static void raid5_make_request(struct mddev *mddev, struct bio * bi)
->  	int remaining;
->  	DEFINE_WAIT(w);
->  	bool do_prepare;
-> +	bool do_flush = false;
->  
->  	if (unlikely(bi->bi_opf & REQ_PREFLUSH)) {
->  		int ret = r5l_handle_flush_request(conf->log, bi);
-> @@ -5259,6 +5260,11 @@ static void raid5_make_request(struct mddev *mddev, struct bio * bi)
->  			return;
->  		}
->  		/* ret == -EAGAIN, fallback */
-> +		/*
-> +		 * if r5l_handle_flush_request() didn't clear REQ_PREFLUSH,
-> +		 * we need to flush journal device
-> +		 */
-> +		do_flush = (bi->bi_opf & REQ_PREFLUSH) != 0;
->  	}
->  
->  	md_write_start(mddev, bi);
-> @@ -5398,6 +5404,12 @@ static void raid5_make_request(struct mddev *mddev, struct bio * bi)
->  				do_prepare = true;
->  				goto retry;
->  			}
-> +			if (do_flush) {
-> +				set_bit(STRIPE_R5C_PREFLUSH, &sh->state);
-> +				/* we only need flush for one stripe */
-> +				do_flush = false;
-> +			}
-> +
->  			set_bit(STRIPE_HANDLE, &sh->state);
->  			clear_bit(STRIPE_DELAYED, &sh->state);
->  			if ((!sh->batch_head || sh == sh->batch_head) &&
-> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-> index a698113..d13fe45 100644
-> --- a/drivers/md/raid5.h
-> +++ b/drivers/md/raid5.h
-> @@ -376,6 +376,7 @@ enum {
->  	STRIPE_R5C_FULL_STRIPE,	/* in r5c cache (to-be/being handled or
->  				 * in conf->r5c_full_stripe_list)
->  				 */
-> +	STRIPE_R5C_PREFLUSH,	/* need to flush journal device */
->  };
->  
->  #define STRIPE_EXPAND_SYNC_FLAGS \
-> -- 
-> 2.9.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Song Liu <songliubraving@fb.com>
+---
+ drivers/md/raid5-cache.c | 100 ++++++++++++++++++++++++++++++++++++++++++++++-
+ drivers/md/raid5.c       |  34 +++++++++++-----
+ drivers/md/raid5.h       |   6 +++
+ 3 files changed, 130 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 8cb79fc..ce7f114 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -51,6 +51,8 @@
+  */
+ #define R5L_POOL_SIZE	4
+ 
++#define R5C_EXTRA_PAGE_POOL_SIZE	2
++
+ /*
+  * r5c journal modes of the array: write-back or write-through.
+  * write-through mode has identical behavior as existing log only
+@@ -162,6 +164,16 @@ struct r5l_log {
+ 
+ 	/* to submit async io_units, to fulfill ordering of flush */
+ 	struct work_struct deferred_io_work;
++
++	/* to handle alloc_page failures in handle_stripe_dirtying() */
++	/* mempool for up to R5C_EXTRA_PAGE_POOL_SIZE stripes */
++	mempool_t *extra_page_pool;
++	/* list of stripes waiting to use the page pool */
++	struct list_head extra_page_pool_list;
++	/* lock for extra_page_pool_list */
++	spinlock_t extra_page_pool_lock;
++	/* work that allocates pages from extra_page_pool */
++	struct work_struct extra_page_pool_work;
+ };
+ 
+ /*
+@@ -252,6 +264,69 @@ static void __r5l_set_io_unit_state(struct r5l_io_unit *io,
+ 	io->state = state;
+ }
+ 
++void r5c_add_to_extra_page_pool_list(struct stripe_head *sh,
++				     struct stripe_head_state *s)
++{
++	struct r5conf *conf = sh->raid_conf;
++	struct r5l_log *log = conf->log;
++	int i;
++	struct page *p;
++
++	BUG_ON(!log);
++
++	/* free any extra orig_page from alloc_page() */
++	for (i = sh->disks; i--; )
++		if (sh->dev[i].page != sh->dev[i].orig_page) {
++			p = sh->dev[i].orig_page;
++			sh->dev[i].orig_page = sh->dev[i].page;
++			put_page(p);
++		}
++
++	WARN_ON(!list_empty(&sh->log_list));
++
++	atomic_inc(&sh->count);
++	set_bit(STRIPE_R5C_EXTRA_PAGE, &sh->state);
++
++	spin_lock(&log->extra_page_pool_lock);
++	list_add_tail(&sh->log_list, &log->extra_page_pool_list);
++	spin_unlock(&log->extra_page_pool_lock);
++
++	s->waiting_extra_page = 1;
++	schedule_work(&log->extra_page_pool_work);
++}
++
++static void r5c_run_extra_page_pool_list(struct work_struct *work)
++{
++	struct r5l_log *log = container_of(work, struct r5l_log,
++					   extra_page_pool_work);
++	struct stripe_head *sh;
++	struct r5dev *dev;
++	int i;
++
++	while (1) {
++		spin_lock(&log->extra_page_pool_lock);
++		if (list_empty(&log->extra_page_pool_list)) {
++			spin_unlock(&log->extra_page_pool_lock);
++			break;
++		}
++		sh = list_first_entry(&log->extra_page_pool_list,
++				      struct stripe_head, log_list);
++		list_del_init(&sh->log_list);
++		spin_unlock(&log->extra_page_pool_lock);
++
++		for (i = sh->disks; i--; ) {
++			dev = &sh->dev[i];
++			BUG_ON(dev->page != dev->orig_page);
++
++			if (test_bit(R5_InJournal, &dev->flags))
++				dev->orig_page = mempool_alloc(
++					log->extra_page_pool, GFP_NOIO);
++		}
++		set_bit(STRIPE_HANDLE, &sh->state);
++		raid5_release_stripe(sh);
++	}
++}
++
+ static void
+ r5c_return_dev_pending_writes(struct r5conf *conf, struct r5dev *dev,
+ 			      struct bio_list *return_bi)
+@@ -2334,14 +2409,25 @@ int r5c_try_caching_write(struct r5conf *conf,
+  */
+ void r5c_release_extra_page(struct stripe_head *sh)
+ {
++	struct r5conf *conf = sh->raid_conf;
++	struct r5l_log *log = conf->log;
+ 	int i;
++	bool using_extra_page_pool;;
++
++	BUG_ON(!log);
++
++	using_extra_page_pool = test_and_clear_bit(
++		STRIPE_R5C_EXTRA_PAGE, &sh->state);
+ 
+ 	for (i = sh->disks; i--; )
+ 		if (sh->dev[i].page != sh->dev[i].orig_page) {
+ 			struct page *p = sh->dev[i].orig_page;
+ 
+ 			sh->dev[i].orig_page = sh->dev[i].page;
+-			put_page(p);
++			if (using_extra_page_pool)
++				mempool_free(p, log->extra_page_pool);
++			else
++				put_page(p);
+ 		}
+ }
+ 
+@@ -2581,6 +2667,15 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+ 	if (!log->meta_pool)
+ 		goto out_mempool;
+ 
++	log->extra_page_pool = mempool_create_page_pool(
++		R5C_EXTRA_PAGE_POOL_SIZE *
++		(conf->raid_disks - conf->max_degraded), 0);
++	if (!log->extra_page_pool)
++		goto extra_page_pool;
++	INIT_LIST_HEAD(&log->extra_page_pool_list);
++	spin_lock_init(&log->extra_page_pool_lock);
++	INIT_WORK(&log->extra_page_pool_work, r5c_run_extra_page_pool_list);
++
+ 	log->reclaim_thread = md_register_thread(r5l_reclaim_thread,
+ 						 log->rdev->mddev, "reclaim");
+ 	if (!log->reclaim_thread)
+@@ -2611,6 +2706,8 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+ error:
+ 	md_unregister_thread(&log->reclaim_thread);
+ reclaim_thread:
++	mempool_destroy(log->extra_page_pool);
++extra_page_pool:
+ 	mempool_destroy(log->meta_pool);
+ out_mempool:
+ 	bioset_free(log->bs);
+@@ -2626,6 +2723,7 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+ void r5l_exit_log(struct r5l_log *log)
+ {
+ 	md_unregister_thread(&log->reclaim_thread);
++	mempool_destroy(log->extra_page_pool);
+ 	mempool_destroy(log->meta_pool);
+ 	bioset_free(log->bs);
+ 	mempool_destroy(log->io_pool);
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index dbab8c7..5870ca9 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -876,6 +876,8 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+ 
+ 	if (!test_bit(STRIPE_R5C_CACHING, &sh->state)) {
+ 		/* writing out phase */
++		if (s->waiting_extra_page)
++			return;
+ 		if (r5l_write_stripe(conf->log, sh) == 0)
+ 			return;
+ 	} else {  /* caching phase */
+@@ -2007,6 +2009,7 @@ static struct stripe_head *alloc_stripe(struct kmem_cache *sc, gfp_t gfp,
+ 		INIT_LIST_HEAD(&sh->batch_list);
+ 		INIT_LIST_HEAD(&sh->lru);
+ 		INIT_LIST_HEAD(&sh->r5c);
++		INIT_LIST_HEAD(&sh->log_list);
+ 		atomic_set(&sh->count, 1);
+ 		sh->log_start = MaxSector;
+ 		for (i = 0; i < disks; i++) {
+@@ -2897,6 +2900,7 @@ schedule_reconstruction(struct stripe_head *sh, struct stripe_head_state *s,
+ 				s->locked++;
+ 			}
+ 		}
++
+ 		/* if we are not expanding this is a proper write request, and
+ 		 * there will be bios with new data to be drained into the
+ 		 * stripe cache
+@@ -3580,10 +3584,10 @@ static void handle_stripe_clean_event(struct r5conf *conf,
+ 		break_stripe_batch_list(head_sh, STRIPE_EXPAND_SYNC_FLAGS);
+ }
+ 
+-static void handle_stripe_dirtying(struct r5conf *conf,
+-				   struct stripe_head *sh,
+-				   struct stripe_head_state *s,
+-				   int disks)
++static int handle_stripe_dirtying(struct r5conf *conf,
++				  struct stripe_head *sh,
++				  struct stripe_head_state *s,
++				  int disks)
+ {
+ 	int rmw = 0, rcw = 0, i;
+ 	sector_t recovery_cp = conf->mddev->recovery_cp;
+@@ -3649,12 +3653,19 @@ static void handle_stripe_dirtying(struct r5conf *conf,
+ 			    dev->page == dev->orig_page &&
+ 			    !test_bit(R5_LOCKED, &sh->dev[sh->pd_idx].flags)) {
+ 				/* alloc page for prexor */
+-				dev->orig_page = alloc_page(GFP_NOIO);
++				struct page *p;
+ 
+-				/* will handle failure in a later patch*/
+-				BUG_ON(!dev->orig_page);
++				p = alloc_page(GFP_NOIO);
++				if (!p) {
++					r5c_add_to_extra_page_pool_list(sh, s);
++					return -EAGAIN;
++				}
++				dev->orig_page = p;
+ 			}
++		}
+ 
++		for (i = disks; i--; ) {
++			struct r5dev *dev = &sh->dev[i];
+ 			if ((dev->towrite ||
+ 			     i == sh->pd_idx || i == sh->qd_idx ||
+ 			     test_bit(R5_InJournal, &dev->flags)) &&
+@@ -3730,6 +3741,7 @@ static void handle_stripe_dirtying(struct r5conf *conf,
+ 	    (s->locked == 0 && (rcw == 0 || rmw == 0) &&
+ 	     !test_bit(STRIPE_BIT_DELAY, &sh->state)))
+ 		schedule_reconstruction(sh, s, rcw == 0, 0);
++	return 0;
+ }
+ 
+ static void handle_parity_checks5(struct r5conf *conf, struct stripe_head *sh,
+@@ -4545,8 +4557,12 @@ static void handle_stripe(struct stripe_head *sh)
+ 			if (ret == -EAGAIN ||
+ 			    /* stripe under reclaim: !caching && injournal */
+ 			    (!test_bit(STRIPE_R5C_CACHING, &sh->state) &&
+-			     s.injournal > 0))
+-				handle_stripe_dirtying(conf, sh, &s, disks);
++			     s.injournal > 0)) {
++				ret = handle_stripe_dirtying(conf, sh, &s,
++							     disks);
++				if (ret == -EAGAIN)
++					goto finish;
++			}
+ 		}
+ 	}
+ 
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index d13fe45..e0efd46 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -276,6 +276,7 @@ struct stripe_head_state {
+ 	struct md_rdev *blocked_rdev;
+ 	int handle_bad_blocks;
+ 	int log_failed;
++	int waiting_extra_page;
+ };
+ 
+ /* Flags for struct r5dev.flags */
+@@ -377,6 +378,9 @@ enum {
+ 				 * in conf->r5c_full_stripe_list)
+ 				 */
+ 	STRIPE_R5C_PREFLUSH,	/* need to flush journal device */
++	STRIPE_R5C_EXTRA_PAGE,	/* extra orig_page of this stripe is allocated
++				 * from r5l_log->extra_page_pool
++				 */
+ };
+ 
+ #define STRIPE_EXPAND_SYNC_FLAGS \
+@@ -774,5 +778,7 @@ extern void r5c_make_stripe_write_out(struct stripe_head *sh);
+ extern void r5c_flush_cache(struct r5conf *conf, int num);
+ extern void r5c_check_stripe_cache_usage(struct r5conf *conf);
+ extern void r5c_check_cached_full_stripe(struct r5conf *conf);
++extern void r5c_add_to_extra_page_pool_list(struct stripe_head *sh,
++					    struct stripe_head_state *s);
+ extern struct md_sysfs_entry r5c_journal_mode;
+ #endif
+-- 
+2.9.3
+
