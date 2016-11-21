@@ -1,38 +1,110 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: linux raid wiki - backup files
-Date: Mon, 21 Nov 2016 09:07:35 -0500
-Message-ID: <4febebb6-0442-cc5e-45d5-e041e21e2d95@turmel.org>
-References: <583077D0.5070804@youngman.org.uk>
- <ffb47575-b655-924d-8626-07b9e48a6371@turmel.org>
- <5831B7B9.8090008@youngman.org.uk>
+From: Marc Smith <marc.smith@mcc.edu>
+Subject: Re: MD Remnants After --stop
+Date: Mon, 21 Nov 2016 09:08:37 -0500
+Message-ID: <CAHkw+LfN9xaFmmvg653OKh1eH=_kLdhd3Y1QMg3955TePCCtkg@mail.gmail.com>
+References: <CAHkw+Lf1SErbGro4bq5MM5LyB-Zqyqi4E90R7c+uAZHv1WgSrA@mail.gmail.com>
+ <87fun3ond9.fsf@notabene.neil.brown.name> <CAHkw+LcfszsWDGQJzDaQU0-PsL+8K7t5msW_bLbv+YyDEFmn8Q@mail.gmail.com>
+ <87fumlebwo.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5831B7B9.8090008@youngman.org.uk>
+In-Reply-To: <87fumlebwo.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/20/2016 09:48 AM, Wols Lists wrote:
-> On 20/11/16 00:27, Phil Turmel wrote:
->> Yes.  But the new stripes lay on top of the old stripes, unless you move
->> the data offset.  Which is why a backup file holds the old stripe just
->> in case.  If you can move the offset, you use the lower offset for the
->> lower addresses in the array, and the higher offset for the higher
->> addresses, on either side of the reshape position.
-> 
-> Okay, understood. So v0.9 and v1.0 always need a backup for a reshape.
-> 
-> But if we have a data offset with v1.2, a reshape will use that space if
-> it can rather than needing a backup file?
+On Sun, Nov 20, 2016 at 10:42 PM, NeilBrown <neilb@suse.com> wrote:
+> On Sat, Nov 19 2016, Marc Smith wrote:
+>
+>> On Mon, Nov 7, 2016 at 12:44 AM, NeilBrown <neilb@suse.com> wrote:
+>>> On Sat, Nov 05 2016, Marc Smith wrote:
+>>>
+>>>> Hi,
+>>>>
+>>>> It may be that I've never noticed this before, so maybe its not a
+>>>> problem... after using '--stop' to deactivate/stop an MD array, there
+>>>> are remnants of it lingering, namely an entry in /sys/block (eg,
+>>>> /sys/block/md127) and the device node in /dev remains (eg,
+>>>> /dev/md127).
+>>>>
+>>>> Is this normal? Like I said, it probably is, and I've just never
+>>>> noticed it before. I assume its not going to hurt anything, but is
+>>>> there a way to clean it up, without rebooting? Obviously I could
+>>>> remove the /dev entry, but what about /sys/block?
+>>>>
+>>>
+>>> You can remove them both by running
+>>>   mdadm -S /dev/md127
+>>>
+>>> but they'll probably just reappear again.
+>>>
+>>> This seems to be an on-going battle between md and udev.  I've "fixed"
+>>> it at least once, but it keeps coming back.
+>>>
+>>> When md removes the md127 device, a message is sent to udev.
+>>> As part of its response to this message, udev tries to open /dev/md127.
+>>> Because of the rather unusual way that md devices are created (it made
+>>> sense nearly 20 years ago when it was designed), opening /dev/md127
+>>> causes md to create device md127 again.
+>>>
+>>> You could
+>>>   mv /dev/md127 /dev/md127X
+>>>   mdadm -S /dev/md127X
+>>>   rm /dev/md127X
+>>> that stop udev from opening /dev/md127.  It seems to work reliably.
+>>>
+>>> md used to generate a CHANGE event before the REMOVE event, and only the
+>>> CHANGE event caused udev to open the device file.  I removed that and
+>>> the problem went away.  Apparently some change has happened to udev and
+>>> now it opens the file in response to REMOVE as well.
+>>
+>> I used "udevadm monitor -pku" to watch the events when running "mdadm
+>> --stop /dev/md127" and this is what I see:
+>>
+>> --snip--
+>> KERNEL[163074.119778] change   /devices/virtual/block/md127 (block)
+>> ACTION=change
+>> DEVNAME=/dev/md127
+>> DEVPATH=/devices/virtual/block/md127
+>> DEVTYPE=disk
+>> MAJOR=9
+>> MINOR=127
+>> SEQNUM=3701
+>> SUBSYSTEM=block
+>>
+>> UDEV  [163074.121569] change   /devices/virtual/block/md127 (block)
+>> ACTION=change
+>> DEVNAME=/dev/md127
+>> DEVPATH=/devices/virtual/block/md127
+>> DEVTYPE=disk
+>> MAJOR=9
+>> MINOR=127
+>> SEQNUM=3701
+>> SUBSYSTEM=block
+>> SYSTEMD_READY=0
+>> USEC_INITIALIZED=370470
+>> --snip--
+>>
+>> I don't see any 'remove' event generated. I should mention if I hadn't
+>> already that I'm testing md-cluster (--bitmap=clustered), and
+>> currently using Linux 4.9-rc3.
+>
+> What version of mdadm are you using?
 
-If there's room to move the entire data area (direction varies with
-operation), yes.
+v3.4
 
-> (And changing topic slightly, that space is also used for an internal
-> bitmap?)
 
-And bad block log.
+> You need one which contains
+> Commit: 229e66cb9689 ("Manage.c: Only issue change events for kernels older than 2.6.28")
+>
+> which hasn't made it into a release yet.  But if you are playing with
+> md-cluster, I would guess you are using the latest from git...
 
-Phil
+Wasn't, but I will now. Thanks.
+
+--Marc
+
+
+>
+> NeilBrown
