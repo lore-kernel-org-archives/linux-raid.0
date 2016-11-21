@@ -1,122 +1,105 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: MD Remnants After --stop
-Date: Mon, 21 Nov 2016 14:42:47 +1100
-Message-ID: <87fumlebwo.fsf@notabene.neil.brown.name>
-References: <CAHkw+Lf1SErbGro4bq5MM5LyB-Zqyqi4E90R7c+uAZHv1WgSrA@mail.gmail.com> <87fun3ond9.fsf@notabene.neil.brown.name> <CAHkw+LcfszsWDGQJzDaQU0-PsL+8K7t5msW_bLbv+YyDEFmn8Q@mail.gmail.com>
+Subject: Re: [PATCH v2] md: add block tracing for bio_remapping
+Date: Mon, 21 Nov 2016 15:00:37 +1100
+Message-ID: <87a8cteb2y.fsf@notabene.neil.brown.name>
+References: <87shqpfrxv.fsf@notabene.neil.brown.name> <20161118172622.hzvmtt5rbtmdh7hh@kernel.org> <20161118175005.dodwcprytycwyuyq@kernel.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHkw+LcfszsWDGQJzDaQU0-PsL+8K7t5msW_bLbv+YyDEFmn8Q@mail.gmail.com>
+In-Reply-To: <20161118175005.dodwcprytycwyuyq@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marc Smith <marc.smith@mcc.edu>
+To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Sat, Nov 19 2016, Marc Smith wrote:
+On Sat, Nov 19 2016, Shaohua Li wrote:
 
-> On Mon, Nov 7, 2016 at 12:44 AM, NeilBrown <neilb@suse.com> wrote:
->> On Sat, Nov 05 2016, Marc Smith wrote:
->>
->>> Hi,
->>>
->>> It may be that I've never noticed this before, so maybe its not a
->>> problem... after using '--stop' to deactivate/stop an MD array, there
->>> are remnants of it lingering, namely an entry in /sys/block (eg,
->>> /sys/block/md127) and the device node in /dev remains (eg,
->>> /dev/md127).
->>>
->>> Is this normal? Like I said, it probably is, and I've just never
->>> noticed it before. I assume its not going to hurt anything, but is
->>> there a way to clean it up, without rebooting? Obviously I could
->>> remove the /dev entry, but what about /sys/block?
->>>
->>
->> You can remove them both by running
->>   mdadm -S /dev/md127
->>
->> but they'll probably just reappear again.
->>
->> This seems to be an on-going battle between md and udev.  I've "fixed"
->> it at least once, but it keeps coming back.
->>
->> When md removes the md127 device, a message is sent to udev.
->> As part of its response to this message, udev tries to open /dev/md127.
->> Because of the rather unusual way that md devices are created (it made
->> sense nearly 20 years ago when it was designed), opening /dev/md127
->> causes md to create device md127 again.
->>
->> You could
->>   mv /dev/md127 /dev/md127X
->>   mdadm -S /dev/md127X
->>   rm /dev/md127X
->> that stop udev from opening /dev/md127.  It seems to work reliably.
->>
->> md used to generate a CHANGE event before the REMOVE event, and only the
->> CHANGE event caused udev to open the device file.  I removed that and
->> the problem went away.  Apparently some change has happened to udev and
->> now it opens the file in response to REMOVE as well.
+> On Fri, Nov 18, 2016 at 09:26:22AM -0800, Shaohua Li wrote:
+>> On Fri, Nov 18, 2016 at 01:22:04PM +1100, Neil Brown wrote:
+>> >=20
+>> > The block tracing infrastructure (accessed with blktrace/blkparse)
+>> > supports the tracing of mapping bios from one device to another.
+>> > This is currently used when a bio in a partition is mapped to the
+>> > whole device, when bios are mapped by dm, and for mapping in md/raid5.
+>> > Other md personalities do not include this tracing yet, so add it.
+>> >=20
+>> > When a read-error is detected we redirect the request to a different d=
+evice.
+>> > This could justifiably be seen as a new mapping for the originial bio,
+>> > or a secondary mapping for the bio that errors.  This patch uses
+>> > the second option.
+>> >=20
+>> > When md is used under dm-raid, the mappings are not traced as we do
+>> > not have access to the block device number of the parent.
+>>=20
+>> thanks, applied patch 1, 3, 4.
 >
-> I used "udevadm monitor -pku" to watch the events when running "mdadm
-> --stop /dev/md127" and this is what I see:
+> BTW, I added below patch
 >
-> --snip--
-> KERNEL[163074.119778] change   /devices/virtual/block/md127 (block)
-> ACTION=change
-> DEVNAME=/dev/md127
-> DEVPATH=/devices/virtual/block/md127
-> DEVTYPE=disk
-> MAJOR=9
-> MINOR=127
-> SEQNUM=3701
-> SUBSYSTEM=block
->
-> UDEV  [163074.121569] change   /devices/virtual/block/md127 (block)
-> ACTION=change
-> DEVNAME=/dev/md127
-> DEVPATH=/devices/virtual/block/md127
-> DEVTYPE=disk
-> MAJOR=9
-> MINOR=127
-> SEQNUM=3701
-> SUBSYSTEM=block
-> SYSTEMD_READY=0
-> USEC_INITIALIZED=370470
-> --snip--
->
-> I don't see any 'remove' event generated. I should mention if I hadn't
-> already that I'm testing md-cluster (--bitmap=clustered), and
-> currently using Linux 4.9-rc3.
 
-What version of mdadm are you using?
-You need one which contains
-Commit: 229e66cb9689 ("Manage.c: Only issue change events for kernels older than 2.6.28")
-
-which hasn't made it into a release yet.  But if you are playing with
-md-cluster, I would guess you are using the latest from git...
+Yes, that looks good.  Thanks!
 
 NeilBrown
+
+>
+> commit 504634f60f463e73e7d58c6810a04437da942dba
+> Author: Shaohua Li <shli@fb.com>
+> Date:   Fri Nov 18 09:44:08 2016 -0800
+>
+>     md: add blktrace event for writes to superblock
+>=20=20=20=20=20
+>     superblock write is an expensive operation. With raid5-cache, it can =
+be called
+>     regularly. Tracing to help performance debug.
+>=20=20=20=20=20
+>     Signed-off-by: Shaohua Li <shli@fb.com>
+>     Cc: NeilBrown <neilb@suse.com>
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 1f1c7f0..d3cef77 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -64,6 +64,7 @@
+>  #include <linux/raid/md_p.h>
+>  #include <linux/raid/md_u.h>
+>  #include <linux/slab.h>
+> +#include <trace/events/block.h>
+>  #include "md.h"
+>  #include "bitmap.h"
+>  #include "md-cluster.h"
+> @@ -2403,6 +2404,8 @@ void md_update_sb(struct mddev *mddev, int force_ch=
+ange)
+>  	pr_debug("md: updating %s RAID superblock on device (in sync %d)\n",
+>  		 mdname(mddev), mddev->in_sync);
+>=20=20
+> +	if (mddev->queue)
+> +		blk_add_trace_msg(mddev->queue, "md md_update_sb");
+>  	bitmap_update_sb(mddev->bitmap);
+>  	rdev_for_each(rdev, mddev) {
+>  		char b[BDEVNAME_SIZE];
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAEBCAAGBQJYMm03AAoJEDnsnt1WYoG54LkP/1kCRzkAGr0eqLwXj84nyVfF
-pAt8+q68BSiOuTLED0MZz5yCIBxjZN9863+YkEPfUWNgPP58P2amiPwK1ZsB77Sz
-y5BoV64JOzPaYqqRtqWv6PkOjg/IJQde/XRBxLwlMttQ9uPQzM6vWwom9SLSPehL
-KgNlrSNwh0sRbZadosd1X0KeXLh9eeBqaC7fh5US1P2SrzB+UhJPuX7sbMOE47aE
-4RSdIqjiVzaE1CGtvSBEGj7n3dspyNvukvyQLUHB0IgQgr5MY9oACBDXqlG+th7f
-YJZZvSZtdAFP2GKYaj2x/BlmjfHbqu4RxUkhaWbClYlx3Xk4ogFoD7ZP91RLe65q
-KFKj1XCx1VqxAAlGDwRgs5pxQcSmuRfEEQKr+m2DYLCbljr8p0CWV+K/A6ahCu36
-T1VAdjX3vjXNSKPwkQlFAp7z7FeTSJeg0i7VUiNdoo7QVmnYc8C7+TjzRVn78ztz
-+meH1pag35Afv/wxBxhVghzFXhkwQgigFlEhj6It+5SSDTegELCp/2npn9fzihdm
-+2khHsD4HuhifUlU0bzrpmRc/W+Tk8oGky7it24m1iFcAdgh878XK+XMwLOifqKy
-QTe5ly7yVs4SbSHdcdke4koVU/LGvJZMVPTXensrgt+nOFLFJKn+J06TmR0+Xxn1
-S54rBJf1xnmGmKDvP20I
-=EPoM
+iQIcBAEBCAAGBQJYMnFlAAoJEDnsnt1WYoG5FMAP/jl+InHtBedwAcRWsbyFU6Lq
+5M/n112GMMg2rydolI4a1xtr16M+Uids7i2UM7SlaSFYKZIxtzxPZ4bNZYhvvT22
+5DOL/6WrZQIPhlySs1NDSu3ouxd0Z3xRETKx81lBtQN5Lnxzsn2RKrBo5uRn/Mct
+CBNaRmZfbC3TsS+kPEfwlS+NLxmTWTvAuwRwj4dvgyzkinQnf3YBFTenVAqG8kB6
+JgxOrLSkXpERLXg6LaljbbhTyRlKu6yfZwc/KpUZr1TyE+ru1YhE8fLuNiQvklOS
+XWUW3tMgUk8EXNQ+kBLy67YUHc5cqjZw90UfGYoMxkJRndGHMW/lBu+9d636Xv6L
+sIJP+D5nhmqkpPcIwW25ar8i+i8dJk5Tim58WONOKUt64V1vo8UBHw6LIskjVXh9
+Gc4uB54qLyBZYhjiNYKpC/cjJR9jpswm18MLWZWMtt7y/liw8sgrvL1uV5eYhd1U
+rH4PFMVUJND7YoHDBnakaV641ZE12ZfJwWALPnUqmvM9Hrg5A0LIFAE72Fe7xWSO
+LbyC2mGTT3OcLnK8RT0QvYKroyfo4cUZqM/T1U9p7hcdjFxs5UE8DxBewSZOYV8m
+0yKdjVSLhnKl1HLyODo2JqRU+ipsiGoIkVQ5xJrXZc3a3uW98g7WQWE1YLip0lHf
+8dSMjrHKJDQhIRzQ4pej
+=DXgg
 -----END PGP SIGNATURE-----
 --=-=-=--
