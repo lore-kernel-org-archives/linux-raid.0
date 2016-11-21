@@ -1,83 +1,170 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH] md/r5cache: handle alloc_page failure
-Date: Mon, 21 Nov 2016 16:05:09 +1100
-Message-ID: <874m31e83e.fsf@notabene.neil.brown.name>
-References: <20161119072057.1302854-1-songliubraving@fb.com>
+From: Andy Smith <andy@strugglers.net>
+Subject: Re: Newly-created arrays don't auto-assemble - related to hostname
+ change?
+Date: Mon, 21 Nov 2016 06:02:56 +0000
+Message-ID: <20161121060256.GL1804@bitfolk.com>
+References: <20161117035230.GG21587@bitfolk.com>
+ <87lgwihc2v.fsf@notabene.neil.brown.name>
+ <20161117150954.GH21587@bitfolk.com>
+ <87d1hthgm7.fsf@notabene.neil.brown.name>
+ <20161118023144.GC1804@bitfolk.com>
+ <87poltfq2d.fsf@notabene.neil.brown.name>
+ <20161118034716.GI21587@bitfolk.com>
+ <87k2c1fn0o.fsf@notabene.neil.brown.name>
+ <20161118041759.GE1804@bitfolk.com>
+ <877f7xe9lh.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161119072057.1302854-1-songliubraving@fb.com>
+Content-Disposition: inline
+In-Reply-To: <877f7xe9lh.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuang521@gmail.com, liuzhengyuan@kylinos.cn, Song Liu <songliubraving@fb.com>
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
+Hi Neil,
 
-On Sat, Nov 19 2016, Song Liu wrote:
+On Mon, Nov 21, 2016 at 03:32:42PM +1100, NeilBrown wrote:
+> If you still want to get to the bottom of this, you might need to revert
+> your work-around, the try the "udevadm monitor" and "udevadm info" and "udevadm
+> trigger" while the array is not assembled.
 
-> RMW of r5c write back cache uses an extra page to store old data for
-> prexor. handle_stripe_dirtying() allocates this page by calling
-> alloc_page(). However, alloc_page() may fail.
->
-> To handle alloc_page() failures, this patch adds a small mempool
-> in r5l_log. When alloc_page fails, the stripe is added to a waiting
-> list. Then, these stripes get pages from the mempool (from work queue).
->
-> Signed-off-by: Song Liu <songliubraving@fb.com>
-> ---
->  drivers/md/raid5-cache.c | 100 ++++++++++++++++++++++++++++++++++++++++++++++-
->  drivers/md/raid5.c       |  34 +++++++++++-----
->  drivers/md/raid5.h       |   6 +++
->  3 files changed, 130 insertions(+), 10 deletions(-)
+I have reverted my addition of "mpt3sas" from
+/etc/initramfs-tools/modules and rebooted, so that md5 is again not
+assembled.
 
-This looks *way* more complex that I feel comfortable with.  I cannot
-see any obvious errors, but I find it hard to be confident there aren't
-any, or that errors won't creep in.
+Result of
 
-We already have mechanisms for delaying stripes.  It would be nice to
-re-use those.
+    udevadm info /dev/sdc
 
-Ideally, when using a mempool, a single allocation from the mempool
-should provide all you need for a single transaction.  For that to work
-in this case, each object in the mempool would need to hold raid_disks-1
-pages.  However in many cases we don't need that many, usually fewer
-than raid_disks/2.  So it would be wasteful or clumsy, or both.
-So I would:
+P: /devices/pci0000:00/0000:00:01.0/0000:01:00.0/host10/port-10:0/end_device-10:0/target10:0:0/10:0:0:0/block/sdc
+N: sdc
+S: disk/by-id/ata-SAMSUNG_MZ7KM1T9HAJM-00005_S2HNNAAH200633
+S: disk/by-id/wwn-0x5002538c0007e7a8
+S: disk/by-path/pci-0000:01:00.0-sas-0x4433221100000000-lun-0
+E: DEVLINKS=/dev/disk/by-id/ata-SAMSUNG_MZ7KM1T9HAJM-00005_S2HNNAAH200633 /dev/disk/by-id/wwn-0x5002538c0007e7a8 /dev/disk/by-path/pci-0000:01:00.0-sas-0x4433221100000000-lun-0
+E: DEVNAME=/dev/sdc
+E: DEVPATH=/devices/pci0000:00/0000:00:01.0/0000:01:00.0/host10/port-10:0/end_device-10:0/target10:0:0/10:0:0:0/block/sdc 
+E: DEVTYPE=disk
+E: ID_ATA=1
+E: ID_ATA_DOWNLOAD_MICROCODE=1
+E: ID_ATA_FEATURE_SET_HPA=1
+E: ID_ATA_FEATURE_SET_HPA_ENABLED=1
+E: ID_ATA_FEATURE_SET_PM=1
+E: ID_ATA_FEATURE_SET_PM_ENABLED=1
+E: ID_ATA_FEATURE_SET_SECURITY=1
+E: ID_ATA_FEATURE_SET_SECURITY_ENABLED=0
+E: ID_ATA_FEATURE_SET_SECURITY_ENHANCED_ERASE_UNIT_MIN=32
+E: ID_ATA_FEATURE_SET_SECURITY_ERASE_UNIT_MIN=32
+E: ID_ATA_FEATURE_SET_SMART=1
+E: ID_ATA_FEATURE_SET_SMART_ENABLED=1
+E: ID_ATA_ROTATION_RATE_RPM=0
+E: ID_ATA_SATA=1
+E: ID_ATA_SATA_SIGNAL_RATE_GEN1=1
+E: ID_ATA_SATA_SIGNAL_RATE_GEN2=1
+E: ID_ATA_WRITE_CACHE=1
+E: ID_ATA_WRITE_CACHE_ENABLED=1
+E: ID_BUS=ata
+E: ID_FS_LABEL=tbd:5
+E: ID_FS_LABEL_ENC=tbd:5
+E: ID_FS_TYPE=linux_raid_member
+E: ID_FS_USAGE=raid
+E: ID_FS_UUID=957030cf-c09f-023d-ceae-bb27e546f095
+E: ID_FS_UUID_ENC=957030cf-c09f-023d-ceae-bb27e546f095
+E: ID_FS_UUID_SUB=4ac82c29-2d10-9465-7fff-9b228c411c1e
+E: ID_FS_VERSION=1.2
+E: ID_MODEL=SAMSUNG_MZ7KM1T9HAJM-00005
+E: ID_MODEL_ENC=SAMSUNG\x20MZ7KM1T9HAJM-00005\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20
+E: ID_PATH=pci-0000:01:00.0-sas-0x4433221100000000-lun-0
+E: ID_PATH_TAG=pci-0000_01_00_0-sas-0x4433221100000000-lun-0
+E: ID_REVISION=GXM1003Q
+E: ID_SERIAL=SAMSUNG_MZ7KM1T9HAJM-00005_S2HNNAAH200633
+E: ID_SERIAL_SHORT=S2HNNAAH200633
+E: ID_TYPE=disk
+E: ID_WWN=0x5002538c0007e7a8
+E: ID_WWN_WITH_EXTENSION=0x5002538c0007e7a8
+E: MAJOR=8
+E: MINOR=32
+E: SUBSYSTEM=block
+E: TAGS=:systemd:
+E: USEC_INITIALIZED=43226
 
- - preallocate a single set of spare pages, and store them, one each, in
-   the disk_info structures.
- - add a flag to cache_state to record if these pages are in use.
- - if alloc_page() fails and test_and_set() on the bit succeeds, then
-     use pages from disk_info
- - if alloc_page() fails and test_and_set() fails, set STRIPE_DELAYED
- - raid5_activate_delayed() doesn't active stripes if the flag is set,
-   showing that the spare pages are in use.
+I then issued
 
-I think that would be much simpler, and should be just as effective.
+    echo change > /sys/block/sdc/uevent
+
+and
+
+    echo change > /sys/block/sdd/uevent
+
+which resulted in the monitor showing:
+
+KERNEL[572.956390] change   /devices/pci0000:00/0000:00:01.0/0000:01:00.0/host10/port-10:0/end_device-10:0/target10:0:0/10:0:0:0/block/sdc (block)
+UDEV  [572.960256] change   /devices/pci0000:00/0000:00:01.0/0000:01:00.0/host10/port-10:0/end_device-10:0/target10:0:0/10:0:0:0/block/sdc (block)
+KERNEL[593.140178] change   /devices/pci0000:00/0000:00:01.0/0000:01:00.0/host10/port-10:1/end_device-10:1/target10:0:1/10:0:1:0/block/sdd (block)
+UDEV  [593.143824] change   /devices/pci0000:00/0000:00:01.0/0000:01:00.0/host10/port-10:1/end_device-10:1/target10:0:1/10:0:1:0/block/sdd (block)
+
+But no assembly of md5.
+
+Afterwards,
+
+    udevadm info /dev/sdc
+
+showed:
+
+P: /devices/pci0000:00/0000:00:01.0/0000:01:00.0/host10/port-10:0/end_device-10:0/target10:0:0/10:0:0:0/block/sdc
+N: sdc
+S: disk/by-id/ata-SAMSUNG_MZ7KM1T9HAJM-00005_S2HNNAAH200633
+S: disk/by-id/wwn-0x5002538c0007e7a8
+S: disk/by-path/pci-0000:01:00.0-sas-0x4433221100000000-lun-0
+E: DEVLINKS=/dev/disk/by-id/ata-SAMSUNG_MZ7KM1T9HAJM-00005_S2HNNAAH200633 /dev/disk/by-id/wwn-0x5002538c0007e7a8 /dev/disk/by-path/pci-0000:01:00.0-sas-0x4433221100000000-lun-0
+E: DEVNAME=/dev/sdc
+E: DEVPATH=/devices/pci0000:00/0000:00:01.0/0000:01:00.0/host10/port-10:0/end_device-10:0/target10:0:0/10:0:0:0/block/sdc
+E: DEVTYPE=disk
+E: ID_ATA=1
+E: ID_ATA_DOWNLOAD_MICROCODE=1
+E: ID_ATA_FEATURE_SET_HPA=1
+E: ID_ATA_FEATURE_SET_HPA_ENABLED=1
+E: ID_ATA_FEATURE_SET_PM=1
+E: ID_ATA_FEATURE_SET_PM_ENABLED=1
+E: ID_ATA_FEATURE_SET_SECURITY=1
+E: ID_ATA_FEATURE_SET_SECURITY_ENABLED=0
+E: ID_ATA_FEATURE_SET_SECURITY_ENHANCED_ERASE_UNIT_MIN=32
+E: ID_ATA_FEATURE_SET_SECURITY_ERASE_UNIT_MIN=32
+E: ID_ATA_FEATURE_SET_SMART=1
+E: ID_ATA_FEATURE_SET_SMART_ENABLED=1
+E: ID_ATA_ROTATION_RATE_RPM=0
+E: ID_ATA_SATA=1
+E: ID_ATA_SATA_SIGNAL_RATE_GEN1=1
+E: ID_ATA_SATA_SIGNAL_RATE_GEN2=1
+E: ID_ATA_WRITE_CACHE=1
+E: ID_ATA_WRITE_CACHE_ENABLED=1
+E: ID_BUS=ata
+E: ID_FS_LABEL=tbd:5
+E: ID_FS_LABEL_ENC=tbd:5
+E: ID_FS_TYPE=linux_raid_member
+E: ID_FS_USAGE=raid
+E: ID_FS_UUID=957030cf-c09f-023d-ceae-bb27e546f095
+E: ID_FS_UUID_ENC=957030cf-c09f-023d-ceae-bb27e546f095
+E: ID_FS_UUID_SUB=4ac82c29-2d10-9465-7fff-9b228c411c1e
+E: ID_FS_UUID_SUB_ENC=4ac82c29-2d10-9465-7fff-9b228c411c1e
+E: ID_FS_VERSION=1.2
+E: ID_MODEL=SAMSUNG_MZ7KM1T9HAJM-00005
+E: ID_MODEL_ENC=SAMSUNG\x20MZ7KM1T9HAJM-00005\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20
+E: ID_PATH=pci-0000:01:00.0-sas-0x4433221100000000-lun-0
+E: ID_PATH_TAG=pci-0000_01_00_0-sas-0x4433221100000000-lun-0
+E: ID_REVISION=GXM1003Q
+E: ID_SERIAL=SAMSUNG_MZ7KM1T9HAJM-00005_S2HNNAAH200633
+E: ID_SERIAL_SHORT=S2HNNAAH200633
+E: ID_TYPE=disk
+E: ID_WWN=0x5002538c0007e7a8
+E: ID_WWN_WITH_EXTENSION=0x5002538c0007e7a8
+E: MAJOR=8
+E: MINOR=32
+E: SUBSYSTEM=block
+E: TAGS=:systemd:
+E: USEC_INITIALIZED=43226
 
 Thanks,
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAEBCAAGBQJYMoCFAAoJEDnsnt1WYoG5CxAQAL7mAoqdx9dbbPD7qeF4nywp
-7SCNnoeMHMvbWe+5WuTSURQmDNJqqp2Uh5Lt4VgszdmTmL+puS9/MgkjnDzKt+gZ
-K0NI4XXLcUFeePUgTLcCkqH8v110yyQYSaHS4Mi0AOOjfWBdQ3FRbF2fSgguZ54p
-tw3OGh/wpaciqJh7rbPuWDADluL9ABJBjoxuutx97gklpXjD/tbuq1PJ0QelKaOA
-74yVEjlyiow2dM+lAD+dPHnjr9i3uiIU1AClmhIH7751Hu8UN/LCtPjUcFb5GTZQ
-6sPyObHZ9nOtau3y4OXiG/Y0KxVWVdiO8bF2ifz45bB9ggMTPu0TS2nIBLVwhGqp
-FbQxD+IOruu4H87f/9SXFy/JFVC55u1gV0L/BLlsin56TGFisIqY2lShW/I92vj1
-k3TQsHLfsSIyNepF5vyOGyxUPm565W4INFbStorKkfMNgocOfWkmIB8jkHqWMiwz
-7+Wjgi31F7aENfIEsbWt3pP/Ncc59NOG+7UKRsg6GiJFrA1DKI6cFfU16gUS3gRN
-exZsc7IfKUQSsO925sObc1YXnKvddHjRyySAVdzFYz34oriU+v56nCqYFfAGgDL9
-RRlgHSVFYVIll1z+dEDpT/+BsgWtm96SqzUgIiFRnNfplGi0ChUCA0k1UjEk62cb
-GpwCFdfnfeYRV+1JTAtq
-=o2uw
------END PGP SIGNATURE-----
---=-=-=--
+Andy
