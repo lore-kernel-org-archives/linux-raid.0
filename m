@@ -1,7 +1,8 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [md PATCH 1/5] md: optimize md_write_start() slightly.
+Subject: [md PATCH 2/5] md/raid5: use md_write_start to count stripes,
+ not bios
 Date: Mon, 21 Nov 2016 12:19:43 +1100
-Message-ID: <147969118311.5434.4562756561505136744.stgit@noble>
+Message-ID: <147969118330.5434.9548726247224162889.stgit@noble>
 References: <147969099621.5434.12384452255155063186.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,81 +14,116 @@ To: Shaohua Li <shli@kernel.org>
 Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Christoph Hellwig <hch@lst.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If md_write_start() finds that ->writes_pending is non-zero, it
-should be able to avoid most of the other checks.
+We use md_write_start() to increase the count of pending writes, and
+md_write_end() to decrement the count.  We currently count bios
+submitted to md/raid5.  Change it count stripe_heads that a WRITE bio
+has been attached to.
 
-To ensure that a non-zero ->writes_pending does mean that other checks
-have completed, move it down until after ->in_sync is known to be
-clear.  To avoid races with places like array_state_store() which
-possible sets ->in_sync, we need to increment ->write_pending inside
-the locked region.  As ->writes_pending is now incremented *after*
-->in_sync is tested, we must always take the spin_lock, but only if
-->writes_pending was found to be zero.
+So raid5_make_request() call md_write_start() and then md_write_end().
+add_stripe_bio() calls md_write_start() for each stripe_head, and the
+completion routines always call md_write_end(), instead of only
+calling when raid5_dec_bi_active_stripes() returns 0.
 
-If ->writes_pending is found to be non-zero, we still need to wait it
-MD_CHANGE_PENDING is true.
-
-In the common case, md_write_start() will now only
- - check if data_dir is WRITE
- - increment ->writes_pending
- - check MD_CHANGE_PENDING is cleared.
+This reduces our dependence on keeping a per-bio count of active
+stripes in bi_phys_segments.
 
 Signed-off-by: NeilBrown <neilb@suse.com>
 ---
- drivers/md/md.c |   32 ++++++++++++++++----------------
- 1 file changed, 16 insertions(+), 16 deletions(-)
+ drivers/md/raid5.c |   25 +++++++++++--------------
+ 1 file changed, 11 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 1f1c7f007b68..2f21f6c7156f 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -7686,20 +7686,18 @@ void md_write_start(struct mddev *mddev, struct bio *bi)
- 	int did_change = 0;
- 	if (bio_data_dir(bi) != WRITE)
- 		return;
--
--	BUG_ON(mddev->ro == 1);
--	if (mddev->ro == 2) {
--		/* need to switch to read/write */
--		mddev->ro = 0;
--		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
--		md_wakeup_thread(mddev->thread);
--		md_wakeup_thread(mddev->sync_thread);
--		did_change = 1;
--	}
--	atomic_inc(&mddev->writes_pending);
--	if (mddev->safemode == 1)
--		mddev->safemode = 0;
--	if (mddev->in_sync) {
-+	if (!atomic_inc_not_zero(&mddev->writes_pending)) {
-+		BUG_ON(mddev->ro == 1);
-+		if (mddev->ro == 2) {
-+			/* need to switch to read/write */
-+			mddev->ro = 0;
-+			set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-+			md_wakeup_thread(mddev->thread);
-+			md_wakeup_thread(mddev->sync_thread);
-+			did_change = 1;
-+		}
-+		if (mddev->safemode == 1)
-+			mddev->safemode = 0;
- 		spin_lock(&mddev->lock);
- 		if (mddev->in_sync) {
- 			mddev->in_sync = 0;
-@@ -7708,10 +7706,12 @@ void md_write_start(struct mddev *mddev, struct bio *bi)
- 			md_wakeup_thread(mddev->thread);
- 			did_change = 1;
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index df88656d8798..d07d2dce6856 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -2998,6 +2998,7 @@ static int add_stripe_bio(struct stripe_head *sh, struct bio *bi, int dd_idx,
+ 		bi->bi_next = *bip;
+ 	*bip = bi;
+ 	raid5_inc_bi_active_stripes(bi);
++	md_write_start(conf->mddev, bi);
+ 
+ 	if (forwrite) {
+ 		/* check if page is covered */
+@@ -3121,10 +3122,9 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
+ 			struct bio *nextbi = r5_next_bio(bi, sh->dev[i].sector);
+ 
+ 			bi->bi_error = -EIO;
+-			if (!raid5_dec_bi_active_stripes(bi)) {
+-				md_write_end(conf->mddev);
++			md_write_end(conf->mddev);
++			if (!raid5_dec_bi_active_stripes(bi))
+ 				bio_list_add(return_bi, bi);
+-			}
+ 			bi = nextbi;
  		}
-+		atomic_inc(&mddev->writes_pending);
- 		spin_unlock(&mddev->lock);
-+
-+		if (did_change)
-+			sysfs_notify_dirent_safe(mddev->sysfs_state);
+ 		if (bitmap_end)
+@@ -3145,10 +3145,9 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
+ 			struct bio *bi2 = r5_next_bio(bi, sh->dev[i].sector);
+ 
+ 			bi->bi_error = -EIO;
+-			if (!raid5_dec_bi_active_stripes(bi)) {
+-				md_write_end(conf->mddev);
++			md_write_end(conf->mddev);
++			if (!raid5_dec_bi_active_stripes(bi))
+ 				bio_list_add(return_bi, bi);
+-			}
+ 			bi = bi2;
+ 		}
+ 
+@@ -3490,10 +3489,9 @@ static void handle_stripe_clean_event(struct r5conf *conf,
+ 				while (wbi && wbi->bi_iter.bi_sector <
+ 					dev->sector + STRIPE_SECTORS) {
+ 					wbi2 = r5_next_bio(wbi, dev->sector);
+-					if (!raid5_dec_bi_active_stripes(wbi)) {
+-						md_write_end(conf->mddev);
++					md_write_end(conf->mddev);
++					if (!raid5_dec_bi_active_stripes(wbi))
+ 						bio_list_add(return_bi, wbi);
+-					}
+ 					wbi = wbi2;
+ 				}
+ 				bitmap_endwrite(conf->mddev->bitmap, sh->sector,
+@@ -5142,9 +5140,9 @@ static void make_discard_request(struct mddev *mddev, struct bio *bi)
+ 		release_stripe_plug(mddev, sh);
  	}
--	if (did_change)
--		sysfs_notify_dirent_safe(mddev->sysfs_state);
- 	wait_event(mddev->sb_wait,
- 		   !test_bit(MD_CHANGE_PENDING, &mddev->flags));
+ 
++	md_write_end(mddev);
+ 	remaining = raid5_dec_bi_active_stripes(bi);
+ 	if (remaining == 0) {
+-		md_write_end(mddev);
+ 		bio_endio(bi);
+ 	}
  }
+@@ -5173,8 +5171,6 @@ static void raid5_make_request(struct mddev *mddev, struct bio * bi)
+ 		/* ret == -EAGAIN, fallback */
+ 	}
+ 
+-	md_write_start(mddev, bi);
+-
+ 	/*
+ 	 * If array is degraded, better not do chunk aligned read because
+ 	 * later we might have to read it again in order to reconstruct
+@@ -5196,6 +5192,7 @@ static void raid5_make_request(struct mddev *mddev, struct bio * bi)
+ 	last_sector = bio_end_sector(bi);
+ 	bi->bi_next = NULL;
+ 	bi->bi_phys_segments = 1;	/* over-loaded to count active stripes */
++	md_write_start(mddev, bi);
+ 
+ 	prepare_to_wait(&conf->wait_for_overlap, &w, TASK_UNINTERRUPTIBLE);
+ 	for (;logical_sector < last_sector; logical_sector += STRIPE_SECTORS) {
+@@ -5324,11 +5321,11 @@ static void raid5_make_request(struct mddev *mddev, struct bio * bi)
+ 	}
+ 	finish_wait(&conf->wait_for_overlap, &w);
+ 
++	if (rw == WRITE)
++		md_write_end(mddev);
+ 	remaining = raid5_dec_bi_active_stripes(bi);
+ 	if (remaining == 0) {
+ 
+-		if ( rw == WRITE )
+-			md_write_end(mddev);
+ 
+ 		trace_block_bio_complete(bdev_get_queue(bi->bi_bdev),
+ 					 bi, 0);
 
 
