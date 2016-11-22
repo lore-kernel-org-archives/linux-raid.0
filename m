@@ -1,32 +1,67 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH 07/12] dm: use bvec iterator helpers to implement
- .get_page and .next_page
-Date: Tue, 22 Nov 2016 08:26:19 +0800
-Message-ID: <CACVXFVOHLMC+qHZco7S675PnbbNQyDH+qobcjdtJEyTE41gEmw@mail.gmail.com>
-References: <1478865957-25252-1-git-send-email-tom.leiming@gmail.com>
- <1478865957-25252-8-git-send-email-tom.leiming@gmail.com> <20161121144956.GB23051@redhat.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [md PATCH 0/5] Stop using bi_phys_segments as a counter
+Date: Mon, 21 Nov 2016 17:02:20 -0800
+Message-ID: <20161122010220.dcq6brjhsliw4io6@kernel.org>
+References: <147969099621.5434.12384452255155063186.stgit@noble>
+ <20161121234311.6qhwa2g3oa4uhcbi@kernel.org>
+ <87mvgscqe7.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20161121144956.GB23051@redhat.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Jens Axboe <axboe@fb.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Alasdair Kergon <agk@redhat.com>, "maintainer:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>, Shaohua Li <shli@kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <87mvgscqe7.fsf@notabene.neil.brown.name>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Christoph Hellwig <hch@lst.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Nov 21, 2016 at 10:49 PM, Mike Snitzer <snitzer@redhat.com> wrote:
-> On Fri, Nov 11 2016 at  7:05am -0500,
-> Ming Lei <tom.leiming@gmail.com> wrote:
->
->> Firstly we have mature bvec/bio iterator helper for iterate each
->> page in one bio, not necessary to reinvent a wheel to do that.
->>
->> Secondly the coming multipage bvecs requires this patch.
->>
->> Also add comments about the direct access to bvec table.
->>
->> Signed-off-by: Ming Lei <tom.leiming@gmail.com>
->
-> I've staged this for 4.10
+On Tue, Nov 22, 2016 at 11:25:04AM +1100, Neil Brown wrote:
+> On Tue, Nov 22 2016, Shaohua Li wrote:
+> 
+> > On Mon, Nov 21, 2016 at 12:19:43PM +1100, Neil Brown wrote:
+> >> There are 2 problems with using bi_phys_segments as a counter
+> >> 1/ we only use 16bits, which limits bios to 256M
+> >> 2/ it is poor form to reuse a field like this.  It interferes
+> >>    with other changes to bios.
+> >> 
+> >> We need to clean up a few things before we can change the use the
+> >> counter which is now available inside a bio.
+> >> 
+> >> I have only tested this lightly.  More review and testing would be
+> >> appreciated.
+> >
+> > So without the accounting, we:
+> > - don't do bio completion trace
+> 
+> Yes, but hopefully that will be added back to bio_endio() soon.
+> 
+> > - call md_write_start/md_write_end excessively, which involves atomic operation.
+> 
+> raid5_inc_bio_active_stripes() did an atomic operation.  I don't think
+> there is a net increase in the number of atomic operations.
 
-Thanks Mike!
+That's different. md_write_start/end uses a global atomic.
+raid5_inc_bio_active_stripes uses a bio atomic. So we have more cache bouncing now.
+ 
+> >
+> > Not big problems. But we are actually reusing __bi_remaining, I'm wondering why
+> > we not explicitly reuse it. Eg, adds bio_dec_remaining_return() and uses it
+> > like raid5_dec_bi_active_stripes.
+> 
+> Because using it exactly the same way that other places use it leads to
+> fewer surprises, now or later.
+> And I think that the effort to rearrange the code so that we could just
+> call bio_endio() brought real improvements in code clarity and
+> simplicity.
+
+Not the same way. The return_bi list and retry list fix are still good. We can
+replace the bio_endio in your patch with something like:
+if (bio_dec_remaining_return() == 0) {
+	trace_block_bio_complete()
+	md_write_end()
+	bio_endio();
+}
+This will give us better control when to end io.
+
+Thanks,
+Shaohua
