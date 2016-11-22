@@ -1,95 +1,75 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [RFC PATCH 2/2] RAID1: avoid unnecessary spin locks in I/O
- barrier code
-Date: Tue, 22 Nov 2016 13:58:57 -0800
-Message-ID: <20161122215857.g4l66hoawdroyo24@kernel.org>
-References: <1479765241-15528-1-git-send-email-colyli@suse.de>
- <1479765241-15528-2-git-send-email-colyli@suse.de>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Please help RAID1 complete fail no superblock
+Date: Tue, 22 Nov 2016 17:01:07 -0500
+Message-ID: <d1b93e98-5d6a-01e4-5272-e3cd61e9136d@turmel.org>
+References: <869594.583611132-sendEmail@optimum>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1479765241-15528-2-git-send-email-colyli@suse.de>
+In-Reply-To: <869594.583611132-sendEmail@optimum>
 Sender: linux-raid-owner@vger.kernel.org
-To: Coly Li <colyli@suse.de>
-Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Hannes Reinecke <hare@suse.com>, Neil Brown <neilb@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Guoqing Jiang <gqjiang@suse.com>
+To: "theelectricengineer@gmail.com" <theelectricengineer@gmail.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "antlists@youngman.org.uk" <antlists@youngman.org.uk>, "george.rapp@gmail.com" <george.rapp@gmail.com>
 List-Id: linux-raid.ids
 
-On Tue, Nov 22, 2016 at 05:54:01AM +0800, Coly Li wrote:
-> When I run a parallel reading performan testing on a md raid1 device with
-> two NVMe SSDs, I observe very bad throughput in supprise: by fio with 64KB
-> block size, 40 seq read I/O jobs, 128 iodepth, overall throughput is
-> only 2.7GB/s, this is around 50% of the idea performance number.
-> 
-> The perf reports locking contention happens at allow_barrier() and
-> wait_barrier() code,
->  - 41.41%  fio [kernel.kallsyms]     [k] _raw_spin_lock_irqsave
->    - _raw_spin_lock_irqsave
-> 	 + 89.92% allow_barrier
-> 	 + 9.34% __wake_up
->  - 37.30%  fio [kernel.kallsyms]     [k] _raw_spin_lock_irq
->    - _raw_spin_lock_irq
-> 	 - 100.00% wait_barrier 
-> 
-> The reason is, in these I/O barrier related functions,
->  - raise_barrier()
->  - lower_barrier()
->  - wait_barrier()
->  - allow_barrier()
-> They always hold conf->resync_lock firstly, even there are only regular
-> reading I/Os and no resync I/O at all. This is a huge performance penalty.
-> 
-> The solution is a lockless-like algorithm in I/O barrier code, and only
-> holding conf->resync_lock when it is really necessary.
-> 
-> The original idea is from Hannes Reinecke, and Neil Brown provides
-> comments to improve it. Now I write the patch based on new simpler raid1
-> I/O barrier code.
-> 
-> In the new simpler raid1 I/O barrier implementation, there are two
-> wait barrier functions,
->  - wait_barrier()
->    Which in turns calls _wait_barrier(), is used for regular write I/O.
->    If there is resync I/O happening on the same barrier bucket index, or
->    the whole array is frozen, task will wait untill no barrier on same
->    bucket index, or the whold array is unfreezed.
->  - wait_read_barrier()
->    Since regular read I/O won't interfere with resync I/O (read_balance()
->    will make sure only uptodate data will be read out), so it is
->    unnecessary to wait for barrier in regular read I/Os, they only have to
->    wait only when the whole array is frozen.
-> The operations on conf->nr_pending[idx], conf->nr_waiting[idx], conf->
-> barrier[idx] are very carefully designed in raise_barrier(),
-> lower_barrier(), _wait_barrier() and wait_read_barrier(), in order to
-> avoid unnecessary spin locks in these functions. Once conf->
-> nr_pengding[idx] is increased, a resync I/O with same barrier bucket index
-> has to wait in raise_barrier(). Then in _wait_barrier() or
-> wait_read_barrier() if no barrier raised in same barrier bucket index or
-> array is not frozen, the regular I/O doesn't need to hold conf->
-> resync_lock, it can just increase conf->nr_pending[idx], and return to its
-> caller. For heavy parallel reading I/Os, the lockless I/O barrier code
-> almostly gets rid of all spin lock cost.
-> 
-> This patch significantly improves raid1 reading peroformance. From my
-> testing, a raid1 device built by two NVMe SSD, runs fio with 64KB
-> blocksize, 40 seq read I/O jobs, 128 iodepth, overall throughput
-> increases from 2.7GB/s to 4.6GB/s (+70%).
-> 
-> Open question:
->  - I am not comfortable with freeze_array() and unfreeze_array(), for
->    writing I/Os if devices failed, wait_barrier() may have race with
->    freeze_array(), I am still looking for a solution now.
+Hi Yaniv,
 
-Only have rough review so far, this one does need more time to look.
+On 11/22/2016 03:38 PM, theelectricengineer@gmail.com wrote:
 
-Since you make all the count atomic, is it safe to check several atomic at the
-same time? For example, in freeze_array we check both nr_queued and nr_pending,
-but they are updated without lock so could be in any order. Please add comments
-to explain.
+> Thank you for informing me about the conventions,
+> I'll try to conform to all of them.
+> (what does trim quotes mean?)
 
-Also you need to add smp_mb__after_atomic and friends to maintain ordering. An
-example is _wait_barrier, 'atomic_inc(&conf->nr_pending[idx])' should happen
-before read 'barrier'.
+Trim quotes means to delete repetitive material in the quotation of the
+previous mail, leaving just the part(s) you are responding to.
+Especially remove signature blocks and large blocks of data.  The list
+archives will have the original mails for anyone interested later.
 
-Thanks,
-Shaohua
+> I tried sending these emails through gmail and Thunderbird
+> but kept getting an automatic reply saying that the emails were blocked,
+> so I'm sending this via the command line (linux terminal).
+> I don't know how to avoid breaking the thread this way.
+
+I received all of them (-:  You need to turn off "html" output --
+kernel.org rejects HTML email, even if there's a plain-text alternate in
+the mail.  In thunderbird, go to "Preferences", "Composition",
+"General", "Send Options..." and then set the check box for sending in
+plain text.
+
+Avoid sending from Gmail -- it's possible but there are quirks.
+
+> I ran both gdisk and parted, here is the output:
+> 
+> gdisk -l /dev/sdb
+> GPT fdisk (gdisk) version 0.8.5
+
+> Number  Start (sector)    End (sector)  Size       Code  Name
+>    1            2048      5860532223   2.7 TiB     0700 
+
+This is good.
+
+> gdisk -l /dev/sdc
+> GPT fdisk (gdisk) version 0.8.5
+
+> Number  Start (sector)    End (sector)  Size       Code  Name
+
+This is bad.
+
+> (there are no values for sdc in both gdisk and parted, looks bad)
+
+Yup.  Please provide the output of these two commands in separate
+replies (they'll be too big for one reply):
+
+dd if=/dev/sdb1 bs=4k count=4k |hexdump -C |head -n1000
+
+dd if=/dev/sdc bs=4k count=4k |hexdump -C |head -n1000
+
+> I greatly appreciate your help.
+> 
+> Thank you,
+
+You're welcome.  And don't panic.
+
+Phil
+
