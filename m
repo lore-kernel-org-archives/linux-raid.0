@@ -1,175 +1,122 @@
-From: Felipe Kich <fkich1977@gmail.com>
-Subject: Re: Help in recovering a RAID5 volume
-Date: Tue, 22 Nov 2016 14:12:10 -0200
-Message-ID: <CA+GmhESq=9MtnU8baeHUd+8eCwFDDycLXmihdgxU3WHFsFCNfw@mail.gmail.com>
-References: <CA+GmhESH-2hDJrOjvNzVBsgCP65BnUE2AbfOZ1Bbrp02jyBNUQ@mail.gmail.com>
- <5824A918.3030300@youngman.org.uk> <CA+GmhESqEQd6J3CSteR08qw907NnC7r1ewecs3NkWUmpei6BVw@mail.gmail.com>
- <5824C354.3060209@youngman.org.uk>
+From: "theelectricengineer@gmail.com" <theelectricengineer@gmail.com>
+Subject: Re:Please help RAID1 complete fail no superblock
+Date: Tue, 22 Nov 2016 16:24:25 +0000
+Message-ID: <856401.507833169-sendEmail@optimum>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/mixed; boundary="----MIME delimiter for sendEmail-458818.844360398"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5824C354.3060209@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: linux-raid@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello again Anthony,
+This is a multi-part message in MIME format. To properly display this message you need a MIME-Version 1.0 compliant Email program.
 
-Well, it's been two weeks and only now I got the time to return to the
-task of trying to recover that failed RAID5 volume.
-Following your recommendations I ddrescue'd all 4 1TB drives to a
-single (partitioned) 4TB drive.
-Problem is, now mdadm can't mount the array, it's compaining about
-missing superblocks. Below is what I've done so far.
+------MIME delimiter for sendEmail-458818.844360398
+Content-Type: text/plain;
+        charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 
-I've created four partitions on a single 4TB HDD. I then used ddrescue
-to copy the contents from the original disks to it.
-To avoid confusion when reading the logs, let me explain how the
-computer was setup:
-
-- sda is the system disk. Runs Mint.
-- sdb is the 4TB disk.
-- sdc is a 1TB disk from the array. I connected the 1st disk,
-ddrescue'd it, shut down the PC, replaced the disk, and so on. So, the
-original disks are always sdc in the outputs below.
-
-So disk1 (sda) was copied to sdb1, disk2 (sdb) to sdb2, disk3 (sdc) to
-sdb3 and disk4 (sdd) to sdb4.
-
-I've used ddrescue version 1.19 and always the same command line:
-ddrescue --force --verbose /dev/sdc2 /dev/sdb% mapfile.disco%
-
---------------------------------------------------------------------------------
-Mapfile for Disk 1
-
-# current_pos  current_status
-0xE864540000     +
-#      pos        size  status
-0x00000000  0xE864546400  +
---------------------------------------------------------------------------------
-Mapfile for Disk 2
-
-# current_pos  current_status
-0xE864540000     +
-#      pos        size  status
-0x00000000  0xE864546400  +
---------------------------------------------------------------------------------
-Mapfile for Disk 3
-
-# current_pos  current_status
-0x3FDB717C00     +
-#      pos        size  status
-0x00000000  0x3FDB717000  +
-0x3FDB717000  0x00001000  -
-0x3FDB718000  0xA888E2E400  +
---------------------------------------------------------------------------------
-Mapfile for Disk 4
-
-# current_pos  current_status
-0xE864546000     +
-#      pos        size  status
-0x00000000  0x3A78C80000  +
-0x3A78C80000  0xADEB8B0000  -
-0xE864530000  0x00001000  +
-0xE864531000  0x00013000  -
-0xE864544000  0x00001000  +
-0xE864545000  0x00001400  -
---------------------------------------------------------------------------------
-
-After that, I tried to verify the data in the partitions, and got that:
-
---------------------------------------------------------------------------------
-root@it:/home/it/Desktop# mdadm --examine /dev/sdb
-/dev/sdb:
-   MBR Magic : aa55
-Partition[0] :  4294967295 sectors at            1 (type ee)
-
-root@it:/home/it/Desktop# mdadm --examine /dev/sdb1
-mdadm: /dev/sdb1 has no superblock - assembly aborted
-
-root@it:/home/it/Desktop# mdadm --examine /dev/sdb2
-mdadm: /dev/sdb2 has no superblock - assembly aborted
-
-root@it:/home/it/Desktop# mdadm --examine /dev/sdb3
-mdadm: /dev/sdb3 has no superblock - assembly aborted
-
-root@it:/home/it/Desktop# mdadm --examine /dev/sdb4
-mdadm: /dev/sdb4 has no superblock - assembly aborted
---------------------------------------------------------------------------------
-
-And if I try to assemble the array, mdadm tells me that there's no
-superblocks in sdb1.
-
-So now I'm stuck. Any tips on what should I do next?
-
-I don't know if it matters, but the original disks have 2 partitions,
-the first being where the EMC Lifeline software is installed (less
-than 2GB), and the rest is the data partition. When I ddrescue'd, I
-only copied the 2nd (data) partition.
-
-Out of curiosity, I opened GParted to see if it can identify the
-partitions. It recognizes sdb1 and sdb4 as "LVM PV", but sdb2 and sdb3
-are unknown.
-
-That's it for now. I'll keep reading about what can be done and
-waiting for some more help from the list.
-
-Regards,
-
--
-Felipe Kich
-51-9622-2067
-
-
-2016-11-10 16:58 GMT-02:00 Wols Lists <antlists@youngman.org.uk>:
-> On 10/11/16 17:47, Felipe Kich wrote:
->> Hi Anthony,
+>On 22/11/16 14:49, George Rapp wrote:
+>> On Tue, Nov 22, 2016 at 9:31 AM, theelectricengineer@gmail.com
+>> <theelectricengineer@gmail.com> wrote:
+>>> Hello good people of the linux-raid group,
+>>>
+>>> I really need your help with my RAID1 that has completely failed, on which I have photos of my beloved deceased grandparents.
+>>>
+>>> I had the RAID1 array for about 3 years, and I had replaced one of the drives when it failed about one year ago. All worked fine.
+>>>
+>>> A few weeks ago, I bought a new computer and wanted to move the array to the new computer.
+>>> I read several guides, and thought that all I had to do was turn both computers off, move the drives, and in the new computer execute: mdadm --assemble --scan
+>>> which I did.
+>>>
+>>> The output was: mdadm: /dev/sdb has no superblock - assembly aborted
+>>>
+>>> I panicked, moved the drives back, but the old RAID wouldn't start!
+>>> The old computer too says that one of the drives has no superblock
+>>> and, even worse, that the other is UNALLOCATED SPACE!!!
+>>>
+>>> I don't understand why the partition on the second drive disappeared, and I'm so worried.
+>>>
+>>> PLEASE, PLEASE help me...
+>>>
+>>> I read the wiki pages (raid wiki kernel), but I'm afraid to run any commands that might make things worse.
+>>>
+>>> I would be very happy if I could restore the data from either one of the drives,
+>>> and copy it to the new drives in my new computer (as I should have done before moving the drives).
+>>>
 >>
->> Thanks for the reply. Here's some answers to your questions and also
->> another question.
+>> Yaniv -
 >>
->> It really seems that 2 disks are bad, but 2 are still good, according
->> to SMART. I'll replace them ASAP.
->> For now, I don't need to increase the array size. It's more than
->> enough for what I need.
+>> One more piece of information that would be helpful is the partition
+>> tables for each drive:
 >>
-> You might find the extra price of larger drives is minimal. It's down to
-> you. And even 2TB drives would give you the space to go raid-6.
->
->> About the drive duplication, I don't have spare discs available now
->> for that, I only have one 4TB disk at hand, so I'd like to know if
->> it's possible to create device images that I can mount and try to
->> rebuild the array, to test if it would work, then I can go and buy new
->> disks to replace the defective ones.
->
-> Okay, if you've got a 4TB drive ...
->
-> I can't remember what the second bad drive was ... iirc the one that was
-> truly dud was sdc ...
->
-> So. What I'd do is create two partitions on the 4TB that are the same
-> (or possibly slightly larger) than your sdx1 partition. ddrescue the 1
-> partition from the best of the dud drives across. Create two partitions
-> the same size (or larger) than your sdx2 partition, and likewise
-> ddrescue the 2 partition.
->
-> Do a --force assembly, and then mount the arrays read-only. The
-> partition should be fine. Look over it and see. I think you can do a
-> fsck without it actually changing anything. fsck will probably find a
-> few problems.
->
-> If everything's fine, add in the other two partitions and let it rebuild.
->
-> And then replace the drives as quickly as possible. With this setup
-> you're critically vulnerable to the 4TB failing. Read up on the
-> --replace option to replace the drives with minimal risk.
+>> # fdisk -l /dev/sdb /dev/sdc
 >>
->> And sure, I'll send you the logs you asked, no problem.
->>
->> Regards.
->>
-> Ta muchly.
->
+> 
+> And search the archive for the following thread - "RAID10 with 2 drives
+> auto-assembled as RAID1". It's pretty recent.
+> 
+> You've got a mirror, which means both of your drives should have a valid
+> filesystem on them, so things look optimistic. It's just a case of
+> finding it - that thread should help you look. The experts will chime
+> in, but if you can find the string sequences they're looking for, it'll
+> help you recover the partition(s). What filesystem were you using?
+> 
 > Cheers,
 > Wol
+
+
+Thank you both for the quick response,
+
+Attached are the outputs of fdisk -l for both drives.
+
+I read the correspondence in the archived email thread "RAID10 with 2 drives
+auto-assembled as RAID1",
+but I don't understand what I should do.
+
+Could you please guide me?
+I'm afraid to execute any unfamiliar commands that might lower my chances of saving my data.
+
+Thank you so much!
+
+Yaniv
+
+
+------MIME delimiter for sendEmail-458818.844360398
+Content-Type: text/plain;
+        name="fdisk_l_sdb.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="fdisk_l_sdb.txt"
+
+V0FSTklORzogR1BUIChHVUlEIFBhcnRpdGlvbiBUYWJsZSkgZGV0ZWN0ZWQgb24gJy9kZXYvc2Ri
+JyEgVGhlIHV0aWwgZmRpc2sgZG9lc24ndCBzdXBwb3J0IEdQVC4gVXNlIEdOVSBQYXJ0ZWQuCgoK
+RGlzayAvZGV2L3NkYjogMzAwMC42IEdCLCAzMDAwNTkyOTgyMDE2IGJ5dGVzCjI1NSBoZWFkcywg
+NjMgc2VjdG9ycy90cmFjaywgMzY0ODAxIGN5bGluZGVycywgdG90YWwgNTg2MDUzMzE2OCBzZWN0
+b3JzClVuaXRzID0gc2VjdG9ycyBvZiAxICogNTEyID0gNTEyIGJ5dGVzClNlY3RvciBzaXplIChs
+b2dpY2FsL3BoeXNpY2FsKTogNTEyIGJ5dGVzIC8gNDA5NiBieXRlcwpJL08gc2l6ZSAobWluaW11
+bS9vcHRpbWFsKTogNDA5NiBieXRlcyAvIDQwOTYgYnl0ZXMKRGlzayBpZGVudGlmaWVyOiAweDA4
+N2MxMzU1CgogICBEZXZpY2UgQm9vdCAgICAgIFN0YXJ0ICAgICAgICAgRW5kICAgICAgQmxvY2tz
+ICAgSWQgIFN5c3RlbQovZGV2L3NkYjEgICAgICAgICAgICAgICAxICA0Mjk0OTY3Mjk1ICAyMTQ3
+NDgzNjQ3KyAgZWUgIEdQVApQYXJ0aXRpb24gMSBkb2VzIG5vdCBzdGFydCBvbiBwaHlzaWNhbCBz
+ZWN0b3IgYm91bmRhcnkuCg==
+
+------MIME delimiter for sendEmail-458818.844360398
+Content-Type: text/plain;
+        name="fdisk_l_sdc.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="fdisk_l_sdc.txt"
+
+V0FSTklORzogR1BUIChHVUlEIFBhcnRpdGlvbiBUYWJsZSkgZGV0ZWN0ZWQgb24gJy9kZXYvc2Rj
+JyEgVGhlIHV0aWwgZmRpc2sgZG9lc24ndCBzdXBwb3J0IEdQVC4gVXNlIEdOVSBQYXJ0ZWQuCgoK
+RGlzayAvZGV2L3NkYzogMzAwMC42IEdCLCAzMDAwNTkyOTgyMDE2IGJ5dGVzCjI1NiBoZWFkcywg
+NjMgc2VjdG9ycy90cmFjaywgMzYzMzc2IGN5bGluZGVycywgdG90YWwgNTg2MDUzMzE2OCBzZWN0
+b3JzClVuaXRzID0gc2VjdG9ycyBvZiAxICogNTEyID0gNTEyIGJ5dGVzClNlY3RvciBzaXplIChs
+b2dpY2FsL3BoeXNpY2FsKTogNTEyIGJ5dGVzIC8gNDA5NiBieXRlcwpJL08gc2l6ZSAobWluaW11
+bS9vcHRpbWFsKTogNDA5NiBieXRlcyAvIDQwOTYgYnl0ZXMKRGlzayBpZGVudGlmaWVyOiAweDAw
+MDAwMDAwCgogICBEZXZpY2UgQm9vdCAgICAgIFN0YXJ0ICAgICAgICAgRW5kICAgICAgQmxvY2tz
+ICAgSWQgIFN5c3RlbQovZGV2L3NkYzEgICAgICAgICAgICAgICAxICA0Mjk0OTY3Mjk1ICAyMTQ3
+NDgzNjQ3KyAgZWUgIEdQVApQYXJ0aXRpb24gMSBkb2VzIG5vdCBzdGFydCBvbiBwaHlzaWNhbCBz
+ZWN0b3IgYm91bmRhcnkuCg==
+
+------MIME delimiter for sendEmail-458818.844360398--
+
