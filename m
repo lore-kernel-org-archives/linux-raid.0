@@ -1,131 +1,112 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [md PATCH 0/5] Stop using bi_phys_segments as a counter
-Date: Tue, 22 Nov 2016 13:19:07 +1100
-Message-ID: <87k2bwcl44.fsf@notabene.neil.brown.name>
-References: <147969099621.5434.12384452255155063186.stgit@noble> <20161121234311.6qhwa2g3oa4uhcbi@kernel.org> <87mvgscqe7.fsf@notabene.neil.brown.name> <20161122010220.dcq6brjhsliw4io6@kernel.org>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH/RFC] add "failfast" support for raid1/raid10.
+Date: Mon, 21 Nov 2016 18:02:38 -0800
+Message-ID: <20161122020238.qtuxwo5etcwmts4r@kernel.org>
+References: <147944614789.3302.1959091446949640579.stgit@noble>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161122010220.dcq6brjhsliw4io6@kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Christoph Hellwig <hch@lst.de>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <147944614789.3302.1959091446949640579.stgit@noble>
+Sender: linux-block-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, hare@suse.de
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Fri, Nov 18, 2016 at 04:16:11PM +1100, Neil Brown wrote:
+> Hi,
+> 
+>  I've been sitting on these patches for a while because although they
+>  solve a real problem, it is a fairly limited use-case, and I don't
+>  really like some of the details.
+> 
+>  So I'm posting them as RFC in the hope that a different perspective
+>  might help me like them better, or find a better approach.
+> 
+>  The core idea is that when you have multiple copies of data
+>  (i.e. mirrored drives) it doesn't make sense to wait for a read from
+>  a drive that seems to be having problems.  It will probably be faster
+>  to just cancel that read, and read from the other device.
+>  Similarly, in some circumstances, it might be better to fail a drive
+>  that is being slow to respond to writes, rather than cause all writes
+>  to be very slow.
+> 
+>  The particular context where this comes up is when mirroring across
+>  storage arrays, where the storage arrays can temporarily take an
+>  unusually long time to respond to requests (firmware updates have
+>  been mentioned).  As the array will have redundancy internally, there
+>  is little risk to the data.  The mirrored pair is really only for
+>  disaster recovery, and it is deemed better to lose the last few
+>  minutes of updates in the case of a serious disaster, rather than
+>  occasionally having latency issues because one array needs to do some
+>  maintenance for a few minutes.  The particular storage arrays in
+>  question are DASD devices which are part of the s390 ecosystem.
+> 
+>  Linux block layer has "failfast" flags to direct drivers to fail more
+>  quickly.  These patches allow devices in an md array to be given a
+>  "failfast" flag, which will cause IO requests to be marked as
+>  "failfast" providing there is another device available.  Once the
+>  array becomes degraded, we stop using failfast, as that could result
+>  in data loss.
+> 
+>  I don't like the whole "failfast" concept because it is not at all
+>  clear how fast "fast" is.  In fact, these block-layer flags are
+>  really a misnomer.  They should be "noretry" flags.
+>  REQ_FAILFAST_DEV means "don't retry requests which reported an error
+>  which seems to come from the device.
+>  REQ_FAILFAST_TRANSPORT means "don't retry requests which seem to
+>  indicate a problem with the transport, rather than the device"
+>  REQ_FAILFAST_DRIVER means  .... I'm not exactly sure.  I think it
+>  means whatever a particular driver wants it to mean, basically "I
+>  cannot seem to handle this right now, just resend and I'll probably
+>  be more in control next time".  It seems to be for internal-use only.
+> 
+>  Multipath code uses REQ_FAILFAST_TRANSPORT only, which makes sense.
+>  btrfs uses REQ_FAILFAST_DEV only (for read-ahead) which doesn't seem
+>  to make sense.... why would you ever use _DEV without _TRANSPORT?
+> 
+>  None of these actually change the timeouts in the driver or in the
+>  device, which is what I would expect for "failfast", so to get real
+>  "fast failure" you need to enable failfast, and adjust the timeouts.
+>  That is what we do for our customers with DASD.
+> 
+>  Anyway, it seems to make sense to use _TRANSPORT and _DEV for
+>  requests from md where there is somewhere to fall-back on.
+>  If we get an error from a "failfast" request, and the array is still
+>  non-degraded, we just fail the device.  We don't try to repair read
+>  errors (which is pointless on storage arrays).
+> 
+>  It is assumed that some user-space code will notice the failure,
+>  monitor the device to see when it becomes available again, and then
+>  --re-add it.  Assuming the array has a bitmap, the --re-add should be
+>  fast and the array will become optimal again without experiencing
+>  excessive latencies.
+> 
+>  My two main concerns are:
+>   - does this functionality have any use-case outside of mirrored
+>     storage arrays, and are there other storage arrays which
+>     occasionally inserted excessive latency (seems like a serious
+>     misfeature to me, but I know few of the details)?
+>   - would it be at all possible to have "real" failfast functionality
+>     in the block layer?  I.e. something that is based on time rather
+>     than retry count.  Maybe in some cases a retry would be
+>     appropriate if the first failure was very fast.
+>     I.e. it would reduce timeouts and decide on retries based on
+>     elapsed time rather than number of attempts.
+>     With this would come the question of "how fast is fast" and I
+>     don't have a really good answer.  Maybe md would need to set a
+>     timeout, which it would double whenever it got failures on all
+>     drives.  Otherwise the timeout would drift towards (say) 10 times
+>     the typical response time.
+> 
+>  So: comments most welcome.  As I say, this does address a genuine
+>  need.  Just find it hard to like it :-(
 
-On Tue, Nov 22 2016, Shaohua Li wrote:
+Patches looks good. As long as these don't break normal raid array (while they
+don't if the superblock bit isn't set), I have no objection to apply the
+patches even they are for special usage. I'll add the series to the next tree.
 
-> On Tue, Nov 22, 2016 at 11:25:04AM +1100, Neil Brown wrote:
->> On Tue, Nov 22 2016, Shaohua Li wrote:
->>=20
->> > On Mon, Nov 21, 2016 at 12:19:43PM +1100, Neil Brown wrote:
->> >> There are 2 problems with using bi_phys_segments as a counter
->> >> 1/ we only use 16bits, which limits bios to 256M
->> >> 2/ it is poor form to reuse a field like this.  It interferes
->> >>    with other changes to bios.
->> >>=20
->> >> We need to clean up a few things before we can change the use the
->> >> counter which is now available inside a bio.
->> >>=20
->> >> I have only tested this lightly.  More review and testing would be
->> >> appreciated.
->> >
->> > So without the accounting, we:
->> > - don't do bio completion trace
->>=20
->> Yes, but hopefully that will be added back to bio_endio() soon.
->>=20
->> > - call md_write_start/md_write_end excessively, which involves atomic =
-operation.
->>=20
->> raid5_inc_bio_active_stripes() did an atomic operation.  I don't think
->> there is a net increase in the number of atomic operations.
->
-> That's different. md_write_start/end uses a global atomic.
-> raid5_inc_bio_active_stripes uses a bio atomic. So we have more cache bou=
-ncing now.
+Just curious: will the FAILFAST increase the chance IO failure?
 
-Maybe.
-Most md_write_start() calls are made in the context of
-raid5_make_request().
-We could
- - call md_write_start() once at the start
- - count how many times we want to call it in a variable local to
-   raid5_make_request()
- - atomically add that to the counter at the end.
-
-Similarly mode md_write_end() requests are in the context of raid5d.  It
-could maintain local counter and apply them all in a single update
-before it sleeps.
-
-It would be a little messy, but not too horrible I think.
-
->=20=20
->> >
->> > Not big problems. But we are actually reusing __bi_remaining, I'm wond=
-ering why
->> > we not explicitly reuse it. Eg, adds bio_dec_remaining_return() and us=
-es it
->> > like raid5_dec_bi_active_stripes.
->>=20
->> Because using it exactly the same way that other places use it leads to
->> fewer surprises, now or later.
->> And I think that the effort to rearrange the code so that we could just
->> call bio_endio() brought real improvements in code clarity and
->> simplicity.
->
-> Not the same way. The return_bi list and retry list fix are still good. W=
-e can
-> replace the bio_endio in your patch with something like:
-> if (bio_dec_remaining_return() =3D=3D 0) {
-> 	trace_block_bio_complete()
-> 	md_write_end()
-> 	bio_endio();
-> }
-> This will give us better control when to end io.
-
-This isn't safe.  The bio arriving at raid5_make_request() might already
-have been split and could be chained.  Then raid5 might never see
-bio_dec_remaining_return() return zero.
-
-For example, suppose there is a RAID0 make of some other device, and
-this RAID5.
-A write request arrives which crosses a chunk boundary.
-raid0.c calls bio_split to split off a new bio that will fit in the other
-device, leaving the original bio with a larger bi_sector which will get
-mapped only into the raid5.
-The split bio is chained into the original bio, elevating its
-__bi_remaining count.
-If the other device is particularly slow, or the RAID5 is particularly
-fast, the RAID5 IO might complete before the split bio completes, so
-raid5 will only see __bi_remaining go down to one, not zero.
-When the split bio finally completes, it's bi_endio is
-bio_chain_endio(), and that will call the final bio_endio() on the
-original bio.  md_write_end() would then never be called.
-
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAEBCAAGBQJYM6sbAAoJEDnsnt1WYoG53dkP/1qAisWGaQhvtn7HRj+JPcPu
-+nkLCgH3aYqlcIcjjEZQDrpKShrAPs/hqR5MjMgYcL8LLVsvhCKyWhyT/4JgiZ8f
-zpHiec2mVYtHFKkw8wdGCGZzt5N6Wj4s0bhOggfUNVfMEezomhATPkAStXBTgeZ+
-Nz72G/yD2OXyMnvV5ZpOYENXnOgzwym0SlHeixgYLaDhr3P6gavPqoITlTXGyptL
-JwqqD7abvFIpDhk2L1ya52HZ/yLyqS2wSC2sBuaLeSCfeAIO4aVgIHRlLAU0BPrK
-mDn6Vymunl/SUVzgLO1v3iO6LStvf99baqiHgR4mJ0gnGUzt0LM0fp/PbwbbrEWt
-l2l8URWi5vxL9l01ZUAMeqpTbXI7VowItA0yprmZVmw66gsUyRDbeFeATWAH3n52
-qmS/gkVCkF8/Q4HZRwciN7dqfZrVtqAkgvmT2Qix8nbH8PbbDZEXGRFCR7knEjAw
-5A95goES/T8BUES7xFWJvE9DdPVooZMRZw/OaFnS6T2cNsxEUrxmo+8HdsjQXM1k
-hub4dknEQUX7dtN0dLU0LvGZmrG/G842c60atXbttX6QejC8QzBcRD+5hctafcYL
-fBF5gP9O+9L9xk7PXo0/p9/Lna8LKbpf3TAFODhwsp79UrrFR3WsE4yfYPlxv/nV
-js3mVYLidtu4Xcty8k0S
-=k8fp
------END PGP SIGNATURE-----
---=-=-=--
+Thanks,
+Shaohua
