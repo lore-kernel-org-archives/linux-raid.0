@@ -1,142 +1,40 @@
-From: Marc Smith <marc.smith@mcc.edu>
-Subject: Re: MD Remnants After --stop
-Date: Tue, 22 Nov 2016 10:12:55 -0500
-Message-ID: <CAHkw+Ldbwkknz6ZqxVpFEE-3z1r7pz1AjamUbZaEPn_uyMn_-w@mail.gmail.com>
-References: <CAHkw+Lf1SErbGro4bq5MM5LyB-Zqyqi4E90R7c+uAZHv1WgSrA@mail.gmail.com>
- <87fun3ond9.fsf@notabene.neil.brown.name> <CAHkw+LcfszsWDGQJzDaQU0-PsL+8K7t5msW_bLbv+YyDEFmn8Q@mail.gmail.com>
- <87fumlebwo.fsf@notabene.neil.brown.name> <CAHkw+LfN9xaFmmvg653OKh1eH=_kLdhd3Y1QMg3955TePCCtkg@mail.gmail.com>
+From: Jens Axboe <axboe@fb.com>
+Subject: Re: [PATCH 00/12] block: cleanup direct access to bvec table
+Date: Tue, 22 Nov 2016 08:53:00 -0700
+Message-ID: <167c2511-349f-a8e6-17d1-f7ce438b2f14@fb.com>
+References: <1478865957-25252-1-git-send-email-tom.leiming@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHkw+LfN9xaFmmvg653OKh1eH=_kLdhd3Y1QMg3955TePCCtkg@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <1478865957-25252-1-git-send-email-tom.leiming@gmail.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Ming Lei <tom.leiming@gmail.com>, linux-kernel@vger.kernel.org
+Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Adrian Hunter <adrian.hunter@intel.com>, Coly Li <colyli@suse.de>, "open list:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>, "open list:DRBD DRIVER" <drbd-dev@lists.linbit.com>, Eric Wheeler <git@linux.ewheeler.net>, Guoqing Jiang <gqjiang@suse.com>, Hannes Reinecke <hare@suse.com>, Jiri Kosina <jkosina@suse.cz>, Johannes Thumshirn <jthumshirn@suse.de>, Keith Busch <keith.busch@intel.com>, Kent Overstreet <kent.overstreet@gmail.com>, "open list:BCACHE (BLOCK LAYER CACHE)" <linux-bcache@vger.kernel.org>, "open list:NVM EXPRESS TARGET DRIVER" <linux-nvme@lists.infradead.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
-
-Sorry, I'm not trying to beat a dead horse here, but I do feel
-something has changed... I just tested with Linux 4.5.2 and when
-stopping an md array (with mdadm --stop) the entry in /sys/block/ is
-removed, and even the /dev/mdXXX and /dev/md/name link are removed
-properly.
-
-When testing with Linux 4.9-rc3, the entries in /sys/block/ still
-remain (array_state attribute value is "clear") after using mdadm
---stop and the /dev/mdXXX device exists (the /dev/md/name link is
-removed, by udev I assume).
-
-Looks like Linux 4.9 is at rc6 now -- have there been any changes that
-would correct this behavior? Or is this expected behavior with the
-latest version? Not sure when this changed, but I did go back to 4.5.2
-and confirmed everything is removed correctly in that version, not
-sure if this is different starting in 4.9, or something between 4.5
-and 4.9.
-
-Can anyone else confirm with Linux 4.9 that the /sys/block/mdXXX entry
-lingers after using mdadm --stop? I suppose it could be some other
-system that is causing this on my machines. I tested using the latest
-from the master branch of mdadm and get the same result.
-
-
-Thanks for your time and help.
-
---Marc
-
-
-On Mon, Nov 21, 2016 at 9:08 AM, Marc Smith <marc.smith@mcc.edu> wrote:
-> On Sun, Nov 20, 2016 at 10:42 PM, NeilBrown <neilb@suse.com> wrote:
->> On Sat, Nov 19 2016, Marc Smith wrote:
->>
->>> On Mon, Nov 7, 2016 at 12:44 AM, NeilBrown <neilb@suse.com> wrote:
->>>> On Sat, Nov 05 2016, Marc Smith wrote:
->>>>
->>>>> Hi,
->>>>>
->>>>> It may be that I've never noticed this before, so maybe its not a
->>>>> problem... after using '--stop' to deactivate/stop an MD array, there
->>>>> are remnants of it lingering, namely an entry in /sys/block (eg,
->>>>> /sys/block/md127) and the device node in /dev remains (eg,
->>>>> /dev/md127).
->>>>>
->>>>> Is this normal? Like I said, it probably is, and I've just never
->>>>> noticed it before. I assume its not going to hurt anything, but is
->>>>> there a way to clean it up, without rebooting? Obviously I could
->>>>> remove the /dev entry, but what about /sys/block?
->>>>>
->>>>
->>>> You can remove them both by running
->>>>   mdadm -S /dev/md127
->>>>
->>>> but they'll probably just reappear again.
->>>>
->>>> This seems to be an on-going battle between md and udev.  I've "fixed"
->>>> it at least once, but it keeps coming back.
->>>>
->>>> When md removes the md127 device, a message is sent to udev.
->>>> As part of its response to this message, udev tries to open /dev/md127.
->>>> Because of the rather unusual way that md devices are created (it made
->>>> sense nearly 20 years ago when it was designed), opening /dev/md127
->>>> causes md to create device md127 again.
->>>>
->>>> You could
->>>>   mv /dev/md127 /dev/md127X
->>>>   mdadm -S /dev/md127X
->>>>   rm /dev/md127X
->>>> that stop udev from opening /dev/md127.  It seems to work reliably.
->>>>
->>>> md used to generate a CHANGE event before the REMOVE event, and only the
->>>> CHANGE event caused udev to open the device file.  I removed that and
->>>> the problem went away.  Apparently some change has happened to udev and
->>>> now it opens the file in response to REMOVE as well.
->>>
->>> I used "udevadm monitor -pku" to watch the events when running "mdadm
->>> --stop /dev/md127" and this is what I see:
->>>
->>> --snip--
->>> KERNEL[163074.119778] change   /devices/virtual/block/md127 (block)
->>> ACTION=change
->>> DEVNAME=/dev/md127
->>> DEVPATH=/devices/virtual/block/md127
->>> DEVTYPE=disk
->>> MAJOR=9
->>> MINOR=127
->>> SEQNUM=3701
->>> SUBSYSTEM=block
->>>
->>> UDEV  [163074.121569] change   /devices/virtual/block/md127 (block)
->>> ACTION=change
->>> DEVNAME=/dev/md127
->>> DEVPATH=/devices/virtual/block/md127
->>> DEVTYPE=disk
->>> MAJOR=9
->>> MINOR=127
->>> SEQNUM=3701
->>> SUBSYSTEM=block
->>> SYSTEMD_READY=0
->>> USEC_INITIALIZED=370470
->>> --snip--
->>>
->>> I don't see any 'remove' event generated. I should mention if I hadn't
->>> already that I'm testing md-cluster (--bitmap=clustered), and
->>> currently using Linux 4.9-rc3.
->>
->> What version of mdadm are you using?
+On 11/11/2016 05:05 AM, Ming Lei wrote:
+> Hi,
 >
-> v3.4
+> This patchset cleans up direct access to bvec table.
 >
+> The 1st patch passes bvec table to bio_init(), so that
+> direct access to bvec table in bio initialization is avoided.
 >
->> You need one which contains
->> Commit: 229e66cb9689 ("Manage.c: Only issue change events for kernels older than 2.6.28")
->>
->> which hasn't made it into a release yet.  But if you are playing with
->> md-cluster, I would guess you are using the latest from git...
+> For other patches, most of them uses bio_add_page()
+> to replace hardcode style of adding page to bvec,
+> and others avoids to access bio->bi_vcnt.
 >
-> Wasn't, but I will now. Thanks.
+> The most special one is to use bvec iterator helpers
+> to implement .get_page/.next_page for dm-io.c
 >
-> --Marc
->
->
->>
->> NeilBrown
+> One big motivation is to prepare for supporting multipage
+> bvec, but this patchset is one good cleanup too even not
+> for that purpose.
+
+I've added the series, except 6-8, the dm parts. I updated some of the
+descriptions/subjects to read a little better.
+
+-- 
+Jens Axboe
+
