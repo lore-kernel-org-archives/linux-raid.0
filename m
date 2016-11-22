@@ -1,112 +1,67 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH/RFC] add "failfast" support for raid1/raid10.
-Date: Mon, 21 Nov 2016 18:02:38 -0800
-Message-ID: <20161122020238.qtuxwo5etcwmts4r@kernel.org>
-References: <147944614789.3302.1959091446949640579.stgit@noble>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: raid10.c read_balance question
+Date: Tue, 22 Nov 2016 15:49:05 +1100
+Message-ID: <87h970ce66.fsf@notabene.neil.brown.name>
+References: <CAANLjFodaUUZrROncC+uQjWX5pXVxgJ0HWkNunwugQQrp4Kojw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <147944614789.3302.1959091446949640579.stgit@noble>
-Sender: linux-block-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, hare@suse.de
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAANLjFodaUUZrROncC+uQjWX5pXVxgJ0HWkNunwugQQrp4Kojw@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Robert LeBlanc <robert@leblancnet.us>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Nov 18, 2016 at 04:16:11PM +1100, Neil Brown wrote:
-> Hi,
-> 
->  I've been sitting on these patches for a while because although they
->  solve a real problem, it is a fairly limited use-case, and I don't
->  really like some of the details.
-> 
->  So I'm posting them as RFC in the hope that a different perspective
->  might help me like them better, or find a better approach.
-> 
->  The core idea is that when you have multiple copies of data
->  (i.e. mirrored drives) it doesn't make sense to wait for a read from
->  a drive that seems to be having problems.  It will probably be faster
->  to just cancel that read, and read from the other device.
->  Similarly, in some circumstances, it might be better to fail a drive
->  that is being slow to respond to writes, rather than cause all writes
->  to be very slow.
-> 
->  The particular context where this comes up is when mirroring across
->  storage arrays, where the storage arrays can temporarily take an
->  unusually long time to respond to requests (firmware updates have
->  been mentioned).  As the array will have redundancy internally, there
->  is little risk to the data.  The mirrored pair is really only for
->  disaster recovery, and it is deemed better to lose the last few
->  minutes of updates in the case of a serious disaster, rather than
->  occasionally having latency issues because one array needs to do some
->  maintenance for a few minutes.  The particular storage arrays in
->  question are DASD devices which are part of the s390 ecosystem.
-> 
->  Linux block layer has "failfast" flags to direct drivers to fail more
->  quickly.  These patches allow devices in an md array to be given a
->  "failfast" flag, which will cause IO requests to be marked as
->  "failfast" providing there is another device available.  Once the
->  array becomes degraded, we stop using failfast, as that could result
->  in data loss.
-> 
->  I don't like the whole "failfast" concept because it is not at all
->  clear how fast "fast" is.  In fact, these block-layer flags are
->  really a misnomer.  They should be "noretry" flags.
->  REQ_FAILFAST_DEV means "don't retry requests which reported an error
->  which seems to come from the device.
->  REQ_FAILFAST_TRANSPORT means "don't retry requests which seem to
->  indicate a problem with the transport, rather than the device"
->  REQ_FAILFAST_DRIVER means  .... I'm not exactly sure.  I think it
->  means whatever a particular driver wants it to mean, basically "I
->  cannot seem to handle this right now, just resend and I'll probably
->  be more in control next time".  It seems to be for internal-use only.
-> 
->  Multipath code uses REQ_FAILFAST_TRANSPORT only, which makes sense.
->  btrfs uses REQ_FAILFAST_DEV only (for read-ahead) which doesn't seem
->  to make sense.... why would you ever use _DEV without _TRANSPORT?
-> 
->  None of these actually change the timeouts in the driver or in the
->  device, which is what I would expect for "failfast", so to get real
->  "fast failure" you need to enable failfast, and adjust the timeouts.
->  That is what we do for our customers with DASD.
-> 
->  Anyway, it seems to make sense to use _TRANSPORT and _DEV for
->  requests from md where there is somewhere to fall-back on.
->  If we get an error from a "failfast" request, and the array is still
->  non-degraded, we just fail the device.  We don't try to repair read
->  errors (which is pointless on storage arrays).
-> 
->  It is assumed that some user-space code will notice the failure,
->  monitor the device to see when it becomes available again, and then
->  --re-add it.  Assuming the array has a bitmap, the --re-add should be
->  fast and the array will become optimal again without experiencing
->  excessive latencies.
-> 
->  My two main concerns are:
->   - does this functionality have any use-case outside of mirrored
->     storage arrays, and are there other storage arrays which
->     occasionally inserted excessive latency (seems like a serious
->     misfeature to me, but I know few of the details)?
->   - would it be at all possible to have "real" failfast functionality
->     in the block layer?  I.e. something that is based on time rather
->     than retry count.  Maybe in some cases a retry would be
->     appropriate if the first failure was very fast.
->     I.e. it would reduce timeouts and decide on retries based on
->     elapsed time rather than number of attempts.
->     With this would come the question of "how fast is fast" and I
->     don't have a really good answer.  Maybe md would need to set a
->     timeout, which it would double whenever it got failures on all
->     drives.  Otherwise the timeout would drift towards (say) 10 times
->     the typical response time.
-> 
->  So: comments most welcome.  As I say, this does address a genuine
->  need.  Just find it hard to like it :-(
+--=-=-=
+Content-Type: text/plain
 
-Patches looks good. As long as these don't break normal raid array (while they
-don't if the superblock bit isn't set), I have no objection to apply the
-patches even they are for special usage. I'll add the series to the next tree.
+On Tue, Nov 22 2016, Robert LeBlanc wrote:
 
-Just curious: will the FAILFAST increase the chance IO failure?
+> I'm looking to improve 'near' layout performance in raid10 and looking
+> at the code for read_balance, the comments mention that there is a
+> 'next expected sequential IO' sector number stored for the RAID array,
+> but I don't see such a variable in the struct, nor do I see in
+> read_balance where that variable is being updated. With such a value,
+> I could use it (with another variable) to guess if the current
+> requests are random or sequential enough to take the latency hit to
+> move drive heads to help parallel the read. This would be a much
+> simpler route than what I was thinking about previously.
+>
+> Am I just missing this variable? I would expect it to be in the
+> r10conf struct, would that be the right place to implement it if
+> doesn't exist?
 
-Thanks,
-Shaohua
+I think it is "head_position".
+
+NeilBrown
+
+>
+> Thanks,
+> ----------------
+> Robert LeBlanc
+> PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAEBCAAGBQJYM85BAAoJEDnsnt1WYoG5YckP/0H/Wo74yTV0VXUG1X7gZI4i
+JJBXP1GBlTjoc6TsCEZgOB5AaDTMZZDZJFfBAt4W+osDXkTPYjHpWE4LkuO4IceW
+vIh0YAvysHKKoGhI6nrwgxvbgUfGj9bFPG7CIi2VzQ1Wqp3lVQOvJlb7o6jbwpWG
+rJbbex4cBiJlNN4d/04OVFaUvmIVUm33ZPeejbP5sANEXfU2d5mUCT7DKZKVcPsz
+aWAM+TgZi4um72StTMnmbMO3+yjjeQiiL4xNnMwahiOeW5ZoFb4ofaNXRwp6armN
+MpbkH36rbrVtc1bFpNhoWMIl0pDvjzEOy0oPVjy6uHl+WABQFVipaSZDjim+9A9n
+QRygMytS7mR4LAdaxWVwmOjXA/sK85rAGbZMTv+27CTMNqxg4mMUsHlOXWehHQAn
+6gYiZ3GME0m+UcropRmLrT5h443MbfPfn1l3/L82i2wlM1PB+sDjNvF/8Ic6uNMo
+qCLehjel8aURNgzVYOCQr4n5/XRgjwmF1TH6lvbf6gKhTmnCttbYrSgEOMd4Mm9g
+mMrQDPgumQKbxKYGuMuJJx2RcR2xkrZ7lf/Uj4tuetr25HrKQuZAh85cph1Zly+n
+7wEWXcBWG96hLSLwOUg+cIR6mEvzBWtFJKGlFPq5yUtnVzqSNxIoJgMBxzSNKXxQ
+90nwXtX4TDOXWxd9ZJi/
+=m7Fc
+-----END PGP SIGNATURE-----
+--=-=-=--
