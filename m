@@ -1,20 +1,24 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 07/12] dm: use bvec iterator helpers to implement
- .get_page and .next_page
-Date: Mon, 21 Nov 2016 23:28:44 -0800
-Message-ID: <20161122072844.GA21761@infradead.org>
+Subject: Re: [PATCH 05/12] bcache: debug: avoid to access .bi_io_vec directly
+Date: Mon, 21 Nov 2016 23:30:51 -0800
+Message-ID: <20161122073051.GA21957@infradead.org>
 References: <1478865957-25252-1-git-send-email-tom.leiming@gmail.com>
- <1478865957-25252-8-git-send-email-tom.leiming@gmail.com>
- <20161121144956.GB23051@redhat.com>
- <CACVXFVOHLMC+qHZco7S675PnbbNQyDH+qobcjdtJEyTE41gEmw@mail.gmail.com>
+ <1478865957-25252-6-git-send-email-tom.leiming@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-bcache-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CACVXFVOHLMC+qHZco7S675PnbbNQyDH+qobcjdtJEyTE41gEmw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1478865957-25252-6-git-send-email-tom.leiming@gmail.com>
+Sender: linux-bcache-owner@vger.kernel.org
 To: Ming Lei <tom.leiming@gmail.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, Jens Axboe <axboe@fb.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Alasdair Kergon <agk@redhat.com>, "maintainer:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>, Shaohua Li <shli@kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>
+Cc: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Kent Overstreet <kent.overstreet@gmail.com>, Shaohua Li <shli@kernel.org>, Mike Christie <mchristi@redhat.com>, Guoqing Jiang <gqjiang@suse.com>, "open list:BCACHE (BLOCK LAYER CACHE)" <linux-bcache@vger.kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Jens, can you apply the non-dm patches?
+On Fri, Nov 11, 2016 at 08:05:33PM +0800, Ming Lei wrote:
+> Instead we use standard iterator way to do that.
+> 
+> Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+
+Looks fine,
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
