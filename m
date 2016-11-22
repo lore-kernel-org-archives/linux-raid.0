@@ -1,124 +1,521 @@
-From: "theelectricengineer@gmail.com" <theelectricengineer@gmail.com>
-Subject: Re:Please help RAID1 complete fail no superblock
-Date: Tue, 22 Nov 2016 20:38:20 +0000
-Message-ID: <869594.583611132-sendEmail@optimum>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [RFC PATCH 1/2] RAID1: a new I/O barrier implementation to
+ remove resync window
+Date: Tue, 22 Nov 2016 13:35:41 -0800
+Message-ID: <20161122213541.btgw4cpoly5j4jpc@kernel.org>
+References: <1479765241-15528-1-git-send-email-colyli@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/related; boundary="----MIME delimiter for sendEmail-574363.299719156"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1479765241-15528-1-git-send-email-colyli@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: "philip@turmel.org" <philip@turmel.org>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "antlists@youngman.org.uk" <antlists@youngman.org.uk>, "george.rapp@gmail.com" <george.rapp@gmail.com>
+To: Coly Li <colyli@suse.de>
+Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Neil Brown <neilb@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format. To properly display this message you need a MIME-Version 1.0 compliant Email program.
-
-------MIME delimiter for sendEmail-574363.299719156
-Content-Type: text/plain;
-        charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-
-Hi Yaniv,
+On Tue, Nov 22, 2016 at 05:54:00AM +0800, Coly Li wrote:
+> 'Commit 79ef3a8aa1cb ("raid1: Rewrite the implementation of iobarrier.")'
+> introduces a sliding resync window for raid1 I/O barrier, this idea limits
+> I/O barriers to happen only inside a slidingresync window, for regular
+> I/Os out of this resync window they don't need to wait for barrier any
+> more. On large raid1 device, it helps a lot to improve parallel writing
+> I/O throughput when there are background resync I/Os performing at
+> same time. 
 > 
-> { Convention on kernel.org is to reply-to-all, trim quotes, and either
-> reply at the bottom or interleaved with the questions.  CC list
-> repaired. And please don't break threading. }
+> The idea of sliding resync widow is awesome, but there are several
+> challenges are very difficult to solve,
+>  - code complexity
+>    Sliding resync window requires several veriables to work collectively,
+>    this is complexed and very hard to make it work correctly. Just grep
+>    "Fixes: 79ef3a8aa1" in kernel git log, there are 8 more patches to fix
+>    the original resync window patch. This is not the end, any further
+>    related modification may easily introduce more regreassion.
+>  - multiple sliding resync windows
+>    Currently raid1 code only has a single sliding resync window, we cannot
+>    do parallel resync with current I/O barrier implementation.
+>    Implementing multiple resync windows are much more complexed, and very
+>    hard to make it correctly.
 > 
-> On 11/22/2016 11:24 AM, theelectricengineer@gmail.com wrote:
+> Therefore I decide to implement a much simpler raid1 I/O barrier, by
+> removing resync window code, I believe life will be much easier.
 > 
-> >>> One more piece of information that would be helpful is the partition
-> >>> tables for each drive:
-> >>>
-> >>> # fdisk -l /dev/sdb /dev/sdc
+> The brief idea of the simpler barrier is,
+>  - Do not maintain a logbal unique resync window
+>  - Use multiple hash buckets to reduce I/O barrier conflictions, regular
+>    I/O only has to wait for a resync I/O when both them have same barrier
+>    bucket index, vice versa.
+>  - I/O barrier can be recuded to an acceptable number if there are enought
+>    barrier buckets
 > 
-> Per the warnings in the output, fdisk is not appropriate for your
-> drives.  You must use gdisk or parted:
+> Here I explain how the barrier buckets are designed,
+>  - BARRIER_UNIT_SECTOR_SIZE
+>    The whole LBA address space of a raid1 device is divided into multiple
+>    barrier units, by the size of BARRIER_UNIT_SECTOR_SIZE.
+>    Bio request won't go across border of barrier unit size, that means
+>    maximum bio size is BARRIER_UNIT_SECTOR_SIZE<<9 in bytes.
+>  - BARRIER_BUCKETS_NR
+>    There are BARRIER_BUCKETS_NR buckets in total, if multiple I/O requests
+>    hit different barrier units, they only need to compete I/O barrier with
+>    other I/Os which hit the same barrier bucket index with each other. The
+>    index of a barrier bucket which a bio should look for is calculated by
+>    get_barrier_bucket_idx(),
+> 	(sector >> BARRIER_UNIT_SECTOR_BITS) % BARRIER_BUCKETS_NR
+>    sector is the start sector number of a bio. align_to_barrier_unit_end()
+>    will make sure the finall bio sent into generic_make_request() won't
+>    exceed border of the barrier unit size.
+>  - RRIER_BUCKETS_NR
+>    Number of barrier buckets is defined by,
+> 	#define BARRIER_BUCKETS_NR	(PAGE_SIZE/sizeof(long))
+>    For 4KB page size, there are 512 buckets for each raid1 device. That
+>    means the propobility of full random I/O barrier confliction may be
+>    reduced down to 1/512.
+
+Thanks! The idea is awesome and does makes the code easier to understand.
+
+For hash conflict, I'm worrying about one case. resync does sequential access.
+Say we have a sequential normal IO. If the first normal IO and resync IO have
+conflict, it's possible they will have conflict subsequently, since both are
+doing sequential access. We can change the hash to something like this:
+
+for the first 64M * 512, the hash is 0, 1, ... 511
+For the second 64M * 512, the hash is 1, 3, 5 ...
+The third 64M * 512, the hash is 2, 5, 8 ...
+
+It should be very easy to implement something like this, and this should reduce
+the conflict of sequential access.
+ 
+> Comparing to single sliding resync window,
+>  - Currently resync I/O grows linearly, therefore regular and resync I/O
+>    will have confliction within a single barrier units. So it is similar to
+>    single sliding resync window.
+>  - But a barrier unit bucket is shared by all barrier units with identical
+>    barrier uinit index, the probability of confliction might be higher
+>    than single sliding resync window, in condition that writing I/Os
+>    always hit barrier units which have identical barrier bucket index with
+>    the resync I/Os. This is a very rare condition in real I/O work loads,
+>    I cannot imagine how it could happen in practice.
+>  - Therefore we can achieve a good enough low confliction rate with much
+>    simpler barrier algorithm and implementation.
 > 
-> gdisk -l /dev/sdb
-> gdisk -l /dev/sdc
+> If user has a (realy) large raid1 device, for example 10PB size, we may
+> just increase the buckets number BARRIER_BUCKETS_NR. Now this is a macro,
+> it is possible to be a raid1-created-time-defined variable in future.
 > 
-> parted /dev/sdb print
-> parted /dev/sdc print
+> There are two changes should be noticed,
+>  - In raid1d(), I change the code to decrease conf->nr_pending[idx] into
+>    single loop, it looks like this,
+> 	spin_lock_irqsave(&conf->device_lock, flags);
+> 	conf->nr_queued[idx]--;
+> 	spin_unlock_irqrestore(&conf->device_lock, flags);
+>    This change generates more spin lock operations, but in next patch of
+>    this patch set, it will be replaced by a single line code,
+> 	atomic_dec(conf->nr_queueud[idx]);
+>    So we don't need to worry about spin lock cost here.
+>  - In raid1_make_request(), wait_barrier() is replaced by,
+>    a) wait_read_barrier(): wait barrier in regular read I/O code path
+>    b) wait_barrier(): wait barrier in regular write I/O code path
+>    The differnece is wait_read_barrier() only waits if array is frozen, I
+>    am not able to combile them into one function, because they must receive
+>    differnet data types in their arguments list.
+>  - align_to_barrier_unit_end() is called to make sure both regular and
+>    resync I/O won't go across the border of a barrier unit size.
+>  
+> Open question:
+>  - Need review from md clustring developer, I don't touch related code now.
+
+Don't think it matters, but please open eyes, Guoqing!
+ 
+> Signed-off-by: Coly Li <colyli@suse.de>
+> Cc: Shaohua Li <shli@fb.com>
+> Cc: Neil Brown <neilb@suse.de>
+> Cc: Johannes Thumshirn <jthumshirn@suse.de>
+> Cc: Guoqing Jiang <gqjiang@suse.com>
+> ---
+>  drivers/md/raid1.c | 389 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++---------------------------------------------
+>  drivers/md/raid1.h |  42 +++++-------
+>  2 files changed, 242 insertions(+), 189 deletions(-)
 > 
-> Phil
+> Index: linux-raid1/drivers/md/raid1.c
+> ===================================================================
+> --- linux-raid1.orig/drivers/md/raid1.c
+> +++ linux-raid1/drivers/md/raid1.c
+> @@ -66,9 +66,8 @@
+>   */
+>  static int max_queued_requests = 1024;
+>  
+> -static void allow_barrier(struct r1conf *conf, sector_t start_next_window,
+> -			  sector_t bi_sector);
+> -static void lower_barrier(struct r1conf *conf);
+> +static void allow_barrier(struct r1conf *conf, sector_t sector_nr);
+> +static void lower_barrier(struct r1conf *conf, sector_t sector_nr);
+>  
+>  static void * r1bio_pool_alloc(gfp_t gfp_flags, void *data)
+>  {
+> @@ -92,7 +91,6 @@ static void r1bio_pool_free(void *r1_bio
+>  #define RESYNC_WINDOW_SECTORS (RESYNC_WINDOW >> 9)
+>  #define CLUSTER_RESYNC_WINDOW (16 * RESYNC_WINDOW)
+>  #define CLUSTER_RESYNC_WINDOW_SECTORS (CLUSTER_RESYNC_WINDOW >> 9)
+> -#define NEXT_NORMALIO_DISTANCE (3 * RESYNC_WINDOW_SECTORS)
+>  
+>  static void * r1buf_pool_alloc(gfp_t gfp_flags, void *data)
+>  {
+> @@ -198,6 +196,7 @@ static void put_buf(struct r1bio *r1_bio
+>  {
+>  	struct r1conf *conf = r1_bio->mddev->private;
+>  	int i;
+> +	sector_t sector_nr = r1_bio->sector;
+>  
+>  	for (i = 0; i < conf->raid_disks * 2; i++) {
+>  		struct bio *bio = r1_bio->bios[i];
+> @@ -207,7 +206,7 @@ static void put_buf(struct r1bio *r1_bio
+>  
+>  	mempool_free(r1_bio, conf->r1buf_pool);
+>  
+> -	lower_barrier(conf);
+> +	lower_barrier(conf, sector_nr);
+>  }
+>  
+>  static void reschedule_retry(struct r1bio *r1_bio)
+> @@ -215,10 +214,15 @@ static void reschedule_retry(struct r1bi
+>  	unsigned long flags;
+>  	struct mddev *mddev = r1_bio->mddev;
+>  	struct r1conf *conf = mddev->private;
+> +	sector_t sector_nr;
+> +	long idx;
+> +
+> +	sector_nr = r1_bio->sector;
+> +	idx = get_barrier_bucket_idx(sector_nr);
+>  
+>  	spin_lock_irqsave(&conf->device_lock, flags);
+>  	list_add(&r1_bio->retry_list, &conf->retry_list);
+> -	conf->nr_queued ++;
+> +	conf->nr_queued[idx]++;
+>  	spin_unlock_irqrestore(&conf->device_lock, flags);
+>  
+>  	wake_up(&conf->wait_barrier);
+> @@ -235,8 +239,6 @@ static void call_bio_endio(struct r1bio
+>  	struct bio *bio = r1_bio->master_bio;
+>  	int done;
+>  	struct r1conf *conf = r1_bio->mddev->private;
+> -	sector_t start_next_window = r1_bio->start_next_window;
+> -	sector_t bi_sector = bio->bi_iter.bi_sector;
+>  
+>  	if (bio->bi_phys_segments) {
+>  		unsigned long flags;
+> @@ -255,19 +257,14 @@ static void call_bio_endio(struct r1bio
+>  	if (!test_bit(R1BIO_Uptodate, &r1_bio->state))
+>  		bio->bi_error = -EIO;
+>  
+> -	if (done) {
+> +	if (done)
+>  		bio_endio(bio);
+> -		/*
+> -		 * Wake up any possible resync thread that waits for the device
+> -		 * to go idle.
+> -		 */
+> -		allow_barrier(conf, start_next_window, bi_sector);
+> -	}
+>  }
+>  
+>  static void raid_end_bio_io(struct r1bio *r1_bio)
+>  {
+>  	struct bio *bio = r1_bio->master_bio;
+> +	struct r1conf *conf = r1_bio->mddev->private;
+>  
+>  	/* if nobody has done the final endio yet, do it now */
+>  	if (!test_and_set_bit(R1BIO_Returned, &r1_bio->state)) {
+> @@ -278,6 +275,12 @@ static void raid_end_bio_io(struct r1bio
+>  
+>  		call_bio_endio(r1_bio);
+>  	}
+> +
+> +	/*
+> +	 * Wake up any possible resync thread that waits for the device
+> +	 * to go idle.
+> +	 */
+> +	allow_barrier(conf, r1_bio->sector);
+Why this change?
 
-Thank you for informing me about the conventions,
-I'll try to conform to all of them.
-(what does trim quotes mean?)
-I tried sending these emails through gmail and Thunderbird
-but kept getting an automatic reply saying that the emails were blocked,
-so I'm sending this via the command line (linux terminal).
-I don't know how to avoid breaking the thread this way.
+>  	free_r1bio(r1_bio);
+>  }
+>  
+> @@ -311,6 +314,7 @@ static int find_bio_disk(struct r1bio *r
+>  	return mirror;
+>  }
+>  
+> +/* bi_end_io callback for regular READ bio */
+>  static void raid1_end_read_request(struct bio *bio)
+>  {
+>  	int uptodate = !bio->bi_error;
+> @@ -490,6 +494,25 @@ static void raid1_end_write_request(stru
+>  		bio_put(to_put);
+>  }
+>  
+> +static sector_t align_to_barrier_unit_end(sector_t start_sector,
+> +					  sector_t sectors)
+> +{
+> +	sector_t len;
+> +
+> +	WARN_ON(sectors == 0);
+> +	/* len is the number of sectors from start_sector to end of the
+> +	 * barrier unit which start_sector belongs to.
+> +	 */
+> +	len = ((start_sector + sectors + (1<<BARRIER_UNIT_SECTOR_BITS) - 1) &
+> +	       (~(BARRIER_UNIT_SECTOR_SIZE - 1))) -
+> +	      start_sector;
+> +
+> +	if (len > sectors)
+> +		len = sectors;
+> +
+> +	return len;
+> +}
 
-I ran both gdisk and parted, here is the output:
+I'd prefer calling bio_split at the early of raid1_make_request and split the
+bio if it crosses the bucket boundary. please see raid10_make_request for
+example. resync will not cross the boundary. So the code will not need to worry
+about the boundary. I believe this will make the code simpiler (all the
+align_to_barrier_unit_end calling can removed) and easy to understand.
 
-gdisk -l /dev/sdb
-GPT fdisk (gdisk) version 0.8.5
+> +
+>  /*
+>   * This routine returns the disk from which the requested read should
+>   * be done. There is a per-array 'next expected sequential IO' sector
+> @@ -691,6 +714,7 @@ static int read_balance(struct r1conf *c
+>  		conf->mirrors[best_disk].next_seq_sect = this_sector + sectors;
+>  	}
+>  	rcu_read_unlock();
+> +	sectors = align_to_barrier_unit_end(this_sector, sectors);
+>  	*max_sectors = sectors;
+>  
+>  	return best_disk;
+> @@ -779,168 +803,174 @@ static void flush_pending_writes(struct
+>   *    there is no normal IO happeing.  It must arrange to call
+>   *    lower_barrier when the particular background IO completes.
+>   */
+> +
+>  static void raise_barrier(struct r1conf *conf, sector_t sector_nr)
+>  {
+> +	long idx = get_barrier_bucket_idx(sector_nr);
+> +
+>  	spin_lock_irq(&conf->resync_lock);
+>  
+>  	/* Wait until no block IO is waiting */
+> -	wait_event_lock_irq(conf->wait_barrier, !conf->nr_waiting,
+> +	wait_event_lock_irq(conf->wait_barrier, !conf->nr_waiting[idx],
+>  			    conf->resync_lock);
+>  
+>  	/* block any new IO from starting */
+> -	conf->barrier++;
+> -	conf->next_resync = sector_nr;
+> +	conf->barrier[idx]++;
+>  
+>  	/* For these conditions we must wait:
+>  	 * A: while the array is in frozen state
+> -	 * B: while barrier >= RESYNC_DEPTH, meaning resync reach
+> -	 *    the max count which allowed.
+> -	 * C: next_resync + RESYNC_SECTORS > start_next_window, meaning
+> -	 *    next resync will reach to the window which normal bios are
+> -	 *    handling.
+> -	 * D: while there are any active requests in the current window.
+> +	 * B: while conf->nr_pending[idx] is not 0, meaning regular I/O
+> +	 *    existing in sector number ranges corresponding to idx.
+> +	 * C: while conf->barrier[idx] >= RESYNC_DEPTH, meaning resync reach
+> +	 *    the max count which allowed in sector number ranges
+> +	 *    conrresponding to idx.
+>  	 */
+>  	wait_event_lock_irq(conf->wait_barrier,
+> -			    !conf->array_frozen &&
+> -			    conf->barrier < RESYNC_DEPTH &&
+> -			    conf->current_window_requests == 0 &&
+> -			    (conf->start_next_window >=
+> -			     conf->next_resync + RESYNC_SECTORS),
+> +			    !conf->array_frozen && !conf->nr_pending[idx] &&
+> +			    conf->barrier[idx] < RESYNC_DEPTH,
+>  			    conf->resync_lock);
 
-Partition table scan:
-  MBR: protective
-  BSD: not present
-  APM: not present
-  GPT: present
+So there is a slight behavior change. Originally we guarautee no more than
+RESYNC_DEPTH sync. Now this only checks 'conf->barrier[idx] < RESYNC_DEPTH'.
+How about barrier[idx-1], barrier[idx-2]...? It's possible conf->barrier[idx] <
+RESYNC_DEPTH, but barrier[idx] + barrier[idx-1] > RESYNC_DEPTH. Not sure how
+important this is, but at least we can check barrier[idx] + barrier[idx-1].
 
-Found valid GPT with protective MBR; using GPT.
-Disk /dev/sdb: 5860533168 sectors, 2.7 TiB
-Logical sector size: 512 bytes
-Disk identifier (GUID): 3DE466AD-A3E5-4258-93E8-6DCF186E851D
-Partition table holds up to 128 entries
-First usable sector is 34, last usable sector is 5860533134
-Partitions will be aligned on 2048-sector boundaries
-Total free space is 2925 sectors (1.4 MiB)
+> -
+> -	conf->nr_pending++;
+> +	conf->nr_pending[idx]++;
+>  	spin_unlock_irq(&conf->resync_lock);
+>  }
+>  
+> -static void lower_barrier(struct r1conf *conf)
+> +static void lower_barrier(struct r1conf *conf, sector_t sector_nr)
+>  {
+>  	unsigned long flags;
+> -	BUG_ON(conf->barrier <= 0);
+> +	long idx = get_barrier_bucket_idx(sector_nr);
+> +
+> +	BUG_ON(conf->barrier[idx] <= 0);
+>  	spin_lock_irqsave(&conf->resync_lock, flags);
+> -	conf->barrier--;
+> -	conf->nr_pending--;
+> +	conf->barrier[idx]--;
+> +	conf->nr_pending[idx]--;
+>  	spin_unlock_irqrestore(&conf->resync_lock, flags);
+>  	wake_up(&conf->wait_barrier);
+>  }
+>  
+> -static bool need_to_wait_for_sync(struct r1conf *conf, struct bio *bio)
+> +/* A regular I/O should wait when,
+> + * - The whole array is frozen (both READ and WRITE)
+> + * - bio is WRITE and in same barrier bucket conf->barrier[idx] raised
+> + */
+> +static void _wait_barrier(struct r1conf *conf, long idx)
+>  {
+> -	bool wait = false;
+> -
+> -	if (conf->array_frozen || !bio)
+> -		wait = true;
+> -	else if (conf->barrier && bio_data_dir(bio) == WRITE) {
+> -		if ((conf->mddev->curr_resync_completed
+> -		     >= bio_end_sector(bio)) ||
+> -		    (conf->next_resync + NEXT_NORMALIO_DISTANCE
+> -		     <= bio->bi_iter.bi_sector))
+> -			wait = false;
+> -		else
+> -			wait = true;
+> +	spin_lock_irq(&conf->resync_lock);
+> +	if (conf->array_frozen || conf->barrier[idx]) {
+> +		conf->nr_waiting[idx]++;
+> +		/* Wait for the barrier to drop. */
+> +		wait_event_lock_irq(
+> +			conf->wait_barrier,
+> +			!conf->array_frozen && !conf->barrier[idx],
+> +			conf->resync_lock);
+> +		conf->nr_waiting[idx]--;
+>  	}
+>  
+> -	return wait;
+> +	conf->nr_pending[idx]++;
+> +	spin_unlock_irq(&conf->resync_lock);
+>  }
+>  
+> -static sector_t wait_barrier(struct r1conf *conf, struct bio *bio)
+> +static void wait_read_barrier(struct r1conf *conf, sector_t sector_nr)
+>  {
+> -	sector_t sector = 0;
+> +	long idx = get_barrier_bucket_idx(sector_nr);
+>  
+>  	spin_lock_irq(&conf->resync_lock);
+> -	if (need_to_wait_for_sync(conf, bio)) {
+> -		conf->nr_waiting++;
+> -		/* Wait for the barrier to drop.
+> -		 * However if there are already pending
+> -		 * requests (preventing the barrier from
+> -		 * rising completely), and the
+> -		 * per-process bio queue isn't empty,
+> -		 * then don't wait, as we need to empty
+> -		 * that queue to allow conf->start_next_window
+> -		 * to increase.
+> -		 */
+> -		wait_event_lock_irq(conf->wait_barrier,
+> -				    !conf->array_frozen &&
+> -				    (!conf->barrier ||
+> -				     ((conf->start_next_window <
+> -				       conf->next_resync + RESYNC_SECTORS) &&
+> -				      current->bio_list &&
+> -				      !bio_list_empty(current->bio_list))),
+> -				    conf->resync_lock);
+> -		conf->nr_waiting--;
+> -	}
+> -
+> -	if (bio && bio_data_dir(bio) == WRITE) {
+> -		if (bio->bi_iter.bi_sector >= conf->next_resync) {
+> -			if (conf->start_next_window == MaxSector)
+> -				conf->start_next_window =
+> -					conf->next_resync +
+> -					NEXT_NORMALIO_DISTANCE;
+> -
+> -			if ((conf->start_next_window + NEXT_NORMALIO_DISTANCE)
+> -			    <= bio->bi_iter.bi_sector)
+> -				conf->next_window_requests++;
+> -			else
+> -				conf->current_window_requests++;
+> -			sector = conf->start_next_window;
+> -		}
+> +	if (conf->array_frozen) {
+> +		conf->nr_waiting[idx]++;
+> +		/* Wait for array to unfreeze */
+> +		wait_event_lock_irq(
+> +			conf->wait_barrier,
+> +			!conf->array_frozen,
+> +			conf->resync_lock);
+> +		conf->nr_waiting[idx]--;
+>  	}
+> -
+> -	conf->nr_pending++;
+> +	conf->nr_pending[idx]++;
+>  	spin_unlock_irq(&conf->resync_lock);
+> -	return sector;
+>  }
+>  
+> -static void allow_barrier(struct r1conf *conf, sector_t start_next_window,
+> -			  sector_t bi_sector)
+> +static void wait_barrier(struct r1conf *conf, sector_t sector_nr)
+> +{
+> +	long idx = get_barrier_bucket_idx(sector_nr);
+> +
+> +	_wait_barrier(conf, idx);
+> +}
+> +
+> +static void wait_all_barriers(struct r1conf *conf)
+> +{
+> +	long idx;
+> +
+> +	for (idx = 0; idx < BARRIER_BUCKETS_NR; idx++)
+> +		_wait_barrier(conf, idx);
 
-Number  Start (sector)    End (sector)  Size       Code  Name
-   1            2048      5860532223   2.7 TiB     0700 
+This is racy. Since resync is sequential, idealy we only need to check the
+bucket sequentially. The compiler could do  _wait_barrier(conf, 1) and then
+_wait_barrier(conf, 0). It's possible the bucket 1 has barrier right after the
+check of bucket 0. Even the compiler doesn't reorder, there is case the bucket
+511 should be check before bucket 0 if the resync is just crossing 512 buckets.
+It would be better we check the resync position and adjust the bucket wait
+order according to the position.
 
-gdisk -l /dev/sdc
-GPT fdisk (gdisk) version 0.8.5
+>  	int good_sectors = RESYNC_SECTORS;
+>  	int min_bad = 0; /* number of sectors that are bad in all devices */
+> +	long idx = get_barrier_bucket_idx(sector_nr);
+>  
+>  	if (!conf->r1buf_pool)
+>  		if (init_resync(conf))
+> @@ -2535,7 +2571,7 @@ static sector_t raid1_sync_request(struc
+>  	 * If there is non-resync activity waiting for a turn, then let it
+>  	 * though before starting on this new sync request.
+>  	 */
+> -	if (conf->nr_waiting)
+> +	if (conf->nr_waiting[idx])
+>  		schedule_timeout_uninterruptible(1);
+>  
+>  	/* we are incrementing sector_nr below. To be safe, we check against
+> @@ -2562,6 +2598,8 @@ static sector_t raid1_sync_request(struc
+>  	r1_bio->sector = sector_nr;
+>  	r1_bio->state = 0;
+>  	set_bit(R1BIO_IsSync, &r1_bio->state);
+> +	/* make sure good_sectors won't go across barrier unit border */
+> +	good_sectors = align_to_barrier_unit_end(sector_nr, good_sectors);
+>  
+>  	for (i = 0; i < conf->raid_disks * 2; i++) {
+>  		struct md_rdev *rdev;
+> @@ -2786,6 +2824,22 @@ static struct r1conf *setup_conf(struct
+>  	if (!conf)
+>  		goto abort;
+>  
+> +	conf->nr_pending = kzalloc(PAGE_SIZE, GFP_KERNEL);
+> +	if (!conf->nr_pending)
+> +		goto abort;
 
-Partition table scan:
-  MBR: protective
-  BSD: not present
-  APM: not present
-  GPT: present
+This allocation is a little wierd. I'd define a count and uses
+sizeof(nr_pending) * count to do the allocation. There is nothing related to
+PAGE_SIZE. Alternatively, just make nr_pending an array in r1conf.
 
-Found valid GPT with protective MBR; using GPT.
-Disk /dev/sdc: 5860533168 sectors, 2.7 TiB
-Logical sector size: 512 bytes
-Disk identifier (GUID): 88439314-5789-4E07-B7D5-775D6D5D98C1
-Partition table holds up to 128 entries
-First usable sector is 34, last usable sector is 5860533134
-Partitions will be aligned on 2048-sector boundaries
-Total free space is 5860533101 sectors (2.7 TiB)
-
-Number  Start (sector)    End (sector)  Size       Code  Name
-
-
-parted /dev/sdb print
-Model: ATA WDC WD30EZRX-00D (scsi)
-Disk /dev/sdb: 3001GB
-Sector size (logical/physical): 512B/4096B
-Partition Table: gpt
-
-Number  Start   End     Size    File system  Name  Flags
- 1      1049kB  3001GB  3001GB  ext4
-
-
-parted /dev/sdc print
-Model: ATA WDC WD30EZRX-00D (scsi)
-Disk /dev/sdc: 3001GB
-Sector size (logical/physical): 512B/4096B
-Partition Table: gpt
-
-Number  Start  End  Size  File system  Name  Flags
-
-(there are no values for sdc in both gdisk and parted, looks bad)
-
-I greatly appreciate your help.
-
-Thank you,
-
-Yaniv 
-
-
-------MIME delimiter for sendEmail-574363.299719156--
-
+Thanks,
+Shaohua
