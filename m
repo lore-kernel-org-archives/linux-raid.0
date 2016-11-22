@@ -1,84 +1,177 @@
-From: Anthony Youngman <antlists@youngman.org.uk>
-Subject: Re: linux raid wiki - backup files
-Date: Tue, 22 Nov 2016 23:16:30 +0000
-Message-ID: <d0544b77-cc70-e6b0-8fd5-ad16b6e275ee@youngman.org.uk>
-References: <583077D0.5070804@youngman.org.uk>
- <ffb47575-b655-924d-8626-07b9e48a6371@turmel.org>
- <5831B7B9.8090008@youngman.org.uk>
- <4febebb6-0442-cc5e-45d5-e041e21e2d95@turmel.org>
- <c3d16a30-b36e-3d26-f30a-441b236f7107@youngman.org.uk>
- <87vavgcuzv.fsf@notabene.neil.brown.name>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: MD Remnants After --stop
+Date: Wed, 23 Nov 2016 10:51:40 +1100
+Message-ID: <878tsbcbub.fsf@notabene.neil.brown.name>
+References: <CAHkw+Lf1SErbGro4bq5MM5LyB-Zqyqi4E90R7c+uAZHv1WgSrA@mail.gmail.com> <87fun3ond9.fsf@notabene.neil.brown.name> <CAHkw+LcfszsWDGQJzDaQU0-PsL+8K7t5msW_bLbv+YyDEFmn8Q@mail.gmail.com> <87fumlebwo.fsf@notabene.neil.brown.name> <CAHkw+LfN9xaFmmvg653OKh1eH=_kLdhd3Y1QMg3955TePCCtkg@mail.gmail.com> <CAHkw+Ldbwkknz6ZqxVpFEE-3z1r7pz1AjamUbZaEPn_uyMn_-w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87vavgcuzv.fsf@notabene.neil.brown.name>
+In-Reply-To: <CAHkw+Ldbwkknz6ZqxVpFEE-3z1r7pz1AjamUbZaEPn_uyMn_-w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, Phil Turmel <philip@turmel.org>, linux-raid <linux-raid@vger.kernel.org>
+To: Marc Smith <marc.smith@mcc.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Okay, after all that I've ended up not mentioning backup files at all. I 
-get the feeling that in pretty much all modern scenarios they are not 
-required. If we have v1.1 or v1.2 there should be enough spare metadata 
-space, and a modern system shouldn't be using v1.0. It's only of 
-interest if you are doing a bios boot off a mirror with no initramfs. 
-Not a likely option for a system being set up today. And from the man 
-page, mdadm leaves 128K at the end of each device - would a v1.0 array 
-have that? Would that be used for backup?
+--=-=-=
+Content-Type: text/plain
 
-I probably ought to work out how I can get it to fit neatly in my mdadm 
-page, especially if it's only needed for older setups.
+On Wed, Nov 23 2016, Marc Smith wrote:
 
-Can you take a look at the page and make sure it's not got anything 
-obviously wrong ...
-
-https://raid.wiki.kernel.org/index.php/A_guide_to_mdadm
-
-And then I'll try and sort out a page on finding lost arrays - we've had 
-a few on the list recently ...
-
-Cheers,
-Wol
-
-On 21/11/16 22:45, NeilBrown wrote:
-> On Tue, Nov 22 2016, Anthony Youngman wrote:
+> Hi,
 >
->> On 21/11/16 14:07, Phil Turmel wrote:
->>> On 11/20/2016 09:48 AM, Wols Lists wrote:
->>>> On 20/11/16 00:27, Phil Turmel wrote:
->>>>> Yes.  But the new stripes lay on top of the old stripes, unless you move
->>>>> the data offset.  Which is why a backup file holds the old stripe just
->>>>> in case.  If you can move the offset, you use the lower offset for the
->>>>> lower addresses in the array, and the higher offset for the higher
->>>>> addresses, on either side of the reshape position.
->>>>
->>>> Okay, understood. So v0.9 and v1.0 always need a backup for a reshape.
->>
->> Having looked at the man page, this now seems obvious - the superblock
->> is at the end, so the data offset is 0. But for a 1.0 array, could we
->> create a data offset?
+> Sorry, I'm not trying to beat a dead horse here, but I do feel
+> something has changed... I just tested with Linux 4.5.2 and when
+> stopping an md array (with mdadm --stop) the entry in /sys/block/ is
+> removed, and even the /dev/mdXXX and /dev/md/name link are removed
+> properly.
 >
-> Yes.  But usually the purpose for using 1.0 is to have data_offset == 0,
-> so you might not want to.
+> When testing with Linux 4.9-rc3, the entries in /sys/block/ still
+> remain (array_state attribute value is "clear") after using mdadm
+> --stop and the /dev/mdXXX device exists (the /dev/md/name link is
+> removed, by udev I assume).
+
+With the latest (git) mdadm, when events are reported by "udevadm monitor"??
+
+I only see remove events, and the entries from /dev and /sys are
+removed.
+
+If I could reproduce your problem, I would fix it...
+
+NeilBrown
+
 >
->>
->> (So, if we created a data offset, we could then move the superblock and
->> convert a 1.0 to 1.1 or 1.2? Okay, it can't do it now, but it looks to
->> me like it shouldn't be that hard ... ?)
+> Looks like Linux 4.9 is at rc6 now -- have there been any changes that
+> would correct this behavior? Or is this expected behavior with the
+> latest version? Not sure when this changed, but I did go back to 4.5.2
+> and confirmed everything is removed correctly in that version, not
+> sure if this is different starting in 4.9, or something between 4.5
+> and 4.9.
 >
-> It would be quite easy to extend "--update=metadata" to change the
-> version once the data_offset had been changed.
+> Can anyone else confirm with Linux 4.9 that the /sys/block/mdXXX entry
+> lingers after using mdadm --stop? I suppose it could be some other
+> system that is causing this on my machines. I tested using the latest
+> from the master branch of mdadm and get the same result.
 >
->>>>
->>>> But if we have a data offset with v1.2, a reshape will use that space if
->>>> it can rather than needing a backup file?
+>
+> Thanks for your time and help.
+>
+> --Marc
+>
+>
+> On Mon, Nov 21, 2016 at 9:08 AM, Marc Smith <marc.smith@mcc.edu> wrote:
+>> On Sun, Nov 20, 2016 at 10:42 PM, NeilBrown <neilb@suse.com> wrote:
+>>> On Sat, Nov 19 2016, Marc Smith wrote:
 >>>
->> I'm guessing that 1.0 and 1.1 defaulted to no data offset to speak of?
->> And if we (can) create a decent data offset, we can then use that in
->> exactly the same way as with v1.2?
->
-> 1.0 defaults to no data_offset.
-> 1.1 uses the safe choice function as 1.2.
->
-> NeilBrown
->
+>>>> On Mon, Nov 7, 2016 at 12:44 AM, NeilBrown <neilb@suse.com> wrote:
+>>>>> On Sat, Nov 05 2016, Marc Smith wrote:
+>>>>>
+>>>>>> Hi,
+>>>>>>
+>>>>>> It may be that I've never noticed this before, so maybe its not a
+>>>>>> problem... after using '--stop' to deactivate/stop an MD array, there
+>>>>>> are remnants of it lingering, namely an entry in /sys/block (eg,
+>>>>>> /sys/block/md127) and the device node in /dev remains (eg,
+>>>>>> /dev/md127).
+>>>>>>
+>>>>>> Is this normal? Like I said, it probably is, and I've just never
+>>>>>> noticed it before. I assume its not going to hurt anything, but is
+>>>>>> there a way to clean it up, without rebooting? Obviously I could
+>>>>>> remove the /dev entry, but what about /sys/block?
+>>>>>>
+>>>>>
+>>>>> You can remove them both by running
+>>>>>   mdadm -S /dev/md127
+>>>>>
+>>>>> but they'll probably just reappear again.
+>>>>>
+>>>>> This seems to be an on-going battle between md and udev.  I've "fixed"
+>>>>> it at least once, but it keeps coming back.
+>>>>>
+>>>>> When md removes the md127 device, a message is sent to udev.
+>>>>> As part of its response to this message, udev tries to open /dev/md127.
+>>>>> Because of the rather unusual way that md devices are created (it made
+>>>>> sense nearly 20 years ago when it was designed), opening /dev/md127
+>>>>> causes md to create device md127 again.
+>>>>>
+>>>>> You could
+>>>>>   mv /dev/md127 /dev/md127X
+>>>>>   mdadm -S /dev/md127X
+>>>>>   rm /dev/md127X
+>>>>> that stop udev from opening /dev/md127.  It seems to work reliably.
+>>>>>
+>>>>> md used to generate a CHANGE event before the REMOVE event, and only the
+>>>>> CHANGE event caused udev to open the device file.  I removed that and
+>>>>> the problem went away.  Apparently some change has happened to udev and
+>>>>> now it opens the file in response to REMOVE as well.
+>>>>
+>>>> I used "udevadm monitor -pku" to watch the events when running "mdadm
+>>>> --stop /dev/md127" and this is what I see:
+>>>>
+>>>> --snip--
+>>>> KERNEL[163074.119778] change   /devices/virtual/block/md127 (block)
+>>>> ACTION=change
+>>>> DEVNAME=/dev/md127
+>>>> DEVPATH=/devices/virtual/block/md127
+>>>> DEVTYPE=disk
+>>>> MAJOR=9
+>>>> MINOR=127
+>>>> SEQNUM=3701
+>>>> SUBSYSTEM=block
+>>>>
+>>>> UDEV  [163074.121569] change   /devices/virtual/block/md127 (block)
+>>>> ACTION=change
+>>>> DEVNAME=/dev/md127
+>>>> DEVPATH=/devices/virtual/block/md127
+>>>> DEVTYPE=disk
+>>>> MAJOR=9
+>>>> MINOR=127
+>>>> SEQNUM=3701
+>>>> SUBSYSTEM=block
+>>>> SYSTEMD_READY=0
+>>>> USEC_INITIALIZED=370470
+>>>> --snip--
+>>>>
+>>>> I don't see any 'remove' event generated. I should mention if I hadn't
+>>>> already that I'm testing md-cluster (--bitmap=clustered), and
+>>>> currently using Linux 4.9-rc3.
+>>>
+>>> What version of mdadm are you using?
+>>
+>> v3.4
+>>
+>>
+>>> You need one which contains
+>>> Commit: 229e66cb9689 ("Manage.c: Only issue change events for kernels older than 2.6.28")
+>>>
+>>> which hasn't made it into a release yet.  But if you are playing with
+>>> md-cluster, I would guess you are using the latest from git...
+>>
+>> Wasn't, but I will now. Thanks.
+>>
+>> --Marc
+>>
+>>
+>>>
+>>> NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAEBCAAGBQJYNNoMAAoJEDnsnt1WYoG5Tj4P/RepqrLb1ROPLM1SGKUMP6D9
+nymQzE75GXkrancehzn8IkOlkJdU7b20KuAuxvjSaDmvv+l6uF3dDPODrd3DdwE9
+xyhKZ0OYrKEDkrk5DxC14lPc0HumysAu0vNDUIyGgM44SWqXQGEbTGPAzQbbA+ht
+BYell4eZ21DR8OqNgGrIzOlTSxOuu1HZ9/asqCHTOmelkZjUyCqHSxaIWPMXjpDX
++myE/YTIVJrhZNbDUeuHeYtvYHjCSdMIrdFCT5JObFqa1uVzPoFnjDV1f24RtQ11
+YPaT6de8zKPt1eXCJNz5nVQknNMn8oCdWO9/yV0PV4mQ+3jEgcmk88M17nhxHnID
+wK6bsfPfDtA3sTzf0yMn+zfmbzpKJRTeC/WQGVfmWTPvj1JB5wtXdE4vN8Pu1Zux
+EfP7FaHLAw99ycxdeY1j6DkUfcFfF0JPKhZlnwg/Z6Qxrz5sTseFG8tfftCGMFHZ
+OYo6MJ6FnYA55QrbH/jmJVMfiZNHpHhdmyn+KVYiiAKSE6KGcSan0sjmLzvl7AZm
+Qmay7ip8w/DLWvR/GXOiXDbkxdU46hKZdYNvsfSlurek5q0cms64MbgNmBNyWHVa
+6sBI2jDZcZ+V4PZrHyBkxhg/qHqykzpqOFnVLw9LvLPKp6ACyorBfpEdjtTs15AG
+xEyyn0MNpmESwbSJIlAm
+=1+xc
+-----END PGP SIGNATURE-----
+--=-=-=--
