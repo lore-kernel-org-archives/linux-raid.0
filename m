@@ -1,62 +1,65 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [md PATCH 0/5] Stop using bi_phys_segments as a counter
-Date: Wed, 23 Nov 2016 13:08:38 +1100
-Message-ID: <87zikraqxl.fsf@notabene.neil.brown.name>
-References: <147969099621.5434.12384452255155063186.stgit@noble> <20161121234311.6qhwa2g3oa4uhcbi@kernel.org> <87mvgscqe7.fsf@notabene.neil.brown.name> <20161122010220.dcq6brjhsliw4io6@kernel.org> <87k2bwcl44.fsf@notabene.neil.brown.name> <20161122080127.rv4kgmeyluyfyxnd@kernel.org>
+Subject: Re: Newly-created arrays don't auto-assemble - related to hostname change?
+Date: Wed, 23 Nov 2016 13:34:52 +1100
+Message-ID: <87wpfuc4ab.fsf@notabene.neil.brown.name>
+References: <20161117150954.GH21587@bitfolk.com> <87d1hthgm7.fsf@notabene.neil.brown.name> <20161118023144.GC1804@bitfolk.com> <87poltfq2d.fsf@notabene.neil.brown.name> <20161118034716.GI21587@bitfolk.com> <87k2c1fn0o.fsf@notabene.neil.brown.name> <20161118041759.GE1804@bitfolk.com> <877f7xe9lh.fsf@notabene.neil.brown.name> <20161121060256.GL1804@bitfolk.com> <87shqkcuhv.fsf@notabene.neil.brown.name> <20161122060105.GS1804@bitfolk.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161122080127.rv4kgmeyluyfyxnd@kernel.org>
+In-Reply-To: <20161122060105.GS1804@bitfolk.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, linux-raid@vger.kernel.org
+To: Andy Smith <andy@strugglers.net>
+Cc: linux-raid@vger.kernel.org, 784070@bugs.debian.org
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Nov 22 2016, Shaohua Li wrote:
+On Tue, Nov 22 2016, Andy Smith wrote:
 
+> Hi Neil,
 >
-> I still don't like we have no control when to do endio, but don't have better
-> idea either. These patches work for raid5, but we need to find similar tricky
-> way to workaround raid1/raid10, which reuse bi_phys_segments too. Probably it's
-> time MD allocates additional data and attaches to bio. Adding a counter will
-> solve the issue in a consistency/clean way for raid1/10/5.
+> On Tue, Nov 22, 2016 at 09:56:28AM +1100, NeilBrown wrote:
+>> Thanks.  Sorry this is taking a lot of back-and-forth...
+>
+> No worries. This is very interesting to me and I'd also like to know
+> what is going wrong even if I have a work-around.
 
-For raid1/raid10 we could do a very similar thing.  There is an
-awkwardness in raid1 w.r.t waiting for bi_phys_segments to reach 1, but
-that might disappear if Coly's resync changes go through.
-Alternately it might make sense to use bio_split so there is one r1_bio
-per bio.
-I might try the raid10 version and see what it looks like.
+Thanks.
+I tried this on a scratch Debian VM I had lying around, and found I
+could exactly reproduce your symptoms.
+I found that, unlike on the first Debian system I looked at, there is a
+line in  /lib/udev/rules.d/64-md-raid-assembly.rules=20
 
-Thanks,
+  # Disable incremental assembly to fix Debian bug #784070
+  GOTO=3D"md_inc_end"
+
+Remove that and the problem goes away.  Arrgg...
+
+I wish people maintainers would *ask* upstream when they don't
+understand, rather than just breaking things.
+
 NeilBrown
-
-
->
-> Thanks,
-> Shaohua
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAEBCAAGBQJYNPomAAoJEDnsnt1WYoG5OhoQAJZnCATdfQrUUkXuHzDyehxi
-6VMriRl1BXWqgSrlp0s7FEJWLiM2e/72CTWIGujvb0e42KZ0lnohlowpOxRlCfQ0
-39P1TQQtx43XsqfvnnqNOk3X0Yjx9vz+PwylIJnhKdDb2AQZcv+lx3zuAaOTTelt
-GbMu7I91oW+bGDUEo9mibqrTtre7TNh+74l49NXr4uzOAPZux+ZmTZG4P+x/cLVn
-b8DponkbSYYaMZ+BbAbu7zVCg7dsJVtkcK/4EnMS1Q8VtbO5cR7BoqGtHBGiqQ68
-FGXXPiwqS1mUcoizptL5z+IkEJwljjJHlLSMkKGSzmCnx2RA07m3Z7j0MCWc7oa9
-ywdkQR+3MAEbZ1GaaObAXIp4Bglsg0lcCUFB/Rd82EDMTH3/mY80sxx0bhWdV69T
-tzoL4X6My4wOVoC0vD31swEgooLZPyuHcIOG8ta9Ph2gPB/ZX+ecPzul80+lxive
-QEq+Y8cI83r/aSVHV7MlVbNIJlfXF9xGufHygA/furfh6vrpUYg4t6Qhu9Uj5Jtc
-q34w4t3L7lTLanMrdPrz9fclNSSLakrYp6Gmz1g6BUARyH1cogDqDFwlXHFuCAkP
-o6uTdP70/9atgS4jfQ1WTjvd1GIlMI1EPimVDJciTAQIHQkob/9d7bXeGxxoXpCo
-/Lfuve9HH5B+Rtvn2+Pi
-=D7ex
+iQIcBAEBCAAGBQJYNQBMAAoJEDnsnt1WYoG53VYQAKBgJAnFqV7Oz06mg6UhIjUE
++q416Ng/ZBfNY0QycNU6nqX16vs1ZtDKWo+f2H1RLQcTlghMrwoZEBjTn4QRXIvI
+ixzphChWEi+FNXde0pwrRv2yQ+GUO3BVSNpOYw7rNjCD18fF8S619ttmmCZDapky
+QcvdsqYI6UmL7As1Q9FOHnF1zyptRgd4oU9Qhi8BAITbWyyIj0owFc+7Hz7bE0g4
+uSk0JNy+x6OSwCDCHaUqkFphATrgr+iTZwvJLWwrIRKqLkhdOd0/AdGAYrKKMfJ5
+PpHl98UvyybJ3wf/S3hd5cYIjlcCwgvR/9qPWe3Pkc4ZytfikFspGoFkr3MS0AMM
+n8nraqiMTZaRiL7GRrNWUnGIudNOMvedkhja5D18T9YrMr396jGCNF652QLw0/uV
+tV8szeYXJWXQk43SB6k7b3ZJvGuoJT6QWX3YF8u7uhKbsDe9mvDiJ3sMpptS0OjV
+aRt/Bng3zBAHe90g63qlba6M+GCioyhEGU6nFdMtp0LPPRNohyYLrhOUCS4E6+96
+Mx32RJ57PsUsw97n4YO3QJoIrJbRFaCkCuw/9Dyl05rxOT8SL5T7VW7UwrMzjoe6
+nNVG5bHrQRbdbbTXZBB2kde7FCGcNHhhF0xcj+scQtCN8ENnGpUb0nogoEaKdnNt
+j5R0s79FjtmUN9JgJhs4
+=N9Jp
 -----END PGP SIGNATURE-----
 --=-=-=--
