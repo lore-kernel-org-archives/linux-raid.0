@@ -1,109 +1,123 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Please help RAID1 complete fail no superblock
-Date: Wed, 23 Nov 2016 20:25:40 +0000
-Message-ID: <5835FB44.2080102@youngman.org.uk>
-References: <175840.371844487-sendEmail@optimum>
- <CAF-KpgbDRbUZeKd+fL8qSGXa-2=QEZqVeAQsQk5U7YqJrcyL3A@mail.gmail.com>
- <58345E9E.1080102@youngman.org.uk>
- <CAOLyU3WMJc+En=DbOW-n2uAXe7b1Gvo6jGCr0zLv5LumrxKJNQ@mail.gmail.com>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: [PATCH] RFC: dm: avoid the mutex lock in dm_bufio_shrink_count()
+Date: Wed, 23 Nov 2016 15:42:27 -0500 (EST)
+Message-ID: <alpine.LRH.2.02.1611231531340.31481@file01.intranet.prod.int.rdu2.redhat.com>
+References: <1479417398-2593-1-git-send-email-dianders@chromium.org> <alpine.DEB.2.10.1611171413450.99747@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAOLyU3WMJc+En=DbOW-n2uAXe7b1Gvo6jGCr0zLv5LumrxKJNQ@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: y k <theelectricengineer@gmail.com>
-Cc: George Rapp <george.rapp@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.2.10.1611171413450.99747@chino.kir.corp.google.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: David Rientjes <rientjes@google.com>
+Cc: Douglas Anderson <dianders@chromium.org>, Mike Snitzer <snitzer@redhat.com>, shli@kernel.org, Dmitry Torokhov <dmitry.torokhov@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux@roeck-us.net, Sonny Rao <sonnyrao@chromium.org>, Alasdair Kergon <agk@redhat.com>
 List-Id: linux-raid.ids
 
-On 22/11/16 16:15, y k wrote:
-> Thank you for the quick response,
-> 
-> Attached are the outputs of fdisk -l for both drives.
-> 
-> I read all the correspondence in the archived email thread "RAID10 with
-> 2 drives
-> auto-assembled as RAID1",
-> but I don't understand what I should do.
-> 
-> Could you please guide me?
-> I'm afraid to execute any unfamiliar commands that might lower my
-> chances of saving my data.
 
-Basically, you need to run hexdump, and look for evidence of a damaged
-superblock, and/or a filesystem superblock.
 
-Hexdump will only read a disk, not do anything to it. That thread should
-tell you what strings to look for to locate any superblocks, which are
-probably on a 4K boundary.
+On Thu, 17 Nov 2016, David Rientjes wrote:
 
-If you find them, the other experts will be able, hopefully, to tell you
-how to get the array back. What should happen is mdadm looks at the disk
-for the partition table, then looks at the partitions for an array
-superblock, then passes the array to linux to be mounted. Obviously,
-something in that chain has been broken, and unfortunately you now have
-to do that manually. Hexdump is your tool to examine the disk and look
-for the information that linux should have found for you automatically.
+> On Thu, 17 Nov 2016, Douglas Anderson wrote:
+> 
+> > diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
+> > index b3ba142e59a4..885ba5482d9f 100644
+> > --- a/drivers/md/dm-bufio.c
+> > +++ b/drivers/md/dm-bufio.c
+> > @@ -89,6 +89,7 @@ struct dm_bufio_client {
+> >  
+> >  	struct list_head lru[LIST_SIZE];
+> >  	unsigned long n_buffers[LIST_SIZE];
+> > +	unsigned long n_all_buffers;
+> >  
+> >  	struct block_device *bdev;
+> >  	unsigned block_size;
+> > @@ -485,6 +486,7 @@ static void __link_buffer(struct dm_buffer *b, sector_t block, int dirty)
+> >  	struct dm_bufio_client *c = b->c;
+> >  
+> >  	c->n_buffers[dirty]++;
+> > +	c->n_all_buffers++;
+> >  	b->block = block;
+> >  	b->list_mode = dirty;
+> >  	list_add(&b->lru_list, &c->lru[dirty]);
+> > @@ -502,6 +504,7 @@ static void __unlink_buffer(struct dm_buffer *b)
+> >  	BUG_ON(!c->n_buffers[b->list_mode]);
+> >  
+> >  	c->n_buffers[b->list_mode]--;
+> > +	c->n_all_buffers--;
+> >  	__remove(b->c, b);
+> >  	list_del(&b->lru_list);
+> >  }
+> > @@ -515,6 +518,7 @@ static void __relink_lru(struct dm_buffer *b, int dirty)
+> >  
+> >  	BUG_ON(!c->n_buffers[b->list_mode]);
+> >  
+> > +	/* NOTE: don't update n_all_buffers: -1 + 1 = 0 */
+> >  	c->n_buffers[b->list_mode]--;
+> >  	c->n_buffers[dirty]++;
+> >  	b->list_mode = dirty;
+> > @@ -1588,17 +1592,10 @@ static unsigned long
+> >  dm_bufio_shrink_count(struct shrinker *shrink, struct shrink_control *sc)
+> >  {
+> >  	struct dm_bufio_client *c;
+> > -	unsigned long count;
+> >  
+> >  	c = container_of(shrink, struct dm_bufio_client, shrinker);
+> > -	if (sc->gfp_mask & __GFP_FS)
+> > -		dm_bufio_lock(c);
+> > -	else if (!dm_bufio_trylock(c))
+> > -		return 0;
+> >  
+> > -	count = c->n_buffers[LIST_CLEAN] + c->n_buffers[LIST_DIRTY];
+> > -	dm_bufio_unlock(c);
+> > -	return count;
+> > +	return c->n_all_buffers;
+> >  }
+> >  
+> >  /*
+> 
+> Would be better to just avoid taking the mutex at all and returning 
+> c->n_buffers[LIST_CLEAN] + c->n_buffers[LIST_DIRTY] with a comment that 
+> the estimate might be wrong, but the actual count may vary between 
+> ->count_objects() and ->scan_objects() anyway, so we don't actually care?
 
-In the next few days, I'm planning to add a page to the wiki explaining
-how to use hexdump and find this information.
-> 
-> Thank you so much!
-> 
-> Yaniv
-> 
-> On Tue, Nov 22, 2016 at 5:05 PM, Wols Lists <antlists@youngman.org.uk
-> <mailto:antlists@youngman.org.uk>> wrote:
-> 
->     On 22/11/16 14:49, George Rapp wrote:
->     > On Tue, Nov 22, 2016 at 9:31 AM, theelectricengineer@gmail.com <mailto:theelectricengineer@gmail.com>
->     > <theelectricengineer@gmail.com
->     <mailto:theelectricengineer@gmail.com>> wrote:
->     >> Hello good people of the linux-raid group,
->     >>
->     >> I really need your help with my RAID1 that has completely failed, on which I have photos of my beloved deceased grandparents.
->     >>
->     >> I had the RAID1 array for about 3 years, and I had replaced one of the drives when it failed about one year ago. All worked fine.
->     >>
->     >> A few weeks ago, I bought a new computer and wanted to move the array to the new computer.
->     >> I read several guides, and thought that all I had to do was turn both computers off, move the drives, and in the new computer execute: mdadm --assemble --scan
->     >> which I did.
->     >>
->     >> The output was: mdadm: /dev/sdb has no superblock - assembly aborted
->     >>
->     >> I panicked, moved the drives back, but the old RAID wouldn't start!
->     >> The old computer too says that one of the drives has no superblock
->     >> and, even worse, that the other is UNALLOCATED SPACE!!!
->     >>
->     >> I don't understand why the partition on the second drive disappeared, and I'm so worried.
->     >>
->     >> PLEASE, PLEASE help me...
->     >>
->     >> I read the wiki pages (raid wiki kernel), but I'm afraid to run any commands that might make things worse.
->     >>
->     >> I would be very happy if I could restore the data from either one of the drives,
->     >> and copy it to the new drives in my new computer (as I should have done before moving the drives).
->     >>
->     >
->     > Yadiv -
->     >
->     > One more piece of information that would be helpful is the partition
->     > tables for each drive:
->     >
->     > # fdisk -l /dev/sdb /dev/sdc
->     >
-> 
->     And search the archive for the following thread - "RAID10 with 2 drives
->     auto-assembled as RAID1". It's pretty recent.
-> 
->     You've got a mirror, which means both of your drives should have a valid
->     filesystem on them, so things look optimistic. It's just a case of
->     finding it - that thread should help you look. The experts will chime
->     in, but if you can find the string sequences they're looking for, it'll
->     help you recover the partition(s). What filesystem were you using?
-> 
->     Cheers,
->     Wol
-> 
-> 
+Yes - here I'm sending a patch that reads c->n_buffers without the lock.
 
+
+From: Mikulas Patocka <mpatocka@redhat.com>
+
+dm-bufio: don't take the lock in dm_bufio_shrink_count
+
+dm_bufio_shrink_count is called from do_shrink_slab to find out how many
+freeable objects are there. The reported value doesn't have to be precise,
+so we don't need to take the dm-bufio lock.
+
+Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+
+---
+ drivers/md/dm-bufio.c |   13 ++-----------
+ 1 file changed, 2 insertions(+), 11 deletions(-)
+
+Index: linux-2.6/drivers/md/dm-bufio.c
+===================================================================
+--- linux-2.6.orig/drivers/md/dm-bufio.c
++++ linux-2.6/drivers/md/dm-bufio.c
+@@ -1587,18 +1587,9 @@ dm_bufio_shrink_scan(struct shrinker *sh
+ static unsigned long
+ dm_bufio_shrink_count(struct shrinker *shrink, struct shrink_control *sc)
+ {
+-	struct dm_bufio_client *c;
+-	unsigned long count;
++	struct dm_bufio_client *c = container_of(shrink, struct dm_bufio_client, shrinker);
+ 
+-	c = container_of(shrink, struct dm_bufio_client, shrinker);
+-	if (sc->gfp_mask & __GFP_FS)
+-		dm_bufio_lock(c);
+-	else if (!dm_bufio_trylock(c))
+-		return 0;
+-
+-	count = c->n_buffers[LIST_CLEAN] + c->n_buffers[LIST_DIRTY];
+-	dm_bufio_unlock(c);
+-	return count;
++	return ACCESS_ONCE(c->n_buffers[LIST_CLEAN]) + ACCESS_ONCE(c->n_buffers[LIST_DIRTY]);
+ }
+ 
+ /*
