@@ -1,76 +1,62 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Bug#784070: Newly-created arrays don't auto-assemble - related to hostname change?
-Date: Wed, 23 Nov 2016 12:03:49 +0300
-Message-ID: <c7f7e076-0fed-eb51-3291-f93cf66a49a3@msgid.tls.msk.ru>
-References: <20161117150954.GH21587@bitfolk.com>
- <87d1hthgm7.fsf@notabene.neil.brown.name> <20161118023144.GC1804@bitfolk.com>
- <87poltfq2d.fsf@notabene.neil.brown.name>
- <20161118034716.GI21587@bitfolk.com>
- <87k2c1fn0o.fsf@notabene.neil.brown.name> <20161118041759.GE1804@bitfolk.com>
- <877f7xe9lh.fsf@notabene.neil.brown.name> <20161121060256.GL1804@bitfolk.com>
- <87shqkcuhv.fsf@notabene.neil.brown.name> <20161122060105.GS1804@bitfolk.com>
- <87wpfuc4ab.fsf@notabene.neil.brown.name>
-Reply-To: Michael Tokarev <mjt@tls.msk.ru>, 784070@bugs.debian.org
+From: Diego Guella <diego.guella@deviltechnologies.com>
+Subject: raid1 bitmap and multiple removed disks
+Date: Wed, 23 Nov 2016 09:50:08 +0100
+Message-ID: <ce2ba842-22f0-eebf-856c-f07d38574489@deviltechnologies.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=iso-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <bounce-debian-bugs-rc=glddbr-debian-bugs-rc=gmane.org@lists.debian.org>
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.784070.B784070.14798918374553@bugs.debian.org>
-In-Reply-To: <87wpfuc4ab.fsf@notabene.neil.brown.name>
-List-URL: <https://lists.debian.org/debian-bugs-rc/>
-List-Post: <mailto:debian-bugs-rc@lists.debian.org>
-List-Help: <mailto:debian-bugs-rc-request@lists.debian.org?subject=help>
-List-Subscribe: <mailto:debian-bugs-rc-request@lists.debian.org?subject=subscribe>
-List-Unsubscribe: <mailto:debian-bugs-rc-request@lists.debian.org?subject=unsubscribe>
-To: NeilBrown <neilb@suse.com>, 784070@bugs.debian.org, Andy Smith <andy@strugglers.net>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-23.11.2016 05:34, NeilBrown wrote:
-> On Tue, Nov 22 2016, Andy Smith wrote:
-> 
->> Hi Neil,
->>
->> On Tue, Nov 22, 2016 at 09:56:28AM +1100, NeilBrown wrote:
->>> Thanks.  Sorry this is taking a lot of back-and-forth...
->>
->> No worries. This is very interesting to me and I'd also like to know
->> what is going wrong even if I have a work-around.
-> 
-> Thanks.
-> I tried this on a scratch Debian VM I had lying around, and found I
-> could exactly reproduce your symptoms.
-> I found that, unlike on the first Debian system I looked at, there is a
-> line in  /lib/udev/rules.d/64-md-raid-assembly.rules 
-> 
->   # Disable incremental assembly to fix Debian bug #784070
->   GOTO="md_inc_end"
-> 
-> Remove that and the problem goes away.  Arrgg...
-> 
-> I wish people maintainers would *ask* upstream when they don't
-> understand, rather than just breaking things.
+(2nd attempt: the previous one didn't make it)
+Hi,
 
-Neil, with all my respect, this is a bit over-reaction :)
+I am using linux raid1 for a double-purpose: redundancy and backup.
 
-It was long ago when we disabled incremental assembly when
-you turned it on by default, and kept old static way to
-assemble arrays, because neither our initrd nor regular
-userpsace weren't ready for that.  At the time jessie come
-out, we didn't have enough time to sort it out, so we kept
-it for jessie too.
+I have a raid1 array of 5 disks, 3 of which are kept for backup purposes.
+Let's call disks A, B, C, D, E.
+Disks A and B are _always_ connected to the system.
+Disks C, D, E are backup disks.
+Here follows a description of how I use the backup disks.
+This morning I connect disk C, and let it resync.
+Tomorrow morning, I shut down the system, remove disk C and keep it away 
+as a daily backup.
+I connect the next disk (D), then start up the system.
+Linux raid1 recognizes the "old" disk and does not allow it to enter the 
+array (this is evidenced by system logs).
+I then add disk D to the array, and let it resync.
+The next day, I connect the next disk (E), and so on, rotating them.
+The "connect and disconnect" is always performed when the system is 
+powered off, although sometimes I hot-connect the disk with the system 
+already powered up.
+The purpose of this is to have an emergency backup: I can disconnect ALL 
+disks from the system and connect only one of the daily backups, going 
+"back to the past"(TM).
 
-After restoring your (upstream) rules, things WILL break in
-other place.  Someone already tried that and had to revert
-it back to what we have now. Initrd should have some
-initial infrastructure for event-based work before this will
-be possible.
+This array has a write-intent bitmap, in order to speed up the resync 
+(it is a 4TB array, and sometimes it needs nearly 20 hours to resync 
+without bitmaps due to system load).
 
-I wanted to fix it all for stretch. But once I had a conflict
-with the d-i team I don't work on mdadm (or any other package
-touching d-i) anymore.
+This worked flawlessly (for some years) until some days ago, when the 
+array suffered a strange inconsistency, and the filesystem nearly gone 
+nuts in about 20 minutes of uptime. I will elaborate more on this later.
 
-Thanks,
+Since that problem happened, some questions come to my mind:
+What raid1 bitmaps allow me to do?
+Can they record _correctly_ the state of multiple removed disks, in 
+order to overwrite only out-of-sync chunks of multiple removed disks?
+In other words, am I allowed to do what I described above?
+If not, can I change something in my actions in order to have a daily 
+backup using raid1?
 
-/mjt
+
+System details:
+# cat /etc/debian_version
+6.0.10
+# mdadm --version
+mdadm - v3.1.4 - 31st August 2010
+
+
