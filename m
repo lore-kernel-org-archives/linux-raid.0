@@ -1,92 +1,79 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: Re: [RFC PATCH 1/2] RAID1: a new I/O barrier implementation to remove
- resync window
-Date: Wed, 23 Nov 2016 17:05:04 +0800
-Message-ID: <58355BC0.9030907@suse.com>
-References: <1479765241-15528-1-git-send-email-colyli@suse.de>
- <20161122213541.btgw4cpoly5j4jpc@kernel.org>
+From: SOUBEYRAND Yann - externe <yann-externe.soubeyrand@edf.fr>
+Subject: Re: Bug#784070: Newly-created arrays don't auto-assemble - related to
+ hostname change?
+Date: Wed, 23 Nov 2016 09:09:12 +0000
+Message-ID: <1479892151.10140.3.camel@edf.fr>
+References: <20161117150954.GH21587@bitfolk.com>
+         <87d1hthgm7.fsf@notabene.neil.brown.name>
+         <20161118023144.GC1804@bitfolk.com>
+         <87poltfq2d.fsf@notabene.neil.brown.name>
+         <20161118034716.GI21587@bitfolk.com>
+         <87k2c1fn0o.fsf@notabene.neil.brown.name>
+         <20161118041759.GE1804@bitfolk.com>
+         <877f7xe9lh.fsf@notabene.neil.brown.name>
+         <20161121060256.GL1804@bitfolk.com>
+         <87shqkcuhv.fsf@notabene.neil.brown.name>
+         <20161122060105.GS1804@bitfolk.com>
+         <87wpfuc4ab.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161122213541.btgw4cpoly5j4jpc@kernel.org>
+In-Reply-To: <87wpfuc4ab.fsf@notabene.neil.brown.name>
+Content-Language: en-US
+Content-ID: <F1C9919C23EEE2499683FB107002154D@NEOPROD.EDF.FR>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>, Coly Li <colyli@suse.de>
-Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Neil Brown <neilb@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>
+To: "neilb@suse.com" <neilb@suse.com>, "784070@bugs.debian.org" <784070@bugs.debian.org>
+Cc: "andy@strugglers.net" <andy@strugglers.net>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+TGUgbWVyY3JlZGkgMjMgbm92ZW1icmUgMjAxNiDDoCAxMzozNCArMTEwMCwgbmVpbGJAc3VzZS5j
+b20gYSDDqWNyaXQgOg0KPiBPbiBUdWUsIE5vdiAyMiAyMDE2LCBBbmR5IFNtaXRoIHdyb3RlOg0K
+PiANCj4gPiBIaSBOZWlsLA0KPiA+DQo+ID4gT24gVHVlLCBOb3YgMjIsIDIwMTYgYXQgMDk6NTY6
+MjhBTSArMTEwMCwgTmVpbEJyb3duIHdyb3RlOg0KPiA+PiBUaGFua3MuICBTb3JyeSB0aGlzIGlz
+IHRha2luZyBhIGxvdCBvZiBiYWNrLWFuZC1mb3J0aC4uLg0KPiA+DQo+ID4gTm8gd29ycmllcy4g
+VGhpcyBpcyB2ZXJ5IGludGVyZXN0aW5nIHRvIG1lIGFuZCBJJ2QgYWxzbyBsaWtlIHRvIGtub3cN
+Cj4gPiB3aGF0IGlzIGdvaW5nIHdyb25nIGV2ZW4gaWYgSSBoYXZlIGEgd29yay1hcm91bmQuDQo+
+IA0KPiBUaGFua3MuDQo+IEkgdHJpZWQgdGhpcyBvbiBhIHNjcmF0Y2ggRGViaWFuIFZNIEkgaGFk
+IGx5aW5nIGFyb3VuZCwgYW5kIGZvdW5kIEkNCj4gY291bGQgZXhhY3RseSByZXByb2R1Y2UgeW91
+ciBzeW1wdG9tcy4NCj4gSSBmb3VuZCB0aGF0LCB1bmxpa2Ugb24gdGhlIGZpcnN0IERlYmlhbiBz
+eXN0ZW0gSSBsb29rZWQgYXQsIHRoZXJlIGlzIGENCj4gbGluZSBpbiAgL2xpYi91ZGV2L3J1bGVz
+LmQvNjQtbWQtcmFpZC1hc3NlbWJseS5ydWxlcyANCj4gDQo+ICAgIyBEaXNhYmxlIGluY3JlbWVu
+dGFsIGFzc2VtYmx5IHRvIGZpeCBEZWJpYW4gYnVnICM3ODQwNzANCj4gICBHT1RPPSJtZF9pbmNf
+ZW5kIg0KPiANCj4gUmVtb3ZlIHRoYXQgYW5kIHRoZSBwcm9ibGVtIGdvZXMgYXdheS4gIEFycmdn
+Li4uDQo+IA0KPiBJIHdpc2ggcGVvcGxlIG1haW50YWluZXJzIHdvdWxkICphc2sqIHVwc3RyZWFt
+IHdoZW4gdGhleSBkb24ndA0KPiB1bmRlcnN0YW5kLCByYXRoZXIgdGhhbiBqdXN0IGJyZWFraW5n
+IHRoaW5ncy4NCj4gDQo+IE5laWxCcm93bg0KDQpIaSBOZWlsLA0KDQpJIGVuY291cmFnZSB5b3Ug
+dG8gaGF2ZSBhIGxvb2sgYXQgdGhlIGZ1bGwgaGlzdG9yeSBvZiB0aGlzIGJ1ZyB0byBzZWUNCndo
+eSB0aGlzIGxpbmUgd2FzIGludHJvZHVjZWQuIFlvdSB3aWxsIHRoZW4gc2VlIHRoYXQgaXQgaGFz
+IGJlZW4gcmVtb3ZlZA0KaW4gU3RyZXRjaC4NCg0KUmVnYXJkcw0KDQpZYW5uDQoKCgpDZSBtZXNz
+YWdlIGV0IHRvdXRlcyBsZXMgcGnDqGNlcyBqb2ludGVzIChjaS1hcHLDqHMgbGUgJ01lc3NhZ2Un
+KSBzb250IMOpdGFibGlzIMOgIGwnaW50ZW50aW9uIGV4Y2x1c2l2ZSBkZXMgZGVzdGluYXRhaXJl
+cyBldCBsZXMgaW5mb3JtYXRpb25zIHF1aSB5IGZpZ3VyZW50IHNvbnQgc3RyaWN0ZW1lbnQgY29u
+ZmlkZW50aWVsbGVzLiBUb3V0ZSB1dGlsaXNhdGlvbiBkZSBjZSBNZXNzYWdlIG5vbiBjb25mb3Jt
+ZSDDoCBzYSBkZXN0aW5hdGlvbiwgdG91dGUgZGlmZnVzaW9uIG91IHRvdXRlIHB1YmxpY2F0aW9u
+IHRvdGFsZSBvdSBwYXJ0aWVsbGUsIGVzdCBpbnRlcmRpdGUgc2F1ZiBhdXRvcmlzYXRpb24gZXhw
+cmVzc2UuCgpTaSB2b3VzIG4nw6p0ZXMgcGFzIGxlIGRlc3RpbmF0YWlyZSBkZSBjZSBNZXNzYWdl
+LCBpbCB2b3VzIGVzdCBpbnRlcmRpdCBkZSBsZSBjb3BpZXIsIGRlIGxlIGZhaXJlIHN1aXZyZSwg
+ZGUgbGUgZGl2dWxndWVyIG91IGQnZW4gdXRpbGlzZXIgdG91dCBvdSBwYXJ0aWUuIFNpIHZvdXMg
+YXZleiByZcOndSBjZSBNZXNzYWdlIHBhciBlcnJldXIsIG1lcmNpIGRlIGxlIHN1cHByaW1lciBk
+ZSB2b3RyZSBzeXN0w6htZSwgYWluc2kgcXVlIHRvdXRlcyBzZXMgY29waWVzLCBldCBkZSBuJ2Vu
+IGdhcmRlciBhdWN1bmUgdHJhY2Ugc3VyIHF1ZWxxdWUgc3VwcG9ydCBxdWUgY2Ugc29pdC4gTm91
+cyB2b3VzIHJlbWVyY2lvbnMgw6lnYWxlbWVudCBkJ2VuIGF2ZXJ0aXIgaW1tw6lkaWF0ZW1lbnQg
+bCdleHDDqWRpdGV1ciBwYXIgcmV0b3VyIGR1IG1lc3NhZ2UuCgpJbCBlc3QgaW1wb3NzaWJsZSBk
+ZSBnYXJhbnRpciBxdWUgbGVzIGNvbW11bmljYXRpb25zIHBhciBtZXNzYWdlcmllIMOpbGVjdHJv
+bmlxdWUgYXJyaXZlbnQgZW4gdGVtcHMgdXRpbGUsIHNvbnQgc8OpY3VyaXPDqWVzIG91IGTDqW51
+w6llcyBkZSB0b3V0ZSBlcnJldXIgb3UgdmlydXMuCl9fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX18KClRoaXMgbWVzc2FnZSBhbmQgYW55IGF0dGFjaG1l
+bnRzICh0aGUgJ01lc3NhZ2UnKSBhcmUgaW50ZW5kZWQgc29sZWx5IGZvciB0aGUgYWRkcmVzc2Vl
+cy4gVGhlIGluZm9ybWF0aW9uIGNvbnRhaW5lZCBpbiB0aGlzIE1lc3NhZ2UgaXMgY29uZmlkZW50
+aWFsLiBBbnkgdXNlIG9mIGluZm9ybWF0aW9uIGNvbnRhaW5lZCBpbiB0aGlzIE1lc3NhZ2Ugbm90
+IGluIGFjY29yZCB3aXRoIGl0cyBwdXJwb3NlLCBhbnkgZGlzc2VtaW5hdGlvbiBvciBkaXNjbG9z
+dXJlLCBlaXRoZXIgd2hvbGUgb3IgcGFydGlhbCwgaXMgcHJvaGliaXRlZCBleGNlcHQgZm9ybWFs
+IGFwcHJvdmFsLgoKSWYgeW91IGFyZSBub3QgdGhlIGFkZHJlc3NlZSwgeW91IG1heSBub3QgY29w
+eSwgZm9yd2FyZCwgZGlzY2xvc2Ugb3IgdXNlIGFueSBwYXJ0IG9mIGl0LiBJZiB5b3UgaGF2ZSBy
+ZWNlaXZlZCB0aGlzIG1lc3NhZ2UgaW4gZXJyb3IsIHBsZWFzZSBkZWxldGUgaXQgYW5kIGFsbCBj
+b3BpZXMgZnJvbSB5b3VyIHN5c3RlbSBhbmQgbm90aWZ5IHRoZSBzZW5kZXIgaW1tZWRpYXRlbHkg
+YnkgcmV0dXJuIG1lc3NhZ2UuCgpFLW1haWwgY29tbXVuaWNhdGlvbiBjYW5ub3QgYmUgZ3VhcmFu
+dGVlZCB0byBiZSB0aW1lbHkgc2VjdXJlLCBlcnJvciBvciB2aXJ1cy1mcmVlLgo=
 
-
-On 11/23/2016 05:35 AM, Shaohua Li wrote:
-> On Tue, Nov 22, 2016 at 05:54:00AM +0800, Coly Li wrote:
->> 'Commit 79ef3a8aa1cb ("raid1: Rewrite the implementation of iobarrier.")'
->> introduces a sliding resync window for raid1 I/O barrier, this idea limits
->> I/O barriers to happen only inside a slidingresync window, for regular
->> I/Os out of this resync window they don't need to wait for barrier any
->> more. On large raid1 device, it helps a lot to improve parallel writing
->> I/O throughput when there are background resync I/Os performing at
->> same time.
->>
->> The idea of sliding resync widow is awesome, but there are several
->> challenges are very difficult to solve,
->>   - code complexity
->>     Sliding resync window requires several veriables to work collectively,
->>     this is complexed and very hard to make it work correctly. Just grep
->>     "Fixes: 79ef3a8aa1" in kernel git log, there are 8 more patches to fix
->>     the original resync window patch. This is not the end, any further
->>     related modification may easily introduce more regreassion.
->>   - multiple sliding resync windows
->>     Currently raid1 code only has a single sliding resync window, we cannot
->>     do parallel resync with current I/O barrier implementation.
->>     Implementing multiple resync windows are much more complexed, and very
->>     hard to make it correctly.
->>
->> Therefore I decide to implement a much simpler raid1 I/O barrier, by
->> removing resync window code, I believe life will be much easier.
->>
->> The brief idea of the simpler barrier is,
->>   - Do not maintain a logbal unique resync window
->>   - Use multiple hash buckets to reduce I/O barrier conflictions, regular
->>     I/O only has to wait for a resync I/O when both them have same barrier
->>     bucket index, vice versa.
->>   - I/O barrier can be recuded to an acceptable number if there are enought
->>     barrier buckets
->>
->> Here I explain how the barrier buckets are designed,
->>   - BARRIER_UNIT_SECTOR_SIZE
->>     The whole LBA address space of a raid1 device is divided into multiple
->>     barrier units, by the size of BARRIER_UNIT_SECTOR_SIZE.
->>     Bio request won't go across border of barrier unit size, that means
->>     maximum bio size is BARRIER_UNIT_SECTOR_SIZE<<9 in bytes.
->>   - BARRIER_BUCKETS_NR
->>     There are BARRIER_BUCKETS_NR buckets in total, if multiple I/O requests
->>     hit different barrier units, they only need to compete I/O barrier with
->>     other I/Os which hit the same barrier bucket index with each other. The
->>     index of a barrier bucket which a bio should look for is calculated by
->>     get_barrier_bucket_idx(),
->> 	(sector >> BARRIER_UNIT_SECTOR_BITS) % BARRIER_BUCKETS_NR
->>     sector is the start sector number of a bio. align_to_barrier_unit_end()
->>     will make sure the finall bio sent into generic_make_request() won't
->>     exceed border of the barrier unit size.
->>   - RRIER_BUCKETS_NR
->>     Number of barrier buckets is defined by,
->> 	#define BARRIER_BUCKETS_NR	(PAGE_SIZE/sizeof(long))
->>     For 4KB page size, there are 512 buckets for each raid1 device. That
->>     means the propobility of full random I/O barrier confliction may be
->>     reduced down to 1/512.
-> Thanks! The idea is awesome and does makes the code easier to understand.
-
-Fully agree!
-
-> Open question:
->   - Need review from md clustring developer, I don't touch related code now.
-> Don't think it matters, but please open eyes, Guoqing!
-
-Thanks for reminding, I agree.
-
-Anyway,  I will try to comment it though I am sticking with lvm2 bugs 
-now and
-run some tests with the two patches applied.
-
-Thanks,
-Guoqing
