@@ -1,7 +1,7 @@
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH 03/12] raid5-cache: add a new policy
-Date: Thu, 24 Nov 2016 13:28:38 +0100
-Message-ID: <20161124122847.16456-4-artur.paszkiewicz@intel.com>
+Subject: [PATCH 04/12] md: superblock changes for PPL
+Date: Thu, 24 Nov 2016 13:28:39 +0100
+Message-ID: <20161124122847.16456-5-artur.paszkiewicz@intel.com>
 References: <20161124122847.16456-1-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20161124122847.16456-1-artur.paszkiewicz@intel.com>
@@ -10,254 +10,153 @@ To: shli@kernel.org
 Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-Add a source file for the new policy implementation and allow selecting
-the policy based on the policy_type parameter in r5l_init_log().
-
-Introduce a new flag for rdev state flags to allow enabling the new
-policy from userspace.
+Include information about PPL location and size into mdp_superblock_1
+and copy it to/from rdev. Because PPL is mutually exclusive with bitmap,
+put it in place of 'bitmap_offset'. Add a new flag MD_FEATURE_PPL for
+'feature_map', analogically to MD_FEATURE_BITMAP_OFFSET. Add MD_HAS_PPL
+to mddev->flags to indicate that PPL is enabled on an array.
 
 Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- drivers/md/Makefile      |  2 +-
- drivers/md/md.c          |  5 +++++
- drivers/md/md.h          |  3 +++
- drivers/md/raid5-cache.c | 17 +++++++++++++++--
- drivers/md/raid5-cache.h |  9 ++++++++-
- drivers/md/raid5-ppl.c   | 20 ++++++++++++++++++++
- drivers/md/raid5.c       | 42 ++++++++++++++++++++++++++++++++++++------
- 7 files changed, 88 insertions(+), 10 deletions(-)
- create mode 100644 drivers/md/raid5-ppl.c
+ drivers/md/md.c                | 14 ++++++++++++++
+ drivers/md/md.h                |  8 ++++++++
+ drivers/md/raid5.c             |  7 +++++++
+ include/uapi/linux/raid/md_p.h | 18 ++++++++++++++----
+ 4 files changed, 43 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/md/Makefile b/drivers/md/Makefile
-index 3cbda1a..4d48714 100644
---- a/drivers/md/Makefile
-+++ b/drivers/md/Makefile
-@@ -18,7 +18,7 @@ dm-cache-cleaner-y += dm-cache-policy-cleaner.o
- dm-era-y	+= dm-era-target.o
- dm-verity-y	+= dm-verity-target.o
- md-mod-y	+= md.o bitmap.o
--raid456-y	+= raid5.o raid5-cache.o
-+raid456-y	+= raid5.o raid5-cache.o raid5-ppl.o
- 
- # Note: link order is important.  All raid personalities
- # and must come before md.o, as they each initialise 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index c7894fb..4876687 100644
+index 4876687..7028d54 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -2575,6 +2575,8 @@ state_show(struct md_rdev *rdev, char *page)
- 		len += sprintf(page+len, "journal%s", sep);
- 	if (test_bit(WriteMostly, &flags))
- 		len += sprintf(page+len, "write_mostly%s", sep);
-+	if (test_bit(JournalPpl, &flags))
-+		len += sprintf(page+len, "journal_ppl%s", sep);
- 	if (test_bit(Blocked, &flags) ||
- 	    (rdev->badblocks.unacked_exist
- 	     && !test_bit(Faulty, &flags)))
-@@ -2753,6 +2755,9 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
- 	} else if (cmd_match(buf, "-external_bbl") && (rdev->mddev->external)) {
- 		clear_bit(ExternalBbl, &rdev->flags);
- 		err = 0;
-+	} else if (cmd_match(buf, "journal_ppl")) {
-+		set_bit(JournalPpl, &rdev->flags);
-+		err = 0;
- 	}
- 	if (!err)
- 		sysfs_notify_dirent_safe(rdev->sysfs_state);
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 5c08f84..2fc75ac 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -172,6 +172,9 @@ enum flag_bits {
- 				 * Usually, this device should be faster
- 				 * than other devices in the array
- 				 */
-+	JournalPpl,		/* This device is used for raid5
-+				 * Partial Parity Log.
-+				 */
- 	ClusterRemove,
- 	RemoveSynchronized,	/* synchronize_rcu() was called after
- 				 * this device was known to be faulty,
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index b10bd4c..9de122a 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -2539,16 +2539,29 @@ struct r5l_policy r5l_journal = {
- 	.handle_flush_request = __r5l_handle_flush_request,
- 	.quiesce = __r5l_quiesce,
- };
-+extern struct r5l_policy r5l_ppl;
+@@ -1524,6 +1524,11 @@ static int super_1_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor_
+ 	} else if (sb->bblog_offset != 0)
+ 		rdev->badblocks.shift = 0;
  
--int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
-+int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev, int policy_type)
- {
- 	int ret;
- 	struct r5l_log *log = kzalloc(sizeof(*log), GFP_KERNEL);
- 	if (!log)
- 		return -ENOMEM;
- 
-+	switch (policy_type) {
-+	case RWH_POLICY_JOURNAL:
-+		log->policy = &r5l_journal;
-+		break;
-+	case RWH_POLICY_PPL:
-+		log->policy = &r5l_ppl;
-+		break;
-+	default:
-+		kfree(log);
-+		return -EINVAL;
++	if (le32_to_cpu(sb->feature_map) & MD_FEATURE_PPL) {
++		rdev->ppl.offset = le16_to_cpu(sb->ppl.offset);
++		rdev->ppl.size = le16_to_cpu(sb->ppl.size);
 +	}
 +
- 	log->rdev = rdev;
--	log->policy = &r5l_journal;
-+	log->rwh_policy = policy_type;
+ 	if (!refdev) {
+ 		ret = 1;
+ 	} else {
+@@ -1636,6 +1641,9 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
  
- 	ret = log->policy->init_log(log, conf);
- 	if (ret)
-diff --git a/drivers/md/raid5-cache.h b/drivers/md/raid5-cache.h
-index c3028a1..2e19453 100644
---- a/drivers/md/raid5-cache.h
-+++ b/drivers/md/raid5-cache.h
-@@ -81,6 +81,13 @@ struct r5l_log {
- 	struct work_struct deferred_io_work;
- 
- 	struct r5l_policy *policy;
-+	enum {
-+		RWH_POLICY_OFF,
-+		RWH_POLICY_JOURNAL,
-+		RWH_POLICY_PPL,
-+	} rwh_policy;
+ 		if (le32_to_cpu(sb->feature_map) & MD_FEATURE_JOURNAL)
+ 			set_bit(MD_HAS_JOURNAL, &mddev->flags);
 +
-+	void *private;
++		if (le32_to_cpu(sb->feature_map) & MD_FEATURE_PPL)
++			set_bit(MD_HAS_PPL, &mddev->flags);
+ 	} else if (mddev->pers == NULL) {
+ 		/* Insist of good event counter while assembling, except for
+ 		 * spares (which don't need an event count) */
+@@ -1849,6 +1857,12 @@ static void super_1_sync(struct mddev *mddev, struct md_rdev *rdev)
+ 	if (test_bit(MD_HAS_JOURNAL, &mddev->flags))
+ 		sb->feature_map |= cpu_to_le32(MD_FEATURE_JOURNAL);
+ 
++	if (test_bit(MD_HAS_PPL, &mddev->flags)) {
++		sb->feature_map |= cpu_to_le32(MD_FEATURE_PPL);
++		sb->ppl.offset = cpu_to_le16(rdev->ppl.offset);
++		sb->ppl.size = cpu_to_le16(rdev->ppl.size);
++	}
++
+ 	rdev_for_each(rdev2, mddev) {
+ 		i = rdev2->desc_nr;
+ 		if (test_bit(Faulty, &rdev2->flags))
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 2fc75ac..d1e56f8 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -122,6 +122,13 @@ struct md_rdev {
+ 					   * sysfs entry */
+ 
+ 	struct badblocks badblocks;
++
++	struct {
++		unsigned int offset; /* Offset from superblock to start of PPL.
++				      * Not used by external metadata. */
++		unsigned int size;   /* Size in sectors of the PPL space */
++		sector_t sector;     /* First sector of the PPL space */
++	} ppl;
  };
- 
- /*
-@@ -142,7 +149,7 @@ struct r5l_policy {
- 	void (*quiesce)(struct r5l_log *log, int state);
+ enum flag_bits {
+ 	Faulty,			/* device is known to have a fault */
+@@ -235,6 +242,7 @@ enum mddev_flags {
+ 				 * never cause the array to become failed.
+ 				 */
+ 	MD_NEED_REWRITE,	/* metadata write needs to be repeated */
++	MD_HAS_PPL,		/* The raid array has PPL feature set */
  };
- 
--extern int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev);
-+extern int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev, int policy_type);
- extern void r5l_exit_log(struct r5l_log *log);
- extern int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh);
- extern void r5l_write_stripe_run(struct r5l_log *log);
-diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
-new file mode 100644
-index 0000000..263fad7
---- /dev/null
-+++ b/drivers/md/raid5-ppl.c
-@@ -0,0 +1,20 @@
-+/*
-+ * Partial Parity Log for closing the RAID5 write hole
-+ * Copyright (c) 2016, Intel Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/blkdev.h>
-+#include "raid5.h"
-+#include "raid5-cache.h"
-+
-+struct r5l_policy r5l_ppl;
+ #define MD_UPDATE_SB_FLAGS (BIT(MD_CHANGE_DEVS) | \
+ 			    BIT(MD_CHANGE_CLEAN) | \
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 58ee1d3..26e4045 100644
+index 26e4045..fdf2503 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -6779,8 +6779,10 @@ static int raid5_run(struct mddev *mddev)
- 	struct r5conf *conf;
- 	int working_disks = 0;
- 	int dirty_parity_disks = 0;
-+	int ppl_disks = 0;
- 	struct md_rdev *rdev;
- 	struct md_rdev *journal_dev = NULL;
-+	int rwh_policy = RWH_POLICY_OFF;
- 	sector_t reshape_offset = 0;
- 	int i;
- 	long long min_offset_diff = 0;
-@@ -6793,6 +6795,10 @@ static int raid5_run(struct mddev *mddev)
+@@ -6795,6 +6795,10 @@ static int raid5_run(struct mddev *mddev)
  	rdev_for_each(rdev, mddev) {
  		long long diff;
  
-+		if (test_bit(JournalPpl, &rdev->flags) &&
++		if (test_bit(MD_HAS_PPL, &mddev->flags) &&
 +		    test_bit(In_sync, &rdev->flags))
-+			ppl_disks++;
++			set_bit(JournalPpl, &rdev->flags);
 +
- 		if (test_bit(Journal, &rdev->flags)) {
- 			journal_dev = rdev;
- 			continue;
-@@ -6983,6 +6989,22 @@ static int raid5_run(struct mddev *mddev)
- 		goto abort;
+ 		if (test_bit(JournalPpl, &rdev->flags) &&
+ 		    test_bit(In_sync, &rdev->flags))
+ 			ppl_disks++;
+@@ -6817,6 +6821,9 @@ static int raid5_run(struct mddev *mddev)
+ 			min_offset_diff = diff;
  	}
  
-+	if (ppl_disks) {
-+		if (ppl_disks != working_disks) {
-+			pr_err("md/raid:%s: distributed PPL must be enabled on all member devices - aborting\n",
-+			       mdname(mddev));
-+			goto abort;
-+		}
-+		rwh_policy = RWH_POLICY_PPL;
-+	}
++	if (ppl_disks)
++		set_bit(MD_HAS_PPL, &mddev->flags);
 +
-+	if (journal_dev) {
-+		if (ppl_disks)
-+			pr_warn("md/raid:%s: using journal device and PPL not allowed - ignoring PPL\n",
-+				mdname(mddev));
-+		rwh_policy = RWH_POLICY_JOURNAL;
-+	}
+ 	if (mddev->reshape_position != MaxSector) {
+ 		/* Check that we can continue the reshape.
+ 		 * Difficulties arise if the stripe we would write to
+diff --git a/include/uapi/linux/raid/md_p.h b/include/uapi/linux/raid/md_p.h
+index 9930f3e..455caa8 100644
+--- a/include/uapi/linux/raid/md_p.h
++++ b/include/uapi/linux/raid/md_p.h
+@@ -242,10 +242,18 @@ struct mdp_superblock_1 {
+ 
+ 	__le32	chunksize;	/* in 512byte sectors */
+ 	__le32	raid_disks;
+-	__le32	bitmap_offset;	/* sectors after start of superblock that bitmap starts
+-				 * NOTE: signed, so bitmap can be before superblock
+-				 * only meaningful of feature_map[0] is set.
+-				 */
++	union {
++		__le32	bitmap_offset;	/* sectors after start of superblock that bitmap starts
++					 * NOTE: signed, so bitmap can be before superblock
++					 * only meaningful of feature_map[0] is set.
++					 */
 +
- 	/* device size must be a multiple of chunk size */
- 	mddev->dev_sectors &= ~(mddev->chunk_sectors - 1);
- 	mddev->resync_max_sectors = mddev->dev_sectors;
-@@ -7108,12 +7130,17 @@ static int raid5_run(struct mddev *mddev)
- 		blk_queue_max_hw_sectors(mddev->queue, UINT_MAX);
- 	}
++		/* only meaningful when feature_map[MD_FEATURE_PPL] is set */
++		struct {
++			__le16 offset; /* sectors after start of superblock that ppl starts */
++			__le16 size; /* PPL size (including header) in sectors */
++		} ppl;
++	};
  
--	if (journal_dev) {
--		char b[BDEVNAME_SIZE];
-+	if (rwh_policy) {
-+		if (journal_dev) {
-+			char b[BDEVNAME_SIZE];
+ 	/* These are only valid with feature bit '4' */
+ 	__le32	new_level;	/* new level we are reshaping to		*/
+@@ -318,6 +326,7 @@ struct mdp_superblock_1 {
+ 					     */
+ #define MD_FEATURE_CLUSTERED		256 /* clustered MD */
+ #define	MD_FEATURE_JOURNAL		512 /* support write cache */
++#define	MD_FEATURE_PPL			1024 /* support PPL */
+ #define	MD_FEATURE_ALL			(MD_FEATURE_BITMAP_OFFSET	\
+ 					|MD_FEATURE_RECOVERY_OFFSET	\
+ 					|MD_FEATURE_RESHAPE_ACTIVE	\
+@@ -328,6 +337,7 @@ struct mdp_superblock_1 {
+ 					|MD_FEATURE_RECOVERY_BITMAP	\
+ 					|MD_FEATURE_CLUSTERED		\
+ 					|MD_FEATURE_JOURNAL		\
++					|MD_FEATURE_PPL			\
+ 					)
  
--		pr_debug("md/raid:%s: using device %s as journal\n",
--			 mdname(mddev), bdevname(journal_dev->bdev, b));
--		if (r5l_init_log(conf, journal_dev))
-+			pr_debug("md/raid:%s: using device %s as journal\n",
-+				 mdname(mddev), bdevname(journal_dev->bdev, b));
-+		} else if (rwh_policy == RWH_POLICY_PPL) {
-+			pr_debug("md/raid:%s: enabling distributed PPL journal\n",
-+				 mdname(mddev));
-+		}
-+		if (r5l_init_log(conf, journal_dev, rwh_policy))
- 			goto abort;
- 	}
- 
-@@ -7309,6 +7336,7 @@ static int raid5_add_disk(struct mddev *mddev, struct md_rdev *rdev)
- 
- 	if (test_bit(Journal, &rdev->flags)) {
- 		char b[BDEVNAME_SIZE];
-+		int ret;
- 		if (conf->log)
- 			return -EBUSY;
- 
-@@ -7317,7 +7345,9 @@ static int raid5_add_disk(struct mddev *mddev, struct md_rdev *rdev)
- 		 * The array is in readonly mode if journal is missing, so no
- 		 * write requests running. We should be safe
- 		 */
--		r5l_init_log(conf, rdev);
-+		ret = r5l_init_log(conf, rdev, RWH_POLICY_JOURNAL);
-+		if (ret)
-+			return ret;
- 		pr_debug("md/raid:%s: using device %s as journal\n",
- 			 mdname(mddev), bdevname(rdev->bdev, b));
- 		return 0;
+ struct r5l_payload_header {
 -- 
 2.10.1
 
