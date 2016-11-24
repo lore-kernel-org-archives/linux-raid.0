@@ -1,67 +1,360 @@
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH 00/12] Partial Parity Log for MD RAID 5
-Date: Thu, 24 Nov 2016 13:28:35 +0100
-Message-ID: <20161124122847.16456-1-artur.paszkiewicz@intel.com>
+Subject: [PATCH 01/12] raid5-cache: move declarations to separate header
+Date: Thu, 24 Nov 2016 13:28:36 +0100
+Message-ID: <20161124122847.16456-2-artur.paszkiewicz@intel.com>
+References: <20161124122847.16456-1-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20161124122847.16456-1-artur.paszkiewicz@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: shli@kernel.org
 Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-This series of patches implements the Partial Parity Log for RAID5 arrays. The
-purpose of this feature is closing the RAID Write Hole. It is a solution
-alternative to the existing raid5-cache, but the implementation is based on it
-and reuses some of the code by introducing support for interchangeable
-policies. This allows decoupling policy from mechanism and not adding more
-boilerplate code in raid5.c.
+Next patches will be reusing raid5-cache structures and functions, so
+put them in their own header.
 
-The issue addressed by PPL is, that on a dirty shutdown, parity for a
-particular stripe may be inconsistent with data on other member disks. In
-degraded state, there is no way to recalculate parity, because one of the disks
-is missing. PPL addresses this issue and allows recalculating the parity. It
-stores only enough data needed for recovering from RWH and is not a true
-journal, like the raid5-cache implementation. It does not protect from losing
-in-flight data.
-
-PPL is a distributed log - data is stored on all RAID member drives in the
-metadata area. It does not need a dedicated journaling drive. Performance is
-reduced by up to 30%-40% but it scales with the number of drives in the array
-and the journaling drive does not become a bottleneck.
-
-This feature originated from Intel RSTe, which uses IMSM metadata. This
-patchset implements PPL for external metadata (specifically IMSM) as well as
-native MD v1.1 and v1.2 metadata.
-
-Thanks,
-Artur
-
-Artur Paszkiewicz (12):
-  raid5-cache: move declarations to separate header
-  raid5-cache: add policy logic
-  raid5-cache: add a new policy
-  md: superblock changes for PPL
-  raid5-ppl: Partial Parity Log implementation
-  raid5-ppl: calculate partial parity
-  md: mddev_find_container helper function
-  md: expose rdev->sb_start as sysfs attribute
-  raid5-ppl: read PPL signature from IMSM metadata
-  raid5-ppl: recovery from dirty shutdown using PPL
-  raid5-ppl: support disk add/remove with distributed PPL
-  raid5-ppl: runtime PPL enabling or disabling
-
- drivers/md/Makefile            |    2 +-
- drivers/md/md.c                |   81 ++-
- drivers/md/md.h                |   14 +
- drivers/md/raid5-cache.c       |  276 +++++-----
- drivers/md/raid5-cache.h       |  171 ++++++
- drivers/md/raid5-ppl.c         | 1123 ++++++++++++++++++++++++++++++++++++++++
- drivers/md/raid5.c             |  274 +++++++++-
- drivers/md/raid5.h             |   10 +-
- include/uapi/linux/raid/md_p.h |   18 +-
- 9 files changed, 1786 insertions(+), 183 deletions(-)
+Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+---
+ drivers/md/raid5-cache.c | 128 +-----------------------------------------
+ drivers/md/raid5-cache.h | 142 +++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/md/raid5.c       |   1 +
+ drivers/md/raid5.h       |   9 ---
+ 4 files changed, 144 insertions(+), 136 deletions(-)
  create mode 100644 drivers/md/raid5-cache.h
- create mode 100644 drivers/md/raid5-ppl.c
 
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 5f817bd..fc6f9fa 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -23,6 +23,7 @@
+ #include "md.h"
+ #include "raid5.h"
+ #include "bitmap.h"
++#include "raid5-cache.h"
+ 
+ /*
+  * metadata/data stored in disk with 4k size unit (a block) regardless
+@@ -52,16 +53,6 @@
+  */
+ #define R5L_POOL_SIZE	4
+ 
+-/*
+- * r5c journal modes of the array: write-back or write-through.
+- * write-through mode has identical behavior as existing log only
+- * implementation.
+- */
+-enum r5c_journal_mode {
+-	R5C_JOURNAL_MODE_WRITE_THROUGH = 0,
+-	R5C_JOURNAL_MODE_WRITE_BACK = 1,
+-};
+-
+ static char *r5c_journal_mode_str[] = {"write-through",
+ 				       "write-back"};
+ /*
+@@ -95,123 +86,6 @@ static char *r5c_journal_mode_str[] = {"write-through",
+  *	- return IO for pending writes
+  */
+ 
+-struct r5l_log {
+-	struct md_rdev *rdev;
+-
+-	u32 uuid_checksum;
+-
+-	sector_t device_size;		/* log device size, round to
+-					 * BLOCK_SECTORS */
+-	sector_t max_free_space;	/* reclaim run if free space is at
+-					 * this size */
+-
+-	sector_t last_checkpoint;	/* log tail. where recovery scan
+-					 * starts from */
+-	u64 last_cp_seq;		/* log tail sequence */
+-
+-	sector_t log_start;		/* log head. where new data appends */
+-	u64 seq;			/* log head sequence */
+-
+-	sector_t next_checkpoint;
+-	u64 next_cp_seq;
+-
+-	struct mutex io_mutex;
+-	struct r5l_io_unit *current_io;	/* current io_unit accepting new data */
+-
+-	spinlock_t io_list_lock;
+-	struct list_head running_ios;	/* io_units which are still running,
+-					 * and have not yet been completely
+-					 * written to the log */
+-	struct list_head io_end_ios;	/* io_units which have been completely
+-					 * written to the log but not yet written
+-					 * to the RAID */
+-	struct list_head flushing_ios;	/* io_units which are waiting for log
+-					 * cache flush */
+-	struct list_head finished_ios;	/* io_units which settle down in log disk */
+-	struct bio flush_bio;
+-
+-	struct list_head no_mem_stripes;   /* pending stripes, -ENOMEM */
+-
+-	struct kmem_cache *io_kc;
+-	mempool_t *io_pool;
+-	struct bio_set *bs;
+-	mempool_t *meta_pool;
+-
+-	struct md_thread *reclaim_thread;
+-	unsigned long reclaim_target;	/* number of space that need to be
+-					 * reclaimed.  if it's 0, reclaim spaces
+-					 * used by io_units which are in
+-					 * IO_UNIT_STRIPE_END state (eg, reclaim
+-					 * dones't wait for specific io_unit
+-					 * switching to IO_UNIT_STRIPE_END
+-					 * state) */
+-	wait_queue_head_t iounit_wait;
+-
+-	struct list_head no_space_stripes; /* pending stripes, log has no space */
+-	spinlock_t no_space_stripes_lock;
+-
+-	bool need_cache_flush;
+-
+-	/* for r5c_cache */
+-	enum r5c_journal_mode r5c_journal_mode;
+-
+-	/* all stripes in r5cache, in the order of seq at sh->log_start */
+-	struct list_head stripe_in_journal_list;
+-
+-	spinlock_t stripe_in_journal_lock;
+-	atomic_t stripe_in_journal_count;
+-
+-	/* to submit async io_units, to fulfill ordering of flush */
+-	struct work_struct deferred_io_work;
+-};
+-
+-/*
+- * an IO range starts from a meta data block and end at the next meta data
+- * block. The io unit's the meta data block tracks data/parity followed it. io
+- * unit is written to log disk with normal write, as we always flush log disk
+- * first and then start move data to raid disks, there is no requirement to
+- * write io unit with FLUSH/FUA
+- */
+-struct r5l_io_unit {
+-	struct r5l_log *log;
+-
+-	struct page *meta_page;	/* store meta block */
+-	int meta_offset;	/* current offset in meta_page */
+-
+-	struct bio *current_bio;/* current_bio accepting new data */
+-
+-	atomic_t pending_stripe;/* how many stripes not flushed to raid */
+-	u64 seq;		/* seq number of the metablock */
+-	sector_t log_start;	/* where the io_unit starts */
+-	sector_t log_end;	/* where the io_unit ends */
+-	struct list_head log_sibling; /* log->running_ios */
+-	struct list_head stripe_list; /* stripes added to the io_unit */
+-
+-	int state;
+-	bool need_split_bio;
+-	struct bio *split_bio;
+-
+-	unsigned int has_flush:1;      /* include flush request */
+-	unsigned int has_fua:1;        /* include fua request */
+-	unsigned int has_null_flush:1; /* include empty flush request */
+-	/*
+-	 * io isn't sent yet, flush/fua request can only be submitted till it's
+-	 * the first IO in running_ios list
+-	 */
+-	unsigned int io_deferred:1;
+-
+-	struct bio_list flush_barriers;   /* size == 0 flush bios */
+-};
+-
+-/* r5l_io_unit state */
+-enum r5l_io_unit_state {
+-	IO_UNIT_RUNNING = 0,	/* accepting new IO */
+-	IO_UNIT_IO_START = 1,	/* io_unit bio start writing to log,
+-				 * don't accepting new bio */
+-	IO_UNIT_IO_END = 2,	/* io_unit bio finish writing to log */
+-	IO_UNIT_STRIPE_END = 3,	/* stripes data finished writing to raid */
+-};
+-
+ bool r5c_is_writeback(struct r5l_log *log)
+ {
+ 	return (log != NULL &&
+diff --git a/drivers/md/raid5-cache.h b/drivers/md/raid5-cache.h
+new file mode 100644
+index 0000000..f3d0c56
+--- /dev/null
++++ b/drivers/md/raid5-cache.h
+@@ -0,0 +1,142 @@
++#ifndef _RAID5_CACHE_H
++#define _RAID5_CACHE_H
++
++/*
++ * r5c journal modes of the array: write-back or write-through.
++ * write-through mode has identical behavior as existing log only
++ * implementation.
++ */
++enum r5c_journal_mode {
++	R5C_JOURNAL_MODE_WRITE_THROUGH = 0,
++	R5C_JOURNAL_MODE_WRITE_BACK = 1,
++};
++
++struct r5l_log {
++	struct md_rdev *rdev;
++
++	u32 uuid_checksum;
++
++	sector_t device_size;		/* log device size, round to
++					 * BLOCK_SECTORS */
++	sector_t max_free_space;	/* reclaim run if free space is at
++					 * this size */
++
++	sector_t last_checkpoint;	/* log tail. where recovery scan
++					 * starts from */
++	u64 last_cp_seq;		/* log tail sequence */
++
++	sector_t log_start;		/* log head. where new data appends */
++	u64 seq;			/* log head sequence */
++
++	sector_t next_checkpoint;
++	u64 next_cp_seq;
++
++	struct mutex io_mutex;
++	struct r5l_io_unit *current_io;	/* current io_unit accepting new data */
++
++	spinlock_t io_list_lock;
++	struct list_head running_ios;	/* io_units which are still running,
++					 * and have not yet been completely
++					 * written to the log */
++	struct list_head io_end_ios;	/* io_units which have been completely
++					 * written to the log but not yet written
++					 * to the RAID */
++	struct list_head flushing_ios;	/* io_units which are waiting for log
++					 * cache flush */
++	struct list_head finished_ios;	/* io_units which settle down in log disk */
++	struct bio flush_bio;
++
++	struct list_head no_mem_stripes;   /* pending stripes, -ENOMEM */
++
++	struct kmem_cache *io_kc;
++	mempool_t *io_pool;
++	struct bio_set *bs;
++	mempool_t *meta_pool;
++
++	struct md_thread *reclaim_thread;
++	unsigned long reclaim_target;	/* number of space that need to be
++					 * reclaimed.  if it's 0, reclaim spaces
++					 * used by io_units which are in
++					 * IO_UNIT_STRIPE_END state (eg, reclaim
++					 * dones't wait for specific io_unit
++					 * switching to IO_UNIT_STRIPE_END
++					 * state) */
++	wait_queue_head_t iounit_wait;
++
++	struct list_head no_space_stripes; /* pending stripes, log has no space */
++	spinlock_t no_space_stripes_lock;
++
++	bool need_cache_flush;
++
++	/* for r5c_cache */
++	enum r5c_journal_mode r5c_journal_mode;
++
++	/* all stripes in r5cache, in the order of seq at sh->log_start */
++	struct list_head stripe_in_journal_list;
++
++	spinlock_t stripe_in_journal_lock;
++	atomic_t stripe_in_journal_count;
++
++	/* to submit async io_units, to fulfill ordering of flush */
++	struct work_struct deferred_io_work;
++};
++
++/*
++ * an IO range starts from a meta data block and end at the next meta data
++ * block. The io unit's the meta data block tracks data/parity followed it. io
++ * unit is written to log disk with normal write, as we always flush log disk
++ * first and then start move data to raid disks, there is no requirement to
++ * write io unit with FLUSH/FUA
++ */
++struct r5l_io_unit {
++	struct r5l_log *log;
++
++	struct page *meta_page;	/* store meta block */
++	int meta_offset;	/* current offset in meta_page */
++
++	struct bio *current_bio;/* current_bio accepting new data */
++
++	atomic_t pending_stripe;/* how many stripes not flushed to raid */
++	u64 seq;		/* seq number of the metablock */
++	sector_t log_start;	/* where the io_unit starts */
++	sector_t log_end;	/* where the io_unit ends */
++	struct list_head log_sibling; /* log->running_ios */
++	struct list_head stripe_list; /* stripes added to the io_unit */
++
++	int state;
++	bool need_split_bio;
++
++	struct bio *split_bio;
++
++	unsigned int has_flush:1;      /* include flush request */
++	unsigned int has_fua:1;        /* include fua request */
++	unsigned int has_null_flush:1; /* include empty flush request */
++	/*
++	 * io isn't sent yet, flush/fua request can only be submitted till it's
++	 * the first IO in running_ios list
++	 */
++	unsigned int io_deferred:1;
++
++	struct bio_list flush_barriers;   /* size == 0 flush bios */
++};
++
++/* r5l_io_unit state */
++enum r5l_io_unit_state {
++	IO_UNIT_RUNNING = 0,	/* accepting new IO */
++	IO_UNIT_IO_START = 1,	/* io_unit bio start writing to log,
++				 * don't accepting new bio */
++	IO_UNIT_IO_END = 2,	/* io_unit bio finish writing to log */
++	IO_UNIT_STRIPE_END = 3,	/* stripes data finished writing to raid */
++};
++
++extern int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev);
++extern void r5l_exit_log(struct r5l_log *log);
++extern int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh);
++extern void r5l_write_stripe_run(struct r5l_log *log);
++extern void r5l_flush_stripe_to_raid(struct r5l_log *log);
++extern void r5l_stripe_write_finished(struct stripe_head *sh);
++extern int r5l_handle_flush_request(struct r5l_log *log, struct bio *bio);
++extern void r5l_quiesce(struct r5l_log *log, int state);
++extern bool r5l_log_disk_error(struct r5conf *conf);
++
++#endif /* _RAID5_CACHE_H */
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index dbab8c7..58ee1d3 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -61,6 +61,7 @@
+ #include "raid5.h"
+ #include "raid0.h"
+ #include "bitmap.h"
++#include "raid5-cache.h"
+ 
+ #define cpu_to_group(cpu) cpu_to_node(cpu)
+ #define ANY_GROUP NUMA_NO_NODE
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index d13fe45..1851be8 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -748,15 +748,6 @@ extern sector_t raid5_compute_sector(struct r5conf *conf, sector_t r_sector,
+ extern struct stripe_head *
+ raid5_get_active_stripe(struct r5conf *conf, sector_t sector,
+ 			int previous, int noblock, int noquiesce);
+-extern int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev);
+-extern void r5l_exit_log(struct r5l_log *log);
+-extern int r5l_write_stripe(struct r5l_log *log, struct stripe_head *head_sh);
+-extern void r5l_write_stripe_run(struct r5l_log *log);
+-extern void r5l_flush_stripe_to_raid(struct r5l_log *log);
+-extern void r5l_stripe_write_finished(struct stripe_head *sh);
+-extern int r5l_handle_flush_request(struct r5l_log *log, struct bio *bio);
+-extern void r5l_quiesce(struct r5l_log *log, int state);
+-extern bool r5l_log_disk_error(struct r5conf *conf);
+ extern bool r5c_is_writeback(struct r5l_log *log);
+ extern int
+ r5c_try_caching_write(struct r5conf *conf, struct stripe_head *sh,
 -- 
 2.10.1
 
