@@ -1,77 +1,88 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [md PATCH 0/5] Stop using bi_phys_segments as a counter
-Date: Thu, 24 Nov 2016 11:31:59 +1100
-Message-ID: <87d1hlbtvk.fsf@notabene.neil.brown.name>
-References: <147969099621.5434.12384452255155063186.stgit@noble> <20161121234311.6qhwa2g3oa4uhcbi@kernel.org> <87mvgscqe7.fsf@notabene.neil.brown.name> <20161122010220.dcq6brjhsliw4io6@kernel.org> <87k2bwcl44.fsf@notabene.neil.brown.name> <20161122080127.rv4kgmeyluyfyxnd@kernel.org> <87zikraqxl.fsf@notabene.neil.brown.name> <20161123084540.GE16966@lst.de>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH] md/r5cache: run_no_space_stripes() when R5C_LOG_CRITICAL
+ == 0
+Date: Wed, 23 Nov 2016 16:42:54 -0800
+Message-ID: <20161124004254.x762ithc5x7o4tcn@kernel.org>
+References: <20161123201745.972168-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161123084540.GE16966@lst.de>
+Content-Disposition: inline
+In-Reply-To: <20161123201745.972168-1-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: Shaohua Li <shli@kernel.org>, Christoph Hellwig <hch@lst.de>, linux-raid@vger.kernel.org
+To: Song Liu <songliubraving@fb.com>
+Cc: linux-raid@vger.kernel.org, neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuang521@gmail.com, liuzhengyuan@kylinos.cn
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Wed, Nov 23, 2016 at 12:17:45PM -0800, Song Liu wrote:
+> With writeback cache, we define log space critical as
+> 
+>    free_space < 2 * reclaim_required_space
+> 
+> So the deassert of R5C_LOG_CRITICAL could happen when
+>   1. free_space increases
+>   2. reclaim_required_space decreases
+> 
+> Currently, run_no_space_stripes() is called when 1 happens, but
+> not (always) when 2 happens.
+> 
+> With this patch, run_no_space_stripes() is call when
+> R5C_LOG_CRITICAL is cleared.
+> 
+> Signed-off-by: Song Liu <songliubraving@fb.com>
+> ---
+>  drivers/md/raid5-cache.c | 13 ++++++++++++-
+>  1 file changed, 12 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+> index 8cb79fc..0e24aab 100644
+> --- a/drivers/md/raid5-cache.c
+> +++ b/drivers/md/raid5-cache.c
+> @@ -370,6 +370,7 @@ static inline void r5c_update_log_state(struct r5l_log *log)
+>  	struct r5conf *conf = log->rdev->mddev->private;
+>  	sector_t free_space;
+>  	sector_t reclaim_space;
+> +	bool wake_reclaim = false;
+>  
+>  	if (!r5c_is_writeback(log))
+>  		return;
+> @@ -379,12 +380,18 @@ static inline void r5c_update_log_state(struct r5l_log *log)
+>  	reclaim_space = r5c_log_required_to_flush_cache(conf);
+>  	if (free_space < 2 * reclaim_space)
+>  		set_bit(R5C_LOG_CRITICAL, &conf->cache_state);
+> -	else
+> +	else {
+> +		if (test_bit(R5C_LOG_CRITICAL, &conf->cache_state))
+> +			wake_reclaim = true;
+>  		clear_bit(R5C_LOG_CRITICAL, &conf->cache_state);
+> +	}
 
-On Wed, Nov 23 2016, Christoph Hellwig wrote:
+This doesn't look correct. shouldn't we clear the bit and do the wakeup right
+after stripe_in_journal_count is decreased? Actually all these clear_bit looks
+wrong. They should be cleared right after the condition met. In current
+implementation, if no new stripe comes, r5c_update_log_state will not get
+called.
 
-> On Wed, Nov 23, 2016 at 01:08:38PM +1100, NeilBrown wrote:
->> For raid1/raid10 we could do a very similar thing.  There is an
->> awkwardness in raid1 w.r.t waiting for bi_phys_segments to reach 1, but
->> that might disappear if Coly's resync changes go through.
->> Alternately it might make sense to use bio_split so there is one r1_bio
->> per bio.
->> I might try the raid10 version and see what it looks like.
->
-> For RAID1 reads there already is one r1_bio per bio
+>  	if (free_space < 3 * reclaim_space)
+>  		set_bit(R5C_LOG_TIGHT, &conf->cache_state);
+>  	else
+>  		clear_bit(R5C_LOG_TIGHT, &conf->cache_state);
+> +
+> +	if (wake_reclaim)
+> +		r5l_wake_reclaim(log, 0);
+>  }
+>  
+>  /*
+> @@ -1348,6 +1355,10 @@ static void r5c_do_reclaim(struct r5conf *conf)
+>  		spin_unlock(&conf->device_lock);
+>  		spin_unlock_irqrestore(&log->stripe_in_journal_lock, flags);
+>  	}
+> +
+> +	if (!test_bit(R5C_LOG_CRITICAL, &conf->cache_state))
+> +		r5l_run_no_space_stripes(log);
+> +
 
-unless the bad-block-log records some bad/missing blocks in the middle
-of the range being read.
+Why this? r5l_do_reclaim will call r5l_run_no_space_stripes.
 
-> - in fact I have
-> a hack that doesn't allocate a r1_bio at all, but that one currently
-> does not handle reads from degraded arrays at all.  Due you remember
-> why we only mark a leg fail for a given bio instead of on a per-device
-> or at least per sector-range?
-
-When we detect a read error, we try to "correct" it by reading the data
-From=20elsewhere and over-writing the "bad" block.  If that works, there
-was no need to mark the whole device as faulty.  If it does fail, that
-is when the device is failed.
-
-We could have a "soft-write-mostly" flag to discourage reads from a
-questionable device, until it has been properly tested.
-
->
-> For writes it would make sense to allocate the new bio for each mirror
-> using a bio_set with front_pad for raid1-specific data, but I haven't
-> really looked into the details yet.
-
-Yes, you could.  I don't know if it would be an improvement, or just a
-change.
-
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAEBCAAGBQJYNjT/AAoJEDnsnt1WYoG5hy0P/i1HO/I4aQyxpuuUAKhwvyIi
-p/ctDNCXp9u2tw4Rmx1Ex0EmIvlvc+25WsA8r21c72NpMDk5wrsCkv1oiR7T/FmG
-zwTEQVkqZ48e31bsVC4Kv1CLT6gM6HWHCEnybW7ilvc3SmKEjC/9xsqX+fUXl1a3
-5vryjlnHeXkRSmK6jhonobOkB/T+AoL0kIIkTd7aD1LjkG+wgkhp7FkHhvzEaojY
-7FMuauzgu+GJYFGz5wdyLcdnBCXQn4x2NX8b/f357/ISQc5clY4LArpXTOFGuSmo
-r/G+OiBuwN0iuy5zG+A/AlGPEZ2nObX8ZQCxdrXr8a1w+gH8wvDovZeNQui6oR+U
-BbeQzvps1mOH8dawE/DNiagfGXtckn7pKBaKZdvUEyTIxrIrEuolpJzGyPVsmsRU
-X9OorKJxpf83qyE+5hX7G1lZLl6QBoJRHDsyp4MlfxcSddpnA+JlAaNwCEr7QSON
-IKUyHt/TvYefPbbcHjGIGrOFMka1xQz0eryKLKS62CrQblWSorRtyeE6s6povPme
-EHXAjpha0K4EuOv77YUQtRql78NSaA7KDS46ubD3OIYjOyc5XnmUNGiEe7b1bdrO
-cIvHPBM50yzWa4oMY1I3vuiYyXpf43yLUPllkFeay4Ssu3NC6+O85KD6vqGC74y4
-RkLWkgwpuOJzdX1LhO9A
-=tFlD
------END PGP SIGNATURE-----
---=-=-=--
+Thanks,
+Shaohua
