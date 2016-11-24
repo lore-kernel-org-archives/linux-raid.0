@@ -1,7 +1,7 @@
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH 07/12] md: mddev_find_container helper function
-Date: Thu, 24 Nov 2016 13:28:42 +0100
-Message-ID: <20161124122847.16456-8-artur.paszkiewicz@intel.com>
+Subject: [PATCH 06/12] raid5-ppl: calculate partial parity
+Date: Thu, 24 Nov 2016 13:28:41 +0100
+Message-ID: <20161124122847.16456-7-artur.paszkiewicz@intel.com>
 References: <20161124122847.16456-1-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20161124122847.16456-1-artur.paszkiewicz@intel.com>
@@ -10,75 +10,124 @@ To: shli@kernel.org
 Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-This allows finding the parent container of a subarray for external
-metadata arrays.
+Partial parity is calculated as follows:
+
+- reconstruct-write case:
+  xor data from all not updated disks in a stripe
+
+- read-modify-write case:
+  xor old data and parity from all updated disks in a stripe
+
+Implement it using the async_tx API and integrate into raid_run_ops().
+It must be called when we still have access to old data, so do it when
+STRIPE_OP_BIODRAIN is set, but before ops_run_prexor5(). The result is
+stored into sh->ppl_page.
 
 Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- drivers/md/md.c | 37 +++++++++++++++++++++++++++++++++++++
- drivers/md/md.h |  3 +++
- 2 files changed, 40 insertions(+)
+ drivers/md/raid5.c | 75 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 75 insertions(+)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 7028d54..5a14f8e 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -595,6 +595,43 @@ static struct mddev *mddev_find(dev_t unit)
- 	goto retry;
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 7d9c253..ba4fff9 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -1939,6 +1939,49 @@ static void ops_run_check_pq(struct stripe_head *sh, struct raid5_percpu *percpu
+ 			   &sh->ops.zero_sum_result, percpu->spare_page, &submit);
  }
  
-+struct mddev *mddev_find_container(struct mddev *subarray)
++static struct dma_async_tx_descriptor *
++ops_run_partial_parity(struct stripe_head *sh, struct raid5_percpu *percpu,
++		       struct dma_async_tx_descriptor *tx)
 +{
-+	struct mddev *mddev, *ret = NULL;
-+	char *container_name;
-+	int len = 0;
-+	int i;
++	int disks = sh->disks;
++	struct page **xor_srcs = flex_array_get(percpu->scribble, 0);
++	int count = 0, pd_idx = sh->pd_idx, i;
++	struct async_submit_ctl submit;
 +
-+	if (!subarray->external)
-+		return NULL;
++	if (test_bit(STRIPE_FULL_WRITE, &sh->state))
++		return tx;
 +
-+	container_name = subarray->metadata_type + 1;
-+	i = 0;
-+	while (container_name[i]) {
-+		if (container_name[i] == '/') {
-+			len = i;
-+			break;
++	if (sh->reconstruct_state == reconstruct_state_prexor_drain_run) {
++		for (i = disks; i--;) {
++			struct r5dev *dev = &sh->dev[i];
++			if (test_bit(R5_Wantdrain, &dev->flags)
++					|| i == pd_idx)
++				xor_srcs[count++] = dev->page;
 +		}
-+		i++;
-+	}
-+	if (len == 0)
-+		return NULL;
-+
-+	spin_lock(&all_mddevs_lock);
-+	list_for_each_entry(mddev, &all_mddevs, all_mddevs) {
-+		char *name = mdname(mddev);
-+		if (strlen(name) == len &&
-+				strncmp(name, container_name, len) == 0) {
-+			ret = mddev;
-+			break;
++	} else if (sh->reconstruct_state == reconstruct_state_drain_run) {
++		for (i = disks; i--;) {
++			struct r5dev *dev = &sh->dev[i];
++			if (test_bit(R5_UPTODATE, &dev->flags))
++				xor_srcs[count++] = dev->page;
 +		}
++	} else {
++		return tx;
 +	}
-+	spin_unlock(&all_mddevs_lock);
 +
-+	return ret;
++	init_async_submit(&submit, ASYNC_TX_XOR_ZERO_DST, tx,
++			NULL, sh, flex_array_get(percpu->scribble, 0)
++				+ sizeof(struct page *) * (sh->disks + 2));
++
++	if (count == 1)
++		tx = async_memcpy(sh->ppl_page, xor_srcs[0], 0, 0, PAGE_SIZE,
++				&submit);
++	else
++		tx = async_xor(sh->ppl_page, xor_srcs, 0, count, PAGE_SIZE,
++				&submit);
++
++	return tx;
 +}
-+EXPORT_SYMBOL_GPL(mddev_find_container);
 +
- static struct attribute_group md_redundancy_group;
- 
- void mddev_unlock(struct mddev *mddev)
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index d1e56f8..ca0b68f 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -711,4 +711,7 @@ static inline int mddev_is_clustered(struct mddev *mddev)
+ static void raid_run_ops(struct stripe_head *sh, unsigned long ops_request)
  {
- 	return mddev->cluster_info && mddev->bitmap_info.nodes > 1;
- }
+ 	int overlap_clear = 0, i, disks = sh->disks;
+@@ -1969,6 +2012,11 @@ static void raid_run_ops(struct stripe_head *sh, unsigned long ops_request)
+ 			async_tx_ack(tx);
+ 	}
+ 
++	if (test_bit(STRIPE_OP_BIODRAIN, &ops_request) &&
++			test_bit(MD_HAS_PPL, &conf->mddev->flags) &&
++			conf->disks[sh->pd_idx].rdev)
++		tx = ops_run_partial_parity(sh, percpu, tx);
 +
-+extern struct mddev *mddev_find_container(struct mddev *subarray);
+ 	if (test_bit(STRIPE_OP_PREXOR, &ops_request)) {
+ 		if (level < 6)
+ 			tx = ops_run_prexor5(sh, percpu, tx);
+@@ -3025,6 +3073,33 @@ static int add_stripe_bio(struct stripe_head *sh, struct bio *bi, int dd_idx,
+ 	if (*bip && (*bip)->bi_iter.bi_sector < bio_end_sector(bi))
+ 		goto overlap;
+ 
++	/*
++	 * PPL does not allow writes to different disks in the same stripe when
++	 * they are not next to each other. Not really an overlap, but
++	 * wait_for_overlap can be used to handle this.
++	 */
++	if (forwrite && test_bit(MD_HAS_PPL, &conf->mddev->flags)) {
++		int i;
++		int di = 0;
++		int first = -1, last = -1;
++		int count = 0;
++		for (i = 0; i < sh->disks; i++) {
++			if (i == sh->pd_idx)
++				continue;
 +
- #endif /* _MD_MD_H */
++			if (sh->dev[i].towrite || i == dd_idx) {
++				count++;
++				if (first < 0)
++					first = di;
++				last = di;
++			}
++			di++;
++		}
++
++		if (last > first && (last - first > count - 1))
++			goto overlap;
++	}
++
+ 	if (!forwrite || previous)
+ 		clear_bit(STRIPE_BATCH_READY, &sh->state);
+ 
 -- 
 2.10.1
 
