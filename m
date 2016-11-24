@@ -1,215 +1,136 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: Re: [RFC PATCH 1/2] RAID1: a new I/O barrier implementation to remove
- resync window
-Date: Thu, 24 Nov 2016 15:34:49 +0800
-Message-ID: <58369819.1070203@suse.com>
-References: <1479765241-15528-1-git-send-email-colyli@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Pawel Baldysiak <pawel.baldysiak@intel.com>
+Subject: [PATCH 1/1] IMSM: Update num_data_stripes during migration
+Date: Thu, 24 Nov 2016 09:48:24 +0100
+Message-ID: <20161124084824.28155-1-pawel.baldysiak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1479765241-15528-1-git-send-email-colyli@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Coly Li <colyli@suse.de>, linux-raid@vger.kernel.org
-Cc: Shaohua Li <shli@fb.com>, Neil Brown <neilb@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>
+To: jes.sorensen@redhat.com
+Cc: linux-raid@vger.kernel.org, Pawel Baldysiak <pawel.baldysiak@intel.com>, Maksymilian Kunt <maksymilian.kunt@intel.com>
 List-Id: linux-raid.ids
 
-Hi Coly,
+This patch adds updataing num_data_stripes during reshape.
+Previously this field once set during creation was never updated.
+Also, num_data_strips value multipied by chunk_size is used
+for set proper component size for RAID5.
 
-Please see below comments, just FYI.
+Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+Signed-off-by: Maksymilian Kunt <maksymilian.kunt@intel.com>
+---
+ super-intel.c | 53 ++++++++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 46 insertions(+), 7 deletions(-)
 
-On 11/22/2016 05:54 AM, Coly Li wrote:
->   - In raid1_make_request(), wait_barrier() is replaced by,
->     a) wait_read_barrier(): wait barrier in regular read I/O code path
->     b) wait_barrier(): wait barrier in regular write I/O code path
->     The differnece is wait_read_barrier() only waits if array is frozen, I
->     am not able to combile them into one function, because they must receive
->     differnet data types in their arguments list.
+diff --git a/super-intel.c b/super-intel.c
+index 5740088..3d21f31 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -910,14 +910,12 @@ static unsigned long long blocks_per_member(struct imsm_map *map)
+ 	return join_u32(map->blocks_per_member_lo, map->blocks_per_member_hi);
+ }
+ 
+-#ifndef MDASSEMBLE
+ static unsigned long long num_data_stripes(struct imsm_map *map)
+ {
+ 	if (map == NULL)
+ 		return 0;
+ 	return join_u32(map->num_data_stripes_lo, map->num_data_stripes_hi);
+ }
+-#endif
+ 
+ static void set_total_blocks(struct imsm_disk *disk, unsigned long long n)
+ {
+@@ -2916,7 +2914,13 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
+ 	}
+ 
+ 	info->data_offset	  = pba_of_lba0(map_to_analyse);
+-	info->component_size	  = blocks_per_member(map_to_analyse);
++
++	if (info->array.level == 5) {
++		info->component_size = num_data_stripes(map_to_analyse) *
++				       map_to_analyse->blocks_per_strip;
++	} else {
++		info->component_size = blocks_per_member(map_to_analyse);
++	}
+ 
+ 	info->component_size = imsm_component_size_aligment_check(
+ 							info->array.level,
+@@ -7065,7 +7069,14 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
+ 
+ 			info_d->events = __le32_to_cpu(mpb->generation_num);
+ 			info_d->data_offset = pba_of_lba0(map);
+-			info_d->component_size = blocks_per_member(map);
++
++			if (map->raid_level == 5) {
++				info_d->component_size =
++						num_data_stripes(map) *
++						map->blocks_per_strip;
++			} else {
++				info_d->component_size = blocks_per_member(map);
++			}
+ 		}
+ 		/* now that the disk list is up-to-date fixup recovery_start */
+ 		update_recovery_start(super, dev, this);
+@@ -8271,9 +8282,23 @@ static int apply_reshape_migration_update(struct imsm_update_reshape_migration *
+ 
+ 			/* update chunk size
+ 			 */
+-			if (u->new_chunksize > 0)
++			if (u->new_chunksize > 0) {
++				unsigned long long num_data_stripes;
++				int used_disks =
++					imsm_num_data_members(dev, MAP_0);
++
++				if (used_disks == 0)
++					return ret_val;
++
+ 				map->blocks_per_strip =
+ 					__cpu_to_le16(u->new_chunksize * 2);
++				num_data_stripes =
++					(join_u32(dev->size_low, dev->size_high)
++					/ used_disks);
++				num_data_stripes /= map->blocks_per_strip;
++				num_data_stripes /= map->num_domains;
++				set_num_data_stripes(map, num_data_stripes);
++			}
+ 
+ 			/* add disk
+ 			 */
+@@ -8340,13 +8365,19 @@ static int apply_size_change_update(struct imsm_update_size_change *u,
+ 			struct imsm_map *map = get_imsm_map(dev, MAP_0);
+ 			int used_disks = imsm_num_data_members(dev, MAP_0);
+ 			unsigned long long blocks_per_member;
++			unsigned long long num_data_stripes;
+ 
+ 			/* calculate new size
+ 			 */
+ 			blocks_per_member = u->new_size / used_disks;
+-			dprintf("(size: %llu, blocks per member: %llu)\n",
+-				u->new_size, blocks_per_member);
++			num_data_stripes = blocks_per_member /
++					   map->blocks_per_strip;
++			num_data_stripes /= map->num_domains;
++			dprintf("(size: %llu, blocks per member: %llu, num_data_stipes: %llu)\n",
++				u->new_size, blocks_per_member,
++				num_data_stripes);
+ 			set_blocks_per_member(map, blocks_per_member);
++			set_num_data_stripes(map, num_data_stripes);
+ 			imsm_set_array_size(dev, u->new_size);
+ 
+ 			ret_val = 1;
+@@ -8597,6 +8628,14 @@ static int apply_takeover_update(struct imsm_update_takeover *u,
+ 	map = get_imsm_map(dev, MAP_0);
+ 
+ 	if (u->direction == R10_TO_R0) {
++		unsigned long long num_data_stripes;
++
++		map->num_domains = 1;
++		num_data_stripes = blocks_per_member(map);
++		num_data_stripes /= map->blocks_per_strip;
++		num_data_stripes /= map->num_domains;
++		set_num_data_stripes(map, num_data_stripes);
++
+ 		/* Number of failed disks must be half of initial disk number */
+ 		if (imsm_count_failed(super, dev, MAP_0) !=
+ 				(map->num_members / 2))
+-- 
+2.9.3
 
-Maybe it is possible to add a parameter to distinguish read and write, then
-the two functions can be unified.
-
->   - align_to_barrier_unit_end() is called to make sure both regular and
->     resync I/O won't go across the border of a barrier unit size.
->   
-> Open question:
->   - Need review from md clustring developer, I don't touch related code now.
-
-I don't find problems with some tests so far.
-
->   static void reschedule_retry(struct r1bio *r1_bio)
-> @@ -215,10 +214,15 @@ static void reschedule_retry(struct r1bi
->   	unsigned long flags;
->   	struct mddev *mddev = r1_bio->mddev;
->   	struct r1conf *conf = mddev->private;
-> +	sector_t sector_nr;
-> +	long idx;
-> +
-> +	sector_nr = r1_bio->sector;
-> +	idx = get_barrier_bucket_idx(sector_nr);
-
-Isn't "idx = get_barrier_bucket_idx(r1_bio->sector)" enough here?
-
->   @@ -255,19 +257,14 @@ static void call_bio_endio(struct r1bio
->   	if (!test_bit(R1BIO_Uptodate, &r1_bio->state))
->   		bio->bi_error = -EIO;
->   
-> -	if (done) {
-> +	if (done)
->   		bio_endio(bio);
-> -		/*
-> -		 * Wake up any possible resync thread that waits for the device
-> -		 * to go idle.
-> -		 */
-> -		allow_barrier(conf, start_next_window, bi_sector);
-> -	}
->   }
->   
->   static void raid_end_bio_io(struct r1bio *r1_bio)
->   {
->   	struct bio *bio = r1_bio->master_bio;
-> +	struct r1conf *conf = r1_bio->mddev->private;
->   
->   	/* if nobody has done the final endio yet, do it now */
->   	if (!test_and_set_bit(R1BIO_Returned, &r1_bio->state)) {
-> @@ -278,6 +275,12 @@ static void raid_end_bio_io(struct r1bio
->   
->   		call_bio_endio(r1_bio);
->   	}
-> +
-> +	/*
-> +	 * Wake up any possible resync thread that waits for the device
-> +	 * to go idle.
-> +	 */
-> +	allow_barrier(conf, r1_bio->sector);
->   	free_r1bio(r1_bio);
->   }
-
-I am not sure it is safe for above changes since call_bio_endio is not only
-called within raid_end_bio_io.
-
->   
-> @@ -311,6 +314,7 @@ static int find_bio_disk(struct r1bio *r
->   	return mirror;
->   }
->   
-> +/* bi_end_io callback for regular READ bio */
-
-Not related to the patch itself, it would be better to make the similar
-changes in other patches.
-
-> -static bool need_to_wait_for_sync(struct r1conf *conf, struct bio *bio)
-> +/* A regular I/O should wait when,
-> + * - The whole array is frozen (both READ and WRITE)
-> + * - bio is WRITE and in same barrier bucket conf->barrier[idx] raised
-> + */
-> +static void _wait_barrier(struct r1conf *conf, long idx)
->   {
-> -	bool wait = false;
-> -
-> -	if (conf->array_frozen || !bio)
-> -		wait = true;
-> -	else if (conf->barrier && bio_data_dir(bio) == WRITE) {
-> -		if ((conf->mddev->curr_resync_completed
-> -		     >= bio_end_sector(bio)) ||
-> -		    (conf->next_resync + NEXT_NORMALIO_DISTANCE
-> -		     <= bio->bi_iter.bi_sector))
-> -			wait = false;
-> -		else
-> -			wait = true;
-> +	spin_lock_irq(&conf->resync_lock);
-> +	if (conf->array_frozen || conf->barrier[idx]) {
-> +		conf->nr_waiting[idx]++;
-> +		/* Wait for the barrier to drop. */
-> +		wait_event_lock_irq(
-> +			conf->wait_barrier,
-> +			!conf->array_frozen && !conf->barrier[idx],
-> +			conf->resync_lock);
-> +		conf->nr_waiting[idx]--;
->   	}
->   
-> -	return wait;
-> +	conf->nr_pending[idx]++;
-> +	spin_unlock_irq(&conf->resync_lock);
->   }
->   
-> -static sector_t wait_barrier(struct r1conf *conf, struct bio *bio)
-> +static void wait_read_barrier(struct r1conf *conf, sector_t sector_nr)
->   {
-> -	sector_t sector = 0;
-> +	long idx = get_barrier_bucket_idx(sector_nr);
->   
->   	spin_lock_irq(&conf->resync_lock);
-> -	if (need_to_wait_for_sync(conf, bio)) {
-> -		conf->nr_waiting++;
-> -		/* Wait for the barrier to drop.
-> -		 * However if there are already pending
-> -		 * requests (preventing the barrier from
-> -		 * rising completely), and the
-> -		 * per-process bio queue isn't empty,
-> -		 * then don't wait, as we need to empty
-> -		 * that queue to allow conf->start_next_window
-> -		 * to increase.
-> -		 */
-> -		wait_event_lock_irq(conf->wait_barrier,
-> -				    !conf->array_frozen &&
-> -				    (!conf->barrier ||
-> -				     ((conf->start_next_window <
-> -				       conf->next_resync + RESYNC_SECTORS) &&
-> -				      current->bio_list &&
-> -				      !bio_list_empty(current->bio_list))),
-> -				    conf->resync_lock);
-> -		conf->nr_waiting--;
-> -	}
-> -
-> -	if (bio && bio_data_dir(bio) == WRITE) {
-> -		if (bio->bi_iter.bi_sector >= conf->next_resync) {
-> -			if (conf->start_next_window == MaxSector)
-> -				conf->start_next_window =
-> -					conf->next_resync +
-> -					NEXT_NORMALIO_DISTANCE;
-> -
-> -			if ((conf->start_next_window + NEXT_NORMALIO_DISTANCE)
-> -			    <= bio->bi_iter.bi_sector)
-> -				conf->next_window_requests++;
-> -			else
-> -				conf->current_window_requests++;
-> -			sector = conf->start_next_window;
-> -		}
-> +	if (conf->array_frozen) {
-> +		conf->nr_waiting[idx]++;
-> +		/* Wait for array to unfreeze */
-> +		wait_event_lock_irq(
-> +			conf->wait_barrier,
-> +			!conf->array_frozen,
-> +			conf->resync_lock);
-> +		conf->nr_waiting[idx]--;
->   	}
-> -
-> -	conf->nr_pending++;
-> +	conf->nr_pending[idx]++;
->   	spin_unlock_irq(&conf->resync_lock);
-> -	return sector;
->   }
->   
-> -static void allow_barrier(struct r1conf *conf, sector_t start_next_window,
-> -			  sector_t bi_sector)
-> +static void wait_barrier(struct r1conf *conf, sector_t sector_nr)
-> +{
-> +	long idx = get_barrier_bucket_idx(sector_nr);
-> +
-> +	_wait_barrier(conf, idx);
-> +}
-> +
-
-I personally prefer to use one wait_barrier to cover both read and 
-write, something like:
-
-wait_barrier(struct r1conf *conf, long idx, int direction)
-
-BTW: there are some unnecessary changes inside the patch, maybe you can 
-remove it
-or introduce other patches for them.
-
-Regards,
-Guoqing
