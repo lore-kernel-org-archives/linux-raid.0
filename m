@@ -1,285 +1,38 @@
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH 6/7] Allow changing the RWH policy for a running array
-Date: Thu, 24 Nov 2016 13:29:51 +0100
-Message-ID: <20161124122952.16529-7-artur.paszkiewicz@intel.com>
-References: <20161124122952.16529-1-artur.paszkiewicz@intel.com>
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: Re: [PATCH 1/4 v2] mdadm: bad block support for external metadata -
+ initialization
+Date: Thu, 24 Nov 2016 15:01:03 +0100
+Message-ID: <20161124140103.GA8047@proton.igk.intel.com>
+References: <1477558425-13332-1-git-send-email-tomasz.majchrzak@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161124122952.16529-1-artur.paszkiewicz@intel.com>
+Content-Disposition: inline
+In-Reply-To: <1477558425-13332-1-git-send-email-tomasz.majchrzak@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: jes.sorensen@redhat.com
-Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+To: Jes.Sorensen@redhat.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This extends the --rwh-policy parameter to work also in Misc mode. Using
-it changes the currently active RWH policy in the kernel driver and
-updates the metadata to make this change permanent. Updating metadata is
-not yet implemented for super1, so this is limited to IMSM for now.
+On Thu, Oct 27, 2016 at 10:53:42AM +0200, Tomasz Majchrzak wrote:
+> If metadata handler provides support for bad blocks, tell md by writing
+> 'external_bbl' to rdev state file (both on create and assemble),
+> followed by a list of known bad blocks written via sysfs 'bad_blocks'
+> file.
+> 
+> Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+> Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+> ---
+>  mdadm.h | 13 +++++++++++++
+>  sysfs.c | 29 ++++++++++++++++++++++++++++-
+>  2 files changed, 41 insertions(+), 1 deletion(-)
 
-Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
----
- Manage.c      | 79 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- mdadm.c       |  9 +++++++
- mdadm.h       |  1 +
- super-intel.c | 65 +++++++++++++++++++++++++++++++++++++++++++++++-
- 4 files changed, 153 insertions(+), 1 deletion(-)
+Hi Jes,
 
-diff --git a/Manage.c b/Manage.c
-index 1b7b0c1..2343eba 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -1805,4 +1805,83 @@ int move_spare(char *from_devname, char *to_devname, dev_t devid)
- 	close(fd2);
- 	return 0;
- }
-+
-+int ChangeRwhPolicy(char *dev, char *update, int verbose)
-+{
-+	struct supertype *st;
-+	struct mdinfo *info;
-+	char *subarray = NULL;
-+	int ret = 0;
-+	int fd;
-+	int new_policy = map_name(rwh_policies, update);
-+
-+	if (new_policy == UnSet)
-+		return 1;
-+
-+	fd = open(dev, O_RDONLY);
-+	if (fd < 0)
-+		return 1;
-+
-+	st = super_by_fd(fd, &subarray);
-+	if (!st) {
-+		close(fd);
-+		return 1;
-+	}
-+
-+	info = sysfs_read(fd, NULL, GET_RWH_POLICY|GET_LEVEL);
-+	close(fd);
-+	if (!info) {
-+		ret = 1;
-+		goto free_st;
-+	}
-+
-+	if (new_policy == RWH_POLICY_PPL && !st->ss->supports_ppl) {
-+		pr_err("%s metadata does not support PPL\n", st->ss->name);
-+		ret = 1;
-+		goto free_info;
-+	}
-+
-+	if (info->array.level < 4 || info->array.level > 6) {
-+		pr_err("Operation not supported for array level %d\n",
-+				info->array.level);
-+		ret = 1;
-+		goto free_info;
-+	}
-+
-+	if (info->rwh_policy != (unsigned)new_policy) {
-+		if (!st->ss->external && new_policy == RWH_POLICY_PPL) {
-+			pr_err("Operation supported for external metadata only.\n");
-+			ret = 1;
-+			goto free_info;
-+		}
-+
-+		if (sysfs_set_str(info, NULL, "rwh_policy", update)) {
-+			pr_err("Failed to change array RWH Policy\n");
-+			ret = 1;
-+			goto free_info;
-+		}
-+		info->rwh_policy = new_policy;
-+	}
-+
-+	if (subarray) {
-+		char container_dev[PATH_MAX];
-+		struct mddev_ident ident;
-+
-+		sprintf(container_dev, "/dev/%s", st->container_devnm);
-+
-+		st->info = info;
-+		ident.st = st;
-+
-+		ret = Update_subarray(container_dev, subarray, "rwh-policy",
-+				&ident, verbose);
-+	}
-+
-+free_info:
-+	sysfs_free(info);
-+free_st:
-+	free(st);
-+	free(subarray);
-+
-+	return ret;
-+}
- #endif
-diff --git a/mdadm.c b/mdadm.c
-index 9ecdce6..82db22c 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -251,6 +251,7 @@ int main(int argc, char *argv[])
- 		case UpdateSubarray:
- 		case UdevRules:
- 		case KillOpt:
-+		case RwhPolicy:
- 			if (!mode)
- 				newmode = MISC;
- 			break;
-@@ -1200,11 +1201,16 @@ int main(int argc, char *argv[])
- 			s.journaldisks = 1;
- 			continue;
- 		case O(CREATE, RwhPolicy):
-+		case O(MISC, RwhPolicy):
- 			s.rwh_policy = map_name(rwh_policies, optarg);
- 			if (s.rwh_policy == UnSet) {
- 				pr_err("Invalid RWH policy: %s\n", optarg);
- 				exit(2);
- 			}
-+			if (mode == MISC) {
-+				devmode = opt;
-+				c.update = optarg;
-+			}
- 			continue;
- 		}
- 		/* We have now processed all the valid options. Anything else is
-@@ -1916,6 +1922,9 @@ static int misc_list(struct mddev_dev *devlist,
- 		case Action:
- 			rv |= SetAction(dv->devname, c->action);
- 			continue;
-+		case RwhPolicy:
-+			rv |= ChangeRwhPolicy(dv->devname, c->update, c->verbose);
-+			continue;
- 		}
- 		if (dv->devname[0] == '/')
- 			mdfd = open_mddev(dv->devname, 1);
-diff --git a/mdadm.h b/mdadm.h
-index 570d108..60a964a 100755
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -1332,6 +1332,7 @@ extern int Update_subarray(char *dev, char *subarray, char *update, struct mddev
- extern int Wait(char *dev);
- extern int WaitClean(char *dev, int sock, int verbose);
- extern int SetAction(char *dev, char *action);
-+extern int ChangeRwhPolicy(char *dev, char *update, int verbose);
- 
- extern int Incremental(struct mddev_dev *devlist, struct context *c,
- 		       struct supertype *st);
-diff --git a/super-intel.c b/super-intel.c
-index e6bd9ec..aa44f8c 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -450,6 +450,7 @@ enum imsm_update_type {
- 	update_takeover,
- 	update_general_migration_checkpoint,
- 	update_size_change,
-+	update_rwh_policy,
- };
- 
- struct imsm_update_activate_spare {
-@@ -538,6 +539,12 @@ struct imsm_update_add_remove_disk {
- 	enum imsm_update_type type;
- };
- 
-+struct imsm_update_rwh_policy {
-+	enum imsm_update_type type;
-+	int new_policy;
-+	int dev_idx;
-+};
-+
- static const char *_sys_dev_type[] = {
- 	[SYS_DEV_UNKNOWN] = "Unknown",
- 	[SYS_DEV_SAS] = "SAS",
-@@ -2896,7 +2903,6 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
- 	info->custom_array_size   <<= 32;
- 	info->custom_array_size   |= __le32_to_cpu(dev->size_low);
- 	info->recovery_blocked = imsm_reshape_blocks_arrays_changes(st->sb);
--	info->journal_clean = dev->rwh_policy;
- 
- 	if (is_gen_migration(dev)) {
- 		info->reshape_active = 1;
-@@ -3061,6 +3067,8 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
- 			info->rwh_policy = RWH_POLICY_PPL;
- 		else
- 			info->rwh_policy = RWH_POLICY_UNKNOWN;
-+
-+		info->journal_clean = info->rwh_policy == RWH_POLICY_PPL;
- 	}
- }
- 
-@@ -6875,6 +6883,41 @@ static int update_subarray_imsm(struct supertype *st, char *subarray,
- 			}
- 			super->updates_pending++;
- 		}
-+	} else if (strcmp(update, "rwh-policy") == 0) {
-+		struct mdinfo *info;
-+		int new_policy;
-+		char *ep;
-+		int vol = strtoul(subarray, &ep, 10);
-+
-+		if (!ident->st || !ident->st->info)
-+			return 2;
-+
-+		info = ident->st->info;
-+
-+		if (*ep != '\0' || vol >= super->anchor->num_raid_devs)
-+			return 2;
-+
-+		if (info->rwh_policy == RWH_POLICY_OFF)
-+			new_policy = RWH_OFF;
-+		else if (info->rwh_policy == RWH_POLICY_PPL)
-+			new_policy = RWH_DISTRIBUTED;
-+		else
-+			return 2;
-+
-+		if (st->update_tail) {
-+			struct imsm_update_rwh_policy *u = xmalloc(sizeof(*u));
-+
-+			u->type = update_rwh_policy;
-+			u->dev_idx = vol;
-+			u->new_policy = new_policy;
-+			append_metadata_update(st, u, sizeof(*u));
-+		} else {
-+			struct imsm_dev *dev;
-+
-+			dev = get_imsm_dev(super, vol);
-+			dev->rwh_policy = new_policy;
-+			super->updates_pending++;
-+		}
- 	} else
- 		return 2;
- 
-@@ -9029,6 +9072,21 @@ static void imsm_process_update(struct supertype *st,
- 		}
- 		break;
- 	}
-+	case update_rwh_policy: {
-+		struct imsm_update_rwh_policy *u = (void *)update->buf;
-+		int target = u->dev_idx;
-+		struct imsm_dev *dev = get_imsm_dev(super, target);
-+		if (!dev) {
-+			dprintf("could not find subarray-%d\n", target);
-+			break;
-+		}
-+
-+		if (dev->rwh_policy != u->new_policy) {
-+			dev->rwh_policy = u->new_policy;
-+			super->updates_pending++;
-+		}
-+		break;
-+	}
- 	default:
- 		pr_err("error: unsuported process update type:(type: %d)\n",	type);
- 	}
-@@ -9270,6 +9328,11 @@ static int imsm_prepare_update(struct supertype *st,
- 	case update_add_remove_disk:
- 		/* no update->len needed */
- 		break;
-+	case update_rwh_policy: {
-+		if (update->len < (int)sizeof(struct imsm_update_rwh_policy))
-+			return 0;
-+		break;
-+	}
- 	default:
- 		return 0;
- 	}
--- 
-2.10.1
+Do you have any comments for this patch set? It is a generic code for bad
+block support for external metadata. It comes ahead of my other patch set
+which provides IMSM implementation of new functionality.
 
+Regards,
+
+Tomek
