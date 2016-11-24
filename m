@@ -1,7 +1,7 @@
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH 06/12] raid5-ppl: calculate partial parity
-Date: Thu, 24 Nov 2016 13:28:41 +0100
-Message-ID: <20161124122847.16456-7-artur.paszkiewicz@intel.com>
+Subject: [PATCH 12/12] raid5-ppl: runtime PPL enabling or disabling
+Date: Thu, 24 Nov 2016 13:28:47 +0100
+Message-ID: <20161124122847.16456-13-artur.paszkiewicz@intel.com>
 References: <20161124122847.16456-1-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20161124122847.16456-1-artur.paszkiewicz@intel.com>
@@ -10,124 +10,204 @@ To: shli@kernel.org
 Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-Partial parity is calculated as follows:
+Introduce a sysfs attribute to get or set the current RWH policy. The
+raid5_reset_cache function is used to free the stripe cache and allocate
+it again. This is needed to allocate or free the ppl_pages for the
+stripes in the stripe cache.
 
-- reconstruct-write case:
-  xor data from all not updated disks in a stripe
-
-- read-modify-write case:
-  xor old data and parity from all updated disks in a stripe
-
-Implement it using the async_tx API and integrate into raid_run_ops().
-It must be called when we still have access to old data, so do it when
-STRIPE_OP_BIODRAIN is set, but before ops_run_prexor5(). The result is
-stored into sh->ppl_page.
+When enabling the log at runtime it is necessary to overwrite the PPL
+header to avoid recovering from stale PPL data if the log had been used
+previously with this array.
 
 Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- drivers/md/raid5.c | 75 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 75 insertions(+)
+ drivers/md/raid5-ppl.c |  38 ++++++++++++++---
+ drivers/md/raid5.c     | 109 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 142 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 7d9c253..ba4fff9 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -1939,6 +1939,49 @@ static void ops_run_check_pq(struct stripe_head *sh, struct raid5_percpu *percpu
- 			   &sh->ops.zero_sum_result, percpu->spare_page, &submit);
+diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
+index 7ce3ce5..0967b6d 100644
+--- a/drivers/md/raid5-ppl.c
++++ b/drivers/md/raid5-ppl.c
+@@ -715,6 +715,27 @@ static int ppl_load(struct r5l_log *log)
+ 	return ret;
  }
  
-+static struct dma_async_tx_descriptor *
-+ops_run_partial_parity(struct stripe_head *sh, struct raid5_percpu *percpu,
-+		       struct dma_async_tx_descriptor *tx)
++static int ppl_invalidate(struct r5l_log *log)
 +{
-+	int disks = sh->disks;
-+	struct page **xor_srcs = flex_array_get(percpu->scribble, 0);
-+	int count = 0, pd_idx = sh->pd_idx, i;
-+	struct async_submit_ctl submit;
++	struct ppl_conf *ppl_conf = log->private;
++	int i;
 +
-+	if (test_bit(STRIPE_FULL_WRITE, &sh->state))
-+		return tx;
++	for (i = 0; i < ppl_conf->count; i++) {
++		struct r5l_log *log_child = ppl_conf->child_logs[i];
++		int ret;
 +
-+	if (sh->reconstruct_state == reconstruct_state_prexor_drain_run) {
-+		for (i = disks; i--;) {
-+			struct r5dev *dev = &sh->dev[i];
-+			if (test_bit(R5_Wantdrain, &dev->flags)
-+					|| i == pd_idx)
-+				xor_srcs[count++] = dev->page;
-+		}
-+	} else if (sh->reconstruct_state == reconstruct_state_drain_run) {
-+		for (i = disks; i--;) {
-+			struct r5dev *dev = &sh->dev[i];
-+			if (test_bit(R5_UPTODATE, &dev->flags))
-+				xor_srcs[count++] = dev->page;
-+		}
-+	} else {
-+		return tx;
++		/* Missing drive */
++		if (!log_child)
++			continue;
++
++		ret = ppl_write_empty_header(log_child);
++		if (ret)
++			return ret;
 +	}
 +
-+	init_async_submit(&submit, ASYNC_TX_XOR_ZERO_DST, tx,
-+			NULL, sh, flex_array_get(percpu->scribble, 0)
-+				+ sizeof(struct page *) * (sh->disks + 2));
-+
-+	if (count == 1)
-+		tx = async_memcpy(sh->ppl_page, xor_srcs[0], 0, 0, PAGE_SIZE,
-+				&submit);
-+	else
-+		tx = async_xor(sh->ppl_page, xor_srcs, 0, count, PAGE_SIZE,
-+				&submit);
-+
-+	return tx;
++	return 0;
 +}
 +
- static void raid_run_ops(struct stripe_head *sh, unsigned long ops_request)
- {
- 	int overlap_clear = 0, i, disks = sh->disks;
-@@ -1969,6 +2012,11 @@ static void raid_run_ops(struct stripe_head *sh, unsigned long ops_request)
- 			async_tx_ack(tx);
+ #define IMSM_MPB_SIG "Intel Raid ISM Cfg Sig. "
+ #define IMSM_MPB_ORIG_FAMILY_NUM_OFFSET 64
+ 
+@@ -946,11 +967,18 @@ static int __ppl_init_log(struct r5l_log *log, struct r5conf *conf)
+ 		ppl_conf->child_logs[i] = log_child;
  	}
  
-+	if (test_bit(STRIPE_OP_BIODRAIN, &ops_request) &&
-+			test_bit(MD_HAS_PPL, &conf->mddev->flags) &&
-+			conf->disks[sh->pd_idx].rdev)
-+		tx = ops_run_partial_parity(sh, percpu, tx);
-+
- 	if (test_bit(STRIPE_OP_PREXOR, &ops_request)) {
- 		if (level < 6)
- 			tx = ops_run_prexor5(sh, percpu, tx);
-@@ -3025,6 +3073,33 @@ static int add_stripe_bio(struct stripe_head *sh, struct bio *bi, int dd_idx,
- 	if (*bip && (*bip)->bi_iter.bi_sector < bio_end_sector(bi))
- 		goto overlap;
+-	ret = ppl_load(log);
+-	if (!ret && mddev->recovery_cp == 0 && !mddev->degraded)
+-		mddev->recovery_cp = MaxSector;
+-	else if (ret < 0)
+-		goto err;
++	if (mddev->pers) {
++		dbg("Array running - invalidate PPL\n");
++		ret = ppl_invalidate(log);
++		if (ret)
++			goto err;
++	} else {
++		ret = ppl_load(log);
++		if (!ret && mddev->recovery_cp == 0 && !mddev->degraded)
++			mddev->recovery_cp = MaxSector;
++		else if (ret < 0)
++			goto err;
++	}
  
-+	/*
-+	 * PPL does not allow writes to different disks in the same stripe when
-+	 * they are not next to each other. Not really an overlap, but
-+	 * wait_for_overlap can be used to handle this.
-+	 */
-+	if (forwrite && test_bit(MD_HAS_PPL, &conf->mddev->flags)) {
-+		int i;
-+		int di = 0;
-+		int first = -1, last = -1;
-+		int count = 0;
-+		for (i = 0; i < sh->disks; i++) {
-+			if (i == sh->pd_idx)
-+				continue;
+ 	rcu_assign_pointer(conf->log, log);
+ 	set_bit(MD_HAS_PPL, &mddev->flags);
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 7a1a564..bd06cfb 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6413,6 +6413,114 @@ raid5_group_thread_cnt = __ATTR(group_thread_cnt, S_IRUGO | S_IWUSR,
+ 				raid5_show_group_thread_cnt,
+ 				raid5_store_group_thread_cnt);
+ 
++static ssize_t
++raid5_show_rwh_policy(struct mddev *mddev, char *page)
++{
++	struct r5conf *conf;
++	int ret = 0;
++	spin_lock(&mddev->lock);
++	conf = mddev->private;
++	if (conf) {
++		const char *policy = NULL;
++		if (!conf->log)
++			policy = "off";
++		else if (conf->log->rwh_policy == RWH_POLICY_JOURNAL)
++			policy = "journal";
++		else if (conf->log->rwh_policy == RWH_POLICY_PPL)
++			policy = "ppl";
++		if (policy)
++			ret = sprintf(page, "%s\n", policy);
++	}
++	spin_unlock(&mddev->lock);
++	return ret;
++}
 +
-+			if (sh->dev[i].towrite || i == dd_idx) {
-+				count++;
-+				if (first < 0)
-+					first = di;
-+				last = di;
-+			}
-+			di++;
-+		}
++static void raid5_reset_cache(struct mddev *mddev)
++{
++	struct r5conf *conf = mddev->private;
 +
-+		if (last > first && (last - first > count - 1))
-+			goto overlap;
++	mutex_lock(&conf->cache_size_mutex);
++	while (conf->max_nr_stripes &&
++		       drop_one_stripe(conf))
++			;
++
++	while (conf->min_nr_stripes > conf->max_nr_stripes)
++		if (!grow_one_stripe(conf, GFP_KERNEL))
++			break;
++	mutex_unlock(&conf->cache_size_mutex);
++}
++
++static ssize_t
++raid5_store_rwh_policy(struct mddev *mddev, const char *page, size_t len)
++{
++	struct r5conf *conf;
++	int err;
++	int new_policy, current_policy;
++
++	if (len >= PAGE_SIZE)
++		return -EINVAL;
++
++	err = mddev_lock(mddev);
++	if (err)
++		return err;
++	conf = mddev->private;
++	if (!conf) {
++		err = -ENODEV;
++		goto out;
 +	}
 +
- 	if (!forwrite || previous)
- 		clear_bit(STRIPE_BATCH_READY, &sh->state);
- 
++	if (conf->log)
++		current_policy = conf->log->rwh_policy;
++	else
++		current_policy = RWH_POLICY_OFF;
++
++	if (strncmp(page, "off", 3) == 0) {
++		new_policy = RWH_POLICY_OFF;
++	} else if (strncmp(page, "journal", 7) == 0) {
++		new_policy = RWH_POLICY_JOURNAL;
++	} else if (strncmp(page, "ppl", 3) == 0) {
++		new_policy = RWH_POLICY_PPL;
++	} else {
++		err = -EINVAL;
++		goto out;
++	}
++
++	if (new_policy == current_policy)
++		goto out;
++
++	if (current_policy == RWH_POLICY_PPL && new_policy == RWH_POLICY_OFF) {
++		struct r5l_log *log;
++		mddev_suspend(mddev);
++		log = conf->log;
++		conf->log = NULL;
++		synchronize_rcu();
++		r5l_exit_log(log);
++		raid5_reset_cache(mddev);
++		mddev_resume(mddev);
++	} else if (current_policy == RWH_POLICY_OFF &&
++		   new_policy == RWH_POLICY_PPL) {
++		mddev_suspend(mddev);
++		err = r5l_init_log(conf, NULL, new_policy);
++		if (!err)
++			raid5_reset_cache(mddev);
++		mddev_resume(mddev);
++	} else {
++		err = -EINVAL;
++		goto out;
++	}
++
++	md_update_sb(mddev, 1);
++out:
++	mddev_unlock(mddev);
++
++	return err ?: len;
++}
++
++static struct md_sysfs_entry
++raid5_rwh_policy = __ATTR(rwh_policy, S_IRUGO | S_IWUSR,
++				raid5_show_rwh_policy,
++				raid5_store_rwh_policy);
++
+ static struct attribute *raid5_attrs[] =  {
+ 	&raid5_stripecache_size.attr,
+ 	&raid5_stripecache_active.attr,
+@@ -6421,6 +6529,7 @@ static struct attribute *raid5_attrs[] =  {
+ 	&raid5_skip_copy.attr,
+ 	&raid5_rmw_level.attr,
+ 	&r5c_journal_mode.attr,
++	&raid5_rwh_policy.attr,
+ 	NULL,
+ };
+ static struct attribute_group raid5_attrs_group = {
 -- 
 2.10.1
 
