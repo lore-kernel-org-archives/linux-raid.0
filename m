@@ -1,7 +1,7 @@
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH 4/7] super1: PPL support
-Date: Thu, 24 Nov 2016 13:29:49 +0100
-Message-ID: <20161124122952.16529-5-artur.paszkiewicz@intel.com>
+Subject: [PATCH 2/7] Generic support for --rwh-policy and PPL
+Date: Thu, 24 Nov 2016 13:29:47 +0100
+Message-ID: <20161124122952.16529-3-artur.paszkiewicz@intel.com>
 References: <20161124122952.16529-1-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20161124122952.16529-1-artur.paszkiewicz@intel.com>
@@ -10,457 +10,412 @@ To: jes.sorensen@redhat.com
 Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-Enable creating and assembling raid5 arrays with PPL for 1.1 and 1.2
-metadata.
+Add a new parameter to mdadm: --rwh-policy=. It can be used to create a
+raid5 array using PPL. Add the necessary plumbing to pass this option to
+metadata handlers. The write journal functionality is treated as a
+different RWH policy, which is implicitly selected when using
+--write-journal.
 
-When creating, reserve enough space for PPL and store its size and
-location in the superblock and set MD_FEATURE_PPL bit. PPL is stored in
-the metadata region reserved for internal write-intent bitmap, so don't
-allow using bitmap and PPL together.
+Show the currently enabled RWH policy type in the output from
+mdadm --detail. The value is retrieved from the array's sysfs attribute
+'rwh_policy'.
 
 Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- Create.c      | 19 +++++++++++--
- Grow.c        | 15 +++++++++-
- mdadm.h       |  4 ++-
- super-ddf.c   |  2 +-
- super-gpt.c   |  2 +-
- super-intel.c |  4 +--
- super-mbr.c   |  2 +-
- super0.c      |  2 +-
- super1.c      | 88 +++++++++++++++++++++++++++++++++++++++++++++++++----------
- 9 files changed, 113 insertions(+), 25 deletions(-)
+ Create.c      |  7 ++++++-
+ Detail.c      | 18 ++++++++++++++++--
+ Kill.c        |  2 +-
+ ReadMe.c      |  1 +
+ maps.c        |  7 +++++++
+ mdadm.c       | 35 ++++++++++++++++++++++++++++++++---
+ mdadm.h       | 15 +++++++++++++--
+ super-ddf.c   |  4 ++--
+ super-intel.c | 12 ++++++------
+ super0.c      |  6 +++---
+ super1.c      |  4 ++--
+ sysfs.c       | 11 +++++++++++
+ 12 files changed, 100 insertions(+), 22 deletions(-)
 
 diff --git a/Create.c b/Create.c
-index 52e7e2b..590ed69 100644
+index 1594a39..52e7e2b 100644
 --- a/Create.c
 +++ b/Create.c
-@@ -201,6 +201,15 @@ int Create(struct supertype *st, char *mddev,
+@@ -594,6 +594,11 @@ int Create(struct supertype *st, char *mddev,
  		return 1;
  	}
  
-+	if (s->rwh_policy == RWH_POLICY_PPL) {
-+		if (s->bitmap_file) {
-+			pr_err("PPL is not compatible with bitmap\n");
-+			return 1;
-+		} else {
-+			s->bitmap_file = "none";
-+		}
++	if (s->rwh_policy == RWH_POLICY_PPL && !st->ss->supports_ppl) {
++		pr_err("%s metadata does not support PPL\n", st->ss->name);
++		return 1;
 +	}
 +
- 	/* now set some defaults */
- 
- 	if (s->layout == UnSet) {
-@@ -259,7 +268,8 @@ int Create(struct supertype *st, char *mddev,
- 	if (st && ! st->ss->validate_geometry(st, s->level, s->layout, s->raiddisks,
- 					      &s->chunk, s->size*2,
- 					      data_offset, NULL,
--					      &newsize, c->verbose>=0))
-+					      &newsize, s->rwh_policy,
-+					      c->verbose>=0))
- 		return 1;
- 
- 	if (s->chunk && s->chunk != UnSet) {
-@@ -358,7 +368,8 @@ int Create(struct supertype *st, char *mddev,
- 						st, s->level, s->layout, s->raiddisks,
- 						&s->chunk, s->size*2,
- 						dv->data_offset, dname,
--						&freesize, c->verbose > 0)) {
-+						&freesize, s->rwh_policy,
-+						c->verbose > 0)) {
- 				case -1: /* Not valid, message printed, and not
- 					  * worth checking any further */
- 					exit(2);
-@@ -395,6 +406,7 @@ int Create(struct supertype *st, char *mddev,
- 						       &s->chunk, s->size*2,
- 						       dv->data_offset,
- 						       dname, &freesize,
-+						       s->rwh_policy,
- 						       c->verbose >= 0)) {
- 
- 				pr_err("%s is not suitable for this array.\n",
-@@ -501,7 +513,8 @@ int Create(struct supertype *st, char *mddev,
- 						       s->raiddisks,
- 						       &s->chunk, minsize*2,
- 						       data_offset,
--						       NULL, NULL, 0)) {
-+						       NULL, NULL,
-+						       s->rwh_policy, 0)) {
- 				pr_err("devices too large for RAID level %d\n", s->level);
- 				return 1;
- 			}
-diff --git a/Grow.c b/Grow.c
-index 455c5f9..8bfb09c 100755
---- a/Grow.c
-+++ b/Grow.c
-@@ -290,6 +290,7 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
- 	int major = BITMAP_MAJOR_HI;
- 	int vers = md_get_version(fd);
- 	unsigned long long bitmapsize, array_size;
-+	struct mdinfo *mdi;
- 
- 	if (vers < 9003) {
- 		major = BITMAP_MAJOR_HOSTENDIAN;
-@@ -389,12 +390,23 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
- 		free(st);
- 		return 1;
+ 	/* We need to create the device */
+ 	map_lock(&map);
+ 	mdfd = create_mddev(mddev, name, c->autof, LOCAL, chosen_name);
+@@ -720,7 +725,7 @@ int Create(struct supertype *st, char *mddev,
+ 				name += 2;
+ 		}
  	}
-+
-+	mdi = sysfs_read(fd, NULL, GET_RWH_POLICY);
-+	if (mdi) {
-+		if (mdi->rwh_policy == RWH_POLICY_PPL) {
-+			pr_err("Cannot add bitmap to array with PPL\n");
-+			free(mdi);
-+			free(st);
-+			return 1;
+-	if (!st->ss->init_super(st, &info.array, s->size, name, c->homehost, uuid,
++	if (!st->ss->init_super(st, &info.array, s, name, c->homehost, uuid,
+ 				data_offset))
+ 		goto abort_locked;
+ 
+diff --git a/Detail.c b/Detail.c
+index 925e479..d79503d 100644
+--- a/Detail.c
++++ b/Detail.c
+@@ -504,15 +504,29 @@ int Detail(char *dev, struct context *c)
+ 		case 10:
+ 		case 6:
+ 			if (array.chunk_size)
+-				printf("     Chunk Size : %dK\n\n",
++				printf("     Chunk Size : %dK\n",
+ 				       array.chunk_size/1024);
+ 			break;
+ 		case -1:
+-			printf("       Rounding : %dK\n\n", array.chunk_size/1024);
++			printf("       Rounding : %dK\n", array.chunk_size/1024);
+ 			break;
+ 		default: break;
+ 		}
+ 
++		if (array.level == 4 || array.level == 5 || array.level == 6) {
++			struct mdinfo *mdi = sysfs_read(fd, NULL,
++							GET_RWH_POLICY);
++			if (mdi) {
++				char *rwh_policy = map_num(rwh_policies,
++							   mdi->rwh_policy);
++				sysfs_free(mdi);
++				if (rwh_policy)
++					printf("     RWH Policy : %s\n",
++					       rwh_policy);
++			}
 +		}
-+		free(mdi);
++		printf("\n");
++
+ 		if (e && e->percent >= 0) {
+ 			static char *sync_action[] = {
+ 				"Rebuild", "Resync",
+diff --git a/Kill.c b/Kill.c
+index f2fdb85..ff52561 100644
+--- a/Kill.c
++++ b/Kill.c
+@@ -63,7 +63,7 @@ int Kill(char *dev, struct supertype *st, int force, int verbose, int noexcl)
+ 	rv = st->ss->load_super(st, fd, dev);
+ 	if (rv == 0 || (force && rv >= 2)) {
+ 		st->ss->free_super(st);
+-		st->ss->init_super(st, NULL, 0, "", NULL, NULL,
++		st->ss->init_super(st, NULL, NULL, "", NULL, NULL,
+ 				   INVALID_SECTORS);
+ 		if (st->ss->store_super(st, fd)) {
+ 			if (verbose >= 0)
+diff --git a/ReadMe.c b/ReadMe.c
+index d3fcb61..11165a8 100644
+--- a/ReadMe.c
++++ b/ReadMe.c
+@@ -143,6 +143,7 @@ struct option long_options[] = {
+     {"nodes",1, 0, Nodes}, /* also for --assemble */
+     {"home-cluster",1, 0, ClusterName},
+     {"write-journal",1, 0, WriteJournal},
++    {"rwh-policy",1, 0, RwhPolicy},
+ 
+     /* For assemble */
+     {"uuid",      1, 0, 'u'},
+diff --git a/maps.c b/maps.c
+index 64f1df2..2e8dd9e 100644
+--- a/maps.c
++++ b/maps.c
+@@ -129,6 +129,13 @@ mapping_t faultylayout[] = {
+ 	{ NULL, 0}
+ };
+ 
++mapping_t rwh_policies[] = {
++	{ "off", RWH_POLICY_OFF},
++	{ "journal", RWH_POLICY_JOURNAL},
++	{ "ppl", RWH_POLICY_PPL},
++	{ NULL, 0}
++};
++
+ char *map_num(mapping_t *map, int num)
+ {
+ 	while (map->name) {
+diff --git a/mdadm.c b/mdadm.c
+index cca0933..9ecdce6 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -78,6 +78,7 @@ int main(int argc, char *argv[])
+ 		.level		= UnSet,
+ 		.layout		= UnSet,
+ 		.bitmap_chunk	= UnSet,
++		.rwh_policy	= UnSet,
+ 	};
+ 
+ 	char sys_hostname[256];
+@@ -1198,6 +1199,13 @@ int main(int argc, char *argv[])
+ 
+ 			s.journaldisks = 1;
+ 			continue;
++		case O(CREATE, RwhPolicy):
++			s.rwh_policy = map_name(rwh_policies, optarg);
++			if (s.rwh_policy == UnSet) {
++				pr_err("Invalid RWH policy: %s\n", optarg);
++				exit(2);
++			}
++			continue;
+ 		}
+ 		/* We have now processed all the valid options. Anything else is
+ 		 * an error
+@@ -1225,9 +1233,30 @@ int main(int argc, char *argv[])
+ 		exit(0);
+ 	}
+ 
+-	if (s.journaldisks && (s.level < 4 || s.level > 6)) {
+-		pr_err("--write-journal is only supported for RAID level 4/5/6.\n");
+-		exit(2);
++	if (s.journaldisks) {
++		if (s.level < 4 || s.level > 6) {
++			pr_err("--write-journal is only supported for RAID level 4/5/6.\n");
++			exit(2);
++		}
++		if (s.rwh_policy == UnSet) {
++			s.rwh_policy = RWH_POLICY_JOURNAL;
++		} else if (s.rwh_policy != RWH_POLICY_JOURNAL) {
++			pr_err("--write-journal is not supported with RWH policy: %s\n",
++			       map_num(rwh_policies, s.rwh_policy));
++			exit(2);
++		}
 +	}
 +
- 	if (strcmp(s->bitmap_file, "internal") == 0 ||
- 	    strcmp(s->bitmap_file, "clustered") == 0) {
- 		int rv;
- 		int d;
- 		int offset_setable = 0;
--		struct mdinfo *mdi;
- 		if (st->ss->add_internal_bitmap == NULL) {
- 			pr_err("Internal bitmaps not supported with %s metadata\n", st->ss->name);
- 			return 1;
-@@ -446,6 +458,7 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
- 			sysfs_init(mdi, fd, NULL);
- 			rv = sysfs_set_num_signed(mdi, NULL, "bitmap/location",
- 						  mdi->bitmap_offset);
-+			free(mdi);
- 		} else {
- 			if (strcmp(s->bitmap_file, "clustered") == 0)
- 				array.state |= (1 << MD_SB_CLUSTERED);
++	if (s.rwh_policy != UnSet) {
++		if (s.level < 4 || s.level > 6) {
++			pr_err("--rwh-policy is only supported for RAID level 4/5/6.\n");
++			exit(2);
++		}
++		if (s.rwh_policy == RWH_POLICY_JOURNAL && !s.journaldisks) {
++			pr_err("--write-journal is required for RWH policy: %s\n",
++			       map_num(rwh_policies, s.rwh_policy));
++			exit(2);
++		}
+ 	}
+ 
+ 	if (!mode && devs_found) {
 diff --git a/mdadm.h b/mdadm.h
-index 5600341..570d108 100755
+index 240ab7f..4eabf59 100755
 --- a/mdadm.h
 +++ b/mdadm.h
-@@ -288,6 +288,8 @@ struct mdinfo {
- 		#define MaxSector  (~0ULL) /* resync/recovery complete position */
- 	};
- 	long			bitmap_offset;	/* 0 == none, 1 == a file */
-+	unsigned int		ppl_offset;
-+	unsigned int		ppl_sectors;
- 	unsigned long		safe_mode_delay; /* ms delay to mark clean */
- 	int			new_level, delta_disks, new_layout, new_chunk;
- 	int			errors;
-@@ -948,7 +950,7 @@ extern struct superswitch {
- 				 int *chunk, unsigned long long size,
- 				 unsigned long long data_offset,
- 				 char *subdev, unsigned long long *freesize,
--				 int verbose);
-+				 int rwh_policy, int verbose);
+@@ -268,6 +268,13 @@ struct mdinfo {
+ 	int journal_device_required;
+ 	int journal_clean;
  
- 	/* Return a linked list of 'mdinfo' structures for all arrays
- 	 * in the container.  For non-containers, it is like
++	enum {
++		RWH_POLICY_UNKNOWN,
++		RWH_POLICY_OFF,
++		RWH_POLICY_JOURNAL,
++		RWH_POLICY_PPL,
++	} rwh_policy;
++
+ 	/* During reshape we can sometimes change the data_offset to avoid
+ 	 * over-writing still-valid data.  We need to know if there is space.
+ 	 * So getinfo_super will fill in space_before and space_after in sectors.
+@@ -409,6 +416,7 @@ enum special_options {
+ 	ClusterName,
+ 	ClusterConfirm,
+ 	WriteJournal,
++	RwhPolicy,
+ };
+ 
+ enum prefix_standard {
+@@ -506,6 +514,7 @@ struct shape {
+ 	int	assume_clean;
+ 	int	write_behind;
+ 	unsigned long long size;
++	int	rwh_policy;
+ };
+ 
+ /* List of device names - wildcards expanded */
+@@ -596,6 +605,7 @@ enum sysfs_read_flags {
+ 	GET_STATE	= (1 << 23),
+ 	GET_ERROR	= (1 << 24),
+ 	GET_ARRAY_STATE = (1 << 25),
++	GET_RWH_POLICY	= (1 << 26),
+ };
+ 
+ /* If fd >= 0, get the array it is open on,
+@@ -679,7 +689,7 @@ extern int restore_stripes(int *dest, unsigned long long *offsets,
+ 
+ extern char *map_num(mapping_t *map, int num);
+ extern int map_name(mapping_t *map, char *name);
+-extern mapping_t r5layout[], r6layout[], pers[], modes[], faultylayout[];
++extern mapping_t r5layout[], r6layout[], pers[], modes[], faultylayout[], rwh_policies[];
+ 
+ extern char *map_dev_preferred(int major, int minor, int create,
+ 			       char *prefer);
+@@ -839,7 +849,7 @@ extern struct superswitch {
+ 	 * metadata.
+ 	 */
+ 	int (*init_super)(struct supertype *st, mdu_array_info_t *info,
+-			  unsigned long long size, char *name,
++			  struct shape *s, char *name,
+ 			  char *homehost, int *uuid,
+ 			  unsigned long long data_offset);
+ 
+@@ -1035,6 +1045,7 @@ extern struct superswitch {
+ 	/* validate container after assemble */
+ 	int (*validate_container)(struct mdinfo *info);
+ 
++	int supports_ppl;
+ 	int swapuuid; /* true if uuid is bigending rather than hostendian */
+ 	int external;
+ 	const char *name; /* canonical metadata name */
 diff --git a/super-ddf.c b/super-ddf.c
-index 18e1e77..6184a73 100644
+index 1707ad1..18e1e77 100644
 --- a/super-ddf.c
 +++ b/super-ddf.c
-@@ -3347,7 +3347,7 @@ static int validate_geometry_ddf(struct supertype *st,
- 				 int *chunk, unsigned long long size,
- 				 unsigned long long data_offset,
- 				 char *dev, unsigned long long *freesize,
--				 int verbose)
-+				 int rwh_policy, int verbose)
+@@ -2290,7 +2290,7 @@ static unsigned int find_vde_by_guid(const struct ddf_super *ddf,
+ 
+ static int init_super_ddf(struct supertype *st,
+ 			  mdu_array_info_t *info,
+-			  unsigned long long size, char *name, char *homehost,
++			  struct shape *s, char *name, char *homehost,
+ 			  int *uuid, unsigned long long data_offset)
  {
- 	int fd;
- 	struct mdinfo *sra;
-diff --git a/super-gpt.c b/super-gpt.c
-index 1a2adce..efb0c00 100644
---- a/super-gpt.c
-+++ b/super-gpt.c
-@@ -195,7 +195,7 @@ static int validate_geometry(struct supertype *st, int level,
- 			     int *chunk, unsigned long long size,
- 			     unsigned long long data_offset,
- 			     char *subdev, unsigned long long *freesize,
--			     int verbose)
-+			     int rwh_policy, int verbose)
- {
- 	pr_err("gpt metadata cannot be used this way\n");
- 	return 0;
+ 	/* This is primarily called by Create when creating a new array.
+@@ -2328,7 +2328,7 @@ static int init_super_ddf(struct supertype *st,
+ 	struct virtual_disk *vd;
+ 
+ 	if (st->sb)
+-		return init_super_ddf_bvd(st, info, size, name, homehost, uuid,
++		return init_super_ddf_bvd(st, info, s->size, name, homehost, uuid,
+ 					  data_offset);
+ 
+ 	if (posix_memalign((void**)&ddf, 512, sizeof(*ddf)) != 0) {
 diff --git a/super-intel.c b/super-intel.c
-index 79a3d78..7f12230 100644
+index 69f6201..df09272 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -6631,7 +6631,7 @@ static int validate_geometry_imsm(struct supertype *st, int level, int layout,
- 				  int raiddisks, int *chunk, unsigned long long size,
- 				  unsigned long long data_offset,
- 				  char *dev, unsigned long long *freesize,
--				  int verbose)
-+				  int rwh_policy, int verbose)
- {
- 	int fd, cfd;
- 	struct mdinfo *sra;
-@@ -10447,7 +10447,7 @@ enum imsm_reshape_type imsm_analyze_change(struct supertype *st,
- 				    geo->raid_disks + devNumChange,
- 				    &chunk,
- 				    geo->size, INVALID_SECTORS,
--				    0, 0, 1))
-+				    0, 0, info.rwh_policy, 1))
- 		change = -1;
+@@ -4887,7 +4887,7 @@ static int check_name(struct intel_super *super, char *name, int quiet)
+ }
  
- 	if (check_devs) {
-diff --git a/super-mbr.c b/super-mbr.c
-index f5e4cea..66d984c 100644
---- a/super-mbr.c
-+++ b/super-mbr.c
-@@ -193,7 +193,7 @@ static int validate_geometry(struct supertype *st, int level,
- 			     int *chunk, unsigned long long size,
- 			     unsigned long long data_offset,
- 			     char *subdev, unsigned long long *freesize,
--			     int verbose)
-+			     int rwh_policy, int verbose)
+ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
+-				  unsigned long long size, char *name,
++				  struct shape *s, char *name,
+ 				  char *homehost, int *uuid,
+ 				  long long data_offset)
  {
- 	pr_err("mbr metadata cannot be used this way\n");
- 	return 0;
+@@ -4981,7 +4981,7 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
+ 	strncpy((char *) dev->volume, name, MAX_RAID_SERIAL_LEN);
+ 	array_blocks = calc_array_size(info->level, info->raid_disks,
+ 					       info->layout, info->chunk_size,
+-					       size * 2);
++					       s->size * 2);
+ 	/* round array size down to closest MB */
+ 	array_blocks = (array_blocks >> SECT_PER_MB_SHIFT) << SECT_PER_MB_SHIFT;
+ 
+@@ -4995,7 +4995,7 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
+ 	vol->curr_migr_unit = 0;
+ 	map = get_imsm_map(dev, MAP_0);
+ 	set_pba_of_lba0(map, super->create_offset);
+-	set_blocks_per_member(map, info_to_blocks_per_member(info, size));
++	set_blocks_per_member(map, info_to_blocks_per_member(info, s->size));
+ 	map->blocks_per_strip = __cpu_to_le16(info_to_blocks_per_strip(info));
+ 	map->failed_disk_num = ~0;
+ 	if (info->level > 0)
+@@ -5023,7 +5023,7 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
+ 		map->num_domains = 1;
+ 
+ 	/* info->size is only int so use the 'size' parameter instead */
+-	num_data_stripes = (size * 2) / info_to_blocks_per_strip(info);
++	num_data_stripes = (s->size * 2) / info_to_blocks_per_strip(info);
+ 	num_data_stripes /= map->num_domains;
+ 	set_num_data_stripes(map, num_data_stripes);
+ 
+@@ -5045,7 +5045,7 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
+ }
+ 
+ static int init_super_imsm(struct supertype *st, mdu_array_info_t *info,
+-			   unsigned long long size, char *name,
++		           struct shape *s, char *name,
+ 			   char *homehost, int *uuid,
+ 			   unsigned long long data_offset)
+ {
+@@ -5068,7 +5068,7 @@ static int init_super_imsm(struct supertype *st, mdu_array_info_t *info,
+ 	}
+ 
+ 	if (st->sb)
+-		return init_super_imsm_volume(st, info, size, name, homehost, uuid,
++		return init_super_imsm_volume(st, info, s, name, homehost, uuid,
+ 					      data_offset);
+ 
+ 	if (info)
 diff --git a/super0.c b/super0.c
-index 151e52a..be6256f 100644
+index 55ebd8b..151e52a 100644
 --- a/super0.c
 +++ b/super0.c
-@@ -1263,7 +1263,7 @@ static int validate_geometry0(struct supertype *st, int level,
- 			      int *chunk, unsigned long long size,
- 			      unsigned long long data_offset,
- 			      char *subdev, unsigned long long *freesize,
--			      int verbose)
-+			      int rwh_policy, int verbose)
+@@ -721,7 +721,7 @@ static int update_super0(struct supertype *st, struct mdinfo *info,
+  * We use the first 8 bytes (64bits) of the sha1 of the host name
+  */
+ static int init_super0(struct supertype *st, mdu_array_info_t *info,
+-		       unsigned long long size, char *ignored_name,
++		       struct shape *s, char *ignored_name,
+ 		       char *homehost, int *uuid,
+ 		       unsigned long long data_offset)
  {
- 	unsigned long long ldsize;
- 	int fd;
+@@ -760,8 +760,8 @@ static int init_super0(struct supertype *st, mdu_array_info_t *info,
+ 	sb->gvalid_words = 0; /* ignored */
+ 	sb->ctime = time(0);
+ 	sb->level = info->level;
+-	sb->size = size;
+-	if (size != (unsigned long long)sb->size)
++	sb->size = s->size;
++	if (s->size != (unsigned long long)sb->size)
+ 		return 0;
+ 	sb->nr_disks = info->nr_disks;
+ 	sb->raid_disks = info->raid_disks;
 diff --git a/super1.c b/super1.c
-index 8a98ac2..b5825e6 100644
+index d323439..8a98ac2 100644
 --- a/super1.c
 +++ b/super1.c
-@@ -48,10 +48,18 @@ struct mdp_superblock_1 {
- 
- 	__u32	chunksize;	/* in 512byte sectors */
- 	__u32	raid_disks;
--	__u32	bitmap_offset;	/* sectors after start of superblock that bitmap starts
--				 * NOTE: signed, so bitmap can be before superblock
--				 * only meaningful of feature_map[0] is set.
--				 */
-+	union {
-+		__u32	bitmap_offset;	/* sectors after start of superblock that bitmap starts
-+					 * NOTE: signed, so bitmap can be before superblock
-+					 * only meaningful of feature_map[0] is set.
-+					 */
-+
-+		/* only meaningful when feature_map[MD_FEATURE_PPL] is set */
-+		struct {
-+			__u16 offset; /* sectors after start of superblock that ppl starts */
-+			__u16 size; /* PPL size (including header) in sectors */
-+		} ppl;
-+	};
- 
- 	/* These are only valid with feature bit '4' */
- 	__u32	new_level;	/* new level we are reshaping to		*/
-@@ -130,6 +138,7 @@ struct misc_dev_info {
- #define	MD_FEATURE_NEW_OFFSET		64 /* new_offset must be honoured */
- #define	MD_FEATURE_BITMAP_VERSIONED	256 /* bitmap version number checked properly */
- #define	MD_FEATURE_JOURNAL		512 /* support write journal */
-+#define	MD_FEATURE_PPL			1024 /* support PPL */
- #define	MD_FEATURE_ALL			(MD_FEATURE_BITMAP_OFFSET	\
- 					|MD_FEATURE_RECOVERY_OFFSET	\
- 					|MD_FEATURE_RESHAPE_ACTIVE	\
-@@ -139,6 +148,7 @@ struct misc_dev_info {
- 					|MD_FEATURE_NEW_OFFSET		\
- 					|MD_FEATURE_BITMAP_VERSIONED	\
- 					|MD_FEATURE_JOURNAL		\
-+					|MD_FEATURE_PPL			\
- 					)
- 
- #ifndef MDASSEMBLE
-@@ -288,6 +298,11 @@ static int awrite(struct align_fd *afd, void *buf, int len)
- 	return len;
+@@ -1388,7 +1388,7 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
  }
  
-+static inline unsigned int choose_ppl_space(int chunk)
-+{
-+	return 8 + (chunk > 128*2 ? chunk : 128*2);
-+}
-+
- #ifndef MDASSEMBLE
- static void examine_super1(struct supertype *st, char *homehost)
+ static int init_super1(struct supertype *st, mdu_array_info_t *info,
+-		       unsigned long long size, char *name, char *homehost,
++		       struct shape *s, char *name, char *homehost,
+ 		       int *uuid, unsigned long long data_offset)
  {
-@@ -391,6 +406,10 @@ static void examine_super1(struct supertype *st, char *homehost)
- 	if (sb->feature_map & __cpu_to_le32(MD_FEATURE_BITMAP_OFFSET)) {
- 		printf("Internal Bitmap : %ld sectors from superblock\n",
- 		       (long)(int32_t)__le32_to_cpu(sb->bitmap_offset));
-+	} else if (sb->feature_map & __cpu_to_le32(MD_FEATURE_PPL)) {
-+		printf("            PPL : %u sectors at offset %u sectors from superblock\n",
-+		       __le16_to_cpu(sb->ppl.size),
-+		       __le16_to_cpu(sb->ppl.offset));
- 	}
- 	if (sb->feature_map & __cpu_to_le32(MD_FEATURE_RESHAPE_ACTIVE)) {
- 		printf("  Reshape pos'n : %llu%s\n", (unsigned long long)__le64_to_cpu(sb->reshape_position)/2,
-@@ -932,8 +951,12 @@ static void getinfo_super1(struct supertype *st, struct mdinfo *info, char *map)
+ 	struct mdp_superblock_1 *sb;
+@@ -1441,7 +1441,7 @@ static int init_super1(struct supertype *st, mdu_array_info_t *info,
+ 	sb->ctime = __cpu_to_le64((unsigned long long)time(0));
+ 	sb->level = __cpu_to_le32(info->level);
+ 	sb->layout = __cpu_to_le32(info->layout);
+-	sb->size = __cpu_to_le64(size*2ULL);
++	sb->size = __cpu_to_le64(s->size*2ULL);
+ 	sb->chunksize = __cpu_to_le32(info->chunk_size>>9);
+ 	sb->raid_disks = __cpu_to_le32(info->raid_disks);
  
- 	info->data_offset = __le64_to_cpu(sb->data_offset);
- 	info->component_size = __le64_to_cpu(sb->size);
--	if (sb->feature_map & __le32_to_cpu(MD_FEATURE_BITMAP_OFFSET))
-+	if (sb->feature_map & __le32_to_cpu(MD_FEATURE_BITMAP_OFFSET)) {
- 		info->bitmap_offset = (int32_t)__le32_to_cpu(sb->bitmap_offset);
-+	} else if (sb->feature_map & __le32_to_cpu(MD_FEATURE_PPL)) {
-+		info->ppl_offset = __le16_to_cpu(sb->ppl.offset);
-+		info->ppl_sectors = __le16_to_cpu(sb->ppl.size);
-+	}
+diff --git a/sysfs.c b/sysfs.c
+index f8a9f0b..4772d77 100644
+--- a/sysfs.c
++++ b/sysfs.c
+@@ -240,6 +240,17 @@ struct mdinfo *sysfs_read(int fd, char *devnm, unsigned long options)
+ 	} else
+ 		sra->sysfs_array_state[0] = 0;
  
- 	info->disk.major = 0;
- 	info->disk.minor = 0;
-@@ -978,6 +1001,11 @@ static void getinfo_super1(struct supertype *st, struct mdinfo *info, char *map)
- 			bmend += size;
- 			if (bmend > earliest)
- 				earliest = bmend;
-+		} else if (info->ppl_offset > 0) {
-+			unsigned long long pplend = info->ppl_offset +
-+						    info->ppl_sectors;
-+			if (pplend > earliest)
-+				earliest = pplend;
- 		}
- 		if (sb->bblog_offset && sb->bblog_size) {
- 			unsigned long long bbend = super_offset;
-@@ -1069,9 +1097,16 @@ static void getinfo_super1(struct supertype *st, struct mdinfo *info, char *map)
- 	}
- 
- 	info->array.working_disks = working;
--	if (sb->feature_map & __le32_to_cpu(MD_FEATURE_JOURNAL))
-+
-+	if (sb->feature_map & __le32_to_cpu(MD_FEATURE_JOURNAL)) {
- 		info->journal_device_required = 1;
--	info->journal_clean = 0;
-+		info->rwh_policy = RWH_POLICY_JOURNAL;
-+	} else if (sb->feature_map & __le32_to_cpu(MD_FEATURE_PPL)) {
-+		info->rwh_policy = RWH_POLICY_PPL;
-+		info->journal_clean = 1;
-+	} else {
-+		info->rwh_policy = RWH_POLICY_UNKNOWN;
-+	}
- }
- 
- static struct mdinfo *container_content1(struct supertype *st, char *subarray)
-@@ -1233,6 +1268,9 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
- 		if (sb->feature_map & __cpu_to_le32(MD_FEATURE_BITMAP_OFFSET)) {
- 			bitmap_offset = (long)__le32_to_cpu(sb->bitmap_offset);
- 			bm_sectors = calc_bitmap_size(bms, 4096) >> 9;
-+		} else if (sb->feature_map & __cpu_to_le32(MD_FEATURE_PPL)) {
-+			bitmap_offset = (long)__le16_to_cpu(sb->ppl.offset);
-+			bm_sectors = (long)__le16_to_cpu(sb->ppl.size);
- 		}
- #endif
- 		if (sb_offset < data_offset) {
-@@ -1462,6 +1500,9 @@ static int init_super1(struct supertype *st, mdu_array_info_t *info,
- 
- 	memset(sb->dev_roles, 0xff, MAX_SB_SIZE - sizeof(struct mdp_superblock_1));
- 
-+	if (s->rwh_policy == RWH_POLICY_PPL)
-+		sb->feature_map |= __cpu_to_le32(MD_FEATURE_PPL);
-+
- 	return 1;
- }
- 
-@@ -1663,7 +1704,7 @@ static int write_empty_r5l_meta_block(struct supertype *st, int fd)
- 	crc = crc32c_le(crc, (void *)mb, META_BLOCK_SIZE);
- 	mb->checksum = crc;
- 
--	if (lseek64(fd, (sb->data_offset) * 512, 0) < 0LL) {
-+	if (lseek64(fd, __le64_to_cpu(sb->data_offset) * 512, 0) < 0LL) {
- 		pr_err("cannot seek to offset of the meta block\n");
- 		goto fail_to_write;
- 	}
-@@ -1696,7 +1737,7 @@ static int write_init_super1(struct supertype *st)
- 
- 	for (di = st->info; di; di = di->next) {
- 		if (di->disk.state & (1 << MD_DISK_JOURNAL))
--			sb->feature_map |= MD_FEATURE_JOURNAL;
-+			sb->feature_map |= __cpu_to_le32(MD_FEATURE_JOURNAL);
- 	}
- 
- 	for (di = st->info; di; di = di->next) {
-@@ -1767,6 +1808,11 @@ static int write_init_super1(struct supertype *st)
- 					(((char *)sb) + MAX_SB_SIZE);
- 			bm_space = calc_bitmap_size(bms, 4096) >> 9;
- 			bm_offset = (long)__le32_to_cpu(sb->bitmap_offset);
-+		} else if (sb->feature_map & __cpu_to_le32(MD_FEATURE_PPL)) {
-+			bm_space = choose_ppl_space(__le32_to_cpu(sb->chunksize));
-+			bm_offset = 8;
-+			sb->ppl.offset = __cpu_to_le16(bm_offset);
-+			sb->ppl.size = __cpu_to_le16(bm_space);
- 		} else {
- 			bm_space = choose_bm_space(array_size);
- 			bm_offset = 8;
-@@ -1838,8 +1884,10 @@ static int write_init_super1(struct supertype *st)
- 				goto error_out;
- 		}
- 
--		if (rv == 0 && (__le32_to_cpu(sb->feature_map) & 1))
-+		if (rv == 0 &&
-+		    (__le32_to_cpu(sb->feature_map) & MD_FEATURE_BITMAP_OFFSET))
- 			rv = st->ss->write_bitmap(st, di->fd, NodeNumUpdate);
-+
- 		close(di->fd);
- 		di->fd = -1;
- 		if (rv)
-@@ -2107,11 +2155,13 @@ static __u64 avail_size1(struct supertype *st, __u64 devsize,
- 		return 0;
- 
- #ifndef MDASSEMBLE
--	if (__le32_to_cpu(super->feature_map)&MD_FEATURE_BITMAP_OFFSET) {
-+	if (__le32_to_cpu(super->feature_map) & MD_FEATURE_BITMAP_OFFSET) {
- 		/* hot-add. allow for actual size of bitmap */
- 		struct bitmap_super_s *bsb;
- 		bsb = (struct bitmap_super_s *)(((char*)super)+MAX_SB_SIZE);
- 		bmspace = calc_bitmap_size(bsb, 4096) >> 9;
-+	} else if (__le32_to_cpu(super->feature_map) & MD_FEATURE_PPL) {
-+		bmspace = __le16_to_cpu(super->ppl.size);
- 	}
- #endif
- 	/* Allow space for bad block log */
-@@ -2479,7 +2529,7 @@ static int validate_geometry1(struct supertype *st, int level,
- 			      int *chunk, unsigned long long size,
- 			      unsigned long long data_offset,
- 			      char *subdev, unsigned long long *freesize,
--			      int verbose)
-+			      int rwh_policy, int verbose)
- {
- 	unsigned long long ldsize, devsize;
- 	int bmspace;
-@@ -2501,6 +2551,14 @@ static int validate_geometry1(struct supertype *st, int level,
- 		/* not specified, so time to set default */
- 		st->minor_version = 2;
- 
-+	if (st->minor_version != 2 && st->minor_version != 1 &&
-+	    rwh_policy == RWH_POLICY_PPL) {
-+		if (verbose)
-+			pr_err("1.%d metadata does not support PPL\n",
-+			       st->minor_version);
-+		return 0;
++	if (options & GET_RWH_POLICY) {
++		strcpy(base, "rwh_policy");
++		if (load_sys(fname, buf, sizeof(buf))) {
++			sra->rwh_policy = RWH_POLICY_UNKNOWN;
++		} else {
++			sra->rwh_policy = map_name(rwh_policies, buf);
++			if (sra->rwh_policy == UnSet)
++				sra->rwh_policy = RWH_POLICY_UNKNOWN;
++		}
 +	}
 +
- 	fd = open(subdev, O_RDONLY|O_EXCL, 0);
- 	if (fd < 0) {
- 		if (verbose)
-@@ -2521,8 +2579,9 @@ static int validate_geometry1(struct supertype *st, int level,
- 		return 0;
- 	}
+ 	if (! (options & GET_DEVS))
+ 		return sra;
  
--	/* creating:  allow suitable space for bitmap */
--	bmspace = choose_bm_space(devsize);
-+	/* creating:  allow suitable space for bitmap or PPL */
-+	bmspace = rwh_policy == RWH_POLICY_PPL ?
-+		  choose_ppl_space((*chunk)*2) : choose_bm_space(devsize);
- 
- 	if (data_offset == INVALID_SECTORS)
- 		data_offset = st->data_offset;
-@@ -2654,5 +2713,6 @@ struct superswitch super1 = {
- #else
- 	.swapuuid = 1,
- #endif
-+	.supports_ppl = 1,
- 	.name = "1.x",
- };
 -- 
 2.10.1
 
