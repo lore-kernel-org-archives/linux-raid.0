@@ -1,103 +1,262 @@
-From: "=?utf-8?B?SmFja2llIExpdQ==?=" <liuyun01@kylinos.cn>
-Subject: [PATCH] raid5-cache: Fix the logic of raid5-cache recovery
-Date: Fri, 25 Nov 2016 19:39:03 +0800
-Message-ID: <tencent_4E54374D19A73C0B4D37AF14@qq.com>
-References: <20161119072057.1302854-1-songliubraving@fb.com>
+From: Jinpu Wang <jinpu.wang@profitbricks.com>
+Subject: [BUG] MD/RAID1 hung forever on freeze_array
+Date: Fri, 25 Nov 2016 14:30:32 +0100
+Message-ID: <CAMGffE=1kp7gMhG+dFxTvhD6VkRuSfbuXbf9vYSWwGG+=vvhDA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161119072057.1302854-1-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?utf-8?B?U29uZyBMaXU=?= <songliubraving@fb.com>
-Cc: =?utf-8?B?bGludXgtcmFpZA==?= <linux-raid@vger.kernel.org>, =?utf-8?B?5YiY5q2j5YWD?= <liuzhengyuan@kylinos.cn>, =?utf-8?B?c2hsaQ==?= <shli@fb.com>
+To: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>
+Cc: Neil Brown <neilb@suse.de>, Nate Dailey <nate.dailey@stratus.com>
 List-Id: linux-raid.ids
 
-SGkgU29uZy4NCg0KVGhlcmUgaXMgYSBkb3VidCBmb3IgcjVsX3JlY292ZXJ5X2xvZy4gSSB0
-aGluayB3ZSBuZWVkIHdyaXRlIGFuIGVtcHR5IGJsb2NrIGZpcnN0LA0KdGhlbiBjYWxsIHI1
-Y19yZWNvdmVyeV9yZXdyaXRlX2RhdGFfb25seV9zdHJpcGVzIGZ1bmN0aW9ucy4gdGhpcyBl
-bXB0eSANCmJsb2NrIHdpbGwgYmUgbWFyayBhcyB0aGUgbGFzdF9jaGVja3BvaW50LiB3aGVu
-IHRoZSBDQUNISU5HIGJsb2NrIGlzIHJld3JpdHRlbiwNCnRoZSBzdXBlcmJsb2NrIHNob3Vs
-ZCBiZSB1cGRhdGUgdGhpcyB0aW1lLiBhdCB0aGUgc2FtZSB0aW1lLCB3ZSBjYW5uJ3QgYmUg
-DQpyZWxlYXNlZCB0aGUgc3RyaXBlX2hlYWQgYXQgdGhlIGZyb250LCBpdCBhbHNvIGJlIHVz
-ZWQgaW4gDQpyNWNfcmVjb3ZlcnlfcmV3cml0ZV9kYXRhX29ubHlfc3RyaXBlcy4NCg0KaGVy
-ZSBpcyB0aGUgcGF0Y2gNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvcmFpZDUtY2FjaGUu
-YyBiL2RyaXZlcnMvbWQvcmFpZDUtY2FjaGUuYw0KaW5kZXggNWY4MTdiZC4uZmFkMTgwOCAx
-MDA2NDQNCi0tLSBhL2RyaXZlcnMvbWQvcmFpZDUtY2FjaGUuYw0KKysrIGIvZHJpdmVycy9t
-ZC9yYWlkNS1jYWNoZS5jDQpAQCAtNjcsNyArNjcsNyBAQCBzdGF0aWMgY2hhciAqcjVjX2pv
-dXJuYWxfbW9kZV9zdHJbXSA9IHsid3JpdGUtdGhyb3VnaCIsDQogLyoNCiAgKiByYWlkNSBj
-YWNoZSBzdGF0ZSBtYWNoaW5lDQogICoNCi0gKiBXaXRoIHJoZSBSQUlEIGNhY2hlLCBlYWNo
-IHN0cmlwZSB3b3JrcyBpbiB0d28gcGhhc2VzOg0KKyAqIFdpdGggdGhlIFJBSUQgY2FjaGUs
-IGVhY2ggc3RyaXBlIHdvcmtzIGluIHR3byBwaGFzZXM6DQogICoJLSBjYWNoaW5nIHBoYXNl
-DQogICoJLSB3cml0aW5nLW91dCBwaGFzZQ0KICAqDQpAQCAtMTY3NCw3ICsxNjc0LDYgQEAg
-cjVsX3JlY292ZXJ5X3JlcGxheV9vbmVfc3RyaXBlKHN0cnVjdCByNWNvbmYgKmNvbmYsDQoN
-CiBzdGF0aWMgc3RydWN0IHN0cmlwZV9oZWFkICoNCiByNWNfcmVjb3ZlcnlfYWxsb2Nfc3Ry
-aXBlKHN0cnVjdCByNWNvbmYgKmNvbmYsDQotCQkJICBzdHJ1Y3QgbGlzdF9oZWFkICpyZWNv
-dmVyeV9saXN0LA0KIAkJCSAgc2VjdG9yX3Qgc3RyaXBlX3NlY3QsDQogCQkJICBzZWN0b3Jf
-dCBsb2dfc3RhcnQpDQogew0KQEAgLTE4NTUsOCArMTg1NCw4IEBAIHI1Y19yZWNvdmVyeV9h
-bmFseXplX21ldGFfYmxvY2soc3RydWN0IHI1bF9sb2cgKmxvZywNCiAJCQkJCQlzdHJpcGVf
-c2VjdCk7DQoNCiAJCWlmICghc2gpIHsNCi0JCQlzaCA9IHI1Y19yZWNvdmVyeV9hbGxvY19z
-dHJpcGUoY29uZiwgY2FjaGVkX3N0cmlwZV9saXN0LA0KLQkJCQkJCSAgICAgICBzdHJpcGVf
-c2VjdCwgY3R4LT5wb3MpOw0KKwkJCXNoID0gcjVjX3JlY292ZXJ5X2FsbG9jX3N0cmlwZShj
-b25mLCBzdHJpcGVfc2VjdCwNCisJCQkJCQkJY3R4LT5wb3MpOw0KIAkJCS8qDQogCQkJICog
-Y2Fubm90IGdldCBzdHJpcGUgZnJvbSByYWlkNV9nZXRfYWN0aXZlX3N0cmlwZQ0KIAkJCSAq
-IHRyeSByZXBsYXkgc29tZSBzdHJpcGVzDQpAQCAtMTg2NSw4ICsxODY0LDcgQEAgcjVjX3Jl
-Y292ZXJ5X2FuYWx5emVfbWV0YV9ibG9jayhzdHJ1Y3QgcjVsX2xvZyAqbG9nLA0KIAkJCQly
-NWNfcmVjb3ZlcnlfcmVwbGF5X3N0cmlwZXMoDQogCQkJCQljYWNoZWRfc3RyaXBlX2xpc3Qs
-IGN0eCk7DQogCQkJCXNoID0gcjVjX3JlY292ZXJ5X2FsbG9jX3N0cmlwZSgNCi0JCQkJCWNv
-bmYsIGNhY2hlZF9zdHJpcGVfbGlzdCwNCi0JCQkJCXN0cmlwZV9zZWN0LCBjdHgtPnBvcyk7
-DQorCQkJCQljb25mLCBzdHJpcGVfc2VjdCwgY3R4LT5wb3MpOw0KIAkJCX0NCiAJCQlpZiAo
-IXNoKSB7DQogCQkJCXByX2RlYnVnKCJtZC9yYWlkOiVzOiBJbmNyZWFzaW5nIHN0cmlwZSBj
-YWNoZSBzaXplIHRvICVkIHRvIHJlY292ZXJ5IGRhdGEgb24gam91cm5hbC5cbiIsDQpAQCAt
-MTg3NSw4ICsxODczLDcgQEAgcjVjX3JlY292ZXJ5X2FuYWx5emVfbWV0YV9ibG9jayhzdHJ1
-Y3QgcjVsX2xvZyAqbG9nLA0KIAkJCQlyYWlkNV9zZXRfY2FjaGVfc2l6ZShtZGRldiwNCiAJ
-CQkJCQkgICAgIGNvbmYtPm1pbl9ucl9zdHJpcGVzICogMik7DQogCQkJCXNoID0gcjVjX3Jl
-Y292ZXJ5X2FsbG9jX3N0cmlwZSgNCi0JCQkJCWNvbmYsIGNhY2hlZF9zdHJpcGVfbGlzdCwg
-c3RyaXBlX3NlY3QsDQotCQkJCQljdHgtPnBvcyk7DQorCQkJCQljb25mLCBzdHJpcGVfc2Vj
-dCwgY3R4LT5wb3MpOw0KIAkJCX0NCiAJCQlpZiAoIXNoKSB7DQogCQkJCXByX2VycigibWQv
-cmFpZDolczogQ2Fubm90IGdldCBlbm91Z2ggc3RyaXBlcyBkdWUgdG8gbWVtb3J5IHByZXNz
-dXJlLiBSZWNvdmVyeSBmYWlsZWQuXG4iLA0KQEAgLTE5ODYsOCArMTk4Myw2IEBAIHN0YXRp
-YyBpbnQgcjVjX3JlY292ZXJ5X2ZsdXNoX2xvZyhzdHJ1Y3QgcjVsX2xvZyAqbG9nLA0KIAls
-aXN0X2Zvcl9lYWNoX2VudHJ5X3NhZmUoc2gsIG5leHQsICZjdHgtPmNhY2hlZF9saXN0LCBs
-cnUpIHsNCiAJCVdBUk5fT04oIXRlc3RfYml0KFNUUklQRV9SNUNfQ0FDSElORywgJnNoLT5z
-dGF0ZSkpOw0KIAkJcjVjX3JlY292ZXJ5X2xvYWRfb25lX3N0cmlwZShsb2csIHNoKTsNCi0J
-CWxpc3RfZGVsX2luaXQoJnNoLT5scnUpOw0KLQkJcmFpZDVfcmVsZWFzZV9zdHJpcGUoc2gp
-Ow0KIAkJY3R4LT5kYXRhX29ubHlfc3RyaXBlcysrOw0KIAl9DQoNCkBAIC0yMDc4LDcgKzIw
-NzMsNiBAQCByNWNfcmVjb3ZlcnlfcmV3cml0ZV9kYXRhX29ubHlfc3RyaXBlcyhzdHJ1Y3Qg
-cjVsX2xvZyAqbG9nLA0KIAkJcmV0dXJuIC1FTk9NRU07DQogCX0NCg0KLQljdHgtPnNlcSAr
-PSAxMDsNCiAJbGlzdF9mb3JfZWFjaF9lbnRyeShzaCwgJmN0eC0+Y2FjaGVkX2xpc3QsIGxy
-dSkgew0KIAkJc3RydWN0IHI1bF9tZXRhX2Jsb2NrICptYjsNCiAJCWludCBpOw0KQEAgLTIw
-OTAsNyArMjA4NCw3IEBAIHI1Y19yZWNvdmVyeV9yZXdyaXRlX2RhdGFfb25seV9zdHJpcGVz
-KHN0cnVjdCByNWxfbG9nICpsb2csDQogCQkJCQkJICAgICBjdHgtPnBvcywgY3R4LT5zZXEp
-Ow0KIAkJbWIgPSBwYWdlX2FkZHJlc3MocGFnZSk7DQogCQlvZmZzZXQgPSBsZTMyX3RvX2Nw
-dShtYi0+bWV0YV9zaXplKTsNCi0JCXdyaXRlX3BvcyA9IGN0eC0+cG9zICsgQkxPQ0tfU0VD
-VE9SUzsNCisJCXdyaXRlX3BvcyA9IHI1bF9yaW5nX2FkZChsb2csIGN0eC0+cG9zLCBCTE9D
-S19TRUNUT1JTKTsNCg0KIAkJZm9yIChpID0gc2gtPmRpc2tzOyBpLS07ICkgew0KIAkJCXN0
-cnVjdCByNWRldiAqZGV2ID0gJnNoLT5kZXZbaV07DQpAQCAtMjEyNSw2ICsyMTE5LDkgQEAg
-cjVjX3JlY292ZXJ5X3Jld3JpdGVfZGF0YV9vbmx5X3N0cmlwZXMoc3RydWN0IHI1bF9sb2cg
-KmxvZywNCiAJCXNoLT5sb2dfc3RhcnQgPSBjdHgtPnBvczsNCiAJCWN0eC0+cG9zID0gd3Jp
-dGVfcG9zOw0KIAkJY3R4LT5zZXEgKz0gMTsNCisNCisJCWxpc3RfZGVsX2luaXQoJnNoLT5s
-cnUpOw0KKwkJcmFpZDVfcmVsZWFzZV9zdHJpcGUoc2gpOw0KIAl9DQogCV9fZnJlZV9wYWdl
-KHBhZ2UpOw0KIAlyZXR1cm4gMDsNCkBAIC0yMTM1LDYgKzIxMzIsNyBAQCBzdGF0aWMgaW50
-IHI1bF9yZWNvdmVyeV9sb2coc3RydWN0IHI1bF9sb2cgKmxvZykNCiAJc3RydWN0IG1kZGV2
-ICptZGRldiA9IGxvZy0+cmRldi0+bWRkZXY7DQogCXN0cnVjdCByNWxfcmVjb3ZlcnlfY3R4
-IGN0eDsNCiAJaW50IHJldDsNCisJc2VjdG9yX3QgcG9zOw0KDQogCWN0eC5wb3MgPSBsb2ct
-Pmxhc3RfY2hlY2twb2ludDsNCiAJY3R4LnNlcSA9IGxvZy0+bGFzdF9jcF9zZXE7DQpAQCAt
-MjE1Miw2ICsyMTUwLDEwIEBAIHN0YXRpYyBpbnQgcjVsX3JlY292ZXJ5X2xvZyhzdHJ1Y3Qg
-cjVsX2xvZyAqbG9nKQ0KIAlpZiAocmV0KQ0KIAkJcmV0dXJuIHJldDsNCg0KKwlwb3MgPSBj
-dHgucG9zOw0KKwlyNWxfbG9nX3dyaXRlX2VtcHR5X21ldGFfYmxvY2sobG9nLCBjdHgucG9z
-LCAoY3R4LnNlcSArPSAxMCkpOw0KKwljdHgucG9zID0gcjVsX3JpbmdfYWRkKGxvZywgY3R4
-LnBvcywgQkxPQ0tfU0VDVE9SUyk7DQorDQogCWlmICgoY3R4LmRhdGFfb25seV9zdHJpcGVz
-ID09IDApICYmIChjdHguZGF0YV9wYXJpdHlfc3RyaXBlcyA9PSAwKSkNCiAJCXByX2RlYnVn
-KCJtZC9yYWlkOiVzOiBzdGFydGluZyBmcm9tIGNsZWFuIHNodXRkb3duXG4iLA0KIAkJCSBt
-ZG5hbWUobWRkZXYpKTsNCkBAIC0yMTcwLDkgKzIxNzIsOSBAQCBzdGF0aWMgaW50IHI1bF9y
-ZWNvdmVyeV9sb2coc3RydWN0IHI1bF9sb2cgKmxvZykNCg0KIAlsb2ctPmxvZ19zdGFydCA9
-IGN0eC5wb3M7DQogCWxvZy0+bmV4dF9jaGVja3BvaW50ID0gY3R4LnBvczsNCisJbG9nLT5s
-YXN0X2NoZWNrcG9pbnQgPSBwb3M7DQogCWxvZy0+c2VxID0gY3R4LnNlcTsNCi0JcjVsX2xv
-Z193cml0ZV9lbXB0eV9tZXRhX2Jsb2NrKGxvZywgY3R4LnBvcywgY3R4LnNlcSk7DQotCXI1
-bF93cml0ZV9zdXBlcihsb2csIGN0eC5wb3MpOw0KKwlyNWxfd3JpdGVfc3VwZXIobG9nLCBw
-b3MpOw0KIAlyZXR1cm4gMDsNCiB9DQoNCi0tDQoyLjcuNA0KDQpUaGFua3MuDQpKYWNraWU=
+Hi,
+
+I'm hitting hung task in mdx_raid1 when running test, I can reproduce
+it easily with my tests below:
+
+I create one md with one local loop device and one remote scsi
+exported by SRP. running fio with mix rw on top of md, force_close
+session on storage side. mdx_raid1 is wait on free_array in D state,
+and a lot of fio also in D state in wait_barrier.
+
+[  335.154711] blk_update_request: I/O error, dev sdb, sector 8
+[  335.154855] md: super_written gets error=3D-5
+[  335.154999] md/raid1:md1: Disk failure on sdb, disabling device.
+               md/raid1:md1: Operation continuing on 1 devices.
+[  335.155258] sd 1:0:0:0: rejecting I/O to offline device
+[  335.155402] blk_update_request: I/O error, dev sdb, sector 80
+[  335.155547] md: super_written gets error=3D-5
+[  340.158828] scsi host1: ib_srp: reconnect succeeded
+[  373.017608] md/raid1:md1: redirecting sector 616617 to other mirror: loo=
+p1
+[  373.110527] md/raid1:md1: redirecting sector 1320893 to other mirror: lo=
+op1
+[  373.117230] md/raid1:md1: redirecting sector 1564499 to other mirror: lo=
+op1
+[  373.127652] md/raid1:md1: redirecting sector 104034 to other mirror: loo=
+p1
+[  373.135665] md/raid1:md1: redirecting sector 1209765 to other mirror: lo=
+op1
+[  373.145634] md/raid1:md1: redirecting sector 51200 to other mirror: loop=
+1
+[  373.158824] md/raid1:md1: redirecting sector 755750 to other mirror: loo=
+p1
+[  373.169964] md/raid1:md1: redirecting sector 1681631 to other mirror: lo=
+op1
+[  373.178619] md/raid1:md1: redirecting sector 1894296 to other mirror: lo=
+op1
+[  373.186153] md/raid1:md1: redirecting sector 1905016 to other mirror: lo=
+op1
+[  374.364370] RAID1 conf printout:
+[  374.364377]  --- wd:1 rd:2
+[  374.364379]  disk 0, wo:1, o:0, dev:sdb
+[  374.364381]  disk 1, wo:0, o:1, dev:loop1
+[  374.437099] RAID1 conf printout:
+[  374.437103]  --- wd:1 rd:2
+snip
 
 
+[  810.266112] sysrq: SysRq : Show Blocked State
+[  810.266235]   task                        PC stack   pid father
+[  810.266362] md1_raid1       D ffff88022d927c48     0  4022      2 0x0000=
+0000
+[  810.266487]  ffff88022d927c48 ffff8802351a0000 ffff8800b91bc100
+000000008010000e
+[  810.266747]  ffff88022d927c30 ffff88022d928000 0000000000000001
+ffff880233b49b70
+[  810.266975]  ffff880233b49b88 ffff8802325d5a40 ffff88022d927c60
+ffffffff81810600
+[  810.267203] Call Trace:
+[  810.267322]  [<ffffffff81810600>] schedule+0x30/0x80
+[  810.267437]  [<ffffffffa01342c1>] freeze_array+0x71/0xc0 [raid1]
+[  810.267555]  [<ffffffff81095480>] ? wake_atomic_t_function+0x70/0x70
+[  810.267669]  [<ffffffffa013578b>] handle_read_error+0x3b/0x570 [raid1]
+[  810.267816]  [<ffffffff81185783>] ? kmem_cache_free+0x183/0x190
+[  810.267929]  [<ffffffff81094e36>] ? __wake_up+0x46/0x60
+[  810.268045]  [<ffffffffa0136dcd>] raid1d+0x20d/0xfc0 [raid1]
+[  810.268159]  [<ffffffff81813043>] ? schedule_timeout+0x1a3/0x230
+[  810.268274]  [<ffffffff8180fe77>] ? __schedule+0x2e7/0xa40
+[  810.268391]  [<ffffffffa0211839>] md_thread+0x119/0x120 [md_mod]
+[  810.268508]  [<ffffffff81095480>] ? wake_atomic_t_function+0x70/0x70
+[  810.268624]  [<ffffffffa0211720>] ? find_pers+0x70/0x70 [md_mod]
+[  810.268741]  [<ffffffff81075614>] kthread+0xc4/0xe0
+[  810.268853]  [<ffffffff81075550>] ? kthread_worker_fn+0x150/0x150
+[  810.268970]  [<ffffffff8181415f>] ret_from_fork+0x3f/0x70
+[  810.269114]  [<ffffffff81075550>] ? kthread_worker_fn+0x150/0x150
+[  810.269227] fio             D ffff8802325137a0     0  4212   4206 0x0000=
+0000
+[  810.269347]  ffff8802325137a0 ffff88022de3db00 ffff8800ba7bb400
+0000000000000000
+[  810.269574]  ffff880233b49b00 ffff880232513788 ffff880232514000
+ffff880233b49b88
+[  810.269801]  ffff880233b49b70 ffff8800ba7bb400 ffff8800b5f5db00
+ffff8802325137b8
+[  810.270028] Call Trace:
+[  810.270138]  [<ffffffff81810600>] schedule+0x30/0x80
+[  810.270282]  [<ffffffffa0133727>] wait_barrier+0x117/0x1f0 [raid1]
+[  810.270396]  [<ffffffff81095480>] ? wake_atomic_t_function+0x70/0x70
+[  810.270513]  [<ffffffffa0135d72>] make_request+0xb2/0xd80 [raid1]
+[  810.270628]  [<ffffffffa02123fc>] md_make_request+0xec/0x230 [md_mod]
+[  810.270746]  [<ffffffff813f96f9>] ? generic_make_request_checks+0x219/0x=
+500
+[  810.270860]  [<ffffffff813fc851>] blk_prologue_bio+0x91/0xc0
+[  810.270976]  [<ffffffff813fc230>] generic_make_request+0xe0/0x1b0
+[  810.271090]  [<ffffffff813fc362>] submit_bio+0x62/0x140
+[  810.271209]  [<ffffffff811d2bbc>] do_blockdev_direct_IO+0x289c/0x33c0
+[  810.271323]  [<ffffffff81810600>] ? schedule+0x30/0x80
+[  810.271468]  [<ffffffff811cd620>] ? I_BDEV+0x10/0x10
+[  810.271580]  [<ffffffff811d371e>] __blockdev_direct_IO+0x3e/0x40
+[  810.271696]  [<ffffffff811cdfb7>] blkdev_direct_IO+0x47/0x50
+[  810.271828]  [<ffffffff81132cbf>] generic_file_read_iter+0x44f/0x570
+[  810.271949]  [<ffffffff811ceaa0>] ? blkdev_write_iter+0x110/0x110
+[  810.272062]  [<ffffffff811cead0>] blkdev_read_iter+0x30/0x40
+[  810.272179]  [<ffffffff811de5a6>] aio_run_iocb+0x126/0x2b0
+[  810.272291]  [<ffffffff8181209d>] ? mutex_lock+0xd/0x30
+[  810.272407]  [<ffffffff811ddd04>] ? aio_read_events+0x284/0x370
+[  810.272521]  [<ffffffff81183c29>] ? kmem_cache_alloc+0xd9/0x180
+[  810.272665]  [<ffffffff811df438>] ? do_io_submit+0x178/0x4a0
+[  810.272778]  [<ffffffff811df4ed>] do_io_submit+0x22d/0x4a0
+[  810.272895]  [<ffffffff811df76b>] SyS_io_submit+0xb/0x10
+[  810.273007]  [<ffffffff81813e17>] entry_SYSCALL_64_fastpath+0x12/0x66
+[  810.273130] fio             D ffff88022fa6f730     0  4213   4206 0x0000=
+0000
+[  810.273247]  ffff88022fa6f730 ffff8800b549a700 ffff8800af703400
+0000000002011200
+[  810.273475]  ffff880236001700 ffff88022fa6f718 ffff88022fa70000
+ffff880233b49b88
+[  810.273702]  ffff880233b49b70 ffff8800af703400 ffff88022f843700
+ffff88022fa6f748
+[  810.273958] Call Trace:
+[  810.274070]  [<ffffffff81810600>] schedule+0x30/0x80
+[  810.274183]  [<ffffffffa0133727>] wait_barrier+0x117/0x1f0 [raid1]
+[  810.274300]  [<ffffffff81095480>] ? wake_atomic_t_function+0x70/0x70
+[  810.274413]  [<ffffffffa0135d72>] make_request+0xb2/0xd80 [raid1]
+[  810.274537]  [<ffffffff81408f15>] ? __bt_get.isra.7+0xd5/0x1b0
+[  810.274650]  [<ffffffff81094feb>] ? finish_wait+0x5b/0x80
+[  810.274766]  [<ffffffff8140917f>] ? bt_get+0x18f/0x1b0
+[  810.274881]  [<ffffffffa02123fc>] md_make_request+0xec/0x230 [md_mod]
+[  810.274998]  [<ffffffff813f96f9>] ? generic_make_request_checks+0x219/0x=
+500
+[  810.275144]  [<ffffffff813fc851>] blk_prologue_bio+0x91/0xc0
+[  810.275257]  [<ffffffff813fc230>] generic_make_request+0xe0/0x1b0
+[  810.275373]  [<ffffffff813fc362>] submit_bio+0x62/0x140
+[  810.275486]  [<ffffffff811d2bbc>] do_blockdev_direct_IO+0x289c/0x33c0
+[  810.275607]  [<ffffffff811cd620>] ? I_BDEV+0x10/0x10
+[  810.275721]  [<ffffffff811d371e>] __blockdev_direct_IO+0x3e/0x40
+[  810.275843]  [<ffffffff811cdfb7>] blkdev_direct_IO+0x47/0x50
+[  810.275956]  [<ffffffff81132e8c>] generic_file_direct_write+0xac/0x170
+[  810.276073]  [<ffffffff8113301d>] __generic_file_write_iter+0xcd/0x1f0
+[  810.276187]  [<ffffffff811ce990>] ? blkdev_close+0x30/0x30
+[  810.276332]  [<ffffffff811cea17>] blkdev_write_iter+0x87/0x110
+[  810.276445]  [<ffffffff811de6d0>] aio_run_iocb+0x250/0x2b0
+[  810.276560]  [<ffffffff8181209d>] ? mutex_lock+0xd/0x30
+[  810.276673]  [<ffffffff811ddd04>] ? aio_read_events+0x284/0x370
+[  810.276786]  [<ffffffff81183c29>] ? kmem_cache_alloc+0xd9/0x180
+[  810.276902]  [<ffffffff811df438>] ? do_io_submit+0x178/0x4a0
+[  810.277015]  [<ffffffff811df4ed>] do_io_submit+0x22d/0x4a0
+[  810.277131]  [<ffffffff811df76b>] SyS_io_submit+0xb/0x10
+[  810.277244]  [<ffffffff81813e17>] entry_SYSCALL_64_fastpath+0x12/0x66
+I dump r1conf in crash:
+struct r1conf {
+  mddev =3D 0xffff88022d761800,
+  mirrors =3D 0xffff88023456a180,
+  raid_disks =3D 2,
+  next_resync =3D 18446744073709527039,
+  start_next_window =3D 18446744073709551615,
+  current_window_requests =3D 0,
+  next_window_requests =3D 0,
+  device_lock =3D {
+    {
+      rlock =3D {
+        raw_lock =3D {
+          val =3D {
+            counter =3D 0
+          }
+        }
+      }
+    }
+  },
+  retry_list =3D {
+    next =3D 0xffff8800b5fe3b40,
+    prev =3D 0xffff8800b50164c0
+  },
+  bio_end_io_list =3D {
+    next =3D 0xffff88022fcd45c0,
+    prev =3D 0xffff8800b53d57c0
+  },
+  pending_bio_list =3D {
+    head =3D 0x0,
+    tail =3D 0x0
+  },
+  pending_count =3D 0,
+  wait_barrier =3D {
+    lock =3D {
+      {
+        rlock =3D {
+          raw_lock =3D {
+            val =3D {
+              counter =3D 0
+            }
+          }
+        }
+      }
+    },
+    task_list =3D {
+      next =3D 0xffff8800b51d37e0,
+      prev =3D 0xffff88022fbbb770
+    }
+  },
+  resync_lock =3D {
+    {
+      rlock =3D {
+        raw_lock =3D {
+          val =3D {
+            counter =3D 0
+          }
+        }
+      }
+    }
+  },
+  nr_pending =3D 406,
+  nr_waiting =3D 100,
+  nr_queued =3D 404,
+  barrier =3D 0,
+  array_frozen =3D 1,
+  fullsync =3D 0,
+  recovery_disabled =3D 1,
+  poolinfo =3D 0xffff88022d829bb0,
+  r1bio_pool =3D 0xffff88022b4512a0,
+  r1buf_pool =3D 0x0,
+  tmppage =3D 0xffffea0008c97b00,
+  thread =3D 0x0,
+  cluster_sync_low =3D 0,
+  cluster_sync_high =3D 0
+}
 
+every time nr_pending is 1 bigger then (nr_queued + 1), so seems we
+forgot to increase nr_queued somewhere?
+
+I've noticed (commit ccfc7bf1f09d61)raid1: include bio_end_io_list in
+nr_queued to prevent freeze_array hang. Seems it fixed similar bug.
+
+Could you give your suggestion?
+
+
+--=20
+Jinpu Wang
+Linux Kernel Developer
+
+ProfitBricks GmbH
+Greifswalder Str. 207
+D - 10405 Berlin
+
+Tel:       +49 30 577 008  042
+Fax:      +49 30 577 008 299
+Email:    jinpu.wang@profitbricks.com
+URL:      https://www.profitbricks.de
+
+Sitz der Gesellschaft: Berlin
+Registergericht: Amtsgericht Charlottenburg, HRB 125506 B
+Gesch=C3=A4ftsf=C3=BChrer: Achim Weiss
