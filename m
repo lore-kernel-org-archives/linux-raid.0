@@ -1,287 +1,320 @@
-From: kbuild test robot <lkp@intel.com>
-Subject: Re: [PATCH 05/12] raid5-ppl: Partial Parity Log implementation
-Date: Fri, 25 Nov 2016 10:26:03 +0800
-Message-ID: <201611251045.EItygkLe%fengguang.wu@intel.com>
-References: <20161124122847.16456-6-artur.paszkiewicz@intel.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH v5] md/r5cache: handle alloc_page failure
+Date: Fri, 25 Nov 2016 14:38:54 +1100
+Message-ID: <87h96w9qk1.fsf@notabene.neil.brown.name>
+References: <20161124065039.2151784-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="a8Wt8u1KmwUX3Y2C"
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20161124122847.16456-6-artur.paszkiewicz@intel.com>
+In-Reply-To: <20161124065039.2151784-1-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: kbuild-all@01.org, shli@kernel.org, linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+To: linux-raid@vger.kernel.org
+Cc: shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuang521@gmail.com, liuzhengyuan@kylinos.cn, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---a8Wt8u1KmwUX3Y2C
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+On Thu, Nov 24 2016, Song Liu wrote:
 
-Hi Artur,
+> RMW of r5c write back cache uses an extra page to store old data for
+> prexor. handle_stripe_dirtying() allocates this page by calling
+> alloc_page(). However, alloc_page() may fail.
+>
+> To handle alloc_page() failures, this patch adds an extra page to
+> disk_info. When alloc_page fails, handle_stripe() trys to use these
+> pages. When these pages are used by other stripe (R5C_EXTRA_PAGE_IN_USE),
+> the stripe is added to delayed_list.
+>
+> Signed-off-by: Song Liu <songliubraving@fb.com>
 
-[auto build test ERROR on next-20161124]
-[cannot apply to md/for-next v4.9-rc6 v4.9-rc5 v4.9-rc4 v4.9-rc6]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+Reviewed-by: NeilBrown <neilb@suse.com>
 
-url:    https://github.com/0day-ci/linux/commits/Artur-Paszkiewicz/Partial-Parity-Log-for-MD-RAID-5/20161125-100404
-config: m68k-sun3_defconfig (attached as .config)
-compiler: m68k-linux-gcc (GCC) 4.9.0
-reproduce:
-        wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # save the attached .config to linux build tree
-        make.cross ARCH=m68k 
+Thanks,
+NeilBrown
 
-All errors (new ones prefixed by >>):
 
-   drivers/md/raid5-ppl.c: In function 'ppl_init_log_child':
->> drivers/md/raid5-ppl.c:429:2: error: too few arguments to function 'bio_init'
-     bio_init(&log->flush_bio);
-     ^
-   In file included from include/linux/blkdev.h:19:0,
-                    from drivers/md/raid5-ppl.c:16:
-   include/linux/bio.h:423:13: note: declared here
-    extern void bio_init(struct bio *bio, struct bio_vec *table,
-                ^
+> ---
+>  drivers/md/raid5-cache.c | 27 ++++++++++++++++-
+>  drivers/md/raid5.c       | 78 ++++++++++++++++++++++++++++++++++++++++--=
+------
+>  drivers/md/raid5.h       |  6 ++++
+>  3 files changed, 98 insertions(+), 13 deletions(-)
+>
+> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+> index 8cb79fc..818874d 100644
+> --- a/drivers/md/raid5-cache.c
+> +++ b/drivers/md/raid5-cache.c
+> @@ -2334,15 +2334,40 @@ int r5c_try_caching_write(struct r5conf *conf,
+>   */
+>  void r5c_release_extra_page(struct stripe_head *sh)
+>  {
+> +	struct r5conf *conf =3D sh->raid_conf;
+>  	int i;
+> +	bool using_disk_info_extra_page;
+> +
+> +	using_disk_info_extra_page =3D
+> +		sh->dev[0].orig_page =3D=3D conf->disks[0].extra_page;
+>=20=20
+>  	for (i =3D sh->disks; i--; )
+>  		if (sh->dev[i].page !=3D sh->dev[i].orig_page) {
+>  			struct page *p =3D sh->dev[i].orig_page;
+>=20=20
+>  			sh->dev[i].orig_page =3D sh->dev[i].page;
+> -			put_page(p);
+> +			if (!using_disk_info_extra_page)
+> +				put_page(p);
+>  		}
+> +
+> +	if (using_disk_info_extra_page) {
+> +		clear_bit(R5C_EXTRA_PAGE_IN_USE, &conf->cache_state);
+> +		md_wakeup_thread(conf->mddev->thread);
+> +	}
+> +}
+> +
+> +void r5c_use_extra_page(struct stripe_head *sh)
+> +{
+> +	struct r5conf *conf =3D sh->raid_conf;
+> +	int i;
+> +	struct r5dev *dev;
+> +
+> +	for (i =3D sh->disks; i--; ) {
+> +		dev =3D &sh->dev[i];
+> +		if (dev->orig_page !=3D dev->page)
+> +			put_page(dev->orig_page);
+> +		dev->orig_page =3D conf->disks[i].extra_page;
+> +	}
+>  }
+>=20=20
+>  /*
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index dbab8c7..db909b9 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -876,6 +876,8 @@ static void ops_run_io(struct stripe_head *sh, struct=
+ stripe_head_state *s)
+>=20=20
+>  	if (!test_bit(STRIPE_R5C_CACHING, &sh->state)) {
+>  		/* writing out phase */
+> +		if (s->waiting_extra_page)
+> +			return;
+>  		if (r5l_write_stripe(conf->log, sh) =3D=3D 0)
+>  			return;
+>  	} else {  /* caching phase */
+> @@ -2007,6 +2009,7 @@ static struct stripe_head *alloc_stripe(struct kmem=
+_cache *sc, gfp_t gfp,
+>  		INIT_LIST_HEAD(&sh->batch_list);
+>  		INIT_LIST_HEAD(&sh->lru);
+>  		INIT_LIST_HEAD(&sh->r5c);
+> +		INIT_LIST_HEAD(&sh->log_list);
+>  		atomic_set(&sh->count, 1);
+>  		sh->log_start =3D MaxSector;
+>  		for (i =3D 0; i < disks; i++) {
+> @@ -2253,10 +2256,24 @@ static int resize_stripes(struct r5conf *conf, in=
+t newsize)
+>  	 */
+>  	ndisks =3D kzalloc(newsize * sizeof(struct disk_info), GFP_NOIO);
+>  	if (ndisks) {
+> -		for (i=3D0; i<conf->raid_disks; i++)
+> +		for (i =3D 0; i < conf->pool_size; i++)
+>  			ndisks[i] =3D conf->disks[i];
+> -		kfree(conf->disks);
+> -		conf->disks =3D ndisks;
+> +
+> +		for (i =3D conf->pool_size; i < newsize; i++) {
+> +			ndisks[i].extra_page =3D alloc_page(GFP_NOIO);
+> +			if (!ndisks[i].extra_page)
+> +				err =3D -ENOMEM;
+> +		}
+> +
+> +		if (err) {
+> +			for (i =3D conf->pool_size; i < newsize; i++)
+> +				if (ndisks[i].extra_page)
+> +					put_page(ndisks[i].extra_page);
+> +			kfree(ndisks);
+> +		} else {
+> +			kfree(conf->disks);
+> +			conf->disks =3D ndisks;
+> +		}
+>  	} else
+>  		err =3D -ENOMEM;
+>=20=20
+> @@ -3580,10 +3597,10 @@ static void handle_stripe_clean_event(struct r5co=
+nf *conf,
+>  		break_stripe_batch_list(head_sh, STRIPE_EXPAND_SYNC_FLAGS);
+>  }
+>=20=20
+> -static void handle_stripe_dirtying(struct r5conf *conf,
+> -				   struct stripe_head *sh,
+> -				   struct stripe_head_state *s,
+> -				   int disks)
+> +static int handle_stripe_dirtying(struct r5conf *conf,
+> +				  struct stripe_head *sh,
+> +				  struct stripe_head_state *s,
+> +				  int disks)
+>  {
+>  	int rmw =3D 0, rcw =3D 0, i;
+>  	sector_t recovery_cp =3D conf->mddev->recovery_cp;
+> @@ -3649,12 +3666,32 @@ static void handle_stripe_dirtying(struct r5conf =
+*conf,
+>  			    dev->page =3D=3D dev->orig_page &&
+>  			    !test_bit(R5_LOCKED, &sh->dev[sh->pd_idx].flags)) {
+>  				/* alloc page for prexor */
+> -				dev->orig_page =3D alloc_page(GFP_NOIO);
+> +				struct page *p =3D alloc_page(GFP_NOIO);
+> +
+> +				if (p) {
+> +					dev->orig_page =3D p;
+> +					continue;
+> +				}
+>=20=20
+> -				/* will handle failure in a later patch*/
+> -				BUG_ON(!dev->orig_page);
+> +				/*
+> +				 * alloc_page() failed, try use
+> +				 * disk_info->extra_page
+> +				 */
+> +				if (!test_and_set_bit(R5C_EXTRA_PAGE_IN_USE,
+> +						      &conf->cache_state)) {
+> +					r5c_use_extra_page(sh);
+> +					break;
+> +				}
+> +
+> +				/* extra_page in use, add to delayed_list */
+> +				set_bit(STRIPE_DELAYED, &sh->state);
+> +				s->waiting_extra_page =3D 1;
+> +				return -EAGAIN;
+>  			}
+> +		}
+>=20=20
+> +		for (i =3D disks; i--; ) {
+> +			struct r5dev *dev =3D &sh->dev[i];
+>  			if ((dev->towrite ||
+>  			     i =3D=3D sh->pd_idx || i =3D=3D sh->qd_idx ||
+>  			     test_bit(R5_InJournal, &dev->flags)) &&
+> @@ -3730,6 +3767,7 @@ static void handle_stripe_dirtying(struct r5conf *c=
+onf,
+>  	    (s->locked =3D=3D 0 && (rcw =3D=3D 0 || rmw =3D=3D 0) &&
+>  	     !test_bit(STRIPE_BIT_DELAY, &sh->state)))
+>  		schedule_reconstruction(sh, s, rcw =3D=3D 0, 0);
+> +	return 0;
+>  }
+>=20=20
+>  static void handle_parity_checks5(struct r5conf *conf, struct stripe_hea=
+d *sh,
+> @@ -4545,8 +4583,12 @@ static void handle_stripe(struct stripe_head *sh)
+>  			if (ret =3D=3D -EAGAIN ||
+>  			    /* stripe under reclaim: !caching && injournal */
+>  			    (!test_bit(STRIPE_R5C_CACHING, &sh->state) &&
+> -			     s.injournal > 0))
+> -				handle_stripe_dirtying(conf, sh, &s, disks);
+> +			     s.injournal > 0)) {
+> +				ret =3D handle_stripe_dirtying(conf, sh, &s,
+> +							     disks);
+> +				if (ret =3D=3D -EAGAIN)
+> +					goto finish;
+> +			}
+>  		}
+>  	}
+>=20=20
+> @@ -6458,6 +6500,8 @@ static void raid5_free_percpu(struct r5conf *conf)
+>=20=20
+>  static void free_conf(struct r5conf *conf)
+>  {
+> +	int i;
+> +
+>  	if (conf->log)
+>  		r5l_exit_log(conf->log);
+>  	if (conf->shrinker.nr_deferred)
+> @@ -6466,6 +6510,9 @@ static void free_conf(struct r5conf *conf)
+>  	free_thread_groups(conf);
+>  	shrink_stripes(conf);
+>  	raid5_free_percpu(conf);
+> +	for (i =3D 0; i < conf->pool_size; i++)
+> +		if (conf->disks[i].extra_page)
+> +			put_page(conf->disks[i].extra_page);
+>  	kfree(conf->disks);
+>  	kfree(conf->stripe_hashtbl);
+>  	kfree(conf);
+> @@ -6612,9 +6659,16 @@ static struct r5conf *setup_conf(struct mddev *mdd=
+ev)
+>=20=20
+>  	conf->disks =3D kzalloc(max_disks * sizeof(struct disk_info),
+>  			      GFP_KERNEL);
+> +
+>  	if (!conf->disks)
+>  		goto abort;
+>=20=20
+> +	for (i =3D 0; i < max_disks; i++) {
+> +		conf->disks[i].extra_page =3D alloc_page(GFP_KERNEL);
+> +		if (!conf->disks[i].extra_page)
+> +			goto abort;
+> +	}
+> +
+>  	conf->mddev =3D mddev;
+>=20=20
+>  	if ((conf->stripe_hashtbl =3D kzalloc(PAGE_SIZE, GFP_KERNEL)) =3D=3D NU=
+LL)
+> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+> index d13fe45..ed8e136 100644
+> --- a/drivers/md/raid5.h
+> +++ b/drivers/md/raid5.h
+> @@ -276,6 +276,7 @@ struct stripe_head_state {
+>  	struct md_rdev *blocked_rdev;
+>  	int handle_bad_blocks;
+>  	int log_failed;
+> +	int waiting_extra_page;
+>  };
+>=20=20
+>  /* Flags for struct r5dev.flags */
+> @@ -439,6 +440,7 @@ enum {
+>=20=20
+>  struct disk_info {
+>  	struct md_rdev	*rdev, *replacement;
+> +	struct page	*extra_page; /* extra page to use in prexor */
+>  };
+>=20=20
+>  /*
+> @@ -559,6 +561,9 @@ enum r5_cache_state {
+>  				 * only process stripes that are already
+>  				 * occupying the log
+>  				 */
+> +	R5C_EXTRA_PAGE_IN_USE,	/* a stripe is using disk_info.extra_page
+> +				 * for prexor
+> +				 */
+>  };
+>=20=20
+>  struct r5conf {
+> @@ -765,6 +770,7 @@ extern void
+>  r5c_finish_stripe_write_out(struct r5conf *conf, struct stripe_head *sh,
+>  			    struct stripe_head_state *s);
+>  extern void r5c_release_extra_page(struct stripe_head *sh);
+> +extern void r5c_use_extra_page(struct stripe_head *sh);
+>  extern void r5l_wake_reclaim(struct r5l_log *log, sector_t space);
+>  extern void r5c_handle_cached_data_endio(struct r5conf *conf,
+>  	struct stripe_head *sh, int disks, struct bio_list *return_bi);
+> --=20
+> 2.9.3
 
-vim +/bio_init +429 drivers/md/raid5-ppl.c
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
-   423		spin_lock_init(&log->io_list_lock);
-   424		INIT_LIST_HEAD(&log->running_ios);
-   425		INIT_LIST_HEAD(&log->io_end_ios);
-   426		INIT_LIST_HEAD(&log->flushing_ios);
-   427		INIT_LIST_HEAD(&log->finished_ios);
-   428		INIT_LIST_HEAD(&log->no_mem_stripes);
- > 429		bio_init(&log->flush_bio);
-   430	
-   431		log->io_kc = log_parent->io_kc;
-   432		log->io_pool = log_parent->io_pool;
+-----BEGIN PGP SIGNATURE-----
 
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
-
---a8Wt8u1KmwUX3Y2C
-Content-Type: application/gzip
-Content-Disposition: attachment; filename=".config.gz"
-Content-Transfer-Encoding: base64
-
-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
-P/7vv3fT2M25tAAA
-
---a8Wt8u1KmwUX3Y2C--
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlg3sk4ACgkQOeye3VZi
+gbkZrhAAnoULxjRr7fmeSLpYA5R6rhqxeIxHs6pV6fyn/jooJEbBvzGiev9h8bno
+21Vg4CCkcAh3cTUEHS+z3DtSdW6YZia6pK//hxV5A0wuF5JA7wdSuMx9Uar+wfGG
+cRGeD/k+g/y2cCQX42Hb9FRJLH9h7937pYOwQsyVFba/Qu+lo0LgtxKRWwGNPsqa
+NoTHWgO759y3LU3/o2A/0t/CkfL3/9q9jMJzVoYW7RN/wHHZkx9/vmrn3i+7GlZE
+uhzJ8aTexjtg4Uyl0QGxwIS+f8OkQq9wLRiUnYLKKhXDJOIg+twIZfU4ZychDY8D
+Hdgyr9V6aRC+7YwWUh9Ysqlp29gPWR9fia6IfKXT9vz2iaUvLc75SDXBe0bljB8H
+NF6DL7cqpQc96gggS3/pEq4Gzh0sd+meOZ6jrpgE0M1Bv5BXkZAqMbS8SaCPW+zi
+hIQzZBKNnRssLX80I/HtulTkWmENei7Ov224Q5136+XHYaqEn7Tt1qxbqLl3D4zs
+pWIdNxMD1Deoa/VPoWRA3AcPa+jsz06s5xM3AVrktR+UOuh67a4ELszWI951j2RZ
+w12/rDpZwlC136ZVpYRDK3yEfWXZ7kx9xocEVdhuirfMwcRqyP1B9IM2510a/LFf
+6TZBT3ApOH0NAacWaxJ5oJiLBymL3IdH70thB/ujGlkMSN9/D0U=
+=Rx8C
+-----END PGP SIGNATURE-----
+--=-=-=--
