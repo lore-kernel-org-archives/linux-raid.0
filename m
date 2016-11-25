@@ -1,517 +1,287 @@
-From: NeilBrown <neilb@suse.com>
-Subject: [mdadm PATCH] Add failfast support.
-Date: Fri, 25 Nov 2016 10:55:49 +1100
-Message-ID: <87polka0vu.fsf@notabene.neil.brown.name>
-References: <147944614789.3302.1959091446949640579.stgit@noble> <20161122020238.qtuxwo5etcwmts4r@kernel.org>
+From: kbuild test robot <lkp@intel.com>
+Subject: Re: [PATCH 05/12] raid5-ppl: Partial Parity Log implementation
+Date: Fri, 25 Nov 2016 10:26:03 +0800
+Message-ID: <201611251045.EItygkLe%fengguang.wu@intel.com>
+References: <20161124122847.16456-6-artur.paszkiewicz@intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20161122020238.qtuxwo5etcwmts4r@kernel.org>
-Sender: linux-block-owner@vger.kernel.org
-To: Jes.Sorensen@redhat.com
-Cc: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, hare@suse.de
+Content-Type: multipart/mixed; boundary="a8Wt8u1KmwUX3Y2C"
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20161124122847.16456-6-artur.paszkiewicz@intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+Cc: kbuild-all@01.org, shli@kernel.org, linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
+--a8Wt8u1KmwUX3Y2C
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Allow per-device "failfast" flag to be set when creating an
-array or adding devices to an array.
+Hi Artur,
 
-When re-adding a device which had the failfast flag, it can be removed
-using --nofailfast.
+[auto build test ERROR on next-20161124]
+[cannot apply to md/for-next v4.9-rc6 v4.9-rc5 v4.9-rc4 v4.9-rc6]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
 
-failfast status is printed in --detail and --examine output.
+url:    https://github.com/0day-ci/linux/commits/Artur-Paszkiewicz/Partial-Parity-Log-for-MD-RAID-5/20161125-100404
+config: m68k-sun3_defconfig (attached as .config)
+compiler: m68k-linux-gcc (GCC) 4.9.0
+reproduce:
+        wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # save the attached .config to linux build tree
+        make.cross ARCH=m68k 
 
-Signed-off-by: NeilBrown <neilb@suse.com>
-=2D--
+All errors (new ones prefixed by >>):
 
-Hi Jes,
- this patch adds mdadm support for the failfast functionality that
-Shaohua recently included in his for-next.
-Hopefully the man-page additions provide all necessary context.
-If there is anything that seems to be missing, I'll be very happy to
-add it.
+   drivers/md/raid5-ppl.c: In function 'ppl_init_log_child':
+>> drivers/md/raid5-ppl.c:429:2: error: too few arguments to function 'bio_init'
+     bio_init(&log->flush_bio);
+     ^
+   In file included from include/linux/blkdev.h:19:0,
+                    from drivers/md/raid5-ppl.c:16:
+   include/linux/bio.h:423:13: note: declared here
+    extern void bio_init(struct bio *bio, struct bio_vec *table,
+                ^
 
-Thanks,
-NeilBrown
+vim +/bio_init +429 drivers/md/raid5-ppl.c
 
+   423		spin_lock_init(&log->io_list_lock);
+   424		INIT_LIST_HEAD(&log->running_ios);
+   425		INIT_LIST_HEAD(&log->io_end_ios);
+   426		INIT_LIST_HEAD(&log->flushing_ios);
+   427		INIT_LIST_HEAD(&log->finished_ios);
+   428		INIT_LIST_HEAD(&log->no_mem_stripes);
+ > 429		bio_init(&log->flush_bio);
+   430	
+   431		log->io_kc = log_parent->io_kc;
+   432		log->io_pool = log_parent->io_pool;
 
- Create.c      |  2 ++
- Detail.c      |  1 +
- Incremental.c |  1 +
- Manage.c      | 20 +++++++++++++++++++-
- ReadMe.c      |  2 ++
- md.4          | 54 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- md_p.h        |  1 +
- mdadm.8.in    | 32 +++++++++++++++++++++++++++++++-
- mdadm.c       | 11 +++++++++++
- mdadm.h       |  5 +++++
- super0.c      | 12 ++++++++----
- super1.c      | 13 +++++++++++++
- 12 files changed, 148 insertions(+), 6 deletions(-)
- mode change 100755 =3D> 100644 mdadm.h
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
-diff --git a/Create.c b/Create.c
-index 1594a3919139..bd114eabafc1 100644
-=2D-- a/Create.c
-+++ b/Create.c
-@@ -890,6 +890,8 @@ int Create(struct supertype *st, char *mddev,
-=20
- 				if (dv->writemostly =3D=3D 1)
- 					inf->disk.state |=3D (1<<MD_DISK_WRITEMOSTLY);
-+				if (dv->failfast =3D=3D 1)
-+					inf->disk.state |=3D (1<<MD_DISK_FAILFAST);
-=20
- 				if (have_container)
- 					fd =3D -1;
-diff --git a/Detail.c b/Detail.c
-index 925e4794c983..509b0d418768 100644
-=2D-- a/Detail.c
-+++ b/Detail.c
-@@ -658,6 +658,7 @@ This is pretty boring
- 			}
- 			if (disk.state & (1<<MD_DISK_REMOVED)) printf(" removed");
- 			if (disk.state & (1<<MD_DISK_WRITEMOSTLY)) printf(" writemostly");
-+			if (disk.state & (1<<MD_DISK_FAILFAST)) printf(" failfast");
- 			if (disk.state & (1<<MD_DISK_JOURNAL)) printf(" journal");
- 			if ((disk.state &
- 			     ((1<<MD_DISK_ACTIVE)|(1<<MD_DISK_SYNC)
-diff --git a/Incremental.c b/Incremental.c
-index cc01d41e641a..75d95ccc497a 100644
-=2D-- a/Incremental.c
-+++ b/Incremental.c
-@@ -1035,6 +1035,7 @@ static int array_try_spare(char *devname, int *dfdp, =
-struct dev_policy *pol,
- 			devlist.next =3D NULL;
- 			devlist.used =3D 0;
- 			devlist.writemostly =3D 0;
-+			devlist.failfast =3D 0;
- 			devlist.devname =3D chosen_devname;
- 			sprintf(chosen_devname, "%d:%d", major(stb.st_rdev),
- 				minor(stb.st_rdev));
-diff --git a/Manage.c b/Manage.c
-index 1b7b0c111c83..429d8631cd23 100644
-=2D-- a/Manage.c
-+++ b/Manage.c
-@@ -683,8 +683,13 @@ int attempt_re_add(int fd, int tfd, struct mddev_dev *=
-dv,
- 			disc.state |=3D 1 << MD_DISK_WRITEMOSTLY;
- 		if (dv->writemostly =3D=3D 2)
- 			disc.state &=3D ~(1 << MD_DISK_WRITEMOSTLY);
-+		if (dv->failfast =3D=3D 1)
-+			disc.state |=3D 1 << MD_DISK_FAILFAST;
-+		if (dv->failfast =3D=3D 2)
-+			disc.state &=3D ~(1 << MD_DISK_FAILFAST);
- 		remove_partitions(tfd);
-=2D		if (update || dv->writemostly > 0) {
-+		if (update || dv->writemostly > 0
-+			|| dv->failfast > 0) {
- 			int rv =3D -1;
- 			tfd =3D dev_open(dv->devname, O_RDWR);
- 			if (tfd < 0) {
-@@ -700,6 +705,14 @@ int attempt_re_add(int fd, int tfd, struct mddev_dev *=
-dv,
- 				rv =3D dev_st->ss->update_super(
- 					dev_st, NULL, "readwrite",
- 					devname, verbose, 0, NULL);
-+			if (dv->failfast =3D=3D 1)
-+				rv =3D dev_st->ss->update_super(
-+					dev_st, NULL, "failfast",
-+					devname, verbose, 0, NULL);
-+			if (dv->failfast =3D=3D 2)
-+				rv =3D dev_st->ss->update_super(
-+					dev_st, NULL, "nofailfast",
-+					devname, verbose, 0, NULL);
- 			if (update)
- 				rv =3D dev_st->ss->update_super(
- 					dev_st, NULL, update,
-@@ -964,6 +977,8 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
- 			disc.state |=3D (1 << MD_DISK_JOURNAL) | (1 << MD_DISK_SYNC);
- 		if (dv->writemostly =3D=3D 1)
- 			disc.state |=3D 1 << MD_DISK_WRITEMOSTLY;
-+		if (dv->failfast =3D=3D 1)
-+			disc.state |=3D 1 << MD_DISK_FAILFAST;
- 		dfd =3D dev_open(dv->devname, O_RDWR | O_EXCL|O_DIRECT);
- 		if (tst->ss->add_to_super(tst, &disc, dfd,
- 					  dv->devname, INVALID_SECTORS))
-@@ -1009,6 +1024,8 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
-=20
- 	if (dv->writemostly =3D=3D 1)
- 		disc.state |=3D (1 << MD_DISK_WRITEMOSTLY);
-+	if (dv->failfast =3D=3D 1)
-+		disc.state |=3D (1 << MD_DISK_FAILFAST);
- 	if (tst->ss->external) {
- 		/* add a disk
- 		 * to an external metadata container */
-@@ -1785,6 +1802,7 @@ int move_spare(char *from_devname, char *to_devname, =
-dev_t devid)
- 	devlist.next =3D NULL;
- 	devlist.used =3D 0;
- 	devlist.writemostly =3D 0;
-+	devlist.failfast =3D 0;
- 	devlist.devname =3D devname;
- 	sprintf(devname, "%d:%d", major(devid), minor(devid));
-=20
-diff --git a/ReadMe.c b/ReadMe.c
-index d3fcb6132fe9..8da49ef46dfb 100644
-=2D-- a/ReadMe.c
-+++ b/ReadMe.c
-@@ -136,6 +136,8 @@ struct option long_options[] =3D {
-     {"bitmap-chunk", 1, 0, BitmapChunk},
-     {"write-behind", 2, 0, WriteBehind},
-     {"write-mostly",0, 0, WriteMostly},
-+    {"failfast",  0, 0,  FailFast},
-+    {"nofailfast",0, 0,  NoFailFast},
-     {"re-add",    0, 0,  ReAdd},
-     {"homehost",  1, 0,  HomeHost},
-     {"symlinks",  1, 0,  Symlinks},
-diff --git a/md.4 b/md.4
-index f1b88ee6bb03..5bdf7a7bd375 100644
-=2D-- a/md.4
-+++ b/md.4
-@@ -916,6 +916,60 @@ slow).  The extra latency of the remote link will not =
-slow down normal
- operations, but the remote system will still have a reasonably
- up-to-date copy of all data.
-=20
-+.SS FAILFAST
-+
-+From Linux 4.10,
-+.I
-+md
-+supports FAILFAST for RAID1 and RAID10 arrays.  This is a flag that
-+can be set on individual drives, though it is usually set on all
-+drives, or no drives.
-+
-+When
-+.I md
-+sends an I/O request to a drive that is marked as FAILFAST, and when
-+the array could survive the loss of that drive without losing data,
-+.I md
-+will request that the underlying device does not perform any retries.
-+This means that a failure will be reported to
-+.I md
-+promptly, and it can mark the device as faulty and continue using the
-+other device(s).
-+.I md
-+cannot control the timeout that the underlying devices use to
-+determine failure.  Any changes desired to that timeout must be set
-+explictly on the underlying device, separately from using
-+.IR mdadm .
-+
-+If a FAILFAST request does fail, and if it is still safe to mark the
-+device as faulty without data loss, that will be done and the array
-+will continue functioning on a reduced number of devices.  If it is not
-+possible to safely mark the device as faulty,
-+.I md
-+will retry the request without disabling retries in the underlying
-+device.  In any case,
-+.I md
-+will not attempt to repair read errors on a device marked as FAILFAST
-+by writing out the correct.  It will just mark the device as faulty.
-+
-+FAILFAST is appropriate for storage arrays that have a low probability
-+of true failure, but will sometimes introduce unacceptable delays to
-+I/O requests while performing internal maintenance.  The value of
-+setting FAILFAST involves a trade-off.  The gain is that the chance of
-+unacceptable delays is substantially reduced.  The cost is that the
-+unlikely event of data-loss on one device is slightly more likely to
-+result in data-loss for the array.
-+
-+When a device in an array using FAILFAST is marked as faulty, it will
-+usually become usable again in a short while.
-+.I mdadm
-+makes no attempt to detect that possibility.  Some separate
-+mechanism, tuned to the specific details of the expected failure modes,
-+needs to be created to monitor devices to see when they return to full
-+functionality, and to then re-add them to the array.  In order of
-+this "re-add" functionality to be effective, an array using FAILFAST
-+should always have a write-intent bitmap.
-+
- .SS RESTRIPING
-=20
- .IR Restriping ,
-diff --git a/md_p.h b/md_p.h
-index 0d691fbc987d..dc9fec165cb6 100644
-=2D-- a/md_p.h
-+++ b/md_p.h
-@@ -89,6 +89,7 @@
- 				   * read requests will only be sent here in
- 				   * dire need
- 				   */
-+#define	MD_DISK_FAILFAST	10 /* Fewer retries, more failures */
-=20
- #define MD_DISK_REPLACEMENT	17
- #define MD_DISK_JOURNAL		18 /* disk is used as the write journal in RAID-5=
-/6 */
-diff --git a/mdadm.8.in b/mdadm.8.in
-index 3c0c58f95f35..aa80f0c1a631 100644
-=2D-- a/mdadm.8.in
-+++ b/mdadm.8.in
-@@ -747,7 +747,7 @@ subsequent devices listed in a
- .BR \-\-create ,
- or
- .B \-\-add
-=2Dcommand will be flagged as 'write-mostly'.  This is valid for RAID1
-+command will be flagged as 'write\-mostly'.  This is valid for RAID1
- only and means that the 'md' driver will avoid reading from these
- devices if at all possible.  This can be useful if mirroring over a
- slow link.
-@@ -762,6 +762,25 @@ mode, and write-behind is only attempted on drives mar=
-ked as
- .IR write-mostly .
-=20
- .TP
-+.BR \-\-failfast
-+subsequent devices listed in a
-+.B \-\-create
-+or
-+.B \-\-add
-+command will be flagged as  'failfast'.  This is valid for RAID1 and
-+RAID10 only.  IO requests to these devices will be encouraged to fail
-+quickly rather than cause long delays due to error handling.  Also no
-+attempt is made to repair a read error on these devices.
-+
-+If an array becomes degraded so that the 'failfast' device is the only
-+usable device, the 'failfast' flag will then be ignored and extended
-+delays will be preferred to complete failure.
-+
-+The 'failfast' flag is appropriate for storage arrays which have a
-+low probability of true failure, but which may sometimes
-+cause unacceptable delays due to internal maintenance functions.
-+
-+.TP
- .BR \-\-assume\-clean
- Tell
- .I mdadm
-@@ -1452,6 +1471,17 @@ that had a failed journal. To avoid interrupting on-=
-going write opertions,
- .B \-\-add-journal
- only works for array in Read-Only state.
-=20
-+.TP
-+.BR \-\-failfast
-+Subsequent devices that are added or re\-added will have
-+the 'failfast' flag set.  This is only valid for RAID1 and RAID10 and
-+means that the 'md' driver will avoid long timeouts on error handling
-+where possible.
-+.TP
-+.BR \-\-nofailfast
-+Subsequent devices that are re\-added will be re\-added without
-+the 'failfast' flag set.
-+
- .P
- Each of these options requires that the first device listed is the array
- to be acted upon, and the remainder are component devices to be added,
-diff --git a/mdadm.c b/mdadm.c
-index cca093318d8d..3c8f273c8254 100644
-=2D-- a/mdadm.c
-+++ b/mdadm.c
-@@ -90,6 +90,7 @@ int main(int argc, char *argv[])
- 	int spare_sharing =3D 1;
- 	struct supertype *ss =3D NULL;
- 	int writemostly =3D 0;
-+	int failfast =3D 0;
- 	char *shortopt =3D short_options;
- 	int dosyslog =3D 0;
- 	int rebuild_map =3D 0;
-@@ -295,6 +296,7 @@ int main(int argc, char *argv[])
- 					dv->devname =3D optarg;
- 					dv->disposition =3D devmode;
- 					dv->writemostly =3D writemostly;
-+					dv->failfast =3D failfast;
- 					dv->used =3D 0;
- 					dv->next =3D NULL;
- 					*devlistend =3D dv;
-@@ -351,6 +353,7 @@ int main(int argc, char *argv[])
- 			dv->devname =3D optarg;
- 			dv->disposition =3D devmode;
- 			dv->writemostly =3D writemostly;
-+			dv->failfast =3D failfast;
- 			dv->used =3D 0;
- 			dv->next =3D NULL;
- 			*devlistend =3D dv;
-@@ -417,6 +420,14 @@ int main(int argc, char *argv[])
- 			writemostly =3D 2;
- 			continue;
-=20
-+		case O(MANAGE,FailFast):
-+		case O(CREATE,FailFast):
-+			failfast =3D 1;
-+			continue;
-+		case O(MANAGE,NoFailFast):
-+			failfast =3D 2;
-+			continue;
-+
- 		case O(GROW,'z'):
- 		case O(CREATE,'z'):
- 		case O(BUILD,'z'): /* size */
-diff --git a/mdadm.h b/mdadm.h
-old mode 100755
-new mode 100644
-index 240ab7f831bc..d47de01f725b
-=2D-- a/mdadm.h
-+++ b/mdadm.h
-@@ -383,6 +383,8 @@ enum special_options {
- 	ConfigFile,
- 	ChunkSize,
- 	WriteMostly,
-+	FailFast,
-+	NoFailFast,
- 	Layout,
- 	Auto,
- 	Force,
-@@ -516,6 +518,7 @@ struct mddev_dev {
- 				 * Not set for names read from .config
- 				 */
- 	char writemostly;	/* 1 for 'set writemostly', 2 for 'clear writemostly' */
-+	char failfast;		/* Ditto but for 'failfast' flag */
- 	int used;		/* set when used */
- 	long long data_offset;
- 	struct mddev_dev *next;
-@@ -821,6 +824,8 @@ extern struct superswitch {
- 	 *   linear-grow-update - now change the size of the array.
- 	 *   writemostly - set the WriteMostly1 bit in the superblock devflags
- 	 *   readwrite - clear the WriteMostly1 bit in the superblock devflags
-+	 *   failfast - set the FailFast1 bit in the superblock
-+	 *   nofailfast - clear the FailFast1 bit
- 	 *   no-bitmap - clear any record that a bitmap is present.
- 	 *   bbl       - add a bad-block-log if possible
- 	 *   no-bbl    - remove any bad-block-log is it is empty.
-diff --git a/super0.c b/super0.c
-index 55ebd8bc7877..938cfd95fa25 100644
-=2D-- a/super0.c
-+++ b/super0.c
-@@ -232,14 +232,15 @@ static void examine_super0(struct supertype *st, char=
- *homehost)
- 		mdp_disk_t *dp;
- 		char *dv;
- 		char nb[5];
-=2D		int wonly;
-+		int wonly, failfast;
- 		if (d>=3D0) dp =3D &sb->disks[d];
- 		else dp =3D &sb->this_disk;
- 		snprintf(nb, sizeof(nb), "%4d", d);
- 		printf("%4s %5d   %5d    %5d    %5d     ", d < 0 ? "this" : nb,
- 		       dp->number, dp->major, dp->minor, dp->raid_disk);
- 		wonly =3D dp->state & (1 << MD_DISK_WRITEMOSTLY);
-=2D		dp->state &=3D ~(1 << MD_DISK_WRITEMOSTLY);
-+		failfast =3D dp->state & (1<<MD_DISK_FAILFAST);
-+		dp->state &=3D ~(wonly | failfast);
- 		if (dp->state & (1 << MD_DISK_FAULTY))
- 			printf(" faulty");
- 		if (dp->state & (1 << MD_DISK_ACTIVE))
-@@ -250,6 +251,8 @@ static void examine_super0(struct supertype *st, char *=
-homehost)
- 			printf(" removed");
- 		if (wonly)
- 			printf(" write-mostly");
-+		if (failfast)
-+			printf(" failfast");
- 		if (dp->state =3D=3D 0)
- 			printf(" spare");
- 		if ((dv =3D map_dev(dp->major, dp->minor, 0)))
-@@ -581,7 +584,8 @@ static int update_super0(struct supertype *st, struct m=
-dinfo *info,
- 	} else if (strcmp(update, "assemble")=3D=3D0) {
- 		int d =3D info->disk.number;
- 		int wonly =3D sb->disks[d].state & (1<<MD_DISK_WRITEMOSTLY);
-=2D		int mask =3D (1<<MD_DISK_WRITEMOSTLY);
-+		int failfast =3D sb->disks[d].state & (1<<MD_DISK_FAILFAST);
-+		int mask =3D (1<<MD_DISK_WRITEMOSTLY)|(1<<MD_DISK_FAILFAST);
- 		int add =3D 0;
- 		if (sb->minor_version >=3D 91)
- 			/* During reshape we don't insist on everything
-@@ -590,7 +594,7 @@ static int update_super0(struct supertype *st, struct m=
-dinfo *info,
- 			add =3D (1<<MD_DISK_SYNC);
- 		if (((sb->disks[d].state & ~mask) | add)
- 		    !=3D (unsigned)info->disk.state) {
-=2D			sb->disks[d].state =3D info->disk.state | wonly;
-+			sb->disks[d].state =3D info->disk.state | wonly |failfast;
- 			rv =3D 1;
- 		}
- 		if (info->reshape_active &&
-diff --git a/super1.c b/super1.c
-index d3234392d453..87a74cb94508 100644
-=2D-- a/super1.c
-+++ b/super1.c
-@@ -77,6 +77,7 @@ struct mdp_superblock_1 {
- 	__u8	device_uuid[16]; /* user-space setable, ignored by kernel */
- 	__u8    devflags;        /* per-device flags.  Only one defined...*/
- #define WriteMostly1    1        /* mask for writemostly flag in above */
-+#define FailFast1	2        /* Device should get FailFast requests */
- 	/* bad block log.  If there are any bad blocks the feature flag is set.
- 	 * if offset and size are non-zero, that space is reserved and available.
- 	 */
-@@ -430,6 +431,8 @@ static void examine_super1(struct supertype *st, char *=
-homehost)
- 		printf("          Flags :");
- 		if (sb->devflags & WriteMostly1)
- 			printf(" write-mostly");
-+		if (sb->devflags & FailFast1)
-+			printf(" failfast");
- 		printf("\n");
- 	}
-=20
-@@ -1020,6 +1023,8 @@ static void getinfo_super1(struct supertype *st, stru=
-ct mdinfo *info, char *map)
- 	}
- 	if (sb->devflags & WriteMostly1)
- 		info->disk.state |=3D (1 << MD_DISK_WRITEMOSTLY);
-+	if (sb->devflags & FailFast1)
-+		info->disk.state |=3D (1 << MD_DISK_FAILFAST);
- 	info->events =3D __le64_to_cpu(sb->events);
- 	sprintf(info->text_version, "1.%d", st->minor_version);
- 	info->safe_mode_delay =3D 200;
-@@ -1377,6 +1382,10 @@ static int update_super1(struct supertype *st, struc=
-t mdinfo *info,
- 		sb->devflags |=3D WriteMostly1;
- 	else if (strcmp(update, "readwrite")=3D=3D0)
- 		sb->devflags &=3D ~WriteMostly1;
-+	else if (strcmp(update, "failfast") =3D=3D 0)
-+		sb->devflags |=3D FailFast1;
-+	else if (strcmp(update, "nofailfast") =3D=3D 0)
-+		sb->devflags &=3D ~FailFast1;
- 	else
- 		rv =3D -1;
-=20
-@@ -1713,6 +1722,10 @@ static int write_init_super1(struct supertype *st)
- 			sb->devflags |=3D WriteMostly1;
- 		else
- 			sb->devflags &=3D ~WriteMostly1;
-+		if (di->disk.state & (1<<MD_DISK_FAILFAST))
-+			sb->devflags |=3D FailFast1;
-+		else
-+			sb->devflags &=3D ~FailFast1;
-=20
- 		random_uuid(sb->device_uuid);
-=20
-=2D-=20
-2.10.2
+--a8Wt8u1KmwUX3Y2C
+Content-Type: application/gzip
+Content-Disposition: attachment; filename=".config.gz"
+Content-Transfer-Encoding: base64
 
+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
+P/7vv3fT2M25tAAA
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAEBCAAGBQJYN34FAAoJEDnsnt1WYoG5ID0P/izer4LWSe4Xk2uCMFPvs4vk
-H1u3K5/2cUxexNQRMPNrhpHHLRUqfU38/rAfyoOTdvnpdEDBsGoQWaVnNFbeByAi
-4jQouEPakkQLu1AasgR2G8egX3eP3KO0RZziqpwlYi/lfVw8Qbv7jMDIBxYieHdT
-dCrRjVOasUIJdvYk1bOpgvu8ktvMwThFzc4BEROF+Nj72iff8Wpcqmh9raP0J7UI
-9b/V+2Wm0ABuBtcSrx9lEseaVsCSsWBRgvg/M8fnEE4enbmd00y7C0umsQEiyruE
-H12NO7tbwvgxLJci2jUyiGK4d445PrD2ZeIx00Eh5WP7fVBZ382Nj+Ls3/5V2msC
-sMoqaYvtYCXpB+ZQoFqC9NqMN2k3BzUqjyJXThaIJ1c7q75cEXpheASp0t1+kR2i
-aroIs9nM+EO9T85TWN1RRuJbqowPFbQexzXl1uEksktaao/tL3Abgvl7AYLY/3vL
-Bl5Pwuz5ZCeRVasGryfj7mnXlbulE/C7qCFjAoBNqyxRNrVttfM8oeUwYoZKB7GO
-6YCxDbMBpjwTRHHSVlq/gjx66pdnAGlesFBzJYUVvAF3TmXun2ZRLWjLV8GZy8xQ
-KX6qzQxuZSXNorMeOuhUljbW98asJnDit54m9itU5FZ/JaSSTd1tcU2VdkA3jlA6
-wRjwyLyg5NDX74jWrVOI
-=6CMV
------END PGP SIGNATURE-----
---=-=-=--
+--a8Wt8u1KmwUX3Y2C--
