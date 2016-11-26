@@ -1,71 +1,40 @@
 From: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
-Subject: [PATCH 2/2] raid5-cache: don't set STRIPE_R5C_PARTIAL_STRIPE flag while load stripe into cache
-Date: Sat, 26 Nov 2016 10:57:14 +0800
-Message-ID: <1480129034-14700-2-git-send-email-liuzhengyuan@kylinos.cn>
-References: <1480129034-14700-1-git-send-email-liuzhengyuan@kylinos.cn>
+Subject: [PATCH 1/2] raid5-cache: add another check conditon before replaying one stripe
+Date: Sat, 26 Nov 2016 10:57:13 +0800
+Message-ID: <1480129034-14700-1-git-send-email-liuzhengyuan@kylinos.cn>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1480129034-14700-1-git-send-email-liuzhengyuan@kylinos.cn>
 Sender: linux-raid-owner@vger.kernel.org
 To: shli@fb.com, songliubraving@fb.com
 Cc: neilb@suse.com, linux-raid@vger.kernel.org, liuyun01@kylinos.cn
 List-Id: linux-raid.ids
 
-r5c_recovery_load_one_stripe should not set STRIPE_R5C_PARTIAL_STRIPE flag,as
-the data-only stripe may be STRIPE_R5C_FULL_STRIPE stripe. The state machine
-would release the stripe later and add it into neither r5c_cached_full_stripes
-list or r5c_cached_partial_stripes list and set correct flag. Also we should
-fix the counter corresponding.
+New stripe that was just allocated has no STRIPE_R5C_CACHING state too,
+add this check condition could avoid unnecessary replaying for empty stripe.
 
-Reviewed-by: JackieLiu <liuyun01@kylinos.cn>
+r5l_recovery_replay_one_stripe would reset stripe for any case, delete it
+to make code more clean.
+
 Signed-off-by: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
 ---
- drivers/md/raid5-cache.c |  3 +--
- drivers/md/raid5.c       | 11 +++++++++++
- 2 files changed, 12 insertions(+), 2 deletions(-)
+ drivers/md/raid5-cache.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 9911164..e0ac758 100644
+index 5f817bd..9911164 100644
 --- a/drivers/md/raid5-cache.c
 +++ b/drivers/md/raid5-cache.c
-@@ -1930,9 +1930,8 @@ static void r5c_recovery_load_one_stripe(struct r5l_log *log,
- 			set_bit(R5_UPTODATE, &dev->flags);
+@@ -1887,9 +1887,9 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
  		}
- 	}
--	set_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state);
--	atomic_inc(&conf->r5c_cached_partial_stripes);
- 	list_add_tail(&sh->r5c, &log->stripe_in_journal_list);
-+	atomic_inc(&log->stripe_in_journal_count);
- }
  
- /*
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index dbab8c7..8120ce4 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -677,12 +677,23 @@ raid5_get_active_stripe(struct r5conf *conf, sector_t sector,
- 					atomic_inc(&conf->active_stripes);
- 				BUG_ON(list_empty(&sh->lru) &&
- 				       !test_bit(STRIPE_EXPANDING, &sh->state));
-+
- 				inc_empty_inactive_list_flag = 0;
- 				if (!list_empty(conf->inactive_list + hash))
- 					inc_empty_inactive_list_flag = 1;
- 				list_del_init(&sh->lru);
- 				if (list_empty(conf->inactive_list + hash) && inc_empty_inactive_list_flag)
- 					atomic_inc(&conf->empty_inactive_list_nr);
-+
-+				if (test_and_clear_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state)) {
-+					WARN_ON(atomic_read(&conf->r5c_cached_partial_stripes) == 0);
-+					atomic_dec(&conf->r5c_cached_partial_stripes);
-+				}
-+				if (test_and_clear_bit(STRIPE_R5C_FULL_STRIPE, &sh->state)) {
-+					WARN_ON(atomic_read(&conf->r5c_cached_full_stripes) == 0);
-+					atomic_dec(&conf->r5c_cached_full_stripes);
-+				}
-+
- 				if (sh->group) {
- 					sh->group->stripes_cnt--;
- 					sh->group = NULL;
+ 		if (payload->header.type == R5LOG_PAYLOAD_DATA) {
+-			if (!test_bit(STRIPE_R5C_CACHING, &sh->state)) {
++			if (!test_bit(STRIPE_R5C_CACHING, &sh->state) &&
++			    test_bit(R5_Wantwrite, &sh->dev[sh->pd_idx].flags)) {
+ 				r5l_recovery_replay_one_stripe(conf, sh, ctx);
+-				r5l_recovery_reset_stripe(sh);
+ 				sh->log_start = ctx->pos;
+ 				list_move_tail(&sh->lru, cached_stripe_list);
+ 			}
 -- 
 2.7.4
 
