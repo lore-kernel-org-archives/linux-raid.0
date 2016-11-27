@@ -1,108 +1,91 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: Re: [PATCH] raid5-cache: Fix the logic of raid5-cache recovery
-Date: Sun, 27 Nov 2016 23:36:54 +0000
-Message-ID: <3593122D-6AB2-499A-9431-59352218397F@fb.com>
-References: <20161119072057.1302854-1-songliubraving@fb.com>
- <tencent_4E54374D19A73C0B4D37AF14@qq.com>
+Subject: Re: [PATCH 2/2] raid5-cache: don't set STRIPE_R5C_PARTIAL_STRIPE flag
+ while load stripe into cache
+Date: Sun, 27 Nov 2016 23:49:24 +0000
+Message-ID: <A581E969-CBCA-4271-B628-1558D3A7A0FD@fb.com>
+References: <1480129034-14700-1-git-send-email-liuzhengyuan@kylinos.cn>
+ <1480129034-14700-2-git-send-email-liuzhengyuan@kylinos.cn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <tencent_4E54374D19A73C0B4D37AF14@qq.com>
+In-Reply-To: <1480129034-14700-2-git-send-email-liuzhengyuan@kylinos.cn>
 Content-Language: en-US
-Content-ID: <5A8066DCA476A44AAA468A5D5C7999AF@namprd15.prod.outlook.com>
+Content-ID: <010CE810252BB34BB4F53C9D4F4CF163@namprd15.prod.outlook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jackie Liu <liuyun01@kylinos.cn>
-Cc: linux-raid <linux-raid@vger.kernel.org>, =?gb2312?B?wfXV/dSq?= <liuzhengyuan@kylinos.cn>, Shaohua Li <shli@fb.com>
+To: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
+Cc: Shaohua Li <shli@fb.com>, NeilBrown <neilb@suse.com>, linux-raid <linux-raid@vger.kernel.org>, "liuyun01@kylinos.cn" <liuyun01@kylinos.cn>
 List-Id: linux-raid.ids
 
-SGkgSmFja2llLCANCg0KVGhpcyBwYXRjaCBoYXMgYSBsb3Qgb2YgZ29vZCBmaXhlcy4gVGhhbmtz
-IGZvciByZXZpZXdpbmcgdGhlIGNvZGUgYW5kIA0KcHJvcG9zaW5nIHRoZSBmaXhlcy4gDQoNCkNv
-dWxkIHlvdSBleHBsYWluIGEgbGl0dGxlIG1vcmUgd2h5IHdlIG5lZWQgd3JpdGUgYW4gZW1wdHkg
-YmxvY2sgYmVmb3JlIA0KY2FsbGluZyByNWNfcmVjb3ZlcnlfcmV3cml0ZV9kYXRhX29ubHlfc3Ry
-aXBlcygpPw0KDQpUaGFua3MsDQpTb25nDQoNCj4gT24gTm92IDI1LCAyMDE2LCBhdCAzOjM5IEFN
-LCBKYWNraWUgTGl1IDxsaXV5dW4wMUBreWxpbm9zLmNuPiB3cm90ZToNCj4gDQo+IEhpIFNvbmcu
-DQo+IA0KPiBUaGVyZSBpcyBhIGRvdWJ0IGZvciByNWxfcmVjb3ZlcnlfbG9nLiBJIHRoaW5rIHdl
-IG5lZWQgd3JpdGUgYW4gZW1wdHkgYmxvY2sgZmlyc3QsDQo+IHRoZW4gY2FsbCByNWNfcmVjb3Zl
-cnlfcmV3cml0ZV9kYXRhX29ubHlfc3RyaXBlcyBmdW5jdGlvbnMuIHRoaXMgZW1wdHkgDQo+IGJs
-b2NrIHdpbGwgYmUgbWFyayBhcyB0aGUgbGFzdF9jaGVja3BvaW50LiB3aGVuIHRoZSBDQUNISU5H
-IGJsb2NrIGlzIHJld3JpdHRlbiwNCj4gdGhlIHN1cGVyYmxvY2sgc2hvdWxkIGJlIHVwZGF0ZSB0
-aGlzIHRpbWUuIGF0IHRoZSBzYW1lIHRpbWUsIHdlIGNhbm4ndCBiZSANCj4gcmVsZWFzZWQgdGhl
-IHN0cmlwZV9oZWFkIGF0IHRoZSBmcm9udCwgaXQgYWxzbyBiZSB1c2VkIGluIA0KPiByNWNfcmVj
-b3ZlcnlfcmV3cml0ZV9kYXRhX29ubHlfc3RyaXBlcy4NCj4gDQo+IGhlcmUgaXMgdGhlIHBhdGNo
-DQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkNS1jYWNoZS5jIGIvZHJpdmVycy9t
-ZC9yYWlkNS1jYWNoZS5jDQo+IGluZGV4IDVmODE3YmQuLmZhZDE4MDggMTAwNjQ0DQo+IC0tLSBh
-L2RyaXZlcnMvbWQvcmFpZDUtY2FjaGUuYw0KPiArKysgYi9kcml2ZXJzL21kL3JhaWQ1LWNhY2hl
-LmMNCj4gQEAgLTY3LDcgKzY3LDcgQEAgc3RhdGljIGNoYXIgKnI1Y19qb3VybmFsX21vZGVfc3Ry
-W10gPSB7IndyaXRlLXRocm91Z2giLA0KPiAvKg0KPiAgKiByYWlkNSBjYWNoZSBzdGF0ZSBtYWNo
-aW5lDQo+ICAqDQo+IC0gKiBXaXRoIHJoZSBSQUlEIGNhY2hlLCBlYWNoIHN0cmlwZSB3b3JrcyBp
-biB0d28gcGhhc2VzOg0KPiArICogV2l0aCB0aGUgUkFJRCBjYWNoZSwgZWFjaCBzdHJpcGUgd29y
-a3MgaW4gdHdvIHBoYXNlczoNCj4gICoJLSBjYWNoaW5nIHBoYXNlDQo+ICAqCS0gd3JpdGluZy1v
-dXQgcGhhc2UNCj4gICoNCj4gQEAgLTE2NzQsNyArMTY3NCw2IEBAIHI1bF9yZWNvdmVyeV9yZXBs
-YXlfb25lX3N0cmlwZShzdHJ1Y3QgcjVjb25mICpjb25mLA0KPiANCj4gc3RhdGljIHN0cnVjdCBz
-dHJpcGVfaGVhZCAqDQo+IHI1Y19yZWNvdmVyeV9hbGxvY19zdHJpcGUoc3RydWN0IHI1Y29uZiAq
-Y29uZiwNCj4gLQkJCSAgc3RydWN0IGxpc3RfaGVhZCAqcmVjb3ZlcnlfbGlzdCwNCj4gCQkJICBz
-ZWN0b3JfdCBzdHJpcGVfc2VjdCwNCj4gCQkJICBzZWN0b3JfdCBsb2dfc3RhcnQpDQo+IHsNCj4g
-QEAgLTE4NTUsOCArMTg1NCw4IEBAIHI1Y19yZWNvdmVyeV9hbmFseXplX21ldGFfYmxvY2soc3Ry
-dWN0IHI1bF9sb2cgKmxvZywNCj4gCQkJCQkJc3RyaXBlX3NlY3QpOw0KPiANCj4gCQlpZiAoIXNo
-KSB7DQo+IC0JCQlzaCA9IHI1Y19yZWNvdmVyeV9hbGxvY19zdHJpcGUoY29uZiwgY2FjaGVkX3N0
-cmlwZV9saXN0LA0KPiAtCQkJCQkJICAgICAgIHN0cmlwZV9zZWN0LCBjdHgtPnBvcyk7DQo+ICsJ
-CQlzaCA9IHI1Y19yZWNvdmVyeV9hbGxvY19zdHJpcGUoY29uZiwgc3RyaXBlX3NlY3QsDQo+ICsJ
-CQkJCQkJY3R4LT5wb3MpOw0KPiAJCQkvKg0KPiAJCQkgKiBjYW5ub3QgZ2V0IHN0cmlwZSBmcm9t
-IHJhaWQ1X2dldF9hY3RpdmVfc3RyaXBlDQo+IAkJCSAqIHRyeSByZXBsYXkgc29tZSBzdHJpcGVz
-DQo+IEBAIC0xODY1LDggKzE4NjQsNyBAQCByNWNfcmVjb3ZlcnlfYW5hbHl6ZV9tZXRhX2Jsb2Nr
-KHN0cnVjdCByNWxfbG9nICpsb2csDQo+IAkJCQlyNWNfcmVjb3ZlcnlfcmVwbGF5X3N0cmlwZXMo
-DQo+IAkJCQkJY2FjaGVkX3N0cmlwZV9saXN0LCBjdHgpOw0KPiAJCQkJc2ggPSByNWNfcmVjb3Zl
-cnlfYWxsb2Nfc3RyaXBlKA0KPiAtCQkJCQljb25mLCBjYWNoZWRfc3RyaXBlX2xpc3QsDQo+IC0J
-CQkJCXN0cmlwZV9zZWN0LCBjdHgtPnBvcyk7DQo+ICsJCQkJCWNvbmYsIHN0cmlwZV9zZWN0LCBj
-dHgtPnBvcyk7DQo+IAkJCX0NCj4gCQkJaWYgKCFzaCkgew0KPiAJCQkJcHJfZGVidWcoIm1kL3Jh
-aWQ6JXM6IEluY3JlYXNpbmcgc3RyaXBlIGNhY2hlIHNpemUgdG8gJWQgdG8gcmVjb3ZlcnkgZGF0
-YSBvbiBqb3VybmFsLlxuIiwNCj4gQEAgLTE4NzUsOCArMTg3Myw3IEBAIHI1Y19yZWNvdmVyeV9h
-bmFseXplX21ldGFfYmxvY2soc3RydWN0IHI1bF9sb2cgKmxvZywNCj4gCQkJCXJhaWQ1X3NldF9j
-YWNoZV9zaXplKG1kZGV2LA0KPiAJCQkJCQkgICAgIGNvbmYtPm1pbl9ucl9zdHJpcGVzICogMik7
-DQo+IAkJCQlzaCA9IHI1Y19yZWNvdmVyeV9hbGxvY19zdHJpcGUoDQo+IC0JCQkJCWNvbmYsIGNh
-Y2hlZF9zdHJpcGVfbGlzdCwgc3RyaXBlX3NlY3QsDQo+IC0JCQkJCWN0eC0+cG9zKTsNCj4gKwkJ
-CQkJY29uZiwgc3RyaXBlX3NlY3QsIGN0eC0+cG9zKTsNCj4gCQkJfQ0KPiAJCQlpZiAoIXNoKSB7
-DQo+IAkJCQlwcl9lcnIoIm1kL3JhaWQ6JXM6IENhbm5vdCBnZXQgZW5vdWdoIHN0cmlwZXMgZHVl
-IHRvIG1lbW9yeSBwcmVzc3VyZS4gUmVjb3ZlcnkgZmFpbGVkLlxuIiwNCj4gQEAgLTE5ODYsOCAr
-MTk4Myw2IEBAIHN0YXRpYyBpbnQgcjVjX3JlY292ZXJ5X2ZsdXNoX2xvZyhzdHJ1Y3QgcjVsX2xv
-ZyAqbG9nLA0KPiAJbGlzdF9mb3JfZWFjaF9lbnRyeV9zYWZlKHNoLCBuZXh0LCAmY3R4LT5jYWNo
-ZWRfbGlzdCwgbHJ1KSB7DQo+IAkJV0FSTl9PTighdGVzdF9iaXQoU1RSSVBFX1I1Q19DQUNISU5H
-LCAmc2gtPnN0YXRlKSk7DQo+IAkJcjVjX3JlY292ZXJ5X2xvYWRfb25lX3N0cmlwZShsb2csIHNo
-KTsNCj4gLQkJbGlzdF9kZWxfaW5pdCgmc2gtPmxydSk7DQo+IC0JCXJhaWQ1X3JlbGVhc2Vfc3Ry
-aXBlKHNoKTsNCj4gCQljdHgtPmRhdGFfb25seV9zdHJpcGVzKys7DQo+IAl9DQo+IA0KPiBAQCAt
-MjA3OCw3ICsyMDczLDYgQEAgcjVjX3JlY292ZXJ5X3Jld3JpdGVfZGF0YV9vbmx5X3N0cmlwZXMo
-c3RydWN0IHI1bF9sb2cgKmxvZywNCj4gCQlyZXR1cm4gLUVOT01FTTsNCj4gCX0NCj4gDQo+IC0J
-Y3R4LT5zZXEgKz0gMTA7DQo+IAlsaXN0X2Zvcl9lYWNoX2VudHJ5KHNoLCAmY3R4LT5jYWNoZWRf
-bGlzdCwgbHJ1KSB7DQo+IAkJc3RydWN0IHI1bF9tZXRhX2Jsb2NrICptYjsNCj4gCQlpbnQgaTsN
-Cj4gQEAgLTIwOTAsNyArMjA4NCw3IEBAIHI1Y19yZWNvdmVyeV9yZXdyaXRlX2RhdGFfb25seV9z
-dHJpcGVzKHN0cnVjdCByNWxfbG9nICpsb2csDQo+IAkJCQkJCSAgICAgY3R4LT5wb3MsIGN0eC0+
-c2VxKTsNCj4gCQltYiA9IHBhZ2VfYWRkcmVzcyhwYWdlKTsNCj4gCQlvZmZzZXQgPSBsZTMyX3Rv
-X2NwdShtYi0+bWV0YV9zaXplKTsNCj4gLQkJd3JpdGVfcG9zID0gY3R4LT5wb3MgKyBCTE9DS19T
-RUNUT1JTOw0KPiArCQl3cml0ZV9wb3MgPSByNWxfcmluZ19hZGQobG9nLCBjdHgtPnBvcywgQkxP
-Q0tfU0VDVE9SUyk7DQo+IA0KPiAJCWZvciAoaSA9IHNoLT5kaXNrczsgaS0tOyApIHsNCj4gCQkJ
-c3RydWN0IHI1ZGV2ICpkZXYgPSAmc2gtPmRldltpXTsNCj4gQEAgLTIxMjUsNiArMjExOSw5IEBA
-IHI1Y19yZWNvdmVyeV9yZXdyaXRlX2RhdGFfb25seV9zdHJpcGVzKHN0cnVjdCByNWxfbG9nICps
-b2csDQo+IAkJc2gtPmxvZ19zdGFydCA9IGN0eC0+cG9zOw0KPiAJCWN0eC0+cG9zID0gd3JpdGVf
-cG9zOw0KPiAJCWN0eC0+c2VxICs9IDE7DQo+ICsNCj4gKwkJbGlzdF9kZWxfaW5pdCgmc2gtPmxy
-dSk7DQo+ICsJCXJhaWQ1X3JlbGVhc2Vfc3RyaXBlKHNoKTsNCj4gCX0NCj4gCV9fZnJlZV9wYWdl
-KHBhZ2UpOw0KPiAJcmV0dXJuIDA7DQo+IEBAIC0yMTM1LDYgKzIxMzIsNyBAQCBzdGF0aWMgaW50
-IHI1bF9yZWNvdmVyeV9sb2coc3RydWN0IHI1bF9sb2cgKmxvZykNCj4gCXN0cnVjdCBtZGRldiAq
-bWRkZXYgPSBsb2ctPnJkZXYtPm1kZGV2Ow0KPiAJc3RydWN0IHI1bF9yZWNvdmVyeV9jdHggY3R4
-Ow0KPiAJaW50IHJldDsNCj4gKwlzZWN0b3JfdCBwb3M7DQo+IA0KPiAJY3R4LnBvcyA9IGxvZy0+
-bGFzdF9jaGVja3BvaW50Ow0KPiAJY3R4LnNlcSA9IGxvZy0+bGFzdF9jcF9zZXE7DQo+IEBAIC0y
-MTUyLDYgKzIxNTAsMTAgQEAgc3RhdGljIGludCByNWxfcmVjb3ZlcnlfbG9nKHN0cnVjdCByNWxf
-bG9nICpsb2cpDQo+IAlpZiAocmV0KQ0KPiAJCXJldHVybiByZXQ7DQo+IA0KPiArCXBvcyA9IGN0
-eC5wb3M7DQo+ICsJcjVsX2xvZ193cml0ZV9lbXB0eV9tZXRhX2Jsb2NrKGxvZywgY3R4LnBvcywg
-KGN0eC5zZXEgKz0gMTApKTsNCj4gKwljdHgucG9zID0gcjVsX3JpbmdfYWRkKGxvZywgY3R4LnBv
-cywgQkxPQ0tfU0VDVE9SUyk7DQo+ICsNCj4gCWlmICgoY3R4LmRhdGFfb25seV9zdHJpcGVzID09
-IDApICYmIChjdHguZGF0YV9wYXJpdHlfc3RyaXBlcyA9PSAwKSkNCj4gCQlwcl9kZWJ1ZygibWQv
-cmFpZDolczogc3RhcnRpbmcgZnJvbSBjbGVhbiBzaHV0ZG93blxuIiwNCj4gCQkJIG1kbmFtZSht
-ZGRldikpOw0KPiBAQCAtMjE3MCw5ICsyMTcyLDkgQEAgc3RhdGljIGludCByNWxfcmVjb3Zlcnlf
-bG9nKHN0cnVjdCByNWxfbG9nICpsb2cpDQo+IA0KPiAJbG9nLT5sb2dfc3RhcnQgPSBjdHgucG9z
-Ow0KPiAJbG9nLT5uZXh0X2NoZWNrcG9pbnQgPSBjdHgucG9zOw0KPiArCWxvZy0+bGFzdF9jaGVj
-a3BvaW50ID0gcG9zOw0KPiAJbG9nLT5zZXEgPSBjdHguc2VxOw0KPiAtCXI1bF9sb2dfd3JpdGVf
-ZW1wdHlfbWV0YV9ibG9jayhsb2csIGN0eC5wb3MsIGN0eC5zZXEpOw0KPiAtCXI1bF93cml0ZV9z
-dXBlcihsb2csIGN0eC5wb3MpOw0KPiArCXI1bF93cml0ZV9zdXBlcihsb2csIHBvcyk7DQo+IAly
-ZXR1cm4gMDsNCj4gfQ0KPiANCj4gLS0NCj4gMi43LjQNCj4gDQo+IFRoYW5rcy4NCj4gSmFja2ll
-DQoNCg==
+
+> On Nov 25, 2016, at 6:57 PM, Zhengyuan Liu <liuzhengyuan@kylinos.cn> wrot=
+e:
+>=20
+> r5c_recovery_load_one_stripe should not set STRIPE_R5C_PARTIAL_STRIPE fla=
+g,as
+> the data-only stripe may be STRIPE_R5C_FULL_STRIPE stripe. The state mach=
+ine
+> would release the stripe later and add it into neither r5c_cached_full_st=
+ripes
+> list or r5c_cached_partial_stripes list and set correct flag. Also we sho=
+uld
+> fix the counter corresponding.
+>=20
+> Reviewed-by: JackieLiu <liuyun01@kylinos.cn>
+> Signed-off-by: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
+> ---
+> drivers/md/raid5-cache.c |  3 +--
+> drivers/md/raid5.c       | 11 +++++++++++
+> 2 files changed, 12 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+> index 9911164..e0ac758 100644
+> --- a/drivers/md/raid5-cache.c
+> +++ b/drivers/md/raid5-cache.c
+> @@ -1930,9 +1930,8 @@ static void r5c_recovery_load_one_stripe(struct r5l=
+_log *log,
+> 			set_bit(R5_UPTODATE, &dev->flags);
+> 		}
+> 	}
+> -	set_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state);
+> -	atomic_inc(&conf->r5c_cached_partial_stripes);
+> 	list_add_tail(&sh->r5c, &log->stripe_in_journal_list);
+> +	atomic_inc(&log->stripe_in_journal_count);
+> }
+
+This makes sense to me. Thanks for catching it.=20
+
+> /*
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index dbab8c7..8120ce4 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -677,12 +677,23 @@ raid5_get_active_stripe(struct r5conf *conf, sector=
+_t sector,
+> 					atomic_inc(&conf->active_stripes);
+> 				BUG_ON(list_empty(&sh->lru) &&
+> 				       !test_bit(STRIPE_EXPANDING, &sh->state));
+> +
+> 				inc_empty_inactive_list_flag =3D 0;
+> 				if (!list_empty(conf->inactive_list + hash))
+> 					inc_empty_inactive_list_flag =3D 1;
+> 				list_del_init(&sh->lru);
+> 				if (list_empty(conf->inactive_list + hash) && inc_empty_inactive_list=
+_flag)
+> 					atomic_inc(&conf->empty_inactive_list_nr);
+> +
+> +				if (test_and_clear_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state)) {
+> +					WARN_ON(atomic_read(&conf->r5c_cached_partial_stripes) =3D=3D 0);
+> +					atomic_dec(&conf->r5c_cached_partial_stripes);
+> +				}
+> +				if (test_and_clear_bit(STRIPE_R5C_FULL_STRIPE, &sh->state)) {
+> +					WARN_ON(atomic_read(&conf->r5c_cached_full_stripes) =3D=3D 0);
+> +					atomic_dec(&conf->r5c_cached_full_stripes);
+> +				}
+> +
+
+I don't think we need these, as we decrease these counters in r5c_make_stri=
+pe_write_out().=20
+
+Thanks,
+Song=
