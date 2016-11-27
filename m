@@ -1,65 +1,34 @@
-From: Coly Li <i@coly.li>
-Subject: Re: [PATCH] Avoid nested function definition
-Date: Sun, 27 Nov 2016 12:06:04 +0800
-Message-ID: <9a8a84ed-ecf7-b1dd-59e8-1a36dbcef088@coly.li>
-References: <20161126222415.13404-1-pefoley2@pefoley.com>
+From: Avi Kivity <avi@scylladb.com>
+Subject: raid0 vs. mkfs
+Date: Sun, 27 Nov 2016 17:24:54 +0200
+Message-ID: <56c83c4e-d451-07e5-88e2-40b085d8681c@scylladb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-bcache-owner@vger.kernel.org>
-In-Reply-To: <20161126222415.13404-1-pefoley2@pefoley.com>
-Sender: linux-bcache-owner@vger.kernel.org
-To: Peter Foley <pefoley2@pefoley.com>, shli@kernel.org, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, kent.overstreet@gmail.com
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2016/11/27 上午6:24, Peter Foley wrote:
-> Fixes below error with clang:
-> ../drivers/md/bcache/sysfs.c:759:3: error: function definition is not allowed here
->                 {       return *((uint16_t *) r) - *((uint16_t *) l); }
->                 ^
-> ../drivers/md/bcache/sysfs.c:789:32: error: use of undeclared identifier 'cmp'
->                 sort(p, n, sizeof(uint16_t), cmp, NULL);
->                                              ^
-> 2 errors generated.
-> 
-> Signed-off-by: Peter Foley <pefoley2@pefoley.com>
-> ---
->  drivers/md/bcache/sysfs.c | 8 +++++---
->  1 file changed, 5 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/md/bcache/sysfs.c b/drivers/md/bcache/sysfs.c
-> index b3ff57d61dde..22ac9e6676a0 100644
-> --- a/drivers/md/bcache/sysfs.c
-> +++ b/drivers/md/bcache/sysfs.c
-> @@ -731,6 +731,11 @@ static struct attribute *bch_cache_set_internal_files[] = {
->  };
->  KTYPE(bch_cache_set_internal);
->  
-> +static int cmp(const void *l, const void *r)
-> +{
-> +	return *((uint16_t *)r) - *((uint16_t *)l);
-> +}
-> +
->  SHOW(__bch_cache)
->  {
->  	struct cache *ca = container_of(kobj, struct cache, kobj);
-> @@ -755,9 +760,6 @@ SHOW(__bch_cache)
->  					       CACHE_REPLACEMENT(&ca->sb));
->  
->  	if (attr == &sysfs_priority_stats) {
-> -		int cmp(const void *l, const void *r)
-> -		{	return *((uint16_t *) r) - *((uint16_t *) l); }
-> -
->  		struct bucket *b;
->  		size_t n = ca->sb.nbuckets, i;
->  		size_t unused = 0, available = 0, dirty = 0, meta = 0;
-> 
+mkfs /dev/md0 can take a very long time, if /dev/md0 is a very large 
+disk that supports TRIM/DISCARD (erase whichever is inappropriate).  
+That is because mkfs issues a TRIM/DISCARD (erase whichever is 
+inappropriate) for the entire partition. As far as I can tell, md 
+converts the large TRIM/DISCARD (erase whichever is inappropriate) into 
+a large number of TRIM/DISCARD (erase whichever is inappropriate) 
+requests, one per chunk-size worth of disk, and issues them to the RAID 
+components individually.
 
- I agree with this fix. Anyway, Can we use a more unique name like
-__bch_cache_cmp() ?
 
-Thanks.
+It seems to me that md can convert the large TRIM/DISCARD (erase 
+whichever is inappropriate) request it gets into one TRIM/DISCARD (erase 
+whichever is inappropriate) per RAID component, converting an O(disk 
+size / chunk size) operation into an O(number of RAID components) 
+operation, which is much faster.
 
--- 
-Coly Li
+
+I observed this with mkfs.xfs on a RAID0 of four 3TB NVMe devices, with 
+the operation taking about a quarter of an hour, continuously pushing 
+half-megabyte TRIM/DISCARD (erase whichever is inappropriate) requests 
+to the disk. Linux 4.1.12.
+
