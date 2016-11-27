@@ -1,57 +1,51 @@
-From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Subject: [PATCH] md/raid5: limit request size according to implementation
- limits
-Date: Sun, 27 Nov 2016 19:32:32 +0300
-Message-ID: <148026435214.19980.7956943898609877817.stgit@buzz>
+From: Coly Li <colyli@suse.de>
+Subject: Re: raid0 vs. mkfs
+Date: Mon, 28 Nov 2016 01:09:46 +0800
+Message-ID: <470ba5d0-e54d-3e5e-c639-4591549b9574@suse.de>
+References: <56c83c4e-d451-07e5-88e2-40b085d8681c@scylladb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <56c83c4e-d451-07e5-88e2-40b085d8681c@scylladb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>, Neil Brown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
+To: Avi Kivity <avi@scylladb.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Current implementation employ 16bit counter of active stripes in lower
-bits of bio->bi_phys_segments. If request is big enough to overflow
-this counter bio will be completed and freed too early.
+On 2016/11/27 下午11:24, Avi Kivity wrote:
+> mkfs /dev/md0 can take a very long time, if /dev/md0 is a very large
+> disk that supports TRIM/DISCARD (erase whichever is inappropriate). 
+> That is because mkfs issues a TRIM/DISCARD (erase whichever is
+> inappropriate) for the entire partition. As far as I can tell, md
+> converts the large TRIM/DISCARD (erase whichever is inappropriate) into
+> a large number of TRIM/DISCARD (erase whichever is inappropriate)
+> requests, one per chunk-size worth of disk, and issues them to the RAID
+> components individually.
+> 
+> 
+> It seems to me that md can convert the large TRIM/DISCARD (erase
+> whichever is inappropriate) request it gets into one TRIM/DISCARD (erase
+> whichever is inappropriate) per RAID component, converting an O(disk
+> size / chunk size) operation into an O(number of RAID components)
+> operation, which is much faster.
+> 
+> 
+> I observed this with mkfs.xfs on a RAID0 of four 3TB NVMe devices, with
+> the operation taking about a quarter of an hour, continuously pushing
+> half-megabyte TRIM/DISCARD (erase whichever is inappropriate) requests
+> to the disk. Linux 4.1.12.
 
-Fortunately this not happens in default configuration because several
-other limits prevent that: stripe_cache_size * nr_disks effectively
-limits count of active stripes. And small max_sectors_kb at lower
-disks prevent that during normal read/write operations.
+It might be possible to improve a bit for DISCARD performance, by your
+suggestion. The implementation might be tricky, but it is worthy to try.
 
-Overflow easily happens in discard if it's enabled by module parameter
-"devices_handle_discard_safely" and stripe_cache_size is set big enough.
+Indeed, it is not only for DISCARD, for read or write, it might be
+helpful for better performance as well. We can check the bio size, if,
+	bio_sectors(bio)/conf->nr_strip_zones >= SOMETHRESHOLD
+it means on each underlying device, we have more then SOMETHRESHOLD
+continuous chunks to issue, and they can be merged into a larger bio.
 
-This patch limits requests size with 256Mb - 8Kb to prevent overflows.
+IMHO it's interesting, good suggestion!
 
-Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Cc: Shaohua Li <shli@kernel.org>
-Cc: Neil Brown <neilb@suse.com>
-Cc: stable@vger.kernel.org
----
- drivers/md/raid5.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 92ac251e91e6..cce6057b9aca 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -6984,6 +6984,15 @@ static int raid5_run(struct mddev *mddev)
- 			stripe = (stripe | (stripe-1)) + 1;
- 		mddev->queue->limits.discard_alignment = stripe;
- 		mddev->queue->limits.discard_granularity = stripe;
-+
-+		/*
-+		 * We use 16-bit counter of active stripes in bi_phys_segments
-+		 * (minus one for over-loaded initialization)
-+		 */
-+		blk_queue_max_hw_sectors(mddev->queue, 0xfffe * STRIPE_SECTORS);
-+		blk_queue_max_discard_sectors(mddev->queue,
-+					      0xfffe * STRIPE_SECTORS);
-+
- 		/*
- 		 * unaligned part of discard request will be ignored, so can't
- 		 * guarantee discard_zeroes_data
+Coly
 
