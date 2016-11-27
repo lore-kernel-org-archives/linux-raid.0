@@ -1,160 +1,108 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: MD Remnants After --stop
-Date: Mon, 28 Nov 2016 09:20:42 +1100
-Message-ID: <8760n8a7k5.fsf@notabene.neil.brown.name>
-References: <CAHkw+Lf1SErbGro4bq5MM5LyB-Zqyqi4E90R7c+uAZHv1WgSrA@mail.gmail.com> <87fun3ond9.fsf@notabene.neil.brown.name> <CAHkw+LcfszsWDGQJzDaQU0-PsL+8K7t5msW_bLbv+YyDEFmn8Q@mail.gmail.com> <87fumlebwo.fsf@notabene.neil.brown.name> <CAHkw+LfN9xaFmmvg653OKh1eH=_kLdhd3Y1QMg3955TePCCtkg@mail.gmail.com> <CAHkw+Ldbwkknz6ZqxVpFEE-3z1r7pz1AjamUbZaEPn_uyMn_-w@mail.gmail.com> <878tsbcbub.fsf@notabene.neil.brown.name> <CAHkw+Ldv+-uXGCQ+tKfkraZ3VF4V8sk203+Oopm7RvygGQQYGQ@mail.gmail.com> <87oa15938i.fsf@notabene.neil.brown.name> <CAHkw+LfJzZoWVnO8kDi+YVV09fas2DveQoChh10wEBZfYin6aQ@mail.gmail.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: Re: [PATCH] raid5-cache: Fix the logic of raid5-cache recovery
+Date: Sun, 27 Nov 2016 23:36:54 +0000
+Message-ID: <3593122D-6AB2-499A-9431-59352218397F@fb.com>
+References: <20161119072057.1302854-1-songliubraving@fb.com>
+ <tencent_4E54374D19A73C0B4D37AF14@qq.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHkw+LfJzZoWVnO8kDi+YVV09fas2DveQoChh10wEBZfYin6aQ@mail.gmail.com>
+In-Reply-To: <tencent_4E54374D19A73C0B4D37AF14@qq.com>
+Content-Language: en-US
+Content-ID: <5A8066DCA476A44AAA468A5D5C7999AF@namprd15.prod.outlook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marc Smith <marc.smith@mcc.edu>
-Cc: linux-raid@vger.kernel.org
+To: Jackie Liu <liuyun01@kylinos.cn>
+Cc: linux-raid <linux-raid@vger.kernel.org>, =?gb2312?B?wfXV/dSq?= <liuzhengyuan@kylinos.cn>, Shaohua Li <shli@fb.com>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-
-On Sun, Nov 27 2016, Marc Smith wrote:
-
-> So, I modified mdopen.c to look like this:
->
-> --- a/mdopen.c    2016-11-25 17:04:25.782299330 -0500
-> +++ b/mdopen.c    2016-11-26 10:57:35.883621355 -0500
-> @@ -416,7 +416,7 @@
->   */
->  int open_mddev(char *dev, int report_errors)
->  {
-> -    int mdfd = open(dev, O_RDWR);
-> +    int mdfd = open(dev, O_RDONLY);
->      if (mdfd < 0 && errno == EACCES)
->          mdfd = open(dev, O_RDONLY);
->      if (mdfd < 0) {
->
->
-> And now, when running 'mdadm --stop' here is what I see...
->
-> From the output 'udevadm monitor -pku':
->
-> --snip--
-> KERNEL[297486.536908] offline
-> /kernel/dlm/62fccfd6-605f-19e6-be6d-99a1e3cb987e (dlm)
-> ACTION=offline
-> DEVPATH=/kernel/dlm/62fccfd6-605f-19e6-be6d-99a1e3cb987e
-> LOCKSPACE=62fccfd6-605f-19e6-be6d-99a1e3cb987e
-> SEQNUM=3651
-> SUBSYSTEM=dlm
->
-> UDEV  [297486.537541] offline
-> /kernel/dlm/62fccfd6-605f-19e6-be6d-99a1e3cb987e (dlm)
-> ACTION=offline
-> DEVPATH=/kernel/dlm/62fccfd6-605f-19e6-be6d-99a1e3cb987e
-> LOCKSPACE=62fccfd6-605f-19e6-be6d-99a1e3cb987e
-> SEQNUM=3651
-> SUBSYSTEM=dlm
-> USEC_INITIALIZED=7486537404
->
-> KERNEL[297486.538325] remove
-> /kernel/dlm/62fccfd6-605f-19e6-be6d-99a1e3cb987e (dlm)
-> ACTION=remove
-> DEVPATH=/kernel/dlm/62fccfd6-605f-19e6-be6d-99a1e3cb987e
-> LOCKSPACE=62fccfd6-605f-19e6-be6d-99a1e3cb987e
-> SEQNUM=3652
-> SUBSYSTEM=dlm
->
-> UDEV  [297486.538644] remove
-> /kernel/dlm/62fccfd6-605f-19e6-be6d-99a1e3cb987e (dlm)
-> ACTION=remove
-> DEVPATH=/kernel/dlm/62fccfd6-605f-19e6-be6d-99a1e3cb987e
-> LOCKSPACE=62fccfd6-605f-19e6-be6d-99a1e3cb987e
-> SEQNUM=3652
-> SUBSYSTEM=dlm
-> USEC_INITIALIZED=86538345
-> --snip--
->
-> And from the kernel log:
->
-> --snip--
-> [297504.958244] md127: detected capacity change from 73340747776 to 0
-> [297504.958249] md: md127 stopped.
-> [297504.958884] dlm: 62fccfd6-605f-19e6-be6d-99a1e3cb987e: leaving the
-> lockspace group...
-> [297504.959004] udevd[487]: seq 3651 queued, 'offline' 'dlm'
-> [297504.959161] udevd[487]: seq 3651 forked new worker [5392]
-> [297504.959417] udevd[5392]: seq 3651 running
-> [297504.959474] udevd[5392]: no db file to read
-> /run/udev/data/+dlm:62fccfd6-605f-19e6-be6d-99a1e3cb987e: No such file
-> or directory
-> [297504.959524] udevd[5392]: passed device to netlink monitor 0x2251c30
-> [297504.959527] udevd[5392]: seq 3651 processed
-> [297504.960101] dlm: 62fccfd6-605f-19e6-be6d-99a1e3cb987e: group event done 0 0
-> [297504.960299] dlm: 62fccfd6-605f-19e6-be6d-99a1e3cb987e:
-> release_lockspace final free
-> [297504.960329] md: unbind<dm-0>
-> [297504.960448] udevd[487]: seq 3652 queued, 'remove' 'dlm'
-> [297504.960500] udevd[487]: passed 214 byte device to netlink monitor 0x224b130
-> [297504.960584] udevd[5392]: seq 3652 running
-> [297504.960606] udevd[5392]: no db file to read
-> /run/udev/data/+dlm:62fccfd6-605f-19e6-be6d-99a1e3cb987e: No such file
-> or directory
-> [297504.967168] md: export_rdev(dm-0)
-> [297504.967231] md: unbind<dm-1>
-> [297504.975176] md: export_rdev(dm-1)
-> --snip--
->
-> So that did get rid of the synthesized CHANGE event, but still no
-> REMOVE event. =)
->
-> Still trying to rule-out there isn't anything strange with my Linux
-> distro / setup... but I assume even if udev was mishandling something,
-> we should still be seeing a REMOVE event on '--stop'.
->
-
-Getting rid of the CHANGE events is good as they can muddy the waters a
-bit.
-
-The lack of a REMOVE event suggests that something it still holding a
-reference to the 'md' kobject.  There aren't many references though.
-One is held when the array is active.  That is dropped by
-mddev_delayed_delete() which is called from a work-queue.  So it can be
-delayed a little bit, but not much.
-The other references are held by member devices, and dropped when the
-devices are unbound from the array - and the kernel log shows the
-"unbind" messages.
-
-In either case, if there is a reference outstanding, there should be
-some evidence in the /sys/mdXX/md directory.  Either a 'dev-XX'
-directory or the various bitmap attributes..
-
-Can you report the result of
-
-  find /sys/block/md127/md
-and
-  find /sys/block/md127/md -type file | xargs grep .
-
-after stopping the array?
-
-Thanks,
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlg7XDoACgkQOeye3VZi
-gbl32A//UZTlhKt/dASUX14m4U8zdORP2LtivrR1b/IAk1liESRYoHFyMTOqTgib
-UcRHLOb+VRbLcURoCLvN8TfER7NbWIE/D5Et03rx325kbcUeri4GFB0uVg7YnrrN
-Noq49CcCNmkAsplbXEJXU/apV6SKDIex1OkQuuVpcygsS+t+0rodS1W2FGrAxtQ1
-uFUsLgoMZ+YMQFiEkyo1AvZIS4qdT41F5K8Ar22cGFE52SarIrLHHIlxLdiaKV7D
-EIVpGvd7ITfJBCaZqwzgsLXbe54y+dAtgt183eo5miT0Qryo1qITlYEXh/ADxyKr
-d5BxCCNIMae49CyXa4afNOrG6kR7cNubsvp8ip4gTt7CQ8wt4Z3sHFi1aTNL+eks
-ftxOMtBYXoOTatcI2gtokUvw7+az7ax7j2vaWgP8BJRtUDCjXhcbPWedtrJ36xDB
-zr+2u73RWWtHc+KI7MteAx1jKmYnzyrWiXuNMLwLtcxiTPhUz0kWNAVoruStUWEj
-rJMxT3wv2DYQpdmEbagCTIadUb8nX4b9SVZPF6SQRt9MK/qZT9AdYNWWdEYoFXEm
-ZLLtX2uEVuGxPefXMbWXEt8iP5mktoU9gpzEoeSg6S2+xQZll+rRGrojrGDmVbxw
-Y036faseHmBHtPg6+yv2GzIYcYcvTbkP/AuM5GyUe0HEP6sG6pc=
-=OmYC
------END PGP SIGNATURE-----
---=-=-=--
+SGkgSmFja2llLCANCg0KVGhpcyBwYXRjaCBoYXMgYSBsb3Qgb2YgZ29vZCBmaXhlcy4gVGhhbmtz
+IGZvciByZXZpZXdpbmcgdGhlIGNvZGUgYW5kIA0KcHJvcG9zaW5nIHRoZSBmaXhlcy4gDQoNCkNv
+dWxkIHlvdSBleHBsYWluIGEgbGl0dGxlIG1vcmUgd2h5IHdlIG5lZWQgd3JpdGUgYW4gZW1wdHkg
+YmxvY2sgYmVmb3JlIA0KY2FsbGluZyByNWNfcmVjb3ZlcnlfcmV3cml0ZV9kYXRhX29ubHlfc3Ry
+aXBlcygpPw0KDQpUaGFua3MsDQpTb25nDQoNCj4gT24gTm92IDI1LCAyMDE2LCBhdCAzOjM5IEFN
+LCBKYWNraWUgTGl1IDxsaXV5dW4wMUBreWxpbm9zLmNuPiB3cm90ZToNCj4gDQo+IEhpIFNvbmcu
+DQo+IA0KPiBUaGVyZSBpcyBhIGRvdWJ0IGZvciByNWxfcmVjb3ZlcnlfbG9nLiBJIHRoaW5rIHdl
+IG5lZWQgd3JpdGUgYW4gZW1wdHkgYmxvY2sgZmlyc3QsDQo+IHRoZW4gY2FsbCByNWNfcmVjb3Zl
+cnlfcmV3cml0ZV9kYXRhX29ubHlfc3RyaXBlcyBmdW5jdGlvbnMuIHRoaXMgZW1wdHkgDQo+IGJs
+b2NrIHdpbGwgYmUgbWFyayBhcyB0aGUgbGFzdF9jaGVja3BvaW50LiB3aGVuIHRoZSBDQUNISU5H
+IGJsb2NrIGlzIHJld3JpdHRlbiwNCj4gdGhlIHN1cGVyYmxvY2sgc2hvdWxkIGJlIHVwZGF0ZSB0
+aGlzIHRpbWUuIGF0IHRoZSBzYW1lIHRpbWUsIHdlIGNhbm4ndCBiZSANCj4gcmVsZWFzZWQgdGhl
+IHN0cmlwZV9oZWFkIGF0IHRoZSBmcm9udCwgaXQgYWxzbyBiZSB1c2VkIGluIA0KPiByNWNfcmVj
+b3ZlcnlfcmV3cml0ZV9kYXRhX29ubHlfc3RyaXBlcy4NCj4gDQo+IGhlcmUgaXMgdGhlIHBhdGNo
+DQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkNS1jYWNoZS5jIGIvZHJpdmVycy9t
+ZC9yYWlkNS1jYWNoZS5jDQo+IGluZGV4IDVmODE3YmQuLmZhZDE4MDggMTAwNjQ0DQo+IC0tLSBh
+L2RyaXZlcnMvbWQvcmFpZDUtY2FjaGUuYw0KPiArKysgYi9kcml2ZXJzL21kL3JhaWQ1LWNhY2hl
+LmMNCj4gQEAgLTY3LDcgKzY3LDcgQEAgc3RhdGljIGNoYXIgKnI1Y19qb3VybmFsX21vZGVfc3Ry
+W10gPSB7IndyaXRlLXRocm91Z2giLA0KPiAvKg0KPiAgKiByYWlkNSBjYWNoZSBzdGF0ZSBtYWNo
+aW5lDQo+ICAqDQo+IC0gKiBXaXRoIHJoZSBSQUlEIGNhY2hlLCBlYWNoIHN0cmlwZSB3b3JrcyBp
+biB0d28gcGhhc2VzOg0KPiArICogV2l0aCB0aGUgUkFJRCBjYWNoZSwgZWFjaCBzdHJpcGUgd29y
+a3MgaW4gdHdvIHBoYXNlczoNCj4gICoJLSBjYWNoaW5nIHBoYXNlDQo+ICAqCS0gd3JpdGluZy1v
+dXQgcGhhc2UNCj4gICoNCj4gQEAgLTE2NzQsNyArMTY3NCw2IEBAIHI1bF9yZWNvdmVyeV9yZXBs
+YXlfb25lX3N0cmlwZShzdHJ1Y3QgcjVjb25mICpjb25mLA0KPiANCj4gc3RhdGljIHN0cnVjdCBz
+dHJpcGVfaGVhZCAqDQo+IHI1Y19yZWNvdmVyeV9hbGxvY19zdHJpcGUoc3RydWN0IHI1Y29uZiAq
+Y29uZiwNCj4gLQkJCSAgc3RydWN0IGxpc3RfaGVhZCAqcmVjb3ZlcnlfbGlzdCwNCj4gCQkJICBz
+ZWN0b3JfdCBzdHJpcGVfc2VjdCwNCj4gCQkJICBzZWN0b3JfdCBsb2dfc3RhcnQpDQo+IHsNCj4g
+QEAgLTE4NTUsOCArMTg1NCw4IEBAIHI1Y19yZWNvdmVyeV9hbmFseXplX21ldGFfYmxvY2soc3Ry
+dWN0IHI1bF9sb2cgKmxvZywNCj4gCQkJCQkJc3RyaXBlX3NlY3QpOw0KPiANCj4gCQlpZiAoIXNo
+KSB7DQo+IC0JCQlzaCA9IHI1Y19yZWNvdmVyeV9hbGxvY19zdHJpcGUoY29uZiwgY2FjaGVkX3N0
+cmlwZV9saXN0LA0KPiAtCQkJCQkJICAgICAgIHN0cmlwZV9zZWN0LCBjdHgtPnBvcyk7DQo+ICsJ
+CQlzaCA9IHI1Y19yZWNvdmVyeV9hbGxvY19zdHJpcGUoY29uZiwgc3RyaXBlX3NlY3QsDQo+ICsJ
+CQkJCQkJY3R4LT5wb3MpOw0KPiAJCQkvKg0KPiAJCQkgKiBjYW5ub3QgZ2V0IHN0cmlwZSBmcm9t
+IHJhaWQ1X2dldF9hY3RpdmVfc3RyaXBlDQo+IAkJCSAqIHRyeSByZXBsYXkgc29tZSBzdHJpcGVz
+DQo+IEBAIC0xODY1LDggKzE4NjQsNyBAQCByNWNfcmVjb3ZlcnlfYW5hbHl6ZV9tZXRhX2Jsb2Nr
+KHN0cnVjdCByNWxfbG9nICpsb2csDQo+IAkJCQlyNWNfcmVjb3ZlcnlfcmVwbGF5X3N0cmlwZXMo
+DQo+IAkJCQkJY2FjaGVkX3N0cmlwZV9saXN0LCBjdHgpOw0KPiAJCQkJc2ggPSByNWNfcmVjb3Zl
+cnlfYWxsb2Nfc3RyaXBlKA0KPiAtCQkJCQljb25mLCBjYWNoZWRfc3RyaXBlX2xpc3QsDQo+IC0J
+CQkJCXN0cmlwZV9zZWN0LCBjdHgtPnBvcyk7DQo+ICsJCQkJCWNvbmYsIHN0cmlwZV9zZWN0LCBj
+dHgtPnBvcyk7DQo+IAkJCX0NCj4gCQkJaWYgKCFzaCkgew0KPiAJCQkJcHJfZGVidWcoIm1kL3Jh
+aWQ6JXM6IEluY3JlYXNpbmcgc3RyaXBlIGNhY2hlIHNpemUgdG8gJWQgdG8gcmVjb3ZlcnkgZGF0
+YSBvbiBqb3VybmFsLlxuIiwNCj4gQEAgLTE4NzUsOCArMTg3Myw3IEBAIHI1Y19yZWNvdmVyeV9h
+bmFseXplX21ldGFfYmxvY2soc3RydWN0IHI1bF9sb2cgKmxvZywNCj4gCQkJCXJhaWQ1X3NldF9j
+YWNoZV9zaXplKG1kZGV2LA0KPiAJCQkJCQkgICAgIGNvbmYtPm1pbl9ucl9zdHJpcGVzICogMik7
+DQo+IAkJCQlzaCA9IHI1Y19yZWNvdmVyeV9hbGxvY19zdHJpcGUoDQo+IC0JCQkJCWNvbmYsIGNh
+Y2hlZF9zdHJpcGVfbGlzdCwgc3RyaXBlX3NlY3QsDQo+IC0JCQkJCWN0eC0+cG9zKTsNCj4gKwkJ
+CQkJY29uZiwgc3RyaXBlX3NlY3QsIGN0eC0+cG9zKTsNCj4gCQkJfQ0KPiAJCQlpZiAoIXNoKSB7
+DQo+IAkJCQlwcl9lcnIoIm1kL3JhaWQ6JXM6IENhbm5vdCBnZXQgZW5vdWdoIHN0cmlwZXMgZHVl
+IHRvIG1lbW9yeSBwcmVzc3VyZS4gUmVjb3ZlcnkgZmFpbGVkLlxuIiwNCj4gQEAgLTE5ODYsOCAr
+MTk4Myw2IEBAIHN0YXRpYyBpbnQgcjVjX3JlY292ZXJ5X2ZsdXNoX2xvZyhzdHJ1Y3QgcjVsX2xv
+ZyAqbG9nLA0KPiAJbGlzdF9mb3JfZWFjaF9lbnRyeV9zYWZlKHNoLCBuZXh0LCAmY3R4LT5jYWNo
+ZWRfbGlzdCwgbHJ1KSB7DQo+IAkJV0FSTl9PTighdGVzdF9iaXQoU1RSSVBFX1I1Q19DQUNISU5H
+LCAmc2gtPnN0YXRlKSk7DQo+IAkJcjVjX3JlY292ZXJ5X2xvYWRfb25lX3N0cmlwZShsb2csIHNo
+KTsNCj4gLQkJbGlzdF9kZWxfaW5pdCgmc2gtPmxydSk7DQo+IC0JCXJhaWQ1X3JlbGVhc2Vfc3Ry
+aXBlKHNoKTsNCj4gCQljdHgtPmRhdGFfb25seV9zdHJpcGVzKys7DQo+IAl9DQo+IA0KPiBAQCAt
+MjA3OCw3ICsyMDczLDYgQEAgcjVjX3JlY292ZXJ5X3Jld3JpdGVfZGF0YV9vbmx5X3N0cmlwZXMo
+c3RydWN0IHI1bF9sb2cgKmxvZywNCj4gCQlyZXR1cm4gLUVOT01FTTsNCj4gCX0NCj4gDQo+IC0J
+Y3R4LT5zZXEgKz0gMTA7DQo+IAlsaXN0X2Zvcl9lYWNoX2VudHJ5KHNoLCAmY3R4LT5jYWNoZWRf
+bGlzdCwgbHJ1KSB7DQo+IAkJc3RydWN0IHI1bF9tZXRhX2Jsb2NrICptYjsNCj4gCQlpbnQgaTsN
+Cj4gQEAgLTIwOTAsNyArMjA4NCw3IEBAIHI1Y19yZWNvdmVyeV9yZXdyaXRlX2RhdGFfb25seV9z
+dHJpcGVzKHN0cnVjdCByNWxfbG9nICpsb2csDQo+IAkJCQkJCSAgICAgY3R4LT5wb3MsIGN0eC0+
+c2VxKTsNCj4gCQltYiA9IHBhZ2VfYWRkcmVzcyhwYWdlKTsNCj4gCQlvZmZzZXQgPSBsZTMyX3Rv
+X2NwdShtYi0+bWV0YV9zaXplKTsNCj4gLQkJd3JpdGVfcG9zID0gY3R4LT5wb3MgKyBCTE9DS19T
+RUNUT1JTOw0KPiArCQl3cml0ZV9wb3MgPSByNWxfcmluZ19hZGQobG9nLCBjdHgtPnBvcywgQkxP
+Q0tfU0VDVE9SUyk7DQo+IA0KPiAJCWZvciAoaSA9IHNoLT5kaXNrczsgaS0tOyApIHsNCj4gCQkJ
+c3RydWN0IHI1ZGV2ICpkZXYgPSAmc2gtPmRldltpXTsNCj4gQEAgLTIxMjUsNiArMjExOSw5IEBA
+IHI1Y19yZWNvdmVyeV9yZXdyaXRlX2RhdGFfb25seV9zdHJpcGVzKHN0cnVjdCByNWxfbG9nICps
+b2csDQo+IAkJc2gtPmxvZ19zdGFydCA9IGN0eC0+cG9zOw0KPiAJCWN0eC0+cG9zID0gd3JpdGVf
+cG9zOw0KPiAJCWN0eC0+c2VxICs9IDE7DQo+ICsNCj4gKwkJbGlzdF9kZWxfaW5pdCgmc2gtPmxy
+dSk7DQo+ICsJCXJhaWQ1X3JlbGVhc2Vfc3RyaXBlKHNoKTsNCj4gCX0NCj4gCV9fZnJlZV9wYWdl
+KHBhZ2UpOw0KPiAJcmV0dXJuIDA7DQo+IEBAIC0yMTM1LDYgKzIxMzIsNyBAQCBzdGF0aWMgaW50
+IHI1bF9yZWNvdmVyeV9sb2coc3RydWN0IHI1bF9sb2cgKmxvZykNCj4gCXN0cnVjdCBtZGRldiAq
+bWRkZXYgPSBsb2ctPnJkZXYtPm1kZGV2Ow0KPiAJc3RydWN0IHI1bF9yZWNvdmVyeV9jdHggY3R4
+Ow0KPiAJaW50IHJldDsNCj4gKwlzZWN0b3JfdCBwb3M7DQo+IA0KPiAJY3R4LnBvcyA9IGxvZy0+
+bGFzdF9jaGVja3BvaW50Ow0KPiAJY3R4LnNlcSA9IGxvZy0+bGFzdF9jcF9zZXE7DQo+IEBAIC0y
+MTUyLDYgKzIxNTAsMTAgQEAgc3RhdGljIGludCByNWxfcmVjb3ZlcnlfbG9nKHN0cnVjdCByNWxf
+bG9nICpsb2cpDQo+IAlpZiAocmV0KQ0KPiAJCXJldHVybiByZXQ7DQo+IA0KPiArCXBvcyA9IGN0
+eC5wb3M7DQo+ICsJcjVsX2xvZ193cml0ZV9lbXB0eV9tZXRhX2Jsb2NrKGxvZywgY3R4LnBvcywg
+KGN0eC5zZXEgKz0gMTApKTsNCj4gKwljdHgucG9zID0gcjVsX3JpbmdfYWRkKGxvZywgY3R4LnBv
+cywgQkxPQ0tfU0VDVE9SUyk7DQo+ICsNCj4gCWlmICgoY3R4LmRhdGFfb25seV9zdHJpcGVzID09
+IDApICYmIChjdHguZGF0YV9wYXJpdHlfc3RyaXBlcyA9PSAwKSkNCj4gCQlwcl9kZWJ1ZygibWQv
+cmFpZDolczogc3RhcnRpbmcgZnJvbSBjbGVhbiBzaHV0ZG93blxuIiwNCj4gCQkJIG1kbmFtZSht
+ZGRldikpOw0KPiBAQCAtMjE3MCw5ICsyMTcyLDkgQEAgc3RhdGljIGludCByNWxfcmVjb3Zlcnlf
+bG9nKHN0cnVjdCByNWxfbG9nICpsb2cpDQo+IA0KPiAJbG9nLT5sb2dfc3RhcnQgPSBjdHgucG9z
+Ow0KPiAJbG9nLT5uZXh0X2NoZWNrcG9pbnQgPSBjdHgucG9zOw0KPiArCWxvZy0+bGFzdF9jaGVj
+a3BvaW50ID0gcG9zOw0KPiAJbG9nLT5zZXEgPSBjdHguc2VxOw0KPiAtCXI1bF9sb2dfd3JpdGVf
+ZW1wdHlfbWV0YV9ibG9jayhsb2csIGN0eC5wb3MsIGN0eC5zZXEpOw0KPiAtCXI1bF93cml0ZV9z
+dXBlcihsb2csIGN0eC5wb3MpOw0KPiArCXI1bF93cml0ZV9zdXBlcihsb2csIHBvcyk7DQo+IAly
+ZXR1cm4gMDsNCj4gfQ0KPiANCj4gLS0NCj4gMi43LjQNCj4gDQo+IFRoYW5rcy4NCj4gSmFja2ll
+DQoNCg==
