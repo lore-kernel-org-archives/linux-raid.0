@@ -1,135 +1,160 @@
-From: Doug Dumitru <doug@easyco.com>
-Subject: Re: raid0 vs. mkfs
-Date: Sun, 27 Nov 2016 11:25:55 -0800
-Message-ID: <CAFx4rwRiTtMdkGLT5y3RkE-zvBjnhvxSgh_2BXxeWCstZ3+8dA@mail.gmail.com>
-References: <56c83c4e-d451-07e5-88e2-40b085d8681c@scylladb.com>
- <470ba5d0-e54d-3e5e-c639-4591549b9574@suse.de> <14c4b1d4-2fd3-b97f-934e-414a8d45fb18@scylladb.com>
-Reply-To: doug@easyco.com
+From: NeilBrown <neilb@suse.com>
+Subject: Re: MD Remnants After --stop
+Date: Mon, 28 Nov 2016 09:20:42 +1100
+Message-ID: <8760n8a7k5.fsf@notabene.neil.brown.name>
+References: <CAHkw+Lf1SErbGro4bq5MM5LyB-Zqyqi4E90R7c+uAZHv1WgSrA@mail.gmail.com> <87fun3ond9.fsf@notabene.neil.brown.name> <CAHkw+LcfszsWDGQJzDaQU0-PsL+8K7t5msW_bLbv+YyDEFmn8Q@mail.gmail.com> <87fumlebwo.fsf@notabene.neil.brown.name> <CAHkw+LfN9xaFmmvg653OKh1eH=_kLdhd3Y1QMg3955TePCCtkg@mail.gmail.com> <CAHkw+Ldbwkknz6ZqxVpFEE-3z1r7pz1AjamUbZaEPn_uyMn_-w@mail.gmail.com> <878tsbcbub.fsf@notabene.neil.brown.name> <CAHkw+Ldv+-uXGCQ+tKfkraZ3VF4V8sk203+Oopm7RvygGQQYGQ@mail.gmail.com> <87oa15938i.fsf@notabene.neil.brown.name> <CAHkw+LfJzZoWVnO8kDi+YVV09fas2DveQoChh10wEBZfYin6aQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <14c4b1d4-2fd3-b97f-934e-414a8d45fb18@scylladb.com>
+In-Reply-To: <CAHkw+LfJzZoWVnO8kDi+YVV09fas2DveQoChh10wEBZfYin6aQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Avi Kivity <avi@scylladb.com>
-Cc: Coly Li <colyli@suse.de>, linux-raid <linux-raid@vger.kernel.org>
+To: Marc Smith <marc.smith@mcc.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I recently ran into this issue with a proprietary device mapper target
-that supports discard.
+--=-=-=
+Content-Type: text/plain
 
-mkfs.ext4 looks like it issues 2GB discard requests.  blkdiscard looks
-like it issues 4GB-4K discard requests.  Both of these are "way
-bigger" than the iolimits for transfers.
+On Sun, Nov 27 2016, Marc Smith wrote:
 
-At least this is what I see at my device mapper layer.  raid0 might
-get some additional filtering by the common raid code.
-
-In the case of my mapper, I actually need to split the bio up and
-re-issue the discards at iolimits sizes (this is how my device mapper
-expects requests).  Fortunately, my mapper is really fast at discards
-even at 1MB each (> 8GB/sec on a single thread), so the performance
-issue is not that bad.
-
-It would be an easy patch for raid0 to be "smarter" at splitting the
-discard request.  It might not actually help that much.  You should
-test your nVME disk to see if the performance of discards is much
-different between "chunk size" requests and "big requests".  Using
-blkdiscard in a script, fill a drive with real data and test discard
-speed first using 256K calls to blkdiscard, and then again using 512MB
-calls to blkdiscard.  Do this to a single drive.  I suspect that the
-times will not be that far off.
-
-Some drives take a real amount of time to process discards.  Even
-though it seems like the operation does nothing, the FTL inside of the
-SSD is still is getting hammered pretty hard.
-
-If your drives are a "lot" faster with bigger discard requests, then
-maybe it would make sense to optimize raid0.  I suspect the win is not
-that big.
-
-In terms of enlarging IO, the iolimits and buffering start to come
-into play.  With a discard, the bio only has a size and does not have
-any actual buffers.  If you push IO really big, then the size of the
-bio starts to grow.  1MB is 256 4K biovecs.  A bio_vec is a pointer
-plus two ints, so it is 16 bytes long (on x86_64).  256 of these just
-happen to fit into a single page.  This is a linear array, so making
-this bigger is hard.  Remember that much of the kernel lives inside of
-pages and pages (usually 4K) are somewhat of a deity over the entire
-kernel.
-
-Then again, you have another option to format your array that will be
-very fast and even more effective:
-
-a) secure erase the drives
-b) create your raid0 array
-c) create your file system with -o nodiscard
-
-Doug Dumitru
-
-On Sun, Nov 27, 2016 at 9:25 AM, Avi Kivity <avi@scylladb.com> wrote:
-> On 11/27/2016 07:09 PM, Coly Li wrote:
->>
->> On 2016/11/27 =E4=B8=8B=E5=8D=8811:24, Avi Kivity wrote:
->>>
->>> mkfs /dev/md0 can take a very long time, if /dev/md0 is a very large
->>> disk that supports TRIM/DISCARD (erase whichever is inappropriate).
->>> That is because mkfs issues a TRIM/DISCARD (erase whichever is
->>> inappropriate) for the entire partition. As far as I can tell, md
->>> converts the large TRIM/DISCARD (erase whichever is inappropriate) into
->>> a large number of TRIM/DISCARD (erase whichever is inappropriate)
->>> requests, one per chunk-size worth of disk, and issues them to the RAID
->>> components individually.
->>>
->>>
->>> It seems to me that md can convert the large TRIM/DISCARD (erase
->>> whichever is inappropriate) request it gets into one TRIM/DISCARD (eras=
-e
->>> whichever is inappropriate) per RAID component, converting an O(disk
->>> size / chunk size) operation into an O(number of RAID components)
->>> operation, which is much faster.
->>>
->>>
->>> I observed this with mkfs.xfs on a RAID0 of four 3TB NVMe devices, with
->>> the operation taking about a quarter of an hour, continuously pushing
->>> half-megabyte TRIM/DISCARD (erase whichever is inappropriate) requests
->>> to the disk. Linux 4.1.12.
->>
->> It might be possible to improve a bit for DISCARD performance, by your
->> suggestion. The implementation might be tricky, but it is worthy to try.
->>
->> Indeed, it is not only for DISCARD, for read or write, it might be
->> helpful for better performance as well. We can check the bio size, if,
->>         bio_sectors(bio)/conf->nr_strip_zones >=3D SOMETHRESHOLD
->> it means on each underlying device, we have more then SOMETHRESHOLD
->> continuous chunks to issue, and they can be merged into a larger bio.
+> So, I modified mdopen.c to look like this:
+>
+> --- a/mdopen.c    2016-11-25 17:04:25.782299330 -0500
+> +++ b/mdopen.c    2016-11-26 10:57:35.883621355 -0500
+> @@ -416,7 +416,7 @@
+>   */
+>  int open_mddev(char *dev, int report_errors)
+>  {
+> -    int mdfd = open(dev, O_RDWR);
+> +    int mdfd = open(dev, O_RDONLY);
+>      if (mdfd < 0 && errno == EACCES)
+>          mdfd = open(dev, O_RDONLY);
+>      if (mdfd < 0) {
 >
 >
-> It's true that this does not strictly apply to TRIM/DISCARD (erase whiche=
-ver
-> is inappropriate), but to see any gain for READ/WRITE, you need a request
-> that is larger than (chunk size) * (raid elements), which is unlikely for
-> reasonable values of those parameters.  But a common implementation can o=
-f
-> course work for multiple request types.
+> And now, when running 'mdadm --stop' here is what I see...
 >
->> IMHO it's interesting, good suggestion!
+> From the output 'udevadm monitor -pku':
 >
+> --snip--
+> KERNEL[297486.536908] offline
+> /kernel/dlm/62fccfd6-605f-19e6-be6d-99a1e3cb987e (dlm)
+> ACTION=offline
+> DEVPATH=/kernel/dlm/62fccfd6-605f-19e6-be6d-99a1e3cb987e
+> LOCKSPACE=62fccfd6-605f-19e6-be6d-99a1e3cb987e
+> SEQNUM=3651
+> SUBSYSTEM=dlm
 >
-> Looking forward to seeing an implementation!
+> UDEV  [297486.537541] offline
+> /kernel/dlm/62fccfd6-605f-19e6-be6d-99a1e3cb987e (dlm)
+> ACTION=offline
+> DEVPATH=/kernel/dlm/62fccfd6-605f-19e6-be6d-99a1e3cb987e
+> LOCKSPACE=62fccfd6-605f-19e6-be6d-99a1e3cb987e
+> SEQNUM=3651
+> SUBSYSTEM=dlm
+> USEC_INITIALIZED=7486537404
 >
+> KERNEL[297486.538325] remove
+> /kernel/dlm/62fccfd6-605f-19e6-be6d-99a1e3cb987e (dlm)
+> ACTION=remove
+> DEVPATH=/kernel/dlm/62fccfd6-605f-19e6-be6d-99a1e3cb987e
+> LOCKSPACE=62fccfd6-605f-19e6-be6d-99a1e3cb987e
+> SEQNUM=3652
+> SUBSYSTEM=dlm
 >
->>
->> Coly
->>
+> UDEV  [297486.538644] remove
+> /kernel/dlm/62fccfd6-605f-19e6-be6d-99a1e3cb987e (dlm)
+> ACTION=remove
+> DEVPATH=/kernel/dlm/62fccfd6-605f-19e6-be6d-99a1e3cb987e
+> LOCKSPACE=62fccfd6-605f-19e6-be6d-99a1e3cb987e
+> SEQNUM=3652
+> SUBSYSTEM=dlm
+> USEC_INITIALIZED=86538345
+> --snip--
 >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> And from the kernel log:
+>
+> --snip--
+> [297504.958244] md127: detected capacity change from 73340747776 to 0
+> [297504.958249] md: md127 stopped.
+> [297504.958884] dlm: 62fccfd6-605f-19e6-be6d-99a1e3cb987e: leaving the
+> lockspace group...
+> [297504.959004] udevd[487]: seq 3651 queued, 'offline' 'dlm'
+> [297504.959161] udevd[487]: seq 3651 forked new worker [5392]
+> [297504.959417] udevd[5392]: seq 3651 running
+> [297504.959474] udevd[5392]: no db file to read
+> /run/udev/data/+dlm:62fccfd6-605f-19e6-be6d-99a1e3cb987e: No such file
+> or directory
+> [297504.959524] udevd[5392]: passed device to netlink monitor 0x2251c30
+> [297504.959527] udevd[5392]: seq 3651 processed
+> [297504.960101] dlm: 62fccfd6-605f-19e6-be6d-99a1e3cb987e: group event done 0 0
+> [297504.960299] dlm: 62fccfd6-605f-19e6-be6d-99a1e3cb987e:
+> release_lockspace final free
+> [297504.960329] md: unbind<dm-0>
+> [297504.960448] udevd[487]: seq 3652 queued, 'remove' 'dlm'
+> [297504.960500] udevd[487]: passed 214 byte device to netlink monitor 0x224b130
+> [297504.960584] udevd[5392]: seq 3652 running
+> [297504.960606] udevd[5392]: no db file to read
+> /run/udev/data/+dlm:62fccfd6-605f-19e6-be6d-99a1e3cb987e: No such file
+> or directory
+> [297504.967168] md: export_rdev(dm-0)
+> [297504.967231] md: unbind<dm-1>
+> [297504.975176] md: export_rdev(dm-1)
+> --snip--
+>
+> So that did get rid of the synthesized CHANGE event, but still no
+> REMOVE event. =)
+>
+> Still trying to rule-out there isn't anything strange with my Linux
+> distro / setup... but I assume even if udev was mishandling something,
+> we should still be seeing a REMOVE event on '--stop'.
+>
 
+Getting rid of the CHANGE events is good as they can muddy the waters a
+bit.
 
+The lack of a REMOVE event suggests that something it still holding a
+reference to the 'md' kobject.  There aren't many references though.
+One is held when the array is active.  That is dropped by
+mddev_delayed_delete() which is called from a work-queue.  So it can be
+delayed a little bit, but not much.
+The other references are held by member devices, and dropped when the
+devices are unbound from the array - and the kernel log shows the
+"unbind" messages.
 
---=20
-Doug Dumitru
-EasyCo LLC
+In either case, if there is a reference outstanding, there should be
+some evidence in the /sys/mdXX/md directory.  Either a 'dev-XX'
+directory or the various bitmap attributes..
+
+Can you report the result of
+
+  find /sys/block/md127/md
+and
+  find /sys/block/md127/md -type file | xargs grep .
+
+after stopping the array?
+
+Thanks,
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlg7XDoACgkQOeye3VZi
+gbl32A//UZTlhKt/dASUX14m4U8zdORP2LtivrR1b/IAk1liESRYoHFyMTOqTgib
+UcRHLOb+VRbLcURoCLvN8TfER7NbWIE/D5Et03rx325kbcUeri4GFB0uVg7YnrrN
+Noq49CcCNmkAsplbXEJXU/apV6SKDIex1OkQuuVpcygsS+t+0rodS1W2FGrAxtQ1
+uFUsLgoMZ+YMQFiEkyo1AvZIS4qdT41F5K8Ar22cGFE52SarIrLHHIlxLdiaKV7D
+EIVpGvd7ITfJBCaZqwzgsLXbe54y+dAtgt183eo5miT0Qryo1qITlYEXh/ADxyKr
+d5BxCCNIMae49CyXa4afNOrG6kR7cNubsvp8ip4gTt7CQ8wt4Z3sHFi1aTNL+eks
+ftxOMtBYXoOTatcI2gtokUvw7+az7ax7j2vaWgP8BJRtUDCjXhcbPWedtrJ36xDB
+zr+2u73RWWtHc+KI7MteAx1jKmYnzyrWiXuNMLwLtcxiTPhUz0kWNAVoruStUWEj
+rJMxT3wv2DYQpdmEbagCTIadUb8nX4b9SVZPF6SQRt9MK/qZT9AdYNWWdEYoFXEm
+ZLLtX2uEVuGxPefXMbWXEt8iP5mktoU9gpzEoeSg6S2+xQZll+rRGrojrGDmVbxw
+Y036faseHmBHtPg6+yv2GzIYcYcvTbkP/AuM5GyUe0HEP6sG6pc=
+=OmYC
+-----END PGP SIGNATURE-----
+--=-=-=--
