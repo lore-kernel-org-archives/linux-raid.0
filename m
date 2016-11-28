@@ -1,103 +1,97 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH 3/7] imsm: PPL support
-Date: Mon, 28 Nov 2016 18:51:31 -0500
-Message-ID: <wrfjlgw3jh8c.fsf@redhat.com>
-References: <20161124122952.16529-1-artur.paszkiewicz@intel.com>
-        <20161124122952.16529-4-artur.paszkiewicz@intel.com>
+From: Doug Dumitru <doug@easyco.com>
+Subject: Re: Question about raid1_make_request
+Date: Mon, 28 Nov 2016 15:53:02 -0800
+Message-ID: <CAFx4rwQQrETbpi-kQ56wj3izmvSpDiCQ3iD6dyK2LkkM-JZBTg@mail.gmail.com>
+References: <CAANLjFpb0ZCEVtvaib8nsoKhKZs55agy35HEByeo1g1OSWBGjg@mail.gmail.com>
+Reply-To: doug@easyco.com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161124122952.16529-4-artur.paszkiewicz@intel.com> (Artur
-        Paszkiewicz's message of "Thu, 24 Nov 2016 13:29:48 +0100")
+In-Reply-To: <CAANLjFpb0ZCEVtvaib8nsoKhKZs55agy35HEByeo1g1OSWBGjg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: linux-raid@vger.kernel.org
+To: Robert LeBlanc <robert@leblancnet.us>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Artur Paszkiewicz <artur.paszkiewicz@intel.com> writes:
-> Enable creating and assembling IMSM raid5 arrays with PPL.
+Not the best code organization, but no real harm done.  Look at the
+front of md_write_start:
+
+void md_write_start(struct mddev *mddev, struct bio *bi)
+{
+        int did_change = 0;
+        if (bio_data_dir(bi) != WRITE)
+                return;
+
+So writes fall thru really quickly.
+
+Doug
+
+
+On Mon, Nov 28, 2016 at 3:41 PM, Robert LeBlanc <robert@leblancnet.us> wrote:
+> I'm looking through the code and am wondering why this is at the start
+> of raid1_make_request. It seems that it is only needed for WRITE and
+> would unnecessarily delay READ requests waiting for the superblock.
+> Would it make more sense to put this at the start of the WRITE branch?
+> What am I missing?
 >
-> Write the IMSM MPB location for a device to the newly added rdev
-> sb_start sysfs attribute and 'journal_ppl' to 'state' attribute for
-> every active member.
+> 1057         /*
+> 1058          * Register the new request and wait if the
+> reconstruction
+> 1059          * thread has put up a bar for new requests.
+> 1060          * Continue immediately if no resync is active currently.
+> 1061          */
+> 1062
+> 1063         md_write_start(mddev, bio); /* wait on superblock update
+> early */
+> 1064
+> 1065         if (bio_data_dir(bio) == WRITE &&
+> 1066             ((bio_end_sector(bio) > mddev->suspend_lo &&
+> 1067             bio->bi_iter.bi_sector < mddev->suspend_hi) ||
+> 1068             (mddev_is_clustered(mddev) &&
+> 1069              md_cluster_ops->area_resyncing(mddev, WRITE,
+> 1070                      bio->bi_iter.bi_sector,
+> bio_end_sector(bio))))) {
+> 1071                 /* As the suspend_* range is controlled by
+> 1072                  * userspace, we want an interruptible
+> 1073                  * wait.
+> 1074                  */
+> 1075                 DEFINE_WAIT(w);
+> 1076                 for (;;) {
+> 1077                         flush_signals(current);
+> 1078                         prepare_to_wait(&conf->wait_barrier,
+> 1079                                         &w, TASK_INTERRUPTIBLE);
+> 1080                         if (bio_end_sector(bio) <=
+> mddev->suspend_lo ||
+> 1081                             bio->bi_iter.bi_sector >=
+> mddev->suspend_hi ||
+> 1082                             (mddev_is_clustered(mddev) &&
+> 1083
+> !md_cluster_ops->area_resyncing(mddev, WRITE,
+> 1084                                      bio->bi_iter.bi_sector,
+> bio_end_sector(bio))))
+> 1085                                 break;
+> 1086                         schedule();
+> 1087                 }
+> 1088                 finish_wait(&conf->wait_barrier, &w);
+> 1089         }
+> 1090
+> 1091         start_next_window = wait_barrier(conf, bio);
+> 1092
+> 1093         bitmap = mddev->bitmap;
+> 1094
 >
-> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-> ---
->  mdadm.h       |  1 +
->  super-intel.c | 33 +++++++++++++++++++++++++++++++++
->  sysfs.c       |  4 ++++
->  3 files changed, 38 insertions(+)
+> Thanks
 >
-> diff --git a/mdadm.h b/mdadm.h
-> index 4eabf59..5600341 100755
-> --- a/mdadm.h
-> +++ b/mdadm.h
-> @@ -252,6 +252,7 @@ struct mdinfo {
->  	unsigned long long	custom_array_size; /* size for non-default sized
->  						    * arrays (in sectors)
->  						    */
-> +	unsigned long long	sb_start;
->  #define NO_RESHAPE		0
->  #define VOLUME_RESHAPE		1
->  #define CONTAINER_RESHAPE	2
-> diff --git a/super-intel.c b/super-intel.c
-> index df09272..79a3d78 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -1261,6 +1261,15 @@ static void print_imsm_dev(struct intel_super *super,
->  	}
->  	printf("\n");
->  	printf("    Dirty State : %s\n", dev->vol.dirty ? "dirty" : "clean");
-> +	printf("     RWH Policy : ");
-> +	if (dev->rwh_policy == RWH_OFF)
-> +		printf("off\n");
-> +	else if (dev->rwh_policy == RWH_DISTRIBUTED)
-> +		printf("PPL distributed\n");
-> +	else if (dev->rwh_policy == RWH_JOURNALING_DRIVE)
-> +		printf("PPL journaling drive\n");
-> +	else
-> +		printf("<unknown:%d>\n", dev->rwh_policy);
->  }
->  
->  static void print_imsm_disk(struct imsm_disk *disk, int index, __u32 reserved)
-> @@ -3043,6 +3052,15 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
->  			}
->  		}
->  	}
-> +
-> +	if (info->array.level == 5) {
-> +		if (dev->rwh_policy == RWH_OFF)
-> +			info->rwh_policy = RWH_POLICY_OFF;
-> +		else if (dev->rwh_policy == RWH_DISTRIBUTED)
-> +			info->rwh_policy = RWH_POLICY_PPL;
-> +		else
-> +			info->rwh_policy = RWH_POLICY_UNKNOWN;
-> +	}
->  }
->  
->  static __u8 imsm_check_degraded(struct intel_super *super, struct imsm_dev *dev,
-> @@ -3177,6 +3195,9 @@ static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info, char *
->  
->  		disk = &super->disks->disk;
->  		info->data_offset = total_blocks(&super->disks->disk) - reserved;
-> +		/* mpb anchor sector - see store_imsm_mpb() */
-> +		info->sb_start = total_blocks(&super->disks->disk) -
-> +				 ((2 * super->sector_size) >> 9);
->  		info->component_size = reserved;
->  		info->disk.state  = is_configured(disk) ? (1 << MD_DISK_ACTIVE) : 0;
->  		/* we don't change info->disk.raid_disk here because
+> ----------------
+> Robert LeBlanc
+> PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Hi Artur,
 
-I have been sitting staring at the above for a while, and looking at
-store_imsm_mpb() it is not clear to me what is meant to happen here.
 
-For 4k sector drives, aren't you pushing back sb_start way further than
-you are for 512 byte sector drives? Ie. you are subtracting 16 sectors
-for the 4k drive but only two sectors for the 512 byte sector drive?
-
-Maybe it's because it's Monday or I lost the last of my marbles, but
-could you possibly enlighten me here please?
-
-Thanks,
-Jes
+-- 
+Doug Dumitru
+EasyCo LLC
