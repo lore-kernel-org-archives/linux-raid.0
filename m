@@ -1,33 +1,47 @@
-From: "Randall C. Grimshaw" <rgrimsha@esf.edu>
-Subject: md prefered minor has been renumbered
-Date: Mon, 28 Nov 2016 17:26:56 +0000
-Message-ID: <BC4985417D7F7B49B9AB545333BDB61B191FE1BC@Exchange-MBX1.esf.edu>
-References: <BC4985417D7F7B49B9AB545333BDB61B191FE1A2@Exchange-MBX1.esf.edu>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: raid0 vs. mkfs
+Date: Mon, 28 Nov 2016 09:47:08 -0800
+Message-ID: <20161128174708.pxl3d7irspgkalsq@kernel.org>
+References: <56c83c4e-d451-07e5-88e2-40b085d8681c@scylladb.com>
+ <87oa108a1x.fsf@notabene.neil.brown.name>
+ <286a5fc1-eda3-0421-a88e-b03c09403259@scylladb.com>
+ <87inr880au.fsf@notabene.neil.brown.name>
+ <df73ebc4-9b78-09b5-022b-089c30dea17c@scylladb.com>
+ <20161128090053.GA9393@infradead.org>
+ <8f633d1b-6250-6f9d-0311-70931d31fe0a@scylladb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BC4985417D7F7B49B9AB545333BDB61B191FE1A2@Exchange-MBX1.esf.edu>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <8f633d1b-6250-6f9d-0311-70931d31fe0a@scylladb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Avi Kivity <avi@scylladb.com>
+Cc: Christoph Hellwig <hch@infradead.org>, NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have made the mistake of booting a centos-6.8 live cd to manipulate a centos 5 system.
-as a result md5 has become md122, md2 has become md125, md4 has become md126, md0 has become md127, and most unfortunately md3 has also become md122.
+On Mon, Nov 28, 2016 at 11:11:18AM +0200, Avi Kivity wrote:
+> On 11/28/2016 11:00 AM, Christoph Hellwig wrote:
+> > On Mon, Nov 28, 2016 at 10:58:24AM +0200, Avi Kivity wrote:
+> > > What I guess is happening is that since the NVMe queue depth is so high, and
+> > > request the driver receives is sent immediately to the disk and there is
+> > > nothing to merge it to.  That could indicate the absence of plugging, or
+> > > just a reluctance to merge TRIMs.
+> > That is exactly the case, and it's also an issue with online trim.
+> > I have work in progress block layer trim patches that always plug trims
+> > and have various TRIM merge improvements including support for ranged
+> > TRIMs.  It needs a bit more work, but I hope I can post it later
+> > this week.
+> 
+> Great, good to know.
+> 
+> I still think it should also be fixed in the RAID layer.  There's no reason
+> to break a single request in millions of smaller ones, then try to merge
+> them into one request back again.  The queuing layer can merge when it's
+> given bad patterns from uncontrolled sources, not as an excuse to generate
+> bad patterns from within the kernel.
 
-smartctl shows that the WD brand drives do support SCT
-mdadm --examine was used to reveal the mish-mash using uuid numbers compared with the file /etc/mdadm.conf also referencing /etc/fstab.
+I think the reason is you are using 4.1 kernel. upstream kernel does support
+request merge even for blk-mq. It didn't at some versions.
 
-can someone kindly tell me the mdadm command to put the correct numbers back.
-
-sda7,sdb7 (122) /dev/md5 uuid=11b7e8b7:ca181503:cf45af46:db2a5d9d /
-sda1,sdb1 (127) /dev/md0 uuid=d9a5774d:d930fbd8:cf45af46:db2a5d9d /boot
-sda3,sdb2 (125) /dev/md2 uuid=23a4116f:1d43390b:cf45af46:db2a5d9d /tmp
-sda5,sdb5 (122) /dev/md3 uuid=c89f6357:f1c7a0ef:cf45af46:db2a5d9d /var
-sda6,sdb6 (126) /dev/md4 uuid=67ad84bc:05153ebe:cf45af46:db2a5d9d /var/lib/mysql/cmdaemon_mon
-sda2,sdb2 (   1) /dev/md1 uuid=5d9f0b00:24d890eb:cf45af46:db2a5d9d swap
-sdc1                                                            /home
-
-much appreciated
-Randall Grimshaw
+Thanks,
+Shaohua
