@@ -1,86 +1,55 @@
-From: JackieLiu <liuyun01@kylinos.cn>
-Subject: [PATCH 4/4] md/raid5-cache: adjust the write position of the empty block and mark it as a checkpoint
-Date: Mon, 28 Nov 2016 16:19:21 +0800
-Message-ID: <20161128081921.5641-4-liuyun01@kylinos.cn>
-References: <20161128081921.5641-1-liuyun01@kylinos.cn>
+From: Jinpu Wang <jinpu.wang@profitbricks.com>
+Subject: Re: [BUG] MD/RAID1 hung forever on freeze_array
+Date: Mon, 28 Nov 2016 09:24:19 +0100
+Message-ID: <CAMGffEmc_6o+Lgq3iJsCUyn6K=5S2w8pnrVDhXNBJxaKxd1Teg@mail.gmail.com>
+References: <CAMGffE=1kp7gMhG+dFxTvhD6VkRuSfbuXbf9vYSWwGG+=vvhDA@mail.gmail.com>
+ <CAMGffE=L_XziWyV+wCJFqKj+v_ahOPNSugZ3uY1q5ixd4iv2fQ@mail.gmail.com> <af7ae0a8-eb73-0070-4280-8758433ad500@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161128081921.5641-1-liuyun01@kylinos.cn>
+In-Reply-To: <af7ae0a8-eb73-0070-4280-8758433ad500@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: songliubraving@fb.com
-Cc: liuzhengyuan@kylinos.cn, linux-raid@vger.kernel.org, JackieLiu <liuyun01@kylinos.cn>
+To: Coly Li <colyli@suse.de>
+Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Neil Brown <neilb@suse.de>, Nate Dailey <nate.dailey@stratus.com>
 List-Id: linux-raid.ids
 
-When recovery is complete, we write an empty block and record his
-position first, then make the data-only stripes rewritten done,
-the location of the empty block as the last checkpoint position
-to write into the super block. And we should update last_checkpoint
-to this empty block position.
+snip
+>>>
+>>> every time nr_pending is 1 bigger then (nr_queued + 1), so seems we
+>>> forgot to increase nr_queued somewhere?
+>>>
+>>> I've noticed (commit ccfc7bf1f09d61)raid1: include bio_end_io_list in
+>>> nr_queued to prevent freeze_array hang. Seems it fixed similar bug.
+>>>
+>>> Could you give your suggestion?
+>>>
+>> Sorry, forgot to mention kernel version is 4.4.28
+>
+> This commit is Cced to stable@vger.kernel.org for v4.3+, do you use a
+> stable kernel or a distribution with 4.4.28 kernel ?
+>
+> Coly
+>
+>
+Hi Coly,
 
-------------------------------------------------------------------
-|  old log       | empty block | data only stripes | invalid log |
-------------------------------------------------------------------
-^                ^                                 ^
-|                |- log->last_checkpoint           |- log->log_start
-|                |- log->last_cp_seq               |- log->next_checkpoint
-|- log->seq=n    |- log->seq=10+n
+I'm using Debian8 with 4.4.28 kernel.
 
-At the same time, if there is no data-only stripes, this scene may appear,
-| meta1 | meta2 | meta3 |
-meta 1 is valid, meta 2 is invalid. meta 3 could be valid. so we should 
-The solution is we create a new meta in meta2 with its seq == meta1's 
-seq + 10 and let superblock points to meta2. 
+Best,
+--=20
+Jinpu Wang
+Linux Kernel Developer
 
-Reviewed-by: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
-Signed-off-by: JackieLiu <liuyun01@kylinos.cn>
----
- drivers/md/raid5-cache.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ProfitBricks GmbH
+Greifswalder Str. 207
+D - 10405 Berlin
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 9e72180..20594f7 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -2072,7 +2072,6 @@ r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
- 		return -ENOMEM;
- 	}
- 
--	ctx->seq += 10;
- 	list_for_each_entry_safe(sh, next, &ctx->cached_list, lru) {
- 		struct r5l_meta_block *mb;
- 		int i;
-@@ -2132,6 +2131,7 @@ static int r5l_recovery_log(struct r5l_log *log)
- 	struct mddev *mddev = log->rdev->mddev;
- 	struct r5l_recovery_ctx ctx;
- 	int ret;
-+	sector_t pos;
- 
- 	ctx.pos = log->last_checkpoint;
- 	ctx.seq = log->last_cp_seq;
-@@ -2149,6 +2149,10 @@ static int r5l_recovery_log(struct r5l_log *log)
- 	if (ret)
- 		return ret;
- 
-+	pos = ctx.pos;
-+	r5l_log_write_empty_meta_block(log, ctx.pos, (ctx.seq += 10));
-+	ctx.pos = r5l_ring_add(log, ctx.pos, BLOCK_SECTORS);
-+
- 	if ((ctx.data_only_stripes == 0) && (ctx.data_parity_stripes == 0))
- 		pr_debug("md/raid:%s: starting from clean shutdown\n",
- 			 mdname(mddev));
-@@ -2167,9 +2171,9 @@ static int r5l_recovery_log(struct r5l_log *log)
- 
- 	log->log_start = ctx.pos;
- 	log->next_checkpoint = ctx.pos;
-+	log->last_checkpoint = pos;
- 	log->seq = ctx.seq;
--	r5l_log_write_empty_meta_block(log, ctx.pos, ctx.seq);
--	r5l_write_super(log, ctx.pos);
-+	r5l_write_super(log, pos);
- 	return 0;
- }
- 
--- 
-2.7.4
+Tel:       +49 30 577 008  042
+Fax:      +49 30 577 008 299
+Email:    jinpu.wang@profitbricks.com
+URL:      https://www.profitbricks.de
 
-
-
+Sitz der Gesellschaft: Berlin
+Registergericht: Amtsgericht Charlottenburg, HRB 125506 B
+Gesch=C3=A4ftsf=C3=BChrer: Achim Weiss
