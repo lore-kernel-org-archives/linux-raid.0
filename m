@@ -1,47 +1,40 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: raid0 vs. mkfs
-Date: Mon, 28 Nov 2016 09:47:08 -0800
-Message-ID: <20161128174708.pxl3d7irspgkalsq@kernel.org>
-References: <56c83c4e-d451-07e5-88e2-40b085d8681c@scylladb.com>
- <87oa108a1x.fsf@notabene.neil.brown.name>
- <286a5fc1-eda3-0421-a88e-b03c09403259@scylladb.com>
- <87inr880au.fsf@notabene.neil.brown.name>
- <df73ebc4-9b78-09b5-022b-089c30dea17c@scylladb.com>
- <20161128090053.GA9393@infradead.org>
- <8f633d1b-6250-6f9d-0311-70931d31fe0a@scylladb.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: md prefered minor has been renumbered
+Date: Mon, 28 Nov 2016 14:58:31 -0500
+Message-ID: <91b64061-6026-c738-75a6-8d80a177aec8@turmel.org>
+References: <BC4985417D7F7B49B9AB545333BDB61B191FE1A2@Exchange-MBX1.esf.edu>
+ <BC4985417D7F7B49B9AB545333BDB61B191FE1BC@Exchange-MBX1.esf.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <8f633d1b-6250-6f9d-0311-70931d31fe0a@scylladb.com>
+In-Reply-To: <BC4985417D7F7B49B9AB545333BDB61B191FE1BC@Exchange-MBX1.esf.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Avi Kivity <avi@scylladb.com>
-Cc: Christoph Hellwig <hch@infradead.org>, NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
+To: "Randall C. Grimshaw" <rgrimsha@esf.edu>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Nov 28, 2016 at 11:11:18AM +0200, Avi Kivity wrote:
-> On 11/28/2016 11:00 AM, Christoph Hellwig wrote:
-> > On Mon, Nov 28, 2016 at 10:58:24AM +0200, Avi Kivity wrote:
-> > > What I guess is happening is that since the NVMe queue depth is so high, and
-> > > request the driver receives is sent immediately to the disk and there is
-> > > nothing to merge it to.  That could indicate the absence of plugging, or
-> > > just a reluctance to merge TRIMs.
-> > That is exactly the case, and it's also an issue with online trim.
-> > I have work in progress block layer trim patches that always plug trims
-> > and have various TRIM merge improvements including support for ranged
-> > TRIMs.  It needs a bit more work, but I hope I can post it later
-> > this week.
-> 
-> Great, good to know.
-> 
-> I still think it should also be fixed in the RAID layer.  There's no reason
-> to break a single request in millions of smaller ones, then try to merge
-> them into one request back again.  The queuing layer can merge when it's
-> given bad patterns from uncontrolled sources, not as an excuse to generate
-> bad patterns from within the kernel.
+On 11/28/2016 12:26 PM, Randall C. Grimshaw wrote:
+> I have made the mistake of booting a centos-6.8 live cd to manipulate a centos 5 system.
+> as a result md5 has become md122, md2 has become md125, md4 has become md126, md0 has become md127, and most unfortunately md3 has also become md122.
 
-I think the reason is you are using 4.1 kernel. upstream kernel does support
-request merge even for blk-mq. It didn't at some versions.
+This is normal and expected for a livecd -- the numbering comes from the
+mdadm.conf file in the initramfs, unless that mdadm.conf file excludes
+arrays for later assembly (when the rootfs is available).
 
-Thanks,
-Shaohua
+Many livecd initramfs scripts try to assemble everything, so the numbers
+are allocated from 127 down.  Usually you can find a boot parameter to
+suppress assembly.
+
+> smartctl shows that the WD brand drives do support SCT
+> mdadm --examine was used to reveal the mish-mash using uuid numbers compared with the file /etc/mdadm.conf also referencing /etc/fstab.
+
+Eww.  You should not be counting on /dev/mdX numbering in your fstab.
+Specifically for this reason.  Use LABEL= or UUID= syntax in fstab.
+
+> can someone kindly tell me the mdadm command to put the correct numbers back.
+
+No need.  When you boot back into your normal system, its initramfs will
+supply this information.  If you are changing the info, make sure you
+rebuild your initramfs, so the updated mdadm.conf file is included.
+
+Phil
