@@ -1,26 +1,36 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v5] md/r5cache: handle alloc_page failure
-Date: Sun, 27 Nov 2016 21:34:50 -0800
-Message-ID: <20161128053450.rbilhgupusdmb42k@kernel.org>
-References: <20161124065039.2151784-1-songliubraving@fb.com>
+Subject: Re: [patch] md/r5cache: enable IRQs on error path
+Date: Sun, 27 Nov 2016 21:37:54 -0800
+Message-ID: <20161128053754.cbppd4ada3oe6klw@kernel.org>
+References: <20161124111304.GI17225@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20161124065039.2151784-1-songliubraving@fb.com>
+In-Reply-To: <20161124111304.GI17225@mwanda>
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>
-Cc: linux-raid@vger.kernel.org, neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuang521@gmail.com, liuzhengyuan@kylinos.cn
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Song Liu <songliubraving@fb.com>, linux-raid@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Nov 23, 2016 at 10:50:39PM -0800, Song Liu wrote:
-> RMW of r5c write back cache uses an extra page to store old data for
-> prexor. handle_stripe_dirtying() allocates this page by calling
-> alloc_page(). However, alloc_page() may fail.
+On Thu, Nov 24, 2016 at 02:13:04PM +0300, Dan Carpenter wrote:
+> We need to re-enable the IRQs here before returning.
 > 
-> To handle alloc_page() failures, this patch adds an extra page to
-> disk_info. When alloc_page fails, handle_stripe() trys to use these
-> pages. When these pages are used by other stripe (R5C_EXTRA_PAGE_IN_USE),
-> the stripe is added to delayed_list.
+> Fixes: a39f7afde358 ("md/r5cache: write-out phase and reclaim support")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Thanks, Applied!
+Applied, thanks!
+ 
+> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+> index 2a60ce4..6610134 100644
+> --- a/drivers/md/raid5-cache.c
+> +++ b/drivers/md/raid5-cache.c
+> @@ -1029,7 +1029,7 @@ static sector_t r5c_calculate_new_cp(struct r5conf *conf)
+>  	spin_lock_irqsave(&log->stripe_in_journal_lock, flags);
+>  	if (list_empty(&conf->log->stripe_in_journal_list)) {
+>  		/* all stripes flushed */
+> -		spin_unlock(&log->stripe_in_journal_lock);
+> +		spin_unlock_irqrestore(&log->stripe_in_journal_lock, flags);
+>  		return log->next_checkpoint;
+>  	}
+>  	sh = list_first_entry(&conf->log->stripe_in_journal_list,
