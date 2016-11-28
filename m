@@ -1,36 +1,72 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [patch] md/r5cache: enable IRQs on error path
-Date: Sun, 27 Nov 2016 21:37:54 -0800
-Message-ID: <20161128053754.cbppd4ada3oe6klw@kernel.org>
-References: <20161124111304.GI17225@mwanda>
+From: Konstantin Khlebnikov <koct9i@gmail.com>
+Subject: Re: [PATCH] md/raid5: limit request size according to implementation limits
+Date: Mon, 28 Nov 2016 09:06:45 +0300
+Message-ID: <CALYGNiN9ChdiEAwGGMC8=QumDSE+ypcSH9OLLTL8SVYDuG5vWw@mail.gmail.com>
+References: <148026435214.19980.7956943898609877817.stgit@buzz> <e4f231db-6e4b-3d7f-e7a0-362dc4441823@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20161124111304.GI17225@mwanda>
-Sender: linux-raid-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Song Liu <songliubraving@fb.com>, linux-raid@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <e4f231db-6e4b-3d7f-e7a0-362dc4441823@suse.de>
+Sender: stable-owner@vger.kernel.org
+To: Coly Li <colyli@suse.de>
+Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Shaohua Li <shli@kernel.org>, Neil Brown <neilb@suse.com>, linux-raid@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Stable <stable@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Nov 24, 2016 at 02:13:04PM +0300, Dan Carpenter wrote:
-> We need to re-enable the IRQs here before returning.
-> 
-> Fixes: a39f7afde358 ("md/r5cache: write-out phase and reclaim support")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+On Mon, Nov 28, 2016 at 7:40 AM, Coly Li <colyli@suse.de> wrote:
+> On 2016/11/28 =E4=B8=8A=E5=8D=8812:32, Konstantin Khlebnikov wrote:
+>> Current implementation employ 16bit counter of active stripes in lower
+>> bits of bio->bi_phys_segments. If request is big enough to overflow
+>> this counter bio will be completed and freed too early.
+>>
+>> Fortunately this not happens in default configuration because several
+>> other limits prevent that: stripe_cache_size * nr_disks effectively
+>> limits count of active stripes. And small max_sectors_kb at lower
+>> disks prevent that during normal read/write operations.
+>>
+>> Overflow easily happens in discard if it's enabled by module parameter
+>> "devices_handle_discard_safely" and stripe_cache_size is set big enough.
+>>
+>> This patch limits requests size with 256Mb - 8Kb to prevent overflows.
+>>
+>> Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+>> Cc: Shaohua Li <shli@kernel.org>
+>> Cc: Neil Brown <neilb@suse.com>
+>> Cc: stable@vger.kernel.org
+>> ---
+>>  drivers/md/raid5.c |    9 +++++++++
+>>  1 file changed, 9 insertions(+)
+>>
+>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>> index 92ac251e91e6..cce6057b9aca 100644
+>> --- a/drivers/md/raid5.c
+>> +++ b/drivers/md/raid5.c
+>> @@ -6984,6 +6984,15 @@ static int raid5_run(struct mddev *mddev)
+>>                       stripe =3D (stripe | (stripe-1)) + 1;
+>>               mddev->queue->limits.discard_alignment =3D stripe;
+>>               mddev->queue->limits.discard_granularity =3D stripe;
+>> +
+>> +             /*
+>> +              * We use 16-bit counter of active stripes in bi_phys_segm=
+ents
+>> +              * (minus one for over-loaded initialization)
+>> +              */
+>> +             blk_queue_max_hw_sectors(mddev->queue, 0xfffe * STRIPE_SEC=
+TORS);
+>> +             blk_queue_max_discard_sectors(mddev->queue,
+>> +                                           0xfffe * STRIPE_SECTORS);
+>> +
+>
+> Could you please to explain why use 0xfffe * STRIPE_SECTORS here ?
 
-Applied, thanks!
- 
-> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index 2a60ce4..6610134 100644
-> --- a/drivers/md/raid5-cache.c
-> +++ b/drivers/md/raid5-cache.c
-> @@ -1029,7 +1029,7 @@ static sector_t r5c_calculate_new_cp(struct r5conf *conf)
->  	spin_lock_irqsave(&log->stripe_in_journal_lock, flags);
->  	if (list_empty(&conf->log->stripe_in_journal_list)) {
->  		/* all stripes flushed */
-> -		spin_unlock(&log->stripe_in_journal_lock);
-> +		spin_unlock_irqrestore(&log->stripe_in_journal_lock, flags);
->  		return log->next_checkpoint;
->  	}
->  	sh = list_first_entry(&conf->log->stripe_in_journal_list,
+This code send individual bio to lower device for each STRIPE_SECTORS (8)
+and count them in 16-bit counter 0xffff max (you could find this
+constant above in this file)
+but counter initialized with 1 to prevent hitting zero during generation
+thus maximum is 0xfffe stripes which is 256Mb - 8Kb in bytes
+
+>
+> Thanks.
+>
+> Coly
+>
