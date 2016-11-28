@@ -1,29 +1,31 @@
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH 1/1] IMSM: Update num_data_stripes during migration
-Date: Mon, 28 Nov 2016 17:42:10 -0500
-Message-ID: <wrfjh96rmdkt.fsf@redhat.com>
-References: <20161124084824.28155-1-pawel.baldysiak@intel.com>
+Subject: Re: [PATCH 1/4] mdadm: bad block support for external metadata - initialization
+Date: Mon, 28 Nov 2016 17:45:22 -0500
+Message-ID: <wrfjpolfkyv1.fsf@redhat.com>
+References: <wrfjr35vpw2j.fsf@redhat.com>
+        <1480342025-19508-1-git-send-email-tomasz.majchrzak@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161124084824.28155-1-pawel.baldysiak@intel.com> (Pawel
-        Baldysiak's message of "Thu, 24 Nov 2016 09:48:24 +0100")
+In-Reply-To: <1480342025-19508-1-git-send-email-tomasz.majchrzak@intel.com>
+        (Tomasz Majchrzak's message of "Mon, 28 Nov 2016 15:07:05 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Cc: linux-raid@vger.kernel.org, Maksymilian Kunt <maksymilian.kunt@intel.com>
+To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Pawel Baldysiak <pawel.baldysiak@intel.com> writes:
-> This patch adds updataing num_data_stripes during reshape.
-> Previously this field once set during creation was never updated.
-> Also, num_data_strips value multipied by chunk_size is used
-> for set proper component size for RAID5.
+Tomasz Majchrzak <tomasz.majchrzak@intel.com> writes:
+> If metadata handler provides support for bad blocks, tell md by writing
+> 'external_bbl' to rdev state file (both on create and assemble),
+> followed by a list of known bad blocks written via sysfs 'bad_blocks'
+> file.
 >
-> Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
-> Signed-off-by: Maksymilian Kunt <maksymilian.kunt@intel.com>
+> Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+> Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 > ---
->  super-intel.c | 53 ++++++++++++++++++++++++++++++++++++++++++++++-------
->  1 file changed, 46 insertions(+), 7 deletions(-)
+>  mdadm.h | 13 +++++++++++++
+>  sysfs.c | 27 ++++++++++++++++++++++++++-
+>  2 files changed, 39 insertions(+), 1 deletion(-)
 
 Applied!
 
