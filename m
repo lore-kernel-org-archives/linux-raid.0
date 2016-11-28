@@ -1,91 +1,194 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: Re: [PATCH 2/2] raid5-cache: don't set STRIPE_R5C_PARTIAL_STRIPE flag
- while load stripe into cache
-Date: Sun, 27 Nov 2016 23:49:24 +0000
-Message-ID: <A581E969-CBCA-4271-B628-1558D3A7A0FD@fb.com>
-References: <1480129034-14700-1-git-send-email-liuzhengyuan@kylinos.cn>
- <1480129034-14700-2-git-send-email-liuzhengyuan@kylinos.cn>
+From: Marc Smith <marc.smith@mcc.edu>
+Subject: Re: MD Remnants After --stop
+Date: Sun, 27 Nov 2016 21:25:57 -0500
+Message-ID: <CAHkw+Lc9YEdbJcRu2bOLU-gex9UYSXB32iRKD8TPS7JpjSOdQA@mail.gmail.com>
+References: <CAHkw+Lf1SErbGro4bq5MM5LyB-Zqyqi4E90R7c+uAZHv1WgSrA@mail.gmail.com>
+ <87fun3ond9.fsf@notabene.neil.brown.name> <CAHkw+LcfszsWDGQJzDaQU0-PsL+8K7t5msW_bLbv+YyDEFmn8Q@mail.gmail.com>
+ <87fumlebwo.fsf@notabene.neil.brown.name> <CAHkw+LfN9xaFmmvg653OKh1eH=_kLdhd3Y1QMg3955TePCCtkg@mail.gmail.com>
+ <CAHkw+Ldbwkknz6ZqxVpFEE-3z1r7pz1AjamUbZaEPn_uyMn_-w@mail.gmail.com>
+ <878tsbcbub.fsf@notabene.neil.brown.name> <CAHkw+Ldv+-uXGCQ+tKfkraZ3VF4V8sk203+Oopm7RvygGQQYGQ@mail.gmail.com>
+ <87oa15938i.fsf@notabene.neil.brown.name> <CAHkw+LfJzZoWVnO8kDi+YVV09fas2DveQoChh10wEBZfYin6aQ@mail.gmail.com>
+ <8760n8a7k5.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1480129034-14700-2-git-send-email-liuzhengyuan@kylinos.cn>
-Content-Language: en-US
-Content-ID: <010CE810252BB34BB4F53C9D4F4CF163@namprd15.prod.outlook.com>
+In-Reply-To: <8760n8a7k5.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
-Cc: Shaohua Li <shli@fb.com>, NeilBrown <neilb@suse.com>, linux-raid <linux-raid@vger.kernel.org>, "liuyun01@kylinos.cn" <liuyun01@kylinos.cn>
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Sun, Nov 27, 2016 at 5:20 PM, NeilBrown <neilb@suse.com> wrote:
+> On Sun, Nov 27 2016, Marc Smith wrote:
+>
+>> So, I modified mdopen.c to look like this:
+>>
+>> --- a/mdopen.c    2016-11-25 17:04:25.782299330 -0500
+>> +++ b/mdopen.c    2016-11-26 10:57:35.883621355 -0500
+>> @@ -416,7 +416,7 @@
+>>   */
+>>  int open_mddev(char *dev, int report_errors)
+>>  {
+>> -    int mdfd = open(dev, O_RDWR);
+>> +    int mdfd = open(dev, O_RDONLY);
+>>      if (mdfd < 0 && errno == EACCES)
+>>          mdfd = open(dev, O_RDONLY);
+>>      if (mdfd < 0) {
+>>
+>>
+>> And now, when running 'mdadm --stop' here is what I see...
+>>
+>> From the output 'udevadm monitor -pku':
+>>
+>> --snip--
+>> KERNEL[297486.536908] offline
+>> /kernel/dlm/62fccfd6-605f-19e6-be6d-99a1e3cb987e (dlm)
+>> ACTION=offline
+>> DEVPATH=/kernel/dlm/62fccfd6-605f-19e6-be6d-99a1e3cb987e
+>> LOCKSPACE=62fccfd6-605f-19e6-be6d-99a1e3cb987e
+>> SEQNUM=3651
+>> SUBSYSTEM=dlm
+>>
+>> UDEV  [297486.537541] offline
+>> /kernel/dlm/62fccfd6-605f-19e6-be6d-99a1e3cb987e (dlm)
+>> ACTION=offline
+>> DEVPATH=/kernel/dlm/62fccfd6-605f-19e6-be6d-99a1e3cb987e
+>> LOCKSPACE=62fccfd6-605f-19e6-be6d-99a1e3cb987e
+>> SEQNUM=3651
+>> SUBSYSTEM=dlm
+>> USEC_INITIALIZED=7486537404
+>>
+>> KERNEL[297486.538325] remove
+>> /kernel/dlm/62fccfd6-605f-19e6-be6d-99a1e3cb987e (dlm)
+>> ACTION=remove
+>> DEVPATH=/kernel/dlm/62fccfd6-605f-19e6-be6d-99a1e3cb987e
+>> LOCKSPACE=62fccfd6-605f-19e6-be6d-99a1e3cb987e
+>> SEQNUM=3652
+>> SUBSYSTEM=dlm
+>>
+>> UDEV  [297486.538644] remove
+>> /kernel/dlm/62fccfd6-605f-19e6-be6d-99a1e3cb987e (dlm)
+>> ACTION=remove
+>> DEVPATH=/kernel/dlm/62fccfd6-605f-19e6-be6d-99a1e3cb987e
+>> LOCKSPACE=62fccfd6-605f-19e6-be6d-99a1e3cb987e
+>> SEQNUM=3652
+>> SUBSYSTEM=dlm
+>> USEC_INITIALIZED=86538345
+>> --snip--
+>>
+>> And from the kernel log:
+>>
+>> --snip--
+>> [297504.958244] md127: detected capacity change from 73340747776 to 0
+>> [297504.958249] md: md127 stopped.
+>> [297504.958884] dlm: 62fccfd6-605f-19e6-be6d-99a1e3cb987e: leaving the
+>> lockspace group...
+>> [297504.959004] udevd[487]: seq 3651 queued, 'offline' 'dlm'
+>> [297504.959161] udevd[487]: seq 3651 forked new worker [5392]
+>> [297504.959417] udevd[5392]: seq 3651 running
+>> [297504.959474] udevd[5392]: no db file to read
+>> /run/udev/data/+dlm:62fccfd6-605f-19e6-be6d-99a1e3cb987e: No such file
+>> or directory
+>> [297504.959524] udevd[5392]: passed device to netlink monitor 0x2251c30
+>> [297504.959527] udevd[5392]: seq 3651 processed
+>> [297504.960101] dlm: 62fccfd6-605f-19e6-be6d-99a1e3cb987e: group event done 0 0
+>> [297504.960299] dlm: 62fccfd6-605f-19e6-be6d-99a1e3cb987e:
+>> release_lockspace final free
+>> [297504.960329] md: unbind<dm-0>
+>> [297504.960448] udevd[487]: seq 3652 queued, 'remove' 'dlm'
+>> [297504.960500] udevd[487]: passed 214 byte device to netlink monitor 0x224b130
+>> [297504.960584] udevd[5392]: seq 3652 running
+>> [297504.960606] udevd[5392]: no db file to read
+>> /run/udev/data/+dlm:62fccfd6-605f-19e6-be6d-99a1e3cb987e: No such file
+>> or directory
+>> [297504.967168] md: export_rdev(dm-0)
+>> [297504.967231] md: unbind<dm-1>
+>> [297504.975176] md: export_rdev(dm-1)
+>> --snip--
+>>
+>> So that did get rid of the synthesized CHANGE event, but still no
+>> REMOVE event. =)
+>>
+>> Still trying to rule-out there isn't anything strange with my Linux
+>> distro / setup... but I assume even if udev was mishandling something,
+>> we should still be seeing a REMOVE event on '--stop'.
+>>
+>
+> Getting rid of the CHANGE events is good as they can muddy the waters a
+> bit.
+>
+> The lack of a REMOVE event suggests that something it still holding a
+> reference to the 'md' kobject.  There aren't many references though.
+> One is held when the array is active.  That is dropped by
+> mddev_delayed_delete() which is called from a work-queue.  So it can be
+> delayed a little bit, but not much.
+> The other references are held by member devices, and dropped when the
+> devices are unbound from the array - and the kernel log shows the
+> "unbind" messages.
+>
+> In either case, if there is a reference outstanding, there should be
+> some evidence in the /sys/mdXX/md directory.  Either a 'dev-XX'
+> directory or the various bitmap attributes..
+>
+> Can you report the result of
+>
+>   find /sys/block/md127/md
+> and
+>   find /sys/block/md127/md -type file | xargs grep .
+>
+> after stopping the array?
 
-> On Nov 25, 2016, at 6:57 PM, Zhengyuan Liu <liuzhengyuan@kylinos.cn> wrot=
-e:
->=20
-> r5c_recovery_load_one_stripe should not set STRIPE_R5C_PARTIAL_STRIPE fla=
-g,as
-> the data-only stripe may be STRIPE_R5C_FULL_STRIPE stripe. The state mach=
-ine
-> would release the stripe later and add it into neither r5c_cached_full_st=
-ripes
-> list or r5c_cached_partial_stripes list and set correct flag. Also we sho=
-uld
-> fix the counter corresponding.
->=20
-> Reviewed-by: JackieLiu <liuyun01@kylinos.cn>
-> Signed-off-by: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
-> ---
-> drivers/md/raid5-cache.c |  3 +--
-> drivers/md/raid5.c       | 11 +++++++++++
-> 2 files changed, 12 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index 9911164..e0ac758 100644
-> --- a/drivers/md/raid5-cache.c
-> +++ b/drivers/md/raid5-cache.c
-> @@ -1930,9 +1930,8 @@ static void r5c_recovery_load_one_stripe(struct r5l=
-_log *log,
-> 			set_bit(R5_UPTODATE, &dev->flags);
-> 		}
-> 	}
-> -	set_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state);
-> -	atomic_inc(&conf->r5c_cached_partial_stripes);
-> 	list_add_tail(&sh->r5c, &log->stripe_in_journal_list);
-> +	atomic_inc(&log->stripe_in_journal_count);
-> }
+# find /sys/block/md127/md
+/sys/block/md127/md
+/sys/block/md127/md/reshape_position
+/sys/block/md127/md/layout
+/sys/block/md127/md/raid_disks
+/sys/block/md127/md/bitmap
+/sys/block/md127/md/bitmap/chunksize
+/sys/block/md127/md/bitmap/space
+/sys/block/md127/md/bitmap/can_clear
+/sys/block/md127/md/bitmap/time_base
+/sys/block/md127/md/bitmap/metadata
+/sys/block/md127/md/bitmap/backlog
+/sys/block/md127/md/bitmap/location
+/sys/block/md127/md/bitmap/max_backlog_used
+/sys/block/md127/md/array_size
+/sys/block/md127/md/max_read_errors
+/sys/block/md127/md/metadata_version
+/sys/block/md127/md/component_size
+/sys/block/md127/md/reshape_direction
+/sys/block/md127/md/resync_start
+/sys/block/md127/md/new_dev
+/sys/block/md127/md/safe_mode_delay
+/sys/block/md127/md/level
+/sys/block/md127/md/chunk_size
+/sys/block/md127/md/array_state
 
-This makes sense to me. Thanks for catching it.=20
 
-> /*
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index dbab8c7..8120ce4 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -677,12 +677,23 @@ raid5_get_active_stripe(struct r5conf *conf, sector=
-_t sector,
-> 					atomic_inc(&conf->active_stripes);
-> 				BUG_ON(list_empty(&sh->lru) &&
-> 				       !test_bit(STRIPE_EXPANDING, &sh->state));
-> +
-> 				inc_empty_inactive_list_flag =3D 0;
-> 				if (!list_empty(conf->inactive_list + hash))
-> 					inc_empty_inactive_list_flag =3D 1;
-> 				list_del_init(&sh->lru);
-> 				if (list_empty(conf->inactive_list + hash) && inc_empty_inactive_list=
-_flag)
-> 					atomic_inc(&conf->empty_inactive_list_nr);
-> +
-> +				if (test_and_clear_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state)) {
-> +					WARN_ON(atomic_read(&conf->r5c_cached_partial_stripes) =3D=3D 0);
-> +					atomic_dec(&conf->r5c_cached_partial_stripes);
-> +				}
-> +				if (test_and_clear_bit(STRIPE_R5C_FULL_STRIPE, &sh->state)) {
-> +					WARN_ON(atomic_read(&conf->r5c_cached_full_stripes) =3D=3D 0);
-> +					atomic_dec(&conf->r5c_cached_full_stripes);
-> +				}
-> +
+# find /sys/block/md127/md -type f | xargs grep .
+/sys/block/md127/md/reshape_position:none
+/sys/block/md127/md/layout:0
+/sys/block/md127/md/bitmap/chunksize:0
+/sys/block/md127/md/bitmap/space:0
+/sys/block/md127/md/bitmap/time_base:0
+/sys/block/md127/md/bitmap/metadata:internal
+/sys/block/md127/md/bitmap/backlog:0
+/sys/block/md127/md/bitmap/location:none
+/sys/block/md127/md/bitmap/max_backlog_used:0
+/sys/block/md127/md/array_size:default
+/sys/block/md127/md/max_read_errors:20
+/sys/block/md127/md/metadata_version:none
+/sys/block/md127/md/component_size:0
+/sys/block/md127/md/reshape_direction:forwards
+/sys/block/md127/md/resync_start:0
+grep: /sys/block/md127/md/new_dev: Permission denied
+/sys/block/md127/md/safe_mode_delay:0.000
+/sys/block/md127/md/chunk_size:0
+/sys/block/md127/md/array_state:clear
 
-I don't think we need these, as we decrease these counters in r5c_make_stri=
-pe_write_out().=20
 
-Thanks,
-Song=
+--Marc
+
+>
+> Thanks,
+> NeilBrown
