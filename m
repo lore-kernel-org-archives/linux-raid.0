@@ -1,118 +1,216 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: raid0 vs. mkfs
-Date: Mon, 28 Nov 2016 19:40:25 +1100
-Message-ID: <87inr880au.fsf@notabene.neil.brown.name>
-References: <56c83c4e-d451-07e5-88e2-40b085d8681c@scylladb.com> <87oa108a1x.fsf@notabene.neil.brown.name> <286a5fc1-eda3-0421-a88e-b03c09403259@scylladb.com>
+From: Jinpu Wang <jinpu.wang@profitbricks.com>
+Subject: [BUG] MD/RAID1 hung forever on bitmap_startwrite+0x122
+Date: Mon, 28 Nov 2016 09:45:07 +0100
+Message-ID: <CAMGffEmvr2rJrAmb+qpq-FdFVMxisH14f_VwWMTTyAXpc_saMQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <286a5fc1-eda3-0421-a88e-b03c09403259@scylladb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Avi Kivity <avi@scylladb.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: NeilBrown <neilb@suse.de>, Shaohua Li <shli@fb.com>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hi folks,
 
-On Mon, Nov 28 2016, Avi Kivity wrote:
+We hit another hung task on bitmap_startwrite with our test machines, this =
+time
+it's hung in bitmap_startwrite.
 
-> On 11/28/2016 07:09 AM, NeilBrown wrote:
->> On Mon, Nov 28 2016, Avi Kivity wrote:
->>
->>> mkfs /dev/md0 can take a very long time, if /dev/md0 is a very large
->>> disk that supports TRIM/DISCARD (erase whichever is inappropriate).
->>> That is because mkfs issues a TRIM/DISCARD (erase whichever is
->>> inappropriate) for the entire partition. As far as I can tell, md
->>> converts the large TRIM/DISCARD (erase whichever is inappropriate) into
->>> a large number of TRIM/DISCARD (erase whichever is inappropriate)
->>> requests, one per chunk-size worth of disk, and issues them to the RAID
->>> components individually.
->>>
->>>
->>> It seems to me that md can convert the large TRIM/DISCARD (erase
->>> whichever is inappropriate) request it gets into one TRIM/DISCARD (erase
->>> whichever is inappropriate) per RAID component, converting an O(disk
->>> size / chunk size) operation into an O(number of RAID components)
->>> operation, which is much faster.
->>>
->>>
->>> I observed this with mkfs.xfs on a RAID0 of four 3TB NVMe devices, with
->>> the operation taking about a quarter of an hour, continuously pushing
->>> half-megabyte TRIM/DISCARD (erase whichever is inappropriate) requests
->>> to the disk. Linux 4.1.12.
->> Surely it is the task of the underlying driver, or the queuing
->> infrastructure, to merge small requests into large requests.
->
-> Here's a blkparse of that run.  As can be seen, there is no concurrency,=
-=20
-> so nobody down the stack has any chance of merging anything.
+We build MD/RAID1 over 2 block devices exported via IB,
+bitmap=3Dinternal. KVM build on top of
+RAID1 on compute node, disks are on remote storage node, one storage
+node crash/reboot, multiple raid1 on multiple compute node KVM run
+into hung task:
 
-That isn't a valid conclusion to draw.
-raid0 effectively calls the make_request_fn function that is registered
-by the underlying driver.
-If that function handles DISCARD synchronously, then you won't see any
-concurrency, and that is because the driver chose not to queue but to
-handle directly.
-I don't know if it actually does this though.  I don't know the insides
-of the nmve driver .... there seems to be a lightnvm thing and a scsi
-thing and a pci thing and it all confuses me.
+[106204.343870] INFO: task kvm:37669 blocked for more than 180 seconds.
 
->
->
-> No merging was happening.  This is an NVMe drive, so running with the=20
-> noop scheduler (which should still merge).   Does the queuing layer=20
-> merge trims?
+[106204.344138]       Tainted: G          IO    4.4.28-1-pserver #1
 
-I wish I knew.  I once thought I understood about half of the block
-queuing code, but now with multi-queue, I'll need to learn it all
-again. :-(
+[106204.344385] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+disables this message.
 
->
-> I don't think it's the queuing layer's job, though.  At the I/O=20
-> scheduler you can merge to clean up sloppy patterns from the upper=20
-> layer, but each layer should try to generate the best pattern it can.=20=
-=20
+[106204.344798] kvm             D ffff882037723710     0 37669      1 0x000=
+00000
 
-Why?  How does it know what is best for the layer below?
+[106204.344805]  ffff882037723710 ffff882038f08d00 ffff882029770d00
+ffff8820377236d8
 
-> Large merges mean increased latency for the first request in the chain,=20
-> forcing the I/O scheduler to make a decision which can harm the=20
-> workload.  By generating merged requests in the first place, the upper=20
-> layer removes the need to make that tradeoff (splitting the requests=20
-> removes information: "we are interested only in when all of the range is=
-=20
-> trimmed, not any particular request").
+[106204.344809]  ffff8820377236d8 ffff882037724000 0000000000308648
+0000000000000008
 
-If it is easy for the upper layer to break a very large request into a
-few very large requests, then I wouldn't necessarily object.
-But unless it is very hard for the lower layer to merge requests, it
-should be doing that too.
-When drivers/lightnvm/rrpc.c is providing rrpc_make_rq as the
-make_request_fn, it performs REQ_OP_DISCARD synchronously.  I would
-suggest that is a very poor design.  I don't know if that is affecting
-you (though a printk would find out).
+[106204.344813]  ffff880f9bd9e8c0 ffff882037723768 ffff882037723728
+ffffffff81811c60
 
-NeilBrown
+[106204.344818] Call Trace:
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+[106204.344831]  [<ffffffff81811c60>] schedule+0x30/0x80
 
------BEGIN PGP SIGNATURE-----
+[106204.344841]  [<ffffffffa09d31a2>] bitmap_startwrite+0x122/0x190 [md_mod=
+]
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlg77XsACgkQOeye3VZi
-gblEgBAAgIp+m+AR+9GRTOhjFPOqGY+CuD76PT02l631D78Gy6fAw2EsZFtVjyV/
-97vlQqgidnZAXLvNcrZeM94wzsrlg6+OmZbOjdrFLChZWtcA6G8ZLHTef+wMIoCe
-FOHtcPi+2vlky7Xh+b+QMmKjaCHn5vMRfxe24bnnxcxmifzKatHBsT7n3Mr2m0mO
-fJ2gnDiKV+6IYwK2TqpJdpBaOV5Ps5kdcI2pbokI3pzxkvjlPn93WsgwxyxE9CDy
-8+XpypA7yNSB6GArcoTwlO4mQpl4EIP32d1s69DpNpdfcpJhQdi2nk7cqXv/f3ys
-+RHRYICvgf5VTYKTpJ1L0Q5naDz+KEDB1ZR1+aKd2O8+1mU0FuKWC913Eb5bZQMz
-suceZ2iYZ0/ds/9qpUlCm25ajq+tFcAovMvOZvdfSzphM++KrEXGt4hsm7lzql+o
-O2/CvA3FTGDTjHLOivtXY1GqYM/I/ECcvShaEwaIQ5XY2Lxko5F52IMLCRZxRBml
-sSxuNh3HSYAuMD/Sj1lPBqjPwQG6NFRBZdex/kYon6dnohYcAoF3LnTwzbDxXLMC
-ZEx2i8LXgesiEh4WDCfXxK0s/QepfObSrPum90blq7GLvR2GRij2VLmVQdYbq2r9
-ghJkbeXtW9QFmncipagfTgMGuP616d3lYzpBST7TrqjbDPJJDVA=
-=T4KN
------END PGP SIGNATURE-----
---=-=-=--
+[106204.344848]  [<ffffffff813f660b>] ? bio_clone_bioset+0x11b/0x310
+
+[106204.344853]  [<ffffffff810956b0>] ? wait_woken+0x80/0x80
+
+[106204.344859]  [<ffffffffa0cc5127>] 0xffffffffa0cc5127
+
+[106204.344865]  [<ffffffffa09c4863>] md_set_array_sectors+0xac3/0xe20 [md_=
+mod]
+
+[106204.344871]  [<ffffffff813faa94>] ? generic_make_request_checks+0x234/0=
+x4c0
+
+[106204.344875]  [<ffffffff813fdb91>] blk_prologue_bio+0x91/0xc0
+
+[106204.344879]  [<ffffffff813fd54e>] generic_make_request+0xfe/0x1e0
+
+[106204.344883]  [<ffffffff813fd692>] submit_bio+0x62/0x150
+
+[106204.344892]  [<ffffffff811d3257>] do_blockdev_direct_IO+0x2317/0x2ba0
+
+[106204.344897]  [<ffffffff810b9999>] ? __remove_hrtimer+0x89/0xa0
+
+[106204.344903]  [<ffffffff8173c08f>] ? udp_poll+0x1f/0xb0
+
+[106204.344908]  [<ffffffff816b71c7>] ? sock_poll+0x57/0x120
+
+[106204.344913]  [<ffffffff811cdbf0>] ? I_BDEV+0x10/0x10
+
+[106204.344918]  [<ffffffff811d3b1e>] __blockdev_direct_IO+0x3e/0x40
+
+[106204.344922]  [<ffffffff811ce287>] blkdev_direct_IO+0x47/0x50
+
+[106204.344930]  [<ffffffff81132c60>] generic_file_direct_write+0xb0/0x170
+
+[106204.344934]  [<ffffffff81132ded>] __generic_file_write_iter+0xcd/0x1f0
+
+[106204.344943]  [<ffffffff81184ff8>] ? kmem_cache_free+0x78/0x190
+
+[106204.344948]  [<ffffffff811ce4c0>] ? bd_unlink_disk_holder+0xf0/0xf0
+
+[106204.344952]  [<ffffffff811ce547>] blkdev_write_iter+0x87/0x110
+
+[106204.344956]  [<ffffffff811ce4c0>] ? bd_unlink_disk_holder+0xf0/0xf0
+
+[106204.344962]  [<ffffffff811dec56>] aio_run_iocb+0x236/0x2a0
+
+[106204.344966]  [<ffffffff811dd183>] ? eventfd_ctx_read+0x53/0x200
+
+[106204.344973]  [<ffffffff811b3bbf>] ? __fget_light+0x1f/0x60
+
+[106204.344976]  [<ffffffff811b3c0e>] ? __fdget+0xe/0x10
+
+[106204.344980]  [<ffffffff811dfb5a>] do_io_submit+0x23a/0x4d0
+
+[106204.344985]  [<ffffffff811dfdfb>] SyS_io_submit+0xb/0x10
+
+[106204.344989]  [<ffffffff818154d7>] entry_SYSCALL_64_fastpath+0x12/0x6a
+
+[106384.345330] INFO: task kvm:37669 blocked for more than 180 seconds.
+
+[106384.345621]       Tainted: G          IO    4.4.28-1-pserver #1
+
+[106384.345866] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+disables this message.
+
+[106384.346275] kvm             D ffff882037723710     0 37669      1 0x000=
+00000
+
+[106384.346282]  ffff882037723710 ffff882038f08d00 ffff882029770d00
+ffff8820377236d8
+
+[106384.346286]  ffff8820377236d8 ffff882037724000 0000000000308648
+0000000000000008
+
+[106384.346290]  ffff880f9bd9e8c0 ffff882037723768 ffff882037723728
+ffffffff81811c60
+
+[106384.346294] Call Trace:
+
+[106384.346308]  [<ffffffff81811c60>] schedule+0x30/0x80
+
+[106384.346317]  [<ffffffffa09d31a2>] bitmap_startwrite+0x122/0x190 [md_mod=
+]
+
+[106384.346325]  [<ffffffff813f660b>] ? bio_clone_bioset+0x11b/0x310
+
+[106384.346330]  [<ffffffff810956b0>] ? wait_woken+0x80/0x80
+
+[106384.346336]  [<ffffffffa0cc5127>] 0xffffffffa0cc5127
+
+[106384.346341]  [<ffffffffa09c4863>] md_set_array_sectors+0xac3/0xe20 [md_=
+mod]
+
+[106384.346347]  [<ffffffff813faa94>] ? generic_make_request_checks+0x234/0=
+x4c0
+
+[106384.346352]  [<ffffffff813fdb91>] blk_prologue_bio+0x91/0xc0
+
+[106384.346356]  [<ffffffff813fd54e>] generic_make_request+0xfe/0x1e0
+
+[106384.346360]  [<ffffffff813fd692>] submit_bio+0x62/0x150
+
+[106384.346369]  [<ffffffff811d3257>] do_blockdev_direct_IO+0x2317/0x2ba0
+
+
+(gdb) l *bitmap_startwrite+0x122
+
+0x121d2 is in bitmap_startwrite (drivers/md/bitmap.c:1396).
+
+
+
+1394                 if (unlikely(COUNTER(*bmc) =3D=3D COUNTER_MAX)) {
+
+1395                         DEFINE_WAIT(__wait);
+
+1396                         /* note that it is safe to do the prepare_to_w=
+ait
+
+1397                          * after the test as long as we do it
+before dropping
+
+1398                          * the spinlock.
+
+1399                          */
+
+1400                         prepare_to_wait(&bitmap->overflow_wait, &__wai=
+t,
+
+1401                                         TASK_UNINTERRUPTIBLE);
+
+1402                         spin_unlock_irq(&bitmap->counts.lock);
+
+1403                         schedule();
+
+1404                         finish_wait(&bitmap->overflow_wait, &__wait);
+
+1405                         continue;
+
+1406                 }
+
+so seem KVM is waiting on overflow_wait queue, but somehow no one wake
+him up. During reboot one storage, raid1 has a lot IO errors in that
+time, I guess some error handle part is broken.
+
+I haven't have a reproducer, just want to report to community, in case
+this is known bug, or anyone has patch already :)
+
+Thanks,
+
+--=20
+Jinpu Wang
+Linux Kernel Developer
+
+ProfitBricks GmbH
+Greifswalder Str. 207
+D - 10405 Berlin
+
+Tel:       +49 30 577 008  042
+Fax:      +49 30 577 008 299
+Email:    jinpu.wang@profitbricks.com
+URL:      https://www.profitbricks.de
+
+Sitz der Gesellschaft: Berlin
+Registergericht: Amtsgericht Charlottenburg, HRB 125506 B
+Gesch=C3=A4ftsf=C3=BChrer: Achim Weiss
