@@ -1,73 +1,49 @@
-From: Coly Li <i@coly.li>
-Subject: Re: [PATCH v2] Avoid nested function definition
-Date: Mon, 28 Nov 2016 11:06:53 +0800
-Message-ID: <4e5b3f6f-695b-5bfe-3f62-c50fe9e984c3@coly.li>
-References: <20161128025004.18782-1-pefoley2@pefoley.com>
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: raid0 vs. mkfs
+Date: Sun, 27 Nov 2016 21:11:16 -0700
+Message-ID: <CAJCQCtR+PnJXq9k37V1pXVO4UmW0dbhvAZYo=Pius2eCz9X_kg@mail.gmail.com>
+References: <56c83c4e-d451-07e5-88e2-40b085d8681c@scylladb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-bcache-owner@vger.kernel.org>
-In-Reply-To: <20161128025004.18782-1-pefoley2@pefoley.com>
-Sender: linux-bcache-owner@vger.kernel.org
-To: Peter Foley <pefoley2@pefoley.com>, linux-kernel@vger.kernel.org, shli@kernel.org, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, kent.overstreet@gmail.com
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <56c83c4e-d451-07e5-88e2-40b085d8681c@scylladb.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Avi Kivity <avi@scylladb.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2016/11/28 上午10:50, Peter Foley wrote:
-> Fixes below error with clang:
-> ../drivers/md/bcache/sysfs.c:759:3: error: function definition is not allowed here
->                 {       return *((uint16_t *) r) - *((uint16_t *) l); }
->                 ^
-> ../drivers/md/bcache/sysfs.c:789:32: error: use of undeclared identifier 'cmp'
->                 sort(p, n, sizeof(uint16_t), cmp, NULL);
->                                              ^
-> 2 errors generated.
-> 
-> v2:
-> rename function to __bch_cache_cmp
-> 
-> Signed-off-by: Peter Foley <pefoley2@pefoley.com>
-> ---
->  drivers/md/bcache/sysfs.c | 10 ++++++----
->  1 file changed, 6 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/md/bcache/sysfs.c b/drivers/md/bcache/sysfs.c
-> index b3ff57d61dde..8f12089a69e7 100644
-> --- a/drivers/md/bcache/sysfs.c
-> +++ b/drivers/md/bcache/sysfs.c
-> @@ -731,6 +731,11 @@ static struct attribute *bch_cache_set_internal_files[] = {
->  };
->  KTYPE(bch_cache_set_internal);
->  
-> +static int __bch_cache_cmp(const void *l, const void *r)
-> +{
-> +	return *((uint16_t *)r) - *((uint16_t *)l);
-> +}
-> +
->  SHOW(__bch_cache)
->  {
->  	struct cache *ca = container_of(kobj, struct cache, kobj);
-> @@ -755,9 +760,6 @@ SHOW(__bch_cache)
->  					       CACHE_REPLACEMENT(&ca->sb));
->  
->  	if (attr == &sysfs_priority_stats) {
-> -		int cmp(const void *l, const void *r)
-> -		{	return *((uint16_t *) r) - *((uint16_t *) l); }
-> -
->  		struct bucket *b;
->  		size_t n = ca->sb.nbuckets, i;
->  		size_t unused = 0, available = 0, dirty = 0, meta = 0;
-> @@ -786,7 +788,7 @@ SHOW(__bch_cache)
->  			p[i] = ca->buckets[i].prio;
->  		mutex_unlock(&ca->set->bucket_lock);
->  
-> -		sort(p, n, sizeof(uint16_t), cmp, NULL);
-> +		sort(p, n, sizeof(uint16_t), __bch_cache_cmp, NULL);
->  
->  		while (n &&
->  		       !cached[n - 1])
-> 
+On Sun, Nov 27, 2016 at 8:24 AM, Avi Kivity <avi@scylladb.com> wrote:
+> mkfs /dev/md0 can take a very long time, if /dev/md0 is a very large disk
+> that supports TRIM/DISCARD (erase whichever is inappropriate)
 
-Acked-by: Coly Li <colyli@suse.de>
+Trim is the appropriate term. Term discard refers to a specific mount
+time implementation of FITRIM ioctl, and fstrim refers to a user space
+tool that does the same and can be scheduled or issued manually.
+
+
+
+  That is
+> because mkfs issues a TRIM/DISCARD (erase whichever is inappropriate) for
+> the entire partition. As far as I can tell, md converts the large
+> TRIM/DISCARD (erase whichever is inappropriate) into a large number of
+> TRIM/DISCARD (erase whichever is inappropriate) requests, one per chunk-size
+> worth of disk, and issues them to the RAID components individually.
+
+You could strace the mkfs command. Each filesystem is doing it a
+little differently the last time I compared mkfs.xfs and mkfs.btrfs;
+but I can't qualify the differences relative to how the device is
+going to react to those commands.
+
+It's also possible to enable block device tracing and see the actual
+SCSI or ATA commands sent to a drive.
+
+There's a metric f tonne of bugs in this area so before anything I'd
+consider researching if there's a firmware update for your hardware
+and applying that and retesting. And then also after testing your
+ideal deployed version, use something much close to upstream (Arch or
+Fedora) and see if the problem is reproducible.
+
+
 
 -- 
-Coly Li
+Chris Murphy
