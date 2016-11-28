@@ -1,7 +1,7 @@
 From: JackieLiu <liuyun01@kylinos.cn>
-Subject: [PATCH 3/4] md/raid5-cache: release the stripe_head at the appropriate location
-Date: Mon, 28 Nov 2016 16:19:20 +0800
-Message-ID: <20161128081921.5641-3-liuyun01@kylinos.cn>
+Subject: [PATCH 4/4] md/raid5-cache: adjust the write position of the empty block and mark it as a checkpoint
+Date: Mon, 28 Nov 2016 16:19:21 +0800
+Message-ID: <20161128081921.5641-4-liuyun01@kylinos.cn>
 References: <20161128081921.5641-1-liuyun01@kylinos.cn>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20161128081921.5641-1-liuyun01@kylinos.cn>
@@ -10,73 +10,75 @@ To: songliubraving@fb.com
 Cc: liuzhengyuan@kylinos.cn, linux-raid@vger.kernel.org, JackieLiu <liuyun01@kylinos.cn>
 List-Id: linux-raid.ids
 
-If we released the 'stripe_head' in r5c_recovery_flush_log,
-ctx->cached_list will both release the data-parity stripes and
-data-only stripes, which will become empty.
-And we also need to use the data-only stripes in
-r5c_recovery_rewrite_data_only_stripes, so we should wait util rewrite
-data-only stripes is done before releasing them.
+When recovery is complete, we write an empty block and record his
+position first, then make the data-only stripes rewritten done,
+the location of the empty block as the last checkpoint position
+to write into the super block. And we should update last_checkpoint
+to this empty block position.
+
+------------------------------------------------------------------
+|  old log       | empty block | data only stripes | invalid log |
+------------------------------------------------------------------
+^                ^                                 ^
+|                |- log->last_checkpoint           |- log->log_start
+|                |- log->last_cp_seq               |- log->next_checkpoint
+|- log->seq=n    |- log->seq=10+n
+
+At the same time, if there is no data-only stripes, this scene may appear,
+| meta1 | meta2 | meta3 |
+meta 1 is valid, meta 2 is invalid. meta 3 could be valid. so we should 
+The solution is we create a new meta in meta2 with its seq == meta1's 
+seq + 10 and let superblock points to meta2. 
 
 Reviewed-by: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
 Signed-off-by: JackieLiu <liuyun01@kylinos.cn>
 ---
- drivers/md/raid5-cache.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ drivers/md/raid5-cache.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 6d2b1da..9e72180 100644
+index 9e72180..20594f7 100644
 --- a/drivers/md/raid5-cache.c
 +++ b/drivers/md/raid5-cache.c
-@@ -1950,7 +1950,7 @@ static void r5c_recovery_load_one_stripe(struct r5l_log *log,
- static int r5c_recovery_flush_log(struct r5l_log *log,
- 				  struct r5l_recovery_ctx *ctx)
- {
--	struct stripe_head *sh, *next;
-+	struct stripe_head *sh;
- 	int ret = 0;
- 
- 	/* scan through the log */
-@@ -1979,11 +1979,9 @@ static int r5c_recovery_flush_log(struct r5l_log *log,
- 	r5c_recovery_replay_stripes(&ctx->cached_list, ctx);
- 
- 	/* load data-only stripes to stripe cache */
--	list_for_each_entry_safe(sh, next, &ctx->cached_list, lru) {
-+	list_for_each_entry(sh, &ctx->cached_list, lru) {
- 		WARN_ON(!test_bit(STRIPE_R5C_CACHING, &sh->state));
- 		r5c_recovery_load_one_stripe(log, sh);
--		list_del_init(&sh->lru);
--		raid5_release_stripe(sh);
- 		ctx->data_only_stripes++;
+@@ -2072,7 +2072,6 @@ r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
+ 		return -ENOMEM;
  	}
  
-@@ -2063,7 +2061,7 @@ static int
- r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
- 				       struct r5l_recovery_ctx *ctx)
- {
--	struct stripe_head *sh;
-+	struct stripe_head *sh, *next;
- 	struct mddev *mddev = log->rdev->mddev;
- 	struct page *page;
- 
-@@ -2075,7 +2073,7 @@ r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
- 	}
- 
- 	ctx->seq += 10;
--	list_for_each_entry(sh, &ctx->cached_list, lru) {
-+	list_for_each_entry_safe(sh, next, &ctx->cached_list, lru) {
+-	ctx->seq += 10;
+ 	list_for_each_entry_safe(sh, next, &ctx->cached_list, lru) {
  		struct r5l_meta_block *mb;
  		int i;
- 		int offset;
-@@ -2121,6 +2119,9 @@ r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
- 		sh->log_start = ctx->pos;
- 		ctx->pos = write_pos;
- 		ctx->seq += 1;
+@@ -2132,6 +2131,7 @@ static int r5l_recovery_log(struct r5l_log *log)
+ 	struct mddev *mddev = log->rdev->mddev;
+ 	struct r5l_recovery_ctx ctx;
+ 	int ret;
++	sector_t pos;
+ 
+ 	ctx.pos = log->last_checkpoint;
+ 	ctx.seq = log->last_cp_seq;
+@@ -2149,6 +2149,10 @@ static int r5l_recovery_log(struct r5l_log *log)
+ 	if (ret)
+ 		return ret;
+ 
++	pos = ctx.pos;
++	r5l_log_write_empty_meta_block(log, ctx.pos, (ctx.seq += 10));
++	ctx.pos = r5l_ring_add(log, ctx.pos, BLOCK_SECTORS);
 +
-+		list_del_init(&sh->lru);
-+		raid5_release_stripe(sh);
- 	}
- 	__free_page(page);
+ 	if ((ctx.data_only_stripes == 0) && (ctx.data_parity_stripes == 0))
+ 		pr_debug("md/raid:%s: starting from clean shutdown\n",
+ 			 mdname(mddev));
+@@ -2167,9 +2171,9 @@ static int r5l_recovery_log(struct r5l_log *log)
+ 
+ 	log->log_start = ctx.pos;
+ 	log->next_checkpoint = ctx.pos;
++	log->last_checkpoint = pos;
+ 	log->seq = ctx.seq;
+-	r5l_log_write_empty_meta_block(log, ctx.pos, ctx.seq);
+-	r5l_write_super(log, ctx.pos);
++	r5l_write_super(log, pos);
  	return 0;
+ }
+ 
 -- 
 2.7.4
 
