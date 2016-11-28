@@ -1,27 +1,64 @@
-From: Arka Sharma <arka.sw1988@gmail.com>
-Subject: Testing RAID 1 redundancy
-Date: Mon, 28 Nov 2016 14:50:18 +0530
-Message-ID: <CAPO=kN2kcPA++DXw3H=S0+PrcVhJptBqAhX39uY7ZY-Q0VaJHQ@mail.gmail.com>
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Subject: Re: [RFC PATCH] crypto: Add IV generation algorithms
+Date: Mon, 28 Nov 2016 20:47:23 +0800
+Message-ID: <20161128124722.GB2257@gondor.apana.org.au>
+References: <1479723009-11113-1-git-send-email-binoy.jayan@linaro.org>
+ <1479723009-11113-2-git-send-email-binoy.jayan@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-crypto-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1479723009-11113-2-git-send-email-binoy.jayan@linaro.org>
+Sender: linux-crypto-owner@vger.kernel.org
+To: Binoy Jayan <binoy.jayan@linaro.org>
+Cc: Oded <oded.golombek@arm.com>, Ofir <Ofir.Drang@arm.com>, "David S. Miller" <davem@davemloft.net>, linux-crypto@vger.kernel.org, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+On Mon, Nov 21, 2016 at 03:40:09PM +0530, Binoy Jayan wrote:
+> Currently, the iv generation algorithms are implemented in dm-crypt.c.
+> The goal is to move these algorithms from the dm layer to the kernel
+> crypto layer by implementing them as template ciphers so they can be used
+> in relation with algorithms like aes, and with multiple modes like cbc,
+> ecb etc. As part of this patchset, the iv-generation code is moved from the
+> dm layer to the crypto layer. The dm-layer can later be optimized to
+> encrypt larger block sizes in a single call to the crypto engine. The iv
+> generation algorithms implemented in geniv.c includes plain, plain64,
+> essiv, benbi, null, lmk and tcw. These templates are to be configured
+> and has to be invoked as:
+> 
+> crypto_alloc_skcipher("plain(cbc(aes))", 0, 0);
+> crypto_alloc_skcipher("essiv(cbc(aes))", 0, 0);
+> ...
+> 
+> from the dm layer.
+> 
+> Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
 
-I want test a redundancy scenario with RAID 1. I have crated an array
-with mdadm and formatted ext4 and after mounting I have written a text
-file. Now I want to switch off one device, and with another remaining
-device I expect to view the text file. When I issue mdadm --detail it
-shows the State as active,FAILED,Not Started. But in dmesg I can't
-find any error message from md related to one of the physical disk
-missing. I was searching about this and I found some references of
-creating degraded RAID 1 with missing parameter in mdadm, but what I
-want to simulate is that let's say one of the disk has gone bad and
-not yet being detected under /dev and in this case we want to verify
-that if data is intact.
+Thanks a lot for working on this!
 
-Regards,
-Arka
+> +static int crypto_geniv_set_ctx(struct crypto_skcipher *cipher,
+> +				void *newctx, unsigned int len)
+> +{
+> +	struct geniv_ctx *ctx = crypto_skcipher_ctx(cipher);
+> +	/*
+> +	 * TODO:
+> +	 * Do we really need this API or can we append the context
+> +	 * 'struct geniv_ctx' to the cipher from dm-crypt and use
+> +	 * the same here.
+> +	 */
+> +	memcpy(ctx, (char *) newctx, len);
+> +	return geniv_setkey_init_ctx(&ctx->data);
+> +}
+
+I think we should be able to do without adding another API for this.
+Can we instead put the information into the key and/or the IV?
+
+Also it would really help if you could attach a patch for dm-crypt
+that goes along with this (it doesn't have to be complete or
+functional, just showing how this is meant to be used)
+
+Thanks,
+-- 
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
