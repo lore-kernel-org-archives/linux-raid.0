@@ -1,49 +1,63 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: raid0 vs. mkfs
-Date: Sun, 27 Nov 2016 21:11:16 -0700
-Message-ID: <CAJCQCtR+PnJXq9k37V1pXVO4UmW0dbhvAZYo=Pius2eCz9X_kg@mail.gmail.com>
-References: <56c83c4e-d451-07e5-88e2-40b085d8681c@scylladb.com>
+From: Coly Li <colyli@suse.de>
+Subject: Re: [PATCH] md/raid5: limit request size according to implementation
+ limits
+Date: Mon, 28 Nov 2016 12:40:15 +0800
+Message-ID: <e4f231db-6e4b-3d7f-e7a0-362dc4441823@suse.de>
+References: <148026435214.19980.7956943898609877817.stgit@buzz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56c83c4e-d451-07e5-88e2-40b085d8681c@scylladb.com>
+In-Reply-To: <148026435214.19980.7956943898609877817.stgit@buzz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Avi Kivity <avi@scylladb.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Cc: Shaohua Li <shli@kernel.org>, Neil Brown <neilb@suse.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Nov 27, 2016 at 8:24 AM, Avi Kivity <avi@scylladb.com> wrote:
-> mkfs /dev/md0 can take a very long time, if /dev/md0 is a very large disk
-> that supports TRIM/DISCARD (erase whichever is inappropriate)
+On 2016/11/28 上午12:32, Konstantin Khlebnikov wrote:
+> Current implementation employ 16bit counter of active stripes in lower
+> bits of bio->bi_phys_segments. If request is big enough to overflow
+> this counter bio will be completed and freed too early.
+> 
+> Fortunately this not happens in default configuration because several
+> other limits prevent that: stripe_cache_size * nr_disks effectively
+> limits count of active stripes. And small max_sectors_kb at lower
+> disks prevent that during normal read/write operations.
+> 
+> Overflow easily happens in discard if it's enabled by module parameter
+> "devices_handle_discard_safely" and stripe_cache_size is set big enough.
+> 
+> This patch limits requests size with 256Mb - 8Kb to prevent overflows.
+> 
+> Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+> Cc: Shaohua Li <shli@kernel.org>
+> Cc: Neil Brown <neilb@suse.com>
+> Cc: stable@vger.kernel.org
+> ---
+>  drivers/md/raid5.c |    9 +++++++++
+>  1 file changed, 9 insertions(+)
+> 
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 92ac251e91e6..cce6057b9aca 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -6984,6 +6984,15 @@ static int raid5_run(struct mddev *mddev)
+>  			stripe = (stripe | (stripe-1)) + 1;
+>  		mddev->queue->limits.discard_alignment = stripe;
+>  		mddev->queue->limits.discard_granularity = stripe;
+> +
+> +		/*
+> +		 * We use 16-bit counter of active stripes in bi_phys_segments
+> +		 * (minus one for over-loaded initialization)
+> +		 */
+> +		blk_queue_max_hw_sectors(mddev->queue, 0xfffe * STRIPE_SECTORS);
+> +		blk_queue_max_discard_sectors(mddev->queue,
+> +					      0xfffe * STRIPE_SECTORS);
+> +
 
-Trim is the appropriate term. Term discard refers to a specific mount
-time implementation of FITRIM ioctl, and fstrim refers to a user space
-tool that does the same and can be scheduled or issued manually.
+Could you please to explain why use 0xfffe * STRIPE_SECTORS here ?
 
+Thanks.
 
+Coly
 
-  That is
-> because mkfs issues a TRIM/DISCARD (erase whichever is inappropriate) for
-> the entire partition. As far as I can tell, md converts the large
-> TRIM/DISCARD (erase whichever is inappropriate) into a large number of
-> TRIM/DISCARD (erase whichever is inappropriate) requests, one per chunk-size
-> worth of disk, and issues them to the RAID components individually.
-
-You could strace the mkfs command. Each filesystem is doing it a
-little differently the last time I compared mkfs.xfs and mkfs.btrfs;
-but I can't qualify the differences relative to how the device is
-going to react to those commands.
-
-It's also possible to enable block device tracing and see the actual
-SCSI or ATA commands sent to a drive.
-
-There's a metric f tonne of bugs in this area so before anything I'd
-consider researching if there's a firmware update for your hardware
-and applying that and retesting. And then also after testing your
-ideal deployed version, use something much close to upstream (Arch or
-Fedora) and see if the problem is reproducible.
-
-
-
--- 
-Chris Murphy
