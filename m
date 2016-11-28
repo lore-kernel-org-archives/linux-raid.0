@@ -1,85 +1,61 @@
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
 Subject: Re: [PATCH 1/4 v2] mdadm: bad block support for external metadata - initialization
-Date: Mon, 28 Nov 2016 08:34:28 -0500
-Message-ID: <wrfjr35vpw2j.fsf@redhat.com>
+Date: Mon, 28 Nov 2016 08:43:28 -0500
+Message-ID: <wrfjk2bnpvnj.fsf@redhat.com>
 References: <1477558425-13332-1-git-send-email-tomasz.majchrzak@intel.com>
+        <20161124140103.GA8047@proton.igk.intel.com>
+        <wrfjh96wub5r.fsf@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1477558425-13332-1-git-send-email-tomasz.majchrzak@intel.com>
-        (Tomasz Majchrzak's message of "Thu, 27 Oct 2016 10:53:42 +0200")
+In-Reply-To: <wrfjh96wub5r.fsf@redhat.com> (Jes Sorensen's message of "Thu, 24
+        Nov 2016 10:53:36 -0500")
 Sender: linux-raid-owner@vger.kernel.org
 To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Tomasz Majchrzak <tomasz.majchrzak@intel.com> writes:
-> If metadata handler provides support for bad blocks, tell md by writing
-> 'external_bbl' to rdev state file (both on create and assemble),
-> followed by a list of known bad blocks written via sysfs 'bad_blocks'
-> file.
+Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+> Tomasz Majchrzak <tomasz.majchrzak@intel.com> writes:
+>> On Thu, Oct 27, 2016 at 10:53:42AM +0200, Tomasz Majchrzak wrote:
+>>> If metadata handler provides support for bad blocks, tell md by writing
+>>> 'external_bbl' to rdev state file (both on create and assemble),
+>>> followed by a list of known bad blocks written via sysfs 'bad_blocks'
+>>> file.
+>>> 
+>>> Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+>>> Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+>>> ---
+>>>  mdadm.h | 13 +++++++++++++
+>>>  sysfs.c | 29 ++++++++++++++++++++++++++++-
+>>>  2 files changed, 41 insertions(+), 1 deletion(-)
+>>
+>> Hi Jes,
+>>
+>> Do you have any comments for this patch set? It is a generic code for bad
+>> block support for external metadata. It comes ahead of my other patch set
+>> which provides IMSM implementation of new functionality.
+>>
+>> Regards,
+>>
+>> Tomek
 >
-> Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-> Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-> ---
->  mdadm.h | 13 +++++++++++++
->  sysfs.c | 29 ++++++++++++++++++++++++++++-
->  2 files changed, 41 insertions(+), 1 deletion(-)
+> Hi Tomek,
+>
+> I thought I had responded to this one - I'll have a look early next week
+> (holiday here).
 
-Hi Tomasz,
+Tomek,
 
-Most of this one looks fine, just one minor nit.
+It mostly look fine, there is a nitpick in patch 1/4. In general I
+discourage the use of unnecessary parenthesis in multi case if
+statements, but it's not a showstopper. Ie.
+ if ((foo == x) && (bar != y))
 
-> diff --git a/mdadm.h b/mdadm.h
-> index 0516c82..5156ea4 100755
-> --- a/mdadm.h
-> +++ b/mdadm.h
-> @@ -237,6 +237,17 @@ struct dlm_lksb {
->  
->  extern const char Name[];
->  
-> +struct md_bb_entry {
-> +	unsigned long long sector;
-> +	int length;
-> +};
-> +
-> +struct md_bb {
-> +	int supported;
-> +	int count;
-> +	struct md_bb_entry *entries;
-> +};
-> +
->  /* general information that might be extracted from a superblock */
->  struct mdinfo {
->  	mdu_array_info_t	array;
-> @@ -311,6 +322,8 @@ struct mdinfo {
->  
->  	/* info read from sysfs */
->  	char		sysfs_array_state[20];
-> +
-> +	struct md_bb bb;
->  };
->  
->  struct createinfo {
-> diff --git a/sysfs.c b/sysfs.c
-> index d28e21a..c7a8e66 100644
-> --- a/sysfs.c
-> +++ b/sysfs.c
-> @@ -50,8 +50,12 @@ void sysfs_free(struct mdinfo *sra)
->  		while (sra->devs) {
->  			struct mdinfo *d = sra->devs;
->  			sra->devs = d->next;
-> +			if (d->bb.entries)
-> +				free(d->bb.entries);
->  			free(d);
->  		}
-> +		if (sra->bb.entries)
-> +			free(sra->bb.entries);
->  		free(sra);
->  		sra = sra2;
->  	}
+If you send me an updated 1/4 then I should be able to apply it.
 
-free() handles NULL pointers, so no need to check first.
+and of course, always use a cover letter when sending out multi-patch
+sets in the future.
 
 Cheers,
 Jes
