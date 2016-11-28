@@ -1,117 +1,74 @@
-From: Avi Kivity <avi@scylladb.com>
-Subject: Re: raid0 vs. mkfs
-Date: Mon, 28 Nov 2016 09:38:30 +0200
-Message-ID: <286a5fc1-eda3-0421-a88e-b03c09403259@scylladb.com>
-References: <56c83c4e-d451-07e5-88e2-40b085d8681c@scylladb.com>
- <87oa108a1x.fsf@notabene.neil.brown.name>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+From: JackieLiu <liuyun01@kylinos.cn>
+Subject: [PATCH 1/4] md/raid5-cache: remove unnecessary function parameters
+Date: Mon, 28 Nov 2016 16:19:18 +0800
+Message-ID: <20161128081921.5641-1-liuyun01@kylinos.cn>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87oa108a1x.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
+To: songliubraving@fb.com
+Cc: liuzhengyuan@kylinos.cn, linux-raid@vger.kernel.org, JackieLiu <liuyun01@kylinos.cn>
 List-Id: linux-raid.ids
 
-On 11/28/2016 07:09 AM, NeilBrown wrote:
-> On Mon, Nov 28 2016, Avi Kivity wrote:
->
->> mkfs /dev/md0 can take a very long time, if /dev/md0 is a very large
->> disk that supports TRIM/DISCARD (erase whichever is inappropriate).
->> That is because mkfs issues a TRIM/DISCARD (erase whichever is
->> inappropriate) for the entire partition. As far as I can tell, md
->> converts the large TRIM/DISCARD (erase whichever is inappropriate) into
->> a large number of TRIM/DISCARD (erase whichever is inappropriate)
->> requests, one per chunk-size worth of disk, and issues them to the RAID
->> components individually.
->>
->>
->> It seems to me that md can convert the large TRIM/DISCARD (erase
->> whichever is inappropriate) request it gets into one TRIM/DISCARD (erase
->> whichever is inappropriate) per RAID component, converting an O(disk
->> size / chunk size) operation into an O(number of RAID components)
->> operation, which is much faster.
->>
->>
->> I observed this with mkfs.xfs on a RAID0 of four 3TB NVMe devices, with
->> the operation taking about a quarter of an hour, continuously pushing
->> half-megabyte TRIM/DISCARD (erase whichever is inappropriate) requests
->> to the disk. Linux 4.1.12.
-> Surely it is the task of the underlying driver, or the queuing
-> infrastructure, to merge small requests into large requests.
+The function parameter 'recovery_list' is not used in
+body, we can delete it
 
-Here's a blkparse of that run.  As can be seen, there is no concurrency, 
-so nobody down the stack has any chance of merging anything.
+Signed-off-by: JackieLiu <liuyun01@kylinos.cn>
+---
+ drivers/md/raid5-cache.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-259,1   10     1090     0.379688898  4801  Q   D 3238067200 + 1024 
-[mkfs.xfs]
-259,1   10     1091     0.379689222  4801  G   D 3238067200 + 1024 
-[mkfs.xfs]
-259,1   10     1092     0.379690304  4801  I   D 3238067200 + 1024 
-[mkfs.xfs]
-259,1   10     1093     0.379703110  2307  D   D 3238067200 + 1024 
-[kworker/10:1H]
-259,1    1      589     0.379718918     0  C   D 3231849472 + 1024 [0]
-259,1   10     1094     0.379735215  4801  Q   D 3238068224 + 1024 
-[mkfs.xfs]
-259,1   10     1095     0.379735548  4801  G   D 3238068224 + 1024 
-[mkfs.xfs]
-259,1   10     1096     0.379736598  4801  I   D 3238068224 + 1024 
-[mkfs.xfs]
-259,1   10     1097     0.379753077  2307  D   D 3238068224 + 1024 
-[kworker/10:1H]
-259,1    1      590     0.379782139     0  C   D 3231850496 + 1024 [0]
-259,1   10     1098     0.379785399  4801  Q   D 3238069248 + 1024 
-[mkfs.xfs]
-259,1   10     1099     0.379785657  4801  G   D 3238069248 + 1024 
-[mkfs.xfs]
-259,1   10     1100     0.379786562  4801  I   D 3238069248 + 1024 
-[mkfs.xfs]
-259,1   10     1101     0.379800116  2307  D   D 3238069248 + 1024 
-[kworker/10:1H]
-259,1   10     1102     0.379829822  4801  Q   D 3238070272 + 1024 
-[mkfs.xfs]
-259,1   10     1103     0.379830156  4801  G   D 3238070272 + 1024 
-[mkfs.xfs]
-259,1   10     1104     0.379831015  4801  I   D 3238070272 + 1024 
-[mkfs.xfs]
-259,1   10     1105     0.379844120  2307  D   D 3238070272 + 1024 
-[kworker/10:1H]
-259,1   10     1106     0.379877825  4801  Q   D 3238071296 + 1024 
-[mkfs.xfs]
-259,1   10     1107     0.379878173  4801  G   D 3238071296 + 1024 
-[mkfs.xfs]
-259,1   10     1108     0.379879028  4801  I   D 3238071296 + 1024 
-[mkfs.xfs]
-259,1    1      591     0.379886451     0  C   D 3231851520 + 1024 [0]
-259,1   10     1109     0.379898178  2307  D   D 3238071296 + 1024 
-[kworker/10:1H]
-259,1   10     1110     0.379923982  4801  Q   D 3238072320 + 1024 
-[mkfs.xfs]
-259,1   10     1111     0.379924229  4801  G   D 3238072320 + 1024 
-[mkfs.xfs]
-259,1   10     1112     0.379925054  4801  I   D 3238072320 + 1024 
-[mkfs.xfs]
-259,1   10     1113     0.379937716  2307  D   D 3238072320 + 1024 
-[kworker/10:1H]
-259,1    1      592     0.379954380     0  C   D 3231852544 + 1024 [0]
-259,1   10     1114     0.379970091  4801  Q   D 3238073344 + 1024 
-[mkfs.xfs]
-259,1   10     1115     0.379970341  4801  G   D 3238073344 + 1024 
-[mkfs.xfs]
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 5f817bd..576c88d 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -67,7 +67,7 @@ static char *r5c_journal_mode_str[] = {"write-through",
+ /*
+  * raid5 cache state machine
+  *
+- * With rhe RAID cache, each stripe works in two phases:
++ * With the RAID cache, each stripe works in two phases:
+  *	- caching phase
+  *	- writing-out phase
+  *
+@@ -1674,7 +1674,6 @@ r5l_recovery_replay_one_stripe(struct r5conf *conf,
+ 
+ static struct stripe_head *
+ r5c_recovery_alloc_stripe(struct r5conf *conf,
+-			  struct list_head *recovery_list,
+ 			  sector_t stripe_sect,
+ 			  sector_t log_start)
+ {
+@@ -1855,8 +1854,7 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
+ 						stripe_sect);
+ 
+ 		if (!sh) {
+-			sh = r5c_recovery_alloc_stripe(conf, cached_stripe_list,
+-						       stripe_sect, ctx->pos);
++			sh = r5c_recovery_alloc_stripe(conf, stripe_sect, ctx->pos);
+ 			/*
+ 			 * cannot get stripe from raid5_get_active_stripe
+ 			 * try replay some stripes
+@@ -1865,8 +1863,7 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
+ 				r5c_recovery_replay_stripes(
+ 					cached_stripe_list, ctx);
+ 				sh = r5c_recovery_alloc_stripe(
+-					conf, cached_stripe_list,
+-					stripe_sect, ctx->pos);
++					conf, stripe_sect, ctx->pos);
+ 			}
+ 			if (!sh) {
+ 				pr_debug("md/raid:%s: Increasing stripe cache size to %d to recovery data on journal.\n",
+@@ -1875,8 +1872,7 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
+ 				raid5_set_cache_size(mddev,
+ 						     conf->min_nr_stripes * 2);
+ 				sh = r5c_recovery_alloc_stripe(
+-					conf, cached_stripe_list, stripe_sect,
+-					ctx->pos);
++					conf, stripe_sect, ctx->pos);
+ 			}
+ 			if (!sh) {
+ 				pr_err("md/raid:%s: Cannot get enough stripes due to memory pressure. Recovery failed.\n",
+-- 
+2.7.4
 
 
-No merging was happening.  This is an NVMe drive, so running with the 
-noop scheduler (which should still merge).   Does the queuing layer 
-merge trims?
-
-I don't think it's the queuing layer's job, though.  At the I/O 
-scheduler you can merge to clean up sloppy patterns from the upper 
-layer, but each layer should try to generate the best pattern it can.  
-Large merges mean increased latency for the first request in the chain, 
-forcing the I/O scheduler to make a decision which can harm the 
-workload.  By generating merged requests in the first place, the upper 
-layer removes the need to make that tradeoff (splitting the requests 
-removes information: "we are interested only in when all of the range is 
-trimmed, not any particular request").
 
