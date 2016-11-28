@@ -1,55 +1,54 @@
-From: "Randall C. Grimshaw" <rgrimsha@esf.edu>
-Subject: RE: md prefered minor has been renumbered
-Date: Mon, 28 Nov 2016 20:34:24 +0000
-Message-ID: <BC4985417D7F7B49B9AB545333BDB61B191FE20C@Exchange-MBX1.esf.edu>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: md prefered minor has been renumbered
+Date: Mon, 28 Nov 2016 20:39:17 +0000
+Message-ID: <583C95F5.9000701@youngman.org.uk>
 References: <BC4985417D7F7B49B9AB545333BDB61B191FE1A2@Exchange-MBX1.esf.edu>
- <BC4985417D7F7B49B9AB545333BDB61B191FE1BC@Exchange-MBX1.esf.edu>,<91b64061-6026-c738-75a6-8d80a177aec8@turmel.org>
+ <BC4985417D7F7B49B9AB545333BDB61B191FE1BC@Exchange-MBX1.esf.edu>
+ <583C8D73.5060406@youngman.org.uk>
+ <7b7ed841-7fe7-627d-bdb5-edb8c7d6a894@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <91b64061-6026-c738-75a6-8d80a177aec8@turmel.org>
-Content-Language: en-US
+In-Reply-To: <7b7ed841-7fe7-627d-bdb5-edb8c7d6a894@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Phil Turmel <philip@turmel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Phil:
-  Thank you for responding, it is much appreciated.
-  This is a recently assigned system so I must apologize for not having all of the history re fstab.
-  But when I try to boot into the 'normal' system it continues to use the new numbering, the mounts fail, (the duplicate md122 obviously fails), and the system panics.
-  I suspect the answer will have something to do with the command I googled: mdadm -A --update=superminor /dev/mdNEWNUMBER  /dev/sd...
-.. but I have zero experience with it.
-Randall
+On 28/11/16 20:22, Phil Turmel wrote:
+> On 11/28/2016 03:02 PM, Wols Lists wrote:
+> 
+>> In My Experience (I'll probably get told I'm wrong :-) mdadm.conf seems
+>> to be pretty much ignored by modern systems. And md numbers now by
+>> default count down from 127, not up from 0.
+> 
+> mdadm.conf is *not* ignored.  Defaults are taken if it isn't found, or
+> doesn't contain the info needed.
 
-________________________________________
-From: Phil Turmel [philip@turmel.org]
-Sent: Monday, November 28, 2016 2:58 PM
-To: Randall C. Grimshaw; linux-raid@vger.kernel.org
-Subject: Re: md prefered minor has been renumbered
+I did say IME :-)
+> 
+> Most modern systems have two copies of mdadm.conf.  One in the initramfs
+> so you can boot a root filesystem that is inside an array, and the other
+> in your root filesystem to assemble everything else.
 
-On 11/28/2016 12:26 PM, Randall C. Grimshaw wrote:
-> I have made the mistake of booting a centos-6.8 live cd to manipulate a centos 5 system.
-> as a result md5 has become md122, md2 has become md125, md4 has become md126, md0 has become md127, and most unfortunately md3 has also become md122.
+Mine don't appear to have any ... and when I've tried to create one, it
+was ignored. Of course, that doesn't rule out incompetence on my part
+:-) But it means the defaults are perfectly okay for me :-) and probably
+most people most of the time ...
+> 
+> Most distros copy the latter to the former when updating the initramfs.
+> You may have to manually trigger this operation when you are
+> re-arranging your arrays.
+> 
+> You also have to manually intervene if you want your initramfs to have
+> a different mdadm.conf, like a two-phase assembly.
+> 
+> mdadm has been counting down from 127 for as long as I've used it.
 
-This is normal and expected for a livecd -- the numbering comes from the
-mdadm.conf file in the initramfs, unless that mdadm.conf file excludes
-arrays for later assembly (when the rootfs is available).
-
-Many livecd initramfs scripts try to assemble everything, so the numbers
-are allocated from 127 down.  Usually you can find a boot parameter to
-suppress assembly.
-
-> smartctl shows that the WD brand drives do support SCT
-> mdadm --examine was used to reveal the mish-mash using uuid numbers compared with the file /etc/mdadm.conf also referencing /etc/fstab.
-
-Eww.  You should not be counting on /dev/mdX numbering in your fstab.
-Specifically for this reason.  Use LABEL= or UUID= syntax in fstab.
-
-> can someone kindly tell me the mdadm command to put the correct numbers back.
-
-No need.  When you boot back into your normal system, its initramfs will
-supply this information.  If you are changing the info, make sure you
-rebuild your initramfs, so the updated mdadm.conf file is included.
-
-Phil
+I think I created several of my arrays as md0/1/2. And they stayed that
+way for a little while before deciding to renumber.
+> 
+> Phil
+> 
+Cheers,
+Wol
