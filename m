@@ -1,119 +1,33 @@
-From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: [PATCH 1/4] mdadm: bad block support for external metadata - initialization
-Date: Mon, 28 Nov 2016 15:07:05 +0100
-Message-ID: <1480342025-19508-1-git-send-email-tomasz.majchrzak@intel.com>
-References: <wrfjr35vpw2j.fsf@redhat.com>
+From: "Randall C. Grimshaw" <rgrimsha@esf.edu>
+Subject: md prefered minor has been renumbered
+Date: Mon, 28 Nov 2016 17:26:56 +0000
+Message-ID: <BC4985417D7F7B49B9AB545333BDB61B191FE1BC@Exchange-MBX1.esf.edu>
+References: <BC4985417D7F7B49B9AB545333BDB61B191FE1A2@Exchange-MBX1.esf.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjr35vpw2j.fsf@redhat.com>
+In-Reply-To: <BC4985417D7F7B49B9AB545333BDB61B191FE1A2@Exchange-MBX1.esf.edu>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Jes.Sorensen@redhat.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-If metadata handler provides support for bad blocks, tell md by writing
-'external_bbl' to rdev state file (both on create and assemble),
-followed by a list of known bad blocks written via sysfs 'bad_blocks'
-file.
+I have made the mistake of booting a centos-6.8 live cd to manipulate a centos 5 system.
+as a result md5 has become md122, md2 has become md125, md4 has become md126, md0 has become md127, and most unfortunately md3 has also become md122.
 
-Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
----
- mdadm.h | 13 +++++++++++++
- sysfs.c | 27 ++++++++++++++++++++++++++-
- 2 files changed, 39 insertions(+), 1 deletion(-)
+smartctl shows that the WD brand drives do support SCT
+mdadm --examine was used to reveal the mish-mash using uuid numbers compared with the file /etc/mdadm.conf also referencing /etc/fstab.
 
-diff --git a/mdadm.h b/mdadm.h
-index 240ab7f..4aa1d30 100755
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -237,6 +237,17 @@ struct dlm_lksb {
- 
- extern const char Name[];
- 
-+struct md_bb_entry {
-+	unsigned long long sector;
-+	int length;
-+};
-+
-+struct md_bb {
-+	int supported;
-+	int count;
-+	struct md_bb_entry *entries;
-+};
-+
- /* general information that might be extracted from a superblock */
- struct mdinfo {
- 	mdu_array_info_t	array;
-@@ -311,6 +322,8 @@ struct mdinfo {
- 
- 	/* info read from sysfs */
- 	char		sysfs_array_state[20];
-+
-+	struct md_bb bb;
- };
- 
- struct createinfo {
-diff --git a/sysfs.c b/sysfs.c
-index f8a9f0b..84c7348 100644
---- a/sysfs.c
-+++ b/sysfs.c
-@@ -52,8 +52,10 @@ void sysfs_free(struct mdinfo *sra)
- 		while (sra->devs) {
- 			struct mdinfo *d = sra->devs;
- 			sra->devs = d->next;
-+			free(d->bb.entries);
- 			free(d);
- 		}
-+		free(sra->bb.entries);
- 		free(sra);
- 		sra = sra2;
- 	}
-@@ -261,7 +263,7 @@ struct mdinfo *sysfs_read(int fd, char *devnm, unsigned long options)
- 		dbase = base + strlen(base);
- 		*dbase++ = '/';
- 
--		dev = xmalloc(sizeof(*dev));
-+		dev = xcalloc(1, sizeof(*dev));
- 
- 		/* Always get slot, major, minor */
- 		strcpy(dbase, "slot");
-@@ -691,6 +693,7 @@ int sysfs_add_disk(struct mdinfo *sra, struct mdinfo *sd, int resume)
- 	char nm[PATH_MAX];
- 	char *dname;
- 	int rv;
-+	int i;
- 
- 	sprintf(dv, "%d:%d", sd->disk.major, sd->disk.minor);
- 	rv = sysfs_set_str(sra, NULL, "new_dev", dv);
-@@ -722,6 +725,28 @@ int sysfs_add_disk(struct mdinfo *sra, struct mdinfo *sd, int resume)
- 		if (resume)
- 			sysfs_set_num(sra, sd, "recovery_start", sd->recovery_start);
- 	}
-+	if (sd->bb.supported) {
-+		if (sysfs_set_str(sra, sd, "state", "external_bbl")) {
-+			/*
-+			 * backward compatibility - if kernel doesn't support
-+			 * bad blocks for external metadata, let it continue
-+			 * as long as there are none known so far
-+			 */
-+			if (sd->bb.count) {
-+				pr_err("The kernel has no support for bad blocks in external metadata\n");
-+				return -1;
-+			}
-+		}
-+
-+		for (i = 0; i < sd->bb.count; i++) {
-+			char s[30];
-+			const struct md_bb_entry *entry = &sd->bb.entries[i];
-+
-+			snprintf(s, sizeof(s) - 1, "%llu %d\n", entry->sector,
-+				 entry->length);
-+			rv |= sysfs_set_str(sra, sd, "bad_blocks", s);
-+		}
-+	}
- 	return rv;
- }
- 
--- 
-1.8.3.1
+can someone kindly tell me the mdadm command to put the correct numbers back.
 
+sda7,sdb7 (122) /dev/md5 uuid=11b7e8b7:ca181503:cf45af46:db2a5d9d /
+sda1,sdb1 (127) /dev/md0 uuid=d9a5774d:d930fbd8:cf45af46:db2a5d9d /boot
+sda3,sdb2 (125) /dev/md2 uuid=23a4116f:1d43390b:cf45af46:db2a5d9d /tmp
+sda5,sdb5 (122) /dev/md3 uuid=c89f6357:f1c7a0ef:cf45af46:db2a5d9d /var
+sda6,sdb6 (126) /dev/md4 uuid=67ad84bc:05153ebe:cf45af46:db2a5d9d /var/lib/mysql/cmdaemon_mon
+sda2,sdb2 (   1) /dev/md1 uuid=5d9f0b00:24d890eb:cf45af46:db2a5d9d swap
+sdc1                                                            /home
+
+much appreciated
+Randall Grimshaw
