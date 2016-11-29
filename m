@@ -1,80 +1,54 @@
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH 1/7] imsm: metadata changes for PPL
-Date: Tue, 29 Nov 2016 10:21:52 -0500
-Message-ID: <wrfj4m2qia5r.fsf@redhat.com>
+Subject: Re: [PATCH 3/7] imsm: PPL support
+Date: Tue, 29 Nov 2016 10:23:07 -0500
+Message-ID: <wrfjzikigvj8.fsf@redhat.com>
 References: <20161124122952.16529-1-artur.paszkiewicz@intel.com>
-        <20161124122952.16529-2-artur.paszkiewicz@intel.com>
-        <wrfjpolfjibn.fsf@redhat.com>
-        <f4ded4a5-abf2-f988-f5d0-7063f5d080d1@intel.com>
+        <20161124122952.16529-4-artur.paszkiewicz@intel.com>
+        <wrfjlgw3jh8c.fsf@redhat.com>
+        <bdf93ddb-689e-fa11-ebaa-3d5d19480d82@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f4ded4a5-abf2-f988-f5d0-7063f5d080d1@intel.com> (Artur
-        Paszkiewicz's message of "Tue, 29 Nov 2016 11:47:59 +0100")
+In-Reply-To: <bdf93ddb-689e-fa11-ebaa-3d5d19480d82@intel.com> (Artur
+        Paszkiewicz's message of "Tue, 29 Nov 2016 12:02:36 +0100")
 Sender: linux-raid-owner@vger.kernel.org
 To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Artur Paszkiewicz <artur.paszkiewicz@intel.com> writes:
-> On 11/29/2016 12:27 AM, Jes Sorensen wrote:
->> Artur Paszkiewicz <artur.paszkiewicz@intel.com> writes:
->>> @@ -189,7 +195,30 @@ struct imsm_dev {
->>>  	__u16 cache_policy;
->>>  	__u8  cng_state;
->>>  	__u8  cng_sub_state;
->>> -#define IMSM_DEV_FILLERS 10
->>> +	__u16 my_vol_raid_dev_num; /* Used in Unique volume Id for this RaidDev */
->>> +
->>> +	/* NVM_EN */
->>> +	__u8 nv_cache_mode;
->>> +	union {
->>> +		__u8 nv_cache_flags;
->>> +		struct {
->>> +		    __u8 dirty:1; /* 1 - cache is dirty, 0 - clean */
->>> +		    __u8 nvc_health:2;
->>> +		    __u8 expansion_bytes:5;
->>> +		} nvCache;
->>> +	};
->> 
->> This sets off alarm bells here - you declare a union of a u8 and a
->> matching bitfield, but do not handle bit endian bitfields. If someone
->> tried to use this on a big endian system this could get messy.
->
-> Those fields are not used in the code at all, the only thing added to
-> this structure that is used is 'rwh_policy'. The rest is to fill the
-> gaps between IMSM format in UEFI/Windows.
-
-Hi Artur,
-
-I did notice the code wasn't actually used, sorry I didn't mention
-that. However I would still prefer to see at least a comment in the code
-indicating that this would fail on BE systems.
-
->>> @@ -7565,12 +7594,15 @@ mark_checkpoint:
+> On 11/29/2016 12:51 AM, Jes Sorensen wrote:
+>>> @@ -3177,6 +3195,9 @@ static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info, char *
 >>>  
->>>  skip_mark_checkpoint:
->>>  	/* mark dirty / clean */
->>> -	if (dev->vol.dirty != !consistent) {
->>> +	if ((dev->vol.dirty & RAIDVOL_DIRTY) != !consistent) {
+>>>  		disk = &super->disks->disk;
+>>>  		info->data_offset = total_blocks(&super->disks->disk) - reserved;
+>>> +		/* mpb anchor sector - see store_imsm_mpb() */
+>>> +		info->sb_start = total_blocks(&super->disks->disk) -
+>>> +				 ((2 * super->sector_size) >> 9);
+>>>  		info->component_size = reserved;
+>>>  		info->disk.state  = is_configured(disk) ? (1 << MD_DISK_ACTIVE) : 0;
+>>>  		/* we don't change info->disk.raid_disk here because
 >> 
->> This part makes my head spin (to be honest, the original code did
->> too). I had to go write a small snipped of C to figure out what the
->> compiler does with !x given x > 0, since consistent can be 0, 1, and 2
->> here.
+>> Hi Artur,
 >> 
->> Basically for RAIDVOL_CLEAN and consistent = 0, and RAIDVOL_DIRTY and
->> consistent = 1 and 2, this statement triggers. Maybe I am just terrible
->> dense when it comes to reading obfuscated C, but could we change this
->> round to a construct that is a little easier to read?
+>> I have been sitting staring at the above for a while, and looking at
+>> store_imsm_mpb() it is not clear to me what is meant to happen here.
+>> 
+>> For 4k sector drives, aren't you pushing back sb_start way further than
+>> you are for 512 byte sector drives? Ie. you are subtracting 16 sectors
+>> for the 4k drive but only two sectors for the 512 byte sector drive?
+>> 
+>> Maybe it's because it's Monday or I lost the last of my marbles, but
+>> could you possibly enlighten me here please?
 >
-> Yes, I admit it is confusing. Does this look better?
+> Jes,
 >
-> -       if (dev->vol.dirty != !consistent) {
-> +       if (((dev->vol.dirty & RAIDVOL_DIRTY) && consistent) ||
-> +           (!(dev->vol.dirty & RAIDVOL_DIRTY) && !consistent)) {
+> You read it correctly. The reason for this is that the IMSM anchor is
+> located in the second _logical_ sector from the end of the drive. So for
+> 4k drives this will be 16 512-byte sectors from the end.
 
-This I can read without getting headache, so yes :)
+I see, so the IMSM implementation uses 512 byte logical sectors on top
+of 4k drives? Could I ask you to add a note explaining this in the code?
 
-Cheers,
+Thanks,
 Jes
