@@ -1,25 +1,40 @@
-From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Subject: Re: Is trim/discard supported on LVM RAID logical volume?
-Date: Tue, 29 Nov 2016 23:09:49 +0100
-Message-ID: <20161129220949.GA4035@metamorpher.de>
-References: <CAEtPA0ByX8yYx8xNc_=4SP0bqXVz-D4o-bM5XZF8Y6NcnqsEKQ@mail.gmail.com>
- <CAJCQCtSpOfMvgfxOFvQtM=zcOnyoqvu3GregmW9NS5j9auRuyw@mail.gmail.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [mdadm PATCH] Introduce enum flag_mode for setting and clearing flags.
+Date: Tue, 29 Nov 2016 17:12:39 -0500
+Message-ID: <wrfj60n69bqg.fsf@redhat.com>
+References: <147944614789.3302.1959091446949640579.stgit@noble>
+        <20161122020238.qtuxwo5etcwmts4r@kernel.org>
+        <87polka0vu.fsf@notabene.neil.brown.name>
+        <wrfjfumbpv7f.fsf@redhat.com>
+        <877f7m7xng.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAJCQCtSpOfMvgfxOFvQtM=zcOnyoqvu3GregmW9NS5j9auRuyw@mail.gmail.com>
+In-Reply-To: <877f7m7xng.fsf@notabene.neil.brown.name> (NeilBrown's message of
+        "Wed, 30 Nov 2016 09:02:11 +1100")
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Patrick Dung <mpatdung@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Nov 29, 2016 at 01:20:16PM -0700, Chris Murphy wrote:
-> Seen /etc/lvm/lvm.conf issue_discards is probably set to 0.
+NeilBrown <neilb@suse.com> writes:
+> We currently use '1' to indicate that a flag (writemostly or failfast)
+> needs to be set, and '2' to indicate that it needs to be cleared.
+>
+> Using magic number like this is not a best-practice.
+>
+> So replaced them with values from a enum.
+>
+> No functional change.
+>
+> Signed-off-by: NeilBrown <neilb@suse.com>
+> ---
+>
+> Ask, and you shall receive :-)
 
-It should be 0 unless you understand what it's doing and actually want it...
+Darn, are you trying ot put me to work?
 
-Don't confuse LVM's issue_discards with cryptsetup's allow_discards.
+Applied!
 
-Regards
-Andreas Klauer
+Thanks,
+Jes
