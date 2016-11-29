@@ -1,55 +1,38 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md/raid5-cache: remove the unnecessary next_cp_seq field
- from the r5l_log
-Date: Tue, 29 Nov 2016 14:37:58 -0800
-Message-ID: <20161129223758.jybulclyeascfuo3@kernel.org>
-References: <20161129031320.9025-1-liuyun01@kylinos.cn>
+Subject: Re: [PATCH] md/raid5-cache: do not need to set STRIPE_PREREAD_ACTIVE
+ repeatedly
+Date: Tue, 29 Nov 2016 14:40:12 -0800
+Message-ID: <20161129224012.wxqqxvp33vmlnncn@kernel.org>
+References: <20161129035730.12822-1-liuyun01@kylinos.cn>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20161129031320.9025-1-liuyun01@kylinos.cn>
+In-Reply-To: <20161129035730.12822-1-liuyun01@kylinos.cn>
 Sender: linux-raid-owner@vger.kernel.org
 To: JackieLiu <liuyun01@kylinos.cn>
-Cc: shli@fb.com, songliubraving@fb.com, liuzhengyuan@kylinos.cn, linux-raid@vger.kernel.org
+Cc: songliubraving@fb.com, liuzhengyuan@kylinos.cn, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Nov 29, 2016 at 11:13:20AM +0800, JackieLiu wrote:
-> The next_cp_seq field is useless, remove it.
-
-applied, thanks!
- 
+On Tue, Nov 29, 2016 at 11:57:30AM +0800, JackieLiu wrote:
+> R5c_make_stripe_write_out has set this flag, do not need to set again.
+> 
 > Signed-off-by: JackieLiu <liuyun01@kylinos.cn>
 > ---
 >  drivers/md/raid5-cache.c | 2 --
 >  1 file changed, 2 deletions(-)
 > 
 > diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index 5f817bd..95bd51e 100644
+> index 95bd51e..aa89de0 100644
 > --- a/drivers/md/raid5-cache.c
 > +++ b/drivers/md/raid5-cache.c
-> @@ -113,7 +113,6 @@ struct r5l_log {
->  	u64 seq;			/* log head sequence */
+> @@ -1247,8 +1247,6 @@ static void r5c_flush_stripe(struct r5conf *conf, struct stripe_head *sh)
+>  	atomic_inc(&conf->active_stripes);
+>  	r5c_make_stripe_write_out(sh);
 >  
->  	sector_t next_checkpoint;
-> -	u64 next_cp_seq;
->  
->  	struct mutex io_mutex;
->  	struct r5l_io_unit *current_io;	/* current io_unit accepting new data */
-> @@ -1075,7 +1074,6 @@ static bool r5l_complete_finished_ios(struct r5l_log *log)
->  			break;
->  
->  		log->next_checkpoint = io->log_start;
-> -		log->next_cp_seq = io->seq;
->  
->  		list_del(&io->log_sibling);
->  		mempool_free(io, log->io_pool);
-> -- 
-> 2.10.2
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> -	if (!test_and_set_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
+> -		atomic_inc(&conf->preread_active_stripes);
+>  	raid5_release_stripe(sh);
+>  }
+
+applied, thanks!
