@@ -1,40 +1,35 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [mdadm PATCH] Introduce enum flag_mode for setting and clearing flags.
-Date: Tue, 29 Nov 2016 17:12:39 -0500
-Message-ID: <wrfj60n69bqg.fsf@redhat.com>
-References: <147944614789.3302.1959091446949640579.stgit@noble>
-        <20161122020238.qtuxwo5etcwmts4r@kernel.org>
-        <87polka0vu.fsf@notabene.neil.brown.name>
-        <wrfjfumbpv7f.fsf@redhat.com>
-        <877f7m7xng.fsf@notabene.neil.brown.name>
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: Is trim/discard supported on LVM RAID logical volume?
+Date: Tue, 29 Nov 2016 15:21:36 -0700
+Message-ID: <CAJCQCtQk01rtPa1=_XnxS3vfhP_gB88fXFayx4T_-OkbUUBGoQ@mail.gmail.com>
+References: <CAEtPA0ByX8yYx8xNc_=4SP0bqXVz-D4o-bM5XZF8Y6NcnqsEKQ@mail.gmail.com>
+ <CAJCQCtSpOfMvgfxOFvQtM=zcOnyoqvu3GregmW9NS5j9auRuyw@mail.gmail.com> <20161129220949.GA4035@metamorpher.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <877f7m7xng.fsf@notabene.neil.brown.name> (NeilBrown's message of
-        "Wed, 30 Nov 2016 09:02:11 +1100")
+In-Reply-To: <20161129220949.GA4035@metamorpher.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Cc: Chris Murphy <lists@colorremedies.com>, Patrick Dung <mpatdung@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.com> writes:
-> We currently use '1' to indicate that a flag (writemostly or failfast)
-> needs to be set, and '2' to indicate that it needs to be cleared.
+On Tue, Nov 29, 2016 at 3:09 PM, Andreas Klauer
+<Andreas.Klauer@metamorpher.de> wrote:
+> On Tue, Nov 29, 2016 at 01:20:16PM -0700, Chris Murphy wrote:
+>> Seen /etc/lvm/lvm.conf issue_discards is probably set to 0.
 >
-> Using magic number like this is not a best-practice.
+> It should be 0 unless you understand what it's doing and actually want it...
 >
-> So replaced them with values from a enum.
->
-> No functional change.
->
-> Signed-off-by: NeilBrown <neilb@suse.com>
-> ---
->
-> Ask, and you shall receive :-)
+> Don't confuse LVM's issue_discards with cryptsetup's allow_discards.
 
-Darn, are you trying ot put me to work?
+Reading the documentation for both, they're functionally the same
+thing in that with these options the particular layer will pass on a
+trim to the next layer underneath it. So if the idea is to get trim to
+to the SSD as the original poster suggests they want, then they'd have
+to use the option at every logical device. Of course there are good
+reasons to support trim affecting one or more layers, but not pass it
+onto the physical block device.
 
-Applied!
 
-Thanks,
-Jes
+-- 
+Chris Murphy
