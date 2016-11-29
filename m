@@ -1,7 +1,7 @@
 From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: [PATCH v2 3/9] imsm: give md list of known bad blocks on startup
-Date: Tue, 29 Nov 2016 14:02:29 +0100
-Message-ID: <1480424555-31509-4-git-send-email-tomasz.majchrzak@intel.com>
+Subject: [PATCH v2 4/9] imsm: record new bad block in bad block log
+Date: Tue, 29 Nov 2016 14:02:30 +0100
+Message-ID: <1480424555-31509-5-git-send-email-tomasz.majchrzak@intel.com>
 References: <1480424555-31509-1-git-send-email-tomasz.majchrzak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1480424555-31509-1-git-send-email-tomasz.majchrzak@intel.com>
@@ -10,114 +10,201 @@ To: linux-raid@vger.kernel.org
 Cc: Jes.Sorensen@redhat.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
-On create set bad block support flag for each drive. On assmble also
-provide a list of known bad blocks. Bad blocks are stored in metadata
-per disk so they have to be checked against volume boundaries
-beforehand.
+Check for a duplicate first or try to merge it with existing bad block.
+If block range exceeds BBM_LOG_MAX_LBA_ENTRY_VAL (256) blocks, it must
+be split into multiple ranges. Fail if maximum number of bad blocks has
+been already reached.
 
 Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 ---
- super-intel.c | 59 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 59 insertions(+)
+ super-intel.c | 142 ++++++++++++++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 134 insertions(+), 8 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index 421bfbc..b2afdff 100644
+index b2afdff..2af44d9 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -884,6 +884,56 @@ static int load_bbm_log(struct intel_super *super)
- 	return 0;
+@@ -843,6 +843,86 @@ static __u32 get_imsm_bbm_log_size(struct bbm_log *log)
+ 		sizeof(log->entry_count) +
+ 		log->entry_count * sizeof(struct bbm_log_entry);
  }
- 
-+/* checks if bad block is within volume boundaries */
-+static int is_bad_block_in_volume(const struct bbm_log_entry *entry,
-+			const unsigned long long start_sector,
-+			const unsigned long long size)
++
++/* check if bad block is not partially stored in bbm log */
++static int is_stored_in_bbm(struct bbm_log *log, const __u8 idx, const unsigned
++			    long long sector, const int length, __u32 *pos)
 +{
-+	unsigned long long bb_start;
-+	unsigned long long bb_end;
++	__u32 i;
 +
-+	bb_start = __le48_to_cpu(&entry->defective_block_start);
-+	bb_end = bb_start + (entry->marked_count + 1);
++	for (i = *pos; i < log->entry_count; i++) {
++		struct bbm_log_entry *entry = &log->marked_block_entries[i];
++		unsigned long long bb_start;
++		unsigned long long bb_end;
 +
-+	if (((bb_start >= start_sector) && (bb_start < start_sector + size)) ||
-+	    ((bb_end >= start_sector) && (bb_end <= start_sector + size)))
-+		return 1;
++		bb_start = __le48_to_cpu(&entry->defective_block_start);
++		bb_end = bb_start + (entry->marked_count + 1);
 +
++		if ((entry->disk_ordinal == idx) && (bb_start >= sector) &&
++		    (bb_end <= sector + length)) {
++			*pos = i;
++			return 1;
++		}
++	}
 +	return 0;
 +}
 +
-+/* get list of bad blocks on a drive for a volume */
-+static void get_volume_badblocks(const struct bbm_log *log, const __u8 idx,
-+			const unsigned long long start_sector,
-+			const unsigned long long size,
-+			struct md_bb *bbs)
++/* record new bad block in bbm log */
++static int record_new_badblock(struct bbm_log *log, const __u8 idx, unsigned
++			       long long sector, int length)
 +{
-+	__u32 count = 0;
-+	__u32 i;
++	int new_bb = 0;
++	__u32 pos = 0;
++	struct bbm_log_entry *entry = NULL;
 +
-+	for (i = 0; i < log->entry_count; i++) {
-+		const struct bbm_log_entry *ent =
-+			&log->marked_block_entries[i];
-+		struct md_bb_entry *bb;
++	while (is_stored_in_bbm(log, idx, sector, length, &pos)) {
++		struct bbm_log_entry *e = &log->marked_block_entries[pos];
 +
-+		if ((ent->disk_ordinal == idx) &&
-+		    is_bad_block_in_volume(ent, start_sector, size)) {
-+
-+			if (!bbs->entries) {
-+				bbs->entries = xmalloc(BBM_LOG_MAX_ENTRIES *
-+						     sizeof(*bb));
-+				if (!bbs->entries)
-+					break;
-+			}
-+
-+			bb = &bbs->entries[count++];
-+			bb->sector = __le48_to_cpu(&ent->defective_block_start);
-+			bb->length = ent->marked_count + 1;
++		if ((e->marked_count + 1 == BBM_LOG_MAX_LBA_ENTRY_VAL) &&
++		    (__le48_to_cpu(&e->defective_block_start) == sector)) {
++			sector += BBM_LOG_MAX_LBA_ENTRY_VAL;
++			length -= BBM_LOG_MAX_LBA_ENTRY_VAL;
++			pos = pos + 1;
++			continue;
 +		}
++		entry = e;
++		break;
 +	}
-+	bbs->count = count;
++
++	if (entry) {
++		int cnt = (length <= BBM_LOG_MAX_LBA_ENTRY_VAL) ? length :
++			BBM_LOG_MAX_LBA_ENTRY_VAL;
++		entry->defective_block_start = __cpu_to_le48(sector);
++		entry->marked_count = cnt - 1;
++		if (cnt == length)
++			return 1;
++		sector += cnt;
++		length -= cnt;
++	}
++
++	new_bb = ROUND_UP(length, BBM_LOG_MAX_LBA_ENTRY_VAL) /
++		BBM_LOG_MAX_LBA_ENTRY_VAL;
++	if (log->entry_count + new_bb > BBM_LOG_MAX_ENTRIES)
++		return 0;
++
++	while (length > 0) {
++		int cnt = (length <= BBM_LOG_MAX_LBA_ENTRY_VAL) ? length :
++			BBM_LOG_MAX_LBA_ENTRY_VAL;
++		struct bbm_log_entry *entry =
++			&log->marked_block_entries[log->entry_count];
++
++		entry->defective_block_start = __cpu_to_le48(sector);
++		entry->marked_count = cnt - 1;
++		entry->disk_ordinal = idx;
++
++		sector += cnt;
++		length -= cnt;
++
++		log->entry_count++;
++	}
++
++	return new_bb;
++}
+ #endif /* MDASSEMBLE */
+ 
+ /* allocate and load BBM log from metadata */
+@@ -7734,6 +7814,25 @@ skip_mark_checkpoint:
+ 	return consistent;
+ }
+ 
++static int imsm_disk_slot_to_ord(struct active_array *a, int slot)
++{
++	int inst = a->info.container_member;
++	struct intel_super *super = a->container->sb;
++	struct imsm_dev *dev = get_imsm_dev(super, inst);
++	struct imsm_map *map = get_imsm_map(dev, MAP_0);
++
++	if (slot > map->num_members) {
++		pr_err("imsm: imsm_disk_slot_to_ord %d out of range 0..%d\n",
++		       slot, map->num_members - 1);
++		return -1;
++	}
++
++	if (slot < 0)
++		return -1;
++
++	return get_imsm_ord_tbl_ent(dev, slot, MAP_0);
 +}
 +
- /*
-  * for second_map:
-  *  == MAP_0 get first map
-@@ -3016,6 +3066,7 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
- 							info->array.chunk_size,
- 							super->sector_size,
- 							info->component_size);
-+	info->bb.supported = 0;
+ static void imsm_set_disk(struct active_array *a, int n, int state)
+ {
+ 	int inst = a->info.container_member;
+@@ -7744,19 +7843,14 @@ static void imsm_set_disk(struct active_array *a, int n, int state)
+ 	struct mdinfo *mdi;
+ 	int recovery_not_finished = 0;
+ 	int failed;
+-	__u32 ord;
++	int ord;
+ 	__u8 map_state;
  
- 	memset(info->uuid, 0, sizeof(info->uuid));
- 	info->recovery_start = MaxSector;
-@@ -3182,6 +3233,7 @@ static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info, char *
- 	info->name[0] = 0;
- 	info->recovery_start = MaxSector;
- 	info->recovery_blocked = imsm_reshape_blocks_arrays_changes(st->sb);
-+	info->bb.supported = 0;
+-	if (n > map->num_members)
+-		pr_err("imsm: set_disk %d out of range 0..%d\n",
+-			n, map->num_members - 1);
+-
+-	if (n < 0)
++	ord = imsm_disk_slot_to_ord(a, n);
++	if (ord < 0)
+ 		return;
  
- 	/* do we have the all the insync disks that we expect? */
- 	mpb = super->anchor;
-@@ -7160,6 +7212,12 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
- 			info_d->events = __le32_to_cpu(mpb->generation_num);
- 			info_d->data_offset = pba_of_lba0(map);
- 			info_d->component_size = blocks_per_member(map);
+ 	dprintf("imsm: set_disk %d:%x\n", n, state);
+-
+-	ord = get_imsm_ord_tbl_ent(dev, n, MAP_0);
+ 	disk = get_imsm_disk(super, ord_to_idx(ord));
+ 
+ 	/* check for new failures */
+@@ -9653,6 +9747,37 @@ int validate_container_imsm(struct mdinfo *info)
+ }
+ #ifndef MDASSEMBLE
+ /*******************************************************************************
++* Function:   imsm_record_badblock
++* Description: This routine stores new bad block record in BBM log
++*
++* Parameters:
++*     a		: array containing a bad block
++*     slot	: disk number containing a bad block
++*     sector	: bad block sector
++*     length	: bad block sectors range
++* Returns:
++*     1 : Success
++*     0 : Error
++******************************************************************************/
++static int imsm_record_badblock(struct active_array *a, int slot,
++			  unsigned long long sector, int length)
++{
++	struct intel_super *super = a->container->sb;
++	int ord;
++	int ret;
 +
-+			info_d->bb.supported = 0;
-+			get_volume_badblocks(super->bbm_log, ord_to_idx(ord),
-+					     info_d->data_offset,
-+					     info_d->component_size,
-+					     &info_d->bb);
- 		}
- 		/* now that the disk list is up-to-date fixup recovery_start */
- 		update_recovery_start(super, dev, this);
-@@ -8166,6 +8224,7 @@ static struct mdinfo *imsm_activate_spare(struct active_array *a,
- 		di->data_offset = pba_of_lba0(map);
- 		di->component_size = a->info.component_size;
- 		di->container_member = inst;
-+		di->bb.supported = 0;
- 		super->random = random32();
- 		di->next = rv;
- 		rv = di;
++	ord = imsm_disk_slot_to_ord(a, slot);
++	if (ord < 0)
++		return 0;
++
++	ret = record_new_badblock(super->bbm_log, ord_to_idx(ord), sector,
++				   length);
++	if (ret)
++		super->updates_pending++;
++
++	return ret;
++}
++/*******************************************************************************
+  * Function:	init_migr_record_imsm
+  * Description:	Function inits imsm migration record
+  * Parameters:
+@@ -11205,5 +11330,6 @@ struct superswitch super_imsm = {
+ 	.activate_spare = imsm_activate_spare,
+ 	.process_update = imsm_process_update,
+ 	.prepare_update = imsm_prepare_update,
++	.record_bad_block = imsm_record_badblock,
+ #endif /* MDASSEMBLE */
+ };
 -- 
 1.8.3.1
 
