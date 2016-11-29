@@ -1,112 +1,93 @@
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: Re: [PATCH 3/7] imsm: PPL support
-Date: Tue, 29 Nov 2016 12:02:36 +0100
-Message-ID: <bdf93ddb-689e-fa11-ebaa-3d5d19480d82@intel.com>
-References: <20161124122952.16529-1-artur.paszkiewicz@intel.com>
- <20161124122952.16529-4-artur.paszkiewicz@intel.com>
- <wrfjlgw3jh8c.fsf@redhat.com>
+From: Jinpu Wang <jinpu.wang@profitbricks.com>
+Subject: Re: [BUG] MD/RAID1 hung forever on freeze_array
+Date: Tue, 29 Nov 2016 12:15:53 +0100
+Message-ID: <CAMGffEkbddHsJ4LSWcd1DmueM8XTm1pUiowa=_MUHmysVEFN_w@mail.gmail.com>
+References: <CAMGffE=1kp7gMhG+dFxTvhD6VkRuSfbuXbf9vYSWwGG+=vvhDA@mail.gmail.com>
+ <CAMGffE=L_XziWyV+wCJFqKj+v_ahOPNSugZ3uY1q5ixd4iv2fQ@mail.gmail.com>
+ <af7ae0a8-eb73-0070-4280-8758433ad500@suse.de> <CAMGffEmc_6o+Lgq3iJsCUyn6K=5S2w8pnrVDhXNBJxaKxd1Teg@mail.gmail.com>
+ <519e773d-e6e6-5d79-7224-ef94ef7c7a93@suse.de> <CAMGffEktp+raca2fYPu8fC5nxUrhGLKwjJhtHwXV2Bh_m5oViA@mail.gmail.com>
+ <dd068837-6873-ab1b-3c25-d4dbf4ad2ec4@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjlgw3jh8c.fsf@redhat.com>
+In-Reply-To: <dd068837-6873-ab1b-3c25-d4dbf4ad2ec4@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-raid@vger.kernel.org
+To: Coly Li <colyli@suse.de>
+Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Neil Brown <neilb@suse.de>, Nate Dailey <nate.dailey@stratus.com>
 List-Id: linux-raid.ids
 
-On 11/29/2016 12:51 AM, Jes Sorensen wrote:
-> Artur Paszkiewicz <artur.paszkiewicz@intel.com> writes:
->> Enable creating and assembling IMSM raid5 arrays with PPL.
+On Mon, Nov 28, 2016 at 10:10 AM, Coly Li <colyli@suse.de> wrote:
+> On 2016/11/28 =E4=B8=8B=E5=8D=885:02, Jinpu Wang wrote:
+>> On Mon, Nov 28, 2016 at 9:54 AM, Coly Li <colyli@suse.de> wrote:
+>>> On 2016/11/28 =E4=B8=8B=E5=8D=884:24, Jinpu Wang wrote:
+>>>> snip
+>>>>>>>
+>>>>>>> every time nr_pending is 1 bigger then (nr_queued + 1), so seems we
+>>>>>>> forgot to increase nr_queued somewhere?
+>>>>>>>
+>>>>>>> I've noticed (commit ccfc7bf1f09d61)raid1: include bio_end_io_list =
+in
+>>>>>>> nr_queued to prevent freeze_array hang. Seems it fixed similar bug.
+>>>>>>>
+>>>>>>> Could you give your suggestion?
+>>>>>>>
+>>>>>> Sorry, forgot to mention kernel version is 4.4.28
+>>>>>
+>>>>> This commit is Cced to stable@vger.kernel.org for v4.3+, do you use a
+>>>>> stable kernel or a distribution with 4.4.28 kernel ?
+>>>>>
+>>>>> Coly
+>>>>>
+>>>>>
+>>>> Hi Coly,
+>>>>
+>>>> I'm using Debian8 with 4.4.28 kernel.
+>>>
+>>> Hi Jinpu,
+>>>
+>>> Is it possible for your to run a upstream kernel or vanilla kernel to
+>>> test whether the issue still can be reproduced ? Then we can know
+>>> whether it is an upstream bug or a distro issue.
+>>>
+>>> Thanks.
+>>>
+>>> Coly
 >>
->> Write the IMSM MPB location for a device to the newly added rdev
->> sb_start sysfs attribute and 'journal_ppl' to 'state' attribute for
->> every active member.
+>> Hi Coly,
 >>
->> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
->> ---
->>  mdadm.h       |  1 +
->>  super-intel.c | 33 +++++++++++++++++++++++++++++++++
->>  sysfs.c       |  4 ++++
->>  3 files changed, 38 insertions(+)
+>> I did run kernel 4.4.34 (I download from kernel.org), I can reproduce
+>> the same bug.
 >>
->> diff --git a/mdadm.h b/mdadm.h
->> index 4eabf59..5600341 100755
->> --- a/mdadm.h
->> +++ b/mdadm.h
->> @@ -252,6 +252,7 @@ struct mdinfo {
->>  	unsigned long long	custom_array_size; /* size for non-default sized
->>  						    * arrays (in sectors)
->>  						    */
->> +	unsigned long long	sb_start;
->>  #define NO_RESHAPE		0
->>  #define VOLUME_RESHAPE		1
->>  #define CONTAINER_RESHAPE	2
->> diff --git a/super-intel.c b/super-intel.c
->> index df09272..79a3d78 100644
->> --- a/super-intel.c
->> +++ b/super-intel.c
->> @@ -1261,6 +1261,15 @@ static void print_imsm_dev(struct intel_super *super,
->>  	}
->>  	printf("\n");
->>  	printf("    Dirty State : %s\n", dev->vol.dirty ? "dirty" : "clean");
->> +	printf("     RWH Policy : ");
->> +	if (dev->rwh_policy == RWH_OFF)
->> +		printf("off\n");
->> +	else if (dev->rwh_policy == RWH_DISTRIBUTED)
->> +		printf("PPL distributed\n");
->> +	else if (dev->rwh_policy == RWH_JOURNALING_DRIVE)
->> +		printf("PPL journaling drive\n");
->> +	else
->> +		printf("<unknown:%d>\n", dev->rwh_policy);
->>  }
->>  
->>  static void print_imsm_disk(struct imsm_disk *disk, int index, __u32 reserved)
->> @@ -3043,6 +3052,15 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
->>  			}
->>  		}
->>  	}
->> +
->> +	if (info->array.level == 5) {
->> +		if (dev->rwh_policy == RWH_OFF)
->> +			info->rwh_policy = RWH_POLICY_OFF;
->> +		else if (dev->rwh_policy == RWH_DISTRIBUTED)
->> +			info->rwh_policy = RWH_POLICY_PPL;
->> +		else
->> +			info->rwh_policy = RWH_POLICY_UNKNOWN;
->> +	}
->>  }
->>  
->>  static __u8 imsm_check_degraded(struct intel_super *super, struct imsm_dev *dev,
->> @@ -3177,6 +3195,9 @@ static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info, char *
->>  
->>  		disk = &super->disks->disk;
->>  		info->data_offset = total_blocks(&super->disks->disk) - reserved;
->> +		/* mpb anchor sector - see store_imsm_mpb() */
->> +		info->sb_start = total_blocks(&super->disks->disk) -
->> +				 ((2 * super->sector_size) >> 9);
->>  		info->component_size = reserved;
->>  		info->disk.state  = is_configured(disk) ? (1 << MD_DISK_ACTIVE) : 0;
->>  		/* we don't change info->disk.raid_disk here because
-> 
-> Hi Artur,
-> 
-> I have been sitting staring at the above for a while, and looking at
-> store_imsm_mpb() it is not clear to me what is meant to happen here.
-> 
-> For 4k sector drives, aren't you pushing back sb_start way further than
-> you are for 512 byte sector drives? Ie. you are subtracting 16 sectors
-> for the 4k drive but only two sectors for the 512 byte sector drive?
-> 
-> Maybe it's because it's Monday or I lost the last of my marbles, but
-> could you possibly enlighten me here please?
+>> I can also try latest 4.8 or 4.9 rc kernel, if you think it's necessary?
+>>
+> Yes, please. If it can be reproduced on upstream kernel by a set of
+> scripts, it will be very helpful to debug and fix this issue.
+>
+> Thanks in advance.
+>
+> Coly
 
-Jes,
+Hi Coly,
 
-You read it correctly. The reason for this is that the IMSM anchor is
-located in the second _logical_ sector from the end of the drive. So for
-4k drives this will be 16 512-byte sectors from the end.
+I tried with kernel 4.9-cr7, I can't reproduce it with my testcase anymore.
 
-Thanks,
-Artur
+It's hard to say the bug is fixed or harder to reproduce because code
+changed a lot.
 
+--=20
+Jinpu Wang
+Linux Kernel Developer
+
+ProfitBricks GmbH
+Greifswalder Str. 207
+D - 10405 Berlin
+
+Tel:       +49 30 577 008  042
+Fax:      +49 30 577 008 299
+Email:    jinpu.wang@profitbricks.com
+URL:      https://www.profitbricks.de
+
+Sitz der Gesellschaft: Berlin
+Registergericht: Amtsgericht Charlottenburg, HRB 125506 B
+Gesch=C3=A4ftsf=C3=BChrer: Achim Weiss
