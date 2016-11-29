@@ -1,60 +1,42 @@
-From: "Randall C. Grimshaw" <rgrimsha@esf.edu>
-Subject: RE: md prefered minor has been renumbered
-Date: Tue, 29 Nov 2016 01:12:10 +0000
-Message-ID: <BC4985417D7F7B49B9AB545333BDB61B191FE2D1@Exchange-MBX1.esf.edu>
-References: <BC4985417D7F7B49B9AB545333BDB61B191FE1A2@Exchange-MBX1.esf.edu>
- <BC4985417D7F7B49B9AB545333BDB61B191FE1BC@Exchange-MBX1.esf.edu>
- <91b64061-6026-c738-75a6-8d80a177aec8@turmel.org>
- <BC4985417D7F7B49B9AB545333BDB61B191FE20C@Exchange-MBX1.esf.edu>
- <bccbeb42-82b5-87fc-aa74-11a34b8c9d8d@turmel.org>
- <BC4985417D7F7B49B9AB545333BDB61B191FE29B@Exchange-MBX1.esf.edu>,<5b2eb59e-7447-da7f-bb0a-85866f2146ef@turmel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: JackieLiu <liuyun01@kylinos.cn>
+Subject: [PATCH] md/raid5-cache: remove the unnecessary next_cp_seq field from the r5l_log
+Date: Tue, 29 Nov 2016 11:13:20 +0800
+Message-ID: <20161129031320.9025-1-liuyun01@kylinos.cn>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5b2eb59e-7447-da7f-bb0a-85866f2146ef@turmel.org>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: shli@fb.com
+Cc: songliubraving@fb.com, liuzhengyuan@kylinos.cn, linux-raid@vger.kernel.org, JackieLiu <liuyun01@kylinos.cn>
 List-Id: linux-raid.ids
 
+The next_cp_seq field is useless, remove it.
 
-________________________________________
-From: Phil Turmel [philip@turmel.org]
-Sent: Monday, November 28, 2016 6:10 PM
-To: Randall C. Grimshaw
-Cc: Linux-RAID
-Subject: Re: md prefered minor has been renumbered
+Signed-off-by: JackieLiu <liuyun01@kylinos.cn>
+---
+ drivers/md/raid5-cache.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-Hi Randall,
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 5f817bd..95bd51e 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -113,7 +113,6 @@ struct r5l_log {
+ 	u64 seq;			/* log head sequence */
+ 
+ 	sector_t next_checkpoint;
+-	u64 next_cp_seq;
+ 
+ 	struct mutex io_mutex;
+ 	struct r5l_io_unit *current_io;	/* current io_unit accepting new data */
+@@ -1075,7 +1074,6 @@ static bool r5l_complete_finished_ios(struct r5l_log *log)
+ 			break;
+ 
+ 		log->next_checkpoint = io->log_start;
+-		log->next_cp_seq = io->seq;
+ 
+ 		list_del(&io->log_sibling);
+ 		mempool_free(io, log->io_pool);
+-- 
+2.10.2
 
-{ Convention on kernel.org is reply-to-all and to avoid top-posting. I
-added the list back. }
-
-On 11/28/2016 05:56 PM, Randall C. Grimshaw wrote:
-> Thank you Phil:
->   the linux rescue mode didn't have blkid but I had the uuid's from mdadm --examine,
-> so I tried uuid=xxxxx in the fstab file. no joy. it is failing in the load of the ramfs, after assembly but before fstab.
->   it appears that I am caught in the catch22 where I cannot update initramfs until I minimally fix the duplicate md122 problem so that I can assemble /var and mount it.
-> Randall
-
-You must use the form UUID="xxxx" with caps and quotes.
-
-you can test with mount UUID="....." /path/to/mount/point to check.
-
-Phil
-----------------------------------
-
-Phil:
-  Sorry for the typos and the top posts. Even with Caps and Quotes I was still in trouble.
-sequentially it complains that md122 is already running - it cannot run /sdb5 (the duplicate)
-then it tries to resume from /dev/md1 -- (md1 remains as swap) then a bunch of indicators that the initramfs
-is unable to mount everything... but the post I found was basically correct.
-I suspect it was the conflicting devices that made my situation different but the solution was to specify the 
-device to mdadm using uuid= (thank you for that tip)
-so my assembly command looked like: mdadm -A --uuid=xxxx --update=super-minor /dev/mdx
-it solved the conflicting devices and returned my system to running state.
-[SOLVED]
 
 
