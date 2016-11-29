@@ -1,97 +1,111 @@
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: Re: [PATCH 1/7] imsm: metadata changes for PPL
-Date: Tue, 29 Nov 2016 11:47:59 +0100
-Message-ID: <f4ded4a5-abf2-f988-f5d0-7063f5d080d1@intel.com>
+Subject: Re: [PATCH 3/7] imsm: PPL support
+Date: Tue, 29 Nov 2016 12:02:36 +0100
+Message-ID: <bdf93ddb-689e-fa11-ebaa-3d5d19480d82@intel.com>
 References: <20161124122952.16529-1-artur.paszkiewicz@intel.com>
- <20161124122952.16529-2-artur.paszkiewicz@intel.com>
- <wrfjpolfjibn.fsf@redhat.com>
+ <20161124122952.16529-4-artur.paszkiewicz@intel.com>
+ <wrfjlgw3jh8c.fsf@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjpolfjibn.fsf@redhat.com>
+In-Reply-To: <wrfjlgw3jh8c.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Jes Sorensen <Jes.Sorensen@redhat.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/29/2016 12:27 AM, Jes Sorensen wrote:
+On 11/29/2016 12:51 AM, Jes Sorensen wrote:
 > Artur Paszkiewicz <artur.paszkiewicz@intel.com> writes:
->> Updates for the IMSM metadata format, including PPL header structures.
+>> Enable creating and assembling IMSM raid5 arrays with PPL.
 >>
->> Extend imsm_vol dirty field adding a third value, which is required to
->> enable PPL recovery in Windows and UEFI drivers.
+>> Write the IMSM MPB location for a device to the newly added rdev
+>> sb_start sysfs attribute and 'journal_ppl' to 'state' attribute for
+>> every active member.
 >>
 >> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 >> ---
->>  super-intel.c | 48 ++++++++++++++++++++++++++++++++++++++++--------
->>  1 file changed, 40 insertions(+), 8 deletions(-)
-> 
-> A couple of comments on this change:
-> 
+>>  mdadm.h       |  1 +
+>>  super-intel.c | 33 +++++++++++++++++++++++++++++++++
+>>  sysfs.c       |  4 ++++
+>>  3 files changed, 38 insertions(+)
+>>
+>> diff --git a/mdadm.h b/mdadm.h
+>> index 4eabf59..5600341 100755
+>> --- a/mdadm.h
+>> +++ b/mdadm.h
+>> @@ -252,6 +252,7 @@ struct mdinfo {
+>>  	unsigned long long	custom_array_size; /* size for non-default sized
+>>  						    * arrays (in sectors)
+>>  						    */
+>> +	unsigned long long	sb_start;
+>>  #define NO_RESHAPE		0
+>>  #define VOLUME_RESHAPE		1
+>>  #define CONTAINER_RESHAPE	2
 >> diff --git a/super-intel.c b/super-intel.c
->> index 5740088..69f6201 100644
+>> index df09272..79a3d78 100644
 >> --- a/super-intel.c
 >> +++ b/super-intel.c
->> @@ -154,6 +157,9 @@ struct imsm_vol {
->>  #define MIGR_STATE_CHANGE 4
->>  #define MIGR_REPAIR 5
->>  	__u8  migr_type;	/* Initializing, Rebuilding, ... */
->> +#define RAIDVOL_CLEAN          0
->> +#define RAIDVOL_DIRTY          1
->> +#define RAIDVOL_DSRECORD_VALID 2
->>  	__u8  dirty;
->>  	__u8  fs_state;		/* fast-sync state for CnG (0xff == disabled) */
->>  	__u16 verify_errors;	/* number of mismatches */
->> @@ -189,7 +195,30 @@ struct imsm_dev {
->>  	__u16 cache_policy;
->>  	__u8  cng_state;
->>  	__u8  cng_sub_state;
->> -#define IMSM_DEV_FILLERS 10
->> +	__u16 my_vol_raid_dev_num; /* Used in Unique volume Id for this RaidDev */
->> +
->> +	/* NVM_EN */
->> +	__u8 nv_cache_mode;
->> +	union {
->> +		__u8 nv_cache_flags;
->> +		struct {
->> +		    __u8 dirty:1; /* 1 - cache is dirty, 0 - clean */
->> +		    __u8 nvc_health:2;
->> +		    __u8 expansion_bytes:5;
->> +		} nvCache;
->> +	};
-> 
-> This sets off alarm bells here - you declare a union of a u8 and a
-> matching bitfield, but do not handle bit endian bitfields. If someone
-> tried to use this on a big endian system this could get messy.
-
-Those fields are not used in the code at all, the only thing added to
-this structure that is used is 'rwh_policy'. The rest is to fill the
-gaps between IMSM format in UEFI/Windows.
-
-> 
->> @@ -7565,12 +7594,15 @@ mark_checkpoint:
+>> @@ -1261,6 +1261,15 @@ static void print_imsm_dev(struct intel_super *super,
+>>  	}
+>>  	printf("\n");
+>>  	printf("    Dirty State : %s\n", dev->vol.dirty ? "dirty" : "clean");
+>> +	printf("     RWH Policy : ");
+>> +	if (dev->rwh_policy == RWH_OFF)
+>> +		printf("off\n");
+>> +	else if (dev->rwh_policy == RWH_DISTRIBUTED)
+>> +		printf("PPL distributed\n");
+>> +	else if (dev->rwh_policy == RWH_JOURNALING_DRIVE)
+>> +		printf("PPL journaling drive\n");
+>> +	else
+>> +		printf("<unknown:%d>\n", dev->rwh_policy);
+>>  }
 >>  
->>  skip_mark_checkpoint:
->>  	/* mark dirty / clean */
->> -	if (dev->vol.dirty != !consistent) {
->> +	if ((dev->vol.dirty & RAIDVOL_DIRTY) != !consistent) {
+>>  static void print_imsm_disk(struct imsm_disk *disk, int index, __u32 reserved)
+>> @@ -3043,6 +3052,15 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
+>>  			}
+>>  		}
+>>  	}
+>> +
+>> +	if (info->array.level == 5) {
+>> +		if (dev->rwh_policy == RWH_OFF)
+>> +			info->rwh_policy = RWH_POLICY_OFF;
+>> +		else if (dev->rwh_policy == RWH_DISTRIBUTED)
+>> +			info->rwh_policy = RWH_POLICY_PPL;
+>> +		else
+>> +			info->rwh_policy = RWH_POLICY_UNKNOWN;
+>> +	}
+>>  }
+>>  
+>>  static __u8 imsm_check_degraded(struct intel_super *super, struct imsm_dev *dev,
+>> @@ -3177,6 +3195,9 @@ static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info, char *
+>>  
+>>  		disk = &super->disks->disk;
+>>  		info->data_offset = total_blocks(&super->disks->disk) - reserved;
+>> +		/* mpb anchor sector - see store_imsm_mpb() */
+>> +		info->sb_start = total_blocks(&super->disks->disk) -
+>> +				 ((2 * super->sector_size) >> 9);
+>>  		info->component_size = reserved;
+>>  		info->disk.state  = is_configured(disk) ? (1 << MD_DISK_ACTIVE) : 0;
+>>  		/* we don't change info->disk.raid_disk here because
 > 
-> This part makes my head spin (to be honest, the original code did
-> too). I had to go write a small snipped of C to figure out what the
-> compiler does with !x given x > 0, since consistent can be 0, 1, and 2
-> here.
+> Hi Artur,
 > 
-> Basically for RAIDVOL_CLEAN and consistent = 0, and RAIDVOL_DIRTY and
-> consistent = 1 and 2, this statement triggers. Maybe I am just terrible
-> dense when it comes to reading obfuscated C, but could we change this
-> round to a construct that is a little easier to read?
+> I have been sitting staring at the above for a while, and looking at
+> store_imsm_mpb() it is not clear to me what is meant to happen here.
+> 
+> For 4k sector drives, aren't you pushing back sb_start way further than
+> you are for 512 byte sector drives? Ie. you are subtracting 16 sectors
+> for the 4k drive but only two sectors for the 512 byte sector drive?
+> 
+> Maybe it's because it's Monday or I lost the last of my marbles, but
+> could you possibly enlighten me here please?
 
-Yes, I admit it is confusing. Does this look better?
+Jes,
 
--       if (dev->vol.dirty != !consistent) {
-+       if (((dev->vol.dirty & RAIDVOL_DIRTY) && consistent) ||
-+           (!(dev->vol.dirty & RAIDVOL_DIRTY) && !consistent)) {
+You read it correctly. The reason for this is that the IMSM anchor is
+located in the second _logical_ sector from the end of the drive. So for
+4k drives this will be 16 512-byte sectors from the end.
 
 Thanks,
 Artur
