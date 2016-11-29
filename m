@@ -1,7 +1,7 @@
 From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: [PATCH v2 5/9] imsm: clear bad block from bad block log
-Date: Tue, 29 Nov 2016 14:02:31 +0100
-Message-ID: <1480424555-31509-6-git-send-email-tomasz.majchrzak@intel.com>
+Subject: [PATCH v2 7/9] imsm: provide list of bad blocks for an array
+Date: Tue, 29 Nov 2016 14:02:33 +0100
+Message-ID: <1480424555-31509-8-git-send-email-tomasz.majchrzak@intel.com>
 References: <1480424555-31509-1-git-send-email-tomasz.majchrzak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1480424555-31509-1-git-send-email-tomasz.majchrzak@intel.com>
@@ -10,86 +10,89 @@ To: linux-raid@vger.kernel.org
 Cc: Jes.Sorensen@redhat.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
+Provide list of bad blocks using memory allocated in advance so it's
+safe to call it from monitor.
+
 Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 ---
- super-intel.c | 53 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 53 insertions(+)
+ super-intel.c | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
 diff --git a/super-intel.c b/super-intel.c
-index 2af44d9..ec592c2 100644
+index 731878c..fd2145c 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -923,6 +923,28 @@ static int record_new_badblock(struct bbm_log *log, const __u8 idx, unsigned
+@@ -393,6 +393,7 @@ struct intel_super {
+ 	struct intel_hba *hba; /* device path of the raid controller for this metadata */
+ 	const struct imsm_orom *orom; /* platform firmware support */
+ 	struct intel_super *next; /* (temp) list for disambiguating family_num */
++	struct md_bb bb;	/* memory for get_bad_blocks call */
+ };
  
- 	return new_bb;
+ struct intel_disk {
+@@ -4298,6 +4299,7 @@ static void __free_imsm(struct intel_super *super, int free_disks)
+ static void free_imsm(struct intel_super *super)
+ {
+ 	__free_imsm(super, 1);
++	free(super->bb.entries);
+ 	free(super);
  }
+ 
+@@ -4318,6 +4320,14 @@ static struct intel_super *alloc_super(void)
+ 
+ 	super->current_vol = -1;
+ 	super->create_offset = ~((unsigned long long) 0);
 +
-+/* clear given bad block */
-+static int clear_badblock(struct bbm_log *log, const __u8 idx, const unsigned
-+			  long long sector, const int length) {
-+	__u32 i = 0;
-+
-+	while (i < log->entry_count) {
-+		struct bbm_log_entry *entries = log->marked_block_entries;
-+
-+		if ((entries[i].disk_ordinal == idx) &&
-+		    (__le48_to_cpu(&entries[i].defective_block_start) ==
-+		     sector) && (entries[i].marked_count + 1 == length)) {
-+			if (i < log->entry_count - 1)
-+				entries[i] = entries[log->entry_count - 1];
-+			log->entry_count--;
-+			break;
-+		}
-+		i++;
++	super->bb.entries = malloc(BBM_LOG_MAX_ENTRIES *
++				   sizeof(struct md_bb_entry));
++	if (!super->bb.entries) {
++		free(super);
++		return NULL;
 +	}
 +
-+	return 1;
-+}
- #endif /* MDASSEMBLE */
+ 	return super;
+ }
  
- /* allocate and load BBM log from metadata */
-@@ -9778,6 +9800,36 @@ static int imsm_record_badblock(struct active_array *a, int slot,
+@@ -9862,6 +9872,34 @@ static int imsm_clear_badblock(struct active_array *a, int slot,
  	return ret;
  }
  /*******************************************************************************
-+* Function:   imsm_clear_badblock
-+* Description: This routine clears bad block record from BBM log
++* Function:   imsm_get_badblocks
++* Description: This routine get list of bad blocks for an array
 +*
 +* Parameters:
-+*     a		: array containing a bad block
-+*     slot	: disk number containing a bad block
-+*     sector	: bad block sector
-+*     length	: bad block sectors range
++*     a		: array
++*     slot	: disk number
 +* Returns:
-+*     1 : Success
-+*     0 : Error
++*     bb	: structure containing bad blocks
++*     NULL	: error
 +******************************************************************************/
-+static int imsm_clear_badblock(struct active_array *a, int slot,
-+			unsigned long long sector, int length)
++static struct md_bb *imsm_get_badblocks(struct active_array *a, int slot)
 +{
++	int inst = a->info.container_member;
 +	struct intel_super *super = a->container->sb;
++	struct imsm_dev *dev = get_imsm_dev(super, inst);
++	struct imsm_map *map = get_imsm_map(dev, MAP_0);
 +	int ord;
-+	int ret;
 +
 +	ord = imsm_disk_slot_to_ord(a, slot);
 +	if (ord < 0)
-+		return 0;
++		return NULL;
 +
-+	ret = clear_badblock(super->bbm_log, ord_to_idx(ord), sector, length);
-+	if (ret)
-+		super->updates_pending++;
++	get_volume_badblocks(super->bbm_log, ord_to_idx(ord), pba_of_lba0(map),
++			     blocks_per_member(map), &super->bb);
 +
-+	return ret;
++	return &super->bb;
 +}
 +/*******************************************************************************
   * Function:	init_migr_record_imsm
   * Description:	Function inits imsm migration record
   * Parameters:
-@@ -11331,5 +11383,6 @@ struct superswitch super_imsm = {
- 	.process_update = imsm_process_update,
+@@ -11416,5 +11454,6 @@ struct superswitch super_imsm = {
  	.prepare_update = imsm_prepare_update,
  	.record_bad_block = imsm_record_badblock,
-+	.clear_bad_block  = imsm_clear_badblock,
+ 	.clear_bad_block  = imsm_clear_badblock,
++	.get_bad_blocks   = imsm_get_badblocks,
  #endif /* MDASSEMBLE */
  };
 -- 
