@@ -1,62 +1,50 @@
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: Re: [PATCH 3/7] imsm: PPL support
-Date: Wed, 30 Nov 2016 09:07:50 +0100
-Message-ID: <10603129-62b3-6342-bfc9-095c5b43fb4c@intel.com>
-References: <20161124122952.16529-1-artur.paszkiewicz@intel.com>
- <20161124122952.16529-4-artur.paszkiewicz@intel.com>
- <wrfjlgw3jh8c.fsf@redhat.com>
- <bdf93ddb-689e-fa11-ebaa-3d5d19480d82@intel.com>
- <wrfjzikigvj8.fsf@redhat.com>
+From: Patrick Dung <mpatdung@gmail.com>
+Subject: Re: Is trim/discard supported on LVM RAID logical volume?
+Date: Wed, 30 Nov 2016 16:25:40 +0800
+Message-ID: <CAEtPA0AouO3pp343QNz3=aAcX6oXzSL_pwhG9p=WEqmCv5Ve9w@mail.gmail.com>
+References: <CAEtPA0ByX8yYx8xNc_=4SP0bqXVz-D4o-bM5XZF8Y6NcnqsEKQ@mail.gmail.com>
+ <CAJCQCtSpOfMvgfxOFvQtM=zcOnyoqvu3GregmW9NS5j9auRuyw@mail.gmail.com>
+ <20161129220949.GA4035@metamorpher.de> <CAJCQCtQk01rtPa1=_XnxS3vfhP_gB88fXFayx4T_-OkbUUBGoQ@mail.gmail.com>
+ <20161129233251.GA4404@metamorpher.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjzikigvj8.fsf@redhat.com>
+In-Reply-To: <20161129233251.GA4404@metamorpher.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-raid@vger.kernel.org
+To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Cc: Chris Murphy <lists@colorremedies.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 11/29/2016 04:23 PM, Jes Sorensen wrote:
-> Artur Paszkiewicz <artur.paszkiewicz@intel.com> writes:
->> On 11/29/2016 12:51 AM, Jes Sorensen wrote:
->>>> @@ -3177,6 +3195,9 @@ static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info, char *
->>>>  
->>>>  		disk = &super->disks->disk;
->>>>  		info->data_offset = total_blocks(&super->disks->disk) - reserved;
->>>> +		/* mpb anchor sector - see store_imsm_mpb() */
->>>> +		info->sb_start = total_blocks(&super->disks->disk) -
->>>> +				 ((2 * super->sector_size) >> 9);
->>>>  		info->component_size = reserved;
->>>>  		info->disk.state  = is_configured(disk) ? (1 << MD_DISK_ACTIVE) : 0;
->>>>  		/* we don't change info->disk.raid_disk here because
->>>
->>> Hi Artur,
->>>
->>> I have been sitting staring at the above for a while, and looking at
->>> store_imsm_mpb() it is not clear to me what is meant to happen here.
->>>
->>> For 4k sector drives, aren't you pushing back sb_start way further than
->>> you are for 512 byte sector drives? Ie. you are subtracting 16 sectors
->>> for the 4k drive but only two sectors for the 512 byte sector drive?
->>>
->>> Maybe it's because it's Monday or I lost the last of my marbles, but
->>> could you possibly enlighten me here please?
->>
->> Jes,
->>
->> You read it correctly. The reason for this is that the IMSM anchor is
->> located in the second _logical_ sector from the end of the drive. So for
->> 4k drives this will be 16 512-byte sectors from the end.
-> 
-> I see, so the IMSM implementation uses 512 byte logical sectors on top
-> of 4k drives? Could I ask you to add a note explaining this in the code?
+Hello,
 
-IMSM uses logical (4k or 512b) sector sizes in the metadata, but mdadm
-implementation uses just 512 byte sectors. This is how it works since
-Pawel's 4k support patches - it converts 4k metadata internally to 512b
-sector values. Plus here the sb_start value is passed to the kernel, so
-it must be in 512 byte sectors. Sure, I can add a comment about this.
+I got a reply in linux-lvm that there should be problem, and Heinz
+from Redhat is looking into it.
+related message:
+https://www.redhat.com/archives/linux-lvm/2016-November/msg00041.html
 
-Thanks,
-Artur
+For your information, I have issue_discards set to 1.
+If I create a non-RAID LVM, the fstrim works.
+
+Thanks and regards,
+Patrick
+
+On Wed, Nov 30, 2016 at 7:32 AM, Andreas Klauer
+<Andreas.Klauer@metamorpher.de> wrote:
+> On Tue, Nov 29, 2016 at 03:21:36PM -0700, Chris Murphy wrote:
+>> Reading the documentation for both, they're functionally the same
+>> thing in that with these options the particular layer will pass on a
+>> trim to the next layer underneath it.
+>
+> discard/fstrim/blkdiscard works fine with issue_discards=0.
+>
+> If it doesn't work, setting issue_discards=1 won't do a thing for you.
+> That flag only affects the lvm tool itself, discard freed LVM extents
+> after lvreduce or pvmove. Can't undo botched resizes anymore, too bad.
+>
+> Most storage layers simply don't have any setting for this at all.
+> It just works. Or it does not (in many cases, old/stable kernel/distro).
+> cryptsetup's allow-discards is the exception, the one layer where you
+> have to manually enable something to make it work.
+>
+> Regards
+> Andreas Klauer
