@@ -1,38 +1,61 @@
-From: Coly Li <colyli@suse.de>
-Subject: Re: [RFC PATCH 1/2] RAID1: a new I/O barrier implementation to remove
- resync window
-Date: Wed, 30 Nov 2016 15:19:46 +0800
-Message-ID: <a3be4c59-9ed1-069d-72ab-3f9950a52360@suse.de>
-References: <1479765241-15528-1-git-send-email-colyli@suse.de>
- <58369819.1070203@suse.com> <0bfdd1c7-5953-a282-dd37-3a8595c90844@suse.de>
- <583E7392.9020308@suse.com>
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: Re: [PATCH 1/7] imsm: metadata changes for PPL
+Date: Wed, 30 Nov 2016 08:34:44 +0100
+Message-ID: <6897db1e-01e8-ce8a-cd77-19a54badafdb@intel.com>
+References: <20161124122952.16529-1-artur.paszkiewicz@intel.com>
+ <20161124122952.16529-2-artur.paszkiewicz@intel.com>
+ <wrfjpolfjibn.fsf@redhat.com>
+ <f4ded4a5-abf2-f988-f5d0-7063f5d080d1@intel.com>
+ <wrfj4m2qia5r.fsf@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <583E7392.9020308@suse.com>
+In-Reply-To: <wrfj4m2qia5r.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>, linux-raid@vger.kernel.org
-Cc: Shaohua Li <shli@fb.com>, Neil Brown <neilb@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2016/11/30 下午2:37, Guoqing Jiang wrote:
-> 
-> 
-> On 11/28/2016 03:33 PM, Coly Li wrote:
->> In raid1_sync_request(), I see,
->> conf->cluster_sync_low = mddev->curr_resync_completed;
->> conf->cluster_sync_high = conf->cluster_sync_low +
->> CLUSTER_RESYNC_WINDOW_SECTORS;
+On 11/29/2016 04:21 PM, Jes Sorensen wrote:
+> Artur Paszkiewicz <artur.paszkiewicz@intel.com> writes:
+>> On 11/29/2016 12:27 AM, Jes Sorensen wrote:
+>>> Artur Paszkiewicz <artur.paszkiewicz@intel.com> writes:
+>>>> @@ -189,7 +195,30 @@ struct imsm_dev {
+>>>>  	__u16 cache_policy;
+>>>>  	__u8  cng_state;
+>>>>  	__u8  cng_sub_state;
+>>>> -#define IMSM_DEV_FILLERS 10
+>>>> +	__u16 my_vol_raid_dev_num; /* Used in Unique volume Id for this RaidDev */
+>>>> +
+>>>> +	/* NVM_EN */
+>>>> +	__u8 nv_cache_mode;
+>>>> +	union {
+>>>> +		__u8 nv_cache_flags;
+>>>> +		struct {
+>>>> +		    __u8 dirty:1; /* 1 - cache is dirty, 0 - clean */
+>>>> +		    __u8 nvc_health:2;
+>>>> +		    __u8 expansion_bytes:5;
+>>>> +		} nvCache;
+>>>> +	};
+>>>
+>>> This sets off alarm bells here - you declare a union of a u8 and a
+>>> matching bitfield, but do not handle bit endian bitfields. If someone
+>>> tried to use this on a big endian system this could get messy.
 >>
->> Is it possible that LBA range [conf->cluster_sync_low,
->> conf->cluster_sync_high] goes across the border of a barrier unit size ?
+>> Those fields are not used in the code at all, the only thing added to
+>> this structure that is used is 'rwh_policy'. The rest is to fill the
+>> gaps between IMSM format in UEFI/Windows.
 > 
-> Not pretty sure about it, but since cluster's resync window is 32M which is
-> less than BARRIER_UNIT_SECTOR_SIZE, I guess it would not cause trouble.
+> Hi Artur,
+> 
+> I did notice the code wasn't actually used, sorry I didn't mention
+> that. However I would still prefer to see at least a comment in the code
+> indicating that this would fail on BE systems.
 
-Thanks for the hint. So BARRIER_UNIT_SECTOR_SIZE is 32MB aligned,
-cluster's resync window won't go across the boundary.
+Since I wasn't going to use those fields I had not given this much
+thought, but you are right - this is definitely not portable. I think
+I'll remove those bitfields in the next version.
 
-
-Coly
+Thanks,
+Artur
