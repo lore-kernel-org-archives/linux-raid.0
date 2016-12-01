@@ -1,85 +1,84 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH v2] md/r5cache: run_no_space_stripes() when R5C_LOG_CRITICAL == 0
-Date: Wed, 30 Nov 2016 16:57:54 -0800
-Message-ID: <20161201005754.3149044-1-songliubraving@fb.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: MD Remnants After --stop
+Date: Thu, 01 Dec 2016 13:52:48 +1100
+Message-ID: <87shq8743j.fsf@notabene.neil.brown.name>
+References: <CAHkw+Lf1SErbGro4bq5MM5LyB-Zqyqi4E90R7c+uAZHv1WgSrA@mail.gmail.com> <87fun3ond9.fsf@notabene.neil.brown.name> <CAHkw+LcfszsWDGQJzDaQU0-PsL+8K7t5msW_bLbv+YyDEFmn8Q@mail.gmail.com> <87fumlebwo.fsf@notabene.neil.brown.name> <CAHkw+LfN9xaFmmvg653OKh1eH=_kLdhd3Y1QMg3955TePCCtkg@mail.gmail.com> <CAHkw+Ldbwkknz6ZqxVpFEE-3z1r7pz1AjamUbZaEPn_uyMn_-w@mail.gmail.com> <878tsbcbub.fsf@notabene.neil.brown.name> <CAHkw+Ldv+-uXGCQ+tKfkraZ3VF4V8sk203+Oopm7RvygGQQYGQ@mail.gmail.com> <87oa15938i.fsf@notabene.neil.brown.name> <CAHkw+LfJzZoWVnO8kDi+YVV09fas2DveQoChh10wEBZfYin6aQ@mail.gmail.com> <8760n8a7k5.fsf@notabene.neil.brown.name> <CAHkw+Lc9YEdbJcRu2bOLU-gex9UYSXB32iRKD8TPS7JpjSOdQA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAHkw+Lc9YEdbJcRu2bOLU-gex9UYSXB32iRKD8TPS7JpjSOdQA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, Song Liu <songliubraving@fb.com>
+To: Marc Smith <marc.smith@mcc.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-With writeback cache, we define log space critical as
+--=-=-=
+Content-Type: text/plain
 
-   free_space < 2 * reclaim_required_space
+On Mon, Nov 28 2016, Marc Smith wrote:
 
-So the deassert of R5C_LOG_CRITICAL could happen when
-  1. free_space increases
-  2. reclaim_required_space decreases
+>
+> # find /sys/block/md127/md
+> /sys/block/md127/md
+> /sys/block/md127/md/reshape_position
+> /sys/block/md127/md/layout
+> /sys/block/md127/md/raid_disks
+> /sys/block/md127/md/bitmap
+> /sys/block/md127/md/bitmap/chunksize
 
-Currently, run_no_space_stripes() is called when 1 happens, but
-not (always) when 2 happens.
+This tells me that:
+	sysfs_remove_group(&mddev->kobj, &md_bitmap_group);
+hasn't been run, so mddev_delayed_delete() hasn't run.
+That suggests the final mddev_put() hsn't run. i.e. mddev->active is > 0
 
-With this patch, run_no_space_stripes() is call when
-R5C_LOG_CRITICAL is cleared.
+Everything else suggests that array has been stopped and cleaned and
+should be gone...
 
-Signed-off-by: Song Liu <songliubraving@fb.com>
----
- drivers/md/raid5-cache.c | 14 +++++++++++++-
- 1 file changed, 13 insertions(+), 1 deletion(-)
+This seems to suggest that there is an unbalanced mddev_get() without a
+matching mddev_put().  I cannot find it though.
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index e786d4e..c36f86b 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -370,6 +370,7 @@ static inline void r5c_update_log_state(struct r5l_log *log)
- 	struct r5conf *conf = log->rdev->mddev->private;
- 	sector_t free_space;
- 	sector_t reclaim_space;
-+	bool wake_reclaim = false;
- 
- 	if (!r5c_is_writeback(log))
- 		return;
-@@ -379,12 +380,18 @@ static inline void r5c_update_log_state(struct r5l_log *log)
- 	reclaim_space = r5c_log_required_to_flush_cache(conf);
- 	if (free_space < 2 * reclaim_space)
- 		set_bit(R5C_LOG_CRITICAL, &conf->cache_state);
--	else
-+	else {
-+		if (test_bit(R5C_LOG_CRITICAL, &conf->cache_state))
-+			wake_reclaim = true;
- 		clear_bit(R5C_LOG_CRITICAL, &conf->cache_state);
-+	}
- 	if (free_space < 3 * reclaim_space)
- 		set_bit(R5C_LOG_TIGHT, &conf->cache_state);
- 	else
- 		clear_bit(R5C_LOG_TIGHT, &conf->cache_state);
-+
-+	if (wake_reclaim)
-+		r5l_wake_reclaim(log, 0);
- }
- 
- /*
-@@ -1345,6 +1352,10 @@ static void r5c_do_reclaim(struct r5conf *conf)
- 		spin_unlock(&conf->device_lock);
- 		spin_unlock_irqrestore(&log->stripe_in_journal_lock, flags);
- 	}
-+
-+	if (!test_bit(R5C_LOG_CRITICAL, &conf->cache_state))
-+		r5l_run_no_space_stripes(log);
-+
- 	md_wakeup_thread(conf->mddev->thread);
- }
- 
-@@ -2401,6 +2412,7 @@ void r5c_finish_stripe_write_out(struct r5conf *conf,
- 	spin_unlock_irq(&conf->log->stripe_in_journal_lock);
- 	sh->log_start = MaxSector;
- 	atomic_dec(&conf->log->stripe_in_journal_count);
-+	r5c_update_log_state(conf->log);
- }
- 
- int
--- 
-2.9.3
+If I could reproduce it, I would try to see what is happening by:
 
+- putting
+   printk("mddev->active = %d\n", atomic_read(&mddev->active));
+ in the top of mddev_put().  That shouldn't be *too* noisy.
+
+- putting
+   printk("rd=%d empty=%d ctime=%d hold=%d\n", mddev->raid_disks,
+   	list_empty(&mddev->disks), mddev->ctime, mddev->hold_active);
+
+  in mddev_put() just before those values are tested.
+
+ - putting
+     printk("queue_work\n");
+   just before the 'queue_work()' call in mddev_put.
+
+ - putting
+     printk("mddev_delayed_delete\n");
+   in mddev_delayed_delete()
+
+Then see what gets printed when you stop the array.
+
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlg/kIAACgkQOeye3VZi
+gbnyjxAApSaRa1ykGC0r++NqQa78AliV+c54DR0xkughH53pg9W5XfPnLN0tl+Qz
+cXV/axRP4O0Dxuppax1KJHzn9G7fR87gPqPeikJ0FLQXRe6OsB3sFoLx/zFn2umj
+gHEvHDk5SEABjgA8Mrna9cxO+GT7KUNF+svzZEStA8xG2i/Z0zz9vf5pW1t+aM2u
+YzUoiSfzoM7AiVfkP5mzb0N/svQ92ONzdYsz7dhslPPqerHkj33w6etidkaYNXCW
+Kh3gG3tMGLdEzoPLHc7ubka819F6YJFSby7AxDkdkHgkEeARCHTaRxRuMF/UV0bo
+HFhkqEGyUG1I1ozliD/kcQ+G4Y5oeUSc7unedssKquojFFQjBYndWpUXy9AohHvI
+YV5Tw5V3yzeh1WfXlubr2ws0ver00wSRH1nULnbCusEhIa00Xy9AC6/3eZuSSNGR
+8pZAkgVw/jbZC0u0AYff9Xc3+ivoN5RkU5ATplhN1JqcT9FiNYXLz9YZTGLKHB74
+6x3ubsco2+lWEivC5rpZRq6tR9qRB4549hyi2Htlf1vLm/mQ4mE4AUOYQbUymxCM
+oizNZISJ3jmA7q20uY6g4xv5lNdB0MJwVOi5IPtbq1JRkanWAyWnECyHfcniqIfy
+d0qsF4zz4HEYzRXPH+OApa7inHdhmx2sjhHGwrvitrk7goUobVc=
+=guN2
+-----END PGP SIGNATURE-----
+--=-=-=--
