@@ -1,55 +1,100 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: Feature request, resumable raid check action
-Date: Fri, 02 Dec 2016 17:09:46 +1100
-Message-ID: <87y3zy6evp.fsf@notabene.neil.brown.name>
-References: <CAEtPA0Aosn6q0pJxsh69EpHQehiSsyeyVfJf98cDhu6kORkE1g@mail.gmail.com> <8737i76idm.fsf@notabene.neil.brown.name> <CAEtPA0C=xH0gCaigs-THNZRspmwD6d4WCrecjL-30M3PP0vxHw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH v3 7/9] imsm: provide list of bad blocks for an array
+Date: Fri,  2 Dec 2016 13:54:15 +0100
+Message-ID: <1480683255-22293-1-git-send-email-tomasz.majchrzak@intel.com>
+References: <wrfjoa0vz3bi.fsf@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAEtPA0C=xH0gCaigs-THNZRspmwD6d4WCrecjL-30M3PP0vxHw@mail.gmail.com>
+In-Reply-To: <wrfjoa0vz3bi.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Patrick Dung <mpatdung@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Jes.Sorensen@redhat.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
+Provide list of bad blocks using memory allocated in advance so it's
+safe to call it from monitor.
 
-On Fri, Dec 02 2016, Patrick Dung wrote:
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+---
+ super-intel.c | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
-> Thanks for reply, NeilBrown.
->
-> In my testing:
-> I had run the mdcheck script, then reboot.
-> After rebooted, then I  run the mdcheck script again, it did not
-> resume from where it stopped before reboot.
->
-> Is there something that I may had missed?
+diff --git a/super-intel.c b/super-intel.c
+index 0562a55..f4e243f 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -393,6 +393,7 @@ struct intel_super {
+ 	struct intel_hba *hba; /* device path of the raid controller for this metadata */
+ 	const struct imsm_orom *orom; /* platform firmware support */
+ 	struct intel_super *next; /* (temp) list for disambiguating family_num */
++	struct md_bb bb;	/* memory for get_bad_blocks call */
+ };
+ 
+ struct intel_disk {
+@@ -4283,6 +4284,7 @@ static void __free_imsm(struct intel_super *super, int free_disks)
+ static void free_imsm(struct intel_super *super)
+ {
+ 	__free_imsm(super, 1);
++	free(super->bb.entries);
+ 	free(super);
+ }
+ 
+@@ -4303,6 +4305,14 @@ static struct intel_super *alloc_super(void)
+ 
+ 	super->current_vol = -1;
+ 	super->create_offset = ~((unsigned long long) 0);
++
++	super->bb.entries = xmalloc(BBM_LOG_MAX_ENTRIES *
++				   sizeof(struct md_bb_entry));
++	if (!super->bb.entries) {
++		free(super);
++		return NULL;
++	}
++
+ 	return super;
+ }
+ 
+@@ -9882,6 +9892,34 @@ static int imsm_clear_badblock(struct active_array *a, int slot,
+ 	return ret;
+ }
+ /*******************************************************************************
++* Function:   imsm_get_badblocks
++* Description: This routine get list of bad blocks for an array
++*
++* Parameters:
++*     a		: array
++*     slot	: disk number
++* Returns:
++*     bb	: structure containing bad blocks
++*     NULL	: error
++******************************************************************************/
++static struct md_bb *imsm_get_badblocks(struct active_array *a, int slot)
++{
++	int inst = a->info.container_member;
++	struct intel_super *super = a->container->sb;
++	struct imsm_dev *dev = get_imsm_dev(super, inst);
++	struct imsm_map *map = get_imsm_map(dev, MAP_0);
++	int ord;
++
++	ord = imsm_disk_slot_to_ord(a, slot);
++	if (ord < 0)
++		return NULL;
++
++	get_volume_badblocks(super->bbm_log, ord_to_idx(ord), pba_of_lba0(map),
++			     blocks_per_member(map), &super->bb);
++
++	return &super->bb;
++}
++/*******************************************************************************
+  * Function:	init_migr_record_imsm
+  * Description:	Function inits imsm migration record
+  * Parameters:
+@@ -11436,5 +11474,6 @@ struct superswitch super_imsm = {
+ 	.prepare_update = imsm_prepare_update,
+ 	.record_bad_block = imsm_record_badblock,
+ 	.clear_bad_block  = imsm_clear_badblock,
++	.get_bad_blocks   = imsm_get_badblocks,
+ #endif /* MDASSEMBLE */
+ };
+-- 
+1.8.3.1
 
-Did you reboot while it was running, or after it had finished its
-aloted time?
-You need to let it finish and record where it got up to.
-
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhBECoACgkQOeye3VZi
-gbnk2Q//byb1g6xlFx5agRG5GWCoFfTD2vHdrTTlJCByRP4JavuMCSCeJi3R2O7V
-dboWR6rhXB0EhBDjpV/bplBdqN5aHnxStY5fbEYQD4+G7uE/wz4jHKN1bnWsEi9y
-V3a90ONLn8WccaWgM7NWWhozEOI4gEcpCcgWF1mKmTJnE3sw/xkVovMZz8uBdDl7
-cJ9i3APh+Mma+T315ereL2EZ7wGx5mNNQuQsr/jqLdFDIS6dJxtsGtZXdLu5orcj
-XLdHlIEJn7kRrwUpLHdfmQDZGZ66j5kI23pxLG6JBMw5JTTtcfzAx0mkzW+HU0sr
-uR+UzKMklVcRrAJOanWJ0UYOwtBAhvo8gTU0s5fXZ94/C6DM/+sB6oAljqabWHda
-g6Fdw59vWfjfk+SxerUnlup1fA9JHdapG+TdQz1nVqANYsakTyt36X7xhMG8LoTK
-2KbGDQN7YNd3MIKaiodod9VB+xMD3cQrwCRzNzszzrADUC29QQLC1D2kV5U4iU/n
-f2xRM8OBVccjJIrY0XBHWetVnh0LEqQSFiLConNRl5MSX/4Pdt7+Wk78oPbz4A1I
-lBgiOXdd2vh0pRo0YIcthtYyNKz1aKkvv/su2oY0EJVjvddtdoHiTtDZWfFpxtHP
-wCt7geIvM3UqhkbwriFMjlX/aJ1EF5i7JTJlIifoU67z3/jN1Hc=
-=T2g0
------END PGP SIGNATURE-----
---=-=-=--
