@@ -1,61 +1,37 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH 1/2] md/raid1: Refactor raid1_make_request
-Date: Fri, 02 Dec 2016 11:36:35 +1100
-Message-ID: <87eg1r6ub0.fsf@notabene.neil.brown.name>
-References: <20161130212020.15762-1-robert@leblancnet.us> <20161130212020.15762-2-robert@leblancnet.us>
-Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+From: Robert LeBlanc <robert@leblancnet.us>
+Subject: [PATCH v2 0/2] Reorganize raid*_make_request to clean up code
+Date: Thu,  1 Dec 2016 20:30:06 -0700
+Message-ID: <20161202033008.30314-1-robert@leblancnet.us>
+References: <20161130212020.15762-1-robert@leblancnet.us>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161130212020.15762-2-robert@leblancnet.us>
+In-Reply-To: <20161130212020.15762-1-robert@leblancnet.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robert LeBlanc <robert@leblancnet.us>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Robert LeBlanc <robert@leblancnet.us>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
+In response to Christoph, I've broken the read and writes into their own
+functions to make the code even cleaner. Since it is such a big change, I broke
+up the commits into this series instead of creating a v2 of the previous patch.
 
-On Thu, Dec 01 2016, Robert LeBlanc wrote:
+Changes since v1:
+ 
+ John Stoffel
+ * Changed to if/then instead of return in raid1_make_request
 
-> Refactor raid1_make_request to make read and write code in their own
-> functions to clean up the code.
+ Neil Brown
+ * Moved wait_barrier into raid1_{read,write}_request so that it could be after
+   ->suspend_{hi,lo}. This prevents a write blocking a resync until the suspend
+   region is moved.
 
-There is a change in here that is more than just a refactoring.
+Robert LeBlanc (2):
+  md/raid1: Refactor raid1_make_request
+  md/raid10: Refactor raid10_make_request
 
-You have moved the wait_barrier() call from after the checks on
-->suspend_{lo,hi} to before.
-If a write was sent to a suspended region, this will block any pending
-resync until the suspended region is moved.
-The previous code won't block resync in this case.
+ drivers/md/raid1.c  | 241 ++++++++++++++++++++++++----------------------
+ drivers/md/raid10.c | 271 +++++++++++++++++++++++++++-------------------------
+ 2 files changed, 264 insertions(+), 248 deletions(-)
 
-I cannot see that this would actually have any practical significance,
-as I don't think the suspend_hi/lo settings are used at all for raid1.
-I'm less certain about the ->area_resyncing() test, though that probably
-isn't a problem.
+-- 
+2.10.2
 
-But it should at least be noted in the change-log that there is
-potentially a functional change here.
-
-Thanks,
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhAwhMACgkQOeye3VZi
-gblPHA//WmtQE2Ofh827N2WvLqE8pnpNrquuJSgdToYShCNf6xj03uc/MQssVvu9
-PBzooo+u+Is/ybaZw+D7f+36TjVeSA7e5jKLZJ+F3JzJPPlecCQZIUbeah2a1KUx
-DxqGjaZHAkx4s5mmh9e40FiGjhkrirN/v1FwhFQIP2nIPiu/di7m3svmlt0vex9h
-wsIbwzI2GYGgwGa7JLjjE4dhXzzXc6YV/G2+uTsJAey4k/iWOho+9cwlFCUIZnre
-1v4UgOyQUkxNk162i0vRogNn4psluurjVOmpLtj62cqd1oONuJhK4hbYi7ae7Xuk
-3BYlhmpmxZMih8zYDoojaDVXEG5aslUTJkd7Rkt01XK1n7JfMdvnaViJXYEdUJ5o
-C6YxE6S75UaW6KgfXb51BpHyvvpTdMIuwtrAofhIBYG8x/T88NWM78pOtcpJF/z/
-Gf1t9yiOGj16qXG9vsoMxIKCq0e2jW7fZev6tTJhtvOFiZG3ViEbwz6jrbxwor+U
-xiqa7hSEdlb9RtqpqHUj1TicqZYzDI9FTX5Wj5EpipWWQ99x/5resxdTYgLsXaOI
-qB4ng2XFU1OOHjoNNUkgt4BF0Fu9WcgISS852LhsiEDyAA61Y9FfL3AskJYEyqJZ
-/ayfjqX/icA/w7P3aRejWk21bTfctS0bLbtLqJN99paHAxloS1g=
-=kLdt
------END PGP SIGNATURE-----
---=-=-=--
