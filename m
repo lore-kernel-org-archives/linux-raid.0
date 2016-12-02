@@ -1,97 +1,79 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v2] md/r5cache: run_no_space_stripes() when
- R5C_LOG_CRITICAL == 0
-Date: Fri, 2 Dec 2016 12:03:13 -0800
-Message-ID: <20161202200313.hqvlavkkbm2lj43y@kernel.org>
-References: <20161201005754.3149044-1-songliubraving@fb.com>
+Subject: Re: [PATCH 4/4] md/raid5-cache: adjust the write position of the
+ empty block and mark it as a checkpoint
+Date: Fri, 2 Dec 2016 12:10:58 -0800
+Message-ID: <20161202201058.e5jrjxkgve3ob776@kernel.org>
+References: <20161128081921.5641-1-liuyun01@kylinos.cn>
+ <20161128081921.5641-4-liuyun01@kylinos.cn>
+ <20161129223150.tseez7b4y6lb72fs@kernel.org>
+ <256217AC-28C5-4C52-ABDB-9C36221E6A1B@kylinos.cn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20161201005754.3149044-1-songliubraving@fb.com>
+In-Reply-To: <256217AC-28C5-4C52-ABDB-9C36221E6A1B@kylinos.cn>
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>
-Cc: linux-raid@vger.kernel.org, neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org
+To: JackieLiu <liuyun01@kylinos.cn>
+Cc: songliubraving@fb.com, =?utf-8?B?5YiY5q2j5YWD?= <liuzhengyuan@kylinos.cn>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Nov 30, 2016 at 04:57:54PM -0800, Song Liu wrote:
-> With writeback cache, we define log space critical as
+On Wed, Nov 30, 2016 at 12:03:14PM +0800, JackieLiu wrote:
 > 
->    free_space < 2 * reclaim_required_space
+> > 在 2016年11月30日，06:31，Shaohua Li <shli@kernel.org> 写道：
+> > 
+> > On Mon, Nov 28, 2016 at 04:19:21PM +0800, JackieLiu wrote:
+> >> When recovery is complete, we write an empty block and record his
+> >> position first, then make the data-only stripes rewritten done,
+> >> the location of the empty block as the last checkpoint position
+> >> to write into the super block. And we should update last_checkpoint
+> >> to this empty block position.
+> >> ...
+> >> +	pos = ctx.pos;
+> >> +	r5l_log_write_empty_meta_block(log, ctx.pos, (ctx.seq += 10));
+> > 
+> > hmm, move the ctx.seq += 10 out please
 > 
-> So the deassert of R5C_LOG_CRITICAL could happen when
->   1. free_space increases
->   2. reclaim_required_space decreases
+> yep, if this patch is OK,I will resend an appropriate patch.
 > 
-> Currently, run_no_space_stripes() is called when 1 happens, but
-> not (always) when 2 happens.
+> >> +	ctx.pos = r5l_ring_add(log, ctx.pos, BLOCK_SECTORS);
+> >> +
+> >> 	if ((ctx.data_only_stripes == 0) && (ctx.data_parity_stripes == 0))
+> >> 		pr_debug("md/raid:%s: starting from clean shutdown\n",
+> >> 			 mdname(mddev));
+> >> @@ -2167,9 +2171,9 @@ static int r5l_recovery_log(struct r5l_log *log)
+> >> 
+> >> 	log->log_start = ctx.pos;
+> >> 	log->next_checkpoint = ctx.pos;
+> >> +	log->last_checkpoint = pos;
+> >> 	log->seq = ctx.seq;
+> >> -	r5l_log_write_empty_meta_block(log, ctx.pos, ctx.seq);
+> >> -	r5l_write_super(log, ctx.pos);
+> >> +	r5l_write_super(log, pos);
+> >> 	return 0;
+> >> }
+> > 
+> > Applied the first 3 patches in the series. This one looks good too, but why we
+> > always create the empty meta block? It's only required when we don't rewrite
+> > the data. Eg, the data_only_stripes == 0.
+> > 
+> > Thanks,
+> > Shaohua
 > 
-> With this patch, run_no_space_stripes() is call when
-> R5C_LOG_CRITICAL is cleared.
+> As you said, when data_only_stripes != 0, does not need to write an empty 
+> meta block, but we need to calculate the position of the first list member and
+> save it.  at the same time, when data_only_stripes == 0, then you need to write
+> an empty block, and let the super block pointing to him; In any case, Since 
+> there is a possibility that invalid blocks are connected to valid blocks, we still 
+> need to add 10 to them.
 > 
-> Signed-off-by: Song Liu <songliubraving@fb.com>
+> In my option, if this empty block has been added, we just let the super block 
+> pointing to him, everything is OK now, the code is more clean, and the logic 
+> is clear.
 
-applied, thanks!
+I'd prefer not writting the empty block unconditionally. It's unnecessary and
+confusing reading the code. Don't think a 'if () write_empty_block' makes the
+logic complecated.
 
-> ---
->  drivers/md/raid5-cache.c | 14 +++++++++++++-
->  1 file changed, 13 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index e786d4e..c36f86b 100644
-> --- a/drivers/md/raid5-cache.c
-> +++ b/drivers/md/raid5-cache.c
-> @@ -370,6 +370,7 @@ static inline void r5c_update_log_state(struct r5l_log *log)
->  	struct r5conf *conf = log->rdev->mddev->private;
->  	sector_t free_space;
->  	sector_t reclaim_space;
-> +	bool wake_reclaim = false;
->  
->  	if (!r5c_is_writeback(log))
->  		return;
-> @@ -379,12 +380,18 @@ static inline void r5c_update_log_state(struct r5l_log *log)
->  	reclaim_space = r5c_log_required_to_flush_cache(conf);
->  	if (free_space < 2 * reclaim_space)
->  		set_bit(R5C_LOG_CRITICAL, &conf->cache_state);
-> -	else
-> +	else {
-> +		if (test_bit(R5C_LOG_CRITICAL, &conf->cache_state))
-> +			wake_reclaim = true;
->  		clear_bit(R5C_LOG_CRITICAL, &conf->cache_state);
-> +	}
->  	if (free_space < 3 * reclaim_space)
->  		set_bit(R5C_LOG_TIGHT, &conf->cache_state);
->  	else
->  		clear_bit(R5C_LOG_TIGHT, &conf->cache_state);
-> +
-> +	if (wake_reclaim)
-> +		r5l_wake_reclaim(log, 0);
->  }
->  
->  /*
-> @@ -1345,6 +1352,10 @@ static void r5c_do_reclaim(struct r5conf *conf)
->  		spin_unlock(&conf->device_lock);
->  		spin_unlock_irqrestore(&log->stripe_in_journal_lock, flags);
->  	}
-> +
-> +	if (!test_bit(R5C_LOG_CRITICAL, &conf->cache_state))
-> +		r5l_run_no_space_stripes(log);
-> +
->  	md_wakeup_thread(conf->mddev->thread);
->  }
->  
-> @@ -2401,6 +2412,7 @@ void r5c_finish_stripe_write_out(struct r5conf *conf,
->  	spin_unlock_irq(&conf->log->stripe_in_journal_lock);
->  	sh->log_start = MaxSector;
->  	atomic_dec(&conf->log->stripe_in_journal_count);
-> +	r5c_update_log_state(conf->log);
->  }
->  
->  int
-> -- 
-> 2.9.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Shaohua
