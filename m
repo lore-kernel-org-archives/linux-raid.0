@@ -1,7 +1,7 @@
 From: Robert LeBlanc <robert@leblancnet.us>
-Subject: [PATCH v2 1/2] md/raid1: Refactor raid1_make_request
-Date: Thu,  1 Dec 2016 20:30:07 -0700
-Message-ID: <20161202033008.30314-2-robert@leblancnet.us>
+Subject: [PATCH v2 2/2] md/raid10: Refactor raid10_make_request
+Date: Thu,  1 Dec 2016 20:30:08 -0700
+Message-ID: <20161202033008.30314-3-robert@leblancnet.us>
 References: <20161130212020.15762-1-robert@leblancnet.us>
  <20161202033008.30314-1-robert@leblancnet.us>
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -11,82 +11,155 @@ To: linux-raid@vger.kernel.org
 Cc: Robert LeBlanc <robert@leblancnet.us>
 List-Id: linux-raid.ids
 
-Refactor raid1_make_request to make read and write code in their own
-functions to clean up the code.
+Refactor raid10_make_request into seperate read and write functions to
+clean up the code.
 
 Signed-off-by: Robert LeBlanc <robert@leblancnet.us>
 ---
- drivers/md/raid1.c | 241 +++++++++++++++++++++++++++--------------------------
- 1 file changed, 125 insertions(+), 116 deletions(-)
+ drivers/md/raid10.c | 271 +++++++++++++++++++++++++++-------------------------
+ 1 file changed, 139 insertions(+), 132 deletions(-)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 21dc00e..0ea6541 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1032,17 +1032,97 @@ static void raid1_unplug(struct blk_plug_cb *cb, bool from_schedule)
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index be1a9fc..d3bd756 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1046,150 +1046,89 @@ static void raid10_unplug(struct blk_plug_cb *cb, bool from_schedule)
  	kfree(plug);
  }
  
--static void raid1_make_request(struct mddev *mddev, struct bio * bio)
-+static void raid1_read_request(struct mddev *mddev, struct bio *bio,
-+				 struct r1bio *r1_bio)
+-static void __make_request(struct mddev *mddev, struct bio *bio)
++static void raid10_read_request(struct mddev *mddev, struct bio *bio,
++				struct r10bio *r10_bio)
  {
- 	struct r1conf *conf = mddev->private;
- 	struct raid1_info *mirror;
--	struct r1bio *r1_bio;
+ 	struct r10conf *conf = mddev->private;
+-	struct r10bio *r10_bio;
  	struct bio *read_bio;
-+	struct bitmap *bitmap = mddev->bitmap;
-+	const int op = bio_op(bio);
-+	const unsigned long do_sync = (bio->bi_opf & REQ_SYNC);
-+	int sectors_handled;
-+	int max_sectors;
-+	int rdisk;
-+
-+	wait_barrier(conf, bio);
-+
+-	int i;
+ 	const int op = bio_op(bio);
+-	const int rw = bio_data_dir(bio);
+ 	const unsigned long do_sync = (bio->bi_opf & REQ_SYNC);
+-	const unsigned long do_fua = (bio->bi_opf & REQ_FUA);
+-	unsigned long flags;
+-	struct md_rdev *blocked_rdev;
+-	struct blk_plug_cb *cb;
+-	struct raid10_plug_cb *plug = NULL;
+ 	int sectors_handled;
+ 	int max_sectors;
+-	int sectors;
+-
+-	md_write_start(mddev, bio);
+-
+-	/*
+-	 * Register the new request and wait if the reconstruction
+-	 * thread has put up a bar for new requests.
+-	 * Continue immediately if no resync is active currently.
+-	 */
+-	wait_barrier(conf);
+-
+-	sectors = bio_sectors(bio);
+-	while (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
+-	    bio->bi_iter.bi_sector < conf->reshape_progress &&
+-	    bio->bi_iter.bi_sector + sectors > conf->reshape_progress) {
+-		/* IO spans the reshape position.  Need to wait for
+-		 * reshape to pass
+-		 */
+-		allow_barrier(conf);
+-		wait_event(conf->wait_barrier,
+-			   conf->reshape_progress <= bio->bi_iter.bi_sector ||
+-			   conf->reshape_progress >= bio->bi_iter.bi_sector +
+-			   sectors);
+-		wait_barrier(conf);
+-	}
+-	if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
+-	    bio_data_dir(bio) == WRITE &&
+-	    (mddev->reshape_backwards
+-	     ? (bio->bi_iter.bi_sector < conf->reshape_safe &&
+-		bio->bi_iter.bi_sector + sectors > conf->reshape_progress)
+-	     : (bio->bi_iter.bi_sector + sectors > conf->reshape_safe &&
+-		bio->bi_iter.bi_sector < conf->reshape_progress))) {
+-		/* Need to update reshape_position in metadata */
+-		mddev->reshape_position = conf->reshape_progress;
+-		set_mask_bits(&mddev->flags, 0,
+-			      BIT(MD_CHANGE_DEVS) | BIT(MD_CHANGE_PENDING));
+-		md_wakeup_thread(mddev->thread);
+-		wait_event(mddev->sb_wait,
+-			   !test_bit(MD_CHANGE_PENDING, &mddev->flags));
++	struct md_rdev *rdev;
++	int slot;
+ 
+-		conf->reshape_safe = mddev->reshape_position;
 +read_again:
-+	rdisk = read_balance(conf, r1_bio, &max_sectors);
-+
-+	if (rdisk < 0) {
-+		/* couldn't find anywhere to read from */
-+		raid_end_bio_io(r1_bio);
++	rdev = read_balance(conf, r10_bio, &max_sectors);
++	if (!rdev) {
++		raid_end_bio_io(r10_bio);
 +		return;
-+	}
-+	mirror = conf->mirrors + rdisk;
-+
-+	if (test_bit(WriteMostly, &mirror->rdev->flags) &&
-+	    bitmap) {
-+		/* Reading from a write-mostly device must
-+		 * take care not to over-take any writes
-+		 * that are 'behind'
-+		 */
-+		wait_event(bitmap->behind_wait,
-+			   atomic_read(&bitmap->behind_writes) == 0);
-+	}
-+	r1_bio->read_disk = rdisk;
-+	r1_bio->start_next_window = 0;
-+
+ 	}
++	slot = r10_bio->read_slot;
+ 
+-	r10_bio = mempool_alloc(conf->r10bio_pool, GFP_NOIO);
+-
+-	r10_bio->master_bio = bio;
+-	r10_bio->sectors = sectors;
 +	read_bio = bio_clone_mddev(bio, GFP_NOIO, mddev);
-+	bio_trim(read_bio, r1_bio->sector - bio->bi_iter.bi_sector,
++	bio_trim(read_bio, r10_bio->sector - bio->bi_iter.bi_sector,
 +		 max_sectors);
-+
-+	r1_bio->bios[rdisk] = read_bio;
-+
-+	read_bio->bi_iter.bi_sector = r1_bio->sector +
-+		mirror->rdev->data_offset;
-+	read_bio->bi_bdev = mirror->rdev->bdev;
-+	read_bio->bi_end_io = raid1_end_read_request;
+ 
+-	r10_bio->mddev = mddev;
+-	r10_bio->sector = bio->bi_iter.bi_sector;
+-	r10_bio->state = 0;
++	r10_bio->devs[slot].bio = read_bio;
++	r10_bio->devs[slot].rdev = rdev;
+ 
+-	/* We might need to issue multiple reads to different
+-	 * devices if there are bad blocks around, so we keep
+-	 * track of the number of reads in bio->bi_phys_segments.
+-	 * If this is 0, there is only one r10_bio and no locking
+-	 * will be needed when the request completes.  If it is
+-	 * non-zero, then it is the number of not-completed requests.
+-	 */
+-	bio->bi_phys_segments = 0;
+-	bio_clear_flag(bio, BIO_SEG_VALID);
++	read_bio->bi_iter.bi_sector = r10_bio->devs[slot].addr +
++		choose_data_offset(r10_bio, rdev);
++	read_bio->bi_bdev = rdev->bdev;
++	read_bio->bi_end_io = raid10_end_read_request;
 +	bio_set_op_attrs(read_bio, op, do_sync);
-+	read_bio->bi_private = r1_bio;
-+
-+	if (max_sectors < r1_bio->sectors) {
-+		/* could not read all from this device, so we will
-+		 * need another r1_bio.
-+		 */
-+
-+		sectors_handled = (r1_bio->sector + max_sectors
++	read_bio->bi_private = r10_bio;
+ 
+-	if (rw == READ) {
+-		/*
+-		 * read balancing logic:
++	if (max_sectors < r10_bio->sectors) {
++		/* Could not read all from this device, so we will
++		 * need another r10_bio.
+ 		 */
+-		struct md_rdev *rdev;
+-		int slot;
+-
+-read_again:
+-		rdev = read_balance(conf, r10_bio, &max_sectors);
+-		if (!rdev) {
+-			raid_end_bio_io(r10_bio);
+-			return;
+-		}
+-		slot = r10_bio->read_slot;
+-
+-		read_bio = bio_clone_mddev(bio, GFP_NOIO, mddev);
+-		bio_trim(read_bio, r10_bio->sector - bio->bi_iter.bi_sector,
+-			 max_sectors);
+-
+-		r10_bio->devs[slot].bio = read_bio;
+-		r10_bio->devs[slot].rdev = rdev;
+-
+-		read_bio->bi_iter.bi_sector = r10_bio->devs[slot].addr +
+-			choose_data_offset(r10_bio, rdev);
+-		read_bio->bi_bdev = rdev->bdev;
+-		read_bio->bi_end_io = raid10_end_read_request;
+-		bio_set_op_attrs(read_bio, op, do_sync);
+-		read_bio->bi_private = r10_bio;
++		sectors_handled = (r10_bio->sector + max_sectors
 +				   - bio->bi_iter.bi_sector);
-+		r1_bio->sectors = max_sectors;
++		r10_bio->sectors = max_sectors;
 +		spin_lock_irq(&conf->device_lock);
 +		if (bio->bi_phys_segments == 0)
 +			bio->bi_phys_segments = 2;
@@ -94,141 +167,19 @@ index 21dc00e..0ea6541 100644
 +			bio->bi_phys_segments++;
 +		spin_unlock_irq(&conf->device_lock);
 +		/* Cannot call generic_make_request directly
-+		 * as that will be queued in __make_request
-+		 * and subsequent mempool_alloc might block waiting
-+		 * for it.  So hand bio over to raid1d.
++		 * as that will be queued in __generic_make_request
++		 * and subsequent mempool_alloc might block
++		 * waiting for it.  so hand bio over to raid10d.
 +		 */
-+		reschedule_retry(r1_bio);
-+
-+		r1_bio = mempool_alloc(conf->r1bio_pool, GFP_NOIO);
-+
-+		r1_bio->master_bio = bio;
-+		r1_bio->sectors = bio_sectors(bio) - sectors_handled;
-+		r1_bio->state = 0;
-+		r1_bio->mddev = mddev;
-+		r1_bio->sector = bio->bi_iter.bi_sector + sectors_handled;
-+		goto read_again;
-+	} else
-+		generic_make_request(read_bio);
-+}
-+
-+static void raid1_write_request(struct mddev *mddev, struct bio *bio,
-+				struct r1bio *r1_bio)
-+{
-+	struct r1conf *conf = mddev->private;
- 	int i, disks;
--	struct bitmap *bitmap;
-+	struct bitmap *bitmap = mddev->bitmap;
- 	unsigned long flags;
- 	const int op = bio_op(bio);
--	const int rw = bio_data_dir(bio);
- 	const unsigned long do_sync = (bio->bi_opf & REQ_SYNC);
- 	const unsigned long do_flush_fua = (bio->bi_opf &
- 						(REQ_PREFLUSH | REQ_FUA));
-@@ -1062,12 +1142,11 @@ static void raid1_make_request(struct mddev *mddev, struct bio * bio)
++		reschedule_retry(r10_bio);
  
- 	md_write_start(mddev, bio); /* wait on superblock update early */
- 
--	if (bio_data_dir(bio) == WRITE &&
--	    ((bio_end_sector(bio) > mddev->suspend_lo &&
-+	if ((bio_end_sector(bio) > mddev->suspend_lo &&
- 	    bio->bi_iter.bi_sector < mddev->suspend_hi) ||
- 	    (mddev_is_clustered(mddev) &&
- 	     md_cluster_ops->area_resyncing(mddev, WRITE,
--		     bio->bi_iter.bi_sector, bio_end_sector(bio))))) {
-+		     bio->bi_iter.bi_sector, bio_end_sector(bio)))) {
- 		/* As the suspend_* range is controlled by
- 		 * userspace, we want an interruptible
- 		 * wait.
-@@ -1081,119 +1160,15 @@ static void raid1_make_request(struct mddev *mddev, struct bio * bio)
- 			    bio->bi_iter.bi_sector >= mddev->suspend_hi ||
- 			    (mddev_is_clustered(mddev) &&
- 			     !md_cluster_ops->area_resyncing(mddev, WRITE,
--				     bio->bi_iter.bi_sector, bio_end_sector(bio))))
-+				     bio->bi_iter.bi_sector,
-+				     bio_end_sector(bio))))
- 				break;
- 			schedule();
- 		}
- 		finish_wait(&conf->wait_barrier, &w);
- 	}
--
- 	start_next_window = wait_barrier(conf, bio);
- 
--	bitmap = mddev->bitmap;
--
--	/*
--	 * make_request() can abort the operation when read-ahead is being
--	 * used and no empty request is available.
--	 *
--	 */
--	r1_bio = mempool_alloc(conf->r1bio_pool, GFP_NOIO);
--
--	r1_bio->master_bio = bio;
--	r1_bio->sectors = bio_sectors(bio);
--	r1_bio->state = 0;
--	r1_bio->mddev = mddev;
--	r1_bio->sector = bio->bi_iter.bi_sector;
--
--	/* We might need to issue multiple reads to different
--	 * devices if there are bad blocks around, so we keep
--	 * track of the number of reads in bio->bi_phys_segments.
--	 * If this is 0, there is only one r1_bio and no locking
--	 * will be needed when requests complete.  If it is
--	 * non-zero, then it is the number of not-completed requests.
--	 */
--	bio->bi_phys_segments = 0;
--	bio_clear_flag(bio, BIO_SEG_VALID);
--
--	if (rw == READ) {
--		/*
--		 * read balancing logic:
--		 */
--		int rdisk;
--
--read_again:
--		rdisk = read_balance(conf, r1_bio, &max_sectors);
--
--		if (rdisk < 0) {
--			/* couldn't find anywhere to read from */
--			raid_end_bio_io(r1_bio);
--			return;
--		}
--		mirror = conf->mirrors + rdisk;
--
--		if (test_bit(WriteMostly, &mirror->rdev->flags) &&
--		    bitmap) {
--			/* Reading from a write-mostly device must
--			 * take care not to over-take any writes
--			 * that are 'behind'
+-		if (max_sectors < r10_bio->sectors) {
+-			/* Could not read all from this device, so we will
+-			 * need another r10_bio.
 -			 */
--			wait_event(bitmap->behind_wait,
--				   atomic_read(&bitmap->behind_writes) == 0);
--		}
--		r1_bio->read_disk = rdisk;
--		r1_bio->start_next_window = 0;
--
--		read_bio = bio_clone_mddev(bio, GFP_NOIO, mddev);
--		bio_trim(read_bio, r1_bio->sector - bio->bi_iter.bi_sector,
--			 max_sectors);
--
--		r1_bio->bios[rdisk] = read_bio;
--
--		read_bio->bi_iter.bi_sector = r1_bio->sector +
--			mirror->rdev->data_offset;
--		read_bio->bi_bdev = mirror->rdev->bdev;
--		read_bio->bi_end_io = raid1_end_read_request;
--		bio_set_op_attrs(read_bio, op, do_sync);
--		read_bio->bi_private = r1_bio;
--
--		if (max_sectors < r1_bio->sectors) {
--			/* could not read all from this device, so we will
--			 * need another r1_bio.
--			 */
--
--			sectors_handled = (r1_bio->sector + max_sectors
+-			sectors_handled = (r10_bio->sector + max_sectors
 -					   - bio->bi_iter.bi_sector);
--			r1_bio->sectors = max_sectors;
+-			r10_bio->sectors = max_sectors;
 -			spin_lock_irq(&conf->device_lock);
 -			if (bio->bi_phys_segments == 0)
 -				bio->bi_phys_segments = 2;
@@ -236,93 +187,166 @@ index 21dc00e..0ea6541 100644
 -				bio->bi_phys_segments++;
 -			spin_unlock_irq(&conf->device_lock);
 -			/* Cannot call generic_make_request directly
--			 * as that will be queued in __make_request
--			 * and subsequent mempool_alloc might block waiting
--			 * for it.  So hand bio over to raid1d.
+-			 * as that will be queued in __generic_make_request
+-			 * and subsequent mempool_alloc might block
+-			 * waiting for it.  so hand bio over to raid10d.
 -			 */
--			reschedule_retry(r1_bio);
--
--			r1_bio = mempool_alloc(conf->r1bio_pool, GFP_NOIO);
--
--			r1_bio->master_bio = bio;
--			r1_bio->sectors = bio_sectors(bio) - sectors_handled;
--			r1_bio->state = 0;
--			r1_bio->mddev = mddev;
--			r1_bio->sector = bio->bi_iter.bi_sector +
+-			reschedule_retry(r10_bio);
++		r10_bio = mempool_alloc(conf->r10bio_pool, GFP_NOIO);
+ 
+-			r10_bio = mempool_alloc(conf->r10bio_pool, GFP_NOIO);
++		r10_bio->master_bio = bio;
++		r10_bio->sectors = bio_sectors(bio) - sectors_handled;
++		r10_bio->state = 0;
++		r10_bio->mddev = mddev;
++		r10_bio->sector = bio->bi_iter.bi_sector + sectors_handled;
++		goto read_again;
++	} else
++		generic_make_request(read_bio);
++	return;
++}
+ 
+-			r10_bio->master_bio = bio;
+-			r10_bio->sectors = bio_sectors(bio) - sectors_handled;
+-			r10_bio->state = 0;
+-			r10_bio->mddev = mddev;
+-			r10_bio->sector = bio->bi_iter.bi_sector +
 -				sectors_handled;
 -			goto read_again;
 -		} else
 -			generic_make_request(read_bio);
 -		return;
 -	}
--
++static void raid10_write_request(struct mddev *mddev, struct bio *bio,
++				 struct r10bio *r10_bio)
++{
++	struct r10conf *conf = mddev->private;
++	int i;
++	const int op = bio_op(bio);
++	const unsigned long do_sync = (bio->bi_opf & REQ_SYNC);
++	const unsigned long do_fua = (bio->bi_opf & REQ_FUA);
++	unsigned long flags;
++	struct md_rdev *blocked_rdev;
++	struct blk_plug_cb *cb;
++	struct raid10_plug_cb *plug = NULL;
++	int sectors_handled;
++	int max_sectors;
++	md_write_start(mddev, bio);
+ 
 -	/*
 -	 * WRITE:
 -	 */
  	if (conf->pending_count >= max_queued_requests) {
  		md_wakeup_thread(mddev->thread);
  		wait_event(conf->wait_barrier,
-@@ -1236,8 +1211,7 @@ read_again:
+@@ -1249,8 +1188,7 @@ retry_write:
  			int bad_sectors;
  			int is_bad;
  
--			is_bad = is_badblock(rdev, r1_bio->sector,
+-			is_bad = is_badblock(rdev, dev_sector,
 -					     max_sectors,
-+			is_bad = is_badblock(rdev, r1_bio->sector, max_sectors,
++			is_bad = is_badblock(rdev, dev_sector, max_sectors,
  					     &first_bad, &bad_sectors);
  			if (is_bad < 0) {
- 				/* mustn't write here until the bad block is
-@@ -1325,7 +1299,8 @@ read_again:
- 			continue;
+ 				/* Mustn't write here until the bad block
+@@ -1353,8 +1291,7 @@ retry_write:
+ 			r10_bio->devs[i].bio = mbio;
  
- 		mbio = bio_clone_mddev(bio, GFP_NOIO, mddev);
--		bio_trim(mbio, r1_bio->sector - bio->bi_iter.bi_sector, max_sectors);
-+		bio_trim(mbio, r1_bio->sector - bio->bi_iter.bi_sector,
-+			 max_sectors);
+ 			mbio->bi_iter.bi_sector	= (r10_bio->devs[i].addr+
+-					   choose_data_offset(r10_bio,
+-							      rdev));
++					   choose_data_offset(r10_bio, rdev));
+ 			mbio->bi_bdev = rdev->bdev;
+ 			mbio->bi_end_io	= raid10_end_write_request;
+ 			bio_set_op_attrs(mbio, op, do_sync | do_fua);
+@@ -1395,8 +1332,7 @@ retry_write:
+ 			r10_bio->devs[i].repl_bio = mbio;
  
- 		if (first_clone) {
- 			/* do behind I/O ?
-@@ -1408,6 +1383,40 @@ read_again:
- 	wake_up(&conf->wait_barrier);
+ 			mbio->bi_iter.bi_sector	= (r10_bio->devs[i].addr +
+-					   choose_data_offset(
+-						   r10_bio, rdev));
++					   choose_data_offset(r10_bio, rdev));
+ 			mbio->bi_bdev = rdev->bdev;
+ 			mbio->bi_end_io	= raid10_end_write_request;
+ 			bio_set_op_attrs(mbio, op, do_sync | do_fua);
+@@ -1434,6 +1370,77 @@ retry_write:
+ 	one_write_done(r10_bio);
  }
  
-+static void raid1_make_request(struct mddev *mddev, struct bio *bio)
++static void __make_request(struct mddev *mddev, struct bio *bio)
 +{
-+	struct r1conf *conf = mddev->private;
-+	struct r1bio *r1_bio;
++	struct r10conf *conf = mddev->private;
++	struct r10bio *r10_bio;
++	int sectors;
 +
 +	/*
-+	 * make_request() can abort the operation when read-ahead is being
-+	 * used and no empty request is available.
-+	 *
++	 * Register the new request and wait if the reconstruction
++	 * thread has put up a bar for new requests.
++	 * Continue immediately if no resync is active currently.
 +	 */
-+	r1_bio = mempool_alloc(conf->r1bio_pool, GFP_NOIO);
++	wait_barrier(conf);
 +
-+	r1_bio->master_bio = bio;
-+	r1_bio->sectors = bio_sectors(bio);
-+	r1_bio->state = 0;
-+	r1_bio->mddev = mddev;
-+	r1_bio->sector = bio->bi_iter.bi_sector;
++	sectors = bio_sectors(bio);
++	while (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
++	    bio->bi_iter.bi_sector < conf->reshape_progress &&
++	    bio->bi_iter.bi_sector + sectors > conf->reshape_progress) {
++		/* IO spans the reshape position.  Need to wait for
++		 * reshape to pass
++		 */
++		allow_barrier(conf);
++		wait_event(conf->wait_barrier,
++			   conf->reshape_progress <= bio->bi_iter.bi_sector ||
++			   conf->reshape_progress >= bio->bi_iter.bi_sector +
++			   sectors);
++		wait_barrier(conf);
++	}
++	if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
++	    bio_data_dir(bio) == WRITE &&
++	    (mddev->reshape_backwards
++	     ? (bio->bi_iter.bi_sector < conf->reshape_safe &&
++		bio->bi_iter.bi_sector + sectors > conf->reshape_progress)
++	     : (bio->bi_iter.bi_sector + sectors > conf->reshape_safe &&
++		bio->bi_iter.bi_sector < conf->reshape_progress))) {
++		/* Need to update reshape_position in metadata */
++		mddev->reshape_position = conf->reshape_progress;
++		set_mask_bits(&mddev->flags, 0,
++			      BIT(MD_CHANGE_DEVS) | BIT(MD_CHANGE_PENDING));
++		md_wakeup_thread(mddev->thread);
++		wait_event(mddev->sb_wait,
++			   !test_bit(MD_CHANGE_PENDING, &mddev->flags));
++
++		conf->reshape_safe = mddev->reshape_position;
++	}
++
++	r10_bio = mempool_alloc(conf->r10bio_pool, GFP_NOIO);
++
++	r10_bio->master_bio = bio;
++	r10_bio->sectors = sectors;
++
++	r10_bio->mddev = mddev;
++	r10_bio->sector = bio->bi_iter.bi_sector;
++	r10_bio->state = 0;
 +
 +	/* We might need to issue multiple reads to different
 +	 * devices if there are bad blocks around, so we keep
 +	 * track of the number of reads in bio->bi_phys_segments.
-+	 * If this is 0, there is only one r1_bio and no locking
-+	 * will be needed when requests complete.  If it is
++	 * If this is 0, there is only one r10_bio and no locking
++	 * will be needed when the request completes.  If it is
 +	 * non-zero, then it is the number of not-completed requests.
 +	 */
 +	bio->bi_phys_segments = 0;
 +	bio_clear_flag(bio, BIO_SEG_VALID);
 +
-+	if (bio_data_dir(bio) == READ)
-+		raid1_read_request(mddev, bio, r1_bio);
-+	else
-+		raid1_write_request(mddev, bio, r1_bio);
++	if (bio_data_dir(bio) == READ) {
++		raid10_read_request(mddev, bio, r10_bio);
++		return;
++	}
++	raid10_write_request(mddev, bio, r10_bio);
 +}
 +
- static void raid1_status(struct seq_file *seq, struct mddev *mddev)
+ static void raid10_make_request(struct mddev *mddev, struct bio *bio)
  {
- 	struct r1conf *conf = mddev->private;
+ 	struct r10conf *conf = mddev->private;
 -- 
 2.10.2
 
