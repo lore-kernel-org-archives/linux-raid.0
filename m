@@ -1,124 +1,162 @@
-From: Stephane Thiell <sthiell@stanford.edu>
+From: Marc Smith <marc.smith@mcc.edu>
 Subject: Re: MD Remnants After --stop
-Date: Fri, 2 Dec 2016 18:18:59 +0000
-Message-ID: <4592A104-1D16-42B6-B4DC-D8696EAAF052@stanford.edu>
+Date: Fri, 2 Dec 2016 14:12:45 -0500
+Message-ID: <CAHkw+LdhCOGn4ZXOrWMQHFK7RvJ9MA=0_uoN+69ZC3SUWsGaCg@mail.gmail.com>
 References: <CAHkw+Lf1SErbGro4bq5MM5LyB-Zqyqi4E90R7c+uAZHv1WgSrA@mail.gmail.com>
- <87fun3ond9.fsf@notabene.neil.brown.name>
- <CAHkw+LcfszsWDGQJzDaQU0-PsL+8K7t5msW_bLbv+YyDEFmn8Q@mail.gmail.com>
- <87fumlebwo.fsf@notabene.neil.brown.name>
- <CAHkw+LfN9xaFmmvg653OKh1eH=_kLdhd3Y1QMg3955TePCCtkg@mail.gmail.com>
+ <87fun3ond9.fsf@notabene.neil.brown.name> <CAHkw+LcfszsWDGQJzDaQU0-PsL+8K7t5msW_bLbv+YyDEFmn8Q@mail.gmail.com>
+ <87fumlebwo.fsf@notabene.neil.brown.name> <CAHkw+LfN9xaFmmvg653OKh1eH=_kLdhd3Y1QMg3955TePCCtkg@mail.gmail.com>
  <CAHkw+Ldbwkknz6ZqxVpFEE-3z1r7pz1AjamUbZaEPn_uyMn_-w@mail.gmail.com>
- <878tsbcbub.fsf@notabene.neil.brown.name>
- <CAHkw+Ldv+-uXGCQ+tKfkraZ3VF4V8sk203+Oopm7RvygGQQYGQ@mail.gmail.com>
- <87oa15938i.fsf@notabene.neil.brown.name>
- <CAHkw+LfJzZoWVnO8kDi+YVV09fas2DveQoChh10wEBZfYin6aQ@mail.gmail.com>
- <8760n8a7k5.fsf@notabene.neil.brown.name>
- <CAHkw+Lc9YEdbJcRu2bOLU-gex9UYSXB32iRKD8TPS7JpjSOdQA@mail.gmail.com>
- <87shq8743j.fsf@notabene.neil.brown.name>
- <CAHkw+LfmEyY8CSumeeftOrcYKzbkumHwtfeTuT0DhHZbaxdUSw@mail.gmail.com>
+ <878tsbcbub.fsf@notabene.neil.brown.name> <CAHkw+Ldv+-uXGCQ+tKfkraZ3VF4V8sk203+Oopm7RvygGQQYGQ@mail.gmail.com>
+ <87oa15938i.fsf@notabene.neil.brown.name> <CAHkw+LfJzZoWVnO8kDi+YVV09fas2DveQoChh10wEBZfYin6aQ@mail.gmail.com>
+ <8760n8a7k5.fsf@notabene.neil.brown.name> <CAHkw+Lc9YEdbJcRu2bOLU-gex9UYSXB32iRKD8TPS7JpjSOdQA@mail.gmail.com>
+ <87shq8743j.fsf@notabene.neil.brown.name> <CAHkw+LfmEyY8CSumeeftOrcYKzbkumHwtfeTuT0DhHZbaxdUSw@mail.gmail.com>
  <87k2bj6zwf.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <87k2bj6zwf.fsf@notabene.neil.brown.name>
-Content-Language: en-US
-Content-ID: <9A30C5931D30944390B842F231B74315@namprd02.prod.outlook.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.com>
-Cc: Marc Smith <marc.smith@mcc.edu>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-SGV5LA0KDQpKdXN0IHdhbnRlZCB0byBqdW1wIGluIGFzIEkgcmVwb3J0ZWQgYSB2ZXJ5IHNpbWls
-YXIgcHJvYmxlbSByZWNlbnRseSBvbjoNCg0KaHR0cHM6Ly9naXRodWIuY29tL25laWxicm93bi9t
-ZGFkbS9pc3N1ZXMvMjkNCg0KQWx0aG91Z2ggaXTigJlzIG11Y2ggYmV0dGVyIHdpdGggbWRhZG0g
-My40IGluIG15IGNhc2UsIEkgc3RpbGwgb2NjYXNpb25hbGx5IGdldCByZW1uYW50IG1kIGFmdGVy
-IC0tc3RvcCAuLi4NCg0KUGxlYXNlIGxldCBtZSBrbm93IHdoYXQgeW91IHRoaW5rLg0KDQpCZXN0
-LA0KDQpTdGVwaGFuDQoNCj4gT24gRGVjIDEsIDIwMTYsIGF0IDI6MzUgUE0sIE5laWxCcm93biA8
-bmVpbGJAc3VzZS5jb20+IHdyb3RlOg0KPiANCj4gT24gRnJpLCBEZWMgMDIgMjAxNiwgTWFyYyBT
-bWl0aCB3cm90ZToNCj4gDQo+PiBPbiBXZWQsIE5vdiAzMCwgMjAxNiBhdCA5OjUyIFBNLCBOZWls
-QnJvd24gPG5laWxiQHN1c2UuY29tPiB3cm90ZToNCj4+PiBPbiBNb24sIE5vdiAyOCAyMDE2LCBN
-YXJjIFNtaXRoIHdyb3RlOg0KPj4+IA0KPj4+PiANCj4+Pj4gIyBmaW5kIC9zeXMvYmxvY2svbWQx
-MjcvbWQNCj4+Pj4gL3N5cy9ibG9jay9tZDEyNy9tZA0KPj4+PiAvc3lzL2Jsb2NrL21kMTI3L21k
-L3Jlc2hhcGVfcG9zaXRpb24NCj4+Pj4gL3N5cy9ibG9jay9tZDEyNy9tZC9sYXlvdXQNCj4+Pj4g
-L3N5cy9ibG9jay9tZDEyNy9tZC9yYWlkX2Rpc2tzDQo+Pj4+IC9zeXMvYmxvY2svbWQxMjcvbWQv
-Yml0bWFwDQo+Pj4+IC9zeXMvYmxvY2svbWQxMjcvbWQvYml0bWFwL2NodW5rc2l6ZQ0KPj4+IA0K
-Pj4+IFRoaXMgdGVsbHMgbWUgdGhhdDoNCj4+PiAgICAgICAgc3lzZnNfcmVtb3ZlX2dyb3VwKCZt
-ZGRldi0+a29iaiwgJm1kX2JpdG1hcF9ncm91cCk7DQo+Pj4gaGFzbid0IGJlZW4gcnVuLCBzbyBt
-ZGRldl9kZWxheWVkX2RlbGV0ZSgpIGhhc24ndCBydW4uDQo+Pj4gVGhhdCBzdWdnZXN0cyB0aGUg
-ZmluYWwgbWRkZXZfcHV0KCkgaHNuJ3QgcnVuLiBpLmUuIG1kZGV2LT5hY3RpdmUgaXMgPiAwDQo+
-Pj4gDQo+Pj4gRXZlcnl0aGluZyBlbHNlIHN1Z2dlc3RzIHRoYXQgYXJyYXkgaGFzIGJlZW4gc3Rv
-cHBlZCBhbmQgY2xlYW5lZCBhbmQNCj4+PiBzaG91bGQgYmUgZ29uZS4uLg0KPj4+IA0KPj4+IFRo
-aXMgc2VlbXMgdG8gc3VnZ2VzdCB0aGF0IHRoZXJlIGlzIGFuIHVuYmFsYW5jZWQgbWRkZXZfZ2V0
-KCkgd2l0aG91dCBhDQo+Pj4gbWF0Y2hpbmcgbWRkZXZfcHV0KCkuICBJIGNhbm5vdCBmaW5kIGl0
-IHRob3VnaC4NCj4+PiANCj4+PiBJZiBJIGNvdWxkIHJlcHJvZHVjZSBpdCwgSSB3b3VsZCB0cnkg
-dG8gc2VlIHdoYXQgaXMgaGFwcGVuaW5nIGJ5Og0KPj4+IA0KPj4+IC0gcHV0dGluZw0KPj4+ICAg
-cHJpbnRrKCJtZGRldi0+YWN0aXZlID0gJWRcbiIsIGF0b21pY19yZWFkKCZtZGRldi0+YWN0aXZl
-KSk7DQo+Pj4gaW4gdGhlIHRvcCBvZiBtZGRldl9wdXQoKS4gIFRoYXQgc2hvdWxkbid0IGJlICp0
-b28qIG5vaXN5Lg0KPj4+IA0KPj4+IC0gcHV0dGluZw0KPj4+ICAgcHJpbnRrKCJyZD0lZCBlbXB0
-eT0lZCBjdGltZT0lZCBob2xkPSVkXG4iLCBtZGRldi0+cmFpZF9kaXNrcywNCj4+PiAgICAgICAg
-bGlzdF9lbXB0eSgmbWRkZXYtPmRpc2tzKSwgbWRkZXYtPmN0aW1lLCBtZGRldi0+aG9sZF9hY3Rp
-dmUpOw0KPj4+IA0KPj4+ICBpbiBtZGRldl9wdXQoKSBqdXN0IGJlZm9yZSB0aG9zZSB2YWx1ZXMg
-YXJlIHRlc3RlZC4NCj4+PiANCj4+PiAtIHB1dHRpbmcNCj4+PiAgICAgcHJpbnRrKCJxdWV1ZV93
-b3JrXG4iKTsNCj4+PiAgIGp1c3QgYmVmb3JlIHRoZSAncXVldWVfd29yaygpJyBjYWxsIGluIG1k
-ZGV2X3B1dC4NCj4+PiANCj4+PiAtIHB1dHRpbmcNCj4+PiAgICAgcHJpbnRrKCJtZGRldl9kZWxh
-eWVkX2RlbGV0ZVxuIik7DQo+Pj4gICBpbiBtZGRldl9kZWxheWVkX2RlbGV0ZSgpDQo+Pj4gDQo+
-Pj4gVGhlbiBzZWUgd2hhdCBnZXRzIHByaW50ZWQgd2hlbiB5b3Ugc3RvcCB0aGUgYXJyYXkuDQo+
-PiANCj4+IEkgbWFkZSB0aG9zZSBtb2RpZmljYXRpb25zIHRvIG1kLmMgYW5kIGhlcmUgaXMgdGhl
-IGtlcm5lbCBsb2cgd2hlbiBzdG9wcGluZzoNCj4+IA0KPj4gLS1zbmlwLS0NCj4+IFsgMzkzNy4y
-MzM0ODddIG1kZGV2LT5hY3RpdmUgPSAyDQo+PiBbIDM5MzcuMjMzNTAzXSBtZGRldi0+YWN0aXZl
-ID0gMg0KPj4gWyAzOTM3LjIzMzUwOV0gbWRkZXYtPmFjdGl2ZSA9IDINCj4+IFsgMzkzNy4yMzM1
-MTZdIG1kZGV2LT5hY3RpdmUgPSAxDQo+PiBbIDM5MzcuMjMzNTE2XSByZD0yIGVtcHR5PTAgY3Rp
-bWU9MTQ4MDYxNzI3MCBob2xkPTANCj4gDQo+IEF0IHRoaXMgcG9pbnQsIG1kYWRtIGhhcyBvcGVu
-ZWQgdGhlIC9kZXYvbWQxMjcgZGV2aWNlLCBhY2Nlc3NlZCBhIGZldw0KPiBhdHRyaWJ1dGVzIHZp
-YSBzeXNmcyBqdXN0IHRvIGNoZWNrIG9uIHRoZSBzdGF0dXMsIGFuZCB0aGVuIGNsb3NlZCBpdA0K
-PiBhZ2Fpbi4NCj4gVGhlIGFycmF5IGlzIHN0aWxsIGFjdGl2ZSwgYnV0IHdlIGtub3cgdGhhdCBu
-byBvdGhlciBwcm9jZXNzIGhhcyBpdA0KPiBvcGVuLg0KPiANCj4gDQo+PiBbIDM5MzcuMjMzNjc5
-XSB1ZGV2ZFs0OTJdOiBpbm90aWZ5IGV2ZW50OiA4IGZvciAvZGV2L21kMTI3DQo+PiBbIDM5Mzcu
-MjQxNDg5XSBtZDEyNzogZGV0ZWN0ZWQgY2FwYWNpdHkgY2hhbmdlIGZyb20gNzMzNDA3NDc3NzYg
-dG8gMA0KPj4gWyAzOTM3LjI0MTQ5M10gbWQ6IG1kMTI3IHN0b3BwZWQuDQo+IA0KPiBOb3cgbWRh
-ZG0gaGFzIG9wZW5lZCB0aGUgYXJyYXkgYWdhaW4gYW5kIGlzc3VlZCB0aGUgU1RPUF9BUlJBWSBp
-b2N0bC4NCj4gU3RpbGwgbm90aGluZyBlbHNlIGhhcyB0aGUgYXJyYXkgb3Blbi4NCj4gDQo+PiBb
-IDM5MzcuMjQxNjY1XSB1ZGV2ZFs0OTJdOiBkZXZpY2UgL2Rldi9tZDEyNyBjbG9zZWQsIHN5bnRo
-ZXNpc2luZyAnY2hhbmdlJw0KPj4gWyAzOTM3LjI0MTcyNl0gdWRldmRbNDkyXTogc2VxIDM2MzEg
-cXVldWVkLCAnY2hhbmdlJyAnYmxvY2snDQo+PiBbIDM5MzcuMjQxODI5XSB1ZGV2ZFs0OTJdOiBz
-ZXEgMzYzMSBmb3JrZWQgbmV3IHdvcmtlciBbNDk5MV0NCj4+IFsgMzkzNy4yNDE5ODldIHVkZXZk
-WzQ5OTFdOiBzZXEgMzYzMSBydW5uaW5nDQo+PiBbIDM5MzcuMjQyMDAyXSBkbG06IGRjMThlMzRj
-LWIxMzYtMTk2NC0xYzM0LTQ1MDlhN2M2MGExOTogbGVhdmluZyB0aGUNCj4+IGxvY2tzcGFjZSBn
-cm91cC4uLg0KPj4gWyAzOTM3LjI0MjAzOV0gdWRldmRbNDk5MV06IHJlbW92aW5nIHdhdGNoIG9u
-ICcvZGV2L21kMTI3Jw0KPj4gWyAzOTM3LjI0MjA2OF0gbWRkZXYtPmFjdGl2ZSA9IDMNCj4gDQo+
-IEJ1dCBzb21laG93IHRoZSAtPmFjdGl2ZSBjb3VudCBnb3QgdXAgdG8gMy4NCj4gbWRhZG0gcHJv
-YmFibHkgc3RpbGwgaGFzIGl0IG9wZW4sIGJ1dCB0d28gb3RoZXIgdGhpbmdzIGRvIHRvby4NCj4g
-SWYgeW91IGhhdmUgIm1kYWRtIC0tbW9uaXRvciIgcnVubmluZyBpbiB0aGUgYmFja2dyb3VuZCAo
-d2hpY2ggaXMgZ29vZCkNCj4gaXQgd2lsbCB0ZW1wb3JhcmlseSBpbmNyZWFzZSwgdGhlbiBkZWNy
-ZWFzZSB0aGUgY291bnQuDQo+IHVkZXZkIG9wZW5zIHRoZSBkZXZpY2UgdGVtcG9yYXJpbHkgdG9v
-Lg0KPiBTbyB0aGlzIGlzbid0IG5lY2Vzc2FyaWx5IGEgcHJvYmxlbS4NCj4gDQo+PiBbIDM5Mzcu
-MjQyMDY5XSB1ZGV2ZFs0OTJdOiBzZXEgMzYzMiBxdWV1ZWQsICdvZmZsaW5lJyAnZGxtJw0KPj4g
-WyAzOTM3LjI0MjA4MF0gbWRkZXYtPmFjdGl2ZSA9IDMNCj4+IFsgMzkzNy4yNDIxMDRdIHVkZXZk
-WzQ5OTFdOiBJTVBPUlQgJ3Byb2JlLWJjYWNoZSAtbyB1ZGV2IC9kZXYvbWQxMjcnDQo+PiAvdXNy
-L2xpYi91ZGV2L3J1bGVzLmQvNjktYmNhY2hlLnJ1bGVzOjE2DQo+PiBbIDM5MzcuMjQyMTYxXSB1
-ZGV2ZFs0OTJdOiBzZXEgMzYzMiBmb3JrZWQgbmV3IHdvcmtlciBbNDk5Ml0NCj4+IFsgMzkzNy4y
-NDIyNTldIHVkZXZkWzQ5OTNdOiBzdGFydGluZyAncHJvYmUtYmNhY2hlIC1vIHVkZXYgL2Rldi9t
-ZDEyNycNCj4+IFsgMzkzNy4yNDI3NTNdIGRsbTogZGMxOGUzNGMtYjEzNi0xOTY0LTFjMzQtNDUw
-OWE3YzYwYTE5OiBncm91cCBldmVudCBkb25lIDAgMA0KPj4gWyAzOTM3LjI0Mjg0N10gZGxtOiBk
-YzE4ZTM0Yy1iMTM2LTE5NjQtMWMzNC00NTA5YTdjNjBhMTk6DQo+PiByZWxlYXNlX2xvY2tzcGFj
-ZSBmaW5hbCBmcmVlDQo+PiBbIDM5MzcuMjQyODYxXSBtZDogdW5iaW5kPGRtLTE+DQo+PiBbIDM5
-MzcuMjU2NjA2XSBtZDogZXhwb3J0X3JkZXYoZG0tMSkNCj4+IFsgMzkzNy4yNTY2MTJdIG1kOiB1
-bmJpbmQ8ZG0tMD4NCj4+IFsgMzkzNy4yNjM2MDFdIG1kOiBleHBvcnRfcmRldihkbS0wKQ0KPj4g
-WyAzOTM3LjI2MzY4OF0gbWRkZXYtPmFjdGl2ZSA9IDQNCj4+IFsgMzkzNy4yNjM3NTFdIG1kZGV2
-LT5hY3RpdmUgPSAzDQo+IA0KPiBCdXQgaGVyZSwgdGhlIGFjdGl2ZSBjb3VudCBvbmx5IGRyb3Bz
-IGRvd24gdG8gMi4gKGl0IGlzIGRlY3JlbWVudGVkDQo+IGFmdGVyIGl0IGlzIHByaW50ZWQpLiAg
-QXNzdW1pbmcgdGhlcmUgcmVhbGx5IHdlcmUgbm8gbW9yZSBtZXNzYWdlcyBsaWtlDQo+IHRoaXMs
-IHRoZXJlIGFyZSB0d28gYWN0aXZlIHJlZmVyZW5jZXMgdG8gdGhlIG1kIGRldmljZSwgYW5kIHdl
-IGRvbid0DQo+IGtub3cgd2hhdCB0aGV5IGFyZS4NCj4gDQo+PiANCj4+IEkgZGlkbid0IHVzZSBt
-eSBtb2RpZmllZCBtZGFkbSB3aGljaCBzdG9wcyB0aGUgc3ludGhlc2l6ZWQgQ0hBTkdFIGZyb20N
-Cj4+IG9jY3VycmluZywgYnV0IGlmIG5lZWRlZCwgSSBjYW4gcmUtcnVuIHRoZSB0ZXN0IHVzaW5n
-IHRoYXQuDQo+IA0KPiBJdCB3b3VsZCBiZSBnb29kIHRvIHVzZSB0aGUgbW9kaWZpZWQgbWRhZG0s
-IGlmIG9ubHkgdG8gcmVkdWNlIHRoZQ0KPiBub2lzZS4gIEl0IHdvbid0IGNoYW5nZSB0aGUgZW5k
-IHJlc3VsdCwgYnV0IG1pZ2h0IG1ha2UgaXQgZWFzaWVyIHRvIHNlZQ0KPiB3aGF0IGlzIGhhcHBl
-bmluZy4NCj4gQWxzbyBwbGVhc2UgYWRkDQo+ICAgV0FSTl9PTigxKTsNCj4gDQo+IGluIHRoZSBz
-dGFydCBvZiBtZGRldl9nZXQoKSBhbmQgbWRkZXZfcHV0KCkuDQo+IFRoYXQgd2lsbCBwcm92aWRl
-IGEgc3RhY2sgdHJhY2Ugd2hlbmV2ZXIgZWl0aGVyIG9mIHRoZXNlIGFyZSBjYWxsZWQsIHNvDQo+
-IHdlIGNhbiBzZWUgd2hvIHRha2VzIGEgcmVmZXJlbmNlcywgYW5kIHdobyBkb2Vzbid0IHJlbGVh
-c2UgaXQuDQo+IA0KPiBUaGFua3MsDQo+IE5laWxCcm93bg0KDQo=
+On Thu, Dec 1, 2016 at 5:35 PM, NeilBrown <neilb@suse.com> wrote:
+> On Fri, Dec 02 2016, Marc Smith wrote:
+>
+>> On Wed, Nov 30, 2016 at 9:52 PM, NeilBrown <neilb@suse.com> wrote:
+>>> On Mon, Nov 28 2016, Marc Smith wrote:
+>>>
+>>>>
+>>>> # find /sys/block/md127/md
+>>>> /sys/block/md127/md
+>>>> /sys/block/md127/md/reshape_position
+>>>> /sys/block/md127/md/layout
+>>>> /sys/block/md127/md/raid_disks
+>>>> /sys/block/md127/md/bitmap
+>>>> /sys/block/md127/md/bitmap/chunksize
+>>>
+>>> This tells me that:
+>>>         sysfs_remove_group(&mddev->kobj, &md_bitmap_group);
+>>> hasn't been run, so mddev_delayed_delete() hasn't run.
+>>> That suggests the final mddev_put() hsn't run. i.e. mddev->active is > 0
+>>>
+>>> Everything else suggests that array has been stopped and cleaned and
+>>> should be gone...
+>>>
+>>> This seems to suggest that there is an unbalanced mddev_get() without a
+>>> matching mddev_put().  I cannot find it though.
+>>>
+>>> If I could reproduce it, I would try to see what is happening by:
+>>>
+>>> - putting
+>>>    printk("mddev->active = %d\n", atomic_read(&mddev->active));
+>>>  in the top of mddev_put().  That shouldn't be *too* noisy.
+>>>
+>>> - putting
+>>>    printk("rd=%d empty=%d ctime=%d hold=%d\n", mddev->raid_disks,
+>>>         list_empty(&mddev->disks), mddev->ctime, mddev->hold_active);
+>>>
+>>>   in mddev_put() just before those values are tested.
+>>>
+>>>  - putting
+>>>      printk("queue_work\n");
+>>>    just before the 'queue_work()' call in mddev_put.
+>>>
+>>>  - putting
+>>>      printk("mddev_delayed_delete\n");
+>>>    in mddev_delayed_delete()
+>>>
+>>> Then see what gets printed when you stop the array.
+>>
+>> I made those modifications to md.c and here is the kernel log when stopping:
+>>
+>> --snip--
+>> [ 3937.233487] mddev->active = 2
+>> [ 3937.233503] mddev->active = 2
+>> [ 3937.233509] mddev->active = 2
+>> [ 3937.233516] mddev->active = 1
+>> [ 3937.233516] rd=2 empty=0 ctime=1480617270 hold=0
+>
+> At this point, mdadm has opened the /dev/md127 device, accessed a few
+> attributes via sysfs just to check on the status, and then closed it
+> again.
+> The array is still active, but we know that no other process has it
+> open.
+>
+>
+>> [ 3937.233679] udevd[492]: inotify event: 8 for /dev/md127
+>> [ 3937.241489] md127: detected capacity change from 73340747776 to 0
+>> [ 3937.241493] md: md127 stopped.
+>
+> Now mdadm has opened the array again and issued the STOP_ARRAY ioctl.
+> Still nothing else has the array open.
+>
+>> [ 3937.241665] udevd[492]: device /dev/md127 closed, synthesising 'change'
+>> [ 3937.241726] udevd[492]: seq 3631 queued, 'change' 'block'
+>> [ 3937.241829] udevd[492]: seq 3631 forked new worker [4991]
+>> [ 3937.241989] udevd[4991]: seq 3631 running
+>> [ 3937.242002] dlm: dc18e34c-b136-1964-1c34-4509a7c60a19: leaving the
+>> lockspace group...
+>> [ 3937.242039] udevd[4991]: removing watch on '/dev/md127'
+>> [ 3937.242068] mddev->active = 3
+>
+> But somehow the ->active count got up to 3.
+> mdadm probably still has it open, but two other things do too.
+> If you have "mdadm --monitor" running in the background (which is good)
+> it will temporarily increase, then decrease the count.
+> udevd opens the device temporarily too.
+> So this isn't necessarily a problem.
+>
+>> [ 3937.242069] udevd[492]: seq 3632 queued, 'offline' 'dlm'
+>> [ 3937.242080] mddev->active = 3
+>> [ 3937.242104] udevd[4991]: IMPORT 'probe-bcache -o udev /dev/md127'
+>> /usr/lib/udev/rules.d/69-bcache.rules:16
+>> [ 3937.242161] udevd[492]: seq 3632 forked new worker [4992]
+>> [ 3937.242259] udevd[4993]: starting 'probe-bcache -o udev /dev/md127'
+>> [ 3937.242753] dlm: dc18e34c-b136-1964-1c34-4509a7c60a19: group event done 0 0
+>> [ 3937.242847] dlm: dc18e34c-b136-1964-1c34-4509a7c60a19:
+>> release_lockspace final free
+>> [ 3937.242861] md: unbind<dm-1>
+>> [ 3937.256606] md: export_rdev(dm-1)
+>> [ 3937.256612] md: unbind<dm-0>
+>> [ 3937.263601] md: export_rdev(dm-0)
+>> [ 3937.263688] mddev->active = 4
+>> [ 3937.263751] mddev->active = 3
+>
+> But here, the active count only drops down to 2. (it is decremented
+> after it is printed).  Assuming there really were no more messages like
+> this, there are two active references to the md device, and we don't
+> know what they are.
+>
+>>
+>> I didn't use my modified mdadm which stops the synthesized CHANGE from
+>> occurring, but if needed, I can re-run the test using that.
+>
+> It would be good to use the modified mdadm, if only to reduce the
+> noise.  It won't change the end result, but might make it easier to see
+> what is happening.
+> Also please add
+>    WARN_ON(1);
+>
+> in the start of mddev_get() and mddev_put().
+> That will provide a stack trace whenever either of these are called, so
+> we can see who takes a references, and who doesn't release it.
 
+Okay, I added that to both functions, and now I can't get stopping the
+array to misbehave (eg, not generate the REMOVE event). I've been
+trying all morning! I literally just added the WARN_ON(1) to those two
+functions, and that's all I changed. I compiled and reinstalled image,
+no other changes. I've tried quite a few times now to reproduce this,
+and I'm failing to do so -- every time the REMOVE event is generated
+and everything is removed correctly.
+
+I'm going to switch back to the previous image and confirm its
+reproducible with that.
+
+--Marc
+
+
+>
+> Thanks,
+> NeilBrown
+>
