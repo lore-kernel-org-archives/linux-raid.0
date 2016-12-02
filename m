@@ -1,352 +1,63 @@
-From: Robert LeBlanc <robert@leblancnet.us>
-Subject: [PATCH v2 2/2] md/raid10: Refactor raid10_make_request
-Date: Thu,  1 Dec 2016 20:30:08 -0700
-Message-ID: <20161202033008.30314-3-robert@leblancnet.us>
-References: <20161130212020.15762-1-robert@leblancnet.us>
- <20161202033008.30314-1-robert@leblancnet.us>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: Feature request, resumable raid check action
+Date: Fri, 02 Dec 2016 15:54:13 +1100
+Message-ID: <8737i76idm.fsf@notabene.neil.brown.name>
+References: <CAEtPA0Aosn6q0pJxsh69EpHQehiSsyeyVfJf98cDhu6kORkE1g@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161202033008.30314-1-robert@leblancnet.us>
+In-Reply-To: <CAEtPA0Aosn6q0pJxsh69EpHQehiSsyeyVfJf98cDhu6kORkE1g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Robert LeBlanc <robert@leblancnet.us>
+To: Patrick Dung <mpatdung@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Refactor raid10_make_request into seperate read and write functions to
-clean up the code.
+--=-=-=
+Content-Type: text/plain
 
-Signed-off-by: Robert LeBlanc <robert@leblancnet.us>
----
- drivers/md/raid10.c | 271 +++++++++++++++++++++++++++-------------------------
- 1 file changed, 139 insertions(+), 132 deletions(-)
+On Wed, Nov 30 2016, Patrick Dung wrote:
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index be1a9fc..d3bd756 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1046,150 +1046,89 @@ static void raid10_unplug(struct blk_plug_cb *cb, bool from_schedule)
- 	kfree(plug);
- }
- 
--static void __make_request(struct mddev *mddev, struct bio *bio)
-+static void raid10_read_request(struct mddev *mddev, struct bio *bio,
-+				struct r10bio *r10_bio)
- {
- 	struct r10conf *conf = mddev->private;
--	struct r10bio *r10_bio;
- 	struct bio *read_bio;
--	int i;
- 	const int op = bio_op(bio);
--	const int rw = bio_data_dir(bio);
- 	const unsigned long do_sync = (bio->bi_opf & REQ_SYNC);
--	const unsigned long do_fua = (bio->bi_opf & REQ_FUA);
--	unsigned long flags;
--	struct md_rdev *blocked_rdev;
--	struct blk_plug_cb *cb;
--	struct raid10_plug_cb *plug = NULL;
- 	int sectors_handled;
- 	int max_sectors;
--	int sectors;
--
--	md_write_start(mddev, bio);
--
--	/*
--	 * Register the new request and wait if the reconstruction
--	 * thread has put up a bar for new requests.
--	 * Continue immediately if no resync is active currently.
--	 */
--	wait_barrier(conf);
--
--	sectors = bio_sectors(bio);
--	while (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
--	    bio->bi_iter.bi_sector < conf->reshape_progress &&
--	    bio->bi_iter.bi_sector + sectors > conf->reshape_progress) {
--		/* IO spans the reshape position.  Need to wait for
--		 * reshape to pass
--		 */
--		allow_barrier(conf);
--		wait_event(conf->wait_barrier,
--			   conf->reshape_progress <= bio->bi_iter.bi_sector ||
--			   conf->reshape_progress >= bio->bi_iter.bi_sector +
--			   sectors);
--		wait_barrier(conf);
--	}
--	if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
--	    bio_data_dir(bio) == WRITE &&
--	    (mddev->reshape_backwards
--	     ? (bio->bi_iter.bi_sector < conf->reshape_safe &&
--		bio->bi_iter.bi_sector + sectors > conf->reshape_progress)
--	     : (bio->bi_iter.bi_sector + sectors > conf->reshape_safe &&
--		bio->bi_iter.bi_sector < conf->reshape_progress))) {
--		/* Need to update reshape_position in metadata */
--		mddev->reshape_position = conf->reshape_progress;
--		set_mask_bits(&mddev->flags, 0,
--			      BIT(MD_CHANGE_DEVS) | BIT(MD_CHANGE_PENDING));
--		md_wakeup_thread(mddev->thread);
--		wait_event(mddev->sb_wait,
--			   !test_bit(MD_CHANGE_PENDING, &mddev->flags));
-+	struct md_rdev *rdev;
-+	int slot;
- 
--		conf->reshape_safe = mddev->reshape_position;
-+read_again:
-+	rdev = read_balance(conf, r10_bio, &max_sectors);
-+	if (!rdev) {
-+		raid_end_bio_io(r10_bio);
-+		return;
- 	}
-+	slot = r10_bio->read_slot;
- 
--	r10_bio = mempool_alloc(conf->r10bio_pool, GFP_NOIO);
--
--	r10_bio->master_bio = bio;
--	r10_bio->sectors = sectors;
-+	read_bio = bio_clone_mddev(bio, GFP_NOIO, mddev);
-+	bio_trim(read_bio, r10_bio->sector - bio->bi_iter.bi_sector,
-+		 max_sectors);
- 
--	r10_bio->mddev = mddev;
--	r10_bio->sector = bio->bi_iter.bi_sector;
--	r10_bio->state = 0;
-+	r10_bio->devs[slot].bio = read_bio;
-+	r10_bio->devs[slot].rdev = rdev;
- 
--	/* We might need to issue multiple reads to different
--	 * devices if there are bad blocks around, so we keep
--	 * track of the number of reads in bio->bi_phys_segments.
--	 * If this is 0, there is only one r10_bio and no locking
--	 * will be needed when the request completes.  If it is
--	 * non-zero, then it is the number of not-completed requests.
--	 */
--	bio->bi_phys_segments = 0;
--	bio_clear_flag(bio, BIO_SEG_VALID);
-+	read_bio->bi_iter.bi_sector = r10_bio->devs[slot].addr +
-+		choose_data_offset(r10_bio, rdev);
-+	read_bio->bi_bdev = rdev->bdev;
-+	read_bio->bi_end_io = raid10_end_read_request;
-+	bio_set_op_attrs(read_bio, op, do_sync);
-+	read_bio->bi_private = r10_bio;
- 
--	if (rw == READ) {
--		/*
--		 * read balancing logic:
-+	if (max_sectors < r10_bio->sectors) {
-+		/* Could not read all from this device, so we will
-+		 * need another r10_bio.
- 		 */
--		struct md_rdev *rdev;
--		int slot;
--
--read_again:
--		rdev = read_balance(conf, r10_bio, &max_sectors);
--		if (!rdev) {
--			raid_end_bio_io(r10_bio);
--			return;
--		}
--		slot = r10_bio->read_slot;
--
--		read_bio = bio_clone_mddev(bio, GFP_NOIO, mddev);
--		bio_trim(read_bio, r10_bio->sector - bio->bi_iter.bi_sector,
--			 max_sectors);
--
--		r10_bio->devs[slot].bio = read_bio;
--		r10_bio->devs[slot].rdev = rdev;
--
--		read_bio->bi_iter.bi_sector = r10_bio->devs[slot].addr +
--			choose_data_offset(r10_bio, rdev);
--		read_bio->bi_bdev = rdev->bdev;
--		read_bio->bi_end_io = raid10_end_read_request;
--		bio_set_op_attrs(read_bio, op, do_sync);
--		read_bio->bi_private = r10_bio;
-+		sectors_handled = (r10_bio->sector + max_sectors
-+				   - bio->bi_iter.bi_sector);
-+		r10_bio->sectors = max_sectors;
-+		spin_lock_irq(&conf->device_lock);
-+		if (bio->bi_phys_segments == 0)
-+			bio->bi_phys_segments = 2;
-+		else
-+			bio->bi_phys_segments++;
-+		spin_unlock_irq(&conf->device_lock);
-+		/* Cannot call generic_make_request directly
-+		 * as that will be queued in __generic_make_request
-+		 * and subsequent mempool_alloc might block
-+		 * waiting for it.  so hand bio over to raid10d.
-+		 */
-+		reschedule_retry(r10_bio);
- 
--		if (max_sectors < r10_bio->sectors) {
--			/* Could not read all from this device, so we will
--			 * need another r10_bio.
--			 */
--			sectors_handled = (r10_bio->sector + max_sectors
--					   - bio->bi_iter.bi_sector);
--			r10_bio->sectors = max_sectors;
--			spin_lock_irq(&conf->device_lock);
--			if (bio->bi_phys_segments == 0)
--				bio->bi_phys_segments = 2;
--			else
--				bio->bi_phys_segments++;
--			spin_unlock_irq(&conf->device_lock);
--			/* Cannot call generic_make_request directly
--			 * as that will be queued in __generic_make_request
--			 * and subsequent mempool_alloc might block
--			 * waiting for it.  so hand bio over to raid10d.
--			 */
--			reschedule_retry(r10_bio);
-+		r10_bio = mempool_alloc(conf->r10bio_pool, GFP_NOIO);
- 
--			r10_bio = mempool_alloc(conf->r10bio_pool, GFP_NOIO);
-+		r10_bio->master_bio = bio;
-+		r10_bio->sectors = bio_sectors(bio) - sectors_handled;
-+		r10_bio->state = 0;
-+		r10_bio->mddev = mddev;
-+		r10_bio->sector = bio->bi_iter.bi_sector + sectors_handled;
-+		goto read_again;
-+	} else
-+		generic_make_request(read_bio);
-+	return;
-+}
- 
--			r10_bio->master_bio = bio;
--			r10_bio->sectors = bio_sectors(bio) - sectors_handled;
--			r10_bio->state = 0;
--			r10_bio->mddev = mddev;
--			r10_bio->sector = bio->bi_iter.bi_sector +
--				sectors_handled;
--			goto read_again;
--		} else
--			generic_make_request(read_bio);
--		return;
--	}
-+static void raid10_write_request(struct mddev *mddev, struct bio *bio,
-+				 struct r10bio *r10_bio)
-+{
-+	struct r10conf *conf = mddev->private;
-+	int i;
-+	const int op = bio_op(bio);
-+	const unsigned long do_sync = (bio->bi_opf & REQ_SYNC);
-+	const unsigned long do_fua = (bio->bi_opf & REQ_FUA);
-+	unsigned long flags;
-+	struct md_rdev *blocked_rdev;
-+	struct blk_plug_cb *cb;
-+	struct raid10_plug_cb *plug = NULL;
-+	int sectors_handled;
-+	int max_sectors;
-+	md_write_start(mddev, bio);
- 
--	/*
--	 * WRITE:
--	 */
- 	if (conf->pending_count >= max_queued_requests) {
- 		md_wakeup_thread(mddev->thread);
- 		wait_event(conf->wait_barrier,
-@@ -1249,8 +1188,7 @@ retry_write:
- 			int bad_sectors;
- 			int is_bad;
- 
--			is_bad = is_badblock(rdev, dev_sector,
--					     max_sectors,
-+			is_bad = is_badblock(rdev, dev_sector, max_sectors,
- 					     &first_bad, &bad_sectors);
- 			if (is_bad < 0) {
- 				/* Mustn't write here until the bad block
-@@ -1353,8 +1291,7 @@ retry_write:
- 			r10_bio->devs[i].bio = mbio;
- 
- 			mbio->bi_iter.bi_sector	= (r10_bio->devs[i].addr+
--					   choose_data_offset(r10_bio,
--							      rdev));
-+					   choose_data_offset(r10_bio, rdev));
- 			mbio->bi_bdev = rdev->bdev;
- 			mbio->bi_end_io	= raid10_end_write_request;
- 			bio_set_op_attrs(mbio, op, do_sync | do_fua);
-@@ -1395,8 +1332,7 @@ retry_write:
- 			r10_bio->devs[i].repl_bio = mbio;
- 
- 			mbio->bi_iter.bi_sector	= (r10_bio->devs[i].addr +
--					   choose_data_offset(
--						   r10_bio, rdev));
-+					   choose_data_offset(r10_bio, rdev));
- 			mbio->bi_bdev = rdev->bdev;
- 			mbio->bi_end_io	= raid10_end_write_request;
- 			bio_set_op_attrs(mbio, op, do_sync | do_fua);
-@@ -1434,6 +1370,77 @@ retry_write:
- 	one_write_done(r10_bio);
- }
- 
-+static void __make_request(struct mddev *mddev, struct bio *bio)
-+{
-+	struct r10conf *conf = mddev->private;
-+	struct r10bio *r10_bio;
-+	int sectors;
-+
-+	/*
-+	 * Register the new request and wait if the reconstruction
-+	 * thread has put up a bar for new requests.
-+	 * Continue immediately if no resync is active currently.
-+	 */
-+	wait_barrier(conf);
-+
-+	sectors = bio_sectors(bio);
-+	while (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
-+	    bio->bi_iter.bi_sector < conf->reshape_progress &&
-+	    bio->bi_iter.bi_sector + sectors > conf->reshape_progress) {
-+		/* IO spans the reshape position.  Need to wait for
-+		 * reshape to pass
-+		 */
-+		allow_barrier(conf);
-+		wait_event(conf->wait_barrier,
-+			   conf->reshape_progress <= bio->bi_iter.bi_sector ||
-+			   conf->reshape_progress >= bio->bi_iter.bi_sector +
-+			   sectors);
-+		wait_barrier(conf);
-+	}
-+	if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
-+	    bio_data_dir(bio) == WRITE &&
-+	    (mddev->reshape_backwards
-+	     ? (bio->bi_iter.bi_sector < conf->reshape_safe &&
-+		bio->bi_iter.bi_sector + sectors > conf->reshape_progress)
-+	     : (bio->bi_iter.bi_sector + sectors > conf->reshape_safe &&
-+		bio->bi_iter.bi_sector < conf->reshape_progress))) {
-+		/* Need to update reshape_position in metadata */
-+		mddev->reshape_position = conf->reshape_progress;
-+		set_mask_bits(&mddev->flags, 0,
-+			      BIT(MD_CHANGE_DEVS) | BIT(MD_CHANGE_PENDING));
-+		md_wakeup_thread(mddev->thread);
-+		wait_event(mddev->sb_wait,
-+			   !test_bit(MD_CHANGE_PENDING, &mddev->flags));
-+
-+		conf->reshape_safe = mddev->reshape_position;
-+	}
-+
-+	r10_bio = mempool_alloc(conf->r10bio_pool, GFP_NOIO);
-+
-+	r10_bio->master_bio = bio;
-+	r10_bio->sectors = sectors;
-+
-+	r10_bio->mddev = mddev;
-+	r10_bio->sector = bio->bi_iter.bi_sector;
-+	r10_bio->state = 0;
-+
-+	/* We might need to issue multiple reads to different
-+	 * devices if there are bad blocks around, so we keep
-+	 * track of the number of reads in bio->bi_phys_segments.
-+	 * If this is 0, there is only one r10_bio and no locking
-+	 * will be needed when the request completes.  If it is
-+	 * non-zero, then it is the number of not-completed requests.
-+	 */
-+	bio->bi_phys_segments = 0;
-+	bio_clear_flag(bio, BIO_SEG_VALID);
-+
-+	if (bio_data_dir(bio) == READ) {
-+		raid10_read_request(mddev, bio, r10_bio);
-+		return;
-+	}
-+	raid10_write_request(mddev, bio, r10_bio);
-+}
-+
- static void raid10_make_request(struct mddev *mddev, struct bio *bio)
- {
- 	struct r10conf *conf = mddev->private;
--- 
-2.10.2
+> Hello,
+>
+> As I know if MD raid is using the newer metadata version, it support
+> resumable raid rebuild/sync. (that is, if a server is rebooted during
+> rebuild, it would resume from last position after reboot, instead of
+> starting from beginning).
+>
+> In my recently testing (a few months ago):
+> I sometimes use the mdadm 'check' action for doing the disk scrubbing
+> of a MD raid.
+> After I rebooted the server, the 'check' operation is forgotten and is
+> not resumable.
+>
+> I think resumable 'check' operation is useful as the array size would
+> become bigger in the future.
 
+"check" is resumable.  md doesn't record where it is up to though, you
+need to do that yourself.
+The "misc/mdcheck" script in the mdadm package makes use of this to
+support time-limited checking, and to resume from where it left off.
+You could use the script, or read it and see how it works.
+
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhA/nUACgkQOeye3VZi
+gbn2LRAAumwua14iv+kso2IemO5TayKrp2TTigDJmD8nmtYK9RA5xMjtKPKGQoyb
+Lw9Pt02IKDS663U5gqPJzd9LvpS2XDYpyM8VYdJVngOfT7fPRpXCN/3XMYdlOYUm
+5Ap6tFfxC2Lm5lyOVFQCgzRA8NHutGvKe9EXKOracjndZQmGkyBh6OsKarTHeZOn
+sT5bbgRI8LWEUb6qlRWjvftbtLINJPk3BS1sM/A82ae9T81it5/H0AezLskbR60i
+XWDt+WjUKXDR3vkVOts/0qXF0b88KPB07Dd74/X8MP/i8w8NRr+REwQZ5VBeWTdm
+BdT6PuiHXNwZHqGIqTQOZ9CQIEPU93czZ+3gZg1GQgYCIBMEYNhNb6N1sTx/4f+k
+wxJNZgfXdxev7yEID198GW7MnaY9WhR2KXENAEbjIV9w3vJwsabLaufZgwAqAftG
+YvRnhNPAXY7O/w9b3Oh86/ibor0vsPTamPv8mIcgQ20Kc5MhOL5li/Lc3cg5VTbV
+YwuJ0ip2TpsLSPD9VyUEoUlCA0Emin7cVJEpxMuBwPTpY+yijtd3mg5Q6B9zu5hZ
+aXBlu5i16jBT/LUbiqUVKerPklAqdbDg/KWD8YG3COMUFsuFbejyDY2RgLOHQuY5
+xBCTqNQCN1OYE3LoAKWdA7Cc2Pxw+0dRCIxo/UB83Wntp6CDGFU=
+=/Nux
+-----END PGP SIGNATURE-----
+--=-=-=--
