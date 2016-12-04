@@ -1,50 +1,46 @@
 From: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
-Subject: [PATCH 2/2] md/r5cache: set journal mode according to log content
-Date: Sun,  4 Dec 2016 16:49:45 +0800
-Message-ID: <1480841385-21180-2-git-send-email-liuzhengyuan@kylinos.cn>
-References: <1480841385-21180-1-git-send-email-liuzhengyuan@kylinos.cn>
+Subject: [PATCH 1/2] md/r5cache: do r5c_update_log_state after log recovery
+Date: Sun,  4 Dec 2016 16:49:44 +0800
+Message-ID: <1480841385-21180-1-git-send-email-liuzhengyuan@kylinos.cn>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1480841385-21180-1-git-send-email-liuzhengyuan@kylinos.cn>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Currently, we choice write-through mode as the default journal mode.
-If there is data-only stripes, we'd rewrite it and add it into raid5d
-release list. However, raid5d thread wouldn't put those stripes into
-cache(full/partial) list but inactive list instead since the journal
-mode is write-through. More futher, later read request would get data
-from raid disk directly instead of cache stripe, that's not we want too.
+We should update log state after we did a log recovery, current completion
+may get wrong log state since log->log_start wasn't initalized until we
+called r5l_recovery_log.
+
+At log recovery stage, no lock needed as there is no race conditon.
+next_checkpoint field will be initialized in r5l_recovery_log too.
 
 Signed-off-by: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
 ---
- drivers/md/raid5-cache.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/md/raid5-cache.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 07bce0e..0473b33 100644
+index fa3319c..07bce0e 100644
 --- a/drivers/md/raid5-cache.c
 +++ b/drivers/md/raid5-cache.c
-@@ -2606,7 +2606,6 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+@@ -2522,14 +2522,12 @@ static int r5l_load_log(struct r5l_log *log)
+ 	if (log->max_free_space > RECLAIM_MAX_FREE_SPACE)
+ 		log->max_free_space = RECLAIM_MAX_FREE_SPACE;
+ 	log->last_checkpoint = cp;
+-	log->next_checkpoint = cp;
+-	mutex_lock(&log->io_mutex);
+-	r5c_update_log_state(log);
+-	mutex_unlock(&log->io_mutex);
  
- 	INIT_WORK(&log->deferred_io_work, r5l_submit_io_async);
+ 	__free_page(page);
  
--	log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_THROUGH;
- 	INIT_LIST_HEAD(&log->stripe_in_journal_list);
- 	spin_lock_init(&log->stripe_in_journal_lock);
- 	atomic_set(&log->stripe_in_journal_count, 0);
-@@ -2614,6 +2613,11 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
- 	if (r5l_load_log(log))
- 		goto error;
- 
-+	if (log->last_checkpoint == log->next_checkpoint)
-+		log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_THROUGH;
-+	else
-+		log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_BACK;
-+
- 	rcu_assign_pointer(conf->log, log);
- 	set_bit(MD_HAS_JOURNAL, &conf->mddev->flags);
- 	return 0;
+-	return r5l_recovery_log(log);
++	ret = r5l_recovery_log(log);
++	r5c_update_log_state(log);
++	return ret;
+ ioerr:
+ 	__free_page(page);
+ 	return ret;
 -- 
 2.7.4
 
