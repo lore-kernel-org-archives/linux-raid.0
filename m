@@ -1,7 +1,7 @@
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH v2 04/12] md: superblock changes for PPL
-Date: Mon,  5 Dec 2016 16:31:05 +0100
-Message-ID: <20161205153113.7268-5-artur.paszkiewicz@intel.com>
+Subject: [PATCH v2 02/12] raid5-cache: add policy logic
+Date: Mon,  5 Dec 2016 16:31:03 +0100
+Message-ID: <20161205153113.7268-3-artur.paszkiewicz@intel.com>
 References: <20161205153113.7268-1-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20161205153113.7268-1-artur.paszkiewicz@intel.com>
@@ -10,153 +10,272 @@ To: shli@kernel.org
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Include information about PPL location and size into mdp_superblock_1
-and copy it to/from rdev. Because PPL is mutually exclusive with bitmap,
-put it in place of 'bitmap_offset'. Add a new flag MD_FEATURE_PPL for
-'feature_map', analogically to MD_FEATURE_BITMAP_OFFSET. Add MD_HAS_PPL
-to mddev->flags to indicate that PPL is enabled on an array.
+Add a struct r5l_policy and wrapper functions for non-static functions
+from raid5-cache. This allows adding different policies for raid5
+logging without changing the mechanism - calls from the raid5
+personality stay the same.
 
 Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- drivers/md/md.c                | 14 ++++++++++++++
- drivers/md/md.h                |  8 ++++++++
- drivers/md/raid5.c             |  7 +++++++
- include/uapi/linux/raid/md_p.h | 18 ++++++++++++++----
- 4 files changed, 43 insertions(+), 4 deletions(-)
+ drivers/md/raid5-cache.c | 112 +++++++++++++++++++++++++++++++++++------------
+ drivers/md/raid5-cache.h |  13 ++++++
+ 2 files changed, 98 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 4876687..7028d54 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -1524,6 +1524,11 @@ static int super_1_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor_
- 	} else if (sb->bblog_offset != 0)
- 		rdev->badblocks.shift = 0;
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 6a3f8e7..74a0eda 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -727,7 +727,7 @@ static inline void r5l_add_no_space_stripe(struct r5l_log *log,
+  * running in raid5d, where reclaim could wait for raid5d too (when it flushes
+  * data from log to raid disks), so we shouldn't wait for reclaim here
+  */
+-int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh)
++static int __r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh)
+ {
+ 	struct r5conf *conf = sh->raid_conf;
+ 	int write_disks = 0;
+@@ -737,8 +737,6 @@ int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh)
+ 	int ret = 0;
+ 	bool wake_reclaim = false;
  
-+	if (le32_to_cpu(sb->feature_map) & MD_FEATURE_PPL) {
-+		rdev->ppl.offset = le16_to_cpu(sb->ppl.offset);
-+		rdev->ppl.size = le16_to_cpu(sb->ppl.size);
-+	}
-+
- 	if (!refdev) {
- 		ret = 1;
- 	} else {
-@@ -1636,6 +1641,9 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
+-	if (!log)
+-		return -EAGAIN;
+ 	/* Don't support stripe batch */
+ 	if (sh->log_io || !test_bit(R5_Wantwrite, &sh->dev[sh->pd_idx].flags) ||
+ 	    test_bit(STRIPE_SYNCING, &sh->state)) {
+@@ -825,19 +823,28 @@ int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh)
+ 	return 0;
+ }
  
- 		if (le32_to_cpu(sb->feature_map) & MD_FEATURE_JOURNAL)
- 			set_bit(MD_HAS_JOURNAL, &mddev->flags);
+-void r5l_write_stripe_run(struct r5l_log *log)
++int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh)
++{
++	if (log && log->policy->write_stripe)
++		return log->policy->write_stripe(log, sh);
++	return -EAGAIN;
++}
 +
-+		if (le32_to_cpu(sb->feature_map) & MD_FEATURE_PPL)
-+			set_bit(MD_HAS_PPL, &mddev->flags);
- 	} else if (mddev->pers == NULL) {
- 		/* Insist of good event counter while assembling, except for
- 		 * spares (which don't need an event count) */
-@@ -1849,6 +1857,12 @@ static void super_1_sync(struct mddev *mddev, struct md_rdev *rdev)
- 	if (test_bit(MD_HAS_JOURNAL, &mddev->flags))
- 		sb->feature_map |= cpu_to_le32(MD_FEATURE_JOURNAL);
++static void __r5l_write_stripe_run(struct r5l_log *log)
+ {
+-	if (!log)
+-		return;
+ 	mutex_lock(&log->io_mutex);
+ 	r5l_submit_current_io(log);
+ 	mutex_unlock(&log->io_mutex);
+ }
  
-+	if (test_bit(MD_HAS_PPL, &mddev->flags)) {
-+		sb->feature_map |= cpu_to_le32(MD_FEATURE_PPL);
-+		sb->ppl.offset = cpu_to_le16(rdev->ppl.offset);
-+		sb->ppl.size = cpu_to_le16(rdev->ppl.size);
-+	}
+-int r5l_handle_flush_request(struct r5l_log *log, struct bio *bio)
++void r5l_write_stripe_run(struct r5l_log *log)
++{
++	if (log && log->policy->write_stripe_run)
++		log->policy->write_stripe_run(log);
++}
 +
- 	rdev_for_each(rdev2, mddev) {
- 		i = rdev2->desc_nr;
- 		if (test_bit(Faulty, &rdev2->flags))
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 2fc75ac..d1e56f8 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -122,6 +122,13 @@ struct md_rdev {
- 					   * sysfs entry */
++static int __r5l_handle_flush_request(struct r5l_log *log, struct bio *bio)
+ {
+-	if (!log)
+-		return -ENODEV;
  
- 	struct badblocks badblocks;
-+
-+	struct {
-+		unsigned int offset; /* Offset from superblock to start of PPL.
-+				      * Not used by external metadata. */
-+		unsigned int size;   /* Size in sectors of the PPL space */
-+		sector_t sector;     /* First sector of the PPL space */
-+	} ppl;
- };
- enum flag_bits {
- 	Faulty,			/* device is known to have a fault */
-@@ -235,6 +242,7 @@ enum mddev_flags {
- 				 * never cause the array to become failed.
- 				 */
- 	MD_NEED_REWRITE,	/* metadata write needs to be repeated */
-+	MD_HAS_PPL,		/* The raid array has PPL feature set */
- };
- #define MD_UPDATE_SB_FLAGS (BIT(MD_CHANGE_DEVS) | \
- 			    BIT(MD_CHANGE_CLEAN) | \
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 9f07769..a7e993a 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -6849,6 +6849,10 @@ static int raid5_run(struct mddev *mddev)
- 	rdev_for_each(rdev, mddev) {
- 		long long diff;
+ 	if (log->r5c_journal_mode == R5C_JOURNAL_MODE_WRITE_THROUGH) {
+ 		/*
+@@ -869,6 +876,13 @@ int r5l_handle_flush_request(struct r5l_log *log, struct bio *bio)
+ 	return -EAGAIN;
+ }
  
-+		if (test_bit(MD_HAS_PPL, &mddev->flags) &&
-+		    test_bit(In_sync, &rdev->flags))
-+			set_bit(JournalPpl, &rdev->flags);
++int r5l_handle_flush_request(struct r5l_log *log, struct bio *bio)
++{
++	if (log && log->policy->handle_flush_request)
++		return log->policy->handle_flush_request(log, bio);
++	return -ENODEV;
++}
 +
- 		if (test_bit(JournalPpl, &rdev->flags) &&
- 		    test_bit(In_sync, &rdev->flags))
- 			ppl_disks++;
-@@ -6871,6 +6875,9 @@ static int raid5_run(struct mddev *mddev)
- 			min_offset_diff = diff;
+ /* This will run after log space is reclaimed */
+ static void r5l_run_no_space_stripes(struct r5l_log *log)
+ {
+@@ -989,8 +1003,9 @@ void r5l_stripe_write_finished(struct stripe_head *sh)
+ 	io = sh->log_io;
+ 	sh->log_io = NULL;
+ 
+-	if (io && atomic_dec_and_test(&io->pending_stripe))
+-		__r5l_stripe_write_finished(io);
++	if (io && atomic_dec_and_test(&io->pending_stripe) &&
++			io->log->policy->stripe_write_finished)
++		io->log->policy->stripe_write_finished(io);
+ }
+ 
+ static void r5l_log_flush_endio(struct bio *bio)
+@@ -1024,11 +1039,11 @@ static void r5l_log_flush_endio(struct bio *bio)
+  * only write stripes of an io_unit to raid disks till the io_unit is the first
+  * one whose data/parity is in log.
+  */
+-void r5l_flush_stripe_to_raid(struct r5l_log *log)
++static void __r5l_flush_stripe_to_raid(struct r5l_log *log)
+ {
+ 	bool do_flush;
+ 
+-	if (!log || !log->need_cache_flush)
++	if (!log->need_cache_flush)
+ 		return;
+ 
+ 	spin_lock_irq(&log->io_list_lock);
+@@ -1050,6 +1065,12 @@ void r5l_flush_stripe_to_raid(struct r5l_log *log)
+ 	submit_bio(&log->flush_bio);
+ }
+ 
++void r5l_flush_stripe_to_raid(struct r5l_log *log)
++{
++	if (log && log->policy->flush_stripe_to_raid)
++		log->policy->flush_stripe_to_raid(log);
++}
++
+ static void r5l_write_super(struct r5l_log *log, sector_t cp);
+ static void r5l_write_super_and_discard_space(struct r5l_log *log,
+ 	sector_t end)
+@@ -1304,10 +1325,10 @@ void r5l_wake_reclaim(struct r5l_log *log, sector_t space)
+ 	md_wakeup_thread(log->reclaim_thread);
+ }
+ 
+-void r5l_quiesce(struct r5l_log *log, int state)
++static void __r5l_quiesce(struct r5l_log *log, int state)
+ {
+ 	struct mddev *mddev;
+-	if (!log || state == 2)
++	if (state == 2)
+ 		return;
+ 	if (state == 0)
+ 		kthread_unpark(log->reclaim_thread->tsk);
+@@ -1321,6 +1342,12 @@ void r5l_quiesce(struct r5l_log *log, int state)
+ 	}
+ }
+ 
++void r5l_quiesce(struct r5l_log *log, int state)
++{
++	if (log && log->policy->quiesce)
++		log->policy->quiesce(log, state);
++}
++
+ bool r5l_log_disk_error(struct r5conf *conf)
+ {
+ 	struct r5l_log *log;
+@@ -2406,11 +2433,9 @@ static int r5l_load_log(struct r5l_log *log)
+ 	return ret;
+ }
+ 
+-int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
++static int __r5l_init_log(struct r5l_log *log, struct r5conf *conf)
+ {
+-	struct request_queue *q = bdev_get_queue(rdev->bdev);
+-	struct r5l_log *log;
+-
++	struct request_queue *q = bdev_get_queue(log->rdev->bdev);
+ 	if (PAGE_SIZE != 4096)
+ 		return -EINVAL;
+ 
+@@ -2429,15 +2454,11 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+ 		return -EINVAL;
  	}
  
-+	if (ppl_disks)
-+		set_bit(MD_HAS_PPL, &mddev->flags);
+-	log = kzalloc(sizeof(*log), GFP_KERNEL);
+-	if (!log)
+-		return -ENOMEM;
+-	log->rdev = rdev;
+ 
+ 	log->need_cache_flush = test_bit(QUEUE_FLAG_WC, &q->queue_flags) != 0;
+ 
+-	log->uuid_checksum = crc32c_le(~0, rdev->mddev->uuid,
+-				       sizeof(rdev->mddev->uuid));
++	log->uuid_checksum = crc32c_le(~0, log->rdev->mddev->uuid,
++				       sizeof(log->rdev->mddev->uuid));
+ 
+ 	mutex_init(&log->io_mutex);
+ 
+@@ -2502,16 +2523,53 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+ io_pool:
+ 	kmem_cache_destroy(log->io_kc);
+ io_kc:
+-	kfree(log);
+ 	return -EINVAL;
+ }
+ 
+-void r5l_exit_log(struct r5l_log *log)
++static void __r5l_exit_log(struct r5l_log *log)
+ {
+ 	md_unregister_thread(&log->reclaim_thread);
+ 	mempool_destroy(log->meta_pool);
+ 	bioset_free(log->bs);
+ 	mempool_destroy(log->io_pool);
+ 	kmem_cache_destroy(log->io_kc);
++}
 +
- 	if (mddev->reshape_position != MaxSector) {
- 		/* Check that we can continue the reshape.
- 		 * Difficulties arise if the stripe we would write to
-diff --git a/include/uapi/linux/raid/md_p.h b/include/uapi/linux/raid/md_p.h
-index 9930f3e..455caa8 100644
---- a/include/uapi/linux/raid/md_p.h
-+++ b/include/uapi/linux/raid/md_p.h
-@@ -242,10 +242,18 @@ struct mdp_superblock_1 {
- 
- 	__le32	chunksize;	/* in 512byte sectors */
- 	__le32	raid_disks;
--	__le32	bitmap_offset;	/* sectors after start of superblock that bitmap starts
--				 * NOTE: signed, so bitmap can be before superblock
--				 * only meaningful of feature_map[0] is set.
--				 */
-+	union {
-+		__le32	bitmap_offset;	/* sectors after start of superblock that bitmap starts
-+					 * NOTE: signed, so bitmap can be before superblock
-+					 * only meaningful of feature_map[0] is set.
-+					 */
++void r5l_exit_log(struct r5l_log *log)
++{
++	if (!log)
++		return;
 +
-+		/* only meaningful when feature_map[MD_FEATURE_PPL] is set */
-+		struct {
-+			__le16 offset; /* sectors after start of superblock that ppl starts */
-+			__le16 size; /* PPL size (including header) in sectors */
-+		} ppl;
-+	};
++	if (log->policy->exit_log)
++		log->policy->exit_log(log);
++
+ 	kfree(log);
+ }
++
++struct r5l_policy r5l_journal = {
++	.init_log = __r5l_init_log,
++	.exit_log = __r5l_exit_log,
++	.write_stripe = __r5l_write_stripe,
++	.write_stripe_run = __r5l_write_stripe_run,
++	.flush_stripe_to_raid = __r5l_flush_stripe_to_raid,
++	.stripe_write_finished = __r5l_stripe_write_finished,
++	.handle_flush_request = __r5l_handle_flush_request,
++	.quiesce = __r5l_quiesce,
++};
++
++int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
++{
++	int ret;
++	struct r5l_log *log = kzalloc(sizeof(*log), GFP_KERNEL);
++	if (!log)
++		return -ENOMEM;
++
++	log->rdev = rdev;
++	log->policy = &r5l_journal;
++
++	ret = log->policy->init_log(log, conf);
++	if (ret)
++		kfree(log);
++
++	return ret;
++}
+diff --git a/drivers/md/raid5-cache.h b/drivers/md/raid5-cache.h
+index 1908d45..52cfef4 100644
+--- a/drivers/md/raid5-cache.h
++++ b/drivers/md/raid5-cache.h
+@@ -78,6 +78,8 @@ struct r5l_log {
  
- 	/* These are only valid with feature bit '4' */
- 	__le32	new_level;	/* new level we are reshaping to		*/
-@@ -318,6 +326,7 @@ struct mdp_superblock_1 {
- 					     */
- #define MD_FEATURE_CLUSTERED		256 /* clustered MD */
- #define	MD_FEATURE_JOURNAL		512 /* support write cache */
-+#define	MD_FEATURE_PPL			1024 /* support PPL */
- #define	MD_FEATURE_ALL			(MD_FEATURE_BITMAP_OFFSET	\
- 					|MD_FEATURE_RECOVERY_OFFSET	\
- 					|MD_FEATURE_RESHAPE_ACTIVE	\
-@@ -328,6 +337,7 @@ struct mdp_superblock_1 {
- 					|MD_FEATURE_RECOVERY_BITMAP	\
- 					|MD_FEATURE_CLUSTERED		\
- 					|MD_FEATURE_JOURNAL		\
-+					|MD_FEATURE_PPL			\
- 					)
+ 	/* to submit async io_units, to fulfill ordering of flush */
+ 	struct work_struct deferred_io_work;
++
++	struct r5l_policy *policy;
+ };
  
- struct r5l_payload_header {
+ /*
+@@ -127,6 +129,17 @@ enum r5l_io_unit_state {
+ 	IO_UNIT_STRIPE_END = 3,	/* stripes data finished writing to raid */
+ };
+ 
++struct r5l_policy {
++	int (*init_log)(struct r5l_log *log, struct r5conf *conf);
++	void (*exit_log)(struct r5l_log *log);
++	int (*write_stripe)(struct r5l_log *log, struct stripe_head *sh);
++	void (*write_stripe_run)(struct r5l_log *log);
++	void (*flush_stripe_to_raid)(struct r5l_log *log);
++	void (*stripe_write_finished)(struct r5l_io_unit *io);
++	int (*handle_flush_request)(struct r5l_log *log, struct bio *bio);
++	void (*quiesce)(struct r5l_log *log, int state);
++};
++
+ extern int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev);
+ extern void r5l_exit_log(struct r5l_log *log);
+ extern int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh);
 -- 
 2.10.1
 
