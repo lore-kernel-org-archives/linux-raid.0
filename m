@@ -1,63 +1,59 @@
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH v2 08/12] md: expose rdev->sb_start as sysfs attribute
-Date: Mon,  5 Dec 2016 16:31:09 +0100
-Message-ID: <20161205153113.7268-9-artur.paszkiewicz@intel.com>
-References: <20161205153113.7268-1-artur.paszkiewicz@intel.com>
+Subject: [PATCH v2 0/7] mdadm support for Partial Parity Log
+Date: Mon,  5 Dec 2016 16:31:57 +0100
+Message-ID: <20161205153204.7343-1-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161205153113.7268-1-artur.paszkiewicz@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: shli@kernel.org
+To: jes.sorensen@redhat.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is meant for external metadata arrays, to pass the location of the
-superblock to the kernel.
+This is the mdadm part of the PPL functionality. It adds a new parameter to
+mdadm to allow selecting the RWH policy for an array. Other changes include
+displaying the RWH policy in the output from --detail and --examine.
 
-Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
----
- drivers/md/md.c | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
+As with the kernel patches sent earlier, all of this is currently targeted and
+tested with IMSM and native MD v1.1 and v1.2 metadata arrays.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 5a14f8e..7049833 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -3204,6 +3204,27 @@ static ssize_t ubb_store(struct md_rdev *rdev, const char *page, size_t len)
- static struct rdev_sysfs_entry rdev_unack_bad_blocks =
- __ATTR(unacknowledged_bad_blocks, S_IRUGO|S_IWUSR, ubb_show, ubb_store);
- 
-+static ssize_t
-+sb_start_show(struct md_rdev *rdev, char *page)
-+{
-+	return sprintf(page, "%llu\n", (unsigned long long)rdev->sb_start);
-+}
-+
-+static ssize_t
-+sb_start_store(struct md_rdev *rdev, const char *buf, size_t len)
-+{
-+	unsigned long long sb_start;
-+	if (kstrtoull(buf, 10, &sb_start) < 0)
-+		return -EINVAL;
-+	if (!rdev->mddev->external)
-+		return -EBUSY;
-+	rdev->sb_start = sb_start;
-+	return len;
-+}
-+
-+static struct rdev_sysfs_entry rdev_sb_start =
-+__ATTR(sb_start, S_IRUGO|S_IWUSR, sb_start_show, sb_start_store);
-+
- static struct attribute *rdev_default_attrs[] = {
- 	&rdev_state.attr,
- 	&rdev_errors.attr,
-@@ -3214,6 +3235,7 @@ static struct attribute *rdev_default_attrs[] = {
- 	&rdev_recovery_start.attr,
- 	&rdev_bad_blocks.attr,
- 	&rdev_unack_bad_blocks.attr,
-+	&rdev_sb_start.attr,
- 	NULL,
- };
- static ssize_t
+v2:
+- Rebased to latest mdadm code.
+- Fixed runtime policy switching.
+- Recognize IMSM PPL journal drive correctly.
+- Removed bitfields from imsm_dev.
+- Made dirty/consistent checks in imsm_set_array_state() more readable.
+- Added comment about calculating sb_start.
+
+Artur Paszkiewicz (6):
+  imsm: metadata changes for PPL
+  Generic support for --rwh-policy and PPL
+  imsm: PPL support
+  super1: PPL support
+  Allow changing the RWH policy for a running array
+  Man page changes for --rwh-policy
+
+Pawel Baldysiak (1):
+  imsm: allow to assemble with PPL even if dirty degraded
+
+ Assemble.c    |   4 +-
+ Create.c      |  26 +++++++--
+ Detail.c      |  18 ++++++-
+ Grow.c        |  15 +++++-
+ Kill.c        |   2 +-
+ Manage.c      |  79 +++++++++++++++++++++++++++
+ ReadMe.c      |   1 +
+ maps.c        |   7 +++
+ mdadm.8.in    |  28 ++++++++++
+ mdadm.c       |  44 +++++++++++++--
+ mdadm.h       |  21 ++++++--
+ super-ddf.c   |   6 +--
+ super-gpt.c   |   2 +-
+ super-intel.c | 169 +++++++++++++++++++++++++++++++++++++++++++++++++++-------
+ super-mbr.c   |   2 +-
+ super0.c      |   8 +--
+ super1.c      |  92 ++++++++++++++++++++++++++------
+ sysfs.c       |  15 ++++++
+ 18 files changed, 481 insertions(+), 58 deletions(-)
+
 -- 
 2.10.1
 
