@@ -1,7 +1,7 @@
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH v2 07/12] md: mddev_find_container helper function
-Date: Mon,  5 Dec 2016 16:31:08 +0100
-Message-ID: <20161205153113.7268-8-artur.paszkiewicz@intel.com>
+Subject: [PATCH v2 08/12] md: expose rdev->sb_start as sysfs attribute
+Date: Mon,  5 Dec 2016 16:31:09 +0100
+Message-ID: <20161205153113.7268-9-artur.paszkiewicz@intel.com>
 References: <20161205153113.7268-1-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20161205153113.7268-1-artur.paszkiewicz@intel.com>
@@ -10,75 +10,54 @@ To: shli@kernel.org
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This allows finding the parent container of a subarray for external
-metadata arrays.
+This is meant for external metadata arrays, to pass the location of the
+superblock to the kernel.
 
 Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- drivers/md/md.c | 37 +++++++++++++++++++++++++++++++++++++
- drivers/md/md.h |  3 +++
- 2 files changed, 40 insertions(+)
+ drivers/md/md.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 7028d54..5a14f8e 100644
+index 5a14f8e..7049833 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -595,6 +595,43 @@ static struct mddev *mddev_find(dev_t unit)
- 	goto retry;
- }
+@@ -3204,6 +3204,27 @@ static ssize_t ubb_store(struct md_rdev *rdev, const char *page, size_t len)
+ static struct rdev_sysfs_entry rdev_unack_bad_blocks =
+ __ATTR(unacknowledged_bad_blocks, S_IRUGO|S_IWUSR, ubb_show, ubb_store);
  
-+struct mddev *mddev_find_container(struct mddev *subarray)
++static ssize_t
++sb_start_show(struct md_rdev *rdev, char *page)
 +{
-+	struct mddev *mddev, *ret = NULL;
-+	char *container_name;
-+	int len = 0;
-+	int i;
-+
-+	if (!subarray->external)
-+		return NULL;
-+
-+	container_name = subarray->metadata_type + 1;
-+	i = 0;
-+	while (container_name[i]) {
-+		if (container_name[i] == '/') {
-+			len = i;
-+			break;
-+		}
-+		i++;
-+	}
-+	if (len == 0)
-+		return NULL;
-+
-+	spin_lock(&all_mddevs_lock);
-+	list_for_each_entry(mddev, &all_mddevs, all_mddevs) {
-+		char *name = mdname(mddev);
-+		if (strlen(name) == len &&
-+				strncmp(name, container_name, len) == 0) {
-+			ret = mddev;
-+			break;
-+		}
-+	}
-+	spin_unlock(&all_mddevs_lock);
-+
-+	return ret;
++	return sprintf(page, "%llu\n", (unsigned long long)rdev->sb_start);
 +}
-+EXPORT_SYMBOL_GPL(mddev_find_container);
 +
- static struct attribute_group md_redundancy_group;
- 
- void mddev_unlock(struct mddev *mddev)
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index d1e56f8..ca0b68f 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -711,4 +711,7 @@ static inline int mddev_is_clustered(struct mddev *mddev)
- {
- 	return mddev->cluster_info && mddev->bitmap_info.nodes > 1;
- }
++static ssize_t
++sb_start_store(struct md_rdev *rdev, const char *buf, size_t len)
++{
++	unsigned long long sb_start;
++	if (kstrtoull(buf, 10, &sb_start) < 0)
++		return -EINVAL;
++	if (!rdev->mddev->external)
++		return -EBUSY;
++	rdev->sb_start = sb_start;
++	return len;
++}
 +
-+extern struct mddev *mddev_find_container(struct mddev *subarray);
++static struct rdev_sysfs_entry rdev_sb_start =
++__ATTR(sb_start, S_IRUGO|S_IWUSR, sb_start_show, sb_start_store);
 +
- #endif /* _MD_MD_H */
+ static struct attribute *rdev_default_attrs[] = {
+ 	&rdev_state.attr,
+ 	&rdev_errors.attr,
+@@ -3214,6 +3235,7 @@ static struct attribute *rdev_default_attrs[] = {
+ 	&rdev_recovery_start.attr,
+ 	&rdev_bad_blocks.attr,
+ 	&rdev_unack_bad_blocks.attr,
++	&rdev_sb_start.attr,
+ 	NULL,
+ };
+ static ssize_t
 -- 
 2.10.1
 
