@@ -1,97 +1,119 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: MD Remnants After --stop
-Date: Mon, 05 Dec 2016 11:41:12 +1100
-Message-ID: <87r35n5hsn.fsf@notabene.neil.brown.name>
-References: <CAHkw+Lf1SErbGro4bq5MM5LyB-Zqyqi4E90R7c+uAZHv1WgSrA@mail.gmail.com> <87fun3ond9.fsf@notabene.neil.brown.name> <CAHkw+LcfszsWDGQJzDaQU0-PsL+8K7t5msW_bLbv+YyDEFmn8Q@mail.gmail.com> <87fumlebwo.fsf@notabene.neil.brown.name> <CAHkw+LfN9xaFmmvg653OKh1eH=_kLdhd3Y1QMg3955TePCCtkg@mail.gmail.com> <CAHkw+Ldbwkknz6ZqxVpFEE-3z1r7pz1AjamUbZaEPn_uyMn_-w@mail.gmail.com> <878tsbcbub.fsf@notabene.neil.brown.name> <CAHkw+Ldv+-uXGCQ+tKfkraZ3VF4V8sk203+Oopm7RvygGQQYGQ@mail.gmail.com> <87oa15938i.fsf@notabene.neil.brown.name> <CAHkw+LfJzZoWVnO8kDi+YVV09fas2DveQoChh10wEBZfYin6aQ@mail.gmail.com> <8760n8a7k5.fsf@notabene.neil.brown.name> <CAHkw+Lc9YEdbJcRu2bOLU-gex9UYSXB32iRKD8TPS7JpjSOdQA@mail.gmail.com> <87shq8743j.fsf@notabene.neil.brown.name> <CAHkw+LfmEyY8CSumeeftOrcYKzbkumHwtfeTuT0DhHZbaxdUSw@
- mail.gmail.com> <87k2bj6zwf.fsf@notabene.neil.brown.name> <CAHkw+LdhCOGn4ZXOrWMQHFK7RvJ9MA=0_uoN+69ZC3SUWsGaCg@mail.gmail.com> <CAHkw+Lfncgkdb8HnbtfGaX0P_KmLmicj3E64JK7oY+1Pv6g_iw@mail.gmail.com>
+From: Aaron Knister <aaron.s.knister@nasa.gov>
+Subject: Re: clustered MD - beyond RAID1
+Date: Sun, 4 Dec 2016 20:46:55 -0500
+Message-ID: <091751d5-27fc-0a6f-60a4-86401df33ac5@nasa.gov>
+References: <56742652.5040304@nasa.gov>
+ <87si2w66tm.fsf@notabene.neil.brown.name> <567850C4.30108@bnl.gov>
+ <87bn9j4jhr.fsf@notabene.neil.brown.name> <56786EA4.2020209@bnl.gov>
+ <8737uv4fz6.fsf@notabene.neil.brown.name> <5678A908.6070401@bnl.gov>
+ <87wps72k8o.fsf@notabene.neil.brown.name>
+ <CAB9NSeXhoHd3_BDRrWAsBrW0Dj2=NucyUFt8pSP0zB5K=RkUOg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHkw+Lfncgkdb8HnbtfGaX0P_KmLmicj3E64JK7oY+1Pv6g_iw@mail.gmail.com>
+In-Reply-To: <CAB9NSeXhoHd3_BDRrWAsBrW0Dj2=NucyUFt8pSP0zB5K=RkUOg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marc Smith <marc.smith@mcc.edu>
-Cc: linux-raid@vger.kernel.org
+To: Robert Woodworth <robertjwoodworth@gmail.com>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+Cc: Tejas Rao <raot@bnl.gov>, Scott Sinno <scott.sinno@nasa.gov>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hi Robert,
 
-On Sat, Dec 03 2016, Marc Smith wrote:
+I don't know the answer to the question, but I had to refresh my memory 
+on the issue and here are my thoughts on it:
 
-> Finally, I got it! Why is it when I want it to break, it doesn't. =3D)
+I dug it up and the issue with clustered RAID5/6 is one of stripe 
+locking (http://www.spinics.net/lists/raid/msg51020.html). If two 
+different nodes say write 4k to 2 different locations within a 128k 
+stripe there's a race condition and best case you'll lose one of the 
+writes, worst case you'd entirely corrupt the stripe. As was pointed out 
+on the thread I linked to the performance implications of locking a 
+stripe could be dire. If you'd like to do 1GiB/s to an array (not 
+unreasonable for even a modest drive count) with a chunk size of 128KiB 
+that's 8,192 locks per second.
 
-welcome to my world :-)
+The approach I was going to take (but I'm no longer working on the 
+project that required it) was to use pacemaker to co-ordinate failover 
+of the md devices between nodes. Pacemaker would co-ordinate the 
+"serving" of the LUNs via SCST and on the passive node would present a 
+pair of "dummy" devices. ALUA would be used to inform the clients of 
+which was the active path. On the clients multipath would be required to 
+pull it all together. I had started work on the pacemaker failover of 
+the SCST LUNs and have some patches to the available OCF resource agents 
+to make the progress I did. I can send those to you if you'd like. It's 
+rather precarious and without extensive testing I don't trust it to not 
+eat all your data.
 
+The only thing I know of that could, out of the box, perhaps do what 
+you're asking is Raidix (http://www.raidix.com/) and that's based purely 
+on advertised specifications.
 
+I agree with you, though, if it clustered md raid6/60 could be made to 
+work and be performant I think it would be an asset to the Linux community.
+
+-Aaron
+
+On 12/2/16 1:03 PM, Robert Woodworth wrote:
+> Excuse me for being late to the party on this subject, but is the idea
+> of clustered RAID5/6 alive or dead?
 >
-> I will say, using the modified mdadm that prevents the synthesized
-> CHANGE event, it seems to not induce the problem as regularly.
+> I have a need for such a feature. I'm in development on SAS JBODs with
+> large drive counts, 60 and 90 drives per JBOD. We would like to support
+> multi-host connectivity in an active/active fashion with MD RAID60.
+> This clustered MD RAID can and should be a nice alternative to HW RAID
+> solutions like LSI/Avago "Syncro" MegaRAID.
 >
-> Below are the kernel logs after stopping an array:
+> I currently have the hardware and time to help develop and test the
+> clustered RAID5/6.
+> I just finished up building a test cluster of 2 nodes with the
+> cluster-md RAID1.  Worked fine with gfs2 on top.
+>
+>
+> My current real job is firmware on these SAS JBODS. I have many years of
+> Linux experience and have developed (years ago) some kernel modules for
+> a custom FPGA based PCIe cards.
+>
+>
+> On Mon, Dec 21, 2015 at 9:13 PM, NeilBrown <neilb@suse.de
+> <mailto:neilb@suse.de>> wrote:
+>
+>     On Tue, Dec 22 2015, Tejas Rao wrote:
+>
+>     > Each GPFS disk (block device) has a list of servers associated with it.
+>     > When the first storage server fails (expired disk lease), the storage
+>     > node is expelled and a different server which also sees the shared
+>     > storage will do I/O.
+>
+>     In that case something probably could be made to work with md/raid5
+>     using much of the cluster support developed for md/raid1.
+>
+>     The raid5 module would take a cluster lock that covered some region of
+>     the array and would not need to release it until a fail-over happened.
+>     So there would be little performance penalty.
+>
+>     The simplest approach would be to lock the whole array.  This would
+>     preclude the possibility of different partitions being accessed from
+>     different nodes.  Maybe that is not a problem.  If it were, a solution
+>     could probably be found but there would be little point searching for a
+>     solution before a clear need was presented.
+>
+>     >
+>     > In the future ,we would prefer to use linux raid (RAID6) in a shared
+>     > environment shielding us against server failures. Unfortunately we can
+>     > only do this after Redhat supports such an environment with linux raid.
+>     > Currently they do not support this even in an active/passive environment
+>     > (only one server can have a md device assembled and active regardless).
+>
+>     Obviously that is something you would need to discuss with Redhat.
+>
+>     Thanks,
+>     NeilBrown
+>
+>
 
-Thank you so much for persisting with this.
-The logs you provide make it clear that two separate processes (494 and
-31178) increment the ->active count by opening the device, but never
-decrement that count by closing the device.
-It seems too unlikely that either process would be holding the
-file descriptor open indefinitely, so something must be going wrong
-either as part of 'open', or as part of 'close'.
-
-Now that I know where to look, the bug is obvious.  Why didn't I see
-that before?
-
-The open request is failing, almost certainly because MD_CLOSING is set,
-but the ->active count isn't being decremented on failure.
-This patch should fix it.
-
-Please test and report results.
-
-Thanks,
-NeilBrown
-
-Fixes: af8d8e6f0315 ("md: changes for MD_STILL_CLOSED flag" v4.9-rc1)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 2089d46b0eb8..a8e07eb2ca5f 100644
-=2D-- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -7087,11 +7087,14 @@ static int md_open(struct block_device *bdev, fmode=
-_t mode)
- 	}
- 	BUG_ON(mddev !=3D bdev->bd_disk->private_data);
-=20
-=2D	if ((err =3D mutex_lock_interruptible(&mddev->open_mutex)))
-+	if ((err =3D mutex_lock_interruptible(&mddev->open_mutex))) {
-+		mddev_put(mddev);
- 		goto out;
-+	}
-=20
- 	if (test_bit(MD_CLOSING, &mddev->flags)) {
- 		mutex_unlock(&mddev->open_mutex);
-+		mddev_put(mddev);
- 		return -ENODEV;
- 	}
-=20
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhEt6gACgkQOeye3VZi
-gblfohAAs7dlHrDtDU8R6yMLCr6jYWmXEfyroEmXIDOkA3+UbhxYNsjoIPD4esRz
-R1f0HVIkIHwTP2+e6BBoW/CXrawew5ltT4TF0WiFZPpIzd4/puRRXz+wiGfWZdgo
-0/PpgDSnzI/RRnkUq5Ao0+SD20Q7+61aMX/b4OKsKc0SOHFW3y3VbEJ2/xPtU1gN
-7YJqD6skZ0J0JsknNopwmuA0W7Te6i1EbX66eGVfrJ5Q78hRFgVRyFpMTVlVcGlz
-JkFuGh82KJI5CQ+FlWPcXI2Lgl5vVfoRF+2iO2mlnXR+YmLB2NjkceMOt7wYkGmr
-xsAOPBT1o8OHnlbvdu766/M+6ZsLclsQj4jUQlHsodnSXWtxj/LLOaxvkPDlXnfB
-KezcIWIQitnobIuVDYP49zeHZ0CgZdAvGWUDC7xj5SlGEzWurDWP3RkH/DxfUx27
-ykBA5P1zIQ+FDuZGke6QncPzYj2tl0puUM/E/ORMRq+ZsF2ii55QW/p6IWliveQh
-VnUdOb3hs4YiiIHSXkrA8/Z6isZIXkxJHNBMlgPM+hu7Hp6mdOHcMHCCggDz0+aQ
-LCgUzjGtj8yz5YEeG32Gd91g/jcbbAOrN09v2vdlgE2IQ1dEwxQ05p2HFxej5rIi
-FkmQTdzS5OdroBCTq2bsswedP2Bsp49Q+AYz63vHTw4DJzaDxsQ=
-=DarN
------END PGP SIGNATURE-----
---=-=-=--
+-- 
+Aaron Knister
+NASA Center for Climate Simulation (Code 606.2)
+Goddard Space Flight Center
+(301) 286-2776
