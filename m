@@ -1,89 +1,86 @@
-From: Marc Smith <marc.smith@mcc.edu>
-Subject: Re: MD Remnants After --stop
-Date: Mon, 5 Dec 2016 16:37:51 -0500
-Message-ID: <CAHkw+Lf4xEnJvAqfjHTOGSUhhKnuLDhds63PFfDZxh6QVSo=pw@mail.gmail.com>
-References: <CAHkw+Lf1SErbGro4bq5MM5LyB-Zqyqi4E90R7c+uAZHv1WgSrA@mail.gmail.com>
- <87fun3ond9.fsf@notabene.neil.brown.name> <CAHkw+LcfszsWDGQJzDaQU0-PsL+8K7t5msW_bLbv+YyDEFmn8Q@mail.gmail.com>
- <87fumlebwo.fsf@notabene.neil.brown.name> <CAHkw+LfN9xaFmmvg653OKh1eH=_kLdhd3Y1QMg3955TePCCtkg@mail.gmail.com>
- <CAHkw+Ldbwkknz6ZqxVpFEE-3z1r7pz1AjamUbZaEPn_uyMn_-w@mail.gmail.com>
- <878tsbcbub.fsf@notabene.neil.brown.name> <CAHkw+Ldv+-uXGCQ+tKfkraZ3VF4V8sk203+Oopm7RvygGQQYGQ@mail.gmail.com>
- <87oa15938i.fsf@notabene.neil.brown.name> <CAHkw+LfJzZoWVnO8kDi+YVV09fas2DveQoChh10wEBZfYin6aQ@mail.gmail.com>
- <8760n8a7k5.fsf@notabene.neil.brown.name> <CAHkw+Lc9YEdbJcRu2bOLU-gex9UYSXB32iRKD8TPS7JpjSOdQA@mail.gmail.com>
- <87shq8743j.fsf@notabene.neil.brown.name> <CAHkw+LfmEyY8CSumeeftOrcYKzbkumHwtfeTuT0DhHZbaxdUSw@mail.gmail.com>
- <87k2bj6zwf.fsf@notabene.neil.brown.name> <CAHkw+LdhCOGn4ZXOrWMQHFK7RvJ9MA=0_uoN+69ZC3SUWsGaCg@mail.gmail.com>
- <CAHkw+Lfncgkdb8HnbtfGaX0P_KmLmicj3E64JK7oY+1Pv6g_iw@mail.gmail.com> <87r35n5hsn.fsf@notabene.neil.brown.name>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH v2 6/7] Allow changing the RWH policy for a running array
+Date: Mon, 05 Dec 2016 16:50:04 -0500
+Message-ID: <wrfjd1h69hbn.fsf@redhat.com>
+References: <20161205153204.7343-1-artur.paszkiewicz@intel.com>
+        <20161205153204.7343-7-artur.paszkiewicz@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87r35n5hsn.fsf@notabene.neil.brown.name>
+In-Reply-To: <20161205153204.7343-7-artur.paszkiewicz@intel.com> (Artur
+        Paszkiewicz's message of "Mon, 5 Dec 2016 16:32:03 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Dec 4, 2016 at 7:41 PM, NeilBrown <neilb@suse.com> wrote:
-> On Sat, Dec 03 2016, Marc Smith wrote:
+Artur Paszkiewicz <artur.paszkiewicz@intel.com> writes:
+> This extends the --rwh-policy parameter to work also in Misc mode. Using
+> it changes the currently active RWH policy in the kernel driver and
+> updates the metadata to make this change permanent. Updating metadata is
+> not yet implemented for super1, so this is limited to IMSM for now.
 >
->> Finally, I got it! Why is it when I want it to break, it doesn't. =)
->
-> welcome to my world :-)
->
->
->>
->> I will say, using the modified mdadm that prevents the synthesized
->> CHANGE event, it seems to not induce the problem as regularly.
->>
->> Below are the kernel logs after stopping an array:
->
-> Thank you so much for persisting with this.
-> The logs you provide make it clear that two separate processes (494 and
-> 31178) increment the ->active count by opening the device, but never
-> decrement that count by closing the device.
-> It seems too unlikely that either process would be holding the
-> file descriptor open indefinitely, so something must be going wrong
-> either as part of 'open', or as part of 'close'.
->
-> Now that I know where to look, the bug is obvious.  Why didn't I see
-> that before?
->
-> The open request is failing, almost certainly because MD_CLOSING is set,
-> but the ->active count isn't being decremented on failure.
-> This patch should fix it.
->
-> Please test and report results.
->
-> Thanks,
-> NeilBrown
->
-> Fixes: af8d8e6f0315 ("md: changes for MD_STILL_CLOSED flag" v4.9-rc1)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 2089d46b0eb8..a8e07eb2ca5f 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -7087,11 +7087,14 @@ static int md_open(struct block_device *bdev, fmode_t mode)
->         }
->         BUG_ON(mddev != bdev->bd_disk->private_data);
->
-> -       if ((err = mutex_lock_interruptible(&mddev->open_mutex)))
-> +       if ((err = mutex_lock_interruptible(&mddev->open_mutex))) {
-> +               mddev_put(mddev);
->                 goto out;
-> +       }
->
->         if (test_bit(MD_CLOSING, &mddev->flags)) {
->                 mutex_unlock(&mddev->open_mutex);
-> +               mddev_put(mddev);
->                 return -ENODEV;
->         }
->
+> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 
-That did the trick! I ran 'mdadm --stop' eight different times on two
-nodes, and every time it was removed completely from /dev and
-/sys/block just like expected. =)
+Hi Artur,
 
-Thanks for your effort and time on this. I think I read in the other
-thread RE: this patch, it may make it into 4.9?
+It looked good all the way up until 6/7, but there is a nit here:
 
+> ---
+>  Manage.c      | 79 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  mdadm.c       |  9 +++++++
+>  mdadm.h       |  1 +
+>  super-intel.c | 65 +++++++++++++++++++++++++++++++++++++++++++++++-
+>  4 files changed, 153 insertions(+), 1 deletion(-)
+[snip]
+> diff --git a/super-intel.c b/super-intel.c
+> index e524ef0..3b40429 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -448,6 +448,7 @@ enum imsm_update_type {
+>  	update_general_migration_checkpoint,
+>  	update_size_change,
+>  	update_prealloc_badblocks_mem,
+> +	update_rwh_policy,
+>  };
+>  
+>  struct imsm_update_activate_spare {
+> @@ -540,6 +541,12 @@ struct imsm_update_prealloc_bb_mem {
+>  	enum imsm_update_type type;
+>  };
+>  
+> +struct imsm_update_rwh_policy {
+> +	enum imsm_update_type type;
+> +	int new_policy;
+> +	int dev_idx;
+> +};
+> +
+>  static const char *_sys_dev_type[] = {
+>  	[SYS_DEV_UNKNOWN] = "Unknown",
+>  	[SYS_DEV_SAS] = "SAS",
+> @@ -3175,7 +3182,6 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
+>  	info->custom_array_size   <<= 32;
+>  	info->custom_array_size   |= __le32_to_cpu(dev->size_low);
+>  	info->recovery_blocked = imsm_reshape_blocks_arrays_changes(st->sb);
+> -	info->journal_clean = dev->rwh_policy;
+>  
+>  	if (is_gen_migration(dev)) {
+>  		info->reshape_active = 1;
+> @@ -3347,6 +3353,8 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
+>  			info->rwh_policy = RWH_POLICY_PPL;
+>  		else
+>  			info->rwh_policy = RWH_POLICY_UNKNOWN;
+> +
+> +		info->journal_clean = info->rwh_policy == RWH_POLICY_PPL;
+>  	}
+>  }
 
---Marc
+This part doesn't make sense, first you set info->rwh_policy based on
+sb->feature_map to RWH_POLICY_PPL or RWH_POLICY_UNKNOWN and then right
+after you hard set it to RWH_POLICY_PPL.
+
+In general I really would prefer not to see any of those double
+assignments if it can be avoided.
+
+Cheers,
+Jes
