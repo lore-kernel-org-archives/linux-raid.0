@@ -1,7 +1,7 @@
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH v2 5/7] imsm: allow to assemble with PPL even if dirty degraded
-Date: Mon,  5 Dec 2016 16:32:02 +0100
-Message-ID: <20161205153204.7343-6-artur.paszkiewicz@intel.com>
+Subject: [PATCH v2 7/7] Man page changes for --rwh-policy
+Date: Mon,  5 Dec 2016 16:32:04 +0100
+Message-ID: <20161205153204.7343-8-artur.paszkiewicz@intel.com>
 References: <20161205153204.7343-1-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20161205153204.7343-1-artur.paszkiewicz@intel.com>
@@ -10,46 +10,60 @@ To: jes.sorensen@redhat.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Pawel Baldysiak <pawel.baldysiak@intel.com>
+Describe the usage of the --rwh-policy parameter in Create and Misc
+modes.
 
-This is necessary to allow PPL recovery in the kernel driver. If the
-recovery succeeds, the array is no longer in dirty state and can be
-started normally as degraded.
-
-Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
 Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- Assemble.c    | 4 +++-
- super-intel.c | 1 +
- 2 files changed, 4 insertions(+), 1 deletion(-)
+ mdadm.8.in | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
-diff --git a/Assemble.c b/Assemble.c
-index 3da0903..022d826 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -1943,7 +1943,9 @@ int assemble_container_content(struct supertype *st, int mdfd,
- 		   content->uuid, chosen_name);
+diff --git a/mdadm.8.in b/mdadm.8.in
+index aa80f0c..d4456a1 100644
+--- a/mdadm.8.in
++++ b/mdadm.8.in
+@@ -1015,6 +1015,26 @@ simultaneously. If not specified, this defaults to 4.
+ Specify journal device for the RAID-4/5/6 array. The journal device
+ should be a SSD with reasonable lifetime.
  
- 	if (enough(content->array.level, content->array.raid_disks,
--		   content->array.layout, content->array.state & 1, avail) == 0) {
-+		   content->array.layout,
-+		   (content->array.state & 1) || content->journal_clean,
-+		   avail) == 0) {
- 		if (c->export && result)
- 			*result |= INCR_NO;
- 		else if (c->verbose >= 0) {
-diff --git a/super-intel.c b/super-intel.c
-index eb6b543..e524ef0 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -3175,6 +3175,7 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
- 	info->custom_array_size   <<= 32;
- 	info->custom_array_size   |= __le32_to_cpu(dev->size_low);
- 	info->recovery_blocked = imsm_reshape_blocks_arrays_changes(st->sb);
-+	info->journal_clean = dev->rwh_policy;
++.TP
++.BR \-\-rwh-policy=
++Specify the RAID Write Hole policy for a RAID-4/5/6 array. Currently supported
++options are
++.BR off ,
++.B journal
++and
++.BR ppl .
++
++The
++.B journal
++policy is implicitly selected when using
++.BR \-\-write-journal .
++
++The
++.B ppl
++policy (Partial Parity Log) is a mechanism that can be used with RAID5 arrays.
++This feature prevents data loss by keeping parity consistent with data even in
++case of drive failure during dirty shutdown. PPL is stored in the metadata
++region of RAID member drives, no additional journal drive is needed.
  
- 	if (is_gen_migration(dev)) {
- 		info->reshape_active = 1;
+ .SH For assemble:
+ 
+@@ -1705,6 +1725,14 @@ can be found it
+ under
+ .BR "SCRUBBING AND MISMATCHES" .
+ 
++.TP
++.BR \-\-rwh-policy=
++Change the RAID Write Hole policy for a RAID-4/5/6 array at runtime. For
++details about the RWH policies, see the description for the same parameter
++under
++.B Create mode
++options.
++
+ .SH For Incremental Assembly mode:
+ .TP
+ .BR \-\-rebuild\-map ", " \-r
 -- 
 2.10.1
 
