@@ -1,83 +1,94 @@
-From: JackieLiu <liuyun01@kylinos.cn>
-Subject: Re: [PATCH 4/4] md/raid5-cache: adjust the write position of the
- empty block and mark it as a checkpoint
-Date: Mon, 5 Dec 2016 11:58:53 +0800
-Message-ID: <D667B2F7-64DE-434D-B793-F4F514BB2714@kylinos.cn>
-References: <20161128081921.5641-1-liuyun01@kylinos.cn>
- <20161128081921.5641-4-liuyun01@kylinos.cn>
- <20161129223150.tseez7b4y6lb72fs@kernel.org>
- <256217AC-28C5-4C52-ABDB-9C36221E6A1B@kylinos.cn>
- <20161202201058.e5jrjxkgve3ob776@kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 10.2 \(3257\))
-Content-Type: text/plain; charset=gb2312
-Content-Transfer-Encoding: 8BIT
+From: NeilBrown <neilb@suse.com>
+Subject: [PATCH] md: fix refcount problem on mddev when stopping array.
+Date: Mon, 05 Dec 2016 16:40:50 +1100
+Message-ID: <87h96j53x9.fsf@notabene.neil.brown.name>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161202201058.e5jrjxkgve3ob776@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>
-Cc: songliubraving@fb.com, =?gb2312?B?wfXV/dSq?= <liuzhengyuan@kylinos.cn>, linux-raid@vger.kernel.org
+Cc: Guoqing Jiang <gqjiang@suse.com>, linux-raid@vger.kernel.org, Marc Smith <marc.smith@mcc.edu>
 List-Id: linux-raid.ids
 
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> 在 2016年12月3日，04:10，Shaohua Li <shli@kernel.org> 写道：
-> 
-> confusing reading the code. Don't think a 'if () write_empty_block' makes the
 
-Hi ShaoHua. 
+md_open() gets a counted reference on an mddev using mddev_find().
+If it ends up returning an error, it must drop this reference.
 
-I rewrote this part of the code, now without data_only_stripes, we write an empty block here,
-with data_only_stripes, mark the first cache block as last_checkpoint.
+There are two error paths where the reference is not dropped.
+One only happens if the process is signalled and an awkward time,
+which is quite unlikely.
+The other was introduced recently in commit af8d8e6f0.
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 9e72180..5697724 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -2072,7 +2072,6 @@ r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
-                return -ENOMEM;
-        }
+Change the code to ensure the drop the reference when returning an error,
+and make it harded to re-introduce this sort of bug in the future.
 
--       ctx->seq += 10;
-        list_for_each_entry_safe(sh, next, &ctx->cached_list, lru) {
-                struct r5l_meta_block *mb;
-                int i;
-@@ -2132,6 +2131,8 @@ static int r5l_recovery_log(struct r5l_log *log)
-        struct mddev *mddev = log->rdev->mddev;
-        struct r5l_recovery_ctx ctx;
-        int ret;
-+       sector_t pos;
-+       struct stripe_head *sh;
+Reported-by: Marc Smith <marc.smith@mcc.edu>
+Fixes: af8d8e6f0315 ("md: changes for MD_STILL_CLOSED flag")
+Signed-off-by: NeilBrown <neilb@suse.com>
+=2D--
 
-        ctx.pos = log->last_checkpoint;
-        ctx.seq = log->last_cp_seq;
-@@ -2149,6 +2150,18 @@ static int r5l_recovery_log(struct r5l_log *log)
-        if (ret)
-                return ret;
+Hi Shaohua,
+ as this bug was introduced in v4.9-rc1, it would be great if this
+ patch could get to Linus before v4.9-final comes out (on Sunday?).
 
-+       pos = ctx.pos;
-+       ctx.seq += 10;
-+
-+       if (ctx.data_only_stripes == 0) {
-+               log->next_checkpoint = ctx.pos;
-+               r5l_log_write_empty_meta_block(log, ctx.pos, ctx.seq++);
-+               ctx.pos = r5l_ring_add(log, ctx.pos, BLOCK_SECTORS);
-+       } else {
-+               sh = list_last_entry(&ctx.cached_list, struct stripe_head, lru);
-+               log->next_checkpoint = sh->log_start;
-+       }
-+
-        if ((ctx.data_only_stripes == 0) && (ctx.data_parity_stripes == 0))
-                pr_debug("md/raid:%s: starting from clean shutdown\n",
-                         mdname(mddev));
-@@ -2166,10 +2179,9 @@ static int r5l_recovery_log(struct r5l_log *log)
-        }
+Thanks,
+NeilBrown
 
-        log->log_start = ctx.pos;
--       log->next_checkpoint = ctx.pos;
-        log->seq = ctx.seq;
--       r5l_log_write_empty_meta_block(log, ctx.pos, ctx.seq);
--       r5l_write_super(log, ctx.pos);
-+       log->last_checkpoint = pos;
-+       r5l_write_super(log, pos);
-        return 0;
+
+ drivers/md/md.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 2089d46b0eb8..d1a291ac2a75 100644
+=2D-- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -7092,7 +7092,8 @@ static int md_open(struct block_device *bdev, fmode_t=
+ mode)
+=20
+ 	if (test_bit(MD_CLOSING, &mddev->flags)) {
+ 		mutex_unlock(&mddev->open_mutex);
+=2D		return -ENODEV;
++		err =3D -ENODEV;
++		goto out;
+ 	}
+=20
+ 	err =3D 0;
+@@ -7101,6 +7102,8 @@ static int md_open(struct block_device *bdev, fmode_t=
+ mode)
+=20
+ 	check_disk_change(bdev);
+  out:
++	if (err)
++		mddev_put(mddev);
+ 	return err;
  }
+=20
+=2D-=20
+2.10.2
 
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhE/eIACgkQOeye3VZi
+gbn8XRAApnBEMyQbnLKVsM+UHF2hBr4rE2hd+7J+iRmowLQKQORBAr8BIMaDmF+6
+HRkJ93cRwKSakv17csGVPprVQDs2Ml3twlaDnZaRKcE89dLXnbTif42ysI9wae1W
+Jq7RzS7c+vLMjP1zkpSB64DkD51uaMmUuNFQi2zxl0XkngFs8phsqa8dbt4mM+xg
+6cyAcTVIxLuPppSZBSCoT4tkd7pGa7xC2CLLAo1oEa/lWymUxMH5EhB/UBN3Z7bR
+abKgzreMRq/RZiC2/GoJaPCX5j+4aIFP+y2HCLOkCUU/G/kAxOWSZKkHHYGAxMbj
+BduzDtNgM5xSA+BbY6WCdyPcIaBxB92xsz6/QfZrWLgCZcWqDU6qkARpd/SxVTpY
+oktnlrv5Ezty6Yq0t2qlS6J41vSi6e6X+K6woGgm0a14FWfxyIosHEn8OuWjeOY6
+O3qHtF/CkgD3z5K8BHfXkAxmxn1d2zyb0+S59spxj2Hpw69UiminMjDt9P/xHdlk
+JORnU6j618HtPbPWHeZw7q0JJUwu+AtvfMucM6P4vb6t2ubFj76/1e1p9WoY426g
+fq48vgT2UrTj+SgS4dhn1e5oUDR2Dd88QrmbO5ULrtI4UGr8StxtG3+7JRqnQXtU
+JzGdGpiCWyWLkDsXWeQw4wL8X+WWQJTVRWK2I6+jkhdQhZF7tLs=
+=Wmk2
+-----END PGP SIGNATURE-----
+--=-=-=--
