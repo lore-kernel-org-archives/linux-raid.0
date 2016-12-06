@@ -1,78 +1,97 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md: fix refcount problem on mddev when stopping array.
-Date: Mon, 5 Dec 2016 16:39:31 -0800
-Message-ID: <20161206003931.vjk566amo5wcvibs@kernel.org>
-References: <87h96j53x9.fsf@notabene.neil.brown.name>
+Subject: Re: [PATCH 4/4] md/raid5-cache: adjust the write position of the
+ empty block and mark it as a checkpoint
+Date: Mon, 5 Dec 2016 17:00:32 -0800
+Message-ID: <20161206010032.wqdvrogugbbkmhg6@kernel.org>
+References: <20161128081921.5641-1-liuyun01@kylinos.cn>
+ <20161128081921.5641-4-liuyun01@kylinos.cn>
+ <20161129223150.tseez7b4y6lb72fs@kernel.org>
+ <256217AC-28C5-4C52-ABDB-9C36221E6A1B@kylinos.cn>
+ <20161202201058.e5jrjxkgve3ob776@kernel.org>
+ <D667B2F7-64DE-434D-B793-F4F514BB2714@kylinos.cn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <87h96j53x9.fsf@notabene.neil.brown.name>
+In-Reply-To: <D667B2F7-64DE-434D-B793-F4F514BB2714@kylinos.cn>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Guoqing Jiang <gqjiang@suse.com>, linux-raid@vger.kernel.org, Marc Smith <marc.smith@mcc.edu>
+To: JackieLiu <liuyun01@kylinos.cn>
+Cc: songliubraving@fb.com, =?utf-8?B?5YiY5q2j5YWD?= <liuzhengyuan@kylinos.cn>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Dec 05, 2016 at 04:40:50PM +1100, Neil Brown wrote:
+On Mon, Dec 05, 2016 at 11:58:53AM +0800, JackieLiu wrote:
 > 
-> md_open() gets a counted reference on an mddev using mddev_find().
-> If it ends up returning an error, it must drop this reference.
+> > 在 2016年12月3日，04:10，Shaohua Li <shli@kernel.org> 写道：
+> > 
+> > confusing reading the code. Don't think a 'if () write_empty_block' makes the
 > 
-> There are two error paths where the reference is not dropped.
-> One only happens if the process is signalled and an awkward time,
-> which is quite unlikely.
-> The other was introduced recently in commit af8d8e6f0.
+> Hi ShaoHua. 
 > 
-> Change the code to ensure the drop the reference when returning an error,
-> and make it harded to re-introduce this sort of bug in the future.
-> 
-> Reported-by: Marc Smith <marc.smith@mcc.edu>
-> Fixes: af8d8e6f0315 ("md: changes for MD_STILL_CLOSED flag")
-> Signed-off-by: NeilBrown <neilb@suse.com>
-> ---
-> 
-> Hi Shaohua,
->  as this bug was introduced in v4.9-rc1, it would be great if this
->  patch could get to Linus before v4.9-final comes out (on Sunday?).
+> I rewrote this part of the code, now without data_only_stripes, we write an empty block here,
+> with data_only_stripes, mark the first cache block as last_checkpoint.
 
-Applied to the for-next tree. This sounds not significant enough, so I'll push
-it to 4.10.
+Next time please send formal patch and fix your mail client (it skews up tabs).
+I manually applied this patch this time. Thanks!
 
-Thanks,
+Best Regards,
 Shaohua
+
  
-> Thanks,
-> NeilBrown
+> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+> index 9e72180..5697724 100644
+> --- a/drivers/md/raid5-cache.c
+> +++ b/drivers/md/raid5-cache.c
+> @@ -2072,7 +2072,6 @@ r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
+>                 return -ENOMEM;
+>         }
 > 
+> -       ctx->seq += 10;
+>         list_for_each_entry_safe(sh, next, &ctx->cached_list, lru) {
+>                 struct r5l_meta_block *mb;
+>                 int i;
+> @@ -2132,6 +2131,8 @@ static int r5l_recovery_log(struct r5l_log *log)
+>         struct mddev *mddev = log->rdev->mddev;
+>         struct r5l_recovery_ctx ctx;
+>         int ret;
+> +       sector_t pos;
+> +       struct stripe_head *sh;
 > 
->  drivers/md/md.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
+>         ctx.pos = log->last_checkpoint;
+>         ctx.seq = log->last_cp_seq;
+> @@ -2149,6 +2150,18 @@ static int r5l_recovery_log(struct r5l_log *log)
+>         if (ret)
+>                 return ret;
 > 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 2089d46b0eb8..d1a291ac2a75 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -7092,7 +7092,8 @@ static int md_open(struct block_device *bdev, fmode_t mode)
->  
->  	if (test_bit(MD_CLOSING, &mddev->flags)) {
->  		mutex_unlock(&mddev->open_mutex);
-> -		return -ENODEV;
-> +		err = -ENODEV;
-> +		goto out;
->  	}
->  
->  	err = 0;
-> @@ -7101,6 +7102,8 @@ static int md_open(struct block_device *bdev, fmode_t mode)
->  
->  	check_disk_change(bdev);
->   out:
-> +	if (err)
-> +		mddev_put(mddev);
->  	return err;
+> +       pos = ctx.pos;
+> +       ctx.seq += 10;
+> +
+> +       if (ctx.data_only_stripes == 0) {
+> +               log->next_checkpoint = ctx.pos;
+> +               r5l_log_write_empty_meta_block(log, ctx.pos, ctx.seq++);
+> +               ctx.pos = r5l_ring_add(log, ctx.pos, BLOCK_SECTORS);
+> +       } else {
+> +               sh = list_last_entry(&ctx.cached_list, struct stripe_head, lru);
+> +               log->next_checkpoint = sh->log_start;
+> +       }
+> +
+>         if ((ctx.data_only_stripes == 0) && (ctx.data_parity_stripes == 0))
+>                 pr_debug("md/raid:%s: starting from clean shutdown\n",
+>                          mdname(mddev));
+> @@ -2166,10 +2179,9 @@ static int r5l_recovery_log(struct r5l_log *log)
+>         }
+> 
+>         log->log_start = ctx.pos;
+> -       log->next_checkpoint = ctx.pos;
+>         log->seq = ctx.seq;
+> -       r5l_log_write_empty_meta_block(log, ctx.pos, ctx.seq);
+> -       r5l_write_super(log, ctx.pos);
+> +       log->last_checkpoint = pos;
+> +       r5l_write_super(log, pos);
+>         return 0;
 >  }
->  
-> -- 
-> 2.10.2
 > 
-
-
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
