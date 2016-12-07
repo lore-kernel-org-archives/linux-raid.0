@@ -1,319 +1,118 @@
-From: Jinpu Wang <jinpu.wang@profitbricks.com>
-Subject: Re: [BUG] MD/RAID1 hung forever on freeze_array
-Date: Wed, 7 Dec 2016 15:17:18 +0100
-Message-ID: <CAMGffE=T15eLaROLCDGBA_OxQgUZbo22LQZJuSji=Z=rZRGr6Q@mail.gmail.com>
-References: <CAMGffE=1kp7gMhG+dFxTvhD6VkRuSfbuXbf9vYSWwGG+=vvhDA@mail.gmail.com>
- <CAMGffE=L_XziWyV+wCJFqKj+v_ahOPNSugZ3uY1q5ixd4iv2fQ@mail.gmail.com>
- <af7ae0a8-eb73-0070-4280-8758433ad500@suse.de> <CAMGffEmc_6o+Lgq3iJsCUyn6K=5S2w8pnrVDhXNBJxaKxd1Teg@mail.gmail.com>
- <519e773d-e6e6-5d79-7224-ef94ef7c7a93@suse.de> <CAMGffEktp+raca2fYPu8fC5nxUrhGLKwjJhtHwXV2Bh_m5oViA@mail.gmail.com>
- <dd068837-6873-ab1b-3c25-d4dbf4ad2ec4@suse.de> <CAMGffEkbddHsJ4LSWcd1DmueM8XTm1pUiowa=_MUHmysVEFN_w@mail.gmail.com>
+From: "John Stoffel" <john@stoffel.org>
+Subject: Re: Recovering a RAID6 after all disks were disconnected
+Date: Wed, 7 Dec 2016 09:31:26 -0500
+Message-ID: <22600.7486.444800.536687@quad.stoffel.home>
+References: <CAOxFTczhq3Gr4WW=-sMamaYDmAoMFGh7kkanwJzhXe5NBdMHHQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAMGffEkbddHsJ4LSWcd1DmueM8XTm1pUiowa=_MUHmysVEFN_w@mail.gmail.com>
+In-Reply-To: <CAOxFTczhq3Gr4WW=-sMamaYDmAoMFGh7kkanwJzhXe5NBdMHHQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Coly Li <colyli@suse.de>
-Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Neil Brown <neilb@suse.de>, Nate Dailey <nate.dailey@stratus.com>
+To: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Nov 29, 2016 at 12:15 PM, Jinpu Wang
-<jinpu.wang@profitbricks.com> wrote:
-> On Mon, Nov 28, 2016 at 10:10 AM, Coly Li <colyli@suse.de> wrote:
->> On 2016/11/28 =E4=B8=8B=E5=8D=885:02, Jinpu Wang wrote:
->>> On Mon, Nov 28, 2016 at 9:54 AM, Coly Li <colyli@suse.de> wrote:
->>>> On 2016/11/28 =E4=B8=8B=E5=8D=884:24, Jinpu Wang wrote:
->>>>> snip
->>>>>>>>
->>>>>>>> every time nr_pending is 1 bigger then (nr_queued + 1), so seems w=
-e
->>>>>>>> forgot to increase nr_queued somewhere?
->>>>>>>>
->>>>>>>> I've noticed (commit ccfc7bf1f09d61)raid1: include bio_end_io_list=
- in
->>>>>>>> nr_queued to prevent freeze_array hang. Seems it fixed similar bug=
-.
->>>>>>>>
->>>>>>>> Could you give your suggestion?
->>>>>>>>
->>>>>>> Sorry, forgot to mention kernel version is 4.4.28
->>>>>>
->>>>>> This commit is Cced to stable@vger.kernel.org for v4.3+, do you use =
-a
->>>>>> stable kernel or a distribution with 4.4.28 kernel ?
->>>>>>
->>>>>> Coly
->>>>>>
->>>>>>
->>>>> Hi Coly,
->>>>>
->>>>> I'm using Debian8 with 4.4.28 kernel.
->>>>
->>>> Hi Jinpu,
->>>>
->>>> Is it possible for your to run a upstream kernel or vanilla kernel to
->>>> test whether the issue still can be reproduced ? Then we can know
->>>> whether it is an upstream bug or a distro issue.
->>>>
->>>> Thanks.
->>>>
->>>> Coly
->>>
->>> Hi Coly,
->>>
->>> I did run kernel 4.4.34 (I download from kernel.org), I can reproduce
->>> the same bug.
->>>
->>> I can also try latest 4.8 or 4.9 rc kernel, if you think it's necessary=
-?
->>>
->> Yes, please. If it can be reproduced on upstream kernel by a set of
->> scripts, it will be very helpful to debug and fix this issue.
->>
->> Thanks in advance.
->>
->> Coly
->
-> Hi Coly,
->
-> I tried with kernel 4.9-cr7, I can't reproduce it with my testcase anymor=
-e.
->
-> It's hard to say the bug is fixed or harder to reproduce because code
-> changed a lot.
->
-> --
-> Jinpu Wang
-> Linux Kernel Developer
->
-> ProfitBricks GmbH
-> Greifswalder Str. 207
-> D - 10405 Berlin
->
-> Tel:       +49 30 577 008  042
-> Fax:      +49 30 577 008 299
-> Email:    jinpu.wang@profitbricks.com
-> URL:      https://www.profitbricks.de
->
-> Sitz der Gesellschaft: Berlin
-> Registergericht: Amtsgericht Charlottenburg, HRB 125506 B
-> Gesch=C3=A4ftsf=C3=BChrer: Achim Weiss
-Hi,
 
-I continue debug the bug:
+Giuseppe> my situation is the following: I have a small 4-disk JBOD that I use
+Giuseppe> to hold a RAID6 software raid setup controlled by mdraid (currently
+Giuseppe> Debian version 3.4-4 on Linux kernel 4.7.8-1
 
-20161207
-crash> struct r1conf 0xffff8800b9792000
-struct r1conf {
-  mddev =3D 0xffff88022db03800,
-  mirrors =3D 0xffff880227729200,
-  raid_disks =3D 2,
-  next_resync =3D 18446744073709527039,
-  start_next_window =3D 18446744073709551615,
-  current_window_requests =3D 0,
-  next_window_requests =3D 0,
-  device_lock =3D {
-    {
-      rlock =3D {
-        raw_lock =3D {
-          val =3D {
-            counter =3D 0
-          }
-        }
-      }
-    }
-  },
-  retry_list =3D {
-    next =3D 0xffff8800afe690c0,
-    prev =3D 0xffff8800b96acac0
-  },
-  bio_end_io_list =3D {
-    next =3D 0xffff8800b96ac2c0,
-    prev =3D 0xffff88003735f140
-  },
-  pending_bio_list =3D {
-    head =3D 0x0,
-    tail =3D 0x0
-  },
-  pending_count =3D 0,
-  wait_barrier =3D {
-    lock =3D {
-      {
-        rlock =3D {
-          raw_lock =3D {
-            val =3D {
-              counter =3D 0
-            }
-          }
-        }
-      }
-    },
-    task_list =3D {
-      next =3D 0xffff880221bc7770,
-      prev =3D 0xffff8800ad44bc88
-    }
-  },
-  resync_lock =3D {
-    {
-      rlock =3D {
-        raw_lock =3D {
-          val =3D {
-            counter =3D 0
-          }
-        }
-      }
-    }
-  },
-  nr_pending =3D 948,
-  nr_waiting =3D 9,
-  nr_queued =3D 946, // again we need one more to finished wait_event.
-  barrier =3D 0,
-  array_frozen =3D 1,
-  fullsync =3D 0,
-  recovery_disabled =3D 2,
-  poolinfo =3D 0xffff88022c567580,
-  r1bio_pool =3D 0xffff88022fdccea0,
-  r1buf_pool =3D 0x0,
-  tmppage =3D 0xffffea0002bf1600,
-  thread =3D 0x0,
-  cluster_sync_low =3D 0,
-  cluster_sync_high =3D 0
-}
-crash> exit
+Giuseppe> I've had sporadic resets of the JBOD due to a variety of reasons
+Giuseppe> (power failures or disk failures —the JBOD has the bad habit of
+Giuseppe> resetting when one disk has an I/O error, which causes all of the
+Giuseppe> disks to go offline temporarily).
 
-on conf->bio_end_io_list we have 91 entries.
-crash> list -H 0xffff88003735f140
-ffff8800b9792048
-ffff8800b96ac2c0
-ffff8800b96ac1c0
+Please toss that JBOD out the window!  *grin*
 
-snip
-ffff88022243dfc0
-ffff88022243dc40
-crash>
+Giuseppe>  When this happens, all the disks get kicked from the RAID,
+Giuseppe> as md fails to find them until the reset of the JBOD is
+Giuseppe> complete. When the disks come back online, even if it's just
+Giuseppe> a few seconds later, the RAID remains in the failed
+Giuseppe> configuration with all 4 disks missing, of course.
 
-on conf->retry_list we have 855
-crash> list -H 0xffff8800b96acac0
-ffff8800b9792038
-ffff8800afe690c0
-snip
+Giuseppe> Normally, the way I would proceed in this case is to unmount
+Giuseppe> the filesystem sitting on top of the RAID, stop the RAID,
+Giuseppe> and then try to start it again, which works reasonably well
+Giuseppe> (aside from the obvious filesystem check that is often
+Giuseppe> needed).
 
-list -H 0xffff8800b96acac0 r1bio.retry_list -s r1bio
+Giuseppe> The thing happened again a couple of days ago, but this time
+Giuseppe> I tried re-adding the disks directly when they came back
+Giuseppe> online, using mdadm -a and confident that since they _had_
+Giuseppe> been recently part of the array, the array would actually go
+Giuseppe> back to work fine —except that this is not the case when ALL
+Giuseppe> disks were kicked out of the array! Instead, what happened
+Giuseppe> was that all the disks were marked as 'spare' and the RAID
+Giuseppe> would not assemble anymore.
 
-ffff8800b9791ff8
-struct r1bio {
-  remaining =3D {
-    counter =3D 0
-  },
-  behind_remaining =3D {
-    counter =3D 0
-  },
-  sector =3D 18446612141670676480, // corrupted?
-  start_next_window =3D 18446612141565972992, //ditto
-  sectors =3D 2,
-  state =3D 18446744073709527039, // ditto
-  mddev =3D 0xffffffffffffffff,
-  master_bio =3D 0x0,
-  read_disk =3D 0,
-  retry_list =3D {
-    next =3D 0xffff8800afe690c0,
-    prev =3D 0xffff8800b96acac0
-  },
-  behind_bvecs =3D 0xffff8800b96ac2c0,
-  behind_page_count =3D 926282048,
-  bios =3D 0xffff8800b9792058
-}
-ffff8800afe69080
-struct r1bio {
-  remaining =3D {
-    counter =3D 0
-  },
-  behind_remaining =3D {
-    counter =3D 0
-  },
-  sector =3D 1566,
-  start_next_window =3D 0,
-  sectors =3D 128,
-  state =3D 257,
-  mddev =3D 0xffff88022db03800,
-  master_bio =3D 0xffff8800371c1f00,
-  read_disk =3D 0,
-  retry_list =3D {
-    next =3D 0xffff8800ad41a540,
-    prev =3D 0xffff8800b9792038
-  },
-  behind_bvecs =3D 0x0,
-  behind_page_count =3D 0,
-  bios =3D 0xffff8800afe690e0
-}
+Can you please send us the full details of each disk using the
+command:
 
-check conf->bio_end_io_list
-list -H 0xffff88003735f140 r1bio.retry_list -s r1bio
+  mdadm -E /dev/sda1
 
-ffff8800b9792008
-struct r1bio {
-  remaining =3D {
-    counter =3D 661819904
-  },
-  behind_remaining =3D {
-    counter =3D -30718
-  },
-  sector =3D 2,
-  start_next_window =3D 18446744073709527039, // corrupted?
-  sectors =3D -1,                                                 // corrup=
-ted?
-  state =3D 0,
-  mddev =3D 0x0,                                               // corrupted=
-?
-  master_bio =3D 0xffff8800afe690c0,
-  read_disk =3D -1184183616,                             // ?
-  retry_list =3D {
-    next =3D 0xffff8800b96ac2c0,
-    prev =3D 0xffff88003735f140
-  },
-  behind_bvecs =3D 0x0,
-  behind_page_count =3D 0,
-  bios =3D 0xffff8800b9792068
-}
-ffff8800b96ac280
-struct r1bio {
-  remaining =3D {
-    counter =3D 0
-  },
-  behind_remaining =3D {
-    counter =3D 0
-  },
-  sector =3D 980009,
-  start_next_window =3D 0,
-  sectors =3D 16,
-  state =3D 257,
-  mddev =3D 0xffff88022db03800,
-  master_bio =3D 0xffff8800370b0600,
-  read_disk =3D 0,
-  retry_list =3D {
-    next =3D 0xffff8800b96ac1c0,
-    prev =3D 0xffff8800b9792048
-  },
-  behind_bvecs =3D 0x0,
-  behind_page_count =3D 0,
-  bios =3D 0xffff8800b96ac2e0
-}
+Where of course 'a' and '1' depend on whether or not you are using
+whole disk or partitioned disks for your arrays.
 
-I still have no clue what it could be, any one has idea?
+You might be able to just for the three spare disks (assumed in this
+case to be sda1, sdb1, sdc1; but you need to be sure first!) to
+assemble into a full array with:
 
---=20
-Jinpu Wang
-Linux Kernel Developer
+ mdadm -A /dev/md50 /dev/sda1 /dev/sdb1 /dev/sdc1
 
-ProfitBricks GmbH
-Greifswalder Str. 207
-D - 10405 Berlin
+And if that works, great.   If not, post the error message(s) you get
+back.
 
-Tel:       +49 30 577 008  042
-Fax:      +49 30 577 008 299
-Email:    jinpu.wang@profitbricks.com
-URL:      https://www.profitbricks.de
+Basically provide more details on your setup so we can help you.
 
-Sitz der Gesellschaft: Berlin
-Registergericht: Amtsgericht Charlottenburg, HRB 125506 B
-Gesch=C3=A4ftsf=C3=BChrer: Achim Weiss
+John
+
+
+Giuseppe> At this point I stopped everything and made a full copy of
+Giuseppe> the RAID disks (lucky me, I had just bought a new JBOD for
+Giuseppe> an upgrade, and a bunch of new disks, even if one of them is
+Giuseppe> apparently defective so I have only been able to backup 3 of
+Giuseppe> the 4 disks) and I have been toying around with ways to
+Giuseppe> recover the array by playing on the copies I've made (I've
+Giuseppe> set the original disks to readonly at the kernel level just
+Giuseppe> to be sure).
+
+Giuseppe> So now my situation is this, and I would like to know if there is
+Giuseppe> something I can try to recover the RAID (I've made a few tests that I
+Giuseppe> will describe momentarily). (I would like to know if there is any
+Giuseppe> possibility for md to handle these kind of issue —all disks in a RAID
+Giuseppe> going temporarily offline— more gracefully, which is likely needed for
+Giuseppe> a lot of home setup where SATA is used instead of SAS).
+
+Giuseppe> So one thing that I've done is to hack around the superblock in the
+Giuseppe> disks (copies) to put back the device roles as they were (getting the
+Giuseppe> information from the pre-failure dmesg output). (By the way, I've been
+Giuseppe> using Andy's Binary Editor for the superblock editing, so if anyone is
+Giuseppe> interested in a be.ini for mdraid v1 superblocks, including checksum
+Giuseppe> verification, I'd be happy to share). Specifically, I've left the
+Giuseppe> device number untouched, but I have edited the dev_roles array so that
+Giuseppe> the slots corresponding to the dev_number from all the disks map to
+Giuseppe> appropriate device roles.
+
+Giuseppe> I can then assemble the array with only 3 of 4 disks (because I do not
+Giuseppe> have a copy of the fourth, essentially) and force-run it. However,
+Giuseppe> when I do this, I get two things:
+
+Giuseppe> (1) a complaint about the bitmap being out of date (number of events
+Giuseppe> too low by 3) and
+Giuseppe> (2) I/O errors on logical block 0 (and the RAID data thus completely
+Giuseppe> inaccessible)
+
+Giuseppe> I'm now wondering about what I should try next. Prevent a resync by
+Giuseppe> matching the event count with that of the bitmap (or conversely)? Try
+Giuseppe> a different permutation of the roles? (I have triple-checked but who
+Giuseppe> knows)? Try a different subset of disks? Try and recreate the array?
+
+Giuseppe> Thanks in advance for any suggestion you may have,
+
+Giuseppe> -- 
+Giuseppe> Giuseppe "Oblomov" Bilotta
+Giuseppe> --
+Giuseppe> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+Giuseppe> the body of a message to majordomo@vger.kernel.org
+Giuseppe> More majordomo info at  http://vger.kernel.org/majordomo-info.html
