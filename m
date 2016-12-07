@@ -1,13 +1,13 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH v2 07/12] md: mddev_find_container helper function
-Date: Wed, 07 Dec 2016 12:23:53 +1100
-Message-ID: <877f7c4jme.fsf@notabene.neil.brown.name>
-References: <20161205153113.7268-1-artur.paszkiewicz@intel.com> <20161205153113.7268-8-artur.paszkiewicz@intel.com>
+Subject: Re: [PATCH v2 11/12] raid5-ppl: support disk add/remove with distributed PPL
+Date: Wed, 07 Dec 2016 12:29:52 +1100
+Message-ID: <87wpfc34rz.fsf@notabene.neil.brown.name>
+References: <20161205153113.7268-1-artur.paszkiewicz@intel.com> <20161205153113.7268-12-artur.paszkiewicz@intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161205153113.7268-8-artur.paszkiewicz@intel.com>
+In-Reply-To: <20161205153113.7268-12-artur.paszkiewicz@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, shli@kernel.org
 Cc: linux-raid@vger.kernel.org
@@ -18,13 +18,22 @@ Content-Type: text/plain
 
 On Tue, Dec 06 2016, Artur Paszkiewicz wrote:
 
-> This allows finding the parent container of a subarray for external
-> metadata arrays.
+> Add a function to modify the log by adding or removing an rdev when a
+> drive fails or is added as a spare.
+>
+> Adding a drive to the log is as simple as initializing and adding a new
+> child log, removing a drive is more complicated because it requires
+> stopping the child log and freeing all of its resources. In order to do
+> that, we busy wait for any submitted log bios to complete and then
+> manually finish and free the io_units. No new log requests will happen
+> at this point. A new list is added to struct r5l_io_unit to have access
+> to stripes that have been written to the log but are not completely
+> processed yet.
 
-This doesn't belong in the kernel.
-If it did, there would be a detailed description here of why it is
-needed.
-But there isn't one.
+Busy-wait for IO to finish?  Seriously?
+
+At the very very least you need to cond_resched() in there, but an
+actual wait would be much better.
 
 NeilBrown
 
@@ -33,18 +42,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhHZKkACgkQOeye3VZi
-gbmwaw/+ITw5I+1ueYjtNRTNqLGdAiXOo3cKbUP4BCRet9Th4F9+KmMmf8sxkaYB
-2/OG33+wekRx4AH5IdQxV7kRm00VUzgJIYdc1HEq+zcBR3tR50TraT2doUKCsPdu
-svnHL3/I81sA2OKhe145W+ytb8ynH84yj+/JsWf9CmBjT8pLo4MAoKqK1iIO1Z68
-XDCfD2fLmOMzQ7YlQqKoJjttR6aPlfTWcKFUQure6N0FVorPEqN8zojdr7nvRARq
-zxhfk8HcHRtwwC5gkfatc6eFzJRrbV7vZCMXkJv0JFTFB8tdDyAbvYUpOamJuaCx
-efTySRJ0COJ5I8Rx2hwQnbxl2BXACycVjdAaNWpb3itltHwt6L4D8OiXDM3AcBEM
-CCqegObOBmU9MRd/ibHj0TMUoUMYZVYbVACALEddaWA7a5k/7f1yO0i1UtZKei2f
-ZdCIXkLyOO06fhUaaxbOj/fCn+8+AEYGea7v+HTHr3bX76+unVKFBjTyMgMTs2wi
-n5Bo/1fLpdOZS799aNTsA272yxSDQB1rU6EbXuplC6Kt14KMOilH9cnfzz91LTgf
-b5bCAt30SbKfuOifGeX+0c3pSSEG2SZubJjyz4M648McyeMvQBomvNJOEvF95He7
-z4n4mKDZ/qw8tuXVMuzImb9AlhXgxj19DEbC3UdCkBRQP1s7wFg=
-=LgPs
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhHZhAACgkQOeye3VZi
+gbnXog/9FoTh7rj6m0qmzksbi2tq6A3zzEe6X+Pkka/uNoqvnB1D5PMgOW4CJ1i1
+2S+eufABsH3O53FOsnFFQiDQ2/ZmdWs6FDDSJy6kZFSJ37AFIVezDJjXOgNwF77T
+/qi4P8THshYSKoig84uHAVsPyD0l0JCelaIEfLmgC5kBwdhxO3jU55hBEtuMCzZs
+SqgZhM+MhfPxensXg2vauCLTWyRJNzJ+Nav1EjuEV+ZvuVY9S7agDGBN+1ma1a5G
+K3WJFzcg61pd2xULMkFWdNcA2cWYyXpkQFnKdy+vXY7fxJL7mRiVS5tEkXApzh2+
+UeuhnIqATA+BgWnTvFC8nYvwkeOmSIhZcW+Ud9e6T/Yyk0jwKbLRi0u0bWyvhOcQ
+kTV1vmH/Rd8scGu2mjEylm8dZKqDZwOBRgTCiXJRz3cbEB4KEXOQSvCCHp5yGKH4
+7D2gOGdoVgdDQ7lGkANCLODBnpO7f1bwrVyn2Gj9DTmxoWo3za4sxA0RFL0/QeeT
+iDC7HeqXA6LzEayXGijqVNKypz2KLCfy6p7G0FDqVWXEh1glbkppsWxFDi8ecbgT
+zicWGmyeulFWZjz77NMwGNP3TD7NRStMTO1cTA5DaBpgxZ/QLyYWjJ5M6TPf2VZ+
+4DD2o5VAd5Lsx7p1B37x2o4Nb9m2C7ah0/qA+kKbO+41TL0LdEs=
+=4dpa
 -----END PGP SIGNATURE-----
 --=-=-=--
