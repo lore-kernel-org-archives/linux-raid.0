@@ -1,98 +1,88 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: raid0 vs. mkfs
-Date: Wed, 7 Dec 2016 00:08:15 -0500
-Message-ID: <CAMM=eLdXg_4e6aSD0EGzdPr1W8WTxuXy7nS8j6opjzWaWDfCSg@mail.gmail.com>
-References: <56c83c4e-d451-07e5-88e2-40b085d8681c@scylladb.com>
- <87oa108a1x.fsf@notabene.neil.brown.name> <286a5fc1-eda3-0421-a88e-b03c09403259@scylladb.com>
- <87inr880au.fsf@notabene.neil.brown.name> <df73ebc4-9b78-09b5-022b-089c30dea17c@scylladb.com>
- <87d1he7zv9.fsf@notabene.neil.brown.name> <33bb250a-4dfd-0acc-9958-30fdac10918c@scylladb.com>
+From: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Subject: Recovering a RAID6 after all disks were disconnected
+Date: Wed, 7 Dec 2016 09:59:46 +0100
+Message-ID: <CAOxFTczhq3Gr4WW=-sMamaYDmAoMFGh7kkanwJzhXe5NBdMHHQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <33bb250a-4dfd-0acc-9958-30fdac10918c@scylladb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Avi Kivity <avi@scylladb.com>
-Cc: NeilBrown <neilb@suse.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Nov 29, 2016 at 5:45 PM, Avi Kivity <avi@scylladb.com> wrote:
-> On 11/29/2016 11:14 PM, NeilBrown wrote:
->>
->> On Mon, Nov 28 2016, Avi Kivity wrote:
->>>>
->>>> If it is easy for the upper layer to break a very large request into a
->>>> few very large requests, then I wouldn't necessarily object.
->>>
->>> I can't see why it would be hard.  It's simple arithmetic.
->>
->> That is easy to say before writing the code :-)
->> It probably is easy for RAID0.  Less so for RAID10.  Even less for
->> RAID6.
->>
->
-> pick the largest subrange wihin the inpu range whose bounds are 0 (mod
-> stripe-size); TRIM it (for all members); apply the regular algorithm to the
-> head and tail subranges.  Works for all RAID types.  If the RAID is
-> undergoing reshaping, exclude the range undergoing reshaping, and treat the
-> two halves separately.
->
->>>> But unless it is very hard for the lower layer to merge requests, it
->>>> should be doing that too.
->>>
->>> Merging has tradeoffs.  When you merge requests R1, R2, ... Rn you make
->>> the latency request R1 sum of the latencies of R1..Rn.  You may gain
->>> some efficiency in the process, but that's not going to make up for a
->>> factor of n.  The queuing layer has no way to tell whether the caller is
->>> interested in the latency of individual requests.  By sending large
->>> requests, the caller indicates it's not interested in the latency of
->>> individual subranges.  The queuing layer is still free to internally
->>> split the request to smaller ranges, to satisfy hardware constraints, or
->>> to reduce worst-case latencies for competing request streams.
->>
->> I would have thought that using plug/unplug to group requests is a
->> fairly strong statement that they can be handled as a unit if that is
->> convenient.
->
->
-> It is not.  As an example, consider a read and a few associated read-ahead
-> requests submitted in a batch.  The last thing you want is for them to be
-> treated as a unit.
->
-> Plug/unplug means: I have a bunch of requests here.  Whether they should be
-> merged or reordered is orthogonal to whether they are members of a batch or
-> not.
->
->>
->>
->>> So I disagree that all the work should be pushed to the merging layer.
->>> It has less information to work with, so the fewer decisions it has to
->>> make, the better.
->>
->> I think that the merging layer should be as efficient as it reasonably
->> can be, and particularly should take into account plugging.  This
->> benefits all callers.
->
->
-> Yes, but plugging does not mean "please merge anything you can until the
-> unplug".
->
->> If it can be demonstrated that changes to some of the upper layers bring
->> further improvements with acceptable costs, then certainly it is good to
->> have those too.
->
->
-> Generating millions of requests only to merge them again is inefficient.  It
-> happens in an edge case (TRIM of the entirety of a very large RAID), but it
-> already caused on user to believe the system failed.  I think the system
-> should be more robust than that.
+Hello all,
 
-DM's stripe target (raid0) has had Avi's proposed implementation
-(breaks large discard into N discards, one per component device) for a
-long while.
-See commit 7b76ec11fec4 ("dm stripe: support discards")
+my situation is the following: I have a small 4-disk JBOD that I use
+to hold a RAID6 software raid setup controlled by mdraid (currently
+Debian version 3.4-4 on Linux kernel 4.7.8-1
 
-This improvement applies to other raid levels too.  And I completely
-agree that it would be a mistake to to continue to have the block
-layer issue millions of chunk-sized bios only to _maybe_ have them be
-merged by the IO scheduler and/or plugging.  Needless make-work that
-just eats cpu and memory.
+I've had sporadic resets of the JBOD due to a variety of reasons
+(power failures or disk failures =E2=80=94the JBOD has the bad habit of
+resetting when one disk has an I/O error, which causes all of the
+disks to go offline temporarily).
+
+ When this happens, all the disks get kicked from the RAID, as md
+fails to find them until the reset of the JBOD is complete. When the
+disks come back online, even if it's just a few seconds later, the
+RAID remains in the failed configuration with all 4 disks missing, of
+course.
+
+Normally, the way I would proceed in this case is to unmount the
+filesystem sitting on top of the RAID, stop the RAID, and then try to
+start it again, which works reasonably well (aside from the obvious
+filesystem check that is often needed).
+
+The thing happened again a couple of days ago, but this time I tried
+re-adding the disks directly when they came back online, using mdadm
+-a and confident that since they _had_ been recently part of the
+array, the array would actually go back to work fine =E2=80=94except that t=
+his
+is not the case when ALL disks were kicked out of the array! Instead,
+what happened was that all the disks were marked as 'spare' and the
+RAID would not assemble anymore.
+
+At this point I stopped everything and made a full copy of the RAID
+disks (lucky me, I had just bought a new JBOD for an upgrade, and a
+bunch of new disks, even if one of them is apparently defective so I
+have only been able to backup 3 of the 4 disks) and I have been toying
+around with ways to recover the array by playing on the copies I've
+made (I've set the original disks to readonly at the kernel level just
+to be sure).
+
+So now my situation is this, and I would like to know if there is
+something I can try to recover the RAID (I've made a few tests that I
+will describe momentarily). (I would like to know if there is any
+possibility for md to handle these kind of issue =E2=80=94all disks in a RA=
+ID
+going temporarily offline=E2=80=94 more gracefully, which is likely needed =
+for
+a lot of home setup where SATA is used instead of SAS).
+
+So one thing that I've done is to hack around the superblock in the
+disks (copies) to put back the device roles as they were (getting the
+information from the pre-failure dmesg output). (By the way, I've been
+using Andy's Binary Editor for the superblock editing, so if anyone is
+interested in a be.ini for mdraid v1 superblocks, including checksum
+verification, I'd be happy to share). Specifically, I've left the
+device number untouched, but I have edited the dev_roles array so that
+the slots corresponding to the dev_number from all the disks map to
+appropriate device roles.
+
+I can then assemble the array with only 3 of 4 disks (because I do not
+have a copy of the fourth, essentially) and force-run it. However,
+when I do this, I get two things:
+
+(1) a complaint about the bitmap being out of date (number of events
+too low by 3) and
+(2) I/O errors on logical block 0 (and the RAID data thus completely
+inaccessible)
+
+I'm now wondering about what I should try next. Prevent a resync by
+matching the event count with that of the bitmap (or conversely)? Try
+a different permutation of the roles? (I have triple-checked but who
+knows)? Try a different subset of disks? Try and recreate the array?
+
+Thanks in advance for any suggestion you may have,
+
+--=20
+Giuseppe "Oblomov" Bilotta
