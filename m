@@ -1,7 +1,7 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH 2/3] md/r5cache: after recovery, increase journal seq by 1000
-Date: Wed, 7 Dec 2016 09:42:06 -0800
-Message-ID: <20161207174207.3685260-2-songliubraving@fb.com>
+Subject: [PATCH 3/3] md/r5cache: sh->log_start in recovery
+Date: Wed, 7 Dec 2016 09:42:07 -0800
+Message-ID: <20161207174207.3685260-3-songliubraving@fb.com>
 References: <20161207174207.3685260-1-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,83 +12,116 @@ To: linux-raid@vger.kernel.org
 Cc: neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuan@kylinos.cn, liuyun01@kylinos.cn, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-Currently, we increase journal entry seq by 10 after recovery.
-However, this is not sufficient in the following case.
+We only need to update sh->log_start at the end of recovery,
+which is r5c_recovery_rewrite_data_only_stripes().
 
-After crash the journal looks like
-
-| seq+0 | +1 | +2 | +3 | +4 | +5 | +6 | +7 | ... | +11 | +12 |
-
-If +1 is not valid, we dropped all entries from +1 to +12; and
-write seq+10:
-
-| seq+0 | +10 | +2 | +3 | +4 | +5 | +6 | +7 | ... | +11 | +12 |
-
-However, if we write a big journal entry with seq+11, it will
-connect with some stale journal entry:
-
-| seq+0 | +10 |                     +11                 | +12 |
-
-To reduce the risk of this issue, we increase seq by 1000 instead.
+In when there is data-only stripes, log->next_checkpoint is
+also set in r5c_recovery_rewrite_data_only_stripes().
 
 Signed-off-by: Song Liu <songliubraving@fb.com>
 ---
- drivers/md/raid5-cache.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/md/raid5-cache.c | 23 ++++++++---------------
+ 1 file changed, 8 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 875f963..5301081 100644
+index 5301081..ae2684a 100644
 --- a/drivers/md/raid5-cache.c
 +++ b/drivers/md/raid5-cache.c
-@@ -2003,8 +2003,8 @@ static int r5c_recovery_flush_log(struct r5l_log *log,
-  * happens again, new recovery will start from meta 1. Since meta 2n is
-  * valid now, recovery will think meta 3 is valid, which is wrong.
-  * The solution is we create a new meta in meta2 with its seq == meta
-- * 1's seq + 10 and let superblock points to meta2. The same recovery will
-- * not think meta 3 is a valid meta, because its seq doesn't match
-+ * 1's seq + 1000 and let superblock points to meta2. The same recovery
-+ * will not think meta 3 is a valid meta, because its seq doesn't match
-  */
+@@ -1681,8 +1681,7 @@ r5l_recovery_replay_one_stripe(struct r5conf *conf,
+ 
+ static struct stripe_head *
+ r5c_recovery_alloc_stripe(struct r5conf *conf,
+-			  sector_t stripe_sect,
+-			  sector_t log_start)
++			  sector_t stripe_sect)
+ {
+ 	struct stripe_head *sh;
+ 
+@@ -1691,7 +1690,6 @@ r5c_recovery_alloc_stripe(struct r5conf *conf,
+ 		return NULL;  /* no more stripe available */
+ 
+ 	r5l_recovery_reset_stripe(sh);
+-	sh->log_start = log_start;
+ 
+ 	return sh;
+ }
+@@ -1861,7 +1859,7 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
+ 						stripe_sect);
+ 
+ 		if (!sh) {
+-			sh = r5c_recovery_alloc_stripe(conf, stripe_sect, ctx->pos);
++			sh = r5c_recovery_alloc_stripe(conf, stripe_sect);
+ 			/*
+ 			 * cannot get stripe from raid5_get_active_stripe
+ 			 * try replay some stripes
+@@ -1870,7 +1868,7 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
+ 				r5c_recovery_replay_stripes(
+ 					cached_stripe_list, ctx);
+ 				sh = r5c_recovery_alloc_stripe(
+-					conf, stripe_sect, ctx->pos);
++					conf, stripe_sect);
+ 			}
+ 			if (!sh) {
+ 				pr_debug("md/raid:%s: Increasing stripe cache size to %d to recovery data on journal.\n",
+@@ -1878,8 +1876,8 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
+ 					conf->min_nr_stripes * 2);
+ 				raid5_set_cache_size(mddev,
+ 						     conf->min_nr_stripes * 2);
+-				sh = r5c_recovery_alloc_stripe(
+-					conf, stripe_sect, ctx->pos);
++				sh = r5c_recovery_alloc_stripe(conf,
++							       stripe_sect);
+ 			}
+ 			if (!sh) {
+ 				pr_err("md/raid:%s: Cannot get enough stripes due to memory pressure. Recovery failed.\n",
+@@ -1893,7 +1891,6 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
+ 			if (!test_bit(STRIPE_R5C_CACHING, &sh->state) &&
+ 			    test_bit(R5_Wantwrite, &sh->dev[sh->pd_idx].flags)) {
+ 				r5l_recovery_replay_one_stripe(conf, sh, ctx);
+-				sh->log_start = ctx->pos;
+ 				list_move_tail(&sh->lru, cached_stripe_list);
+ 			}
+ 			r5l_recovery_load_data(log, sh, ctx, payload,
+@@ -1932,8 +1929,6 @@ static void r5c_recovery_load_one_stripe(struct r5l_log *log,
+ 			set_bit(R5_UPTODATE, &dev->flags);
+ 		}
+ 	}
+-	list_add_tail(&sh->r5c, &log->stripe_in_journal_list);
+-	atomic_inc(&log->stripe_in_journal_count);
+ }
  
  /*
-@@ -2034,7 +2034,7 @@ static int r5c_recovery_flush_log(struct r5l_log *log,
-  *   ---------------------------------------------
-  *   ^                              ^
-  *   |- log->last_checkpoint        |- ctx->pos+1
-- *   |- log->last_cp_seq            |- ctx->seq+11
-+ *   |- log->last_cp_seq            |- ctx->seq+1001
-  *
-  * However, it is not safe to start the state machine yet, because data only
-  * parities are not yet secured in RAID. To save these data only parities, we
-@@ -2045,7 +2045,7 @@ static int r5c_recovery_flush_log(struct r5l_log *log,
-  *   -----------------------------------------------------------------
-  *   ^                                                ^
-  *   |- log->last_checkpoint                          |- ctx->pos+n
-- *   |- log->last_cp_seq                              |- ctx->seq+10+n
-+ *   |- log->last_cp_seq                              |- ctx->seq+1000+n
-  *
-  * If failure happens again during this process, the recovery can safe start
-  * again from log->last_checkpoint.
-@@ -2057,7 +2057,7 @@ static int r5c_recovery_flush_log(struct r5l_log *log,
-  *   -----------------------------------------------------------------
-  *                        ^                         ^
-  *                        |- log->last_checkpoint   |- ctx->pos+n
-- *                        |- log->last_cp_seq       |- ctx->seq+10+n
-+ *                        |- log->last_cp_seq       |- ctx->seq+1000+n
-  *
-  * Then we can safely start the state machine. If failure happens from this
-  * point on, the recovery will start from new log->last_checkpoint.
-@@ -2157,8 +2157,8 @@ static int r5l_recovery_log(struct r5l_log *log)
- 	if (ret)
- 		return ret;
+@@ -2123,9 +2118,11 @@ r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
+ 		sync_page_io(log->rdev, ctx->pos, PAGE_SIZE, page,
+ 			     REQ_OP_WRITE, WRITE_FUA, false);
+ 		sh->log_start = ctx->pos;
++		list_add_tail(&sh->r5c, &log->stripe_in_journal_list);
++		atomic_inc(&log->stripe_in_journal_count);
+ 		ctx->pos = write_pos;
+ 		ctx->seq += 1;
+-
++		log->next_checkpoint = sh->log_start;
+ 		list_del_init(&sh->lru);
+ 		raid5_release_stripe(sh);
+ 	}
+@@ -2139,7 +2136,6 @@ static int r5l_recovery_log(struct r5l_log *log)
+ 	struct r5l_recovery_ctx ctx;
+ 	int ret;
+ 	sector_t pos;
+-	struct stripe_head *sh;
  
--       pos = ctx.pos;
--       ctx.seq += 10;
-+	pos = ctx.pos;
-+	ctx.seq += 1000;
- 
- 	if (ctx.data_only_stripes == 0) {
+ 	ctx.pos = log->last_checkpoint;
+ 	ctx.seq = log->last_cp_seq;
+@@ -2164,9 +2160,6 @@ static int r5l_recovery_log(struct r5l_log *log)
  		log->next_checkpoint = ctx.pos;
+ 		r5l_log_write_empty_meta_block(log, ctx.pos, ctx.seq++);
+ 		ctx.pos = r5l_ring_add(log, ctx.pos, BLOCK_SECTORS);
+-	} else {
+-		sh = list_last_entry(&ctx.cached_list, struct stripe_head, lru);
+-		log->next_checkpoint = sh->log_start;
+ 	}
+ 
+ 	if ((ctx.data_only_stripes == 0) && (ctx.data_parity_stripes == 0))
 -- 
 2.9.3
 
