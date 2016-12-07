@@ -1,13 +1,13 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH v2 11/12] raid5-ppl: support disk add/remove with distributed PPL
-Date: Wed, 07 Dec 2016 12:29:52 +1100
-Message-ID: <87wpfc34rz.fsf@notabene.neil.brown.name>
-References: <20161205153113.7268-1-artur.paszkiewicz@intel.com> <20161205153113.7268-12-artur.paszkiewicz@intel.com>
+Subject: Re: [PATCH v2 09/12] raid5-ppl: read PPL signature from IMSM metadata
+Date: Wed, 07 Dec 2016 12:25:55 +1100
+Message-ID: <871sxk4jj0.fsf@notabene.neil.brown.name>
+References: <20161205153113.7268-1-artur.paszkiewicz@intel.com> <20161205153113.7268-10-artur.paszkiewicz@intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161205153113.7268-12-artur.paszkiewicz@intel.com>
+In-Reply-To: <20161205153113.7268-10-artur.paszkiewicz@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, shli@kernel.org
 Cc: linux-raid@vger.kernel.org
@@ -18,22 +18,14 @@ Content-Type: text/plain
 
 On Tue, Dec 06 2016, Artur Paszkiewicz wrote:
 
-> Add a function to modify the log by adding or removing an rdev when a
-> drive fails or is added as a spare.
->
-> Adding a drive to the log is as simple as initializing and adding a new
-> child log, removing a drive is more complicated because it requires
-> stopping the child log and freeing all of its resources. In order to do
-> that, we busy wait for any submitted log bios to complete and then
-> manually finish and free the io_units. No new log requests will happen
-> at this point. A new list is added to struct r5l_io_unit to have access
-> to stripes that have been written to the log but are not completely
-> processed yet.
+> The PPL signature is used to determine if the stored PPL is valid for a
+> given array. With IMSM, the PPL signature should match the
+> orig_family_num field of the superblock. To avoid passing this value
+> from userspace, it can be read from the IMSM MPB when initializing the
+> log.
 
-Busy-wait for IO to finish?  Seriously?
-
-At the very very least you need to cond_resched() in there, but an
-actual wait would be much better.
+It is up to mdadm to determine if the PPL is valid.  It would only tell
+the kernel that a PPL exists if it is valid...
 
 NeilBrown
 
@@ -42,18 +34,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhHZhAACgkQOeye3VZi
-gbnXog/9FoTh7rj6m0qmzksbi2tq6A3zzEe6X+Pkka/uNoqvnB1D5PMgOW4CJ1i1
-2S+eufABsH3O53FOsnFFQiDQ2/ZmdWs6FDDSJy6kZFSJ37AFIVezDJjXOgNwF77T
-/qi4P8THshYSKoig84uHAVsPyD0l0JCelaIEfLmgC5kBwdhxO3jU55hBEtuMCzZs
-SqgZhM+MhfPxensXg2vauCLTWyRJNzJ+Nav1EjuEV+ZvuVY9S7agDGBN+1ma1a5G
-K3WJFzcg61pd2xULMkFWdNcA2cWYyXpkQFnKdy+vXY7fxJL7mRiVS5tEkXApzh2+
-UeuhnIqATA+BgWnTvFC8nYvwkeOmSIhZcW+Ud9e6T/Yyk0jwKbLRi0u0bWyvhOcQ
-kTV1vmH/Rd8scGu2mjEylm8dZKqDZwOBRgTCiXJRz3cbEB4KEXOQSvCCHp5yGKH4
-7D2gOGdoVgdDQ7lGkANCLODBnpO7f1bwrVyn2Gj9DTmxoWo3za4sxA0RFL0/QeeT
-iDC7HeqXA6LzEayXGijqVNKypz2KLCfy6p7G0FDqVWXEh1glbkppsWxFDi8ecbgT
-zicWGmyeulFWZjz77NMwGNP3TD7NRStMTO1cTA5DaBpgxZ/QLyYWjJ5M6TPf2VZ+
-4DD2o5VAd5Lsx7p1B37x2o4Nb9m2C7ah0/qA+kKbO+41TL0LdEs=
-=4dpa
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhHZSMACgkQOeye3VZi
+gbmTjA/8CHrzKwrp3KeGwdFhD4nXocpTXdWFF6PYg5HaHCK53esCS3gMIdk9QpvX
+/X9HtG5hliubZGefAw1jSgHyqAKdbDApsS9XsfFDb2QROohywUvt/i8yQd7W4nGA
+mJ+SOhEkEEd07QGphoQHvrKTFJ/daa2oml6kqxX6Q1/Fg43kPljTEj0vIeudEfvB
+pRYSek+ZqHZS8R/s+nOSnbkZEU55g2ZiGq3A6/RJWIRoULXyqLcUC3hjvsX0FGKr
+NM4Ast4+vTbZLg/OKFH7BRuKCZhfu6y0Qb6Lr35kNs4agsjt56Qa7A/TGWC6hvuz
+gRg66SBCQevjl11VrLguFXUdS2j3IZyABXdcjyf1ZoAmqz/1qUi08xfVqql31HwN
+7k4mOIgZvh39w9oJXqnOL522f+4m1EGL99KkPzYLcqahTldwX9xx0Vk2AT2FpD+k
+KQJ7bw2ByOZWp1ech4IkdAlpeyi7dNWvcqk2/nXViJrNAHYEv32xnH2D6njoUvHZ
+E/cWUgYQ0wfKCvHDPSjiUJvkKTP8RXH4/ItAXwCMxn74SJixeocOMP8hbvDJV4D3
+ifyozzUZMlTKbuVTnkGsX8kRfLfDkohs7zWEaDwVs/8PqBrrTqt3C4ntkfK2oYZZ
+IMLcpfawSKlrLKrCPwXz0zFTF+dNN5HwOiJNMEG5/4YoVL18Vu4=
+=m8+g
 -----END PGP SIGNATURE-----
 --=-=-=--
