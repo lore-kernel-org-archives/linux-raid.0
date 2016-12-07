@@ -1,88 +1,293 @@
-From: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
-Subject: Recovering a RAID6 after all disks were disconnected
-Date: Wed, 7 Dec 2016 09:59:46 +0100
-Message-ID: <CAOxFTczhq3Gr4WW=-sMamaYDmAoMFGh7kkanwJzhXe5NBdMHHQ@mail.gmail.com>
+From: Coly Li <colyli@suse.de>
+Subject: Re: raid0 vs. mkfs
+Date: Wed, 7 Dec 2016 19:50:33 +0800
+Message-ID: <ccf447df-e7b5-0a08-7753-67ee4ad574ef@suse.de>
+References: <56c83c4e-d451-07e5-88e2-40b085d8681c@scylladb.com>
+ <87oa108a1x.fsf@notabene.neil.brown.name>
+ <286a5fc1-eda3-0421-a88e-b03c09403259@scylladb.com>
+ <87inr880au.fsf@notabene.neil.brown.name>
+ <df73ebc4-9b78-09b5-022b-089c30dea17c@scylladb.com>
+ <87d1he7zv9.fsf@notabene.neil.brown.name>
+ <33bb250a-4dfd-0acc-9958-30fdac10918c@scylladb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/mixed;
+ boundary="------------8B584A9716CF92BEC0EE7FB0"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <33bb250a-4dfd-0acc-9958-30fdac10918c@scylladb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Avi Kivity <avi@scylladb.com>, NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org, linux-block@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello all,
+This is a multi-part message in MIME format.
+--------------8B584A9716CF92BEC0EE7FB0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 
-my situation is the following: I have a small 4-disk JBOD that I use
-to hold a RAID6 software raid setup controlled by mdraid (currently
-Debian version 3.4-4 on Linux kernel 4.7.8-1
+On 2016/11/30 上午6:45, Avi Kivity wrote:
+> On 11/29/2016 11:14 PM, NeilBrown wrote:
+[snip]
 
-I've had sporadic resets of the JBOD due to a variety of reasons
-(power failures or disk failures =E2=80=94the JBOD has the bad habit of
-resetting when one disk has an I/O error, which causes all of the
-disks to go offline temporarily).
+>>> So I disagree that all the work should be pushed to the merging layer.
+>>> It has less information to work with, so the fewer decisions it has to
+>>> make, the better.
+>> I think that the merging layer should be as efficient as it reasonably
+>> can be, and particularly should take into account plugging.  This
+>> benefits all callers.
+> 
+> Yes, but plugging does not mean "please merge anything you can until the
+> unplug".
+> 
+>> If it can be demonstrated that changes to some of the upper layers bring
+>> further improvements with acceptable costs, then certainly it is good to
+>> have those too.
+> 
+> Generating millions of requests only to merge them again is
+> inefficient.  It happens in an edge case (TRIM of the entirety of a very
+> large RAID), but it already caused on user to believe the system
+> failed.  I think the system should be more robust than that.
 
- When this happens, all the disks get kicked from the RAID, as md
-fails to find them until the reset of the JBOD is complete. When the
-disks come back online, even if it's just a few seconds later, the
-RAID remains in the failed configuration with all 4 disks missing, of
-course.
+Neil,
 
-Normally, the way I would proceed in this case is to unmount the
-filesystem sitting on top of the RAID, stop the RAID, and then try to
-start it again, which works reasonably well (aside from the obvious
-filesystem check that is often needed).
+As my understand, if a large discard bio received by
+raid0_make_request(), for example it requests to discard chunk 1 to 24
+on a raid0 device built by 4 SSDs. This large discard bio will be split
+and written to each SSD as the following layout,
 
-The thing happened again a couple of days ago, but this time I tried
-re-adding the disks directly when they came back online, using mdadm
--a and confident that since they _had_ been recently part of the
-array, the array would actually go back to work fine =E2=80=94except that t=
-his
-is not the case when ALL disks were kicked out of the array! Instead,
-what happened was that all the disks were marked as 'spare' and the
-RAID would not assemble anymore.
+SSD1: C1,C5,C9,C13,C17,C21
+SSD2: C2,C6,C10,C14,C18,C22
+SSD3: C3,C7,C11,C15,C19,C23
+SSD4: C4,C8,C12,C16,C20,C24
 
-At this point I stopped everything and made a full copy of the RAID
-disks (lucky me, I had just bought a new JBOD for an upgrade, and a
-bunch of new disks, even if one of them is apparently defective so I
-have only been able to backup 3 of the 4 disks) and I have been toying
-around with ways to recover the array by playing on the copies I've
-made (I've set the original disks to readonly at the kernel level just
-to be sure).
+Current raid0 code will call generic_make_request() for 24 times for
+each split bio. But it is possible to calculate the final layout of each
+split bio, so we can combine all the bios into four per-SSD large bio,
+like this,
 
-So now my situation is this, and I would like to know if there is
-something I can try to recover the RAID (I've made a few tests that I
-will describe momentarily). (I would like to know if there is any
-possibility for md to handle these kind of issue =E2=80=94all disks in a RA=
-ID
-going temporarily offline=E2=80=94 more gracefully, which is likely needed =
-for
-a lot of home setup where SATA is used instead of SAS).
+bio1 (on SSD1): C{1,5,9,13,17,21}
+bio2 (on SSD2): C{2,6,10,14,18,22}
+bio3 (on SSD3): C{3,7,11,15,19,23}
+bio4 (on SSD4): C{4,8,12,16,20,24}
 
-So one thing that I've done is to hack around the superblock in the
-disks (copies) to put back the device roles as they were (getting the
-information from the pre-failure dmesg output). (By the way, I've been
-using Andy's Binary Editor for the superblock editing, so if anyone is
-interested in a be.ini for mdraid v1 superblocks, including checksum
-verification, I'd be happy to share). Specifically, I've left the
-device number untouched, but I have edited the dev_roles array so that
-the slots corresponding to the dev_number from all the disks map to
-appropriate device roles.
+Now we only need to call generic_make_request() for 4 times. Rebuild the
+per-device discard bios is more efficient in raid0 code then in block
+layer. There are some reasons that I know,
+- there are splice timeout, block layer cannot merge all split bio into
+one large bio before time out.
+- rebuilt per-device bio in raid0 is just by a few calculation, block
+layer does merge on queue with list operations, it is slower.
+- raid0 code knows its on disk layout, so rebuild per-device bio is
+possible here. block layer has no idea on raid0 layout, it can only do
+request merge.
 
-I can then assemble the array with only 3 of 4 disks (because I do not
-have a copy of the fourth, essentially) and force-run it. However,
-when I do this, I get two things:
+Avi,
 
-(1) a complaint about the bitmap being out of date (number of events
-too low by 3) and
-(2) I/O errors on logical block 0 (and the RAID data thus completely
-inaccessible)
+I compose a prototype patch, the code is not simple, indeed it is quite
+complicated IMHO.
 
-I'm now wondering about what I should try next. Prevent a resync by
-matching the event count with that of the bitmap (or conversely)? Try
-a different permutation of the roles? (I have triple-checked but who
-knows)? Try a different subset of disks? Try and recreate the array?
+I do a little research, some NVMe SSDs support whole device size
+DISCARD, also I observe mkfs.xfs sends out a raid0 device size DISCARD
+bio to block layer. But raid0_make_request() only receives 512KB size
+DISCARD bio, block/blk-lib.c:__blkdev_issue_discard() splits the
+original large bio into 512KB small bios, the limitation is from
+q->limits.discard_granularity.
 
-Thanks in advance for any suggestion you may have,
+At this moment, I don't know why a q->limits.discard_granularity is
+512KB even the underlying SSD supports whole device size discard. We
+also need to fix q->limits.discard_granularity, otherwise
+block/blk-lib.c:__blkdev_issue_discard() still does an inefficient loop
+to split the original large discard bio into smaller ones and sends them
+to raid0 code by next_bio().
 
---=20
-Giuseppe "Oblomov" Bilotta
+I also CC this email to linux-block@vger.kernel.org to ask for help. My
+question is, if a NVMe SSD supports whole-device-size DISCARD, is
+q->limits.discard_granularity still necessary ?
+
+Here I also attach my prototype patch as a proof of concept, it is
+runnable with Linux 4.9-rc7.
+
+Coly
+
+
+
+--------------8B584A9716CF92BEC0EE7FB0
+Content-Type: text/plain; charset=UTF-8; x-mac-type="0"; x-mac-creator="0";
+ name="raid0_handle_large_discard_bio.patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="raid0_handle_large_discard_bio.patch"
+
+U3ViamVjdDogb3B0aW1pemF0aW9uIGZvciBsYXJnZSBzaXplIERJU0NBUkQgYmlvIGJ5IHBl
+ci1kZXZpY2UgYmlvcyAKClRoaXMgaXMgYSB2ZXJ5IGVhcmx5IHByb3RvdHlwZSwgc3RpbGwg
+bmVlZHMgbW9yZSBibG9jayBsYXllciBjb2RlCm1vZGlmaWNhdGlvbiB0byBtYWtlIGl0IHdv
+cmsuCgpDdXJyZW50IHVwc3RyZWFtIHJhaWQwX21ha2VfcmVxdWVzdCgpIG9ubHkgaGFuZGxl
+cyBUUklNL0RJU0NBUkQgYmlvIGJ5CmNodW5rIHNpemUsIGl0IG1lYW1zIGZvciBsYXJnZSBy
+YWlkMCBkZXZpY2UgYnVpbHQgYnkgU1NEcyB3aWxsIGNhbGwKbWlsbGlvbiB0aW1lcyBnZW5l
+cmljX21ha2VfcmVxdWVzdCgpIGZvciB0aGUgc3BsaXQgYmlvLiBUaGlzIHBhdGNoCnRyaWVz
+IHRvIGNvbWJpbmUgc21hbGwgYmlvcyBpbnRvIGxhcmdlIG9uZSBpZiB0aGV5IGFyZSBvbiBz
+YW1lIHJlYWwKZGV2aWNlIGFuZCBjb250aW51b3VzIG9uIHRoaXMgcmVhbCBkZXZpY2UsIHRo
+ZW4gc2VuZCB0aGUgY29tYmluZWQgbGFyZ2UKYmlvIHRvIHVuZGVybHlpbmcgZGV2aWNlIGJ5
+IHNpbmdsZSBjYWxsIHRvIGdlbmVyaWNfbWFrZV9yZXF1ZXN0KCkuCgpGb3IgZXhhbXBsZSwg
+dXNlIG1rZnMueGZzIHRvIHRyaW0gYSByYWlkMCBkZXZpY2UgYnVpbHQgd2l0aCA0IHggM1RC
+Ck5WTWVTU0QsIGN1cnJlbnQgdXBzdHJlYW0gcmFpZDBfbWFrZV9yZXF1ZXN0KCkgd2lsbCBj
+YWxsCmdlbmVyaWNfbWFrZV9yZXF1ZXN0KCkgNS43IG1pbGxpb24gdGltZXMsIHdpdGggdGhp
+cyBwYXRjaCBvbmx5IDQgY2FsbHMKdG8gZ2VuZXJpY19tYWtlX3JlcXVlc3QoKSBpcyByZXF1
+aXJlZC4KClRoaXMgcGF0Y2ggd29uJ3Qgd29yayBpbiByZWFsIHdvcmxkLCBiZWNhdXNlIGlu
+IGJsb2NrL2Jsay1saWIuYzoKX19ibGtkZXZfaXNzdWVfZGlzY2FyZCgpIHRoZSBvcmlnaW5h
+bCBsYXJnZSBiaW8gd2lsbCBiZSBzcGxpdCBpbnRvCnNtYWxsZXIgb25lcyBieSByZXN0cmlj
+dGlvbiBvZiBkaXNjYXJkX2dyYW51bGFyaXR5LgoKSWYgc29tZSBkYXkgU1NEIHN1cHBvcnRz
+IHdob2xlIGRldmljZSBzaXplZCBkaXNjYXJkX2dyYW51bGFyaXR5LCBpdAp3aWxsIGJlIHZl
+cnkgaW50ZXJlc3RpbmcgdGhlbi4uLgoKVGhlIGJhc2ljIGlkZWEgaXMsIGlmIGEgbGFyZ2Ug
+ZGlzY2FyZCBiaW8gcmVjZWl2ZWQKYnkgcmFpZDBfbWFrZV9yZXF1ZXN0KCksIGZvciBleGFt
+cGxlIGl0IHJlcXVlc3RzIHRvIGRpc2NhcmQgY2h1bmsgMQp0byAyNCBvbiBhIHJhaWQwIGRl
+dmljZSBidWlsdCBieSA0IFNTRHMuIFRoaXMgbGFyZ2UgZGlzY2FyZCBiaW8gd2lsbApiZSBz
+cGxpdCBhbmQgd3JpdHRlbiB0byBlYWNoIFNTRCBhcyB0aGUgZm9sbG93aW5nIGxheW91dCwK
+CVNTRDE6IEMxLEM1LEM5LEMxMyxDMTcsQzIxCglTU0QyOiBDMixDNixDMTAsQzE0LEMxOCxD
+MjIKCVNTRDM6IEMzLEM3LEMxMSxDMTUsQzE5LEMyMwoJU1NENDogQzQsQzgsQzEyLEMxNixD
+MjAsQzI0CkN1cnJlbnQgcmFpZDAgY29kZSB3aWxsIGNhbGwgZ2VuZXJpY19tYWtlX3JlcXVl
+c3QoKSBmb3IgMjQgdGltZXMgZm9yCmVhY2ggc3BsaXQgYmlvLiBCdXQgaXQgaXMgcG9zc2li
+bGUgdG8gY2FsY3VsYXRlIHRoZSBmaW5hbCBsYXlvdXQgb2YKZWFjaCBzcGxpdCBiaW8sIHNv
+IHdlIGNhbiBjb21iaW5lIGFsbCB0aGUgYmlvcyBpbnRvIGZvdXIgcGVyLVNTRCBsYXJnZQpi
+aW8sIGxpa2UgdGhpcywKCWJpbzEgKG9uIFNTRDEpOiBDezEsNSw5LDEzLDE3LDIxfQoJYmlv
+MiAob24gU1NEMik6IEN7Miw2LDEwLDE0LDE4LDIyfQoJYmlvMyAob24gU1NEMyk6IEN7Myw3
+LDExLDE1LDE5LDIzfQoJYmlvNCAob24gU1NENCk6IEN7NCw4LDEyLDE2LDIwLDI0fQpOb3cg
+d2Ugb25seSBuZWVkIHRvIGNhbGwgZ2VuZXJpY19tYWtlX3JlcXVlc3QoKSBmb3IgNCB0aW1l
+cy4KClRoZSBjb2RlIGlzIG5vdCBzaW1wbGUsIEkgbmVlZCBtb3JlIHRpbWUgdG8gd3JpdGUg
+dGV4dCB0byBjb21wbGFpbiBob3cKaXQgd29ya3MuIEN1cnJlbnRseSB5b3UgY2FuIHRyZWF0
+IGl0IGFzIGEgcHJvb2Ygb2YgY29uY2VwdC4KClNpZ25lZC1vZmYtYnk6IENvbHkgTGkgPGNv
+bHlsaUBzdXNlLmRlPgotLS0KIGRyaXZlcnMvbWQvcmFpZDAuYyB8IDIyNCArKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKwogMSBmaWxlIGNo
+YW5nZWQsIDIyNCBpbnNlcnRpb25zKCspCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlk
+MC5jIGIvZHJpdmVycy9tZC9yYWlkMC5jCmluZGV4IDI1ODk4NmEuLjczYzVmYWMgMTAwNjQ0
+Ci0tLSBhL2RyaXZlcnMvbWQvcmFpZDAuYworKysgYi9kcml2ZXJzL21kL3JhaWQwLmMKQEAg
+LTQ1Miw2ICs0NTIsMjI1IEBAIHN0YXRpYyBpbmxpbmUgaW50IGlzX2lvX2luX2NodW5rX2Jv
+dW5kYXJ5KHN0cnVjdCBtZGRldiAqbWRkZXYsCiAJfQogfQogCisKK3N0cnVjdCBiaW9fcmVj
+b3JkIHsKKwlzZWN0b3JfdAliaV9zZWN0b3I7CisJdW5zaWduZWQgbG9uZwlzZWN0b3JzOwor
+CXN0cnVjdCBtZF9yZGV2CSpyZGV2OworfTsKKworc3RhdGljIHZvaWQgaGFuZGxlX2Rpc2Nh
+cmRfcmVxdWVzdChzdHJ1Y3QgbWRkZXYgKm1kZGV2LCBzdHJ1Y3QgYmlvICpiaW8pCit7CisJ
+c3RydWN0IGJpb19yZWNvcmQgKnJlY3MgPSBOVUxMOworCXN0cnVjdCBiaW8gKnNwbGl0Owor
+CXN0cnVjdCByMGNvbmYgKmNvbmYgPSBtZGRldi0+cHJpdmF0ZTsKKwlzZWN0b3JfdCBzZWN0
+b3JzLCBzZWN0b3I7CisJc3RydWN0IHN0cmlwX3pvbmUgKmZpcnN0X3pvbmU7CisJaW50IHpv
+bmVfaWR4OworCXNlY3Rvcl90IHpvbmVfc3RhcnQsIHpvbmVfZW5kOworCWludCBucl9zdHJp
+cF96b25lcyA9IGNvbmYtPm5yX3N0cmlwX3pvbmVzOworCWludCBkaXNrczsKKwlpbnQgZmly
+c3RfcmRldl9pZHggPSAtMSwgcmRldl9pZHg7CisJc3RydWN0IG1kX3JkZXYgKmZpcnN0X3Jk
+ZXY7CisJdW5zaWduZWQgaW50IGNodW5rX3NlY3RzID0gbWRkZXYtPmNodW5rX3NlY3RvcnM7
+CisKKwlzZWN0b3IgPSBiaW8tPmJpX2l0ZXIuYmlfc2VjdG9yOworCWZpcnN0X3pvbmUgPSBm
+aW5kX3pvbmUoY29uZiwgJnNlY3Rvcik7CisJZmlyc3RfcmRldiA9IG1hcF9zZWN0b3IobWRk
+ZXYsIGZpcnN0X3pvbmUsIHNlY3RvciwgJnNlY3Rvcik7CisKKwlzZWN0b3JzID0gY2h1bmtf
+c2VjdHMgLQorCQkobGlrZWx5KGlzX3Bvd2VyX29mXzIoY2h1bmtfc2VjdHMpKQorCQkgPyAo
+c2VjdG9yICYgKGNodW5rX3NlY3RzIC0gMSkpCisJCSA6IHNlY3Rvcl9kaXYoc2VjdG9yLCBj
+aHVua19zZWN0cykpOworCisJLyogaWYgYmlvIHNpemUgaXMgbm90IGV4Y2VlZCBhIGNodW5r
+IGJvdW5kYXJ5LAorCSAqIHNpbXBseSBoYW5kbGUgaXQgaGVyZS4KKwkgKi8KKwlpZiAoc2Vj
+dG9ycyA+PSBiaW9fc2VjdG9ycyhiaW8pKSB7CisJCWJpby0+YmlfYmRldiA9IGZpcnN0X3Jk
+ZXYtPmJkZXY7CisJCWJpby0+YmlfaXRlci5iaV9zZWN0b3IgPSBzZWN0b3IgKyBmaXJzdF96
+b25lLT5kZXZfc3RhcnQgKworCQkJCQkgZmlyc3RfcmRldi0+ZGF0YV9vZmZzZXQ7CisJCWlm
+ICh1bmxpa2VseSghYmxrX3F1ZXVlX2Rpc2NhcmQoYmRldl9nZXRfcXVldWUoYmlvLT5iaV9i
+ZGV2KSkpKQorCQkJLyogSnVzdCBpZ25vcmUgaXQgKi8KKwkJCWJpb19lbmRpbyhiaW8pOwor
+CQllbHNlCisJCQlnZW5lcmljX21ha2VfcmVxdWVzdChiaW8pOworCQlyZXR1cm47CisJfQor
+CisJLyogYmlvIGlzIGxhcmdlIGVub3VnaCB0byBiZSBzcGxpdCwgYWxsb2NhdGUgcmVjcyBm
+aXJzdGx5ICovCisJZGlza3MgPSBtZGRldi0+cmFpZF9kaXNrczsKKwlyZWNzID0ga2NhbGxv
+YyhkaXNrcywgc2l6ZW9mKHN0cnVjdCBiaW9fcmVjb3JkKSwgR0ZQX05PSU8pOworCWlmIChy
+ZWNzID09IE5VTEwpIHsKKwkJcHJpbnRrKEtFUk5fRVJSICJtZC9yYWlkMDolczogZmFpbGVk
+IHRvIGFsbG9jYXRlIG1lbW9yeSAiIFwKKwkJCQkiZm9yIGJpb19yZWNvcmQiLCBtZG5hbWUo
+bWRkZXYpKTsKKwkJYmlvLT5iaV9lcnJvciA9IC1FTk9NRU07CisJCWJpb19lbmRpbyhiaW8p
+OworCQlyZXR1cm47CisJfQorCisJem9uZV9pZHggPSBmaXJzdF96b25lIC0gY29uZi0+c3Ry
+aXBfem9uZTsKKwlmb3IgKHJkZXZfaWR4ID0gMDsgcmRldl9pZHggPCBmaXJzdF96b25lLT5u
+Yl9kZXY7IHJkZXZfaWR4KyspIHsKKwkJc3RydWN0IG1kX3JkZXYgKnJkZXY7CisKKwkJcmRl
+diA9IGNvbmYtPmRldmxpc3Rbem9uZV9pZHggKiBkaXNrcyArIHJkZXZfaWR4XTsKKwkJcmVj
+c1tyZGV2X2lkeF0ucmRldiA9IHJkZXY7CisJCWlmIChyZGV2ID09IGZpcnN0X3JkZXYpCisJ
+CQlmaXJzdF9yZGV2X2lkeCA9IHJkZXZfaWR4OworCX0KKworCS8qIFJlc3RvcmUgZHVlIHRv
+IHNlY3Rvcl9kaXYgKi8KKwlzZWN0b3IgPSBiaW8tPmJpX2l0ZXIuYmlfc2VjdG9yOworCXJl
+Y3NbZmlyc3RfcmRldl9pZHhdLmJpX3NlY3RvciA9IHNlY3RvciArIGZpcnN0X3pvbmUtPmRl
+dl9zdGFydDsKKwlyZWNzW2ZpcnN0X3JkZXZfaWR4XS5zZWN0b3JzID0gc2VjdG9yczsKKwlC
+VUdfT04ocmVjc1tmaXJzdF9yZGV2X2lkeF0ucmRldiAhPSBmaXJzdF9yZGV2KTsKKworCS8q
+IHJlY3NbZmlyc3RfcmRldl9pZHhdIGlzIGluaXRpYWxpemVkIHdpdGggJ3NlY3RvcnMnLCB3
+ZSBuZWVkIHRvCisJICogaGFuZGxlIHRoZSByZXN0ZWQgc2VjdG9ycywgd2hpY2ggaXMgc290
+cmVkIGluICdzZWN0b3JzJyB0b28uCisJICovCisJc2VjdG9ycyA9IGJpb19zZWN0b3JzKGJp
+bykgLSBzZWN0b3JzOworCisJLyogYmlvIG1heSBub3QgYmUgY2h1bmsgc2l6ZSBhbGlnbmVk
+LCB0aGUgc3BsaXQgYmlvIG9uIGZpcnN0IHJkZXYKKwkgKiBtYXkgbm90IGJlIGNodW5rIHNp
+emUgYWxpZ25lZCB0b28uIEJ1dCB0aGUgcmVzdGVkIHNwbGl0IGJpb3MKKwkgKiBvbiByZXN0
+ZWQgcmRldnMgbXVzdCBiZSBjaHVuayBzaXplIGFsaWduZWQsIGFuZCBhbGlnbmVkIHRvCisJ
+ICogcm91bmQgZG93biBjaHVuayBudW1iZXIuCisJICovCisJem9uZV9lbmQgPSBmaXJzdF96
+b25lLT56b25lX2VuZDsKKwlyZGV2X2lkeCA9IGZpcnN0X3JkZXZfaWR4ICsgMTsKKwlzZWN0
+b3IgPSBsaWtlbHkoaXNfcG93ZXJfb2ZfMihjaHVua19zZWN0cykpCisJCSA/IHNlY3RvciAm
+ICh+KGNodW5rX3NlY3RzIC0gMSkpCisJCSA6IGNodW5rX3NlY3RzICogKHNlY3Rvci9jaHVu
+a19zZWN0cyk7CisKKwl3aGlsZSAocmRldl9pZHggPCBmaXJzdF96b25lLT5uYl9kZXYpIHsK
+KwkJcmVjc1tyZGV2X2lkeF0uYmlfc2VjdG9yID0gc2VjdG9yICsgZmlyc3Rfem9uZS0+ZGV2
+X3N0YXJ0OworCQlpZiAoc2VjdG9ycyA8PSBjaHVua19zZWN0cykgeworCQkJcmVjc1tyZGV2
+X2lkeF0uc2VjdG9ycyA9IHNlY3RvcnM7CisJCQlnb3RvIGlzc3VlOworCQl9CisJCXJlY3Nb
+cmRldl9pZHhdLnNlY3RvcnMgPSBjaHVua19zZWN0czsKKwkJc2VjdG9ycyAtPSBjaHVua19z
+ZWN0czsKKwkJcmRldl9pZHgrKzsKKwl9CisKKwlzZWN0b3IgKz0gY2h1bmtfc2VjdHM7CisJ
+em9uZV9zdGFydCA9IHNlY3RvciArIGZpcnN0X3pvbmUtPmRldl9zdGFydDsKKwlpZiAoem9u
+ZV9zdGFydCA9PSB6b25lX2VuZCkgeworCQl6b25lX2lkeCsrOworCQl6b25lX3N0YXJ0ID0g
+Y29uZi0+c3RyaXBfem9uZVt6b25lX2lkeF0uZGV2X3N0YXJ0OworCX0KKworCXdoaWxlICh6
+b25lX2lkeCA8IG5yX3N0cmlwX3pvbmVzKSB7CisJCWludCByZGV2c19pbl96b25lID0gY29u
+Zi0+c3RyaXBfem9uZVt6b25lX2lkeF0ubmJfZGV2OworCQlpbnQgY2h1bmtzX3Blcl9yZGV2
+LCByZXN0ZWRfY2h1bmtzLCByZXN0ZWRfc2VjdG9yczsKKwkJc2VjdG9yX3Qgem9uZV9zZWN0
+b3JzLCBncm93X3NlY3RvcnM7CisJCWludCBhZGRfcmVzdGVkX3NlY3RvcnMgPSAwOworCisJ
+CXpvbmVfZW5kID0gY29uZi0+c3RyaXBfem9uZVt6b25lX2lkeF0uem9uZV9lbmQ7CisJCXpv
+bmVfc2VjdG9ycyA9IHpvbmVfZW5kIC0gem9uZV9zdGFydDsKKwkJY2h1bmtzX3Blcl9yZGV2
+ID0gc2VjdG9yczsKKwkJcmVzdGVkX3NlY3RvcnMgPQorCQkJc2VjdG9yX2RpdihjaHVua3Nf
+cGVyX3JkZXYsIGNodW5rX3NlY3RzICogcmRldnNfaW5fem9uZSk7CisJCXJlc3RlZF9jaHVu
+a3MgPSByZXN0ZWRfc2VjdG9yczsKKwkJcmVzdGVkX3NlY3RvcnMgPSBzZWN0b3JfZGl2KHJl
+c3RlZF9jaHVua3MsIGNodW5rX3NlY3RzKTsKKworCQlpZiAoKGNodW5rc19wZXJfcmRldiAq
+IGNodW5rX3NlY3RzKSA+IHpvbmVfc2VjdG9ycykKKwkJCWNodW5rc19wZXJfcmRldiA9IHpv
+bmVfc2VjdG9ycy9jaHVua19zZWN0czsKKworCQkvKiByZXN0ZWRfY2h1bmtzIGFuZCByZXN0
+ZWRfc2VjdG9ycyBnbyBpbnRvIG5leHQgem9uZSwgd2Ugd29uJ3QKKwkJICogaGFuZGxlIHRo
+ZW0gaW4gdGhpcyB6b25lLiBTZXQgdGhlbSB0byAwLgorCQkgKi8KKwkJaWYgKChjaHVua3Nf
+cGVyX3JkZXYgKiBjaHVua19zZWN0cykgPT0gem9uZV9zZWN0b3JzICYmCisJCSAgICAocmVz
+dGVkX2NodW5rcyAhPSAwIHx8IHJlc3RlZF9zZWN0b3JzICE9IDApKSB7CisJCQlpZiAocmVz
+dGVkX2NodW5rcyAhPSAwKQorCQkJCXJlc3RlZF9jaHVua3MgPSAwOworCQkJaWYgKHJlc3Rl
+ZF9zZWN0b3JzICE9IDApCisJCQkJcmVzdGVkX3NlY3RvcnMgPSAwOworCQl9CisKKwkJaWYg
+KHJlc3RlZF9jaHVua3MgPT0gMCAmJiByZXN0ZWRfc2VjdG9ycyAhPSAwKQorCQkJYWRkX3Jl
+c3RlZF9zZWN0b3JzID0gMTsKKworCQlmb3IgKHJkZXZfaWR4ID0gMDsgcmRldl9pZHggPCBy
+ZGV2c19pbl96b25lOyByZGV2X2lkeCsrKSB7CisJCQkvKiBpZiAuc2VjdG9ycyBpcyBub3Qg
+aW5pdGFpbGl6ZWQgKD09IDApLCBpdCBpbmRpY2F0ZXMKKwkJCSAqIC5iaV9zZWN0b3IgaXMg
+bm90IGluaXRpYWxpemVkIG5laXRoZXIuIFdlIGluaXRpYXRlCisJCQkgKiAuYmlfc2VjdG9y
+IGZpcnN0bHksIHRoZW4gc2V0IC5zZWN0b3JzIGJ5CisJCQkgKiBncm93X3NlY3RvcnMuCisJ
+CQkgKi8KKwkJCWlmIChyZWNzW3JkZXZfaWR4XS5zZWN0b3JzID09IDApCisJCQkJcmVjc1ty
+ZGV2X2lkeF0uYmlfc2VjdG9yID0gem9uZV9zdGFydDsKKwkJCWdyb3dfc2VjdG9ycyA9IGNo
+dW5rc19wZXJfcmRldiAqIGNodW5rX3NlY3RzOworCQkJaWYgKHJlc3RlZF9jaHVua3MpIHsK
+KwkJCQlncm93X3NlY3RvcnMgKz0gY2h1bmtfc2VjdHM7CisJCQkJcmVzdGVkX2NodW5rcy0t
+OworCQkJCWlmIChyZXN0ZWRfY2h1bmtzID09IDAgJiYKKwkJCQkgICAgcmVzdGVkX3NlY3Rv
+cnMgIT0gMCkgeworCQkJCQlyZWNzW3JkZXZfaWR4XS5zZWN0b3JzICs9IGdyb3dfc2VjdG9y
+czsKKwkJCQkJc2VjdG9ycyAtPSBncm93X3NlY3RvcnM7CisJCQkJCWFkZF9yZXN0ZWRfc2Vj
+dG9ycyA9IDE7CisJCQkJCWNvbnRpbnVlOworCQkJCX0KKwkJCX0KKworCQkJLyogaWYgYWRk
+X3Jlc3RlZF9zZWN0b3JzICE9IDAsIGl0IGluZGljYXRlcworCQkJICogcmVzdGVkX3NlY3Rv
+cnMgIT0gMAorCQkJICovCisJCQlpZiAoYWRkX3Jlc3RlZF9zZWN0b3JzKQorCQkJCWdyb3df
+c2VjdG9ycyArPSByZXN0ZWRfc2VjdG9yczsKKwkJCXJlY3NbcmRldl9pZHhdLnNlY3RvcnMg
+Kz0gZ3Jvd19zZWN0b3JzOworCQkJc2VjdG9ycyAtPSBncm93X3NlY3RvcnM7CisJCQlpZiAo
+YWRkX3Jlc3RlZF9zZWN0b3JzKQorCQkJCWJyZWFrOworCQl9CisKKwkJaWYgKHNlY3RvcnMg
+PT0gMCkKKwkJCWJyZWFrOworCQl6b25lX3N0YXJ0ID0gem9uZV9lbmQ7CisJCXpvbmVfaWR4
+Kys7CisJCUJVR19PTih6b25lX3N0YXJ0ICE9IGNvbmYtPnN0cmlwX3pvbmVbem9uZV9pZHhd
+LmRldl9zdGFydCk7CisJfQorCisKK2lzc3VlOgorCS8qIHJlY3MgY29udGFpbnMgdGhlIHJl
+LW9yZGVyZWQgcmVxdWVzdHMgbGF5b3V0LCBub3cgd2UgY2FuCisJICogY2hhaW4gc3BsaXQg
+YmlvcyBmcm9tIHJlY3MKKwkgKi8KKwlmb3IgKHJkZXZfaWR4ID0gMDsgcmRldl9pZHggPCBk
+aXNrczsgcmRldl9pZHgrKykgeworCQlpZiAocmRldl9pZHggPT0gZmlyc3RfcmRldl9pZHgg
+fHwKKwkJICAgIHJlY3NbcmRldl9pZHhdLnNlY3RvcnMgPT0gMCkKKwkJCWNvbnRpbnVlOwor
+CQlzcGxpdCA9IGJpb19zcGxpdChiaW8sCisJCQkJICByZWNzW3JkZXZfaWR4XS5zZWN0b3Jz
+LAorCQkJCSAgR0ZQX05PSU8sCisJCQkJICBmc19iaW9fc2V0KTsKKwkJaWYgKHNwbGl0ID09
+IE5VTEwpCisJCQlicmVhazsKKwkJYmlvX2NoYWluKHNwbGl0LCBiaW8pOworCQlCVUdfT04o
+c3BsaXQtPmJpX2l0ZXIuYmlfc2l6ZSAhPSByZWNzW3JkZXZfaWR4XS5zZWN0b3JzIDw8IDkp
+OworCQlzcGxpdC0+YmlfYmRldiA9IHJlY3NbcmRldl9pZHhdLnJkZXYtPmJkZXY7CisJCXNw
+bGl0LT5iaV9pdGVyLmJpX3NlY3RvciA9IHJlY3NbcmRldl9pZHhdLmJpX3NlY3RvciArCisJ
+CQkJcmVjc1tyZGV2X2lkeF0ucmRldi0+ZGF0YV9vZmZzZXQ7CisKKwkJaWYgKHVubGlrZWx5
+KCFibGtfcXVldWVfZGlzY2FyZCgKKwkJCQliZGV2X2dldF9xdWV1ZShzcGxpdC0+YmlfYmRl
+dikpKSkKKwkJCS8qIEp1c3QgaWdub3JlIGl0ICovCisJCQliaW9fZW5kaW8oc3BsaXQpOwor
+CQllbHNlCisJCQlnZW5lcmljX21ha2VfcmVxdWVzdChzcGxpdCk7CisJfQorCUJVR19PTihi
+aW8tPmJpX2l0ZXIuYmlfc2l6ZSAhPSByZWNzW2ZpcnN0X3JkZXZfaWR4XS5zZWN0b3JzIDw8
+IDkpOworCWJpby0+YmlfaXRlci5iaV9zZWN0b3IgPSByZWNzW2ZpcnN0X3JkZXZfaWR4XS5i
+aV9zZWN0b3IgKworCQkJCQlyZWNzW2ZpcnN0X3JkZXZfaWR4XS5yZGV2LT5kYXRhX29mZnNl
+dDsKKwliaW8tPmJpX2JkZXYgPSByZWNzW2ZpcnN0X3JkZXZfaWR4XS5yZGV2LT5iZGV2Owor
+CisJaWYgKHVubGlrZWx5KCFibGtfcXVldWVfZGlzY2FyZChiZGV2X2dldF9xdWV1ZShiaW8t
+PmJpX2JkZXYpKSkpCisJCS8qIEp1c3QgaWdub3JlIGl0ICovCisJCWJpb19lbmRpbyhiaW8p
+OworCWVsc2UKKwkJZ2VuZXJpY19tYWtlX3JlcXVlc3QoYmlvKTsKKworCWtmcmVlKHJlY3Mp
+OworfQorCiBzdGF0aWMgdm9pZCByYWlkMF9tYWtlX3JlcXVlc3Qoc3RydWN0IG1kZGV2ICpt
+ZGRldiwgc3RydWN0IGJpbyAqYmlvKQogewogCXN0cnVjdCBzdHJpcF96b25lICp6b25lOwpA
+QCAtNDYzLDYgKzY4MiwxMSBAQCBzdGF0aWMgdm9pZCByYWlkMF9tYWtlX3JlcXVlc3Qoc3Ry
+dWN0IG1kZGV2ICptZGRldiwgc3RydWN0IGJpbyAqYmlvKQogCQlyZXR1cm47CiAJfQogCisJ
+aWYgKHVubGlrZWx5KGJpb19vcChiaW8pID09IFJFUV9PUF9ESVNDQVJEKSkgeworCQloYW5k
+bGVfZGlzY2FyZF9yZXF1ZXN0KG1kZGV2LCBiaW8pOworCQlyZXR1cm47CisJfQorCiAJZG8g
+ewogCQlzZWN0b3JfdCBzZWN0b3IgPSBiaW8tPmJpX2l0ZXIuYmlfc2VjdG9yOwogCQl1bnNp
+Z25lZCBjaHVua19zZWN0cyA9IG1kZGV2LT5jaHVua19zZWN0b3JzOwo=
+--------------8B584A9716CF92BEC0EE7FB0--
