@@ -1,40 +1,74 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH v2 6/7] Allow changing the RWH policy for a running array
-Date: Tue, 06 Dec 2016 10:38:02 -0500
-Message-ID: <wrfjh96h5aqt.fsf@redhat.com>
-References: <20161205153204.7343-1-artur.paszkiewicz@intel.com>
-        <20161205153204.7343-7-artur.paszkiewicz@intel.com>
-        <wrfjd1h69hbn.fsf@redhat.com>
-        <5c74d40c-36c4-97ae-9a67-be533d6abfb1@intel.com>
-        <wrfj1sxl870h.fsf@redhat.com>
-        <e90fade8-b904-7834-880d-61e1634e5fed@intel.com>
-        <wrfja8c96qo5.fsf@redhat.com>
-        <c21e1560-ca0d-67c8-83ca-04d275698d8b@intel.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH v2 00/12] Partial Parity Log for MD RAID 5
+Date: Wed, 07 Dec 2016 11:32:09 +1100
+Message-ID: <87fum04m0m.fsf@notabene.neil.brown.name>
+References: <20161205153113.7268-1-artur.paszkiewicz@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <c21e1560-ca0d-67c8-83ca-04d275698d8b@intel.com> (Artur
-        Paszkiewicz's message of "Tue, 6 Dec 2016 16:30:38 +0100")
+In-Reply-To: <20161205153113.7268-1-artur.paszkiewicz@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, shli@kernel.org
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Artur Paszkiewicz <artur.paszkiewicz@intel.com> writes:
-> On 12/06/2016 04:08 PM, Jes Sorensen wrote:
->> Artur Paszkiewicz <artur.paszkiewicz@intel.com> writes:
->>> Sure, I can change that :) If you agree with the rest I'll just resend
->>> those two patches.
->> 
->> Yes, that would be perfect.
+--=-=-=
+Content-Type: text/plain
+
+On Tue, Dec 06 2016, Artur Paszkiewicz wrote:
+
+> This series of patches implements the Partial Parity Log for RAID5 arrays. The
+> purpose of this feature is closing the RAID Write Hole. It is a solution
+> alternative to the existing raid5-cache, but the implementation is based on it
+> and reuses some of the code by introducing support for interchangeable
+> policies. This allows decoupling policy from mechanism and not adding more
+> boilerplate code in raid5.c.
 >
-> OK, but just in case - if you are going to apply them maybe wait until
-> Shaohua comments on the kernel patches. These mdadm patches won't be any
-> good if the kernel part doesn't get accepted.
+> The issue addressed by PPL is, that on a dirty shutdown, parity for a
+> particular stripe may be inconsistent with data on other member disks. In
+> degraded state, there is no way to recalculate parity, because one of the disks
+> is missing. PPL addresses this issue and allows recalculating the parity. It
+> stores only enough data needed for recovering from RWH and is not a true
+> journal, like the raid5-cache implementation. It does not protect from losing
+> in-flight data.
+>
+> PPL is a distributed log - data is stored on all RAID member drives in the
+> metadata area. It does not need a dedicated journaling drive. Performance is
+> reduced by up to 30%-40% but it scales with the number of drives in the array
+> and the journaling drive does not become a bottleneck.
 
-I can cope with that :) I was trying to get in sync as I felt I was
-falling behind the last couple of weeks. If I drop the ball or miss it,
-please feel free to throw heavy objects at me.
+I would expect to see as description of what a PPL actually is and how
+it works here... but there is none.
 
-Cheers,
-Jes
+The change-log for patch 06 has a tiny bit more information which is
+just enough to be able to start trying to understand the code, but it
+isn't much.
+And none of this description gets into the code, or into the
+Documentation/.  This makes it hard to review and hard to maintain.
+
+Remember: if you want people to review you code, it is in your interest
+to make it easy.  That means give lots of details.
+
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhHWIoACgkQOeye3VZi
+gbl8VQ/+O91/iwmBC4PSCUhV+DMitUoxB7TORhag7djnT/sNEv7PRdhVKPP2OJ0q
+oUEHA2p7R9Ta3kJf4xFl9LJQkWGC+MWVtkCAi4q7FC0v7pOlLbGPTmRZFJt9rTWa
+pbGdqKUfZ4gqclH1fQzzwBPXEmS58QiQz8m95ZnIDZjm0GUj6qAtizLRM60seG6N
+RxYXeCN2JmU5mDvuw+on6QE1kHst7lvjyqMXy8qc/6T4P015BGMUj3rAkfxbBlmd
+m/y9Au1LScLyJgfvAtracCBqEW46WRSYSGT4d5WZ42OiyrI9Xe3rCqfUtnHC5AuB
+hnzCn7mqOKLGAK4c4/W5yV3jSbiw3fLO7CBnY4B2E7ERg3zNZokkFagZvLrEwz4G
+CtUqOxO0BLBXbc+KOtwN9D6Y5qm5+rFkgNB1EO00d6yZRUhhUgmS7Azmu97E0nRI
+7LGUtvC53z2WRg1D+zmmkPjExWRVSTmWr0iL8AzPnd9GH6Z0g+6Y1JFQkVaLerxo
+jTuLJ3cjhSTVomTbOKqmrXeVMKwmp3v6knJV6KTxSly+jZ2s0MZdi99/qq1nEsFB
+y+dIm4U0PY8oIKUiayAeKy6+rD620xJfGgw9Wny8cDrtqwpb0XPCkR6xncZxyhJR
+6vpFMNQurAM2R8CObpqCYdEq4bD9BgM7ghMDfz56QD+zP4fqoeo=
+=JBgA
+-----END PGP SIGNATURE-----
+--=-=-=--
