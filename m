@@ -1,51 +1,98 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH v2 08/12] md: expose rdev->sb_start as sysfs attribute
-Date: Wed, 07 Dec 2016 12:25:10 +1100
-Message-ID: <874m2g4jk9.fsf@notabene.neil.brown.name>
-References: <20161205153113.7268-1-artur.paszkiewicz@intel.com> <20161205153113.7268-9-artur.paszkiewicz@intel.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: raid0 vs. mkfs
+Date: Wed, 7 Dec 2016 00:08:15 -0500
+Message-ID: <CAMM=eLdXg_4e6aSD0EGzdPr1W8WTxuXy7nS8j6opjzWaWDfCSg@mail.gmail.com>
+References: <56c83c4e-d451-07e5-88e2-40b085d8681c@scylladb.com>
+ <87oa108a1x.fsf@notabene.neil.brown.name> <286a5fc1-eda3-0421-a88e-b03c09403259@scylladb.com>
+ <87inr880au.fsf@notabene.neil.brown.name> <df73ebc4-9b78-09b5-022b-089c30dea17c@scylladb.com>
+ <87d1he7zv9.fsf@notabene.neil.brown.name> <33bb250a-4dfd-0acc-9958-30fdac10918c@scylladb.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161205153113.7268-9-artur.paszkiewicz@intel.com>
+In-Reply-To: <33bb250a-4dfd-0acc-9958-30fdac10918c@scylladb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, shli@kernel.org
-Cc: linux-raid@vger.kernel.org
+To: Avi Kivity <avi@scylladb.com>
+Cc: NeilBrown <neilb@suse.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
+On Tue, Nov 29, 2016 at 5:45 PM, Avi Kivity <avi@scylladb.com> wrote:
+> On 11/29/2016 11:14 PM, NeilBrown wrote:
+>>
+>> On Mon, Nov 28 2016, Avi Kivity wrote:
+>>>>
+>>>> If it is easy for the upper layer to break a very large request into a
+>>>> few very large requests, then I wouldn't necessarily object.
+>>>
+>>> I can't see why it would be hard.  It's simple arithmetic.
+>>
+>> That is easy to say before writing the code :-)
+>> It probably is easy for RAID0.  Less so for RAID10.  Even less for
+>> RAID6.
+>>
+>
+> pick the largest subrange wihin the inpu range whose bounds are 0 (mod
+> stripe-size); TRIM it (for all members); apply the regular algorithm to the
+> head and tail subranges.  Works for all RAID types.  If the RAID is
+> undergoing reshaping, exclude the range undergoing reshaping, and treat the
+> two halves separately.
+>
+>>>> But unless it is very hard for the lower layer to merge requests, it
+>>>> should be doing that too.
+>>>
+>>> Merging has tradeoffs.  When you merge requests R1, R2, ... Rn you make
+>>> the latency request R1 sum of the latencies of R1..Rn.  You may gain
+>>> some efficiency in the process, but that's not going to make up for a
+>>> factor of n.  The queuing layer has no way to tell whether the caller is
+>>> interested in the latency of individual requests.  By sending large
+>>> requests, the caller indicates it's not interested in the latency of
+>>> individual subranges.  The queuing layer is still free to internally
+>>> split the request to smaller ranges, to satisfy hardware constraints, or
+>>> to reduce worst-case latencies for competing request streams.
+>>
+>> I would have thought that using plug/unplug to group requests is a
+>> fairly strong statement that they can be handled as a unit if that is
+>> convenient.
+>
+>
+> It is not.  As an example, consider a read and a few associated read-ahead
+> requests submitted in a batch.  The last thing you want is for them to be
+> treated as a unit.
+>
+> Plug/unplug means: I have a bunch of requests here.  Whether they should be
+> merged or reordered is orthogonal to whether they are members of a batch or
+> not.
+>
+>>
+>>
+>>> So I disagree that all the work should be pushed to the merging layer.
+>>> It has less information to work with, so the fewer decisions it has to
+>>> make, the better.
+>>
+>> I think that the merging layer should be as efficient as it reasonably
+>> can be, and particularly should take into account plugging.  This
+>> benefits all callers.
+>
+>
+> Yes, but plugging does not mean "please merge anything you can until the
+> unplug".
+>
+>> If it can be demonstrated that changes to some of the upper layers bring
+>> further improvements with acceptable costs, then certainly it is good to
+>> have those too.
+>
+>
+> Generating millions of requests only to merge them again is inefficient.  It
+> happens in an edge case (TRIM of the entirety of a very large RAID), but it
+> already caused on user to believe the system failed.  I think the system
+> should be more robust than that.
 
-On Tue, Dec 06 2016, Artur Paszkiewicz wrote:
+DM's stripe target (raid0) has had Avi's proposed implementation
+(breaks large discard into N discards, one per component device) for a
+long while.
+See commit 7b76ec11fec4 ("dm stripe: support discards")
 
-> This is meant for external metadata arrays, to pass the location of the
-> superblock to the kernel.
-
-The whole point of external metadata arrays is that the metadata is
-handled externally.  The kernel doesn't need to know where it is.
-
-Certainly the kernel needs to know where the PPL is, but that is quite a
-different question to knowing where the superblock is.
-
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhHZPYACgkQOeye3VZi
-gbnLMBAAsySLmSTyyK3cTq/Rd3UFFFVJK7oFjzJkeHGr+nffct61EgyTfM5uzh0f
-c6Pq8KoD5i69teSG4VwOq2OAVwVgeuR/Q4Yg8jP4w+OIZx1UvBwu4Ho2YNGQntmn
-6jd4lTxERAY40PUaGtH/WXg/FGinmrXtI3S7qbadjAqHKx4rwB5Si2yNIXeRuXys
-y/UfCT1lPobdSS+sTNIktO+tAf3F55k87TDu/AorkqoAAr5KDmBD1pX6MDYKQ2pp
-pHJcCoxw98M5VU5118BMuXB7Rm1Z4rOsULx68rG4tYwoETlqvvkH4F4lgp1HM7kK
-QOHyBzIqihrlSndSQvlg5bAAM2ThlBSXxnFoWgN2ZNFfSgppHUChT6UQTHbToifL
-YBDMmr8CRgS6qZ0fE2h638KBPwIzCI53PTfbfkDxDIobuZUAqfIzE2W9diz0IoM+
-IJBWI1fTo9PLcXLtOSNTbGJIYhiXeaOdWzgDSygstZxC9dak8FQGVYf1rXLUfAmb
-OGumI5XtVmOkNcbcjudauxzNprK6pJIQjKyQHBVriIFcPMJYMlYRxC5Uw7O1Vj12
-Qq+W4fMfKr2eZpB1+Ao28Px0yEFB97+cGIaoQjHXmY2ZJupe2MetYaa1gVe/E8WS
-XTYPxp9vExxmsFhgZvCT4gVCcE1ZvdDqmtyy+IHhyCaG3W3dUCA=
-=vlyY
------END PGP SIGNATURE-----
---=-=-=--
+This improvement applies to other raid levels too.  And I completely
+agree that it would be a mistake to to continue to have the block
+layer issue millions of chunk-sized bios only to _maybe_ have them be
+merged by the IO scheduler and/or plugging.  Needless make-work that
+just eats cpu and memory.
