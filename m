@@ -1,430 +1,103 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: Recovering a RAID6 after all disks were disconnected
-Date: Thu, 8 Dec 2016 14:02:54 -0500
-Message-ID: <22601.44638.79418.124438@quad.stoffel.home>
-References: <CAOxFTczhq3Gr4WW=-sMamaYDmAoMFGh7kkanwJzhXe5NBdMHHQ@mail.gmail.com>
-        <22600.7486.444800.536687@quad.stoffel.home>
-        <CAOxFTczn4Su6KwjDGS0S5BrUdirv9Tu_zCeo26iFMvL3378xpw@mail.gmail.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: raid0 vs. mkfs
+Date: Thu, 8 Dec 2016 11:19:06 -0800
+Message-ID: <20161208191906.ealqsudmgopn7wa3@kernel.org>
+References: <56c83c4e-d451-07e5-88e2-40b085d8681c@scylladb.com>
+ <87oa108a1x.fsf@notabene.neil.brown.name>
+ <286a5fc1-eda3-0421-a88e-b03c09403259@scylladb.com>
+ <87inr880au.fsf@notabene.neil.brown.name>
+ <df73ebc4-9b78-09b5-022b-089c30dea17c@scylladb.com>
+ <87d1he7zv9.fsf@notabene.neil.brown.name>
+ <33bb250a-4dfd-0acc-9958-30fdac10918c@scylladb.com>
+ <ccf447df-e7b5-0a08-7753-67ee4ad574ef@suse.de>
+ <20161207165933.isq64dbkxye772nz@kernel.org>
+ <c384d070-457c-cfee-e35f-53b9195ace10@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAOxFTczn4Su6KwjDGS0S5BrUdirv9Tu_zCeo26iFMvL3378xpw@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
-Cc: John Stoffel <john@stoffel.org>, linux-raid@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <c384d070-457c-cfee-e35f-53b9195ace10@suse.de>
+Sender: linux-block-owner@vger.kernel.org
+To: Coly Li <colyli@suse.de>
+Cc: Avi Kivity <avi@scylladb.com>, NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org, linux-block@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-Sorry for not getting back to you sooner, I've been under the weather
-lately.  And I'm NOT an expert on this, but it's good you've made
-copies of the disks.
-
-Giuseppe> Hello John, and thanks for your time
-
-Giuseppe> I've had sporadic resets of the JBOD due to a variety of reasons
-Giuseppe> (power failures or disk failures —the JBOD has the bad habit of
-Giuseppe> resetting when one disk has an I/O error, which causes all of the
-Giuseppe> disks to go offline temporarily).
-
-John> Please toss that JBOD out the window!  *grin*
-
-Giuseppe> Well, that's exactly why I bought the new one which is the one I'm
-Giuseppe> currently using to host the backup disks I'm experimenting on! 8-)
-Giuseppe> However I suspect this is a misfeature common to many if not all
-Giuseppe> 'home' JBODS which are all SATA based and only provide eSATA and/or
-Giuseppe> USB3 connection to the machine.
-
-Giuseppe> The thing happened again a couple of days ago, but this time
-Giuseppe> I tried re-adding the disks directly when they came back
-Giuseppe> online, using mdadm -a and confident that since they _had_
-Giuseppe> been recently part of the array, the array would actually go
-Giuseppe> back to work fine —except that this is not the case when ALL
-Giuseppe> disks were kicked out of the array! Instead, what happened
-Giuseppe> was that all the disks were marked as 'spare' and the RAID
-Giuseppe> would not assemble anymore.
-
-John> Can you please send us the full details of each disk using the
-John> command:
-John> 
-John> mdadm -E /dev/sda1
-John> 
-
-Giuseppe> Here it is. Notice that this is the result of -E _after_ the attempted
-Giuseppe> re-add while the RAID was running, which marked all the disks as
-Giuseppe> spares:
-
-Yeah, this is probably a bad state.  I would suggest you try to just
-assemble the disks in various orders using your clones:
-
-   mdadm -A /dev/md0 /dev/sdc /dev/sdd /dev/sde /dev/sdf
-
-And then mix up the order until you get a working array.  You might
-also want to try assembling using the 'missing' flag for the original
-disk which dropped out of the array, so that just the three good disks
-are used.  This might take a while to test all the possible
-permutations.
-
-You might also want to look back in the archives of this mailing
-list.  Phil Turmel has some great advice and howto guides for this.
-You can do the test assembles using loop back devices so that you
-don't write to the originals, or even to the clones.
-
-This should let you do testing more quickly.
-
-
-Here's some other pointers for drive timeout issues that you should
-look at as well:
-
-    Readings for timeout mismatch issues:  (whole threads if possible)
-
-    http://marc.info/?l=linux-raid&m=139050322510249&w=2
-    http://marc.info/?l=linux-raid&m=135863964624202&w=2
-    http://marc.info/?l=linux-raid&m=135811522817345&w=1
-    http://marc.info/?l=linux-raid&m=133761065622164&w=2
-    http://marc.info/?l=linux-raid&m=132477199207506
-    http://marc.info/?l=linux-raid&m=133665797115876&w=2
-    http://marc.info/?l=linux-raid&m=142487508806844&w=3
-    http://marc.info/?l=linux-raid&m=144535576302583&w=2
-
-
-
-
-
-
-Giuseppe> ==8<=======
-
-Giuseppe> /dev/sdc:
-Giuseppe>           Magic : a92b4efc
-Giuseppe>         Version : 1.2
-Giuseppe>     Feature Map : 0x9
-Giuseppe>      Array UUID : 943d287e:af28b455:88a047f2:d714b8c6
-Giuseppe>            Name : labrador:oneforall  (local to host labrador)
-Giuseppe>   Creation Time : Fri Nov 30 19:57:45 2012
-Giuseppe>      Raid Level : raid6
-Giuseppe>    Raid Devices : 4
-
-Giuseppe>  Avail Dev Size : 5860271024 (2794.39 GiB 3000.46 GB)
-Giuseppe>      Array Size : 5860270080 (5588.79 GiB 6000.92 GB)
-Giuseppe>   Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
-Giuseppe>     Data Offset : 262144 sectors
-Giuseppe>    Super Offset : 8 sectors
-Giuseppe>    Unused Space : before=262048 sectors, after=944 sectors
-Giuseppe>           State : clean
-Giuseppe>     Device UUID : 543f75ac:a1f3cf99:1c6b71d9:52e358b9
-
-Giuseppe> Internal Bitmap : 8 sectors from superblock
-Giuseppe>     Update Time : Sun Dec  4 17:11:19 2016
-Giuseppe>   Bad Block Log : 512 entries available at offset 80 sectors - bad
-Giuseppe> blocks present.
-Giuseppe>        Checksum : 1e2f00fc - correct
-Giuseppe>          Events : 31196
-
-Giuseppe>          Layout : left-symmetric
-Giuseppe>      Chunk Size : 512K
-
-Giuseppe>    Device Role : spare
-Giuseppe>    Array State : .... ('A' == active, '.' == missing, 'R' == replacing)
-
-Giuseppe> /dev/sdd:
-Giuseppe>           Magic : a92b4efc
-Giuseppe>         Version : 1.2
-Giuseppe>     Feature Map : 0x9
-Giuseppe>      Array UUID : 943d287e:af28b455:88a047f2:d714b8c6
-Giuseppe>            Name : labrador:oneforall  (local to host labrador)
-Giuseppe>   Creation Time : Fri Nov 30 19:57:45 2012
-Giuseppe>      Raid Level : raid6
-Giuseppe>    Raid Devices : 4
-
-Giuseppe>  Avail Dev Size : 5860271024 (2794.39 GiB 3000.46 GB)
-Giuseppe>      Array Size : 5860270080 (5588.79 GiB 6000.92 GB)
-Giuseppe>   Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
-Giuseppe>     Data Offset : 262144 sectors
-Giuseppe>    Super Offset : 8 sectors
-Giuseppe>    Unused Space : before=262048 sectors, after=944 sectors
-Giuseppe>           State : clean
-Giuseppe>     Device UUID : 649d53ad:f909b7a9:cd0f57f2:08a55e3b
-
-Giuseppe> Internal Bitmap : 8 sectors from superblock
-Giuseppe>     Update Time : Sun Dec  4 17:11:19 2016
-Giuseppe>   Bad Block Log : 512 entries available at offset 80 sectors - bad
-Giuseppe> blocks present.
-Giuseppe>        Checksum : c9dfe033 - correct
-Giuseppe>          Events : 31196
-
-Giuseppe>          Layout : left-symmetric
-Giuseppe>      Chunk Size : 512K
-
-Giuseppe>    Device Role : spare
-Giuseppe>    Array State : .... ('A' == active, '.' == missing, 'R' == replacing)
-
-Giuseppe> /dev/sde:
-Giuseppe>           Magic : a92b4efc
-Giuseppe>         Version : 1.2
-Giuseppe>     Feature Map : 0x9
-Giuseppe>      Array UUID : 943d287e:af28b455:88a047f2:d714b8c6
-Giuseppe>            Name : labrador:oneforall  (local to host labrador)
-Giuseppe>   Creation Time : Fri Nov 30 19:57:45 2012
-Giuseppe>      Raid Level : raid6
-Giuseppe>    Raid Devices : 4
-
-Giuseppe>  Avail Dev Size : 5860271024 (2794.39 GiB 3000.46 GB)
-Giuseppe>      Array Size : 5860270080 (5588.79 GiB 6000.92 GB)
-Giuseppe>   Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
-Giuseppe>     Data Offset : 262144 sectors
-Giuseppe>    Super Offset : 8 sectors
-Giuseppe>    Unused Space : before=262048 sectors, after=944 sectors
-Giuseppe>           State : clean
-Giuseppe>     Device UUID : dd3f90ab:619684c0:942a7d88:f116f2db
-
-Giuseppe> Internal Bitmap : 8 sectors from superblock
-Giuseppe>     Update Time : Sun Dec  4 17:11:19 2016
-Giuseppe>   Bad Block Log : 512 entries available at offset 80 sectors - bad
-Giuseppe> blocks present.
-Giuseppe>        Checksum : 15a3975a - correct
-Giuseppe>          Events : 31196
-
-Giuseppe>          Layout : left-symmetric
-Giuseppe>      Chunk Size : 512K
-
-Giuseppe>    Device Role : spare
-Giuseppe>    Array State : .... ('A' == active, '.' == missing, 'R' == replacing)
-
-Giuseppe> /dev/sdf:
-Giuseppe>           Magic : a92b4efc
-Giuseppe>         Version : 1.2
-Giuseppe>     Feature Map : 0x9
-Giuseppe>      Array UUID : 943d287e:af28b455:88a047f2:d714b8c6
-Giuseppe>            Name : labrador:oneforall  (local to host labrador)
-Giuseppe>   Creation Time : Fri Nov 30 19:57:45 2012
-Giuseppe>      Raid Level : raid6
-Giuseppe>    Raid Devices : 4
-
-Giuseppe>  Avail Dev Size : 5860271024 (2794.39 GiB 3000.46 GB)
-Giuseppe>      Array Size : 5860270080 (5588.79 GiB 6000.92 GB)
-Giuseppe>   Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
-Giuseppe>     Data Offset : 262144 sectors
-Giuseppe>    Super Offset : 8 sectors
-Giuseppe>    Unused Space : before=262048 sectors, after=944 sectors
-Giuseppe>           State : clean
-Giuseppe>     Device UUID : f7359c4e:c1f04b22:ce7aa32f:ed5bb054
-
-Giuseppe> Internal Bitmap : 8 sectors from superblock
-Giuseppe>     Update Time : Sun Dec  4 17:11:19 2016
-Giuseppe>   Bad Block Log : 512 entries available at offset 80 sectors - bad
-Giuseppe> blocks present.
-Giuseppe>        Checksum : 3a5b94a7 - correct
-Giuseppe>          Events : 31196
-
-Giuseppe>          Layout : left-symmetric
-Giuseppe>      Chunk Size : 512K
-
-Giuseppe>    Device Role : spare
-Giuseppe>    Array State : .... ('A' == active, '.' == missing, 'R' == replacing)
-
-Giuseppe> ==8<=======
-
-Giuseppe> I do however know the _original_ positions of the respective disks
-Giuseppe> from the kernel messages
-
-Giuseppe> At assembly time:
-
-Giuseppe> [  +0.000638] RAID conf printout:
-Giuseppe> [  +0.000001]  --- level:6 rd:4 wd:4
-Giuseppe> [  +0.000001]  disk 0, o:1, dev:sdf
-Giuseppe> [  +0.000001]  disk 1, o:1, dev:sde
-Giuseppe> [  +0.000000]  disk 2, o:1, dev:sdd
-Giuseppe> [  +0.000001]  disk 3, o:1, dev:sdc
-
-Giuseppe> After the JBOD disappeared and right before they all get kicked out:
-
-Giuseppe> [  +0.000438] RAID conf printout:
-Giuseppe> [  +0.000001]  --- level:6 rd:4 wd:0
-Giuseppe> [  +0.000001]  disk 0, o:0, dev:sdf
-Giuseppe> [  +0.000001]  disk 1, o:0, dev:sde
-Giuseppe> [  +0.000000]  disk 2, o:0, dev:sdd
-Giuseppe> [  +0.000001]  disk 3, o:0, dev:sdc
-
-
-John> You might be able to just for the three spare disks (assumed in this
-John> case to be sda1, sdb1, sdc1; but you need to be sure first!) to
-John> assemble into a full array with:
-John> 
-John> mdadm -A /dev/md50 /dev/sda1 /dev/sdb1 /dev/sdc1
-John> 
-John> And if that works, great.   If not, post the error message(s) you get
-John> back.
-
-Giuseppe> Note that the RAID has no active disks anymore, since when I tried
-Giuseppe> re-adding the formerly active disks that
-Giuseppe> where kicked from the array they got marked as spares, and mdraid
-Giuseppe> simply refuses to start a RAID6 setup with only spares. The message I
-Giuseppe> get is indeed
-
-Giuseppe> mdadm: /dev/md126 assembled from 0 drives and 3 spares - not enough to
-Giuseppe> start the array.
-
-Giuseppe> This is the point at which I made a copy of 3 of the 4 disks and
-Giuseppe> started playing around. Specifically, I dd'ed sdc into sdh, sdd into
-Giuseppe> sdi and sde into sdj and started playing around with sd[hij] rather
-Giuseppe> than the original disks, as I mentioned:
-
-Giuseppe> So one thing that I've done is to hack around the superblock in the
-Giuseppe> disks (copies) to put back the device roles as they were (getting the
-Giuseppe> information from the pre-failure dmesg output). (By the way, I've been
-Giuseppe> using Andy's Binary Editor for the superblock editing, so if anyone is
-Giuseppe> interested in a be.ini for mdraid v1 superblocks, including checksum
-Giuseppe> verification, I'd be happy to share). Specifically, I've left the
-Giuseppe> device number untouched, but I have edited the dev_roles array so that
-Giuseppe> the slots corresponding to the dev_number from all the disks map to
-Giuseppe> appropriate device roles.
-
-Giuseppe> Specifically, I hand-edited the superblocks to achieve this:
-
-
-Giuseppe> ==8<===============
-
-Giuseppe> /dev/sdh:
-Giuseppe>           Magic : a92b4efc
-Giuseppe>         Version : 1.2
-Giuseppe>     Feature Map : 0x9
-Giuseppe>      Array UUID : 943d287e:af28b455:88a047f2:d714b8c6
-Giuseppe>            Name : labrador:oneforall  (local to host labrador)
-Giuseppe>   Creation Time : Fri Nov 30 19:57:45 2012
-Giuseppe>      Raid Level : raid6
-Giuseppe>    Raid Devices : 4
-
-Giuseppe>  Avail Dev Size : 5860271024 (2794.39 GiB 3000.46 GB)
-Giuseppe>      Array Size : 5860270080 (5588.79 GiB 6000.92 GB)
-Giuseppe>   Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
-Giuseppe>     Data Offset : 262144 sectors
-Giuseppe>    Super Offset : 8 sectors
-Giuseppe>    Unused Space : before=262048 sectors, after=944 sectors
-Giuseppe>           State : clean
-Giuseppe>     Device UUID : 543f75ac:a1f3cf99:1c6b71d9:52e358b9
-
-Giuseppe> Internal Bitmap : 8 sectors from superblock
-Giuseppe>     Update Time : Sun Dec  4 17:11:19 2016
-Giuseppe>   Bad Block Log : 512 entries available at offset 80 sectors - bad
-Giuseppe> blocks present.
-Giuseppe>        Checksum : 1e3300fe - correct
-Giuseppe>          Events : 31196
-
-Giuseppe>          Layout : left-symmetric
-Giuseppe>      Chunk Size : 512K
-
-Giuseppe>    Device Role : Active device 3
-Giuseppe>    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
-
-Giuseppe> /dev/sdi:
-Giuseppe>           Magic : a92b4efc
-Giuseppe>         Version : 1.2
-Giuseppe>     Feature Map : 0x9
-Giuseppe>      Array UUID : 943d287e:af28b455:88a047f2:d714b8c6
-Giuseppe>            Name : labrador:oneforall  (local to host labrador)
-Giuseppe>   Creation Time : Fri Nov 30 19:57:45 2012
-Giuseppe>      Raid Level : raid6
-Giuseppe>    Raid Devices : 4
-
-Giuseppe>  Avail Dev Size : 5860271024 (2794.39 GiB 3000.46 GB)
-Giuseppe>      Array Size : 5860270080 (5588.79 GiB 6000.92 GB)
-Giuseppe>   Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
-Giuseppe>     Data Offset : 262144 sectors
-Giuseppe>    Super Offset : 8 sectors
-Giuseppe>    Unused Space : before=262048 sectors, after=944 sectors
-Giuseppe>           State : clean
-Giuseppe>     Device UUID : 649d53ad:f909b7a9:cd0f57f2:08a55e3b
-
-Giuseppe> Internal Bitmap : 8 sectors from superblock
-Giuseppe>     Update Time : Sun Dec  4 17:11:19 2016
-Giuseppe>   Bad Block Log : 512 entries available at offset 80 sectors - bad
-Giuseppe> blocks present.
-Giuseppe>        Checksum : c9e3e035 - correct
-Giuseppe>          Events : 31196
-
-Giuseppe>          Layout : left-symmetric
-Giuseppe>      Chunk Size : 512K
-
-Giuseppe>    Device Role : Active device 2
-Giuseppe>    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
-
-Giuseppe> /dev/sdj:
-Giuseppe>           Magic : a92b4efc
-Giuseppe>         Version : 1.2
-Giuseppe>     Feature Map : 0x9
-Giuseppe>      Array UUID : 943d287e:af28b455:88a047f2:d714b8c6
-Giuseppe>            Name : labrador:oneforall  (local to host labrador)
-Giuseppe>   Creation Time : Fri Nov 30 19:57:45 2012
-Giuseppe>      Raid Level : raid6
-Giuseppe>    Raid Devices : 4
-
-Giuseppe>  Avail Dev Size : 5860271024 (2794.39 GiB 3000.46 GB)
-Giuseppe>      Array Size : 5860270080 (5588.79 GiB 6000.92 GB)
-Giuseppe>   Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
-Giuseppe>     Data Offset : 262144 sectors
-Giuseppe>    Super Offset : 8 sectors
-Giuseppe>    Unused Space : before=262048 sectors, after=944 sectors
-Giuseppe>           State : clean
-Giuseppe>     Device UUID : dd3f90ab:619684c0:942a7d88:f116f2db
-
-Giuseppe> Internal Bitmap : 8 sectors from superblock
-Giuseppe>     Update Time : Sun Dec  4 17:11:19 2016
-Giuseppe>   Bad Block Log : 512 entries available at offset 80 sectors - bad
-Giuseppe> blocks present.
-Giuseppe>        Checksum : 15a7975c - correct
-Giuseppe>          Events : 31196
-
-Giuseppe>          Layout : left-symmetric
-Giuseppe>      Chunk Size : 512K
-
-Giuseppe>    Device Role : Active device 1
-Giuseppe>    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
-
-Giuseppe> ==8<===============
-
-Giuseppe> And I _can_ assemble the array, but what I get is this:
-
-Giuseppe> [  +0.003574] md: bind<sdi>
-Giuseppe> [  +0.001823] md: bind<sdh>
-Giuseppe> [  +0.000978] md: bind<sdj>
-Giuseppe> [  +0.003971] md/raid:md127: device sdj operational as raid disk 1
-Giuseppe> [  +0.000125] md/raid:md127: device sdh operational as raid disk 3
-Giuseppe> [  +0.000105] md/raid:md127: device sdi operational as raid disk 2
-Giuseppe> [  +0.015017] md/raid:md127: allocated 4374kB
-Giuseppe> [  +0.000139] md/raid:md127: raid level 6 active with 3 out of 4
-Giuseppe> devices, algorithm 2
-Giuseppe> [  +0.000063] RAID conf printout:
-Giuseppe> [  +0.000002]  --- level:6 rd:4 wd:3
-Giuseppe> [  +0.000003]  disk 1, o:1, dev:sdj
-Giuseppe> [  +0.000002]  disk 2, o:1, dev:sdi
-Giuseppe> [  +0.000001]  disk 3, o:1, dev:sdh
-Giuseppe> [  +0.004187] md127: bitmap file is out of date (31193 < 31196) --
-Giuseppe> forcing full recovery
-Giuseppe> [  +0.000065] created bitmap (22 pages) for device md127
-Giuseppe> [  +0.000072] md127: bitmap file is out of date, doing full recovery
-Giuseppe> [  +0.100300] md127: bitmap initialized from disk: read 2 pages, set
-Giuseppe> 44711 of 44711 bits
-Giuseppe> [  +0.039741] md127: detected capacity change from 0 to 6000916561920
-Giuseppe> [  +0.000085] Buffer I/O error on dev md127, logical block 0, async page read
-Giuseppe> [  +0.000064] Buffer I/O error on dev md127, logical block 0, async page read
-Giuseppe> [  +0.000022] Buffer I/O error on dev md127, logical block 0, async page read
-Giuseppe> [  +0.000022] Buffer I/O error on dev md127, logical block 0, async page read
-Giuseppe> [  +0.000019] ldm_validate_partition_table(): Disk read failed.
-Giuseppe> [  +0.000021] Buffer I/O error on dev md127, logical block 0, async page read
-Giuseppe> [  +0.000026] Buffer I/O error on dev md127, logical block 0, async page read
-Giuseppe> [  +0.000022] Buffer I/O error on dev md127, logical block 0, async page read
-Giuseppe> [  +0.000021] Buffer I/O error on dev md127, logical block 0, async page read
-Giuseppe> [  +0.000019] Dev md127: unable to read RDB block 0
-Giuseppe> [  +0.000016] Buffer I/O error on dev md127, logical block 0, async page read
-Giuseppe> [  +0.000022] Buffer I/O error on dev md127, logical block 0, async page read
-Giuseppe> [  +0.000030]  md127: unable to read partition table
-
-Giuseppe> and any attempt to access md127 content gives an I/O error.
-
-
-Giuseppe> -- 
-Giuseppe> Giuseppe "Oblomov" Bilotta
-Giuseppe> --
-Giuseppe> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-Giuseppe> the body of a message to majordomo@vger.kernel.org
-Giuseppe> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Fri, Dec 09, 2016 at 12:44:57AM +0800, Coly Li wrote:
+> On 2016/12/8 上午12:59, Shaohua Li wrote:
+> > On Wed, Dec 07, 2016 at 07:50:33PM +0800, Coly Li wrote:
+> [snip]
+> > Thanks for doing this, Coly! For raid0, this totally makes sense. The raid0
+> > zones make things a little complicated though. I just had a brief look of your
+> > proposed patch, which looks really complicated. I'd suggest something like
+> > this:
+> > 1. split the bio according to zone boundary.
+> > 2. handle the splitted bio. since the bio is within zone range, calculating
+> > the start and end sector for each rdev should be easy.
+> > 
+> 
+> Hi Shaohua,
+> 
+> Thanks for your suggestion! I try to modify the code by your suggestion,
+> it is even more hard to make the code that way ...
+> 
+> Because even split bios for each zone, all the corner cases still exist
+> and should be taken care in every zoon. The code will be more complicated.
+
+Not sure why it makes the code more complicated. Probably I'm wrong, but Just
+want to make sure we are in the same page: split the bio according to zone
+boundary, then handle the splitted bio separately. Calculating end/start point
+of each rdev for the new bio within a zone should be simple. we then clone a
+bio for each rdev and dispatch. So for example:
+Disk 0: D0 D2 D4 D6 D7
+Disk 1: D1 D3 D5
+zone 0 is from D0 - D5, zone 1 is from D6 - D7
+If bio is from D1 to D7, we split it to 2 bios, one is D1 - D5, the other D6 - D7.
+For D1 - D5, we dispatch 2 bios. D1 - D5 for disk 1, D2 - D4 for disk 0
+For D6 - D7, we just dispatch to disk 0.
+What kind of corner case makes this more complicated?
+ 
+> > This will create slightly more bio to each rdev (not too many, since there
+> > aren't too many zones in practice) and block layer should easily merge these
+> > bios without much overhead. The benefit is a much simpler implementation.
+> > 
+> >> I compose a prototype patch, the code is not simple, indeed it is quite
+> >> complicated IMHO.
+> >>
+> >> I do a little research, some NVMe SSDs support whole device size
+> >> DISCARD, also I observe mkfs.xfs sends out a raid0 device size DISCARD
+> >> bio to block layer. But raid0_make_request() only receives 512KB size
+> >> DISCARD bio, block/blk-lib.c:__blkdev_issue_discard() splits the
+> >> original large bio into 512KB small bios, the limitation is from
+> >> q->limits.discard_granularity.
+> > 
+> > please adjust the max discard sectors for the queue. The original setting is
+> > chunk size.
+> 
+> This is a powerful suggestion, I change the max_discard_sectors to raid0
+> size, and fix some bugs, now the patch looks working well. The
+> performance number is not bad.
+> 
+> On 4x3TB NVMe raid0, format it with mkfs.xfs. Current upstream kernel
+> spends 306 seconds, the patched kernel spends 15 seconds. I see average
+> request size increases from 1 chunk (1024 sectors) to 2048 chunks
+> (2097152 sectors).
+> 
+> I don't know why the bios are still be split before raid0_make_request()
+> receives them, after I set q->limits.max_discard_sectors to
+> mddev->array_sectors. Can anybody give me a hint ?
+
+That probably is from disk_stack_limits. try set the max_discard_sectors after it.
+
+> Here I attach the RFC v2 patch, if anybody wants to try it, please do it
+> and response the result :-)
+> 
+> I will take time to write a very detailed commit log and code comments
+> to make this patch more easier to be understood. Ugly code, that's what
+> I have to pay to gain better performance ....
+
+Can't say I like it :). Hard to read and the memory allocation is ugly. Please
+check if there is simpler solution first before writting detailed commit log.
+
+Thanks,
+Shaohua
