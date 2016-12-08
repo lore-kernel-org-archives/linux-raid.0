@@ -1,256 +1,145 @@
-From: Doug Anderson <dianders@chromium.org>
-Subject: Re: [PATCH] dm: Avoid sleeping while holding the dm_bufio lock
-Date: Wed, 7 Dec 2016 16:54:50 -0800
-Message-ID: <CAD=FV=V85=ZTXURVZ3Xo1gS80rqA8gOhr+Xm47axrwVUpjQFuw@mail.gmail.com>
-References: <1479410660-31408-1-git-send-email-dianders@chromium.org> <alpine.LRH.2.02.1611231543020.31481@file01.intranet.prod.int.rdu2.redhat.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [BUG] MD/RAID1 hung forever on freeze_array
+Date: Thu, 08 Dec 2016 14:17:18 +1100
+Message-ID: <871sxj2jpd.fsf@notabene.neil.brown.name>
+References: <CAMGffE=1kp7gMhG+dFxTvhD6VkRuSfbuXbf9vYSWwGG+=vvhDA@mail.gmail.com> <CAMGffE=L_XziWyV+wCJFqKj+v_ahOPNSugZ3uY1q5ixd4iv2fQ@mail.gmail.com> <af7ae0a8-eb73-0070-4280-8758433ad500@suse.de> <CAMGffEmc_6o+Lgq3iJsCUyn6K=5S2w8pnrVDhXNBJxaKxd1Teg@mail.gmail.com> <519e773d-e6e6-5d79-7224-ef94ef7c7a93@suse.de> <CAMGffEktp+raca2fYPu8fC5nxUrhGLKwjJhtHwXV2Bh_m5oViA@mail.gmail.com> <dd068837-6873-ab1b-3c25-d4dbf4ad2ec4@suse.de> <CAMGffEkbddHsJ4LSWcd1DmueM8XTm1pUiowa=_MUHmysVEFN_w@mail.gmail.com> <CAMGffE=T15eLaROLCDGBA_OxQgUZbo22LQZJuSji=Z=rZRGr6Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.LRH.2.02.1611231543020.31481@file01.intranet.prod.int.rdu2.redhat.com>
+In-Reply-To: <CAMGffE=T15eLaROLCDGBA_OxQgUZbo22LQZJuSji=Z=rZRGr6Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Shaohua Li <shli@kernel.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, dm-devel@redhat.com, David Rientjes <rientjes@google.com>, Sonny Rao <sonnyrao@chromium.org>, Guenter Roeck <linux@roeck-us.net>
+To: Jinpu Wang <jinpu.wang@profitbricks.com>, Coly Li <colyli@suse.de>
+Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Nate Dailey <nate.dailey@stratus.com>
 List-Id: linux-raid.ids
 
-Hi,
+--=-=-=
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Nov 23, 2016 at 12:57 PM, Mikulas Patocka <mpatocka@redhat.com> wrote:
-> Hi
->
-> The GFP_NOIO allocation frees clean cached pages. The GFP_NOWAIT
-> allocation doesn't. Your patch would incorrectly reuse buffers in a
-> situation when the memory is filled with clean cached pages.
->
-> Here I'm proposing an alternate patch that first tries GFP_NOWAIT
-> allocation, then drops the lock and tries GFP_NOIO allocation.
->
-> Note that the root cause why you are seeing this stacktrace is, that your
-> block device is congested - i.e. there are too many requests in the
-> device's queue - and note that fixing this wait won't fix the root cause
-> (congested device).
->
-> The congestion limits are set in blk_queue_congestion_threshold to 7/8 to
-> 13/16 size of the nr_requests value.
->
-> If you don't want your device to report the congested status, you can
-> increase /sys/block/<device>/queue/nr_requests - you should test if your
-> chromebook is faster of slower with this setting increased. But note that
-> this setting won't increase the IO-per-second of the device.
+On Thu, Dec 08 2016, Jinpu Wang wrote:
 
-Cool, thanks for the insight!
+> On Tue, Nov 29, 2016 at 12:15 PM, Jinpu Wang
+> <jinpu.wang@profitbricks.com> wrote:
+>> On Mon, Nov 28, 2016 at 10:10 AM, Coly Li <colyli@suse.de> wrote:
+>>> On 2016/11/28 =E4=B8=8B=E5=8D=885:02, Jinpu Wang wrote:
+>>>> On Mon, Nov 28, 2016 at 9:54 AM, Coly Li <colyli@suse.de> wrote:
+>>>>> On 2016/11/28 =E4=B8=8B=E5=8D=884:24, Jinpu Wang wrote:
+>>>>>> snip
+>>>>>>>>>
+>>>>>>>>> every time nr_pending is 1 bigger then (nr_queued + 1), so seems =
+we
+>>>>>>>>> forgot to increase nr_queued somewhere?
+>>>>>>>>>
+>>>>>>>>> I've noticed (commit ccfc7bf1f09d61)raid1: include bio_end_io_lis=
+t in
+>>>>>>>>> nr_queued to prevent freeze_array hang. Seems it fixed similar bu=
+g.
+>>>>>>>>>
+>>>>>>>>> Could you give your suggestion?
+>>>>>>>>>
+>>>>>>>> Sorry, forgot to mention kernel version is 4.4.28
 
-Can you clarify which block device is relevant here?  Is this the DM
-block device, the underlying block device, or the swap block device?
-I'm not at all an expert on DM, but I think we have:
+>
+> I continue debug the bug:
+>
+> 20161207
 
-1. /dev/mmcblk0 - the underlying storage device.
-2. /dev/dm-0 - The verity device that's run atop /dev/mmcblk0p3
-3. /dev/zram0 - Our swap device
+>   nr_pending =3D 948,
+>   nr_waiting =3D 9,
+>   nr_queued =3D 946, // again we need one more to finished wait_event.
+>   barrier =3D 0,
+>   array_frozen =3D 1,
 
-As stated in the original email, I'm running on a downstream kernel
-(kernel-4.4) with bunches of local patches, so it's plausible that
-things have changed in the meantime, but:
+> on conf->bio_end_io_list we have 91 entries.
 
-* At boot time the "nr_requests" for all block devices was 128
-* I was unable to set the "nr_requests" for dm-0 and zram0 (it just
-gives an error in sysfs).
-* When I set "nr_requests" to 4096 for /dev/mmcblk0 it didn't seem to
-affect the problem.
+> on conf->retry_list we have 855
+
+This is useful.  It confirms that nr_queued is correct, and that
+nr_pending is consistently 1 higher than expected.
+This suggests that a request has been counted in nr_pending, but hasn't
+yet been submitted, or has been taken off one of the queues but has not
+yet been processed.
+
+I notice that in your first email the Blocked tasks listed included
+raid1d which is blocked in freeze_array() and a few others in
+make_request() blocked on wait_barrier().
+In that case nr_waiting was 100, so there should have been 100 threads
+blocked in wait_barrier().  Is that correct?  I assume you thought it
+was pointless to list them all, which seems reasonable.
+
+I asked because I wonder if there might have been one thread in
+make_request() which was blocked on something else.  There are a couple
+of places when make_request() will wait after having successfully called
+wait_barrier().  If that happened, it would cause exactly the symptoms
+you report.  Could you check all blocked threads carefully please?
 
 
-> Mikulas
->
->
-> On Thu, 17 Nov 2016, Douglas Anderson wrote:
->
->> We've seen in-field reports showing _lots_ (18 in one case, 41 in
->> another) of tasks all sitting there blocked on:
->>
->>   mutex_lock+0x4c/0x68
->>   dm_bufio_shrink_count+0x38/0x78
->>   shrink_slab.part.54.constprop.65+0x100/0x464
->>   shrink_zone+0xa8/0x198
->>
->> In the two cases analyzed, we see one task that looks like this:
->>
->>   Workqueue: kverityd verity_prefetch_io
->>
->>   __switch_to+0x9c/0xa8
->>   __schedule+0x440/0x6d8
->>   schedule+0x94/0xb4
->>   schedule_timeout+0x204/0x27c
->>   schedule_timeout_uninterruptible+0x44/0x50
->>   wait_iff_congested+0x9c/0x1f0
->>   shrink_inactive_list+0x3a0/0x4cc
->>   shrink_lruvec+0x418/0x5cc
->>   shrink_zone+0x88/0x198
->>   try_to_free_pages+0x51c/0x588
->>   __alloc_pages_nodemask+0x648/0xa88
->>   __get_free_pages+0x34/0x7c
->>   alloc_buffer+0xa4/0x144
->>   __bufio_new+0x84/0x278
->>   dm_bufio_prefetch+0x9c/0x154
->>   verity_prefetch_io+0xe8/0x10c
->>   process_one_work+0x240/0x424
->>   worker_thread+0x2fc/0x424
->>   kthread+0x10c/0x114
->>
->> ...and that looks to be the one holding the mutex.
->>
->> The problem has been reproduced on fairly easily:
->> 0. Be running Chrome OS w/ verity enabled on the root filesystem
->> 1. Pick test patch: http://crosreview.com/412360
->> 2. Install launchBalloons.sh and balloon.arm from
->>      http://crbug.com/468342
->>    ...that's just a memory stress test app.
->> 3. On a 4GB rk3399 machine, run
->>      nice ./launchBalloons.sh 4 900 100000
->>    ...that tries to eat 4 * 900 MB of memory and keep accessing.
->> 4. Login to the Chrome web browser and restore many tabs
->>
->> With that, I've seen printouts like:
->>   DOUG: long bufio 90758 ms
->> ...and stack trace always show's we're in dm_bufio_prefetch().
->>
->> The problem is that we try to allocate memory with GFP_NOIO while
->> we're holding the dm_bufio lock.  Instead we should be using
->> GFP_NOWAIT.  Using GFP_NOIO can cause us to sleep while holding the
->> lock and that causes the above problems.
->>
->> The current behavior explained by David Rientjes:
->>
->>   It will still try reclaim initially because __GFP_WAIT (or
->>   __GFP_KSWAPD_RECLAIM) is set by GFP_NOIO.  This is the cause of
->>   contention on dm_bufio_lock() that the thread holds.  You want to
->>   pass GFP_NOWAIT instead of GFP_NOIO to alloc_buffer() when holding a
->>   mutex that can be contended by a concurrent slab shrinker (if
->>   count_objects didn't use a trylock, this pattern would trivially
->>   deadlock).
->>
->> Suggested-by: David Rientjes <rientjes@google.com>
->> Signed-off-by: Douglas Anderson <dianders@chromium.org>
->> ---
->> Note that this change was developed and tested against the Chrome OS
->> 4.4 kernel tree, not mainline.  Due to slight differences in verity
->> between mainline and Chrome OS it became too difficult to reproduce my
->> testing setup on mainline.  This patch still seems correct and
->> relevant to upstream, so I'm posting it.  If this is not acceptible to
->> you then please ignore this patch.
->>
->> Also note that when I tested the Chrome OS 3.14 kernel tree I couldn't
->> reproduce the long delays described in the patch.  Presumably
->> something changed in either the kernel config or the memory management
->> code between the two kernel versions that made this crop up.  In a
->> similar vein, it is possible that problems described in this patch are
->> no longer reproducible upstream.  However, the arguments made in this
->> patch (that we don't want to block while holding the mutex) still
->> apply so I think the patch may still have merit.
->>
->>  drivers/md/dm-bufio.c | 6 ++++--
->>  1 file changed, 4 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
->> index b3ba142e59a4..3c767399cc59 100644
->> --- a/drivers/md/dm-bufio.c
->> +++ b/drivers/md/dm-bufio.c
->> @@ -827,7 +827,8 @@ static struct dm_buffer *__alloc_buffer_wait_no_callback(struct dm_bufio_client
->>        * dm-bufio is resistant to allocation failures (it just keeps
->>        * one buffer reserved in cases all the allocations fail).
->>        * So set flags to not try too hard:
->> -      *      GFP_NOIO: don't recurse into the I/O layer
->> +      *      GFP_NOWAIT: don't wait; if we need to sleep we'll release our
->> +      *                  mutex and wait ourselves.
->>        *      __GFP_NORETRY: don't retry and rather return failure
->>        *      __GFP_NOMEMALLOC: don't use emergency reserves
->>        *      __GFP_NOWARN: don't print a warning in case of failure
->> @@ -837,7 +838,8 @@ static struct dm_buffer *__alloc_buffer_wait_no_callback(struct dm_bufio_client
->>        */
->>       while (1) {
->>               if (dm_bufio_cache_size_latch != 1) {
->> -                     b = alloc_buffer(c, GFP_NOIO | __GFP_NORETRY | __GFP_NOMEMALLOC | __GFP_NOWARN);
->> +                     b = alloc_buffer(c, GFP_NOWAIT | __GFP_NORETRY |
->> +                                      __GFP_NOMEMALLOC | __GFP_NOWARN);
->>                       if (b)
->>                               return b;
->>               }
->> --
->> 2.8.0.rc3.226.g39d4020
->>
->> --
->> dm-devel mailing list
->> dm-devel@redhat.com
->> https://www.redhat.com/mailman/listinfo/dm-devel
->>
->
-> From: Mikulas Patocka <mpatocka@redhat.com>
->
-> Subject: dm-bufio: drop the lock when doing GFP_NOIO alloaction
->
-> Drop the lock when doing GFP_NOIO alloaction beacuse the allocation can
-> take some time.
->
-> Note that we won't do GFP_NOIO allocation when we loop for the second
-> time, because the lock shouldn't be dropped between __wait_for_free_buffer
-> and __get_unclaimed_buffer.
->
-> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
->
-> ---
->  drivers/md/dm-bufio.c |   13 ++++++++++++-
->  1 file changed, 12 insertions(+), 1 deletion(-)
->
-> Index: linux-2.6/drivers/md/dm-bufio.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/md/dm-bufio.c
-> +++ linux-2.6/drivers/md/dm-bufio.c
-> @@ -822,11 +822,13 @@ enum new_flag {
->  static struct dm_buffer *__alloc_buffer_wait_no_callback(struct dm_bufio_client *c, enum new_flag nf)
->  {
->         struct dm_buffer *b;
-> +       bool tried_noio_alloc = false;
->
->         /*
->          * dm-bufio is resistant to allocation failures (it just keeps
->          * one buffer reserved in cases all the allocations fail).
->          * So set flags to not try too hard:
-> +        *      GFP_NOWAIT: don't sleep and don't release cache
->          *      GFP_NOIO: don't recurse into the I/O layer
->          *      __GFP_NORETRY: don't retry and rather return failure
->          *      __GFP_NOMEMALLOC: don't use emergency reserves
-> @@ -837,7 +839,7 @@ static struct dm_buffer *__alloc_buffer_
->          */
->         while (1) {
->                 if (dm_bufio_cache_size_latch != 1) {
-> -                       b = alloc_buffer(c, GFP_NOIO | __GFP_NORETRY | __GFP_NOMEMALLOC | __GFP_NOWARN);
-> +                       b = alloc_buffer(c, GFP_NOWAIT | __GFP_NORETRY | __GFP_NOMEMALLOC | __GFP_NOWARN);
->                         if (b)
->                                 return b;
->                 }
-> @@ -845,6 +847,15 @@ static struct dm_buffer *__alloc_buffer_
->                 if (nf == NF_PREFETCH)
->                         return NULL;
->
-> +               if (dm_bufio_cache_size_latch != 1 && !tried_noio_alloc) {
-> +                       dm_bufio_unlock(c);
-> +                       b = alloc_buffer(c, GFP_NOIO | __GFP_NORETRY | __GFP_NOMEMALLOC | __GFP_NOWARN);
-> +                       dm_bufio_lock(c);
-> +                       if (b)
-> +                               return b;
-> +                       tried_noio_alloc = true;
-> +               }
-> +
->                 if (!list_empty(&c->reserved_buffers)) {
->                         b = list_entry(c->reserved_buffers.next,
->                                        struct dm_buffer, lru_list);
+There are other ways that nr_pending and nr_queued can get out of sync,
+though I think they would result in nr_pending being less than
+nr_queued, not more.
 
-I agree that I believe that it is safe to drop and re-grab the
-dm_bufio lock in this function.  I also believe it to be safe to call
-alloc_buffer() without holding the dm_bufio lock.
+If the presense of a bad block in the bad block log causes a request to
+be split into two r1bios, and if both of those end up on one of the
+queues, then they would be added to nr_queued twice, but to nr_pending
+only once.  We should fix that.
 
-That means that this looks fine to me.  It also fixes the test case
-that I have.  ...so for what it's worth:
 
-Reviewed-by: Douglas Anderson <dianders@chromium.org>
-Tested-by: Douglas Anderson <dianders@chromium.org>
+>
+> list -H 0xffff8800b96acac0 r1bio.retry_list -s r1bio
+>
+> ffff8800b9791ff8
+> struct r1bio {
+>   remaining =3D {
+>     counter =3D 0
+>   },
+>   behind_remaining =3D {
+>     counter =3D 0
+>   },
+>   sector =3D 18446612141670676480, // corrupted?
+>   start_next_window =3D 18446612141565972992, //ditto
 
--Doug
+I don't think this is corruption.
+
+> crash> struct r1conf 0xffff8800b9792000
+> struct r1conf {
+  ....
+>   retry_list =3D {
+>     next =3D 0xffff8800afe690c0,
+>     prev =3D 0xffff8800b96acac0
+>   },
+
+The pointer you started at was at the end of the list.
+So this r1bio structure you are seeing is not an r1bio at all but the
+memory out of the middle of the r1conf, being interpreted as an r1bio.
+You can confirm this by noticing that retry_list in the r1bio:
+
+>   retry_list =3D {
+>     next =3D 0xffff8800afe690c0,
+>     prev =3D 0xffff8800b96acac0
+>   },
+
+is exactly the same as the retry_list in the r1conf.
+
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhI0L4ACgkQOeye3VZi
+gbm1xg//bglInICeSuzDtH8pqSrsjimTt169wqR0aR+nhWOYs071trj4vHU+wTQy
+fnEorplZoGOD8N/I1cOQN67K2tmG+Dlt5J6hGHc7E8X07qlan6XaEkqyPIzXPLBm
+3KKMwGMTPnLHh3YwWEF6rnSwH4YdRhFY39+iq4stZVI+l0Iw1sKqu8jKvOGG+I1j
+Kj5iiObtCHQxxzpPLHVa++rswe1GRZKBbyPZriXFdzk7UqZcByb+iGNEXINDpZnn
+4oKSfOVx4OVs3VxFqu5yXgkIFrt6mzFLko8k6gtXUfCT4+gGZofWFsHTQ8Z2kcux
+hg5bZwsUAWyqinF6ICq4ig7m+AaKxOUDwU2/tVt+YVqM5NezMAWxgLWmJZDATncF
+i8mQFu+La63K7BrZwqHpEXfxvdbSGNr1BZf9vlhM/R2ANTq4W24buSi40aw1OaEV
+Lt7lxcHnV8ra5mx/dWR5GojEAIU0cq/Nj+BdRcSJB41Lbfh63a/0YVDffHRoFEED
+MPcPE+Y8PA6dA64DoRFyoxP3FeMO36QK3PcCipyHvRqtHoG4ARv2/9DjW8PclQbT
+yhAh4L2z6WxwB9t2lxwODyj2sx2cHFjxTHXX6EPwEuQhcT0XxSbEX6dZC3BsUHUX
+b1WdfAoz9FmsSmzjc5y1m0YZbeAiJFktQaO2KmNMV0jkGw3hTZE=
+=Yf/+
+-----END PGP SIGNATURE-----
+--=-=-=--
