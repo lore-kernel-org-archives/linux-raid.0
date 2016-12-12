@@ -1,45 +1,36 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [BUG] MD/RAID1 hung forever on freeze_array
-Date: Mon, 12 Dec 2016 11:59:07 +1100
-Message-ID: <87a8c20xpg.fsf@notabene.neil.brown.name>
-References: <CAMGffE=1kp7gMhG+dFxTvhD6VkRuSfbuXbf9vYSWwGG+=vvhDA@mail.gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: What is the solution for USB HDs
+Date: Sun, 11 Dec 2016 22:17:19 -0500
+Message-ID: <9481982b-bfda-644e-e160-74b94bbbec0c@turmel.org>
+References: <13e51316a11df7b0c9f5ab89392361de@juan-carlos.info>
+ <171542c9-1ab8-0993-733d-fbb95467f512@websitemanagers.com.au>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAMGffE=1kp7gMhG+dFxTvhD6VkRuSfbuXbf9vYSWwGG+=vvhDA@mail.gmail.com>
+In-Reply-To: <171542c9-1ab8-0993-733d-fbb95467f512@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jinpu Wang <jinpu.wang@profitbricks.com>, linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>
-Cc: Nate Dailey <nate.dailey@stratus.com>
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>, juca@juan-carlos.info, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
+On 12/11/2016 05:14 PM, Adam Goryachev wrote:
+> On 12/12/16 04:14, juca@juan-carlos.info wrote:
+> If you are still having problems after that, then please try to post
+> more details on what happens when the drives vanish (eg, kernel logs,
+> system logs, etc).
+> 
+> Also, you might consider an alternative SBC, some have SATA ports
+> already available (RPi are the only SBC's I've used, but there are many
+> other options/variations).
 
-On Sat, Nov 26 2016, Jinpu Wang wrote:
-> [  810.270860]  [<ffffffff813fc851>] blk_prologue_bio+0x91/0xc0
+There's also a kernel boot parameter that can cut off all USB
+auto-suspend, which I suspect is part of the problem.  It has been known
+for a long time that USB is not robust enough to be trusted in MD arrays.
 
-What is this?  I cannot find that function in the upstream kernel.
+{ looking around..... }
 
-NeilBrown
+usbcore.autosuspend=-1
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+is what you need in your bootloader or builtin to the kernel.
 
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhN9lwACgkQOeye3VZi
-gbnyPxAAgoUyAXDc9DmU2lTbHBqi9ix3wkZlDYbf6WZb/svE+ti9Y45BF+aetkua
-fo4ZoOKq2wLaru4ocUbyexyiPg0L8H+HsOhqqvXoxdqAuo0gwwdzYHysRzGrWKok
-Sf+aiiM5LCwMdqlnnZb6S85oHYDBs4UZFJzP52s1I9/AC+oh+EZfNNSHX4c7GCP5
-DzGyLyvP8Vrz91EwT+XTuCUwYy1UMwoRykdk/a/oaYiuNtQNHt74c4NPunU4LnPD
-GoZ6Nh+CwWh8/k+7gd/cN4Ka+08ngcrGzl4QKc5uPQwTr23/ILAPEiwGuLPRtL10
-zKu/stLZdGlXg79EZk2s05y98z06uoi3R97JUCpsnxS53tBJapSDKD0qzmkjEOl9
-DWjDazumRL6QcLB8E2J9gHLVooNTC1bzfNZtL20Sywznj58Oeu4/bHeQRfLNOGxo
-l9dzvMy7sgC7mzgNpsdJaJL+cg9nEtv/wIajJu+XZrYUBQ6wcqgRTLvSj/9m98Tj
-fUC+xGoMh/XH9aTB4HQk3lUGDR1fa1jc4qVVwwpDhnS9QAJfFrIupnWXA0mQvIYy
-CjCdIH2NRnDElwwKTLitTDv7M08Pe4UQawvxER8cSdqKPjmeM0ffg2DihrkxeqrM
-+oTq3QZYFIfJKYpyiuUAa72Q+ubJcVr1IvFToTJJSoUR3pgqw0c=
-=5PQC
------END PGP SIGNATURE-----
---=-=-=--
+Phil
