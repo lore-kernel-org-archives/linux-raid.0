@@ -1,54 +1,72 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH] Always return last partition end address in 512B blocks
-Date: Mon, 12 Dec 2016 14:30:28 -0500
-Message-ID: <wrfjshptrlm3.fsf@redhat.com>
-References: <1481195606-13227-1-git-send-email-mariusz.dabrowski@intel.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [BUG] MD/RAID1 hung forever on freeze_array
+Date: Tue, 13 Dec 2016 08:53:24 +1100
+Message-ID: <87oa0gzuej.fsf@notabene.neil.brown.name>
+References: <CAMGffE=1kp7gMhG+dFxTvhD6VkRuSfbuXbf9vYSWwGG+=vvhDA@mail.gmail.com> <87a8c20xpg.fsf@notabene.neil.brown.name> <CAMGffEkQ5puQEE0FVfLMV1of1OYOhLMhHdUTAy-YLYPkzBzjDg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1481195606-13227-1-git-send-email-mariusz.dabrowski@intel.com>
-        (Mariusz Dabrowski's message of "Thu, 8 Dec 2016 12:13:26 +0100")
+In-Reply-To: <CAMGffEkQ5puQEE0FVfLMV1of1OYOhLMhHdUTAy-YLYPkzBzjDg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
-Cc: linux-raid@vger.kernel.org
+To: Jinpu Wang <jinpu.wang@profitbricks.com>
+Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Nate Dailey <nate.dailey@stratus.com>
 List-Id: linux-raid.ids
 
-Mariusz Dabrowski <mariusz.dabrowski@intel.com> writes:
-> For 4K disks 'endofpart' is an index of the last 4K sector used by partition.
-> mdadm is using number of 512-byte sectors, so value returned by
-> get_last_partition_end must be multiplied by 8 for devices with 4K sectors.
-> Also, unused 'ret' variable has been removed.
+--=-=-=
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, Dec 13 2016, Jinpu Wang wrote:
+
+> On Mon, Dec 12, 2016 at 1:59 AM, NeilBrown <neilb@suse.com> wrote:
+>> On Sat, Nov 26 2016, Jinpu Wang wrote:
+>>> [  810.270860]  [<ffffffff813fc851>] blk_prologue_bio+0x91/0xc0
+>>
+>> What is this?  I cannot find that function in the upstream kernel.
+>>
+>> NeilBrown
 >
-> Signed-off-by: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
-> ---
->  util.c | 7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
+> Hi Neil,
+>
+> blk_prologue_bio is our internal extension to gather some stats, sorry
+> not informed before.
 
-I am a little wary of this since I don't have any 4k sector drivers to
-test with, so I will come yelling at you if this breaks something :)
+Ahhh.
 
-> diff --git a/util.c b/util.c
-> index 883eaa4..46c1280 100644
-> --- a/util.c
-> +++ b/util.c
-> @@ -1430,6 +1430,7 @@ static int get_last_partition_end(int fd, unsigned long long *endofpart)
->  	struct MBR boot_sect;
->  	unsigned long long curr_part_end;
->  	unsigned part_nr;
-> +	unsigned int sector_size;
->  	int retval = 0;
->  
->  	*endofpart = 0;
-> @@ -1469,6 +1470,9 @@ static int get_last_partition_end(int fd, unsigned long long *endofpart)
->  		/* Unknown partition table */
->  		retval = -1;
->  	}
-> +	/* calculate number of 512-byte blocks */
-> +	if (get_dev_sector_size(fd, NULL, &sector_size))
-> +		*endofpart *= sector_size/512;
+....
+> +       return q->custom_make_request_fn(q, clone);
 
-I really would prefer to see a parenthesis around this here and use of
-proper spacing.
+I haven't heard of custom_make_request_fn before either.
 
-Thanks,
-Jes
+> +}
+>
+> =EF=BC=A9=EF=BC=AD=EF=BC=A8=EF=BC=AF=EF=BC=8C it seems unrelated, but I w=
+ill rerun my test without this change.
+
+Yes, please re-test with an unmodified upstream kernel (and always
+report *exactly* what kernel you are running.  I cannot analyse code
+that I cannot see).
+
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhPHFUACgkQOeye3VZi
+gbnrRxAAm5T4PHhSnWVvnz7f94arby1pvYl9slVqPEEY24w/XAou+mLSvgs/2EL+
+7D7GIC8GeyTViez8ejEuk/uU8pItUwC2uJ7n2/teYNv1BArvtOrCPDaYUvD27cco
+GQ1e897G4wZO1n0u5GL/ZcHQ8xsgDOto40dt7vaU89DUQFW4gNRj4eZ/yeo1TdxB
+ork2Ye0GJziTVKBXbYN7R54V7YloAi7Bz970FknFP5mRYwydQbHG/lMJppqeyvSP
+MeYs2YETsMjuGUW7o1QzCRDQOlOsLxdar6zSv+44kzGM9ToPVz/jsaV68/eSHeh3
+DM7uK/6HULIkg6vtQf1tiPOsz4eXazx+Ovm4Wqu+z+cj6Btrv6Ds1u3MjN/TklvM
+9PS2Skfhux7ojObgqjCTBxrp7FQrtGMXY+d1a3i+1mOqqZ3SQ22Xp9Qi8xuRkoA4
+rsDOqDGqdZmMMB+pMNgdp2VnCXlJPeIAm1d8s3kyhLY207u5O0AsMHaRZ2U6tkCG
+5y95hdP+oRQqLOIcSC8p7P4jrwN7/FFLqnqwe+N9aIdrrQ2FSGH/kofJgKZx4NhG
+8C1UxTx0RpceO9uompRNXNNdH1YDaBZCTv6vsC5Cwew8BqejAPliHphMVUFRq4K+
+M20hvbryHXC7ZXsn7A/LSibPcl9CtBlme7IIgYRqabJJWQJAOsk=
+=3in0
+-----END PGP SIGNATURE-----
+--=-=-=--
