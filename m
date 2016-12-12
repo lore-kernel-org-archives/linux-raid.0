@@ -1,86 +1,86 @@
-From: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Subject: [PATCH 1/1] IMSM: Add support for Non-Intel NVMe drives under VMD
-Date: Mon, 12 Dec 2016 11:28:44 +0100
-Message-ID: <20161212102844.26697-1-pawel.baldysiak@intel.com>
+From: Jinpu Wang <jinpu.wang@profitbricks.com>
+Subject: Re: [BUG] MD/RAID1 hung forever on freeze_array
+Date: Mon, 12 Dec 2016 14:10:54 +0100
+Message-ID: <CAMGffEkQ5puQEE0FVfLMV1of1OYOhLMhHdUTAy-YLYPkzBzjDg@mail.gmail.com>
+References: <CAMGffE=1kp7gMhG+dFxTvhD6VkRuSfbuXbf9vYSWwGG+=vvhDA@mail.gmail.com>
+ <87a8c20xpg.fsf@notabene.neil.brown.name>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87a8c20xpg.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: jes.sorensen@redhat.com
-Cc: linux-raid@vger.kernel.org, Pawel Baldysiak <pawel.baldysiak@intel.com>
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Nate Dailey <nate.dailey@stratus.com>
 List-Id: linux-raid.ids
 
-This patch adds checking if platform (preOS) supports
-non-Intel NVMe drives under VMD domain,
-and - if so - allow creating IMSM Raid Volume
-with those drives.
+On Mon, Dec 12, 2016 at 1:59 AM, NeilBrown <neilb@suse.com> wrote:
+> On Sat, Nov 26 2016, Jinpu Wang wrote:
+>> [  810.270860]  [<ffffffff813fc851>] blk_prologue_bio+0x91/0xc0
+>
+> What is this?  I cannot find that function in the upstream kernel.
+>
+> NeilBrown
 
-Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
----
- platform-intel.h |  7 +++++++
- super-intel.c    | 12 +++++++++---
- 2 files changed, 16 insertions(+), 3 deletions(-)
+Hi Neil,
 
-diff --git a/platform-intel.h b/platform-intel.h
-index a8ae85f..4851074 100644
---- a/platform-intel.h
-+++ b/platform-intel.h
-@@ -99,6 +99,8 @@ struct imsm_orom {
- 	#define IMSM_OROM_CAPABILITIES_Rohi (1 << 5)
- 	#define IMSM_OROM_CAPABILITIES_ReadPatrol (1 << 6)
- 	#define IMSM_OROM_CAPABILITIES_XorHw (1 << 7)
-+	#define IMSM_OROM_CAPABILITIES_SKUMode ((1 << 8)|(1 << 9))
-+	#define IMSM_OROM_CAPABILITIES_TPV (1 << 10)
- } __attribute__((packed));
- 
- static inline int imsm_orom_has_raid0(const struct imsm_orom *orom)
-@@ -184,6 +186,11 @@ static inline int imsm_orom_is_nvme(const struct imsm_orom *orom)
- 			sizeof(orom->signature)) == 0;
- }
- 
-+static inline int imsm_orom_has_tpv_support(const struct imsm_orom *orom)
+blk_prologue_bio is our internal extension to gather some stats, sorry
+not informed before.
+
+It does below, code snip only:
++static void bio_endio_complete_diskstat(struct bio *clone)
 +{
-+	return !!(orom->driver_features & IMSM_OROM_CAPABILITIES_TPV);
++       struct bio *bio =3D clone->bi_private;
++       struct block_device *bdev =3D bio->bi_bdev;
++       struct hd_struct *hdp =3D bdev->bd_part;
++       unsigned long start =3D clone->bi_start_time;
++       const int rw =3D !!bio_data_dir(bio);
++       int cpu, err =3D clone->bi_error;
++
++       bio_put(clone);
++       blk_end_io_acct()
++       bio->bi_error =3D err;
++       bio_endio(bio);
 +}
 +
- enum sys_dev_type {
- 	SYS_DEV_UNKNOWN = 0,
- 	SYS_DEV_SAS,
-diff --git a/super-intel.c b/super-intel.c
-index 0407d43..cee6951 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -2199,9 +2199,6 @@ static int print_vmd_attached_devs(struct sys_dev *hba)
- 			continue;
- 
- 		sprintf(path, "/sys/bus/pci/drivers/nvme/%s", ent->d_name);
--		/* if not a intel NVMe - skip it*/
--		if (devpath_to_vendor(path) != 0x8086)
--			continue;
- 
- 		rp = realpath(path, NULL);
- 		if (!rp)
-@@ -2416,6 +2413,8 @@ static int detail_platform_imsm(int verbose, int enumerate_only, char *controlle
- 	for (entry = orom_entries; entry; entry = entry->next) {
- 		if (entry->type == SYS_DEV_VMD) {
- 			print_imsm_capability(&entry->orom);
-+			printf(" 3rd party NVMe :%s supported\n",
-+			    imsm_orom_has_tpv_support(&entry->orom)?"":" not");
- 			for (hba = list; hba; hba = hba->next) {
- 				if (hba->type == SYS_DEV_VMD) {
- 					char buf[PATH_MAX];
-@@ -5609,6 +5608,13 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
- 						"\tRAID 0 is the only supported configuration for this type of x8 device.\n");
- 				break;
- 			}
-+		} else if (super->hba->type == SYS_DEV_VMD && super->orom &&
-+		    !imsm_orom_has_tpv_support(super->orom)) {
-+			pr_err("\tPlatform configuration does not support non-Intel NVMe drives.\n"
-+			       "\tPlease refer to Intel(R) RSTe user guide.\n");
-+			free(dd->devname);
-+			free(dd);
-+			return 1;
- 		}
- 	}
- 
--- 
-2.9.3
++blk_qc_t blk_prologue_bio(struct request_queue *q, struct bio *bio)
++{
++       struct block_device *bdev =3D bio->bi_bdev;
++       struct hd_struct *hdp =3D bdev->bd_part;
++       struct bio *clone;
++
++       if (!hdp->additional_diskstat)
++               return q->custom_make_request_fn(q, bio);
++       clone =3D bio_clone_fast(bio, GFP_NOWAIT | __GFP_NOWARN, NULL);
++       if (unlikely(!clone))
++               return q->custom_make_request_fn(q, bio);
++       clone->bi_start_time =3D jiffies;
++       if (hdp->bio_mode_diskstat) {
++               int rw =3D !!bio_data_dir(bio);
++
++               generic_start_io_acct(rw, bio_sectors(clone), hdp);
++       }
++       clone->bi_end_io =3D bio_endio_complete_diskstat;
++       clone->bi_private =3D bio;
++       return q->custom_make_request_fn(q, clone);
++}
 
+=EF=BC=A9=EF=BC=AD=EF=BC=A8=EF=BC=AF=EF=BC=8C it seems unrelated, but I wil=
+l rerun my test without this change.
+
+--=20
+Jinpu Wang
+Linux Kernel Developer
+
+ProfitBricks GmbH
+Greifswalder Str. 207
+D - 10405 Berlin
+
+Tel:       +49 30 577 008  042
+Fax:      +49 30 577 008 299
+Email:    jinpu.wang@profitbricks.com
+URL:      https://www.profitbricks.de
+
+Sitz der Gesellschaft: Berlin
+Registergericht: Amtsgericht Charlottenburg, HRB 125506 B
+Gesch=C3=A4ftsf=C3=BChrer: Achim Weiss
