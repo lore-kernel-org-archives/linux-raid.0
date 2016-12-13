@@ -1,103 +1,56 @@
-From: Milan Broz <gmazyland@gmail.com>
-Subject: Re: [RFC PATCH v2] crypto: Add IV generation algorithms
-Date: Tue, 13 Dec 2016 11:01:08 +0100
-Message-ID: <d6d92865-98fa-4d02-035f-9080bc265c35@gmail.com>
-References: <1481618949-20086-1-git-send-email-binoy.jayan@linaro.org>
- <1481618949-20086-2-git-send-email-binoy.jayan@linaro.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1481618949-20086-2-git-send-email-binoy.jayan@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Binoy Jayan <binoy.jayan@linaro.org>, Oded <oded.golombek@arm.com>, Ofir <Ofir.Drang@arm.com>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, linux-crypto@vger.kernel.org, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Rajendra <rnayak@codeaurora.org>
+From: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
+Subject: [PATCH v2] Always return last partition end address in 512B blocks
+Date: Tue, 13 Dec 2016 14:31:02 +0100
+Message-ID: <1481635862-829-1-git-send-email-mariusz.dabrowski@intel.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Jes.Sorensen@redhat.com, Mariusz Dabrowski <mariusz.dabrowski@intel.com>
 List-Id: linux-raid.ids
 
-On 12/13/2016 09:49 AM, Binoy Jayan wrote:
-> Currently, the iv generation algorithms are implemented in dm-crypt.c.
-> The goal is to move these algorithms from the dm layer to the kernel
-> crypto layer by implementing them as template ciphers so they can be
-> implemented in hardware for performance. As part of this patchset, the
-> iv-generation code is moved from the dm layer to the crypto layer and
-> adapt the dm-layer to send a whole 'bio' (as defined in the block layer)
-> at a time. Each bio contains the in memory representation of physically
-> contiguous disk blocks. The dm layer sets up a chained scatterlist of
-> these blocks split into physically contiguous segments in memory so that
-> DMA can be performed. The iv generation algorithms implemented in geniv.c
-> include plain, plain64, essiv, benbi, null, lmk and tcw.
-...
+For 4K disks 'endofpart' is an index of the last 4K sector used by partition.
+mdadm is using number of 512-byte sectors, so value returned by
+get_last_partition_end must be multiplied by 8 for devices with 4K sectors.
+Also, unused 'ret' variable has been removed.
 
-Just few notes...
+Signed-off-by: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
+---
+ util.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-The lmk (loopAES) and tcw (old TrueCrypt mode) IVs are in fact hacks,
-it is combination of IV and modification of CBC mode (in post calls).
+diff --git a/util.c b/util.c
+index 883eaa4..d510613 100644
+--- a/util.c
++++ b/util.c
+@@ -1430,6 +1430,7 @@ static int get_last_partition_end(int fd, unsigned long long *endofpart)
+ 	struct MBR boot_sect;
+ 	unsigned long long curr_part_end;
+ 	unsigned part_nr;
++	unsigned int sector_size;
+ 	int retval = 0;
+ 
+ 	*endofpart = 0;
+@@ -1469,6 +1470,9 @@ static int get_last_partition_end(int fd, unsigned long long *endofpart)
+ 		/* Unknown partition table */
+ 		retval = -1;
+ 	}
++	/* calculate number of 512-byte blocks */
++	if (get_dev_sector_size(fd, NULL, &sector_size))
++		*endofpart *= (sector_size / 512);
+  abort:
+ 	return retval;
+ }
+@@ -1480,9 +1484,8 @@ int check_partitions(int fd, char *dname, unsigned long long freesize,
+ 	 * Check where the last partition ends
+ 	 */
+ 	unsigned long long endofpart;
+-	int ret;
+ 
+-	if ((ret = get_last_partition_end(fd, &endofpart)) > 0) {
++	if (get_last_partition_end(fd, &endofpart) > 0) {
+ 		/* There appears to be a partition table here */
+ 		if (freesize == 0) {
+ 			/* partitions will not be visible in new device */
+-- 
+1.8.3.1
 
-It is used only in these disk-encryption systems, it does not make sense
-to use it elsewhere (moreover tcw IV is not safe, it is here only
-for compatibility reasons).
-
-I think that IV generators should not modify or read encrypted data directly,
-it should only generate IV.
-
-By the move everything to cryptoAPI we are basically introducing some strange mix
-of IV and modes there, I wonder how this is going to be maintained.
-Anyway, Herbert should say if it is ok...
-
-But I would imagine that cryptoAPI should implement only "real" IV generators
-and these disk-encryption add-ons keep inside dmcrypt.
-(and dmcrypt should probably use normal IVs through crypto API and
-build some wrapper around for hacks...)
-
-...
-
-> 
-> When using multiple keys with the original dm-crypt, the key selection is
-> made based on the sector number as:
-> 
-> key_index = sector & (key_count - 1)
-> 
-> This restricts the usage of the same key for encrypting/decrypting a
-> single bio. One way to solve this is to move the key management code from
-> dm-crypt to cryto layer. But this seems tricky when using template ciphers
-> because, when multiple ciphers are instantiated from dm layer, each cipher
-> instance set with a unique subkey (part of the bigger master key) and
-> these instances themselves do not have access to each other's instances
-> or contexts. This way, a single instance cannot encryt/decrypt a whole bio.
-> This has to be fixed.
-
-I really do not think the disk encryption key management should be moved
-outside of dm-crypt. We cannot then change key structure later easily.
-
-But it is not only key management, you are basically moving much more internals
-outside of dm-crypt:
-
-> +struct geniv_ctx {
-> +	struct crypto_skcipher *child;
-> +	unsigned int tfms_count;
-> +	char *ivmode;
-> +	unsigned int iv_size;
-> +	char *ivopts;
-> +	char *cipher;
-> +	struct geniv_operations *iv_gen_ops;
-> +	union {
-> +		struct geniv_essiv_private essiv;
-> +		struct geniv_benbi_private benbi;
-> +		struct geniv_lmk_private lmk;
-> +		struct geniv_tcw_private tcw;
-> +	} iv_gen_private;
-> +	void *iv_private;
-> +	struct crypto_skcipher *tfm;
-> +	unsigned int key_size;
-> +	unsigned int key_extra_size;
-> +	unsigned int key_parts;      /* independent parts in key buffer */
-
-^^^ these key sizes you probably mean by key management.
-It is based on way how the key is currently sent into kernel
-(one hexa string in ioctl that needs to be split) and have to be changed in future.
-
-> +	enum setkey_op keyop;
-> +	char *msg;
-> +	u8 *key;
-
-Milan
