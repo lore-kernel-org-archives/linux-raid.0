@@ -1,36 +1,36 @@
 From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: [PATCH] Use disk sector size value to set offset for reading GPT
-Date: Tue, 13 Dec 2016 16:38:51 +0000
-Message-ID: <5850241B.8030007@youngman.org.uk>
-References: <1481195595-13140-1-git-send-email-mariusz.dabrowski@intel.com>
+Subject: Re: What is the solution for USB HDs
+Date: Tue, 13 Dec 2016 15:53:37 +0000
+Message-ID: <58501981.1070305@youngman.org.uk>
+References: <13e51316a11df7b0c9f5ab89392361de@juan-carlos.info>
+ <171542c9-1ab8-0993-733d-fbb95467f512@websitemanagers.com.au>
+ <9481982b-bfda-644e-e160-74b94bbbec0c@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1481195595-13140-1-git-send-email-mariusz.dabrowski@intel.com>
+In-Reply-To: <9481982b-bfda-644e-e160-74b94bbbec0c@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mariusz Dabrowski <mariusz.dabrowski@intel.com>, linux-raid@vger.kernel.org
-Cc: jes.sorensen@redhat.com
+To: Phil Turmel <philip@turmel.org>, Adam Goryachev <mailinglists@websitemanagers.com.au>, juca@juan-carlos.info, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 08/12/16 11:13, Mariusz Dabrowski wrote:
-> mdadm is using invalid byte-offset while reading GPT header to get
-> partition info (size, first sector, last sector etc.). Now this offset
-> is hardcoded to 512 bytes and it is not valid for disks with sector
-> size different than 512 bytes because MBR and GPT headers are aligned
-> to LBA, so valid offset for 4k drives is 4096 bytes.
-> 
-> Signed-off-by: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
+On 12/12/16 03:17, Phil Turmel wrote:
+> On 12/11/2016 05:14 PM, Adam Goryachev wrote:
+>> > On 12/12/16 04:14, juca@juan-carlos.info wrote:
+>> > If you are still having problems after that, then please try to post
+>> > more details on what happens when the drives vanish (eg, kernel logs,
+>> > system logs, etc).
+>> > 
+>> > Also, you might consider an alternative SBC, some have SATA ports
+>> > already available (RPi are the only SBC's I've used, but there are many
+>> > other options/variations).
+> There's also a kernel boot parameter that can cut off all USB
+> auto-suspend, which I suspect is part of the problem.  It has been known
+> for a long time that USB is not robust enough to be trusted in MD arrays.
 
-Could this be behind the couple of incidents recently, where an array
-has been moved from one machine to another, and the GPT has disappeared?
-
-I know I've been following the threads, and I've been puzzled in that
-I've thought "nothing should be writing there!"
-
-If it is, what mdadm/kernels are affected, and I can put it on the wiki,
-writing the page up about corrupted disks is next on my list.
+Okay, I've just parroted it on the wiki, but the wiki does recommend
+against USB disks, precisely because every mention (very few) I've seen
+says it's a bad idea - because of suspend.
 
 Cheers,
 Wol
-
