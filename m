@@ -1,61 +1,92 @@
-From: Doug Anderson <dianders@chromium.org>
-Subject: Re: [PATCH] dm: Avoid sleeping while holding the dm_bufio lock
-Date: Tue, 13 Dec 2016 14:01:40 -0800
-Message-ID: <CAD=FV=WJN8DaY5NAFwMvO7rfir9BJ38OxKJtG5Q3W8TCg_sNPg@mail.gmail.com>
-References: <1479410660-31408-1-git-send-email-dianders@chromium.org>
- <alpine.LRH.2.02.1611231543020.31481@file01.intranet.prod.int.rdu2.redhat.com>
- <CAD=FV=V85=ZTXURVZ3Xo1gS80rqA8gOhr+Xm47axrwVUpjQFuw@mail.gmail.com>
- <alpine.LRH.2.02.1612081758250.25149@file01.intranet.prod.int.rdu2.redhat.com>
- <CAD=FV=U+1VA23s1WMn4srH5U3Cjuz+0OLhq1qD5qw0oTE34xFQ@mail.gmail.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [BUG] MD/RAID1 hung forever on freeze_array
+Date: Wed, 14 Dec 2016 09:18:22 +1100
+Message-ID: <877f73zd5d.fsf@notabene.neil.brown.name>
+References: <CAMGffE=1kp7gMhG+dFxTvhD6VkRuSfbuXbf9vYSWwGG+=vvhDA@mail.gmail.com> <87a8c20xpg.fsf@notabene.neil.brown.name> <CAMGffEkQ5puQEE0FVfLMV1of1OYOhLMhHdUTAy-YLYPkzBzjDg@mail.gmail.com> <87oa0gzuej.fsf@notabene.neil.brown.name> <CAMGffEm4BDhKJSiDt=2WmxrpRutg862at7JP221gMi6_SpPomQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAD=FV=U+1VA23s1WMn4srH5U3Cjuz+0OLhq1qD5qw0oTE34xFQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Shaohua Li <shli@kernel.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, dm-devel@redhat.com, David Rientjes <rientjes@google.com>, Sonny Rao <sonnyrao@chromium.org>, Guenter Roeck <linux@roeck-us.net>
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAMGffEm4BDhKJSiDt=2WmxrpRutg862at7JP221gMi6_SpPomQ@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Jinpu Wang <jinpu.wang@profitbricks.com>
+Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Nate Dailey <nate.dailey@stratus.com>
 List-Id: linux-raid.ids
 
-Hi,
+--=-=-=
+Content-Type: text/plain
 
-On Mon, Dec 12, 2016 at 4:08 PM, Doug Anderson <dianders@chromium.org> wrote:
-> OK, so I just put a printk in wait_iff_congested() and it didn't show
-> me waiting for the timeout (!).  I know that I saw
-> wait_iff_congested() in the originally reproduction of this problem,
-> but it appears that in my little "balloon" reproduction it's not
-> actually involved...
+On Wed, Dec 14 2016, Jinpu Wang wrote:
+
 >
+> As you suggested, I re-run same test with 4.4.36 with no our own patch on MD.
+> I can still reproduce the same bug, nr_pending on heathy leg(loop1) is till 1.
 >
-> ...I dug further and it appears that __alloc_pages_direct_reclaim() is
-> actually what's slow.  Specifically it looks as if shrink_zone() can
-> actually take quite a while.  As I've said, I'm not an expert on the
-> memory manager but I'm not convinced that it's wrong for the direct
-> reclaim path to be pretty slow at times, especially when I'm putting
-> an abnormally high amount of stress on it.
->
-> I'm going to take this as further evidence that the patch being
-> discussed in this thread is a good one (AKA don't hold the dm bufio
-> lock while allocating memory).  :)  If it's unexpected that
-> shrink_zone() might take several seconds when under extreme memory
-> pressure then I can do some additional digging.  Do note that I am
-> running with "zram" and remember that I'm on an ancient 4.4-based
-> kernel, so perhaps one of those two factors causes problems.
 
-Sadly, I couldn't get this go as just "the way things were" in case
-there was some major speedup to be had here.  :-P
+Thanks.
 
-I tracked this down to shrink_list() taking 1 ms per call (perhaps
-because I have HZ=1000?) and in shrink_lruvec() the outer loop ran
-many thousands of times.  Thus the total time taken by shrink_lruvec()
-could easily be many seconds.
+I have an hypothesis.
 
-Wow, interesting, when I change HZ to 100 instead of 1000 then the
-behavior changes quite a bit.  I can still get my bufio lock warning
-easily, but all of a sudden shrink_lruvec() isn't slow.  :-P
+md_make_request() calls blk_queue_split().
+If that does split the request it will call generic_make_request()
+on the first half. That will call back into md_make_request() and
+raid1_make_request() which will submit requests to the underlying
+devices.  These will get caught on the bio_list_on_stack queue in
+generic_make_request().
+This is a queue which is not accounted in nr_queued.
 
-OK, really truly going to stop digging further now...  ;)  Presumably
-reporting weird behaviors with old kernels doesn't help anyone in
-mainline, and I can buy the whole "memory accesses are slow when you
-start thrashing the system" argument.
+When blk_queue_split() completes, 'bio' will be the second half of the
+bio.
+This enters raid1_make_request() and by this time the array have been
+frozen.
+So wait_barrier() has to wait for pending requests to complete, and that
+includes the one that it stuck in bio_list_on_stack, which will never
+complete now.
 
--Doug
+To see if this might be happening, please change the
+
+	blk_queue_split(q, &bio, q->bio_split);
+
+call in md_make_request() to
+
+	struct bio *tmp = bio;
+	blk_queue_split(q, &bio, q->bio_split);
+	WARN_ON_ONCE(bio != tmp);
+
+If that ever triggers, then the above is a real possibility.
+
+Fixing the problem isn't very easy...
+
+You could try:
+1/ write a function in raid1.c which calls punt_bios_to_rescuer()
+  (which you will need to export from block/bio.c),
+  passing mddev->queue->bio_split as the bio_set.
+
+1/ change the wait_event_lock_irq() call in wait_barrier() to
+   wait_event_lock_irq_cmd(), and pass the new function as the command.
+
+That way, if wait_barrier() ever blocks, all the requests in
+bio_list_on_stack will be handled by a separate thread.
+
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhQc64ACgkQOeye3VZi
+gbkb+xAAg3OBFqNPaZkQoveJmYWZnzbhCFV43Ifr5aymLwm+PEDb9szhalH1jQUq
+2WZBgQ6S1wy1HUERXVR3kr5A/zvMQkmrYLS052ap92xaqfb3yOd/V8Jc7bjPwiMh
+3uJ40gtJkj3Mkm0EHL1TFBtea+UM5nkddj9cl7cS/Z/HbkXD6ARDQxCdWJoqx5hs
+S0WDYBEQilyZfDBqyMXcf5lg2EMUqivgxhQ1y3X9jAiQ7HvBwcc2FqIkbJ2RU8Zy
+R0o1ukRU8IHam/aau6Ex5ucThXlncqwYhP+VfeqVG6tgZXNnYwWE4xJu/9nWUx08
+DrI+GAXI1fxPpyHpeSqxnBR1SeU+UXBoTZSFkemhVlwU2xKassJSC+2qnhI6ydhq
+fAwsLHOfwSHhMZCGlCHuQlm1XiNUq//N78RNg3sE6aIfkrvdzybmA6df5MNP7yiA
+1zsPzx9utYuFigV7YODn0dszuCS8zGbCyCqHJE+knoQ0TvXuTk4SDi1RASzVQ3Mi
+ozWZ2KWYCnsODP2ZWxyh1czbUMB/EkqyD3mPTbaXlJQTd2ojuZgUl0GMsf9cNM9E
+iDK5LyRK+8todxffJHAU79vn1omixE6+yI3S0SFWSpUduQpFC0S2DCW52sDPHa1x
+qIB9fcnahR/4fhnw0VqVc+VQhZ+DDL4TCUORpmTxdiv1v0tUJgw=
+=OL2s
+-----END PGP SIGNATURE-----
+--=-=-=--
