@@ -1,15 +1,37 @@
-From: bancoleite@sms.goiania.go.gov.br
-Subject: DO YOU NEED A LOAN??
-Date: Tue, 13 Dec 2016 10:59:19 +0530
-Message-ID: <20161213054256.7CD7F5F6C70@zmail.goiania.go.gov.br>
-Reply-To: finansbank.muhaberrat@accountant.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 8BIT
+From: JackieLiu <liuyun01@kylinos.cn>
+Subject: [PATCH] md/raid5-cache: removes unnecessary write-through mode judgments
+Date: Tue, 13 Dec 2016 13:55:27 +0800
+Message-ID: <20161213055527.3306-1-liuyun01@kylinos.cn>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Description: Mail message body
 Sender: linux-raid-owner@vger.kernel.org
-To: Recipients <bancoleite@sms.goiania.go.gov.br>
+To: songliubraving@fb.com
+Cc: shli@kernel.org, linux-raid@vger.kernel.org, JackieLiu <liuyun01@kylinos.cn>
 List-Id: linux-raid.ids
 
-Are you in need of a loan? Apply for more details.
+The write-through mode has been returned in front of the function,
+do not need to do it again.
+
+Signed-off-by: JackieLiu <liuyun01@kylinos.cn>
+---
+ drivers/md/raid5-cache.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 6d1a150..4dd8e4e 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -2418,9 +2418,6 @@ void r5c_finish_stripe_write_out(struct r5conf *conf,
+ 	if (do_wakeup)
+ 		wake_up(&conf->wait_for_overlap);
+ 
+-	if (conf->log->r5c_journal_mode == R5C_JOURNAL_MODE_WRITE_THROUGH)
+-		return;
+-
+ 	spin_lock_irq(&conf->log->stripe_in_journal_lock);
+ 	list_del_init(&sh->r5c);
+ 	spin_unlock_irq(&conf->log->stripe_in_journal_lock);
+-- 
+2.10.2
+
+
+
