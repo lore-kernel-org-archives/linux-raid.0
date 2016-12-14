@@ -1,149 +1,152 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: [GIT PULL] MD update for 4.10
-Date: Tue, 13 Dec 2016 22:23:16 -0800
-Message-ID: <20161214062316.br6uje3whezynkqs@kernel.org>
+From: Jinpu Wang <jinpu.wang@profitbricks.com>
+Subject: Re: [BUG] MD/RAID1 hung forever on freeze_array
+Date: Wed, 14 Dec 2016 11:22:04 +0100
+Message-ID: <CAMGffEnCesgUp4gBsPN2L9qg3WSxNXsCcYEPWH-BaeEEktaqcw@mail.gmail.com>
+References: <CAMGffE=1kp7gMhG+dFxTvhD6VkRuSfbuXbf9vYSWwGG+=vvhDA@mail.gmail.com>
+ <87a8c20xpg.fsf@notabene.neil.brown.name> <CAMGffEkQ5puQEE0FVfLMV1of1OYOhLMhHdUTAy-YLYPkzBzjDg@mail.gmail.com>
+ <87oa0gzuej.fsf@notabene.neil.brown.name> <CAMGffEm4BDhKJSiDt=2WmxrpRutg862at7JP221gMi6_SpPomQ@mail.gmail.com>
+ <877f73zd5d.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <877f73zd5d.fsf@notabene.neil.brown.name>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Nate Dailey <nate.dailey@stratus.com>
 List-Id: linux-raid.ids
 
-Hi Linus,
+Thanks Neil,
 
-Please pull MD changes for 4.10. This update includes:
-- A raid5 writeback cache feature. The goal is to aggregate writes to make full
-  stripe write and reduce read-modify-write. It's helpful for workload which
-  does sequential write and follows fsync for example. This feature is
-  experimental and off by default right now.
-- FAILFAST support. This fails IOs to broken raid disks quickly, so can improve
-  latency. It's mainly for DASD storage, but some patches help normal raid
-  array too.
-- Support bad block for raid array with external metadata
-- AVX2 instruction support for raid6 parity calculation
-- Normalize MD info output
-- Add missing blktrace
-- Other bug fixes
+On Tue, Dec 13, 2016 at 11:18 PM, NeilBrown <neilb@suse.com> wrote:
+> On Wed, Dec 14 2016, Jinpu Wang wrote:
+>
+>>
+>> As you suggested, I re-run same test with 4.4.36 with no our own patch o=
+n MD.
+>> I can still reproduce the same bug, nr_pending on heathy leg(loop1) is t=
+ill 1.
+>>
+>
+> Thanks.
+>
+> I have an hypothesis.
+>
+> md_make_request() calls blk_queue_split().
+> If that does split the request it will call generic_make_request()
+> on the first half. That will call back into md_make_request() and
+> raid1_make_request() which will submit requests to the underlying
+> devices.  These will get caught on the bio_list_on_stack queue in
+> generic_make_request().
+> This is a queue which is not accounted in nr_queued.
+>
+> When blk_queue_split() completes, 'bio' will be the second half of the
+> bio.
+> This enters raid1_make_request() and by this time the array have been
+> frozen.
+> So wait_barrier() has to wait for pending requests to complete, and that
+> includes the one that it stuck in bio_list_on_stack, which will never
+> complete now.
+>
+> To see if this might be happening, please change the
+>
+>         blk_queue_split(q, &bio, q->bio_split);
+>
+> call in md_make_request() to
+>
+>         struct bio *tmp =3D bio;
+>         blk_queue_split(q, &bio, q->bio_split);
+>         WARN_ON_ONCE(bio !=3D tmp);
+>
+> If that ever triggers, then the above is a real possibility.
 
-Thanks,
-Shaohua
+I triggered the warning as you expected, we can confirm the bug was
+caused by your above hypothesis.
+[  429.282235] ------------[ cut here ]------------
+[  429.282407] WARNING: CPU: 2 PID: 4139 at drivers/md/md.c:262
+md_set_array_sectors+0xac0/0xc30 [md_mod]()
+[  429.285288] Modules linked in: raid1 ibnbd_client(O)
+ibtrs_client(O) dm_service_time dm_multipath rdma_ucm ib_ucm rdma_cm
+iw_cm ib_ipoib ib_cm ib_uverbs ib_umad mlx5_ib mlx5_c
+ore vxlan ip6_udp_tunnel udp_tunnel mlx4_ib ib_sa ib_mad ib_core
+ib_addr ib_netlink mlx4_core mlx_compat loop md_mod kvm_amd
+edac_mce_amd kvm edac_core irqbypass acpi_cpufreq tpm
+_infineon tpm_tis i2c_piix4 tpm serio_raw evdev k10temp processor
+button fam15h_power crct10dif_pclmul crc32_pclmul sg sd_mod ahci
+libahci libata scsi_mod crc32c_intel r8169 psmo
+use xhci_pci xhci_hcd [last unloaded: mlx_compat]
+[  429.288543] CPU: 2 PID: 4139 Comm: fio Tainted: G           O    4.4.36-=
+1-pse
+rver #1
+[  429.288825] Hardware name: To be filled by O.E.M. To be filled by
+O.E.M./M5A97 R2.0, BIOS 2501 04/07/2014
+[  429.289113]  0000000000000000 ffff8801f64ff8f0 ffffffff81424486
+0000000000000000
+[  429.289538]  ffffffffa0561938 ffff8801f64ff928 ffffffff81058a60
+ffff8800b8f3e000
+[  429.290157]  0000000000000000 ffff8800b51f4100 ffff880234f9a700
+ffff880234f9a700
+[  429.290594] Call Trace:
+[  429.290743]  [<ffffffff81424486>] dump_stack+0x4d/0x67
+[  429.290893]  [<ffffffff81058a60>] warn_slowpath_common+0x90/0xd0
+[  429.291046]  [<ffffffff81058b55>] warn_slowpath_null+0x15/0x20
+[  429.291202]  [<ffffffffa0550740>] md_set_array_sectors+0xac0/0xc30 [md_m=
+od]
+[  429.291358]  [<ffffffff813fd3de>] generic_make_request+0xfe/0x1e0
+[  429.291540]  [<ffffffff813fd522>] submit_bio+0x62/0x150
+[  429.291693]  [<ffffffff813f53d9>] ? bio_set_pages_dirty+0x49/0x60
+[  429.291847]  [<ffffffff811d32a7>] do_blockdev_direct_IO+0x2317/0x2ba0
+[  429.292011]  [<ffffffffa0834f64>] ?
+ib_post_rdma_write_imm+0x24/0x30 [ibtrs_client]
+[  429.292271]  [<ffffffff811cdc40>] ? I_BDEV+0x10/0x10
+[  429.292417]  [<ffffffff811d3b6e>] __blockdev_direct_IO+0x3e/0x40
+[  429.292566]  [<ffffffff811ce2d7>] blkdev_direct_IO+0x47/0x50
+[  429.292746]  [<ffffffff81132abf>] generic_file_read_iter+0x45f/0x580
+[  429.292894]  [<ffffffff811ce620>] ? blkdev_write_iter+0x110/0x110
+[  429.293073]  [<ffffffff811ce652>] blkdev_read_iter+0x32/0x40
+[  429.293284]  [<ffffffff811deb86>] aio_run_iocb+0x116/0x2a0
+[  429.293492]  [<ffffffff813fed52>] ? blk_flush_plug_list+0xc2/0x200
+[  429.293703]  [<ffffffff81183ac6>] ? kmem_cache_alloc+0xb6/0x180
+[  429.293901]  [<ffffffff811dfaf4>] ? do_io_submit+0x184/0x4d0
+[  429.294047]  [<ffffffff811dfbaa>] do_io_submit+0x23a/0x4d0
+[  429.294194]  [<ffffffff811dfe4b>] SyS_io_submit+0xb/0x10
+[  429.294375]  [<ffffffff81815497>] entry_SYSCALL_64_fastpath+0x12/0x6a
+[  429.294610] ---[ end trace 25d1cece0e01494b ]---
 
-The following changes since commit b78b499a67c3f77aeb6cd0b54724bc38b141255d:
+I double checked the nr_pending on heathy leg is still 1 as before.
 
-  Merge tag 'char-misc-4.10-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/char-misc (2016-12-13 12:11:01 -0800)
+>
+> Fixing the problem isn't very easy...
+>
+> You could try:
+> 1/ write a function in raid1.c which calls punt_bios_to_rescuer()
+>   (which you will need to export from block/bio.c),
+>   passing mddev->queue->bio_split as the bio_set.
+>
+> 1/ change the wait_event_lock_irq() call in wait_barrier() to
+>    wait_event_lock_irq_cmd(), and pass the new function as the command.
+>
+> That way, if wait_barrier() ever blocks, all the requests in
+> bio_list_on_stack will be handled by a separate thread.
+>
+> NeilBrown
 
-are available in the git repository at:
+I will try your sugested way to see if it fix the bug, will report back soo=
+n.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git for-linus
+--=20
+Jinpu Wang
+Linux Kernel Developer
 
-for you to fetch changes up to 20737738d397dfadbca1ea50dcc00d7259f500cf:
+ProfitBricks GmbH
+Greifswalder Str. 207
+D - 10405 Berlin
 
-  Merge branch 'md-next' into md-linus (2016-12-13 12:40:15 -0800)
+Tel:       +49 30 577 008  042
+Fax:      +49 30 577 008 299
+Email:    jinpu.wang@profitbricks.com
+URL:      https://www.profitbricks.de
 
-----------------------------------------------------------------
-Dan Carpenter (1):
-      md/r5cache: enable IRQs on error path
-
-Gayatri Kammela (1):
-      lib/raid6: Add AVX2 optimized xor_syndrome functions
-
-Guoqing Jiang (1):
-      md/bitmap: call bitmap_file_unmap once bitmap_storage_alloc returns -ENOMEM
-
-JackieLiu (8):
-      raid5-cache: restrict the use area of the log_offset variable
-      md/raid5-cache: remove unnecessary function parameters
-      md/raid5-cache: use ring add to prevent overflow
-      md/raid5-cache: release the stripe_head at the appropriate location
-      md/raid5-cache: remove the unnecessary next_cp_seq field from the r5l_log
-      md/raid5-cache: do not need to set STRIPE_PREREAD_ACTIVE repeatedly
-      md/raid5-cache: adjust the write position of the empty block if no data blocks
-      md/raid5-cache: no recovery is required when create super-block
-
-Konstantin Khlebnikov (1):
-      md/raid5: limit request size according to implementation limits
-
-NeilBrown (26):
-      md: fix some issues with alloc_disk_sb()
-      md: change all printk() to pr_err() or pr_warn() etc.
-      md/bitmap: change all printk() to pr_*()
-      md/linear: replace printk() with pr_*()
-      md/multipath: replace printk() with pr_*()
-      md/raid0: replace printk() with pr_*()
-      md/raid1: change printk() to pr_*()
-      md/raid10: change printk() to pr_*()
-      md/raid5: change printk() to pr_*()
-      md: perform async updates for metadata where possible.
-      md/raid1: abort delayed writes when device fails.
-      md/raid10: abort delayed writes when device fails.
-      md/bitmap: Don't write bitmap while earlier writes might be in-flight
-      md/raid1: fix: IO can block resync indefinitely
-      md: define mddev flags, recovery flags and r1bio state bits using enums
-      md: remove md_super_wait() call after bitmap_flush()
-      md: add block tracing for bio_remapping
-      md/bitmap: add blktrace event for writes to the bitmap
-      md/raid1, raid10: add blktrace records when IO is delayed
-      md/failfast: add failfast flag for md to be used by some personalities.
-      md: Use REQ_FAILFAST_* on metadata writes where appropriate
-      md/raid1: add failfast handling for reads.
-      md/raid1: add failfast handling for writes.
-      md/raid10: add failfast handling for reads.
-      md/raid10: add failfast handling for writes.
-      md: fix refcount problem on mddev when stopping array.
-
-Shaohua Li (8):
-      raid5-cache: fix lockdep warning
-      md: add blktrace event for writes to superblock
-      raid5-cache: suspend reclaim thread instead of shutdown
-      md: stop write should stop journal reclaim
-      md: takeover should clear unrelated bits
-      md: MD_RECOVERY_NEEDED is set for mddev->recovery
-      md: separate flags for superblock changes
-      Merge branch 'md-next' into md-linus
-
-Song Liu (14):
-      md/r5cache: Check array size in r5l_init_log
-      md/r5cache: move some code to raid5.h
-      md/r5cache: State machine for raid5-cache write back mode
-      md/r5cache: caching phase of r5cache
-      md/r5cache: write-out phase and reclaim support
-      md/r5cache: sysfs entry journal_mode
-      md/r5cache: refactoring journal recovery code
-      md/r5cache: r5cache recovery: part 1
-      md/r5cache: r5cache recovery: part 2
-      md/r5cache: handle FLUSH and FUA
-      md/r5cache: handle alloc_page failure
-      md/r5cache: run_no_space_stripes() when R5C_LOG_CRITICAL == 0
-      md/raid5-cache: fix crc in rewrite_data_only_stripes()
-      md/r5cache: after recovery, increase journal seq by 10000
-
-Tomasz Majchrzak (4):
-      md: add bad block support for external metadata
-      md: don't fail an array if there are unacknowledged bad blocks
-      md: wake up personality thread after array state update
-      raid5: revert commit 11367799f3d1
-
-Zhengyuan Liu (3):
-      raid5-cache: add another check conditon before replaying one stripe
-      raid5-cache: don't set STRIPE_R5C_PARTIAL_STRIPE flag while load stripe into cache
-      md/r5cache: do r5c_update_log_state after log recovery
-
- drivers/md/bitmap.c            |  166 ++--
- drivers/md/dm-raid.c           |    4 +-
- drivers/md/linear.c            |   31 +-
- drivers/md/md.c                |  701 ++++++++-------
- drivers/md/md.h                |  108 ++-
- drivers/md/multipath.c         |   92 +-
- drivers/md/raid0.c             |  107 ++-
- drivers/md/raid1.c             |  247 ++++--
- drivers/md/raid1.h             |   19 +-
- drivers/md/raid10.c            |  295 ++++---
- drivers/md/raid10.h            |    2 +
- drivers/md/raid5-cache.c       | 1885 +++++++++++++++++++++++++++++++++++-----
- drivers/md/raid5.c             |  623 +++++++------
- drivers/md/raid5.h             |  172 +++-
- include/uapi/linux/raid/md_p.h |    7 +-
- lib/raid6/avx2.c               |  232 ++++-
- 16 files changed, 3429 insertions(+), 1262 deletions(-)
+Sitz der Gesellschaft: Berlin
+Registergericht: Amtsgericht Charlottenburg, HRB 125506 B
+Gesch=C3=A4ftsf=C3=BChrer: Achim Weiss
