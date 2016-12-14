@@ -1,148 +1,149 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH 1/6] md/r5cache: simplify handling of sh->log_start in recovery
-Date: Wed, 14 Dec 2016 15:38:01 -0800
-Message-ID: <20161214233806.4137850-1-songliubraving@fb.com>
+Subject: [PATCH 4/6] md/r5cache: read data into orig_page for prexor of cached data
+Date: Wed, 14 Dec 2016 15:38:04 -0800
+Message-ID: <20161214233806.4137850-4-songliubraving@fb.com>
+References: <20161214233806.4137850-1-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20161214233806.4137850-1-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuan@kylinos.cn, liuyun01@kylinos.cn, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-We only need to update sh->log_start at the end of recovery,
-which is r5c_recovery_rewrite_data_only_stripes(), so it is not
-necessary to set it before that. In this patch, log_start is
-removed from r5c_recovery_alloc_stripe().
+With write back cache, we use orig_page to do prexor. This patch
+makes sure we read data into orig_page for it.
 
-After updating all sh->log_start, rewrite_data_only_stripes()
-also updates log->next_checkpoints to the last sh->log_start.
+Flag R5_OrigPageUPTDODATE is added to show whether orig_page
+has the latest data from raid disk.
 
 Signed-off-by: Song Liu <songliubraving@fb.com>
 ---
- drivers/md/raid5-cache.c | 27 ++++++++++++---------------
- 1 file changed, 12 insertions(+), 15 deletions(-)
+ drivers/md/raid5-cache.c |  2 ++
+ drivers/md/raid5.c       | 37 ++++++++++++++++++++++++++++---------
+ drivers/md/raid5.h       |  5 +++++
+ 3 files changed, 35 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index d7bfb6f..0f5e6a2 100644
+index cded2b1..e65de05 100644
 --- a/drivers/md/raid5-cache.c
 +++ b/drivers/md/raid5-cache.c
-@@ -1682,8 +1682,7 @@ r5l_recovery_replay_one_stripe(struct r5conf *conf,
+@@ -2377,6 +2377,8 @@ void r5c_release_extra_page(struct stripe_head *sh)
+ 			struct page *p = sh->dev[i].orig_page;
  
- static struct stripe_head *
- r5c_recovery_alloc_stripe(struct r5conf *conf,
--			  sector_t stripe_sect,
--			  sector_t log_start)
-+			  sector_t stripe_sect)
- {
- 	struct stripe_head *sh;
- 
-@@ -1692,7 +1691,6 @@ r5c_recovery_alloc_stripe(struct r5conf *conf,
- 		return NULL;  /* no more stripe available */
- 
- 	r5l_recovery_reset_stripe(sh);
--	sh->log_start = log_start;
- 
- 	return sh;
- }
-@@ -1862,7 +1860,7 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
- 						stripe_sect);
- 
- 		if (!sh) {
--			sh = r5c_recovery_alloc_stripe(conf, stripe_sect, ctx->pos);
-+			sh = r5c_recovery_alloc_stripe(conf, stripe_sect);
- 			/*
- 			 * cannot get stripe from raid5_get_active_stripe
- 			 * try replay some stripes
-@@ -1871,7 +1869,7 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
- 				r5c_recovery_replay_stripes(
- 					cached_stripe_list, ctx);
- 				sh = r5c_recovery_alloc_stripe(
--					conf, stripe_sect, ctx->pos);
-+					conf, stripe_sect);
- 			}
- 			if (!sh) {
- 				pr_debug("md/raid:%s: Increasing stripe cache size to %d to recovery data on journal.\n",
-@@ -1879,8 +1877,8 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
- 					conf->min_nr_stripes * 2);
- 				raid5_set_cache_size(mddev,
- 						     conf->min_nr_stripes * 2);
--				sh = r5c_recovery_alloc_stripe(
--					conf, stripe_sect, ctx->pos);
-+				sh = r5c_recovery_alloc_stripe(conf,
-+							       stripe_sect);
- 			}
- 			if (!sh) {
- 				pr_err("md/raid:%s: Cannot get enough stripes due to memory pressure. Recovery failed.\n",
-@@ -1894,7 +1892,6 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
- 			if (!test_bit(STRIPE_R5C_CACHING, &sh->state) &&
- 			    test_bit(R5_Wantwrite, &sh->dev[sh->pd_idx].flags)) {
- 				r5l_recovery_replay_one_stripe(conf, sh, ctx);
--				sh->log_start = ctx->pos;
- 				list_move_tail(&sh->lru, cached_stripe_list);
- 			}
- 			r5l_recovery_load_data(log, sh, ctx, payload,
-@@ -1933,8 +1930,6 @@ static void r5c_recovery_load_one_stripe(struct r5l_log *log,
- 			set_bit(R5_UPTODATE, &dev->flags);
+ 			sh->dev[i].orig_page = sh->dev[i].page;
++			clear_bit(R5_OrigPageUPTDODATE, &sh->dev[i].flags);
++
+ 			if (!using_disk_info_extra_page)
+ 				put_page(p);
  		}
- 	}
--	list_add_tail(&sh->r5c, &log->stripe_in_journal_list);
--	atomic_inc(&log->stripe_in_journal_count);
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index b98dfb2..760af2e 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -1019,7 +1019,13 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+ 
+ 			if (test_bit(R5_SkipCopy, &sh->dev[i].flags))
+ 				WARN_ON(test_bit(R5_UPTODATE, &sh->dev[i].flags));
+-			sh->dev[i].vec.bv_page = sh->dev[i].page;
++
++			if (!op_is_write(op) &&
++			    test_bit(R5_InJournal, &sh->dev[i].flags) &&
++			    sh->dev[i].page != sh->dev[i].orig_page)
++				sh->dev[i].vec.bv_page = sh->dev[i].orig_page;
++			else
++				sh->dev[i].vec.bv_page = sh->dev[i].page;
+ 			bi->bi_vcnt = 1;
+ 			bi->bi_io_vec[0].bv_len = STRIPE_SIZE;
+ 			bi->bi_io_vec[0].bv_offset = 0;
+@@ -2384,6 +2390,10 @@ static void raid5_end_read_request(struct bio * bi)
+ 		} else if (test_bit(R5_ReadNoMerge, &sh->dev[i].flags))
+ 			clear_bit(R5_ReadNoMerge, &sh->dev[i].flags);
+ 
++		if (test_bit(R5_InJournal, &sh->dev[i].flags) &&
++		    sh->dev[i].page != sh->dev[i].orig_page)
++			set_bit(R5_OrigPageUPTDODATE, &sh->dev[i].flags);
++
+ 		if (atomic_read(&rdev->read_errors))
+ 			atomic_set(&rdev->read_errors, 0);
+ 	} else {
+@@ -3598,6 +3608,21 @@ static void handle_stripe_clean_event(struct r5conf *conf,
+ 		break_stripe_batch_list(head_sh, STRIPE_EXPAND_SYNC_FLAGS);
  }
+ 
++/*
++ * For RMW in write back cache, we need extra page in prexor to store the
++ * old data. This page is stored in dev->orig_page.
++ *
++ * This function checks whether we have data for prexor. The exact logic
++ * is:
++ *       R5_UPTODATE && (!R5_InJournal || R5_OrigPageUPTDODATE)
++ */
++static inline bool uptodate_for_rmw(struct r5dev *dev)
++{
++	return (test_bit(R5_UPTODATE, &dev->flags)) &&
++		(!test_bit(R5_InJournal, &dev->flags) ||
++		 test_bit(R5_OrigPageUPTDODATE, &dev->flags));
++}
++
+ static int handle_stripe_dirtying(struct r5conf *conf,
+ 				  struct stripe_head *sh,
+ 				  struct stripe_head_state *s,
+@@ -3629,9 +3654,7 @@ static int handle_stripe_dirtying(struct r5conf *conf,
+ 		if ((dev->towrite || i == sh->pd_idx || i == sh->qd_idx ||
+ 		     test_bit(R5_InJournal, &dev->flags)) &&
+ 		    !test_bit(R5_LOCKED, &dev->flags) &&
+-		    !((test_bit(R5_UPTODATE, &dev->flags) &&
+-		       (!test_bit(R5_InJournal, &dev->flags) ||
+-			dev->page != dev->orig_page)) ||
++		    !(uptodate_for_rmw(dev) ||
+ 		      test_bit(R5_Wantcompute, &dev->flags))) {
+ 			if (test_bit(R5_Insync, &dev->flags))
+ 				rmw++;
+@@ -3643,7 +3666,6 @@ static int handle_stripe_dirtying(struct r5conf *conf,
+ 		    i != sh->pd_idx && i != sh->qd_idx &&
+ 		    !test_bit(R5_LOCKED, &dev->flags) &&
+ 		    !(test_bit(R5_UPTODATE, &dev->flags) ||
+-		      test_bit(R5_InJournal, &dev->flags) ||
+ 		      test_bit(R5_Wantcompute, &dev->flags))) {
+ 			if (test_bit(R5_Insync, &dev->flags))
+ 				rcw++;
+@@ -3697,9 +3719,7 @@ static int handle_stripe_dirtying(struct r5conf *conf,
+ 			     i == sh->pd_idx || i == sh->qd_idx ||
+ 			     test_bit(R5_InJournal, &dev->flags)) &&
+ 			    !test_bit(R5_LOCKED, &dev->flags) &&
+-			    !((test_bit(R5_UPTODATE, &dev->flags) &&
+-			       (!test_bit(R5_InJournal, &dev->flags) ||
+-				dev->page != dev->orig_page)) ||
++			    !(uptodate_for_rmw(dev) ||
+ 			      test_bit(R5_Wantcompute, &dev->flags)) &&
+ 			    test_bit(R5_Insync, &dev->flags)) {
+ 				if (test_bit(STRIPE_PREREAD_ACTIVE,
+@@ -3726,7 +3746,6 @@ static int handle_stripe_dirtying(struct r5conf *conf,
+ 			    i != sh->pd_idx && i != sh->qd_idx &&
+ 			    !test_bit(R5_LOCKED, &dev->flags) &&
+ 			    !(test_bit(R5_UPTODATE, &dev->flags) ||
+-			      test_bit(R5_InJournal, &dev->flags) ||
+ 			      test_bit(R5_Wantcompute, &dev->flags))) {
+ 				rcw++;
+ 				if (test_bit(R5_Insync, &dev->flags) &&
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index b39fe46..6cc8d4c 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -322,6 +322,11 @@ enum r5dev_flags {
+ 			 * data and parity being written are in the journal
+ 			 * device
+ 			 */
++	R5_OrigPageUPTDODATE,	/* with write back cache, we read old data into
++				 * dev->orig_page for prexor. When this flag is
++				 * set, orig_page contains latest data in the
++				 * raid disk.
++				 */
+ };
  
  /*
-@@ -2070,6 +2065,7 @@ r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
- 	struct stripe_head *sh, *next;
- 	struct mddev *mddev = log->rdev->mddev;
- 	struct page *page;
-+	sector_t next_checkpoint = MaxSector;
- 
- 	page = alloc_page(GFP_KERNEL);
- 	if (!page) {
-@@ -2078,6 +2074,8 @@ r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
- 		return -ENOMEM;
- 	}
- 
-+	WARN_ON(list_empty(&ctx->cached_list));
-+
- 	list_for_each_entry_safe(sh, next, &ctx->cached_list, lru) {
- 		struct r5l_meta_block *mb;
- 		int i;
-@@ -2123,12 +2121,15 @@ r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
- 		sync_page_io(log->rdev, ctx->pos, PAGE_SIZE, page,
- 			     REQ_OP_WRITE, REQ_FUA, false);
- 		sh->log_start = ctx->pos;
-+		list_add_tail(&sh->r5c, &log->stripe_in_journal_list);
-+		atomic_inc(&log->stripe_in_journal_count);
- 		ctx->pos = write_pos;
- 		ctx->seq += 1;
--
-+		next_checkpoint = sh->log_start;
- 		list_del_init(&sh->lru);
- 		raid5_release_stripe(sh);
- 	}
-+	log->next_checkpoint = next_checkpoint;
- 	__free_page(page);
- 	return 0;
- }
-@@ -2139,7 +2140,6 @@ static int r5l_recovery_log(struct r5l_log *log)
- 	struct r5l_recovery_ctx ctx;
- 	int ret;
- 	sector_t pos;
--	struct stripe_head *sh;
- 
- 	ctx.pos = log->last_checkpoint;
- 	ctx.seq = log->last_cp_seq;
-@@ -2164,9 +2164,6 @@ static int r5l_recovery_log(struct r5l_log *log)
- 		log->next_checkpoint = ctx.pos;
- 		r5l_log_write_empty_meta_block(log, ctx.pos, ctx.seq++);
- 		ctx.pos = r5l_ring_add(log, ctx.pos, BLOCK_SECTORS);
--	} else {
--		sh = list_last_entry(&ctx.cached_list, struct stripe_head, lru);
--		log->next_checkpoint = sh->log_start;
- 	}
- 
- 	if ((ctx.data_only_stripes == 0) && (ctx.data_parity_stripes == 0))
 -- 
 2.9.3
 
