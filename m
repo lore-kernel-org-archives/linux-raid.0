@@ -1,97 +1,148 @@
-From: Thomas Fjellstrom <thomas@fjellstrom.ca>
-Subject: Re: What is the solution for USB HDs
-Date: Wed, 14 Dec 2016 13:59:58 -0700
-Message-ID: <1712888.Wbb50rTSOS@natasha>
-References: <13e51316a11df7b0c9f5ab89392361de@juan-carlos.info> <9481982b-bfda-644e-e160-74b94bbbec0c@turmel.org> <CAMQE2N47aUPkW4s8juNWLm7TmRhkk6B4UOo9TbGm1ZoujgokCQ@mail.gmail.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: [PATCH 1/6] md/r5cache: simplify handling of sh->log_start in recovery
+Date: Wed, 14 Dec 2016 15:38:01 -0800
+Message-ID: <20161214233806.4137850-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAMQE2N47aUPkW4s8juNWLm7TmRhkk6B4UOo9TbGm1ZoujgokCQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Juan Carlos Carvajal B." <juca@juan-carlos.info>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuan@kylinos.cn, liuyun01@kylinos.cn, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-On Wednesday, December 14, 2016 12:08:47 PM MST you wrote:
-> Hi Phil,
->=20
-> usbcore.autosuspend=3D-1
->=20
-> This might be the solution! I'll test it and let you know.
->=20
-> And regarding power issues:
->=20
-> - this was the first thing I notices and I bought a powered usb-hub to
-> provide enough current to the HDs.
->=20
-> Using USB drives is kind of a home user scenario. I understand that
-> MDADM might be more focused on large data centers, but would be great
-> to have such a great tool also available for the average joe.
+We only need to update sh->log_start at the end of recovery,
+which is r5c_recovery_rewrite_data_only_stripes(), so it is not
+necessary to set it before that. In this patch, log_start is
+removed from r5c_recovery_alloc_stripe().
 
-I don't know if I'd call linux md-raid a "home user" senario. home user is=
-=20
-more just not having any kind of backup or at most a single usb stick or us=
-b=20
-hdd.=20
+After updating all sh->log_start, rewrite_data_only_stripes()
+also updates log->next_checkpoints to the last sh->log_start.
 
-Now, I use md-raid but I am not typical. I have a little self built NAS box=
-,=20
-with 5x5 TB disks in raid 5. (I had thought I did raid 6, but I think I=20
-skipped it cause I have a full backup of the array on another box using a=20
-bunch of my older drives). Nice litle box using the Lian-Li PC Q25 case.=20
-Though I'd like to upgrade to the PC Q26, but its hard to find in canada fo=
-r a=20
-decent price :(
+Signed-off-by: Song Liu <songliubraving@fb.com>
+---
+ drivers/md/raid5-cache.c | 27 ++++++++++++---------------
+ 1 file changed, 12 insertions(+), 15 deletions(-)
 
-Most of my friends use synology or drobo NAS boxes so they don't have to ca=
-re=20
-about all the inner-workings most of the time.
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index d7bfb6f..0f5e6a2 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -1682,8 +1682,7 @@ r5l_recovery_replay_one_stripe(struct r5conf *conf,
+ 
+ static struct stripe_head *
+ r5c_recovery_alloc_stripe(struct r5conf *conf,
+-			  sector_t stripe_sect,
+-			  sector_t log_start)
++			  sector_t stripe_sect)
+ {
+ 	struct stripe_head *sh;
+ 
+@@ -1692,7 +1691,6 @@ r5c_recovery_alloc_stripe(struct r5conf *conf,
+ 		return NULL;  /* no more stripe available */
+ 
+ 	r5l_recovery_reset_stripe(sh);
+-	sh->log_start = log_start;
+ 
+ 	return sh;
+ }
+@@ -1862,7 +1860,7 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
+ 						stripe_sect);
+ 
+ 		if (!sh) {
+-			sh = r5c_recovery_alloc_stripe(conf, stripe_sect, ctx->pos);
++			sh = r5c_recovery_alloc_stripe(conf, stripe_sect);
+ 			/*
+ 			 * cannot get stripe from raid5_get_active_stripe
+ 			 * try replay some stripes
+@@ -1871,7 +1869,7 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
+ 				r5c_recovery_replay_stripes(
+ 					cached_stripe_list, ctx);
+ 				sh = r5c_recovery_alloc_stripe(
+-					conf, stripe_sect, ctx->pos);
++					conf, stripe_sect);
+ 			}
+ 			if (!sh) {
+ 				pr_debug("md/raid:%s: Increasing stripe cache size to %d to recovery data on journal.\n",
+@@ -1879,8 +1877,8 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
+ 					conf->min_nr_stripes * 2);
+ 				raid5_set_cache_size(mddev,
+ 						     conf->min_nr_stripes * 2);
+-				sh = r5c_recovery_alloc_stripe(
+-					conf, stripe_sect, ctx->pos);
++				sh = r5c_recovery_alloc_stripe(conf,
++							       stripe_sect);
+ 			}
+ 			if (!sh) {
+ 				pr_err("md/raid:%s: Cannot get enough stripes due to memory pressure. Recovery failed.\n",
+@@ -1894,7 +1892,6 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
+ 			if (!test_bit(STRIPE_R5C_CACHING, &sh->state) &&
+ 			    test_bit(R5_Wantwrite, &sh->dev[sh->pd_idx].flags)) {
+ 				r5l_recovery_replay_one_stripe(conf, sh, ctx);
+-				sh->log_start = ctx->pos;
+ 				list_move_tail(&sh->lru, cached_stripe_list);
+ 			}
+ 			r5l_recovery_load_data(log, sh, ctx, payload,
+@@ -1933,8 +1930,6 @@ static void r5c_recovery_load_one_stripe(struct r5l_log *log,
+ 			set_bit(R5_UPTODATE, &dev->flags);
+ 		}
+ 	}
+-	list_add_tail(&sh->r5c, &log->stripe_in_journal_list);
+-	atomic_inc(&log->stripe_in_journal_count);
+ }
+ 
+ /*
+@@ -2070,6 +2065,7 @@ r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
+ 	struct stripe_head *sh, *next;
+ 	struct mddev *mddev = log->rdev->mddev;
+ 	struct page *page;
++	sector_t next_checkpoint = MaxSector;
+ 
+ 	page = alloc_page(GFP_KERNEL);
+ 	if (!page) {
+@@ -2078,6 +2074,8 @@ r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
+ 		return -ENOMEM;
+ 	}
+ 
++	WARN_ON(list_empty(&ctx->cached_list));
++
+ 	list_for_each_entry_safe(sh, next, &ctx->cached_list, lru) {
+ 		struct r5l_meta_block *mb;
+ 		int i;
+@@ -2123,12 +2121,15 @@ r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
+ 		sync_page_io(log->rdev, ctx->pos, PAGE_SIZE, page,
+ 			     REQ_OP_WRITE, REQ_FUA, false);
+ 		sh->log_start = ctx->pos;
++		list_add_tail(&sh->r5c, &log->stripe_in_journal_list);
++		atomic_inc(&log->stripe_in_journal_count);
+ 		ctx->pos = write_pos;
+ 		ctx->seq += 1;
+-
++		next_checkpoint = sh->log_start;
+ 		list_del_init(&sh->lru);
+ 		raid5_release_stripe(sh);
+ 	}
++	log->next_checkpoint = next_checkpoint;
+ 	__free_page(page);
+ 	return 0;
+ }
+@@ -2139,7 +2140,6 @@ static int r5l_recovery_log(struct r5l_log *log)
+ 	struct r5l_recovery_ctx ctx;
+ 	int ret;
+ 	sector_t pos;
+-	struct stripe_head *sh;
+ 
+ 	ctx.pos = log->last_checkpoint;
+ 	ctx.seq = log->last_cp_seq;
+@@ -2164,9 +2164,6 @@ static int r5l_recovery_log(struct r5l_log *log)
+ 		log->next_checkpoint = ctx.pos;
+ 		r5l_log_write_empty_meta_block(log, ctx.pos, ctx.seq++);
+ 		ctx.pos = r5l_ring_add(log, ctx.pos, BLOCK_SECTORS);
+-	} else {
+-		sh = list_last_entry(&ctx.cached_list, struct stripe_head, lru);
+-		log->next_checkpoint = sh->log_start;
+ 	}
+ 
+ 	if ((ctx.data_only_stripes == 0) && (ctx.data_parity_stripes == 0))
+-- 
+2.9.3
 
-I find USB disks too finicky for any real use. Also many are rather slow. I=
- do=20
-however use them on occasion, especially usb3/3.1 ssds for quick backup or =
-re-
-image work when a usb stick won't cut it.
-
-> Best!
-> Juan Carlos Carvajal Berm=FAdez
-> +43 650 477 0005
-> juca@juan-carlos.info
-> Beingasse 17/2/3
-> AT 1150, Wien
-> www.juan-carlos.info
->=20
-> On 12 December 2016 at 04:17, Phil Turmel <philip@turmel.org> wrote:
-> > On 12/11/2016 05:14 PM, Adam Goryachev wrote:
-> >> On 12/12/16 04:14, juca@juan-carlos.info wrote:
-> >> If you are still having problems after that, then please try to post
-> >> more details on what happens when the drives vanish (eg, kernel logs,
-> >> system logs, etc).
-> >>=20
-> >> Also, you might consider an alternative SBC, some have SATA ports
-> >> already available (RPi are the only SBC's I've used, but there are many
-> >> other options/variations).
-> >=20
-> > There's also a kernel boot parameter that can cut off all USB
-> > auto-suspend, which I suspect is part of the problem.  It has been known
-> > for a long time that USB is not robust enough to be trusted in MD array=
-s.
-> >=20
-> > { looking around..... }
-> >=20
-> > usbcore.autosuspend=3D-1
-> >=20
-> > is what you need in your bootloader or builtin to the kernel.
-> >=20
-> > Phil
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-=2D-=20
-Thomas Fjellstrom
-thomas@fjellstrom.ca
