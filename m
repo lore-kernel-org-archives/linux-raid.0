@@ -1,7 +1,7 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH 4/6] md/r5cache: read data into orig_page for prexor of cached data
-Date: Wed, 14 Dec 2016 15:38:04 -0800
-Message-ID: <20161214233806.4137850-4-songliubraving@fb.com>
+Subject: [PATCH 6/6] md/r5cache: shift complex rmw from read path to write path
+Date: Wed, 14 Dec 2016 15:38:06 -0800
+Message-ID: <20161214233806.4137850-6-songliubraving@fb.com>
 References: <20161214233806.4137850-1-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,138 +12,127 @@ To: linux-raid@vger.kernel.org
 Cc: neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuan@kylinos.cn, liuyun01@kylinos.cn, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-With write back cache, we use orig_page to do prexor. This patch
-makes sure we read data into orig_page for it.
+Write back cache requires a complex RMW mechanism, where old data is
+read into dev->orig_page for prexor, and then xor is done with
+dev->page. This logic is already implemented in the write path.
 
-Flag R5_OrigPageUPTDODATE is added to show whether orig_page
-has the latest data from raid disk.
+However, current read path is not awared of this requirement. When
+the array is optimal, the RMW is not required, as the data are
+read from raid disks. However, when the target stripe is degraded,
+complex RMW is required to generate right data.
+
+To keep read path as clean as possible, we handle read path by
+flushing degraded, in-journal stripes before processing reads to
+missing dev.
+
+Specifically, when there is read requests to a degraded stripe
+with data in journal, handle_stripe_fill() calls
+r5c_make_stripe_write_out() and exits. Then handle_stripe_dirtying()
+will do the complex RMW and flush the stripe to RAID disks. After
+that, read requests are handled.
+
+There is one more corner case when there is non-overwrite bio for
+the missing (or out of sync) dev. handle_stripe_dirtying() will not
+be able to process the non-overwrite bios without constructing the
+data in handle_stripe_fill(). This is fixed by delaying non-overwrite
+bios in handle_stripe_dirtying(). So handle_stripe_fill() works on
+these bios after the stripe is flushed to raid disks.
 
 Signed-off-by: Song Liu <songliubraving@fb.com>
 ---
- drivers/md/raid5-cache.c |  2 ++
- drivers/md/raid5.c       | 37 ++++++++++++++++++++++++++++---------
- drivers/md/raid5.h       |  5 +++++
- 3 files changed, 35 insertions(+), 9 deletions(-)
+ drivers/md/raid5.c | 48 ++++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 44 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index cded2b1..e65de05 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -2377,6 +2377,8 @@ void r5c_release_extra_page(struct stripe_head *sh)
- 			struct page *p = sh->dev[i].orig_page;
- 
- 			sh->dev[i].orig_page = sh->dev[i].page;
-+			clear_bit(R5_OrigPageUPTDODATE, &sh->dev[i].flags);
-+
- 			if (!using_disk_info_extra_page)
- 				put_page(p);
- 		}
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index b98dfb2..760af2e 100644
+index 0f25d84..6d5391f 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -1019,7 +1019,13 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
- 
- 			if (test_bit(R5_SkipCopy, &sh->dev[i].flags))
- 				WARN_ON(test_bit(R5_UPTODATE, &sh->dev[i].flags));
--			sh->dev[i].vec.bv_page = sh->dev[i].page;
-+
-+			if (!op_is_write(op) &&
-+			    test_bit(R5_InJournal, &sh->dev[i].flags) &&
-+			    sh->dev[i].page != sh->dev[i].orig_page)
-+				sh->dev[i].vec.bv_page = sh->dev[i].orig_page;
-+			else
-+				sh->dev[i].vec.bv_page = sh->dev[i].page;
- 			bi->bi_vcnt = 1;
- 			bi->bi_io_vec[0].bv_len = STRIPE_SIZE;
- 			bi->bi_io_vec[0].bv_offset = 0;
-@@ -2384,6 +2390,10 @@ static void raid5_end_read_request(struct bio * bi)
- 		} else if (test_bit(R5_ReadNoMerge, &sh->dev[i].flags))
- 			clear_bit(R5_ReadNoMerge, &sh->dev[i].flags);
- 
-+		if (test_bit(R5_InJournal, &sh->dev[i].flags) &&
-+		    sh->dev[i].page != sh->dev[i].orig_page)
-+			set_bit(R5_OrigPageUPTDODATE, &sh->dev[i].flags);
-+
- 		if (atomic_read(&rdev->read_errors))
- 			atomic_set(&rdev->read_errors, 0);
- 	} else {
-@@ -3598,6 +3608,21 @@ static void handle_stripe_clean_event(struct r5conf *conf,
- 		break_stripe_batch_list(head_sh, STRIPE_EXPAND_SYNC_FLAGS);
+@@ -2894,6 +2894,30 @@ sector_t raid5_compute_blocknr(struct stripe_head *sh, int i, int previous)
+ 	return r_sector;
  }
  
 +/*
-+ * For RMW in write back cache, we need extra page in prexor to store the
-+ * old data. This page is stored in dev->orig_page.
++ * There are cases where we want handle_stripe_dirtying() and
++ * schedule_reconstruction() to delay towrite to some dev of a stripe.
 + *
-+ * This function checks whether we have data for prexor. The exact logic
-+ * is:
-+ *       R5_UPTODATE && (!R5_InJournal || R5_OrigPageUPTDODATE)
++ * This function checks whether we want to delay the towrite. Specifically,
++ * we delay the towrite when:
++ *   1. degraded stripe has a non-overwrite to the missing dev, AND this
++ *      stripe has data in journal (for other devices).
++ *
++ *      In this case, when reading data for the non-overwrite dev, it is
++ *      necessary to handle complex rmw of write back cache (prexor with
++ *      orig_page, and xor with page). To keep read path simple, we would
++ *      like to flush data in journal to RAID disks first, so complex rmw
++ *      is handled in the write patch (handle_stripe_dirtying).
++ *
++ *   2. to be added
 + */
-+static inline bool uptodate_for_rmw(struct r5dev *dev)
++static inline bool delay_towrite(struct r5dev *dev,
++				   struct stripe_head_state *s)
 +{
-+	return (test_bit(R5_UPTODATE, &dev->flags)) &&
-+		(!test_bit(R5_InJournal, &dev->flags) ||
-+		 test_bit(R5_OrigPageUPTDODATE, &dev->flags));
++	return dev->towrite && !test_bit(R5_OVERWRITE, &dev->flags) &&
++		!test_bit(R5_Insync, &dev->flags) && s->injournal;
 +}
 +
- static int handle_stripe_dirtying(struct r5conf *conf,
- 				  struct stripe_head *sh,
- 				  struct stripe_head_state *s,
-@@ -3629,9 +3654,7 @@ static int handle_stripe_dirtying(struct r5conf *conf,
- 		if ((dev->towrite || i == sh->pd_idx || i == sh->qd_idx ||
+ static void
+ schedule_reconstruction(struct stripe_head *sh, struct stripe_head_state *s,
+ 			 int rcw, int expand)
+@@ -2914,7 +2938,7 @@ schedule_reconstruction(struct stripe_head *sh, struct stripe_head_state *s,
+ 		for (i = disks; i--; ) {
+ 			struct r5dev *dev = &sh->dev[i];
+ 
+-			if (dev->towrite) {
++			if (dev->towrite && !delay_towrite(dev, s)) {
+ 				set_bit(R5_LOCKED, &dev->flags);
+ 				set_bit(R5_Wantdrain, &dev->flags);
+ 				if (!expand)
+@@ -3491,10 +3515,25 @@ static void handle_stripe_fill(struct stripe_head *sh,
+ 	 * midst of changing due to a write
+ 	 */
+ 	if (!test_bit(STRIPE_COMPUTE_RUN, &sh->state) && !sh->check_state &&
+-	    !sh->reconstruct_state)
++	    !sh->reconstruct_state) {
++
++		/* for degraded stripe with data in journal, do not handle
++		 * read requests yet, instead, flush the stripe to raid
++		 * disks first, this avoids handling complex rmw of write
++		 * back cache (prexor with orig_page, and then xor with
++		 * page) in the read path
++		 */
++		if (s->injournal && s->failed) {
++			if (test_bit(STRIPE_R5C_CACHING, &sh->state))
++				r5c_make_stripe_write_out(sh);
++			goto out;
++		}
++
+ 		for (i = disks; i--; )
+ 			if (fetch_block(sh, s, i, disks))
+ 				break;
++	}
++out:
+ 	set_bit(STRIPE_HANDLE, &sh->state);
+ }
+ 
+@@ -3650,7 +3689,8 @@ static int handle_stripe_dirtying(struct r5conf *conf,
+ 	} else for (i = disks; i--; ) {
+ 		/* would I have to read this buffer for read_modify_write */
+ 		struct r5dev *dev = &sh->dev[i];
+-		if ((dev->towrite || i == sh->pd_idx || i == sh->qd_idx ||
++		if (((dev->towrite && !delay_towrite(dev, s)) ||
++		     i == sh->pd_idx || i == sh->qd_idx ||
  		     test_bit(R5_InJournal, &dev->flags)) &&
  		    !test_bit(R5_LOCKED, &dev->flags) &&
--		    !((test_bit(R5_UPTODATE, &dev->flags) &&
--		       (!test_bit(R5_InJournal, &dev->flags) ||
--			dev->page != dev->orig_page)) ||
-+		    !(uptodate_for_rmw(dev) ||
- 		      test_bit(R5_Wantcompute, &dev->flags))) {
- 			if (test_bit(R5_Insync, &dev->flags))
- 				rmw++;
-@@ -3643,7 +3666,6 @@ static int handle_stripe_dirtying(struct r5conf *conf,
- 		    i != sh->pd_idx && i != sh->qd_idx &&
- 		    !test_bit(R5_LOCKED, &dev->flags) &&
- 		    !(test_bit(R5_UPTODATE, &dev->flags) ||
--		      test_bit(R5_InJournal, &dev->flags) ||
- 		      test_bit(R5_Wantcompute, &dev->flags))) {
- 			if (test_bit(R5_Insync, &dev->flags))
- 				rcw++;
-@@ -3697,9 +3719,7 @@ static int handle_stripe_dirtying(struct r5conf *conf,
+ 		    !(uptodate_for_rmw(dev) ||
+@@ -3714,7 +3754,7 @@ static int handle_stripe_dirtying(struct r5conf *conf,
+ 
+ 		for (i = disks; i--; ) {
+ 			struct r5dev *dev = &sh->dev[i];
+-			if ((dev->towrite ||
++			if (((dev->towrite && !delay_towrite(dev, s)) ||
  			     i == sh->pd_idx || i == sh->qd_idx ||
  			     test_bit(R5_InJournal, &dev->flags)) &&
  			    !test_bit(R5_LOCKED, &dev->flags) &&
--			    !((test_bit(R5_UPTODATE, &dev->flags) &&
--			       (!test_bit(R5_InJournal, &dev->flags) ||
--				dev->page != dev->orig_page)) ||
-+			    !(uptodate_for_rmw(dev) ||
- 			      test_bit(R5_Wantcompute, &dev->flags)) &&
- 			    test_bit(R5_Insync, &dev->flags)) {
- 				if (test_bit(STRIPE_PREREAD_ACTIVE,
-@@ -3726,7 +3746,6 @@ static int handle_stripe_dirtying(struct r5conf *conf,
- 			    i != sh->pd_idx && i != sh->qd_idx &&
- 			    !test_bit(R5_LOCKED, &dev->flags) &&
- 			    !(test_bit(R5_UPTODATE, &dev->flags) ||
--			      test_bit(R5_InJournal, &dev->flags) ||
- 			      test_bit(R5_Wantcompute, &dev->flags))) {
- 				rcw++;
- 				if (test_bit(R5_Insync, &dev->flags) &&
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index b39fe46..6cc8d4c 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -322,6 +322,11 @@ enum r5dev_flags {
- 			 * data and parity being written are in the journal
- 			 * device
- 			 */
-+	R5_OrigPageUPTDODATE,	/* with write back cache, we read old data into
-+				 * dev->orig_page for prexor. When this flag is
-+				 * set, orig_page contains latest data in the
-+				 * raid disk.
-+				 */
- };
- 
- /*
 -- 
 2.9.3
 
