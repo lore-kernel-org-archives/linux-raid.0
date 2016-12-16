@@ -1,119 +1,41 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH] mdadm: add test case for raid5 write back cache
-Date: Thu, 15 Dec 2016 16:00:16 -0800
-Message-ID: <20161216000016.3840135-1-songliubraving@fb.com>
+From: Binoy Jayan <binoy.jayan@linaro.org>
+Subject: Re: [RFC PATCH v2] crypto: Add IV generation algorithms
+Date: Fri, 16 Dec 2016 11:25:16 +0530
+Message-ID: <CAHv-k_997mzCDih46psH_m4URLFYJzE0mtk8ciLSAHFeZyVtZg@mail.gmail.com>
+References: <1481618949-20086-1-git-send-email-binoy.jayan@linaro.org>
+ <1481618949-20086-2-git-send-email-binoy.jayan@linaro.org> <d6d92865-98fa-4d02-035f-9080bc265c35@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <d6d92865-98fa-4d02-035f-9080bc265c35@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuan@kylinos.cn, liuyun01@kylinos.cn, Song Liu <songliubraving@fb.com>, Jes.Sorensen@redhat.com
+To: Milan Broz <gmazyland@gmail.com>
+Cc: Oded <oded.golombek@arm.com>, Ofir <Ofir.Drang@arm.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, linux-crypto@vger.kernel.org, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Linux kernel mailing list <linux-kernel@vger.kernel.org>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Rajendra <rnayak@codeaurora.org>
 List-Id: linux-raid.ids
 
-This test cases checks data integrity of raid5 write back cache
-under various scenarios:
+Hi Milan,
 
-degraded mode, non-overwrite, raid-5/6.
+On 13 December 2016 at 15:31, Milan Broz <gmazyland@gmail.com> wrote:
 
-Signed-off-by: Song Liu <songliubraving@fb.com>
----
- tests/21raid5cache | 87 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 87 insertions(+)
- create mode 100644 tests/21raid5cache
+> I think that IV generators should not modify or read encrypted data directly,
+> it should only generate IV.
 
-diff --git a/tests/21raid5cache b/tests/21raid5cache
-new file mode 100644
-index 0000000..0dd97bf
---- /dev/null
-+++ b/tests/21raid5cache
-@@ -0,0 +1,87 @@
-+# check data integrity with raid5 write back cache
-+
-+# create a 4kB random file and 4 files each with a 1kB chunk of the random file:
-+#    randfile: ABCD   randchunk[0-3]:  A  B  C  D
-+#
-+# then create another random 1kB chunk E, and a new random page with A, B, E, D:
-+#    randchunk4: E    newrandfile:   ABED
-+create_random_data() {
-+    dd if=/dev/urandom of=/tmp/randfile bs=4k count=1
-+    for x in {0..3}
-+    do
-+        dd if=/tmp/randfile of=/tmp/randchunk$x bs=1k count=1 skip=$x count=1
-+    done
-+
-+    dd if=/dev/urandom of=/tmp/randchunk4 bs=1k count=1
-+
-+    rm /tmp/newrandfile
-+    for x in 0 1 4 3
-+    do
-+        cat /tmp/randchunk$x >> /tmp/newrandfile
-+    done
-+}
-+
-+# create array, $1 could be 5 for raid5 and 6 for raid6
-+create_array() {
-+    if [ $1 -lt 5 -o $1 -gt 6 ]
-+    then
-+        echo wrong array type $1
-+        exit 2
-+    fi
-+
-+    mdadm -CR $md0 -c4 -l5 -n10 $dev0 $dev1 $dev2 $dev3 $dev4 $dev5 $dev6 $dev11 $dev8 $dev9 --write-journal $dev10
-+    check wait
-+    echo write-back > /sys/block/md0/md/journal_mode
-+}
-+
-+restart_array_write_back() {
-+    mdadm -S $md0
-+    mdadm -A $md0 $dev0 $dev1 $dev2 $dev3 $dev4 $dev5 $dev6 $dev11 $dev8 $dev9 $dev10
-+    echo write-back > /sys/block/md0/md/journal_mode
-+}
-+
-+# compare the first page of md0 with file in $1
-+cmp_first_page() {
-+    cmp  -n 4096 $1 $md0 || { echo cmp failed ; exit 2 ; }
-+}
-+
-+# write 3 pages after the first page of md0
-+write_three_pages() {
-+    for x in {1..3}
-+    do
-+        dd if=/dev/urandom of=$md0 bs=4k count=1 seek=$x count=1
-+    done
-+}
-+
-+# run_test <array_type:5/6> <degraded_or_not:yes/no>
-+run_test() {
-+    create_random_data
-+    create_array $1
-+
-+    if [ $2 == yes ]
-+    then
-+        mdadm --fail $md0 $dev0
-+    fi
-+
-+    dd if=/tmp/randfile of=$md0 bs=4k count=1
-+    restart_array_write_back
-+    cmp_first_page /tmp/randfile
-+    restart_array_write_back
-+    write_three_pages
-+    cmp_first_page /tmp/randfile
-+
-+
-+    dd if=/tmp/randchunk4 of=/dev/md0 bs=1k count=1 seek=2
-+    restart_array_write_back
-+    cmp_first_page /tmp/newrandfile
-+    restart_array_write_back
-+    write_three_pages
-+    cmp_first_page /tmp/newrandfile
-+
-+    mdadm -S $md0
-+}
-+
-+run_test 5 no
-+run_test 5 yes
-+run_test 6 no
-+run_test 6 yes
--- 
-2.9.3
+I was trying to find more information about what you said and how a
+iv generator should be written. I saw two examples of IV generators
+too used with AEAD ciphers (crypto/seqiv.c and crypto/echainiv.c)
 
+Excerpt from crypto api doc:
+http://www.chronox.de/crypto-API/crypto/architecture.html#crypto-api-cipher-references-and-priority
+
+2. Now, SEQIV uses the AEAD API function calls to invoke the associated
+AEAD cipher. In our case, during the instantiation of SEQIV, the cipher
+handle for GCM is provided to SEQIV. This means that SEQIV invokes
+AEAD cipher operations with the GCM cipher handle.
+
+Here, it says seqiv invokes cipher operations. However the code crypto/seqiv.c
+does not look similar to how the modes are implemented which is confusing. I
+was looking for an example of an IV generator used with a regular block cipher
+and not a AEAD cipher. Could you point me out to some?
+
+Thanks,
+Binoy
