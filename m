@@ -1,24 +1,21 @@
-From: Robert L Mathews <lists@tigertech.com>
+From: Wols Lists <antlists@youngman.org.uk>
 Subject: Re: root in grub for raid1
-Date: Sat, 17 Dec 2016 11:46:50 -0800
-Message-ID: <9a6fa611-79ea-e6ef-c0dc-c75529a37218@tigertech.com>
+Date: Sat, 17 Dec 2016 21:11:07 +0000
+Message-ID: <5855A9EB.2080608@youngman.org.uk>
 References: <20161216221414.7c67f80b@para.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20161216221414.7c67f80b@para.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Egbert Bouwman <eppo@xs4all.nl>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12/16/16 1:14 PM, Egbert Bouwman wrote:
+On 16/12/16 21:14, Egbert Bouwman wrote:
 > Newbie, but this list seems to be for developers.
 > If that is true I'll ask my one question, and then retire.
-
-It's for both, so this is fine.
-
-
+> 
 > Actually it is a question about grub, but I think the raid specialists
 > know more about this grub problem than the grubbers do.
 > 
@@ -29,48 +26,40 @@ It's for both, so this is fine.
 > and the linux command line
 > 	linux root=
 > Please note that i chose md/data, and not the common md0.
+> 
+> egbert
+> 
+The first thing I noticed in your post was "grub-efi-amd" - I thought on
+modern UEFI systems, you used UEFI and not grub to boot linux ...
 
-Here's how Debian's installer automatically set it up on one of our
-machines, which should help.
+But, as another datapoint, I boot from almost exactly the same setup as
+you, two mirrored disks on a GPT/BIOS system. My grub entry is
 
-df:
-/dev/md0      497817      30722    456815   7% /boot
+menuentry 'Gentoo GNU/Linux, with Linux 4.4.6-gentoo' --class gentoo
+--class gnu-linux --class gnu --class os $menuentry_id_option
+'gnulinux-4.4.6-gentoo-advanced-ab538350-d249-413b-86ef-4bd5280600b8' {
+        load_video
+        insmod gzio
+        insmod part_gpt
+        insmod part_gpt
+        insmod diskfilter
+        insmod mdraid1x
+        insmod ext2
+        set root='mduuid/69270eaca840f6e70199064bd5863c5d'
+        if [ x$feature_platform_search_hint = xy ]; then
+          search --no-floppy --fs-uuid --set=root
+--hint='mduuid/69270eaca840f6e70199064bd5863c5d'
+ab538350-d249-413b-86ef-4bd5280600b8
+        else
+          search --no-floppy --fs-uuid --set=root
+ab538350-d249-413b-86ef-4bd5280600b8
+        fi
+        echo    'Loading Linux 4.4.6-gentoo ...'
+        linux   /boot/vmlinuz-4.4.6-gentoo
+root=UUID=ab538350-d249-413b-86ef-4bd5280600b8 ro  domdadm
+        echo    'Loading initial ramdisk ...'
+        initrd  /boot/initramfs-genkernel-x86_64-4.4.6-gentoo
+}
 
-
-mdadm --detail /dev/md0:
- 0       8        1        0      active sync   /dev/sda1
- 1       8       17        1      active sync   /dev/sdb1
- 2       8       33        2      active sync   /dev/sdc1
-
-
-blkid:
-/dev/sda1: UUID="97dad9d1-ffbd-302a-f0d9-91deb32240d0"
-UUID_SUB="cf4cfce6-2f61-d15c-2ebf-3aea07f9644c" TYPE="linux_raid_member"
-
-/dev/sdb1: UUID="97dad9d1-ffbd-302a-f0d9-91deb32240d0"
-UUID_SUB="c879211d-9efa-3f08-6d54-0f2f3249a839" TYPE="linux_raid_member"
-
-/dev/sdc1: UUID="97dad9d1-ffbd-302a-f0d9-91deb32240d0"
-UUID_SUB="51e0ab31-8fb4-8be3-7626-3ab449732c24" TYPE="linux_raid_member"
-
-/dev/md0: UUID="4e19f8d1-d373-42f1-832b-4da7c1a72930" TYPE="ext3"
-
-
-And finally, here's the grub.cfg lines:
-
- set root='(mduuid/97dad9d1ffbd302af0d991deb32240d0)'
- search --no-floppy --fs-uuid --set=root
-4e19f8d1-d373-42f1-832b-4da7c1a72930
- echo    'Loading Linux 3.2.0-4-amd64 ...'
- linux   /vmlinuz-3.2.0-4-amd64
-root=UUID=04324b83-7740-49cd-8866-cb88e1a54845 ro  quiet radeon.modeset=0
-
-So it appears the first "set root=" line should be the blkid UUID of the
-underlying partitions (/dev/sdb in your case?), and the second "search
---set=root" should be the UUID of the RAID partition (/dev/md/data is
-your case?).
-
-Works on our machines, anyway. <shrug>
-
--- 
-Robert L Mathews, Tiger Technologies, http://www.tigertech.net/
+Cheers,
+Wol
