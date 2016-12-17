@@ -1,66 +1,76 @@
-From: John Brooks <john@fastquake.com>
-Subject: Inconsistent use of sectors vs 1k-blocks in sysfs and other places
-Date: Sat, 17 Dec 2016 05:14:20 +0000
-Message-ID: <20161217051420.GA29241@oldkitsune.fastquake.com>
+From: Robert L Mathews <lists@tigertech.com>
+Subject: Re: root in grub for raid1
+Date: Sat, 17 Dec 2016 11:46:50 -0800
+Message-ID: <9a6fa611-79ea-e6ef-c0dc-c75529a37218@tigertech.com>
+References: <20161216221414.7c67f80b@para.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20161216221414.7c67f80b@para.lan>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: NeilBrown <neilb@suse.com>
 List-Id: linux-raid.ids
 
-I noticed that the md.rst (formerly md.txt) file in Documentation/ says that
-the component_size attribute in sysfs is measured in sectors. What the
-attribute actually returns is sectors/2 (1K blocks, perhaps?). This is the
-relevant code from md.c:
+On 12/16/16 1:14 PM, Egbert Bouwman wrote:
+> Newbie, but this list seems to be for developers.
+> If that is true I'll ask my one question, and then retire.
 
-static ssize_t
-size_show(struct mddev *mddev, char *page)
-{
-        return sprintf(page, "%llu\n",
-                (unsigned long long)mddev->dev_sectors / 2);
-}
+It's for both, so this is fine.
 
-So the documentation doesn't match the code. Obviously, that needs fixing. But
-in this case, I'm not sure which one is "wrong". mdadm's get_component_size()
-function in sysfs.c reads this file and multiplies the result by 2 to get
-sectors. So clearly this is a known behaviour and not just a forgotten typo.
 
-Looking further, I found that this seems to be a point of inconsistency in
-multiple areas:
+> Actually it is a question about grub, but I think the raid specialists
+> know more about this grub problem than the grubbers do.
+> 
+> Setting up raid1 for /dev/sda and /dev/sdb (actually for missing and /dev/sdb)
+> on /dev/md/data succeeded, but now I have to do a dpkg-reconfigure
+> grub-efi-amd64 and i don't know how to specify root in the two grub lines: 
+> 	set root=...
+> and the linux command line
+> 	linux root=
+> Please note that i chose md/data, and not the common md0.
 
-- The per-device "offset" attribute is in sectors (as documented).
-  The per-device "size" attribute is in 1K blocks (which the documentation
-  doesn't specify).
+Here's how Debian's installer automatically set it up on one of our
+machines, which should help.
 
-- The "sync_completed" attribute uses sectors.
-  The "mdstat" file in procfs uses 1K blocks.
+df:
+/dev/md0      497817      30722    456815   7% /boot
 
-- mdadm --examine shows Avail Dev Size in sectors.
-  mdadm --detail shows Used Dev Size in 1K blocks.
-  And they both show Array Size in 1K blocks.
 
-I suspect that the sysfs attributes have stayed the way they are in the
-interest of not breaking programs that use them. The easiest solution would
-probably be to leave the behaviour as-is but update the documentation so it's
-clear what units are used where.
+mdadm --detail /dev/md0:
+ 0       8        1        0      active sync   /dev/sda1
+ 1       8       17        1      active sync   /dev/sdb1
+ 2       8       33        2      active sync   /dev/sdc1
 
-Somewhat related, suspend_{lo|hi}, resync_{min|max} attributes specify ranges
-in sectors, but the documentation does not specify if they are ranges on the
-array size or device size. And RAID10 may even handle resync_max differently
-from the rest; I didn't look deeply into that but see commit c805cdecea.
 
-The reason I found out about the component_size issue is that I was trying to
-make use of the min/max attributes in a project I'm working on, found that they
-wanted device-based sectors, and then found that none of the sysfs attributes
-actually tell you the device size in sectors (or the array size for that
-matter, by the way).
+blkid:
+/dev/sda1: UUID="97dad9d1-ffbd-302a-f0d9-91deb32240d0"
+UUID_SUB="cf4cfce6-2f61-d15c-2ebf-3aea07f9644c" TYPE="linux_raid_member"
 
-I'm interested to hear what the developers think. I didn't do a thorough audit
-to find all the different places that the different units are used; I just
-pointed out a few that I noticed while working with it. So I think it's a good
-discussion to bring up with the people familiar with the code.
+/dev/sdb1: UUID="97dad9d1-ffbd-302a-f0d9-91deb32240d0"
+UUID_SUB="c879211d-9efa-3f08-6d54-0f2f3249a839" TYPE="linux_raid_member"
 
-P.S. First mailing list post :)
+/dev/sdc1: UUID="97dad9d1-ffbd-302a-f0d9-91deb32240d0"
+UUID_SUB="51e0ab31-8fb4-8be3-7626-3ab449732c24" TYPE="linux_raid_member"
+
+/dev/md0: UUID="4e19f8d1-d373-42f1-832b-4da7c1a72930" TYPE="ext3"
+
+
+And finally, here's the grub.cfg lines:
+
+ set root='(mduuid/97dad9d1ffbd302af0d991deb32240d0)'
+ search --no-floppy --fs-uuid --set=root
+4e19f8d1-d373-42f1-832b-4da7c1a72930
+ echo    'Loading Linux 3.2.0-4-amd64 ...'
+ linux   /vmlinuz-3.2.0-4-amd64
+root=UUID=04324b83-7740-49cd-8866-cb88e1a54845 ro  quiet radeon.modeset=0
+
+So it appears the first "set root=" line should be the blkid UUID of the
+underlying partitions (/dev/sdb in your case?), and the second "search
+--set=root" should be the UUID of the RAID partition (/dev/md/data is
+your case?).
+
+Works on our machines, anyway. <shrug>
+
+-- 
+Robert L Mathews, Tiger Technologies, http://www.tigertech.net/
