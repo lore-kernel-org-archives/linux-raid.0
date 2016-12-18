@@ -1,167 +1,125 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: Fwd: (user) Help needed: mdadm seems to constantly touch my disks
-Date: Mon, 19 Dec 2016 09:21:08 +1100
-Message-ID: <87inqgvpyj.fsf@notabene.neil.brown.name>
-References: <CAJ=9zicFM+wOUhpdX1XEVm+y2gYoW3r2aTRj6gAcEkypxJULmA@mail.gmail.com> <871sxbz4yz.fsf@notabene.neil.brown.name> <CAJ=9zieRuTNiEGuB_RouqbdLGoxNkn09yiogR6rND84LtMdbxA@mail.gmail.com> <CAJ=9zifGPd+3YnP1aLwLPXjtpygRc9DsDP37CNz-VHBHn1vDOg@mail.gmail.com>
+Subject: Re: Inconsistent use of sectors vs 1k-blocks in sysfs and other places
+Date: Mon, 19 Dec 2016 09:32:00 +1100
+Message-ID: <87fulkvpgf.fsf@notabene.neil.brown.name>
+References: <20161217051420.GA29241@oldkitsune.fastquake.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJ=9zifGPd+3YnP1aLwLPXjtpygRc9DsDP37CNz-VHBHn1vDOg@mail.gmail.com>
+In-Reply-To: <20161217051420.GA29241@oldkitsune.fastquake.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jure =?utf-8?Q?Erzno=C5=BEnik?= <jure.erznoznik@gmail.com>, linux-raid@vger.kernel.org
+To: John Brooks <john@fastquake.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 
-On Thu, Dec 15 2016, Jure Erzno=C5=BEnik wrote:
+On Sat, Dec 17 2016, John Brooks wrote:
 
-> Thanks for helping Neil. I have run the suggested utilities and here
-> are my findings:
+> I noticed that the md.rst (formerly md.txt) file in Documentation/ says that
+> the component_size attribute in sysfs is measured in sectors. What the
+> attribute actually returns is sectors/2 (1K blocks, perhaps?). This is the
+> relevant code from md.c:
 >
-> It is always [kworker/x:yy] (x:yy changes somewhat) or [0].
-> A few lines from one of the outputs:
+> static ssize_t
+> size_show(struct mddev *mddev, char *page)
+> {
+>         return sprintf(page, "%llu\n",
+>                 (unsigned long long)mddev->dev_sectors / 2);
+> }
+>
+> So the documentation doesn't match the code. Obviously, that needs fixing. But
+> in this case, I'm not sure which one is "wrong". mdadm's get_component_size()
+> function in sysfs.c reads this file and multiplies the result by 2 to get
+> sectors. So clearly this is a known behaviour and not just a forgotten typo.
 
-That's disappointing.  "kworker" could be any work queue.
+The code is right by definition.  As you say, mdadm uses this interface
+so we cannot change it.
 
-It might be useful to look for large scale patterns.
-What different addresses are written to?  Is there are regular pattern?
-What is the period?
+>
+> Looking further, I found that this seems to be a point of inconsistency in
+> multiple areas:
 
-md doesn't use work_queues for IO so these much be coming from
-elsewhere.  bcache uses a few work-queues...
+Yes.  Sad isn't it?
+The original ioctl interface used 'K' so I copied that when I created
+the sysfs interface.  After a while I realized that 'sectors' made a lot
+more sense, so I change to that for subsequent additions.
 
+
+>
+> - The per-device "offset" attribute is in sectors (as documented).
+>   The per-device "size" attribute is in 1K blocks (which the documentation
+>   doesn't specify).
+>
+> - The "sync_completed" attribute uses sectors.
+>   The "mdstat" file in procfs uses 1K blocks.
+>
+> - mdadm --examine shows Avail Dev Size in sectors.
+>   mdadm --detail shows Used Dev Size in 1K blocks.
+>   And they both show Array Size in 1K blocks.
+>
+> I suspect that the sysfs attributes have stayed the way they are in the
+> interest of not breaking programs that use them. The easiest solution would
+> probably be to leave the behaviour as-is but update the documentation so it's
+> clear what units are used where.
+
+Yes.  Not just "easiest", but "only acceptable".
+
+>
+> Somewhat related, suspend_{lo|hi}, resync_{min|max} attributes specify ranges
+> in sectors, but the documentation does not specify if they are ranges on the
+> array size or device size. And RAID10 may even handle resync_max differently
+> from the rest; I didn't look deeply into that but see commit c805cdecea.
+
+suspend_{lo|hi} are are array addresses
+resync_{min|max} are array addresses for RAID1 and RAID10, and they are
+device-addresses-offset-from-data_offset for RAID1 and RAID456.
+
+>
+> The reason I found out about the component_size issue is that I was trying to
+> make use of the min/max attributes in a project I'm working on, found that they
+> wanted device-based sectors, and then found that none of the sysfs attributes
+> actually tell you the device size in sectors (or the array size for that
+> matter, by the way).
+>
+> I'm interested to hear what the developers think. I didn't do a thorough audit
+> to find all the different places that the different units are used; I just
+> pointed out a few that I noticed while working with it. So I think it's a good
+> discussion to bring up with the people familiar with the code.
+>
+
+I agree that it is sad that units aren't consistent, but there is not
+much we can do about that.
+It is bad that the documentation is incorrect and incomplete.  If you we
+to post a patch which fixed some of it, I'm sure that would be
+thankfully accepted.
+
+In theory you could have a RAID1 with an odd number of sectors used in
+each component, but I doubt that happens in practice.  So you can get
+the component size in sectors by reading component_size and multiplying
+by two.
+
+Thanks,
 NeilBrown
-
->
->   9,0    3        0     0.061577998     0  m   N raid5 rcw 3758609392 2 2=
- 0
->   9,0    3        0     0.061580084     0  m   N raid5 rcw 3758609400 2 2=
- 0
->   9,0    3        0     0.061580084     0  m   N raid5 rcw 3758609400 2 2=
- 0
->   9,0    3        0     0.061580084     0  m   N raid5 rcw 3758609400 2 2=
- 0
->   9,0    3        0     0.061580084     0  m   N raid5 rcw 3758609400 2 2=
- 0
->   9,0    0        1     0.065333879   283  C   W 11275825480 [0]
->   9,0    0        1     0.065333879   283  C   W 11275825480 [0]
->   9,0    0        1     0.065333879   283  C   W 11275825480 [0]
->   9,0    0        1     0.065333879   283  C   W 11275825480 [0]
->   9,0    3        2     1.022155200  2861  Q   W 11275826504 + 32 [kworke=
-r/3:38]
->   9,0    3        2     1.022155200  2861  Q   W 11275826504 + 32 [kworke=
-r/3:38]
->   9,0    3        2     1.022155200  2861  Q   W 11275826504 + 32 [kworke=
-r/3:38]
->   9,0    3        2     1.022155200  2861  Q   W 11275826504 + 32 [kworke=
-r/3:38]
->   9,0    0        2     1.054590402   283  C   W 11275826504 [0]
->   9,0    0        2     1.054590402   283  C   W 11275826504 [0]
->   9,0    0        2     1.054590402   283  C   W 11275826504 [0]
->   9,0    0        2     1.054590402   283  C   W 11275826504 [0]
->   9,0    3        3     2.046065106  2861  Q   W 11275861232 + 8 [kworker=
-/3:38]
->   9,0    3        3     2.046065106  2861  Q   W 11275861232 + 8 [kworker=
-/3:38]
->   9,0    3        3     2.046065106  2861  Q   W 11275861232 + 8 [kworker=
-/3:38]
->   9,0    3        3     2.046065106  2861  Q   W 11275861232 + 8 [kworker=
-/3:38]
->   9,0    0        0     2.075247515     0  m   N raid5 rcw 3758619888 2 0=
- 1
->   9,0    0        0     2.075247515     0  m   N raid5 rcw 3758619888 2 0=
- 1
->   9,0    0        0     2.075247515     0  m   N raid5 rcw 3758619888 2 0=
- 1
->   9,0    0        0     2.075247515     0  m   N raid5 rcw 3758619888 2 0=
- 1
->   9,0    0        0     2.075250686     0  m   N raid5 rcw 3758619888 2 2=
- 0
->   9,0    0        0     2.075250686     0  m   N raid5 rcw 3758619888 2 2=
- 0
->   9,0    0        0     2.075250686     0  m   N raid5 rcw 3758619888 2 2=
- 0
->   9,0    0        0     2.075250686     0  m   N raid5 rcw 3758619888 2 2=
- 0
->   9,0    2        1     2.086924691   283  C   W 11275861232 [0]
->   9,0    2        1     2.086924691   283  C   W 11275861232 [0]
->   9,0    2        1     2.086924691   283  C   W 11275861232 [0]
->   9,0    2        1     2.086924691   283  C   W 11275861232 [0]
->   9,0    0        3     2.967340614  1061  Q FWS [kworker/0:18]
->   9,0    0        3     2.967340614  1061  Q FWS [kworker/0:18]
->   9,0    0        3     2.967340614  1061  Q FWS [kworker/0:18]
->   9,0    0        3     2.967340614  1061  Q FWS [kworker/0:18]
->   9,0    3        4     3.070092310  2861  Q   W 11275861272 + 8 [kworker=
-/3:38]
->   9,0    3        4     3.070092310  2861  Q   W 11275861272 + 8 [kworker=
-/3:38]
->   9,0    3        4     3.070092310  2861  Q   W 11275861272 + 8 [kworker=
-/3:38]
->   9,0    3        4     3.070092310  2861  Q   W 11275861272 + 8 [kworker=
-/3:38]
->   9,0    0        0     3.101966398     0  m   N raid5 rcw 3758619928 2 0=
- 1
->   9,0    0        0     3.101966398     0  m   N raid5 rcw 3758619928 2 0=
- 1
->   9,0    0        0     3.101966398     0  m   N raid5 rcw 3758619928 2 0=
- 1
->   9,0    0        0     3.101966398     0  m   N raid5 rcw 3758619928 2 0=
- 1
->   9,0    0        0     3.101969169     0  m   N raid5 rcw 3758619928 2 2=
- 0
->   9,0    0        0     3.101969169     0  m   N raid5 rcw 3758619928 2 2=
- 0
->   9,0    0        0     3.101969169     0  m   N raid5 rcw 3758619928 2 2=
- 0
->   9,0    0        0     3.101969169     0  m   N raid5 rcw 3758619928 2 2=
- 0
->   9,0    0        4     3.102340646   283  C   W 11275861272 [0]
->   9,0    0        4     3.102340646   283  C   W 11275861272 [0]
->   9,0    0        4     3.102340646   283  C   W 11275861272 [0]
->   9,0    0        4     3.102340646   283  C   W 11275861272 [0]
->   9,0    3        5     4.094666938  2861  Q   W 11276014160 + 336
-> [kworker/3:38]
->   9,0    3        5     4.094666938  2861  Q   W 11276014160 + 336
-> [kworker/3:38]
->   9,0    3        5     4.094666938  2861  Q   W 11276014160 + 336
-> [kworker/3:38]
->   9,0    3        5     4.094666938  2861  Q   W 11276014160 + 336
-> [kworker/3:38]
->   9,0    3        0     4.137869804     0  m   N raid5 rcw 3758671440 2 0=
- 1
->   9,0    3        0     4.137869804     0  m   N raid5 rcw 3758671440 2 0=
- 1
->   9,0    3        0     4.137869804     0  m   N raid5 rcw 3758671440 2 0=
- 1
->   9,0    3        0     4.137869804     0  m   N raid5 rcw 3758671440 2 0=
- 1
->   9,0    3        0     4.137872647     0  m   N raid5 rcw 3758671448 2 0=
- 1
->   9,0    3        0     4.137872647     0  m   N raid5 rcw 3758671448 2 0=
- 1
->   9,0    3        0     4.137872647     0  m   N raid5 rcw 3758671448 2 0=
- 1
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhXC9UACgkQOeye3VZi
-gbnbZRAAglvB8Kh3VVpYhf6QWxPahFrKza7GJhchM5iH0wPXa/iMdwo5BhurbFOI
-5ss1eAOW4HyL6NIyVzaPc7XVb0yOnu3fgHuME5T/ZsFFV/bEmIzGVu+iExdHa41d
-BpZ+mE45L06RwjU6zEEsoMWPfeGhAo2pj3LrVaCHMtlfNb/byQ/dLqoIh2ULfq3o
-2Wqvq6y0etrpkpOYu1bxSOgwOF3SMy3VjmyBlB0mJA+GayGsnWqKCJsyuyMuJdVa
-I76vSlH1f8pWd8YX1jcM82rprzZx5g1Bm2WNGAjZp2WYKoJyNyc4BU1gNS0aXxM7
-n6KrbK3G8LKiMoXeT419W49WBgF3hvDfENXC/FHhSfLXchdjwRnlrdQh2K180uOx
-LqVczqhmPNKFXIYTsuLwU388vUrZqbNFOphSPevywK1IRNnTftKcqtJQRsPG+MFX
-OTJo+joeJCToLEu8d2/DRmnQGgHHKtoQ0Sr97QOFxqq9+zjlPWP3iOb4e61J1jO8
-rcdckJWHjAIqRJAi6T0n96PxKXd5HvLvvQqrFnn1SNK1IM5DNQeE+RDHOTqNkbQo
-6ybo6SfJwv45duql1XEx1IP853MzfFDrDoery6ReSk9pJWVW0ysALa4uiTp3OD0Z
-TLvKqBf/4B/8wrUSSJZhf9TmpizvV+mT772zQB88NjeaVfBSDkE=
-=AN8w
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhXDmAACgkQOeye3VZi
+gblnjRAAnOWqqzw40Hq9g9hMYA4Lf+mVLr57H7/YRZPal1yQdZtDVkp3COZ26gac
+LbHm75dfQ1fo41sToE5OIR7Pam2bzURl4YRLrWmbfEMmVfIUxy/u9hSLORR49QZs
+03yHnugEM01zSElL6ERxuLOgY/ASrcf7Kd53EN+2U1xfb9I1bPiNPQ2roYTXEo81
+B/dC2CCsei82wZOkNfY2SPVPLAPBw1NbPg8KMENa5tiKKs0R5aUPWxr/ZZ+Pyyff
+CKjZcBUdwCW2sbGNrG2xWw5I4cPfL6gJi6fuKkUqHtiU5VgRQuxxmRTGj0f+w5y7
+2SO3j5UiopzIOqCR2bi3mZlZy4Aafe0CFqD5RtWZ6urTfgPa8zxXvFjV8hyjEjxx
+rKsgBSsz+4D+KiQZ/LVIC6hFXqepsARr4Xw4vhyBnPfaPYlcDTYUDBZHJ6uATttM
+DKNfer8bFGud9s8I4bHpI7fUIAvees7luMERkAEMQDyVupy/PoCi995xf2Nb7rrH
+S5vdrwrcnAG3hkZvYsohDYZtMrA66vMDNhzdG/nMw0BlSgD0IMosxpswnSmVl1Qt
+pS90HWitHSy0hkNpU8AC1XgnVZ5bGXrU0Q7bnTYvC52prO9f8Bvl6s7dVpt7hzhI
+2vBMHb+2QiBKLCp+LQtELqJeW4sCgbZAKPqvu+0Q2SxJ0jtex58=
+=qmBs
 -----END PGP SIGNATURE-----
 --=-=-=--
