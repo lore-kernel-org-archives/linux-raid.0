@@ -1,46 +1,43 @@
-From: =?UTF-8?Q?Jure_Erzno=C5=BEnik?= <jure.erznoznik@gmail.com>
-Subject: Re: Fwd: (user) Help needed: mdadm seems to constantly touch my disks
-Date: Mon, 19 Dec 2016 08:12:18 +0100
-Message-ID: <CAJ=9zidt_25tCF8QBy0To9oY+QNVD1ufF+CQ-pSjD97zVaLoGg@mail.gmail.com>
-References: <CAJ=9zicFM+wOUhpdX1XEVm+y2gYoW3r2aTRj6gAcEkypxJULmA@mail.gmail.com>
- <871sxbz4yz.fsf@notabene.neil.brown.name> <CAJ=9zieRuTNiEGuB_RouqbdLGoxNkn09yiogR6rND84LtMdbxA@mail.gmail.com>
- <CAJ=9zifGPd+3YnP1aLwLPXjtpygRc9DsDP37CNz-VHBHn1vDOg@mail.gmail.com>
- <87inqgvpyj.fsf@notabene.neil.brown.name> <CAJ=9zidNV4sPj7KC7_mJEo8+=-YTKyWD5RiLsGG9p33CV12Qdg@mail.gmail.com>
- <87twa0tvma.fsf@notabene.neil.brown.name>
+From: Luca Coelho <luca@coelho.fi>
+Subject: Re: [PATCH 5/8] linux: drop __bitwise__ everywhere
+Date: Mon, 19 Dec 2016 11:09:28 +0200
+Message-ID: <1482138568.26174.8.camel@coelho.fi>
+References: <1481778865-27667-1-git-send-email-mst@redhat.com>
+	 <1481778865-27667-6-git-send-email-mst@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87twa0tvma.fsf@notabene.neil.brown.name>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1481778865-27667-6-git-send-email-mst@redhat.com>
+Sender: owner-linux-mm@kvack.org
+To: "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org
+Cc: Kukjin Kim <kgene@kernel.org>, Krzysztof Kozlowski <krzk@kernel.org>, Javier Martinez Canillas <javier@osg.samsung.com>, Russell King <linux@armlinux.org.uk>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Johannes Berg <johannes.berg@intel.com>, Emmanuel Grumbach <emmanuel.grumbach@intel.com>, Intel Linux Wireless <linuxwifi@intel.com>, Kalle Valo <kvalo@codeaurora.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>, "James E.J.
+ Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Jason Wang <jasowang@redhat.com>, Alexander Aring <aar@pengutronix.de>, Stefan Schmidt <stefan@osg.samsung.com>, "David S.
+ Miller" <davem@d>
 List-Id: linux-raid.ids
 
-I have made two blktraces at the same time: one for md0 and one for a
-member of the array. I hope they will show something sensible.
+On Thu, 2016-12-15 at 07:15 +0200, Michael S. Tsirkin wrote:
+> __bitwise__ used to mean "yes, please enable sparse checks
+> unconditionally", but now that we dropped __CHECK_ENDIAN__
+> __bitwise is exactly the same.
+> There aren't many users, replace it by __bitwise everywhere.
+> 
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> ---
+>  arch/arm/plat-samsung/include/plat/gpio-cfg.h    | 2 +-
+>  drivers/md/dm-cache-block-types.h                | 6 +++---
+>  drivers/net/ethernet/sun/sunhme.h                | 2 +-
+>  drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h | 4 ++--
 
-I dropped them here:
-http://expirebox.com/download/ee081fa4f85ffbd0bfad68e4ee257e11.html
+For drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h:
 
-The file will be available for 48 hours or so they say.
+Acked-by: Luca Coelho <luciano.coelho@intel.com>
 
-LP,
-Jure
+--
+Luca.
 
-On Mon, Dec 19, 2016 at 5:01 AM, NeilBrown <neilb@suse.com> wrote:
-> [please remember to keep linux-raid cc:ed]
->
-> On Mon, Dec 19 2016, Jure Erzno=C5=BEnik wrote:
->
->> I wrote this in OP: iosnoop shows COMM=3D[idle, md0_raid5, kworker] as
->> processes working on the disk. Blocks reported are 8, 16 (data size a
->> few KB) and 18446744073709500000 (data size 0). That last one must be
->> some virtual thingie as the disks are nowhere near that large.
->>
->> Does this answer the question or did you mean something else?
->
-> Maybe if you just make the blktrace logs available somewhere and I will
-> look at them myself.
->
-> NeilBrown
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
