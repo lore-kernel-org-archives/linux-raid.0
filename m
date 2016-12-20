@@ -1,84 +1,49 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [BUG] MD/RAID1 hung forever on freeze_array
-Date: Wed, 21 Dec 2016 08:23:02 +1100
-Message-ID: <871sx2thvt.fsf@notabene.neil.brown.name>
-References: <CAMGffE=1kp7gMhG+dFxTvhD6VkRuSfbuXbf9vYSWwGG+=vvhDA@mail.gmail.com> <87a8c20xpg.fsf@notabene.neil.brown.name> <CAMGffEkQ5puQEE0FVfLMV1of1OYOhLMhHdUTAy-YLYPkzBzjDg@mail.gmail.com> <87oa0gzuej.fsf@notabene.neil.brown.name> <CAMGffEm4BDhKJSiDt=2WmxrpRutg862at7JP221gMi6_SpPomQ@mail.gmail.com> <877f73zd5d.fsf@notabene.neil.brown.name> <CAMGffEnCesgUp4gBsPN2L9qg3WSxNXsCcYEPWH-BaeEEktaqcw@mail.gmail.com> <CAMGffE=KoVdoYRzkHdRMuCopjmUdcrP9-woFFr-4-VszGsSHRQ@mail.gmail.com> <CAMGffEnvn4YQ5ADFXrOm2vOeEwApo38V84wB7VF3D1eZihF-Zw@mail.gmail.com> <87fulpyj33.fsf@notabene.neil.brown.name> <CAMGffEkufeaDytaHxtLR02iiQifZDhcwkLdzMj3X8_yaitSoFQ@mail.gmail.com> <87oa07tu6q.fsf@notabene.neil.brown.name> <CAMGffEmEUg2Xrg-v_z+cMxzsH-Uk6bDCqTSA7vGoPw4f2dvu0A@mail.gmail.com>
+From: John Brooks <john@fastquake.com>
+Subject: Re: Inconsistent use of sectors vs 1k-blocks in sysfs and other
+ places
+Date: Tue, 20 Dec 2016 22:14:30 +0000
+Message-ID: <20161220221430.GA19146@oldkitsune.fastquake.com>
+References: <20161217051420.GA29241@oldkitsune.fastquake.com>
+ <87fulkvpgf.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAMGffEmEUg2Xrg-v_z+cMxzsH-Uk6bDCqTSA7vGoPw4f2dvu0A@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <87fulkvpgf.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jinpu Wang <jinpu.wang@profitbricks.com>
-Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Nate Dailey <nate.dailey@stratus.com>
+To: NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
+On Mon, Dec 19, 2016 at 09:32:00AM +1100, NeilBrown wrote:
+> The code is right by definition.  As you say, mdadm uses this interface
+> so we cannot change it.
 
-On Tue, Dec 20 2016, Jinpu Wang wrote:
+Yep, I expected as much and fully agree.
 
-> Hi Neil,
->> This is the problem.  'hold' hasn't been initialised.
->> We could either do:
->>   bio_list_init(&hold);
->>   bio_list_merge(&hold, &bio_list_on_stack);
-> I tried above variant first and it lead to panic in endio path:
+> >
+> > Somewhat related, suspend_{lo|hi}, resync_{min|max} attributes specify ranges
+> > in sectors, but the documentation does not specify if they are ranges on the
+> > array size or device size. And RAID10 may even handle resync_max differently
+> > from the rest; I didn't look deeply into that but see commit c805cdecea.
 >
-...
->
->     [exception RIP: bio_check_pages_dirty+65]
+> suspend_{lo|hi} are are array addresses
+> resync_{min|max} are array addresses for RAID1 and RAID10, and they are
+> device-addresses-offset-from-data_offset for RAID1 and RAID456.
 
+Good to know. One question, is it possible for the offset or size to be
+different across disks in the same array? The documentation says that the size
+is "normally" the same as component_size, implying that perhaps it could be
+different.
 
-I can't explain that at all.  Maybe if I saw the complete patch I would
-be able to see what went wrong (or maybe there is a separate cause).
+> It is bad that the documentation is incorrect and incomplete.  If you we
+> to post a patch which fixed some of it, I'm sure that would be
+> thankfully accepted.
 
->>
->> You didn't find 'hold' to be necessary in your testing, but I think that
->> is more complex arrangements it could make an important difference.
->
-> Could you elaborate a bit more, from my understanding, in later code,
-> we pop all bio from bio_list_on_stack,
-> add it to either "lower" or "same" bio_list, so merge both will have
-> the whole list again, right?
+I will see what I can do.
 
-If there are several bios on bio_list_on_stack, and if processing the
-first one causes several calls to generic_make_request(), then we want
-all the bios passed to generic_make_request() to be handled *before* the
-remaining bios that were originally on bio_list_on_stack.  Of these new
-bios, we want to handle those for a lower level device first, and those
-for the same device after that.  Only when all of those have been
-completely submitted (together with any subordinate bios submitted to
-generic_make_request()) do we move on to the rest of bio_list_on_stack
-(which are at the same level as the first bio, or higher in the device
-stack).
+> In theory you could have a RAID1 with an odd number of sectors used in
+> each component, but I doubt that happens in practice.  So you can get
+> the component size in sectors by reading component_size and multiplying
+> by two.
 
-The usage of 'hold' would become important when you have multiple
-levels.  e.g. dm on md on scsi.  If the first bio send to dm is split,
-then the first half needs to be processed all the way down to all the
-scsi devices, before the second half of the split is handled.
-
-Hope that helps,
-NeilBrown
-
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhZoTYACgkQOeye3VZi
-gbnK2A//Zuu7P0YSM6C10JwS8D/vdP/RXfTt1jz0O078pJZtr5Z2TXhkzRR4Vrj4
-cHiXFheOGipstZfwtoihYxyX2SoUD/cX/05d1mJCniyz/4lv7xI0MKhW/rVAehaB
-u3hnxkeSPwuk9skWjE3kUnUCZxDU1EYRUciIb9deR2hzO5rzf/Dtvtg7Ytn41TTQ
-UO3aePKJ1UPdQsqSAQI3JXXPnHGq34s/ZxxjQTDXotNW+85yORuFr9ImK1pHl+fl
-cawklsukDu0r7TU5MiZbPItcwVSMZ3sG0OKumgjnKQp1CxI0N7ka28kaWzhdDSPi
-Qw1GsHrurofRcvDlzNJAN+Ft4ocLrWxkGL3VTt2XIbOhNfddkmCyIkKIBDYkYrX0
-QlcdSOLyekveSMCRbCePfC1hGulDMdter1mI9hxCzJjrIWWp75ldNoD8M2MqWEC2
-JGETMJxzQLtaRZ+1IA1u6kjIJ0Dqs8r7UzpC3oiY6lqDgytjt9eFZyilpxMckb/w
-6cV5pLH3z671OvYF90Zxjjyn9w/dB+aqV54z+iaLHJQ7vpDCetsD4y3+YRrQDwgs
-x4eXZQ3gavyvtOobLLKpar0D5ye67HiivoVtyNKFbnY9ZYY22PrNiv9PacMKcpYA
-iIGrxM8TLV0o0N5x4LF0m4bTLXPV4iOuxPgD4g0uEeFeHz/rbZ8=
-=tavO
------END PGP SIGNATURE-----
---=-=-=--
+Is that within a realm of possibility worth mentioning in the docs?
