@@ -1,146 +1,77 @@
-From: Jinpu Wang <jinpu.wang@profitbricks.com>
-Subject: (unknown)
-Date: Tue, 20 Dec 2016 09:38:57 +0100
-Message-ID: <CAMGffE=CSOJXC+SHNV39vA6rQCr5zB+DzdrH-NH4bwJq+A5P8Q@mail.gmail.com>
+From: Binoy Jayan <binoy.jayan@linaro.org>
+Subject: dm-crypt optimization
+Date: Tue, 20 Dec 2016 15:11:16 +0530
+Message-ID: <CAHv-k_98w-9whFiCLAnTGL2QAirExsix_S8ZWc8tM7wj=gzD6Q@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-raid-owner@vger.kernel.org>
-Subject: 
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Nate Dailey <nate.dailey@stratus.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Milan Broz <gmazyland@gmail.com>, Oded <oded.golombek@arm.com>, Ofir <Ofir.Drang@arm.com>, Herbert Xu <herbert@gondor.apana.org.au>, Arnd Bergmann <arnd@arndb.de>, Mark Brown <broonie@kernel.org>, Alasdair Kergon <agk@redhat.com>, "David S. Miller" <davem@davemloft.net>, private-kwg@linaro.org
+Cc: dm-devel@redhat.com, linux-crypto@vger.kernel.org, Rajendra <rnayak@codeaurora.org>, Linux kernel mailing list <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>, Mike Snitzer <snitzer@redhat.com>
 List-Id: linux-raid.ids
 
-Hi Neil,
+At a high level the goal is to maximize the size of data blocks that get passed
+to hardware accelerators, minimizing the overhead from setting up and tearing
+down operations in the hardware. Currently dm-crypt itself is a big blocker as
+it manually implements ESSIV and similar algorithms which allow per-block
+encryption of the data so the low level operations from the crypto API can
+only operate on a single block. This is done because currently the crypto API
+doesn't have software implementations of these algorithms itself so dm-crypt
+can't rely on it being able to provide the functionality. The plan to address
+this was to provide some software implementations in the crypto API, then
+update dm-crypt to rely on those. Even for a pure software implementation
+with no hardware acceleration that should hopefully provide a small
+optimization as we need to call into the crypto API less often but it's likely
+to be marginal given the overhead of crypto, the real win would be on a system
+that has an accelerator that can replace the software implementation.
 
-On Mon, Dec 19, 2016 at 11:45 PM, NeilBrown <neilb@suse.com> wrote:
-> On Mon, Dec 19 2016, Jinpu Wang wrote:
->
->> Hi Neil,
->>
->> After apply the patch below, it paniced during boot in
->> generic_make_request-> bio_list_pop.
->> Looks related to you do bio_list_init(&bio_list_on_stack); again.
->>> diff --git a/block/blk-core.c b/block/blk-core.c
->>> index 14d7c0740dc0..3436b6fc3ef8 100644
->>> --- a/block/blk-core.c
->>> +++ b/block/blk-core.c
->>> @@ -2036,10 +2036,31 @@ blk_qc_t generic_make_request(struct bio *bio)
->>>                 struct request_queue *q =3D bdev_get_queue(bio->bi_bdev=
-);
->>>
->>>                 if (likely(blk_queue_enter(q, false) =3D=3D 0)) {
->>> +                       struct bio_list hold;
->>> +                       struct bio_list lower, same;
->>> +
->>> +                       /* Create a fresh bio_list for all subordinate =
-requests */
->>> +                       bio_list_merge(&hold, &bio_list_on_stack);
->
-> This is the problem.  'hold' hasn't been initialised.
-> We could either do:
->   bio_list_init(&hold);
->   bio_list_merge(&hold, &bio_list_on_stack);
-I did try first variant, it leads to panic in bio_check_pages_dirty
+Currently dm-crypt handles data only in single blocks. This means that it can't
+make good use of hardware cryptography engines since there is an overhead to
+each transaction with the engine but transfers must be split into block sized
+chunks. Allowing the transfer of larger blocks e.g. 'struct bio', could
+mitigate against these costs and could improve performance in operating systems
+with encrypted filesystems. Although qualcomm chipsets support another variant
+of the device-mapper dm-req-crypt, it is not something generic and in
+mainline-able state. Also, it only supports 'XTS-AES' mode of encryption and
+is not compatible with other modes supported by dm-crypt.
 
-PID: 4004   TASK: ffff8802337f3400  CPU: 1   COMMAND: "fio"
+However, there are some challenges and a few possibilities to address this. I
+request you to provide your suggestions on whether the points mentioned below
+makes sense and if it could be done differently.
 
- #0 [ffff88023ec838d0] machine_kexec at ffffffff8104075a
+1. Move the 'real' IV generation algorithms to crypto layer (e.g. essiv)
+2. Increase the 'length' of the scatterlist nodes used in the crypto api. It
+   can be made equal to the size of a main memory segment (as defined in
+   'struct bio') as they are physcially contiguous.
+3. Multiple segments in 'struct bio' can be represented as scatterlist of all
+   segments in a 'struct bio'.
 
- #1 [ffff88023ec83918] crash_kexec at ffffffff810d54c3
+4. Move algorithms 'lmk' and 'tcw' (which are IV combined with hacks to the
+   cbc mode) to create a customized cbc algorithm, implemented in a seperate
+   file (e.g. cbc_lmk.c/cbc_tcw.c). As Milan suggested, these can't be treated
+   as real IVs as these include hacks to the cbc mode (and directly manipulate
+   encrypted data).
 
- #2 [ffff88023ec839e0] oops_end at ffffffff81008784
+5. Move key selection logic to user space or always assume keycount as '1'
+   (as mentioned in the dm-crypt param format below) so that the key selection
+   logic does not have to be dependent on the sector number. This is necessary
+   as the key is selected otherwise based on sector number:
 
- #3 [ffff88023ec83a08] no_context at ffffffff8104a8f6
+   key_index = sector & (key_count - 1)
 
- #4 [ffff88023ec83a60] __bad_area_nosemaphore at ffffffff8104abcf
+   If block size for scatterlist nodes are increased beyond sector boundary
+   (which is what we plan to achieve, for performance), the key set for every
+   cipher operation cannot be changed at the sector level.
 
- #5 [ffff88023ec83aa8] bad_area_nosemaphore at ffffffff8104ad3e
+   dm-crypt param format : cipher[:keycount]-mode-iv:ivopts
+   Example               : aes:2-cbc-essiv:sha256
 
- #6 [ffff88023ec83ab8] __do_page_fault at ffffffff8104afd7
+   Also as Milan suggested, it is not wise to move the key selection logic to
+   the crypto layer as it will prevent any changes to the key structure later.
 
- #7 [ffff88023ec83b10] do_page_fault at ffffffff8104b33c
+The following is a reference to an earlier patchset. It had the cipher mode
+'cbc' mixed up with the IV algorithms and is usually not the preferred way.
 
- #8 [ffff88023ec83b20] page_fault at ffffffff818173a2
-
-    [exception RIP: bio_check_pages_dirty+65]
-
-    RIP: ffffffff813f6221  RSP: ffff88023ec83bd8  RFLAGS: 00010212
-
-    RAX: 0000000000000020  RBX: ffff880232d75010  RCX: 0000000000000001
-
-    RDX: ffff880232d74000  RSI: 0000000000000000  RDI: 0000000000000000
-
-    RBP: ffff88023ec83bf8   R8: 0000000000000001   R9: 0000000000000000
-
-    R10: ffffffff81f25ac0  R11: ffff8802348acef0  R12: 0000000000000001
-
-    R13: 0000000000000000  R14: ffff8800b53b7d00  R15: ffff88009704d180
-
-    ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
-
- #9 [ffff88023ec83c00] dio_bio_complete at ffffffff811d010e
-
-#10 [ffff88023ec83c38] dio_bio_end_aio at ffffffff811d0367
-
-#11 [ffff88023ec83c68] bio_endio at ffffffff813f637a
-
-#12 [ffff88023ec83c80] call_bio_endio at ffffffffa0868220 [raid1]
-
-#13 [ffff88023ec83cc8] raid_end_bio_io at ffffffffa086885b [raid1]
-
-#14 [ffff88023ec83cf8] raid1_end_read_request at ffffffffa086a184 [raid1]
-
-#15 [ffff88023ec83d50] bio_endio at ffffffff813f637a
-
-#16 [ffff88023ec83d68] blk_update_request at ffffffff813fdab6
-
-#17 [ffff88023ec83da8] blk_mq_end_request at ffffffff81406dfe
-
-
-
-> or just
->   hold =3D bio_list_on_stack;
->
->
-> You didn't find 'hold' to be necessary in your testing, but I think that
-> is more complex arrangements it could make an important difference.
-
-Could you elaborate  a bit more, from my understanding, in later
-logic, we traverse the whole bio_list_on_stack,
-and sort it into either lower or same bio_list, merge again the
-initial bio_list_on_stack will lead to duplicated bio, isn't it?
-
->
-> Thanks,
-> NeilBrown
-
-Thanks
-Jinpu
->
->
->>> +                       bio_list_init(&bio_list_on_stack); ??? maybe in=
-it hold, and then merge bio_list_on_stack?
->>>                         ret =3D q->make_request_fn(q, bio);
->>>
->>>                         blk_queue_exit(q);
-
-
-
---=20
-Jinpu Wang
-Linux Kernel Developer
-
-ProfitBricks GmbH
-Greifswalder Str. 207
-D - 10405 Berlin
-
-Tel:       +49 30 577 008  042
-Fax:      +49 30 577 008 299
-Email:    jinpu.wang@profitbricks.com
-URL:      https://www.profitbricks.de
-
-Sitz der Gesellschaft: Berlin
-Registergericht: Amtsgericht Charlottenburg, HRB 125506 B
-Gesch=C3=A4ftsf=C3=BChrer: Achim Weiss
+Reference:
+https://lkml.org/lkml/2016/12/13/65
+https://lkml.org/lkml/2016/12/13/66
