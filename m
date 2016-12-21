@@ -1,195 +1,87 @@
-From: Robert LeBlanc <robert@leblancnet.us>
-Subject: Re: RAID without dev size prevents adding a new member
-Date: Wed, 21 Dec 2016 09:44:29 -0700
-Message-ID: <CAANLjFpYKFNG8mmBfVmXuOGwcs5BvMwiqjsy9nLw3LpkhGtLyg@mail.gmail.com>
-References: <CAANLjFo09x0VMj2KbPZzWwpgXebS0d1ZGNTwDqi7fiVsKvFJ+g@mail.gmail.com>
- <8760mdswsn.fsf@notabene.neil.brown.name>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: Fwd: (user) Help needed: mdadm seems to constantly touch my disks
+Date: Thu, 22 Dec 2016 09:52:44 +1100
+Message-ID: <87mvforj2b.fsf@notabene.neil.brown.name>
+References: <CAJ=9zicFM+wOUhpdX1XEVm+y2gYoW3r2aTRj6gAcEkypxJULmA@mail.gmail.com> <871sxbz4yz.fsf@notabene.neil.brown.name> <CAJ=9zieRuTNiEGuB_RouqbdLGoxNkn09yiogR6rND84LtMdbxA@mail.gmail.com> <CAJ=9zifGPd+3YnP1aLwLPXjtpygRc9DsDP37CNz-VHBHn1vDOg@mail.gmail.com> <87inqgvpyj.fsf@notabene.neil.brown.name> <CAJ=9zidNV4sPj7KC7_mJEo8+=-YTKyWD5RiLsGG9p33CV12Qdg@mail.gmail.com> <87twa0tvma.fsf@notabene.neil.brown.name> <CAJ=9zidt_25tCF8QBy0To9oY+QNVD1ufF+CQ-pSjD97zVaLoGg@mail.gmail.com> <87inqftro1.fsf@notabene.neil.brown.name> <CAJ=9zicozhGYUy_iB7EPSRxMVDJBG0ArhKNqyKQYCVwA0zEkew@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8760mdswsn.fsf@notabene.neil.brown.name>
+In-Reply-To: <CAJ=9zicozhGYUy_iB7EPSRxMVDJBG0ArhKNqyKQYCVwA0zEkew@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Jure =?utf-8?Q?Erzno=C5=BEnik?= <jure.erznoznik@gmail.com>, linux-raid@vger.kernel.org, tkonto@gmail.com
 List-Id: linux-raid.ids
 
-It looks like it is still there on the latest master.
+--=-=-=
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-# ./mdadm --version
-mdadm - v3.4-88-gfa219dd - 22nd September 2016
+On Wed, Dec 21 2016, Jure Erzno=C5=BEnik wrote:
 
-# ./mdadm --detail /dev/md_root
-/dev/md_root:
-        Version : 1.0
-  Creation Time : Wed Sep  7 15:58:30 2016
-     Raid Level : raid1
-     Array Size : 5368708928 (5120.00 GiB 5497.56 GB)
-  Used Dev Size : unknown
-   Raid Devices : 2
-  Total Devices : 1
-    Persistence : Superblock is persistent
-
-  Intent Bitmap : Internal
-
-    Update Time : Wed Dec 21 09:40:21 2016
-          State : clean, degraded
- Active Devices : 1
-Working Devices : 1
- Failed Devices : 0
-  Spare Devices : 0
-
-           Name : 10.91.0.11-volume
-           UUID : 2ea91e32:59b7806d:956803c6:00c410eb
-         Events : 3989416
-
-    Number   Major   Minor   RaidDevice State
-       0       8       16        0      active sync   /dev/sdb
-       -       0        0        1      removed
-
-# ./mdadm /dev/md_root --add /dev/sda
-mdadm: /dev/sda not large enough to join array
-
-Any other ideas or information that I can provide that would be helpful?
-----------------
-Robert LeBlanc
-PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
-
-
-On Tue, Dec 20, 2016 at 9:58 PM, NeilBrown <neilb@suse.com> wrote:
-> On Tue, Dec 20 2016, Robert LeBlanc wrote:
+> Mr Brown,
 >
->> I have an array that failed to readd a member saying that the new
->> member was too small. After trying a few things including "--add",
->> "--force", zeroing out the superblock, clearing out the first 100 MB
->> to get rid of the partition table, I found that mdadm thinks the Used
->> Dev Size is unknown. I looked at the superblock and it appears to have
->> a valid used dev size. Both disks are exactly the same size. I'm not
->> sure how fix this.
->>
->> # mdadm --version
->> mdadm - v3.3.2 - 21st August 2014
->
-> Try a newer mdadm.
->  git clone git://git.kernel.org/pub/scm/utils/mdadm/mdadm.git
->  cd mdadm
->  make
->
-> your bug sounds familiar.  I think it has been fixed.
->
-> NeilBrown
+> Let me begin with: please give me your paypal address or something so
+> that I can at least buy you a beer or something
+
+Thanks :-)
+My first inclination is to say "no thanks" as I am very adequately
+compensated by SUSE, and it is part of my role at SUSE to ensure the
+upstream kernel remains healthy.  Encouraging a health community is part
+of that (and I often learn something while helping people fix things).
+
+But my second inclination is to recognize that gratitude is an important
+part of human interactions, and that a community is strong when
+gratitude is appropriately given and received.  It is not my place to
+direct others how they should show gratitude.
+So I'll tell you my paypal address is neil@brown.name and that I'm more
+likely to enjoy hot chocolate than beer, but I'll also emphasize that
+there is no expectation attached to this information. :-)
+
 >
 >
->>
->> # mdadm --detail /dev/md_root
->> /dev/md_root:
->>        Version : 1.0
->>  Creation Time : Wed Sep  7 15:58:30 2016
->>     Raid Level : raid1
->>     Array Size : 5368708928 (5120.00 GiB 5497.56 GB)
->>  Used Dev Size : unknown
->>   Raid Devices : 2
->>  Total Devices : 1
->>    Persistence : Superblock is persistent
->>
->>  Intent Bitmap : Internal
->>
->>    Update Time : Mon Dec 19 17:05:29 2016
->>          State : clean, degraded
->> Active Devices : 1
->> Working Devices : 1
->> Failed Devices : 0
->>  Spare Devices : 0
->>
->>           Name : 10.91.0.11-volume
->>           UUID : 2ea91e32:59b7806d:956803c6:00c410eb
->>         Events : 3691225
->>
->>    Number   Major   Minor   RaidDevice State
->>       0       8       16        0      active sync   /dev/sdb
->>       2       0        0        2      removed
->>
->> # mdadm --detail /dev/md_root
->> /dev/md_root:
->>        Version : 1.0
->>  Creation Time : Wed Sep  7 15:58:30 2016
->>     Raid Level : raid1
->>     Array Size : 5368708928 (5120.00 GiB 5497.56 GB)
->>  Used Dev Size : unknown
->>   Raid Devices : 2
->>  Total Devices : 1
->>    Persistence : Superblock is persistent
->>
->>  Intent Bitmap : Internal
->>
->>    Update Time : Mon Dec 19 17:05:29 2016
->>          State : clean, degraded
->> Active Devices : 1
->> Working Devices : 1
->> Failed Devices : 0
->>  Spare Devices : 0
->>
->>           Name : 10.91.0.11-volume
->>           UUID : 2ea91e32:59b7806d:956803c6:00c410eb
->>         Events : 3691225
->>
->>    Number   Major   Minor   RaidDevice State
->>       0       8       16        0      active sync   /dev/sdb
->>       2       0        0        2      removed
->>
->> # hexdump -C -s 5497558130688 /dev/sdb
->> 4ffffffe000  fc 4e 2b a9 01 00 00 00  01 00 00 00 00 00 00 00
->> |.N+.............|
->> 4ffffffe010  2e a9 1e 32 59 b7 80 6d  95 68 03 c6 00 c4 10 eb
->> |...2Y..m.h......|
->> 4ffffffe020  31 30 2e 39 31 2e 30 2e  31 31 2d 76 6f 6c 75 6d
->> |10.91.0.11-volum|
->> 4ffffffe030  65 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
->> |e...............|
->> 4ffffffe040  86 8d d0 57 00 00 00 00  01 00 00 00 00 00 00 00
->> |...W............|
->> 4ffffffe050  80 fe ff 7f 02 00 00 00  00 00 00 00 02 00 00 00
->> |................|
->> 4ffffffe060  a0 ff ff ff 00 00 00 00  00 00 00 00 00 00 00 00
->> |................|
->> 4ffffffe070  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
->> |................|
->> 4ffffffe080  00 00 00 00 00 00 00 00  e8 fe ff 7f 02 00 00 00
->> |................|
->> 4ffffffe090  f0 ff ff 7f 02 00 00 00  00 00 00 00 00 00 00 00
->> |................|
->> 4ffffffe0a0  00 00 00 00 00 00 00 00  4c 6c 99 5a bd 1a 4c 7d
->> |........Ll.Z..L}|
->> 4ffffffe0b0  32 29 7a bc e2 45 89 dd  00 00 08 00 f8 ff ff ff
->> |2)z..E..........|
->> 4ffffffe0c0  4f 66 58 58 00 00 00 00  7b 33 38 00 00 00 00 00
->> |OfXX....{38.....|
->> 4ffffffe0d0  ff ff ff ff ff ff ff ff  33 f3 f0 e6 80 00 00 00
->> |........3.......|
->> 4ffffffe0e0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
->> |................|
->> *
->> 4ffffffe100  00 00 fe ff fe ff fe ff  fe ff fe ff fe ff fe ff
->> |................|
->> 4ffffffe110  fe ff fe ff fe ff fe ff  fe ff fe ff fe ff fe ff
->> |................|
->> *
->> 4ffffffe200  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
->> |................|
->> *
->> 50000000000
->>
->> # blockdev --report /dev/sd[a,b]
->> RO    RA   SSZ   BSZ   StartSec            Size   Device
->> rw   256   512  4096          0   5497558138880   /dev/sda
->> rw   256   512  4096          0   5497558138880   /dev/sdb
->>
->> # mdadm /dev/md_root --add /dev/sda
->> mdadm: /dev/sda not large enough to join array
->>
->> ----------------
->> Robert LeBlanc
->> PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Your analysis and discovery that iSCSI is the origin of writes got me
+> thinking: how can he see that on md0 device if that device has two
+> more layers (bcache + LVM) before iSCSI even comes into play. Maybe
+> the system propagates the origin down the block devices or something,
+> totally not relevant here. So I embarked on a journey of total data
+> destruction by disabling one layer at a time. I started by simply
+> detaching bcache as that was the first thing on the list - and was
+> non-destructive to boot :)
+>
+> I have found the culprit:
+> It is bcache that does the one second writes. I have yet to find the
+> exact parameters that influence this behaviour, but the output of
+> writeback_rate_debug is EXTREMELY clear: it's writing a bit of data
+> each second, reducing the dirty cache by that tiny amount. This is
+> what causes the write "amplification" resulting in clicks long after a
+> write has been done - because bcache only writes tiny amounts each
+> second instead of flushing the entire cache at once when the time
+> comes.
+
+Now that we have an understanding of what is happening, I can recommend
+that you increase /sys/block/md0/md/safe_mode_delay.  It is measured in
+seconds.  If you make it larger than the period of the bcache writes, it
+should stop the 'ticking' you mentioned.
+
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhbB7wACgkQOeye3VZi
+gbmnlg/+LxX0HgIsXRhzKvO7yFyb6w2JwaB9Cn0H/32bO3E9D9RlPd5fGU1JLqt4
+D7LH9Adv27LbHEDUewK34SvoGuPUcBX7fkvp1duJ6/eHNVBn5hJILFaPEYgZZHbG
+7RKC+yA8+i+Ll+WvKtxVZkqJAA6Kb+1JOZzuzs0MefF3Dla3GRdm4Wptrsw9fShd
+jZLoQ20rMULliNe5EvesgDL6gOsBvmecakQ6O7A0HhKOl6aiL023z6oCflg6+npp
+MmIrEAkb+JjVD3AZbH65EHnA6xO6kKQ9ItIX1wlTiJryirXTcxwESkBhdtqE7mJt
+r/zuTq2Vx3yyg/Xdev1iL6vlrv+GQy6A39otYXMKybL79loBWMkr716fvtmayraZ
+cTDMCOvUxS+BSpcVcEXKiwbkzQIY66dvFZQLZxv2ejUylurnGvBkNz0INK6vuhAJ
+RxahsADOS2MFP9v2ELcv/ljsomTQTJaLBA8EvC6Y5DHjdL7qC8x6d+NXGBVHXGds
+o3yyTAz3Hh0c1FmPduDifN0imZhRLsybxaYxe9WWuFb6PIahZdCrzSwiTQOhTMyS
+0UbOXxuycaBaamszI9EZd1nc+o77ODXuC5C429fq4PcOAh7752edsYm95tpUiIsR
+GTLmgIraFmN11MxlMTyCbT3hreHtpYcDGZIuD0zT0vaYCSQriZQ=
+=4239
+-----END PGP SIGNATURE-----
+--=-=-=--
