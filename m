@@ -1,94 +1,175 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: Inconsistent use of sectors vs 1k-blocks in sysfs and other places
-Date: Wed, 21 Dec 2016 11:06:53 +1100
-Message-ID: <87h95yrvqa.fsf@notabene.neil.brown.name>
-References: <20161217051420.GA29241@oldkitsune.fastquake.com> <87fulkvpgf.fsf@notabene.neil.brown.name> <20161220221430.GA19146@oldkitsune.fastquake.com>
+Subject: Re: RAID without dev size prevents adding a new member
+Date: Wed, 21 Dec 2016 15:58:32 +1100
+Message-ID: <8760mdswsn.fsf@notabene.neil.brown.name>
+References: <CAANLjFo09x0VMj2KbPZzWwpgXebS0d1ZGNTwDqi7fiVsKvFJ+g@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161220221430.GA19146@oldkitsune.fastquake.com>
+In-Reply-To: <CAANLjFo09x0VMj2KbPZzWwpgXebS0d1ZGNTwDqi7fiVsKvFJ+g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Brooks <john@fastquake.com>, linux-raid@vger.kernel.org
+To: Robert LeBlanc <robert@leblancnet.us>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 
-On Wed, Dec 21 2016, John Brooks wrote:
+On Tue, Dec 20 2016, Robert LeBlanc wrote:
 
-> On Mon, Dec 19, 2016 at 09:32:00AM +1100, NeilBrown wrote:
->> The code is right by definition.  As you say, mdadm uses this interface
->> so we cannot change it.
+> I have an array that failed to readd a member saying that the new
+> member was too small. After trying a few things including "--add",
+> "--force", zeroing out the superblock, clearing out the first 100 MB
+> to get rid of the partition table, I found that mdadm thinks the Used
+> Dev Size is unknown. I looked at the superblock and it appears to have
+> a valid used dev size. Both disks are exactly the same size. I'm not
+> sure how fix this.
 >
-> Yep, I expected as much and fully agree.
->
->> >
->> > Somewhat related, suspend_{lo|hi}, resync_{min|max} attributes specify ranges
->> > in sectors, but the documentation does not specify if they are ranges on the
->> > array size or device size. And RAID10 may even handle resync_max differently
->> > from the rest; I didn't look deeply into that but see commit c805cdecea.
->>
->> suspend_{lo|hi} are are array addresses
->> resync_{min|max} are array addresses for RAID1 and RAID10, and they are
->> device-addresses-offset-from-data_offset for RAID1 and RAID456.
->
-> Good to know. One question, is it possible for the offset or size to be
-> different across disks in the same array? The documentation says that the size
-> is "normally" the same as component_size, implying that perhaps it could be
-> different.
+> # mdadm --version
+> mdadm - v3.3.2 - 21st August 2014
 
-raid0 and linear are special.
-For linear, it is obvious that differently sized devices can be
-combined.
-For raid0, it is not quite so obvious.  The array is divided into
-region.  The first region is striped over all devices.  Then next region
-is striped over all devices that are bigger than the smallest, etc.
+Try a newer mdadm.
+ git clone git://git.kernel.org/pub/scm/utils/mdadm/mdadm.git
+ cd mdadm
+ make
 
-The offset can be different on all devices.  The size can be only for
-raid0 and linear.
+your bug sounds familiar.  I think it has been fixed.
 
->
->> It is bad that the documentation is incorrect and incomplete.  If you we
->> to post a patch which fixed some of it, I'm sure that would be
->> thankfully accepted.
->
-> I will see what I can do.
->
->> In theory you could have a RAID1 with an odd number of sectors used in
->> each component, but I doubt that happens in practice.  So you can get
->> the component size in sectors by reading component_size and multiplying
->> by two.
->
-> Is that within a realm of possibility worth mentioning in the docs?
-
-Probably not.  I'd have to check the code to see what it actually
-allows.
-If the kernel allows odd-sized RAID1, we would have to leave it that
-way.  But I'd support changing mdadm (if needed) to refuse to create
-a RAID1 with an odd number of sectors (or even a size that is not a
-multiple of 4K).
-
-Thanks,
 NeilBrown
+
+
+>
+> # mdadm --detail /dev/md_root
+> /dev/md_root:
+>        Version : 1.0
+>  Creation Time : Wed Sep  7 15:58:30 2016
+>     Raid Level : raid1
+>     Array Size : 5368708928 (5120.00 GiB 5497.56 GB)
+>  Used Dev Size : unknown
+>   Raid Devices : 2
+>  Total Devices : 1
+>    Persistence : Superblock is persistent
+>
+>  Intent Bitmap : Internal
+>
+>    Update Time : Mon Dec 19 17:05:29 2016
+>          State : clean, degraded
+> Active Devices : 1
+> Working Devices : 1
+> Failed Devices : 0
+>  Spare Devices : 0
+>
+>           Name : 10.91.0.11-volume
+>           UUID : 2ea91e32:59b7806d:956803c6:00c410eb
+>         Events : 3691225
+>
+>    Number   Major   Minor   RaidDevice State
+>       0       8       16        0      active sync   /dev/sdb
+>       2       0        0        2      removed
+>
+> # mdadm --detail /dev/md_root
+> /dev/md_root:
+>        Version : 1.0
+>  Creation Time : Wed Sep  7 15:58:30 2016
+>     Raid Level : raid1
+>     Array Size : 5368708928 (5120.00 GiB 5497.56 GB)
+>  Used Dev Size : unknown
+>   Raid Devices : 2
+>  Total Devices : 1
+>    Persistence : Superblock is persistent
+>
+>  Intent Bitmap : Internal
+>
+>    Update Time : Mon Dec 19 17:05:29 2016
+>          State : clean, degraded
+> Active Devices : 1
+> Working Devices : 1
+> Failed Devices : 0
+>  Spare Devices : 0
+>
+>           Name : 10.91.0.11-volume
+>           UUID : 2ea91e32:59b7806d:956803c6:00c410eb
+>         Events : 3691225
+>
+>    Number   Major   Minor   RaidDevice State
+>       0       8       16        0      active sync   /dev/sdb
+>       2       0        0        2      removed
+>
+> # hexdump -C -s 5497558130688 /dev/sdb
+> 4ffffffe000  fc 4e 2b a9 01 00 00 00  01 00 00 00 00 00 00 00
+> |.N+.............|
+> 4ffffffe010  2e a9 1e 32 59 b7 80 6d  95 68 03 c6 00 c4 10 eb
+> |...2Y..m.h......|
+> 4ffffffe020  31 30 2e 39 31 2e 30 2e  31 31 2d 76 6f 6c 75 6d
+> |10.91.0.11-volum|
+> 4ffffffe030  65 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+> |e...............|
+> 4ffffffe040  86 8d d0 57 00 00 00 00  01 00 00 00 00 00 00 00
+> |...W............|
+> 4ffffffe050  80 fe ff 7f 02 00 00 00  00 00 00 00 02 00 00 00
+> |................|
+> 4ffffffe060  a0 ff ff ff 00 00 00 00  00 00 00 00 00 00 00 00
+> |................|
+> 4ffffffe070  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+> |................|
+> 4ffffffe080  00 00 00 00 00 00 00 00  e8 fe ff 7f 02 00 00 00
+> |................|
+> 4ffffffe090  f0 ff ff 7f 02 00 00 00  00 00 00 00 00 00 00 00
+> |................|
+> 4ffffffe0a0  00 00 00 00 00 00 00 00  4c 6c 99 5a bd 1a 4c 7d
+> |........Ll.Z..L}|
+> 4ffffffe0b0  32 29 7a bc e2 45 89 dd  00 00 08 00 f8 ff ff ff
+> |2)z..E..........|
+> 4ffffffe0c0  4f 66 58 58 00 00 00 00  7b 33 38 00 00 00 00 00
+> |OfXX....{38.....|
+> 4ffffffe0d0  ff ff ff ff ff ff ff ff  33 f3 f0 e6 80 00 00 00
+> |........3.......|
+> 4ffffffe0e0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+> |................|
+> *
+> 4ffffffe100  00 00 fe ff fe ff fe ff  fe ff fe ff fe ff fe ff
+> |................|
+> 4ffffffe110  fe ff fe ff fe ff fe ff  fe ff fe ff fe ff fe ff
+> |................|
+> *
+> 4ffffffe200  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+> |................|
+> *
+> 50000000000
+>
+> # blockdev --report /dev/sd[a,b]
+> RO    RA   SSZ   BSZ   StartSec            Size   Device
+> rw   256   512  4096          0   5497558138880   /dev/sda
+> rw   256   512  4096          0   5497558138880   /dev/sdb
+>
+> # mdadm /dev/md_root --add /dev/sda
+> mdadm: /dev/sda not large enough to join array
+>
+> ----------------
+> Robert LeBlanc
+> PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhZx50ACgkQOeye3VZi
-gbn2mA//XoA0ejRy2lHaz2tO25U23vd5Ctxn8oLQ56FkS7O8toq8nb467ADWWaNI
-9vjuvF0Z+k0qBLWzxExhEYMW0i323uIDRTVPY5733cwhzDdmvBE0aMjcGBgAzMOv
-bQ/GarnXkKEK0Ywtegwl9UdKqrMUcvVj5pDXkDisio9hxgh2B7AVOWCVdkq2LcaE
-4CUiIEWqxWO2UoMo09gfnw4QySS4I3FE/axPhn7R1Vl+a/2a5r7GS6tcPHBzVAL5
-AYciP9xfwqyE+XPk+RmPuZJIrMLGuclaBPp17Ji4G2e5v9Y2Bo9Q50/JgGKjDPgN
-guPmyGRvsreZ8em9w9p2lPdrnP0PmlhWbyebg5Noisxp/rk0EFuMkteDLXZ2Em5k
-/dzvJxDNxfvsfzUQ3fISLOhsOJvyZNnrjcN9WyrOYEUQTgImDrQktZ/ysK6i8It+
-zGinuEILC4ZhPSNgmoB/+yj2Uf5pYBZj/pb0pE2H8Sbtx1+fvOJYn2hMeVfcQfH7
-JWJ2ILV06CGdLI2t6OvIbSLCAYZCq42BIp+cgYUNSLQt5UJCTEbSCVrO/iVDf0Yf
-tfW3NsihdEvOHvpYoTaq0IziAXCI3fkgvCCSqo1BWsIQLtcJPRy/DsHF4hljy3mH
-sU6YKEtKe4d6m4YJQaWAG6GYVB88X+sxmiF6oQuvspWuNUwO8xg=
-=zzrd
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhaC/gACgkQOeye3VZi
+gbleQBAAlDTS0JFTScRjsBHtjk2hfHkpGeA+5XIo1616wtmtOzK7IeFsTqcfN+cY
+WFJQgCexvrixBxHelTTxmuwCutArYOU884m80GqdRxT2SyIUIIESF4za46+zSEnQ
+P5WjR68o5UX4QRBkvQp2OzOC2tKrO7pGOOTSmR3p+JBTM3jRbhBBrro7h303BVur
+OE9mK+EyGYnye+6cQr/9wu4rPOH/nDpaJDzVA1u1k/l7Dybcp7mYGrFDL2tyAkLU
+U4q062oPc46ltcWQWaDV8C02nvPamRKbn/jy47EVbHgsjDzfjFkAnW29I5tsU4og
+JTh3ihR5p0kAbZFA3fuytK8KuagOfl579CM7W3XcKsNvuuLAy64MykjdILwwsHjF
+ryB8ZH8rEj4T1Y6e+g9w1hayOEbGdW46T7r/dbJCJVsoytMKiV4WMwAoXEnB8OxJ
+uQaJlAccYk2hgriTHVDdfCA+QC3lsZxch9JS+YVsmORhhB7TGqYOZshSDfgwbSVk
+9vPP0y2hypdJBm3qVwXTX683YcRm6kO9412OHhXRHq9WY3RFChgF/j2osPYZ3gy4
+ZA9dq7Z2zkq+C4Wspw9owyvHK5JbvdxxNDp8eDYMC4MyIz4TcwuY5UQvobvy5ceA
+XwLx4Hs95F0yElLd1pWNbacDOXLe/Zk4NBy4AXqNutvIBJ9q+n0=
+=aH46
 -----END PGP SIGNATURE-----
 --=-=-=--
