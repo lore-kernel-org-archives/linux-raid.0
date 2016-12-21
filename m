@@ -1,175 +1,98 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: RAID without dev size prevents adding a new member
-Date: Wed, 21 Dec 2016 15:58:32 +1100
-Message-ID: <8760mdswsn.fsf@notabene.neil.brown.name>
-References: <CAANLjFo09x0VMj2KbPZzWwpgXebS0d1ZGNTwDqi7fiVsKvFJ+g@mail.gmail.com>
+Subject: Re: Linux software RAID becomes unresponsive after removing a disk from server
+Date: Wed, 21 Dec 2016 16:12:40 +1100
+Message-ID: <8737hhsw53.fsf@notabene.neil.brown.name>
+References: <7b8b1130-e79b-efcd-0579-c4a349ec5814@php-friends.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAANLjFo09x0VMj2KbPZzWwpgXebS0d1ZGNTwDqi7fiVsKvFJ+g@mail.gmail.com>
+In-Reply-To: <7b8b1130-e79b-efcd-0579-c4a349ec5814@php-friends.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robert LeBlanc <robert@leblancnet.us>, linux-raid <linux-raid@vger.kernel.org>
+To: PHP-Friends GmbH <gl@php-friends.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Dec 20 2016, Robert LeBlanc wrote:
+On Sat, Dec 17 2016, PHP-Friends GmbH wrote:
 
-> I have an array that failed to readd a member saying that the new
-> member was too small. After trying a few things including "--add",
-> "--force", zeroing out the superblock, clearing out the first 100 MB
-> to get rid of the partition table, I found that mdadm thinks the Used
-> Dev Size is unknown. I looked at the superblock and it appears to have
-> a valid used dev size. Both disks are exactly the same size. I'm not
-> sure how fix this.
+> Hello everyone,
 >
-> # mdadm --version
-> mdadm - v3.3.2 - 21st August 2014
+> first of all: This is in fact a crossposting from serverfault=20
+> (http://serverfault.com/questions/821195/linux-software-raid-becomes-unre=
+sponsive-after-removing-a-disk-from-server),=20
+> as the user shodanshok recommended contacting this mailing list because=20
+> to him this seems like a possible bug in the Linux RAID software. I want=
+=20
+> to add that I can provide more logs and information if they are needed,=20
+> but as the text is already quite long I thought that would be enough for=
+=20
+> the moment.
+>
+> I am running a CentOS 7 machine (standard kernel:=20
+> 3.10.0-327.36.3.el7.x86_64) with a software RAID-10 over 16x 1 TB SSDs=20
+> (to be more precise, there are two RAID arrays on the disks; one of the=20
+> arrays is providing the host's swap partition). Last week, a SSD failed:
+>
+...
 
-Try a newer mdadm.
- git clone git://git.kernel.org/pub/scm/utils/mdadm/mdadm.git
- cd mdadm
- make
+> 11:48:00 kvm7 kernel: INFO: task md3_raid10:1293 blocked for more than=20
+> 120 seconds.
+> 11:48:00 kvm7 kernel: "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"=
+=20
+> disables this message.
+> 11:48:00 kvm7 kernel: md3_raid10      D ffff883f26e55c00     0 1293=20=20=
+=20=20=20=20
+> 2 0x00000000
+> 11:48:00 kvm7 kernel: ffff887f24bd7c58 0000000000000046 ffff887f212eb980=
+=20
+> ffff887f24bd7fd8
+> 11:48:00 kvm7 kernel: ffff887f24bd7fd8 ffff887f24bd7fd8 ffff887f212eb980=
+=20
+> ffff887f23514400
+> 11:48:00 kvm7 kernel: ffff887f235144dc 0000000000000001 ffff887f23514500=
+=20
+> ffff8807fa4c4300
+> 11:48:00 kvm7 kernel: Call Trace:
+> 11:48:00 kvm7 kernel: [<ffffffff8163bb39>] schedule+0x29/0x70
+> 11:48:00 kvm7 kernel: [<ffffffffa0104ef7>] freeze_array+0xb7/0x180 [raid1=
+0]
 
-your bug sounds familiar.  I think it has been fixed.
+Might be a known bug, maybe the one fixed by
+ Commit: ccfc7bf1f09d ("raid1: include bio_end_io_list in nr_queued to prev=
+ent freeze_array hang")
+
+I have no idea what patches are included in your centos kernel.
+In general, we only provide support for mainline kernels here.  Not
+because we don't want to support others, but because digging around
+inside a non-mainline kernel is much more work.
+
+BTW, to remove a device from an md array after it has been physically
+removed from the system, you can use
+  mdadm /dev/mdXX --remove detached
+That wouldn't have helped you here, but for future reference.
 
 NeilBrown
-
-
->
-> # mdadm --detail /dev/md_root
-> /dev/md_root:
->        Version : 1.0
->  Creation Time : Wed Sep  7 15:58:30 2016
->     Raid Level : raid1
->     Array Size : 5368708928 (5120.00 GiB 5497.56 GB)
->  Used Dev Size : unknown
->   Raid Devices : 2
->  Total Devices : 1
->    Persistence : Superblock is persistent
->
->  Intent Bitmap : Internal
->
->    Update Time : Mon Dec 19 17:05:29 2016
->          State : clean, degraded
-> Active Devices : 1
-> Working Devices : 1
-> Failed Devices : 0
->  Spare Devices : 0
->
->           Name : 10.91.0.11-volume
->           UUID : 2ea91e32:59b7806d:956803c6:00c410eb
->         Events : 3691225
->
->    Number   Major   Minor   RaidDevice State
->       0       8       16        0      active sync   /dev/sdb
->       2       0        0        2      removed
->
-> # mdadm --detail /dev/md_root
-> /dev/md_root:
->        Version : 1.0
->  Creation Time : Wed Sep  7 15:58:30 2016
->     Raid Level : raid1
->     Array Size : 5368708928 (5120.00 GiB 5497.56 GB)
->  Used Dev Size : unknown
->   Raid Devices : 2
->  Total Devices : 1
->    Persistence : Superblock is persistent
->
->  Intent Bitmap : Internal
->
->    Update Time : Mon Dec 19 17:05:29 2016
->          State : clean, degraded
-> Active Devices : 1
-> Working Devices : 1
-> Failed Devices : 0
->  Spare Devices : 0
->
->           Name : 10.91.0.11-volume
->           UUID : 2ea91e32:59b7806d:956803c6:00c410eb
->         Events : 3691225
->
->    Number   Major   Minor   RaidDevice State
->       0       8       16        0      active sync   /dev/sdb
->       2       0        0        2      removed
->
-> # hexdump -C -s 5497558130688 /dev/sdb
-> 4ffffffe000  fc 4e 2b a9 01 00 00 00  01 00 00 00 00 00 00 00
-> |.N+.............|
-> 4ffffffe010  2e a9 1e 32 59 b7 80 6d  95 68 03 c6 00 c4 10 eb
-> |...2Y..m.h......|
-> 4ffffffe020  31 30 2e 39 31 2e 30 2e  31 31 2d 76 6f 6c 75 6d
-> |10.91.0.11-volum|
-> 4ffffffe030  65 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
-> |e...............|
-> 4ffffffe040  86 8d d0 57 00 00 00 00  01 00 00 00 00 00 00 00
-> |...W............|
-> 4ffffffe050  80 fe ff 7f 02 00 00 00  00 00 00 00 02 00 00 00
-> |................|
-> 4ffffffe060  a0 ff ff ff 00 00 00 00  00 00 00 00 00 00 00 00
-> |................|
-> 4ffffffe070  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
-> |................|
-> 4ffffffe080  00 00 00 00 00 00 00 00  e8 fe ff 7f 02 00 00 00
-> |................|
-> 4ffffffe090  f0 ff ff 7f 02 00 00 00  00 00 00 00 00 00 00 00
-> |................|
-> 4ffffffe0a0  00 00 00 00 00 00 00 00  4c 6c 99 5a bd 1a 4c 7d
-> |........Ll.Z..L}|
-> 4ffffffe0b0  32 29 7a bc e2 45 89 dd  00 00 08 00 f8 ff ff ff
-> |2)z..E..........|
-> 4ffffffe0c0  4f 66 58 58 00 00 00 00  7b 33 38 00 00 00 00 00
-> |OfXX....{38.....|
-> 4ffffffe0d0  ff ff ff ff ff ff ff ff  33 f3 f0 e6 80 00 00 00
-> |........3.......|
-> 4ffffffe0e0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
-> |................|
-> *
-> 4ffffffe100  00 00 fe ff fe ff fe ff  fe ff fe ff fe ff fe ff
-> |................|
-> 4ffffffe110  fe ff fe ff fe ff fe ff  fe ff fe ff fe ff fe ff
-> |................|
-> *
-> 4ffffffe200  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
-> |................|
-> *
-> 50000000000
->
-> # blockdev --report /dev/sd[a,b]
-> RO    RA   SSZ   BSZ   StartSec            Size   Device
-> rw   256   512  4096          0   5497558138880   /dev/sda
-> rw   256   512  4096          0   5497558138880   /dev/sdb
->
-> # mdadm /dev/md_root --add /dev/sda
-> mdadm: /dev/sda not large enough to join array
->
-> ----------------
-> Robert LeBlanc
-> PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhaC/gACgkQOeye3VZi
-gbleQBAAlDTS0JFTScRjsBHtjk2hfHkpGeA+5XIo1616wtmtOzK7IeFsTqcfN+cY
-WFJQgCexvrixBxHelTTxmuwCutArYOU884m80GqdRxT2SyIUIIESF4za46+zSEnQ
-P5WjR68o5UX4QRBkvQp2OzOC2tKrO7pGOOTSmR3p+JBTM3jRbhBBrro7h303BVur
-OE9mK+EyGYnye+6cQr/9wu4rPOH/nDpaJDzVA1u1k/l7Dybcp7mYGrFDL2tyAkLU
-U4q062oPc46ltcWQWaDV8C02nvPamRKbn/jy47EVbHgsjDzfjFkAnW29I5tsU4og
-JTh3ihR5p0kAbZFA3fuytK8KuagOfl579CM7W3XcKsNvuuLAy64MykjdILwwsHjF
-ryB8ZH8rEj4T1Y6e+g9w1hayOEbGdW46T7r/dbJCJVsoytMKiV4WMwAoXEnB8OxJ
-uQaJlAccYk2hgriTHVDdfCA+QC3lsZxch9JS+YVsmORhhB7TGqYOZshSDfgwbSVk
-9vPP0y2hypdJBm3qVwXTX683YcRm6kO9412OHhXRHq9WY3RFChgF/j2osPYZ3gy4
-ZA9dq7Z2zkq+C4Wspw9owyvHK5JbvdxxNDp8eDYMC4MyIz4TcwuY5UQvobvy5ceA
-XwLx4Hs95F0yElLd1pWNbacDOXLe/Zk4NBy4AXqNutvIBJ9q+n0=
-=aH46
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhaD0gACgkQOeye3VZi
+gbneQg//Zi3xlcxowQWRi8S2ZlZ95JN7th6j8M+/y2UzKNZSgMs3SOp1SIcQ2DJx
+Sf6rsAokzoSoY4D9dpaV0vokdLOI3mQp4UCmmlwrnRdKjpXy1O9RGQX8jSzCJIJ2
+l/EKbsGovegdNDXlsb6V3tIKxA9Hv7V99CiqiHe2cB5kKqRgg3d8LcYoXI5l7yTg
+HlWBud2QA16Xlvcf6PEUobHLGY0EqLbBfYnRq/zj0MNZES3E21GMIrybU2JZNSQs
+iE43hNhvZ/9NrxKngQoiR2w5ilyiy3C1WqdrFtS+gf3w6BHPQTUedA1X9+M8FwOz
+0/patu7kz8Kz+lPaL5Rhsh2+DdKg9hgsKs2qmYLbnfwneHVTdHOB4ekM0/betUy8
+P+qgyS98LoB+6ta5qtLvoIvU8kn8QSObylBSEvZZ1dSpnb4wQCca60zTAOeVSmQ5
++N7z6y94G1ospEOI5rgfWtHElxyvrAajZwX5Z0sPHQHq1qM0x9OL7DJFPUU028w1
+0JxdPw19o8XeLonBSW/N4qrEmUIUyCFi5fVXm7+cPZ16mopia1ZbF9/dpEgumBPa
+wl0XgDhZHdylD+e/aJGtc/QyDP6WmGruJaMaYABNhGbdq1cXrXO9w+geoyouIu2S
+KGQQSpVKlOgNTSu2/4MSpHXP7P3cIc6Qw77mm2+ORH1o0oJE4uU=
+=lrwv
 -----END PGP SIGNATURE-----
 --=-=-=--
