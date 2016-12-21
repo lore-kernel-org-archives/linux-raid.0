@@ -1,102 +1,155 @@
-From: Milan Broz <gmazyland@gmail.com>
-Subject: Re: dm-crypt optimization
-Date: Wed, 21 Dec 2016 13:47:18 +0100
-Message-ID: <bf5e7237-2f5c-3fc6-c7d6-38c3b13ac2c3@gmail.com>
-References: <CAHv-k_98w-9whFiCLAnTGL2QAirExsix_S8ZWc8tM7wj=gzD6Q@mail.gmail.com>
+From: Jinpu Wang <jinpu.wang@profitbricks.com>
+Subject: Re: [BUG] MD/RAID1 hung forever on freeze_array
+Date: Wed, 21 Dec 2016 13:48:25 +0100
+Message-ID: <CAMGffE=OVX-jp+-SY8A4pmJHyVAkVQVXSCa_3VgndFf4tYyG9w@mail.gmail.com>
+References: <CAMGffE=1kp7gMhG+dFxTvhD6VkRuSfbuXbf9vYSWwGG+=vvhDA@mail.gmail.com>
+ <87a8c20xpg.fsf@notabene.neil.brown.name> <CAMGffEkQ5puQEE0FVfLMV1of1OYOhLMhHdUTAy-YLYPkzBzjDg@mail.gmail.com>
+ <87oa0gzuej.fsf@notabene.neil.brown.name> <CAMGffEm4BDhKJSiDt=2WmxrpRutg862at7JP221gMi6_SpPomQ@mail.gmail.com>
+ <877f73zd5d.fsf@notabene.neil.brown.name> <CAMGffEnCesgUp4gBsPN2L9qg3WSxNXsCcYEPWH-BaeEEktaqcw@mail.gmail.com>
+ <CAMGffE=KoVdoYRzkHdRMuCopjmUdcrP9-woFFr-4-VszGsSHRQ@mail.gmail.com>
+ <CAMGffEnvn4YQ5ADFXrOm2vOeEwApo38V84wB7VF3D1eZihF-Zw@mail.gmail.com>
+ <87fulpyj33.fsf@notabene.neil.brown.name> <CAMGffEkufeaDytaHxtLR02iiQifZDhcwkLdzMj3X8_yaitSoFQ@mail.gmail.com>
+ <87oa07tu6q.fsf@notabene.neil.brown.name> <CAMGffEmEUg2Xrg-v_z+cMxzsH-Uk6bDCqTSA7vGoPw4f2dvu0A@mail.gmail.com>
+ <871sx2thvt.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary=001a1141c938e083cc05442a92da
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHv-k_98w-9whFiCLAnTGL2QAirExsix_S8ZWc8tM7wj=gzD6Q@mail.gmail.com>
+In-Reply-To: <871sx2thvt.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Binoy Jayan <binoy.jayan@linaro.org>, Oded <oded.golombek@arm.com>, Ofir <Ofir.Drang@arm.com>, Herbert Xu <herbert@gondor.apana.org.au>, Arnd Bergmann <arnd@arndb.de>, Mark Brown <broonie@kernel.org>, Alasdair Kergon <agk@redhat.com>, "David S. Miller" <davem@davemloft.net>, private-kwg@linaro.org
-Cc: dm-devel@redhat.com, linux-crypto@vger.kernel.org, Rajendra <rnayak@codeaurora.org>, Linux kernel mailing list <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>, Mike Snitzer <snitzer@redhat.com>
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Nate Dailey <nate.dailey@stratus.com>
 List-Id: linux-raid.ids
 
-On 12/20/2016 10:41 AM, Binoy Jayan wrote:
-> At a high level the goal is to maximize the size of data blocks that get passed
-> to hardware accelerators, minimizing the overhead from setting up and tearing
-> down operations in the hardware. Currently dm-crypt itself is a big blocker as
-> it manually implements ESSIV and similar algorithms which allow per-block
-> encryption of the data so the low level operations from the crypto API can
-> only operate on a single block. This is done because currently the crypto API
-> doesn't have software implementations of these algorithms itself so dm-crypt
-> can't rely on it being able to provide the functionality. The plan to address
-> this was to provide some software implementations in the crypto API, then
-> update dm-crypt to rely on those. Even for a pure software implementation
-> with no hardware acceleration that should hopefully provide a small
-> optimization as we need to call into the crypto API less often but it's likely
-> to be marginal given the overhead of crypto, the real win would be on a system
-> that has an accelerator that can replace the software implementation.
-> 
-> Currently dm-crypt handles data only in single blocks. This means that it can't
-> make good use of hardware cryptography engines since there is an overhead to
-> each transaction with the engine but transfers must be split into block sized
-> chunks. Allowing the transfer of larger blocks e.g. 'struct bio', could
-> mitigate against these costs and could improve performance in operating systems
-> with encrypted filesystems. Although qualcomm chipsets support another variant
-> of the device-mapper dm-req-crypt, it is not something generic and in
-> mainline-able state. Also, it only supports 'XTS-AES' mode of encryption and
-> is not compatible with other modes supported by dm-crypt.
+--001a1141c938e083cc05442a92da
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-So the core problem is that your crypto accelerator can operate efficiently only
-with bigger batch sizes.
+Thanks Neil,
 
-How big blocks your crypto hw need to be able to operate more efficiently?
-What about 4k blocks (no batches), could it be usable trade-off?
+On Tue, Dec 20, 2016 at 10:23 PM, NeilBrown <neilb@suse.com> wrote:
+> On Tue, Dec 20 2016, Jinpu Wang wrote:
+>
+>> Hi Neil,
+>>> This is the problem.  'hold' hasn't been initialised.
+>>> We could either do:
+>>>   bio_list_init(&hold);
+>>>   bio_list_merge(&hold, &bio_list_on_stack);
+>> I tried above variant first and it lead to panic in endio path:
+>>
+> ...
+>>
+>>     [exception RIP: bio_check_pages_dirty+65]
+>
+>
+> I can't explain that at all.  Maybe if I saw the complete patch I would
+> be able to see what went wrong (or maybe there is a separate cause).
+I think I know the cause now, I did
++bio_list_init(&hold);
+bio_list_merge(&hold, &bio_list_on_stack);
+- bio_list_init(&bio_list_on_stack)
+I didn't read your comment clear enough, just thought we maybe don't
+need to reinit &bio_list_on_stack twice.
+But your idea is same the copy before we can q->make_request_fn.
 
-With some (backward incompatible) changes in LUKS format I would like to see support
-for encryption blocks equivalent to sectors size, so it basically means for 4k drive 4k
-encryption block.
-(This should decrease overhead, now is everything processed on 512 blocks only.)
+>
+>>>
+>>> You didn't find 'hold' to be necessary in your testing, but I think tha=
+t
+>>> is more complex arrangements it could make an important difference.
+>>
+>> Could you elaborate a bit more, from my understanding, in later code,
+>> we pop all bio from bio_list_on_stack,
+>> add it to either "lower" or "same" bio_list, so merge both will have
+>> the whole list again, right?
+>
+> If there are several bios on bio_list_on_stack, and if processing the
+> first one causes several calls to generic_make_request(), then we want
+> all the bios passed to generic_make_request() to be handled *before* the
+> remaining bios that were originally on bio_list_on_stack.  Of these new
+> bios, we want to handle those for a lower level device first, and those
+> for the same device after that.  Only when all of those have been
+> completely submitted (together with any subordinate bios submitted to
+> generic_make_request()) do we move on to the rest of bio_list_on_stack
+> (which are at the same level as the first bio, or higher in the device
+> stack).
+>
+> The usage of 'hold' would become important when you have multiple
+> levels.  e.g. dm on md on scsi.  If the first bio send to dm is split,
+> then the first half needs to be processed all the way down to all the
+> scsi devices, before the second half of the split is handled.
+>
+> Hope that helps,
+> NeilBrown
+>
+Thanks, it does help a lot, I attached the patch I'm still testing,
+but so far so good.
+Could you check if I got it right?
 
-Support of bigger block sizes would be unsafe without additional mechanism that provides
-atomic writes of multiple sectors. Maybe it applies to 4k as well on some devices though...)
+Cheers,
+--=20
+Jinpu Wang
+Linux Kernel Developer
 
-The above is not going against your proposal, I am just curious if this is enough
-to provide better performance on your hw accelerator or not.
+ProfitBricks GmbH
+Greifswalder Str. 207
+D - 10405 Berlin
 
-Milan
+Tel:       +49 30 577 008  042
+Fax:      +49 30 577 008 299
+Email:    jinpu.wang@profitbricks.com
+URL:      https://www.profitbricks.de
 
-> However, there are some challenges and a few possibilities to address this. I
-> request you to provide your suggestions on whether the points mentioned below
-> makes sense and if it could be done differently.
-> 
-> 1. Move the 'real' IV generation algorithms to crypto layer (e.g. essiv)
-> 2. Increase the 'length' of the scatterlist nodes used in the crypto api. It
->    can be made equal to the size of a main memory segment (as defined in
->    'struct bio') as they are physcially contiguous.
-> 3. Multiple segments in 'struct bio' can be represented as scatterlist of all
->    segments in a 'struct bio'.
-> 
-> 4. Move algorithms 'lmk' and 'tcw' (which are IV combined with hacks to the
->    cbc mode) to create a customized cbc algorithm, implemented in a seperate
->    file (e.g. cbc_lmk.c/cbc_tcw.c). As Milan suggested, these can't be treated
->    as real IVs as these include hacks to the cbc mode (and directly manipulate
->    encrypted data).
-> 
-> 5. Move key selection logic to user space or always assume keycount as '1'
->    (as mentioned in the dm-crypt param format below) so that the key selection
->    logic does not have to be dependent on the sector number. This is necessary
->    as the key is selected otherwise based on sector number:
-> 
->    key_index = sector & (key_count - 1)
-> 
->    If block size for scatterlist nodes are increased beyond sector boundary
->    (which is what we plan to achieve, for performance), the key set for every
->    cipher operation cannot be changed at the sector level.
-> 
->    dm-crypt param format : cipher[:keycount]-mode-iv:ivopts
->    Example               : aes:2-cbc-essiv:sha256
-> 
->    Also as Milan suggested, it is not wise to move the key selection logic to
->    the crypto layer as it will prevent any changes to the key structure later.
-> 
-> The following is a reference to an earlier patchset. It had the cipher mode
-> 'cbc' mixed up with the IV algorithms and is usually not the preferred way.
-> 
-> Reference:
-> https://lkml.org/lkml/2016/12/13/65
-> https://lkml.org/lkml/2016/12/13/66
-> 
+Sitz der Gesellschaft: Berlin
+Registergericht: Amtsgericht Charlottenburg, HRB 125506 B
+Gesch=C3=A4ftsf=C3=BChrer: Achim Weiss
 
+--001a1141c938e083cc05442a92da
+Content-Type: text/x-patch; charset=US-ASCII;
+	name="0001-block-fix-deadlock-between-freeze_array-and-wait_bar.patch"
+Content-Disposition: attachment;
+	filename="0001-block-fix-deadlock-between-freeze_array-and-wait_bar.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_iwyxnemg1
+
+RnJvbSA5NTAwZDVlOWE3Y2NkMWY0Mzk3ZjkyN2ZmZGM4ZDM3ODk1NWQ0NzdjIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBKYWNrIFdhbmcgPGppbnB1LndhbmdAcHJvZml0YnJpY2tzLmNv
+bT4KRGF0ZTogV2VkLCAxNCBEZWMgMjAxNiAxNjo1NTo1MiArMDEwMApTdWJqZWN0OiBbUEFUQ0hd
+IGJsb2NrOiBmaXggZGVhZGxvY2sgYmV0d2VlbiBmcmVlemVfYXJyYXkoKSBhbmQgd2FpdF9iYXJy
+aWVyKCkKCldoZW4gd2UgY2FsbCB3YWl0X2JhcnJpZXIsIHdlIG1pZ2h0IGhhdmUgc29tZSBiaW9z
+IHdhaXRpbmcKaW4gY3VycmVudC0+YmlvX2xpc3QsIHdoaWNoIHByZXZlbnRzIHRoZSBhcnJheV9m
+cmVlemUgY2FsbCB0bwpjb21wbGV0ZS4gVGhvc2UgY2FuIG9ubHkgYmUgaW50ZXJuYWwgUkVBRHMs
+IHdoaWNoIGhhdmUgYWxyZWFkeQpwYXNzZWQgdGhlIHdhaXRfYmFycmllciBjYWxsICh0aHVzIGlu
+Y3JlbWVudGluZyBucl9wZW5kaW5nKSwgYnV0CnN0aWxsIHdlcmUgbm90IHN1Ym1pdHRlZCB0byB0
+aGUgbG93ZXIgbGV2ZWwsIGR1ZSB0byBnZW5lcmljX21ha2VfcmVxdWVzdApsb2dpYyB0byBhdm9p
+ZCByZWN1cnNpdmUgY2FsbHMuIEluIHN1Y2ggY2FzZSwgd2UgaGF2ZSBhIGRlYWRsb2NrOgotIGFy
+cmF5X2Zyb3plbiBpcyBhbHJlYWR5IHNldCB0byAxLCBzbyB3YWl0X2JhcnJpZXIgdW5jb25kaXRp
+b25hbGx5IHdhaXRzLCBzbwotIGludGVybmFsIFJFQUQgYmlvcyB3aWxsIG5vdCBiZSBzdWJtaXR0
+ZWQsIHRodXMgZnJlZXplX2FycmF5IHdpbGwKbmV2ZXIgY29tcGxldGVzLgoKVG8gZml4IHRoaXMs
+IG1vZGlmeSBnZW5lcmljX21ha2VfcmVxdWVzdCB0byBhbHdheXMgc29ydCBiaW9fbGlzdF9vbl9z
+dGFjawpmaXJzdCB3aXRoIGxvd2VzdCBsZXZlbCwgdGhlbiBoaWdoZXIsIHVudGlsIHNhbWUgbGV2
+ZWwuCgpTdWdnZXN0ZWQtYnk6IE5laWwgQnJvd24gPG5laWwuYnJvd24uc3VzZS5jb20+ClNpZ25l
+ZC1vZmYtYnk6IEphY2sgV2FuZyA8amlucHUud2FuZ0Bwcm9maXRicmlja3MuY29tPgotLS0KIGJs
+b2NrL2Jsay1jb3JlLmMgfCAyMCArKysrKysrKysrKysrKysrKysrKwogMSBmaWxlIGNoYW5nZWQs
+IDIwIGluc2VydGlvbnMoKykKCmRpZmYgLS1naXQgYS9ibG9jay9ibGstY29yZS5jIGIvYmxvY2sv
+YmxrLWNvcmUuYwppbmRleCBlOGQxNWQ4Li41YTYzOTBhIDEwMDY0NAotLS0gYS9ibG9jay9ibGst
+Y29yZS5jCisrKyBiL2Jsb2NrL2Jsay1jb3JlLmMKQEAgLTIwNjQsMTAgKzIwNjQsMzAgQEAgYmxr
+X3FjX3QgZ2VuZXJpY19tYWtlX3JlcXVlc3Qoc3RydWN0IGJpbyAqYmlvKQogCQlzdHJ1Y3QgcmVx
+dWVzdF9xdWV1ZSAqcSA9IGJkZXZfZ2V0X3F1ZXVlKGJpby0+YmlfYmRldik7CiAKIAkJaWYgKGxp
+a2VseShibGtfcXVldWVfZW50ZXIocSwgX19HRlBfRElSRUNUX1JFQ0xBSU0pID09IDApKSB7CisJ
+CQlzdHJ1Y3QgYmlvX2xpc3QgbG93ZXIsIHNhbWUsIGhvbGQ7CisKKwkJCS8qIENyZWF0ZSBhIGZy
+ZXNoIGJpb19saXN0IGZvciBhbGwgc3Vib3JkaW5hdGUgcmVxdWVzdHMgKi8KKwkJCWJpb19saXN0
+X2luaXQoJmhvbGQpOworCQkJYmlvX2xpc3RfbWVyZ2UoJmhvbGQsICZiaW9fbGlzdF9vbl9zdGFj
+ayk7CisJCQliaW9fbGlzdF9pbml0KCZiaW9fbGlzdF9vbl9zdGFjayk7CiAKIAkJCXJldCA9IHEt
+Pm1ha2VfcmVxdWVzdF9mbihxLCBiaW8pOwogCiAJCQlibGtfcXVldWVfZXhpdChxKTsKKwkJCS8q
+IHNvcnQgbmV3IGJpb3MgaW50byB0aG9zZSBmb3IgYSBsb3dlciBsZXZlbAorCQkJICogYW5kIHRo
+b3NlIGZvciB0aGUgc2FtZSBsZXZlbAorCQkJICovCisJCQliaW9fbGlzdF9pbml0KCZsb3dlcik7
+CisJCQliaW9fbGlzdF9pbml0KCZzYW1lKTsKKwkJCXdoaWxlICgoYmlvID0gYmlvX2xpc3RfcG9w
+KCZiaW9fbGlzdF9vbl9zdGFjaykpICE9IE5VTEwpCisJCQkJaWYgKHEgPT0gYmRldl9nZXRfcXVl
+dWUoYmlvLT5iaV9iZGV2KSkKKwkJCQkJYmlvX2xpc3RfYWRkKCZzYW1lLCBiaW8pOworCQkJCWVs
+c2UKKwkJCQkJYmlvX2xpc3RfYWRkKCZsb3dlciwgYmlvKTsKKwkJCS8qIG5vdyBhc3NlbWJsZSBz
+byB3ZSBoYW5kbGUgdGhlIGxvd2VzdCBsZXZlbCBmaXJzdCAqLworCQkJYmlvX2xpc3RfbWVyZ2Uo
+JmJpb19saXN0X29uX3N0YWNrLCAmbG93ZXIpOworCQkJYmlvX2xpc3RfbWVyZ2UoJmJpb19saXN0
+X29uX3N0YWNrLCAmc2FtZSk7CisJCQliaW9fbGlzdF9tZXJnZSgmYmlvX2xpc3Rfb25fc3RhY2ss
+ICZob2xkKTsKIAogCQkJYmlvID0gYmlvX2xpc3RfcG9wKGN1cnJlbnQtPmJpb19saXN0KTsKIAkJ
+fSBlbHNlIHsKLS0gCjIuNy40Cgo=
+--001a1141c938e083cc05442a92da--
