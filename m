@@ -1,58 +1,49 @@
-From: Jinpu Wang <jinpu.wang@profitbricks.com>
-Subject: Re: [BUG] MD/RAID1 hung forever on freeze_array
-Date: Thu, 22 Dec 2016 09:35:53 +0100
-Message-ID: <CAMGffEk-eTYxUj5a0YbfWzKM+mGx7pXF7ZS72GbREwPKFK4NTA@mail.gmail.com>
-References: <CAMGffE=1kp7gMhG+dFxTvhD6VkRuSfbuXbf9vYSWwGG+=vvhDA@mail.gmail.com>
- <87a8c20xpg.fsf@notabene.neil.brown.name> <CAMGffEkQ5puQEE0FVfLMV1of1OYOhLMhHdUTAy-YLYPkzBzjDg@mail.gmail.com>
- <87oa0gzuej.fsf@notabene.neil.brown.name> <CAMGffEm4BDhKJSiDt=2WmxrpRutg862at7JP221gMi6_SpPomQ@mail.gmail.com>
- <877f73zd5d.fsf@notabene.neil.brown.name> <CAMGffEnCesgUp4gBsPN2L9qg3WSxNXsCcYEPWH-BaeEEktaqcw@mail.gmail.com>
- <CAMGffE=KoVdoYRzkHdRMuCopjmUdcrP9-woFFr-4-VszGsSHRQ@mail.gmail.com>
- <CAMGffEnvn4YQ5ADFXrOm2vOeEwApo38V84wB7VF3D1eZihF-Zw@mail.gmail.com>
- <87fulpyj33.fsf@notabene.neil.brown.name> <CAMGffEkufeaDytaHxtLR02iiQifZDhcwkLdzMj3X8_yaitSoFQ@mail.gmail.com>
- <87oa07tu6q.fsf@notabene.neil.brown.name> <CAMGffEmEUg2Xrg-v_z+cMxzsH-Uk6bDCqTSA7vGoPw4f2dvu0A@mail.gmail.com>
- <871sx2thvt.fsf@notabene.neil.brown.name> <CAMGffE=OVX-jp+-SY8A4pmJHyVAkVQVXSCa_3VgndFf4tYyG9w@mail.gmail.com>
- <878tr8rgc3.fsf@notabene.neil.brown.name>
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Subject: Re: [RFC PATCH v2] crypto: Add IV generation algorithms
+Date: Thu, 22 Dec 2016 16:55:09 +0800
+Message-ID: <20161222085509.GA2160@gondor.apana.org.au>
+References: <1481618949-20086-1-git-send-email-binoy.jayan@linaro.org>
+ <1481618949-20086-2-git-send-email-binoy.jayan@linaro.org>
+ <d6d92865-98fa-4d02-035f-9080bc265c35@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <878tr8rgc3.fsf@notabene.neil.brown.name>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Nate Dailey <nate.dailey@stratus.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-crypto-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <d6d92865-98fa-4d02-035f-9080bc265c35@gmail.com>
+Sender: linux-crypto-owner@vger.kernel.org
+To: Milan Broz <gmazyland@gmail.com>
+Cc: Binoy Jayan <binoy.jayan@linaro.org>, Oded <oded.golombek@arm.com>, Ofir <Ofir.Drang@arm.com>, "David S. Miller" <davem@davemloft.net>, linux-crypto@vger.kernel.org, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Rajendra <rnayak@codeaurora.org>
 List-Id: linux-raid.ids
 
-On Thu, Dec 22, 2016 at 12:51 AM, NeilBrown <neilb@suse.com> wrote:
-> On Wed, Dec 21 2016, Jinpu Wang wrote:
+On Tue, Dec 13, 2016 at 11:01:08AM +0100, Milan Broz wrote:
 >
->>>
->> Thanks, it does help a lot, I attached the patch I'm still testing,
->> but so far so good.
->> Could you check if I got it right?
->
-> Yes, that looks exactly right.
-> I guess one of us should try to push it upstream... maybe next year :-)
->
-> Thanks,
-> NeilBrown
+> By the move everything to cryptoAPI we are basically introducing some strange mix
+> of IV and modes there, I wonder how this is going to be maintained.
+> Anyway, Herbert should say if it is ok...
 
-Thanks, Neil. I will try to push to upstream next year!
-Happy holidays!
+Well there is precedent in how do the IPsec IV generation.  In
+that case the IV generators too are completely specific to that
+application, i.e., IPsec.  However, the way structured it allowed
+us to have one single entry path from the IPsec stack into the
+crypto layer regardless of whether you are using AEAD or traditional
+encryption/hashing algorithms.
 
-Cheers!
---=20
-Jinpu Wang
-Linux Kernel Developer
+For IPsec we make the IV generators behave like normal AEAD
+algorithms, except that they take the sequence number as the IV.
 
-ProfitBricks GmbH
-Greifswalder Str. 207
-D - 10405 Berlin
+The goal here are obviously different.  However, by employing
+the same method as we do in IPsec, it appears to me that you
+can effectively process multiple blocks at once instead of having
+to supply one block at a time due to the IV generation issue.
+ 
+> I really do not think the disk encryption key management should be moved
+> outside of dm-crypt. We cannot then change key structure later easily.
 
-Tel:       +49 30 577 008  042
-Fax:      +49 30 577 008 299
-Email:    jinpu.wang@profitbricks.com
-URL:      https://www.profitbricks.de
+It doesn't have to live outside of dm-crypt.  You can register
+these IV generators from there if you really want.
 
-Sitz der Gesellschaft: Berlin
-Registergericht: Amtsgericht Charlottenburg, HRB 125506 B
-Gesch=C3=A4ftsf=C3=BChrer: Achim Weiss
+Cheers,
+-- 
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
