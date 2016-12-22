@@ -1,80 +1,70 @@
-From: NeilBrown <neilb@suse.com>
-Subject: [mdadm PATCH] Make get_component_size() work with named array.
-Date: Thu, 22 Dec 2016 13:14:59 +1100
-Message-ID: <87wpespv4s.fsf@notabene.neil.brown.name>
+From: Binoy Jayan <binoy.jayan@linaro.org>
+Subject: Re: dm-crypt optimization
+Date: Thu, 22 Dec 2016 13:55:59 +0530
+Message-ID: <CAHv-k_-K9dOiM+Pm_wqVJrvmNYhjtS82-emKVZ8OjsoMHf+7hg@mail.gmail.com>
+References: <CAHv-k_98w-9whFiCLAnTGL2QAirExsix_S8ZWc8tM7wj=gzD6Q@mail.gmail.com>
+ <bf5e7237-2f5c-3fc6-c7d6-38c3b13ac2c3@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Robert LeBlanc <robert@leblancnet.us>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-crypto-owner@vger.kernel.org>
+In-Reply-To: <bf5e7237-2f5c-3fc6-c7d6-38c3b13ac2c3@gmail.com>
+Sender: linux-crypto-owner@vger.kernel.org
+To: Milan Broz <gmazyland@gmail.com>
+Cc: Oded <oded.golombek@arm.com>, Ofir <Ofir.Drang@arm.com>, Herbert Xu <herbert@gondor.apana.org.au>, Arnd Bergmann <arnd@arndb.de>, Mark Brown <broonie@kernel.org>, Alasdair Kergon <agk@redhat.com>, "David S. Miller" <davem@davemloft.net>, private-kwg@linaro.org, dm-devel@redhat.com, linux-crypto@vger.kernel.org, Rajendra <rnayak@codeaurora.org>, Linux kernel mailing list <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>, Mike Snitzer <snitzer@redhat.com>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hi Milan,
 
+On 21 December 2016 at 18:17, Milan Broz <gmazyland@gmail.com> wrote:
 
-get_component_size() still assumes that all array are
- /sys/block/md%d or /sys/block/md_d%d
-and so doesn't work with e.g. /sys/block/md_foo.
+> So the core problem is that your crypto accelerator can operate efficiently only
+> with bigger batch sizes.
 
-This cause "mdadm --detail" to report
-   Used Dev Size : unknown
-and causes problems when added spares and in other circumstances.
+Thank you for the reply. Yes, that would be rather an improvement when having
+bigger block sizes.
 
-So change it to use stat2devnm() which does the right thing with all
-types of array names.
+> How big blocks your crypto hw need to be able to operate more efficiently?
+> What about 4k blocks (no batches), could it be usable trade-off?
 
-Reported-and-tested-by: Robert LeBlanc <robert@leblancnet.us>
-Signed-off-by: NeilBrown <neilb@suse.com>
-=2D--
- sysfs.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+The benchmark results for Qualcomm Snapdragon SoC's (mentioned below) show
+significant improvement with 4K blocks but in batches of all such contiguous
+segments in the block layer's request queue in the form of a chained
+scatterlist.
+However, it uses the algorithm 'aes-xts' instead of the conventional
+'essiv-cbc-aes'
+used in dm-crypt. Also, it uses the device mapper dm-req-crypt instead
+of dm-cypt.
 
-diff --git a/sysfs.c b/sysfs.c
-index 84c7348526c9..b0657a04b3a3 100644
-=2D-- a/sysfs.c
-+++ b/sysfs.c
-@@ -400,14 +400,8 @@ unsigned long long get_component_size(int fd)
- 	int n;
- 	if (fstat(fd, &stb))
- 		return 0;
-=2D	if (major(stb.st_rdev) !=3D (unsigned)get_mdp_major())
-=2D		snprintf(fname, MAX_SYSFS_PATH_LEN,
-=2D			"/sys/block/md%d/md/component_size",
-=2D			(int)minor(stb.st_rdev));
-=2D	else
-=2D		snprintf(fname, MAX_SYSFS_PATH_LEN,
-=2D			"/sys/block/md_d%d/md/component_size",
-=2D			(int)minor(stb.st_rdev)>>MdpMinorShift);
-+	snprintf(fname, MAX_SYSFS_PATH_LEN,
-+		 "/sys/block/%s/md/component_size", stat2devnm(&stb));
- 	fd =3D open(fname, O_RDONLY);
- 	if (fd < 0)
- 		return 0;
-=2D-=20
-2.11.0
+http://nelenkov.blogspot.in/2015/05/hardware-accelerated-disk-encryption-in.html
+Section : 'Performance'
 
+Its reports and IO rate of 46.3MB/s compared to an IO rate of 25.1MB/s while
+using a software-based FDE (based on dm-crypt).  But I am not sure how genuine
+this data is or how it was tested.
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+Since qualcomm SoC's use hardware backed keystore for managing keys and since
+there is no easy way to make dm-crypt work with qualcomm's engines, I do not
+have solid benchmark data to show an improved performance when using 4k blocks.
 
------BEGIN PGP SIGNATURE-----
+> With some (backward incompatible) changes in LUKS format I would like to see support
+> for encryption blocks equivalent to sectors size, so it basically means for 4k drive 4k
+> encryption block.
+> (This should decrease overhead, now is everything processed on 512 blocks only.)
+>
+> Support of bigger block sizes would be unsafe without additional mechanism that provides
+> atomic writes of multiple sectors. Maybe it applies to 4k as well on some devices though...)
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhbNyMACgkQOeye3VZi
-gbk6Tg//Y7q6CpjzSRdTvuWyMYQYk/irOkunTd5uDtgdpXBCWBRLkkIW9D14PLiB
-gT4FxMU2WtFDg/0CRGDM5JaLZXfmBwZ9MRqcMbjGFWheT9MMh/GD6cWDJkAOE+ca
-dfTXPPhSUUEB2qJSFf0mUr2zpFoOi5exZYZPKCzgPgeUNM9WpNv5phJ1dm4pd456
-ydLjuXnT72yozeeTUtruz6BclkxX7rdgBnzrUTHho96UKO6X5Ohm1rlajlBEdHaQ
-QFUgprVWfT++L36O+YmPABsgiKjoc/n7XbPbDCVcbdWXhvnCYRtA8KYUrPdYoMwi
-hkHj2aeE65Rr06ZHqVH+BjVzRsTBgHiqv24U5xqTXvWYXOTRfSVDa5GKRAJ849UN
-/15mH4j8CQ9X0R6YByO9JUy8v6y6fpu+l/2gQTIP3eQoy8o7V4uH2OHh57wbgmTh
-dFum4+nzDNxmQaT9q9aJm2aA/u9RJ/7LPidhfxnfGj6zEFs69Eqdd9aCFLQZ84Ui
-/g+9UO0QVebFBKQAP1k4DWpC+e+ZOkor1qpba+w8IGjWOB3QJx6d+8PYvnfRcOEh
-Wm7Ek4w6QjPRZM5UEsajAyp2QruuVfUahSbbKZK2QhO3G7crHr2384JgUVRrLDWB
-NZVbZ+uFES8XazGfpLR4W5chl+9A5pBhTiGKuw0lNHakmiHjuew=
-=ojFj
------END PGP SIGNATURE-----
---=-=-=--
+Did you mean write to the crypto output buffers or the actual disk write?
+I didn't quite understand how the block size for encryption affects atomic
+writes as it is the block layer which handles them. As far as dm-crypt is,
+concerned it just encrypts/decrypts a 'struct bio' instance and submits the IO
+operation to the block layer.
+
+> The above is not going against your proposal, I am just curious if this is enough
+> to provide better performance on your hw accelerator or not.
+
+May be I should be able to procure an open crypto board and get back to you with
+some results. Or may be show even a marginal improvement while using software
+algorithm by avoiding the crypto overhead for every 512 bytes.
+
+-Binoy
