@@ -1,70 +1,58 @@
-From: Binoy Jayan <binoy.jayan@linaro.org>
-Subject: Re: dm-crypt optimization
-Date: Thu, 22 Dec 2016 13:55:59 +0530
-Message-ID: <CAHv-k_-K9dOiM+Pm_wqVJrvmNYhjtS82-emKVZ8OjsoMHf+7hg@mail.gmail.com>
-References: <CAHv-k_98w-9whFiCLAnTGL2QAirExsix_S8ZWc8tM7wj=gzD6Q@mail.gmail.com>
- <bf5e7237-2f5c-3fc6-c7d6-38c3b13ac2c3@gmail.com>
+From: Jinpu Wang <jinpu.wang@profitbricks.com>
+Subject: Re: [BUG] MD/RAID1 hung forever on freeze_array
+Date: Thu, 22 Dec 2016 09:35:53 +0100
+Message-ID: <CAMGffEk-eTYxUj5a0YbfWzKM+mGx7pXF7ZS72GbREwPKFK4NTA@mail.gmail.com>
+References: <CAMGffE=1kp7gMhG+dFxTvhD6VkRuSfbuXbf9vYSWwGG+=vvhDA@mail.gmail.com>
+ <87a8c20xpg.fsf@notabene.neil.brown.name> <CAMGffEkQ5puQEE0FVfLMV1of1OYOhLMhHdUTAy-YLYPkzBzjDg@mail.gmail.com>
+ <87oa0gzuej.fsf@notabene.neil.brown.name> <CAMGffEm4BDhKJSiDt=2WmxrpRutg862at7JP221gMi6_SpPomQ@mail.gmail.com>
+ <877f73zd5d.fsf@notabene.neil.brown.name> <CAMGffEnCesgUp4gBsPN2L9qg3WSxNXsCcYEPWH-BaeEEktaqcw@mail.gmail.com>
+ <CAMGffE=KoVdoYRzkHdRMuCopjmUdcrP9-woFFr-4-VszGsSHRQ@mail.gmail.com>
+ <CAMGffEnvn4YQ5ADFXrOm2vOeEwApo38V84wB7VF3D1eZihF-Zw@mail.gmail.com>
+ <87fulpyj33.fsf@notabene.neil.brown.name> <CAMGffEkufeaDytaHxtLR02iiQifZDhcwkLdzMj3X8_yaitSoFQ@mail.gmail.com>
+ <87oa07tu6q.fsf@notabene.neil.brown.name> <CAMGffEmEUg2Xrg-v_z+cMxzsH-Uk6bDCqTSA7vGoPw4f2dvu0A@mail.gmail.com>
+ <871sx2thvt.fsf@notabene.neil.brown.name> <CAMGffE=OVX-jp+-SY8A4pmJHyVAkVQVXSCa_3VgndFf4tYyG9w@mail.gmail.com>
+ <878tr8rgc3.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-crypto-owner@vger.kernel.org>
-In-Reply-To: <bf5e7237-2f5c-3fc6-c7d6-38c3b13ac2c3@gmail.com>
-Sender: linux-crypto-owner@vger.kernel.org
-To: Milan Broz <gmazyland@gmail.com>
-Cc: Oded <oded.golombek@arm.com>, Ofir <Ofir.Drang@arm.com>, Herbert Xu <herbert@gondor.apana.org.au>, Arnd Bergmann <arnd@arndb.de>, Mark Brown <broonie@kernel.org>, Alasdair Kergon <agk@redhat.com>, "David S. Miller" <davem@davemloft.net>, private-kwg@linaro.org, dm-devel@redhat.com, linux-crypto@vger.kernel.org, Rajendra <rnayak@codeaurora.org>, Linux kernel mailing list <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>, Mike Snitzer <snitzer@redhat.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <878tr8rgc3.fsf@notabene.neil.brown.name>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Nate Dailey <nate.dailey@stratus.com>
 List-Id: linux-raid.ids
 
-Hi Milan,
-
-On 21 December 2016 at 18:17, Milan Broz <gmazyland@gmail.com> wrote:
-
-> So the core problem is that your crypto accelerator can operate efficiently only
-> with bigger batch sizes.
-
-Thank you for the reply. Yes, that would be rather an improvement when having
-bigger block sizes.
-
-> How big blocks your crypto hw need to be able to operate more efficiently?
-> What about 4k blocks (no batches), could it be usable trade-off?
-
-The benchmark results for Qualcomm Snapdragon SoC's (mentioned below) show
-significant improvement with 4K blocks but in batches of all such contiguous
-segments in the block layer's request queue in the form of a chained
-scatterlist.
-However, it uses the algorithm 'aes-xts' instead of the conventional
-'essiv-cbc-aes'
-used in dm-crypt. Also, it uses the device mapper dm-req-crypt instead
-of dm-cypt.
-
-http://nelenkov.blogspot.in/2015/05/hardware-accelerated-disk-encryption-in.html
-Section : 'Performance'
-
-Its reports and IO rate of 46.3MB/s compared to an IO rate of 25.1MB/s while
-using a software-based FDE (based on dm-crypt).  But I am not sure how genuine
-this data is or how it was tested.
-
-Since qualcomm SoC's use hardware backed keystore for managing keys and since
-there is no easy way to make dm-crypt work with qualcomm's engines, I do not
-have solid benchmark data to show an improved performance when using 4k blocks.
-
-> With some (backward incompatible) changes in LUKS format I would like to see support
-> for encryption blocks equivalent to sectors size, so it basically means for 4k drive 4k
-> encryption block.
-> (This should decrease overhead, now is everything processed on 512 blocks only.)
+On Thu, Dec 22, 2016 at 12:51 AM, NeilBrown <neilb@suse.com> wrote:
+> On Wed, Dec 21 2016, Jinpu Wang wrote:
 >
-> Support of bigger block sizes would be unsafe without additional mechanism that provides
-> atomic writes of multiple sectors. Maybe it applies to 4k as well on some devices though...)
+>>>
+>> Thanks, it does help a lot, I attached the patch I'm still testing,
+>> but so far so good.
+>> Could you check if I got it right?
+>
+> Yes, that looks exactly right.
+> I guess one of us should try to push it upstream... maybe next year :-)
+>
+> Thanks,
+> NeilBrown
 
-Did you mean write to the crypto output buffers or the actual disk write?
-I didn't quite understand how the block size for encryption affects atomic
-writes as it is the block layer which handles them. As far as dm-crypt is,
-concerned it just encrypts/decrypts a 'struct bio' instance and submits the IO
-operation to the block layer.
+Thanks, Neil. I will try to push to upstream next year!
+Happy holidays!
 
-> The above is not going against your proposal, I am just curious if this is enough
-> to provide better performance on your hw accelerator or not.
+Cheers!
+--=20
+Jinpu Wang
+Linux Kernel Developer
 
-May be I should be able to procure an open crypto board and get back to you with
-some results. Or may be show even a marginal improvement while using software
-algorithm by avoiding the crypto overhead for every 512 bytes.
+ProfitBricks GmbH
+Greifswalder Str. 207
+D - 10405 Berlin
 
--Binoy
+Tel:       +49 30 577 008  042
+Fax:      +49 30 577 008 299
+Email:    jinpu.wang@profitbricks.com
+URL:      https://www.profitbricks.de
+
+Sitz der Gesellschaft: Berlin
+Registergericht: Amtsgericht Charlottenburg, HRB 125506 B
+Gesch=C3=A4ftsf=C3=BChrer: Achim Weiss
