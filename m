@@ -1,59 +1,92 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: SAS disk from RAID card (no RAID mode) problems
-Date: Fri, 23 Dec 2016 09:21:35 -0500
-Message-ID: <wrfja8bmiv4g.fsf@redhat.com>
-References: <2326bdf0-2948-5cbf-3033-27ed41803e23@imagedworld.com>
+From: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Subject: Re: Recovering a RAID6 after all disks were disconnected
+Date: Fri, 23 Dec 2016 17:17:05 +0100
+Message-ID: <CAOxFTcxaC1WOj7HeD5bRaPKV93fQZ6X-mBtHOFcQmPwWfjPxDQ@mail.gmail.com>
+References: <CAOxFTczhq3Gr4WW=-sMamaYDmAoMFGh7kkanwJzhXe5NBdMHHQ@mail.gmail.com>
+ <22600.7486.444800.536687@quad.stoffel.home> <CAOxFTczn4Su6KwjDGS0S5BrUdirv9Tu_zCeo26iFMvL3378xpw@mail.gmail.com>
+ <22601.44638.79418.124438@quad.stoffel.home> <CAOxFTcwYujHCHeiJiwUc4aA5RpN_9ocoBGfLS1kfgaz=sKSOSQ@mail.gmail.com>
+ <87k2arpmvt.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2326bdf0-2948-5cbf-3033-27ed41803e23@imagedworld.com> (IW News's
-        message of "Fri, 23 Dec 2016 09:01:40 +0100")
+In-Reply-To: <87k2arpmvt.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: IW News <news@imagedworld.com>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: John Stoffel <john@stoffel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-IW News <news@imagedworld.com> writes:
-> Hello,
->
-> First message here.
->
-> After looking for a solution without any luck I have found this
-> list. I hope someone can help me with this.
->
-> I have an ASUS P6T Deluxe with a MARVELL 88SE63xx SAS RAID controller.
-> There are to identical 400GB SAS SSD drives attached to it. One of
-> them has a Windows 10 installation, the other one Linux.
-> Grub is installed on the second disk.
->
-> Windows works as expected, but I have problems with the Linux
-> installation: the desktop environment freezes for some second once in
-> a while. This occurs with Mint Cinnamon, OpenSuSe KDE, Ubuntu and
-> Manjaro KDE. All of them are current installations. I'm now working in
-> up to date Manjaro KDE (kernel 4.9.0).
-> When the temporary freezes occur the mouse pointer moves, some windows
-> are updated correctly, other do not and DE stops working.
-> When this happens always I have a system log like this:
->
-> ______________________________________________________
-> 23/12/16 8:29    kernel    sas: Enter sas_scsi_recover_host busy: 6
-> failed: 6
-> 23/12/16 8:29    kernel    sas: trying to find task 0xffff8bda8d2bd900
-> 23/12/16 8:29    kernel    sas: sas_scsi_find_task: aborting task
-> 0xffff8bda8d2bd900
-> 23/12/16 8:29    kernel    sas: task done but aborted
-> 23/12/16 8:29    kernel    sas: sas_scsi_find_task: task
-> 0xffff8bda8d2bd900 is done
-> 23/12/16 8:29    kernel    sas: sas_eh_handle_sas_errors: task
-> 0xffff8bda8d2bd900 is done
-[snip]
-> Sometimes shorter sometimes larger.
-> It looks like a controller/drive/cable problem?
-> Any thoughts?
+On Fri, Dec 23, 2016 at 12:25 AM, NeilBrown <neilb@suse.com> wrote:
+> On Fri, Dec 23 2016, Giuseppe Bilotta wrote:
+>> I also wrote a small script to test all combinations (nothing smart,
+>> really, simply enumeration of combos, but I'll consider putting it up
+>> on the wiki as well), and I was actually surprised by the results. To
+>> test if the RAID was being re-created correctly with each combination,
+>> I used `file -s` on the RAID, and verified that the results made
+>> sense. I am surprised to find out that there are multiple combinations
+>> that make sense (note that the disk names are shifted by one compared
+>> to previous emails due a machine lockup that required a reboot and
+>> another disk butting in to a different order):
+>>
+>> trying /dev/sdd /dev/sdf /dev/sde /dev/sdg
+>> /dev/md111: Linux rev 1.0 ext4 filesystem data,
+>> UUID=0031565c-38dd-4445-a707-f77aef1cbf7e, volume name "oneforall"
+>> (needs journal recovery) (extents) (large files) (huge files)
+>>
+>> trying /dev/sdd /dev/sdf /dev/sdg /dev/sde
+>> /dev/md111: Linux rev 1.0 ext4 filesystem data,
+>> UUID=0031565c-38dd-4445-a707-f77aef1cbf7e, volume name "oneforall"
+>> (needs journal recovery) (extents) (large files) (huge files)
+>>
+>> trying /dev/sde /dev/sdf /dev/sdd /dev/sdg
+>> /dev/md111: Linux rev 1.0 ext4 filesystem data,
+>> UUID=0031565c-38dd-4445-a707-f77aef1cbf7e, volume name "oneforall"
+>> (needs journal recovery) (extents) (large files) (huge files)
+>>
+>> trying /dev/sde /dev/sdf /dev/sdg /dev/sdd
+>> /dev/md111: Linux rev 1.0 ext4 filesystem data,
+>> UUID=0031565c-38dd-4445-a707-f77aef1cbf7e, volume name "oneforall"
+>> (needs journal recovery) (extents) (large files) (huge files)
+>>
+>> trying /dev/sdg /dev/sdf /dev/sde /dev/sdd
+>> /dev/md111: Linux rev 1.0 ext4 filesystem data,
+>> UUID=0031565c-38dd-4445-a707-f77aef1cbf7e, volume name "oneforall"
+>> (needs journal recovery) (extents) (large files) (huge files)
+>>
+>> trying /dev/sdg /dev/sdf /dev/sdd /dev/sde
+>> /dev/md111: Linux rev 1.0 ext4 filesystem data,
+>> UUID=0031565c-38dd-4445-a707-f77aef1cbf7e, volume name "oneforall"
+>> (needs journal recovery) (extents) (large files) (huge files)
+>> :
+>> So there are six out of 24 combinations that make sense, at least for
+>> the first block. I know from the pre-fail dmesg that the g-f-e-d order
+>> should be the correct one, but now I'm left wondering if there is a
+>> better way to verify this (other than manually sampling files to see
+>> if they make sense), or if the left-symmetric layout on a RAID6 simply
+>> allows some of the disk positions to be swapped without loss of data.
 
-Doesn't look like a Linux RAID issue, but much more like a driver
-problem. Possibly caused by cables or controller issues.
+> You script has reported all arrangements with /dev/sdf as the second
+> device.  Presumably that is where the single block you are reading
+> resides.
 
-You probably want to reach out to the linux-scsi list.
+That makes sense.
 
-Jes
+> To check if a RAID6 arrangement is credible, you can try the raid6check
+> program that is include in the mdadm source release.  There is a man
+> page.
+> If the order of devices is not correct raid6check will tell you about
+> it.
+
+That's a wonderful small utility, thanks for making it known to me!
+Checking even just a small number of stripes was enough in this case,
+as the expected combination (g f e d) was the only one that produced
+no errors.
+
+Now I wonder if it it would be possible to combine this approach with
+something that simply hacked the metadata of each disk to re-establish
+the correct disk order to make it possible to reassemble this
+particular array without recreating anything. Are problems such as
+mine common enough to warrant support for this kind of verified
+reassembly from assumed-clean disks easier?.
+
+-- 
+Giuseppe "Oblomov" Bilotta
