@@ -1,35 +1,40 @@
 From: Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH v1 37/54] dm-crypt: convert to bio_for_each_segment_all_sp()
-Date: Wed, 28 Dec 2016 00:04:46 +0800
-Message-ID: <1482854706-14128-6-git-send-email-tom.leiming@gmail.com>
+Subject: [PATCH v1 38/54] md/raid1.c: convert to bio_for_each_segment_all_sp()
+Date: Wed, 28 Dec 2016 00:04:47 +0800
+Message-ID: <1482854706-14128-7-git-send-email-tom.leiming@gmail.com>
 References: <1482854706-14128-1-git-send-email-tom.leiming@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1482854706-14128-1-git-send-email-tom.leiming@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-raid-owner@vger.kernel.org
 To: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org
-Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ming Lei <tom.leiming@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "maintainer:DEVICE-MAPPER LVM" <dm-devel@redhat.com>, Shaohua Li <shli@kernel.org>, "open list:SOFTWARE RAID Multiple Disks
+Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ming Lei <tom.leiming@gmail.com>, Shaohua Li <shli@kernel.org>, "open list:SOFTWARE RAID Multiple Disks
         SUPPORT" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 Signed-off-by: Ming Lei <tom.leiming@gmail.com>
 ---
- drivers/md/dm-crypt.c | 3 ++-
+ drivers/md/raid1.c | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
-index 593cdf88bf5f..c6932fb85418 100644
---- a/drivers/md/dm-crypt.c
-+++ b/drivers/md/dm-crypt.c
-@@ -1038,8 +1038,9 @@ static void crypt_free_buffer_pages(struct crypt_config *cc, struct bio *clone)
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index a1f3fbed9100..4818f40e7ce9 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -988,12 +988,13 @@ static void alloc_behind_pages(struct bio *bio, struct r1bio *r1_bio)
  {
- 	unsigned int i;
- 	struct bio_vec *bv;
+ 	int i;
+ 	struct bio_vec *bvec;
 +	struct bvec_iter_all bia;
+ 	struct bio_vec *bvecs = kzalloc(bio->bi_vcnt * sizeof(struct bio_vec),
+ 					GFP_NOIO);
+ 	if (unlikely(!bvecs))
+ 		return;
  
--	bio_for_each_segment_all(bv, clone, i) {
-+	bio_for_each_segment_all_sp(bv, clone, i, bia) {
- 		BUG_ON(!bv->bv_page);
- 		mempool_free(bv->bv_page, cc->page_pool);
- 	}
+-	bio_for_each_segment_all(bvec, bio, i) {
++	bio_for_each_segment_all_sp(bvec, bio, i, bia) {
+ 		bvecs[i] = *bvec;
+ 		bvecs[i].bv_page = alloc_page(GFP_NOIO);
+ 		if (unlikely(!bvecs[i].bv_page))
 -- 
 2.7.4
+
