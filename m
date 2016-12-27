@@ -1,377 +1,226 @@
-From: Coly Li <colyli@suse.de>
-Subject: [v2 PATCH 2/2] RAID1: avoid unnecessary spin locks in I/O barrier code
-Date: Tue, 27 Dec 2016 23:47:38 +0800
-Message-ID: <1482853658-82535-2-git-send-email-colyli@suse.de>
-References: <1482853658-82535-1-git-send-email-colyli@suse.de>
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1482853658-82535-1-git-send-email-colyli@suse.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Coly Li <colyli@suse.de>, Shaohua Li <shli@fb.com>, Hannes Reinecke <hare@suse.com>, Neil Brown <neilb@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Guoqing Jiang <gqjiang@suse.com>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: [PATCH v1 00/54] block: support multipage bvec
+Date: Tue, 27 Dec 2016 23:55:49 +0800
+Message-ID: <1482854250-13481-1-git-send-email-tom.leiming@gmail.com>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
+To: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org
+Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ming Lei <tom.leiming@gmail.com>, Al Viro <viro@ZenIV.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Bart Van Assche <bart.vanassche@sandisk.com>, Chaitanya Kulkarni <chaitanya.kulkarni@hgst.com>, "open list:GFS2 FILE SYSTEM" <cluster-devel@redhat.com>, Damien Le Moal <damien.lemoal@hgst.com>, Dan Williams <dan.j.williams@intel.com>, "open list:DEVICE-MAPPER  LVM" <dm-devel@redhat.com>, "open list:DRBD DRIVER" <drbd-dev@lists.linbit.com>, Eric Wheeler <git@linux.ewheeler.net>, Guoqing Jiang <gqjiang@suse.com>, Hannes Reinecke <hare@suse.com>, Hannes Reinecke <hare@suse.de>, Jiri Kosina <jkosina@suse.cz>, Joe Perches <joe@perches.com>, Johannes Berg <johannes.berg@intel.com>, Johannes Thumshirn <jthumshirn@suse.de>, Kent Overstreet <kent.overstreet@gmail.com>, linux-bcache@vger.kernel.org
 List-Id: linux-raid.ids
 
-When I run a parallel reading performan testing on a md raid1 device with
-two NVMe SSDs, I observe very bad throughput in supprise: by fio with 64KB
-block size, 40 seq read I/O jobs, 128 iodepth, overall throughput is
-only 2.7GB/s, this is around 50% of the idea performance number.
+Hi,
 
-The perf reports locking contention happens at allow_barrier() and
-wait_barrier() code,
- - 41.41%  fio [kernel.kallsyms]     [k] _raw_spin_lock_irqsave
-   - _raw_spin_lock_irqsave
-         + 89.92% allow_barrier
-         + 9.34% __wake_up
- - 37.30%  fio [kernel.kallsyms]     [k] _raw_spin_lock_irq
-   - _raw_spin_lock_irq
-         - 100.00% wait_barrier
+This patchset brings multipage bvec into block layer. Basic
+xfstests(-a auto) over virtio-blk/virtio-scsi have been run
+and no regression is found, so it should be good enough
+to show the approach now, and any comments are welcome!
 
-The reason is, in these I/O barrier related functions,
- - raise_barrier()
- - lower_barrier()
- - wait_barrier()
- - allow_barrier()
-They always hold conf->resync_lock firstly, even there are only regular
-reading I/Os and no resync I/O at all. This is a huge performance penalty.
+1) what is multipage bvec?
 
-The solution is a lockless-like algorithm in I/O barrier code, and only
-holding conf->resync_lock when it is really necessary.
+Multipage bvecs means that one 'struct bio_bvec' can hold
+multiple pages which are physically contiguous instead
+of one single page used in linux kernel for long time.
 
-The original idea is from Hannes Reinecke, and Neil Brown provides
-comments to improve it. Now I write the patch based on new simpler raid1
-I/O barrier code.
+2) why is multipage bvec introduced?
 
-In the new simpler raid1 I/O barrier implementation, there are two
-wait barrier functions,
- - wait_barrier()
-   Which in turns calls _wait_barrier(), is used for regular write I/O.
-   If there is resync I/O happening on the same barrier bucket index, or
-   the whole array is frozen, task will wait until no barrier on same
-   bucket index, or the whold array is unfreezed.
- - wait_read_barrier()
-   Since regular read I/O won't interfere with resync I/O (read_balance()
-   will make sure only uptodate data will be read out), so it is
-   unnecessary to wait for barrier in regular read I/Os, they only have to
-   wait only when the whole array is frozen.
-The operations on conf->nr_pending[idx], conf->nr_waiting[idx], conf->
-barrier[idx] are very carefully designed in raise_barrier(),
-lower_barrier(), _wait_barrier() and wait_read_barrier(), in order to
-avoid unnecessary spin locks in these functions. Once conf->
-nr_pengding[idx] is increased, a resync I/O with same barrier bucket index
-has to wait in raise_barrier(). Then in _wait_barrier() or
-wait_read_barrier() if no barrier raised in same barrier bucket index or
-array is not frozen, the regular I/O doesn't need to hold conf->
-resync_lock, it can just increase conf->nr_pending[idx], and return to its
-caller. For heavy parallel reading I/Os, the lockless I/O barrier code
-almostly gets rid of all spin lock cost.
+Kent proposed the idea[1] first. 
 
-This patch significantly improves raid1 reading peroformance. From my
-testing, a raid1 device built by two NVMe SSD, runs fio with 64KB
-blocksize, 40 seq read I/O jobs, 128 iodepth, overall throughput
-increases from 2.7GB/s to 4.6GB/s (+70%).
+As system's RAM becomes much bigger than before, and 
+at the same time huge page, transparent huge page and
+memory compaction are widely used, it is a bit easy now
+to see physically contiguous pages from fs in I/O.
+On the other hand, from block layer's view, it isn't
+necessary to store intermediate pages into bvec, and
+it is enough to just store the physicallly contiguous
+'segment'.
 
-Open question:
-Shaohua points out the memory barrier should be added to some atomic
-operations. Now I am reading the document to learn how to add the memory
-barriers correctly. Anyway, if anyone has suggestion, please don't
-hesitate to let me know.
+Also huge pages are being brought to filesystem[2], we
+can do IO a hugepage a time[3], requires that one bio can
+transfer at least one huge page one time. Turns out it isn't
+flexiable to change BIO_MAX_PAGES simply[3]. Multipage bvec
+can fit in this case very well.
 
-Changelog
+With multipage bvec:
+
+- bio size can be increased and it should improve some
+high-bandwidth IO case in theory[4].
+
+- Inside block layer, both bio splitting and sg map can
+become more efficient than before by just traversing the
+physically contiguous 'segment' instead of each page.
+
+- there is possibility in future to improve memory footprint
+of bvecs usage. 
+
+3) how is multipage bvec implemented in this patchset?
+
+The 1st 9 patches comment on some special cases. As we saw,
+most of cases are found as safe for multipage bvec,
+only fs/buffer, MD and btrfs need to deal with. Both fs/buffer
+and btrfs are dealt with in the following patches based on some
+new block APIs for multipage bvec. 
+
+Given a little more work is involved to cleanup MD, this patchset
+introduces QUEUE_FLAG_NO_MP for them, and this component can still
+see/use singlepage bvec. In the future, once the cleanup is done, the
+flag can be killed.
+
+The 2nd part(23 ~ 54) implements multipage bvec in block:
+
+- put all tricks into bvec/bio/rq iterators, and as far as
+drivers and fs use these standard iterators, they are happy
+with multipage bvec
+
+- bio_for_each_segment_all() changes
+this helper pass pointer of each bvec directly to user, and
+it has to be changed. Two new helpers(bio_for_each_segment_all_sp()
+and bio_for_each_segment_all_mp()) are introduced. 
+
+Also convert current bio_for_each_segment_all() into the
+above two.
+
+- bio_clone() changes
+At default bio_clone still clones one new bio in multipage bvec
+way. Also single page version of bio_clone() is introduced
+for some special cases, such as only single page bvec is used
+for the new cloned bio(bio bounce, ...)
+
+- btrfs cleanup
+just three patches for avoiding direct access to bvec table.
+
+These patches can be found in the following git tree:
+
+	https://github.com/ming1/linux/commits/mp-bvec-0.6-v4.10-rc
+
+Thanks Christoph for looking at the early version and providing
+very good suggestions, such as: introduce bio_init_with_vec_table(),
+remove another unnecessary helpers for cleanup and so on.
+
+TODO:
+	- cleanup direct access to bvec table for MD
+
 V1:
-- Original RFC patch for comments.
-V2:
-- Remove a spin_lock/unlock pair in raid1d().
-- Add more code comments to explain why there is no racy when checking two
-  atomic_t variables at same time.
+	- against v4.10-rc1 and some cleanup in V0 are in -linus already
+	- handle queue_virt_boundary() in mp bvec change and make NVMe happy
+	- further BTRFS cleanup
+	- remove QUEUE_FLAG_SPLIT_MP
+	- rename for two new helpers of bio_for_each_segment_all()
+	- fix bounce convertion
+	- address comments in V0
 
-Signed-off-by: Coly Li <colyli@suse.de>
-Cc: Shaohua Li <shli@fb.com>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Neil Brown <neilb@suse.de>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Guoqing Jiang <gqjiang@suse.com>
----
- drivers/md/raid1.c | 134 +++++++++++++++++++++++++++++++----------------------
- drivers/md/raid1.h |  12 ++---
- 2 files changed, 85 insertions(+), 61 deletions(-)
+[1], http://marc.info/?l=linux-kernel&m=141680246629547&w=2
+[2], https://patchwork.kernel.org/patch/9451523/
+[3], http://marc.info/?t=147735447100001&r=1&w=2
+[4], http://marc.info/?l=linux-mm&m=147745525801433&w=2
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 5813656..b1fb4c1 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -222,7 +222,7 @@ static void reschedule_retry(struct r1bio *r1_bio)
- 	idx = hash_long(r1_bio->sector, BARRIER_BUCKETS_NR_BITS);
- 	spin_lock_irqsave(&conf->device_lock, flags);
- 	list_add(&r1_bio->retry_list, &conf->retry_list);
--	conf->nr_queued[idx]++;
-+	atomic_inc(&conf->nr_queued[idx]);
- 	spin_unlock_irqrestore(&conf->device_lock, flags);
- 
- 	wake_up(&conf->wait_barrier);
-@@ -831,13 +831,13 @@ static void raise_barrier(struct r1conf *conf, sector_t sector_nr)
- 	spin_lock_irq(&conf->resync_lock);
- 
- 	/* Wait until no block IO is waiting */
--	wait_event_lock_irq(conf->wait_barrier, !conf->nr_waiting[idx],
-+	wait_event_lock_irq(conf->wait_barrier,
-+			    !atomic_read(&conf->nr_waiting[idx]),
- 			    conf->resync_lock);
- 
- 	/* block any new IO from starting */
--	conf->barrier[idx]++;
--	conf->total_barriers++;
--
-+	atomic_inc(&conf->barrier[idx]);
-+	atomic_inc(&conf->total_barriers);
- 	/* For these conditions we must wait:
- 	 * A: while the array is in frozen state
- 	 * B: while conf->nr_pending[idx] is not 0, meaning regular I/O
-@@ -846,44 +846,69 @@ static void raise_barrier(struct r1conf *conf, sector_t sector_nr)
- 	 *    the max count which allowed on the whole raid1 device.
- 	 */
- 	wait_event_lock_irq(conf->wait_barrier,
--			    !conf->array_frozen &&
--			     !conf->nr_pending[idx] &&
--			     conf->total_barriers < RESYNC_DEPTH,
-+			    !atomic_read(&conf->array_frozen) &&
-+			     !atomic_read(&conf->nr_pending[idx]) &&
-+			     atomic_read(&conf->total_barriers) < RESYNC_DEPTH,
- 			    conf->resync_lock);
- 
--	conf->nr_pending[idx]++;
-+	atomic_inc(&conf->nr_pending[idx]);
- 	spin_unlock_irq(&conf->resync_lock);
- }
- 
- static void lower_barrier(struct r1conf *conf, sector_t sector_nr)
- {
--	unsigned long flags;
- 	int idx = hash_long(sector_nr, BARRIER_BUCKETS_NR_BITS);
- 
--	BUG_ON((conf->barrier[idx] <= 0) || conf->total_barriers <= 0);
--
--	spin_lock_irqsave(&conf->resync_lock, flags);
--	conf->barrier[idx]--;
--	conf->total_barriers--;
--	conf->nr_pending[idx]--;
--	spin_unlock_irqrestore(&conf->resync_lock, flags);
-+	BUG_ON(atomic_read(&conf->barrier[idx]) <= 0);
-+	BUG_ON(atomic_read(&conf->total_barriers) <= 0);
-+	atomic_dec(&conf->barrier[idx]);
-+	atomic_dec(&conf->total_barriers);
-+	atomic_dec(&conf->nr_pending[idx]);
- 	wake_up(&conf->wait_barrier);
- }
- 
- static void _wait_barrier(struct r1conf *conf, int idx)
- {
--	spin_lock_irq(&conf->resync_lock);
--	if (conf->array_frozen || conf->barrier[idx]) {
--		conf->nr_waiting[idx]++;
--		/* Wait for the barrier to drop. */
--		wait_event_lock_irq(
--			conf->wait_barrier,
--			!conf->array_frozen && !conf->barrier[idx],
--			conf->resync_lock);
--		conf->nr_waiting[idx]--;
--	}
-+	/* We need to increase conf->nr_pending[idx] very early here,
-+	 * then raise_barrier() can be blocked when it waits for
-+	 * conf->nr_pending[idx] to be 0. Then we can avoid holding
-+	 * conf->resync_lock when there is no barrier raised in same
-+	 * barrier unit bucket. Also if the array is frozen, I/O
-+	 * should be blocked until array is unfrozen.
-+	 */
-+	atomic_inc(&conf->nr_pending[idx]);
-+
-+	/* Don't worry about checking two atomic_t variables at same time
-+	 * here. conf->array_frozen MUST be checked firstly, The logic is,
-+	 * if the array is frozen, no matter there is any barrier or not,
-+	 * all I/O should be blocked. If there is no barrier in current
-+	 * barrier bucket, we still need to check whether the array is frozen,
-+	 * otherwise I/O will happen on frozen array, that's buggy.
-+	 * If during we check conf->barrier[idx], the array is frozen (a.k.a
-+	 * conf->array_frozen is set), and chonf->barrier[idx] is 0, it is
-+	 * safe to return and make the I/O continue. Because the array is
-+	 * frozen, all I/O returned here will eventually complete or be
-+	 * queued, see code comment in frozen_array().
-+	 */
-+	if (!atomic_read(&conf->array_frozen) &&
-+	    !atomic_read(&conf->barrier[idx]))
-+		return;
- 
--	conf->nr_pending[idx]++;
-+	/* After holding conf->resync_lock, conf->nr_pending[idx]
-+	 * should be decreased before waiting for barrier to drop.
-+	 * Otherwise, we may encounter a race condition because
-+	 * raise_barrer() might be waiting for conf->nr_pending[idx]
-+	 * to be 0 at same time.
-+	 */
-+	atomic_inc(&conf->nr_waiting[idx]);
-+	atomic_dec(&conf->nr_pending[idx]);
-+	/* Wait for the barrier in same barrier unit bucket to drop. */
-+	wait_event_lock_irq(conf->wait_barrier,
-+			    !atomic_read(&conf->array_frozen) &&
-+			     !atomic_read(&conf->barrier[idx]),
-+			    conf->resync_lock);
-+	atomic_inc(&conf->nr_pending[idx]);
-+	atomic_dec(&conf->nr_waiting[idx]);
- 	spin_unlock_irq(&conf->resync_lock);
- }
- 
-@@ -891,18 +916,23 @@ static void wait_read_barrier(struct r1conf *conf, sector_t sector_nr)
- {
- 	long idx = hash_long(sector_nr, BARRIER_BUCKETS_NR_BITS);
- 
--	spin_lock_irq(&conf->resync_lock);
--	if (conf->array_frozen) {
--		conf->nr_waiting[idx]++;
--		/* Wait for array to unfreeze */
--		wait_event_lock_irq(
--			conf->wait_barrier,
--			!conf->array_frozen,
--			conf->resync_lock);
--		conf->nr_waiting[idx]--;
--	}
-+	/* Very similar to _wait_barrier(). The difference is, for read
-+	 * I/O we don't need wait for sync I/O, but if the whole array
-+	 * is frozen, the read I/O still has to wait until the array is
-+	 * unfrozen.
-+	 */
-+	atomic_inc(&conf->nr_pending[idx]);
-+	if (!atomic_read(&conf->array_frozen))
-+		return;
- 
--	conf->nr_pending[idx]++;
-+	atomic_inc(&conf->nr_waiting[idx]);
-+	atomic_dec(&conf->nr_pending[idx]);
-+	/* Wait for array to be unfrozen */
-+	wait_event_lock_irq(conf->wait_barrier,
-+			    !atomic_read(&conf->array_frozen),
-+			    conf->resync_lock);
-+	atomic_inc(&conf->nr_pending[idx]);
-+	atomic_dec(&conf->nr_waiting[idx]);
- 	spin_unlock_irq(&conf->resync_lock);
- }
- 
-@@ -923,11 +953,7 @@ static void wait_all_barriers(struct r1conf *conf)
- 
- static void _allow_barrier(struct r1conf *conf, int idx)
- {
--	unsigned long flags;
--
--	spin_lock_irqsave(&conf->resync_lock, flags);
--	conf->nr_pending[idx]--;
--	spin_unlock_irqrestore(&conf->resync_lock, flags);
-+	atomic_dec(&conf->nr_pending[idx]);
- 	wake_up(&conf->wait_barrier);
- }
- 
-@@ -952,7 +978,7 @@ static int get_all_pendings(struct r1conf *conf)
- 	int idx, ret;
- 
- 	for (ret = 0, idx = 0; idx < BARRIER_BUCKETS_NR; idx++)
--		ret += conf->nr_pending[idx];
-+		ret += atomic_read(&conf->nr_pending[idx]);
- 	return ret;
- }
- 
-@@ -962,7 +988,7 @@ static int get_all_queued(struct r1conf *conf)
- 	int idx, ret;
- 
- 	for (ret = 0, idx = 0; idx < BARRIER_BUCKETS_NR; idx++)
--		ret += conf->nr_queued[idx];
-+		ret += atomic_read(&conf->nr_queued[idx]);
- 	return ret;
- }
- 
-@@ -992,7 +1018,7 @@ static void freeze_array(struct r1conf *conf, int extra)
- 	 * normal I/O context, extra is 1, in rested situations extra is 0.
- 	 */
- 	spin_lock_irq(&conf->resync_lock);
--	conf->array_frozen = 1;
-+	atomic_set(&conf->array_frozen, 1);
- 	raid1_log(conf->mddev, "wait freeze");
- 	wait_event_lock_irq_cmd(
- 		conf->wait_barrier,
-@@ -1005,7 +1031,7 @@ static void unfreeze_array(struct r1conf *conf)
- {
- 	/* reverse the effect of the freeze */
- 	spin_lock_irq(&conf->resync_lock);
--	conf->array_frozen = 0;
-+	atomic_set(&conf->array_frozen, 0);
- 	wake_up(&conf->wait_barrier);
- 	spin_unlock_irq(&conf->resync_lock);
- }
-@@ -2407,7 +2433,7 @@ static void handle_write_finished(struct r1conf *conf, struct r1bio *r1_bio)
- 		spin_lock_irq(&conf->device_lock);
- 		list_add(&r1_bio->retry_list, &conf->bio_end_io_list);
- 		idx = hash_long(r1_bio->sector, BARRIER_BUCKETS_NR_BITS);
--		conf->nr_queued[idx]++;
-+		atomic_inc(&conf->nr_queued[idx]);
- 		spin_unlock_irq(&conf->device_lock);
- 		md_wakeup_thread(conf->mddev->thread);
- 	} else {
-@@ -2546,9 +2572,7 @@ static void raid1d(struct md_thread *thread)
- 			list_del(&r1_bio->retry_list);
- 			idx = hash_long(r1_bio->sector,
- 					BARRIER_BUCKETS_NR_BITS);
--			spin_lock_irqsave(&conf->device_lock, flags);
--			conf->nr_queued[idx]--;
--			spin_unlock_irqrestore(&conf->device_lock, flags);
-+			atomic_dec(&conf->nr_queued[idx]);
- 			if (mddev->degraded)
- 				set_bit(R1BIO_Degraded, &r1_bio->state);
- 			if (test_bit(R1BIO_WriteError, &r1_bio->state))
-@@ -2570,7 +2594,7 @@ static void raid1d(struct md_thread *thread)
- 		r1_bio = list_entry(head->prev, struct r1bio, retry_list);
- 		list_del(head->prev);
- 		idx = hash_long(r1_bio->sector, BARRIER_BUCKETS_NR_BITS);
--		conf->nr_queued[idx]--;
-+		atomic_dec(&conf->nr_queued[idx]);
- 		spin_unlock_irqrestore(&conf->device_lock, flags);
- 
- 		mddev = r1_bio->mddev;
-@@ -2687,7 +2711,7 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
- 	 * If there is non-resync activity waiting for a turn, then let it
- 	 * though before starting on this new sync request.
- 	 */
--	if (conf->nr_waiting[idx])
-+	if (atomic_read(&conf->nr_waiting[idx]))
- 		schedule_timeout_uninterruptible(1);
- 
- 	/* we are incrementing sector_nr below. To be safe, we check against
-@@ -3316,7 +3340,7 @@ static void *raid1_takeover(struct mddev *mddev)
- 		conf = setup_conf(mddev);
- 		if (!IS_ERR(conf)) {
- 			/* Array must appear to be quiesced */
--			conf->array_frozen = 1;
-+			atomic_set(&conf->array_frozen, 1);
- 			clear_bit(MD_HAS_JOURNAL, &mddev->flags);
- 			clear_bit(MD_JOURNAL_CLEAN, &mddev->flags);
- 		}
-diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
-index 817115d..bbe65f7 100644
---- a/drivers/md/raid1.h
-+++ b/drivers/md/raid1.h
-@@ -68,12 +68,12 @@ struct r1conf {
- 	 */
- 	wait_queue_head_t	wait_barrier;
- 	spinlock_t		resync_lock;
--	int			nr_pending[BARRIER_BUCKETS_NR];
--	int			nr_waiting[BARRIER_BUCKETS_NR];
--	int			nr_queued[BARRIER_BUCKETS_NR];
--	int			barrier[BARRIER_BUCKETS_NR];
--	int			total_barriers;
--	int			array_frozen;
-+	atomic_t		nr_pending[BARRIER_BUCKETS_NR];
-+	atomic_t		nr_waiting[BARRIER_BUCKETS_NR];
-+	atomic_t		nr_queued[BARRIER_BUCKETS_NR];
-+	atomic_t		barrier[BARRIER_BUCKETS_NR];
-+	atomic_t		total_barriers;
-+	atomic_t		array_frozen;
- 
- 	/* Set to 1 if a full sync is needed, (fresh device added).
- 	 * Cleared when a sync completes.
+
+Ming Lei (54):
+  block: drbd: comment on direct access bvec table
+  block: loop: comment on direct access to bvec table
+  kernel/power/swap.c: comment on direct access to bvec table
+  mm: page_io.c: comment on direct access to bvec table
+  fs/buffer: comment on direct access to bvec table
+  f2fs: f2fs_read_end_io: comment on direct access to bvec table
+  bcache: comment on direct access to bvec table
+  block: comment on bio_alloc_pages()
+  block: comment on bio_iov_iter_get_pages()
+  block: introduce flag QUEUE_FLAG_NO_MP
+  md: set NO_MP for request queue of md
+  dm: limit the max bio size as BIO_MAX_PAGES * PAGE_SIZE
+  block: comments on bio_for_each_segment[_all]
+  block: introduce multipage/single page bvec helpers
+  block: implement sp version of bvec iterator helpers
+  block: introduce bio_for_each_segment_mp()
+  block: introduce bio_clone_sp()
+  bvec_iter: introduce BVEC_ITER_ALL_INIT
+  block: bounce: avoid direct access to bvec table
+  block: bounce: don't access bio->bi_io_vec in copy_to_high_bio_irq
+  block: introduce bio_can_convert_to_sp()
+  block: bounce: convert multipage bvecs into singlepage
+  bcache: handle bio_clone() & bvec updating for multipage bvecs
+  blk-merge: compute bio->bi_seg_front_size efficiently
+  block: blk-merge: try to make front segments in full size
+  block: blk-merge: remove unnecessary check
+  block: use bio_for_each_segment_mp() to compute segments count
+  block: use bio_for_each_segment_mp() to map sg
+  block: introduce bvec_for_each_sp_bvec()
+  block: bio: introduce single/multi page version of
+    bio_for_each_segment_all()
+  block: introduce bio_segments_all()
+  block: introduce bvec_get_last_sp()
+  block: deal with dirtying pages for multipage bvec
+  block: convert to singe/multi page version of
+    bio_for_each_segment_all()
+  bcache: convert to bio_for_each_segment_all_sp()
+  dm-crypt: don't clear bvec->bv_page in crypt_free_buffer_pages()
+  dm-crypt: convert to bio_for_each_segment_all_sp()
+  md/raid1.c: convert to bio_for_each_segment_all_sp()
+  fs/mpage: convert to bio_for_each_segment_all_sp()
+  fs/direct-io: convert to bio_for_each_segment_all_sp()
+  ext4: convert to bio_for_each_segment_all_sp()
+  xfs: convert to bio_for_each_segment_all_sp()
+  gfs2: convert to bio_for_each_segment_all_sp()
+  f2fs: convert to bio_for_each_segment_all_sp()
+  exofs: convert to bio_for_each_segment_all_sp()
+  fs: crypto: convert to bio_for_each_segment_all_sp()
+  fs/btrfs: convert to bio_for_each_segment_all_sp()
+  fs/block_dev.c: convert to bio_for_each_segment_all_sp()
+  fs/iomap.c: convert to bio_for_each_segment_all_sp()
+  fs/buffer.c: use bvec iterator to truncate the bio
+  btrfs: avoid access to .bi_vcnt directly
+  btrfs: use bvec_get_last_sp to get the last singlepage bvec
+  btrfs: comment on direct access bvec table
+  block: enable multipage bvecs
+
+ block/bio.c                      | 110 +++++++++++++++----
+ block/blk-merge.c                | 227 +++++++++++++++++++++++++++++++--------
+ block/blk-zoned.c                |   5 +-
+ block/bounce.c                   |  75 +++++++++----
+ drivers/block/drbd/drbd_bitmap.c |   1 +
+ drivers/block/loop.c             |   5 +
+ drivers/md/bcache/btree.c        |   4 +-
+ drivers/md/bcache/debug.c        |  30 +++++-
+ drivers/md/bcache/super.c        |   6 ++
+ drivers/md/bcache/util.c         |   7 ++
+ drivers/md/dm-crypt.c            |   4 +-
+ drivers/md/dm.c                  |  11 +-
+ drivers/md/md.c                  |  12 +++
+ drivers/md/raid1.c               |   3 +-
+ fs/block_dev.c                   |   6 +-
+ fs/btrfs/check-integrity.c       |  12 ++-
+ fs/btrfs/compression.c           |  12 ++-
+ fs/btrfs/disk-io.c               |   3 +-
+ fs/btrfs/extent_io.c             |  26 +++--
+ fs/btrfs/extent_io.h             |   1 +
+ fs/btrfs/file-item.c             |   6 +-
+ fs/btrfs/inode.c                 |  34 ++++--
+ fs/btrfs/raid56.c                |   6 +-
+ fs/buffer.c                      |  24 +++--
+ fs/crypto/crypto.c               |   3 +-
+ fs/direct-io.c                   |   4 +-
+ fs/exofs/ore.c                   |   3 +-
+ fs/exofs/ore_raid.c              |   3 +-
+ fs/ext4/page-io.c                |   3 +-
+ fs/ext4/readpage.c               |   3 +-
+ fs/f2fs/data.c                   |  13 ++-
+ fs/gfs2/lops.c                   |   3 +-
+ fs/gfs2/meta_io.c                |   3 +-
+ fs/iomap.c                       |   3 +-
+ fs/mpage.c                       |   3 +-
+ fs/xfs/xfs_aops.c                |   3 +-
+ include/linux/bio.h              | 164 ++++++++++++++++++++++++++--
+ include/linux/blk_types.h        |   6 ++
+ include/linux/blkdev.h           |   2 +
+ include/linux/bvec.h             | 138 ++++++++++++++++++++++--
+ kernel/power/swap.c              |   2 +
+ mm/page_io.c                     |   2 +
+ 42 files changed, 829 insertions(+), 162 deletions(-)
+
 -- 
-2.6.6
+2.7.4
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
