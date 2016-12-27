@@ -1,46 +1,53 @@
 From: Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH v1 12/54] dm: limit the max bio size as BIO_MAX_PAGES * PAGE_SIZE
-Date: Tue, 27 Dec 2016 23:56:01 +0800
-Message-ID: <1482854250-13481-13-git-send-email-tom.leiming@gmail.com>
+Subject: [PATCH v1 11/54] md: set NO_MP for request queue of md
+Date: Tue, 27 Dec 2016 23:56:00 +0800
+Message-ID: <1482854250-13481-12-git-send-email-tom.leiming@gmail.com>
 References: <1482854250-13481-1-git-send-email-tom.leiming@gmail.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1482854250-13481-1-git-send-email-tom.leiming@gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org
-Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ming Lei <tom.leiming@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "maintainer:DEVICE-MAPPER LVM" <dm-devel@redhat.com>, Shaohua Li <shli@kernel.org>, "open list:SOFTWARE RAID Multiple Disks
+Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ming Lei <tom.leiming@gmail.com>, Shaohua Li <shli@kernel.org>, "open list:SOFTWARE RAID Multiple Disks
         SUPPORT" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-For BIO based DM, some targets aren't ready for dealing with
-bigger incoming bio than 1Mbyte, such as crypt target.
+MD isn't ready for multipage bvecs, so mark it as
+NO_MP.
 
 Signed-off-by: Ming Lei <tom.leiming@gmail.com>
 ---
- drivers/md/dm.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ drivers/md/md.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 3086da5664f3..6139bf7623f7 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -899,7 +899,16 @@ int dm_set_target_max_io_len(struct dm_target *ti, sector_t len)
- 		return -EINVAL;
- 	}
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 82821ee0d57f..63c6326bafde 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5162,6 +5162,16 @@ static void md_safemode_timeout(unsigned long data)
  
--	ti->max_io_len = (uint32_t) len;
-+	/*
-+	 * BIO based queue uses its own splitting. When multipage bvecs
-+	 * is switched on, size of the incoming bio may be too big to
-+	 * be handled in some targets, such as crypt.
-+	 *
-+	 * When these targets are ready for the big bio, we can remove
-+	 * the limit.
-+	 */
-+	ti->max_io_len = min_t(uint32_t, len,
-+			       (BIO_MAX_PAGES * PAGE_SIZE));
+ static int start_dirty_degraded;
  
- 	return 0;
- }
++/*
++ * MD isn't ready for multipage bvecs yet, and set the flag
++ * so that MD still can see singlepage bvecs bio
++ */
++static inline void md_set_no_mp(struct mddev *mddev)
++{
++	if (mddev->queue)
++		set_bit(QUEUE_FLAG_NO_MP, &mddev->queue->queue_flags);
++}
++
+ int md_run(struct mddev *mddev)
+ {
+ 	int err;
+@@ -5381,6 +5391,8 @@ int md_run(struct mddev *mddev)
+ 	if (mddev->sb_flags)
+ 		md_update_sb(mddev, 0);
+ 
++	md_set_no_mp(mddev);
++
+ 	md_new_event(mddev);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_state);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_action);
 -- 
 2.7.4
-
