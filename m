@@ -1,57 +1,46 @@
 From: Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH v1 08/54] block: comment on bio_alloc_pages()
-Date: Tue, 27 Dec 2016 23:55:57 +0800
-Message-ID: <1482854250-13481-9-git-send-email-tom.leiming@gmail.com>
+Subject: [PATCH v1 12/54] dm: limit the max bio size as BIO_MAX_PAGES * PAGE_SIZE
+Date: Tue, 27 Dec 2016 23:56:01 +0800
+Message-ID: <1482854250-13481-13-git-send-email-tom.leiming@gmail.com>
 References: <1482854250-13481-1-git-send-email-tom.leiming@gmail.com>
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1482854250-13481-1-git-send-email-tom.leiming@gmail.com>
-Sender: linux-block-owner@vger.kernel.org
+Sender: linux-raid-owner@vger.kernel.org
 To: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org
-Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ming Lei <tom.leiming@gmail.com>, Jens Axboe <axboe@kernel.dk>, Kent Overstreet <kent.overstreet@gmail.com>, Shaohua Li <shli@kernel.org>, Mike Christie <mchristi@redhat.com>, Guoqing Jiang <gqjiang@suse.com>, Hannes Reinecke <hare@suse.com>, "open list:BCACHE BLOCK LAYER CACHE" <linux-bcache@vger.kernel.org>, "open list:SOFTWARE RAID Multiple Disks
+Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ming Lei <tom.leiming@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "maintainer:DEVICE-MAPPER LVM" <dm-devel@redhat.com>, Shaohua Li <shli@kernel.org>, "open list:SOFTWARE RAID Multiple Disks
         SUPPORT" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-This patch adds comment on usage of bio_alloc_pages(),
-also comments on one special case of bch_data_verify().
+For BIO based DM, some targets aren't ready for dealing with
+bigger incoming bio than 1Mbyte, such as crypt target.
 
 Signed-off-by: Ming Lei <tom.leiming@gmail.com>
 ---
- block/bio.c               | 4 +++-
- drivers/md/bcache/debug.c | 6 ++++++
- 2 files changed, 9 insertions(+), 1 deletion(-)
+ drivers/md/dm.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index 2b375020fc49..d4a1e0b63ea0 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -961,7 +961,9 @@ EXPORT_SYMBOL(bio_advance);
-  * @bio: bio to allocate pages for
-  * @gfp_mask: flags for allocation
-  *
-- * Allocates pages up to @bio->bi_vcnt.
-+ * Allocates pages up to @bio->bi_vcnt, and this function should only
-+ * be called on a new initialized bio, which means all pages aren't added
-+ * to the bio via bio_add_page() yet.
-  *
-  * Returns 0 on success, -ENOMEM on failure. On failure, any allocated pages are
-  * freed.
-diff --git a/drivers/md/bcache/debug.c b/drivers/md/bcache/debug.c
-index 06f55056aaae..48d03e8b3385 100644
---- a/drivers/md/bcache/debug.c
-+++ b/drivers/md/bcache/debug.c
-@@ -110,6 +110,12 @@ void bch_data_verify(struct cached_dev *dc, struct bio *bio)
- 	struct bio_vec bv, cbv;
- 	struct bvec_iter iter, citer = { 0 };
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index 3086da5664f3..6139bf7623f7 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -899,7 +899,16 @@ int dm_set_target_max_io_len(struct dm_target *ti, sector_t len)
+ 		return -EINVAL;
+ 	}
  
+-	ti->max_io_len = (uint32_t) len;
 +	/*
-+	 * Once multipage bvec is supported, the bio_clone()
-+	 * has to make sure page count in this bio can be held
-+	 * in the new cloned bio because each single page need
-+	 * to assign to each bvec of the new bio.
++	 * BIO based queue uses its own splitting. When multipage bvecs
++	 * is switched on, size of the incoming bio may be too big to
++	 * be handled in some targets, such as crypt.
++	 *
++	 * When these targets are ready for the big bio, we can remove
++	 * the limit.
 +	 */
- 	check = bio_clone(bio, GFP_NOIO);
- 	if (!check)
- 		return;
++	ti->max_io_len = min_t(uint32_t, len,
++			       (BIO_MAX_PAGES * PAGE_SIZE));
+ 
+ 	return 0;
+ }
 -- 
 2.7.4
 
