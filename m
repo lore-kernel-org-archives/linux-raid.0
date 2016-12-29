@@ -1,154 +1,71 @@
 From: Adam Goryachev <mailinglists@websitemanagers.com.au>
 Subject: Re: Intel SSD or other brands
-Date: Fri, 30 Dec 2016 09:51:27 +1100
-Message-ID: <6199a648-eebe-687d-1a13-3f2dd954ae54@websitemanagers.com.au>
+Date: Fri, 30 Dec 2016 10:04:23 +1100
+Message-ID: <65bda7a8-f74f-be87-2490-f6c0b1c5c3f1@websitemanagers.com.au>
 References: <0329d841-984b-fa25-0bf2-0aba4d55b6de@websitemanagers.com.au>
- <CAFx4rwT+j3mx3B_bj803Zs1kX=x-1w4Nwwsyb=a=NumFo8-Ufw@mail.gmail.com>
+ <CAANLjFo4tP9Xdv8JX5waNOu_34zWDKsQqOru3fpt2wOAJuZYcQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAFx4rwT+j3mx3B_bj803Zs1kX=x-1w4Nwwsyb=a=NumFo8-Ufw@mail.gmail.com>
+In-Reply-To: <CAANLjFo4tP9Xdv8JX5waNOu_34zWDKsQqOru3fpt2wOAJuZYcQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: doug@easyco.com
+To: Robert LeBlanc <robert@leblancnet.us>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 30/12/16 05:50, Doug Dumitru wrote:
-> Mr. Goryachev,
->
-> I find it easier to look at these numbers in terms of IOPS.  You are
-> dealing with 17,500 IOPS vs 100 IOPS.  This pretty much has to be the
-> "commit" from the drive.  The benchmark is basically waiting for the
-> data to actually hit "recorded media" before the IO completes.  The
-> "better" drive is returning this "write ACK" when the data is in RAM,
-> the the "worse" drive is returning this "write ACK" after the data is
-> somewhere much slower (probably flash).  I would note that 17,500 IOPS
-> is a "good" but not "great" number.
+On 30/12/16 03:56, Robert LeBlanc wrote:
+> This is a similar workload as Ceph and you may find more information
+> from their mailing lists. When I was working with Ceph about a year
+> ago, we tested a bunch of SSDs and found that sync=1 really
+> differentiates drives and you really find which drives are better. In
+> our testing, we found that the 35xx, 36xx, and 37xx drives handled the
+> workloads the best. The 3x00 drives were close to EOL, so we focused
+> on the 3x10 drives. I don't have the data anymore, but the 3610 had
+> the best performance, the 3710 had the best data integrity in the case
+> of power failure, and the 3510 had the best price.
+So it seems that my "good/best" results were based on the 3510, which 
+was the cheapest out of the options you tested. Any chance you could 
+find the raw data again? Or do you recall the relative performance 
+difference between these three drives?
 
-So what would you consider a great number? I guess in practice the 
-environment isn't really that massive, it shouldn't really *need* great 
-numbers, but it seems no matter how hard I try to "over-architect", it 
-is still not performing to end user expectation.
-> Doing commit writes to Flash is expensive.  Not only do you have to
-> wait for the flash, but you have to update the mapping tables to get
-> to the data.  Flash also does not typically allow 4K updates (even
-> given the erase rules), so your 4K sync update probably has to update
-> a 16K "page" is probably causing a lot of flash wear.  Maybe as much
-> as 10:1 write amplification.  Maybe more.
-Wear doesn't seem to have been a problem so far.
+> The 3510 had about
+> ~.1 drive writes per day, the 3610 had ~1 DWPD and the 3710 had ~3
+> DWPD.
+We seem to be around 0.03 DWPD, so I don't think any of these drives 
+would be a problem for us. Lifetime seems much longer than the useful 
+life, given capacity/etc.
+> Due to the fault tolerance of Ceph, we felt comfortable with the
+> 3610s.
+Equally, we have fault tolerance (RAID5) as well as DRBD onto the other 
+node which also has RAID5. I also monitor the drive lifetime, I'm not 
+sure what value I would consider urgent replacement, but probably around 
+20% remaining life....
+> In our testing, we exceeded the performance numbers listed for
+> the drives on their data sheets when running up to 8 jobs even with
+> sync=1 which no other manufacture did. For Ceph, we could put multiple
+> OSDs on a disk and take advantage of this performance gain. You may be
+> able to do something similar by partitioning your RAID 5 and putting
+> multiple DRBDs on it.
 
-   9 Power_On_Hours_and_Msec 0x0032   000   000   000    Old_age 
-Always       -       914339h+46m+34.180s
-This is obviously wrong, I haven't had the drive for >100 years, but it 
-is at least almost 4 years old (early 2013 I suspect).
-233 Media_Wearout_Indicator 0x0032   095   095   000    Old_age 
-Always       -       0
-This is the worst drive out of the whole array, the best is 99, but 
-either way it suggests these drives could easily last >10 years, which 
-would be well and truly longer than their expected/useful life (based on 
-capacity).
+We do this already... we use a single RAID5 which is split with LVM2 (20 
+LV's), and each LV is then a DRBD device (so 20 DRBD's). This was one of 
+the optimisations linbit advised us to do way back at the beginning.
 
-241 Host_Writes_32MiB       0x0032   100   100   000    Old_age 
-Always       -       3329773
-This is the drive with the highest number of writes.... Obviously most 
-writes are smaller than 32MB, so I'm not entirely sure what this means, 
-but I suspect we are not doing a lot of writes per day compared to the 
-total storage capacity...
-3329773 * 32MB / 3 years / 365 days = 97308MB/day. Total capacity is 
-480*7 = 3360GB or approx 0.03 per drive writes per day.
-
-I've actually asked this question before, but here again we find what 
-appears to be an anomaly... some drives have significantly more writes 
-than others, and I don't understand why in a RAID5 array this would be 
-the case, I would have expected the writes to be split approx equally 
-across all drives...
-225 Host_Writes_32MiB       0x0032   100   100   000    Old_age 
-Always       -       1501762
-225 Host_Writes_32MiB       0x0032   100   100   000    Old_age 
-Always       -       1712480
-225 Host_Writes_32MiB       0x0032   100   100   000    Old_age 
-Always       -       1684811
-225 Host_Writes_32MiB       0x0032   100   100   000    Old_age 
-Always       -       1781849
-225 Host_Writes_32MiB       0x0032   100   100   000    Old_age 
-Always       -       2282764
-225 Host_Writes_32MiB       0x0032   100   100   000    Old_age 
-Always       -       2269957
-225 Host_Writes_32MiB       0x0032   100   100   000    Old_age 
-Always       -       2154155
-225 Host_Writes_32MiB       0x0032   100   100   000    Old_age 
-Always       -       2163563
-225 Host_Writes_32MiB       0x0032   100   100   000    Old_age 
-Always       -       3329774
-
-It's hard to calculate whether some drives were replaced or similar due 
-to the nonsense power on hours values.... but generally all these drives 
-were purchased at the same time, and so should have been used mostly 
-equally.
-
-> In the case of RAID-5 in a "traditional" Linux deployment, and
-> especially with DRBD protecting you on another node, you are probably
-> fine without having every last ACK "perfect".  After all, if you power
-> fail the primary node, the secondary will become the primary, and any
-> "tail writes" that are missing will get re-sync'd by DRBD's hash
-> checks.  And because the amount of data being re-synced is small, it
-> will happen very quickly and you might not even notice it.
-Right, and at this stage I'm not even looking at data integrity, I'm 
-only examining "performance". In fact, it would be within the 
-"acceptable" parameters" to lose some data under a "disaster" scenario 
-(where disaster means losing both primary and secondary in an unclean 
-shutdown). Of course, I wouldn't design the system to do that, but it 
-isn't a strict requirement, as long as "normal" processes mean no data 
-loss/corruption, and any drive should (eventually) write all the data it 
-has told you it will.
-> Back to performance, you should also consider what your array is doing
-> to you.  You are running an 8 drive raid-5 array.  This will limit
-> performance even more because every write becomes 2 sync writes, plus
-> 6 reads.  With q=1 latencies, if you run this test on the array with
-> "good" drives, you should probably get about 15K IOPS max, but it
-> might be a bit worse as the read and write latencies add for each OP.
-Right, and one thing I've considered was moving to RAID10 to avoid this, 
-but even RAID10 means 2 writes. Assuming reads are relatively quick, 
-than that should reduce the impact of the RAID5 as well. At this stage, 
-converting to RAID10 is still something I'm holding up my sleeve as a 
-last resort (due to the additional wasted capacity).
-
-Note that my tests are all on single drives, not the array. I can't 
-afford to be doing testing on the full array due to the destructive 
-nature, and also it is almost impossible to get a quiet moment where the 
-tests wouldn't be affected by workload.
-> I tried your test on our "in house" "server-side FTL" mapping layer on
-> 8 drives raid-5.  This is an E5-1650 v3 w/ an LSI 3008 SAS controller
-> and 8 Samsung 256GB 850 Pro SSDs.  The array is "new" so it will slow
-> down somewhat as it fills.  439K IOPS is actually quite a bit under
-> the array's bandwidth, but at q=1, you end up benchmarking the
-> benchmark program.  (at q=10, the array saturates the drives linear
-> performance at about 900K IOPS or 3518 MB/sec).
->
-> root@ubuntu-16-24-2:/usr/local/ess# fio --filename=/dev/mapper/ess-md0
-> --direct=1 --sync=1 --rw=write --bs=4k --iodepth=1 --runtime=60
-> --time_based --group_reporting --name=ess-raid5 --numjobs=1
-Would it be possible for you to run the test on a single drive directly 
-instead?
->
-> Run status group 0 (all jobs):
->    WRITE: io=102653MB, aggrb=1710.9MB/s, minb=1710.9MB/s,
-> maxb=1710.9MB/s, mint=60001msec, maxt=60001msec
-I might be looking at the wrong value, but you are getting 1711MB/s out 
-of an 8 drive array, I got a max of 99MB/s on a single drive, even if I 
-multiply that by 7 (8 drives - 1 redundancy), it's still less than half. 
-I'd be pretty keen to see your single drive results. Also whether those 
-results will change when using the 800GB model.
-
-Thank you for your advice, I'll see whether I can find a way to purchase 
-one of the samsung drives for testing/evaluation, then seem to be a 
-similar price to the Intel S3510 that I was looking at.
+The problem I'm having is that a single DRBD will reach saturation 
+because the underlying devices are saturated. So I'm trying to improve 
+the underlying device performance, and expect to be able to "move" the 
+bottleneck to DRBD or hopefully, the ethernet of the iSCSI interface.
 
 Regards,
 Adam
 
-> On Wed, Dec 28, 2016 at 6:14 PM, Adam Goryachev
+> ----------------
+> Robert LeBlanc
+> PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
+>
+>
+> On Wed, Dec 28, 2016 at 7:14 PM, Adam Goryachev
 > <mailinglists@websitemanagers.com.au> wrote:
 >> Apologies for my prematurely sent email (if it gets through), this one is
 >> complete...
@@ -248,8 +165,10 @@ Adam
 >> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 >> the body of a message to majordomo@vger.kernel.org
 >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
 -- 
