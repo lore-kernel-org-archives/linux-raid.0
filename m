@@ -1,36 +1,26 @@
 From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
 Subject: Re: Intel SSD or other brands
-Date: Thu, 29 Dec 2016 17:33:17 +0000
-Message-ID: <22629.18653.431222.163351@tree.ty.sabi.co.uk>
+Date: Thu, 29 Dec 2016 17:46:40 +0000
+Message-ID: <22629.19456.78167.898302@tree.ty.sabi.co.uk>
 References: <0329d841-984b-fa25-0bf2-0aba4d55b6de@websitemanagers.com.au>
-        <CAANLjFo4tP9Xdv8JX5waNOu_34zWDKsQqOru3fpt2wOAJuZYcQ@mail.gmail.com>
+        <22628.62979.46926.463323@tree.ty.sabi.co.uk>
+        <8c0e48b3-e224-1e0e-13fe-987a58411e06@websitemanagers.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAANLjFo4tP9Xdv8JX5waNOu_34zWDKsQqOru3fpt2wOAJuZYcQ@mail.gmail.com>
+In-Reply-To: <8c0e48b3-e224-1e0e-13fe-987a58411e06@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> [ ... ] sync=1 really differentiates drives and you really
-> find which drives are better. [ ... ]
+>> Well "performance" can be roughly the same, even if "speed" can
+>> be very different. http://www.sabi.co.uk/blog/15-two.html#151023
 
-It is not necessarily "better" in a strict sense: flash SSD
-devices with supercapacitor-backed persistent caches can be much
-faster on 'fsync' heavy workloads, but also cost a lot more
-(probably mostly because of market segmentation). Of course
-especially on a RAID5 set with lots of read-modify-write.
+> [ ... ] what you mean to say here, [ ... ]
 
-It is a different performance envelope, not necessarily a
-"better" one. If one does not need small-write speed then
-cheaper drivers are more appropriate.
-
-However devices which don't have persistent caches and still
-have high 'sync=1'/'direct=1' speed because they don't implement
-'fsync' synchronously are definitely worse, in the sense of
-having arguably no performance at all.
-
-Some manufacturers think that using an SLC cache helps without a
-persistent-ed RAM cache, but the persistent=-ed RAM seems a lot
-better to me.
+Some people may say that 'eatmydata $COMMAND' can improve a lot
+the "performance" of running '$COMMAND'. More properly it can
+improve its speed, but its performance arguably goes to zero or
+more precisely becomes insignificant, in most cases. That's a
+pretty huge difference.
