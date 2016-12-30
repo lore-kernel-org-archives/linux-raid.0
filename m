@@ -1,42 +1,81 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: PROBLEM: Kernel BUG with raid5 soft + Xen + DRBD - invalid opcode
-Date: Fri, 30 Dec 2016 15:54:00 -0500
-Message-ID: <wrfj8tqxf89j.fsf@redhat.com>
-References: <585D6C34.2020908@gmail.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: Re: [PATCH v1] dm-crypt: replace custom implementation of hex2bin()
+Date: Fri, 30 Dec 2016 23:51:24 +0200
+Message-ID: <CAHp75VdZWT5vH-JNh_PJgRjzFcwwAGT93igfzLBewFGjwu31nA@mail.gmail.com>
+References: <1462922651-6465-1-git-send-email-andy.shevchenko@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <585D6C34.2020908@gmail.com> (MasterPrenium's message of "Fri, 23
-        Dec 2016 19:25:56 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: MasterPrenium <masterprenium.lkml@gmail.com>
-Cc: linux-kernel@vger.kernel.org, xen-users@lists.xen.org, linux-raid@vger.kernel.org, shli@kernel.org, "MasterPrenium@gmail.com" <MasterPrenium@gmail.com>, xen-devel@lists.xenproject.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1462922651-6465-1-git-send-email-andy.shevchenko@gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>, linux-raid@vger.kernel.org
+Cc: Andy Shevchenko <andy.shevchenko@gmail.com>
 List-Id: linux-raid.ids
 
-MasterPrenium <masterprenium.lkml@gmail.com> writes:
-> Hello Guys,
+On Wed, May 11, 2016 at 2:24 AM, Andy Shevchenko
+<andy.shevchenko@gmail.com> wrote:
+> There is no need to have a duplication of the generic library, i.e. hex2bin().
+> Replace the open coded variant.
 >
-> I've having some trouble on a new system I'm setting up. I'm getting a
-> kernel BUG message, seems to be related with the use of Xen (when I
-> boot the system _without_ Xen, I don't get any crash).
-> Here is configuration :
-> - 3x Hard Drives running on RAID 5 Software raid created by mdadm
-> - On top of it, DRBD for replication over another node (Active/passive cluster)
-> - On top of it, a BTRFS FileSystem with a few subvolumes
-> - On top of it, XEN VMs running.
->
-> The BUG is happening when I'm making "huge" I/O (20MB/s with a rsync
-> for example) on the RAID5 stack.
-> I've to reset system to make it work again.
->
-> Reproducible : ALWAYS (making the i/o, it crash in 2-5mins). Also
-> reproducible on another system with the same hardware.
->
-> Kernel versions impacted (at least): kernel-4.4.26, kernel-4.8.15, kernel-4.9.0
 
-Well you have one foreign object in there that is not part of the
-kernel and which shows up in the OOPS: DRDB
+Ping?
 
-What happens when you remove that from the equation?
+> Signed-off-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+> ---
+>  drivers/md/dm-crypt.c | 27 ++-------------------------
+>  1 file changed, 2 insertions(+), 25 deletions(-)
+>
+> diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
+> index 4f3cb35..eb30284 100644
+> --- a/drivers/md/dm-crypt.c
+> +++ b/drivers/md/dm-crypt.c
+> @@ -1407,30 +1407,6 @@ static void kcryptd_queue_crypt(struct dm_crypt_io *io)
+>         queue_work(cc->crypt_queue, &io->work);
+>  }
+>
+> -/*
+> - * Decode key from its hex representation
+> - */
+> -static int crypt_decode_key(u8 *key, char *hex, unsigned int size)
+> -{
+> -       char buffer[3];
+> -       unsigned int i;
+> -
+> -       buffer[2] = '\0';
+> -
+> -       for (i = 0; i < size; i++) {
+> -               buffer[0] = *hex++;
+> -               buffer[1] = *hex++;
+> -
+> -               if (kstrtou8(buffer, 16, &key[i]))
+> -                       return -EINVAL;
+> -       }
+> -
+> -       if (*hex != '\0')
+> -               return -EINVAL;
+> -
+> -       return 0;
+> -}
+> -
+>  static void crypt_free_tfms(struct crypt_config *cc)
+>  {
+>         unsigned i;
+> @@ -1502,7 +1478,8 @@ static int crypt_set_key(struct crypt_config *cc, char *key)
+>         if (!cc->key_size && strcmp(key, "-"))
+>                 goto out;
+>
+> -       if (cc->key_size && crypt_decode_key(cc->key, key, cc->key_size) < 0)
+> +       /* Decode key from its hex representation. */
+> +       if (cc->key_size && hex2bin(cc->key, key, cc->key_size) < 0)
+>                 goto out;
+>
+>         set_bit(DM_CRYPT_KEY_VALID, &cc->flags);
+> --
+> 2.8.2
+>
 
-Jes
+
+
+-- 
+With Best Regards,
+Andy Shevchenko
