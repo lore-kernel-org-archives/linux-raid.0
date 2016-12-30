@@ -1,60 +1,59 @@
-From: Coly Li <colyli@suse.de>
-Subject: Re: [PATCH v1 08/54] block: comment on bio_alloc_pages()
-Date: Fri, 30 Dec 2016 19:06:02 +0800
-Message-ID: <a9d5cf1c-91f4-4dbd-5b2f-e7b4998b6e34@suse.de>
-References: <1482854250-13481-1-git-send-email-tom.leiming@gmail.com>
- <1482854250-13481-9-git-send-email-tom.leiming@gmail.com>
+From: Pasi =?iso-8859-1?Q?K=E4rkk=E4inen?= <pasik@iki.fi>
+Subject: Re: Intel SSD or other brands
+Date: Fri, 30 Dec 2016 18:32:11 +0200
+Message-ID: <20161230163210.GW28824@reaktio.net>
+References: <0329d841-984b-fa25-0bf2-0aba4d55b6de@websitemanagers.com.au>
+ <CAFx4rwT+j3mx3B_bj803Zs1kX=x-1w4Nwwsyb=a=NumFo8-Ufw@mail.gmail.com>
+ <6199a648-eebe-687d-1a13-3f2dd954ae54@websitemanagers.com.au>
+ <CAFx4rwRUnfCXgM66oa+-GYbtthVZvtHQkb2-J3XqUU9YXWF6sA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-bcache-owner@vger.kernel.org>
-In-Reply-To: <1482854250-13481-9-git-send-email-tom.leiming@gmail.com>
-Sender: linux-bcache-owner@vger.kernel.org
-To: Ming Lei <tom.leiming@gmail.com>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org
-Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, Kent Overstreet <kent.overstreet@gmail.com>, Shaohua Li <shli@kernel.org>, Mike Christie <mchristi@redhat.com>, Guoqing Jiang <gqjiang@suse.com>, Hannes Reinecke <hare@suse.com>, "open list:BCACHE (BLOCK LAYER CACHE)" <linux-bcache@vger.kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAFx4rwRUnfCXgM66oa+-GYbtthVZvtHQkb2-J3XqUU9YXWF6sA@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Doug Dumitru <doug@easyco.com>
+Cc: Adam Goryachev <mailinglists@websitemanagers.com.au>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2016/12/27 下午11:55, Ming Lei wrote:
-> This patch adds comment on usage of bio_alloc_pages(),
-> also comments on one special case of bch_data_verify().
+Hello,
+
+On Thu, Dec 29, 2016 at 05:24:16PM -0800, Doug Dumitru wrote:
 > 
-> Signed-off-by: Ming Lei <tom.leiming@gmail.com>
-> ---
->  block/bio.c               | 4 +++-
->  drivers/md/bcache/debug.c | 6 ++++++
->  2 files changed, 9 insertions(+), 1 deletion(-)
+> My test is of a "managed" array with a "host side Flash Translation
+> Layer".  This means that software is linearizing the writes before
+> RAID-5 sees them.  This is how the major "storage appliance" vendors
+> get really fast performance.  One vendor, running an earlier version
+> of the software I am running here, was able to support 5000 ESXI VDI
+> clients from a single 2U storage server (with a lot of FC cards).  The
+> boot storm took about 3 minutes to settle.
+>
+
+Does this software happen to be opensource / publicly available ? 
+
+
+Thanks,
+
+-- Pasi
+ 
+> Single drives are around 500 MB/sec which is 125K IOPS through our
+> engine.  Eight drives are (8-1)x500=3500 MB/sec or 900K IOPS.  This is
+> actually faster than FIO can generate a test pattern from a single
+> job.  It is also faster than stock RAID-5 can linearly write without
+> patches.
 > 
-> diff --git a/block/bio.c b/block/bio.c
-> index 2b375020fc49..d4a1e0b63ea0 100644
-> --- a/block/bio.c
-> +++ b/block/bio.c
-> @@ -961,7 +961,9 @@ EXPORT_SYMBOL(bio_advance);
->   * @bio: bio to allocate pages for
->   * @gfp_mask: flags for allocation
->   *
-> - * Allocates pages up to @bio->bi_vcnt.
-> + * Allocates pages up to @bio->bi_vcnt, and this function should only
-> + * be called on a new initialized bio, which means all pages aren't added
-> + * to the bio via bio_add_page() yet.
->   *
->   * Returns 0 on success, -ENOMEM on failure. On failure, any allocated pages are
->   * freed.
-> diff --git a/drivers/md/bcache/debug.c b/drivers/md/bcache/debug.c
-> index 06f55056aaae..48d03e8b3385 100644
-> --- a/drivers/md/bcache/debug.c
-> +++ b/drivers/md/bcache/debug.c
-> @@ -110,6 +110,12 @@ void bch_data_verify(struct cached_dev *dc, struct bio *bio)
->  	struct bio_vec bv, cbv;
->  	struct bvec_iter iter, citer = { 0 };
->  
-> +	/*
-> +	 * Once multipage bvec is supported, the bio_clone()
-> +	 * has to make sure page count in this bio can be held
-> +	 * in the new cloned bio because each single page need
-> +	 * to assign to each bvec of the new bio.
-> +	 */
->  	check = bio_clone(bio, GFP_NOIO);
->  	if (!check)
->  		return;
+> In terms of wear, lots of users are running very light write
+> environments.  This is good as many configurations are > 50:1 write
+> amp if you measure "end to end".  By end to end, I mean, how many
+> flash writes happen when you create a small file inside of a file
+> system.  This leads to "file system write amp" x "raid write amp" x
+> "SSD write amp".  Some people don't like this approach as the file
+> system is often "off limits" and a black box.  Then again, some file
+> systems are better than others (for 10K sync creates, EXT4 and XFS are
+> both about 4.4:1 whereas ZFS is a lot worse).  And with EXT4/XFS, you
+> can mitigate some of this with an SSD or mapping layer that compresses
+> blocks.
 > 
-Acked-by: Coly Li <colyli@suse.de>
+> Doug Dumitru
+> 
+
