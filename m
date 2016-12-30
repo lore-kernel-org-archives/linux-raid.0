@@ -1,99 +1,78 @@
-From: Coly Li <colyli@suse.de>
-Subject: Re: [PATCH v1 07/54] bcache: comment on direct access to bvec table
-Date: Sat, 31 Dec 2016 00:56:41 +0800
-Message-ID: <f88ea6e0-d2e4-15ea-0eb6-19be3d9d317d@suse.de>
-References: <1482854250-13481-1-git-send-email-tom.leiming@gmail.com>
- <1482854250-13481-8-git-send-email-tom.leiming@gmail.com>
+From: Doug Dumitru <doug@easyco.com>
+Subject: Re: Intel SSD or other brands
+Date: Fri, 30 Dec 2016 10:23:22 -0800
+Message-ID: <CAFx4rwQb45iRrqwo6JU0N54JxJiixWYdMhBepZ4YC5gBsv6nSg@mail.gmail.com>
+References: <0329d841-984b-fa25-0bf2-0aba4d55b6de@websitemanagers.com.au>
+ <CAFx4rwT+j3mx3B_bj803Zs1kX=x-1w4Nwwsyb=a=NumFo8-Ufw@mail.gmail.com>
+ <6199a648-eebe-687d-1a13-3f2dd954ae54@websitemanagers.com.au>
+ <CAFx4rwRUnfCXgM66oa+-GYbtthVZvtHQkb2-J3XqUU9YXWF6sA@mail.gmail.com> <20161230163210.GW28824@reaktio.net>
+Reply-To: doug@easyco.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1482854250-13481-8-git-send-email-tom.leiming@gmail.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Ming Lei <tom.leiming@gmail.com>
-Cc: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Kent Overstreet <kent.overstreet@gmail.com>, Shaohua Li <shli@kernel.org>, Guoqing Jiang <gqjiang@suse.com>, Zheng Liu <gnehzuil.liu@gmail.com>, Mike Christie <mchristi@redhat.com>, Jiri Kosina <jkosina@suse.cz>, Eric Wheeler <git@linux.ewheeler.net>, Yijing Wang <wangyijing@huawei.com>, Al Viro <viro@ZenIV.linux.org.uk>, "open list:BCACHE (BLOCK LAYER CACHE)" <linux-bcache@vger.kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20161230163210.GW28824@reaktio.net>
+Sender: linux-raid-owner@vger.kernel.org
+To: =?UTF-8?B?UGFzaSBLw6Rya2vDpGluZW4=?= <pasik@iki.fi>
+Cc: Adam Goryachev <mailinglists@websitemanagers.com.au>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2016/12/27 下午11:55, Ming Lei wrote:
-> Looks all are safe after multipage bvec is supported.
-> 
-> Signed-off-by: Ming Lei <tom.leiming@gmail.com>
-> ---
->  drivers/md/bcache/btree.c | 1 +
->  drivers/md/bcache/super.c | 6 ++++++
->  drivers/md/bcache/util.c  | 7 +++++++
->  3 files changed, 14 insertions(+)
-> 
-> diff --git a/drivers/md/bcache/btree.c b/drivers/md/bcache/btree.c
-> index a43eedd5804d..fc35cfb4d0f1 100644
-> --- a/drivers/md/bcache/btree.c
-> +++ b/drivers/md/bcache/btree.c
-> @@ -428,6 +428,7 @@ static void do_btree_node_write(struct btree *b)
->  
->  		continue_at(cl, btree_node_write_done, NULL);
->  	} else {
-> +		/* No harm for multipage bvec since the new is just allocated */
->  		b->bio->bi_vcnt = 0;
->  		bch_bio_map(b->bio, i);
->  
-> diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
-> index 3a19cbc8b230..607b022259dc 100644
-> --- a/drivers/md/bcache/super.c
-> +++ b/drivers/md/bcache/super.c
-> @@ -208,6 +208,7 @@ static void write_bdev_super_endio(struct bio *bio)
->  
->  static void __write_super(struct cache_sb *sb, struct bio *bio)
->  {
-> +	/* single page bio, safe for multipage bvec */
->  	struct cache_sb *out = page_address(bio->bi_io_vec[0].bv_page);
->  	unsigned i;
->  
-> @@ -1156,6 +1157,8 @@ static void register_bdev(struct cache_sb *sb, struct page *sb_page,
->  	dc->bdev->bd_holder = dc;
->  
->  	bio_init(&dc->sb_bio, dc->sb_bio.bi_inline_vecs, 1);
-> +
-> +	/* single page bio, safe for multipage bvec */
->  	dc->sb_bio.bi_io_vec[0].bv_page = sb_page;
->  	get_page(sb_page);
->  
-> @@ -1799,6 +1802,7 @@ void bch_cache_release(struct kobject *kobj)
->  	for (i = 0; i < RESERVE_NR; i++)
->  		free_fifo(&ca->free[i]);
->  
-> +	/* single page bio, safe for multipage bvec */
->  	if (ca->sb_bio.bi_inline_vecs[0].bv_page)
->  		put_page(ca->sb_bio.bi_io_vec[0].bv_page);
->  
-> @@ -1854,6 +1858,8 @@ static int register_cache(struct cache_sb *sb, struct page *sb_page,
->  	ca->bdev->bd_holder = ca;
->  
->  	bio_init(&ca->sb_bio, ca->sb_bio.bi_inline_vecs, 1);
-> +
-> +	/* single page bio, safe for multipage bvec */
->  	ca->sb_bio.bi_io_vec[0].bv_page = sb_page;
->  	get_page(sb_page);
->  
-> diff --git a/drivers/md/bcache/util.c b/drivers/md/bcache/util.c
-> index dde6172f3f10..5cc0b49a65fb 100644
-> --- a/drivers/md/bcache/util.c
-> +++ b/drivers/md/bcache/util.c
-> @@ -222,6 +222,13 @@ uint64_t bch_next_delay(struct bch_ratelimit *d, uint64_t done)
->  		: 0;
->  }
->  
-> +/*
-> + * Generally it isn't good to access .bi_io_vec and .bi_vcnt
-> + * directly, the preferred way is bio_add_page, but in
-> + * this case, bch_bio_map() supposes that the bvec table
-> + * is empty, so it is safe to access .bi_vcnt & .bi_io_vec
-> + * in this way even after multipage bvec is supported.
-> + */
->  void bch_bio_map(struct bio *bio, void *base)
->  {
->  	size_t size = bio->bi_iter.bi_size;
-> 
+Pasi,
 
-Acked-by: Coly Li <colyli@suse.de>
+The software is proprietary, but can run on most 64-bit Linux systems
+in a server setting.  It also works wonders with "embedded Flash" (SD,
+eMMC, USB, etc.) for 32-bit x86 and ARM systems.
+
+Please send me a direct email, off-list, and I can give you more details.
+
+Doug Dumitru
+
+On Fri, Dec 30, 2016 at 8:32 AM, Pasi K=C3=A4rkk=C3=A4inen <pasik@iki.fi> w=
+rote:
+> Hello,
+>
+> On Thu, Dec 29, 2016 at 05:24:16PM -0800, Doug Dumitru wrote:
+>>
+>> My test is of a "managed" array with a "host side Flash Translation
+>> Layer".  This means that software is linearizing the writes before
+>> RAID-5 sees them.  This is how the major "storage appliance" vendors
+>> get really fast performance.  One vendor, running an earlier version
+>> of the software I am running here, was able to support 5000 ESXI VDI
+>> clients from a single 2U storage server (with a lot of FC cards).  The
+>> boot storm took about 3 minutes to settle.
+>>
+>
+> Does this software happen to be opensource / publicly available ?
+>
+>
+> Thanks,
+>
+> -- Pasi
+>
+>> Single drives are around 500 MB/sec which is 125K IOPS through our
+>> engine.  Eight drives are (8-1)x500=3D3500 MB/sec or 900K IOPS.  This is
+>> actually faster than FIO can generate a test pattern from a single
+>> job.  It is also faster than stock RAID-5 can linearly write without
+>> patches.
+>>
+>> In terms of wear, lots of users are running very light write
+>> environments.  This is good as many configurations are > 50:1 write
+>> amp if you measure "end to end".  By end to end, I mean, how many
+>> flash writes happen when you create a small file inside of a file
+>> system.  This leads to "file system write amp" x "raid write amp" x
+>> "SSD write amp".  Some people don't like this approach as the file
+>> system is often "off limits" and a black box.  Then again, some file
+>> systems are better than others (for 10K sync creates, EXT4 and XFS are
+>> both about 4.4:1 whereas ZFS is a lot worse).  And with EXT4/XFS, you
+>> can mitigate some of this with an SSD or mapping layer that compresses
+>> blocks.
+>>
+>> Doug Dumitru
+>>
+>
 
 
+
+--=20
+Doug Dumitru
+EasyCo LLC
