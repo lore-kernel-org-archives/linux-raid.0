@@ -1,149 +1,61 @@
-From: "Marc Roos" <M.Roos@f1-outsourcing.eu>
-Subject: Raid5 performance issue
-Date: Fri, 23 Dec 2016 14:43:03 +0100
-Message-ID: <36140.198846306$1505296064@news.gmane.org>
+From: Victor Garcia <vichor@gmail.com>
+Subject: Write mostly flag
+Date: Sun, 1 Jan 2017 07:37:25 +0000
+Message-ID: <CACUwJN1tPMv6KcL+zASxcMWs6GXVT1jdbOYNOun9ADEYC_Mh2A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hello all
 
-I have grown a raid5 over the years with drives and resized partitions, 
-now I have upgraded to centos7 (from centos5). And I have the impression 
-the speed is not what it used to be. 
+I am trying to set up a raid 1 array using an SSD and a standard SAT
+HDD drives. As I read, it's better to set the write-mostly flag to the
+HDD partition of the array to keep SSD performance times.
 
-Can this be because of some missalignment? How can this be verified?
+This is the command I'm using:
 
+# mdadm --create /dev/md1 -n 2 -l 1 --metadata=0.90 --bitmap=internal
+/dev/nvme0n1p5 -W /dev/sda8 --write-behind
 
-If I monitor the individual disks with dstat it reads the raid drives at 
-very low speeds
+I expect seeing the (W) indicator in mdstat, but this is not showing:
 
-dd if=/dev/md21 of=/dev/null bs=1M count=1500 iflag=direct
-1500+0 records in
-1500+0 records out
-1572864000 bytes (1.6 GB) copied, 19.5879 s, 80.3 MB/s
+# cat /proc/mdstat
+Personalities : [raid1]
+md1 : active raid1 sda8[1] nvme0n1p5[0]
+      52400064 blocks [2/2] [UU]
+      [>....................]  resync =  0.3% (175936/52400064)
+finish=9.8min speed=87968K/sec
 
+unused devices: <none>
 
-   0     0 :   0     0 :   0     0 :   0     0 :   0     0 :   0     0 : 
-  0     0
-   0     0 :   0     0 :   0     0 :   0     0 :   0     0 :   0     0 : 
-  0     0
-   0     0 :   0     0 :   0     0 :   0     0 :   0     0 :   0     0 : 
-  0     0
- 256k    0 : 320k    0 : 320k    0 : 192k    0 : 256k    0 : 320k    0 : 
-256k    0
-4672k    0 :4672k    0 :4672k    0 :4800k    0 :4672k    0 :4672k    0 
-:4736k    0
-  11M    0 :  11M    0 :  11M    0 :  11M    0 :  11M    0 :  11M    0 : 
- 11M    0
-  10M    0 :  10M    0 :  10M    0 :  10M    0 :  10M    0 :  10M    0 : 
- 10M    0
-  10M    0 :  10M    0 :  10M    0 :  10M    0 :  10M    0 :  10M    0 : 
- 10M    0
-  13M    0 :  13M    0 :  13M    0 :  13M    0 :  13M    0 :  13M    0 : 
- 13M    0
-  10M    0 :  10M    0 :  10M    0 :  10M    0 :  10M    0 :  10M    0 : 
- 10M    0
-  11M    0 :  11M    0 :  11M    0 :  11M    0 :  11M    0 :  11M    0 : 
- 11M    0
-  19M    0 :  19M    0 :  19M    0 :  19M    0 :  19M    0 :  19M    0 : 
- 19M    0
-9984k    0 :9792k    0 :9792k    0 :9792k    0 :9984k    0 :9984k    0 
-:9856k    0
-  13M    0 :  13M    0 :  13M    0 :  13M    0 :  13M    0 :  13M    0 : 
- 13M    0
-  11M    0 :  11M    0 :  11M    0 :  11M    0 :  11M    0 :  11M    0 : 
- 11M    0
-  12M    0 :  12M    0 :  12M    0 :  12M    0 :  12M    0 :  12M    0 : 
- 12M    0
-7872k    0 :7744k    0 :7808k    0 :7744k    0 :7936k    0 :7744k    0 
-:7744k    0
-  11M    0 :  11M    0 :  11M    0 :  11M    0 :  11M    0 :  11M    0 : 
- 11M    0
-  19M    0 :  19M    0 :  19M    0 :  19M    0 :  19M    0 :  19M    0 : 
- 19M    0
-7488k    0 :7360k    0 :7296k    0 :7360k    0 :7296k    0 :7296k    0 
-:7296k    0
-  10M    0 :  10M    0 :  10M    0 :  10M    0 :  10M    0 :  10M    0 : 
- 10M    0
-  14M    0 :  14M    0 :  14M    0 :  14M    0 :  14M    0 :  14M    0 : 
- 14M    0
-9472k    0 :9536k    0 :9536k    0 :9536k    0 :9472k    0 :9536k    0 
-:9472k    0
-   0     0 :   0     0 :   0     0 :   0     0 :   0     0 :   0     0 : 
-  0     0
+ But if I force later on the flag by means of the sys FS handle, then
+it does appear:
 
-When I test the individual disks with
+# cat /sys/block/md1/md/dev-sda8/state
+in_sync
+# echo writemostly > /sys/block/md1/md/dev-sda8/state
+# cat /sys/block/md1/md/dev-sda8/state
+in_sync,write_mostly
+# cat /proc/mdstat
+Personalities : [raid1]
+md1 : active raid1 sda8[1](W) nvme0n1p5[0]
+      52400064 blocks [2/2] [UU]
+      [==>..................]  resync = 11.0% (5806336/52400064)
+finish=9.8min speed=78966K/sec
+      bitmap: 1/1 pages [4KB], 65536KB chunk
 
-for disk in sdm sdl sdi sde sdk sdf sdd;do `dd if=/dev/$disk 
-of=/dev/null bs=1M count=1500 iflag=direct &`  ;done
+unused devices: <none>
 
-[root@san2 ~]# 1500+0 records in
-1500+0 records out
-1572864000 bytes (1.6 GB) copied, 8.96022 s, 176 MB/s
-1500+0 records in
-1500+0 records out
-1572864000 bytes (1.6 GB) copied, 9.59289 s, 164 MB/s
-1500+0 records in
-1500+0 records out
-1572864000 bytes (1.6 GB) copied, 10.0863 s, 156 MB/s
-1500+0 records in
-1500+0 records out
-1572864000 bytes (1.6 GB) copied, 10.5833 s, 149 MB/s
-1500+0 records in
-1500+0 records out
-1572864000 bytes (1.6 GB) copied, 10.6084 s, 148 MB/s
-1500+0 records in
-1500+0 records out
-1572864000 bytes (1.6 GB) copied, 11.0205 s, 143 MB/s
-1500+0 records in
-1500+0 records out
-1572864000 bytes (1.6 GB) copied, 11.3199 s, 139 MB/s
+How is it that the (W) is not showing in the first place?
 
+BTW, this is the system being used:
 
+# uname -a
+Linux ubuntu 4.8.0-22-generic #24-Ubuntu SMP Sat Oct 8 09:15:00 UTC
+2016 x86_64 x86_64 x86_64 GNU/Linu
 
-  0     0 :   0     0 :   0     0 :   0     0 :   0     0 :   0     0 :  
- 0     0
-   0     0 :   0     0 :   0     0 :   0     0 :   0     0 :   0     0 : 
-  0     0
-4096k    0 :5120k    0 :  32M    0 : 512k    0 :  29M    0 :  35M    0 
-:5120k    0
-  62M    0 :  51M    0 : 157M    0 : 145M    0 : 144M    0 : 153M    0 : 
- 38M    0
- 153M    0 : 148M    0 : 158M    0 : 174M    0 : 135M    0 : 151M    0 : 
-150M    0
- 152M    0 : 144M    0 : 154M    0 : 179M    0 : 150M    0 : 146M    0 : 
-149M    0
- 149M    0 : 147M    0 : 155M    0 : 186M    0 : 148M    0 : 155M    0 : 
-157M    0
- 156M    0 : 128M    0 : 154M    0 : 188M    0 : 136M    0 : 153M    0 : 
-155M    0
- 159M    0 : 136M    0 : 157M    0 : 206M    0 : 147M    0 : 155M    0 : 
-151M    0
- 153M    0 : 147M    0 : 162M    0 : 153M    0 : 144M    0 : 127M    0 : 
-147M    0
- 153M    0 : 138M    0 : 159M    0 : 153M    0 : 134M    0 : 145M    0 : 
-146M    0
- 147M    0 : 144M    0 : 154M    0 : 116M    0 : 144M    0 : 153M    0 : 
-143M    0
- 154M    0 : 150M    0 :  60M    0 :   0     0 : 141M    0 : 131M    0 : 
-153M    0
-  61M    0 : 147M    0 :   0     0 :   0     0 :  51M    0 :   0     0 : 
-109M    0
-   0     0 :  17M    0 :   0     0 :   0     0 :   0     0 :   0     0 : 
-  0     0
-
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -. 
-F1 Outsourcing Development Sp. z o.o.
-Poland 
-
-t:  +48 (0)124466845
-f:  +48 (0)124466843
-e:  marc@f1-outsourcing.eu
-
-
+Thanks and regards
+Victor
