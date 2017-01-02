@@ -1,63 +1,53 @@
-From: Benjammin2068 <benjammin2068@gmail.com>
+From: Ben Kamen <benjammin2068@gmail.com>
 Subject: Re: Using mdadm --grow to resize a RAID1
-Date: Mon, 2 Jan 2017 10:38:03 -0600
-Message-ID: <e37c42da-71f5-e83e-4e9f-2ec3961a14a0@gmail.com>
+Date: Mon, 2 Jan 2017 13:11:32 -0600
+Message-ID: <CADDTLRDgH9RvDkVpVAQSLGZVf75f4-jTFguYoxFFifmj_uMF9A@mail.gmail.com>
 References: <4716208e-12a9-1ae8-46f4-a89ae15d9077@gmail.com>
- <586A454F.1010308@youngman.org.uk>
- <ca87be95-bfb1-10c6-18d4-9aca4a6e3558@gmail.com>
- <20170102212412.19832496@natsu>
+ <586A454F.1010308@youngman.org.uk> <ca87be95-bfb1-10c6-18d4-9aca4a6e3558@gmail.com>
+ <20170102212412.19832496@natsu> <e37c42da-71f5-e83e-4e9f-2ec3961a14a0@gmail.com>
+ <CADDTLRAY=VHydpXOUMh0OSsVYnYefKyo1vtR3hZx4vyGsSW3tQ@mail.gmail.com>
+ <586A993C.8010601@youngman.org.uk> <CADDTLRA2fNyKTCsxK_G-2k4p-01wn16M7T_ruRxt_Dot+6-8Aw@mail.gmail.com>
+ <586AA155.9000802@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170102212412.19832496@natsu>
+In-Reply-To: <586AA155.9000802@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
 To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Mon, Jan 2, 2017 at 12:52 PM, Wols Lists <antlists@youngman.org.uk> wrote:
+>
+> OUCH!
+>
+> I don't know how far the kernel and mdadm have come since then, and what
+> has or has not been backported, but it sounds like you want a modern
+> rescue CD.
+>
+> I'd be inclined to get something like SystemRescueCD
+> https://www.system-rescue-cd.org/SystemRescueCd_Homepage and see if the
+> mdadm and kernel on that work any better. It wouldn't surprise me if
+> they do.
 
 
-On 01/02/2017 10:24 AM, Roman Mamedov wrote:
-> On Mon, 2 Jan 2017 09:55:34 -0600
-> Benjammin2068 <benjammin2068@gmail.com> wrote:
->
->>
->> On 01/02/2017 06:19 AM, Wols Lists wrote:
->>> On 02/01/17 10:18, Benjammin2068 wrote:
->>>> I get stuck at the --size max.
->>>>
->>>> it seems the correct syntax is "--size=" but that "max" is not supported as an argument.
-> First you say it's unsupported as an argument, but then actually 
->
->>> [root@quantum ~]# mdadm --grow /dev/md1 --size max
->>> mdadm: component size of /dev/md1 unchanged at 239490048K
->>> [root@quantum ~]# mdadm --grow /dev/md1 --size=max
->>> mdadm: component size of /dev/md1 unchanged at 239490048K
-> Unsupported as an argument looks like that:
->
->> mdadm --grow /dev/md1 --size=blah
->> mdadm: invalid size: blah
+LoL... yea... Long term stability over bleeding-nose "now what broke?!?"
 
-Sorry bout that -- when I said  "unsupported" - it was from the combined results that there is no mention of it in the man page even though the Wiki mentions it and the results are ambiguous in actual use.
+This server has been plodding away for (I think) over 6yrs now.
 
+I'll download and check it out. I had a feeling I'd need to go
+single-user or boot from an external source.
 
-> In your case mdadm appears to think there is nowhere to grow the array.
->
-> Check with "blockdev --getsz /dev/sda3" and sdb3 that they actually do have a
-> proper size (the result will be in 512-byte sectors). 
->
-> If not, maybe your kernel didn't re-read the partition table after resizing
-> partitions (if that was what you did)?
->
-> If the blockdevice size is wrong, do a "blockdev --rereadpt /dev/sda" and sdb,
-> or just rebooting (as in some cases rereading will fail with a "device busy"
-> error).
->
-Yep -- sizes are off and --rereadpt returns "device busy".
+I'm doing the grow on that pesky raid5 (now raid6) I mentioned a while
+back. Turned out it looks to be the old samsung drives that were
+causing me problems with that JBOD controller. I upgraded the RAID6 to
+2TB drives while I was in the midst of getting rid of the 40,000+hr
+old 1TB samsungs.
 
-Be right back....
+So I'm doing the grow on that from 3tb to 6tb as we speak from single
+user mode and that's chugging along fine.
+
+I'll report back later..
+
+Thanks a bunch of the insight.
 
  -Ben
-
-
-
