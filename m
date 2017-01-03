@@ -1,7 +1,7 @@
 From: Ben Kamen <benjammin2068@gmail.com>
 Subject: Re: Using mdadm --grow to resize a RAID1
-Date: Mon, 2 Jan 2017 13:11:32 -0600
-Message-ID: <CADDTLRDgH9RvDkVpVAQSLGZVf75f4-jTFguYoxFFifmj_uMF9A@mail.gmail.com>
+Date: Mon, 2 Jan 2017 19:57:46 -0600
+Message-ID: <CADDTLRCf1GWUxntGfE=2nL_FKv_Po2Vx0XChti3rcsH4QWzf+A@mail.gmail.com>
 References: <4716208e-12a9-1ae8-46f4-a89ae15d9077@gmail.com>
  <586A454F.1010308@youngman.org.uk> <ca87be95-bfb1-10c6-18d4-9aca4a6e3558@gmail.com>
  <20170102212412.19832496@natsu> <e37c42da-71f5-e83e-4e9f-2ec3961a14a0@gmail.com>
@@ -16,38 +16,14 @@ Sender: linux-raid-owner@vger.kernel.org
 To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Jan 2, 2017 at 12:52 PM, Wols Lists <antlists@youngman.org.uk> wrote:
->
-> OUCH!
->
-> I don't know how far the kernel and mdadm have come since then, and what
-> has or has not been backported, but it sounds like you want a modern
-> rescue CD.
->
-> I'd be inclined to get something like SystemRescueCD
-> https://www.system-rescue-cd.org/SystemRescueCd_Homepage and see if the
-> mdadm and kernel on that work any better. It wouldn't surprise me if
-> they do.
+Hey all --  just thought I'd report back.
 
+Single User mode was enough to take care of doing the 'mdadm --grow'
+and I just did everything else there too (resize2fs).
 
-LoL... yea... Long term stability over bleeding-nose "now what broke?!?"
+It was the block size kernel sync (or lack thereof) and then just
+being up and running with alll those processes... hahaha.
 
-This server has been plodding away for (I think) over 6yrs now.
-
-I'll download and check it out. I had a feeling I'd need to go
-single-user or boot from an external source.
-
-I'm doing the grow on that pesky raid5 (now raid6) I mentioned a while
-back. Turned out it looks to be the old samsung drives that were
-causing me problems with that JBOD controller. I upgraded the RAID6 to
-2TB drives while I was in the midst of getting rid of the 40,000+hr
-old 1TB samsungs.
-
-So I'm doing the grow on that from 3tb to 6tb as we speak from single
-user mode and that's chugging along fine.
-
-I'll report back later..
-
-Thanks a bunch of the insight.
+Thanks everyone for the quick help!
 
  -Ben
