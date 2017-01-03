@@ -1,99 +1,46 @@
-From: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Subject: [PATCH 1/1] IMSM: Fix signed/unsigned comparisons
-Date: Tue,  3 Jan 2017 15:20:13 +0100
-Message-ID: <20170103142013.13132-1-pawel.baldysiak@intel.com>
+From: Gilad Ben-Yossef <gilad@benyossef.com>
+Subject: Re: [RFC PATCH v2] crypto: Add IV generation algorithms
+Date: Tue, 3 Jan 2017 16:23:10 +0200
+Message-ID: <CAOtvUMc_X1DUuR8NTvOLjW7h-p=X14tFHFqe_dB8t08-nYBPcw@mail.gmail.com>
+References: <1481618949-20086-1-git-send-email-binoy.jayan@linaro.org> <1481618949-20086-2-git-send-email-binoy.jayan@linaro.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1481618949-20086-2-git-send-email-binoy.jayan@linaro.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: jes.sorensen@redhat.com
-Cc: linux-raid@vger.kernel.org, Pawel Baldysiak <pawel.baldysiak@intel.com>
+To: Binoy Jayan <binoy.jayan@linaro.org>
+Cc: Oded <oded.golombek@arm.com>, Ofir <Ofir.Drang@arm.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, linux-crypto@vger.kernel.org, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Rajendra <rnayak@codeaurora.org>, gilad.benyossef@arm.com
 List-Id: linux-raid.ids
 
-Prior to this patch there was an error during compiling
-on 32-bit arch. This patch fixes this issue.
+Hi Binoy,
 
-Reported-by: Thomas Backlund <tmb@mageia.org>
-Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
----
- super-intel.c | 17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
+On Tue, Dec 13, 2016 at 02:19:09PM +0530, Binoy Jayan wrote:
+> Currently, the iv generation algorithms are implemented in dm-crypt.c.
+> The goal is to move these algorithms from the dm layer to the kernel
+> crypto layer by implementing them as template ciphers so they can be
+> implemented in hardware for performance. As part of this patchset, the
+> iv-generation code is moved from the dm layer to the crypto layer and
+> adapt the dm-layer to send a whole 'bio' (as defined in the block layer)
+> at a time. Each bio contains the in memory representation of physically
+> contiguous disk blocks. The dm layer sets up a chained scatterlist of
+> these blocks split into physically contiguous segments in memory so that
+> DMA can be performed. The iv generation algorithms implemented in geniv.c
+> include plain, plain64, essiv, benbi, null, lmk and tcw.
+>
 
-diff --git a/super-intel.c b/super-intel.c
-index 29b2163..0817a1f 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -1945,7 +1945,7 @@ static int copy_metadata_imsm(struct supertype *st, int from, int to)
- 
- 	if (lseek64(from, dsize-(2*sector_size), 0) < 0)
- 		goto err;
--	if (read(from, buf, sector_size) != sector_size)
-+	if ((unsigned int)read(from, buf, sector_size) != sector_size)
- 		goto err;
- 	sb = buf;
- 	if (strncmp((char*)sb->sig, MPB_SIGNATURE, MPB_SIG_LEN) != 0)
-@@ -2816,7 +2816,7 @@ static int read_imsm_migr_rec(int fd, struct intel_super *super)
- 		       strerror(errno));
- 		goto out;
- 	}
--	if (read(fd, super->migr_rec_buf,
-+	if ((unsigned int)read(fd, super->migr_rec_buf,
- 	    MIGR_REC_BUF_SECTORS*sector_size) !=
- 	    MIGR_REC_BUF_SECTORS*sector_size) {
- 		pr_err("Cannot read migr record block: %s\n",
-@@ -3018,7 +3018,7 @@ static int write_imsm_migr_rec(struct supertype *st)
- 			       strerror(errno));
- 			goto out;
- 		}
--		if (write(fd, super->migr_rec_buf,
-+		if ((unsigned int)write(fd, super->migr_rec_buf,
- 		    MIGR_REC_BUF_SECTORS*sector_size) !=
- 		    MIGR_REC_BUF_SECTORS*sector_size) {
- 			pr_err("Cannot write migr record block: %s\n",
-@@ -4122,7 +4122,7 @@ static int load_imsm_mpb(int fd, struct intel_super *super, char *devname)
- 			pr_err("Failed to allocate imsm anchor buffer on %s\n", devname);
- 		return 1;
- 	}
--	if (read(fd, anchor, sector_size) != sector_size) {
-+	if ((unsigned int)read(fd, anchor, sector_size) != sector_size) {
- 		if (devname)
- 			pr_err("Cannot read anchor block on %s: %s\n",
- 			       devname, strerror(errno));
-@@ -5637,7 +5637,7 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
- 	memset(super->migr_rec_buf, 0, MIGR_REC_BUF_SECTORS*super->sector_size);
- 	if (lseek64(fd, size - MIGR_REC_SECTOR_POSITION*super->sector_size,
- 	    SEEK_SET) >= 0) {
--		if (write(fd, super->migr_rec_buf,
-+		if ((unsigned int)write(fd, super->migr_rec_buf,
- 		    MIGR_REC_BUF_SECTORS*super->sector_size) !=
- 		    MIGR_REC_BUF_SECTORS*super->sector_size)
- 			perror("Write migr_rec failed");
-@@ -5847,7 +5847,8 @@ static int write_super_imsm(struct supertype *st, int doclose)
- 			get_dev_size(d->fd, NULL, &dsize);
- 			if (lseek64(d->fd, dsize - sector_size,
- 			    SEEK_SET) >= 0) {
--				if (write(d->fd, super->migr_rec_buf,
-+				if ((unsigned int)write(d->fd,
-+				    super->migr_rec_buf,
- 				    MIGR_REC_BUF_SECTORS*sector_size) !=
- 				    MIGR_REC_BUF_SECTORS*sector_size)
- 					perror("Write migr_rec failed");
-@@ -8090,7 +8091,7 @@ static int store_imsm_mpb(int fd, struct imsm_super *mpb)
- 	if (lseek64(fd, dsize - (sector_size * 2), SEEK_SET) < 0)
- 		return 1;
- 
--	if (write(fd, buf, sector_size) != sector_size)
-+	if ((unsigned int)write(fd, buf, sector_size) != sector_size)
- 		return 1;
- 
- 	return 0;
-@@ -11501,7 +11502,7 @@ static int imsm_manage_reshape(
- 		get_dev_size(d->fd, NULL, &dsize);
- 		if (lseek64(d->fd, dsize - MIGR_REC_SECTOR_POSITION*sector_size,
- 			    SEEK_SET) >= 0) {
--			if (write(d->fd, super->migr_rec_buf,
-+			if ((unsigned int)write(d->fd, super->migr_rec_buf,
- 			    MIGR_REC_BUF_SECTORS*sector_size) !=
- 			    MIGR_REC_BUF_SECTORS*sector_size)
- 				perror("Write migr_rec failed");
--- 
-2.9.3
+Good idea. I wanted to test the patch but alas it does not apply cleanly.
+You seem to have a blank line at the end of files and other small
+transgressions that makes checkpatch grumpy.
 
+<snip>
+
+Also...
+
+>
+> Not-signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
+
+
+What is Not-signed-off-by ? :-)
+
+Thanks,
+Gilad Ben-Yossef
