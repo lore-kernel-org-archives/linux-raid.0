@@ -1,93 +1,87 @@
-From: Peter Rajnoha <prajnoha@redhat.com>
-Subject: Re: [lvm2 PATCH] Remove special-case for md in
- 69-dm-lvm-metadata.rules
-Date: Wed, 4 Jan 2017 11:27:48 +0100
-Message-ID: <e0225e4c-80fe-359e-462a-5829195ca5b6@redhat.com>
-References: <87eg0jmrgz.fsf@notabene.neil.brown.name>
-Reply-To: LVM2 development <lvm-devel@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <lvm-devel-bounces@redhat.com>
-In-Reply-To: <87eg0jmrgz.fsf@notabene.neil.brown.name>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/lvm-devel>,
-	<mailto:lvm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/lvm-devel>
-List-Post: <mailto:lvm-devel@redhat.com>
-List-Help: <mailto:lvm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/lvm-devel>,
-	<mailto:lvm-devel-request@redhat.com?subject=subscribe>
-Sender: lvm-devel-bounces@redhat.com
-Errors-To: lvm-devel-bounces@redhat.com
-To: LVM2 development <lvm-devel@redhat.com>, linux-raid@vger.kernel.org
-Cc: Lidong Zhong <lidong.zhong@suse.com>, neilb@suse.com, GuoQing Jiang <gqjiang@suse.com>
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH] Don't assume VMD sysfs path ends with a disk entry
+Date: Wed,  4 Jan 2017 11:45:24 +0100
+Message-ID: <1483526724-29456-1-git-send-email-tomasz.majchrzak@intel.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Jes.Sorensen@redhat.com, tomasz.majchrzak@intel.com, Alexey Obitotskiy <aleksey.obitotskiy@intel.com>
 List-Id: linux-raid.ids
 
-On 01/04/2017 04:30 AM, NeilBrown wrote:
-> 
-> This special casing brings no value.  It appears to attempt to
-> determine if the array is active yet or not, and to skip
-> processing if the array has not yet been started.
+From: Alexey Obitotskiy <aleksey.obitotskiy@intel.com>
 
-Hi Neil,
+From: Alexey Obitotskiy <aleksey.obitotskiy@intel.com>
+Date: Wed, 4 Jan 2017 11:31:23 +0100
 
-those rules also have another use which is to not trigger further
-unnecessary actions if the device is already up and running, hence
-avoiding useless resource consumption if it brings no new information.
-Currently, this is applied only for running pvscan on top of newly
-activated MD device (that's why it's part of 69-dm-lvm-metad.rules
-at the moment).
+When VMD is enabled but no drive is attached to the PCIe port, mdadm
+crashes trying to parse the path. Skip entry if valid path has not been
+returned. Do it early to avoid unnecessary memory allocation.
 
-So what we also need is to detect the very first CHANGE event
-that makes the device active and to make a difference between this
-first CHANGE event and further CHANGE events which are possibly
-part of the WATCH rule and any other possible CHANGE events which
-do not notify about the device switching from "not ready" to "ready"
-state (of course, counting with possible coldplug events).
+Signed-off-by: Alexey Obitotskiy <aleksey.obitotskiy@intel.com>
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+---
+ platform-intel.c | 33 +++++++++++++++++++++------------
+ 1 file changed, 21 insertions(+), 12 deletions(-)
 
-> However, if the array hasn't been started, then "blkid" will
-> not have been able to read a signature, so:
->   ENV{ID_FS_TYPE}!="LVM2_member|LVM1_member", GOTO="lvm_end"
-> will have caused all this code to be skipped.
-> 
-> Further, this code causes incorrect behaviour in at least one case.
-> It assumes that the first "add" event should be ignored, as it will be
-> followed by a "change" event which indicates the array coming on line.
-> This is consistent with how the kernel sends events, but not always
-> consistent with how this script sees event.
-> Specifically: if the initrd has "mdadm" support installed, but not
-> "lvm2" support, then the initial "add" and "change" events will
-> happen while the initrd is in charge and this file is not available.
-> Once the root filesystem is mountd, this file will be available
-> and "udevadm trigger --action=add" will be run.
-> So the first and only event seen by this script for an md device will be
-> "add", and it will incorrectly ignore it.
-> 
-
-Yes, you're right that in this case, it's not behaving correctly when
-the initrd doesn't have this rule while the root FS does.  To fix this
-issue for now, I suggest to separate those rule out of 69-dm-lvm-metad.rules
-and make it a part of MD rules so that rule is always available both in
-initrd and root fs when MD is used (while LVM doesn't need to be
-installed in initrd).
-
-This comes right on time because right at this very moment, I'm working
-on a design for a solution which covers this area - I'll surely pass you
-the design doc once it's more complete (should be in next few days) so
-you we can discuss this problem further. This will cover the *standard*
-notification about when the block device is ready which provides a
-standard way of letting others (rules or any uevent monitors) know when
-the switch from "not ready" to "ready" state happens exactly. This should
-save us lots of unnecessary work that is done at the moment - we don't
-need to fire scans and further inspection of the device for all the
-events all the time. This work also covers identification of spurious
-events coming as a result of the WATCH rule and minimization of its
-impact on uevent processing performance in userspace.
-
+diff --git a/platform-intel.c b/platform-intel.c
+index c60fd9e..7ad8831 100644
+--- a/platform-intel.c
++++ b/platform-intel.c
+@@ -48,9 +48,9 @@ static void free_sys_dev(struct sys_dev **list)
+ struct sys_dev *find_driver_devices(const char *bus, const char *driver)
+ {
+ 	/* search sysfs for devices driven by 'driver' */
+-	char path[292];
+-	char link[256];
+-	char *c;
++	char path[PATH_MAX];
++	char link[PATH_MAX];
++	char *c, *p;
+ 	DIR *driver_dir;
+ 	struct dirent *de;
+ 	struct sys_dev *head = NULL;
+@@ -123,6 +123,22 @@ struct sys_dev *find_driver_devices(const char *bus, const char *driver)
+ 		if (devpath_to_ll(path, "class", &class) != 0)
+ 			continue;
+ 
++		/*
++		 * Each VMD device (domain) adds separate PCI bus, it is better
++		 * to store path as a path to that bus (easier further
++		 * determination which NVMe dev is connected to this particular
++		 * VMD domain).
++		 */
++		if (type == SYS_DEV_VMD) {
++			sprintf(path, "/sys/bus/%s/drivers/%s/%s/domain/device",
++				bus, driver, de->d_name);
++		}
++		p = realpath(path, NULL);
++		if (p == NULL) {
++			pr_err("Unable to get real path for '%s'\n", path);
++			continue;
++		}
++
+ 		/* start / add list entry */
+ 		if (!head) {
+ 			head = xmalloc(sizeof(*head));
+@@ -140,16 +156,9 @@ struct sys_dev *find_driver_devices(const char *bus, const char *driver)
+ 		list->dev_id = (__u16) dev_id;
+ 		list->class = (__u32) class;
+ 		list->type = type;
+-		/* Each VMD device (domain) adds separate PCI bus, it is better to
+-		 * store path as a path to that bus (easier further determination which
+-		 * NVMe dev is connected to this particular VMD domain).
+-		 */
+-		if (type == SYS_DEV_VMD) {
+-			sprintf(path, "/sys/bus/%s/drivers/%s/%s/domain/device",
+-			bus, driver, de->d_name);
+-		}
+-		list->path = realpath(path, NULL);
+ 		list->next = NULL;
++		list->path = p;
++
+ 		if ((list->pci_id = strrchr(list->path, '/')) != NULL)
+ 			list->pci_id++;
+ 	}
 -- 
-Peter
+1.8.3.1
 
---
-lvm-devel mailing list
-lvm-devel@redhat.com
-https://www.redhat.com/mailman/listinfo/lvm-devel
