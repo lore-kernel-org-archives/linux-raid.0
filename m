@@ -1,38 +1,50 @@
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH] Don't assume VMD sysfs path ends with a disk entry
-Date: Wed, 04 Jan 2017 08:27:36 -0500
-Message-ID: <wrfj1swjvttj.fsf@redhat.com>
-References: <1483526724-29456-1-git-send-email-tomasz.majchrzak@intel.com>
+Subject: Re: [PATCH v2 00/12] Partial Parity Log for MD RAID 5
+Date: Wed, 04 Jan 2017 08:29:23 -0500
+Message-ID: <wrfjwpebuf64.fsf@redhat.com>
+References: <20161205153113.7268-1-artur.paszkiewicz@intel.com>
+        <87fum04m0m.fsf@notabene.neil.brown.name>
+        <84c59771-48b7-da47-3497-c82c6c6939c9@intel.com>
+        <20161207170906.sthdxswufwk5fqhn@kernel.org>
+        <wrfjy3zjq2b3.fsf@redhat.com>
+        <20161214194726.4to3rnqyrqlqlx7t@kernel.org>
+        <c97a46de-f88a-f8f2-4520-e3c8a57d1b3b@intel.com>
+        <20161216232421.x6sb4goclzyasu6k@kernel.org>
+        <wrfjzij8ywtu.fsf@redhat.com>
+        <84d3a102-faef-13ae-44e2-2f9a4d561c37@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1483526724-29456-1-git-send-email-tomasz.majchrzak@intel.com>
-        (Tomasz Majchrzak's message of "Wed, 4 Jan 2017 11:45:24 +0100")
+In-Reply-To: <84d3a102-faef-13ae-44e2-2f9a4d561c37@intel.com> (Artur
+        Paszkiewicz's message of "Wed, 4 Jan 2017 09:01:05 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Cc: linux-raid@vger.kernel.org, Alexey Obitotskiy <aleksey.obitotskiy@intel.com>
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: Shaohua Li <shli@kernel.org>, NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Tomasz Majchrzak <tomasz.majchrzak@intel.com> writes:
-> From: Alexey Obitotskiy <aleksey.obitotskiy@intel.com>
+Artur Paszkiewicz <artur.paszkiewicz@intel.com> writes:
+> On 01/03/2017 04:42 PM, Jes Sorensen wrote:
+>> Artur,
+>> 
+>> Did you make any progress getting the alignment issue resolved?
+>> 
+>> I'd really like to get an mdadm release out the door this week, so
+>> getting this resolved would be awesome. Hint hint ;)
 >
-> From: Alexey Obitotskiy <aleksey.obitotskiy@intel.com>
-> Date: Wed, 4 Jan 2017 11:31:23 +0100
+> Jes,
 >
-> When VMD is enabled but no drive is attached to the PCIe port, mdadm
-> crashes trying to parse the path. Skip entry if valid path has not been
-> returned. Do it early to avoid unnecessary memory allocation.
->
-> Signed-off-by: Alexey Obitotskiy <aleksey.obitotskiy@intel.com>
-> Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-> ---
->  platform-intel.c | 33 +++++++++++++++++++++------------
->  1 file changed, 21 insertions(+), 12 deletions(-)
+> The alignment issue is fixed but I'm currently making changes in the
+> kernel part after comments from Neil. This also requires modifications
+> in mdadm, maybe even more than in the kernel. I need a few more days to
+> finish this, I'll be sending the next version of the patches probably
+> next week. So don't let me keep you if you want to make a release this
+> week.
 
-Applied!
+Artur,
 
-I had to fixup the commit message since your message had a mail header
-from Alaexy as well.
+Thanks for the update - it sounds like it is probably wise to let this
+stew a bit and let all the dust settle before we put it into an official
+release.
 
-Thanks,
+Cheers,
 Jes
