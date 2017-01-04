@@ -1,95 +1,208 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [lvm2 PATCH] Remove special-case for md in 69-dm-lvm-metadata.rules
-Date: Wed, 04 Jan 2017 14:30:52 +1100
-Message-ID: <87eg0jmrgz.fsf@notabene.neil.brown.name>
+Subject: Re: [PATCH 2/2] md/r5cache: enable chunk_aligned_read with write back cache
+Date: Wed, 04 Jan 2017 15:02:48 +1100
+Message-ID: <87bmvnmpzr.fsf@notabene.neil.brown.name>
+References: <20161229011802.692478-1-songliubraving@fb.com> <20161229011802.692478-2-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20161229011802.692478-2-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: lvm-devel@redhat.com, linux-raid@vger.kernel.org
-Cc: GuoQing Jiang <gqjiang@suse.com>, Lidong Zhong <lidong.zhong@suse.com>
+To: linux-raid@vger.kernel.org
+Cc: shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuan@kylinos.cn, liuyun01@kylinos.cn, Song Liu <songliubraving@fb.com>, Jes.Sorensen@redhat.com
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
+On Thu, Dec 29 2016, Song Liu wrote:
 
-This special casing brings no value.  It appears to attempt to
-determine if the array is active yet or not, and to skip
-processing if the array has not yet been started.
-However, if the array hasn't been started, then "blkid" will
-not have been able to read a signature, so:
-  ENV{ID_FS_TYPE}!=3D"LVM2_member|LVM1_member", GOTO=3D"lvm_end"
-will have caused all this code to be skipped.
+> Chunk aligned read significantly reduces CPU usage of raid456.
+> However, it is not safe to fully bypass the write back cache.
+> This patch enables chunk aligned read with write back cache.
+>
+> For chunk aligned read, we track stripes in write back cache at
+> a bigger granularity, "big_stripe". Each chunk may contain more
+> than one stripe (for example, a 256kB chunk contains 64 4kB-page,
+> so this chunk contain 64 stripes). For chunk_aligned_read, these
+> stripes are grouped into one big_stripe, so we only need one lookup
+> for the whole chunk.
+>
+> For each big_stripe, struct big_stripe_info tracks how many stripes of
+> this big_stripe are in the write back cache. These data are tracked
+> in a radix tree (big_stripe_tree). big_stripe_index() is used to
+> calculate keys for the radix tree.
+>
+> chunk_aligned_read() calls r5c_big_stripe_cached() to look up
+> big_stripe of each chunk in the tree. If this big_stripe is in the
+> tree, chunk_aligned_read() aborts. This look up is protected by
+> rcu_read_lock().
+>
+> It is necessary to remember whether a stripe is counted in
+> big_stripe_tree. Instead of adding new flag, we reuses existing flags:
+> STRIPE_R5C_PARTIAL_STRIPE and STRIPE_R5C_FULL_STRIPE. If either of these
+> two flags are set, the stripe is counted in big_stripe_tree. This
+> requires moving set_bit(STRIPE_R5C_PARTIAL_STRIPE) to
+> r5c_try_caching_write().
+>
+> Signed-off-by: Song Liu <songliubraving@fb.com>
+> ---
+>  drivers/md/raid5-cache.c | 146 +++++++++++++++++++++++++++++++++++++++++=
++++---
+>  drivers/md/raid5.c       |  19 +++---
+>  drivers/md/raid5.h       |   1 +
+>  3 files changed, 152 insertions(+), 14 deletions(-)
+>
+> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+> index 817b294..268dcd2 100644
+> --- a/drivers/md/raid5-cache.c
+> +++ b/drivers/md/raid5-cache.c
+> @@ -162,9 +162,60 @@ struct r5l_log {
+>=20=20
+>  	/* to submit async io_units, to fulfill ordering of flush */
+>  	struct work_struct deferred_io_work;
+> +
+> +	/* to for chunk_aligned_read in writeback mode, details below */
+> +	spinlock_t tree_lock;
+> +	struct radix_tree_root big_stripe_tree;
+> +	struct kmem_cache *bsi_kc;	/* kmem_cache for big_stripe_info */
 
-Further, this code causes incorrect behaviour in at least one case.
-It assumes that the first "add" event should be ignored, as it will be
-followed by a "change" event which indicates the array coming on line.
-This is consistent with how the kernel sends events, but not always
-consistent with how this script sees event.
-Specifically: if the initrd has "mdadm" support installed, but not
-"lvm2" support, then the initial "add" and "change" events will
-happen while the initrd is in charge and this file is not available.
-Once the root filesystem is mountd, this file will be available
-and "udevadm trigger --action=3Dadd" will be run.
-So the first and only event seen by this script for an md device will be
-"add", and it will incorrectly ignore it.
+Why use a kmem_cache.  The structure you are allocating is an atomic_t,
+which is 4 or 8 bytes, so kmalloc can allocate it efficiently.  You only
+need a kmem_cache for objects that are not a nice even size.
 
-It is probable that the special handling for "loop" should be removed as
-well, but I have not actually seen that cause a problem, so I'm
-leaving it unchanged.
+> +	mempool_t *big_stripe_info_pool;
 
-Signed-off-by: NeilBrown <neilb@suse.com>
-=2D--
- udev/69-dm-lvm-metad.rules.in | 10 ----------
- 1 file changed, 10 deletions(-)
+And why a mempool? Mempool are used when the allocation mustn't fail and
+you can wait for some other users of the memory to free it.  That is not
+at all the case here.
 
-diff --git a/udev/69-dm-lvm-metad.rules.in b/udev/69-dm-lvm-metad.rules.in
-index bd75fc8efcd5..db213ed67f21 100644
-=2D-- a/udev/69-dm-lvm-metad.rules.in
-+++ b/udev/69-dm-lvm-metad.rules.in
-@@ -50,16 +50,6 @@ KERNEL!=3D"dm-[0-9]*", GOTO=3D"next"
- ENV{DM_UDEV_PRIMARY_SOURCE_FLAG}=3D=3D"1", ENV{DM_ACTIVATION}=3D=3D"1", GO=
-TO=3D"lvm_scan"
- GOTO=3D"lvm_end"
-=20
-=2D# MD device:
-=2DLABEL=3D"next"
-=2DKERNEL!=3D"md[0-9]*", GOTO=3D"next"
-=2DIMPORT{db}=3D"LVM_MD_PV_ACTIVATED"
-=2DACTION=3D=3D"add", ENV{LVM_MD_PV_ACTIVATED}=3D=3D"1", GOTO=3D"lvm_scan"
-=2DACTION=3D=3D"change", ENV{LVM_MD_PV_ACTIVATED}!=3D"1", TEST=3D=3D"md/arr=
-ay_state", ENV{LVM_MD_PV_ACTIVATED}=3D"1", GOTO=3D"lvm_scan"
-=2DACTION=3D=3D"add", KERNEL=3D=3D"md[0-9]*p[0-9]*", GOTO=3D"lvm_scan"
-=2DENV{LVM_MD_PV_ACTIVATED}!=3D"1", ENV{SYSTEMD_READY}=3D"0"
-=2DGOTO=3D"lvm_end"
-=2D
- # Loop device:
- LABEL=3D"next"
- KERNEL!=3D"loop[0-9]*", GOTO=3D"next"
-=2D-=20
-2.11.0
+As you are using a radix tree, it would probably make sense to not store
+a pointer, but to store an integer directly.  Use radix_tree_replace to
+update.
 
+
+>  };
+>=20=20
+>  /*
+> + * Enable chunk_aligned_read() with write back cache.
+> + *
+> + * Each chunk may contain more than one stripe (for example, a 256kB
+> + * chunk contains 64 4kB-page, so this chunk contain 64 stripes). For
+> + * chunk_aligned_read, these stripes are grouped into one "big_stripe".
+> + * For each big_stripe, struct big_stripe_info tracks how many stripes of
+> + * this big_stripe are in the write back cache. These data are tracked
+> + * in a radix tree (big_stripe_tree). big_stripe_index() is used to
+> + * calculate keys for the radix tree.
+> + *
+> + * chunk_aligned_read() calls r5c_big_stripe_cached() to look up
+> + * big_stripe of each chunk in the tree. If this big_stripe is in the
+> + * tree, chunk_aligned_read() aborts. This look up is protected by
+> + * rcu_read_lock().
+> + *
+> + * It is necessary to remember whether a stripe is counted in
+> + * big_stripe_tree. Instead of adding new flag, we reuses existing flags:
+> + * STRIPE_R5C_PARTIAL_STRIPE and STRIPE_R5C_FULL_STRIPE. If either of th=
+ese
+> + * two flags are set, the stripe is counted in big_stripe_tree. This
+> + * requires moving set_bit(STRIPE_R5C_PARTIAL_STRIPE) to
+> + * r5c_try_caching_write().
+> + */
+> +struct big_stripe_info {
+> +	atomic_t count;
+> +#ifdef CONFIG_DEBUG_VM
+> +	void *pad;  /* suppress size check error in kmem_cache_sanity_check */
+
+There is a probably a reason for this error .....
+
+> +#endif
+> +};
+> +
+> +/*
+> + * calculate key for big_stripe_tree
+> + *
+> + * sect: align_bi->bi_iter.bi_sector or sh->sector
+> + */
+> +static inline sector_t big_stripe_index(struct r5conf *conf,
+> +					sector_t sect)
+> +{
+> +	sector_t offset;
+> +
+> +	offset =3D sector_div(sect, conf->chunk_sectors *
+> +			    (conf->raid_disks - conf->max_degraded));
+
+This code implies that 'sect' is a sector address in the array.
+However you call this function as=20
+> +		bs_index =3D big_stripe_index(conf, sh->sector);
+
+and sh->sector is a sector address in each underlying device.
+So something is definitely wrong.
+
+
+> +	return sect;
+> +}
+> +
+> +/*
+>   * an IO range starts from a meta data block and end at the next meta da=
+ta
+>   * block. The io unit's the meta data block tracks data/parity followed =
+it. io
+>   * unit is written to log disk with normal write, as we always flush log=
+ disk
+> @@ -2293,6 +2344,8 @@ int r5c_try_caching_write(struct r5conf *conf,
+>  	int i;
+>  	struct r5dev *dev;
+>  	int to_cache =3D 0;
+> +	struct big_stripe_info *bsinfo;
+> +	sector_t bs_index;
+>=20=20
+>  	BUG_ON(!r5c_is_writeback(log));
+>=20=20
+> @@ -2327,6 +2380,37 @@ int r5c_try_caching_write(struct r5conf *conf,
+>  		}
+>  	}
+>=20=20
+> +	/* if the stripe is not counted in big_stripe_tree, add it now */
+> +	if (!test_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state) &&
+> +	    !test_bit(STRIPE_R5C_FULL_STRIPE, &sh->state)) {
+> +		bs_index =3D big_stripe_index(conf, sh->sector);
+> +		spin_lock(&log->tree_lock);
+> +		bsinfo =3D radix_tree_lookup(&log->big_stripe_tree, bs_index);
+> +		if (bsinfo)
+> +			atomic_inc(&bsinfo->count);
+> +		else {
+> +			bsinfo =3D mempool_alloc(log->big_stripe_info_pool, GFP_ATOMIC);
+> +			if (bsinfo) {
+> +				atomic_set(&bsinfo->count, 1);
+> +				radix_tree_insert(&log->big_stripe_tree, bs_index, bsinfo);
+
+You've declared this radix_tree as
+> +	INIT_RADIX_TREE(&log->big_stripe_tree, GFP_ATOMIC);
+
+so it can be using in spinlock context, but that is only reliable if you
+first call radix_tree_preload() before taking the lock.
+
+NeilBrown
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhsbGwACgkQOeye3VZi
-gblj1g//RomkX8Emip5ERtehvabLjJ2tozq0fuvHgaMrxkpmIkoN10xg4r5ojq9l
-0v0qmgzUviMNfK6SQ96hWG1TYOVZknYtS8ABLlJEYdPfg3SvyZV5tZlhqpvzD0fr
-1Xy2jWNTdbgGWwrXOc6dMAYlJJu2/yPh4LMNHXHY+tVdse5SkhCTBsC5axuwKbZQ
-sU9qTzNKisPPJcJ8EJzdHiJMO2Rsf/crTy+ZwT6dq0/R4U1/kUDHsEfTyrMdUOeo
-IVPCPxaVSGwEzIxT/N87VlbFkeOj0QD1lyekxUrVL6qw0K1Ab2w/8o++j2wYdR8a
-eVBc9XcFAQUuHlQAYKccoh7+Ru5Z1tMOyJ7iVwBXAKKYr6n7GyG6e3vogjlm1ZWF
-JNkNzAUTHRn8zztjDd3FDgV59oZGWyi8dXbTBYgGXNRE+PzKk+2jjM1kK9vtTioY
-ABoG0/jN170V6ds+0AQHYkli1f5txYpnLpyMbkcIpEPxKkAMFk9N7yLYJV8TbymU
-Frw+N+LLo5k0xxi+8PPx8RBn3sYhop3eSkqf8JAuLjyj+xftuzcdsSAeiNBYLxBF
-+R/VilOMSVWILNCsG+zz0s1Ow82Vxl7+mzY7A1p0WdHTc+kyrORCdmQiJaU/1MqJ
-QLpvIX2hI/9tYx+eTeP/+dMOr6E0K66s/JulKpyO4xYrWMz/ens=
-=gVAW
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhsc+kACgkQOeye3VZi
+gbm/wA/8DLKxyBJaGfEGAyJWppWPMnnJ8vbk3XNsNhZ5KwJI9QME9VSGsD8VO4wG
+WE1epPbzgvL1LWKS+oydV3Oz/ZJJr4otKI5BQvQR2KM7Y+4ejOu7xpXtIaJ/dBwF
+gvlW993UV2CjGRt+yATQGREZPMPtTbDUPp3a8KnxLE9JXM5TPKmkYiQBVaqjhwnF
+86MHSP0t6saryu0P8p6QksgR/LaXai2699nMUd5jqFwChuRYVIPGTWXsDCLqkLix
+mP3fQsRwamo56s148atWUnVf3/MlIydflmvopA6kNZid0wLAlh6F6IzfKnS9wK8j
+m6lV5s81mkMZvp/i9Pr5HwPAA8PZ27AdYwO9yqRpp8uLAbu8A5sTzlreDjjKMj8w
+KOr1AMOhMjTwzpRpD7BSbM3+dkJyy2MAmPkxKxn6IoErcgOAYrl3EeaXxc53C8/+
+ONJjNgap20fWF8aC30Q0Q3C4tSOZKOwjaRqbxhXzN2E/0uiZpkaYuMbAxS4h0s+1
+5YpoERvnRTOohWp5xRxe2D/HFMgQiDpJPac9pil7gE+ClmV/bkPaW1uoaYgANLDJ
+AuJHxSS/1s9KnckE1RQ9SkGgNwzS1qDrhqRUOivOCPQAwsPWvO11g8boGIHU8WOR
+IGShxnKQ99ZkTUmW+YFM/bsQlGVk0DarWLbrqA1uM+5GNcFIEG8=
+=6xWm
 -----END PGP SIGNATURE-----
 --=-=-=--
