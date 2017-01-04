@@ -1,208 +1,195 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH 2/2] md/r5cache: enable chunk_aligned_read with write back cache
-Date: Wed, 04 Jan 2017 15:02:48 +1100
-Message-ID: <87bmvnmpzr.fsf@notabene.neil.brown.name>
-References: <20161229011802.692478-1-songliubraving@fb.com> <20161229011802.692478-2-songliubraving@fb.com>
+Subject: Re: [PATCH v2 1/1] block: fix blk_queue_split() resource
+	exhaustion
+Date: Wed, 04 Jan 2017 16:12:54 +1100
+Message-ID: <878tqrmmqx.fsf@notabene.neil.brown.name>
+References: <1467990243-3531-1-git-send-email-lars.ellenberg@linbit.com>
+	<1467990243-3531-2-git-send-email-lars.ellenberg@linbit.com>
+	<20160711141042.GY13335@soda.linbit>
+	<76d9bf14-d848-4405-8358-3771c0a93d39@profitbricks.com>
+	<20161223114553.GP4138@soda.linbit>
+	<CA+res+SjL6FrYWMroB-xjBO5gyz9pca6FQCy-arr7+4RQHeJGw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20161229011802.692478-2-songliubraving@fb.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuan@kylinos.cn, liuyun01@kylinos.cn, Song Liu <songliubraving@fb.com>, Jes.Sorensen@redhat.com
+Content-Type: multipart/mixed; boundary="===============2944397195331466932=="
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <CA+res+SjL6FrYWMroB-xjBO5gyz9pca6FQCy-arr7+4RQHeJGw@mail.gmail.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Jack Wang <jack.wang.usish@gmail.com>, Lars Ellenberg <lars.ellenberg@linbit.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-raid <linux-raid@vger.kernel.org>, Michael Wang <yun.wang@profitbricks.com>, Mike Snitzer <snitzer@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Jiri Kosina <jkosina@suse.cz>, Ming Lei <ming.lei@canonical.com>, linux-kernel@vger.kernel.org, Zheng Liu <gnehzuil.liu@gmail.com>, linux-block@vger.kernel.org, Takashi Iwai <tiwai@suse.de>, "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>, Ingo Molnar <mingo@redhat.com>, Alasdair Kergon <agk@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Keith Busch <keith.busch@intel.com>, device-mapper development <dm-devel@redhat.com>, Shaohua Li <shli@kernel.org>, Kent Overstreet <kent.overstreet@gmail.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, R
 List-Id: linux-raid.ids
+
+--===============2944397195331466932==
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Dec 29 2016, Song Liu wrote:
+On Tue, Jan 03 2017, Jack Wang wrote:
 
-> Chunk aligned read significantly reduces CPU usage of raid456.
-> However, it is not safe to fully bypass the write back cache.
-> This patch enables chunk aligned read with write back cache.
+> 2016-12-23 12:45 GMT+01:00 Lars Ellenberg <lars.ellenberg@linbit.com>:
+>> On Fri, Dec 23, 2016 at 09:49:53AM +0100, Michael Wang wrote:
+>>> Dear Maintainers
+>>>
+>>> I'd like to ask for the status of this patch since we hit the
+>>> issue too during our testing on md raid1.
+>>>
+>>> Split remainder bio_A was queued ahead, following by bio_B for
+>>> lower device, at this moment raid start freezing, the loop take
+>>> out bio_A firstly and deliver it, which will hung since raid is
+>>> freezing, while the freezing never end since it waiting for
+>>> bio_B to finish, and bio_B is still on the queue, waiting for
+>>> bio_A to finish...
+>>>
+>>> We're looking for a good solution and we found this patch
+>>> already progressed a lot, but we can't find it on linux-next,
+>>> so we'd like to ask are we still planning to have this fix
+>>> in upstream?
+>>
+>> I don't see why not, I'd even like to have it in older kernels,
+>> but did not have the time and energy to push it.
+>>
+>> Thanks for the bump.
+>>
+>>         Lars
+>>
+> Hi folks,
 >
-> For chunk aligned read, we track stripes in write back cache at
-> a bigger granularity, "big_stripe". Each chunk may contain more
-> than one stripe (for example, a 256kB chunk contains 64 4kB-page,
-> so this chunk contain 64 stripes). For chunk_aligned_read, these
-> stripes are grouped into one big_stripe, so we only need one lookup
-> for the whole chunk.
+> As Michael mentioned, we hit a bug this patch is trying to fix.
+> Neil suggested another way to fix it.  I attached below.
+> I personal prefer Neil's version as it's less code change, and straight f=
+orward.
 >
-> For each big_stripe, struct big_stripe_info tracks how many stripes of
-> this big_stripe are in the write back cache. These data are tracked
-> in a radix tree (big_stripe_tree). big_stripe_index() is used to
-> calculate keys for the radix tree.
+> Could you share your comments, we can get one fix into mainline.
 >
-> chunk_aligned_read() calls r5c_big_stripe_cached() to look up
-> big_stripe of each chunk in the tree. If this big_stripe is in the
-> tree, chunk_aligned_read() aborts. This look up is protected by
-> rcu_read_lock().
+> Thanks,
+> Jinpu
+> From 69a4829a55503e496ce9c730d2c8e3dd8a08874a Mon Sep 17 00:00:00 2001
+> From: NeilBrown <neilb@suse.com>
+> Date: Wed, 14 Dec 2016 16:55:52 +0100
+> Subject: [PATCH] block: fix deadlock between freeze_array() and wait_barr=
+ier()
 >
-> It is necessary to remember whether a stripe is counted in
-> big_stripe_tree. Instead of adding new flag, we reuses existing flags:
-> STRIPE_R5C_PARTIAL_STRIPE and STRIPE_R5C_FULL_STRIPE. If either of these
-> two flags are set, the stripe is counted in big_stripe_tree. This
-> requires moving set_bit(STRIPE_R5C_PARTIAL_STRIPE) to
-> r5c_try_caching_write().
+> When we call wait_barrier, we might have some bios waiting
+> in current->bio_list, which prevents the array_freeze call to
+> complete. Those can only be internal READs, which have already
+> passed the wait_barrier call (thus incrementing nr_pending), but
+> still were not submitted to the lower level, due to generic_make_request
+> logic to avoid recursive calls. In such case, we have a deadlock:
+> - array_frozen is already set to 1, so wait_barrier unconditionally waits=
+, so
+> - internal READ bios will not be submitted, thus freeze_array will
+> never completes.
 >
-> Signed-off-by: Song Liu <songliubraving@fb.com>
-> ---
->  drivers/md/raid5-cache.c | 146 +++++++++++++++++++++++++++++++++++++++++=
-+++---
->  drivers/md/raid5.c       |  19 +++---
->  drivers/md/raid5.h       |   1 +
->  3 files changed, 152 insertions(+), 14 deletions(-)
+> To fix this, modify generic_make_request to always sort bio_list_on_stack
+> first with lowest level, then higher, until same level.
 >
-> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index 817b294..268dcd2 100644
-> --- a/drivers/md/raid5-cache.c
-> +++ b/drivers/md/raid5-cache.c
-> @@ -162,9 +162,60 @@ struct r5l_log {
->=20=20
->  	/* to submit async io_units, to fulfill ordering of flush */
->  	struct work_struct deferred_io_work;
-> +
-> +	/* to for chunk_aligned_read in writeback mode, details below */
-> +	spinlock_t tree_lock;
-> +	struct radix_tree_root big_stripe_tree;
-> +	struct kmem_cache *bsi_kc;	/* kmem_cache for big_stripe_info */
+> Sent to linux-raid mail list:
+> https://marc.info/?l=3Dlinux-raid&m=3D148232453107685&w=3D2
+>
 
-Why use a kmem_cache.  The structure you are allocating is an atomic_t,
-which is 4 or 8 bytes, so kmalloc can allocate it efficiently.  You only
-need a kmem_cache for objects that are not a nice even size.
+This should probably also have
 
-> +	mempool_t *big_stripe_info_pool;
+  Inspired-by: Lars Ellenberg <lars.ellenberg@linbit.com>
 
-And why a mempool? Mempool are used when the allocation mustn't fail and
-you can wait for some other users of the memory to free it.  That is not
-at all the case here.
+or something that, as I was building on Lars' ideas when I wrote this.
 
-As you are using a radix tree, it would probably make sense to not store
-a pointer, but to store an integer directly.  Use radix_tree_replace to
-update.
+It would also be worth noting in the description that this addresses
+issues with dm and drbd as well as md.
 
+In fact, I think that with this patch in place, much of the need for the
+rescue_workqueue won't exist any more.  I cannot promise it can be
+removed completely, but it should be to hard to make it optional and
+only enabled for those few block devices that will still need it.
+The rescuer should only be needed for a bioset which can be allocated
+From=20twice in the one call the ->make_request_fn.  This would include
+raid0 for example, though raid0_make_reqest could be re-written to not
+use a loop and to just call generic_make_request(bio) if bio !=3D split.
 
->  };
->=20=20
->  /*
-> + * Enable chunk_aligned_read() with write back cache.
-> + *
-> + * Each chunk may contain more than one stripe (for example, a 256kB
-> + * chunk contains 64 4kB-page, so this chunk contain 64 stripes). For
-> + * chunk_aligned_read, these stripes are grouped into one "big_stripe".
-> + * For each big_stripe, struct big_stripe_info tracks how many stripes of
-> + * this big_stripe are in the write back cache. These data are tracked
-> + * in a radix tree (big_stripe_tree). big_stripe_index() is used to
-> + * calculate keys for the radix tree.
-> + *
-> + * chunk_aligned_read() calls r5c_big_stripe_cached() to look up
-> + * big_stripe of each chunk in the tree. If this big_stripe is in the
-> + * tree, chunk_aligned_read() aborts. This look up is protected by
-> + * rcu_read_lock().
-> + *
-> + * It is necessary to remember whether a stripe is counted in
-> + * big_stripe_tree. Instead of adding new flag, we reuses existing flags:
-> + * STRIPE_R5C_PARTIAL_STRIPE and STRIPE_R5C_FULL_STRIPE. If either of th=
-ese
-> + * two flags are set, the stripe is counted in big_stripe_tree. This
-> + * requires moving set_bit(STRIPE_R5C_PARTIAL_STRIPE) to
-> + * r5c_try_caching_write().
-> + */
-> +struct big_stripe_info {
-> +	atomic_t count;
-> +#ifdef CONFIG_DEBUG_VM
-> +	void *pad;  /* suppress size check error in kmem_cache_sanity_check */
-
-There is a probably a reason for this error .....
-
-> +#endif
-> +};
-> +
-> +/*
-> + * calculate key for big_stripe_tree
-> + *
-> + * sect: align_bi->bi_iter.bi_sector or sh->sector
-> + */
-> +static inline sector_t big_stripe_index(struct r5conf *conf,
-> +					sector_t sect)
-> +{
-> +	sector_t offset;
-> +
-> +	offset =3D sector_div(sect, conf->chunk_sectors *
-> +			    (conf->raid_disks - conf->max_degraded));
-
-This code implies that 'sect' is a sector address in the array.
-However you call this function as=20
-> +		bs_index =3D big_stripe_index(conf, sh->sector);
-
-and sh->sector is a sector address in each underlying device.
-So something is definitely wrong.
-
-
-> +	return sect;
-> +}
-> +
-> +/*
->   * an IO range starts from a meta data block and end at the next meta da=
-ta
->   * block. The io unit's the meta data block tracks data/parity followed =
-it. io
->   * unit is written to log disk with normal write, as we always flush log=
- disk
-> @@ -2293,6 +2344,8 @@ int r5c_try_caching_write(struct r5conf *conf,
->  	int i;
->  	struct r5dev *dev;
->  	int to_cache =3D 0;
-> +	struct big_stripe_info *bsinfo;
-> +	sector_t bs_index;
->=20=20
->  	BUG_ON(!r5c_is_writeback(log));
->=20=20
-> @@ -2327,6 +2380,37 @@ int r5c_try_caching_write(struct r5conf *conf,
->  		}
->  	}
->=20=20
-> +	/* if the stripe is not counted in big_stripe_tree, add it now */
-> +	if (!test_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state) &&
-> +	    !test_bit(STRIPE_R5C_FULL_STRIPE, &sh->state)) {
-> +		bs_index =3D big_stripe_index(conf, sh->sector);
-> +		spin_lock(&log->tree_lock);
-> +		bsinfo =3D radix_tree_lookup(&log->big_stripe_tree, bs_index);
-> +		if (bsinfo)
-> +			atomic_inc(&bsinfo->count);
-> +		else {
-> +			bsinfo =3D mempool_alloc(log->big_stripe_info_pool, GFP_ATOMIC);
-> +			if (bsinfo) {
-> +				atomic_set(&bsinfo->count, 1);
-> +				radix_tree_insert(&log->big_stripe_tree, bs_index, bsinfo);
-
-You've declared this radix_tree as
-> +	INIT_RADIX_TREE(&log->big_stripe_tree, GFP_ATOMIC);
-
-so it can be using in spinlock context, but that is only reliable if you
-first call radix_tree_preload() before taking the lock.
-
+Thanks,
 NeilBrown
+
+
+> Suggested-by: NeilBrown <neilb@suse.com>
+> Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
+> ---
+>  block/blk-core.c | 20 ++++++++++++++++++++
+>  1 file changed, 20 insertions(+)
+>
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index 9e3ac56..47ef373 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -2138,10 +2138,30 @@ blk_qc_t generic_make_request(struct bio *bio)
+>  		struct request_queue *q =3D bdev_get_queue(bio->bi_bdev);
+>=20=20
+>  		if (likely(blk_queue_enter(q, __GFP_DIRECT_RECLAIM) =3D=3D 0)) {
+> +			struct bio_list lower, same, hold;
+> +
+> +			/* Create a fresh bio_list for all subordinate requests */
+> +			bio_list_init(&hold);
+> +			bio_list_merge(&hold, &bio_list_on_stack);
+> +			bio_list_init(&bio_list_on_stack);
+>=20=20
+>  			ret =3D q->make_request_fn(q, bio);
+>=20=20
+>  			blk_queue_exit(q);
+> +			/* sort new bios into those for a lower level
+> +			 * and those for the same level
+> +			 */
+> +			bio_list_init(&lower);
+> +			bio_list_init(&same);
+> +			while ((bio =3D bio_list_pop(&bio_list_on_stack)) !=3D NULL)
+> +				if (q =3D=3D bdev_get_queue(bio->bi_bdev))
+> +					bio_list_add(&same, bio);
+> +				else
+> +					bio_list_add(&lower, bio);
+> +			/* now assemble so we handle the lowest level first */
+> +			bio_list_merge(&bio_list_on_stack, &lower);
+> +			bio_list_merge(&bio_list_on_stack, &same);
+> +			bio_list_merge(&bio_list_on_stack, &hold);
+>=20=20
+>  			bio =3D bio_list_pop(current->bio_list);
+>  		} else {
+> --=20
+> 2.7.4
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhsc+kACgkQOeye3VZi
-gbm/wA/8DLKxyBJaGfEGAyJWppWPMnnJ8vbk3XNsNhZ5KwJI9QME9VSGsD8VO4wG
-WE1epPbzgvL1LWKS+oydV3Oz/ZJJr4otKI5BQvQR2KM7Y+4ejOu7xpXtIaJ/dBwF
-gvlW993UV2CjGRt+yATQGREZPMPtTbDUPp3a8KnxLE9JXM5TPKmkYiQBVaqjhwnF
-86MHSP0t6saryu0P8p6QksgR/LaXai2699nMUd5jqFwChuRYVIPGTWXsDCLqkLix
-mP3fQsRwamo56s148atWUnVf3/MlIydflmvopA6kNZid0wLAlh6F6IzfKnS9wK8j
-m6lV5s81mkMZvp/i9Pr5HwPAA8PZ27AdYwO9yqRpp8uLAbu8A5sTzlreDjjKMj8w
-KOr1AMOhMjTwzpRpD7BSbM3+dkJyy2MAmPkxKxn6IoErcgOAYrl3EeaXxc53C8/+
-ONJjNgap20fWF8aC30Q0Q3C4tSOZKOwjaRqbxhXzN2E/0uiZpkaYuMbAxS4h0s+1
-5YpoERvnRTOohWp5xRxe2D/HFMgQiDpJPac9pil7gE+ClmV/bkPaW1uoaYgANLDJ
-AuJHxSS/1s9KnckE1RQ9SkGgNwzS1qDrhqRUOivOCPQAwsPWvO11g8boGIHU8WOR
-IGShxnKQ99ZkTUmW+YFM/bsQlGVk0DarWLbrqA1uM+5GNcFIEG8=
-=6xWm
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhshFYACgkQOeye3VZi
+gblqUg/7Bws8GmwZUdBHNk3xCTBNEMVYJEDp2ybObY/6wX8T4mPQzeyEjcRRWFsq
+2k1BYf042lDz37arcOuBa2iYmmV8Wb7ePgoa4wKbZ5L2imuyvCllEz/tMCwl8Qdd
+068zLJ5LlmRanfVKv4yPL5qg+tRBg4WVo6Qx1pBdqf/5uffK/pHUUPAtx6Ae4aLT
+FJisLZ1GDGH9eZwC4Nzy6cABl6J7fbfMevUieCE5TprJqlArhaWpBxrPTlZDNlkO
+8EqM1SkO8YecFYc7cC+ryUM4UQhZlJGFTOVcchI2oME7C257ebjOSj7SVS62wail
+zyEyaKMJ126eqW/9SfewSfkkaXggWhsHOioupoGpjgx8XnzqUSUBYowHURawuTdg
+tO7syR8QiGJfz5H1D4tM2s3B8DZxW4/LSkSBmNEYjJREmlVuFZ7zGAoH54GiM72M
+Z6RZ3u9+GQw8XmLd6U6D5gqsLUMNNmNzZ2U2iQ7cuIAYSJAr+iT0RNCiDmKnrPj0
+gTZGyuLGsiQmJswnhDHAGOMXUOGPAaRP4kMqDkA3N9EoixC6xUQUciGA87bZruzz
+5pN4GKtfbBjmDLqXRIsJMQS2uAKQB0Op1XNHGSpktdhinaFDiet/+XkTwqd3u2cZ
+vg35xPvQF5khosSkpOei19LMoGZjfL7Xnt7kK5unxvz5F/PaoM8=
+=xcLU
 -----END PGP SIGNATURE-----
 --=-=-=--
+
+
+--===============2944397195331466932==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+
+--===============2944397195331466932==--
