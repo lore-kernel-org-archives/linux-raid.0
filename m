@@ -1,50 +1,29 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH v2 00/12] Partial Parity Log for MD RAID 5
-Date: Wed, 04 Jan 2017 08:29:23 -0500
-Message-ID: <wrfjwpebuf64.fsf@redhat.com>
-References: <20161205153113.7268-1-artur.paszkiewicz@intel.com>
-        <87fum04m0m.fsf@notabene.neil.brown.name>
-        <84c59771-48b7-da47-3497-c82c6c6939c9@intel.com>
-        <20161207170906.sthdxswufwk5fqhn@kernel.org>
-        <wrfjy3zjq2b3.fsf@redhat.com>
-        <20161214194726.4to3rnqyrqlqlx7t@kernel.org>
-        <c97a46de-f88a-f8f2-4520-e3c8a57d1b3b@intel.com>
-        <20161216232421.x6sb4goclzyasu6k@kernel.org>
-        <wrfjzij8ywtu.fsf@redhat.com>
-        <84d3a102-faef-13ae-44e2-2f9a4d561c37@intel.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: Re: [PATCH] raid5: only dispatch IO from raid5d for harddisk raid
+Date: Wed, 4 Jan 2017 18:10:59 +0000
+Message-ID: <E6506DA7-E269-4092-8761-12FFC1770F82@fb.com>
+References: <9e987c0d95c49224da7fb82477dd10fcacf4d794.1483552525.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <84d3a102-faef-13ae-44e2-2f9a4d561c37@intel.com> (Artur
-        Paszkiewicz's message of "Wed, 4 Jan 2017 09:01:05 +0100")
+In-Reply-To: <9e987c0d95c49224da7fb82477dd10fcacf4d794.1483552525.git.shli@fb.com>
+Content-Language: en-US
+Content-ID: <85ABAFCA752E294CA84F18FD46F8FDB9@namprd15.prod.outlook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: Shaohua Li <shli@kernel.org>, NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
+To: Shaohua Li <shli@fb.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, NeilBrown <neilb@suse.com>
 List-Id: linux-raid.ids
 
-Artur Paszkiewicz <artur.paszkiewicz@intel.com> writes:
-> On 01/03/2017 04:42 PM, Jes Sorensen wrote:
->> Artur,
->> 
->> Did you make any progress getting the alignment issue resolved?
->> 
->> I'd really like to get an mdadm release out the door this week, so
->> getting this resolved would be awesome. Hint hint ;)
->
-> Jes,
->
-> The alignment issue is fixed but I'm currently making changes in the
-> kernel part after comments from Neil. This also requires modifications
-> in mdadm, maybe even more than in the kernel. I need a few more days to
-> finish this, I'll be sending the next version of the patches probably
-> next week. So don't let me keep you if you want to make a release this
-> week.
 
-Artur,
+> On Jan 4, 2017, at 9:57 AM, Shaohua Li <shli@fb.com> wrote:
+>=20
+> +	spin_lock_init(&conf->pending_bios_lock);
+> +	conf->batch_bio_dispatch =3D true;
+> +	rdev_for_each(rdev, mddev) {
+> +		if (blk_queue_nonrot(bdev_get_queue(rdev->bdev))) {
+> +			conf->batch_bio_dispatch =3D false;
 
-Thanks for the update - it sounds like it is probably wise to let this
-stew a bit and let all the dust settle before we put it into an official
-release.
+Shall we skip this check for the journal device?=20
 
-Cheers,
-Jes
+Song
