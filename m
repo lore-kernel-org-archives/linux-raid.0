@@ -1,159 +1,100 @@
-From: Shaohua Li <shli@fb.com>
-Subject: [PATCH] raid5: only dispatch IO from raid5d for harddisk raid
-Date: Wed, 4 Jan 2017 09:57:45 -0800
-Message-ID: <9e987c0d95c49224da7fb82477dd10fcacf4d794.1483552525.git.shli@fb.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [v2 PATCH 2/2] RAID1: avoid unnecessary spin locks in I/O
+ barrier code
+Date: Wed, 4 Jan 2017 11:59:55 -0800
+Message-ID: <20170104195955.szil3oyatlpanmis@kernel.org>
+References: <1482853658-82535-1-git-send-email-colyli@suse.de>
+ <1482853658-82535-2-git-send-email-colyli@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1482853658-82535-2-git-send-email-colyli@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Kernel-team@fb.com, NeilBrown <neilb@suse.com>, Song Liu <songliubraving@fb.com>
+To: Coly Li <colyli@suse.de>
+Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Hannes Reinecke <hare@suse.com>, Neil Brown <neilb@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-We made raid5 stripe handling multi-thread before. It works well for
-SSD. But for harddisk, the multi-threading creates more disk seek, so
-not always improve performance. For several hard disks based raid5,
-multi-threading is required as raid5d becames a bottleneck especially
-for sequential write.
+On Tue, Dec 27, 2016 at 11:47:38PM +0800, Coly Li wrote:
+> When I run a parallel reading performan testing on a md raid1 device with
+> two NVMe SSDs, I observe very bad throughput in supprise: by fio with 64KB
+> block size, 40 seq read I/O jobs, 128 iodepth, overall throughput is
+> only 2.7GB/s, this is around 50% of the idea performance number.
+> 
+> The perf reports locking contention happens at allow_barrier() and
+> wait_barrier() code,
+>  - 41.41%  fio [kernel.kallsyms]     [k] _raw_spin_lock_irqsave
+>    - _raw_spin_lock_irqsave
+>          + 89.92% allow_barrier
+>          + 9.34% __wake_up
+>  - 37.30%  fio [kernel.kallsyms]     [k] _raw_spin_lock_irq
+>    - _raw_spin_lock_irq
+>          - 100.00% wait_barrier
+> 
+> The reason is, in these I/O barrier related functions,
+>  - raise_barrier()
+>  - lower_barrier()
+>  - wait_barrier()
+>  - allow_barrier()
+> They always hold conf->resync_lock firstly, even there are only regular
+> reading I/Os and no resync I/O at all. This is a huge performance penalty.
+> 
+> The solution is a lockless-like algorithm in I/O barrier code, and only
+> holding conf->resync_lock when it is really necessary.
+> 
+> The original idea is from Hannes Reinecke, and Neil Brown provides
+> comments to improve it. Now I write the patch based on new simpler raid1
+> I/O barrier code.
+> 
+> In the new simpler raid1 I/O barrier implementation, there are two
+> wait barrier functions,
+>  - wait_barrier()
+>    Which in turns calls _wait_barrier(), is used for regular write I/O.
+>    If there is resync I/O happening on the same barrier bucket index, or
+>    the whole array is frozen, task will wait until no barrier on same
+>    bucket index, or the whold array is unfreezed.
+>  - wait_read_barrier()
+>    Since regular read I/O won't interfere with resync I/O (read_balance()
+>    will make sure only uptodate data will be read out), so it is
+>    unnecessary to wait for barrier in regular read I/Os, they only have to
+>    wait only when the whole array is frozen.
+> The operations on conf->nr_pending[idx], conf->nr_waiting[idx], conf->
+> barrier[idx] are very carefully designed in raise_barrier(),
+> lower_barrier(), _wait_barrier() and wait_read_barrier(), in order to
+> avoid unnecessary spin locks in these functions. Once conf->
+> nr_pengding[idx] is increased, a resync I/O with same barrier bucket index
+> has to wait in raise_barrier(). Then in _wait_barrier() or
+> wait_read_barrier() if no barrier raised in same barrier bucket index or
+> array is not frozen, the regular I/O doesn't need to hold conf->
+> resync_lock, it can just increase conf->nr_pending[idx], and return to its
+> caller. For heavy parallel reading I/Os, the lockless I/O barrier code
+> almostly gets rid of all spin lock cost.
+> 
+> This patch significantly improves raid1 reading peroformance. From my
+> testing, a raid1 device built by two NVMe SSD, runs fio with 64KB
+> blocksize, 40 seq read I/O jobs, 128 iodepth, overall throughput
+> increases from 2.7GB/s to 4.6GB/s (+70%).
+> 
+> Open question:
+> Shaohua points out the memory barrier should be added to some atomic
+> operations. Now I am reading the document to learn how to add the memory
+> barriers correctly. Anyway, if anyone has suggestion, please don't
+> hesitate to let me know.
 
-To overcome the disk seek issue, we only dispatch IO from raid5d if the
-array is harddisk based. Other threads can still handle stripes, but
-can't dispatch IO.
-
-Idealy, we should control IO dispatching order according to IO position
-interrnally. Right now we still depend on block layer, which isn't very
-efficient sometimes though.
-
-My setup has 9 harddisks, each disk can do around 180M/s sequential
-write. So in theory, the raid5 can do 180 * 8 = 1440M/s sequential
-write. The test machine uses an ATOM CPU. I measure sequential write
-with large iodepth bandwidth to raid array:
-
-without patch: ~600M/s
-without patch and group_thread_cnt=4: 750M/s
-with patch and group_thread_cnt=4: 950M/s
-with patch, group_thread_cnt=4, skip_copy=1: 1150M/s
-
-We are pretty close to the maximum bandwidth in the large iodepth
-iodepth case. The performance gap of small iodepth sequential write
-between software raid and theory value is still very big though, because
-we don't have an efficient pipeline.
-
-Cc: NeilBrown <neilb@suse.com>
-Cc: Song Liu <songliubraving@fb.com>
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- drivers/md/raid5.c | 53 +++++++++++++++++++++++++++++++++++++++++++++++++++--
- drivers/md/raid5.h |  4 ++++
- 2 files changed, 55 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 06d7279..81417cf 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -861,6 +861,43 @@ static int use_new_offset(struct r5conf *conf, struct stripe_head *sh)
- 	return 1;
- }
+Yes, because the raise_barrier/_wait_barrier depend on the atomic opertions
+order, while atomic_inc/atomic_read don't imply a barrier.
  
-+static void flush_deferred_bios(struct r5conf *conf)
-+{
-+	struct bio_list tmp;
-+	struct bio *bio;
-+
-+	if (!conf->batch_bio_dispatch || !conf->group_cnt)
-+		return;
-+
-+	bio_list_init(&tmp);
-+	spin_lock(&conf->pending_bios_lock);
-+	bio_list_merge(&tmp, &conf->pending_bios);
-+	bio_list_init(&conf->pending_bios);
-+	spin_unlock(&conf->pending_bios_lock);
-+
-+	while ((bio = bio_list_pop(&tmp)))
-+		generic_make_request(bio);
-+}
-+
-+static void defer_bio_issue(struct r5conf *conf, struct bio *bio)
-+{
-+	/*
-+	 * change group_cnt will drain all bios, so this is safe
-+	 *
-+	 * A read generally means a read-modify-write, which usually means a
-+	 * randwrite, so we don't delay it
-+	 */
-+	if (!conf->batch_bio_dispatch || !conf->group_cnt ||
-+	    bio_op(bio) == REQ_OP_READ) {
-+		generic_make_request(bio);
-+		return;
-+	}
-+	spin_lock(&conf->pending_bios_lock);
-+	bio_list_add(&conf->pending_bios, bio);
-+	spin_unlock(&conf->pending_bios_lock);
-+	md_wakeup_thread(conf->mddev->thread);
-+}
-+
- static void
- raid5_end_read_request(struct bio *bi);
- static void
-@@ -1031,7 +1068,7 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
- 				trace_block_bio_remap(bdev_get_queue(bi->bi_bdev),
- 						      bi, disk_devt(conf->mddev->gendisk),
- 						      sh->dev[i].sector);
--			generic_make_request(bi);
-+			defer_bio_issue(conf, bi);
- 		}
- 		if (rrdev) {
- 			if (s->syncing || s->expanding || s->expanded
-@@ -1076,7 +1113,7 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
- 				trace_block_bio_remap(bdev_get_queue(rbi->bi_bdev),
- 						      rbi, disk_devt(conf->mddev->gendisk),
- 						      sh->dev[i].sector);
--			generic_make_request(rbi);
-+			defer_bio_issue(conf, rbi);
- 		}
- 		if (!rdev && !rrdev) {
- 			if (op_is_write(op))
-@@ -6057,6 +6094,8 @@ static void raid5d(struct md_thread *thread)
- 		mutex_unlock(&conf->cache_size_mutex);
- 	}
- 
-+	flush_deferred_bios(conf);
-+
- 	r5l_flush_stripe_to_raid(conf->log);
- 
- 	async_tx_issue_pending_all();
-@@ -6642,6 +6681,16 @@ static struct r5conf *setup_conf(struct mddev *mddev)
- 	atomic_set(&conf->active_stripes, 0);
- 	atomic_set(&conf->preread_active_stripes, 0);
- 	atomic_set(&conf->active_aligned_reads, 0);
-+	bio_list_init(&conf->pending_bios);
-+	spin_lock_init(&conf->pending_bios_lock);
-+	conf->batch_bio_dispatch = true;
-+	rdev_for_each(rdev, mddev) {
-+		if (blk_queue_nonrot(bdev_get_queue(rdev->bdev))) {
-+			conf->batch_bio_dispatch = false;
-+			break;
-+		}
-+	}
-+
- 	conf->bypass_threshold = BYPASS_THRESHOLD;
- 	conf->recovery_disabled = mddev->recovery_disabled - 1;
- 
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index ed8e136..2af5bea 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -679,6 +679,10 @@ struct r5conf {
- 	int			group_cnt;
- 	int			worker_cnt_per_group;
- 	struct r5l_log		*log;
-+
-+	struct bio_list		pending_bios;
-+	spinlock_t		pending_bios_lock;
-+	bool			batch_bio_dispatch;
- };
- 
- 
--- 
-2.9.3
+> @@ -1005,7 +1031,7 @@ static void unfreeze_array(struct r1conf *conf)
+>  {
+>  	/* reverse the effect of the freeze */
+>  	spin_lock_irq(&conf->resync_lock);
+> -	conf->array_frozen = 0;
+> +	atomic_set(&conf->array_frozen, 0);
+>  	wake_up(&conf->wait_barrier);
+>  	spin_unlock_irq(&conf->resync_lock);
+>  }
 
+Nitpick: This one doesn't need the lock.
+
+Thanks,
+Shaohua
