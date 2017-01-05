@@ -1,117 +1,52 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [lvm-devel] [lvm2 PATCH] Remove special-case for md in 69-dm-lvm-metadata.rules
-Date: Thu, 05 Jan 2017 14:44:20 +1100
-Message-ID: <87wpeakw6j.fsf@notabene.neil.brown.name>
-References: <87eg0jmrgz.fsf@notabene.neil.brown.name> <e0225e4c-80fe-359e-462a-5829195ca5b6@redhat.com>
+From: Binoy Jayan <binoy.jayan@linaro.org>
+Subject: Re: [RFC PATCH v2] crypto: Add IV generation algorithms
+Date: Thu, 5 Jan 2017 11:36:52 +0530
+Message-ID: <CAHv-k_9G=iWe_CWNEcKxq0Q1=XhUAPDE88NvvkCOu5q=pNSgrA@mail.gmail.com>
+References: <1481618949-20086-1-git-send-email-binoy.jayan@linaro.org>
+ <1481618949-20086-2-git-send-email-binoy.jayan@linaro.org>
+ <d6d92865-98fa-4d02-035f-9080bc265c35@gmail.com> <20161222085509.GA2160@gondor.apana.org.au>
+ <CAHv-k_-EKq2g=Wb+YkPVp9gCXTDEyrxZhQpT5JMSw=WtZ1OC9w@mail.gmail.com>
+ <20161223075114.GA3580@gondor.apana.org.au> <CAHv-k_9SynECq7qDbrW59=LsV_WNj+9Ffa=6tATyNKOt36he6Q@mail.gmail.com>
+ <20161230102723.GA15713@gondor.apana.org.au> <CAHv-k_8FmeKk_3zUAVCqHp82nHmiWsyfZ_BW+z=SC5VVOrFsAA@mail.gmail.com>
+ <20170102065325.GA19553@gondor.apana.org.au>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e0225e4c-80fe-359e-462a-5829195ca5b6@redhat.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Peter Rajnoha <prajnoha@redhat.com>, LVM2 development <lvm-devel@redhat.com>, linux-raid@vger.kernel.org
-Cc: Lidong Zhong <lidong.zhong@suse.com>, GuoQing Jiang <gqjiang@suse.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-crypto-owner@vger.kernel.org>
+In-Reply-To: <20170102065325.GA19553@gondor.apana.org.au>
+Sender: linux-crypto-owner@vger.kernel.org
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: Milan Broz <gmazyland@gmail.com>, Oded <oded.golombek@arm.com>, Ofir <Ofir.Drang@arm.com>, "David S. Miller" <davem@davemloft.net>, linux-crypto@vger.kernel.org, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Linux kernel mailing list <linux-kernel@vger.kernel.org>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Rajendra <rnayak@codeaurora.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hi Herbert,
 
-On Wed, Jan 04 2017, Peter Rajnoha wrote:
+On 2 January 2017 at 12:23, Herbert Xu <herbert@gondor.apana.org.au> wrote:
+> On Mon, Jan 02, 2017 at 12:16:45PM +0530, Binoy Jayan wrote:
+>
+> Right.  The actual number of underlying tfms that do the work
+> won't change compared to the status quo.  We're just structuring
+> it such that if the overall scheme is supported by the hardware
+> then we can feed more than one sector at a time to it.
 
-> On 01/04/2017 04:30 AM, NeilBrown wrote:
->>=20
->> This special casing brings no value.  It appears to attempt to
->> determine if the array is active yet or not, and to skip
->> processing if the array has not yet been started.
->
-> Hi Neil,
->
-> those rules also have another use which is to not trigger further
-> unnecessary actions if the device is already up and running, hence
-> avoiding useless resource consumption if it brings no new information.
-> Currently, this is applied only for running pvscan on top of newly
-> activated MD device (that's why it's part of 69-dm-lvm-metad.rules
-> at the moment).
+I was thinking of continuing to have the iv generation algorithms as template
+ciphers instead of regular 'skcipher' as it is easier to inherit the parameters
+from the underlying cipher (e.g. aes) like cra_blocksize, cra_alignmask,
+ivsize, chunksize etc.
 
-I am having difficulty seeing why MD devices should be handled
-differently from any others in this respect.  If you want to filter out
-unhelpful event for MD, surely you should filter them out for all
-devices??
+Usually, the underlying cipher for the template ciphers are instantiated
+in the following function:
 
-I also wonder if there are really so many unhelpful events that there is
-a genuine gain in filtering them out.
+skcipher_instance:skcipher_alg:init()
 
->
-> So what we also need is to detect the very first CHANGE event
-> that makes the device active and to make a difference between this
-> first CHANGE event and further CHANGE events which are possibly
-> part of the WATCH rule and any other possible CHANGE events which
-> do not notify about the device switching from "not ready" to "ready"
-> state (of course, counting with possible coldplug events).
->
->> However, if the array hasn't been started, then "blkid" will
->> not have been able to read a signature, so:
->>   ENV{ID_FS_TYPE}!=3D"LVM2_member|LVM1_member", GOTO=3D"lvm_end"
->> will have caused all this code to be skipped.
->>=20
->> Further, this code causes incorrect behaviour in at least one case.
->> It assumes that the first "add" event should be ignored, as it will be
->> followed by a "change" event which indicates the array coming on line.
->> This is consistent with how the kernel sends events, but not always
->> consistent with how this script sees event.
->> Specifically: if the initrd has "mdadm" support installed, but not
->> "lvm2" support, then the initial "add" and "change" events will
->> happen while the initrd is in charge and this file is not available.
->> Once the root filesystem is mountd, this file will be available
->> and "udevadm trigger --action=3Dadd" will be run.
->> So the first and only event seen by this script for an md device will be
->> "add", and it will incorrectly ignore it.
->>=20
->
-> Yes, you're right that in this case, it's not behaving correctly when
-> the initrd doesn't have this rule while the root FS does.  To fix this
-> issue for now, I suggest to separate those rule out of 69-dm-lvm-metad.ru=
-les
-> and make it a part of MD rules so that rule is always available both in
-> initrd and root fs when MD is used (while LVM doesn't need to be
-> installed in initrd).
->
-> This comes right on time because right at this very moment, I'm working
-> on a design for a solution which covers this area - I'll surely pass you
-> the design doc once it's more complete (should be in next few days) so
-> you we can discuss this problem further. This will cover the *standard*
-> notification about when the block device is ready which provides a
-> standard way of letting others (rules or any uevent monitors) know when
-> the switch from "not ready" to "ready" state happens exactly. This should
-> save us lots of unnecessary work that is done at the moment - we don't
-> need to fire scans and further inspection of the device for all the
-> events all the time. This work also covers identification of spurious
-> events coming as a result of the WATCH rule and minimization of its
-> impact on uevent processing performance in userspace.
-
-I'd certainly be very interested to read and comment on your design.
+Since the number of such cipher instances depend on the key count, which is
+not known at the time of creation of the cipher (it's passed to as an argument
+to the setkey api), the creation of those have to be delayed until the setkey
+operation of the template cipher. But as Mark pointed out, the users of this
+cipher may get confused if the creation of the underlying cipher fails while
+trying to do a 'setkey' on the template cipher. I was wondering if I can create
+a single instance of the cipher and assign it to tfms[0] and allocate the
+remaining instances when the setkey operation is called later with the encoded
+key_count so that errors during cipher creation are uncovered earlier.
 
 Thanks,
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhtwRQACgkQOeye3VZi
-gbkrnBAAhYuXPhpTL7t/d2dcLwM3nDCADzOw0opjSfUiQOz23r5yfe16XGNBC8Ei
-g71yQaZ46cOaXmsYWBV0ZPDVjke9rwf1bGljCPqm6uwew6LSaDe/OqxUKkDWGXgT
-vQkOhd5xMiubeoyVbcS3vzAiBXm0/oGX59tpjEB5Prvdysv7/64oPaGGAi4BoXAE
-Bu4MXP8LAqov5BG6j/nESjLoTzCgKfB2EC8qtF2dUuz5zgytfRn2UGWSyQDVoIay
-7EKriUqfbmraY0ockJdLz6ZwWS42LeLvMConc4RG+bqJcBDG3cGQOXQ4hkHAqrBg
-RylAAZMgaL+5EZN/SjpZYI8G7JFuvKbULhfZDHi0FFPX8UPROqpQdqbSpl3/oHFB
-5i9UkxucWbYkP6+NK7+KGzv4NTAK08l8KCbEPwJ+D9w/Hgtyi3b/GRIjZzarIfks
-+zM46Z9NsGGg9eEKlhW65dAKBbAHx2ptRGsMwoJoSixV+toqMmawUiN1fdzLdtx8
-CIWDGLuMg2zdMiDCCTYyiWcsJyIgwuDoUuFUAn874h+riOLchXIkSSUBW1SzWecN
-Md3i/v1iXgApKUwRCEpbGiwP2QzHrOvFmr78PR/+CdAFR2P3P1R1mw05Rh+itPrv
-fKSJzq10vigyJFB8uCxsgnPIJvxMwiS7O0X1fTcbpSoD8kcynrk=
-=a8HU
------END PGP SIGNATURE-----
---=-=-=--
+Binoy
