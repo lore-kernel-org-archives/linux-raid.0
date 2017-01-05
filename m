@@ -1,202 +1,84 @@
-From: Alexander Shenkin <al@shenkin.org>
-Subject: Re: recovering failed raid5
-Date: Thu, 5 Jan 2017 12:08:48 +0000
-Message-ID: <afa0c794-02f1-0150-d295-973a7f7bea12@shenkin.org>
-References: <CAM97BgQLPUN=t7VKHaVG-=SrJmS_tvaxGDbo3yqMwHm8B-do_Q@mail.gmail.com>
- <20161027160400.GA21042@metamorpher.de>
- <715b259f-1e56-9606-edc4-3e5c4d57744b@shenkin.org>
- <20161028133626.GA27462@cthulhu.home.robinhill.me.uk>
- <194ae464-2d19-cefd-055f-6f4a33676ab2@shenkin.org>
- <582C7CC3.40901@youngman.org.uk>
- <275e84b8-4a2c-5ef2-0e88-5dfe28e42fc9@shenkin.org>
- <582C8B6C.5040303@youngman.org.uk>
+From: MasterPrenium <masterprenium.lkml@gmail.com>
+Subject: Re: PROBLEM: Kernel BUG with raid5 soft + Xen + DRBD -
+	invalid opcode
+Date: Thu, 5 Jan 2017 15:16:53 +0100
+Message-ID: <e56edc2b-f2ad-2ab1-4184-5d7cad80085a@gmail.com>
+References: <585D6C34.2020908@gmail.com>
+ <20170104223015.cr6vtyhxuwxrg76g@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <582C8B6C.5040303@youngman.org.uk>
-Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org, rm@romanrm.net, robin@robinhill.me.uk
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Transfer-Encoding: base64
+Return-path: <xen-devel-bounces@lists.xen.org>
+In-Reply-To: <20170104223015.cr6vtyhxuwxrg76g@kernel.org>
+List-Unsubscribe: <https://lists.xen.org/cgi-bin/mailman/options/xen-devel>,
+ <mailto:xen-devel-request@lists.xen.org?subject=unsubscribe>
+List-Post: <mailto:xen-devel@lists.xen.org>
+List-Help: <mailto:xen-devel-request@lists.xen.org?subject=help>
+List-Subscribe: <https://lists.xen.org/cgi-bin/mailman/listinfo/xen-devel>,
+ <mailto:xen-devel-request@lists.xen.org?subject=subscribe>
+Errors-To: xen-devel-bounces@lists.xen.org
+Sender: "Xen-devel" <xen-devel-bounces@lists.xen.org>
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, xen-users@lists.xen.org, "MasterPrenium@gmail.com" <MasterPrenium@gmail.com>, linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org
 List-Id: linux-raid.ids
 
-Hi again all,
-
-I've finally gotten new disks and copies ready, and have a small 
-operational question.  But first, just a reminder, as this thread is a 
-bit old.
-
-My sdb went down in a 4-disk RAID5 array.  After adding a new sdb and 
-rebuilding, sdc went down.  I ddrescue'd sdc to a new drive (previous 
-attempts were marred by errors when using a USB enclosure; all finally 
-went well when using direct motherboard SATA interface - just one 4096 
-byte sector couldn't be read).  So now I have: sda (good), sdc 
-(ddrescued), and sdd (good).  I have copied the partition table, and 
-randomized the IDs, to a new drive and connected it to the sdb SATA 
-interface on the motherboard.  All of this was done using the system 
-rescue cd on a USB drive (https://www.system-rescue-cd.org/).
-
-Now the question is: how do I actually get the system up to a state 
-where I can run "mdadm --assemble /dev/sd[adc]n" as suggested by Wol 
-below?  The system won't boot from the HDD's since there are only 2 
-working members of the RAID apparently (I guess it must have removed sdc 
-previously?  not sure.).  And trying to run mdadm from the system rescue 
-cd OS says that the md config isn't there (or something to that effect). 
-  (note: i do have the timeout script running on the USB OS).
-
-Should I somehow recreate the md config on the OS on the USB drive?  Or 
-something else?  Thanks again all!
-
-Best,
-Allie
-
-On 11/16/2016 4:38 PM, Wols Lists wrote:
-> On 16/11/16 15:50, Alexander Shenkin wrote:
->>
->>
->> On 11/16/2016 3:35 PM, Wols Lists wrote:
->>> On 16/11/16 09:04, Alexander Shenkin wrote:
->>>> Hello all,
->>>>
->>>> As a quick reminder, my sdb failed in a 4-disk RAID5, and then sdc
->>>> failed when trying to replace sdb.  I'm now trying to recover sdc with
->>>> ddrescue.
->>>>
->>>> After much back and forth, I've finally got ddrescue running to
->>>> replicate my apparently-faulty sdc.  I'm ddrescue'ing from a seagate 3TB
->>>> to a toshiba 3TB drive, and I'm getting a 'No space left on device
->>>> error'.  Any thoughts?
->>>>
->>>> One further question: should I also try to ddrescue my original failed
->>>> sdb in the hopes that anything lost on sdc would be covered by the
->>>> recovered sdb?
->>>
->>> Depends how badly out of sync the event counts are. However, I note that
->>> your ddrescue copy appeared to run without any errors (apart from
->>> falling off the end of the drive :-) ?
->>
->> Thanks Wol.
->>
->> From my newbie reading, it looked like there was on 65kb error... but
->> i'm not sure how to tell if it got read properly by ddrescue in the end
->> - any tips?  I don't see any "retrying bad sectors" (-) lines in the
->> logfile below...
->>
->> username@Ubuntu-VirtualBox:~$ sudo ddrescue -d -f -r3 /dev/sdb /dev/sdc
->> ~/rescue.logfile
->> [sudo] password for username:
->> GNU ddrescue 1.19
->> Press Ctrl-C to interrupt
->> rescued:     3000 GB,  errsize:   65536 B,  current rate:   55640 kB/s
->>    ipos:     3000 GB,   errors:       1,    average rate:   83070 kB/s
->>    opos:     3000 GB, run time:   10.03 h,  successful read:       0 s ago
->> Copying non-tried blocks... Pass 1 (forwards)
->> ddrescue: Write error: No space left on device
->>
->> # Rescue Logfile. Created by GNU ddrescue version 1.19
->> # Command line: ddrescue -d -f -r3 /dev/sdb /dev/sdc
->> /home/username/rescue.logfile
->> # Start time:   2016-11-15 13:54:24
->> # Current time: 2016-11-15 23:56:25
->> # Copying non-tried blocks... Pass 1 (forwards)
->> # current_pos  current_status
->> 0x2BAA1470000     ?
->> #      pos        size  status
->> 0x00000000  0x7F5A0000  +
->> 0x7F5A0000  0x00010000  *
->> 0x7F5B0000  0x00010000  ?
->> 0x7F5C0000  0x2BA21EB0000  +
->> 0x2BAA1470000  0x00006000  ?
->>
->>>
->>> In which case, you haven't lost anything on sdc. Which is why the wiki
->>> says don't mount your array writeable while you're trying to recover it
->>> - you're not going to muck up your data and have user-space provoke
->>> further errors.
->>
->> gotcha - i'm doing this with removed drives on a different (virtual)
->> machine.  Seemed like the arrays were getting mounted read-only by
->> default when the disks were having issues...
->>
->>>
->>> If the array barfs while it's rebuilding, it's hopefully just a
->>> transient, and do another assemble with --force to get it back again.
->>
->> so, i guess i put the copied drive back in as sdc, and a new blank drive
->> as sdb, add sdb, and just let it rebuild from there?  Or, do I issue
->> this command as appropriate?
->>
->> mdadm --force --assemble /dev/mdN /dev/sd[XYZ]1
->
-> Let me get my thoughts straight - cross check what I'm writing but ...
->
-> sda and sdd have never failed. sdc is the new drive you've ddrescue'd onto.
->
-> So in order to get a working array, you need to do
-> "mdadm --assemble /dev/sd[adc]n"
-> This will give you a working, degraded array, which unfortunately
-> probably has a little bit of corruption - whatever you were writing when
-> the array first failed will not have been saved properly. You've
-> basically recovered the array with the two drives that are okay, and a
-> copy of the drive that failed most recently.
->
-> IFF the smarts report that your two failed drives are okay, then you can
-> add them back in. I'm hoping it was just the timeout problem - with
-> Barracudas that's quite likely.
->
-> MAKE SURE that you've run the timeout script on all the Barracudas, or
-> the array is simply going to crash again.
->
-> WIPE THE SUPERBLOCKS on the old drives. I'm not sure what the mdadm
-> command is, but we're adding them back in as new drives.
->
-> mdadm --add /dev/old-b /dev/old-c
->
-> This will think they are two new drives and will rebuild on to one of
-> them. You can then convert the array to raid 6 and it will rebuild on to
-> the other one.
->
-> Once you've got back to a fully-working raid-5, you can do a fsck on the
-> filesystem(s) to find the corruption.
->
-> Lastly, if you can get another Toshiba drive, add that in as a spare.
->
-> This will leave you with a 6-drive raid-6 - 3xdata, 2xparity, 1xspare.
->
-> If the smarts report that any of your barracudas have a load of errors,
-> it's not worth faffing about with them. Bin them and replace them.
->
-> Going back to an earlier point of yours - DO NOT try to force re-add the
-> first drive that failed back into the array. The mismatch in event count
-> will mean loads of corruption.
->
-> Cheers,
-> Wol
->>
->>>
->>> Once you've got the array properly back up again :-
->>>
->>> 1) make sure that the timeout script is run EVERY BOOT to fix the kernel
->>> defaults for your remaining barracudas.
->>>
->>> 2) make sure smarts are enabled EVERY BOOT because barracudas forget
->>> their settings on power-off.
->>>
->>> 3) You've now got a spare drive. If a smart self-check comes back pretty
->>> clean and it looks like a transient problem not a dud drive, then put it
->>> back in and convert the array to raid 6.
->>>
->>> 4) MONITOR MONITOR MONITOR
->>>
->>> You've seen the comments elsewhere about the 3TB barracudas? Barracudas
->>> in general aren't bad drives, but the 3TB model has a reputation for
->>> dying early and quickly. You can then plan to replace the drives at your
->>> leisure, knowing that provided you catch any failure, you've still got
->>> redundancy with one dead drive in a raid-6. Even better, get another
->>> Toshiba and go raid-6+spare. And don't say you haven't got enough sata
->>> ports - an add-in card is about £20 :-)
->>>
->>> Cheers,
->>> Wol
->>>
->>
->
+SGkgU2hhb2h1YSwKClRoYW5rcyBmb3IgeW91ciByZXBseS4KCkxldCBtZSBleHBsYWluIG15ICJo
+dWdlIi4gRm9yIGV4YW1wbGUsIGlmIEknbSBtYWtpbmcgYSBsb3cgcmF0ZSBpL28gCnN0cmVhbSwg
+SSBkb24ndCBnZXQgYSBjcmFzaCAoPDFNQiB3cml0dGVuIC8gc2VjKSB3aXRoIHJhbmRvbSBpL28s
+IGJ1dCBpZiAKSSdtIG1ha2luZyBhIHJhbmRvbSBJL08gb2YgYWJvdXQgMjBNQi9zZWMsIHRoZSBr
+ZXJuZWwgY3Jhc2hlcyBpbiBhIGZldyAKbWludXRlcyAoZm9yIGV4YW1wbGUsIG1ha2luZyBhbiBy
+c3luYywgb3IgZXZlbiBzeW5jaHJvbmlzaW5nIG15IERSQkQgCnN0YWNrIGlzIGNhdXNpbmcgdGhl
+IGNyYXNoKS4KSSBkb24ndCBrbm93IGlmIHRoaXMgY2FuIGhlbHAsIGJ1dCBpbiBtb3N0IG9mIGNh
+c2UsIHdoZW4gdGhlIGtlcm5lbCAKY3Jhc2hlcywgYWZ0ZXIgYSByZWJvb3QsIG15IHJhaWQgNSBz
+dGFjayBpcyByZS1zeW5jaHJvbml6aW5nLgoKSSdtIG5vdCBhYmxlIHRvIHJlcHJvZHVjZSB0aGUg
+Y3Jhc2ggd2l0aCBhIHJhdyBSQUlENSBzdGFjayAod2l0aCBkZC9maW8gCi4uLikuCgpJdCBzZWVt
+cyBJIG5lZWQgdG8gc3RhY2sgZmlsZXN5c3RlbXMgdG8gaGVscCByZXByb2R1Y2UgaXQ6CgpIZXJl
+IGlzIGEgY29uZmlndXJhdGlvbiB0ZXN0LCBjb21tYW5kIGxpbmVzIHRvIGV4cGxhaW4gKHRoZSB3
+YXkgSSdtIGFibGUgCnRvIHJlcHJvZHVjZSB0aGUgY3Jhc2gpLiBFdmVyeXRoaW5nIGlzIGRvbmUg
+aW4gZG9tMC4KLSBtZGFkbSAtLWNyZWF0ZSAvZGV2L21kMTAgLS1yYWlkLWRldmljZXM9MyAtLWxl
+dmVsPTUgL2Rldi9zZGMxIAovZGV2L3NkZDEgL2Rldi9zZGUxCi0gbWtmcy5idHJmcyAvZGV2L21k
+MTAKLSBta2RpciAvdG1wL2J0cmZzIC9tbnQvWGVuVk0gL3RtcC9leHQ0Ci0gbW91bnQgL2Rldi9t
+ZDEwIC90bXAvYnRyZnMKLSBidHJmcyBzdWJ2b2x1bWUgY3JlYXRlIC90bXAvYnRyZnMvWGVuVk0K
+LSB1bW91bnQgL3RtcC9idHJmcwotIG1vdW50IC9kZXYvbWQxMCAvbW50L1hlblZNIC1vc3Vidm9s
+PVhlblZNCi0gdHJ1bmNhdGUgL21udC9YZW5WTS9WTVRlc3RGaWxlLmRhdCAtcyA4MDBHCi0gbWtm
+cy5leHQ0IC9tbnQvWGVuVk0vVk1UZXN0RmlsZS5kYXQKLSBtb3VudCAvbW50L1hlblZNL1ZNVGVz
+dEZpbGUuZGF0IC90bXAvZXh0NAoKLT4gRG9pbmcgdGhpcywgZG9lc24ndCBzZWVtIHRvIGNyYXNo
+IHRoZSBrZXJuZWwgOgpmaW8gLS1uYW1lPXJhbmR3cml0ZSAtLWlvZW5naW5lPWxpYmFpbyAtLWlv
+ZGVwdGg9MSAtLXJ3PXJhbmR3cml0ZSAKLS1yd21peHdyaXRlPTk1IC0tYnM9MU0gLS1kaXJlY3Q9
+MSAtLXNpemU9ODBHIC0tbnVtam9icz04IC0tcnVudGltZT02MDAgCi0tZ3JvdXBfcmVwb3J0aW5n
+IC0tZmlsZW5hbWU9L21udC9YZW5WTS9GaW8uZGF0CgotPiBEb2luZyB0aGlzLCBpcyBjcmFzaGlu
+ZyB0aGUga2VybmVsIGluIGEgZmV3IG1pbnV0ZXMgOgpmaW8gLS1uYW1lPXJhbmR3cml0ZSAtLWlv
+ZW5naW5lPWxpYmFpbyAtLWlvZGVwdGg9MSAtLXJ3PXJhbmR3cml0ZSAKLS1yd21peHdyaXRlPTk1
+IC0tYnM9MU0gLS1kaXJlY3Q9MSAtLXNpemU9ODBHIC0tbnVtam9icz04IC0tcnVudGltZT02MDAg
+Ci0tZ3JvdXBfcmVwb3J0aW5nIC0tZmlsZW5hbWU9L3RtcC9leHQ0L2V4dDQuZGF0CgpOb3RlIDog
+LS1kaXJlY3Q9MSBvciAtLWRpcmVjdD0wIGRvZXNuJ3Qgc2VlbSB0byBjaGFuZ2UgdGhlIGJlaGF2
+aW91ci4gCkFsc28gaGF2aW5nIHRoZSByYWlkIDUgc3RhY2sgcmUtc3luY2hyb25pemluZyBvciBh
+bHJlYWR5IHN5bmNocm9uaXplZCwgCmRvZXNuJ3QgY2hhbmdlIHRoZSBiZWhhdmlvdXIuCgpIZXJl
+IGFub3RoZXIgImNyYXNoIiA6IGh0dHA6Ly9wYXN0ZWJpbi5jb20vdXFMekw0Zm4KClJlZ2FyZGlu
+ZyB5b3VyIHBhdGNoLCBJIGNhbid0IGZpbmQgaXQuIElzIGl0IHRoZSBvbmUgc2VudCBieSBLb25z
+dGFudGluIApLaGxlYm5pa292ID8KCkRvIHlvdSB3YW50IHRoZSAiZXh0NC5kYXQiIGZpbyBmaWxl
+ID8gSXQgd2lsbCBiZSByZWFsbHkgZGlmZmljdWx0IGZvciBtZSAKdG8gcHJvdmlkZSBpdCB0byB5
+b3UgYXMgSSd2ZSBvbmx5IGEgcG9vciBBRFNMIG5ldHdvcmsgY29ubmVjdGlvbi4KClRoYW5rcyBm
+b3IgeW91ciBoZWxwLAoKTWFzdGVyUHJlbml1bQoKTGUgMDQvMDEvMjAxNyDDoCAyMzozMCwgU2hh
+b2h1YSBMaSBhIMOpY3JpdCA6Cj4gT24gRnJpLCBEZWMgMjMsIDIwMTYgYXQgMDc6MjU6NTZQTSAr
+MDEwMCwgTWFzdGVyUHJlbml1bSB3cm90ZToKPj4gSGVsbG8gR3V5cywKPj4KPj4gSSd2ZSBoYXZp
+bmcgc29tZSB0cm91YmxlIG9uIGEgbmV3IHN5c3RlbSBJJ20gc2V0dGluZyB1cC4gSSdtIGdldHRp
+bmcgYSBrZXJuZWwgQlVHIG1lc3NhZ2UsIHNlZW1zIHRvIGJlIHJlbGF0ZWQgd2l0aCB0aGUgdXNl
+IG9mIFhlbiAod2hlbiBJIGJvb3QgdGhlIHN5c3RlbSBfd2l0aG91dF8gWGVuLCBJIGRvbid0IGdl
+dCBhbnkgY3Jhc2gpLgo+PiBIZXJlIGlzIGNvbmZpZ3VyYXRpb24gOgo+PiAtIDN4IEhhcmQgRHJp
+dmVzIHJ1bm5pbmcgb24gUkFJRCA1IFNvZnR3YXJlIHJhaWQgY3JlYXRlZCBieSBtZGFkbQo+PiAt
+IE9uIHRvcCBvZiBpdCwgRFJCRCBmb3IgcmVwbGljYXRpb24gb3ZlciBhbm90aGVyIG5vZGUgKEFj
+dGl2ZS9wYXNzaXZlIGNsdXN0ZXIpCj4+IC0gT24gdG9wIG9mIGl0LCBhIEJUUkZTIEZpbGVTeXN0
+ZW0gd2l0aCBhIGZldyBzdWJ2b2x1bWVzCj4+IC0gT24gdG9wIG9mIGl0LCBYRU4gVk1zIHJ1bm5p
+bmcuCj4+Cj4+IFRoZSBCVUcgaXMgaGFwcGVuaW5nIHdoZW4gSSdtIG1ha2luZyAiaHVnZSIgSS9P
+ICgyME1CL3Mgd2l0aCBhIHJzeW5jIGZvciBleGFtcGxlKSBvbiB0aGUgUkFJRDUgc3RhY2suCj4+
+IEkndmUgdG8gcmVzZXQgc3lzdGVtIHRvIG1ha2UgaXQgd29yayBhZ2Fpbi4KPiB3aGF0IGRpZCB5
+b3UgbWVhbiAnaHVnZScgSS9PICgyME0vcyk/IElzIGl0IHBvc3NpYmxlIHlvdSBjYW4gcmVwcm9k
+dWNlIHRoZQo+IGlzc3VlIHdpdGggYSByYXcgcmFpZDUgcmFpZD8gSXQgd291bGQgYmUgZXZlbiBi
+ZXR0ZXIgaWYgeW91IGNhbiBnaXZlIG1lIGEgZmlvCj4gam9iIGZpbGUgd2l0aCB0aGUgaXNzdWUs
+IHNvIEkgY2FuIGVhc2lseSBkZWJ1ZyBpdC4KPgo+IGFsc28gcGxlYXNlIGNoZWNrIGlmIHVwc3Ry
+ZWFtIHBhdGNoIChlOGQ3YzMzIG1kL3JhaWQ1OiBsaW1pdCByZXF1ZXN0IHNpemUKPiBhY2NvcmRp
+bmcgdG8gaW1wbGVtZW50YXRpb24gbGltaXRzKSBoZWxwcy4KPgo+IFRoYW5rcywKPiBTaGFvaHVh
+CgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KWGVuLWRl
+dmVsIG1haWxpbmcgbGlzdApYZW4tZGV2ZWxAbGlzdHMueGVuLm9yZwpodHRwczovL2xpc3RzLnhl
+bi5vcmcveGVuLWRldmVsCg==
