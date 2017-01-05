@@ -1,96 +1,37 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: PROBLEM: Kernel BUG with raid5 soft + Xen + DRBD -
-	invalid opcode
-Date: Thu, 5 Jan 2017 11:37:45 -0800
-Message-ID: <20170105193745.qnmqsussxy7nasdn@kernel.org>
-References: <585D6C34.2020908@gmail.com>
- <20170104223015.cr6vtyhxuwxrg76g@kernel.org>
- <e56edc2b-f2ad-2ab1-4184-5d7cad80085a@gmail.com>
+From: Ric Wheeler <ricwheeler@gmail.com>
+Subject: Linux Foundation's open source file & storage conference
+	CFP
+Date: Thu, 5 Jan 2017 17:30:06 -0500
+Message-ID: <6e0276dd-7388-c6bf-ed6e-02649bd4f464@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <xen-devel-bounces@lists.xen.org>
-Content-Disposition: inline
-In-Reply-To: <e56edc2b-f2ad-2ab1-4184-5d7cad80085a@gmail.com>
-List-Unsubscribe: <https://lists.xen.org/cgi-bin/mailman/options/xen-devel>,
- <mailto:xen-devel-request@lists.xen.org?subject=unsubscribe>
-List-Post: <mailto:xen-devel@lists.xen.org>
-List-Help: <mailto:xen-devel-request@lists.xen.org?subject=help>
-List-Subscribe: <https://lists.xen.org/cgi-bin/mailman/listinfo/xen-devel>,
- <mailto:xen-devel-request@lists.xen.org?subject=subscribe>
-Errors-To: xen-devel-bounces@lists.xen.org
-Sender: "Xen-devel" <xen-devel-bounces@lists.xen.org>
-To: MasterPrenium <masterprenium.lkml@gmail.com>
-Cc: linux-raid@vger.kernel.org, xen-users@lists.xen.org, "MasterPrenium@gmail.com" <MasterPrenium@gmail.com>, linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org, linux-btrfs@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org, samba-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-T24gVGh1LCBKYW4gMDUsIDIwMTcgYXQgMDM6MTY6NTNQTSArMDEwMCwgTWFzdGVyUHJlbml1bSB3
-cm90ZToKPiBIaSBTaGFvaHVhLAo+IAo+IFRoYW5rcyBmb3IgeW91ciByZXBseS4KPiAKPiBMZXQg
-bWUgZXhwbGFpbiBteSAiaHVnZSIuIEZvciBleGFtcGxlLCBpZiBJJ20gbWFraW5nIGEgbG93IHJh
-dGUgaS9vIHN0cmVhbSwKPiBJIGRvbid0IGdldCBhIGNyYXNoICg8MU1CIHdyaXR0ZW4gLyBzZWMp
-IHdpdGggcmFuZG9tIGkvbywgYnV0IGlmIEknbSBtYWtpbmcKPiBhIHJhbmRvbSBJL08gb2YgYWJv
-dXQgMjBNQi9zZWMsIHRoZSBrZXJuZWwgY3Jhc2hlcyBpbiBhIGZldyBtaW51dGVzIChmb3IKPiBl
-eGFtcGxlLCBtYWtpbmcgYW4gcnN5bmMsIG9yIGV2ZW4gc3luY2hyb25pc2luZyBteSBEUkJEIHN0
-YWNrIGlzIGNhdXNpbmcgdGhlCj4gY3Jhc2gpLgo+IEkgZG9uJ3Qga25vdyBpZiB0aGlzIGNhbiBo
-ZWxwLCBidXQgaW4gbW9zdCBvZiBjYXNlLCB3aGVuIHRoZSBrZXJuZWwgY3Jhc2hlcywKPiBhZnRl
-ciBhIHJlYm9vdCwgbXkgcmFpZCA1IHN0YWNrIGlzIHJlLXN5bmNocm9uaXppbmcuCj4gCj4gSSdt
-IG5vdCBhYmxlIHRvIHJlcHJvZHVjZSB0aGUgY3Jhc2ggd2l0aCBhIHJhdyBSQUlENSBzdGFjayAo
-d2l0aCBkZC9maW8KPiAuLi4pLgo+IAo+IEl0IHNlZW1zIEkgbmVlZCB0byBzdGFjayBmaWxlc3lz
-dGVtcyB0byBoZWxwIHJlcHJvZHVjZSBpdDoKPiAKPiBIZXJlIGlzIGEgY29uZmlndXJhdGlvbiB0
-ZXN0LCBjb21tYW5kIGxpbmVzIHRvIGV4cGxhaW4gKHRoZSB3YXkgSSdtIGFibGUgdG8KPiByZXBy
-b2R1Y2UgdGhlIGNyYXNoKS4gRXZlcnl0aGluZyBpcyBkb25lIGluIGRvbTAuCj4gLSBtZGFkbSAt
-LWNyZWF0ZSAvZGV2L21kMTAgLS1yYWlkLWRldmljZXM9MyAtLWxldmVsPTUgL2Rldi9zZGMxIC9k
-ZXYvc2RkMQo+IC9kZXYvc2RlMQo+IC0gbWtmcy5idHJmcyAvZGV2L21kMTAKPiAtIG1rZGlyIC90
-bXAvYnRyZnMgL21udC9YZW5WTSAvdG1wL2V4dDQKPiAtIG1vdW50IC9kZXYvbWQxMCAvdG1wL2J0
-cmZzCj4gLSBidHJmcyBzdWJ2b2x1bWUgY3JlYXRlIC90bXAvYnRyZnMvWGVuVk0KPiAtIHVtb3Vu
-dCAvdG1wL2J0cmZzCj4gLSBtb3VudCAvZGV2L21kMTAgL21udC9YZW5WTSAtb3N1YnZvbD1YZW5W
-TQo+IC0gdHJ1bmNhdGUgL21udC9YZW5WTS9WTVRlc3RGaWxlLmRhdCAtcyA4MDBHCj4gLSBta2Zz
-LmV4dDQgL21udC9YZW5WTS9WTVRlc3RGaWxlLmRhdAo+IC0gbW91bnQgL21udC9YZW5WTS9WTVRl
-c3RGaWxlLmRhdCAvdG1wL2V4dDQKPiAKPiAtPiBEb2luZyB0aGlzLCBkb2Vzbid0IHNlZW0gdG8g
-Y3Jhc2ggdGhlIGtlcm5lbCA6Cj4gZmlvIC0tbmFtZT1yYW5kd3JpdGUgLS1pb2VuZ2luZT1saWJh
-aW8gLS1pb2RlcHRoPTEgLS1ydz1yYW5kd3JpdGUKPiAtLXJ3bWl4d3JpdGU9OTUgLS1icz0xTSAt
-LWRpcmVjdD0xIC0tc2l6ZT04MEcgLS1udW1qb2JzPTggLS1ydW50aW1lPTYwMAo+IC0tZ3JvdXBf
-cmVwb3J0aW5nIC0tZmlsZW5hbWU9L21udC9YZW5WTS9GaW8uZGF0Cj4gCj4gLT4gRG9pbmcgdGhp
-cywgaXMgY3Jhc2hpbmcgdGhlIGtlcm5lbCBpbiBhIGZldyBtaW51dGVzIDoKPiBmaW8gLS1uYW1l
-PXJhbmR3cml0ZSAtLWlvZW5naW5lPWxpYmFpbyAtLWlvZGVwdGg9MSAtLXJ3PXJhbmR3cml0ZQo+
-IC0tcndtaXh3cml0ZT05NSAtLWJzPTFNIC0tZGlyZWN0PTEgLS1zaXplPTgwRyAtLW51bWpvYnM9
-OCAtLXJ1bnRpbWU9NjAwCj4gLS1ncm91cF9yZXBvcnRpbmcgLS1maWxlbmFtZT0vdG1wL2V4dDQv
-ZXh0NC5kYXQKPiAKPiBOb3RlIDogLS1kaXJlY3Q9MSBvciAtLWRpcmVjdD0wIGRvZXNuJ3Qgc2Vl
-bSB0byBjaGFuZ2UgdGhlIGJlaGF2aW91ci4gQWxzbwo+IGhhdmluZyB0aGUgcmFpZCA1IHN0YWNr
-IHJlLXN5bmNocm9uaXppbmcgb3IgYWxyZWFkeSBzeW5jaHJvbml6ZWQsIGRvZXNuJ3QKPiBjaGFu
-Z2UgdGhlIGJlaGF2aW91ci4KPiAKPiBIZXJlIGFub3RoZXIgImNyYXNoIiA6IGh0dHA6Ly9wYXN0
-ZWJpbi5jb20vdXFMekw0Zm4KCkknbSB0cnlpbmcgdG8gcmVwcm9kdWNlLCBidXQgbm8gc3VjY2Vz
-cy4gU28KZXh0NC0+YnRyZnMtPnJhaWQ1LCBjcmFzaApidHJmcy0+cmFpZDUsIG5vIGNyYXNoCnJp
-Z2h0PyBkb2VzIHN1YnZvbHVtZSBtYXR0ZXI/IFdoZW4geW91IGNyZWF0ZSB0aGUgcmFpZDUgYXJy
-YXksIGRvZXMgYWRkaW5nCictLWFzc3VtZS1jbGVhbicgb3B0aW9uIGNoYW5nZSB0aGUgYmVoYXZp
-b3I/IEknZCBsaWtlIHRvIG5hcnJvdyBkb3duIHRoZSBpc3N1ZS4KSWYgeW91IGNhbiBjYXB0dXJl
-IHRoZSBibGt0cmFjZSB0byB0aGUgcmFpZDUgYXJyYXksIGl0IHdvdWxkIGJlIGdyZWF0IHRvIGhp
-bnQKdXMgd2hhdCBraW5kIG9mIElPIGl0IGlzLgogCj4gUmVnYXJkaW5nIHlvdXIgcGF0Y2gsIEkg
-Y2FuJ3QgZmluZCBpdC4gSXMgaXQgdGhlIG9uZSBzZW50IGJ5IEtvbnN0YW50aW4KPiBLaGxlYm5p
-a292ID8KClJpZ2h0LgoKPiBEbyB5b3Ugd2FudCB0aGUgImV4dDQuZGF0IiBmaW8gZmlsZSA/IEl0
-IHdpbGwgYmUgcmVhbGx5IGRpZmZpY3VsdCBmb3IgbWUgdG8KPiBwcm92aWRlIGl0IHRvIHlvdSBh
-cyBJJ3ZlIG9ubHkgYSBwb29yIEFEU0wgbmV0d29yayBjb25uZWN0aW9uLgoKTm90IG5lY2Vzc2Fy
-eS4KClRoYW5rcywKU2hhb2h1YQoKPiBUaGFua3MgZm9yIHlvdXIgaGVscCwKPiAKPiBNYXN0ZXJQ
-cmVuaXVtCj4gCj4gTGUgMDQvMDEvMjAxNyDDoCAyMzozMCwgU2hhb2h1YSBMaSBhIMOpY3JpdCA6
-Cj4gPiBPbiBGcmksIERlYyAyMywgMjAxNiBhdCAwNzoyNTo1NlBNICswMTAwLCBNYXN0ZXJQcmVu
-aXVtIHdyb3RlOgo+ID4gPiBIZWxsbyBHdXlzLAo+ID4gPiAKPiA+ID4gSSd2ZSBoYXZpbmcgc29t
-ZSB0cm91YmxlIG9uIGEgbmV3IHN5c3RlbSBJJ20gc2V0dGluZyB1cC4gSSdtIGdldHRpbmcgYSBr
-ZXJuZWwgQlVHIG1lc3NhZ2UsIHNlZW1zIHRvIGJlIHJlbGF0ZWQgd2l0aCB0aGUgdXNlIG9mIFhl
-biAod2hlbiBJIGJvb3QgdGhlIHN5c3RlbSBfd2l0aG91dF8gWGVuLCBJIGRvbid0IGdldCBhbnkg
-Y3Jhc2gpLgo+ID4gPiBIZXJlIGlzIGNvbmZpZ3VyYXRpb24gOgo+ID4gPiAtIDN4IEhhcmQgRHJp
-dmVzIHJ1bm5pbmcgb24gUkFJRCA1IFNvZnR3YXJlIHJhaWQgY3JlYXRlZCBieSBtZGFkbQo+ID4g
-PiAtIE9uIHRvcCBvZiBpdCwgRFJCRCBmb3IgcmVwbGljYXRpb24gb3ZlciBhbm90aGVyIG5vZGUg
-KEFjdGl2ZS9wYXNzaXZlIGNsdXN0ZXIpCj4gPiA+IC0gT24gdG9wIG9mIGl0LCBhIEJUUkZTIEZp
-bGVTeXN0ZW0gd2l0aCBhIGZldyBzdWJ2b2x1bWVzCj4gPiA+IC0gT24gdG9wIG9mIGl0LCBYRU4g
-Vk1zIHJ1bm5pbmcuCj4gPiA+IAo+ID4gPiBUaGUgQlVHIGlzIGhhcHBlbmluZyB3aGVuIEknbSBt
-YWtpbmcgImh1Z2UiIEkvTyAoMjBNQi9zIHdpdGggYSByc3luYyBmb3IgZXhhbXBsZSkgb24gdGhl
-IFJBSUQ1IHN0YWNrLgo+ID4gPiBJJ3ZlIHRvIHJlc2V0IHN5c3RlbSB0byBtYWtlIGl0IHdvcmsg
-YWdhaW4uCj4gPiB3aGF0IGRpZCB5b3UgbWVhbiAnaHVnZScgSS9PICgyME0vcyk/IElzIGl0IHBv
-c3NpYmxlIHlvdSBjYW4gcmVwcm9kdWNlIHRoZQo+ID4gaXNzdWUgd2l0aCBhIHJhdyByYWlkNSBy
-YWlkPyBJdCB3b3VsZCBiZSBldmVuIGJldHRlciBpZiB5b3UgY2FuIGdpdmUgbWUgYSBmaW8KPiA+
-IGpvYiBmaWxlIHdpdGggdGhlIGlzc3VlLCBzbyBJIGNhbiBlYXNpbHkgZGVidWcgaXQuCj4gPiAK
-PiA+IGFsc28gcGxlYXNlIGNoZWNrIGlmIHVwc3RyZWFtIHBhdGNoIChlOGQ3YzMzIG1kL3JhaWQ1
-OiBsaW1pdCByZXF1ZXN0IHNpemUKPiA+IGFjY29yZGluZyB0byBpbXBsZW1lbnRhdGlvbiBsaW1p
-dHMpIGhlbHBzLgo+ID4gCj4gPiBUaGFua3MsCj4gPiBTaGFvaHVhCj4gCgpfX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpYZW4tZGV2ZWwgbWFpbGluZyBsaXN0
-Clhlbi1kZXZlbEBsaXN0cy54ZW4ub3JnCmh0dHBzOi8vbGlzdHMueGVuLm9yZy94ZW4tZGV2ZWwK
+Hi all,
+
+The CFP for the Linux Foundation's Vault conference is coming close to an end. 
+The event is being held this year in Cambridge, Massachusetts on the days 
+following the LSF/MM summit.
+
+The first two year's events have been solid, focused events in my (slightly 
+biased) opinion, so worth submitting to and definitely worth attending.
+
+Submit a Proposal to Speak at Vault, Linux Storage and Filesystems Conference. 
+Vault will be held alongside LSF-MM Summit on March 22 & 23 in Cambridge, MA. To 
+submit (by 1/14) visit http://events.linuxfoundation.org/events/vault/program/cfp
+
+Happy to answer any questions about the event.
+
+Ric
