@@ -1,38 +1,42 @@
-From: Borislav Petkov <bp@alien8.de>
-Subject: Re: [PATCH v2 4/7] x86: put msr-index.h in uapi
-Date: Fri, 6 Jan 2017 13:14:46 +0100
-Message-ID: <20170106121446.aizmoxons5gpecnc@pd.tnic>
-References: <bf83da6b-01ef-bf44-b3e1-ca6fc5636818@6wind.com>
- <1483695839-18660-1-git-send-email-nicolas.dichtel@6wind.com>
- <1483695839-18660-5-git-send-email-nicolas.dichtel@6wind.com>
+From: Benjammin2068 <benjammin2068@gmail.com>
+Subject: Recommendation on new system Arrays
+Date: Fri, 6 Jan 2017 10:14:17 -0600
+Message-ID: <4259f5ef-42f7-ad4c-c8af-7b6e5c19354c@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Return-path: <linux-mips-bounce@linux-mips.org>
-Content-Disposition: inline
-In-Reply-To: <1483695839-18660-5-git-send-email-nicolas.dichtel@6wind.com>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-List-help: <mailto:ecartis@linux-mips.org?Subject=help>
-List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
-List-software: Ecartis version 1.0.0
-List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
-List-owner: <mailto:ralf@linux-mips.org>
-List-post: <mailto:linux-mips@linux-mips.org>
-List-archive: <http://www.linux-mips.org/archives/linux-mips/>
-To: Nicolas Dichtel <nicolas.dichtel@6wind.com>
-Cc: arnd@arndb.de, mmarek@suse.com, linux-kbuild@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-alpha@vger.kernel.org, linux-snps-arc@lists.infradead.org, linux-arm-kernel@lists.infradead.org, adi-buildroot-devel@lists.sourceforge.net, linux-c6x-dev@linux-c6x.org, linux-cris-kernel@axis.com, uclinux-h8-devel@lists.sourceforge.jp, linux-hexagon@vger.kernel.org, linux-ia64@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-metag@vger.kernel.org, linux-mips@linux-mips.org, linux-am33-list@redhat.com, nios2-dev@lists.rocketboards.org, openrisc@lists.librecores.org, linux-parisc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org, linux-sh@vger.kernel.org, sparclinux@vger.kernel.org, linux-xtensa@linux-xtensa.orglinux-ar
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Jan 06, 2017 at 10:43:56AM +0100, Nicolas Dichtel wrote:
-> This header file is exported, thus move it to uapi.
+Hey guys,
 
-It should rather not be exported - please remove it from
-arch/x86/include/uapi/asm/Kbuild instead.
 
-Thanks.
+ I have a question for you now that I'm diving into a machine with more drives on a single system than I've ever worked with before.
 
--- 
-Regards/Gruss,
-    Boris.
 
-Good mailing practices for 400: avoid top-posting and trim the reply.
+Hardware:
+
+    Supermicro Rack PC with Avago MegaRAID SAS 9380-8e HBA. Motherboard has Dual Xeon E5-2640 V4 cpus (10 HT cores each)
+
+    Supermicro SC847 JBOD housing with room for 44 disk but currently populated with 22 drives (rear backplane)
+
+    (22) HGST 8TB drives - Model HUH728080AL5200 - https://www.hgst.com/products/hard-drives/ultrastar-he8
+
+    OS is CentOS 7.x (I think 7.2. I just downloaded and installed the other night)
+
+Of course, I'd like to avoid HW raid.
+
+but.. for this array, I was going to split into a couple of RAID6 arrays with a couple hot spares in the rack.
+
+    * one for owners data
+
+    * the other as a data drive for use with surveillance software (from Milestone probably) running in a VM as a secondary storage vault for company cameras/NVRs that are remote. (like a backup system)
+
+But anything else I should look out for?
+
+Thanks,
+
+ -Ben
+
