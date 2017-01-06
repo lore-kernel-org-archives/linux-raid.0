@@ -1,31 +1,27 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: drivers/md/dm-mpath.c:478: suspicious code ?
-Date: Fri, 6 Jan 2017 15:08:55 -0500
-Message-ID: <20170106200855.GA15627@redhat.com>
-References: <VI1PR08MB10227DFB2600B24201D3209D9C630@VI1PR08MB1022.eurprd08.prod.outlook.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: Re: [PATCH v2 4/7] x86: put msr-index.h in uapi
+Date: Fri, 6 Jan 2017 22:50:34 +0200
+Message-ID: <CAHp75VdDfopdSy-7oy87ZeosDB9+FN4zFBhErPWLQB7tH81zTw@mail.gmail.com>
+References: <bf83da6b-01ef-bf44-b3e1-ca6fc5636818@6wind.com>
+ <1483695839-18660-1-git-send-email-nicolas.dichtel@6wind.com> <1483695839-18660-5-git-send-email-nicolas.dichtel@6wind.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <VI1PR08MB10227DFB2600B24201D3209D9C630@VI1PR08MB1022.eurprd08.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: David Binderman <dcb314@hotmail.com>
-Cc: "agk@redhat.com" <agk@redhat.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "shli@kernel.org" <shli@kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <1483695839-18660-5-git-send-email-nicolas.dichtel@6wind.com>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Nicolas Dichtel <nicolas.dichtel@6wind.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, mmarek@suse.com, linux-kbuild@vger.kernel.org, Linux Documentation List <linux-doc@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-alpha@vger.kernel.org, linux-snps-arc@lists.infradead.org, linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>, adi-buildroot-devel@lists.sourceforge.net, linux-c6x-dev@linux-c6x.org, Cris <linux-cris-kernel@axis.com>, uclinux-h8-devel@lists.sourceforge.jp, linux-hexagon@vger.kernel.org, linux-ia64@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-metag@vger.kernel.org, linux-mips@linux-mips.org, linux-am33-list@redhat.com, nios2-dev@lists.rocketboards.org, openrisc@lists.librecores.org, linux-parisc@vger.kernel.org, open list:LINUX FOR POWERPC PA SEMI PWRFICI
 List-Id: linux-raid.ids
 
-On Fri, Jan 06 2017 at 12:52pm -0500,
-David Binderman <dcb314@hotmail.com> wrote:
+On Fri, Jan 6, 2017 at 11:43 AM, Nicolas Dichtel
+<nicolas.dichtel@6wind.com> wrote:
+> This header file is exported, thus move it to uapi.
 
-> Hello there,
-> 
-> drivers/md/dm-mpath.c:478:19: warning: decrement of a boolean expression [-Wbool-operation]
-> 
-> Source code is
-> 
->    } while (bypassed--);
-> 
-> Suggest code rework. Maybe a boolean / int type mixup ?
+Just hint for the future:
+-M (move)
+-C (copy)
+-D (delete) [though this is NOT for applying]
 
-Yeah, should be cleaned up.
-
-Thanks for reporting this.
+-- 
+With Best Regards,
+Andy Shevchenko
