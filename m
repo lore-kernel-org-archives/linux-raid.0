@@ -1,36 +1,28 @@
-From: Jes.Sorensen@redhat.com
-Subject: [PATCH 0/1] md/raid5 - fix build error
-Date: Fri,  6 Jan 2017 19:31:34 -0500
-Message-ID: <20170107003135.8276-1-Jes.Sorensen@redhat.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: Recommendation on new system Arrays
+Date: Sat, 7 Jan 2017 10:04:32 +0000
+Message-ID: <5870BD30.3020302@youngman.org.uk>
+References: <4259f5ef-42f7-ad4c-c8af-7b6e5c19354c@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4259f5ef-42f7-ad4c-c8af-7b6e5c19354c@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: shli@kernel.org
-Cc: linux-raid@vger.kernel.org
+To: Benjammin2068 <benjammin2068@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+On 06/01/17 16:14, Benjammin2068 wrote:
+>     * the other as a data drive for use with surveillance software (from Milestone probably) running in a VM as a secondary storage vault for company cameras/NVRs that are remote. (like a backup system)
 
-Hi,
+If you were planning on a raid-6, how about a mirror for this drive? I
+believe it is not a good choice for a general raid, but if you're only
+writing *NEW* stuff for the most part, and streaming big files to disk,
+how about these new WD shingled disks (Purples, I believe).
 
-commit 6995f0b247e15e34fbcd10852c08b30bdc1a78da
-Author: Shaohua Li <shli@fb.com>
-Date:   Thu Dec 8 15:48:17 2016 -0800
-
-    md: takeover should clear unrelated bits
-
-Introduced a bug comparing a pointer against an integer, which fails
-the build when stricter checking is in place. This should ideally be
-included in 4.10.
+This sounds like one of the few use cases where they might be a good
+idea. Worth considering, at least. Might even work well in your planned
+raid-6 config.
 
 Cheers,
-Jes
-
-Jes Sorensen (1):
-  md/raid5: Use correct IS_ERR() variation on pointer check
-
- drivers/md/raid5.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
--- 
-2.9.3
-
+Wol
