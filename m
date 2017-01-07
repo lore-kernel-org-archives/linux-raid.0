@@ -1,28 +1,37 @@
 From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Recommendation on new system Arrays
-Date: Sat, 7 Jan 2017 10:04:32 +0000
-Message-ID: <5870BD30.3020302@youngman.org.uk>
-References: <4259f5ef-42f7-ad4c-c8af-7b6e5c19354c@gmail.com>
+Subject: Interesting mdadm quirk ...
+Date: Sat, 7 Jan 2017 13:21:03 +0000
+Message-ID: <5870EB3F.2060206@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4259f5ef-42f7-ad4c-c8af-7b6e5c19354c@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Benjammin2068 <benjammin2068@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 06/01/17 16:14, Benjammin2068 wrote:
->     * the other as a data drive for use with surveillance software (from Milestone probably) running in a VM as a secondary storage vault for company cameras/NVRs that are remote. (like a backup system)
+Just been doing some raid testing, and this happened ...
 
-If you were planning on a raid-6, how about a mirror for this drive? I
-believe it is not a good choice for a general raid, but if you're only
-writing *NEW* stuff for the most part, and streaming big files to disk,
-how about these new WD shingled disks (Purples, I believe).
+linux-lfqf:/dev # mdadm md/parity
+md/parity: 31.97GiB raid5 3 devices, 0 spares. Use mdadm --detail for
+more detail.
+linux-lfqf:/dev # mdadm --stop md/parity
+mdadm: Cannot open md/parity
+linux-lfqf:/dev # mdadm --stop /dev/md/parity
+mdadm: stopped /dev/md/parity
 
-This sounds like one of the few use cases where they might be a good
-idea. Worth considering, at least. Might even work well in your planned
-raid-6 config.
+Weird - why can it successfully stop it when passed an absolute path,
+but not when passed a relative path? When I did the first variant, I
+used tab completion, and then when I edited it I really did edit it, not
+retype it, so I can't see any way the two arguments could refer to
+different objects.
+
+Oh - and
+
+mdadm --version
+mdadm - v3.4 - 28th January 2016
+
+ie stock SuSE leap 42.2
 
 Cheers,
 Wol
