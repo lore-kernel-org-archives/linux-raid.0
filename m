@@ -1,75 +1,164 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+From: NeilBrown <neilb@suse.com>
 Subject: Re: using the raid6check report
-Date: Sun, 8 Jan 2017 22:43:00 +0100
-Message-ID: <20170108214259.GB7933@lazy.lzy>
-References: <14e8ec23-de4a-e90b-4b67-155e5e3cc228@eyal.emu.id.au>
- <20170108174010.GA3699@lazy.lzy>
- <a33dbf5c-465d-b5af-a9a9-a00664816489@eyal.emu.id.au>
- <20170108204659.GB7057@lazy.lzy>
- <5872A9C6.7010408@youngman.org.uk>
+Date: Mon, 09 Jan 2017 09:39:14 +1100
+Message-ID: <87pojxjhwt.fsf@notabene.neil.brown.name>
+References: <14e8ec23-de4a-e90b-4b67-155e5e3cc228@eyal.emu.id.au> <20170108174010.GA3699@lazy.lzy> <5872A698.7000009@youngman.org.uk> <20170108214111.GA7933@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5872A9C6.7010408@youngman.org.uk>
+In-Reply-To: <20170108214111.GA7933@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
 To: Wols Lists <antlists@youngman.org.uk>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid@vger.kernel.org
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, list linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun, Jan 08, 2017 at 09:06:14PM +0000, Wols Lists wrote:
-> On 08/01/17 20:46, Piergiorgio Sartor wrote:
-> > "should" as in "it is supposed to do it".
-> > 
-> > So, as far as I know, "raid6check" with "repair" will
-> > check the parity and try to find errors.
-> > If possible, it will find where the error is, then
-> > re-compute the value and write the corrected data.
-> > 
-> > Now, this was somehow tested and *should* work.
-> > 
-> > An other option is just to check for the errors and
-> > see if one drive is constantly at fault.
-> > This will not write anything, so it is safer, but
-> > it will help to see if there are strange things,
-> > before writing to the disk(s).
-> 
-> Hmmm ...
-> 
-> I've now been thinking about it, and actually I'm not sure it's possible
-> even with raid6, to correct a corrupt read. The thing is, raid protects
-> against a failure to read - if a sector fails, the parity will re-create
-> it. But if a data sector is corrupted, how is raid to know WHICH sector?
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Here all you need to know:
+On Mon, Jan 09 2017, Piergiorgio Sartor wrote:
 
-http://ftp.nluug.nl/ftp/ftp/os/Linux/system/kernel/people/hpa/raid6.pdf
+> On Sun, Jan 08, 2017 at 08:52:40PM +0000, Wols Lists wrote:
+>> On 08/01/17 17:40, Piergiorgio Sartor wrote:
+>> > On Fri, Dec 23, 2016 at 11:56:34AM +1100, Eyal Lebedinsky wrote:
+>> >> > From time to time I get non-zero mismatch_count in the weekly scrub=
+. The way I handle
+>> >> > it is to run a check around the stripe (I have a background job pri=
+nting the mismatch
+>> >> > count and /proc/mdstat regularly) which should report the same coun=
+t.
+>> >> >=20
+>> >> > I now drill into the fs to find which files use this area, deal wit=
+h them and delete
+>> >> > the bad ones. I then run a repair on that small area.
+>> >> >=20
+>> >> > I now found about raid6check which can actually tell me which disk =
+holds the bad data.
+>> >> > This is something raid6 should be able to do assuming a single erro=
+r.
+>> >> > Hoping it is one bad disk, the simple solution now is to recover th=
+e bad stripe on
+>> >> > that disk.
+>> >> >=20
+>> >> > Will a 'repair' rewrite the bad disk or just create fresh P+Q which=
+ may just make the
+>> >> > bad data invisible to a 'check'? I recall this being the case in th=
+e past.
+>> > "repair" should fix the data which is assumed
+>> > to be wrong.
+>> > It should not simply correct P+Q, but really
+>> > find out which disk is not OK and fix it.
+>> >=20
+>> Having just looked at the man page and the source to raid6check as found
+>> online ...
+>>=20
+>> "man raid6check" says that it does not write to the disk. Looking at the
+>> source, it appears to have code that is intended to write to the disk
+>> and repair the stripe. So what's going on?
+>
+> There was a patch adding the write capability,
+> but likely only for the C code, not the man page.
+>
+>>=20
+>> I can add it to the wiki as a little programming project, but it would
+>> be nice to know the exact status of things - my raid-fu isn't good
+>> enough at present to read the code and work out what's going on.
+>>=20
+>> It would be nice to be able to write "parity-check" or somesuch to
+>> sync_action, and then for raid5 it would check and update parity, or
+>> raid6 it would check and correct data/parity.
+>
+> At that time, the agreement with Neil was to do
+> such things in user space and not inside the
+> md raid "driver" (so to speak) in kernal space.
 
-bye,
+This is correct.
 
-pg
+With RAID6 it is possible to determine, with high reliability, if a
+single device is corrupt.  There is a mathematical function that can be
+calculated over a set of bytes, one from each device.  If the result is
+a number less than the number of devices in the array (including P and
+Q), then the device with that index number is corrupt (or at least, both
+P and Q can be made correct again by simply changing that one byte).  If
+we compute that function over all 512 (or 4096) bytes in a stripe and
+they all report the same device (or report that there are no errors for
+some bytes) then it is reasonable to assume the block on the identified
+device is corrupt.
 
-> 
-> If one of the parity sectors is corrupted, it's easy. Calculate parity
-> from the data, and either P or Q will be wrong, so fix it. But if it's a
-> *data* sector that's corrupted, both P and Q will be wrong. How easy is
-> it to work back from that, and work out *which* data sector is wrong? My
-> fu makes me think you can't, though I could quite easily be wrong :-)
-> 
-> But should that even happen, unless a disk is on its way out, anyway? I
-> remember years ago, back in the 80s, our minicomputers had
-> error-correction in the drive. I don't remember the algorithm, but it
-> wrote 16-bit words to disk - each an 8-bit data byte. The first half was
-> the original data, and the second half was some parity pattern such that
-> for any single-bit corruption you knew which half was corrupt, and you
-> could throw away the corrupt parity, or recreate the correct data from
-> the parity. Even with a 2-bit error I think it was >90% detection and
-> recreation. I can't imagine something like that not being in drive
-> hardware today.
-> 
-> Cheers,
-> Wol
+raid6check does this and provides very useful functionality for a
+sysadmin to determine which device is corrupt, and to then correct that
+if they wish.
 
--- 
+However, I am not comfortable with having that be done transparently
+without any confirmation from the sysadmin.  This is because I don't
+have a credible threat model for how the corruption could have happened
+in the first place.  I understand how hardware failure can make a whole
+device unaccessible, and how media errors can cause a single block to be
+unreadable.  But I don't see a "most likely way" that a single block can
+become corrupt.
 
-piergiorgio
+Without a clear model, I cannot determine what the correct response is.
+The corruption might have happened on the write path ... so re-writing
+the block could just cause more corruption.  It could have happened on
+the read path, so re-writing won't change anything.  It could have
+happened in memory, so nothing can be trusted.  It could have happened
+due to buggy code.  Without knowing the cause with high probability, it
+is not safe to try to fix anything.
+
+The most likely cause for incorrect P and Q is if the machine crashed
+which a stipe was being updated. In that case, simply updating P and Q
+is the correct response.  So that is the only response that the kernel
+performs.
+
+For more reading, see http://neil.brown.name/blog/20100211050355
+
+NeilBrown
+
+
+>
+> So, as far as I know, the kernel md code can
+> check the parity and, possibily, re-write.
+>
+> "raid6check" can detect errors *and*, if only one,
+> where it is, so a "data repair" capability is possible.
+>
+> bye,
+>
+> pg
+>=20=20
+>> Cheers,
+>> Wol
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> --=20
+>
+> piergiorgio
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlhyv5IACgkQOeye3VZi
+gblFkxAAl7FjNaXlYkHnrNkEVgHSpEYSLzpw7T9BY05LoddhibOXquwSYeiodYOr
+oXMvq8688UxF+isf1bbfYEsErbR79+HNaaSoPWAgtCDgL53Bvgd8vIRB35sKh3q0
+Ryg6PQeic7RJyrMygTgg0s/0eounhFKYbfHiLI1HCfUd/XapU8iUdE1SFBCXom+U
++3lpDRUboS9bDPPhlrnzoTaogC4OW7feIRi00XQkV5/RCGN/itCQb1XLXSBLHyzB
+rJ4ybFulKiBTR/U/SxRbeRUFTh/ElKbdqkQPgO52HvDr08la1o23l4Z02vJILVLs
+bY+WvE8sp4/oxVvqeKzp1XIDk/yhAlX6Qlmxi/vcuX7H1h9ml8idlO8sul54p5x9
+PuXQf0rRnrPRe4/3EiphTaPmFrcasena7VOi/u5wKFqfAePqQSUyzv2VKim03Dt+
+THaCILMNdWxviPkzvXcL55gpyVCS5mzEowqmS62MD+Eh+osariI7FC7HEnhn18Fd
+7tFN4SPpc8eNkPi9+OMmhfpefauvJp7ybxvNmFVUe5uCRtfHJnTy+9IRRT4/z/r5
+QSbdpO4byXomND0yT5XkcP9fotUbF0btOVriMvToIKSIJsD7d92wvagN9SZu4CyB
+ZboXPFwJ2a9fLS1OuHRVrojtFgs4QQ0EkXKJduE0k04+dbA1Bxo=
+=6N9r
+-----END PGP SIGNATURE-----
+--=-=-=--
