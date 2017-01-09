@@ -1,28 +1,43 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH] imsm: show correct size for arrays with 4k disks
-Date: Mon, 09 Jan 2017 09:26:24 -0500
-Message-ID: <wrfjk2a4e2cv.fsf@redhat.com>
-References: <1483971364-7343-1-git-send-email-maksymilian.kunt@intel.com>
+From: Coly Li <colyli@suse.de>
+Subject: [LSF/MM TOPIC] [LSF/MM ATTEND] md raid general discussion
+Date: Tue, 10 Jan 2017 00:38:03 +0800
+Message-ID: <79796ea4-2631-c762-b8a1-50bcdcbc602e@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1483971364-7343-1-git-send-email-maksymilian.kunt@intel.com>
-        (Maksymilian Kunt's message of "Mon, 9 Jan 2017 15:16:04 +0100")
-Sender: linux-raid-owner@vger.kernel.org
-To: Maksymilian Kunt <maksymilian.kunt@intel.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: lsf-pc@lists.linux-foundation.org
+Cc: "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org, Shaohua Li <shli@kernel.org>, NeilBrown <neilb@suse.com>, songliubraving@fb.com, Guoqing Jiang <gqjiang@suse.com>, pawel.baldysiak@intel.com, mariusz.dabrowski@intel.com, artur.paszkiewicz@intel.com, Jes.Sorensen@redhat.com, Hannes Reinecke <hare@suse.de>
 List-Id: linux-raid.ids
 
-Maksymilian Kunt <maksymilian.kunt@intel.com> writes:
-> Number of blocks used to calculate array size is based on 512 block size
-> so the size displayed is incorrect for arrays with 4k disks.
->
-> Signed-off-by: Maksymilian Kunt <maksymilian.kunt@intel.com>
-> ---
->  super-intel.c | 18 ++++++++++++------
->  1 file changed, 12 insertions(+), 6 deletions(-)
+Hi Folks,
 
-Applied!
+I'd like to propose a general md raid discussion, it is quite necessary
+for most of active md raid developers sit together to discuss current
+challenge of Linux software raid and development trends.
 
-Thanks,
-Jes
+In the last years, we have many development activities in md raid, e.g.
+raid5 cache, raid1 clustering, partial parity log, fast fail
+upstreaming, and some effort for raid1 & raid0 performance improvement.
+
+I see there are some kind of functionality overlap between r5cache
+(raid5 cache) and PPL (partial parity log), currently I have no idea
+where we will go for these two development activities.
+Also I receive reports from users that raid1 performance is desired when
+it is built on NVMe SSDs as a cache (maybe bcache or dm-cache). I am
+working on some raid1 performance improvement (e.g. new raid1 I/O
+barrier and lockless raid1 I/O submit), and have some more ideas to discuss.
+
+Therefore, if md raid developers may have a chance to sit together,
+discuss how to efficiently collaborate in next year, it will be much
+more productive then communicating on mailing list.
+
+Finally let me introduce myself for people don't know me. My name is
+Coly Li, I used to work on OCFS2, Ext4 for SUSE Linux, now I work with
+Neil Brown and Hannes Reinecke to maintain block layer code for SUSE
+Linux, mostly focus on drivers/md/*
+
+Thanks.
+
+Coly Li
