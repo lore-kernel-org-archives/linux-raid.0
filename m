@@ -1,35 +1,28 @@
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH] imsm: count arrays under VMD HBAs correctly
-Date: Mon, 09 Jan 2017 07:49:16 -0500
-Message-ID: <wrfjk2a4flf7.fsf@redhat.com>
-References: <1483963942-24774-1-git-send-email-aleksey.obitotskiy@intel.com>
+Subject: Re: [MDADM PATCH 1/1] Add detail information when can not connect monitor
+Date: Mon, 09 Jan 2017 07:50:35 -0500
+Message-ID: <wrfjbmvgfld0.fsf@redhat.com>
+References: <1483844394-7647-1-git-send-email-xni@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1483963942-24774-1-git-send-email-aleksey.obitotskiy@intel.com>
-        (Alexey Obitotskiy's message of "Mon, 9 Jan 2017 13:12:22 +0100")
+In-Reply-To: <1483844394-7647-1-git-send-email-xni@redhat.com> (Xiao Ni's
+        message of "Sun, 8 Jan 2017 10:59:54 +0800")
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexey Obitotskiy <aleksey.obitotskiy@intel.com>
-Cc: linux-raid@vger.kernel.org
+To: Xiao Ni <xni@redhat.com>
+Cc: linux-raid@vger.kernel.org, osamarin68@gmail.com
 List-Id: linux-raid.ids
 
-Alexey Obitotskiy <aleksey.obitotskiy@intel.com> writes:
-> OROM defines maximum number of arrays supported. On array creation mdadm
-> checks if number of arrays doesn't exceed that limit, however it is not
-> calculated correctly for VMD now.
+Xiao Ni <xni@redhat.com> writes:
+> If it can't connect monitor, now the error message is just
+> Error waiting for xxx to be clean. Add detail error message
+> in connect_monitor.
 >
-> The current code performs a lookup of HBA using the id. VMD HBAs have
-> the same id so each lookup returns the same structure (first
-> encountered). Take a different approach for VMD HBAs. As id is not
-> unique and cannot be used for lookups, iterate over all VMD HBAs and
-> compare both id and HBA path.
->
-> Signed-off-by: Alexey Obitotskiy <aleksey.obitotskiy@intel.com>
+> Suggested-by: Oleg Samarin <osamarin68@gmail.com>
+> Signed-off-by: Xiao Ni <xni@redhat.com>
 > ---
->  platform-intel.c | 10 ++++++++++
->  platform-intel.h |  1 +
->  super-intel.c    | 48 ++++++++++++++++++++++++++++++++++++------------
->  3 files changed, 47 insertions(+), 12 deletions(-)
+>  msg.c | 2 ++
+>  1 file changed, 2 insertions(+)
 
 Applied!
 
