@@ -1,64 +1,66 @@
-From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Subject: Re: using the raid6check report
-Date: Mon, 9 Jan 2017 13:13:39 +1100
-Message-ID: <f364997c-af1a-d0d3-a6de-3eabe50e3428@eyal.emu.id.au>
-References: <14e8ec23-de4a-e90b-4b67-155e5e3cc228@eyal.emu.id.au>
- <20170108174010.GA3699@lazy.lzy> <5872A698.7000009@youngman.org.uk>
- <20170108214111.GA7933@lazy.lzy> <87pojxjhwt.fsf@notabene.neil.brown.name>
- <62f5d174-0aef-5a70-68c3-26f7763b5e61@eyal.emu.id.au>
- <87h959j8ss.fsf@notabene.neil.brown.name>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: Interesting mdadm quirk ...
+Date: Mon, 9 Jan 2017 06:59:50 +0000
+Message-ID: <587334E6.406@youngman.org.uk>
+References: <5870EB3F.2060206@youngman.org.uk>
+ <87mvf1jhnu.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87h959j8ss.fsf@notabene.neil.brown.name>
+In-Reply-To: <87mvf1jhnu.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: list linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.com>, linux-raid <linux-raid@vger.kernel.org>
+Cc: jes.sorensen@redhat.com
 List-Id: linux-raid.ids
 
-On 09/01/17 12:56, NeilBrown wrote:
-> On Mon, Jan 09 2017, Eyal Lebedinsky wrote:
->
+On 08/01/17 22:44, NeilBrown wrote:
+> On Sun, Jan 08 2017, Wols Lists wrote:
+> 
+>> Just been doing some raid testing, and this happened ...
 >>
->> I am aware of that discussion and agree with the sentiment (fix in user space).
->
-> (I primarily provided for the information of others)
->
->> What I miss is a message from md when a 'check' mismatch is found. Not having
->> this means I have to run 'raid6check', then after looking at the situation
->> run 'raid6check autorepair' in the small sections reported as bad. This is time
->> consuming and risky.
->
-> Something like this?
->
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 69b0a169e43d..f19c38baf2b2 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -2738,6 +2738,8 @@ static void handle_parity_checks5(raid5_conf_t *conf, struct stripe_head *sh,
->  			conf->mddev->resync_mismatches += STRIPE_SECTORS;
->  			if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery))
->  				/* don't try to repair!! */
-> +				pr_debug("%s: \"check\" found inconsistency near sector %llu\n",
-> +					 md_name(conf->mddev), sh->sector);
->  				set_bit(STRIPE_INSYNC, &sh->state);
->  			else {
->  				sh->check_state = check_state_compute_run;
->
->
-> I chose pr_debug() because I didn't want to flood the logs if there are
-> lots of inconsistencies.
-> You can selectively enable pr_debug() messages by writing to
-> /sys/kernel/debug/dynamic_debug/control
-> providing you have dynamic debugging compiled in.
+>> linux-lfqf:/dev # mdadm md/parity
+>> md/parity: 31.97GiB raid5 3 devices, 0 spares. Use mdadm --detail for
+>> more detail.
+>> linux-lfqf:/dev # mdadm --stop md/parity
+>> mdadm: Cannot open md/parity
+>> linux-lfqf:/dev # mdadm --stop /dev/md/parity
+>> mdadm: stopped /dev/md/parity
+>>
+>> Weird - why can it successfully stop it when passed an absolute path,
+>> but not when passed a relative path? When I did the first variant, I
+>> used tab completion, and then when I edited it I really did edit it, not
+>> retype it, so I can't see any way the two arguments could refer to
+>> different objects.
+> 
+> If you give mdadm a name of an array that start with "/", it is assumed
+> to be a path name (usually in /dev).
+> If it doesn't start with "/", then it is an array name.  The might mean
+> different things in different contexts, I'm not 100% sure.
+> However, for --stop, it a name like you would find is /sys/block or
+> /proc/mdstat.
+> So "mdadm --stop md0" or "mdadm --stop md_parity" might do what you
+> want.
+> Probably the error message could be more useful here.
+> 
+Does that mean an array name can contain a "/"?
 
-I run fedora and can see the dynamic debugging control file.
+Assuming it can't, surely it's better to alter the logic slightly...
 
-> Maybe use pr_info_ratelimited() instead??
+if char[0] ne '/' then
+  open array_name
+end
+if not successful then
+  open path_name
+  if error then go error_handler
+end
+carry on ...
 
-Yes, rate limiting is probably a good idea when we have a really bad day.
+That way naive users like me won't get a surprise. And it is rather
+inconsistent for it to work with one sort of path but not another ...
+and actually that logic will work fine even if the name does contain a
+"/" :-)
 
-> NeilBrown
+Cheers,
+Wol
 
--- 
-Eyal Lebedinsky (eyal@eyal.emu.id.au)
