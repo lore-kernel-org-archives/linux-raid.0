@@ -1,53 +1,160 @@
-From: Russell King - ARM Linux <linux-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org>
-Subject: Re: [PATCH v2 7/7] uapi: export all headers under uapi directories
-Date: Mon, 9 Jan 2017 12:01:08 +0000
-Message-ID: <20170109120107.GW14217@n2100.armlinux.org.uk>
-References: <bf83da6b-01ef-bf44-b3e1-ca6fc5636818@6wind.com>
- <1483695839-18660-1-git-send-email-nicolas.dichtel@6wind.com>
- <1483695839-18660-8-git-send-email-nicolas.dichtel@6wind.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-metag-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1483695839-18660-8-git-send-email-nicolas.dichtel-pdR9zngts4EAvxtiuMwx3w@public.gmane.org>
-Sender: linux-metag-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Nicolas Dichtel <nicolas.dichtel-pdR9zngts4EAvxtiuMwx3w@public.gmane.org>
-Cc: arnd-r2nGTMty4D4@public.gmane.org, linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org, linux-ia64-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, airlied-cv59FeDIM0c@public.gmane.org, linux-fbdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, sparclinux-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-am33-list-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-c6x-dev-jPsnJVOj+W6hPH1hqNUYSQ@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-hexagon-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sh-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, coreteam-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, xen-devel-GuqFBffKawtpuQazS67q72D2FQJk+8+b@public.gmane.org, linux-snps-arc-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, uclinux-h8-devel-5NWGOfrQmneRv+LV9MX5uooqe+aC9MnS@public.gmane.org, linux-xtensa-PjhNF2WwrV/0Sa2dR60CXw@public.gmane.org, linux-kbuild-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, adi-buildroot-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.orglin
+From: Alexey Obitotskiy <aleksey.obitotskiy@intel.com>
+Subject: [PATCH] imsm: count arrays under VMD HBAs correctly
+Date: Mon,  9 Jan 2017 13:12:22 +0100
+Message-ID: <1483963942-24774-1-git-send-email-aleksey.obitotskiy@intel.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Jes.Sorensen@redhat.com
 List-Id: linux-raid.ids
 
-On Fri, Jan 06, 2017 at 10:43:59AM +0100, Nicolas Dichtel wrote:
-> diff --git a/arch/arm/include/uapi/asm/Kbuild b/arch/arm/include/uapi/asm/Kbuild
-> index 46a76cd6acb6..607f702c2d62 100644
-> --- a/arch/arm/include/uapi/asm/Kbuild
-> +++ b/arch/arm/include/uapi/asm/Kbuild
-> @@ -1,23 +1,6 @@
->  # UAPI Header export list
->  include include/uapi/asm-generic/Kbuild.asm
->  
-> -header-y += auxvec.h
-> -header-y += byteorder.h
-> -header-y += fcntl.h
-> -header-y += hwcap.h
-> -header-y += ioctls.h
-> -header-y += kvm_para.h
-> -header-y += mman.h
-> -header-y += perf_regs.h
-> -header-y += posix_types.h
-> -header-y += ptrace.h
-> -header-y += setup.h
-> -header-y += sigcontext.h
-> -header-y += signal.h
-> -header-y += stat.h
-> -header-y += statfs.h
-> -header-y += swab.h
-> -header-y += unistd.h
->  genhdr-y += unistd-common.h
->  genhdr-y += unistd-oabi.h
->  genhdr-y += unistd-eabi.h
+OROM defines maximum number of arrays supported. On array creation mdadm
+checks if number of arrays doesn't exceed that limit, however it is not
+calculated correctly for VMD now.
 
-Acked-by: Russell King <rmk+kernel-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org>
+The current code performs a lookup of HBA using the id. VMD HBAs have
+the same id so each lookup returns the same structure (first
+encountered). Take a different approach for VMD HBAs. As id is not
+unique and cannot be used for lookups, iterate over all VMD HBAs and
+compare both id and HBA path.
 
+Signed-off-by: Alexey Obitotskiy <aleksey.obitotskiy@intel.com>
+---
+ platform-intel.c | 10 ++++++++++
+ platform-intel.h |  1 +
+ super-intel.c    | 48 ++++++++++++++++++++++++++++++++++++------------
+ 3 files changed, 47 insertions(+), 12 deletions(-)
+
+diff --git a/platform-intel.c b/platform-intel.c
+index c60fd9e..72a4f19 100644
+--- a/platform-intel.c
++++ b/platform-intel.c
+@@ -178,6 +178,16 @@ struct sys_dev *device_by_id(__u16 device_id)
+ 	return NULL;
+ }
+ 
++struct sys_dev *device_by_id_and_path(__u16 device_id, const char *path)
++{
++	struct sys_dev *iter;
++
++	for (iter = intel_devices; iter != NULL; iter = iter->next)
++		if ((iter->dev_id == device_id) && strstr(iter->path, path))
++			return iter;
++	return NULL;
++}
++
+ static int devpath_to_ll(const char *dev_path, const char *entry, unsigned long long *val)
+ {
+ 	char path[strlen(dev_path) + strlen(entry) + 2];
+diff --git a/platform-intel.h b/platform-intel.h
+index a8ae85f..4b4e67f 100644
+--- a/platform-intel.h
++++ b/platform-intel.h
+@@ -244,4 +244,5 @@ const char *get_sys_dev_type(enum sys_dev_type);
+ const struct orom_entry *get_orom_entry_by_device_id(__u16 dev_id);
+ const struct imsm_orom *get_orom_by_device_id(__u16 device_id);
+ struct sys_dev *device_by_id(__u16 device_id);
++struct sys_dev *device_by_id_and_path(__u16 device_id, const char *path);
+ char *vmd_domain_to_controller(struct sys_dev *hba, char *buf);
+diff --git a/super-intel.c b/super-intel.c
+index 0407d43..93cea8c 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -6475,20 +6475,20 @@ count_volumes_list(struct md_list *devlist, char *homehost,
+ 	return count;
+ }
+ 
+-static int
+-count_volumes(struct intel_hba *hba, int dpa, int verbose)
++static int __count_volumes(char *hba_path, int dpa, int verbose,
++			   int cmp_hba_path)
+ {
+ 	struct sys_dev *idev, *intel_devices = find_intel_devices();
+ 	int count = 0;
+ 	const struct orom_entry *entry;
+ 	struct devid_list *dv, *devid_list;
+ 
+-	if (!hba || !hba->path)
++	if (!hba_path)
+ 		return 0;
+ 
+ 	for (idev = intel_devices; idev; idev = idev->next) {
+-		if (strstr(idev->path, hba->path))
+-				break;
++		if (strstr(idev->path, hba_path))
++			break;
+ 	}
+ 
+ 	if (!idev || !idev->dev_id)
+@@ -6502,22 +6502,28 @@ count_volumes(struct intel_hba *hba, int dpa, int verbose)
+ 	devid_list = entry->devid_list;
+ 	for (dv = devid_list; dv; dv = dv->next) {
+ 		struct md_list *devlist;
+-		struct sys_dev *device = device_by_id(dv->devid);
+-		char *hba_path;
++		struct sys_dev *device = NULL;
++		char *hpath;
+ 		int found = 0;
+ 
++		if (cmp_hba_path)
++			device = device_by_id_and_path(dv->devid, hba_path);
++		else
++			device = device_by_id(dv->devid);
++
+ 		if (device)
+-			hba_path = device->path;
++			hpath = device->path;
+ 		else
+ 			return 0;
+ 
+-		devlist = get_devices(hba_path);
++		devlist = get_devices(hpath);
+ 		/* if no intel devices return zero volumes */
+ 		if (devlist == NULL)
+ 			return 0;
+ 
+-		count += active_arrays_by_format("imsm", hba_path, &devlist, dpa, verbose);
+-		dprintf("path: %s active arrays: %d\n", hba_path, count);
++		count += active_arrays_by_format("imsm", hpath, &devlist, dpa,
++						 verbose);
++		dprintf("path: %s active arrays: %d\n", hpath, count);
+ 		if (devlist == NULL)
+ 			return 0;
+ 		do  {
+@@ -6529,7 +6535,7 @@ count_volumes(struct intel_hba *hba, int dpa, int verbose)
+ 			dprintf("found %d count: %d\n", found, count);
+ 		} while (found);
+ 
+-		dprintf("path: %s total number of volumes: %d\n", hba_path, count);
++		dprintf("path: %s total number of volumes: %d\n", hpath, count);
+ 
+ 		while (devlist) {
+ 			struct md_list *dv = devlist;
+@@ -6541,6 +6547,24 @@ count_volumes(struct intel_hba *hba, int dpa, int verbose)
+ 	return count;
+ }
+ 
++static int count_volumes(struct intel_hba *hba, int dpa, int verbose)
++{
++	if (!hba)
++		return 0;
++	if (hba->type == SYS_DEV_VMD) {
++		struct sys_dev *dev;
++		int count = 0;
++
++		for (dev = find_intel_devices(); dev; dev = dev->next) {
++			if (dev->type == SYS_DEV_VMD)
++				count += __count_volumes(dev->path, dpa,
++							 verbose, 1);
++		}
++		return count;
++	}
++	return __count_volumes(hba->path, dpa, verbose, 0);
++}
++
+ static int imsm_default_chunk(const struct imsm_orom *orom)
+ {
+ 	/* up to 512 if the plaform supports it, otherwise the platform max.
 -- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
+2.7.4
+
