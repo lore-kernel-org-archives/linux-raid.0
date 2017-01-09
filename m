@@ -1,43 +1,49 @@
-From: Coly Li <colyli@suse.de>
-Subject: [LSF/MM TOPIC] [LSF/MM ATTEND] md raid general discussion
-Date: Tue, 10 Jan 2017 00:38:03 +0800
-Message-ID: <79796ea4-2631-c762-b8a1-50bcdcbc602e@suse.de>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH 1/1] md/raid5: Use correct IS_ERR() variation on pointer
+ check
+Date: Mon, 9 Jan 2017 13:34:12 -0800
+Message-ID: <20170109213412.we7sxcivzbaiyb3i@kernel.org>
+References: <20170107003135.8276-1-Jes.Sorensen@redhat.com>
+ <20170107003135.8276-2-Jes.Sorensen@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: lsf-pc@lists.linux-foundation.org
-Cc: "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org, Shaohua Li <shli@kernel.org>, NeilBrown <neilb@suse.com>, songliubraving@fb.com, Guoqing Jiang <gqjiang@suse.com>, pawel.baldysiak@intel.com, mariusz.dabrowski@intel.com, artur.paszkiewicz@intel.com, Jes.Sorensen@redhat.com, Hannes Reinecke <hare@suse.de>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170107003135.8276-2-Jes.Sorensen@redhat.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Jes.Sorensen@redhat.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Folks,
+On Fri, Jan 06, 2017 at 07:31:35PM -0500, Jes.Sorensen@redhat.com wrote:
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+> 
+> This fixes a build error on certain architectures, such as ppc64.
 
-I'd like to propose a general md raid discussion, it is quite necessary
-for most of active md raid developers sit together to discuss current
-challenge of Linux software raid and development trends.
+Yep, we should use IS_ERR here, applied this. I'm curious why there is a
+compile error. The IS_ERR_VALUE casts the pointer to 'unsigned long'.
 
-In the last years, we have many development activities in md raid, e.g.
-raid5 cache, raid1 clustering, partial parity log, fast fail
-upstreaming, and some effort for raid1 & raid0 performance improvement.
-
-I see there are some kind of functionality overlap between r5cache
-(raid5 cache) and PPL (partial parity log), currently I have no idea
-where we will go for these two development activities.
-Also I receive reports from users that raid1 performance is desired when
-it is built on NVMe SSDs as a cache (maybe bcache or dm-cache). I am
-working on some raid1 performance improvement (e.g. new raid1 I/O
-barrier and lockless raid1 I/O submit), and have some more ideas to discuss.
-
-Therefore, if md raid developers may have a chance to sit together,
-discuss how to efficiently collaborate in next year, it will be much
-more productive then communicating on mailing list.
-
-Finally let me introduce myself for people don't know me. My name is
-Coly Li, I used to work on OCFS2, Ext4 for SUSE Linux, now I work with
-Neil Brown and Hannes Reinecke to maintain block layer code for SUSE
-Linux, mostly focus on drivers/md/*
-
-Thanks.
-
-Coly Li
+Thanks,
+Shaohua
+> Fixes: 6995f0b247e("md: takeover should clear unrelated bits")
+> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+> ---
+>  drivers/md/raid5.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 06d7279..0e0646b 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -7829,7 +7829,7 @@ static void *raid5_takeover_raid1(struct mddev *mddev)
+>  	mddev->new_chunk_sectors = chunksect;
+>  
+>  	ret = setup_conf(mddev);
+> -	if (!IS_ERR_VALUE(ret))
+> +	if (!IS_ERR(ret))
+>  		clear_bit(MD_FAILFAST_SUPPORTED, &mddev->flags);
+>  	return ret;
+>  }
+> -- 
+> 2.9.3
+> 
