@@ -1,45 +1,75 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 7/7] uapi: export all headers under uapi directories
-Date: Mon, 9 Jan 2017 04:56:38 -0800
-Message-ID: <20170109125638.GA15506@infradead.org>
-References: <bf83da6b-01ef-bf44-b3e1-ca6fc5636818@6wind.com>
- <1483695839-18660-1-git-send-email-nicolas.dichtel@6wind.com>
- <1483695839-18660-8-git-send-email-nicolas.dichtel@6wind.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-snps-arc-bounces+gla-linux-snps-arc=m.gmane.org@lists.infradead.org>
-Content-Disposition: inline
-In-Reply-To: <1483695839-18660-8-git-send-email-nicolas.dichtel@6wind.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-snps-arc>,
- <mailto:linux-snps-arc-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-snps-arc/>
-List-Post: <mailto:linux-snps-arc@lists.infradead.org>
-List-Help: <mailto:linux-snps-arc-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-snps-arc>,
- <mailto:linux-snps-arc-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-snps-arc" <linux-snps-arc-bounces@lists.infradead.org>
-Errors-To: linux-snps-arc-bounces+gla-linux-snps-arc=m.gmane.org@lists.infradead.org
-To: Nicolas Dichtel <nicolas.dichtel@6wind.com>
-Cc: linux-mips@linux-mips.org, alsa-devel@alsa-project.org, linux-ia64@vger.kernel.org, linux-doc@vger.kernel.org, airlied@linux.ie, linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-mtd@lists.infradead.org, sparclinux@vger.kernel.org, linux-arch@vger.kernel.org, linux-s390@vger.kernel.org, linux-am33-list@redhat.com, linux-c6x-dev@linux-c6x.org, linux-rdma@vger.kernel.org, linux-hexagon@vger.kernel.org, linux-sh@vger.kernel.org, coreteam@netfilter.org, fcoe-devel@open-fcoe.org, xen-devel@lists.xenproject.org, linux-snps-arc@lists.infradead.org, linux-media@vger.kernel.org, uclinux-h8-devel@lists.sourceforge.jp, linux-xtensa@linux-xtensa.org, arnd@arndb.de, linux-kbuild@vger.kernel.org, adi-buildroot-devel@lists.sourceforge.net, linux-raid@vger.kernel.org, linux-m68k@lists.linux-m68k.org, openrisc@lists.librecores.org, linux-metag@vger.kernel.org, linux-arm
+From: Maksymilian Kunt <maksymilian.kunt@intel.com>
+Subject: [PATCH] imsm: show correct size for arrays with 4k disks
+Date: Mon,  9 Jan 2017 15:16:04 +0100
+Message-ID: <1483971364-7343-1-git-send-email-maksymilian.kunt@intel.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: jes.sorensen@redhat.com, Maksymilian Kunt <maksymilian.kunt@intel.com>
 List-Id: linux-raid.ids
 
-On Fri, Jan 06, 2017 at 10:43:59AM +0100, Nicolas Dichtel wrote:
-> Regularly, when a new header is created in include/uapi/, the developer
-> forgets to add it in the corresponding Kbuild file. This error is usually
-> detected after the release is out.
-> 
-> In fact, all headers under uapi directories should be exported, thus it's
-> useless to have an exhaustive list.
-> 
-> After this patch, the following files, which were not exported, are now
-> exported (with make headers_install_all):
+Number of blocks used to calculate array size is based on 512 block size
+so the size displayed is incorrect for arrays with 4k disks.
 
-... snip ...
+Signed-off-by: Maksymilian Kunt <maksymilian.kunt@intel.com>
+---
+ super-intel.c | 18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
 
-> linux/genwqe/.install
-> linux/genwqe/..install.cmd
-> linux/cifs/.install
-> linux/cifs/..install.cmd
+diff --git a/super-intel.c b/super-intel.c
+index 0817a1f..87ed8ec 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -1480,8 +1480,10 @@ static void print_imsm_dev(struct intel_super *super,
+ 	printf("    Dirty State : %s\n", dev->vol.dirty ? "dirty" : "clean");
+ }
+ 
+-static void print_imsm_disk(struct imsm_disk *disk, int index, __u32 reserved)
+-{
++static void print_imsm_disk(struct imsm_disk *disk,
++			    int index,
++			    __u32 reserved,
++			    unsigned int sector_size) {
+ 	char str[MAX_RAID_SERIAL_LEN + 1];
+ 	__u64 sz;
+ 
+@@ -1499,7 +1501,8 @@ static void print_imsm_disk(struct imsm_disk *disk, int index, __u32 reserved)
+ 					    is_failed(disk) ? " failed" : "");
+ 	printf("             Id : %08x\n", __le32_to_cpu(disk->scsi_id));
+ 	sz = total_blocks(disk) - reserved;
+-	printf("    Usable Size : %llu%s\n", (unsigned long long)sz,
++	printf("    Usable Size : %llu%s\n",
++	       (unsigned long long)sz * 512 / sector_size,
+ 	       human_size(sz * 512));
+ }
+ 
+@@ -1829,7 +1832,8 @@ static void examine_super_imsm(struct supertype *st, char *homehost)
+ 	printf("    MPB Sectors : %d\n", mpb_sectors(mpb, super->sector_size));
+ 	printf("          Disks : %d\n", mpb->num_disks);
+ 	printf("   RAID Devices : %d\n", mpb->num_raid_devs);
+-	print_imsm_disk(__get_imsm_disk(mpb, super->disks->index), super->disks->index, reserved);
++	print_imsm_disk(__get_imsm_disk(mpb, super->disks->index),
++			super->disks->index, reserved, super->sector_size);
+ 	if (get_imsm_bbm_log_size(super->bbm_log)) {
+ 		struct bbm_log *log = super->bbm_log;
+ 
+@@ -1851,12 +1855,14 @@ static void examine_super_imsm(struct supertype *st, char *homehost)
+ 	for (i = 0; i < mpb->num_disks; i++) {
+ 		if (i == super->disks->index)
+ 			continue;
+-		print_imsm_disk(__get_imsm_disk(mpb, i), i, reserved);
++		print_imsm_disk(__get_imsm_disk(mpb, i), i, reserved,
++				super->sector_size);
+ 	}
+ 
+ 	for (dl = super->disks; dl; dl = dl->next)
+ 		if (dl->index == -1)
+-			print_imsm_disk(&dl->disk, -1, reserved);
++			print_imsm_disk(&dl->disk, -1, reserved,
++					super->sector_size);
+ 
+ 	examine_migr_rec_imsm(super);
+ }
+-- 
+1.8.3.1
 
-I'm pretty sure these should not be exported!
