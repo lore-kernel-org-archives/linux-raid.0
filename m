@@ -1,68 +1,33 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: PROBLEM: Kernel BUG with raid5 soft + Xen + DRBD - invalid opcode
-Date: Mon, 9 Jan 2017 14:44:35 -0800
-Message-ID: <20170109224435.sfyrvkxhajgrq2i5@kernel.org>
-References: <585D6C34.2020908@gmail.com>
- <20170104223015.cr6vtyhxuwxrg76g@kernel.org>
- <e56edc2b-f2ad-2ab1-4184-5d7cad80085a@gmail.com>
- <20170105193745.qnmqsussxy7nasdn@kernel.org>
- <2717981a-4308-3f7b-15c6-f384a41fd445@gmail.com>
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: ANNOUNCE: mdadm 4.0 - A tool for managing md Soft RAID under Linux
+Date: Mon, 9 Jan 2017 20:11:57 -0500
+Message-ID: <1cd97490-e650-d98b-466a-095292dc5b98@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <2717981a-4308-3f7b-15c6-f384a41fd445@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: MasterPrenium <masterprenium.lkml@gmail.com>
-Cc: linux-kernel@vger.kernel.org, xen-users@lists.xen.org, linux-raid@vger.kernel.org, "MasterPrenium@gmail.com" <MasterPrenium@gmail.com>, xen-devel@lists.xenproject.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, "Brown, Neil" <neilb@suse.com>
 List-Id: linux-raid.ids
 
-On Sun, Jan 08, 2017 at 02:31:15PM +0100, MasterPrenium wrote:
-> Hello,
-> 
-> Replies below + :
-> - I don't know if this can help but after the crash, when the system
-> reboots, the Raid 5 stack is re-synchronizing
-> [   37.028239] md10: Warning: Device sdc1 is misaligned
-> [   37.028541] created bitmap (15 pages) for device md10
-> [   37.030433] md10: bitmap initialized from disk: read 1 pages, set 59 of
-> 29807 bits
-> 
-> - Sometimes the kernel completely crash (lost serial + network connection),
-> sometimes only got the "BUG" dump, but still have network access (but a
-> reboot is impossible, need to reset the system).
-> 
-> - You can find blktrace here (while running fio), I hope it's complete since
-> the end of the file is when the kernel crashed : https://goo.gl/X9jZ50
+I am pleased to announce the availability of
+   mdadm version 4.0
 
-Looks most are normal full stripe writes.
- 
-> > I'm trying to reproduce, but no success. So
-> > ext4->btrfs->raid5, crash
-> > btrfs->raid5, no crash
-> > right? does subvolume matter? When you create the raid5 array, does adding
-> > '--assume-clean' option change the behavior? I'd like to narrow down the issue.
-> > If you can capture the blktrace to the raid5 array, it would be great to hint
-> > us what kind of IO it is.
-> Yes Correct.
-> The subvolume doesn't matter.
-> -- assume-clean doesn't change the behaviour.
+It is available at the usual places:
+   http://www.kernel.org/pub/linux/utils/raid/mdadm/
+and via git at
+   git://git.kernel.org/pub/scm/utils/mdadm/mdadm.git
+   http://git.kernel.org/cgit/utils/mdadm/
 
-so it's not a resync issue.
+The update in major version number primarily indicates this is a
+release by it's new maintainer. In addition it contains a large number
+of fixes in particular for IMSM RAID and clustered RAID support.  In
+addition this release includes support for IMSM 4k sector drives,
+failfast and better documentation for journaled RAID.
 
-> Don't forget that the system needs to be running on xen to crash, without
-> (on native kernel) it doesn't crash (or at least, I was not able to make it
-> crash).
-> > > Regarding your patch, I can't find it. Is it the one sent by Konstantin
-> > > Khlebnikov ?
-> > Right.
-> It doesn't help :(. Maybe the crash is happening a little bit later.
+This is my first release of mdadm. Please thank Neil Brown for his
+previous work as maintainer and blame me for all the bugs I caused
+since taking over.
 
-ok, the patch is unlikely helpful, since the IO size isn't very big.
-
-Don't have good idea yet. My best guess so far is virtual machine introduces
-extra delay, which might trigger some race conditions which aren't seen in
-native.  I'll check if I could find something locally.
-
-Thanks,
-Shaohua
+Jes Sorensen, 2017-01-09
