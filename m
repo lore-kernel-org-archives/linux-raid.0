@@ -1,33 +1,40 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: ANNOUNCE: mdadm 4.0 - A tool for managing md Soft RAID under Linux
-Date: Mon, 9 Jan 2017 20:11:57 -0500
-Message-ID: <1cd97490-e650-d98b-466a-095292dc5b98@gmail.com>
+From: Benjammin2068 <benjammin2068@gmail.com>
+Subject: Re: Recommendation on new system Arrays
+Date: Tue, 10 Jan 2017 02:48:22 -0600
+Message-ID: <bfb6ebec-defe-186d-76c8-f7fbbaf65a70@gmail.com>
+References: <4259f5ef-42f7-ad4c-c8af-7b6e5c19354c@gmail.com>
+ <d1f5b65b-5a0b-92e1-7fe7-d2a0c45c8998@fnarfbargle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, "Brown, Neil" <neilb@suse.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <d1f5b65b-5a0b-92e1-7fe7-d2a0c45c8998@fnarfbargle.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I am pleased to announce the availability of
-   mdadm version 4.0
+On 01/08/2017 10:34 PM, Brad Campbell wrote:
+>
+> This can be a real trap.
+>
+> In general CCTV software works great for about the first 2 complete database writes. As the database ages you will find increasing levels of write fragmentation that kill your write latency. It also makes each write smaller as you are no longer streaming bulk data to disk but filling the holes left by expired footage. This destroys your array write latency and makes replay and searching for footage frustratingly slow.
+>
+> Make sure your CCTV storage RAID is not used for anything else, select a small chunk size to minimise stripe size and be prepared for fairly high search and playback latency.
+>
+> Most of the major CCTV systems suffer in the same way, and they generally get around it by using "hardware" RAID cards with large RAM buffers (until the BBU wears out and you start getting massive footage loss because they can't get the streams to disk fast enough).
+>
+> If performance is not an issue then a RAID6 being written from a Windows VM on a Linux host works just fine. Pass the md straight through to the Windows VM and let it manage the raw block device.
+>
+> It has bee a couple of years since I tested Milestone, but I've just finished a test with Indigo Vision, Aimetis, Genetec, Geutebruck, Bosch, Avigilon & March Networks. They all suffer to a certain degree and all use different storage architectures depending on their legacy. March works really well over SMB shares though. I'm just not fond of the product.
+>
+> Milestone sent me a new test license before Christmas but I've not got around to spooling it up yet.
+>
+> All of this stuff gets tested on KVM VM's writing to a couple of small RAID-6 arrays (10-14 drives).
 
-It is available at the usual places:
-   http://www.kernel.org/pub/linux/utils/raid/mdadm/
-and via git at
-   git://git.kernel.org/pub/scm/utils/mdadm/mdadm.git
-   http://git.kernel.org/cgit/utils/mdadm/
+Excellent -- the kind of info I was looking for (and wondering about.)
 
-The update in major version number primarily indicates this is a
-release by it's new maintainer. In addition it contains a large number
-of fixes in particular for IMSM RAID and clustered RAID support.  In
-addition this release includes support for IMSM 4k sector drives,
-failfast and better documentation for journaled RAID.
+Thanks for the tip!
 
-This is my first release of mdadm. Please thank Neil Brown for his
-previous work as maintainer and blame me for all the bugs I caused
-since taking over.
+ -Ben
 
-Jes Sorensen, 2017-01-09
+
