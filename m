@@ -1,60 +1,44 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: ANNOUNCE: mdadm 4.0 - A tool for managing md Soft RAID under
- Linux
-Date: Wed, 11 Jan 2017 11:59:46 -0500
-Message-ID: <b2808c47-5180-818d-87d9-ab28f699234e@gmail.com>
-References: <1cd97490-e650-d98b-466a-095292dc5b98@gmail.com>
- <58751E90.5090306@gmail.com> <20170111165241.yavdwc57v6yodx7g@kernel.org>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH v2 1/2] EXPORT_SYMBOL radix_tree_lookup_slot
+Date: Wed, 11 Jan 2017 09:54:05 -0800
+Message-ID: <20170111175405.ixtmcs4runoo7dv2@kernel.org>
+References: <20170111014251.3236610-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170111165241.yavdwc57v6yodx7g@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>, Bruce Dubbs <bruce.dubbs@gmail.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "Brown, Neil" <neilb@suse.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170111014251.3236610-1-songliubraving@fb.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Song Liu <songliubraving@fb.com>
+Cc: linux-raid@vger.kernel.org, neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuan@kylinos.cn, liuyun01@kylinos.cn, Jes.Sorensen@redhat.com
 List-Id: linux-raid.ids
 
-On 01/11/17 11:52, Shaohua Li wrote:
-> On Tue, Jan 10, 2017 at 11:49:04AM -0600, Bruce Dubbs wrote:
->> Jes Sorensen wrote:
->>> I am pleased to announce the availability of
->>>     mdadm version 4.0
->>>
->>> It is available at the usual places:
->>>     http://www.kernel.org/pub/linux/utils/raid/mdadm/
->>> and via git at
->>>     git://git.kernel.org/pub/scm/utils/mdadm/mdadm.git
->>>     http://git.kernel.org/cgit/utils/mdadm/
->>>
->>> The update in major version number primarily indicates this is a
->>> release by it's new maintainer. In addition it contains a large number
->>> of fixes in particular for IMSM RAID and clustered RAID support.  In
->>> addition this release includes support for IMSM 4k sector drives,
->>> failfast and better documentation for journaled RAID.
->>
->> Thank you for the new release.  Unfortunately I get 9 failures running the
->> test suite:
->>
->> tests/00raid1...          FAILED
->> tests/07autoassemble...   FAILED
->> tests/07changelevels...   FAILED
->> tests/07revert-grow...    FAILED
->> tests/07revert-inplace... FAILED
->> tests/07testreshape5...   FAILED
->> tests/10ddf-fail-twice... FAILED
->> tests/20raid5journal...   FAILED
->> tests/10ddf-incremental-wrong-order...  FAILED
+On Tue, Jan 10, 2017 at 05:42:50PM -0800, Song Liu wrote:
+> It will be used in drivers/md/raid5-cache.c
+
+title and patch don't match
+ 
+> Signed-off-by: Song Liu <songliubraving@fb.com>
+> ---
+>  lib/radix-tree.c | 1 +
+>  1 file changed, 1 insertion(+)
 > 
-> Yep, several tests usually fail. It appears some checks aren't always good.  At
-> least the 'check' function for reshape/resync isn't reliable in my test, I saw
-> 07changelevelintr fails frequently.
-
-That is my experience as well - some of them are affected by the kernel
-version too. We probably need to look into making them more reliable.
-
-I am also not sure how reliable the DDF tests are on systems without DDF
-support.
-
-Cheers,
-Jes
+> diff --git a/lib/radix-tree.c b/lib/radix-tree.c
+> index 6f382e0..1ee7449 100644
+> --- a/lib/radix-tree.c
+> +++ b/lib/radix-tree.c
+> @@ -1099,6 +1099,7 @@ void radix_tree_replace_slot(struct radix_tree_root *root,
+>  {
+>  	replace_slot(root, NULL, slot, item, true);
+>  }
+> +EXPORT_SYMBOL(radix_tree_replace_slot);
+>  
+>  /**
+>   * radix_tree_iter_replace - replace item in a slot
+> -- 
+> 2.9.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
