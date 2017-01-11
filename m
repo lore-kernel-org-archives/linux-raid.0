@@ -1,83 +1,61 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [dm-devel] split scsi passthrough fields out of struct request V2
-Date: Tue, 31 Jan 2017 13:58:35 -0800
-Message-ID: <2085a3e6-25fc-d104-35cb-38995d154fd2@kernel.dk>
-References: <1485365126-23210-1-git-send-email-hch@lst.de>
- <4054e944-b28d-1cd6-574f-6cd90e28c301@fb.com>
- <1485464486.2540.12.camel@sandisk.com>
- <6995c991-65a4-8dca-c36e-fb2eff277ca9@fb.com>
- <1485467235.2540.14.camel@sandisk.com>
- <e1d5f4e6-c63f-545d-710f-d4d10fa8d2e0@fb.com>
- <1485472465.2540.19.camel@sandisk.com>
- <e222c541-3239-104d-e0b0-40d19b012b66@fb.com>
- <1485474426.2540.25.camel@sandisk.com>
- <b98195e7-6e04-5a59-8b83-ce2e1c5c4e1a@fb.com>
- <1485477510.2540.27.camel@sandisk.com>
- <2d971693-b79d-c1b9-fb2a-f5dd04128c68@fb.com>
- <1485479738.2540.30.camel@sandisk.com>
- <ecca734c-7a9c-f060-9335-c2de089849c2@fb.com>
- <37ab009a-bc2d-d2ae-a875-269ab563a430@fb.com>
- <9cbf0ce5-ed79-0252-fd2d-34bebaafffa3@fb.com>
- <1485535925.4267.1.camel@sandisk.com>
- <2c696943-2a44-4f36-f0f8-0bebceb95a4a@fb.com>
- <1485825148.2669.18.camel@sandisk.com>
- <4D024E85-CDE7-4FB0-B8CA-F2B8C86CCFCB@kernel.dk>
- <1485898487.3113.7.camel@sandisk.com> <1485899692.3113.9.camel@sandisk.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: [GIT PULL] MD update for 4.10-rc3
+Date: Wed, 11 Jan 2017 10:15:23 -0800
+Message-ID: <20170111181523.6urbotv24ifnhjpl@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1485899692.3113.9.camel@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "j-nomura@ce.jp.nec.com" <j-nomura@ce.jp.nec.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-On 01/31/2017 01:55 PM, Bart Van Assche wrote:
-> On Tue, 2017-01-31 at 13:34 -0800, Bart Van Assche wrote:
->> On Mon, 2017-01-30 at 17:38 -0800, Jens Axboe wrote:
->>> That's a known bug in mainline. Pull it into 4.10-rc6,
->>> or use my for-next where everything is already merged. 
->>
->> Hello Jens,
->>
->> With your for-next branch (commit c2e60b3a2602) I haven't hit any block
->> layer crashes so far. The only issue I encountered that is new is a
->> memory leak triggered by the SG-IO code. These memory leak reports
->> started to appear after I started testing the mq-deadline scheduler.
->> kmemleak reported the following call stack multiple times after my tests
->> had finished:
->>
->> unreferenced object 0xffff88041119e528 (size 192):
->>   comm "multipathd", pid 2353, jiffies 4295128020 (age 1332.440s)
->>   hex dump (first 32 bytes):
->>     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
->>     00 00 00 00 00 00 00 00 12 01 00 00 00 00 00 00  ................
->>   backtrace:
->>     [<ffffffff8165e3b5>] kmemleak_alloc+0x45/0xa0
->>     [<ffffffff811cc23d>] __kmalloc+0x15d/0x2f0
->>     [<ffffffff81310e35>] bio_alloc_bioset+0x185/0x1f0
->>     [<ffffffff813117f4>] bio_map_user_iov+0x124/0x400
->>     [<ffffffff81320b7a>] blk_rq_map_user_iov+0x11a/0x210
->>     [<ffffffff81320cbd>] blk_rq_map_user+0x4d/0x60
->>     [<ffffffff81336694>] sg_io+0x3d4/0x410
->>     [<ffffffff813369d0>] scsi_cmd_ioctl+0x300/0x490
->>     [<ffffffff81336b9d>] scsi_cmd_blk_ioctl+0x3d/0x50
->>     [<ffffffff814b4360>] sd_ioctl+0x80/0x100
->>     [<ffffffff8132ddde>] blkdev_ioctl+0x51e/0x9f0
->>     [<ffffffff8122f388>] block_ioctl+0x38/0x40
->>     [<ffffffff8120097f>] do_vfs_ioctl+0x8f/0x700
->>     [<ffffffff8120102c>] SyS_ioctl+0x3c/0x70
->>     [<ffffffff8166c4aa>] entry_SYSCALL_64_fastpath+0x18/0xad
-> 
-> After I repeated my test the above findings were confirmed: no memory leaks
-> were reported by kmemleak after a test with I/O scheduler "none" and the
-> above call stack was reported 44 times by kmemleak after a test with I/O
-> scheduler "mq-deadline".
+Hi,
 
-Interesting, I'll check this. Doesn't make any sense why the scheduler
-would be implicated in that, given how we run completions now. But if
-it complains, then something must be up.
+Please pull MD update for 4.10-rc3. Basically one fix for raid5 cache which is
+merged in this cycle, others are trival fixes.
 
--- 
-Jens Axboe
+Thanks,
+Shaohua
+
+The following changes since commit 0c744ea4f77d72b3dcebb7a8f2684633ec79be88:
+
+  Linux 4.10-rc2 (2017-01-01 14:31:53 -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git tags/md/4.10-rc3
+
+for you to fetch changes up to 32cd7cbbacf700885a2316275f188f2d5739b5f4:
+
+  md/raid5: Use correct IS_ERR() variation on pointer check (2017-01-09 13:58:10 -0800)
+
+----------------------------------------------------------------
+Colin Ian King (1):
+      md/r5cache: fix spelling mistake on "recoverying"
+
+JackieLiu (1):
+      md/raid5-cache: removes unnecessary write-through mode judgments
+
+Jes Sorensen (1):
+      md/raid5: Use correct IS_ERR() variation on pointer check
+
+Robert LeBlanc (2):
+      md/raid1: Refactor raid1_make_request
+      md/raid10: Refactor raid10_make_request
+
+Shaohua Li (1):
+      md: cleanup mddev flag clear for takeover
+
+Song Liu (2):
+      md/r5cache: simplify handling of sh->log_start in recovery
+      md/r5cache: assign conf->log before r5l_load_log()
+
+ drivers/md/md.h          |   8 ++
+ drivers/md/raid0.c       |  12 ++-
+ drivers/md/raid1.c       | 275 +++++++++++++++++++++++++----------------------
+ drivers/md/raid10.c      | 245 +++++++++++++++++++++++------------------
+ drivers/md/raid5-cache.c |  36 +++----
+ drivers/md/raid5.c       |   7 +-
+ 6 files changed, 322 insertions(+), 261 deletions(-)
