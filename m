@@ -1,51 +1,67 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v4] md/r5cache: enable chunk_aligned_read with write back
- cache
-Date: Wed, 11 Jan 2017 14:00:12 -0800
-Message-ID: <20170111220012.xg2l42exbself2tp@kernel.org>
-References: <20170111213914.2429024-1-songliubraving@fb.com>
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: Re: ANNOUNCE: mdadm 4.0 - A tool for managing md Soft RAID under
+ Linux
+Date: Thu, 12 Jan 2017 12:24:28 +0800
+Message-ID: <587704FC.6030701@suse.com>
+References: <1cd97490-e650-d98b-466a-095292dc5b98@gmail.com>
+ <58751E90.5090306@gmail.com> <20170111165241.yavdwc57v6yodx7g@kernel.org>
+ <b2808c47-5180-818d-87d9-ab28f699234e@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170111213914.2429024-1-songliubraving@fb.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>
-Cc: linux-raid@vger.kernel.org, neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuan@kylinos.cn, liuyun01@kylinos.cn, Jes.Sorensen@redhat.com
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <b2808c47-5180-818d-87d9-ab28f699234e@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jes Sorensen <jes.sorensen@gmail.com>, Shaohua Li <shli@kernel.org>, Bruce Dubbs <bruce.dubbs@gmail.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "Brown, Neil" <neilb@suse.com>
 List-Id: linux-raid.ids
 
-On Wed, Jan 11, 2017 at 01:39:14PM -0800, Song Liu wrote:
-> Chunk aligned read significantly reduces CPU usage of raid456.
-> However, it is not safe to fully bypass the write back cache.
-> This patch enables chunk aligned read with write back cache.
-> 
-> For chunk aligned read, we track stripes in write back cache at
-> a bigger granularity, "big_stripe". Each chunk may contain more
-> than one stripe (for example, a 256kB chunk contains 64 4kB-page,
-> so this chunk contain 64 stripes). For chunk_aligned_read, these
-> stripes are grouped into one big_stripe, so we only need one lookup
-> for the whole chunk.
-> 
-> For each big_stripe, struct big_stripe_info tracks how many stripes
-> of this big_stripe are in the write back cache. We count how many
-> stripes of this big_stripe are in the write back cache. These
-> counters are tracked in a radix tree (big_stripe_tree).
-> r5c_tree_index() is used to calculate keys for the radix tree.
-> 
-> chunk_aligned_read() calls r5c_big_stripe_cached() to look up
-> big_stripe of each chunk in the tree. If this big_stripe is in the
-> tree, chunk_aligned_read() aborts. This look up is protected by
-> rcu_read_lock().
-> 
-> It is necessary to remember whether a stripe is counted in
-> big_stripe_tree. Instead of adding new flag, we reuses existing flags:
-> STRIPE_R5C_PARTIAL_STRIPE and STRIPE_R5C_FULL_STRIPE. If either of these
-> two flags are set, the stripe is counted in big_stripe_tree. This
-> requires moving set_bit(STRIPE_R5C_PARTIAL_STRIPE) to
-> r5c_try_caching_write(); and moving clear_bit of
-> STRIPE_R5C_PARTIAL_STRIPE and STRIPE_R5C_FULL_STRIPE to
-> r5c_finish_stripe_write_out().
-> 
-> Signed-off-by: Song Liu <songliubraving@fb.com>
 
-applied, thanks!
+
+On 01/12/2017 12:59 AM, Jes Sorensen wrote:
+> On 01/11/17 11:52, Shaohua Li wrote:
+>> On Tue, Jan 10, 2017 at 11:49:04AM -0600, Bruce Dubbs wrote:
+>>> Jes Sorensen wrote:
+>>>> I am pleased to announce the availability of
+>>>>      mdadm version 4.0
+>>>>
+>>>> It is available at the usual places:
+>>>>      http://www.kernel.org/pub/linux/utils/raid/mdadm/
+>>>> and via git at
+>>>>      git://git.kernel.org/pub/scm/utils/mdadm/mdadm.git
+>>>>      http://git.kernel.org/cgit/utils/mdadm/
+>>>>
+>>>> The update in major version number primarily indicates this is a
+>>>> release by it's new maintainer. In addition it contains a large number
+>>>> of fixes in particular for IMSM RAID and clustered RAID support.  In
+>>>> addition this release includes support for IMSM 4k sector drives,
+>>>> failfast and better documentation for journaled RAID.
+>>> Thank you for the new release.  Unfortunately I get 9 failures running the
+>>> test suite:
+>>>
+>>> tests/00raid1...          FAILED
+>>> tests/07autoassemble...   FAILED
+>>> tests/07changelevels...   FAILED
+>>> tests/07revert-grow...    FAILED
+>>> tests/07revert-inplace... FAILED
+>>> tests/07testreshape5...   FAILED
+>>> tests/10ddf-fail-twice... FAILED
+>>> tests/20raid5journal...   FAILED
+>>> tests/10ddf-incremental-wrong-order...  FAILED
+>> Yep, several tests usually fail. It appears some checks aren't always good.  At
+>> least the 'check' function for reshape/resync isn't reliable in my test, I saw
+>> 07changelevelintr fails frequently.
+> That is my experience as well - some of them are affected by the kernel
+> version too. We probably need to look into making them more reliable.
+
+If possible, it could be a potential topic for lsf/mm raid discussion as 
+Coly suggested
+in previous mail.
+
+Is current test can run the test for different raid level, say, "./test 
+--raidtype=raid1" could
+execute all the *r1* tests, does it make sense to do it if we don't 
+support it now.
+
+Thanks,
+Guoqing
