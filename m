@@ -1,27 +1,43 @@
-From: Sagi Grimberg <sagi@grimberg.me>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] [LSF/MM ATTEND] md raid general
- discussion
-Date: Thu, 12 Jan 2017 17:09:23 +0200
-Message-ID: <17625a3f-5598-d83d-44a1-316ccc917ad5@grimberg.me>
-References: <79796ea4-2631-c762-b8a1-50bcdcbc602e@suse.de>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Recommendation on new system Arrays
+Date: Thu, 12 Jan 2017 10:39:52 -0500
+Message-ID: <030ca00a-f024-14a0-d5b9-a9497811910e@turmel.org>
+References: <4259f5ef-42f7-ad4c-c8af-7b6e5c19354c@gmail.com>
+ <5870BD30.3020302@youngman.org.uk>
+ <6017e35e-6328-bf8b-fb25-eb8afbf163ba@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <79796ea4-2631-c762-b8a1-50bcdcbc602e@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Coly Li <colyli@suse.de>, lsf-pc@lists.linux-foundation.org
-Cc: linux-block@vger.kernel.org, songliubraving@fb.com, pawel.baldysiak@intel.com, linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org, NeilBrown <neilb@suse.com>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, artur.paszkiewicz@intel.com, Hannes Reinecke <hare@suse.de>, Guoqing Jiang <gqjiang@suse.com>, Jes.Sorensen@redhat.com, mariusz.dabrowski@intel.com, Shaohua Li <shli@kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <6017e35e-6328-bf8b-fb25-eb8afbf163ba@gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Benjammin2068 <benjammin2068@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hey Coly,
+Hi Ben,
 
-> Also I receive reports from users that raid1 performance is desired when
-> it is built on NVMe SSDs as a cache (maybe bcache or dm-cache). I am
-> working on some raid1 performance improvement (e.g. new raid1 I/O
-> barrier and lockless raid1 I/O submit), and have some more ideas to discuss.
+{Convention on kernel.org is reply-to-all -- please do.}
 
-Do you have some performance measurements to share?
+On 01/07/2017 11:04 PM, Benjammin2068 wrote:
 
-Mike used null devices to simulate very fast devices which
-led to nice performance enhancements in dm-multipath code.
+> Also in other news.... (maybe someone from this list can help since they've run into it before)
+> 
+> The motherboard of the computer has its own SATA controller as usual... as well as this Avago SAS controller.
+> 
+> When CentOS 7 boots up, it enumerates the external SAS drives starting at /dev/sda instead of the motherboard's drives.
+> 
+> The OCD in me wants the MB's SATA drives as /dev/sda-sdd.
+> 
+> Where does one even control that enumeration order? udev? Eeks.
+
+You cannot control the order.  Period.  It is pseudo-random based on
+hardware responses to driver loads.  New kernels can have entirely
+different orders of devices, and if parallel loads are allowed, you can
+have one controller get sd[aceg] while another gets sd[bdfh]. The entire
+system of LABEL= and UUID= support via initramfs and blkid is intended
+make fstab and other utilities deterministic in spite of varying names.
+
+mdadm has always been resistant to naming problems thanks to its device
+#s and UUIDs in the superblocks.
+
+Phil
