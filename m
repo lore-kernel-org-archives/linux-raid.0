@@ -1,57 +1,81 @@
-From: Coly Li <colyli@suse.de>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] [LSF/MM ATTEND] md raid general
- discussion
-Date: Fri, 13 Jan 2017 12:00:12 +0800
-Message-ID: <0e2dc23a-bee9-6c7b-0903-a2edc05f75e6@suse.de>
-References: <79796ea4-2631-c762-b8a1-50bcdcbc602e@suse.de>
- <17625a3f-5598-d83d-44a1-316ccc917ad5@grimberg.me>
+From: NeilBrown <neil@brown.name>
+Subject: Re: regarding mdadm
+Date: Fri, 13 Jan 2017 17:23:02 +1100
+Message-ID: <87vatjfph5.fsf@notabene.neil.brown.name>
+References: <CAC8PVF-W8dcALXWm4S1qOXoZuimTd_9YhbO9Wg_WihtSpjrJog@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <17625a3f-5598-d83d-44a1-316ccc917ad5@grimberg.me>
-Sender: linux-block-owner@vger.kernel.org
-To: Sagi Grimberg <sagi@grimberg.me>
-Cc: lsf-pc@lists.linux-foundation.org, linux-block@vger.kernel.org, songliubraving@fb.com, pawel.baldysiak@intel.com, linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org, NeilBrown <neilb@suse.com>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, artur.paszkiewicz@intel.com, Hannes Reinecke <hare@suse.de>, Guoqing Jiang <gqjiang@suse.com>, Jes.Sorensen@redhat.com, mariusz.dabrowski@intel.com, Shaohua Li <shli@kernel.org>
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAC8PVF-W8dcALXWm4S1qOXoZuimTd_9YhbO9Wg_WihtSpjrJog@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Sushant Patil <srpatil2259@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2017/1/12 下午11:09, Sagi Grimberg wrote:
-> Hey Coly,
-> 
->> Also I receive reports from users that raid1 performance is desired when
->> it is built on NVMe SSDs as a cache (maybe bcache or dm-cache). I am
->> working on some raid1 performance improvement (e.g. new raid1 I/O
->> barrier and lockless raid1 I/O submit), and have some more ideas to
->> discuss.
-> 
-> Do you have some performance measurements to share?
-> 
-> Mike used null devices to simulate very fast devices which
-> led to nice performance enhancements in dm-multipath code.
+--=-=-=
+Content-Type: text/plain
 
-I have several performance data of raid1 and raid0, which is still work
-in progress.
+On Fri, Jan 13 2017, Sushant Patil wrote:
 
-- md raid1
-  Current md raid1 read performance is not ideal. A raid1 with 2 NVMe
-SSD, only observe 2.6GB/s throughput for multi I/O and depth reading.
-Most of the time spending on I/O barrier locking. Now I am working on a
-lockless I/O submit patch (the original idea is from Hannes Reinecke),
-which improves reading throughput to 4.7~5GB/s. When using md raid1 as a
-cache device, reading performance improvement is critical.
-  On my hardware, the ideal reading throughput of 2 NVMe is 6GB/s,
-currently the reading performance number is 4.7~5GB/s, still have a
-little some space to improve.
-- md raid0
-  People reports on linux-raid mailing list that DISCARD/TRIM
-performance on raid0 is slow. In my reproducing, a raid0 built by 4x3TB
-NVMe SSD, formatting a XFS volume on top of it takes 306 seconds. Most
-of the time is inside md raid0 code to issue DISCARD/TRIM request in
-chunk size range. I compose a POC patch to re-combine a large
-DISCARD/TRIM command into per-device request, which reduces the
-formatting time to 15 seconds. Now I work on patch simplifying by the
-suggestions from upstream maintainers.
+> Hi Neil,
+>
+> This is Sushant from India(Maharashtra).
+> I am studying mdadm command (package), its awesome tool to manage RAID.
+> but there is lack of documentation related to help and also there is lack
+> of explanation regarding examples and hands-on(experiments) on internet.
+> so I am facing difficulty in studying and applying this mdadm tool.
+> sir I request you to send me some kind of documentation related to examples
+> related  to commands with various modes like create ,assemble,monitor etc.
+>
+> I tried with one link which is "
+> http://www.cse.unsw.edu.au/~neil/source/mdadm/"  given in book "Managing
+> RAID on Linux" but it is not working.
+>
+> so sir please send me something related to examples of managing RAID with
+> mdadm.
 
-For raid1, currently most of feed backs are from read performance.
+Think for a minute about what you are asking of me.....
 
-Coly
+You haven't given me any hint about what sort of problem you are having,
+but you want me to guess what sort of help you want.
+For the thousands of pages about mdadm on the internet, you have told me
+that you have looked at just one, and found it wasn't helpful.
+
+Seriously, what do you expect of me?  Do you think I have some secret
+stack of example and I have haven't put on the internet for you to find,
+but I'll just give them to you when you ask?  Or maybe you think I'll
+spend hours writing up some examples just for you.
+
+I recommend you start by reading the man pages:
+
+ man md
+ man mdadm
+ man mdadm.conf
+
+and then if that isn't enough, look at the test scripts in
+the mdadm source tree, in the 'tests' directory.
+
+Or maybe just use good "mdadm examples"
+
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlh4ckYACgkQOeye3VZi
+gbkrzhAAsLJvX9QmMhxDOzDPEkawf0mUE/K35mBzFFw+GNv+G2iNom9jakMHoBJk
+BHZk8nRyWIUcm6o4G8QBo3++olOZiYdzHFEAZns51hKes5iXb3pM26nrOyb6V1pL
+itPVPpdvDakbNIe8mBKIKezF3QL5Q/u3LSP4YMQ7NNNtNS/fEn10truXLq0KF0Vd
+f64V7C0S79dpdggxpUVfkHNO67R8rbcim5xYvWN/T7eGDpgRVeokuec5DyAef+fI
+ZodDuHYXfd81xDmhmKrTEmIFkS70L57uvq/Hav/UF8XlYCeP2S7YeFKoGnrFCkjV
+n6QRLnIyW+xvVSsbd8NPhoTMMv8pWL2CJLlvYXSpOj3obzr/N6VbIvmW5+GxT6QA
+SP1cxGQ7E5CEXGSMB5IHwsxNuXPepSs802ECvDgR3D33Z1dzr8S8zqPbbOWRFYM5
+b9l8qs0ExGfFZ0U0T7eWimLeRbNzhK79f9+7hGf7kbLvJHvZM4v71XT3wBt5rWz6
+nWh4Lywgzx17S8NeeoJj717XeNmXty0toz/p2+f5fnbBgQz+YwogOuBJwNg238U5
+9Gu4g81lkbglaKegG3ZKsw5esHUyaKGhj2Fvxpjp8kHshc6H+UCEET0yPw5yKHKz
+Nh/rC1qEU/WvIhjXDs4lfNfwz4UhKxAAJgSTjIGyJXWnn6VBAZ0=
+=DIpo
+-----END PGP SIGNATURE-----
+--=-=-=--
