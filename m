@@ -1,78 +1,39 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: ANNOUNCE: mdadm 4.0 - A tool for managing md Soft RAID under
- Linux
-Date: Thu, 12 Jan 2017 11:41:53 -0500
-Message-ID: <4eb83aa0-6245-d499-f18a-e8456aad9f98@gmail.com>
-References: <1cd97490-e650-d98b-466a-095292dc5b98@gmail.com>
- <58751E90.5090306@gmail.com> <20170111165241.yavdwc57v6yodx7g@kernel.org>
- <b2808c47-5180-818d-87d9-ab28f699234e@gmail.com> <587704FC.6030701@suse.com>
+From: Jeff Epler <jepler@unpythonic.net>
+Subject: Re: [PATCH v2 7/7] uapi: export all headers under uapi directories
+Date: Thu, 12 Jan 2017 19:04:27 -0600
+Message-ID: <20170113010427.GA22650@unpythonic.net>
+References: <bf83da6b-01ef-bf44-b3e1-ca6fc5636818@6wind.com>
+ <1483695839-18660-1-git-send-email-nicolas.dichtel@6wind.com>
+ <1483695839-18660-8-git-send-email-nicolas.dichtel@6wind.com>
+ <20170109125638.GA15506@infradead.org>
+ <464a1323-4450-e563-ff59-9e6d57b75959@6wind.com>
+ <alpine.LSU.2.20.1701121727180.19188@erq.vanv.qr>
+ <9d68af8a-a609-d7b1-58a9-f1155313b077@6wind.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <587704FC.6030701@suse.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>, Shaohua Li <shli@kernel.org>, Bruce Dubbs <bruce.dubbs@gmail.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "Brown, Neil" <neilb@suse.com>
+Return-path: <linux-snps-arc-bounces+gla-linux-snps-arc=m.gmane.org@lists.infradead.org>
+Content-Disposition: inline
+In-Reply-To: <9d68af8a-a609-d7b1-58a9-f1155313b077@6wind.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-snps-arc>,
+ <mailto:linux-snps-arc-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-snps-arc/>
+List-Post: <mailto:linux-snps-arc@lists.infradead.org>
+List-Help: <mailto:linux-snps-arc-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-snps-arc>,
+ <mailto:linux-snps-arc-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-snps-arc" <linux-snps-arc-bounces@lists.infradead.org>
+Errors-To: linux-snps-arc-bounces+gla-linux-snps-arc=m.gmane.org@lists.infradead.org
+To: Nicolas Dichtel <nicolas.dichtel@6wind.com>
+Cc: linux-mips@linux-mips.org, alsa-devel@alsa-project.org, linux-ia64@vger.kernel.org, linux-doc@vger.kernel.org, airlied@linux.ie, linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-mtd@lists.infradead.org, sparclinux@vger.kernel.org, linux-arch@vger.kernel.org, linux-s390@vger.kernel.org, linux-am33-list@redhat.com, linux-c6x-dev@linux-c6x.org, linux-rdma@vger.kernel.org, linux-hexagon@vger.kernel.org, linux-sh@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, coreteam@netfilter.org, fcoe-devel@open-fcoe.org, xen-devel@lists.xenproject.org, linux-snps-arc@lists.infradead.org, linux-media@vger.kernel.org, uclinux-h8-devel@lists.sourceforge.jp, linux-xtensa@linux-xtensa.org, arnd@arndb.de, linux-kbuild@vger.kernel.org, adi-buildroot-devel@lists.sourceforge.net, linux-raid@vger.kernel.org, linux-m68k@lists.linux-m68k.org, mmarek@suse.com, linux-metag@v
 List-Id: linux-raid.ids
 
-On 01/11/17 23:24, Guoqing Jiang wrote:
-> 
-> 
-> On 01/12/2017 12:59 AM, Jes Sorensen wrote:
->> On 01/11/17 11:52, Shaohua Li wrote:
->>> On Tue, Jan 10, 2017 at 11:49:04AM -0600, Bruce Dubbs wrote:
->>>> Jes Sorensen wrote:
->>>>> I am pleased to announce the availability of
->>>>>      mdadm version 4.0
->>>>>
->>>>> It is available at the usual places:
->>>>>      http://www.kernel.org/pub/linux/utils/raid/mdadm/
->>>>> and via git at
->>>>>      git://git.kernel.org/pub/scm/utils/mdadm/mdadm.git
->>>>>      http://git.kernel.org/cgit/utils/mdadm/
->>>>>
->>>>> The update in major version number primarily indicates this is a
->>>>> release by it's new maintainer. In addition it contains a large number
->>>>> of fixes in particular for IMSM RAID and clustered RAID support.  In
->>>>> addition this release includes support for IMSM 4k sector drives,
->>>>> failfast and better documentation for journaled RAID.
->>>> Thank you for the new release.  Unfortunately I get 9 failures
->>>> running the
->>>> test suite:
->>>>
->>>> tests/00raid1...          FAILED
->>>> tests/07autoassemble...   FAILED
->>>> tests/07changelevels...   FAILED
->>>> tests/07revert-grow...    FAILED
->>>> tests/07revert-inplace... FAILED
->>>> tests/07testreshape5...   FAILED
->>>> tests/10ddf-fail-twice... FAILED
->>>> tests/20raid5journal...   FAILED
->>>> tests/10ddf-incremental-wrong-order...  FAILED
->>> Yep, several tests usually fail. It appears some checks aren't always
->>> good.  At
->>> least the 'check' function for reshape/resync isn't reliable in my
->>> test, I saw
->>> 07changelevelintr fails frequently.
->> That is my experience as well - some of them are affected by the kernel
->> version too. We probably need to look into making them more reliable.
-> 
-> If possible, it could be a potential topic for lsf/mm raid discussion as
-> Coly suggested
-> in previous mail.
-> 
-> Is current test can run the test for different raid level, say, "./test
-> --raidtype=raid1" could
-> execute all the *r1* tests, does it make sense to do it if we don't
-> support it now.
+On Thu, Jan 12, 2017 at 05:32:09PM +0100, Nicolas Dichtel wrote:
+> What I was trying to say is that I export those directories like other are.
+> Removing those files is not related to that series.
 
-We could have a discussion about this at LSF/MM, if someone is willing
-to sponsor getting it accepted and we can get the right people there.
+Perhaps the correct solution is to only copy files matching "*.h" to
+reduce the risk of copying files incidentally created by kbuild but
+which shouldn't be installed as uapi headers.
 
-Note that the test suite also allows you to run all the 01 tests by
-specifying ./test 01. I do like to see the test suite improved and made
-more resilient.
-
-Cheers,
-Jes
+jeff
