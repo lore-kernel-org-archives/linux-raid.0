@@ -1,138 +1,176 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH 4/4] md/r5cache: shift complex rmw from read path to write path
-Date: Thu, 12 Jan 2017 17:22:43 -0800
-Message-ID: <20170113012243.3246467-4-songliubraving@fb.com>
-References: <20170113012243.3246467-1-songliubraving@fb.com>
+Subject: [PATCH 1/4] md/r5cache: flush data only stripes in r5l_recovery_log()
+Date: Thu, 12 Jan 2017 17:22:40 -0800
+Message-ID: <20170113012243.3246467-1-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170113012243.3246467-1-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuan@kylinos.cn, liuyun01@kylinos.cn, Song Liu <songliubraving@fb.com>, Jes.Sorensen@redhat.com
 List-Id: linux-raid.ids
 
-Write back cache requires a complex RMW mechanism, where old data is
-read into dev->orig_page for prexor, and then xor is done with
-dev->page. This logic is already implemented in the write path.
+When there is data only stripes in the journal, we flush them out in
+r5l_recovery_log(). Ths logic is implemented in a new function:
+r5c_recovery_flush_data_only_stripes():
 
-However, current read path is not awared of this requirement. When
-the array is optimal, the RMW is not required, as the data are
-read from raid disks. However, when the target stripe is degraded,
-complex RMW is required to generate right data.
+1. enable write back cache
+2. set flag R5C_PRE_INIT_FLUSH in conf->cache_state
+3. flush all stripes
+4. wake up conf->mddev->thread
+5. wait for all stripes get flushed (reuse wait_for_quiescent)
+6. clear R5C_PRE_INIT_FLUSH
+7. disable write back cache
 
-To keep read path as clean as possible, we handle read path by
-flushing degraded, in-journal stripes before processing reads to
-missing dev.
-
-Specifically, when there is read requests to a degraded stripe
-with data in journal, handle_stripe_fill() calls
-r5c_make_stripe_write_out() and exits. Then handle_stripe_dirtying()
-will do the complex RMW and flush the stripe to RAID disks. After
-that, read requests are handled.
-
-There is one more corner case when there is non-overwrite bio for
-the missing (or out of sync) dev. handle_stripe_dirtying() will not
-be able to process the non-overwrite bios without constructing the
-data in handle_stripe_fill(). This is fixed by delaying non-overwrite
-bios in handle_stripe_dirtying(). So handle_stripe_fill() works on
-these bios after the stripe is flushed to raid disks.
+do_release_stripe() will wake up the wait when conf->active_stripe
+reduces to 0.
 
 Signed-off-by: Song Liu <songliubraving@fb.com>
 ---
- drivers/md/raid5.c | 48 ++++++++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 44 insertions(+), 4 deletions(-)
+ drivers/md/raid5-cache.c | 58 +++++++++++++++++++++++++++++++++++-------------
+ drivers/md/raid5.c       |  4 ++++
+ drivers/md/raid5.h       |  3 +++
+ 3 files changed, 49 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index d07a319..193acd3 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -2938,6 +2938,30 @@ sector_t raid5_compute_blocknr(struct stripe_head *sh, int i, int previous)
- 	return r_sector;
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 0c88648..2bbc38b 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -2102,7 +2102,7 @@ static int
+ r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
+ 				       struct r5l_recovery_ctx *ctx)
+ {
+-	struct stripe_head *sh, *next;
++	struct stripe_head *sh;
+ 	struct mddev *mddev = log->rdev->mddev;
+ 	struct page *page;
+ 	sector_t next_checkpoint = MaxSector;
+@@ -2116,7 +2116,7 @@ r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
+ 
+ 	WARN_ON(list_empty(&ctx->cached_list));
+ 
+-	list_for_each_entry_safe(sh, next, &ctx->cached_list, lru) {
++	list_for_each_entry(sh, &ctx->cached_list, lru) {
+ 		struct r5l_meta_block *mb;
+ 		int i;
+ 		int offset;
+@@ -2166,14 +2166,41 @@ r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
+ 		ctx->pos = write_pos;
+ 		ctx->seq += 1;
+ 		next_checkpoint = sh->log_start;
+-		list_del_init(&sh->lru);
+-		raid5_release_stripe(sh);
+ 	}
+ 	log->next_checkpoint = next_checkpoint;
+ 	__free_page(page);
+ 	return 0;
  }
  
-+/*
-+ * There are cases where we want handle_stripe_dirtying() and
-+ * schedule_reconstruction() to delay towrite to some dev of a stripe.
-+ *
-+ * This function checks whether we want to delay the towrite. Specifically,
-+ * we delay the towrite when:
-+ *   1. degraded stripe has a non-overwrite to the missing dev, AND this
-+ *      stripe has data in journal (for other devices).
-+ *
-+ *      In this case, when reading data for the non-overwrite dev, it is
-+ *      necessary to handle complex rmw of write back cache (prexor with
-+ *      orig_page, and xor with page). To keep read path simple, we would
-+ *      like to flush data in journal to RAID disks first, so complex rmw
-+ *      is handled in the write patch (handle_stripe_dirtying).
-+ *
-+ *   2. to be added
-+ */
-+static inline bool delay_towrite(struct r5dev *dev,
-+				   struct stripe_head_state *s)
++static void r5c_recovery_flush_data_only_stripes(struct r5l_log *log,
++						 struct r5l_recovery_ctx *ctx)
 +{
-+	return dev->towrite && !test_bit(R5_OVERWRITE, &dev->flags) &&
-+		!test_bit(R5_Insync, &dev->flags) && s->injournal;
++	struct mddev *mddev = log->rdev->mddev;
++	struct r5conf *conf = mddev->private;
++	struct stripe_head *sh, *next;
++
++	if (ctx->data_only_stripes == 0)
++		return;
++
++	log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_BACK;
++	set_bit(R5C_PRE_INIT_FLUSH, &conf->cache_state);
++
++	list_for_each_entry_safe(sh, next, &ctx->cached_list, lru) {
++		r5c_make_stripe_write_out(sh);
++		set_bit(STRIPE_HANDLE, &sh->state);
++		list_del_init(&sh->lru);
++		raid5_release_stripe(sh);
++	}
++
++	md_wakeup_thread(conf->mddev->thread);
++	/* reuse conf->wait_for_quiescent in recovery */
++	wait_event(conf->wait_for_quiescent,
++		   atomic_read(&conf->active_stripes) == 0);
++
++	clear_bit(R5C_PRE_INIT_FLUSH, &conf->cache_state);
++	log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_THROUGH;
 +}
 +
- static void
- schedule_reconstruction(struct stripe_head *sh, struct stripe_head_state *s,
- 			 int rcw, int expand)
-@@ -2958,7 +2982,7 @@ schedule_reconstruction(struct stripe_head *sh, struct stripe_head_state *s,
- 		for (i = disks; i--; ) {
- 			struct r5dev *dev = &sh->dev[i];
+ static int r5l_recovery_log(struct r5l_log *log)
+ {
+ 	struct mddev *mddev = log->rdev->mddev;
+@@ -2200,32 +2227,31 @@ static int r5l_recovery_log(struct r5l_log *log)
+ 	pos = ctx.pos;
+ 	ctx.seq += 10000;
  
--			if (dev->towrite) {
-+			if (dev->towrite && !delay_towrite(dev, s)) {
- 				set_bit(R5_LOCKED, &dev->flags);
- 				set_bit(R5_Wantdrain, &dev->flags);
- 				if (!expand)
-@@ -3535,10 +3559,25 @@ static void handle_stripe_fill(struct stripe_head *sh,
- 	 * midst of changing due to a write
- 	 */
- 	if (!test_bit(STRIPE_COMPUTE_RUN, &sh->state) && !sh->check_state &&
--	    !sh->reconstruct_state)
-+	    !sh->reconstruct_state) {
+-	if (ctx.data_only_stripes == 0) {
+-		log->next_checkpoint = ctx.pos;
+-		r5l_log_write_empty_meta_block(log, ctx.pos, ctx.seq++);
+-		ctx.pos = r5l_ring_add(log, ctx.pos, BLOCK_SECTORS);
+-	}
+ 
+ 	if ((ctx.data_only_stripes == 0) && (ctx.data_parity_stripes == 0))
+ 		pr_debug("md/raid:%s: starting from clean shutdown\n",
+ 			 mdname(mddev));
+-	else {
++	else
+ 		pr_debug("md/raid:%s: recovering %d data-only stripes and %d data-parity stripes\n",
+ 			 mdname(mddev), ctx.data_only_stripes,
+ 			 ctx.data_parity_stripes);
+ 
+-		if (ctx.data_only_stripes > 0)
+-			if (r5c_recovery_rewrite_data_only_stripes(log, &ctx)) {
+-				pr_err("md/raid:%s: failed to rewrite stripes to journal\n",
+-				       mdname(mddev));
+-				return -EIO;
+-			}
++	if (ctx.data_only_stripes == 0) {
++		log->next_checkpoint = ctx.pos;
++		r5l_log_write_empty_meta_block(log, ctx.pos, ctx.seq++);
++		ctx.pos = r5l_ring_add(log, ctx.pos, BLOCK_SECTORS);
++	} else if (r5c_recovery_rewrite_data_only_stripes(log, &ctx)) {
++		pr_err("md/raid:%s: failed to rewrite stripes to journal\n",
++		       mdname(mddev));
++		return -EIO;
+ 	}
+ 
+ 	log->log_start = ctx.pos;
+ 	log->seq = ctx.seq;
+ 	log->last_checkpoint = pos;
+ 	r5l_write_super(log, pos);
 +
-+		/* for degraded stripe with data in journal, do not handle
-+		 * read requests yet, instead, flush the stripe to raid
-+		 * disks first, this avoids handling complex rmw of write
-+		 * back cache (prexor with orig_page, and then xor with
-+		 * page) in the read path
-+		 */
-+		if (s->injournal && s->failed) {
-+			if (test_bit(STRIPE_R5C_CACHING, &sh->state))
-+				r5c_make_stripe_write_out(sh);
-+			goto out;
-+		}
-+
- 		for (i = disks; i--; )
- 			if (fetch_block(sh, s, i, disks))
- 				break;
-+	}
-+out:
- 	set_bit(STRIPE_HANDLE, &sh->state);
++	r5c_recovery_flush_data_only_stripes(log, &ctx);
+ 	return 0;
  }
  
-@@ -3694,7 +3733,8 @@ static int handle_stripe_dirtying(struct r5conf *conf,
- 	} else for (i = disks; i--; ) {
- 		/* would I have to read this buffer for read_modify_write */
- 		struct r5dev *dev = &sh->dev[i];
--		if ((dev->towrite || i == sh->pd_idx || i == sh->qd_idx ||
-+		if (((dev->towrite && !delay_towrite(dev, s)) ||
-+		     i == sh->pd_idx || i == sh->qd_idx ||
- 		     test_bit(R5_InJournal, &dev->flags)) &&
- 		    !test_bit(R5_LOCKED, &dev->flags) &&
- 		    !(uptodate_for_rmw(dev) ||
-@@ -3758,7 +3798,7 @@ static int handle_stripe_dirtying(struct r5conf *conf,
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index b8e45cc..0d2082d 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -266,6 +266,10 @@ static void do_release_stripe(struct r5conf *conf, struct stripe_head *sh,
+ 			    < IO_THRESHOLD)
+ 				md_wakeup_thread(conf->mddev->thread);
+ 		atomic_dec(&conf->active_stripes);
++		if (test_bit(R5C_PRE_INIT_FLUSH, &conf->cache_state) &&
++		    atomic_read(&conf->active_stripes) == 0)
++			wake_up(&sh->raid_conf->wait_for_quiescent);
++
+ 		if (!test_bit(STRIPE_EXPANDING, &sh->state)) {
+ 			if (!r5c_is_writeback(conf->log))
+ 				list_add_tail(&sh->lru, temp_inactive_list);
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index 3bb9ffc..c582086 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -564,6 +564,9 @@ enum r5_cache_state {
+ 	R5C_EXTRA_PAGE_IN_USE,	/* a stripe is using disk_info.extra_page
+ 				 * for prexor
+ 				 */
++	R5C_PRE_INIT_FLUSH,	/* flushing data only stripes recovered from
++				 * the journal
++				 */
+ };
  
- 		for (i = disks; i--; ) {
- 			struct r5dev *dev = &sh->dev[i];
--			if ((dev->towrite ||
-+			if (((dev->towrite && !delay_towrite(dev, s)) ||
- 			     i == sh->pd_idx || i == sh->qd_idx ||
- 			     test_bit(R5_InJournal, &dev->flags)) &&
- 			    !test_bit(R5_LOCKED, &dev->flags) &&
+ struct r5conf {
 -- 
 2.9.3
 
