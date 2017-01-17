@@ -1,48 +1,35 @@
-From: Coly Li <colyli@suse.de>
-Subject: Re: performance of raid5 on fast devices
-Date: Tue, 17 Jan 2017 13:04:57 +0800
-Message-ID: <f72f7be4-9b2d-6bf9-1b61-eb066ef35343@suse.de>
-References: <CA+Dh761_kVPEcRdFEAo72Wif_t-G7RpgyoKGetEFveyMpaYD1w@mail.gmail.com>
- <65f0f922-fae0-0135-463d-86115cffbf33@hardwarefreak.org>
+From: Eric Schwarz <eas@sw-optimization.com>
+Subject: Soft-Raid 0 Performance | Transfer two Data-Streams (CPU+FPGA) to the
+ same Soft-Raid
+Date: Tue, 17 Jan 2017 16:00:47 +0100
+Message-ID: <0e04b53af8bdf4f39a08b31ea4499626@sw-optimization.com>
+References: <21298bd64ef0dc83b29bd45362ead46c@sw-optimization.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <65f0f922-fae0-0135-463d-86115cffbf33@hardwarefreak.org>
+In-Reply-To: <21298bd64ef0dc83b29bd45362ead46c@sw-optimization.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jake Yao <jgyao1@gmail.com>
-Cc: Stan Hoeppner <stan@hardwarefreak.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2017/1/17 上午11:10, Stan Hoeppner wrote:
-> On 01/16/2017 08:35 PM, Jake Yao wrote:
->> I have a raid5 array on 4 NVMe drives, and the performance on the
->> array is only marginally better than a single drive. Unlike a similar
->> raid5 array on 4 SAS SSD or HDD,  the performance on array is 3x
->> better than a single drive, which is expected.
->>
->> It looks like when the single kernel thread associated with the raid
->> device running at 100%, the array performance hit its peak. This can
->> happen easily for fast devices like NVMe.
-> The md raid personalities are limited to a single kernel write thread. 
-> Work is in progress to alleviate this bottleneck by using multiple write
-> threads.  When it will hit mainline I don't know.
+Hello mailing list,
 
-If you want 8 writing threads, and your md raid5 device is /dev/md0, you
-may have a try with,
-	echo 8 > /sys/block/md0/md/group_thread_cnt
+I have got two questions:
 
-> 
->> This can reproduced by creating a raid5 with 4 ramdisks as well, and
->> comparing performance on the array and one ramdisk. Sometimes the
->> performance on the array is worse than a single ramdisk.
->>
->> The kernel version is 4.9.0-rc3 and mdadm is release 3.4, no write
->> journal is configured.
->>
->> Is this a known issue?
+1.) I have set-up a softraid (raid level 0) with mdadm using two M.2 
+modules. For one module the throughput is ~350MB/s (no mdadm) for two 
+modules the throughput is ~500MB/s which is less than factor 1,5 of the 
+throughput of a single drive. The filesystem used is ext4. Is there 
+someone having some values for comparison? For me the throughput gain 
+seems to be too little. The test was done using a HP Z840 workstation.
 
-It was, but you are on 4.9 kernel, group_thread_cnt should work for you.
+2.) We want to configure a softraid (raid level 0) with mdadm which can 
+be used from within Linux but also it should be possible to write data 
+to the raid w/ DMA directly from the FPGA which is also connected to the 
+PCIe bus as a slave as well as the M.2 modules. How can that be achieved 
+using existing kernel infrastructure?
 
-Coly
-
+Many thanks for helpful replies
+Eric
