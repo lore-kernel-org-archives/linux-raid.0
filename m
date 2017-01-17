@@ -1,35 +1,65 @@
-From: Eric Schwarz <eas@sw-optimization.com>
-Subject: Soft-Raid 0 Performance | Transfer two Data-Streams (CPU+FPGA) to the
- same Soft-Raid
-Date: Tue, 17 Jan 2017 16:00:47 +0100
-Message-ID: <0e04b53af8bdf4f39a08b31ea4499626@sw-optimization.com>
-References: <21298bd64ef0dc83b29bd45362ead46c@sw-optimization.com>
+From: Jake Yao <jgyao1@gmail.com>
+Subject: Re: performance of raid5 on fast devices
+Date: Tue, 17 Jan 2017 10:28:35 -0500
+Message-ID: <CA+Dh763Ttvnt9CSEUZ0QwPOLCaZq6VVXmj4OoheR7WTO6o4Pbw@mail.gmail.com>
+References: <CA+Dh761_kVPEcRdFEAo72Wif_t-G7RpgyoKGetEFveyMpaYD1w@mail.gmail.com>
+ <20170117101043.78e80bdc@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <21298bd64ef0dc83b29bd45362ead46c@sw-optimization.com>
+In-Reply-To: <20170117101043.78e80bdc@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Roman Mamedov <rm@romanrm.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello mailing list,
+Thanks for the response.
 
-I have got two questions:
+I am using fio for performance measurement.
 
-1.) I have set-up a softraid (raid level 0) with mdadm using two M.2 
-modules. For one module the throughput is ~350MB/s (no mdadm) for two 
-modules the throughput is ~500MB/s which is less than factor 1,5 of the 
-throughput of a single drive. The filesystem used is ext4. Is there 
-someone having some values for comparison? For me the throughput gain 
-seems to be too little. The test was done using a HP Z840 workstation.
+The chunk size of raid5 array is 32K, and the block size in fio is set
+to 96K(3x chunk size) which is also the optimal_io_size, ioengine is
+set to libaio with direct IO.
 
-2.) We want to configure a softraid (raid level 0) with mdadm which can 
-be used from within Linux but also it should be possible to write data 
-to the raid w/ DMA directly from the FPGA which is also connected to the 
-PCIe bus as a slave as well as the M.2 modules. How can that be achieved 
-using existing kernel infrastructure?
+Increasing stripe_cache_size does not help much, and it looks like the
+write is limited by the single kernel thread as mentioned earlier.
 
-Many thanks for helpful replies
-Eric
+
+On Tue, Jan 17, 2017 at 12:10 AM, Roman Mamedov <rm@romanrm.net> wrote:
+> On Mon, 16 Jan 2017 21:35:21 -0500
+> Jake Yao <jgyao1@gmail.com> wrote:
+>
+>> I have a raid5 array on 4 NVMe drives, and the performance on the
+>> array is only marginally better than a single drive. Unlike a similar
+>> raid5 array on 4 SAS SSD or HDD,  the performance on array is 3x
+>> better than a single drive, which is expected.
+>>
+>> It looks like when the single kernel thread associated with the raid
+>> device running at 100%, the array performance hit its peak. This can
+>> happen easily for fast devices like NVMe.
+>>
+>> This can reproduced by creating a raid5 with 4 ramdisks as well, and
+>> comparing performance on the array and one ramdisk. Sometimes the
+>> performance on the array is worse than a single ramdisk.
+>>
+>> The kernel version is 4.9.0-rc3 and mdadm is release 3.4, no write
+>> journal is configured.
+>>
+>> Is this a known issue?
+>
+> How do you measure the performance?
+>
+> Sure it may be CPU-bound in the end, but also why not try the usual
+> optimization tricks, such as:
+>
+>   * increase your stripe_cache_size, it's not uncommon that this can speed up
+>     linear writes by as much as several times;
+>
+>   * if you meant reads, you could look into read-ahead settings for the array;
+>
+>   * and in both cases, try experimenting with different stripe sizes (if you
+>     were using 512K, try with 64K stripes).
+>
+> --
+> With respect,
+> Roman
