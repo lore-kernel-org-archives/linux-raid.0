@@ -1,52 +1,70 @@
-From: Benjammin2068 <benjammin2068@gmail.com>
-Subject: Re: Recommendation on new system Arrays
-Date: Tue, 17 Jan 2017 12:57:15 -0600
-Message-ID: <96a49827-f5ff-8f60-7f51-7bbef02b79a1@gmail.com>
-References: <4259f5ef-42f7-ad4c-c8af-7b6e5c19354c@gmail.com>
- <5870BD30.3020302@youngman.org.uk>
- <6017e35e-6328-bf8b-fb25-eb8afbf163ba@gmail.com>
- <030ca00a-f024-14a0-d5b9-a9497811910e@turmel.org>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: [PATCH] Fix oddity where mdadm did not recognise a relative path
+Date: Tue, 17 Jan 2017 19:07:02 +0000
+Message-ID: <587E6B56.8090704@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------090404000605080905040009"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <030ca00a-f024-14a0-d5b9-a9497811910e@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 01/12/2017 09:39 AM, Phil Turmel wrote:
-> Hi Ben,
->
-> {Convention on kernel.org is reply-to-all -- please do.}
->
-> On 01/07/2017 11:04 PM, Benjammin2068 wrote:
->
->> Also in other news.... (maybe someone from this list can help since they've run into it before)
->>
->> The motherboard of the computer has its own SATA controller as usual... as well as this Avago SAS controller.
->>
->> When CentOS 7 boots up, it enumerates the external SAS drives starting at /dev/sda instead of the motherboard's drives.
->>
->> The OCD in me wants the MB's SATA drives as /dev/sda-sdd.
->>
->> Where does one even control that enumeration order? udev? Eeks.
-> You cannot control the order.  Period.  It is pseudo-random based on
-> hardware responses to driver loads.  New kernels can have entirely
-> different orders of devices, and if parallel loads are allowed, you can
-> have one controller get sd[aceg] while another gets sd[bdfh]. The entire
-> system of LABEL= and UUID= support via initramfs and blkid is intended
-> make fstab and other utilities deterministic in spite of varying names.
->
-> mdadm has always been resistant to naming problems thanks to its device
-> #s and UUIDs in the superblocks.
+This is a multi-part message in MIME format.
+--------------090404000605080905040009
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 
-Yea, I got that and understand... just the OCD in me. (sigh)
 
-As for Reply/Reply-All -- most of the lists I happen to subscribe to "reply-to-list" (through one mechanism or another) as the default for "reply"... :(
+--------------090404000605080905040009
+Content-Type: text/x-patch;
+ name="0001-Fix-oddity-where-mdadm-did-not-recognise-a-relative-.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename*0="0001-Fix-oddity-where-mdadm-did-not-recognise-a-relative-.pa";
+ filename*1="tch"
 
-The habit is hard to break.
+From 4ce784307a9004124392ce48432960d7ca94d0bf Mon Sep 17 00:00:00 2001
+From: Wol <anthony@youngman.org.uk>
+Date: Tue, 17 Jan 2017 17:47:05 +0000
+Subject: [PATCH] Fix oddity where mdadm did not recognise a relative path
 
-Thanks!
+mdadm assumed that a pathname started with a "/", while an array
+name didn't. This alters the logic so that if the first character
+is not a "/" it tries to open an array, and if that fails it drops
+through to the pathname code rather than terminating immediately
+with an error.
 
- -Ben
+Signed-off-by: Wol <anthony@youngman.org.uk>
+---
+ mdadm.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/mdadm.c b/mdadm.c
+index c3a265b..b5d89e4 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -1899,12 +1899,12 @@ static int misc_list(struct mddev_dev *devlist,
+ 			rv |= SetAction(dv->devname, c->action);
+ 			continue;
+ 		}
+-		if (dv->devname[0] == '/')
+-			mdfd = open_mddev(dv->devname, 1);
+-		else {
+-			mdfd = open_dev(dv->devname);
+-			if (mdfd < 0)
+-				pr_err("Cannot open %s\n", dv->devname);
++		switch(dv->devname[0] == '/') {
++			case 0:
++				mdfd = open_dev(dv->devname);
++				if (mdfd >= 0) break;
++			case 1:
++				mdfd = open_mddev(dv->devname, 1);  
+ 		}
+ 		if (mdfd>=0) {
+ 			switch(dv->disposition) {
+-- 
+2.7.3
+
+
+--------------090404000605080905040009--
