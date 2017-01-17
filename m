@@ -1,46 +1,61 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [patch] block: add blktrace C events for bio-based drivers
-Date: Tue, 17 Jan 2017 17:39:06 -0500
-Message-ID: <x49lgu9s451.fsf@segfault.boston.devel.redhat.com>
-References: <x49ziips61y.fsf@segfault.boston.devel.redhat.com>
-        <f3044f42-3134-c577-068f-bd2750528b32@kernel.dk>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <f3044f42-3134-c577-068f-bd2750528b32@kernel.dk> (Jens Axboe's
-        message of "Tue, 17 Jan 2017 14:07:32 -0800")
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, agk@redhat.com, snitzer@redhat.com, dm-devel@redhat.com, shli@kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de
+From: Ram Pai <linuxram@us.ibm.com>
+Subject: [RFC PATCH v2] DM: dm-inplace-compress: inplace compressed DM target
+Date: Tue, 17 Jan 2017 15:59:05 -0800
+Message-ID: <1484697546-20917-1-git-send-email-linuxram@us.ibm.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Cc: agk@redhat.com, snitzer@redhat.com, corbet@lwn.net, shli@kernel.org, hbabu@us.ibm.com
 List-Id: linux-raid.ids
 
-Jens Axboe <axboe@kernel.dk> writes:
+This  patch provides a generic device-mapper inplace compression
+device.  Originally written by Shaohua Li.
+https://www.redhat.com/archives/dm-devel/2013-December/msg00143.html
 
-> On 01/17/2017 01:57 PM, Jeff Moyer wrote:
->> Only a few bio-based drivers actually generate blktrace completion
->> (C) events.  Instead of changing all bio-based drivers to call
->> trace_block_bio_complete, move the tracing to bio_complete, and remove
->> the explicit tracing from the few drivers that actually do it.  After
->> this patch, there is exactly one caller of trace_block_bio_complete
->> and one caller of trace_block_rq_complete.  More importantly, all
->> bio-based drivers now generate C events, which is useful for
->> performance analysis.
->
-> I like the change, hate the naming. I'd prefer one of two things:
->
-> - Add bio_endio_complete() instead. That name sucks too, the
->   important part is flipping the __name() to have a trace
->   version instead.
+I have optimized and hardened the code.
 
-I had also considered bio_endio_notrace().
+Testing:
+-------
+This compression block device  is  tested in the following scenarios
+a) backing a ext4 filesystem 
+b) backing swap
+Its tested on a PPC64 system only.
+More    testing  is  needed on different architectures.
 
-> - Mark the bio as trace completed, and keep the naming. Since
->   it's only off the completion path, that can be just marking
->   the bi_flags non-atomically.
->
-> I probably prefer the latter.
+TODO:
+-----
+For testing, the code was modified to use GFP_ATOMIC allocations when   device
+is   used as swap. A more dynamic mechanism is needed to switch allocation
+strategy based on usage. Probably a sysfs interface?
 
-Hmm, okay.  I'll take a crack at that.
+Version v1:
+	Comments from Alasdair have been incorporated.
+	https://www.redhat.com/archives/dm-devel/2013-December/msg00144.html
 
-Thanks!
-Jeff
+Version v2:
+	All patches are merged into a single patch.
+	Major code re-arrangement.
+	Data and metablocks allocated based on the length of the device
+	map rather than the size of the backing device.
+        Size   of   each entry   in  the bitmap array is explicitly set
+	 to 32bits.
+	Attempt  to  reuse  the  provided  bio  buffer  space   instead  of
+	 allocating a new one.
+
+Your comments to improve the code is very much appreciated.
+
+Ram Pai (1):
+  From: Shaohua Li <shli@kernel.org>
+
+ .../device-mapper/dm-inplace-compress.txt          |  139 ++
+ drivers/md/Kconfig                                 |    6 +
+ drivers/md/Makefile                                |    2 +
+ drivers/md/dm-inplace-compress.c                   | 2104 ++++++++++++++++++++
+ drivers/md/dm-inplace-compress.h                   |  185 ++
+ 5 files changed, 2436 insertions(+)
+ create mode 100644 Documentation/device-mapper/dm-inplace-compress.txt
+ create mode 100644 drivers/md/dm-inplace-compress.c
+ create mode 100644 drivers/md/dm-inplace-compress.h
+
+-- 
+1.8.3.1
