@@ -1,85 +1,32 @@
-From: MasterPrenium <masterprenium.lkml@gmail.com>
-Subject: Re: PROBLEM: Kernel BUG with raid5 soft + Xen + DRBD -
-	invalid opcode
-Date: Tue, 17 Jan 2017 02:54:06 +0100
-Message-ID: <128ad8a8-3aaf-f5f1-3709-373ad504ca44@gmail.com>
-References: <585D6C34.2020908@gmail.com>
- <20170104223015.cr6vtyhxuwxrg76g@kernel.org>
- <e56edc2b-f2ad-2ab1-4184-5d7cad80085a@gmail.com>
- <20170105193745.qnmqsussxy7nasdn@kernel.org>
- <2717981a-4308-3f7b-15c6-f384a41fd445@gmail.com>
- <20170109224435.sfyrvkxhajgrq2i5@kernel.org>
+From: Jake Yao <jgyao1@gmail.com>
+Subject: performance of raid5 on fast devices
+Date: Mon, 16 Jan 2017 21:35:21 -0500
+Message-ID: <CA+Dh761_kVPEcRdFEAo72Wif_t-G7RpgyoKGetEFveyMpaYD1w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
-Content-Transfer-Encoding: base64
-Return-path: <xen-devel-bounces@lists.xen.org>
-In-Reply-To: <20170109224435.sfyrvkxhajgrq2i5@kernel.org>
-List-Unsubscribe: <https://lists.xen.org/cgi-bin/mailman/options/xen-devel>,
- <mailto:xen-devel-request@lists.xen.org?subject=unsubscribe>
-List-Post: <mailto:xen-devel@lists.xen.org>
-List-Help: <mailto:xen-devel-request@lists.xen.org?subject=help>
-List-Subscribe: <https://lists.xen.org/cgi-bin/mailman/listinfo/xen-devel>,
- <mailto:xen-devel-request@lists.xen.org?subject=subscribe>
-Errors-To: xen-devel-bounces@lists.xen.org
-Sender: "Xen-devel" <xen-devel-bounces@lists.xen.org>
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, xen-users@lists.xen.org, "MasterPrenium@gmail.com" <MasterPrenium@gmail.com>, linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-SGkgU2hhb2h1YSwKCkkndmUgbWFkZSBzb21lIG5ldyBsaXR0bGUgdGVzdHMsIG1heWJlIGl0IGNh
-biBoZWxwLgoKLSBJIHRyaWVkIGNyZWF0aW5nIHRoZSBSQUlEIDUgc3RhY2sgd2l0aCBvbmx5IDIg
-ZHJpdmVzIChtZGFkbSAtLWNyZWF0ZSAKL2Rldi9tZDEwIC0tcmFpZC1kZXZpY2VzPTMgLS1sZXZl
-bD01IC9kZXYvc2RjMSAvZGV2L3NkZDEgbWlzc2luZykuClRoZSBzYW1lIGlzc3VlIGlzIGhhcHBl
-bmluZy4KLSBidXQgb25lIHRpbWUgKHN0aWxsIHdpdGggMi8zIGRyaXZlcyksIEkgd2FzIG5vdCBh
-YmxlIHRvIGNyYXNoIHRoZSAKa2VybmVsLCB3aXRoIGV4YWN0bHkgdGhlIHNhbWUgcHJvY2VkdXJl
-IGFzIHByZXZpb3VzLiBFdmVuIHdpdGggCnJlLWNyZWF0aW5nIGZpbGVzeXN0ZW1zIGVjdC4KSW4g
-b3JkZXIgdG8gcmUtcHJvZHVjZSB0aGUgQlVHIEkgaGFkIHRvIHJlLWNyZWF0ZSB0aGUgYXJyYXku
-CgpDYW4gdGhpcyBiZSBsaW5rZWQgdG8gdGhpcyBtZXNzYWdlID8gOgpbICAxNTUuNjY3NDU2XSBt
-ZDEwOiBXYXJuaW5nOiBEZXZpY2Ugc2RjMSBpcyBtaXNhbGlnbmVkCgpJIGRvbid0IGtub3cgaG93
-IHRvICJhbGlnbiIgYSBkcml2ZSBpbiBhIFJBSUQgc3RhY2suLi4gVGhlIHBhcnRpdGlvbiBpcyAK
-Y29ycmVjdGx5IGFsaWduIChhcyAicGFydGVkIiBzYXlzKS4KCi0gSW4gYW5vdGhlciB0ZXN0IChz
-dGlsbCAyLzMgZHJpdmVzIGluIHRoZSBzdGFjayksIEkgZGlkbid0IGdvdCB0aGUgCmtlcm5lbCBj
-cmFzaCwgYnV0IEkgaGFkIDEwMCUgaW8gd2FpdCBvbiBjcHUuIFRyeWluZyB0byByZWJvb3QsIGZp
-bmFsbHkgCmdpdmUgbWUgdGhpcyBwcmludGsgbWVzc2FnZXMgOiBodHRwOi8vcGFzdGViaW4uY29t
-L3V6VkhVVXJDCgpJZiB5b3UgaGF2ZSBhbnkgcGF0Y2ggdG8gZ2l2ZSBtZSAobWF5YmUgc29tZXRo
-aW5nIHRvIGJlIG1vcmUgdmVyYm9zZSAKYWJvdXQgdGhlIGlzc3VlKSwgcGxlYXNlIHRlbGwgbWUs
-IEknbGwgdGVzdCBpdCBhcyBpdCdzIGEgcmVhbGx5IGJsb2NraW5nIAppc3N1ZS4uLgoKQmVzdCBy
-ZWdhcmRzLAoKTWFzdGVyUHJlbml1bQoKCkxlIDA5LzAxLzIwMTcgw6AgMjM6NDQsIFNoYW9odWEg
-TGkgYSDDqWNyaXQgOgo+IE9uIFN1biwgSmFuIDA4LCAyMDE3IGF0IDAyOjMxOjE1UE0gKzAxMDAs
-IE1hc3RlclByZW5pdW0gd3JvdGU6Cj4+IEhlbGxvLAo+Pgo+PiBSZXBsaWVzIGJlbG93ICsgOgo+
-PiAtIEkgZG9uJ3Qga25vdyBpZiB0aGlzIGNhbiBoZWxwIGJ1dCBhZnRlciB0aGUgY3Jhc2gsIHdo
-ZW4gdGhlIHN5c3RlbQo+PiByZWJvb3RzLCB0aGUgUmFpZCA1IHN0YWNrIGlzIHJlLXN5bmNocm9u
-aXppbmcKPj4gWyAgIDM3LjAyODIzOV0gbWQxMDogV2FybmluZzogRGV2aWNlIHNkYzEgaXMgbWlz
-YWxpZ25lZAo+PiBbICAgMzcuMDI4NTQxXSBjcmVhdGVkIGJpdG1hcCAoMTUgcGFnZXMpIGZvciBk
-ZXZpY2UgbWQxMAo+PiBbICAgMzcuMDMwNDMzXSBtZDEwOiBiaXRtYXAgaW5pdGlhbGl6ZWQgZnJv
-bSBkaXNrOiByZWFkIDEgcGFnZXMsIHNldCA1OSBvZgo+PiAyOTgwNyBiaXRzCj4+Cj4+IC0gU29t
-ZXRpbWVzIHRoZSBrZXJuZWwgY29tcGxldGVseSBjcmFzaCAobG9zdCBzZXJpYWwgKyBuZXR3b3Jr
-IGNvbm5lY3Rpb24pLAo+PiBzb21ldGltZXMgb25seSBnb3QgdGhlICJCVUciIGR1bXAsIGJ1dCBz
-dGlsbCBoYXZlIG5ldHdvcmsgYWNjZXNzIChidXQgYQo+PiByZWJvb3QgaXMgaW1wb3NzaWJsZSwg
-bmVlZCB0byByZXNldCB0aGUgc3lzdGVtKS4KPj4KPj4gLSBZb3UgY2FuIGZpbmQgYmxrdHJhY2Ug
-aGVyZSAod2hpbGUgcnVubmluZyBmaW8pLCBJIGhvcGUgaXQncyBjb21wbGV0ZSBzaW5jZQo+PiB0
-aGUgZW5kIG9mIHRoZSBmaWxlIGlzIHdoZW4gdGhlIGtlcm5lbCBjcmFzaGVkIDogaHR0cHM6Ly9n
-b28uZ2wvWDlqWjUwCj4gTG9va3MgbW9zdCBhcmUgbm9ybWFsIGZ1bGwgc3RyaXBlIHdyaXRlcy4K
-PiAgIAo+Pj4gSSdtIHRyeWluZyB0byByZXByb2R1Y2UsIGJ1dCBubyBzdWNjZXNzLiBTbwo+Pj4g
-ZXh0NC0+YnRyZnMtPnJhaWQ1LCBjcmFzaAo+Pj4gYnRyZnMtPnJhaWQ1LCBubyBjcmFzaAo+Pj4g
-cmlnaHQ/IGRvZXMgc3Vidm9sdW1lIG1hdHRlcj8gV2hlbiB5b3UgY3JlYXRlIHRoZSByYWlkNSBh
-cnJheSwgZG9lcyBhZGRpbmcKPj4+ICctLWFzc3VtZS1jbGVhbicgb3B0aW9uIGNoYW5nZSB0aGUg
-YmVoYXZpb3I/IEknZCBsaWtlIHRvIG5hcnJvdyBkb3duIHRoZSBpc3N1ZS4KPj4+IElmIHlvdSBj
-YW4gY2FwdHVyZSB0aGUgYmxrdHJhY2UgdG8gdGhlIHJhaWQ1IGFycmF5LCBpdCB3b3VsZCBiZSBn
-cmVhdCB0byBoaW50Cj4+PiB1cyB3aGF0IGtpbmQgb2YgSU8gaXQgaXMuCj4+IFllcyBDb3JyZWN0
-Lgo+PiBUaGUgc3Vidm9sdW1lIGRvZXNuJ3QgbWF0dGVyLgo+PiAtLSBhc3N1bWUtY2xlYW4gZG9l
-c24ndCBjaGFuZ2UgdGhlIGJlaGF2aW91ci4KPiBzbyBpdCdzIG5vdCBhIHJlc3luYyBpc3N1ZS4K
-Pgo+PiBEb24ndCBmb3JnZXQgdGhhdCB0aGUgc3lzdGVtIG5lZWRzIHRvIGJlIHJ1bm5pbmcgb24g
-eGVuIHRvIGNyYXNoLCB3aXRob3V0Cj4+IChvbiBuYXRpdmUga2VybmVsKSBpdCBkb2Vzbid0IGNy
-YXNoIChvciBhdCBsZWFzdCwgSSB3YXMgbm90IGFibGUgdG8gbWFrZSBpdAo+PiBjcmFzaCkuCj4+
-Pj4gUmVnYXJkaW5nIHlvdXIgcGF0Y2gsIEkgY2FuJ3QgZmluZCBpdC4gSXMgaXQgdGhlIG9uZSBz
-ZW50IGJ5IEtvbnN0YW50aW4KPj4+PiBLaGxlYm5pa292ID8KPj4+IFJpZ2h0Lgo+PiBJdCBkb2Vz
-bid0IGhlbHAgOiguIE1heWJlIHRoZSBjcmFzaCBpcyBoYXBwZW5pbmcgYSBsaXR0bGUgYml0IGxh
-dGVyLgo+IG9rLCB0aGUgcGF0Y2ggaXMgdW5saWtlbHkgaGVscGZ1bCwgc2luY2UgdGhlIElPIHNp
-emUgaXNuJ3QgdmVyeSBiaWcuCj4KPiBEb24ndCBoYXZlIGdvb2QgaWRlYSB5ZXQuIE15IGJlc3Qg
-Z3Vlc3Mgc28gZmFyIGlzIHZpcnR1YWwgbWFjaGluZSBpbnRyb2R1Y2VzCj4gZXh0cmEgZGVsYXks
-IHdoaWNoIG1pZ2h0IHRyaWdnZXIgc29tZSByYWNlIGNvbmRpdGlvbnMgd2hpY2ggYXJlbid0IHNl
-ZW4gaW4KPiBuYXRpdmUuICBJJ2xsIGNoZWNrIGlmIEkgY291bGQgZmluZCBzb21ldGhpbmcgbG9j
-YWxseS4KPgo+IFRoYW5rcywKPiBTaGFvaHVhCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX18KWGVuLWRldmVsIG1haWxpbmcgbGlzdApYZW4tZGV2ZWxAbGlz
-dHMueGVuLm9yZwpodHRwczovL2xpc3RzLnhlbi5vcmcveGVuLWRldmVsCg==
+I have a raid5 array on 4 NVMe drives, and the performance on the
+array is only marginally better than a single drive. Unlike a similar
+raid5 array on 4 SAS SSD or HDD,  the performance on array is 3x
+better than a single drive, which is expected.
+
+It looks like when the single kernel thread associated with the raid
+device running at 100%, the array performance hit its peak. This can
+happen easily for fast devices like NVMe.
+
+This can reproduced by creating a raid5 with 4 ramdisks as well, and
+comparing performance on the array and one ramdisk. Sometimes the
+performance on the array is worse than a single ramdisk.
+
+The kernel version is 4.9.0-rc3 and mdadm is release 3.4, no write
+journal is configured.
+
+Is this a known issue?
+
+Please cc me on the email as I am not on the mail list.
+
+Thanks!
