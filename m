@@ -1,70 +1,152 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [patch] block: add blktrace C events for bio-based
-	drivers
-Date: Wed, 18 Jan 2017 11:01:46 -0500
-Message-ID: <x49ziiol5lh.fsf@segfault.boston.devel.redhat.com>
-References: <x49ziips61y.fsf@segfault.boston.devel.redhat.com>
-	<f3044f42-3134-c577-068f-bd2750528b32@kernel.dk>
+From: Song Liu <songliubraving@fb.com>
+Subject: [PATCH 2/2] md/r5cache: improve journal device efficiency
+Date: Wed, 18 Jan 2017 15:56:50 -0800
+Message-ID: <20170118235650.2430923-2-songliubraving@fb.com>
+References: <20170118235650.2430923-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <f3044f42-3134-c577-068f-bd2750528b32@kernel.dk> (Jens Axboe's
-	message of "Tue, 17 Jan 2017 14:07:32 -0800")
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-raid@vger.kernel.org, snitzer@redhat.com, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, dm-devel@redhat.com, shli@kernel.org, hch@lst.de, agk@redhat.com
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170118235650.2430923-1-songliubraving@fb.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuan@kylinos.cn, liuyun01@kylinos.cn, Song Liu <songliubraving@fb.com>, Jes.Sorensen@redhat.com
 List-Id: linux-raid.ids
 
-Hi, Jens,
+It is important to be able to flush all stripes in raid5-cache.
+Therefore, we need reserve some space on the journal device for
+these flushes. If flush operation includes pending writes to the
+stripe, we need to reserve (conf->raid_disk + 1) pages per stripe
+for the flush out. This reduces the efficiency of journal space.
+If we exclude these pending writes from flush operation, we only
+need (conf->max_degraded + 1) pages per stripe.
 
-Jens Axboe <axboe@kernel.dk> writes:
+With this patch, when log space is critical (R5C_LOG_CRITICAL=1),
+pending writes will be excluded from stripe flush out. Therefore,
+we can reduce reserved space for flush out and thus improve journal
+device efficiency.
 
-> I like the change, hate the naming. I'd prefer one of two things:
->
-> - Add bio_endio_complete() instead. That name sucks too, the
->   important part is flipping the __name() to have a trace
->   version instead.
+Signed-off-by: Song Liu <songliubraving@fb.com>
+---
+ drivers/md/raid5-cache.c | 15 +++------------
+ drivers/md/raid5.c       | 42 ++++++++++++++++++++++++++++++++----------
+ 2 files changed, 35 insertions(+), 22 deletions(-)
 
-ITYM a notrace version.  By default, we want tracing for bio_endio.  The
-only callers that need the inverse of that are in the request-based
-path, and there are only 2 of them.
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index b31ae41..c027f1b 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -387,17 +387,8 @@ void r5c_check_cached_full_stripe(struct r5conf *conf)
+ /*
+  * Total log space (in sectors) needed to flush all data in cache
+  *
+- * Currently, writing-out phase automatically includes all pending writes
+- * to the same sector. So the reclaim of each stripe takes up to
+- * (conf->raid_disks + 1) pages of log space.
+- *
+- * To totally avoid deadlock due to log space, the code reserves
+- * (conf->raid_disks + 1) pages for each stripe in cache, which is not
+- * necessary in most cases.
+- *
+- * To improve this, we will need writing-out phase to be able to NOT include
+- * pending writes, which will reduce the requirement to
+- * (conf->max_degraded + 1) pages per stripe in cache.
++ * To flush all stripes in cache, we need (conf->max_degraded + 1)
++ * pages per stripe in cache.
+  */
+ static sector_t r5c_log_required_to_flush_cache(struct r5conf *conf)
+ {
+@@ -406,7 +397,7 @@ static sector_t r5c_log_required_to_flush_cache(struct r5conf *conf)
+ 	if (!r5c_is_writeback(log))
+ 		return 0;
+ 
+-	return BLOCK_SECTORS * (conf->raid_disks + 1) *
++	return BLOCK_SECTORS * (conf->max_degraded + 1) *
+ 		atomic_read(&log->stripe_in_journal_count);
+ }
+ 
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 193acd3..55a6156 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -2953,13 +2953,35 @@ sector_t raid5_compute_blocknr(struct stripe_head *sh, int i, int previous)
+  *      like to flush data in journal to RAID disks first, so complex rmw
+  *      is handled in the write patch (handle_stripe_dirtying).
+  *
+- *   2. to be added
++ *   2. when journal space is critical (R5C_LOG_CRITICAL=1)
++ *
++ *      It is important to be able to flush all stripes in raid5-cache.
++ *      Therefore, we need reserve some space on the journal device for
++ *      these flushes. If flush operation includes pending writes to the
++ *      stripe, we need to reserve (conf->raid_disk + 1) pages per stripe
++ *      for the flush out. If we exclude these pending writes from flush
++ *      operation, we only need (conf->max_degraded + 1) pages per stripe.
++ *      Therefore, excluding pending writes in these cases enables more
++ *      efficient use of the journal device.
++ *
++ *      Note: To make sure the stripe makes progress, we only delay
++ *      towrite for stripes with data already in journal (injournal > 0).
++ *      When LOG_CRITICAL, stripes with injournal == 0 will be sent to
++ *      no_space_stripes list.
+  */
+-static inline bool delay_towrite(struct r5dev *dev,
+-				   struct stripe_head_state *s)
++static inline bool delay_towrite(struct r5conf *conf,
++				 struct r5dev *dev,
++				 struct stripe_head_state *s)
+ {
+-	return dev->towrite && !test_bit(R5_OVERWRITE, &dev->flags) &&
+-		!test_bit(R5_Insync, &dev->flags) && s->injournal;
++	/* case 1 above */
++	if (dev->towrite && !test_bit(R5_OVERWRITE, &dev->flags) &&
++	    !test_bit(R5_Insync, &dev->flags) && s->injournal)
++		return true;
++	/* case 2 above */
++	if (test_bit(R5C_LOG_CRITICAL, &conf->cache_state) &&
++	    s->injournal > 0)
++		return true;
++	return false;
+ }
+ 
+ static void
+@@ -2982,7 +3004,7 @@ schedule_reconstruction(struct stripe_head *sh, struct stripe_head_state *s,
+ 		for (i = disks; i--; ) {
+ 			struct r5dev *dev = &sh->dev[i];
+ 
+-			if (dev->towrite && !delay_towrite(dev, s)) {
++			if (dev->towrite && !delay_towrite(conf, dev, s)) {
+ 				set_bit(R5_LOCKED, &dev->flags);
+ 				set_bit(R5_Wantdrain, &dev->flags);
+ 				if (!expand)
+@@ -3733,7 +3755,7 @@ static int handle_stripe_dirtying(struct r5conf *conf,
+ 	} else for (i = disks; i--; ) {
+ 		/* would I have to read this buffer for read_modify_write */
+ 		struct r5dev *dev = &sh->dev[i];
+-		if (((dev->towrite && !delay_towrite(dev, s)) ||
++		if (((dev->towrite && !delay_towrite(conf, dev, s)) ||
+ 		     i == sh->pd_idx || i == sh->qd_idx ||
+ 		     test_bit(R5_InJournal, &dev->flags)) &&
+ 		    !test_bit(R5_LOCKED, &dev->flags) &&
+@@ -3757,8 +3779,8 @@ static int handle_stripe_dirtying(struct r5conf *conf,
+ 		}
+ 	}
+ 
+-	pr_debug("for sector %llu, rmw=%d rcw=%d\n",
+-		(unsigned long long)sh->sector, rmw, rcw);
++	pr_debug("for sector %llu state 0x%lx, rmw=%d rcw=%d\n",
++		 (unsigned long long)sh->sector, sh->state, rmw, rcw);
+ 	set_bit(STRIPE_HANDLE, &sh->state);
+ 	if ((rmw < rcw || (rmw == rcw && conf->rmw_level == PARITY_PREFER_RMW)) && rmw > 0) {
+ 		/* prefer read-modify-write, but need to get some data */
+@@ -3798,7 +3820,7 @@ static int handle_stripe_dirtying(struct r5conf *conf,
+ 
+ 		for (i = disks; i--; ) {
+ 			struct r5dev *dev = &sh->dev[i];
+-			if (((dev->towrite && !delay_towrite(dev, s)) ||
++			if (((dev->towrite && !delay_towrite(conf, dev, s)) ||
+ 			     i == sh->pd_idx || i == sh->qd_idx ||
+ 			     test_bit(R5_InJournal, &dev->flags)) &&
+ 			    !test_bit(R5_LOCKED, &dev->flags) &&
+-- 
+2.9.3
 
-> - Mark the bio as trace completed, and keep the naming. Since
->   it's only off the completion path, that can be just marking
->   the bi_flags non-atomically.
-
-One issue with this is in generic_make_request_checks, where we can call
-bio_endio without having called trace_block_bio_queue (so you could get
-a C event with no corresponding Q).  To address that, we could make the
-flag indicate that trace_block_bio_queue was performed, and clear it in
-bio_complete, like so:
-
-	if (test_and_clear_bit(BIO_QUEUE_TRACED, &bio->bi_flags))
-		trace_block_bio_complete(...);
-
-That would solve the problem of duplicate completions, but requires
-setting the flag in the submission path and clearing it in the
-completion path.  I think the former can be done with just a
-bio_set_flag (i.e. non-atomic), right?  Of course, where to stick that
-bio_set_flag call is another bike-shedding discussion waiting to happen
-(i.e. does it go in the tracepoint itself?).
-
-Alternatively, we could set the trace_completed flag in the paths where
-we end I/O without having done the trace_block_bio_queue, but that seems
-way uglier to me.
-
-Can you think of any other options?  If we're choosing from the above,
-my preference is for adding the bio_endio_notrace(), since it's so much
-simpler.
-
-Cheers,
-Jeff
