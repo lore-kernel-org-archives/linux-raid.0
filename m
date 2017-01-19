@@ -1,53 +1,57 @@
-From: Binoy Jayan <binoy.jayan@linaro.org>
-Subject: Re: [RFC PATCH v3] crypto: Add IV generation algorithms
-Date: Thu, 19 Jan 2017 10:12:23 +0530
-Message-ID: <CAHv-k_-7m_oiVgzB5a3_=R9+fouxUc6fyxSchGtxfUKP00eM4w@mail.gmail.com>
-References: <1484732425-10319-1-git-send-email-binoy.jayan@linaro.org>
- <1484732425-10319-2-git-send-email-binoy.jayan@linaro.org> <CAOtvUMfhethgZ8TarKGDumL1W5fgjwy1Hi7f88mmCCD6vJ_hLg@mail.gmail.com>
+From: kyle <kyle.upton.is@gmail.com>
+Subject: HELP! RAID5 array disappeared after partitions deleted
+Date: Thu, 19 Jan 2017 18:57:21 +1000
+Message-ID: <e3f5d5ff-cea5-8cdc-c235-768e73293283@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAOtvUMfhethgZ8TarKGDumL1W5fgjwy1Hi7f88mmCCD6vJ_hLg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gilad Ben-Yossef <gilad@benyossef.com>
-Cc: Oded <oded.golombek@arm.com>, Ofir <Ofir.Drang@arm.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, linux-crypto@vger.kernel.org, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Linux kernel mailing list <linux-kernel@vger.kernel.org>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Rajendra <rnayak@codeaurora.org>, Milan Broz <gmazyland@gmail.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Gilad,
+I have (had) a large RAID5 array (3x8TB) up and running on Ubuntu 16.04 
+using the guide on the following page:
 
-On 18 January 2017 at 20:51, Gilad Ben-Yossef <gilad@benyossef.com> wrote:
-> I have some review comments and a bug report -
+https://www.digitalocean.com/community/tutorials/how-to-create-raid-arrays-with-mdadm-on-ubuntu-16-04
 
-Thank you very much for testing this on ARM and for the comments.
+The array seemed to be running well, and was automatically loaded on 
+re-boot etc, all good!
 
-> I'm pretty sure this needs to be
->
->  n2 = bio_segments(ctx->bio_out);
+Today however, i was formatting some USB drives in gparted and it popped 
+up some error about the partition table for the raid drives appearing 
+corrupted, and using the backup. I didn't think much of this at the 
+time, but it looks like that deleted the partition tables, and now i 
+have no array.
 
-Yes you are right, that was a typo :)
+Interestingly a raid 0 array i created at the same time is fine.
 
->> +
->> +       rinfo.is_write = bio_data_dir(ctx->bio_in) == WRITE;
->
-> Please consider wrapping the above boolean expression in parenthesis.
+Does anyone know a safe(ish) way of recovering or recreating the 
+partition tables, and re-loading the array? Or any other way to 
+resurrect the array?
 
-Well, I can do that to enhance the clarity.
+Happy to provide any other outputs that are helpful
 
->> +       rinfo.iv_sector = ctx->cc_sector;
->> +       rinfo.nents = nents;
->> +       rinfo.iv = iv;
->> +
->> +       skcipher_request_set_crypt(req, dmreq->sg_in, dmreq->sg_out,
->
-> Also, where do the scatterlist src2 and dst2 that you use
-> sg_set_page() get sg_init_table() called on?
-> I couldn't figure it out...
+lsblk shows all of the disks are there and detected. sda,b,c are the 
+raid0 array which is fine. sdd,e,f should have partitions and be part of 
+a raid5 array (md1).
 
-Thank you pointing this out. I missed out to add sg_init_table(src2, 1)
-and sg_init_table(dst2, 1), but sg_set_page is used in geniv_iter_block.
-This is probably the reason for the panic on ARM platform. However it
-ran fine under qemu-x86. May be I should setup an arm platform too
-for testing.
+|$ lsblk -o NAME,SIZE,FSTYPE,TYPE,MOUNTPOINT NAME SIZE FSTYPE TYPE 
+MOUNTPOINT sda 232.9G disk └─sda1 232.9G linux_raid_member part └─md0 
+698.3G ext4 raid0 /fast sdb 232.9G disk └─sdb1 232.9G linux_raid_member 
+part └─md0 698.3G ext4 raid0 /fast sdc 232.9G disk └─sdc1 232.9G 
+linux_raid_member part └─md0 698.3G ext4 raid0 /fast sdd 7.3T disk sde 
+7.3T disk sdf 7.3T disk nvme0n1 238.5G disk ├─nvme0n1p1 119.2G ext4 part 
+/ └─nvme0n1p5 119.3G swap part [SWAP] |
 
-Regards,
-Binoy
+Only 1 raid array is found by mdstat
+
+|$ cat /proc/mdstat Personalities : [raid0] [linear] [multipath] [raid1] 
+[raid6] [raid5] [raid4] [raid10] md0 : active raid0 sdc1[2] sdb1[1] 
+sda1[0] 732198912 blocks super 1.2 64k chunks unused devices: |
+
+|$ cat /etc/mdadm/mdadm.conf \# mdadm.conf CREATE owner=root group=disk 
+mode=0660 auto=yes HOMEHOST MAILADDR root ARRAY /dev/md/0 metadata=1.2 
+name=Octavius:0 UUID=b893dcb8:24d049e3:c810f89f:00c5f1b7 ARRAY /dev/md1 
+metadata=1.2 name=Octavius:1 UUID=5858458f:6ebb00c9:c30c4aa6:5737eedb |
+
