@@ -1,48 +1,35 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: HELP! RAID5 array disappeared after partitions deleted
-Date: Thu, 19 Jan 2017 13:52:28 +0000
-Message-ID: <5880C49C.5090508@youngman.org.uk>
-References: <e3f5d5ff-cea5-8cdc-c235-768e73293283@gmail.com>
+From: Binoy Jayan <binoy.jayan@linaro.org>
+Subject: Re: [RFC PATCH v3] crypto: Add IV generation algorithms
+Date: Thu, 19 Jan 2017 20:33:50 +0530
+Message-ID: <CAHv-k_85e8d3_O50-DEynw=AXSfuFXfj4LT2cqVv2zqwMnG+Pw@mail.gmail.com>
+References: <1484732425-10319-1-git-send-email-binoy.jayan@linaro.org>
+ <1484732425-10319-2-git-send-email-binoy.jayan@linaro.org>
+ <CAOtvUMfhethgZ8TarKGDumL1W5fgjwy1Hi7f88mmCCD6vJ_hLg@mail.gmail.com>
+ <CAHv-k_-7m_oiVgzB5a3_=R9+fouxUc6fyxSchGtxfUKP00eM4w@mail.gmail.com> <CAOtvUMenhgAuZXcsUPpOd5RfQh8XE9krve5YsFF3h-gK8KfDYQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e3f5d5ff-cea5-8cdc-c235-768e73293283@gmail.com>
+In-Reply-To: <CAOtvUMenhgAuZXcsUPpOd5RfQh8XE9krve5YsFF3h-gK8KfDYQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: kyle <kyle.upton.is@gmail.com>, linux-raid@vger.kernel.org
+To: Gilad Ben-Yossef <gilad@benyossef.com>
+Cc: Oded <oded.golombek@arm.com>, Ofir <Ofir.Drang@arm.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, linux-crypto@vger.kernel.org, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Linux kernel mailing list <linux-kernel@vger.kernel.org>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Rajendra <rnayak@codeaurora.org>, Milan Broz <gmazyland@gmail.com>
 List-Id: linux-raid.ids
 
-On 19/01/17 08:57, kyle wrote:
-> I have (had) a large RAID5 array (3x8TB) up and running on Ubuntu 16.04
-> using the guide on the following page:
-> 
-> https://www.digitalocean.com/community/tutorials/how-to-create-raid-arrays-with-mdadm-on-ubuntu-16-04
-> 
-> 
-> The array seemed to be running well, and was automatically loaded on
-> re-boot etc, all good!
-> 
-> Today however, i was formatting some USB drives in gparted and it popped
-> up some error about the partition table for the raid drives appearing
-> corrupted, and using the backup. I didn't think much of this at the
-> time, but it looks like that deleted the partition tables, and now i
-> have no array.
-> 
-I need to write this stuff up - I keep saying this ...
+Hi Gilad,
 
-Search for the following thread(s) and read them:
+On 19 January 2017 at 15:17, Gilad Ben-Yossef <gilad@benyossef.com> wrote:
+> I tried adding sg_init_table() where I thought it was appropriate and
+> it didn't resolve the issue.
+>
+> For what it's worth, my guess is that the difference between our
+> setups is not related to Arm but to other options or the storage I'm
+> using.
 
-Please help RAID1 complete fail no superblock 22/11/16
+I was able to reproduce this again on my qemu setup with a 1GB virtual
+disk. That is the same thing I do with the x86 setup as well.
 
-RAID10 with 2 drives auto-assembled as RAID1 05/11/16
+> Are you using cryptd?
 
-Dates are DMY European format. You want to hexdump the likely disk
-locations and try and find partition superblocks, raid superblocks, etc
-etc. If you can find anything like that and post it to the list, then
-the experts can chime in and help you get it back.
+You mean config CRYPTO_CRYPTD?
 
-There's probably a few more threads like that, but those are the ones
-I've just found.
-
-Cheers,
-Wol
+-Binoy
