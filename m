@@ -1,78 +1,48 @@
-From: Gilad Ben-Yossef <gilad@benyossef.com>
-Subject: Re: [RFC PATCH v3] crypto: Add IV generation algorithms
-Date: Thu, 19 Jan 2017 11:47:33 +0200
-Message-ID: <CAOtvUMenhgAuZXcsUPpOd5RfQh8XE9krve5YsFF3h-gK8KfDYQ@mail.gmail.com>
-References: <1484732425-10319-1-git-send-email-binoy.jayan@linaro.org>
-	<1484732425-10319-2-git-send-email-binoy.jayan@linaro.org>
-	<CAOtvUMfhethgZ8TarKGDumL1W5fgjwy1Hi7f88mmCCD6vJ_hLg@mail.gmail.com>
-	<CAHv-k_-7m_oiVgzB5a3_=R9+fouxUc6fyxSchGtxfUKP00eM4w@mail.gmail.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: HELP! RAID5 array disappeared after partitions deleted
+Date: Thu, 19 Jan 2017 13:52:28 +0000
+Message-ID: <5880C49C.5090508@youngman.org.uk>
+References: <e3f5d5ff-cea5-8cdc-c235-768e73293283@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <CAHv-k_-7m_oiVgzB5a3_=R9+fouxUc6fyxSchGtxfUKP00eM4w@mail.gmail.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Binoy Jayan <binoy.jayan@linaro.org>
-Cc: Rajendra <rnayak@codeaurora.org>, Herbert Xu <herbert@gondor.apana.org.au>, Oded <oded.golombek@arm.com>, Mike Snitzer <snitzer@redhat.com>, Linux kernel mailing list <linux-kernel@vger.kernel.org>, Milan Broz <gmazyland@gmail.com>, linux-raid@vger.kernel.org, dm-devel@redhat.com, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, linux-crypto@vger.kernel.org, Shaohua Li <shli@kernel.org>, "David S. Miller" <davem@davemloft.net>, Alasdair Kergon <agk@redhat.com>, Ofir <Ofir.Drang@arm.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <e3f5d5ff-cea5-8cdc-c235-768e73293283@gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: kyle <kyle.upton.is@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jan 19, 2017 at 6:42 AM, Binoy Jayan <binoy.jayan@linaro.org> wrote:
-> Hi Gilad,
->
-> On 18 January 2017 at 20:51, Gilad Ben-Yossef <gilad@benyossef.com> wrote:
->> I have some review comments and a bug report -
->
-> Thank you very much for testing this on ARM and for the comments.
+On 19/01/17 08:57, kyle wrote:
+> I have (had) a large RAID5 array (3x8TB) up and running on Ubuntu 16.04
+> using the guide on the following page:
+> 
+> https://www.digitalocean.com/community/tutorials/how-to-create-raid-arrays-with-mdadm-on-ubuntu-16-04
+> 
+> 
+> The array seemed to be running well, and was automatically loaded on
+> re-boot etc, all good!
+> 
+> Today however, i was formatting some USB drives in gparted and it popped
+> up some error about the partition table for the raid drives appearing
+> corrupted, and using the backup. I didn't think much of this at the
+> time, but it looks like that deleted the partition tables, and now i
+> have no array.
+> 
+I need to write this stuff up - I keep saying this ...
 
-My pleasure. Thanks for writing the code :-)
+Search for the following thread(s) and read them:
 
->
->>> +       rinfo.iv_sector = ctx->cc_sector;
->>> +       rinfo.nents = nents;
->>> +       rinfo.iv = iv;
->>> +
->>> +       skcipher_request_set_crypt(req, dmreq->sg_in, dmreq->sg_out,
->>
->> Also, where do the scatterlist src2 and dst2 that you use
->> sg_set_page() get sg_init_table() called on?
->> I couldn't figure it out...
->
-> Thank you pointing this out. I missed out to add sg_init_table(src2, 1)
-> and sg_init_table(dst2, 1), but sg_set_page is used in geniv_iter_block.
-> This is probably the reason for the panic on ARM platform. However it
-> ran fine under qemu-x86. May be I should setup an arm platform too
-> for testing.
+Please help RAID1 complete fail no superblock 22/11/16
 
-I tried adding sg_init_table() where I thought it was appropriate and
-it didn't resolve the issue.
+RAID10 with 2 drives auto-assembled as RAID1 05/11/16
 
-For what it's worth, my guess is that the difference between our
-setups is not related to Arm but to other options or the storage I'm
-using.
+Dates are DMY European format. You want to hexdump the likely disk
+locations and try and find partition superblocks, raid superblocks, etc
+etc. If you can find anything like that and post it to the list, then
+the experts can chime in and help you get it back.
 
-Are you using cryptd?
+There's probably a few more threads like that, but those are the ones
+I've just found.
 
-Thanks,
-Gilad
-
->
-> Regards,
-> Binoy
-
-
-
--- 
-Gilad Ben-Yossef
-Chief Coffee Drinker
-
-"If you take a class in large-scale robotics, can you end up in a
-situation where the homework eats your dog?"
- -- Jean-Baptiste Queru
+Cheers,
+Wol
