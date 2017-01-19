@@ -1,57 +1,78 @@
-From: kyle <kyle.upton.is@gmail.com>
-Subject: HELP! RAID5 array disappeared after partitions deleted
-Date: Thu, 19 Jan 2017 18:57:21 +1000
-Message-ID: <e3f5d5ff-cea5-8cdc-c235-768e73293283@gmail.com>
+From: Gilad Ben-Yossef <gilad@benyossef.com>
+Subject: Re: [RFC PATCH v3] crypto: Add IV generation algorithms
+Date: Thu, 19 Jan 2017 11:47:33 +0200
+Message-ID: <CAOtvUMenhgAuZXcsUPpOd5RfQh8XE9krve5YsFF3h-gK8KfDYQ@mail.gmail.com>
+References: <1484732425-10319-1-git-send-email-binoy.jayan@linaro.org>
+	<1484732425-10319-2-git-send-email-binoy.jayan@linaro.org>
+	<CAOtvUMfhethgZ8TarKGDumL1W5fgjwy1Hi7f88mmCCD6vJ_hLg@mail.gmail.com>
+	<CAHv-k_-7m_oiVgzB5a3_=R9+fouxUc6fyxSchGtxfUKP00eM4w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <CAHv-k_-7m_oiVgzB5a3_=R9+fouxUc6fyxSchGtxfUKP00eM4w@mail.gmail.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Binoy Jayan <binoy.jayan@linaro.org>
+Cc: Rajendra <rnayak@codeaurora.org>, Herbert Xu <herbert@gondor.apana.org.au>, Oded <oded.golombek@arm.com>, Mike Snitzer <snitzer@redhat.com>, Linux kernel mailing list <linux-kernel@vger.kernel.org>, Milan Broz <gmazyland@gmail.com>, linux-raid@vger.kernel.org, dm-devel@redhat.com, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, linux-crypto@vger.kernel.org, Shaohua Li <shli@kernel.org>, "David S. Miller" <davem@davemloft.net>, Alasdair Kergon <agk@redhat.com>, Ofir <Ofir.Drang@arm.com>
 List-Id: linux-raid.ids
 
-I have (had) a large RAID5 array (3x8TB) up and running on Ubuntu 16.04 
-using the guide on the following page:
+On Thu, Jan 19, 2017 at 6:42 AM, Binoy Jayan <binoy.jayan@linaro.org> wrote:
+> Hi Gilad,
+>
+> On 18 January 2017 at 20:51, Gilad Ben-Yossef <gilad@benyossef.com> wrote:
+>> I have some review comments and a bug report -
+>
+> Thank you very much for testing this on ARM and for the comments.
 
-https://www.digitalocean.com/community/tutorials/how-to-create-raid-arrays-with-mdadm-on-ubuntu-16-04
+My pleasure. Thanks for writing the code :-)
 
-The array seemed to be running well, and was automatically loaded on 
-re-boot etc, all good!
+>
+>>> +       rinfo.iv_sector = ctx->cc_sector;
+>>> +       rinfo.nents = nents;
+>>> +       rinfo.iv = iv;
+>>> +
+>>> +       skcipher_request_set_crypt(req, dmreq->sg_in, dmreq->sg_out,
+>>
+>> Also, where do the scatterlist src2 and dst2 that you use
+>> sg_set_page() get sg_init_table() called on?
+>> I couldn't figure it out...
+>
+> Thank you pointing this out. I missed out to add sg_init_table(src2, 1)
+> and sg_init_table(dst2, 1), but sg_set_page is used in geniv_iter_block.
+> This is probably the reason for the panic on ARM platform. However it
+> ran fine under qemu-x86. May be I should setup an arm platform too
+> for testing.
 
-Today however, i was formatting some USB drives in gparted and it popped 
-up some error about the partition table for the raid drives appearing 
-corrupted, and using the backup. I didn't think much of this at the 
-time, but it looks like that deleted the partition tables, and now i 
-have no array.
+I tried adding sg_init_table() where I thought it was appropriate and
+it didn't resolve the issue.
 
-Interestingly a raid 0 array i created at the same time is fine.
+For what it's worth, my guess is that the difference between our
+setups is not related to Arm but to other options or the storage I'm
+using.
 
-Does anyone know a safe(ish) way of recovering or recreating the 
-partition tables, and re-loading the array? Or any other way to 
-resurrect the array?
+Are you using cryptd?
 
-Happy to provide any other outputs that are helpful
+Thanks,
+Gilad
 
-lsblk shows all of the disks are there and detected. sda,b,c are the 
-raid0 array which is fine. sdd,e,f should have partitions and be part of 
-a raid5 array (md1).
+>
+> Regards,
+> Binoy
 
-|$ lsblk -o NAME,SIZE,FSTYPE,TYPE,MOUNTPOINT NAME SIZE FSTYPE TYPE 
-MOUNTPOINT sda 232.9G disk └─sda1 232.9G linux_raid_member part └─md0 
-698.3G ext4 raid0 /fast sdb 232.9G disk └─sdb1 232.9G linux_raid_member 
-part └─md0 698.3G ext4 raid0 /fast sdc 232.9G disk └─sdc1 232.9G 
-linux_raid_member part └─md0 698.3G ext4 raid0 /fast sdd 7.3T disk sde 
-7.3T disk sdf 7.3T disk nvme0n1 238.5G disk ├─nvme0n1p1 119.2G ext4 part 
-/ └─nvme0n1p5 119.3G swap part [SWAP] |
 
-Only 1 raid array is found by mdstat
 
-|$ cat /proc/mdstat Personalities : [raid0] [linear] [multipath] [raid1] 
-[raid6] [raid5] [raid4] [raid10] md0 : active raid0 sdc1[2] sdb1[1] 
-sda1[0] 732198912 blocks super 1.2 64k chunks unused devices: |
+-- 
+Gilad Ben-Yossef
+Chief Coffee Drinker
 
-|$ cat /etc/mdadm/mdadm.conf \# mdadm.conf CREATE owner=root group=disk 
-mode=0660 auto=yes HOMEHOST MAILADDR root ARRAY /dev/md/0 metadata=1.2 
-name=Octavius:0 UUID=b893dcb8:24d049e3:c810f89f:00c5f1b7 ARRAY /dev/md1 
-metadata=1.2 name=Octavius:1 UUID=5858458f:6ebb00c9:c30c4aa6:5737eedb |
-
+"If you take a class in large-scale robotics, can you end up in a
+situation where the homework eats your dog?"
+ -- Jean-Baptiste Queru
