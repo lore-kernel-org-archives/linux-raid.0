@@ -1,52 +1,53 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH 1/2] md/r5cache: disable write back for degraded raid6
-Date: Wed, 18 Jan 2017 15:56:49 -0800
-Message-ID: <20170118235650.2430923-1-songliubraving@fb.com>
+From: Binoy Jayan <binoy.jayan@linaro.org>
+Subject: Re: [RFC PATCH v3] crypto: Add IV generation algorithms
+Date: Thu, 19 Jan 2017 10:12:23 +0530
+Message-ID: <CAHv-k_-7m_oiVgzB5a3_=R9+fouxUc6fyxSchGtxfUKP00eM4w@mail.gmail.com>
+References: <1484732425-10319-1-git-send-email-binoy.jayan@linaro.org>
+ <1484732425-10319-2-git-send-email-binoy.jayan@linaro.org> <CAOtvUMfhethgZ8TarKGDumL1W5fgjwy1Hi7f88mmCCD6vJ_hLg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAOtvUMfhethgZ8TarKGDumL1W5fgjwy1Hi7f88mmCCD6vJ_hLg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuan@kylinos.cn, liuyun01@kylinos.cn, Song Liu <songliubraving@fb.com>, Jes.Sorensen@redhat.com
+To: Gilad Ben-Yossef <gilad@benyossef.com>
+Cc: Oded <oded.golombek@arm.com>, Ofir <Ofir.Drang@arm.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, linux-crypto@vger.kernel.org, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Linux kernel mailing list <linux-kernel@vger.kernel.org>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Rajendra <rnayak@codeaurora.org>, Milan Broz <gmazyland@gmail.com>
 List-Id: linux-raid.ids
 
-raid6 handles write differently in degraded mode. Specifically,
-handle_stripe_fill() is called for writes. As a result, write
-back cache has very little performance benefit for degraded
-raid6. (On the other hand, write back cache does help sequential
-writes on degraded raid4 and raid5).
+Hi Gilad,
 
-Write back cache for degraded mode also introduces data integrity
-corner cases. This is mostly because handle_stripe_fill() is
-called on write. To avoid handling these corner cases, this patch
-disables write back cache for degraded raid6.
+On 18 January 2017 at 20:51, Gilad Ben-Yossef <gilad@benyossef.com> wrote:
+> I have some review comments and a bug report -
 
-Signed-off-by: Song Liu <songliubraving@fb.com>
----
- drivers/md/raid5-cache.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+Thank you very much for testing this on ARM and for the comments.
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 4957297..b31ae41 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -2371,6 +2371,16 @@ int r5c_try_caching_write(struct r5conf *conf,
- 		set_bit(STRIPE_R5C_CACHING, &sh->state);
- 	}
- 
-+	/*
-+	 * When raid6 array runs in degraded mode, handle_stripe_fill() is
-+	 * called on every write. So write back cache doesn't help the
-+	 * performance. To simplify the code, do write-through.
-+	 */
-+	if (conf->level == 6 && s->failed) {
-+		r5c_make_stripe_write_out(sh);
-+		return -EAGAIN;
-+	}
-+
- 	for (i = disks; i--; ) {
- 		dev = &sh->dev[i];
- 		/* if non-overwrite, use writing-out phase */
--- 
-2.9.3
+> I'm pretty sure this needs to be
+>
+>  n2 = bio_segments(ctx->bio_out);
 
+Yes you are right, that was a typo :)
+
+>> +
+>> +       rinfo.is_write = bio_data_dir(ctx->bio_in) == WRITE;
+>
+> Please consider wrapping the above boolean expression in parenthesis.
+
+Well, I can do that to enhance the clarity.
+
+>> +       rinfo.iv_sector = ctx->cc_sector;
+>> +       rinfo.nents = nents;
+>> +       rinfo.iv = iv;
+>> +
+>> +       skcipher_request_set_crypt(req, dmreq->sg_in, dmreq->sg_out,
+>
+> Also, where do the scatterlist src2 and dst2 that you use
+> sg_set_page() get sg_init_table() called on?
+> I couldn't figure it out...
+
+Thank you pointing this out. I missed out to add sg_init_table(src2, 1)
+and sg_init_table(dst2, 1), but sg_set_page is used in geniv_iter_block.
+This is probably the reason for the panic on ARM platform. However it
+ran fine under qemu-x86. May be I should setup an arm platform too
+for testing.
+
+Regards,
+Binoy
