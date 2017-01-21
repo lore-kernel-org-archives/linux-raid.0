@@ -1,172 +1,172 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH 2/4] md/r5cache: read data into orig_page for prexor of
- cached data
-Date: Sat, 21 Jan 2017 10:04:22 -0800
-Message-ID: <20170121180422.sdmia25uwpsq3uiz@kernel.org>
+Subject: Re: [PATCH 1/4] md/r5cache: flush data only stripes in
+ r5l_recovery_log()
+Date: Sat, 21 Jan 2017 10:03:27 -0800
+Message-ID: <20170121180327.qwdbe4ovortwdszv@kernel.org>
 References: <20170113012243.3246467-1-songliubraving@fb.com>
- <20170113012243.3246467-2-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170113012243.3246467-2-songliubraving@fb.com>
+In-Reply-To: <20170113012243.3246467-1-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Song Liu <songliubraving@fb.com>
 Cc: linux-raid@vger.kernel.org, neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuan@kylinos.cn, liuyun01@kylinos.cn, Jes.Sorensen@redhat.com
 List-Id: linux-raid.ids
 
-On Thu, Jan 12, 2017 at 05:22:41PM -0800, Song Liu wrote:
-> With write back cache, we use orig_page to do prexor. This patch
-> makes sure we read data into orig_page for it.
+On Thu, Jan 12, 2017 at 05:22:40PM -0800, Song Liu wrote:
+> When there is data only stripes in the journal, we flush them out in
+> r5l_recovery_log(). Ths logic is implemented in a new function:
+> r5c_recovery_flush_data_only_stripes():
 > 
-> Flag R5_OrigPageUPTDODATE is added to show whether orig_page
-> has the latest data from raid disk.
-> 
-> We introduce a helper function uptodate_for_rmw() to simplify
-> the a couple conditions in handle_stripe_dirtying().
+> 1. enable write back cache
+> 2. set flag R5C_PRE_INIT_FLUSH in conf->cache_state
+> 3. flush all stripes
+> 4. wake up conf->mddev->thread
+> 5. wait for all stripes get flushed (reuse wait_for_quiescent)
+> 6. clear R5C_PRE_INIT_FLUSH
+> 7. disable write back cache
 
-applied patch 2 & 3
-
-Thanks,
-Shaohua
+Please explain why we need this and if this applies to writethrough too. Also
+please explain why it's safe to wakeup mddev->thread in r5l_recovery_log() as
+the mddev isn't fully initialized yet.
+ 
+> do_release_stripe() will wake up the wait when conf->active_stripe
+> reduces to 0.
 > 
 > Signed-off-by: Song Liu <songliubraving@fb.com>
 > ---
->  drivers/md/raid5-cache.c |  2 ++
->  drivers/md/raid5.c       | 44 +++++++++++++++++++++++++++++++++++---------
->  drivers/md/raid5.h       |  5 +++++
->  3 files changed, 42 insertions(+), 9 deletions(-)
+>  drivers/md/raid5-cache.c | 58 +++++++++++++++++++++++++++++++++++-------------
+>  drivers/md/raid5.c       |  4 ++++
+>  drivers/md/raid5.h       |  3 +++
+>  3 files changed, 49 insertions(+), 16 deletions(-)
 > 
 > diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index 2bbc38b..248fede 100644
+> index 0c88648..2bbc38b 100644
 > --- a/drivers/md/raid5-cache.c
 > +++ b/drivers/md/raid5-cache.c
-> @@ -2459,6 +2459,8 @@ void r5c_release_extra_page(struct stripe_head *sh)
->  			struct page *p = sh->dev[i].orig_page;
+> @@ -2102,7 +2102,7 @@ static int
+>  r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
+>  				       struct r5l_recovery_ctx *ctx)
+>  {
+> -	struct stripe_head *sh, *next;
+> +	struct stripe_head *sh;
+>  	struct mddev *mddev = log->rdev->mddev;
+>  	struct page *page;
+>  	sector_t next_checkpoint = MaxSector;
+> @@ -2116,7 +2116,7 @@ r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
 >  
->  			sh->dev[i].orig_page = sh->dev[i].page;
-> +			clear_bit(R5_OrigPageUPTDODATE, &sh->dev[i].flags);
-> +
->  			if (!using_disk_info_extra_page)
->  				put_page(p);
->  		}
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 0d2082d..3e75289 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -1056,7 +1056,17 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+>  	WARN_ON(list_empty(&ctx->cached_list));
 >  
->  			if (test_bit(R5_SkipCopy, &sh->dev[i].flags))
->  				WARN_ON(test_bit(R5_UPTODATE, &sh->dev[i].flags));
-> -			sh->dev[i].vec.bv_page = sh->dev[i].page;
-> +
-> +			if (!op_is_write(op) &&
-> +			    test_bit(R5_InJournal, &sh->dev[i].flags))
-> +				/*
-> +				 * issuing read for a page in journal, this
-> +				 * must be preparing for prexor in rmw; read
-> +				 * the data into orig_page
-> +				 */
-> +				sh->dev[i].vec.bv_page = sh->dev[i].orig_page;
-> +			else
-> +				sh->dev[i].vec.bv_page = sh->dev[i].page;
->  			bi->bi_vcnt = 1;
->  			bi->bi_io_vec[0].bv_len = STRIPE_SIZE;
->  			bi->bi_io_vec[0].bv_offset = 0;
-> @@ -2421,6 +2431,13 @@ static void raid5_end_read_request(struct bio * bi)
->  		} else if (test_bit(R5_ReadNoMerge, &sh->dev[i].flags))
->  			clear_bit(R5_ReadNoMerge, &sh->dev[i].flags);
->  
-> +		if (test_bit(R5_InJournal, &sh->dev[i].flags))
-> +			/*
-> +			 * end read for a page in journal, this
-> +			 * must be preparing for prexor in rmw
-> +			 */
-> +			set_bit(R5_OrigPageUPTDODATE, &sh->dev[i].flags);
-> +
->  		if (atomic_read(&rdev->read_errors))
->  			atomic_set(&rdev->read_errors, 0);
->  	} else {
-> @@ -3635,6 +3652,21 @@ static void handle_stripe_clean_event(struct r5conf *conf,
->  		break_stripe_batch_list(head_sh, STRIPE_EXPAND_SYNC_FLAGS);
+> -	list_for_each_entry_safe(sh, next, &ctx->cached_list, lru) {
+> +	list_for_each_entry(sh, &ctx->cached_list, lru) {
+>  		struct r5l_meta_block *mb;
+>  		int i;
+>  		int offset;
+> @@ -2166,14 +2166,41 @@ r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
+>  		ctx->pos = write_pos;
+>  		ctx->seq += 1;
+>  		next_checkpoint = sh->log_start;
+> -		list_del_init(&sh->lru);
+> -		raid5_release_stripe(sh);
+>  	}
+>  	log->next_checkpoint = next_checkpoint;
+>  	__free_page(page);
+>  	return 0;
 >  }
 >  
-> +/*
-> + * For RMW in write back cache, we need extra page in prexor to store the
-> + * old data. This page is stored in dev->orig_page.
-> + *
-> + * This function checks whether we have data for prexor. The exact logic
-> + * is:
-> + *       R5_UPTODATE && (!R5_InJournal || R5_OrigPageUPTDODATE)
-> + */
-> +static inline bool uptodate_for_rmw(struct r5dev *dev)
+> +static void r5c_recovery_flush_data_only_stripes(struct r5l_log *log,
+> +						 struct r5l_recovery_ctx *ctx)
 > +{
-> +	return (test_bit(R5_UPTODATE, &dev->flags)) &&
-> +		(!test_bit(R5_InJournal, &dev->flags) ||
-> +		 test_bit(R5_OrigPageUPTDODATE, &dev->flags));
+> +	struct mddev *mddev = log->rdev->mddev;
+> +	struct r5conf *conf = mddev->private;
+> +	struct stripe_head *sh, *next;
+> +
+> +	if (ctx->data_only_stripes == 0)
+> +		return;
+> +
+> +	log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_BACK;
+> +	set_bit(R5C_PRE_INIT_FLUSH, &conf->cache_state);
+> +
+> +	list_for_each_entry_safe(sh, next, &ctx->cached_list, lru) {
+> +		r5c_make_stripe_write_out(sh);
+> +		set_bit(STRIPE_HANDLE, &sh->state);
+> +		list_del_init(&sh->lru);
+> +		raid5_release_stripe(sh);
+> +	}
+> +
+> +	md_wakeup_thread(conf->mddev->thread);
+> +	/* reuse conf->wait_for_quiescent in recovery */
+> +	wait_event(conf->wait_for_quiescent,
+> +		   atomic_read(&conf->active_stripes) == 0);
+> +
+> +	clear_bit(R5C_PRE_INIT_FLUSH, &conf->cache_state);
+> +	log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_THROUGH;
 > +}
 > +
->  static int handle_stripe_dirtying(struct r5conf *conf,
->  				  struct stripe_head *sh,
->  				  struct stripe_head_state *s,
-> @@ -3666,9 +3698,7 @@ static int handle_stripe_dirtying(struct r5conf *conf,
->  		if ((dev->towrite || i == sh->pd_idx || i == sh->qd_idx ||
->  		     test_bit(R5_InJournal, &dev->flags)) &&
->  		    !test_bit(R5_LOCKED, &dev->flags) &&
-> -		    !((test_bit(R5_UPTODATE, &dev->flags) &&
-> -		       (!test_bit(R5_InJournal, &dev->flags) ||
-> -			dev->page != dev->orig_page)) ||
-> +		    !(uptodate_for_rmw(dev) ||
->  		      test_bit(R5_Wantcompute, &dev->flags))) {
->  			if (test_bit(R5_Insync, &dev->flags))
->  				rmw++;
-> @@ -3680,7 +3710,6 @@ static int handle_stripe_dirtying(struct r5conf *conf,
->  		    i != sh->pd_idx && i != sh->qd_idx &&
->  		    !test_bit(R5_LOCKED, &dev->flags) &&
->  		    !(test_bit(R5_UPTODATE, &dev->flags) ||
-> -		      test_bit(R5_InJournal, &dev->flags) ||
->  		      test_bit(R5_Wantcompute, &dev->flags))) {
->  			if (test_bit(R5_Insync, &dev->flags))
->  				rcw++;
-> @@ -3734,9 +3763,7 @@ static int handle_stripe_dirtying(struct r5conf *conf,
->  			     i == sh->pd_idx || i == sh->qd_idx ||
->  			     test_bit(R5_InJournal, &dev->flags)) &&
->  			    !test_bit(R5_LOCKED, &dev->flags) &&
-> -			    !((test_bit(R5_UPTODATE, &dev->flags) &&
-> -			       (!test_bit(R5_InJournal, &dev->flags) ||
-> -				dev->page != dev->orig_page)) ||
-> +			    !(uptodate_for_rmw(dev) ||
->  			      test_bit(R5_Wantcompute, &dev->flags)) &&
->  			    test_bit(R5_Insync, &dev->flags)) {
->  				if (test_bit(STRIPE_PREREAD_ACTIVE,
-> @@ -3763,7 +3790,6 @@ static int handle_stripe_dirtying(struct r5conf *conf,
->  			    i != sh->pd_idx && i != sh->qd_idx &&
->  			    !test_bit(R5_LOCKED, &dev->flags) &&
->  			    !(test_bit(R5_UPTODATE, &dev->flags) ||
-> -			      test_bit(R5_InJournal, &dev->flags) ||
->  			      test_bit(R5_Wantcompute, &dev->flags))) {
->  				rcw++;
->  				if (test_bit(R5_Insync, &dev->flags) &&
-> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-> index c582086..50855ad 100644
-> --- a/drivers/md/raid5.h
-> +++ b/drivers/md/raid5.h
-> @@ -322,6 +322,11 @@ enum r5dev_flags {
->  			 * data and parity being written are in the journal
->  			 * device
->  			 */
-> +	R5_OrigPageUPTDODATE,	/* with write back cache, we read old data into
-> +				 * dev->orig_page for prexor. When this flag is
-> +				 * set, orig_page contains latest data in the
-> +				 * raid disk.
-> +				 */
->  };
+>  static int r5l_recovery_log(struct r5l_log *log)
+>  {
+>  	struct mddev *mddev = log->rdev->mddev;
+> @@ -2200,32 +2227,31 @@ static int r5l_recovery_log(struct r5l_log *log)
+>  	pos = ctx.pos;
+>  	ctx.seq += 10000;
 >  
->  /*
-> -- 
-> 2.9.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> -	if (ctx.data_only_stripes == 0) {
+> -		log->next_checkpoint = ctx.pos;
+> -		r5l_log_write_empty_meta_block(log, ctx.pos, ctx.seq++);
+> -		ctx.pos = r5l_ring_add(log, ctx.pos, BLOCK_SECTORS);
+> -	}
+>  
+>  	if ((ctx.data_only_stripes == 0) && (ctx.data_parity_stripes == 0))
+>  		pr_debug("md/raid:%s: starting from clean shutdown\n",
+>  			 mdname(mddev));
+> -	else {
+> +	else
+>  		pr_debug("md/raid:%s: recovering %d data-only stripes and %d data-parity stripes\n",
+>  			 mdname(mddev), ctx.data_only_stripes,
+>  			 ctx.data_parity_stripes);
+>  
+> -		if (ctx.data_only_stripes > 0)
+> -			if (r5c_recovery_rewrite_data_only_stripes(log, &ctx)) {
+> -				pr_err("md/raid:%s: failed to rewrite stripes to journal\n",
+> -				       mdname(mddev));
+> -				return -EIO;
+> -			}
+> +	if (ctx.data_only_stripes == 0) {
+> +		log->next_checkpoint = ctx.pos;
+> +		r5l_log_write_empty_meta_block(log, ctx.pos, ctx.seq++);
+> +		ctx.pos = r5l_ring_add(log, ctx.pos, BLOCK_SECTORS);
+> +	} else if (r5c_recovery_rewrite_data_only_stripes(log, &ctx)) {
+> +		pr_err("md/raid:%s: failed to rewrite stripes to journal\n",
+> +		       mdname(mddev));
+> +		return -EIO;
+>  	}
+>  
+>  	log->log_start = ctx.pos;
+>  	log->seq = ctx.seq;
+>  	log->last_checkpoint = pos;
+>  	r5l_write_super(log, pos);
+> +
+> +	r5c_recovery_flush_data_only_stripes(log, &ctx);
+>  	return 0;
+>  }
+>  
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index b8e45cc..0d2082d 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -266,6 +266,10 @@ static void do_release_stripe(struct r5conf *conf, struct stripe_head *sh,
+>  			    < IO_THRESHOLD)
+>  				md_wakeup_thread(conf->mddev->thread);
+>  		atomic_dec(&conf->active_stripes);
+> +		if (test_bit(R5C_PRE_INIT_FLUSH, &conf->cache_state) &&
+> +		    atomic_read(&conf->active_stripes) == 0)
+> +			wake_up(&sh->raid_conf->wait_for_quiescent);
+
+Don't understand why R5C_PRE_INIT_FLUSH must be introduced. Shouldn't we always
+wakeup wait_for_quiescent after active_stripes == 0? If not, this is a bug in
+existing code.
+
+
+Thanks,
+Shaohua
