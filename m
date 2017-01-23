@@ -1,290 +1,150 @@
-From: Coly Li <colyli@suse.de>
-Subject: Re: raid0 vs. mkfs
-Date: Mon, 23 Jan 2017 20:26:39 +0800
-Message-ID: <a89fd8ba-9238-2490-1c3f-3e8ac62212d7@suse.de>
-References: <56c83c4e-d451-07e5-88e2-40b085d8681c@scylladb.com>
- <06411e37-ee35-c8d9-a578-4a9cd2fbb0d9@scylladb.com>
+From: Salatiel Filho <salatiel.filho@gmail.com>
+Subject: Re: Input/Output error reading from a clean raid
+Date: Mon, 23 Jan 2017 11:02:24 -0300
+Message-ID: <CAGmni9pazRfia++-s5Hn4FT+ubVzEhsnrQrKC3cSLja53-SizQ@mail.gmail.com>
+References: <CAGmni9p7T5VQsSGQrwkpYgV=H4B-pjXtg8TxnuWst-FQSJh_fA@mail.gmail.com>
+ <20170123010334.GA7546@metamorpher.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------34BE93A2EE19524CC25738D4"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <06411e37-ee35-c8d9-a578-4a9cd2fbb0d9@scylladb.com>
+In-Reply-To: <20170123010334.GA7546@metamorpher.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Avi Kivity <avi@scylladb.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------34BE93A2EE19524CC25738D4
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Ok, i have run echo check >>/sys/block/md1/md/sync_action, and now the output of
+mdadm mdadm --examine-badblocks /dev/sdd1 /dev/sdg1 /dev/sdf1  /dev/sde1
 
-On 2017/1/23 上午2:01, Avi Kivity wrote:
-> Hello,
-> 
-> 
-> On 11/27/2016 05:24 PM, Avi Kivity wrote:
->> mkfs /dev/md0 can take a very long time, if /dev/md0 is a very large
->> disk that supports TRIM/DISCARD (erase whichever is inappropriate). 
->> That is because mkfs issues a TRIM/DISCARD (erase whichever is
->> inappropriate) for the entire partition. As far as I can tell, md
->> converts the large TRIM/DISCARD (erase whichever is inappropriate)
->> into a large number of TRIM/DISCARD (erase whichever is inappropriate)
->> requests, one per chunk-size worth of disk, and issues them to the
->> RAID components individually.
->>
->>
->> It seems to me that md can convert the large TRIM/DISCARD (erase
->> whichever is inappropriate) request it gets into one TRIM/DISCARD
->> (erase whichever is inappropriate) per RAID component, converting an
->> O(disk size / chunk size) operation into an O(number of RAID
->> components) operation, which is much faster.
->>
->>
->> I observed this with mkfs.xfs on a RAID0 of four 3TB NVMe devices,
->> with the operation taking about a quarter of an hour, continuously
->> pushing half-megabyte TRIM/DISCARD (erase whichever is inappropriate)
->> requests to the disk. Linux 4.1.12.
->>
-> 
-> Did anyone pick this up by any chance?  The only thing I could find is
-> more people complaining about the same issue.
+Bad-blocks on /dev/sdd1:
+          1515723072 for 512 sectors
+          1515723584 for 512 sectors
+          1515724096 for 512 sectors
+          1515724608 for 512 sectors
+          1515725120 for 512 sectors
+          1515725632 for 512 sectors
+          1515726144 for 512 sectors
+          1515726656 for 512 sectors
+          1515727168 for 512 sectors
+          1515727680 for 512 sectors
+          1515728192 for 512 sectors
+          1515728704 for 512 sectors
+          1515729216 for 512 sectors
+          1515729728 for 512 sectors
+          1515730240 for 512 sectors
+          1515730752 for 512 sectors
+          1515731264 for 512 sectors
+          1515731776 for 512 sectors
+          1515732288 for 512 sectors
+          1515732800 for 512 sectors
+          1515733312 for 512 sectors
+          1515733824 for 512 sectors
+          1515734336 for 512 sectors
+          1515734848 for 512 sectors
+          1515735360 for 512 sectors
+          1515735872 for 512 sectors
+          1515736384 for 512 sectors
+          1515736896 for 512 sectors
+          1515737408 for 512 sectors
+          1515737920 for 512 sectors
+          1515738432 for 512 sectors
+          1515738944 for 512 sectors
+          1515739456 for 512 sectors
+          1515739968 for 512 sectors
+          1515740480 for 512 sectors
+          1515740992 for 512 sectors
+          1515741504 for 512 sectors
+          1515742016 for 192 sectors
+          1515743712 for 512 sectors
+          1515744224 for 512 sectors
+          1515744736 for 512 sectors
+          1515745248 for 512 sectors
+          1515745760 for 512 sectors
+          1515746272 for 512 sectors
+          1515746784 for 512 sectors
+          1515747296 for 512 sectors
+          1515747808 for 512 sectors
+          1515748320 for 512 sectors
+          1515749072 for 304 sectors
+          1515750400 for 512 sectors
+          1515750912 for 512 sectors
+          1515751424 for 512 sectors
+          1515751936 for 512 sectors
+          1515752448 for 512 sectors
+          1515752960 for 512 sectors
+          1515753472 for 512 sectors
+          1515753984 for 512 sectors
+          1515754496 for 232 sectors
+Bad-blocks list is empty in /dev/sdg1
+Bad-blocks list is empty in /dev/sdf1
+Bad-blocks on /dev/sde1:
+          1515723072 for 512 sectors
+          1515723584 for 512 sectors
+          1515724096 for 512 sectors
+          1515724608 for 512 sectors
+          1515725120 for 512 sectors
+          1515725632 for 512 sectors
+          1515726144 for 512 sectors
+          1515726656 for 512 sectors
+          1515727168 for 512 sectors
+          1515727680 for 512 sectors
+          1515728192 for 512 sectors
+          1515728704 for 512 sectors
+          1515729216 for 512 sectors
+          1515729728 for 512 sectors
+          1515730240 for 512 sectors
+          1515730752 for 512 sectors
+          1515731264 for 512 sectors
+          1515731776 for 512 sectors
+          1515732288 for 512 sectors
+          1515732800 for 512 sectors
+          1515733312 for 512 sectors
+          1515733824 for 512 sectors
+          1515734336 for 512 sectors
+          1515734848 for 512 sectors
+          1515735360 for 512 sectors
+          1515735872 for 512 sectors
+          1515736384 for 512 sectors
+          1515736896 for 512 sectors
+          1515737408 for 512 sectors
+          1515737920 for 512 sectors
+          1515738432 for 512 sectors
+          1515738944 for 512 sectors
+          1515739456 for 512 sectors
+          1515739968 for 512 sectors
+          1515740480 for 512 sectors
+          1515740992 for 512 sectors
+          1515741504 for 512 sectors
+          1515742016 for 192 sectors
+          1515743712 for 512 sectors
+          1515744224 for 512 sectors
+          1515744736 for 512 sectors
+          1515745248 for 512 sectors
+          1515745760 for 512 sectors
+          1515746272 for 512 sectors
+          1515746784 for 512 sectors
+          1515747296 for 512 sectors
+          1515747808 for 512 sectors
+          1515748320 for 512 sectors
+          1515749072 for 304 sectors
+          1515750400 for 512 sectors
+          1515750912 for 512 sectors
+          1515751424 for 512 sectors
+          1515751936 for 512 sectors
+          1515752448 for 512 sectors
+          1515752960 for 512 sectors
+          1515753472 for 512 sectors
+          1515753984 for 512 sectors
+          1515754496 for 232 sectors
+[]'s
+Salatiel
 
-Hi Avi,
 
-I proposed a POC patch, Shaohua and Neil provide review comments,
-suggest me to simplify this patch.
-
-If you notice, there is a patch I sent out on Dec 9, 2016, in this email
-thread. This patch works, but not the final version to be accepted by
-upstream. I quote the performance number here,
-
-“ On 4x3TB NVMe raid0, format it with mkfs.xfs. Current upstream kernel
-spends 306 seconds, the patched kernel spends 15 seconds. I see average
-request size increases from 1 chunk (1024 sectors) to 2048 chunks
-(2097152 sectors).”
-
-I call this patch as RFC v2 patch, and attach it again in this email.
-Now I am working on a new version by the suggestion from Shaohua and
-Neil, but any testing feed back of RFC v2 patch is welcome. It works,
-just too complex to review.
-
-Thanks.
-
-Coly
-
---------------34BE93A2EE19524CC25738D4
-Content-Type: text/plain; charset=UTF-8; x-mac-type="0"; x-mac-creator="0";
- name="raid0_handle_large_discard_bio.patch"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="raid0_handle_large_discard_bio.patch"
-
-U3ViamVjdDogW1JGQyB2Ml0gb3B0aW1pemF0aW9uIGZvciBsYXJnZSBzaXplIERJU0NBUkQg
-YmlvIGJ5IHBlci1kZXZpY2UgYmlvcyAKClRoaXMgaXMgYSB2ZXJ5IGVhcmx5IHByb3RvdHlw
-ZSwgc3RpbGwgbmVlZHMgbW9yZSBibG9jayBsYXllciBjb2RlCm1vZGlmaWNhdGlvbiB0byBt
-YWtlIGl0IHdvcmsuCgpDdXJyZW50IHVwc3RyZWFtIHJhaWQwX21ha2VfcmVxdWVzdCgpIG9u
-bHkgaGFuZGxlcyBUUklNL0RJU0NBUkQgYmlvIGJ5CmNodW5rIHNpemUsIGl0IG1lYW1zIGZv
-ciBsYXJnZSByYWlkMCBkZXZpY2UgYnVpbHQgYnkgU1NEcyB3aWxsIGNhbGwKbWlsbGlvbiB0
-aW1lcyBnZW5lcmljX21ha2VfcmVxdWVzdCgpIGZvciB0aGUgc3BsaXQgYmlvLiBUaGlzIHBh
-dGNoCnRyaWVzIHRvIGNvbWJpbmUgc21hbGwgYmlvcyBpbnRvIGxhcmdlIG9uZSBpZiB0aGV5
-IGFyZSBvbiBzYW1lIHJlYWwKZGV2aWNlIGFuZCBjb250aW51b3VzIG9uIHRoaXMgcmVhbCBk
-ZXZpY2UsIHRoZW4gc2VuZCB0aGUgY29tYmluZWQgbGFyZ2UKYmlvIHRvIHVuZGVybHlpbmcg
-ZGV2aWNlIGJ5IHNpbmdsZSBjYWxsIHRvIGdlbmVyaWNfbWFrZV9yZXF1ZXN0KCkuCgpGb3Ig
-ZXhhbXBsZSwgdXNlIG1rZnMueGZzIHRvIHRyaW0gYSByYWlkMCBkZXZpY2UgYnVpbHQgd2l0
-aCA0IHggM1RCCk5WTWVTU0QsIGN1cnJlbnQgdXBzdHJlYW0gcmFpZDBfbWFrZV9yZXF1ZXN0
-KCkgd2lsbCBjYWxsCmdlbmVyaWNfbWFrZV9yZXF1ZXN0KCkgNS43IG1pbGxpb24gdGltZXMs
-IHdpdGggdGhpcyBwYXRjaCBvbmx5IDQgY2FsbHMKdG8gZ2VuZXJpY19tYWtlX3JlcXVlc3Qo
-KSBpcyByZXF1aXJlZC4KClRoaXMgcGF0Y2ggd29uJ3Qgd29yayBpbiByZWFsIHdvcmxkLCBi
-ZWNhdXNlIGluIGJsb2NrL2Jsay1saWIuYzoKX19ibGtkZXZfaXNzdWVfZGlzY2FyZCgpIHRo
-ZSBvcmlnaW5hbCBsYXJnZSBiaW8gd2lsbCBiZSBzcGxpdCBpbnRvCnNtYWxsZXIgb25lcyBi
-eSByZXN0cmljdGlvbiBvZiBkaXNjYXJkX2dyYW51bGFyaXR5LgoKSWYgc29tZSBkYXkgU1NE
-IHN1cHBvcnRzIHdob2xlIGRldmljZSBzaXplZCBkaXNjYXJkX2dyYW51bGFyaXR5LCBpdAp3
-aWxsIGJlIHZlcnkgaW50ZXJlc3RpbmcgdGhlbi4uLgoKVGhlIGJhc2ljIGlkZWEgaXMsIGlm
-IGEgbGFyZ2UgZGlzY2FyZCBiaW8gcmVjZWl2ZWQKYnkgcmFpZDBfbWFrZV9yZXF1ZXN0KCks
-IGZvciBleGFtcGxlIGl0IHJlcXVlc3RzIHRvIGRpc2NhcmQgY2h1bmsgMQp0byAyNCBvbiBh
-IHJhaWQwIGRldmljZSBidWlsdCBieSA0IFNTRHMuIFRoaXMgbGFyZ2UgZGlzY2FyZCBiaW8g
-d2lsbApiZSBzcGxpdCBhbmQgd3JpdHRlbiB0byBlYWNoIFNTRCBhcyB0aGUgZm9sbG93aW5n
-IGxheW91dCwKCVNTRDE6IEMxLEM1LEM5LEMxMyxDMTcsQzIxCglTU0QyOiBDMixDNixDMTAs
-QzE0LEMxOCxDMjIKCVNTRDM6IEMzLEM3LEMxMSxDMTUsQzE5LEMyMwoJU1NENDogQzQsQzgs
-QzEyLEMxNixDMjAsQzI0CkN1cnJlbnQgcmFpZDAgY29kZSB3aWxsIGNhbGwgZ2VuZXJpY19t
-YWtlX3JlcXVlc3QoKSBmb3IgMjQgdGltZXMgZm9yCmVhY2ggc3BsaXQgYmlvLiBCdXQgaXQg
-aXMgcG9zc2libGUgdG8gY2FsY3VsYXRlIHRoZSBmaW5hbCBsYXlvdXQgb2YKZWFjaCBzcGxp
-dCBiaW8sIHNvIHdlIGNhbiBjb21iaW5lIGFsbCB0aGUgYmlvcyBpbnRvIGZvdXIgcGVyLVNT
-RCBsYXJnZQpiaW8sIGxpa2UgdGhpcywKCWJpbzEgKG9uIFNTRDEpOiBDezEsNSw5LDEzLDE3
-LDIxfQoJYmlvMiAob24gU1NEMik6IEN7Miw2LDEwLDE0LDE4LDIyfQoJYmlvMyAob24gU1NE
-Myk6IEN7Myw3LDExLDE1LDE5LDIzfQoJYmlvNCAob24gU1NENCk6IEN7NCw4LDEyLDE2LDIw
-LDI0fQpOb3cgd2Ugb25seSBuZWVkIHRvIGNhbGwgZ2VuZXJpY19tYWtlX3JlcXVlc3QoKSBm
-b3IgNCB0aW1lcy4KClRoZSBjb2RlIGlzIG5vdCBzaW1wbGUsIEkgbmVlZCBtb3JlIHRpbWUg
-dG8gd3JpdGUgdGV4dCB0byBjb21wbGFpbiBob3cKaXQgd29ya3MuIEN1cnJlbnRseSB5b3Ug
-Y2FuIHRyZWF0IGl0IGFzIGEgcHJvb2Ygb2YgY29uY2VwdC4KCkNoYW5nZWxvZ3MKdjEsIElu
-aXRpYWwgcHJvdG90eXBlLgp2MiwgTWFqb3IgY2hhbmdlcyBpbmxjdWRlLAogICAgLSByZW5h
-bWUgZnVuY3Rpb24gbmFtZXMsIG5vdyBoYW5kbGVfZGlzY2FyZF9iaW8oKSB0YWtlcyBjYXJl
-CiAgICAgIGluIGNodW5rIHNpemUgRElTQ0FSRCBiaW8gYW5kIHNpbmdsZSBkaXNrIHN1dGlh
-dGlvbiwgbGFyZ2UgRElTQ0FSRAogICAgICBiaW8gd2lsbCBiZSBoYW5kbGVkIGluIGhhbmRs
-ZV9sYXJnZV9kaXNjYXJkX2JpbygpLgogICAgLSBTZXQgbWF4X2Rpc2NhcmRfc2VjdG9ycyB0
-byByYWlkMCBkZXZpY2Ugc2l6ZS4KICAgIC0gRml4IHNldmVyYWwgYnVncyB3aGljaCBJIGZp
-bmQgaW4gYmFzaWMgdGVzdGluZy4uCgpTaWduZWQtb2ZmLWJ5OiBDb2x5IExpIDxjb2x5bGlA
-c3VzZS5kZT4KLS0tCiBkcml2ZXJzL21kL3JhaWQwLmMgfCAyNjcgKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0KIDEgZmlsZSBjaGFuZ2Vk
-LCAyNjYgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQoKZGlmZiAtLWdpdCBhL2RyaXZl
-cnMvbWQvcmFpZDAuYyBiL2RyaXZlcnMvbWQvcmFpZDAuYwppbmRleCAyNTg5ODZhLi5jN2Fm
-ZTBjIDEwMDY0NAotLS0gYS9kcml2ZXJzL21kL3JhaWQwLmMKKysrIGIvZHJpdmVycy9tZC9y
-YWlkMC5jCkBAIC0zNzgsNyArMzc4LDcgQEAgc3RhdGljIGludCByYWlkMF9ydW4oc3RydWN0
-IG1kZGV2ICptZGRldikKIAogCQlibGtfcXVldWVfbWF4X2h3X3NlY3RvcnMobWRkZXYtPnF1
-ZXVlLCBtZGRldi0+Y2h1bmtfc2VjdG9ycyk7CiAJCWJsa19xdWV1ZV9tYXhfd3JpdGVfc2Ft
-ZV9zZWN0b3JzKG1kZGV2LT5xdWV1ZSwgbWRkZXYtPmNodW5rX3NlY3RvcnMpOwotCQlibGtf
-cXVldWVfbWF4X2Rpc2NhcmRfc2VjdG9ycyhtZGRldi0+cXVldWUsIG1kZGV2LT5jaHVua19z
-ZWN0b3JzKTsKKwkJYmxrX3F1ZXVlX21heF9kaXNjYXJkX3NlY3RvcnMobWRkZXYtPnF1ZXVl
-LCByYWlkMF9zaXplKG1kZGV2LCAwLCAwKSk7CiAKIAkJYmxrX3F1ZXVlX2lvX21pbihtZGRl
-di0+cXVldWUsIG1kZGV2LT5jaHVua19zZWN0b3JzIDw8IDkpOwogCQlibGtfcXVldWVfaW9f
-b3B0KG1kZGV2LT5xdWV1ZSwKQEAgLTQ1Miw2ICs0NTIsMjY2IEBAIHN0YXRpYyBpbmxpbmUg
-aW50IGlzX2lvX2luX2NodW5rX2JvdW5kYXJ5KHN0cnVjdCBtZGRldiAqbWRkZXYsCiAJfQog
-fQogCisKK3N0cnVjdCBiaW9fcmVjb3JkIHsKKwlzZWN0b3JfdAliaV9zZWN0b3I7CisJdW5z
-aWduZWQgbG9uZwlzZWN0b3JzOworCXN0cnVjdCBtZF9yZGV2CSpyZGV2OworfTsKKworc3Rh
-dGljIHZvaWQgaGFuZGxlX2xhcmdlX2Rpc2NhcmRfYmlvKHN0cnVjdCBtZGRldiAqbWRkZXYs
-IHN0cnVjdCBiaW8gKmJpbykKK3sKKwlzdHJ1Y3QgYmlvX3JlY29yZCAqcmVjcyA9IE5VTEw7
-CisJc3RydWN0IGJpbyAqc3BsaXQ7CisJc3RydWN0IHIwY29uZiAqY29uZiA9IG1kZGV2LT5w
-cml2YXRlOworCXNlY3Rvcl90IHNlY3RvcnMsIHNlY3RvcjsKKwlzdHJ1Y3Qgc3RyaXBfem9u
-ZSAqZmlyc3Rfem9uZTsKKwlpbnQgem9uZV9pZHg7CisJc2VjdG9yX3Qgem9uZV9zdGFydCwg
-em9uZV9lbmQ7CisJaW50IG5yX3N0cmlwX3pvbmVzID0gY29uZi0+bnJfc3RyaXBfem9uZXM7
-CisJaW50IGRpc2tzOworCWludCBmaXJzdF9yZGV2X2lkeCA9IC0xLCByZGV2X2lkeDsKKwlz
-dHJ1Y3QgbWRfcmRldiAqZmlyc3RfcmRldjsKKwl1bnNpZ25lZCBpbnQgY2h1bmtfc2VjdHMg
-PSBtZGRldi0+Y2h1bmtfc2VjdG9yczsKKworCXNlY3RvciA9IGJpby0+YmlfaXRlci5iaV9z
-ZWN0b3I7CisJZmlyc3Rfem9uZSA9IGZpbmRfem9uZShjb25mLCAmc2VjdG9yKTsKKwlmaXJz
-dF9yZGV2ID0gbWFwX3NlY3RvcihtZGRldiwgZmlyc3Rfem9uZSwgc2VjdG9yLCAmc2VjdG9y
-KTsKKworCS8qIGJpbyBpcyBsYXJnZSBlbm91Z2ggdG8gYmUgc3BsaXQsIGFsbG9jYXRlIHJl
-Y3MgZmlyc3RseSAqLworCWRpc2tzID0gbWRkZXYtPnJhaWRfZGlza3M7CisJcmVjcyA9IGtj
-YWxsb2MoZGlza3MsIHNpemVvZihzdHJ1Y3QgYmlvX3JlY29yZCksIEdGUF9OT0lPKTsKKwlp
-ZiAocmVjcyA9PSBOVUxMKSB7CisJCXByaW50ayhLRVJOX0VSUiAibWQvcmFpZDA6JXM6IGZh
-aWxlZCB0byBhbGxvY2F0ZSBtZW1vcnkgIiBcCisJCQkJImZvciBiaW9fcmVjb3JkIiwgbWRu
-YW1lKG1kZGV2KSk7CisJCWJpby0+YmlfZXJyb3IgPSAtRU5PTUVNOworCQliaW9fZW5kaW8o
-YmlvKTsKKwkJcmV0dXJuOworCX0KKworCXpvbmVfaWR4ID0gZmlyc3Rfem9uZSAtIGNvbmYt
-PnN0cmlwX3pvbmU7CisJZm9yIChyZGV2X2lkeCA9IDA7IHJkZXZfaWR4IDwgZmlyc3Rfem9u
-ZS0+bmJfZGV2OyByZGV2X2lkeCsrKSB7CisJCXN0cnVjdCBtZF9yZGV2ICpyZGV2OworCisJ
-CXJkZXYgPSBjb25mLT5kZXZsaXN0W3pvbmVfaWR4ICogZGlza3MgKyByZGV2X2lkeF07CisJ
-CXJlY3NbcmRldl9pZHhdLnJkZXYgPSByZGV2OworCQlpZiAocmRldiA9PSBmaXJzdF9yZGV2
-KQorCQkJZmlyc3RfcmRldl9pZHggPSByZGV2X2lkeDsKKwl9CisKKwlzZWN0b3JzID0gY2h1
-bmtfc2VjdHMgLQorCQkobGlrZWx5KGlzX3Bvd2VyX29mXzIoY2h1bmtfc2VjdHMpKQorCQk/
-IChzZWN0b3IgJiAoY2h1bmtfc2VjdHMgLSAxKSkKKwkJOiBzZWN0b3JfZGl2KHNlY3Rvciwg
-Y2h1bmtfc2VjdHMpKTsKKwkJc2VjdG9yID0gYmlvLT5iaV9pdGVyLmJpX3NlY3RvcjsKKwor
-CXJlY3NbZmlyc3RfcmRldl9pZHhdLmJpX3NlY3RvciA9IHNlY3RvciArIGZpcnN0X3pvbmUt
-PmRldl9zdGFydDsKKwlyZWNzW2ZpcnN0X3JkZXZfaWR4XS5zZWN0b3JzID0gc2VjdG9yczsK
-KworCS8qIHJlY3NbZmlyc3RfcmRldl9pZHhdIGlzIGluaXRpYWxpemVkIHdpdGggJ3NlY3Rv
-cnMnLCB3ZSBuZWVkIHRvCisJICogaGFuZGxlIHRoZSByZXN0ZWQgc2VjdG9ycywgd2hpY2gg
-aXMgc290cmVkIGluICdzZWN0b3JzJyB0b28uCisJICovCisJc2VjdG9ycyA9IGJpb19zZWN0
-b3JzKGJpbykgLSBzZWN0b3JzOworCisJLyogYmlvIG1heSBub3QgYmUgY2h1bmsgc2l6ZSBh
-bGlnbmVkLCB0aGUgc3BsaXQgYmlvIG9uIGZpcnN0IHJkZXYKKwkgKiBtYXkgbm90IGJlIGNo
-dW5rIHNpemUgYWxpZ25lZCB0b28uIEJ1dCB0aGUgcmVzdGVkIHNwbGl0IGJpb3MKKwkgKiBv
-biByZXN0ZWQgcmRldnMgbXVzdCBiZSBjaHVuayBzaXplIGFsaWduZWQsIGFuZCBhbGlnbmVk
-IHRvCisJICogcm91bmQgZG93biBjaHVuayBudW1iZXIuCisJICovCisJem9uZV9lbmQgPSBm
-aXJzdF96b25lLT56b25lX2VuZDsKKwlyZGV2X2lkeCA9IGZpcnN0X3JkZXZfaWR4ICsgMTsK
-KwlzZWN0b3IgPSBsaWtlbHkoaXNfcG93ZXJfb2ZfMihjaHVua19zZWN0cykpCisJCSA/IHNl
-Y3RvciAmICh+KGNodW5rX3NlY3RzIC0gMSkpCisJCSA6IGNodW5rX3NlY3RzICogKHNlY3Rv
-ci9jaHVua19zZWN0cyk7CisKKwl3aGlsZSAocmRldl9pZHggPCBmaXJzdF96b25lLT5uYl9k
-ZXYpIHsKKwkJaWYgKHJlY3NbcmRldl9pZHhdLnNlY3RvcnMgPT0gMCkgeworCQkJcmVjc1ty
-ZGV2X2lkeF0uYmlfc2VjdG9yID0gc2VjdG9yICsgZmlyc3Rfem9uZS0+ZGV2X3N0YXJ0Owor
-CQkJaWYgKHNlY3RvcnMgPD0gY2h1bmtfc2VjdHMpIHsKKwkJCQlyZWNzW3JkZXZfaWR4XS5z
-ZWN0b3JzID0gc2VjdG9yczsKKwkJCQlnb3RvIGlzc3VlOworCQkJfQorCQkJcmVjc1tyZGV2
-X2lkeF0uc2VjdG9ycyA9IGNodW5rX3NlY3RzOworCQkJc2VjdG9ycyAtPSBjaHVua19zZWN0
-czsKKwkJfQorCQlyZGV2X2lkeCsrOworCX0KKworCXNlY3RvciArPSBjaHVua19zZWN0czsK
-Kwl6b25lX3N0YXJ0ID0gc2VjdG9yICsgZmlyc3Rfem9uZS0+ZGV2X3N0YXJ0OworCWlmICh6
-b25lX3N0YXJ0ID09IHpvbmVfZW5kKSB7CisJCXpvbmVfaWR4Kys7CisJCWlmICh6b25lX2lk
-eCA9PSBucl9zdHJpcF96b25lcykgeworCQkJaWYgKHNlY3RvcnMgIT0gMCkKKwkJCQlwcmlu
-dGsoS0VSTl9JTkZPICJiaW8gc2l6ZSBleGNlZWRzIHJhaWQwICIgXAorCQkJCQkiY2FwYWJp
-bGl0eSwgaWdub3JlIGV4dHJhICIgXAorCQkJCQkiVFJJTS9ESVNDQVJEIHJhbmdlLlxuIik7
-CisJCQlnb3RvIGlzc3VlOworCQl9CisJCXpvbmVfc3RhcnQgPSBjb25mLT5zdHJpcF96b25l
-W3pvbmVfaWR4XS5kZXZfc3RhcnQ7CisJfQorCisJd2hpbGUgKHpvbmVfaWR4IDwgbnJfc3Ry
-aXBfem9uZXMpIHsKKwkJaW50IHJkZXZzX2luX3pvbmUgPSBjb25mLT5zdHJpcF96b25lW3pv
-bmVfaWR4XS5uYl9kZXY7CisJCWludCBjaHVua3NfcGVyX3JkZXYsIHJlc3RlZF9jaHVua3Ms
-IHJlc3RlZF9zZWN0b3JzOworCQlzZWN0b3JfdCB6b25lX3NlY3RvcnMsIGdyb3dfc2VjdG9y
-czsKKwkJaW50IGFkZF9yZXN0ZWRfc2VjdG9ycyA9IDA7CisKKwkJem9uZV9lbmQgPSBjb25m
-LT5zdHJpcF96b25lW3pvbmVfaWR4XS56b25lX2VuZDsKKwkJem9uZV9zZWN0b3JzID0gem9u
-ZV9lbmQgLSB6b25lX3N0YXJ0OworCQljaHVua3NfcGVyX3JkZXYgPSBzZWN0b3JzOworCQly
-ZXN0ZWRfc2VjdG9ycyA9CisJCQlzZWN0b3JfZGl2KGNodW5rc19wZXJfcmRldiwgY2h1bmtf
-c2VjdHMgKiByZGV2c19pbl96b25lKTsKKwkJcmVzdGVkX2NodW5rcyA9IHJlc3RlZF9zZWN0
-b3JzOworCQlyZXN0ZWRfc2VjdG9ycyA9IHNlY3Rvcl9kaXYocmVzdGVkX2NodW5rcywgY2h1
-bmtfc2VjdHMpOworCisJCWlmICgoY2h1bmtzX3Blcl9yZGV2ICogY2h1bmtfc2VjdHMpID4g
-em9uZV9zZWN0b3JzKQorCQkJY2h1bmtzX3Blcl9yZGV2ID0gem9uZV9zZWN0b3JzL2NodW5r
-X3NlY3RzOworCisJCS8qIHJlc3RlZF9jaHVua3MgYW5kIHJlc3RlZF9zZWN0b3JzIGdvIGlu
-dG8gbmV4dCB6b25lLCB3ZSB3b24ndAorCQkgKiBoYW5kbGUgdGhlbSBpbiB0aGlzIHpvbmUu
-IFNldCB0aGVtIHRvIDAuCisJCSAqLworCQlpZiAoKGNodW5rc19wZXJfcmRldiAqIGNodW5r
-X3NlY3RzKSA9PSB6b25lX3NlY3RvcnMgJiYKKwkJICAgIChyZXN0ZWRfY2h1bmtzICE9IDAg
-fHwgcmVzdGVkX3NlY3RvcnMgIT0gMCkpIHsKKwkJCWlmIChyZXN0ZWRfY2h1bmtzICE9IDAp
-CisJCQkJcmVzdGVkX2NodW5rcyA9IDA7CisJCQlpZiAocmVzdGVkX3NlY3RvcnMgIT0gMCkK
-KwkJCQlyZXN0ZWRfc2VjdG9ycyA9IDA7CisJCX0KKworCQlpZiAocmVzdGVkX2NodW5rcyA9
-PSAwICYmIHJlc3RlZF9zZWN0b3JzICE9IDApCisJCQlhZGRfcmVzdGVkX3NlY3RvcnMgKys7
-CisKKwkJZm9yIChyZGV2X2lkeCA9IDA7IHJkZXZfaWR4IDwgcmRldnNfaW5fem9uZTsgcmRl
-dl9pZHgrKykgeworCQkJLyogaWYgLnNlY3RvcnMgaXMgbm90IGluaXRhaWxpemVkICg9PSAw
-KSwgaXQgaW5kaWNhdGVzCisJCQkgKiAuYmlfc2VjdG9yIGlzIG5vdCBpbml0aWFsaXplZCBu
-ZWl0aGVyLiBXZSBpbml0aWF0ZQorCQkJICogLmJpX3NlY3RvciBmaXJzdGx5LCB0aGVuIHNl
-dCAuc2VjdG9ycyBieQorCQkJICogZ3Jvd19zZWN0b3JzLgorCQkJICovCisJCQlpZiAocmVj
-c1tyZGV2X2lkeF0uc2VjdG9ycyA9PSAwKQorCQkJCXJlY3NbcmRldl9pZHhdLmJpX3NlY3Rv
-ciA9IHpvbmVfc3RhcnQ7CisJCQlncm93X3NlY3RvcnMgPSBjaHVua3NfcGVyX3JkZXYgKiBj
-aHVua19zZWN0czsKKwkJCWlmIChyZXN0ZWRfY2h1bmtzKSB7CisJCQkJZ3Jvd19zZWN0b3Jz
-ICs9IGNodW5rX3NlY3RzOworCQkJCXJlc3RlZF9jaHVua3MtLTsKKwkJCQlpZiAocmVzdGVk
-X2NodW5rcyA9PSAwICYmCisJCQkJICAgIHJlc3RlZF9zZWN0b3JzICE9IDApIHsKKwkJCQkJ
-cmVjc1tyZGV2X2lkeF0uc2VjdG9ycyArPSBncm93X3NlY3RvcnM7CisJCQkJCXNlY3RvcnMg
-LT0gZ3Jvd19zZWN0b3JzOworCQkJCQlhZGRfcmVzdGVkX3NlY3RvcnMgKys7CisJCQkJCWNv
-bnRpbnVlOworCQkJCX0KKwkJCX0KKworCQkJLyogaWYgYWRkX3Jlc3RlZF9zZWN0b3JzICE9
-IDAsIGl0IGluZGljYXRlcworCQkJICogcmVzdGVkX3NlY3RvcnMgIT0gMAorCQkJICovCisJ
-CQlpZiAoYWRkX3Jlc3RlZF9zZWN0b3JzID09IDEpIHsKKwkJCQlncm93X3NlY3RvcnMgKz0g
-cmVzdGVkX3NlY3RvcnM7CisJCQkJYWRkX3Jlc3RlZF9zZWN0b3JzICsrOworCQkJfQorCQkJ
-cmVjc1tyZGV2X2lkeF0uc2VjdG9ycyArPSBncm93X3NlY3RvcnM7CisJCQlzZWN0b3JzIC09
-IGdyb3dfc2VjdG9yczsKKwkJCWlmIChzZWN0b3JzID09IDApCisJCQkJYnJlYWs7CisJCX0K
-KworCQlpZiAoc2VjdG9ycyA9PSAwKQorCQkJYnJlYWs7CisJCXpvbmVfc3RhcnQgPSB6b25l
-X2VuZDsKKwkJem9uZV9pZHgrKzsKKwkJaWYgKHpvbmVfaWR4IDwgbnJfc3RyaXBfem9uZXMp
-CisJCQlCVUdfT04oem9uZV9zdGFydCAhPSBjb25mLT5zdHJpcF96b25lW3pvbmVfaWR4XS5k
-ZXZfc3RhcnQpOworCX0KKworCitpc3N1ZToKKwkvKiByZWNzIGNvbnRhaW5zIHRoZSByZS1v
-cmRlcmVkIHJlcXVlc3RzIGxheW91dCwgbm93IHdlIGNhbgorCSAqIGNoYWluIHNwbGl0IGJp
-b3MgZnJvbSByZWNzCisJICovCisJZm9yIChyZGV2X2lkeCA9IDA7IHJkZXZfaWR4IDwgZGlz
-a3M7IHJkZXZfaWR4KyspIHsKKwkJaWYgKHJkZXZfaWR4ID09IGZpcnN0X3JkZXZfaWR4IHx8
-CisJCSAgICByZWNzW3JkZXZfaWR4XS5zZWN0b3JzID09IDApCisJCQljb250aW51ZTsKKwkJ
-c3BsaXQgPSBiaW9fc3BsaXQoYmlvLAorCQkJCSAgcmVjc1tyZGV2X2lkeF0uc2VjdG9ycywK
-KwkJCQkgIEdGUF9OT0lPLAorCQkJCSAgZnNfYmlvX3NldCk7CisJCWlmIChzcGxpdCA9PSBO
-VUxMKQorCQkJYnJlYWs7CisJCWJpb19jaGFpbihzcGxpdCwgYmlvKTsKKwkJQlVHX09OKHNw
-bGl0LT5iaV9pdGVyLmJpX3NpemUgIT0gcmVjc1tyZGV2X2lkeF0uc2VjdG9ycyA8PCA5KTsK
-KwkJc3BsaXQtPmJpX2JkZXYgPSByZWNzW3JkZXZfaWR4XS5yZGV2LT5iZGV2OworCQlzcGxp
-dC0+YmlfaXRlci5iaV9zZWN0b3IgPSByZWNzW3JkZXZfaWR4XS5iaV9zZWN0b3IgKworCQkJ
-CXJlY3NbcmRldl9pZHhdLnJkZXYtPmRhdGFfb2Zmc2V0OworCisJCWlmICh1bmxpa2VseSgh
-YmxrX3F1ZXVlX2Rpc2NhcmQoCisJCQkJYmRldl9nZXRfcXVldWUoc3BsaXQtPmJpX2JkZXYp
-KSkpCisJCQkvKiBKdXN0IGlnbm9yZSBpdCAqLworCQkJYmlvX2VuZGlvKHNwbGl0KTsKKwkJ
-ZWxzZQorCQkJZ2VuZXJpY19tYWtlX3JlcXVlc3Qoc3BsaXQpOworCX0KKwlCVUdfT04oYmlv
-LT5iaV9pdGVyLmJpX3NpemUgIT0gcmVjc1tmaXJzdF9yZGV2X2lkeF0uc2VjdG9ycyA8PCA5
-KTsKKwliaW8tPmJpX2l0ZXIuYmlfc2VjdG9yID0gcmVjc1tmaXJzdF9yZGV2X2lkeF0uYmlf
-c2VjdG9yICsKKwkJCQkJcmVjc1tmaXJzdF9yZGV2X2lkeF0ucmRldi0+ZGF0YV9vZmZzZXQ7
-CisJYmlvLT5iaV9iZGV2ID0gcmVjc1tmaXJzdF9yZGV2X2lkeF0ucmRldi0+YmRldjsKKwor
-CWlmICh1bmxpa2VseSghYmxrX3F1ZXVlX2Rpc2NhcmQoYmRldl9nZXRfcXVldWUoYmlvLT5i
-aV9iZGV2KSkpKQorCQkvKiBKdXN0IGlnbm9yZSBpdCAqLworCQliaW9fZW5kaW8oYmlvKTsK
-KwllbHNlCisJCWdlbmVyaWNfbWFrZV9yZXF1ZXN0KGJpbyk7CisKKwlrZnJlZShyZWNzKTsK
-K30KKworc3RhdGljIHZvaWQgaGFuZGxlX2Rpc2NhcmRfYmlvKHN0cnVjdCBtZGRldiAqbWRk
-ZXYsIHN0cnVjdCBiaW8gKmJpbykKK3sKKwlzdHJ1Y3QgcjBjb25mICpjb25mID0gbWRkZXYt
-PnByaXZhdGU7CisJdW5zaWduZWQgaW50IGNodW5rX3NlY3RzID0gbWRkZXYtPmNodW5rX3Nl
-Y3RvcnM7CisJc2VjdG9yX3Qgc2VjdG9yLCBzZWN0b3JzOworCXN0cnVjdCBtZF9yZGV2ICpy
-ZGV2OworCXN0cnVjdCBzdHJpcF96b25lICp6b25lOworCisJc2VjdG9yID0gYmlvLT5iaV9p
-dGVyLmJpX3NlY3RvcjsKKwl6b25lID0gZmluZF96b25lKGNvbmYsICZzZWN0b3IpOworCXJk
-ZXYgPSBtYXBfc2VjdG9yKG1kZGV2LCB6b25lLCBzZWN0b3IsICZzZWN0b3IpOworCWJpby0+
-YmlfYmRldiA9IHJkZXYtPmJkZXY7CisJc2VjdG9ycyA9IGNodW5rX3NlY3RzIC0KKwkJKGxp
-a2VseShpc19wb3dlcl9vZl8yKGNodW5rX3NlY3RzKSkKKwkJID8gKHNlY3RvciAmIChjaHVu
-a19zZWN0cyAtIDEpKQorCQkgOiBzZWN0b3JfZGl2KHNlY3RvciwgY2h1bmtfc2VjdHMpKTsK
-KworCWlmICh1bmxpa2VseShzZWN0b3JzID49IGJpb19zZWN0b3JzKGJpbykpKSB7CisJCWJp
-by0+YmlfaXRlci5iaV9zZWN0b3IgPSBzZWN0b3IgKyB6b25lLT5kZXZfc3RhcnQgKworCQkJ
-CQkgcmRldi0+ZGF0YV9vZmZzZXQ7CisJCWdvdG8gc2luZ2xlX2JpbzsKKwl9CisKKwlpZiAo
-dW5saWtlbHkoem9uZS0+bmJfZGV2ID09IDEpKSB7CisJCXNlY3RvcnMgPSBjb25mLT5zdHJp
-cF96b25lWzBdLnpvbmVfZW5kIC0KKwkJCSAgc2VjdG9yOworCQlpZiAoYmlvX3NlY3RvcnMo
-YmlvKSA+IHNlY3RvcnMpCisJCQliaW8tPmJpX2l0ZXIuYmlfc2l6ZSA9IHNlY3RvcnMgPDwg
-OTsKKwkJYmlvLT5iaV9pdGVyLmJpX3NlY3RvciA9IHNlY3RvciArIHJkZXYtPmRhdGFfb2Zm
-c2V0OworCQlnb3RvIHNpbmdsZV9iaW87CisJfQorCisJaGFuZGxlX2xhcmdlX2Rpc2NhcmRf
-YmlvKG1kZGV2LCBiaW8pOworCXJldHVybjsKKworc2luZ2xlX2JpbzoKKwlpZiAodW5saWtl
-bHkoIWJsa19xdWV1ZV9kaXNjYXJkKGJkZXZfZ2V0X3F1ZXVlKGJpby0+YmlfYmRldikpKSkK
-KwkJLyogSnVzdCBpZ25vcmUgaXQgKi8KKwkJYmlvX2VuZGlvKGJpbyk7CisJZWxzZQorCQln
-ZW5lcmljX21ha2VfcmVxdWVzdChiaW8pOworCisJcmV0dXJuOworfQorCisKIHN0YXRpYyB2
-b2lkIHJhaWQwX21ha2VfcmVxdWVzdChzdHJ1Y3QgbWRkZXYgKm1kZGV2LCBzdHJ1Y3QgYmlv
-ICpiaW8pCiB7CiAJc3RydWN0IHN0cmlwX3pvbmUgKnpvbmU7CkBAIC00NjMsNiArNzIzLDEx
-IEBAIHN0YXRpYyB2b2lkIHJhaWQwX21ha2VfcmVxdWVzdChzdHJ1Y3QgbWRkZXYgKm1kZGV2
-LCBzdHJ1Y3QgYmlvICpiaW8pCiAJCXJldHVybjsKIAl9CiAKKwlpZiAodW5saWtlbHkoYmlv
-X29wKGJpbykgPT0gUkVRX09QX0RJU0NBUkQpKSB7CisJCWhhbmRsZV9kaXNjYXJkX2Jpbyht
-ZGRldiwgYmlvKTsKKwkJcmV0dXJuOworCX0KKwogCWRvIHsKIAkJc2VjdG9yX3Qgc2VjdG9y
-ID0gYmlvLT5iaV9pdGVyLmJpX3NlY3RvcjsKIAkJdW5zaWduZWQgY2h1bmtfc2VjdHMgPSBt
-ZGRldi0+Y2h1bmtfc2VjdG9yczsK
---------------34BE93A2EE19524CC25738D4--
+On Sun, Jan 22, 2017 at 10:03 PM, Andreas Klauer
+<Andreas.Klauer@metamorpher.de> wrote:
+> On Sun, Jan 22, 2017 at 11:08:40AM -0300, Salatiel Filho wrote:
+>> Any ideas what could it be ?
+>
+> mdadm --examine-badblocks
+>
+> Regards
+> Andreas Klauer
