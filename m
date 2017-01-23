@@ -1,36 +1,65 @@
-From: Joyes Dadi <"YD."@biscuit.ocn.ne.jp>
-Subject: Urgent Please,,
-Date: Mon, 23 Jan 2017 23:07:54 +0900 (JST)
-Message-ID: <1307460608.25784291.1485180474314.JavaMail.root__18088.5805435993$1485181164$gmane$org@biscuit.ocn.ne.jp>
-Reply-To: Joyes Dadi <joyesdadi767@citromail.hu>
+From: Salatiel Filho <salatiel.filho@gmail.com>
+Subject: Re: Input/Output error reading from a clean raid
+Date: Mon, 23 Jan 2017 11:42:04 -0300
+Message-ID: <CAGmni9qwyHo+G8e4APF99Ai-N_d5WfOhkT0xLoq-8tVkTOjonA@mail.gmail.com>
+References: <CAGmni9p7T5VQsSGQrwkpYgV=H4B-pjXtg8TxnuWst-FQSJh_fA@mail.gmail.com>
+ <22661.19403.314279.130591@quad.stoffel.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <22661.19403.314279.130591@quad.stoffel.home>
 Sender: linux-raid-owner@vger.kernel.org
+To: John Stoffel <john@stoffel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Good Day Dear,
+The output of the command is:
 
-My name is Ms. Joyes Dadi, I am glad you are reading this letter and I hope
-we will start our communication and I know that this message will look strange,
-surprising and probably unbelievable to you, but it is the reality. I want to
-make a donation of money to you.
+# dd if=3DFotos.zip of=3D/dev/null
+dd: error reading =E2=80=98Fotos.zip=E2=80=99: Input/output error
+328704+0 records in
+328704+0 records out
+168296448 bytes (168 MB) copied, 0.127723 s, 1.3 GB/s
 
-I contact you by the will of God. I am a firm German woman specialized in
-mining gold and diamonds in Africa. But now, I'm very sick of a cancer. My
-husband died in an accident two years ago with our two children and now I have
-cancer of the esophagus that damaged almost all the cells in my system/agencies
-and I'll die soon according to my doctor.
+or
 
-My most concern now is, we grew up in the orphanage and were married in
-orphanage. If I die this deposited fund will soon be left alone in the hand of
-the bank, and I do want to it that  way. Please, if you can be reliable and
-sincere to accept my humble proposal; I have (10.5Millions Euro) in a fixed
-deposit account; I will order the Bank to transfer the money into your account
-in your country immediately, and then you will take the fund to  your country
-and invest it to the orphanage homes Please, answer as quickly as possible.
+# cp Fotos.zip /tmp/
+cp: error reading =E2=80=98Fotos.zip=E2=80=99: Input/output error
+cp: failed to extend =E2=80=98/tmp/Fotos.zip=E2=80=99: Input/output error
 
-God bless you.
-Ms. Joyes Dadi
-Email: joyesdadi767@citromail.hu
+
+There is nothing on dmesg after running those commands;
+
+[]'s
+Salatiel
+
+
+On Sun, Jan 22, 2017 at 9:18 PM, John Stoffel <john@stoffel.org> wrote:
+>
+> Salatiel> I am trying to recover a few files from my backup. The
+> Salatiel> backup is on a raid 5 + ext4.  There are several files where
+> Salatiel> i get I/O error. The raid appears to be clean and fsck shows
+> Salatiel> no errors. Any ideas what could it be ?
+>
+> Salatiel> md1 : active raid5 sdd1[0] sdg1[4] sdf1[2] sde1[1]
+> Salatiel>       3220829184 blocks super 1.2 level 5, 512k chunk, algorith=
+m 2 [4/4] [UUUU]
+> Salatiel>       bitmap: 1/8 pages [4KB], 65536KB chunk
+>
+> It would help if you could post the error(s) you're getting, along
+> with any output from dmesg during that time.  Have you done a full
+> scan of the disk looking for errors?  You might just have silent
+> read errors in your array.  So as root do:
+>
+>    # echo check >>/sys/block/md??/md/sync_action
+>
+> where md?? is the name of your md array you want to check.  You can
+> get the name from:
+>
+>    cat /proc/mdstat
+>
+> and of course it would help to post that info as well if you want more
+> help.
+>
+> John
