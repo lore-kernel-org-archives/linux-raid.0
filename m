@@ -1,41 +1,48 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: Input/Output error reading from a clean raid
-Date: Sun, 22 Jan 2017 19:18:19 -0500
-Message-ID: <22661.19403.314279.130591@quad.stoffel.home>
-References: <CAGmni9p7T5VQsSGQrwkpYgV=H4B-pjXtg8TxnuWst-FQSJh_fA@mail.gmail.com>
+From: Coly Li <colyli@suse.de>
+Subject: Re: Soft-Raid 0 Performance | Transfer two Data-Streams (CPU+FPGA) to
+ the same Soft-Raid
+Date: Mon, 23 Jan 2017 16:40:00 +0800
+Message-ID: <f2c7fa6f-3061-9baa-d2dd-1abbe7e22cfe@suse.de>
+References: <21298bd64ef0dc83b29bd45362ead46c@sw-optimization.com>
+ <0e04b53af8bdf4f39a08b31ea4499626@sw-optimization.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGmni9p7T5VQsSGQrwkpYgV=H4B-pjXtg8TxnuWst-FQSJh_fA@mail.gmail.com>
+In-Reply-To: <0e04b53af8bdf4f39a08b31ea4499626@sw-optimization.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Salatiel Filho <salatiel.filho@gmail.com>
+To: Eric Schwarz <eas@sw-optimization.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 2017/1/17 下午11:00, Eric Schwarz wrote:
+> Hello mailing list,
+> 
+> I have got two questions:
+> 
+> 1.) I have set-up a softraid (raid level 0) with mdadm using two M.2
+> modules. For one module the throughput is ~350MB/s (no mdadm) for two
+> modules the throughput is ~500MB/s which is less than factor 1,5 of the
+> throughput of a single drive. The filesystem used is ext4. Is there
+> someone having some values for comparison? For me the throughput gain
+> seems to be too little. The test was done using a HP Z840 workstation.
+> 
 
-Salatiel> I am trying to recover a few files from my backup. The
-Salatiel> backup is on a raid 5 + ext4.  There are several files where
-Salatiel> i get I/O error. The raid appears to be clean and fsck shows
-Salatiel> no errors. Any ideas what could it be ?
+Hi Eric,
 
-Salatiel> md1 : active raid5 sdd1[0] sdg1[4] sdf1[2] sde1[1]
-Salatiel>       3220829184 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/4] [UUUU]
-Salatiel>       bitmap: 1/8 pages [4KB], 65536KB chunk
+Could you attach your testing script as well, than we can have a look.
 
-It would help if you could post the error(s) you're getting, along
-with any output from dmesg during that time.  Have you done a full
-scan of the disk looking for errors?  You might just have silent
-read errors in your array.  So as root do:
 
-   # echo check >>/sys/block/md??/md/sync_action
 
-where md?? is the name of your md array you want to check.  You can
-get the name from:
+> 2.) We want to configure a softraid (raid level 0) with mdadm which can
+> be used from within Linux but also it should be possible to write data
+> to the raid w/ DMA directly from the FPGA which is also connected to the
+> PCIe bus as a slave as well as the M.2 modules. How can that be achieved
+> using existing kernel infrastructure?
+> 
 
-   cat /proc/mdstat
+I don't know such existing kernel code. Maybe other people can provide
+useful information.
 
-and of course it would help to post that info as well if you want more
-help.
+Coly
 
-John
