@@ -1,164 +1,166 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH v2 1/3] md/r5cache: flush data only stripes in r5l_recovery_log()
-Date: Mon, 23 Jan 2017 17:12:57 -0800
-Message-ID: <20170124011259.3351506-1-songliubraving@fb.com>
+Subject: [PATCH v2 3/3] md/r5cache: disable write back for degraded array
+Date: Mon, 23 Jan 2017 17:12:59 -0800
+Message-ID: <20170124011259.3351506-3-songliubraving@fb.com>
+References: <20170124011259.3351506-1-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170124011259.3351506-1-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuan@kylinos.cn, liuyun01@kylinos.cn, Song Liu <songliubraving@fb.com>, Jes.Sorensen@redhat.com
 List-Id: linux-raid.ids
 
-For safer operation, all arrays start in write-through mode.
-However, if recovery found data-only stripes before the shutdown
-(from previous write-back mode), it is not safe to run the array
-in write-through mode. To solve this problem, we flush all data-only
-stripes in r5l_recovery_log(). This logic is implemented in
-r5c_recovery_flush_data_only_stripes():
+write-back cache in degraded mode introduces corner cases to the array.
+Although we try to cover all these corner cases, it is safer to just
+disable write-back cache when the array is in degraded mode.
 
-1. enable write back cache
-2. flush all stripes
-3. wake up conf->mddev->thread
-4. wait for all stripes get flushed (reuse wait_for_quiescent)
-5. disable write back cache
-
-The wait in 4 will be waked up in release_inactive_stripe_list()
-when conf->active_stripes reaches 0.
-
-It is safe to wake up mddev->thread here because all the resource
-required for the thread has been initialized.
+In this patch, we disable writeback cache for degraded mode:
+1. On device failure, if the array enters degraded mode, raid5_error()
+   will submit async job r5c_disable_writeback_async to disable
+   writeback;
+2. In r5c_journal_mode_store(), it is invalid to enable writeback in
+   degraded mode;
+3. In r5c_try_caching_write(), stripes with s->failed>0 will be handled
+   in write-through mode.
 
 Signed-off-by: Song Liu <songliubraving@fb.com>
 ---
- drivers/md/md.c          |  5 +++++
- drivers/md/raid5-cache.c | 56 ++++++++++++++++++++++++++++++++++--------------
- 2 files changed, 45 insertions(+), 16 deletions(-)
+ drivers/md/raid5-cache.c | 44 ++++++++++++++++++++++++++++++++++++++++++++
+ drivers/md/raid5.c       |  3 ++-
+ drivers/md/raid5.h       |  2 ++
+ 3 files changed, 48 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 0abb147..85ac984 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5333,6 +5333,11 @@ int md_run(struct mddev *mddev)
- 	if (start_readonly && mddev->ro == 0)
- 		mddev->ro = 2; /* read-only, but switch on first write */
- 
-+	/*
-+	 * NOTE: some pers->run(), for example r5l_recovery_log(), wakes
-+	 * up mddev->thread. It is important to initialize critical
-+	 * resources for mddev->thread BEFORE calling pers->run().
-+	 */
- 	err = pers->run(mddev);
- 	if (err)
- 		pr_warn("md: pers->run() failed ...\n");
 diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 3da5e2a..00d2838 100644
+index 00d2838..55f1a37 100644
 --- a/drivers/md/raid5-cache.c
 +++ b/drivers/md/raid5-cache.c
-@@ -2102,7 +2102,7 @@ static int
- r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
- 				       struct r5l_recovery_ctx *ctx)
- {
--	struct stripe_head *sh, *next;
-+	struct stripe_head *sh;
- 	struct mddev *mddev = log->rdev->mddev;
- 	struct page *page;
- 	sector_t next_checkpoint = MaxSector;
-@@ -2116,7 +2116,7 @@ r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
+@@ -164,6 +164,9 @@ struct r5l_log {
+ 	/* to submit async io_units, to fulfill ordering of flush */
+ 	struct work_struct deferred_io_work;
  
- 	WARN_ON(list_empty(&ctx->cached_list));
- 
--	list_for_each_entry_safe(sh, next, &ctx->cached_list, lru) {
-+	list_for_each_entry(sh, &ctx->cached_list, lru) {
- 		struct r5l_meta_block *mb;
- 		int i;
- 		int offset;
-@@ -2166,14 +2166,39 @@ r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
- 		ctx->pos = write_pos;
- 		ctx->seq += 1;
- 		next_checkpoint = sh->log_start;
--		list_del_init(&sh->lru);
--		raid5_release_stripe(sh);
- 	}
- 	log->next_checkpoint = next_checkpoint;
- 	__free_page(page);
- 	return 0;
++	/* to disable write back during in degraded mode */
++	struct work_struct disable_writeback_work;
++
+ 	/* to for chunk_aligned_read in writeback mode, details below */
+ 	spinlock_t tree_lock;
+ 	struct radix_tree_root big_stripe_tree;
+@@ -653,6 +656,20 @@ static void r5l_submit_io_async(struct work_struct *work)
+ 		r5l_do_submit_io(log, io);
  }
  
-+static void r5c_recovery_flush_data_only_stripes(struct r5l_log *log,
-+						 struct r5l_recovery_ctx *ctx)
++static void r5c_disable_writeback_async(struct work_struct *work)
 +{
++	struct r5l_log *log = container_of(work, struct r5l_log,
++					   disable_writeback_work);
 +	struct mddev *mddev = log->rdev->mddev;
 +	struct r5conf *conf = mddev->private;
-+	struct stripe_head *sh, *next;
 +
-+	if (ctx->data_only_stripes == 0)
-+		return;
-+
-+	log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_BACK;
-+
-+	list_for_each_entry_safe(sh, next, &ctx->cached_list, lru) {
-+		r5c_make_stripe_write_out(sh);
-+		set_bit(STRIPE_HANDLE, &sh->state);
-+		list_del_init(&sh->lru);
-+		raid5_release_stripe(sh);
-+	}
-+
-+	md_wakeup_thread(conf->mddev->thread);
-+	/* reuse conf->wait_for_quiescent in recovery */
-+	wait_event(conf->wait_for_quiescent,
-+		   atomic_read(&conf->active_stripes) == 0);
-+
-+	log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_THROUGH;
++	pr_crit("md/raid:%s: Disabling writeback cache for degraded array.\n",
++		mdname(mddev));
++	mddev_suspend(mddev);
++	conf->log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_THROUGH;
++	mddev_resume(mddev);
 +}
 +
- static int r5l_recovery_log(struct r5l_log *log)
+ static void r5l_submit_current_io(struct r5l_log *log)
  {
- 	struct mddev *mddev = log->rdev->mddev;
-@@ -2200,32 +2225,31 @@ static int r5l_recovery_log(struct r5l_log *log)
- 	pos = ctx.pos;
- 	ctx.seq += 10000;
+ 	struct r5l_io_unit *io = log->current_io;
+@@ -2311,6 +2328,9 @@ static ssize_t r5c_journal_mode_store(struct mddev *mddev,
+ 	    val > R5C_JOURNAL_MODE_WRITE_BACK)
+ 		return -EINVAL;
  
--	if (ctx.data_only_stripes == 0) {
--		log->next_checkpoint = ctx.pos;
--		r5l_log_write_empty_meta_block(log, ctx.pos, ctx.seq++);
--		ctx.pos = r5l_ring_add(log, ctx.pos, BLOCK_SECTORS);
--	}
- 
- 	if ((ctx.data_only_stripes == 0) && (ctx.data_parity_stripes == 0))
- 		pr_debug("md/raid:%s: starting from clean shutdown\n",
- 			 mdname(mddev));
--	else {
-+	else
- 		pr_debug("md/raid:%s: recovering %d data-only stripes and %d data-parity stripes\n",
- 			 mdname(mddev), ctx.data_only_stripes,
- 			 ctx.data_parity_stripes);
- 
--		if (ctx.data_only_stripes > 0)
--			if (r5c_recovery_rewrite_data_only_stripes(log, &ctx)) {
--				pr_err("md/raid:%s: failed to rewrite stripes to journal\n",
--				       mdname(mddev));
--				return -EIO;
--			}
-+	if (ctx.data_only_stripes == 0) {
-+		log->next_checkpoint = ctx.pos;
-+		r5l_log_write_empty_meta_block(log, ctx.pos, ctx.seq++);
-+		ctx.pos = r5l_ring_add(log, ctx.pos, BLOCK_SECTORS);
-+	} else if (r5c_recovery_rewrite_data_only_stripes(log, &ctx)) {
-+		pr_err("md/raid:%s: failed to rewrite stripes to journal\n",
-+		       mdname(mddev));
-+		return -EIO;
++	if (calc_degraded(conf) > 0 && val == R5C_JOURNAL_MODE_WRITE_BACK)
++		return -EINVAL;
++
+ 	mddev_suspend(mddev);
+ 	conf->log->r5c_journal_mode = val;
+ 	mddev_resume(mddev);
+@@ -2369,6 +2389,16 @@ int r5c_try_caching_write(struct r5conf *conf,
+ 		set_bit(STRIPE_R5C_CACHING, &sh->state);
  	}
  
- 	log->log_start = ctx.pos;
- 	log->seq = ctx.seq;
- 	log->last_checkpoint = pos;
- 	r5l_write_super(log, pos);
++	/*
++	 * When run in degraded mode, array is set to write-through mode.
++	 * This check helps drain pending write safely in the transition to
++	 * write-through mode.
++	 */
++	if (s->failed) {
++		r5c_make_stripe_write_out(sh);
++		return -EAGAIN;
++	}
 +
-+	r5c_recovery_flush_data_only_stripes(log, &ctx);
- 	return 0;
+ 	for (i = disks; i--; ) {
+ 		dev = &sh->dev[i];
+ 		/* if non-overwrite, use writing-out phase */
+@@ -2713,6 +2743,19 @@ static int r5l_load_log(struct r5l_log *log)
+ 	return ret;
  }
  
++void r5c_update_on_rdev_error(struct mddev *mddev)
++{
++	struct r5conf *conf = mddev->private;
++	struct r5l_log *log = conf->log;
++
++	if (!log)
++		return;
++
++	if (calc_degraded(conf) > 0 &&
++	    conf->log->r5c_journal_mode == R5C_JOURNAL_MODE_WRITE_BACK)
++		schedule_work(&log->disable_writeback_work);
++}
++
+ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+ {
+ 	struct request_queue *q = bdev_get_queue(rdev->bdev);
+@@ -2788,6 +2831,7 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+ 	spin_lock_init(&log->no_space_stripes_lock);
+ 
+ 	INIT_WORK(&log->deferred_io_work, r5l_submit_io_async);
++	INIT_WORK(&log->disable_writeback_work, r5c_disable_writeback_async);
+ 
+ 	log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_THROUGH;
+ 	INIT_LIST_HEAD(&log->stripe_in_journal_list);
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index ad8f24c..f8223e5 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -556,7 +556,7 @@ static struct stripe_head *__find_stripe(struct r5conf *conf, sector_t sector,
+  * of the two sections, and some non-in_sync devices may
+  * be insync in the section most affected by failed devices.
+  */
+-static int calc_degraded(struct r5conf *conf)
++int calc_degraded(struct r5conf *conf)
+ {
+ 	int degraded, degraded2;
+ 	int i;
+@@ -2606,6 +2606,7 @@ static void raid5_error(struct mddev *mddev, struct md_rdev *rdev)
+ 		bdevname(rdev->bdev, b),
+ 		mdname(mddev),
+ 		conf->raid_disks - mddev->degraded);
++	r5c_update_on_rdev_error(mddev);
+ }
+ 
+ /*
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index 8ae498c..36f28d1 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -762,6 +762,7 @@ extern sector_t raid5_compute_sector(struct r5conf *conf, sector_t r_sector,
+ extern struct stripe_head *
+ raid5_get_active_stripe(struct r5conf *conf, sector_t sector,
+ 			int previous, int noblock, int noquiesce);
++extern int calc_degraded(struct r5conf *conf);
+ extern int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev);
+ extern void r5l_exit_log(struct r5l_log *log);
+ extern int r5l_write_stripe(struct r5l_log *log, struct stripe_head *head_sh);
+@@ -791,4 +792,5 @@ extern void r5c_check_stripe_cache_usage(struct r5conf *conf);
+ extern void r5c_check_cached_full_stripe(struct r5conf *conf);
+ extern struct md_sysfs_entry r5c_journal_mode;
+ extern bool r5c_big_stripe_cached(struct r5conf *conf, sector_t sect);
++extern void r5c_update_on_rdev_error(struct mddev *mddev);
+ #endif
 -- 
 2.9.3
 
