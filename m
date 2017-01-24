@@ -1,38 +1,151 @@
-From: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Subject: [PATCH 1/1] imsm: fix missing error message during migration
-Date: Tue, 24 Jan 2017 14:29:33 +0100
-Message-ID: <20170124132933.16943-1-pawel.baldysiak@intel.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH v2 3/3] md/r5cache: disable write back for degraded array
+Date: Tue, 24 Jan 2017 09:56:36 -0800
+Message-ID: <20170124175636.q3q7mq26hajtqoib@kernel.org>
+References: <20170124011259.3351506-1-songliubraving@fb.com>
+ <20170124011259.3351506-3-songliubraving@fb.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170124011259.3351506-3-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: jes.sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org, Pawel Baldysiak <pawel.baldysiak@intel.com>
+To: Song Liu <songliubraving@fb.com>
+Cc: linux-raid@vger.kernel.org, neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuan@kylinos.cn, liuyun01@kylinos.cn, Jes.Sorensen@redhat.com
 List-Id: linux-raid.ids
 
-If user tries to migrate from raid0 to raid5 and there is no spare
-drive to perform it - mdadm will exit with errorcode, but
-no error message is printed.
+On Mon, Jan 23, 2017 at 05:12:59PM -0800, Song Liu wrote:
+> write-back cache in degraded mode introduces corner cases to the array.
+> Although we try to cover all these corner cases, it is safer to just
+> disable write-back cache when the array is in degraded mode.
+> 
+> In this patch, we disable writeback cache for degraded mode:
+> 1. On device failure, if the array enters degraded mode, raid5_error()
+>    will submit async job r5c_disable_writeback_async to disable
+>    writeback;
+> 2. In r5c_journal_mode_store(), it is invalid to enable writeback in
+>    degraded mode;
+> 3. In r5c_try_caching_write(), stripes with s->failed>0 will be handled
+>    in write-through mode.
 
-Print error instead of debug message when this condition occurs,
-so user is informed why requested migration is not started.
+Applied the first 2, have some comments about this one, please see below
+ 
+> Signed-off-by: Song Liu <songliubraving@fb.com>
+> ---
+>  drivers/md/raid5-cache.c | 44 ++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/md/raid5.c       |  3 ++-
+>  drivers/md/raid5.h       |  2 ++
+>  3 files changed, 48 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+> index 00d2838..55f1a37 100644
+> --- a/drivers/md/raid5-cache.c
+> +++ b/drivers/md/raid5-cache.c
+> @@ -164,6 +164,9 @@ struct r5l_log {
+>  	/* to submit async io_units, to fulfill ordering of flush */
+>  	struct work_struct deferred_io_work;
+>  
+> +	/* to disable write back during in degraded mode */
+> +	struct work_struct disable_writeback_work;
+> +
+>  	/* to for chunk_aligned_read in writeback mode, details below */
+>  	spinlock_t tree_lock;
+>  	struct radix_tree_root big_stripe_tree;
+> @@ -653,6 +656,20 @@ static void r5l_submit_io_async(struct work_struct *work)
+>  		r5l_do_submit_io(log, io);
+>  }
+>  
+> +static void r5c_disable_writeback_async(struct work_struct *work)
+> +{
+> +	struct r5l_log *log = container_of(work, struct r5l_log,
+> +					   disable_writeback_work);
+> +	struct mddev *mddev = log->rdev->mddev;
+> +	struct r5conf *conf = mddev->private;
+> +
+> +	pr_crit("md/raid:%s: Disabling writeback cache for degraded array.\n",
+> +		mdname(mddev));
 
-Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
----
- super-intel.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+does this need to be pr_crit? This isn't an error. So I think pr_info is more
+appropriate.
 
-diff --git a/super-intel.c b/super-intel.c
-index 433bb6d..d5e9517 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -10718,7 +10718,7 @@ static int imsm_create_metadata_update_for_migration(
- 			free(u);
- 			sysfs_free(spares);
- 			update_memory_size = 0;
--			dprintf("error: cannot get spare device for requested migration");
-+			pr_err("cannot get spare device for requested migration\n");
- 			return 0;
- 		}
- 		sysfs_free(spares);
--- 
-2.9.3
+> +	mddev_suspend(mddev);
+> +	conf->log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_THROUGH;
+> +	mddev_resume(mddev);
+> +}
+> +
+>  static void r5l_submit_current_io(struct r5l_log *log)
+>  {
+>  	struct r5l_io_unit *io = log->current_io;
+> @@ -2311,6 +2328,9 @@ static ssize_t r5c_journal_mode_store(struct mddev *mddev,
+>  	    val > R5C_JOURNAL_MODE_WRITE_BACK)
+>  		return -EINVAL;
+>  
+> +	if (calc_degraded(conf) > 0 && val == R5C_JOURNAL_MODE_WRITE_BACK)
+> +		return -EINVAL;
+> +
+>  	mddev_suspend(mddev);
+>  	conf->log->r5c_journal_mode = val;
+>  	mddev_resume(mddev);
+> @@ -2369,6 +2389,16 @@ int r5c_try_caching_write(struct r5conf *conf,
+>  		set_bit(STRIPE_R5C_CACHING, &sh->state);
+>  	}
+>  
+> +	/*
+> +	 * When run in degraded mode, array is set to write-through mode.
+> +	 * This check helps drain pending write safely in the transition to
+> +	 * write-through mode.
+> +	 */
+> +	if (s->failed) {
+> +		r5c_make_stripe_write_out(sh);
+> +		return -EAGAIN;
+> +	}
+> +
+>  	for (i = disks; i--; ) {
+>  		dev = &sh->dev[i];
+>  		/* if non-overwrite, use writing-out phase */
+> @@ -2713,6 +2743,19 @@ static int r5l_load_log(struct r5l_log *log)
+>  	return ret;
+>  }
+>  
+> +void r5c_update_on_rdev_error(struct mddev *mddev)
+> +{
+> +	struct r5conf *conf = mddev->private;
+> +	struct r5l_log *log = conf->log;
+> +
+> +	if (!log)
+> +		return;
+> +
+> +	if (calc_degraded(conf) > 0 &&
+> +	    conf->log->r5c_journal_mode == R5C_JOURNAL_MODE_WRITE_BACK)
+> +		schedule_work(&log->disable_writeback_work);
+> +}
+> +
+>  int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+>  {
+>  	struct request_queue *q = bdev_get_queue(rdev->bdev);
+> @@ -2788,6 +2831,7 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+>  	spin_lock_init(&log->no_space_stripes_lock);
+>  
+>  	INIT_WORK(&log->deferred_io_work, r5l_submit_io_async);
+> +	INIT_WORK(&log->disable_writeback_work, r5c_disable_writeback_async);
 
+In teardown, we need to make sure the work is finished. so please flush the
+work at that time.
+ 
+>  	log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_THROUGH;
+>  	INIT_LIST_HEAD(&log->stripe_in_journal_list);
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index ad8f24c..f8223e5 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -556,7 +556,7 @@ static struct stripe_head *__find_stripe(struct r5conf *conf, sector_t sector,
+>   * of the two sections, and some non-in_sync devices may
+>   * be insync in the section most affected by failed devices.
+>   */
+> -static int calc_degraded(struct r5conf *conf)
+> +int calc_degraded(struct r5conf *conf)
+
+Since this one is exported to other file, let's rename it to raid5_calc_degraded
+
+Thanks,
+Shaohua
