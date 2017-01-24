@@ -1,157 +1,138 @@
-From: Jake Yao <jgyao1@gmail.com>
-Subject: Re: performance of raid5 on fast devices
-Date: Mon, 23 Jan 2017 17:20:42 -0500
-Message-ID: <CA+Dh761AoRa3g3O4hztTACe5M1sbNRz3_hQQKgikupxLNLVQ8g@mail.gmail.com>
-References: <CA+Dh761_kVPEcRdFEAo72Wif_t-G7RpgyoKGetEFveyMpaYD1w@mail.gmail.com>
- <20170117101043.78e80bdc@natsu> <CA+Dh763Ttvnt9CSEUZ0QwPOLCaZq6VVXmj4OoheR7WTO6o4Pbw@mail.gmail.com>
- <27fb7a94-27d0-b319-30b8-daf4dab97415@redhat.com> <CA+Dh761U6J6UKsGBD8dLfBR0bQHjK5T3tj3tTv889BAQWncxfw@mail.gmail.com>
- <a7cf3ce7-688d-819c-60ab-a9b53e14d869@suse.de>
+From: Song Liu <songliubraving@fb.com>
+Subject: [PATCH v2 2/3] md/r5cache: shift complex rmw from read path to write path
+Date: Mon, 23 Jan 2017 17:12:58 -0800
+Message-ID: <20170124011259.3351506-2-songliubraving@fb.com>
+References: <20170124011259.3351506-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <a7cf3ce7-688d-819c-60ab-a9b53e14d869@suse.de>
+In-Reply-To: <20170124011259.3351506-1-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Coly Li <colyli@suse.de>
-Cc: Heinz Mauelshagen <heinzm@redhat.com>, Roman Mamedov <rm@romanrm.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.com, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, liuzhengyuan@kylinos.cn, liuyun01@kylinos.cn, Song Liu <songliubraving@fb.com>, Jes.Sorensen@redhat.com
 List-Id: linux-raid.ids
 
-I run tests with multiple IO threads, but it looks like it does not
-affect the overall performance.
+Write back cache requires a complex RMW mechanism, where old data is
+read into dev->orig_page for prexor, and then xor is done with
+dev->page. This logic is already implemented in the write path.
 
-In this run with 8 io threads,
+However, current read path is not awared of this requirement. When
+the array is optimal, the RMW is not required, as the data are
+read from raid disks. However, when the target stripe is degraded,
+complex RMW is required to generate right data.
 
-[global]
-ioengine=3Dlibaio
-iodepth=3D64
-bs=3D192k
-direct=3D1
-thread=3D1
-time_based=3D1
-runtime=3D20
-numjobs=3D8
-loops=3D1
-group_reporting=3D1
-rwmixread=3D70
-rwmixwrite=3D30
-exitall
-#
-# end of global
-#
-[nvme_md_write]
-rw=3Dwrite
-filename=3D/dev/md127
-runtime=3D20
+To keep read path as clean as possible, we handle read path by
+flushing degraded, in-journal stripes before processing reads to
+missing dev.
 
-[nvme_drv_write]
-rw=3Dwrite
-filename=3D/dev/nvme1n1p2
-runtime=3D20
+Specifically, when there is read requests to a degraded stripe
+with data in journal, handle_stripe_fill() calls
+r5c_make_stripe_write_out() and exits. Then handle_stripe_dirtying()
+will do the complex RMW and flush the stripe to RAID disks. After
+that, read requests are handled.
 
-I got following for nvme based raid5 and single drive:
+There is one more corner case when there is non-overwrite bio for
+the missing (or out of sync) dev. handle_stripe_dirtying() will not
+be able to process the non-overwrite bios without constructing the
+data in handle_stripe_fill(). This is fixed by delaying non-overwrite
+bios in handle_stripe_dirtying(). So handle_stripe_fill() works on
+these bios after the stripe is flushed to raid disks.
 
-md thrd-cnt 0: write: io=3D27992MB, bw=3D1397.5MB/s, iops=3D7452, runt=3D 2=
-0031msec
-md thrd-cnt 1: write: io=3D43065MB, bw=3D2148.6MB/s, iops=3D11458, runt=3D =
-20044msec
-md thrd-cnt 2: write: io=3D43209MB, bw=3D2155.9MB/s, iops=3D11497, runt=3D =
-20043msec
-md thrd-cnt 3: write: io=3D43163MB, bw=3D2153.9MB/s, iops=3D11487, runt=3D =
-20040msec
-md thrd-cnt 4: write: io=3D43316MB, bw=3D2163.2MB/s, iops=3D11536, runt=3D =
-20024msec
-md thrd-cnt 5: write: io=3D43390MB, bw=3D2164.7MB/s, iops=3D11544, runt=3D =
-20045msec
-md thrd-cnt 6: write: io=3D43295MB, bw=3D2160.2MB/s, iops=3D11521, runt=3D =
-20042msec
-single drive: write: io=3D36004MB, bw=3D1795.4MB/s, iops=3D9575, runt=3D 20=
-054msec
+Signed-off-by: Song Liu <songliubraving@fb.com>
+---
+ drivers/md/raid5.c | 48 ++++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 44 insertions(+), 4 deletions(-)
 
-It also does not show little effect on ssd based raid5 and single
-drive. Same fio config as above, just changing the corresponding
-device filenames. The result is following:
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index f060ad6..ad8f24c 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -2934,6 +2934,30 @@ sector_t raid5_compute_blocknr(struct stripe_head *sh, int i, int previous)
+ 	return r_sector;
+ }
+ 
++/*
++ * There are cases where we want handle_stripe_dirtying() and
++ * schedule_reconstruction() to delay towrite to some dev of a stripe.
++ *
++ * This function checks whether we want to delay the towrite. Specifically,
++ * we delay the towrite when:
++ *
++ *   1. degraded stripe has a non-overwrite to the missing dev, AND this
++ *      stripe has data in journal (for other devices).
++ *
++ *      In this case, when reading data for the non-overwrite dev, it is
++ *      necessary to handle complex rmw of write back cache (prexor with
++ *      orig_page, and xor with page). To keep read path simple, we would
++ *      like to flush data in journal to RAID disks first, so complex rmw
++ *      is handled in the write patch (handle_stripe_dirtying).
++ *
++ */
++static inline bool delay_towrite(struct r5dev *dev,
++				   struct stripe_head_state *s)
++{
++	return !test_bit(R5_OVERWRITE, &dev->flags) &&
++		!test_bit(R5_Insync, &dev->flags) && s->injournal;
++}
++
+ static void
+ schedule_reconstruction(struct stripe_head *sh, struct stripe_head_state *s,
+ 			 int rcw, int expand)
+@@ -2954,7 +2978,7 @@ schedule_reconstruction(struct stripe_head *sh, struct stripe_head_state *s,
+ 		for (i = disks; i--; ) {
+ 			struct r5dev *dev = &sh->dev[i];
+ 
+-			if (dev->towrite) {
++			if (dev->towrite && !delay_towrite(dev, s)) {
+ 				set_bit(R5_LOCKED, &dev->flags);
+ 				set_bit(R5_Wantdrain, &dev->flags);
+ 				if (!expand)
+@@ -3531,10 +3555,25 @@ static void handle_stripe_fill(struct stripe_head *sh,
+ 	 * midst of changing due to a write
+ 	 */
+ 	if (!test_bit(STRIPE_COMPUTE_RUN, &sh->state) && !sh->check_state &&
+-	    !sh->reconstruct_state)
++	    !sh->reconstruct_state) {
++
++		/* for degraded stripe with data in journal, do not handle
++		 * read requests yet, instead, flush the stripe to raid
++		 * disks first, this avoids handling complex rmw of write
++		 * back cache (prexor with orig_page, and then xor with
++		 * page) in the read path
++		 */
++		if (s->injournal && s->failed) {
++			if (test_bit(STRIPE_R5C_CACHING, &sh->state))
++				r5c_make_stripe_write_out(sh);
++			goto out;
++		}
++
+ 		for (i = disks; i--; )
+ 			if (fetch_block(sh, s, i, disks))
+ 				break;
++	}
++out:
+ 	set_bit(STRIPE_HANDLE, &sh->state);
+ }
+ 
+@@ -3690,7 +3729,8 @@ static int handle_stripe_dirtying(struct r5conf *conf,
+ 	} else for (i = disks; i--; ) {
+ 		/* would I have to read this buffer for read_modify_write */
+ 		struct r5dev *dev = &sh->dev[i];
+-		if ((dev->towrite || i == sh->pd_idx || i == sh->qd_idx ||
++		if (((dev->towrite && !delay_towrite(dev, s)) ||
++		     i == sh->pd_idx || i == sh->qd_idx ||
+ 		     test_bit(R5_InJournal, &dev->flags)) &&
+ 		    !test_bit(R5_LOCKED, &dev->flags) &&
+ 		    !(uptodate_for_rmw(dev) ||
+@@ -3754,7 +3794,7 @@ static int handle_stripe_dirtying(struct r5conf *conf,
+ 
+ 		for (i = disks; i--; ) {
+ 			struct r5dev *dev = &sh->dev[i];
+-			if ((dev->towrite ||
++			if (((dev->towrite && !delay_towrite(dev, s)) ||
+ 			     i == sh->pd_idx || i == sh->qd_idx ||
+ 			     test_bit(R5_InJournal, &dev->flags)) &&
+ 			    !test_bit(R5_LOCKED, &dev->flags) &&
+-- 
+2.9.3
 
-md thrd-cnt 0: write: io=3D13646MB, bw=3D696242KB/s, iops=3D3626, runt=3D 2=
-0070msec
-md thrd-cnt 1: write: io=3D24519MB, bw=3D1221.5MB/s, iops=3D6514, runt=3D 2=
-0074msec
-md thrd-cnt 2: write: io=3D24780MB, bw=3D1234.9MB/s, iops=3D6585, runt=3D 2=
-0068msec
-md thrd-cnt 3: write: io=3D24890MB, bw=3D1240.2MB/s, iops=3D6613, runt=3D 2=
-0072msec
-md thrd-cnt 4: write: io=3D24937MB, bw=3D1242.5MB/s, iops=3D6626, runt=3D 2=
-0071msec
-md thrd-cnt 5: write: io=3D24948MB, bw=3D1242.9MB/s, iops=3D6628, runt=3D 2=
-0073msec
-md thrd-cnt 6: write: io=3D24701MB, bw=3D1230.1MB/s, iops=3D6564, runt=3D 2=
-0068msec
-single drive: write: io=3D8389.4MB, bw=3D428184KB/s, iops=3D2230, runt=3D 2=
-0063msec
-
-In the ssd case, raid5 array is 3x better than a single drive.
-
-On Fri, Jan 20, 2017 at 9:58 AM, Coly Li <colyli@suse.de> wrote:
-> On 2017/1/19 =E4=B8=8A=E5=8D=883:25, Jake Yao wrote:
->> It is interesting. I do not see the similar behavior with the change
->> of group_thread_cnt.
->>
->> The raid5 I have is following:
->>
->> md125 : active raid5 nvme0n1p1[0] nvme2n1p1[2] nvme1n1p1[1] nvme3n1p1[4]
->>       943325184 blocks super 1.2 level 5, 32k chunk, algorithm 2 [4/4] [=
-UUUU]
->>       bitmap: 0/3 pages [0KB], 65536KB chunk
->>
->> /dev/md125:
->>         Version : 1.2
->>   Creation Time : Thu Dec 15 20:11:46 2016
->>      Raid Level : raid5
->>      Array Size : 943325184 (899.63 GiB 965.96 GB)
->>   Used Dev Size : 314441728 (299.88 GiB 321.99 GB)
->>    Raid Devices : 4
->>   Total Devices : 4
->>     Persistence : Superblock is persistent
->>
->>   Intent Bitmap : Internal
->>
->>     Update Time : Wed Jan 18 16:24:52 2017
->>           State : clean
->>  Active Devices : 4
->> Working Devices : 4
->>  Failed Devices : 0
->>   Spare Devices : 0
->>
->>          Layout : left-symmetric
->>      Chunk Size : 32K
->>
->>            Name : localhost:nvme  (local to host localhost)
->>            UUID : 477a94af:79f5a10a:0d513dc6:7f5e670d
->>          Events : 108
->>
->>     Number   Major   Minor   RaidDevice State
->>        0     259        6        0      active sync   /dev/nvme0n1p1
->>        1     259        8        1      active sync   /dev/nvme1n1p1
->>        2     259        9        2      active sync   /dev/nvme2n1p1
->>        4     259        1        3      active sync   /dev/nvme3n1p1
->>
->> The fio config is:
->>
->> [global]
->> ioengine=3Dlibaio
->> iodepth=3D64
->> bs=3D96K
->> direct=3D1
->> thread=3D1
->> time_based=3D1
->> runtime=3D20
->> numjobs=3D1
->
-> You only have 1 I/O thread, bottle neck is here. Have a try with numjobs=
-=3D8.
->
->> loops=3D1
->> group_reporting=3D1
->> exitall
-> [snip]
->
-> Coly
