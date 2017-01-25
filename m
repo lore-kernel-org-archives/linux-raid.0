@@ -1,38 +1,53 @@
 From: "John Stoffel" <john@stoffel.org>
-Subject: Re: errors when reading in one section of a disk
-Date: Wed, 25 Jan 2017 10:44:14 -0500
-Message-ID: <22664.51150.798851.190164@quad.stoffel.home>
-References: <3b82fbda-b3a7-4bcf-8c1e-cbb2b2fd7075@exhybrid01.net.ucsf.edu>
+Subject: Re: Input/Output error reading from a clean raid
+Date: Wed, 25 Jan 2017 10:54:26 -0500
+Message-ID: <22664.51762.365362.899675@quad.stoffel.home>
+References: <CAGmni9p7T5VQsSGQrwkpYgV=H4B-pjXtg8TxnuWst-FQSJh_fA@mail.gmail.com>
+        <20170123010334.GA7546@metamorpher.de>
+        <CAGmni9pazRfia++-s5Hn4FT+ubVzEhsnrQrKC3cSLja53-SizQ@mail.gmail.com>
+        <20170123173411.GA9270@metamorpher.de>
+        <CAGmni9qF_LjdzYtsMJ9YmHoymG=SN6p2Mta-COEhbyReQFbNTA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3b82fbda-b3a7-4bcf-8c1e-cbb2b2fd7075@exhybrid01.net.ucsf.edu>
+In-Reply-To: <CAGmni9qF_LjdzYtsMJ9YmHoymG=SN6p2Mta-COEhbyReQFbNTA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Boylan, Ross" <Ross.Boylan@ucsf.edu>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Salatiel Filho <salatiel.filho@gmail.com>
+Cc: Andreas Klauer <Andreas.Klauer@metamorpher.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+>>>>> "Salatiel" == Salatiel Filho <salatiel.filho@gmail.com> writes:
 
-Ross> I suspect this problem has little to do with RAID, but since I'm
-Ross> using it I thought I'd start here.  I have 3 disks in a Vantec
-Ross> HX4 4 SATA drive box, connected by USB.  Repeatedly, when I try
-Ross> to read certain sectors of one disk every disk in the box seems
-Ross> to reset and then get remounted.  I thought this was a transient
-Ross> power failure the first time (though I'm on UPS), but when it
-Ross> happened again I figured the problem was elsewhere.  I am
-Ross> surprised that a read failure on one drive seems to reset the
-Ross> entire connection to the box.
+Salatiel> On Mon, Jan 23, 2017 at 2:34 PM, Andreas Klauer
+Salatiel> <Andreas.Klauer@metamorpher.de> wrote:
+>> On Mon, Jan 23, 2017 at 11:02:24AM -0300, Salatiel Filho wrote:
+>>> mdadm mdadm --examine-badblocks /dev/sdd1 /dev/sdg1 /dev/sdf1  /dev/sde1
+>>> 
+>>> Bad-blocks on /dev/sdd1:
+>>> 1515723072 for 512 sectors
+>>> Bad-blocks on /dev/sde1:
+>>> 1515723072 for 512 sectors
+>> 
+>> md believes you have bad blocks in identical places so it won't return
+>> whatever data is in these blocks. Thus you get read errors even if there
+>> is no bad block on the disk itself. Those bad block entries can be caused
+>> by cable or controller flukes, making temporary problems permanent...
+>> 
+>> Personally I disable the bad block list everywhere.
+>> 
+>> You can search this list for old messages regarding --examine-badblocks,
+>> this problem came up several times. Clearing the mdadm bad block list is
+>> worth a try. There's an undocumented option, update=force-no-bbl or such.
+>> 
+>> Regards
+>> Andreas Klauer
 
+Salatiel> Thanks all of you for the help.
+Salatiel> Andreas, the force-no-bbl from mdadm 3.4 did the trick. I was able to
+Salatiel> retrieve all files and their md5 matches, so it is great =)
 
-Ross> The disk is a relatively new WD Red Pro, and so seems unlikely
-Ross> to have a physical failure.  The Vantec box is almost 5 years
-Ross> old, and seems a better suspect.  The only reason I can think
-Ross> that reading a particular spot on one disk would make it fail is
-Ross> that this is perhaps accompanied by some other activity at the
-Ross> same time.  The Vantec itself supplies no RAID or anything
-Ross> fancy, just access to the drives.
+Great news, glad I could help, wish I had pin-pointed the root cause
+better.
 
-I'd just replace the Vantec box, the USB-SATA bridge is probably A)
-slow, and B) flaky.  
-
+john
