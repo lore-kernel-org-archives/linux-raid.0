@@ -1,42 +1,44 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: errors when reading in one section of a disk
-Date: Wed, 25 Jan 2017 16:42:18 +0000
-Message-ID: <5888D56A.3050409@youngman.org.uk>
-References: <3b82fbda-b3a7-4bcf-8c1e-cbb2b2fd7075@exhybrid01.net.ucsf.edu>
+From: Eric Schwarz <eas@sw-optimization.com>
+Subject: Re: Soft-Raid 0 Performance | Transfer two Data-Streams (CPU+FPGA) to
+ the same Soft-Raid
+Date: Wed, 25 Jan 2017 17:49:09 +0100
+Message-ID: <082d8b01add3650584dd44a13ca9b78b@sw-optimization.com>
+References: <21298bd64ef0dc83b29bd45362ead46c@sw-optimization.com>
+ <0e04b53af8bdf4f39a08b31ea4499626@sw-optimization.com>
+ <f2c7fa6f-3061-9baa-d2dd-1abbe7e22cfe@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3b82fbda-b3a7-4bcf-8c1e-cbb2b2fd7075@exhybrid01.net.ucsf.edu>
+In-Reply-To: <f2c7fa6f-3061-9baa-d2dd-1abbe7e22cfe@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Boylan, Ross" <Ross.Boylan@ucsf.edu>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Coly Li <colyli@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 25/01/17 02:43, Boylan, Ross wrote:
-> It looks as if the RAID arrays survive the redefinition of the physical devices (e.g., sde is reattached as sdj), but it's hard to tell since the partition with the error is mounted read-only and thus generates errors.  I have been rebooting the whole system shortly after the problem happens.  Should  the /dev/md* devices survive such remapping beneath them?
+Hi Coly,
+
+>> 1.) I have set-up a softraid (raid level 0) with mdadm using two M.2
+>> modules. For one module the throughput is ~350MB/s (no mdadm) for two
+>> modules the throughput is ~500MB/s which is less than factor 1,5 of 
+>> the
+>> throughput of a single drive. The filesystem used is ext4. Is there
+>> someone having some values for comparison? For me the throughput gain
+>> seems to be too little. The test was done using a HP Z840 workstation.
 > 
-Everything is moving to UUIDs. And raid, iirc, has done so.
+> Hi Eric,
+> 
+> Could you attach your testing script as well, than we can have a look.
 
-In other words, when your system is running, it doesn't care what you
-refer to the drives as - sde or sdj is immaterial - it converts those to
-UUIDs before saving them in the config, so when it re-assembles the
-array after some sort of reset, it gets the right drive. Linux has a
-whole bunch of symlinks in /dev to make life easy for the sysadm, and
-raid does what makes life easy for it.
+Create RAID0:
+$ mdadm --create /dev/md0 --auto md --level=0 --raid-devices=2 /dev/sdb1 
+/dev/sdc1
 
-Thing is, udev explicitly does NOT guarantee things like sda, sdb, etc
-(and md0, md1`, md27, md126 etc) will be preserved - they are allocated
-in the order the devices are found and there are quite a few systems out
-there that are distinctly non-deterministic so all the little quirks
-WILL have been found and ironed out. It's just "fortunate" that PC
-hardware happens to be - for the most part - deterministic giving the
-same result every time.
+Write to bare RAID0:
+$ dd if=/dev/zero of=/dev/md0 bs=1G count=1 oflag=dsync
 
-> After the remapping the file systems the md devices supported on the host computer were still mounted (albeit ro for one of them). mdadm -D did not llist the names of the component devices and the info in proc (or maybe it was run) seemed stale, since it still had the old device names (e.g., sde3 rather than sdj3).
+dd will show the throughput
 
-I'm guessing linux reset the Vantec box, rediscovering and moving all
-the drives, but raid didn't realise anything had happened so it was
-still using the old names. Not a good place to be, I don't think...
-
-Cheers,
-Wol
+Cheers
+Eric
