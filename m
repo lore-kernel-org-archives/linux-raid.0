@@ -1,90 +1,130 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 11/18] scsi: remove gfp_flags member in scsi_host_cmd_pool
-Date: Wed, 25 Jan 2017 18:25:19 +0100
-Message-ID: <1485365126-23210-12-git-send-email-hch@lst.de>
-References: <1485365126-23210-1-git-send-email-hch@lst.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1485365126-23210-1-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, Junichi Nomura <j-nomura@ce.jp.nec.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH] md linear: fix a race between linear_add() and
+ linear_congested()
+Date: Wed, 25 Jan 2017 10:02:58 -0800
+Message-ID: <20170125180258.fil35zckwtebysqr@kernel.org>
+References: <1485342943-9330-1-git-send-email-colyli@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1485342943-9330-1-git-send-email-colyli@suse.de>
+Sender: stable-owner@vger.kernel.org
+To: colyli@suse.de
+Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Neil Brown <neilb@suse.com>, stable@vger.kernel.org
 List-Id: linux-raid.ids
 
-When using the slab allocator we already decide at cache creation time if
-an allocation comes from a GFP_DMA pool using the SLAB_CACHE_DMA flag,
-and there is no point passing the kmalloc-family only GFP_DMA flag to
-kmem_cache_alloc.  Drop all the infrastructure for doing so.
+On Wed, Jan 25, 2017 at 07:15:43PM +0800, colyli@suse.de wrote:
+> Recently I receie a report that on Linux v3.0 based kerenl, hot add disk
+> to a md linear device causes kernel crash at linear_congested(). From the
+> crash image analysis, I find in linear_congested(), mddev->raid_disks
+> contains value N, but conf->disks[] only has N-1 pointers available. Then
+> a pointer deference to a NULL pointer crashes the kernel.
+> 
+> There is a race between linear_add() and linear_congested(), RCU stuffs
+> used in these two functions cannot avoid the race. Since Linuv v4.0
+> RCU code is replaced by introducing mddev_suspend().  After checking the
+> upstream code, it seems linear_congested() is not called in
+> generic_make_request() code patch, so mddev_suspend() cannot provent it
+> from being called. The possible race still exists.
+> 
+> Here I explain how the race still exists in current code.  For a machine
+> has many CPUs, on one CPU, linear_add() is called to add a hard disk to a
+> md linear device; at the same time on other CPU, linear_congested() is
+> called to detect whether this md linear device is congested before issuing
+> an I/O request onto it.
+> 
+> Now I use a possible code execution time sequence to demo how the possible
+> race happens, 
+> 
+> seq    linear_add()                linear_congested()
+>  0                                 conf=mddev->private
+>  1   oldconf=mddev->private
+>  2   mddev->raid_disks++
+>  3                              for (i=0; i<mddev->raid_disks;i++)
+>  4                                bdev_get_queue(conf->disks[i].rdev->bdev)
+>  5   mddev->private=newconf
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/scsi.c | 14 ++++----------
- 1 file changed, 4 insertions(+), 10 deletions(-)
+Good catch, this makes a lot of sense. However, this looks like an incomplete
+fix. step 0 will get the old conf, after step 5, linear_add will free the old
+conf. So it's possible linear_congested() will use the freed old conf. I think
+this is more likely to happen. The easist fix maybe put rcu_lock in
+linear_congested and free the old conf in a rcu callback.
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 75455d4..0f93892 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -105,7 +105,6 @@ struct scsi_host_cmd_pool {
- 	char			*cmd_name;
- 	char			*sense_name;
- 	unsigned int		slab_flags;
--	gfp_t			gfp_mask;
- };
+Thanks,
+Shaohua
  
- static struct scsi_host_cmd_pool scsi_cmd_pool = {
-@@ -118,7 +117,6 @@ static struct scsi_host_cmd_pool scsi_cmd_dma_pool = {
- 	.cmd_name	= "scsi_cmd_cache(DMA)",
- 	.sense_name	= "scsi_sense_cache(DMA)",
- 	.slab_flags	= SLAB_HWCACHE_ALIGN|SLAB_CACHE_DMA,
--	.gfp_mask	= __GFP_DMA,
- };
- 
- static DEFINE_MUTEX(host_cmd_pool_mutex);
-@@ -156,12 +154,11 @@ scsi_host_alloc_command(struct Scsi_Host *shost, gfp_t gfp_mask)
- 	struct scsi_host_cmd_pool *pool = shost->cmd_pool;
- 	struct scsi_cmnd *cmd;
- 
--	cmd = kmem_cache_zalloc(pool->cmd_slab, gfp_mask | pool->gfp_mask);
-+	cmd = kmem_cache_zalloc(pool->cmd_slab, gfp_mask);
- 	if (!cmd)
- 		goto fail;
- 
--	cmd->sense_buffer = kmem_cache_alloc(pool->sense_slab,
--					     gfp_mask | pool->gfp_mask);
-+	cmd->sense_buffer = kmem_cache_alloc(pool->sense_slab, gfp_mask);
- 	if (!cmd->sense_buffer)
- 		goto fail_free_cmd;
- 
-@@ -327,10 +324,8 @@ scsi_alloc_host_cmd_pool(struct Scsi_Host *shost)
- 	}
- 
- 	pool->slab_flags = SLAB_HWCACHE_ALIGN;
--	if (shost->unchecked_isa_dma) {
-+	if (shost->unchecked_isa_dma)
- 		pool->slab_flags |= SLAB_CACHE_DMA;
--		pool->gfp_mask = __GFP_DMA;
--	}
- 
- 	if (hostt->cmd_size)
- 		hostt->cmd_pool = pool;
-@@ -424,7 +419,6 @@ static void scsi_put_host_cmd_pool(struct Scsi_Host *shost)
-  */
- int scsi_setup_command_freelist(struct Scsi_Host *shost)
- {
--	const gfp_t gfp_mask = shost->unchecked_isa_dma ? GFP_DMA : GFP_KERNEL;
- 	struct scsi_cmnd *cmd;
- 
- 	spin_lock_init(&shost->free_list_lock);
-@@ -437,7 +431,7 @@ int scsi_setup_command_freelist(struct Scsi_Host *shost)
- 	/*
- 	 * Get one backup command for this host.
- 	 */
--	cmd = scsi_host_alloc_command(shost, gfp_mask);
-+	cmd = scsi_host_alloc_command(shost, GFP_KERNEL);
- 	if (!cmd) {
- 		scsi_put_host_cmd_pool(shost);
- 		shost->cmd_pool = NULL;
--- 
-2.1.4
-
+> In linear_add() mddev->raid_disks is increased in time seq 2, and on
+> another CPU in linear_congested() the for-loop iterates conf->disks[i] by
+> the increased mddev->raid_disks in time seq 3,4. But conf with one more
+> element (which is a pointer to struct dev_info type) to conf->disks[] is
+> not updated yet, accessing its structure member in time seq 4 will cause a
+> NULL pointer deference fault.
+> 
+> The fix is to update mddev->private with new value before increasing
+> mddev->raid_disks, and to make sure on other CPUs their are seen to be
+> updated in same order as linear_add() does (otherwise the race may still
+> happen), a smp_mb() is necessary.
+> 
+> A question is, by this fix, if mddev->private is update to new value in
+> linear_add(), but in linear_congested() the for-loop still tests old value
+> of mddev->raid_disks, then the iteration will miss the last element of
+> conf->disks[]. My answer is don't worry it, it's OK. the reasons are,
+>  - When updating mddev->private, the md linear device is suspend, no I/O
+>    may happen, it is safe to missing congestion status of the last
+>    new-added hard disk. 
+>  - In the worst case linear_congested() returns 0 and I/O sent to this md
+>    linear device, but the new added hard disk is congested, then the I/O
+>    request will be blocked for a while if it just happenly hits the new
+>    added hard disk. linear_congested() is in code path of wb_congested(),
+>    which is quite hot in write back code path. Comparing to add locking
+>    code in linear_congested(), the cost of the worst case is acceptable.
+> 
+> The bug is reported on Linux v3.0 based kernel, it can and should be
+> applied to all kernels since Linux v3.0. I see linear_add() is merged into
+> mainline since Linux v2.6.18, maybe stable kernel maintainers after this
+> version may consider to pick this fix as well.
+> 
+> Signed-off-by: Coly Li <colyli@suse.de>
+> Cc: Shaohua Li <shli@fb.com>
+> Cc: Neil Brown <neilb@suse.com>
+> Cc: stable@vger.kernel.org
+> ---
+>  drivers/md/linear.c | 14 +++++++++++++-
+>  1 file changed, 13 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/md/linear.c b/drivers/md/linear.c
+> index 5975c99..48ccfad 100644
+> --- a/drivers/md/linear.c
+> +++ b/drivers/md/linear.c
+> @@ -196,10 +196,22 @@ static int linear_add(struct mddev *mddev, struct md_rdev *rdev)
+>  	if (!newconf)
+>  		return -ENOMEM;
+>  
+> +	/* In linear_congested(), mddev->raid_disks and mddev->private
+> +	 * are accessed without protection by mddev_suspend(). If on
+> +	 * another CPU,  in linear_congested() mddev->private is still seen
+> +	 * to contains old value but mddev->raid_disks is seen to have the
+> +	 * increased value, the last iteration to conf->disks[i].rdev will
+> +	 * trigger a NULL pointer deference. To avoid this race, here
+> +	 * mddev->private must be updated before increasing
+> +	 * mddev->raid_disks, and a smp_mb() is required between them. Then
+> +	 * in linear_congested(), we are sure the updated mddev->private is
+> +	 * seen when iterating conf->disks[i].
+> +	 */
+>  	mddev_suspend(mddev);
+>  	oldconf = mddev->private;
+> -	mddev->raid_disks++;
+>  	mddev->private = newconf;
+> +	smp_mb();
+> +	mddev->raid_disks++;
+>  	md_set_array_sectors(mddev, linear_size(mddev, 0, 0));
+>  	set_capacity(mddev->gendisk, mddev->array_sectors);
+>  	mddev_resume(mddev);
+> -- 
+> 2.6.6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
