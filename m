@@ -1,112 +1,81 @@
-From: Coly Li <colyli@suse.de>
-Subject: Re: [PATCH] md linear: fix a race between linear_add() and
- linear_congested()
-Date: Sat, 28 Jan 2017 01:45:46 +0800
-Message-ID: <fe4e5004-3cf4-f3a7-7741-8aa3e4e4ccb5@suse.de>
-References: <1485342943-9330-1-git-send-email-colyli@suse.de>
- <20170125180258.fil35zckwtebysqr@kernel.org>
- <8737g6vg7r.fsf@notabene.neil.brown.name>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH 15/18] scsi: allocate scsi_cmnd structures as
+ part of struct request
+Date: Fri, 27 Jan 2017 18:39:46 +0000
+Message-ID: <1485542367.4267.19.camel@sandisk.com>
+References: <1485365126-23210-1-git-send-email-hch@lst.de>
+	<1485365126-23210-16-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8737g6vg7r.fsf@notabene.neil.brown.name>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, stable@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <1485365126-23210-16-git-send-email-hch@lst.de>
+Content-Language: en-US
+Content-ID: <BE554E14EF9A284CBAC0B74B0A4D7AA9@sandisk.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: "hch@lst.de" <hch@lst.de>, "axboe@fb.com" <axboe@fb.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "j-nomura@ce.jp.nec.com" <j-nomura@ce.jp.nec.com>
 List-Id: linux-raid.ids
 
-On 2017/1/26 上午8:04, NeilBrown wrote:
-> On Wed, Jan 25 2017, Shaohua Li wrote:
-> 
->> On Wed, Jan 25, 2017 at 07:15:43PM +0800, colyli@suse.de wrote:
->>> Recently I receie a report that on Linux v3.0 based kerenl, hot
->>> add disk to a md linear device causes kernel crash at
->>> linear_congested(). From the crash image analysis, I find in
->>> linear_congested(), mddev->raid_disks contains value N, but
->>> conf->disks[] only has N-1 pointers available. Then a pointer
->>> deference to a NULL pointer crashes the kernel.
->>> 
->>> There is a race between linear_add() and linear_congested(),
->>> RCU stuffs used in these two functions cannot avoid the race.
->>> Since Linuv v4.0 RCU code is replaced by introducing
->>> mddev_suspend().  After checking the upstream code, it seems
->>> linear_congested() is not called in generic_make_request() code
->>> patch, so mddev_suspend() cannot provent it from being called.
->>> The possible race still exists.
->>> 
->>> Here I explain how the race still exists in current code.  For
->>> a machine has many CPUs, on one CPU, linear_add() is called to
->>> add a hard disk to a md linear device; at the same time on
->>> other CPU, linear_congested() is called to detect whether this
->>> md linear device is congested before issuing an I/O request
->>> onto it.
->>> 
->>> Now I use a possible code execution time sequence to demo how
->>> the possible race happens,
->>> 
->>> seq    linear_add()                linear_congested() 0
->>> conf=mddev->private 1   oldconf=mddev->private 2
->>> mddev->raid_disks++ 3                              for (i=0;
->>> i<mddev->raid_disks;i++) 4
->>> bdev_get_queue(conf->disks[i].rdev->bdev) 5
->>> mddev->private=newconf
->> 
->> Good catch, this makes a lot of sense. However, this looks like
->> an incomplete fix. step 0 will get the old conf, after step 5,
->> linear_add will free the old conf. So it's possible
->> linear_congested() will use the freed old conf. I think this is
->> more likely to happen. The easist fix maybe put rcu_lock in 
->> linear_congested and free the old conf in a rcu callback.
-> 
-> We used to use kfree_rcu() but removed it in
-> 
-> Commit: 3be260cc18f8 ("md/linear: remove rcu protections in favour
-> of suspend/resume")
-> 
-> when we changed to suspend/resume the device.  That stops all IO,
-> but doesn't stop the ->congested call.
-> 
-> So we probably should re-introduce kfree_rcu() to free oldconf. It
-> might also be good to store a copy of raid_disks in linear_conf,
-> like we do with r5conf, the ensure we never us inconsistent 
-> ->raid_disks and ->disks[]
+On Wed, 2017-01-25 at 18:25 +0100, Christoph Hellwig wrote:
+> -unsigned char *scsi_alloc_sense_buffer(struct Scsi_Host *shost, gfp_t gf=
+p_mask,
+> -=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0int numa_node)
+> +static unsigned char *scsi_alloc_sense_buffer(struct Scsi_Host *shost,
+> +=A0=A0=A0=A0=A0=A0=A0gfp_t gfp_mask, int numa_node)
+> =A0{
+> =A0=A0=A0=A0=A0=A0=A0=A0return kmem_cache_alloc_node(scsi_select_sense_ca=
+che(shost), gfp_mask,
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0n=
+uma_node);
+> @@ -697,14 +696,13 @@ static bool scsi_end_request(struct request *req, i=
+nt error,
+> =A0
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0if (bidi_bytes)
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0s=
+csi_release_bidi_buffers(cmd);
+> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0scsi_release_buffers(cmd);
+> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0scsi_put_command(cmd);
+> =A0
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0spin_lock_irqsave(q->queu=
+e_lock, flags);
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0blk_finish_request(req, e=
+rror);
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0spin_unlock_irqrestore(q-=
+>queue_lock, flags);
+> =A0
+> -=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0scsi_release_buffers(cmd);
+> -
+> -=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0scsi_put_command(cmd);
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0scsi_run_queue(q);
+> =A0=A0=A0=A0=A0=A0=A0=A0}
 
-Hi Neil,
+Hello Christoph,
 
-I just send out v2 patch which adds RCU stuffs back. I test it on my
-small server, it survives.
+Why=A0have the=A0scsi_release_buffers() and scsi_put_command(cmd) calls been
+moved up? I haven't found an explanation for this change in the patch
+description.
 
-Once thing I want to confirm here is the memory barrier in linear_add().
+Please also consider to remove the cmd->request->special =3D NULL assignmen=
+ts
+via this patch. Since this patch makes the lifetime of struct scsi_cmnd and
+struct request identical these assignments are no longer needed.
 
-219         mddev_suspend(mddev);
-220         oldconf = rcu_dereference(mddev->private);
-221         rcu_assign_pointer(mddev->private, newconf);
-222         smp_mb();
-223         mddev->raid_disks++;
-224         md_set_array_sectors(mddev, linear_size(mddev, 0, 0));
-225         set_capacity(mddev->gendisk, mddev->array_sectors);
-226         mddev_resume(mddev);
-227         revalidate_disk(mddev->gendisk);
-228         call_rcu(&oldconf->rcu, free_conf);
+This patch introduces the function scsi_exit_rq(). Having two functions
+for the single-queue path that release resources (scsi_release_buffers()
+and scsi_exit_rq()) is confusing. Since every scsi_release_buffers() call
+is followed by a blk_unprep_request() call, have you considered to move
+the scsi_release_buffers() call into scsi_unprep_fn() via an additional
+patch?
 
-At LINE 222, I add a smp_mb(), from Documentations/memory-barrier.txt,
-my understand is here I need a smp_wmb() or smp_mb(). I see other
-places all use smp_mb() so I choose the stronger one -- smp_mb().
+Thanks,
 
-But from Documentation/whatisRCU.txt, it says about
-rcu_assign_pointer(): "This function returns he new value, and also
-executes any memory-barrier instructions required for a given CPU
-architecture." So it seems smp_mb() at LINE 222 is unnecessary.
-
-In v2 patch, I keep smp_mb() although I think it is unnecessary. I
-will remove it if you or Shaohua may confirm it is unncessary as I think.
-
-
-Another question is, I try to look at the code about r5conf, but I
-still have no idea how to store a copy of r5conf. Could you please to
-give me more hint ?
-
-Thanks.
-
-Coly
+Bart.
