@@ -1,46 +1,22 @@
-From: Martin Wilck <mwilck@suse.com>
-Subject: Re: Errorneous detection of degraded array
-Date: Fri, 27 Jan 2017 09:25:02 +0100
-Message-ID: <1485505502.4903.6.camel@suse.com>
-References: <96A26C8C6786C341B83BC4F2BC5419E4795DE9A6@SRF-EXCH1.corp.sunrisefutures.com>
- <b842c2ce-7d32-a392-e9d9-9f330fa6a7cf@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <systemd-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <b842c2ce-7d32-a392-e9d9-9f330fa6a7cf@gmail.com>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/systemd-devel>,
- <mailto:systemd-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/systemd-devel>
-List-Post: <mailto:systemd-devel@lists.freedesktop.org>
-List-Help: <mailto:systemd-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/systemd-devel>,
- <mailto:systemd-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: systemd-devel-bounces@lists.freedesktop.org
-Sender: "systemd-devel" <systemd-devel-bounces@lists.freedesktop.org>
-To: Andrei Borzenkov <arvidjaar@gmail.com>, Luke Pyzowski <Luke@sunrisefutures.com>, "'systemd-devel@lists.freedesktop.org'" <systemd-devel@lists.freedesktop.org>, linux-raid@vger.kernel.org
+From: "nimiak" <nimiak@unvisioned.com>
+Subject: hi Linux
+Date: Fri, 27 Jan 2017 12:12:51 +0000
+Message-ID: <40615AFC-B466-4B28-A3A7-E9A0D1DD9825@unvisioned.com>
+Mime-Version: 1.0 (1.0)
+Content-Type: text/plain;
+        charset=us-ascii
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-PiAyNi4wMS4yMDE3IDIxOjAyLCBMdWtlIFB5em93c2tpINC/0LjRiNC10YI6Cj4gPiBIZWxsbywK
-PiA+IEkgaGF2ZSBhIGxhcmdlIFJBSUQ2IGRldmljZSB3aXRoIDI0IGxvY2FsIGRyaXZlcyBvbiBD
-ZW50T1M3LjMuCj4gPiBSYW5kb21seSAoYXJvdW5kIDUwJSBvZiB0aGUgdGltZSkgc3lzdGVtZCB3
-aWxsIHVubW91bnQgbXkgUkFJRAo+ID4gZGV2aWNlIHRoaW5raW5nIGl0IGlzIGRlZ3JhZGVkIGFm
-dGVyIHRoZSBtZGFkbS1sYXN0LXJlc29ydEAudGltZXIKPiA+IGV4cGlyZXMsIGhvd2V2ZXIgdGhl
-IGRldmljZSBpcyB3b3JraW5nIG5vcm1hbGx5IGJ5IGFsbCBhY2NvdW50cywKPiA+IGFuZCBJIGNh
-biBpbW1lZGlhdGVseSBtb3VudCBpdCBtYW51YWxseSB1cG9uIGJvb3QgY29tcGxldGlvbi4gSW4K
-PiA+IHRoZSBsb2dzIGJlbG93IC9zaGFyZSBpcyB0aGUgUkFJRCBkZXZpY2UuIEkgY2FuIGluY3Jl
-YXNlIHRoZSB0aW1lcgo+ID4gaW4gL3Vzci9saWIvc3lzdGVtZC9zeXN0ZW0vbWRhZG0tbGFzdC1y
-ZXNvcnRALnRpbWVyIGZyb20gMzAgdG8gNjAKPiA+IHNlY29uZHMsIGJ1dCB0aGlzIHByb2JsZW0g
-Y2FuIHJhbmRvbWx5IHN0aWxsIG9jY3VyLgoKSXQgc2VlbXMgdG8gbWUgdGhhdCB5b3UgcmF0aGVy
-IG5lZWQgdG8gZGVjcmVhc2UgdGhlIHRpbWVvdXQgdmFsdWUsIG9yCihtb3JlIHJlYXNvbmFibGUp
-IGluY3JlYXNlIHgtc3lzdGVtZC5kZXZpY2UtdGltZW91dCBmb3IgdGhlIC9zaGFyZQptb3VudCBw
-b2ludC4KVW5mb3J0dW5hdGVseSB5b3VyIGxvZyBleGNlcnB0IGNvbnRhaW5zIHRvIHRpbWUgc3Rh
-bXBzIGJ1dCBJIHN1cHBvc2UKeW91J3JlIGZhY2luZyBhIHJhY2Ugd2hlcmUgdGhlIGRldmljZSB0
-aW1lcyBvdXQgYmVmb3JlIHRoZSAibGFzdApyZXNvcnQiIHRpbWVyIHN0YXJ0cyBpdCAoYW5kIGJl
-Zm9yZSB0aGUgbGFzdCBkZXZpY2VzIGFwcGVhcikuCgpNYXJ0aW4KCi0tIApEci4gTWFydGluIFdp
-bGNrIDxtd2lsY2tAc3VzZS5jb20+LCBUZWwuwqArNDkgKDApOTExIDc0MDUzIDIxMDcKU1VTRSBM
-aW51eCBHbWJILCBHRjogRmVsaXggSW1lbmTDtnJmZmVyLCBKYW5lIFNtaXRoYXJkLCBHcmFoYW0g
-Tm9ydG9uCkhSQiAyMTI4NCAoQUcgTsO8cm5iZXJnKQoKX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX18Kc3lzdGVtZC1kZXZlbCBtYWlsaW5nIGxpc3QKc3lzdGVt
-ZC1kZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5v
-cmcvbWFpbG1hbi9saXN0aW5mby9zeXN0ZW1kLWRldmVsCg==
+greetings Linux
+
+http://gilstrap-sneed.com/bookmark.php?love=3D2kfz2auv8hc1fd2g
+
+
+
+
+
+nimiak
