@@ -1,112 +1,80 @@
-From: Andrei Borzenkov <arvidjaar@gmail.com>
-Subject: Re: [systemd-devel] Errorneous detection of degraded array
-Date: Sat, 28 Jan 2017 20:34:26 +0300
-Message-ID: <4504399b-4d6f-a18a-d64a-e46ecd8efa46@gmail.com>
-References: <96A26C8C6786C341B83BC4F2BC5419E4795DE9A6@SRF-EXCH1.corp.sunrisefutures.com>
- <b842c2ce-7d32-a392-e9d9-9f330fa6a7cf@gmail.com>
- <96A26C8C6786C341B83BC4F2BC5419E4795DF1D8@SRF-EXCH1.corp.sunrisefutures.com>
+From: George Rapp <george.rapp@gmail.com>
+Subject: RAID 5 reshape stalled at 77.5% - next steps??
+Date: Sat, 28 Jan 2017 18:01:30 -0500
+Message-ID: <CAF-Kpgbz_Ld5WVOid1SHopcOjdx63kM-zVDUScZowtQzxrtZHg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1251
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <96A26C8C6786C341B83BC4F2BC5419E4795DF1D8@SRF-EXCH1.corp.sunrisefutures.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Luke Pyzowski <Luke@sunrisefutures.com>, "'systemd-devel@lists.freedesktop.org'" <systemd-devel@lists.freedesktop.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Linux-RAID <linux-raid@vger.kernel.org>
+Cc: Matthew Krumwiede <matt.krumwiede@me.com>
 List-Id: linux-raid.ids
 
-27.01.2017 22:44, Luke Pyzowski пишет:
-...
-> Jan 27 11:33:14 lnxnfs01 kernel: md/raid:md0: raid level 6 active with 24 out of 24 devices, algorithm 2
-...
-> Jan 27 11:33:14 lnxnfs01 kernel: md0: detected capacity change from 0 to 45062020923392
-> Jan 27 11:33:14 lnxnfs01 systemd[1]: Found device /dev/disk/by-uuid/2b9114be-3d5a-41d7-8d4b-e5047d223129.
-> Jan 27 11:33:14 lnxnfs01 systemd[1]: Started udev Wait for Complete Device Initialization.
-> Jan 27 11:33:14 lnxnfs01 systemd[1]: Started Timer to wait for more drives before activating degraded array..
-> Jan 27 11:33:14 lnxnfs01 systemd[1]: Starting Timer to wait for more drives before activating degraded array..
-...
-> 
-> ... + 31 seconds from disk initialization, expiration of 30 second timer from mdadm-last-resort@.timer
-> 
-> Jan 27 11:33:45 lnxnfs01 systemd[1]: Created slice system-mdadm\x2dlast\x2dresort.slice.
-> Jan 27 11:33:45 lnxnfs01 systemd[1]: Starting system-mdadm\x2dlast\x2dresort.slice.
-> Jan 27 11:33:45 lnxnfs01 systemd[1]: Stopped target Local File Systems.
-> Jan 27 11:33:45 lnxnfs01 systemd[1]: Stopping Local File Systems.
-> Jan 27 11:33:45 lnxnfs01 systemd[1]: Unmounting Mount /share RAID partition explicitly...
-> Jan 27 11:33:45 lnxnfs01 systemd[1]: Starting Activate md array even though degraded...
-> Jan 27 11:33:45 lnxnfs01 systemd[1]: Stopped (with error) /dev/md0.
-> Jan 27 11:33:45 lnxnfs01 systemd[1]: Started Activate md array even though degraded.
-> Jan 27 11:33:45 lnxnfs01 systemd[1]: Unmounted Mount /share RAID partition explicitly.
-> 
+Hello linux-raid team. I have a reshape operation that is stuck and
+refuses to respond to commands. I'm wondering what my options are to
+safely get it moving again.
 
-Here is my educated guess.
+Background: I added two new partitions to a RAID 5 array, using a
+backup-file on a
+separate device:
 
-Both mdadm-last-resort@.timer and mdadm-last-resort@.service conflict
-with MD device:
+# mdadm --add /dev/md4 /dev/sdb4 /dev/sdd4
+mdadm: added /dev/sdb4
+mdadm: added /dev/sdd4
 
-bor@bor-Latitude-E5450:~/src/systemd$ cat ../mdadm/systemd/
-mdadm-grow-continue@.service  mdadm.shutdown
-SUSE-mdadm_env.sh
-mdadm-last-resort@.service    mdmonitor.service
-mdadm-last-resort@.timer      mdmon@.service
-bor@bor-Latitude-E5450:~/src/systemd$ cat
-../mdadm/systemd/mdadm-last-resort@.timer
-[Unit]
-Description=Timer to wait for more drives before activating degraded array.
-DefaultDependencies=no
-Conflicts=sys-devices-virtual-block-%i.device
+# mdadm --grow --raid-devices=10
+--backup-file=/home/gwr/c/md4_backup__2017-01-25 /dev/md4
+mdadm: Need to backup 32256K of critical section..
 
-[Timer]
-OnActiveSec=30
-bor@bor-Latitude-E5450:~/src/systemd$ cat
-../mdadm/systemd/mdadm-last-resort@.service
-[Unit]
-Description=Activate md array even though degraded
-DefaultDependencies=no
-Conflicts=sys-devices-virtual-block-%i.device
+# cat /proc/mdstat
+Personalities : [raid1] [raid6] [raid5] [raid4]
+[...]
+md4 : active raid5 sdd4[13](R) sdb4[12] sdg4[10] sdi4[8] sdl4[9]
+sdf4[1] sdj4[7] sdh4[2] sde4[0] sdk4[11]
+13454923776 blocks super 1.1 level 5, 512k chunk, algorithm 2 [10/9]
+[UUUUUUUUU_]
+[>....................] reshape = 0.8% (16715456/1922131968)
+finish=965.4min speed=32892K/sec
 
-[Service]
-Type=oneshot
-ExecStart=BINDIR/mdadm --run /dev/%i
+The reshape proceeded normally until it hit 77.5%, where it has been
+stuck for the last couple of days:
 
-I presume intention is to stop these units when MD device is finally
-assembled as complete. This is indeed what happens on my (test) system:
+# cat /proc/mdstat
+Personalities : [raid1] [raid6] [raid5] [raid4]
+md4 : active raid5 sdd4[13](R) sdb4[12] sdg4[10](F) sdi4[8] sdl4[9]
+sdf4[1] sdj4[7] sdh4[2] sde4[0] sdk4[11]
 
-Jan 28 14:18:04 linux-ffk5 kernel: md: bind<vda1>
-Jan 28 14:18:04 linux-ffk5 kernel: md: bind<vdb1>
-Jan 28 14:18:05 linux-ffk5 kernel: md/raid1:md0: active with 2 out of 2
-mirrors
-Jan 28 14:18:05 linux-ffk5 kernel: md0: detected capacity change from 0
-to 5363466240
-Jan 28 14:18:06 linux-ffk5 systemd[1]: mdadm-last-resort@md0.timer:
-Installed new job mdadm-last-resort@md0.timer/start as 287
-Jan 28 14:18:06 linux-ffk5 systemd[1]: mdadm-last-resort@md0.timer:
-Enqueued job mdadm-last-resort@md0.timer/start as 287
-Jan 28 14:18:06 linux-ffk5 systemd[1]: dev-ttyS9.device: Changed dead ->
-plugged
-Jan 28 14:18:07 linux-ffk5 systemd[1]: mdadm-last-resort@md0.timer:
-Changed dead -> waiting
-Jan 28 14:18:12 linux-ffk5 systemd[1]:
-sys-devices-virtual-block-md0.device: Changed dead -> plugged
-Jan 28 14:18:12 linux-ffk5 systemd[1]: mdadm-last-resort@md0.timer:
-Trying to enqueue job mdadm-last-resort@md0.timer/stop/replace
-Jan 28 14:18:12 linux-ffk5 systemd[1]: mdadm-last-resort@md0.timer:
-Installed new job mdadm-last-resort@md0.timer/stop as 292
-Jan 28 14:18:12 linux-ffk5 systemd[1]: mdadm-last-resort@md0.timer:
-Enqueued job mdadm-last-resort@md0.timer/stop as 292
-Jan 28 14:18:12 linux-ffk5 systemd[1]: mdadm-last-resort@md0.timer:
-Changed waiting -> dead
-Jan 28 14:18:12 linux-ffk5 systemd[1]: mdadm-last-resort@md0.timer: Job
-mdadm-last-resort@md0.timer/stop finished, result=done
-Jan 28 14:18:12 linux-ffk5 systemd[1]: Stopped Timer to wait for more
-drives before activating degraded array..
-Jan 28 14:19:34 10 systemd[1692]: dev-vda1.device: Changed dead -> plugged
-Jan 28 14:19:34 10 systemd[1692]: dev-vdb1.device: Changed dead -> plugged
+13454923776 blocks super 1.1 level 5, 512k chunk, algorithm 2 [10/9]
+[UUUU_UUUU_]
+[===============>.....] reshape = 77.5% (1490403328/1922131968)
+finish=2544246.9min speed=2K/sec
 
+The backup file was last accessed at about the time I started the reshape:
+-rw-------. 1 root root  33034240 Jan 25 11:52 md4_backup__2017-01-25
 
-On your system apparently timer is not stopped when md device appears so
-that when later last-resort service runs, it causes attempt to stop md
-device (due to conflict) and transitively mount on top of it.
+I tried to idle the RAID reshape, but the "echo" command just hung:
 
-Could you try run with systemd.log_level=debug on kernel command line
-and upload journal again. We can only hope that it will not skew timings
-enough but it may prove my hypothesis.
+# cd /sys/block/md4/md
+# echo idle > sync_action
+
+I can get some data from the files in this directory, though:
+
+# cat reshape_direction
+forwards
+# cat reshape_position
+26825379840
+
+I tried to pull mdadm data about this array to add to this post, but that
+command also hung:
+
+# mdadm --misc --examine /dev/md4
+
+The server CPU load is pegged, with md4_raid5 as the top CPU hog.
+
+What are my safe alternatives here? Can I safely reboot without corrupting
+the reshape? How can I get the reshape unstuck?
+
+-- 
+George Rapp  (Pataskala, OH) Home: george.rapp -- at -- gmail.com
+LinkedIn profile: https://www.linkedin.com/in/georgerapp
+Phone: +1 740 936 RAPP (740 936 7277)
