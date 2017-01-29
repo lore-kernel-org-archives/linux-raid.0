@@ -1,40 +1,33 @@
 From: jes.sorensen@gmail.com
-Subject: Re: [PATCH] Fix oddity where mdadm did not recognise a relative path
-Date: Sun, 29 Jan 2017 12:48:17 -0500
-Message-ID: <wrfjzii9iwpq.fsf@gmail.com>
-References: <587E6B56.8090704@youngman.org.uk>
+Subject: Re: [PATCH 0/2] Bad block notification
+Date: Sun, 29 Jan 2017 12:44:25 -0500
+Message-ID: <wrfjd1f5kbgm.fsf@gmail.com>
+References: <1485259419-2308-1-git-send-email-tomasz.majchrzak@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <587E6B56.8090704@youngman.org.uk> (Wols Lists's message of "Tue,
-        17 Jan 2017 19:07:02 +0000")
+In-Reply-To: <1485259419-2308-1-git-send-email-tomasz.majchrzak@intel.com>
+        (Tomasz Majchrzak's message of "Tue, 24 Jan 2017 13:03:37 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Cc: linux-raid@vger.kernel.org, shli@kernel.org
 List-Id: linux-raid.ids
 
-Wols Lists <antlists@youngman.org.uk> writes:
-> From 4ce784307a9004124392ce48432960d7ca94d0bf Mon Sep 17 00:00:00 2001
-> From: Wol <anthony@youngman.org.uk>
-> Date: Tue, 17 Jan 2017 17:47:05 +0000
-> Subject: [PATCH] Fix oddity where mdadm did not recognise a relative path
+Tomasz Majchrzak <tomasz.majchrzak@intel.com> writes:
+> At the moment there is no way to be notified that bad blocks have been found on
+> a disk. It is only possible to check manually with 'mdadm --examine-badblocks'.
+> User might not be aware there is a bad block for a long period. If another disk
+> in the array fails, data is lost.
 >
-> mdadm assumed that a pathname started with a "/", while an array
-> name didn't. This alters the logic so that if the first character
-> is not a "/" it tries to open an array, and if that fails it drops
-> through to the pathname code rather than terminating immediately
-> with an error.
->
-> Signed-off-by: Wol <anthony@youngman.org.uk>
-> ---
->  mdadm.c | 12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
+> These patches add a new event to the kernel and mdadm in order to send
+> notification on the first bad block on a disk. I have chosen to do it only for
+> first bad block as I think it's sufficient indication that the drive requires
+> replacement.
 
-Applied, thanks!
+Tomasz,
 
-Sorry I have been swamped the last couple of weeks finishing up my old
-job and starting the new one. Will be bogged down a lot the next couple
-of weeks, so please be patient.
+Looks reasonable to me - I'll wait for Shaohua to respond on the kernel
+part before I apply the mdadm part.
 
 Cheers,
 Jes
