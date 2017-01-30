@@ -1,67 +1,64 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: split scsi passthrough fields out of struct request V2
-Date: Mon, 30 Jan 2017 07:58:24 +0100
-Message-ID: <00141930-e69b-ccfa-3f1f-4dff5cd3b680@suse.de>
-References: <1485365126-23210-1-git-send-email-hch@lst.de>
- <1485552454.4267.29.camel@sandisk.com>
+From: Andrei Borzenkov <arvidjaar@gmail.com>
+Subject: Re: Errorneous detection of degraded array
+Date: Mon, 30 Jan 2017 10:29:27 +0300
+Message-ID: <CAA91j0V92RXDky-AnD6w+Dy=M7KJVCWyssA7yHRfRqBxLTWvog@mail.gmail.com>
+References: <96A26C8C6786C341B83BC4F2BC5419E4795DE9A6@SRF-EXCH1.corp.sunrisefutures.com>
+ <b842c2ce-7d32-a392-e9d9-9f330fa6a7cf@gmail.com>
+ <87vasxs47y.fsf@notabene.neil.brown.name>
+ <666d5a48-4c71-77ee-f71b-c32f334cf7cc@gmail.com>
+ <87k29drr3w.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1485552454.4267.29.camel@sandisk.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "hch@lst.de" <hch@lst.de>, "axboe@fb.com" <axboe@fb.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "j-nomura@ce.jp.nec.com" <j-nomura@ce.jp.nec.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <systemd-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <87k29drr3w.fsf@notabene.neil.brown.name>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/systemd-devel>,
+ <mailto:systemd-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/systemd-devel>
+List-Post: <mailto:systemd-devel@lists.freedesktop.org>
+List-Help: <mailto:systemd-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/systemd-devel>,
+ <mailto:systemd-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: systemd-devel-bounces@lists.freedesktop.org
+Sender: "systemd-devel" <systemd-devel-bounces@lists.freedesktop.org>
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org, "systemd-devel@lists.freedesktop.org" <systemd-devel@lists.freedesktop.org>
 List-Id: linux-raid.ids
 
-On 01/27/2017 10:27 PM, Bart Van Assche wrote:
-> On Wed, 2017-01-25 at 18:25 +0100, Christoph Hellwig wrote:
->> this series splits the support for SCSI passthrough commands from the
->> main struct request used all over the block layer into a separate
->> scsi_request structure that drivers that want to support SCSI passthough
->> need to embedded as the first thing into their request-private data,
->> similar to how we handle NVMe passthrough commands.
->>
->> To support this I've added support for that the private data after
->> request structure to the legacy request path instead, so that it can
->> be treated the same way as the blk-mq path.  Compare to the current
->> scsi_cmnd allocator that actually is a major simplification.
->>
->> Changes since V1:
->>  - fix handling of a NULL sense pointer in __scsi_execute
->>  - clean up handling of the flush flags in the block layer and MD
->>  - additional small cleanup in dm-rq
-> 
-> Hello Christoph,
-> 
-> A general comment: patch "block: allow specifying size for extra
-> command data" is a very welcome improvement but unfortunately also
-> introduces an inconsistency among block drivers. This patch series
-> namely creates two kinds of block drivers:
-> - Block drivers that use the block layer core to allocate
->   request-private data. These block drivers set request.cmd_size
->   to a non-zero value and do not need request.special.
-> - Block drivers that allocate request-private data themselves.
->   These block drivers set request.cmd_size to zero and use
->   request.special to translate a request pointer into the private
->   data pointer.
-> 
-> Have you considered to convert all block drivers to the new
-> approach and to get rid of request.special? If so, do you already
-> have plans to start working on this? I'm namely wondering wheter I
-> should start working on this myself.
-> 
-I was actually looking into it, too.
-Once scsi passthrough is removed from struct request there is no
-reasonable need to rely on '->special' for anything, and we should just
-ditch it.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+T24gTW9uLCBKYW4gMzAsIDIwMTcgYXQgOTozNiBBTSwgTmVpbEJyb3duIDxuZWlsYkBzdXNlLmNv
+bT4gd3JvdGU6Ci4uLgo+Pj4+Pgo+Pj4+PiBzeXN0ZW1kWzFdOiBDcmVhdGVkIHNsaWNlIHN5c3Rl
+bS1tZGFkbVx4MmRsYXN0XHgyZHJlc29ydC5zbGljZS4KPj4+Pj4gc3lzdGVtZFsxXTogU3RhcnRp
+bmcgc3lzdGVtLW1kYWRtXHgyZGxhc3RceDJkcmVzb3J0LnNsaWNlLgo+Pj4+PiBzeXN0ZW1kWzFd
+OiBTdGFydGluZyBBY3RpdmF0ZSBtZCBhcnJheSBldmVuIHRob3VnaCBkZWdyYWRlZC4uLgo+Pj4+
+PiBzeXN0ZW1kWzFdOiBTdG9wcGVkIHRhcmdldCBMb2NhbCBGaWxlIFN5c3RlbXMuCj4+Pj4+IHN5
+c3RlbWRbMV06IFN0b3BwaW5nIExvY2FsIEZpbGUgU3lzdGVtcy4KPj4+Pj4gc3lzdGVtZFsxXTog
+VW5tb3VudGluZyAvc2hhcmUuLi4KPj4+Pj4gc3lzdGVtZFsxXTogU3RvcHBlZCAod2l0aCBlcnJv
+cikgL2Rldi9tZDAuCj4+PgouLi4KPgo+IFRoZSByYWNlIGlzLCBJIHRoaW5rLCB0aGF0IG9uZSBJ
+IG1lbnRpb25lZC4gIElmIHRoZSBtZCBkZXZpY2UgaXMgc3RhcnRlZAo+IGJlZm9yZSB1ZGV2IHRl
+bGxzIHN5c3RlbWQgdG8gc3RhcnQgdGhlIHRpbWVyLCB0aGUgQ29uZmxpY3RzIGRlcGVuZGVuY2ll
+cwo+IGdvZXMgdGhlICJ3cm9uZyIgd2F5IGFuZCBzdG9wcyB0aGUgd3JvbmcgdGhpbmcuCj4KCkZy
+b20gdGhlIGxvZ3MgcHJvdmlkZWQgaXQgaXMgdW5jbGVhciB3aGV0aGVyIGl0IGlzICp0aW1lciog
+b3IKKnNlcnZpY2UqLiBJZiBpdCBpcyB0aW1lciAtIEkgZG8gbm90IHVuZGVyc3RhbmQgd2h5IGl0
+IGlzIHN0YXJ0ZWQKZXhhY3RseSAzMCBzZWNvbmRzIGFmdGVyIGRldmljZSBhcHBhcmVudGx5IGFw
+cGVhcnMuIFRoaXMgd291bGQgbWF0Y2gKc3RhcnRpbmcgc2VydmljZS4KCllldCBhbm90aGVyIGNh
+c2Ugd2hlcmUgc3lzdGVtIGxvZ2dpbmcgaXMgaG9wZWxlc3NseSB1bmZyaWVuZGx5IGZvcgp0cm91
+Ymxlc2hvb3RpbmcgOigKCj4gSXQgd291bGQgYmUgbmljZSB0byBiZSBhYmxlIHRvIHJlbGlhYmx5
+IHN0b3AgdGhlIHRpbWVyIHdoZW4gdGhlIGRldmljZQo+IHN0YXJ0cywgd2l0aG91dCByaXNraW5n
+IGhhdmluZyB0aGUgZGV2aWNlIGdldCBzdG9wcGVkIHdoZW4gdGhlIHRpbWVyCj4gc3RhcnRzLCBi
+dXQgSSBkb24ndCB0aGluayB3ZSBjYW4gcmVsaWFibHkgZG8gdGhhdC4KPgoKV2VsbCwgbGV0J3Mg
+d2FpdCB1bnRpbCB3ZSBjYW4gZ2V0IHNvbWUgbW9yZSBpbmZvcm1hdGlvbiBhYm91dCB3aGF0IGhh
+cHBlbnMuCgo+IENoYW5naW5nIHRoZQo+ICAgQ29uZmxpY3RzPXN5cy1kZXZpY2VzLXZpcnR1YWwt
+YmxvY2stJWkuZGV2aWNlCj4gbGluZXMgdG8KPiAgIENvbmRpdGlvblBhdGhFeGlzdHM9L3N5cy9k
+ZXZpY2VzL3ZpcnR1YWwvYmxvY2svJWkKPiBtaWdodCBtYWtlIHRoZSBwcm9ibGVtIGdvIGF3YXks
+IHdpdGhvdXQgYW55IG5lZ2F0aXZlIGNvbnNlcXVlbmNlcy4KPgoKVWdseSwgYnV0IHllcywgbWF5
+IGJlIHRoaXMgaXMgdGhlIG9ubHkgd2F5IHVzaW5nIGN1cnJlbnQgc3lzdGVtZC4KCj4gVGhlIHBy
+aW1hcnkgcHVycG9zZSBvZiBoYXZpbmcgdGhlICdDb25mbGljdHMnIGRpcmVjdGl2ZXMgd2FzIHNv
+IHRoYXQKPiBzeXN0ZW1kIHdvdWxkbid0IGxvZwo+ICAgU3RhcnRpbmcgQWN0aXZhdGUgbWQgYXJy
+YXkgZXZlbiB0aG91Z2ggZGVncmFkZWQKPiBhZnRlciB0aGUgYXJyYXkgd2FzIHN1Y2Nlc3NmdWxs
+eSBzdGFydGVkLgoKVGhpcyBsb29rcyBsaWtlIGNvc21ldGljIHByb2JsZW0uIFdoYXQgd2lsbCBo
+YXBwZW4gaWYgbGFzdCByZXNvcnQKc2VydmljZSBpcyBzdGFydGVkIHdoZW4gYXJyYXkgaXMgZnVs
+bHkgYXNzZW1ibGVkPyBXaWxsIGl0IGRvIGFueSBoYXJtPwoKPiBIb3BlZnVsbHkgaXQgd29uJ3Qg
+ZG8gdGhhdCB3aGVuIHRoZSBDb25kaXRpb24gZmFpbHMuCj4KX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX18Kc3lzdGVtZC1kZXZlbCBtYWlsaW5nIGxpc3QKc3lz
+dGVtZC1kZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3Rv
+cC5vcmcvbWFpbG1hbi9saXN0aW5mby9zeXN0ZW1kLWRldmVsCg==
