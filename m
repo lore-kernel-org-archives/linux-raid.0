@@ -1,130 +1,175 @@
-From: Shaohua Li <shli@fb.com>
-Subject: [PATCH] MD: add doc for raid5-cache
-Date: Tue, 31 Jan 2017 11:18:29 -0800
-Message-ID: <25051bd79d94b45c7be24ce466a8b6eb2fba66c0.1485890144.git.shli@fb.com>
+From: Andrei Borzenkov <arvidjaar@gmail.com>
+Subject: Re: [systemd-devel] Errorneous detection of degraded array
+Date: Tue, 31 Jan 2017 23:17:03 +0300
+Message-ID: <e32430d2-5f59-40af-6027-715dfde1045d@gmail.com>
+References: <96A26C8C6786C341B83BC4F2BC5419E4795DE9A6@SRF-EXCH1.corp.sunrisefutures.com>
+ <b842c2ce-7d32-a392-e9d9-9f330fa6a7cf@gmail.com>
+ <87vasxs47y.fsf@notabene.neil.brown.name>
+ <666d5a48-4c71-77ee-f71b-c32f334cf7cc@gmail.com>
+ <87k29drr3w.fsf@notabene.neil.brown.name>
+ <CAA91j0V92RXDky-AnD6w+Dy=M7KJVCWyssA7yHRfRqBxLTWvog@mail.gmail.com>
+ <8760kwry0r.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="61tMEB1chVGstBq0OMorEpSLJvxtk2j0E"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <8760kwry0r.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: antlists@youngman.org.uk, philip@turmel.org, songliubraving@fb.com, neilb@suse.com
+To: NeilBrown <neilb@suse.com>
+Cc: Luke Pyzowski <Luke@sunrisefutures.com>, "systemd-devel@lists.freedesktop.org" <systemd-devel@lists.freedesktop.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm starting document of the raid5-cache feature. Please let me know
-what else we should put into the document. Of course, comments are
-welcome!
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--61tMEB1chVGstBq0OMorEpSLJvxtk2j0E
+Content-Type: multipart/mixed; boundary="1ETFtmPne6sx1Hi2s3CdAXRgh5Al1EMLN"
+From: Andrei Borzenkov <arvidjaar@gmail.com>
+To: NeilBrown <neilb@suse.com>
+Cc: Luke Pyzowski <Luke@sunrisefutures.com>,
+ "systemd-devel@lists.freedesktop.org" <systemd-devel@lists.freedesktop.org>,
+ linux-raid@vger.kernel.org
+Message-ID: <e32430d2-5f59-40af-6027-715dfde1045d@gmail.com>
+Subject: Re: [systemd-devel] Errorneous detection of degraded array
+References: <96A26C8C6786C341B83BC4F2BC5419E4795DE9A6@SRF-EXCH1.corp.sunrisefutures.com>
+ <b842c2ce-7d32-a392-e9d9-9f330fa6a7cf@gmail.com>
+ <87vasxs47y.fsf@notabene.neil.brown.name>
+ <666d5a48-4c71-77ee-f71b-c32f334cf7cc@gmail.com>
+ <87k29drr3w.fsf@notabene.neil.brown.name>
+ <CAA91j0V92RXDky-AnD6w+Dy=M7KJVCWyssA7yHRfRqBxLTWvog@mail.gmail.com>
+ <8760kwry0r.fsf@notabene.neil.brown.name>
+In-Reply-To: <8760kwry0r.fsf@notabene.neil.brown.name>
 
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- Documentation/md/raid5-cache.txt | 99 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 99 insertions(+)
- create mode 100644 Documentation/md/raid5-cache.txt
+--1ETFtmPne6sx1Hi2s3CdAXRgh5Al1EMLN
+Content-Type: text/plain; charset=windows-1251
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/Documentation/md/raid5-cache.txt b/Documentation/md/raid5-cache.txt
-new file mode 100644
-index 0000000..17a6279
---- /dev/null
-+++ b/Documentation/md/raid5-cache.txt
-@@ -0,0 +1,99 @@
-+RAID5 cache
-+
-+Raid 4/5/6 could include an extra disk for data cache. The cache could be
-+in write-through or write-back mode. mdadm has a new option
-+'--write-journal' to create array with cache. By default (raid array
-+starts), the cache is in write-through mode. User can switch it to
-+write-back mode by:
-+
-+echo "write-back" > /sys/block/md0/md/journal_mode
-+
-+And switch it back to write-through mode by:
-+
-+echo "write-through" > /sys/block/md0/md/journal_mode
-+
-+In both modes, all writes to the array will hit cache disk first. This means
-+the cache disk must be fast and sustainable (if you use a SSD as the cache).
-+
-+-------------------------------------
-+write-through mode:
-+
-+This mode mainly fixes 'write hole' issue. For RAID 4/5/6 array, an
-+unclean shutdown could cause data in some stripes is not in consistent
-+state, eg, data and parity don't match. The reason is a stripe write
-+involves several raid disks and it's possible writes don't hit all raid
-+disks yet before the unclean shutdown. After an unclean shutdown, MD try
-+to 'resync' the array to put all stripes back into consistent state. In
-+the resync, any disk failure will cause real data corruption. This problem
-+is called 'write hole'. So the 'write hole' issue occurs between unclean
-+shutdown and 'resync'. This window isn't big. On the other hand, if one
-+disk fails, other disks could fail soon, which happens sometimes if the
-+disks are from the same vendor and manufactured in the same time. This
-+will increase the chance of 'write whole', but overall the chance isn't
-+big, so don't panic even not using cache disk.
-+
-+The write-through cache will cache all data in cache disk first. Until the
-+data hits into the cache disk, the data is flushed into RAID disks. The
-+two-step write will guarantee MD can recover correct data after unclean
-+shutdown even with disk failure. Thus the cache can close the 'write
-+hole'.
-+
-+In write-through mode, MD reports IO finish to upper layer (usually
-+filesystems) till the data hits RAID disks, so cache disk failure doesn't
-+cause data lost. Of course cache disk failure means the array is exposed
-+into 'write hole' again.
-+
-+--------------------------------------
-+write-back mode:
-+
-+write-back mode fixes the 'write hole' issue too, since all write data is
-+cached in cache disk. But the main goal of 'write-back' cache is to speed up
-+write. If a write crosses all raid disks of a stripe, we call it full-stripe
-+write. For non-full-stripe write, MD must do a read-modify-write. The extra
-+read (for data in other disks) and write (for parity) introduce a lot of
-+overhead. Some writes which are sequential but not dispatched in the same time
-+will suffer from this overhead too. write-back cache will aggregate the data
-+and flush the data to raid disks till the data becomes a full stripe write.
-+This will completely avoid the overhead, so it's very helpful for some
-+workloads. A typical workload which does sequential write and follows fsync is
-+an example.
-+
-+In write-back mode, MD reports IO finish to upper layer (usually filesystems)
-+right after the data hit cache disk. The data is flushed to raid disks later
-+after specific conditions met. So cache disk failure will cause data lost.
-+
-+--------------------------------------
-+The implementation:
-+
-+The write-through and write-back cache use the same disk format. The cache disk
-+is organized as a simple write log. The log consists of 'meta data' and 'data'
-+pairs. The meta data describes the data. It also includes checksum and sequence
-+ID for recovery identification. Data could be IO data and parity data. Data is
-+checksumed too. The checksum is stored in the meta data ahead of the data. The
-+checksum is an optimization because MD can write meta and data freely without
-+worry about the order. MD superblock has a field pointed to the valid meta data
-+of log head.
-+
-+The log implementation is pretty straightforward. The difficult part is the
-+order MD write data to cache disk and raid disks. Specifically, in
-+write-through mode, MD calculates parity for IO data, writes both IO data and
-+parity to the log, write the data and parity to raid disks after the data and
-+parity is settled down in log and finally the IO is finished. Read just reads
-+from raid disks as usual.
-+
-+In write-back mode, MD writes IO data to the log and reports IO finish. The
-+data is also fully cached in memory at that time, which means read must query
-+memory cache. If some conditions are met, MD will flush the data to raid disks.
-+MD will calculate parity for the data and write parity into the log. After this
-+is finished, MD will write both data and parity into raid disks, then MD can
-+release the memory cache. The flush conditions could be stripe becomes a full
-+stripe write, free cache disk space is low or in-kernel memory cache space is
-+low.
-+
-+After an unclean shutdown, MD does recovery. MD reads all meta data and data
-+from the log. The sequence ID and checksum will help us detect corrupted meta
-+data and data. If MD finds a stripe with data and valid parities (1 parity for
-+raid4/5 and 2 for raid6), MD will write the data and parities to raid disks. If
-+parities are incompleted, they are discarded. If part of data is corrupted,
-+they are discarded too. MD then loads valid data and writes them to raid disks
-+in normal way.
--- 
-2.9.3
+31.01.2017 01:19, NeilBrown =EF=E8=F8=E5=F2:
+> On Mon, Jan 30 2017, Andrei Borzenkov wrote:
+>=20
+>> On Mon, Jan 30, 2017 at 9:36 AM, NeilBrown <neilb@suse.com> wrote:
+>> ...
+>>>>>>>
+>>>>>>> systemd[1]: Created slice system-mdadm\x2dlast\x2dresort.slice.
+>>>>>>> systemd[1]: Starting system-mdadm\x2dlast\x2dresort.slice.
+>>>>>>> systemd[1]: Starting Activate md array even though degraded...
+>>>>>>> systemd[1]: Stopped target Local File Systems.
+>>>>>>> systemd[1]: Stopping Local File Systems.
+>>>>>>> systemd[1]: Unmounting /share...
+>>>>>>> systemd[1]: Stopped (with error) /dev/md0.
+>>>>>
+>> ...
+>>>
+>>> The race is, I think, that one I mentioned.  If the md device is star=
+ted
+>>> before udev tells systemd to start the timer, the Conflicts dependenc=
+ies
+>>> goes the "wrong" way and stops the wrong thing.
+>>>
+>>
+>> From the logs provided it is unclear whether it is *timer* or
+>> *service*. If it is timer - I do not understand why it is started
+>> exactly 30 seconds after device apparently appears. This would match
+>> starting service.
+>=20
+> My guess is that the timer is triggered immediately after the device is=
 
+> started, but before it is mounted.
+> The Conflicts directive tries to stop the device, but is cannot stop th=
+e
+> device and there are no dependencies yet, so nothing happen.
+> After the timer fires (30 seconds later) the .service starts.  It also
+> has a Conflicts directory so systemd tried to stop the device again.
+> Now that it has been mounted, there is a dependences that can be
+> stopped, and the device gets unmounted.
+>=20
+>>
+>> Yet another case where system logging is hopelessly unfriendly for
+>> troubleshooting :(
+>>
+>>> It would be nice to be able to reliably stop the timer when the devic=
+e
+>>> starts, without risking having the device get stopped when the timer
+>>> starts, but I don't think we can reliably do that.
+>>>
+>>
+>> Well, let's wait until we can get some more information about what hap=
+pens.
+>>
+
+Not much more, but we at least have confirmed that it was indeed last
+resort service which was fired off by last resort timer. Unfortunately
+no trace of timer itself.
+
+>>> Changing the
+>>>   Conflicts=3Dsys-devices-virtual-block-%i.device
+>>> lines to
+>>>   ConditionPathExists=3D/sys/devices/virtual/block/%i
+>>> might make the problem go away, without any negative consequences.
+>>>
+>>
+>> Ugly, but yes, may be this is the only way using current systemd.
+>>
+
+This won't work. sysfs node appears as soon as the very first array
+member is found and array is still inactive, while what we need is
+condition "array is active".
+
+Conflicts line works because array is not announced to systemd
+(SYSTEMD_READY) until it is active. Which in turn is derived from the
+content of md/array_state.
+
+>>> The primary purpose of having the 'Conflicts' directives was so that
+>>> systemd wouldn't log
+>>>   Starting Activate md array even though degraded
+>>> after the array was successfully started.
+>>
+
+Yes, I understand it.
+
+>> This looks like cosmetic problem. What will happen if last resort
+>> service is started when array is fully assembled? Will it do any harm?=
+
+>=20
+> Yes, it could be seen as cosmetic, but cosmetic issues can be important=
+
+> too.  Confusing messages in logs can be harmful.
+>=20
+> In all likely cases, running the last-resort service won't cause any
+> harm.
+> If, during the 30 seconds, the array is started, then deliberately
+> stopped, then partially assembled again, then when the last-resort
+> service finally starts it might do the wrong thing.
+> So it would be cleanest if the timer was killed as soon as the device
+> is started.  But I don't think there is a practical concern.
+>=20
+> I guess I could make a udev rule that fires when the array started, and=
+
+> that runs "systemctl stop mdadm-last-resort@md0.timer"
+>=20
+
+
+Well ... what we really need is unidirectional dependency. Actually the
+way Conflicts is used *is* unidirectional anyway - nobody seriously
+expects that starting foo.service will stop currently running
+shutdown.target. But that is semantic we have currently.
+
+But this probably will do to mitigate this issue until something more
+generic can be implemented.
+
+
+--1ETFtmPne6sx1Hi2s3CdAXRgh5Al1EMLN--
+
+--61tMEB1chVGstBq0OMorEpSLJvxtk2j0E
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iEYEARECAAYFAliQ8MAACgkQR6LMutpd94y3nwCeNe/9D0KRjtQqEq8+ivljygD2
+GHEAoM+g3vVtQY7NqJFR6g0jxP0nE0dM
+=Aj2+
+-----END PGP SIGNATURE-----
+
+--61tMEB1chVGstBq0OMorEpSLJvxtk2j0E--
