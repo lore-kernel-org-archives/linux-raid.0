@@ -1,175 +1,80 @@
-From: Andrei Borzenkov <arvidjaar@gmail.com>
-Subject: Re: [systemd-devel] Errorneous detection of degraded array
-Date: Tue, 31 Jan 2017 23:17:03 +0300
-Message-ID: <e32430d2-5f59-40af-6027-715dfde1045d@gmail.com>
-References: <96A26C8C6786C341B83BC4F2BC5419E4795DE9A6@SRF-EXCH1.corp.sunrisefutures.com>
- <b842c2ce-7d32-a392-e9d9-9f330fa6a7cf@gmail.com>
- <87vasxs47y.fsf@notabene.neil.brown.name>
- <666d5a48-4c71-77ee-f71b-c32f334cf7cc@gmail.com>
- <87k29drr3w.fsf@notabene.neil.brown.name>
- <CAA91j0V92RXDky-AnD6w+Dy=M7KJVCWyssA7yHRfRqBxLTWvog@mail.gmail.com>
- <8760kwry0r.fsf@notabene.neil.brown.name>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [dm-devel] split scsi passthrough fields out of struct request
+ V2
+Date: Tue, 31 Jan 2017 21:35:08 +0000
+Message-ID: <1485898487.3113.7.camel@sandisk.com>
+References: <1485365126-23210-1-git-send-email-hch@lst.de>
+         <1485456745.2540.9.camel@sandisk.com>
+         <db7f9165-19db-d1f2-a2fa-7546da57741b@fb.com>
+         <20170126185924.GA25289@lst.de>
+         <ee95c6dd-cdb4-7da5-2d4a-ec14034eac7a@fb.com>
+         <71e22257-0592-fdd3-25e5-a78ceced2ab9@sandisk.com>
+         <4054e944-b28d-1cd6-574f-6cd90e28c301@fb.com>
+         <1485464486.2540.12.camel@sandisk.com>
+         <6995c991-65a4-8dca-c36e-fb2eff277ca9@fb.com>
+         <1485467235.2540.14.camel@sandisk.com>
+         <e1d5f4e6-c63f-545d-710f-d4d10fa8d2e0@fb.com>
+         <1485472465.2540.19.camel@sandisk.com>
+         <e222c541-3239-104d-e0b0-40d19b012b66@fb.com>
+         <1485474426.2540.25.camel@sandisk.com>
+         <b98195e7-6e04-5a59-8b83-ce2e1c5c4e1a@fb.com>
+         <1485477510.2540.27.camel@sandisk.com>
+         <2d971693-b79d-c1b9-fb2a-f5dd04128c68@fb.com>
+         <1485479738.2540.30.camel@sandisk.com>
+         <ecca734c-7a9c-f060-9335-c2de089849c2@fb.com>
+         <37ab009a-bc2d-d2ae-a875-269ab563a430@fb.com>
+         <9cbf0ce5-ed79-0252-fd2d-34bebaafffa3@fb.com>
+         <1485535925.4267.1.camel@sandisk.com>
+         <2c696943-2a44-4f36-f0f8-0bebceb95a4a@fb.com>
+         <1485825148.2669.18.camel@sandisk.com>
+         <4D024E85-CDE7-4FB0-B8CA-F2B8C86CCFCB@kernel.dk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="61tMEB1chVGstBq0OMorEpSLJvxtk2j0E"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8760kwry0r.fsf@notabene.neil.brown.name>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Luke Pyzowski <Luke@sunrisefutures.com>, "systemd-devel@lists.freedesktop.org" <systemd-devel@lists.freedesktop.org>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <4D024E85-CDE7-4FB0-B8CA-F2B8C86CCFCB@kernel.dk>
+Content-Language: en-US
+Content-ID: <DFF9E0710DB1794D88A68C549ADCF79B@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "j-nomura@ce.jp.nec.com" <j-nomura@ce.jp.nec.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---61tMEB1chVGstBq0OMorEpSLJvxtk2j0E
-Content-Type: multipart/mixed; boundary="1ETFtmPne6sx1Hi2s3CdAXRgh5Al1EMLN"
-From: Andrei Borzenkov <arvidjaar@gmail.com>
-To: NeilBrown <neilb@suse.com>
-Cc: Luke Pyzowski <Luke@sunrisefutures.com>,
- "systemd-devel@lists.freedesktop.org" <systemd-devel@lists.freedesktop.org>,
- linux-raid@vger.kernel.org
-Message-ID: <e32430d2-5f59-40af-6027-715dfde1045d@gmail.com>
-Subject: Re: [systemd-devel] Errorneous detection of degraded array
-References: <96A26C8C6786C341B83BC4F2BC5419E4795DE9A6@SRF-EXCH1.corp.sunrisefutures.com>
- <b842c2ce-7d32-a392-e9d9-9f330fa6a7cf@gmail.com>
- <87vasxs47y.fsf@notabene.neil.brown.name>
- <666d5a48-4c71-77ee-f71b-c32f334cf7cc@gmail.com>
- <87k29drr3w.fsf@notabene.neil.brown.name>
- <CAA91j0V92RXDky-AnD6w+Dy=M7KJVCWyssA7yHRfRqBxLTWvog@mail.gmail.com>
- <8760kwry0r.fsf@notabene.neil.brown.name>
-In-Reply-To: <8760kwry0r.fsf@notabene.neil.brown.name>
+On Mon, 2017-01-30 at 17:38 -0800, Jens Axboe wrote:
+> That's a known bug in mainline. Pull it into 4.10-rc6,
+> or use my for-next where everything is already merged.=20
 
---1ETFtmPne6sx1Hi2s3CdAXRgh5Al1EMLN
-Content-Type: text/plain; charset=windows-1251
-Content-Transfer-Encoding: quoted-printable
+Hello Jens,
 
-31.01.2017 01:19, NeilBrown =EF=E8=F8=E5=F2:
-> On Mon, Jan 30 2017, Andrei Borzenkov wrote:
->=20
->> On Mon, Jan 30, 2017 at 9:36 AM, NeilBrown <neilb@suse.com> wrote:
->> ...
->>>>>>>
->>>>>>> systemd[1]: Created slice system-mdadm\x2dlast\x2dresort.slice.
->>>>>>> systemd[1]: Starting system-mdadm\x2dlast\x2dresort.slice.
->>>>>>> systemd[1]: Starting Activate md array even though degraded...
->>>>>>> systemd[1]: Stopped target Local File Systems.
->>>>>>> systemd[1]: Stopping Local File Systems.
->>>>>>> systemd[1]: Unmounting /share...
->>>>>>> systemd[1]: Stopped (with error) /dev/md0.
->>>>>
->> ...
->>>
->>> The race is, I think, that one I mentioned.  If the md device is star=
-ted
->>> before udev tells systemd to start the timer, the Conflicts dependenc=
-ies
->>> goes the "wrong" way and stops the wrong thing.
->>>
->>
->> From the logs provided it is unclear whether it is *timer* or
->> *service*. If it is timer - I do not understand why it is started
->> exactly 30 seconds after device apparently appears. This would match
->> starting service.
->=20
-> My guess is that the timer is triggered immediately after the device is=
+With your for-next branch (commit c2e60b3a2602) I haven't hit any block
+layer crashes so far. The only issue I encountered that is new is a
+memory leak triggered by the SG-IO code. These memory leak reports
+started to appear after I started testing the mq-deadline scheduler.
+kmemleak reported the following call stack multiple times after my tests
+had finished:
 
-> started, but before it is mounted.
-> The Conflicts directive tries to stop the device, but is cannot stop th=
-e
-> device and there are no dependencies yet, so nothing happen.
-> After the timer fires (30 seconds later) the .service starts.  It also
-> has a Conflicts directory so systemd tried to stop the device again.
-> Now that it has been mounted, there is a dependences that can be
-> stopped, and the device gets unmounted.
->=20
->>
->> Yet another case where system logging is hopelessly unfriendly for
->> troubleshooting :(
->>
->>> It would be nice to be able to reliably stop the timer when the devic=
-e
->>> starts, without risking having the device get stopped when the timer
->>> starts, but I don't think we can reliably do that.
->>>
->>
->> Well, let's wait until we can get some more information about what hap=
-pens.
->>
+unreferenced object 0xffff88041119e528 (size 192):
+=A0 comm "multipathd", pid 2353, jiffies 4295128020 (age 1332.440s)
+=A0 hex dump (first 32 bytes):
+=A0=A0=A0=A000 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00=A0=A0..........=
+......
+=A0=A0=A0=A000 00 00 00 00 00 00 00 12 01 00 00 00 00 00 00=A0=A0..........=
+......
+=A0 backtrace:
+=A0=A0=A0=A0[<ffffffff8165e3b5>] kmemleak_alloc+0x45/0xa0
+=A0=A0=A0=A0[<ffffffff811cc23d>] __kmalloc+0x15d/0x2f0
+=A0=A0=A0=A0[<ffffffff81310e35>] bio_alloc_bioset+0x185/0x1f0
+=A0=A0=A0=A0[<ffffffff813117f4>] bio_map_user_iov+0x124/0x400
+=A0=A0=A0=A0[<ffffffff81320b7a>] blk_rq_map_user_iov+0x11a/0x210
+=A0=A0=A0=A0[<ffffffff81320cbd>] blk_rq_map_user+0x4d/0x60
+=A0=A0=A0=A0[<ffffffff81336694>] sg_io+0x3d4/0x410
+=A0=A0=A0=A0[<ffffffff813369d0>] scsi_cmd_ioctl+0x300/0x490
+=A0=A0=A0=A0[<ffffffff81336b9d>] scsi_cmd_blk_ioctl+0x3d/0x50
+=A0=A0=A0=A0[<ffffffff814b4360>] sd_ioctl+0x80/0x100
+=A0=A0=A0=A0[<ffffffff8132ddde>] blkdev_ioctl+0x51e/0x9f0
+=A0=A0=A0=A0[<ffffffff8122f388>] block_ioctl+0x38/0x40
+=A0=A0=A0=A0[<ffffffff8120097f>] do_vfs_ioctl+0x8f/0x700
+=A0=A0=A0=A0[<ffffffff8120102c>] SyS_ioctl+0x3c/0x70
+=A0=A0=A0=A0[<ffffffff8166c4aa>] entry_SYSCALL_64_fastpath+0x18/0xad
 
-Not much more, but we at least have confirmed that it was indeed last
-resort service which was fired off by last resort timer. Unfortunately
-no trace of timer itself.
-
->>> Changing the
->>>   Conflicts=3Dsys-devices-virtual-block-%i.device
->>> lines to
->>>   ConditionPathExists=3D/sys/devices/virtual/block/%i
->>> might make the problem go away, without any negative consequences.
->>>
->>
->> Ugly, but yes, may be this is the only way using current systemd.
->>
-
-This won't work. sysfs node appears as soon as the very first array
-member is found and array is still inactive, while what we need is
-condition "array is active".
-
-Conflicts line works because array is not announced to systemd
-(SYSTEMD_READY) until it is active. Which in turn is derived from the
-content of md/array_state.
-
->>> The primary purpose of having the 'Conflicts' directives was so that
->>> systemd wouldn't log
->>>   Starting Activate md array even though degraded
->>> after the array was successfully started.
->>
-
-Yes, I understand it.
-
->> This looks like cosmetic problem. What will happen if last resort
->> service is started when array is fully assembled? Will it do any harm?=
-
->=20
-> Yes, it could be seen as cosmetic, but cosmetic issues can be important=
-
-> too.  Confusing messages in logs can be harmful.
->=20
-> In all likely cases, running the last-resort service won't cause any
-> harm.
-> If, during the 30 seconds, the array is started, then deliberately
-> stopped, then partially assembled again, then when the last-resort
-> service finally starts it might do the wrong thing.
-> So it would be cleanest if the timer was killed as soon as the device
-> is started.  But I don't think there is a practical concern.
->=20
-> I guess I could make a udev rule that fires when the array started, and=
-
-> that runs "systemctl stop mdadm-last-resort@md0.timer"
->=20
-
-
-Well ... what we really need is unidirectional dependency. Actually the
-way Conflicts is used *is* unidirectional anyway - nobody seriously
-expects that starting foo.service will stop currently running
-shutdown.target. But that is semantic we have currently.
-
-But this probably will do to mitigate this issue until something more
-generic can be implemented.
-
-
---1ETFtmPne6sx1Hi2s3CdAXRgh5Al1EMLN--
-
---61tMEB1chVGstBq0OMorEpSLJvxtk2j0E
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEARECAAYFAliQ8MAACgkQR6LMutpd94y3nwCeNe/9D0KRjtQqEq8+ivljygD2
-GHEAoM+g3vVtQY7NqJFR6g0jxP0nE0dM
-=Aj2+
------END PGP SIGNATURE-----
-
---61tMEB1chVGstBq0OMorEpSLJvxtk2j0E--
+Bart.=
