@@ -1,196 +1,101 @@
-From: =?UTF-8?Q?Jure_Erzno=C5=BEnik?= <jure.erznoznik@gmail.com>
-Subject: Re: [PATCH] MD: add doc for raid5-cache
-Date: Thu, 2 Feb 2017 07:54:51 +0100
-Message-ID: <CAJ=9zicEhZseObrjoCr7fCoyvaTUs90S9ik-0dLC=NjCPOW=LQ@mail.gmail.com>
-References: <25051bd79d94b45c7be24ce466a8b6eb2fba66c0.1485890144.git.shli@fb.com>
- <3d68e5aa-5c2e-4cb0-ba57-45246041ffe6@gmail.com>
+From: Santiago DIEZ <santiago.diez@caoba.fr>
+Subject: Re: Fail to assemble raid4 with replaced disk
+Date: Thu, 2 Feb 2017 14:33:40 +0100
+Message-ID: <CAJh8RqVt1cwVy5xTCXEhYncVF5ax2OKtfKn0os5wHZwpXOYnaQ@mail.gmail.com>
+References: <CAJh8RqUjr7L_Of0fbW_mAXshmmgcPdXvhtsvhFXKF+XxjOTrFw@mail.gmail.com>
+ <580F9B68.9010105@youngman.org.uk> <CAJh8RqXV4_v-zAu9Us_K6oTS_N_bR6vd97G4msN00qXn_vtXEQ@mail.gmail.com>
+ <581769E1.6060403@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3d68e5aa-5c2e-4cb0-ba57-45246041ffe6@gmail.com>
+In-Reply-To: <581769E1.6060403@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: Linux Raid LIST <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-If I may, I'd also like to see the following in the manual:
+Hi,
 
-1. Instructions on how to set up the cache. So far I have seen how to
-change mode, but not how to even get to the part where you can (change
-the mode)
-2. List of all tweaking parameters with descriptions on what they do
+I never said THANKS.
 
-Thanks for the fine work!
+Never too late ;o)
 
-LP,
-Jure
+-------------------------
+Santiago DIEZ
+-------------------------
+Quark Systems & CAOBA
+23 rue du Buisson Saint-Louis, 75010 Paris
+-------------------------
 
-On Thu, Feb 2, 2017 at 7:33 AM, Ram Ramesh <rramesh2400@gmail.com> wrote:
-> On 01/31/2017 01:18 PM, Shaohua Li wrote:
+
+On Mon, Oct 31, 2016 at 4:57 PM, Wols Lists <antlists@youngman.org.uk> wrote:
+> On 27/10/16 15:11, Santiago DIEZ wrote:
+>> Hi,
 >>
->> I'm starting document of the raid5-cache feature. Please let me know
->> what else we should put into the document. Of course, comments are
->> welcome!
+>> Indeed, here is what I had in terms of event count:
+>> /dev/sda10: 81589
+>> /dev/sdb10: 81626
+>> /dev/sdc10: 81589
 >>
->> Signed-off-by: Shaohua Li <shli@fb.com>
->> ---
->>   Documentation/md/raid5-cache.txt | 99
->> ++++++++++++++++++++++++++++++++++++++++
->>   1 file changed, 99 insertions(+)
->>   create mode 100644 Documentation/md/raid5-cache.txt
+>> Then the following procedure worked quite straightforward:
+>> --------------------------------------------------------------------------------
+>> # mdadm --assemble /dev/md10 --verbose --force /dev/sda10 /dev/sdb10 /dev/sdc10
+>> # mdadm --manage /dev/md10 --add /dev/sdd10
+>> --------------------------------------------------------------------------------
 >>
->> diff --git a/Documentation/md/raid5-cache.txt
->> b/Documentation/md/raid5-cache.txt
->> new file mode 100644
->> index 0000000..17a6279
->> --- /dev/null
->> +++ b/Documentation/md/raid5-cache.txt
->> @@ -0,0 +1,99 @@
->> +RAID5 cache
->> +
->> +Raid 4/5/6 could include an extra disk for data cache. The cache could be
->> +in write-through or write-back mode. mdadm has a new option
->> +'--write-journal' to create array with cache. By default (raid array
->> +starts), the cache is in write-through mode. User can switch it to
->> +write-back mode by:
->> +
->> +echo "write-back" > /sys/block/md0/md/journal_mode
->> +
->> +And switch it back to write-through mode by:
->> +
->> +echo "write-through" > /sys/block/md0/md/journal_mode
->> +
->> +In both modes, all writes to the array will hit cache disk first. This
->> means
->> +the cache disk must be fast and sustainable (if you use a SSD as the
->> cache).
->> +
->> +-------------------------------------
->> +write-through mode:
->> +
->> +This mode mainly fixes 'write hole' issue. For RAID 4/5/6 array, an
->> +unclean shutdown could cause data in some stripes is not in consistent
->> +state, eg, data and parity don't match. The reason is a stripe write
->> +involves several raid disks and it's possible writes don't hit all raid
->> +disks yet before the unclean shutdown. After an unclean shutdown, MD try
->> +to 'resync' the array to put all stripes back into consistent state. In
->> +the resync, any disk failure will cause real data corruption. This
->> problem
->> +is called 'write hole'. So the 'write hole' issue occurs between unclean
->> +shutdown and 'resync'. This window isn't big. On the other hand, if one
->> +disk fails, other disks could fail soon, which happens sometimes if the
->> +disks are from the same vendor and manufactured in the same time. This
->> +will increase the chance of 'write whole', but overall the chance isn't
->> +big, so don't panic even not using cache disk.
->> +
->> +The write-through cache will cache all data in cache disk first. Until
->> the
->> +data hits into the cache disk, the data is flushed into RAID disks. The
->> +two-step write will guarantee MD can recover correct data after unclean
->> +shutdown even with disk failure. Thus the cache can close the 'write
->> +hole'.
->> +
->> +In write-through mode, MD reports IO finish to upper layer (usually
->> +filesystems) till the data hits RAID disks, so cache disk failure doesn't
->> +cause data lost. Of course cache disk failure means the array is exposed
->> +into 'write hole' again.
->> +
->> +--------------------------------------
->> +write-back mode:
->> +
->> +write-back mode fixes the 'write hole' issue too, since all write data is
->> +cached in cache disk. But the main goal of 'write-back' cache is to speed
->> up
->> +write. If a write crosses all raid disks of a stripe, we call it
->> full-stripe
->> +write. For non-full-stripe write, MD must do a read-modify-write. The
->> extra
->> +read (for data in other disks) and write (for parity) introduce a lot of
->> +overhead. Some writes which are sequential but not dispatched in the same
->> time
->> +will suffer from this overhead too. write-back cache will aggregate the
->> data
->> +and flush the data to raid disks till the data becomes a full stripe
->> write.
->> +This will completely avoid the overhead, so it's very helpful for some
->> +workloads. A typical workload which does sequential write and follows
->> fsync is
->> +an example.
->> +
->> +In write-back mode, MD reports IO finish to upper layer (usually
->> filesystems)
->> +right after the data hit cache disk. The data is flushed to raid disks
->> later
->> +after specific conditions met. So cache disk failure will cause data
->> lost.
->> +
->> +--------------------------------------
->> +The implementation:
->> +
->> +The write-through and write-back cache use the same disk format. The
->> cache disk
->> +is organized as a simple write log. The log consists of 'meta data' and
->> 'data'
->> +pairs. The meta data describes the data. It also includes checksum and
->> sequence
->> +ID for recovery identification. Data could be IO data and parity data.
->> Data is
->> +checksumed too. The checksum is stored in the meta data ahead of the
->> data. The
->> +checksum is an optimization because MD can write meta and data freely
->> without
->> +worry about the order. MD superblock has a field pointed to the valid
->> meta data
->> +of log head.
->> +
->> +The log implementation is pretty straightforward. The difficult part is
->> the
->> +order MD write data to cache disk and raid disks. Specifically, in
->> +write-through mode, MD calculates parity for IO data, writes both IO data
->> and
->> +parity to the log, write the data and parity to raid disks after the data
->> and
->> +parity is settled down in log and finally the IO is finished. Read just
->> reads
->> +from raid disks as usual.
->> +
->> +In write-back mode, MD writes IO data to the log and reports IO finish.
->> The
->> +data is also fully cached in memory at that time, which means read must
->> query
->> +memory cache. If some conditions are met, MD will flush the data to raid
->> disks.
->> +MD will calculate parity for the data and write parity into the log.
->> After this
->> +is finished, MD will write both data and parity into raid disks, then MD
->> can
->> +release the memory cache. The flush conditions could be stripe becomes a
->> full
->> +stripe write, free cache disk space is low or in-kernel memory cache
->> space is
->> +low.
->> +
->> +After an unclean shutdown, MD does recovery. MD reads all meta data and
->> data
->> +from the log. The sequence ID and checksum will help us detect corrupted
->> meta
->> +data and data. If MD finds a stripe with data and valid parities (1
->> parity for
->> +raid4/5 and 2 for raid6), MD will write the data and parities to raid
->> disks. If
->> +parities are incompleted, they are discarded. If part of data is
->> corrupted,
->> +they are discarded too. MD then loads valid data and writes them to raid
->> disks
->> +in normal way.
+>> And 6h+ later:
+>> --------------------------------------------------------------------------------
+>> # cat /proc/mdstat
+>> Personalities : [raid1] [raid6] [raid5] [raid4]
+>> md10 : active raid5 sdd10[3] sda10[0] sdc10[2] sdb10[1]
+>>       5778741888 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
+>> --------------------------------------------------------------------------------
+>>
+>> Then I ran:
+>> --------------------------------------------------------------------------------
+>> # e2fsck -f -n -t -v /dev/md10
+>> e2fsck 1.42.5 (29-Jul-2012)
+>> Pass 1: Checking inodes, blocks, and sizes
+>> Pass 2: Checking directory structure
+>> Pass 3: Checking directory connectivity
+>> Pass 4: Checking reference counts
+>> Pass 5: Checking group summary information
+>>
+>>     15675837 inodes used (4.34%, out of 361177088)
+>>       188798 non-contiguous files (1.2%)
+>>        14751 non-contiguous directories (0.1%)
+>>              # of inodes with ind/dind/tind blocks: 0/0/0
+>>              Extent depth histogram: 15626455/47037/15
+>>   1281308341 blocks used (88.69%, out of 1444685472)
+>>            0 bad blocks
+>>          101 large files
+>>
+>>     15311457 regular files
+>>       361754 directories
+>>            0 character device files
+>>            0 block device files
+>>            0 fifos
+>>            0 links
+>>         2607 symbolic links (2310 fast symbolic links)
+>>           10 sockets
+>> ------------
+>>     15675828 files
+>> Memory used: 50976k/1912k (20541k/30436k), time: 1304.00/334.06/ 8.00
+>> I/O read: 4891MB, write: 0MB, rate: 3.75MB/s
+>> --------------------------------------------------------------------------------
+>>
+>> Does it look OK enough to launch the mount?
+>>
+> sorry - I've been away for the weekend - daughter's wedding :-)
 >
+> But yes, that looks great. No errors on fsck either, I think :-)
 >
-> Which version of mdadm/kernel supports this feature? Is it already released
-> or in the process?
+> I think your array looks fine. Just look at the output from smartctl for
+> your old drives and make sure that it doesn't look like another drive is
+> going to fail soon. I'm not quite sure what to look for, mostly bad
+> blocks and relocates, I think, but if you compare it with your new drive
+> and stuff looks dodgy, you can always ask for help.
 >
-> Ramesh
+> Cheers,
+> Wol
 >
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
