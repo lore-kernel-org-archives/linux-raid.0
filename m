@@ -1,76 +1,78 @@
 From: Anup Patel <anup.patel@broadcom.com>
-Subject: [PATCH 1/6] mailbox: Add new API mbox_channel_device() for clients
-Date: Thu,  2 Feb 2017 10:17:11 +0530
-Message-ID: <1486010836-25228-2-git-send-email-anup.patel@broadcom.com>
+Subject: [PATCH 2/6] lib/raid6: Add log-of-2 table for RAID6 HW requiring disk position
+Date: Thu,  2 Feb 2017 10:17:12 +0530
+Message-ID: <1486010836-25228-3-git-send-email-anup.patel@broadcom.com>
 References: <1486010836-25228-1-git-send-email-anup.patel@broadcom.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-crypto-owner@vger.kernel.org>
 In-Reply-To: <1486010836-25228-1-git-send-email-anup.patel@broadcom.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-crypto-owner@vger.kernel.org
 To: Vinod Koul <vinod.koul@intel.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S . Miller" <davem@davemloft.net>, Jassi Brar <jassisinghbrar@gmail.com>
 Cc: Dan Williams <dan.j.williams@intel.com>, Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>, Rob Rice <rob.rice@broadcom.com>, bcm-kernel-feedback-list@broadcom.com, dmaengine@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org, Anup Patel <anup.patel@broadcom.com>
 List-Id: linux-raid.ids
 
-The remote processor can have DMAENGINE capabilities and client
-can pass data to be processed via main memory. In such cases,
-the client will require DMAble memory for remote processor.
+The raid6_gfexp table represents {2}^n values for 0 <= n < 256. The
+Linux async_tx framework pass values from raid6_gfexp as coefficients
+for each source to prep_dma_pq() callback of DMA channel with PQ
+capability. This creates problem for RAID6 offload engines (such as
+Broadcom SBA) which take disk position (i.e. log of {2}) instead of
+multiplicative cofficients from raid6_gfexp table.
 
-This patch adds new API mbox_channel_device() which can be
-used by clients to get struct device pointer of underlying
-mailbox controller. This struct device pointer of mailbox
-controller can be used by clients to allocate DMAble memory
-for remote processor.
+This patch adds raid6_gflog table having log-of-2 value for any given
+x such that 0 <= x < 256. For any given disk coefficient x, the
+corresponding disk position is given by raid6_gflog[x]. The RAID6
+offload engine driver can use this newly added raid6_gflog table to
+get disk position from multiplicative coefficient.
 
 Signed-off-by: Anup Patel <anup.patel@broadcom.com>
 Reviewed-by: Scott Branden <scott.branden@broadcom.com>
 Reviewed-by: Ray Jui <ray.jui@broadcom.com>
 ---
- drivers/mailbox/mailbox.c      | 21 +++++++++++++++++++++
- include/linux/mailbox_client.h |  1 +
- 2 files changed, 22 insertions(+)
+ include/linux/raid/pq.h |  1 +
+ lib/raid6/mktables.c    | 20 ++++++++++++++++++++
+ 2 files changed, 21 insertions(+)
 
-diff --git a/drivers/mailbox/mailbox.c b/drivers/mailbox/mailbox.c
-index 4671f8a..d4380fc 100644
---- a/drivers/mailbox/mailbox.c
-+++ b/drivers/mailbox/mailbox.c
-@@ -281,6 +281,27 @@ int mbox_send_message(struct mbox_chan *chan, void *mssg)
- EXPORT_SYMBOL_GPL(mbox_send_message);
+diff --git a/include/linux/raid/pq.h b/include/linux/raid/pq.h
+index 4d57bba..30f9453 100644
+--- a/include/linux/raid/pq.h
++++ b/include/linux/raid/pq.h
+@@ -142,6 +142,7 @@ int raid6_select_algo(void);
+ extern const u8 raid6_gfmul[256][256] __attribute__((aligned(256)));
+ extern const u8 raid6_vgfmul[256][32] __attribute__((aligned(256)));
+ extern const u8 raid6_gfexp[256]      __attribute__((aligned(256)));
++extern const u8 raid6_gflog[256]      __attribute__((aligned(256)));
+ extern const u8 raid6_gfinv[256]      __attribute__((aligned(256)));
+ extern const u8 raid6_gfexi[256]      __attribute__((aligned(256)));
  
- /**
-+ * mbox_channel_device - Get device pointer of a mailbox channel.
-+ * @chan: Mailbox channel assigned to this client.
-+ *
-+ * The remote processor can have DMAENGINE capabilities and client
-+ * can pass data to be processed via main memory. In such cases,
-+ * the client will require struct device pointer of the mailbox
-+ * channel to map/unmap/allocate/free DMAble memory.
-+ *
-+ * Return: Pointer to the struct device of mailbox channel.
-+ *	   ERR_PTR on failure.
-+ */
-+struct device *mbox_channel_device(struct mbox_chan *chan)
-+{
-+	if (!chan || !chan->cl)
-+		return ERR_PTR(-EINVAL);
-+
-+	return chan->mbox->dev;
-+}
-+EXPORT_SYMBOL_GPL(mbox_channel_device);
-+
-+/**
-  * mbox_request_channel - Request a mailbox channel.
-  * @cl: Identity of the client requesting the channel.
-  * @index: Index of mailbox specifier in 'mboxes' property.
-diff --git a/include/linux/mailbox_client.h b/include/linux/mailbox_client.h
-index 4434871..3daffad 100644
---- a/include/linux/mailbox_client.h
-+++ b/include/linux/mailbox_client.h
-@@ -40,6 +40,7 @@ struct mbox_client {
- 	void (*tx_done)(struct mbox_client *cl, void *mssg, int r);
- };
+diff --git a/lib/raid6/mktables.c b/lib/raid6/mktables.c
+index 39787db..e824d08 100644
+--- a/lib/raid6/mktables.c
++++ b/lib/raid6/mktables.c
+@@ -125,6 +125,26 @@ int main(int argc, char *argv[])
+ 	printf("EXPORT_SYMBOL(raid6_gfexp);\n");
+ 	printf("#endif\n");
  
-+struct device *mbox_channel_device(struct mbox_chan *chan);
- struct mbox_chan *mbox_request_channel_byname(struct mbox_client *cl,
- 					      const char *name);
- struct mbox_chan *mbox_request_channel(struct mbox_client *cl, int index);
++	/* Compute log-of-2 table */
++	printf("\nconst u8 __attribute__((aligned(256)))\n"
++	       "raid6_gflog[256] =\n" "{\n");
++	for (i = 0; i < 256; i += 8) {
++		printf("\t");
++		for (j = 0; j < 8; j++) {
++			v = 255;
++			for (k = 0; k < 256; k++)
++				if (exptbl[k] == (i + j)) {
++					v = k;
++					break;
++				}
++			printf("0x%02x,%c", v, (j == 7) ? '\n' : ' ');
++		}
++	}
++	printf("};\n");
++	printf("#ifdef __KERNEL__\n");
++	printf("EXPORT_SYMBOL(raid6_gflog);\n");
++	printf("#endif\n");
++
+ 	/* Compute inverse table x^-1 == x^254 */
+ 	printf("\nconst u8 __attribute__((aligned(256)))\n"
+ 	       "raid6_gfinv[256] =\n" "{\n");
 -- 
 2.7.4
