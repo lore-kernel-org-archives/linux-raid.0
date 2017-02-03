@@ -1,56 +1,32 @@
-From: Anup Patel <anup.patel@broadcom.com>
-Subject: Re: [PATCH 3/6] async_tx: Handle DMA devices having support for fewer
- PQ coefficients
-Date: Fri, 3 Feb 2017 16:30:03 +0530
-Message-ID: <CAALAos_9uuOVG8zVY4KLY+AeuOCv+rTsF6uM-WLFxf6TM8GRPg@mail.gmail.com>
-References: <1486010836-25228-1-git-send-email-anup.patel@broadcom.com>
- <1486010836-25228-4-git-send-email-anup.patel@broadcom.com> <CAPcyv4gBFu7skx_8cvsaL0sL5=44DMcWY_EjWSCfaNd8oh=Svw@mail.gmail.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: sector size mismatch a problem for RAID 1?
+Date: Fri, 3 Feb 2017 11:20:17 +0000
+Message-ID: <58946771.4030005@youngman.org.uk>
+References: <3dcb5a7a-9bd4-4cfd-a655-91a88692c549@EXHT01.net.ucsf.edu>
+ <d05e3579-38c4-40bd-8fb4-d296fc3ea9c5@EXHT02.net.ucsf.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-crypto-owner@vger.kernel.org>
-In-Reply-To: <CAPcyv4gBFu7skx_8cvsaL0sL5=44DMcWY_EjWSCfaNd8oh=Svw@mail.gmail.com>
-Sender: linux-crypto-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Vinod Koul <vinod.koul@intel.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S . Miller" <davem@davemloft.net>, Jassi Brar <jassisinghbrar@gmail.com>, Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>, Rob Rice <rob.rice@broadcom.com>, BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>, "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>, Device Tree <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <d05e3579-38c4-40bd-8fb4-d296fc3ea9c5@EXHT02.net.ucsf.edu>
+Sender: linux-raid-owner@vger.kernel.org
+To: "Boylan, Ross" <Ross.Boylan@ucsf.edu>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Feb 2, 2017 at 11:31 AM, Dan Williams <dan.j.williams@intel.com> wrote:
->
-> On Wed, Feb 1, 2017 at 8:47 PM, Anup Patel <anup.patel@broadcom.com> wrote:
-> > The DMAENGINE framework assumes that if PQ offload is supported by a
-> > DMA device then all 256 PQ coefficients are supported. This assumption
-> > does not hold anymore because we now have BCM-SBA-RAID offload engine
-> > which supports PQ offload with limited number of PQ coefficients.
-> >
-> > This patch extends async_tx APIs to handle DMA devices with support
-> > for fewer PQ coefficients.
-> >
-> > Signed-off-by: Anup Patel <anup.patel@broadcom.com>
-> > Reviewed-by: Scott Branden <scott.branden@broadcom.com>
-> > ---
-> >  crypto/async_tx/async_pq.c          |  3 +++
-> >  crypto/async_tx/async_raid6_recov.c | 12 ++++++++++--
-> >  include/linux/dmaengine.h           | 19 +++++++++++++++++++
-> >  include/linux/raid/pq.h             |  3 +++
-> >  4 files changed, 35 insertions(+), 2 deletions(-)
->
-> So, I hate the way async_tx does these checks on each operation, and
-> it's ok for me to say that because it's my fault. Really it's md that
-> should be validating engine offload capabilities once at the beginning
-> of time. I'd rather we move in that direction than continue to pile
-> onto a bad design.
+On 03/02/17 06:18, Boylan, Ross wrote:
+> When I moved the new disk to an internal drive bay (after reading lvm-raid wiki's statements that RAID shouldn't be used over a USB link) the problems went away--at least so far.
+> 
+As I understand it, the problem is that the USB interface goes to sleep.
+So when you try to write to it, it may not wake up quick enough, causing
+havoc ...
 
-Yes, indeed. All async_tx APIs have lot of checks and for high throughput
-RAID offload engine these checks can add some overhead.
+> I wonder if this  is the source of my original problem: I was using a single disk RAID1 where the single disk had a USB connection.  However, I did get a failure off that drive doing a dd off the raw device.
+> 
+Quite likely. But I'm puzzled as to why the dd would fail, as this would
+keep the USB interface active. Maybe others who know more will chime in
+and explain.
+> 
+> Ross
 
-I think doing checks in Linux md would be certainly better but this would
-mean lot of changes in Linux md as well as remove checks in async_tx.
-
-Also, async_tx APIs should not find DMA channel on its own instead it
-should rely on Linux md to provide DMA channel pointer as parameter.
-
-It's better to do checks cleanup in async_tx as separate patchset and
-keep this patchset simple.
-
-Regards,
-Anup
+Cheers,
+Wol
