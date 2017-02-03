@@ -1,101 +1,62 @@
-From: Santiago DIEZ <santiago.diez@caoba.fr>
-Subject: Re: Fail to assemble raid4 with replaced disk
-Date: Thu, 2 Feb 2017 14:33:40 +0100
-Message-ID: <CAJh8RqVt1cwVy5xTCXEhYncVF5ax2OKtfKn0os5wHZwpXOYnaQ@mail.gmail.com>
-References: <CAJh8RqUjr7L_Of0fbW_mAXshmmgcPdXvhtsvhFXKF+XxjOTrFw@mail.gmail.com>
- <580F9B68.9010105@youngman.org.uk> <CAJh8RqXV4_v-zAu9Us_K6oTS_N_bR6vd97G4msN00qXn_vtXEQ@mail.gmail.com>
- <581769E1.6060403@youngman.org.uk>
+From: "Boylan, Ross" <Ross.Boylan@ucsf.edu>
+Subject: sector size mismatch a problem for RAID 1?
+Date: Fri, 3 Feb 2017 00:17:25 +0000
+Message-ID: <3dcb5a7a-9bd4-4cfd-a655-91a88692c549@EXHT01.net.ucsf.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <581769E1.6060403@youngman.org.uk>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: Linux Raid LIST <linux-raid@vger.kernel.org>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+I got a replacement  for a failing disk, but the 2 drives seems to have slightly different formatting:
+For the failing one
+GNU Parted 2.3
+Using /dev/sdb
+Welcome to GNU Parted! Type 'help' to view a list of commands.
+(parted) p
+Model: WDC WD40 01FFSX-68JNUN0 (scsi)
+Disk /dev/sdb: 4001GB
+Sector size (logical/physical): 512B/4096B <<<------
+Partition Table: gpt
 
-I never said THANKS.
+And the replacement (sdk)
+Model: WDC WD40 01FFSX-68JNUN0 (scsi)
+Disk /dev/sdk: 7814037168s
+Sector size (logical/physical): 512B/512B <<<<-----
+Partition Table: gpt
 
-Never too late ;o)
+So the first is 4k physical, and the second is 512b physical (I assume that's really a fib, but it's what the drive says).
 
--------------------------
-Santiago DIEZ
--------------------------
-Quark Systems & CAOBA
-23 rue du Buisson Saint-Louis, 75010 Paris
--------------------------
+Could the mismatch in the physical sizes cause trouble?
 
+I ask because I did this:
+mdadm --grow /dev/md/media4 --add /dev/sdk2 --raid-devices=2
+which resulted in 
+the Feb  2 15:26:46 tempserver kernel: [ 8583.545160] md: bind<sdk2>
+Feb  2 15:26:46 tempserver kernel: [ 8583.957047] RAID1 conf printout:
+Feb  2 15:26:46 tempserver kernel: [ 8583.957051]  --- wd:1 rd:2
+Feb  2 15:26:46 tempserver kernel: [ 8583.957052]  disk 0, wo:0, o:1, dev:sdb2
+Feb  2 15:26:46 tempserver kernel: [ 8583.957054]  disk 1, wo:1, o:1, dev:sdk2
+Feb  2 15:26:46 tempserver kernel: [ 8583.957108] md: recovery of RAID array md126
+Feb  2 15:26:46 tempserver kernel: [ 8583.957111] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+Feb  2 15:26:46 tempserver kernel: [ 8583.957112] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
+Feb  2 15:26:46 tempserver kernel: [ 8583.957115] md: using 128k window, over a total of 1953376064k.
+Feb  2 15:26:50 tempserver kernel: [ 8587.312261] usb 2-3: USB disconnect, device number 4
+Feb  2 15:26:50 tempserver kernel: [ 8587.315908] scsi 8:0:0:3: rejecting I/O to offline device
+Feb  2 15:26:50 tempserver kernel: [ 8587.315912] scsi 8:0:0:3: [sdk] killing request
+Feb  2 15:26:50 tempserver kernel: [ 8587.315934] scsi 8:0:0:3: [sdk] Unhandled error code
+Feb  2 15:26:50 tempserver kernel: [ 8587.315936] scsi 8:0:0:3: [sdk]  
+Feb  2 15:26:50 tempserver kernel: [ 8587.315939] Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+Feb  2 15:26:50 tempserver kernel: [ 8587.315941] scsi 8:0:0:3: [sdk] CDB: 
+Feb  2 15:26:50 tempserver kernel: [ 8587.315943] Write(16): 8a 00 00 00 00 00 00 0c 3e 80 00 00 00 80 00 00
+Feb  2 15:26:50 tempserver kernel: [ 8587.315951] end_request: I/O error, dev sdk, sector 802432
+Feb  2 15:26:50 tempserver kernel: [ 8587.315963] md/raid1:md126: Disk failure on sdk2, disabling device.
+Feb  2 15:26:50 tempserver kernel: [ 8587.315963] md/raid1:md126: Operation continuing on 1 devices.result of which from kern.log was
+I then tried
+ dd if=/dev/disk/by-id/ata-WDC_WD4001FFSX-68JNUN0_WD-WMC130FACU91 of=/dev/null skip=802500 count=1000
+which produced no error.  The input is from the device previously known as sdk.  So I can at least read from the sector that was associated with the error message above.
 
-On Mon, Oct 31, 2016 at 4:57 PM, Wols Lists <antlists@youngman.org.uk> wrote:
-> On 27/10/16 15:11, Santiago DIEZ wrote:
->> Hi,
->>
->> Indeed, here is what I had in terms of event count:
->> /dev/sda10: 81589
->> /dev/sdb10: 81626
->> /dev/sdc10: 81589
->>
->> Then the following procedure worked quite straightforward:
->> --------------------------------------------------------------------------------
->> # mdadm --assemble /dev/md10 --verbose --force /dev/sda10 /dev/sdb10 /dev/sdc10
->> # mdadm --manage /dev/md10 --add /dev/sdd10
->> --------------------------------------------------------------------------------
->>
->> And 6h+ later:
->> --------------------------------------------------------------------------------
->> # cat /proc/mdstat
->> Personalities : [raid1] [raid6] [raid5] [raid4]
->> md10 : active raid5 sdd10[3] sda10[0] sdc10[2] sdb10[1]
->>       5778741888 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
->> --------------------------------------------------------------------------------
->>
->> Then I ran:
->> --------------------------------------------------------------------------------
->> # e2fsck -f -n -t -v /dev/md10
->> e2fsck 1.42.5 (29-Jul-2012)
->> Pass 1: Checking inodes, blocks, and sizes
->> Pass 2: Checking directory structure
->> Pass 3: Checking directory connectivity
->> Pass 4: Checking reference counts
->> Pass 5: Checking group summary information
->>
->>     15675837 inodes used (4.34%, out of 361177088)
->>       188798 non-contiguous files (1.2%)
->>        14751 non-contiguous directories (0.1%)
->>              # of inodes with ind/dind/tind blocks: 0/0/0
->>              Extent depth histogram: 15626455/47037/15
->>   1281308341 blocks used (88.69%, out of 1444685472)
->>            0 bad blocks
->>          101 large files
->>
->>     15311457 regular files
->>       361754 directories
->>            0 character device files
->>            0 block device files
->>            0 fifos
->>            0 links
->>         2607 symbolic links (2310 fast symbolic links)
->>           10 sockets
->> ------------
->>     15675828 files
->> Memory used: 50976k/1912k (20541k/30436k), time: 1304.00/334.06/ 8.00
->> I/O read: 4891MB, write: 0MB, rate: 3.75MB/s
->> --------------------------------------------------------------------------------
->>
->> Does it look OK enough to launch the mount?
->>
-> sorry - I've been away for the weekend - daughter's wedding :-)
->
-> But yes, that looks great. No errors on fsck either, I think :-)
->
-> I think your array looks fine. Just look at the output from smartctl for
-> your old drives and make sure that it doesn't look like another drive is
-> going to fail soon. I'm not quite sure what to look for, mostly bad
-> blocks and relocates, I think, but if you compare it with your new drive
-> and stuff looks dodgy, you can always ask for help.
->
-> Cheers,
-> Wol
->
+BTW, the array I'm trying to mirror is on a part of the disk that I think is still good.
