@@ -1,44 +1,76 @@
 From: Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH 0/4] md: use bio_clone_fast()
-Date: Sun,  5 Feb 2017 14:22:09 +0800
-Message-ID: <1486275733-7268-1-git-send-email-tom.leiming@gmail.com>
-Return-path: <linux-block-owner@vger.kernel.org>
-Sender: linux-block-owner@vger.kernel.org
+Subject: [PATCH 3/4] md/raid1: use bio_clone_slow_mddev_partial in case of write behind
+Date: Sun,  5 Feb 2017 14:22:12 +0800
+Message-ID: <1486275733-7268-4-git-send-email-tom.leiming@gmail.com>
+References: <1486275733-7268-1-git-send-email-tom.leiming@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1486275733-7268-1-git-send-email-tom.leiming@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, NeilBrown <neilb@suse.com>
 Cc: Ming Lei <tom.leiming@gmail.com>
 List-Id: linux-raid.ids
 
-Hi,
+Write behind need to replace pages in bio's bvecs, and we have
+to clone a fresh bio with new bvec table, so use the introduced
+bio_clone_slow_mddev_partial() for it.
 
-This patches replaces bio_clone() with bio_fast_clone() in
-bio_clone_mddev() because:
+For other bio_clone_mddev() cases, we will use fast clone since
+they don't need to touch bvec table.
 
-1) bio_clone_mddev() is used in raid normal I/O and isn't in
-resync I/O path, and all the direct access to bvec table in
-raid happens on resync I/O only except for write behind of raid1.
-Write behind is treated specially, so the replacement is safe.
+Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+---
+ drivers/md/raid1.c | 21 ++++++++++++++++-----
+ 1 file changed, 16 insertions(+), 5 deletions(-)
 
-2) for write behind, bio_clone() is kept, but this patchset
-introduces bio_clone_bioset_partial() to just clone one specific 
-bvecs range instead of whole table. Then write behind is improved
-too.
-
-
-Thanks,
-Ming
-
-Ming Lei (4):
-  block: introduce bio_clone_bioset_partial()
-  md: introduce bio_clone_slow_mddev_partial()
-  md/raid1: use bio_clone_slow_mddev_partial in case of write behind
-  md: fast clone bio in bio_clone_mddev()
-
- block/bio.c         | 61 +++++++++++++++++++++++++++++++++++++++++------------
- drivers/md/md.c     | 24 +++++++++++++++++++--
- drivers/md/md.h     |  3 +++
- drivers/md/raid1.c  | 21 +++++++++++++-----
- include/linux/bio.h | 11 ++++++++--
- 5 files changed, 98 insertions(+), 22 deletions(-)
-
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 830ff2b20346..e1c5639febdb 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1341,13 +1341,12 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 
+ 	first_clone = 1;
+ 	for (i = 0; i < disks; i++) {
+-		struct bio *mbio;
++		struct bio *mbio = NULL;
++		int offset;
+ 		if (!r1_bio->bios[i])
+ 			continue;
+ 
+-		mbio = bio_clone_mddev(bio, GFP_NOIO, mddev);
+-		bio_trim(mbio, r1_bio->sector - bio->bi_iter.bi_sector,
+-			 max_sectors);
++		offset = r1_bio->sector - bio->bi_iter.bi_sector;
+ 
+ 		if (first_clone) {
+ 			/* do behind I/O ?
+@@ -1357,8 +1356,14 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 			if (bitmap &&
+ 			    (atomic_read(&bitmap->behind_writes)
+ 			     < mddev->bitmap_info.max_write_behind) &&
+-			    !waitqueue_active(&bitmap->behind_wait))
++			    !waitqueue_active(&bitmap->behind_wait)) {
++				mbio = bio_clone_slow_mddev_partial(bio,
++								    GFP_NOIO,
++								    mddev,
++								    offset,
++								    max_sectors);
+ 				alloc_behind_pages(mbio, r1_bio);
++			}
+ 
+ 			bitmap_startwrite(bitmap, r1_bio->sector,
+ 					  r1_bio->sectors,
+@@ -1366,6 +1371,12 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 						   &r1_bio->state));
+ 			first_clone = 0;
+ 		}
++
++		if (!mbio) {
++			mbio = bio_clone_mddev(bio, GFP_NOIO, mddev);
++			bio_trim(mbio, offset, max_sectors);
++		}
++
+ 		if (r1_bio->behind_bvecs) {
+ 			struct bio_vec *bvec;
+ 			int j;
 -- 
 2.7.4
