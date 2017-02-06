@@ -1,85 +1,112 @@
-From: NeilBrown <neilb@suse.com>
-Subject: [PATCH] md: ensure md devices are freed before module is unloaded.
-Date: Mon, 06 Feb 2017 13:41:39 +1100
-Message-ID: <87r33cvy58.fsf@notabene.neil.brown.name>
+From: Anup Patel <anup.patel@broadcom.com>
+Subject: Re: [PATCH 3/6] async_tx: Handle DMA devices having support for fewer
+ PQ coefficients
+Date: Mon, 6 Feb 2017 09:25:24 +0530
+Message-ID: <CAALAos_=yM3V1TJVHU1o6Ztkh5-PmZJw9yYM9SmDU7rN1jWFFg@mail.gmail.com>
+References: <1486010836-25228-1-git-send-email-anup.patel@broadcom.com>
+ <1486010836-25228-4-git-send-email-anup.patel@broadcom.com>
+ <CAPcyv4gBFu7skx_8cvsaL0sL5=44DMcWY_EjWSCfaNd8oh=Svw@mail.gmail.com>
+ <CAALAos8HEjPhdM0cibTVB==WsanktBx87e8b8diVsNm1EmCQHQ@mail.gmail.com> <CAPcyv4icg74StGOjsOpYCDb9x02rrvSrkv6O66WtbSvhOwxYnw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>
-Cc: Guoqing Jiang <gqjiang@suse.com>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-crypto-owner@vger.kernel.org>
+In-Reply-To: <CAPcyv4icg74StGOjsOpYCDb9x02rrvSrkv6O66WtbSvhOwxYnw@mail.gmail.com>
+Sender: linux-crypto-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Vinod Koul <vinod.koul@intel.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S . Miller" <davem@davemloft.net>, Jassi Brar <jassisinghbrar@gmail.com>, Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>, Rob Rice <rob.rice@broadcom.com>, BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>, "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>, Device Tree <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Sat, Feb 4, 2017 at 12:12 AM, Dan Williams <dan.j.williams@intel.com> wrote:
+> On Fri, Feb 3, 2017 at 2:59 AM, Anup Patel <anup.patel@broadcom.com> wrote:
+>>
+>>
+>> On Thu, Feb 2, 2017 at 11:31 AM, Dan Williams <dan.j.williams@intel.com>
+>> wrote:
+>>>
+>>> On Wed, Feb 1, 2017 at 8:47 PM, Anup Patel <anup.patel@broadcom.com>
+>>> wrote:
+>>> > The DMAENGINE framework assumes that if PQ offload is supported by a
+>>> > DMA device then all 256 PQ coefficients are supported. This assumption
+>>> > does not hold anymore because we now have BCM-SBA-RAID offload engine
+>>> > which supports PQ offload with limited number of PQ coefficients.
+>>> >
+>>> > This patch extends async_tx APIs to handle DMA devices with support
+>>> > for fewer PQ coefficients.
+>>> >
+>>> > Signed-off-by: Anup Patel <anup.patel@broadcom.com>
+>>> > Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+>>> > ---
+>>> >  crypto/async_tx/async_pq.c          |  3 +++
+>>> >  crypto/async_tx/async_raid6_recov.c | 12 ++++++++++--
+>>> >  include/linux/dmaengine.h           | 19 +++++++++++++++++++
+>>> >  include/linux/raid/pq.h             |  3 +++
+>>> >  4 files changed, 35 insertions(+), 2 deletions(-)
+>>>
+>>> So, I hate the way async_tx does these checks on each operation, and
+>>> it's ok for me to say that because it's my fault. Really it's md that
+>>> should be validating engine offload capabilities once at the beginning
+>>> of time. I'd rather we move in that direction than continue to pile
+>>> onto a bad design.
+>>
+>>
+>> Yes, indeed. All async_tx APIs have lot of checks and for high throughput
+>> RAID offload engine these checks can add some overhead.
+>>
+>> I think doing checks in Linux md would be certainly better but this would
+>> mean lot of changes in Linux md as well as remove checks in async_tx.
+>>
+>> Also, async_tx APIs should not find DMA channel on its own instead it
+>> should rely on Linux md to provide DMA channel pointer as parameter.
+>>
+>> It's better to do checks cleanup in async_tx as separate patchset and
+>> keep this patchset simple.
+>
+> That's been the problem with async_tx being broken like this for
+> years. Once you get this "small / simple" patch upstream, that
+> arguably makes async_tx a little bit worse, there is no longer any
+> motivation to fix the underlying issues. If you care about the long
+> term health of raid offload and are enabling new hardware support you
+> should first tackle the known problems with it before adding new
+> features.
 
+Apart from the checks related issue you pointed there are other
+issues with async_tx APIs such as:
 
+1. The mechanism to do update PQ (or RAID6 update) operation
+in current async_tx APIs is to call async_gen_syndrome() twice
+with ASYNC_TX_PQ_XOR_DST flag set. Also, async_gen_syndrome()
+will always prefer SW approach when ASYNC_TX_PQ_XOR_DST flag
+is set. This means async_tx API is forcing SW approach for update
+PQ operation and in-addition we require two async_gen_syndrome()
+calls to achieve update PQ. This limitations of async_gen_syndrome()
+reduces performance of async_tx APIs. Instead of this we should
+have a dedicated async_update_pq() API which will allow RAID
+offload engine drivers (such as BCM-FS4-RAID) to implement
+update PQ using HW offload and this new API will fall-back to
+SW approach using async_gen_syndrome() if no DMA channel
+provides update PQ HW offload.
 
-Commit: cbd199837750 ("md: Fix unfortunate interaction with evms")
-change mddev_put() so that it would not destroy an md device while
-=2D>ctime was non-zero.
+2. In our stress testing, we have observed that dma_map_page()
+and dma_unmap_page() used in various async_tx APIs are the
+major cause of overhead. If we directly call DMA channel callbacks
+with pre-DMA-mapped pages then we get very high throughput.
+The async_tx APIs should provide a way for pre-DMA-mapped
+pages so that Linux MD can exploit this fact for better performance.
 
-Unfortunately, we didn't make sure to clear ->ctime when unloading
-the module, so it is possible for an md device to remain after
-module unload.  An attempt to open such a device will trigger
-an invalid memory reference in:
-  get_gendisk -> kobj_lookup -> exact_lock -> get_disk
+3. We really don't have a test module to stress/benchmark all
+async_tx APIs using multi-threading and batching large number
+of request in each thread. This kind of test module is very much
+required for performance benchmarking and stressing high
+throughput (hundreds of Gbps) RAID offload engines (such as
+BCM-FS4-RAID).
 
-when tring to access disk->fops, which was in the module that has
-been removed.
+From the above, we already have async_tx_test module to
+address point3. We also plan to address point1 above but
+this would also require changes in Linux MD to use new
+async_update_pq() API.
 
-So ensure we clear ->ctime in md_exit(), and explain how that is useful,
-as it isn't immediately obvious when looking at the code.
+As you can see, this patchset is not end of story of us if we
+want best possible utilization of BCM-FS4-RAID.
 
-Fixes: cbd199837750 ("md: Fix unfortunate interaction with evms")
-Tested-by: Guoqing Jiang <gqjiang@suse.com>
-Signed-off-by: NeilBrown <neilb@suse.com>
-=2D--
- drivers/md/md.c | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 01175dac0db6..8926fb781cdc 100644
-=2D-- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -8980,7 +8980,14 @@ static __exit void md_exit(void)
-=20
- 	for_each_mddev(mddev, tmp) {
- 		export_array(mddev);
-+		mddev->ctime =3D 0;
- 		mddev->hold_active =3D 0;
-+		/* for_each_mddev() will call mddev_put() at the
-+		 * end of each iteration.  As the mddev is now
-+		 * fully clear, this will schedule the mddev for destruction
-+		 * by a workqueue, and the destroy_workqueue() below
-+		 * will wait for that to complete.
-+		 */
- 	}
- 	destroy_workqueue(md_misc_wq);
- 	destroy_workqueue(md_wq);
-=2D-=20
-2.11.0
-
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAliX4mMACgkQOeye3VZi
-gbkp8Q//Uup7lObC9D0L1oJ0boH6XaMNo38je0Bx7okr/Oha8ebmrxeWypNcH6AN
-kc4BLy762nRt607WxuiHykxU/vm8tBmfyjKFCe3QIX2tYVjz6uxEDor+XAU+7meo
-q7ElJVZEgsdiBt4tU1xbSHOq9yjVVa3DvANIECfKVsBR/G6c+hkEltaRqcPizsN7
-JirPpL5OonqrHuIlOXcaP/in1vgm7Xowzx0EX4pYCYrFGkSddPEHMKGz1l0Rk3zb
-sUMX2FKZK34w+u5D164TuKOvbvoDnrx5OpZhVh/ptryzi8O6ue8fTOdxdD3/EBM/
-IX5AhLz/7UmN+9t9Ah7FJ07SNzcmjZLH5fcgDXSZ+yB/A7JFVZhV8aDUR5ylAuzl
-9nbAFU5WQnq8nnvV2IB662LiuXvMkXKPqEL/5yToloLI3snQqf+R/YxbLxyt36BZ
-95c/JzBv37YJsR0poF7ZnEtyBRHmSjjbyy38YKiMxMRFIAZ2QnOIZEDdKrPBtJ+S
-AM4UU98hzirYh39ROxu4o+3/wnT6vueG98kMmQz5oyzLby53Zfkw9VbYPzZYA758
-Iyh0hhL7eDAUHQ8Z7zsi9UdmaxaK5NRlMWGOaS2pvtWjFc7vk5eVZWYqPqvrggWk
-e3v1768N+iAgsTYtx07Xw6HIlmUXWhlBBBoj9TFXV63pQxNHMpM=
-=ft7p
------END PGP SIGNATURE-----
---=-=-=--
+Regards,
+Anup
