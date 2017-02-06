@@ -1,104 +1,141 @@
-From: Vinod Koul <vinod.koul@intel.com>
-Subject: Re: [PATCH 5/6] dmaengine: Add Broadcom SBA RAID driver
-Date: Mon, 6 Feb 2017 22:24:00 +0530
-Message-ID: <20170206165400.GD19244@localhost>
-References: <1486010836-25228-1-git-send-email-anup.patel@broadcom.com>
- <1486010836-25228-6-git-send-email-anup.patel@broadcom.com>
- <20170205060657.GV19244@localhost>
- <CAALAos9FxwKuF+qtqViybZ8APZNYt-PWLnTfJs64xtoyYB5NZQ@mail.gmail.com>
+From: Shaohua Li <shli@fb.com>
+Subject: [PATCH V2] MD: add doc for raid5-cache
+Date: Mon, 6 Feb 2017 11:23:29 -0800
+Message-ID: <cac53388fd5903a006792c0165063d63eb66079d.1486408891.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAALAos9FxwKuF+qtqViybZ8APZNYt-PWLnTfJs64xtoyYB5NZQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Anup Patel <anup.patel@broadcom.com>
-Cc: Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S . Miller" <davem@davemloft.net>, Jassi Brar <jassisinghbrar@gmail.com>, Dan Williams <dan.j.williams@intel.com>, Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>, Rob Rice <rob.rice@broadcom.com>, BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>, dmaengine@vger.kernel.org, Device Tree <devicetree@vger.kernel.org>, Linux ARM Kernel <linux-arm-kernel@lists.infradead.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: antlists@youngman.org.uk, philip@turmel.org, songliubraving@fb.com, neilb@suse.com, jure.erznoznik@gmail.com, rramesh2400@gmail.com
 List-Id: linux-raid.ids
 
-On Mon, Feb 06, 2017 at 05:31:15PM +0530, Anup Patel wrote:
+I'm starting document of the raid5-cache feature. Please note this is a
+kernel doc instead of a mdadm manual, so I don't add the details about
+how to use the feature in mdadm side. Please let me know what else we
+should put into the document. Of course, comments are welcome!
 
-> >> +
-> >> +/* SBA C_MDATA helper macros */
-> >> +#define SBA_C_MDATA_LOAD_VAL(__bnum0)                ((__bnum0) & 0x3)
-> >> +#define SBA_C_MDATA_WRITE_VAL(__bnum0)               ((__bnum0) & 0x3)
-> >> +#define SBA_C_MDATA_XOR_VAL(__bnum1, __bnum0)                        \
-> >> +                     ({      u32 __v = ((__bnum0) & 0x3);    \
-> >> +                             __v |= ((__bnum1) & 0x3) << 2;  \
-> >> +                             __v;                            \
-> >> +                     })
-> >> +#define SBA_C_MDATA_PQ_VAL(__dnum, __bnum1, __bnum0)         \
-> >> +                     ({      u32 __v = ((__bnum0) & 0x3);    \
-> >> +                             __v |= ((__bnum1) & 0x3) << 2;  \
-> >> +                             __v |= ((__dnum) & 0x1f) << 5;  \
-> >> +                             __v;                            \
-> >> +                     })
-> >
-> > ah why are we usig complex macros, why can't these be simple functions..
-> 
-> "static inline functions" seemed too complicated here because most of
-> these macros are two lines of c-code.
+Signed-off-by: Shaohua Li <shli@fb.com>
+---
+ Documentation/md/raid5-cache.txt | 109 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 109 insertions(+)
+ create mode 100644 Documentation/md/raid5-cache.txt
 
-and thats where I have an issue with this. Macros for simple things is fine
-but not for couple of line of logic!
-
-> 
-> Do you still insist on using "static inline functions"?
-
-Yes
-
-> 
-> >
-> >> +#define SBA_C_MDATA_LS(__c_mdata_val)        ((__c_mdata_val) & 0xff)
-> >> +#define SBA_C_MDATA_MS(__c_mdata_val)        (((__c_mdata_val) >> 8) & 0x3)
-> >> +
-> >> +/* Driver helper macros */
-> >> +#define to_sba_request(tx)           \
-> >> +     container_of(tx, struct sba_request, tx)
-> >> +#define to_sba_device(dchan)         \
-> >> +     container_of(dchan, struct sba_device, dma_chan)
-> >> +
-> >> +enum sba_request_state {
-> >> +     SBA_REQUEST_STATE_FREE = 1,
-> >> +     SBA_REQUEST_STATE_ALLOCED = 2,
-> >> +     SBA_REQUEST_STATE_PENDING = 3,
-> >> +     SBA_REQUEST_STATE_ACTIVE = 4,
-> >> +     SBA_REQUEST_STATE_COMPLETED = 5,
-> >> +     SBA_REQUEST_STATE_ABORTED = 6,
-> >
-> > whats up with a very funny indentation setting, we use 8 chars.
-> >
-> > Please re-read the Documentation/process/coding-style.rst
-> 
-> I have double checked this enum. The indentation is fine
-> and as-per coding style. Am I missing anything else?
-
-Somehow the initial indent doesnt seem to be 8 chars to me.
-
-> >> +static enum dma_status sba_tx_status(struct dma_chan *dchan,
-> >> +                                  dma_cookie_t cookie,
-> >> +                                  struct dma_tx_state *txstate)
-> >> +{
-> >> +     int mchan_idx;
-> >> +     enum dma_status ret;
-> >> +     struct sba_device *sba = to_sba_device(dchan);
-> >> +
-> >> +     ret = dma_cookie_status(dchan, cookie, txstate);
-> >> +     if (ret == DMA_COMPLETE)
-> >> +             return ret;
-> >> +
-> >> +     for (mchan_idx = 0; mchan_idx < sba->mchans_count; mchan_idx++)
-> >> +             mbox_client_peek_data(sba->mchans[mchan_idx]);
-> >
-> > what is this achieving?
-> 
-> The mbox_client_peek_data() is a hint to mailbox controller driver
-> to check for available messages.
-> 
-> This gives good performance improvement when some DMA client
-> code is polling using tx_status() callback.
-
-Then why do it before and then check status.
-
+diff --git a/Documentation/md/raid5-cache.txt b/Documentation/md/raid5-cache.txt
+new file mode 100644
+index 0000000..2b210f2
+--- /dev/null
++++ b/Documentation/md/raid5-cache.txt
+@@ -0,0 +1,109 @@
++RAID5 cache
++
++Raid 4/5/6 could include an extra disk for data cache besides normal RAID
++disks. The role of RAID disks isn't changed with the cache disk. The cache disk
++caches data to the RAID disks. The cache can be in write-through (supported
++since 4.4) or write-back mode (supported since 4.10). mdadm (supported since
++3.4) has a new option '--write-journal' to create array with cache. Please
++refer to mdadm manual for details. By default (RAID array starts), the cache is
++in write-through mode. A user can switch it to write-back mode by:
++
++echo "write-back" > /sys/block/md0/md/journal_mode
++
++And switch it back to write-through mode by:
++
++echo "write-through" > /sys/block/md0/md/journal_mode
++
++In both modes, all writes to the array will hit cache disk first. This means
++the cache disk must be fast and sustainable.
++
++-------------------------------------
++write-through mode:
++
++This mode mainly fixes the 'write hole' issue. For RAID 4/5/6 array, an unclean
++shutdown can cause data in some stripes to not be in consistent state, eg, data
++and parity don't match. The reason is that a stripe write involves several RAID
++disks and it's possible the writes don't hit all RAID disks yet before the
++unclean shutdown. We call an array degraded if it has inconsistent data. MD
++tries to resync the array to bring it back to normal state. But before the
++resync completes, any system crash will expose the chance of real data
++corruption in the RAID array. This problem is called 'write hole'.
++
++The write-through cache will cache all data on cache disk first. After the data
++is safe on the cache disk, the data will be flushed onto RAID disks. The
++two-step write will guarantee MD can recover correct data after unclean
++shutdown even the array is degraded. Thus the cache can close the 'write hole'.
++
++In write-through mode, MD reports IO completion to upper layer (usually
++filesystems) after the data is safe on RAID disks, so cache disk failure
++doesn't cause data loss. Of course cache disk failure means the array is
++exposed to 'write hole' again.
++
++In write-through mode, the cache disk isn't required to be big. Several
++hundreds megabytes are enough.
++
++--------------------------------------
++write-back mode:
++
++write-back mode fixes the 'write hole' issue too, since all write data is
++cached on cache disk. But the main goal of 'write-back' cache is to speed up
++write. If a write crosses all RAID disks of a stripe, we call it full-stripe
++write. For non-full-stripe writes, MD must read old data before the new parity
++can be calculated. These synchronous reads hurt write throughput. Some writes
++which are sequential but not dispatched in the same time will suffer from this
++overhead too. Write-back cache will aggregate the data and flush the data to
++RAID disks only after the data becomes a full stripe write. This will
++completely avoid the overhead, so it's very helpful for some workloads. A
++typical workload which does sequential write followed by fsync is an example.
++
++In write-back mode, MD reports IO completion to upper layer (usually
++filesystems) right after the data hits cache disk. The data is flushed to raid
++disks later after specific conditions met. So cache disk failure will cause
++data loss.
++
++In write-back mode, MD also caches data in memory. The memory cache includes
++the same data stored on cache disk, so a power loss doesn't cause data loss.
++The memory cache size has performance impact for the array. It's recommended
++the size is big. A user can configure the size by:
++
++echo "2048" > /sys/block/md0/md/stripe_cache_size
++
++Too small cache disk will make the write aggregation less efficient in this
++mode depending on the workloads. It's recommended to use a cache disk with at
++least several gigabytes size in write-back mode.
++
++--------------------------------------
++The implementation:
++
++The write-through and write-back cache use the same disk format. The cache disk
++is organized as a simple write log. The log consists of 'meta data' and 'data'
++pairs. The meta data describes the data. It also includes checksum and sequence
++ID for recovery identification. Data can be IO data and parity data. Data is
++checksumed too. The checksum is stored in the meta data ahead of the data. The
++checksum is an optimization because MD can write meta and data freely without
++worry about the order. MD superblock has a field pointed to the valid meta data
++of log head.
++
++The log implementation is pretty straightforward. The difficult part is the
++order in which MD writes data to cache disk and RAID disks. Specifically, in
++write-through mode, MD calculates parity for IO data, writes both IO data and
++parity to the log, writes the data and parity to RAID disks after the data and
++parity is settled down in log and finally the IO is finished. Read just reads
++from raid disks as usual.
++
++In write-back mode, MD writes IO data to the log and reports IO completion. The
++data is also fully cached in memory at that time, which means read must query
++memory cache. If some conditions are met, MD will flush the data to RAID disks.
++MD will calculate parity for the data and write parity into the log. After this
++is finished, MD will write both data and parity into RAID disks, then MD can
++release the memory cache. The flush conditions could be stripe becomes a full
++stripe write, free cache disk space is low or free in-kernel memory cache space
++is low.
++
++After an unclean shutdown, MD does recovery. MD reads all meta data and data
++from the log. The sequence ID and checksum will help us detect corrupted meta
++data and data. If MD finds a stripe with data and valid parities (1 parity for
++raid4/5 and 2 for raid6), MD will write the data and parities to RAID disks. If
++parities are incompleted, they are discarded. If part of data is corrupted,
++they are discarded too. MD then loads valid data and writes them to RAID disks
++in normal way.
 -- 
-~Vinod
+2.9.3
+
