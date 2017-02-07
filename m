@@ -1,90 +1,199 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v3 4/9] raid5: calculate partial parity for a stripe
-Date: Tue, 7 Feb 2017 13:25:28 -0800
-Message-ID: <20170207212528.m6u47y3f2jot2kng@kernel.org>
+Subject: Re: [PATCH v3 5/9] raid5-ppl: Partial Parity Log write logging
+ implementation
+Date: Tue, 7 Feb 2017 13:42:25 -0800
+Message-ID: <20170207214225.3jenvleiz3tldzlx@kernel.org>
 References: <20170130185953.30428-1-artur.paszkiewicz@intel.com>
- <20170130185953.30428-5-artur.paszkiewicz@intel.com>
+ <20170130185953.30428-6-artur.paszkiewicz@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170130185953.30428-5-artur.paszkiewicz@intel.com>
+In-Reply-To: <20170130185953.30428-6-artur.paszkiewicz@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.com, jes.sorensen@gmail.com
 List-Id: linux-raid.ids
 
-On Mon, Jan 30, 2017 at 07:59:48PM +0100, Artur Paszkiewicz wrote:
-> Attach a page for holding the partial parity data to stripe_head.
-> Allocate it only if mddev has the MD_HAS_PPL flag set.
+On Mon, Jan 30, 2017 at 07:59:49PM +0100, Artur Paszkiewicz wrote:
+> This implements the PPL write logging functionality, using the
+> raid5-cache policy logic introduced in previous patches. The description
+> of PPL is added to the documentation. More details can be found in the
+> comments in raid5-ppl.c.
 > 
-> Partial parity is the xor of not modified data chunks of a stripe and is
-> calculated as follows:
-> 
-> - reconstruct-write case:
->   xor data from all not updated disks in a stripe
-> 
-> - read-modify-write case:
->   xor old data and parity from all updated disks in a stripe
-> 
-> Implement it using the async_tx API and integrate into raid_run_ops().
-> It must be called when we still have access to old data, so do it when
-> STRIPE_OP_BIODRAIN is set, but before ops_run_prexor5(). The result is
-> stored into sh->ppl_page.
-> 
-> Partial parity is not meaningful for full stripe write and is not stored
-> in the log or used for recovery, so don't attempt to calculate it when
-> stripe has STRIPE_FULL_WRITE.
+> Put the PPL metadata structures to md_p.h because userspace tools
+> (mdadm) will also need to read/write PPL.
 > 
 > Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 > ---
->  drivers/md/raid5.c | 98 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  drivers/md/raid5.h |  2 ++
->  2 files changed, 100 insertions(+)
+>  Documentation/admin-guide/md.rst |  53 ++++
+>  drivers/md/Makefile              |   2 +-
+>  drivers/md/raid5-cache.c         |  13 +-
+>  drivers/md/raid5-cache.h         |   8 +
+>  drivers/md/raid5-ppl.c           | 551 +++++++++++++++++++++++++++++++++++++++
+>  drivers/md/raid5.c               |  15 +-
+>  include/uapi/linux/raid/md_p.h   |  26 ++
+>  7 files changed, 661 insertions(+), 7 deletions(-)
+>  create mode 100644 drivers/md/raid5-ppl.c
 > 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index d1cba941951e..e1e238da32ba 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -466,6 +466,11 @@ static void shrink_buffers(struct stripe_head *sh)
->  		sh->dev[i].page = NULL;
->  		put_page(p);
->  	}
-> +
-> +	if (sh->ppl_page) {
-> +		put_page(sh->ppl_page);
-> +		sh->ppl_page = NULL;
-> +	}
->  }
+> diff --git a/Documentation/admin-guide/md.rst b/Documentation/admin-guide/md.rst
+> index e449fb5f277c..7104ef757e73 100644
+> --- a/Documentation/admin-guide/md.rst
+> +++ b/Documentation/admin-guide/md.rst
+> @@ -86,6 +86,9 @@ superblock can be autodetected and run at boot time.
+>  The kernel parameter ``raid=partitionable`` (or ``raid=part``) means
+>  that all auto-detected arrays are assembled as partitionable.
 >  
->  static int grow_buffers(struct stripe_head *sh, gfp_t gfp)
-> @@ -482,6 +487,13 @@ static int grow_buffers(struct stripe_head *sh, gfp_t gfp)
->  		sh->dev[i].page = page;
->  		sh->dev[i].orig_page = page;
->  	}
 > +
-> +	if (test_bit(MD_HAS_PPL, &sh->raid_conf->mddev->flags)) {
-
-I think the test should be something like:
-	if (raid5_ppl_enabled())
-
-Having the feature doesn't mean the feature is enabled.
-
->  	pr_debug("%s: stripe %llu locked: %d ops_request: %lx\n",
->  		__func__, (unsigned long long)sh->sector,
->  		s->locked, s->ops_request);
-> @@ -3105,6 +3175,34 @@ static int add_stripe_bio(struct stripe_head *sh, struct bio *bi, int dd_idx,
->  	if (*bip && (*bip)->bi_iter.bi_sector < bio_end_sector(bi))
->  		goto overlap;
+> +.. _dirty_degraded_boot:
+> +
+>  Boot time assembly of degraded/dirty arrays
+>  -------------------------------------------
 >  
-> +	if (forwrite && test_bit(MD_HAS_PPL, &conf->mddev->flags)) {
-> +		/*
-> +		 * With PPL only writes to consecutive data chunks within a
-> +		 * stripe are allowed. Not really an overlap, but
-> +		 * wait_for_overlap can be used to handle this.
-> +		 */
+> @@ -176,6 +179,56 @@ and its role in the array.
+>  Once started with RUN_ARRAY, uninitialized spares can be added with
+>  HOT_ADD_DISK.
+>  
+> +.. _ppl:
+> +
+> +Partial Parity Log
+> +------------------
+Please put this part to a separate file under Documentation/md. The admin-guide
+is supposed to serve as a doc for user. The Documentation/md files will server
+as a doc for developer.
 
-Please describe why the data must be consecutive.
+> +Partial Parity Log (PPL) is a feature available for RAID5 arrays. The issue
+> +addressed by PPL is that after a dirty shutdown, parity of a particular stripe
+> +may become inconsistent with data on other member disks. If the array is also
+> +in degraded state, there is no way to recalculate parity, because one of the
+> +disks is missing. This can lead to silent data corruption when rebuilding the
+> +array or using it is as degraded - data calculated from parity for array blocks
+> +that have not been touched by a write request during the unclean shutdown can
+> +be incorrect. Such condition is known as the ``RAID5 Write Hole``. Because of
+> +this, md by default does not allow starting a dirty degraded array, see
+> +:ref:`dirty_degraded_boot`.
+> +
+> +Partial parity for a write operation is the XOR of stripe data chunks not
+> +modified by this write. It is just enough data needed for recovering from the
+> +write hole. XORing partial parity with the modified chunks produces parity for
+> +the stripe, consistent with its state before the write operation, regardless of
+> +which chunk writes have completed. If one of the not modified data disks of
+> +this stripe is missing, this updated parity can be used to recover its
+> +contents. PPL recovery is also performed when starting an array after an
+> +unclean shutdown and all disks are available, eliminating the need to resync
+> +the array. Because of this, using write-intent bitmap and PPL together is not
+> +supported.
+> +
+> +When handling a write request PPL writes partial parity before new data and
+> +parity are dispatched to disks. PPL is a distributed log - it is stored on
+> +array member drives in the metadata area, on the parity drive of a particular
+> +stripe.  It does not require a dedicated journaling drive. Write performance is
+> +reduced by up to 30%-40% but it scales with the number of drives in the array
+> +and the journaling drive does not become a bottleneck or a single point of
+> +failure.
+> +
+> +Unlike raid5-cache, the other solution in md for closing the write hole, PPL is
+> +not a true journal. It does not protect from losing in-flight data, only from
+> +silent data corruption. If a dirty disk of a stripe is lost, no PPL recovery is
+> +performed for this stripe (parity is not updated). So it is possible to have
+> +arbitrary data in the written part of a stripe if that disk is lost. In such
+> +case the behavior is the same as in plain raid5.
+> +
+> +PPL is available for md version-1 metadata and external (specifically IMSM)
+> +metadata arrays. It can be enabled using mdadm option
+> +``--consistency-policy=ppl``.
+> +
+> +Currently, volatile write-back cache should be disabled on all member drives
+> +when using PPL. Otherwise it cannot guarantee consistency in case of power
+> +failure.
+
+The limitation is weird and dumb. Is this an implementation limitation which
+can be fixed later or a design limitation?
+
+> diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
+> new file mode 100644
+> index 000000000000..6bc246c80f6b
+> --- /dev/null
+> +++ b/drivers/md/raid5-ppl.c
+> @@ -0,0 +1,551 @@
+> +/*
+> + * Partial Parity Log for closing the RAID5 write hole
+> + * Copyright (c) 2017, Intel Corporation.
+> + *
+> + * This program is free software; you can redistribute it and/or modify it
+> + * under the terms and conditions of the GNU General Public License,
+> + * version 2, as published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope it will be useful, but WITHOUT
+> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+> + * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+> + * more details.
+> + */
+> +
+> +#include <linux/kernel.h>
+> +#include <linux/blkdev.h>
+> +#include <linux/slab.h>
+> +#include <linux/crc32c.h>
+> +#include <linux/raid/md_p.h>
+> +#include "md.h"
+> +#include "raid5.h"
+> +#include "raid5-cache.h"
+> +
+> +/*
+> + * PPL consists of a 4KB header (struct ppl_header) and at least 128KB for
+> + * partial parity data. The header contains an array of entries
+> + * (struct ppl_header_entry) which describe the logged write requests.
+> + * Partial parity for the entries comes after the header, written in the same
+> + * sequence as the entries:
+> + *
+> + * Header
+> + *   entry0
+> + *   ...
+> + *   entryN
+> + * PP data
+> + *   PP for entry0
+> + *   ...
+> + *   PP for entryN
+> + *
+> + * Every entry holds a checksum of its partial parity, the header also has a
+> + * checksum of the header itself. Entries for full stripes writes contain no
+> + * partial parity, they only mark the stripes for which parity should be
+> + * recalculated after an unclean shutdown.
+> + *
+> + * A write request is always logged to the PPL instance stored on the parity
+> + * disk of the corresponding stripe. For each member disk there is one r5l_log
+> + * used to handle logging for this disk, independently from others. They are
+> + * grouped in child_logs array in struct ppl_conf, which is assigned to a
+> + * common parent r5l_log. This parent log serves as a proxy and is used in
+> + * raid5 personality code - it is assigned as _the_ log in r5conf->log.
+> + *
+> + * r5l_io_unit represents a full PPL write, meta_page contains the ppl_header.
+> + * PPL entries for logged stripes are added in ppl_log_stripe(). A stripe can
+> + * be appended to the last entry if the chunks to write are the same, otherwise
+> + * a new entry is added. Checksums of entries are calculated incrementally as
+> + * stripes containing partial parity are being added to entries.
+> + * ppl_submit_iounit() calculates the checksum of the header and submits a bio
+> + * containing the meta_page (ppl_header) and partial parity pages (sh->ppl_page)
+> + * for all stripes of the io_unit. When the PPL write completes, the stripes
+> + * associated with the io_unit are released and raid5d starts writing their data
+> + * and parity. When all stripes are written, the io_unit is freed and the next
+> + * can be submitted.
+> + *
+> + * An io_unit is used to gather stripes until it is submitted or becomes full
+> + * (if the maximum number of entries or size of PPL is reached). Another io_unit
+> + * can't be submitted until the previous has completed (PPL and stripe
+> + * data+parity is written). The log->running_ios list tracks all io_units of
+> + * a log (for a single member disk). New io_units are added to the end of the
+> + * list and the first io_unit is submitted, if it is not submitted already.
+> + * The current io_unit accepting new stripes is always the last on the list.
+> + */
+
+I don't like the way that io_unit and r5l_log are reused here. The code below
+shares very little with raid5-cache. There are a lot of fields in the data
+structures which are not used by ppl. It's not a good practice to share data
+structure like this way, so please define ppl its own data structure. The
+workflow between raid5 cache and ppl might be similar, but what we really need
+to share is the hooks to raid5 core.
 
 Thanks,
 Shaohua
