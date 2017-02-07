@@ -1,7 +1,7 @@
 From: Shaohua Li <shli@fb.com>
-Subject: [PATCH 5/5] md/raid10: don't abuse bio->bi_phys_segments
-Date: Tue, 7 Feb 2017 08:56:02 -0800
-Message-ID: <8d3fc89d0394e4a5117e8cc1272c08e3586fd8e8.1486485935.git.shli@fb.com>
+Subject: [PATCH 2/5] md/raid5: don't abuse bio->bi_phys_segments
+Date: Tue, 7 Feb 2017 08:55:59 -0800
+Message-ID: <c520acdc3408674479117d83cb95f712d9e9b3b4.1486485935.git.shli@fb.com>
 References: <cover.1486485935.git.shli@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,136 +12,159 @@ To: linux-raid@vger.kernel.org
 Cc: khlebnikov@yandex-team.ru, hch@lst.de, neilb@suse.com
 List-Id: linux-raid.ids
 
-Allocates extra data (an 'unsigned int') for bio reference accounting.
-Don't need to abuse bio->bi_phys_segments.
+Allocates extra data for activate_stripes and processed_stripes
+accounting. Don't need to abuse bio->bi_phys_segments.
 
 Signed-off-by: Shaohua Li <shli@fb.com>
 ---
- drivers/md/raid10.c | 40 ++++++++++++++++++++++++----------------
- 1 file changed, 24 insertions(+), 16 deletions(-)
+ drivers/md/raid5.c | 12 ++++++++----
+ drivers/md/raid5.h | 37 +++++++++++++++++++------------------
+ 2 files changed, 27 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 1920756..77623ff 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -133,6 +133,12 @@ static void r10bio_pool_free(void *r10_bio, void *data)
- /* maximum number of concurrent requests, memory permitting */
- #define RESYNC_DEPTH (32*1024*1024/RESYNC_BLOCK_SIZE)
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index b0d1345..fd3e5ce 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -3103,7 +3103,7 @@ static int add_stripe_bio(struct stripe_head *sh, struct bio *bi, int dd_idx,
+ 		(unsigned long long)sh->sector);
  
-+/* The bio has a counter attached */
-+static unsigned int *raid10_bio_ref_ptr(struct bio *bio)
-+{
-+	return md_get_per_bio_data(bio);
-+}
-+
- /*
-  * When performing a resync, we need to read and compare, so
-  * we need as many pages are there are copies.
-@@ -304,11 +310,11 @@ static void raid_end_bio_io(struct r10bio *r10_bio)
- 	int done;
- 	struct r10conf *conf = r10_bio->mddev->private;
- 
--	if (bio->bi_phys_segments) {
-+	if (*raid10_bio_ref_ptr(bio)) {
- 		unsigned long flags;
- 		spin_lock_irqsave(&conf->device_lock, flags);
--		bio->bi_phys_segments--;
--		done = (bio->bi_phys_segments == 0);
-+		(*raid10_bio_ref_ptr(bio))--;
-+		done = (*raid10_bio_ref_ptr(bio) == 0);
- 		spin_unlock_irqrestore(&conf->device_lock, flags);
- 	} else
- 		done = 1;
-@@ -1162,10 +1168,10 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
- 				   - bio->bi_iter.bi_sector);
- 		r10_bio->sectors = max_sectors;
- 		spin_lock_irq(&conf->device_lock);
--		if (bio->bi_phys_segments == 0)
--			bio->bi_phys_segments = 2;
-+		if (*raid10_bio_ref_ptr(bio) == 0)
-+			*raid10_bio_ref_ptr(bio) = 2;
- 		else
--			bio->bi_phys_segments++;
-+			(*raid10_bio_ref_ptr(bio))++;
- 		spin_unlock_irq(&conf->device_lock);
- 		/*
- 		 * Cannot call generic_make_request directly as that will be
-@@ -1262,7 +1268,7 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
- 	 * writing to those blocks.  This potentially requires several
- 	 * writes to write around the bad blocks.  Each set of writes
- 	 * gets its own r10_bio with a set of bios attached.  The number
--	 * of r10_bios is recored in bio->bi_phys_segments just as with
-+	 * of r10_bios is recored in a counter just as with
- 	 * the read case.
- 	 */
- 
-@@ -1389,10 +1395,10 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
- 		 */
- 		r10_bio->sectors = max_sectors;
- 		spin_lock_irq(&conf->device_lock);
--		if (bio->bi_phys_segments == 0)
--			bio->bi_phys_segments = 2;
-+		if (*raid10_bio_ref_ptr(bio) == 0)
-+			*raid10_bio_ref_ptr(bio) = 2;
- 		else
--			bio->bi_phys_segments++;
-+			(*raid10_bio_ref_ptr(bio))++;
- 		spin_unlock_irq(&conf->device_lock);
- 	}
- 	sectors_handled = r10_bio->sector + max_sectors -
-@@ -1493,7 +1499,7 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
- 	if (sectors_handled < bio_sectors(bio)) {
- 		one_write_done(r10_bio);
- 		/* We need another r10_bio.  It has already been counted
--		 * in bio->bi_phys_segments.
-+		 * in bio's counter.
- 		 */
- 		r10_bio = mempool_alloc(conf->r10bio_pool, GFP_NOIO);
- 
-@@ -1525,11 +1531,11 @@ static void __make_request(struct mddev *mddev, struct bio *bio)
  	/*
- 	 * We might need to issue multiple reads to different devices if there
- 	 * are bad blocks around, so we keep track of the number of reads in
--	 * bio->bi_phys_segments.  If this is 0, there is only one r10_bio and
-+	 * a counter.  If this is 0, there is only one r10_bio and
- 	 * no locking will be needed when the request completes.  If it is
- 	 * non-zero, then it is the number of not-completed requests.
- 	 */
--	bio->bi_phys_segments = 0;
-+	*raid10_bio_ref_ptr(bio) = 0;
- 	bio_clear_flag(bio, BIO_SEG_VALID);
- 
- 	if (bio_data_dir(bio) == READ)
-@@ -1567,6 +1573,7 @@ static void raid10_make_request(struct mddev *mddev, struct bio *bio)
- 					   (chunk_sects - 1)),
- 					  GFP_NOIO, fs_bio_set);
- 			bio_chain(split, bio);
+-	 * If several bio share a stripe. The bio bi_phys_segments acts as a
++	 * If several bio share a stripe. The raid5_bio_data has a
+ 	 * reference count to avoid race. The reference count should already be
+ 	 * increased before this function is called (for example, in
+ 	 * raid5_make_request()), so other bio sharing this stripe will not free the
+@@ -5146,6 +5146,7 @@ static struct bio *chunk_aligned_read(struct mddev *mddev, struct bio *raid_bio)
+ 		if (sectors < bio_sectors(raid_bio)) {
+ 			split = bio_split(raid_bio, sectors, GFP_NOIO, fs_bio_set);
+ 			bio_chain(split, raid_bio);
 +			md_bio_attach_data(mddev, split);
- 		} else {
- 			split = bio;
- 		}
-@@ -2667,10 +2674,10 @@ static void handle_read_error(struct mddev *mddev, struct r10bio *r10_bio)
- 			- mbio->bi_iter.bi_sector;
- 		r10_bio->sectors = max_sectors;
- 		spin_lock_irq(&conf->device_lock);
--		if (mbio->bi_phys_segments == 0)
--			mbio->bi_phys_segments = 2;
-+		if (*raid10_bio_ref_ptr(mbio) == 0)
-+			*raid10_bio_ref_ptr(mbio) = 2;
- 		else
--			mbio->bi_phys_segments++;
-+			(*raid10_bio_ref_ptr(mbio))++;
- 		spin_unlock_irq(&conf->device_lock);
- 		generic_make_request(bio);
+ 		} else
+ 			split = raid_bio;
  
-@@ -4816,6 +4823,7 @@ static struct md_personality raid10_personality =
- 	.start_reshape	= raid10_start_reshape,
- 	.finish_reshape	= raid10_finish_reshape,
- 	.congested	= raid10_congested,
-+	.per_bio_data_size = sizeof(unsigned int),
+@@ -5335,7 +5336,7 @@ static void make_discard_request(struct mddev *mddev, struct bio *bi)
+ 	last_sector = bi->bi_iter.bi_sector + (bi->bi_iter.bi_size>>9);
+ 
+ 	bi->bi_next = NULL;
+-	bi->bi_phys_segments = 1; /* over-loaded to count active stripes */
++	raid5_set_bi_stripes(bi, 1);
+ 
+ 	stripe_sectors = conf->chunk_sectors *
+ 		(conf->raid_disks - conf->max_degraded);
+@@ -5463,7 +5464,7 @@ static void raid5_make_request(struct mddev *mddev, struct bio * bi)
+ 	logical_sector = bi->bi_iter.bi_sector & ~((sector_t)STRIPE_SECTORS-1);
+ 	last_sector = bio_end_sector(bi);
+ 	bi->bi_next = NULL;
+-	bi->bi_phys_segments = 1;	/* over-loaded to count active stripes */
++	raid5_set_bi_stripes(bi, 1);
+ 
+ 	prepare_to_wait(&conf->wait_for_overlap, &w, TASK_UNINTERRUPTIBLE);
+ 	for (;logical_sector < last_sector; logical_sector += STRIPE_SECTORS) {
+@@ -5963,7 +5964,7 @@ static int  retry_aligned_read(struct r5conf *conf, struct bio *raid_bio)
+ 	 * We cannot pre-allocate enough stripe_heads as we may need
+ 	 * more than exist in the cache (if we allow ever large chunks).
+ 	 * So we do one stripe head at a time and record in
+-	 * ->bi_hw_segments how many have been done.
++	 * ->raid5_bio_data.processed_stripes how many have been done.
+ 	 *
+ 	 * We *know* that this entire raid_bio is in one chunk, so
+ 	 * it will be only one 'dd_idx' and only need one call to raid5_compute_sector.
+@@ -8188,6 +8189,7 @@ static struct md_personality raid6_personality =
+ 	.quiesce	= raid5_quiesce,
+ 	.takeover	= raid6_takeover,
+ 	.congested	= raid5_congested,
++	.per_bio_data_size = sizeof(struct raid5_bio_data),
+ };
+ static struct md_personality raid5_personality =
+ {
+@@ -8211,6 +8213,7 @@ static struct md_personality raid5_personality =
+ 	.quiesce	= raid5_quiesce,
+ 	.takeover	= raid5_takeover,
+ 	.congested	= raid5_congested,
++	.per_bio_data_size = sizeof(struct raid5_bio_data),
  };
  
- static int __init raid_init(void)
+ static struct md_personality raid4_personality =
+@@ -8235,6 +8238,7 @@ static struct md_personality raid4_personality =
+ 	.quiesce	= raid5_quiesce,
+ 	.takeover	= raid4_takeover,
+ 	.congested	= raid5_congested,
++	.per_bio_data_size = sizeof(struct raid5_bio_data),
+ };
+ 
+ static int __init raid5_init(void)
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index c0687df..9232463 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -481,48 +481,49 @@ static inline struct bio *r5_next_bio(struct bio *bio, sector_t sector)
+ 		return NULL;
+ }
+ 
+-/*
+- * We maintain a biased count of active stripes in the bottom 16 bits of
+- * bi_phys_segments, and a count of processed stripes in the upper 16 bits
+- */
++struct raid5_bio_data {
++	atomic_t active_stripes;
++	atomic_t processed_stripes;
++};
++
++#define raid5_get_bio_data(bio) \
++	((struct raid5_bio_data *)md_get_per_bio_data(bio))
++
+ static inline int raid5_bi_processed_stripes(struct bio *bio)
+ {
+-	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
++	struct raid5_bio_data *data= raid5_get_bio_data(bio);
+ 
+-	return (atomic_read(segments) >> 16) & 0xffff;
++	return atomic_read(&data->processed_stripes);
+ }
+ 
+ static inline int raid5_dec_bi_active_stripes(struct bio *bio)
+ {
+-	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
++	struct raid5_bio_data *data= raid5_get_bio_data(bio);
+ 
+-	return atomic_sub_return(1, segments) & 0xffff;
++	return atomic_sub_return(1, &data->active_stripes);
+ }
+ 
+ static inline void raid5_inc_bi_active_stripes(struct bio *bio)
+ {
+-	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
++	struct raid5_bio_data *data= raid5_get_bio_data(bio);
+ 
+-	atomic_inc(segments);
++	atomic_inc(&data->active_stripes);
+ }
+ 
+ static inline void raid5_set_bi_processed_stripes(struct bio *bio,
+ 	unsigned int cnt)
+ {
+-	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
+-	int old, new;
++	struct raid5_bio_data *data= raid5_get_bio_data(bio);
+ 
+-	do {
+-		old = atomic_read(segments);
+-		new = (old & 0xffff) | (cnt << 16);
+-	} while (atomic_cmpxchg(segments, old, new) != old);
++	atomic_set(&data->processed_stripes, cnt);
+ }
+ 
+ static inline void raid5_set_bi_stripes(struct bio *bio, unsigned int cnt)
+ {
+-	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
++	struct raid5_bio_data *data= raid5_get_bio_data(bio);
+ 
+-	atomic_set(segments, cnt);
++	atomic_set(&data->active_stripes, cnt);
++	atomic_set(&data->processed_stripes, 0);
+ }
+ 
+ /* NOTE NR_STRIPE_HASH_LOCKS must remain below 64.
 -- 
 2.9.3
 
