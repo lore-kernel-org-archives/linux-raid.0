@@ -1,70 +1,79 @@
 From: Anup Patel <anup.patel@broadcom.com>
-Subject: [PATCH v2 0/5] Broadcom SBA RAID support
-Date: Tue,  7 Feb 2017 13:46:41 +0530
-Message-ID: <1486455406-11202-1-git-send-email-anup.patel@broadcom.com>
-Return-path: <linux-crypto-owner@vger.kernel.org>
-Sender: linux-crypto-owner@vger.kernel.org
+Subject: [PATCH v2 1/5] lib/raid6: Add log-of-2 table for RAID6 HW requiring disk position
+Date: Tue,  7 Feb 2017 13:46:42 +0530
+Message-ID: <1486455406-11202-2-git-send-email-anup.patel@broadcom.com>
+References: <1486455406-11202-1-git-send-email-anup.patel@broadcom.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1486455406-11202-1-git-send-email-anup.patel@broadcom.com>
+Sender: linux-raid-owner@vger.kernel.org
 To: Vinod Koul <vinod.koul@intel.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S . Miller" <davem@davemloft.net>, Jassi Brar <jassisinghbrar@gmail.com>
 Cc: Dan Williams <dan.j.williams@intel.com>, Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>, Rob Rice <rob.rice@broadcom.com>, bcm-kernel-feedback-list@broadcom.com, dmaengine@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org, Anup Patel <anup.patel@broadcom.com>
 List-Id: linux-raid.ids
 
-The Broadcom SBA RAID is a stream-based device which provides
-RAID5/6 offload.
+The raid6_gfexp table represents {2}^n values for 0 <= n < 256. The
+Linux async_tx framework pass values from raid6_gfexp as coefficients
+for each source to prep_dma_pq() callback of DMA channel with PQ
+capability. This creates problem for RAID6 offload engines (such as
+Broadcom SBA) which take disk position (i.e. log of {2}) instead of
+multiplicative cofficients from raid6_gfexp table.
 
-It requires a SoC specific ring manager (such as Broadcom FlexRM
-ring manager) to provide ring-based programming interface. Due to
-this, the Broadcom SBA RAID driver (mailbox client) implements
-DMA device having one DMA channel using a set of mailbox channels
-provided by Broadcom SoC specific ring manager driver (mailbox
-controller).
+This patch adds raid6_gflog table having log-of-2 value for any given
+x such that 0 <= x < 256. For any given disk coefficient x, the
+corresponding disk position is given by raid6_gflog[x]. The RAID6
+offload engine driver can use this newly added raid6_gflog table to
+get disk position from multiplicative coefficient.
 
-Important limitations of Broadcom SBA RAID hardware are:
-1. Requires disk position instead of disk coefficient 
-2. Supports only 30 PQ disk coefficients
+Signed-off-by: Anup Patel <anup.patel@broadcom.com>
+Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+---
+ include/linux/raid/pq.h |  1 +
+ lib/raid6/mktables.c    | 20 ++++++++++++++++++++
+ 2 files changed, 21 insertions(+)
 
-To address limitation #1, we have added raid_gflog table which
-will help driver convert disk coefficient to disk position. To
-address limitation #2, we have extended Linux Async Tx APIs to
-check for available PQ coefficients before doing PQ offload.
-
-This patchset is based on Linux-4.10-rc2 and depends on patchset
-"[PATCH v4 0/2] Broadcom FlexRM ring manager support"
-
-It is also available at sba-raid-v2 branch of
-https://github.com/Broadcom/arm64-linux.git
-
-Changes since v1:
- - Droped patch to add mbox_channel_device() API
- - Used GENMASK and BIT macros wherever possible in bcm-sba-raid driver
- - Replaced C_MDATA macros with static inline functions in
-   bcm-sba-raid driver
- - Removed sba_alloc_chan_resources() callback in bcm-sba-raid driver
- - Used dev_err() instead of dev_info() wherever applicable
- - Removed call to sba_issue_pending() from sba_tx_submit() in
-   bcm-sba-raid driver
- - Implemented SBA request chaning for handling (len > sba->req_size)
-   in bcm-sba-raid driver
- - Implemented device_terminate_all() callback in bcm-sba-raid driver
-
-Anup Patel (5):
-  lib/raid6: Add log-of-2 table for RAID6 HW requiring disk position
-  async_tx: Handle DMA devices having support for fewer PQ coefficients
-  async_tx: Fix DMA_PREP_FENCE usage in do_async_gen_syndrome()
-  dmaengine: Add Broadcom SBA RAID driver
-  dt-bindings: Add DT bindings document for Broadcom SBA RAID driver
-
- .../devicetree/bindings/dma/brcm,iproc-sba.txt     |   29 +
- crypto/async_tx/async_pq.c                         |    8 +-
- crypto/async_tx/async_raid6_recov.c                |   12 +-
- drivers/dma/Kconfig                                |   13 +
- drivers/dma/Makefile                               |    1 +
- drivers/dma/bcm-sba-raid.c                         | 1470 ++++++++++++++++++++
- include/linux/dmaengine.h                          |   19 +
- include/linux/raid/pq.h                            |    4 +
- lib/raid6/mktables.c                               |   20 +
- 9 files changed, 1571 insertions(+), 5 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/dma/brcm,iproc-sba.txt
- create mode 100644 drivers/dma/bcm-sba-raid.c
-
+diff --git a/include/linux/raid/pq.h b/include/linux/raid/pq.h
+index 4d57bba..30f9453 100644
+--- a/include/linux/raid/pq.h
++++ b/include/linux/raid/pq.h
+@@ -142,6 +142,7 @@ int raid6_select_algo(void);
+ extern const u8 raid6_gfmul[256][256] __attribute__((aligned(256)));
+ extern const u8 raid6_vgfmul[256][32] __attribute__((aligned(256)));
+ extern const u8 raid6_gfexp[256]      __attribute__((aligned(256)));
++extern const u8 raid6_gflog[256]      __attribute__((aligned(256)));
+ extern const u8 raid6_gfinv[256]      __attribute__((aligned(256)));
+ extern const u8 raid6_gfexi[256]      __attribute__((aligned(256)));
+ 
+diff --git a/lib/raid6/mktables.c b/lib/raid6/mktables.c
+index 39787db..e824d08 100644
+--- a/lib/raid6/mktables.c
++++ b/lib/raid6/mktables.c
+@@ -125,6 +125,26 @@ int main(int argc, char *argv[])
+ 	printf("EXPORT_SYMBOL(raid6_gfexp);\n");
+ 	printf("#endif\n");
+ 
++	/* Compute log-of-2 table */
++	printf("\nconst u8 __attribute__((aligned(256)))\n"
++	       "raid6_gflog[256] =\n" "{\n");
++	for (i = 0; i < 256; i += 8) {
++		printf("\t");
++		for (j = 0; j < 8; j++) {
++			v = 255;
++			for (k = 0; k < 256; k++)
++				if (exptbl[k] == (i + j)) {
++					v = k;
++					break;
++				}
++			printf("0x%02x,%c", v, (j == 7) ? '\n' : ' ');
++		}
++	}
++	printf("};\n");
++	printf("#ifdef __KERNEL__\n");
++	printf("EXPORT_SYMBOL(raid6_gflog);\n");
++	printf("#endif\n");
++
+ 	/* Compute inverse table x^-1 == x^254 */
+ 	printf("\nconst u8 __attribute__((aligned(256)))\n"
+ 	       "raid6_gfinv[256] =\n" "{\n");
 -- 
 2.7.4
+
