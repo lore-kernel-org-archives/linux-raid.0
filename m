@@ -1,120 +1,90 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [systemd-devel] Errorneous detection of degraded array
-Date: Wed, 08 Feb 2017 15:10:57 +1100
-Message-ID: <87h945uxta.fsf@notabene.neil.brown.name>
-References: <96A26C8C6786C341B83BC4F2BC5419E4795DE9A6@SRF-EXCH1.corp.sunrisefutures.com> <b842c2ce-7d32-a392-e9d9-9f330fa6a7cf@gmail.com> <87vasxs47y.fsf@notabene.neil.brown.name> <666d5a48-4c71-77ee-f71b-c32f334cf7cc@gmail.com> <87k29drr3w.fsf@notabene.neil.brown.name> <CAA91j0V92RXDky-AnD6w+Dy=M7KJVCWyssA7yHRfRqBxLTWvog@mail.gmail.com> <8760kwry0r.fsf@notabene.neil.brown.name> <e32430d2-5f59-40af-6027-715dfde1045d@gmail.com>
+From: Anup Patel <anup.patel@broadcom.com>
+Subject: Re: [PATCH v2 2/5] async_tx: Handle DMA devices having support for
+ fewer PQ coefficients
+Date: Wed, 8 Feb 2017 12:07:23 +0530
+Message-ID: <CAALAos__1XVv-=CitWfWLsXUt7nYC5bN6qaVUBWY7fiLA1UtGg@mail.gmail.com>
+References: <1486455406-11202-1-git-send-email-anup.patel@broadcom.com>
+ <1486455406-11202-3-git-send-email-anup.patel@broadcom.com>
+ <CAPcyv4gbV1yf52JrejW+Dn3wOPn7Er+8HWdu2qsW0+Qm+cRr9g@mail.gmail.com>
+ <CAALAos_yhXufdt79KWY0eugjF5oyJ8+NcPh2E-dEXnSQu2WhhA@mail.gmail.com> <20170207164207.GI19244@localhost>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e32430d2-5f59-40af-6027-715dfde1045d@gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Andrei Borzenkov <arvidjaar@gmail.com>
-Cc: Luke Pyzowski <Luke@sunrisefutures.com>, "systemd-devel@lists.freedesktop.org" <systemd-devel@lists.freedesktop.org>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170207164207.GI19244@localhost>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Vinod Koul <vinod.koul@intel.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S . Miller" <davem@davemloft.net>, Jassi Brar <jassisinghbrar@gmail.com>, Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>, Rob Rice <rob.rice@broadcom.com>, BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>, "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>, Device Tree <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, Jan 31 2017, Andrei Borzenkov wrote:
-
+On Tue, Feb 7, 2017 at 10:12 PM, Vinod Koul <vinod.koul@intel.com> wrote:
+> On Tue, Feb 07, 2017 at 02:32:15PM +0530, Anup Patel wrote:
+>> On Tue, Feb 7, 2017 at 1:57 PM, Dan Williams <dan.j.williams@intel.com> wrote:
+>> > On Tue, Feb 7, 2017 at 12:16 AM, Anup Patel <anup.patel@broadcom.com> wrote:
+>> >> The DMAENGINE framework assumes that if PQ offload is supported by a
+>> >> DMA device then all 256 PQ coefficients are supported. This assumption
+>> >> does not hold anymore because we now have BCM-SBA-RAID offload engine
+>> >> which supports PQ offload with limited number of PQ coefficients.
+>> >>
+>> >> This patch extends async_tx APIs to handle DMA devices with support
+>> >> for fewer PQ coefficients.
+>> >>
+>> >> Signed-off-by: Anup Patel <anup.patel@broadcom.com>
+>> >> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+>> >
+>> > I don't like this approach. Define an interface for md to query the
+>> > offload engine once at the beginning of time. We should not be adding
+>> > any new extensions to async_tx.
+>>
+>> Even if we do capability checks in Linux MD, we still need a way
+>> for DMAENGINE drivers to advertise number of PQ coefficients
+>> handled by the HW.
 >
->>>> Changing the
->>>>   Conflicts=3Dsys-devices-virtual-block-%i.device
->>>> lines to
->>>>   ConditionPathExists=3D/sys/devices/virtual/block/%i
->>>> might make the problem go away, without any negative consequences.
->>>>
->>>
->>> Ugly, but yes, may be this is the only way using current systemd.
->>>
->
-> This won't work. sysfs node appears as soon as the very first array
-> member is found and array is still inactive, while what we need is
-> condition "array is active".
+> If the question is only for advertising caps, then why not do as done
+> for dma_get_slave_caps(). you can add dma_get_pq_caps() so that clients (md)
+> in this case would know the HW capability.
 
-Of course, you are right.
-A suitable "array is active" test is the existence of
-  .../md/sync_action
-which appears when an array is activated (except for RAID0 and Linear,
-which don't need last-resort support).
+We have large number of possible capabilities for
+DMA slave such as src_addr_widths, dst_addr_widths,
+directions, max_burst, residue_granularity, and
+descriptor_resue.
 
-So this is what I propose to post upstream.  Could you please confirm
-that it works for you?  It appears to work for me.
+The possible capabilities of PQ offload are:
+1. Number of PQ sources handled by PQ offload
+(Represented by "max_pq" member of "struct dma_device")
+2. Number of PQ coefficients handled by PQ offload
 
-Thanks,
-NeilBrown
+The above two PQ capabilities are good enough for
+current PQ HW and future PQ HW so we just need a
+way to specify number of PQ coefficients.
 
-From: NeilBrown <neilb@suse.com>
-Date: Wed, 8 Feb 2017 15:01:05 +1100
-Subject: [PATCH] systemd/mdadm-last-resort: use ConditionPathExists instead=
- of
- Conflicts
+Till now all of the PQ HW always supported all 256
+PQ coefficients so we never felt the need of capability
+to specify PQ coefficients. The BCM-SBA-RAID is the
+only HW (as far as I know) which does not support all
+256 PQ coefficients.
 
-Commit cec72c071bbe ("systemd/mdadm-last-resort: add Conflicts to .service =
-file.")
+Currently, DMAENGINE drivers use dma_set_maxpq() to
+specify number of PQ sources handled by PQ HW and
+Linux Async Tx uses dma_maxpq() to get number of
+PQ sources.
 
-added a 'Conflicts' directive to the mdadm-last-resort@.service file in
-the hope that this would make sure the service didn't run after the device
-was active, even if the timer managed to get started, which is possible in
-race conditions.
+On similar lines, we added dma_set_maxpqcoef() to
+specify number of PQ coefficients and Linux Async Tx
+uses dma_maxpqcoef() to get number of PQ coefficients.
+If DMAENGINE driver does not specify PQ coefficients
+then dma_maxpqcoef() will return 256 assuming all
+PQ coefficients are supported. This approach is
+backward compatible to existing DMAENGINE APIs
+and will not break existing DMAENGINE drivers.
 
-This seemed to work is testing, but it isn't clear why, and it is known
-to cause problems.
-If systemd happens to know that the mentioned device is a dependency of a
-mount point, the Conflicts can unmount that mountpoint, which is certainly
-not wanted.
+If we add dma_get_pq_caps() similar to the
+dma_get_slave_caps() for PQ capabilities then we
+will have to use this new method for both of the above
+PQ capabilities and we have to change all DMAENGINE
+drivers to use new method of specifying PQ capabilities.
+I think this is too intrusive and bit overkill because its
+very very unlikely to see anymore additions to
+PQ capabilities.
 
-So remove the "Conflicts" and instead use
- ConditionPathExists=3D!/sys/devices/virtual/block/%i/md/sync_action
-
-The "sync_action" file exists for any array which require last-resort
-handling, and only appear when the array is activated.  So it is safe
-to reliy on it to determine if the last-resort is really needed.
-
-Fixes: cec72c071bbe ("systemd/mdadm-last-resort: add Conflicts to .service =
-file.")
-Signed-off-by: NeilBrown <neilb@suse.com>
-=2D--
- systemd/mdadm-last-resort@.service | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/systemd/mdadm-last-resort@.service b/systemd/mdadm-last-resort=
-@.service
-index e93d72b2b45e..f9d4d12738a3 100644
-=2D-- a/systemd/mdadm-last-resort@.service
-+++ b/systemd/mdadm-last-resort@.service
-@@ -1,7 +1,7 @@
- [Unit]
- Description=3DActivate md array even though degraded
- DefaultDependencies=3Dno
-=2DConflicts=3Dsys-devices-virtual-block-%i.device
-+ConditionPathExists=3D!/sys/devices/virtual/block/%i/md/sync_action
-=20
- [Service]
- Type=3Doneshot
-=2D-=20
-2.11.0
-
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAliamlEACgkQOeye3VZi
-gbmVBg//XYNrhN9rm5uqaLLTx8tOaxaT0pm/6dY5RCZXi7DWZkacUVNx0qw26ylz
-hZzImeJ4CwuQi61ssSyOhMPHSpw+0VvddUmm4lT26CjIHd011V/yBMuqedVPBKNq
-YvrXBMS084Xbln4TFNC7MdGhmYFsg9E96J8zuVCqNrqvLLl+pFhiCzAL9htFWXAa
-yreKs6WjOWxmxXXWMUH8a8v8uoPodFgr8290Y/OK1MUCcZqTa4QxRqGv+huhsWYF
-qyrOSLnravDtgQuh36JKin5U0+TicS7WSaYnmHGLAeKymerZ4Xe/rBQDAi5nyaG7
-n27V6Xo9+QamPn6vdxR9VFW2enRDcji1sg5coCLmTWSRrblNOgIRai/OPN/tFSVF
-i4mp4SXno3QmLQgyxTYeH/Qqx4k0BtzDFPOhoSJGISUmZYpIikU6lwGp/BspznvV
-hilpyGoBWcv2d2zG2LKVAvxUNjptN2x0Zd9QdaJatqtCxZCIlYnHSfw19IrWhfFr
-Gc+TzIKGX4Fd6CXfAcdNrK1HXJ2ysgDdpWGkEkLGoS+B9J9aSsmav2qDAuFbx6ff
-4yopDVfT/TyNwHRsjWKi1TRM8cj9MORg037Vsmnuhk99B4OQNzMCXSXSXp6z8fYw
-IazV41FbNoLJujJ8JKoKGkxys3hVsnuiUz6XEbiDYRNBCx3ei78=
-=Rx3/
------END PGP SIGNATURE-----
---=-=-=--
+Regards,
+Anup
