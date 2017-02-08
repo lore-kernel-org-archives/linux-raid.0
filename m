@@ -1,241 +1,58 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v3 6/9] md: add sysfs entries for PPL
-Date: Tue, 7 Feb 2017 13:49:14 -0800
-Message-ID: <20170207214914.dfin7ma73lrqz2y2@kernel.org>
-References: <20170130185953.30428-1-artur.paszkiewicz@intel.com>
- <20170130185953.30428-7-artur.paszkiewicz@intel.com>
+Subject: Re: [PATCH V2] MD: add doc for raid5-cache
+Date: Tue, 7 Feb 2017 17:03:21 -0800
+Message-ID: <20170208010321.glrr3urj54wlox2y@kernel.org>
+References: <cac53388fd5903a006792c0165063d63eb66079d.1486408891.git.shli@fb.com>
+ <c2c87a20-05b5-f769-8eb6-4d7b164dfad6@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170130185953.30428-7-artur.paszkiewicz@intel.com>
+In-Reply-To: <c2c87a20-05b5-f769-8eb6-4d7b164dfad6@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.com, jes.sorensen@gmail.com
+To: Anthony Youngman <antlists@youngman.org.uk>
+Cc: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org, philip@turmel.org, songliubraving@fb.com, neilb@suse.com, jure.erznoznik@gmail.com, rramesh2400@gmail.com
 List-Id: linux-raid.ids
 
-On Mon, Jan 30, 2017 at 07:59:50PM +0100, Artur Paszkiewicz wrote:
-> Add 'consistency_policy' attribute for array. It indicates how the array
-> maintains consistency in case of unexpected shutdown.
+On Mon, Feb 06, 2017 at 09:02:32PM +0000, Anthony Youngman wrote:
 > 
-> Add 'ppl_sector' and 'ppl_size' for rdev, which describe the location
-> and size of the PPL space on the device.
 > 
-> These attributes are writable to allow enabling PPL for external
-> metadata arrays and (later) to enable/disable PPL for a running array.
+> On 06/02/17 19:23, Shaohua Li wrote:
+> > I'm starting document of the raid5-cache feature. Please note this is a
+> > kernel doc instead of a mdadm manual, so I don't add the details about
+> > how to use the feature in mdadm side. Please let me know what else we
+> > should put into the document. Of course, comments are welcome!
+> > 
+> > Signed-off-by: Shaohua Li <shli@fb.com>
+> > ---
+> >  Documentation/md/raid5-cache.txt | 109 +++++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 109 insertions(+)
+> >  create mode 100644 Documentation/md/raid5-cache.txt
 > 
-> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-> ---
->  Documentation/admin-guide/md.rst |  32 ++++++++++-
->  drivers/md/md.c                  | 115 +++++++++++++++++++++++++++++++++++++++
->  2 files changed, 144 insertions(+), 3 deletions(-)
+> Note that the kernel documentation is moving over to a new format - .rst.
+> They're using a new system called Sphinx. There was an article on lwn about
+> it. I've lost the reference to lwn, but if you look at
+> https://www.kernel.org/doc/html/latest/ you will see that it is a match to
+> Documentation/index.rst.
 > 
-> diff --git a/Documentation/admin-guide/md.rst b/Documentation/admin-guide/md.rst
-> index 7104ef757e73..2c153b3d798f 100644
-> --- a/Documentation/admin-guide/md.rst
-> +++ b/Documentation/admin-guide/md.rst
-> @@ -329,14 +329,14 @@ All md devices contain:
->       array creation it will default to 0, though starting the array as
->       ``clean`` will set it much larger.
->  
-> -   new_dev
-> +  new_dev
->       This file can be written but not read.  The value written should
->       be a block device number as major:minor.  e.g. 8:0
->       This will cause that device to be attached to the array, if it is
->       available.  It will then appear at md/dev-XXX (depending on the
->       name of the device) and further configuration is then possible.
->  
-> -   safe_mode_delay
-> +  safe_mode_delay
->       When an md array has seen no write requests for a certain period
->       of time, it will be marked as ``clean``.  When another write
->       request arrives, the array is marked as ``dirty`` before the write
-> @@ -345,7 +345,7 @@ All md devices contain:
->       period as a number of seconds.  The default is 200msec (0.200).
->       Writing a value of 0 disables safemode.
->  
-> -   array_state
-> +  array_state
->       This file contains a single word which describes the current
->       state of the array.  In many cases, the state can be set by
->       writing the word for the desired state, however some states
-> @@ -454,7 +454,30 @@ All md devices contain:
->       once the array becomes non-degraded, and this fact has been
->       recorded in the metadata.
->  
-> +  consistency_policy
-> +     This indicates how the array maintains consistency in case of unexpected
-> +     shutdown. It can be:
->  
-> +     none
-> +       Array has no redundancy information, e.g. raid0, linear.
-> +
-> +     resync
-> +       Full resync is performed and all redundancy is regenerated when the
-> +       array is started after unclean shutdown.
-> +
-> +     bitmap
-> +       Resync assisted by a write-intent bitmap.
-> +
-> +     journal
-> +       For raid4/5/6, journal device is used to log transactions and replay
-> +       after unclean shutdown.
-> +
-> +     ppl
-> +       For raid5 only, :ref:`ppl` is used to close the write hole and eliminate
-> +       resync.
-> +
-> +     The accepted values when writing to this file are ``ppl`` and ``resync``,
-> +     used to enable and disable PPL.
->  
->  
->  As component devices are added to an md array, they appear in the ``md``
-> @@ -616,6 +639,9 @@ Each directory contains:
->  	adds bad blocks without acknowledging them. This is largely
->  	for testing.
->  
-> +      ppl_sector, ppl_size
-> +        Location and size (in sectors) of the space used for Partial Parity Log
-> +        on this device.
->  
->  
->  An active md device will also contain an entry for each active device
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index e96f73572e23..47ab3afe87cb 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -3205,6 +3205,78 @@ static ssize_t ubb_store(struct md_rdev *rdev, const char *page, size_t len)
->  static struct rdev_sysfs_entry rdev_unack_bad_blocks =
->  __ATTR(unacknowledged_bad_blocks, S_IRUGO|S_IWUSR, ubb_show, ubb_store);
->  
-> +static ssize_t
-> +ppl_sector_show(struct md_rdev *rdev, char *page)
-> +{
-> +	return sprintf(page, "%llu\n", (unsigned long long)rdev->ppl.sector);
-> +}
-> +
-> +static ssize_t
-> +ppl_sector_store(struct md_rdev *rdev, const char *buf, size_t len)
-> +{
-> +	unsigned long long sector;
-> +
-> +	if (kstrtoull(buf, 10, &sector) < 0)
-> +		return -EINVAL;
-> +	if (sector != (sector_t)sector)
-> +	        return -EINVAL;
-> +
-> +	if (rdev->mddev->pers && test_bit(MD_HAS_PPL, &rdev->mddev->flags) &&
-> +	    rdev->raid_disk >= 0)
-> +		return -EBUSY;
-> +
-> +	if (rdev->mddev->persistent) {
-> +		if (rdev->mddev->major_version == 0)
-> +			return -EINVAL;
-> +		if ((sector > rdev->sb_start &&
-> +		     sector - rdev->sb_start > S16_MAX) ||
-> +		    (sector < rdev->sb_start &&
-> +		     rdev->sb_start - sector > -S16_MIN))
-> +			return -EINVAL;
-> +		rdev->ppl.offset = sector - rdev->sb_start;
+> So of course, converting all the md stuff has made its way onto my "to do"
+> list, but I don't want to start until I've got a converted kernel running on
+> my system. I'm currently running 4.4.6 and I think it came out with
+> something like 4.6. Problem is, running gentoo, my system is well out of
+> date because I need a helper system to get me to upgrade and going from KDE4
+> to KDE5 is likely to give me grief :-)
+> 
+> You're probably working with an up-to-date kernel, but it's up to you - do
+> you want to create a .rst file, or submit it as .txt and let me convert it
+> and go through the grief of working out how to do it :-). Conversion is
+> probably rather more than just converting the one file, it'll need
+> converting the directory structure too, I expect. Any problems, Jon Corbet's
+> probably our go-to guy.
 
-Why do we allow non-external array changes the ppl log position and size?
-
-> +	} else if (!rdev->mddev->external) {
-> +		return -EBUSY;
-> +	}
-> +	rdev->ppl.sector = sector;
-> +	return len;
-> +}
-> +
-> +static struct rdev_sysfs_entry rdev_ppl_sector =
-> +__ATTR(ppl_sector, S_IRUGO|S_IWUSR, ppl_sector_show, ppl_sector_store);
-> +
-> +static ssize_t
-> +ppl_size_show(struct md_rdev *rdev, char *page)
-> +{
-> +	return sprintf(page, "%u\n", rdev->ppl.size);
-> +}
-> +
-> +static ssize_t
-> +ppl_size_store(struct md_rdev *rdev, const char *buf, size_t len)
-> +{
-> +	unsigned int size;
-> +
-> +	if (kstrtouint(buf, 10, &size) < 0)
-> +		return -EINVAL;
-> +
-> +	if (rdev->mddev->pers && test_bit(MD_HAS_PPL, &rdev->mddev->flags) &&
-> +	    rdev->raid_disk >= 0)
-> +		return -EBUSY;
-> +
-> +	if (rdev->mddev->persistent) {
-> +		if (rdev->mddev->major_version == 0)
-> +			return -EINVAL;
-> +		if (size > U16_MAX)
-> +			return -EINVAL;
-> +	} else if (!rdev->mddev->external) {
-> +		return -EBUSY;
-> +	}
-> +	rdev->ppl.size = size;
-> +	return len;
-> +}
-> +
-> +static struct rdev_sysfs_entry rdev_ppl_size =
-> +__ATTR(ppl_size, S_IRUGO|S_IWUSR, ppl_size_show, ppl_size_store);
-> +
->  static struct attribute *rdev_default_attrs[] = {
->  	&rdev_state.attr,
->  	&rdev_errors.attr,
-> @@ -3215,6 +3287,8 @@ static struct attribute *rdev_default_attrs[] = {
->  	&rdev_recovery_start.attr,
->  	&rdev_bad_blocks.attr,
->  	&rdev_unack_bad_blocks.attr,
-> +	&rdev_ppl_sector.attr,
-> +	&rdev_ppl_size.attr,
->  	NULL,
->  };
->  static ssize_t
-> @@ -4951,6 +5025,46 @@ static struct md_sysfs_entry md_array_size =
->  __ATTR(array_size, S_IRUGO|S_IWUSR, array_size_show,
->         array_size_store);
->  
-> +static ssize_t
-> +consistency_policy_show(struct mddev *mddev, char *page)
-> +{
-> +	int ret;
-> +
-> +	if (test_bit(MD_HAS_JOURNAL, &mddev->flags)) {
-> +		ret = sprintf(page, "journal\n");
-> +	} else if (test_bit(MD_HAS_PPL, &mddev->flags)) {
-> +		ret = sprintf(page, "ppl\n");
-> +	} else if (mddev->bitmap) {
-> +		ret = sprintf(page, "bitmap\n");
-> +	} else if (mddev->pers) {
-> +		if (mddev->pers->sync_request)
-> +			ret = sprintf(page, "resync\n");
-> +		else
-> +			ret = sprintf(page, "none\n");
-> +	} else {
-> +		ret = sprintf(page, "unknown\n");
-> +	}
-> +
-> +	return ret;
-> +}
-> +
-> +static ssize_t
-> +consistency_policy_store(struct mddev *mddev, const char *buf, size_t len)
-> +{
-> +	if (mddev->pers) {
-> +		return -EBUSY;
-> +	} else if (mddev->external && strncmp(buf, "ppl", 3) == 0) {
-> +		set_bit(MD_HAS_PPL, &mddev->flags);
-> +		return len;
-
-Here we should check if ppl position and size are valid before we set the flag.
-
-And shouldn't we move this part to .change_consistency_policy added in patch 9?
-This is a consistency policy change too.
+Yep, I saw some directories are converted to .rst, but most not yet. I'll
+commit this as-is if nobody objects, being lazy to learn/install the rst
+stuffes :). It would be great you can help convert the md directory to new
+format, but I don't think it's in a hurry.
 
 Thanks,
 Shaohua
