@@ -1,58 +1,120 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH V2] MD: add doc for raid5-cache
-Date: Tue, 7 Feb 2017 17:03:21 -0800
-Message-ID: <20170208010321.glrr3urj54wlox2y@kernel.org>
-References: <cac53388fd5903a006792c0165063d63eb66079d.1486408891.git.shli@fb.com>
- <c2c87a20-05b5-f769-8eb6-4d7b164dfad6@youngman.org.uk>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [systemd-devel] Errorneous detection of degraded array
+Date: Wed, 08 Feb 2017 15:10:57 +1100
+Message-ID: <87h945uxta.fsf@notabene.neil.brown.name>
+References: <96A26C8C6786C341B83BC4F2BC5419E4795DE9A6@SRF-EXCH1.corp.sunrisefutures.com> <b842c2ce-7d32-a392-e9d9-9f330fa6a7cf@gmail.com> <87vasxs47y.fsf@notabene.neil.brown.name> <666d5a48-4c71-77ee-f71b-c32f334cf7cc@gmail.com> <87k29drr3w.fsf@notabene.neil.brown.name> <CAA91j0V92RXDky-AnD6w+Dy=M7KJVCWyssA7yHRfRqBxLTWvog@mail.gmail.com> <8760kwry0r.fsf@notabene.neil.brown.name> <e32430d2-5f59-40af-6027-715dfde1045d@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <c2c87a20-05b5-f769-8eb6-4d7b164dfad6@youngman.org.uk>
+In-Reply-To: <e32430d2-5f59-40af-6027-715dfde1045d@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Anthony Youngman <antlists@youngman.org.uk>
-Cc: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org, philip@turmel.org, songliubraving@fb.com, neilb@suse.com, jure.erznoznik@gmail.com, rramesh2400@gmail.com
+To: Andrei Borzenkov <arvidjaar@gmail.com>
+Cc: Luke Pyzowski <Luke@sunrisefutures.com>, "systemd-devel@lists.freedesktop.org" <systemd-devel@lists.freedesktop.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Feb 06, 2017 at 09:02:32PM +0000, Anthony Youngman wrote:
-> 
-> 
-> On 06/02/17 19:23, Shaohua Li wrote:
-> > I'm starting document of the raid5-cache feature. Please note this is a
-> > kernel doc instead of a mdadm manual, so I don't add the details about
-> > how to use the feature in mdadm side. Please let me know what else we
-> > should put into the document. Of course, comments are welcome!
-> > 
-> > Signed-off-by: Shaohua Li <shli@fb.com>
-> > ---
-> >  Documentation/md/raid5-cache.txt | 109 +++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 109 insertions(+)
-> >  create mode 100644 Documentation/md/raid5-cache.txt
-> 
-> Note that the kernel documentation is moving over to a new format - .rst.
-> They're using a new system called Sphinx. There was an article on lwn about
-> it. I've lost the reference to lwn, but if you look at
-> https://www.kernel.org/doc/html/latest/ you will see that it is a match to
-> Documentation/index.rst.
-> 
-> So of course, converting all the md stuff has made its way onto my "to do"
-> list, but I don't want to start until I've got a converted kernel running on
-> my system. I'm currently running 4.4.6 and I think it came out with
-> something like 4.6. Problem is, running gentoo, my system is well out of
-> date because I need a helper system to get me to upgrade and going from KDE4
-> to KDE5 is likely to give me grief :-)
-> 
-> You're probably working with an up-to-date kernel, but it's up to you - do
-> you want to create a .rst file, or submit it as .txt and let me convert it
-> and go through the grief of working out how to do it :-). Conversion is
-> probably rather more than just converting the one file, it'll need
-> converting the directory structure too, I expect. Any problems, Jon Corbet's
-> probably our go-to guy.
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Yep, I saw some directories are converted to .rst, but most not yet. I'll
-commit this as-is if nobody objects, being lazy to learn/install the rst
-stuffes :). It would be great you can help convert the md directory to new
-format, but I don't think it's in a hurry.
+On Tue, Jan 31 2017, Andrei Borzenkov wrote:
+
+>
+>>>> Changing the
+>>>>   Conflicts=3Dsys-devices-virtual-block-%i.device
+>>>> lines to
+>>>>   ConditionPathExists=3D/sys/devices/virtual/block/%i
+>>>> might make the problem go away, without any negative consequences.
+>>>>
+>>>
+>>> Ugly, but yes, may be this is the only way using current systemd.
+>>>
+>
+> This won't work. sysfs node appears as soon as the very first array
+> member is found and array is still inactive, while what we need is
+> condition "array is active".
+
+Of course, you are right.
+A suitable "array is active" test is the existence of
+  .../md/sync_action
+which appears when an array is activated (except for RAID0 and Linear,
+which don't need last-resort support).
+
+So this is what I propose to post upstream.  Could you please confirm
+that it works for you?  It appears to work for me.
 
 Thanks,
-Shaohua
+NeilBrown
+
+From: NeilBrown <neilb@suse.com>
+Date: Wed, 8 Feb 2017 15:01:05 +1100
+Subject: [PATCH] systemd/mdadm-last-resort: use ConditionPathExists instead=
+ of
+ Conflicts
+
+Commit cec72c071bbe ("systemd/mdadm-last-resort: add Conflicts to .service =
+file.")
+
+added a 'Conflicts' directive to the mdadm-last-resort@.service file in
+the hope that this would make sure the service didn't run after the device
+was active, even if the timer managed to get started, which is possible in
+race conditions.
+
+This seemed to work is testing, but it isn't clear why, and it is known
+to cause problems.
+If systemd happens to know that the mentioned device is a dependency of a
+mount point, the Conflicts can unmount that mountpoint, which is certainly
+not wanted.
+
+So remove the "Conflicts" and instead use
+ ConditionPathExists=3D!/sys/devices/virtual/block/%i/md/sync_action
+
+The "sync_action" file exists for any array which require last-resort
+handling, and only appear when the array is activated.  So it is safe
+to reliy on it to determine if the last-resort is really needed.
+
+Fixes: cec72c071bbe ("systemd/mdadm-last-resort: add Conflicts to .service =
+file.")
+Signed-off-by: NeilBrown <neilb@suse.com>
+=2D--
+ systemd/mdadm-last-resort@.service | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/systemd/mdadm-last-resort@.service b/systemd/mdadm-last-resort=
+@.service
+index e93d72b2b45e..f9d4d12738a3 100644
+=2D-- a/systemd/mdadm-last-resort@.service
++++ b/systemd/mdadm-last-resort@.service
+@@ -1,7 +1,7 @@
+ [Unit]
+ Description=3DActivate md array even though degraded
+ DefaultDependencies=3Dno
+=2DConflicts=3Dsys-devices-virtual-block-%i.device
++ConditionPathExists=3D!/sys/devices/virtual/block/%i/md/sync_action
+=20
+ [Service]
+ Type=3Doneshot
+=2D-=20
+2.11.0
+
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAliamlEACgkQOeye3VZi
+gbmVBg//XYNrhN9rm5uqaLLTx8tOaxaT0pm/6dY5RCZXi7DWZkacUVNx0qw26ylz
+hZzImeJ4CwuQi61ssSyOhMPHSpw+0VvddUmm4lT26CjIHd011V/yBMuqedVPBKNq
+YvrXBMS084Xbln4TFNC7MdGhmYFsg9E96J8zuVCqNrqvLLl+pFhiCzAL9htFWXAa
+yreKs6WjOWxmxXXWMUH8a8v8uoPodFgr8290Y/OK1MUCcZqTa4QxRqGv+huhsWYF
+qyrOSLnravDtgQuh36JKin5U0+TicS7WSaYnmHGLAeKymerZ4Xe/rBQDAi5nyaG7
+n27V6Xo9+QamPn6vdxR9VFW2enRDcji1sg5coCLmTWSRrblNOgIRai/OPN/tFSVF
+i4mp4SXno3QmLQgyxTYeH/Qqx4k0BtzDFPOhoSJGISUmZYpIikU6lwGp/BspznvV
+hilpyGoBWcv2d2zG2LKVAvxUNjptN2x0Zd9QdaJatqtCxZCIlYnHSfw19IrWhfFr
+Gc+TzIKGX4Fd6CXfAcdNrK1HXJ2ysgDdpWGkEkLGoS+B9J9aSsmav2qDAuFbx6ff
+4yopDVfT/TyNwHRsjWKi1TRM8cj9MORg037Vsmnuhk99B4OQNzMCXSXSXp6z8fYw
+IazV41FbNoLJujJ8JKoKGkxys3hVsnuiUz6XEbiDYRNBCx3ei78=
+=Rx3/
+-----END PGP SIGNATURE-----
+--=-=-=--
