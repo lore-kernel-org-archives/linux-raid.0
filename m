@@ -1,262 +1,35 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v3 6/9] md: add sysfs entries for PPL
-Date: Wed, 8 Feb 2017 10:14:42 -0800
-Message-ID: <20170208173606.bfvmvcnypyrsisks@kernel.org>
-References: <20170130185953.30428-1-artur.paszkiewicz@intel.com>
- <20170130185953.30428-7-artur.paszkiewicz@intel.com>
- <20170207214914.dfin7ma73lrqz2y2@kernel.org>
- <d484e0e5-345e-f35b-e10c-6727e300bfa1@intel.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: [PATCH 1/5] MD: attach data to each bio
+Date: Thu, 9 Feb 2017 00:09:26 +0000
+Message-ID: <589BB336.1040203@youngman.org.uk>
+References: <cover.1486485935.git.shli@fb.com>
+ <79515b1372fa1a1813c00ef0d7e0613a4512183d.1486485935.git.shli@fb.com>
+ <589ADFEC.1070902@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <d484e0e5-345e-f35b-e10c-6727e300bfa1@intel.com>
+In-Reply-To: <589ADFEC.1070902@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.com, jes.sorensen@gmail.com
+To: Guoqing Jiang <gqjiang@suse.com>, Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
+Cc: khlebnikov@yandex-team.ru, hch@lst.de, neilb@suse.com
 List-Id: linux-raid.ids
 
-On Wed, Feb 08, 2017 at 12:58:51PM +0100, Artur Paszkiewicz wrote:
-> On 02/07/2017 10:49 PM, Shaohua Li wrote:
-> > On Mon, Jan 30, 2017 at 07:59:50PM +0100, Artur Paszkiewicz wrote:
-> >> Add 'consistency_policy' attribute for array. It indicates how the array
-> >> maintains consistency in case of unexpected shutdown.
-> >>
-> >> Add 'ppl_sector' and 'ppl_size' for rdev, which describe the location
-> >> and size of the PPL space on the device.
-> >>
-> >> These attributes are writable to allow enabling PPL for external
-> >> metadata arrays and (later) to enable/disable PPL for a running array.
-> >>
-> >> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-> >> ---
-> >>  Documentation/admin-guide/md.rst |  32 ++++++++++-
-> >>  drivers/md/md.c                  | 115 +++++++++++++++++++++++++++++++++++++++
-> >>  2 files changed, 144 insertions(+), 3 deletions(-)
-> >>
-> >> diff --git a/Documentation/admin-guide/md.rst b/Documentation/admin-guide/md.rst
-> >> index 7104ef757e73..2c153b3d798f 100644
-> >> --- a/Documentation/admin-guide/md.rst
-> >> +++ b/Documentation/admin-guide/md.rst
-> >> @@ -329,14 +329,14 @@ All md devices contain:
-> >>       array creation it will default to 0, though starting the array as
-> >>       ``clean`` will set it much larger.
-> >>  
-> >> -   new_dev
-> >> +  new_dev
-> >>       This file can be written but not read.  The value written should
-> >>       be a block device number as major:minor.  e.g. 8:0
-> >>       This will cause that device to be attached to the array, if it is
-> >>       available.  It will then appear at md/dev-XXX (depending on the
-> >>       name of the device) and further configuration is then possible.
-> >>  
-> >> -   safe_mode_delay
-> >> +  safe_mode_delay
-> >>       When an md array has seen no write requests for a certain period
-> >>       of time, it will be marked as ``clean``.  When another write
-> >>       request arrives, the array is marked as ``dirty`` before the write
-> >> @@ -345,7 +345,7 @@ All md devices contain:
-> >>       period as a number of seconds.  The default is 200msec (0.200).
-> >>       Writing a value of 0 disables safemode.
-> >>  
-> >> -   array_state
-> >> +  array_state
-> >>       This file contains a single word which describes the current
-> >>       state of the array.  In many cases, the state can be set by
-> >>       writing the word for the desired state, however some states
-> >> @@ -454,7 +454,30 @@ All md devices contain:
-> >>       once the array becomes non-degraded, and this fact has been
-> >>       recorded in the metadata.
-> >>  
-> >> +  consistency_policy
-> >> +     This indicates how the array maintains consistency in case of unexpected
-> >> +     shutdown. It can be:
-> >>  
-> >> +     none
-> >> +       Array has no redundancy information, e.g. raid0, linear.
-> >> +
-> >> +     resync
-> >> +       Full resync is performed and all redundancy is regenerated when the
-> >> +       array is started after unclean shutdown.
-> >> +
-> >> +     bitmap
-> >> +       Resync assisted by a write-intent bitmap.
-> >> +
-> >> +     journal
-> >> +       For raid4/5/6, journal device is used to log transactions and replay
-> >> +       after unclean shutdown.
-> >> +
-> >> +     ppl
-> >> +       For raid5 only, :ref:`ppl` is used to close the write hole and eliminate
-> >> +       resync.
-> >> +
-> >> +     The accepted values when writing to this file are ``ppl`` and ``resync``,
-> >> +     used to enable and disable PPL.
-> >>  
-> >>  
-> >>  As component devices are added to an md array, they appear in the ``md``
-> >> @@ -616,6 +639,9 @@ Each directory contains:
-> >>  	adds bad blocks without acknowledging them. This is largely
-> >>  	for testing.
-> >>  
-> >> +      ppl_sector, ppl_size
-> >> +        Location and size (in sectors) of the space used for Partial Parity Log
-> >> +        on this device.
-> >>  
-> >>  
-> >>  An active md device will also contain an entry for each active device
-> >> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> >> index e96f73572e23..47ab3afe87cb 100644
-> >> --- a/drivers/md/md.c
-> >> +++ b/drivers/md/md.c
-> >> @@ -3205,6 +3205,78 @@ static ssize_t ubb_store(struct md_rdev *rdev, const char *page, size_t len)
-> >>  static struct rdev_sysfs_entry rdev_unack_bad_blocks =
-> >>  __ATTR(unacknowledged_bad_blocks, S_IRUGO|S_IWUSR, ubb_show, ubb_store);
-> >>  
-> >> +static ssize_t
-> >> +ppl_sector_show(struct md_rdev *rdev, char *page)
-> >> +{
-> >> +	return sprintf(page, "%llu\n", (unsigned long long)rdev->ppl.sector);
-> >> +}
-> >> +
-> >> +static ssize_t
-> >> +ppl_sector_store(struct md_rdev *rdev, const char *buf, size_t len)
-> >> +{
-> >> +	unsigned long long sector;
-> >> +
-> >> +	if (kstrtoull(buf, 10, &sector) < 0)
-> >> +		return -EINVAL;
-> >> +	if (sector != (sector_t)sector)
-> >> +	        return -EINVAL;
-> >> +
-> >> +	if (rdev->mddev->pers && test_bit(MD_HAS_PPL, &rdev->mddev->flags) &&
-> >> +	    rdev->raid_disk >= 0)
-> >> +		return -EBUSY;
-> >> +
-> >> +	if (rdev->mddev->persistent) {
-> >> +		if (rdev->mddev->major_version == 0)
-> >> +			return -EINVAL;
-> >> +		if ((sector > rdev->sb_start &&
-> >> +		     sector - rdev->sb_start > S16_MAX) ||
-> >> +		    (sector < rdev->sb_start &&
-> >> +		     rdev->sb_start - sector > -S16_MIN))
-> >> +			return -EINVAL;
-> >> +		rdev->ppl.offset = sector - rdev->sb_start;
-> > 
-> > Why do we allow non-external array changes the ppl log position and size?
+On 08/02/17 09:07, Guoqing Jiang wrote:
 > 
-> To support enabling ppl for a running array. Mdadm should not change the
-> metadata if the array is running, so we can't read the ppl position and
-> size from the superblock. This is similar to adding an internal bitmap
-> with mdadm --grow --bitmap=internal - mdadm writes the bitmap offset to
-> "bitmap/location" in sysfs.
-
-So this is to add ppl support in runtime, right? I think more sanity checks
-should be done here to make sure the input is valid. For example the
-position/size don't overlap with data, bitmap isn't enabled yet.
-
-> >> +	} else if (!rdev->mddev->external) {
-> >> +		return -EBUSY;
-> >> +	}
-> >> +	rdev->ppl.sector = sector;
-> >> +	return len;
-> >> +}
-> >> +
-> >> +static struct rdev_sysfs_entry rdev_ppl_sector =
-> >> +__ATTR(ppl_sector, S_IRUGO|S_IWUSR, ppl_sector_show, ppl_sector_store);
-> >> +
-> >> +static ssize_t
-> >> +ppl_size_show(struct md_rdev *rdev, char *page)
-> >> +{
-> >> +	return sprintf(page, "%u\n", rdev->ppl.size);
-> >> +}
-> >> +
-> >> +static ssize_t
-> >> +ppl_size_store(struct md_rdev *rdev, const char *buf, size_t len)
-> >> +{
-> >> +	unsigned int size;
-> >> +
-> >> +	if (kstrtouint(buf, 10, &size) < 0)
-> >> +		return -EINVAL;
-> >> +
-> >> +	if (rdev->mddev->pers && test_bit(MD_HAS_PPL, &rdev->mddev->flags) &&
-> >> +	    rdev->raid_disk >= 0)
-> >> +		return -EBUSY;
-> >> +
-> >> +	if (rdev->mddev->persistent) {
-> >> +		if (rdev->mddev->major_version == 0)
-> >> +			return -EINVAL;
-> >> +		if (size > U16_MAX)
-> >> +			return -EINVAL;
-> >> +	} else if (!rdev->mddev->external) {
-> >> +		return -EBUSY;
-> >> +	}
-> >> +	rdev->ppl.size = size;
-> >> +	return len;
-> >> +}
-> >> +
-> >> +static struct rdev_sysfs_entry rdev_ppl_size =
-> >> +__ATTR(ppl_size, S_IRUGO|S_IWUSR, ppl_size_show, ppl_size_store);
-> >> +
-> >>  static struct attribute *rdev_default_attrs[] = {
-> >>  	&rdev_state.attr,
-> >>  	&rdev_errors.attr,
-> >> @@ -3215,6 +3287,8 @@ static struct attribute *rdev_default_attrs[] = {
-> >>  	&rdev_recovery_start.attr,
-> >>  	&rdev_bad_blocks.attr,
-> >>  	&rdev_unack_bad_blocks.attr,
-> >> +	&rdev_ppl_sector.attr,
-> >> +	&rdev_ppl_size.attr,
-> >>  	NULL,
-> >>  };
-> >>  static ssize_t
-> >> @@ -4951,6 +5025,46 @@ static struct md_sysfs_entry md_array_size =
-> >>  __ATTR(array_size, S_IRUGO|S_IWUSR, array_size_show,
-> >>         array_size_store);
-> >>  
-> >> +static ssize_t
-> >> +consistency_policy_show(struct mddev *mddev, char *page)
-> >> +{
-> >> +	int ret;
-> >> +
-> >> +	if (test_bit(MD_HAS_JOURNAL, &mddev->flags)) {
-> >> +		ret = sprintf(page, "journal\n");
-> >> +	} else if (test_bit(MD_HAS_PPL, &mddev->flags)) {
-> >> +		ret = sprintf(page, "ppl\n");
-> >> +	} else if (mddev->bitmap) {
-> >> +		ret = sprintf(page, "bitmap\n");
-> >> +	} else if (mddev->pers) {
-> >> +		if (mddev->pers->sync_request)
-> >> +			ret = sprintf(page, "resync\n");
-> >> +		else
-> >> +			ret = sprintf(page, "none\n");
-> >> +	} else {
-> >> +		ret = sprintf(page, "unknown\n");
-> >> +	}
-> >> +
-> >> +	return ret;
-> >> +}
-> >> +
-> >> +static ssize_t
-> >> +consistency_policy_store(struct mddev *mddev, const char *buf, size_t len)
-> >> +{
-> >> +	if (mddev->pers) {
-> >> +		return -EBUSY;
-> >> +	} else if (mddev->external && strncmp(buf, "ppl", 3) == 0) {
-> >> +		set_bit(MD_HAS_PPL, &mddev->flags);
-> >> +		return len;
-> > 
-> > Here we should check if ppl position and size are valid before we set the flag.
-> > 
-> > And shouldn't we move this part to .change_consistency_policy added in patch 9?
-> > This is a consistency policy change too.
 > 
-> Yes, but here the array is not started yet and we don't have the
-> personality for which to call .change_consistency_policy. We are not
-> changing the consistency policy here, but rather setting it initially
-> for an external metadata array.
+> On 02/08/2017 12:55 AM, Shaohua Li wrote:
+>> Currently MD is rebusing some bio fields. To remove the hack, we attach
+>> extra data to each bio. Each personablity can attach extra data to the
+>> bios, so we don't need to rebuse bio fields.
+> 
+> rebuse? Maybe it should be reuse, or abuse.
+> 
+imho abuse
 
-Ok, makes sense.
+also
+c/personablity/personality/
 
-Thanks,
-Shaohua
+Cheers,
+Wol
+
