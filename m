@@ -1,35 +1,32 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: [PATCH 1/5] MD: attach data to each bio
-Date: Thu, 9 Feb 2017 00:09:26 +0000
-Message-ID: <589BB336.1040203@youngman.org.uk>
-References: <cover.1486485935.git.shli@fb.com>
- <79515b1372fa1a1813c00ef0d7e0613a4512183d.1486485935.git.shli@fb.com>
- <589ADFEC.1070902@suse.com>
+From: Binoy Jayan <binoy.jayan@linaro.org>
+Subject: Re: [RFC PATCH v4] IV Generation algorithms for dm-crypt
+Date: Thu, 9 Feb 2017 14:00:36 +0530
+Message-ID: <CAHv-k__7ks245eB8ZvnTjni_+25bf_hZjCn67_h970nC2ndYQQ@mail.gmail.com>
+References: <1486463731-6224-1-git-send-email-binoy.jayan@linaro.org> <CAOtvUMcN8s886978vE6T=AE79KkZsLBnXsmhewnb5PB0UyAG3A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <589ADFEC.1070902@suse.com>
+In-Reply-To: <CAOtvUMcN8s886978vE6T=AE79KkZsLBnXsmhewnb5PB0UyAG3A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>, Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
-Cc: khlebnikov@yandex-team.ru, hch@lst.de, neilb@suse.com
+To: Gilad Ben-Yossef <gilad@benyossef.com>
+Cc: Oded <oded.golombek@arm.com>, Ofir <Ofir.Drang@arm.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, linux-crypto@vger.kernel.org, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Linux kernel mailing list <linux-kernel@vger.kernel.org>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Rajendra <rnayak@codeaurora.org>, Milan Broz <gmazyland@gmail.com>
 List-Id: linux-raid.ids
 
-On 08/02/17 09:07, Guoqing Jiang wrote:
-> 
-> 
-> On 02/08/2017 12:55 AM, Shaohua Li wrote:
->> Currently MD is rebusing some bio fields. To remove the hack, we attach
->> extra data to each bio. Each personablity can attach extra data to the
->> bios, so we don't need to rebuse bio fields.
-> 
-> rebuse? Maybe it should be reuse, or abuse.
-> 
-imho abuse
+On 8 February 2017 at 13:02, Gilad Ben-Yossef <gilad@benyossef.com> wrote:
+>
+> Ran Bonnie++ on it last night  (Luks mode, plain64, Qemu Virt platform
+> Arm64) and it works just fine.
+>
+> Tested-by: Gilad Ben-Yossef <gilad@benyossef.com>
+>
 
-also
-c/personablity/personality/
+Hi Gilad,
 
-Cheers,
-Wol
+Thank you for testing it. Do you have access to a device having crypto
+hardware with IV generation capability and associated drivers for let
+say, aes with cbc or any another mode? I was wondering if I can customize
+it to work with dm-crypt by generating IVs automatically. Please let
+me know your thoughts.
 
+Thanks,
+Binoy
