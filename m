@@ -1,105 +1,92 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: ANNOUNCE: mdadm 4.0 - A tool for managing md Soft RAID under
- Linux
-Date: Mon, 13 Feb 2017 12:44:11 -0500
-Message-ID: <ab936987-8589-e497-b56e-525c1608ed1f@gmail.com>
-References: <1cd97490-e650-d98b-466a-095292dc5b98@gmail.com>
- <58751E90.5090306@gmail.com> <20170111165241.yavdwc57v6yodx7g@kernel.org>
- <b2808c47-5180-818d-87d9-ab28f699234e@gmail.com> <587704FC.6030701@suse.com>
- <4eb83aa0-6245-d499-f18a-e8456aad9f98@gmail.com>
- <6504747e-c49e-dc54-64a6-bce2220daffc@suse.com>
- <f578e46d-8e76-0335-332b-3d90aa7848cf@suse.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH 1/5] MD: attach data to each bio
+Date: Mon, 13 Feb 2017 10:49:42 -0800
+Message-ID: <20170213184942.x3s2hawueq3ryzj3@kernel.org>
+References: <cover.1486485935.git.shli@fb.com>
+ <79515b1372fa1a1813c00ef0d7e0613a4512183d.1486485935.git.shli@fb.com>
+ <87r336tw5l.fsf@notabene.neil.brown.name>
+ <20170210064715.tpr5mzvccmgxz2af@kernel.org>
+ <8760ke4dzm.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f578e46d-8e76-0335-332b-3d90aa7848cf@suse.com>
+Content-Disposition: inline
+In-Reply-To: <8760ke4dzm.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: zhilong <zlliu@suse.com>, Bruce Dubbs <bruce.dubbs@gmail.com>, "Brown, Neil" <neilb@suse.com>
-Cc: Guoqing Jiang <gqjiang@suse.com>, Shaohua Li <shli@kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: NeilBrown <neilb@suse.com>
+Cc: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org, khlebnikov@yandex-team.ru, hch@lst.de
 List-Id: linux-raid.ids
 
-On 02/13/2017 12:54 AM, zhilong wrote:
-> On 02/13/2017 01:08 PM, zhilong wrote:
->> Hi, Jes;
->> On 01/13/2017 12:41 AM, Jes Sorensen wrote:
->>> On 01/11/17 23:24, Guoqing Jiang wrote:
->>>>
->>>> On 01/12/2017 12:59 AM, Jes Sorensen wrote:
->>>>> On 01/11/17 11:52, Shaohua Li wrote:
->>>>>> On Tue, Jan 10, 2017 at 11:49:04AM -0600, Bruce Dubbs wrote:
->>>>>>> Jes Sorensen wrote:
->>>>>>>> I am pleased to announce the availability of
->>>>>>>>       mdadm version 4.0
->>>>>>>>
->>>>>>>> It is available at the usual places:
->>>>>>>> http://www.kernel.org/pub/linux/utils/raid/mdadm/
->>>>>>>> and via git at
->>>>>>>> git://git.kernel.org/pub/scm/utils/mdadm/mdadm.git
->>>>>>>>       http://git.kernel.org/cgit/utils/mdadm/
->>>>>>>>
->>>>>>>> The update in major version number primarily indicates this is a
->>>>>>>> release by it's new maintainer. In addition it contains a large
->>>>>>>> number
->>>>>>>> of fixes in particular for IMSM RAID and clustered RAID
->>>>>>>> support.  In
->>>>>>>> addition this release includes support for IMSM 4k sector drives,
->>>>>>>> failfast and better documentation for journaled RAID.
->>>>>>> Thank you for the new release.  Unfortunately I get 9 failures
->>>>>>> running the
->>>>>>> test suite:
->>>>>>>
->>>>>>> tests/00raid1...          FAILED
->>>>>>> tests/07autoassemble...   FAILED
->>>>>>> tests/07changelevels...   FAILED
->>>>>>> tests/07revert-grow...    FAILED
->>>>>>> tests/07revert-inplace... FAILED
->>>>>>> tests/07testreshape5...   FAILED
->>>>>>> tests/10ddf-fail-twice... FAILED
->>>>>>> tests/20raid5journal...   FAILED
->>>>>>> tests/10ddf-incremental-wrong-order...  FAILED
->>>>>> Yep, several tests usually fail. It appears some checks aren't always
->>>>>> good.  At
->>>>>> least the 'check' function for reshape/resync isn't reliable in my
->>>>>> test, I saw
->>>>>> 07changelevelintr fails frequently.
->>>>> That is my experience as well - some of them are affected by the
->>>>> kernel
->>>>> version too. We probably need to look into making them more reliable.
->>>> If possible, it could be a potential topic for lsf/mm raid
->>>> discussion as
->>>> Coly suggested
->>>> in previous mail.
->>>>
->>>> Is current test can run the test for different raid level, say, "./test
->>>> --raidtype=raid1" could
->>>> execute all the *r1* tests, does it make sense to do it if we don't
->>>> support it now.
->>> We could have a discussion about this at LSF/MM, if someone is willing
->>> to sponsor getting it accepted and we can get the right people there.
->>>
->>> Note that the test suite also allows you to run all the 01 tests by
->>> specifying ./test 01. I do like to see the test suite improved and made
->>> more resilient.
->> I'm sorry for my late response, I'm just back to work today from
->> vacation. In the past months, I learned and worked for cluster-md
->> feature,
->> and I have draft one test suit for cluster-md feature. please refer to
->> https://github.com/zhilongliu/clustermd-autotest
->> I'm very willing to do something for improving mdadm testing part,
->> also wanna improve cluster-md test suit, welcome all comments for it.
->>
->   I would keep making cluster-md test scripts more and more stable, and
-> finally apply to integrate into mdadm test part. :-)
+On Mon, Feb 13, 2017 at 08:49:33PM +1100, Neil Brown wrote:
+> On Thu, Feb 09 2017, Shaohua Li wrote:
+> 
+> > On Fri, Feb 10, 2017 at 05:08:54PM +1100, Neil Brown wrote:
+> >> On Tue, Feb 07 2017, Shaohua Li wrote:
+> >> 
+> >> > Currently MD is rebusing some bio fields. To remove the hack, we attach
+> >> > extra data to each bio. Each personablity can attach extra data to the
+> >> > bios, so we don't need to rebuse bio fields.
+> >> 
+> >> I must say that I don't really like this approach.
+> >> Temporarily modifying ->bi_private and ->bi_end_io seems
+> >> .... intrusive.   I suspect it works, but I wonder if it is really
+> >> robust in the long term.
+> >> 
+> >> How about a different approach..  Your main concern with my first patch
+> >> was that it called md_write_start() and md_write_end() much more often,
+> >> and these performed atomic ops on "global" variables, particular
+> >> writes_pending.
+> >> 
+> >> We could change writes_pending to a per-cpu array which we only count
+> >> occasionally when needed.  As writes_pending is updated often and
+> >> checked rarely, a per-cpu array which is summed on demand seems
+> >> appropriate.
+> >> 
+> >> The following patch is an early draft - it doesn't obviously fail and
+> >> isn't obviously wrong to me.  There is certainly room for improvement
+> >> and may be bugs.
+> >> Next week I'll work on collection the re-factoring into separate
+> >> patches, which are possible good-to-have anyway.
+> >
+> > For your first patch, I don't have much concern. It's ok to me. What I don't
+> > like is the bi_phys_segments handling part. The patches add a lot of logic to
+> > handle the reference count. They should work, but I'd say it's not easy to
+> > understand and could be error prone. What we really need is a reference count
+> > for the bio, so let's just add a reference count. That's my logic and it's
+> > simple.
+> 
+> We already have two reference counts, and you want to add a third one.
+> 
+> bi_phys_segments is currently used for two related purposes.
+> It counts the number of stripe_heads currently attached to the bio so
+> that when the count reaches zero:
+>  1/ ->writes_pending can be decremented
+>  2/ bio_endio() can be called.
+> 
+> When the code was written, the __bi_remaining counter didn't exist.  Now
+> it does and it is integrated with bio_endio() so it should make the code
+> easier to understand if we just use bio_endio() rather and doing our own
+> accounting.
+> 
+> That just leaves '1'.  We can easily decrement ->writes_pending directly
+> instead of decrementing a per-bio refcount, and then when it reaches
+> zero, decrement ->writes_pending.  As you pointed out, that comes with a
+> cost.  If ->writes_pending is changed to a per-cpu array which is summed
+> on demand, the cost goes away.
+> 
+> Having an extra refcount in the bio just adds a level of indirection
+> that doesn't (that I can see) provide actual value.
 
-I'd very much like to see work to improve the test suite, so that is great.
+Ok, fair enough. I do think an explict counter in the driver side will help us
+a lot, eg, we can better control when to endio and do something there (for
+example the current blk trace, or something we want to add in the future). But
+I don't insist currently.
 
-Once you have the test suites ready, please post patches and I shall be 
-happy to implement them.
+For the patches, can you repost? I think:
+- patch 2 missed md_write_start for make_discard_request
+- It's unnecessary to zero bi_phys_segments in patch 5. And raid5-cache need do
+  the same change of bio_endio.
+For the md_write_start optimization, we can do it later.
 
-Please make sure to test that they don't break if people haven't built 
-cluster support into their kernels.
-
-Cheers,
-Jes
-
+Thanks,
+Shaohua
