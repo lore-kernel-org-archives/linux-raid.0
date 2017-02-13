@@ -1,33 +1,59 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/5] MD: attach data to each bio
-Date: Mon, 13 Feb 2017 08:37:24 +0100
-Message-ID: <20170213073724.GA16666@lst.de>
-References: <cover.1486485935.git.shli@fb.com> <79515b1372fa1a1813c00ef0d7e0613a4512183d.1486485935.git.shli@fb.com> <87r336tw5l.fsf@notabene.neil.brown.name>
+From: Chien Lee <chienlee@qnap.com>
+Subject: Enable the skip_copy feature will results in data integrity issue in
+ raid5 degraded mode.
+Date: Mon, 13 Feb 2017 17:07:45 +0800
+Message-ID: <CAByoP04pSvxrb_ubNXjaneHvBMPVrMyMj5QgmBSfXsCa4D=5AA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87r336tw5l.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org, khlebnikov@yandex-team.ru, hch@lst.de
+To: linux-raid@vger.kernel.org, NeilBrown <neilb@suse.com>, shli@kernel.org, owner-linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Feb 10, 2017 at 05:08:54PM +1100, NeilBrown wrote:
-> I must say that I don't really like this approach.
-> Temporarily modifying ->bi_private and ->bi_end_io seems
-> .... intrusive.   I suspect it works, but I wonder if it is really
-> robust in the long term.
-> 
-> How about a different approach..  Your main concern with my first patch
-> was that it called md_write_start() and md_write_end() much more often,
-> and these performed atomic ops on "global" variables, particular
-> writes_pending.
-> 
-> We could change writes_pending to a per-cpu array which we only count
-> occasionally when needed.  As writes_pending is updated often and
-> checked rarely, a per-cpu array which is summed on demand seems
-> appropriate.
+Hello,
 
-FYI, I much prefer you original approach, it's much closer to how
-the rest of the block stack works. 
+
+Recently we find a bug about skip_copy feature in raid5 degraded mode.
+In the beginning, we enable the skip_copy feature to speed up system=E2=80=
+=99s
+write performance. But when the system has database read/write I/O
+continually in raid5 degraded mode, the Mongo DB will detect the
+checksum error and generate related debug log. The following is the
+testing detail.
+
+
+a. Enable skip_copy
+    --> Checksum error logs from Mongo DB
+
+2017-02-06T11:54:56.537+0800 E STORAGE  [conn7] WiredTiger (0)
+[1486353296:537114][52:0x7f98396a4700],
+file:collection-110-3235234017846331078.wt,  WT_CURSOR.next: read
+checksum error for 4096B block at offset 61440: calculated block
+checksum of 1363526237 doesn't match expected checksum of 2969711960
+
+
+b. Disable skip_copy
+    --> Mongo DB has no checksum error.
+
+
+We've pretty sure that it must be a bug by our repeated database I/O
+testing. When skip_copy feature is enabled, the raid5/raid6 always
+causes the mongo DB checksum error in degraded mode less than one
+hour. On the contrary, it will never cause this abnormal situation
+when the skip_copy feature is disabled. Besides, because the skip_copy
+feature only affects the write action instead of read action, I think
+it should be the write action in degraded mode while skip_copy feature
+is enabled cause this bug.
+
+
+Please kindly provide us some help or idea about the root cause and solutio=
+n.
+
+
+Thanks,
+
+
+--=20
+
+Chien Lee
