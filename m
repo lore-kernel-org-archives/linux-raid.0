@@ -1,40 +1,71 @@
-From: Shaohua Li <shli@fb.com>
-Subject: [PATCH --resend 2/2] md/multipath: disable WRITE SAME if it fails for multipath
-Date: Mon, 13 Feb 2017 11:55:48 -0800
-Message-ID: <0c162e2280760e1af0f34d58fb90f2b723d5ae9d.1487015420.git.shli@fb.com>
-References: <cover.1487015420.git.shli@fb.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cover.1487015420.git.shli@fb.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.com
+From: Ram Pai <linuxram@us.ibm.com>
+Subject: [PATCH v4] DM: dm-inplace-compress: inplace compressed DM target
+Date: Mon, 13 Feb 2017 12:42:24 -0800
+Message-ID: <1487018545-5061-1-git-send-email-linuxram@us.ibm.com>
+Return-path: <linux-doc-owner@vger.kernel.org>
+Sender: linux-doc-owner@vger.kernel.org
+To: linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org
+Cc: agk@redhat.com, snitzer@redhat.com, corbet@lwn.net, shli@kernel.org, hbabu@us.ibm.com, linuxram@us.ibm.com
 List-Id: linux-raid.ids
 
-This is the part for multipath. Since multipatch already attaches
-private data into original bio, we just disable write same there.
+This  patch   provides   a   generic  device-mapper  compression device.
+Originally written by Shaohua Li.
+https://www.redhat.com/archives/dm-devel/2013-December/msg00143.html
 
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- drivers/md/multipath.c | 4 ++++
- 1 file changed, 4 insertions(+)
+I have optimized and hardened the code.
 
-diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
-index aa8c4e5c..5ee9579 100644
---- a/drivers/md/multipath.c
-+++ b/drivers/md/multipath.c
-@@ -89,6 +89,10 @@ static void multipath_end_request(struct bio *bio)
- 	struct mpconf *conf = mp_bh->mddev->private;
- 	struct md_rdev *rdev = conf->multipaths[mp_bh->path].rdev;
- 
-+	if (bio_op(bio) == REQ_OP_WRITE_SAME && bio->bi_error == -EREMOTEIO &&
-+	    !bdev_get_queue(bio->bi_bdev)->limits.max_write_same_sectors)
-+		mp_bh->mddev->queue->limits.max_write_same_sectors = 0;
-+
- 	if (!bio->bi_error)
- 		multipath_end_bh_io(mp_bh, 0);
- 	else if (!(bio->bi_opf & REQ_RAHEAD)) {
+Testing:
+-------
+This compression block device  is   tested in  the  following scenarios
+a) backing a ext4 filesystem 
+b) backing swap
+Its further stress tested on PPC64 and x86 system.
+
+Version v4:
+	fixed kbuild errors; hopefully they are all taken care off.
+       	  - no reference to zero_page
+	  - convert all divide and mod operations to bit operations
+
+Version v3:
+	Fixed  sector  alignment  bugs  exposed  while   testing on x86.
+	Explicitly set the maximum request size  to 128K.  Without which
+	range  locking  failed,  causing  I/Os  to  stamp   each  other.
+	Fixed an occasional data corruption  caused by wrong size of the
+	compression buffer.
+	Added  a   parameter   while  creation  of  the   block  device, 
+	to  not  sleep   during  memory  allocations. This can be useful
+       	if the device is used as a swap device.
+
+Version v2:
+	All patches are merged into a single patch.
+	Major code re-arrangement.
+	Data and metablocks allocated based on the length of the device
+	map rather than the size of the backing device.
+        Size   of   each entry   in  the bitmap array is explicitly set
+	 to 32bits.
+	Attempt  to  reuse  the  provided  bio  buffer  space   instead
+	 of allocating a new one.
+
+Version v1:
+	Comments from Alasdair have been incorporated.
+	https://www.redhat.com/archives/dm-devel/2013-December/msg00144.html
+
+Your  comments  to  improve  the  code  is  very  much  appreciated. Will be 
+requesting for merge if I do not receive any comments.
+
+Ram Pai (1):
+  From: Shaohua Li <shli@kernel.org>
+
+ .../device-mapper/dm-inplace-compress.txt          |  155 ++
+ drivers/md/Kconfig                                 |    6 +
+ drivers/md/Makefile                                |    2 +
+ drivers/md/dm-inplace-compress.c                   | 2214 ++++++++++++++++++++
+ drivers/md/dm-inplace-compress.h                   |  187 ++
+ 5 files changed, 2564 insertions(+)
+ create mode 100644 Documentation/device-mapper/dm-inplace-compress.txt
+ create mode 100644 drivers/md/dm-inplace-compress.c
+ create mode 100644 drivers/md/dm-inplace-compress.h
+
 -- 
-2.9.3
+1.8.3.1
 
