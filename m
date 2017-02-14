@@ -1,69 +1,56 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: Which API for md state monitoring - sysfs vs. /proc/mdstat vs.
- GET_DISK_INFO ioctl
-Date: Tue, 14 Feb 2017 16:26:09 +0100
-Message-ID: <fb552c09-ec92-2ba3-fd91-052ff130ae8b@suse.de>
-References: <994ffd50-9041-a5e0-bbd9-1db704f6ad63@buttersideup.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <994ffd50-9041-a5e0-bbd9-1db704f6ad63@buttersideup.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Tim Small <tim@buttersideup.com>, linux-raid@vger.kernel.org
-Cc: shli@kernel.org
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: [PATCH v2 0/5] md: use bio_clone_fast()
+Date: Tue, 14 Feb 2017 23:28:58 +0800
+Message-ID: <1487086143-10255-1-git-send-email-tom.leiming@gmail.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, NeilBrown <neilb@suse.com>
+Cc: Ming Lei <tom.leiming@gmail.com>
 List-Id: linux-raid.ids
 
-On 02/14/2017 03:43 PM, Tim Small wrote:
-> Hello,
-> 
-> A design question for a user-space RAID monitoring tool.  The tool is
-> intended to export machine-readable md state so that the system owners
-> can creating automated alert policies etc.
-> 
-> Should it get its information on md device state from /proc/mdstat, or
-> /sys/block/*/md/ as a data source, or should it use the ioctl interface
-> that mdadm uses (on the basis that this is more complete / heavily tested).
-> 
-> I assume the issues are:
-> 
-> . usability (/proc/mdstat is intended to be human-readable so machine
-> parsing it seems bleugh - it's also incomplete?)
-> 
-Yes.
+Hi,
 
-> . stability (perhaps /sys/block/*/md/ is less stable than the ioctl or
-> proc interface?  Or perhaps it's just fine and won't break in
-> backward-incompatible ways?).
-> 
-I'm not sure if there are any guarantees here; we _try_ to keep the
-sysfs interface stable, but ...
+This patches replaces bio_clone() with bio_fast_clone() in
+bio_clone_mddev() because:
 
-> Any thoughts?
-> 
-> Should I see which way the recent "add bad block flag to disk state"
-> patch-set thread goes?
-> 
-Hehe.
+1) bio_clone_mddev() is used in raid normal I/O and isn't in
+resync I/O path, and all the direct access to bvec table in
+raid happens on resync I/O only except for write behind of raid1.
+Write behind is treated specially, so the replacement is safe.
 
-Unfortunately the only tool able to provide a consistent view of the MD
-RAID status is called 'mdadm'.
+2) for write behind, bio_clone() is kept, but this patchset
+introduces bio_clone_bioset_partial() to just clone one specific 
+bvecs range instead of whole table. Then write behind is improved
+too.
 
-Problem is that you each of the various interfaces (ioctl, /proc/mdstat,
-/sys/block/*/md) provides you with different information. So your
-userspace tool would need to parse all of these information sources to
-get a consistent view.
+V2:
+	1) move 3rd patch into 2nd one
+	2) kill  bio_clone_mddev() and use  bio_clone_fast() directly
+	3) define local variable 'offset' as sector_t in raid1_write_request()
 
-I did a similar thing myself for my md_monitor program
-(github.com:/hreinecke/md_monitor.git), so you could have a look there
-for some further information.
+V1:
+	1) don't introduce bio_clone_slow_mddev_partial()
+	2) return failure if mddev->bio_set can't be created
+	3) remove check in bio_clone_mddev() as suggested by
+	Christoph Hellwig.
+	4) rename bio_clone_mddev() as bio_clone_fast_mddev()
 
-Cheers,
+Ming Lei (5):
+  block: introduce bio_clone_bioset_partial()
+  md: fail if mddev->bio_set can't be created
+  md/raid1: use bio_clone_bioset_partial() in case of write behind
+  md: remove unnecessary check on mddev
+  md: fast clone bio in bio_clone_mddev()
 
-Hannes
+ block/bio.c         | 61 +++++++++++++++++++++++++++++++++++++++++------------
+ drivers/md/faulty.c |  2 +-
+ drivers/md/md.c     | 15 ++++---------
+ drivers/md/md.h     |  2 --
+ drivers/md/raid1.c  | 28 +++++++++++++++++-------
+ drivers/md/raid10.c | 11 +++++-----
+ drivers/md/raid5.c  |  4 ++--
+ include/linux/bio.h | 11 ++++++++--
+ 8 files changed, 89 insertions(+), 45 deletions(-)
+
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+2.7.4
