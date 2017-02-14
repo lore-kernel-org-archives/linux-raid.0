@@ -1,88 +1,60 @@
-From: Ram Pai <linuxram@us.ibm.com>
-Subject: Re: [PATCH v4 1/1] DM: inplace compressed DM target (fwd)
-Date: Tue, 14 Feb 2017 09:56:41 -0800
-Message-ID: <20170214175641.GA10603@ram.oc3035372033.ibm.com>
-References: <alpine.DEB.2.20.1702140707530.2033@hadrien>
-Reply-To: Ram Pai <linuxram@us.ibm.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: Enable the skip_copy feature will results in data integrity
+ issue in raid5 degraded mode.
+Date: Tue, 14 Feb 2017 11:48:51 -0800
+Message-ID: <20170214194851.3txkw3nrcxczejyv@kernel.org>
+References: <CAByoP04pSvxrb_ubNXjaneHvBMPVrMyMj5QgmBSfXsCa4D=5AA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.20.1702140707530.2033@hadrien>
+In-Reply-To: <CAByoP04pSvxrb_ubNXjaneHvBMPVrMyMj5QgmBSfXsCa4D=5AA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Julia Lawall <julia.lawall@lip6.fr>
-Cc: linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, agk@redhat.com, snitzer@redhat.com, corbet@lwn.net, shli@kernel.org, hbabu@us.ibm.com
+To: Chien Lee <chienlee@qnap.com>
+Cc: linux-raid@vger.kernel.org, NeilBrown <neilb@suse.com>, owner-linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Feb 14, 2017 at 07:09:04AM +0100, Julia Lawall wrote:
-> On line 1759, since ret is unsigned it will not be less than 0.
+On Mon, Feb 13, 2017 at 05:07:45PM +0800, Chien Lee wrote:
+> Hello,
+> 
+> 
+> Recently we find a bug about skip_copy feature in raid5 degraded mode.
+> In the beginning, we enable the skip_copy feature to speed up system’s
+> write performance. But when the system has database read/write I/O
+> continually in raid5 degraded mode, the Mongo DB will detect the
+> checksum error and generate related debug log. The following is the
+> testing detail.
+> 
+> 
+> a. Enable skip_copy
+>     --> Checksum error logs from Mongo DB
+> 
+> 2017-02-06T11:54:56.537+0800 E STORAGE  [conn7] WiredTiger (0)
+> [1486353296:537114][52:0x7f98396a4700],
+> file:collection-110-3235234017846331078.wt,  WT_CURSOR.next: read
+> checksum error for 4096B block at offset 61440: calculated block
+> checksum of 1363526237 doesn't match expected checksum of 2969711960
+> 
+> 
+> b. Disable skip_copy
+>     --> Mongo DB has no checksum error.
+> 
+> 
+> We've pretty sure that it must be a bug by our repeated database I/O
+> testing. When skip_copy feature is enabled, the raid5/raid6 always
+> causes the mongo DB checksum error in degraded mode less than one
+> hour. On the contrary, it will never cause this abnormal situation
+> when the skip_copy feature is disabled. Besides, because the skip_copy
+> feature only affects the write action instead of read action, I think
+> it should be the write action in degraded mode while skip_copy feature
+> is enabled cause this bug.
+> 
+> 
+> Please kindly provide us some help or idea about the root cause and solution.
 
-Thanks fixed it. Infact noticed that dm_icomp_io_range_compress() had missed a case where
-it was supposed to return error; a negative number.  Fixed that aswell.
+Thanks for the reporting, I'll look at it. In the meaning time, do you have a
+quick way which I can use to reproduce the issue?
 
-RP
-
-> 
-> julia
-> 
-> ---------- Forwarded message ----------
-> Date: Tue, 14 Feb 2017 09:00:39 +0800
-> From: kbuild test robot <fengguang.wu@intel.com>
-> To: kbuild@01.org
-> Cc: Julia Lawall <julia.lawall@lip6.fr>
-> Subject: Re: [PATCH v4 1/1] DM: inplace compressed DM target
-> 
-> CC: kbuild-all@01.org
-> In-Reply-To: <1487018545-5061-2-git-send-email-linuxram@us.ibm.com>
-> 
-> Hi Ram,
-> 
-> [auto build test WARNING on dm/for-next]
-> [also build test WARNING on v4.10-rc8 next-20170213]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-> 
-> url:    https://github.com/0day-ci/linux/commits/Ram-Pai/DM-inplace-compressed-DM-target/20170214-055727
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/device-mapper/linux-dm.git for-next
-> :::::: branch date: 3 hours ago
-> :::::: commit date: 3 hours ago
-> 
-> >> drivers/md/dm-inplace-compress.c:1759:5-8: WARNING: Unsigned expression compared with zero: ret < 0
-> 
-> git remote add linux-review https://github.com/0day-ci/linux
-> git remote update linux-review
-> git checkout e7924efaaba5efdcd28f32efbb949ed1153c932c
-> vim +1759 drivers/md/dm-inplace-compress.c
-> 
-> e7924efa Ram Pai 2017-02-13  1743   * @io : io range
-> e7924efa Ram Pai 2017-02-13  1744   * @sector_start : the sector on backing storage to which the
-> e7924efa Ram Pai 2017-02-13  1745   *	compressed data needs to be written.
-> e7924efa Ram Pai 2017-02-13  1746   * @meta_start: the page index of the bits corresponding to
-> e7924efa Ram Pai 2017-02-13  1747   * @meta_end  : start and end blocks.
-> e7924efa Ram Pai 2017-02-13  1748   */
-> e7924efa Ram Pai 2017-02-13  1749  static int dm_icomp_compress_write(struct dm_icomp_io_range *io,
-> e7924efa Ram Pai 2017-02-13  1750  		sector_t sector_start, u64 *meta_start, u64 *meta_end)
-> e7924efa Ram Pai 2017-02-13  1751  {
-> e7924efa Ram Pai 2017-02-13  1752  	struct dm_icomp_req *req = io->req;
-> e7924efa Ram Pai 2017-02-13  1753  	sector_t count = DMCP_BYTES_TO_SECTOR(io->decomp_len);
-> e7924efa Ram Pai 2017-02-13  1754  	unsigned int comp_len, ret;
-> e7924efa Ram Pai 2017-02-13  1755  	u64 page_index;
-> e7924efa Ram Pai 2017-02-13  1756
-> e7924efa Ram Pai 2017-02-13  1757  	/* comp_data must be able to accommadate a larger compress buffer */
-> e7924efa Ram Pai 2017-02-13  1758  	ret = dm_icomp_io_range_compress(req->info, io, &comp_len);
-> e7924efa Ram Pai 2017-02-13 @1759  	if (ret < 0) {
-> e7924efa Ram Pai 2017-02-13  1760  		req->result = -EIO;
-> e7924efa Ram Pai 2017-02-13  1761  		return -EIO;
-> e7924efa Ram Pai 2017-02-13  1762  	}
-> e7924efa Ram Pai 2017-02-13  1763  	WARN_ON(comp_len > io->comp_len);
-> e7924efa Ram Pai 2017-02-13  1764
-> e7924efa Ram Pai 2017-02-13  1765  	dm_icomp_get_req(req);
-> e7924efa Ram Pai 2017-02-13  1766
-> e7924efa Ram Pai 2017-02-13  1767  	io->io_req.bi_op = REQ_OP_WRITE;
-> 
-> ---
-> 0-DAY kernel test infrastructure                Open Source Technology Center
-> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
-
--- 
-Ram Pai
-
+Thanks,
+Shaohua
