@@ -1,15 +1,16 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH V2] md: disable WRITE SAME if it fails in underlayer disks
-Date: Tue, 14 Feb 2017 13:39:30 +1100
-Message-ID: <87y3x9338d.fsf@notabene.neil.brown.name>
-References: <728f3fb3d63e6c9512a68fe5fdc61812d95aa2bd.1487031632.git.shli@fb.com>
+Subject: Re: [PATCH 1/5] MD: attach data to each bio
+Date: Tue, 14 Feb 2017 13:40:30 +1100
+Message-ID: <87vasd336p.fsf@notabene.neil.brown.name>
+References: <cover.1486485935.git.shli@fb.com> <79515b1372fa1a1813c00ef0d7e0613a4512183d.1486485935.git.shli@fb.com> <87r336tw5l.fsf@notabene.neil.brown.name> <20170210064715.tpr5mzvccmgxz2af@kernel.org> <8760ke4dzm.fsf@notabene.neil.brown.name> <20170213184942.x3s2hawueq3ryzj3@kernel.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <728f3fb3d63e6c9512a68fe5fdc61812d95aa2bd.1487031632.git.shli@fb.com>
+In-Reply-To: <20170213184942.x3s2hawueq3ryzj3@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org, khlebnikov@yandex-team.ru, hch@lst.de
 List-Id: linux-raid.ids
 
 --=-=-=
@@ -18,113 +19,116 @@ Content-Transfer-Encoding: quoted-printable
 
 On Mon, Feb 13 2017, Shaohua Li wrote:
 
-> This makes md do the same thing as dm for write same IO failure. Please
-> see 7eee4ae(dm: disable WRITE SAME if it fails) for details why we need
-> this.
+> On Mon, Feb 13, 2017 at 08:49:33PM +1100, Neil Brown wrote:
+>> On Thu, Feb 09 2017, Shaohua Li wrote:
+>>=20
+>> > On Fri, Feb 10, 2017 at 05:08:54PM +1100, Neil Brown wrote:
+>> >> On Tue, Feb 07 2017, Shaohua Li wrote:
+>> >>=20
+>> >> > Currently MD is rebusing some bio fields. To remove the hack, we at=
+tach
+>> >> > extra data to each bio. Each personablity can attach extra data to =
+the
+>> >> > bios, so we don't need to rebuse bio fields.
+>> >>=20
+>> >> I must say that I don't really like this approach.
+>> >> Temporarily modifying ->bi_private and ->bi_end_io seems
+>> >> .... intrusive.   I suspect it works, but I wonder if it is really
+>> >> robust in the long term.
+>> >>=20
+>> >> How about a different approach..  Your main concern with my first pat=
+ch
+>> >> was that it called md_write_start() and md_write_end() much more ofte=
+n,
+>> >> and these performed atomic ops on "global" variables, particular
+>> >> writes_pending.
+>> >>=20
+>> >> We could change writes_pending to a per-cpu array which we only count
+>> >> occasionally when needed.  As writes_pending is updated often and
+>> >> checked rarely, a per-cpu array which is summed on demand seems
+>> >> appropriate.
+>> >>=20
+>> >> The following patch is an early draft - it doesn't obviously fail and
+>> >> isn't obviously wrong to me.  There is certainly room for improvement
+>> >> and may be bugs.
+>> >> Next week I'll work on collection the re-factoring into separate
+>> >> patches, which are possible good-to-have anyway.
+>> >
+>> > For your first patch, I don't have much concern. It's ok to me. What I=
+ don't
+>> > like is the bi_phys_segments handling part. The patches add a lot of l=
+ogic to
+>> > handle the reference count. They should work, but I'd say it's not eas=
+y to
+>> > understand and could be error prone. What we really need is a referenc=
+e count
+>> > for the bio, so let's just add a reference count. That's my logic and =
+it's
+>> > simple.
+>>=20
+>> We already have two reference counts, and you want to add a third one.
+>>=20
+>> bi_phys_segments is currently used for two related purposes.
+>> It counts the number of stripe_heads currently attached to the bio so
+>> that when the count reaches zero:
+>>  1/ ->writes_pending can be decremented
+>>  2/ bio_endio() can be called.
+>>=20
+>> When the code was written, the __bi_remaining counter didn't exist.  Now
+>> it does and it is integrated with bio_endio() so it should make the code
+>> easier to understand if we just use bio_endio() rather and doing our own
+>> accounting.
+>>=20
+>> That just leaves '1'.  We can easily decrement ->writes_pending directly
+>> instead of decrementing a per-bio refcount, and then when it reaches
+>> zero, decrement ->writes_pending.  As you pointed out, that comes with a
+>> cost.  If ->writes_pending is changed to a per-cpu array which is summed
+>> on demand, the cost goes away.
+>>=20
+>> Having an extra refcount in the bio just adds a level of indirection
+>> that doesn't (that I can see) provide actual value.
 >
-> We did a little bit different than dm. Instead of disabling writesame in
-> the first IO error, we disable it till next writesame IO coming after
-> the first IO error. This way we don't need to clone a bio.
+> Ok, fair enough. I do think an explict counter in the driver side will he=
+lp us
+> a lot, eg, we can better control when to endio and do something there (for
+> example the current blk trace, or something we want to add in the future)=
+. But
+> I don't insist currently.
 >
-> Also reported here: https://bugzilla.kernel.org/show_bug.cgi?id=3D118581
->
-> Suggested-by: NeilBrown <neilb@suse.com>
-> Signed-off-by: Shaohua Li <shli@fb.com>
+> For the patches, can you repost? I think:
+> - patch 2 missed md_write_start for make_discard_request
+> - It's unnecessary to zero bi_phys_segments in patch 5. And raid5-cache n=
+eed do
+>   the same change of bio_endio.
+> For the md_write_start optimization, we can do it later.
 
-Looks good to be, thanks.
-  Acked-by: NeilBrown <neilb@suse.com>
+Sure. I agree those two changes are needed.  I'll try to send something
+in the next day or so.
 
 NeilBrown
 
-> ---
->  drivers/md/linear.c    | 1 +
->  drivers/md/md.h        | 7 +++++++
->  drivers/md/multipath.c | 1 +
->  drivers/md/raid0.c     | 1 +
->  4 files changed, 10 insertions(+)
+
 >
-> diff --git a/drivers/md/linear.c b/drivers/md/linear.c
-> index 26a73b2..789008b 100644
-> --- a/drivers/md/linear.c
-> +++ b/drivers/md/linear.c
-> @@ -291,6 +291,7 @@ static void linear_make_request(struct mddev *mddev, =
-struct bio *bio)
->  				trace_block_bio_remap(bdev_get_queue(split->bi_bdev),
->  						      split, disk_devt(mddev->gendisk),
->  						      bio_sector);
-> +			mddev_check_writesame(mddev, split);
->  			generic_make_request(split);
->  		}
->  	} while (split !=3D bio);
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 2a51403..42f8398 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -710,4 +710,11 @@ static inline void mddev_clear_unsupported_flags(str=
-uct mddev *mddev,
->  {
->  	mddev->flags &=3D ~unsupported_flags;
->  }
-> +
-> +static inline void mddev_check_writesame(struct mddev *mddev, struct bio=
- *bio)
-> +{
-> +	if (bio_op(bio) =3D=3D REQ_OP_WRITE_SAME &&
-> +	    !bdev_get_queue(bio->bi_bdev)->limits.max_write_same_sectors)
-> +		mddev->queue->limits.max_write_same_sectors =3D 0;
-> +}
->  #endif /* _MD_MD_H */
-> diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
-> index aa8c4e5c..065fe28 100644
-> --- a/drivers/md/multipath.c
-> +++ b/drivers/md/multipath.c
-> @@ -138,6 +138,7 @@ static void multipath_make_request(struct mddev *mdde=
-v, struct bio * bio)
->  	mp_bh->bio.bi_opf |=3D REQ_FAILFAST_TRANSPORT;
->  	mp_bh->bio.bi_end_io =3D multipath_end_request;
->  	mp_bh->bio.bi_private =3D mp_bh;
-> +	mddev_check_writesame(mddev, &mp_bh->bio);
->  	generic_make_request(&mp_bh->bio);
->  	return;
->  }
-> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> index 848365d..b3d2644 100644
-> --- a/drivers/md/raid0.c
-> +++ b/drivers/md/raid0.c
-> @@ -503,6 +503,7 @@ static void raid0_make_request(struct mddev *mddev, s=
-truct bio *bio)
->  				trace_block_bio_remap(bdev_get_queue(split->bi_bdev),
->  						      split, disk_devt(mddev->gendisk),
->  						      bio_sector);
-> +			mddev_check_writesame(mddev, split);
->  			generic_make_request(split);
->  		}
->  	} while (split !=3D bio);
-> --=20
-> 2.9.3
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Thanks,
+> Shaohua
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAliibeIACgkQOeye3VZi
-gbmLyg//YZ8MKGiS92Vep7jZiHV7iqwjh6aeSFGYbZfhKTCYNxATPWa/qOkGT7sP
-2LofMjgfv5LCY0pIjRfqbuYOeMhb1Z/vwUBGPuDJbzMfgGJfSykg0G2KTAFV7WgC
-WtRK+RE2dVPKWQ9ibY+O/shcVzpZ+Yf4mfEQ56yNOgqrn/9S/YDLX1P1NGCKOdIo
-9rSxl2le6zERRPGS1l+WhBDqCm9aEhOUtJ2Nv88pp20Gr0NHJsKyEaJ7n5FQaaPm
-QlakmizeV/boS2jsRg72xIJlQXUPES6v39Q66Xe7v0z1UHnRotLYQKJCwnQJR1gu
-lbokT+MiPaj5Wk4QMLfJ3qvAyr7/ro6XjXXeyWMBb6Z6GFl1SpclhsbStJ/PTNGV
-SVlerrLYdO032J+xG4xIw4KcS2/S3kVZu0tfVmyUbGDXrAS5zVPT9GoDHlzUrH+r
-qwcnT4J0RaRAqd/eDhYljgZ/GCWYVBzx2KH1SCDhmlS9yOUHB70AqTXbR54+TnQt
-tETrQ4oCJ8ObWU2vGMZwoI2KnaY60ZonVQs/0MxzNI3q1Tlnl4oM1maWzaF0cKQu
-cK2fD+23Q8C+zg8DbE9Ty1ELE4Y2RxA8hBqvg+TPeECtKPMmymvwcUcVw+RPQKFl
-SryECbClWDMgz/u2cLslPxA/oF8y0RNLRCbaKD3HLrJRbM92fD0=
-=Xd1i
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAliibh4ACgkQOeye3VZi
+gblimxAAlqzPSfyBysupvvyOPiPAsqduiKBX3oBd9C3LYACQiXi/TMDjZLoivJtm
+mjlSfuF/DxoA0dUxlp1Gss32786hbBjplpEU28D6nnIK3h/RMfZp0mQHbD5deA50
+GgUxmUskrTOK3r06LIlfZRu7K4fJzfZ3D9562Z/CvzVe3PKJbUylOy08ARz0U3NI
+9lGo+3GsWme70LfolS+nGO+3ReOVWk4Q+60qUK8NBDS1CaLIdcvEOupKiyGRkO+3
+jbHQEuWEHw18F5R/p/IQJtCp46KugATpz+OuGRa1K2A1H/2B3oVqNDUxpKZVthSA
+T8OxQNDMq8c+3jnwUPwUybViqcS/h5JMa9brnQvZFIU4DEcZb5iMChvbLBB12FfH
+FKx5tyc7PyXDeOpZXScQn03IlgBMJIOVNZU4JGJRiQ2bi1gyP3YQckVY7fHmruCR
+WLkhv5zwufpnnYatZHrrfkjP5Db2Kg3m1ttGGjU/g76yI4wJ4WYdilwXEplWf1ip
+8Cph4HFG+Vhq7dp+yagD5BzAM+V7w5dhFBx0KdP3Uj3SmXmy8nLWn2EXQ/f0sO/e
+DGd8VF7zT5k5WR6tmHZDzyV3Ecb8Vwkb9QRoTQdcb0TxYsCceH7wLr5M7L9oQdlc
+lxTstJ/ka2d39+KuMJHElwwhiy19baQGr2+WCkE55n4/vXXuDfc=
+=eEDH
 -----END PGP SIGNATURE-----
 --=-=-=--
