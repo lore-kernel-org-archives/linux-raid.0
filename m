@@ -1,38 +1,36 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 5/5] md: fast clone bio in bio_clone_mddev()
-Date: Tue, 14 Feb 2017 08:01:09 -0800
-Message-ID: <20170214160109.GA32705@infradead.org>
-References: <1487086143-10255-1-git-send-email-tom.leiming@gmail.com>
- <1487086143-10255-6-git-send-email-tom.leiming@gmail.com>
+Subject: Re: [PATCH v1 1/5] block: introduce bio_clone_bioset_partial()
+Date: Tue, 14 Feb 2017 08:01:51 -0800
+Message-ID: <20170214160151.GB32705@infradead.org>
+References: <1486724177-14817-1-git-send-email-tom.leiming@gmail.com>
+ <1486724177-14817-2-git-send-email-tom.leiming@gmail.com>
+ <20170213134654.GB22818@infradead.org>
+ <CACVXFVNN3Gtm4Ut5KCmx8REbMYnh3Y2+sAZPto7F40fvGyZ=zw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1487086143-10255-6-git-send-email-tom.leiming@gmail.com>
+In-Reply-To: <CACVXFVNN3Gtm4Ut5KCmx8REbMYnh3Y2+sAZPto7F40fvGyZ=zw@mail.gmail.com>
 Sender: linux-block-owner@vger.kernel.org
 To: Ming Lei <tom.leiming@gmail.com>
-Cc: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, NeilBrown <neilb@suse.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, NeilBrown <neilb@suse.com>
 List-Id: linux-raid.ids
 
-On Tue, Feb 14, 2017 at 11:29:03PM +0800, Ming Lei wrote:
-> Firstly bio_clone_mddev() is used in raid normal I/O and isn't
-> in resync I/O path.
+On Tue, Feb 14, 2017 at 09:04:26AM +0800, Ming Lei wrote:
+> On Mon, Feb 13, 2017 at 9:46 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> > On Fri, Feb 10, 2017 at 06:56:13PM +0800, Ming Lei wrote:
+> >> md still need bio clone(not the fast version) for behind write,
+> >> and it is more efficient to use bio_clone_bioset_partial().
+> >>
+> >> The idea is simple and just copy the bvecs range specified from
+> >> parameters.
+> >
+> > Given how few users bio_clone_bioset has I wonder if we shouldn't
+> > simply add the two new arguments to it instead of adding another
+> > indirection.
 > 
-> Secondly all the direct access to bvec table in raid happens on
-> resync I/O except for write behind of raid1, in which we still
-> use bio_clone() for allocating new bvec table.
-> 
-> So this patch replaces bio_clone() with bio_clone_fast()
-> in bio_clone_mddev().
-> 
-> Also kill bio_clone_mddev() and call bio_clone_fast() directly, as
-> suggested by Christoph Hellwig.
-> 
-> Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+> For md write-behind, looks we have to provide the two arguments,
+> could you explain a bit how we can do that by adding another indirection?
 
-Looks fine,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-Btw, can you also tack on another patch to kill bio_alloc_mddev
-to be consistent?
+I meant to just pass the additional arguments that 
+bio_clone_bioset_partial has to bio_clone_bioset.
