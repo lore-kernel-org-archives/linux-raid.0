@@ -1,41 +1,39 @@
-From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH] Monitor: dev should be a block file in waitclean
-Date: Tue, 14 Feb 2017 15:50:25 +0800
-Message-ID: <1487058625-28852-1-git-send-email-zlliu@suse.com>
+From: Tim Small <tim@buttersideup.com>
+Subject: Which API for md state monitoring - sysfs vs. /proc/mdstat vs.
+ GET_DISK_INFO ioctl
+Date: Tue, 14 Feb 2017 14:43:32 +0000
+Message-ID: <994ffd50-9041-a5e0-bbd9-1db704f6ad63@buttersideup.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@redhat.com
-Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
+To: linux-raid@vger.kernel.org
+Cc: shli@kernel.org
 List-Id: linux-raid.ids
 
-    mdadm --wait-clean /dev/mdX, the dev should
-    be a block file, otherwise fd2devnm returns
-    NULL and triggers core dumped.
+Hello,
 
-Signed-off-by: Zhilong Liu <zlliu@suse.com>
+A design question for a user-space RAID monitoring tool.  The tool is
+intended to export machine-readable md state so that the system owners
+can creating automated alert policies etc.
 
-diff --git a/Monitor.c b/Monitor.c
-index 802a9d9..d16ac49 100644
---- a/Monitor.c
-+++ b/Monitor.c
-@@ -1060,7 +1060,17 @@ int WaitClean(char *dev, int sock, int verbose)
- 	struct mdinfo *mdi;
- 	int rv = 1;
- 	char devnm[32];
-+	struct stat stb;
- 
-+	if (stat(dev, &stb) != 0) {
-+		pr_err("Cannot find %s: %s\n", dev,
-+			strerror(errno));
-+		return 2;
-+	}
-+	if ((S_IFMT & stb.st_mode) != S_IFBLK) {
-+		pr_err("%s is not a block device.\n", dev);
-+		return 2;
-+	}
- 	fd = open(dev, O_RDONLY);
- 	if (fd < 0) {
- 		if (verbose)
--- 
-2.6.6
+Should it get its information on md device state from /proc/mdstat, or
+/sys/block/*/md/ as a data source, or should it use the ioctl interface
+that mdadm uses (on the basis that this is more complete / heavily tested).
 
+I assume the issues are:
+
+. usability (/proc/mdstat is intended to be human-readable so machine
+parsing it seems bleugh - it's also incomplete?)
+
+. stability (perhaps /sys/block/*/md/ is less stable than the ioctl or
+proc interface?  Or perhaps it's just fine and won't break in
+backward-incompatible ways?).
+
+Any thoughts?
+
+Should I see which way the recent "add bad block flag to disk state"
+patch-set thread goes?
+
+Tim.
