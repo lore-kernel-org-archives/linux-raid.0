@@ -1,134 +1,89 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH 1/5] MD: attach data to each bio
-Date: Tue, 14 Feb 2017 13:40:30 +1100
-Message-ID: <87vasd336p.fsf@notabene.neil.brown.name>
-References: <cover.1486485935.git.shli@fb.com> <79515b1372fa1a1813c00ef0d7e0613a4512183d.1486485935.git.shli@fb.com> <87r336tw5l.fsf@notabene.neil.brown.name> <20170210064715.tpr5mzvccmgxz2af@kernel.org> <8760ke4dzm.fsf@notabene.neil.brown.name> <20170213184942.x3s2hawueq3ryzj3@kernel.org>
+From: Anup Patel <anup.patel@broadcom.com>
+Subject: Re: [PATCH v3 3/4] dmaengine: Add Broadcom SBA RAID driver
+Date: Tue, 14 Feb 2017 09:30:04 +0530
+Message-ID: <CAALAos_m5RkjAA2BNB9d3LP_mBSe5aEjyernXV28LTSe7qfFQg@mail.gmail.com>
+References: <1486717628-17580-1-git-send-email-anup.patel@broadcom.com>
+ <1486717628-17580-4-git-send-email-anup.patel@broadcom.com>
+ <CAPcyv4hE5gDiHhfaiHDHbhA2xKa45UdzKcSxnQXK-W92sr3Z1g@mail.gmail.com> <CAALAos-dThk-h09Yox5AN37po3OqR1oReoZPfqjZVqTqVkCxUA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170213184942.x3s2hawueq3ryzj3@kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org, khlebnikov@yandex-team.ru, hch@lst.de
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAALAos-dThk-h09Yox5AN37po3OqR1oReoZPfqjZVqTqVkCxUA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Vinod Koul <vinod.koul@intel.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S . Miller" <davem@davemloft.net>, Jassi Brar <jassisinghbrar@gmail.com>, Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>, Rob Rice <rob.rice@broadcom.com>, BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>, "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>, Device Tree <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, Feb 13 2017, Shaohua Li wrote:
-
-> On Mon, Feb 13, 2017 at 08:49:33PM +1100, Neil Brown wrote:
->> On Thu, Feb 09 2017, Shaohua Li wrote:
->>=20
->> > On Fri, Feb 10, 2017 at 05:08:54PM +1100, Neil Brown wrote:
->> >> On Tue, Feb 07 2017, Shaohua Li wrote:
->> >>=20
->> >> > Currently MD is rebusing some bio fields. To remove the hack, we at=
-tach
->> >> > extra data to each bio. Each personablity can attach extra data to =
-the
->> >> > bios, so we don't need to rebuse bio fields.
->> >>=20
->> >> I must say that I don't really like this approach.
->> >> Temporarily modifying ->bi_private and ->bi_end_io seems
->> >> .... intrusive.   I suspect it works, but I wonder if it is really
->> >> robust in the long term.
->> >>=20
->> >> How about a different approach..  Your main concern with my first pat=
-ch
->> >> was that it called md_write_start() and md_write_end() much more ofte=
-n,
->> >> and these performed atomic ops on "global" variables, particular
->> >> writes_pending.
->> >>=20
->> >> We could change writes_pending to a per-cpu array which we only count
->> >> occasionally when needed.  As writes_pending is updated often and
->> >> checked rarely, a per-cpu array which is summed on demand seems
->> >> appropriate.
->> >>=20
->> >> The following patch is an early draft - it doesn't obviously fail and
->> >> isn't obviously wrong to me.  There is certainly room for improvement
->> >> and may be bugs.
->> >> Next week I'll work on collection the re-factoring into separate
->> >> patches, which are possible good-to-have anyway.
->> >
->> > For your first patch, I don't have much concern. It's ok to me. What I=
- don't
->> > like is the bi_phys_segments handling part. The patches add a lot of l=
-ogic to
->> > handle the reference count. They should work, but I'd say it's not eas=
-y to
->> > understand and could be error prone. What we really need is a referenc=
-e count
->> > for the bio, so let's just add a reference count. That's my logic and =
-it's
->> > simple.
->>=20
->> We already have two reference counts, and you want to add a third one.
->>=20
->> bi_phys_segments is currently used for two related purposes.
->> It counts the number of stripe_heads currently attached to the bio so
->> that when the count reaches zero:
->>  1/ ->writes_pending can be decremented
->>  2/ bio_endio() can be called.
->>=20
->> When the code was written, the __bi_remaining counter didn't exist.  Now
->> it does and it is integrated with bio_endio() so it should make the code
->> easier to understand if we just use bio_endio() rather and doing our own
->> accounting.
->>=20
->> That just leaves '1'.  We can easily decrement ->writes_pending directly
->> instead of decrementing a per-bio refcount, and then when it reaches
->> zero, decrement ->writes_pending.  As you pointed out, that comes with a
->> cost.  If ->writes_pending is changed to a per-cpu array which is summed
->> on demand, the cost goes away.
->>=20
->> Having an extra refcount in the bio just adds a level of indirection
->> that doesn't (that I can see) provide actual value.
+On Mon, Feb 13, 2017 at 2:43 PM, Anup Patel <anup.patel@broadcom.com> wrote:
+> On Fri, Feb 10, 2017 at 11:20 PM, Dan Williams <dan.j.williams@intel.com> wrote:
+>> On Fri, Feb 10, 2017 at 1:07 AM, Anup Patel <anup.patel@broadcom.com> wrote:
+>>> The Broadcom stream buffer accelerator (SBA) provides offloading
+>>> capabilities for RAID operations. This SBA offload engine is
+>>> accessible via Broadcom SoC specific ring manager.
+>>>
+>>> This patch adds Broadcom SBA RAID driver which provides one
+>>> DMA device with RAID capabilities using one or more Broadcom
+>>> SoC specific ring manager channels. The SBA RAID driver in its
+>>> current shape implements memcpy, xor, and pq operations.
+>>>
+>>> Signed-off-by: Anup Patel <anup.patel@broadcom.com>
+>>> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+>>> ---
+>>>  drivers/dma/Kconfig        |   13 +
+>>>  drivers/dma/Makefile       |    1 +
+>>>  drivers/dma/bcm-sba-raid.c | 1711 ++++++++++++++++++++++++++++++++++++++++++++
+>>>  3 files changed, 1725 insertions(+)
+>>>  create mode 100644 drivers/dma/bcm-sba-raid.c
+>>>
+>>> diff --git a/drivers/dma/Kconfig b/drivers/dma/Kconfig
+>>> index 263495d..bf8fb84 100644
+>>> --- a/drivers/dma/Kconfig
+>>> +++ b/drivers/dma/Kconfig
+>>> @@ -99,6 +99,19 @@ config AXI_DMAC
+>>>           controller is often used in Analog Device's reference designs for FPGA
+>>>           platforms.
+>>>
+>>> +config BCM_SBA_RAID
+>>> +       tristate "Broadcom SBA RAID engine support"
+>>> +       depends on (ARM64 && MAILBOX && RAID6_PQ) || COMPILE_TEST
+>>> +       select DMA_ENGINE
+>>> +       select DMA_ENGINE_RAID
+>>> +       select ASYNC_TX_ENABLE_CHANNEL_SWITCH
+>>
+>> ASYNC_TX_ENABLE_CHANNEL_SWITCH violates the DMA mapping API and
+>> Russell has warned it's especially problematic on ARM [1].  If you
+>> need channel switching for this offload engine to be useful then you
+>> need to move DMA mapping and channel switching responsibilities to MD
+>> itself.
+>>
+>> [1]: http://lists.infradead.org/pipermail/linux-arm-kernel/2011-January/036753.html
 >
-> Ok, fair enough. I do think an explict counter in the driver side will he=
-lp us
-> a lot, eg, we can better control when to endio and do something there (for
-> example the current blk trace, or something we want to add in the future)=
-. But
-> I don't insist currently.
->
-> For the patches, can you repost? I think:
-> - patch 2 missed md_write_start for make_discard_request
-> - It's unnecessary to zero bi_phys_segments in patch 5. And raid5-cache n=
-eed do
->   the same change of bio_endio.
-> For the md_write_start optimization, we can do it later.
+> Actually driver works fine with/without
+> ASYNC_TX_ENABLE_CHANNEL_SWITCH enabled
+> so I am fine with removing dependency on this config option.
 
-Sure. I agree those two changes are needed.  I'll try to send something
-in the next day or so.
+I stand corrected.
 
-NeilBrown
+Previously, when I had tried removing
+ASYNC_TX_ENABLE_CHANNEL_SWITCH
+from BCM_SBA_RAID config option it worked because other
+drivers such xgene-dma and mv_xor_v2 are selecting this option.
 
+The BCM-SBA-RAID driver requires
+ASYNC_TX_ENABLE_CHANNEL_SWITCH option
 
->
-> Thanks,
-> Shaohua
+There is no issue reported for
+ASYNC_TX_ENABLE_CHANNEL_SWITCH
+with ARM64 kernel.
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+The issue you pointed out was with ARM kernel.
 
------BEGIN PGP SIGNATURE-----
+We will have to select
+ASYNC_TX_ENABLE_CHANNEL_SWITCH
+for BCM-SBA-RAID driver
+just like other ARM64 RAID drivers such
+as xgene-dma and mv_xor_v2.
+(Refer, XGENE_DMA and MV_XOR_V2 options)
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAliibh4ACgkQOeye3VZi
-gblimxAAlqzPSfyBysupvvyOPiPAsqduiKBX3oBd9C3LYACQiXi/TMDjZLoivJtm
-mjlSfuF/DxoA0dUxlp1Gss32786hbBjplpEU28D6nnIK3h/RMfZp0mQHbD5deA50
-GgUxmUskrTOK3r06LIlfZRu7K4fJzfZ3D9562Z/CvzVe3PKJbUylOy08ARz0U3NI
-9lGo+3GsWme70LfolS+nGO+3ReOVWk4Q+60qUK8NBDS1CaLIdcvEOupKiyGRkO+3
-jbHQEuWEHw18F5R/p/IQJtCp46KugATpz+OuGRa1K2A1H/2B3oVqNDUxpKZVthSA
-T8OxQNDMq8c+3jnwUPwUybViqcS/h5JMa9brnQvZFIU4DEcZb5iMChvbLBB12FfH
-FKx5tyc7PyXDeOpZXScQn03IlgBMJIOVNZU4JGJRiQ2bi1gyP3YQckVY7fHmruCR
-WLkhv5zwufpnnYatZHrrfkjP5Db2Kg3m1ttGGjU/g76yI4wJ4WYdilwXEplWf1ip
-8Cph4HFG+Vhq7dp+yagD5BzAM+V7w5dhFBx0KdP3Uj3SmXmy8nLWn2EXQ/f0sO/e
-DGd8VF7zT5k5WR6tmHZDzyV3Ecb8Vwkb9QRoTQdcb0TxYsCceH7wLr5M7L9oQdlc
-lxTstJ/ka2d39+KuMJHElwwhiy19baQGr2+WCkE55n4/vXXuDfc=
-=eEDH
------END PGP SIGNATURE-----
---=-=-=--
+Regards,
+Anup
