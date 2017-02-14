@@ -1,60 +1,41 @@
-From: Anup Patel <anup.patel@broadcom.com>
-Subject: [PATCH v4 4/4] dt-bindings: Add DT bindings document for Broadcom SBA RAID driver
-Date: Tue, 14 Feb 2017 12:21:52 +0530
-Message-ID: <1487055112-5185-5-git-send-email-anup.patel@broadcom.com>
-References: <1487055112-5185-1-git-send-email-anup.patel@broadcom.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1487055112-5185-1-git-send-email-anup.patel@broadcom.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vinod Koul <vinod.koul@intel.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S . Miller" <davem@davemloft.net>, Jassi Brar <jassisinghbrar@gmail.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>, Rob Rice <rob.rice@broadcom.com>, bcm-kernel-feedback-list@broadcom.com, dmaengine@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org, Anup Patel <anup.patel@broadcom.com>
+From: Zhilong Liu <zlliu@suse.com>
+Subject: [PATCH] Monitor: dev should be a block file in waitclean
+Date: Tue, 14 Feb 2017 15:50:25 +0800
+Message-ID: <1487058625-28852-1-git-send-email-zlliu@suse.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Jes.Sorensen@redhat.com
+Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
-This patch adds the DT bindings document for newly added Broadcom
-SBA RAID driver.
+    mdadm --wait-clean /dev/mdX, the dev should
+    be a block file, otherwise fd2devnm returns
+    NULL and triggers core dumped.
 
-Signed-off-by: Anup Patel <anup.patel@broadcom.com>
-Reviewed-by: Ray Jui <ray.jui@broadcom.com>
-Reviewed-by: Scott Branden <scott.branden@broadcom.com>
----
- .../devicetree/bindings/dma/brcm,iproc-sba.txt     | 29 ++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/dma/brcm,iproc-sba.txt
+Signed-off-by: Zhilong Liu <zlliu@suse.com>
 
-diff --git a/Documentation/devicetree/bindings/dma/brcm,iproc-sba.txt b/Documentation/devicetree/bindings/dma/brcm,iproc-sba.txt
-new file mode 100644
-index 0000000..092913a
---- /dev/null
-+++ b/Documentation/devicetree/bindings/dma/brcm,iproc-sba.txt
-@@ -0,0 +1,29 @@
-+* Broadcom SBA RAID engine
-+
-+Required properties:
-+- compatible: Should be one of the following
-+	      "brcm,iproc-sba"
-+	      "brcm,iproc-sba-v2"
-+  The "brcm,iproc-sba" has support for only 6 PQ coefficients
-+  The "brcm,iproc-sba-v2" has support for only 30 PQ coefficients
-+- mboxes: List of phandle and mailbox channel specifiers
-+
-+Example:
-+
-+raid_mbox: mbox@67400000 {
-+	...
-+	#mbox-cells = <3>;
-+	...
-+};
-+
-+raid0 {
-+	compatible = "brcm,iproc-sba-v2";
-+	mboxes = <&raid_mbox 0 0x1 0xffff>,
-+		 <&raid_mbox 1 0x1 0xffff>,
-+		 <&raid_mbox 2 0x1 0xffff>,
-+		 <&raid_mbox 3 0x1 0xffff>,
-+		 <&raid_mbox 4 0x1 0xffff>,
-+		 <&raid_mbox 5 0x1 0xffff>,
-+		 <&raid_mbox 6 0x1 0xffff>,
-+		 <&raid_mbox 7 0x1 0xffff>;
-+};
+diff --git a/Monitor.c b/Monitor.c
+index 802a9d9..d16ac49 100644
+--- a/Monitor.c
++++ b/Monitor.c
+@@ -1060,7 +1060,17 @@ int WaitClean(char *dev, int sock, int verbose)
+ 	struct mdinfo *mdi;
+ 	int rv = 1;
+ 	char devnm[32];
++	struct stat stb;
+ 
++	if (stat(dev, &stb) != 0) {
++		pr_err("Cannot find %s: %s\n", dev,
++			strerror(errno));
++		return 2;
++	}
++	if ((S_IFMT & stb.st_mode) != S_IFBLK) {
++		pr_err("%s is not a block device.\n", dev);
++		return 2;
++	}
+ 	fd = open(dev, O_RDONLY);
+ 	if (fd < 0) {
+ 		if (verbose)
 -- 
-2.7.4
+2.6.6
+
