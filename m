@@ -1,44 +1,87 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH v1 1/5] block: introduce bio_clone_bioset_partial()
-Date: Wed, 15 Feb 2017 10:26:35 +0800
-Message-ID: <CACVXFVM4nuf13a8PTqk_UMDNUT-p2o7oaw2E8+dk42Zg0EFTMQ@mail.gmail.com>
-References: <1486724177-14817-1-git-send-email-tom.leiming@gmail.com>
- <1486724177-14817-2-git-send-email-tom.leiming@gmail.com> <20170213134654.GB22818@infradead.org>
- <CACVXFVNN3Gtm4Ut5KCmx8REbMYnh3Y2+sAZPto7F40fvGyZ=zw@mail.gmail.com> <20170214160151.GB32705@infradead.org>
+From: Anup Patel <anup.patel-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Subject: Re: [PATCH v4 3/4] dmaengine: Add Broadcom SBA RAID driver
+Date: Wed, 15 Feb 2017 11:55:40 +0530
+Message-ID: <CAALAos_=TN_ZfeJbRQEwuc+t5zaxKVgrgEMNPQQu8K8Q8+8F6A@mail.gmail.com>
+References: <1487055112-5185-1-git-send-email-anup.patel@broadcom.com>
+ <1487055112-5185-4-git-send-email-anup.patel@broadcom.com> <CAPcyv4g5PU1EQWq-SCbt0QB=vSaMyafqa-ThJifDxEoQha-6Hw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170214160151.GB32705@infradead.org>
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, NeilBrown <neilb@suse.com>
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAPcyv4g5PU1EQWq-SCbt0QB=vSaMyafqa-ThJifDxEoQha-6Hw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Vinod Koul <vinod.koul-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jassi Brar <jassisinghbrar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Ray Jui <rjui-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Scott Branden <sbranden-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Jon Mason <jonmason-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Rob Rice <rob.rice-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, BCM Kernel Feedback <bcm-kernel-feedback-list-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, "dmaengine-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <dmaengine-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Device Tree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-raid.ids
 
-On Wed, Feb 15, 2017 at 12:01 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Tue, Feb 14, 2017 at 09:04:26AM +0800, Ming Lei wrote:
->> On Mon, Feb 13, 2017 at 9:46 PM, Christoph Hellwig <hch@infradead.org> wrote:
->> > On Fri, Feb 10, 2017 at 06:56:13PM +0800, Ming Lei wrote:
->> >> md still need bio clone(not the fast version) for behind write,
->> >> and it is more efficient to use bio_clone_bioset_partial().
->> >>
->> >> The idea is simple and just copy the bvecs range specified from
->> >> parameters.
->> >
->> > Given how few users bio_clone_bioset has I wonder if we shouldn't
->> > simply add the two new arguments to it instead of adding another
->> > indirection.
+On Tue, Feb 14, 2017 at 10:04 PM, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> wrote:
+> On Mon, Feb 13, 2017 at 10:51 PM, Anup Patel <anup.patel-dY08KVG/lbpWk0Htik3J/w@public.gmane.org> wrote:
+>> The Broadcom stream buffer accelerator (SBA) provides offloading
+>> capabilities for RAID operations. This SBA offload engine is
+>> accessible via Broadcom SoC specific ring manager.
 >>
->> For md write-behind, looks we have to provide the two arguments,
->> could you explain a bit how we can do that by adding another indirection?
+>> This patch adds Broadcom SBA RAID driver which provides one
+>> DMA device with RAID capabilities using one or more Broadcom
+>> SoC specific ring manager channels. The SBA RAID driver in its
+>> current shape implements memcpy, xor, and pq operations.
+>>
+>> Signed-off-by: Anup Patel <anup.patel-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+>> Reviewed-by: Ray Jui <ray.jui-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+>> ---
+>>  drivers/dma/Kconfig        |   13 +
+>>  drivers/dma/Makefile       |    1 +
+>>  drivers/dma/bcm-sba-raid.c | 1694 ++++++++++++++++++++++++++++++++++++++++++++
+>>  3 files changed, 1708 insertions(+)
+>>  create mode 100644 drivers/dma/bcm-sba-raid.c
+>>
+>> diff --git a/drivers/dma/Kconfig b/drivers/dma/Kconfig
+>> index 263495d..bf8fb84 100644
+>> --- a/drivers/dma/Kconfig
+>> +++ b/drivers/dma/Kconfig
+>> @@ -99,6 +99,19 @@ config AXI_DMAC
+>>           controller is often used in Analog Device's reference designs for FPGA
+>>           platforms.
+>>
+>> +config BCM_SBA_RAID
+>> +       tristate "Broadcom SBA RAID engine support"
+>> +       depends on (ARM64 && MAILBOX && RAID6_PQ) || COMPILE_TEST
+>> +       select DMA_ENGINE
+>> +       select DMA_ENGINE_RAID
+>> +       select ASYNC_TX_ENABLE_CHANNEL_SWITCH
 >
-> I meant to just pass the additional arguments that
-> bio_clone_bioset_partial has to bio_clone_bioset.
+> I thought you agreed to drop this. Its usage is broken.
 
-That may cause more changes(fs, ...) into this patchset, so I suggest to
-do that in another patchset, especially after we confirmed current
-users of bio_clone is absolutely necessary, and I will check if other bio_clone
-can be converted to fast clone.
+If ASYNC_TX_ENABLE_CHANNEL_SWITCH is not selected
+then async_dma_find_channel() will only try to find channel
+with DMA_ASYNC_TX capability.
 
+The DMA_ASYNC_TX capability is set by
+dma_async_device_register() when all Async Tx
+capabilities are supported by a DMA devices namely
+DMA_INTERRUPT, DMA_MEMCPY, DMA_XOR,
+DMA_XOR_VAL, DMA_PQ, and DMA_PQ_VAL.
 
-Thanks,
-Ming Lei
+We only support DMA_MEMCPY, DMA_XOR, and
+DMA_PQ capabilities in BCM-SBA-RAID driver so
+DMA_ASYNC_TX capability is never set for the
+DMA device registered by BCM-SBA-RAID driver.
+
+Due to above, if ASYNC_TX_ENABLE_CHANNEL_SWITCH
+is not selected then Async Tx APIs fail to find DMA
+channel provided by BCM-SBA-RAID hence the
+option ASYNC_TX_ENABLE_CHANNEL_SWITCH is
+required for BCM-SBA-RAID.
+
+The DMA mappings are violated by channel switching
+only if we switch form DMA channel A to DMA channel
+B and both these DMA channels have different underlying
+"struct device". In most of the cases DMA mappings
+are not violated because DMA channels having
+Async Tx capabilities are provided using same
+underlying "struct device".
+
+Regards,
+Anup
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
