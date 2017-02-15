@@ -1,65 +1,42 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v2 0/5] md: use bio_clone_fast()
-Date: Wed, 15 Feb 2017 11:19:56 -0800
-Message-ID: <20170215191956.bdeusjyi3mazerbe@kernel.org>
+Subject: Re: [PATCH v2 5/5] md: fast clone bio in bio_clone_mddev()
+Date: Wed, 15 Feb 2017 11:20:25 -0800
+Message-ID: <20170215192025.fo7jsew7pvagp5hv@kernel.org>
 References: <1487086143-10255-1-git-send-email-tom.leiming@gmail.com>
+ <1487086143-10255-6-git-send-email-tom.leiming@gmail.com>
+ <20170214160109.GA32705@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1487086143-10255-1-git-send-email-tom.leiming@gmail.com>
+In-Reply-To: <20170214160109.GA32705@infradead.org>
 Sender: linux-block-owner@vger.kernel.org
-To: Ming Lei <tom.leiming@gmail.com>
-Cc: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, NeilBrown <neilb@suse.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ming Lei <tom.leiming@gmail.com>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-block@vger.kernel.org, NeilBrown <neilb@suse.com>
 List-Id: linux-raid.ids
 
-On Tue, Feb 14, 2017 at 11:28:58PM +0800, Ming Lei wrote:
-> Hi,
+On Tue, Feb 14, 2017 at 08:01:09AM -0800, Christoph Hellwig wrote:
+> On Tue, Feb 14, 2017 at 11:29:03PM +0800, Ming Lei wrote:
+> > Firstly bio_clone_mddev() is used in raid normal I/O and isn't
+> > in resync I/O path.
+> > 
+> > Secondly all the direct access to bvec table in raid happens on
+> > resync I/O except for write behind of raid1, in which we still
+> > use bio_clone() for allocating new bvec table.
+> > 
+> > So this patch replaces bio_clone() with bio_clone_fast()
+> > in bio_clone_mddev().
+> > 
+> > Also kill bio_clone_mddev() and call bio_clone_fast() directly, as
+> > suggested by Christoph Hellwig.
+> > 
+> > Signed-off-by: Ming Lei <tom.leiming@gmail.com>
 > 
-> This patches replaces bio_clone() with bio_fast_clone() in
-> bio_clone_mddev() because:
+> Looks fine,
 > 
-> 1) bio_clone_mddev() is used in raid normal I/O and isn't in
-> resync I/O path, and all the direct access to bvec table in
-> raid happens on resync I/O only except for write behind of raid1.
-> Write behind is treated specially, so the replacement is safe.
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > 
-> 2) for write behind, bio_clone() is kept, but this patchset
-> introduces bio_clone_bioset_partial() to just clone one specific 
-> bvecs range instead of whole table. Then write behind is improved
-> too.
-> 
-> V2:
-> 	1) move 3rd patch into 2nd one
-> 	2) kill  bio_clone_mddev() and use  bio_clone_fast() directly
-> 	3) define local variable 'offset' as sector_t in raid1_write_request()
-> 
-> V1:
-> 	1) don't introduce bio_clone_slow_mddev_partial()
-> 	2) return failure if mddev->bio_set can't be created
-> 	3) remove check in bio_clone_mddev() as suggested by
-> 	Christoph Hellwig.
-> 	4) rename bio_clone_mddev() as bio_clone_fast_mddev()
+> Btw, can you also tack on another patch to kill bio_alloc_mddev
+> to be consistent?
 
-Applied, thanks!
- 
-> Ming Lei (5):
->   block: introduce bio_clone_bioset_partial()
->   md: fail if mddev->bio_set can't be created
->   md/raid1: use bio_clone_bioset_partial() in case of write behind
->   md: remove unnecessary check on mddev
->   md: fast clone bio in bio_clone_mddev()
-> 
->  block/bio.c         | 61 +++++++++++++++++++++++++++++++++++++++++------------
->  drivers/md/faulty.c |  2 +-
->  drivers/md/md.c     | 15 ++++---------
->  drivers/md/md.h     |  2 --
->  drivers/md/raid1.c  | 28 +++++++++++++++++-------
->  drivers/md/raid10.c | 11 +++++-----
->  drivers/md/raid5.c  |  4 ++--
->  include/linux/bio.h | 11 ++++++++--
->  8 files changed, 89 insertions(+), 45 deletions(-)
-> 
-> -- 
-> 2.7.4
-> 
+I'll take care of this
