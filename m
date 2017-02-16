@@ -1,55 +1,39 @@
 From: Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH 04/17] md: introduce helpers for dealing with fetch/store preallocated pages in bio
-Date: Thu, 16 Feb 2017 19:45:34 +0800
-Message-ID: <1487245547-24384-5-git-send-email-tom.leiming@gmail.com>
+Subject: [PATCH 01/17] block: introduce bio_segments_all()
+Date: Thu, 16 Feb 2017 19:45:31 +0800
+Message-ID: <1487245547-24384-2-git-send-email-tom.leiming@gmail.com>
 References: <1487245547-24384-1-git-send-email-tom.leiming@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <1487245547-24384-1-git-send-email-tom.leiming@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, NeilBrown <neilb@suse.com>
 Cc: Ming Lei <tom.leiming@gmail.com>
 List-Id: linux-raid.ids
 
-Both raid1 and raid10 uses bio's bvec table to store pre-allocated
-pages, then fetch and add it to bio.
-
-This patch introduces two helpers for dealing with the special case,
-like what bio_iov_iter_get_pages() does.
+So that we can replace the direct access to .bi_vcnt.
 
 Signed-off-by: Ming Lei <tom.leiming@gmail.com>
 ---
- drivers/md/md.h | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+ include/linux/bio.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index a86ad62079de..21897cb514af 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -708,4 +708,25 @@ static inline void mddev_clear_unsupported_flags(struct mddev *mddev,
- {
- 	mddev->flags &= ~unsupported_flags;
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 8e521194f6fc..3364b3ed90e7 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -293,6 +293,13 @@ static inline void bio_get_last_bvec(struct bio *bio, struct bio_vec *bv)
+ 		bv->bv_len = iter.bi_bvec_done;
  }
-+
-+/*
-+ * Both raid1 and raid10 use bio's bvec table to store the preallocated
-+ * pages, so we introduces the following helpers for this kind of usage.
-+ *
-+ * Actually the usage is a bit similar with bio_iov_iter_get_pages().
-+ *
-+ * Please make sure .bi_io_vec[idx] points to one unused vector by the
-+ * bio.
-+ */
-+static inline struct page *mdev_get_page_from_bio(struct bio *bio, unsigned idx)
+ 
++static inline unsigned bio_segments_all(struct bio *bio)
 +{
-+	return bio->bi_io_vec[idx].bv_page;
++	WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED));
++
++	return bio->bi_vcnt;
 +}
 +
-+static inline void mdev_put_page_to_bio(struct bio *bio, unsigned idx,
-+					struct page *page)
-+{
-+	bio->bi_io_vec[idx].bv_page = page;
-+}
-+
- #endif /* _MD_MD_H */
+ enum bip_flags {
+ 	BIP_BLOCK_INTEGRITY	= 1 << 0, /* block layer owns integrity data */
+ 	BIP_MAPPED_INTEGRITY	= 1 << 1, /* ref tag has been remapped */
 -- 
 2.7.4
