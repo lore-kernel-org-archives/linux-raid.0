@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [md PATCH 02/14] md/raid5: simplfy delaying of writes while
- metadata is updated.
+Subject: [md PATCH 03/14] md/raid5: call bio_endio() directly rather than
+ queueing for later.
 Date: Thu, 16 Feb 2017 15:39:01 +1100
-Message-ID: <148721994135.7521.12977218167692514945.stgit@noble>
+Message-ID: <148721994151.7521.9782959078427528817.stgit@noble>
 References: <148721992248.7521.17160361058957519076.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,102 +14,219 @@ To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org, hch@lst.de
 List-Id: linux-raid.ids
 
-If a device fails during a write, we must ensure the failure is
-recorded in the metadata before the completion of the write is
-acknowleged.
+We currently gather bios that need to be returned into a bio_list
+and call bio_endio() on them all together.
+The original reason for this was to avoid making the calls while
+holding a spinlock.
+Locking has changed a lot since then, and that reason is no longer
+valid.
 
-Commit c3cce6cda162 ("md/raid5: ensure device failure recorded before
-write request returns.")  added code for this, but it was
-unnecessarily complicated.  We already had similar functionality for
-handling updates to the bad-block-list, thanks to Commit de393cdea66c
-("md: make it easier to wait for bad blocks to be acknowledged.")
-
-So revert most of the former commit, and instead avoid collecting
-completed writes if MD_CHANGE_PENDING is set.  raid5d() will then flush
-the metadata and retry the stripe_head.
-
-We check MD_CHANGE_PENDING *after* analyse_stripe() as it could be set
-asynchronously.  After analyse_stripe(), we have collected stable data
-about the state of devices, which will be used to make decisions.
+So discard return_io() and various return_bi lists, and just call
+bio_endio() directly as needed.
 
 Signed-off-by: NeilBrown <neilb@suse.com>
 ---
- drivers/md/raid5.c |   27 ++++-----------------------
- drivers/md/raid5.h |    3 ---
- 2 files changed, 4 insertions(+), 26 deletions(-)
+ drivers/md/raid5-cache.c |   13 +++++--------
+ drivers/md/raid5.c       |   38 ++++++++++----------------------------
+ drivers/md/raid5.h       |    3 +--
+ 3 files changed, 16 insertions(+), 38 deletions(-)
 
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 4b211f914d17..1b972a172800 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -255,8 +255,7 @@ static void __r5l_set_io_unit_state(struct r5l_io_unit *io,
+ }
+ 
+ static void
+-r5c_return_dev_pending_writes(struct r5conf *conf, struct r5dev *dev,
+-			      struct bio_list *return_bi)
++r5c_return_dev_pending_writes(struct r5conf *conf, struct r5dev *dev)
+ {
+ 	struct bio *wbi, *wbi2;
+ 
+@@ -266,23 +265,21 @@ r5c_return_dev_pending_writes(struct r5conf *conf, struct r5dev *dev,
+ 	       dev->sector + STRIPE_SECTORS) {
+ 		wbi2 = r5_next_bio(wbi, dev->sector);
+ 		md_write_end(conf->mddev);
+-		if (!raid5_dec_bi_active_stripes(wbi)) {
+-			bio_list_add(return_bi, wbi);
+-		}
++		if (!raid5_dec_bi_active_stripes(wbi))
++			bio_endio(wbi);
+ 		wbi = wbi2;
+ 	}
+ }
+ 
+ void r5c_handle_cached_data_endio(struct r5conf *conf,
+-	  struct stripe_head *sh, int disks, struct bio_list *return_bi)
++				  struct stripe_head *sh, int disks)
+ {
+ 	int i;
+ 
+ 	for (i = sh->disks; i--; ) {
+ 		if (sh->dev[i].written) {
+ 			set_bit(R5_UPTODATE, &sh->dev[i].flags);
+-			r5c_return_dev_pending_writes(conf, &sh->dev[i],
+-						      return_bi);
++			r5c_return_dev_pending_writes(conf, &sh->dev[i]);
+ 			bitmap_endwrite(conf->mddev->bitmap, sh->sector,
+ 					STRIPE_SECTORS,
+ 					!test_bit(STRIPE_DEGRADED, &sh->state),
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 760b726943c9..154593e0afbe 100644
+index 154593e0afbe..a6edca65b561 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -4492,7 +4492,8 @@ static void handle_stripe(struct stripe_head *sh)
- 	if (test_bit(STRIPE_LOG_TRAPPED, &sh->state))
- 		goto finish;
+@@ -154,17 +154,6 @@ static int raid6_idx_to_slot(int idx, struct stripe_head *sh,
+ 	return slot;
+ }
  
--	if (s.handle_bad_blocks) {
-+	if (s.handle_bad_blocks ||
-+	    test_bit(MD_SB_CHANGE_PENDING, &conf->mddev->sb_flags)) {
- 		set_bit(STRIPE_HANDLE, &sh->state);
- 		goto finish;
+-static void return_io(struct bio_list *return_bi)
+-{
+-	struct bio *bi;
+-	while ((bi = bio_list_pop(return_bi)) != NULL) {
+-		bi->bi_iter.bi_size = 0;
+-		trace_block_bio_complete(bdev_get_queue(bi->bi_bdev),
+-					 bi, 0);
+-		bio_endio(bi);
+-	}
+-}
+-
+ static void print_raid5_conf (struct r5conf *conf);
+ 
+ static int stripe_operations_active(struct stripe_head *sh)
+@@ -1175,7 +1164,6 @@ async_copy_data(int frombio, struct bio *bio, struct page **page,
+ static void ops_complete_biofill(void *stripe_head_ref)
+ {
+ 	struct stripe_head *sh = stripe_head_ref;
+-	struct bio_list return_bi = BIO_EMPTY_LIST;
+ 	int i;
+ 
+ 	pr_debug("%s: stripe %llu\n", __func__,
+@@ -1200,15 +1188,13 @@ static void ops_complete_biofill(void *stripe_head_ref)
+ 				dev->sector + STRIPE_SECTORS) {
+ 				rbi2 = r5_next_bio(rbi, dev->sector);
+ 				if (!raid5_dec_bi_active_stripes(rbi))
+-					bio_list_add(&return_bi, rbi);
++					bio_endio(rbi);
+ 				rbi = rbi2;
+ 			}
+ 		}
  	}
-@@ -4822,15 +4823,8 @@ static void handle_stripe(struct stripe_head *sh)
+ 	clear_bit(STRIPE_BIOFILL_RUN, &sh->state);
+ 
+-	return_io(&return_bi);
+-
+ 	set_bit(STRIPE_HANDLE, &sh->state);
+ 	raid5_release_stripe(sh);
+ }
+@@ -3152,8 +3138,7 @@ static void stripe_set_idx(sector_t stripe, struct r5conf *conf, int previous,
+ 
+ static void
+ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
+-				struct stripe_head_state *s, int disks,
+-				struct bio_list *return_bi)
++		     struct stripe_head_state *s, int disks)
+ {
+ 	int i;
+ 	BUG_ON(sh->batch_head);
+@@ -3201,7 +3186,7 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
+ 			bi->bi_error = -EIO;
+ 			md_write_end(conf->mddev);
+ 			if (!raid5_dec_bi_active_stripes(bi))
+-				bio_list_add(return_bi, bi);
++				bio_endio(bi);
+ 			bi = nextbi;
+ 		}
+ 		if (bitmap_end)
+@@ -3224,7 +3209,7 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
+ 			bi->bi_error = -EIO;
+ 			md_write_end(conf->mddev);
+ 			if (!raid5_dec_bi_active_stripes(bi))
+-				bio_list_add(return_bi, bi);
++				bio_endio(bi);
+ 			bi = bi2;
+ 		}
+ 
+@@ -3250,7 +3235,7 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
+ 
+ 				bi->bi_error = -EIO;
+ 				if (!raid5_dec_bi_active_stripes(bi))
+-					bio_list_add(return_bi, bi);
++					bio_endio(bi);
+ 				bi = nextbi;
+ 			}
+ 		}
+@@ -3549,7 +3534,7 @@ static void break_stripe_batch_list(struct stripe_head *head_sh,
+  * never LOCKED, so we don't need to test 'failed' directly.
+  */
+ static void handle_stripe_clean_event(struct r5conf *conf,
+-	struct stripe_head *sh, int disks, struct bio_list *return_bi)
++	struct stripe_head *sh, int disks)
+ {
+ 	int i;
+ 	struct r5dev *dev;
+@@ -3583,7 +3568,7 @@ static void handle_stripe_clean_event(struct r5conf *conf,
+ 					wbi2 = r5_next_bio(wbi, dev->sector);
+ 					md_write_end(conf->mddev);
+ 					if (!raid5_dec_bi_active_stripes(wbi))
+-						bio_list_add(return_bi, wbi);
++						bio_endio(wbi);
+ 					wbi = wbi2;
+ 				}
+ 				bitmap_endwrite(conf->mddev->bitmap, sh->sector,
+@@ -4526,7 +4511,7 @@ static void handle_stripe(struct stripe_head *sh)
+ 		sh->reconstruct_state = 0;
+ 		break_stripe_batch_list(sh, 0);
+ 		if (s.to_read+s.to_write+s.written)
+-			handle_failed_stripe(conf, sh, &s, disks, &s.return_bi);
++			handle_failed_stripe(conf, sh, &s, disks);
+ 		if (s.syncing + s.replacing)
+ 			handle_failed_sync(conf, sh, &s);
+ 	}
+@@ -4592,10 +4577,10 @@ static void handle_stripe(struct stripe_head *sh)
+ 			     && !test_bit(R5_LOCKED, &qdev->flags)
+ 			     && (test_bit(R5_UPTODATE, &qdev->flags) ||
+ 				 test_bit(R5_Discard, &qdev->flags))))))
+-		handle_stripe_clean_event(conf, sh, disks, &s.return_bi);
++		handle_stripe_clean_event(conf, sh, disks);
+ 
+ 	if (s.just_cached)
+-		r5c_handle_cached_data_endio(conf, sh, disks, &s.return_bi);
++		r5c_handle_cached_data_endio(conf, sh, disks);
+ 	r5l_stripe_write_finished(sh);
+ 
+ 	/* Now we might consider reading some blocks, either to check/generate
+@@ -4823,9 +4808,6 @@ static void handle_stripe(struct stripe_head *sh)
  			md_wakeup_thread(conf->mddev->thread);
  	}
  
--	if (!bio_list_empty(&s.return_bi)) {
--		if (test_bit(MD_SB_CHANGE_PENDING, &conf->mddev->sb_flags)) {
--			spin_lock_irq(&conf->device_lock);
--			bio_list_merge(&conf->return_bi, &s.return_bi);
--			spin_unlock_irq(&conf->device_lock);
--			md_wakeup_thread(conf->mddev->thread);
--		} else
--			return_io(&s.return_bi);
--	}
-+	if (!bio_list_empty(&s.return_bi))
-+		return_io(&s.return_bi);
- 
+-	if (!bio_list_empty(&s.return_bi))
+-		return_io(&s.return_bi);
+-
  	clear_bit_unlock(STRIPE_ACTIVE, &sh->state);
  }
-@@ -6055,18 +6049,6 @@ static void raid5d(struct md_thread *thread)
  
- 	md_check_recovery(mddev);
- 
--	if (!bio_list_empty(&conf->return_bi) &&
--	    !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags)) {
--		struct bio_list tmp = BIO_EMPTY_LIST;
--		spin_lock_irq(&conf->device_lock);
--		if (!test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags)) {
--			bio_list_merge(&tmp, &conf->return_bi);
--			bio_list_init(&conf->return_bi);
--		}
--		spin_unlock_irq(&conf->device_lock);
--		return_io(&tmp);
--	}
--
- 	blk_start_plug(&plug);
- 	handled = 0;
- 	spin_lock_irq(&conf->device_lock);
-@@ -6705,7 +6687,6 @@ static struct r5conf *setup_conf(struct mddev *mddev)
- 	INIT_LIST_HEAD(&conf->hold_list);
- 	INIT_LIST_HEAD(&conf->delayed_list);
- 	INIT_LIST_HEAD(&conf->bitmap_list);
--	bio_list_init(&conf->return_bi);
- 	init_llist_head(&conf->released_stripes);
- 	atomic_set(&conf->active_stripes, 0);
- 	atomic_set(&conf->preread_active_stripes, 0);
 diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index 1440fa26e296..1ef71273b9b2 100644
+index 1ef71273b9b2..9051631cb7f0 100644
 --- a/drivers/md/raid5.h
 +++ b/drivers/md/raid5.h
-@@ -621,9 +621,6 @@ struct r5conf {
- 	int			skip_copy; /* Don't copy data from bio to stripe cache */
- 	struct list_head	*last_hold; /* detect hold_list promotions */
+@@ -272,7 +272,6 @@ struct stripe_head_state {
+ 	int dec_preread_active;
+ 	unsigned long ops_request;
  
--	/* bios to have bi_end_io called after metadata is synced */
--	struct bio_list		return_bi;
--
- 	atomic_t		reshape_stripes; /* stripes with pending writes for reshape */
- 	/* unfortunately we need two cache names as we temporarily have
- 	 * two caches.
+-	struct bio_list return_bi;
+ 	struct md_rdev *blocked_rdev;
+ 	int handle_bad_blocks;
+ 	int log_failed;
+@@ -776,7 +775,7 @@ extern void r5c_release_extra_page(struct stripe_head *sh);
+ extern void r5c_use_extra_page(struct stripe_head *sh);
+ extern void r5l_wake_reclaim(struct r5l_log *log, sector_t space);
+ extern void r5c_handle_cached_data_endio(struct r5conf *conf,
+-	struct stripe_head *sh, int disks, struct bio_list *return_bi);
++	struct stripe_head *sh, int disks);
+ extern int r5c_cache_data(struct r5l_log *log, struct stripe_head *sh,
+ 			  struct stripe_head_state *s);
+ extern void r5c_make_stripe_write_out(struct stripe_head *sh);
 
 
