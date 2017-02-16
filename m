@@ -1,7 +1,7 @@
 From: Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH 14/17] md: raid10: avoid direct access to bvec table in sync_request_write()
-Date: Thu, 16 Feb 2017 19:45:44 +0800
-Message-ID: <1487245547-24384-15-git-send-email-tom.leiming@gmail.com>
+Subject: [PATCH 12/17] md: raid1: avoid direct access to bvec table in process_checks()
+Date: Thu, 16 Feb 2017 19:45:42 +0800
+Message-ID: <1487245547-24384-13-git-send-email-tom.leiming@gmail.com>
 References: <1487245547-24384-1-git-send-email-tom.leiming@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1487245547-24384-1-git-send-email-tom.leiming@gmail.com>
@@ -10,57 +10,71 @@ To: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.k
 Cc: Ming Lei <tom.leiming@gmail.com>
 List-Id: linux-raid.ids
 
-The cost is 256bytes(8*16*2) stack space, and just use the bio
-helper to retrieve pages from bio.
+Given process_checks is only called in resync path, it should be
+ok to allocate three stack variable(total 320byteds) to store
+pages from bios.
 
 Signed-off-by: Ming Lei <tom.leiming@gmail.com>
 ---
- drivers/md/raid10.c | 15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+ drivers/md/raid1.c | 20 ++++++++++++++++----
+ 1 file changed, 16 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 5c698f3d3083..69fe2a3cef89 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -2036,6 +2036,8 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
- 	int i, first;
- 	struct bio *tbio, *fbio;
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 4400fbe7ce8c..54ec32be3277 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -2010,6 +2010,9 @@ static void process_checks(struct r1bio *r1_bio)
+ 	int primary;
+ 	int i;
  	int vcnt;
-+	struct bio_vec *bvl;
-+	struct page *fbio_pages[RESYNC_PAGES], *tbio_pages[RESYNC_PAGES];
++	struct bio_vec *bi;
++	int page_len[RESYNC_PAGES];
++	struct page *pbio_pages[RESYNC_PAGES], *sbio_pages[RESYNC_PAGES];
  
- 	atomic_set(&r10_bio->remaining, 1);
+ 	/* Fix variable parts of all bios */
+ 	vcnt = (r1_bio->sectors + PAGE_SIZE / 512 - 1) >> (PAGE_SHIFT - 9);
+@@ -2017,7 +2020,6 @@ static void process_checks(struct r1bio *r1_bio)
+ 		int j;
+ 		int size;
+ 		int error;
+-		struct bio_vec *bi;
+ 		struct bio *b = r1_bio->bios[i];
+ 		if (b->bi_end_io != end_sync_read)
+ 			continue;
+@@ -2051,6 +2053,11 @@ static void process_checks(struct r1bio *r1_bio)
+ 			break;
+ 		}
+ 	r1_bio->read_disk = primary;
++
++	/* .bi_vcnt has been set for all read bios */
++	bio_for_each_segment_all(bi, r1_bio->bios[primary], i)
++		pbio_pages[i] = bi->bv_page;
++
+ 	for (i = 0; i < conf->raid_disks * 2; i++) {
+ 		int j;
+ 		struct bio *pbio = r1_bio->bios[primary];
+@@ -2062,14 +2069,19 @@ static void process_checks(struct r1bio *r1_bio)
+ 		/* Now we can 'fixup' the error value */
+ 		sbio->bi_error = 0;
  
-@@ -2052,6 +2054,10 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
- 	fbio->bi_iter.bi_size = r10_bio->sectors << 9;
- 	fbio->bi_iter.bi_idx = 0;
- 
-+	/* the bio has been filled up in raid10_sync_request */
-+	bio_for_each_segment_all(bvl, fbio, i)
-+		fbio_pages[i] = bvl->bv_page;
++		bio_for_each_segment_all(bi, sbio, j) {
++			sbio_pages[j] = bi->bv_page;
++			page_len[j] = bi->bv_len;
++		}
 +
- 	vcnt = (r10_bio->sectors + (PAGE_SIZE >> 9) - 1) >> (PAGE_SHIFT - 9);
- 	/* now find blocks with errors */
- 	for (i=0 ; i < conf->copies ; i++) {
-@@ -2072,12 +2078,17 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
- 			 * All vec entries are PAGE_SIZE;
- 			 */
- 			int sectors = r10_bio->sectors;
-+
-+			/* the bio has been filled up in raid10_sync_request */
-+			bio_for_each_segment_all(bvl, tbio, j)
-+				tbio_pages[j] = bvl->bv_page;
-+
- 			for (j = 0; j < vcnt; j++) {
- 				int len = PAGE_SIZE;
- 				if (sectors < (len / 512))
- 					len = sectors * 512;
--				if (memcmp(page_address(fbio->bi_io_vec[j].bv_page),
--					   page_address(tbio->bi_io_vec[j].bv_page),
-+				if (memcmp(page_address(fbio_pages[j]),
-+					   page_address(tbio_pages[j]),
- 					   len))
+ 		if (!error) {
+ 			for (j = vcnt; j-- ; ) {
+ 				struct page *p, *s;
+-				p = pbio->bi_io_vec[j].bv_page;
+-				s = sbio->bi_io_vec[j].bv_page;
++				p = pbio_pages[j];
++				s = sbio_pages[j];
+ 				if (memcmp(page_address(p),
+ 					   page_address(s),
+-					   sbio->bi_io_vec[j].bv_len))
++					   page_len[j]))
  					break;
- 				sectors -= len/512;
+ 			}
+ 		} else
 -- 
 2.7.4
