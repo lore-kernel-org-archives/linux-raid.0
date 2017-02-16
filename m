@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [md PATCH 10/14] md/raid1: stop using bi_phys_segment
+Subject: [md PATCH 09/14] md/raid10: stop using bi_phys_segments
 Date: Thu, 16 Feb 2017 15:39:02 +1100
-Message-ID: <148721994272.7521.4656357457037580183.stgit@noble>
+Message-ID: <148721994257.7521.2502119977276847128.stgit@noble>
 References: <148721992248.7521.17160361058957519076.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,33 +13,55 @@ To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org, hch@lst.de
 List-Id: linux-raid.ids
 
-Change to use bio->__bi_remaining to count number of r1bio attached
-to a bio.
-See precious raid10 patch for more details.
+raid10 currently repurposes bi_phys_segments on each
+incoming bio to count how many r10bio was used to encode the
+request.
 
-inc_pending is a little more complicated in raid1 as we need to adjust
-next_window_requests or current_window_requests.
+We need to know when the number of attached r10bio reaches
+zero to:
+1/ call bio_endio() when all IO on the bio is finished
+2/ decrement ->nr_pending so that resync IO can proceed.
 
-The wait_event() call if start_next_window is no longer needed as each
-r1_bio is completed separately.
+Now that the bio has its own __bi_remaining counter, that
+can be used instead. We can call bio_inc_remaining to
+increment the counter and call bio_endio() every time an
+r10bio completes, rather than only when bi_phys_segments
+reaches zero.
+
+This addresses point 1, but not point 2.  bio_endio()
+doesn't (and cannot) report when the last r10bio has
+finished, so a different approach is needed.
+
+So: instead of counting bios in ->nr_pending, count r10bios.
+i.e. every time we attach a bio, increment nr_pending.
+Every time an r10bio completes, decrement nr_pending.
+
+Normally we only increment nr_pending after first checking
+that ->barrier is zero, or some other non-trivial tests and
+possible waiting.  When attaching multiple r10bios to a bio,
+we only need the tests and the waiting once.  After the
+first increment, subsequent increments can happen
+unconditionally as they are really all part of the one
+request.
+
+So introduce inc_pending() which can be used when we know
+that nr_pending is already elevated.
 
 Signed-off-by: NeilBrown <neilb@suse.com>
 ---
- drivers/md/raid1.c |   99 ++++++++++++++++++----------------------------------
- 1 file changed, 34 insertions(+), 65 deletions(-)
+ drivers/md/raid10.c |   76 +++++++++++++++++----------------------------------
+ 1 file changed, 25 insertions(+), 51 deletions(-)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index c1d0675880fb..5a57111c7bc9 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -241,36 +241,19 @@ static void reschedule_retry(struct r1bio *r1_bio)
- static void call_bio_endio(struct r1bio *r1_bio)
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 9258cbe233bb..6b4d8643c574 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -301,27 +301,18 @@ static void reschedule_retry(struct r10bio *r10_bio)
+ static void raid_end_bio_io(struct r10bio *r10_bio)
  {
- 	struct bio *bio = r1_bio->master_bio;
+ 	struct bio *bio = r10_bio->master_bio;
 -	int done;
- 	struct r1conf *conf = r1_bio->mddev->private;
- 	sector_t start_next_window = r1_bio->start_next_window;
- 	sector_t bi_sector = bio->bi_iter.bi_sector;
+ 	struct r10conf *conf = r10_bio->mddev->private;
  
 -	if (bio->bi_phys_segments) {
 -		unsigned long flags;
@@ -47,105 +69,77 @@ index c1d0675880fb..5a57111c7bc9 100644
 -		bio->bi_phys_segments--;
 -		done = (bio->bi_phys_segments == 0);
 -		spin_unlock_irqrestore(&conf->device_lock, flags);
--		/*
--		 * make_request() might be waiting for
--		 * bi_phys_segments to decrease
--		 */
--		wake_up(&conf->wait_barrier);
 -	} else
 -		done = 1;
--
- 	if (!test_bit(R1BIO_Uptodate, &r1_bio->state))
+ 	if (!test_bit(R10BIO_Uptodate, &r10_bio->state))
  		bio->bi_error = -EIO;
- 
 -	if (done) {
 -		bio_endio(bio);
 -		/*
 -		 * Wake up any possible resync thread that waits for the device
 -		 * to go idle.
 -		 */
--		allow_barrier(conf, start_next_window, bi_sector);
+-		allow_barrier(conf);
 -	}
-+	bio_endio(bio);
++
 +	/*
 +	 * Wake up any possible resync thread that waits for the device
 +	 * to go idle.
 +	 */
-+	allow_barrier(conf, start_next_window, bi_sector);
++	allow_barrier(conf);
++	bio_endio(bio);
++
+ 	free_r10bio(r10_bio);
  }
  
- static void raid_end_bio_io(struct r1bio *r1_bio)
-@@ -923,6 +906,26 @@ static sector_t wait_barrier(struct r1conf *conf, struct bio *bio)
- 	return sector;
+@@ -984,6 +975,15 @@ static void wait_barrier(struct r10conf *conf)
+ 	spin_unlock_irq(&conf->resync_lock);
  }
  
-+static void inc_pending(struct r1conf *conf, sector_t start_next_window,
-+			sector_t bi_sector)
++static void inc_pending(struct r10conf *conf)
 +{
-+	/* The current request requires multiple r1_bio, so
-+	 * we need to increment the pending count, and the corresponding
-+	 * window count.
++	/* The current request requires multiple r10_bio, so
++	 * we need to increment the pending count.
 +	 */
-+	spin_lock(&conf->resync_lock);
-+	conf->nr_pending++;
-+	if (start_next_window == conf->start_next_window) {
-+		if (conf->start_next_window + NEXT_NORMALIO_DISTANCE
-+		    <= bi_sector)
-+			conf->next_window_requests++;
-+		else
-+			conf->current_window_requests++;
-+	} else
-+		conf->current_window_requests++;
-+	spin_unlock(&conf->resync_lock);
++	WARN_ON(!atomic_read(&conf->nr_pending));
++	atomic_inc(&conf->nr_pending);
 +}
 +
- static void allow_barrier(struct r1conf *conf, sector_t start_next_window,
- 			  sector_t bi_sector)
+ static void allow_barrier(struct r10conf *conf)
  {
-@@ -1137,12 +1140,7 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
- 		sectors_handled = (r1_bio->sector + max_sectors
+ 	if ((atomic_dec_and_test(&conf->nr_pending)) ||
+@@ -1161,12 +1161,8 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+ 		sectors_handled = (r10_bio->sector + max_sectors
  				   - bio->bi_iter.bi_sector);
- 		r1_bio->sectors = max_sectors;
+ 		r10_bio->sectors = max_sectors;
 -		spin_lock_irq(&conf->device_lock);
 -		if (bio->bi_phys_segments == 0)
 -			bio->bi_phys_segments = 2;
 -		else
 -			bio->bi_phys_segments++;
 -		spin_unlock_irq(&conf->device_lock);
++		inc_pending(conf);
 +		bio_inc_remaining(bio);
- 
  		/*
  		 * Cannot call generic_make_request directly as that will be
-@@ -1304,7 +1302,6 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 	if (unlikely(blocked_rdev)) {
- 		/* Wait for this device to become unblocked */
- 		int j;
--		sector_t old = start_next_window;
- 
- 		for (j = 0; j < i; j++)
- 			if (r1_bio->bios[j])
-@@ -1314,15 +1311,6 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 		raid1_log(mddev, "wait rdev %d blocked", blocked_rdev->raid_disk);
- 		md_wait_for_blocked_rdev(blocked_rdev, mddev);
- 		start_next_window = wait_barrier(conf, bio);
--		/*
--		 * We must make sure the multi r1bios of bio have
--		 * the same value of bi_phys_segments
--		 */
--		if (bio->bi_phys_segments && old &&
--		    old != start_next_window)
--			/* Wait for the former r1bio(s) to complete */
--			wait_event(conf->wait_barrier,
--				   bio->bi_phys_segments == 1);
- 		goto retry_write;
- 	}
- 
-@@ -1417,22 +1405,18 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 	 * as it could result in the bio being freed.
+ 		 * queued in __generic_make_request and subsequent
+@@ -1261,9 +1257,7 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
+ 	 * on which we have seen a write error, we want to avoid
+ 	 * writing to those blocks.  This potentially requires several
+ 	 * writes to write around the bad blocks.  Each set of writes
+-	 * gets its own r10_bio with a set of bios attached.  The number
+-	 * of r10_bios is recored in bio->bi_phys_segments just as with
+-	 * the read case.
++	 * gets its own r10_bio with a set of bios attached.
  	 */
+ 
+ 	r10_bio->read_slot = -1; /* make sure repl_bio gets freed */
+@@ -1481,15 +1475,9 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
+ 	 */
+ 
  	if (sectors_handled < bio_sectors(bio)) {
--		/* We need another r1_bio, which must be accounted
--		 * in bio->bi_phys_segments
+-		/* We need another r10_bio and it needs to be counted
+-		 * in bio->bi_phys_segments.
 -		 */
 -		spin_lock_irq(&conf->device_lock);
 -		if (bio->bi_phys_segments == 0)
@@ -153,52 +147,43 @@ index c1d0675880fb..5a57111c7bc9 100644
 -		else
 -			bio->bi_phys_segments++;
 -		spin_unlock_irq(&conf->device_lock);
-+		/* We need another r1_bio, which must be counted */
-+		sector_t sect = bio->bi_iter.bi_sector + sectors_handled;
-+
-+		inc_pending(conf, start_next_window, sect);
++		/* We need another r10_bio and it needs to be counted */
++		inc_pending(conf);
 +		bio_inc_remaining(bio);
- 		r1_bio_write_done(r1_bio);
- 		r1_bio = mempool_alloc(conf->r1bio_pool, GFP_NOIO);
- 		r1_bio->master_bio = bio;
- 		r1_bio->sectors = bio_sectors(bio) - sectors_handled;
- 		r1_bio->state = 0;
- 		r1_bio->mddev = mddev;
--		r1_bio->sector = bio->bi_iter.bi_sector + sectors_handled;
-+		r1_bio->sector = sect;
- 		goto retry_write;
- 	}
+ 		one_write_done(r10_bio);
+ 		r10_bio = mempool_alloc(conf->r10bio_pool, GFP_NOIO);
  
-@@ -1460,16 +1444,6 @@ static void raid1_make_request(struct mddev *mddev, struct bio *bio)
- 	r1_bio->mddev = mddev;
- 	r1_bio->sector = bio->bi_iter.bi_sector;
+@@ -1518,16 +1506,6 @@ static void __make_request(struct mddev *mddev, struct bio *bio)
+ 	r10_bio->sector = bio->bi_iter.bi_sector;
+ 	r10_bio->state = 0;
  
 -	/*
 -	 * We might need to issue multiple reads to different devices if there
 -	 * are bad blocks around, so we keep track of the number of reads in
--	 * bio->bi_phys_segments.  If this is 0, there is only one r1_bio and
--	 * no locking will be needed when requests complete.  If it is
+-	 * bio->bi_phys_segments.  If this is 0, there is only one r10_bio and
+-	 * no locking will be needed when the request completes.  If it is
 -	 * non-zero, then it is the number of not-completed requests.
 -	 */
 -	bio->bi_phys_segments = 0;
 -	bio_clear_flag(bio, BIO_SEG_VALID);
 -
  	if (bio_data_dir(bio) == READ)
- 		raid1_read_request(mddev, bio, r1_bio);
+ 		raid10_read_request(mddev, bio, r10_bio);
  	else
-@@ -2434,12 +2408,7 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
- 			int sectors_handled = (r1_bio->sector + max_sectors
- 					       - mbio->bi_iter.bi_sector);
- 			r1_bio->sectors = max_sectors;
--			spin_lock_irq(&conf->device_lock);
--			if (mbio->bi_phys_segments == 0)
--				mbio->bi_phys_segments = 2;
--			else
--				mbio->bi_phys_segments++;
--			spin_unlock_irq(&conf->device_lock);
-+			bio_inc_remaining(mbio);
- 			trace_block_bio_remap(bdev_get_queue(bio->bi_bdev),
- 					      bio, bio_dev, bio_sector);
- 			generic_make_request(bio);
+@@ -2662,12 +2640,8 @@ static void handle_read_error(struct mddev *mddev, struct r10bio *r10_bio)
+ 			r10_bio->sector + max_sectors
+ 			- mbio->bi_iter.bi_sector;
+ 		r10_bio->sectors = max_sectors;
+-		spin_lock_irq(&conf->device_lock);
+-		if (mbio->bi_phys_segments == 0)
+-			mbio->bi_phys_segments = 2;
+-		else
+-			mbio->bi_phys_segments++;
+-		spin_unlock_irq(&conf->device_lock);
++		bio_inc_remaining(mbio);
++		inc_pending(conf);
+ 		generic_make_request(bio);
+ 
+ 		r10_bio = mempool_alloc(conf->r10bio_pool,
 
 
