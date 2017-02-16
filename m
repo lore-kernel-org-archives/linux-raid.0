@@ -1,7 +1,7 @@
 From: Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH 17/17] md: raid10: avoid direct access to bvec table in handle_reshape_read_error
-Date: Thu, 16 Feb 2017 19:45:47 +0800
-Message-ID: <1487245547-24384-18-git-send-email-tom.leiming@gmail.com>
+Subject: [PATCH 10/17] md: raid1: remove direct access to bvec table in fix_sync_read_error
+Date: Thu, 16 Feb 2017 19:45:40 +0800
+Message-ID: <1487245547-24384-11-git-send-email-tom.leiming@gmail.com>
 References: <1487245547-24384-1-git-send-email-tom.leiming@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1487245547-24384-1-git-send-email-tom.leiming@gmail.com>
@@ -10,43 +10,63 @@ To: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.k
 Cc: Ming Lei <tom.leiming@gmail.com>
 List-Id: linux-raid.ids
 
-The cost is 128bytes(8*16) stack space in kernel thread context, and
-just use the bio helper to retrieve pages from bio.
+This patch uses a stack variable to hold the pages in bio, so
+that we can remove direct access to bvec table in fix_sync_read_error().
+
+This 16*8 stack variable is just fine for kernel thread context.
 
 Signed-off-by: Ming Lei <tom.leiming@gmail.com>
 ---
- drivers/md/raid10.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ drivers/md/raid1.c | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 5016ce8163c3..d9d7c79a3bd4 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -4689,7 +4689,15 @@ static int handle_reshape_read_error(struct mddev *mddev,
- 	struct r10bio *r10b = &on_stack.r10_bio;
- 	int slot = 0;
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 1dd6b2760fba..02ee8542295d 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1874,6 +1874,16 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
+ 	int sectors = r1_bio->sectors;
  	int idx = 0;
--	struct bio_vec *bvec = r10_bio->master_bio->bi_io_vec;
+ 	struct md_rdev *rdev;
 +	struct bio_vec *bvl;
++	int i;
 +	struct page *pages[RESYNC_PAGES];
 +
 +	/*
-+	 * This bio is allocated in reshape_request(), and size
-+	 * is still RESYNC_PAGES
++	 * bio for read_disk is filled up, so we can use
++	 * bio_for_each_segment_all() to retrieve all pages.
 +	 */
-+	bio_for_each_segment_all(bvl, r10_bio->master_bio, idx)
-+		pages[idx] = bvl->bv_page;
++	bio_for_each_segment_all(bvl, bio, i)
++		pages[i] = bvl->bv_page;
  
- 	r10b->sector = r10_bio->sector;
- 	__raid10_find_phys(&conf->prev, r10b);
-@@ -4718,7 +4726,7 @@ static int handle_reshape_read_error(struct mddev *mddev,
- 			success = sync_page_io(rdev,
- 					       addr,
- 					       s << 9,
--					       bvec[idx].bv_page,
-+					       pages[idx],
- 					       REQ_OP_READ, 0, false);
- 			rdev_dec_pending(rdev, mddev);
- 			rcu_read_lock();
+ 	rdev = conf->mirrors[r1_bio->read_disk].rdev;
+ 	if (test_bit(FailFast, &rdev->flags)) {
+@@ -1903,7 +1913,7 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
+ 				 */
+ 				rdev = conf->mirrors[d].rdev;
+ 				if (sync_page_io(rdev, sect, s<<9,
+-						 bio->bi_io_vec[idx].bv_page,
++						 pages[idx],
+ 						 REQ_OP_READ, 0, false)) {
+ 					success = 1;
+ 					break;
+@@ -1958,7 +1968,7 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
+ 				continue;
+ 			rdev = conf->mirrors[d].rdev;
+ 			if (r1_sync_page_io(rdev, sect, s,
+-					    bio->bi_io_vec[idx].bv_page,
++					    pages[idx],
+ 					    WRITE) == 0) {
+ 				r1_bio->bios[d]->bi_end_io = NULL;
+ 				rdev_dec_pending(rdev, mddev);
+@@ -1973,7 +1983,7 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
+ 				continue;
+ 			rdev = conf->mirrors[d].rdev;
+ 			if (r1_sync_page_io(rdev, sect, s,
+-					    bio->bi_io_vec[idx].bv_page,
++					    pages[idx],
+ 					    READ) != 0)
+ 				atomic_add(s, &rdev->corrected_errors);
+ 		}
 -- 
 2.7.4
