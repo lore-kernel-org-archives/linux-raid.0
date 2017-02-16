@@ -1,62 +1,90 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [md PATCH 02/14] md/raid5: simplfy delaying of writes while
- metadata is updated.
-Date: Thu, 16 Feb 2017 09:37:57 -0800
-Message-ID: <20170216173757.chtxbvpbzxcqjk62@kernel.org>
+Subject: Re: [md PATCH 14/14] MD: use per-cpu counter for writes_pending
+Date: Thu, 16 Feb 2017 12:12:11 -0800
+Message-ID: <20170216201211.3q7rvvp2p3xxz6ew@kernel.org>
 References: <148721992248.7521.17160361058957519076.stgit@noble>
- <148721994135.7521.12977218167692514945.stgit@noble>
+ <148721994322.7521.3431105903303667812.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <148721994135.7521.12977218167692514945.stgit@noble>
+In-Reply-To: <148721994322.7521.3431105903303667812.stgit@noble>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.com>
 Cc: linux-raid@vger.kernel.org, hch@lst.de
 List-Id: linux-raid.ids
 
-On Thu, Feb 16, 2017 at 03:39:01PM +1100, Neil Brown wrote:
-> If a device fails during a write, we must ensure the failure is
-> recorded in the metadata before the completion of the write is
-> acknowleged.
+On Thu, Feb 16, 2017 at 03:39:03PM +1100, Neil Brown wrote:
+> The 'writes_pending' counter is used to determine when the
+> array is stable so that it can be marked in the superblock
+> as "Clean".  Consequently it needs to be updated frequently
+> but only checked for zero occasionally.  Recent changes to
+> raid5 cause the count to be updated even more often - once
+> per 4K rather than once per bio.  This provided
+> justification for making the updates more efficient.
 > 
-> Commit c3cce6cda162 ("md/raid5: ensure device failure recorded before
-> write request returns.")  added code for this, but it was
-> unnecessarily complicated.  We already had similar functionality for
-> handling updates to the bad-block-list, thanks to Commit de393cdea66c
-> ("md: make it easier to wait for bad blocks to be acknowledged.")
+> So we replace the atomic counter with a per-cpu array of
+> 'long' counters. Incrementing and decrementing is normally
+> much cheaper, testing for zero is more expensive.
 > 
-> So revert most of the former commit, and instead avoid collecting
-> completed writes if MD_CHANGE_PENDING is set.  raid5d() will then flush
-> the metadata and retry the stripe_head.
+> To meaningfully be able to test for zero we need to be able
+> to block further updates.  This is done by forcing the
+> "increment" step to take a spinlock in the rare case that
+> another thread is checking if the count is zero.  This is
+> done using a new field: "checkers".  "checkers" is the
+> number of threads that are currently checking whether the
+> count is zero.  It is usually 0, occasionally 1, and it is
+> not impossible that it could be higher, though this would be
+> rare.
 > 
-> We check MD_CHANGE_PENDING *after* analyse_stripe() as it could be set
-> asynchronously.  After analyse_stripe(), we have collected stable data
-> about the state of devices, which will be used to make decisions.
+> If, within an rcu_read_locked section, checkers is seen to
+> be zero, then the local-cpu counter can be incremented
+> freely.  If checkers is not zero, mddev->lock must be taken
+> before the increment is allowed.  A decrement is always
+> allowed.
+> 
+> To test for zero, a thread must increment "checkers", call
+> synchronize_rcu(), then take mddev->lock.  Once this is done
+> no new increments can happen.  A thread may choose to
+> perform a quick test-for-zero by summing all the counters
+> without holding a lock.  If this is non-zero, the the total
+> count is non-zero, or was non-zero very recently, so it is
+> safe to assume that it isn't zero.  If the quick check does
+> report a zero sum, then it is worth performing the locking
+> protocol.
+> 
+> When the counter is decremented, it is no longer possible to
+> immediately test if the result is zero
+> (atmic_dec_and_test()).  We don't even really want to
+> perform the "quick" tests as that sums over all cpus and is
+> work that will most often bring no benefit.
+> 
+> In the "safemode==2" case, when we want to mark the array as
+> "clean" immediately when there are no writes, we perform the
+> quick test anyway, and possibly wake the md thread to do the
+> full test.  "safemode==2" is only used during shutdown so
+> the cost is not problematic.
+> 
+> When safemode!=2 we always set the timer, rather than only
+> when the counter reaches zero.
+> 
+> If mod_timer() is called to set the timeout to the value it
+> already has, mod_timer() has low overhead with no atomic
+> operations.  So at worst it will have a noticeable cost once
+> per jiffie.  To further reduce the otherhead, we round the
+> requests delay to a multiple of ->safemode_delay.  This
+> might increase the delay until the timer fires a little, but
+> will reduce the overhead of calling mod_timer()
+> significantly.  If lots of requests are completing, the
+> timer will be updated every 200 milliseconds (by default)
+> and never fire.  When it does eventually fire, it will
+> schedule the md thread to perform the full test for
+> writes_pending==0, and this is quite likely to find '0'.
 > 
 > Signed-off-by: NeilBrown <neilb@suse.com>
-> ---
->  drivers/md/raid5.c |   27 ++++-----------------------
->  drivers/md/raid5.h |    3 ---
->  2 files changed, 4 insertions(+), 26 deletions(-)
-> 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 760b726943c9..154593e0afbe 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -4492,7 +4492,8 @@ static void handle_stripe(struct stripe_head *sh)
->  	if (test_bit(STRIPE_LOG_TRAPPED, &sh->state))
->  		goto finish;
->  
-> -	if (s.handle_bad_blocks) {
-> +	if (s.handle_bad_blocks ||
-> +	    test_bit(MD_SB_CHANGE_PENDING, &conf->mddev->sb_flags)) {
->  		set_bit(STRIPE_HANDLE, &sh->state);
->  		goto finish;
->  	}
 
-This part is fragile. We don't delay it and post it to handle list again. So
-the raid5d/worker could run this stripe infinitely.
+This sounds like a good place to use percpu-refcount. In set_in_sync, we switch
+it to atomic, read it, then switch it back to percpu.
 
 Thanks,
 Shaohua
