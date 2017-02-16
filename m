@@ -1,50 +1,56 @@
 From: Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH 13/17] md: raid1: use bio_segments_all()
-Date: Thu, 16 Feb 2017 19:45:43 +0800
-Message-ID: <1487245547-24384-14-git-send-email-tom.leiming@gmail.com>
+Subject: [PATCH 15/17] md: raid10: avoid direct access to bvec table in fix_recovery_read_error
+Date: Thu, 16 Feb 2017 19:45:45 +0800
+Message-ID: <1487245547-24384-16-git-send-email-tom.leiming@gmail.com>
 References: <1487245547-24384-1-git-send-email-tom.leiming@gmail.com>
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1487245547-24384-1-git-send-email-tom.leiming@gmail.com>
-Sender: linux-block-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, NeilBrown <neilb@suse.com>
 Cc: Ming Lei <tom.leiming@gmail.com>
 List-Id: linux-raid.ids
 
-Use this helper, instead of direct access to .bi_vcnt.
+The cost is 128bytes(8*16) stack space in kernel thread context, and just
+use the bio helper to retrieve pages from bio.
 
 Signed-off-by: Ming Lei <tom.leiming@gmail.com>
 ---
- drivers/md/raid1.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/md/raid10.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 54ec32be3277..02cfece74981 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -998,7 +998,8 @@ static void alloc_behind_pages(struct bio *bio, struct r1bio *r1_bio)
- {
- 	int i;
- 	struct bio_vec *bvec;
--	struct bio_vec *bvecs = kzalloc(bio->bi_vcnt * sizeof(struct bio_vec),
-+	unsigned vcnt = bio_segments_all(bio);
-+	struct bio_vec *bvecs = kzalloc(vcnt * sizeof(struct bio_vec),
- 					GFP_NOIO);
- 	if (unlikely(!bvecs))
- 		return;
-@@ -1014,12 +1015,12 @@ static void alloc_behind_pages(struct bio *bio, struct r1bio *r1_bio)
- 		kunmap(bvec->bv_page);
- 	}
- 	r1_bio->behind_bvecs = bvecs;
--	r1_bio->behind_page_count = bio->bi_vcnt;
-+	r1_bio->behind_page_count = vcnt;
- 	set_bit(R1BIO_BehindIO, &r1_bio->state);
- 	return;
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 69fe2a3cef89..c7d2f73565d9 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -2184,6 +2184,11 @@ static void fix_recovery_read_error(struct r10bio *r10_bio)
+ 	int idx = 0;
+ 	int dr = r10_bio->devs[0].devnum;
+ 	int dw = r10_bio->devs[1].devnum;
++	struct bio_vec *bvl;
++	struct page *pages[RESYNC_PAGES];
++
++	bio_for_each_segment_all(bvl, bio, idx)
++		pages[idx] = bvl->bv_page;
  
- do_sync_io:
--	for (i = 0; i < bio->bi_vcnt; i++)
-+	for (i = 0; i < vcnt; i++)
- 		if (bvecs[i].bv_page)
- 			put_page(bvecs[i].bv_page);
- 	kfree(bvecs);
+ 	while (sectors) {
+ 		int s = sectors;
+@@ -2199,7 +2204,7 @@ static void fix_recovery_read_error(struct r10bio *r10_bio)
+ 		ok = sync_page_io(rdev,
+ 				  addr,
+ 				  s << 9,
+-				  bio->bi_io_vec[idx].bv_page,
++				  pages[idx],
+ 				  REQ_OP_READ, 0, false);
+ 		if (ok) {
+ 			rdev = conf->mirrors[dw].rdev;
+@@ -2207,7 +2212,7 @@ static void fix_recovery_read_error(struct r10bio *r10_bio)
+ 			ok = sync_page_io(rdev,
+ 					  addr,
+ 					  s << 9,
+-					  bio->bi_io_vec[idx].bv_page,
++					  pages[idx],
+ 					  REQ_OP_WRITE, 0, false);
+ 			if (!ok) {
+ 				set_bit(WriteErrorSeen, &rdev->flags);
 -- 
 2.7.4
