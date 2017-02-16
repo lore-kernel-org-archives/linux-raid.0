@@ -1,97 +1,112 @@
-From: Ming Lei <tom.leiming@gmail.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
 Subject: Re: [PATCH 02/17] block: introduce bio_remove_last_page()
-Date: Thu, 16 Feb 2017 21:59:22 +0800
-Message-ID: <CACVXFVPLXfWKcQGcmX8H6Um+4P0XFpKC0DWC4-JXy94st=QL7Q@mail.gmail.com>
+Date: Thu, 16 Feb 2017 15:10:35 +0100
+Message-ID: <f856434b-90a3-9885-4f4f-9d899601ed60@suse.de>
 References: <1487245547-24384-1-git-send-email-tom.leiming@gmail.com>
- <1487245547-24384-3-git-send-email-tom.leiming@gmail.com> <b443b3a1-ecc9-8238-1b3d-90870a25c793@suse.de>
- <CACVXFVPPifd4ktKnCb6v+44dwUOyN6cTNiQp5zT82r9XzP_z1A@mail.gmail.com> <d6d67f9b-e011-cc57-e484-e21b66ab9d6b@suse.de>
+ <1487245547-24384-3-git-send-email-tom.leiming@gmail.com>
+ <b443b3a1-ecc9-8238-1b3d-90870a25c793@suse.de>
+ <CACVXFVPPifd4ktKnCb6v+44dwUOyN6cTNiQp5zT82r9XzP_z1A@mail.gmail.com>
+ <d6d67f9b-e011-cc57-e484-e21b66ab9d6b@suse.de>
+ <CACVXFVPLXfWKcQGcmX8H6Um+4P0XFpKC0DWC4-JXy94st=QL7Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <d6d67f9b-e011-cc57-e484-e21b66ab9d6b@suse.de>
+In-Reply-To: <CACVXFVPLXfWKcQGcmX8H6Um+4P0XFpKC0DWC4-JXy94st=QL7Q@mail.gmail.com>
 Sender: linux-block-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
+To: Ming Lei <tom.leiming@gmail.com>
 Cc: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, NeilBrown <neilb@suse.com>
 List-Id: linux-raid.ids
 
-On Thu, Feb 16, 2017 at 9:40 PM, Johannes Thumshirn <jthumshirn@suse.de> wrote:
-> On 02/16/2017 02:30 PM, Ming Lei wrote:
->> On Thu, Feb 16, 2017 at 8:08 PM, Johannes Thumshirn <jthumshirn@suse.de> wrote:
->>> On 02/16/2017 12:45 PM, Ming Lei wrote:
->>>> MD need this helper to remove the last added page, so introduce
->>>> it.
+On 02/16/2017 02:59 PM, Ming Lei wrote:
+> On Thu, Feb 16, 2017 at 9:40 PM, Johannes Thumshirn <jthumshirn@suse.de> wrote:
+>> On 02/16/2017 02:30 PM, Ming Lei wrote:
+>>> On Thu, Feb 16, 2017 at 8:08 PM, Johannes Thumshirn <jthumshirn@suse.de> wrote:
+>>>> On 02/16/2017 12:45 PM, Ming Lei wrote:
+>>>>> MD need this helper to remove the last added page, so introduce
+>>>>> it.
+>>>>>
+>>>>> Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+>>>>> ---
+>>>>>  block/bio.c         | 23 +++++++++++++++++++++++
+>>>>>  include/linux/bio.h |  1 +
+>>>>>  2 files changed, 24 insertions(+)
+>>>>>
+>>>>> diff --git a/block/bio.c b/block/bio.c
+>>>>> index 5eec5e08417f..0ce7ffcd7939 100644
+>>>>> --- a/block/bio.c
+>>>>> +++ b/block/bio.c
+>>>>> @@ -837,6 +837,29 @@ int bio_add_pc_page(struct request_queue *q, struct bio *bio, struct page
+>>>>>  EXPORT_SYMBOL(bio_add_pc_page);
+>>>>>
+>>>>>  /**
+>>>>> + *   bio_remove_last_page    -       remove the last added page
+>>>>> + *   @bio: destination bio
+>>>>> + *
+>>>>> + *   Attempt to remove the last added page from the bio_vec maplist.
+>>>>> + */
+>>>>> +void bio_remove_last_page(struct bio *bio)
+>>>>> +{
+>>>>> +     /*
+>>>>> +      * cloned bio must not modify vec list
+>>>>> +      */
+>>>>> +     if (WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED)))
+>>>>> +             return;
+>>>>> +
+>>>>> +     if (bio->bi_vcnt > 0) {
 >>>>
->>>> Signed-off-by: Ming Lei <tom.leiming@gmail.com>
->>>> ---
->>>>  block/bio.c         | 23 +++++++++++++++++++++++
->>>>  include/linux/bio.h |  1 +
->>>>  2 files changed, 24 insertions(+)
+>>>> In patch 1 you introduce bio_segments_all() with the log message 'So
+>>>> that we can replace the direct access to .bi_vcnt.' Here you introduce a
+>>>> new direct access to it (plus the duplicated WARN_ON_ONCE()).
 >>>>
->>>> diff --git a/block/bio.c b/block/bio.c
->>>> index 5eec5e08417f..0ce7ffcd7939 100644
->>>> --- a/block/bio.c
->>>> +++ b/block/bio.c
->>>> @@ -837,6 +837,29 @@ int bio_add_pc_page(struct request_queue *q, struct bio *bio, struct page
->>>>  EXPORT_SYMBOL(bio_add_pc_page);
->>>>
->>>>  /**
->>>> + *   bio_remove_last_page    -       remove the last added page
->>>> + *   @bio: destination bio
->>>> + *
->>>> + *   Attempt to remove the last added page from the bio_vec maplist.
->>>> + */
->>>> +void bio_remove_last_page(struct bio *bio)
->>>> +{
->>>> +     /*
->>>> +      * cloned bio must not modify vec list
->>>> +      */
->>>> +     if (WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED)))
->>>> +             return;
->>>> +
->>>> +     if (bio->bi_vcnt > 0) {
+>>>> Maybe use the helper directly here (I admit I haven't gone through the
+>>>> whole series yet, so I can't see if the change is made later).
 >>>
->>> In patch 1 you introduce bio_segments_all() with the log message 'So
->>> that we can replace the direct access to .bi_vcnt.' Here you introduce a
->>> new direct access to it (plus the duplicated WARN_ON_ONCE()).
+>>> Firstly MD does need one helper to remove the last added page, as you
+>>> can see there are three such uses in patch3.
 >>>
->>> Maybe use the helper directly here (I admit I haven't gone through the
->>> whole series yet, so I can't see if the change is made later).
+>>> Secondly both the two helpers will be changed once multipage bvec
+>>> is supported, that means we have to change MD too after multipage bvec
+>>> if just using bio_segments_all() to replace .bi_vcnt for removing
+>>> the last added page.
 >>
->> Firstly MD does need one helper to remove the last added page, as you
->> can see there are three such uses in patch3.
+>> I'm not sure if we're talking past each other here, I assumed you'd do
+>> something like:
 >>
->> Secondly both the two helpers will be changed once multipage bvec
->> is supported, that means we have to change MD too after multipage bvec
->> if just using bio_segments_all() to replace .bi_vcnt for removing
->> the last added page.
->
-> I'm not sure if we're talking past each other here, I assumed you'd do
-> something like:
->
-> void bio_remove_last_page(struct bio *bio)
-> {
->         int vcnt = bio_segments_all(bio);
->
->         if (bio_flagged(bio, BIO_CLONED))
->                 return;
->
->         if (vcnt > 0) {
->                 struct bio_vec *bv = &bio->bi_io_vec[vcnt - 1];
->
->                 bio->bi_iter.bi_size -= bv->bv_len;
->                 bio->bi_vcnt--;
->         }
-> }
+>> void bio_remove_last_page(struct bio *bio)
+>> {
+>>         int vcnt = bio_segments_all(bio);
+>>
+>>         if (bio_flagged(bio, BIO_CLONED))
+>>                 return;
+>>
+>>         if (vcnt > 0) {
+>>                 struct bio_vec *bv = &bio->bi_io_vec[vcnt - 1];
+>>
+>>                 bio->bi_iter.bi_size -= bv->bv_len;
+>>                 bio->bi_vcnt--;
+>>         }
+>> }
+> 
+> What we are doing is to remove the external direct access to bvec
+> table in drivers or filesystems because they may misuse that, for
+> example, drivers often use .bi_vcnt to get the page count in the bio,
+> but the actual meaning is just bvec's count.
+> 
+> And the implementation in block layer still need to play the table directly,
+> especially for sake of efficiency, cause we understand the details and won't
+> misuse that.
 
-What we are doing is to remove the external direct access to bvec
-table in drivers or filesystems because they may misuse that, for
-example, drivers often use .bi_vcnt to get the page count in the bio,
-but the actual meaning is just bvec's count.
+Ah OK, so bio_segments_all() is intended for drivers.
 
-And the implementation in block layer still need to play the table directly,
-especially for sake of efficiency, cause we understand the details and won't
-misuse that.
+Thanks for the clarification,
+	Johannes
 
 
-Thanks,
-Ming Lei
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
