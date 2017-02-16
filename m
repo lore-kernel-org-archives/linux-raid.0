@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [md PATCH 06/14] md/raid5: remove over-loading of
- ->bi_phys_segments.
+Subject: [md PATCH 08/14] md/raid1,
+ raid10: move rXbio accounting closer to allocation.
 Date: Thu, 16 Feb 2017 15:39:02 +1100
-Message-ID: <148721994202.7521.13464645140160274861.stgit@noble>
+Message-ID: <148721994238.7521.906707300050565451.stgit@noble>
 References: <148721992248.7521.17160361058957519076.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,170 +14,109 @@ To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org, hch@lst.de
 List-Id: linux-raid.ids
 
-When a read request, which bypassed the cache, fails, we need to retry
-it through the cache.
-This involves attaching it to a sequence of stripe_heads, and it may not
-be possible to get all the stripe_heads we need at once.
-We do what we can, and record how far we got in ->bi_phys_segments so
-we can pick up again later.
+When raid1 or raid10 need find they will need to allocate
+a new r1bio/r10bio, in order to work around a known bad block,
+the account for the allocation well before the allocation
+is made.  This separation makes the correctness less obvious and
+requires comments.
 
-There is only ever one bio which may have a non-zero offset stored in
-->bi_phys_segments, the one that is either active in the single thread
-which calls retry_aligned_read(), or is in conf->retry_read_aligned
-waiting for retry_aligned_read() to be called again.
+The accounting needs to be a little before: before the first rXbio is
+submitted, but that is all.
 
-So we only need to store one offset value.  This can be in a local
-variable passed between remove_bio_from_retry() and
-retry_aligned_read(), or in the r5conf structure next to the
-->retry_read_aligned pointer.
-
-Storing it there allows the last usage of ->bi_phys_segments to be
-removed from md/raid5.c.
+So move the accounting down to where it makes more sense.
 
 Signed-off-by: NeilBrown <neilb@suse.com>
 ---
- drivers/md/raid5.c |   24 ++++++++++++------------
- drivers/md/raid5.h |   30 +-----------------------------
- 2 files changed, 13 insertions(+), 41 deletions(-)
+ drivers/md/raid1.c  |   23 ++++++++++-------------
+ drivers/md/raid10.c |   22 +++++++++-------------
+ 2 files changed, 19 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 905abf081acf..f93e8fddbb23 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4883,12 +4883,14 @@ static void add_bio_to_retry(struct bio *bi,struct r5conf *conf)
- 	md_wakeup_thread(conf->mddev->thread);
- }
- 
--static struct bio *remove_bio_from_retry(struct r5conf *conf)
-+static struct bio *remove_bio_from_retry(struct r5conf *conf,
-+					 unsigned int *offset)
- {
- 	struct bio *bi;
- 
- 	bi = conf->retry_read_aligned;
- 	if (bi) {
-+		*offset = conf->retry_read_offset;
- 		conf->retry_read_aligned = NULL;
- 		return bi;
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 7b0f647bcccb..c1d0675880fb 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1326,18 +1326,9 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 		goto retry_write;
  	}
-@@ -4896,11 +4898,7 @@ static struct bio *remove_bio_from_retry(struct r5conf *conf)
- 	if(bi) {
- 		conf->retry_read_aligned_list = bi->bi_next;
- 		bi->bi_next = NULL;
--		/*
--		 * this sets the active strip count to 1 and the processed
--		 * strip count to zero (upper 8 bits)
+ 
+-	if (max_sectors < r1_bio->sectors) {
+-		/* We are splitting this write into multiple parts, so
+-		 * we need to prepare for allocating another r1_bio.
 -		 */
--		raid5_set_bi_processed_stripes(bi, 0);
-+		*offset = 0;
++	if (max_sectors < r1_bio->sectors)
+ 		r1_bio->sectors = max_sectors;
+-		spin_lock_irq(&conf->device_lock);
+-		if (bio->bi_phys_segments == 0)
+-			bio->bi_phys_segments = 2;
+-		else
+-			bio->bi_phys_segments++;
+-		spin_unlock_irq(&conf->device_lock);
+-	}
++
+ 	sectors_handled = r1_bio->sector + max_sectors - bio->bi_iter.bi_sector;
+ 
+ 	atomic_set(&r1_bio->remaining, 1);
+@@ -1426,10 +1417,16 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 	 * as it could result in the bio being freed.
+ 	 */
+ 	if (sectors_handled < bio_sectors(bio)) {
+-		r1_bio_write_done(r1_bio);
+-		/* We need another r1_bio.  It has already been counted
++		/* We need another r1_bio, which must be accounted
+ 		 * in bio->bi_phys_segments
+ 		 */
++		spin_lock_irq(&conf->device_lock);
++		if (bio->bi_phys_segments == 0)
++			bio->bi_phys_segments = 2;
++		else
++			bio->bi_phys_segments++;
++		spin_unlock_irq(&conf->device_lock);
++		r1_bio_write_done(r1_bio);
+ 		r1_bio = mempool_alloc(conf->r1bio_pool, GFP_NOIO);
+ 		r1_bio->master_bio = bio;
+ 		r1_bio->sectors = bio_sectors(bio) - sectors_handled;
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 1920756828df..9258cbe233bb 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1383,18 +1383,8 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
+ 		goto retry_write;
  	}
  
- 	return bi;
-@@ -5835,7 +5833,8 @@ static inline sector_t raid5_sync_request(struct mddev *mddev, sector_t sector_n
- 	return STRIPE_SECTORS;
- }
+-	if (max_sectors < r10_bio->sectors) {
+-		/* We are splitting this into multiple parts, so
+-		 * we need to prepare for allocating another r10_bio.
+-		 */
++	if (max_sectors < r10_bio->sectors)
+ 		r10_bio->sectors = max_sectors;
+-		spin_lock_irq(&conf->device_lock);
+-		if (bio->bi_phys_segments == 0)
+-			bio->bi_phys_segments = 2;
+-		else
+-			bio->bi_phys_segments++;
+-		spin_unlock_irq(&conf->device_lock);
+-	}
+ 	sectors_handled = r10_bio->sector + max_sectors -
+ 		bio->bi_iter.bi_sector;
  
--static int  retry_aligned_read(struct r5conf *conf, struct bio *raid_bio)
-+static int  retry_aligned_read(struct r5conf *conf, struct bio *raid_bio,
-+			       unsigned int offset)
- {
- 	/* We may not be able to submit a whole bio at once as there
- 	 * may not be enough stripe_heads available.
-@@ -5864,7 +5863,7 @@ static int  retry_aligned_read(struct r5conf *conf, struct bio *raid_bio)
- 		     sector += STRIPE_SECTORS,
- 		     scnt++) {
+@@ -1491,10 +1481,16 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
+ 	 */
  
--		if (scnt < raid5_bi_processed_stripes(raid_bio))
-+		if (scnt < offset)
- 			/* already done this stripe */
- 			continue;
+ 	if (sectors_handled < bio_sectors(bio)) {
+-		one_write_done(r10_bio);
+-		/* We need another r10_bio.  It has already been counted
++		/* We need another r10_bio and it needs to be counted
+ 		 * in bio->bi_phys_segments.
+ 		 */
++		spin_lock_irq(&conf->device_lock);
++		if (bio->bi_phys_segments == 0)
++			bio->bi_phys_segments = 2;
++		else
++			bio->bi_phys_segments++;
++		spin_unlock_irq(&conf->device_lock);
++		one_write_done(r10_bio);
+ 		r10_bio = mempool_alloc(conf->r10bio_pool, GFP_NOIO);
  
-@@ -5872,15 +5871,15 @@ static int  retry_aligned_read(struct r5conf *conf, struct bio *raid_bio)
- 
- 		if (!sh) {
- 			/* failed to get a stripe - must wait */
--			raid5_set_bi_processed_stripes(raid_bio, scnt);
- 			conf->retry_read_aligned = raid_bio;
-+			conf->retry_read_offset = scnt;
- 			return handled;
- 		}
- 
- 		if (!add_stripe_bio(sh, raid_bio, dd_idx, 0, 0)) {
- 			raid5_release_stripe(sh);
--			raid5_set_bi_processed_stripes(raid_bio, scnt);
- 			conf->retry_read_aligned = raid_bio;
-+			conf->retry_read_offset = scnt;
- 			return handled;
- 		}
- 
-@@ -6003,6 +6002,7 @@ static void raid5d(struct md_thread *thread)
- 	while (1) {
- 		struct bio *bio;
- 		int batch_size, released;
-+		unsigned int offset;
- 
- 		released = release_stripe_list(conf, conf->temp_inactive_list);
- 		if (released)
-@@ -6020,10 +6020,10 @@ static void raid5d(struct md_thread *thread)
- 		}
- 		raid5_activate_delayed(conf);
- 
--		while ((bio = remove_bio_from_retry(conf))) {
-+		while ((bio = remove_bio_from_retry(conf, &offset))) {
- 			int ok;
- 			spin_unlock_irq(&conf->device_lock);
--			ok = retry_aligned_read(conf, bio);
-+			ok = retry_aligned_read(conf, bio, offset);
- 			spin_lock_irq(&conf->device_lock);
- 			if (!ok)
- 				break;
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index 3018a33693ab..a4ef02176afb 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -480,35 +480,6 @@ static inline struct bio *r5_next_bio(struct bio *bio, sector_t sector)
- 		return NULL;
- }
- 
--/*
-- * We maintain a count of processed stripes in the upper 16 bits
-- */
--static inline int raid5_bi_processed_stripes(struct bio *bio)
--{
--	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
--
--	return (atomic_read(segments) >> 16) & 0xffff;
--}
--
--static inline void raid5_set_bi_processed_stripes(struct bio *bio,
--	unsigned int cnt)
--{
--	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
--	int old, new;
--
--	do {
--		old = atomic_read(segments);
--		new = (old & 0xffff) | (cnt << 16);
--	} while (atomic_cmpxchg(segments, old, new) != old);
--}
--
--static inline void raid5_set_bi_stripes(struct bio *bio, unsigned int cnt)
--{
--	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
--
--	atomic_set(segments, cnt);
--}
--
- /* NOTE NR_STRIPE_HASH_LOCKS must remain below 64.
-  * This is because we sometimes take all the spinlocks
-  * and creating that much locking depth can cause
-@@ -596,6 +567,7 @@ struct r5conf {
- 	struct list_head	delayed_list; /* stripes that have plugged requests */
- 	struct list_head	bitmap_list; /* stripes delaying awaiting bitmap update */
- 	struct bio		*retry_read_aligned; /* currently retrying aligned bios   */
-+	unsigned int		retry_read_offset; /* sector offset into retry_read_aligned */
- 	struct bio		*retry_read_aligned_list; /* aligned bios retry list  */
- 	atomic_t		preread_active_stripes; /* stripes with scheduled io */
- 	atomic_t		active_aligned_reads;
+ 		r10_bio->master_bio = bio;
 
 
