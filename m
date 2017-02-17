@@ -1,131 +1,127 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [md PATCH 09/14] md/raid10: stop using bi_phys_segments
-Date: Fri, 17 Feb 2017 13:15:21 +1100
-Message-ID: <87d1eh4l6u.fsf@notabene.neil.brown.name>
-References: <148721992248.7521.17160361058957519076.stgit@noble> <148721994257.7521.2502119977276847128.stgit@noble> <CA+res+SSS4c1nXo8AE14ku2q_3Bb+w-+XuZOK14SHLACWkHzRw@mail.gmail.com>
+Subject: Re: [md PATCH 14/14] MD: use per-cpu counter for writes_pending
+Date: Fri, 17 Feb 2017 13:34:18 +1100
+Message-ID: <87a89l4kb9.fsf@notabene.neil.brown.name>
+References: <148721992248.7521.17160361058957519076.stgit@noble> <148721994322.7521.3431105903303667812.stgit@noble> <20170216201211.3q7rvvp2p3xxz6ew@kernel.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CA+res+SSS4c1nXo8AE14ku2q_3Bb+w-+XuZOK14SHLACWkHzRw@mail.gmail.com>
+In-Reply-To: <20170216201211.3q7rvvp2p3xxz6ew@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jack Wang <jack.wang.usish@gmail.com>
-Cc: Shaohua Li <shli@kernel.org>, linux-raid <linux-raid@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, hch@lst.de
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Feb 16 2017, Jack Wang wrote:
+On Thu, Feb 16 2017, Shaohua Li wrote:
 
-> 2017-02-16 5:39 GMT+01:00 NeilBrown <neilb@suse.com>:
->> raid10 currently repurposes bi_phys_segments on each
->> incoming bio to count how many r10bio was used to encode the
->> request.
->>
->> We need to know when the number of attached r10bio reaches
->> zero to:
->> 1/ call bio_endio() when all IO on the bio is finished
->> 2/ decrement ->nr_pending so that resync IO can proceed.
->>
->> Now that the bio has its own __bi_remaining counter, that
->> can be used instead. We can call bio_inc_remaining to
->> increment the counter and call bio_endio() every time an
->> r10bio completes, rather than only when bi_phys_segments
->> reaches zero.
->>
->> This addresses point 1, but not point 2.  bio_endio()
->> doesn't (and cannot) report when the last r10bio has
->> finished, so a different approach is needed.
->>
->> So: instead of counting bios in ->nr_pending, count r10bios.
->> i.e. every time we attach a bio, increment nr_pending.
->> Every time an r10bio completes, decrement nr_pending.
->>
->> Normally we only increment nr_pending after first checking
->> that ->barrier is zero, or some other non-trivial tests and
->> possible waiting.  When attaching multiple r10bios to a bio,
->> we only need the tests and the waiting once.  After the
->> first increment, subsequent increments can happen
->> unconditionally as they are really all part of the one
->> request.
->>
->> So introduce inc_pending() which can be used when we know
->> that nr_pending is already elevated.
->>
+> On Thu, Feb 16, 2017 at 03:39:03PM +1100, Neil Brown wrote:
+>> The 'writes_pending' counter is used to determine when the
+>> array is stable so that it can be marked in the superblock
+>> as "Clean".  Consequently it needs to be updated frequently
+>> but only checked for zero occasionally.  Recent changes to
+>> raid5 cause the count to be updated even more often - once
+>> per 4K rather than once per bio.  This provided
+>> justification for making the updates more efficient.
+>>=20
+>> So we replace the atomic counter with a per-cpu array of
+>> 'long' counters. Incrementing and decrementing is normally
+>> much cheaper, testing for zero is more expensive.
+>>=20
+>> To meaningfully be able to test for zero we need to be able
+>> to block further updates.  This is done by forcing the
+>> "increment" step to take a spinlock in the rare case that
+>> another thread is checking if the count is zero.  This is
+>> done using a new field: "checkers".  "checkers" is the
+>> number of threads that are currently checking whether the
+>> count is zero.  It is usually 0, occasionally 1, and it is
+>> not impossible that it could be higher, though this would be
+>> rare.
+>>=20
+>> If, within an rcu_read_locked section, checkers is seen to
+>> be zero, then the local-cpu counter can be incremented
+>> freely.  If checkers is not zero, mddev->lock must be taken
+>> before the increment is allowed.  A decrement is always
+>> allowed.
+>>=20
+>> To test for zero, a thread must increment "checkers", call
+>> synchronize_rcu(), then take mddev->lock.  Once this is done
+>> no new increments can happen.  A thread may choose to
+>> perform a quick test-for-zero by summing all the counters
+>> without holding a lock.  If this is non-zero, the the total
+>> count is non-zero, or was non-zero very recently, so it is
+>> safe to assume that it isn't zero.  If the quick check does
+>> report a zero sum, then it is worth performing the locking
+>> protocol.
+>>=20
+>> When the counter is decremented, it is no longer possible to
+>> immediately test if the result is zero
+>> (atmic_dec_and_test()).  We don't even really want to
+>> perform the "quick" tests as that sums over all cpus and is
+>> work that will most often bring no benefit.
+>>=20
+>> In the "safemode=3D=3D2" case, when we want to mark the array as
+>> "clean" immediately when there are no writes, we perform the
+>> quick test anyway, and possibly wake the md thread to do the
+>> full test.  "safemode=3D=3D2" is only used during shutdown so
+>> the cost is not problematic.
+>>=20
+>> When safemode!=3D2 we always set the timer, rather than only
+>> when the counter reaches zero.
+>>=20
+>> If mod_timer() is called to set the timeout to the value it
+>> already has, mod_timer() has low overhead with no atomic
+>> operations.  So at worst it will have a noticeable cost once
+>> per jiffie.  To further reduce the otherhead, we round the
+>> requests delay to a multiple of ->safemode_delay.  This
+>> might increase the delay until the timer fires a little, but
+>> will reduce the overhead of calling mod_timer()
+>> significantly.  If lots of requests are completing, the
+>> timer will be updated every 200 milliseconds (by default)
+>> and never fire.  When it does eventually fire, it will
+>> schedule the md thread to perform the full test for
+>> writes_pending=3D=3D0, and this is quite likely to find '0'.
+>>=20
 >> Signed-off-by: NeilBrown <neilb@suse.com>
->> ---
->>  drivers/md/raid10.c |   76 +++++++++++++++++----------------------------------
->>  1 file changed, 25 insertions(+), 51 deletions(-)
->>
->> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->> index 9258cbe233bb..6b4d8643c574 100644
->> --- a/drivers/md/raid10.c
->> +++ b/drivers/md/raid10.c
->> @@ -301,27 +301,18 @@ static void reschedule_retry(struct r10bio *r10_bio)
->>  static void raid_end_bio_io(struct r10bio *r10_bio)
->>  {
->>         struct bio *bio = r10_bio->master_bio;
->> -       int done;
->>         struct r10conf *conf = r10_bio->mddev->private;
->>
->> -       if (bio->bi_phys_segments) {
->> -               unsigned long flags;
->> -               spin_lock_irqsave(&conf->device_lock, flags);
->> -               bio->bi_phys_segments--;
->> -               done = (bio->bi_phys_segments == 0);
->> -               spin_unlock_irqrestore(&conf->device_lock, flags);
->> -       } else
->> -               done = 1;
->>         if (!test_bit(R10BIO_Uptodate, &r10_bio->state))
->>                 bio->bi_error = -EIO;
->> -       if (done) {
->> -               bio_endio(bio);
->> -               /*
->> -                * Wake up any possible resync thread that waits for the device
->> -                * to go idle.
->> -                */
->> -               allow_barrier(conf);
->> -       }
->> +
->> +       /*
->> +        * Wake up any possible resync thread that waits for the device
->> +        * to go idle.
->> +        */
->> +       allow_barrier(conf);
->> +       bio_endio(bio);
->> +
 >
-> Hi Neil,
->
-> Why do you switch the order of above 2 lines, is there a reason
-> behind, I notice in raid1 you kept the order?
+> This sounds like a good place to use percpu-refcount. In set_in_sync, we =
+switch
+> it to atomic, read it, then switch it back to percpu.
 
-I cannot think why I would have done that.  It doesn't matter what
-order they are in, but it does make sense to leave the order unchanged
-unless there is a good reason.  I'll put it back.
+I did have a quick look at percpu-refcount and it didn't seem suitable.
+There is no interface to set the counter to atomic and wait for that to
+complete.
+There is also no interface to perform a lockless sum - only expected to
+report '0' if the count has been zero for a little while.
 
-Thanks,
+I might be able to make do without those, or possibly enhance
+percpu-refcount.
+
+I'll have a look - thanks.
+
 NeilBrown
-
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlimXLkACgkQOeye3VZi
-gbnDkhAArnPy5ACTEKAMvpNfhADDL7aZywqMCTDWZVyzCFuMrXGL6Ps2uwI13F0I
-dU2UrLk0j38XXP2Spqtj9KS8a4yAyfYYBwkpPgwlKtCH4GGDZ05hAr/DHt+1w2WZ
-QtXr0WHo3jKKXBkdI94fef2sXgw2zZ5IZodb5GRa95qB0ekwqKVjeapYdqmReRFb
-3HgSpJFHKo22GXbqPL1Z32kvLrugqRf52/p6z/ZQ0hz4fjORogYF2h+HSM8qqlhF
-A7sO5S4MTcYRPiPJITecrvMpzCrPD3I3rlf29bQLtR8ZFYmF8Hbp7DkhWvuX+O4S
-ttZemg/lbbZb96PdfDzLhdIbRFwofhBBo8E7rS/HmhBVmXK8iwucVTMFplut39uy
-VAKL67bC6Y2EinBV7nYS/bDMSOl7d3nGvVdtQIXvy8HZFiybkucp3x1mzrJL8KBa
-STJeSmB2LPVMoUiJs7CDddzt/iftpiD97Rk3j1i8cmNxk+42FBaJbFE8i5EYG26x
-GubOQRaU0F4YjWCjA55xDlwoOsFmmbvUbB06thggOjcYmI8+86ERImH2+EaBmD6D
-QnH/dFG6H6bFzULOjxbj+Wn4AvumdjMl79wp3KWOU68CZYl+EkKMFmD/8hvK2jGM
-S3FOmpaNK6PqbPChQlmITygEgjVmzrl0u/OyR7shzM1IOoa+AOU=
-=uvvO
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlimYSoACgkQOeye3VZi
+gbk1VA/8D7ljNPcX3sfoAb2aBjnbFXFb8Kmuxx5eXNFKHC/hb4ixLWi9qu6EDG/J
+R876ViLifKS7B0GUp59C8H85uAtS75pxxvBDOXuwvefPXD4j9icEb8vWSpkG89RL
+1hKsHOFQhtyh6Nm+SSJeT1LwcNlCXrEZ3uk35pCTcK97Vg13JBja9YPdYj/uyYIX
+IldfxqXXBDQqh6ubDZw+mN7G35PE5izwhh+bta/LkhJHU+pCIPyk4XY65jfpyMST
+tSs4Wl0vAekEzHW5g4kqP+myI8YJeZvqpHJGf6c3rFP6/++L9Z9Z7/G3+/Ks0UyK
+ZlUZdJK21ly5KueYQgFpB5e2WU/1/d4qfojuw+xPLca0rSGHvH2JBI+KOR3F/M9V
+Fj1NCUD2USXN+HI/F6r6Ufn8zyzDG/hUy9zWtYkuWO7q3x/js/uJhupktlAOOT9K
+AQ1glhffRgro8YV0ByBeppckTWTjft/qc6wh+lxZOIAcvBkAB0AmJRPYxOsx/65P
+jVkwoL3Dm9kQ7YdSeeIpisnaQQQ6UXbP6T5nN3mTExElFlkhFTTu3QHCabcsP+2H
+tiIBILC+HUsOVwhC9OX0LLGWtRS/872RJVpJMx1Q73XGVRmWl+DdRwxVjzi+OmXe
+Z36Enxn4+8Cu0C1ASV16TK+qySyTvvzJ4sy/+A0O4hZmdfcY7gI=
+=7Ogm
 -----END PGP SIGNATURE-----
 --=-=-=--
