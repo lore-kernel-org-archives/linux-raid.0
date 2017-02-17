@@ -1,59 +1,169 @@
-From: Les Stroud <les@lesstroud.com>
-Subject: Re: Process stuck in md_flush_request (state: D)
-Date: Fri, 17 Feb 2017 15:40:03 -0500
-Message-ID: <9589FA71-C458-4B44-B2F3-3D42E8B0885D@lesstroud.com>
-References: <36A8825E-F387-4ED8-8672-976094B3BEBB@lesstroud.com>
- <99A92F4D-338D-4486-BB1C-C114A8524403@lesstroud.com>
- <20170217200644.amaxgira4nqlbchh@kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 10.2 \(3259\))
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+From: Shaohua Li <shli@fb.com>
+Subject: [PATCH 1/3] md/raid5: prioritize stripes for writeback
+Date: Fri, 17 Feb 2017 15:32:24 -0800
+Message-ID: <b9e3986a466fffa2b901f6eff9c4ca6ec7398262.1487373517.git.shli@fb.com>
+References: <cover.1487373517.git.shli@fb.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170217200644.amaxgira4nqlbchh@kernel.org>
+In-Reply-To: <cover.1487373517.git.shli@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.com, songliubraving@fb.com, kernel-team@fb.com
 List-Id: linux-raid.ids
 
-It=E2=80=99ll take a day or two for it to happen again.  When it does, =
-I=E2=80=99ll pull the inflight stats.  Anything else I should grab while =
-I=E2=80=99m at it?
+In raid5-cache writeback mode, we have two types of stripes to handle.
+- stripes which aren't cached yet
+- stripes which are cached and flushing out to raid disks
 
-Thanx,
-LES
+Upperlayer is more sensistive to latency of the first type of stripes
+generally. But we only one handle list for all these stripes, where the
+two types of stripes are mixed together. When reclaim flushes a lot of
+stripes, the first type of stripes could be noticeably delayed. On the
+other hand, if the log space is tight, we'd like to handle the second
+type of stripes faster and free log space.
 
+This patch destinguishes the two types stripes. They are added into
+different handle list. When we try to get a stripe to handl, we prefer
+the first type of stripes unless log space is tight.
 
-> On Feb 17, 2017, at 3:06 PM, Shaohua Li <shli@kernel.org> wrote:
->=20
-> On Fri, Feb 17, 2017 at 02:05:49PM -0500, Les Stroud wrote:
->>=20
->> I have a problem with processes entering an uninterruptible sleep =
-state in md_flush_request and never returning. I having trouble =
-identifying the underlying issue. I=E2=80=99m hoping someone on here may =
-be able to help.
->>=20
->> The servers in question are running in aws (xen hvm) with kernel =
-3.8.13-118.16.2.el6uek.x86_64.  The server has two mounts.  The first is =
-vanilla ext4.  The second is a software RAID0 array, striped with 256k =
-chunks, buiIt with md.  It=E2=80=99s file system is ext4.=20
->>=20
->> The most immediately and obvious symptom of the issue are kernel =
-errors =E2=80=9Ckernel: INFO task [some process]: blocked for more than =
-120 seconds.=E2=80=9D.  Shortly there after, other processes start =
-entering the same uninterruptible wait state (D). This almost always =
-impacts ssh logins.
->>=20
->> The problem does not occur when the system is under load, or was =
-recently under load.  It happens when the system is quiet (no cpu, very =
-little io).
->=20
-> This seems suggesting we have a missed blk-plug flush in light =
-workload. Can
-> you check the output of /sys/block/disk-bame/inflight for both md and =
-the
-> underlayer disks? This will let us know if there is IO pending.
-> Also it would be great if you can test a upstream kernel.
->=20
-> Thanks,
-> Shaohua
+This should have no impact for !writeback case.
+
+Signed-off-by: Shaohua Li <shli@fb.com>
+---
+ drivers/md/raid5.c | 48 +++++++++++++++++++++++++++++++++++++++---------
+ drivers/md/raid5.h |  2 ++
+ 2 files changed, 41 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 7b7722bb2..d7c90da 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -174,6 +174,13 @@ static int stripe_operations_active(struct stripe_head *sh)
+ 	       test_bit(STRIPE_COMPUTE_RUN, &sh->state);
+ }
+ 
++static bool stripe_is_lowprio(struct stripe_head *sh)
++{
++	return (test_bit(STRIPE_R5C_FULL_STRIPE, &sh->state) ||
++		test_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state)) &&
++	       !test_bit(STRIPE_R5C_CACHING, &sh->state);
++}
++
+ static void raid5_wakeup_stripe_thread(struct stripe_head *sh)
+ {
+ 	struct r5conf *conf = sh->raid_conf;
+@@ -189,7 +196,10 @@ static void raid5_wakeup_stripe_thread(struct stripe_head *sh)
+ 	if (list_empty(&sh->lru)) {
+ 		struct r5worker_group *group;
+ 		group = conf->worker_groups + cpu_to_group(cpu);
+-		list_add_tail(&sh->lru, &group->handle_list);
++		if (stripe_is_lowprio(sh))
++			list_add_tail(&sh->lru, &group->loprio_list);
++		else
++			list_add_tail(&sh->lru, &group->handle_list);
+ 		group->stripes_cnt++;
+ 		sh->group = group;
+ 	}
+@@ -252,7 +262,12 @@ static void do_release_stripe(struct r5conf *conf, struct stripe_head *sh,
+ 			clear_bit(STRIPE_DELAYED, &sh->state);
+ 			clear_bit(STRIPE_BIT_DELAY, &sh->state);
+ 			if (conf->worker_cnt_per_group == 0) {
+-				list_add_tail(&sh->lru, &conf->handle_list);
++				if (stripe_is_lowprio(sh))
++					list_add_tail(&sh->lru,
++							&conf->loprio_list);
++				else
++					list_add_tail(&sh->lru,
++							&conf->handle_list);
+ 			} else {
+ 				raid5_wakeup_stripe_thread(sh);
+ 				return;
+@@ -5169,19 +5184,27 @@ static struct bio *chunk_aligned_read(struct mddev *mddev, struct bio *raid_bio)
+  */
+ static struct stripe_head *__get_priority_stripe(struct r5conf *conf, int group)
+ {
+-	struct stripe_head *sh = NULL, *tmp;
++	struct stripe_head *sh, *tmp;
+ 	struct list_head *handle_list = NULL;
+-	struct r5worker_group *wg = NULL;
++	struct r5worker_group *wg;
++	bool second_try = !r5c_is_writeback(conf->log);
++	bool try_loprio = test_bit(R5C_LOG_TIGHT, &conf->cache_state);
+ 
++again:
++	wg = NULL;
++	sh = NULL;
+ 	if (conf->worker_cnt_per_group == 0) {
+-		handle_list = &conf->handle_list;
++		handle_list = try_loprio ? &conf->loprio_list :
++					&conf->handle_list;
+ 	} else if (group != ANY_GROUP) {
+-		handle_list = &conf->worker_groups[group].handle_list;
++		handle_list = try_loprio ? &conf->worker_groups[group].loprio_list :
++				&conf->worker_groups[group].handle_list;
+ 		wg = &conf->worker_groups[group];
+ 	} else {
+ 		int i;
+ 		for (i = 0; i < conf->group_cnt; i++) {
+-			handle_list = &conf->worker_groups[i].handle_list;
++			handle_list = try_loprio ? &conf->worker_groups[i].loprio_list :
++				&conf->worker_groups[i].handle_list;
+ 			wg = &conf->worker_groups[i];
+ 			if (!list_empty(handle_list))
+ 				break;
+@@ -5232,8 +5255,13 @@ static struct stripe_head *__get_priority_stripe(struct r5conf *conf, int group)
+ 		wg = NULL;
+ 	}
+ 
+-	if (!sh)
+-		return NULL;
++	if (!sh) {
++		if (second_try)
++			return NULL;
++		second_try = true;
++		try_loprio = !try_loprio;
++		goto again;
++	}
+ 
+ 	if (wg) {
+ 		wg->stripes_cnt--;
+@@ -6543,6 +6571,7 @@ static int alloc_thread_groups(struct r5conf *conf, int cnt,
+ 
+ 		group = &(*worker_groups)[i];
+ 		INIT_LIST_HEAD(&group->handle_list);
++		INIT_LIST_HEAD(&group->loprio_list);
+ 		group->conf = conf;
+ 		group->workers = workers + i * cnt;
+ 
+@@ -6770,6 +6799,7 @@ static struct r5conf *setup_conf(struct mddev *mddev)
+ 	init_waitqueue_head(&conf->wait_for_stripe);
+ 	init_waitqueue_head(&conf->wait_for_overlap);
+ 	INIT_LIST_HEAD(&conf->handle_list);
++	INIT_LIST_HEAD(&conf->loprio_list);
+ 	INIT_LIST_HEAD(&conf->hold_list);
+ 	INIT_LIST_HEAD(&conf->delayed_list);
+ 	INIT_LIST_HEAD(&conf->bitmap_list);
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index 4bb27b9..6b9d2e8 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -542,6 +542,7 @@ struct r5worker {
+ 
+ struct r5worker_group {
+ 	struct list_head handle_list;
++	struct list_head loprio_list;
+ 	struct r5conf *conf;
+ 	struct r5worker *workers;
+ 	int stripes_cnt;
+@@ -608,6 +609,7 @@ struct r5conf {
+ 						  */
+ 
+ 	struct list_head	handle_list; /* stripes needing handling */
++	struct list_head	loprio_list; /* low priority stripes */
+ 	struct list_head	hold_list; /* preread ready stripes */
+ 	struct list_head	delayed_list; /* stripes that have plugged requests */
+ 	struct list_head	bitmap_list; /* stripes delaying awaiting bitmap update */
+-- 
+2.9.3
 
