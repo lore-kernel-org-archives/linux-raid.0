@@ -1,185 +1,131 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [md PATCH 01/14] md/raid5: use md_write_start to count stripes, not bios
-Date: Fri, 17 Feb 2017 13:04:44 +1100
-Message-ID: <87ino94loj.fsf@notabene.neil.brown.name>
-References: <148721992248.7521.17160361058957519076.stgit@noble> <148721994120.7521.3518782809103694227.stgit@noble> <20170216172926.lojx2a7ceqifrklq@kernel.org>
+Subject: Re: [md PATCH 09/14] md/raid10: stop using bi_phys_segments
+Date: Fri, 17 Feb 2017 13:15:21 +1100
+Message-ID: <87d1eh4l6u.fsf@notabene.neil.brown.name>
+References: <148721992248.7521.17160361058957519076.stgit@noble> <148721994257.7521.2502119977276847128.stgit@noble> <CA+res+SSS4c1nXo8AE14ku2q_3Bb+w-+XuZOK14SHLACWkHzRw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170216172926.lojx2a7ceqifrklq@kernel.org>
+In-Reply-To: <CA+res+SSS4c1nXo8AE14ku2q_3Bb+w-+XuZOK14SHLACWkHzRw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, hch@lst.de
+To: Jack Wang <jack.wang.usish@gmail.com>
+Cc: Shaohua Li <shli@kernel.org>, linux-raid <linux-raid@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Thu, Feb 16 2017, Shaohua Li wrote:
+On Thu, Feb 16 2017, Jack Wang wrote:
 
-> On Thu, Feb 16, 2017 at 03:39:01PM +1100, Neil Brown wrote:
->> We use md_write_start() to increase the count of pending writes, and
->> md_write_end() to decrement the count.  We currently count bios
->> submitted to md/raid5.  Change it count stripe_heads that a WRITE bio
->> has been attached to.
->>=20
->> So now, raid5_make_request() calls md_write_start() and then
->> md_write_end() to keep the count elevated during the setup of the
+> 2017-02-16 5:39 GMT+01:00 NeilBrown <neilb@suse.com>:
+>> raid10 currently repurposes bi_phys_segments on each
+>> incoming bio to count how many r10bio was used to encode the
 >> request.
->>=20
->> add_stripe_bio() calls md_write_start() for each stripe_head, and the
->> completion routines always call md_write_end(), instead of only
->> calling it when raid5_dec_bi_active_stripes() returns 0.
->> make_discard_request also calls md_write_start/end().
->>=20
->> The parallel between md_write_{start,end} and use of bi_phys_segments
->> can be seen in that:
->>  Whenever we set bi_phys_segments to 1, we now call md_write_start.
->>  Whenever we increment it on non-read requests with
->>    raid5_inc_bi_active_stripes(), we now call md_write_start().
->>  Whenever we decrement bi_phys_segments on non-read requsts with
->>     raid5_dec_bi_active_stripes(), we now call md_write_end().
->>=20
->> This reduces our dependence on keeping a per-bio count of active
->> stripes in bi_phys_segments.
->>=20
+>>
+>> We need to know when the number of attached r10bio reaches
+>> zero to:
+>> 1/ call bio_endio() when all IO on the bio is finished
+>> 2/ decrement ->nr_pending so that resync IO can proceed.
+>>
+>> Now that the bio has its own __bi_remaining counter, that
+>> can be used instead. We can call bio_inc_remaining to
+>> increment the counter and call bio_endio() every time an
+>> r10bio completes, rather than only when bi_phys_segments
+>> reaches zero.
+>>
+>> This addresses point 1, but not point 2.  bio_endio()
+>> doesn't (and cannot) report when the last r10bio has
+>> finished, so a different approach is needed.
+>>
+>> So: instead of counting bios in ->nr_pending, count r10bios.
+>> i.e. every time we attach a bio, increment nr_pending.
+>> Every time an r10bio completes, decrement nr_pending.
+>>
+>> Normally we only increment nr_pending after first checking
+>> that ->barrier is zero, or some other non-trivial tests and
+>> possible waiting.  When attaching multiple r10bios to a bio,
+>> we only need the tests and the waiting once.  After the
+>> first increment, subsequent increments can happen
+>> unconditionally as they are really all part of the one
+>> request.
+>>
+>> So introduce inc_pending() which can be used when we know
+>> that nr_pending is already elevated.
+>>
 >> Signed-off-by: NeilBrown <neilb@suse.com>
 >> ---
->>  drivers/md/raid5-cache.c |    2 +-
->>  drivers/md/raid5.c       |   27 +++++++++++++--------------
->>  2 files changed, 14 insertions(+), 15 deletions(-)
->>=20
->> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
->> index 302dea3296ba..4b211f914d17 100644
->> --- a/drivers/md/raid5-cache.c
->> +++ b/drivers/md/raid5-cache.c
->> @@ -265,8 +265,8 @@ r5c_return_dev_pending_writes(struct r5conf *conf, s=
-truct r5dev *dev,
->>  	while (wbi && wbi->bi_iter.bi_sector <
->>  	       dev->sector + STRIPE_SECTORS) {
->>  		wbi2 =3D r5_next_bio(wbi, dev->sector);
->> +		md_write_end(conf->mddev);
->>  		if (!raid5_dec_bi_active_stripes(wbi)) {
->> -			md_write_end(conf->mddev);
->>  			bio_list_add(return_bi, wbi);
->>  		}
->>  		wbi =3D wbi2;
->> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> index 3c7e106c12a2..760b726943c9 100644
->> --- a/drivers/md/raid5.c
->> +++ b/drivers/md/raid5.c
->> @@ -3075,6 +3075,7 @@ static int add_stripe_bio(struct stripe_head *sh, =
-struct bio *bi, int dd_idx,
->>  		bi->bi_next =3D *bip;
->>  	*bip =3D bi;
->>  	raid5_inc_bi_active_stripes(bi);
->> +	md_write_start(conf->mddev, bi);
->>=20=20
->>  	if (forwrite) {
->>  		/* check if page is covered */
->> @@ -3198,10 +3199,9 @@ handle_failed_stripe(struct r5conf *conf, struct =
-stripe_head *sh,
->>  			struct bio *nextbi =3D r5_next_bio(bi, sh->dev[i].sector);
->>=20=20
->>  			bi->bi_error =3D -EIO;
->> -			if (!raid5_dec_bi_active_stripes(bi)) {
->> -				md_write_end(conf->mddev);
->> +			md_write_end(conf->mddev);
->> +			if (!raid5_dec_bi_active_stripes(bi))
->>  				bio_list_add(return_bi, bi);
->> -			}
->>  			bi =3D nextbi;
->>  		}
->>  		if (bitmap_end)
->> @@ -3222,10 +3222,9 @@ handle_failed_stripe(struct r5conf *conf, struct =
-stripe_head *sh,
->>  			struct bio *bi2 =3D r5_next_bio(bi, sh->dev[i].sector);
->>=20=20
->>  			bi->bi_error =3D -EIO;
->> -			if (!raid5_dec_bi_active_stripes(bi)) {
->> -				md_write_end(conf->mddev);
->> +			md_write_end(conf->mddev);
->> +			if (!raid5_dec_bi_active_stripes(bi))
->>  				bio_list_add(return_bi, bi);
->> -			}
->>  			bi =3D bi2;
->>  		}
->>=20=20
->> @@ -3582,10 +3581,9 @@ static void handle_stripe_clean_event(struct r5co=
-nf *conf,
->>  				while (wbi && wbi->bi_iter.bi_sector <
->>  					dev->sector + STRIPE_SECTORS) {
->>  					wbi2 =3D r5_next_bio(wbi, dev->sector);
->> -					if (!raid5_dec_bi_active_stripes(wbi)) {
->> -						md_write_end(conf->mddev);
->> +					md_write_end(conf->mddev);
->> +					if (!raid5_dec_bi_active_stripes(wbi))
->>  						bio_list_add(return_bi, wbi);
->> -					}
->>  					wbi =3D wbi2;
->>  				}
->>  				bitmap_endwrite(conf->mddev->bitmap, sh->sector,
->> @@ -5268,6 +5266,7 @@ static void make_discard_request(struct mddev *mdd=
-ev, struct bio *bi)
->>=20=20
->>  	bi->bi_next =3D NULL;
->>  	bi->bi_phys_segments =3D 1; /* over-loaded to count active stripes */
->> +	md_write_start(mddev, bi);
+>>  drivers/md/raid10.c |   76 +++++++++++++++++----------------------------------
+>>  1 file changed, 25 insertions(+), 51 deletions(-)
+>>
+>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+>> index 9258cbe233bb..6b4d8643c574 100644
+>> --- a/drivers/md/raid10.c
+>> +++ b/drivers/md/raid10.c
+>> @@ -301,27 +301,18 @@ static void reschedule_retry(struct r10bio *r10_bio)
+>>  static void raid_end_bio_io(struct r10bio *r10_bio)
+>>  {
+>>         struct bio *bio = r10_bio->master_bio;
+>> -       int done;
+>>         struct r10conf *conf = r10_bio->mddev->private;
+>>
+>> -       if (bio->bi_phys_segments) {
+>> -               unsigned long flags;
+>> -               spin_lock_irqsave(&conf->device_lock, flags);
+>> -               bio->bi_phys_segments--;
+>> -               done = (bio->bi_phys_segments == 0);
+>> -               spin_unlock_irqrestore(&conf->device_lock, flags);
+>> -       } else
+>> -               done = 1;
+>>         if (!test_bit(R10BIO_Uptodate, &r10_bio->state))
+>>                 bio->bi_error = -EIO;
+>> -       if (done) {
+>> -               bio_endio(bio);
+>> -               /*
+>> -                * Wake up any possible resync thread that waits for the device
+>> -                * to go idle.
+>> -                */
+>> -               allow_barrier(conf);
+>> -       }
+>> +
+>> +       /*
+>> +        * Wake up any possible resync thread that waits for the device
+>> +        * to go idle.
+>> +        */
+>> +       allow_barrier(conf);
+>> +       bio_endio(bio);
+>> +
 >
-> md_write_start calls wait_event, so it can't be called with lock hold. Ma=
-ybe
-> add a special __md_write_start which only increases the count, we already=
- wait
-> in make_request.
+> Hi Neil,
+>
+> Why do you switch the order of above 2 lines, is there a reason
+> behind, I notice in raid1 you kept the order?
 
-I cannot see what lock is held here, but I can see a that a lock is held
-below while md_write_start() is called.
-
-An "md_write_incr()" or similar would certainly make sense.  I'll add
-that in.
+I cannot think why I would have done that.  It doesn't matter what
+order they are in, but it does make sense to leave the order unchanged
+unless there is a good reason.  I'll put it back.
 
 Thanks,
 NeilBrown
 
-
->
->>  	stripe_sectors =3D conf->chunk_sectors *
->>  		(conf->raid_disks - conf->max_degraded);
->> @@ -5314,6 +5313,7 @@ static void make_discard_request(struct mddev *mdd=
-ev, struct bio *bi)
->>  			sh->dev[d].towrite =3D bi;
->>  			set_bit(R5_OVERWRITE, &sh->dev[d].flags);
->>  			raid5_inc_bi_active_stripes(bi);
->> +			md_write_start(mddev, bi);
->
-> Ditto.
->
-> Thanks,
-> Shaohua
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlimWj0ACgkQOeye3VZi
-gbkk5xAAgSddoPwlp3V22tITrpyOkaAIhLkgsI8UHZBF3wQiB3oOR1Q3VNS7Yksb
-fDy1c4U5rEkLRKOMYggQw6wgOC/MShu8hZEb64jqbIXwl1pcuciyb98HlR+iAok5
-4z94UZc4iCGfGZ4HKlboZcy9FknztKrtnc0ThQoazEBt4BTsaT26Dv07QMRlavTw
-Qx8H8yUkUHvv8ZEeMiv+uU3duAdNCAxSl/VJiUOeAIF5qQ55zpjTiQzhEkL4h8Mp
-giuTywdw3CJPkdnS2YFRbjW8Z/TZ44QR0LjeWxEhjWWgB3vHiy0LR5/IHnC2HtD3
-e63kdsizKoX+LLNGZCNeXuYrl2AM82kvfOaUSydy0fAlSlEKqDb8gh0cE+KKvEbm
-DGccXk+A7W5LIlf/VyvhhsntM9i1iTLtxvJP1FhNBzw7tGdRGsNnCjFWvY8H1AST
-JRuFK4CIIWDF9QMznrkfRFXfiOdrVMEAvl3U7CVro0gbw8maOQimhRMKDUod4uMn
-ohnzXOUZW1VC/Kv5CLQ+yj2b4Mr0Aq5G6+2QyuUypGrbXBATZncPkf39RwC4fE6F
-eF3hIOmqLg09qofOtxJhDFUKNq9VQrggCNCQ38vOXLVz0Uu75+y8H3IO50CmHJ2k
-YIGU32dtb7fpt5mRAuI5MEWDM9ZDburl5rH7+iOahfrL9L6lOtY=
-=Qm/l
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlimXLkACgkQOeye3VZi
+gbnDkhAArnPy5ACTEKAMvpNfhADDL7aZywqMCTDWZVyzCFuMrXGL6Ps2uwI13F0I
+dU2UrLk0j38XXP2Spqtj9KS8a4yAyfYYBwkpPgwlKtCH4GGDZ05hAr/DHt+1w2WZ
+QtXr0WHo3jKKXBkdI94fef2sXgw2zZ5IZodb5GRa95qB0ekwqKVjeapYdqmReRFb
+3HgSpJFHKo22GXbqPL1Z32kvLrugqRf52/p6z/ZQ0hz4fjORogYF2h+HSM8qqlhF
+A7sO5S4MTcYRPiPJITecrvMpzCrPD3I3rlf29bQLtR8ZFYmF8Hbp7DkhWvuX+O4S
+ttZemg/lbbZb96PdfDzLhdIbRFwofhBBo8E7rS/HmhBVmXK8iwucVTMFplut39uy
+VAKL67bC6Y2EinBV7nYS/bDMSOl7d3nGvVdtQIXvy8HZFiybkucp3x1mzrJL8KBa
+STJeSmB2LPVMoUiJs7CDddzt/iftpiD97Rk3j1i8cmNxk+42FBaJbFE8i5EYG26x
+GubOQRaU0F4YjWCjA55xDlwoOsFmmbvUbB06thggOjcYmI8+86ERImH2+EaBmD6D
+QnH/dFG6H6bFzULOjxbj+Wn4AvumdjMl79wp3KWOU68CZYl+EkKMFmD/8hvK2jGM
+S3FOmpaNK6PqbPChQlmITygEgjVmzrl0u/OyR7shzM1IOoa+AOU=
+=uvvO
 -----END PGP SIGNATURE-----
 --=-=-=--
