@@ -1,417 +1,445 @@
-From: Les Stroud <les@lesstroud.com>
-Subject: Process stuck in md_flush_request (state: D)
-Date: Fri, 17 Feb 2017 14:05:49 -0500
-Message-ID: <99A92F4D-338D-4486-BB1C-C114A8524403@lesstroud.com>
-References: <36A8825E-F387-4ED8-8672-976094B3BEBB@lesstroud.com>
-Mime-Version: 1.0 (Mac OS X Mail 10.2 \(3259\))
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+From: colyli@suse.de
+Subject: [PATCH V4 2/2] RAID1: avoid unnecessary spin locks in I/O barrier code
+Date: Sat, 18 Feb 2017 03:05:57 +0800
+Message-ID: <1487358357-123924-2-git-send-email-colyli@suse.de>
+References: <1487358357-123924-1-git-send-email-colyli@suse.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1487358357-123924-1-git-send-email-colyli@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: Coly Li <colyli@suse.de>, Shaohua Li <shli@fb.com>, Hannes Reinecke <hare@suse.com>, Neil Brown <neilb@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
+When I run a parallel reading performan testing on a md raid1 device with
+two NVMe SSDs, I observe very bad throughput in supprise: by fio with 64KB
+block size, 40 seq read I/O jobs, 128 iodepth, overall throughput is
+only 2.7GB/s, this is around 50% of the idea performance number.
 
-I have a problem with processes entering an uninterruptible sleep state =
-in md_flush_request and never returning. I having trouble identifying =
-the underlying issue. I=E2=80=99m hoping someone on here may be able to =
-help.
+The perf reports locking contention happens at allow_barrier() and
+wait_barrier() code,
+ - 41.41%  fio [kernel.kallsyms]     [k] _raw_spin_lock_irqsave
+   - _raw_spin_lock_irqsave
+         + 89.92% allow_barrier
+         + 9.34% __wake_up
+ - 37.30%  fio [kernel.kallsyms]     [k] _raw_spin_lock_irq
+   - _raw_spin_lock_irq
+         - 100.00% wait_barrier
 
-The servers in question are running in aws (xen hvm) with kernel =
-3.8.13-118.16.2.el6uek.x86_64.  The server has two mounts.  The first is =
-vanilla ext4.  The second is a software RAID0 array, striped with 256k =
-chunks, buiIt with md.  It=E2=80=99s file system is ext4.=20
+The reason is, in these I/O barrier related functions,
+ - raise_barrier()
+ - lower_barrier()
+ - wait_barrier()
+ - allow_barrier()
+They always hold conf->resync_lock firstly, even there are only regular
+reading I/Os and no resync I/O at all. This is a huge performance penalty.
 
-The most immediately and obvious symptom of the issue are kernel errors =
-=E2=80=9Ckernel: INFO task [some process]: blocked for more than 120 =
-seconds.=E2=80=9D.  Shortly there after, other processes start entering =
-the same uninterruptible wait state (D). This almost always impacts ssh =
-logins.
+The solution is a lockless-like algorithm in I/O barrier code, and only
+holding conf->resync_lock when it has to.
 
-The problem does not occur when the system is under load, or was =
-recently under load.  It happens when the system is quiet (no cpu, very =
-little io).
+The original idea is from Hannes Reinecke, and Neil Brown provides
+comments to improve it. I continue to work on it, and make the patch into
+current form.
 
-I=E2=80=99ve been able to gather a little information from the logs and =
-process tree (when I could get in). It seems to start with an md process =
-(jdb2/md-127-8). Most of the time it=E2=80=99s queuing up kworker =
-processes behind it.  However, I=E2=80=99ve seen other processes stuck =
-as well.  When I can find a way to execute commands on the box, some of =
-them will work, some of them will hand immediately, and others will work =
-a few times before hanging themselves. Every time I have been able to =
-look, I=E2=80=99ve found these =E2=80=9Chung=E2=80=9D processes sitting =
-in one of two methods md_flush_cache and md_flush_request. =20
+In the new simpler raid1 I/O barrier implementation, there are two
+wait barrier functions,
+ - wait_barrier()
+   Which calls _wait_barrier(), is used for regular write I/O. If there is
+   resync I/O happening on the same I/O barrier bucket, or the whole
+   array is frozen, task will wait until no barrier on same barrier bucket,
+   or the whold array is unfreezed.
+ - wait_read_barrier()
+   Since regular read I/O won't interfere with resync I/O (read_balance()
+   will make sure only uptodate data will be read out), it is unnecessary
+   to wait for barrier in regular read I/Os, waiting in only necessary
+   when the whole array is frozen.
 
+The operations on conf->nr_pending[idx], conf->nr_waiting[idx], conf->
+barrier[idx] are very carefully designed in raise_barrier(),
+lower_barrier(), _wait_barrier() and wait_read_barrier(), in order to
+avoid unnecessary spin locks in these functions. Once conf->
+nr_pengding[idx] is increased, a resync I/O with same barrier bucket index
+has to wait in raise_barrier(). Then in _wait_barrier() if no barrier
+raised in same barrier bucket index and array is not frozen, the regular
+I/O doesn't need to hold conf->resync_lock, it can just increase
+conf->nr_pending[idx], and return to its caller. wait_read_barrier() is
+very similar to _wait_barrier(), the only difference is it only waits when
+array is frozen. For heavy parallel reading I/Os, the lockless I/O barrier
+code almostly gets rid of all spin lock cost.
 
-I would appreciate any help you can provide to diagnose and resolve this =
-issue, find an available patch, or report a bug (if necessary).
+This patch significantly improves raid1 reading peroformance. From my
+testing, a raid1 device built by two NVMe SSD, runs fio with 64KB
+blocksize, 40 seq read I/O jobs, 128 iodepth, overall throughput
+increases from 2.7GB/s to 4.6GB/s (+70%).
 
+Changelog
+V4:
+- Change conf->nr_queued[] to atomic_t.
+- Define BARRIER_BUCKETS_NR_BITS by (PAGE_SHIFT - ilog2(sizeof(atomic_t)))
+V3:
+- Add smp_mb__after_atomic() as Shaohua and Neil suggested.
+- Change conf->nr_queued[] from atomic_t to int.
+- Change conf->array_frozen from atomic_t back to int, and use
+  READ_ONCE(conf->array_frozen) to check value of conf->array_frozen
+  in _wait_barrier() and wait_read_barrier().
+- In _wait_barrier() and wait_read_barrier(), add a call to
+  wake_up(&conf->wait_barrier) after atomic_dec(&conf->nr_pending[idx]),
+  to fix a deadlock between  _wait_barrier()/wait_read_barrier and
+  freeze_array().
+V2:
+- Remove a spin_lock/unlock pair in raid1d().
+- Add more code comments to explain why there is no racy when checking two
+  atomic_t variables at same time.
+V1:
+- Original RFC patch for comments.
 
+Signed-off-by: Coly Li <colyli@suse.de>
+Cc: Shaohua Li <shli@fb.com>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Neil Brown <neilb@suse.de>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Guoqing Jiang <gqjiang@suse.com>
+---
+ drivers/md/raid1.c | 165 ++++++++++++++++++++++++++++++++++++-----------------
+ drivers/md/raid1.h |  31 +++++-----
+ 2 files changed, 130 insertions(+), 66 deletions(-)
 
-Here is a piece of one of the call traces:
-
-	Feb  6 15:41:57 server1 kernel: INFO: task jbd2/md127-8:2511 =
-blocked for more than 120 seconds.
-	Feb  6 15:41:57 server1 kernel: "echo 0 > =
-/proc/sys/kernel/hung_task_timeout_secs" disables this message.
-	Feb  6 15:41:57 server1 kernel: jbd2/md127-8    D =
-ffffffff815c6d00     0  2511      2 0x00000000
-	Feb  6 15:41:57 server1 kernel: ffff8803f8a659c8 =
-0000000000000046 ffff8803f8a65fd8 0000000000013040
-	Feb  6 15:41:57 server1 kernel: ffff8803f8a64010 =
-0000000000013040 0000000000013040 0000000000013040
-	Feb  6 15:41:57 server1 kernel: ffff8803f8a65fd8 =
-0000000000013040 ffff8803f95b8300 ffff8803f5c3e340
-	Feb  6 15:41:57 server1 kernel: Call Trace:
-	Feb  6 15:41:57 server1 kernel: [<ffffffff815a0ea9>] =
-schedule+0x29/0x70
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8146b886>] =
-md_flush_request+0x86/0x120
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81086da0>] ? =
-wake_up_bit+0x40/0x40
-	Feb  6 15:41:57 server1 kernel: [<ffffffffa00ab6eb>] =
-raid0_make_request+0x11b/0x200 [raid0]
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8126c83d>] ? =
-generic_make_request_checks+0x1ad/0x400
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8146b60c>] =
-md_make_request+0xdc/0x240
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81135365>] ? =
-mempool_alloc_slab+0x15/0x20
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811354d0>] ? =
-mempool_alloc+0x60/0x170
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8126cb5a>] =
-generic_make_request+0xca/0x100
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8126cc09>] =
-submit_bio+0x79/0x160
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811ce0e5>] ? =
-bio_alloc_bioset+0x65/0x120
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811c8e50>] =
-_submit_bh+0x130/0x200
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811c8f30>] =
-submit_bh+0x10/0x20
-	Feb  6 15:41:57 server1 kernel: [<ffffffffa0167fbd>] =
-journal_submit_commit_record+0x14d/0x1d0 [jbd2]
-	Feb  6 15:41:57 server1 kernel: [<ffffffffa016e380>] ? =
-journal_free_journal_head+0x60/0x70 [jbd2]
-	Feb  6 15:41:57 server1 kernel: [<ffffffffa0168eab>] =
-jbd2_journal_commit_transaction+0xcfb/0x1950 [jbd2]
-	Feb  6 15:41:57 server1 kernel: [<ffffffffa016f213>] =
-kjournald2+0xf3/0x3e0 [jbd2]
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81086da0>] ? =
-wake_up_bit+0x40/0x40
-	Feb  6 15:41:57 server1 kernel: [<ffffffffa016f120>] ? =
-commit_timeout+0x10/0x10 [jbd2]
-	Feb  6 15:41:57 server1 kernel: [<ffffffff810864ee>] =
-kthread+0xce/0xe0
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81086420>] ? =
-kthread_freezable_should_stop+0x70/0x70
-	Feb  6 15:41:57 server1 kernel: [<ffffffff815aa9c8>] =
-ret_from_fork+0x58/0x90
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81086420>] ? =
-kthread_freezable_should_stop+0x70/0x70
-	Feb  6 15:41:57 server1 kernel: INFO: task ora_ckpt_rdbdev:1200 =
-blocked for more than 120 seconds.
-	Feb  6 15:41:57 server1 kernel: "echo 0 > =
-/proc/sys/kernel/hung_task_timeout_secs" disables this message.
-	Feb  6 15:41:57 server1 kernel: ora_ckpt_rdbdev D =
-ffffffff815c6d00     0  1200      1 0x00000080
-	Feb  6 15:41:57 server1 kernel: ffff8803f5327898 =
-0000000000000082 ffff8803f5327fd8 0000000000013040
-	Feb  6 15:41:57 server1 kernel: ffff8803f5326010 =
-0000000000013040 0000000000013040 0000000000013040
-	Feb  6 15:41:57 server1 kernel: ffff8803f5327fd8 =
-0000000000013040 ffffffff818c3420 ffff8803f7ad4140
-	Feb  6 15:41:57 server1 kernel: Call Trace:
-	Feb  6 15:41:57 server1 kernel: [<ffffffff815a0ea9>] =
-schedule+0x29/0x70
-	Feb  6 15:41:57 server1 kernel: [<ffffffff815a119e>] =
-schedule_preempt_disabled+0xe/0x10
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8159f767>] =
-__mutex_lock_slowpath+0x177/0x220
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81138e51>] ? =
-prep_new_page+0x111/0x180
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8159f5cb>] =
-mutex_lock+0x2b/0x50
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811d400e>] =
-do_blockdev_direct_IO+0x7be/0x860
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811d40fc>] =
-__blockdev_direct_IO+0x4c/0x50
-	Feb  6 15:41:57 server1 kernel: [<ffffffffa0191ab0>] ? =
-ext4_get_block_write+0x20/0x20 [ext4]
-	Feb  6 15:41:57 server1 kernel: [<ffffffffa01d0c78>] =
-ext4_ind_direct_IO+0xf8/0x480 [ext4]
-	Feb  6 15:41:57 server1 kernel: [<ffffffffa0191ab0>] ? =
-ext4_get_block_write+0x20/0x20 [ext4]
-	Feb  6 15:41:57 server1 kernel: [<ffffffffa019331b>] =
-ext4_ext_direct_IO+0x16b/0x240 [ext4]
-	Feb  6 15:41:57 server1 kernel: [<ffffffffa01934c9>] =
-ext4_direct_IO+0xd9/0x180 [ext4]
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811349e2>] =
-generic_file_read_iter+0x122/0x130
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8119615c>] =
-do_aio_read+0xbc/0xd0
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81196217>] =
-do_sync_read+0xa7/0xe0
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81196521>] =
-vfs_read+0xb1/0x130
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81196eaa>] =
-sys_pread64+0x9a/0xb0
-	Feb  6 15:41:57 server1 kernel: [<ffffffff815aaa79>] =
-system_call_fastpath+0x16/0x1b
-	Feb  6 15:41:57 server1 kernel: INFO: task kworker/0:5:30438 =
-blocked for more than 120 seconds.
-	Feb  6 15:41:57 server1 kernel: "echo 0 > =
-/proc/sys/kernel/hung_task_timeout_secs" disables this message.
-	Feb  6 15:41:57 server1 kernel: kworker/0:5     D =
-0000000000000000     0 30438      2 0x00000080
-	Feb  6 15:41:57 server1 kernel: ffff8803f7df5ad8 =
-0000000000000046 ffff8803f7df5fd8 0000000000013040
-	Feb  6 15:41:57 server1 kernel: ffff8803f7df4010 =
-0000000000013040 0000000000013040 0000000000013040
-	Feb  6 15:41:57 server1 kernel: ffff8803f7df5fd8 =
-0000000000013040 ffff8802958be500 ffff8802acd20200
-	Feb  6 15:41:57 server1 kernel: Call Trace:
-	Feb  6 15:41:57 server1 kernel: [<ffffffff815a0ea9>] =
-schedule+0x29/0x70
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8146b886>] =
-md_flush_request+0x86/0x120
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81086da0>] ? =
-wake_up_bit+0x40/0x40
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8159eed5>] ? =
-schedule_timeout+0x195/0x220
-	Feb  6 15:41:57 server1 kernel: [<ffffffffa00ab6eb>] =
-raid0_make_request+0x11b/0x200 [raid0]
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8126c83d>] ? =
-generic_make_request_checks+0x1ad/0x400
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8146b60c>] =
-md_make_request+0xdc/0x240
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81135365>] ? =
-mempool_alloc_slab+0x15/0x20
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811354d0>] ? =
-mempool_alloc+0x60/0x170
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8126cb5a>] =
-generic_make_request+0xca/0x100
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8126cc09>] =
-submit_bio+0x79/0x160
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811ce0e5>] ? =
-bio_alloc_bioset+0x65/0x120
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8126fe68>] =
-blkdev_issue_flush+0xb8/0xf0
-	Feb  6 15:41:57 server1 kernel: [<ffffffffa018c807>] =
-ext4_sync_file+0x167/0x300 [ext4]
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811c642e>] =
-vfs_fsync_range+0x2e/0x30
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811c6491>] =
-generic_write_sync+0x41/0x50
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811d1d8b>] =
-dio_complete+0x11b/0x140
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8107ce0c>] ? =
-need_to_create_worker+0x1c/0x40
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811d1f04>] =
-dio_aio_complete_work+0x24/0x30
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8107ea50>] =
-process_one_work+0x180/0x420
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8108119e>] =
-worker_thread+0x12e/0x390
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81081070>] ? =
-manage_workers+0x180/0x180
-	Feb  6 15:41:57 server1 kernel: [<ffffffff810864ee>] =
-kthread+0xce/0xe0
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81086420>] ? =
-kthread_freezable_should_stop+0x70/0x70
-	Feb  6 15:41:57 server1 kernel: [<ffffffff815aa9c8>] =
-ret_from_fork+0x58/0x90
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81086420>] ? =
-kthread_freezable_should_stop+0x70/0x70
-	Feb  6 15:41:57 server1 kernel: INFO: task kworker/1:2:31430 =
-blocked for more than 120 seconds.
-	Feb  6 15:41:57 server1 kernel: "echo 0 > =
-/proc/sys/kernel/hung_task_timeout_secs" disables this message.
-	Feb  6 15:41:57 server1 kernel: kworker/1:2     D =
-0000000000000001     0 31430      2 0x00000080
-	Feb  6 15:41:57 server1 kernel: ffff8802a7dcfb58 =
-0000000000000046 ffff8802a7dcffd8 0000000000013040
-	Feb  6 15:41:57 server1 kernel: ffff8802a7dce010 =
-0000000000013040 0000000000013040 0000000000013040
-	Feb  6 15:41:57 server1 kernel: ffff8802a7dcffd8 =
-0000000000013040 ffff8803f6dca3c0 ffff8802a25bc580
-	Feb  6 15:41:57 server1 kernel: Call Trace:
-	Feb  6 15:41:57 server1 kernel: [<ffffffff815a0ea9>] =
-schedule+0x29/0x70
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8159eed5>] =
-schedule_timeout+0x195/0x220
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8126c83d>] ? =
-generic_make_request_checks+0x1ad/0x400
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8146b60c>] ? =
-md_make_request+0xdc/0x240
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81135365>] ? =
-mempool_alloc_slab+0x15/0x20
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811354d0>] ? =
-mempool_alloc+0x60/0x170
-	Feb  6 15:41:57 server1 kernel: [<ffffffff815a0cda>] =
-wait_for_common+0x11a/0x170
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8126cb5a>] ? =
-generic_make_request+0xca/0x100
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8109a3d0>] ? =
-try_to_wake_up+0x2e0/0x2e0
-	Feb  6 15:41:57 server1 kernel: [<ffffffff815a0e0d>] =
-wait_for_completion+0x1d/0x20
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8126fe70>] =
-blkdev_issue_flush+0xc0/0xf0
-	Feb  6 15:41:57 server1 kernel: [<ffffffffa018c8ef>] =
-ext4_sync_file+0x24f/0x300 [ext4]
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811c642e>] =
-vfs_fsync_range+0x2e/0x30
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811c6491>] =
-generic_write_sync+0x41/0x50
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811d1d8b>] =
-dio_complete+0x11b/0x140
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8107ce0c>] ? =
-need_to_create_worker+0x1c/0x40
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811d1f04>] =
-dio_aio_complete_work+0x24/0x30
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8107ea50>] =
-process_one_work+0x180/0x420
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8108119e>] =
-worker_thread+0x12e/0x390
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81081070>] ? =
-manage_workers+0x180/0x180
-	Feb  6 15:41:57 server1 kernel: [<ffffffff810864ee>] =
-kthread+0xce/0xe0
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81086420>] ? =
-kthread_freezable_should_stop+0x70/0x70
-	Feb  6 15:41:57 server1 kernel: [<ffffffff815aa9c8>] =
-ret_from_fork+0x58/0x90
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81086420>] ? =
-kthread_freezable_should_stop+0x70/0x70
-	Feb  6 15:41:57 server1 kernel: INFO: task kworker/3:0:32582 =
-blocked for more than 120 seconds.
-	Feb  6 15:41:57 server1 kernel: "echo 0 > =
-/proc/sys/kernel/hung_task_timeout_secs" disables this message.
-	Feb  6 15:41:57 server1 kernel: kworker/3:0     D =
-0000000000000003     0 32582      2 0x00000080
-	Feb  6 15:41:57 server1 kernel: ffff8803f6e97ad8 =
-0000000000000046 ffff8803f6e97fd8 0000000000013040
-	Feb  6 15:41:57 server1 kernel: ffff8803f6e96010 =
-0000000000013040 0000000000013040 0000000000013040
-	Feb  6 15:41:57 server1 kernel: ffff8803f6e97fd8 =
-0000000000013040 ffff8802b7806440 ffff8802a1f92540
-	Feb  6 15:41:57 server1 kernel: Call Trace:
-	Feb  6 15:41:57 server1 kernel: [<ffffffff815a0ea9>] =
-schedule+0x29/0x70
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8146b886>] =
-md_flush_request+0x86/0x120
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81086da0>] ? =
-wake_up_bit+0x40/0x40
-	Feb  6 15:41:57 server1 kernel: [<ffffffffa00ab6eb>] =
-raid0_make_request+0x11b/0x200 [raid0]
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8126c83d>] ? =
-generic_make_request_checks+0x1ad/0x400
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8146b60c>] =
-md_make_request+0xdc/0x240
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81135365>] ? =
-mempool_alloc_slab+0x15/0x20
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811354d0>] ? =
-mempool_alloc+0x60/0x170
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8126cb5a>] =
-generic_make_request+0xca/0x100
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8126cc09>] =
-submit_bio+0x79/0x160
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811ce0e5>] ? =
-bio_alloc_bioset+0x65/0x120
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8126fe68>] =
-blkdev_issue_flush+0xb8/0xf0
-	Feb  6 15:41:57 server1 kernel: [<ffffffffa018c807>] =
-ext4_sync_file+0x167/0x300 [ext4]
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811c642e>] =
-vfs_fsync_range+0x2e/0x30
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811c6491>] =
-generic_write_sync+0x41/0x50
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811d1d8b>] =
-dio_complete+0x11b/0x140
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811d1f04>] =
-dio_aio_complete_work+0x24/0x30
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8107ea50>] =
-process_one_work+0x180/0x420
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8108119e>] =
-worker_thread+0x12e/0x390
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81081070>] ? =
-manage_workers+0x180/0x180
-	Feb  6 15:41:57 server1 kernel: [<ffffffff810864ee>] =
-kthread+0xce/0xe0
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81086420>] ? =
-kthread_freezable_should_stop+0x70/0x70
-	Feb  6 15:41:57 server1 kernel: [<ffffffff815aa9c8>] =
-ret_from_fork+0x58/0x90
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81086420>] ? =
-kthread_freezable_should_stop+0x70/0x70
-	Feb  6 15:41:57 server1 kernel: INFO: task kworker/1:1:416 =
-blocked for more than 120 seconds.
-	Feb  6 15:41:57 server1 kernel: "echo 0 > =
-/proc/sys/kernel/hung_task_timeout_secs" disables this message.
-	Feb  6 15:41:57 server1 kernel: kworker/1:1     D =
-ffffffff815c6d00     0   416      2 0x00000080
-	Feb  6 15:41:57 server1 kernel: ffff88029ff75ad8 =
-0000000000000046 ffff88029ff75fd8 0000000000013040
-	Feb  6 15:41:57 server1 kernel: ffff88029ff74010 =
-0000000000013040 0000000000013040 0000000000013040
-	Feb  6 15:41:57 server1 kernel: ffff88029ff75fd8 =
-0000000000013040 ffff8803f95b8300 ffff8802b1d983c0
-	Feb  6 15:41:57 server1 kernel: Call Trace:
-	Feb  6 15:41:57 server1 kernel: [<ffffffff815a0ea9>] =
-schedule+0x29/0x70
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8146b886>] =
-md_flush_request+0x86/0x120
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81086da0>] ? =
-wake_up_bit+0x40/0x40
-	Feb  6 15:41:57 server1 kernel: [<ffffffffa00ab6eb>] =
-raid0_make_request+0x11b/0x200 [raid0]
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8126c83d>] ? =
-generic_make_request_checks+0x1ad/0x400
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8146b60c>] =
-md_make_request+0xdc/0x240
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81135365>] ? =
-mempool_alloc_slab+0x15/0x20
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811354d0>] ? =
-mempool_alloc+0x60/0x170
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8126cb5a>] =
-generic_make_request+0xca/0x100
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8126cc09>] =
-submit_bio+0x79/0x160
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811ce0e5>] ? =
-bio_alloc_bioset+0x65/0x120
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8126fe68>] =
-blkdev_issue_flush+0xb8/0xf0
-	Feb  6 15:41:57 server1 kernel: [<ffffffffa018c807>] =
-ext4_sync_file+0x167/0x300 [ext4]
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811c642e>] =
-vfs_fsync_range+0x2e/0x30
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811c6491>] =
-generic_write_sync+0x41/0x50
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811d1d8b>] =
-dio_complete+0x11b/0x140
-	Feb  6 15:41:57 server1 kernel: [<ffffffff811d1f04>] =
-dio_aio_complete_work+0x24/0x30
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8107ea50>] =
-process_one_work+0x180/0x420
-	Feb  6 15:41:57 server1 kernel: [<ffffffff8108119e>] =
-worker_thread+0x12e/0x390
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81081070>] ? =
-manage_workers+0x180/0x180
-	Feb  6 15:41:57 server1 kernel: [<ffffffff810864ee>] =
-kthread+0xce/0xe0
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81086420>] ? =
-kthread_freezable_should_stop+0x70/0x70
-	Feb  6 15:41:57 server1 kernel: [<ffffffff815aa9c8>] =
-ret_from_fork+0x58/0x90
-	Feb  6 15:41:57 server1 kernel: [<ffffffff81086420>] ? =
-kthread_freezable_should_stop+0x70/0x70
-
-
-
-Thank you for the time,
-LES
-
-
-
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 621b3ae..7376b3d 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -226,7 +226,7 @@ static void reschedule_retry(struct r1bio *r1_bio)
+ 	idx = sector_to_idx(r1_bio->sector);
+ 	spin_lock_irqsave(&conf->device_lock, flags);
+ 	list_add(&r1_bio->retry_list, &conf->retry_list);
+-	conf->nr_queued[idx]++;
++	atomic_inc(&conf->nr_queued[idx]);
+ 	spin_unlock_irqrestore(&conf->device_lock, flags);
+ 
+ 	wake_up(&conf->wait_barrier);
+@@ -836,11 +836,21 @@ static void raise_barrier(struct r1conf *conf, sector_t sector_nr)
+ 	spin_lock_irq(&conf->resync_lock);
+ 
+ 	/* Wait until no block IO is waiting */
+-	wait_event_lock_irq(conf->wait_barrier, !conf->nr_waiting[idx],
++	wait_event_lock_irq(conf->wait_barrier,
++			    !atomic_read(&conf->nr_waiting[idx]),
+ 			    conf->resync_lock);
+ 
+ 	/* block any new IO from starting */
+-	conf->barrier[idx]++;
++	atomic_inc(&conf->barrier[idx]);
++	/*
++	 * In raise_barrier() we firstly increase conf->barrier[idx] then
++	 * check conf->nr_pending[idx]. In _wait_barrier() we firstly
++	 * increase conf->nr_pending[idx] then check conf->barrier[idx].
++	 * A memory barrier here to make sure conf->nr_pending[idx] won't
++	 * be fetched before conf->barrier[idx] is increased. Otherwise
++	 * there will be a race between raise_barrier() and _wait_barrier().
++	 */
++	smp_mb__after_atomic();
+ 
+ 	/* For these conditions we must wait:
+ 	 * A: while the array is in frozen state
+@@ -851,42 +861,81 @@ static void raise_barrier(struct r1conf *conf, sector_t sector_nr)
+ 	 */
+ 	wait_event_lock_irq(conf->wait_barrier,
+ 			    !conf->array_frozen &&
+-			     !conf->nr_pending[idx] &&
+-			     conf->barrier[idx] < RESYNC_DEPTH,
++			     !atomic_read(&conf->nr_pending[idx]) &&
++			     atomic_read(&conf->barrier[idx]) < RESYNC_DEPTH,
+ 			    conf->resync_lock);
+ 
+-	conf->nr_pending[idx]++;
++	atomic_inc(&conf->nr_pending[idx]);
+ 	spin_unlock_irq(&conf->resync_lock);
+ }
+ 
+ static void lower_barrier(struct r1conf *conf, sector_t sector_nr)
+ {
+-	unsigned long flags;
+ 	int idx = sector_to_idx(sector_nr);
+ 
+-	BUG_ON(conf->barrier[idx] <= 0);
++	BUG_ON(atomic_read(&conf->barrier[idx]) <= 0);
+ 
+-	spin_lock_irqsave(&conf->resync_lock, flags);
+-	conf->barrier[idx]--;
+-	conf->nr_pending[idx]--;
+-	spin_unlock_irqrestore(&conf->resync_lock, flags);
++	atomic_dec(&conf->barrier[idx]);
++	atomic_dec(&conf->nr_pending[idx]);
+ 	wake_up(&conf->wait_barrier);
+ }
+ 
+ static void _wait_barrier(struct r1conf *conf, int idx)
+ {
+-	spin_lock_irq(&conf->resync_lock);
+-	if (conf->array_frozen || conf->barrier[idx]) {
+-		conf->nr_waiting[idx]++;
+-		/* Wait for the barrier to drop. */
+-		wait_event_lock_irq(
+-			conf->wait_barrier,
+-			!conf->array_frozen && !conf->barrier[idx],
+-			conf->resync_lock);
+-		conf->nr_waiting[idx]--;
+-	}
++	/*
++	 * We need to increase conf->nr_pending[idx] very early here,
++	 * then raise_barrier() can be blocked when it waits for
++	 * conf->nr_pending[idx] to be 0. Then we can avoid holding
++	 * conf->resync_lock when there is no barrier raised in same
++	 * barrier unit bucket. Also if the array is frozen, I/O
++	 * should be blocked until array is unfrozen.
++	 */
++	atomic_inc(&conf->nr_pending[idx]);
++	/*
++	 * In _wait_barrier() we firstly increase conf->nr_pending[idx], then
++	 * check conf->barrier[idx]. In raise_barrier() we firstly increase
++	 * conf->barrier[idx], then check conf->nr_pending[idx]. A memory
++	 * barrier is necessary here to make sure conf->barrier[idx] won't be
++	 * fetched before conf->nr_pending[idx] is increased. Otherwise there
++	 * will be a race between _wait_barrier() and raise_barrier().
++	 */
++	smp_mb__after_atomic();
++
++	/*
++	 * Don't worry about checking two atomic_t variables at same time
++	 * here. If during we check conf->barrier[idx], the array is
++	 * frozen (conf->array_frozen is 1), and chonf->barrier[idx] is
++	 * 0, it is safe to return and make the I/O continue. Because the
++	 * array is frozen, all I/O returned here will eventually complete
++	 * or be queued, no race will happen. See code comment in
++	 * frozen_array().
++	 */
++	if (!READ_ONCE(conf->array_frozen) &&
++	    !atomic_read(&conf->barrier[idx]))
++		return;
+ 
+-	conf->nr_pending[idx]++;
++	/*
++	 * After holding conf->resync_lock, conf->nr_pending[idx]
++	 * should be decreased before waiting for barrier to drop.
++	 * Otherwise, we may encounter a race condition because
++	 * raise_barrer() might be waiting for conf->nr_pending[idx]
++	 * to be 0 at same time.
++	 */
++	spin_lock_irq(&conf->resync_lock);
++	atomic_inc(&conf->nr_waiting[idx]);
++	atomic_dec(&conf->nr_pending[idx]);
++	/*
++	 * In case freeze_array() is waiting for
++	 * get_unqueued_pending() == extra
++	 */
++	wake_up(&conf->wait_barrier);
++	/* Wait for the barrier in same barrier unit bucket to drop. */
++	wait_event_lock_irq(conf->wait_barrier,
++			    !conf->array_frozen &&
++			     !atomic_read(&conf->barrier[idx]),
++			    conf->resync_lock);
++	atomic_inc(&conf->nr_pending[idx]);
++	atomic_dec(&conf->nr_waiting[idx]);
+ 	spin_unlock_irq(&conf->resync_lock);
+ }
+ 
+@@ -894,18 +943,32 @@ static void wait_read_barrier(struct r1conf *conf, sector_t sector_nr)
+ {
+ 	int idx = sector_to_idx(sector_nr);
+ 
+-	spin_lock_irq(&conf->resync_lock);
+-	if (conf->array_frozen) {
+-		conf->nr_waiting[idx]++;
+-		/* Wait for array to unfreeze */
+-		wait_event_lock_irq(
+-			conf->wait_barrier,
+-			!conf->array_frozen,
+-			conf->resync_lock);
+-		conf->nr_waiting[idx]--;
+-	}
++	/*
++	 * Very similar to _wait_barrier(). The difference is, for read
++	 * I/O we don't need wait for sync I/O, but if the whole array
++	 * is frozen, the read I/O still has to wait until the array is
++	 * unfrozen. Since there is no ordering requirement with
++	 * conf->barrier[idx] here, memory barrier is unnecessary as well.
++	 */
++	atomic_inc(&conf->nr_pending[idx]);
+ 
+-	conf->nr_pending[idx]++;
++	if (!READ_ONCE(conf->array_frozen))
++		return;
++
++	spin_lock_irq(&conf->resync_lock);
++	atomic_inc(&conf->nr_waiting[idx]);
++	atomic_dec(&conf->nr_pending[idx]);
++	/*
++	 * In case freeze_array() is waiting for
++	 * get_unqueued_pending() == extra
++	 */
++	wake_up(&conf->wait_barrier);
++	/* Wait for array to be unfrozen */
++	wait_event_lock_irq(conf->wait_barrier,
++			    !conf->array_frozen,
++			    conf->resync_lock);
++	atomic_inc(&conf->nr_pending[idx]);
++	atomic_dec(&conf->nr_waiting[idx]);
+ 	spin_unlock_irq(&conf->resync_lock);
+ }
+ 
+@@ -926,11 +989,7 @@ static void wait_all_barriers(struct r1conf *conf)
+ 
+ static void _allow_barrier(struct r1conf *conf, int idx)
+ {
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&conf->resync_lock, flags);
+-	conf->nr_pending[idx]--;
+-	spin_unlock_irqrestore(&conf->resync_lock, flags);
++	atomic_dec(&conf->nr_pending[idx]);
+ 	wake_up(&conf->wait_barrier);
+ }
+ 
+@@ -955,7 +1014,8 @@ static int get_unqueued_pending(struct r1conf *conf)
+ 	int idx, ret;
+ 
+ 	for (ret = 0, idx = 0; idx < BARRIER_BUCKETS_NR; idx++)
+-		ret += conf->nr_pending[idx] - conf->nr_queued[idx];
++		ret += atomic_read(&conf->nr_pending[idx]) -
++			atomic_read(&conf->nr_queued[idx]);
+ 
+ 	return ret;
+ }
+@@ -1000,8 +1060,8 @@ static void unfreeze_array(struct r1conf *conf)
+ 	/* reverse the effect of the freeze */
+ 	spin_lock_irq(&conf->resync_lock);
+ 	conf->array_frozen = 0;
+-	wake_up(&conf->wait_barrier);
+ 	spin_unlock_irq(&conf->resync_lock);
++	wake_up(&conf->wait_barrier);
+ }
+ 
+ /* duplicate the data pages for behind I/O
+@@ -2387,8 +2447,13 @@ static void handle_write_finished(struct r1conf *conf, struct r1bio *r1_bio)
+ 		spin_lock_irq(&conf->device_lock);
+ 		list_add(&r1_bio->retry_list, &conf->bio_end_io_list);
+ 		idx = sector_to_idx(r1_bio->sector);
+-		conf->nr_queued[idx]++;
++		atomic_inc(&conf->nr_queued[idx]);
+ 		spin_unlock_irq(&conf->device_lock);
++		/*
++		 * In case freeze_array() is waiting for condition
++		 * get_unqueued_pending() == extra to be true.
++		 */
++		wake_up(&conf->wait_barrier);
+ 		md_wakeup_thread(conf->mddev->thread);
+ 	} else {
+ 		if (test_bit(R1BIO_WriteError, &r1_bio->state))
+@@ -2525,9 +2590,7 @@ static void raid1d(struct md_thread *thread)
+ 						  retry_list);
+ 			list_del(&r1_bio->retry_list);
+ 			idx = sector_to_idx(r1_bio->sector);
+-			spin_lock_irqsave(&conf->device_lock, flags);
+-			conf->nr_queued[idx]--;
+-			spin_unlock_irqrestore(&conf->device_lock, flags);
++			atomic_dec(&conf->nr_queued[idx]);
+ 			if (mddev->degraded)
+ 				set_bit(R1BIO_Degraded, &r1_bio->state);
+ 			if (test_bit(R1BIO_WriteError, &r1_bio->state))
+@@ -2549,7 +2612,7 @@ static void raid1d(struct md_thread *thread)
+ 		r1_bio = list_entry(head->prev, struct r1bio, retry_list);
+ 		list_del(head->prev);
+ 		idx = sector_to_idx(r1_bio->sector);
+-		conf->nr_queued[idx]--;
++		atomic_dec(&conf->nr_queued[idx]);
+ 		spin_unlock_irqrestore(&conf->device_lock, flags);
+ 
+ 		mddev = r1_bio->mddev;
+@@ -2666,7 +2729,7 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 	 * If there is non-resync activity waiting for a turn, then let it
+ 	 * though before starting on this new sync request.
+ 	 */
+-	if (conf->nr_waiting[idx])
++	if (atomic_read(&conf->nr_waiting[idx]))
+ 		schedule_timeout_uninterruptible(1);
+ 
+ 	/* we are incrementing sector_nr below. To be safe, we check against
+@@ -2926,22 +2989,22 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+ 		goto abort;
+ 
+ 	conf->nr_pending = kcalloc(BARRIER_BUCKETS_NR,
+-				   sizeof(int), GFP_KERNEL);
++				   sizeof(atomic_t), GFP_KERNEL);
+ 	if (!conf->nr_pending)
+ 		goto abort;
+ 
+ 	conf->nr_waiting = kcalloc(BARRIER_BUCKETS_NR,
+-				   sizeof(int), GFP_KERNEL);
++				   sizeof(atomic_t), GFP_KERNEL);
+ 	if (!conf->nr_waiting)
+ 		goto abort;
+ 
+ 	conf->nr_queued = kcalloc(BARRIER_BUCKETS_NR,
+-				  sizeof(int), GFP_KERNEL);
++				  sizeof(atomic_t), GFP_KERNEL);
+ 	if (!conf->nr_queued)
+ 		goto abort;
+ 
+ 	conf->barrier = kcalloc(BARRIER_BUCKETS_NR,
+-				sizeof(int), GFP_KERNEL);
++				sizeof(atomic_t), GFP_KERNEL);
+ 	if (!conf->barrier)
+ 		goto abort;
+ 
+diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
+index 3442e8f..dd22a37 100644
+--- a/drivers/md/raid1.h
++++ b/drivers/md/raid1.h
+@@ -10,18 +10,19 @@
+ /*
+  * In struct r1conf, the following members are related to I/O barrier
+  * buckets,
+- *	int	*nr_pending;
+- *	int	*nr_waiting;
+- *	int	*nr_queued;
+- *	int	*barrier;
+- * Each of them points to array of integers, each array is designed to
+- * have BARRIER_BUCKETS_NR elements and occupy a single memory page. The
+- * data width of integer variables is 4, equal to 1<<(ilog2(sizeof(int))),
+- * BARRIER_BUCKETS_NR_BITS is defined as (PAGE_SHIFT - ilog2(sizeof(int)))
+- * to make sure an array of integers with BARRIER_BUCKETS_NR elements just
+- * exactly occupies a single memory page.
++ *	atomic_t	*nr_pending;
++ *	atomic_t	*nr_waiting;
++ *	atomic_t	*nr_queued;
++ *	atomic_t	*barrier;
++ * Each of them points to array of atomic_t variables, each array is
++ * designed to have BARRIER_BUCKETS_NR elements and occupy a single
++ * memory page. The data width of atomic_t variables is 4 bytes, equal
++ * to 1<<(ilog2(sizeof(atomic_t))), BARRIER_BUCKETS_NR_BITS is defined
++ * as (PAGE_SHIFT - ilog2(sizeof(int))) to make sure an array of
++ * atomic_t variables with BARRIER_BUCKETS_NR elements just exactly
++ * occupies a single memory page.
+  */
+-#define BARRIER_BUCKETS_NR_BITS		(PAGE_SHIFT - ilog2(sizeof(int)))
++#define BARRIER_BUCKETS_NR_BITS		(PAGE_SHIFT - ilog2(sizeof(atomic_t)))
+ #define BARRIER_BUCKETS_NR		(1<<BARRIER_BUCKETS_NR_BITS)
+ 
+ struct raid1_info {
+@@ -83,10 +84,10 @@ struct r1conf {
+ 	 */
+ 	wait_queue_head_t	wait_barrier;
+ 	spinlock_t		resync_lock;
+-	int			*nr_pending;
+-	int			*nr_waiting;
+-	int			*nr_queued;
+-	int			*barrier;
++	atomic_t		*nr_pending;
++	atomic_t		*nr_waiting;
++	atomic_t		*nr_queued;
++	atomic_t		*barrier;
+ 	int			array_frozen;
+ 
+ 	/* Set to 1 if a full sync is needed, (fresh device added).
+-- 
+2.6.6
 
