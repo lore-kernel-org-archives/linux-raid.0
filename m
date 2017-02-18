@@ -1,44 +1,34 @@
 From: Phil Turmel <philip@turmel.org>
-Subject: Re: RAID10 and 'writemostly' support
-Date: Sat, 18 Feb 2017 17:20:35 -0500
-Message-ID: <7090c5c7-7f02-14a3-36f1-23b8bfe53043@turmel.org>
-References: <07e8d394-2f95-caae-d971-a5fef009fefe@thelounge.net>
- <033aa14d-32a0-531d-7d7d-c01a0aeb13eb@youngman.org.uk>
- <f6ed7560-97b8-78ef-26be-789a8bc372b5@thelounge.net>
+Subject: Re: mdadm: can only add devices to linear arrays
+Date: Sat, 18 Feb 2017 17:29:34 -0500
+Message-ID: <6c5ca569-0ffa-ebfd-2c42-fc2043ae473f@turmel.org>
+References: <dffb96dc-ee78-4bad-82a8-7f9cfdeb80cd@EXHT01.net.ucsf.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f6ed7560-97b8-78ef-26be-789a8bc372b5@thelounge.net>
+In-Reply-To: <dffb96dc-ee78-4bad-82a8-7f9cfdeb80cd@EXHT01.net.ucsf.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Reindl Harald <h.reindl@thelounge.net>, linux-raid@vger.kernel.org
+To: "Boylan, Ross" <Ross.Boylan@ucsf.edu>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 02/17/2017 05:03 AM, Reindl Harald wrote:
-
->> Be careful. Don't confuse Raid10 with Raid1+0. They are NOT the
->> same thing (on linux at least), although they are very similar
+On 02/17/2017 09:33 PM, Boylan, Ross wrote:
+> I got "mdadm: can only add devices to linear arrays" when I did not
+> expect it.  Can anyone explain what's  going on, and what the right
+> way to handle the situation is?
 > 
-> yeah, i realized that but anyways thought the "writemostly" logic is 
-> there too and maybe the docs not up-to-date
+> In brief, I had a raid1 set for 2 devices, but with only 1.  I tried
+> adding a 2nd.
 
-Linux MD raid10 doesn't have a requirement that the number of devices
-be a multiple of the number of data copies.  Which creates "interesting"
-data layouts with odd numbers of devices or similar effects with ,n3 or
-,f3 layouts.  Which makes it difficult if not impossible to designate
-specific devices as write mostly without weird operational asymmetries
-across the assembled array.
+I think you simply misunderstood the use of --grow.  All you needed was
+--add to place a new device in the empty slot.
 
-In other words, it is not at all like raid 1 on top of raid 0, except in
-certain very limited cases, and your assumptions are simply wrong.
+Use --grow to change the layout or number of devices of a non-degraded
+array.  Use --add, --fail, and --remove to manage the devices in an
+array without changing its structure.
 
-If there are features (other than layouts) of raid10 that make you
-prefer it to raid1, it would make sense to ask for those features to
-be implemented in raid1.
-
-> sadly i can't write a patch on my own but only point how useful it
-> would be
-
-That's unfortunate.  Patches are generally welcome.
+Often, you see --grow with an --add because a spare is needed for the
+structural changes one is commanding, and it is fine to combine the
+operations (adding a spare then growing onto it).
 
 Phil
