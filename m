@@ -1,75 +1,54 @@
-From: Coly Li <colyli@suse.de>
-Subject: Re: [PATCH V4 1/2] RAID1: a new I/O barrier implementation to remove
- resync window
-Date: Sat, 18 Feb 2017 10:56:41 +0800
-Message-ID: <fa9ad7e2-4d34-1e96-7a9b-c62b7ab9b0a0@suse.de>
-References: <1487358357-123924-1-git-send-email-colyli@suse.de>
- <20170217200036.2ca5iotzhc4oauwa@kernel.org>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: interesting case of a hung 'recovery'
+Date: Sat, 18 Feb 2017 23:14:33 +1100
+Message-ID: <091a6513-1594-4a33-691a-cd1f7920d4a0@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170217200036.2ca5iotzhc4oauwa@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Neil Brown <neilb@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Guoqing Jiang <gqjiang@suse.com>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2017/2/18 上午4:00, Shaohua Li wrote:
-> On Sat, Feb 18, 2017 at 03:05:56AM +0800, colyli@suse.de wrote:
-[snip]
+I should start by saying that this is an old fedora 19 system
 
->> Changelog
->> V4:
->> - Add alloc_r1bio() to remove redundant r1bio memory allocation code.
->> - Fix many typos in patch comments.
->> - Use (PAGE_SHIFT - ilog2(sizeof(int))) to define BARRIER_BUCKETS_NR_BITS.
->> V3:
->> - Rebase the patch against latest upstream kernel code.
->> - Many fixes by review comments from Neil,
->>   - Back to use pointers to replace arraries in struct r1conf
->>   - Remove total_barriers from struct r1conf
->>   - Add more patch comments to explain how/why the values of
->>     BARRIER_UNIT_SECTOR_SIZE and BARRIER_BUCKETS_NR are decided.
->>   - Use get_unqueued_pending() to replace get_all_pendings() and
->>     get_all_queued()
->>   - Increase bucket number from 512 to 1024
->> - Change code comments format by review from Shaohua.
->> V2:
->> - Use bio_split() to split the orignal bio if it goes across barrier unit
->>   bounday, to make the code more simple, by suggestion from Shaohua and
->>   Neil.
->> - Use hash_long() to replace original linear hash, to avoid a possible
->>   confilict between resync I/O and sequential write I/O, by suggestion from
->>   Shaohua.
->> - Add conf->total_barriers to record barrier depth, which is used to
->>   control number of parallel sync I/O barriers, by suggestion from Shaohua.
->> - In V1 patch the bellowed barrier buckets related members in r1conf are
->>   allocated in memory page. To make the code more simple, V2 patch moves
->>   the memory space into struct r1conf, like this,
->>         -       int                     nr_pending;
->>         -       int                     nr_waiting;
->>         -       int                     nr_queued;
->>         -       int                     barrier;
->>         +       int                     nr_pending[BARRIER_BUCKETS_NR];
->>         +       int                     nr_waiting[BARRIER_BUCKETS_NR];
->>         +       int                     nr_queued[BARRIER_BUCKETS_NR];
->>         +       int                     barrier[BARRIER_BUCKETS_NR];
->>   This change is by the suggestion from Shaohua.
->> - Remove some inrelavent code comments, by suggestion from Guoqing.
->> - Add a missing wait_barrier() before jumping to retry_write, in
->>   raid1_make_write_request().
->> V1:
->> - Original RFC patch for comments
-> 
-> Thanks, I applied the two patches. For the deadlock issue Neil pointed out, I
-> don't want it to hold this patch, we can fix it later after we figured out how
-> to fix. The r1bio allocation is guaranteed to success because it's mempool
-> allocation, so I deleted the warn statement.
+Executive summary: after '--add'ing a new member a 'recovery' starts but 'sync_max' is not reset.
 
-Good to know this, yes please delete the warn message line.
+$ uname -a
+Linux e7.eyal.emu.id.au 3.14.27-100.fc19.x86_64 #1 SMP Wed Dec 17 19:36:34 UTC 2014 x86_64 x86_64 x86_64 GNU/Linux
 
-Thanks.
+so the issue may have been fixed since.
 
-Coly
+I had a disk fail in a raid6. After some 'pending' sectors were logged I decided to do a 'check'
+around that location (set sync_min/max and echo 'check'). Sure enough it elicited disk errors,
+but the disk did not recover and it was kicked out of the array. Moreover it became unresponsive.
+It needed a power cycle so I shutdown and rebooted the machine.
 
+Not one to give up easily I tried the check again, with the same result.
+It was time to '--remove' this array member. I then '--add'ed a new disk which started a recovery.
+
+A few hours later I noticed that it slowed down. A lot. It actually did not progress at all for
+a few hours (I was away from the machine).
+
+As I was staring at the screen (for a long while) I realised that it stopped at 55.5%, and this
+number is exactly where the original 'check' failed (I still do not understand why with my bad
+memory I remembered this number).
+
+I checked 'sync_completed' and it was proper.
+I then examined 'sync_max' and it was wrong - it had the location where the very early 'check'
+failed earlier in the day. It was the same sector where it is now paused at - looks related.
+
+I decided to take a (small) risk and do
+	# echo 'max' >/sys/block/md127/md/sync_max
+at which point the recovery moved on. It should be finished in about 5 hours.
+
+I do not think that it is correct for 'sync_max' to not be set to 'max' when a new member is
+added - it surely requires a full recovery.
+
+I really hope (and expect) that this was actually fixed, but this note may help others facing
+same predicament.
+
+cheers
+
+-- 
+Eyal Lebedinsky (eyal@eyal.emu.id.au)
