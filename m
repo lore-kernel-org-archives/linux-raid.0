@@ -1,62 +1,89 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: RAID10 and 'writemostly' support
-Date: Sun, 19 Feb 2017 12:31:06 -0500
-Message-ID: <08f52436-9de4-76d0-99c0-c90dedee8ae1@turmel.org>
-References: <07e8d394-2f95-caae-d971-a5fef009fefe@thelounge.net>
- <033aa14d-32a0-531d-7d7d-c01a0aeb13eb@youngman.org.uk>
- <f6ed7560-97b8-78ef-26be-789a8bc372b5@thelounge.net>
- <7090c5c7-7f02-14a3-36f1-23b8bfe53043@turmel.org>
- <5a11be45-1793-d4b7-7cf5-3adaef5740d6@thelounge.net>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH V3 1/2] RAID1: a new I/O barrier implementation to remove resync window
+Date: Mon, 20 Feb 2017 10:50:53 +1100
+Message-ID: <87shn9spsy.fsf@notabene.neil.brown.name>
+References: <1487176523-109075-1-git-send-email-colyli@suse.de> <87shnevcpr.fsf@notabene.neil.brown.name> <2f6b3d68-1536-3167-7362-78fdfa91e149@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5a11be45-1793-d4b7-7cf5-3adaef5740d6@thelounge.net>
+In-Reply-To: <2f6b3d68-1536-3167-7362-78fdfa91e149@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Reindl Harald <h.reindl@thelounge.net>, linux-raid@vger.kernel.org
+To: Coly Li <colyli@suse.de>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+Cc: Shaohua Li <shli@fb.com>, Johannes Thumshirn <jthumshirn@suse.de>, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-On 02/18/2017 06:35 PM, Reindl Harald wrote:
-> 
-> Am 18.02.2017 um 23:20 schrieb Phil Turmel:
+--=-=-=
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
->> If there are features (other than layouts) of raid10 that make you
->> prefer it to raid1, it would make sense to ask for those features to
->> be implemented in raid1.
-> 
-> writemostly it's also very appealing on existing setups, the machine
-> from where i type was installed in 2011
-> 
-> RAID1 don't have the benefit of doubled performance (also for writes, on
-> a hybrid RAID slower but still faster than RAID1) *and* doubled space
-> compared to a single disk combined with mirroring
+On Fri, Feb 17 2017, Coly Li wrote:
 
-Doubled capacity?  Vs. raid1?  No.  Raid10,n2 (,n2 is default) on two
-devices yields the same capacity as raid1 on two devices.  Unless I'm
-misunderstanding your point.
+> On 2017/2/16 =E4=B8=8B=E5=8D=883:04, NeilBrown wrote:
+>> I know you are going to change this as Shaohua wantsthe spitting to
+>> happen in a separate function, which I agree with, but there is=20
+>> something else wrong here. Calling bio_split/bio_chain repeatedly
+>> in a loop is dangerous. It is OK for simple devices, but when one
+>> request can wait for another request to the same device it can
+>> deadlock. This can happen with raid1.  If a resync request calls
+>> raise_barrier() between one request and the next, then the next has
+>> to wait for the resync request, which has to wait for the first
+>> request. As the first request will be stuck in the queue in=20
+>> generic_make_request(), you get a deadlock.
+>
+> For md raid1, queue in generic_make_request(), can I understand it as
+> bio_list_on_stack in this function? And queue in underlying device,
+> can I understand it as the data structures like plug->pending and
+> conf->pending_bio_list ?
 
-> another example: on machines like a HP microserver with only 4 drive
-> slots that you could easily improve read-performance which is for many
-> workloads the most important part by just switch half of the disk to SSD
-> 
-> price calculation for a hybrid RAID10 with 10 disks:
-> 5x4 TB SSD = 5 x 1400€ = 7000€
-> 5x4 TB HDD = 5 x 100€ = 500€
-> total price 7500€ versus 14000€ for flash-only
+Yes, the queue in generic_make_request() is the bio_list_on_stack.  That
+is the only queue I am talking about.  I'm not referring to
+plug->pending or conf->pending_bio_list at all.
 
-What is preventing you from using the existing raid1 in pairs with
-write mostly, then layering raid0 on top of them for the capacity you
-are trying to achieve?  No new code required.  What you are asking for
-really is raid1+0, which MD raid allows you to assemble yourself.
+>
+> I still don't get the point of deadlock, let me try to explain why I
+> don't see the possible deadlock. If a bio is split, and the first part
+> is processed by make_request_fn(), and then a resync comes and it will
+> raise a barrier, there are 3 possible conditions,
+> - the resync I/O tries to raise barrier on same bucket of the first
+> regular bio. Then the resync task has to wait to the first bio drops
+> its conf->nr_pending[idx]
 
-> i would be *seriously* willing to pay the inital patch for any kernel
-> maintainer who takes it over - Fedora regulary does kernel-rebases on GA
-> versions
+Not quite.
+First, the resync task (in raise_barrier()) will wait for ->nr_waiting[idx]
+to be zero.  We can assume this happens immediately.
+Then the resync_task will increment ->barrier[idx].
+Only then will it wait for the first bio to drop ->nr_pending[idx].
+The processing of that first bio will have submitted bios to the
+underlying device, and they will be in the bio_list_on_stack queue, and
+will not be processed until raid1_make_request() completes.
 
-Since no new kernel code is needed to achieve what you desire, I doubt
-a kernel patch for it would be accepted. (But I'm not a maintainer, so
-YMMV.)  This is really a user-space question, along the lines of
-"should/could mdadm automate creation of dual layers like raid1+0?"
+The loop in raid1_make_request() will then call make_request_fn() which
+will call wait_barrier(), which will wait for ->barrier[idx] to be zero.
 
-Phil
+So raid1_make_request is waiting for the resync to progress, and resync
+is waiting for a bio which is on bio_list_on_stack which won't be
+processed until raid1_make_request() completes.
 
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAliqL10ACgkQOeye3VZi
+gbnpsxAAs1HwRtIUi8pdBkr77HHBasN0bj7BcIuEOg8oAQ4F2qD5bFNrUs8XG3d0
+/ek4T5Pm2u8Pc4vTCRw717v4LliY5QocFIWsf6Uad5/IwL1n5EGU6ecL+m2ikVvo
+FM8AtEyn9vY4gfQj07ke3jaJNansu8k/UTb7C4nWGU5xZPt6h9J8zJNnBrC0dJHj
+WIcLCCRi+8mB5RabiIplqEBJyCimwpogkgTC6vmyHriRlhxVcEBCNQouxSqTEErE
+X5ezYmIEj6a924qsUWSVLm7f6xjJ+xIaOF5YBKvZH8lzunluw+WhzTQn/NkPvhkF
+tB1KtQlUYsiq3yeW6BZSH5fJWwUaa0ZlL53sct1VaCOxLwZSIE8XWkX81R0TJHVA
+mV9oLsMJvk1GGRgeVBY7ddfkn4U3RZ7wM710n6wiVWJWruFJr7dbY6WqsohSWEK3
+yxAtfp8I49yr3AGF88mTfVbrL/fPrKqIMw5x+L79HZ+GJJbFDlHWD950/bu3RzFg
+9Cd9gzqWZG8myqap5emY7JACMz7Y1fVyQNR9/+ic4daGNefcOh86XbJUoIlmyNWG
+KGisbAeJXiA/cR8IoXJddt9F68Md8wiKask4uqYGlPoBMpEcnBoBGqZfq7ryTX8B
+8p2nnJ5/WX0hgf2bNmiBsMcpiNw3Z3Iz24uUCAOnIpt35CZ1YFM=
+=Tkyt
+-----END PGP SIGNATURE-----
+--=-=-=--
