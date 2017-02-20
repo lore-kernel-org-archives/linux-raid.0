@@ -1,129 +1,124 @@
-From: Roger Roglans <rroglans@gmail.com>
-Subject: Trouble reassembling RAID10
-Date: Mon, 20 Feb 2017 21:42:28 +0000
-Message-ID: <CAPXQET=6v3NTeujqtq69KfzAv1gpeG8vGQPfwMxxOaECvFR4sg@mail.gmail.com>
+From: George Rapp <george.rapp@gmail.com>
+Subject: Reshape stalled at first badblock location (was: RAID 5 --assemble
+ doesn't recognize all overlays as component devices)
+Date: Mon, 20 Feb 2017 17:18:46 -0500
+Message-ID: <CAF-KpgY0ySvCN9ftbDmW_P6wDiyfN2yWE6=NECVru4=vCe+pbQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>
+Cc: Matthew Krumwiede <matt.krumwiede@me.com>
 List-Id: linux-raid.ids
 
-Hey new to the mailing list and fairly new to RAIDs in general. I ran
-into an issue and was hoping someone could help.
+On Sat, Feb 11, 2017 at 7:32 PM, George Rapp <george.rapp@gmail.com> wrote:
+> Previous thread: http://marc.info/?l=linux-raid&m=148564798430138&w=2
+> -- to summarize, while adding two drives to a RAID 5 array, one of the
+> existing RAID 5 component drives failed, causing the reshape progress
+> to stall at 77.5%. I removed the previous thread from this message to
+> conserve space -- before resolving that situation, another problem has
+> arisen.
+>
+> We have cloned and replaced the failed /dev/sdg with "ddrescue --force
+> -r3 -n /dev/sdh /dev/sde c/sdh-sde-recovery.log"; copied in below, or
+> viewable via https://app.box.com/v/sdh-sde-recovery . The failing
+> device was removed from the server, and the RAID component partition
+> on the cloned drive is now /dev/sdg4.
 
-Our server that runs a 14 drive RAID10 through a rocketraid 2470
-controller refused to assemble. Our goal is not necessarily to recover
-a working RAID, but to get as much data back as possible.
+[previous thread snipped - after stepping through the code under gdb,
+I realized that "mdadm --assemble --force" was needed.]
 
-Maybe as a consequence of the assembly failure, upon shutting down the
-server, it would get stuck in boot loops. So I'm currently running
-Ubuntu 16.04.1 from a USB. I've determined that 2 of 14  disks are
-faulty and have determined which ones they are.
+# uname -a
+Linux localhost 4.3.4-200.fc22.x86_64 #1 SMP Mon Jan 25 13:37:15 UTC
+2016 x86_64 x86_64 x86_64 GNU/Linux
+# mdadm --version
+mdadm - v3.3.4 - 3rd August 2015
 
-Here is the output of a mdadm --examine call.
+As previously mentioned, the device that originally failed was cloned
+to a new drive. This copy included the bad blocks list from the md
+metadata, because I'm showing 23 bad blocks on the clone target drive,
+/dev/sdg4:
 
-    ubuntu@ubuntu:~$ sudo mdadm --examine /dev/sd[c-p]1 | egrep
-'Events | /dev/sd'
-       Events : 21988
-       Events : 21988
-       Events : 21988
-       Events : 21988
-       Events : 21988
-       Events : 21988
-       Events : 21988
-       Events : 21988
-       Events : 21988
-       Events : 21988
-       Events : 21988
-       Events : 560
-       Events : 21944
-       Events : 560
+# mdadm --examine-badblocks /dev/sdg4
+Bad-blocks on /dev/sdg4:
+          3802454640 for 512 sectors
+          3802455664 for 512 sectors
+          3802456176 for 512 sectors
+          3802456688 for 512 sectors
+          3802457200 for 512 sectors
+          3802457712 for 512 sectors
+          3802458224 for 512 sectors
+          3802458736 for 512 sectors
+          3802459248 for 512 sectors
+          3802459760 for 512 sectors
+          3802460272 for 512 sectors
+          3802460784 for 512 sectors
+          3802461296 for 512 sectors
+          3802461808 for 512 sectors
+          3802462320 for 512 sectors
+          3802462832 for 512 sectors
+          3802463344 for 512 sectors
+          3802463856 for 512 sectors
+          3802464368 for 512 sectors
+          3802464880 for 512 sectors
+          3802465392 for 512 sectors
+          3802465904 for 512 sectors
+          3802466416 for 512 sectors
 
-However, I keep running into an error:
+However, when I run the following command to attempt to read each of
+the bad blocks, no I/O errors pop up either on the command line or in
+/var/log messages:
 
-    ubuntu@ubuntu:~$ sudo mdadm --assemble --verbose --force /dev/md0
-/dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1 /dev/sdg1 /dev/sdh1 /dev/sdi1
-/dev/sdj1 /dev/sdk1 /dev/sdl1 /dev/sdm1 /dev/sdn1 /dev/sdo1 /dev/sdp1
-    mdadm: looking for devices for /dev/md0
-    mdadm: /dev/sdc1 is identified as a member of /dev/md0, slot 0.
-    mdadm: /dev/sdd1 is identified as a member of /dev/md0, slot 1.
-    mdadm: /dev/sde1 is identified as a member of /dev/md0, slot 2.
-    mdadm: /dev/sdf1 is identified as a member of /dev/md0, slot 3.
-    mdadm: /dev/sdg1 is identified as a member of /dev/md0, slot 4.
-    mdadm: /dev/sdh1 is identified as a member of /dev/md0, slot 5.
-    mdadm: /dev/sdi1 is identified as a member of /dev/md0, slot 6.
-    mdadm: /dev/sdj1 is identified as a member of /dev/md0, slot 7.
-    mdadm: /dev/sdk1 is identified as a member of /dev/md0, slot 8.
-    mdadm: /dev/sdl1 is identified as a member of /dev/md0, slot 9.
-    mdadm: /dev/sdm1 is identified as a member of /dev/md0, slot 10.
-    mdadm: /dev/sdn1 is identified as a member of /dev/md0, slot 11.
-    mdadm: /dev/sdo1 is identified as a member of /dev/md0, slot 12.
-    mdadm: /dev/sdp1 is identified as a member of /dev/md0, slot 13.
-    mdadm: added /dev/sdd1 to /dev/md0 as 1
-    mdadm: added /dev/sde1 to /dev/md0 as 2
-    mdadm: added /dev/sdf1 to /dev/md0 as 3
-    mdadm: added /dev/sdg1 to /dev/md0 as 4
-    mdadm: added /dev/sdh1 to /dev/md0 as 5
-    mdadm: added /dev/sdi1 to /dev/md0 as 6
-    mdadm: added /dev/sdj1 to /dev/md0 as 7
-    mdadm: added /dev/sdk1 to /dev/md0 as 8
-    mdadm: added /dev/sdl1 to /dev/md0 as 9
-    mdadm: added /dev/sdm1 to /dev/md0 as 10
-    mdadm: added /dev/sdn1 to /dev/md0 as 11 (possibly out of date)
-    mdadm: added /dev/sdo1 to /dev/md0 as 12 (possibly out of date)
-    mdadm: added /dev/sdp1 to /dev/md0 as 13 (possibly out of date)
-    mdadm: added /dev/sdc1 to /dev/md0 as 0
-    mdadm: /dev/md0 assembled from 11 drives - not enough to start the array.
+# for i in $(mdadm --examine-badblocks /dev/sdg4 | grep "512 sectors"
+| cut -c11-20) ; do dd bs=512 if=/dev/sdg4 skip=$i count=512 | wc -c;
+done
 
-and trying to add --run gives this error:
+I've truncated the output, but in each case it is similar to this:
 
-    ubuntu@ubuntu:~$ sudo mdadm --assemble --verbose --run --force
-/dev/md1 /dev/sdc1 /dev/sde1 /dev/sdf1 /dev/sdg1 /dev/sdh1 /dev/sdi1
-/dev/sdj1 /dev/sdk1 /dev/sdl1 /dev/sdm1 /dev/sdo1
-    mdadm: looking for devices for /dev/md1
-    mdadm: /dev/sdc1 is identified as a member of /dev/md1, slot 0.
-    mdadm: /dev/sde1 is identified as a member of /dev/md1, slot 2.
-    mdadm: /dev/sdf1 is identified as a member of /dev/md1, slot 3.
-    mdadm: /dev/sdg1 is identified as a member of /dev/md1, slot 4.
-    mdadm: /dev/sdh1 is identified as a member of /dev/md1, slot 5.
-    mdadm: /dev/sdi1 is identified as a member of /dev/md1, slot 6.
-    mdadm: /dev/sdj1 is identified as a member of /dev/md1, slot 7.
-    mdadm: /dev/sdk1 is identified as a member of /dev/md1, slot 8.
-    mdadm: /dev/sdl1 is identified as a member of /dev/md1, slot 9.
-    mdadm: /dev/sdm1 is identified as a member of /dev/md1, slot 10.
-    mdadm: /dev/sdo1 is identified as a member of /dev/md1, slot 12.
-    mdadm: no uptodate device for slot 2 of /dev/md1
-    mdadm: added /dev/sde1 to /dev/md1 as 2
-    mdadm: added /dev/sdf1 to /dev/md1 as 3
-    mdadm: added /dev/sdg1 to /dev/md1 as 4
-    mdadm: added /dev/sdh1 to /dev/md1 as 5
-    mdadm: added /dev/sdi1 to /dev/md1 as 6
-    mdadm: added /dev/sdj1 to /dev/md1 as 7
-    mdadm: added /dev/sdk1 to /dev/md1 as 8
-    mdadm: added /dev/sdl1 to /dev/md1 as 9
-    mdadm: added /dev/sdm1 to /dev/md1 as 10
-    mdadm: no uptodate device for slot 22 of /dev/md1
-    mdadm: added /dev/sdo1 to /dev/md1 as 12 (possibly out of date)
-    mdadm: no uptodate device for slot 26 of /dev/md1
-    mdadm: added /dev/sdc1 to /dev/md1 as 0
-    mdadm: failed to RUN_ARRAY /dev/md1: Input/output error
-    mdadm: Not enough devices to start the array.
+512+0 records in
+512+0 records out
+262144
+262144 bytes (262 kB) copied, 0.636762 s, 412 kB/s
 
-So it's clear that the last three drives are out of date. It's
-possible that drives 11 and 13 were never really active, but since
-they were only partners in a raid 1, the array was unaffected until
-now. I'm hoping that if I can reassemble with the 12th drive, then I
-will be able to recover most of the data. Does anyone know what I can
-do about that? I've also tried without the "inactive" drives but it
-still isn't assembling drive 12. I know that I can try using --run,
-but I'm not sure if I'll lose data that way. I'm also hesitant to zero
-the superblock because I've always heard it was a last resort option.
+Thus, the bad blocks on the failed hard drive are apparently now
+readable on the cloned drive.
 
-Note that because I'm running this off a USB the usual `cat
-/proc/mdstat` doesn't return the previous array. Also, I don't know
-the exact structure of the array (if I did this would be a lot
-easier).
+When I try to assemble the RAID 5 array, though, the process gets
+stuck at the location of the first bad block. The assemble command is:
 
-Thanks in advance for the help,
-Roger
+# mdadm --assemble --force /dev/md4
+--backup-file=/home/gwr/2017/2017-01/md4_backup__2017-01-25 /dev/sde4
+/dev/sdf4 /dev/sdh4 /dev/sdl4 /dev/sdg4 /dev/sdk4 /dev/sdi4 /dev/sdj4
+/dev/sdb4 /dev/sdd4
+mdadm: accepting backup with timestamp 1485366772 for array with
+timestamp 1487624068
+mdadm: /dev/md4 has been started with 9 drives (out of 10).
+
+The md4_raid5 process immediately spikes to 100% CPU utilization, and
+the reshape stops at 1901225472 KiB (which is exactly half of the
+first bad sector value, 3802454640):
+
+# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md4 : active raid5 sde4[0] sdb4[12] sdj4[7] sdi4[8] sdk4[11] sdg4[10]
+sdl4[9] sdh4[2] sdf4[1]
+      13454923776 blocks super 1.1 level 5, 512k chunk, algorithm 2
+[10/9] [UUUUUUUUU_]
+      [===================>.]  reshape = 98.9% (1901225472/1922131968)
+finish=2780.9min speed=125K/sec
+
+unused devices: <none>
+
+Googling around, I get the impression that resetting the badblocks
+list is (a) not supported by the mdadm command; and (b) considered
+harmful. However, if the blocks aren't really bad any more, as they
+are now readable, does that risk still hold? How can I get this
+reshape to proceed?
+
+Updated mdadm --examine output is at
+https://app.box.com/v/raid-status-2017-02-20
+
+-- 
+George Rapp  (Pataskala, OH) Home: george.rapp -- at -- gmail.com
+LinkedIn profile: https://www.linkedin.com/in/georgerapp
+Phone: +1 740 936 RAPP (740 936 7277)
