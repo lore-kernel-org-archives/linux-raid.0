@@ -1,132 +1,105 @@
-From: Martin Bosner <martin@bosner.de>
-Subject: assistance recovering failed raid6 array
-Date: Mon, 20 Feb 2017 02:49:18 +0100
-Message-ID: <58AA4B1E.1030809@bosner.de>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH V3 1/2] RAID1: a new I/O barrier implementation to remove resync window
+Date: Mon, 20 Feb 2017 13:51:22 +1100
+Message-ID: <87k28lshg5.fsf@notabene.neil.brown.name>
+References: <1487176523-109075-1-git-send-email-colyli@suse.de> <87shnevcpr.fsf@notabene.neil.brown.name> <2f6b3d68-1536-3167-7362-78fdfa91e149@suse.de> <87shn9spsy.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87shn9spsy.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Coly Li <colyli@suse.de>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+Cc: Shaohua Li <shli@fb.com>, Johannes Thumshirn <jthumshirn@suse.de>, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-I am running a software raid6 with 36 x 3TB disks (sda to sdaj). All
-disks have one partition (gpt, 100%, primary, raid on) and i am using
-btrfs on top of the raid.
+--=-=-=
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Last week one of the disks failed and was unrecoverable. I replaced the
-disk (sdk) with a new one and the resync process started.
-At around 80% recovery two further disks failed and the recovery process
-was stopped. That failed disks are sdm and sdh.
+On Mon, Feb 20 2017, NeilBrown wrote:
 
-All other disks seem to be fine and I was about the use the "mdadm
---create" command when i remembered the lines
-"You have been warned! It's better to send an email to the linux-raid
-mailing list with detailed information"
+> On Fri, Feb 17 2017, Coly Li wrote:
+>
+>> On 2017/2/16 =E4=B8=8B=E5=8D=883:04, NeilBrown wrote:
+>>> I know you are going to change this as Shaohua wantsthe spitting to
+>>> happen in a separate function, which I agree with, but there is=20
+>>> something else wrong here. Calling bio_split/bio_chain repeatedly
+>>> in a loop is dangerous. It is OK for simple devices, but when one
+>>> request can wait for another request to the same device it can
+>>> deadlock. This can happen with raid1.  If a resync request calls
+>>> raise_barrier() between one request and the next, then the next has
+>>> to wait for the resync request, which has to wait for the first
+>>> request. As the first request will be stuck in the queue in=20
+>>> generic_make_request(), you get a deadlock.
+>>
+>> For md raid1, queue in generic_make_request(), can I understand it as
+>> bio_list_on_stack in this function? And queue in underlying device,
+>> can I understand it as the data structures like plug->pending and
+>> conf->pending_bio_list ?
+>
+> Yes, the queue in generic_make_request() is the bio_list_on_stack.  That
+> is the only queue I am talking about.  I'm not referring to
+> plug->pending or conf->pending_bio_list at all.
+>
+>>
+>> I still don't get the point of deadlock, let me try to explain why I
+>> don't see the possible deadlock. If a bio is split, and the first part
+>> is processed by make_request_fn(), and then a resync comes and it will
+>> raise a barrier, there are 3 possible conditions,
+>> - the resync I/O tries to raise barrier on same bucket of the first
+>> regular bio. Then the resync task has to wait to the first bio drops
+>> its conf->nr_pending[idx]
+>
+> Not quite.
+> First, the resync task (in raise_barrier()) will wait for ->nr_waiting[id=
+x]
+> to be zero.  We can assume this happens immediately.
+> Then the resync_task will increment ->barrier[idx].
+> Only then will it wait for the first bio to drop ->nr_pending[idx].
+> The processing of that first bio will have submitted bios to the
+> underlying device, and they will be in the bio_list_on_stack queue, and
+> will not be processed until raid1_make_request() completes.
+>
+> The loop in raid1_make_request() will then call make_request_fn() which
+> will call wait_barrier(), which will wait for ->barrier[idx] to be
+> zero.
 
-So here i am for an advice how to continue.
+Thinking more carefully about this.. the 'idx' that the second bio will
+wait for will normally be different, so there won't be a deadlock after
+all.
 
-More details:
+However it is possible for hash_long() to produce the same idx for two
+consecutive barrier_units so there is still the possibility of a
+deadlock, though it isn't as likely as I thought at first.
 
-Only 35% of the raid space is used.
-
-The disks status is:
-sdk: original disk is dead and the replacement was around 80% recovered.
-sdm: i was able to copy the first 2 TB with two errors (128kbyte) and
-the third TB with around 200GB missing data using ddrescue to a new disk.
-sdh: the original disk is dead and i replaced it with a brand new one
-and created the partition sdh1.
-
-Since the array is offline i cannot add sdh1 to the raid and trying to
-assemble the array gives me:
-
-For mdadm --assemble --force with sdh1:
-mdadm: no RAID superblock on /dev/sdh1
-mdadm: /dev/sdh1 has no superblock - assembly aborted
-
-For mdadm --assemble --force without sdh1:
-mdadm: /dev/md0 assembled from 33 drives, 1 rebuilding and 1 spare - not
-enough to start the array.
-
-Full status of /dev/sda1:
-
-mdadm --examine /dev/sda1
-/dev/sda1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 5c7c227e:22de5fc1:ca3ebb65:9c283567
-           Name : media-storage:0  (local to host media-storage)
-  Creation Time : Sun Sep 18 22:46:42 2016
-     Raid Level : raid6
-   Raid Devices : 36
-
- Avail Dev Size : 5860268032 (2794.39 GiB 3000.46 GB)
-     Array Size : 99624556544 (95009.38 GiB 102015.55 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=262056 sectors, after=0 sectors
-          State : clean
-    Device UUID : f90e9c41:5aa3c3b2:d715781b:1abbb439
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Wed Feb 15 14:08:28 2017
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : b0b57ef2 - correct
-         Events : 140559
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 0
-   Array State : AAAAAAA.AA.AAAAAAAAAAAAAAAAAAAAAAAAA ('A' == active,
-'.' == missing, 'R' == replacing)
+NeilBrown
 
 
-mdadm --examine for each drive to get "Device Role":
+>
+> So raid1_make_request is waiting for the resync to progress, and resync
+> is waiting for a bio which is on bio_list_on_stack which won't be
+> processed until raid1_make_request() completes.
+>
+> NeilBrown
 
-"sda    Device Role : Active device 0"
-"sdb    Device Role : Active device 1"
-"sdc    Device Role : Active device 2"
-"sdd    Device Role : Active device 3"
-"sde    Device Role : Active device 4"
-"sdf    Device Role : Active device 5"
-"sdg    Device Role : Active device 6"
-"sdh" mdadm: No md superblock detected on /dev/sdh1.
-"sdi    Device Role : Active device 8"
-"sdj    Device Role : Active device 9"
-"sdk    Device Role : spare"
-"sdl    Device Role : Active device 11"
-"sdm    Device Role : Active device 12"
-"sdn    Device Role : Active device 13"
-"sdo    Device Role : Active device 14"
-"sdp    Device Role : Active device 15"
-"sdq    Device Role : Active device 16"
-"sdr    Device Role : Active device 17"
-"sds    Device Role : Active device 18"
-"sdt    Device Role : Active device 19"
-"sdu    Device Role : Active device 20"
-"sdv    Device Role : Active device 21"
-"sdw    Device Role : Active device 22"
-"sdx    Device Role : Active device 23"
-"sdy    Device Role : Active device 24"
-"sdz    Device Role : Active device 25"
-"sdaa    Device Role : Active device 26"
-"sdab    Device Role : Active device 27"
-"sdac    Device Role : Active device 28"
-"sdad    Device Role : Active device 29"
-"sdae    Device Role : Active device 30"
-"sdaf    Device Role : Active device 31"
-"sdag    Device Role : Active device 32"
-"sdah    Device Role : Active device 33"
-"sdai    Device Role : Active device 34"
-"sdaj    Device Role : Active device 35"
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
+-----BEGIN PGP SIGNATURE-----
 
-The system is Ubuntu 16.04.2 LTS (x86_64) with a 4.4.0-62-generic kernel.
-
-mdadm --version gives me: mdadm - v3.3 - 3rd September 2013
-
--- 
-
-<https://www.postbox-inc.com/?utm_source=email&utm_medium=siglink&utm_campaign=reach>
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAliqWaoACgkQOeye3VZi
+gbldtA/9HgO0LpHR5DHExEeIoPHpe043RB6qzwMtBb/kzlOos8vq86iuBOolzVux
+SKGJu5RwO1Up0Zrxn+yV0FJYAHN7+FzMUluAi72Eukhlj/p9k5VjXclvqVRxphku
+eZE8nyPCA05CapYm9BcLMSyPHJp72JVH7Nbwibclb5JIuMUI53OwXuCKE8UkJK+b
+3/lety3ygdodEOdv9XOgMrQadJCGK6slRR9zPMoNV77h0XCRSFM9jObXN9mmFDgM
+KEAQs4eWGhwkkEtmIKduKfuwtrCn/1u2vVZPUNKvs1bO0RBa/sxU2693801uG8tw
+wAbcIiXilrGINw1dDx44ucLzzaJDxT4YgDsfbHmjBHF5QE262y7buv+zh6oy5Y4T
+PfEriYMVjbKUG6oNzp7zd3geqiMenU/X4mx4DcTvXHaHuIFbnODQ115sJ23BhREU
+vJumBheE46/CCtrILRbR1m7PaonBgC/g7/UDmMWWAbx8O1AXik0lcNZUEES8J9zi
+5mtMuSw85k8skTFe61zq4Br+ufoLqS1q2nEcXUlZ9+XmAqcMNaBmqz5Bxx1GbB1M
+N+oW0Bk75E4FzMNMNi9IdaxwcWk+ZKLCPkjSInAjKsziOrxgbE+xHfziN8iW5lMV
+HrKZpv8K7Bp94jlYuc5sqUIw91xcuv7CYvZI80qM1oUgyRkGjPQ=
+=QwVl
+-----END PGP SIGNATURE-----
+--=-=-=--
