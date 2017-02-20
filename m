@@ -1,7 +1,7 @@
 From: Phil Turmel <philip@turmel.org>
 Subject: Re: assistance recovering failed raid6 array
-Date: Mon, 20 Feb 2017 16:21:34 -0500
-Message-ID: <6286c879-2c58-ee43-86fb-22e83c1964c4@turmel.org>
+Date: Mon, 20 Feb 2017 16:30:45 -0500
+Message-ID: <fd323bc5-78d9-9f51-f7b1-01f9e90215fa@turmel.org>
 References: <58AA4B1E.1030809@bosner.de>
  <e01061cb-ea4c-4f64-16e8-e6027adbc70d@turmel.org>
  <E18A7C79-09E0-4361-9F89-68AE1E6FCBF6@bosner.de>
@@ -10,32 +10,29 @@ References: <58AA4B1E.1030809@bosner.de>
  <676bd1fa-4b97-2c6a-05b8-bd23290fb9a6@turmel.org>
  <54F6D166-0D54-49EF-B967-124DC582B299@bosner.de>
  <fcf34399-2f7a-f444-bff7-512ae29d2e7b@turmel.org>
- <58AB5555.5070504@youngman.org.uk>
+ <30DDAE62-6D76-4999-A69A-A6C16D082DA9@bosner.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <58AB5555.5070504@youngman.org.uk>
+In-Reply-To: <30DDAE62-6D76-4999-A69A-A6C16D082DA9@bosner.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, Martin Bosner <martin@bosner.de>
+To: Martin Bosner <martin@bosner.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/20/2017 03:45 PM, Wols Lists wrote:
+On 02/20/2017 02:31 PM, Martin Bosner wrote:
 
-> But there's a request on the linux wiki program for someone to write a
-> utility program that takes a ddrescue log and flags the duff sectors as
-> "soft unreadable". That would mean that if you can recover 35 drives,
-> provided no stripe has lost two sectors across two drives, you wouldn't
-> lose any data.
-> 
-> If you want to try and write that utility? Or if you want to email me a
-> ddrescue log with a bunch of failed sectors, I'll have a go at writing
-> it myself :-)
+> Is there a way tell mdadm to use sdk1 as a “active” device? And how
+> can i tell the array that it should not try to recover sdm1 but set
+> it active ? Is there any magic to force the state ? It might not be
+> healthy for the normal use case but might be helpful for me.
 
-Check out hdparm --make-bad-sector.  You can get what you are describing
-by scripting that.  It's marked very dangerous, but I guess if one has
-nothing to lose....
+No. There's no way to do that.  Short of reading the kernel code to do
+hex editing on the superblock.  And since the spare status is there due
+to an --add action, you can't trust that anything else there would be
+safe for --create --assume-clean. You would scramble these eggs even
+further.
 
 Phil
 
