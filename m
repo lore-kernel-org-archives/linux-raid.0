@@ -1,40 +1,27 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: assistance recovering failed raid6 array
-Date: Mon, 20 Feb 2017 10:39:16 -0500
-Message-ID: <e01061cb-ea4c-4f64-16e8-e6027adbc70d@turmel.org>
-References: <58AA4B1E.1030809@bosner.de>
+From: "Christian Samsel" <csamsel@gmxpro.de>
+Subject: Device size for linux raid5 journal?
+Date: Mon, 20 Feb 2017 17:50:09 +0100
+Message-ID: <trinity-e6976ea9-ab41-4a2a-85ce-50b77ded8f35-1487609409044@3capp-gmx-bs16>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <58AA4B1E.1030809@bosner.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Bosner <martin@bosner.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/19/2017 08:49 PM, Martin Bosner wrote:
-> I am running a software raid6 with 36 x 3TB disks (sda to sdaj). All
-> disks have one partition (gpt, 100%, primary, raid on) and i am using
-> btrfs on top of the raid.
-> 
-> Last week one of the disks failed and was unrecoverable. I replaced the
-> disk (sdk) with a new one and the resync process started.
-> At around 80% recovery two further disks failed and the recovery process
-> was stopped. That failed disks are sdm and sdh.
-> 
-> All other disks seem to be fine and I was about the use the "mdadm
-> --create" command when i remembered the lines
-> "You have been warned! It's better to send an email to the linux-raid
-> mailing list with detailed information"
-> 
-> So here i am for an advice how to continue.
+Hello raid team,
+First of all, thanks for your work.
+So i recently read about Linux raid5/raid6 write-cache and journaling and thought about
+giving it a try. I'm mainly interested in the additional safety provided by the journal but might
+want be future proof to use the write cache as well.
+I read how to create an array using a journal but i havent found the slightest indication of how
+large the respective device/partition should be. I went through the lwn article [1], the slides [2] of the
+respective engineers at facebook and a few commit messages.
 
-More information, please.  Paste inline, untrimmed, in your reply with
-line wrapping disabled.  Plain text only.  Use multiple mails if needed.
-List limit is ~100k IIRC.
+So my question is, let's assume i have a 6TB raid5 array (3x3TB), what would a good journal device size be?
+I'd probably went with 4GB, as this is kinda the upper bound of what hardware raid controller offer. 
 
-# dmesg
+Christian
 
-# for x in /dev/sd[a-z] /dev/sda[a-j] ; do echo mdadm -E ${x}1 ; smartctl -iA -l scterc $x ; done
-
-Phil
+[1] https://lwn.net/Articles/665299/
+[2] http://events.linuxfoundation.org/sites/events/files/slides/2016_vault_write_journal_cache_v2.pdf
