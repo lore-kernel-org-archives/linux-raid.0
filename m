@@ -1,90 +1,132 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH V4 1/2] RAID1: a new I/O barrier implementation to remove resync window
-Date: Mon, 20 Feb 2017 11:31:59 +1100
-Message-ID: <87mvdhsnwg.fsf@notabene.neil.brown.name>
-References: <1487358357-123924-1-git-send-email-colyli@suse.de>
+From: Martin Bosner <martin@bosner.de>
+Subject: assistance recovering failed raid6 array
+Date: Mon, 20 Feb 2017 02:49:18 +0100
+Message-ID: <58AA4B1E.1030809@bosner.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1487358357-123924-1-git-send-email-colyli@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Coly Li <colyli@suse.de>, Shaohua Li <shli@fb.com>, Neil Brown <neilb@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I am running a software raid6 with 36 x 3TB disks (sda to sdaj). All
+disks have one partition (gpt, 100%, primary, raid on) and i am using
+btrfs on top of the raid.
 
-On Sat, Feb 18 2017, colyli@suse.de wrote:
+Last week one of the disks failed and was unrecoverable. I replaced the
+disk (sdk) with a new one and the resync process started.
+At around 80% recovery two further disks failed and the recovery process
+was stopped. That failed disks are sdm and sdh.
 
-> @@ -1447,36 +1497,26 @@ static void raid1_write_request(struct mddev *mdd=
-ev, struct bio *bio,
->=20=20
->  static void raid1_make_request(struct mddev *mddev, struct bio *bio)
->  {
-> -	struct r1conf *conf =3D mddev->private;
-> -	struct r1bio *r1_bio;
-> +	void (*make_request_fn)(struct mddev *mddev, struct bio *bio);
-> +	struct bio *split;
-> +	sector_t sectors;
->=20=20
-> -	/*
-> -	 * make_request() can abort the operation when read-ahead is being
-> -	 * used and no empty request is available.
-> -	 *
-> -	 */
-> -	r1_bio =3D mempool_alloc(conf->r1bio_pool, GFP_NOIO);
-> +	make_request_fn =3D (bio_data_dir(bio) =3D=3D READ) ?
-> +			  raid1_read_request : raid1_write_request;
->=20=20
-....
->=20=20
-> -	if (bio_data_dir(bio) =3D=3D READ)
-> -		raid1_read_request(mddev, bio, r1_bio);
-> -	else
-> -		raid1_write_request(mddev, bio, r1_bio);
-> +		make_request_fn(mddev, split);
-> +	} while (split !=3D bio);
->  }
+All other disks seem to be fine and I was about the use the "mdadm
+--create" command when i remembered the lines
+"You have been warned! It's better to send an email to the linux-raid
+mailing list with detailed information"
 
-I don't think the use of make_request_fn() makes the code more readable
-or more efficient, and it quite possibly has a cost.
-If you left it as
+So here i am for an advice how to continue.
 
-	if (bio_data_dir(bio) =3D=3D READ)
-		raid1_read_request(mddev, bio, r1_bio);
-	else
-		raid1_write_request(mddev, bio, r1_bio);
+More details:
 
-then gcc would notice that both raid1_read_request and
-raid1_write_request are static functions that are only used once, and
-will normally inline them.  This will reduce the total stack depth,
-which you expressed some concern about in a previous email.
-Using a function pointer like this makes it harder for gcc to perform
-that optimization.
+Only 35% of the raid space is used.
+
+The disks status is:
+sdk: original disk is dead and the replacement was around 80% recovered.
+sdm: i was able to copy the first 2 TB with two errors (128kbyte) and
+the third TB with around 200GB missing data using ddrescue to a new disk.
+sdh: the original disk is dead and i replaced it with a brand new one
+and created the partition sdh1.
+
+Since the array is offline i cannot add sdh1 to the raid and trying to
+assemble the array gives me:
+
+For mdadm --assemble --force with sdh1:
+mdadm: no RAID superblock on /dev/sdh1
+mdadm: /dev/sdh1 has no superblock - assembly aborted
+
+For mdadm --assemble --force without sdh1:
+mdadm: /dev/md0 assembled from 33 drives, 1 rebuilding and 1 spare - not
+enough to start the array.
+
+Full status of /dev/sda1:
+
+mdadm --examine /dev/sda1
+/dev/sda1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 5c7c227e:22de5fc1:ca3ebb65:9c283567
+           Name : media-storage:0  (local to host media-storage)
+  Creation Time : Sun Sep 18 22:46:42 2016
+     Raid Level : raid6
+   Raid Devices : 36
+
+ Avail Dev Size : 5860268032 (2794.39 GiB 3000.46 GB)
+     Array Size : 99624556544 (95009.38 GiB 102015.55 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=262056 sectors, after=0 sectors
+          State : clean
+    Device UUID : f90e9c41:5aa3c3b2:d715781b:1abbb439
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Wed Feb 15 14:08:28 2017
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : b0b57ef2 - correct
+         Events : 140559
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 0
+   Array State : AAAAAAA.AA.AAAAAAAAAAAAAAAAAAAAAAAAA ('A' == active,
+'.' == missing, 'R' == replacing)
 
 
-NeilBrown
+mdadm --examine for each drive to get "Device Role":
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+"sda    Device Role : Active device 0"
+"sdb    Device Role : Active device 1"
+"sdc    Device Role : Active device 2"
+"sdd    Device Role : Active device 3"
+"sde    Device Role : Active device 4"
+"sdf    Device Role : Active device 5"
+"sdg    Device Role : Active device 6"
+"sdh" mdadm: No md superblock detected on /dev/sdh1.
+"sdi    Device Role : Active device 8"
+"sdj    Device Role : Active device 9"
+"sdk    Device Role : spare"
+"sdl    Device Role : Active device 11"
+"sdm    Device Role : Active device 12"
+"sdn    Device Role : Active device 13"
+"sdo    Device Role : Active device 14"
+"sdp    Device Role : Active device 15"
+"sdq    Device Role : Active device 16"
+"sdr    Device Role : Active device 17"
+"sds    Device Role : Active device 18"
+"sdt    Device Role : Active device 19"
+"sdu    Device Role : Active device 20"
+"sdv    Device Role : Active device 21"
+"sdw    Device Role : Active device 22"
+"sdx    Device Role : Active device 23"
+"sdy    Device Role : Active device 24"
+"sdz    Device Role : Active device 25"
+"sdaa    Device Role : Active device 26"
+"sdab    Device Role : Active device 27"
+"sdac    Device Role : Active device 28"
+"sdad    Device Role : Active device 29"
+"sdae    Device Role : Active device 30"
+"sdaf    Device Role : Active device 31"
+"sdag    Device Role : Active device 32"
+"sdah    Device Role : Active device 33"
+"sdai    Device Role : Active device 34"
+"sdaj    Device Role : Active device 35"
 
------BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAliqOP8ACgkQOeye3VZi
-gblDsA/9ETg+H+MFU6R9NK/qYTg79kzTcN/hhuNFUviLSQn1KuWWAnM0Fb0gOVA7
-oOUX2lLogXUYBzpM4W50SLkIQzPwMkvTkUAvimpqXip7jaPK5CWqBxTDrZFMaf+B
-l9Sdf7F2QqxJczNBJ9Ihu1Fm2PKeFHpHeUzyI22/cMV4ytxytIahX8fCuaKk64JJ
-d3mTiIi11B7jlTwQnR/IeBMWASmmrxvQRzy9Y/JonUbz4wn3m168y11RoYouqM1J
-6dc7qfiDoG98aEFmiHOQVIMif1QLZBGSJYk5ZtIMWvwrUk9k8tFul4WLBXj5X4BR
-JZU1oRAFM9nonN11W2um2VNyhlOgfc5/9R39JVhn1ys9lMbEzBqGjPzTxbfU0Dpw
-ffGocReCXYjuHKZWfBN+ukyLC7fK3XcLj6VkvZyxuJA6EiuXxe0L+3mRqq1k59Ge
-NdJ52czQfCnLtGL5jn8xSjeuDpRlh7i5zJEbbbotjUUBsU7ZW98vbfydJbt4rnFg
-+lu9h7oJK2Xo4M3wIp2Zdtb2nSZK+XNcIf/hYbRBM3nSczFE13Jk5fvZVOgZoVLh
-fgu7/u9rHHv5ZpFYblRRB3YpHdlR9JVot2xHsCL+fSWqZ3/XPjk2/Dm2BirvPkrW
-7JmUIYnp4qX+utFd8oY76Axp8Cj95kUQk+OywtrTUkUpa+hpki4=
-=fphU
------END PGP SIGNATURE-----
---=-=-=--
+The system is Ubuntu 16.04.2 LTS (x86_64) with a 4.4.0-62-generic kernel.
+
+mdadm --version gives me: mdadm - v3.3 - 3rd September 2013
+
+-- 
+
+<https://www.postbox-inc.com/?utm_source=email&utm_medium=siglink&utm_campaign=reach>
