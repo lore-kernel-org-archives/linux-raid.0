@@ -1,138 +1,35 @@
-From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: Re: Reshape stalled at first badblock location (was: RAID 5
- --assemble doesn't recognize all overlays as component devices)
-Date: Tue, 21 Feb 2017 10:51:04 +0100
-Message-ID: <20170221095104.GA3491@proton.igk.intel.com>
-References: <CAF-KpgY0ySvCN9ftbDmW_P6wDiyfN2yWE6=NECVru4=vCe+pbQ@mail.gmail.com>
+From: Coly Li <colyli@suse.de>
+Subject: Re: [PATCH V3 1/2] RAID1: a new I/O barrier implementation to remove
+ resync window
+Date: Tue, 21 Feb 2017 19:30:55 +0800
+Message-ID: <e8ff590a-3972-465a-bf05-36f3e8542f0a@suse.de>
+References: <1487176523-109075-1-git-send-email-colyli@suse.de>
+ <87shnevcpr.fsf@notabene.neil.brown.name>
+ <2f6b3d68-1536-3167-7362-78fdfa91e149@suse.de>
+ <87shn9spsy.fsf@notabene.neil.brown.name>
+ <87k28lshg5.fsf@notabene.neil.brown.name>
+ <20170220070430.4mca7clpaw7kpj4j@kernel.org>
+ <7178ADEA-6263-4FB0-95A5-96E5F71A9740@suse.de>
+ <58AB320B.1060707@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAF-KpgY0ySvCN9ftbDmW_P6wDiyfN2yWE6=NECVru4=vCe+pbQ@mail.gmail.com>
+In-Reply-To: <58AB320B.1060707@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: George Rapp <george.rapp@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>, Matthew Krumwiede <matt.krumwiede@me.com>
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: Shaohua Li <shli@kernel.org>, NeilBrown <neilb@suse.com>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Johannes Thumshirn <jthumshirn@suse.de>, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-On Mon, Feb 20, 2017 at 05:18:46PM -0500, George Rapp wrote:
-> On Sat, Feb 11, 2017 at 7:32 PM, George Rapp <george.rapp@gmail.com> wrote:
-> > Previous thread: http://marc.info/?l=linux-raid&m=148564798430138&w=2
-> > -- to summarize, while adding two drives to a RAID 5 array, one of the
-> > existing RAID 5 component drives failed, causing the reshape progress
-> > to stall at 77.5%. I removed the previous thread from this message to
-> > conserve space -- before resolving that situation, another problem has
-> > arisen.
-> >
-> > We have cloned and replaced the failed /dev/sdg with "ddrescue --force
-> > -r3 -n /dev/sdh /dev/sde c/sdh-sde-recovery.log"; copied in below, or
-> > viewable via https://app.box.com/v/sdh-sde-recovery . The failing
-> > device was removed from the server, and the RAID component partition
-> > on the cloned drive is now /dev/sdg4.
+On 2017/2/21 上午2:14, Wols Lists wrote:
+> On 20/02/17 08:07, Coly Li wrote:
+>> For the function pointer asignment, it is because I see a brach happens in a loop. If I use a function pointer, I can avoid redundant brach inside the loop. raid1_read_request() and raid1_write_request() are not simple functions, I don't know whether gcc may make them inline or not, so I am on the way to check the disassembled code..
 > 
-> [previous thread snipped - after stepping through the code under gdb,
-> I realized that "mdadm --assemble --force" was needed.]
-> 
-> # uname -a
-> Linux localhost 4.3.4-200.fc22.x86_64 #1 SMP Mon Jan 25 13:37:15 UTC
-> 2016 x86_64 x86_64 x86_64 GNU/Linux
-> # mdadm --version
-> mdadm - v3.3.4 - 3rd August 2015
-> 
-> As previously mentioned, the device that originally failed was cloned
-> to a new drive. This copy included the bad blocks list from the md
-> metadata, because I'm showing 23 bad blocks on the clone target drive,
-> /dev/sdg4:
-> 
-> # mdadm --examine-badblocks /dev/sdg4
-> Bad-blocks on /dev/sdg4:
->           3802454640 for 512 sectors
->           3802455664 for 512 sectors
->           3802456176 for 512 sectors
->           3802456688 for 512 sectors
->           3802457200 for 512 sectors
->           3802457712 for 512 sectors
->           3802458224 for 512 sectors
->           3802458736 for 512 sectors
->           3802459248 for 512 sectors
->           3802459760 for 512 sectors
->           3802460272 for 512 sectors
->           3802460784 for 512 sectors
->           3802461296 for 512 sectors
->           3802461808 for 512 sectors
->           3802462320 for 512 sectors
->           3802462832 for 512 sectors
->           3802463344 for 512 sectors
->           3802463856 for 512 sectors
->           3802464368 for 512 sectors
->           3802464880 for 512 sectors
->           3802465392 for 512 sectors
->           3802465904 for 512 sectors
->           3802466416 for 512 sectors
-> 
-> However, when I run the following command to attempt to read each of
-> the bad blocks, no I/O errors pop up either on the command line or in
-> /var/log messages:
-> 
-> # for i in $(mdadm --examine-badblocks /dev/sdg4 | grep "512 sectors"
-> | cut -c11-20) ; do dd bs=512 if=/dev/sdg4 skip=$i count=512 | wc -c;
-> done
-> 
-> I've truncated the output, but in each case it is similar to this:
-> 
-> 512+0 records in
-> 512+0 records out
-> 262144
-> 262144 bytes (262 kB) copied, 0.636762 s, 412 kB/s
-> 
-> Thus, the bad blocks on the failed hard drive are apparently now
-> readable on the cloned drive.
-> 
-> When I try to assemble the RAID 5 array, though, the process gets
-> stuck at the location of the first bad block. The assemble command is:
-> 
-> # mdadm --assemble --force /dev/md4
-> --backup-file=/home/gwr/2017/2017-01/md4_backup__2017-01-25 /dev/sde4
-> /dev/sdf4 /dev/sdh4 /dev/sdl4 /dev/sdg4 /dev/sdk4 /dev/sdi4 /dev/sdj4
-> /dev/sdb4 /dev/sdd4
-> mdadm: accepting backup with timestamp 1485366772 for array with
-> timestamp 1487624068
-> mdadm: /dev/md4 has been started with 9 drives (out of 10).
-> 
-> The md4_raid5 process immediately spikes to 100% CPU utilization, and
-> the reshape stops at 1901225472 KiB (which is exactly half of the
-> first bad sector value, 3802454640):
-> 
-> # cat /proc/mdstat
-> Personalities : [raid6] [raid5] [raid4]
-> md4 : active raid5 sde4[0] sdb4[12] sdj4[7] sdi4[8] sdk4[11] sdg4[10]
-> sdl4[9] sdh4[2] sdf4[1]
->       13454923776 blocks super 1.1 level 5, 512k chunk, algorithm 2
-> [10/9] [UUUUUUUUU_]
->       [===================>.]  reshape = 98.9% (1901225472/1922131968)
-> finish=2780.9min speed=125K/sec
-> 
-> unused devices: <none>
-> 
-> Googling around, I get the impression that resetting the badblocks
-> list is (a) not supported by the mdadm command; and (b) considered
-> harmful. However, if the blocks aren't really bad any more, as they
-> are now readable, does that risk still hold? How can I get this
-> reshape to proceed?
+> Can you force gcc to inline or compile a function? Isn't it dangerous to
+> rely on default behaviour and assume it won't change when the compiler
+> is upgraded?
 
-Indeed, it is not possible to reset badblocks list. This list is the
-indication for a driver which blocks it is not allowed to read - the
-operation might succeed but the data can be out-of-date. But it still
-attempts to write those blocks. If write operation is successful, the block
-is removed from bad block list. I think it is the only way to clear the
-list.
+I choose to trust compiler, and trust the people behind gcc.
 
-I guess your reshape is blocked because it cannot read the data from the
-disk to restore the data on the other drive. On the other hand it cannot
-clear bad block as it's not possible to execute a write on a degraded array
-with bad block.
+Coly
 
-As long as you're sure the data on the disk is valid, I believe clearing
-bad block list manually in metadata (no easy way to do it) would allow
-reshape to complete.
-
-Tomek
