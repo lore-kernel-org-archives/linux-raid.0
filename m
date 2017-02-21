@@ -1,124 +1,63 @@
-From: George Rapp <george.rapp@gmail.com>
-Subject: Reshape stalled at first badblock location (was: RAID 5 --assemble
- doesn't recognize all overlays as component devices)
-Date: Mon, 20 Feb 2017 17:18:46 -0500
-Message-ID: <CAF-KpgY0ySvCN9ftbDmW_P6wDiyfN2yWE6=NECVru4=vCe+pbQ@mail.gmail.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [md PATCH 10/14] md/raid1: stop using bi_phys_segment
+Date: Tue, 21 Feb 2017 11:05:37 +1100
+Message-ID: <87bmtws90u.fsf@notabene.neil.brown.name>
+References: <148721992248.7521.17160361058957519076.stgit@noble> <148721994272.7521.4656357457037580183.stgit@noble> <CACVXFVMZqivgG39HBAjPKE+CJ3=nXZ3fD0XfujeUbe+_3J9HLg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CACVXFVMZqivgG39HBAjPKE+CJ3=nXZ3fD0XfujeUbe+_3J9HLg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
-Cc: Matthew Krumwiede <matt.krumwiede@me.com>
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: Shaohua Li <shli@kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-raid.ids
 
-On Sat, Feb 11, 2017 at 7:32 PM, George Rapp <george.rapp@gmail.com> wrote:
-> Previous thread: http://marc.info/?l=linux-raid&m=148564798430138&w=2
-> -- to summarize, while adding two drives to a RAID 5 array, one of the
-> existing RAID 5 component drives failed, causing the reshape progress
-> to stall at 77.5%. I removed the previous thread from this message to
-> conserve space -- before resolving that situation, another problem has
-> arisen.
+--=-=-=
+Content-Type: text/plain
+
+On Mon, Feb 20 2017, Ming Lei wrote:
+
+> On Thu, Feb 16, 2017 at 12:39 PM, NeilBrown <neilb@suse.com> wrote:
+>>
+>> +static void inc_pending(struct r1conf *conf, sector_t start_next_window,
+>> +                       sector_t bi_sector)
+>> +{
+>> +       /* The current request requires multiple r1_bio, so
+>> +        * we need to increment the pending count, and the corresponding
+>> +        * window count.
+>> +        */
+>> +       spin_lock(&conf->resync_lock);
+>> +       conf->nr_pending++;
 >
-> We have cloned and replaced the failed /dev/sdg with "ddrescue --force
-> -r3 -n /dev/sdh /dev/sde c/sdh-sde-recovery.log"; copied in below, or
-> viewable via https://app.box.com/v/sdh-sde-recovery . The failing
-> device was removed from the server, and the RAID component partition
-> on the cloned drive is now /dev/sdg4.
+> Just be curious, in current code 'nr_pending' is increased in wait_barrier(),
+> and looks this patch introduces inc_pending() to do that on each r10_bio, but
+> not see any change in wait_barrier(), so that means there might be issue in
+> current implementation about operating on this counter?
 
-[previous thread snipped - after stepping through the code under gdb,
-I realized that "mdadm --assemble --force" was needed.]
+Did you read the more detailed description in the previous raid10.c
+patch?
+This patch follows the same logic as that patch.
 
-# uname -a
-Linux localhost 4.3.4-200.fc22.x86_64 #1 SMP Mon Jan 25 13:37:15 UTC
-2016 x86_64 x86_64 x86_64 GNU/Linux
-# mdadm --version
-mdadm - v3.3.4 - 3rd August 2015
+NeilBrown
 
-As previously mentioned, the device that originally failed was cloned
-to a new drive. This copy included the bad blocks list from the md
-metadata, because I'm showing 23 bad blocks on the clone target drive,
-/dev/sdg4:
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
-# mdadm --examine-badblocks /dev/sdg4
-Bad-blocks on /dev/sdg4:
-          3802454640 for 512 sectors
-          3802455664 for 512 sectors
-          3802456176 for 512 sectors
-          3802456688 for 512 sectors
-          3802457200 for 512 sectors
-          3802457712 for 512 sectors
-          3802458224 for 512 sectors
-          3802458736 for 512 sectors
-          3802459248 for 512 sectors
-          3802459760 for 512 sectors
-          3802460272 for 512 sectors
-          3802460784 for 512 sectors
-          3802461296 for 512 sectors
-          3802461808 for 512 sectors
-          3802462320 for 512 sectors
-          3802462832 for 512 sectors
-          3802463344 for 512 sectors
-          3802463856 for 512 sectors
-          3802464368 for 512 sectors
-          3802464880 for 512 sectors
-          3802465392 for 512 sectors
-          3802465904 for 512 sectors
-          3802466416 for 512 sectors
+-----BEGIN PGP SIGNATURE-----
 
-However, when I run the following command to attempt to read each of
-the bad blocks, no I/O errors pop up either on the command line or in
-/var/log messages:
-
-# for i in $(mdadm --examine-badblocks /dev/sdg4 | grep "512 sectors"
-| cut -c11-20) ; do dd bs=512 if=/dev/sdg4 skip=$i count=512 | wc -c;
-done
-
-I've truncated the output, but in each case it is similar to this:
-
-512+0 records in
-512+0 records out
-262144
-262144 bytes (262 kB) copied, 0.636762 s, 412 kB/s
-
-Thus, the bad blocks on the failed hard drive are apparently now
-readable on the cloned drive.
-
-When I try to assemble the RAID 5 array, though, the process gets
-stuck at the location of the first bad block. The assemble command is:
-
-# mdadm --assemble --force /dev/md4
---backup-file=/home/gwr/2017/2017-01/md4_backup__2017-01-25 /dev/sde4
-/dev/sdf4 /dev/sdh4 /dev/sdl4 /dev/sdg4 /dev/sdk4 /dev/sdi4 /dev/sdj4
-/dev/sdb4 /dev/sdd4
-mdadm: accepting backup with timestamp 1485366772 for array with
-timestamp 1487624068
-mdadm: /dev/md4 has been started with 9 drives (out of 10).
-
-The md4_raid5 process immediately spikes to 100% CPU utilization, and
-the reshape stops at 1901225472 KiB (which is exactly half of the
-first bad sector value, 3802454640):
-
-# cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-md4 : active raid5 sde4[0] sdb4[12] sdj4[7] sdi4[8] sdk4[11] sdg4[10]
-sdl4[9] sdh4[2] sdf4[1]
-      13454923776 blocks super 1.1 level 5, 512k chunk, algorithm 2
-[10/9] [UUUUUUUUU_]
-      [===================>.]  reshape = 98.9% (1901225472/1922131968)
-finish=2780.9min speed=125K/sec
-
-unused devices: <none>
-
-Googling around, I get the impression that resetting the badblocks
-list is (a) not supported by the mdadm command; and (b) considered
-harmful. However, if the blocks aren't really bad any more, as they
-are now readable, does that risk still hold? How can I get this
-reshape to proceed?
-
-Updated mdadm --examine output is at
-https://app.box.com/v/raid-status-2017-02-20
-
--- 
-George Rapp  (Pataskala, OH) Home: george.rapp -- at -- gmail.com
-LinkedIn profile: https://www.linkedin.com/in/georgerapp
-Phone: +1 740 936 RAPP (740 936 7277)
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlirhFEACgkQOeye3VZi
+gbktmg/7BbQnd/HaqRjoFrJ2jYa0htfUsEL6WcwvkWsf4nUNmUef319ejIPnW2cO
+wYU7Yl1gZX5H3qTv/KQ+IhaHolJdMEsbhqBL3RExcAborYfOteCi0ZFzfRhwt9GF
+9qdp8PLVwYiLkIYDsgRS8TkE7v2+whFhVciOqCmmxEP88LEcSrWbkEDiuE5xHZAY
+PrPsgR3/tcCzh39uSGJC6QcWPP1uoM4FjNDdEXVwRynNWVJgw0SCrFpeDDCtq06F
+rK+r46gesUBAUFgA0XzmkLn+9km72IqRNmTE0hB+hPvlf78beLoSrRZh0UQdwS9e
+4Atim/ssjjXt0LFIkBmZmIy3cP2ZUQWglE5skk91eEcXvmN/ecM5WY+4pRyn8E4O
+DR9dAhluXnuHWI4ETekb7HTubI8rniKZvlRQ49XbcrttGE543fiY70dIPHZYaJbE
+vuqN8mttDLZq3bsTamhDr6BDSOJPsNLn1g1UafMzQMly8XbXdVfcFFNQxROkGf3J
+d0slzvSZqU9tgA3VTspfptTnAxGSvVJFcv0mzVaec7gwCTJTDMtwM5S7r1j7/s8a
+9AcABeOv1b6Gd2tJ523L+Ff2JF88cy57W3whHaPxcSFGjEHqGdPYFeI5yS0djmGh
+cCBnGa5EXsamk0FWCwH8zGHW1nGefxCpRasihZtCnVz//Zi4liI=
+=yFwk
+-----END PGP SIGNATURE-----
+--=-=-=--
