@@ -1,55 +1,59 @@
-From: Brad Campbell <lists2009@fnarfbargle.com>
-Subject: Re: assistance recovering failed raid6 array
-Date: Tue, 21 Feb 2017 10:03:26 +0800
-Message-ID: <d5d8d99c-b5ed-e395-da02-f9cc4681edcd@fnarfbargle.com>
-References: <58AA4B1E.1030809@bosner.de>
- <e01061cb-ea4c-4f64-16e8-e6027adbc70d@turmel.org>
- <E18A7C79-09E0-4361-9F89-68AE1E6FCBF6@bosner.de>
- <5cc1566c-1b4c-c663-56a1-2040b93b46d7@turmel.org>
- <231629B1-0888-4B3D-BD81-F641937AC045@bosner.de>
- <676bd1fa-4b97-2c6a-05b8-bd23290fb9a6@turmel.org>
- <54F6D166-0D54-49EF-B967-124DC582B299@bosner.de>
- <fcf34399-2f7a-f444-bff7-512ae29d2e7b@turmel.org>
- <58AB5555.5070504@youngman.org.uk>
- <6286c879-2c58-ee43-86fb-22e83c1964c4@turmel.org>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: [md PATCH 10/14] md/raid1: stop using bi_phys_segment
+Date: Tue, 21 Feb 2017 15:41:08 +0800
+Message-ID: <CACVXFVPf6qoaEWcv_s4n=2V9E=Jqfv3QE+ZpXVALdiiWTjh63Q@mail.gmail.com>
+References: <148721992248.7521.17160361058957519076.stgit@noble>
+ <148721994272.7521.4656357457037580183.stgit@noble> <CACVXFVMZqivgG39HBAjPKE+CJ3=nXZ3fD0XfujeUbe+_3J9HLg@mail.gmail.com>
+ <87bmtws90u.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6286c879-2c58-ee43-86fb-22e83c1964c4@turmel.org>
+In-Reply-To: <87bmtws90u.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>, Wols Lists <antlists@youngman.org.uk>, Martin Bosner <martin@bosner.de>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: Shaohua Li <shli@kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-raid.ids
 
-On 21/02/17 05:21, Phil Turmel wrote:
-> On 02/20/2017 03:45 PM, Wols Lists wrote:
+On Tue, Feb 21, 2017 at 8:05 AM, NeilBrown <neilb@suse.com> wrote:
+> On Mon, Feb 20 2017, Ming Lei wrote:
 >
->> But there's a request on the linux wiki program for someone to write a
->> utility program that takes a ddrescue log and flags the duff sectors as
->> "soft unreadable". That would mean that if you can recover 35 drives,
->> provided no stripe has lost two sectors across two drives, you wouldn't
->> lose any data.
+>> On Thu, Feb 16, 2017 at 12:39 PM, NeilBrown <neilb@suse.com> wrote:
+>>>
+>>> +static void inc_pending(struct r1conf *conf, sector_t start_next_window,
+>>> +                       sector_t bi_sector)
+>>> +{
+>>> +       /* The current request requires multiple r1_bio, so
+>>> +        * we need to increment the pending count, and the corresponding
+>>> +        * window count.
+>>> +        */
+>>> +       spin_lock(&conf->resync_lock);
+>>> +       conf->nr_pending++;
 >>
->> If you want to try and write that utility? Or if you want to email me a
->> ddrescue log with a bunch of failed sectors, I'll have a go at writing
->> it myself :-)
+>> Just be curious, in current code 'nr_pending' is increased in wait_barrier(),
+>> and looks this patch introduces inc_pending() to do that on each r10_bio, but
+>> not see any change in wait_barrier(), so that means there might be issue in
+>> current implementation about operating on this counter?
 >
-> Check out hdparm --make-bad-sector.  You can get what you are describing
-> by scripting that.  It's marked very dangerous, but I guess if one has
-> nothing to lose....
->
+> Did you read the more detailed description in the previous raid10.c
+> patch?
+> This patch follows the same logic as that patch.
 
-Wol and I have tic-tacced on that a couple of times. He suggested the 
-idea and I proved the viability of it by testing hdparm in a RAID to do 
-exactly that. Neither of us has had a chance to stitch it all together, 
-but the preliminary tests indicate that would do *exactly* what was 
-required.
+OK, I see the point now:
 
-Given the hdparm commands are completely reversible and non-permanent, 
-*and* they are being executed on a destination of a ddrescue, there is 
-pretty much no risk (as long as the underlying glue code to be written 
-gets the sector numbers and offsets right).
+- for the 1st r1_bio, conf->nr_pending is increased in wait_barrier()
+- for the others, conf->nr_pending is increased in inc_pending().
 
-Regards,
-Brad
+Also I have another question:
+
+- before this patch, both number of requests in windows
+are increased only for WRITE I/O(see wait_barrier()), and decreased
+for both READ/WRITE in complete path(see allow_barrier())
+
+- after this patch, except for the 1st r1_bio, number of requests in
+windows are increased for both WRITE/READ I/O, and decreased
+for both READ/WRITE too.
+
+Could you explain a bit about this change?
+
+Thanks,
+Ming Lei
