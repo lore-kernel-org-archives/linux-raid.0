@@ -1,50 +1,44 @@
 From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: [PATCH V3 1/2] RAID1: a new I/O barrier implementation to remove
- resync window
-Date: Tue, 21 Feb 2017 19:20:25 +0000
-Message-ID: <58AC92F9.5050108@youngman.org.uk>
-References: <1487176523-109075-1-git-send-email-colyli@suse.de>
- <87shnevcpr.fsf@notabene.neil.brown.name>
- <2f6b3d68-1536-3167-7362-78fdfa91e149@suse.de>
- <87shn9spsy.fsf@notabene.neil.brown.name>
- <87k28lshg5.fsf@notabene.neil.brown.name>
- <20170220070430.4mca7clpaw7kpj4j@kernel.org>
- <7178ADEA-6263-4FB0-95A5-96E5F71A9740@suse.de>
- <58AB320B.1060707@youngman.org.uk>
- <e8ff590a-3972-465a-bf05-36f3e8542f0a@suse.de>
+Subject: Re: Trouble reassembling RAID10
+Date: Tue, 21 Feb 2017 19:33:07 +0000
+Message-ID: <58AC95F3.3010601@youngman.org.uk>
+References: <CAPXQET=6v3NTeujqtq69KfzAv1gpeG8vGQPfwMxxOaECvFR4sg@mail.gmail.com>
+ <f01c3494-1191-fdf5-c32e-c60abcdc989e@turmel.org>
+ <CAPXQETk=0j+2P-dex4GpPTmEyBpkUcqHt4WSKJnuNGZvuwY97g@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e8ff590a-3972-465a-bf05-36f3e8542f0a@suse.de>
+In-Reply-To: <CAPXQETk=0j+2P-dex4GpPTmEyBpkUcqHt4WSKJnuNGZvuwY97g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Coly Li <colyli@suse.de>
-Cc: Shaohua Li <shli@kernel.org>, NeilBrown <neilb@suse.com>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Johannes Thumshirn <jthumshirn@suse.de>, Guoqing Jiang <gqjiang@suse.com>
+To: Roger Roglans <rroglans@gmail.com>, Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 21/02/17 11:30, Coly Li wrote:
-> On 2017/2/21 上午2:14, Wols Lists wrote:
->> On 20/02/17 08:07, Coly Li wrote:
->>> For the function pointer asignment, it is because I see a brach happens in a loop. If I use a function pointer, I can avoid redundant brach inside the loop. raid1_read_request() and raid1_write_request() are not simple functions, I don't know whether gcc may make them inline or not, so I am on the way to check the disassembled code..
->>
->> Can you force gcc to inline or compile a function? Isn't it dangerous to
->> rely on default behaviour and assume it won't change when the compiler
->> is upgraded?
+On 21/02/17 18:38, Roger Roglans wrote:
+> Hi Phil,
 > 
-> I choose to trust compiler, and trust the people behind gcc.
-> 
-I admire your faith. I seem to remember several occasions where the gcc
-people added new optimisations and caused all sorts of subtle havoc with
-the kernel where it relied on the old behaviour. Don't forget - the
-linux kernel is one of the compiler's most demanding customers. And
-don't forget also - there are quite a few people now using llvm to
-compile the kernel (it may not yet be working - I think it is certainly
-for simple use cases) so tests on gcc don't guarantee it'll work for
-everyone ...
+> seems very useful to know in the future. I ended up just assuming
+> clean and using "--create". Since I was able to discern the exact
+> configurations, I was able to mount it and am currently transferring
+> data. I know it was not the ideal solution but I believe that it
+> worked out with only minimal corruption. I might have problems with
+> another array soon. If so, I will certainly contact this mailing list
+> again.
 
-I think you can trace the addition of many kernel compile-time flags to
-that sort of thing - disabling new optimisations.
+If I can plug my own work :-) there is now a section on the linux wiki
+about troubleshooting an array, and what data to gather for the list.
+Look at
+
+https://raid.wiki.kernel.org/index.php/Linux_Raid#When_Things_Go_Wrogn
+
+That should be enough to fix simple problems or, for more serious ones,
+you'll have the bulk if not all the information the members of the list
+will need, saving the back-and-forth of "can we have this, can we have
+that".
+
+If you find any problems with the information on the wiki, let me know
+and I'll endeavour to fix it.
 
 Cheers,
 Wol
-
