@@ -1,61 +1,50 @@
-From: Shaohua Li <shli@fb.com>
-Subject: [PATCH] md/raid1: handle flush request correctly
-Date: Tue, 21 Feb 2017 11:03:07 -0800
-Message-ID: <45d118f3ebfef696ffc5a725db5ca775360a51b2.1487703748.git.shli@fb.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: [PATCH V3 1/2] RAID1: a new I/O barrier implementation to remove
+ resync window
+Date: Tue, 21 Feb 2017 19:20:25 +0000
+Message-ID: <58AC92F9.5050108@youngman.org.uk>
+References: <1487176523-109075-1-git-send-email-colyli@suse.de>
+ <87shnevcpr.fsf@notabene.neil.brown.name>
+ <2f6b3d68-1536-3167-7362-78fdfa91e149@suse.de>
+ <87shn9spsy.fsf@notabene.neil.brown.name>
+ <87k28lshg5.fsf@notabene.neil.brown.name>
+ <20170220070430.4mca7clpaw7kpj4j@kernel.org>
+ <7178ADEA-6263-4FB0-95A5-96E5F71A9740@suse.de>
+ <58AB320B.1060707@youngman.org.uk>
+ <e8ff590a-3972-465a-bf05-36f3e8542f0a@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <e8ff590a-3972-465a-bf05-36f3e8542f0a@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Coly Li <colyli@suse.de>, NeilBrown <neilb@suse.com>
+To: Coly Li <colyli@suse.de>
+Cc: Shaohua Li <shli@kernel.org>, NeilBrown <neilb@suse.com>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Johannes Thumshirn <jthumshirn@suse.de>, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-I got a warning triggered in align_to_barrier_unit_end. It's a flush
-request so sectors == 0. The flush request happens to work well without
-the new barrier patch, but we'd better handle it explictly.
+On 21/02/17 11:30, Coly Li wrote:
+> On 2017/2/21 上午2:14, Wols Lists wrote:
+>> On 20/02/17 08:07, Coly Li wrote:
+>>> For the function pointer asignment, it is because I see a brach happens in a loop. If I use a function pointer, I can avoid redundant brach inside the loop. raid1_read_request() and raid1_write_request() are not simple functions, I don't know whether gcc may make them inline or not, so I am on the way to check the disassembled code..
+>>
+>> Can you force gcc to inline or compile a function? Isn't it dangerous to
+>> rely on default behaviour and assume it won't change when the compiler
+>> is upgraded?
+> 
+> I choose to trust compiler, and trust the people behind gcc.
+> 
+I admire your faith. I seem to remember several occasions where the gcc
+people added new optimisations and caused all sorts of subtle havoc with
+the kernel where it relied on the old behaviour. Don't forget - the
+linux kernel is one of the compiler's most demanding customers. And
+don't forget also - there are quite a few people now using llvm to
+compile the kernel (it may not yet be working - I think it is certainly
+for simple use cases) so tests on gcc don't guarantee it'll work for
+everyone ...
 
-Cc: Coly Li <colyli@suse.de>
-Cc: NeilBrown <neilb@suse.com>
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- drivers/md/raid1.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+I think you can trace the addition of many kernel compile-time flags to
+that sort of thing - disabling new optimisations.
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 954d028..e1ee446 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1282,8 +1282,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio)
- 	unsigned long flags;
- 	const int op = bio_op(bio);
- 	const unsigned long do_sync = (bio->bi_opf & REQ_SYNC);
--	const unsigned long do_flush_fua = (bio->bi_opf &
--						(REQ_PREFLUSH | REQ_FUA));
-+	const unsigned long do_fua = (bio->bi_opf & REQ_FUA);
- 	struct md_rdev *blocked_rdev;
- 	struct blk_plug_cb *cb;
- 	struct raid1_plug_cb *plug = NULL;
-@@ -1509,7 +1508,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio)
- 				   conf->mirrors[i].rdev->data_offset);
- 		mbio->bi_bdev = conf->mirrors[i].rdev->bdev;
- 		mbio->bi_end_io	= raid1_end_write_request;
--		bio_set_op_attrs(mbio, op, do_flush_fua | do_sync);
-+		bio_set_op_attrs(mbio, op, do_fua | do_sync);
- 		if (test_bit(FailFast, &conf->mirrors[i].rdev->flags) &&
- 		    !test_bit(WriteMostly, &conf->mirrors[i].rdev->flags) &&
- 		    conf->raid_disks - mddev->degraded > 1)
-@@ -1565,6 +1564,11 @@ static void raid1_make_request(struct mddev *mddev, struct bio *bio)
- 	struct bio *split;
- 	sector_t sectors;
- 
-+	if (unlikely(bio->bi_opf & REQ_PREFLUSH)) {
-+		md_flush_request(mddev, bio);
-+		return;
-+	}
-+
- 	/* if bio exceeds barrier unit boundary, split it */
- 	sectors = align_to_barrier_unit_end(
- 			bio->bi_iter.bi_sector, bio_sectors(bio));
--- 
-2.9.3
+Cheers,
+Wol
 
