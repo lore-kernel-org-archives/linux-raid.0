@@ -1,35 +1,56 @@
-From: Coly Li <colyli@suse.de>
-Subject: Re: [PATCH V3 1/2] RAID1: a new I/O barrier implementation to remove
- resync window
-Date: Tue, 21 Feb 2017 19:30:55 +0800
-Message-ID: <e8ff590a-3972-465a-bf05-36f3e8542f0a@suse.de>
-References: <1487176523-109075-1-git-send-email-colyli@suse.de>
- <87shnevcpr.fsf@notabene.neil.brown.name>
- <2f6b3d68-1536-3167-7362-78fdfa91e149@suse.de>
- <87shn9spsy.fsf@notabene.neil.brown.name>
- <87k28lshg5.fsf@notabene.neil.brown.name>
- <20170220070430.4mca7clpaw7kpj4j@kernel.org>
- <7178ADEA-6263-4FB0-95A5-96E5F71A9740@suse.de>
- <58AB320B.1060707@youngman.org.uk>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Trouble reassembling RAID10
+Date: Tue, 21 Feb 2017 10:16:38 -0500
+Message-ID: <f01c3494-1191-fdf5-c32e-c60abcdc989e@turmel.org>
+References: <CAPXQET=6v3NTeujqtq69KfzAv1gpeG8vGQPfwMxxOaECvFR4sg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <58AB320B.1060707@youngman.org.uk>
+In-Reply-To: <CAPXQET=6v3NTeujqtq69KfzAv1gpeG8vGQPfwMxxOaECvFR4sg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: Shaohua Li <shli@kernel.org>, NeilBrown <neilb@suse.com>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Johannes Thumshirn <jthumshirn@suse.de>, Guoqing Jiang <gqjiang@suse.com>
+To: Roger Roglans <rroglans@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2017/2/21 上午2:14, Wols Lists wrote:
-> On 20/02/17 08:07, Coly Li wrote:
->> For the function pointer asignment, it is because I see a brach happens in a loop. If I use a function pointer, I can avoid redundant brach inside the loop. raid1_read_request() and raid1_write_request() are not simple functions, I don't know whether gcc may make them inline or not, so I am on the way to check the disassembled code..
-> 
-> Can you force gcc to inline or compile a function? Isn't it dangerous to
-> rely on default behaviour and assume it won't change when the compiler
-> is upgraded?
+Hi Roger,
 
-I choose to trust compiler, and trust the people behind gcc.
+On 02/20/2017 04:42 PM, Roger Roglans wrote:
+> Hey new to the mailing list and fairly new to RAIDs in general. I
+> ran into an issue and was hoping someone could help.
 
-Coly
+We probably can.
 
+> Our server that runs a 14 drive RAID10 through a rocketraid 2470 
+> controller refused to assemble. Our goal is not necessarily to
+> recover a working RAID, but to get as much data back as possible.
+
+Amounts to the same thing.
+
+> Maybe as a consequence of the assembly failure, upon shutting down
+> the server, it would get stuck in boot loops. So I'm currently
+> running Ubuntu 16.04.1 from a USB. I've determined that 2 of 14
+> disks are faulty and have determined which ones they are.
+
+Three.  Two have been faulty for a very long time.  No-one noticed
+the degraded status.
+
+> Here is the output of a mdadm --examine call.
+
+Please re-do this, combined with smartctl, and without grep.  This
+will tell us everything about your array.  Like so:
+
+for x in /dev/sd[a-p] do mdadm -E ${x}1 ; smartctl -iA -l scterc $x ; done
+
+Paste the output *inline* in your plain-text reply with line
+wrapping disabled.  If your draft email is larger than 100k, split
+into multiple emails.
+
+You are likely to need an alternate bootable USB stick -- your
+report sounds like one of the versions of mdadm that had a bug
+in forced assembly.  I usually use the latest one from
+https://www.system-rescue-cd.org/
+
+Please also read the recent thread and its references starting
+here: https://marc.info/?l=linux-raid&m=148755536616025&w=2
+
+Phil
