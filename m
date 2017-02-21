@@ -1,7 +1,7 @@
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH v4 4/7] md: add sysfs entries for PPL
-Date: Tue, 21 Feb 2017 20:43:58 +0100
-Message-ID: <20170221194401.18733-5-artur.paszkiewicz@intel.com>
+Subject: [PATCH v4 7/7] raid5-ppl: runtime PPL enabling or disabling
+Date: Tue, 21 Feb 2017 20:44:01 +0100
+Message-ID: <20170221194401.18733-8-artur.paszkiewicz@intel.com>
 References: <20170221194401.18733-1-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20170221194401.18733-1-artur.paszkiewicz@intel.com>
@@ -10,242 +10,161 @@ To: shli@fb.com
 Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-Add 'consistency_policy' attribute for array. It indicates how the array
-maintains consistency in case of unexpected shutdown.
+Allow writing to 'consistency_policy' attribute when the array is
+active. Add a new function 'change_consistency_policy' to the
+md_personality operations structure to handle the change in the
+personality code. Values "ppl" and "resync" are accepted and
+turn PPL on and off respectively.
 
-Add 'ppl_sector' and 'ppl_size' for rdev, which describe the location
-and size of the PPL space on the device. They can't be changed for
-active members if the array is started and PPL is enabled, so in the
-setter functions only basic checks are performed. More checks are done
-in ppl_validate_rdev() when starting the log.
+When enabling PPL its location and size should first be set using
+'ppl_sector' and 'ppl_size' attributes and a valid PPL header should be
+written at this location on each member device.
 
-These attributes are writable to allow enabling PPL for external
-metadata arrays and (later) to enable/disable PPL for a running array.
+Enabling or disabling PPL is performed under a suspended array.  The
+raid5_reset_stripe_cache function frees the stripe cache and allocates
+it again in order to allocate or free the ppl_pages for the stripes in
+the stripe cache.
 
 Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- Documentation/admin-guide/md.rst |  32 ++++++++++-
- drivers/md/md.c                  | 115 +++++++++++++++++++++++++++++++++++++++
- 2 files changed, 144 insertions(+), 3 deletions(-)
+ drivers/md/md.c        | 12 ++++++++---
+ drivers/md/md.h        |  2 ++
+ drivers/md/raid5-ppl.c |  4 ++++
+ drivers/md/raid5.c     | 58 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 73 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/admin-guide/md.rst b/Documentation/admin-guide/md.rst
-index 1e61bf50595c..84de718f24a4 100644
---- a/Documentation/admin-guide/md.rst
-+++ b/Documentation/admin-guide/md.rst
-@@ -276,14 +276,14 @@ All md devices contain:
-      array creation it will default to 0, though starting the array as
-      ``clean`` will set it much larger.
- 
--   new_dev
-+  new_dev
-      This file can be written but not read.  The value written should
-      be a block device number as major:minor.  e.g. 8:0
-      This will cause that device to be attached to the array, if it is
-      available.  It will then appear at md/dev-XXX (depending on the
-      name of the device) and further configuration is then possible.
- 
--   safe_mode_delay
-+  safe_mode_delay
-      When an md array has seen no write requests for a certain period
-      of time, it will be marked as ``clean``.  When another write
-      request arrives, the array is marked as ``dirty`` before the write
-@@ -292,7 +292,7 @@ All md devices contain:
-      period as a number of seconds.  The default is 200msec (0.200).
-      Writing a value of 0 disables safemode.
- 
--   array_state
-+  array_state
-      This file contains a single word which describes the current
-      state of the array.  In many cases, the state can be set by
-      writing the word for the desired state, however some states
-@@ -401,7 +401,30 @@ All md devices contain:
-      once the array becomes non-degraded, and this fact has been
-      recorded in the metadata.
- 
-+  consistency_policy
-+     This indicates how the array maintains consistency in case of unexpected
-+     shutdown. It can be:
- 
-+     none
-+       Array has no redundancy information, e.g. raid0, linear.
-+
-+     resync
-+       Full resync is performed and all redundancy is regenerated when the
-+       array is started after unclean shutdown.
-+
-+     bitmap
-+       Resync assisted by a write-intent bitmap.
-+
-+     journal
-+       For raid4/5/6, journal device is used to log transactions and replay
-+       after unclean shutdown.
-+
-+     ppl
-+       For raid5 only, Partial Parity Log is used to close the write hole and
-+       eliminate resync.
-+
-+     The accepted values when writing to this file are ``ppl`` and ``resync``,
-+     used to enable and disable PPL.
- 
- 
- As component devices are added to an md array, they appear in the ``md``
-@@ -563,6 +586,9 @@ Each directory contains:
- 	adds bad blocks without acknowledging them. This is largely
- 	for testing.
- 
-+      ppl_sector, ppl_size
-+        Location and size (in sectors) of the space used for Partial Parity Log
-+        on this device.
- 
- 
- An active md device will also contain an entry for each active device
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index c2028007b209..3ff979d538d4 100644
+index 3ff979d538d4..b70e19513588 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -3157,6 +3157,78 @@ static ssize_t ubb_store(struct md_rdev *rdev, const char *page, size_t len)
- static struct rdev_sysfs_entry rdev_unack_bad_blocks =
- __ATTR(unacknowledged_bad_blocks, S_IRUGO|S_IWUSR, ubb_show, ubb_store);
- 
-+static ssize_t
-+ppl_sector_show(struct md_rdev *rdev, char *page)
-+{
-+	return sprintf(page, "%llu\n", (unsigned long long)rdev->ppl.sector);
-+}
-+
-+static ssize_t
-+ppl_sector_store(struct md_rdev *rdev, const char *buf, size_t len)
-+{
-+	unsigned long long sector;
-+
-+	if (kstrtoull(buf, 10, &sector) < 0)
-+		return -EINVAL;
-+	if (sector != (sector_t)sector)
-+		return -EINVAL;
-+
-+	if (rdev->mddev->pers && test_bit(MD_HAS_PPL, &rdev->mddev->flags) &&
-+	    rdev->raid_disk >= 0)
-+		return -EBUSY;
-+
-+	if (rdev->mddev->persistent) {
-+		if (rdev->mddev->major_version == 0)
-+			return -EINVAL;
-+		if ((sector > rdev->sb_start &&
-+		     sector - rdev->sb_start > S16_MAX) ||
-+		    (sector < rdev->sb_start &&
-+		     rdev->sb_start - sector > -S16_MIN))
-+			return -EINVAL;
-+		rdev->ppl.offset = sector - rdev->sb_start;
-+	} else if (!rdev->mddev->external) {
-+		return -EBUSY;
-+	}
-+	rdev->ppl.sector = sector;
-+	return len;
-+}
-+
-+static struct rdev_sysfs_entry rdev_ppl_sector =
-+__ATTR(ppl_sector, S_IRUGO|S_IWUSR, ppl_sector_show, ppl_sector_store);
-+
-+static ssize_t
-+ppl_size_show(struct md_rdev *rdev, char *page)
-+{
-+	return sprintf(page, "%u\n", rdev->ppl.size);
-+}
-+
-+static ssize_t
-+ppl_size_store(struct md_rdev *rdev, const char *buf, size_t len)
-+{
-+	unsigned int size;
-+
-+	if (kstrtouint(buf, 10, &size) < 0)
-+		return -EINVAL;
-+
-+	if (rdev->mddev->pers && test_bit(MD_HAS_PPL, &rdev->mddev->flags) &&
-+	    rdev->raid_disk >= 0)
-+		return -EBUSY;
-+
-+	if (rdev->mddev->persistent) {
-+		if (rdev->mddev->major_version == 0)
-+			return -EINVAL;
-+		if (size > U16_MAX)
-+			return -EINVAL;
-+	} else if (!rdev->mddev->external) {
-+		return -EBUSY;
-+	}
-+	rdev->ppl.size = size;
-+	return len;
-+}
-+
-+static struct rdev_sysfs_entry rdev_ppl_size =
-+__ATTR(ppl_size, S_IRUGO|S_IWUSR, ppl_size_show, ppl_size_store);
-+
- static struct attribute *rdev_default_attrs[] = {
- 	&rdev_state.attr,
- 	&rdev_errors.attr,
-@@ -3167,6 +3239,8 @@ static struct attribute *rdev_default_attrs[] = {
- 	&rdev_recovery_start.attr,
- 	&rdev_bad_blocks.attr,
- 	&rdev_unack_bad_blocks.attr,
-+	&rdev_ppl_sector.attr,
-+	&rdev_ppl_size.attr,
- 	NULL,
- };
+@@ -5003,14 +5003,20 @@ consistency_policy_show(struct mddev *mddev, char *page)
  static ssize_t
-@@ -4903,6 +4977,46 @@ static struct md_sysfs_entry md_array_size =
- __ATTR(array_size, S_IRUGO|S_IWUSR, array_size_show,
-        array_size_store);
- 
-+static ssize_t
-+consistency_policy_show(struct mddev *mddev, char *page)
-+{
-+	int ret;
+ consistency_policy_store(struct mddev *mddev, const char *buf, size_t len)
+ {
++	int err = 0;
 +
-+	if (test_bit(MD_HAS_JOURNAL, &mddev->flags)) {
-+		ret = sprintf(page, "journal\n");
-+	} else if (test_bit(MD_HAS_PPL, &mddev->flags)) {
-+		ret = sprintf(page, "ppl\n");
-+	} else if (mddev->bitmap) {
-+		ret = sprintf(page, "bitmap\n");
-+	} else if (mddev->pers) {
-+		if (mddev->pers->sync_request)
-+			ret = sprintf(page, "resync\n");
+ 	if (mddev->pers) {
+-		return -EBUSY;
++		if (mddev->pers->change_consistency_policy)
++			err = mddev->pers->change_consistency_policy(mddev, buf);
 +		else
-+			ret = sprintf(page, "none\n");
-+	} else {
-+		ret = sprintf(page, "unknown\n");
-+	}
++			err = -EBUSY;
+ 	} else if (mddev->external && strncmp(buf, "ppl", 3) == 0) {
+ 		set_bit(MD_HAS_PPL, &mddev->flags);
+-		return len;
+ 	} else {
+-		return -EINVAL;
++		err = -EINVAL;
+ 	}
 +
-+	return ret;
-+}
-+
-+static ssize_t
-+consistency_policy_store(struct mddev *mddev, const char *buf, size_t len)
-+{
-+	if (mddev->pers) {
-+		return -EBUSY;
-+	} else if (mddev->external && strncmp(buf, "ppl", 3) == 0) {
-+		set_bit(MD_HAS_PPL, &mddev->flags);
-+		return len;
-+	} else {
-+		return -EINVAL;
-+	}
-+}
-+
-+static struct md_sysfs_entry md_consistency_policy =
-+__ATTR(consistency_policy, S_IRUGO | S_IWUSR, consistency_policy_show,
-+       consistency_policy_store);
-+
- static struct attribute *md_default_attrs[] = {
- 	&md_level.attr,
- 	&md_layout.attr,
-@@ -4918,6 +5032,7 @@ static struct attribute *md_default_attrs[] = {
- 	&md_reshape_direction.attr,
- 	&md_array_size.attr,
- 	&max_corr_read_errors.attr,
-+	&md_consistency_policy.attr,
- 	NULL,
++	return err ? err : len;
+ }
+ 
+ static struct md_sysfs_entry md_consistency_policy =
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 66a5a16e79f7..88a5155c152e 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -548,6 +548,8 @@ struct md_personality
+ 	/* congested implements bdi.congested_fn().
+ 	 * Will not be called while array is 'suspended' */
+ 	int (*congested)(struct mddev *mddev, int bits);
++	/* Changes the consistency policy of an active array. */
++	int (*change_consistency_policy)(struct mddev *mddev, const char *buf);
  };
  
+ struct md_sysfs_entry {
+diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
+index c2070d124849..a5c4d3333bce 100644
+--- a/drivers/md/raid5-ppl.c
++++ b/drivers/md/raid5-ppl.c
+@@ -1095,6 +1095,10 @@ int ppl_init_log(struct r5conf *conf)
+ 		 */
+ 		mddev->recovery_cp = MaxSector;
+ 		set_bit(MD_SB_CHANGE_CLEAN, &mddev->sb_flags);
++	} else if (mddev->pers && ppl_conf->mismatch_count > 0) {
++		/* no mismatch allowed when enabling PPL for a running array */
++		ret = -EINVAL;
++		goto err;
+ 	}
+ 
+ 	conf->ppl = ppl_conf;
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index b17e90f06f19..754fb8e1c76f 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -8319,6 +8319,63 @@ static void *raid6_takeover(struct mddev *mddev)
+ 	return setup_conf(mddev);
+ }
+ 
++static void raid5_reset_stripe_cache(struct mddev *mddev)
++{
++	struct r5conf *conf = mddev->private;
++
++	mutex_lock(&conf->cache_size_mutex);
++	while (conf->max_nr_stripes &&
++	       drop_one_stripe(conf))
++		;
++	while (conf->min_nr_stripes > conf->max_nr_stripes &&
++	       grow_one_stripe(conf, GFP_KERNEL))
++		;
++	mutex_unlock(&conf->cache_size_mutex);
++}
++
++static int raid5_change_consistency_policy(struct mddev *mddev, const char *buf)
++{
++	struct r5conf *conf;
++	int err;
++
++	err = mddev_lock(mddev);
++	if (err)
++		return err;
++	conf = mddev->private;
++	if (!conf) {
++		mddev_unlock(mddev);
++		return -ENODEV;
++	}
++
++	if (strncmp(buf, "ppl", 3) == 0 &&
++	    !test_bit(MD_HAS_PPL, &mddev->flags)) {
++		mddev_suspend(mddev);
++		err = ppl_init_log(conf);
++		if (!err) {
++			set_bit(MD_HAS_PPL, &mddev->flags);
++			raid5_reset_stripe_cache(mddev);
++		}
++		mddev_resume(mddev);
++	} else if (strncmp(buf, "resync", 6) == 0 &&
++		   test_bit(MD_HAS_PPL, &mddev->flags)) {
++		mddev_suspend(mddev);
++		ppl_exit_log(conf->ppl);
++		conf->ppl = NULL;
++		clear_bit(MD_HAS_PPL, &mddev->flags);
++		raid5_reset_stripe_cache(mddev);
++		mddev_resume(mddev);
++	} else {
++		err = -EINVAL;
++	}
++
++	if (!err)
++		md_update_sb(mddev, 1);
++
++	mddev_unlock(mddev);
++
++	return err;
++}
++
+ static struct md_personality raid6_personality =
+ {
+ 	.name		= "raid6",
+@@ -8364,6 +8421,7 @@ static struct md_personality raid5_personality =
+ 	.quiesce	= raid5_quiesce,
+ 	.takeover	= raid5_takeover,
+ 	.congested	= raid5_congested,
++	.change_consistency_policy = raid5_change_consistency_policy,
+ };
+ 
+ static struct md_personality raid4_personality =
 -- 
 2.11.0
 
