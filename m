@@ -1,275 +1,138 @@
-From: Coly Li <colyli@suse.de>
-Subject: Re: [PATCH V3 1/2] RAID1: a new I/O barrier implementation to remove
- resync window
-Date: Tue, 21 Feb 2017 17:45:53 +0800
-Message-ID: <f36e85b1-cca1-5be4-a171-d64057cc56a3@suse.de>
-References: <1487176523-109075-1-git-send-email-colyli@suse.de>
- <87shnevcpr.fsf@notabene.neil.brown.name>
- <2f6b3d68-1536-3167-7362-78fdfa91e149@suse.de>
- <87shn9spsy.fsf@notabene.neil.brown.name>
- <87k28lshg5.fsf@notabene.neil.brown.name>
- <20170220070430.4mca7clpaw7kpj4j@kernel.org>
- <7178ADEA-6263-4FB0-95A5-96E5F71A9740@suse.de>
- <878tp0s7w8.fsf@notabene.neil.brown.name>
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: Re: Reshape stalled at first badblock location (was: RAID 5
+ --assemble doesn't recognize all overlays as component devices)
+Date: Tue, 21 Feb 2017 10:51:04 +0100
+Message-ID: <20170221095104.GA3491@proton.igk.intel.com>
+References: <CAF-KpgY0ySvCN9ftbDmW_P6wDiyfN2yWE6=NECVru4=vCe+pbQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <878tp0s7w8.fsf@notabene.neil.brown.name>
+Content-Disposition: inline
+In-Reply-To: <CAF-KpgY0ySvCN9ftbDmW_P6wDiyfN2yWE6=NECVru4=vCe+pbQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Johannes Thumshirn <jthumshirn@suse.de>, Guoqing Jiang <gqjiang@suse.com>
+To: George Rapp <george.rapp@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>, Matthew Krumwiede <matt.krumwiede@me.com>
 List-Id: linux-raid.ids
 
-On 2017/2/21 上午8:29, NeilBrown wrote:
-> On Mon, Feb 20 2017, Coly Li wrote:
+On Mon, Feb 20, 2017 at 05:18:46PM -0500, George Rapp wrote:
+> On Sat, Feb 11, 2017 at 7:32 PM, George Rapp <george.rapp@gmail.com> wrote:
+> > Previous thread: http://marc.info/?l=linux-raid&m=148564798430138&w=2
+> > -- to summarize, while adding two drives to a RAID 5 array, one of the
+> > existing RAID 5 component drives failed, causing the reshape progress
+> > to stall at 77.5%. I removed the previous thread from this message to
+> > conserve space -- before resolving that situation, another problem has
+> > arisen.
+> >
+> > We have cloned and replaced the failed /dev/sdg with "ddrescue --force
+> > -r3 -n /dev/sdh /dev/sde c/sdh-sde-recovery.log"; copied in below, or
+> > viewable via https://app.box.com/v/sdh-sde-recovery . The failing
+> > device was removed from the server, and the RAID component partition
+> > on the cloned drive is now /dev/sdg4.
 > 
->>> 在 2017年2月20日，下午3:04，Shaohua Li <shli@kernel.org> 写道：
->>> 
->>>> On Mon, Feb 20, 2017 at 01:51:22PM +1100, Neil Brown wrote:
->>>>> On Mon, Feb 20 2017, NeilBrown wrote:
->>>>> 
->>>>>> On Fri, Feb 17 2017, Coly Li wrote:
->>>>>> 
->>>>>>> On 2017/2/16 下午3:04, NeilBrown wrote: I know you are
->>>>>>> going to change this as Shaohua wantsthe spitting to 
->>>>>>> happen in a separate function, which I agree with, but
->>>>>>> there is something else wrong here. Calling
->>>>>>> bio_split/bio_chain repeatedly in a loop is dangerous.
->>>>>>> It is OK for simple devices, but when one request can
->>>>>>> wait for another request to the same device it can 
->>>>>>> deadlock. This can happen with raid1.  If a resync
->>>>>>> request calls raise_barrier() between one request and
->>>>>>> the next, then the next has to wait for the resync
->>>>>>> request, which has to wait for the first request. As
->>>>>>> the first request will be stuck in the queue in 
->>>>>>> generic_make_request(), you get a deadlock.
->>>>>> 
->>>>>> For md raid1, queue in generic_make_request(), can I
->>>>>> understand it as bio_list_on_stack in this function? And
->>>>>> queue in underlying device, can I understand it as the
->>>>>> data structures like plug->pending and 
->>>>>> conf->pending_bio_list ?
->>>>> 
->>>>> Yes, the queue in generic_make_request() is the
->>>>> bio_list_on_stack.  That is the only queue I am talking
->>>>> about.  I'm not referring to plug->pending or
->>>>> conf->pending_bio_list at all.
->>>>> 
->>>>>> 
->>>>>> I still don't get the point of deadlock, let me try to
->>>>>> explain why I don't see the possible deadlock. If a bio
->>>>>> is split, and the first part is processed by
->>>>>> make_request_fn(), and then a resync comes and it will 
->>>>>> raise a barrier, there are 3 possible conditions, - the
->>>>>> resync I/O tries to raise barrier on same bucket of the
->>>>>> first regular bio. Then the resync task has to wait to
->>>>>> the first bio drops its conf->nr_pending[idx]
->>>>> 
->>>>> Not quite. First, the resync task (in raise_barrier()) will
->>>>> wait for ->nr_waiting[idx] to be zero.  We can assume this
->>>>> happens immediately. Then the resync_task will increment
->>>>> ->barrier[idx]. Only then will it wait for the first bio to
->>>>> drop ->nr_pending[idx]. The processing of that first bio
->>>>> will have submitted bios to the underlying device, and they
->>>>> will be in the bio_list_on_stack queue, and will not be
->>>>> processed until raid1_make_request() completes.
->>>>> 
->>>>> The loop in raid1_make_request() will then call
->>>>> make_request_fn() which will call wait_barrier(), which
->>>>> will wait for ->barrier[idx] to be zero.
->>>> 
->>>> Thinking more carefully about this.. the 'idx' that the
->>>> second bio will wait for will normally be different, so there
->>>> won't be a deadlock after all.
->>>> 
->>>> However it is possible for hash_long() to produce the same
->>>> idx for two consecutive barrier_units so there is still the
->>>> possibility of a deadlock, though it isn't as likely as I
->>>> thought at first.
->>> 
->>> Wrapped the function pointer issue Neil pointed out into Coly's
->>> original patch. Also fix a 'use-after-free' bug. For the
->>> deadlock issue, I'll add below patch, please check.
->>> 
->>> Thanks, Shaohua
->>> 
->> 
-
-Neil,
-
-Thanks for your patient explanation, I feel I come to follow up what
-you mean. Let me try to re-tell what I understand, correct me if I am
-wrong.
-
-
->> Hmm, please hold, I am still thinking of it. With barrier bucket
->> and hash_long(), I don't see dead lock yet. For raid10 it might
->> happen, but once we have barrier bucket on it , there will no
->> deadlock.
->> 
->> My question is, this deadlock only happens when a big bio is
->> split, and the split small bios are continuous, and the resync io
->> visiting barrier buckets in sequntial order too. In the case if
->> adjacent split regular bios or resync bios hit same barrier
->> bucket, it will be a very big failure of hash design, and should
->> have been found already. But no one complain it, so I don't
->> convince myself tje deadlock is real with io barrier buckets
->> (this is what Neil concerns).
+> [previous thread snipped - after stepping through the code under gdb,
+> I realized that "mdadm --assemble --force" was needed.]
 > 
-> I think you are wrong about the design goal of a hash function. 
-> When feed a sequence of inputs, with any stride (i.e. with any
-> constant difference between consecutive inputs), the output of the
-> hash function should appear to be random. A random sequence can
-> produce the same number twice in a row. If the hash function
-> produces a number from 0 to N-1, you would expect two consecutive
-> outputs to be the same about once every N inputs.
+> # uname -a
+> Linux localhost 4.3.4-200.fc22.x86_64 #1 SMP Mon Jan 25 13:37:15 UTC
+> 2016 x86_64 x86_64 x86_64 GNU/Linux
+> # mdadm --version
+> mdadm - v3.3.4 - 3rd August 2015
 > 
-
-Yes, you are right. But when I mentioned hash conflict, I limit the
-integers in range [0, 1<<38]. 38 is (64-17-9), when a 64bit LBA
-address divided by 64MB I/O barrier unit size, its value range is
-reduced to [0, 1<<38].
-
-Maximum size of normal bio is 1MB, it could be split into 2 bios at most.
-
-For DISCARD bio, its maximum size is 4GB, it could be split into 65
-bios at most.
-
-Then in this patch, the hash question is degraded to: for any
-consecutive 65 integers in range [0, 1<<38], use hash_long() to hash
-these 65 integers into range [0, 1023], will any hash conflict happen
-among these integers ?
-
-I tried a half range [0, 1<<37] to check hash conflict, by writing a
-simple code to emulate hash calculation in the new I/O barrier patch,
-to iterate all consecutive {2, 65, 128, 512} integers in range [0,
-1<<37] for hash conflict.
-
-On a 20 core CPU each run spent 7+ hours, finally I find no hash
-conflict detected up to 512 consecutive integers in above limited
-condition. For 1024, there are a lot hash conflict detected.
-
-[0, 1<<37] range back to [0, 63] LBA range, this is large enough for
-almost all existing md raid configuration. So for current kernel
-implementation and real world device, for a single bio, there is no
-possible hash conflict the new I/O barrier patch.
-
-If bi_iter.bi_size changes from unsigned int to unsigned long in
-future, the above assumption will be wrong. There will be hash
-conflict, and potential dead lock, which is quite implicit. Yes, I
-agree with you. No, bio split inside loop is not perfect.
-
-> Even if there was no possibility of a deadlock from a resync
-> request happening between two bios, there are other possibilities.
+> As previously mentioned, the device that originally failed was cloned
+> to a new drive. This copy included the bad blocks list from the md
+> metadata, because I'm showing 23 bad blocks on the clone target drive,
+> /dev/sdg4:
 > 
-
-The bellowed text makes me know more about raid1 code, but confuses me
-more as well. Here comes my questions,
-
-> It is not, in general, safe to call mempool_alloc() twice in a
-> row, without first ensuring that the first allocation will get
-> freed by some other thread.  raid1_write_request() allocates from
-> r1bio_pool, and then submits bios to the underlying device, which
-> get queued on bio_list_on_stack.  They will not be processed until
-> after raid1_make_request() completes, so when raid1_make_request
-> loops around and calls raid1_write_request() again, it will try to
-> allocate another r1bio from r1bio_pool, and this might end up
-> waiting for the r1bio which is trapped and cannot complete.
+> # mdadm --examine-badblocks /dev/sdg4
+> Bad-blocks on /dev/sdg4:
+>           3802454640 for 512 sectors
+>           3802455664 for 512 sectors
+>           3802456176 for 512 sectors
+>           3802456688 for 512 sectors
+>           3802457200 for 512 sectors
+>           3802457712 for 512 sectors
+>           3802458224 for 512 sectors
+>           3802458736 for 512 sectors
+>           3802459248 for 512 sectors
+>           3802459760 for 512 sectors
+>           3802460272 for 512 sectors
+>           3802460784 for 512 sectors
+>           3802461296 for 512 sectors
+>           3802461808 for 512 sectors
+>           3802462320 for 512 sectors
+>           3802462832 for 512 sectors
+>           3802463344 for 512 sectors
+>           3802463856 for 512 sectors
+>           3802464368 for 512 sectors
+>           3802464880 for 512 sectors
+>           3802465392 for 512 sectors
+>           3802465904 for 512 sectors
+>           3802466416 for 512 sectors
 > 
-
-Can I say that it is because blk_finish_plug() won't be called before
-raid1_make_request() returns ? Then in raid1_write_request(), mbio
-will be added into plug->pending, but before blk_finish_plug() is
-called, they won't be handled.
-
-
-> As r1bio_pool preallocates 256 entries, this is unlikely  but not 
-> impossible.  If 256 threads all attempt a write (or read) that
-> crosses a boundary, then they will consume all 256 preallocated
-> entries, and want more. If there is no free memory, they will block
-> indefinitely.
+> However, when I run the following command to attempt to read each of
+> the bad blocks, no I/O errors pop up either on the command line or in
+> /var/log messages:
 > 
-
-If raid1_make_request() is modified into this way,
-+	if (bio_data_dir(split) == READ)
-+		raid1_read_request(mddev, split);
-+	else
-+		raid1_write_request(mddev, split);
-+	if (split != bio)
-+		generic_make_request(bio);
-
-Then the original bio will be added into the bio_list_on_stack of top
-level generic_make_request(), current->bio_list is initialized, when
-generic_make_request() is called nested in raid1_make_request(), the
-split bio will be added into current->bio_list and nothing else happens.
-
-After the nested generic_make_request() returns, the code back to next
-code of generic_make_request(),
-2022                         ret = q->make_request_fn(q, bio);
-2023
-2024                         blk_queue_exit(q);
-2025
-2026                         bio = bio_list_pop(current->bio_list);
-
-bio_list_pop() will return the second half of the split bio, and it is
-continuously handled in raid1_make_request() by calling,
-2022                         ret = q->make_request_fn(q, bio);
-
-Then there is no dead lock, at all.
-
-
-> bio_alloc_bioset() has punt_bios_to_rescuer() to attempt to work
-> around a deadlock very similar to this, but it is a very specific
-> solution, wouldn't help raid1, and is much more complex than just
-> rearranging the code.
+> # for i in $(mdadm --examine-badblocks /dev/sdg4 | grep "512 sectors"
+> | cut -c11-20) ; do dd bs=512 if=/dev/sdg4 skip=$i count=512 | wc -c;
+> done
 > 
-
-Yes, it is, definitely.
-
+> I've truncated the output, but in each case it is similar to this:
 > 
->> 
->> For the function pointer asignment, it is because I see a brach 
->> happens in a loop. If I use a function pointer, I can avoid
->> redundant brach inside the loop. raid1_read_request() and
->> raid1_write_request() are not simple functions, I don't know
->> whether gcc may make them inline or not, so I am on the way to
->> check the disassembled code..
+> 512+0 records in
+> 512+0 records out
+> 262144
+> 262144 bytes (262 kB) copied, 0.636762 s, 412 kB/s
 > 
-> It is a long time since I studied how CPUs handle different sorts
-> of machine code, but I'm fairly sure that and indirect branch (i.e.
-> a branch through a function pointer) is harder to optimize than a 
-> conditional branch.
+> Thus, the bad blocks on the failed hard drive are apparently now
+> readable on the cloned drive.
 > 
-
-It makes sense to me, yes, you are right.
-
-> But I think the readability of the code is more important, and
-> having an if-then-else in a loop is more familiar to most readers
-> than using a function pointer like this.
+> When I try to assemble the RAID 5 array, though, the process gets
+> stuck at the location of the first bad block. The assemble command is:
 > 
-
-Copied, I agree with you.
-
-
->> 
->> The loop in raid1_make_request() is quite high level, I am not
->> sure whether CPU brach pridiction may work correctly, especially
->> when it is a big DISCARD bio, using function pointer may drop a
->> possible brach.
->> 
->> So I need to check what we get and lose when use function pointer
->> or not. If it is not urgent, please hold this patch for a while.
->> 
->> 
->> The only thing I worry in the bellowed patch is, if a very big
->> DISCARD bio comes, will the kernel space stack trend to be
->> overflow？
+> # mdadm --assemble --force /dev/md4
+> --backup-file=/home/gwr/2017/2017-01/md4_backup__2017-01-25 /dev/sde4
+> /dev/sdf4 /dev/sdh4 /dev/sdl4 /dev/sdg4 /dev/sdk4 /dev/sdi4 /dev/sdj4
+> /dev/sdb4 /dev/sdd4
+> mdadm: accepting backup with timestamp 1485366772 for array with
+> timestamp 1487624068
+> mdadm: /dev/md4 has been started with 9 drives (out of 10).
 > 
-> How would a large request cause extra stack space to be used?
+> The md4_raid5 process immediately spikes to 100% CPU utilization, and
+> the reshape stops at 1901225472 KiB (which is exactly half of the
+> first bad sector value, 3802454640):
+> 
+> # cat /proc/mdstat
+> Personalities : [raid6] [raid5] [raid4]
+> md4 : active raid5 sde4[0] sdb4[12] sdj4[7] sdi4[8] sdk4[11] sdg4[10]
+> sdl4[9] sdh4[2] sdf4[1]
+>       13454923776 blocks super 1.1 level 5, 512k chunk, algorithm 2
+> [10/9] [UUUUUUUUU_]
+>       [===================>.]  reshape = 98.9% (1901225472/1922131968)
+> finish=2780.9min speed=125K/sec
+> 
+> unused devices: <none>
+> 
+> Googling around, I get the impression that resetting the badblocks
+> list is (a) not supported by the mdadm command; and (b) considered
+> harmful. However, if the blocks aren't really bad any more, as they
+> are now readable, does that risk still hold? How can I get this
+> reshape to proceed?
 
-If my understand is correct, there is no worry here.
+Indeed, it is not possible to reset badblocks list. This list is the
+indication for a driver which blocks it is not allowed to read - the
+operation might succeed but the data can be out-of-date. But it still
+attempts to write those blocks. If write operation is successful, the block
+is removed from bad block list. I think it is the only way to clear the
+list.
 
-Please correct me.
+I guess your reshape is blocked because it cannot read the data from the
+disk to restore the data on the other drive. On the other hand it cannot
+clear bad block as it's not possible to execute a write on a degraded array
+with bad block.
 
-Coly
+As long as you're sure the data on the disk is valid, I believe clearing
+bad block list manually in metadata (no easy way to do it) would allow
+reshape to complete.
+
+Tomek
