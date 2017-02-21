@@ -1,38 +1,74 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: Device size for linux raid5 journal?
-Date: Tue, 21 Feb 2017 10:03:20 -0800
-Message-ID: <20170221180320.7fovqiv2yore3pog@kernel.org>
-References: <trinity-e6976ea9-ab41-4a2a-85ce-50b77ded8f35-1487609409044@3capp-gmx-bs16>
+From: Roger Roglans <rroglans@gmail.com>
+Subject: Re: Trouble reassembling RAID10
+Date: Tue, 21 Feb 2017 12:38:14 -0600
+Message-ID: <CAPXQETk=0j+2P-dex4GpPTmEyBpkUcqHt4WSKJnuNGZvuwY97g@mail.gmail.com>
+References: <CAPXQET=6v3NTeujqtq69KfzAv1gpeG8vGQPfwMxxOaECvFR4sg@mail.gmail.com>
+ <f01c3494-1191-fdf5-c32e-c60abcdc989e@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <trinity-e6976ea9-ab41-4a2a-85ce-50b77ded8f35-1487609409044@3capp-gmx-bs16>
+In-Reply-To: <f01c3494-1191-fdf5-c32e-c60abcdc989e@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christian Samsel <csamsel@gmxpro.de>
+To: Phil Turmel <philip@turmel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Feb 20, 2017 at 05:50:09PM +0100, Christian Samsel wrote:
-> Hello raid team,
-> First of all, thanks for your work.
-> So i recently read about Linux raid5/raid6 write-cache and journaling and thought about
-> giving it a try. I'm mainly interested in the additional safety provided by the journal but might
-> want be future proof to use the write cache as well.
-> I read how to create an array using a journal but i havent found the slightest indication of how
-> large the respective device/partition should be. I went through the lwn article [1], the slides [2] of the
-> respective engineers at facebook and a few commit messages.
-> 
-> So my question is, let's assume i have a 6TB raid5 array (3x3TB), what would a good journal device size be?
-> I'd probably went with 4GB, as this is kinda the upper bound of what hardware raid controller offer. 
+Hi Phil,
 
-Thanks for trying! Depending on write-through or write-back mode. For
-write-through mode, the size could be just several hundreds megabytes. For
-write-back mode, the size should be a little bigger, several gigabytes, but 4
-GB should be enough.
+seems very useful to know in the future. I ended up just assuming
+clean and using "--create". Since I was able to discern the exact
+configurations, I was able to mount it and am currently transferring
+data. I know it was not the ideal solution but I believe that it
+worked out with only minimal corruption. I might have problems with
+another array soon. If so, I will certainly contact this mailing list
+again.
 
-Also I added doc about raid5-cache in
-kernel_source/Documentation/md/raid5-cache.txt recently.
+thanks for your help,
 
-Thanks,
-Shaohua
+Roger
+
+
+On Feb 21, 2017 9:16 AM, "Phil Turmel" <philip@turmel.org> wrote:
+
+Hi Roger,
+
+On 02/20/2017 04:42 PM, Roger Roglans wrote:
+> Hey new to the mailing list and fairly new to RAIDs in general. I
+> ran into an issue and was hoping someone could help.
+
+We probably can.
+
+> Our server that runs a 14 drive RAID10 through a rocketraid 2470
+> controller refused to assemble. Our goal is not necessarily to
+> recover a working RAID, but to get as much data back as possible.
+
+Amounts to the same thing.
+
+> Maybe as a consequence of the assembly failure, upon shutting down
+> the server, it would get stuck in boot loops. So I'm currently
+> running Ubuntu 16.04.1 from a USB. I've determined that 2 of 14
+> disks are faulty and have determined which ones they are.
+
+Three.  Two have been faulty for a very long time.  No-one noticed
+the degraded status.
+
+> Here is the output of a mdadm --examine call.
+
+Please re-do this, combined with smartctl, and without grep.  This
+will tell us everything about your array.  Like so:
+
+for x in /dev/sd[a-p] do mdadm -E ${x}1 ; smartctl -iA -l scterc $x ; done
+
+Paste the output *inline* in your plain-text reply with line
+wrapping disabled.  If your draft email is larger than 100k, split
+into multiple emails.
+
+You are likely to need an alternate bootable USB stick -- your
+report sounds like one of the versions of mdadm that had a bug
+in forced assembly.  I usually use the latest one from
+https://www.system-rescue-cd.org/
+
+Please also read the recent thread and its references starting
+here: https://marc.info/?l=linux-raid&m=148755536616025&w=2
+
+Phil
