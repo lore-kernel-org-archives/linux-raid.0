@@ -1,68 +1,71 @@
-From: Christian Samsel <csamsel@gmxpro.de>
-Subject: Re: Device size for linux raid5 journal?
-Date: Wed, 22 Feb 2017 09:40:03 +0100
-Message-ID: <3798064.0ax3I63nsd@oxygen-mobile>
-References: <trinity-e6976ea9-ab41-4a2a-85ce-50b77ded8f35-1487609409044@3capp-gmx-bs16> <20170221180320.7fovqiv2yore3pog@kernel.org>
+From: Coly Li <colyli@suse.de>
+Subject: Re: [PATCH] md/raid1: handle flush request correctly
+Date: Wed, 22 Feb 2017 19:43:10 +0800
+Message-ID: <ed6dc00a-5433-d0fd-b50b-0e24af2eaf4b@suse.de>
+References: <45d118f3ebfef696ffc5a725db5ca775360a51b2.1487703748.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170221180320.7fovqiv2yore3pog@kernel.org>
+In-Reply-To: <45d118f3ebfef696ffc5a725db5ca775360a51b2.1487703748.git.shli@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
+To: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
+Cc: NeilBrown <neilb@suse.com>
 List-Id: linux-raid.ids
 
-On Tuesday, 21 February 2017, 19:03:20 CET  Shaohua Li wrote:
-> On Mon, Feb 20, 2017 at 05:50:09PM +0100, Christian Samsel wrote:
-> > Hello raid team,
-> > First of all, thanks for your work.
-> > So i recently read about Linux raid5/raid6 write-cache and journaling and
-> > thought about giving it a try. I'm mainly interested in the additional
-> > safety provided by the journal but might want be future proof to use the
-> > write cache as well.
-> > I read how to create an array using a journal but i havent found the
-> > slightest indication of how large the respective device/partition should
-> > be. I went through the lwn article [1], the slides [2] of the respective
-> > engineers at facebook and a few commit messages.
-> > 
-> > So my question is, let's assume i have a 6TB raid5 array (3x3TB), what
-> > would a good journal device size be? I'd probably went with 4GB, as this
-> > is kinda the upper bound of what hardware raid controller offer.
-> Thanks for trying! Depending on write-through or write-back mode. For
-> write-through mode, the size could be just several hundreds megabytes. For
-> write-back mode, the size should be a little bigger, several gigabytes, but
-> 4 GB should be enough.
+On 2017/2/22 上午3:03, Shaohua Li wrote:
+> I got a warning triggered in align_to_barrier_unit_end. It's a flush
+> request so sectors == 0. The flush request happens to work well without
+> the new barrier patch, but we'd better handle it explictly.
+> 
+> Cc: Coly Li <colyli@suse.de>
+> Cc: NeilBrown <neilb@suse.com>
+> Signed-off-by: Shaohua Li <shli@fb.com>
 
-Thanks four your response. I managed to get it running. I had a backup ready 
-but as the restore would have taken a lot of time i applied the patch "[PATCH 
-3/3] Add new journal to array that does not have journal" (4ddd650) to mdadm 
-so i could add the journal without to have to recreate the array. That worked 
-as well. I think adding the journal introduced a small write speed degregation 
-but thats fine for me, as i mostly do reads and data safety is top priority.
-I'm using write-through mode as of now. 
+Acked-by: Coly Li <colyli@suse.de>
 
-> Also I added doc about raid5-cache in
-> kernel_source/Documentation/md/raid5-cache.txt recently.
-I didnt saw that because i'm still running 4.9. That was helpful but the 
-information regarding the size is very vague:
+Thanks.
 
-|In write-through mode, the cache disk isn't required to be big. Several
-|hundreds megabytes are enough.
-...
-|Too small cache disk will make the write aggregation less efficient in this
-|mode depending on the workloads. It's recommended to use a cache disk with at
-|least several gigabytes size in write-back mode.
+Coly
 
-Some more information like on which factors is the optimal size dependent, 
-maybe application type, system memory, array size, disk speed (i dont really 
-know, just naming some candidates) and how these factors impact it, would be 
-helpful. If it isnt that complex i'd be totally fine to just have it stated 
-"The optimal size is X GB".
-
-Besides that, i think a pointer to this documentation inside the mdadm manpage 
-would also help. I suppose for a lot of user the documentation inside the 
-kernel tree isnt really the first place to look.
-
-Christian
+> ---
+>  drivers/md/raid1.c | 10 +++++++---
+>  1 file changed, 7 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 954d028..e1ee446 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -1282,8 +1282,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio)
+>  	unsigned long flags;
+>  	const int op = bio_op(bio);
+>  	const unsigned long do_sync = (bio->bi_opf & REQ_SYNC);
+> -	const unsigned long do_flush_fua = (bio->bi_opf &
+> -						(REQ_PREFLUSH | REQ_FUA));
+> +	const unsigned long do_fua = (bio->bi_opf & REQ_FUA);
+>  	struct md_rdev *blocked_rdev;
+>  	struct blk_plug_cb *cb;
+>  	struct raid1_plug_cb *plug = NULL;
+> @@ -1509,7 +1508,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio)
+>  				   conf->mirrors[i].rdev->data_offset);
+>  		mbio->bi_bdev = conf->mirrors[i].rdev->bdev;
+>  		mbio->bi_end_io	= raid1_end_write_request;
+> -		bio_set_op_attrs(mbio, op, do_flush_fua | do_sync);
+> +		bio_set_op_attrs(mbio, op, do_fua | do_sync);
+>  		if (test_bit(FailFast, &conf->mirrors[i].rdev->flags) &&
+>  		    !test_bit(WriteMostly, &conf->mirrors[i].rdev->flags) &&
+>  		    conf->raid_disks - mddev->degraded > 1)
+> @@ -1565,6 +1564,11 @@ static void raid1_make_request(struct mddev *mddev, struct bio *bio)
+>  	struct bio *split;
+>  	sector_t sectors;
+>  
+> +	if (unlikely(bio->bi_opf & REQ_PREFLUSH)) {
+> +		md_flush_request(mddev, bio);
+> +		return;
+> +	}
+> +
+>  	/* if bio exceeds barrier unit boundary, split it */
+>  	sectors = align_to_barrier_unit_end(
+>  			bio->bi_iter.bi_sector, bio_sectors(bio));
+> 
 
