@@ -1,66 +1,52 @@
-From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Subject: Re: interesting case of a hung 'recovery'
-Date: Thu, 23 Feb 2017 17:17:06 +1100
-Message-ID: <52ea7f37-5368-3b9d-5348-75861cc56652@eyal.emu.id.au>
-References: <091a6513-1594-4a33-691a-cd1f7920d4a0@eyal.emu.id.au>
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: Re: IMSM RAID10: Rebuild/Resync difference on Linux vs Windows
+Date: Thu, 23 Feb 2017 16:27:51 +0100
+Message-ID: <4f749c02-3478-cafc-2ae4-40af25459f65@intel.com>
+References: <055fbb58-fb5f-5d69-0974-aaa234c99028@binary-island.eu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <091a6513-1594-4a33-691a-cd1f7920d4a0@eyal.emu.id.au>
+In-Reply-To: <055fbb58-fb5f-5d69-0974-aaa234c99028@binary-island.eu>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Matthias Dahl <ml_linux-raid@binary-island.eu>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Can one of the experts on the list please comment on the issue.
+On 02/22/2017 02:41 PM, Matthias Dahl wrote:
+> Hello @everyone,
+> 
+> I had an unclean shutdown today and the RAID was (as expected) out of
+> sync -- so with the next boot, Linux started a resync.
+> 
+> A while into the resync, I had to fire up Windows due to work, and the
+> Intel Rapid Storage Manager took over the rebuild as expected. But there
+> was a crucial difference: When I left Linux, I was at somewhat ~35% with
+> another 2 hours or so to go for the resync, whereas IRSM was at 97% from
+> the get-go and took just another 10 minutes or so to (apparently) finish
+> the job.
+> 
+> On Linux, the resync was taking place at 150 MiB/s to 200 MiB/s. So even
+> if Windows was syncing faster (as-in: transfer-speed wise), there is no way to account for a jump from ~35% to 97%.
+> 
+> That is quite a huge difference and got me worried, since I ran into my fair share of bugs with imsm on Linux, unfortunately.
+> 
+> Is this to be expected and normal behavior? Does IRSM on Win use some kind of optimization/shortcut during rebuild that is not implemented on Linux? Or should this really not be happening and I should indeed be worried that the resync was done improperly now?
+> 
+> This happened with kernel 4.9.5 and mdadm/mdmon 4.0 with a RAID10.
+> 
+> If there you need any more information, please don't hesitate to ask and
+> I will gladly provide it and help figure this out.
+> 
+> Thanks in advance for any help.
 
-Regards,
-	Eyal
+Windows IRSM should not make any "shortcuts" in this case. If you
+suspect that resync was not completed properly in Windows, you can run
+it manually by writing "repair" to /sys/block/<dev>/md/sync_action. When
+it finishes you can check md/mismatch_cnt if there were any
+unsynchronized blocks.
 
-On 18/02/17 23:14, Eyal Lebedinsky wrote:
-> I should start by saying that this is an old fedora 19 system
->
-> Executive summary: after '--add'ing a new member a 'recovery' starts but 'sync_max' is not reset.
->
-> $ uname -a
-> Linux e7.eyal.emu.id.au 3.14.27-100.fc19.x86_64 #1 SMP Wed Dec 17 19:36:34 UTC 2014 x86_64 x86_64 x86_64 GNU/Linux
+Can you share the output of mdadm -E <raid disks> and mdadm --detail-platform?
+What version of RST software are you using on Windows?
 
-$ sudo mdadm --version
-mdadm - v4.0 - 2017-01-09
-
-> so the issue may have been fixed since.
->
-> I had a disk fail in a raid6. After some 'pending' sectors were logged I decided to do a 'check'
-> around that location (set sync_min/max and echo 'check'). Sure enough it elicited disk errors,
-> but the disk did not recover and it was kicked out of the array. Moreover it became unresponsive.
-> It needed a power cycle so I shutdown and rebooted the machine.
->
-> Not one to give up easily I tried the check again, with the same result.
-> It was time to '--remove' this array member. I then '--add'ed a new disk which started a recovery.
->
-> A few hours later I noticed that it slowed down. A lot. It actually did not progress at all for
-> a few hours (I was away from the machine).
->
-> As I was staring at the screen (for a long while) I realised that it stopped at 55.5%, and this
-> number is exactly where the original 'check' failed (I still do not understand why with my bad
-> memory I remembered this number).
->
-> I checked 'sync_completed' and it was proper.
-> I then examined 'sync_max' and it was wrong - it had the location where the very early 'check'
-> failed earlier in the day. It was the same sector where it is now paused at - looks related.
->
-> I decided to take a (small) risk and do
->     # echo 'max' >/sys/block/md127/md/sync_max
-> at which point the recovery moved on. It should be finished in about 5 hours.
->
-> I do not think that it is correct for 'sync_max' to not be set to 'max' when a new member is
-> added - it surely requires a full recovery.
->
-> I really hope (and expect) that this was actually fixed, but this note may help others facing
-> same predicament.
->
-> cheers
->
-
--- 
-Eyal Lebedinsky (eyal@eyal.emu.id.au)
+Thanks,
+Artur
