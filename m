@@ -1,65 +1,57 @@
 From: Shaohua Li <shli@fb.com>
-Subject: [PATCH 2/2] md: delete dead code
-Date: Thu, 23 Feb 2017 12:34:35 -0800
-Message-ID: <c50373e8960c41ec6cd3ab7308e666acd4e6d7c1.1487881989.git.shli@fb.com>
-References: <bf67a7498d5807e3913762f63402f367a6de401e.1487881989.git.shli@fb.com>
+Subject: [PATCH 1/2] md/raid10: submit bio directly to replacement disk
+Date: Thu, 23 Feb 2017 12:34:34 -0800
+Message-ID: <bf67a7498d5807e3913762f63402f367a6de401e.1487881989.git.shli@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <bf67a7498d5807e3913762f63402f367a6de401e.1487881989.git.shli@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: neilb@suse.com
 List-Id: linux-raid.ids
 
-Nobody is using mddev_check_plugged(), so delete the dead code
+Commit 57c67df(md/raid10: submit IO from originating thread instead of
+md thread) submits bio directly for normal disks but not for replacement
+disks. There is no point we shouldn't do this for replacement disks.
 
+Cc: NeilBrown <neilb@suse.com>
 Signed-off-by: Shaohua Li <shli@fb.com>
 ---
- drivers/md/md.c | 8 --------
- drivers/md/md.h | 6 ------
- 2 files changed, 14 deletions(-)
+ drivers/md/raid10.c | 19 ++++++++++++++++---
+ 1 file changed, 16 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index bef1863..b97f133 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -439,14 +439,6 @@ void md_flush_request(struct mddev *mddev, struct bio *bio)
- }
- EXPORT_SYMBOL(md_flush_request);
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index a1f8e98..4e85a61 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1477,11 +1477,24 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
+ 			mbio->bi_bdev = (void*)rdev;
  
--void md_unplug(struct blk_plug_cb *cb, bool from_schedule)
--{
--	struct mddev *mddev = cb->data;
--	md_wakeup_thread(mddev->thread);
--	kfree(cb);
--}
--EXPORT_SYMBOL(md_unplug);
--
- static inline struct mddev *mddev_get(struct mddev *mddev)
- {
- 	atomic_inc(&mddev->active);
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 44fe227..8c4f462 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -674,16 +674,10 @@ extern void md_rdev_clear(struct md_rdev *rdev);
- extern void mddev_suspend(struct mddev *mddev);
- extern void mddev_resume(struct mddev *mddev);
- 
--extern void md_unplug(struct blk_plug_cb *cb, bool from_schedule);
- extern void md_reload_sb(struct mddev *mddev, int raid_disk);
- extern void md_update_sb(struct mddev *mddev, int force);
- extern void md_kick_rdev_from_array(struct md_rdev * rdev);
- struct md_rdev *md_find_rdev_nr_rcu(struct mddev *mddev, int nr);
--static inline int mddev_check_plugged(struct mddev *mddev)
--{
--	return !!blk_check_plugged(md_unplug, mddev,
--				   sizeof(struct blk_plug_cb));
--}
- 
- static inline void rdev_dec_pending(struct md_rdev *rdev, struct mddev *mddev)
- {
+ 			atomic_inc(&r10_bio->remaining);
++
++			cb = blk_check_plugged(raid10_unplug, mddev,
++					       sizeof(*plug));
++			if (cb)
++				plug = container_of(cb, struct raid10_plug_cb,
++						    cb);
++			else
++				plug = NULL;
+ 			spin_lock_irqsave(&conf->device_lock, flags);
+-			bio_list_add(&conf->pending_bio_list, mbio);
+-			conf->pending_count++;
++			if (plug) {
++				bio_list_add(&plug->pending, mbio);
++				plug->pending_cnt++;
++			} else {
++				bio_list_add(&conf->pending_bio_list, mbio);
++				conf->pending_count++;
++			}
+ 			spin_unlock_irqrestore(&conf->device_lock, flags);
+-			if (!mddev_check_plugged(mddev))
++			if (!plug)
+ 				md_wakeup_thread(mddev->thread);
+ 		}
+ 	}
 -- 
 2.9.3
 
