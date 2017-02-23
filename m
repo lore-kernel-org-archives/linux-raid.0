@@ -1,307 +1,66 @@
-From: Coly Li <colyli@suse.de>
-Subject: Re: [PATCH V3 1/2] RAID1: a new I/O barrier implementation to remove
- resync window
-Date: Thu, 23 Feb 2017 13:54:47 +0800
-Message-ID: <488f88e0-8111-a320-3abb-c6e6611a957e@suse.de>
-References: <1487176523-109075-1-git-send-email-colyli@suse.de>
- <87shnevcpr.fsf@notabene.neil.brown.name>
- <2f6b3d68-1536-3167-7362-78fdfa91e149@suse.de>
- <87shn9spsy.fsf@notabene.neil.brown.name>
- <87k28lshg5.fsf@notabene.neil.brown.name>
- <20170220070430.4mca7clpaw7kpj4j@kernel.org>
- <7178ADEA-6263-4FB0-95A5-96E5F71A9740@suse.de>
- <878tp0s7w8.fsf@notabene.neil.brown.name>
- <f36e85b1-cca1-5be4-a171-d64057cc56a3@suse.de>
- <20170221174542.rer73ywil3oq26gj@kernel.org>
- <c04d68cd-96e8-dff9-c54e-54248394119f@suse.de>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: Re: interesting case of a hung 'recovery'
+Date: Thu, 23 Feb 2017 17:17:06 +1100
+Message-ID: <52ea7f37-5368-3b9d-5348-75861cc56652@eyal.emu.id.au>
+References: <091a6513-1594-4a33-691a-cd1f7920d4a0@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <c04d68cd-96e8-dff9-c54e-54248394119f@suse.de>
+In-Reply-To: <091a6513-1594-4a33-691a-cd1f7920d4a0@eyal.emu.id.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Johannes Thumshirn <jthumshirn@suse.de>, Guoqing Jiang <gqjiang@suse.com>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2017/2/22 上午4:09, Coly Li wrote:
-> On 2017/2/22 上午1:45, Shaohua Li wrote:
->> On Tue, Feb 21, 2017 at 05:45:53PM +0800, Coly Li wrote:
->>> On 2017/2/21 上午8:29, NeilBrown wrote:
->>>> On Mon, Feb 20 2017, Coly Li wrote:
->>>>
->>>>>> 在 2017年2月20日，下午3:04，Shaohua Li <shli@kernel.org> 写道：
->>>>>>
->>>>>>> On Mon, Feb 20, 2017 at 01:51:22PM +1100, Neil Brown wrote:
->>>>>>>> On Mon, Feb 20 2017, NeilBrown wrote:
->>>>>>>>
->>>>>>>>> On Fri, Feb 17 2017, Coly Li wrote:
->>>>>>>>>
->>>>>>>>>> On 2017/2/16 下午3:04, NeilBrown wrote: I know you are
->>>>>>>>>> going to change this as Shaohua wantsthe spitting to 
->>>>>>>>>> happen in a separate function, which I agree with, but
->>>>>>>>>> there is something else wrong here. Calling
->>>>>>>>>> bio_split/bio_chain repeatedly in a loop is dangerous.
->>>>>>>>>> It is OK for simple devices, but when one request can
->>>>>>>>>> wait for another request to the same device it can 
->>>>>>>>>> deadlock. This can happen with raid1.  If a resync
->>>>>>>>>> request calls raise_barrier() between one request and
->>>>>>>>>> the next, then the next has to wait for the resync
->>>>>>>>>> request, which has to wait for the first request. As
->>>>>>>>>> the first request will be stuck in the queue in 
->>>>>>>>>> generic_make_request(), you get a deadlock.
->>>>>>>>>
->>>>>>>>> For md raid1, queue in generic_make_request(), can I
->>>>>>>>> understand it as bio_list_on_stack in this function? And
->>>>>>>>> queue in underlying device, can I understand it as the
->>>>>>>>> data structures like plug->pending and 
->>>>>>>>> conf->pending_bio_list ?
->>>>>>>>
->>>>>>>> Yes, the queue in generic_make_request() is the
->>>>>>>> bio_list_on_stack.  That is the only queue I am talking
->>>>>>>> about.  I'm not referring to plug->pending or
->>>>>>>> conf->pending_bio_list at all.
->>>>>>>>
->>>>>>>>>
->>>>>>>>> I still don't get the point of deadlock, let me try to
->>>>>>>>> explain why I don't see the possible deadlock. If a bio
->>>>>>>>> is split, and the first part is processed by
->>>>>>>>> make_request_fn(), and then a resync comes and it will 
->>>>>>>>> raise a barrier, there are 3 possible conditions, - the
->>>>>>>>> resync I/O tries to raise barrier on same bucket of the
->>>>>>>>> first regular bio. Then the resync task has to wait to
->>>>>>>>> the first bio drops its conf->nr_pending[idx]
->>>>>>>>
->>>>>>>> Not quite. First, the resync task (in raise_barrier()) will
->>>>>>>> wait for ->nr_waiting[idx] to be zero.  We can assume this
->>>>>>>> happens immediately. Then the resync_task will increment
->>>>>>>> ->barrier[idx]. Only then will it wait for the first bio to
->>>>>>>> drop ->nr_pending[idx]. The processing of that first bio
->>>>>>>> will have submitted bios to the underlying device, and they
->>>>>>>> will be in the bio_list_on_stack queue, and will not be
->>>>>>>> processed until raid1_make_request() completes.
->>>>>>>>
->>>>>>>> The loop in raid1_make_request() will then call
->>>>>>>> make_request_fn() which will call wait_barrier(), which
->>>>>>>> will wait for ->barrier[idx] to be zero.
->>>>>>>
->>>>>>> Thinking more carefully about this.. the 'idx' that the
->>>>>>> second bio will wait for will normally be different, so there
->>>>>>> won't be a deadlock after all.
->>>>>>>
->>>>>>> However it is possible for hash_long() to produce the same
->>>>>>> idx for two consecutive barrier_units so there is still the
->>>>>>> possibility of a deadlock, though it isn't as likely as I
->>>>>>> thought at first.
->>>>>>
->>>>>> Wrapped the function pointer issue Neil pointed out into Coly's
->>>>>> original patch. Also fix a 'use-after-free' bug. For the
->>>>>> deadlock issue, I'll add below patch, please check.
->>>>>>
->>>>>> Thanks, Shaohua
->>>>>>
->>>>>
->>>
->>> Neil,
->>>
->>> Thanks for your patient explanation, I feel I come to follow up what
->>> you mean. Let me try to re-tell what I understand, correct me if I am
->>> wrong.
->>>
->>>
->>>>> Hmm, please hold, I am still thinking of it. With barrier bucket
->>>>> and hash_long(), I don't see dead lock yet. For raid10 it might
->>>>> happen, but once we have barrier bucket on it , there will no
->>>>> deadlock.
->>>>>
->>>>> My question is, this deadlock only happens when a big bio is
->>>>> split, and the split small bios are continuous, and the resync io
->>>>> visiting barrier buckets in sequntial order too. In the case if
->>>>> adjacent split regular bios or resync bios hit same barrier
->>>>> bucket, it will be a very big failure of hash design, and should
->>>>> have been found already. But no one complain it, so I don't
->>>>> convince myself tje deadlock is real with io barrier buckets
->>>>> (this is what Neil concerns).
->>>>
->>>> I think you are wrong about the design goal of a hash function. 
->>>> When feed a sequence of inputs, with any stride (i.e. with any
->>>> constant difference between consecutive inputs), the output of the
->>>> hash function should appear to be random. A random sequence can
->>>> produce the same number twice in a row. If the hash function
->>>> produces a number from 0 to N-1, you would expect two consecutive
->>>> outputs to be the same about once every N inputs.
->>>>
->>>
->>> Yes, you are right. But when I mentioned hash conflict, I limit the
->>> integers in range [0, 1<<38]. 38 is (64-17-9), when a 64bit LBA
->>> address divided by 64MB I/O barrier unit size, its value range is
->>> reduced to [0, 1<<38].
->>>
->>> Maximum size of normal bio is 1MB, it could be split into 2 bios at most.
->>>
->>> For DISCARD bio, its maximum size is 4GB, it could be split into 65
->>> bios at most.
->>>
->>> Then in this patch, the hash question is degraded to: for any
->>> consecutive 65 integers in range [0, 1<<38], use hash_long() to hash
->>> these 65 integers into range [0, 1023], will any hash conflict happen
->>> among these integers ?
->>>
->>> I tried a half range [0, 1<<37] to check hash conflict, by writing a
->>> simple code to emulate hash calculation in the new I/O barrier patch,
->>> to iterate all consecutive {2, 65, 128, 512} integers in range [0,
->>> 1<<37] for hash conflict.
->>>
->>> On a 20 core CPU each run spent 7+ hours, finally I find no hash
->>> conflict detected up to 512 consecutive integers in above limited
->>> condition. For 1024, there are a lot hash conflict detected.
->>>
->>> [0, 1<<37] range back to [0, 63] LBA range, this is large enough for
->>> almost all existing md raid configuration. So for current kernel
->>> implementation and real world device, for a single bio, there is no
->>> possible hash conflict the new I/O barrier patch.
->>>
->>> If bi_iter.bi_size changes from unsigned int to unsigned long in
->>> future, the above assumption will be wrong. There will be hash
->>> conflict, and potential dead lock, which is quite implicit. Yes, I
->>> agree with you. No, bio split inside loop is not perfect.
->>>
->>>> Even if there was no possibility of a deadlock from a resync
->>>> request happening between two bios, there are other possibilities.
->>>>
->>>
->>> The bellowed text makes me know more about raid1 code, but confuses me
->>> more as well. Here comes my questions,
->>>
->>>> It is not, in general, safe to call mempool_alloc() twice in a
->>>> row, without first ensuring that the first allocation will get
->>>> freed by some other thread.  raid1_write_request() allocates from
->>>> r1bio_pool, and then submits bios to the underlying device, which
->>>> get queued on bio_list_on_stack.  They will not be processed until
->>>> after raid1_make_request() completes, so when raid1_make_request
->>>> loops around and calls raid1_write_request() again, it will try to
->>>> allocate another r1bio from r1bio_pool, and this might end up
->>>> waiting for the r1bio which is trapped and cannot complete.
->>>>
->>>
->>> Can I say that it is because blk_finish_plug() won't be called before
->>> raid1_make_request() returns ? Then in raid1_write_request(), mbio
->>> will be added into plug->pending, but before blk_finish_plug() is
->>> called, they won't be handled.
->>
->> blk_finish_plug is called if raid1_make_request sleep. The bio is hold in
->> current->bio_list, not in plug list.
->>  
-> 
-> Oops, I messed them up,  thank you for the clarifying :-)
-> 
->>>> As r1bio_pool preallocates 256 entries, this is unlikely  but not 
->>>> impossible.  If 256 threads all attempt a write (or read) that
->>>> crosses a boundary, then they will consume all 256 preallocated
->>>> entries, and want more. If there is no free memory, they will block
->>>> indefinitely.
->>>>
->>>
->>> If raid1_make_request() is modified into this way,
->>> +	if (bio_data_dir(split) == READ)
->>> +		raid1_read_request(mddev, split);
->>> +	else
->>> +		raid1_write_request(mddev, split);
->>> +	if (split != bio)
->>> +		generic_make_request(bio);
->>>
->>> Then the original bio will be added into the bio_list_on_stack of top
->>> level generic_make_request(), current->bio_list is initialized, when
->>> generic_make_request() is called nested in raid1_make_request(), the
->>> split bio will be added into current->bio_list and nothing else happens.
->>>
->>> After the nested generic_make_request() returns, the code back to next
->>> code of generic_make_request(),
->>> 2022                         ret = q->make_request_fn(q, bio);
->>> 2023
->>> 2024                         blk_queue_exit(q);
->>> 2025
->>> 2026                         bio = bio_list_pop(current->bio_list);
->>>
->>> bio_list_pop() will return the second half of the split bio, and it is
->>
->> So in above sequence, the curent->bio_list will has bios in below sequence:
->> bios to underlaying disks, second half of original bio
->>
->> bio_list_pop will pop bios to underlaying disks first, handle them, then the
->> second half of original bio.
->>
->> That said, this doesn't work for array stacked 3 layers. Because in 3-layer
->> array, handling the middle layer bio will make the 3rd layer bio hold to
->> bio_list again.
->>
-> 
-> Could you please give me more hint,
-> - What is the meaning of "hold" from " make the 3rd layer bio hold to
-> bio_list again" ?
-> - Why deadlock happens if the 3rd layer bio hold to bio_list again ?
+Can one of the experts on the list please comment on the issue.
 
-I tried to set up a 4 layer stacked md raid1, and reduce I/O barrier
-bucket size to 8MB, running for 10 hours, there is no deadlock observed,
+Regards,
+	Eyal
 
-Here is how the 4 layer stacked raid1 setup,
-- There are 4 NVMe SSDs, on each SSD I create four 500GB partition,
-  /dev/nvme0n1:  nvme0n1p1, nvme0n1p2, nvme0n1p3, nvme0n1p4
-  /dev/nvme1n1:  nvme1n1p1, nvme1n1p2, nvme1n1p3, nvme1n1p4
-  /dev/nvme2n1:  nvme2n1p1, nvme2n1p2, nvme2n1p3, nvme2n1p4
-  /dev/nvme3n1:  nvme3n1p1, nvme3n1p2, nvme3n1p3, nvme3n1p4
-- Here is how the 4 layer stacked raid1 assembled, level 1 means the top
-level, level 4 means the bottom level in the stacked devices,
-  - level 1:
-	/dev/md40: /dev/md30  /dev/md31
-  - level 2:
-	/dev/md30: /dev/md20  /dev/md21
-	/dev/md31: /dev/md22  /dev/md23
-  - level 3:
-	/dev/md20: /dev/md10  /dev/md11
-	/dev/md21: /dev/md12  /dev/md13
-	/dev/md22: /dev/md14  /dev/md15
-	/dev/md23: /dev/md16  /dev/md17
-  - level 4:
-	/dev/md10: /dev/nvme0n1p1  /dev/nvme1n1p1
-	/dev/md11: /dev/nvme2n1p1  /dev/nvme3n1p1
-	/dev/md12: /dev/nvme0n1p2  /dev/nvme1n1p2
-	/dev/md13: /dev/nvme2n1p2  /dev/nvme3n1p2
-	/dev/md14: /dev/nvme0n1p3  /dev/nvme1n1p3
-	/dev/md15: /dev/nvme2n1p3  /dev/nvme3n1p3
-	/dev/md16: /dev/nvme0n1p4  /dev/nvme1n1p4
-	/dev/md17: /dev/nvme2n1p4  /dev/nvme3n1p4
+On 18/02/17 23:14, Eyal Lebedinsky wrote:
+> I should start by saying that this is an old fedora 19 system
+>
+> Executive summary: after '--add'ing a new member a 'recovery' starts but 'sync_max' is not reset.
+>
+> $ uname -a
+> Linux e7.eyal.emu.id.au 3.14.27-100.fc19.x86_64 #1 SMP Wed Dec 17 19:36:34 UTC 2014 x86_64 x86_64 x86_64 GNU/Linux
 
-Here is the fio job file,
-[global]
-direct=1
-thread=1
-ioengine=libaio
+$ sudo mdadm --version
+mdadm - v4.0 - 2017-01-09
 
-[job]
-filename=/dev/md40
-readwrite=write
-numjobs=10
-blocksize=33M
-iodepth=128
-time_based=1
-runtime=10h
+> so the issue may have been fixed since.
+>
+> I had a disk fail in a raid6. After some 'pending' sectors were logged I decided to do a 'check'
+> around that location (set sync_min/max and echo 'check'). Sure enough it elicited disk errors,
+> but the disk did not recover and it was kicked out of the array. Moreover it became unresponsive.
+> It needed a power cycle so I shutdown and rebooted the machine.
+>
+> Not one to give up easily I tried the check again, with the same result.
+> It was time to '--remove' this array member. I then '--add'ed a new disk which started a recovery.
+>
+> A few hours later I noticed that it slowed down. A lot. It actually did not progress at all for
+> a few hours (I was away from the machine).
+>
+> As I was staring at the screen (for a long while) I realised that it stopped at 55.5%, and this
+> number is exactly where the original 'check' failed (I still do not understand why with my bad
+> memory I remembered this number).
+>
+> I checked 'sync_completed' and it was proper.
+> I then examined 'sync_max' and it was wrong - it had the location where the very early 'check'
+> failed earlier in the day. It was the same sector where it is now paused at - looks related.
+>
+> I decided to take a (small) risk and do
+>     # echo 'max' >/sys/block/md127/md/sync_max
+> at which point the recovery moved on. It should be finished in about 5 hours.
+>
+> I do not think that it is correct for 'sync_max' to not be set to 'max' when a new member is
+> added - it surely requires a full recovery.
+>
+> I really hope (and expect) that this was actually fixed, but this note may help others facing
+> same predicament.
+>
+> cheers
+>
 
-I planed to learn how the deadlock comes by analyze a deadlock
-condition. Maybe it was because 8MB bucket unit size is small enough,
-now I try to run with 512K bucket unit size, and see whether I can
-encounter a deadlock.
-
-
-=============== P.S ==============
-When I run the stacked raid1 testing, I feel I see something behavior
-suspiciously, it is resync.
-
-The second time when I rebuild all the raid1 devices by "mdadm -C
-/dev/mdXX -l 1 -n 2 /dev/xxx /dev/xxx", I see the top level raid1 device
-/dev/md40 already accomplished 50%+ resync. I don't think it could be
-that fast...
-
-Coly
-
-
+-- 
+Eyal Lebedinsky (eyal@eyal.emu.id.au)
