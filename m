@@ -1,52 +1,24 @@
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: Re: IMSM RAID10: Rebuild/Resync difference on Linux vs Windows
-Date: Thu, 23 Feb 2017 16:27:51 +0100
-Message-ID: <4f749c02-3478-cafc-2ae4-40af25459f65@intel.com>
-References: <055fbb58-fb5f-5d69-0974-aaa234c99028@binary-island.eu>
+From: Qin's Yanjun <Qin.Yanjun@null.net>
+Subject: RE:
+Date: Thu, 23 Feb 2017 20:09:29 +0500
+Message-ID: <cf3faff95fb3db02602e6f37c5cd928f__38670.2632917606$1487873574$gmane$org@mail.aknet.kz>
+Reply-To: Qin's Yanjun <Qin.Yanjun@null.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <055fbb58-fb5f-5d69-0974-aaa234c99028@binary-island.eu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Matthias Dahl <ml_linux-raid@binary-island.eu>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/22/2017 02:41 PM, Matthias Dahl wrote:
-> Hello @everyone,
-> 
-> I had an unclean shutdown today and the RAID was (as expected) out of
-> sync -- so with the next boot, Linux started a resync.
-> 
-> A while into the resync, I had to fire up Windows due to work, and the
-> Intel Rapid Storage Manager took over the rebuild as expected. But there
-> was a crucial difference: When I left Linux, I was at somewhat ~35% with
-> another 2 hours or so to go for the resync, whereas IRSM was at 97% from
-> the get-go and took just another 10 minutes or so to (apparently) finish
-> the job.
-> 
-> On Linux, the resync was taking place at 150 MiB/s to 200 MiB/s. So even
-> if Windows was syncing faster (as-in: transfer-speed wise), there is no way to account for a jump from ~35% to 97%.
-> 
-> That is quite a huge difference and got me worried, since I ran into my fair share of bugs with imsm on Linux, unfortunately.
-> 
-> Is this to be expected and normal behavior? Does IRSM on Win use some kind of optimization/shortcut during rebuild that is not implemented on Linux? Or should this really not be happening and I should indeed be worried that the resync was done improperly now?
-> 
-> This happened with kernel 4.9.5 and mdadm/mdmon 4.0 with a RAID10.
-> 
-> If there you need any more information, please don't hesitate to ask and
-> I will gladly provide it and help figure this out.
-> 
-> Thanks in advance for any help.
 
-Windows IRSM should not make any "shortcuts" in this case. If you
-suspect that resync was not completed properly in Windows, you can run
-it manually by writing "repair" to /sys/block/<dev>/md/sync_action. When
-it finishes you can check md/mismatch_cnt if there were any
-unsynchronized blocks.
+How are you today and your family? I require your attention and honest
+co-operation about some issues which i will really want to discuss with you
+which.  Looking forward to read from you soon.  
 
-Can you share the output of mdadm -E <raid disks> and mdadm --detail-platform?
-What version of RST software are you using on Windows?
+Qin's
 
-Thanks,
-Artur
+
+______________________________
+
+Sky Silk, http://aknet.kz
+
