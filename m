@@ -1,7 +1,7 @@
 From: zhilong <zlliu@suse.com>
 Subject: Re: [PATCH] Monitor: triggers core dump when stat2devnm return NULL
-Date: Fri, 24 Feb 2017 11:05:49 +0800
-Message-ID: <b1fd6f4a-6827-66be-3d50-babecaba6427@suse.com>
+Date: Fri, 24 Feb 2017 11:06:28 +0800
+Message-ID: <6875664c-1942-6d18-1c65-268559e876a6@suse.com>
 References: <1487050315-27940-1-git-send-email-zlliu@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
@@ -14,8 +14,7 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Hi, Jes;
-
-I just wanted to ping and see if this could get a review:
+   I just wanted to ping and see if this could get a review:
 
 
 On 02/14/2017 01:31 PM, Zhilong Liu wrote:
