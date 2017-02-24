@@ -1,100 +1,55 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: [GIT PULL] MD update for 4.11
-Date: Fri, 24 Feb 2017 07:52:06 -0800
-Message-ID: <20170224155206.tu7ub3rp7wv4faoq@kernel.org>
+From: <ian_bruce@mail.ru>
+Subject: Re: [BUG] non-metadata arrays cannot use more than 27 component
+ devices
+Date: Fri, 24 Feb 2017 08:40:24 -0800
+Message-ID: <20170224084024.4dfe83a2.ian_bruce@mail.ru>
+References: <20170224040816.41f2f372.ian_bruce@mail.ru>
+        <41ea334c-ae1c-dac6-e1a1-480d3700a588@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <41ea334c-ae1c-dac6-e1a1-480d3700a588@turmel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On Fri, 24 Feb 2017 10:20:52 -0500
+Phil Turmel <philip@turmel.org> wrote:
 
-please pull MD update for 4.11, this pull mainly fixes bugs and improves
-performance:
-- Improve scalability for raid1 from Coly
-- Improve raid5-cache read performance, disk efficiency and IO pattern from
-  Song and me
-- Fix a race condition of disk hotplug for linear from Coly
-- A few cleanup patches from Ming and Byungchul
-- Fix a memory leak from Neil
-- Fix WRITE SAME IO failure from me
-- Add doc for raid5-cache from me
+> Considering the existence of --build is strictly to support arrays
+> that predate MD raid, it seems a bit of a stretch to claim this as a
+> bug instead of a feature request.
 
-Thanks,
-Shaohua
+quoting from the mdadm manual page:
 
-The following changes since commit 7089db84e356562f8ba737c29e472cc42d530dbc:
+    *Build*
+    
+    Build an array that doesn't have per-device metadata (superblocks).
+    For these sorts of arrays, mdadm cannot differentiate between
+    initial creation and subsequent assembly of an array. It also cannot
+    perform any checks that appropriate components have been requested.
+    Because of this, the Build mode should only be used together with a
+    complete understanding of what you are doing.
 
-  Linux 4.10-rc8 (2017-02-12 13:03:20 -0800)
+No mention of "arrays that predate MD RAID" there. Nor any mention of a
+27-component limit, either. Nor does the eventual error message mention
+any such thing (although "mdadm --create --metadata=0 --raid-devices=28"
+does). I'd call that a bug.
 
-are available in the git repository at:
+Since there's no pre-existing superblock, and the kernel has to create
+one, it could just as easily use the v1.2 format as the v0.90 format, as
+it does with "mdadm --create". Why shouldn't the v1.2 format be the
+default for "mdadm --build" as well? That would be more consistent --
+why should these two options behave differently in this regard, in the
+absence of any material reason to do so?
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git for-next
+--create : initialize v1.2 kernel superblock and write to disk
 
-for you to fetch changes up to 1ec492232ed659acde8cc00b9ecc7529778e03e1:
+--build  : initialize v1.2 kernel superblock but don't write to disk
 
-  md/raid1: fix write behind issues introduced by bio_clone_bioset_partial (2017-02-23 11:59:44 -0800)
+It seems like it would actually be simpler to treat the two cases the
+same, rather than differently.
 
-----------------------------------------------------------------
-Byungchul Park (1):
-      md/raid5: Don't reinvent the wheel but use existing llist API
 
-Ming Lei (5):
-      block: introduce bio_clone_bioset_partial()
-      md: fail if mddev->bio_set can't be created
-      md/raid1: use bio_clone_bioset_partial() in case of write behind
-      md: remove unnecessary check on mddev
-      md: fast clone bio in bio_clone_mddev()
-
-NeilBrown (1):
-      md: ensure md devices are freed before module is unloaded.
-
-Shaohua Li (10):
-      raid5: only dispatch IO from raid5d for harddisk raid
-      Documentation: move MD related doc into a separate dir
-      MD: add doc for raid5-cache
-      md/raid5-cache: stripe reclaim only counts valid stripes
-      md/raid5-cache: exclude reclaiming stripes in reclaim check
-      md: disable WRITE SAME if it fails in underlayer disks
-      md/raid1: fix a use-after-free bug
-      md/linear: shutup lockdep warnning
-      md/raid1: handle flush request correctly
-      md/raid1: fix write behind issues introduced by bio_clone_bioset_partial
-
-Song Liu (3):
-      EXPORT_SYMBOL radix_tree_replace_slot
-      md/r5cache: enable chunk_aligned_read with write back cache
-      md/r5cache: improve journal device efficiency
-
-colyli@suse.de (3):
-      md linear: fix a race between linear_add() and linear_congested()
-      RAID1: a new I/O barrier implementation to remove resync window
-      RAID1: avoid unnecessary spin locks in I/O barrier code
-
- Documentation/00-INDEX                |   4 +-
- Documentation/admin-guide/md.rst      |   5 +
- Documentation/{ => md}/md-cluster.txt |   0
- Documentation/md/raid5-cache.txt      | 109 +++++++
- block/bio.c                           |  61 +++-
- drivers/md/faulty.c                   |   2 +-
- drivers/md/linear.c                   |  41 ++-
- drivers/md/linear.h                   |   1 +
- drivers/md/md.c                       |  22 +-
- drivers/md/md.h                       |   9 +-
- drivers/md/multipath.c                |   1 +
- drivers/md/raid0.c                    |   1 +
- drivers/md/raid1.c                    | 598 +++++++++++++++++++++-------------
- drivers/md/raid1.h                    |  58 ++--
- drivers/md/raid10.c                   |  11 +-
- drivers/md/raid5-cache.c              | 225 +++++++++++--
- drivers/md/raid5.c                    | 129 ++++++--
- drivers/md/raid5.h                    |   7 +
- include/linux/bio.h                   |  11 +-
- lib/radix-tree.c                      |   1 +
- 20 files changed, 943 insertions(+), 353 deletions(-)
- rename Documentation/{ => md}/md-cluster.txt (100%)
- create mode 100644 Documentation/md/raid5-cache.txt
+-- Ian Bruce
