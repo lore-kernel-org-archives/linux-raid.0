@@ -1,7 +1,7 @@
 From: Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH v1 10/14] md: raid1: use bio_segments_all()
-Date: Fri, 24 Feb 2017 23:42:47 +0800
-Message-ID: <1487950971-1131-11-git-send-email-tom.leiming@gmail.com>
+Subject: [PATCH v1 11/14] md: raid10: refactor code of read reshape's .bi_end_io
+Date: Fri, 24 Feb 2017 23:42:48 +0800
+Message-ID: <1487950971-1131-12-git-send-email-tom.leiming@gmail.com>
 References: <1487950971-1131-1-git-send-email-tom.leiming@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1487950971-1131-1-git-send-email-tom.leiming@gmail.com>
@@ -10,41 +10,72 @@ To: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.k
 Cc: Ming Lei <tom.leiming@gmail.com>
 List-Id: linux-raid.ids
 
-Use this helper, instead of direct access to .bi_vcnt.
+reshape read request is a bit special and requires one extra
+bio which isn't allocated from r10buf_pool.
+
+Refactor the .bi_end_io for read reshape, so that we can use
+raid10's resync page mangement approach easily in the following
+patches.
 
 Signed-off-by: Ming Lei <tom.leiming@gmail.com>
 ---
- drivers/md/raid1.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/md/raid10.c | 28 ++++++++++++++++++----------
+ 1 file changed, 18 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 7363bf56f3b4..391da975e092 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1091,7 +1091,8 @@ static void alloc_behind_pages(struct bio *bio, struct r1bio *r1_bio)
- {
- 	int i;
- 	struct bio_vec *bvec;
--	struct bio_vec *bvecs = kzalloc(bio->bi_vcnt * sizeof(struct bio_vec),
-+	unsigned vcnt = bio_segments_all(bio);
-+	struct bio_vec *bvecs = kzalloc(vcnt * sizeof(struct bio_vec),
- 					GFP_NOIO);
- 	if (unlikely(!bvecs))
- 		return;
-@@ -1107,12 +1108,12 @@ static void alloc_behind_pages(struct bio *bio, struct r1bio *r1_bio)
- 		kunmap(bvec->bv_page);
- 	}
- 	r1_bio->behind_bvecs = bvecs;
--	r1_bio->behind_page_count = bio->bi_vcnt;
-+	r1_bio->behind_page_count = vcnt;
- 	set_bit(R1BIO_BehindIO, &r1_bio->state);
- 	return;
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 227dd6ad7716..c76e08ea4b92 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1907,17 +1907,9 @@ static int raid10_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 	return err;
+ }
  
- do_sync_io:
--	for (i = 0; i < bio->bi_vcnt; i++)
-+	for (i = 0; i < vcnt; i++)
- 		if (bvecs[i].bv_page)
- 			put_page(bvecs[i].bv_page);
- 	kfree(bvecs);
+-static void end_sync_read(struct bio *bio)
++static void __end_sync_read(struct r10bio *r10_bio, struct bio *bio, int d)
+ {
+-	struct r10bio *r10_bio = bio->bi_private;
+ 	struct r10conf *conf = r10_bio->mddev->private;
+-	int d;
+-
+-	if (bio == r10_bio->master_bio) {
+-		/* this is a reshape read */
+-		d = r10_bio->read_slot; /* really the read dev */
+-	} else
+-		d = find_bio_disk(conf, r10_bio, bio, NULL, NULL);
+ 
+ 	if (!bio->bi_error)
+ 		set_bit(R10BIO_Uptodate, &r10_bio->state);
+@@ -1941,6 +1933,22 @@ static void end_sync_read(struct bio *bio)
+ 	}
+ }
+ 
++static void end_sync_read(struct bio *bio)
++{
++	struct r10bio *r10_bio = bio->bi_private;
++	struct r10conf *conf = r10_bio->mddev->private;
++	int d = find_bio_disk(conf, r10_bio, bio, NULL, NULL);
++
++	__end_sync_read(r10_bio, bio, d);
++}
++
++static void end_reshape_read(struct bio *bio)
++{
++	struct r10bio *r10_bio = bio->bi_private;
++
++	__end_sync_read(r10_bio, bio, r10_bio->read_slot);
++}
++
+ static void end_sync_request(struct r10bio *r10_bio)
+ {
+ 	struct mddev *mddev = r10_bio->mddev;
+@@ -4474,7 +4482,7 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr,
+ 	read_bio->bi_iter.bi_sector = (r10_bio->devs[r10_bio->read_slot].addr
+ 			       + rdev->data_offset);
+ 	read_bio->bi_private = r10_bio;
+-	read_bio->bi_end_io = end_sync_read;
++	read_bio->bi_end_io = end_reshape_read;
+ 	bio_set_op_attrs(read_bio, REQ_OP_READ, 0);
+ 	read_bio->bi_flags &= (~0UL << BIO_RESET_BITS);
+ 	read_bio->bi_error = 0;
 -- 
 2.7.4
