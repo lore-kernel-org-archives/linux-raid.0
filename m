@@ -1,7 +1,7 @@
 From: Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH v1 06/14] md: raid1: simplify r1buf_pool_free()
-Date: Fri, 24 Feb 2017 23:42:43 +0800
-Message-ID: <1487950971-1131-7-git-send-email-tom.leiming@gmail.com>
+Subject: [PATCH v1 08/14] md: raid1: retrieve page from pre-allocated resync page array
+Date: Fri, 24 Feb 2017 23:42:45 +0800
+Message-ID: <1487950971-1131-9-git-send-email-tom.leiming@gmail.com>
 References: <1487950971-1131-1-git-send-email-tom.leiming@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1487950971-1131-1-git-send-email-tom.leiming@gmail.com>
@@ -10,50 +10,75 @@ To: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.k
 Cc: Ming Lei <tom.leiming@gmail.com>
 List-Id: linux-raid.ids
 
-This patch gets each page's reference of each bio for resync,
-then r1buf_pool_free() gets simplified a lot.
-
-The same policy has been taken in raid10's buf pool allocation/free
-too.
+Now one page array is allocated for each resync bio, and we can
+retrieve page from this table directly.
 
 Signed-off-by: Ming Lei <tom.leiming@gmail.com>
 ---
- drivers/md/raid1.c | 15 +++++++--------
- 1 file changed, 7 insertions(+), 8 deletions(-)
+ drivers/md/raid1.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 2013e5870761..2de0bd69d8da 100644
+index 4a208220ff0f..9371caace379 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -139,9 +139,12 @@ static void * r1buf_pool_alloc(gfp_t gfp_flags, void *data)
- 	/* If not user-requests, copy the page pointers to all bios */
- 	if (!test_bit(MD_RECOVERY_REQUESTED, &pi->mddev->recovery)) {
- 		for (i=0; i<RESYNC_PAGES ; i++)
--			for (j=1; j<pi->raid_disks; j++)
--				r1_bio->bios[j]->bi_io_vec[i].bv_page =
-+			for (j=1; j<pi->raid_disks; j++) {
-+				struct page *page =
- 					r1_bio->bios[0]->bi_io_vec[i].bv_page;
-+				get_page(page);
-+				r1_bio->bios[j]->bi_io_vec[i].bv_page = page;
-+			}
- 	}
+@@ -1970,6 +1970,7 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
+ 	struct mddev *mddev = r1_bio->mddev;
+ 	struct r1conf *conf = mddev->private;
+ 	struct bio *bio = r1_bio->bios[r1_bio->read_disk];
++	struct page **pages = get_resync_pages(bio)->pages;
+ 	sector_t sect = r1_bio->sector;
+ 	int sectors = r1_bio->sectors;
+ 	int idx = 0;
+@@ -2003,7 +2004,7 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
+ 				 */
+ 				rdev = conf->mirrors[d].rdev;
+ 				if (sync_page_io(rdev, sect, s<<9,
+-						 bio->bi_io_vec[idx].bv_page,
++						 pages[idx],
+ 						 REQ_OP_READ, 0, false)) {
+ 					success = 1;
+ 					break;
+@@ -2058,7 +2059,7 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
+ 				continue;
+ 			rdev = conf->mirrors[d].rdev;
+ 			if (r1_sync_page_io(rdev, sect, s,
+-					    bio->bi_io_vec[idx].bv_page,
++					    pages[idx],
+ 					    WRITE) == 0) {
+ 				r1_bio->bios[d]->bi_end_io = NULL;
+ 				rdev_dec_pending(rdev, mddev);
+@@ -2073,7 +2074,7 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
+ 				continue;
+ 			rdev = conf->mirrors[d].rdev;
+ 			if (r1_sync_page_io(rdev, sect, s,
+-					    bio->bi_io_vec[idx].bv_page,
++					    pages[idx],
+ 					    READ) != 0)
+ 				atomic_add(s, &rdev->corrected_errors);
+ 		}
+@@ -2149,6 +2150,8 @@ static void process_checks(struct r1bio *r1_bio)
+ 		struct bio *pbio = r1_bio->bios[primary];
+ 		struct bio *sbio = r1_bio->bios[i];
+ 		int error = sbio->bi_error;
++		struct page **ppages = get_resync_pages(pbio)->pages;
++		struct page **spages = get_resync_pages(sbio)->pages;
  
- 	r1_bio->master_bio = NULL;
-@@ -166,12 +169,8 @@ static void r1buf_pool_free(void *__r1_bio, void *data)
- 	struct r1bio *r1bio = __r1_bio;
+ 		if (sbio->bi_end_io != end_sync_read)
+ 			continue;
+@@ -2157,11 +2160,8 @@ static void process_checks(struct r1bio *r1_bio)
  
- 	for (i = 0; i < RESYNC_PAGES; i++)
--		for (j = pi->raid_disks; j-- ;) {
--			if (j == 0 ||
--			    r1bio->bios[j]->bi_io_vec[i].bv_page !=
--			    r1bio->bios[0]->bi_io_vec[i].bv_page)
--				safe_put_page(r1bio->bios[j]->bi_io_vec[i].bv_page);
--		}
-+		for (j = pi->raid_disks; j-- ;)
-+			safe_put_page(r1bio->bios[j]->bi_io_vec[i].bv_page);
- 	for (i=0 ; i < pi->raid_disks; i++)
- 		bio_put(r1bio->bios[i]);
- 
+ 		if (!error) {
+ 			for (j = vcnt; j-- ; ) {
+-				struct page *p, *s;
+-				p = pbio->bi_io_vec[j].bv_page;
+-				s = sbio->bi_io_vec[j].bv_page;
+-				if (memcmp(page_address(p),
+-					   page_address(s),
++				if (memcmp(page_address(ppages[j]),
++					   page_address(spages[j]),
+ 					   sbio->bi_io_vec[j].bv_len))
+ 					break;
+ 			}
 -- 
 2.7.4
