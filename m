@@ -1,7 +1,7 @@
 From: Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH v1 03/14] md: raid1/raid10: use bio_remove_last_page()
-Date: Fri, 24 Feb 2017 23:42:40 +0800
-Message-ID: <1487950971-1131-4-git-send-email-tom.leiming@gmail.com>
+Subject: [PATCH v1 05/14] md: prepare for managing resync I/O pages in clean way
+Date: Fri, 24 Feb 2017 23:42:42 +0800
+Message-ID: <1487950971-1131-6-git-send-email-tom.leiming@gmail.com>
 References: <1487950971-1131-1-git-send-email-tom.leiming@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1487950971-1131-1-git-send-email-tom.leiming@gmail.com>
@@ -10,49 +10,87 @@ To: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.k
 Cc: Ming Lei <tom.leiming@gmail.com>
 List-Id: linux-raid.ids
 
+Now resync I/O use bio's bec table to manage pages,
+this way is very hacky, and may not work any more
+once multipage bvec is introduced.
+
+So introduce helpers and new data structure for
+managing resync I/O pages more cleanly.
+
 Signed-off-by: Ming Lei <tom.leiming@gmail.com>
 ---
- drivers/md/raid1.c  | 3 +--
- drivers/md/raid10.c | 6 ++----
- 2 files changed, 3 insertions(+), 6 deletions(-)
+ drivers/md/md.h | 61 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 61 insertions(+)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 0628c07dd16d..2a0bf5b430c9 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -2912,8 +2912,7 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
- 						if (bio->bi_end_io==NULL)
- 							continue;
- 						/* remove last page from this bio */
--						bio->bi_vcnt--;
--						bio->bi_iter.bi_size -= len;
-+						bio_remove_last_page(bio);
- 						bio_clear_flag(bio, BIO_SEG_VALID);
- 					}
- 					goto bio_full;
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 33f6a535dc1f..125d74dba27e 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -3446,8 +3446,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
- 			     bio2 && bio2 != bio;
- 			     bio2 = bio2->bi_next) {
- 				/* remove last page from this bio */
--				bio2->bi_vcnt--;
--				bio2->bi_iter.bi_size -= len;
-+				bio_remove_last_page(bio2);
- 				bio_clear_flag(bio2, BIO_SEG_VALID);
- 			}
- 			goto bio_full;
-@@ -4537,8 +4536,7 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr,
- 			     bio2 && bio2 != bio;
- 			     bio2 = bio2->bi_next) {
- 				/* Remove last page from this bio */
--				bio2->bi_vcnt--;
--				bio2->bi_iter.bi_size -= len;
-+				bio_remove_last_page(bio2);
- 				bio_clear_flag(bio2, BIO_SEG_VALID);
- 			}
- 			goto bio_full;
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 1d63239a1be4..df18ae05838d 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -720,4 +720,65 @@ static inline void mddev_check_writesame(struct mddev *mddev, struct bio *bio)
+ #define RESYNC_BLOCK_SIZE (64*1024)
+ #define RESYNC_PAGES ((RESYNC_BLOCK_SIZE + PAGE_SIZE-1) / PAGE_SIZE)
+ 
++/* for managing resync I/O pages */
++struct resync_pages {
++	unsigned	idx;	/* for get/put page from the pool */
++	void		*raid_bio;
++	struct page	*pages[RESYNC_PAGES];
++};
++
++static inline int resync_alloc_pages(struct resync_pages *rp,
++				     gfp_t gfp_flags)
++{
++	int i;
++
++	for (i = 0; i < RESYNC_PAGES; i++) {
++		rp->pages[i] = alloc_page(gfp_flags);
++		if (!rp->pages[i])
++			goto out_free;
++	}
++
++	return 0;
++
++ out_free:
++	while (--i >= 0)
++		__free_page(rp->pages[i]);
++	return -ENOMEM;
++}
++
++static inline void resync_free_pages(struct resync_pages *rp)
++{
++	int i;
++
++	for (i = 0; i < RESYNC_PAGES; i++)
++		__free_page(rp->pages[i]);
++}
++
++static inline void resync_get_all_pages(struct resync_pages *rp)
++{
++	int i;
++
++	for (i = 0; i < RESYNC_PAGES; i++)
++		get_page(rp->pages[i]);
++}
++
++static inline void resync_store_page(struct resync_pages *rp, struct page *page)
++{
++	if (WARN_ON(!rp->idx))
++		return;
++	rp->pages[--rp->idx] = page;
++}
++
++static inline struct page *resync_fetch_page(struct resync_pages *rp)
++{
++	if (WARN_ON_ONCE(rp->idx >= RESYNC_PAGES))
++		return NULL;
++	return rp->pages[rp->idx++];
++}
++
++static inline bool resync_page_available(struct resync_pages *rp)
++{
++	return rp->idx < RESYNC_PAGES;
++}
++
+ #endif /* _MD_MD_H */
 -- 
 2.7.4
