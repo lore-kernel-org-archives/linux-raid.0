@@ -1,7 +1,7 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH 02/14] md-cluster: free md_cluster_info if node leave cluster
-Date: Fri, 24 Feb 2017 11:15:12 +0800
-Message-ID: <1487906124-20107-3-git-send-email-gqjiang@suse.com>
+Subject: [PATCH 12/14] md/bitmap: replace redundant codes with get_bitmap_from_slot
+Date: Fri, 24 Feb 2017 11:15:22 +0800
+Message-ID: <1487906124-20107-13-git-send-email-gqjiang@suse.com>
 References: <1487906124-20107-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1487906124-20107-1-git-send-email-gqjiang@suse.com>
@@ -10,27 +10,51 @@ To: linux-raid@vger.kernel.org
 Cc: shli@fb.com, neilb@suse.de, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-To avoid memory leak, we need to free the cinfo which
-is allocated when node join cluster.
+Since get_bitmap_from_slot is introduced in previous
+commit, we can use it in bitmap_copy_from_slot to
+remove redundant code.
 
 Reviewed-by: NeilBrown <neilb@suse.com>
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- drivers/md/md-cluster.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/md/bitmap.c | 16 +++++++---------
+ 1 file changed, 7 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index 03c38ed222ce..84c001063983 100644
---- a/drivers/md/md-cluster.c
-+++ b/drivers/md/md-cluster.c
-@@ -973,6 +973,7 @@ static int leave(struct mddev *mddev)
- 	lockres_free(cinfo->bitmap_lockres);
- 	unlock_all_bitmaps(mddev);
- 	dlm_release_lockspace(cinfo->lockspace, 2);
-+	kfree(cinfo);
- 	return 0;
- }
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index 67a7d399f501..b6fa55a3cff8 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -1952,14 +1952,13 @@ int bitmap_copy_from_slot(struct mddev *mddev, int slot,
+ 	int rv = 0, i, j;
+ 	sector_t block, lo = 0, hi = 0;
+ 	struct bitmap_counts *counts;
+-	struct bitmap *bitmap = bitmap_create(mddev, slot);
+-
+-	if (IS_ERR(bitmap))
+-		return PTR_ERR(bitmap);
++	struct bitmap *bitmap;
  
+-	rv = bitmap_init_from_disk(bitmap, 0);
+-	if (rv)
+-		goto err;
++	bitmap = get_bitmap_from_slot(mddev, slot);
++	if (IS_ERR(bitmap)) {
++		pr_err("%s can't get bitmap from slot %d\n", __func__, slot);
++		return -1;
++	}
+ 
+ 	counts = &bitmap->counts;
+ 	for (j = 0; j < counts->chunks; j++) {
+@@ -1986,8 +1985,7 @@ int bitmap_copy_from_slot(struct mddev *mddev, int slot,
+ 	bitmap_unplug(mddev->bitmap);
+ 	*low = lo;
+ 	*high = hi;
+-err:
+-	bitmap_free(bitmap);
++
+ 	return rv;
+ }
+ EXPORT_SYMBOL_GPL(bitmap_copy_from_slot);
 -- 
 2.6.2
 
