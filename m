@@ -1,47 +1,39 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: [BUG] non-metadata arrays cannot use more than 27 component
- devices
-Date: Fri, 24 Feb 2017 10:20:52 -0500
-Message-ID: <41ea334c-ae1c-dac6-e1a1-480d3700a588@turmel.org>
-References: <20170224040816.41f2f372.ian_bruce@mail.ru>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170224040816.41f2f372.ian_bruce@mail.ru>
-Sender: linux-raid-owner@vger.kernel.org
-To: ian_bruce@mail.ru, linux-raid@vger.kernel.org
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: [PATCH v1 01/14] block: introduce bio_segments_all()
+Date: Fri, 24 Feb 2017 23:42:38 +0800
+Message-ID: <1487950971-1131-2-git-send-email-tom.leiming@gmail.com>
+References: <1487950971-1131-1-git-send-email-tom.leiming@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1487950971-1131-1-git-send-email-tom.leiming@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Cc: Ming Lei <tom.leiming@gmail.com>
 List-Id: linux-raid.ids
 
-On 02/24/2017 07:08 AM, ian_bruce@mail.ru wrote:
-> When assembling non-metadata arrays ("mdadm --build"), the in-kernel 
-> superblock apparently defaults to the MD-RAID v0.90 type. This
-> imposes a maximum of 27 component block devices, presumably as well
-> as limits on device size.
-> 
-> mdadm does not allow you to override this default, by specifying the 
-> v1.2 superblock. It is not clear whether mdadm tells the kernel to
-> use the v0.90 superblock, or the kernel assumes this by itself. One
-> or other of them should be fixed; there does not appear to be any
-> reason why the v1.2 superblock should not be the default in this
-> case.
-> 
-> details are here:
-> 
-> https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=855871
-> 
-> This problem is easy to reproduce, even with simple hardware. You
-> can use /dev/loop devices as the array components, as explained in
-> the link.
+So that we can replace the direct access to .bi_vcnt.
 
-Considering the existence of --build is strictly to support arrays that
-predate MD raid, it seems a bit of a stretch to claim this as a bug
-instead of a feature request.
+Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+---
+ include/linux/bio.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-When you implement this feature, you might want to consider extending
-modern MD raid's support for external metadata to use RAM and then
-you could do whatever you please with the array events.
-
-See "man mdmon" for a summary of external metadata events.
-
-Phil
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 8e521194f6fc..3364b3ed90e7 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -293,6 +293,13 @@ static inline void bio_get_last_bvec(struct bio *bio, struct bio_vec *bv)
+ 		bv->bv_len = iter.bi_bvec_done;
+ }
+ 
++static inline unsigned bio_segments_all(struct bio *bio)
++{
++	WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED));
++
++	return bio->bi_vcnt;
++}
++
+ enum bip_flags {
+ 	BIP_BLOCK_INTEGRITY	= 1 << 0, /* block layer owns integrity data */
+ 	BIP_MAPPED_INTEGRITY	= 1 << 1, /* ref tag has been remapped */
+-- 
+2.7.4
