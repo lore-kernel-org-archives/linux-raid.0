@@ -1,40 +1,24 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: raid5 - adding journal to an existing device?
-Date: Sat, 25 Feb 2017 23:12:21 +0900
-Message-ID: <9447cf1f98aaade8ab5cd3f0ef724f79@admin.virtall.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v1 01/14] block: introduce bio_segments_all()
+Date: Sat, 25 Feb 2017 10:22:16 -0800
+Message-ID: <20170225182216.GB26447@infradead.org>
+References: <1487950971-1131-1-git-send-email-tom.leiming@gmail.com>
+ <1487950971-1131-2-git-send-email-tom.leiming@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1487950971-1131-2-git-send-email-tom.leiming@gmail.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-raid.ids
 
-mdadm manual specifies the following for create, build and grow modes:
+> +static inline unsigned bio_segments_all(struct bio *bio)
+> +{
+> +	WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED));
+> +
+> +	return bio->bi_vcnt;
+> +}
 
-        --write-journal
-               Specify journal device for the RAID-4/5/6 array.
-
-However:
-
-# mdadm --grow /dev/md2 --write-journal /dev/sdc1
-mdadm: :option --write-journal not valid in grow mode
-
-
-Is it not yet supported, will never be supported, or am I simply trying 
-to use it in a  wrong way?
-
-
-
-Tried the following versions:
-
-# ./mdadm -V
-mdadm - v3.4-115-ge22fe3a - 29th November 2016
-
-# mdadm -V
-mdadm - v3.4 - 28th January 2016
-
-
-Tomasz Chmielewski
-https://lxadm.com
+I don't think this helpers really adds any benefit.
