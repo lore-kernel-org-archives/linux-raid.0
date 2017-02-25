@@ -1,8 +1,8 @@
-From: Phil Turmel <philip@turmel.org>
+From: Wols Lists <antlists@youngman.org.uk>
 Subject: Re: [BUG] non-metadata arrays cannot use more than 27 component
  devices
-Date: Sat, 25 Feb 2017 18:41:36 -0500
-Message-ID: <5172e2ab-e193-477b-52c4-86fbab0d52fe@turmel.org>
+Date: Sat, 25 Feb 2017 23:55:51 +0000
+Message-ID: <58B21987.6060604@youngman.org.uk>
 References: <20170224040816.41f2f372.ian_bruce@mail.ru>
  <41ea334c-ae1c-dac6-e1a1-480d3700a588@turmel.org>
  <20170224084024.4dfe83a2.ian_bruce@mail.ru>
@@ -10,50 +10,43 @@ References: <20170224040816.41f2f372.ian_bruce@mail.ru>
  <c23b2aca-b6e6-37b8-3238-e59423d8f5a7@youngman.org.uk>
  <aee1f55b-cedf-15e9-5865-7fc0cdf9a188@turmel.org>
  <58B2137B.6070608@youngman.org.uk>
+ <5172e2ab-e193-477b-52c4-86fbab0d52fe@turmel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <58B2137B.6070608@youngman.org.uk>
+In-Reply-To: <5172e2ab-e193-477b-52c4-86fbab0d52fe@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, ian_bruce@mail.ru, linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>, ian_bruce@mail.ru, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/25/2017 06:30 PM, Wols Lists wrote:
-> On 25/02/17 22:00, Phil Turmel wrote:
+On 25/02/17 23:41, Phil Turmel wrote:
+>> Is there a sound technical reason not to go there, or is it simply a
+>> > case of "learn another tool for that job"? The less tools I have to know
+>> > the better, imho.
 
->> No. Don't go there.  There's already a technology out there that does
->> this correctly, called LVM snapshots.  And they let you resume normal
->> operations after a very brief hesitation, and the snapshot holds the
->> static image while you copy it off.
+> Um, no, imnsho.  Learn new tools when you need them.
+
+I don't have a problem with that. All too often people use the tool
+they're familiar with when it's the wrong tool. But there's a reason
+they do that - it's a familiar tool!
 > 
-> Will it let you put that snapshot on a hot-plug disk you can remove? For
-> my little system I'd quite happily mirror it off onto a hard-disk and
-> unplug it.
+> Linux raid has no formal mechanism to cleanly separate a mirror from a
+> running array, access it as a backup, and not risk corruption when
+> re-attaching it to the array.  Most filesystems write to the partition
+> when mounting, even for read-only mounts.  You cannot safely access the
+> disconnected member except via pure block reads.
 
-You can copy it off to any block device you like, or dd it to a file, or
-dd and gzip to a compressed file.  Anything you can do to copy a
-partition to backup can be used on the snapshot.
+Because to do so doesn't make sense? Or because nobody's bothered to do
+it? I get grumpy when people implement corner cases without bothering to
+implement the logically sensible options - bit like those extremely
+annoying dialog boxes that give you three choices, "yes", "no", "yes to
+all". What about no to all?
 
-> Oh - and I'm not running lvm. Not that I think there's anything wrong
-> with that, it's just yet another layer that I'm not (currently)
-> comfortable with.
+I feel like mirror-raid is perfect for doing backups. I take your point
+that linux hasn't implemented that feature (particularly well), but
+surely it's a feature that *should* be there. I know I know - "patches
+welcome" :-)
 
-So you know how to use a hammer, and don't feel comfortable with using a
-handsaw, so you're going to smash a board in two instead of sawing it?
-
-Ok, maybe that was too facetious. (-:
-
-> Is there a sound technical reason not to go there, or is it simply a
-> case of "learn another tool for that job"? The less tools I have to know
-> the better, imho.
-
-Um, no, imnsho.  Learn new tools when you need them.
-
-Linux raid has no formal mechanism to cleanly separate a mirror from a
-running array, access it as a backup, and not risk corruption when
-re-attaching it to the array.  Most filesystems write to the partition
-when mounting, even for read-only mounts.  You cannot safely access the
-disconnected member except via pure block reads.
-
-Phil
+Cheers,
+Wol
