@@ -1,33 +1,44 @@
-From: Stan Hoeppner <stan@hardwarefreak.org>
-Subject: Re: LSI RAID
-Date: Mon, 27 Feb 2017 17:04:43 -0600
-Message-ID: <e1ec7f7b-ca15-bb49-971c-a12d09a761ee@hardwarefreak.org>
-References: <CAJH6TXj+766Xj4w8BAOoq9wQ_Vym_JD66pbqRgpXriNguG6zTQ@mail.gmail.com>
- <CAJH6TXhwfoWKM2=0v0+qhUWp=WppF5qO7zm5Y1-vS4zWQHA5WA@mail.gmail.com>
+From: "Peter Sangas" <pete@wnsdev.com>
+Subject: GRUB warning after replacing disk drive in RAID1
+Date: Mon, 27 Feb 2017 15:37:24 -0800
+Message-ID: <002f01d29152$737b4550$5a71cff0$@wnsdev.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain;
+        charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJH6TXhwfoWKM2=0v0+qhUWp=WppF5qO7zm5Y1-vS4zWQHA5WA@mail.gmail.com>
+Content-Language: en-us
 Sender: linux-raid-owner@vger.kernel.org
-To: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-No, you must use the LSI tools.
+Hi all.
+
+I have a RAID1 with 3 disks sda,sdb,sdc.  After replacing sdc and re-syncing
+it to the array I issued the following command to load grub but I get this 
+warning:
+
+grub-install /dev/sdc
+
+Installing for i386-pc platform.
+grub-install: warning: Couldn't find physical volume `(null)'. Some modules
+may be missing from core image..
+grub-install: warning: Couldn't find physical volume `(null)'. Some modules
+may be missing from core image..
+Installation finished. No error reported.
+
+Does anyone know why I get this warning and how to avoid it.
+
+uname -a 
+Linux green 4.4.0-47-generic #68-Ubuntu SMP Wed Oct 26 19:39:52 UTC 2016
+x86_64 x86_64 x86_64 GNU/Linux
+
+mdadm -V
+mdadm - v3.3 - 3rd September 2013
 
 
-On 02/27/2017 10:02 AM, Gandalf Corvotempesta wrote:
-> anyone?
->
-> 2017-02-13 11:33 GMT+01:00 Gandalf Corvotempesta
-> <gandalf.corvotempesta@gmail.com>:
->> Hi to all
->> silly question: i've read that LSI/PERC Hardware controller supports DDF.
->>
->> Would be possible, for mdadm, to use a RAID created with an LSI/PERC
->> controller supporting DDF ?
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Pete
+
+
 
