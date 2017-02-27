@@ -1,39 +1,39 @@
-From: zhilong <zlliu@suse.com>
-Subject: exposed and pushed the mdadm/test improvement progress
-Date: Mon, 27 Feb 2017 20:37:33 +0800
-Message-ID: <a81137d5-3042-e983-fe0e-1b9a0de836ff@suse.com>
+From: Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH v5 4/4] dt-bindings: Add DT bindings document for
+ Broadcom SBA RAID driver
+Date: Mon, 27 Feb 2017 08:47:38 -0600
+Message-ID: <20170227144738.szmppcir6bvav4bb@rob-hp-laptop>
+References: <1487227695-965-1-git-send-email-anup.patel@broadcom.com>
+ <1487227695-965-5-git-send-email-anup.patel@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Guoqing Jiang <gqjiang@suse.com>
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Disposition: inline
+In-Reply-To: <1487227695-965-5-git-send-email-anup.patel@broadcom.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Anup Patel <anup.patel@broadcom.com>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org, Herbert Xu <herbert@gondor.apana.org.au>, Scott Branden <sbranden@broadcom.com>, Vinod Koul <vinod.koul@intel.com>, Ray Jui <rjui@broadcom.com>, Jassi Brar <jassisinghbrar@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Jon Mason <jonmason@broadcom.com>, bcm-kernel-feedback-list@broadcom.com, linux-crypto@vger.kernel.org, Rob Rice <rob.rice@broadcom.com>, dmaengine@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, "David S . Miller" <davem@davemloft.net>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-raid.ids
 
-hi, Neil and Jes;
+On Thu, Feb 16, 2017 at 12:18:15PM +0530, Anup Patel wrote:
+> This patch adds the DT bindings document for newly added Broadcom
+> SBA RAID driver.
+> 
+> Signed-off-by: Anup Patel <anup.patel@broadcom.com>
+> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+> ---
+>  .../devicetree/bindings/dma/brcm,iproc-sba.txt     | 29 ++++++++++++++++++++++
+>  1 file changed, 29 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/dma/brcm,iproc-sba.txt
 
-    Several weeks ago, the mdadm version 4.0 has announced and we talked 
-about how to improve the testing part in that mail-tree.
-I have spent two weeks to verify the testing part in different testing 
-environments include of
-    kernel:                                    mdadm: 
-                                   filesystem:
-    SUSE 12 SP2 Enterprise      mdadm 4.0 source code       ext3, ext4 
-and btrfs
-    linux upstream 4.10             mdadm 
-4.0                             ext3, ext4 and btrfs
-
-    According to the two weeks' testing and my understanding, my first 
-step has done to redraft the 'test' script, as my purpose,
-I mainly made it easier to read, added some important checking I thought 
-and changed some func(). After the 'test' file has done,
-the second part is to improve every case under tests/ folder.
-
-    The 'tests/check' and 'tests/testdev' files would be deleted after 
-finish the testing part improvement. I have added comments in the
-RFC patch, I wanna ask for all ideas about the testing improvement in 
-the mailing-list, would you have any suggestion?
-
-Thanks very much,
--Zhilong
+Acked-by: Rob Herring <robh@kernel.org>
