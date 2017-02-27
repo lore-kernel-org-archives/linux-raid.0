@@ -1,176 +1,39 @@
-From: Matthias Dahl <ml_linux-raid@binary-island.eu>
-Subject: Re: IMSM RAID10: Rebuild/Resync difference on Linux vs Windows
-Date: Mon, 27 Feb 2017 10:30:37 +0100
-Message-ID: <3bd897c2-f916-b315-50e5-5f96ae881c10@binary-island.eu>
-References: <055fbb58-fb5f-5d69-0974-aaa234c99028@binary-island.eu>
- <4f749c02-3478-cafc-2ae4-40af25459f65@intel.com>
+From: zhilong <zlliu@suse.com>
+Subject: exposed and pushed the mdadm/test improvement progress
+Date: Mon, 27 Feb 2017 20:37:33 +0800
+Message-ID: <a81137d5-3042-e983-fe0e-1b9a0de836ff@suse.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------998FBD2C06376A1E0CEFDD42"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4f749c02-3478-cafc-2ae4-40af25459f65@intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, linux-raid@vger.kernel.org
-List-Id: linux-raid.ids
-
-This is a multi-part message in MIME format.
---------------998FBD2C06376A1E0CEFDD42
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>, Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Guoqing Jiang <gqjiang@suse.com>
+List-Id: linux-raid.ids
 
-Hello Artur...
+hi, Neil and Jes;
 
-On 23/02/17 16:27, Artur Paszkiewicz wrote:
+    Several weeks ago, the mdadm version 4.0 has announced and we talked 
+about how to improve the testing part in that mail-tree.
+I have spent two weeks to verify the testing part in different testing 
+environments include of
+    kernel:                                    mdadm: 
+                                   filesystem:
+    SUSE 12 SP2 Enterprise      mdadm 4.0 source code       ext3, ext4 
+and btrfs
+    linux upstream 4.10             mdadm 
+4.0                             ext3, ext4 and btrfs
 
-> Windows IRSM should not make any "shortcuts" in this case.
+    According to the two weeks' testing and my understanding, my first 
+step has done to redraft the 'test' script, as my purpose,
+I mainly made it easier to read, added some important checking I thought 
+and changed some func(). After the 'test' file has done,
+the second part is to improve every case under tests/ folder.
 
-I expected and dreaded that answer equally. ;-)
+    The 'tests/check' and 'tests/testdev' files would be deleted after 
+finish the testing part improvement. I have added comments in the
+RFC patch, I wanna ask for all ideas about the testing improvement in 
+the mailing-list, would you have any suggestion?
 
-> [...] When it finishes you can check md/mismatch_cnt if there were any
-> unsynchronized blocks.
-
-I did a resync completely on Linux and the mismatch_cnt stayed at zero,
-which is nice to know but does unfortunately not change the fact that
-there was a huge jump going from Linux to Windows with regards to sync
-completion the last time around. :(
-
-Knowing almost nothing about the on-disk (meta-data) structure here, I'd
-guess that having an in-sync raid could also be completely due to luck
-in this case.
-
-> Can you share the output of mdadm -E <raid disks> and
- > mdadm --detail-platform?
-
-It is attached. If there is anything else you need, please let me know.
-The data was pulled, btw, before I did the "test resync" above -- if
-that is relevant to you.
-
-> What version of RST software are you using on Windows?
-
-14.8.0.1042 on Win10 Pro (x86_64)
-
-Thanks,
-Matthias
-
--- 
-Dipl.-Inf. (FH) Matthias Dahl | Software Engineer | binary-island.eu
-  Hire me for contract work: Open Source, Proprietary, Web/Mobile/Desktop
-
---------------998FBD2C06376A1E0CEFDD42
-Content-Type: text/plain; charset=UTF-8;
- name="raid-details.txt"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="raid-details.txt"
-
-ICAgICAgIFBsYXRmb3JtIDogSW50ZWwoUikgUmFwaWQgU3RvcmFnZSBUZWNobm9sb2d5CiAg
-ICAgICAgVmVyc2lvbiA6IDE0LjYuMC4yMjg1CiAgICBSQUlEIExldmVscyA6IHJhaWQwIHJh
-aWQxIHJhaWQxMCByYWlkNQogICAgQ2h1bmsgU2l6ZXMgOiA0ayA4ayAxNmsgMzJrIDY0ayAx
-MjhrCiAgICAyVEIgdm9sdW1lcyA6IHN1cHBvcnRlZAogICAgICAyVEIgZGlza3MgOiBzdXBw
-b3J0ZWQKICAgICAgTWF4IERpc2tzIDogNwogICAgTWF4IFZvbHVtZXMgOiAyIHBlciBhcnJh
-eSwgNCBwZXIgY29udHJvbGxlcgogSS9PIENvbnRyb2xsZXIgOiAvc3lzL2RldmljZXMvcGNp
-MDAwMDowMC8wMDAwOjAwOjE3LjAgKFNBVEEpCiAgICAgICAgICBQb3J0NSA6IC9kZXYvc2Rk
-IChaMVg2OUdDMikKICAgICAgICAgIFBvcnQzIDogL2Rldi9zZGIgKFoxWDZWRUVRKQogICAg
-ICAgICAgUG9ydDQgOiAvZGV2L3NkYyAoWjFYNjlIQjIpCiAgICAgICAgICBQb3J0MSA6IC0g
-bm9uLWRpc2sgZGV2aWNlIChQSU9ORUVSIEJELVJXICAgQkRSLVMwOSkgLQogICAgICAgICAg
-UG9ydDIgOiAvZGV2L3NkYSAoWjFYNlY1SlopCiAgICAgICAgICBQb3J0MCA6IC0gbm8gZGV2
-aWNlIGF0dGFjaGVkIC0KCi9kZXYvc2RhOgogICAgICAgICAgTWFnaWMgOiBJbnRlbCBSYWlk
-IElTTSBDZmcgU2lnLgogICAgICAgIFZlcnNpb24gOiAxLjMuMDAKICAgIE9yaWcgRmFtaWx5
-IDogOGJmMzNhYTQKICAgICAgICAgRmFtaWx5IDogOGJmMzNhYTQKICAgICBHZW5lcmF0aW9u
-IDogMDAzMTJhMmMKICAgICBBdHRyaWJ1dGVzIDogQWxsIHN1cHBvcnRlZAogICAgICAgICAg
-IFVVSUQgOiA5YzQ1YTVhNzo4M2MzNjRkYjpmMWU4YjQ3YzplOWFlZTUzZgogICAgICAgQ2hl
-Y2tzdW0gOiA2NWMwODRiOCBjb3JyZWN0CiAgICBNUEIgU2VjdG9ycyA6IDIKICAgICAgICAg
-IERpc2tzIDogNAogICBSQUlEIERldmljZXMgOiAxCgogIERpc2swMCBTZXJpYWwgOiBaMVg2
-VjVKWgogICAgICAgICAgU3RhdGUgOiBhY3RpdmUKICAgICAgICAgICAgIElkIDogMDAwMDAw
-MDIKICAgIFVzYWJsZSBTaXplIDogMzkwNzAyNDEzNiAoMTg2My4wMSBHaUIgMjAwMC40MCBH
-QikKCltNYWluUjEwXToKICAgICAgICAgICBVVUlEIDogOTJhZGY0YjA6MTI5YzNiOTQ6OWEy
-YjU2MTA6ZDdjOGM1ZDUKICAgICBSQUlEIExldmVsIDogMTAKICAgICAgICBNZW1iZXJzIDog
-NAogICAgICAgICAgU2xvdHMgOiBbVVVVVV0KICAgIEZhaWxlZCBkaXNrIDogbm9uZQogICAg
-ICBUaGlzIFNsb3QgOiAwCiAgICAgQXJyYXkgU2l6ZSA6IDc4MTQwNDc3NDQgKDM3MjYuMDMg
-R2lCIDQwMDAuNzkgR0IpCiAgIFBlciBEZXYgU2l6ZSA6IDM5MDcwMjQxMzYgKDE4NjMuMDEg
-R2lCIDIwMDAuNDAgR0IpCiAgU2VjdG9yIE9mZnNldCA6IDAKICAgIE51bSBTdHJpcGVzIDog
-MTUyNjE4MTIKICAgICBDaHVuayBTaXplIDogNjQgS2lCCiAgICAgICBSZXNlcnZlZCA6IDAK
-ICBNaWdyYXRlIFN0YXRlIDogaWRsZQogICAgICBNYXAgU3RhdGUgOiBub3JtYWwKICAgIERp
-cnR5IFN0YXRlIDogZGlydHkKCiAgRGlzazAxIFNlcmlhbCA6IFoxWDZWRUVRCiAgICAgICAg
-ICBTdGF0ZSA6IGFjdGl2ZQogICAgICAgICAgICAgSWQgOiAwMDAwMDAwMwogICAgVXNhYmxl
-IFNpemUgOiAzOTA3MDI0MTM2ICgxODYzLjAxIEdpQiAyMDAwLjQwIEdCKQoKICBEaXNrMDIg
-U2VyaWFsIDogWjFYNjlIQjIKICAgICAgICAgIFN0YXRlIDogYWN0aXZlCiAgICAgICAgICAg
-ICBJZCA6IDAwMDAwMDA0CiAgICBVc2FibGUgU2l6ZSA6IDM5MDcwMjQxMzYgKDE4NjMuMDEg
-R2lCIDIwMDAuNDAgR0IpCgogIERpc2swMyBTZXJpYWwgOiBaMVg2OUdDMgogICAgICAgICAg
-U3RhdGUgOiBhY3RpdmUKICAgICAgICAgICAgIElkIDogMDAwMDAwMDUKICAgIFVzYWJsZSBT
-aXplIDogMzkwNzAyNDEzNiAoMTg2My4wMSBHaUIgMjAwMC40MCBHQikKCi9kZXYvc2RiOgog
-ICAgICAgICAgTWFnaWMgOiBJbnRlbCBSYWlkIElTTSBDZmcgU2lnLgogICAgICAgIFZlcnNp
-b24gOiAxLjMuMDAKICAgIE9yaWcgRmFtaWx5IDogOGJmMzNhYTQKICAgICAgICAgRmFtaWx5
-IDogOGJmMzNhYTQKICAgICBHZW5lcmF0aW9uIDogMDAzMTJhMmMKICAgICBBdHRyaWJ1dGVz
-IDogQWxsIHN1cHBvcnRlZAogICAgICAgICAgIFVVSUQgOiA5YzQ1YTVhNzo4M2MzNjRkYjpm
-MWU4YjQ3YzplOWFlZTUzZgogICAgICAgQ2hlY2tzdW0gOiA2NWMwODRiOCBjb3JyZWN0CiAg
-ICBNUEIgU2VjdG9ycyA6IDIKICAgICAgICAgIERpc2tzIDogNAogICBSQUlEIERldmljZXMg
-OiAxCgogIERpc2swMSBTZXJpYWwgOiBaMVg2VkVFUQogICAgICAgICAgU3RhdGUgOiBhY3Rp
-dmUKICAgICAgICAgICAgIElkIDogMDAwMDAwMDMKICAgIFVzYWJsZSBTaXplIDogMzkwNzAy
-NDEzNiAoMTg2My4wMSBHaUIgMjAwMC40MCBHQikKCltNYWluUjEwXToKICAgICAgICAgICBV
-VUlEIDogOTJhZGY0YjA6MTI5YzNiOTQ6OWEyYjU2MTA6ZDdjOGM1ZDUKICAgICBSQUlEIExl
-dmVsIDogMTAKICAgICAgICBNZW1iZXJzIDogNAogICAgICAgICAgU2xvdHMgOiBbVVVVVV0K
-ICAgIEZhaWxlZCBkaXNrIDogbm9uZQogICAgICBUaGlzIFNsb3QgOiAxCiAgICAgQXJyYXkg
-U2l6ZSA6IDc4MTQwNDc3NDQgKDM3MjYuMDMgR2lCIDQwMDAuNzkgR0IpCiAgIFBlciBEZXYg
-U2l6ZSA6IDM5MDcwMjQxMzYgKDE4NjMuMDEgR2lCIDIwMDAuNDAgR0IpCiAgU2VjdG9yIE9m
-ZnNldCA6IDAKICAgIE51bSBTdHJpcGVzIDogMTUyNjE4MTIKICAgICBDaHVuayBTaXplIDog
-NjQgS2lCCiAgICAgICBSZXNlcnZlZCA6IDAKICBNaWdyYXRlIFN0YXRlIDogaWRsZQogICAg
-ICBNYXAgU3RhdGUgOiBub3JtYWwKICAgIERpcnR5IFN0YXRlIDogZGlydHkKCiAgRGlzazAw
-IFNlcmlhbCA6IFoxWDZWNUpaCiAgICAgICAgICBTdGF0ZSA6IGFjdGl2ZQogICAgICAgICAg
-ICAgSWQgOiAwMDAwMDAwMgogICAgVXNhYmxlIFNpemUgOiAzOTA3MDI0MTM2ICgxODYzLjAx
-IEdpQiAyMDAwLjQwIEdCKQoKICBEaXNrMDIgU2VyaWFsIDogWjFYNjlIQjIKICAgICAgICAg
-IFN0YXRlIDogYWN0aXZlCiAgICAgICAgICAgICBJZCA6IDAwMDAwMDA0CiAgICBVc2FibGUg
-U2l6ZSA6IDM5MDcwMjQxMzYgKDE4NjMuMDEgR2lCIDIwMDAuNDAgR0IpCgogIERpc2swMyBT
-ZXJpYWwgOiBaMVg2OUdDMgogICAgICAgICAgU3RhdGUgOiBhY3RpdmUKICAgICAgICAgICAg
-IElkIDogMDAwMDAwMDUKICAgIFVzYWJsZSBTaXplIDogMzkwNzAyNDEzNiAoMTg2My4wMSBH
-aUIgMjAwMC40MCBHQikKCi9kZXYvc2RjOgogICAgICAgICAgTWFnaWMgOiBJbnRlbCBSYWlk
-IElTTSBDZmcgU2lnLgogICAgICAgIFZlcnNpb24gOiAxLjMuMDAKICAgIE9yaWcgRmFtaWx5
-IDogOGJmMzNhYTQKICAgICAgICAgRmFtaWx5IDogOGJmMzNhYTQKICAgICBHZW5lcmF0aW9u
-IDogMDAzMTJhMmUKICAgICBBdHRyaWJ1dGVzIDogQWxsIHN1cHBvcnRlZAogICAgICAgICAg
-IFVVSUQgOiA5YzQ1YTVhNzo4M2MzNjRkYjpmMWU4YjQ3YzplOWFlZTUzZgogICAgICAgQ2hl
-Y2tzdW0gOiA2NWMwODRiYSBjb3JyZWN0CiAgICBNUEIgU2VjdG9ycyA6IDIKICAgICAgICAg
-IERpc2tzIDogNAogICBSQUlEIERldmljZXMgOiAxCgogIERpc2swMiBTZXJpYWwgOiBaMVg2
-OUhCMgogICAgICAgICAgU3RhdGUgOiBhY3RpdmUKICAgICAgICAgICAgIElkIDogMDAwMDAw
-MDQKICAgIFVzYWJsZSBTaXplIDogMzkwNzAyNDEzNiAoMTg2My4wMSBHaUIgMjAwMC40MCBH
-QikKCltNYWluUjEwXToKICAgICAgICAgICBVVUlEIDogOTJhZGY0YjA6MTI5YzNiOTQ6OWEy
-YjU2MTA6ZDdjOGM1ZDUKICAgICBSQUlEIExldmVsIDogMTAKICAgICAgICBNZW1iZXJzIDog
-NAogICAgICAgICAgU2xvdHMgOiBbVVVVVV0KICAgIEZhaWxlZCBkaXNrIDogbm9uZQogICAg
-ICBUaGlzIFNsb3QgOiAyCiAgICAgQXJyYXkgU2l6ZSA6IDc4MTQwNDc3NDQgKDM3MjYuMDMg
-R2lCIDQwMDAuNzkgR0IpCiAgIFBlciBEZXYgU2l6ZSA6IDM5MDcwMjQxMzYgKDE4NjMuMDEg
-R2lCIDIwMDAuNDAgR0IpCiAgU2VjdG9yIE9mZnNldCA6IDAKICAgIE51bSBTdHJpcGVzIDog
-MTUyNjE4MTIKICAgICBDaHVuayBTaXplIDogNjQgS2lCCiAgICAgICBSZXNlcnZlZCA6IDAK
-ICBNaWdyYXRlIFN0YXRlIDogaWRsZQogICAgICBNYXAgU3RhdGUgOiBub3JtYWwKICAgIERp
-cnR5IFN0YXRlIDogZGlydHkKCiAgRGlzazAwIFNlcmlhbCA6IFoxWDZWNUpaCiAgICAgICAg
-ICBTdGF0ZSA6IGFjdGl2ZQogICAgICAgICAgICAgSWQgOiAwMDAwMDAwMgogICAgVXNhYmxl
-IFNpemUgOiAzOTA3MDI0MTM2ICgxODYzLjAxIEdpQiAyMDAwLjQwIEdCKQoKICBEaXNrMDEg
-U2VyaWFsIDogWjFYNlZFRVEKICAgICAgICAgIFN0YXRlIDogYWN0aXZlCiAgICAgICAgICAg
-ICBJZCA6IDAwMDAwMDAzCiAgICBVc2FibGUgU2l6ZSA6IDM5MDcwMjQxMzYgKDE4NjMuMDEg
-R2lCIDIwMDAuNDAgR0IpCgogIERpc2swMyBTZXJpYWwgOiBaMVg2OUdDMgogICAgICAgICAg
-U3RhdGUgOiBhY3RpdmUKICAgICAgICAgICAgIElkIDogMDAwMDAwMDUKICAgIFVzYWJsZSBT
-aXplIDogMzkwNzAyNDEzNiAoMTg2My4wMSBHaUIgMjAwMC40MCBHQikKCi9kZXYvc2RkOgog
-ICAgICAgICAgTWFnaWMgOiBJbnRlbCBSYWlkIElTTSBDZmcgU2lnLgogICAgICAgIFZlcnNp
-b24gOiAxLjMuMDAKICAgIE9yaWcgRmFtaWx5IDogOGJmMzNhYTQKICAgICAgICAgRmFtaWx5
-IDogOGJmMzNhYTQKICAgICBHZW5lcmF0aW9uIDogMDAzMTJhMmYKICAgICBBdHRyaWJ1dGVz
-IDogQWxsIHN1cHBvcnRlZAogICAgICAgICAgIFVVSUQgOiA5YzQ1YTVhNzo4M2MzNjRkYjpm
-MWU4YjQ3YzplOWFlZTUzZgogICAgICAgQ2hlY2tzdW0gOiA2NWJmODRiYiBjb3JyZWN0CiAg
-ICBNUEIgU2VjdG9ycyA6IDIKICAgICAgICAgIERpc2tzIDogNAogICBSQUlEIERldmljZXMg
-OiAxCgogIERpc2swMyBTZXJpYWwgOiBaMVg2OUdDMgogICAgICAgICAgU3RhdGUgOiBhY3Rp
-dmUKICAgICAgICAgICAgIElkIDogMDAwMDAwMDUKICAgIFVzYWJsZSBTaXplIDogMzkwNzAy
-NDEzNiAoMTg2My4wMSBHaUIgMjAwMC40MCBHQikKCltNYWluUjEwXToKICAgICAgICAgICBV
-VUlEIDogOTJhZGY0YjA6MTI5YzNiOTQ6OWEyYjU2MTA6ZDdjOGM1ZDUKICAgICBSQUlEIExl
-dmVsIDogMTAKICAgICAgICBNZW1iZXJzIDogNAogICAgICAgICAgU2xvdHMgOiBbVVVVVV0K
-ICAgIEZhaWxlZCBkaXNrIDogbm9uZQogICAgICBUaGlzIFNsb3QgOiAzCiAgICAgQXJyYXkg
-U2l6ZSA6IDc4MTQwNDc3NDQgKDM3MjYuMDMgR2lCIDQwMDAuNzkgR0IpCiAgIFBlciBEZXYg
-U2l6ZSA6IDM5MDcwMjQxMzYgKDE4NjMuMDEgR2lCIDIwMDAuNDAgR0IpCiAgU2VjdG9yIE9m
-ZnNldCA6IDAKICAgIE51bSBTdHJpcGVzIDogMTUyNjE4MTIKICAgICBDaHVuayBTaXplIDog
-NjQgS2lCCiAgICAgICBSZXNlcnZlZCA6IDAKICBNaWdyYXRlIFN0YXRlIDogaWRsZQogICAg
-ICBNYXAgU3RhdGUgOiBub3JtYWwKICAgIERpcnR5IFN0YXRlIDogY2xlYW4KCiAgRGlzazAw
-IFNlcmlhbCA6IFoxWDZWNUpaCiAgICAgICAgICBTdGF0ZSA6IGFjdGl2ZQogICAgICAgICAg
-ICAgSWQgOiAwMDAwMDAwMgogICAgVXNhYmxlIFNpemUgOiAzOTA3MDI0MTM2ICgxODYzLjAx
-IEdpQiAyMDAwLjQwIEdCKQoKICBEaXNrMDEgU2VyaWFsIDogWjFYNlZFRVEKICAgICAgICAg
-IFN0YXRlIDogYWN0aXZlCiAgICAgICAgICAgICBJZCA6IDAwMDAwMDAzCiAgICBVc2FibGUg
-U2l6ZSA6IDM5MDcwMjQxMzYgKDE4NjMuMDEgR2lCIDIwMDAuNDAgR0IpCgogIERpc2swMiBT
-ZXJpYWwgOiBaMVg2OUhCMgogICAgICAgICAgU3RhdGUgOiBhY3RpdmUKICAgICAgICAgICAg
-IElkIDogMDAwMDAwMDQKICAgIFVzYWJsZSBTaXplIDogMzkwNzAyNDEzNiAoMTg2My4wMSBH
-aUIgMjAwMC40MCBHQikK
---------------998FBD2C06376A1E0CEFDD42--
+Thanks very much,
+-Zhilong
