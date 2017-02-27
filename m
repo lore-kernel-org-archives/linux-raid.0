@@ -1,74 +1,176 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [BUG] non-metadata arrays cannot use more than 27 component devices
-Date: Mon, 27 Feb 2017 16:55:56 +1100
-Message-ID: <87y3wsp47n.fsf@notabene.neil.brown.name>
-References: <20170224040816.41f2f372.ian_bruce@mail.ru>
+From: Matthias Dahl <ml_linux-raid@binary-island.eu>
+Subject: Re: IMSM RAID10: Rebuild/Resync difference on Linux vs Windows
+Date: Mon, 27 Feb 2017 10:30:37 +0100
+Message-ID: <3bd897c2-f916-b315-50e5-5f96ae881c10@binary-island.eu>
+References: <055fbb58-fb5f-5d69-0974-aaa234c99028@binary-island.eu>
+ <4f749c02-3478-cafc-2ae4-40af25459f65@intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: multipart/mixed;
+ boundary="------------998FBD2C06376A1E0CEFDD42"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170224040816.41f2f372.ian_bruce@mail.ru>
+In-Reply-To: <4f749c02-3478-cafc-2ae4-40af25459f65@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: ian_bruce@mail.ru, linux-raid@vger.kernel.org
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This is a multi-part message in MIME format.
+--------------998FBD2C06376A1E0CEFDD42
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Fri, Feb 24 2017, ian_bruce@mail.ru wrote:
+Hello Artur...
 
-> When assembling non-metadata arrays ("mdadm --build"), the in-kernel
-> superblock apparently defaults to the MD-RAID v0.90 type. This imposes a
-> maximum of 27 component block devices, presumably as well as limits on
-> device size.
->
-> mdadm does not allow you to override this default, by specifying the
-> v1.2 superblock. It is not clear whether mdadm tells the kernel to use
-> the v0.90 superblock, or the kernel assumes this by itself. One or other
-> of them should be fixed; there does not appear to be any reason why the
-> v1.2 superblock should not be the default in this case.
+On 23/02/17 16:27, Artur Paszkiewicz wrote:
 
-Can you see if this change improves the behavior for you?
+> Windows IRSM should not make any "shortcuts" in this case.
 
-NeilBrown
+I expected and dreaded that answer equally. ;-)
 
+> [...] When it finishes you can check md/mismatch_cnt if there were any
+> unsynchronized blocks.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index ba485dcf1064..e0ac7f5a8e68 100644
-=2D-- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -6464,9 +6464,8 @@ static int set_array_info(struct mddev *mddev, mdu_ar=
-ray_info_t *info)
- 	mddev->layout        =3D info->layout;
- 	mddev->chunk_sectors =3D info->chunk_size >> 9;
-=20
-=2D	mddev->max_disks     =3D MD_SB_DISKS;
-=2D
- 	if (mddev->persistent) {
-+		mddev->max_disks     =3D MD_SB_DISKS;
- 		mddev->flags         =3D 0;
- 		mddev->sb_flags         =3D 0;
- 	}
+I did a resync completely on Linux and the mismatch_cnt stayed at zero,
+which is nice to know but does unfortunately not change the fact that
+there was a huge jump going from Linux to Windows with regards to sync
+completion the last time around. :(
 
+Knowing almost nothing about the on-disk (meta-data) structure here, I'd
+guess that having an in-sync raid could also be completely due to luck
+in this case.
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+> Can you share the output of mdadm -E <raid disks> and
+ > mdadm --detail-platform?
 
------BEGIN PGP SIGNATURE-----
+It is attached. If there is anything else you need, please let me know.
+The data was pulled, btw, before I did the "test resync" above -- if
+that is relevant to you.
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlizv2wACgkQOeye3VZi
-gbkuVw/7BujPVlaJSLiJnPA6HTlCr6qPOK3j+FH22MJHhygF116HUyObh37bWKuM
-NBGjgza22XEialxu+mqL2iEKPStAIavc2aUbCapfskQAQTi9netCORk3uc70gosu
-RUTuqi79F03WPOgFjvJK8q38RHd6NNcXpUeFenO4Q/wZ0y3YmDGgkOcDGe/15jVB
-Zd9GHQ7790pvJGqEWwcBc/Hfk0LptjlbG04CaC1iVp94Vokc6CH5BfPAakQyJMPz
-fwVlxXVCwn8Eqs7S5KlfwkN3KkyyKzL0VJPHVrmUegR1fN9jG/OSL9bfLAi0//UI
-54E8gdol0VUSMT/x/mLPNTK57WSnHHH5PM3pP40Bd8CrqJtvblFiIPmUqpvGBBLF
-A6We2L+KWbSJkbhULIKNKQ+pQo5tNyXc0cYFNUcBtFdYL4GXD3qs8wnqEupwqGpj
-IHI3lTFdEVbXUXvmTtdODtCZFpq59fr1xsScTkBcUqdv9M2hISlaqwEY0PzA6jZp
-Mtnc5jaWe4h+gqx8zde2K/DAm7uwJ3XYqp6a1sZWDbkO+srWmPlJ1IV/iOPrl666
-oFPlKqUzsPulBaQuI8BmG5kjuxo8zrDgPVogkJkNLMKLa2OW5shdZ0vdGUZHlA9u
-HRV0N/Tj2ox1QtZhXZ9nYgvLC7nyoY1Oo5oyUB50c4Y6ISdmKkw=
-=yINy
------END PGP SIGNATURE-----
---=-=-=--
+> What version of RST software are you using on Windows?
+
+14.8.0.1042 on Win10 Pro (x86_64)
+
+Thanks,
+Matthias
+
+-- 
+Dipl.-Inf. (FH) Matthias Dahl | Software Engineer | binary-island.eu
+  Hire me for contract work: Open Source, Proprietary, Web/Mobile/Desktop
+
+--------------998FBD2C06376A1E0CEFDD42
+Content-Type: text/plain; charset=UTF-8;
+ name="raid-details.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="raid-details.txt"
+
+ICAgICAgIFBsYXRmb3JtIDogSW50ZWwoUikgUmFwaWQgU3RvcmFnZSBUZWNobm9sb2d5CiAg
+ICAgICAgVmVyc2lvbiA6IDE0LjYuMC4yMjg1CiAgICBSQUlEIExldmVscyA6IHJhaWQwIHJh
+aWQxIHJhaWQxMCByYWlkNQogICAgQ2h1bmsgU2l6ZXMgOiA0ayA4ayAxNmsgMzJrIDY0ayAx
+MjhrCiAgICAyVEIgdm9sdW1lcyA6IHN1cHBvcnRlZAogICAgICAyVEIgZGlza3MgOiBzdXBw
+b3J0ZWQKICAgICAgTWF4IERpc2tzIDogNwogICAgTWF4IFZvbHVtZXMgOiAyIHBlciBhcnJh
+eSwgNCBwZXIgY29udHJvbGxlcgogSS9PIENvbnRyb2xsZXIgOiAvc3lzL2RldmljZXMvcGNp
+MDAwMDowMC8wMDAwOjAwOjE3LjAgKFNBVEEpCiAgICAgICAgICBQb3J0NSA6IC9kZXYvc2Rk
+IChaMVg2OUdDMikKICAgICAgICAgIFBvcnQzIDogL2Rldi9zZGIgKFoxWDZWRUVRKQogICAg
+ICAgICAgUG9ydDQgOiAvZGV2L3NkYyAoWjFYNjlIQjIpCiAgICAgICAgICBQb3J0MSA6IC0g
+bm9uLWRpc2sgZGV2aWNlIChQSU9ORUVSIEJELVJXICAgQkRSLVMwOSkgLQogICAgICAgICAg
+UG9ydDIgOiAvZGV2L3NkYSAoWjFYNlY1SlopCiAgICAgICAgICBQb3J0MCA6IC0gbm8gZGV2
+aWNlIGF0dGFjaGVkIC0KCi9kZXYvc2RhOgogICAgICAgICAgTWFnaWMgOiBJbnRlbCBSYWlk
+IElTTSBDZmcgU2lnLgogICAgICAgIFZlcnNpb24gOiAxLjMuMDAKICAgIE9yaWcgRmFtaWx5
+IDogOGJmMzNhYTQKICAgICAgICAgRmFtaWx5IDogOGJmMzNhYTQKICAgICBHZW5lcmF0aW9u
+IDogMDAzMTJhMmMKICAgICBBdHRyaWJ1dGVzIDogQWxsIHN1cHBvcnRlZAogICAgICAgICAg
+IFVVSUQgOiA5YzQ1YTVhNzo4M2MzNjRkYjpmMWU4YjQ3YzplOWFlZTUzZgogICAgICAgQ2hl
+Y2tzdW0gOiA2NWMwODRiOCBjb3JyZWN0CiAgICBNUEIgU2VjdG9ycyA6IDIKICAgICAgICAg
+IERpc2tzIDogNAogICBSQUlEIERldmljZXMgOiAxCgogIERpc2swMCBTZXJpYWwgOiBaMVg2
+VjVKWgogICAgICAgICAgU3RhdGUgOiBhY3RpdmUKICAgICAgICAgICAgIElkIDogMDAwMDAw
+MDIKICAgIFVzYWJsZSBTaXplIDogMzkwNzAyNDEzNiAoMTg2My4wMSBHaUIgMjAwMC40MCBH
+QikKCltNYWluUjEwXToKICAgICAgICAgICBVVUlEIDogOTJhZGY0YjA6MTI5YzNiOTQ6OWEy
+YjU2MTA6ZDdjOGM1ZDUKICAgICBSQUlEIExldmVsIDogMTAKICAgICAgICBNZW1iZXJzIDog
+NAogICAgICAgICAgU2xvdHMgOiBbVVVVVV0KICAgIEZhaWxlZCBkaXNrIDogbm9uZQogICAg
+ICBUaGlzIFNsb3QgOiAwCiAgICAgQXJyYXkgU2l6ZSA6IDc4MTQwNDc3NDQgKDM3MjYuMDMg
+R2lCIDQwMDAuNzkgR0IpCiAgIFBlciBEZXYgU2l6ZSA6IDM5MDcwMjQxMzYgKDE4NjMuMDEg
+R2lCIDIwMDAuNDAgR0IpCiAgU2VjdG9yIE9mZnNldCA6IDAKICAgIE51bSBTdHJpcGVzIDog
+MTUyNjE4MTIKICAgICBDaHVuayBTaXplIDogNjQgS2lCCiAgICAgICBSZXNlcnZlZCA6IDAK
+ICBNaWdyYXRlIFN0YXRlIDogaWRsZQogICAgICBNYXAgU3RhdGUgOiBub3JtYWwKICAgIERp
+cnR5IFN0YXRlIDogZGlydHkKCiAgRGlzazAxIFNlcmlhbCA6IFoxWDZWRUVRCiAgICAgICAg
+ICBTdGF0ZSA6IGFjdGl2ZQogICAgICAgICAgICAgSWQgOiAwMDAwMDAwMwogICAgVXNhYmxl
+IFNpemUgOiAzOTA3MDI0MTM2ICgxODYzLjAxIEdpQiAyMDAwLjQwIEdCKQoKICBEaXNrMDIg
+U2VyaWFsIDogWjFYNjlIQjIKICAgICAgICAgIFN0YXRlIDogYWN0aXZlCiAgICAgICAgICAg
+ICBJZCA6IDAwMDAwMDA0CiAgICBVc2FibGUgU2l6ZSA6IDM5MDcwMjQxMzYgKDE4NjMuMDEg
+R2lCIDIwMDAuNDAgR0IpCgogIERpc2swMyBTZXJpYWwgOiBaMVg2OUdDMgogICAgICAgICAg
+U3RhdGUgOiBhY3RpdmUKICAgICAgICAgICAgIElkIDogMDAwMDAwMDUKICAgIFVzYWJsZSBT
+aXplIDogMzkwNzAyNDEzNiAoMTg2My4wMSBHaUIgMjAwMC40MCBHQikKCi9kZXYvc2RiOgog
+ICAgICAgICAgTWFnaWMgOiBJbnRlbCBSYWlkIElTTSBDZmcgU2lnLgogICAgICAgIFZlcnNp
+b24gOiAxLjMuMDAKICAgIE9yaWcgRmFtaWx5IDogOGJmMzNhYTQKICAgICAgICAgRmFtaWx5
+IDogOGJmMzNhYTQKICAgICBHZW5lcmF0aW9uIDogMDAzMTJhMmMKICAgICBBdHRyaWJ1dGVz
+IDogQWxsIHN1cHBvcnRlZAogICAgICAgICAgIFVVSUQgOiA5YzQ1YTVhNzo4M2MzNjRkYjpm
+MWU4YjQ3YzplOWFlZTUzZgogICAgICAgQ2hlY2tzdW0gOiA2NWMwODRiOCBjb3JyZWN0CiAg
+ICBNUEIgU2VjdG9ycyA6IDIKICAgICAgICAgIERpc2tzIDogNAogICBSQUlEIERldmljZXMg
+OiAxCgogIERpc2swMSBTZXJpYWwgOiBaMVg2VkVFUQogICAgICAgICAgU3RhdGUgOiBhY3Rp
+dmUKICAgICAgICAgICAgIElkIDogMDAwMDAwMDMKICAgIFVzYWJsZSBTaXplIDogMzkwNzAy
+NDEzNiAoMTg2My4wMSBHaUIgMjAwMC40MCBHQikKCltNYWluUjEwXToKICAgICAgICAgICBV
+VUlEIDogOTJhZGY0YjA6MTI5YzNiOTQ6OWEyYjU2MTA6ZDdjOGM1ZDUKICAgICBSQUlEIExl
+dmVsIDogMTAKICAgICAgICBNZW1iZXJzIDogNAogICAgICAgICAgU2xvdHMgOiBbVVVVVV0K
+ICAgIEZhaWxlZCBkaXNrIDogbm9uZQogICAgICBUaGlzIFNsb3QgOiAxCiAgICAgQXJyYXkg
+U2l6ZSA6IDc4MTQwNDc3NDQgKDM3MjYuMDMgR2lCIDQwMDAuNzkgR0IpCiAgIFBlciBEZXYg
+U2l6ZSA6IDM5MDcwMjQxMzYgKDE4NjMuMDEgR2lCIDIwMDAuNDAgR0IpCiAgU2VjdG9yIE9m
+ZnNldCA6IDAKICAgIE51bSBTdHJpcGVzIDogMTUyNjE4MTIKICAgICBDaHVuayBTaXplIDog
+NjQgS2lCCiAgICAgICBSZXNlcnZlZCA6IDAKICBNaWdyYXRlIFN0YXRlIDogaWRsZQogICAg
+ICBNYXAgU3RhdGUgOiBub3JtYWwKICAgIERpcnR5IFN0YXRlIDogZGlydHkKCiAgRGlzazAw
+IFNlcmlhbCA6IFoxWDZWNUpaCiAgICAgICAgICBTdGF0ZSA6IGFjdGl2ZQogICAgICAgICAg
+ICAgSWQgOiAwMDAwMDAwMgogICAgVXNhYmxlIFNpemUgOiAzOTA3MDI0MTM2ICgxODYzLjAx
+IEdpQiAyMDAwLjQwIEdCKQoKICBEaXNrMDIgU2VyaWFsIDogWjFYNjlIQjIKICAgICAgICAg
+IFN0YXRlIDogYWN0aXZlCiAgICAgICAgICAgICBJZCA6IDAwMDAwMDA0CiAgICBVc2FibGUg
+U2l6ZSA6IDM5MDcwMjQxMzYgKDE4NjMuMDEgR2lCIDIwMDAuNDAgR0IpCgogIERpc2swMyBT
+ZXJpYWwgOiBaMVg2OUdDMgogICAgICAgICAgU3RhdGUgOiBhY3RpdmUKICAgICAgICAgICAg
+IElkIDogMDAwMDAwMDUKICAgIFVzYWJsZSBTaXplIDogMzkwNzAyNDEzNiAoMTg2My4wMSBH
+aUIgMjAwMC40MCBHQikKCi9kZXYvc2RjOgogICAgICAgICAgTWFnaWMgOiBJbnRlbCBSYWlk
+IElTTSBDZmcgU2lnLgogICAgICAgIFZlcnNpb24gOiAxLjMuMDAKICAgIE9yaWcgRmFtaWx5
+IDogOGJmMzNhYTQKICAgICAgICAgRmFtaWx5IDogOGJmMzNhYTQKICAgICBHZW5lcmF0aW9u
+IDogMDAzMTJhMmUKICAgICBBdHRyaWJ1dGVzIDogQWxsIHN1cHBvcnRlZAogICAgICAgICAg
+IFVVSUQgOiA5YzQ1YTVhNzo4M2MzNjRkYjpmMWU4YjQ3YzplOWFlZTUzZgogICAgICAgQ2hl
+Y2tzdW0gOiA2NWMwODRiYSBjb3JyZWN0CiAgICBNUEIgU2VjdG9ycyA6IDIKICAgICAgICAg
+IERpc2tzIDogNAogICBSQUlEIERldmljZXMgOiAxCgogIERpc2swMiBTZXJpYWwgOiBaMVg2
+OUhCMgogICAgICAgICAgU3RhdGUgOiBhY3RpdmUKICAgICAgICAgICAgIElkIDogMDAwMDAw
+MDQKICAgIFVzYWJsZSBTaXplIDogMzkwNzAyNDEzNiAoMTg2My4wMSBHaUIgMjAwMC40MCBH
+QikKCltNYWluUjEwXToKICAgICAgICAgICBVVUlEIDogOTJhZGY0YjA6MTI5YzNiOTQ6OWEy
+YjU2MTA6ZDdjOGM1ZDUKICAgICBSQUlEIExldmVsIDogMTAKICAgICAgICBNZW1iZXJzIDog
+NAogICAgICAgICAgU2xvdHMgOiBbVVVVVV0KICAgIEZhaWxlZCBkaXNrIDogbm9uZQogICAg
+ICBUaGlzIFNsb3QgOiAyCiAgICAgQXJyYXkgU2l6ZSA6IDc4MTQwNDc3NDQgKDM3MjYuMDMg
+R2lCIDQwMDAuNzkgR0IpCiAgIFBlciBEZXYgU2l6ZSA6IDM5MDcwMjQxMzYgKDE4NjMuMDEg
+R2lCIDIwMDAuNDAgR0IpCiAgU2VjdG9yIE9mZnNldCA6IDAKICAgIE51bSBTdHJpcGVzIDog
+MTUyNjE4MTIKICAgICBDaHVuayBTaXplIDogNjQgS2lCCiAgICAgICBSZXNlcnZlZCA6IDAK
+ICBNaWdyYXRlIFN0YXRlIDogaWRsZQogICAgICBNYXAgU3RhdGUgOiBub3JtYWwKICAgIERp
+cnR5IFN0YXRlIDogZGlydHkKCiAgRGlzazAwIFNlcmlhbCA6IFoxWDZWNUpaCiAgICAgICAg
+ICBTdGF0ZSA6IGFjdGl2ZQogICAgICAgICAgICAgSWQgOiAwMDAwMDAwMgogICAgVXNhYmxl
+IFNpemUgOiAzOTA3MDI0MTM2ICgxODYzLjAxIEdpQiAyMDAwLjQwIEdCKQoKICBEaXNrMDEg
+U2VyaWFsIDogWjFYNlZFRVEKICAgICAgICAgIFN0YXRlIDogYWN0aXZlCiAgICAgICAgICAg
+ICBJZCA6IDAwMDAwMDAzCiAgICBVc2FibGUgU2l6ZSA6IDM5MDcwMjQxMzYgKDE4NjMuMDEg
+R2lCIDIwMDAuNDAgR0IpCgogIERpc2swMyBTZXJpYWwgOiBaMVg2OUdDMgogICAgICAgICAg
+U3RhdGUgOiBhY3RpdmUKICAgICAgICAgICAgIElkIDogMDAwMDAwMDUKICAgIFVzYWJsZSBT
+aXplIDogMzkwNzAyNDEzNiAoMTg2My4wMSBHaUIgMjAwMC40MCBHQikKCi9kZXYvc2RkOgog
+ICAgICAgICAgTWFnaWMgOiBJbnRlbCBSYWlkIElTTSBDZmcgU2lnLgogICAgICAgIFZlcnNp
+b24gOiAxLjMuMDAKICAgIE9yaWcgRmFtaWx5IDogOGJmMzNhYTQKICAgICAgICAgRmFtaWx5
+IDogOGJmMzNhYTQKICAgICBHZW5lcmF0aW9uIDogMDAzMTJhMmYKICAgICBBdHRyaWJ1dGVz
+IDogQWxsIHN1cHBvcnRlZAogICAgICAgICAgIFVVSUQgOiA5YzQ1YTVhNzo4M2MzNjRkYjpm
+MWU4YjQ3YzplOWFlZTUzZgogICAgICAgQ2hlY2tzdW0gOiA2NWJmODRiYiBjb3JyZWN0CiAg
+ICBNUEIgU2VjdG9ycyA6IDIKICAgICAgICAgIERpc2tzIDogNAogICBSQUlEIERldmljZXMg
+OiAxCgogIERpc2swMyBTZXJpYWwgOiBaMVg2OUdDMgogICAgICAgICAgU3RhdGUgOiBhY3Rp
+dmUKICAgICAgICAgICAgIElkIDogMDAwMDAwMDUKICAgIFVzYWJsZSBTaXplIDogMzkwNzAy
+NDEzNiAoMTg2My4wMSBHaUIgMjAwMC40MCBHQikKCltNYWluUjEwXToKICAgICAgICAgICBV
+VUlEIDogOTJhZGY0YjA6MTI5YzNiOTQ6OWEyYjU2MTA6ZDdjOGM1ZDUKICAgICBSQUlEIExl
+dmVsIDogMTAKICAgICAgICBNZW1iZXJzIDogNAogICAgICAgICAgU2xvdHMgOiBbVVVVVV0K
+ICAgIEZhaWxlZCBkaXNrIDogbm9uZQogICAgICBUaGlzIFNsb3QgOiAzCiAgICAgQXJyYXkg
+U2l6ZSA6IDc4MTQwNDc3NDQgKDM3MjYuMDMgR2lCIDQwMDAuNzkgR0IpCiAgIFBlciBEZXYg
+U2l6ZSA6IDM5MDcwMjQxMzYgKDE4NjMuMDEgR2lCIDIwMDAuNDAgR0IpCiAgU2VjdG9yIE9m
+ZnNldCA6IDAKICAgIE51bSBTdHJpcGVzIDogMTUyNjE4MTIKICAgICBDaHVuayBTaXplIDog
+NjQgS2lCCiAgICAgICBSZXNlcnZlZCA6IDAKICBNaWdyYXRlIFN0YXRlIDogaWRsZQogICAg
+ICBNYXAgU3RhdGUgOiBub3JtYWwKICAgIERpcnR5IFN0YXRlIDogY2xlYW4KCiAgRGlzazAw
+IFNlcmlhbCA6IFoxWDZWNUpaCiAgICAgICAgICBTdGF0ZSA6IGFjdGl2ZQogICAgICAgICAg
+ICAgSWQgOiAwMDAwMDAwMgogICAgVXNhYmxlIFNpemUgOiAzOTA3MDI0MTM2ICgxODYzLjAx
+IEdpQiAyMDAwLjQwIEdCKQoKICBEaXNrMDEgU2VyaWFsIDogWjFYNlZFRVEKICAgICAgICAg
+IFN0YXRlIDogYWN0aXZlCiAgICAgICAgICAgICBJZCA6IDAwMDAwMDAzCiAgICBVc2FibGUg
+U2l6ZSA6IDM5MDcwMjQxMzYgKDE4NjMuMDEgR2lCIDIwMDAuNDAgR0IpCgogIERpc2swMiBT
+ZXJpYWwgOiBaMVg2OUhCMgogICAgICAgICAgU3RhdGUgOiBhY3RpdmUKICAgICAgICAgICAg
+IElkIDogMDAwMDAwMDQKICAgIFVzYWJsZSBTaXplIDogMzkwNzAyNDEzNiAoMTg2My4wMSBH
+aUIgMjAwMC40MCBHQikK
+--------------998FBD2C06376A1E0CEFDD42--
