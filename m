@@ -1,54 +1,35 @@
-From: Reindl Harald <h.reindl@thelounge.net>
+From: Brad Campbell <lists2009@fnarfbargle.com>
 Subject: Re: RAID10 reshape and change lout possible?
-Date: Sun, 26 Feb 2017 23:57:49 +0100
-Message-ID: <8f887638-fcc9-0433-3d35-537357bd4d8e@thelounge.net>
+Date: Mon, 27 Feb 2017 08:42:09 +0800
+Message-ID: <b573fbd3-0f37-7c37-0077-06e1140a34ef@fnarfbargle.com>
 References: <ae9c2ffb-808a-c905-ea29-1c8f5493b2ad@thelounge.net>
- <20170226185147.GD21587@bitfolk.com>
- <3ef7f0b2-1f3e-40e2-ab23-3ff9436f9ced@thelounge.net>
- <20170226211728.GE21587@bitfolk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170226211728.GE21587@bitfolk.com>
+In-Reply-To: <ae9c2ffb-808a-c905-ea29-1c8f5493b2ad@thelounge.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Reindl Harald <h.reindl@thelounge.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 26/02/17 22:37, Reindl Harald wrote:
+> since in recent news i saw that convert several raid-levels with respahe
+> is possible now
+>
+> is it somehow possible to change a existing md RAID10 array from "2
+> near-copies" to "2 far-copies" and what would be the mdadm syntax? the
+> IO intense workload here are large reads within virtual disks and as far
+> as i can see far-layout would here be the better option but as installed
+> the stuff in 2011 not sure if anaconda even offered that in the OS
+> installer
 
+Far layout will significantly improve read performance, however it will 
+also significantly impact write performance. You really want to spool up 
+a test system and benchmark the performance in your specific application 
+before considering changes like this. The write performance degradation 
+on magnetic media is significant due to the extra seeking required.
 
-Am 26.02.2017 um 22:17 schrieb Andy Smith:
-> Hi,
->
-> On Sun, Feb 26, 2017 at 09:28:34PM +0100, Reindl Harald wrote:
->> Am 26.02.2017 um 19:51 schrieb Andy Smith:
->>> https://manpages.debian.org/jessie/mdadm/mdadm.8.en.html suggests
->>> that --grow --layout can be changed on RAID-10.
->
-> […]
->
->> [root@testserver:~]$ mdadm --grow /dev/md0 --layout=f2
->> mdadm: Cannot reshape RAID10 to far-mode
->
-> Hmm, that man page says that Debian jessie has version 3.3.2-5 and
-> still it says:
->     …changing the chunk size and layout for RAID 0,4,5,6,10 as well
->     as adding or removing a write-intent bitmap.
->
-> So is the man page wrong?
->
-> Admittedly until I looked I thought RAID-10 couldn't be reshaped at
-> all in any way. And now I don't know at all. :)
+As you've already discovered. It's a backup and restore exercise on RAID10.
 
-well, change to "offset" seems to be supported (also not that long at 
-all) if there is enough room and Google round confirms that
-
-[root@testserver:~]$ mdadm --grow /dev/md0 --layout=o2
-mdadm: insufficient head-room on /dev/sdg1
-
-with the knowledge from today i would have chosen RAID1+0 or two RAID1 
-and LVM stripe on top at least for the data partitions which would 
-support the current 4 disk setup with "writemostly" and so achieve the 
-full read performance out of the two SSD instead need another 2 SSD 
-disks or build the raid-setup from scratch, both not making me terrible 
-happy :-)
+Regards,
+Brad
