@@ -1,107 +1,68 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v2 04/13] md: prepare for managing resync I/O pages in
- clean way
-Date: Tue, 28 Feb 2017 15:30:11 -0800
-Message-ID: <20170228233011.rdqtde22zwsimbz7@kernel.org>
+Subject: Re: [PATCH v2 08/13] md: raid1: use bio helper in process_checks()
+Date: Tue, 28 Feb 2017 15:39:09 -0800
+Message-ID: <20170228233909.slbbjuh24p77pcrv@kernel.org>
 References: <1488296503-4987-1-git-send-email-tom.leiming@gmail.com>
- <1488296503-4987-5-git-send-email-tom.leiming@gmail.com>
+ <1488296503-4987-9-git-send-email-tom.leiming@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1488296503-4987-5-git-send-email-tom.leiming@gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
+In-Reply-To: <1488296503-4987-9-git-send-email-tom.leiming@gmail.com>
+Sender: linux-block-owner@vger.kernel.org
 To: Ming Lei <tom.leiming@gmail.com>
 Cc: Jens Axboe <axboe@fb.com>, linux-raid@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-raid.ids
 
-On Tue, Feb 28, 2017 at 11:41:34PM +0800, Ming Lei wrote:
-> Now resync I/O use bio's bec table to manage pages,
-> this way is very hacky, and may not work any more
-> once multipage bvec is introduced.
-> 
-> So introduce helpers and new data structure for
-> managing resync I/O pages more cleanly.
+On Tue, Feb 28, 2017 at 11:41:38PM +0800, Ming Lei wrote:
+> Avoid to direct access to bvec table.
 > 
 > Signed-off-by: Ming Lei <tom.leiming@gmail.com>
 > ---
->  drivers/md/md.h | 54 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 54 insertions(+)
+>  drivers/md/raid1.c | 12 ++++++++----
+>  1 file changed, 8 insertions(+), 4 deletions(-)
 > 
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 1d63239a1be4..b5a638d85cb4 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -720,4 +720,58 @@ static inline void mddev_check_writesame(struct mddev *mddev, struct bio *bio)
->  #define RESYNC_BLOCK_SIZE (64*1024)
->  #define RESYNC_PAGES ((RESYNC_BLOCK_SIZE + PAGE_SIZE-1) / PAGE_SIZE)
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index d0cb5c026506..316bd6dd6cc1 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -2108,6 +2108,7 @@ static void process_checks(struct r1bio *r1_bio)
+>  		int j;
+>  		int size;
+>  		int error;
+> +		struct bio_vec *bi;
+>  		struct bio *b = r1_bio->bios[i];
+>  		struct resync_pages *rp = get_resync_pages(b);
+>  		if (b->bi_end_io != end_sync_read)
+> @@ -2126,9 +2127,7 @@ static void process_checks(struct r1bio *r1_bio)
+>  		b->bi_private = rp;
 >  
-> +/* for managing resync I/O pages */
-> +struct resync_pages {
-> +	unsigned	idx;	/* for get/put page from the pool */
-> +	void		*raid_bio;
-> +	struct page	*pages[RESYNC_PAGES];
-> +};
+>  		size = b->bi_iter.bi_size;
+> -		for (j = 0; j < vcnt ; j++) {
+> -			struct bio_vec *bi;
+> -			bi = &b->bi_io_vec[j];
+> +		bio_for_each_segment_all(bi, b, j) {
+>  			bi->bv_offset = 0;
+>  			if (size > PAGE_SIZE)
+>  				bi->bv_len = PAGE_SIZE;
+> @@ -2152,17 +2151,22 @@ static void process_checks(struct r1bio *r1_bio)
+>  		int error = sbio->bi_error;
+>  		struct page **ppages = get_resync_pages(pbio)->pages;
+>  		struct page **spages = get_resync_pages(sbio)->pages;
+> +		struct bio_vec *bi;
+> +		int page_len[RESYNC_PAGES];
+>  
+>  		if (sbio->bi_end_io != end_sync_read)
+>  			continue;
+>  		/* Now we can 'fixup' the error value */
+>  		sbio->bi_error = 0;
+>  
+> +		bio_for_each_segment_all(bi, sbio, j)
+> +			page_len[j] = bi->bv_len;
+> +
 
-I'd like this to be embedded into r1bio directly. Not sure if we really need a
-structure.
-
-> +
-> +static inline int resync_alloc_pages(struct resync_pages *rp,
-> +				     gfp_t gfp_flags)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i < RESYNC_PAGES; i++) {
-> +		rp->pages[i] = alloc_page(gfp_flags);
-> +		if (!rp->pages[i])
-> +			goto out_free;
-> +	}
-> +
-> +	return 0;
-> +
-> + out_free:
-> +	while (--i >= 0)
-> +		__free_page(rp->pages[i]);
-> +	return -ENOMEM;
-> +}
-> +
-> +static inline void resync_free_pages(struct resync_pages *rp)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i < RESYNC_PAGES; i++)
-> +		__free_page(rp->pages[i]);
-
-Since we will use get_page, shouldn't this be put_page?
-
-> +}
-> +
-> +static inline void resync_get_all_pages(struct resync_pages *rp)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i < RESYNC_PAGES; i++)
-> +		get_page(rp->pages[i]);
-> +}
-> +
-> +static inline struct page *resync_fetch_page(struct resync_pages *rp)
-> +{
-> +	if (WARN_ON_ONCE(rp->idx >= RESYNC_PAGES))
-> +		return NULL;
-> +	return rp->pages[rp->idx++];
-
-I'd like the caller explicitly specify the index instead of a global variable
-to track it, which will make the code more understandable and less error prone.
-
-> +}
-> +
-> +static inline bool resync_page_available(struct resync_pages *rp)
-> +{
-> +	return rp->idx < RESYNC_PAGES;
-> +}
-
-Then we don't need this obscure API.
+If we record length for each page in resync_pages (don't need offset, because
+it should be 0), we don't need to access the bio_vec too.
 
 Thanks,
 Shaohua
