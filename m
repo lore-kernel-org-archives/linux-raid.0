@@ -1,36 +1,72 @@
-From: Benjammin2068 <benjammin2068@gmail.com>
-Subject: Re: WARNING: mismatch_cnt is not 0 on <array device> [SOLVED?]
-Date: Tue, 28 Feb 2017 13:50:16 -0600
-Message-ID: <c475d72e-bc32-a01a-c70d-fe07950b57af@gmail.com>
-References: <26b91420-97c9-f405-aa71-16cd5cda3a67@gmail.com>
- <409d9f5f-6f72-a399-93ab-2b10323f4122@fnarfbargle.com>
- <c72d3567-7c9c-39dc-c2e1-722bc267bdd6@gmail.com>
- <74e5712f-e89e-97af-8aa4-ae2948c02e94@turmel.org>
- <c7bfde3e-0605-96d0-4e3d-fb76a9a8c724@gmail.com>
- <27577b8a-1b63-8f1a-9b68-b056622a5268@fnarfbargle.com>
- <41c176d2-0235-6ff0-996c-b32dc95d487d@gmail.com>
- <57EAA214.8030603@youngman.org.uk>
- <5427ce35-f222-8a2c-486e-441c4c6ec9a6@gmail.com>
- <be044941-8097-7d6f-5216-294fe2cac4d9@websitemanagers.com.au>
- <0f6bd6f6-20ee-1720-23fc-27d206063bfc@gmail.com>
- <287df6d6-3850-1142-5c69-c7b54a8a22d4@gmail.com>
- <1497737a-a307-4501-4158-9703a051ef67@turmel.org>
- <58223D29.6030401@youngman.org.uk>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH 12/14] md/bitmap: replace redundant codes with
+ get_bitmap_from_slot
+Date: Tue, 28 Feb 2017 11:06:10 -0800
+Message-ID: <20170228190610.xq6kyo2blyme2syf@kernel.org>
+References: <1487906124-20107-1-git-send-email-gqjiang@suse.com>
+ <1487906124-20107-13-git-send-email-gqjiang@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <58223D29.6030401@youngman.org.uk>
+Content-Disposition: inline
+In-Reply-To: <1487906124-20107-13-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: Guoqing Jiang <gqjiang@suse.com>
+Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-As an interesting update for everyone on this thread....
+On Fri, Feb 24, 2017 at 11:15:22AM +0800, Guoqing Jiang wrote:
+> Since get_bitmap_from_slot is introduced in previous
+> commit, we can use it in bitmap_copy_from_slot to
+> remove redundant code.
 
-I replaced all my drives with a single type/speed (WD Red) and now that the older Samsung HD103SJ (now Seagate) drives have been gone, I haven't had any mismatch_cnt hiccups with that marvell JBOD MV8 controller.
-
-Just thought I'd offer that as a current data point.
-
-Cheers,
-
- -Ben
+this should be merged into patch 11
+ 
+> Reviewed-by: NeilBrown <neilb@suse.com>
+> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+> ---
+>  drivers/md/bitmap.c | 16 +++++++---------
+>  1 file changed, 7 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+> index 67a7d399f501..b6fa55a3cff8 100644
+> --- a/drivers/md/bitmap.c
+> +++ b/drivers/md/bitmap.c
+> @@ -1952,14 +1952,13 @@ int bitmap_copy_from_slot(struct mddev *mddev, int slot,
+>  	int rv = 0, i, j;
+>  	sector_t block, lo = 0, hi = 0;
+>  	struct bitmap_counts *counts;
+> -	struct bitmap *bitmap = bitmap_create(mddev, slot);
+> -
+> -	if (IS_ERR(bitmap))
+> -		return PTR_ERR(bitmap);
+> +	struct bitmap *bitmap;
+>  
+> -	rv = bitmap_init_from_disk(bitmap, 0);
+> -	if (rv)
+> -		goto err;
+> +	bitmap = get_bitmap_from_slot(mddev, slot);
+> +	if (IS_ERR(bitmap)) {
+> +		pr_err("%s can't get bitmap from slot %d\n", __func__, slot);
+> +		return -1;
+> +	}
+>  
+>  	counts = &bitmap->counts;
+>  	for (j = 0; j < counts->chunks; j++) {
+> @@ -1986,8 +1985,7 @@ int bitmap_copy_from_slot(struct mddev *mddev, int slot,
+>  	bitmap_unplug(mddev->bitmap);
+>  	*low = lo;
+>  	*high = hi;
+> -err:
+> -	bitmap_free(bitmap);
+> +
+>  	return rv;
+>  }
+>  EXPORT_SYMBOL_GPL(bitmap_copy_from_slot);
+> -- 
+> 2.6.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
