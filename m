@@ -1,160 +1,145 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v4 6/7] raid5-ppl: support disk hot add/remove with PPL
-Date: Mon, 27 Feb 2017 17:22:26 -0800
-Message-ID: <20170228012226.xo76v3cdgqfddx4k@kernel.org>
+Subject: Re: [PATCH v4 7/7] raid5-ppl: runtime PPL enabling or disabling
+Date: Mon, 27 Feb 2017 17:31:35 -0800
+Message-ID: <20170228013135.g4x7cu63rakvpacx@kernel.org>
 References: <20170221194401.18733-1-artur.paszkiewicz@intel.com>
- <20170221194401.18733-7-artur.paszkiewicz@intel.com>
+ <20170221194401.18733-8-artur.paszkiewicz@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170221194401.18733-7-artur.paszkiewicz@intel.com>
+In-Reply-To: <20170221194401.18733-8-artur.paszkiewicz@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 Cc: shli@fb.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Feb 21, 2017 at 08:44:00PM +0100, Artur Paszkiewicz wrote:
-> Add a function to modify the log by removing an rdev when a drive fails
-> or adding when a spare/replacement is activated as a raid member.
+On Tue, Feb 21, 2017 at 08:44:01PM +0100, Artur Paszkiewicz wrote:
+> Allow writing to 'consistency_policy' attribute when the array is
+> active. Add a new function 'change_consistency_policy' to the
+> md_personality operations structure to handle the change in the
+> personality code. Values "ppl" and "resync" are accepted and
+> turn PPL on and off respectively.
 > 
-> Removing a disk just clears the child log rdev pointer. No new stripes
-> will be accepted for this child log in ppl_write_stripe() and running io
-> units will be processed without writing PPL to the device.
+> When enabling PPL its location and size should first be set using
+> 'ppl_sector' and 'ppl_size' attributes and a valid PPL header should be
+> written at this location on each member device.
 > 
-> Adding a disk sets the child log rdev pointer and writes an empty PPL
-> header.
+> Enabling or disabling PPL is performed under a suspended array.  The
+> raid5_reset_stripe_cache function frees the stripe cache and allocates
+> it again in order to allocate or free the ppl_pages for the stripes in
+> the stripe cache.
 > 
 > Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 > ---
->  drivers/md/raid5-ppl.c | 47 +++++++++++++++++++++++++++++++++++++++++++++++
->  drivers/md/raid5.c     | 15 +++++++++++++++
->  drivers/md/raid5.h     |  8 ++++++++
->  3 files changed, 70 insertions(+)
+>  drivers/md/md.c        | 12 ++++++++---
+>  drivers/md/md.h        |  2 ++
+>  drivers/md/raid5-ppl.c |  4 ++++
+>  drivers/md/raid5.c     | 58 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>  4 files changed, 73 insertions(+), 3 deletions(-)
 > 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 3ff979d538d4..b70e19513588 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -5003,14 +5003,20 @@ consistency_policy_show(struct mddev *mddev, char *page)
+>  static ssize_t
+>  consistency_policy_store(struct mddev *mddev, const char *buf, size_t len)
+>  {
+> +	int err = 0;
+> +
+>  	if (mddev->pers) {
+> -		return -EBUSY;
+> +		if (mddev->pers->change_consistency_policy)
+> +			err = mddev->pers->change_consistency_policy(mddev, buf);
+> +		else
+> +			err = -EBUSY;
+>  	} else if (mddev->external && strncmp(buf, "ppl", 3) == 0) {
+>  		set_bit(MD_HAS_PPL, &mddev->flags);
+> -		return len;
+>  	} else {
+> -		return -EINVAL;
+> +		err = -EINVAL;
+>  	}
+> +
+> +	return err ? err : len;
+>  }
+>  
+>  static struct md_sysfs_entry md_consistency_policy =
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index 66a5a16e79f7..88a5155c152e 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -548,6 +548,8 @@ struct md_personality
+>  	/* congested implements bdi.congested_fn().
+>  	 * Will not be called while array is 'suspended' */
+>  	int (*congested)(struct mddev *mddev, int bits);
+> +	/* Changes the consistency policy of an active array. */
+> +	int (*change_consistency_policy)(struct mddev *mddev, const char *buf);
+>  };
+>  
+>  struct md_sysfs_entry {
 > diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
-> index a7693353243a..c2070d124849 100644
+> index c2070d124849..a5c4d3333bce 100644
 > --- a/drivers/md/raid5-ppl.c
 > +++ b/drivers/md/raid5-ppl.c
-> @@ -319,6 +319,12 @@ static void ppl_submit_iounit(struct ppl_io_unit *io)
->  
->  	bio = bio_alloc_bioset(GFP_NOIO, BIO_MAX_PAGES, ppl_conf->bs);
->  	bio->bi_private = io;
-> +
-> +	if (!log->rdev || test_bit(Faulty, &log->rdev->flags)) {
-> +		ppl_log_endio(bio);
-> +		return;
-> +	}
-> +
->  	bio->bi_end_io = ppl_log_endio;
->  	bio->bi_opf = REQ_OP_WRITE | REQ_FUA;
->  	bio->bi_bdev = log->rdev->bdev;
-> @@ -1098,3 +1104,44 @@ int ppl_init_log(struct r5conf *conf)
->  	ppl_exit_log(ppl_conf);
->  	return ret;
->  }
-> +
-> +int ppl_modify_log(struct ppl_conf *ppl_conf, struct md_rdev *rdev,
-> +		   enum ppl_modify_log_operation operation)
-> +{
-> +	struct ppl_log *log;
-> +	int ret = 0;
-> +	char b[BDEVNAME_SIZE];
-> +
-> +	if (!rdev)
-> +		return -EINVAL;
-> +
-> +	pr_debug("%s: disk: %d operation: %s dev: %s\n",
-> +		 __func__, rdev->raid_disk,
-> +		 operation == PPL_MODIFY_LOG_DISK_REMOVE ? "remove" :
-> +		 (operation == PPL_MODIFY_LOG_DISK_ADD ? "add" : "?"),
-> +		 bdevname(rdev->bdev, b));
-> +
-> +	if (rdev->raid_disk < 0)
-> +		return 0;
-> +
-> +	if (rdev->raid_disk >= ppl_conf->count)
-> +		return -ENODEV;
-> +
-> +	log = &ppl_conf->child_logs[rdev->raid_disk];
-> +
-> +	mutex_lock(&log->io_mutex);
-> +	if (operation == PPL_MODIFY_LOG_DISK_REMOVE) {
-> +		log->rdev = NULL;
-> +	} else if (operation == PPL_MODIFY_LOG_DISK_ADD) {
-> +		ret = ppl_validate_rdev(rdev);
-> +		if (!ret) {
-> +			log->rdev = rdev;
-> +			ret = ppl_write_empty_header(log);
-> +		}
-> +	} else {
+> @@ -1095,6 +1095,10 @@ int ppl_init_log(struct r5conf *conf)
+>  		 */
+>  		mddev->recovery_cp = MaxSector;
+>  		set_bit(MD_SB_CHANGE_CLEAN, &mddev->sb_flags);
+> +	} else if (mddev->pers && ppl_conf->mismatch_count > 0) {
+> +		/* no mismatch allowed when enabling PPL for a running array */
 > +		ret = -EINVAL;
-> +	}
-> +	mutex_unlock(&log->io_mutex);
-> +
-> +	return ret;
-> +}
+> +		goto err;
+>  	}
+>  
+>  	conf->ppl = ppl_conf;
 > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 8b52392457d8..b17e90f06f19 100644
+> index b17e90f06f19..754fb8e1c76f 100644
 > --- a/drivers/md/raid5.c
 > +++ b/drivers/md/raid5.c
-> @@ -7623,6 +7623,12 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
->  			*rdevp = rdev;
->  		}
->  	}
-> +	if (conf->ppl) {
-> +		err = ppl_modify_log(conf->ppl, rdev,
-> +				     PPL_MODIFY_LOG_DISK_REMOVE);
-> +		if (err)
-> +			goto abort;
+> @@ -8319,6 +8319,63 @@ static void *raid6_takeover(struct mddev *mddev)
+>  	return setup_conf(mddev);
+>  }
+>  
+> +static void raid5_reset_stripe_cache(struct mddev *mddev)
+> +{
+> +	struct r5conf *conf = mddev->private;
+> +
+> +	mutex_lock(&conf->cache_size_mutex);
+> +	while (conf->max_nr_stripes &&
+> +	       drop_one_stripe(conf))
+> +		;
+> +	while (conf->min_nr_stripes > conf->max_nr_stripes &&
+> +	       grow_one_stripe(conf, GFP_KERNEL))
+> +		;
+> +	mutex_unlock(&conf->cache_size_mutex);
+> +}
+> +
+> +static int raid5_change_consistency_policy(struct mddev *mddev, const char *buf)
+> +{
+> +	struct r5conf *conf;
+> +	int err;
+> +
+> +	err = mddev_lock(mddev);
+> +	if (err)
+> +		return err;
+> +	conf = mddev->private;
+> +	if (!conf) {
+> +		mddev_unlock(mddev);
+> +		return -ENODEV;
 > +	}
->  	if (p->replacement) {
->  		/* We must have just cleared 'rdev' */
->  		p->rdev = p->replacement;
-> @@ -7632,6 +7638,10 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
->  			   */
->  		p->replacement = NULL;
->  		clear_bit(WantReplacement, &rdev->flags);
 > +
-> +		if (conf->ppl)
-> +			err = ppl_modify_log(conf->ppl, p->rdev,
-> +					     PPL_MODIFY_LOG_DISK_ADD);
->  	} else
->  		/* We might have just removed the Replacement as faulty-
->  		 * clear the bit just in case
-> @@ -7695,6 +7705,11 @@ static int raid5_add_disk(struct mddev *mddev, struct md_rdev *rdev)
->  			if (rdev->saved_raid_disk != disk)
->  				conf->fullsync = 1;
->  			rcu_assign_pointer(p->rdev, rdev);
-> +
-> +			if (conf->ppl)
-> +				err = ppl_modify_log(conf->ppl, rdev,
-> +						     PPL_MODIFY_LOG_DISK_ADD);
-> +
->  			goto out;
->  		}
->  	}
-> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-> index f915a7a0e752..43cfa5fa71b3 100644
-> --- a/drivers/md/raid5.h
-> +++ b/drivers/md/raid5.h
-> @@ -806,4 +806,12 @@ extern void ppl_exit_log(struct ppl_conf *log);
->  extern int ppl_write_stripe(struct ppl_conf *log, struct stripe_head *sh);
->  extern void ppl_write_stripe_run(struct ppl_conf *log);
->  extern void ppl_stripe_write_finished(struct stripe_head *sh);
-> +
-> +enum ppl_modify_log_operation {
-> +	PPL_MODIFY_LOG_DISK_REMOVE,
-> +	PPL_MODIFY_LOG_DISK_ADD,
-> +};
+> +	if (strncmp(buf, "ppl", 3) == 0 &&
+> +	    !test_bit(MD_HAS_PPL, &mddev->flags)) {
+> +		mddev_suspend(mddev);
+> +		err = ppl_init_log(conf);
 
-a bool for this parameter is better
+I didn't see you check if all rdev have valid ppl setting in ppl_load. Am I
+missing anything? Is it possible some rdevs have ppl set, but some not. In the
+case, we should just bail out.
 
-> +extern int ppl_modify_log(struct ppl_conf *log, struct md_rdev *rdev,
-> +			  enum ppl_modify_log_operation operation);
-
-So this should be put into raid5-log.h and rename to log_modify_log(conf, xxx)
-or other sensible name.
+Also check if this is raid5
 
 Thanks,
 Shaohua
