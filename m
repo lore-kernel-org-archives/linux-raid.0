@@ -1,7 +1,7 @@
 From: Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH v2 07/13] md: raid1: retrieve page from pre-allocated resync page array
-Date: Tue, 28 Feb 2017 23:41:37 +0800
-Message-ID: <1488296503-4987-8-git-send-email-tom.leiming@gmail.com>
+Subject: [PATCH v2 08/13] md: raid1: use bio helper in process_checks()
+Date: Tue, 28 Feb 2017 23:41:38 +0800
+Message-ID: <1488296503-4987-9-git-send-email-tom.leiming@gmail.com>
 References: <1488296503-4987-1-git-send-email-tom.leiming@gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1488296503-4987-1-git-send-email-tom.leiming@gmail.com>
@@ -10,76 +10,60 @@ To: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, linux-raid@vger.ker
 Cc: Ming Lei <tom.leiming@gmail.com>
 List-Id: linux-raid.ids
 
-Now one page array is allocated for each resync bio, and we can
-retrieve page from this table directly.
+Avoid to direct access to bvec table.
 
 Signed-off-by: Ming Lei <tom.leiming@gmail.com>
 ---
- drivers/md/raid1.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ drivers/md/raid1.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 900144f39630..d0cb5c026506 100644
+index d0cb5c026506..316bd6dd6cc1 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -1970,6 +1970,7 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
- 	struct mddev *mddev = r1_bio->mddev;
- 	struct r1conf *conf = mddev->private;
- 	struct bio *bio = r1_bio->bios[r1_bio->read_disk];
-+	struct page **pages = get_resync_pages(bio)->pages;
- 	sector_t sect = r1_bio->sector;
- 	int sectors = r1_bio->sectors;
- 	int idx = 0;
-@@ -2003,7 +2004,7 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
- 				 */
- 				rdev = conf->mirrors[d].rdev;
- 				if (sync_page_io(rdev, sect, s<<9,
--						 bio->bi_io_vec[idx].bv_page,
-+						 pages[idx],
- 						 REQ_OP_READ, 0, false)) {
- 					success = 1;
- 					break;
-@@ -2058,7 +2059,7 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
- 				continue;
- 			rdev = conf->mirrors[d].rdev;
- 			if (r1_sync_page_io(rdev, sect, s,
--					    bio->bi_io_vec[idx].bv_page,
-+					    pages[idx],
- 					    WRITE) == 0) {
- 				r1_bio->bios[d]->bi_end_io = NULL;
- 				rdev_dec_pending(rdev, mddev);
-@@ -2073,7 +2074,7 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
- 				continue;
- 			rdev = conf->mirrors[d].rdev;
- 			if (r1_sync_page_io(rdev, sect, s,
--					    bio->bi_io_vec[idx].bv_page,
-+					    pages[idx],
- 					    READ) != 0)
- 				atomic_add(s, &rdev->corrected_errors);
- 		}
-@@ -2149,6 +2150,8 @@ static void process_checks(struct r1bio *r1_bio)
- 		struct bio *pbio = r1_bio->bios[primary];
- 		struct bio *sbio = r1_bio->bios[i];
+@@ -2108,6 +2108,7 @@ static void process_checks(struct r1bio *r1_bio)
+ 		int j;
+ 		int size;
+ 		int error;
++		struct bio_vec *bi;
+ 		struct bio *b = r1_bio->bios[i];
+ 		struct resync_pages *rp = get_resync_pages(b);
+ 		if (b->bi_end_io != end_sync_read)
+@@ -2126,9 +2127,7 @@ static void process_checks(struct r1bio *r1_bio)
+ 		b->bi_private = rp;
+ 
+ 		size = b->bi_iter.bi_size;
+-		for (j = 0; j < vcnt ; j++) {
+-			struct bio_vec *bi;
+-			bi = &b->bi_io_vec[j];
++		bio_for_each_segment_all(bi, b, j) {
+ 			bi->bv_offset = 0;
+ 			if (size > PAGE_SIZE)
+ 				bi->bv_len = PAGE_SIZE;
+@@ -2152,17 +2151,22 @@ static void process_checks(struct r1bio *r1_bio)
  		int error = sbio->bi_error;
-+		struct page **ppages = get_resync_pages(pbio)->pages;
-+		struct page **spages = get_resync_pages(sbio)->pages;
+ 		struct page **ppages = get_resync_pages(pbio)->pages;
+ 		struct page **spages = get_resync_pages(sbio)->pages;
++		struct bio_vec *bi;
++		int page_len[RESYNC_PAGES];
  
  		if (sbio->bi_end_io != end_sync_read)
  			continue;
-@@ -2157,11 +2160,8 @@ static void process_checks(struct r1bio *r1_bio)
+ 		/* Now we can 'fixup' the error value */
+ 		sbio->bi_error = 0;
  
++		bio_for_each_segment_all(bi, sbio, j)
++			page_len[j] = bi->bv_len;
++
  		if (!error) {
  			for (j = vcnt; j-- ; ) {
--				struct page *p, *s;
--				p = pbio->bi_io_vec[j].bv_page;
--				s = sbio->bi_io_vec[j].bv_page;
--				if (memcmp(page_address(p),
--					   page_address(s),
-+				if (memcmp(page_address(ppages[j]),
-+					   page_address(spages[j]),
- 					   sbio->bi_io_vec[j].bv_len))
+ 				if (memcmp(page_address(ppages[j]),
+ 					   page_address(spages[j]),
+-					   sbio->bi_io_vec[j].bv_len))
++					   page_len[j]))
  					break;
  			}
+ 		} else
 -- 
 2.7.4
 
