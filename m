@@ -1,7 +1,7 @@
 From: Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH v2 03/13] md: move two macros into md.h
-Date: Tue, 28 Feb 2017 23:41:33 +0800
-Message-ID: <1488296503-4987-4-git-send-email-tom.leiming@gmail.com>
+Subject: [PATCH v2 05/13] md: raid1: simplify r1buf_pool_free()
+Date: Tue, 28 Feb 2017 23:41:35 +0800
+Message-ID: <1488296503-4987-6-git-send-email-tom.leiming@gmail.com>
 References: <1488296503-4987-1-git-send-email-tom.leiming@gmail.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <1488296503-4987-1-git-send-email-tom.leiming@gmail.com>
@@ -10,58 +10,50 @@ To: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, linux-raid@vger.ker
 Cc: Ming Lei <tom.leiming@gmail.com>
 List-Id: linux-raid.ids
 
-Both raid1 and raid10 share common resync
-block size and page count, so move them into md.h.
+This patch gets each page's reference of each bio for resync,
+then r1buf_pool_free() gets simplified a lot.
+
+The same policy has been taken in raid10's buf pool allocation/free
+too.
 
 Signed-off-by: Ming Lei <tom.leiming@gmail.com>
 ---
- drivers/md/md.h     | 5 +++++
- drivers/md/raid1.c  | 2 --
- drivers/md/raid10.c | 3 ---
- 3 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/md/raid1.c | 15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index b8859cbf84b6..1d63239a1be4 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -715,4 +715,9 @@ static inline void mddev_check_writesame(struct mddev *mddev, struct bio *bio)
- 	    !bdev_get_queue(bio->bi_bdev)->limits.max_write_same_sectors)
- 		mddev->queue->limits.max_write_same_sectors = 0;
- }
-+
-+/* Maximum size of each resync request */
-+#define RESYNC_BLOCK_SIZE (64*1024)
-+#define RESYNC_PAGES ((RESYNC_BLOCK_SIZE + PAGE_SIZE-1) / PAGE_SIZE)
-+
- #endif /* _MD_MD_H */
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index b3021355c7e2..25c9172db639 100644
+index 25c9172db639..c442b4657e2f 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -91,10 +91,8 @@ static void r1bio_pool_free(void *r1_bio, void *data)
- 	kfree(r1_bio);
- }
+@@ -139,9 +139,12 @@ static void * r1buf_pool_alloc(gfp_t gfp_flags, void *data)
+ 	/* If not user-requests, copy the page pointers to all bios */
+ 	if (!test_bit(MD_RECOVERY_REQUESTED, &pi->mddev->recovery)) {
+ 		for (i=0; i<RESYNC_PAGES ; i++)
+-			for (j=1; j<pi->raid_disks; j++)
+-				r1_bio->bios[j]->bi_io_vec[i].bv_page =
++			for (j=1; j<pi->raid_disks; j++) {
++				struct page *page =
+ 					r1_bio->bios[0]->bi_io_vec[i].bv_page;
++				get_page(page);
++				r1_bio->bios[j]->bi_io_vec[i].bv_page = page;
++			}
+ 	}
  
--#define RESYNC_BLOCK_SIZE (64*1024)
- #define RESYNC_DEPTH 32
- #define RESYNC_SECTORS (RESYNC_BLOCK_SIZE >> 9)
--#define RESYNC_PAGES ((RESYNC_BLOCK_SIZE + PAGE_SIZE-1) / PAGE_SIZE)
- #define RESYNC_WINDOW (RESYNC_BLOCK_SIZE * RESYNC_DEPTH)
- #define RESYNC_WINDOW_SECTORS (RESYNC_WINDOW >> 9)
- #define CLUSTER_RESYNC_WINDOW (16 * RESYNC_WINDOW)
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index ceb3acc793cf..c5f1a117494b 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -125,9 +125,6 @@ static void r10bio_pool_free(void *r10_bio, void *data)
- 	kfree(r10_bio);
- }
+ 	r1_bio->master_bio = NULL;
+@@ -166,12 +169,8 @@ static void r1buf_pool_free(void *__r1_bio, void *data)
+ 	struct r1bio *r1bio = __r1_bio;
  
--/* Maximum size of each resync request */
--#define RESYNC_BLOCK_SIZE (64*1024)
--#define RESYNC_PAGES ((RESYNC_BLOCK_SIZE + PAGE_SIZE-1) / PAGE_SIZE)
- /* amount of memory to reserve for resync requests */
- #define RESYNC_WINDOW (1024*1024)
- /* maximum number of concurrent requests, memory permitting */
+ 	for (i = 0; i < RESYNC_PAGES; i++)
+-		for (j = pi->raid_disks; j-- ;) {
+-			if (j == 0 ||
+-			    r1bio->bios[j]->bi_io_vec[i].bv_page !=
+-			    r1bio->bios[0]->bi_io_vec[i].bv_page)
+-				safe_put_page(r1bio->bios[j]->bi_io_vec[i].bv_page);
+-		}
++		for (j = pi->raid_disks; j-- ;)
++			safe_put_page(r1bio->bios[j]->bi_io_vec[i].bv_page);
+ 	for (i=0 ; i < pi->raid_disks; i++)
+ 		bio_put(r1bio->bios[i]);
+ 
 -- 
 2.7.4
