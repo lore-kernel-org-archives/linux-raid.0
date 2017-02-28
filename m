@@ -1,22 +1,33 @@
-From: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
-Subject: Re: LSI RAID
-Date: Tue, 28 Feb 2017 10:44:30 +0100
-Message-ID: <CAJH6TXhYDMP_Xm+nZyoGBfAR77_W4h18_3bdTKeymEKYpUu-bw@mail.gmail.com>
-References: <CAJH6TXj+766Xj4w8BAOoq9wQ_Vym_JD66pbqRgpXriNguG6zTQ@mail.gmail.com>
- <CAJH6TXhwfoWKM2=0v0+qhUWp=WppF5qO7zm5Y1-vS4zWQHA5WA@mail.gmail.com> <73fdfb90-4bdc-a452-d785-eb270ad987e2@suse.de>
+From: Reindl Harald <h.reindl@thelounge.net>
+Subject: Re: GRUB warning after replacing disk drive in RAID1
+Date: Tue, 28 Feb 2017 10:23:18 +0100
+Message-ID: <ab6d048b-b944-6661-11a5-503012dfad50@thelounge.net>
+References: <002f01d29152$737b4550$5a71cff0$@wnsdev.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <73fdfb90-4bdc-a452-d785-eb270ad987e2@suse.de>
+In-Reply-To: <002f01d29152$737b4550$5a71cff0$@wnsdev.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2017-02-28 10:06 GMT+01:00 Hannes Reinecke <hare@suse.de>:
-> Sure.
-> The recent mdadm should be able to create DDF metadata.
 
-This means that i'll be able to import a configuration created with a
-LSI MegaRaid controller and use them with mdadm ?
-If yes, how ?
+
+Am 28.02.2017 um 00:37 schrieb Peter Sangas:
+> I have a RAID1 with 3 disks sda,sdb,sdc.  After replacing sdc and re-syncing
+> it to the array I issued the following command to load grub but I get this
+> warning:
+>
+> grub-install /dev/sdc
+>
+> Installing for i386-pc platform.
+> grub-install: warning: Couldn't find physical volume `(null)'. Some modules
+> may be missing from core image..
+> grub-install: warning: Couldn't find physical volume `(null)'. Some modules
+> may be missing from core image..
+> Installation finished. No error reported.
+>
+> Does anyone know why I get this warning and how to avoid it
+
+it's harmless and disappears after the resync finished
