@@ -1,132 +1,68 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v4 2/7] raid5: calculate partial parity for a stripe
-Date: Mon, 27 Feb 2017 15:45:14 -0800
-Message-ID: <20170227234514.3bo5jxf35ie7vhor@kernel.org>
-References: <20170221194401.18733-1-artur.paszkiewicz@intel.com>
- <20170221194401.18733-3-artur.paszkiewicz@intel.com>
+Subject: Re: Process stuck in md_flush_request (state: D)
+Date: Mon, 27 Feb 2017 16:44:34 -0800
+Message-ID: <20170228004434.esi5ehauz3wx6uop@kernel.org>
+References: <36A8825E-F387-4ED8-8672-976094B3BEBB@lesstroud.com>
+ <99A92F4D-338D-4486-BB1C-C114A8524403@lesstroud.com>
+ <20170217200644.amaxgira4nqlbchh@kernel.org>
+ <9589FA71-C458-4B44-B2F3-3D42E8B0885D@lesstroud.com>
+ <829563C6-A2AF-4E5F-B5AF-D33D2E5A734E@lesstroud.com>
+ <20170227182806.jntxzhyw3nkohl5r@kernel.org>
+ <ED1913CC-96EF-4A25-A1F3-E664396A2710@lesstroud.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170221194401.18733-3-artur.paszkiewicz@intel.com>
+In-Reply-To: <ED1913CC-96EF-4A25-A1F3-E664396A2710@lesstroud.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: shli@fb.com, linux-raid@vger.kernel.org
+To: Les Stroud <les@lesstroud.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Feb 21, 2017 at 08:43:56PM +0100, Artur Paszkiewicz wrote:
-> Attach a page for holding the partial parity data to stripe_head.
-> Allocate it only if mddev has the MD_HAS_PPL flag set.
+On Mon, Feb 27, 2017 at 01:48:00PM -0500, Les Stroud wrote:
 > 
-> Partial parity is the xor of not modified data chunks of a stripe and is
-> calculated as follows:
 > 
-> - reconstruct-write case:
->   xor data from all not updated disks in a stripe
 > 
-> - read-modify-write case:
->   xor old data and parity from all updated disks in a stripe
 > 
-> Implement it using the async_tx API and integrate into raid_run_ops().
-> It must be called when we still have access to old data, so do it when
-> STRIPE_OP_BIODRAIN is set, but before ops_run_prexor5(). The result is
-> stored into sh->ppl_page.
+> > On Feb 27, 2017, at 1:28 PM, Shaohua Li <shli@kernel.org> wrote:
+> > 
+> > On Mon, Feb 27, 2017 at 09:49:59AM -0500, Les Stroud wrote:
+> >> After a period of a couple of weeks with one of our test instances having this problem every other day, they were all nice enough to operate without an issue for 9 days.  It finally reoccurred last night on one of the machines.  
+> >> 
+> >> It exhibits the same symptoms and the call traces look as they did previously.  This particular instance is configured with a deadline scheduler.  I was able to capture the inflight you requested:
+> >> 
+> >> $ cat /sys/block/xvd[abcde]/inflight
+> >>        0        0
+> >>        0        0
+> >>        0        0
+> >>        0        0
+> >>        0        0
+> >> 
+> >> I’ve had this happen on instances with the deadline scheduler and the noop scheduler.  At this point, I have not had this happen on an instance that is noop and the raid filesystem (ext4) is mounted with nobarrier.  The instances with noop/nobarrier have not been running long enough for me to make any sort of conclusion that it works around the problem. Frankly, I’m not sure I understand the interaction between ext4 barriers and raid0 block flushes well enough to theorize whether it should or shouldn’t make a difference.
+> > 
+> > If nobarrier, ext4 doesn't send flush request.
 > 
-> Partial parity is not meaningful for full stripe write and is not stored
-> in the log or used for recovery, so don't attempt to calculate it when
-> stripe has STRIPE_FULL_WRITE.
-> 
-> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-> ---
->  drivers/md/raid5.c | 100 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  drivers/md/raid5.h |   3 ++
->  2 files changed, 103 insertions(+)
-> 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 7b7722bb2e8d..02e02fe5b04e 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -463,6 +463,11 @@ static void shrink_buffers(struct stripe_head *sh)
->  		sh->dev[i].page = NULL;
->  		put_page(p);
->  	}
-> +
-> +	if (sh->ppl_page) {
-> +		put_page(sh->ppl_page);
-> +		sh->ppl_page = NULL;
-> +	}
->  }
->  
->  static int grow_buffers(struct stripe_head *sh, gfp_t gfp)
-> @@ -479,6 +484,13 @@ static int grow_buffers(struct stripe_head *sh, gfp_t gfp)
->  		sh->dev[i].page = page;
->  		sh->dev[i].orig_page = page;
->  	}
-> +
-> +	if (test_bit(MD_HAS_PPL, &sh->raid_conf->mddev->flags)) {
-> +		sh->ppl_page = alloc_page(gfp);
-> +		if (!sh->ppl_page)
-> +			return 1;
-> +	}
-> +
->  	return 0;
->  }
->  
-> @@ -1974,6 +1986,55 @@ static void ops_run_check_pq(struct stripe_head *sh, struct raid5_percpu *percpu
->  			   &sh->ops.zero_sum_result, percpu->spare_page, &submit);
->  }
->  
-> +static struct dma_async_tx_descriptor *
-> +ops_run_partial_parity(struct stripe_head *sh, struct raid5_percpu *percpu,
-> +		       struct dma_async_tx_descriptor *tx)
-> +{
-> +	int disks = sh->disks;
-> +	struct page **xor_srcs = flex_array_get(percpu->scribble, 0);
-> +	int count = 0, pd_idx = sh->pd_idx, i;
-> +	struct async_submit_ctl submit;
-> +
-> +	pr_debug("%s: stripe %llu\n", __func__, (unsigned long long)sh->sector);
-> +
-> +	/*
-> +	 * Partial parity is the XOR of stripe data chunks that are not changed
-> +	 * during the write request. Depending on available data
-> +	 * (read-modify-write vs. reconstruct-write case) we calculate it
-> +	 * differently.
-> +	 */
-> +	if (sh->reconstruct_state == reconstruct_state_prexor_drain_run) {
-> +		/* rmw: xor old data and parity from updated disks */
-> +		for (i = disks; i--;) {
-> +			struct r5dev *dev = &sh->dev[i];
-> +			if (test_bit(R5_Wantdrain, &dev->flags) || i == pd_idx)
-> +				xor_srcs[count++] = dev->page;
-> +		}
-> +	} else if (sh->reconstruct_state == reconstruct_state_drain_run) {
-> +		/* rcw: xor data from all not updated disks */
-> +		for (i = disks; i--;) {
-> +			struct r5dev *dev = &sh->dev[i];
-> +			if (test_bit(R5_UPTODATE, &dev->flags))
-> +				xor_srcs[count++] = dev->page;
-> +		}
-> +	} else {
-> +		return tx;
-> +	}
-> +
-> +	init_async_submit(&submit, ASYNC_TX_XOR_ZERO_DST, tx, NULL, sh,
-> +			  flex_array_get(percpu->scribble, 0)
-> +			  + sizeof(struct page *) * (sh->disks + 2));
-> +
-> +	if (count == 1)
-> +		tx = async_memcpy(sh->ppl_page, xor_srcs[0], 0, 0, PAGE_SIZE,
-> +				  &submit);
-> +	else
-> +		tx = async_xor(sh->ppl_page, xor_srcs, 0, count, PAGE_SIZE,
-> +			       &submit);
-> +
-> +	return tx;
-> +}
+> So, could ext4’s flush request deadlock with an md_flush_request?  Do they share a mutex of some sort? Could one of them be failing to acquire a mutex and not handling it?
 
-Can you put this function to raid5-ppl.c? I'd like to keep all the log related
-out raid5.c if possible.
+No, it shouldn't deadlock. I don't have other reports for such issue. Yours are the only one.
+ 
+> > 
+> >> Does any of this help with identifying the bug?  Is there anymore information I can get that would be useful?  
+> > 
+> > 
+> > Unfortunately I can't find anything fishing. Does the xcdx disk correctly
+> > handle flush request? For example, you can do the same test with a single such
+> > disk and check if anything wrong.
+> 
+> Until recently, we had a number of these systems setup without raid0.  This issue never occurred on those systems.  Unfortunately, I can’t find a way to make it happen other than stand a server up and let it run.
+> 
+> I suppose I could try a different filesystem and see if that makes a difference (maybe ext3, xfs, etc).
+
+You could format a xcdx disk and do a test against it, and check if there is
+anything wrong. To be honest, I don't think it's a problme in ext4 side too,
+but better try other filesystems. If the xcdx is a proprietory driver, I highly
+recommend a check with a single such disk first.
 
 Thanks,
 Shaohua
