@@ -1,83 +1,67 @@
-From: Ondrej Mosnacek <omosnace@redhat.com>
-Subject: Re: [RFC PATCH v4] IV Generation algorithms for dm-crypt
-Date: Wed, 1 Mar 2017 14:21:51 +0100
-Message-ID: <CAFqZXNugEK0do+BYC061i4CidMVgg8_BZue8gUVa2g7_RYsAEw@mail.gmail.com>
-References: <1486463731-6224-1-git-send-email-binoy.jayan@linaro.org>
- <CAOtvUMcN8s886978vE6T=AE79KkZsLBnXsmhewnb5PB0UyAG3A@mail.gmail.com>
- <CAHv-k_8rgArzV2uQ64h1ZTNRpssX1jMf=RwuPoBmsjQ0FhCsWA@mail.gmail.com>
- <68f70534-a309-46ba-a84d-8acc1e6620e5@gmail.com> <CAOtvUMf3c0fUjABmbfMrbs0W4gyhKVZyc_tZH3rQg65zF18YMg@mail.gmail.com>
- <b563eb97-82ba-69d2-c4c5-66bc716a7507@gmail.com> <CAOtvUMePYT7OJDKL7i0y3y6Jvqsxyx6Je6g9aGKVq6PLZ_-Z8w@mail.gmail.com>
+From: <ian_bruce@mail.ru>
+Subject: Re: [BUG] non-metadata arrays cannot use more than 27 component
+ devices
+Date: Wed, 1 Mar 2017 05:05:47 -0800
+Message-ID: <20170301050529.5978de82.ian_bruce@mail.ru>
+References: <20170224040816.41f2f372.ian_bruce@mail.ru>
+        <87y3wsp47n.fsf@notabene.neil.brown.name>
+        <20170228022513.2cf5445a.ian_bruce@mail.ru>
+        <87mvd6oy8n.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-crypto-owner@vger.kernel.org>
-In-Reply-To: <CAOtvUMePYT7OJDKL7i0y3y6Jvqsxyx6Je6g9aGKVq6PLZ_-Z8w@mail.gmail.com>
-Sender: linux-crypto-owner@vger.kernel.org
-To: Gilad Ben-Yossef <gilad@benyossef.com>
-Cc: Milan Broz <gmazyland@gmail.com>, Binoy Jayan <binoy.jayan@linaro.org>, Oded <oded.golombek@arm.com>, Ofir <Ofir.Drang@arm.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, linux-crypto@vger.kernel.org, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Linux kernel mailing list <linux-kernel@vger.kernel.org>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Rajendra <rnayak@codeaurora.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87mvd6oy8n.fsf@notabene.neil.brown.name>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2017-03-01 13:42 GMT+01:00 Gilad Ben-Yossef <gilad@benyossef.com>:
-> It really is an observation about overhead of context switches between
-> dm-crypt and
-> whatever/wherever you handle crypto - be it an off CPU hardware engine
-> or a bunch
-> of parallel kernel threads running on other cores. You really want to
-> burst as much as
-> possible.
+On Wed, 01 Mar 2017 07:29:28 +1100
+NeilBrown <neilb@suse.com> wrote:
 
-[...]
+> Thanks.  That makes it easy.
+> Test works with my patch applied.
 
->> For XTS you need just simple linear IV. No problem with that, implementation
->> in crypto API and hw is trivial.
->>
->> But for compatible IV (that provides compatibility with loopAES and very old TrueCrypt),
->> these should be never ever implemented again anywhere.
->
->>
->> Specifically "tcw" is broken, insecure and provided here just to help people to migrate
->> from old Truecrypt containers. Even Truecrypt followers removed it from the codebase.
->> (It is basically combination of IV and slight modification of CBC mode. All
->> recent version switched to XTS and plain IV.)
->>
->> So building abstraction over something known to be broken and that is now intentionally
->> isolated inside dmcrypt is, in my opinion, really not a good idea.
->>
->
-> I don't think anyone is interested in these modes. How do you support
-> XTS and essiv in
-> a generic way without supporting this broken modes is not something
-> I'm clear on though.
+Thanks for fixing that.
 
-Wouldn't adopting a bulk request API (something like what I tried to
-do here [1]) that allows users to supply multiple messages, each with
-their own IV, fulfill this purpose? That way, we wouldn't need to
-introduce any new modes into Crypto API and the drivers/accelerators
-would only need to provide bulk implementations of common modes
-(xts(aes), cbc(aes), ...) to provide better performance for dm-crypt
-(and possibly other users, too).
+If anybody is curious, the application for this capability is as
+follows. For live systems running from a USB flashdrive, we need to
+loop-mount an ext4 filesystem image from the fat32-formatted flashdrive.
+Unfortunately, the maximum file size on fat32 is 4GB, which is a severe
+limitation, when 128GB flashdrives are commonly available.
 
-I'm not sure how exactly these crypto accelerators work, but wouldn't
-it help if the drivers simply get more messages (in our case sectors)
-in a single call? I wonder, would (efficiently) supporting such a
-scheme require changes in the HW itself or could it be achieved just
-by modifying driver code (let's say specifically for your CryptoCell
-accelerator)?
+The solution is to split the ext4 image into multiple sub-4GB chunks,
+associate a /dev/loop device with each of those files, have mdadm turn
+those into a single RAID device, and mount that as the ext4 filesystem.
+It is preferable to use non-metadata, linear-mode RAID for this, because
+we can then convert back and forth between the single filesystem image
+and its constituent chunks using the non-privileged utilities "cat" and
+"split". With a maximum of 27 RAID component devices, the maximum
+filesystem size would be 108GB, which is not quite a complete solution.
 
-Thanks,
-Ondrej
 
-[1] https://www.mail-archive.com/linux-crypto@vger.kernel.org/msg23007.html
+On Fri, 24 Feb 2017 15:46:19 -0500
+Phil Turmel <philip@turmel.org> wrote:
 
->
-> Thanks,
-> Gilad
->
->
->
-> --
-> Gilad Ben-Yossef
-> Chief Coffee Drinker
->
-> "If you take a class in large-scale robotics, can you end up in a
-> situation where the homework eats your dog?"
->  -- Jean-Baptiste Queru
+> Note that build mode doesn't support a bunch of other MD raid features
+> either, like all of the parity raid levels. That it doesn't support
+> v1+ metadata isn't a surprise, and isn't the only legacy feature that
+> only uses legacy metadata (built-in kernel auto-assembly gets the most
+> whining, actually).
+
+> If you think its trivial to implement --build with v1.x metadata, go
+> right ahead. Post your patches for review.
+
+I haven't tested "mdadm --build" with parity RAID myself (although the
+/dev/loop trick would probably suffice for that too), but if this is so,
+would the change to provide that be as simple as the patch to remove the
+27-component limitation? (Although I suppose that unlike linear mode,
+the component devices for parity mode would have to be initialized with
+consistent data, first.)
+
+Somebody might find a use for non-metadata, parity-mode RAID, if it were
+available.
+
+
+-- Ian Bruce
