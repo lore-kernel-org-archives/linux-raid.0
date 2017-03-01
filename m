@@ -1,37 +1,39 @@
 From: Xiao Ni <xni@redhat.com>
-Subject: [MDADM PATCH 1/2] Add Wimplicit-fallthrough=0 in Makefile
-Date: Wed,  1 Mar 2017 14:12:45 +0800
-Message-ID: <1488348766-31087-2-git-send-email-xni@redhat.com>
-References: <1488348766-31087-1-git-send-email-xni@redhat.com>
+Subject: [MDADM PATCH 0/2] Fix some building errors
+Date: Wed,  1 Mar 2017 15:07:42 +0800
+Message-ID: <1488352062-32157-1-git-send-email-xni@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1488348766-31087-1-git-send-email-xni@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: Jes.Sorensen@gmail.com, ncroxon@redhat.com
 List-Id: linux-raid.ids
 
-There are many errors like 'error: this statement may fall through'. 
-But the logic is right. So add the flag Wimplicit-fallthrough=0 
-to disable the error messages. The method I use is from 
-https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
-#index-Wimplicit-fallthrough-375
----
- Makefile | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Hi Jes
 
-diff --git a/Makefile b/Makefile
-index a6f464c..b9f52e0 100644
---- a/Makefile
-+++ b/Makefile
-@@ -43,7 +43,7 @@ KLIBC_GCC = gcc -nostdinc -iwithprefix include -I$(KLIBC)/klibc/include -I$(KLIB
- 
- CC ?= $(CROSS_COMPILE)gcc
- CXFLAGS ?= -ggdb
--CWFLAGS = -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
-+CWFLAGS = -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter -Wimplicit-fallthrough=0
- ifdef WARN_UNUSED
- CWFLAGS += -Wp,-D_FORTIFY_SOURCE=2 -O3
- endif
+There are some error buildings in Fedora release 26 (Rawhide)
+The gcc version is gcc (GCC) 7.0.1 20170211 (Red Hat 7.0.1-0.8)
+
+There are three types of errors:
+1. Fall through 
+mdadm.c:149:28: error: this statement may fall through [-Werror=implicit-fallthrough=]
+2. format-overflow
+Detail.c: In function Detail:
+Detail.c:584:31: error: directive writing up to 255 bytes into 
+a region of size 189 [-Werror=format-overflow=]
+3. format-truncation
+super-intel.c: In function examine_super_imsm:
+super-intel.c:1815:30: error: directive output may be truncated 
+writing up to 31 bytes into a region of size 24 [-Werror=format-truncation=]
+
+Xiao Ni (2):
+  Add Wimplicit-fallthrough=0 in Makefile
+  Specify suitable size when write to buffer
+
+ Detail.c      | 2 +-
+ Makefile      | 2 +-
+ super-intel.c | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
 -- 
 2.7.4
 
