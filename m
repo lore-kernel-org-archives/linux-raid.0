@@ -1,220 +1,169 @@
-From: Reindl Harald <h.reindl@thelounge.net>
-Subject: Re: GRUB warning after replacing disk drive in RAID1
-Date: Wed, 1 Mar 2017 01:12:35 +0100
-Message-ID: <97135270-088a-69da-8789-c64f1054ee72@thelounge.net>
-References: <002f01d29152$737b4550$5a71cff0$@wnsdev.com>
- <ab6d048b-b944-6661-11a5-503012dfad50@thelounge.net>
- <008001d29205$e4f503c0$aedf0b40$@wnsdev.com>
- <59c85e04-2f6a-1c81-ccba-fa8aac1c50ee@thelounge.net>
- <009601d29218$9fd3e460$df7bad20$@wnsdev.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=koi8-r; format=flowed
-Content-Transfer-Encoding: 8bit
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: [PATCH 06/14] md-cluster: use sync way to handle METADATA_UPDATED msg
+Date: Wed,  1 Mar 2017 10:02:36 +0800
+Message-ID: <1488333756-16372-1-git-send-email-gqjiang@suse.com>
+References: <1487906124-20107-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <009601d29218$9fd3e460$df7bad20$@wnsdev.com>
+In-Reply-To: <1487906124-20107-1-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: shli@fb.com, neilb@suse.de, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
+Previously, when node received METADATA_UPDATED msg, it just
+need to wakeup mddev->thread, then md_reload_sb will be called
+eventually.
 
+We taken the asynchronous way to avoid a deadlock issue, the
+deadlock issue could happen when one node is receiving the
+METADATA_UPDATED msg (wants reconfig_mutex) and trying to run
+the path:
 
-Am 01.03.2017 um 00:15 schrieb Peter Sangas:
-> Thanks for your help.  See below for output
+md_check_recovery -> mddev_trylock(hold reconfig_mutex)
+                  -> md_update_sb-metadata_update_start
+		     (want EX on token however token is
+		      got by the sending node)
 
-Personalities : [raid1] [linear] [multipath] [raid0] [raid6] [raid5] [raid4]
+Since we will support resizing for clustered raid, and we
+need the metadata update handling to be synchronous so that
+the initiating node can detect failure, so we need to change
+the way for handling METADATA_UPDATED msg.
 
-not sure if it means something but i only see the on the machines used 
-raid-levels at that line - looks like i am out of ideas for now, i saw 
-the "grub-install: warning: Couldn't find physical volume `(null)'" 
-messages (while it at the same time said it was successful) as i removed 
-2 out of my 4 drives from the RAID10 by using the script below and after 
-both where in sync "grub2-sintall /dev/sd[a-d]" was completly silent again
+But, we obviously need to avoid above deadlock with the
+sync way. To make this happen, we considered to not hold
+reconfig_mutex to call md_reload_sb, if some other thread
+has already taken reconfig_mutex and waiting for the 'token',
+then process_recvd_msg() can safely call md_reload_sb()
+without taking the mutex. This is because we can be certain
+that no other thread will take the mutex, and we also certain
+that the actions performed by md_reload_sb() won't interfere
+with anything that the other thread is in the middle of.
 
-___________________________________________________
+To make this more concrete, we added a new cinfo->state bit
+        MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD
 
-#!/bin/bash
+Which is set in lock_token() just before dlm_lock_sync() is
+called, and cleared just after. As lock_token() is always
+called with reconfig_mutex() held (the specific case is the
+resync_info_update which is distinguished well in previous
+patch), if process_recvd_msg() finds that the new bit is set,
+then the mutex must be held by some other thread, and it will
+keep waiting.
 
-GOOD_DISK="/dev/sda"
-BAD_DISK="/dev/sdc"
+So process_metadata_update() can call md_reload_sb() if either
+mddev_trylock() succeeds, or if MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD
+is set. The tricky bit is what to do if neither of these apply.
+We need to wait. Fortunately mddev_unlock() always calls wake_up()
+on mddev->thread->wqueue. So we can get lock_token() to call
+wake_up() on that when it sets the bit.
 
-# clone MBR
-dd if=$GOOD_DISK of=$BAD_DISK bs=512 count=1
+Also remove RELOAD_SB related codes since there are not valid
+anymore.
 
-# force OS to read partition tables
-partprobe $BAD_DISK
+Finally, thanks to Neil for his great idea and help!
 
-# start RAID recovery
-mdadm /dev/md0 --add ${BAD_DISK}1
-mdadm /dev/md1 --add ${BAD_DISK}2
-mdadm /dev/md2 --add ${BAD_DISK}3
+Reviewed-by: NeilBrown <neilb@suse.com>
+Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+---
+ drivers/md/md-cluster.c | 28 +++++++++++++++++++++++++---
+ drivers/md/md.c         |  4 ----
+ drivers/md/md.h         |  3 ---
+ 3 files changed, 25 insertions(+), 10 deletions(-)
 
-# print RAID status on screen
-sleep 5
-cat /proc/mdstat
+diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+index a6cf02c5c7bc..0aad477d1b20 100644
+--- a/drivers/md/md-cluster.c
++++ b/drivers/md/md-cluster.c
+@@ -66,7 +66,7 @@ struct resync_info {
+  * set up all the related infos such as bitmap and personality */
+ #define		MD_CLUSTER_ALREADY_IN_CLUSTER		6
+ #define		MD_CLUSTER_PENDING_RECV_EVENT		7
+-
++#define 	MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD		8
+ 
+ struct md_cluster_info {
+ 	struct mddev *mddev; /* the md device which md_cluster_info belongs to */
+@@ -523,11 +523,17 @@ static void process_add_new_disk(struct mddev *mddev, struct cluster_msg *cmsg)
+ 
+ static void process_metadata_update(struct mddev *mddev, struct cluster_msg *msg)
+ {
++	int got_lock = 0;
+ 	struct md_cluster_info *cinfo = mddev->cluster_info;
+ 	mddev->good_device_nr = le32_to_cpu(msg->raid_slot);
+-	set_bit(MD_RELOAD_SB, &mddev->flags);
++
+ 	dlm_lock_sync(cinfo->no_new_dev_lockres, DLM_LOCK_CR);
+-	md_wakeup_thread(mddev->thread);
++	wait_event(mddev->thread->wqueue,
++		   (got_lock = mddev_trylock(mddev)) ||
++		    test_bit(MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD, &cinfo->state));
++	md_reload_sb(mddev, mddev->good_device_nr);
++	if (got_lock)
++		mddev_unlock(mddev);
+ }
+ 
+ static void process_remove_disk(struct mddev *mddev, struct cluster_msg *msg)
+@@ -649,8 +655,24 @@ static void recv_daemon(struct md_thread *thread)
+ static int lock_token(struct md_cluster_info *cinfo, bool mddev_locked)
+ {
+ 	int error;
++	struct mddev *mddev = cinfo->mddev;
+ 
++	/*
++	 * If resync thread run after raid1d thread, then process_metadata_update
++	 * could not continue if raid1d held reconfig_mutex (and raid1d is blocked
++	 * since another node already got EX on Token and waitting the EX of Ack),
++	 * so let resync wake up thread in case flag is set.
++	 */
++	if (mddev_locked) {
++		error = test_and_set_bit_lock(MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD,
++					      &cinfo->state);
++		WARN_ON_ONCE(error);
++		md_wakeup_thread(mddev->thread);
++	}
+ 	error = dlm_lock_sync(cinfo->token_lockres, DLM_LOCK_EX);
++	if (mddev_locked)
++		clear_bit_unlock(MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD, &cinfo->state);
++
+ 	if (error)
+ 		pr_err("md-cluster(%s:%d): failed to get EX on TOKEN (%d)\n",
+ 				__func__, __LINE__, error);
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 55e7e7a8714e..6e910d99c9c1 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -8389,7 +8389,6 @@ void md_check_recovery(struct mddev *mddev)
+ 		(mddev->sb_flags & ~ (1<<MD_SB_CHANGE_PENDING)) ||
+ 		test_bit(MD_RECOVERY_NEEDED, &mddev->recovery) ||
+ 		test_bit(MD_RECOVERY_DONE, &mddev->recovery) ||
+-		test_bit(MD_RELOAD_SB, &mddev->flags) ||
+ 		(mddev->external == 0 && mddev->safemode == 1) ||
+ 		(mddev->safemode == 2 && ! atomic_read(&mddev->writes_pending)
+ 		 && !mddev->in_sync && mddev->recovery_cp == MaxSector)
+@@ -8438,9 +8437,6 @@ void md_check_recovery(struct mddev *mddev)
+ 						rdev->raid_disk < 0)
+ 					md_kick_rdev_from_array(rdev);
+ 			}
+-
+-			if (test_and_clear_bit(MD_RELOAD_SB, &mddev->flags))
+-				md_reload_sb(mddev, mddev->good_device_nr);
+ 		}
+ 
+ 		if (!mddev->external) {
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index b8859cbf84b6..ec5ffde03ccf 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -219,9 +219,6 @@ enum mddev_flags {
+ 				 * it then */
+ 	MD_JOURNAL_CLEAN,	/* A raid with journal is already clean */
+ 	MD_HAS_JOURNAL,		/* The raid array has journal feature set */
+-	MD_RELOAD_SB,		/* Reload the superblock because another node
+-				 * updated it.
+-				 */
+ 	MD_CLUSTER_RESYNC_LOCKED, /* cluster raid only, which means node
+ 				   * already took resync lock, need to
+ 				   * release the lock */
+-- 
+2.6.2
 
-# install bootloader on replacement disk
-grub2-install "$BAD_DISK"
-___________________________________________________
-
-
-> -----Original Message-----
-> From: Reindl Harald [mailto:h.reindl@thelounge.net]
-> Sent: Tuesday, February 28, 2017 2:34 PM
-> To: linux-raid@vger.kernel.org
-> Subject: Re: GRUB warning after replacing disk drive in RAID1
->
->
->
-> Am 28.02.2017 um 22:01 schrieb Peter Sangas:
->> But I issue the grub command AFTER the re-sync is completed
->
->>>> output of "cat /proc/mdstat" and your environment missing!
->
->>>> * cat /proc/mdstat
->>>> * df -hT
->>>> * lsscsi
->>>> * lsblk
->
->>>> no pictures and interpretations, just copy&paste from the terminal (input
-> as well as output)
->
->>>> please help others to help you
->
->
-> cat /proc/mdstat
-> Personalities : [raid1] [linear] [multipath] [raid0] [raid6] [raid5] [raid4]
-> [raid10]
-> md3 : active raid1 sdc5[3] sdb5[1] sda5[0]
->       97589248 blocks super 1.2 [3/3] [UUU]
->
-> md1 : active raid1 sdc2[3] sdb2[1] sda2[0]
->       126887936 blocks super 1.2 [3/3] [UUU]
->       bitmap: 0/1 pages [0KB], 65536KB chunk
->
-> md5 : active raid1 sdc7[3] sdb7[1] sda7[0]
->       244169728 blocks super 1.2 [3/3] [UUU]
->       bitmap: 0/2 pages [0KB], 65536KB chunk
->
-> md2 : active raid1 sdc3[3] sdb3[1] sda3[0]
->       195181568 blocks super 1.2 [3/3] [UUU]
->       bitmap: 1/2 pages [4KB], 65536KB chunk
->
-> md4 : active raid1 sdc6[3] sdb6[1] sda6[0]
->       97589248 blocks super 1.2 [3/3] [UUU]
->
-> md0 : active raid1 sdc1[3] sdb1[1] sda1[0]
->       19514368 blocks super 1.2 [3/3] [UUU]
->
-> unused devices: <none>
->
-> uname -a
-> Linux green 4.4.0-47-generic #68-Ubuntu SMP Wed Oct 26 19:39:52 UTC 2016
-> x86_64 x86_64 x86_64 GNU/Linux
->
-> df -hT
-> Filesystem     Type      Size  Used Avail Use% Mounted on
-> udev           devtmpfs   63G     0   63G   0% /dev
-> tmpfs          tmpfs      13G  746M   12G   6% /run
-> /dev/md2       ext4      184G   31G  144G  18% /
-> tmpfs          tmpfs      63G     0   63G   0% /dev/shm
-> tmpfs          tmpfs     5.0M     0  5.0M   0% /run/lock
-> tmpfs          tmpfs      63G     0   63G   0% /sys/fs/cgroup
-> /dev/md0       ext4       19G  289M   17G   2% /boot
-> /dev/md3       ext4       92G   40G   48G  46% /cl
-> /dev/md5       ext4      230G   31G  187G  15% /sd
-> /dev/md4       ext4       92G   20G   68G  22% /pc
-> tan:/clbck     nfs4      596G  169G  398G  30% /clbck
-> tan:/sdbck     nfs4      596G  169G  398G  30% /sdbck
-> tmpfs          tmpfs      13G  4.0K   13G   1% /run/user/275
-> /dev/sde1      ext3      2.7T  676G  1.9T  26% /archive
-> tmpfs          tmpfs      13G  4.0K   13G   1% /run/user/286
-> /dev/sdd1      ext3      1.8T  1.6T  182G  90% /backupdisk
-> tmpfs          tmpfs      13G   12K   13G   1% /run/user/277
-> tmpfs          tmpfs      13G     0   13G   0% /run/user/283
-> tmpfs          tmpfs      13G  4.0K   13G   1% /run/user/280
-> tmpfs          tmpfs      13G  4.0K   13G   1% /run/user/285
-> tmpfs          tmpfs      13G     0   13G   0% /run/user/299
-> tmpfs          tmpfs      13G     0   13G   0% /run/user/1100
-> tmpfs          tmpfs      13G     0   13G   0% /run/user/1685
->
->
-> lsscsi
-> [2:0:0:0]    disk    ATA      WDC WD30EZRS-00J 0A80  /dev/sde
-> [3:0:0:0]    disk    ATA      WDC WD2000FYYZ-0 1K03  /dev/sdd
-> [4:0:0:0]    disk    ATA      INTEL SSDSC2BX80 0140  /dev/sda
-> [5:0:0:0]    disk    ATA      INTEL SSDSC2BX80 0140  /dev/sdb
-> [6:0:0:0]    disk    ATA      INTEL SSDSC2BX80 0140  /dev/sdc
->
-> lsblk
-> NAME    MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINT
-> sda       8:0    0 745.2G  0 disk
-> +-sda1    8:1    0  18.6G  0 part
->  L-md0   9:0    0  18.6G  0 raid1 /boot
-> +-sda2    8:2    0 121.1G  0 part
->  L-md1   9:1    0   121G  0 raid1 [SWAP]
-> +-sda3    8:3    0 186.3G  0 part
->  L-md2   9:2    0 186.1G  0 raid1 /
-> +-sda4    8:4    0     1K  0 part
-> +-sda5    8:5    0  93.1G  0 part
->  L-md3   9:3    0  93.1G  0 raid1 /cl
-> +-sda6    8:6    0  93.1G  0 part
->  L-md4   9:4    0  93.1G  0 raid1 /pc
-> L-sda7    8:7    0   233G  0 part
->   L-md5   9:5    0 232.9G  0 raid1 /sd
-> sdb       8:16   0 745.2G  0 disk
-> +-sdb1    8:17   0  18.6G  0 part
->  L-md0   9:0    0  18.6G  0 raid1 /boot
-> +-sdb2    8:18   0 121.1G  0 part
->  L-md1   9:1    0   121G  0 raid1 [SWAP]
-> +-sdb3    8:19   0 186.3G  0 part
->  L-md2   9:2    0 186.1G  0 raid1 /
-> +-sdb4    8:20   0     1K  0 part
-> +-sdb5    8:21   0  93.1G  0 part
->  L-md3   9:3    0  93.1G  0 raid1 /cl
-> +-sdb6    8:22   0  93.1G  0 part
->  L-md4   9:4    0  93.1G  0 raid1 /pc
-> L-sdb7    8:23   0   233G  0 part
->   L-md5   9:5    0 232.9G  0 raid1 /sd
-> sdc       8:32   0 745.2G  0 disk
-> +-sdc1    8:33   0  18.6G  0 part
->  L-md0   9:0    0  18.6G  0 raid1 /boot
-> +-sdc2    8:34   0 121.1G  0 part
->  L-md1   9:1    0   121G  0 raid1 [SWAP]
-> +-sdc3    8:35   0 186.3G  0 part
->  L-md2   9:2    0 186.1G  0 raid1 /
-> +-sdc4    8:36   0     1K  0 part
-> +-sdc5    8:37   0  93.1G  0 part
->  L-md3   9:3    0  93.1G  0 raid1 /cl
-> +-sdc6    8:38   0  93.1G  0 part
->  L-md4   9:4    0  93.1G  0 raid1 /pc
-> L-sdc7    8:39   0   233G  0 part
->   L-md5   9:5    0 232.9G  0 raid1 /sd
-> sdd       8:48   0   1.8T  0 disk
-> L-sdd1    8:49   0   1.8T  0 part  /backupdisk
-> sde       8:64   0   2.7T  0 disk
-> L-sde1    8:65   0   2.7T  0 part  /archive
->
->> -----Original Message-----
->> From: Reindl Harald [mailto:h.reindl@thelounge.net]
->> Sent: Tuesday, February 28, 2017 1:23 AM
->> To: linux-raid@vger.kernel.org
->> Subject: Re: GRUB warning after replacing disk drive in RAID1
->>
->> Am 28.02.2017 um 00:37 schrieb Peter Sangas:
->>> I have a RAID1 with 3 disks sda,sdb,sdc.  After replacing sdc and
->>> re-syncing it to the array I issued the following command to load
->>> grub but I get this
->>> warning:
->>>
->>> grub-install /dev/sdc
->>>
->>> Installing for i386-pc platform.
->>> grub-install: warning: Couldn't find physical volume `(null)'. Some
->>> modules may be missing from core image..
->>> grub-install: warning: Couldn't find physical volume `(null)'. Some
->>> modules may be missing from core image..
->>> Installation finished. No error reported.
->>>
->>> Does anyone know why I get this warning and how to avoid it
->>
->> it's harmless and disappears after the resync finished
