@@ -1,61 +1,60 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: [MDADM PATCH 0/2] Fix some building errors
-Date: Wed,  1 Mar 2017 14:12:44 +0800
-Message-ID: <1488348766-31087-1-git-send-email-xni@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From: Zhilong Liu <zlliu@suse.com>
+Subject: [PATCH] mdadm:check the nodes when operate clustered array
+Date: Wed,  1 Mar 2017 18:42:33 +0800
+Message-ID: <1488364953-20456-1-git-send-email-zlliu@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Jes.Sorensen@gmail.com, ncroxon@redhat.com
+To: Jes.Sorensen@gmail.com
+Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
-Hi Jes
+It doesn't make sense to write_bitmap with less than 2 nodes,
+in order to avoid 'write_bitmap' received invalid nodes number,
+it would be better to do checking nodes in getopt operations.
 
-There are some error buildings in Fedora release 26 (Rawhide)
-The gcc version is gcc (GCC) 7.0.1 20170211 (Red Hat 7.0.1-0.8)
+Signed-off-by: Zhilong Liu <zlliu@suse.com>
+---
+such as following method would reproduce the issue.
+# mdadm -CR /dev/md0 -l1 -n2 --bitmap=internal /dev/sda /dev/sdb
+# mdadm --grow /dev/md0 --bitmap=none
+# mdadm --grow /dev/md0 --bitmap=clustered --nodes=1
+# mdadm -X /dev/sda, it would be written internal bitmap.
 
-There are three types of errors:
-1. Fall through 
-mdadm.c:149:28: error: this statement may fall through [-Werror=implicit-fallthrough=]
-    if (mode == ASSEMBLE || mode == BUILD ||
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        mode == CREATE || mode == GROW ||
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        mode == INCREMENTAL || mode == MANAGE)
-        ~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~
-mdadm.c:151:3: note: here
-   case Brief:
-   ^~~~
-2. format-overflow
-Detail.c: In function ‘Detail’:
-Detail.c:584:31: error: ‘%s’ directive writing up to 255 bytes into a region of size 189 [-Werror=format-overflow=]
-     sprintf(path, "/sys/block/%s/md/metadata_version",
-                               ^~
-Detail.c:584:5: note: ‘sprintf’ output between 32 and 287 bytes into a destination of size 200
-     sprintf(path, "/sys/block/%s/md/metadata_version",
-     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      de->d_name);
-      ~~~~~~~~~~~
-3. format-truncation
-super-intel.c: In function ‘examine_super_imsm’:
-super-intel.c:1815:30: error: ‘%s’ directive output may be truncated writing up to 31 bytes into a region of size 24 [-Werror=format-truncation=]
-  snprintf(str, MPB_SIG_LEN, "%s", mpb->sig);
-                              ^~
-super-intel.c:1815:2: note: ‘snprintf’ output between 1 and 32 bytes into a destination of size 24
-  snprintf(str, MPB_SIG_LEN, "%s", mpb->sig);
-  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Xiao Ni (2):
-  Add Wimplicit-fallthrough=0 in Makefile
-  Specify suitable size when write to buffer
-
- Detail.c      | 2 +-
- Makefile      | 2 +-
- super-intel.c | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
-
+diff --git a/mdadm.c b/mdadm.c
+index b5d89e4..747101c 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -603,8 +603,8 @@ int main(int argc, char *argv[])
+ 		case O(GROW, Nodes):
+ 		case O(CREATE, Nodes):
+ 			c.nodes = parse_num(optarg);
+-			if (c.nodes <= 0) {
+-				pr_err("invalid number for the number of cluster nodes: %s\n",
++			if (c.nodes < 2) {
++				pr_err("clustered array needs two nodes at least: %s\n",
+ 					optarg);
+ 				exit(2);
+ 			}
+diff --git a/super1.c b/super1.c
+index 87a74cb..882cd61 100644
+--- a/super1.c
++++ b/super1.c
+@@ -2380,14 +2380,7 @@ static int write_bitmap1(struct supertype *st, int fd, enum bitmap_update update
+ 		}
+ 
+ 		if (bms->version == BITMAP_MAJOR_CLUSTERED) {
+-			if (st->nodes == 1) {
+-				/* the parameter for nodes is not valid */
+-				pr_err("Warning: cluster-md at least needs two nodes\n");
+-				return -EINVAL;
+-			} else if (st->nodes == 0)
+-				/* --nodes is not specified */
+-				break;
+-			else if (__cpu_to_le32(st->nodes) < bms->nodes) {
++			if (__cpu_to_le32(st->nodes) < bms->nodes) {
+ 				/* Since the nodes num is not increased, no need to check the space
+ 				 * is enough or not, just update bms->nodes */
+ 				bms->nodes = __cpu_to_le32(st->nodes);
 -- 
-2.7.4
+2.6.6
 
