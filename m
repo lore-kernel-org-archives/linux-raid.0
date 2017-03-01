@@ -1,69 +1,54 @@
-From: Zhilong <zlliu@suse.com>
-Subject: Re: [PATCH] mdadm: add checking the clustered bitmap in assemble mode
-Date: Thu, 2 Mar 2017 00:32:50 +0800
-Message-ID: <8AF739E9-FB96-4547-9770-7CCB399238CD@suse.com>
-References: <1488354469-19137-1-git-send-email-zlliu@suse.com> <66e3dbf7-5851-0895-7de8-baf48375fead@suse.de>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain;
-        charset=gb2312
-Content-Transfer-Encoding: 8BIT
+From: =?UTF-8?B?546L6YeR5rWm?= <jinpuwang@gmail.com>
+Subject: Re: [PATCH V3 1/2] RAID1: a new I/O barrier implementation to remove
+ resync window
+Date: Wed, 1 Mar 2017 18:01:36 +0100
+Message-ID: <CAD9gYJLh1KaKmp5Z2ShUx5DPAzGM=K69os4J2=ik8KDA51ejOg@mail.gmail.com>
+References: <20170220070430.4mca7clpaw7kpj4j@kernel.org> <7178ADEA-6263-4FB0-95A5-96E5F71A9740@suse.de>
+ <878tp0s7w8.fsf@notabene.neil.brown.name> <f36e85b1-cca1-5be4-a171-d64057cc56a3@suse.de>
+ <20170221174542.rer73ywil3oq26gj@kernel.org> <c04d68cd-96e8-dff9-c54e-54248394119f@suse.de>
+ <488f88e0-8111-a320-3abb-c6e6611a957e@suse.de> <20170223173418.qrgjpj6utgceg5f4@kernel.org>
+ <b6134a31-6cf6-3ea4-a3e5-0073c38c3a51@suse.de> <CAD9gYJ+FqnFbJp3sY9k5j=ZtJiN6qPivJ665hJPX94eWaAMkJA@mail.gmail.com>
+ <20170228194232.ubkw6s3bxnl6nfyt@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <66e3dbf7-5851-0895-7de8-baf48375fead@suse.de>
+In-Reply-To: <20170228194232.ubkw6s3bxnl6nfyt@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Coly Li <colyli@suse.de>
-Cc: Jes.Sorensen@gmail.com, linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: Coly Li <colyli@suse.de>, NeilBrown <neilb@suse.com>, linux-raid <linux-raid@vger.kernel.org>, Shaohua Li <shli@fb.com>, Johannes Thumshirn <jthumshirn@suse.de>, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
+2017-02-28 20:42 GMT+01:00 Shaohua Li <shli@kernel.org>:
+> On Fri, Feb 24, 2017 at 11:19:05AM +0100, =E7=8E=8B=E9=87=91=E6=B5=A6 wro=
+te:
+>> Hi Coly, Hi Shaohua,
+>>
+>>
+>> >
+>> > Hi Shaohua,
+>> >
+>> > I try to catch up with you, let me try to follow your mind by the
+>> > split-in-while-loop condition (this is my new I/O barrier patch). I
+>> > assume the original BIO is a write bio, and original bio is split and
+>> > handled in a while loop in raid1_make_request().
+>>
+>> It's still possible for read bio. We hit a deadlock in the past.
+>> See https://patchwork.kernel.org/patch/9498949/
+>>
+>> Also:
+>> http://www.spinics.net/lists/raid/msg52792.html
+>
+> Thanks Jinpu. So this is for the read side, where we don't have plug stuf=
+f.
+> Yep, that finally makes sense. It's my fault I didn't look at the read si=
+de
+> code carefully. Looks we need the patch Neil suggested.
+>
+> Thanks,
+> Shaohua
 
+Thanks Shaohua, I will test your patch and report result.
 
-> 在 2017年3月1日，20:03，Coly Li <colyli@suse.de> 写道：
-> 
->> On 2017/3/1 下午3:47, Zhilong Liu wrote:
->> 1. both clustered and internal array don't need to specify
->> --bitmap when assembling array.
->> 2. clustered array doesn't support external bitmap mode.
->> 
->> Signed-off-by: Zhilong Liu <zlliu@suse.com>
->> 
->> diff --git a/mdadm.c b/mdadm.c
->> index b5d89e4..b08cace 100644
->> --- a/mdadm.c
->> +++ b/mdadm.c
->> @@ -1095,8 +1095,14 @@ int main(int argc, char *argv[])
->>                pr_err("bitmap file needed with -b in --assemble mode\n");
->>                exit(2);
->>            }
->> -            if (strcmp(optarg, "internal") == 0) {
->> -                pr_err("there is no need to specify --bitmap when assembling arrays with internal bitmaps\n");
->> +            if (strcmp(optarg, "internal") == 0 ||
->> +                strcmp(optarg, "clustered") == 0) {
->> +                pr_err("no need to specify --bitmap when assembling arrays with internal or clustered bitmaps\n");
-> 
-> Is it important for 80 characters width limitation ?
-> 
-To keep good style, the suggestion is great.
->> +                continue;
-> 
-> Here if optarg is "clustered", it will continue and won't check the
-> following strcmp.
-> 
->> +            }
->> +            if (strcmp(optarg, "clustered") == 0 &&
->> +                strchr(optarg, '/') != NULL) {
-> 
-> I guess this check won't happen at all. Correct me if I am wrong.
-Yes, I should do this checking in 'create' and 'grow' mode. The first checking is enough in assemble mode.
-> 
->> +                pr_err("clustered array doesn't support external bitmap\n");
->>                continue;
->>            }
->>            bitmap_fd = open(optarg, O_RDWR);
->> 
-> 
-> Thanks.
-> 
-> Coly
-Many many thanks,
-Zhilong
-
-send from iPhone
+Regards,
+Jinpu
