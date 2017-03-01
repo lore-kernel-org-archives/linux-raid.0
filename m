@@ -1,350 +1,135 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH V2 1/5] md-cluster: use sync way to handle METADATA_UPDATED msg
-Date: Wed,  1 Mar 2017 17:30:29 +0800
-Message-ID: <1488360629-10397-1-git-send-email-gqjiang@suse.com>
-References: <1488357760-7893-1-git-send-email-gqjiang@suse.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1488357760-7893-1-git-send-email-gqjiang@suse.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@fb.com, neilb@suse.de, Guoqing Jiang <gqjiang@suse.com>
+From: Milan Broz <gmazyland@gmail.com>
+Subject: Re: [RFC PATCH v4] IV Generation algorithms for dm-crypt
+Date: Wed, 1 Mar 2017 10:29:59 +0100
+Message-ID: <b563eb97-82ba-69d2-c4c5-66bc716a7507@gmail.com>
+References: <1486463731-6224-1-git-send-email-binoy.jayan@linaro.org>
+	<CAOtvUMcN8s886978vE6T=AE79KkZsLBnXsmhewnb5PB0UyAG3A@mail.gmail.com>
+	<CAHv-k_8rgArzV2uQ64h1ZTNRpssX1jMf=RwuPoBmsjQ0FhCsWA@mail.gmail.com>
+	<68f70534-a309-46ba-a84d-8acc1e6620e5@gmail.com>
+	<CAOtvUMf3c0fUjABmbfMrbs0W4gyhKVZyc_tZH3rQg65zF18YMg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <CAOtvUMf3c0fUjABmbfMrbs0W4gyhKVZyc_tZH3rQg65zF18YMg@mail.gmail.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Gilad Ben-Yossef <gilad@benyossef.com>
+Cc: Binoy Jayan <binoy.jayan@linaro.org>, Rajendra <rnayak@codeaurora.org>, Herbert Xu <herbert@gondor.apana.org.au>, Oded <oded.golombek@arm.com>, Mike Snitzer <snitzer@redhat.com>, Linux kernel mailing list <linux-kernel@vger.kernel.org>, Ondrej Mosnacek <omosnace@redhat.com>, linux-raid@vger.kernel.org, dm-devel@redhat.com, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, linux-crypto@vger.kernel.org, Shaohua Li <shli@kernel.org>, "David S. Miller" <davem@davemloft.net>, Alasdair Kergon <agk@redhat.com>, Ofir <Ofir.Drang@arm.com>
 List-Id: linux-raid.ids
 
-Previously, when node received METADATA_UPDATED msg, it just
-need to wakeup mddev->thread, then md_reload_sb will be called
-eventually.
+On 03/01/2017 09:30 AM, Gilad Ben-Yossef wrote:
+> On Tue, Feb 28, 2017 at 11:05 PM, Milan Broz <gmazyland@gmail.com> wrote:
+>>
+>> On 02/22/2017 07:12 AM, Binoy Jayan wrote:
+>>>
+>>> I was wondering if this is near to be ready for submission (apart from
+>>> the testmgr.c
+>>> changes) or I need to make some changes to make it similar to the IPSec offload?
+>>
+>> I just tried this and except it registers the IV for every new device again, it works...
+>> (After a while you have many duplicate entries in /proc/crypto.)
+>>
+>> But I would like to see some summary why such a big patch is needed in the first place.
+>> (During an internal discussions seems that people are already lost in mails and
+>> patches here, so Ondra promised me to send some summary mail soon here.)
+>>
+>> IIRC the first initial problem was dmcrypt performance on some embedded
+>> crypto processors that are not able to cope with small crypto requests effectively.
+>>
+>>
+>> Do you have some real performance numbers that proves that such a patch is adequate?
+>>
+>> I would really like to see the performance issue fixed but I am really not sure
+>> this approach works for everyone. It would be better to avoid repeating this exercise later.
+>> IIRC Ondra's "bulk" mode, despite rejected, shows that there is a potential
+>> to speedup things even for crypt drivers that do not support own IV generators.
+>>
+> 
+> AFAIK the problem that we are trying to solve is that if the IV is
+> generated outside the crypto API
+> domain than you are forced to have an invocation of the crypto API per
+> each block because you
+> need to provide the IV for each block.
+> 
+> By putting the IV generation responsibility in the Crypto API we open
+> the way to do a single invocation
+> of the crypto API for a whole sequence of blocks.
 
-We taken the asynchronous way to avoid a deadlock issue, the
-deadlock issue could happen when one node is receiving the
-METADATA_UPDATED msg (wants reconfig_mutex) and trying to run
-the path:
+Sure, but this is theory. Does it really work on some hw already?
+Do you have performance measurements or comparison?
 
-md_check_recovery -> mddev_trylock(hold reconfig_mutex)
-                  -> md_update_sb-metadata_update_start
-		     (want EX on token however token is
-		      got by the sending node)
+> For software implementation of XTS this doesn't matter much - but for
+> hardware based XTS providers
 
-Since we will support resizing for clustered raid, and we
-need the metadata update handling to be synchronous so that
-the initiating node can detect failure, so we need to change
-the way for handling METADATA_UPDATED msg.
+It is not only embedded crypto, we have some more reports in the past
+that 512B sectors are not ideal even for other systems.
+(IIRC it was also with AES-NI that represents really big group of users).
 
-But, we obviously need to avoid above deadlock with the
-sync way. To make this happen, we considered to not hold
-reconfig_mutex to call md_reload_sb, if some other thread
-has already taken reconfig_mutex and waiting for the 'token',
-then process_recvd_msg() can safely call md_reload_sb()
-without taking the mutex. This is because we can be certain
-that no other thread will take the mutex, and we also certain
-that the actions performed by md_reload_sb() won't interfere
-with anything that the other thread is in the middle of.
+> This lead some vendors to ship hacked up versions of dm-crypt to match
+> the specific crypto hardware
+> they were using, or so I've heard at least - didn't see the code myself.
 
-To make this more concrete, we added a new cinfo->state bit
-        MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD
+I saw few version of that. There was a very hacky way to provide request-based dmcrypt
+(see old "Introduce the request handling for dm-crypt" thread on dm-devel).
+This is not the acceptable way but definitely it points to the same problem.
 
-Which is set in lock_token() just before dlm_lock_sync() is
-called, and cleared just after. As lock_token() is always
-called with reconfig_mutex() held (the specific case is the
-resync_info_update which is distinguished well in previous
-patch), if process_recvd_msg() finds that the new bit is set,
-then the mutex must be held by some other thread, and it will
-keep waiting.
+> I believe Binoy is trying to address this in a generic upstream worthy
+> way instead.
 
-So process_metadata_update() can call md_reload_sb() if either
-mddev_trylock() succeeds, or if MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD
-is set. The tricky bit is what to do if neither of these apply.
-We need to wait. Fortunately mddev_unlock() always calls wake_up()
-on mddev->thread->wqueue. So we can get lock_token() to call
-wake_up() on that when it sets the bit.
+IIRC the problem is performance, if we can solve it by some generic way,
+good, but for now it seems to be a big change and just hope it helps later...
 
-There are also some related changes inside this commit:
-1. remove RELOAD_SB related codes since there are not valid anymore.
-2. mddev is added into md_cluster_info then we can get mddev inside
-   lock_token.
-3. add new parameter for lock_token to distinguish reconfig_mutex
-   is held or not.
+> Anyway, you are only supposed to see s difference when using a
+> hardware based XTS provider algo
+> that supports IV generation.
+> 
+>> I like the patch is now contained inside dmcrypt, but it still exposes IVs that
+>> are designed just for old, insecure, compatibility-only containers.
+>>
+>> I really do not think every compatible crap must be accessible through crypto API.
+>> (I wrote the dmcrypt lrw and tcw compatibility IVs and I would never do that this way
+>> if I know it is accessible outside of dmcrypt internals...)
+>> Even the ESSIV is something that was born to fix predictive IVs (CBC watermarking
+>> attacks) for disk encryption only, no reason to expose it outside of disk encryption.
+>>
+> 
+> The point is that you have more than one implementation of these
+> "compatible crap" - the
+> software implementation that you wrote and potentially multiple
+> hardware implementations
+> and putting this in the crypto API domain is the way to abstract this
+> so you use the one
+> that works best of your platform.
 
-And, we need to set MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD in below:
-1. set it before unregister thread, otherwise a deadlock could
-   appear if stop a resyncing array.
-   This is because md_unregister_thread(&cinfo->recv_thread) is
-   blocked by recv_daemon -> process_recvd_msg
-			  -> process_metadata_update.
-   To resolve the issue, MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD is
-   also need to be set before unregister thread.
-2. set it in metadata_update_start to fix another deadlock.
-	a. Node A sends METADATA_UPDATED msg (held Token lock).
-	b. Node B wants to do resync, and is blocked since it can't
-	   get Token lock, but MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD is
-	   not set since the callchain
-	   (md_do_sync -> sync_request
-        	       -> resync_info_update
-		       -> sendmsg
-		       -> lock_comm -> lock_token)
-	   doesn't hold reconfig_mutex.
-	c. Node B trys to update sb (held reconfig_mutex), but stopped
-	   at wait_event() in metadata_update_start since we have set
-	   MD_CLUSTER_SEND_LOCK flag in lock_comm (step 2).
-	d. Then Node B receives METADATA_UPDATED msg from A, of course
-	   recv_daemon is blocked forever.
-   Since metadata_update_start always calls lock_token with reconfig_mutex,
-   we need to set MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD here as well, and
-   lock_token don't need to set it twice unless lock_token is invoked from
-   lock_comm.
+For XTS you need just simple linear IV. No problem with that, implementation
+in crypto API and hw is trivial.
 
-Finally, thanks to Neil for his great idea and help!
+But for compatible IV (that provides compatibility with loopAES and very old TrueCrypt),
+these should be never ever implemented again anywhere.
 
-Reviewed-by: NeilBrown <neilb@suse.com>
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
----
- drivers/md/md-cluster.c | 82 +++++++++++++++++++++++++++++++++++++++----------
- drivers/md/md.c         |  4 ---
- drivers/md/md.h         |  3 --
- 3 files changed, 66 insertions(+), 23 deletions(-)
+Specifically "tcw" is broken, insecure and provided here just to help people to migrate
+from old Truecrypt containers. Even Truecrypt followers removed it from the codebase.
+(It is basically combination of IV and slight modification of CBC mode. All
+recent version switched to XTS and plain IV.)
 
-diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index 321ecac23027..5cf0a9d29bf0 100644
---- a/drivers/md/md-cluster.c
-+++ b/drivers/md/md-cluster.c
-@@ -67,9 +67,10 @@ struct resync_info {
-  * set up all the related infos such as bitmap and personality */
- #define		MD_CLUSTER_ALREADY_IN_CLUSTER		6
- #define		MD_CLUSTER_PENDING_RECV_EVENT		7
--
-+#define 	MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD		8
- 
- struct md_cluster_info {
-+	struct mddev *mddev; /* the md device which md_cluster_info belongs to */
- 	/* dlm lock space and resources for clustered raid. */
- 	dlm_lockspace_t *lockspace;
- 	int slot_number;
-@@ -523,11 +524,17 @@ static void process_add_new_disk(struct mddev *mddev, struct cluster_msg *cmsg)
- 
- static void process_metadata_update(struct mddev *mddev, struct cluster_msg *msg)
- {
-+	int got_lock = 0;
- 	struct md_cluster_info *cinfo = mddev->cluster_info;
- 	mddev->good_device_nr = le32_to_cpu(msg->raid_slot);
--	set_bit(MD_RELOAD_SB, &mddev->flags);
-+
- 	dlm_lock_sync(cinfo->no_new_dev_lockres, DLM_LOCK_CR);
--	md_wakeup_thread(mddev->thread);
-+	wait_event(mddev->thread->wqueue,
-+		   (got_lock = mddev_trylock(mddev)) ||
-+		    test_bit(MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD, &cinfo->state));
-+	md_reload_sb(mddev, mddev->good_device_nr);
-+	if (got_lock)
-+		mddev_unlock(mddev);
- }
- 
- static void process_remove_disk(struct mddev *mddev, struct cluster_msg *msg)
-@@ -646,11 +653,29 @@ static void recv_daemon(struct md_thread *thread)
-  * Takes the lock on the TOKEN lock resource so no other
-  * node can communicate while the operation is underway.
-  */
--static int lock_token(struct md_cluster_info *cinfo)
-+static int lock_token(struct md_cluster_info *cinfo, bool mddev_locked)
- {
--	int error;
-+	int error, set_bit = 0;
-+	struct mddev *mddev = cinfo->mddev;
- 
-+	/*
-+	 * If resync thread run after raid1d thread, then process_metadata_update
-+	 * could not continue if raid1d held reconfig_mutex (and raid1d is blocked
-+	 * since another node already got EX on Token and waitting the EX of Ack),
-+	 * so let resync wake up thread in case flag is set.
-+	 */
-+	if (mddev_locked && !test_bit(MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD,
-+				      &cinfo->state)) {
-+		error = test_and_set_bit_lock(MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD,
-+					      &cinfo->state);
-+		WARN_ON_ONCE(error);
-+		md_wakeup_thread(mddev->thread);
-+		set_bit = 1;
-+	}
- 	error = dlm_lock_sync(cinfo->token_lockres, DLM_LOCK_EX);
-+	if (set_bit)
-+		clear_bit_unlock(MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD, &cinfo->state);
-+
- 	if (error)
- 		pr_err("md-cluster(%s:%d): failed to get EX on TOKEN (%d)\n",
- 				__func__, __LINE__, error);
-@@ -663,12 +688,12 @@ static int lock_token(struct md_cluster_info *cinfo)
- /* lock_comm()
-  * Sets the MD_CLUSTER_SEND_LOCK bit to lock the send channel.
-  */
--static int lock_comm(struct md_cluster_info *cinfo)
-+static int lock_comm(struct md_cluster_info *cinfo, bool mddev_locked)
- {
- 	wait_event(cinfo->wait,
- 		   !test_and_set_bit(MD_CLUSTER_SEND_LOCK, &cinfo->state));
- 
--	return lock_token(cinfo);
-+	return lock_token(cinfo, mddev_locked);
- }
- 
- static void unlock_comm(struct md_cluster_info *cinfo)
-@@ -743,11 +768,12 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
- 	return error;
- }
- 
--static int sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
-+static int sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg,
-+		   bool mddev_locked)
- {
- 	int ret;
- 
--	lock_comm(cinfo);
-+	lock_comm(cinfo, mddev_locked);
- 	ret = __sendmsg(cinfo, cmsg);
- 	unlock_comm(cinfo);
- 	return ret;
-@@ -834,6 +860,7 @@ static int join(struct mddev *mddev, int nodes)
- 	mutex_init(&cinfo->recv_mutex);
- 
- 	mddev->cluster_info = cinfo;
-+	cinfo->mddev = mddev;
- 
- 	memset(str, 0, 64);
- 	sprintf(str, "%pU", mddev->uuid);
-@@ -908,6 +935,7 @@ static int join(struct mddev *mddev, int nodes)
- 
- 	return 0;
- err:
-+	set_bit(MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD, &cinfo->state);
- 	md_unregister_thread(&cinfo->recovery_thread);
- 	md_unregister_thread(&cinfo->recv_thread);
- 	lockres_free(cinfo->message_lockres);
-@@ -943,7 +971,7 @@ static void resync_bitmap(struct mddev *mddev)
- 	int err;
- 
- 	cmsg.type = cpu_to_le32(BITMAP_NEEDS_SYNC);
--	err = sendmsg(cinfo, &cmsg);
-+	err = sendmsg(cinfo, &cmsg, 1);
- 	if (err)
- 		pr_err("%s:%d: failed to send BITMAP_NEEDS_SYNC message (%d)\n",
- 			__func__, __LINE__, err);
-@@ -963,6 +991,7 @@ static int leave(struct mddev *mddev)
- 	if (cinfo->slot_number > 0 && mddev->recovery_cp != MaxSector)
- 		resync_bitmap(mddev);
- 
-+	set_bit(MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD, &cinfo->state);
- 	md_unregister_thread(&cinfo->recovery_thread);
- 	md_unregister_thread(&cinfo->recv_thread);
- 	lockres_free(cinfo->message_lockres);
-@@ -997,16 +1026,30 @@ static int slot_number(struct mddev *mddev)
- static int metadata_update_start(struct mddev *mddev)
- {
- 	struct md_cluster_info *cinfo = mddev->cluster_info;
-+	int ret;
-+
-+	/*
-+	 * metadata_update_start is always called with the protection of
-+	 * reconfig_mutex, so set WAITING_FOR_TOKEN here.
-+	 */
-+	ret = test_and_set_bit_lock(MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD,
-+				    &cinfo->state);
-+	WARN_ON_ONCE(ret);
-+	md_wakeup_thread(mddev->thread);
- 
- 	wait_event(cinfo->wait,
- 		   !test_and_set_bit(MD_CLUSTER_SEND_LOCK, &cinfo->state) ||
- 		   test_and_clear_bit(MD_CLUSTER_SEND_LOCKED_ALREADY, &cinfo->state));
- 
- 	/* If token is already locked, return 0 */
--	if (cinfo->token_lockres->mode == DLM_LOCK_EX)
-+	if (cinfo->token_lockres->mode == DLM_LOCK_EX) {
-+		clear_bit_unlock(MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD, &cinfo->state);
- 		return 0;
-+	}
- 
--	return lock_token(cinfo);
-+	ret = lock_token(cinfo, 1);
-+	clear_bit_unlock(MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD, &cinfo->state);
-+	return ret;
- }
- 
- static int metadata_update_finish(struct mddev *mddev)
-@@ -1069,7 +1112,14 @@ static int resync_info_update(struct mddev *mddev, sector_t lo, sector_t hi)
- 	cmsg.low = cpu_to_le64(lo);
- 	cmsg.high = cpu_to_le64(hi);
- 
--	return sendmsg(cinfo, &cmsg);
-+	/*
-+	 * mddev_lock is held if resync_info_update is called from
-+	 * resync_finish (md_reap_sync_thread -> resync_finish)
-+	 */
-+	if (lo == 0 && hi == 0)
-+		return sendmsg(cinfo, &cmsg, 1);
-+	else
-+		return sendmsg(cinfo, &cmsg, 0);
- }
- 
- static int resync_finish(struct mddev *mddev)
-@@ -1119,7 +1169,7 @@ static int add_new_disk(struct mddev *mddev, struct md_rdev *rdev)
- 	cmsg.type = cpu_to_le32(NEWDISK);
- 	memcpy(cmsg.uuid, uuid, 16);
- 	cmsg.raid_slot = cpu_to_le32(rdev->desc_nr);
--	lock_comm(cinfo);
-+	lock_comm(cinfo, 1);
- 	ret = __sendmsg(cinfo, &cmsg);
- 	if (ret)
- 		return ret;
-@@ -1179,7 +1229,7 @@ static int remove_disk(struct mddev *mddev, struct md_rdev *rdev)
- 	struct md_cluster_info *cinfo = mddev->cluster_info;
- 	cmsg.type = cpu_to_le32(REMOVE);
- 	cmsg.raid_slot = cpu_to_le32(rdev->desc_nr);
--	return sendmsg(cinfo, &cmsg);
-+	return sendmsg(cinfo, &cmsg, 1);
- }
- 
- static int lock_all_bitmaps(struct mddev *mddev)
-@@ -1243,7 +1293,7 @@ static int gather_bitmaps(struct md_rdev *rdev)
- 
- 	cmsg.type = cpu_to_le32(RE_ADD);
- 	cmsg.raid_slot = cpu_to_le32(rdev->desc_nr);
--	err = sendmsg(cinfo, &cmsg);
-+	err = sendmsg(cinfo, &cmsg, 1);
- 	if (err)
- 		goto out;
- 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index f25bd6de0c72..44206bc6e3aa 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -8384,7 +8384,6 @@ void md_check_recovery(struct mddev *mddev)
- 		(mddev->sb_flags & ~ (1<<MD_SB_CHANGE_PENDING)) ||
- 		test_bit(MD_RECOVERY_NEEDED, &mddev->recovery) ||
- 		test_bit(MD_RECOVERY_DONE, &mddev->recovery) ||
--		test_bit(MD_RELOAD_SB, &mddev->flags) ||
- 		(mddev->external == 0 && mddev->safemode == 1) ||
- 		(mddev->safemode == 2 && ! atomic_read(&mddev->writes_pending)
- 		 && !mddev->in_sync && mddev->recovery_cp == MaxSector)
-@@ -8433,9 +8432,6 @@ void md_check_recovery(struct mddev *mddev)
- 						rdev->raid_disk < 0)
- 					md_kick_rdev_from_array(rdev);
- 			}
--
--			if (test_and_clear_bit(MD_RELOAD_SB, &mddev->flags))
--				md_reload_sb(mddev, mddev->good_device_nr);
- 		}
- 
- 		if (!mddev->external) {
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index dde8ecb760c8..1c00160b09f9 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -219,9 +219,6 @@ enum mddev_flags {
- 				 * it then */
- 	MD_JOURNAL_CLEAN,	/* A raid with journal is already clean */
- 	MD_HAS_JOURNAL,		/* The raid array has journal feature set */
--	MD_RELOAD_SB,		/* Reload the superblock because another node
--				 * updated it.
--				 */
- 	MD_CLUSTER_RESYNC_LOCKED, /* cluster raid only, which means node
- 				   * already took resync lock, need to
- 				   * release the lock */
--- 
-2.6.2
+So building abstraction over something known to be broken and that is now intentionally
+isolated inside dmcrypt is, in my opinion, really not a good idea.
 
+
+But please do get me wrong,  I do not want to block any improvement.
+
+But it seems to me that this thread focused on creating nice crypto API interface
+for FDE IVs instead of demonstration that the proposed solution really solves
+the performance issue.
+And not only for your hw driver, maybe other systems could benefit from the better
+processing of small requests as well.
+
+Milan
