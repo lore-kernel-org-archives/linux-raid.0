@@ -1,71 +1,112 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: [BUG] non-metadata arrays cannot use more than 27 component
- devices
-Date: Wed, 1 Mar 2017 12:23:42 -0500
-Message-ID: <27373f29-a8ea-012c-102d-9fadf05cb3c2@turmel.org>
-References: <20170224040816.41f2f372.ian_bruce@mail.ru>
- <41ea334c-ae1c-dac6-e1a1-480d3700a588@turmel.org>
- <20170224084024.4dfe83a2.ian_bruce@mail.ru>
- <1e40da0d-b175-9ff5-d2e5-cf1f25aacc26@turmel.org>
- <c23b2aca-b6e6-37b8-3238-e59423d8f5a7@youngman.org.uk>
- <aee1f55b-cedf-15e9-5865-7fc0cdf9a188@turmel.org>
- <58B2137B.6070608@youngman.org.uk>
- <5172e2ab-e193-477b-52c4-86fbab0d52fe@turmel.org>
- <58B21987.6060604@youngman.org.uk>
- <657e80e9-b1f5-1f58-a4d0-6cbc4cc44927@turmel.org>
- <58B6E287.9020804@youngman.org.uk>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH v4 3/7] raid5-ppl: Partial Parity Log write logging
+ implementation
+Date: Wed, 1 Mar 2017 09:51:33 -0800
+Message-ID: <20170301175133.jimllzchgsemndak@kernel.org>
+References: <20170221194401.18733-1-artur.paszkiewicz@intel.com>
+ <20170221194401.18733-4-artur.paszkiewicz@intel.com>
+ <20170228000419.rljabgaurh7e3rqq@kernel.org>
+ <d1021e37-f40d-955b-0726-1b64cc4f8064@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <58B6E287.9020804@youngman.org.uk>
+Content-Disposition: inline
+In-Reply-To: <d1021e37-f40d-955b-0726-1b64cc4f8064@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, ian_bruce@mail.ru, linux-raid@vger.kernel.org
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: shli@fb.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 03/01/2017 10:02 AM, Wols Lists wrote:
+On Wed, Mar 01, 2017 at 05:13:38PM +0100, Artur Paszkiewicz wrote:
+> On 02/28/2017 01:04 AM, Shaohua Li wrote:
+> > On Tue, Feb 21, 2017 at 08:43:57PM +0100, Artur Paszkiewicz wrote:
+> >> This implements the PPL write logging functionality. The description
+> >> of PPL is added to the documentation. More details can be found in the
+> >> comments in raid5-ppl.c.
+> >>
+> >> Put the PPL metadata structures to md_p.h because userspace tools
+> >> (mdadm) will also need to read/write PPL.
+> >>
+> >> Warn about using PPL with enabled disk volatile write-back cache for
+> >> now. It can be removed once disk cache flushing before writing PPL is
+> >> implemented.
+> >>
+> >> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+> >> ---
+> >>  Documentation/md/raid5-ppl.txt |  44 +++
+> >>  drivers/md/Makefile            |   2 +-
+> >>  drivers/md/raid5-ppl.c         | 617 +++++++++++++++++++++++++++++++++++++++++
+> >>  drivers/md/raid5.c             |  49 +++-
+> >>  drivers/md/raid5.h             |   8 +
+> >>  include/uapi/linux/raid/md_p.h |  26 ++
+> >>  6 files changed, 738 insertions(+), 8 deletions(-)
+> >>  create mode 100644 Documentation/md/raid5-ppl.txt
+> >>  create mode 100644 drivers/md/raid5-ppl.c
+> >>
+> >> diff --git a/Documentation/md/raid5-ppl.txt b/Documentation/md/raid5-ppl.txt
+> >> new file mode 100644
+> >> index 000000000000..127072b09363
+> >> --- /dev/null
+> >> +++ b/Documentation/md/raid5-ppl.txt
+> >> @@ -0,0 +1,44 @@
+> >> +Partial Parity Log
+> >> +
+> >> +
+> >> +		while (stripes_count--) {
+> >> +			/*
+> >> +			 * if entry without partial parity just skip its stripes
+> >> +			 * without adding pages to bio
+> >> +			 */
+> >> +			if (pp_size > 0 &&
+> >> +			    !bio_add_page(bio, sh->ppl_page, PAGE_SIZE, 0)) {
+> >> +				struct bio *prev = bio;
+> >> +
+> >> +				bio = bio_alloc_bioset(GFP_NOIO, BIO_MAX_PAGES,
+> >> +						       ppl_conf->bs);
+> > 
+> > The code keeps allocating bios but doesn't dispatch any yet. The bioset can't
+> > guarantee the allocation successes. To have the guarantee, we must make sure
+> > previous bios could finish.
+> 
+> Is it ok to submit the bio before allocating another from the same
+> bioset, without waiting for it to complete? The description for
+> bio_alloc_bioset() suggests this, if I understand it correctly: "Callers
+> that need to allocate more than 1 bio must always submit the previously
+> allocated bio for IO before attempting to allocate a new one." 
 
-> Sorry to drag this up again, but where are these write intent bits
-> going to come from? And it's a backup. Why am I going to re-add,
-> unless I'm going to wipe the old backup and create a new one?
+Yes, I mean submit.
+  
+> >>  		return -EINVAL;
+> >>  	if (mddev->delta_disks == 0 &&
+> >>  	    mddev->new_layout == mddev->layout &&
+> >> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+> >> index 3cc4cb28f7e6..f915a7a0e752 100644
+> >> --- a/drivers/md/raid5.h
+> >> +++ b/drivers/md/raid5.h
+> >> @@ -230,6 +230,7 @@ struct stripe_head {
+> >>  	struct list_head	r5c; /* for r5c_cache->stripe_in_journal */
+> >>  
+> >>  	struct page		*ppl_page; /* partial parity of this stripe */
+> >> +	struct ppl_io_unit	*ppl_log_io;
+> > 
+> > Maybe we should put the ppl fields and raid5 fields to a union
+> 
+> Good idea, will do.
+> 
+> >>  	/**
+> >>  	 * struct stripe_operations
+> >>  	 * @target - STRIPE_OP_COMPUTE_BLK target
+> >> @@ -689,6 +690,7 @@ struct r5conf {
+> >>  	int			group_cnt;
+> >>  	int			worker_cnt_per_group;
+> >>  	struct r5l_log		*log;
+> >> +	struct ppl_conf		*ppl;
+> > 
+> > Maybe use void * log_private, so works for both raid5-cache and ppl
+> 
+> Do you mean replace "struct ppl_conf *ppl" with "void *log_private"?
 
-Given your process below, it's moot.
+Right. But if this makes checking the log type hard, ignore it.
 
-> And your way is more complicated - more room for sys-admin cock-up
-> :-)
-
-I strongly disagree.  This procedure, as shown, is an admin cock-up:
-
-> mdadm --build /dev/mdbackup --device-count 2 /dev/md/home missing
-> ... hotplug sd-big ...
-> madam /dev/mdbackup --add /dev/sd-big
-> ... wait for sync to finish ...
-> mdadm --stop mdbackup
-> ... unplug sd-big ...
-
-Are you unmounting /dev/md/home while this is going on?  If not, and
-there's any significant activity, your "backup" is corrupt.  If you are
-unmounting, your data is unavailable for the duration of the resync.
-
-The corresponding procedure for logical volume in LVM would be:
-
-# lvcreate -n homesnaplv -s homelv --size 10g vg0
-# dd if=/dev/vg0/homesnaplv of=/dev/sd-big bs=1M
-# lvremove /dev/vg0/homesnaplv
-
-Unlike your solution, the LVM snapshot won't be changing underneath you
-during the copy.  The allocated size of the snapshot, shown as 10g
-above, only has to be big enough to accommodate the amount of writes to
-homelv while the dd is in progress.
-
-Also, LVM understands most mounted filesystems, and will invoke the
-proper kernel calls to briefly quiesce the filesystem for the snapshot,
-ensuring the filesystem copied out is consistent.  But the user sees
-only a few tens or hundreds of milliseconds of hesitation and can keep
-going.  Writes to homelv while the snapshot exists generate extra disk
-activity (to move the replaced blocks to the snapshot storage, with some
-metadata), but is otherwise invisible to the users.
-
-LVM is *made* for this.  You should use it.
-
-Phil
+Thanks,
+Shaohua
