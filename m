@@ -1,7 +1,7 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH V2 3/5] md-cluster: add CHANGE_CAPACITY message type
-Date: Wed,  1 Mar 2017 16:42:38 +0800
-Message-ID: <1488357760-7893-4-git-send-email-gqjiang@suse.com>
+Subject: [PATCH V2 5/5] md-cluster: add the support for resize
+Date: Wed,  1 Mar 2017 16:42:40 +0800
+Message-ID: <1488357760-7893-6-git-send-email-gqjiang@suse.com>
 References: <1488357760-7893-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1488357760-7893-1-git-send-email-gqjiang@suse.com>
@@ -10,41 +10,198 @@ To: linux-raid@vger.kernel.org
 Cc: shli@fb.com, neilb@suse.de, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-The msg type CHANGE_CAPACITY is introduced to support
-resize clustered raid in later patch, and it is sent
-after all the nodes have the same sync_size, receiver
-node just need to set new capacity once received this
-msg.
+To update size for cluster raid, we need to make
+sure all nodes can perform the change successfully.
+However, it is possible that some of them can't do
+it due to failure (bitmap_resize could fail). So
+we need to consider the issue before we set the
+capacity unconditionally, and we use below steps
+to perform sanity check.
+
+1. A change the size, then broadcast METADATA_UPDATED
+   msg.
+2. B and C receive METADATA_UPDATED change the size
+   excepts call set_capacity, sync_size is not update
+   if the change failed. Also call bitmap_update_sb
+   to sync sb to disk.
+3. A checks other node's sync_size, if sync_size has
+   been updated in all nodes, then send CHANGE_CAPACITY
+   msg otherwise send msg to revert previous change.
+4. B and C call set_capacity if receive CHANGE_CAPACITY
+   msg, otherwise pers->resize will be called to restore
+   the old value.
 
 Reviewed-by: NeilBrown <neilb@suse.com>
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- drivers/md/md-cluster.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ Documentation/md/md-cluster.txt |  2 +-
+ drivers/md/md-cluster.c         | 76 +++++++++++++++++++++++++++++++++++++++++
+ drivers/md/md-cluster.h         |  1 +
+ drivers/md/md.c                 | 21 +++++++++---
+ 4 files changed, 94 insertions(+), 6 deletions(-)
 
+diff --git a/Documentation/md/md-cluster.txt b/Documentation/md/md-cluster.txt
+index 38883276d31c..2663d49dd8a0 100644
+--- a/Documentation/md/md-cluster.txt
++++ b/Documentation/md/md-cluster.txt
+@@ -321,4 +321,4 @@ The algorithm is:
+ 
+ There are somethings which are not supported by cluster MD yet.
+ 
+-- update size and change array_sectors.
++- change array_sectors.
 diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index 5cf0a9d29bf0..8b7d55bf5aa2 100644
+index 5a42fc5202ff..88ce15843a42 100644
 --- a/drivers/md/md-cluster.c
 +++ b/drivers/md/md-cluster.c
-@@ -104,6 +104,7 @@ enum msg_type {
- 	REMOVE,
- 	RE_ADD,
- 	BITMAP_NEEDS_SYNC,
-+	CHANGE_CAPACITY,
- };
+@@ -1151,6 +1151,81 @@ int cluster_check_sync_size(struct mddev *mddev)
+ 	return (my_sync_size == sync_size) ? 0 : -1;
+ }
  
- struct cluster_msg {
-@@ -579,6 +580,10 @@ static int process_recvd_msg(struct mddev *mddev, struct cluster_msg *msg)
- 	case METADATA_UPDATED:
- 		process_metadata_update(mddev, msg);
- 		break;
-+	case CHANGE_CAPACITY:
++/*
++ * Update the size for cluster raid is a little more complex, we perform it
++ * by the steps:
++ * 1. hold token lock and update superblock in initiator node.
++ * 2. send METADATA_UPDATED msg to other nodes.
++ * 3. The initiator node continues to check each bitmap's sync_size, if all
++ *    bitmaps have the same value of sync_size, then we can set capacity and
++ *    let other nodes to perform it. If one node can't update sync_size
++ *    accordingly, we need to revert to previous value.
++ */
++static void update_size(struct mddev *mddev, sector_t old_dev_sectors)
++{
++	struct md_cluster_info *cinfo = mddev->cluster_info;
++	struct cluster_msg cmsg;
++	struct md_rdev *rdev;
++	int ret = 0;
++	int raid_slot = -1;
++
++	md_update_sb(mddev, 1);
++	lock_comm(cinfo, 1);
++
++	memset(&cmsg, 0, sizeof(cmsg));
++	cmsg.type = cpu_to_le32(METADATA_UPDATED);
++	rdev_for_each(rdev, mddev)
++		if (rdev->raid_disk >= 0 && !test_bit(Faulty, &rdev->flags)) {
++			raid_slot = rdev->desc_nr;
++			break;
++		}
++	if (raid_slot >= 0) {
++		cmsg.raid_slot = cpu_to_le32(raid_slot);
++		/*
++		 * We can only change capiticy after all the nodes can do it,
++		 * so need to wait after other nodes already received the msg
++		 * and handled the change
++		 */
++		ret = __sendmsg(cinfo, &cmsg);
++		if (ret) {
++			pr_err("%s:%d: failed to send METADATA_UPDATED msg\n",
++			       __func__, __LINE__);
++			unlock_comm(cinfo);
++			return;
++		}
++	} else {
++		pr_err("md-cluster: No good device id found to send\n");
++		unlock_comm(cinfo);
++		return;
++	}
++
++	/*
++	 * check the sync_size from other node's bitmap, if sync_size
++	 * have already updated in other nodes as expected, send an
++	 * empty metadata msg to permit the change of capacity
++	 */
++	if (cluster_check_sync_size(mddev) == 0) {
++		memset(&cmsg, 0, sizeof(cmsg));
++		cmsg.type = cpu_to_le32(CHANGE_CAPACITY);
++		ret = __sendmsg(cinfo, &cmsg);
++		if (ret)
++			pr_err("%s:%d: failed to send CHANGE_CAPACITY msg\n",
++			       __func__, __LINE__);
 +		set_capacity(mddev->gendisk, mddev->array_sectors);
 +		revalidate_disk(mddev->gendisk);
-+		break;
- 	case RESYNCING:
- 		process_suspend_info(mddev, le32_to_cpu(msg->slot),
- 				     le64_to_cpu(msg->low),
++	} else {
++		/* revert to previous sectors */
++		ret = mddev->pers->resize(mddev, old_dev_sectors);
++		if (!ret)
++			revalidate_disk(mddev->gendisk);
++		ret = __sendmsg(cinfo, &cmsg);
++		if (ret)
++			pr_err("%s:%d: failed to send METADATA_UPDATED msg\n",
++			       __func__, __LINE__);
++	}
++	unlock_comm(cinfo);
++}
++
+ static int resync_start(struct mddev *mddev)
+ {
+ 	struct md_cluster_info *cinfo = mddev->cluster_info;
+@@ -1396,6 +1471,7 @@ static struct md_cluster_operations cluster_ops = {
+ 	.gather_bitmaps = gather_bitmaps,
+ 	.lock_all_bitmaps = lock_all_bitmaps,
+ 	.unlock_all_bitmaps = unlock_all_bitmaps,
++	.update_size = update_size,
+ };
+ 
+ static int __init cluster_init(void)
+diff --git a/drivers/md/md-cluster.h b/drivers/md/md-cluster.h
+index e765499ba591..274016177983 100644
+--- a/drivers/md/md-cluster.h
++++ b/drivers/md/md-cluster.h
+@@ -27,6 +27,7 @@ struct md_cluster_operations {
+ 	int (*gather_bitmaps)(struct md_rdev *rdev);
+ 	int (*lock_all_bitmaps)(struct mddev *mddev);
+ 	void (*unlock_all_bitmaps)(struct mddev *mddev);
++	void (*update_size)(struct mddev *mddev, sector_t old_dev_sectors);
+ };
+ 
+ #endif /* _MD_CLUSTER_H */
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index e1d9116044ae..46bae2fb4f9a 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6496,10 +6496,7 @@ static int update_size(struct mddev *mddev, sector_t num_sectors)
+ 	struct md_rdev *rdev;
+ 	int rv;
+ 	int fit = (num_sectors == 0);
+-
+-	/* cluster raid doesn't support update size */
+-	if (mddev_is_clustered(mddev))
+-		return -EINVAL;
++	sector_t old_dev_sectors = mddev->dev_sectors;
+ 
+ 	if (mddev->pers->resize == NULL)
+ 		return -EINVAL;
+@@ -6528,7 +6525,9 @@ static int update_size(struct mddev *mddev, sector_t num_sectors)
+ 	}
+ 	rv = mddev->pers->resize(mddev, num_sectors);
+ 	if (!rv) {
+-		if (mddev->queue) {
++		if (mddev_is_clustered(mddev))
++			md_cluster_ops->update_size(mddev, old_dev_sectors);
++		else if (mddev->queue) {
+ 			set_capacity(mddev->gendisk, mddev->array_sectors);
+ 			revalidate_disk(mddev->gendisk);
+ 		}
+@@ -8746,6 +8745,18 @@ static void check_sb_changes(struct mddev *mddev, struct md_rdev *rdev)
+ 	int role, ret;
+ 	char b[BDEVNAME_SIZE];
+ 
++	/*
++	 * If size is changed in another node then we need to
++	 * do resize as well.
++	 */
++	if (mddev->dev_sectors != le64_to_cpu(sb->size)) {
++		ret = mddev->pers->resize(mddev, le64_to_cpu(sb->size));
++		if (ret)
++			pr_info("md-cluster: resize failed\n");
++		else
++			bitmap_update_sb(mddev->bitmap);
++	}
++
+ 	/* Check for change of roles in the active devices */
+ 	rdev_for_each(rdev2, mddev) {
+ 		if (test_bit(Faulty, &rdev2->flags))
 -- 
 2.6.2
 
