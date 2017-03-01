@@ -1,57 +1,46 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: Re: [PATCH 07/14] md: move bitmap_destroy before __md_stop
-Date: Wed, 1 Mar 2017 11:46:37 +0800
-Message-ID: <58B6441D.1090909@suse.com>
-References: <1487906124-20107-1-git-send-email-gqjiang@suse.com>
- <1487906124-20107-8-git-send-email-gqjiang@suse.com>
- <20170228182009.zfsi2epb24ihjudp@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Xiao Ni <xni@redhat.com>
+Subject: [MDADM PATCH 2/2] Specify suitable size when write to buffer
+Date: Wed,  1 Mar 2017 14:12:46 +0800
+Message-ID: <1488348766-31087-3-git-send-email-xni@redhat.com>
+References: <1488348766-31087-1-git-send-email-xni@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170228182009.zfsi2epb24ihjudp@kernel.org>
+In-Reply-To: <1488348766-31087-1-git-send-email-xni@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.de
+To: linux-raid@vger.kernel.org
+Cc: Jes.Sorensen@gmail.com, ncroxon@redhat.com
 List-Id: linux-raid.ids
 
+---
+ Detail.c      | 2 +-
+ super-intel.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-
-On 03/01/2017 02:20 AM, Shaohua Li wrote:
-> On Fri, Feb 24, 2017 at 11:15:17AM +0800, Guoqing Jiang wrote:
->> Since we have switched to sync way to handle METADATA_UPDATED
->> msg for md-cluster, then process_metadata_update is depended
->> on mddev->thread->wqueue.
->>
->> With the new change, clustered raid could possible hang if
->> array received a METADATA_UPDATED msg after array unregistered
->> mddev->thread, so we need to stop clustered raid earlier
->> than before.
->>
->> And this change should be safe for non-clustered raid since
->> all writes are stopped before the destroy. Also in md_run,
->> we activate the personality (pers->run()) before activating
->> the bitmap (bitmap_create()). So it is pleasingly symmetric
->> to stop the bitmap (bitmap_destroy()) before stopping the
->> personality (__md_stop() calls pers->free()).
-> There is no patch 6. So I can't judge the purpose of the patch.
-
-Sorry, it is resent now.
-
-> The patch changed behaviors. We only destroy bitmap with mode == 0, now we do it
-> even for mode == 2. Please specify why it's safe.
-
-Thanks for reminder, I will add the check for mode.
-
-> The __md_stop will wait for
-> behind writes for example only with bitmap set, but the patch makes us not do
-> the wait.
-
-I don't know behind write very well,  but we have call __md_stop_writes 
-before
-destroy bitmap, also bitmap is flushed. Shouldn't it mean the 
-behind_writes is
-cleared? If not, when the behind_write bit can be cleared? Thanks.
-
-Guoqing
+diff --git a/Detail.c b/Detail.c
+index 509b0d4..f4d4241 100644
+--- a/Detail.c
++++ b/Detail.c
+@@ -575,7 +575,7 @@ This is pretty boring
+ 			printf("  Member Arrays :");
+ 
+ 			while (dir && (de = readdir(dir)) != NULL) {
+-				char path[200];
++				char path[320];
+ 				char vbuf[1024];
+ 				int nlen = strlen(sra->sys_name);
+ 				dev_t devid;
+diff --git a/super-intel.c b/super-intel.c
+index d5e9517..ea50265 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -1811,7 +1811,7 @@ static void examine_super_imsm(struct supertype *st, char *homehost)
+ 	__u32 reserved = imsm_reserved_sectors(super, super->disks);
+ 	struct dl *dl;
+ 
+-	snprintf(str, MPB_SIG_LEN, "%s", mpb->sig);
++	snprintf(str, MAX_SIGNATURE_LENGTH, "%s", mpb->sig);
+ 	printf("          Magic : %s\n", str);
+ 	snprintf(str, strlen(MPB_VERSION_RAID0), "%s", get_imsm_version(mpb));
+ 	printf("        Version : %s\n", get_imsm_version(mpb));
+-- 
+2.7.4
 
