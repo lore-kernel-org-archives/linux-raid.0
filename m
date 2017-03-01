@@ -1,58 +1,53 @@
-From: Coly Li <colyli@suse.de>
-Subject: Re: [PATCH] mdadm: add checking the clustered bitmap in assemble mode
-Date: Wed, 1 Mar 2017 20:03:28 +0800
-Message-ID: <66e3dbf7-5851-0895-7de8-baf48375fead@suse.de>
-References: <1488354469-19137-1-git-send-email-zlliu@suse.com>
+From: Milan Broz <gmazyland@gmail.com>
+Subject: Re: [RFC PATCH v4] IV Generation algorithms for dm-crypt
+Date: Wed, 1 Mar 2017 14:04:47 +0100
+Message-ID: <2aef6e54-805f-e09b-ae66-c198f8c05335@gmail.com>
+References: <1486463731-6224-1-git-send-email-binoy.jayan@linaro.org>
+	<CAOtvUMcN8s886978vE6T=AE79KkZsLBnXsmhewnb5PB0UyAG3A@mail.gmail.com>
+	<CAHv-k_8rgArzV2uQ64h1ZTNRpssX1jMf=RwuPoBmsjQ0FhCsWA@mail.gmail.com>
+	<68f70534-a309-46ba-a84d-8acc1e6620e5@gmail.com>
+	<CAOtvUMf3c0fUjABmbfMrbs0W4gyhKVZyc_tZH3rQg65zF18YMg@mail.gmail.com>
+	<b563eb97-82ba-69d2-c4c5-66bc716a7507@gmail.com>
+	<CAOtvUMePYT7OJDKL7i0y3y6Jvqsxyx6Je6g9aGKVq6PLZ_-Z8w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1488354469-19137-1-git-send-email-zlliu@suse.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Zhilong Liu <zlliu@suse.com>, Jes.Sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <CAOtvUMePYT7OJDKL7i0y3y6Jvqsxyx6Je6g9aGKVq6PLZ_-Z8w@mail.gmail.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Gilad Ben-Yossef <gilad@benyossef.com>, Milan Broz <gmazyland@gmail.com>
+Cc: Binoy Jayan <binoy.jayan@linaro.org>, Rajendra <rnayak@codeaurora.org>, Herbert Xu <herbert@gondor.apana.org.au>, Oded <oded.golombek@arm.com>, Mike Snitzer <snitzer@redhat.com>, Linux kernel mailing list <linux-kernel@vger.kernel.org>, Ondrej Mosnacek <omosnace@redhat.com>, linux-raid@vger.kernel.org, dm-devel@redhat.com, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, linux-crypto@vger.kernel.org, Shaohua Li <shli@kernel.org>, "David S. Miller" <davem@davemloft.net>, Alasdair Kergon <agk@redhat.com>, Ofir <Ofir.Drang@arm.com>
 List-Id: linux-raid.ids
 
-On 2017/3/1 下午3:47, Zhilong Liu wrote:
-> 1. both clustered and internal array don't need to specify
-> --bitmap when assembling array.
-> 2. clustered array doesn't support external bitmap mode.
-> 
-> Signed-off-by: Zhilong Liu <zlliu@suse.com>
-> 
-> diff --git a/mdadm.c b/mdadm.c
-> index b5d89e4..b08cace 100644
-> --- a/mdadm.c
-> +++ b/mdadm.c
-> @@ -1095,8 +1095,14 @@ int main(int argc, char *argv[])
->  				pr_err("bitmap file needed with -b in --assemble mode\n");
->  				exit(2);
->  			}
-> -			if (strcmp(optarg, "internal") == 0) {
-> -				pr_err("there is no need to specify --bitmap when assembling arrays with internal bitmaps\n");
-> +			if (strcmp(optarg, "internal") == 0 ||
-> +			    strcmp(optarg, "clustered") == 0) {
-> +				pr_err("no need to specify --bitmap when assembling arrays with internal or clustered bitmaps\n");
+On 03/01/2017 01:42 PM, Gilad Ben-Yossef wrote:
+...
 
-Is it important for 80 characters width limitation ?
+> I can certainly understand if you don't wont to take the patch until
+> we have results with
+> dm-crypt itself but the difference between 8 separate invocation of
+> the engine for 512
+> bytes of XTS and a single invocation for 4KB are pretty big.
 
-> +				continue;
+Yes, I know it. But the same can be achieved if we just implement
+4k sector encryption in dmcrypt. It is incompatible with LUKS1
+(but next LUKS version will support it) but I think this is not
+a problem for now.
 
-Here if optarg is "clustered", it will continue and won't check the
-following strcmp.
+If the underlying device supports atomic write of 4k sectors, then
+there should not be a problem.
 
-> +			}
-> +			if (strcmp(optarg, "clustered") == 0 &&
-> +			    strchr(optarg, '/') != NULL) {
+This is one of the speed-up I would like to compare with the IV approach,
+because everyone should benefit from 4k sectors in the end.
+And no crypto API changes are needed here.
 
-I guess this check won't happen at all. Correct me if I am wrong.
+(I have an old patch for this, so I will try to revive it.)
 
-> +				pr_err("clustered array doesn't support external bitmap\n");
->  				continue;
->  			}
->  			bitmap_fd = open(optarg, O_RDWR);
-> 
-
-Thanks.
-
-Coly
+Milan
