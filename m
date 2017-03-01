@@ -1,40 +1,38 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: Re: [PATCH 00/14] the latest changes for md-cluster
-Date: Wed, 1 Mar 2017 11:50:25 +0800
-Message-ID: <58B64501.2000309@suse.com>
+Subject: Re: [PATCH 01/14] md-cluster: remove unnecessary header files
+Date: Wed, 1 Mar 2017 10:47:43 +0800
+Message-ID: <58B6364F.7050308@suse.com>
 References: <1487906124-20107-1-git-send-email-gqjiang@suse.com>
- <20170228192721.3jxfigqeqbhhmxca@kernel.org>
+ <1487906124-20107-2-git-send-email-gqjiang@suse.com>
+ <20170228180337.j7qakl7kbf5lapup@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170228192721.3jxfigqeqbhhmxca@kernel.org>
+In-Reply-To: <20170228180337.j7qakl7kbf5lapup@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.de, zhilong <zlliu@suse.com>
+Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.de
 List-Id: linux-raid.ids
 
 
 
-On 03/01/2017 03:27 AM, Shaohua Li wrote:
-> On Fri, Feb 24, 2017 at 11:15:10AM +0800, Guoqing Jiang wrote:
->> Hi,
+On 03/01/2017 02:03 AM, Shaohua Li wrote:
+> On Fri, Feb 24, 2017 at 11:15:11AM +0800, Guoqing Jiang wrote:
+>> md-cluster.h is already included in md.h, so remove
+>> the redundant one and we don't want to cross include
+>> header file too.
 >>
->> This patchset is based on md/for-next branch, which includes below parts:
->>
->> 1. some code improvements (0001-0004).
->> 2. changes for use sync way to handle METADATA_UPDATED msg (0005-0009).
->> 3. add resize support for md-cluster (0010-0012 and 0014), and also
->>     make some related changes inside md (0013).
-> Applied patch 2, 3, 13. Replied to other patches.
+>> Reviewed-by: NeilBrown <neilb@suse.com>
+>> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+> It would be better md.h doesn't include md-cluster.h and include md-cluster.h
+> in required .c files.
 
-Thanks for review.
-
-> BTW, is it possible you can create a test suite people can verify the md-cluster stuff?
-
-Actually, Zhilong is currently working on this, we will push the test
-suite into mdadm/test and also improve current test too (you may
-see his effort in the list).
+Currently, there are compile dependency since md_cluster_operations and
+md_cluster_info (though it need to move from md-cluster.c to md-cluster.h
+in future) are used inside md.h. Anyway, I will consider about how to 
+improve
+this.
 
 Thanks,
 Guoqing
