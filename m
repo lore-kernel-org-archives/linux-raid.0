@@ -1,225 +1,40 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: Re: [PATCH 14/14] md-cluster: add the support for resize
-Date: Wed, 1 Mar 2017 11:28:46 +0800
-Message-ID: <58B63FEE.5010709@suse.com>
+Subject: Re: [PATCH 00/14] the latest changes for md-cluster
+Date: Wed, 1 Mar 2017 11:50:25 +0800
+Message-ID: <58B64501.2000309@suse.com>
 References: <1487906124-20107-1-git-send-email-gqjiang@suse.com>
- <1487906124-20107-15-git-send-email-gqjiang@suse.com>
- <20170228192536.r74i2o3vchf74isn@kernel.org>
+ <20170228192721.3jxfigqeqbhhmxca@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170228192536.r74i2o3vchf74isn@kernel.org>
+In-Reply-To: <20170228192721.3jxfigqeqbhhmxca@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.de
+Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.de, zhilong <zlliu@suse.com>
 List-Id: linux-raid.ids
 
 
 
-On 03/01/2017 03:25 AM, Shaohua Li wrote:
-> On Fri, Feb 24, 2017 at 11:15:24AM +0800, Guoqing Jiang wrote:
->> To update size for cluster raid, we need to make
->> sure all nodes can perform the change successfully.
->> However, it is possible that some of them can't do
->> it due to failure (bitmap_resize could fail). So
->> we need to consider the issue before we set the
->> capacity unconditionally, and we use below steps
->> to perform sanity check.
+On 03/01/2017 03:27 AM, Shaohua Li wrote:
+> On Fri, Feb 24, 2017 at 11:15:10AM +0800, Guoqing Jiang wrote:
+>> Hi,
 >>
->> 1. A change the size, then broadcast METADATA_UPDATED
->>     msg.
->> 2. B and C receive METADATA_UPDATED change the size
->>     excepts call set_capacity, sync_size is not update
->>     if the change failed. Also call bitmap_update_sb
->>     to sync sb to disk.
->> 3. A checks other node's sync_size, if sync_size has
->>     been updated in all nodes, then send CHANGE_CAPACITY
->>     msg otherwise send msg to revert previous change.
->> 4. B and C call set_capacity if receive CHANGE_CAPACITY
->>     msg, otherwise pers->resize will be called to restore
->>     the old value.
+>> This patchset is based on md/for-next branch, which includes below parts:
 >>
->> Reviewed-by: NeilBrown <neilb@suse.com>
->> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
->> ---
->>   Documentation/md/md-cluster.txt |  2 +-
->>   drivers/md/md-cluster.c         | 75 +++++++++++++++++++++++++++++++++++++++++
->>   drivers/md/md-cluster.h         |  1 +
->>   drivers/md/md.c                 | 21 +++++++++---
->>   4 files changed, 93 insertions(+), 6 deletions(-)
->>
->> diff --git a/Documentation/md/md-cluster.txt b/Documentation/md/md-cluster.txt
->> index 38883276d31c..2663d49dd8a0 100644
->> --- a/Documentation/md/md-cluster.txt
->> +++ b/Documentation/md/md-cluster.txt
->> @@ -321,4 +321,4 @@ The algorithm is:
->>   
->>   There are somethings which are not supported by cluster MD yet.
->>   
->> -- update size and change array_sectors.
->> +- change array_sectors.
->> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
->> index d3c024e6bfcf..75da83187c31 100644
->> --- a/drivers/md/md-cluster.c
->> +++ b/drivers/md/md-cluster.c
->> @@ -1147,6 +1147,80 @@ int cluster_check_sync_size(struct mddev *mddev)
->>   	return (my_sync_size == sync_size) ? 0 : -1;
->>   }
->>   
->> +/*
->> + * Update the size for cluster raid is a little more complex, we perform it
->> + * by the steps:
->> + * 1. hold token lock and update superblock in initiator node.
->> + * 2. send METADATA_UPDATED msg to other nodes.
->> + * 3. The initiator node continues to check each bitmap's sync_size, if all
->> + *    bitmaps have the same value of sync_size, then we can set capacity and
->> + *    let other nodes to perform it. If one node can't update sync_size
->> + *    accordingly, we need to revert to previous value.
->> + */
->> +static void update_size(struct mddev *mddev, sector_t old_dev_sectors)
->> +{
->> +	struct md_cluster_info *cinfo = mddev->cluster_info;
->> +	struct cluster_msg cmsg;
->> +	struct md_rdev *rdev;
->> +	int ret = 0;
->> +	int raid_slot = -1;
->> +
->> +	md_update_sb(mddev, 1);
->> +	lock_comm(cinfo, 1);
->> +
->> +	memset(&cmsg, 0, sizeof(cmsg));
->> +	cmsg.type = cpu_to_le32(METADATA_UPDATED);
->> +	rdev_for_each(rdev, mddev)
->> +		if (rdev->raid_disk >= 0 && !test_bit(Faulty, &rdev->flags)) {
->> +			raid_slot = rdev->desc_nr;
->> +			break;
->> +		}
->> +	if (raid_slot >= 0) {
->> +		cmsg.raid_slot = cpu_to_le32(raid_slot);
->> +		/*
->> +		 * We can only change capiticy after all the nodes can do it,
->> +		 * so need to wait after other nodes already received the msg
->> +		 * and handled the change
->> +		 */
->> +		ret = __sendmsg(cinfo, &cmsg);
->> +		if (ret) {
->> +			pr_err("%s:%d: failed to send METADATA_UPDATED msg\n",
->> +			       __func__, __LINE__);
->> +			unlock_comm(cinfo);
->> +			return;
->> +		}
->> +	} else {
->> +		pr_err("md-cluster: No good device id found to send\n");
->> +		unlock_comm(cinfo);
->> +		return;
->> +	}
->> +
->> +	/*
->> +	 * check the sync_size from other node's bitmap, if sync_size
->> +	 * have already updated in other nodes as expected, send an
->> +	 * empty metadata msg to permit the change of capacity
->> +	 */
->> +	if (cluster_check_sync_size(mddev) == 0) {
->> +		memset(&cmsg, 0, sizeof(cmsg));
->> +		cmsg.type = cpu_to_le32(CHANGE_CAPACITY);
->> +		ret = __sendmsg(cinfo, &cmsg);
->> +		if (ret)
->> +			pr_err("%s:%d: failed to send CHANGE_CAPACITY msg\n",
->> +			       __func__, __LINE__);
->> +		set_capacity(mddev->gendisk, mddev->array_sectors);
-> don't call revalidate_disk here? And why don't move the gendisk related stuff to md.c.
+>> 1. some code improvements (0001-0004).
+>> 2. changes for use sync way to handle METADATA_UPDATED msg (0005-0009).
+>> 3. add resize support for md-cluster (0010-0012 and 0014), and also
+>>     make some related changes inside md (0013).
+> Applied patch 2, 3, 13. Replied to other patches.
 
-Thanks, I will add revalidate_disk after set_capacity. But we can't move 
-it to md.c
-since md-cluster runs a different way for resize.
+Thanks for review.
 
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -6503,10 +6503,7 @@ static int update_size(struct mddev *mddev, sector_t num_sectors)
->>   	struct md_rdev *rdev;
->>   	int rv;
->>   	int fit = (num_sectors == 0);
->> -
->> -	/* cluster raid doesn't support update size */
->> -	if (mddev_is_clustered(mddev))
->> -		return -EINVAL;
->> +	sector_t old_dev_sectors = mddev->dev_sectors;
->>   
->>   	if (mddev->pers->resize == NULL)
->>   		return -EINVAL;
->> @@ -6535,7 +6532,9 @@ static int update_size(struct mddev *mddev, sector_t num_sectors)
->>   	}
->>   	rv = mddev->pers->resize(mddev, num_sectors);
->>   	if (!rv) {
->> -		if (mddev->queue) {
->> +		if (mddev_is_clustered(mddev))
->> +			md_cluster_ops->update_size(mddev, old_dev_sectors);
->> +		else if (mddev->queue) {
->>   			set_capacity(mddev->gendisk, mddev->array_sectors);
->>   			revalidate_disk(mddev->gendisk);
->>   		}
+> BTW, is it possible you can create a test suite people can verify the md-cluster stuff?
 
-You can see the path is different between common md and md-cluster, 
-because we have
-to check if all the bitmaps have the same sync_size or not, then set 
-capacity and revalidate
-disk.
-
->> @@ -8753,6 +8752,18 @@ static void check_sb_changes(struct mddev *mddev, struct md_rdev *rdev)
->>   	int role, ret;
->>   	char b[BDEVNAME_SIZE];
->>   
->> +	/*
->> +	 * If size is changed in another node then we need to
->> +	 * do resize as well.
->> +	 */
->> +	if (mddev->dev_sectors != le64_to_cpu(sb->size)) {
->> +		ret = mddev->pers->resize(mddev, le64_to_cpu(sb->size));
->> +		if (ret)
->> +			pr_info("md-cluster: resize failed\n");
->> +		else
->> +			bitmap_update_sb(mddev->bitmap);
->> +	}
-> I'm confused, who will trigger this? The patch 10 only calls set_capacity.
-
-process_metadata_update -> md_reload_sb -> check_sb_changes, so which
-means if a node received METADATA_UPDATED msg, it will call the path.
-
-And in this patch you may see that update_size sends the msg.
-
-+static void update_size(struct mddev *mddev, sector_t old_dev_sectors)
-+{
-+	struct md_cluster_info *cinfo = mddev->cluster_info;
-+	struct cluster_msg cmsg;
-+	struct md_rdev *rdev;
-+	int ret = 0;
-+	int raid_slot = -1;
-+
-+	md_update_sb(mddev, 1);
-+	lock_comm(cinfo, 1);
-+
-+	memset(&cmsg, 0, sizeof(cmsg));
-+	cmsg.type = cpu_to_le32(METADATA_UPDATED);
-
-> Please describe the details in each node. Also please add it to md-cluster.txt
-> document.
-
-Does it help?
-
-diff --git a/Documentation/md/md-cluster.txt 
-b/Documentation/md/md-cluster.txt
-index 2663d49dd8a0..709439e687c2 100644
---- a/Documentation/md/md-cluster.txt
-+++ b/Documentation/md/md-cluster.txt
-@@ -71,8 +71,8 @@ There are three groups of locks for managing the device:
-
-   3.1.1 METADATA_UPDATED: informs other nodes that the metadata has
-     been updated, and the node must re-read the md superblock. This is
--   performed synchronously. It is primarily used to signal device
--   failure.
-+   performed synchronously. We send this message if sb is updated or
-+   the size is changed.
+Actually, Zhilong is currently working on this, we will push the test
+suite into mdadm/test and also improve current test too (you may
+see his effort in the list).
 
 Thanks,
 Guoqing
