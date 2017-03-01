@@ -1,153 +1,69 @@
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: Re: [PATCH v4 7/7] raid5-ppl: runtime PPL enabling or disabling
-Date: Wed, 1 Mar 2017 17:14:42 +0100
-Message-ID: <7c26e9f9-2a10-8bb9-9232-ec2c2bca881d@intel.com>
-References: <20170221194401.18733-1-artur.paszkiewicz@intel.com>
- <20170221194401.18733-8-artur.paszkiewicz@intel.com>
- <20170228013135.g4x7cu63rakvpacx@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+From: Zhilong <zlliu@suse.com>
+Subject: Re: [PATCH] mdadm: add checking the clustered bitmap in assemble mode
+Date: Thu, 2 Mar 2017 00:32:50 +0800
+Message-ID: <8AF739E9-FB96-4547-9770-7CCB399238CD@suse.com>
+References: <1488354469-19137-1-git-send-email-zlliu@suse.com> <66e3dbf7-5851-0895-7de8-baf48375fead@suse.de>
+Mime-Version: 1.0 (1.0)
+Content-Type: text/plain;
+        charset=gb2312
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170228013135.g4x7cu63rakvpacx@kernel.org>
+In-Reply-To: <66e3dbf7-5851-0895-7de8-baf48375fead@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: shli@fb.com, linux-raid@vger.kernel.org
+To: Coly Li <colyli@suse.de>
+Cc: Jes.Sorensen@gmail.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/28/2017 02:31 AM, Shaohua Li wrote:
-> On Tue, Feb 21, 2017 at 08:44:01PM +0100, Artur Paszkiewicz wrote:
->> Allow writing to 'consistency_policy' attribute when the array is
->> active. Add a new function 'change_consistency_policy' to the
->> md_personality operations structure to handle the change in the
->> personality code. Values "ppl" and "resync" are accepted and
->> turn PPL on and off respectively.
->>
->> When enabling PPL its location and size should first be set using
->> 'ppl_sector' and 'ppl_size' attributes and a valid PPL header should be
->> written at this location on each member device.
->>
->> Enabling or disabling PPL is performed under a suspended array.  The
->> raid5_reset_stripe_cache function frees the stripe cache and allocates
->> it again in order to allocate or free the ppl_pages for the stripes in
->> the stripe cache.
->>
->> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
->> ---
->>  drivers/md/md.c        | 12 ++++++++---
->>  drivers/md/md.h        |  2 ++
->>  drivers/md/raid5-ppl.c |  4 ++++
->>  drivers/md/raid5.c     | 58 ++++++++++++++++++++++++++++++++++++++++++++++++++
->>  4 files changed, 73 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index 3ff979d538d4..b70e19513588 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -5003,14 +5003,20 @@ consistency_policy_show(struct mddev *mddev, char *page)
->>  static ssize_t
->>  consistency_policy_store(struct mddev *mddev, const char *buf, size_t len)
->>  {
->> +	int err = 0;
->> +
->>  	if (mddev->pers) {
->> -		return -EBUSY;
->> +		if (mddev->pers->change_consistency_policy)
->> +			err = mddev->pers->change_consistency_policy(mddev, buf);
->> +		else
->> +			err = -EBUSY;
->>  	} else if (mddev->external && strncmp(buf, "ppl", 3) == 0) {
->>  		set_bit(MD_HAS_PPL, &mddev->flags);
->> -		return len;
->>  	} else {
->> -		return -EINVAL;
->> +		err = -EINVAL;
->>  	}
->> +
->> +	return err ? err : len;
->>  }
->>  
->>  static struct md_sysfs_entry md_consistency_policy =
->> diff --git a/drivers/md/md.h b/drivers/md/md.h
->> index 66a5a16e79f7..88a5155c152e 100644
->> --- a/drivers/md/md.h
->> +++ b/drivers/md/md.h
->> @@ -548,6 +548,8 @@ struct md_personality
->>  	/* congested implements bdi.congested_fn().
->>  	 * Will not be called while array is 'suspended' */
->>  	int (*congested)(struct mddev *mddev, int bits);
->> +	/* Changes the consistency policy of an active array. */
->> +	int (*change_consistency_policy)(struct mddev *mddev, const char *buf);
->>  };
->>  
->>  struct md_sysfs_entry {
->> diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
->> index c2070d124849..a5c4d3333bce 100644
->> --- a/drivers/md/raid5-ppl.c
->> +++ b/drivers/md/raid5-ppl.c
->> @@ -1095,6 +1095,10 @@ int ppl_init_log(struct r5conf *conf)
->>  		 */
->>  		mddev->recovery_cp = MaxSector;
->>  		set_bit(MD_SB_CHANGE_CLEAN, &mddev->sb_flags);
->> +	} else if (mddev->pers && ppl_conf->mismatch_count > 0) {
->> +		/* no mismatch allowed when enabling PPL for a running array */
->> +		ret = -EINVAL;
->> +		goto err;
->>  	}
->>  
->>  	conf->ppl = ppl_conf;
->> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> index b17e90f06f19..754fb8e1c76f 100644
->> --- a/drivers/md/raid5.c
->> +++ b/drivers/md/raid5.c
->> @@ -8319,6 +8319,63 @@ static void *raid6_takeover(struct mddev *mddev)
->>  	return setup_conf(mddev);
->>  }
->>  
->> +static void raid5_reset_stripe_cache(struct mddev *mddev)
->> +{
->> +	struct r5conf *conf = mddev->private;
->> +
->> +	mutex_lock(&conf->cache_size_mutex);
->> +	while (conf->max_nr_stripes &&
->> +	       drop_one_stripe(conf))
->> +		;
->> +	while (conf->min_nr_stripes > conf->max_nr_stripes &&
->> +	       grow_one_stripe(conf, GFP_KERNEL))
->> +		;
->> +	mutex_unlock(&conf->cache_size_mutex);
->> +}
->> +
->> +static int raid5_change_consistency_policy(struct mddev *mddev, const char *buf)
->> +{
->> +	struct r5conf *conf;
->> +	int err;
->> +
->> +	err = mddev_lock(mddev);
->> +	if (err)
->> +		return err;
->> +	conf = mddev->private;
->> +	if (!conf) {
->> +		mddev_unlock(mddev);
->> +		return -ENODEV;
->> +	}
->> +
->> +	if (strncmp(buf, "ppl", 3) == 0 &&
->> +	    !test_bit(MD_HAS_PPL, &mddev->flags)) {
->> +		mddev_suspend(mddev);
->> +		err = ppl_init_log(conf);
+
+
+> 在 2017年3月1日，20:03，Coly Li <colyli@suse.de> 写道：
 > 
-> I didn't see you check if all rdev have valid ppl setting in ppl_load. Am I
-> missing anything? Is it possible some rdevs have ppl set, but some not. In the
-> case, we should just bail out.
+>> On 2017/3/1 下午3:47, Zhilong Liu wrote:
+>> 1. both clustered and internal array don't need to specify
+>> --bitmap when assembling array.
+>> 2. clustered array doesn't support external bitmap mode.
+>> 
+>> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+>> 
+>> diff --git a/mdadm.c b/mdadm.c
+>> index b5d89e4..b08cace 100644
+>> --- a/mdadm.c
+>> +++ b/mdadm.c
+>> @@ -1095,8 +1095,14 @@ int main(int argc, char *argv[])
+>>                pr_err("bitmap file needed with -b in --assemble mode\n");
+>>                exit(2);
+>>            }
+>> -            if (strcmp(optarg, "internal") == 0) {
+>> -                pr_err("there is no need to specify --bitmap when assembling arrays with internal bitmaps\n");
+>> +            if (strcmp(optarg, "internal") == 0 ||
+>> +                strcmp(optarg, "clustered") == 0) {
+>> +                pr_err("no need to specify --bitmap when assembling arrays with internal or clustered bitmaps\n");
+> 
+> Is it important for 80 characters width limitation ?
+> 
+To keep good style, the suggestion is great.
+>> +                continue;
+> 
+> Here if optarg is "clustered", it will continue and won't check the
+> following strcmp.
+> 
+>> +            }
+>> +            if (strcmp(optarg, "clustered") == 0 &&
+>> +                strchr(optarg, '/') != NULL) {
+> 
+> I guess this check won't happen at all. Correct me if I am wrong.
+Yes, I should do this checking in 'create' and 'grow' mode. The first checking is enough in assemble mode.
+> 
+>> +                pr_err("clustered array doesn't support external bitmap\n");
+>>                continue;
+>>            }
+>>            bitmap_fd = open(optarg, O_RDWR);
+>> 
+> 
+> Thanks.
+> 
+> Coly
+Many many thanks,
+Zhilong
 
-All rdevs should have valid ppl settings, this is checked in
-ppl_validate_rdev(), just before ppl_load() is called.
-
-> Also check if this is raid5
-
-pers->change_consistency_policy is only set for raid5_personality, so it
-is (currently) not necessary.
-
-Thanks,
-Artur
+send from iPhone
