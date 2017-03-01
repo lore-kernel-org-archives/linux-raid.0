@@ -1,61 +1,66 @@
-From: jes.sorensen@gmail.com
-Subject: Re: [PATCH] Fix oddity where mdadm did not recognise a relative path
-Date: Wed, 01 Mar 2017 17:03:10 -0500
-Message-ID: <wrfjzih4wt7l.fsf@gmail.com>
-References: <587E6B56.8090704@youngman.org.uk>
+From: Reindl Harald <h.reindl@thelounge.net>
+Subject: Re: GRUB warning after replacing disk drive in RAID1
+Date: Wed, 1 Mar 2017 23:13:16 +0100
+Message-ID: <b900aca8-7f61-2516-8c6a-a9dd25ce2f17@thelounge.net>
+References: <002f01d29152$737b4550$5a71cff0$@wnsdev.com>
+ <ab6d048b-b944-6661-11a5-503012dfad50@thelounge.net>
+ <008001d29205$e4f503c0$aedf0b40$@wnsdev.com>
+ <59c85e04-2f6a-1c81-ccba-fa8aac1c50ee@thelounge.net>
+ <009601d29218$9fd3e460$df7bad20$@wnsdev.com>
+ <5136f32b-a0bb-dc16-cae9-59946ea21622@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <587E6B56.8090704@youngman.org.uk> (Wols Lists's message of "Tue,
-        17 Jan 2017 19:07:02 +0000")
+In-Reply-To: <5136f32b-a0bb-dc16-cae9-59946ea21622@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Wols Lists <antlists@youngman.org.uk> writes:
-> From 4ce784307a9004124392ce48432960d7ca94d0bf Mon Sep 17 00:00:00 2001
-> From: Wol <anthony@youngman.org.uk>
-> Date: Tue, 17 Jan 2017 17:47:05 +0000
-> Subject: [PATCH] Fix oddity where mdadm did not recognise a relative path
->
-> mdadm assumed that a pathname started with a "/", while an array
-> name didn't. This alters the logic so that if the first character
-> is not a "/" it tries to open an array, and if that fails it drops
-> through to the pathname code rather than terminating immediately
-> with an error.
->
-> Signed-off-by: Wol <anthony@youngman.org.uk>
-> ---
->  mdadm.c | 12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
->
-> diff --git a/mdadm.c b/mdadm.c
-> index c3a265b..b5d89e4 100644
-> --- a/mdadm.c
-> +++ b/mdadm.c
-> @@ -1899,12 +1899,12 @@ static int misc_list(struct mddev_dev *devlist,
->  			rv |= SetAction(dv->devname, c->action);
->  			continue;
->  		}
-> -		if (dv->devname[0] == '/')
-> -			mdfd = open_mddev(dv->devname, 1);
-> -		else {
-> -			mdfd = open_dev(dv->devname);
-> -			if (mdfd < 0)
-> -				pr_err("Cannot open %s\n", dv->devname);
-> +		switch(dv->devname[0] == '/') {
-> +			case 0:
-> +				mdfd = open_dev(dv->devname);
-> +				if (mdfd >= 0) break;
-> +			case 1:
-> +				mdfd = open_mddev(dv->devname, 1);  
 
-I thought this was still pending but going back, it looks like I did
-apply it. The problem is I noticed a major issue in the patch, which
-doesn't belong in code, it is doing 'if () break' on the same line.
 
-Mind sending me a patch to fix that.
+Am 01.03.2017 um 19:29 schrieb Phil Turmel:
+> Hi Peter, Reindl,
+>
+> { Convention on kernel.org is to reply-to-all, trim unneeded quoted
+> material, and bottom post or interleave.  Please do so. }
 
-Thanks,
-Jes
+why should someone reply to the list and everyboy else subscribed to the 
+list to trigger multiple copies?
+
+> On 02/28/2017 06:15 PM, Peter Sangas wrote:
+>
+>> cat /proc/mdstat
+>> Personalities : [raid1] [linear] [multipath] [raid0] [raid6] [raid5] [raid4]
+>> [raid10]
+>
+>> md0 : active raid1 sdc1[3] sdb1[1] sda1[0]
+>>       19514368 blocks super 1.2 [3/3] [UUU]
+>
+> Grub1 needs its boot partitions to use v0.90 or v1.0 superblocks.  Grub2
+> needs the md module in its core to boot from v1.1 or v1.2 superblocks.
+> Anyways, because the content of a v1.2 array does not
+> start at the beginning of the member devices, stupid grub doesn't
+> connect sd[abc]1 with your /boot mount and therefore delivers 'null'.
+> And then doesn't know how to link the core together.
+>
+> Since this worked before, I would guess your grub was updated and its md
+> support was left out.  Hopefully someone with more grub experience can
+> chip in here -- I don't use any bootloader on my servers any more
+
+i am not the OP *but* i can assure you that i get the same warnings when 
+the /boot RAID1 is not synced, afetr hat grub2-install works just fine 
+without that warning and so you can be sure grub has no problem and is 
+missing nothing, otherwise the command won't work without warnings afetr 
+all arrays are in ync again
+
+[root@srv-rhsoft:~]$ cat /proc/mdstat
+Personalities : [raid1] [raid10]
+md2 : active raid10 sdc3[4] sdd3[7] sda3[6] sdb3[5]
+       3875222528 blocks super 1.1 512K chunks 2 near-copies [4/4] [UUUU]
+
+md0 : active raid1 sdc1[4] sdd1[7] sdb1[5] sda1[6]
+       511988 blocks super 1.0 [4/4] [UUUU]
+
+md1 : active raid10 sdc2[4] sdd2[7] sdb2[5] sda2[6]
+       30716928 blocks super 1.1 512K chunks 2 near-copies [4/4] [UUUU]
