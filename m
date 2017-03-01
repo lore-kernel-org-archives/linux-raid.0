@@ -1,168 +1,153 @@
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: Re: [PATCH v4 4/7] md: add sysfs entries for PPL
-Date: Wed, 1 Mar 2017 17:13:52 +0100
-Message-ID: <6c8c68c9-6e67-3248-1919-ed1889f50730@intel.com>
+Subject: Re: [PATCH v4 7/7] raid5-ppl: runtime PPL enabling or disabling
+Date: Wed, 1 Mar 2017 17:14:42 +0100
+Message-ID: <7c26e9f9-2a10-8bb9-9232-ec2c2bca881d@intel.com>
 References: <20170221194401.18733-1-artur.paszkiewicz@intel.com>
- <20170221194401.18733-5-artur.paszkiewicz@intel.com>
- <20170228003703.iyhta33quiic6ayk@kernel.org>
+ <20170221194401.18733-8-artur.paszkiewicz@intel.com>
+ <20170228013135.g4x7cu63rakvpacx@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170228003703.iyhta33quiic6ayk@kernel.org>
+In-Reply-To: <20170228013135.g4x7cu63rakvpacx@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>
 Cc: shli@fb.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/28/2017 01:37 AM, Shaohua Li wrote:
-> On Tue, Feb 21, 2017 at 08:43:58PM +0100, Artur Paszkiewicz wrote:
->> Add 'consistency_policy' attribute for array. It indicates how the array
->> maintains consistency in case of unexpected shutdown.
+On 02/28/2017 02:31 AM, Shaohua Li wrote:
+> On Tue, Feb 21, 2017 at 08:44:01PM +0100, Artur Paszkiewicz wrote:
+>> Allow writing to 'consistency_policy' attribute when the array is
+>> active. Add a new function 'change_consistency_policy' to the
+>> md_personality operations structure to handle the change in the
+>> personality code. Values "ppl" and "resync" are accepted and
+>> turn PPL on and off respectively.
 >>
->> Add 'ppl_sector' and 'ppl_size' for rdev, which describe the location
->> and size of the PPL space on the device. They can't be changed for
->> active members if the array is started and PPL is enabled, so in the
->> setter functions only basic checks are performed. More checks are done
->> in ppl_validate_rdev() when starting the log.
+>> When enabling PPL its location and size should first be set using
+>> 'ppl_sector' and 'ppl_size' attributes and a valid PPL header should be
+>> written at this location on each member device.
 >>
->> These attributes are writable to allow enabling PPL for external
->> metadata arrays and (later) to enable/disable PPL for a running array.
+>> Enabling or disabling PPL is performed under a suspended array.  The
+>> raid5_reset_stripe_cache function frees the stripe cache and allocates
+>> it again in order to allocate or free the ppl_pages for the stripes in
+>> the stripe cache.
 >>
 >> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 >> ---
->>  Documentation/admin-guide/md.rst |  32 ++++++++++-
->>  drivers/md/md.c                  | 115 +++++++++++++++++++++++++++++++++++++++
->>  2 files changed, 144 insertions(+), 3 deletions(-)
+>>  drivers/md/md.c        | 12 ++++++++---
+>>  drivers/md/md.h        |  2 ++
+>>  drivers/md/raid5-ppl.c |  4 ++++
+>>  drivers/md/raid5.c     | 58 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>>  4 files changed, 73 insertions(+), 3 deletions(-)
 >>
->> diff --git a/Documentation/admin-guide/md.rst b/Documentation/admin-guide/md.rst
->> index 1e61bf50595c..84de718f24a4 100644
->> --- a/Documentation/admin-guide/md.rst
->> +++ b/Documentation/admin-guide/md.rst
->> @@ -276,14 +276,14 @@ All md devices contain:
->>       array creation it will default to 0, though starting the array as
->>       ``clean`` will set it much larger.
->>  
->> -   new_dev
->> +  new_dev
->>       This file can be written but not read.  The value written should
->>       be a block device number as major:minor.  e.g. 8:0
->>       This will cause that device to be attached to the array, if it is
->>       available.  It will then appear at md/dev-XXX (depending on the
->>       name of the device) and further configuration is then possible.
->>  
->> -   safe_mode_delay
->> +  safe_mode_delay
->>       When an md array has seen no write requests for a certain period
->>       of time, it will be marked as ``clean``.  When another write
->>       request arrives, the array is marked as ``dirty`` before the write
->> @@ -292,7 +292,7 @@ All md devices contain:
->>       period as a number of seconds.  The default is 200msec (0.200).
->>       Writing a value of 0 disables safemode.
->>  
->> -   array_state
->> +  array_state
->>       This file contains a single word which describes the current
->>       state of the array.  In many cases, the state can be set by
->>       writing the word for the desired state, however some states
->> @@ -401,7 +401,30 @@ All md devices contain:
->>       once the array becomes non-degraded, and this fact has been
->>       recorded in the metadata.
->>  
->> +  consistency_policy
->> +     This indicates how the array maintains consistency in case of unexpected
->> +     shutdown. It can be:
->>  
->> +     none
->> +       Array has no redundancy information, e.g. raid0, linear.
->> +
->> +     resync
->> +       Full resync is performed and all redundancy is regenerated when the
->> +       array is started after unclean shutdown.
->> +
->> +     bitmap
->> +       Resync assisted by a write-intent bitmap.
->> +
->> +     journal
->> +       For raid4/5/6, journal device is used to log transactions and replay
->> +       after unclean shutdown.
->> +
->> +     ppl
->> +       For raid5 only, Partial Parity Log is used to close the write hole and
->> +       eliminate resync.
->> +
->> +     The accepted values when writing to this file are ``ppl`` and ``resync``,
->> +     used to enable and disable PPL.
->>  
->>  
->>  As component devices are added to an md array, they appear in the ``md``
->> @@ -563,6 +586,9 @@ Each directory contains:
->>  	adds bad blocks without acknowledging them. This is largely
->>  	for testing.
->>  
->> +      ppl_sector, ppl_size
->> +        Location and size (in sectors) of the space used for Partial Parity Log
->> +        on this device.
->>  
->>  
->>  An active md device will also contain an entry for each active device
 >> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index c2028007b209..3ff979d538d4 100644
+>> index 3ff979d538d4..b70e19513588 100644
 >> --- a/drivers/md/md.c
 >> +++ b/drivers/md/md.c
->> @@ -3157,6 +3157,78 @@ static ssize_t ubb_store(struct md_rdev *rdev, const char *page, size_t len)
->>  static struct rdev_sysfs_entry rdev_unack_bad_blocks =
->>  __ATTR(unacknowledged_bad_blocks, S_IRUGO|S_IWUSR, ubb_show, ubb_store);
+>> @@ -5003,14 +5003,20 @@ consistency_policy_show(struct mddev *mddev, char *page)
+>>  static ssize_t
+>>  consistency_policy_store(struct mddev *mddev, const char *buf, size_t len)
+>>  {
+>> +	int err = 0;
+>> +
+>>  	if (mddev->pers) {
+>> -		return -EBUSY;
+>> +		if (mddev->pers->change_consistency_policy)
+>> +			err = mddev->pers->change_consistency_policy(mddev, buf);
+>> +		else
+>> +			err = -EBUSY;
+>>  	} else if (mddev->external && strncmp(buf, "ppl", 3) == 0) {
+>>  		set_bit(MD_HAS_PPL, &mddev->flags);
+>> -		return len;
+>>  	} else {
+>> -		return -EINVAL;
+>> +		err = -EINVAL;
+>>  	}
+>> +
+>> +	return err ? err : len;
+>>  }
 >>  
->> +static ssize_t
->> +ppl_sector_show(struct md_rdev *rdev, char *page)
+>>  static struct md_sysfs_entry md_consistency_policy =
+>> diff --git a/drivers/md/md.h b/drivers/md/md.h
+>> index 66a5a16e79f7..88a5155c152e 100644
+>> --- a/drivers/md/md.h
+>> +++ b/drivers/md/md.h
+>> @@ -548,6 +548,8 @@ struct md_personality
+>>  	/* congested implements bdi.congested_fn().
+>>  	 * Will not be called while array is 'suspended' */
+>>  	int (*congested)(struct mddev *mddev, int bits);
+>> +	/* Changes the consistency policy of an active array. */
+>> +	int (*change_consistency_policy)(struct mddev *mddev, const char *buf);
+>>  };
+>>  
+>>  struct md_sysfs_entry {
+>> diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
+>> index c2070d124849..a5c4d3333bce 100644
+>> --- a/drivers/md/raid5-ppl.c
+>> +++ b/drivers/md/raid5-ppl.c
+>> @@ -1095,6 +1095,10 @@ int ppl_init_log(struct r5conf *conf)
+>>  		 */
+>>  		mddev->recovery_cp = MaxSector;
+>>  		set_bit(MD_SB_CHANGE_CLEAN, &mddev->sb_flags);
+>> +	} else if (mddev->pers && ppl_conf->mismatch_count > 0) {
+>> +		/* no mismatch allowed when enabling PPL for a running array */
+>> +		ret = -EINVAL;
+>> +		goto err;
+>>  	}
+>>  
+>>  	conf->ppl = ppl_conf;
+>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>> index b17e90f06f19..754fb8e1c76f 100644
+>> --- a/drivers/md/raid5.c
+>> +++ b/drivers/md/raid5.c
+>> @@ -8319,6 +8319,63 @@ static void *raid6_takeover(struct mddev *mddev)
+>>  	return setup_conf(mddev);
+>>  }
+>>  
+>> +static void raid5_reset_stripe_cache(struct mddev *mddev)
 >> +{
->> +	return sprintf(page, "%llu\n", (unsigned long long)rdev->ppl.sector);
+>> +	struct r5conf *conf = mddev->private;
+>> +
+>> +	mutex_lock(&conf->cache_size_mutex);
+>> +	while (conf->max_nr_stripes &&
+>> +	       drop_one_stripe(conf))
+>> +		;
+>> +	while (conf->min_nr_stripes > conf->max_nr_stripes &&
+>> +	       grow_one_stripe(conf, GFP_KERNEL))
+>> +		;
+>> +	mutex_unlock(&conf->cache_size_mutex);
 >> +}
 >> +
->> +static ssize_t
->> +ppl_sector_store(struct md_rdev *rdev, const char *buf, size_t len)
+>> +static int raid5_change_consistency_policy(struct mddev *mddev, const char *buf)
 >> +{
->> +	unsigned long long sector;
+>> +	struct r5conf *conf;
+>> +	int err;
 >> +
->> +	if (kstrtoull(buf, 10, &sector) < 0)
->> +		return -EINVAL;
-> 
-> Maybe use base 0 to be more friendly
-
-OK, good idea.
-
->> +	if (sector != (sector_t)sector)
->> +		return -EINVAL;
->> +
->> +	if (rdev->mddev->pers && test_bit(MD_HAS_PPL, &rdev->mddev->flags) &&
->> +	    rdev->raid_disk >= 0)
->> +		return -EBUSY;
->> +
->> +	if (rdev->mddev->persistent) {
->> +		if (rdev->mddev->major_version == 0)
->> +			return -EINVAL;
->> +		if ((sector > rdev->sb_start &&
->> +		     sector - rdev->sb_start > S16_MAX) ||
->> +		    (sector < rdev->sb_start &&
->> +		     rdev->sb_start - sector > -S16_MIN))
->> +			return -EINVAL;
-> 
-> Don't check if the address overlaps with data?
-
-It is checked in ppl_validate_rdev() when enabling ppl or adding a disk
-to an array with ppl.
-
->> +		rdev->ppl.offset = sector - rdev->sb_start;
->> +	} else if (!rdev->mddev->external) {
->> +		return -EBUSY;
+>> +	err = mddev_lock(mddev);
+>> +	if (err)
+>> +		return err;
+>> +	conf = mddev->private;
+>> +	if (!conf) {
+>> +		mddev_unlock(mddev);
+>> +		return -ENODEV;
 >> +	}
+>> +
+>> +	if (strncmp(buf, "ppl", 3) == 0 &&
+>> +	    !test_bit(MD_HAS_PPL, &mddev->flags)) {
+>> +		mddev_suspend(mddev);
+>> +		err = ppl_init_log(conf);
 > 
-> generally we don't use {} for single line code
+> I didn't see you check if all rdev have valid ppl setting in ppl_load. Am I
+> missing anything? Is it possible some rdevs have ppl set, but some not. In the
+> case, we should just bail out.
 
-I thought this conforms to the coding-style doc? It says: "This does not
-apply if only one branch of a conditional statement is a single
-statement; in the latter case use braces in both branches"
+All rdevs should have valid ppl settings, this is checked in
+ppl_validate_rdev(), just before ppl_load() is called.
+
+> Also check if this is raid5
+
+pers->change_consistency_policy is only set for raid5_personality, so it
+is (currently) not necessary.
 
 Thanks,
 Artur
