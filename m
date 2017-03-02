@@ -1,69 +1,47 @@
-From: Reindl Harald <h.reindl@thelounge.net>
+From: Wols Lists <antlists@youngman.org.uk>
 Subject: Re: GRUB warning after replacing disk drive in RAID1
-Date: Thu, 2 Mar 2017 10:54:47 +0100
-Message-ID: <0060f09f-b82f-f35b-55fb-8125c21c5403@thelounge.net>
+Date: Thu, 2 Mar 2017 13:15:04 +0000
+Message-ID: <58B81AD8.9030306@youngman.org.uk>
 References: <002f01d29152$737b4550$5a71cff0$@wnsdev.com>
  <ab6d048b-b944-6661-11a5-503012dfad50@thelounge.net>
  <008001d29205$e4f503c0$aedf0b40$@wnsdev.com>
  <59c85e04-2f6a-1c81-ccba-fa8aac1c50ee@thelounge.net>
  <009601d29218$9fd3e460$df7bad20$@wnsdev.com>
- <97135270-088a-69da-8789-c64f1054ee72@thelounge.net>
- <008101d292e4$b1aeafe0$150c0fa0$@wnsdev.com>
+ <5136f32b-a0bb-dc16-cae9-59946ea21622@turmel.org>
+ <b900aca8-7f61-2516-8c6a-a9dd25ce2f17@thelounge.net>
+ <99581e49-2a6b-e8ce-fdb5-44d923b067eb@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <008101d292e4$b1aeafe0$150c0fa0$@wnsdev.com>
+In-Reply-To: <99581e49-2a6b-e8ce-fdb5-44d923b067eb@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Sangas <pete@wnsdev.com>, linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>, Reindl Harald <h.reindl@thelounge.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 02/03/17 02:42, Phil Turmel wrote:
+> On 03/01/2017 05:13 PM, Reindl Harald wrote:
+>> Am 01.03.2017 um 19:29 schrieb Phil Turmel:
+>>> Hi Peter, Reindl,
+>>>
+>>> { Convention on kernel.org is to reply-to-all, trim unneeded quoted
+>>> material, and bottom post or interleave.  Please do so. }
+>>
+>> why should someone reply to the list and everyboy else subscribed to the
+>> list to trigger multiple copies?
+> 
+> Because kernel.org doesn't require subscriptions to post, and does
+> expect participants to include non-subscribers.  Since one can't
+> normally tell who is subscribed and who is not, reply-to-all is the rule
+> here.  Other lists have other policies.
 
+> 
+fwiw, some mailing list software detects this, and if you're cc'd on a
+mail the list won't send you another copy.
 
-Am 02.03.2017 um 00:36 schrieb Peter Sangas:
-> Hi Reindl,
->
-> My comments are interleaved. thanks:
-> ___________________________________________________
->
->> #!/bin/bash
->
->> GOOD_DISK="/dev/sda"
->> BAD_DISK="/dev/sdc"
->
->> # clone MBR
->> dd if=$GOOD_DISK of=$BAD_DISK bs=512 count=1
->
-> Here I run the command sfdisk -d /dev/$GOOD_DISK | sfdisk -f /dev/$BAD_DISK.
->
-> I think dd and sfdisk are doing the same thing which is cloning the
-> partitions and copy the MBR ?
+And some client software also de-dupes for you without asking. I run TB
+so I need an add-on - especially as something in my mail setup
+duplicates emails madly every now and then ... :-)
 
-yes
-
->> # force OS to read partition tables
->> partprobe $BAD_DISK
->
-> Why run partprobe if the partitions have not changed?
-
-because they *have* changed when you replace a disk with a complete 
-empty one and clone the MBR and partition table with 3 partitions and 
-have bootet with a empty partition table - not every hardware supports 
-hotswap proper and even if it don't harm
-
->> # install bootloader on replacement disk grub2-install "$BAD_DISK"
->
-> Here don't you mean grub-install not grub2-install?
-
-no, i mean what i say since that script replaced multiple disks on 
-multiple machines - but how does it matter which name a binary has on 
-whatever distribution?
-
-[harry@srv-rhsoft:~]$ rpm -q --filesbypkg grub2 | grep install
-[harry@srv-rhsoft:~]$ rpm -q --filesbypkg grub2-tools | grep install
-grub2-tools               /usr/sbin/grub2-install
-grub2-tools               /usr/share/man/man8/grub2-install.8.gz
-[harry@srv-rhsoft:~]$ cat /etc/redhat-release
-Generic release 24 (Generic)
-
-
+Cheers,
+Wol
