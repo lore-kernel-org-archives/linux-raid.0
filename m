@@ -1,80 +1,158 @@
-From: Gilad Ben-Yossef <gilad@benyossef.com>
-Subject: Re: [RFC PATCH v4] IV Generation algorithms for dm-crypt
-Date: Thu, 2 Mar 2017 16:01:03 +0200
-Message-ID: <CAOtvUMf9Ph5Q=Pq_d3OpjSN1eXRNFLFmxcFgnm+KRKYskQ-d2w@mail.gmail.com>
-References: <1486463731-6224-1-git-send-email-binoy.jayan@linaro.org>
-	<CAOtvUMcN8s886978vE6T=AE79KkZsLBnXsmhewnb5PB0UyAG3A@mail.gmail.com>
-	<CAHv-k_8rgArzV2uQ64h1ZTNRpssX1jMf=RwuPoBmsjQ0FhCsWA@mail.gmail.com>
-	<68f70534-a309-46ba-a84d-8acc1e6620e5@gmail.com>
-	<CAOtvUMf3c0fUjABmbfMrbs0W4gyhKVZyc_tZH3rQg65zF18YMg@mail.gmail.com>
-	<b563eb97-82ba-69d2-c4c5-66bc716a7507@gmail.com>
-	<CAOtvUMePYT7OJDKL7i0y3y6Jvqsxyx6Je6g9aGKVq6PLZ_-Z8w@mail.gmail.com>
-	<CAFqZXNugEK0do+BYC061i4CidMVgg8_BZue8gUVa2g7_RYsAEw@mail.gmail.com>
+From: =?UTF-8?B?546L6YeR5rWm?= <jinpuwang@gmail.com>
+Subject: Re: [PATCH] md/raid1/10: fix potential deadlock
+Date: Thu, 2 Mar 2017 18:04:59 +0100
+Message-ID: <CAD9gYJKpxqR6RHpXS86WFciSZZ6ZsbD9Vmp39DBb7FMkuck7SA@mail.gmail.com>
+References: <b5d7363c5bb03ee017d42f09cf16d9e41e0aa8eb.1488315832.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <CAFqZXNugEK0do+BYC061i4CidMVgg8_BZue8gUVa2g7_RYsAEw@mail.gmail.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Ondrej Mosnacek <omosnace@redhat.com>
-Cc: Binoy Jayan <binoy.jayan@linaro.org>, Rajendra <rnayak@codeaurora.org>, Herbert Xu <herbert@gondor.apana.org.au>, Oded <oded.golombek@arm.com>, Mike Snitzer <snitzer@redhat.com>, Linux kernel mailing list <linux-kernel@vger.kernel.org>, Milan Broz <gmazyland@gmail.com>, linux-raid@vger.kernel.org, dm-devel@redhat.com, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, linux-crypto@vger.kernel.org, Shaohua Li <shli@kernel.org>, "David S. Miller" <davem@davemloft.net>, Alasdair Kergon <agk@redhat.com>, Ofir <Ofir.Drang@arm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <b5d7363c5bb03ee017d42f09cf16d9e41e0aa8eb.1488315832.git.shli@fb.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Shaohua Li <shli@fb.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.com>, Coly Li <colyli@suse.de>, "v3.14+, only the raid10 part" <stable@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Mar 1, 2017 at 3:21 PM, Ondrej Mosnacek <omosnace@redhat.com> wrote:
-> 2017-03-01 13:42 GMT+01:00 Gilad Ben-Yossef <gilad@benyossef.com>:
+2017-02-28 22:08 GMT+01:00 Shaohua Li <shli@fb.com>:
+> Neil Brown pointed out a potential deadlock in raid 10 code with
+> bio_split/chain. The raid1 code could have the same issue, but recent
+> barrier rework makes it less likely to happen. The deadlock happens in
+> below sequence:
 >
-> Wouldn't adopting a bulk request API (something like what I tried to
-> do here [1]) that allows users to supply multiple messages, each with
-> their own IV, fulfill this purpose? That way, we wouldn't need to
-> introduce any new modes into Crypto API and the drivers/accelerators
-> would only need to provide bulk implementations of common modes
-> (xts(aes), cbc(aes), ...) to provide better performance for dm-crypt
-> (and possibly other users, too).
+> 1. generic_make_request(bio), this will set current->bio_list
+> 2. raid10_make_request will split bio to bio1 and bio2
+> 3. __make_request(bio1), wait_barrer, add underlayer disk bio to
+> current->bio_list
+> 4. __make_request(bio2), wait_barrer
 >
-> I'm not sure how exactly these crypto accelerators work, but wouldn't
-> it help if the drivers simply get more messages (in our case sectors)
-> in a single call? I wonder, would (efficiently) supporting such a
-> scheme require changes in the HW itself or could it be achieved just
-> by modifying driver code (let's say specifically for your CryptoCell
-> accelerator)?
+> If raise_barrier happens between 3 & 4, since wait_barrier runs at 3,
+> raise_barrier waits for IO completion from 3. And since raise_barrier
+> sets barrier, 4 waits for raise_barrier. But IO from 3 can't be
+> dispatched because raid10_make_request() doesn't finished yet.
 >
-> [1] https://www.mail-archive.com/linux-crypto@vger.kernel.org/msg23007.html
+> The solution is to adjust the IO ordering. Quotes from Neil:
+> "
+> It is much safer to:
 >
+>     if (need to split) {
+>         split =3D bio_split(bio, ...)
+>         bio_chain(...)
+>         make_request_fn(split);
+>         generic_make_request(bio);
+>    } else
+>         make_request_fn(mddev, bio);
+>
+> This way we first process the initial section of the bio (in 'split')
+> which will queue some requests to the underlying devices.  These
+> requests will be queued in generic_make_request.
+> Then we queue the remainder of the bio, which will be added to the end
+> of the generic_make_request queue.
+> Then we return.
+> generic_make_request() will pop the lower-level device requests off the
+> queue and handle them first.  Then it will process the remainder
+> of the original bio once the first section has been fully processed.
+> "
+>
+> Cc: Coly Li <colyli@suse.de>
+> Cc: =E7=8E=8B=E9=87=91=E6=B5=A6 <jinpuwang@gmail.com>
+> Cc: stable@vger.kernel.org (v3.14+, only the raid10 part)
+> Suggested-by: NeilBrown <neilb@suse.com>
+> Signed-off-by: Shaohua Li <shli@fb.com>
+> ---
+>  drivers/md/raid1.c  | 25 +++++++++++++++++++++++--
+>  drivers/md/raid10.c | 18 ++++++++++++++++++
+>  2 files changed, 41 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 551d654..3c5933b 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -1584,9 +1584,30 @@ static void raid1_make_request(struct mddev *mddev=
+, struct bio *bio)
+>                         split =3D bio;
+>                 }
+>
+> -               if (bio_data_dir(split) =3D=3D READ)
+> +               if (bio_data_dir(split) =3D=3D READ) {
+>                         raid1_read_request(mddev, split);
+> -               else
+> +
+> +                       /*
+> +                        * If a bio is splitted, the first part of bio wi=
+ll
+> +                        * pass barrier but the bio is queued in
+> +                        * current->bio_list (see generic_make_request). =
+If
+> +                        * there is a raise_barrier() called here, the se=
+cond
+> +                        * part of bio can't pass barrier. But since the =
+first
+> +                        * part bio isn't dispatched to underlaying disks=
+ yet,
+> +                        * the barrier is never released, hence raise_bar=
+rier
+> +                        * will alays wait. We have a deadlock.
+> +                        * Note, this only happens in read path. For writ=
+e
+> +                        * path, the first part of bio is dispatched in a
+> +                        * schedule() call (because of blk plug) or offlo=
+aded
+> +                        * to raid10d.
+> +                        * Quitting from the function immediately can cha=
+nge
+> +                        * the bio order queued in bio_list and avoid the=
+ deadlock.
+> +                        */
+> +                       if (split !=3D bio) {
+> +                               generic_make_request(bio);
+> +                               break;
+> +                       }
+> +               } else
+>                         raid1_write_request(mddev, split);
+>         } while (split !=3D bio);
+>  }
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index c4db6d1..b1b1f98 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -1584,7 +1584,25 @@ static void raid10_make_request(struct mddev *mdde=
+v, struct bio *bio)
+>                         split =3D bio;
+>                 }
+>
+> +               /*
+> +                * If a bio is splitted, the first part of bio will pass
+> +                * barrier but the bio is queued in current->bio_list (se=
+e
+> +                * generic_make_request). If there is a raise_barrier() c=
+alled
+> +                * here, the second part of bio can't pass barrier. But s=
+ince
+> +                * the first part bio isn't dispatched to underlaying dis=
+ks
+> +                * yet, the barrier is never released, hence raise_barrie=
+r will
+> +                * alays wait. We have a deadlock.
+> +                * Note, this only happens in read path. For write path, =
+the
+> +                * first part of bio is dispatched in a schedule() call
+> +                * (because of blk plug) or offloaded to raid10d.
+> +                * Quitting from the function immediately can change the =
+bio
+> +                * order queued in bio_list and avoid the deadlock.
+> +                */
+>                 __make_request(mddev, split);
+> +               if (split !=3D bio && bio_data_dir(bio) =3D=3D READ) {
+> +                       generic_make_request(bio);
+> +                       break;
+> +               }
+>         } while (split !=3D bio);
+>
+>         /* In case raid10d snuck in to freeze_array */
+> --
+> 2.9.3
+>
+Looks good to me!
+Reviewed-by:  Jack Wang <jinpu.wang@profitbricks.com>
 
-
-From a general perspective - that is things are expect to be true not
-just for CryptoCell but for most HW crypto engines,
-you want two things - for the HW engine to be able to burst work for a
-long time and than rest for a long time vs. a stop and go scheme
-(engine utilization)
-and for the average IO transaction to be relatively long (bus utilization)
-
-So, a big cluster size i.e. Milan's proposal) works great - you get both.
-
-Submitting a series of sequential small clusters where the HW can
-calculate the IV (e.g. Binoy's proposal) works great if the HW
-supports it - you get both.
-
-A batched series of small clusters + IV is less favorable - if your HW
-engines has lots of parallel context processing (this is expensive for
-HW) you might enjoy engine utilization but the bus utilization will be
-low - lots of small transactions.
-
-Gilad
-
-
--- 
-Gilad Ben-Yossef
-Chief Coffee Drinker
-
-"If you take a class in large-scale robotics, can you end up in a
-situation where the homework eats your dog?"
- -- Jean-Baptiste Queru
+Thanks!
