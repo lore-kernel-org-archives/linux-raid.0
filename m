@@ -1,157 +1,75 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH v2 04/13] md: prepare for managing resync I/O pages in
- clean way
-Date: Fri, 3 Mar 2017 09:54:37 +0800
-Message-ID: <CACVXFVODAM6sise1FjwFhkJq9bXrFGjEgj=KLw6fuHrefV55DA@mail.gmail.com>
-References: <1488296503-4987-1-git-send-email-tom.leiming@gmail.com>
- <1488296503-4987-5-git-send-email-tom.leiming@gmail.com> <20170228233011.rdqtde22zwsimbz7@kernel.org>
- <CACVXFVMJ-h+TwKT8eVbg3AxUjBzzEsCV0SeuDUaQ3FvFdfni3w@mail.gmail.com> <20170302175543.ta2tmjveatjiiapc@kernel.org>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH RFC] test: revise 'test' and make it easier to understand
+Date: Fri, 03 Mar 2017 09:26:43 +1100
+Message-ID: <87mvd3nwm4.fsf@notabene.neil.brown.name>
+References: <a81137d5-3042-e983-fe0e-1b9a0de836ff@suse.com> <1488250053-10436-1-git-send-email-zlliu@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170302175543.ta2tmjveatjiiapc@kernel.org>
-Sender: linux-block-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: Jens Axboe <axboe@fb.com>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1488250053-10436-1-git-send-email-zlliu@suse.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Jes.Sorensen@redhat.com
+Cc: linux-raid@vger.kernel.org, gqjiang@suse.com, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
-On Fri, Mar 3, 2017 at 1:55 AM, Shaohua Li <shli@kernel.org> wrote:
-> On Thu, Mar 02, 2017 at 10:09:14AM +0800, Ming Lei wrote:
->> Hi Shaohua,
->>
->> On Wed, Mar 1, 2017 at 7:30 AM, Shaohua Li <shli@kernel.org> wrote:
->> > On Tue, Feb 28, 2017 at 11:41:34PM +0800, Ming Lei wrote:
->> >> Now resync I/O use bio's bec table to manage pages,
->> >> this way is very hacky, and may not work any more
->> >> once multipage bvec is introduced.
->> >>
->> >> So introduce helpers and new data structure for
->> >> managing resync I/O pages more cleanly.
->> >>
->> >> Signed-off-by: Ming Lei <tom.leiming@gmail.com>
->> >> ---
->> >>  drivers/md/md.h | 54 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
->> >>  1 file changed, 54 insertions(+)
->> >>
->> >> diff --git a/drivers/md/md.h b/drivers/md/md.h
->> >> index 1d63239a1be4..b5a638d85cb4 100644
->> >> --- a/drivers/md/md.h
->> >> +++ b/drivers/md/md.h
->> >> @@ -720,4 +720,58 @@ static inline void mddev_check_writesame(struct mddev *mddev, struct bio *bio)
->> >>  #define RESYNC_BLOCK_SIZE (64*1024)
->> >>  #define RESYNC_PAGES ((RESYNC_BLOCK_SIZE + PAGE_SIZE-1) / PAGE_SIZE)
->> >>
->> >> +/* for managing resync I/O pages */
->> >> +struct resync_pages {
->> >> +     unsigned        idx;    /* for get/put page from the pool */
->> >> +     void            *raid_bio;
->> >> +     struct page     *pages[RESYNC_PAGES];
->> >> +};
->> >
->> > I'd like this to be embedded into r1bio directly. Not sure if we really need a
->> > structure.
->>
->> There are two reasons we can't put this into r1bio:
->> - r1bio is used in both normal and resync I/O, not fair to allocate more
->> in normal I/O, and that is why this patch wouldn't like to touch r1bio or r10bio
->>
->> - the count of 'struct resync_pages' instance depends on raid_disks(raid1)
->> or copies(raid10), both can't be decided during compiling.
+--=-=-=
+Content-Type: text/plain
+
+On Tue, Feb 28 2017, Zhilong Liu wrote:
+
+> 1. use 'Tab' as the code style.
+> 2. arrange the testing steps and provide the 'main' entrance.
+> 3. draft the log_save feature, it captures the /proc/mdstat,
+>    md superblock info, bitmap info and the detail dmesg.
+> 4. modified the mdadm() func, adding the operation that clear
+>    the superblock when create or build one new array, and it
+>    would exit testing when mdadm command returned non-0 value.
+> 5. delete no_errors() func, it only used in tests/04update-uuid,
+>    I recommend the new mdadm() using method.
+> 6. delete fast_sync() func.
+> 7. testdev(), add the object file checking, otherwise this command
+>    would create one regular file, it's one trouble thing.
+> 8. add dmesg checking in do_test() func, it's necessary to check
+>    dmesg whether or not printed abnormal message.
+> 9. add checking conditions in main(), such as $pwd/raid6check need
+>    exists, here is a prompt to remind users to 'make everything'
+>    before testing; the $targetdir should mount under ext[2-4] FS,
+>    because the external bitmap only supports ext, the bmap() API
+>    of bitmap.c doesn't exist in all filesystem, such as btrfs.
 >
-> Yes, I said it should be a pointer of r1bio pointing to the pages in other emails.
+> Signed-off-by: Zhilong Liu <zlliu@suse.com>
 
-OK, got it, :-)
+I haven't looked at this patch in any great detail, but I just wanted to
+say I think it is great that 'test' is getting some attention like this.
+I sort of just grew over the years without any clear plan.  It probably
+has all sorts of strange things in it that don't make a lot of sense any
+more.
+So I've very happy for you to rip it apart and put it together is a more
+coherent form.  Thanks!
 
-Actually I did that in my local tree, and finally I figured out not
-necessary to introduce this pointor, which only usage is for freeing,
-and we can get the
-pointor from .bi_private of the 1st bio. And this stuff can be commented
-clearly.
+Acked-by: NeilBrown <neilb@suse.com>
 
->
->> >
->> >> +}
->> >> +
->> >> +static inline bool resync_page_available(struct resync_pages *rp)
->> >> +{
->> >> +     return rp->idx < RESYNC_PAGES;
->> >> +}
->> >
->> > Then we don't need this obscure API.
->>
->> That is fine.
->>
->>
->> Thanks,
->> Ming Lei
->
->> >
->> >> +
->> >> +static inline int resync_alloc_pages(struct resync_pages *rp,
->> >> +                                  gfp_t gfp_flags)
->> >> +{
->> >> +     int i;
->> >> +
->> >> +     for (i = 0; i < RESYNC_PAGES; i++) {
->> >> +             rp->pages[i] = alloc_page(gfp_flags);
->> >> +             if (!rp->pages[i])
->> >> +                     goto out_free;
->> >> +     }
->> >> +
->> >> +     return 0;
->> >> +
->> >> + out_free:
->> >> +     while (--i >= 0)
->> >> +             __free_page(rp->pages[i]);
->> >> +     return -ENOMEM;
->> >> +}
->> >> +
->> >> +static inline void resync_free_pages(struct resync_pages *rp)
->> >> +{
->> >> +     int i;
->> >> +
->> >> +     for (i = 0; i < RESYNC_PAGES; i++)
->> >> +             __free_page(rp->pages[i]);
->> >
->> > Since we will use get_page, shouldn't this be put_page?
->>
->> You are right, will fix in v3.
->>
->> >
->> >> +}
->> >> +
->> >> +static inline void resync_get_all_pages(struct resync_pages *rp)
->> >> +{
->> >> +     int i;
->> >> +
->> >> +     for (i = 0; i < RESYNC_PAGES; i++)
->> >> +             get_page(rp->pages[i]);
->> >> +}
->> >> +
->> >> +static inline struct page *resync_fetch_page(struct resync_pages *rp)
->> >> +{
->> >> +     if (WARN_ON_ONCE(rp->idx >= RESYNC_PAGES))
->> >> +             return NULL;
->> >> +     return rp->pages[rp->idx++];
->> >
->> > I'd like the caller explicitly specify the index instead of a global variable
->> > to track it, which will make the code more understandable and less error prone.
->>
->> That is fine, but the index has to be per bio, and finally the index
->> has to be stored
->> in 'struct resync_pages', so every user has to call it in the following way:
->>
->>           resync_fetch_page(rp, rp->idx);
->>
->> then looks no benefit to pass index explicitly.
->
-> I suppose the callers always iterate though page 0 to RESYNC_PAGES - 1. Then
-> the callers can use an index by themselves. That will clearly show which page
-> the callers are using. The resync_fetch_page() wrap is a blackbox we always
-> need to refer to the definition.
-
-OK, understood.
+NeilBrown
 
 
-Thanks,
-Ming Lei
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAli4nCMACgkQOeye3VZi
+gbmNOhAAka27iBfbqx4alHOwXB4t+f/EdmccEVXprnFPFNxF3AbDC7pYRWNiNNez
+SOUUcHq0R+SdFt9CkO+kxTDIHZ4KRrUImGNqAmSZdoB6LkMyiHslIeh5s6YVyKoO
+VSXY5G+X5HD5tH+APHoRiXRog/bGcBUMSz1/ooXhNiqDxh7IYlwrd6A5KFS9uVel
+n5MwmkqqQLxCnExVrfE3LZJu7PSz2Sb1MJFhKTCleKTy91fzRciLLmkfbEVlNyDw
+2yc3LTe7aWZm7lFQ6u+NvmO5HD/OasFCWPetE/+BwEzFK6TfpDLQNZPVa+vNk3DM
+hTLnTBFk6LUOy3V3b++wrApmh3SYmUg29gV8cCRromFvZkhZ8/7ktqEY89Iy13xe
+WsjqfCd3pDeM8WGiihGJqMmbnptm+WC5rDlkdyNtx9cc+QT6OZPDZ4L6XjTaXV3O
+GD4Iewde6SDBgmC50oDbeSGxkR/dvGw+TNmnsqfaJBWW3qfFyXTssPbrQIpetYAP
+KAMn+NH7pL8mMOqhYCGJQdRC7tgG4RvVXlFfag2Xa3gXRTCW9vF8c2Vo5r/8Sqih
+0vKJmzmvgHsDukcwY2II9132OEeX+KqPh70XeW3u20uwrFTXbxSuzEpn8TmC7RAC
+h2PnKSfhl26w2CWLl8HDD+ldqLh9GO6r0N5rYxD6MJIM8XjpX9w=
+=2DM9
+-----END PGP SIGNATURE-----
+--=-=-=--
