@@ -1,35 +1,55 @@
 From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH v2 09/13] md: raid1: use bio_segments_all()
-Date: Thu, 2 Mar 2017 10:34:25 +0800
-Message-ID: <CACVXFVOLLJ1Og7ezOsDTbuBsJg+qxJdqmf0MO+VDwDZiSoFn1g@mail.gmail.com>
+Subject: Re: [PATCH v2 13/13] md: raid10: avoid direct access to bvec table in handle_reshape_read_error
+Date: Thu, 2 Mar 2017 10:37:49 +0800
+Message-ID: <CACVXFVN8aE_Cd=ssBuhmVRK5YYRe2q4+jXoxsfztFLZiimH_xA@mail.gmail.com>
 References: <1488296503-4987-1-git-send-email-tom.leiming@gmail.com>
- <1488296503-4987-10-git-send-email-tom.leiming@gmail.com> <20170228234212.3wjwxsegg4v57nxu@kernel.org>
+ <1488296503-4987-14-git-send-email-tom.leiming@gmail.com> <20170228234627.3h6tospuz33yhdig@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170228234212.3wjwxsegg4v57nxu@kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170228234627.3h6tospuz33yhdig@kernel.org>
+Sender: linux-block-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>
 Cc: Jens Axboe <axboe@fb.com>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-raid.ids
 
 Hi Shaohua,
 
-On Wed, Mar 1, 2017 at 7:42 AM, Shaohua Li <shli@kernel.org> wrote:
-> On Tue, Feb 28, 2017 at 11:41:39PM +0800, Ming Lei wrote:
->> Use this helper, instead of direct access to .bi_vcnt.
+On Wed, Mar 1, 2017 at 7:46 AM, Shaohua Li <shli@kernel.org> wrote:
+> On Tue, Feb 28, 2017 at 11:41:43PM +0800, Ming Lei wrote:
+>> The cost is 128bytes(8*16) stack space in kernel thread context, and
+>> just use the bio helper to retrieve pages from bio.
+>>
+>> Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+>> ---
+>>  drivers/md/raid10.c | 12 ++++++++++--
+>>  1 file changed, 10 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+>> index 0b97631e3905..6ffb64ab45f8 100644
+>> --- a/drivers/md/raid10.c
+>> +++ b/drivers/md/raid10.c
+>> @@ -4670,7 +4670,15 @@ static int handle_reshape_read_error(struct mddev *mddev,
+>>       struct r10bio *r10b = &on_stack.r10_bio;
+>>       int slot = 0;
+>>       int idx = 0;
+>> -     struct bio_vec *bvec = r10_bio->master_bio->bi_io_vec;
+>> +     struct bio_vec *bvl;
+>> +     struct page *pages[RESYNC_PAGES];
+>> +
+>> +     /*
+>> +      * This bio is allocated in reshape_request(), and size
+>> +      * is still RESYNC_PAGES
+>> +      */
+>> +     bio_for_each_segment_all(bvl, r10_bio->master_bio, idx)
+>> +             pages[idx] = bvl->bv_page;
 >
-> what We really need to do for the behind IO is:
-> - allocate memory and copy bio data to the memory
-> - let behind bio do IO against the memory
->
-> The behind bio doesn't need to have the exactly same bio_vec setting. If we
-> just track the new memory, we don't need use the bio_segments_all and access
-> bio_vec too.
+> The reshape bio is doing IO against the memory we allocated for r10_bio, I'm
+> wondering why we can't get the pages from r10_bio. In this way, we don't need
+> access the bio_vec any more.
 
-But we need to figure out how many vecs(each vec store one page) to be
-allocated for the cloned/behind bio, and that is the only value of
-bio_segments_all() here. Or you have idea to avoid that?
+Reshap read is special and the bio(r10_bio->master_bio) isn't allocated from
+.r10buf_pool, please see reshape_request().
 
 Thanks,
-Ming
+Ming Lei
