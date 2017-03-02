@@ -1,55 +1,34 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH v2 13/13] md: raid10: avoid direct access to bvec table in handle_reshape_read_error
-Date: Thu, 2 Mar 2017 10:37:49 +0800
-Message-ID: <CACVXFVN8aE_Cd=ssBuhmVRK5YYRe2q4+jXoxsfztFLZiimH_xA@mail.gmail.com>
-References: <1488296503-4987-1-git-send-email-tom.leiming@gmail.com>
- <1488296503-4987-14-git-send-email-tom.leiming@gmail.com> <20170228234627.3h6tospuz33yhdig@kernel.org>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: GRUB warning after replacing disk drive in RAID1
+Date: Wed, 1 Mar 2017 21:42:19 -0500
+Message-ID: <99581e49-2a6b-e8ce-fdb5-44d923b067eb@turmel.org>
+References: <002f01d29152$737b4550$5a71cff0$@wnsdev.com>
+ <ab6d048b-b944-6661-11a5-503012dfad50@thelounge.net>
+ <008001d29205$e4f503c0$aedf0b40$@wnsdev.com>
+ <59c85e04-2f6a-1c81-ccba-fa8aac1c50ee@thelounge.net>
+ <009601d29218$9fd3e460$df7bad20$@wnsdev.com>
+ <5136f32b-a0bb-dc16-cae9-59946ea21622@turmel.org>
+ <b900aca8-7f61-2516-8c6a-a9dd25ce2f17@thelounge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170228234627.3h6tospuz33yhdig@kernel.org>
-Sender: linux-block-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: Jens Axboe <axboe@fb.com>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <b900aca8-7f61-2516-8c6a-a9dd25ce2f17@thelounge.net>
+Sender: linux-raid-owner@vger.kernel.org
+To: Reindl Harald <h.reindl@thelounge.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Shaohua,
-
-On Wed, Mar 1, 2017 at 7:46 AM, Shaohua Li <shli@kernel.org> wrote:
-> On Tue, Feb 28, 2017 at 11:41:43PM +0800, Ming Lei wrote:
->> The cost is 128bytes(8*16) stack space in kernel thread context, and
->> just use the bio helper to retrieve pages from bio.
+On 03/01/2017 05:13 PM, Reindl Harald wrote:
+> Am 01.03.2017 um 19:29 schrieb Phil Turmel:
+>> Hi Peter, Reindl,
 >>
->> Signed-off-by: Ming Lei <tom.leiming@gmail.com>
->> ---
->>  drivers/md/raid10.c | 12 ++++++++++--
->>  1 file changed, 10 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->> index 0b97631e3905..6ffb64ab45f8 100644
->> --- a/drivers/md/raid10.c
->> +++ b/drivers/md/raid10.c
->> @@ -4670,7 +4670,15 @@ static int handle_reshape_read_error(struct mddev *mddev,
->>       struct r10bio *r10b = &on_stack.r10_bio;
->>       int slot = 0;
->>       int idx = 0;
->> -     struct bio_vec *bvec = r10_bio->master_bio->bi_io_vec;
->> +     struct bio_vec *bvl;
->> +     struct page *pages[RESYNC_PAGES];
->> +
->> +     /*
->> +      * This bio is allocated in reshape_request(), and size
->> +      * is still RESYNC_PAGES
->> +      */
->> +     bio_for_each_segment_all(bvl, r10_bio->master_bio, idx)
->> +             pages[idx] = bvl->bv_page;
->
-> The reshape bio is doing IO against the memory we allocated for r10_bio, I'm
-> wondering why we can't get the pages from r10_bio. In this way, we don't need
-> access the bio_vec any more.
+>> { Convention on kernel.org is to reply-to-all, trim unneeded quoted
+>> material, and bottom post or interleave.  Please do so. }
+> 
+> why should someone reply to the list and everyboy else subscribed to the
+> list to trigger multiple copies?
 
-Reshap read is special and the bio(r10_bio->master_bio) isn't allocated from
-.r10buf_pool, please see reshape_request().
-
-Thanks,
-Ming Lei
+Because kernel.org doesn't require subscriptions to post, and does
+expect participants to include non-subscribers.  Since one can't
+normally tell who is subscribed and who is not, reply-to-all is the rule
+here.  Other lists have other policies.
