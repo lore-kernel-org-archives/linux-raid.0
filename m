@@ -1,158 +1,71 @@
-From: =?UTF-8?B?546L6YeR5rWm?= <jinpuwang@gmail.com>
-Subject: Re: [PATCH] md/raid1/10: fix potential deadlock
-Date: Thu, 2 Mar 2017 18:04:59 +0100
-Message-ID: <CAD9gYJKpxqR6RHpXS86WFciSZZ6ZsbD9Vmp39DBb7FMkuck7SA@mail.gmail.com>
-References: <b5d7363c5bb03ee017d42f09cf16d9e41e0aa8eb.1488315832.git.shli@fb.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH v2 13/13] md: raid10: avoid direct access to bvec table
+ in handle_reshape_read_error
+Date: Wed, 1 Mar 2017 23:47:53 -0800
+Message-ID: <20170302074753.6zsdspg5e67l24xu@kernel.org>
+References: <1488296503-4987-1-git-send-email-tom.leiming@gmail.com>
+ <1488296503-4987-14-git-send-email-tom.leiming@gmail.com>
+ <20170228234627.3h6tospuz33yhdig@kernel.org>
+ <CACVXFVN8aE_Cd=ssBuhmVRK5YYRe2q4+jXoxsfztFLZiimH_xA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <b5d7363c5bb03ee017d42f09cf16d9e41e0aa8eb.1488315832.git.shli@fb.com>
+Content-Disposition: inline
+In-Reply-To: <CACVXFVN8aE_Cd=ssBuhmVRK5YYRe2q4+jXoxsfztFLZiimH_xA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.com>, Coly Li <colyli@suse.de>, "v3.14+, only the raid10 part" <stable@vger.kernel.org>
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: Jens Axboe <axboe@fb.com>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-raid.ids
 
-2017-02-28 22:08 GMT+01:00 Shaohua Li <shli@fb.com>:
-> Neil Brown pointed out a potential deadlock in raid 10 code with
-> bio_split/chain. The raid1 code could have the same issue, but recent
-> barrier rework makes it less likely to happen. The deadlock happens in
-> below sequence:
->
-> 1. generic_make_request(bio), this will set current->bio_list
-> 2. raid10_make_request will split bio to bio1 and bio2
-> 3. __make_request(bio1), wait_barrer, add underlayer disk bio to
-> current->bio_list
-> 4. __make_request(bio2), wait_barrer
->
-> If raise_barrier happens between 3 & 4, since wait_barrier runs at 3,
-> raise_barrier waits for IO completion from 3. And since raise_barrier
-> sets barrier, 4 waits for raise_barrier. But IO from 3 can't be
-> dispatched because raid10_make_request() doesn't finished yet.
->
-> The solution is to adjust the IO ordering. Quotes from Neil:
-> "
-> It is much safer to:
->
->     if (need to split) {
->         split =3D bio_split(bio, ...)
->         bio_chain(...)
->         make_request_fn(split);
->         generic_make_request(bio);
->    } else
->         make_request_fn(mddev, bio);
->
-> This way we first process the initial section of the bio (in 'split')
-> which will queue some requests to the underlying devices.  These
-> requests will be queued in generic_make_request.
-> Then we queue the remainder of the bio, which will be added to the end
-> of the generic_make_request queue.
-> Then we return.
-> generic_make_request() will pop the lower-level device requests off the
-> queue and handle them first.  Then it will process the remainder
-> of the original bio once the first section has been fully processed.
-> "
->
-> Cc: Coly Li <colyli@suse.de>
-> Cc: =E7=8E=8B=E9=87=91=E6=B5=A6 <jinpuwang@gmail.com>
-> Cc: stable@vger.kernel.org (v3.14+, only the raid10 part)
-> Suggested-by: NeilBrown <neilb@suse.com>
-> Signed-off-by: Shaohua Li <shli@fb.com>
-> ---
->  drivers/md/raid1.c  | 25 +++++++++++++++++++++++--
->  drivers/md/raid10.c | 18 ++++++++++++++++++
->  2 files changed, 41 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 551d654..3c5933b 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -1584,9 +1584,30 @@ static void raid1_make_request(struct mddev *mddev=
-, struct bio *bio)
->                         split =3D bio;
->                 }
->
-> -               if (bio_data_dir(split) =3D=3D READ)
-> +               if (bio_data_dir(split) =3D=3D READ) {
->                         raid1_read_request(mddev, split);
-> -               else
-> +
-> +                       /*
-> +                        * If a bio is splitted, the first part of bio wi=
-ll
-> +                        * pass barrier but the bio is queued in
-> +                        * current->bio_list (see generic_make_request). =
-If
-> +                        * there is a raise_barrier() called here, the se=
-cond
-> +                        * part of bio can't pass barrier. But since the =
-first
-> +                        * part bio isn't dispatched to underlaying disks=
- yet,
-> +                        * the barrier is never released, hence raise_bar=
-rier
-> +                        * will alays wait. We have a deadlock.
-> +                        * Note, this only happens in read path. For writ=
-e
-> +                        * path, the first part of bio is dispatched in a
-> +                        * schedule() call (because of blk plug) or offlo=
-aded
-> +                        * to raid10d.
-> +                        * Quitting from the function immediately can cha=
-nge
-> +                        * the bio order queued in bio_list and avoid the=
- deadlock.
-> +                        */
-> +                       if (split !=3D bio) {
-> +                               generic_make_request(bio);
-> +                               break;
-> +                       }
-> +               } else
->                         raid1_write_request(mddev, split);
->         } while (split !=3D bio);
->  }
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index c4db6d1..b1b1f98 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -1584,7 +1584,25 @@ static void raid10_make_request(struct mddev *mdde=
-v, struct bio *bio)
->                         split =3D bio;
->                 }
->
-> +               /*
-> +                * If a bio is splitted, the first part of bio will pass
-> +                * barrier but the bio is queued in current->bio_list (se=
-e
-> +                * generic_make_request). If there is a raise_barrier() c=
-alled
-> +                * here, the second part of bio can't pass barrier. But s=
-ince
-> +                * the first part bio isn't dispatched to underlaying dis=
-ks
-> +                * yet, the barrier is never released, hence raise_barrie=
-r will
-> +                * alays wait. We have a deadlock.
-> +                * Note, this only happens in read path. For write path, =
-the
-> +                * first part of bio is dispatched in a schedule() call
-> +                * (because of blk plug) or offloaded to raid10d.
-> +                * Quitting from the function immediately can change the =
-bio
-> +                * order queued in bio_list and avoid the deadlock.
-> +                */
->                 __make_request(mddev, split);
-> +               if (split !=3D bio && bio_data_dir(bio) =3D=3D READ) {
-> +                       generic_make_request(bio);
-> +                       break;
-> +               }
->         } while (split !=3D bio);
->
->         /* In case raid10d snuck in to freeze_array */
-> --
-> 2.9.3
->
-Looks good to me!
-Reviewed-by:  Jack Wang <jinpu.wang@profitbricks.com>
+On Thu, Mar 02, 2017 at 10:37:49AM +0800, Ming Lei wrote:
+> Hi Shaohua,
+> 
+> On Wed, Mar 1, 2017 at 7:46 AM, Shaohua Li <shli@kernel.org> wrote:
+> > On Tue, Feb 28, 2017 at 11:41:43PM +0800, Ming Lei wrote:
+> >> The cost is 128bytes(8*16) stack space in kernel thread context, and
+> >> just use the bio helper to retrieve pages from bio.
+> >>
+> >> Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+> >> ---
+> >>  drivers/md/raid10.c | 12 ++++++++++--
+> >>  1 file changed, 10 insertions(+), 2 deletions(-)
+> >>
+> >> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> >> index 0b97631e3905..6ffb64ab45f8 100644
+> >> --- a/drivers/md/raid10.c
+> >> +++ b/drivers/md/raid10.c
+> >> @@ -4670,7 +4670,15 @@ static int handle_reshape_read_error(struct mddev *mddev,
+> >>       struct r10bio *r10b = &on_stack.r10_bio;
+> >>       int slot = 0;
+> >>       int idx = 0;
+> >> -     struct bio_vec *bvec = r10_bio->master_bio->bi_io_vec;
+> >> +     struct bio_vec *bvl;
+> >> +     struct page *pages[RESYNC_PAGES];
+> >> +
+> >> +     /*
+> >> +      * This bio is allocated in reshape_request(), and size
+> >> +      * is still RESYNC_PAGES
+> >> +      */
+> >> +     bio_for_each_segment_all(bvl, r10_bio->master_bio, idx)
+> >> +             pages[idx] = bvl->bv_page;
+> >
+> > The reshape bio is doing IO against the memory we allocated for r10_bio, I'm
+> > wondering why we can't get the pages from r10_bio. In this way, we don't need
+> > access the bio_vec any more.
+> 
+> Reshap read is special and the bio(r10_bio->master_bio) isn't allocated from
+> .r10buf_pool, please see reshape_request().
 
-Thanks!
+Why does this matter? The bio is still doing IO to the memory allocated in
+r10_bio. bi_private->r10_bio->the pages.
+
+My guess why you think the reshape read is special is the bio->bi_private
+doesn't pointer to resync_pages. And since you let resync_pages pointer to
+r10_bio and not vice versa, we can't find r10_bio, correct? I think this is
+another reason why r10_bio embeds resync_pages (I mean a pointer to
+resync_pages). With this way I suggested, the reshape read isn't special at
+all. If we allocate memory for r10_bio/r1_bio, we shouldn't need access any bio
+bvec.
+
+Thanks,
+Shaohua
