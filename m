@@ -1,79 +1,73 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH 3/3] md/raid5: sort bios
-Date: Fri, 3 Mar 2017 09:59:09 -0800
-Message-ID: <20170303175909.q2t2hoxsorjhk77k@kernel.org>
-References: <cover.1487373517.git.shli@fb.com>
- <01c6067566d787a815fc29aa07b36ad4dd0280f0.1487373517.git.shli@fb.com>
- <87k287m3d6.fsf@notabene.neil.brown.name>
+Subject: Re: [PATCH v2 09/13] md: raid1: use bio_segments_all()
+Date: Fri, 3 Mar 2017 09:12:30 -0800
+Message-ID: <20170303171230.qacc66jovhgaplkh@kernel.org>
+References: <1488296503-4987-1-git-send-email-tom.leiming@gmail.com>
+ <1488296503-4987-10-git-send-email-tom.leiming@gmail.com>
+ <20170228234212.3wjwxsegg4v57nxu@kernel.org>
+ <CACVXFVOLLJ1Og7ezOsDTbuBsJg+qxJdqmf0MO+VDwDZiSoFn1g@mail.gmail.com>
+ <20170302075202.ipnx64sodjzxisqs@kernel.org>
+ <CACVXFVP1gNEsUFdh1eKW9d01azis2+GMNO_kZjN8_ZQEbe8BxQ@mail.gmail.com>
+ <CACVXFVNRhekBMAnVN9co-jdkP=+5S+28CyFr9Z_nsJVmdxPxSg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <87k287m3d6.fsf@notabene.neil.brown.name>
+In-Reply-To: <CACVXFVNRhekBMAnVN9co-jdkP=+5S+28CyFr9Z_nsJVmdxPxSg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org, songliubraving@fb.com, kernel-team@fb.com
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: Jens Axboe <axboe@fb.com>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-raid.ids
 
-On Fri, Mar 03, 2017 at 02:43:49PM +1100, Neil Brown wrote:
-> On Fri, Feb 17 2017, Shaohua Li wrote:
-> 
-> > Previous patch (raid5: only dispatch IO from raid5d for harddisk raid)
-> > defers IO dispatching. The goal is to create better IO pattern. At that
-> > time, we don't sort the deffered IO and hope the block layer can do IO
-> > merge and sort. Now the raid5-cache writeback could create large amount
-> > of bios. And if we enable muti-thread for stripe handling, we can't
-> > control when to dispatch IO to raid disks. In a lot of time, we are
-> > dispatching IO which block layer can't do merge effectively.
+On Fri, Mar 03, 2017 at 02:22:30PM +0800, Ming Lei wrote:
+> On Fri, Mar 3, 2017 at 10:20 AM, Ming Lei <tom.leiming@gmail.com> wrote:
+> > On Thu, Mar 2, 2017 at 3:52 PM, Shaohua Li <shli@kernel.org> wrote:
+> >> On Thu, Mar 02, 2017 at 10:34:25AM +0800, Ming Lei wrote:
+> >>> Hi Shaohua,
+> >>>
+> >>> On Wed, Mar 1, 2017 at 7:42 AM, Shaohua Li <shli@kernel.org> wrote:
+> >>> > On Tue, Feb 28, 2017 at 11:41:39PM +0800, Ming Lei wrote:
+> >>> >> Use this helper, instead of direct access to .bi_vcnt.
+> >>> >
+> >>> > what We really need to do for the behind IO is:
+> >>> > - allocate memory and copy bio data to the memory
+> >>> > - let behind bio do IO against the memory
+> >>> >
+> >>> > The behind bio doesn't need to have the exactly same bio_vec setting. If we
+> >>> > just track the new memory, we don't need use the bio_segments_all and access
+> >>> > bio_vec too.
+> >>>
+> >>> But we need to figure out how many vecs(each vec store one page) to be
+> >>> allocated for the cloned/behind bio, and that is the only value of
+> >>> bio_segments_all() here. Or you have idea to avoid that?
+> >>
+> >> As I said, the behind bio doesn't need to have the exactly same bio_vec
+> >> setting. We just allocate memory and copy original bio data to the memory,
+> >> then do IO against the new memory. The behind bio
+> >> segments == (bio->bi_iter.bi_size + PAGE_SIZE - 1) >> PAGE_SHIFT
 > >
-> > This patch moves further for the IO dispatching defer. We accumulate
-> > bios, but we don't dispatch all the bios after a threshold is met. This
-> > 'dispatch partial portion of bios' stragety allows bios coming in a
-> > large time window are sent to disks together. At the dispatching time,
-> > there is large chance the block layer can merge the bios. To make this
-> > more effective, we dispatch IO in ascending order. This increases
-> > request merge chance and reduces disk seek.
+> > The equation isn't always correct, especially when bvec includes just
+> > part of page, and it is quite often in case of mkfs, in which one bvec often
+> > includes 512byte buffer.
 > 
-> I can see the benefit of batching and sorting requests.
+> Think it further, your idea could be workable and more clean, but the change
+> can be a bit big, looks we need to switch handling write behind into
+> the following way:
 > 
-> I wonder if the extra complexity of grouping together 512 requests, then
-> submitting the "first" 128 is really worth it.  Have you measured the
-> value of that?
-
-I'm pretty sure I tried. The whole point of dispatching the first 128 is we
-don't have a better pipeline. Grouping 512 and then dispatching them together
-definitely improve the IO patter, but the request accumulation takes time, we
-will have no IO running in the window.
-
-> If you just submitted every time you got 512 requests, you could use
-> list_sort() on the bio list and wouldn't need an array.
+> 1) replace bio_clone_bioset_partial() with bio_allocate(nr_vecs), and 'nr_vecs'
+> is computed with your equation;
 > 
-> If an array really is best, it would be really nice if "sort" could pass
-> a 'void*' down to the cmp function,
-> and it could sort all bios that are
-> *after* last_bio_pos first, and then the others.  That would make the
-> code much simpler.  I guess sort() could be changed (list_sort() already
-> has a 'priv' argument like this).
-
-Ok, I'll change this to a list. And add extra pointer to record the last sorted
-entry. I didn't see the sort uses much time in my profile, but the merge sort
-looks better. Will do the change.
-
-> If we cannot change sort(), then maybe use lib/bsearch.c for the binary
-> search.  Performing two comparisons in the loop of a binary search
-> should get a *fail* in any algorithms class!!
-> The "pending_data" array that you have added to the r5conf structure
-> adds 4096 bytes.  This means it is larger than a page, which is best
-> avoided (though it is unlikely to cause problems).  I would allocate it
-> separately.
-
-Yep, already fixed internally.
-
+> 2) allocate 'nr_vecs' pages once and share them among all created bio in 1)
 > 
-> So there is a lot that I don't really like, but it seems like a good
-> idea in principle.
+> 3) for each created bio, add each page into the bio via bio_add_page()
+> 
+> 4) only for the 1st created bio, call bio_copy_data() to copy data from
+> master bio.
+> 
+> Let me know if you are OK with the above implementaion.
 
-ok, thanks for your time!
+Right, this is exactly what I'd like to do. This way we don't need touch
+bvec and should be much cleaner.
 
 Thanks,
 Shaohua
