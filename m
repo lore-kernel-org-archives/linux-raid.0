@@ -1,118 +1,159 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH v2 06/13] md: raid1: don't use bio's vec table to manage
- resync pages
-Date: Fri, 3 Mar 2017 10:11:31 +0800
-Message-ID: <CACVXFVPQx0rQqQS0PG2MoYh+pGvVQb_H_+fMCGbWeVDM3JNcnQ@mail.gmail.com>
-References: <1488296503-4987-1-git-send-email-tom.leiming@gmail.com>
- <1488296503-4987-7-git-send-email-tom.leiming@gmail.com> <20170228233716.v3izfseg3dpdyexc@kernel.org>
- <CACVXFVPqFyvsdwjdcHbKm8J8Ni=d5isSxguRVJZoF3m2kaO98Q@mail.gmail.com> <20170302174803.ds45hdbzkofl5hkh@kernel.org>
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: Re: [PATCH V2 2/5] md: move bitmap_destroy before __md_stop
+Date: Fri, 3 Mar 2017 11:08:52 +0800
+Message-ID: <58B8DE44.7040804@suse.com>
+References: <1488357760-7893-1-git-send-email-gqjiang@suse.com>
+ <1488357760-7893-3-git-send-email-gqjiang@suse.com>
+ <20170302182825.fcinhanfai3qgzot@kernel.org>
+ <87pohznx49.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170302174803.ds45hdbzkofl5hkh@kernel.org>
-Sender: linux-block-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: Jens Axboe <axboe@fb.com>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87pohznx49.fsf@notabene.neil.brown.name>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>, Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-On Fri, Mar 3, 2017 at 1:48 AM, Shaohua Li <shli@kernel.org> wrote:
-> On Thu, Mar 02, 2017 at 10:25:10AM +0800, Ming Lei wrote:
->> Hi Shaohua,
->>
->> On Wed, Mar 1, 2017 at 7:37 AM, Shaohua Li <shli@kernel.org> wrote:
->> > On Tue, Feb 28, 2017 at 11:41:36PM +0800, Ming Lei wrote:
->> >> Now we allocate one page array for managing resync pages, instead
->> >> of using bio's vec table to do that, and the old way is very hacky
->> >> and won't work any more if multipage bvec is enabled.
->> >>
->> >> The introduced cost is that we need to allocate (128 + 16) * raid_disks
->> >> bytes per r1_bio, and it is fine because the inflight r1_bio for
->> >> resync shouldn't be much, as pointed by Shaohua.
->> >>
->> >> Also the bio_reset() in raid1_sync_request() is removed because
->> >> all bios are freshly new now and not necessary to reset any more.
->> >>
->> >> This patch can be thought as a cleanup too
->> >>
->> >> Suggested-by: Shaohua Li <shli@kernel.org>
->> >> Signed-off-by: Ming Lei <tom.leiming@gmail.com>
->> >> ---
->> >>  drivers/md/raid1.c | 83 ++++++++++++++++++++++++++++++++++--------------------
->> >>  1 file changed, 53 insertions(+), 30 deletions(-)
->> >>
->> >> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
->> >> index c442b4657e2f..900144f39630 100644
->> >> --- a/drivers/md/raid1.c
->> >> +++ b/drivers/md/raid1.c
->> >> @@ -77,6 +77,16 @@ static void lower_barrier(struct r1conf *conf, sector_t sector_nr);
->> >>  #define raid1_log(md, fmt, args...)                          \
->> >>       do { if ((md)->queue) blk_add_trace_msg((md)->queue, "raid1 " fmt, ##args); } while (0)
->> >>
->> >> +static inline struct resync_pages *get_resync_pages(struct bio *bio)
->> >> +{
->> >> +     return bio->bi_private;
->> >> +}
->> >> +
->> >> +static inline struct r1bio *get_resync_r1bio(struct bio *bio)
->> >> +{
->> >> +     return get_resync_pages(bio)->raid_bio;
->> >> +}
->> >
->> > This is a weird between bio, r1bio and the resync_pages. I'd like the pages are
->>
->> It is only a bit weird inside allocating and freeing r1bio, once all
->> are allocated, you
->> can see everthing is clean and simple:
->>
->>     - r1bio includes lots of bioes,
->>     - and one bio is attached by one resync_pages via .bi_private
+
+
+On 03/03/2017 06:15 AM, NeilBrown wrote:
+> On Thu, Mar 02 2017, Shaohua Li wrote:
 >
-> I don't how complex to let r1bio pointer to the pages, but that's the nartual
-> way. r1bio owns the pages, not the pages own r1bio, so we should let r1bio
-> points to the pages. The bio.bi_private still points to r1bio.
-
-Actually it is bio which owns the pages for doing its own I/O, and the only
-thing related with r10bio is that bios may share these pages, but using
-page refcount trick will make the relation quite implicit.
-
-The only reason to allocate all resync_pages together is for sake of efficiency,
-and just for avoiding to allocate one resync_pages one time for each bio.
-
-We have to make .bi_private point to resync_pages(per bio), otherwise we
-can't fetch pages into one bio at all, thinking about where to store the index
-for each bio's pre-allocated pages, and it has to be per bio.
-
->
->> > embedded in r1bio. Maybe a pointer of r1bio to the pages. It's cleaner and more
->> > straightforward.
+>> On Wed, Mar 01, 2017 at 04:42:37PM +0800, Guoqing Jiang wrote:
+>>> Since we have switched to sync way to handle METADATA_UPDATED
+>>> msg for md-cluster, then process_metadata_update is depended
+>>> on mddev->thread->wqueue.
+>>>
+>>> With the new change, clustered raid could possible hang if
+>>> array received a METADATA_UPDATED msg after array unregistered
+>>> mddev->thread, so we need to stop clustered raid earlier
+>>> than before.
+>>>
+>>> And this change should be safe for non-clustered raid since
+>>> all writes are stopped before the destroy. Also in md_run,
+>>> we activate the personality (pers->run()) before activating
+>>> the bitmap (bitmap_create()). So it is pleasingly symmetric
+>>> to stop the bitmap (bitmap_destroy()) before stopping the
+>>> personality (__md_stop() calls pers->free()).
+>>>
+>>> Reviewed-by: NeilBrown <neilb@suse.com>
+>>> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+>>> ---
+>>>   drivers/md/md.c | 30 +++++++++++++++++-------------
+>>>   1 file changed, 17 insertions(+), 13 deletions(-)
+>>>
+>>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>>> index 44206bc6e3aa..e1d9116044ae 100644
+>>> --- a/drivers/md/md.c
+>>> +++ b/drivers/md/md.c
+>>> @@ -5574,8 +5574,8 @@ void md_stop(struct mddev *mddev)
+>>>   	/* stop the array and free an attached data structures.
+>>>   	 * This is called from dm-raid
+>>>   	 */
+>>> -	__md_stop(mddev);
+>>>   	bitmap_destroy(mddev);
+>>> +	__md_stop(mddev);
+>>>   	if (mddev->bio_set)
+>>>   		bioset_free(mddev->bio_set);
+>>>   }
+>> Applied other 4 patches. But this one I still have concerns.
 >>
->> In theory, the cleanest way is to allocate one resync_pages for each resync bio,
->> but that isn't efficient. That is why this patch allocates all
->> resync_pages together
->> in r1buf_pool_alloc(), and split them into bio.
+>> For raid1, if a bio is behind IO, we return the bio to upper layer but don't
+>> wait behind IO completion. So even there are no writes running, there might be
+>> behind IO running. mddev_detach will do the wait which checks bitmap. If we
+>> bitmap_destroy before __md_stop, mddev_detach doesn't do the wait.
+
+Got it, thanks for explanation!
+
 >>
->> BTW, the only trick is just that the whole page array is stored in .bi_private
->> of the 1st bio, then we can avoid to add one pointer into r1bio.
->
-> You will need to add pointer in resync_pages which points to r1bio
-
-Yeah, that is just what this patchset is doing.
-
->
->> >
->> > I think the patch 6, 7 8 should be in a same patch. Otherwise bisect will be broken.
->> >
+>> Probably we should move mddev_detach out of __md_stop and always do:
+>> mddev_detach()
+>> bitmap_destroy()
+>> __md_stop()
 >>
->> No, it won't. Both patch 7 and patch 8 just replacing reading from bvec table
->> with reading from the pre-allocated page array.  Both should be fine, but the
->> latter is cleaner and simpler to do.
+>> This looks safer to me.
+> Thanks for catching that.  I agree - mddev_detach should come before
+> bitmap_destroy.
+> I might be best to change __md_stop() to start
 >
-> Ok, sounds good, though I doubt it's really worthy.
+> static void __md_stop(struct mddev *mddev)
+> {
+> 	struct md_personality *pers = mddev->pers;
+> 	mddev_detach(mddev);
+> +	bitmap_destroy(mddev);
+> 	/* Ensure ->event_work is done */
+> 	flush_workqueue(md_misc_wq);
 
-Small patch with one purpose is always easy to review, do one thing,
-do it better,
-:-)
+With this change, does it mean we destroy bitmap unconditionally even
+if the mode is 2? Thanks.
 
+> That would make the remainder of the patch (below) unnecessary.
+> I think it is wrong anyway.
+> We were correct to move the "bitmap_destroy() call up to the
+> "if (mddev->pers)" case, but we were not correct to move the
+> closing of bitmap_info.file.
+> If a file is added to an array but that array is not started
+> (so ->pers is not set), then stopping the array will not close the file
+> with the change below, and that isn't good.
+
+Hmm, thanks for reminder. Though I have some questions about above.
+I guess the file is pointed to bitmap file, from mdadm manpage, I see
+  "-b, --bitmap=" is used under create, build, grow and assemble mode.
+But  how to add a file to a array which is not started? Please correct me
+for my wrong understanding.
+
+> So if we move bitmap_destroy() into  __md_stop() and remove it from
+> do_md_stop and md_stop(), that might be exactly what we need.
+
+How about the below changes? It may addresses both your concern and
+Shaohua's concern, but not sure ...
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 79a99a1..a0e79d6 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5555,7 +5555,6 @@ static void mddev_detach(struct mddev *mddev)
+  static void __md_stop(struct mddev *mddev)
+  {
+         struct md_personality *pers = mddev->pers;
+-       mddev_detach(mddev);
+         /* Ensure ->event_work is done */
+         flush_workqueue(md_misc_wq);
+         spin_lock(&mddev->lock);
+@@ -5574,8 +5573,9 @@ void md_stop(struct mddev *mddev)
+         /* stop the array and free an attached data structures.
+          * This is called from dm-raid
+          */
+-       __md_stop(mddev);
++       mddev_detach(mddev);
+         bitmap_destroy(mddev);
++       __md_stop(mddev);
+         if (mddev->bio_set)
+                 bioset_free(mddev->bio_set);
+  }
+@@ -5688,6 +5688,10 @@ static int do_md_stop(struct mddev *mddev, int mode,
+                         set_disk_ro(disk, 0);
+
+                 __md_stop_writes(mddev);
++               mddev_detach(mddev);
++               if (mode == 0)
++                       bitmap_destroy(mddev);
++
+                 __md_stop(mddev);
+mddev->queue->backing_dev_info->congested_fn = NULL;
+
+@@ -5713,7 +5717,8 @@ static int do_md_stop(struct mddev *mddev, int mode,
+         if (mode == 0) {
+                 pr_info("md: %s stopped.\n", mdname(mddev));
+
+-               bitmap_destroy(mddev);
++               if (!mddev->pers)
++                       bitmap_destroy(mddev);
+                 if (mddev->bitmap_info.file) {
+                         struct file *f = mddev->bitmap_info.file;
+                         spin_lock(&mddev->lock);
 
 Thanks,
-Ming Lei
+Guoqing
