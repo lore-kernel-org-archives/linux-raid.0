@@ -1,75 +1,48 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH RFC] test: revise 'test' and make it easier to understand
-Date: Fri, 03 Mar 2017 09:26:43 +1100
-Message-ID: <87mvd3nwm4.fsf@notabene.neil.brown.name>
-References: <a81137d5-3042-e983-fe0e-1b9a0de836ff@suse.com> <1488250053-10436-1-git-send-email-zlliu@suse.com>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: [PATCH v2 09/13] md: raid1: use bio_segments_all()
+Date: Fri, 3 Mar 2017 10:20:04 +0800
+Message-ID: <CACVXFVP1gNEsUFdh1eKW9d01azis2+GMNO_kZjN8_ZQEbe8BxQ@mail.gmail.com>
+References: <1488296503-4987-1-git-send-email-tom.leiming@gmail.com>
+ <1488296503-4987-10-git-send-email-tom.leiming@gmail.com> <20170228234212.3wjwxsegg4v57nxu@kernel.org>
+ <CACVXFVOLLJ1Og7ezOsDTbuBsJg+qxJdqmf0MO+VDwDZiSoFn1g@mail.gmail.com> <20170302075202.ipnx64sodjzxisqs@kernel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1488250053-10436-1-git-send-email-zlliu@suse.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@redhat.com
-Cc: linux-raid@vger.kernel.org, gqjiang@suse.com, Zhilong Liu <zlliu@suse.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170302075202.ipnx64sodjzxisqs@kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: Jens Axboe <axboe@fb.com>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-
-On Tue, Feb 28 2017, Zhilong Liu wrote:
-
-> 1. use 'Tab' as the code style.
-> 2. arrange the testing steps and provide the 'main' entrance.
-> 3. draft the log_save feature, it captures the /proc/mdstat,
->    md superblock info, bitmap info and the detail dmesg.
-> 4. modified the mdadm() func, adding the operation that clear
->    the superblock when create or build one new array, and it
->    would exit testing when mdadm command returned non-0 value.
-> 5. delete no_errors() func, it only used in tests/04update-uuid,
->    I recommend the new mdadm() using method.
-> 6. delete fast_sync() func.
-> 7. testdev(), add the object file checking, otherwise this command
->    would create one regular file, it's one trouble thing.
-> 8. add dmesg checking in do_test() func, it's necessary to check
->    dmesg whether or not printed abnormal message.
-> 9. add checking conditions in main(), such as $pwd/raid6check need
->    exists, here is a prompt to remind users to 'make everything'
->    before testing; the $targetdir should mount under ext[2-4] FS,
->    because the external bitmap only supports ext, the bmap() API
->    of bitmap.c doesn't exist in all filesystem, such as btrfs.
+On Thu, Mar 2, 2017 at 3:52 PM, Shaohua Li <shli@kernel.org> wrote:
+> On Thu, Mar 02, 2017 at 10:34:25AM +0800, Ming Lei wrote:
+>> Hi Shaohua,
+>>
+>> On Wed, Mar 1, 2017 at 7:42 AM, Shaohua Li <shli@kernel.org> wrote:
+>> > On Tue, Feb 28, 2017 at 11:41:39PM +0800, Ming Lei wrote:
+>> >> Use this helper, instead of direct access to .bi_vcnt.
+>> >
+>> > what We really need to do for the behind IO is:
+>> > - allocate memory and copy bio data to the memory
+>> > - let behind bio do IO against the memory
+>> >
+>> > The behind bio doesn't need to have the exactly same bio_vec setting. If we
+>> > just track the new memory, we don't need use the bio_segments_all and access
+>> > bio_vec too.
+>>
+>> But we need to figure out how many vecs(each vec store one page) to be
+>> allocated for the cloned/behind bio, and that is the only value of
+>> bio_segments_all() here. Or you have idea to avoid that?
 >
-> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+> As I said, the behind bio doesn't need to have the exactly same bio_vec
+> setting. We just allocate memory and copy original bio data to the memory,
+> then do IO against the new memory. The behind bio
+> segments == (bio->bi_iter.bi_size + PAGE_SIZE - 1) >> PAGE_SHIFT
 
-I haven't looked at this patch in any great detail, but I just wanted to
-say I think it is great that 'test' is getting some attention like this.
-I sort of just grew over the years without any clear plan.  It probably
-has all sorts of strange things in it that don't make a lot of sense any
-more.
-So I've very happy for you to rip it apart and put it together is a more
-coherent form.  Thanks!
-
-Acked-by: NeilBrown <neilb@suse.com>
-
-NeilBrown
+The equation isn't always correct, especially when bvec includes just
+part of page, and it is quite often in case of mkfs, in which one bvec often
+includes 512byte buffer.
 
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAli4nCMACgkQOeye3VZi
-gbmNOhAAka27iBfbqx4alHOwXB4t+f/EdmccEVXprnFPFNxF3AbDC7pYRWNiNNez
-SOUUcHq0R+SdFt9CkO+kxTDIHZ4KRrUImGNqAmSZdoB6LkMyiHslIeh5s6YVyKoO
-VSXY5G+X5HD5tH+APHoRiXRog/bGcBUMSz1/ooXhNiqDxh7IYlwrd6A5KFS9uVel
-n5MwmkqqQLxCnExVrfE3LZJu7PSz2Sb1MJFhKTCleKTy91fzRciLLmkfbEVlNyDw
-2yc3LTe7aWZm7lFQ6u+NvmO5HD/OasFCWPetE/+BwEzFK6TfpDLQNZPVa+vNk3DM
-hTLnTBFk6LUOy3V3b++wrApmh3SYmUg29gV8cCRromFvZkhZ8/7ktqEY89Iy13xe
-WsjqfCd3pDeM8WGiihGJqMmbnptm+WC5rDlkdyNtx9cc+QT6OZPDZ4L6XjTaXV3O
-GD4Iewde6SDBgmC50oDbeSGxkR/dvGw+TNmnsqfaJBWW3qfFyXTssPbrQIpetYAP
-KAMn+NH7pL8mMOqhYCGJQdRC7tgG4RvVXlFfag2Xa3gXRTCW9vF8c2Vo5r/8Sqih
-0vKJmzmvgHsDukcwY2II9132OEeX+KqPh70XeW3u20uwrFTXbxSuzEpn8TmC7RAC
-h2PnKSfhl26w2CWLl8HDD+ldqLh9GO6r0N5rYxD6MJIM8XjpX9w=
-=2DM9
------END PGP SIGNATURE-----
---=-=-=--
+Thanks,
+Ming Lei
