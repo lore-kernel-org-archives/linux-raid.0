@@ -1,73 +1,71 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v2 09/13] md: raid1: use bio_segments_all()
-Date: Fri, 3 Mar 2017 09:12:30 -0800
-Message-ID: <20170303171230.qacc66jovhgaplkh@kernel.org>
-References: <1488296503-4987-1-git-send-email-tom.leiming@gmail.com>
- <1488296503-4987-10-git-send-email-tom.leiming@gmail.com>
- <20170228234212.3wjwxsegg4v57nxu@kernel.org>
- <CACVXFVOLLJ1Og7ezOsDTbuBsJg+qxJdqmf0MO+VDwDZiSoFn1g@mail.gmail.com>
- <20170302075202.ipnx64sodjzxisqs@kernel.org>
- <CACVXFVP1gNEsUFdh1eKW9d01azis2+GMNO_kZjN8_ZQEbe8BxQ@mail.gmail.com>
- <CACVXFVNRhekBMAnVN9co-jdkP=+5S+28CyFr9Z_nsJVmdxPxSg@mail.gmail.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: [PATCH] Fix oddity where mdadm did not recognise a relative path
+Date: Fri, 3 Mar 2017 18:36:16 +0000
+Message-ID: <58B9B7A0.9040602@youngman.org.uk>
+References: <587E6B56.8090704@youngman.org.uk> <wrfjzih4wt7l.fsf@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------040706090008090200080305"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CACVXFVNRhekBMAnVN9co-jdkP=+5S+28CyFr9Z_nsJVmdxPxSg@mail.gmail.com>
+In-Reply-To: <wrfjzih4wt7l.fsf@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ming Lei <tom.leiming@gmail.com>
-Cc: Jens Axboe <axboe@fb.com>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: jes.sorensen@gmail.com
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Mar 03, 2017 at 02:22:30PM +0800, Ming Lei wrote:
-> On Fri, Mar 3, 2017 at 10:20 AM, Ming Lei <tom.leiming@gmail.com> wrote:
-> > On Thu, Mar 2, 2017 at 3:52 PM, Shaohua Li <shli@kernel.org> wrote:
-> >> On Thu, Mar 02, 2017 at 10:34:25AM +0800, Ming Lei wrote:
-> >>> Hi Shaohua,
-> >>>
-> >>> On Wed, Mar 1, 2017 at 7:42 AM, Shaohua Li <shli@kernel.org> wrote:
-> >>> > On Tue, Feb 28, 2017 at 11:41:39PM +0800, Ming Lei wrote:
-> >>> >> Use this helper, instead of direct access to .bi_vcnt.
-> >>> >
-> >>> > what We really need to do for the behind IO is:
-> >>> > - allocate memory and copy bio data to the memory
-> >>> > - let behind bio do IO against the memory
-> >>> >
-> >>> > The behind bio doesn't need to have the exactly same bio_vec setting. If we
-> >>> > just track the new memory, we don't need use the bio_segments_all and access
-> >>> > bio_vec too.
-> >>>
-> >>> But we need to figure out how many vecs(each vec store one page) to be
-> >>> allocated for the cloned/behind bio, and that is the only value of
-> >>> bio_segments_all() here. Or you have idea to avoid that?
-> >>
-> >> As I said, the behind bio doesn't need to have the exactly same bio_vec
-> >> setting. We just allocate memory and copy original bio data to the memory,
-> >> then do IO against the new memory. The behind bio
-> >> segments == (bio->bi_iter.bi_size + PAGE_SIZE - 1) >> PAGE_SHIFT
-> >
-> > The equation isn't always correct, especially when bvec includes just
-> > part of page, and it is quite often in case of mkfs, in which one bvec often
-> > includes 512byte buffer.
-> 
-> Think it further, your idea could be workable and more clean, but the change
-> can be a bit big, looks we need to switch handling write behind into
-> the following way:
-> 
-> 1) replace bio_clone_bioset_partial() with bio_allocate(nr_vecs), and 'nr_vecs'
-> is computed with your equation;
-> 
-> 2) allocate 'nr_vecs' pages once and share them among all created bio in 1)
-> 
-> 3) for each created bio, add each page into the bio via bio_add_page()
-> 
-> 4) only for the 1st created bio, call bio_copy_data() to copy data from
-> master bio.
-> 
-> Let me know if you are OK with the above implementaion.
+This is a multi-part message in MIME format.
+--------------040706090008090200080305
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 
-Right, this is exactly what I'd like to do. This way we don't need touch
-bvec and should be much cleaner.
+> 
+> I thought this was still pending but going back, it looks like I did
+> apply it. The problem is I noticed a major issue in the patch, which
+> doesn't belong in code, it is doing 'if () break' on the same line.
 
-Thanks,
-Shaohua
+Sorry about that - corporate style and all that :-) but it is important
+to not break the standard style.
+> 
+> Mind sending me a patch to fix that.
+> 
+> Thanks,
+> Jes
+> 
+Cheers,
+Wol
+
+--------------040706090008090200080305
+Content-Type: text/x-patch;
+ name="0001-Fix-formatting-error.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="0001-Fix-formatting-error.patch"
+
+From 945b835cc89fd16279e01f743f8507b80219c8a1 Mon Sep 17 00:00:00 2001
+From: Wol <anthony@youngman.org.uk>
+Date: Fri, 3 Mar 2017 18:31:52 +0000
+Subject: [PATCH] Fix formatting error
+
+---
+ mdadm.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/mdadm.c b/mdadm.c
+index b5d89e4..d973ae4 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -1902,7 +1902,8 @@ static int misc_list(struct mddev_dev *devlist,
+ 		switch(dv->devname[0] == '/') {
+ 			case 0:
+ 				mdfd = open_dev(dv->devname);
+-				if (mdfd >= 0) break;
++				if (mdfd >= 0)
++					break;
+ 			case 1:
+ 				mdfd = open_mddev(dv->devname, 1);  
+ 		}
+-- 
+2.7.3
+
+
+--------------040706090008090200080305--
