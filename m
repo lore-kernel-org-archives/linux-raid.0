@@ -1,65 +1,66 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: Reshape stalled at first badblock location (was: RAID 5 --assemble doesn't recognize all overlays as component devices)
-Date: Fri, 03 Mar 2017 11:27:47 +1100
-Message-ID: <8760jrnr0c.fsf@notabene.neil.brown.name>
-References: <CAF-KpgY0ySvCN9ftbDmW_P6wDiyfN2yWE6=NECVru4=vCe+pbQ@mail.gmail.com> <20170221175801.wt64t2tzcvg3sfmc@kernel.org>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: [PATCH v2 09/13] md: raid1: use bio_segments_all()
+Date: Fri, 3 Mar 2017 14:22:30 +0800
+Message-ID: <CACVXFVNRhekBMAnVN9co-jdkP=+5S+28CyFr9Z_nsJVmdxPxSg@mail.gmail.com>
+References: <1488296503-4987-1-git-send-email-tom.leiming@gmail.com>
+ <1488296503-4987-10-git-send-email-tom.leiming@gmail.com> <20170228234212.3wjwxsegg4v57nxu@kernel.org>
+ <CACVXFVOLLJ1Og7ezOsDTbuBsJg+qxJdqmf0MO+VDwDZiSoFn1g@mail.gmail.com>
+ <20170302075202.ipnx64sodjzxisqs@kernel.org> <CACVXFVP1gNEsUFdh1eKW9d01azis2+GMNO_kZjN8_ZQEbe8BxQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170221175801.wt64t2tzcvg3sfmc@kernel.org>
+In-Reply-To: <CACVXFVP1gNEsUFdh1eKW9d01azis2+GMNO_kZjN8_ZQEbe8BxQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>, George Rapp <george.rapp@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>, Matthew Krumwiede <matt.krumwiede@me.com>, Jes.Sorensen@gmail.com
+To: Shaohua Li <shli@kernel.org>
+Cc: Jens Axboe <axboe@fb.com>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-
-On Tue, Feb 21 2017, Shaohua Li wrote:
-
+On Fri, Mar 3, 2017 at 10:20 AM, Ming Lei <tom.leiming@gmail.com> wrote:
+> On Thu, Mar 2, 2017 at 3:52 PM, Shaohua Li <shli@kernel.org> wrote:
+>> On Thu, Mar 02, 2017 at 10:34:25AM +0800, Ming Lei wrote:
+>>> Hi Shaohua,
+>>>
+>>> On Wed, Mar 1, 2017 at 7:42 AM, Shaohua Li <shli@kernel.org> wrote:
+>>> > On Tue, Feb 28, 2017 at 11:41:39PM +0800, Ming Lei wrote:
+>>> >> Use this helper, instead of direct access to .bi_vcnt.
+>>> >
+>>> > what We really need to do for the behind IO is:
+>>> > - allocate memory and copy bio data to the memory
+>>> > - let behind bio do IO against the memory
+>>> >
+>>> > The behind bio doesn't need to have the exactly same bio_vec setting. If we
+>>> > just track the new memory, we don't need use the bio_segments_all and access
+>>> > bio_vec too.
+>>>
+>>> But we need to figure out how many vecs(each vec store one page) to be
+>>> allocated for the cloned/behind bio, and that is the only value of
+>>> bio_segments_all() here. Or you have idea to avoid that?
+>>
+>> As I said, the behind bio doesn't need to have the exactly same bio_vec
+>> setting. We just allocate memory and copy original bio data to the memory,
+>> then do IO against the new memory. The behind bio
+>> segments == (bio->bi_iter.bi_size + PAGE_SIZE - 1) >> PAGE_SHIFT
 >
-> Add Neil and Jes.
->
-> Yes, there were similar reports before. When reshape finds nadblocks, the
-> reshape will do an infinite loop without any progress. I think there are two
-> things we need to do:
->
-> - Make reshape more robust. Maybe reshape should bail out if badblocks found.
-> - Add an option in mdadm to force reset badblocks
+> The equation isn't always correct, especially when bvec includes just
+> part of page, and it is quite often in case of mkfs, in which one bvec often
+> includes 512byte buffer.
 
-The second of these is already possible
-Commit: 6dd16dac4001 ("Add --update=force-no-bbl.")
+Think it further, your idea could be workable and more clean, but the change
+can be a bit big, looks we need to switch handling write behind into
+the following way:
 
-It isn't documented though, and only works during "assemble", not on an
-active array.
-Writing to the "bad" blocks should remove the "bad" status.  It would be
-nice if mdadm could locate the bad blocks, map them to array blocks,
-trigger a limited "resync" if there are any good copies, or write zeros
-if there aren't.
+1) replace bio_clone_bioset_partial() with bio_allocate(nr_vecs), and 'nr_vecs'
+is computed with your equation;
 
-And yes; reshape should be more robust...  if only we had a pool of
-developers, eager to work on these problems :-)
+2) allocate 'nr_vecs' pages once and share them among all created bio in 1)
 
-NeilBrown
+3) for each created bio, add each page into the bio via bio_add_page()
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+4) only for the 1st created bio, call bio_copy_data() to copy data from
+master bio.
 
------BEGIN PGP SIGNATURE-----
+Let me know if you are OK with the above implementaion.
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAli4uIMACgkQOeye3VZi
-gbm1Qw//blWR0ZOv503+Q2nhid44XOXLZYcCTfPHLgOV1cQ/wFcnyKN34kSq+9ei
-cuYAe/Y/j9OV/wBA51AZlBPe1nZgoM2SlS7D2BRpDWwuatSzAdLZFy8GYwVatokG
-gBIWtt0KM2fQTO/FUefAFy91kf6X/B3SQEM27Rr6DxmGjISzYcZR6c4+or+hrlK4
-ec3V2uVhvngpk7mg5URVw3bbv35GgrTTMDw9Ou3VmVI2oSHhe1RJFMdeydPo3a3k
-Uj9ACTVVUTtA3jJ978lisLCkEOLJQ1L1jLRn5PNSyNhN9OoCalUIlrgZbRd7YUSS
-5mK2cX8t9NCi9jDImttPbYMK2PfyDaYlVDCxzqZl6IsrII68U+kB28EKRwRD4V7b
-pZ2E4IAzVnlsvR6xJWDkvyY+PKt7XqdxKLlb8eE+qFMF9ntFc8hxid4m8TdJIUKN
-QhBZliRju8AsIWoeaGnLYsPCFa5OYmQjibpOM+17p+sQ4Q/Zqp+mzFEzA+FFLPGQ
-l+OGLD/Yq2Uyuqew4SFQHO2Gwv8KoJTibxugx7MP5uAR323Dvrjbi12Rg333wJ3Y
-kBYN3Nt7xOoBMZCdy3UdkCkNr53XlZxAc6//d7dmIcJvaXnmIWdcrWJO5zchRYaY
-phMT3KACWxnSFJSwdAE2TlrODZJNMed3PZgec57z4Oz/Tnjsfqw=
-=MWAV
------END PGP SIGNATURE-----
---=-=-=--
+
+Thanks,
+Ming Lei
