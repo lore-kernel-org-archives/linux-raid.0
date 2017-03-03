@@ -1,180 +1,99 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [PATCH - mdadm] examine: tidy up some code.
-Date: Fri, 03 Mar 2017 10:57:00 +1100
-Message-ID: <878tonnsfn.fsf@notabene.neil.brown.name>
+Subject: Re: [md PATCH 10/14] md/raid1: stop using bi_phys_segment
+Date: Fri, 03 Mar 2017 11:34:31 +1100
+Message-ID: <8737evnqp4.fsf@notabene.neil.brown.name>
+References: <148721992248.7521.17160361058957519076.stgit@noble> <148721994272.7521.4656357457037580183.stgit@noble> <CACVXFVMZqivgG39HBAjPKE+CJ3=nXZ3fD0XfujeUbe+_3J9HLg@mail.gmail.com> <87bmtws90u.fsf@notabene.neil.brown.name> <CACVXFVPf6qoaEWcv_s4n=2V9E=Jqfv3QE+ZpXVALdiiWTjh63Q@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CACVXFVPf6qoaEWcv_s4n=2V9E=Jqfv3QE+ZpXVALdiiWTjh63Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org, Michael Shigorin <mike@altlinux.org>
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: Shaohua Li <shli@kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
+On Tue, Feb 21 2017, Ming Lei wrote:
 
-Michael Shigorin reports that the 'lcc' compiler isn't able
-to deduce that 'st' must be initialized in
+> On Tue, Feb 21, 2017 at 8:05 AM, NeilBrown <neilb@suse.com> wrote:
+>> On Mon, Feb 20 2017, Ming Lei wrote:
+>>
+>>> On Thu, Feb 16, 2017 at 12:39 PM, NeilBrown <neilb@suse.com> wrote:
+>>>>
+>>>> +static void inc_pending(struct r1conf *conf, sector_t start_next_window,
+>>>> +                       sector_t bi_sector)
+>>>> +{
+>>>> +       /* The current request requires multiple r1_bio, so
+>>>> +        * we need to increment the pending count, and the corresponding
+>>>> +        * window count.
+>>>> +        */
+>>>> +       spin_lock(&conf->resync_lock);
+>>>> +       conf->nr_pending++;
+>>>
+>>> Just be curious, in current code 'nr_pending' is increased in wait_barrier(),
+>>> and looks this patch introduces inc_pending() to do that on each r10_bio, but
+>>> not see any change in wait_barrier(), so that means there might be issue in
+>>> current implementation about operating on this counter?
+>>
+>> Did you read the more detailed description in the previous raid10.c
+>> patch?
+>> This patch follows the same logic as that patch.
+>
+> OK, I see the point now:
+>
+> - for the 1st r1_bio, conf->nr_pending is increased in wait_barrier()
+> - for the others, conf->nr_pending is increased in inc_pending().
+>
+> Also I have another question:
+>
+> - before this patch, both number of requests in windows
+> are increased only for WRITE I/O(see wait_barrier()), and decreased
+> for both READ/WRITE in complete path(see allow_barrier())
 
-		if (c->SparcAdjust)
-			st->ss->update_super(st, NULL, "sparc2.2",
+For a READ request, ->start_next_window is zero, so allow_barrier()
+doesn't decrease the window counters.
+So they are only increased and decreased for WRITE request.
 
-just because the only times it isn't initialised, 'err' is set non-zero.
+>
+> - after this patch, except for the 1st r1_bio, number of requests in
+> windows are increased for both WRITE/READ I/O, and decreased
+> for both READ/WRITE too.
 
-This results in a 'possibly uninitialised' warning.
-While there is no bug in the code, this does suggest that maybe
-the code could be made more obviously correct.
+Why do you think READ requests now increase the number of requests in a
+window?
 
-So this patch:
- 1/ moves the "err" variable inside the for loop, so an error in
-    one device doesn't stop the other devices from being processed
- 2/ calls 'continue' early if the device cannot be opened, so that
-    a level of indent can be removed, and so that it is clear that
-    'st' is always initialised before being used
- 3/ frees 'st' if an error occured in load_super or load_container.
+NeilBrown
 
-Reported-by: Michael Shigorin <mike@altlinux.org>
-Signed-off-by: NeilBrown <neilb@suse.com>
-=2D--
- Examine.c | 75 +++++++++++++++++++++++++++++++++--------------------------=
-----
- 1 file changed, 39 insertions(+), 36 deletions(-)
-
-diff --git a/Examine.c b/Examine.c
-index 953b8eee2360..7013480d6dd8 100644
-=2D-- a/Examine.c
-+++ b/Examine.c
-@@ -53,7 +53,6 @@ int Examine(struct mddev_dev *devlist,
- 	 */
- 	int fd;
- 	int rv =3D 0;
-=2D	int err =3D 0;
-=20
- 	struct array {
- 		struct supertype *st;
-@@ -66,6 +65,8 @@ int Examine(struct mddev_dev *devlist,
- 	for (; devlist ; devlist =3D devlist->next) {
- 		struct supertype *st;
- 		int have_container =3D 0;
-+		int err =3D 0;
-+		int container =3D 0;
-=20
- 		fd =3D dev_open(devlist->devname, O_RDONLY);
- 		if (fd < 0) {
-@@ -74,44 +75,46 @@ int Examine(struct mddev_dev *devlist,
- 				       devlist->devname, strerror(errno));
- 				rv =3D 1;
- 			}
-=2D			err =3D 1;
-+			continue;
- 		}
-=2D		else {
-=2D			int container =3D 0;
-=2D			if (forcest)
-=2D				st =3D dup_super(forcest);
-=2D			else if (must_be_container(fd)) {
-=2D				/* might be a container */
-=2D				st =3D super_by_fd(fd, NULL);
-=2D				container =3D 1;
-=2D			} else
-=2D				st =3D guess_super(fd);
-=2D			if (st) {
-=2D				err =3D 1;
-=2D				st->ignore_hw_compat =3D 1;
-=2D				if (!container)
-=2D					err =3D st->ss->load_super(st, fd,
-=2D								 (c->brief||c->scan) ? NULL
-=2D								 :devlist->devname);
-=2D				if (err && st->ss->load_container) {
-=2D					err =3D st->ss->load_container(st, fd,
-=2D								 (c->brief||c->scan) ? NULL
-=2D								 :devlist->devname);
-=2D					if (!err)
-=2D						have_container =3D 1;
-=2D				}
-=2D				st->ignore_hw_compat =3D 0;
-=2D			} else {
-=2D				if (!c->brief) {
-=2D					pr_err("No md superblock detected on %s.\n", devlist->devname);
-=2D					rv =3D 1;
-=2D				}
-=2D				err =3D 1;
-+
-+		if (forcest)
-+			st =3D dup_super(forcest);
-+		else if (must_be_container(fd)) {
-+			/* might be a container */
-+			st =3D super_by_fd(fd, NULL);
-+			container =3D 1;
-+		} else
-+			st =3D guess_super(fd);
-+		if (st) {
-+			err =3D 1;
-+			st->ignore_hw_compat =3D 1;
-+			if (!container)
-+				err =3D st->ss->load_super(st, fd,
-+							 (c->brief||c->scan) ? NULL
-+							 :devlist->devname);
-+			if (err && st->ss->load_container) {
-+				err =3D st->ss->load_container(st, fd,
-+							     (c->brief||c->scan) ? NULL
-+							     :devlist->devname);
-+				if (!err)
-+					have_container =3D 1;
- 			}
-=2D			close(fd);
-+			st->ignore_hw_compat =3D 0;
-+		} else {
-+			if (!c->brief) {
-+				pr_err("No md superblock detected on %s.\n", devlist->devname);
-+				rv =3D 1;
-+			}
-+			err =3D 1;
- 		}
-=2D		if (err)
-+		close(fd);
-+
-+		if (err) {
-+			if (st)
-+				st->ss->free_super(st);
- 			continue;
-+		}
-=20
- 		if (c->SparcAdjust)
- 			st->ss->update_super(st, NULL, "sparc2.2",
-@@ -121,7 +124,7 @@ int Examine(struct mddev_dev *devlist,
- 		if (c->brief && st->ss->brief_examine_super =3D=3D NULL) {
- 			if (!c->scan)
- 				pr_err("No brief listing for %s on %s\n",
-=2D					st->ss->name, devlist->devname);
-+				       st->ss->name, devlist->devname);
- 		} else if (c->brief) {
- 			struct array *ap;
- 			char *d;
-=2D-=20
-2.11.0
-
+>
+> Could you explain a bit about this change?
+>
+> Thanks,
+> Ming Lei
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAli4sUwACgkQOeye3VZi
-gbmBFA/9FjabLziLs1JZNAXg3ud9FOxE6opzmA7Gi5JZSBChSchX0WjcLHd97ylA
-rG93hd5pkei1IT5EdkZHMgTh8OATDd88xqFhglkRn70UagLNRRhvKuQS0p/YQrhR
-slqMUbtsq/Bx+ZSGzQnz8ltXRWLbB+vQxQJZTAU/tlLGAOnU97rxiom2oFXi0oYk
-QA8pE8n5AkjlXujN4DSN+jIpdnlb2eokr4p2i5wQAWaPoV8ONzn5ez7OegFz4S0l
-A/UPjIuLd3hBOWDpiZAdn92p3pgSYAjGwJvlwxHFQ2JcHtCLbZzAI2umLC9SVViu
-FMrVCGgSHZYC67r7uj/l9Ag//68vz1WOMIGTb51GS8hXC9HGIshi1Oq+1P2EwdTd
-zMnujkV/r4fJQKF/a/byM1PpXg0luw7dNsFgw/rLguelQep/fR72B8Gj9wYTKnNM
-2F3dOyev03jFFzawghAi1TEFMkrxW8GKh4CLDVrYd6RzV7w+jcU8RWg5DRall5dh
-Q8MZj4nfVSScM4CUD+ltj4SZ45nJVSq9HmJW31csM9O0btP+GCmKJO6TAlqyg5z+
-tzldNhy7u+aIumNCdPx7cv28BwgUnjHWzu1coIjkDo8fY6Q6BQ3qBO1U3dKj1ED7
-cApCb242pVxwCqkD0yoElNfkFqJmCBxBkI7Nxa0mX44UvVgyxj4=
-=Dkvt
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAli4uhcACgkQOeye3VZi
+gbku/g//YnysbZd6aBXyw1qaqPQ0eNlq2QHdzD2KRpWA1Uf470SnT5uyrRde+CAk
+90YCuxZ88E5QhyO7qOUvbCzNDWt0UFc5J0RNG+wnb9A8YeF2lqLijxetF9kmLpS9
+rdkiRUX3RIXJTNZ6AYmMHlolPr2WCk6ZR8tIiguhFw46K9MzaMMcztzyNGIB07Er
+JrpP1hxzs2c9sp2NKHe3QOceVhNFFMy9VgQXGIJUavesXk4Zmds2RzoW2jSFkT7n
+e36nJlzW9DdtegGAHEB9DedOd401HXrcRDmW2C0iR0ZXr5ZY3+7PG5nyGq65bOyT
+v6iJw79sJqpu2dPc0/6YsvrkAuzApIHWq6PncgHtuc0F38q8JgfUrQ07U4KbJG+J
+yMER9ypFeZKzKtMVKLXJL6x6wiLokGhEGUPXsogjmgkvaoWXMcWH1RAtzM+jWC/T
+79HBvizP0GdlGXRTmMVZPt7pZjXjDnsfS2BBEbcm43Boas343jbekpsfdrYvriWJ
+3gr0oSgfc15rP2I15O6JzL4vwCbWgKXy1OSQzm26ojUsSGlXusAQZFKcZPgCSSHv
+oLu5YifvOJAh+yrozmHspEV7o6fe7pBHE3UEzLx5gy61uDNzDqWUIiuPzGVfkHoJ
+bpxR8/m9k1AOI5nwbg3Y/8s+agb1syPemC0uQ9LXx0c8XmeoXoA=
+=Kbm0
 -----END PGP SIGNATURE-----
 --=-=-=--
