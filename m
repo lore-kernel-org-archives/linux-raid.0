@@ -1,199 +1,351 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH V2 2/5] md: move bitmap_destroy before __md_stop
-Date: Fri, 03 Mar 2017 16:20:11 +1100
-Message-ID: <87efyflywk.fsf@notabene.neil.brown.name>
-References: <1488357760-7893-1-git-send-email-gqjiang@suse.com> <1488357760-7893-3-git-send-email-gqjiang@suse.com> <20170302182825.fcinhanfai3qgzot@kernel.org> <87pohznx49.fsf@notabene.neil.brown.name> <58B8DE44.7040804@suse.com>
+Subject: Re: [PATCH 3/3] md/raid5: sort bios
+Date: Fri, 03 Mar 2017 14:43:49 +1100
+Message-ID: <87k287m3d6.fsf@notabene.neil.brown.name>
+References: <cover.1487373517.git.shli@fb.com> <01c6067566d787a815fc29aa07b36ad4dd0280f0.1487373517.git.shli@fb.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <58B8DE44.7040804@suse.com>
+In-Reply-To: <01c6067566d787a815fc29aa07b36ad4dd0280f0.1487373517.git.shli@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>, Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, shli@fb.com
+To: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
+Cc: songliubraving@fb.com, kernel-team@fb.com
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Mar 03 2017, Guoqing Jiang wrote:
+On Fri, Feb 17 2017, Shaohua Li wrote:
 
-> On 03/03/2017 06:15 AM, NeilBrown wrote:
->> On Thu, Mar 02 2017, Shaohua Li wrote:
->>
->>> On Wed, Mar 01, 2017 at 04:42:37PM +0800, Guoqing Jiang wrote:
->>>> Since we have switched to sync way to handle METADATA_UPDATED
->>>> msg for md-cluster, then process_metadata_update is depended
->>>> on mddev->thread->wqueue.
->>>>
->>>> With the new change, clustered raid could possible hang if
->>>> array received a METADATA_UPDATED msg after array unregistered
->>>> mddev->thread, so we need to stop clustered raid earlier
->>>> than before.
->>>>
->>>> And this change should be safe for non-clustered raid since
->>>> all writes are stopped before the destroy. Also in md_run,
->>>> we activate the personality (pers->run()) before activating
->>>> the bitmap (bitmap_create()). So it is pleasingly symmetric
->>>> to stop the bitmap (bitmap_destroy()) before stopping the
->>>> personality (__md_stop() calls pers->free()).
->>>>
->>>> Reviewed-by: NeilBrown <neilb@suse.com>
->>>> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
->>>> ---
->>>>   drivers/md/md.c | 30 +++++++++++++++++-------------
->>>>   1 file changed, 17 insertions(+), 13 deletions(-)
->>>>
->>>> diff --git a/drivers/md/md.c b/drivers/md/md.c
->>>> index 44206bc6e3aa..e1d9116044ae 100644
->>>> --- a/drivers/md/md.c
->>>> +++ b/drivers/md/md.c
->>>> @@ -5574,8 +5574,8 @@ void md_stop(struct mddev *mddev)
->>>>   	/* stop the array and free an attached data structures.
->>>>   	 * This is called from dm-raid
->>>>   	 */
->>>> -	__md_stop(mddev);
->>>>   	bitmap_destroy(mddev);
->>>> +	__md_stop(mddev);
->>>>   	if (mddev->bio_set)
->>>>   		bioset_free(mddev->bio_set);
->>>>   }
->>> Applied other 4 patches. But this one I still have concerns.
->>>
->>> For raid1, if a bio is behind IO, we return the bio to upper layer but don't
->>> wait behind IO completion. So even there are no writes running, there might be
->>> behind IO running. mddev_detach will do the wait which checks bitmap. If we
->>> bitmap_destroy before __md_stop, mddev_detach doesn't do the wait.
+> Previous patch (raid5: only dispatch IO from raid5d for harddisk raid)
+> defers IO dispatching. The goal is to create better IO pattern. At that
+> time, we don't sort the deffered IO and hope the block layer can do IO
+> merge and sort. Now the raid5-cache writeback could create large amount
+> of bios. And if we enable muti-thread for stripe handling, we can't
+> control when to dispatch IO to raid disks. In a lot of time, we are
+> dispatching IO which block layer can't do merge effectively.
 >
-> Got it, thanks for explanation!
->
->>>
->>> Probably we should move mddev_detach out of __md_stop and always do:
->>> mddev_detach()
->>> bitmap_destroy()
->>> __md_stop()
->>>
->>> This looks safer to me.
->> Thanks for catching that.  I agree - mddev_detach should come before
->> bitmap_destroy.
->> I might be best to change __md_stop() to start
->>
->> static void __md_stop(struct mddev *mddev)
->> {
->> 	struct md_personality *pers = mddev->pers;
->> 	mddev_detach(mddev);
->> +	bitmap_destroy(mddev);
->> 	/* Ensure ->event_work is done */
->> 	flush_workqueue(md_misc_wq);
->
-> With this change, does it mean we destroy bitmap unconditionally even
-> if the mode is 2? Thanks.
+> This patch moves further for the IO dispatching defer. We accumulate
+> bios, but we don't dispatch all the bios after a threshold is met. This
+> 'dispatch partial portion of bios' stragety allows bios coming in a
+> large time window are sent to disks together. At the dispatching time,
+> there is large chance the block layer can merge the bios. To make this
+> more effective, we dispatch IO in ascending order. This increases
+> request merge chance and reduces disk seek.
 
-Yes, and we should destroy the bitmap.  In that case we need to return
-the array to the start it was before RUN_ARRAY ioctl.
+I can see the benefit of batching and sorting requests.
 
->
->> That would make the remainder of the patch (below) unnecessary.
->> I think it is wrong anyway.
->> We were correct to move the "bitmap_destroy() call up to the
->> "if (mddev->pers)" case, but we were not correct to move the
->> closing of bitmap_info.file.
->> If a file is added to an array but that array is not started
->> (so ->pers is not set), then stopping the array will not close the file
->> with the change below, and that isn't good.
->
-> Hmm, thanks for reminder. Though I have some questions about above.
-> I guess the file is pointed to bitmap file, from mdadm manpage, I see
->   "-b, --bitmap=" is used under create, build, grow and assemble mode.
-> But  how to add a file to a array which is not started? Please correct me
-> for my wrong understanding.
+I wonder if the extra complexity of grouping together 512 requests, then
+submitting the "first" 128 is really worth it.  Have you measured the
+value of that?
+If you just submitted every time you got 512 requests, you could use
+list_sort() on the bio list and wouldn't need an array.
 
-Call SET_BITMAP_FILE ioctl.
-mdadm won't do this without then calling RUN_ARRAY (or similar).
-But is it is possible and we should handle it.
-o
+If an array really is best, it would be really nice if "sort" could pass
+a 'void*' down to the cmp function, and it could sort all bios that are
+*after* last_bio_pos first, and then the others.  That would make the
+code much simpler.  I guess sort() could be changed (list_sort() already
+has a 'priv' argument like this).
 
->
->> So if we move bitmap_destroy() into  __md_stop() and remove it from
->> do_md_stop and md_stop(), that might be exactly what we need.
->
-> How about the below changes? It may addresses both your concern and
-> Shaohua's concern, but not sure ...
+If we cannot change sort(), then maybe use lib/bsearch.c for the binary
+search.  Performing two comparisons in the loop of a binary search
+should get a *fail* in any algorithms class!!
 
+The "pending_data" array that you have added to the r5conf structure
+adds 4096 bytes.  This means it is larger than a page, which is best
+avoided (though it is unlikely to cause problems).  I would allocate it
+separately.
 
-No, that is more complex than needed, and doesn't call bitmap_destroy()
-always when required.
+So there is a lot that I don't really like, but it seems like a good
+idea in principle.
 
 Thanks,
 NeilBrown
 
 
 >
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 79a99a1..a0e79d6 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -5555,7 +5555,6 @@ static void mddev_detach(struct mddev *mddev)
->   static void __md_stop(struct mddev *mddev)
->   {
->          struct md_personality *pers = mddev->pers;
-> -       mddev_detach(mddev);
->          /* Ensure ->event_work is done */
->          flush_workqueue(md_misc_wq);
->          spin_lock(&mddev->lock);
-> @@ -5574,8 +5573,9 @@ void md_stop(struct mddev *mddev)
->          /* stop the array and free an attached data structures.
->           * This is called from dm-raid
->           */
-> -       __md_stop(mddev);
-> +       mddev_detach(mddev);
->          bitmap_destroy(mddev);
-> +       __md_stop(mddev);
->          if (mddev->bio_set)
->                  bioset_free(mddev->bio_set);
->   }
-> @@ -5688,6 +5688,10 @@ static int do_md_stop(struct mddev *mddev, int mode,
->                          set_disk_ro(disk, 0);
+> Signed-off-by: Shaohua Li <shli@fb.com>
+> ---
+>  drivers/md/raid5.c | 141 ++++++++++++++++++++++++++++++++++++++++++++---=
+------
+>  drivers/md/raid5.h |  11 ++++-
+>  2 files changed, 127 insertions(+), 25 deletions(-)
 >
->                  __md_stop_writes(mddev);
-> +               mddev_detach(mddev);
-> +               if (mode == 0)
-> +                       bitmap_destroy(mddev);
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index d7c90da..fe6232f 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -56,6 +56,7 @@
+>  #include <linux/nodemask.h>
+>  #include <linux/flex_array.h>
+>  #include <trace/events/block.h>
+> +#include <linux/sort.h>
+>=20=20
+>  #include "md.h"
+>  #include "raid5.h"
+> @@ -876,41 +877,121 @@ static int use_new_offset(struct r5conf *conf, str=
+uct stripe_head *sh)
+>  	return 1;
+>  }
+>=20=20
+> -static void flush_deferred_bios(struct r5conf *conf)
+> +static void dispatch_bio_list(struct bio_list *tmp)
+>  {
+> -	struct bio_list tmp;
+>  	struct bio *bio;
+>=20=20
+> +	while ((bio =3D bio_list_pop(tmp)))
+> +		generic_make_request(bio);
+> +}
 > +
->                  __md_stop(mddev);
-> mddev->queue->backing_dev_info->congested_fn = NULL;
->
-> @@ -5713,7 +5717,8 @@ static int do_md_stop(struct mddev *mddev, int mode,
->          if (mode == 0) {
->                  pr_info("md: %s stopped.\n", mdname(mddev));
->
-> -               bitmap_destroy(mddev);
-> +               if (!mddev->pers)
-> +                       bitmap_destroy(mddev);
->                  if (mddev->bitmap_info.file) {
->                          struct file *f = mddev->bitmap_info.file;
->                          spin_lock(&mddev->lock);
->
-> Thanks,
-> Guoqing
+> +static int cmp_sh(const void *a, const void *b)
+> +{
+> +	const struct r5pending_data *da =3D a;
+> +	const struct r5pending_data *db =3D b;
+> +
+> +	if (da->sector > db->sector)
+> +		return 1;
+> +	if (da->sector < db->sector)
+> +		return -1;
+> +	return 0;
+> +}
+> +
+> +static void dispatch_defer_bios(struct r5conf *conf, int target,
+> +				struct bio_list *list)
+> +{
+> +	int start =3D 0;
+> +	int end =3D conf->pending_data_cnt - 1;
+> +	int mid;
+> +	int cnt =3D 0;
+> +
+> +	if (conf->pending_data_cnt =3D=3D 0)
+> +		return;
+> +	sort(conf->pending_data, conf->pending_data_cnt,
+> +		sizeof(struct r5pending_data), cmp_sh, NULL);
+> +
+> +	while (start <=3D end) {
+> +		mid =3D (start + end) / 2;
+> +		if (conf->pending_data[mid].sector > conf->last_bio_pos)
+> +			end =3D mid - 1;
+> +		else if (conf->pending_data[mid].sector < conf->last_bio_pos)
+> +			start =3D mid + 1;
+> +		else {
+> +			start =3D mid;
+> +			break;
+> +		}
+> +	}
+> +
+> +	end =3D conf->pending_data_cnt - 1;
+> +	for (mid =3D start; mid <=3D end; mid++) {
+> +		conf->last_bio_pos =3D conf->pending_data[mid].sector;
+> +		bio_list_merge(list, &conf->pending_data[mid].bios);
+> +
+> +		cnt++;
+> +		if (cnt >=3D target) {
+> +			mid++;
+> +			break;
+> +		}
+> +	}
+> +	conf->pending_data_cnt -=3D cnt;
+> +	BUG_ON(conf->pending_data_cnt < 0);
+> +	if (mid <=3D end) {
+> +		memmove(&conf->pending_data[start], &conf->pending_data[mid],
+> +			(end - mid + 1) * sizeof(struct r5pending_data));
+> +		return;
+> +	}
+> +
+> +	for (mid =3D 0; mid < start; mid++) {
+> +		conf->last_bio_pos =3D conf->pending_data[mid].sector;
+> +		bio_list_merge(list, &conf->pending_data[mid].bios);
+> +
+> +		cnt++;
+> +		if (cnt >=3D target) {
+> +			mid++;
+> +			break;
+> +		}
+> +	}
+> +
+> +	conf->pending_data_cnt -=3D mid;
+> +	BUG_ON(conf->pending_data_cnt < 0);
+> +	if (mid =3D=3D start) {
+> +		BUG_ON(conf->pending_data_cnt);
+> +		return;
+> +	}
+> +	memmove(&conf->pending_data[0], &conf->pending_data[mid],
+> +			(start - mid) * sizeof(struct r5pending_data));
+> +}
+> +
+> +static void flush_deferred_bios(struct r5conf *conf)
+> +{
+> +	struct bio_list tmp =3D BIO_EMPTY_LIST;
+> +
+>  	if (!conf->batch_bio_dispatch || !conf->group_cnt)
+>  		return;
+>=20=20
+> -	bio_list_init(&tmp);
+>  	spin_lock(&conf->pending_bios_lock);
+> -	bio_list_merge(&tmp, &conf->pending_bios);
+> -	bio_list_init(&conf->pending_bios);
+> +	dispatch_defer_bios(conf, conf->pending_data_cnt, &tmp);
+>  	spin_unlock(&conf->pending_bios_lock);
+>=20=20
+> -	while ((bio =3D bio_list_pop(&tmp)))
+> -		generic_make_request(bio);
+> +	dispatch_bio_list(&tmp);
+>  }
+>=20=20
+> -static void defer_bio_issue(struct r5conf *conf, struct bio *bio)
+> +static void defer_issue_bios(struct r5conf *conf, sector_t sector,
+> +				struct bio_list *bios)
+>  {
+> -	/*
+> -	 * change group_cnt will drain all bios, so this is safe
+> -	 *
+> -	 * A read generally means a read-modify-write, which usually means a
+> -	 * randwrite, so we don't delay it
+> -	 */
+> -	if (!conf->batch_bio_dispatch || !conf->group_cnt ||
+> -	    bio_op(bio) =3D=3D REQ_OP_READ) {
+> -		generic_make_request(bio);
+> -		return;
+> -	}
+> +	struct bio_list tmp =3D BIO_EMPTY_LIST;
+> +
+>  	spin_lock(&conf->pending_bios_lock);
+> -	bio_list_add(&conf->pending_bios, bio);
+> +	conf->pending_data[conf->pending_data_cnt].sector =3D sector;
+> +	bio_list_init(&conf->pending_data[conf->pending_data_cnt].bios);
+> +	bio_list_merge(&conf->pending_data[conf->pending_data_cnt].bios,
+> +		bios);
+> +	conf->pending_data_cnt++;
+> +	if (conf->pending_data_cnt >=3D PENDING_IO_MAX)
+> +		dispatch_defer_bios(conf, PENDING_IO_ONE_FLUSH, &tmp);
+>  	spin_unlock(&conf->pending_bios_lock);
+> -	md_wakeup_thread(conf->mddev->thread);
+> +
+> +	dispatch_bio_list(&tmp);
+>  }
+>=20=20
+>  static void
+> @@ -923,6 +1004,8 @@ static void ops_run_io(struct stripe_head *sh, struc=
+t stripe_head_state *s)
+>  	struct r5conf *conf =3D sh->raid_conf;
+>  	int i, disks =3D sh->disks;
+>  	struct stripe_head *head_sh =3D sh;
+> +	struct bio_list pending_bios =3D BIO_EMPTY_LIST;
+> +	bool should_defer;
+>=20=20
+>  	might_sleep();
+>=20=20
+> @@ -939,6 +1022,8 @@ static void ops_run_io(struct stripe_head *sh, struc=
+t stripe_head_state *s)
+>  		}
+>  	}
+>=20=20
+> +	should_defer =3D conf->batch_bio_dispatch && conf->group_cnt;
+> +
+>  	for (i =3D disks; i--; ) {
+>  		int op, op_flags =3D 0;
+>  		int replace_only =3D 0;
+> @@ -1093,7 +1178,10 @@ static void ops_run_io(struct stripe_head *sh, str=
+uct stripe_head_state *s)
+>  				trace_block_bio_remap(bdev_get_queue(bi->bi_bdev),
+>  						      bi, disk_devt(conf->mddev->gendisk),
+>  						      sh->dev[i].sector);
+> -			defer_bio_issue(conf, bi);
+> +			if (should_defer && op_is_write(op))
+> +				bio_list_add(&pending_bios, bi);
+> +			else
+> +				generic_make_request(bi);
+>  		}
+>  		if (rrdev) {
+>  			if (s->syncing || s->expanding || s->expanded
+> @@ -1138,7 +1226,10 @@ static void ops_run_io(struct stripe_head *sh, str=
+uct stripe_head_state *s)
+>  				trace_block_bio_remap(bdev_get_queue(rbi->bi_bdev),
+>  						      rbi, disk_devt(conf->mddev->gendisk),
+>  						      sh->dev[i].sector);
+> -			defer_bio_issue(conf, rbi);
+> +			if (should_defer && op_is_write(op))
+> +				bio_list_add(&pending_bios, rbi);
+> +			else
+> +				generic_make_request(rbi);
+>  		}
+>  		if (!rdev && !rrdev) {
+>  			if (op_is_write(op))
+> @@ -1156,6 +1247,9 @@ static void ops_run_io(struct stripe_head *sh, stru=
+ct stripe_head_state *s)
+>  		if (sh !=3D head_sh)
+>  			goto again;
+>  	}
+> +
+> +	if (should_defer && !bio_list_empty(&pending_bios))
+> +		defer_issue_bios(conf, head_sh->sector, &pending_bios);
+>  }
+>=20=20
+>  static struct dma_async_tx_descriptor *
+> @@ -6808,7 +6902,6 @@ static struct r5conf *setup_conf(struct mddev *mdde=
+v)
+>  	atomic_set(&conf->active_stripes, 0);
+>  	atomic_set(&conf->preread_active_stripes, 0);
+>  	atomic_set(&conf->active_aligned_reads, 0);
+> -	bio_list_init(&conf->pending_bios);
+>  	spin_lock_init(&conf->pending_bios_lock);
+>  	conf->batch_bio_dispatch =3D true;
+>  	rdev_for_each(rdev, mddev) {
+> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+> index 6b9d2e8..eb6d5d5 100644
+> --- a/drivers/md/raid5.h
+> +++ b/drivers/md/raid5.h
+> @@ -572,6 +572,13 @@ enum r5_cache_state {
+>  				 */
+>  };
+>=20=20
+> +#define PENDING_IO_MAX 512
+> +#define PENDING_IO_ONE_FLUSH 128
+> +struct r5pending_data {
+> +	sector_t sector; /* stripe sector */
+> +	struct bio_list bios;
+> +};
+> +
+>  struct r5conf {
+>  	struct hlist_head	*stripe_hashtbl;
+>  	/* only protect corresponding hash list and inactive_list */
+> @@ -689,9 +696,11 @@ struct r5conf {
+>  	int			worker_cnt_per_group;
+>  	struct r5l_log		*log;
+>=20=20
+> -	struct bio_list		pending_bios;
+>  	spinlock_t		pending_bios_lock;
+>  	bool			batch_bio_dispatch;
+> +	struct r5pending_data	pending_data[PENDING_IO_MAX];
+> +	int			pending_data_cnt;
+> +	sector_t		last_bio_pos;
+>  };
+>=20=20
+>=20=20
+> --=20
+> 2.9.3
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAli4/QsACgkQOeye3VZi
-gbmMFQ/+PXKY2ZpRdWJ7Zz610ZkA8KoIRUnvh/2ZEyyPF/VB/4Cj+JiUVhJg7gHi
-PSkO4M7sezicCVc5A+hQmpBg3890jsfShmjC5npwbvm/2SdtL4Wv41hKLnV+d5OC
-+lzVkxqKI1OJPjSUvVTSItFzRMrsKqNCruGHfDvRAsvZVXmERnqkDmketV4T+5de
-GIoZfwkbzQjxSS9BlnHdwbBSxsOt4i7GYAMuDTybNu88x6hmBaUi99LRsnB5qj0Y
-mXhb3iC0I4o/GctZcnxpcjwzY5ltfhgh61euP3IsHLwpwr62mbHymtCjKPVKN5Qy
-pBQGD9pg2nxP42KSv6lG/9Lt/rTB0MM/C0jjCzeD4N0b39ADsTUiCcIrHz7jA4Of
-oDVA0DBlSVET7weEnbP7jVloMdOO42gdi6rye5zQnBQeaViVb5ApFgATSWeytIZX
-Yg0IGHvnP40k05eQro4CoXR36C5WR8T+1xu5syZj60sf+qJPgQq3y+vcBEcrMmVZ
-gatdd6tONQC+jlKhJ0knabItfD3WjlDrT1LMLn1tCYNc8bdoa9tHSj/DhLhfYrZK
-QxIxZJyd1vuxqpit9PDMFL5h6m3ssZ634mUN40MlFuLHZtum8Hrpn+Yci2xU1D+Q
-1AYsSGMqyyCr02H3skvnz8scd9sfDXHCe2r53L7MigbCTMvahso=
-=UgQa
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAli45nUACgkQOeye3VZi
+gbk5dQ/+P2H33VDL5yhtL4GURjaVRYlHAUdlw8q/eW1oQURZad/pCQpBkB77WgeY
+/m7REeVQPs4kQE6PA24k4kxTXO2lA2bhoWSGYBNtCF2TjCvsNxWBfynsy6OOOKCK
+hFgn/2ED+74X4Z2HiGRoAa7KtVoLngsr4LgWf62PD6jozKVCbRRhH3pRNgxAiH5C
+R3eQ3ksEtrTKVtbgwIacfc+EFQTpu6DWbRPaLyxGb1Mwy1dpG7gu6qjCn2+T37nz
+xSo11D742YOk0tABp79zkLEb+bH1hmIQOOP2YNqSQioub9yYZyNV4zHa73LBMh/f
+LGJmP8osx0Re+pHzCJ07uw+9qrdNlHyjNysOJAZHaXBOnU6mUjyeR4OiXIJcZnrr
+M8zqJ03rBvaMgcFhk2g8K9chsb9WBE0PANIYikQzaistPFDoYX05HNhFySaDkXuQ
+fcdmw6lbj2YQIqmQV8F0UsKWjkYv1xj6lREPgT9yMY1VcnlfQUCU4TQMcSU/cgI+
+5P2dNmYlPmK8Rg6ZJeqfOlcml3AsHzRkFlU8pIpsVb0U/wBr6M6Jt5JrO2EbJHST
+6g7aiVAgfAgEuBKl3nvYBVLl6wkpWGD5CWRDTn6cHj5pCALjoT5hVtgSD7SS7R/7
+zmx/WXpRBD/+ywurzmrapLJcu7gpRVB2JmSS11axDpjD60q31ac=
+=6JEA
 -----END PGP SIGNATURE-----
 --=-=-=--
