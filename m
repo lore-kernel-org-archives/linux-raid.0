@@ -1,41 +1,114 @@
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Subject: Re: [Xen-devel] [PATCH 29/29] drivers, xen: convert grant_map.users
- from atomic_t to refcount_t
-Date: Mon, 6 Mar 2017 11:58:59 -0500
-Message-ID: <99270126-7751-eed0-5efa-fc695ff3be25@oracle.com>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-30-git-send-email-elena.reshetova@intel.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: RAID Recovery
+Date: Mon, 6 Mar 2017 15:10:52 -0500
+Message-ID: <e4d9724d-ab52-aa79-c600-7b287c16a182@turmel.org>
+References: <936e84af-f190-3541-bdf8-eaa0c42d2ddc@websitemanagers.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1488810076-3754-30-git-send-email-elena.reshetova@intel.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Elena Reshetova <elena.reshetova@intel.com>, gregkh@linuxfoundation.org
-Cc: peterz@infradead.org, linux-pci@vger.kernel.org, target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net, devel@driverdev.osuosl.org, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, fcoe-devel@open-fcoe.org, Hans Liljestrand <ishkamiel@gmail.com>, open-iscsi@googlegroups.com, linux-media@vger.kernel.org, Kees Cook <keescook@chromium.org>, linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org, xen-devel@lists.xenproject.org, David Windsor <dwindsor@gmail.com>, Juergen Gross <jgross@suse.com>, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <936e84af-f190-3541-bdf8-eaa0c42d2ddc@websitemanagers.com.au>
+Sender: linux-raid-owner@vger.kernel.org
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 03/06/2017 09:21 AM, Elena Reshetova wrote:
-> refcount_t type and corresponding API should be
-> used instead of atomic_t when the variable is used as
-> a reference counter. This allows to avoid accidental
-> refcounter overflows that might lead to use-after-free
-> situations.
->
-> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> Signed-off-by: David Windsor <dwindsor@gmail.com>
-> ---
->  drivers/xen/gntdev.c | 11 ++++++-----
->  1 file changed, 6 insertions(+), 5 deletions(-)
+On 03/06/2017 10:07 AM, Adam Goryachev wrote:
+> Hi all,
+> 
+> I'm trying to assist a friend to recover their RAID array, it consists
+> of 4 drives, most likely in RAID10. It was a linux based NAS (AFAIK). I
+> would really appreciate any tips or suggestions...
+> 
+> First, the bad news:
+> 
+> mdadm --misc --detail /dev/sd[abcd]
+> mdadm: /dev/sda does not appear to be an md device
 
-Reviewed-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+For future reference:  --detail is only applicable to the /dev/md*
+*array* device.  --examine is only applicable to *member* devices,
+and is required for valid results when an array is not running.
+
+> mdadm --misc --examine /dev/sd[abcd]
+> /dev/sda:
+>    MBR Magic : aa55
+> /dev/sdb:
+>    MBR Magic : aa55
+> /dev/sdc:
+>    MBR Magic : aa55
+> /dev/sdd:
+>    MBR Magic : aa55
+> 
+> This really doesn't look promising.... but the disks themselves look
+> "healthy"... at least mostly.
+
+As Reindl said, this by itself is no surprise.  The NAS has to boot off
+of *something*, so partitions for /boot, /swap, /, and /data, or some
+combination, is common for such small systems.
+
+The first partition is likely raid1 across all devices for /boot.
+After that, all bets are off.
+
+> Looking at the content of the drives, it might be possible that all four
+> drives were in RAID1 ... at least, I can find identical data on all four
+> of the drives:
+> 
+> Running this command for each drive:
+> 
+> strings /dev/sdd |cat -n |less
+> 
+> looking for some "text", and I find what looks like a log file snipped
+> which is identical across all four drives. Thats 25 lines of output,
+> that exists on the same output line number, matching across all 4
+> drives. So perhaps I have a 4 drive RAID1, which I guess should make it
+> easier to recover from.
+
+Probably just a 4x raid1 mirror for the root partition.
+
+> Disks are /dev/sda /dev/sdb /dev/sdc /dev/sdd, all identical
+> "partitions" that don't seem to exist, but there is a MBR partition table
+> 
+> gdisk -l /dev/sda
+> GPT fdisk (gdisk) version 1.0.1
+> 
+> Partition table scan:
+>   MBR: MBR only
+>   BSD: not present
+>   APM: not present
+>   GPT: not present
+> 
+> 
+> ***************************************************************
+> Found invalid GPT and valid MBR; converting MBR to GPT format
+> in memory.
+> ***************************************************************
+> 
+> Disk /dev/sda: 1953525168 sectors, 931.5 GiB
+> Logical sector size: 512 bytes
+> Disk identifier (GUID): 145F71F0-4D0B-4941-9F9E-2C5301BF518F
+> Partition table holds up to 128 entries
+> First usable sector is 34, last usable sector is 1953525134
+> Partitions will be aligned on 2048-sector boundaries
+> Total free space is 1953525101 sectors (931.5 GiB)
+
+This is worrisome.  Please repost the complete output of fdisk -l
+and gdisk -l for all of these devices.  But....
+
+> The first two drives look like this (lots of read errors), the second
+> two look perfectly clean...
+
+Please remove the drives from the NAS box and connect to a known good
+system.  Your smartctl reports include neither re-allocated sectors
+nor pending relocations, which would be expected if there are many
+read errors.  That means the read errors are likely due to controller,
+cables, or power supply problems.
+
+Note, timeout mismatch *does not* apply to sda, but you trimmed
+too much to tell for the other devices.  Please submit complete output
+from smartctl -iA -l scterc /dev/sdX for each of these devices.
+
+Do the fdisk & gdisk reports from the known good system, and also,
+if you can find any partitions, run --examine on each from the same
+system.  Keep the --examine reports with the corresponding smartctl
+report.
+
+Phil
