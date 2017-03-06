@@ -1,114 +1,49 @@
 From: Phil Turmel <philip@turmel.org>
-Subject: Re: RAID Recovery
-Date: Mon, 6 Mar 2017 15:10:52 -0500
-Message-ID: <e4d9724d-ab52-aa79-c600-7b287c16a182@turmel.org>
-References: <936e84af-f190-3541-bdf8-eaa0c42d2ddc@websitemanagers.com.au>
+Subject: Re: [RAID recovery] Unable to recover RAID5 array after disk failure
+Date: Mon, 6 Mar 2017 14:50:52 -0500
+Message-ID: <c3ae0e4d-dccc-9cb4-72b0-28a1bde3c752@turmel.org>
+References: <CAJ0QwkJqRbJtM9HiXL+cCj2TkQQRahGgWTwD9QKH_CBfbJeLKA@mail.gmail.com>
+ <0a6e4a82-665c-6e62-293f-151e41c67842@turmel.org>
+ <CAJ0QwkKAVLh7+kV_GsEL4O5hA+Pj=Y9sE_CBbWJJqDyA+gVqpA@mail.gmail.com>
+ <CAJ0QwkKuSKzE7_4h1aUA4XMyNAAdmFR4J6z+Z_vW5nsW3OcZtw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <936e84af-f190-3541-bdf8-eaa0c42d2ddc@websitemanagers.com.au>
+In-Reply-To: <CAJ0QwkKuSKzE7_4h1aUA4XMyNAAdmFR4J6z+Z_vW5nsW3OcZtw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <mailinglists@websitemanagers.com.au>, linux-raid@vger.kernel.org
+To: Olivier Swinkels <olivier.swinkels@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 03/06/2017 10:07 AM, Adam Goryachev wrote:
-> Hi all,
-> 
-> I'm trying to assist a friend to recover their RAID array, it consists
-> of 4 drives, most likely in RAID10. It was a linux based NAS (AFAIK). I
-> would really appreciate any tips or suggestions...
-> 
-> First, the bad news:
-> 
-> mdadm --misc --detail /dev/sd[abcd]
-> mdadm: /dev/sda does not appear to be an md device
+On 03/06/2017 04:17 AM, Olivier Swinkels wrote:
 
-For future reference:  --detail is only applicable to the /dev/md*
-*array* device.  --examine is only applicable to *member* devices,
-and is required for valid results when an array is not running.
+>> That sounds promising, as /etc was not on the array.
+>> I found a backup in /etc/lvm/backup/lvm-raid (contents shown below).
 
-> mdadm --misc --examine /dev/sd[abcd]
-> /dev/sda:
->    MBR Magic : aa55
-> /dev/sdb:
->    MBR Magic : aa55
-> /dev/sdc:
->    MBR Magic : aa55
-> /dev/sdd:
->    MBR Magic : aa55
+Yay!  That's exactly what you need.
+
+>> Unfortunatelly when I try to use it to restore the LVM I get the
+>> following error:
+>> vgcfgrestore -f /etc/lvm/backup/lvm-raid lvm-raid
+>> Aborting vg_write: No metadata areas to write to!
+>> Restore failed.
+
+You're command doesn't specify the device name of your reconstructed
+array.
+
+>> So I guess I also need to recreate the physical volume using:
 > 
-> This really doesn't look promising.... but the disks themselves look
-> "healthy"... at least mostly.
-
-As Reindl said, this by itself is no surprise.  The NAS has to boot off
-of *something*, so partitions for /boot, /swap, /, and /data, or some
-combination, is common for such small systems.
-
-The first partition is likely raid1 across all devices for /boot.
-After that, all bets are off.
-
-> Looking at the content of the drives, it might be possible that all four
-> drives were in RAID1 ... at least, I can find identical data on all four
-> of the drives:
+> Correction: (Put the wrong ID in the pvcreate example):
+> pvcreate --uuid "DWv51O-lg9s-Dl4w-EBp9-QeIF-Vv60-8wt2uS" --restorefile
+> /etc/lvm/backup/lvm-raid
 > 
-> Running this command for each drive:
-> 
-> strings /dev/sdd |cat -n |less
-> 
-> looking for some "text", and I find what looks like a log file snipped
-> which is identical across all four drives. Thats 25 lines of output,
-> that exists on the same output line number, matching across all 4
-> drives. So perhaps I have a 4 drive RAID1, which I guess should make it
-> easier to recover from.
+>> Is this correct? (I'm a bit hesitant with another 'create' command as
+>> you might understand.)
 
-Probably just a 4x raid1 mirror for the root partition.
-
-> Disks are /dev/sda /dev/sdb /dev/sdc /dev/sdd, all identical
-> "partitions" that don't seem to exist, but there is a MBR partition table
-> 
-> gdisk -l /dev/sda
-> GPT fdisk (gdisk) version 1.0.1
-> 
-> Partition table scan:
->   MBR: MBR only
->   BSD: not present
->   APM: not present
->   GPT: not present
-> 
-> 
-> ***************************************************************
-> Found invalid GPT and valid MBR; converting MBR to GPT format
-> in memory.
-> ***************************************************************
-> 
-> Disk /dev/sda: 1953525168 sectors, 931.5 GiB
-> Logical sector size: 512 bytes
-> Disk identifier (GUID): 145F71F0-4D0B-4941-9F9E-2C5301BF518F
-> Partition table holds up to 128 entries
-> First usable sector is 34, last usable sector is 1953525134
-> Partitions will be aligned on 2048-sector boundaries
-> Total free space is 1953525101 sectors (931.5 GiB)
-
-This is worrisome.  Please repost the complete output of fdisk -l
-and gdisk -l for all of these devices.  But....
-
-> The first two drives look like this (lots of read errors), the second
-> two look perfectly clean...
-
-Please remove the drives from the NAS box and connect to a known good
-system.  Your smartctl reports include neither re-allocated sectors
-nor pending relocations, which would be expected if there are many
-read errors.  That means the read errors are likely due to controller,
-cables, or power supply problems.
-
-Note, timeout mismatch *does not* apply to sda, but you trimmed
-too much to tell for the other devices.  Please submit complete output
-from smartctl -iA -l scterc /dev/sdX for each of these devices.
-
-Do the fdisk & gdisk reports from the known good system, and also,
-if you can find any partitions, run --examine on each from the same
-system.  Keep the --examine reports with the corresponding smartctl
-report.
+I haven't actually had to do this operation but once, and I don't
+recall if the vgcfgrestore was sufficient.  But either way, you simply
+didn't tell LVM where you are restoring TO.
 
 Phil
+
