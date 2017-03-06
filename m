@@ -1,50 +1,50 @@
-From: "Peter Sangas" <pete@wnsdev.com>
-Subject: RE: GRUB warning after replacing disk drive in RAID1
-Date: Mon, 6 Mar 2017 14:13:58 -0800
-Message-ID: <008401d296c6$f5ee1e80$e1ca5b80$@wnsdev.com>
-References: <002f01d29152$737b4550$5a71cff0$@wnsdev.com> <ab6d048b-b944-6661-11a5-503012dfad50@thelounge.net> <008001d29205$e4f503c0$aedf0b40$@wnsdev.com> <59c85e04-2f6a-1c81-ccba-fa8aac1c50ee@thelounge.net> <009601d29218$9fd3e460$df7bad20$@wnsdev.com> <5136f32b-a0bb-dc16-cae9-59946ea21622@turmel.org> <58B81B80.6020708@youngman.org.uk>
+From: jes.sorensen@gmail.com
+Subject: Re: [MDADM PATCH 1/2] Add Wimplicit-fallthrough=0 in Makefile
+Date: Mon, 06 Mar 2017 15:30:43 -0500
+Message-ID: <wrfjh936m9l8.fsf@gmail.com>
+References: <1488348766-31087-1-git-send-email-xni@redhat.com>
+        <1488348766-31087-2-git-send-email-xni@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <58B81B80.6020708@youngman.org.uk>
-Content-Language: en-us
+In-Reply-To: <1488348766-31087-2-git-send-email-xni@redhat.com> (Xiao Ni's
+        message of "Wed, 1 Mar 2017 14:12:45 +0800")
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Wols Lists' <antlists@youngman.org.uk>, 'Phil Turmel' <philip@turmel.org>, 'Reindl Harald' <h.reindl@thelounge.net>, linux-raid@vger.kernel.org
+To: Xiao Ni <xni@redhat.com>
+Cc: linux-raid@vger.kernel.org, ncroxon@redhat.com
 List-Id: linux-raid.ids
 
+Xiao Ni <xni@redhat.com> writes:
+> There are many errors like 'error: this statement may fall through'. 
+> But the logic is right. So add the flag Wimplicit-fallthrough=0 
+> to disable the error messages. The method I use is from 
+> https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
+> #index-Wimplicit-fallthrough-375
+> ---
+>  Makefile | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/Makefile b/Makefile
+> index a6f464c..b9f52e0 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -43,7 +43,7 @@ KLIBC_GCC = gcc -nostdinc -iwithprefix include
+> -I$(KLIBC)/klibc/include -I$(KLIB
+>  
+>  CC ?= $(CROSS_COMPILE)gcc
+>  CXFLAGS ?= -ggdb
+> -CWFLAGS = -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+> +CWFLAGS = -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter -Wimplicit-fallthrough=0
 
-> On March 02, 2017 5:18 AM, Wols Lists wrote :
-> Look at the raid wiki
-> 
-> https://raid.wiki.kernel.org/index.php/Converting_an_existing_system
-> 
-> it mentions grub.
+Hi Xiao,
 
-Wol, I'm trying to understand what you and others are suggesting is causing this grub warning.  
+I am not sure how long -Wimplicit-fallthrough has existed. I want to
+make sure we allow for this to compile with older compilers as well.
 
-according to the raid.wiki you referenced the last line of grub.cnf should look like this to support booting from RAID:
+Could you please make it a check so this flag is only set if the version
+of gcc supports it?
 
-         initrd  /boot/initramfs-genkernel-x86_64-4.4.6-gentoo
-
-In addition,  the wiki says " you will need to configure your distro to use an initramfs.
-
-here are the last few lines of my grub.cnf: 
-
-         echo    'Loading Linux 4.4.0-36-generic ...'
-         linux    /vmlinuz-4.4.0-36-generic root=UUID=cddffa50-9713-4205-aab6-86745735958b ro recovery nomodeset 
-         echo    'Loading initial ramdisk ...'
-         initrd   /initrd.img-4.4.0-36-generic
-
-should I be concerned my grub.cnf uses initrd.img and not initramfs?   My grub.cnf was last modified 11/2016 and I've rebooted successfully into a RAID1 since.
-
-
-Finally, on Friday 3/3 I swapped one of the disks (sdc) in this RAID1 with a brand new identical disk.  After creating the partitions and syncing I issued 
-install-grub /dev/sdc and there were no warnings.   If my grub was broken why would there be no warning but a week ago doing the exact disk swap/same sequence of commands I got a warning.  Nothing on the system was changed during that time.
-
-
-Thank you.
-
+Thanks,
+Jes
 
 
