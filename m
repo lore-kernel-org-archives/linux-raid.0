@@ -1,94 +1,37 @@
-From: Gilad Ben-Yossef <gilad@benyossef.com>
-Subject: Re: [RFC PATCH v4] IV Generation algorithms for dm-crypt
-Date: Mon, 6 Mar 2017 16:38:00 +0200
-Message-ID: <CAOtvUMdrQA4okKhiCyVmosQ4Oc2PHO4k4wLrDz-_fCyWB1rWBw@mail.gmail.com>
-References: <1486463731-6224-1-git-send-email-binoy.jayan@linaro.org>
-	<CAOtvUMcN8s886978vE6T=AE79KkZsLBnXsmhewnb5PB0UyAG3A@mail.gmail.com>
-	<CAHv-k_8rgArzV2uQ64h1ZTNRpssX1jMf=RwuPoBmsjQ0FhCsWA@mail.gmail.com>
-	<68f70534-a309-46ba-a84d-8acc1e6620e5@gmail.com>
-	<CAOtvUMf3c0fUjABmbfMrbs0W4gyhKVZyc_tZH3rQg65zF18YMg@mail.gmail.com>
-	<b563eb97-82ba-69d2-c4c5-66bc716a7507@gmail.com>
-	<CAOtvUMePYT7OJDKL7i0y3y6Jvqsxyx6Je6g9aGKVq6PLZ_-Z8w@mail.gmail.com>
-	<2aef6e54-805f-e09b-ae66-c198f8c05335@gmail.com>
-	<c835926e-c2bd-8a52-34db-6c605301bc2b@gmail.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 21/29] drivers, s390: convert fc_fcp_pkt.ref_cnt from
+ atomic_t to refcount_t
+Date: Mon, 6 Mar 2017 16:27:11 +0100
+Message-ID: <536a58ba-8896-5639-cab9-bd2f13bed325@suse.de>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+ <1488810076-3754-22-git-send-email-elena.reshetova@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <c835926e-c2bd-8a52-34db-6c605301bc2b@gmail.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Milan Broz <gmazyland@gmail.com>
-Cc: Binoy Jayan <binoy.jayan@linaro.org>, Rajendra <rnayak@codeaurora.org>, Herbert Xu <herbert@gondor.apana.org.au>, Oded <oded.golombek@arm.com>, Mike Snitzer <snitzer@redhat.com>, Linux kernel mailing list <linux-kernel@vger.kernel.org>, Ondrej Mosnacek <omosnace@redhat.com>, linux-raid@vger.kernel.org, dm-devel@redhat.com, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, linux-crypto@vger.kernel.org, Shaohua Li <shli@kernel.org>, "David S. Miller" <davem@davemloft.net>, Alasdair Kergon <agk@redhat.com>, Ofir <Ofir.Drang@arm.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-media-owner@vger.kernel.org>
+In-Reply-To: <1488810076-3754-22-git-send-email-elena.reshetova@intel.com>
+Sender: linux-media-owner@vger.kernel.org
+To: Elena Reshetova <elena.reshetova@intel.com>, gregkh@linuxfoundation.org
+Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org, netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-media@vger.kernel.org, devel@linuxdriverproject.org, linux-pci@vger.kernel.org, linux-s390@vger.kernel.org, fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, devel@driverdev.osuosl.org, target-devel@vger.kernel.org, linux-serial@vger.kernel.org, linux-usb@vger.kernel.org, peterz@infradead.org, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
 List-Id: linux-raid.ids
 
-On Wed, Mar 1, 2017 at 5:38 PM, Milan Broz <gmazyland@gmail.com> wrote:
->
-> On 03/01/2017 02:04 PM, Milan Broz wrote:
->> On 03/01/2017 01:42 PM, Gilad Ben-Yossef wrote:
->> ...
->>
->>> I can certainly understand if you don't wont to take the patch until
->>> we have results with
->>> dm-crypt itself but the difference between 8 separate invocation of
->>> the engine for 512
->>> bytes of XTS and a single invocation for 4KB are pretty big.
->>
->> Yes, I know it. But the same can be achieved if we just implement
->> 4k sector encryption in dmcrypt. It is incompatible with LUKS1
->> (but next LUKS version will support it) but I think this is not
->> a problem for now.
->>
->> If the underlying device supports atomic write of 4k sectors, then
->> there should not be a problem.
->>
->> This is one of the speed-up I would like to compare with the IV approach,
->> because everyone should benefit from 4k sectors in the end.
->> And no crypto API changes are needed here.
->>
->> (I have an old patch for this, so I will try to revive it.)
->
-> If anyone interested, simple experimental patch for larger sector size
-> (up to the page size) for dmcrypt is in this branch:
->
-> http://git.kernel.org/cgit/linux/kernel/git/mbroz/linux.git/log/?h=dm-crypt-4k-sector
->
-> It would be nice to check what performance gain could be provided
-> by this simple approach.
+On 03/06/2017 03:21 PM, Elena Reshetova wrote:
+> refcount_t type and corresponding API should be
+> used instead of atomic_t when the variable is used as
+> a reference counter. This allows to avoid accidental
+> refcounter overflows that might lead to use-after-free
+> situations.
 
+The subject is wrong, should be something like "scsi: libfc convert
+fc_fcp_pkt.ref_cnt from atomic_t to refcount_t" but not s390.
 
-I gave it a spin on a x86_64 with 8 CPUs with AES-NI using cryptd and
-on Arm  using CryptoCell hardware accelerator.
-
-There was no difference in performance between 512 and 4096 bytes
-cluster size on the x86_64 (800 MB loop file system)
-
-There was an improvement in latency of 3.2% between 512 and 4096 bytes
-cluster size on the Arm. I expect the performance benefits for this
-test for Binoy's patch to be the same.
-
-In both cases the very naive test was a simple dd with block size of
-4096 bytes or the raw block device.
-
-I do not know what effect having a bigger cluster size would have on
-have on other more complex file system operations.
-Is there any specific benchmark worth testing with?
-
-
-Gilad
-
+Other than that
+Acked-by: Johannes Thumshirn <jth@kernel.org>
 
 -- 
-Gilad Ben-Yossef
-Chief Coffee Drinker
-
-"If you take a class in large-scale robotics, can you end up in a
-situation where the homework eats your dog?"
- -- Jean-Baptiste Queru
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
