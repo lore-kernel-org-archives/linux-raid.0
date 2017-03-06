@@ -1,133 +1,137 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH 3/3] md/raid5: sort bios
-Date: Mon, 06 Mar 2017 17:40:16 +1100
-Message-ID: <87bmtekiwf.fsf@notabene.neil.brown.name>
-References: <cover.1487373517.git.shli@fb.com> <01c6067566d787a815fc29aa07b36ad4dd0280f0.1487373517.git.shli@fb.com> <87k287m3d6.fsf@notabene.neil.brown.name> <20170303175909.q2t2hoxsorjhk77k@kernel.org>
+From: Olivier Swinkels <olivier.swinkels@gmail.com>
+Subject: Re: [RAID recovery] Unable to recover RAID5 array after disk failure
+Date: Mon, 6 Mar 2017 09:26:13 +0100
+Message-ID: <CAJ0QwkKAVLh7+kV_GsEL4O5hA+Pj=Y9sE_CBbWJJqDyA+gVqpA@mail.gmail.com>
+References: <CAJ0QwkJqRbJtM9HiXL+cCj2TkQQRahGgWTwD9QKH_CBfbJeLKA@mail.gmail.com>
+ <0a6e4a82-665c-6e62-293f-151e41c67842@turmel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170303175909.q2t2hoxsorjhk77k@kernel.org>
+In-Reply-To: <0a6e4a82-665c-6e62-293f-151e41c67842@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org, songliubraving@fb.com, kernel-team@fb.com
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, Mar 03 2017, Shaohua Li wrote:
-
-> On Fri, Mar 03, 2017 at 02:43:49PM +1100, Neil Brown wrote:
->> On Fri, Feb 17 2017, Shaohua Li wrote:
->>=20
->> > Previous patch (raid5: only dispatch IO from raid5d for harddisk raid)
->> > defers IO dispatching. The goal is to create better IO pattern. At that
->> > time, we don't sort the deffered IO and hope the block layer can do IO
->> > merge and sort. Now the raid5-cache writeback could create large amount
->> > of bios. And if we enable muti-thread for stripe handling, we can't
->> > control when to dispatch IO to raid disks. In a lot of time, we are
->> > dispatching IO which block layer can't do merge effectively.
->> >
->> > This patch moves further for the IO dispatching defer. We accumulate
->> > bios, but we don't dispatch all the bios after a threshold is met. This
->> > 'dispatch partial portion of bios' stragety allows bios coming in a
->> > large time window are sent to disks together. At the dispatching time,
->> > there is large chance the block layer can merge the bios. To make this
->> > more effective, we dispatch IO in ascending order. This increases
->> > request merge chance and reduces disk seek.
->>=20
->> I can see the benefit of batching and sorting requests.
->>=20
->> I wonder if the extra complexity of grouping together 512 requests, then
->> submitting the "first" 128 is really worth it.  Have you measured the
->> value of that?
+On Sun, Mar 5, 2017 at 7:55 PM, Phil Turmel <philip@turmel.org> wrote:
 >
-> I'm pretty sure I tried. The whole point of dispatching the first 128 is =
-we
-> don't have a better pipeline. Grouping 512 and then dispatching them toge=
-ther
-> definitely improve the IO patter, but the request accumulation takes time=
-, we
-> will have no IO running in the window.
-
-But we don't wait for the first batch before we start collecting the
-next batch - do we?  Why would there be a window with no IO running?
-
-
+> On 03/03/2017 04:35 PM, Olivier Swinkels wrote:
+> > Hi,
+> >
+> > I'm in quite a pickle here. I can't recover from a disk failure on my
+> > 6 disk raid 5 array.
+> > Any help would really be appreciated!
+> >
+> > Please bear with me as I lay out the the steps that got me here:
 >
->> If you just submitted every time you got 512 requests, you could use
->> list_sort() on the bio list and wouldn't need an array.
->>=20
->> If an array really is best, it would be really nice if "sort" could pass
->> a 'void*' down to the cmp function,
->> and it could sort all bios that are
->> *after* last_bio_pos first, and then the others.  That would make the
->> code much simpler.  I guess sort() could be changed (list_sort() already
->> has a 'priv' argument like this).
+> [trim /]
 >
-> Ok, I'll change this to a list. And add extra pointer to record the last =
-sorted
-> entry. I didn't see the sort uses much time in my profile, but the merge =
-sort
-> looks better. Will do the change.
-
-I think both sorts are O(log(N)).
-I had thought that list_sort() would work on a bio_list, but it requires
-a list_head (even though it doesn't use the prev pointer).
-If it worked on a bio_list and if you could just submit the whole batch,
-then using list_sort would have meant that you don't need to allocate a
-table of r5pending_data.
-Now with the struct list_head in there, the data is twice the size.
-
-I guess that doesn't matter too much.
-
-It just feels like there should be a cleaner solution, but I cannot find
-it without writing a new sort function (not that it would be so hard do
-to that).
-
-Thanks,
-NeilBrown
-
-
+> Well, you've learned that mdadm --create is not a good idea. /-:
 >
->> If we cannot change sort(), then maybe use lib/bsearch.c for the binary
->> search.  Performing two comparisons in the loop of a binary search
->> should get a *fail* in any algorithms class!!
->> The "pending_data" array that you have added to the r5conf structure
->> adds 4096 bytes.  This means it is larger than a page, which is best
->> avoided (though it is unlikely to cause problems).  I would allocate it
->> separately.
+> However, you did save your pre-re-create --examine reports, and it
+> looks like you've reconstructed correctly.  (Very brief look.)
 >
-> Yep, already fixed internally.
+> However, you discovered that mdadm's defaults have long since changed
+> to v1.2 superblock, 512k chunks, bitmaps, and a substantially different
+> metadata layout.  In fact, I'm certain your LVM metadata has been
+> damaged by the brief existence of mdadm's v1.2 metadata on your member
+> devices.  Including removal of the LVM magic signature.
 >
->>=20
->> So there is a lot that I don't really like, but it seems like a good
->> idea in principle.
+> What you need is a backup of your lvm configuration, which is commonly
+> available in /etc/ of an install, but naturally not available if /etc/
+> was inside this array.  In addition, though, LVM generally writes
+> multiple copies of this backup in its metadata.  And that is likely
+> still there, near the beginning of your array.
 >
-> ok, thanks for your time!
+> You should hexdump the first several megabytes of your array looking for
+> LVM's XML formatted configuration.  If you can locate some of those
+> copies, you can probably use dd to extract a copy to a file, then use
+> that with LVM's recovery tools to re-establish all of your LVs.
 >
-> Thanks,
-> Shaohua
+> There is a possibilility that some of your actual LV content was damaged
+> by the mdadm v1.2 metadata, too, but first recover the LVM setup.
+>
+> Phil
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
 
------BEGIN PGP SIGNATURE-----
+That sounds promising, as /etc was not on the array.
+I found a backup in /etc/lvm/backup/lvm-raid (contents shown below).
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAli9BFAACgkQOeye3VZi
-gbko9RAAv9s0rSkGsHBHnNRZ5X31wZnvZMfgKdO0TAxrWdufMFnNA8DqVJTzy3LU
-G3jhZa+jKa6eZ4PlX8Ra4gxG+1ik+GJfG5mSJf0i9IrWKUhK4h+3Avan9ODayMz+
-yeZ4+JwePOSTwwA5YUjVKpEJtuMKhOJ4ujya+MbVkoO4ofENGWe35DwKytQscMA7
-dIB2Y6nENi4WCP+fJj+uZKFod+SD8tBpOAqPHGVcWrZmDGy7qRDVTvPHyH155h0x
-nyaw2A+PB/d+xpkTTd9oocRcHEdBkZs6aLvC2JAmeRcI5R3VvQmj+yRHRqZwmLso
-mG+F9QXcg/6zR1/IzXwWYkUx71O0q1WEh6mxjvmcdbHDDgTMVKeCDCqUlHVjI+Uf
-yIpm90TAL4Vu5PdZwYrL5dUinlUaIBE0OhEVgVpN8+2vfREKEhSUEBJkY0S8uRkQ
-C1O0zRTfjrCWRsiMeOdK5lIK5FH/tVHZUNIw20WGJXGVG8DmAzRvLaZENejyB+lr
-oTs0JagEW5M8t6ALddQC1gidy3rSFtrNg3xeG2aLmLXbVHkgajkw4HIi8rQcBWLM
-3ojiPkKJ0OTr58uwBdhe6Cu9MsLYHQ7IlHjNZaR8LqBHfapbUTAHS6VUq+1l8Uuf
-u4wKol+uQCim2GQiY0BUdmcp3PASfU/Xs5aG3d3Orgae+XpbITM=
-=IyQp
------END PGP SIGNATURE-----
---=-=-=--
+Unfortunatelly when I try to use it to restore the LVM I get the
+following error:
+vgcfgrestore -f /etc/lvm/backup/lvm-raid lvm-raid
+Aborting vg_write: No metadata areas to write to!
+Restore failed.
+
+So I guess I also need to recreate the physical volume using:
+pvcreate --uuid "0Esja8-U0EZ-fndQ-vjUq-oIuX-3KgA-uTL6rP" --restorefile
+/etc/lvm/backup/lvm-raid
+Is this correct? (I'm a bit hesitant with another 'create' command as
+you might understand.)
+
+Regards,
+
+Olivier
+
+
+===============================================================================
+/etc/lvm/backup/lvm-raid
+===============================================================================
+# Generated by LVM2 version 2.02.133(2) (2015-10-30): Fri Oct 14 15:55:36 2016
+
+contents = "Text Format Volume Group"
+version = 1
+
+description = "Created *after* executing 'vgcfgbackup'"
+
+creation_host = "horus-server"  # Linux horus-server 3.13.0-98-generic
+#145-Ubuntu SMP Sat Oct 8 20:13:07 UTC 2016 x86_64
+creation_time = 1476453336      # Fri Oct 14 15:55:36 2016
+
+lvm-raid {
+        id = "0Esja8-U0EZ-fndQ-vjUq-oIuX-3KgA-uTL6rP"
+        seqno = 8
+        format = "lvm2"                 # informational
+        status = ["RESIZEABLE", "READ", "WRITE"]
+        flags = []
+        extent_size = 524288            # 256 Megabytes
+        max_lv = 0
+        max_pv = 0
+        metadata_copies = 0
+
+        physical_volumes {
+
+                pv0 {
+                        id = "DWv51O-lg9s-Dl4w-EBp9-QeIF-Vv60-8wt2uS"
+                        device = "/dev/md0"     # Hint only
+
+                        status = ["ALLOCATABLE"]
+                        flags = []
+                        dev_size = 19535144448  # 9.09676 Terabytes
+                        pe_start = 512
+                        pe_count = 37260        # 9.09668 Terabytes
+                }
+        }
+
+        logical_volumes {
+
+                lvm0 {
+                        id = "OpWRpy-O4JT-Ua3t-E1A4-2SuN-GLLR-5CFMLh"
+                        status = ["READ", "WRITE", "VISIBLE"]
+                        flags = []
+                        segment_count = 1
+
+                        segment1 {
+                                start_extent = 0
+                                extent_count = 37260    # 9.09668 Terabytes
+
+                                type = "striped"
+                                stripe_count = 1        # linear
+
+                                stripes = [
+                                        "pv0", 0
+                                ]
+                        }
+                }
+        }
+}
