@@ -1,137 +1,142 @@
 From: Olivier Swinkels <olivier.swinkels@gmail.com>
 Subject: Re: [RAID recovery] Unable to recover RAID5 array after disk failure
-Date: Mon, 6 Mar 2017 09:26:13 +0100
-Message-ID: <CAJ0QwkKAVLh7+kV_GsEL4O5hA+Pj=Y9sE_CBbWJJqDyA+gVqpA@mail.gmail.com>
+Date: Mon, 6 Mar 2017 10:17:26 +0100
+Message-ID: <CAJ0QwkKuSKzE7_4h1aUA4XMyNAAdmFR4J6z+Z_vW5nsW3OcZtw@mail.gmail.com>
 References: <CAJ0QwkJqRbJtM9HiXL+cCj2TkQQRahGgWTwD9QKH_CBfbJeLKA@mail.gmail.com>
- <0a6e4a82-665c-6e62-293f-151e41c67842@turmel.org>
+ <0a6e4a82-665c-6e62-293f-151e41c67842@turmel.org> <CAJ0QwkKAVLh7+kV_GsEL4O5hA+Pj=Y9sE_CBbWJJqDyA+gVqpA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <0a6e4a82-665c-6e62-293f-151e41c67842@turmel.org>
+In-Reply-To: <CAJ0QwkKAVLh7+kV_GsEL4O5hA+Pj=Y9sE_CBbWJJqDyA+gVqpA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Phil Turmel <philip@turmel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Mar 5, 2017 at 7:55 PM, Phil Turmel <philip@turmel.org> wrote:
+On Mon, Mar 6, 2017 at 9:26 AM, Olivier Swinkels
+<olivier.swinkels@gmail.com> wrote:
+> On Sun, Mar 5, 2017 at 7:55 PM, Phil Turmel <philip@turmel.org> wrote:
+>>
+>> On 03/03/2017 04:35 PM, Olivier Swinkels wrote:
+>> > Hi,
+>> >
+>> > I'm in quite a pickle here. I can't recover from a disk failure on my
+>> > 6 disk raid 5 array.
+>> > Any help would really be appreciated!
+>> >
+>> > Please bear with me as I lay out the the steps that got me here:
+>>
+>> [trim /]
+>>
+>> Well, you've learned that mdadm --create is not a good idea. /-:
+>>
+>> However, you did save your pre-re-create --examine reports, and it
+>> looks like you've reconstructed correctly.  (Very brief look.)
+>>
+>> However, you discovered that mdadm's defaults have long since changed
+>> to v1.2 superblock, 512k chunks, bitmaps, and a substantially different
+>> metadata layout.  In fact, I'm certain your LVM metadata has been
+>> damaged by the brief existence of mdadm's v1.2 metadata on your member
+>> devices.  Including removal of the LVM magic signature.
+>>
+>> What you need is a backup of your lvm configuration, which is commonly
+>> available in /etc/ of an install, but naturally not available if /etc/
+>> was inside this array.  In addition, though, LVM generally writes
+>> multiple copies of this backup in its metadata.  And that is likely
+>> still there, near the beginning of your array.
+>>
+>> You should hexdump the first several megabytes of your array looking for
+>> LVM's XML formatted configuration.  If you can locate some of those
+>> copies, you can probably use dd to extract a copy to a file, then use
+>> that with LVM's recovery tools to re-establish all of your LVs.
+>>
+>> There is a possibilility that some of your actual LV content was damaged
+>> by the mdadm v1.2 metadata, too, but first recover the LVM setup.
+>>
+>> Phil
 >
-> On 03/03/2017 04:35 PM, Olivier Swinkels wrote:
-> > Hi,
-> >
-> > I'm in quite a pickle here. I can't recover from a disk failure on my
-> > 6 disk raid 5 array.
-> > Any help would really be appreciated!
-> >
-> > Please bear with me as I lay out the the steps that got me here:
 >
-> [trim /]
+> That sounds promising, as /etc was not on the array.
+> I found a backup in /etc/lvm/backup/lvm-raid (contents shown below).
 >
-> Well, you've learned that mdadm --create is not a good idea. /-:
+> Unfortunatelly when I try to use it to restore the LVM I get the
+> following error:
+> vgcfgrestore -f /etc/lvm/backup/lvm-raid lvm-raid
+> Aborting vg_write: No metadata areas to write to!
+> Restore failed.
 >
-> However, you did save your pre-re-create --examine reports, and it
-> looks like you've reconstructed correctly.  (Very brief look.)
->
-> However, you discovered that mdadm's defaults have long since changed
-> to v1.2 superblock, 512k chunks, bitmaps, and a substantially different
-> metadata layout.  In fact, I'm certain your LVM metadata has been
-> damaged by the brief existence of mdadm's v1.2 metadata on your member
-> devices.  Including removal of the LVM magic signature.
->
-> What you need is a backup of your lvm configuration, which is commonly
-> available in /etc/ of an install, but naturally not available if /etc/
-> was inside this array.  In addition, though, LVM generally writes
-> multiple copies of this backup in its metadata.  And that is likely
-> still there, near the beginning of your array.
->
-> You should hexdump the first several megabytes of your array looking for
-> LVM's XML formatted configuration.  If you can locate some of those
-> copies, you can probably use dd to extract a copy to a file, then use
-> that with LVM's recovery tools to re-establish all of your LVs.
->
-> There is a possibilility that some of your actual LV content was damaged
-> by the mdadm v1.2 metadata, too, but first recover the LVM setup.
->
-> Phil
+> So I guess I also need to recreate the physical volume using:
 
-
-That sounds promising, as /etc was not on the array.
-I found a backup in /etc/lvm/backup/lvm-raid (contents shown below).
-
-Unfortunatelly when I try to use it to restore the LVM I get the
-following error:
-vgcfgrestore -f /etc/lvm/backup/lvm-raid lvm-raid
-Aborting vg_write: No metadata areas to write to!
-Restore failed.
-
-So I guess I also need to recreate the physical volume using:
-pvcreate --uuid "0Esja8-U0EZ-fndQ-vjUq-oIuX-3KgA-uTL6rP" --restorefile
+Correction: (Put the wrong ID in the pvcreate example):
+pvcreate --uuid "DWv51O-lg9s-Dl4w-EBp9-QeIF-Vv60-8wt2uS" --restorefile
 /etc/lvm/backup/lvm-raid
-Is this correct? (I'm a bit hesitant with another 'create' command as
-you might understand.)
 
-Regards,
-
-Olivier
-
-
-===============================================================================
-/etc/lvm/backup/lvm-raid
-===============================================================================
-# Generated by LVM2 version 2.02.133(2) (2015-10-30): Fri Oct 14 15:55:36 2016
-
-contents = "Text Format Volume Group"
-version = 1
-
-description = "Created *after* executing 'vgcfgbackup'"
-
-creation_host = "horus-server"  # Linux horus-server 3.13.0-98-generic
-#145-Ubuntu SMP Sat Oct 8 20:13:07 UTC 2016 x86_64
-creation_time = 1476453336      # Fri Oct 14 15:55:36 2016
-
-lvm-raid {
-        id = "0Esja8-U0EZ-fndQ-vjUq-oIuX-3KgA-uTL6rP"
-        seqno = 8
-        format = "lvm2"                 # informational
-        status = ["RESIZEABLE", "READ", "WRITE"]
-        flags = []
-        extent_size = 524288            # 256 Megabytes
-        max_lv = 0
-        max_pv = 0
-        metadata_copies = 0
-
-        physical_volumes {
-
-                pv0 {
-                        id = "DWv51O-lg9s-Dl4w-EBp9-QeIF-Vv60-8wt2uS"
-                        device = "/dev/md0"     # Hint only
-
-                        status = ["ALLOCATABLE"]
-                        flags = []
-                        dev_size = 19535144448  # 9.09676 Terabytes
-                        pe_start = 512
-                        pe_count = 37260        # 9.09668 Terabytes
-                }
-        }
-
-        logical_volumes {
-
-                lvm0 {
-                        id = "OpWRpy-O4JT-Ua3t-E1A4-2SuN-GLLR-5CFMLh"
-                        status = ["READ", "WRITE", "VISIBLE"]
-                        flags = []
-                        segment_count = 1
-
-                        segment1 {
-                                start_extent = 0
-                                extent_count = 37260    # 9.09668 Terabytes
-
-                                type = "striped"
-                                stripe_count = 1        # linear
-
-                                stripes = [
-                                        "pv0", 0
-                                ]
-                        }
-                }
-        }
-}
+> Is this correct? (I'm a bit hesitant with another 'create' command as
+> you might understand.)
+>
+> Regards,
+>
+> Olivier
+>
+>
+> ===============================================================================
+> /etc/lvm/backup/lvm-raid
+> ===============================================================================
+> # Generated by LVM2 version 2.02.133(2) (2015-10-30): Fri Oct 14 15:55:36 2016
+>
+> contents = "Text Format Volume Group"
+> version = 1
+>
+> description = "Created *after* executing 'vgcfgbackup'"
+>
+> creation_host = "horus-server"  # Linux horus-server 3.13.0-98-generic
+> #145-Ubuntu SMP Sat Oct 8 20:13:07 UTC 2016 x86_64
+> creation_time = 1476453336      # Fri Oct 14 15:55:36 2016
+>
+> lvm-raid {
+>         id = "0Esja8-U0EZ-fndQ-vjUq-oIuX-3KgA-uTL6rP"
+>         seqno = 8
+>         format = "lvm2"                 # informational
+>         status = ["RESIZEABLE", "READ", "WRITE"]
+>         flags = []
+>         extent_size = 524288            # 256 Megabytes
+>         max_lv = 0
+>         max_pv = 0
+>         metadata_copies = 0
+>
+>         physical_volumes {
+>
+>                 pv0 {
+>                         id = "DWv51O-lg9s-Dl4w-EBp9-QeIF-Vv60-8wt2uS"
+>                         device = "/dev/md0"     # Hint only
+>
+>                         status = ["ALLOCATABLE"]
+>                         flags = []
+>                         dev_size = 19535144448  # 9.09676 Terabytes
+>                         pe_start = 512
+>                         pe_count = 37260        # 9.09668 Terabytes
+>                 }
+>         }
+>
+>         logical_volumes {
+>
+>                 lvm0 {
+>                         id = "OpWRpy-O4JT-Ua3t-E1A4-2SuN-GLLR-5CFMLh"
+>                         status = ["READ", "WRITE", "VISIBLE"]
+>                         flags = []
+>                         segment_count = 1
+>
+>                         segment1 {
+>                                 start_extent = 0
+>                                 extent_count = 37260    # 9.09668 Terabytes
+>
+>                                 type = "striped"
+>                                 stripe_count = 1        # linear
+>
+>                                 stripes = [
+>                                         "pv0", 0
+>                                 ]
+>                         }
+>                 }
+>         }
+> }
