@@ -1,57 +1,46 @@
 From: jes.sorensen@gmail.com
-Subject: Re: [MDADM PATCH 2/2] Specify suitable size when write to buffer
-Date: Mon, 06 Mar 2017 16:21:54 -0500
-Message-ID: <wrfjd1dum77x.fsf@gmail.com>
-References: <1488348766-31087-1-git-send-email-xni@redhat.com>
-        <1488348766-31087-3-git-send-email-xni@redhat.com>
+Subject: Re: [PATCH - mdadm] examine: tidy up some code.
+Date: Mon, 06 Mar 2017 16:34:04 -0500
+Message-ID: <wrfjvarmks37.fsf@gmail.com>
+References: <878tonnsfn.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1488348766-31087-3-git-send-email-xni@redhat.com> (Xiao Ni's
-        message of "Wed, 1 Mar 2017 14:12:46 +0800")
+In-Reply-To: <878tonnsfn.fsf@notabene.neil.brown.name> (NeilBrown's message of
+        "Fri, 03 Mar 2017 10:57:00 +1100")
 Sender: linux-raid-owner@vger.kernel.org
-To: Xiao Ni <xni@redhat.com>
-Cc: linux-raid@vger.kernel.org, ncroxon@redhat.com
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org, Michael Shigorin <mike@altlinux.org>
 List-Id: linux-raid.ids
 
-Xiao Ni <xni@redhat.com> writes:
-> ---
->  Detail.c      | 2 +-
->  super-intel.c | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
+NeilBrown <neilb@suse.com> writes:
+> Michael Shigorin reports that the 'lcc' compiler isn't able
+> to deduce that 'st' must be initialized in
 >
-> diff --git a/Detail.c b/Detail.c
-> index 509b0d4..f4d4241 100644
-> --- a/Detail.c
-> +++ b/Detail.c
-> @@ -575,7 +575,7 @@ This is pretty boring
->  			printf("  Member Arrays :");
->  
->  			while (dir && (de = readdir(dir)) != NULL) {
-> -				char path[200];
-> +				char path[320];
->  				char vbuf[1024];
->  				int nlen = strlen(sra->sys_name);
->  				dev_t devid;
-> diff --git a/super-intel.c b/super-intel.c
-> index d5e9517..ea50265 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -1811,7 +1811,7 @@ static void examine_super_imsm(struct supertype *st, char *homehost)
->  	__u32 reserved = imsm_reserved_sectors(super, super->disks);
->  	struct dl *dl;
->  
-> -	snprintf(str, MPB_SIG_LEN, "%s", mpb->sig);
-> +	snprintf(str, MAX_SIGNATURE_LENGTH, "%s", mpb->sig);
->  	printf("          Magic : %s\n", str);
->  	snprintf(str, strlen(MPB_VERSION_RAID0), "%s", get_imsm_version(mpb));
->  	printf("        Version : %s\n", get_imsm_version(mpb));
+> 		if (c->SparcAdjust)
+> 			st->ss->update_super(st, NULL, "sparc2.2",
+>
+> just because the only times it isn't initialised, 'err' is set non-zero.
+>
+> This results in a 'possibly uninitialised' warning.
+> While there is no bug in the code, this does suggest that maybe
+> the code could be made more obviously correct.
+>
+> So this patch:
+>  1/ moves the "err" variable inside the for loop, so an error in
+>     one device doesn't stop the other devices from being processed
+>  2/ calls 'continue' early if the device cannot be opened, so that
+>     a level of indent can be removed, and so that it is clear that
+>     'st' is always initialised before being used
+>  3/ frees 'st' if an error occured in load_super or load_container.
+>
+> Reported-by: Michael Shigorin <mike@altlinux.org>
+> Signed-off-by: NeilBrown <neilb@suse.com>
+> ---
+>  Examine.c | 75 +++++++++++++++++++++++++++++++++------------------------------
+>  1 file changed, 39 insertions(+), 36 deletions(-)
 
-Hi Xiao,
-
-This is really two independent changes, so they should come in two
-seperate patches. All the patches needs their own commit messages and
-signed-off-by lines.
+Applied!
 
 Thanks,
 Jes
