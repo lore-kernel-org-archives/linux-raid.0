@@ -1,76 +1,60 @@
-From: "Reshetova, Elena" <elena.reshetova@intel.com>
-Subject: RE: [PATCH 11/29] drivers, media: convert cx88_core.refcount from
- atomic_t to refcount_t
-Date: Tue, 7 Mar 2017 07:52:09 +0000
-Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C556E2@IRSMSX102.ger.corp.intel.com>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-12-git-send-email-elena.reshetova@intel.com>
- <c6987419-f708-9923-0f9f-87b715600045@cogentembedded.com>
+From: jes.sorensen@gmail.com
+Subject: Re: [PATCH v1] mdadm: add checking clustered bitmap in assemble mode
+Date: Mon, 06 Mar 2017 16:32:17 -0500
+Message-ID: <wrfjzigyks66.fsf@gmail.com>
+References: <1488425157-24582-1-git-send-email-zlliu@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <c6987419-f708-9923-0f9f-87b715600045@cogentembedded.com>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-Cc: "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>, "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>, "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, Kees Cook <keescook@chromium.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, David Windsor <dwindsor@gmail.com>, "peterz@infradead.org" <peterz@infradead.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriver>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1488425157-24582-1-git-send-email-zlliu@suse.com> (Zhilong Liu's
+        message of "Thu, 2 Mar 2017 11:25:57 +0800")
+Sender: linux-raid-owner@vger.kernel.org
+To: Zhilong Liu <zlliu@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Hello.
-> 
-> On 03/06/2017 05:20 PM, Elena Reshetova wrote:
-> 
-> > refcount_t type and corresponding API should be
-> > used instead of atomic_t when the variable is used as
-> > a reference counter. This allows to avoid accidental
-> > refcounter overflows that might lead to use-after-free
-> > situations.
-> >
-> > Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> > Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> > Signed-off-by: Kees Cook <keescook@chromium.org>
-> > Signed-off-by: David Windsor <dwindsor@gmail.com>
-> [...]
-> > diff --git a/drivers/media/pci/cx88/cx88.h b/drivers/media/pci/cx88/cx88.h
-> > index 115414c..16c1313 100644
-> > --- a/drivers/media/pci/cx88/cx88.h
-> > +++ b/drivers/media/pci/cx88/cx88.h
-> > @@ -24,6 +24,7 @@
-> >  #include <linux/i2c-algo-bit.h>
-> >  #include <linux/videodev2.h>
-> >  #include <linux/kdev_t.h>
-> > +#include <linux/refcount.h>
-> >
-> >  #include <media/v4l2-device.h>
-> >  #include <media/v4l2-fh.h>
-> > @@ -339,7 +340,7 @@ struct cx8802_dev;
-> >
-> >  struct cx88_core {
-> >  	struct list_head           devlist;
-> > -	atomic_t                   refcount;
-> > +	refcount_t                   refcount;
-> 
->     Could you please keep the name aligned with above and below?
+Zhilong Liu <zlliu@suse.com> writes:
+> Both clustered and internal array don't need to specify
+> --bitmap when assembling array.
+>
+> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+>
+> diff --git a/mdadm.c b/mdadm.c
+> index b5d89e4..4087f77 100644
+> --- a/mdadm.c
+> +++ b/mdadm.c
+> @@ -1095,8 +1095,10 @@ int main(int argc, char *argv[])
+>  				pr_err("bitmap file needed with -b in --assemble mode\n");
+>  				exit(2);
+>  			}
+> -			if (strcmp(optarg, "internal") =3D=3D 0) {
+> -				pr_err("there is no need to specify --bitmap when assembling arrays =
+with internal bitmaps\n");
+> +			if (strcmp(optarg, "internal") =3D=3D 0 ||
+> +			    strcmp(optarg, "clustered") =3D=3D 0) {
+> +				pr_err("no need to specify --bitmap when assembling
+> +					arrays with internal or clustered bitmap\n");
+>  				continue;
+>  			}
+>  			bitmap_fd =3D open(optarg, O_RDWR);
 
-You mean "not aligned" to devlist, but with a shift like it was before? 
-Sure, will fix. Is the patch ok otherwise?
+This doesn't build - could you please send me a working patch.
 
-Best Regards,
-Elena.
+Thanks,
+Jes
 
-> 
-> >
-> >  	/* board name */
-> >  	int                        nr;
-> >
-> 
-> MBR, Sergei
+cc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter -ggdb -D=
+Sendmail=3D\""/usr/sbin/sendmail -t"\" -DCONFFILE=3D\"/etc/mdadm.conf\" -DC=
+ONFFILE2=3D\"/etc/mdadm/mdadm.conf\" -DMAP_DIR=3D\"/run/mdadm\" -DMAP_FILE=
+=3D\"map\" -DMDMON_DIR=3D\"/run/mdadm\" -DFAILED_SLOTS_DIR=3D\"/run/mdadm/f=
+ailed-slots\" -DNO_COROSYNC -DNO_DLM -DVERSION=3D\"4.0-6-g8383db9\" -DVERS_=
+DATE=3D"\"2017-03-06\"" -DUSE_PTHREADS -DBINDIR=3D\"/sbin\"  -c -o mdadm.o =
+mdadm.c
+mdadm.c: In function =E2=80=98main=E2=80=99:
+mdadm.c:1100:12: error: missing terminating " character [-Werror]
+     pr_err("no need to specify --bitmap when assembling
+            ^
+mdadm.c:1101:48: error: missing terminating " character [-Werror]
+      arrays with internal or clustered bitmap\n");
+
