@@ -1,119 +1,43 @@
-From: "Reshetova, Elena" <elena.reshetova@intel.com>
-Subject: RE: [PATCH 13/29] drivers, media: convert
- vb2_vmarea_handler.refcount from atomic_t to refcount_t
-Date: Tue, 7 Mar 2017 14:48:43 +0000
-Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C558E6@IRSMSX102.ger.corp.intel.com>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-14-git-send-email-elena.reshetova@intel.com>
- <20170307085005.GH3220@valkosipuli.retiisi.org.uk>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: RAID Recovery
+Date: Tue, 7 Mar 2017 10:00:00 -0500
+Message-ID: <1066d485-ebea-d0d2-a198-33b560de99fc@turmel.org>
+References: <936e84af-f190-3541-bdf8-eaa0c42d2ddc@websitemanagers.com.au>
+ <e4d9724d-ab52-aa79-c600-7b287c16a182@turmel.org>
+ <7cefe670-dcea-6e04-b090-b215a6a218c9@websitemanagers.com.au>
+ <94b4591a-bda1-529b-3af1-c451b657082f@websitemanagers.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20170307085005.GH3220@valkosipuli.retiisi.org.uk>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Sakari Ailus <sakari.ailus@iki.fi>
-Cc: "peterz@infradead.org" <peterz@infradead.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux1394-devel@lists.sourceforge.net" <linux1394-devel@lists.sourceforge.net>, "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>, "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>, "fcoe-devel@open-fcoe.org" <fcoe-devel@open-fcoe.org>, "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>, "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>, Kees Cook <keescook@chromium.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-bcache@vger.kernel.org" <linux-bcache@vger.kerne>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <94b4591a-bda1-529b-3af1-c451b657082f@websitemanagers.com.au>
+Sender: linux-raid-owner@vger.kernel.org
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Hi Elena,
-> 
-> On Mon, Mar 06, 2017 at 04:21:00PM +0200, Elena Reshetova wrote:
-> > refcount_t type and corresponding API should be
-> > used instead of atomic_t when the variable is used as
-> > a reference counter. This allows to avoid accidental
-> > refcounter overflows that might lead to use-after-free
-> > situations.
-> >
-> > Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> > Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> > Signed-off-by: Kees Cook <keescook@chromium.org>
-> > Signed-off-by: David Windsor <dwindsor@gmail.com>
-> > ---
-> >  drivers/media/v4l2-core/videobuf2-memops.c | 6 +++---
-> >  include/media/videobuf2-memops.h           | 3 ++-
-> >  2 files changed, 5 insertions(+), 4 deletions(-)
-> >
-> > diff --git a/drivers/media/v4l2-core/videobuf2-memops.c b/drivers/media/v4l2-
-> core/videobuf2-memops.c
-> > index 1cd322e..4bb8424 100644
-> > --- a/drivers/media/v4l2-core/videobuf2-memops.c
-> > +++ b/drivers/media/v4l2-core/videobuf2-memops.c
-> > @@ -96,10 +96,10 @@ static void vb2_common_vm_open(struct
-> vm_area_struct *vma)
-> >  	struct vb2_vmarea_handler *h = vma->vm_private_data;
-> >
-> >  	pr_debug("%s: %p, refcount: %d, vma: %08lx-%08lx\n",
-> > -	       __func__, h, atomic_read(h->refcount), vma->vm_start,
-> > +	       __func__, h, refcount_read(h->refcount), vma->vm_start,
-> >  	       vma->vm_end);
-> >
-> > -	atomic_inc(h->refcount);
-> > +	refcount_inc(h->refcount);
-> >  }
-> >
-> >  /**
-> > @@ -114,7 +114,7 @@ static void vb2_common_vm_close(struct
-> vm_area_struct *vma)
-> >  	struct vb2_vmarea_handler *h = vma->vm_private_data;
-> >
-> >  	pr_debug("%s: %p, refcount: %d, vma: %08lx-%08lx\n",
-> > -	       __func__, h, atomic_read(h->refcount), vma->vm_start,
-> > +	       __func__, h, refcount_read(h->refcount), vma->vm_start,
-> >  	       vma->vm_end);
-> >
-> >  	h->put(h->arg);
-> > diff --git a/include/media/videobuf2-memops.h b/include/media/videobuf2-
-> memops.h
-> > index 36565c7a..a6ed091 100644
-> > --- a/include/media/videobuf2-memops.h
-> > +++ b/include/media/videobuf2-memops.h
-> > @@ -16,6 +16,7 @@
-> >
-> >  #include <media/videobuf2-v4l2.h>
-> >  #include <linux/mm.h>
-> > +#include <linux/refcount.h>
-> >
-> >  /**
-> >   * struct vb2_vmarea_handler - common vma refcount tracking handler
-> > @@ -25,7 +26,7 @@
-> >   * @arg:	argument for @put callback
-> >   */
-> >  struct vb2_vmarea_handler {
-> > -	atomic_t		*refcount;
-> > +	refcount_t		*refcount;
-> 
-> This is a pointer to refcount, not refcount itself. The refcount is part of
-> a memory type specific struct, the types that you change in the following
-> three patches. I guess it would still compile and work as separate patches
-> but you'd sure get warnings at least.
+Hi Adam,
 
-Actually it doesn't compile without this patch if I remember it correctly back in past when I was initially splitting the patches per variable. 
+{Please remember to trim repetitive stuff, and interleave.}
 
-> 
-> How about merging this and the three following patches that change the memop
-> refcount types?
+On 03/07/2017 09:06 AM, Adam Goryachev wrote:
+> BTW, just some more info I've found... either almost the entire
+> drives are RAID1 mirrors, or all 4 are RAID1 mirrors:
 
-Sounds good!
+> Other option, they have been re-initialised/zero'd or similar, and
+> thats why all the data is identical (useless). I was hoping to get a
+> starting point for where the partition boundaries might have been
+> ....
 
-Best Regards,
-Elena.
-> 
-> >  	void			(*put)(void *arg);
-> >  	void			*arg;
-> >  };
-> 
-> --
-> Kind regards,
-> 
-> Sakari Ailus
-> e-mail: sakari.ailus@iki.fi	XMPP: sailus@retiisi.org.uk
+Search the devices for ext2/3/4 superblocks, like so:
+
+dd if=/dev/sdX bs=1M 2>/dev/null |hexdump -C |grep '30  .\+  53 ef 0'
+
+This will take a very long time, and will generate false positives.
+You probably would want to use screen or tmux to run these in
+parallel in separate processes.
+
+But superblock locations will give you hints as to the rest of data,
+and make it possible to create partitions that will let you copy
+stuff off into a new array.
+
+Phil
