@@ -1,43 +1,40 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: RAID Recovery
-Date: Tue, 7 Mar 2017 10:00:00 -0500
-Message-ID: <1066d485-ebea-d0d2-a198-33b560de99fc@turmel.org>
-References: <936e84af-f190-3541-bdf8-eaa0c42d2ddc@websitemanagers.com.au>
- <e4d9724d-ab52-aa79-c600-7b287c16a182@turmel.org>
- <7cefe670-dcea-6e04-b090-b215a6a218c9@websitemanagers.com.au>
- <94b4591a-bda1-529b-3af1-c451b657082f@websitemanagers.com.au>
+From: "Austin S. Hemmelgarn" <ahferroin7@gmail.com>
+Subject: Re: When will Linux support M2 on RAID ?
+Date: Tue, 7 Mar 2017 09:50:22 -0500
+Message-ID: <a92c6f16-af2d-9d79-fb09-8490aac050db@gmail.com>
+References: <CAGRSmLsqBF_7eGHdeA=FQbgbjSLMrbRK14mNQxyBcV0PoGYaRQ@mail.gmail.com>
+ <20170307045200.GA1708@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <94b4591a-bda1-529b-3af1-c451b657082f@websitemanagers.com.au>
-Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <mailinglists@websitemanagers.com.au>, linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170307045200.GA1708@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, "David F." <df7729@gmail.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Adam,
+On 2017-03-06 23:52, Christoph Hellwig wrote:
+> On Sun, Mar 05, 2017 at 06:09:42PM -0800, David F. wrote:
+>> More and more systems are coming with M2 on RAID and Linux doesn't
+>> work unless you change the system out of RAID mode.  This is becoming
+>> more and more of a problem.   What is the status of Linux support for
+>> the new systems?
+>
+> Your message doesn't make sense at all.  MD works on absolutely any
+> Linux block device, and I've used it on plenty M.2 form factor devices -
+> not that the form factor has anything to do with how Linux would treat
+> a device.
+>
+He's referring to the RAID mode most modern Intel chipsets have, which 
+(last I checked) Linux does not support completely and many OEM's are 
+setting by default on new systems because it apparently provides better 
+performance than AHCI even for a single device.  The bigger issue with 
+this is that it's damn near impossible to get to the firmware on many 
+new systems, and even if you can, some OEM's aren't even giving the 
+option to use AHCI mode instead of the RAID mode.
 
-{Please remember to trim repetitive stuff, and interleave.}
-
-On 03/07/2017 09:06 AM, Adam Goryachev wrote:
-> BTW, just some more info I've found... either almost the entire
-> drives are RAID1 mirrors, or all 4 are RAID1 mirrors:
-
-> Other option, they have been re-initialised/zero'd or similar, and
-> thats why all the data is identical (useless). I was hoping to get a
-> starting point for where the partition boundaries might have been
-> ....
-
-Search the devices for ext2/3/4 superblocks, like so:
-
-dd if=/dev/sdX bs=1M 2>/dev/null |hexdump -C |grep '30  .\+  53 ef 0'
-
-This will take a very long time, and will generate false positives.
-You probably would want to use screen or tmux to run these in
-parallel in separate processes.
-
-But superblock locations will give you hints as to the rest of data,
-and make it possible to create partitions that will let you copy
-stuff off into a new array.
-
-Phil
+The whole M.2 thing is absolutely bogus though, my thought is that 
+people are conflating the two because this switch to using RAID mode by 
+default is happening concurrently with a general movement towards using 
+M.2 devices as primary storage.
