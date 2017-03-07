@@ -1,60 +1,43 @@
-From: jes.sorensen@gmail.com
-Subject: Re: [PATCH v1] mdadm: add checking clustered bitmap in assemble mode
-Date: Mon, 06 Mar 2017 16:32:17 -0500
-Message-ID: <wrfjzigyks66.fsf@gmail.com>
-References: <1488425157-24582-1-git-send-email-zlliu@suse.com>
+From: Sakari Ailus <sakari.ailus@iki.fi>
+Subject: Re: [PATCH 11/29] drivers, media: convert cx88_core.refcount from
+ atomic_t to refcount_t
+Date: Tue, 7 Mar 2017 10:22:50 +0200
+Message-ID: <20170307082250.GF3220@valkosipuli.retiisi.org.uk>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+ <1488810076-3754-12-git-send-email-elena.reshetova@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1488425157-24582-1-git-send-email-zlliu@suse.com> (Zhilong Liu's
-        message of "Thu, 2 Mar 2017 11:25:57 +0800")
-Sender: linux-raid-owner@vger.kernel.org
-To: Zhilong Liu <zlliu@suse.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Content-Disposition: inline
+In-Reply-To: <1488810076-3754-12-git-send-email-elena.reshetova@intel.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Elena Reshetova <elena.reshetova@intel.com>
+Cc: peterz@infradead.org, linux-pci@vger.kernel.org, target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net, devel@driverdev.osuosl.org, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, fcoe-devel@open-fcoe.org, xen-devel@lists.xenproject.org, open-iscsi@googlegroups.com, linux-media@vger.kernel.org, Kees Cook <keescook@chromium.org>, linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org, Hans Liljestrand <ishkamiel@gmail.com>, David Windsor <dwindsor@gmail.com>, gregkh@linuxfoundation.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, devel@linuxdriverproject.org
 List-Id: linux-raid.ids
 
-Zhilong Liu <zlliu@suse.com> writes:
-> Both clustered and internal array don't need to specify
-> --bitmap when assembling array.
->
-> Signed-off-by: Zhilong Liu <zlliu@suse.com>
->
-> diff --git a/mdadm.c b/mdadm.c
-> index b5d89e4..4087f77 100644
-> --- a/mdadm.c
-> +++ b/mdadm.c
-> @@ -1095,8 +1095,10 @@ int main(int argc, char *argv[])
->  				pr_err("bitmap file needed with -b in --assemble mode\n");
->  				exit(2);
->  			}
-> -			if (strcmp(optarg, "internal") =3D=3D 0) {
-> -				pr_err("there is no need to specify --bitmap when assembling arrays =
-with internal bitmaps\n");
-> +			if (strcmp(optarg, "internal") =3D=3D 0 ||
-> +			    strcmp(optarg, "clustered") =3D=3D 0) {
-> +				pr_err("no need to specify --bitmap when assembling
-> +					arrays with internal or clustered bitmap\n");
->  				continue;
->  			}
->  			bitmap_fd =3D open(optarg, O_RDWR);
+On Mon, Mar 06, 2017 at 04:20:58PM +0200, Elena Reshetova wrote:
+> refcount_t type and corresponding API should be
+> used instead of atomic_t when the variable is used as
+> a reference counter. This allows to avoid accidental
+> refcounter overflows that might lead to use-after-free
+> situations.
+> 
+> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Signed-off-by: David Windsor <dwindsor@gmail.com>
 
-This doesn't build - could you please send me a working patch.
+Acked-by: Sakari Ailus <sakari.ailus@linux.intel.com>
 
-Thanks,
-Jes
-
-cc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter -ggdb -D=
-Sendmail=3D\""/usr/sbin/sendmail -t"\" -DCONFFILE=3D\"/etc/mdadm.conf\" -DC=
-ONFFILE2=3D\"/etc/mdadm/mdadm.conf\" -DMAP_DIR=3D\"/run/mdadm\" -DMAP_FILE=
-=3D\"map\" -DMDMON_DIR=3D\"/run/mdadm\" -DFAILED_SLOTS_DIR=3D\"/run/mdadm/f=
-ailed-slots\" -DNO_COROSYNC -DNO_DLM -DVERSION=3D\"4.0-6-g8383db9\" -DVERS_=
-DATE=3D"\"2017-03-06\"" -DUSE_PTHREADS -DBINDIR=3D\"/sbin\"  -c -o mdadm.o =
-mdadm.c
-mdadm.c: In function =E2=80=98main=E2=80=99:
-mdadm.c:1100:12: error: missing terminating " character [-Werror]
-     pr_err("no need to specify --bitmap when assembling
-            ^
-mdadm.c:1101:48: error: missing terminating " character [-Werror]
-      arrays with internal or clustered bitmap\n");
-
+-- 
+Sakari Ailus
+e-mail: sakari.ailus@iki.fi	XMPP: sailus@retiisi.org.uk
