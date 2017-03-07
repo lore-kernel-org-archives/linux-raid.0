@@ -1,67 +1,106 @@
-From: Olivier Swinkels <olivier.swinkels@gmail.com>
-Subject: Re: [RAID recovery] Unable to recover RAID5 array after disk failure
-Date: Tue, 7 Mar 2017 09:39:50 +0100
-Message-ID: <CAJ0QwkKG8_dCzTBYEPm5CpqWMQwM=f8YBAYtatNh=9U_7ygdnA@mail.gmail.com>
-References: <CAJ0QwkJqRbJtM9HiXL+cCj2TkQQRahGgWTwD9QKH_CBfbJeLKA@mail.gmail.com>
- <0a6e4a82-665c-6e62-293f-151e41c67842@turmel.org> <CAJ0QwkKAVLh7+kV_GsEL4O5hA+Pj=Y9sE_CBbWJJqDyA+gVqpA@mail.gmail.com>
- <CAJ0QwkKuSKzE7_4h1aUA4XMyNAAdmFR4J6z+Z_vW5nsW3OcZtw@mail.gmail.com> <c3ae0e4d-dccc-9cb4-72b0-28a1bde3c752@turmel.org>
+From: Sakari Ailus <sakari.ailus@iki.fi>
+Subject: Re: [PATCH 13/29] drivers, media: convert
+ vb2_vmarea_handler.refcount from atomic_t to refcount_t
+Date: Tue, 7 Mar 2017 10:50:05 +0200
+Message-ID: <20170307085005.GH3220@valkosipuli.retiisi.org.uk>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+ <1488810076-3754-14-git-send-email-elena.reshetova@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <c3ae0e4d-dccc-9cb4-72b0-28a1bde3c752@turmel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Content-Disposition: inline
+In-Reply-To: <1488810076-3754-14-git-send-email-elena.reshetova@intel.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Elena Reshetova <elena.reshetova@intel.com>
+Cc: peterz@infradead.org, linux-pci@vger.kernel.org, target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net, devel@driverdev.osuosl.org, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, fcoe-devel@open-fcoe.org, xen-devel@lists.xenproject.org, open-iscsi@googlegroups.com, linux-media@vger.kernel.org, Kees Cook <keescook@chromium.org>, linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org, Hans Liljestrand <ishkamiel@gmail.com>, David Windsor <dwindsor@gmail.com>, gregkh@linuxfoundation.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, devel@linuxdriverproject.org
 List-Id: linux-raid.ids
 
-On Mon, Mar 6, 2017 at 8:50 PM, Phil Turmel <philip@turmel.org> wrote:
-> On 03/06/2017 04:17 AM, Olivier Swinkels wrote:
->
->>> That sounds promising, as /etc was not on the array.
->>> I found a backup in /etc/lvm/backup/lvm-raid (contents shown below).
->
-> Yay!  That's exactly what you need.
->
->>> Unfortunatelly when I try to use it to restore the LVM I get the
->>> following error:
->>> vgcfgrestore -f /etc/lvm/backup/lvm-raid lvm-raid
->>> Aborting vg_write: No metadata areas to write to!
->>> Restore failed.
->
-> You're command doesn't specify the device name of your reconstructed
-> array.
->
->>> So I guess I also need to recreate the physical volume using:
->>
->> Correction: (Put the wrong ID in the pvcreate example):
->> pvcreate --uuid "DWv51O-lg9s-Dl4w-EBp9-QeIF-Vv60-8wt2uS" --restorefile
->> /etc/lvm/backup/lvm-raid
->>
->>> Is this correct? (I'm a bit hesitant with another 'create' command as
->>> you might understand.)
->
-> I haven't actually had to do this operation but once, and I don't
-> recall if the vgcfgrestore was sufficient.  But either way, you simply
-> didn't tell LVM where you are restoring TO.
->
-> Phil
->
-Hi,
-Thanks for your response, as far as I can see the syntax of the
-vgcfgrestore command is correct as the destination location is in the
-backup file.
-After I used the pvcreate command to recreate pv the vgcfgrestore
-command succeeds and the lvm is available (after activating).
+Hi Elena,
 
-However when I try to mount it I get the following error:
-sudo mount -t ext4 /dev/lvm-raid/lvm0 /mnt/raid
-mount: mount /dev/mapper/lvm--raid-lvm0 on /mnt/raid failed: Structure
-needs cleaning
+On Mon, Mar 06, 2017 at 04:21:00PM +0200, Elena Reshetova wrote:
+> refcount_t type and corresponding API should be
+> used instead of atomic_t when the variable is used as
+> a reference counter. This allows to avoid accidental
+> refcounter overflows that might lead to use-after-free
+> situations.
+> 
+> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Signed-off-by: David Windsor <dwindsor@gmail.com>
+> ---
+>  drivers/media/v4l2-core/videobuf2-memops.c | 6 +++---
+>  include/media/videobuf2-memops.h           | 3 ++-
+>  2 files changed, 5 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/media/v4l2-core/videobuf2-memops.c b/drivers/media/v4l2-core/videobuf2-memops.c
+> index 1cd322e..4bb8424 100644
+> --- a/drivers/media/v4l2-core/videobuf2-memops.c
+> +++ b/drivers/media/v4l2-core/videobuf2-memops.c
+> @@ -96,10 +96,10 @@ static void vb2_common_vm_open(struct vm_area_struct *vma)
+>  	struct vb2_vmarea_handler *h = vma->vm_private_data;
+>  
+>  	pr_debug("%s: %p, refcount: %d, vma: %08lx-%08lx\n",
+> -	       __func__, h, atomic_read(h->refcount), vma->vm_start,
+> +	       __func__, h, refcount_read(h->refcount), vma->vm_start,
+>  	       vma->vm_end);
+>  
+> -	atomic_inc(h->refcount);
+> +	refcount_inc(h->refcount);
+>  }
+>  
+>  /**
+> @@ -114,7 +114,7 @@ static void vb2_common_vm_close(struct vm_area_struct *vma)
+>  	struct vb2_vmarea_handler *h = vma->vm_private_data;
+>  
+>  	pr_debug("%s: %p, refcount: %d, vma: %08lx-%08lx\n",
+> -	       __func__, h, atomic_read(h->refcount), vma->vm_start,
+> +	       __func__, h, refcount_read(h->refcount), vma->vm_start,
+>  	       vma->vm_end);
+>  
+>  	h->put(h->arg);
+> diff --git a/include/media/videobuf2-memops.h b/include/media/videobuf2-memops.h
+> index 36565c7a..a6ed091 100644
+> --- a/include/media/videobuf2-memops.h
+> +++ b/include/media/videobuf2-memops.h
+> @@ -16,6 +16,7 @@
+>  
+>  #include <media/videobuf2-v4l2.h>
+>  #include <linux/mm.h>
+> +#include <linux/refcount.h>
+>  
+>  /**
+>   * struct vb2_vmarea_handler - common vma refcount tracking handler
+> @@ -25,7 +26,7 @@
+>   * @arg:	argument for @put callback
+>   */
+>  struct vb2_vmarea_handler {
+> -	atomic_t		*refcount;
+> +	refcount_t		*refcount;
 
-So I guess the underlying RAID array is still not ok...
+This is a pointer to refcount, not refcount itself. The refcount is part of
+a memory type specific struct, the types that you change in the following
+three patches. I guess it would still compile and work as separate patches
+but you'd sure get warnings at least.
 
-Is there a way for me to validate if the degraded array contains valid
-data or if there is still a disk swapped or corrupted?
-Thanks.
+How about merging this and the three following patches that change the memop
+refcount types?
 
-Olivier
+>  	void			(*put)(void *arg);
+>  	void			*arg;
+>  };
+
+-- 
+Kind regards,
+
+Sakari Ailus
+e-mail: sakari.ailus@iki.fi	XMPP: sailus@retiisi.org.uk
