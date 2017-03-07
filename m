@@ -1,67 +1,49 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH 11/29] drivers, media: convert cx88_core.refcount from
- atomic_t to refcount_t
-Date: Tue, 7 Mar 2017 13:40:07 +0300
-Message-ID: <71ea983c-c2e4-9145-634b-78aef993d982@cogentembedded.com>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-12-git-send-email-elena.reshetova@intel.com>
- <c6987419-f708-9923-0f9f-87b715600045@cogentembedded.com>
- <2236FBA76BA1254E88B949DDB74E612B41C556E2@IRSMSX102.ger.corp.intel.com>
+From: Reindl Harald <h.reindl@thelounge.net>
+Subject: Re: GRUB warning after replacing disk drive in RAID1
+Date: Tue, 7 Mar 2017 14:00:24 +0100
+Message-ID: <33267918-3912-322f-f165-38d2eb306f68@thelounge.net>
+References: <002f01d29152$737b4550$5a71cff0$@wnsdev.com>
+ <ab6d048b-b944-6661-11a5-503012dfad50@thelounge.net>
+ <008001d29205$e4f503c0$aedf0b40$@wnsdev.com>
+ <59c85e04-2f6a-1c81-ccba-fa8aac1c50ee@thelounge.net>
+ <009601d29218$9fd3e460$df7bad20$@wnsdev.com>
+ <5136f32b-a0bb-dc16-cae9-59946ea21622@turmel.org>
+ <58B81B80.6020708@youngman.org.uk>
+ <008401d296c6$f5ee1e80$e1ca5b80$@wnsdev.com>
+ <58BEAD7B.5070709@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <2236FBA76BA1254E88B949DDB74E612B41C556E2@IRSMSX102.ger.corp.intel.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: "Reshetova, Elena" <elena.reshetova@intel.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-Cc: "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>, "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>, "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, Kees Cook <keescook@chromium.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, David Windsor <dwindsor@gmail.com>, "peterz@infradead.org" <peterz@infradead.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriver>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <58BEAD7B.5070709@youngman.org.uk>
+Sender: linux-raid-owner@vger.kernel.org
+To: Wols Lists <antlists@youngman.org.uk>, Peter Sangas <pete@wnsdev.com>, 'Phil Turmel' <philip@turmel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 3/7/2017 10:52 AM, Reshetova, Elena wrote:
 
->>> refcount_t type and corresponding API should be
->>> used instead of atomic_t when the variable is used as
->>> a reference counter. This allows to avoid accidental
->>> refcounter overflows that might lead to use-after-free
->>> situations.
->>>
->>> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
->>> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
->>> Signed-off-by: Kees Cook <keescook@chromium.org>
->>> Signed-off-by: David Windsor <dwindsor@gmail.com>
->> [...]
->>> diff --git a/drivers/media/pci/cx88/cx88.h b/drivers/media/pci/cx88/cx88.h
->>> index 115414c..16c1313 100644
->>> --- a/drivers/media/pci/cx88/cx88.h
->>> +++ b/drivers/media/pci/cx88/cx88.h
-[...]
->>> @@ -339,7 +340,7 @@ struct cx8802_dev;
->>>
->>>  struct cx88_core {
->>>  	struct list_head           devlist;
->>> -	atomic_t                   refcount;
->>> +	refcount_t                   refcount;
+
+Am 07.03.2017 um 13:54 schrieb Wols Lists:
+> On 06/03/17 22:13, Peter Sangas wrote:
+>> In addition,  the wiki says " you will need to configure your distro to use an initramfs.
 >>
->>     Could you please keep the name aligned with above and below?
+>> here are the last few lines of my grub.cnf:
+>>
+>>          echo    'Loading Linux 4.4.0-36-generic ...'
+>>          linux    /vmlinuz-4.4.0-36-generic root=UUID=cddffa50-9713-4205-aab6-86745735958b ro recovery nomodeset
+>>          echo    'Loading initial ramdisk ...'
+>>          initrd   /initrd.img-4.4.0-36-generic
+>>
+>> should I be concerned my grub.cnf uses initrd.img and not initramfs?   My grub.cnf was last modified 11/2016 and I've rebooted successfully into a RAID1 since.
 >
-> You mean "not aligned" to devlist, but with a shift like it was before?
+> I think your problem is right there !!!
+>
+> Look at the wiki, but I can NOT see the magic command "domdadm", without
+> which mdadm doesn't get loaded and the array doesn't get assembled. No
+> array, no root, no system ...
 
-    I mean aligned, like it was before. :-)
+not really because subject is "GRUB warning after replacing disk drive 
+in RAID1" and so mdadm is running and the array assembled
 
-> Sure, will fix. Is the patch ok otherwise?
+> (Oh - initrd, initramfs, they're probably the same thing. :-)
 
-    I haven't noticed anything else...
-
-> Best Regards,
-> Elena.
-[...]
-
-MBR, Sergei
+yes
