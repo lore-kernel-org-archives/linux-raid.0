@@ -1,38 +1,25 @@
-From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH v2] mdadm:add checking clustered bitmap in assemble mode
-Date: Tue,  7 Mar 2017 11:13:03 +0800
-Message-ID: <20170307031303.3009-1-zlliu@suse.com>
-References: <wrfjzigyks66.fsf@gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: When will Linux support M2 on RAID ?
+Date: Mon, 6 Mar 2017 20:52:00 -0800
+Message-ID: <20170307045200.GA1708@infradead.org>
+References: <CAGRSmLsqBF_7eGHdeA=FQbgbjSLMrbRK14mNQxyBcV0PoGYaRQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjzigyks66.fsf@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <CAGRSmLsqBF_7eGHdeA=FQbgbjSLMrbRK14mNQxyBcV0PoGYaRQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
+To: "David F." <df7729@gmail.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-mdadm:Both clustered and internal array don't need
-to specify --bitmap when assembling array.
+On Sun, Mar 05, 2017 at 06:09:42PM -0800, David F. wrote:
+> More and more systems are coming with M2 on RAID and Linux doesn't
+> work unless you change the system out of RAID mode.  This is becoming
+> more and more of a problem.   What is the status of Linux support for
+> the new systems?
 
-Signed-off-by: Zhilong Liu <zlliu@suse.com>
-Acked-by: Coly Li <colyli@suse.de>
-
-diff --git a/mdadm.c b/mdadm.c
-index b5ac061..d6ad8dc 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -1095,8 +1095,10 @@ int main(int argc, char *argv[])
- 				pr_err("bitmap file needed with -b in --assemble mode\n");
- 				exit(2);
- 			}
--			if (strcmp(optarg, "internal") == 0) {
--				pr_err("there is no need to specify --bitmap when assembling arrays with internal bitmaps\n");
-+			if (strcmp(optarg, "internal") == 0 ||
-+			    strcmp(optarg, "clustered") == 0) {
-+				pr_err("no need to specify --bitmap when assembling"
-+					" arrays with internal or clustered bitmap\n");
- 				continue;
- 			}
- 			bitmap_fd = open(optarg, O_RDWR);
--- 
-2.10.2
-
+Your message doesn't make sense at all.  MD works on absolutely any
+Linux block device, and I've used it on plenty M.2 form factor devices -
+not that the form factor has anything to do with how Linux would treat
+a device.
