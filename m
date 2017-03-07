@@ -1,64 +1,67 @@
-From: Sakari Ailus <sakari.ailus@iki.fi>
-Subject: Re: [PATCH 12/29] drivers, media: convert s2255_dev.num_channels
- from atomic_t to refcount_t
-Date: Tue, 7 Mar 2017 10:30:17 +0200
-Message-ID: <20170307083016.GG3220@valkosipuli.retiisi.org.uk>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-13-git-send-email-elena.reshetova@intel.com>
+From: Olivier Swinkels <olivier.swinkels@gmail.com>
+Subject: Re: [RAID recovery] Unable to recover RAID5 array after disk failure
+Date: Tue, 7 Mar 2017 09:39:50 +0100
+Message-ID: <CAJ0QwkKG8_dCzTBYEPm5CpqWMQwM=f8YBAYtatNh=9U_7ygdnA@mail.gmail.com>
+References: <CAJ0QwkJqRbJtM9HiXL+cCj2TkQQRahGgWTwD9QKH_CBfbJeLKA@mail.gmail.com>
+ <0a6e4a82-665c-6e62-293f-151e41c67842@turmel.org> <CAJ0QwkKAVLh7+kV_GsEL4O5hA+Pj=Y9sE_CBbWJJqDyA+gVqpA@mail.gmail.com>
+ <CAJ0QwkKuSKzE7_4h1aUA4XMyNAAdmFR4J6z+Z_vW5nsW3OcZtw@mail.gmail.com> <c3ae0e4d-dccc-9cb4-72b0-28a1bde3c752@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-Disposition: inline
-In-Reply-To: <1488810076-3754-13-git-send-email-elena.reshetova@intel.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Elena Reshetova <elena.reshetova@intel.com>
-Cc: peterz@infradead.org, linux-pci@vger.kernel.org, target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net, devel@driverdev.osuosl.org, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, fcoe-devel@open-fcoe.org, xen-devel@lists.xenproject.org, open-iscsi@googlegroups.com, linux-media@vger.kernel.org, Kees Cook <keescook@chromium.org>, linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org, Hans Liljestrand <ishkamiel@gmail.com>, David Windsor <dwindsor@gmail.com>, gregkh@linuxfoundation.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, devel@linuxdriverproject.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <c3ae0e4d-dccc-9cb4-72b0-28a1bde3c752@turmel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Elena,
+On Mon, Mar 6, 2017 at 8:50 PM, Phil Turmel <philip@turmel.org> wrote:
+> On 03/06/2017 04:17 AM, Olivier Swinkels wrote:
+>
+>>> That sounds promising, as /etc was not on the array.
+>>> I found a backup in /etc/lvm/backup/lvm-raid (contents shown below).
+>
+> Yay!  That's exactly what you need.
+>
+>>> Unfortunatelly when I try to use it to restore the LVM I get the
+>>> following error:
+>>> vgcfgrestore -f /etc/lvm/backup/lvm-raid lvm-raid
+>>> Aborting vg_write: No metadata areas to write to!
+>>> Restore failed.
+>
+> You're command doesn't specify the device name of your reconstructed
+> array.
+>
+>>> So I guess I also need to recreate the physical volume using:
+>>
+>> Correction: (Put the wrong ID in the pvcreate example):
+>> pvcreate --uuid "DWv51O-lg9s-Dl4w-EBp9-QeIF-Vv60-8wt2uS" --restorefile
+>> /etc/lvm/backup/lvm-raid
+>>
+>>> Is this correct? (I'm a bit hesitant with another 'create' command as
+>>> you might understand.)
+>
+> I haven't actually had to do this operation but once, and I don't
+> recall if the vgcfgrestore was sufficient.  But either way, you simply
+> didn't tell LVM where you are restoring TO.
+>
+> Phil
+>
+Hi,
+Thanks for your response, as far as I can see the syntax of the
+vgcfgrestore command is correct as the destination location is in the
+backup file.
+After I used the pvcreate command to recreate pv the vgcfgrestore
+command succeeds and the lvm is available (after activating).
 
-On Mon, Mar 06, 2017 at 04:20:59PM +0200, Elena Reshetova wrote:
-> refcount_t type and corresponding API should be
-> used instead of atomic_t when the variable is used as
-> a reference counter. This allows to avoid accidental
-> refcounter overflows that might lead to use-after-free
-> situations.
-> 
-> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> Signed-off-by: David Windsor <dwindsor@gmail.com>
-> ---
-...
-> @@ -1688,7 +1689,7 @@ static int s2255_probe_v4l(struct s2255_dev *dev)
->  				"failed to register video device!\n");
->  			break;
->  		}
-> -		atomic_inc(&dev->num_channels);
-> +		refcount_set(&dev->num_channels, 1);
+However when I try to mount it I get the following error:
+sudo mount -t ext4 /dev/lvm-raid/lvm0 /mnt/raid
+mount: mount /dev/mapper/lvm--raid-lvm0 on /mnt/raid failed: Structure
+needs cleaning
 
-That's not right. The loop runs four iterations and the value after the
-loop should be indeed the number of channels.
+So I guess the underlying RAID array is still not ok...
 
-atomic_t isn't really used for reference counting here, but storing out how
-many "channels" there are per hardware device, with maximum number of four
-(4). I'd leave this driver using atomic_t.
+Is there a way for me to validate if the degraded array contains valid
+data or if there is still a disk swapped or corrupted?
+Thanks.
 
->  		v4l2_info(&dev->v4l2_dev, "V4L2 device registered as %s\n",
->  			  video_device_node_name(&vc->vdev));
->  
-
--- 
-Kind regards,
-
-Sakari Ailus
-e-mail: sakari.ailus@iki.fi	XMPP: sailus@retiisi.org.uk
+Olivier
