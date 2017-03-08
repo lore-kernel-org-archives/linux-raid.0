@@ -1,51 +1,71 @@
-From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH 3/4] mdadm:triggers core dump when stat2devnm return NULL
-Date: Wed,  8 Mar 2017 15:52:21 +0800
-Message-ID: <20170308075221.24965-1-zlliu@suse.com>
-References: <20170308074831.24683-1-zlliu@suse.com>
+From: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Subject: Re: RAID Recovery
+Date: Wed, 8 Mar 2017 20:08:10 +1100
+Message-ID: <c9a70435-56a5-9295-2582-7b71a71619eb@websitemanagers.com.au>
+References: <936e84af-f190-3541-bdf8-eaa0c42d2ddc@websitemanagers.com.au>
+ <e4d9724d-ab52-aa79-c600-7b287c16a182@turmel.org>
+ <7cefe670-dcea-6e04-b090-b215a6a218c9@websitemanagers.com.au>
+ <94b4591a-bda1-529b-3af1-c451b657082f@websitemanagers.com.au>
+ <1066d485-ebea-d0d2-a198-33b560de99fc@turmel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170308074831.24683-1-zlliu@suse.com>
+In-Reply-To: <1066d485-ebea-d0d2-a198-33b560de99fc@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
+To: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-ensure that the device should be a block device when uses
---wait parameter, such as the 'f' and 'd' type file would
-be triggered core dumped.
-./mdadm --wait /dev/md/, happened core dump.
 
-Signed-off-by: Zhilong Liu <zlliu@suse.com>
 
-diff --git a/Monitor.c b/Monitor.c
-index 802a9d9..1900db3 100644
---- a/Monitor.c
-+++ b/Monitor.c
-@@ -1002,6 +1002,10 @@ int Wait(char *dev)
- 			strerror(errno));
- 		return 2;
- 	}
-+	if ((S_IFMT & stb.st_mode) != S_IFBLK) {
-+		pr_err("%s is not a block device.\n", dev);
-+		return 2;
-+	}
- 	strcpy(devnm, stat2devnm(&stb));
- 
- 	while(1) {
-diff --git a/lib.c b/lib.c
-index b640634..7116298 100644
---- a/lib.c
-+++ b/lib.c
-@@ -89,9 +89,6 @@ char *devid2kname(int devid)
- 
- char *stat2kname(struct stat *st)
- {
--	if ((S_IFMT & st->st_mode) != S_IFBLK)
--		return NULL;
--
- 	return devid2kname(st->st_rdev);
- }
- 
--- 
-2.10.2
+On 8/3/17 02:00, Phil Turmel wrote:
+> Hi Adam,
+>
+> {Please remember to trim repetitive stuff, and interleave.}
+>
+> On 03/07/2017 09:06 AM, Adam Goryachev wrote:
+>> BTW, just some more info I've found... either almost the entire
+>> drives are RAID1 mirrors, or all 4 are RAID1 mirrors:
 
+OK, so I now have the following:
+root@ubuntu:~# cmp /dev/sda /dev/sdb
+/dev/sda /dev/sdb differ: byte 1000162959365, line 243319233
+root@ubuntu:~# cmp /dev/sdc /dev/sdd
+/dev/sdc /dev/sdd differ: byte 1000162971653, line 243236929
+root@ubuntu:~# cmp /dev/sdb /dev/sdc
+/dev/sdb /dev/sdc differ: byte 499637813249, line 54927275
+
+So drives sda/sdb are almost complete mirror, and drives sdc/sdd are 
+almost complete mirror.
+On top of that, the first half of all four drives are a complete mirror 
+(which seems oversized considering a "small" root RAID1 drive....)
+Why there is a difference half way, and whether they are more difference 
+after that point I haven't yet checked, but that looks like something to 
+come back to...
+>> Other option, they have been re-initialised/zero'd or similar, and
+>> thats why all the data is identical (useless). I was hoping to get a
+>> starting point for where the partition boundaries might have been
+>> ....
+> Search the devices for ext2/3/4 superblocks, like so:
+>
+> dd if=/dev/sdX bs=1M 2>/dev/null |hexdump -C |grep '30  .\+  53 ef 0'
+What is the chance it is a ext2/3/4 based FS? I suppose most NAS would 
+use these filesystems... I guess I'll find out soon enough.
+
+> This will take a very long time, and will generate false positives.
+Can you advise what to do to "verify" these and work out which ones are 
+false positives?
+> You probably would want to use screen or tmux to run these in
+> parallel in separate processes.
+I'm not sure there is much of a point, since they are mostly duplicates 
+of each other. I'm running it on sdd now, and copying sda and sdc to a 
+spare drive. I may re-run the command on sdc (and skip the first 
+490GB...) if nothing useful is found on sdd.
+> But superblock locations will give you hints as to the rest of data,
+> and make it possible to create partitions that will let you copy
+> stuff off into a new array.
+>
+Sounds good, will see how it goes. Thanks for the advice!
+
+Regards,
+Adam
