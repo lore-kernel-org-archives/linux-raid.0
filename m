@@ -1,125 +1,111 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH 2/2] md/r5cache: generate R5LOG_PAYLOAD_FLUSH
-Date: Tue, 7 Mar 2017 17:44:22 -0800
-Message-ID: <20170308014422.4019149-2-songliubraving@fb.com>
-References: <20170308014422.4019149-1-songliubraving@fb.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: [PATCH V3] md: move bitmap_destroy before __md_stop
+Date: Wed,  8 Mar 2017 10:31:32 +0800
+Message-ID: <1488940292-8555-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170308014422.4019149-1-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, Song Liu <songliubraving@fb.com>
+Cc: neilb@suse.com, shli@fb.com, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-In r5c_finish_stripe_write_out(), R5LOG_PAYLOAD_FLUSH is append to
-log->current_io.
+Since we have switched to sync way to handle METADATA_UPDATED
+msg for md-cluster, then process_metadata_update is depended
+on mddev->thread->wqueue.
 
-Appending R5LOG_PAYLOAD_FLUSH in quiesce needs extra writes to
-journal. To simplify the logic, we just skip R5LOG_PAYLOAD_FLUSH in
-quiesce.
+With the new change, clustered raid could possible hang if
+array received a METADATA_UPDATED msg after array unregistered
+mddev->thread, so we need to stop clustered raid (bitmap_destroy
+	 -> bitmap_free -> md_cluster_stop) earlier than unregister
+thread (mddev_detach -> md_unregister_thread).
 
-Even R5LOG_PAYLOAD_FLUSH supports multiple stripes per payload.
-However, current implementation is one stripe per R5LOG_PAYLOAD_FLUSH,
-which is simpler.
+And this change should be safe for non-clustered raid since
+all writes are stopped before the destroy. Also in md_run,
+we activate the personality (pers->run()) before activating
+the bitmap (bitmap_create()). So it is pleasingly symmetric
+to stop the bitmap (bitmap_destroy()) before stopping the
+personality (__md_stop() calls pers->free()).
 
-Signed-off-by: Song Liu <songliubraving@fb.com>
+But we don't want to break the codes for waiting behind IO as
+Shaohua mentioned, so move those codes from mddev_detach to
+bitmap_destroy. Since we already check bitmap at the beginning
+of bitmap_destroy, just wait for behind_writes to be zero if
+it existed.
+
+Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- drivers/md/raid5-cache.c | 60 +++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 59 insertions(+), 1 deletion(-)
+This version move waiting behind IO codes into bitmap_destroy
+so we can safely call bitmap_destroy before __md_stop now.
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index e69f922..fd0bfea 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -590,7 +590,21 @@ static void r5l_log_endio(struct bio *bio)
- 	mempool_free(io->meta_page, log->meta_pool);
+ drivers/md/bitmap.c |  9 +++++++++
+ drivers/md/md.c     | 13 ++-----------
+ 2 files changed, 11 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index b6fa55a3cff8..89a35bc092dd 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -1771,6 +1771,15 @@ void bitmap_destroy(struct mddev *mddev)
+ 	if (!bitmap) /* there was no bitmap */
+ 		return;
  
- 	spin_lock_irqsave(&log->io_list_lock, flags);
--	__r5l_set_io_unit_state(io, IO_UNIT_IO_END);
-+
-+	if (list_empty(&io->stripe_list))
-+		/*
-+		 * this io_unit only has R5LOG_PAYLOAD_FLUSH, set
-+		 * to IO_UNIT_STRIPE_END
-+		 */
-+		__r5l_set_io_unit_state(io, IO_UNIT_STRIPE_END);
-+	else
-+		/*
-+		 * io_unit with R5LOG_PAYLOAD_FLUSH and also DATA/PARITY
-+		 * set to IO_UNIT_IO_END and wait for all stripes get
-+		 * handled.
-+		 */
-+		__r5l_set_io_unit_state(io, IO_UNIT_IO_END);
-+
- 	if (log->need_cache_flush)
- 		r5l_move_to_end_ios(log);
- 	else
-@@ -843,6 +857,41 @@ static void r5l_append_payload_page(struct r5l_log *log, struct page *page)
- 	r5_reserve_log_entry(log, io);
- }
- 
-+static void r5l_append_flush_payload(struct r5l_log *log, sector_t sect)
-+{
-+	struct mddev *mddev = log->rdev->mddev;
-+	struct r5conf *conf = mddev->private;
-+	struct r5l_io_unit *io;
-+	struct r5l_payload_flush *payload;
-+	int meta_size;
-+
-+	/*
-+	 * payload_flush requires extra writes to the journal.
-+	 * To avoid handling the extra IO in quiesce, just skip
-+	 * flush_payload
-+	 */
-+	if (conf->quiesce)
-+		return;
-+
-+	mutex_lock(&log->io_mutex);
-+	meta_size = sizeof(struct r5l_payload_flush) + sizeof(__le64);
-+
-+	if (r5l_get_meta(log, meta_size)) {
-+		mutex_unlock(&log->io_mutex);
-+		return;
++	/* wait for behind writes to complete */
++	if (atomic_read(&bitmap->behind_writes) > 0) {
++		printk(KERN_INFO "md:%s: behind writes in progress - waiting to stop.\n",
++		       mdname(mddev));
++		/* need to kick something here to make sure I/O goes? */
++		wait_event(bitmap->behind_wait,
++			   atomic_read(&bitmap->behind_writes) == 0);
 +	}
 +
-+	/* current implementation is one stripe per flush payload */
-+	io = log->current_io;
-+	payload = page_address(io->meta_page) + io->meta_offset;
-+	payload->header.type = cpu_to_le16(R5LOG_PAYLOAD_FLUSH);
-+	payload->header.flags = cpu_to_le16(0);
-+	payload->size = cpu_to_le32(sizeof(__le64));
-+	payload->flush_stripes[0] = cpu_to_le64(sect);
-+	io->meta_offset += meta_size;
-+	mutex_unlock(&log->io_mutex);
-+}
-+
- static int r5l_log_stripe(struct r5l_log *log, struct stripe_head *sh,
- 			   int data_pages, int parity_pages)
+ 	mutex_lock(&mddev->bitmap_info.mutex);
+ 	spin_lock(&mddev->lock);
+ 	mddev->bitmap = NULL; /* disconnect from the md device */
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 79a99a1c9ce7..b63ab4f33892 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5534,15 +5534,6 @@ EXPORT_SYMBOL_GPL(md_stop_writes);
+ 
+ static void mddev_detach(struct mddev *mddev)
  {
-@@ -1466,6 +1515,13 @@ static void r5l_do_reclaim(struct r5l_log *log)
- 		     list_empty(&log->finished_ios)))
- 			break;
- 
-+		/*
-+		 * In some cases, io_unit with only R5LOG_PAYLOAD_FLUSH
-+		 * will stay in finished_ios list. It is necessary to
-+		 * complete them before quiesce.
-+		 */
-+		r5l_complete_finished_ios(log);
-+
- 		md_wakeup_thread(log->rdev->mddev->thread);
- 		wait_event_lock_irq(log->iounit_wait,
- 				    r5l_reclaimable_space(log) > reclaimable,
-@@ -2784,6 +2840,8 @@ void r5c_finish_stripe_write_out(struct r5conf *conf,
- 		atomic_dec(&conf->r5c_flushing_full_stripes);
- 		atomic_dec(&conf->r5c_cached_full_stripes);
- 	}
-+
-+	r5l_append_flush_payload(log, sh->sector);
+-	struct bitmap *bitmap = mddev->bitmap;
+-	/* wait for behind writes to complete */
+-	if (bitmap && atomic_read(&bitmap->behind_writes) > 0) {
+-		pr_debug("md:%s: behind writes in progress - waiting to stop.\n",
+-			 mdname(mddev));
+-		/* need to kick something here to make sure I/O goes? */
+-		wait_event(bitmap->behind_wait,
+-			   atomic_read(&bitmap->behind_writes) == 0);
+-	}
+ 	if (mddev->pers && mddev->pers->quiesce) {
+ 		mddev->pers->quiesce(mddev, 1);
+ 		mddev->pers->quiesce(mddev, 0);
+@@ -5574,8 +5565,8 @@ void md_stop(struct mddev *mddev)
+ 	/* stop the array and free an attached data structures.
+ 	 * This is called from dm-raid
+ 	 */
+-	__md_stop(mddev);
+ 	bitmap_destroy(mddev);
++	__md_stop(mddev);
+ 	if (mddev->bio_set)
+ 		bioset_free(mddev->bio_set);
  }
+@@ -5688,6 +5679,7 @@ static int do_md_stop(struct mddev *mddev, int mode,
+ 			set_disk_ro(disk, 0);
  
- int
+ 		__md_stop_writes(mddev);
++		bitmap_destroy(mddev);
+ 		__md_stop(mddev);
+ 		mddev->queue->backing_dev_info->congested_fn = NULL;
+ 
+@@ -5713,7 +5705,6 @@ static int do_md_stop(struct mddev *mddev, int mode,
+ 	if (mode == 0) {
+ 		pr_info("md: %s stopped.\n", mdname(mddev));
+ 
+-		bitmap_destroy(mddev);
+ 		if (mddev->bitmap_info.file) {
+ 			struct file *f = mddev->bitmap_info.file;
+ 			spin_lock(&mddev->lock);
 -- 
-2.9.3
+2.6.2
 
