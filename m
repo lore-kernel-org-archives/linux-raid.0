@@ -1,71 +1,95 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: RAID Recovery
-Date: Wed, 8 Mar 2017 20:08:10 +1100
-Message-ID: <c9a70435-56a5-9295-2582-7b71a71619eb@websitemanagers.com.au>
-References: <936e84af-f190-3541-bdf8-eaa0c42d2ddc@websitemanagers.com.au>
- <e4d9724d-ab52-aa79-c600-7b287c16a182@turmel.org>
- <7cefe670-dcea-6e04-b090-b215a6a218c9@websitemanagers.com.au>
- <94b4591a-bda1-529b-3af1-c451b657082f@websitemanagers.com.au>
- <1066d485-ebea-d0d2-a198-33b560de99fc@turmel.org>
+From: "Reshetova, Elena" <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: RE: [PATCH 10/29] drivers, md: convert stripe_head.count from
+ atomic_t to refcount_t
+Date: Wed, 8 Mar 2017 09:39:30 +0000
+Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C56050@IRSMSX102.ger.corp.intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+ <1488810076-3754-11-git-send-email-elena.reshetova@intel.com>
+ <20170307190759.jnrq66kfpkr4m7zl@kernel.org>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1066d485-ebea-d0d2-a198-33b560de99fc@turmel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <open-iscsi+bncBCWONPVE7ANRBWFC77CQKGQENLEVWYQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <20170307190759.jnrq66kfpkr4m7zl-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Language: en-US
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: "gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org" <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "xen-devel-GuqFBffKawtpuQazS67q72D2FQJk+8+b@public.gmane.org" <xen-devel-GuqFBffKawtpuQazS67q72D2FQJk+8+b@public.gmane.org>, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux1394-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org" <linux1394-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, "linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "devel-tBiZLqfeLfOHmIFyCCdPziST3g8Odh+X@public.gmane.org" <devel-tBiZLqfeLfOHmIFyCCdPziST3g8Odh+X@public.gmane.org>, "linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org" <fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org" <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>, devel-gWbeCf7V1WCQmaza687I9uG/Ez6ZCGd0@public.gmane.org
 List-Id: linux-raid.ids
 
+> On Mon, Mar 06, 2017 at 04:20:57PM +0200, Elena Reshetova wrote:
+> > refcount_t type and corresponding API should be
+> > used instead of atomic_t when the variable is used as
+> > a reference counter. This allows to avoid accidental
+> > refcounter overflows that might lead to use-after-free
+> > situations.
+> >
+> > Signed-off-by: Elena Reshetova <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> > Signed-off-by: Hans Liljestrand <ishkamiel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> > Signed-off-by: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+> > Signed-off-by: David Windsor <dwindsor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> > ---
+> >  drivers/md/raid5-cache.c |  8 +++---
+> >  drivers/md/raid5.c       | 66 ++++++++++++++++++++++++------------------------
+> >  drivers/md/raid5.h       |  3 ++-
+> >  3 files changed, 39 insertions(+), 38 deletions(-)
+> >
+> > diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+> > index 3f307be..6c05e12 100644
+> > --- a/drivers/md/raid5-cache.c
+> > +++ b/drivers/md/raid5-cache.c
+> 
+> snip
+> >  	       sh->check_state, sh->reconstruct_state);
+> >
+> >  	analyse_stripe(sh, &s);
+> > @@ -4924,7 +4924,7 @@ static void activate_bit_delay(struct r5conf *conf,
+> >  		struct stripe_head *sh = list_entry(head.next, struct
+> stripe_head, lru);
+> >  		int hash;
+> >  		list_del_init(&sh->lru);
+> > -		atomic_inc(&sh->count);
+> > +		refcount_inc(&sh->count);
+> >  		hash = sh->hash_lock_index;
+> >  		__release_stripe(conf, sh,
+> &temp_inactive_list[hash]);
+> >  	}
+> > @@ -5240,7 +5240,7 @@ static struct stripe_head *__get_priority_stripe(struct
+> r5conf *conf, int group)
+> >  		sh->group = NULL;
+> >  	}
+> >  	list_del_init(&sh->lru);
+> > -	BUG_ON(atomic_inc_return(&sh->count) != 1);
+> > +	BUG_ON(refcount_inc_not_zero(&sh->count));
+> 
+> This changes the behavior. refcount_inc_not_zero doesn't inc if original value is 0
 
+Hm.. So, you want to inc here in any case and BUG if the end result differs from 1. 
+So essentially you want to only increment here from zero to one under normal conditions... This is a challenge for refcount_t and against the design.
+Is it ok just to maybe do this here:
 
-On 8/3/17 02:00, Phil Turmel wrote:
-> Hi Adam,
->
-> {Please remember to trim repetitive stuff, and interleave.}
->
-> On 03/07/2017 09:06 AM, Adam Goryachev wrote:
->> BTW, just some more info I've found... either almost the entire
->> drives are RAID1 mirrors, or all 4 are RAID1 mirrors:
+-	BUG_ON(atomic_inc_return(&sh->count) != 1);
++	BUG_ON(refcount_read(&sh->count) != 0);
++	refcount_set((&sh->count, 1);
 
-OK, so I now have the following:
-root@ubuntu:~# cmp /dev/sda /dev/sdb
-/dev/sda /dev/sdb differ: byte 1000162959365, line 243319233
-root@ubuntu:~# cmp /dev/sdc /dev/sdd
-/dev/sdc /dev/sdd differ: byte 1000162971653, line 243236929
-root@ubuntu:~# cmp /dev/sdb /dev/sdc
-/dev/sdb /dev/sdc differ: byte 499637813249, line 54927275
+Do we have an issue with locking in this case? Or maybe it is then better to leave this one to be atomic_t without protection since it isn't a real refcounter as it turns out. 
 
-So drives sda/sdb are almost complete mirror, and drives sdc/sdd are 
-almost complete mirror.
-On top of that, the first half of all four drives are a complete mirror 
-(which seems oversized considering a "small" root RAID1 drive....)
-Why there is a difference half way, and whether they are more difference 
-after that point I haven't yet checked, but that looks like something to 
-come back to...
->> Other option, they have been re-initialised/zero'd or similar, and
->> thats why all the data is identical (useless). I was hoping to get a
->> starting point for where the partition boundaries might have been
->> ....
-> Search the devices for ext2/3/4 superblocks, like so:
->
-> dd if=/dev/sdX bs=1M 2>/dev/null |hexdump -C |grep '30  .\+  53 ef 0'
-What is the chance it is a ext2/3/4 based FS? I suppose most NAS would 
-use these filesystems... I guess I'll find out soon enough.
+Best Regards,
+Elena. 
 
-> This will take a very long time, and will generate false positives.
-Can you advise what to do to "verify" these and work out which ones are 
-false positives?
-> You probably would want to use screen or tmux to run these in
-> parallel in separate processes.
-I'm not sure there is much of a point, since they are mostly duplicates 
-of each other. I'm running it on sdd now, and copying sda and sdc to a 
-spare drive. I may re-run the command on sdc (and skip the first 
-490GB...) if nothing useful is found on sdd.
-> But superblock locations will give you hints as to the rest of data,
-> and make it possible to create partitions that will let you copy
-> stuff off into a new array.
->
-Sounds good, will see how it goes. Thanks for the advice!
+> 
+> Thanks,
+> Shaohua
 
-Regards,
-Adam
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
