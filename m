@@ -1,69 +1,82 @@
-From: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: [PATCH 21/29] drivers, s390: convert fc_fcp_pkt.ref_cnt from
- atomic_t to refcount_t
-Date: Wed, 8 Mar 2017 15:06:53 +0100
-Message-ID: <36e6c54c-5e4b-fe16-86e2-fdef7a52d048@suse.de>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-22-git-send-email-elena.reshetova@intel.com>
- <536a58ba-8896-5639-cab9-bd2f13bed325@suse.de>
- <2236FBA76BA1254E88B949DDB74E612B41C5615F@IRSMSX102.ger.corp.intel.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Adam Goryachev <adam@websitemanagers.com.au>
+Subject: Re: RAID Recovery
+Date: Thu, 9 Mar 2017 02:25:53 +1100
+Message-ID: <7f4f3418-8e31-fa83-e161-895e779568ff@websitemanagers.com.au>
+References: <936e84af-f190-3541-bdf8-eaa0c42d2ddc@websitemanagers.com.au>
+ <e4d9724d-ab52-aa79-c600-7b287c16a182@turmel.org>
+ <7cefe670-dcea-6e04-b090-b215a6a218c9@websitemanagers.com.au>
+ <94b4591a-bda1-529b-3af1-c451b657082f@websitemanagers.com.au>
+ <1066d485-ebea-d0d2-a198-33b560de99fc@turmel.org>
+ <c9a70435-56a5-9295-2582-7b71a71619eb@websitemanagers.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
-Return-path: <open-iscsi+bncBDVNRMMDUUIBB747QDDAKGQEYPGNNBQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <2236FBA76BA1254E88B949DDB74E612B41C5615F-kPTMFJFq+rFP9JyJpTNKArfspsVTdybXVpNB7YpNyf8@public.gmane.org>
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: "Reshetova, Elena" <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org" <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Cc: "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "xen-devel-GuqFBffKawtpuQazS67q72D2FQJk+8+b@public.gmane.org" <xen-devel-GuqFBffKawtpuQazS67q72D2FQJk+8+b@public.gmane.org>, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux1394-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org" <linux1394-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, "linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "devel-tBiZLqfeLfOHmIFyCCdPziST3g8Odh+X@public.gmane.org" <devel-tBiZLqfeLfOHmIFyCCdPziST3g8Odh+X@public.gmane.org>, "linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org" <fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org" <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>, "devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org" <devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org>, target-devel-u79uwXL29Tb/PtFMR13I2A@public.gmane.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <c9a70435-56a5-9295-2582-7b71a71619eb@websitemanagers.com.au>
+Sender: linux-raid-owner@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 03/08/2017 02:48 PM, Reshetova, Elena wrote:
->> On 03/06/2017 03:21 PM, Elena Reshetova wrote:
->>> refcount_t type and corresponding API should be
->>> used instead of atomic_t when the variable is used as
->>> a reference counter. This allows to avoid accidental
->>> refcounter overflows that might lead to use-after-free
->>> situations.
->>
->> The subject is wrong, should be something like "scsi: libfc convert
->> fc_fcp_pkt.ref_cnt from atomic_t to refcount_t" but not s390.
->>
->> Other than that
->> Acked-by: Johannes Thumshirn <jth-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+
+
+On 8/3/17 20:08, Adam Goryachev wrote:
 >
-> Turns out that it is better that all these patches go through the respect=
-ive maintainer trees, if present.
-> If I send an updated patch (with subject fixed), could you merge it throu=
-gh your tree?
+>
+> On 8/3/17 02:00, Phil Turmel wrote:
+>> Hi Adam,
+>>
+>> Search the devices for ext2/3/4 superblocks, like so:
+>>
+>> dd if=/dev/sdX bs=1M 2>/dev/null |hexdump -C |grep '30  .\+ 53 ef 0'
+> What is the chance it is a ext2/3/4 based FS? I suppose most NAS would 
+> use these filesystems... I guess I'll find out soon enough.
+>
+>> This will take a very long time, and will generate false positives.
+> Can you advise what to do to "verify" these and work out which ones 
+> are false positives?
+>> You probably would want to use screen or tmux to run these in
+>> parallel in separate processes.
+> I'm not sure there is much of a point, since they are mostly 
+> duplicates of each other. I'm running it on sdd now, and copying sda 
+> and sdc to a spare drive. I may re-run the command on sdc (and skip 
+> the first 490GB...) if nothing useful is found on sdd.
+>> But superblock locations will give you hints as to the rest of data,
+>> and make it possible to create partitions that will let you copy
+>> stuff off into a new array.
+>>
+>
 
-Yes, but this would be the normal scsi tree from Martin and James.
+OK, so the first disk has completed and found 85 matches, I don't think 
+there is any point in posting the raw output, but can you advise what I 
+should do with it? Here is the first few matches:
+082f6c30  3a 5d f7 a2 d0 52 ab ba  53 ef 0d 6d 51 d0 2a 76 
+|:]...R..S..mQ.*v|
+21146d30  cf 17 bf 15 bf 9e e2 67  53 ef 05 15 a7 89 ae 38 
+|.......gS......8|
+217e2730  73 0f 3c 00 99 68 a4 ed  53 ef 0f b4 ed 8d a6 7b 
+|s.<..h..S......{|
+4c64f430  a4 48 02 00 00 00 86 00  53 ef 00 00 03 7a 1f 09 
+|.H......S....z..|
+4c688430  a4 48 02 00 00 00 86 00  53 ef 00 00 03 7a 1f 09 
+|.H......S....z..|
+e8724430  00 2b 02 17 71 e3 27 3b  53 ef 0c f3 90 3b 0c 0e 
+|.+..q.';S....;..|
+f1fd0d30  53 ef 04 cd 4d ef 04 cd  53 ef 04 cd 4d ef 04 cd 
+|S...M...S...M...|
+fb9a2930  ce f0 97 69 a0 f2 1b 07  53 ef 0b 95 74 ff 98 c9 
+|...i....S...t...|
+10a0c9d30  41 2c 9b 24 7f bf ec 76  53 ef 0f 07 3e 0a 3d 15 
+|A,.$...vS...>.=.|
+15bd95430  e1 72 92 fb 73 64 a4 1a  53 ef 0b 6a 66 e1 ef ae 
+|.r..sd..S..jf...|
 
-Please include my Ack in the re-sends.
 
-Thanks a lot,
-	Johannes
+Regards,
+Adam
 
+-- 
+Adam Goryachev
+Website Managers
+P: +61 2 8304 0000                    adam@websitemanagers.com.au
+F: +61 2 8304 0001                     www.websitemanagers.com.au
 
---=20
-Johannes Thumshirn                                          Storage
-jthumshirn-l3A5Bk7waGM@public.gmane.org                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=C3=BCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
-
---=20
-You received this message because you are subscribed to the Google Groups "=
-open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an e=
-mail to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
