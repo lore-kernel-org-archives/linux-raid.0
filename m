@@ -1,54 +1,73 @@
 From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH 5/5] mdadm:checking level once mode has been set
-Date: Wed,  8 Mar 2017 16:07:01 +0800
-Message-ID: <20170308080701.25377-1-zlliu@suse.com>
-References: <20170308075059.24789-1-zlliu@suse.com>
+Subject: [PATCH 2/4] mdadm:external bitmap only supports ext filesystem
+Date: Wed,  8 Mar 2017 15:51:44 +0800
+Message-ID: <20170308075144.24873-1-zlliu@suse.com>
+References: <20170308074831.24683-1-zlliu@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170308075059.24789-1-zlliu@suse.com>
+In-Reply-To: <20170308074831.24683-1-zlliu@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Jes.Sorensen@gmail.com
 Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
-mdadm: it would be better to check --level ealier,
-because it would fall to different prompt if user
-forgets to specify the --level parameter. such as:
-./mdadm -CR /dev/md0 -b internal -n2 -x1 /dev/loop[0-2]
+mdadm: ensure that the external bitmap_file is
+stored by ext[2-4] file system, because bmap()
+of linux/driver/md/bitmap.c exits directly when
+the bitmap_file isn't suitable. mdadm should make
+users aware of this scenario and give a prompt.
 
 Signed-off-by: Zhilong Liu <zlliu@suse.com>
 
 diff --git a/Create.c b/Create.c
-index 2721884..50ec85e 100644
+index 2721884..9a951b0 100644
 --- a/Create.c
 +++ b/Create.c
-@@ -125,10 +125,6 @@ int Create(struct supertype *st, char *mddev,
- 	memset(&info, 0, sizeof(info));
- 	if (s->level == UnSet && st && st->ss->default_geometry)
- 		st->ss->default_geometry(st, &s->level, NULL, NULL);
--	if (s->level == UnSet) {
--		pr_err("a RAID level is needed to create an array.\n");
--		return 1;
--	}
- 	if (s->raiddisks < 4 && s->level == 6) {
- 		pr_err("at least 4 raid-devices needed for level 6\n");
- 		return 1;
+@@ -831,11 +831,6 @@ int Create(struct supertype *st, char *mddev,
+ 			goto abort_locked;
+ 		}
+ 		bitmap_fd = open(s->bitmap_file, O_RDWR);
+-		if (bitmap_fd < 0) {
+-			pr_err("weird: %s cannot be openned\n",
+-				s->bitmap_file);
+-			goto abort_locked;
+-		}
+ 		if (ioctl(mdfd, SET_BITMAP_FILE, bitmap_fd) < 0) {
+ 			pr_err("Cannot set bitmap file for %s: %s\n",
+ 				mddev, strerror(errno));
 diff --git a/mdadm.c b/mdadm.c
-index d6ad8dc..fcb33d1 100644
+index d6ad8dc..19a06db 100644
 --- a/mdadm.c
 +++ b/mdadm.c
-@@ -349,6 +349,12 @@ int main(int argc, char *argv[])
- 				pr_err("Must give -a/--add for devices to add: %s\n", optarg);
- 				exit(2);
- 			}
-+			if (devs_found > 0 && s.level == UnSet && !devmode) {
-+				if (mode == CREATE || mode == BUILD) {
-+					pr_err("a RAID level is needed to create or build an array.\n");
-+					exit(2);
+@@ -28,6 +28,7 @@
+ #include "mdadm.h"
+ #include "md_p.h"
+ #include <ctype.h>
++#include <sys/vfs.h>
+ 
+ static int scan_assemble(struct supertype *ss,
+ 			 struct context *c,
+@@ -1143,6 +1144,21 @@ int main(int argc, char *argv[])
+ 			    strcmp(optarg, "none") == 0 ||
+ 			    strchr(optarg, '/') != NULL) {
+ 				s.bitmap_file = optarg;
++				if (strchr(s.bitmap_file, '/') != NULL) {
++					bitmap_fd = open(s.bitmap_file, O_RDWR);
++					if (bitmap_fd < 0) {
++						pr_err("weird: %s cannot be openned\n", s.bitmap_file);
++						exit(2);
++					}
++					close(bitmap_fd);
++					struct statfs ext_bitmap;
++					statfs(s.bitmap_file, &ext_bitmap);
++					if (ext_bitmap.f_type != 0xEF53){
++						pr_err("external bitmap only supports ext[2-4] filesystem, %s.\n",
++							s.bitmap_file);
++						exit(2);
++					}
 +				}
-+			}
- 			dv = xmalloc(sizeof(*dv));
- 			dv->devname = optarg;
- 			dv->disposition = devmode;
+ 				continue;
+ 			}
+ 			if (strcmp(optarg, "clustered") == 0) {
 -- 
 2.10.2
 
