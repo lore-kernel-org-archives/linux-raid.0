@@ -1,374 +1,164 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v3] md/r5cache: improve recovery with read ahead page pool
-Date: Thu, 9 Mar 2017 10:48:36 -0800
-Message-ID: <20170309184836.5hkg63acazstenix@kernel.org>
-References: <20170308004917.3902687-1-songliubraving@fb.com>
+From: Tim Small <tim@buttersideup.com>
+Subject: mdadm add spare fails with "add new device failed ... Invalid
+ argument" for RAID5
+Date: Thu, 9 Mar 2017 20:17:30 +0000
+Message-ID: <52bd5f76-a343-ddc7-1c72-0350796cbe07@buttersideup.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170308004917.3902687-1-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>
-Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Mar 07, 2017 at 04:49:17PM -0800, Song Liu wrote:
-> In r5cache recovery, the journal device is scanned page by page.
-> Currently, we use sync_page_io() to read journal device. This is
-> not efficient when we have to recovery many stripes from the journal.
-> 
-> To improve the speed of recovery, this patch introduces a read ahead
-> page pool (ra_pool) to recovery_ctx. With ra_pool, multiple consecutive
-> pages are read in one IO. Then the recovery code read the journal from
-> ra_pool.
-> 
-> With ra_pool, r5l_recovery_ctx has become much bigger. Therefore,
-> r5l_recovery_log() is refactored so r5l_recovery_ctx is not using
-> stack space.
+Hello,
 
-applied, thanks!
+I attempted to add in a new partition as a spare to a RAID5 array.  This
+had previously worked for a different md (a smaller one, using another
+set of partitions on the same set of drives, but otherwise created at
+the same time and very similar), but it fails on the larger md array as
+below:
 
-> 
-> Signed-off-by: Song Liu <songliubraving@fb.com>
-> ---
->  drivers/md/raid5-cache.c | 223 +++++++++++++++++++++++++++++++++++++----------
->  1 file changed, 177 insertions(+), 46 deletions(-)
-> 
-> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index 3f307be..0d744d5 100644
-> --- a/drivers/md/raid5-cache.c
-> +++ b/drivers/md/raid5-cache.c
-> @@ -30,6 +30,7 @@
->   * underneath hardware sector size. only works with PAGE_SIZE == 4096
->   */
->  #define BLOCK_SECTORS (8)
-> +#define BLOCK_SECTOR_SHIFT (3)
->  
->  /*
->   * log->max_free_space is min(1/4 disk size, 10G reclaimable space).
-> @@ -1552,6 +1553,8 @@ bool r5l_log_disk_error(struct r5conf *conf)
->  	return ret;
->  }
->  
-> +#define R5L_RECOVERY_PAGE_POOL_SIZE 256
-> +
->  struct r5l_recovery_ctx {
->  	struct page *meta_page;		/* current meta */
->  	sector_t meta_total_blocks;	/* total size of current meta and data */
-> @@ -1560,18 +1563,131 @@ struct r5l_recovery_ctx {
->  	int data_parity_stripes;	/* number of data_parity stripes */
->  	int data_only_stripes;		/* number of data_only stripes */
->  	struct list_head cached_list;
-> +
-> +	/*
-> +	 * read ahead page pool (ra_pool)
-> +	 * in recovery, log is read sequentially. It is not efficient to
-> +	 * read every page with sync_page_io(). The read ahead page pool
-> +	 * reads multiple pages with one IO, so further log read can
-> +	 * just copy data from the pool.
-> +	 */
-> +	struct page *ra_pool[R5L_RECOVERY_PAGE_POOL_SIZE];
-> +	sector_t pool_offset;	/* offset of first page in the pool */
-> +	int total_pages;	/* total allocated pages */
-> +	int valid_pages;	/* pages with valid data */
-> +	struct bio *ra_bio;	/* bio to do the read ahead */
->  };
->  
-> +static int r5l_recovery_allocate_ra_pool(struct r5l_log *log,
-> +					    struct r5l_recovery_ctx *ctx)
-> +{
-> +	struct page *page;
-> +
-> +	ctx->ra_bio = bio_alloc_bioset(GFP_KERNEL, BIO_MAX_PAGES, log->bs);
-> +	if (!ctx->ra_bio)
-> +		return -ENOMEM;
-> +
-> +	ctx->valid_pages = 0;
-> +	ctx->total_pages = 0;
-> +	while (ctx->total_pages < R5L_RECOVERY_PAGE_POOL_SIZE) {
-> +		page = alloc_page(GFP_KERNEL);
-> +
-> +		if (!page)
-> +			break;
-> +		ctx->ra_pool[ctx->total_pages] = page;
-> +		ctx->total_pages += 1;
-> +	}
-> +
-> +	if (ctx->total_pages == 0) {
-> +		bio_put(ctx->ra_bio);
-> +		return -ENOMEM;
-> +	}
-> +
-> +	ctx->pool_offset = 0;
-> +	return 0;
-> +}
-> +
-> +static void r5l_recovery_free_ra_pool(struct r5l_log *log,
-> +					struct r5l_recovery_ctx *ctx)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i < ctx->total_pages; ++i)
-> +		put_page(ctx->ra_pool[i]);
-> +	bio_put(ctx->ra_bio);
-> +}
-> +
-> +/*
-> + * fetch ctx->valid_pages pages from offset
-> + * In normal cases, ctx->valid_pages == ctx->total_pages after the call.
-> + * However, if the offset is close to the end of the journal device,
-> + * ctx->valid_pages could be smaller than ctx->total_pages
-> + */
-> +static int r5l_recovery_fetch_ra_pool(struct r5l_log *log,
-> +				      struct r5l_recovery_ctx *ctx,
-> +				      sector_t offset)
-> +{
-> +	bio_reset(ctx->ra_bio);
-> +	ctx->ra_bio->bi_bdev = log->rdev->bdev;
-> +	bio_set_op_attrs(ctx->ra_bio, REQ_OP_READ, 0);
-> +	ctx->ra_bio->bi_iter.bi_sector = log->rdev->data_offset + offset;
-> +
-> +	ctx->valid_pages = 0;
-> +	ctx->pool_offset = offset;
-> +
-> +	while (ctx->valid_pages < ctx->total_pages) {
-> +		bio_add_page(ctx->ra_bio,
-> +			     ctx->ra_pool[ctx->valid_pages], PAGE_SIZE, 0);
-> +		ctx->valid_pages += 1;
-> +
-> +		offset = r5l_ring_add(log, offset, BLOCK_SECTORS);
-> +
-> +		if (offset == 0)  /* reached end of the device */
-> +			break;
-> +	}
-> +
-> +	return submit_bio_wait(ctx->ra_bio);
-> +}
-> +
-> +/*
-> + * try read a page from the read ahead page pool, if the page is not in the
-> + * pool, call r5l_recovery_fetch_ra_pool
-> + */
-> +static int r5l_recovery_read_page(struct r5l_log *log,
-> +				  struct r5l_recovery_ctx *ctx,
-> +				  struct page *page,
-> +				  sector_t offset)
-> +{
-> +	int ret;
-> +
-> +	if (offset < ctx->pool_offset ||
-> +	    offset >= ctx->pool_offset + ctx->valid_pages * BLOCK_SECTORS) {
-> +		ret = r5l_recovery_fetch_ra_pool(log, ctx, offset);
-> +		if (ret)
-> +			return ret;
-> +	}
-> +
-> +	BUG_ON(offset < ctx->pool_offset ||
-> +	       offset >= ctx->pool_offset + ctx->valid_pages * BLOCK_SECTORS);
-> +
-> +	memcpy(page_address(page),
-> +	       page_address(ctx->ra_pool[(offset - ctx->pool_offset) >>
-> +					 BLOCK_SECTOR_SHIFT]),
-> +	       PAGE_SIZE);
-> +	return 0;
-> +}
-> +
->  static int r5l_recovery_read_meta_block(struct r5l_log *log,
->  					struct r5l_recovery_ctx *ctx)
->  {
->  	struct page *page = ctx->meta_page;
->  	struct r5l_meta_block *mb;
->  	u32 crc, stored_crc;
-> +	int ret;
->  
-> -	if (!sync_page_io(log->rdev, ctx->pos, PAGE_SIZE, page, REQ_OP_READ, 0,
-> -			  false))
-> -		return -EIO;
-> +	ret = r5l_recovery_read_page(log, ctx, page, ctx->pos);
-> +	if (ret != 0)
-> +		return ret;
->  
->  	mb = page_address(page);
->  	stored_crc = le32_to_cpu(mb->checksum);
-> @@ -1653,8 +1769,7 @@ static void r5l_recovery_load_data(struct r5l_log *log,
->  	raid5_compute_sector(conf,
->  			     le64_to_cpu(payload->location), 0,
->  			     &dd_idx, sh);
-> -	sync_page_io(log->rdev, log_offset, PAGE_SIZE,
-> -		     sh->dev[dd_idx].page, REQ_OP_READ, 0, false);
-> +	r5l_recovery_read_page(log, ctx, sh->dev[dd_idx].page, log_offset);
->  	sh->dev[dd_idx].log_checksum =
->  		le32_to_cpu(payload->checksum[0]);
->  	ctx->meta_total_blocks += BLOCK_SECTORS;
-> @@ -1673,17 +1788,15 @@ static void r5l_recovery_load_parity(struct r5l_log *log,
->  	struct r5conf *conf = mddev->private;
->  
->  	ctx->meta_total_blocks += BLOCK_SECTORS * conf->max_degraded;
-> -	sync_page_io(log->rdev, log_offset, PAGE_SIZE,
-> -		     sh->dev[sh->pd_idx].page, REQ_OP_READ, 0, false);
-> +	r5l_recovery_read_page(log, ctx, sh->dev[sh->pd_idx].page, log_offset);
->  	sh->dev[sh->pd_idx].log_checksum =
->  		le32_to_cpu(payload->checksum[0]);
->  	set_bit(R5_Wantwrite, &sh->dev[sh->pd_idx].flags);
->  
->  	if (sh->qd_idx >= 0) {
-> -		sync_page_io(log->rdev,
-> -			     r5l_ring_add(log, log_offset, BLOCK_SECTORS),
-> -			     PAGE_SIZE, sh->dev[sh->qd_idx].page,
-> -			     REQ_OP_READ, 0, false);
-> +		r5l_recovery_read_page(
-> +			log, ctx, sh->dev[sh->qd_idx].page,
-> +			r5l_ring_add(log, log_offset, BLOCK_SECTORS));
->  		sh->dev[sh->qd_idx].log_checksum =
->  			le32_to_cpu(payload->checksum[1]);
->  		set_bit(R5_Wantwrite, &sh->dev[sh->qd_idx].flags);
-> @@ -1814,14 +1927,15 @@ r5c_recovery_replay_stripes(struct list_head *cached_stripe_list,
->  
->  /* if matches return 0; otherwise return -EINVAL */
->  static int
-> -r5l_recovery_verify_data_checksum(struct r5l_log *log, struct page *page,
-> +r5l_recovery_verify_data_checksum(struct r5l_log *log,
-> +				  struct r5l_recovery_ctx *ctx,
-> +				  struct page *page,
->  				  sector_t log_offset, __le32 log_checksum)
->  {
->  	void *addr;
->  	u32 checksum;
->  
-> -	sync_page_io(log->rdev, log_offset, PAGE_SIZE,
-> -		     page, REQ_OP_READ, 0, false);
-> +	r5l_recovery_read_page(log, ctx, page, log_offset);
->  	addr = kmap_atomic(page);
->  	checksum = crc32c_le(log->uuid_checksum, addr, PAGE_SIZE);
->  	kunmap_atomic(addr);
-> @@ -1853,17 +1967,17 @@ r5l_recovery_verify_data_checksum_for_mb(struct r5l_log *log,
->  
->  		if (payload->header.type == R5LOG_PAYLOAD_DATA) {
->  			if (r5l_recovery_verify_data_checksum(
-> -				    log, page, log_offset,
-> +				    log, ctx, page, log_offset,
->  				    payload->checksum[0]) < 0)
->  				goto mismatch;
->  		} else if (payload->header.type == R5LOG_PAYLOAD_PARITY) {
->  			if (r5l_recovery_verify_data_checksum(
-> -				    log, page, log_offset,
-> +				    log, ctx, page, log_offset,
->  				    payload->checksum[0]) < 0)
->  				goto mismatch;
->  			if (conf->max_degraded == 2 && /* q for RAID 6 */
->  			    r5l_recovery_verify_data_checksum(
-> -				    log, page,
-> +				    log, ctx, page,
->  				    r5l_ring_add(log, log_offset,
->  						 BLOCK_SECTORS),
->  				    payload->checksum[1]) < 0)
-> @@ -2241,55 +2355,72 @@ static void r5c_recovery_flush_data_only_stripes(struct r5l_log *log,
->  static int r5l_recovery_log(struct r5l_log *log)
->  {
->  	struct mddev *mddev = log->rdev->mddev;
-> -	struct r5l_recovery_ctx ctx;
-> +	struct r5l_recovery_ctx *ctx;
->  	int ret;
->  	sector_t pos;
->  
-> -	ctx.pos = log->last_checkpoint;
-> -	ctx.seq = log->last_cp_seq;
-> -	ctx.meta_page = alloc_page(GFP_KERNEL);
-> -	ctx.data_only_stripes = 0;
-> -	ctx.data_parity_stripes = 0;
-> -	INIT_LIST_HEAD(&ctx.cached_list);
-> -
-> -	if (!ctx.meta_page)
-> +	ctx = kzalloc(sizeof(*ctx), GFP_KERNEL);
-> +	if (!ctx)
->  		return -ENOMEM;
->  
-> -	ret = r5c_recovery_flush_log(log, &ctx);
-> -	__free_page(ctx.meta_page);
-> +	ctx->pos = log->last_checkpoint;
-> +	ctx->seq = log->last_cp_seq;
-> +	ctx->data_only_stripes = 0;
-> +	ctx->data_parity_stripes = 0;
-> +	INIT_LIST_HEAD(&ctx->cached_list);
-> +	ctx->meta_page = alloc_page(GFP_KERNEL);
->  
-> -	if (ret)
-> -		return ret;
-> +	if (!ctx->meta_page) {
-> +		ret =  -ENOMEM;
-> +		goto meta_page;
-> +	}
-> +
-> +	if (r5l_recovery_allocate_ra_pool(log, ctx) != 0) {
-> +		ret = -ENOMEM;
-> +		goto ra_pool;
-> +	}
->  
-> -	pos = ctx.pos;
-> -	ctx.seq += 10000;
-> +	ret = r5c_recovery_flush_log(log, ctx);
->  
-> +	if (ret)
-> +		goto error;
->  
-> -	if ((ctx.data_only_stripes == 0) && (ctx.data_parity_stripes == 0))
-> +	pos = ctx->pos;
-> +	ctx->seq += 10000;
-> +
-> +	if ((ctx->data_only_stripes == 0) && (ctx->data_parity_stripes == 0))
->  		pr_debug("md/raid:%s: starting from clean shutdown\n",
->  			 mdname(mddev));
->  	else
->  		pr_debug("md/raid:%s: recovering %d data-only stripes and %d data-parity stripes\n",
-> -			 mdname(mddev), ctx.data_only_stripes,
-> -			 ctx.data_parity_stripes);
-> -
-> -	if (ctx.data_only_stripes == 0) {
-> -		log->next_checkpoint = ctx.pos;
-> -		r5l_log_write_empty_meta_block(log, ctx.pos, ctx.seq++);
-> -		ctx.pos = r5l_ring_add(log, ctx.pos, BLOCK_SECTORS);
-> -	} else if (r5c_recovery_rewrite_data_only_stripes(log, &ctx)) {
-> +			 mdname(mddev), ctx->data_only_stripes,
-> +			 ctx->data_parity_stripes);
-> +
-> +	if (ctx->data_only_stripes == 0) {
-> +		log->next_checkpoint = ctx->pos;
-> +		r5l_log_write_empty_meta_block(log, ctx->pos, ctx->seq++);
-> +		ctx->pos = r5l_ring_add(log, ctx->pos, BLOCK_SECTORS);
-> +	} else if (r5c_recovery_rewrite_data_only_stripes(log, ctx)) {
->  		pr_err("md/raid:%s: failed to rewrite stripes to journal\n",
->  		       mdname(mddev));
-> -		return -EIO;
-> +		ret =  -EIO;
-> +		goto error;
->  	}
->  
-> -	log->log_start = ctx.pos;
-> -	log->seq = ctx.seq;
-> +	log->log_start = ctx->pos;
-> +	log->seq = ctx->seq;
->  	log->last_checkpoint = pos;
->  	r5l_write_super(log, pos);
->  
-> -	r5c_recovery_flush_data_only_stripes(log, &ctx);
-> -	return 0;
-> +	r5c_recovery_flush_data_only_stripes(log, ctx);
-> +	ret = 0;
-> +error:
-> +	r5l_recovery_free_ra_pool(log, ctx);
-> +ra_pool:
-> +	__free_page(ctx->meta_page);
-> +meta_page:
-> +	kfree(ctx);
-> +	return ret;
->  }
->  
->  static void r5l_write_super(struct r5l_log *log, sector_t cp)
-> -- 
-> 2.9.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+# ~tim/compile/mdadm/mdadm --manage /dev/md2 --add /dev/sdf2
+mdadm: add new device failed for /dev/sdf2 as 4: Invalid argument
+
+The kernel says:
+
+md: sdf2 does not have a valid v1.2 superblock, not importing!
+
+I've tried with various mdadm versions (v3.1.4 to current git), and also
+with Ubuntu  4.4.x and 4.8.x kernels.
+
+I've attached mdadm --examine -v output:
+
+Existing member examined with mdadm from git@github.com:neilbrown/mdadm.git
+
+/dev/sdd2:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x9
+     Array UUID : ad7ef7fa:e78344ea:a8778f06:abf07bf5
+           Name : magic:2  (local to host magic)
+  Creation Time : Wed Jul 15 13:43:06 2015
+     Raid Level : raid5
+   Raid Devices : 3
+
+ Avail Dev Size : 3885793456 (1852.89 GiB 1989.53 GB)
+     Array Size : 3885793280 (3705.78 GiB 3979.05 GB)
+  Used Dev Size : 3885793280 (1852.89 GiB 1989.53 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=262056 sectors, after=176 sectors
+          State : clean
+    Device UUID : 55004cc7:b2e691de:c612612a:675ea2f3
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Thu Mar  9 15:14:29 2017
+  Bad Block Log : 512 entries available at offset 72 sectors - bad
+blocks present.
+       Checksum : 35698943 - correct
+         Events : 568847
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 1
+   Array State : AAA ('A' == active, '.' == missing, 'R' == replacing)
+
+
+
+ diff vs. failed-to-add member:
+
+
+--- /tmp/existing-member-examined-with-git-mdadm-d2	2017-03-09
+15:18:32.993620717 +0000
++++ /tmp/mdadm-3-1-4-examined-with-git-mdadm-f2	2017-03-09
+15:18:37.905679120 +0000
+@@ -1,4 +1,4 @@
+-/dev/sdd2:
++/dev/sdf2:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x9
+@@ -8,23 +8,23 @@
+      Raid Level : raid5
+    Raid Devices : 3
+
+- Avail Dev Size : 3885793456 (1852.89 GiB 1989.53 GB)
++ Avail Dev Size : 3886053552 (1853.01 GiB 1989.66 GB)
+      Array Size : 3885793280 (3705.78 GiB 3979.05 GB)
+   Used Dev Size : 3885793280 (1852.89 GiB 1989.53 GB)
+-    Data Offset : 262144 sectors
++    Data Offset : 2048 sectors
+    Super Offset : 8 sectors
+-   Unused Space : before=262056 sectors, after=176 sectors
++   Unused Space : before=1960 sectors, after=260272 sectors
+           State : active
+-    Device UUID : 55004cc7:b2e691de:c612612a:675ea2f3
++    Device UUID : 876152cb:5f1646b5:39c32e17:9b55d3dd
+
+ Internal Bitmap : 8 sectors from superblock
+-    Update Time : Thu Mar  9 15:18:32 2017
++    Update Time : Thu Mar  9 15:15:02 2017
+   Bad Block Log : 512 entries available at offset 72 sectors - bad
+blocks present.
+-       Checksum : 35698a37 - correct
+-         Events : 568848
++       Checksum : e719c0b6 - correct
++         Events : 0
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+-   Device Role : Active device 1
++   Device Role : spare
+    Array State : AAA ('A' == active, '.' == missing, 'R' == replacing)
+
+
+and vs. same newly created spare, but when the add was attempted with
+the a current git mdadm:
+
+
+--- /tmp/existing-member-examined-with-git-mdadm-d2	2017-03-09
+15:18:32.993620717 +0000
++++ /tmp/git-f2	2017-03-09 15:14:22.226655671 +0000
+@@ -1,4 +1,4 @@
+-/dev/sdd2:
++/dev/sdf2:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x9
+@@ -13,18 +13,18 @@
+   Used Dev Size : 3885793280 (1852.89 GiB 1989.53 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+-   Unused Space : before=262056 sectors, after=176 sectors
+-          State : active
+-    Device UUID : 55004cc7:b2e691de:c612612a:675ea2f3
++   Unused Space : before=262064 sectors, after=176 sectors
++          State : clean
++    Device UUID : 3b1be0c7:82e8b8df:2d84b34b:9212fa71
+
+ Internal Bitmap : 8 sectors from superblock
+-    Update Time : Thu Mar  9 15:18:32 2017
+-  Bad Block Log : 512 entries available at offset 72 sectors - bad
+blocks present.
+-       Checksum : 35698a37 - correct
+-         Events : 568848
++    Update Time : Thu Mar  9 15:13:58 2017
++  Bad Block Log : 512 entries available at offset 16 sectors - bad
+blocks present.
++       Checksum : d6c5ca00 - correct
++         Events : 0
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+-   Device Role : Active device 1
++   Device Role : spare
+    Array State : AAA ('A' == active, '.' == missing, 'R' == replacing)
+
+
+Any hints or tips welcome...
+
+Tim.
