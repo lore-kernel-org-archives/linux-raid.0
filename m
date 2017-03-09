@@ -1,38 +1,41 @@
-From: Edward Kuns <eddie.kuns@gmail.com>
+From: Brad Campbell <lists2009@fnarfbargle.com>
 Subject: Re: Auto replace disk
-Date: Wed, 8 Mar 2017 20:08:01 -0600
-Message-ID: <CACsGCyTKzHb7Z+2jFPyKiShTf9HSeJvc_9x9mPZY6sNzpaEc_Q@mail.gmail.com>
+Date: Thu, 9 Mar 2017 09:31:18 +0800
+Message-ID: <87713f17-e078-5d90-07b4-fc1dbb963496@fnarfbargle.com>
 References: <CAJH6TXgyOEE5A8TZVZy-db+tPD1QeHtnXXO3B-1vmKe4cAt6xA@mail.gmail.com>
- <58C04AC9.9070801@youngman.org.uk> <CAJH6TXjjjnQ3_OJ87Gv8Spsd=7BZ7RGrfCJ0kqeRXTQN_1Q3KQ@mail.gmail.com>
+ <58C04AC9.9070801@youngman.org.uk>
+ <CAJH6TXjjjnQ3_OJ87Gv8Spsd=7BZ7RGrfCJ0kqeRXTQN_1Q3KQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <CAJH6TXjjjnQ3_OJ87Gv8Spsd=7BZ7RGrfCJ0kqeRXTQN_1Q3KQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
-Cc: Wols Lists <antlists@youngman.org.uk>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, Wols Lists <antlists@youngman.org.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Mar 8, 2017 at 3:32 PM, Gandalf Corvotempesta
-<gandalf.corvotempesta@gmail.com> wrote:
->> The last resort is to remove the broken drive and then replace it - this is
->> likely to trigger further failures and bring down the array.
->
+On 09/03/17 05:32, Gandalf Corvotempesta wrote:
+
 > Why ? I've removed many, many, many disks before with no issue.
 > Why removing a disk should bring the whole array down? This seems a bug to me.
+> If a disk will crash, the effect is the same as removing from the slot
+> and RAID is
+> meant to protect against this kind of failures.
 
-In a perfect world where you do scrubbing and your timeouts are
-properly configured and your other disks are all in good shape, you're
-right.  In the real world where people often don't do what, where
-multiple bad sectors accumulate on multiple disks before you get a
-failure, or where you're just unlucky, a rebuild triggered by removing
-a bad disk and adding back a new one has a fair chance of experiencing
-a failure during the rebuild.
+In general a good number of "help me my RAID is dead" requests that hit 
+this list are due to not performing routine array or drive scrubs. So 
+one drive dies, and one of the others has a previously unknown bad 
+sector. When you put the new drive in, during the rebuild the bad sector 
+is hit and the whole array comes tumbling down.
 
-If you've lost all redundancy due to a disk failure and while doing a
-rebuild you experience another read failure or a second disk failure,
-whether due to negligence or bad luck, you can lose the whole array.
-If you have the option of doing so, therefore, better to --replace
-while you still have redundancy.
+Doing a proactive replacement reduces the possibility of this occurring. 
+Having said that, if your disk is dead then there's no other option 
+anyway. Regular array scrubs go a long way to mitigating this risk, but 
+it does happen frequently enough that you need to be warned against it.
 
-           Eddie
+Just because it hasn't happened to you *yet* does not mean you're 
+immune, and it's certainly not a *bug*.
+
+
+
