@@ -1,59 +1,63 @@
-From: "Reshetova, Elena" <elena.reshetova@intel.com>
-Subject: RE: [Xen-devel] [PATCH 29/29] drivers, xen: convert grant_map.users
- from atomic_t to refcount_t
-Date: Thu, 9 Mar 2017 07:19:12 +0000
-Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C569F1@IRSMSX102.ger.corp.intel.com>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-30-git-send-email-elena.reshetova@intel.com>
- <99270126-7751-eed0-5efa-fc695ff3be25@oracle.com>
- <2236FBA76BA1254E88B949DDB74E612B41C56177@IRSMSX102.ger.corp.intel.com>
- <c4ea3925-f505-3c5b-a9fc-c74ea5a7cbe9@oracle.com>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: Re: interesting case of a hung 'recovery'
+Date: Thu, 9 Mar 2017 18:39:39 +1100
+Message-ID: <61a297da-de29-e471-7270-166b33ce18b9@eyal.emu.id.au>
+References: <091a6513-1594-4a33-691a-cd1f7920d4a0@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <c4ea3925-f505-3c5b-a9fc-c74ea5a7cbe9@oracle.com>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Boris Ostrovsky <boris.ostrovsky@oracle.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-Cc: "peterz@infradead.org" <peterz@infradead.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux1394-devel@lists.sourceforge.net" <linux1394-devel@lists.sourceforge.net>, "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>, "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>, "fcoe-devel@open-fcoe.org" <fcoe-devel@open-fcoe.org>, Hans Liljestrand <ishkamiel@gmail.com>, "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>, Kees Cook <keescook@chromium.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>, xen-devel@lists.x
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <091a6513-1594-4a33-691a-cd1f7920d4a0@eyal.emu.id.au>
+Sender: linux-raid-owner@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Bump.
 
-> On 03/08/2017 08:49 AM, Reshetova, Elena wrote:
-> >> On 03/06/2017 09:21 AM, Elena Reshetova wrote:
-> >>> refcount_t type and corresponding API should be
-> >>> used instead of atomic_t when the variable is used as
-> >>> a reference counter. This allows to avoid accidental
-> >>> refcounter overflows that might lead to use-after-free
-> >>> situations.
-> >>>
-> >>> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> >>> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> >>> Signed-off-by: Kees Cook <keescook@chromium.org>
-> >>> Signed-off-by: David Windsor <dwindsor@gmail.com>
-> >>> ---
-> >>>  drivers/xen/gntdev.c | 11 ++++++-----
-> >>>  1 file changed, 6 insertions(+), 5 deletions(-)
-> >> Reviewed-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-> > Is there a tree that can take this change? Turns out it is better to propagate
-> changes via separate trees and only leftovers can be taken via Greg's tree.
-> >
-> 
-> Sure, we can take it via Xen tree for rc3.
+On 18/02/17 23:14, Eyal Lebedinsky wrote:
+> I should start by saying that this is an old fedora 19 system
+>
+> Executive summary: after '--add'ing a new member a 'recovery' starts but 'sync_max' is not reset.
+>
+> $ uname -a
+> Linux e7.eyal.emu.id.au 3.14.27-100.fc19.x86_64 #1 SMP Wed Dec 17 19:36:34 UTC 2014 x86_64 x86_64 x86_64 GNU/Linux
 
-Thank you very much!
+$ sudo mdadm --version
+mdadm - v4.0 - 2017-01-09
 
-Best Regards,
-Elena.
+> so the issue may have been fixed since.
+>
+> I had a disk fail in a raid6. After some 'pending' sectors were logged I decided to do a 'check'
+> around that location (set sync_min/max and echo 'check'). Sure enough it elicited disk errors,
+> but the disk did not recover and it was kicked out of the array. Moreover it became unresponsive.
+> It needed a power cycle so I shutdown and rebooted the machine.
+>
+> Not one to give up easily I tried the check again, with the same result.
+> It was time to '--remove' this array member. I then '--add'ed a new disk which started a recovery.
+>
+> A few hours later I noticed that it slowed down. A lot. It actually did not progress at all for
+> a few hours (I was away from the machine).
+>
+> As I was staring at the screen (for a long while) I realised that it stopped at 55.5%, and this
+> number is exactly where the original 'check' failed (I still do not understand why with my bad
+> memory I remembered this number).
+>
+> I checked 'sync_completed' and it was proper.
+> I then examined 'sync_max' and it was wrong - it had the location where the very early 'check'
+> failed earlier in the day. It was the same sector where it is now paused at - looks related.
+>
+> I decided to take a (small) risk and do
+>     # echo 'max' >/sys/block/md127/md/sync_max
+> at which point the recovery moved on. It should be finished in about 5 hours.
+>
+> I do not think that it is correct for 'sync_max' to not be set to 'max' when a new member is
+> added - it surely requires a full recovery.
+>
+> I really hope (and expect) that this was actually fixed, but this note may help others facing
+> same predicament.
+>
+> cheers
+>
 
-> 
-> -boris
+-- 
+Eyal Lebedinsky (eyal@eyal.emu.id.au)
