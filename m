@@ -1,92 +1,76 @@
-From: Jack Wang <jack.wang.usish@gmail.com>
-Subject: Re: interesting case of a hung 'recovery'
-Date: Thu, 9 Mar 2017 10:13:01 +0100
-Message-ID: <CA+res+SYTaCd77Nvdvn-gSe2qcJu5nXMdnV32nL0MKs9NOzqYg@mail.gmail.com>
-References: <091a6513-1594-4a33-691a-cd1f7920d4a0@eyal.emu.id.au> <61a297da-de29-e471-7270-166b33ce18b9@eyal.emu.id.au>
+From: "Reshetova, Elena" <elena.reshetova@intel.com>
+Subject: RE: [PATCH 22/29] drivers, scsi: convert iscsi_task.refcount from
+ atomic_t to refcount_t
+Date: Thu, 9 Mar 2017 09:26:03 +0000
+Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C56ABF@IRSMSX102.ger.corp.intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+ <1488810076-3754-23-git-send-email-elena.reshetova@intel.com>
+ <20170308184740.4gueok5csdkt7u62@straylight.hirudinean.org>
+ <2236FBA76BA1254E88B949DDB74E612B41C569DC@IRSMSX102.ger.corp.intel.com>
+ <5a1f7860-b650-9fe7-fafb-1f0c7cae00e7@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <61a297da-de29-e471-7270-166b33ce18b9@eyal.emu.id.au>
-Sender: linux-raid-owner@vger.kernel.org
-To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <5a1f7860-b650-9fe7-fafb-1f0c7cae00e7@suse.de>
+Content-Language: en-US
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Johannes Thumshirn <jthumshirn@suse.de>, Chris Leech <cleech@redhat.com>
+Cc: "peterz@infradead.org" <peterz@infradead.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux1394-devel@lists.sourceforge.net" <linux1394-devel@lists.sourceforge.net>, "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>, "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>, "fcoe-devel@open-fcoe.org" <fcoe-devel@open-fcoe.org>, "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>, "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>, Kees Cook <keescook@chromium.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-bcache@vger.kernel.org" <linux-bcache@vger.kerne>
 List-Id: linux-raid.ids
 
-2017-03-09 8:39 GMT+01:00 Eyal Lebedinsky <eyal@eyal.emu.id.au>:
-> Bump.
->
-> On 18/02/17 23:14, Eyal Lebedinsky wrote:
->>
->> I should start by saying that this is an old fedora 19 system
->>
->> Executive summary: after '--add'ing a new member a 'recovery' starts but
->> 'sync_max' is not reset.
->>
->> $ uname -a
->> Linux e7.eyal.emu.id.au 3.14.27-100.fc19.x86_64 #1 SMP Wed Dec 17 19:36:34
->> UTC 2014 x86_64 x86_64 x86_64 GNU/Linux
->
->
-> $ sudo mdadm --version
-> mdadm - v4.0 - 2017-01-09
->
->> so the issue may have been fixed since.
->>
->> I had a disk fail in a raid6. After some 'pending' sectors were logged I
->> decided to do a 'check'
->> around that location (set sync_min/max and echo 'check'). Sure enough it
->> elicited disk errors,
->> but the disk did not recover and it was kicked out of the array. Moreover
->> it became unresponsive.
->> It needed a power cycle so I shutdown and rebooted the machine.
->>
->> Not one to give up easily I tried the check again, with the same result.
->> It was time to '--remove' this array member. I then '--add'ed a new disk
->> which started a recovery.
->>
->> A few hours later I noticed that it slowed down. A lot. It actually did
->> not progress at all for
->> a few hours (I was away from the machine).
->>
->> As I was staring at the screen (for a long while) I realised that it
->> stopped at 55.5%, and this
->> number is exactly where the original 'check' failed (I still do not
->> understand why with my bad
->> memory I remembered this number).
->>
->> I checked 'sync_completed' and it was proper.
->> I then examined 'sync_max' and it was wrong - it had the location where
->> the very early 'check'
->> failed earlier in the day. It was the same sector where it is now paused
->> at - looks related.
->>
->> I decided to take a (small) risk and do
->>     # echo 'max' >/sys/block/md127/md/sync_max
->> at which point the recovery moved on. It should be finished in about 5
->> hours.
->>
->> I do not think that it is correct for 'sync_max' to not be set to 'max'
->> when a new member is
->> added - it surely requires a full recovery.
->>
->> I really hope (and expect) that this was actually fixed, but this note may
->> help others facing
->> same predicament.
->>
->> cheers
->>
->
+
+> On 03/09/2017 08:18 AM, Reshetova, Elena wrote:
+> >> On Mon, Mar 06, 2017 at 04:21:09PM +0200, Elena Reshetova wrote:
+> >>> refcount_t type and corresponding API should be
+> >>> used instead of atomic_t when the variable is used as
+> >>> a reference counter. This allows to avoid accidental
+> >>> refcounter overflows that might lead to use-after-free
+> >>> situations.
+> >>>
+> >>> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+> >>> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+> >>> Signed-off-by: Kees Cook <keescook@chromium.org>
+> >>> Signed-off-by: David Windsor <dwindsor@gmail.com>
+> >>
+> >> This looks OK to me.
+> >>
+> >> Acked-by: Chris Leech <cleech@redhat.com>
+> >
+> > Thank you for review! Do you have a tree that can take this change?
+> =
+
+> Hi Elena,
+> =
+
+> iscsi like fcoe should go via the SCSI tree.
+
+Thanks Johannes! Should I resend with "Acked-by" added in order for it to b=
+e picked up? =
+
+
+Best Regards,
+Elena.
+
+
+> =
+
+> Byte,
+> 	Johannes
+> =
+
 > --
-> Eyal Lebedinsky (eyal@eyal.emu.id.au)
-
-You'd better offer attach much detailed information, then people can help.
-
-eg:
-https://raid.wiki.kernel.org/index.php/Asking_for_help
-
-For the problem you reported, better offer also kernel dmesg, output
-of blocking tasks via "echo w >  /proc/sysrq-trigger" maybe also
-"echo t > /proc/sysrq-trigger"
-
-Cheers,
-Jack
+> Johannes Thumshirn                                          Storage
+> jthumshirn@suse.de                                +49 911 74053 689
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+> GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
+> HRB 21284 (AG N=FCrnberg)
+> Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
