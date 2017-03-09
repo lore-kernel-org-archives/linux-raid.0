@@ -1,108 +1,374 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH V3] md: move bitmap_destroy before __md_stop
-Date: Thu, 9 Mar 2017 10:24:43 -0800
-Message-ID: <20170309182443.c3th4di2v3kct7eu@kernel.org>
-References: <1488940292-8555-1-git-send-email-gqjiang@suse.com>
+Subject: Re: [PATCH v3] md/r5cache: improve recovery with read ahead page pool
+Date: Thu, 9 Mar 2017 10:48:36 -0800
+Message-ID: <20170309184836.5hkg63acazstenix@kernel.org>
+References: <20170308004917.3902687-1-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1488940292-8555-1-git-send-email-gqjiang@suse.com>
+In-Reply-To: <20170308004917.3902687-1-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>
-Cc: linux-raid@vger.kernel.org, neilb@suse.com, shli@fb.com
+To: Song Liu <songliubraving@fb.com>
+Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org
 List-Id: linux-raid.ids
 
-On Wed, Mar 08, 2017 at 10:31:32AM +0800, Guoqing Jiang wrote:
-> Since we have switched to sync way to handle METADATA_UPDATED
-> msg for md-cluster, then process_metadata_update is depended
-> on mddev->thread->wqueue.
+On Tue, Mar 07, 2017 at 04:49:17PM -0800, Song Liu wrote:
+> In r5cache recovery, the journal device is scanned page by page.
+> Currently, we use sync_page_io() to read journal device. This is
+> not efficient when we have to recovery many stripes from the journal.
 > 
-> With the new change, clustered raid could possible hang if
-> array received a METADATA_UPDATED msg after array unregistered
-> mddev->thread, so we need to stop clustered raid (bitmap_destroy
-> 	 -> bitmap_free -> md_cluster_stop) earlier than unregister
-> thread (mddev_detach -> md_unregister_thread).
+> To improve the speed of recovery, this patch introduces a read ahead
+> page pool (ra_pool) to recovery_ctx. With ra_pool, multiple consecutive
+> pages are read in one IO. Then the recovery code read the journal from
+> ra_pool.
 > 
-> And this change should be safe for non-clustered raid since
-> all writes are stopped before the destroy. Also in md_run,
-> we activate the personality (pers->run()) before activating
-> the bitmap (bitmap_create()). So it is pleasingly symmetric
-> to stop the bitmap (bitmap_destroy()) before stopping the
-> personality (__md_stop() calls pers->free()).
+> With ra_pool, r5l_recovery_ctx has become much bigger. Therefore,
+> r5l_recovery_log() is refactored so r5l_recovery_ctx is not using
+> stack space.
+
+applied, thanks!
+
 > 
-> But we don't want to break the codes for waiting behind IO as
-> Shaohua mentioned, so move those codes from mddev_detach to
-> bitmap_destroy. Since we already check bitmap at the beginning
-> of bitmap_destroy, just wait for behind_writes to be zero if
-> it existed.
-> 
-> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+> Signed-off-by: Song Liu <songliubraving@fb.com>
 > ---
-> This version move waiting behind IO codes into bitmap_destroy
-> so we can safely call bitmap_destroy before __md_stop now.
+>  drivers/md/raid5-cache.c | 223 +++++++++++++++++++++++++++++++++++++----------
+>  1 file changed, 177 insertions(+), 46 deletions(-)
 > 
->  drivers/md/bitmap.c |  9 +++++++++
->  drivers/md/md.c     | 13 ++-----------
->  2 files changed, 11 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-> index b6fa55a3cff8..89a35bc092dd 100644
-> --- a/drivers/md/bitmap.c
-> +++ b/drivers/md/bitmap.c
-> @@ -1771,6 +1771,15 @@ void bitmap_destroy(struct mddev *mddev)
->  	if (!bitmap) /* there was no bitmap */
->  		return;
+> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+> index 3f307be..0d744d5 100644
+> --- a/drivers/md/raid5-cache.c
+> +++ b/drivers/md/raid5-cache.c
+> @@ -30,6 +30,7 @@
+>   * underneath hardware sector size. only works with PAGE_SIZE == 4096
+>   */
+>  #define BLOCK_SECTORS (8)
+> +#define BLOCK_SECTOR_SHIFT (3)
 >  
-> +	/* wait for behind writes to complete */
-> +	if (atomic_read(&bitmap->behind_writes) > 0) {
-> +		printk(KERN_INFO "md:%s: behind writes in progress - waiting to stop.\n",
-> +		       mdname(mddev));
-> +		/* need to kick something here to make sure I/O goes? */
-> +		wait_event(bitmap->behind_wait,
-> +			   atomic_read(&bitmap->behind_writes) == 0);
+>  /*
+>   * log->max_free_space is min(1/4 disk size, 10G reclaimable space).
+> @@ -1552,6 +1553,8 @@ bool r5l_log_disk_error(struct r5conf *conf)
+>  	return ret;
+>  }
+>  
+> +#define R5L_RECOVERY_PAGE_POOL_SIZE 256
+> +
+>  struct r5l_recovery_ctx {
+>  	struct page *meta_page;		/* current meta */
+>  	sector_t meta_total_blocks;	/* total size of current meta and data */
+> @@ -1560,18 +1563,131 @@ struct r5l_recovery_ctx {
+>  	int data_parity_stripes;	/* number of data_parity stripes */
+>  	int data_only_stripes;		/* number of data_only stripes */
+>  	struct list_head cached_list;
+> +
+> +	/*
+> +	 * read ahead page pool (ra_pool)
+> +	 * in recovery, log is read sequentially. It is not efficient to
+> +	 * read every page with sync_page_io(). The read ahead page pool
+> +	 * reads multiple pages with one IO, so further log read can
+> +	 * just copy data from the pool.
+> +	 */
+> +	struct page *ra_pool[R5L_RECOVERY_PAGE_POOL_SIZE];
+> +	sector_t pool_offset;	/* offset of first page in the pool */
+> +	int total_pages;	/* total allocated pages */
+> +	int valid_pages;	/* pages with valid data */
+> +	struct bio *ra_bio;	/* bio to do the read ahead */
+>  };
+>  
+> +static int r5l_recovery_allocate_ra_pool(struct r5l_log *log,
+> +					    struct r5l_recovery_ctx *ctx)
+> +{
+> +	struct page *page;
+> +
+> +	ctx->ra_bio = bio_alloc_bioset(GFP_KERNEL, BIO_MAX_PAGES, log->bs);
+> +	if (!ctx->ra_bio)
+> +		return -ENOMEM;
+> +
+> +	ctx->valid_pages = 0;
+> +	ctx->total_pages = 0;
+> +	while (ctx->total_pages < R5L_RECOVERY_PAGE_POOL_SIZE) {
+> +		page = alloc_page(GFP_KERNEL);
+> +
+> +		if (!page)
+> +			break;
+> +		ctx->ra_pool[ctx->total_pages] = page;
+> +		ctx->total_pages += 1;
 > +	}
 > +
->  	mutex_lock(&mddev->bitmap_info.mutex);
->  	spin_lock(&mddev->lock);
->  	mddev->bitmap = NULL; /* disconnect from the md device */
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 79a99a1c9ce7..b63ab4f33892 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -5534,15 +5534,6 @@ EXPORT_SYMBOL_GPL(md_stop_writes);
->  
->  static void mddev_detach(struct mddev *mddev)
+> +	if (ctx->total_pages == 0) {
+> +		bio_put(ctx->ra_bio);
+> +		return -ENOMEM;
+> +	}
+> +
+> +	ctx->pool_offset = 0;
+> +	return 0;
+> +}
+> +
+> +static void r5l_recovery_free_ra_pool(struct r5l_log *log,
+> +					struct r5l_recovery_ctx *ctx)
+> +{
+> +	int i;
+> +
+> +	for (i = 0; i < ctx->total_pages; ++i)
+> +		put_page(ctx->ra_pool[i]);
+> +	bio_put(ctx->ra_bio);
+> +}
+> +
+> +/*
+> + * fetch ctx->valid_pages pages from offset
+> + * In normal cases, ctx->valid_pages == ctx->total_pages after the call.
+> + * However, if the offset is close to the end of the journal device,
+> + * ctx->valid_pages could be smaller than ctx->total_pages
+> + */
+> +static int r5l_recovery_fetch_ra_pool(struct r5l_log *log,
+> +				      struct r5l_recovery_ctx *ctx,
+> +				      sector_t offset)
+> +{
+> +	bio_reset(ctx->ra_bio);
+> +	ctx->ra_bio->bi_bdev = log->rdev->bdev;
+> +	bio_set_op_attrs(ctx->ra_bio, REQ_OP_READ, 0);
+> +	ctx->ra_bio->bi_iter.bi_sector = log->rdev->data_offset + offset;
+> +
+> +	ctx->valid_pages = 0;
+> +	ctx->pool_offset = offset;
+> +
+> +	while (ctx->valid_pages < ctx->total_pages) {
+> +		bio_add_page(ctx->ra_bio,
+> +			     ctx->ra_pool[ctx->valid_pages], PAGE_SIZE, 0);
+> +		ctx->valid_pages += 1;
+> +
+> +		offset = r5l_ring_add(log, offset, BLOCK_SECTORS);
+> +
+> +		if (offset == 0)  /* reached end of the device */
+> +			break;
+> +	}
+> +
+> +	return submit_bio_wait(ctx->ra_bio);
+> +}
+> +
+> +/*
+> + * try read a page from the read ahead page pool, if the page is not in the
+> + * pool, call r5l_recovery_fetch_ra_pool
+> + */
+> +static int r5l_recovery_read_page(struct r5l_log *log,
+> +				  struct r5l_recovery_ctx *ctx,
+> +				  struct page *page,
+> +				  sector_t offset)
+> +{
+> +	int ret;
+> +
+> +	if (offset < ctx->pool_offset ||
+> +	    offset >= ctx->pool_offset + ctx->valid_pages * BLOCK_SECTORS) {
+> +		ret = r5l_recovery_fetch_ra_pool(log, ctx, offset);
+> +		if (ret)
+> +			return ret;
+> +	}
+> +
+> +	BUG_ON(offset < ctx->pool_offset ||
+> +	       offset >= ctx->pool_offset + ctx->valid_pages * BLOCK_SECTORS);
+> +
+> +	memcpy(page_address(page),
+> +	       page_address(ctx->ra_pool[(offset - ctx->pool_offset) >>
+> +					 BLOCK_SECTOR_SHIFT]),
+> +	       PAGE_SIZE);
+> +	return 0;
+> +}
+> +
+>  static int r5l_recovery_read_meta_block(struct r5l_log *log,
+>  					struct r5l_recovery_ctx *ctx)
 >  {
-> -	struct bitmap *bitmap = mddev->bitmap;
-> -	/* wait for behind writes to complete */
-> -	if (bitmap && atomic_read(&bitmap->behind_writes) > 0) {
-> -		pr_debug("md:%s: behind writes in progress - waiting to stop.\n",
-> -			 mdname(mddev));
-> -		/* need to kick something here to make sure I/O goes? */
-> -		wait_event(bitmap->behind_wait,
-> -			   atomic_read(&bitmap->behind_writes) == 0);
-> -	}
-
-I think it's ok to add this part into bitmap_destroy, as we need to call
-bitmap_destroy before mddev_detach. Look at the usage of mddev_detach, at in
-one place (level_store()), we wait for the IO without bitmap_destroy. I think
-we should keep this part code in mddev_detach. Maybe create a small function,
-let both mddev_detach and bitmap_destroy call it.
-
->  	if (mddev->pers && mddev->pers->quiesce) {
->  		mddev->pers->quiesce(mddev, 1);
->  		mddev->pers->quiesce(mddev, 0);
-> @@ -5574,8 +5565,8 @@ void md_stop(struct mddev *mddev)
->  	/* stop the array and free an attached data structures.
->  	 * This is called from dm-raid
->  	 */
-> -	__md_stop(mddev);
->  	bitmap_destroy(mddev);
-> +	__md_stop(mddev);
-
-since we now always do bitmap_destroy and follow __md_stop, maybe move
-bitmap_destroy to very begining of __md_stop
-
-Thanks,
-Shaohua
+>  	struct page *page = ctx->meta_page;
+>  	struct r5l_meta_block *mb;
+>  	u32 crc, stored_crc;
+> +	int ret;
+>  
+> -	if (!sync_page_io(log->rdev, ctx->pos, PAGE_SIZE, page, REQ_OP_READ, 0,
+> -			  false))
+> -		return -EIO;
+> +	ret = r5l_recovery_read_page(log, ctx, page, ctx->pos);
+> +	if (ret != 0)
+> +		return ret;
+>  
+>  	mb = page_address(page);
+>  	stored_crc = le32_to_cpu(mb->checksum);
+> @@ -1653,8 +1769,7 @@ static void r5l_recovery_load_data(struct r5l_log *log,
+>  	raid5_compute_sector(conf,
+>  			     le64_to_cpu(payload->location), 0,
+>  			     &dd_idx, sh);
+> -	sync_page_io(log->rdev, log_offset, PAGE_SIZE,
+> -		     sh->dev[dd_idx].page, REQ_OP_READ, 0, false);
+> +	r5l_recovery_read_page(log, ctx, sh->dev[dd_idx].page, log_offset);
+>  	sh->dev[dd_idx].log_checksum =
+>  		le32_to_cpu(payload->checksum[0]);
+>  	ctx->meta_total_blocks += BLOCK_SECTORS;
+> @@ -1673,17 +1788,15 @@ static void r5l_recovery_load_parity(struct r5l_log *log,
+>  	struct r5conf *conf = mddev->private;
+>  
+>  	ctx->meta_total_blocks += BLOCK_SECTORS * conf->max_degraded;
+> -	sync_page_io(log->rdev, log_offset, PAGE_SIZE,
+> -		     sh->dev[sh->pd_idx].page, REQ_OP_READ, 0, false);
+> +	r5l_recovery_read_page(log, ctx, sh->dev[sh->pd_idx].page, log_offset);
+>  	sh->dev[sh->pd_idx].log_checksum =
+>  		le32_to_cpu(payload->checksum[0]);
+>  	set_bit(R5_Wantwrite, &sh->dev[sh->pd_idx].flags);
+>  
+>  	if (sh->qd_idx >= 0) {
+> -		sync_page_io(log->rdev,
+> -			     r5l_ring_add(log, log_offset, BLOCK_SECTORS),
+> -			     PAGE_SIZE, sh->dev[sh->qd_idx].page,
+> -			     REQ_OP_READ, 0, false);
+> +		r5l_recovery_read_page(
+> +			log, ctx, sh->dev[sh->qd_idx].page,
+> +			r5l_ring_add(log, log_offset, BLOCK_SECTORS));
+>  		sh->dev[sh->qd_idx].log_checksum =
+>  			le32_to_cpu(payload->checksum[1]);
+>  		set_bit(R5_Wantwrite, &sh->dev[sh->qd_idx].flags);
+> @@ -1814,14 +1927,15 @@ r5c_recovery_replay_stripes(struct list_head *cached_stripe_list,
+>  
+>  /* if matches return 0; otherwise return -EINVAL */
+>  static int
+> -r5l_recovery_verify_data_checksum(struct r5l_log *log, struct page *page,
+> +r5l_recovery_verify_data_checksum(struct r5l_log *log,
+> +				  struct r5l_recovery_ctx *ctx,
+> +				  struct page *page,
+>  				  sector_t log_offset, __le32 log_checksum)
+>  {
+>  	void *addr;
+>  	u32 checksum;
+>  
+> -	sync_page_io(log->rdev, log_offset, PAGE_SIZE,
+> -		     page, REQ_OP_READ, 0, false);
+> +	r5l_recovery_read_page(log, ctx, page, log_offset);
+>  	addr = kmap_atomic(page);
+>  	checksum = crc32c_le(log->uuid_checksum, addr, PAGE_SIZE);
+>  	kunmap_atomic(addr);
+> @@ -1853,17 +1967,17 @@ r5l_recovery_verify_data_checksum_for_mb(struct r5l_log *log,
+>  
+>  		if (payload->header.type == R5LOG_PAYLOAD_DATA) {
+>  			if (r5l_recovery_verify_data_checksum(
+> -				    log, page, log_offset,
+> +				    log, ctx, page, log_offset,
+>  				    payload->checksum[0]) < 0)
+>  				goto mismatch;
+>  		} else if (payload->header.type == R5LOG_PAYLOAD_PARITY) {
+>  			if (r5l_recovery_verify_data_checksum(
+> -				    log, page, log_offset,
+> +				    log, ctx, page, log_offset,
+>  				    payload->checksum[0]) < 0)
+>  				goto mismatch;
+>  			if (conf->max_degraded == 2 && /* q for RAID 6 */
+>  			    r5l_recovery_verify_data_checksum(
+> -				    log, page,
+> +				    log, ctx, page,
+>  				    r5l_ring_add(log, log_offset,
+>  						 BLOCK_SECTORS),
+>  				    payload->checksum[1]) < 0)
+> @@ -2241,55 +2355,72 @@ static void r5c_recovery_flush_data_only_stripes(struct r5l_log *log,
+>  static int r5l_recovery_log(struct r5l_log *log)
+>  {
+>  	struct mddev *mddev = log->rdev->mddev;
+> -	struct r5l_recovery_ctx ctx;
+> +	struct r5l_recovery_ctx *ctx;
+>  	int ret;
+>  	sector_t pos;
+>  
+> -	ctx.pos = log->last_checkpoint;
+> -	ctx.seq = log->last_cp_seq;
+> -	ctx.meta_page = alloc_page(GFP_KERNEL);
+> -	ctx.data_only_stripes = 0;
+> -	ctx.data_parity_stripes = 0;
+> -	INIT_LIST_HEAD(&ctx.cached_list);
+> -
+> -	if (!ctx.meta_page)
+> +	ctx = kzalloc(sizeof(*ctx), GFP_KERNEL);
+> +	if (!ctx)
+>  		return -ENOMEM;
+>  
+> -	ret = r5c_recovery_flush_log(log, &ctx);
+> -	__free_page(ctx.meta_page);
+> +	ctx->pos = log->last_checkpoint;
+> +	ctx->seq = log->last_cp_seq;
+> +	ctx->data_only_stripes = 0;
+> +	ctx->data_parity_stripes = 0;
+> +	INIT_LIST_HEAD(&ctx->cached_list);
+> +	ctx->meta_page = alloc_page(GFP_KERNEL);
+>  
+> -	if (ret)
+> -		return ret;
+> +	if (!ctx->meta_page) {
+> +		ret =  -ENOMEM;
+> +		goto meta_page;
+> +	}
+> +
+> +	if (r5l_recovery_allocate_ra_pool(log, ctx) != 0) {
+> +		ret = -ENOMEM;
+> +		goto ra_pool;
+> +	}
+>  
+> -	pos = ctx.pos;
+> -	ctx.seq += 10000;
+> +	ret = r5c_recovery_flush_log(log, ctx);
+>  
+> +	if (ret)
+> +		goto error;
+>  
+> -	if ((ctx.data_only_stripes == 0) && (ctx.data_parity_stripes == 0))
+> +	pos = ctx->pos;
+> +	ctx->seq += 10000;
+> +
+> +	if ((ctx->data_only_stripes == 0) && (ctx->data_parity_stripes == 0))
+>  		pr_debug("md/raid:%s: starting from clean shutdown\n",
+>  			 mdname(mddev));
+>  	else
+>  		pr_debug("md/raid:%s: recovering %d data-only stripes and %d data-parity stripes\n",
+> -			 mdname(mddev), ctx.data_only_stripes,
+> -			 ctx.data_parity_stripes);
+> -
+> -	if (ctx.data_only_stripes == 0) {
+> -		log->next_checkpoint = ctx.pos;
+> -		r5l_log_write_empty_meta_block(log, ctx.pos, ctx.seq++);
+> -		ctx.pos = r5l_ring_add(log, ctx.pos, BLOCK_SECTORS);
+> -	} else if (r5c_recovery_rewrite_data_only_stripes(log, &ctx)) {
+> +			 mdname(mddev), ctx->data_only_stripes,
+> +			 ctx->data_parity_stripes);
+> +
+> +	if (ctx->data_only_stripes == 0) {
+> +		log->next_checkpoint = ctx->pos;
+> +		r5l_log_write_empty_meta_block(log, ctx->pos, ctx->seq++);
+> +		ctx->pos = r5l_ring_add(log, ctx->pos, BLOCK_SECTORS);
+> +	} else if (r5c_recovery_rewrite_data_only_stripes(log, ctx)) {
+>  		pr_err("md/raid:%s: failed to rewrite stripes to journal\n",
+>  		       mdname(mddev));
+> -		return -EIO;
+> +		ret =  -EIO;
+> +		goto error;
+>  	}
+>  
+> -	log->log_start = ctx.pos;
+> -	log->seq = ctx.seq;
+> +	log->log_start = ctx->pos;
+> +	log->seq = ctx->seq;
+>  	log->last_checkpoint = pos;
+>  	r5l_write_super(log, pos);
+>  
+> -	r5c_recovery_flush_data_only_stripes(log, &ctx);
+> -	return 0;
+> +	r5c_recovery_flush_data_only_stripes(log, ctx);
+> +	ret = 0;
+> +error:
+> +	r5l_recovery_free_ra_pool(log, ctx);
+> +ra_pool:
+> +	__free_page(ctx->meta_page);
+> +meta_page:
+> +	kfree(ctx);
+> +	return ret;
+>  }
+>  
+>  static void r5l_write_super(struct r5l_log *log, sector_t cp)
+> -- 
+> 2.9.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
