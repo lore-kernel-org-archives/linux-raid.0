@@ -1,7 +1,7 @@
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH v5 6/7] raid5-ppl: support disk hot add/remove with PPL
-Date: Thu,  9 Mar 2017 10:00:02 +0100
-Message-ID: <20170309090003.13298-7-artur.paszkiewicz@intel.com>
+Subject: [PATCH v5 1/7] md: superblock changes for PPL
+Date: Thu,  9 Mar 2017 09:59:57 +0100
+Message-ID: <20170309090003.13298-2-artur.paszkiewicz@intel.com>
 References: <20170309090003.13298-1-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20170309090003.13298-1-artur.paszkiewicz@intel.com>
@@ -10,155 +10,162 @@ To: shli@fb.com
 Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-Add a function to modify the log by removing an rdev when a drive fails
-or adding when a spare/replacement is activated as a raid member.
-
-Removing a disk just clears the child log rdev pointer. No new stripes
-will be accepted for this child log in ppl_write_stripe() and running io
-units will be processed without writing PPL to the device.
-
-Adding a disk sets the child log rdev pointer and writes an empty PPL
-header.
+Include information about PPL location and size into mdp_superblock_1
+and copy it to/from rdev. Because PPL is mutually exclusive with bitmap,
+put it in place of 'bitmap_offset'. Add a new flag MD_FEATURE_PPL for
+'feature_map', analogically to MD_FEATURE_BITMAP_OFFSET. Add MD_HAS_PPL
+to mddev->flags to indicate that PPL is enabled on an array.
 
 Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- drivers/md/raid5-log.h |  9 +++++++++
- drivers/md/raid5-ppl.c | 45 ++++++++++++++++++++++++++++++++++++++++++++-
- drivers/md/raid5.c     | 12 +++++++++++-
- 3 files changed, 64 insertions(+), 2 deletions(-)
+ drivers/md/md.c                | 19 +++++++++++++++++++
+ drivers/md/md.h                |  8 ++++++++
+ drivers/md/raid0.c             |  3 ++-
+ drivers/md/raid1.c             |  3 ++-
+ include/uapi/linux/raid/md_p.h | 18 ++++++++++++++----
+ 5 files changed, 45 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/md/raid5-log.h b/drivers/md/raid5-log.h
-index a67fb58513b9..4f5a0f4e0b1f 100644
---- a/drivers/md/raid5-log.h
-+++ b/drivers/md/raid5-log.h
-@@ -39,6 +39,7 @@ extern void ppl_exit_log(struct r5conf *conf);
- extern int ppl_write_stripe(struct r5conf *conf, struct stripe_head *sh);
- extern void ppl_write_stripe_run(struct r5conf *conf);
- extern void ppl_stripe_write_finished(struct stripe_head *sh);
-+extern int ppl_modify_log(struct r5conf *conf, struct md_rdev *rdev, bool add);
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 79a99a1c9ce7..173550455c42 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -1506,6 +1506,12 @@ static int super_1_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor_
+ 	} else if (sb->bblog_offset != 0)
+ 		rdev->badblocks.shift = 0;
  
- static inline bool raid5_has_ppl(struct r5conf *conf)
- {
-@@ -102,4 +103,12 @@ static inline int log_init(struct r5conf *conf, struct md_rdev *journal_dev)
- 	return 0;
- }
- 
-+static inline int log_modify(struct r5conf *conf, struct md_rdev *rdev, bool add)
-+{
-+	if (raid5_has_ppl(conf))
-+		return ppl_modify_log(conf, rdev, add);
-+
-+	return 0;
-+}
-+
- #endif
-diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
-index 548d1028a3ce..b5fcf55edee9 100644
---- a/drivers/md/raid5-ppl.c
-+++ b/drivers/md/raid5-ppl.c
-@@ -400,6 +400,13 @@ static void ppl_submit_iounit(struct ppl_io_unit *io)
- 	struct stripe_head *sh;
- 	int i;
- 
-+	bio->bi_private = io;
-+
-+	if (!log->rdev || test_bit(Faulty, &log->rdev->flags)) {
-+		ppl_log_endio(bio);
-+		return;
++	if (le32_to_cpu(sb->feature_map) & MD_FEATURE_PPL) {
++		rdev->ppl.offset = (__s16)le16_to_cpu(sb->ppl.offset);
++		rdev->ppl.size = le16_to_cpu(sb->ppl.size);
++		rdev->ppl.sector = rdev->sb_start + rdev->ppl.offset;
 +	}
 +
- 	for (i = 0; i < io->entries_count; i++) {
- 		struct ppl_header_entry *e = &pplhdr->entries[i];
+ 	if (!refdev) {
+ 		ret = 1;
+ 	} else {
+@@ -1618,6 +1624,13 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
  
-@@ -415,7 +422,6 @@ static void ppl_submit_iounit(struct ppl_io_unit *io)
- 	pplhdr->entries_count = cpu_to_le32(io->entries_count);
- 	pplhdr->checksum = cpu_to_le32(~crc32c_le(~0, pplhdr, PPL_HEADER_SIZE));
- 
--	bio->bi_private = io;
- 	bio->bi_end_io = ppl_log_endio;
- 	bio->bi_opf = REQ_OP_WRITE | REQ_FUA;
- 	bio->bi_bdev = log->rdev->bdev;
-@@ -1198,3 +1204,40 @@ int ppl_init_log(struct r5conf *conf)
- 	__ppl_exit_log(ppl_conf);
- 	return ret;
- }
+ 		if (le32_to_cpu(sb->feature_map) & MD_FEATURE_JOURNAL)
+ 			set_bit(MD_HAS_JOURNAL, &mddev->flags);
 +
-+int ppl_modify_log(struct r5conf *conf, struct md_rdev *rdev, bool add)
-+{
-+	struct ppl_conf *ppl_conf = conf->log_private;
-+	struct ppl_log *log;
-+	int ret = 0;
-+	char b[BDEVNAME_SIZE];
-+
-+	if (!rdev)
-+		return -EINVAL;
-+
-+	pr_debug("%s: disk: %d operation: %s dev: %s\n",
-+		 __func__, rdev->raid_disk, add ? "add" : "remove",
-+		 bdevname(rdev->bdev, b));
-+
-+	if (rdev->raid_disk < 0)
-+		return 0;
-+
-+	if (rdev->raid_disk >= ppl_conf->count)
-+		return -ENODEV;
-+
-+	log = &ppl_conf->child_logs[rdev->raid_disk];
-+
-+	mutex_lock(&log->io_mutex);
-+	if (add) {
-+		ret = ppl_validate_rdev(rdev);
-+		if (!ret) {
-+			log->rdev = rdev;
-+			ret = ppl_write_empty_header(log);
++		if (le32_to_cpu(sb->feature_map) & MD_FEATURE_PPL) {
++			if (le32_to_cpu(sb->feature_map) &
++			    (MD_FEATURE_BITMAP_OFFSET | MD_FEATURE_JOURNAL))
++				return -EINVAL;
++			set_bit(MD_HAS_PPL, &mddev->flags);
 +		}
-+	} else {
-+		log->rdev = NULL;
+ 	} else if (mddev->pers == NULL) {
+ 		/* Insist of good event counter while assembling, except for
+ 		 * spares (which don't need an event count) */
+@@ -1831,6 +1844,12 @@ static void super_1_sync(struct mddev *mddev, struct md_rdev *rdev)
+ 	if (test_bit(MD_HAS_JOURNAL, &mddev->flags))
+ 		sb->feature_map |= cpu_to_le32(MD_FEATURE_JOURNAL);
+ 
++	if (test_bit(MD_HAS_PPL, &mddev->flags)) {
++		sb->feature_map |= cpu_to_le32(MD_FEATURE_PPL);
++		sb->ppl.offset = cpu_to_le16(rdev->ppl.offset);
++		sb->ppl.size = cpu_to_le16(rdev->ppl.size);
 +	}
-+	mutex_unlock(&log->io_mutex);
 +
-+	return ret;
-+}
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index f032af4d0421..8b8f172d6807 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -7527,6 +7527,11 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
- 			*rdevp = rdev;
- 		}
- 	}
-+	if (!err) {
-+		err = log_modify(conf, rdev, false);
-+		if (err)
-+			goto abort;
-+	}
- 	if (p->replacement) {
- 		/* We must have just cleared 'rdev' */
- 		p->rdev = p->replacement;
-@@ -7536,6 +7541,9 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
- 			   */
- 		p->replacement = NULL;
- 		clear_bit(WantReplacement, &rdev->flags);
+ 	rdev_for_each(rdev2, mddev) {
+ 		i = rdev2->desc_nr;
+ 		if (test_bit(Faulty, &rdev2->flags))
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 1c00160b09f9..a7b2f16452c4 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -122,6 +122,13 @@ struct md_rdev {
+ 					   * sysfs entry */
+ 
+ 	struct badblocks badblocks;
 +
-+		if (!err)
-+			err = log_modify(conf, p->rdev, true);
- 	} else
- 		/* We might have just removed the Replacement as faulty-
- 		 * clear the bit just in case
-@@ -7592,10 +7600,12 @@ static int raid5_add_disk(struct mddev *mddev, struct md_rdev *rdev)
- 		if (p->rdev == NULL) {
- 			clear_bit(In_sync, &rdev->flags);
- 			rdev->raid_disk = disk;
--			err = 0;
- 			if (rdev->saved_raid_disk != disk)
- 				conf->fullsync = 1;
- 			rcu_assign_pointer(p->rdev, rdev);
++	struct {
++		short offset;	/* Offset from superblock to start of PPL.
++				 * Not used by external metadata. */
++		unsigned int size;	/* Size in sectors of the PPL space */
++		sector_t sector;	/* First sector of the PPL space */
++	} ppl;
+ };
+ enum flag_bits {
+ 	Faulty,			/* device is known to have a fault */
+@@ -226,6 +233,7 @@ enum mddev_flags {
+ 				 * supported as calls to md_error() will
+ 				 * never cause the array to become failed.
+ 				 */
++	MD_HAS_PPL,		/* The raid array has PPL feature set */
+ };
+ 
+ enum mddev_sb_flags {
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index 93347ca7c7a6..56f70c3ad37c 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -29,7 +29,8 @@
+ #define UNSUPPORTED_MDDEV_FLAGS		\
+ 	((1L << MD_HAS_JOURNAL) |	\
+ 	 (1L << MD_JOURNAL_CLEAN) |	\
+-	 (1L << MD_FAILFAST_SUPPORTED))
++	 (1L << MD_FAILFAST_SUPPORTED) |\
++	 (1L << MD_HAS_PPL))
+ 
+ static int raid0_congested(struct mddev *mddev, int bits)
+ {
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 3c5933b1d8fb..31c7df2859a6 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -44,7 +44,8 @@
+ 
+ #define UNSUPPORTED_MDDEV_FLAGS		\
+ 	((1L << MD_HAS_JOURNAL) |	\
+-	 (1L << MD_JOURNAL_CLEAN))
++	 (1L << MD_JOURNAL_CLEAN) |	\
++	 (1L << MD_HAS_PPL))
+ 
+ /*
+  * Number of guaranteed r1bios in case of extreme VM load:
+diff --git a/include/uapi/linux/raid/md_p.h b/include/uapi/linux/raid/md_p.h
+index 9930f3e9040f..fe2112810c43 100644
+--- a/include/uapi/linux/raid/md_p.h
++++ b/include/uapi/linux/raid/md_p.h
+@@ -242,10 +242,18 @@ struct mdp_superblock_1 {
+ 
+ 	__le32	chunksize;	/* in 512byte sectors */
+ 	__le32	raid_disks;
+-	__le32	bitmap_offset;	/* sectors after start of superblock that bitmap starts
+-				 * NOTE: signed, so bitmap can be before superblock
+-				 * only meaningful of feature_map[0] is set.
+-				 */
++	union {
++		__le32	bitmap_offset;	/* sectors after start of superblock that bitmap starts
++					 * NOTE: signed, so bitmap can be before superblock
++					 * only meaningful of feature_map[0] is set.
++					 */
 +
-+			err = log_modify(conf, rdev, true);
-+
- 			goto out;
- 		}
- 	}
++		/* only meaningful when feature_map[MD_FEATURE_PPL] is set */
++		struct {
++			__le16 offset; /* sectors from start of superblock that ppl starts (signed) */
++			__le16 size; /* ppl size in sectors */
++		} ppl;
++	};
+ 
+ 	/* These are only valid with feature bit '4' */
+ 	__le32	new_level;	/* new level we are reshaping to		*/
+@@ -318,6 +326,7 @@ struct mdp_superblock_1 {
+ 					     */
+ #define MD_FEATURE_CLUSTERED		256 /* clustered MD */
+ #define	MD_FEATURE_JOURNAL		512 /* support write cache */
++#define	MD_FEATURE_PPL			1024 /* support PPL */
+ #define	MD_FEATURE_ALL			(MD_FEATURE_BITMAP_OFFSET	\
+ 					|MD_FEATURE_RECOVERY_OFFSET	\
+ 					|MD_FEATURE_RESHAPE_ACTIVE	\
+@@ -328,6 +337,7 @@ struct mdp_superblock_1 {
+ 					|MD_FEATURE_RECOVERY_BITMAP	\
+ 					|MD_FEATURE_CLUSTERED		\
+ 					|MD_FEATURE_JOURNAL		\
++					|MD_FEATURE_PPL			\
+ 					)
+ 
+ struct r5l_payload_header {
 -- 
 2.11.0
 
