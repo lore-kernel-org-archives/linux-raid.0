@@ -1,84 +1,39 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH 10/29] drivers, md: convert stripe_head.count from
- atomic_t to refcount_t
-Date: Thu, 9 Mar 2017 09:18:29 -0800
-Message-ID: <20170309171829.33z7z6czwdivztp4@kernel.org>
+Subject: Re: [PATCH 08/29] drivers, md: convert mddev.active from atomic_t to
+ refcount_t
+Date: Thu, 9 Mar 2017 09:11:54 -0800
+Message-ID: <20170309171154.zlcz63uqikzyu5hz@kernel.org>
 References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-11-git-send-email-elena.reshetova@intel.com>
- <20170307190759.jnrq66kfpkr4m7zl@kernel.org>
- <2236FBA76BA1254E88B949DDB74E612B41C56050@IRSMSX102.ger.corp.intel.com>
+ <1488810076-3754-9-git-send-email-elena.reshetova@intel.com>
+ <20170307190449.baceyzzngsz776x7@kernel.org>
+ <2236FBA76BA1254E88B949DDB74E612B41C5606B@IRSMSX102.ger.corp.intel.com>
+ <20170308101914.GB15198@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <2236FBA76BA1254E88B949DDB74E612B41C56050@IRSMSX102.ger.corp.intel.com>
+In-Reply-To: <20170308101914.GB15198@kroah.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Reshetova, Elena" <elena.reshetova@intel.com>
-Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
+To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+Cc: "Reshetova, Elena" <elena.reshetova@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Mar 08, 2017 at 09:39:30AM +0000, Reshetova, Elena wrote:
-> > On Mon, Mar 06, 2017 at 04:20:57PM +0200, Elena Reshetova wrote:
-> > > refcount_t type and corresponding API should be
-> > > used instead of atomic_t when the variable is used as
-> > > a reference counter. This allows to avoid accidental
-> > > refcounter overflows that might lead to use-after-free
-> > > situations.
-> > >
-> > > Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> > > Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> > > Signed-off-by: Kees Cook <keescook@chromium.org>
-> > > Signed-off-by: David Windsor <dwindsor@gmail.com>
-> > > ---
-> > >  drivers/md/raid5-cache.c |  8 +++---
-> > >  drivers/md/raid5.c       | 66 ++++++++++++++++++++++++------------------------
-> > >  drivers/md/raid5.h       |  3 ++-
-> > >  3 files changed, 39 insertions(+), 38 deletions(-)
-> > >
-> > > diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> > > index 3f307be..6c05e12 100644
-> > > --- a/drivers/md/raid5-cache.c
-> > > +++ b/drivers/md/raid5-cache.c
+On Wed, Mar 08, 2017 at 11:19:14AM +0100, gregkh@linuxfoundation.org wrote:
+> On Wed, Mar 08, 2017 at 09:42:09AM +0000, Reshetova, Elena wrote:
+> > > On Mon, Mar 06, 2017 at 04:20:55PM +0200, Elena Reshetova wrote:
+> > > > refcount_t type and corresponding API should be
+> > > > used instead of atomic_t when the variable is used as
+> > > > a reference counter. This allows to avoid accidental
+> > > > refcounter overflows that might lead to use-after-free
+> > > > situations.
+> > > 
+> > > Looks good. Let me know how do you want to route the patch to upstream.
 > > 
-> > snip
-> > >  	       sh->check_state, sh->reconstruct_state);
-> > >
-> > >  	analyse_stripe(sh, &s);
-> > > @@ -4924,7 +4924,7 @@ static void activate_bit_delay(struct r5conf *conf,
-> > >  		struct stripe_head *sh = list_entry(head.next, struct
-> > stripe_head, lru);
-> > >  		int hash;
-> > >  		list_del_init(&sh->lru);
-> > > -		atomic_inc(&sh->count);
-> > > +		refcount_inc(&sh->count);
-> > >  		hash = sh->hash_lock_index;
-> > >  		__release_stripe(conf, sh,
-> > &temp_inactive_list[hash]);
-> > >  	}
-> > > @@ -5240,7 +5240,7 @@ static struct stripe_head *__get_priority_stripe(struct
-> > r5conf *conf, int group)
-> > >  		sh->group = NULL;
-> > >  	}
-> > >  	list_del_init(&sh->lru);
-> > > -	BUG_ON(atomic_inc_return(&sh->count) != 1);
-> > > +	BUG_ON(refcount_inc_not_zero(&sh->count));
-> > 
-> > This changes the behavior. refcount_inc_not_zero doesn't inc if original value is 0
+> > Greg, you previously mentioned that driver's conversions can go via your tree. Does this still apply?
+> > Or should I be asking maintainers to merge these patches via their trees? 
 > 
-> Hm.. So, you want to inc here in any case and BUG if the end result differs from 1. 
-> So essentially you want to only increment here from zero to one under normal conditions... This is a challenge for refcount_t and against the design.
-> Is it ok just to maybe do this here:
-> 
-> -	BUG_ON(atomic_inc_return(&sh->count) != 1);
-> +	BUG_ON(refcount_read(&sh->count) != 0);
-> +	refcount_set((&sh->count, 1);
+> You should ask them to take them through their trees, if they have them.
+> I'll be glad to scoop up all of the remaining ones that get missed, or
+> for subsystems that do not have trees.
 
-this looks ok
-
-
-> Do we have an issue with locking in this case? Or maybe it is then better to leave this one to be atomic_t without protection since it isn't a real refcounter as it turns out. 
-
-There is no lock issue, the count should be 0 in the list. It's a refcounter actually, so good to do the convert.
-
-Thanks,
-Shaohua
+ok, applied, thanks!
