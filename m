@@ -1,109 +1,70 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH v3] md/r5cache: generate R5LOG_PAYLOAD_FLUSH
-Date: Thu, 9 Mar 2017 21:23:39 -0800
-Message-ID: <20170310052339.2705936-1-songliubraving@fb.com>
+From: NeilBrown <neilb@suse.com>
+Subject: [PATCH 0/5] Updates following recent generic_make_request
+ improvement
+Date: Fri, 10 Mar 2017 17:00:46 +1100
+Message-ID: <148912539296.4002.219258660543808741.stgit@noble>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, Song Liu <songliubraving@fb.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, Mikulas Patocka <mpatocka@redhat.com>, Pavel Machek <pavel@ucw.cz>, Jack Wang <jinpu.wang@profitbricks.com>, Lars Ellenberg <lars.ellenberg@linbit.com>, Kent Overstreet <kent.overstreet@gmail.com>
 List-Id: linux-raid.ids
 
-In r5c_finish_stripe_write_out(), R5LOG_PAYLOAD_FLUSH is append to
-log->current_io.
+This is a rebase of the series I sent earlier, based on the
+very latest from Linus, which included my first patch.
 
-Appending R5LOG_PAYLOAD_FLUSH in quiesce needs extra writes to
-journal. To simplify the logic, we just skip R5LOG_PAYLOAD_FLUSH in
-quiesce.
+The first fixes a problem that patch introduced, and so should go to
+Linux promptly.
+The others are more general improvements and can go in the normal
+course of events.
 
-Even R5LOG_PAYLOAD_FLUSH supports multiple stripes per payload.
-However, current implementation is one stripe per R5LOG_PAYLOAD_FLUSH,
-which is simpler.
+It is possible that the changes to btrfs and xfs can just be dropped
+as a subsequent patch will be needed to revert them anyway.  They are
+there only to be able to say that "blk: make the bioset
+rescue_workqueue optional." doesn't change any functionality at all.
 
-Signed-off-by: Song Liu <songliubraving@fb.com>
+Thanks,
+NeilBrown
+
 ---
- drivers/md/raid5-cache.c | 45 ++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 42 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index e69f922..e3c20c7 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -591,7 +591,7 @@ static void r5l_log_endio(struct bio *bio)
- 
- 	spin_lock_irqsave(&log->io_list_lock, flags);
- 	__r5l_set_io_unit_state(io, IO_UNIT_IO_END);
--	if (log->need_cache_flush)
-+	if (log->need_cache_flush && !list_empty(&io->stripe_list))
- 		r5l_move_to_end_ios(log);
- 	else
- 		r5l_log_run_stripes(log);
-@@ -619,9 +619,11 @@ static void r5l_log_endio(struct bio *bio)
- 			bio_endio(bi);
- 			atomic_dec(&io->pending_stripe);
- 		}
--		if (atomic_read(&io->pending_stripe) == 0)
--			__r5l_stripe_write_finished(io);
- 	}
-+
-+	/* finish flush only io_unit and PAYLOAD_FLUSH only io_unit */
-+	if (atomic_read(&io->pending_stripe) == 0)
-+		__r5l_stripe_write_finished(io);
- }
- 
- static void r5l_do_submit_io(struct r5l_log *log, struct r5l_io_unit *io)
-@@ -843,6 +845,41 @@ static void r5l_append_payload_page(struct r5l_log *log, struct page *page)
- 	r5_reserve_log_entry(log, io);
- }
- 
-+static void r5l_append_flush_payload(struct r5l_log *log, sector_t sect)
-+{
-+	struct mddev *mddev = log->rdev->mddev;
-+	struct r5conf *conf = mddev->private;
-+	struct r5l_io_unit *io;
-+	struct r5l_payload_flush *payload;
-+	int meta_size;
-+
-+	/*
-+	 * payload_flush requires extra writes to the journal.
-+	 * To avoid handling the extra IO in quiesce, just skip
-+	 * flush_payload
-+	 */
-+	if (conf->quiesce)
-+		return;
-+
-+	mutex_lock(&log->io_mutex);
-+	meta_size = sizeof(struct r5l_payload_flush) + sizeof(__le64);
-+
-+	if (r5l_get_meta(log, meta_size)) {
-+		mutex_unlock(&log->io_mutex);
-+		return;
-+	}
-+
-+	/* current implementation is one stripe per flush payload */
-+	io = log->current_io;
-+	payload = page_address(io->meta_page) + io->meta_offset;
-+	payload->header.type = cpu_to_le16(R5LOG_PAYLOAD_FLUSH);
-+	payload->header.flags = cpu_to_le16(0);
-+	payload->size = cpu_to_le32(sizeof(__le64));
-+	payload->flush_stripes[0] = cpu_to_le64(sect);
-+	io->meta_offset += meta_size;
-+	mutex_unlock(&log->io_mutex);
-+}
-+
- static int r5l_log_stripe(struct r5l_log *log, struct stripe_head *sh,
- 			   int data_pages, int parity_pages)
- {
-@@ -2784,6 +2821,8 @@ void r5c_finish_stripe_write_out(struct r5conf *conf,
- 		atomic_dec(&conf->r5c_flushing_full_stripes);
- 		atomic_dec(&conf->r5c_cached_full_stripes);
- 	}
-+
-+	r5l_append_flush_payload(log, sh->sector);
- }
- 
- int
--- 
-2.9.3
+NeilBrown (5):
+      blk: Ensure users for current->bio_list can see the full list.
+      blk: remove bio_set arg from blk_queue_split()
+      blk: make the bioset rescue_workqueue optional.
+      blk: use non-rescuing bioset for q->bio_split.
+      block_dev: make blkdev_dio_pool a non-rescuing bioset
 
+
+ block/bio.c                         |   40 +++++++++++++++++++++++++++++------
+ block/blk-core.c                    |   32 +++++++++++++++++-----------
+ block/blk-merge.c                   |    7 +++---
+ block/blk-mq.c                      |    4 ++--
+ drivers/block/drbd/drbd_main.c      |    2 +-
+ drivers/block/drbd/drbd_req.c       |    2 +-
+ drivers/block/pktcdvd.c             |    2 +-
+ drivers/block/ps3vram.c             |    2 +-
+ drivers/block/rsxx/dev.c            |    2 +-
+ drivers/block/umem.c                |    2 +-
+ drivers/block/zram/zram_drv.c       |    2 +-
+ drivers/lightnvm/rrpc.c             |    2 +-
+ drivers/md/bcache/super.c           |    4 ++--
+ drivers/md/dm-crypt.c               |    2 +-
+ drivers/md/dm-io.c                  |    2 +-
+ drivers/md/dm.c                     |   32 ++++++++++++++++------------
+ drivers/md/md.c                     |    4 ++--
+ drivers/md/raid10.c                 |    3 ++-
+ drivers/md/raid5-cache.c            |    2 +-
+ drivers/s390/block/dcssblk.c        |    2 +-
+ drivers/s390/block/xpram.c          |    2 +-
+ drivers/target/target_core_iblock.c |    2 +-
+ fs/btrfs/extent_io.c                |    4 ++--
+ fs/xfs/xfs_super.c                  |    2 +-
+ include/linux/bio.h                 |    2 ++
+ include/linux/blkdev.h              |    3 +--
+ 26 files changed, 101 insertions(+), 64 deletions(-)
+
+--
+Signature
