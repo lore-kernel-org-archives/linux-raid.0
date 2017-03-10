@@ -1,93 +1,117 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] raid5-ppl: two minor improvements
-Date: Fri, 10 Mar 2017 10:16:20 -0800
-Message-ID: <20170310181620.dzwuj6d3ya3s2zpm@kernel.org>
-References: <20170309233240.r64itd7oreuxkumz@kernel.org>
- <20170310154044.11198-1-artur.paszkiewicz@intel.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH v5 3/7] raid5-ppl: Partial Parity Log write logging implementation
+Date: Fri, 10 Mar 2017 10:42:05 -0800
+Message-ID: <CAPcyv4jff0otqUkHv2Etfo+rB-N=tJfkDbEaTBTg-ek9nW0MpA@mail.gmail.com>
+References: <20170309090003.13298-1-artur.paszkiewicz@intel.com>
+ <20170309090003.13298-4-artur.paszkiewicz@intel.com> <20170309232451.4hw2pgizn7potlrj@kernel.org>
+ <12942165-232b-a078-f434-1087932ac166@intel.com> <20170310181539.67vxhhjjhpqkcjyf@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170310154044.11198-1-artur.paszkiewicz@intel.com>
+In-Reply-To: <20170310181539.67vxhhjjhpqkcjyf@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: shli@fb.com, linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, Shaohua Li <shli@fb.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Mar 10, 2017 at 04:40:44PM +0100, Artur Paszkiewicz wrote:
-> - Remove 'page_result' parameter from ppl_xor() and always write result
->   to 'page1'.
-> - Use blkdev_issue_flush() instead of open coding the flush bio
->   submission.
+On Fri, Mar 10, 2017 at 10:15 AM, Shaohua Li <shli@kernel.org> wrote:
+> On Fri, Mar 10, 2017 at 04:16:58PM +0100, Artur Paszkiewicz wrote:
+>> On 03/10/2017 12:24 AM, Shaohua Li wrote:
+>> > On Thu, Mar 09, 2017 at 09:59:59AM +0100, Artur Paszkiewicz wrote:
+>> >> Implement the calculation of partial parity for a stripe and PPL write
+>> >> logging functionality. The description of PPL is added to the
+>> >> documentation. More details can be found in the comments in raid5-ppl.c.
+>> >>
+>> >> Attach a page for holding the partial parity data to stripe_head.
+>> >> Allocate it only if mddev has the MD_HAS_PPL flag set.
+>> >>
+>> >> Partial parity is the xor of not modified data chunks of a stripe and is
+>> >> calculated as follows:
+>> >>
+>> >> - reconstruct-write case:
+>> >>   xor data from all not updated disks in a stripe
+>> >>
+>> >> - read-modify-write case:
+>> >>   xor old data and parity from all updated disks in a stripe
+>> >>
+>> >> Implement it using the async_tx API and integrate into raid_run_ops().
+>> >> It must be called when we still have access to old data, so do it when
+>> >> STRIPE_OP_BIODRAIN is set, but before ops_run_prexor5(). The result is
+>> >> stored into sh->ppl_page.
+>> >>
+>> >> Partial parity is not meaningful for full stripe write and is not stored
+>> >> in the log or used for recovery, so don't attempt to calculate it when
+>> >> stripe has STRIPE_FULL_WRITE.
+>> >>
+>> >> Put the PPL metadata structures to md_p.h because userspace tools
+>> >> (mdadm) will also need to read/write PPL.
+>> >>
+>> >> Warn about using PPL with enabled disk volatile write-back cache for
+>> >> now. It can be removed once disk cache flushing before writing PPL is
+>> >> implemented.
+>> >>
+>> >> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+>> >
+>> > ... snip ...
+>> >
+>> >> +struct dma_async_tx_descriptor *
+>> >> +ops_run_partial_parity(struct stripe_head *sh, struct raid5_percpu *percpu,
+>> >> +                 struct dma_async_tx_descriptor *tx)
+>> >> +{
+>> >> +  int disks = sh->disks;
+>> >> +  struct page **xor_srcs = flex_array_get(percpu->scribble, 0);
+>> >> +  int count = 0, pd_idx = sh->pd_idx, i;
+>> >> +  struct async_submit_ctl submit;
+>> >> +
+>> >> +  pr_debug("%s: stripe %llu\n", __func__, (unsigned long long)sh->sector);
+>> >> +
+>> >> +  /*
+>> >> +   * Partial parity is the XOR of stripe data chunks that are not changed
+>> >> +   * during the write request. Depending on available data
+>> >> +   * (read-modify-write vs. reconstruct-write case) we calculate it
+>> >> +   * differently.
+>> >> +   */
+>> >> +  if (sh->reconstruct_state == reconstruct_state_prexor_drain_run) {
+>> >> +          /* rmw: xor old data and parity from updated disks */
+>> >> +          for (i = disks; i--;) {
+>> >> +                  struct r5dev *dev = &sh->dev[i];
+>> >> +                  if (test_bit(R5_Wantdrain, &dev->flags) || i == pd_idx)
+>> >> +                          xor_srcs[count++] = dev->page;
+>> >> +          }
+>> >> +  } else if (sh->reconstruct_state == reconstruct_state_drain_run) {
+>> >> +          /* rcw: xor data from all not updated disks */
+>> >> +          for (i = disks; i--;) {
+>> >> +                  struct r5dev *dev = &sh->dev[i];
+>> >> +                  if (test_bit(R5_UPTODATE, &dev->flags))
+>> >> +                          xor_srcs[count++] = dev->page;
+>> >> +          }
+>> >> +  } else {
+>> >> +          return tx;
+>> >> +  }
+>> >> +
+>> >> +  init_async_submit(&submit, ASYNC_TX_XOR_ZERO_DST, tx, NULL, sh,
+>> >> +                    flex_array_get(percpu->scribble, 0)
+>> >> +                    + sizeof(struct page *) * (sh->disks + 2));
+>> >
+>> > Since this should be done before biodrain, should this add ASYNC_TX_FENCE flag?
+>>
+>> The result of this calculation isn't used later by other async_tx
+>> operations, so it's not needed here, if I understand this correctly. But
+>> maybe later we could optimize and use partial parity to calculate full
+>> parity, then it will be necessary.
+>
+> But the source pages will be overwritten soon, if no fence, I think this is a
+> problem. Anyway, I'll let Dan to clarify.
+>
+> Dan,
+> We are using async API for below operations:
+> 1. xor several source pages to a dest page
+> 2. memcpy other data to the source pages
+>
+> The two operations will be in an async chain. Should the first operation
+> include ASYNC_TX_FENCE flag? The API comment declares the flag is required if
+> the destination page is used by subsequent operations, but I suspect it should
+> be used too if the subsequent operations could change the source pages.
 
-merged to original patch
- 
-> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-> ---
->  drivers/md/raid5-ppl.c | 18 +++++-------------
->  1 file changed, 5 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
-> index ca1ef644351a..2419fbc6f684 100644
-> --- a/drivers/md/raid5-ppl.c
-> +++ b/drivers/md/raid5-ppl.c
-> @@ -524,8 +524,7 @@ void ppl_stripe_write_finished(struct stripe_head *sh)
->  		ppl_io_unit_finished(io);
->  }
->  
-> -static void ppl_xor(int size, struct page *page1, struct page *page2,
-> -		    struct page *page_result)
-> +static void ppl_xor(int size, struct page *page1, struct page *page2)
->  {
->  	struct async_submit_ctl submit;
->  	struct dma_async_tx_descriptor *tx;
-> @@ -533,7 +532,7 @@ static void ppl_xor(int size, struct page *page1, struct page *page2,
->  
->  	init_async_submit(&submit, ASYNC_TX_ACK|ASYNC_TX_XOR_DROP_DST,
->  			  NULL, NULL, NULL, NULL);
-> -	tx = async_xor(page_result, xor_srcs, 0, 2, size, &submit);
-> +	tx = async_xor(page1, xor_srcs, 0, 2, size, &submit);
->  
->  	async_tx_quiesce(&tx);
->  }
-> @@ -724,7 +723,7 @@ static int ppl_recover_entry(struct ppl_log *log, struct ppl_header_entry *e,
->  				goto out;
->  			}
->  
-> -			ppl_xor(block_size, page1, page2, page1);
-> +			ppl_xor(block_size, page1, page2);
->  
->  			indent -= 2;
->  		}
-> @@ -747,7 +746,7 @@ static int ppl_recover_entry(struct ppl_log *log, struct ppl_header_entry *e,
->  				goto out;
->  			}
->  
-> -			ppl_xor(block_size, page1, page2, page1);
-> +			ppl_xor(block_size, page1, page2);
->  		}
->  
->  		/* map raid sector to parity disk */
-> @@ -846,14 +845,7 @@ static int ppl_recover(struct ppl_log *log, struct ppl_header *pplhdr)
->  	}
->  
->  	/* flush the disk cache after recovery if necessary */
-> -	if (test_bit(QUEUE_FLAG_WC, &bdev_get_queue(rdev->bdev)->queue_flags)) {
-> -		struct bio *bio = bio_alloc_bioset(GFP_KERNEL, 0, ppl_conf->bs);
-> -
-> -		bio->bi_bdev = rdev->bdev;
-> -		bio->bi_opf = REQ_OP_WRITE | REQ_PREFLUSH;
-> -		ret = submit_bio_wait(bio);
-> -		bio_put(bio);
-> -	}
-> +	ret = blkdev_issue_flush(rdev->bdev, GFP_KERNEL, NULL);
->  out:
->  	__free_page(page);
->  	return ret;
-> -- 
-> 2.11.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I think you're right. If operation2 could change operation1 source
+data we should include the fence.
