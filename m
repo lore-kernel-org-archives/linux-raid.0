@@ -1,79 +1,82 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH v2] blk: improve order of bio handling in
- generic_make_request()
-Date: Fri, 10 Mar 2017 10:35:55 -0500
-Message-ID: <20170310153554.GA24167@redhat.com>
-References: <87lgsjj9w8.fsf@notabene.neil.brown.name>
- <a674456d-fb93-437e-c50e-195e7a035ba4@kernel.dk>
- <87r328j00i.fsf@notabene.neil.brown.name>
- <87d1dphhuy.fsf@notabene.neil.brown.name>
- <58be6551-4aa7-72ee-1616-a1545606d029@kernel.dk>
- <87varhg14d.fsf@notabene.neil.brown.name>
- <CANr6vz8EbRWXq7igGCzRy9JC1Nt=MMma0h8M6nxHQtwiMDa5aQ@mail.gmail.com>
- <20170310143822.GA23879@redhat.com>
- <alpine.LRH.2.02.1703100953280.9054@file01.intranet.prod.int.rdu2.redhat.com>
- <153a6cff-c553-0d18-e15b-4f3defc3a42b@profitbricks.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <153a6cff-c553-0d18-e15b-4f3defc3a42b@profitbricks.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jack Wang <jinpu.wang@profitbricks.com>
-Cc: Mikulas Patocka <mpatocka@redhat.com>, Lars Ellenberg <lars.ellenberg@linbit.com>, NeilBrown <neilb@suse.com>, Jens Axboe <axboe@kernel.dk>, LKML <linux-kernel@vger.kernel.org>, Kent Overstreet <kent.overstreet@gmail.com>, Pavel Machek <pavel@ucw.cz>, linux-raid@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, linux-block@vger.kernel.org
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: [PATCH] raid5-ppl: two minor improvements
+Date: Fri, 10 Mar 2017 16:40:44 +0100
+Message-ID: <20170310154044.11198-1-artur.paszkiewicz@intel.com>
+References: <20170309233240.r64itd7oreuxkumz@kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170309233240.r64itd7oreuxkumz@kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: shli@fb.com
+Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-On Fri, Mar 10 2017 at 10:07am -0500,
-Jack Wang <jinpu.wang@profitbricks.com> wrote:
+- Remove 'page_result' parameter from ppl_xor() and always write result
+  to 'page1'.
+- Use blkdev_issue_flush() instead of open coding the flush bio
+  submission.
 
-> 
-> 
-> On 10.03.2017 15:55, Mikulas Patocka wrote:
-> > 
-> > 
-> > On Fri, 10 Mar 2017, Mike Snitzer wrote:
-> > 
-> >> On Fri, Mar 10 2017 at  7:34am -0500,
-> >> Lars Ellenberg <lars.ellenberg@linbit.com> wrote:
-> >>
-> >>>> --- a/block/blk-core.c
-> >>>> +++ b/block/blk-core.c
-> >>>> @@ -1975,7 +1975,14 @@ generic_make_request_checks(struct bio *bio)
-> >>>>   */
-> >>>>  blk_qc_t generic_make_request(struct bio *bio)
-> >>>>  {
-> >>>> -       struct bio_list bio_list_on_stack;
-> >>>> +       /*
-> >>>> +        * bio_list_on_stack[0] contains bios submitted by the current
-> >>>> +        * make_request_fn.
-> >>>> +        * bio_list_on_stack[1] contains bios that were submitted before
-> >>>> +        * the current make_request_fn, but that haven't been processed
-> >>>> +        * yet.
-> >>>> +        */
-> >>>> +       struct bio_list bio_list_on_stack[2];
-> >>>>         blk_qc_t ret = BLK_QC_T_NONE;
-> >>>
-> >>> May I suggest that, if you intend to assign something that is not a
-> >>> plain &(struct bio_list), but a &(struct bio_list[2]),
-> >>> you change the task member so it is renamed (current->bio_list vs
-> >>> current->bio_lists, plural, is what I did last year).
-> >>> Or you will break external modules, silently, and horribly (or,
-> >>> rather, they won't notice, but break the kernel).
-> >>> Examples of such modules would be DRBD, ZFS, quite possibly others.
-> >>
-> >> drbd is upstream -- so what is the problem?  (if you are having to
-> >> distribute drbd independent of the upstream drbd then why is drbd
-> >> upstream?)
-> >>
-> >> As for ZFS, worrying about ZFS kABI breakage is the last thing we should
-> >> be doing.
-> > 
-> > It's better to make external modules not compile than to silently 
-> > introduce bugs in them. So yes, I would rename that.
-> > 
-> > Mikulas
-> 
-> Agree, better rename current->bio_list to current->bio_lists
+Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+---
+ drivers/md/raid5-ppl.c | 18 +++++-------------
+ 1 file changed, 5 insertions(+), 13 deletions(-)
 
-Fine, normally wouldn't do so but I'm not so opposed that we need to get
-hung up on this detail.  If Neil and Jens agree then so be it.
+diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
+index ca1ef644351a..2419fbc6f684 100644
+--- a/drivers/md/raid5-ppl.c
++++ b/drivers/md/raid5-ppl.c
+@@ -524,8 +524,7 @@ void ppl_stripe_write_finished(struct stripe_head *sh)
+ 		ppl_io_unit_finished(io);
+ }
+ 
+-static void ppl_xor(int size, struct page *page1, struct page *page2,
+-		    struct page *page_result)
++static void ppl_xor(int size, struct page *page1, struct page *page2)
+ {
+ 	struct async_submit_ctl submit;
+ 	struct dma_async_tx_descriptor *tx;
+@@ -533,7 +532,7 @@ static void ppl_xor(int size, struct page *page1, struct page *page2,
+ 
+ 	init_async_submit(&submit, ASYNC_TX_ACK|ASYNC_TX_XOR_DROP_DST,
+ 			  NULL, NULL, NULL, NULL);
+-	tx = async_xor(page_result, xor_srcs, 0, 2, size, &submit);
++	tx = async_xor(page1, xor_srcs, 0, 2, size, &submit);
+ 
+ 	async_tx_quiesce(&tx);
+ }
+@@ -724,7 +723,7 @@ static int ppl_recover_entry(struct ppl_log *log, struct ppl_header_entry *e,
+ 				goto out;
+ 			}
+ 
+-			ppl_xor(block_size, page1, page2, page1);
++			ppl_xor(block_size, page1, page2);
+ 
+ 			indent -= 2;
+ 		}
+@@ -747,7 +746,7 @@ static int ppl_recover_entry(struct ppl_log *log, struct ppl_header_entry *e,
+ 				goto out;
+ 			}
+ 
+-			ppl_xor(block_size, page1, page2, page1);
++			ppl_xor(block_size, page1, page2);
+ 		}
+ 
+ 		/* map raid sector to parity disk */
+@@ -846,14 +845,7 @@ static int ppl_recover(struct ppl_log *log, struct ppl_header *pplhdr)
+ 	}
+ 
+ 	/* flush the disk cache after recovery if necessary */
+-	if (test_bit(QUEUE_FLAG_WC, &bdev_get_queue(rdev->bdev)->queue_flags)) {
+-		struct bio *bio = bio_alloc_bioset(GFP_KERNEL, 0, ppl_conf->bs);
+-
+-		bio->bi_bdev = rdev->bdev;
+-		bio->bi_opf = REQ_OP_WRITE | REQ_PREFLUSH;
+-		ret = submit_bio_wait(bio);
+-		bio_put(bio);
+-	}
++	ret = blkdev_issue_flush(rdev->bdev, GFP_KERNEL, NULL);
+ out:
+ 	__free_page(page);
+ 	return ret;
+-- 
+2.11.0
+
