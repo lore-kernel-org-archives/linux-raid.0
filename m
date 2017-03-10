@@ -1,109 +1,119 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: linux-next: WARNING: CPU: 0 PID: 1 at lib/refcount.c:114
- refcount_inc+0x37/0x40
-Date: Fri, 10 Mar 2017 12:54:13 -0800
-Message-ID: <20170310205413.wjs64c4zvrqvswg7@kernel.org>
-References: <CANaxB-xDKh+_0eR2p4rODObQPVFwNM1-vK=fmCV-jaBYpGkPAw@mail.gmail.com>
+Subject: Re: [PATCH v3] md/r5cache: generate R5LOG_PAYLOAD_FLUSH
+Date: Fri, 10 Mar 2017 13:01:51 -0800
+Message-ID: <20170310210151.bbuc2dv3t6c46xea@kernel.org>
+References: <20170310052339.2705936-1-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CANaxB-xDKh+_0eR2p4rODObQPVFwNM1-vK=fmCV-jaBYpGkPAw@mail.gmail.com>
+In-Reply-To: <20170310052339.2705936-1-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrei Vagin <avagin@gmail.com>
-Cc: linux-raid@vger.kernel.org, elena.reshetova@intel.com
+To: Song Liu <songliubraving@fb.com>
+Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org
 List-Id: linux-raid.ids
 
-On Fri, Mar 10, 2017 at 12:01:06PM -0800, Andrei Vagin wrote:
-> Hello,
+On Thu, Mar 09, 2017 at 09:23:39PM -0800, Song Liu wrote:
+> In r5c_finish_stripe_write_out(), R5LOG_PAYLOAD_FLUSH is append to
+> log->current_io.
 > 
-> We run CRIU tests for linux-next kernels and here is a new issue:
+> Appending R5LOG_PAYLOAD_FLUSH in quiesce needs extra writes to
+> journal. To simplify the logic, we just skip R5LOG_PAYLOAD_FLUSH in
+> quiesce.
 > 
-> All logs are here: https://api.travis-ci.org/jobs/209680974/log.txt?deansi=true
-> The kernel version is 4.11.0-rc1-next-20170310
+> Even R5LOG_PAYLOAD_FLUSH supports multiple stripes per payload.
+> However, current implementation is one stripe per R5LOG_PAYLOAD_FLUSH,
+> which is simpler.
 
-Thanks for the reporting. It caused by 731d126(drivers, md: convert
-mddev.active from atomic_t to refcount_t). It turns out the count doesn't match
-the refcount usage. I'll drop the patch temporarily.
-
-Thanks,
-Shaohua
+Thanks, applied the two patches.
+ 
+> Signed-off-by: Song Liu <songliubraving@fb.com>
+> ---
+>  drivers/md/raid5-cache.c | 45 ++++++++++++++++++++++++++++++++++++++++++---
+>  1 file changed, 42 insertions(+), 3 deletions(-)
 > 
-> [    2.324763] md: Waiting for all devices to be available before autodetect
-> [    2.331707] md: If you don't use raid, use raid=noautodetect
-> [    2.338189] ------------[ cut here ]------------
-> [    2.342965] WARNING: CPU: 0 PID: 1 at lib/refcount.c:114
-> refcount_inc+0x37/0x40
-> [    2.350427] refcount_t: increment on 0; use-after-free.
-> [    2.355794] Modules linked in:
-> [    2.358979] CPU: 0 PID: 1 Comm: swapper/0 Not tainted
-> 4.11.0-rc1-next-20170310 #1
-> [    2.362966] Hardware name: Google Google Compute Engine/Google
-> Compute Engine, BIOS Google 01/01/2011
-> [    2.362966] Call Trace:
-> [    2.362966]  dump_stack+0x85/0xc9
-> [    2.362966]  __warn+0xd1/0xf0
-> [    2.362966]  warn_slowpath_fmt+0x4f/0x60
-> [    2.362966]  refcount_inc+0x37/0x40
-> [    2.362966]  mddev_find+0x1f1/0x2b0
-> [    2.362966]  md_open+0x1a/0xd0
-> [    2.362966]  __blkdev_get+0x85/0x4c0
-> [    2.362966]  blkdev_get+0x1d3/0x340
-> [    2.362966]  ? _raw_spin_unlock+0x27/0x40
-> [    2.362966]  blkdev_open+0x5b/0x70
-> [    2.362966]  do_dentry_open+0x213/0x330
-> [    2.362966]  ? bd_acquire+0xd0/0xd0
-> [    2.362966]  vfs_open+0x4f/0x80
-> [    2.362966]  ? may_open+0x9b/0x100
-> [    2.362966]  path_openat+0x48a/0xd50
-> [    2.362966]  ? console_unlock+0x2f9/0x560
-> [    2.362966]  do_filp_open+0x7e/0xd0
-> [    2.362966]  ? _raw_spin_unlock+0x27/0x40
-> [    2.362966]  ? __alloc_fd+0xf7/0x210
-> [    2.362966]  do_sys_open+0x115/0x1f0
-> [    2.362966]  SyS_open+0x1e/0x20
-> [    2.362966]  md_run_setup+0x71/0x9a
-> [    2.362966]  prepare_namespace+0x36/0x1a4
-> [    2.362966]  kernel_init_freeable+0x254/0x269
-> [    2.362966]  ? set_debug_rodata+0x12/0x12
-> [    2.362966]  ? rest_init+0x140/0x140
-> [    2.362966]  kernel_init+0xe/0x100
-> [    2.362966]  ret_from_fork+0x31/0x40
-> [    2.482465] ---[ end trace a822b43a79b1f9f5 ]---
-> [    2.487353] md: Autodetecting RAID arrays.
-> [    2.491647] md: autorun ...
-> [    2.494592] md: ... autorun DONE.
-> [    2.503263] EXT4-fs (sda1): couldn't mount as ext3 due to feature
-> incompatibilities
-> [    2.511467] ------------[ cut here ]------------
-> [    2.511477] WARNING: CPU: 0 PID: 21 at lib/refcount.c:207
-> refcount_dec_not_one+0x75/0x80
-> [    2.511478] refcount_t: underflow; use-after-free.
-> [    2.511480] Modules linked in:
-> [    2.511485] CPU: 0 PID: 21 Comm: kworker/0:1 Tainted: G        W
->    4.11.0-rc1-next-20170310 #1
-> [    2.511486] Hardware name: Google Google Compute Engine/Google
-> Compute Engine, BIOS Google 01/01/2011
-> [    2.511490] Workqueue: events delayed_fput
-> [    2.511492] Call Trace:
-> [    2.511496]  dump_stack+0x85/0xc9
-> [    2.511501]  __warn+0xd1/0xf0
-> [    2.511505]  warn_slowpath_fmt+0x4f/0x60
-> [    2.511509]  refcount_dec_not_one+0x75/0x80
-> [    2.511511]  refcount_dec_and_lock+0x16/0x50
-> [    2.511515]  mddev_put+0x22/0x150
-> [    2.511517]  md_release+0x21/0x30
-> [    2.511521]  __blkdev_put+0x2df/0x340
-> [    2.511526]  blkdev_put+0x50/0x150
-> [    2.511529]  blkdev_close+0x25/0x30
-> [    2.511531]  __fput+0xfa/0x230
-> [    2.511535]  delayed_fput+0x25/0x30
-> [    2.511538]  process_one_work+0x1e1/0x670
-> [    2.511539]  ? process_one_work+0x162/0x670
-> [    2.511544]  worker_thread+0x137/0x4b0
-> [    2.511546]  ? trace_hardirqs_on+0xd/0x10
-> [    2.511551]  kthread+0x10c/0x140
-> [    2.511552]  ? process_one_work+0x670/0x670
-> [    2.511554]  ? kthread_create_on_node+0x40/0x40
-> [    2.511558]  ret_from_fork+0x31/0x40
-> [    2.511566] ---[ end trace a822b43a79b1f9f6 ]---
+> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+> index e69f922..e3c20c7 100644
+> --- a/drivers/md/raid5-cache.c
+> +++ b/drivers/md/raid5-cache.c
+> @@ -591,7 +591,7 @@ static void r5l_log_endio(struct bio *bio)
+>  
+>  	spin_lock_irqsave(&log->io_list_lock, flags);
+>  	__r5l_set_io_unit_state(io, IO_UNIT_IO_END);
+> -	if (log->need_cache_flush)
+> +	if (log->need_cache_flush && !list_empty(&io->stripe_list))
+>  		r5l_move_to_end_ios(log);
+>  	else
+>  		r5l_log_run_stripes(log);
+> @@ -619,9 +619,11 @@ static void r5l_log_endio(struct bio *bio)
+>  			bio_endio(bi);
+>  			atomic_dec(&io->pending_stripe);
+>  		}
+> -		if (atomic_read(&io->pending_stripe) == 0)
+> -			__r5l_stripe_write_finished(io);
+>  	}
+> +
+> +	/* finish flush only io_unit and PAYLOAD_FLUSH only io_unit */
+> +	if (atomic_read(&io->pending_stripe) == 0)
+> +		__r5l_stripe_write_finished(io);
+>  }
+>  
+>  static void r5l_do_submit_io(struct r5l_log *log, struct r5l_io_unit *io)
+> @@ -843,6 +845,41 @@ static void r5l_append_payload_page(struct r5l_log *log, struct page *page)
+>  	r5_reserve_log_entry(log, io);
+>  }
+>  
+> +static void r5l_append_flush_payload(struct r5l_log *log, sector_t sect)
+> +{
+> +	struct mddev *mddev = log->rdev->mddev;
+> +	struct r5conf *conf = mddev->private;
+> +	struct r5l_io_unit *io;
+> +	struct r5l_payload_flush *payload;
+> +	int meta_size;
+> +
+> +	/*
+> +	 * payload_flush requires extra writes to the journal.
+> +	 * To avoid handling the extra IO in quiesce, just skip
+> +	 * flush_payload
+> +	 */
+> +	if (conf->quiesce)
+> +		return;
+> +
+> +	mutex_lock(&log->io_mutex);
+> +	meta_size = sizeof(struct r5l_payload_flush) + sizeof(__le64);
+> +
+> +	if (r5l_get_meta(log, meta_size)) {
+> +		mutex_unlock(&log->io_mutex);
+> +		return;
+> +	}
+> +
+> +	/* current implementation is one stripe per flush payload */
+> +	io = log->current_io;
+> +	payload = page_address(io->meta_page) + io->meta_offset;
+> +	payload->header.type = cpu_to_le16(R5LOG_PAYLOAD_FLUSH);
+> +	payload->header.flags = cpu_to_le16(0);
+> +	payload->size = cpu_to_le32(sizeof(__le64));
+> +	payload->flush_stripes[0] = cpu_to_le64(sect);
+> +	io->meta_offset += meta_size;
+> +	mutex_unlock(&log->io_mutex);
+> +}
+> +
+>  static int r5l_log_stripe(struct r5l_log *log, struct stripe_head *sh,
+>  			   int data_pages, int parity_pages)
+>  {
+> @@ -2784,6 +2821,8 @@ void r5c_finish_stripe_write_out(struct r5conf *conf,
+>  		atomic_dec(&conf->r5c_flushing_full_stripes);
+>  		atomic_dec(&conf->r5c_cached_full_stripes);
+>  	}
+> +
+> +	r5l_append_flush_payload(log, sh->sector);
+>  }
+>  
+>  int
+> -- 
+> 2.9.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
