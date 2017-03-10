@@ -1,102 +1,96 @@
-From: Lars Ellenberg <lars.ellenberg@linbit.com>
-Subject: Re: [PATCH v2] blk: improve order of bio handling in
- generic_make_request()
-Date: Fri, 10 Mar 2017 19:51:03 +0100
-Message-ID: <20170310185103.GA15851@soda.linbit>
-References: <87lgsjj9w8.fsf@notabene.neil.brown.name>
- <a674456d-fb93-437e-c50e-195e7a035ba4@kernel.dk>
- <87r328j00i.fsf@notabene.neil.brown.name>
- <87d1dphhuy.fsf@notabene.neil.brown.name>
- <58be6551-4aa7-72ee-1616-a1545606d029@kernel.dk>
- <87varhg14d.fsf@notabene.neil.brown.name>
- <CANr6vz8EbRWXq7igGCzRy9JC1Nt=MMma0h8M6nxHQtwiMDa5aQ@mail.gmail.com>
- <20170310143822.GA23879@redhat.com>
- <alpine.LRH.2.02.1703100953280.9054@file01.intranet.prod.int.rdu2.redhat.com>
- <153a6cff-c553-0d18-e15b-4f3defc3a42b@profitbricks.com>
+From: Andrei Vagin <avagin@gmail.com>
+Subject: linux-next: WARNING: CPU: 0 PID: 1 at lib/refcount.c:114 refcount_inc+0x37/0x40
+Date: Fri, 10 Mar 2017 12:01:06 -0800
+Message-ID: <CANaxB-xDKh+_0eR2p4rODObQPVFwNM1-vK=fmCV-jaBYpGkPAw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <153a6cff-c553-0d18-e15b-4f3defc3a42b@profitbricks.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Jack Wang <jinpu.wang@profitbricks.com>
-Cc: Mikulas Patocka <mpatocka@redhat.com>, Mike Snitzer <snitzer@redhat.com>, NeilBrown <neilb@suse.com>, Jens Axboe <axboe@kernel.dk>, LKML <linux-kernel@vger.kernel.org>, Kent Overstreet <kent.overstreet@gmail.com>, Pavel Machek <pavel@ucw.cz>, linux-raid@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, linux-block@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Mar 10, 2017 at 04:07:58PM +0100, Jack Wang wrote:
-> On 10.03.2017 15:55, Mikulas Patocka wrote:
-> > On Fri, 10 Mar 2017, Mike Snitzer wrote:
-> >> On Fri, Mar 10 2017 at  7:34am -0500,
-> >> Lars Ellenberg <lars.ellenberg@linbit.com> wrote:
-> >>
-> >>>> --- a/block/blk-core.c
-> >>>> +++ b/block/blk-core.c
-> >>>> @@ -1975,7 +1975,14 @@ generic_make_request_checks(struct bio *bio)
-> >>>>   */
-> >>>>  blk_qc_t generic_make_request(struct bio *bio)
-> >>>>  {
-> >>>> -       struct bio_list bio_list_on_stack;
-> >>>> +       /*
-> >>>> +        * bio_list_on_stack[0] contains bios submitted by the current
-> >>>> +        * make_request_fn.
-> >>>> +        * bio_list_on_stack[1] contains bios that were submitted before
-> >>>> +        * the current make_request_fn, but that haven't been processed
-> >>>> +        * yet.
-> >>>> +        */
-> >>>> +       struct bio_list bio_list_on_stack[2];
-> >>>>         blk_qc_t ret = BLK_QC_T_NONE;
-> >>>
-> >>> May I suggest that, if you intend to assign something that is not a
-> >>> plain &(struct bio_list), but a &(struct bio_list[2]),
-> >>> you change the task member so it is renamed (current->bio_list vs
-> >>> current->bio_lists, plural, is what I did last year).
-> >>> Or you will break external modules, silently, and horribly (or,
-> >>> rather, they won't notice, but break the kernel).
-> >>> Examples of such modules would be DRBD, ZFS, quite possibly others.
+Hello,
 
-> > It's better to make external modules not compile than to silently 
-> > introduce bugs in them. So yes, I would rename that.
-> > 
-> > Mikulas
-> 
-> Agree, better rename current->bio_list to current->bio_lists
->
-> Regards,
-> Jack
+We run CRIU tests for linux-next kernels and here is a new issue:
 
-Thank you.
+All logs are here: https://api.travis-ci.org/jobs/209680974/log.txt?deansi=true
+The kernel version is 4.11.0-rc1-next-20170310
 
-(I don't know if some one does, but...)
-Thing is: *IF* some external thing messes with
-current->bio_list in "interesting" ways, and not just the
-"I don't care, one level of real recursion fixes this for me"
-pattern of
-	struct bio_list *tmp = current->bio_list;
-	current->bio_list = NULL;
-	submit_bio()
-	current->bio_list = tmp;
-you get a chance of stack corruption,
-without even as much as a compiler warning.
-
-Which is why I wrote https://lkml.org/lkml/2016/7/8/469
-...
-
-Instead, I suggest to distinguish between recursive calls to
-generic_make_request(), and pushing back the remainder part in
-blk_queue_split(), by pointing current->bio_lists to a
-	struct recursion_to_iteration_bio_lists {
-		struct bio_list recursion;
-		struct bio_list queue;
-	}
-
-By providing each q->make_request_fn() with an empty "recursion"
-bio_list, then merging any recursively submitted bios to the
-head of the "queue" list, we can make the recursion-to-iteration
-logic in generic_make_request() process deepest level bios first,
-and "sibling" bios of the same level in "natural" order.
-
-...
-
-Cheers,
-
-	Lars
+[    2.324763] md: Waiting for all devices to be available before autodetect
+[    2.331707] md: If you don't use raid, use raid=noautodetect
+[    2.338189] ------------[ cut here ]------------
+[    2.342965] WARNING: CPU: 0 PID: 1 at lib/refcount.c:114
+refcount_inc+0x37/0x40
+[    2.350427] refcount_t: increment on 0; use-after-free.
+[    2.355794] Modules linked in:
+[    2.358979] CPU: 0 PID: 1 Comm: swapper/0 Not tainted
+4.11.0-rc1-next-20170310 #1
+[    2.362966] Hardware name: Google Google Compute Engine/Google
+Compute Engine, BIOS Google 01/01/2011
+[    2.362966] Call Trace:
+[    2.362966]  dump_stack+0x85/0xc9
+[    2.362966]  __warn+0xd1/0xf0
+[    2.362966]  warn_slowpath_fmt+0x4f/0x60
+[    2.362966]  refcount_inc+0x37/0x40
+[    2.362966]  mddev_find+0x1f1/0x2b0
+[    2.362966]  md_open+0x1a/0xd0
+[    2.362966]  __blkdev_get+0x85/0x4c0
+[    2.362966]  blkdev_get+0x1d3/0x340
+[    2.362966]  ? _raw_spin_unlock+0x27/0x40
+[    2.362966]  blkdev_open+0x5b/0x70
+[    2.362966]  do_dentry_open+0x213/0x330
+[    2.362966]  ? bd_acquire+0xd0/0xd0
+[    2.362966]  vfs_open+0x4f/0x80
+[    2.362966]  ? may_open+0x9b/0x100
+[    2.362966]  path_openat+0x48a/0xd50
+[    2.362966]  ? console_unlock+0x2f9/0x560
+[    2.362966]  do_filp_open+0x7e/0xd0
+[    2.362966]  ? _raw_spin_unlock+0x27/0x40
+[    2.362966]  ? __alloc_fd+0xf7/0x210
+[    2.362966]  do_sys_open+0x115/0x1f0
+[    2.362966]  SyS_open+0x1e/0x20
+[    2.362966]  md_run_setup+0x71/0x9a
+[    2.362966]  prepare_namespace+0x36/0x1a4
+[    2.362966]  kernel_init_freeable+0x254/0x269
+[    2.362966]  ? set_debug_rodata+0x12/0x12
+[    2.362966]  ? rest_init+0x140/0x140
+[    2.362966]  kernel_init+0xe/0x100
+[    2.362966]  ret_from_fork+0x31/0x40
+[    2.482465] ---[ end trace a822b43a79b1f9f5 ]---
+[    2.487353] md: Autodetecting RAID arrays.
+[    2.491647] md: autorun ...
+[    2.494592] md: ... autorun DONE.
+[    2.503263] EXT4-fs (sda1): couldn't mount as ext3 due to feature
+incompatibilities
+[    2.511467] ------------[ cut here ]------------
+[    2.511477] WARNING: CPU: 0 PID: 21 at lib/refcount.c:207
+refcount_dec_not_one+0x75/0x80
+[    2.511478] refcount_t: underflow; use-after-free.
+[    2.511480] Modules linked in:
+[    2.511485] CPU: 0 PID: 21 Comm: kworker/0:1 Tainted: G        W
+   4.11.0-rc1-next-20170310 #1
+[    2.511486] Hardware name: Google Google Compute Engine/Google
+Compute Engine, BIOS Google 01/01/2011
+[    2.511490] Workqueue: events delayed_fput
+[    2.511492] Call Trace:
+[    2.511496]  dump_stack+0x85/0xc9
+[    2.511501]  __warn+0xd1/0xf0
+[    2.511505]  warn_slowpath_fmt+0x4f/0x60
+[    2.511509]  refcount_dec_not_one+0x75/0x80
+[    2.511511]  refcount_dec_and_lock+0x16/0x50
+[    2.511515]  mddev_put+0x22/0x150
+[    2.511517]  md_release+0x21/0x30
+[    2.511521]  __blkdev_put+0x2df/0x340
+[    2.511526]  blkdev_put+0x50/0x150
+[    2.511529]  blkdev_close+0x25/0x30
+[    2.511531]  __fput+0xfa/0x230
+[    2.511535]  delayed_fput+0x25/0x30
+[    2.511538]  process_one_work+0x1e1/0x670
+[    2.511539]  ? process_one_work+0x162/0x670
+[    2.511544]  worker_thread+0x137/0x4b0
+[    2.511546]  ? trace_hardirqs_on+0xd/0x10
+[    2.511551]  kthread+0x10c/0x140
+[    2.511552]  ? process_one_work+0x670/0x670
+[    2.511554]  ? kthread_create_on_node+0x40/0x40
+[    2.511558]  ret_from_fork+0x31/0x40
+[    2.511566] ---[ end trace a822b43a79b1f9f6 ]---
