@@ -1,44 +1,114 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v5 0/7] Partial Parity Log for MD RAID 5
-Date: Thu, 9 Mar 2017 15:32:40 -0800
-Message-ID: <20170309233240.r64itd7oreuxkumz@kernel.org>
-References: <20170309090003.13298-1-artur.paszkiewicz@intel.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: [PATCH v2] md/r5cache: generate R5LOG_PAYLOAD_FLUSH
+Date: Thu, 9 Mar 2017 16:24:03 -0800
+Message-ID: <20170310002403.1951485-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170309090003.13298-1-artur.paszkiewicz@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: shli@fb.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-On Thu, Mar 09, 2017 at 09:59:56AM +0100, Artur Paszkiewicz wrote:
-> This series of patches implements the Partial Parity Log for RAID5 arrays. The
-> purpose of this feature is closing the RAID 5 Write Hole. It is a solution
-> alternative to the existing raid5-cache, but the logging workflow and much of
-> the implementation is based on it.
-> 
-> The main differences compared to raid5-cache is that PPL is a distributed log -
-> it is stored on array member drives in the metadata area and does not require a
-> dedicated journaling drive. Write performance is reduced by up to 30%-40% but
-> it scales with the number of drives in the array and the journaling drive does
-> not become a bottleneck or a single point of failure. PPL does not protect from
-> losing in-flight data, only from silent data corruption. More details about how
-> the log works can be found in patches 3 and 5.
-> 
-> This feature originated from Intel RSTe, which uses IMSM metadata. PPL for IMSM
-> is going to be included in RSTe implementations starting with upcoming Xeon
-> platforms and Intel will continue supporting and maintaining it. This patchset
-> implements PPL for external metadata (specifically IMSM) as well as native MD
-> v1.x metadata.
-> 
-> Changes in mdadm are also required to make this fully usable. Patches for mdadm
-> will be sent later.
+In r5c_finish_stripe_write_out(), R5LOG_PAYLOAD_FLUSH is append to
+log->current_io.
 
-Looks good, I'll apply this series into next. There are some small issues I
-replied separately. Please send a separate patch to fix them if they make
-sense, I'll integrate them locally.
+Appending R5LOG_PAYLOAD_FLUSH in quiesce needs extra writes to
+journal. To simplify the logic, we just skip R5LOG_PAYLOAD_FLUSH in
+quiesce.
 
-Thanks,
-Shaohua
+Even R5LOG_PAYLOAD_FLUSH supports multiple stripes per payload.
+However, current implementation is one stripe per R5LOG_PAYLOAD_FLUSH,
+which is simpler.
+
+Signed-off-by: Song Liu <songliubraving@fb.com>
+---
+ drivers/md/raid5-cache.c | 48 ++++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 44 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index e69f922..f148c68 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -588,10 +588,11 @@ static void r5l_log_endio(struct bio *bio)
+ 
+ 	bio_put(bio);
+ 	mempool_free(io->meta_page, log->meta_pool);
++	__r5l_set_io_unit_state(io, IO_UNIT_IO_END);
+ 
+ 	spin_lock_irqsave(&log->io_list_lock, flags);
+-	__r5l_set_io_unit_state(io, IO_UNIT_IO_END);
+-	if (log->need_cache_flush)
++
++	if (log->need_cache_flush && !list_empty(&io->stripe_list))
+ 		r5l_move_to_end_ios(log);
+ 	else
+ 		r5l_log_run_stripes(log);
+@@ -619,9 +620,11 @@ static void r5l_log_endio(struct bio *bio)
+ 			bio_endio(bi);
+ 			atomic_dec(&io->pending_stripe);
+ 		}
+-		if (atomic_read(&io->pending_stripe) == 0)
+-			__r5l_stripe_write_finished(io);
+ 	}
++
++	/* finish flush only io_unit and PAYLOAD_FLUSH only io_unit */
++	if (list_empty(&io->stripe_list))
++		__r5l_stripe_write_finished(io);
+ }
+ 
+ static void r5l_do_submit_io(struct r5l_log *log, struct r5l_io_unit *io)
+@@ -843,6 +846,41 @@ static void r5l_append_payload_page(struct r5l_log *log, struct page *page)
+ 	r5_reserve_log_entry(log, io);
+ }
+ 
++static void r5l_append_flush_payload(struct r5l_log *log, sector_t sect)
++{
++	struct mddev *mddev = log->rdev->mddev;
++	struct r5conf *conf = mddev->private;
++	struct r5l_io_unit *io;
++	struct r5l_payload_flush *payload;
++	int meta_size;
++
++	/*
++	 * payload_flush requires extra writes to the journal.
++	 * To avoid handling the extra IO in quiesce, just skip
++	 * flush_payload
++	 */
++	if (conf->quiesce)
++		return;
++
++	mutex_lock(&log->io_mutex);
++	meta_size = sizeof(struct r5l_payload_flush) + sizeof(__le64);
++
++	if (r5l_get_meta(log, meta_size)) {
++		mutex_unlock(&log->io_mutex);
++		return;
++	}
++
++	/* current implementation is one stripe per flush payload */
++	io = log->current_io;
++	payload = page_address(io->meta_page) + io->meta_offset;
++	payload->header.type = cpu_to_le16(R5LOG_PAYLOAD_FLUSH);
++	payload->header.flags = cpu_to_le16(0);
++	payload->size = cpu_to_le32(sizeof(__le64));
++	payload->flush_stripes[0] = cpu_to_le64(sect);
++	io->meta_offset += meta_size;
++	mutex_unlock(&log->io_mutex);
++}
++
+ static int r5l_log_stripe(struct r5l_log *log, struct stripe_head *sh,
+ 			   int data_pages, int parity_pages)
+ {
+@@ -2784,6 +2822,8 @@ void r5c_finish_stripe_write_out(struct r5conf *conf,
+ 		atomic_dec(&conf->r5c_flushing_full_stripes);
+ 		atomic_dec(&conf->r5c_cached_full_stripes);
+ 	}
++
++	r5l_append_flush_payload(log, sh->sector);
+ }
+ 
+ int
+-- 
+2.9.3
+
