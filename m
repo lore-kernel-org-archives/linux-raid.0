@@ -1,119 +1,140 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v3] md/r5cache: generate R5LOG_PAYLOAD_FLUSH
-Date: Fri, 10 Mar 2017 13:01:51 -0800
-Message-ID: <20170310210151.bbuc2dv3t6c46xea@kernel.org>
-References: <20170310052339.2705936-1-songliubraving@fb.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH v2] blk: improve order of bio handling in
+	generic_make_request()
+Date: Sat, 11 Mar 2017 11:47:56 +1100
+Message-ID: <87shmkfxkz.fsf@notabene.neil.brown.name>
+References: <87h93blz6g.fsf@notabene.neil.brown.name>
+	<71562c2c-97f4-9a0a-32ec-30e0702ca575@profitbricks.com>
+	<87lgsjj9w8.fsf@notabene.neil.brown.name>
+	<a674456d-fb93-437e-c50e-195e7a035ba4@kernel.dk>
+	<87r328j00i.fsf@notabene.neil.brown.name>
+	<87d1dphhuy.fsf@notabene.neil.brown.name>
+	<58be6551-4aa7-72ee-1616-a1545606d029@kernel.dk>
+	<87varhg14d.fsf@notabene.neil.brown.name>
+	<CANr6vz8EbRWXq7igGCzRy9JC1Nt=MMma0h8M6nxHQtwiMDa5aQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170310052339.2705936-1-songliubraving@fb.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>
-Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org
+Content-Type: multipart/mixed; boundary="===============3756041316313884675=="
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <CANr6vz8EbRWXq7igGCzRy9JC1Nt=MMma0h8M6nxHQtwiMDa5aQ@mail.gmail.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Lars Ellenberg <lars.ellenberg@linbit.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, Mikulas Patocka <mpatocka@redhat.com>, Pavel Machek <pavel@ucw.cz>, Jack Wang <jinpu.wang@profitbricks.com>, Kent Overstreet <kent.overstreet@gmail.com>
 List-Id: linux-raid.ids
 
-On Thu, Mar 09, 2017 at 09:23:39PM -0800, Song Liu wrote:
-> In r5c_finish_stripe_write_out(), R5LOG_PAYLOAD_FLUSH is append to
-> log->current_io.
-> 
-> Appending R5LOG_PAYLOAD_FLUSH in quiesce needs extra writes to
-> journal. To simplify the logic, we just skip R5LOG_PAYLOAD_FLUSH in
-> quiesce.
-> 
-> Even R5LOG_PAYLOAD_FLUSH supports multiple stripes per payload.
-> However, current implementation is one stripe per R5LOG_PAYLOAD_FLUSH,
-> which is simpler.
+--===============3756041316313884675==
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 
-Thanks, applied the two patches.
- 
-> Signed-off-by: Song Liu <songliubraving@fb.com>
-> ---
->  drivers/md/raid5-cache.c | 45 ++++++++++++++++++++++++++++++++++++++++++---
->  1 file changed, 42 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index e69f922..e3c20c7 100644
-> --- a/drivers/md/raid5-cache.c
-> +++ b/drivers/md/raid5-cache.c
-> @@ -591,7 +591,7 @@ static void r5l_log_endio(struct bio *bio)
->  
->  	spin_lock_irqsave(&log->io_list_lock, flags);
->  	__r5l_set_io_unit_state(io, IO_UNIT_IO_END);
-> -	if (log->need_cache_flush)
-> +	if (log->need_cache_flush && !list_empty(&io->stripe_list))
->  		r5l_move_to_end_ios(log);
->  	else
->  		r5l_log_run_stripes(log);
-> @@ -619,9 +619,11 @@ static void r5l_log_endio(struct bio *bio)
->  			bio_endio(bi);
->  			atomic_dec(&io->pending_stripe);
->  		}
-> -		if (atomic_read(&io->pending_stripe) == 0)
-> -			__r5l_stripe_write_finished(io);
->  	}
-> +
-> +	/* finish flush only io_unit and PAYLOAD_FLUSH only io_unit */
-> +	if (atomic_read(&io->pending_stripe) == 0)
-> +		__r5l_stripe_write_finished(io);
->  }
->  
->  static void r5l_do_submit_io(struct r5l_log *log, struct r5l_io_unit *io)
-> @@ -843,6 +845,41 @@ static void r5l_append_payload_page(struct r5l_log *log, struct page *page)
->  	r5_reserve_log_entry(log, io);
->  }
->  
-> +static void r5l_append_flush_payload(struct r5l_log *log, sector_t sect)
-> +{
-> +	struct mddev *mddev = log->rdev->mddev;
-> +	struct r5conf *conf = mddev->private;
-> +	struct r5l_io_unit *io;
-> +	struct r5l_payload_flush *payload;
-> +	int meta_size;
-> +
-> +	/*
-> +	 * payload_flush requires extra writes to the journal.
-> +	 * To avoid handling the extra IO in quiesce, just skip
-> +	 * flush_payload
-> +	 */
-> +	if (conf->quiesce)
-> +		return;
-> +
-> +	mutex_lock(&log->io_mutex);
-> +	meta_size = sizeof(struct r5l_payload_flush) + sizeof(__le64);
-> +
-> +	if (r5l_get_meta(log, meta_size)) {
-> +		mutex_unlock(&log->io_mutex);
-> +		return;
-> +	}
-> +
-> +	/* current implementation is one stripe per flush payload */
-> +	io = log->current_io;
-> +	payload = page_address(io->meta_page) + io->meta_offset;
-> +	payload->header.type = cpu_to_le16(R5LOG_PAYLOAD_FLUSH);
-> +	payload->header.flags = cpu_to_le16(0);
-> +	payload->size = cpu_to_le32(sizeof(__le64));
-> +	payload->flush_stripes[0] = cpu_to_le64(sect);
-> +	io->meta_offset += meta_size;
-> +	mutex_unlock(&log->io_mutex);
-> +}
-> +
->  static int r5l_log_stripe(struct r5l_log *log, struct stripe_head *sh,
->  			   int data_pages, int parity_pages)
->  {
-> @@ -2784,6 +2821,8 @@ void r5c_finish_stripe_write_out(struct r5conf *conf,
->  		atomic_dec(&conf->r5c_flushing_full_stripes);
->  		atomic_dec(&conf->r5c_cached_full_stripes);
->  	}
-> +
-> +	r5l_append_flush_payload(log, sh->sector);
->  }
->  
->  int
-> -- 
-> 2.9.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=-=-=
+Content-Type: text/plain
+
+On Fri, Mar 10 2017, Lars Ellenberg wrote:
+
+>> --- a/block/blk-core.c
+>> +++ b/block/blk-core.c
+>> @@ -1975,7 +1975,14 @@ generic_make_request_checks(struct bio *bio)
+>>   */
+>>  blk_qc_t generic_make_request(struct bio *bio)
+>>  {
+>> -       struct bio_list bio_list_on_stack;
+>> +       /*
+>> +        * bio_list_on_stack[0] contains bios submitted by the current
+>> +        * make_request_fn.
+>> +        * bio_list_on_stack[1] contains bios that were submitted before
+>> +        * the current make_request_fn, but that haven't been processed
+>> +        * yet.
+>> +        */
+>> +       struct bio_list bio_list_on_stack[2];
+>>         blk_qc_t ret = BLK_QC_T_NONE;
+>
+> May I suggest that, if you intend to assign something that is not a
+> plain &(struct bio_list), but a &(struct bio_list[2]),
+> you change the task member so it is renamed (current->bio_list vs
+> current->bio_lists, plural, is what I did last year).
+> Or you will break external modules, silently, and horribly (or,
+> rather, they won't notice, but break the kernel).
+> Examples of such modules would be DRBD, ZFS, quite possibly others.
+>
+
+This is exactly what I didn't in my first draft (bio_list -> bio_lists),
+but then I reverted that change because it didn't seem to be worth the
+noise.
+It isn't much noise, sched.h, bcache/btree.c, md/dm-bufio.c, and
+md/raid1.c get minor changes.
+But as I'm hoping to get rid of all of those uses, renaming before
+removing seemed pointless ... though admittedly that is what I did for
+bioset_create().... I wondered about that too.
+
+The example you give later:
+	struct bio_list *tmp = current->bio_list;
+	current->bio_list = NULL;
+	submit_bio()
+	current->bio_list = tmp;
+
+won't cause any problem.  Whatever lists the parent generic_make_request
+is holding onto will be untouched during the submit_bio() call, and will
+be exactly as it expects them when this caller returns.
+
+If some out-of-tree code does anything with ->bio_list that makes sense
+with the previous code, then it will still make sense with the new
+code. However there will be a few bios that it didn't get too look at.
+These will all be bios that were submitted by a device further up the
+stack (closer to the filesystem), so they *should* be irrelevant.
+I could probably come up with some weird behaviour that might have
+worked before but now wouldn't quite work the same way.  But just fixing
+bugs can sometimes affect an out-of-tree driver in a strange way because
+it was assuming those bugs.
+
+I hope that I'll soon be able to remove punt_bios_to_rescuer and
+flush_current_bio_list, after which current->bio_list  can really be
+just a list again.  I don't think it is worth changing the name for a
+transient situation.
+
+But thanks for the review - it encouraged me to think though the
+consequences again and I'm now more confident.
+I actually now think that change probably wasn't necessary.  It is
+safer though.  It ensures that current functionality isn't removed
+without a clear justification.
+
+Thanks,
+NeilBrown
+
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljDST0ACgkQOeye3VZi
+gbnqNRAAjFtXFzd/Bu+z85h3s2hXEZROkDKXsty0fgRGP1+dsGHrZIhouBiqWmqB
+spX/Ij+ccbFYOwBWjFM12yz2eWGRqrqyrIPpbh0/T7jNVT5eeD76kmBRdmv2jbl5
+1AMa/K5LS4BWhPsxzXOPMTPsV6K3CtoVs9cRmqh8phiWnjqqWhec9PkU/j1B1XBs
+oHQDi+QzMe775U8s0hOK8UtxRyb+Do1RlSWr6hW8PfZjybpG3973j5PsvzmDsAYE
+cGpirb+IeOlSa9O4Br3pdGIp7P3nJ6EPlkMrl1vLEmDbMzUjNAf+wvq/oppjamAN
+FdCF8wa2ydFCaEfiZ5SMnaNtOgnafinn3XzIQuykpQjadvWct63NVy8a96yVm9MN
+kfDRyKrTzQfct2Sr91k/u6va58OkpW6GV3ylq6j1bMKCNHOueHJzMc6A9Q5EhQe3
+/s0FLc1bW78tRSH2zKhWaaM4N0Lm2bI4WcIFI8jsIP6S2DC8pnVyvricvQ9DAArw
+gxG8Wu1FwQljN5bGlnzn/gYWOAQsJ2jhpFs8edHA4hnqUyBv6UdoJ0qxeMIhw7P8
+WFjNDRjJ9u/B7RAUBBWs2Z2ACDwIeRko7Zo3NitjRzv70EHUOx5Qc9P8qktj+tmt
+T/VoKXloIVG4WIX3+r5v3pFJPmzboW88Y/4cuUmr0uM5gERj3Ho=
+=3pLX
+-----END PGP SIGNATURE-----
+--=-=-=--
+
+
+--===============3756041316313884675==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+
+--===============3756041316313884675==--
