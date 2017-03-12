@@ -1,103 +1,62 @@
-From: Liu Zhilong <zlliu@suse.com>
-Subject: Re: [PATCH 2/4] mdadm:external bitmap only supports ext filesystem
-Date: Sun, 12 Mar 2017 10:48:01 -0400
-Message-ID: <1dbe7b29-a414-3031-a562-0799750e174c@suse.com>
-References: <20170308074831.24683-1-zlliu@suse.com>
- <20170308075144.24873-1-zlliu@suse.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [dm-devel] [PATCH 0/5] Updates following recent generic_make_request improvement
+Date: Mon, 13 Mar 2017 08:52:50 +1100
+Message-ID: <87lgsaf9hp.fsf@notabene.neil.brown.name>
+References: <148912539296.4002.219258660543808741.stgit@noble> <3c5e786a-ba42-ada8-c943-17e8b72c63d1@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170308075144.24873-1-zlliu@suse.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@gmail.com, shli@fb.com
-Cc: linux-raid@vger.kernel.org
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <3c5e786a-ba42-ada8-c943-17e8b72c63d1@kernel.dk>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-raid@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, LKML <linux-kernel@vger.kernel.org>, linux-block@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, Mikulas Patocka <mpatocka@redhat.com>, Pavel Machek <pavel@ucw.cz>, Jack Wang <jinpu.wang@profitbricks.com>, Lars Ellenberg <lars.ellenberg@linbit.com>, Kent Overstreet <kent.overstreet@gmail.com>
 List-Id: linux-raid.ids
 
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-      as this patch's purpose, just wanna improve the prompt when using the
-external bitmap mode, and this patch maybe a little redundant.
-      For the errno rule, RUN_ARRAY returned EINVAL indeed and the man page
-has indicated that external bitmap only works with ext[2-4] file system.
-      I think it would be more user-friendly if prints one prompt and 
-returned
-EINVAL at the same time when the bmap() got failure.
-      Such as:
+On Sat, Mar 11 2017, Jens Axboe wrote:
 
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index 9fb2cca..0bff96b 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -381,6 +381,7 @@ static int read_page(struct file *file, unsigned 
-long index,
-                         bh->b_blocknr = bmap(inode, block);
-                         if (bh->b_blocknr == 0) {
-                                 /* Cannot use this file! */
-+                               pr_err("The external bitmap only works 
-with ext[2-4] filesystem.\n");
-                                 ret = -EINVAL;
-                                 goto out;
-                         }
-Thanks,
--Zhilong
-
-On 03/08/2017 02:51 AM, Zhilong Liu wrote:
-> mdadm: ensure that the external bitmap_file is
-> stored by ext[2-4] file system, because bmap()
-> of linux/driver/md/bitmap.c exits directly when
-> the bitmap_file isn't suitable. mdadm should make
-> users aware of this scenario and give a prompt.
+> On 03/09/2017 11:00 PM, NeilBrown wrote:
+>> This is a rebase of the series I sent earlier, based on the
+>> very latest from Linus, which included my first patch.
+>>=20
+>> The first fixes a problem that patch introduced, and so should go to
+>> Linux promptly.
+>> The others are more general improvements and can go in the normal
+>> course of events.
+>>=20
+>> It is possible that the changes to btrfs and xfs can just be dropped
+>> as a subsequent patch will be needed to revert them anyway.  They are
+>> there only to be able to say that "blk: make the bioset
+>> rescue_workqueue optional." doesn't change any functionality at all.
 >
-> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+> I have applied the first patch for this series, and added the Fixes
+> tag. We'll let the rest simmer a bit, then aim for 4.12 for those.
 >
-> diff --git a/Create.c b/Create.c
-> index 2721884..9a951b0 100644
-> --- a/Create.c
-> +++ b/Create.c
-> @@ -831,11 +831,6 @@ int Create(struct supertype *st, char *mddev,
->   			goto abort_locked;
->   		}
->   		bitmap_fd = open(s->bitmap_file, O_RDWR);
-> -		if (bitmap_fd < 0) {
-> -			pr_err("weird: %s cannot be openned\n",
-> -				s->bitmap_file);
-> -			goto abort_locked;
-> -		}
->   		if (ioctl(mdfd, SET_BITMAP_FILE, bitmap_fd) < 0) {
->   			pr_err("Cannot set bitmap file for %s: %s\n",
->   				mddev, strerror(errno));
-> diff --git a/mdadm.c b/mdadm.c
-> index d6ad8dc..19a06db 100644
-> --- a/mdadm.c
-> +++ b/mdadm.c
-> @@ -28,6 +28,7 @@
->   #include "mdadm.h"
->   #include "md_p.h"
->   #include <ctype.h>
-> +#include <sys/vfs.h>
->   
->   static int scan_assemble(struct supertype *ss,
->   			 struct context *c,
-> @@ -1143,6 +1144,21 @@ int main(int argc, char *argv[])
->   			    strcmp(optarg, "none") == 0 ||
->   			    strchr(optarg, '/') != NULL) {
->   				s.bitmap_file = optarg;
-> +				if (strchr(s.bitmap_file, '/') != NULL) {
-> +					bitmap_fd = open(s.bitmap_file, O_RDWR);
-> +					if (bitmap_fd < 0) {
-> +						pr_err("weird: %s cannot be openned\n", s.bitmap_file);
-> +						exit(2);
-> +					}
-> +					close(bitmap_fd);
-> +					struct statfs ext_bitmap;
-> +					statfs(s.bitmap_file, &ext_bitmap);
-> +					if (ext_bitmap.f_type != 0xEF53){
-> +						pr_err("external bitmap only supports ext[2-4] filesystem, %s.\n",
-> +							s.bitmap_file);
-> +						exit(2);
-> +					}
-> +				}
->   				continue;
->   			}
->   			if (strcmp(optarg, "clustered") == 0) {
 
+Sounds good, thanks.
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljFwzIACgkQOeye3VZi
+gblP4g/+OK2+Il19jFe3uEH7tSZmXRJCYWJQhOEE6SoHelttD53TBgSBlxGW/SyB
+L7gP8yN8FmO5xCrY3sWvVIgx9iVS2uJIu6ndgo6eJ+8sDmtDCkSIP9iuCVO+Dyq1
+sgri4XNmVR494EyFR3P5fdPwelY4yd0C5nwSkqOqLuB7TKZ3Mo3RixMJmNEmdzY5
+cyhbsfxXERfcxaUmTV32fNO7Kp+LILrFG6ACv0OQjhejCIJXh9EB5DFJI8Jz9OcR
+OWNR+y5RDb+p5Obpmd8vsWLMuvppm5pUSMvu8VJwV/fKqocBVsiRNA3d8Jr6faAh
+AcQC0OneOVGmUFSdwwYBuI7HRw6QTYG+ykjh6TsmeP5L/R9v91uDupJzSf6oMBLj
+HCFYty2XXubydpt2vceWFVezfqlf/zqqncop3POxDfthzVdAuOVrjTkOhSUoxEYY
+5ySXDN/YTGXqLO35m7stHdHHkHBGLlJI0o3Mv9e76QIv8phbXtlkovqBi9kVhPjn
+xv4RLYnO8ZsNRUzwdfq8jekvM4iXeBLXsQDYTNZhLXMFxwg4TLFxRRuT9VVROGnS
+1NymqgUZZlfc2RS3bbVhAU6pFPDvzsyZh4C9xOZfXRZYMRAn3sJcu6En5mBPxDm0
+QnXW3CKjr0tMYTW7SYhJ0IXobxaTI0I5UQiG56C/fv/c2rke23Y=
+=nvb5
+-----END PGP SIGNATURE-----
+--=-=-=--
