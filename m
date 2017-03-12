@@ -1,62 +1,99 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [dm-devel] [PATCH 0/5] Updates following recent generic_make_request improvement
-Date: Mon, 13 Mar 2017 08:52:50 +1100
-Message-ID: <87lgsaf9hp.fsf@notabene.neil.brown.name>
-References: <148912539296.4002.219258660543808741.stgit@noble> <3c5e786a-ba42-ada8-c943-17e8b72c63d1@kernel.dk>
+Subject: Re: [PATCH 0/4] mdadm:checking level once mode has been set
+Date: Mon, 13 Mar 2017 09:54:49 +1100
+Message-ID: <878toaf6me.fsf@notabene.neil.brown.name>
+References: <20170308074831.24683-1-zlliu@suse.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <3c5e786a-ba42-ada8-c943-17e8b72c63d1@kernel.dk>
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-raid@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, LKML <linux-kernel@vger.kernel.org>, linux-block@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, Mikulas Patocka <mpatocka@redhat.com>, Pavel Machek <pavel@ucw.cz>, Jack Wang <jinpu.wang@profitbricks.com>, Lars Ellenberg <lars.ellenberg@linbit.com>, Kent Overstreet <kent.overstreet@gmail.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170308074831.24683-1-zlliu@suse.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Jes.Sorensen@gmail.com
+Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, Mar 11 2017, Jens Axboe wrote:
+On Wed, Mar 08 2017, Zhilong Liu wrote:
 
-> On 03/09/2017 11:00 PM, NeilBrown wrote:
->> This is a rebase of the series I sent earlier, based on the
->> very latest from Linus, which included my first patch.
->>=20
->> The first fixes a problem that patch introduced, and so should go to
->> Linux promptly.
->> The others are more general improvements and can go in the normal
->> course of events.
->>=20
->> It is possible that the changes to btrfs and xfs can just be dropped
->> as a subsequent patch will be needed to revert them anyway.  They are
->> there only to be able to say that "blk: make the bioset
->> rescue_workqueue optional." doesn't change any functionality at all.
->
-> I have applied the first patch for this series, and added the Fixes
-> tag. We'll let the rest simmer a bit, then aim for 4.12 for those.
->
+> mdadm: it would be better to check --level ealier,
+> because it would fall to different prompt if user
+> forgets to specify the --level. such as:
+> ./mdadm -CR /dev/md0 -b internal -n2 -x1 /dev/loop[0-2]
 
-Sounds good, thanks.
+When I run that command I get:
+
+  mdadm: a RAID level is needed to create an array.
+
+
+What do you get?
+
 NeilBrown
+
+
+>
+> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+>
+> diff --git a/Create.c b/Create.c
+> index 9a951b0..beec29f 100644
+> --- a/Create.c
+> +++ b/Create.c
+> @@ -125,10 +125,6 @@ int Create(struct supertype *st, char *mddev,
+>  	memset(&info, 0, sizeof(info));
+>  	if (s->level =3D=3D UnSet && st && st->ss->default_geometry)
+>  		st->ss->default_geometry(st, &s->level, NULL, NULL);
+> -	if (s->level =3D=3D UnSet) {
+> -		pr_err("a RAID level is needed to create an array.\n");
+> -		return 1;
+> -	}
+>  	if (s->raiddisks < 4 && s->level =3D=3D 6) {
+>  		pr_err("at least 4 raid-devices needed for level 6\n");
+>  		return 1;
+> diff --git a/mdadm.c b/mdadm.c
+> index 19a06db..ad24bdf 100644
+> --- a/mdadm.c
+> +++ b/mdadm.c
+> @@ -350,6 +350,12 @@ int main(int argc, char *argv[])
+>  				pr_err("Must give -a/--add for devices to add: %s\n", optarg);
+>  				exit(2);
+>  			}
+> +			if (devs_found > 0 && s.level =3D=3D UnSet && !devmode) {
+> +				if (mode =3D=3D CREATE || mode =3D=3D BUILD) {
+> +					pr_err("a RAID level is needed to create or build an array.\n");
+> +					exit(2);
+> +				}
+> +			}
+>  			dv =3D xmalloc(sizeof(*dv));
+>  			dv->devname =3D optarg;
+>  			dv->disposition =3D devmode;
+> --=20
+> 2.10.2
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljFwzIACgkQOeye3VZi
-gblP4g/+OK2+Il19jFe3uEH7tSZmXRJCYWJQhOEE6SoHelttD53TBgSBlxGW/SyB
-L7gP8yN8FmO5xCrY3sWvVIgx9iVS2uJIu6ndgo6eJ+8sDmtDCkSIP9iuCVO+Dyq1
-sgri4XNmVR494EyFR3P5fdPwelY4yd0C5nwSkqOqLuB7TKZ3Mo3RixMJmNEmdzY5
-cyhbsfxXERfcxaUmTV32fNO7Kp+LILrFG6ACv0OQjhejCIJXh9EB5DFJI8Jz9OcR
-OWNR+y5RDb+p5Obpmd8vsWLMuvppm5pUSMvu8VJwV/fKqocBVsiRNA3d8Jr6faAh
-AcQC0OneOVGmUFSdwwYBuI7HRw6QTYG+ykjh6TsmeP5L/R9v91uDupJzSf6oMBLj
-HCFYty2XXubydpt2vceWFVezfqlf/zqqncop3POxDfthzVdAuOVrjTkOhSUoxEYY
-5ySXDN/YTGXqLO35m7stHdHHkHBGLlJI0o3Mv9e76QIv8phbXtlkovqBi9kVhPjn
-xv4RLYnO8ZsNRUzwdfq8jekvM4iXeBLXsQDYTNZhLXMFxwg4TLFxRRuT9VVROGnS
-1NymqgUZZlfc2RS3bbVhAU6pFPDvzsyZh4C9xOZfXRZYMRAn3sJcu6En5mBPxDm0
-QnXW3CKjr0tMYTW7SYhJ0IXobxaTI0I5UQiG56C/fv/c2rke23Y=
-=nvb5
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljF0bkACgkQOeye3VZi
+gbnpaA/+PRvM8fgcvERPiQ5hieShkuFlG/wmPg3LVfVTlaaMQG4PZLX6W7jAo/Mn
+g0wf7WrEgnr/YTMW4uofNc9jRPZkmD5WcFJzgBcS7dOPofHeN2UR9dOD8RubD1IX
+apTp8rGdLkGgvGmVMTMhb0USVrIrGRhGos2jpo6zLTsMZMCPi4qRu7lA4I6WJstn
+9L52JRiJbNWHKTp9Dm4+OldOnF6NGDAVh8/E9ORHKHkIuCpnM6sIABJVsejpFIpc
+3CzLe+pwd682Oy877/wwHMRA1NjJv+9C6BCjQFk5bdl7CqRMIWnVgiWQ4R4UjZsk
+iwMszyg+6o6gF40+XVaMHsLVD9nWIY1TlxH99PEeaPUa6lwYxsUinkZ6NZQsdltJ
+3hefdQmS2fR7xTA1wkY4sZOK8MuIORC65QBh8k3lN/CDqQr3R9zA+mPtb4Es9Axh
+a5LCLJrgxWQkfOw6SZOzI7yoYIfGNdqpogrn28rBA57oj7nFvZein642IPu5D83I
+CYS94Y/VZCYKP98MRzA9Du9Xa8VJnpI/7PSnwMKnyeIOpHxB1KyLiiCJImBLBLQ1
+/b96EOzBZI+4x/uFe8NM30+BONr8vPet7U+RuXjiZR6tpAfpPuL/SC0MriYF/57D
+nXXulqs7LoNjIvYwB2be0+VivQjCIC2PVVb6AoxNwXBzUEQ811o=
+=zUj5
 -----END PGP SIGNATURE-----
 --=-=-=--
