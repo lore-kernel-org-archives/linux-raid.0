@@ -1,36 +1,69 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 0/5] Updates following recent generic_make_request
- improvement
-Date: Sat, 11 Mar 2017 15:32:35 -0700
-Message-ID: <3c5e786a-ba42-ada8-c943-17e8b72c63d1@kernel.dk>
-References: <148912539296.4002.219258660543808741.stgit@noble>
+From: "David F." <df7729@gmail.com>
+Subject: Re: When will Linux support M2 on RAID ?
+Date: Sat, 11 Mar 2017 16:52:29 -0800
+Message-ID: <CAGRSmLszm7JHtjmu3yQdRRLDU9CAR6nvyR58M7LxqwFYqEDCNg@mail.gmail.com>
+References: <CAGRSmLsqBF_7eGHdeA=FQbgbjSLMrbRK14mNQxyBcV0PoGYaRQ@mail.gmail.com>
+ <20170307045200.GA1708@infradead.org> <a92c6f16-af2d-9d79-fb09-8490aac050db@gmail.com>
+ <20170307151528.GA16216@infradead.org> <f37700c7-139d-2bf4-07da-4f0bf77c743d@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <148912539296.4002.219258660543808741.stgit@noble>
+In-Reply-To: <f37700c7-139d-2bf4-07da-4f0bf77c743d@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-block@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, Mikulas Patocka <mpatocka@redhat.com>, Pavel Machek <pavel@ucw.cz>, Jack Wang <jinpu.wang@profitbricks.com>, Lars Ellenberg <lars.ellenberg@linbit.com>, Kent Overstreet <kent.overstreet@gmail.com>
+To: "Austin S. Hemmelgarn" <ahferroin7@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 03/09/2017 11:00 PM, NeilBrown wrote:
-> This is a rebase of the series I sent earlier, based on the
-> very latest from Linus, which included my first patch.
-> 
-> The first fixes a problem that patch introduced, and so should go to
-> Linux promptly.
-> The others are more general improvements and can go in the normal
-> course of events.
-> 
-> It is possible that the changes to btrfs and xfs can just be dropped
-> as a subsequent patch will be needed to revert them anyway.  They are
-> there only to be able to say that "blk: make the bioset
-> rescue_workqueue optional." doesn't change any functionality at all.
+Very possible it affects other devices attached, but all consumer
+reports and test systems here all have NVME drives on m2 and when in
+RAID mode.  Listing PCI data linux will show Intel SATA controller
+detected in RAID mode, but no drives detected, all you get is your
+/dev/sda USB boot device.  A lot of places linux uses a table of known
+ID's and if not listed doesn't support it, unlike Windows which always
+supports the given generic device type when it can (keyboard, etc..)
+and special drivers for special features.  RAID of course is different
+an typically requires special drivers.   As mentioned, some system
+don't let you change the mode, others you can't use linux as a
+maintenance platform since it won't see any of the drives.  Just be
+nice to have things "just work".
 
-I have applied the first patch for this series, and added the Fixes
-tag. We'll let the rest simmer a bit, then aim for 4.12 for those.
-
--- 
-Jens Axboe
-
+On Tue, Mar 7, 2017 at 7:54 AM, Austin S. Hemmelgarn
+<ahferroin7@gmail.com> wrote:
+> On 2017-03-07 10:15, Christoph Hellwig wrote:
+>>
+>> On Tue, Mar 07, 2017 at 09:50:22AM -0500, Austin S. Hemmelgarn wrote:
+>>>
+>>> He's referring to the RAID mode most modern Intel chipsets have, which
+>>> (last
+>>> I checked) Linux does not support completely and many OEM's are setting
+>>> by
+>>> default on new systems because it apparently provides better performance
+>>> than AHCI even for a single device.
+>>
+>>
+>> It actually provides worse performance.  What it does it that it shoves
+>> up to three nvme device bars into the bar of an AHCI device, and
+>> requires the OS to handle them all using a single driver.  The Money's
+>> on crack at Intel decided to do that to provide their "valueable" RSTe
+>> IP (which is a windows ATA + RAID driver in a blob, which now has also
+>> grown a NVMe driver).  The only remotely sane thing is to disable it
+>> in the bios, and burn all people involved with it.  The next best thing
+>> is to provide a fake PCIe root port driver untangling this before it
+>> hits the driver, but unfortunately Intel is unwilling to either do this
+>> on their own or at least provide enough documentation for others to do
+>> it.
+>>
+> For NVMe, yeah, it hurts performance horribly.  For SATA devices though,
+> it's hit or miss, some setups perform better, some perform worse.
+>
+> It does have one advantage though, it lets you put the C drive for a Windows
+> install on a soft-RAID array insanely easily compared to trying to do so
+> through Windows itself (although still significantly less easily that doing
+> the equivalent on Linux...).
+>
+> The cynic in me is tempted to believe that the OEM's who are turning it on
+> by default are trying to either:
+> 1. Make their low-end systems look even crappier in terms of performance
+> while adding to their marketing checklist (Of the systems I've seen that
+> have this on by default, most were cheap ones with really low specs).
+> 2. Actively make it harder to run anything but Windows on their hardware.
