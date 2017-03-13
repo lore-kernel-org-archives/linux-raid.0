@@ -1,42 +1,36 @@
-From: "John Stoffel" <john@stoffel.org>
+From: Coly Li <colyli@suse.de>
 Subject: Re: [PATCH] md:fix a trivial typo in comments
-Date: Mon, 13 Mar 2017 10:27:55 -0400
-Message-ID: <22726.44139.863057.288208@quad.stoffel.home>
+Date: Mon, 13 Mar 2017 22:59:39 +0800
+Message-ID: <c46115df-7eb5-fa28-b71b-933ca9b3fbc2@suse.de>
 References: <1489384407-12672-1-git-send-email-zlliu@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1489384407-12672-1-git-send-email-zlliu@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Zhilong Liu <zlliu@suse.com>
-Cc: shli@fb.com, linux-raid@vger.kernel.org
+To: Zhilong Liu <zlliu@suse.com>, shli@fb.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "Zhilong" == Zhilong Liu <zlliu@suse.com> writes:
+On 2017/3/13 下午1:53, Zhilong Liu wrote:
+> fix a trivial typo in freeze_array() of raid1.c
+> 
+> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+> ---
+>  drivers/md/raid1.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 7b0f647..2ec0617 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -958,7 +958,7 @@ static void allow_barrier(struct r1conf *conf, sector_t start_next_window,
+>  static void freeze_array(struct r1conf *conf, int extra)
+>  {
+>  	/* stop syncio and normal IO and wait for everything to
+> -	 * go quite.
 
-Zhilong> fix a trivial typo in freeze_array() of raid1.c
-Zhilong> Signed-off-by: Zhilong Liu <zlliu@suse.com>
-Zhilong> ---
-Zhilong>  drivers/md/raid1.c | 2 +-
-Zhilong>  1 file changed, 1 insertion(+), 1 deletion(-)
+	It should be "quiet"， this is a typo， thanks for catching it :-)
 
-Zhilong> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-Zhilong> index 7b0f647..2ec0617 100644
-Zhilong> --- a/drivers/md/raid1.c
-Zhilong> +++ b/drivers/md/raid1.c
-Zhilong> @@ -958,7 +958,7 @@ static void allow_barrier(struct r1conf *conf, sector_t start_next_window,
-Zhilong>  static void freeze_array(struct r1conf *conf, int extra)
-Zhilong>  {
-Zhilong>  	/* stop syncio and normal IO and wait for everything to
-Zhilong> -	 * go quite.
-Zhilong> +	 * go quit.
-Zhilong>  	 * We wait until nr_pending match nr_queued+extra
-Zhilong>  	 * This is called in the context of one normal IO request
-Zhilong>  	 * that has failed. Thus any sync request that might be pending
-Zhilong> -- 
-Zhilong> 2.6.6
-
-Don't you mean "quiet" instead?
-
-John
+Coly
