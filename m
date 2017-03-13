@@ -1,98 +1,121 @@
 From: "Reshetova, Elena" <elena.reshetova@intel.com>
-Subject: RE: [PATCH 10/29] drivers, md: convert stripe_head.count from
- atomic_t to refcount_t
-Date: Mon, 13 Mar 2017 09:49:47 +0000
-Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C58130@IRSMSX102.ger.corp.intel.com>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-11-git-send-email-elena.reshetova@intel.com>
- <20170307190759.jnrq66kfpkr4m7zl@kernel.org>
- <2236FBA76BA1254E88B949DDB74E612B41C56050@IRSMSX102.ger.corp.intel.com>
- <20170309171829.33z7z6czwdivztp4@kernel.org>
+Subject: RE: linux-next: WARNING: CPU: 0 PID: 1 at lib/refcount.c:114
+ refcount_inc+0x37/0x40
+Date: Mon, 13 Mar 2017 10:04:32 +0000
+Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C5816D@IRSMSX102.ger.corp.intel.com>
+References: <CANaxB-xDKh+_0eR2p4rODObQPVFwNM1-vK=fmCV-jaBYpGkPAw@mail.gmail.com>
+ <20170310205413.wjs64c4zvrqvswg7@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170309171829.33z7z6czwdivztp4@kernel.org>
+In-Reply-To: <20170310205413.wjs64c4zvrqvswg7@kernel.org>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
+To: Shaohua Li <shli@kernel.org>, Andrei Vagin <avagin@gmail.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> On Wed, Mar 08, 2017 at 09:39:30AM +0000, Reshetova, Elena wrote:
-> > > On Mon, Mar 06, 2017 at 04:20:57PM +0200, Elena Reshetova wrote:
-> > > > refcount_t type and corresponding API should be
-> > > > used instead of atomic_t when the variable is used as
-> > > > a reference counter. This allows to avoid accidental
-> > > > refcounter overflows that might lead to use-after-free
-> > > > situations.
-> > > >
-> > > > Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> > > > Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> > > > Signed-off-by: Kees Cook <keescook@chromium.org>
-> > > > Signed-off-by: David Windsor <dwindsor@gmail.com>
-> > > > ---
-> > > >  drivers/md/raid5-cache.c |  8 +++---
-> > > >  drivers/md/raid5.c       | 66 ++++++++++++++++++++++++------------------------
-> > > >  drivers/md/raid5.h       |  3 ++-
-> > > >  3 files changed, 39 insertions(+), 38 deletions(-)
-> > > >
-> > > > diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> > > > index 3f307be..6c05e12 100644
-> > > > --- a/drivers/md/raid5-cache.c
-> > > > +++ b/drivers/md/raid5-cache.c
-> > >
-> > > snip
-> > > >  	       sh->check_state, sh->reconstruct_state);
-> > > >
-> > > >  	analyse_stripe(sh, &s);
-> > > > @@ -4924,7 +4924,7 @@ static void activate_bit_delay(struct r5conf *conf,
-> > > >  		struct stripe_head *sh = list_entry(head.next, struct
-> > > stripe_head, lru);
-> > > >  		int hash;
-> > > >  		list_del_init(&sh->lru);
-> > > > -		atomic_inc(&sh->count);
-> > > > +		refcount_inc(&sh->count);
-> > > >  		hash = sh->hash_lock_index;
-> > > >  		__release_stripe(conf, sh,
-> > > &temp_inactive_list[hash]);
-> > > >  	}
-> > > > @@ -5240,7 +5240,7 @@ static struct stripe_head
-> *__get_priority_stripe(struct
-> > > r5conf *conf, int group)
-> > > >  		sh->group = NULL;
-> > > >  	}
-> > > >  	list_del_init(&sh->lru);
-> > > > -	BUG_ON(atomic_inc_return(&sh->count) != 1);
-> > > > +	BUG_ON(refcount_inc_not_zero(&sh->count));
-> > >
-> > > This changes the behavior. refcount_inc_not_zero doesn't inc if original value
-> is 0
+> On Fri, Mar 10, 2017 at 12:01:06PM -0800, Andrei Vagin wrote:
+> > Hello,
 > >
-> > Hm.. So, you want to inc here in any case and BUG if the end result differs from
-> 1.
-> > So essentially you want to only increment here from zero to one under normal
-> conditions... This is a challenge for refcount_t and against the design.
-> > Is it ok just to maybe do this here:
+> > We run CRIU tests for linux-next kernels and here is a new issue:
 > >
-> > -	BUG_ON(atomic_inc_return(&sh->count) != 1);
-> > +	BUG_ON(refcount_read(&sh->count) != 0);
-> > +	refcount_set((&sh->count, 1);
+> > All logs are here: https://api.travis-ci.org/jobs/209680974/log.txt?deansi=true
+> > The kernel version is 4.11.0-rc1-next-20170310
 > 
-> this looks ok
-> 
-> 
-> > Do we have an issue with locking in this case? Or maybe it is then better to leave
-> this one to be atomic_t without protection since it isn't a real refcounter as it turns
-> out.
-> 
-> There is no lock issue, the count should be 0 in the list. It's a refcounter actually, so
-> good to do the convert.
+> Thanks for the reporting. It caused by 731d126(drivers, md: convert
+> mddev.active from atomic_t to refcount_t). It turns out the count doesn't match
+> the refcount usage. I'll drop the patch temporarily.
 
-Ok, great, I will send an updated patch!
+The log below indicates that you are using your refcounter in a bit weird way in mddev_find(). 
+However, I can't find the place (just by reading the code) where you would increment refcounter from zero (vs. setting it to one).
+It looks like you either iterate over existing nodes (and increment their counters, which should be >= 1 at the time of increment) or create a new node, but then mddev_init() sets the counter to 1. 
+
+Do you somehow reuse the objects or?
 
 Best Regards,
 Elena.
+
 > 
 > Thanks,
 > Shaohua
+> >
+> > [    2.324763] md: Waiting for all devices to be available before autodetect
+> > [    2.331707] md: If you don't use raid, use raid=noautodetect
+> > [    2.338189] ------------[ cut here ]------------
+> > [    2.342965] WARNING: CPU: 0 PID: 1 at lib/refcount.c:114
+> > refcount_inc+0x37/0x40
+> > [    2.350427] refcount_t: increment on 0; use-after-free.
+> > [    2.355794] Modules linked in:
+> > [    2.358979] CPU: 0 PID: 1 Comm: swapper/0 Not tainted
+> > 4.11.0-rc1-next-20170310 #1
+> > [    2.362966] Hardware name: Google Google Compute Engine/Google
+> > Compute Engine, BIOS Google 01/01/2011
+> > [    2.362966] Call Trace:
+> > [    2.362966]  dump_stack+0x85/0xc9
+> > [    2.362966]  __warn+0xd1/0xf0
+> > [    2.362966]  warn_slowpath_fmt+0x4f/0x60
+> > [    2.362966]  refcount_inc+0x37/0x40
+> > [    2.362966]  mddev_find+0x1f1/0x2b0
+> > [    2.362966]  md_open+0x1a/0xd0
+> > [    2.362966]  __blkdev_get+0x85/0x4c0
+> > [    2.362966]  blkdev_get+0x1d3/0x340
+> > [    2.362966]  ? _raw_spin_unlock+0x27/0x40
+> > [    2.362966]  blkdev_open+0x5b/0x70
+> > [    2.362966]  do_dentry_open+0x213/0x330
+> > [    2.362966]  ? bd_acquire+0xd0/0xd0
+> > [    2.362966]  vfs_open+0x4f/0x80
+> > [    2.362966]  ? may_open+0x9b/0x100
+> > [    2.362966]  path_openat+0x48a/0xd50
+> > [    2.362966]  ? console_unlock+0x2f9/0x560
+> > [    2.362966]  do_filp_open+0x7e/0xd0
+> > [    2.362966]  ? _raw_spin_unlock+0x27/0x40
+> > [    2.362966]  ? __alloc_fd+0xf7/0x210
+> > [    2.362966]  do_sys_open+0x115/0x1f0
+> > [    2.362966]  SyS_open+0x1e/0x20
+> > [    2.362966]  md_run_setup+0x71/0x9a
+> > [    2.362966]  prepare_namespace+0x36/0x1a4
+> > [    2.362966]  kernel_init_freeable+0x254/0x269
+> > [    2.362966]  ? set_debug_rodata+0x12/0x12
+> > [    2.362966]  ? rest_init+0x140/0x140
+> > [    2.362966]  kernel_init+0xe/0x100
+> > [    2.362966]  ret_from_fork+0x31/0x40
+> > [    2.482465] ---[ end trace a822b43a79b1f9f5 ]---
+> > [    2.487353] md: Autodetecting RAID arrays.
+> > [    2.491647] md: autorun ...
+> > [    2.494592] md: ... autorun DONE.
+> > [    2.503263] EXT4-fs (sda1): couldn't mount as ext3 due to feature
+> > incompatibilities
+> > [    2.511467] ------------[ cut here ]------------
+> > [    2.511477] WARNING: CPU: 0 PID: 21 at lib/refcount.c:207
+> > refcount_dec_not_one+0x75/0x80
+> > [    2.511478] refcount_t: underflow; use-after-free.
+> > [    2.511480] Modules linked in:
+> > [    2.511485] CPU: 0 PID: 21 Comm: kworker/0:1 Tainted: G        W
+> >    4.11.0-rc1-next-20170310 #1
+> > [    2.511486] Hardware name: Google Google Compute Engine/Google
+> > Compute Engine, BIOS Google 01/01/2011
+> > [    2.511490] Workqueue: events delayed_fput
+> > [    2.511492] Call Trace:
+> > [    2.511496]  dump_stack+0x85/0xc9
+> > [    2.511501]  __warn+0xd1/0xf0
+> > [    2.511505]  warn_slowpath_fmt+0x4f/0x60
+> > [    2.511509]  refcount_dec_not_one+0x75/0x80
+> > [    2.511511]  refcount_dec_and_lock+0x16/0x50
+> > [    2.511515]  mddev_put+0x22/0x150
+> > [    2.511517]  md_release+0x21/0x30
+> > [    2.511521]  __blkdev_put+0x2df/0x340
+> > [    2.511526]  blkdev_put+0x50/0x150
+> > [    2.511529]  blkdev_close+0x25/0x30
+> > [    2.511531]  __fput+0xfa/0x230
+> > [    2.511535]  delayed_fput+0x25/0x30
+> > [    2.511538]  process_one_work+0x1e1/0x670
+> > [    2.511539]  ? process_one_work+0x162/0x670
+> > [    2.511544]  worker_thread+0x137/0x4b0
+> > [    2.511546]  ? trace_hardirqs_on+0xd/0x10
+> > [    2.511551]  kthread+0x10c/0x140
+> > [    2.511552]  ? process_one_work+0x670/0x670
+> > [    2.511554]  ? kthread_create_on_node+0x40/0x40
+> > [    2.511558]  ret_from_fork+0x31/0x40
+> > [    2.511566] ---[ end trace a822b43a79b1f9f6 ]---
