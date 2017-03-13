@@ -1,108 +1,37 @@
-From: <een@zmva.hu>
-Subject: 41959 linux-raid
-Date: Mon, 13 Mar 2017 17:42:14 -0000
-Message-ID: <148942693493.3115.5322336284576147431@apoiocom.com.br>
-Reply-To: <een@zmva.hu>
+From: Song Liu <songliubraving@fb.com>
+Subject: [PATCH] md/r5cache: fix set_syndrome_sources()
+Date: Mon, 13 Mar 2017 13:44:35 -0700
+Message-ID: <20170313204435.1732089-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="0689.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: attachment
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-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
-BgAAAAABAAEAUwAAAF8UAAAAAA==
+With srctype == SYNDROME_SRC_WRITTEN, we need include both
+dev with non-null ->written and dev with R5_InJournal.
+
+Signed-off-by: Song Liu <songliubraving@fb.com>
+---
+ drivers/md/raid5.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 1c554a8..88cc898 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -1499,7 +1499,8 @@ static int set_syndrome_sources(struct page **srcs,
+ 		     (test_bit(R5_Wantdrain, &dev->flags) ||
+ 		      test_bit(R5_InJournal, &dev->flags))) ||
+ 		    (srctype == SYNDROME_SRC_WRITTEN &&
+-		     dev->written)) {
++		     (dev->written ||
++		      test_bit(R5_InJournal, &dev->flags)))) {
+ 			if (test_bit(R5_InJournal, &dev->flags))
+ 				srcs[slot] = sh->dev[i].orig_page;
+ 			else
+-- 
+2.9.3
+
