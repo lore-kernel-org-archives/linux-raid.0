@@ -1,68 +1,63 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: on assembly and recovery of a hardware RAID
-Date: Tue, 14 Mar 2017 08:32:37 +1100
-Message-ID: <87tw6weubu.fsf@notabene.neil.brown.name>
-References: <CAAZLhTdaVM4fagN5=bqWpPx-DjyU6UZ69bJFf51FWMX7oeyJNw@mail.gmail.com>
+Subject: Re: Auto replace disk
+Date: Tue, 14 Mar 2017 08:36:54 +1100
+Message-ID: <87r320eu4p.fsf@notabene.neil.brown.name>
+References: <CAJH6TXgyOEE5A8TZVZy-db+tPD1QeHtnXXO3B-1vmKe4cAt6xA@mail.gmail.com> <58C04AC9.9070801@youngman.org.uk> <CAJH6TXjjjnQ3_OJ87Gv8Spsd=7BZ7RGrfCJ0kqeRXTQN_1Q3KQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAZLhTdaVM4fagN5=bqWpPx-DjyU6UZ69bJFf51FWMX7oeyJNw@mail.gmail.com>
+In-Reply-To: <CAJH6TXjjjnQ3_OJ87Gv8Spsd=7BZ7RGrfCJ0kqeRXTQN_1Q3KQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alfred Matthews <asm13243546@gmail.com>, linux-raid@vger.kernel.org
+To: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, Wols Lists <antlists@youngman.org.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 
-On Fri, Mar 10 2017, Alfred Matthews wrote:
+On Wed, Mar 08 2017, Gandalf Corvotempesta wrote:
 
-> Hello list. I'm facing a non-redundant Western Digital hardware RAID,
-> for which, hardware seems to cause a kernel panic at about 3 seconds
-> running time.
+> 2017-03-08 19:17 GMT+01:00 Wols Lists <antlists@youngman.org.uk>:
+>> Do you mean you remove an old disk, and put a new blank disk in?
 >
-> I've assembled the customary testing. The drives appear to be striped RAID 0.
+> Yes
 >
-> Output: http://pastebin.com/c361jGVx
+>> If that's what you mean, then no, it's not possible. mdadm doesn't have
+>> a clue about disks, what it sees is "block devices".
 >
-> Evidently WD metadata changes over time, since a new console (adding
-> USB) will not recognize the drives without erasing them. Files are
-> visible as files for the short period of controller health.
+> Ok but mdadm.conf man page seems to say the opposite:
+> https://linux.die.net/man/5/mdadm.conf
 >
-> I imagine I'm trying to assemble a 2 x 3TB RAID array from the
-> original WD disks when mounted as SATA.
+> "POLICY
+> This is used to specify what automatic behavior is allowed on devices
+> newly appearing in the system and provides a way of marking spares
+> that can be moved to other arrays as well as the migration domains.
 >
-> Seeking input on proper mdadm configuration for this.
+> action=include, re-add, spare, spare-same-slot, or force-spare
+> auto= yes, no, or homehost.
 >
-> Then I imagine that I may recover files-as-files from this 2 x 3TB to
-> standalone disks. Ultimately they would need to move to a new RAID.
+> The action item determines the automatic behavior allowed for devices
+> matching the path and type in the same line. If a device matches
+> several lines with different actions then the most permissive will
+> apply. The ordering of policy lines is irrelevant to the end result.
 >
-> Failing: WD My Book Thunderbolt Duo, 2x3TB
-> New, incompatible: WD My Book Pro, 2x3TB.
->
-> Thanks for any comment.
->
-> Thanks for your time.
->
+> includeallows adding a disk to an array if metadata on that disk
+> matches that arrayre-addwill include the device in the array if it
+> appears to be a current member or a member that was recently
+> removedspareas above and additionally: if the device is bare it can
+> become a spare if there is any array that it is a candidate for based
+> on domains and metadata.spare-same-slotas above and additionally if
+> given slot was used by an array that went degraded recently and the
+> device plugged in has no metadata then it will be automatically added
+> to that array (or it's container)force-spareas above and the disk will
+> become a spare in remaining cases
+> "
 
-Does
-  dmraid -b /dev/sda /dev/sdb /dev/sdc
-tell you anything useful?
-
-
-You will probably want a command like:
-
- mdadm --build /dev/md0 -l0 -n2 --chunk=SOMETHING /dev/sdXX /dev/sdYY
-
-where SOMETHING is the chunk size. e.g. 64K or 512K or something.
-Doing this is non-destructive so you can try several different times,
-using "mdadm --stop /dev/md0" to reset before trying again.
-
-After building the array, try "cfdisk /dev/md0" or maybe "fdisk
-/dev/md0" to look at the partition table.
-
-What filesystem(s) did you have on the device? Maybe "fsck -n /dev/md0p1"
-might tell you if the filesystem looks OK.
+Clearly you have read the documentation - excellent!
+What exactly are you asking?
+Presumably you have tried something and it didn't work.  What (exactly)
+did you try?
 
 NeilBrown
 
@@ -71,18 +66,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljHD/UACgkQOeye3VZi
-gbmU1g/+IlUGlm/a6zd4h35XaLqZ4xTeCDjxa2CYpc6guw5hiFc45hqZLRh3Phsy
-h/UPtBxxIt6Bw9u7d2y0c27zld4DKHv61H0W9U7FwCu1pZDzI5WLyAJl+bLahCos
-4DXqaca96Iq0zPyXLVrdfCr2xnLqCGppBLw1xV8M2oBwsUF24IcqsXcsVywdCeeq
-aLJ0seJAwuDs+2VcvjLwlQMxZ+N+Z2y9wP3IJFZaL+VT18CUpmy/uBTgArjYCCiX
-RIHS+TU+fLk5qDjUzruJbIhpSSWgzB+OOFXBudOS0A0K4vaFwah0wGHlUacIAO9r
-Z1WmycXJ4FXP6SC1bSMHW75WmnCygDrHkOhKgImJuhwMxKclEa+FZG7m/p5jzYrL
-pgdC4uRIvdkR90+tSqB166Ww/XaQ7Vg7fS28gLbYza7NFdXDNAyMVhelAP0r3WSK
-DQjlGcOou6YEO8ZMqb1hFGxA/U9/v6/sxec+ZQQ1r31aQqse5FJWzqTvTe7qqZYq
-2yGvkuyIQNfjtQ0GZyNS+hkpQUkTz/82LoLKdSO4P7C72ts0RIxlZuNgJzqU1sZQ
-YP/6ruqTEMWquUtqbOWsYL5dqACWVebcsQWFXgdyCwwK9BCBBJ+1rpU8wiAIoc02
-TcARZ/XCYS1DIFBWVd55ent3Gfwlx/a2tnjZN36BW7laDnNaDGw=
-=PSWH
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljHEPYACgkQOeye3VZi
+gbmlng//cTzDKGSFwE96YwWmUYjZAPBQkK+Li0U8+F8FZ3d2e5yaURe5DNP93CgL
+kja3c3lqqxwQiVrNUW/ZkbriCaDAF/rq1H+hwvS54Iw9/NCTdXLnLVOJ7D7M0ZiF
+nrNpLaOWWziVi2YrnCgj3pMutMRmWPU+A3Rx6brGNHb2Hh9qQwfRw68pZK3Og6KA
+AtUtZYQ+/GecEirE8sE+lOQcS95m2qUSlxw5/EttygDxQ7Mq88PgnJEDWMHf2K4d
+rWwlP2vvgu/Hy3awdVMZ5O8+I51KZPllTxz7jpsE9odJO2RSG0lD8tYbwYoLpsXR
+7RYgLWrVHOk1pLc+J57eJRfcJg86RarCwm42DppYRJUGbnjTvNZ0Pa6s6pufollh
+NLiP1hMS+PSmfg6Xoc80PLp5TJFQlEoyGUewIeoP+dTsElqxDxFUoMOuuZ3C2Chj
+pFPPSA61A5ISD2UHYHrD8UNDl4f5oJwqT42hVs1A9IKLfBfZ1PhC+/UQ8qye8xZL
+5TO0XWPV7dTu9Imdb465Apr7BBn3ynTdPrS+Ntn+Yx+jwqqfZ+xOsZ5SLmJSI4AA
+gDmRbC3WHZGbFWCW91BOpLY4iElLrX/vnNgl+jIJBZkNyuDiJGd1LS5H6NpHZzbf
+W184JqBMHGowQrXEaJ+xCgKInqcX62UtKb5O59xh3XEacpkImmA=
+=Zw4S
 -----END PGP SIGNATURE-----
 --=-=-=--
