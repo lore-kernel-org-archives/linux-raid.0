@@ -1,63 +1,34 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: Auto replace disk
-Date: Tue, 14 Mar 2017 08:36:54 +1100
-Message-ID: <87r320eu4p.fsf@notabene.neil.brown.name>
-References: <CAJH6TXgyOEE5A8TZVZy-db+tPD1QeHtnXXO3B-1vmKe4cAt6xA@mail.gmail.com> <58C04AC9.9070801@youngman.org.uk> <CAJH6TXjjjnQ3_OJ87Gv8Spsd=7BZ7RGrfCJ0kqeRXTQN_1Q3KQ@mail.gmail.com>
+Subject: Re: LSI RAID
+Date: Tue, 14 Mar 2017 08:38:38 +1100
+Message-ID: <87o9x4eu1t.fsf@notabene.neil.brown.name>
+References: <CAJH6TXj+766Xj4w8BAOoq9wQ_Vym_JD66pbqRgpXriNguG6zTQ@mail.gmail.com> <CAJH6TXhwfoWKM2=0v0+qhUWp=WppF5qO7zm5Y1-vS4zWQHA5WA@mail.gmail.com> <73fdfb90-4bdc-a452-d785-eb270ad987e2@suse.de> <CAJH6TXhYDMP_Xm+nZyoGBfAR77_W4h18_3bdTKeymEKYpUu-bw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJH6TXjjjnQ3_OJ87Gv8Spsd=7BZ7RGrfCJ0kqeRXTQN_1Q3KQ@mail.gmail.com>
+In-Reply-To: <CAJH6TXhYDMP_Xm+nZyoGBfAR77_W4h18_3bdTKeymEKYpUu-bw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, Wols Lists <antlists@youngman.org.uk>
+To: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, Hannes Reinecke <hare@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 
-On Wed, Mar 08 2017, Gandalf Corvotempesta wrote:
+On Tue, Feb 28 2017, Gandalf Corvotempesta wrote:
 
-> 2017-03-08 19:17 GMT+01:00 Wols Lists <antlists@youngman.org.uk>:
->> Do you mean you remove an old disk, and put a new blank disk in?
+> 2017-02-28 10:06 GMT+01:00 Hannes Reinecke <hare@suse.de>:
+>> Sure.
+>> The recent mdadm should be able to create DDF metadata.
 >
-> Yes
->
->> If that's what you mean, then no, it's not possible. mdadm doesn't have
->> a clue about disks, what it sees is "block devices".
->
-> Ok but mdadm.conf man page seems to say the opposite:
-> https://linux.die.net/man/5/mdadm.conf
->
-> "POLICY
-> This is used to specify what automatic behavior is allowed on devices
-> newly appearing in the system and provides a way of marking spares
-> that can be moved to other arrays as well as the migration domains.
->
-> action=include, re-add, spare, spare-same-slot, or force-spare
-> auto= yes, no, or homehost.
->
-> The action item determines the automatic behavior allowed for devices
-> matching the path and type in the same line. If a device matches
-> several lines with different actions then the most permissive will
-> apply. The ordering of policy lines is irrelevant to the end result.
->
-> includeallows adding a disk to an array if metadata on that disk
-> matches that arrayre-addwill include the device in the array if it
-> appears to be a current member or a member that was recently
-> removedspareas above and additionally: if the device is bare it can
-> become a spare if there is any array that it is a candidate for based
-> on domains and metadata.spare-same-slotas above and additionally if
-> given slot was used by an array that went degraded recently and the
-> device plugged in has no metadata then it will be automatically added
-> to that array (or it's container)force-spareas above and the disk will
-> become a spare in remaining cases
-> "
+> This means that i'll be able to import a configuration created with a
+> LSI MegaRaid controller and use them with mdadm ?
+> If yes, how ?
 
-Clearly you have read the documentation - excellent!
-What exactly are you asking?
-Presumably you have tried something and it didn't work.  What (exactly)
-did you try?
+Try it and see.
+i.e. plug the devices into a Linux box with mdadm installed, and see
+what happens.
 
 NeilBrown
 
@@ -66,18 +37,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljHEPYACgkQOeye3VZi
-gbmlng//cTzDKGSFwE96YwWmUYjZAPBQkK+Li0U8+F8FZ3d2e5yaURe5DNP93CgL
-kja3c3lqqxwQiVrNUW/ZkbriCaDAF/rq1H+hwvS54Iw9/NCTdXLnLVOJ7D7M0ZiF
-nrNpLaOWWziVi2YrnCgj3pMutMRmWPU+A3Rx6brGNHb2Hh9qQwfRw68pZK3Og6KA
-AtUtZYQ+/GecEirE8sE+lOQcS95m2qUSlxw5/EttygDxQ7Mq88PgnJEDWMHf2K4d
-rWwlP2vvgu/Hy3awdVMZ5O8+I51KZPllTxz7jpsE9odJO2RSG0lD8tYbwYoLpsXR
-7RYgLWrVHOk1pLc+J57eJRfcJg86RarCwm42DppYRJUGbnjTvNZ0Pa6s6pufollh
-NLiP1hMS+PSmfg6Xoc80PLp5TJFQlEoyGUewIeoP+dTsElqxDxFUoMOuuZ3C2Chj
-pFPPSA61A5ISD2UHYHrD8UNDl4f5oJwqT42hVs1A9IKLfBfZ1PhC+/UQ8qye8xZL
-5TO0XWPV7dTu9Imdb465Apr7BBn3ynTdPrS+Ntn+Yx+jwqqfZ+xOsZ5SLmJSI4AA
-gDmRbC3WHZGbFWCW91BOpLY4iElLrX/vnNgl+jIJBZkNyuDiJGd1LS5H6NpHZzbf
-W184JqBMHGowQrXEaJ+xCgKInqcX62UtKb5O59xh3XEacpkImmA=
-=Zw4S
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljHEV4ACgkQOeye3VZi
+gbmf4Q/+Mgq8bQyRi3qhH+Nj3tnnamw/Ml2Sys8Gzh+rpM+CZO/FfpUkUjzttDtV
+Es26mBbus7BdE/jKtaYRsfKAYfU1mJKIszefGH2kUlJhLOPOVdeOiZNJpzuo/k2e
+PknnH7UUqWxOFI+6nvv1atl4ktUHjlGuakxG3bsiflYYEpbYNZ6z+bKnqzaZSCeV
+jsGMNsQnRgHQBNQS0uZQjkbQlHqd+x95yvSYJC5UbanZz89xQ79qUsi+7v2ALFTN
+iMaTPpYGGPZMaLTIIuY+qByTZQ9hsWJR9S/iY5Fgj2kAbuDmKr0wPOcb80BpzvDL
+e0lLrXbtzBKoGP67OkcIFJtmPuDFUTgBm0wUFMK6n/ycYvhCm/sAe2PLKurXXNWb
+8y0QNdHrsZBslU8AV4DXfnwwfKXnSPysqEpU6/Y//3Um4OeU50m2vrmSo+JO52tE
+yOewMZm6FjEyxPZKaH7ZOUT8/uYyYyGf6CBwI5UOQTlYORBDg2aSyZd2C0O1LAYF
+JhdLqTVtH9N2Pi8EN77TY6vu8laVgtihcdXJsS2JJIwx0SODmmgX8UUIK3+bjmFu
+PN2XEQot0KqdN6CuOK3XREaQ/JgPcuxyZeQXtLYZWiR5lm7H/YRjFbxYWIAx/sgF
+Vl6kzY+dpkD3s/HAr5HHtz3wiR3Fotbi9IWHk9nKpgSaJFXKsuQ=
+=HFL9
 -----END PGP SIGNATURE-----
 --=-=-=--
