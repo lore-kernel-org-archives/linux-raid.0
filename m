@@ -1,94 +1,85 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH 3/4] mdadm:triggers core dump when stat2devnm return NULL
-Date: Mon, 13 Mar 2017 10:00:23 +1100
-Message-ID: <8760jef6d4.fsf@notabene.neil.brown.name>
-References: <20170308074831.24683-1-zlliu@suse.com> <20170308075221.24965-1-zlliu@suse.com>
+From: zhilong <zlliu@suse.com>
+Subject: Re: [PATCH 0/4] mdadm:checking level once mode has been set
+Date: Mon, 13 Mar 2017 11:22:44 +0800
+Message-ID: <65454fe3-6165-5d02-eecd-02f8aac8f422@suse.com>
+References: <20170308074831.24683-1-zlliu@suse.com>
+ <878toaf6me.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170308075221.24965-1-zlliu@suse.com>
+In-Reply-To: <878toaf6me.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
+To: NeilBrown <neilb@suse.com>, Jes.Sorensen@gmail.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Wed, Mar 08 2017, Zhilong Liu wrote:
-
-> ensure that the device should be a block device when uses
-> --wait parameter, such as the 'f' and 'd' type file would
-> be triggered core dumped.
-> ./mdadm --wait /dev/md/, happened core dump.
+On 03/13/2017 06:54 AM, NeilBrown wrote:
+> On Wed, Mar 08 2017, Zhilong Liu wrote:
 >
-> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+>> mdadm: it would be better to check --level ealier,
+>> because it would fall to different prompt if user
+>> forgets to specify the --level. such as:
+>> ./mdadm -CR /dev/md0 -b internal -n2 -x1 /dev/loop[0-2]
+> When I run that command I get:
 >
-> diff --git a/Monitor.c b/Monitor.c
-> index 802a9d9..1900db3 100644
-> --- a/Monitor.c
-> +++ b/Monitor.c
-> @@ -1002,6 +1002,10 @@ int Wait(char *dev)
->  			strerror(errno));
->  		return 2;
->  	}
-> +	if ((S_IFMT & stb.st_mode) !=3D S_IFBLK) {
-> +		pr_err("%s is not a block device.\n", dev);
-> +		return 2;
-> +	}
->  	strcpy(devnm, stat2devnm(&stb));
+>    mdadm: a RAID level is needed to create an array.
+>
+>
+> What do you get?
 
-Surely it would be cleaner to do something like:
+I'm sorry I have provided the wrong command, for this scenario,
+issues "mdadm --build /dev/md0 -n2 /dev/loop[0-1]" should be
+proper. it's the purpose to check --level earlier.
 
-  tmp =3D stat2devnm(&stb);
-  if (!tmp) {
-      pr_err("%s is not a block device.\n", dev);
-      return 2;
-  }
-  strcpy(devnm, tmp);
+If this patch is useful, I would send the v1 patch for it, correct the
+comments.
 
-This makes it more obvious how you have fixed the crash.
+Thanks,
+-Zhilong
+> NeilBrown
+>
+>
+>> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+>>
+>> diff --git a/Create.c b/Create.c
+>> index 9a951b0..beec29f 100644
+>> --- a/Create.c
+>> +++ b/Create.c
+>> @@ -125,10 +125,6 @@ int Create(struct supertype *st, char *mddev,
+>>   	memset(&info, 0, sizeof(info));
+>>   	if (s->level == UnSet && st && st->ss->default_geometry)
+>>   		st->ss->default_geometry(st, &s->level, NULL, NULL);
+>> -	if (s->level == UnSet) {
+>> -		pr_err("a RAID level is needed to create an array.\n");
+>> -		return 1;
+>> -	}
+>>   	if (s->raiddisks < 4 && s->level == 6) {
+>>   		pr_err("at least 4 raid-devices needed for level 6\n");
+>>   		return 1;
+>> diff --git a/mdadm.c b/mdadm.c
+>> index 19a06db..ad24bdf 100644
+>> --- a/mdadm.c
+>> +++ b/mdadm.c
+>> @@ -350,6 +350,12 @@ int main(int argc, char *argv[])
+>>   				pr_err("Must give -a/--add for devices to add: %s\n", optarg);
+>>   				exit(2);
+>>   			}
+>> +			if (devs_found > 0 && s.level == UnSet && !devmode) {
+>> +				if (mode == CREATE || mode == BUILD) {
+>> +					pr_err("a RAID level is needed to create or build an array.\n");
+>> +					exit(2);
+>> +				}
+>> +			}
+>>   			dv = xmalloc(sizeof(*dv));
+>>   			dv->devname = optarg;
+>>   			dv->disposition = devmode;
+>> -- 
+>> 2.10.2
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
->=20=20
->  	while(1) {
-> diff --git a/lib.c b/lib.c
-> index b640634..7116298 100644
-> --- a/lib.c
-> +++ b/lib.c
-> @@ -89,9 +89,6 @@ char *devid2kname(int devid)
->=20=20
->  char *stat2kname(struct stat *st)
->  {
-> -	if ((S_IFMT & st->st_mode) !=3D S_IFBLK)
-> -		return NULL;
-> -
->  	return devid2kname(st->st_rdev);
->  }
-
-Why are you removing this test?  It has nothing to do with the other
-part of the patch.
-
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljF0wcACgkQOeye3VZi
-gblkdRAAuMPFr6pLZOULN0RIF6wSOC+1uhLXZwzs0QG52LCngqacZqbFa2uMA+vy
-+WRR2ArDwLXP/Grffo3dZtXurvH8RApl3TjpXYLWB8rgghZteFxLuKwx2X1M/W1H
-crSH4cw6Uu8kcz8ZArKTWZdd0kOiF14xK4JL0+45biKEY7OrnJhn4emR7qWLVyDo
-C9PMwpJrnLERxkY3Ua0wLQUGajUFQAiNuP3iQw3r63TnC4amx5AtP85GM+QeQnQv
-VxRx7sbVxC8VxP9WUmZKHdT/YRsZG/AeD4uLINXg1N6lDyAfmILNroahvcNXYisW
-tZZbk0J/OzKg9KWRj8WPtg0/5fSPXSzgTfBpIB8RbDeT1n6V0ITPY7PCAzbg6rxK
-qpai+4WFQTVoyqyu7tkTZYRFURxYCmhut1JfTDkCphHCMiVUrsrG+RSRJYRBdJ+7
-VyoCvw6E6m1KogAtDecNoABIs7fzqEIAVwH4XRLWERlPU29YNYJWN7lOT33tpnwd
-w3t8igznaQQbXX2qG1jbXjBWOyw5nRM5Hwkzu6jHnOPWmEc752/aNjBFlaipEdqL
-i5Hdb+nH5OUTyOf70b0fMMtTMUlXYwAbSesyqnL8xI18be+wgj27qBfXhaU/B4WF
-iN2xqApVeqa7ba4845yGiuEb5iJkqG+vicdeG77IcFicNrbSGpM=
-=bx/q
------END PGP SIGNATURE-----
---=-=-=--
