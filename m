@@ -1,37 +1,22 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH] md/r5cache: fix set_syndrome_sources()
-Date: Mon, 13 Mar 2017 13:44:35 -0700
-Message-ID: <20170313204435.1732089-1-songliubraving@fb.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH] md/r5cache: fix set_syndrome_sources()
+Date: Mon, 13 Mar 2017 13:58:09 -0700
+Message-ID: <CAPcyv4h6XBdDRrq5+cs9v70v93sHnkTUoFrKuN_-Ox_wjJvvkw@mail.gmail.com>
+References: <20170313204435.1732089-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170313204435.1732089-1-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, Song Liu <songliubraving@fb.com>
+To: Song Liu <songliubraving@fb.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Shaohua Li <shli@fb.com>, NeilBrown <neilb@suse.com>, Kernel Team <kernel-team@fb.com>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-raid.ids
 
-With srctype == SYNDROME_SRC_WRITTEN, we need include both
-dev with non-null ->written and dev with R5_InJournal.
+On Mon, Mar 13, 2017 at 1:44 PM, Song Liu <songliubraving@fb.com> wrote:
+> With srctype == SYNDROME_SRC_WRITTEN, we need include both
+> dev with non-null ->written and dev with R5_InJournal.
+>
 
-Signed-off-by: Song Liu <songliubraving@fb.com>
----
- drivers/md/raid5.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 1c554a8..88cc898 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -1499,7 +1499,8 @@ static int set_syndrome_sources(struct page **srcs,
- 		     (test_bit(R5_Wantdrain, &dev->flags) ||
- 		      test_bit(R5_InJournal, &dev->flags))) ||
- 		    (srctype == SYNDROME_SRC_WRITTEN &&
--		     dev->written)) {
-+		     (dev->written ||
-+		      test_bit(R5_InJournal, &dev->flags)))) {
- 			if (test_bit(R5_InJournal, &dev->flags))
- 				srcs[slot] = sh->dev[i].orig_page;
- 			else
--- 
-2.9.3
-
+Can you say a bit more about what this fixes? How does this bug
+manifest itself (user visible effect), and should this be marked for
+-stable?
