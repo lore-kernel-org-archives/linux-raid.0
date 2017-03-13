@@ -1,54 +1,67 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: LSI RAID
-Date: Tue, 14 Mar 2017 08:38:38 +1100
-Message-ID: <87o9x4eu1t.fsf@notabene.neil.brown.name>
-References: <CAJH6TXj+766Xj4w8BAOoq9wQ_Vym_JD66pbqRgpXriNguG6zTQ@mail.gmail.com> <CAJH6TXhwfoWKM2=0v0+qhUWp=WppF5qO7zm5Y1-vS4zWQHA5WA@mail.gmail.com> <73fdfb90-4bdc-a452-d785-eb270ad987e2@suse.de> <CAJH6TXhYDMP_Xm+nZyoGBfAR77_W4h18_3bdTKeymEKYpUu-bw@mail.gmail.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: [PATCH] md/r5cache: flush data in memory during journal device failure
+Date: Mon, 13 Mar 2017 16:36:26 -0700
+Message-ID: <20170313233626.2109293-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJH6TXhYDMP_Xm+nZyoGBfAR77_W4h18_3bdTKeymEKYpUu-bw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, Hannes Reinecke <hare@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
+For the raid456 with writeback cache, when journal device failed during
+normal operation, it is still possible to persist all data, as all
+pending data is still in stripe cache. However, the stripe will be
+marked as fail with s.log_failed. Thus, the write out from stripe cache
+cannot make progress.
 
-On Tue, Feb 28 2017, Gandalf Corvotempesta wrote:
+To unblock the write out in journal failures, this patch allows stripes
+with data injournal to make progress.
 
-> 2017-02-28 10:06 GMT+01:00 Hannes Reinecke <hare@suse.de>:
->> Sure.
->> The recent mdadm should be able to create DDF metadata.
->
-> This means that i'll be able to import a configuration created with a
-> LSI MegaRaid controller and use them with mdadm ?
-> If yes, how ?
+The array should be read-only in journal failures. Therefore, pending
+writes (in dev->towrite) are excluded in this write (in delay_towrite).
 
-Try it and see.
-i.e. plug the devices into a Linux box with mdadm installed, and see
-what happens.
+Signed-off-by: Song Liu <songliubraving@fb.com>
+---
+ drivers/md/raid5.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-NeilBrown
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 3233975..447d9dd 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -3069,6 +3069,10 @@ sector_t raid5_compute_blocknr(struct stripe_head *sh, int i, int previous)
+  *      When LOG_CRITICAL, stripes with injournal == 0 will be sent to
+  *      no_space_stripes list.
+  *
++ *   3. during journal failure
++ *      In journal failure, we try to flush all cached data to raid disks
++ *      based on data in stripe cache. The array is read-only to upper
++ *      layers, so we would skip all pending writes.
+  */
+ static inline bool delay_towrite(struct r5conf *conf,
+ 				 struct r5dev *dev,
+@@ -3082,6 +3086,9 @@ static inline bool delay_towrite(struct r5conf *conf,
+ 	if (test_bit(R5C_LOG_CRITICAL, &conf->cache_state) &&
+ 	    s->injournal > 0)
+ 		return true;
++	/* case 3 above */
++	if (s->log_failed && s->injournal)
++		return true;
+ 	return false;
+ }
+ 
+@@ -4721,7 +4728,8 @@ static void handle_stripe(struct stripe_head *sh)
+ 	/* check if the array has lost more than max_degraded devices and,
+ 	 * if so, some requests might need to be failed.
+ 	 */
+-	if (s.failed > conf->max_degraded || s.log_failed) {
++	if (s.failed > conf->max_degraded ||
++	    (s.log_failed && s.injournal == 0)) {
+ 		sh->check_state = 0;
+ 		sh->reconstruct_state = 0;
+ 		break_stripe_batch_list(sh, 0);
+-- 
+2.9.3
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljHEV4ACgkQOeye3VZi
-gbmf4Q/+Mgq8bQyRi3qhH+Nj3tnnamw/Ml2Sys8Gzh+rpM+CZO/FfpUkUjzttDtV
-Es26mBbus7BdE/jKtaYRsfKAYfU1mJKIszefGH2kUlJhLOPOVdeOiZNJpzuo/k2e
-PknnH7UUqWxOFI+6nvv1atl4ktUHjlGuakxG3bsiflYYEpbYNZ6z+bKnqzaZSCeV
-jsGMNsQnRgHQBNQS0uZQjkbQlHqd+x95yvSYJC5UbanZz89xQ79qUsi+7v2ALFTN
-iMaTPpYGGPZMaLTIIuY+qByTZQ9hsWJR9S/iY5Fgj2kAbuDmKr0wPOcb80BpzvDL
-e0lLrXbtzBKoGP67OkcIFJtmPuDFUTgBm0wUFMK6n/ycYvhCm/sAe2PLKurXXNWb
-8y0QNdHrsZBslU8AV4DXfnwwfKXnSPysqEpU6/Y//3Um4OeU50m2vrmSo+JO52tE
-yOewMZm6FjEyxPZKaH7ZOUT8/uYyYyGf6CBwI5UOQTlYORBDg2aSyZd2C0O1LAYF
-JhdLqTVtH9N2Pi8EN77TY6vu8laVgtihcdXJsS2JJIwx0SODmmgX8UUIK3+bjmFu
-PN2XEQot0KqdN6CuOK3XREaQ/JgPcuxyZeQXtLYZWiR5lm7H/YRjFbxYWIAx/sgF
-Vl6kzY+dpkD3s/HAr5HHtz3wiR3Fotbi9IWHk9nKpgSaJFXKsuQ=
-=HFL9
------END PGP SIGNATURE-----
---=-=-=--
