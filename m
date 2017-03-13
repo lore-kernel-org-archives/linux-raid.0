@@ -1,33 +1,44 @@
 From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH] md:fix a trivial typo in comments
-Date: Mon, 13 Mar 2017 13:53:27 +0800
-Message-ID: <1489384407-12672-1-git-send-email-zlliu@suse.com>
+Subject: [PATCH 3/4 v1] mdadm:triggers core dump when stat2devnm return NULL
+Date: Mon, 13 Mar 2017 15:01:05 +0800
+Message-ID: <1489388465-13407-1-git-send-email-zlliu@suse.com>
+References: <8760jef6d4.fsf@notabene.neil.brown.name>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <8760jef6d4.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: shli@fb.com
-Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
+To: Jes.Sorensen@gmail.com
+Cc: linux-raid@vger.kernel.org, neilb@suse.com, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
-fix a trivial typo in freeze_array() of raid1.c
+monitor: ensure that the device should be a block
+device when uses --wait parameter, such as the 'f'
+and 'd' type file would be triggered core dumped.
+./mdadm --wait /dev/md/, happened core dump.
 
+Reviewed-by: NeilBrown <neilb@suse.com>
 Signed-off-by: Zhilong Liu <zlliu@suse.com>
 ---
- drivers/md/raid1.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ Monitor.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 7b0f647..2ec0617 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -958,7 +958,7 @@ static void allow_barrier(struct r1conf *conf, sector_t start_next_window,
- static void freeze_array(struct r1conf *conf, int extra)
- {
- 	/* stop syncio and normal IO and wait for everything to
--	 * go quite.
-+	 * go quit.
- 	 * We wait until nr_pending match nr_queued+extra
- 	 * This is called in the context of one normal IO request
- 	 * that has failed. Thus any sync request that might be pending
+diff --git a/Monitor.c b/Monitor.c
+index 802a9d9..f8850d3 100644
+--- a/Monitor.c
++++ b/Monitor.c
+@@ -1002,7 +1002,12 @@ int Wait(char *dev)
+ 			strerror(errno));
+ 		return 2;
+ 	}
+-	strcpy(devnm, stat2devnm(&stb));
++	char *tmp = stat2devnm(&stb);
++	if (!tmp) {
++		pr_err("%s is not a block device.\n", dev);
++		return 2;
++	}
++	strcpy(devnm, tmp);
+ 
+ 	while(1) {
+ 		struct mdstat_ent *ms = mdstat_read(1, 0);
 -- 
 2.6.6
 
