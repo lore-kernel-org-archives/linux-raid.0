@@ -1,79 +1,150 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md/r5cache: flush data in memory during journal device
- failure
-Date: Tue, 14 Mar 2017 10:50:48 -0700
-Message-ID: <20170314175048.rjyaufwgaclsmhdz@kernel.org>
-References: <20170313233626.2109293-1-songliubraving@fb.com>
+Subject: Re: [PATCH V4] md: move bitmap_destroy to the beginning of __md_stop
+Date: Tue, 14 Mar 2017 11:05:54 -0700
+Message-ID: <20170314180554.wf74pwynckrnyhjr@kernel.org>
+References: <1489455620-16306-1-git-send-email-gqjiang@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170313233626.2109293-1-songliubraving@fb.com>
+In-Reply-To: <1489455620-16306-1-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>
-Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org
+To: Guoqing Jiang <gqjiang@suse.com>
+Cc: linux-raid@vger.kernel.org, neilb@suse.com, shli@fb.com
 List-Id: linux-raid.ids
 
-On Mon, Mar 13, 2017 at 04:36:26PM -0700, Song Liu wrote:
-> For the raid456 with writeback cache, when journal device failed during
-> normal operation, it is still possible to persist all data, as all
-> pending data is still in stripe cache. However, the stripe will be
-> marked as fail with s.log_failed. Thus, the write out from stripe cache
-> cannot make progress.
+On Tue, Mar 14, 2017 at 09:40:20AM +0800, Guoqing Jiang wrote:
+> Since we have switched to sync way to handle METADATA_UPDATED
+> msg for md-cluster, then process_metadata_update is depended
+> on mddev->thread->wqueue.
 > 
-> To unblock the write out in journal failures, this patch allows stripes
-> with data injournal to make progress.
-
-what about the parity part? if log failed, we should skip journaling the parity.
-
-Thanks,
-Shaohua
- 
-> The array should be read-only in journal failures. Therefore, pending
-> writes (in dev->towrite) are excluded in this write (in delay_towrite).
+> With the new change, clustered raid could possible hang if
+> array received a METADATA_UPDATED msg after array unregistered
+> mddev->thread, so we need to stop clustered raid (bitmap_destroy
+> -> bitmap_free -> md_cluster_stop) earlier than unregister
+> thread (mddev_detach -> md_unregister_thread).
 > 
-> Signed-off-by: Song Liu <songliubraving@fb.com>
+> And this change should be safe for non-clustered raid since
+> all writes are stopped before the destroy. Also in md_run,
+> we activate the personality (pers->run()) before activating
+> the bitmap (bitmap_create()). So it is pleasingly symmetric
+> to stop the bitmap (bitmap_destroy()) before stopping the
+> personality (__md_stop() calls pers->free()), we achieve this
+> by move bitmap_destroy to the beginning of __md_stop.
+> 
+> But we don't want to break the codes for waiting behind IO as
+> Shaohua mentioned, so introduce bitmap_wait_behind_writes to
+> call the codes, and call the new fun in both mddev_detach and
+> bitmap_destroy, then we will not break original behind IO code
+> and also fit the new condition well.
+> 
+> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 > ---
->  drivers/md/raid5.c | 10 +++++++++-
->  1 file changed, 9 insertions(+), 1 deletion(-)
+> Changes from v3:
+> 1. move bitmap_destroy to __md_stop
+> 2. add bitmap_wait_behind_writes to handle behind IO
 > 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 3233975..447d9dd 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -3069,6 +3069,10 @@ sector_t raid5_compute_blocknr(struct stripe_head *sh, int i, int previous)
->   *      When LOG_CRITICAL, stripes with injournal == 0 will be sent to
->   *      no_space_stripes list.
->   *
-> + *   3. during journal failure
-> + *      In journal failure, we try to flush all cached data to raid disks
-> + *      based on data in stripe cache. The array is read-only to upper
-> + *      layers, so we would skip all pending writes.
->   */
->  static inline bool delay_towrite(struct r5conf *conf,
->  				 struct r5dev *dev,
-> @@ -3082,6 +3086,9 @@ static inline bool delay_towrite(struct r5conf *conf,
->  	if (test_bit(R5C_LOG_CRITICAL, &conf->cache_state) &&
->  	    s->injournal > 0)
->  		return true;
-> +	/* case 3 above */
-> +	if (s->log_failed && s->injournal)
-> +		return true;
->  	return false;
+>  drivers/md/bitmap.c | 17 +++++++++++++++++
+>  drivers/md/bitmap.h |  1 +
+>  drivers/md/md.c     | 13 ++-----------
+>  3 files changed, 20 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+> index b6fa55a3cff8..20cad80d6e34 100644
+> --- a/drivers/md/bitmap.c
+> +++ b/drivers/md/bitmap.c
+> @@ -1764,6 +1764,21 @@ void bitmap_free(struct bitmap *bitmap)
 >  }
+>  EXPORT_SYMBOL(bitmap_free);
 >  
-> @@ -4721,7 +4728,8 @@ static void handle_stripe(struct stripe_head *sh)
->  	/* check if the array has lost more than max_degraded devices and,
->  	 * if so, some requests might need to be failed.
+> +void bitmap_wait_behind_writes(struct mddev *mddev)
+> +{
+> +	struct bitmap *bitmap = mddev->bitmap;
+> +
+> +	/* wait for behind writes to complete */
+> +	if (bitmap && atomic_read(&bitmap->behind_writes) > 0) {
+> +		pr_debug("md:%s: behind writes in progress - waiting to stop.\n",
+> +			 mdname(mddev));
+> +		/* need to kick something here to make sure I/O goes? */
+> +		wait_event(bitmap->behind_wait,
+> +			   atomic_read(&bitmap->behind_writes) == 0);
+> +	}
+> +}
+> +EXPORT_SYMBOL(bitmap_wait_behind_writes);
+
+Applied, thanks! I deleted the EXPORT_SYMBOL here, it's not used by a module.
+
+>  void bitmap_destroy(struct mddev *mddev)
+>  {
+>  	struct bitmap *bitmap = mddev->bitmap;
+> @@ -1771,6 +1786,8 @@ void bitmap_destroy(struct mddev *mddev)
+>  	if (!bitmap) /* there was no bitmap */
+>  		return;
+>  
+> +	bitmap_wait_behind_writes(mddev);
+> +
+>  	mutex_lock(&mddev->bitmap_info.mutex);
+>  	spin_lock(&mddev->lock);
+>  	mddev->bitmap = NULL; /* disconnect from the md device */
+> diff --git a/drivers/md/bitmap.h b/drivers/md/bitmap.h
+> index 9f761097aab2..d15721ac07a6 100644
+> --- a/drivers/md/bitmap.h
+> +++ b/drivers/md/bitmap.h
+> @@ -271,6 +271,7 @@ struct bitmap *get_bitmap_from_slot(struct mddev *mddev, int slot);
+>  int bitmap_copy_from_slot(struct mddev *mddev, int slot,
+>  				sector_t *lo, sector_t *hi, bool clear_bits);
+>  void bitmap_free(struct bitmap *bitmap);
+> +void bitmap_wait_behind_writes(struct mddev *mddev);
+>  #endif
+>  
+>  #endif
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 79a99a1c9ce7..dc131fabfc7c 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -5534,15 +5534,7 @@ EXPORT_SYMBOL_GPL(md_stop_writes);
+>  
+>  static void mddev_detach(struct mddev *mddev)
+>  {
+> -	struct bitmap *bitmap = mddev->bitmap;
+> -	/* wait for behind writes to complete */
+> -	if (bitmap && atomic_read(&bitmap->behind_writes) > 0) {
+> -		pr_debug("md:%s: behind writes in progress - waiting to stop.\n",
+> -			 mdname(mddev));
+> -		/* need to kick something here to make sure I/O goes? */
+> -		wait_event(bitmap->behind_wait,
+> -			   atomic_read(&bitmap->behind_writes) == 0);
+> -	}
+> +	bitmap_wait_behind_writes(mddev);
+>  	if (mddev->pers && mddev->pers->quiesce) {
+>  		mddev->pers->quiesce(mddev, 1);
+>  		mddev->pers->quiesce(mddev, 0);
+> @@ -5555,6 +5547,7 @@ static void mddev_detach(struct mddev *mddev)
+>  static void __md_stop(struct mddev *mddev)
+>  {
+>  	struct md_personality *pers = mddev->pers;
+> +	bitmap_destroy(mddev);
+>  	mddev_detach(mddev);
+>  	/* Ensure ->event_work is done */
+>  	flush_workqueue(md_misc_wq);
+> @@ -5575,7 +5568,6 @@ void md_stop(struct mddev *mddev)
+>  	 * This is called from dm-raid
 >  	 */
-> -	if (s.failed > conf->max_degraded || s.log_failed) {
-> +	if (s.failed > conf->max_degraded ||
-> +	    (s.log_failed && s.injournal == 0)) {
->  		sh->check_state = 0;
->  		sh->reconstruct_state = 0;
->  		break_stripe_batch_list(sh, 0);
+>  	__md_stop(mddev);
+> -	bitmap_destroy(mddev);
+>  	if (mddev->bio_set)
+>  		bioset_free(mddev->bio_set);
+>  }
+> @@ -5713,7 +5705,6 @@ static int do_md_stop(struct mddev *mddev, int mode,
+>  	if (mode == 0) {
+>  		pr_info("md: %s stopped.\n", mdname(mddev));
+>  
+> -		bitmap_destroy(mddev);
+>  		if (mddev->bitmap_info.file) {
+>  			struct file *f = mddev->bitmap_info.file;
+>  			spin_lock(&mddev->lock);
 > -- 
-> 2.9.3
+> 2.6.2
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
