@@ -1,49 +1,56 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v6 0/4] Broadcom SBA RAID support
-Date: Tue, 14 Mar 2017 09:56:35 -0700
-Message-ID: <CAPcyv4hGGbhF-g8B__9=rsP+QwR6RBi=WqALLgABNb1M4D3rBw@mail.gmail.com>
-References: <1488793408-25592-1-git-send-email-anup.patel@broadcom.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH v2] r5cache: allow adding journal to array without journal
+Date: Tue, 14 Mar 2017 09:56:32 -0700
+Message-ID: <20170314165632.gbkyjt7pkmgf4ga5@kernel.org>
+References: <20170314001138.2194394-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1488793408-25592-1-git-send-email-anup.patel@broadcom.com>
+Content-Disposition: inline
+In-Reply-To: <20170314001138.2194394-1-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Anup Patel <anup.patel@broadcom.com>
-Cc: Vinod Koul <vinod.koul@intel.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S . Miller" <davem@davemloft.net>, Jassi Brar <jassisinghbrar@gmail.com>, Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>, Rob Rice <rob.rice@broadcom.com>, BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>, "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>, Device Tree <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>, Shaohua Li <shli@fb.>
+To: Song Liu <songliubraving@fb.com>
+Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jsorensen@fb.com
 List-Id: linux-raid.ids
 
-On Mon, Mar 6, 2017 at 1:43 AM, Anup Patel <anup.patel@broadcom.com> wrote:
-> The Broadcom SBA RAID is a stream-based device which provides
-> RAID5/6 offload.
->
-> It requires a SoC specific ring manager (such as Broadcom FlexRM
-> ring manager) to provide ring-based programming interface. Due to
-> this, the Broadcom SBA RAID driver (mailbox client) implements
-> DMA device having one DMA channel using a set of mailbox channels
-> provided by Broadcom SoC specific ring manager driver (mailbox
-> controller).
->
-> The Broadcom SBA RAID hardware requires PQ disk position instead
-> of PQ disk coefficient. To address this, we have added raid_gflog
-> table which will help driver to convert PQ disk coefficient to PQ
-> disk position.
->
-> This patchset is based on Linux-4.11-rc1 and depends on patchset
-> "[PATCH v5 0/2] Broadcom FlexRM ring manager support"
->
-> It is also available at sba-raid-v6 branch of
-> https://github.com/Broadcom/arm64-linux.git
->
-[..]
->
-> Anup Patel (4):
->   lib/raid6: Add log-of-2 table for RAID6 HW requiring disk position
->   async_tx: Fix DMA_PREP_FENCE usage in do_async_gen_syndrome()
->   dmaengine: Add Broadcom SBA RAID driver
->   dt-bindings: Add DT bindings document for Broadcom SBA RAID driver
+On Mon, Mar 13, 2017 at 05:11:38PM -0700, Song Liu wrote:
+> This seems just work.
 
-For the dmaengine and async_tx changes:
-
-Acked-by: Dan Williams <dan.j.williams@intel.com>
-
-The raid change should get an ack from Shaohua.
+this is by no means a changelog :)
+ 
+> Signed-off-by: Song Liu <songliubraving@fb.com>
+> ---
+>  Manage.c | 6 ------
+>  1 file changed, 6 deletions(-)
+> 
+> diff --git a/Manage.c b/Manage.c
+> index 5c3d2b9..5ff5de3 100644
+> --- a/Manage.c
+> +++ b/Manage.c
+> @@ -946,7 +946,6 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+>  
+>  	/* only add journal to array that supports journaling */
+>  	if (dv->disposition == 'j') {
+> -		struct mdinfo mdi;
+>  		struct mdinfo *mdp;
+>  
+>  		mdp = sysfs_read(fd, NULL, GET_ARRAY_STATE);
+> @@ -963,11 +962,6 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+>  
+>  		sysfs_free(mdp);
+>  
+> -		tst->ss->getinfo_super(tst, &mdi, NULL);
+> -		if (mdi.journal_device_required == 0) {
+> -			pr_err("%s does not support journal device.\n", devname);
+> -			return -1;
+> -		}
+>  		disc.raid_disk = 0;
+>  	}
+>  
+> -- 
+> 2.9.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
