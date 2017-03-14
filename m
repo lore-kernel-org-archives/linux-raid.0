@@ -1,67 +1,38 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH] md/r5cache: flush data in memory during journal device failure
-Date: Mon, 13 Mar 2017 16:36:26 -0700
-Message-ID: <20170313233626.2109293-1-songliubraving@fb.com>
+Subject: [PATCH] r5cache: allow adding journal to array without journal
+Date: Mon, 13 Mar 2017 17:09:07 -0700
+Message-ID: <20170314000907.2184606-1-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, Song Liu <songliubraving@fb.com>
+Cc: shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jsorensen@fb.com, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-For the raid456 with writeback cache, when journal device failed during
-normal operation, it is still possible to persist all data, as all
-pending data is still in stripe cache. However, the stripe will be
-marked as fail with s.log_failed. Thus, the write out from stripe cache
-cannot make progress.
-
-To unblock the write out in journal failures, this patch allows stripes
-with data injournal to make progress.
-
-The array should be read-only in journal failures. Therefore, pending
-writes (in dev->towrite) are excluded in this write (in delay_towrite).
+This seems just work.
 
 Signed-off-by: Song Liu <songliubraving@fb.com>
 ---
- drivers/md/raid5.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+ Manage.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 3233975..447d9dd 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -3069,6 +3069,10 @@ sector_t raid5_compute_blocknr(struct stripe_head *sh, int i, int previous)
-  *      When LOG_CRITICAL, stripes with injournal == 0 will be sent to
-  *      no_space_stripes list.
-  *
-+ *   3. during journal failure
-+ *      In journal failure, we try to flush all cached data to raid disks
-+ *      based on data in stripe cache. The array is read-only to upper
-+ *      layers, so we would skip all pending writes.
-  */
- static inline bool delay_towrite(struct r5conf *conf,
- 				 struct r5dev *dev,
-@@ -3082,6 +3086,9 @@ static inline bool delay_towrite(struct r5conf *conf,
- 	if (test_bit(R5C_LOG_CRITICAL, &conf->cache_state) &&
- 	    s->injournal > 0)
- 		return true;
-+	/* case 3 above */
-+	if (s->log_failed && s->injournal)
-+		return true;
- 	return false;
- }
+diff --git a/Manage.c b/Manage.c
+index 5c3d2b9..9ab999d 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -963,11 +963,6 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
  
-@@ -4721,7 +4728,8 @@ static void handle_stripe(struct stripe_head *sh)
- 	/* check if the array has lost more than max_degraded devices and,
- 	 * if so, some requests might need to be failed.
- 	 */
--	if (s.failed > conf->max_degraded || s.log_failed) {
-+	if (s.failed > conf->max_degraded ||
-+	    (s.log_failed && s.injournal == 0)) {
- 		sh->check_state = 0;
- 		sh->reconstruct_state = 0;
- 		break_stripe_batch_list(sh, 0);
+ 		sysfs_free(mdp);
+ 
+-		tst->ss->getinfo_super(tst, &mdi, NULL);
+-		if (mdi.journal_device_required == 0) {
+-			pr_err("%s does not support journal device.\n", devname);
+-			return -1;
+-		}
+ 		disc.raid_disk = 0;
+ 	}
+ 
 -- 
 2.9.3
 
