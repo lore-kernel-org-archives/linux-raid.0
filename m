@@ -1,7 +1,7 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH] r5cache: allow adding journal to array without journal
-Date: Mon, 13 Mar 2017 17:09:07 -0700
-Message-ID: <20170314000907.2184606-1-songliubraving@fb.com>
+Subject: [PATCH v2] r5cache: allow adding journal to array without journal
+Date: Mon, 13 Mar 2017 17:11:38 -0700
+Message-ID: <20170314001138.2194394-1-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -14,14 +14,22 @@ This seems just work.
 
 Signed-off-by: Song Liu <songliubraving@fb.com>
 ---
- Manage.c | 5 -----
- 1 file changed, 5 deletions(-)
+ Manage.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
 diff --git a/Manage.c b/Manage.c
-index 5c3d2b9..9ab999d 100644
+index 5c3d2b9..5ff5de3 100644
 --- a/Manage.c
 +++ b/Manage.c
-@@ -963,11 +963,6 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+@@ -946,7 +946,6 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+ 
+ 	/* only add journal to array that supports journaling */
+ 	if (dv->disposition == 'j') {
+-		struct mdinfo mdi;
+ 		struct mdinfo *mdp;
+ 
+ 		mdp = sysfs_read(fd, NULL, GET_ARRAY_STATE);
+@@ -963,11 +962,6 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
  
  		sysfs_free(mdp);
  
