@@ -1,47 +1,49 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md/r5cache: fix set_syndrome_sources()
-Date: Tue, 14 Mar 2017 09:52:33 -0700
-Message-ID: <20170314165233.p7wef5qxyosxe5hm@kernel.org>
-References: <20170313204435.1732089-1-songliubraving@fb.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH v6 0/4] Broadcom SBA RAID support
+Date: Tue, 14 Mar 2017 09:56:35 -0700
+Message-ID: <CAPcyv4hGGbhF-g8B__9=rsP+QwR6RBi=WqALLgABNb1M4D3rBw@mail.gmail.com>
+References: <1488793408-25592-1-git-send-email-anup.patel@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170313204435.1732089-1-songliubraving@fb.com>
+In-Reply-To: <1488793408-25592-1-git-send-email-anup.patel@broadcom.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>
-Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org
+To: Anup Patel <anup.patel@broadcom.com>
+Cc: Vinod Koul <vinod.koul@intel.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S . Miller" <davem@davemloft.net>, Jassi Brar <jassisinghbrar@gmail.com>, Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>, Rob Rice <rob.rice@broadcom.com>, BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>, "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>, Device Tree <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>, Shaohua Li <shli@fb.>
 List-Id: linux-raid.ids
 
-On Mon, Mar 13, 2017 at 01:44:35PM -0700, Song Liu wrote:
-> With srctype == SYNDROME_SRC_WRITTEN, we need include both
-> dev with non-null ->written and dev with R5_InJournal.
+On Mon, Mar 6, 2017 at 1:43 AM, Anup Patel <anup.patel@broadcom.com> wrote:
+> The Broadcom SBA RAID is a stream-based device which provides
+> RAID5/6 offload.
+>
+> It requires a SoC specific ring manager (such as Broadcom FlexRM
+> ring manager) to provide ring-based programming interface. Due to
+> this, the Broadcom SBA RAID driver (mailbox client) implements
+> DMA device having one DMA channel using a set of mailbox channels
+> provided by Broadcom SoC specific ring manager driver (mailbox
+> controller).
+>
+> The Broadcom SBA RAID hardware requires PQ disk position instead
+> of PQ disk coefficient. To address this, we have added raid_gflog
+> table which will help driver to convert PQ disk coefficient to PQ
+> disk position.
+>
+> This patchset is based on Linux-4.11-rc1 and depends on patchset
+> "[PATCH v5 0/2] Broadcom FlexRM ring manager support"
+>
+> It is also available at sba-raid-v6 branch of
+> https://github.com/Broadcom/arm64-linux.git
+>
+[..]
+>
+> Anup Patel (4):
+>   lib/raid6: Add log-of-2 table for RAID6 HW requiring disk position
+>   async_tx: Fix DMA_PREP_FENCE usage in do_async_gen_syndrome()
+>   dmaengine: Add Broadcom SBA RAID driver
+>   dt-bindings: Add DT bindings document for Broadcom SBA RAID driver
 
-Thanks, applied. I'll add this to stable
- 
-> Signed-off-by: Song Liu <songliubraving@fb.com>
-> ---
->  drivers/md/raid5.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 1c554a8..88cc898 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -1499,7 +1499,8 @@ static int set_syndrome_sources(struct page **srcs,
->  		     (test_bit(R5_Wantdrain, &dev->flags) ||
->  		      test_bit(R5_InJournal, &dev->flags))) ||
->  		    (srctype == SYNDROME_SRC_WRITTEN &&
-> -		     dev->written)) {
-> +		     (dev->written ||
-> +		      test_bit(R5_InJournal, &dev->flags)))) {
->  			if (test_bit(R5_InJournal, &dev->flags))
->  				srcs[slot] = sh->dev[i].orig_page;
->  			else
-> -- 
-> 2.9.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+For the dmaengine and async_tx changes:
+
+Acked-by: Dan Williams <dan.j.williams@intel.com>
+
+The raid change should get an ack from Shaohua.
