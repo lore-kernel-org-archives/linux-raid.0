@@ -1,51 +1,60 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v1] md:fix a trivial typo in comments
-Date: Tue, 14 Mar 2017 11:09:40 -0700
-Message-ID: <20170314180940.lgekkkpalux74vrh@kernel.org>
-References: <1489384407-12672-1-git-send-email-zlliu@suse.com>
- <1489477946-4202-1-git-send-email-zlliu@suse.com>
+From: Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v6 0/4] Broadcom SBA RAID support
+Date: Tue, 14 Mar 2017 11:48:06 -0700
+Message-ID: <20170314184806.o2oykhztje3obwot@kernel.org>
+References: <1488793408-25592-1-git-send-email-anup.patel@broadcom.com>
+ <CAPcyv4hGGbhF-g8B__9=rsP+QwR6RBi=WqALLgABNb1M4D3rBw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1489477946-4202-1-git-send-email-zlliu@suse.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Zhilong Liu <zlliu@suse.com>
-Cc: shli@fb.com, linux-raid@vger.kernel.org, Jack Wang <jack.wang.usish@gmail.com>, Guoqing Jiang <gqjiang@suse.com>, John Stoffel <john@stoffel.org>, Coly Li <colyli@suse.de>
+In-Reply-To: <CAPcyv4hGGbhF-g8B__9=rsP+QwR6RBi=WqALLgABNb1M4D3rBw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Anup Patel <anup.patel-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Vinod Koul <vinod.koul-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jassi Brar <jassisinghbrar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Ray Jui <rjui-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Scott Branden <sbranden-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Jon Mason <jonmason-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Rob Rice <rob.rice-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, BCM Kernel Feedback <bcm-kernel-feedback-list-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, "dmaengine-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <dmaengine-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Device Tree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.orglinux-raid <lin>
 List-Id: linux-raid.ids
 
-On Tue, Mar 14, 2017 at 03:52:26PM +0800, Zhilong Liu wrote:
-> raid1.c: fix a trivial typo in comments of freeze_array().
+On Tue, Mar 14, 2017 at 09:56:35AM -0700, Dan Williams wrote:
+> On Mon, Mar 6, 2017 at 1:43 AM, Anup Patel <anup.patel-dY08KVG/lbpWk0Htik3J/w@public.gmane.org> wrote:
+> > The Broadcom SBA RAID is a stream-based device which provides
+> > RAID5/6 offload.
+> >
+> > It requires a SoC specific ring manager (such as Broadcom FlexRM
+> > ring manager) to provide ring-based programming interface. Due to
+> > this, the Broadcom SBA RAID driver (mailbox client) implements
+> > DMA device having one DMA channel using a set of mailbox channels
+> > provided by Broadcom SoC specific ring manager driver (mailbox
+> > controller).
+> >
+> > The Broadcom SBA RAID hardware requires PQ disk position instead
+> > of PQ disk coefficient. To address this, we have added raid_gflog
+> > table which will help driver to convert PQ disk coefficient to PQ
+> > disk position.
+> >
+> > This patchset is based on Linux-4.11-rc1 and depends on patchset
+> > "[PATCH v5 0/2] Broadcom FlexRM ring manager support"
+> >
+> > It is also available at sba-raid-v6 branch of
+> > https://github.com/Broadcom/arm64-linux.git
+> >
+> [..]
+> >
+> > Anup Patel (4):
+> >   lib/raid6: Add log-of-2 table for RAID6 HW requiring disk position
+> >   async_tx: Fix DMA_PREP_FENCE usage in do_async_gen_syndrome()
+> >   dmaengine: Add Broadcom SBA RAID driver
+> >   dt-bindings: Add DT bindings document for Broadcom SBA RAID driver
 > 
-> Cc: Jack Wang <jack.wang.usish@gmail.com>
-> Cc: Guoqing Jiang <gqjiang@suse.com>
-> Cc: John Stoffel <john@stoffel.org>
-> Cc: Coly Li <colyli@suse.de>
-> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+> For the dmaengine and async_tx changes:
+> 
+> Acked-by: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> 
+> The raid change should get an ack from Shaohua.
 
-applied, thanks
+For the raid6 part:
 
-> ---
->  drivers/md/raid1.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index fbc2d78..92ca6de 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -1027,7 +1027,7 @@ static int get_unqueued_pending(struct r1conf *conf)
->  static void freeze_array(struct r1conf *conf, int extra)
->  {
->  	/* Stop sync I/O and normal I/O and wait for everything to
-> -	 * go quite.
-> +	 * go quiet.
->  	 * This is called in two situations:
->  	 * 1) management command handlers (reshape, remove disk, quiesce).
->  	 * 2) one normal I/O request failed.
-> -- 
-> 2.6.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Acked-by: Shaohua Li <shli-b10kYP2dOMg@public.gmane.org>
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
