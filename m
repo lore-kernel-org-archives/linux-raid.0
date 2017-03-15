@@ -1,71 +1,72 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: on assembly and recovery of a hardware RAID
-Date: Wed, 15 Mar 2017 13:56:13 +1100
-Message-ID: <87d1djdz8y.fsf@notabene.neil.brown.name>
-References: <CAAZLhTdaVM4fagN5=bqWpPx-DjyU6UZ69bJFf51FWMX7oeyJNw@mail.gmail.com> <87tw6weubu.fsf@notabene.neil.brown.name> <CAAZLhTcEhn2GezDSDJHOLv2VNSynzT-he0FRrVNbz1xtakLsMQ@mail.gmail.com>
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: Re: [RFC PATCH] md/raid10: refactor some codes from
+ raid10_write_request
+Date: Wed, 15 Mar 2017 11:02:44 +0800
+Message-ID: <58C8AED4.5020309@suse.com>
+References: <1489397039-3353-1-git-send-email-gqjiang@suse.com>
+ <20170314164836.mekttgqcw4smsgsw@kernel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAZLhTcEhn2GezDSDJHOLv2VNSynzT-he0FRrVNbz1xtakLsMQ@mail.gmail.com>
+In-Reply-To: <20170314164836.mekttgqcw4smsgsw@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alfred Matthews <asm13243546@gmail.com>, linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.com
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
 
-On Tue, Mar 14 2017, Alfred Matthews wrote:
 
->> Does
->>   dmraid -b /dev/sda /dev/sdb /dev/sdc
->> tell you anything useful?
+On 03/15/2017 12:48 AM, Shaohua Li wrote:
+> On Mon, Mar 13, 2017 at 05:23:59PM +0800, Guoqing Jiang wrote:
+>> Previously, we clone both bio and repl_bio in raid10_write_request,
+>> then add the cloned bio to plug->pending or conf->pending_bio_list
+>> based on plug or not, and most of the logics are same for the two
+>> conditions.
 >>
->
-> # dmraid -b /dev/sdb /dev/sdc
-> /dev/sdc:   5860533168 total, "WD-WCAWZ2927144"
-> /dev/sdb:   5860533168 total, "WD-WCAWZ2939730"
+>> So introduce handle_clonebio (a better name is welcome) for it, and
+>> use replacement parameter to distinguish the difference. No functional
+>> changes in the patch.
+>>
+>> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+>> ---
+>> Another reason for it is to improve the readability of code, but
+>> I didn't touch raid10 before so this is labeled as RFC.
+>>
+>>   drivers/md/raid10.c | 172 ++++++++++++++++++++++------------------------------
+>>   1 file changed, 72 insertions(+), 100 deletions(-)
+>>
+>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+>> index b1b1f982a722..02d8eff8d26e 100644
+>> --- a/drivers/md/raid10.c
+>> +++ b/drivers/md/raid10.c
+>> @@ -1188,18 +1188,81 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+>>   	return;
+>>   }
+>>   
+>> -static void raid10_write_request(struct mddev *mddev, struct bio *bio,
+>> -				 struct r10bio *r10_bio)
+>> +static void handle_clonebio(struct mddev *mddev, struct r10bio *r10_bio,
+>> +			    struct bio *bio, int i, int replacement,
+>> +			    int max_sectors)
+> Maybe raid10_write_one_disk?
+
+Thanks for review, I will use it unless a better name is found.
+
+>   Please replace 'i' with a meaningful name and
+> change to 'boo' for replacement.
+
+Ok, I would replace 'i' with 'n_copy', what is the meaning of 'boo'?
+IMO, replacement fits better here, thanks.
+
++		if (r10_bio->devs[i].bio)
++			handle_clonebio(mddev, r10_bio, bio, i, 0, max_sectors);
++		if (r10_bio->devs[i].repl_bio)
++			handle_clonebio(mddev, r10_bio, bio, i, 1, max_sectors);
 
 
-No, not useful.
 
-Your other output also doesn't show anything interesting.
-I had another look at the lsdrv output you showed before and I'm
-wondering if there really is anything "hardware RAID" here at all.
+Regards,
+Guoqing
 
-Both drives (sdb and sdc) are partitioned into a 200MB EFI partition, a
-2.75TB hfsplus (Apple file system) / unknown partition, and a 128M
-hfsplus boot partition.
 
-Maybe the two 2.75TB paritions were raided together.
-sdc looks like the "first" device if this were the case.
-Try:
-
-  mdadm --build /dev/md0 --level=0 -n2 --chunk=512M /dev/sdc2 /dev/sdb2
-
-Then try fsck.hfs of hpfsck ... in the "hfsplus" package on Debian.
- hpfsck /dev/md0
-maybe.
-
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljIrU0ACgkQOeye3VZi
-gblc9Q//XXVHEaR7xpfufi4p2eWNZUXm2HPy0i4hGWuwr5T5+3Nru3HEdVzdqhmO
-iwOlv+I4kOtpymFQ526OgjdgXRPggOcrJsx7Qd35ZECfqWVpGScsz9fm6+aTAaOC
-Ejr7FK0XvLzs7wm8YS4Tef+N4Cae/FtDy0QmHGuN7o1dBHUxDfQTEWifst+tykps
-oafp2ErMfPp00joRP7/5jTiKrghdEceQCGhDaP97FPTRRgJmfmwyLQvl4ffBswKk
-W/aDGZ4j8OLk2SGtI9JA1R6v7PLH+4WBJmGZkiE9WfofDEo9twb1/tPUw4Z6OS4R
-Tjg4Z9v8WVHumqc9EkF8YqS5BMSkmuQvPQWxRGgWp+I+zWppEPO6ks8UnmVezXsv
-CtM18bqDl+3ZD71/HSbM1ms2AS60VQiRBctblEiWKx5rHD2k0tGV88d42cl7RoBf
-JY28A1HPV39phXbHmISSiIrwGBfXZdYe/fZBcSof4MK/47BZSRiXm7H8Fb/x6Bp4
-K0MrVVpVo+0ohYMPzpuou1uIezRWj/ZUMCaDegs34CQM31W2okvn+zkXCIFP/WEt
-UQeHiAJw+vb+vDTM3qOvIbBtc6ng0q6d+CaXDTgrU0jN1WumZ7UfG86In2PznDdr
-G5mad9DzMAuKFPGii1LRj/wKmRZXBDuizbz/KMeMmvDesp5Fnl0=
-=5HN6
------END PGP SIGNATURE-----
---=-=-=--
