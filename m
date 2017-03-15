@@ -1,102 +1,75 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md/r5cache: flush data in memory during journal device
- failure
-Date: Wed, 15 Mar 2017 15:48:31 -0700
-Message-ID: <20170315224831.plinspr2liew4mp7@kernel.org>
-References: <20170313233626.2109293-1-songliubraving@fb.com>
- <20170314175048.rjyaufwgaclsmhdz@kernel.org>
- <5FFE3F62-D87A-46C5-B9D7-7A7501A32B90@fb.com>
+Subject: Re: [PATCH 1/2] md/r5cache: improve add-journal
+Date: Wed, 15 Mar 2017 15:51:00 -0700
+Message-ID: <20170315225100.mr4glirjdjx237fq@kernel.org>
+References: <20170315182816.3627123-1-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <5FFE3F62-D87A-46C5-B9D7-7A7501A32B90@fb.com>
+In-Reply-To: <20170315182816.3627123-1-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Song Liu <songliubraving@fb.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Shaohua Li <shli@fb.com>, NeilBrown <neilb@suse.com>, Kernel Team <Kernel-team@fb.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "hch@infradead.org" <hch@infradead.org>
+Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com
 List-Id: linux-raid.ids
 
-On Tue, Mar 14, 2017 at 10:40:14PM +0000, Song Liu wrote:
-> 
-> > On Mar 14, 2017, at 10:50 AM, Shaohua Li <shli@kernel.org> wrote:
-> > 
-> > On Mon, Mar 13, 2017 at 04:36:26PM -0700, Song Liu wrote:
-> >> For the raid456 with writeback cache, when journal device failed during
-> >> normal operation, it is still possible to persist all data, as all
-> >> pending data is still in stripe cache. However, the stripe will be
-> >> marked as fail with s.log_failed. Thus, the write out from stripe cache
-> >> cannot make progress.
-> >> 
-> >> To unblock the write out in journal failures, this patch allows stripes
-> >> with data injournal to make progress.
-> > 
-> > what about the parity part? if log failed, we should skip journaling the parity.
-> > 
-> > Thanks,
-> > Shaohua
-> > 
-> 
-> For stripes with data in journal (not flushed yet), the state machine 
-> can flush them out. The behavior is just like when there are no journal 
-> at all. 
+On Wed, Mar 15, 2017 at 11:28:15AM -0700, Song Liu wrote:
+> 1. suspend the array before adding journal, so that we can add journal
+>    when the array is not read-only;
 
-can you explain this more? I didn't find any place we check the failure bit and
-so skip journaling the parity. Also include the description in the changelog.
+we can't call mddev_suspend in raid5d, because there is deadlock.
+raid5_add_disk can be called in raid5d.
+
+> 2. allow recreate journal when existing journal is Faulty. So that we can
+>    add-journal before removing failed journal.
+
+this is weird usage, why don't we remove the failed journal first?
  
-> On the other hand, other writes will be gated by the log_failed flags, 
-> so the array appears to be read-only to upper layers. 
+> Signed-off-by: Song Liu <songliubraving@fb.com>
+> ---
+>  drivers/md/md.c    | 5 +++--
+>  drivers/md/raid5.c | 6 ++----
+>  2 files changed, 5 insertions(+), 6 deletions(-)
 > 
-> Thanks,
-> Song
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 42e68b2..ac3bd15 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -6230,9 +6230,10 @@ static int add_new_disk(struct mddev *mddev, mdu_disk_info_t *info)
+>  			struct md_rdev *rdev2;
+>  			bool has_journal = false;
+>  
+> -			/* make sure no existing journal disk */
+> +			/* make sure no active journal disk */
+>  			rdev_for_each(rdev2, mddev) {
+> -				if (test_bit(Journal, &rdev2->flags)) {
+> +				if (test_bit(Journal, &rdev2->flags) &&
+> +				    !test_bit(Faulty, &rdev2->flags)) {
+>  					has_journal = true;
+>  					break;
+>  				}
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 447d9dd..ee8648b 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -7758,11 +7758,9 @@ static int raid5_add_disk(struct mddev *mddev, struct md_rdev *rdev)
+>  			return -EBUSY;
+>  
+>  		rdev->raid_disk = 0;
+> -		/*
+> -		 * The array is in readonly mode if journal is missing, so no
+> -		 * write requests running. We should be safe
+> -		 */
+> +		mddev_suspend(mddev);
+>  		log_init(conf, rdev);
+> +		mddev_resume(mddev);
+>  		return 0;
+>  	}
+>  	if (mddev->recovery_disabled == conf->recovery_disabled)
+> -- 
+> 2.9.3
 > 
-> >> The array should be read-only in journal failures. Therefore, pending
-> >> writes (in dev->towrite) are excluded in this write (in delay_towrite).
-> >> 
-> >> Signed-off-by: Song Liu <songliubraving@fb.com>
-> >> ---
-> >> drivers/md/raid5.c | 10 +++++++++-
-> >> 1 file changed, 9 insertions(+), 1 deletion(-)
-> >> 
-> >> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> >> index 3233975..447d9dd 100644
-> >> --- a/drivers/md/raid5.c
-> >> +++ b/drivers/md/raid5.c
-> >> @@ -3069,6 +3069,10 @@ sector_t raid5_compute_blocknr(struct stripe_head *sh, int i, int previous)
-> >>  *      When LOG_CRITICAL, stripes with injournal == 0 will be sent to
-> >>  *      no_space_stripes list.
-> >>  *
-> >> + *   3. during journal failure
-> >> + *      In journal failure, we try to flush all cached data to raid disks
-> >> + *      based on data in stripe cache. The array is read-only to upper
-> >> + *      layers, so we would skip all pending writes.
-> >>  */
-> >> static inline bool delay_towrite(struct r5conf *conf,
-> >> 				 struct r5dev *dev,
-> >> @@ -3082,6 +3086,9 @@ static inline bool delay_towrite(struct r5conf *conf,
-> >> 	if (test_bit(R5C_LOG_CRITICAL, &conf->cache_state) &&
-> >> 	    s->injournal > 0)
-> >> 		return true;
-> >> +	/* case 3 above */
-> >> +	if (s->log_failed && s->injournal)
-> >> +		return true;
-> >> 	return false;
-> >> }
-> >> 
-> >> @@ -4721,7 +4728,8 @@ static void handle_stripe(struct stripe_head *sh)
-> >> 	/* check if the array has lost more than max_degraded devices and,
-> >> 	 * if so, some requests might need to be failed.
-> >> 	 */
-> >> -	if (s.failed > conf->max_degraded || s.log_failed) {
-> >> +	if (s.failed > conf->max_degraded ||
-> >> +	    (s.log_failed && s.injournal == 0)) {
-> >> 		sh->check_state = 0;
-> >> 		sh->reconstruct_state = 0;
-> >> 		break_stripe_batch_list(sh, 0);
-> >> -- 
-> >> 2.9.3
-> >> 
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
