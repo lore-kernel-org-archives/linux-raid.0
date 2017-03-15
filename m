@@ -1,75 +1,102 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [RFC PATCH] md/raid10: refactor some codes from
- raid10_write_request
-Date: Wed, 15 Mar 2017 15:46:48 -0700
-Message-ID: <20170315224648.g77w3nt23weycrhy@kernel.org>
-References: <1489397039-3353-1-git-send-email-gqjiang@suse.com>
- <20170314164836.mekttgqcw4smsgsw@kernel.org>
- <58C8AED4.5020309@suse.com>
+Subject: Re: [PATCH] md/r5cache: flush data in memory during journal device
+ failure
+Date: Wed, 15 Mar 2017 15:48:31 -0700
+Message-ID: <20170315224831.plinspr2liew4mp7@kernel.org>
+References: <20170313233626.2109293-1-songliubraving@fb.com>
+ <20170314175048.rjyaufwgaclsmhdz@kernel.org>
+ <5FFE3F62-D87A-46C5-B9D7-7A7501A32B90@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <58C8AED4.5020309@suse.com>
+In-Reply-To: <5FFE3F62-D87A-46C5-B9D7-7A7501A32B90@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>
-Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.com
+To: Song Liu <songliubraving@fb.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Shaohua Li <shli@fb.com>, NeilBrown <neilb@suse.com>, Kernel Team <Kernel-team@fb.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "hch@infradead.org" <hch@infradead.org>
 List-Id: linux-raid.ids
 
-On Wed, Mar 15, 2017 at 11:02:44AM +0800, Guoqing Jiang wrote:
+On Tue, Mar 14, 2017 at 10:40:14PM +0000, Song Liu wrote:
 > 
+> > On Mar 14, 2017, at 10:50 AM, Shaohua Li <shli@kernel.org> wrote:
+> > 
+> > On Mon, Mar 13, 2017 at 04:36:26PM -0700, Song Liu wrote:
+> >> For the raid456 with writeback cache, when journal device failed during
+> >> normal operation, it is still possible to persist all data, as all
+> >> pending data is still in stripe cache. However, the stripe will be
+> >> marked as fail with s.log_failed. Thus, the write out from stripe cache
+> >> cannot make progress.
+> >> 
+> >> To unblock the write out in journal failures, this patch allows stripes
+> >> with data injournal to make progress.
+> > 
+> > what about the parity part? if log failed, we should skip journaling the parity.
+> > 
+> > Thanks,
+> > Shaohua
+> > 
 > 
-> On 03/15/2017 12:48 AM, Shaohua Li wrote:
-> > On Mon, Mar 13, 2017 at 05:23:59PM +0800, Guoqing Jiang wrote:
-> > > Previously, we clone both bio and repl_bio in raid10_write_request,
-> > > then add the cloned bio to plug->pending or conf->pending_bio_list
-> > > based on plug or not, and most of the logics are same for the two
-> > > conditions.
-> > > 
-> > > So introduce handle_clonebio (a better name is welcome) for it, and
-> > > use replacement parameter to distinguish the difference. No functional
-> > > changes in the patch.
-> > > 
-> > > Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-> > > ---
-> > > Another reason for it is to improve the readability of code, but
-> > > I didn't touch raid10 before so this is labeled as RFC.
-> > > 
-> > >   drivers/md/raid10.c | 172 ++++++++++++++++++++++------------------------------
-> > >   1 file changed, 72 insertions(+), 100 deletions(-)
-> > > 
-> > > diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> > > index b1b1f982a722..02d8eff8d26e 100644
-> > > --- a/drivers/md/raid10.c
-> > > +++ b/drivers/md/raid10.c
-> > > @@ -1188,18 +1188,81 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
-> > >   	return;
-> > >   }
-> > > -static void raid10_write_request(struct mddev *mddev, struct bio *bio,
-> > > -				 struct r10bio *r10_bio)
-> > > +static void handle_clonebio(struct mddev *mddev, struct r10bio *r10_bio,
-> > > +			    struct bio *bio, int i, int replacement,
-> > > +			    int max_sectors)
-> > Maybe raid10_write_one_disk?
-> 
-> Thanks for review, I will use it unless a better name is found.
-> 
-> >   Please replace 'i' with a meaningful name and
-> > change to 'boo' for replacement.
-> 
-> Ok, I would replace 'i' with 'n_copy', what is the meaning of 'boo'?
-> IMO, replacement fits better here, thanks.
+> For stripes with data in journal (not flushed yet), the state machine 
+> can flush them out. The behavior is just like when there are no journal 
+> at all. 
 
-sorry, I mean 'bool'
+can you explain this more? I didn't find any place we check the failure bit and
+so skip journaling the parity. Also include the description in the changelog.
  
-> +		if (r10_bio->devs[i].bio)
-> +			handle_clonebio(mddev, r10_bio, bio, i, 0, max_sectors);
-> +		if (r10_bio->devs[i].repl_bio)
-> +			handle_clonebio(mddev, r10_bio, bio, i, 1, max_sectors);
+> On the other hand, other writes will be gated by the log_failed flags, 
+> so the array appears to be read-only to upper layers. 
 > 
+> Thanks,
+> Song
 > 
-> 
-> Regards,
-> Guoqing
-> 
+> >> The array should be read-only in journal failures. Therefore, pending
+> >> writes (in dev->towrite) are excluded in this write (in delay_towrite).
+> >> 
+> >> Signed-off-by: Song Liu <songliubraving@fb.com>
+> >> ---
+> >> drivers/md/raid5.c | 10 +++++++++-
+> >> 1 file changed, 9 insertions(+), 1 deletion(-)
+> >> 
+> >> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> >> index 3233975..447d9dd 100644
+> >> --- a/drivers/md/raid5.c
+> >> +++ b/drivers/md/raid5.c
+> >> @@ -3069,6 +3069,10 @@ sector_t raid5_compute_blocknr(struct stripe_head *sh, int i, int previous)
+> >>  *      When LOG_CRITICAL, stripes with injournal == 0 will be sent to
+> >>  *      no_space_stripes list.
+> >>  *
+> >> + *   3. during journal failure
+> >> + *      In journal failure, we try to flush all cached data to raid disks
+> >> + *      based on data in stripe cache. The array is read-only to upper
+> >> + *      layers, so we would skip all pending writes.
+> >>  */
+> >> static inline bool delay_towrite(struct r5conf *conf,
+> >> 				 struct r5dev *dev,
+> >> @@ -3082,6 +3086,9 @@ static inline bool delay_towrite(struct r5conf *conf,
+> >> 	if (test_bit(R5C_LOG_CRITICAL, &conf->cache_state) &&
+> >> 	    s->injournal > 0)
+> >> 		return true;
+> >> +	/* case 3 above */
+> >> +	if (s->log_failed && s->injournal)
+> >> +		return true;
+> >> 	return false;
+> >> }
+> >> 
+> >> @@ -4721,7 +4728,8 @@ static void handle_stripe(struct stripe_head *sh)
+> >> 	/* check if the array has lost more than max_degraded devices and,
+> >> 	 * if so, some requests might need to be failed.
+> >> 	 */
+> >> -	if (s.failed > conf->max_degraded || s.log_failed) {
+> >> +	if (s.failed > conf->max_degraded ||
+> >> +	    (s.log_failed && s.injournal == 0)) {
+> >> 		sh->check_state = 0;
+> >> 		sh->reconstruct_state = 0;
+> >> 		break_stripe_batch_list(sh, 0);
+> >> -- 
+> >> 2.9.3
+> >> 
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
