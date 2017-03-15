@@ -1,7 +1,7 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH 1/2] mdadm/r5cache: allow adding journal to array without journal
-Date: Wed, 15 Mar 2017 11:28:49 -0700
-Message-ID: <20170315182850.3628010-1-songliubraving@fb.com>
+Subject: [PATCH v2] md/r5cache: journal remove support
+Date: Wed, 15 Mar 2017 14:15:08 -0700
+Message-ID: <20170315211508.4000145-1-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -10,77 +10,142 @@ To: linux-raid@vger.kernel.org
 Cc: shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-We use to apply constraints to --add-journal:
-  1. We only support recreate journal for arrays with missing journal;
-  2. The array need to be readonly when the journal is added.
+When journal device of an array fails, the array is forced into read-only
+mode. To make the array normal without adding another journal device, we
+need to remove journal _feature_ from the array.
 
-As the kernel code getting more mature, these constraints are no longer
-necessary. This patch removes this constraints from mdadm.
+This patch allows remove journal _feature_ from an array, For journal
+remove to work, existing journal should be either missing or faulty.
+
+Two flags are added to GET_ARRAY_INFO for mdadm.
+  1. MD_SB_HAS_JOURNAL: meaning the array have journal feature;
+  2. MD_SB_JOURNAL_REMOVABLE: meaning the journal is faulty or missing
+
+When both flags are set, mdadm can clear MD_SB_HAS_JOURNAL to remove
+journal _feature_.
 
 Signed-off-by: Song Liu <songliubraving@fb.com>
 ---
- Manage.c   | 29 ++++-------------------------
- md_p.h     |  5 +++++
- mdadm.8.in |  7 ++-----
- 3 files changed, 11 insertions(+), 30 deletions(-)
+ drivers/md/md.c                | 44 ++++++++++++++++++++++++++++++++++++++++--
+ include/uapi/linux/raid/md_p.h | 11 ++++++++---
+ 2 files changed, 50 insertions(+), 5 deletions(-)
 
-diff --git a/Manage.c b/Manage.c
-index 5c3d2b9..289b7ce 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -946,28 +946,13 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index ac3bd15..14bf4c3 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5981,6 +5981,25 @@ static void autorun_devices(int part)
+ }
+ #endif /* !MODULE */
  
- 	/* only add journal to array that supports journaling */
- 	if (dv->disposition == 'j') {
--		struct mdinfo mdi;
--		struct mdinfo *mdp;
--
--		mdp = sysfs_read(fd, NULL, GET_ARRAY_STATE);
--		if (!mdp) {
--			pr_err("%s unable to read array state.\n", devname);
--			return -1;
--		}
--
--		if (strncmp(mdp->sysfs_array_state, "readonly", 8) != 0) {
--			sysfs_free(mdp);
--			pr_err("%s is not readonly, cannot add journal.\n", devname);
-+		if ((array->state & (1<<MD_SB_HAS_JOURNAL)) &&
-+		    !(array->state & (1<<MD_SB_JOURNAL_REMOVABLE))) {
-+			pr_err("%s has a working journal. Hot spare journal device is not supported.\n",
-+			       devname);
- 			return -1;
++/*
++ * the journal _feature_ is removable when:
++ * the array has journal support &&
++ *    (journal is missing || journal is faulty)
++ */
++static bool journal_removable(struct mddev *mddev)
++{
++	struct md_rdev *rdev;
++
++	if (!test_bit(MD_HAS_JOURNAL, &mddev->flags))
++		return false;
++
++	rdev_for_each_rcu(rdev, mddev)
++		if (test_bit(Journal, &rdev->flags) &&
++		    !test_bit(Faulty, &rdev->flags))
++		    return false;
++	return true;
++}
++
+ static int get_version(void __user *arg)
+ {
+ 	mdu_version_t ver;
+@@ -6041,6 +6060,10 @@ static int get_array_info(struct mddev *mddev, void __user *arg)
+ 		info.state |= (1<<MD_SB_BITMAP_PRESENT);
+ 	if (mddev_is_clustered(mddev))
+ 		info.state |= (1<<MD_SB_CLUSTERED);
++	if (test_bit(MD_HAS_JOURNAL, &mddev->flags))
++		info.state |= (1<<MD_SB_HAS_JOURNAL);
++	if (journal_removable(mddev))
++		info.state |= (1<<MD_SB_JOURNAL_REMOVABLE);
+ 	info.active_disks  = insync;
+ 	info.working_disks = working;
+ 	info.failed_disks  = failed;
+@@ -6721,6 +6744,10 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
+ 	/* calculate expected state,ignoring low bits */
+ 	if (mddev->bitmap && mddev->bitmap_info.offset)
+ 		state |= (1 << MD_SB_BITMAP_PRESENT);
++	if (test_bit(MD_HAS_JOURNAL, &mddev->flags))
++		state |= (1 << MD_SB_HAS_JOURNAL);
++	if (journal_removable(mddev))
++		state |= (1 << MD_SB_JOURNAL_REMOVABLE);
+ 
+ 	if (mddev->major_version != info->major_version ||
+ 	    mddev->minor_version != info->minor_version ||
+@@ -6730,8 +6757,11 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
+ /*	    mddev->layout        != info->layout        || */
+ 	    mddev->persistent	 != !info->not_persistent ||
+ 	    mddev->chunk_sectors != info->chunk_size >> 9 ||
+-	    /* ignore bottom 8 bits of state, and allow SB_BITMAP_PRESENT to change */
+-	    ((state^info->state) & 0xfffffe00)
++	    /*
++	     * ignore bottom 8 bits of state, and allow SB_BITMAP_PRESENT
++	     * and SB_HAS_JOURNAL to change
++	     */
++	    ((state^info->state) & 0xfffffc00)
+ 		)
+ 		return -EINVAL;
+ 	/* Check there is only one change */
+@@ -6743,6 +6773,8 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
+ 		cnt++;
+ 	if ((state ^ info->state) & (1<<MD_SB_BITMAP_PRESENT))
+ 		cnt++;
++	if ((state ^ info->state) & (1<<MD_SB_HAS_JOURNAL))
++		cnt++;
+ 	if (cnt == 0)
+ 		return 0;
+ 	if (cnt > 1)
+@@ -6831,6 +6863,14 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
+ 			mddev->bitmap_info.offset = 0;
  		}
- 
--		sysfs_free(mdp);
--
--		tst->ss->getinfo_super(tst, &mdi, NULL);
--		if (mdi.journal_device_required == 0) {
--			pr_err("%s does not support journal device.\n", devname);
--			return -1;
--		}
- 		disc.raid_disk = 0;
  	}
++	if ((state ^ info->state) & (1<<MD_SB_HAS_JOURNAL)) {
++		if (!journal_removable(mddev)) {
++			rv = -EINVAL;
++			goto err;
++		}
++		clear_bit(MD_HAS_JOURNAL,  &mddev->flags);
++	}
++
+ 	md_update_sb(mddev, 1);
+ 	return rv;
+ err:
+diff --git a/include/uapi/linux/raid/md_p.h b/include/uapi/linux/raid/md_p.h
+index d9a1ead..b1f2b63 100644
+--- a/include/uapi/linux/raid/md_p.h
++++ b/include/uapi/linux/raid/md_p.h
+@@ -1,15 +1,15 @@
+ /*
+    md_p.h : physical layout of Linux RAID devices
+           Copyright (C) 1996-98 Ingo Molnar, Gadi Oxman
+-	  
++
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2, or (at your option)
+    any later version.
+-   
++
+    You should have received a copy of the GNU General Public License
+    (for example /usr/src/linux/COPYING); if not, write to the Free
+-   Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
++   Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
  
-@@ -1097,12 +1082,6 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
- 				       dv->devname, j, strerror(errno));
- 			return -1;
- 		}
--		if (dv->disposition == 'j') {
--			pr_err("Journal added successfully, making %s read-write\n", devname);
--			if (Manage_ro(devname, fd, -1))
--				pr_err("Failed to make %s read-write\n", devname);
--		}
--
- 	}
- 	if (verbose >= 0)
- 		pr_err("added %s\n", dv->devname);
-diff --git a/md_p.h b/md_p.h
-index dc9fec1..7081bd9 100644
---- a/md_p.h
-+++ b/md_p.h
-@@ -121,6 +121,11 @@ typedef struct mdp_device_descriptor_s {
- 				   * in container can be activated */
- #define MD_SB_CLUSTERED		5 /* MD is clustered  */
+ #ifndef _MD_P_H
+@@ -119,6 +119,11 @@ typedef struct mdp_device_descriptor_s {
+ 
+ #define	MD_SB_CLUSTERED		5 /* MD is clustered */
  #define	MD_SB_BITMAP_PRESENT	8 /* bitmap may be present nearby */
 +#define	MD_SB_HAS_JOURNAL	9
 +#define	MD_SB_JOURNAL_REMOVABLE	10 /* journal _feature_ can be removed,
@@ -88,26 +153,8 @@ index dc9fec1..7081bd9 100644
 +				    * missing or Faulty
 +				    */
  
- typedef struct mdp_superblock_s {
- 	/*
-diff --git a/mdadm.8.in b/mdadm.8.in
-index df1d460..087f679 100644
---- a/mdadm.8.in
-+++ b/mdadm.8.in
-@@ -1474,11 +1474,8 @@ the device is found or <slot>:missing in case the device is not found.
- 
- .TP
- .BR \-\-add-journal
--Recreate journal for RAID-4/5/6 array that lost a journal device. In the
--current implementation, this command cannot add a journal to an array
--that had a failed journal. To avoid interrupting on-going write opertions,
--.B \-\-add-journal
--only works for array in Read-Only state.
-+Add journal to an existing array, or recreate journal for RAID-4/5/6 array
-+that lost a journal device.
- 
- .TP
- .BR \-\-failfast
+ /*
+  * Notes:
 -- 
 2.9.3
 
