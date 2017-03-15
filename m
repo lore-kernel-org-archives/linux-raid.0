@@ -1,61 +1,160 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH 1/2] md/r5cache: improve add-journal
-Date: Wed, 15 Mar 2017 11:28:15 -0700
-Message-ID: <20170315182816.3627123-1-songliubraving@fb.com>
+Subject: [PATCH 2/2] md/r5cache: journal remove support
+Date: Wed, 15 Mar 2017 11:28:16 -0700
+Message-ID: <20170315182816.3627123-2-songliubraving@fb.com>
+References: <20170315182816.3627123-1-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170315182816.3627123-1-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-1. suspend the array before adding journal, so that we can add journal
-   when the array is not read-only;
-2. allow recreate journal when existing journal is Faulty. So that we can
-   add-journal before removing failed journal.
+When journal device of an array fails, the array is forced into read-only
+mode. To make the array normal without adding another journal device, we
+need to remove journal _feature_ from the array.
+
+This patch allows remove journal _feature_ from an array, For journal
+remove to work, existing journal should be either missing or faulty.
+
+Two flags are added to GET_ARRAY_INFO for mdadm.
+  1. MD_SB_HAS_JOURNAL: meaning the array have journal feature;
+  2. MD_SB_JOURNAL_REMOVABLE: meaning the journal is faulty or missing
+
+When both flags are set, mdadm can clear MD_SB_HAS_JOURNAL to remove
+journal _feature_.
 
 Signed-off-by: Song Liu <songliubraving@fb.com>
 ---
- drivers/md/md.c    | 5 +++--
- drivers/md/raid5.c | 6 ++----
- 2 files changed, 5 insertions(+), 6 deletions(-)
+ drivers/md/md.c                | 42 ++++++++++++++++++++++++++++++++++++++++--
+ include/uapi/linux/raid/md_p.h | 11 ++++++++---
+ 2 files changed, 48 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 42e68b2..ac3bd15 100644
+index ac3bd15..32ee994 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -6230,9 +6230,10 @@ static int add_new_disk(struct mddev *mddev, mdu_disk_info_t *info)
- 			struct md_rdev *rdev2;
- 			bool has_journal = false;
+@@ -5981,6 +5981,25 @@ static void autorun_devices(int part)
+ }
+ #endif /* !MODULE */
  
--			/* make sure no existing journal disk */
-+			/* make sure no active journal disk */
- 			rdev_for_each(rdev2, mddev) {
--				if (test_bit(Journal, &rdev2->flags)) {
-+				if (test_bit(Journal, &rdev2->flags) &&
-+				    !test_bit(Faulty, &rdev2->flags)) {
- 					has_journal = true;
- 					break;
- 				}
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 447d9dd..ee8648b 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -7758,11 +7758,9 @@ static int raid5_add_disk(struct mddev *mddev, struct md_rdev *rdev)
- 			return -EBUSY;
++/*
++ * the journal _feature_ is removable when:
++ * the array has journal support &&
++ *    (journal is missing || journal is faulty)
++ */
++static bool journal_removable(struct mddev *mddev)
++{
++	struct md_rdev *rdev;
++
++	if (!test_bit(MD_HAS_JOURNAL, &mddev->flags))
++		return false;
++
++	rdev_for_each_rcu(rdev, mddev)
++		if (test_bit(Journal, &rdev->flags) &&
++		    !test_bit(Faulty, &rdev->flags))
++		    return false;
++	return true;
++}
++
+ static int get_version(void __user *arg)
+ {
+ 	mdu_version_t ver;
+@@ -6041,6 +6060,10 @@ static int get_array_info(struct mddev *mddev, void __user *arg)
+ 		info.state |= (1<<MD_SB_BITMAP_PRESENT);
+ 	if (mddev_is_clustered(mddev))
+ 		info.state |= (1<<MD_SB_CLUSTERED);
++	if (test_bit(MD_HAS_JOURNAL, &mddev->flags))
++		info.state |= (1<<MD_SB_HAS_JOURNAL);
++	if (journal_removable(mddev))
++		info.state |= (1<<MD_SB_JOURNAL_REMOVABLE);
+ 	info.active_disks  = insync;
+ 	info.working_disks = working;
+ 	info.failed_disks  = failed;
+@@ -6721,6 +6744,8 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
+ 	/* calculate expected state,ignoring low bits */
+ 	if (mddev->bitmap && mddev->bitmap_info.offset)
+ 		state |= (1 << MD_SB_BITMAP_PRESENT);
++	if (journal_removable(mddev))
++		state |= (1 << MD_SB_JOURNAL_REMOVABLE);
  
- 		rdev->raid_disk = 0;
--		/*
--		 * The array is in readonly mode if journal is missing, so no
--		 * write requests running. We should be safe
--		 */
-+		mddev_suspend(mddev);
- 		log_init(conf, rdev);
-+		mddev_resume(mddev);
+ 	if (mddev->major_version != info->major_version ||
+ 	    mddev->minor_version != info->minor_version ||
+@@ -6730,8 +6755,11 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
+ /*	    mddev->layout        != info->layout        || */
+ 	    mddev->persistent	 != !info->not_persistent ||
+ 	    mddev->chunk_sectors != info->chunk_size >> 9 ||
+-	    /* ignore bottom 8 bits of state, and allow SB_BITMAP_PRESENT to change */
+-	    ((state^info->state) & 0xfffffe00)
++	    /*
++	     * ignore bottom 8 bits of state, and allow SB_BITMAP_PRESENT
++	     * and SB_HAS_JOURNAL to change
++	     */
++	    ((state^info->state) & 0xfffffc00)
+ 		)
+ 		return -EINVAL;
+ 	/* Check there is only one change */
+@@ -6743,6 +6771,8 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
+ 		cnt++;
+ 	if ((state ^ info->state) & (1<<MD_SB_BITMAP_PRESENT))
+ 		cnt++;
++	if ((state ^ info->state) & (1<<MD_SB_HAS_JOURNAL))
++		cnt++;
+ 	if (cnt == 0)
  		return 0;
+ 	if (cnt > 1)
+@@ -6831,6 +6861,14 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
+ 			mddev->bitmap_info.offset = 0;
+ 		}
  	}
- 	if (mddev->recovery_disabled == conf->recovery_disabled)
++	if ((state ^ info->state) & (1<<MD_SB_HAS_JOURNAL)) {
++		if (!journal_removable(mddev)) {
++			rv = -EINVAL;
++			goto err;
++		}
++		clear_bit(MD_HAS_JOURNAL,  &mddev->flags);
++	}
++
+ 	md_update_sb(mddev, 1);
+ 	return rv;
+ err:
+diff --git a/include/uapi/linux/raid/md_p.h b/include/uapi/linux/raid/md_p.h
+index d9a1ead..b1f2b63 100644
+--- a/include/uapi/linux/raid/md_p.h
++++ b/include/uapi/linux/raid/md_p.h
+@@ -1,15 +1,15 @@
+ /*
+    md_p.h : physical layout of Linux RAID devices
+           Copyright (C) 1996-98 Ingo Molnar, Gadi Oxman
+-	  
++
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2, or (at your option)
+    any later version.
+-   
++
+    You should have received a copy of the GNU General Public License
+    (for example /usr/src/linux/COPYING); if not, write to the Free
+-   Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
++   Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+ 
+ #ifndef _MD_P_H
+@@ -119,6 +119,11 @@ typedef struct mdp_device_descriptor_s {
+ 
+ #define	MD_SB_CLUSTERED		5 /* MD is clustered */
+ #define	MD_SB_BITMAP_PRESENT	8 /* bitmap may be present nearby */
++#define	MD_SB_HAS_JOURNAL	9
++#define	MD_SB_JOURNAL_REMOVABLE	10 /* journal _feature_ can be removed,
++				    * which means the journal is either
++				    * missing or Faulty
++				    */
+ 
+ /*
+  * Notes:
 -- 
 2.9.3
 
