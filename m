@@ -1,12 +1,12 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH 2/2] md/r5cache: journal remove support
-Date: Wed, 15 Mar 2017 11:28:16 -0700
-Message-ID: <20170315182816.3627123-2-songliubraving@fb.com>
-References: <20170315182816.3627123-1-songliubraving@fb.com>
+Subject: [PATCH 2/2] mdadm: remove journal with "remove-journal"
+Date: Wed, 15 Mar 2017 11:28:50 -0700
+Message-ID: <20170315182850.3628010-2-songliubraving@fb.com>
+References: <20170315182850.3628010-1-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170315182816.3627123-1-songliubraving@fb.com>
+In-Reply-To: <20170315182850.3628010-1-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com, Song Liu <songliubraving@fb.com>
@@ -16,145 +16,142 @@ When journal device of an array fails, the array is forced into read-only
 mode. To make the array normal without adding another journal device, we
 need to remove journal _feature_ from the array.
 
-This patch allows remove journal _feature_ from an array, For journal
-remove to work, existing journal should be either missing or faulty.
+This patch is the mdadm part of removing journal feature for an array with
+failed or missing journal.
 
-Two flags are added to GET_ARRAY_INFO for mdadm.
+Two flags are added to GET_ARRAY_INFO:
   1. MD_SB_HAS_JOURNAL: meaning the array have journal feature;
   2. MD_SB_JOURNAL_REMOVABLE: meaning the journal is faulty or missing
 
-When both flags are set, mdadm can clear MD_SB_HAS_JOURNAL to remove
-journal _feature_.
+When both flags are set, mdadm will use ioctl SET_ARRAY_INFO to clear
+MD_SB_HAS_JOURNAL, and thus remove journal feature from the array.
 
 Signed-off-by: Song Liu <songliubraving@fb.com>
 ---
- drivers/md/md.c                | 42 ++++++++++++++++++++++++++++++++++++++++--
- include/uapi/linux/raid/md_p.h | 11 ++++++++---
- 2 files changed, 48 insertions(+), 5 deletions(-)
+ Manage.c | 26 ++++++++++++++++++++++++++
+ ReadMe.c |  1 +
+ mdadm.c  |  9 ++++++++-
+ mdadm.h  |  3 +++
+ 4 files changed, 38 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index ac3bd15..32ee994 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5981,6 +5981,25 @@ static void autorun_devices(int part)
+diff --git a/Manage.c b/Manage.c
+index 289b7ce..26c7dca 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -189,6 +189,32 @@ int Manage_run(char *devname, int fd, struct context *c)
+ 	return IncrementalScan(c, nm);
  }
- #endif /* !MODULE */
  
-+/*
-+ * the journal _feature_ is removable when:
-+ * the array has journal support &&
-+ *    (journal is missing || journal is faulty)
-+ */
-+static bool journal_removable(struct mddev *mddev)
++int Manage_remove_journal(char *devname, int fd, int verbose)
 +{
-+	struct md_rdev *rdev;
++	mdu_array_info_t array;
 +
-+	if (!test_bit(MD_HAS_JOURNAL, &mddev->flags))
-+		return false;
++	if (ioctl(fd, GET_ARRAY_INFO, &array) != 0)
++		return 1;
 +
-+	rdev_for_each_rcu(rdev, mddev)
-+		if (test_bit(Journal, &rdev->flags) &&
-+		    !test_bit(Faulty, &rdev->flags))
-+		    return false;
-+	return true;
-+}
-+
- static int get_version(void __user *arg)
- {
- 	mdu_version_t ver;
-@@ -6041,6 +6060,10 @@ static int get_array_info(struct mddev *mddev, void __user *arg)
- 		info.state |= (1<<MD_SB_BITMAP_PRESENT);
- 	if (mddev_is_clustered(mddev))
- 		info.state |= (1<<MD_SB_CLUSTERED);
-+	if (test_bit(MD_HAS_JOURNAL, &mddev->flags))
-+		info.state |= (1<<MD_SB_HAS_JOURNAL);
-+	if (journal_removable(mddev))
-+		info.state |= (1<<MD_SB_JOURNAL_REMOVABLE);
- 	info.active_disks  = insync;
- 	info.working_disks = working;
- 	info.failed_disks  = failed;
-@@ -6721,6 +6744,8 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
- 	/* calculate expected state,ignoring low bits */
- 	if (mddev->bitmap && mddev->bitmap_info.offset)
- 		state |= (1 << MD_SB_BITMAP_PRESENT);
-+	if (journal_removable(mddev))
-+		state |= (1 << MD_SB_JOURNAL_REMOVABLE);
- 
- 	if (mddev->major_version != info->major_version ||
- 	    mddev->minor_version != info->minor_version ||
-@@ -6730,8 +6755,11 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
- /*	    mddev->layout        != info->layout        || */
- 	    mddev->persistent	 != !info->not_persistent ||
- 	    mddev->chunk_sectors != info->chunk_size >> 9 ||
--	    /* ignore bottom 8 bits of state, and allow SB_BITMAP_PRESENT to change */
--	    ((state^info->state) & 0xfffffe00)
-+	    /*
-+	     * ignore bottom 8 bits of state, and allow SB_BITMAP_PRESENT
-+	     * and SB_HAS_JOURNAL to change
-+	     */
-+	    ((state^info->state) & 0xfffffc00)
- 		)
- 		return -EINVAL;
- 	/* Check there is only one change */
-@@ -6743,6 +6771,8 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
- 		cnt++;
- 	if ((state ^ info->state) & (1<<MD_SB_BITMAP_PRESENT))
- 		cnt++;
-+	if ((state ^ info->state) & (1<<MD_SB_HAS_JOURNAL))
-+		cnt++;
- 	if (cnt == 0)
- 		return 0;
- 	if (cnt > 1)
-@@ -6831,6 +6861,14 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
- 			mddev->bitmap_info.offset = 0;
- 		}
- 	}
-+	if ((state ^ info->state) & (1<<MD_SB_HAS_JOURNAL)) {
-+		if (!journal_removable(mddev)) {
-+			rv = -EINVAL;
-+			goto err;
-+		}
-+		clear_bit(MD_HAS_JOURNAL,  &mddev->flags);
++	if (!(array.state & (1<<MD_SB_HAS_JOURNAL))) {
++		pr_err("%s does not have journal. No need to remove.\n",
++		       devname);
++		return 1;
++	} else if (!(array.state & (1<<MD_SB_JOURNAL_REMOVABLE))) {
++		pr_err("Cannot remove active journal. Please fail it and try again.\n");
++		return 1;
 +	}
 +
- 	md_update_sb(mddev, 1);
- 	return rv;
- err:
-diff --git a/include/uapi/linux/raid/md_p.h b/include/uapi/linux/raid/md_p.h
-index d9a1ead..b1f2b63 100644
---- a/include/uapi/linux/raid/md_p.h
-+++ b/include/uapi/linux/raid/md_p.h
-@@ -1,15 +1,15 @@
- /*
-    md_p.h : physical layout of Linux RAID devices
-           Copyright (C) 1996-98 Ingo Molnar, Gadi Oxman
--	  
++	array.state &= ~(1<<MD_SB_HAS_JOURNAL);
 +
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2, or (at your option)
-    any later version.
--   
++	if (ioctl(fd, SET_ARRAY_INFO, &array)) {
++		pr_err("Failed to add remove journal feature.\n");
++		return 1;
++	}
 +
-    You should have received a copy of the GNU General Public License
-    (for example /usr/src/linux/COPYING); if not, write to the Free
--   Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
-+   Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
++	return 0;
++}
++
+ int Manage_stop(char *devname, int fd, int verbose, int will_retry)
+ {
+ 	/* Stop the array.  Array must already be configured
+diff --git a/ReadMe.c b/ReadMe.c
+index 50d3807..acc4180 100644
+--- a/ReadMe.c
++++ b/ReadMe.c
+@@ -164,6 +164,7 @@ struct option long_options[] = {
+     {"add-spare", 0, 0, AddSpare},
+     {"add-journal", 0, 0, AddJournal},
+     {"remove",    0, 0, Remove},
++    {"remove-journal",    0, 0, RemoveJournal},
+     {"fail",      0, 0, Fail},
+     {"set-faulty",0, 0, Fail},
+     {"replace",   0, 0, Replace},
+diff --git a/mdadm.c b/mdadm.c
+index d6ad8dc..3ad413f 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -194,6 +194,7 @@ int main(int argc, char *argv[])
+ 		case AddJournal:
+ 		case 'r':
+ 		case Remove:
++		case RemoveJournal:
+ 		case Replace:
+ 		case With:
+ 		case 'f':
+@@ -994,6 +995,9 @@ int main(int argc, char *argv[])
+ 			}
+ 			c.runstop = -1;
+ 			continue;
++		case O(MANAGE,RemoveJournal):
++			c.remove_journal = 1;
++			continue;
+ 		case O(MANAGE,'t'):
+ 			c.test = 1;
+ 			continue;
+@@ -1387,6 +1391,9 @@ int main(int argc, char *argv[])
+ 			rv = Manage_run(devlist->devname, mdfd, &c);
+ 		if (!rv && c.runstop < 0)
+ 			rv = Manage_stop(devlist->devname, mdfd, c.verbose, 0);
++		if (!rv && c.remove_journal > 0)
++			rv = Manage_remove_journal(devlist->devname, mdfd,
++						   c.verbose);
+ 		break;
+ 	case ASSEMBLE:
+ 		if (devs_found == 1 && ident.uuid_set == 0 &&
+@@ -1906,7 +1913,7 @@ static int misc_list(struct mddev_dev *devlist,
+ 				mdfd = open_dev(dv->devname);
+ 				if (mdfd >= 0) break;
+ 			case 1:
+-				mdfd = open_mddev(dv->devname, 1);  
++				mdfd = open_mddev(dv->devname, 1);
+ 		}
+ 		if (mdfd>=0) {
+ 			switch(dv->disposition) {
+diff --git a/mdadm.h b/mdadm.h
+index 71b8afb..e5acc49 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -390,6 +390,7 @@ enum special_options {
+ 	AddSpare,
+ 	AddJournal,
+ 	Remove,
++	RemoveJournal,
+ 	Fail,
+ 	Replace,
+ 	With,
+@@ -512,6 +513,7 @@ struct context {
+ 	char	*action;
+ 	int	nodes;
+ 	char	*homecluster;
++	int	remove_journal;
+ };
  
- #ifndef _MD_P_H
-@@ -119,6 +119,11 @@ typedef struct mdp_device_descriptor_s {
- 
- #define	MD_SB_CLUSTERED		5 /* MD is clustered */
- #define	MD_SB_BITMAP_PRESENT	8 /* bitmap may be present nearby */
-+#define	MD_SB_HAS_JOURNAL	9
-+#define	MD_SB_JOURNAL_REMOVABLE	10 /* journal _feature_ can be removed,
-+				    * which means the journal is either
-+				    * missing or Faulty
-+				    */
- 
- /*
-  * Notes:
+ struct shape {
+@@ -1293,6 +1295,7 @@ extern int Manage_ro(char *devname, int fd, int readonly);
+ extern int Manage_run(char *devname, int fd, struct context *c);
+ extern int Manage_stop(char *devname, int fd, int quiet,
+ 		       int will_retry);
++extern int Manage_remove_journal(char *devname, int fd, int verbose);
+ extern int Manage_subdevs(char *devname, int fd,
+ 			  struct mddev_dev *devlist, int verbose, int test,
+ 			  char *update, int force);
 -- 
 2.9.3
 
