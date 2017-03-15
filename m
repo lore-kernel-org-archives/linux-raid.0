@@ -1,157 +1,113 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH 2/2] mdadm: remove journal with "remove-journal"
-Date: Wed, 15 Mar 2017 11:28:50 -0700
-Message-ID: <20170315182850.3628010-2-songliubraving@fb.com>
-References: <20170315182850.3628010-1-songliubraving@fb.com>
+Subject: [PATCH 1/2] mdadm/r5cache: allow adding journal to array without journal
+Date: Wed, 15 Mar 2017 11:28:49 -0700
+Message-ID: <20170315182850.3628010-1-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170315182850.3628010-1-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-When journal device of an array fails, the array is forced into read-only
-mode. To make the array normal without adding another journal device, we
-need to remove journal _feature_ from the array.
+We use to apply constraints to --add-journal:
+  1. We only support recreate journal for arrays with missing journal;
+  2. The array need to be readonly when the journal is added.
 
-This patch is the mdadm part of removing journal feature for an array with
-failed or missing journal.
-
-Two flags are added to GET_ARRAY_INFO:
-  1. MD_SB_HAS_JOURNAL: meaning the array have journal feature;
-  2. MD_SB_JOURNAL_REMOVABLE: meaning the journal is faulty or missing
-
-When both flags are set, mdadm will use ioctl SET_ARRAY_INFO to clear
-MD_SB_HAS_JOURNAL, and thus remove journal feature from the array.
+As the kernel code getting more mature, these constraints are no longer
+necessary. This patch removes this constraints from mdadm.
 
 Signed-off-by: Song Liu <songliubraving@fb.com>
 ---
- Manage.c | 26 ++++++++++++++++++++++++++
- ReadMe.c |  1 +
- mdadm.c  |  9 ++++++++-
- mdadm.h  |  3 +++
- 4 files changed, 38 insertions(+), 1 deletion(-)
+ Manage.c   | 29 ++++-------------------------
+ md_p.h     |  5 +++++
+ mdadm.8.in |  7 ++-----
+ 3 files changed, 11 insertions(+), 30 deletions(-)
 
 diff --git a/Manage.c b/Manage.c
-index 289b7ce..26c7dca 100644
+index 5c3d2b9..289b7ce 100644
 --- a/Manage.c
 +++ b/Manage.c
-@@ -189,6 +189,32 @@ int Manage_run(char *devname, int fd, struct context *c)
- 	return IncrementalScan(c, nm);
- }
+@@ -946,28 +946,13 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
  
-+int Manage_remove_journal(char *devname, int fd, int verbose)
-+{
-+	mdu_array_info_t array;
-+
-+	if (ioctl(fd, GET_ARRAY_INFO, &array) != 0)
-+		return 1;
-+
-+	if (!(array.state & (1<<MD_SB_HAS_JOURNAL))) {
-+		pr_err("%s does not have journal. No need to remove.\n",
-+		       devname);
-+		return 1;
-+	} else if (!(array.state & (1<<MD_SB_JOURNAL_REMOVABLE))) {
-+		pr_err("Cannot remove active journal. Please fail it and try again.\n");
-+		return 1;
-+	}
-+
-+	array.state &= ~(1<<MD_SB_HAS_JOURNAL);
-+
-+	if (ioctl(fd, SET_ARRAY_INFO, &array)) {
-+		pr_err("Failed to add remove journal feature.\n");
-+		return 1;
-+	}
-+
-+	return 0;
-+}
-+
- int Manage_stop(char *devname, int fd, int verbose, int will_retry)
- {
- 	/* Stop the array.  Array must already be configured
-diff --git a/ReadMe.c b/ReadMe.c
-index 50d3807..acc4180 100644
---- a/ReadMe.c
-+++ b/ReadMe.c
-@@ -164,6 +164,7 @@ struct option long_options[] = {
-     {"add-spare", 0, 0, AddSpare},
-     {"add-journal", 0, 0, AddJournal},
-     {"remove",    0, 0, Remove},
-+    {"remove-journal",    0, 0, RemoveJournal},
-     {"fail",      0, 0, Fail},
-     {"set-faulty",0, 0, Fail},
-     {"replace",   0, 0, Replace},
-diff --git a/mdadm.c b/mdadm.c
-index d6ad8dc..3ad413f 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -194,6 +194,7 @@ int main(int argc, char *argv[])
- 		case AddJournal:
- 		case 'r':
- 		case Remove:
-+		case RemoveJournal:
- 		case Replace:
- 		case With:
- 		case 'f':
-@@ -994,6 +995,9 @@ int main(int argc, char *argv[])
- 			}
- 			c.runstop = -1;
- 			continue;
-+		case O(MANAGE,RemoveJournal):
-+			c.remove_journal = 1;
-+			continue;
- 		case O(MANAGE,'t'):
- 			c.test = 1;
- 			continue;
-@@ -1387,6 +1391,9 @@ int main(int argc, char *argv[])
- 			rv = Manage_run(devlist->devname, mdfd, &c);
- 		if (!rv && c.runstop < 0)
- 			rv = Manage_stop(devlist->devname, mdfd, c.verbose, 0);
-+		if (!rv && c.remove_journal > 0)
-+			rv = Manage_remove_journal(devlist->devname, mdfd,
-+						   c.verbose);
- 		break;
- 	case ASSEMBLE:
- 		if (devs_found == 1 && ident.uuid_set == 0 &&
-@@ -1906,7 +1913,7 @@ static int misc_list(struct mddev_dev *devlist,
- 				mdfd = open_dev(dv->devname);
- 				if (mdfd >= 0) break;
- 			case 1:
--				mdfd = open_mddev(dv->devname, 1);  
-+				mdfd = open_mddev(dv->devname, 1);
+ 	/* only add journal to array that supports journaling */
+ 	if (dv->disposition == 'j') {
+-		struct mdinfo mdi;
+-		struct mdinfo *mdp;
+-
+-		mdp = sysfs_read(fd, NULL, GET_ARRAY_STATE);
+-		if (!mdp) {
+-			pr_err("%s unable to read array state.\n", devname);
+-			return -1;
+-		}
+-
+-		if (strncmp(mdp->sysfs_array_state, "readonly", 8) != 0) {
+-			sysfs_free(mdp);
+-			pr_err("%s is not readonly, cannot add journal.\n", devname);
++		if ((array->state & (1<<MD_SB_HAS_JOURNAL)) &&
++		    !(array->state & (1<<MD_SB_JOURNAL_REMOVABLE))) {
++			pr_err("%s has a working journal. Hot spare journal device is not supported.\n",
++			       devname);
+ 			return -1;
  		}
- 		if (mdfd>=0) {
- 			switch(dv->disposition) {
-diff --git a/mdadm.h b/mdadm.h
-index 71b8afb..e5acc49 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -390,6 +390,7 @@ enum special_options {
- 	AddSpare,
- 	AddJournal,
- 	Remove,
-+	RemoveJournal,
- 	Fail,
- 	Replace,
- 	With,
-@@ -512,6 +513,7 @@ struct context {
- 	char	*action;
- 	int	nodes;
- 	char	*homecluster;
-+	int	remove_journal;
- };
  
- struct shape {
-@@ -1293,6 +1295,7 @@ extern int Manage_ro(char *devname, int fd, int readonly);
- extern int Manage_run(char *devname, int fd, struct context *c);
- extern int Manage_stop(char *devname, int fd, int quiet,
- 		       int will_retry);
-+extern int Manage_remove_journal(char *devname, int fd, int verbose);
- extern int Manage_subdevs(char *devname, int fd,
- 			  struct mddev_dev *devlist, int verbose, int test,
- 			  char *update, int force);
+-		sysfs_free(mdp);
+-
+-		tst->ss->getinfo_super(tst, &mdi, NULL);
+-		if (mdi.journal_device_required == 0) {
+-			pr_err("%s does not support journal device.\n", devname);
+-			return -1;
+-		}
+ 		disc.raid_disk = 0;
+ 	}
+ 
+@@ -1097,12 +1082,6 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+ 				       dv->devname, j, strerror(errno));
+ 			return -1;
+ 		}
+-		if (dv->disposition == 'j') {
+-			pr_err("Journal added successfully, making %s read-write\n", devname);
+-			if (Manage_ro(devname, fd, -1))
+-				pr_err("Failed to make %s read-write\n", devname);
+-		}
+-
+ 	}
+ 	if (verbose >= 0)
+ 		pr_err("added %s\n", dv->devname);
+diff --git a/md_p.h b/md_p.h
+index dc9fec1..7081bd9 100644
+--- a/md_p.h
++++ b/md_p.h
+@@ -121,6 +121,11 @@ typedef struct mdp_device_descriptor_s {
+ 				   * in container can be activated */
+ #define MD_SB_CLUSTERED		5 /* MD is clustered  */
+ #define	MD_SB_BITMAP_PRESENT	8 /* bitmap may be present nearby */
++#define	MD_SB_HAS_JOURNAL	9
++#define	MD_SB_JOURNAL_REMOVABLE	10 /* journal _feature_ can be removed,
++				    * which means the journal is either
++				    * missing or Faulty
++				    */
+ 
+ typedef struct mdp_superblock_s {
+ 	/*
+diff --git a/mdadm.8.in b/mdadm.8.in
+index df1d460..087f679 100644
+--- a/mdadm.8.in
++++ b/mdadm.8.in
+@@ -1474,11 +1474,8 @@ the device is found or <slot>:missing in case the device is not found.
+ 
+ .TP
+ .BR \-\-add-journal
+-Recreate journal for RAID-4/5/6 array that lost a journal device. In the
+-current implementation, this command cannot add a journal to an array
+-that had a failed journal. To avoid interrupting on-going write opertions,
+-.B \-\-add-journal
+-only works for array in Read-Only state.
++Add journal to an existing array, or recreate journal for RAID-4/5/6 array
++that lost a journal device.
+ 
+ .TP
+ .BR \-\-failfast
 -- 
 2.9.3
 
