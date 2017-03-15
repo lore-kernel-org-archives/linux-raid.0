@@ -1,104 +1,71 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: Re: [PATCH] md/r5cache: flush data in memory during journal device
- failure
-Date: Tue, 14 Mar 2017 22:40:14 +0000
-Message-ID: <5FFE3F62-D87A-46C5-B9D7-7A7501A32B90@fb.com>
-References: <20170313233626.2109293-1-songliubraving@fb.com>
- <20170314175048.rjyaufwgaclsmhdz@kernel.org>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: on assembly and recovery of a hardware RAID
+Date: Wed, 15 Mar 2017 13:56:13 +1100
+Message-ID: <87d1djdz8y.fsf@notabene.neil.brown.name>
+References: <CAAZLhTdaVM4fagN5=bqWpPx-DjyU6UZ69bJFf51FWMX7oeyJNw@mail.gmail.com> <87tw6weubu.fsf@notabene.neil.brown.name> <CAAZLhTcEhn2GezDSDJHOLv2VNSynzT-he0FRrVNbz1xtakLsMQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170314175048.rjyaufwgaclsmhdz@kernel.org>
-Content-Language: en-US
-Content-ID: <73656782F9F6AA469EAE597C08000F57@namprd15.prod.outlook.com>
+In-Reply-To: <CAAZLhTcEhn2GezDSDJHOLv2VNSynzT-he0FRrVNbz1xtakLsMQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Shaohua Li <shli@fb.com>, NeilBrown <neilb@suse.com>, Kernel Team <Kernel-team@fb.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "hch@infradead.org" <hch@infradead.org>
+To: Alfred Matthews <asm13243546@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+--=-=-=
+Content-Type: text/plain
 
-> On Mar 14, 2017, at 10:50 AM, Shaohua Li <shli@kernel.org> wrote:
->=20
-> On Mon, Mar 13, 2017 at 04:36:26PM -0700, Song Liu wrote:
->> For the raid456 with writeback cache, when journal device failed during
->> normal operation, it is still possible to persist all data, as all
->> pending data is still in stripe cache. However, the stripe will be
->> marked as fail with s.log_failed. Thus, the write out from stripe cache
->> cannot make progress.
->>=20
->> To unblock the write out in journal failures, this patch allows stripes
->> with data injournal to make progress.
->=20
-> what about the parity part? if log failed, we should skip journaling the =
-parity.
->=20
-> Thanks,
-> Shaohua
->=20
+On Tue, Mar 14 2017, Alfred Matthews wrote:
 
-For stripes with data in journal (not flushed yet), the state machine=20
-can flush them out. The behavior is just like when there are no journal=20
-at all.=20
+>> Does
+>>   dmraid -b /dev/sda /dev/sdb /dev/sdc
+>> tell you anything useful?
+>>
+>
+> # dmraid -b /dev/sdb /dev/sdc
+> /dev/sdc:   5860533168 total, "WD-WCAWZ2927144"
+> /dev/sdb:   5860533168 total, "WD-WCAWZ2939730"
 
-On the other hand, other writes will be gated by the log_failed flags,=20
-so the array appears to be read-only to upper layers.=20
 
-Thanks,
-Song
+No, not useful.
 
->> The array should be read-only in journal failures. Therefore, pending
->> writes (in dev->towrite) are excluded in this write (in delay_towrite).
->>=20
->> Signed-off-by: Song Liu <songliubraving@fb.com>
->> ---
->> drivers/md/raid5.c | 10 +++++++++-
->> 1 file changed, 9 insertions(+), 1 deletion(-)
->>=20
->> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> index 3233975..447d9dd 100644
->> --- a/drivers/md/raid5.c
->> +++ b/drivers/md/raid5.c
->> @@ -3069,6 +3069,10 @@ sector_t raid5_compute_blocknr(struct stripe_head=
- *sh, int i, int previous)
->>  *      When LOG_CRITICAL, stripes with injournal =3D=3D 0 will be sent =
-to
->>  *      no_space_stripes list.
->>  *
->> + *   3. during journal failure
->> + *      In journal failure, we try to flush all cached data to raid dis=
-ks
->> + *      based on data in stripe cache. The array is read-only to upper
->> + *      layers, so we would skip all pending writes.
->>  */
->> static inline bool delay_towrite(struct r5conf *conf,
->> 				 struct r5dev *dev,
->> @@ -3082,6 +3086,9 @@ static inline bool delay_towrite(struct r5conf *co=
-nf,
->> 	if (test_bit(R5C_LOG_CRITICAL, &conf->cache_state) &&
->> 	    s->injournal > 0)
->> 		return true;
->> +	/* case 3 above */
->> +	if (s->log_failed && s->injournal)
->> +		return true;
->> 	return false;
->> }
->>=20
->> @@ -4721,7 +4728,8 @@ static void handle_stripe(struct stripe_head *sh)
->> 	/* check if the array has lost more than max_degraded devices and,
->> 	 * if so, some requests might need to be failed.
->> 	 */
->> -	if (s.failed > conf->max_degraded || s.log_failed) {
->> +	if (s.failed > conf->max_degraded ||
->> +	    (s.log_failed && s.injournal =3D=3D 0)) {
->> 		sh->check_state =3D 0;
->> 		sh->reconstruct_state =3D 0;
->> 		break_stripe_batch_list(sh, 0);
->> --=20
->> 2.9.3
->>=20
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Your other output also doesn't show anything interesting.
+I had another look at the lsdrv output you showed before and I'm
+wondering if there really is anything "hardware RAID" here at all.
 
+Both drives (sdb and sdc) are partitioned into a 200MB EFI partition, a
+2.75TB hfsplus (Apple file system) / unknown partition, and a 128M
+hfsplus boot partition.
+
+Maybe the two 2.75TB paritions were raided together.
+sdc looks like the "first" device if this were the case.
+Try:
+
+  mdadm --build /dev/md0 --level=0 -n2 --chunk=512M /dev/sdc2 /dev/sdb2
+
+Then try fsck.hfs of hpfsck ... in the "hfsplus" package on Debian.
+ hpfsck /dev/md0
+maybe.
+
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljIrU0ACgkQOeye3VZi
+gblc9Q//XXVHEaR7xpfufi4p2eWNZUXm2HPy0i4hGWuwr5T5+3Nru3HEdVzdqhmO
+iwOlv+I4kOtpymFQ526OgjdgXRPggOcrJsx7Qd35ZECfqWVpGScsz9fm6+aTAaOC
+Ejr7FK0XvLzs7wm8YS4Tef+N4Cae/FtDy0QmHGuN7o1dBHUxDfQTEWifst+tykps
+oafp2ErMfPp00joRP7/5jTiKrghdEceQCGhDaP97FPTRRgJmfmwyLQvl4ffBswKk
+W/aDGZ4j8OLk2SGtI9JA1R6v7PLH+4WBJmGZkiE9WfofDEo9twb1/tPUw4Z6OS4R
+Tjg4Z9v8WVHumqc9EkF8YqS5BMSkmuQvPQWxRGgWp+I+zWppEPO6ks8UnmVezXsv
+CtM18bqDl+3ZD71/HSbM1ms2AS60VQiRBctblEiWKx5rHD2k0tGV88d42cl7RoBf
+JY28A1HPV39phXbHmISSiIrwGBfXZdYe/fZBcSof4MK/47BZSRiXm7H8Fb/x6Bp4
+K0MrVVpVo+0ohYMPzpuou1uIezRWj/ZUMCaDegs34CQM31W2okvn+zkXCIFP/WEt
+UQeHiAJw+vb+vDTM3qOvIbBtc6ng0q6d+CaXDTgrU0jN1WumZ7UfG86In2PznDdr
+G5mad9DzMAuKFPGii1LRj/wKmRZXBDuizbz/KMeMmvDesp5Fnl0=
+=5HN6
+-----END PGP SIGNATURE-----
+--=-=-=--
