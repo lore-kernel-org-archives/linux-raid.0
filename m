@@ -1,169 +1,140 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH 2/2] md/r5cache: journal remove support
-Date: Wed, 15 Mar 2017 15:52:37 -0700
-Message-ID: <20170315225237.ahnmqsoest57tj3m@kernel.org>
-References: <20170315182816.3627123-1-songliubraving@fb.com>
- <20170315182816.3627123-2-songliubraving@fb.com>
+Subject: Re: [md PATCH 02/15] md/raid5: simplfy delaying of writes while
+ metadata is updated.
+Date: Wed, 15 Mar 2017 16:03:56 -0700
+Message-ID: <20170315230356.3zizpl44atdikrt7@kernel.org>
+References: <148954692173.18641.1294690639716682540.stgit@noble>
+ <148954711228.18641.2048575896322496918.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170315182816.3627123-2-songliubraving@fb.com>
+In-Reply-To: <148954711228.18641.2048575896322496918.stgit@noble>
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>
-Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org, hch@lst.de
 List-Id: linux-raid.ids
 
-On Wed, Mar 15, 2017 at 11:28:16AM -0700, Song Liu wrote:
-> When journal device of an array fails, the array is forced into read-only
-> mode. To make the array normal without adding another journal device, we
-> need to remove journal _feature_ from the array.
+On Wed, Mar 15, 2017 at 02:05:12PM +1100, Neil Brown wrote:
+> If a device fails during a write, we must ensure the failure is
+> recorded in the metadata before the completion of the write is
+> acknowleged.
 > 
-> This patch allows remove journal _feature_ from an array, For journal
-> remove to work, existing journal should be either missing or faulty.
+> Commit c3cce6cda162 ("md/raid5: ensure device failure recorded before
+> write request returns.")  added code for this, but it was
+> unnecessarily complicated.  We already had similar functionality for
+> handling updates to the bad-block-list, thanks to Commit de393cdea66c
+> ("md: make it easier to wait for bad blocks to be acknowledged.")
 > 
-> Two flags are added to GET_ARRAY_INFO for mdadm.
->   1. MD_SB_HAS_JOURNAL: meaning the array have journal feature;
->   2. MD_SB_JOURNAL_REMOVABLE: meaning the journal is faulty or missing
+> So revert most of the former commit, and instead avoid collecting
+> completed writes if MD_CHANGE_PENDING is set.  raid5d() will then flush
+> the metadata and retry the stripe_head.
+> As this change can leave a stripe_head ready for handling immediately
+> after handle_active_stripes() returns, we change raid5_do_work() to
+> pause when MD_CHANGE_PENDING is set, so that it doesn't spin.
 > 
-> When both flags are set, mdadm can clear MD_SB_HAS_JOURNAL to remove
-> journal _feature_.
-
-please use the new 'consistency_policy' interface to remove journal support
-
-> Signed-off-by: Song Liu <songliubraving@fb.com>
+> We check MD_CHANGE_PENDING *after* analyse_stripe() as it could be set
+> asynchronously.  After analyse_stripe(), we have collected stable data
+> about the state of devices, which will be used to make decisions.
+> 
+> Signed-off-by: NeilBrown <neilb@suse.com>
 > ---
->  drivers/md/md.c                | 42 ++++++++++++++++++++++++++++++++++++++++--
->  include/uapi/linux/raid/md_p.h | 11 ++++++++---
->  2 files changed, 48 insertions(+), 5 deletions(-)
+>  drivers/md/raid5.c |   31 ++++++++-----------------------
+>  drivers/md/raid5.h |    3 ---
+>  2 files changed, 8 insertions(+), 26 deletions(-)
 > 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index ac3bd15..32ee994 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -5981,6 +5981,25 @@ static void autorun_devices(int part)
->  }
->  #endif /* !MODULE */
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index cc2d039b4aae..f990f74901d2 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -4690,7 +4690,8 @@ static void handle_stripe(struct stripe_head *sh)
+>  	if (test_bit(STRIPE_LOG_TRAPPED, &sh->state))
+>  		goto finish;
 >  
-> +/*
-> + * the journal _feature_ is removable when:
-> + * the array has journal support &&
-> + *    (journal is missing || journal is faulty)
-> + */
-> +static bool journal_removable(struct mddev *mddev)
-> +{
-> +	struct md_rdev *rdev;
-> +
-> +	if (!test_bit(MD_HAS_JOURNAL, &mddev->flags))
-> +		return false;
-> +
-> +	rdev_for_each_rcu(rdev, mddev)
-> +		if (test_bit(Journal, &rdev->flags) &&
-> +		    !test_bit(Faulty, &rdev->flags))
-> +		    return false;
-> +	return true;
-> +}
-> +
->  static int get_version(void __user *arg)
->  {
->  	mdu_version_t ver;
-> @@ -6041,6 +6060,10 @@ static int get_array_info(struct mddev *mddev, void __user *arg)
->  		info.state |= (1<<MD_SB_BITMAP_PRESENT);
->  	if (mddev_is_clustered(mddev))
->  		info.state |= (1<<MD_SB_CLUSTERED);
-> +	if (test_bit(MD_HAS_JOURNAL, &mddev->flags))
-> +		info.state |= (1<<MD_SB_HAS_JOURNAL);
-> +	if (journal_removable(mddev))
-> +		info.state |= (1<<MD_SB_JOURNAL_REMOVABLE);
->  	info.active_disks  = insync;
->  	info.working_disks = working;
->  	info.failed_disks  = failed;
-> @@ -6721,6 +6744,8 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
->  	/* calculate expected state,ignoring low bits */
->  	if (mddev->bitmap && mddev->bitmap_info.offset)
->  		state |= (1 << MD_SB_BITMAP_PRESENT);
-> +	if (journal_removable(mddev))
-> +		state |= (1 << MD_SB_JOURNAL_REMOVABLE);
->  
->  	if (mddev->major_version != info->major_version ||
->  	    mddev->minor_version != info->minor_version ||
-> @@ -6730,8 +6755,11 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
->  /*	    mddev->layout        != info->layout        || */
->  	    mddev->persistent	 != !info->not_persistent ||
->  	    mddev->chunk_sectors != info->chunk_size >> 9 ||
-> -	    /* ignore bottom 8 bits of state, and allow SB_BITMAP_PRESENT to change */
-> -	    ((state^info->state) & 0xfffffe00)
-> +	    /*
-> +	     * ignore bottom 8 bits of state, and allow SB_BITMAP_PRESENT
-> +	     * and SB_HAS_JOURNAL to change
-> +	     */
-> +	    ((state^info->state) & 0xfffffc00)
->  		)
->  		return -EINVAL;
->  	/* Check there is only one change */
-> @@ -6743,6 +6771,8 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
->  		cnt++;
->  	if ((state ^ info->state) & (1<<MD_SB_BITMAP_PRESENT))
->  		cnt++;
-> +	if ((state ^ info->state) & (1<<MD_SB_HAS_JOURNAL))
-> +		cnt++;
->  	if (cnt == 0)
->  		return 0;
->  	if (cnt > 1)
-> @@ -6831,6 +6861,14 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
->  			mddev->bitmap_info.offset = 0;
->  		}
+> -	if (s.handle_bad_blocks) {
+> +	if (s.handle_bad_blocks ||
+> +	    test_bit(MD_SB_CHANGE_PENDING, &conf->mddev->sb_flags)) {
+>  		set_bit(STRIPE_HANDLE, &sh->state);
+>  		goto finish;
 >  	}
-> +	if ((state ^ info->state) & (1<<MD_SB_HAS_JOURNAL)) {
-> +		if (!journal_removable(mddev)) {
-> +			rv = -EINVAL;
-> +			goto err;
-> +		}
-> +		clear_bit(MD_HAS_JOURNAL,  &mddev->flags);
-> +	}
-> +
->  	md_update_sb(mddev, 1);
->  	return rv;
->  err:
-> diff --git a/include/uapi/linux/raid/md_p.h b/include/uapi/linux/raid/md_p.h
-> index d9a1ead..b1f2b63 100644
-> --- a/include/uapi/linux/raid/md_p.h
-> +++ b/include/uapi/linux/raid/md_p.h
-> @@ -1,15 +1,15 @@
->  /*
->     md_p.h : physical layout of Linux RAID devices
->            Copyright (C) 1996-98 Ingo Molnar, Gadi Oxman
-> -	  
-> +
->     This program is free software; you can redistribute it and/or modify
->     it under the terms of the GNU General Public License as published by
->     the Free Software Foundation; either version 2, or (at your option)
->     any later version.
-> -   
-> +
->     You should have received a copy of the GNU General Public License
->     (for example /usr/src/linux/COPYING); if not, write to the Free
-> -   Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
-> +   Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
->  */
+> @@ -5020,15 +5021,8 @@ static void handle_stripe(struct stripe_head *sh)
+>  			md_wakeup_thread(conf->mddev->thread);
+>  	}
 >  
->  #ifndef _MD_P_H
-> @@ -119,6 +119,11 @@ typedef struct mdp_device_descriptor_s {
+> -	if (!bio_list_empty(&s.return_bi)) {
+> -		if (test_bit(MD_SB_CHANGE_PENDING, &conf->mddev->sb_flags)) {
+> -			spin_lock_irq(&conf->device_lock);
+> -			bio_list_merge(&conf->return_bi, &s.return_bi);
+> -			spin_unlock_irq(&conf->device_lock);
+> -			md_wakeup_thread(conf->mddev->thread);
+> -		} else
+> -			return_io(&s.return_bi);
+> -	}
+> +	if (!bio_list_empty(&s.return_bi))
+> +		return_io(&s.return_bi);
 >  
->  #define	MD_SB_CLUSTERED		5 /* MD is clustered */
->  #define	MD_SB_BITMAP_PRESENT	8 /* bitmap may be present nearby */
-> +#define	MD_SB_HAS_JOURNAL	9
-> +#define	MD_SB_JOURNAL_REMOVABLE	10 /* journal _feature_ can be removed,
-> +				    * which means the journal is either
-> +				    * missing or Faulty
-> +				    */
+>  	clear_bit_unlock(STRIPE_ACTIVE, &sh->state);
+>  }
+> @@ -6225,6 +6219,7 @@ static void raid5_do_work(struct work_struct *work)
+>  	struct r5worker *worker = container_of(work, struct r5worker, work);
+>  	struct r5worker_group *group = worker->group;
+>  	struct r5conf *conf = group->conf;
+> +	struct mddev *mddev = conf->mddev;
+>  	int group_id = group - conf->worker_groups;
+>  	int handled;
+>  	struct blk_plug plug;
+> @@ -6245,6 +6240,9 @@ static void raid5_do_work(struct work_struct *work)
+>  		if (!batch_size && !released)
+>  			break;
+>  		handled += batch_size;
+> +		wait_event_lock_irq(mddev->sb_wait,
+> +				    !test_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags),
+MD_SB_CHANGE_PENDING?
+
+> +				    conf->device_lock);
+>  	}
+>  	pr_debug("%d stripes handled\n", handled);
 >  
->  /*
->   * Notes:
-> -- 
-> 2.9.3
+> @@ -6272,18 +6270,6 @@ static void raid5d(struct md_thread *thread)
+>  
+>  	md_check_recovery(mddev);
+>  
+> -	if (!bio_list_empty(&conf->return_bi) &&
+> -	    !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags)) {
+> -		struct bio_list tmp = BIO_EMPTY_LIST;
+> -		spin_lock_irq(&conf->device_lock);
+> -		if (!test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags)) {
+> -			bio_list_merge(&tmp, &conf->return_bi);
+> -			bio_list_init(&conf->return_bi);
+> -		}
+> -		spin_unlock_irq(&conf->device_lock);
+> -		return_io(&tmp);
+> -	}
+> -
+>  	blk_start_plug(&plug);
+>  	handled = 0;
+>  	spin_lock_irq(&conf->device_lock);
+> @@ -6935,7 +6921,6 @@ static struct r5conf *setup_conf(struct mddev *mddev)
+>  	INIT_LIST_HEAD(&conf->hold_list);
+>  	INIT_LIST_HEAD(&conf->delayed_list);
+>  	INIT_LIST_HEAD(&conf->bitmap_list);
+> -	bio_list_init(&conf->return_bi);
+>  	init_llist_head(&conf->released_stripes);
+>  	atomic_set(&conf->active_stripes, 0);
+>  	atomic_set(&conf->preread_active_stripes, 0);
+> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+> index ba5b7a3790af..13800dc9dd88 100644
+> --- a/drivers/md/raid5.h
+> +++ b/drivers/md/raid5.h
+> @@ -638,9 +638,6 @@ struct r5conf {
+>  	int			skip_copy; /* Don't copy data from bio to stripe cache */
+>  	struct list_head	*last_hold; /* detect hold_list promotions */
+>  
+> -	/* bios to have bi_end_io called after metadata is synced */
+> -	struct bio_list		return_bi;
+> -
+>  	atomic_t		reshape_stripes; /* stripes with pending writes for reshape */
+>  	/* unfortunately we need two cache names as we temporarily have
+>  	 * two caches.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
