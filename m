@@ -1,7 +1,7 @@
 From: Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH v3 07/14] md: raid1: use bio helper in process_checks()
-Date: Fri, 17 Mar 2017 00:12:28 +0800
-Message-ID: <20170316161235.27110-8-tom.leiming@gmail.com>
+Subject: [PATCH v3 04/14] md: raid1: simplify r1buf_pool_free()
+Date: Fri, 17 Mar 2017 00:12:25 +0800
+Message-ID: <20170316161235.27110-5-tom.leiming@gmail.com>
 References: <20170316161235.27110-1-tom.leiming@gmail.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170316161235.27110-1-tom.leiming@gmail.com>
@@ -10,59 +10,50 @@ To: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, linux-raid@vger.ker
 Cc: Ming Lei <tom.leiming@gmail.com>
 List-Id: linux-raid.ids
 
-Avoid to direct access to bvec table.
+This patch gets each page's reference of each bio for resync,
+then r1buf_pool_free() gets simplified a lot.
+
+The same policy has been taken in raid10's buf pool allocation/free
+too.
 
 Signed-off-by: Ming Lei <tom.leiming@gmail.com>
 ---
- drivers/md/raid1.c | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+ drivers/md/raid1.c | 15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index b1345aa4efd8..4034a2963da8 100644
+index 908e2caeb704..e30d89690109 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -2130,6 +2130,7 @@ static void process_checks(struct r1bio *r1_bio)
- 		int j;
- 		int size;
- 		int error;
-+		struct bio_vec *bi;
- 		struct bio *b = r1_bio->bios[i];
- 		struct resync_pages *rp = get_resync_pages(b);
- 		if (b->bi_end_io != end_sync_read)
-@@ -2148,9 +2149,7 @@ static void process_checks(struct r1bio *r1_bio)
- 		b->bi_private = rp;
+@@ -142,9 +142,12 @@ static void * r1buf_pool_alloc(gfp_t gfp_flags, void *data)
+ 	/* If not user-requests, copy the page pointers to all bios */
+ 	if (!test_bit(MD_RECOVERY_REQUESTED, &pi->mddev->recovery)) {
+ 		for (i=0; i<RESYNC_PAGES ; i++)
+-			for (j=1; j<pi->raid_disks; j++)
+-				r1_bio->bios[j]->bi_io_vec[i].bv_page =
++			for (j=1; j<pi->raid_disks; j++) {
++				struct page *page =
+ 					r1_bio->bios[0]->bi_io_vec[i].bv_page;
++				get_page(page);
++				r1_bio->bios[j]->bi_io_vec[i].bv_page = page;
++			}
+ 	}
  
- 		size = b->bi_iter.bi_size;
--		for (j = 0; j < vcnt ; j++) {
--			struct bio_vec *bi;
--			bi = &b->bi_io_vec[j];
-+		bio_for_each_segment_all(bi, b, j) {
- 			bi->bv_offset = 0;
- 			if (size > PAGE_SIZE)
- 				bi->bv_len = PAGE_SIZE;
-@@ -2174,17 +2173,22 @@ static void process_checks(struct r1bio *r1_bio)
- 		int error = sbio->bi_error;
- 		struct page **ppages = get_resync_pages(pbio)->pages;
- 		struct page **spages = get_resync_pages(sbio)->pages;
-+		struct bio_vec *bi;
-+		int page_len[RESYNC_PAGES];
+ 	r1_bio->master_bio = NULL;
+@@ -169,12 +172,8 @@ static void r1buf_pool_free(void *__r1_bio, void *data)
+ 	struct r1bio *r1bio = __r1_bio;
  
- 		if (sbio->bi_end_io != end_sync_read)
- 			continue;
- 		/* Now we can 'fixup' the error value */
- 		sbio->bi_error = 0;
+ 	for (i = 0; i < RESYNC_PAGES; i++)
+-		for (j = pi->raid_disks; j-- ;) {
+-			if (j == 0 ||
+-			    r1bio->bios[j]->bi_io_vec[i].bv_page !=
+-			    r1bio->bios[0]->bi_io_vec[i].bv_page)
+-				safe_put_page(r1bio->bios[j]->bi_io_vec[i].bv_page);
+-		}
++		for (j = pi->raid_disks; j-- ;)
++			safe_put_page(r1bio->bios[j]->bi_io_vec[i].bv_page);
+ 	for (i=0 ; i < pi->raid_disks; i++)
+ 		bio_put(r1bio->bios[i]);
  
-+		bio_for_each_segment_all(bi, sbio, j)
-+			page_len[j] = bi->bv_len;
-+
- 		if (!error) {
- 			for (j = vcnt; j-- ; ) {
- 				if (memcmp(page_address(ppages[j]),
- 					   page_address(spages[j]),
--					   sbio->bi_io_vec[j].bv_len))
-+					   page_len[j]))
- 					break;
- 			}
- 		} else
 -- 
 2.9.3
