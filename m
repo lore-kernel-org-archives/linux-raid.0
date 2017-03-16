@@ -1,7 +1,7 @@
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH v3 5/6] Add 'ppl' and 'no-ppl' options for --update=
-Date: Thu, 16 Mar 2017 22:09:47 +0100
-Message-ID: <20170316210948.21093-6-artur.paszkiewicz@intel.com>
+Subject: [PATCH v3 3/6] imsm: PPL support
+Date: Thu, 16 Mar 2017 22:09:45 +0100
+Message-ID: <20170316210948.21093-4-artur.paszkiewicz@intel.com>
 References: <20170316210948.21093-1-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20170316210948.21093-1-artur.paszkiewicz@intel.com>
@@ -10,272 +10,644 @@ To: jes.sorensen@gmail.com
 Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-This can be used with --assemble for super1 and with --update-subarray
-for imsm to enable or disable PPL in the metadata.
+Enable creating and assembling IMSM raid5 arrays with PPL. Update the
+IMSM metadata format to include new fields used for PPL.
+
+Add structures for PPL metadata. They are used also by super1 and shared
+with the kernel, so put them in md_p.h.
+
+Write the initial empty PPL header when creating an array. When
+assembling an array with PPL, validate the PPL header and in case it is
+not correct allow to overwrite it if --force was provided.
+
+Write the PPL location and size for a device to the new rdev sysfs
+attributes 'ppl_sector' and 'ppl_size'. Enable PPL in the kernel by
+writing to 'consistency_policy' before the array is activated.
 
 Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- Assemble.c    |  6 ++++++
- mdadm.8.in    | 27 ++++++++++++++++++++++++---
- mdadm.c       |  6 +++++-
- super-intel.c | 55 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- super1.c      | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 139 insertions(+), 4 deletions(-)
+ Assemble.c    |  49 +++++++++++
+ Makefile      |   5 +-
+ md_p.h        |  25 ++++++
+ mdadm.h       |   6 ++
+ super-intel.c | 274 +++++++++++++++++++++++++++++++++++++++++++++++++++++-----
+ sysfs.c       |  14 +++
+ 6 files changed, 349 insertions(+), 24 deletions(-)
 
 diff --git a/Assemble.c b/Assemble.c
-index c0984201..6a6a56bf 100644
+index 3da09033..8e55b49f 100644
 --- a/Assemble.c
 +++ b/Assemble.c
-@@ -602,6 +602,12 @@ static int load_devices(struct devs *devices, char *devmap,
- 			if (strcmp(c->update, "uuid") == 0 && !ident->uuid_set)
- 				random_uuid((__u8 *)ident->uuid);
+@@ -1942,6 +1942,55 @@ int assemble_container_content(struct supertype *st, int mdfd,
+ 	map_update(NULL, fd2devnm(mdfd), content->text_version,
+ 		   content->uuid, chosen_name);
  
-+			if (strcmp(c->update, "ppl") == 0 &&
-+			    ident->bitmap_fd >= 0) {
-+				pr_err("PPL is not compatible with bitmap\n");
-+				return -1;
++	if (content->consistency_policy == CONSISTENCY_POLICY_PPL &&
++	    st->ss->validate_ppl) {
++		content->array.state |= 1;
++		err = 0;
++
++		for (dev = content->devs; dev; dev = dev->next) {
++			int dfd;
++			char *devpath;
++			int ret;
++
++			ret = st->ss->validate_ppl(st, content, dev);
++			if (ret == 0)
++				continue;
++
++			if (ret < 0) {
++				err = 1;
++				break;
 +			}
 +
- 			dfd = dev_open(devname,
- 				       tmpdev->disposition == 'I'
- 				       ? O_RDWR : (O_RDWR|O_EXCL));
-diff --git a/mdadm.8.in b/mdadm.8.in
-index cad5db53..1178ed9b 100644
---- a/mdadm.8.in
-+++ b/mdadm.8.in
-@@ -1176,6 +1176,8 @@ argument given to this flag can be one of
- .BR no\-bitmap ,
- .BR bbl ,
- .BR no\-bbl ,
-+.BR ppl ,
-+.BR no\-ppl ,
- .BR metadata ,
- or
- .BR super\-minor .
-@@ -1316,6 +1318,16 @@ option will cause any reservation of space for a bad block list to be
- removed.  If the bad block list contains entries, this will fail, as
- removing the list could cause data corruption.
- 
-+The
-+.B ppl
-+option will enable PPL for a RAID5 array and reserve space for PPL on each
-+device. There must be enough free space between the data and superblock and a
-+write-intent bitmap or journal must not be used.
++			if (!c->force) {
++				pr_err("%s contains invalid PPL - consider --force or --update-subarray with --update=no-ppl\n",
++					chosen_name);
++				content->array.state &= ~1;
++				avail[dev->disk.raid_disk] = 0;
++				break;
++			}
 +
-+The
-+.B no\-ppl
-+option will disable PPL in the superblock.
++			/* have --force - overwrite the invalid ppl */
++			devpath = map_dev(dev->disk.major, dev->disk.minor, 0);
++			dfd = dev_open(devpath, O_RDWR);
++			if (dfd < 0) {
++				pr_err("Failed to open %s\n", devpath);
++				err = 1;
++				break;
++			}
 +
- .TP
- .BR \-\-freeze\-reshape
- Option is intended to be used in start-up scripts during initrd boot phase.
-@@ -2327,9 +2339,11 @@ superblock field in the subarray.  Similar to updating an array in
- .B \-U
- or
- .B \-\-update=
--option.  Currently only
--.B name
--is supported.
-+option. The supported options are
-+.BR name ,
-+.B ppl
-+and
-+.BR no\-ppl .
- 
- The
- .B name
-@@ -2340,6 +2354,13 @@ re\-assembled.  If updating
- would change the UUID of an active subarray this operation is blocked,
- and the command will end in an error.
- 
-+The
-+.B ppl
-+and
-+.B no\-ppl
-+options enable and disable PPL in the metadata. Currently supported only for
-+IMSM subarrays.
++			err = st->ss->write_init_ppl(st, content, dfd);
++			close(dfd);
 +
- .TP
- .B \-\-examine
- The device should be a component of an md array.
-diff --git a/mdadm.c b/mdadm.c
-index 65431b76..3d0da1ec 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -769,6 +769,10 @@ int main(int argc, char *argv[])
- 				continue;
- 			if (strcmp(c.update, "force-no-bbl") == 0)
- 				continue;
-+			if (strcmp(c.update, "ppl") == 0)
-+				continue;
-+			if (strcmp(c.update, "no-ppl") == 0)
-+				continue;
- 			if (strcmp(c.update, "metadata") == 0)
- 				continue;
- 			if (strcmp(c.update, "revert-reshape") == 0)
-@@ -802,7 +806,7 @@ int main(int argc, char *argv[])
- 		"     'sparc2.2', 'super-minor', 'uuid', 'name', 'nodes', 'resync',\n"
- 		"     'summaries', 'homehost', 'home-cluster', 'byteorder', 'devicesize',\n"
- 		"     'no-bitmap', 'metadata', 'revert-reshape'\n"
--		"     'bbl', 'no-bbl', 'force-no-bbl'\n"
-+		"     'bbl', 'no-bbl', 'force-no-bbl', 'ppl', 'no-ppl'\n"
- 				);
- 			exit(outf == stdout ? 0 : 2);
++			if (err)
++				break;
++		}
++
++		if (err) {
++			free(avail);
++			return err;
++		}
++	}
++
+ 	if (enough(content->array.level, content->array.raid_disks,
+ 		   content->array.layout, content->array.state & 1, avail) == 0) {
+ 		if (c->export && result)
+diff --git a/Makefile b/Makefile
+index a6f464c3..49da491f 100644
+--- a/Makefile
++++ b/Makefile
+@@ -146,7 +146,7 @@ MON_OBJS = mdmon.o monitor.o managemon.o util.o maps.o mdstat.o sysfs.o \
+ 	Kill.o sg_io.o dlink.o ReadMe.o super-intel.o \
+ 	super-mbr.o super-gpt.o \
+ 	super-ddf.o sha1.o crc32.o msg.o bitmap.o xmalloc.o \
+-	platform-intel.o probe_roms.o
++	platform-intel.o probe_roms.o crc32c.o
  
+ MON_SRCS = $(patsubst %.o,%.c,$(MON_OBJS))
+ 
+@@ -156,7 +156,8 @@ STATICOBJS = pwgr.o
+ ASSEMBLE_SRCS := mdassemble.c Assemble.c Manage.c config.c policy.c dlink.c util.c \
+ 	maps.c lib.c xmalloc.c \
+ 	super0.c super1.c super-ddf.c super-intel.c sha1.c crc32.c sg_io.c mdstat.c \
+-	platform-intel.c probe_roms.c sysfs.c super-mbr.c super-gpt.c mapfile.c
++	platform-intel.c probe_roms.c sysfs.c super-mbr.c super-gpt.c mapfile.c \
++	crc32c.o
+ ASSEMBLE_AUTO_SRCS := mdopen.c
+ ASSEMBLE_FLAGS:= $(CFLAGS) -DMDASSEMBLE
+ ifdef MDASSEMBLE_AUTO
+diff --git a/md_p.h b/md_p.h
+index dc9fec16..358a28ce 100644
+--- a/md_p.h
++++ b/md_p.h
+@@ -267,4 +267,29 @@ struct r5l_meta_block {
+ #define R5LOG_VERSION 0x1
+ #define R5LOG_MAGIC 0x6433c509
+ 
++struct ppl_header_entry {
++	__u64 data_sector;	/* raid sector of the new data */
++	__u32 pp_size;		/* length of partial parity */
++	__u32 data_size;	/* length of data */
++	__u32 parity_disk;	/* member disk containing parity */
++	__u32 checksum;		/* checksum of this entry's partial parity */
++} __attribute__ ((__packed__));
++
++#define PPL_HEADER_SIZE 4096
++#define PPL_HDR_RESERVED 512
++#define PPL_HDR_ENTRY_SPACE \
++	(PPL_HEADER_SIZE - PPL_HDR_RESERVED - 4 * sizeof(__u32) - sizeof(__u64))
++#define PPL_HDR_MAX_ENTRIES \
++	(PPL_HDR_ENTRY_SPACE / sizeof(struct ppl_header_entry))
++
++struct ppl_header {
++	__u8 reserved[PPL_HDR_RESERVED];/* reserved space, fill with 0xff */
++	__u32 signature;		/* signature (family number of volume) */
++	__u32 padding;			/* zero pad */
++	__u64 generation;		/* generation number of the header */
++	__u32 entries_count;		/* number of entries in entry array */
++	__u32 checksum;			/* checksum of the header */
++	struct ppl_header_entry entries[PPL_HDR_MAX_ENTRIES];
++} __attribute__ ((__packed__));
++
+ #endif
+diff --git a/mdadm.h b/mdadm.h
+index ed4d7e4e..10c20416 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -300,6 +300,8 @@ struct mdinfo {
+ 		#define MaxSector  (~0ULL) /* resync/recovery complete position */
+ 	};
+ 	long			bitmap_offset;	/* 0 == none, 1 == a file */
++	unsigned int		ppl_size;
++	unsigned long long	ppl_sector;
+ 	unsigned long		safe_mode_delay; /* ms delay to mark clean */
+ 	int			new_level, delta_disks, new_layout, new_chunk;
+ 	int			errors;
+@@ -1074,6 +1076,10 @@ extern struct superswitch {
+ 	/* write initial empty PPL on device */
+ 	int (*write_init_ppl)(struct supertype *st, struct mdinfo *info, int fd);
+ 
++	/* validate ppl before assemble */
++	int (*validate_ppl)(struct supertype *st, struct mdinfo *info,
++			    struct mdinfo *disk);
++
+ 	/* records new bad block in metadata */
+ 	int (*record_bad_block)(struct active_array *a, int n,
+ 					unsigned long long sector, int length);
 diff --git a/super-intel.c b/super-intel.c
-index ad3a4536..53fab8a3 100644
+index 120ce77c..ad3a4536 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -451,6 +451,7 @@ enum imsm_update_type {
- 	update_general_migration_checkpoint,
- 	update_size_change,
- 	update_prealloc_badblocks_mem,
-+	update_rwh_policy,
- };
+@@ -102,6 +102,7 @@ struct imsm_disk {
+ #define SPARE_DISK      __cpu_to_le32(0x01)  /* Spare */
+ #define CONFIGURED_DISK __cpu_to_le32(0x02)  /* Member of some RaidDev */
+ #define FAILED_DISK     __cpu_to_le32(0x04)  /* Permanent failure */
++#define JOURNAL_DISK    __cpu_to_le32(0x2000000) /* Device marked as Journaling Drive */
+ 	__u32 status;			 /* 0xF0 - 0xF3 */
+ 	__u32 owner_cfg_num; /* which config 0,1,2... owns this disk */
+ 	__u32 total_blocks_hi;		 /* 0xF4 - 0xF5 total blocks hi */
+@@ -155,6 +156,9 @@ struct imsm_vol {
+ #define MIGR_STATE_CHANGE 4
+ #define MIGR_REPAIR 5
+ 	__u8  migr_type;	/* Initializing, Rebuilding, ... */
++#define RAIDVOL_CLEAN          0
++#define RAIDVOL_DIRTY          1
++#define RAIDVOL_DSRECORD_VALID 2
+ 	__u8  dirty;
+ 	__u8  fs_state;		/* fast-sync state for CnG (0xff == disabled) */
+ 	__u16 verify_errors;	/* number of mismatches */
+@@ -190,7 +194,24 @@ struct imsm_dev {
+ 	__u16 cache_policy;
+ 	__u8  cng_state;
+ 	__u8  cng_sub_state;
+-#define IMSM_DEV_FILLERS 10
++	__u16 my_vol_raid_dev_num; /* Used in Unique volume Id for this RaidDev */
++
++	/* NVM_EN */
++	__u8 nv_cache_mode;
++	__u8 nv_cache_flags;
++
++	/* Unique Volume Id of the NvCache Volume associated with this volume */
++	__u32 nvc_vol_orig_family_num;
++	__u16 nvc_vol_raid_dev_num;
++
++#define RWH_OFF 0
++#define RWH_DISTRIBUTED 1
++#define RWH_JOURNALING_DRIVE 2
++	__u8  rwh_policy; /* Raid Write Hole Policy */
++	__u8  jd_serial[MAX_RAID_SERIAL_LEN]; /* Journal Drive serial number */
++	__u8  filler1;
++
++#define IMSM_DEV_FILLERS 3
+ 	__u32 filler[IMSM_DEV_FILLERS];
+ 	struct imsm_vol vol;
+ } __attribute__ ((packed));
+@@ -257,6 +278,9 @@ static char *map_state_str[] = { "normal", "uninitialized", "degraded", "failed"
+ #define UNIT_SRC_IN_CP_AREA 1   /* Source data for curr_migr_unit has
+ 				 *  already been migrated and must
+ 				 *  be recovered from checkpoint area */
++
++#define PPL_ENTRY_SPACE (128 * 1024) /* Size of the PPL, without the header */
++
+ struct migr_record {
+ 	__u32 rec_status;	    /* Status used to determine how to restart
+ 				     * migration in case it aborts
+@@ -1288,6 +1312,11 @@ static int is_failed(struct imsm_disk *disk)
+ 	return (disk->status & FAILED_DISK) == FAILED_DISK;
+ }
  
- struct imsm_update_activate_spare {
-@@ -543,6 +544,12 @@ struct imsm_update_prealloc_bb_mem {
- 	enum imsm_update_type type;
- };
- 
-+struct imsm_update_rwh_policy {
-+	enum imsm_update_type type;
-+	int new_policy;
-+	int dev_idx;
-+};
++static int is_journal(struct imsm_disk *disk)
++{
++	return (disk->status & JOURNAL_DISK) == JOURNAL_DISK;
++}
 +
- static const char *_sys_dev_type[] = {
- 	[SYS_DEV_UNKNOWN] = "Unknown",
- 	[SYS_DEV_SAS] = "SAS",
-@@ -7370,6 +7377,34 @@ static int update_subarray_imsm(struct supertype *st, char *subarray,
- 			}
- 			super->updates_pending++;
- 		}
-+	} else if (strcmp(update, "ppl") == 0 ||
-+		   strcmp(update, "no-ppl") == 0) {
-+		int new_policy;
-+		char *ep;
-+		int vol = strtoul(subarray, &ep, 10);
-+
-+		if (*ep != '\0' || vol >= super->anchor->num_raid_devs)
-+			return 2;
-+
-+		if (strcmp(update, "ppl") == 0)
-+			new_policy = RWH_DISTRIBUTED;
-+		else
-+			new_policy = RWH_OFF;
-+
-+		if (st->update_tail) {
-+			struct imsm_update_rwh_policy *u = xmalloc(sizeof(*u));
-+
-+			u->type = update_rwh_policy;
-+			u->dev_idx = vol;
-+			u->new_policy = new_policy;
-+			append_metadata_update(st, u, sizeof(*u));
-+		} else {
-+			struct imsm_dev *dev;
-+
-+			dev = get_imsm_dev(super, vol);
-+			dev->rwh_policy = new_policy;
-+			super->updates_pending++;
-+		}
- 	} else
- 		return 2;
- 
-@@ -9596,6 +9631,21 @@ static void imsm_process_update(struct supertype *st,
+ /* try to determine how much space is reserved for metadata from
+  * the last get_extents() entry on the smallest active disk,
+  * otherwise fallback to the default
+@@ -1477,7 +1506,17 @@ static void print_imsm_dev(struct intel_super *super,
+ 				   blocks_per_migr_unit(super, dev));
  	}
- 	case update_prealloc_badblocks_mem:
- 		break;
-+	case update_rwh_policy: {
-+		struct imsm_update_rwh_policy *u = (void *)update->buf;
-+		int target = u->dev_idx;
-+		struct imsm_dev *dev = get_imsm_dev(super, target);
-+		if (!dev) {
-+			dprintf("could not find subarray-%d\n", target);
+ 	printf("\n");
+-	printf("    Dirty State : %s\n", dev->vol.dirty ? "dirty" : "clean");
++	printf("    Dirty State : %s\n", (dev->vol.dirty & RAIDVOL_DIRTY) ?
++					 "dirty" : "clean");
++	printf("     RWH Policy : ");
++	if (dev->rwh_policy == RWH_OFF)
++		printf("off\n");
++	else if (dev->rwh_policy == RWH_DISTRIBUTED)
++		printf("PPL distributed\n");
++	else if (dev->rwh_policy == RWH_JOURNALING_DRIVE)
++		printf("PPL journaling drive\n");
++	else
++		printf("<unknown:%d>\n", dev->rwh_policy);
+ }
+ 
+ static void print_imsm_disk(struct imsm_disk *disk,
+@@ -1496,9 +1535,10 @@ static void print_imsm_disk(struct imsm_disk *disk,
+ 		printf("  Disk%02d Serial : %s\n", index, str);
+ 	else
+ 		printf("    Disk Serial : %s\n", str);
+-	printf("          State :%s%s%s\n", is_spare(disk) ? " spare" : "",
+-					    is_configured(disk) ? " active" : "",
+-					    is_failed(disk) ? " failed" : "");
++	printf("          State :%s%s%s%s\n", is_spare(disk) ? " spare" : "",
++					      is_configured(disk) ? " active" : "",
++					      is_failed(disk) ? " failed" : "",
++					      is_journal(disk) ? " journal" : "");
+ 	printf("             Id : %08x\n", __le32_to_cpu(disk->scsi_id));
+ 	sz = total_blocks(disk) - reserved;
+ 	printf("    Usable Size : %llu%s\n",
+@@ -3113,6 +3153,15 @@ static unsigned long long imsm_component_size_aligment_check(int level,
+ 	return component_size;
+ }
+ 
++static unsigned long long get_ppl_sector(struct intel_super *super, int dev_idx)
++{
++	struct imsm_dev *dev = get_imsm_dev(super, dev_idx);
++	struct imsm_map *map = get_imsm_map(dev, MAP_0);
++
++	return pba_of_lba0(map) +
++	       (num_data_stripes(map) * map->blocks_per_strip);
++}
++
+ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info, char *dmap)
+ {
+ 	struct intel_super *super = st->sb;
+@@ -3139,7 +3188,7 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
+ 	info->array.utime	  = 0;
+ 	info->array.chunk_size	  =
+ 		__le16_to_cpu(map_to_analyse->blocks_per_strip) << 9;
+-	info->array.state	  = !dev->vol.dirty;
++	info->array.state	  = !(dev->vol.dirty & RAIDVOL_DIRTY);
+ 	info->custom_array_size   = __le32_to_cpu(dev->size_high);
+ 	info->custom_array_size   <<= 32;
+ 	info->custom_array_size   |= __le32_to_cpu(dev->size_low);
+@@ -3220,10 +3269,20 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
+ 	memset(info->uuid, 0, sizeof(info->uuid));
+ 	info->recovery_start = MaxSector;
+ 
++	if (info->array.level == 5 && dev->rwh_policy == RWH_DISTRIBUTED) {
++		info->consistency_policy = CONSISTENCY_POLICY_PPL;
++		info->ppl_sector = get_ppl_sector(super, super->current_vol);
++		info->ppl_size = (PPL_HEADER_SIZE + PPL_ENTRY_SPACE) >> 9;
++	} else if (info->array.level <= 0) {
++		info->consistency_policy = CONSISTENCY_POLICY_NONE;
++	} else {
++		info->consistency_policy = CONSISTENCY_POLICY_RESYNC;
++	}
++
+ 	info->reshape_progress = 0;
+ 	info->resync_start = MaxSector;
+ 	if ((map_to_analyse->map_state == IMSM_T_STATE_UNINITIALIZED ||
+-	    dev->vol.dirty) &&
++	    !(info->array.state & 1)) &&
+ 	    imsm_reshape_blocks_arrays_changes(super) == 0) {
+ 		info->resync_start = 0;
+ 	}
+@@ -3450,7 +3509,8 @@ static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info, char *
+ 		 * found the 'most fresh' version of the metadata
+ 		 */
+ 		info->disk.state |= is_failed(disk) ? (1 << MD_DISK_FAULTY) : 0;
+-		info->disk.state |= is_spare(disk) ? 0 : (1 << MD_DISK_SYNC);
++		info->disk.state |= (is_spare(disk) || is_journal(disk)) ?
++				    0 : (1 << MD_DISK_SYNC);
+ 	}
+ 
+ 	/* only call uuid_from_super_imsm when this disk is part of a populated container,
+@@ -3905,7 +3965,7 @@ load_imsm_disk(int fd, struct intel_super *super, char *devname, int keep_fd)
+ 		 */
+ 		if (is_failed(&dl->disk))
+ 			dl->index = -2;
+-		else if (is_spare(&dl->disk))
++		else if (is_spare(&dl->disk) || is_journal(&dl->disk))
+ 			dl->index = -1;
+ 	}
+ 
+@@ -5302,6 +5362,20 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
+ 	}
+ 	mpb->num_raid_devs++;
+ 
++	if (s->consistency_policy == UnSet ||
++	    s->consistency_policy == CONSISTENCY_POLICY_RESYNC ||
++	    s->consistency_policy == CONSISTENCY_POLICY_NONE) {
++		dev->rwh_policy = RWH_OFF;
++	} else if (s->consistency_policy == CONSISTENCY_POLICY_PPL) {
++		dev->rwh_policy = RWH_DISTRIBUTED;
++	} else {
++		free(dev);
++		free(dv);
++		pr_err("imsm does not support consistency policy %s\n",
++		       map_num(consistency_policies, s->consistency_policy));
++		return 0;
++	}
++
+ 	dv->dev = dev;
+ 	dv->index = super->current_vol;
+ 	dv->next = super->devlist;
+@@ -5926,11 +6000,146 @@ static int mgmt_disk(struct supertype *st)
+ 
+ 	return 0;
+ }
++#endif
++
++__u32 crc32c_le(__u32 crc, unsigned char const *p, size_t len);
++
++static int write_init_ppl_imsm(struct supertype *st, struct mdinfo *info, int fd)
++{
++	struct intel_super *super = st->sb;
++	void *buf;
++	struct ppl_header *ppl_hdr;
++	int ret;
++
++	ret = posix_memalign(&buf, 4096, PPL_HEADER_SIZE);
++	if (ret) {
++		pr_err("Failed to allocate PPL header buffer\n");
++		return ret;
++	}
++
++	memset(buf, 0, PPL_HEADER_SIZE);
++	ppl_hdr = buf;
++	memset(ppl_hdr->reserved, 0xff, PPL_HDR_RESERVED);
++	ppl_hdr->signature = __cpu_to_le32(super->anchor->orig_family_num);
++	ppl_hdr->checksum = __cpu_to_le32(~crc32c_le(~0, buf, PPL_HEADER_SIZE));
++
++	if (lseek64(fd, info->ppl_sector * 512, SEEK_SET) < 0) {
++		ret = errno;
++		perror("Failed to seek to PPL header location");
++	}
++
++	if (!ret && write(fd, buf, PPL_HEADER_SIZE) != PPL_HEADER_SIZE) {
++		ret = errno;
++		perror("Write PPL header failed");
++	}
++
++	if (!ret)
++		fsync(fd);
++
++	free(buf);
++	return ret;
++}
++
++static int validate_ppl_imsm(struct supertype *st, struct mdinfo *info,
++			     struct mdinfo *disk)
++{
++	struct intel_super *super = st->sb;
++	struct dl *d;
++	void *buf;
++	int ret = 0;
++	struct ppl_header *ppl_hdr;
++	__u32 crc;
++	struct imsm_dev *dev;
++	struct imsm_map *map;
++	__u32 idx;
++
++	if (disk->disk.raid_disk < 0)
++		return 0;
++
++	if (posix_memalign(&buf, 4096, PPL_HEADER_SIZE)) {
++		pr_err("Failed to allocate PPL header buffer\n");
++		return -1;
++	}
++
++	dev = get_imsm_dev(super, info->container_member);
++	map = get_imsm_map(dev, MAP_X);
++	idx = get_imsm_disk_idx(dev, disk->disk.raid_disk, MAP_X);
++	d = get_imsm_dl_disk(super, idx);
++
++	if (!d || d->index < 0 || is_failed(&d->disk))
++		goto out;
++
++	if (lseek64(d->fd, info->ppl_sector * 512, SEEK_SET) < 0) {
++		perror("Failed to seek to PPL header location");
++		ret = -1;
++		goto out;
++	}
++
++	if (read(d->fd, buf, PPL_HEADER_SIZE) != PPL_HEADER_SIZE) {
++		perror("Read PPL header failed");
++		ret = -1;
++		goto out;
++	}
++
++	ppl_hdr = buf;
++
++	crc = __le32_to_cpu(ppl_hdr->checksum);
++	ppl_hdr->checksum = 0;
++
++	if (crc != ~crc32c_le(~0, buf, PPL_HEADER_SIZE)) {
++		dprintf("Wrong PPL header checksum on %s\n",
++			d->devname);
++		ret = 1;
++	}
++
++	if (!ret && (__le32_to_cpu(ppl_hdr->signature) !=
++		      super->anchor->orig_family_num)) {
++		dprintf("Wrong PPL header signature on %s\n",
++			d->devname);
++		ret = 1;
++	}
++
++out:
++	free(buf);
++
++	if (ret == 1 && map->map_state == IMSM_T_STATE_UNINITIALIZED)
++		return st->ss->write_init_ppl(st, info, d->fd);
++
++	return ret;
++}
++
++#ifndef MDASSEMBLE
++
++static int write_init_ppl_imsm_all(struct supertype *st, struct mdinfo *info)
++{
++	struct intel_super *super = st->sb;
++	struct dl *d;
++	int ret = 0;
++
++	if (info->consistency_policy != CONSISTENCY_POLICY_PPL ||
++	    info->array.level != 5)
++		return 0;
++
++	for (d = super->disks; d ; d = d->next) {
++		if (d->index < 0 || is_failed(&d->disk))
++			continue;
++
++		ret = st->ss->write_init_ppl(st, info, d->fd);
++		if (ret)
 +			break;
-+		}
-+
-+		if (dev->rwh_policy != u->new_policy) {
-+			dev->rwh_policy = u->new_policy;
-+			super->updates_pending++;
-+		}
-+		break;
 +	}
- 	default:
- 		pr_err("error: unsuported process update type:(type: %d)\n",	type);
- 	}
-@@ -9841,6 +9891,11 @@ static int imsm_prepare_update(struct supertype *st,
- 		super->extra_space += sizeof(struct bbm_log) -
- 			get_imsm_bbm_log_size(super->bbm_log);
- 		break;
-+	case update_rwh_policy: {
-+		if (update->len < (int)sizeof(struct imsm_update_rwh_policy))
-+			return 0;
-+		break;
-+	}
- 	default:
- 		return 0;
- 	}
-diff --git a/super1.c b/super1.c
-index 76eeca11..541f31ee 100644
---- a/super1.c
-+++ b/super1.c
-@@ -1325,6 +1325,55 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
- 		sb->bblog_size = 0;
- 		sb->bblog_shift = 0;
- 		sb->bblog_offset = 0;
-+	} else if (strcmp(update, "ppl") == 0) {
-+		unsigned long long sb_offset = __le64_to_cpu(sb->super_offset);
-+		unsigned long long data_offset = __le64_to_cpu(sb->data_offset);
-+		unsigned long long data_size = __le64_to_cpu(sb->data_size);
-+		long bb_offset = __le32_to_cpu(sb->bblog_offset);
-+		int space;
-+		int optimal_space;
-+		int offset;
 +
-+		if (sb->feature_map & __cpu_to_le32(MD_FEATURE_BITMAP_OFFSET)) {
-+			pr_err("Cannot add PPL to array with bitmap\n");
-+			return -2;
-+		}
++	return ret;
++}
+ 
+ static int write_init_super_imsm(struct supertype *st)
+ {
+ 	struct intel_super *super = st->sb;
+ 	int current_vol = super->current_vol;
++	int rv = 0;
++	struct mdinfo info;
 +
-+		if (sb->feature_map & __cpu_to_le32(MD_FEATURE_JOURNAL)) {
-+			pr_err("Cannot add PPL to array with journal\n");
-+			return -2;
-+		}
-+
-+		if (sb_offset < data_offset) {
-+			if (bb_offset)
-+				space = bb_offset - 8;
-+			else
-+				space = data_offset - sb_offset - 8;
-+			offset = 8;
++	getinfo_super_imsm(st, &info, NULL);
+ 
+ 	/* we are done with current_vol reset it to point st at the container */
+ 	super->current_vol = -1;
+@@ -5938,24 +6147,29 @@ static int write_init_super_imsm(struct supertype *st)
+ 	if (st->update_tail) {
+ 		/* queue the recently created array / added disk
+ 		 * as a metadata update */
+-		int rv;
+ 
+ 		/* determine if we are creating a volume or adding a disk */
+ 		if (current_vol < 0) {
+ 			/* in the mgmt (add/remove) disk case we are running
+ 			 * in mdmon context, so don't close fd's
+ 			 */
+-			return mgmt_disk(st);
+-		} else
+-			rv = create_array(st, current_vol);
+-
+-		return rv;
++			rv = mgmt_disk(st);
 +		} else {
-+			offset = -(sb_offset - data_offset - data_size);
-+			if (offset < INT16_MIN)
-+				offset = INT16_MIN;
-+			space = -(offset - bb_offset);
++			rv = write_init_ppl_imsm_all(st, &info);
++			if (!rv)
++				rv = create_array(st, current_vol);
 +		}
+ 	} else {
+ 		struct dl *d;
+ 		for (d = super->disks; d; d = d->next)
+ 			Kill(d->devname, NULL, 0, -1, 1);
+-		return write_super_imsm(st, 1);
++		if (current_vol >= 0)
++			rv = write_init_ppl_imsm_all(st, &info);
++		if (!rv)
++			rv = write_super_imsm(st, 1);
+ 	}
 +
-+		if (space < (PPL_HEADER_SIZE >> 9) + 8) {
-+			pr_err("Not enough space to add ppl\n");
-+			return -2;
++	return rv;
+ }
+ #endif
+ 
+@@ -7372,7 +7586,8 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
+ 			 *
+ 			 * FIXME handle dirty degraded
+ 			 */
+-			if ((skip || recovery_start == 0) && !dev->vol.dirty)
++			if ((skip || recovery_start == 0) &&
++			    !(dev->vol.dirty & RAIDVOL_DIRTY))
+ 				this->resync_start = MaxSector;
+ 			if (skip)
+ 				continue;
+@@ -7407,9 +7622,12 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
+ 				info_d->component_size =
+ 						num_data_stripes(map) *
+ 						map->blocks_per_strip;
++				info_d->ppl_sector = this->ppl_sector;
++				info_d->ppl_size = this->ppl_size;
+ 			} else {
+ 				info_d->component_size = blocks_per_member(map);
+ 			}
++			info_d->consistency_policy = this->consistency_policy;
+ 
+ 			info_d->bb.supported = 1;
+ 			get_volume_badblocks(super->bbm_log, ord_to_idx(ord),
+@@ -7925,12 +8143,16 @@ mark_checkpoint:
+ 
+ skip_mark_checkpoint:
+ 	/* mark dirty / clean */
+-	if (dev->vol.dirty != !consistent) {
++	if (((dev->vol.dirty & RAIDVOL_DIRTY) && consistent) ||
++	    (!(dev->vol.dirty & RAIDVOL_DIRTY) && !consistent)) {
+ 		dprintf("imsm: mark '%s'\n", consistent ? "clean" : "dirty");
+-		if (consistent)
+-			dev->vol.dirty = 0;
+-		else
+-			dev->vol.dirty = 1;
++		if (consistent) {
++			dev->vol.dirty = RAIDVOL_CLEAN;
++		} else {
++			dev->vol.dirty = RAIDVOL_DIRTY;
++			if (dev->rwh_policy == RWH_DISTRIBUTED)
++				dev->vol.dirty |= RAIDVOL_DSRECORD_VALID;
 +		}
+ 		super->updates_pending++;
+ 	}
+ 
+@@ -8442,6 +8664,11 @@ static struct mdinfo *imsm_activate_spare(struct active_array *a,
+ 		di->component_size = a->info.component_size;
+ 		di->container_member = inst;
+ 		di->bb.supported = 1;
++		if (dev->rwh_policy == RWH_DISTRIBUTED) {
++			di->consistency_policy = CONSISTENCY_POLICY_PPL;
++			di->ppl_sector = get_ppl_sector(super, inst);
++			di->ppl_size = (PPL_HEADER_SIZE + PPL_ENTRY_SPACE) >> 9;
++		}
+ 		super->random = random32();
+ 		di->next = rv;
+ 		rv = di;
+@@ -11597,6 +11824,9 @@ struct superswitch super_imsm = {
+ 	.container_content = container_content_imsm,
+ 	.validate_container = validate_container_imsm,
+ 
++	.write_init_ppl = write_init_ppl_imsm,
++	.validate_ppl	= validate_ppl_imsm,
 +
-+		optimal_space = choose_ppl_space(__le32_to_cpu(sb->chunksize));
+ 	.external	= 1,
+ 	.name = "imsm",
+ 
+diff --git a/sysfs.c b/sysfs.c
+index 53589a76..2a91ba0a 100644
+--- a/sysfs.c
++++ b/sysfs.c
+@@ -689,6 +689,16 @@ int sysfs_set_array(struct mdinfo *info, int vers)
+ 		 * once the reshape completes.
+ 		 */
+ 	}
 +
-+		if (space > optimal_space)
-+			space = optimal_space;
-+		if (space > UINT16_MAX)
-+			space = UINT16_MAX;
++	if (info->consistency_policy == CONSISTENCY_POLICY_PPL) {
++		if (sysfs_set_str(info, NULL, "consistency_policy",
++				  map_num(consistency_policies,
++					  info->consistency_policy))) {
++			pr_err("This kernel does not support PPL\n");
++			return 1;
++		}
++	}
 +
-+		sb->ppl.offset = __cpu_to_le16(offset);
-+		sb->ppl.size = __cpu_to_le16(space);
-+		sb->feature_map |= __cpu_to_le32(MD_FEATURE_PPL);
-+	} else if (strcmp(update, "no-ppl") == 0) {
-+		sb->feature_map &= ~ __cpu_to_le32(MD_FEATURE_PPL);
- 	} else if (strcmp(update, "name") == 0) {
- 		if (info->name[0] == 0)
- 			sprintf(info->name, "%d", info->array.md_minor);
+ 	return rv;
+ }
+ 
+@@ -720,6 +730,10 @@ int sysfs_add_disk(struct mdinfo *sra, struct mdinfo *sd, int resume)
+ 	rv = sysfs_set_num(sra, sd, "offset", sd->data_offset);
+ 	rv |= sysfs_set_num(sra, sd, "size", (sd->component_size+1) / 2);
+ 	if (sra->array.level != LEVEL_CONTAINER) {
++		if (sd->consistency_policy == CONSISTENCY_POLICY_PPL) {
++			rv |= sysfs_set_num(sra, sd, "ppl_sector", sd->ppl_sector);
++			rv |= sysfs_set_num(sra, sd, "ppl_size", sd->ppl_size);
++		}
+ 		if (sd->recovery_start == MaxSector)
+ 			/* This can correctly fail if array isn't started,
+ 			 * yet, so just ignore status for now.
 -- 
 2.11.0
 
