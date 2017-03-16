@@ -1,45 +1,86 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: Re: [PATCH 1/2] md/r5cache: improve add-journal
-Date: Wed, 15 Mar 2017 23:48:10 +0000
-Message-ID: <E9B05880-0C4F-4AAB-B4FF-13C78B7DE535@fb.com>
-References: <20170315182816.3627123-1-songliubraving@fb.com>
- <20170315225100.mr4glirjdjx237fq@kernel.org>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [md PATCH 10/15] md/raid1: stop using bi_phys_segment
+Date: Wed, 15 Mar 2017 17:13:55 -0700
+Message-ID: <20170316001355.lyhq7lkyvndsocwo@kernel.org>
+References: <148954692173.18641.1294690639716682540.stgit@noble>
+ <148954711389.18641.6044680366998154084.stgit@noble>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170315225100.mr4glirjdjx237fq@kernel.org>
-Content-Language: en-US
-Content-ID: <4C93C9C13ACE0B45867D6D46D5E3D40E@namprd15.prod.outlook.com>
+Content-Disposition: inline
+In-Reply-To: <148954711389.18641.6044680366998154084.stgit@noble>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Shaohua Li <shli@fb.com>, NeilBrown <neilb@suse.com>, Kernel Team <Kernel-team@fb.com>, Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@infradead.org>, "jes.sorensen@gmail.com" <jes.sorensen@gmail.com>
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org, hch@lst.de
 List-Id: linux-raid.ids
 
+On Wed, Mar 15, 2017 at 02:05:14PM +1100, Neil Brown wrote:
+> Change to use bio->__bi_remaining to count number of r1bio attached
+> to a bio.
+> See precious raid10 patch for more details.
+> 
+> Like the raid10.c patch, this fixes a bug as nr_queued and nr_pending
+> used to measure different things, but were being compared.
+> 
+> This patch fixes another bug in that nr_pending previously did not
+> could write-behind requests, so behind writes could continue while
+> resync was happening.  How that nr_pending counts all r1_bio,
+> the resync cannot commence until the behind writes have completed.
+> 
+> Signed-off-by: NeilBrown <neilb@suse.com>
+> ---
+>  drivers/md/raid1.c |   87 +++++++++++++---------------------------------------
+>  1 file changed, 22 insertions(+), 65 deletions(-)
+> 
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 7e509a894f15..e566407b196f 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -246,35 +246,18 @@ static void reschedule_retry(struct r1bio *r1_bio)
+>  static void call_bio_endio(struct r1bio *r1_bio)
+>  {
+>  	struct bio *bio = r1_bio->master_bio;
+> -	int done;
+>  	struct r1conf *conf = r1_bio->mddev->private;
+>  	sector_t bi_sector = bio->bi_iter.bi_sector;
+>  
+> -	if (bio->bi_phys_segments) {
+> -		unsigned long flags;
+> -		spin_lock_irqsave(&conf->device_lock, flags);
+> -		bio->bi_phys_segments--;
+> -		done = (bio->bi_phys_segments == 0);
+> -		spin_unlock_irqrestore(&conf->device_lock, flags);
+> -		/*
+> -		 * make_request() might be waiting for
+> -		 * bi_phys_segments to decrease
+> -		 */
+> -		wake_up(&conf->wait_barrier);
+> -	} else
+> -		done = 1;
+> -
+>  	if (!test_bit(R1BIO_Uptodate, &r1_bio->state))
+>  		bio->bi_error = -EIO;
+>  
+> -	if (done) {
+> -		bio_endio(bio);
+> -		/*
+> -		 * Wake up any possible resync thread that waits for the device
+> -		 * to go idle.
+> -		 */
+> -		allow_barrier(conf, bi_sector);
+> -	}
+> +	bio_endio(bio);
+> +	/*
+> +	 * Wake up any possible resync thread that waits for the device
+> +	 * to go idle.
+> +	 */
+> +	allow_barrier(conf, bi_sector);
 
-> On Mar 15, 2017, at 3:51 PM, Shaohua Li <shli@kernel.org> wrote:
->=20
-> On Wed, Mar 15, 2017 at 11:28:15AM -0700, Song Liu wrote:
->> 1. suspend the array before adding journal, so that we can add journal
->>   when the array is not read-only;
->=20
-> we can't call mddev_suspend in raid5d, because there is deadlock.
-> raid5_add_disk can be called in raid5d.
+I think this one should be r1_bio->sector instead of master_bio->sector,
+because multiple r1_bio could be attached to a master_bio. Maybe not change
+anything, because both sector should be in the same barrier unit, but we'd
+better to be consistent.
 
-I see. I guess we can just require setting read only before adding journal.=
-=20
-
->=20
->> 2. allow recreate journal when existing journal is Faulty. So that we ca=
-n
->>   add-journal before removing failed journal.
->=20
-> this is weird usage, why don't we remove the failed journal first?
-
-This is really not necessary.=20
-
-I guess we can just drop this patch.=20
 
 Thanks,
-Song
-
+Shaohua
