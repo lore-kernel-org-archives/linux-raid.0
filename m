@@ -1,35 +1,52 @@
 From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH] md/bitmap:fix a typo in comments of bitmap_read_sb
-Date: Thu, 16 Mar 2017 12:26:08 +0800
-Message-ID: <1489638368-19136-1-git-send-email-zlliu@suse.com>
-References: <1489565693-12595-1-git-send-email-zlliu@suse.com>
+Subject: [PATCH] md/raid5:fix typo in comments of resize_stripes
+Date: Thu, 16 Mar 2017 22:10:39 +0800
+Message-ID: <1489673439-23594-1-git-send-email-zlliu@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1489565693-12595-1-git-send-email-zlliu@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: shli@fb.com
 Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
-bitmap.c: fix a trivial typo in comments of bitmap_read_sb().
+raid5.c: fix typo in comment of resize_stripes()
+and delete repeated words.
 
 Signed-off-by: Zhilong Liu <zlliu@suse.com>
 ---
- drivers/md/bitmap.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/md/raid5.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index 9fb2cca..af9e0f0 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -696,7 +696,7 @@ static int bitmap_read_sb(struct bitmap *bitmap)
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 4fb09b3..cb55b3b 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -2209,7 +2209,7 @@ static int resize_stripes(struct r5conf *conf, int newsize)
+ 	 *    pages have been transferred over, and the old kmem_cache is
+ 	 *    freed when all stripes are done.
+ 	 * 3/ reallocate conf->disks to be suitable bigger.  If this fails,
+-	 *    we simple return a failre status - no need to clean anything up.
++	 *    we simple return a failure status - no need to clean anything up.
+ 	 * 4/ allocate new pages for the new slots in the new stripe_heads.
+ 	 *    If this fails, we don't bother trying the shrink the
+ 	 *    stripe_heads down again, we just leave them as they are.
+@@ -3448,7 +3448,7 @@ static int need_this_block(struct stripe_head *sh, struct stripe_head_state *s,
+ 	    !test_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
+ 		/* Pre-reads at not permitted until after short delay
+ 		 * to gather multiple requests.  However if this
+-		 * device is no Insync, the block could only be be computed
++		 * device is no Insync, the block could only be computed
+ 		 * and there is no need to delay that.
+ 		 */
+ 		return 0;
+@@ -3467,7 +3467,7 @@ static int need_this_block(struct stripe_head *sh, struct stripe_head_state *s,
  
- out:
- 	kunmap_atomic(sb);
--	/* Assiging chunksize is required for "re_read" */
-+	/* Assigning chunksize is required for "re_read" */
- 	bitmap->mddev->bitmap_info.chunksize = chunksize;
- 	if (err == 0 && nodes && (bitmap->cluster_slot < 0)) {
- 		err = md_setup_cluster(bitmap->mddev, nodes);
+ 	/* If we are forced to do a reconstruct-write, either because
+ 	 * the current RAID6 implementation only supports that, or
+-	 * or because parity cannot be trusted and we are currently
++	 * because parity cannot be trusted and we are currently
+ 	 * recovering it, there is extra need to be careful.
+ 	 * If one of the devices that we would need to read, because
+ 	 * it is not being overwritten (and maybe not written at all)
 -- 
 2.6.6
 
