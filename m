@@ -1,67 +1,52 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: [GIT PULL] MD update for 4.11-rc3
-Date: Thu, 16 Mar 2017 09:40:56 -0700
-Message-ID: <20170316164056.pot4r65lokskmjns@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Matthias Kaehlcke <mka@chromium.org>
+Subject: [PATCH] dm ioctl: Remove double parentheses
+Date: Thu, 16 Mar 2017 09:48:30 -0700
+Message-ID: <20170316164830.127026-1-mka@chromium.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
+To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com
+Cc: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Grant Grundler <grundler@chromium.org>, Michael Davidson <md@google.com>, Greg Hackmann <ghackmann@google.com>, Matthias Kaehlcke <mka@chromium.org>
 List-Id: linux-raid.ids
 
-Hi,
-Please pull MD fix for 4.11-rc3. This update includes some fixes and cleanups:
-- Fix a parity calculation bug of raid5 cache by Song
-- Fix a potential deadlock issue by me
-- Fix two endian issues by Jason
-- Fix a disk limitation issue by Neil
-- Other small fixes and cleanup
+The extra pair of parantheses is not needed and causes clang to generate
+the following warning:
 
-Thanks,
-Shaohua
+drivers/md/dm-ioctl.c:1776:11: error: equality comparison with extraneous parentheses [-Werror,-Wparentheses-equality]
+        if ((cmd == DM_DEV_CREATE_CMD)) {
+             ~~~~^~~~~~~~~~~~~~~~~~~~
+drivers/md/dm-ioctl.c:1776:11: note: remove extraneous parentheses around the comparison to silence this warning
+        if ((cmd == DM_DEV_CREATE_CMD)) {
+            ~    ^                   ~
+drivers/md/dm-ioctl.c:1776:11: note: use '=' to turn this equality comparison into an assignment
+        if ((cmd == DM_DEV_CREATE_CMD)) {
+                 ^~
+                 =
 
-The following changes since commit ea6200e84182989a3cce9687cf79a23ac44ec4db:
+Also remove another double parentheses that don't cause a warning.
 
-  Merge branch 'core-urgent-for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip (2017-03-08 14:45:31 -0800)
+Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
+---
+ drivers/md/dm-ioctl.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git for-linus
-
-for you to fetch changes up to 11353b9d10392e79e32603d2178e75feb25eaf0d:
-
-  md/raid1: fix a trivial typo in comments (2017-03-14 11:10:44 -0700)
-
-----------------------------------------------------------------
-Guoqing Jiang (3):
-      md-cluster: free md_cluster_info if node leave cluster
-      md-cluster: remove useless memset from gather_all_resync_info
-      md: move funcs from pers->resize to update_size
-
-Jason Yan (2):
-      md: fix super_offset endianness in super_1_rdev_size_change
-      md: fix incorrect use of lexx_to_cpu in does_sb_need_changing
-
-NeilBrown (1):
-      md: don't impose the MD_SB_DISKS limit on arrays without metadata.
-
-Shaohua Li (3):
-      md/raid10: submit bio directly to replacement disk
-      md: delete dead code
-      md/raid1/10: fix potential deadlock
-
-Song Liu (1):
-      md/r5cache: fix set_syndrome_sources() for data in cache
-
-Zhilong Liu (1):
-      md/raid1: fix a trivial typo in comments
-
- drivers/md/md-cluster.c |  2 +-
- drivers/md/md.c         | 27 +++++++++++----------------
- drivers/md/md.h         |  6 ------
- drivers/md/raid1.c      | 29 ++++++++++++++++++++++++-----
- drivers/md/raid10.c     | 41 ++++++++++++++++++++++++++++++++++-------
- drivers/md/raid5.c      |  5 ++---
- 6 files changed, 72 insertions(+), 38 deletions(-)
+diff --git a/drivers/md/dm-ioctl.c b/drivers/md/dm-ioctl.c
+index a5a9b17f0f7f..9360036bf6d3 100644
+--- a/drivers/md/dm-ioctl.c
++++ b/drivers/md/dm-ioctl.c
+@@ -1777,12 +1777,12 @@ static int validate_params(uint cmd, struct dm_ioctl *param)
+ 	    cmd == DM_LIST_VERSIONS_CMD)
+ 		return 0;
+ 
+-	if ((cmd == DM_DEV_CREATE_CMD)) {
++	if (cmd == DM_DEV_CREATE_CMD) {
+ 		if (!*param->name) {
+ 			DMWARN("name not supplied when creating device");
+ 			return -EINVAL;
+ 		}
+-	} else if ((*param->uuid && *param->name)) {
++	} else if (*param->uuid && *param->name) {
+ 		DMWARN("only supply one of name or uuid, cmd(%u)", cmd);
+ 		return -EINVAL;
+ 	}
+-- 
+2.12.0.367.g23dc2f6d3c-goog
