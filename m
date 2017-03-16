@@ -1,7 +1,7 @@
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH v3 6/6] Grow: support consistency policy change
-Date: Thu, 16 Mar 2017 22:09:48 +0100
-Message-ID: <20170316210948.21093-7-artur.paszkiewicz@intel.com>
+Subject: [PATCH v3 5/6] Add 'ppl' and 'no-ppl' options for --update=
+Date: Thu, 16 Mar 2017 22:09:47 +0100
+Message-ID: <20170316210948.21093-6-artur.paszkiewicz@intel.com>
 References: <20170316210948.21093-1-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20170316210948.21093-1-artur.paszkiewicz@intel.com>
@@ -10,287 +10,272 @@ To: jes.sorensen@gmail.com
 Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-Extend the --consistency-policy parameter to work also in Grow mode.
-Using it changes the currently active consistency policy in the kernel
-driver and updates the metadata to make this change permanent. Currently
-this supports only changing between "ppl" and "resync" policies, that is
-enabling or disabling PPL at runtime.
+This can be used with --assemble for super1 and with --update-subarray
+for imsm to enable or disable PPL in the metadata.
 
 Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- Grow.c     | 172 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- mdadm.8.in |  18 ++++++-
- mdadm.c    |   3 ++
- mdadm.h    |   2 +
- 4 files changed, 194 insertions(+), 1 deletion(-)
+ Assemble.c    |  6 ++++++
+ mdadm.8.in    | 27 ++++++++++++++++++++++++---
+ mdadm.c       |  6 +++++-
+ super-intel.c | 55 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ super1.c      | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 139 insertions(+), 4 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index e4351d7f..c01d0945 100755
---- a/Grow.c
-+++ b/Grow.c
-@@ -528,6 +528,178 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
- 	return 0;
- }
+diff --git a/Assemble.c b/Assemble.c
+index c0984201..6a6a56bf 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -602,6 +602,12 @@ static int load_devices(struct devs *devices, char *devmap,
+ 			if (strcmp(c->update, "uuid") == 0 && !ident->uuid_set)
+ 				random_uuid((__u8 *)ident->uuid);
  
-+int Grow_consistency_policy(char *devname, int fd, struct context *c, struct shape *s)
-+{
-+	struct supertype *st;
-+	struct mdinfo *sra;
-+	struct mdinfo *sd;
-+	char *subarray = NULL;
-+	int ret = 0;
-+	char container_dev[PATH_MAX];
-+
-+	if (s->consistency_policy != CONSISTENCY_POLICY_RESYNC &&
-+	    s->consistency_policy != CONSISTENCY_POLICY_PPL) {
-+		pr_err("Operation not supported for consistency policy %s\n",
-+		       map_num(consistency_policies, s->consistency_policy));
-+		return 1;
-+	}
-+
-+	st = super_by_fd(fd, &subarray);
-+	if (!st)
-+		return 1;
-+
-+	sra = sysfs_read(fd, NULL, GET_CONSISTENCY_POLICY|GET_LEVEL|
-+				   GET_DEVS|GET_STATE);
-+	if (!sra) {
-+		ret = 1;
-+		goto free_st;
-+	}
-+
-+	if (s->consistency_policy == CONSISTENCY_POLICY_PPL &&
-+	    !st->ss->write_init_ppl) {
-+		pr_err("%s metadata does not support PPL\n", st->ss->name);
-+		ret = 1;
-+		goto free_info;
-+	}
-+
-+	if (sra->array.level != 5) {
-+		pr_err("Operation not supported for array level %d\n",
-+				sra->array.level);
-+		ret = 1;
-+		goto free_info;
-+	}
-+
-+	if (sra->consistency_policy == (unsigned)s->consistency_policy) {
-+		pr_err("Consistency policy is already %s\n",
-+		       map_num(consistency_policies, s->consistency_policy));
-+		ret = 1;
-+		goto free_info;
-+	} else if (sra->consistency_policy != CONSISTENCY_POLICY_RESYNC &&
-+		   sra->consistency_policy != CONSISTENCY_POLICY_PPL) {
-+		pr_err("Current consistency policy is %s, cannot change to %s\n",
-+		       map_num(consistency_policies, sra->consistency_policy),
-+		       map_num(consistency_policies, s->consistency_policy));
-+		ret = 1;
-+		goto free_info;
-+	}
-+
-+	if (subarray) {
-+		char *update;
-+
-+		if (s->consistency_policy == CONSISTENCY_POLICY_PPL)
-+			update = "ppl";
-+		else
-+			update = "no-ppl";
-+
-+		sprintf(container_dev, "/dev/%s", st->container_devnm);
-+
-+		ret = Update_subarray(container_dev, subarray, update, NULL,
-+				      c->verbose);
-+		if (ret)
-+			goto free_info;
-+	}
-+
-+	if (s->consistency_policy == CONSISTENCY_POLICY_PPL) {
-+		struct mdinfo info;
-+
-+		if (subarray) {
-+			struct mdinfo *mdi;
-+			int cfd;
-+
-+			cfd = open(container_dev, O_RDWR|O_EXCL);
-+			if (cfd < 0) {
-+				pr_err("Failed to open %s\n", container_dev);
-+				ret = 1;
-+				goto free_info;
++			if (strcmp(c->update, "ppl") == 0 &&
++			    ident->bitmap_fd >= 0) {
++				pr_err("PPL is not compatible with bitmap\n");
++				return -1;
 +			}
 +
-+			ret = st->ss->load_container(st, cfd, st->container_devnm);
-+			close(cfd);
-+
-+			if (ret) {
-+				pr_err("Cannot read superblock for %s\n",
-+				       container_dev);
-+				goto free_info;
-+			}
-+
-+			mdi = st->ss->container_content(st, subarray);
-+			info = *mdi;
-+			free(mdi);
-+		}
-+
-+		for (sd = sra->devs; sd; sd = sd->next) {
-+			int dfd;
-+			char *devpath;
-+
-+			if ((sd->disk.state & (1 << MD_DISK_SYNC)) == 0)
-+				continue;
-+
-+			devpath = map_dev(sd->disk.major, sd->disk.minor, 0);
-+			dfd = dev_open(devpath, O_RDWR);
-+			if (dfd < 0) {
-+				pr_err("Failed to open %s\n", devpath);
-+				ret = 1;
-+				goto free_info;
-+			}
-+
-+			if (!subarray) {
-+				ret = st->ss->load_super(st, dfd, NULL);
-+				if (ret) {
-+					pr_err("Failed to load super-block.\n");
-+					close(dfd);
-+					goto free_info;
-+				}
-+
-+				ret = st->ss->update_super(st, sra, "ppl", devname,
-+							   c->verbose, 0, NULL);
-+				if (ret) {
-+					close(dfd);
-+					st->ss->free_super(st);
-+					goto free_info;
-+				}
-+				st->ss->getinfo_super(st, &info, NULL);
-+			}
-+
-+			ret |= sysfs_set_num(sra, sd, "ppl_sector", info.ppl_sector);
-+			ret |= sysfs_set_num(sra, sd, "ppl_size", info.ppl_size);
-+
-+			if (ret) {
-+				pr_err("Failed to set PPL attributes for %s\n",
-+				       sd->sys_name);
-+				close(dfd);
-+				st->ss->free_super(st);
-+				goto free_info;
-+			}
-+
-+			ret = st->ss->write_init_ppl(st, &info, dfd);
-+			if (ret)
-+				pr_err("Failed to write PPL\n");
-+
-+			close(dfd);
-+
-+			if (!subarray)
-+				st->ss->free_super(st);
-+
-+			if (ret)
-+				goto free_info;
-+		}
-+	}
-+
-+	ret = sysfs_set_str(sra, NULL, "consistency_policy",
-+			    map_num(consistency_policies,
-+				    s->consistency_policy));
-+	if (ret)
-+		pr_err("Failed to change array consistency policy\n");
-+
-+free_info:
-+	sysfs_free(sra);
-+free_st:
-+	free(st);
-+	free(subarray);
-+
-+	return ret;
-+}
-+
- /*
-  * When reshaping an array we might need to backup some data.
-  * This is written to all spares with a 'super_block' describing it.
+ 			dfd = dev_open(devname,
+ 				       tmpdev->disposition == 'I'
+ 				       ? O_RDWR : (O_RDWR|O_EXCL));
 diff --git a/mdadm.8.in b/mdadm.8.in
-index 1178ed9b..744c12b5 100644
+index cad5db53..1178ed9b 100644
 --- a/mdadm.8.in
 +++ b/mdadm.8.in
-@@ -126,7 +126,7 @@ of component devices and changing the number of active devices in
- Linear and RAID levels 0/1/4/5/6,
- changing the RAID level between 0, 1, 5, and 6, and between 0 and 10,
- changing the chunk size and layout for RAID 0,4,5,6,10 as well as adding or
--removing a write-intent bitmap.
-+removing a write-intent bitmap and changing the array's consistency policy.
+@@ -1176,6 +1176,8 @@ argument given to this flag can be one of
+ .BR no\-bitmap ,
+ .BR bbl ,
+ .BR no\-bbl ,
++.BR ppl ,
++.BR no\-ppl ,
+ .BR metadata ,
+ or
+ .BR super\-minor .
+@@ -1316,6 +1318,16 @@ option will cause any reservation of space for a bad block list to be
+ removed.  If the bad block list contains entries, this will fail, as
+ removing the list could cause data corruption.
  
++The
++.B ppl
++option will enable PPL for a RAID5 array and reserve space for PPL on each
++device. There must be enough free space between the data and superblock and a
++write-intent bitmap or journal must not be used.
++
++The
++.B no\-ppl
++option will disable PPL in the superblock.
++
  .TP
- .B "Incremental Assembly"
-@@ -1050,6 +1050,10 @@ after unclean shutdown. Implicitly selected when using
- For RAID5 only, Partial Parity Log is used to close the write hole and
- eliminate resync. PPL is stored in the metadata region of RAID member drives,
- no additional journal drive is needed.
-+
-+.PP
-+Can be used with \-\-grow to change the consistency policy of an active array
-+in some cases. See CONSISTENCY POLICY CHANGES below.
- .RE
- 
- 
-@@ -2694,6 +2698,8 @@ RAID0, RAID4, and RAID5, and between RAID0 and RAID10 (in the near-2 mode).
- .IP \(bu 4
- add a write-intent bitmap to any array which supports these bitmaps, or
- remove a write-intent bitmap from such an array.
-+.IP \(bu 4
-+change the array's consistency policy.
- .PP
- 
- Using GROW on containers is currently supported only for Intel's IMSM
-@@ -2850,6 +2856,16 @@ can be added.  Note that if you add a bitmap stored in a file which is
- in a filesystem that is on the RAID array being affected, the system
- will deadlock.  The bitmap must be on a separate filesystem.
- 
-+.SS CONSISTENCY POLICY CHANGES
-+
-+The consistency policy of an active array can be changed by using the
-+.B \-\-consistency\-policy
-+option in Grow mode. Currently this works only for the
+ .BR \-\-freeze\-reshape
+ Option is intended to be used in start-up scripts during initrd boot phase.
+@@ -2327,9 +2339,11 @@ superblock field in the subarray.  Similar to updating an array in
+ .B \-U
+ or
+ .B \-\-update=
+-option.  Currently only
+-.B name
+-is supported.
++option. The supported options are
++.BR name ,
 +.B ppl
 +and
-+.B resync
-+policies and allows to enable or disable the RAID5 Partial Parity Log (PPL).
-+
- .SH INCREMENTAL MODE
++.BR no\-ppl .
  
- .HP 12
+ The
+ .B name
+@@ -2340,6 +2354,13 @@ re\-assembled.  If updating
+ would change the UUID of an active subarray this operation is blocked,
+ and the command will end in an error.
+ 
++The
++.B ppl
++and
++.B no\-ppl
++options enable and disable PPL in the metadata. Currently supported only for
++IMSM subarrays.
++
+ .TP
+ .B \-\-examine
+ The device should be a component of an md array.
 diff --git a/mdadm.c b/mdadm.c
-index 3d0da1ec..0db4cb33 100644
+index 65431b76..3d0da1ec 100644
 --- a/mdadm.c
 +++ b/mdadm.c
-@@ -1217,6 +1217,7 @@ int main(int argc, char *argv[])
- 			s.journaldisks = 1;
- 			continue;
- 		case O(CREATE, 'k'):
-+		case O(GROW, 'k'):
- 			s.consistency_policy = map_name(consistency_policies,
- 							optarg);
- 			if (s.consistency_policy == UnSet ||
-@@ -1675,6 +1676,8 @@ int main(int argc, char *argv[])
- 			rv = Grow_reshape(devlist->devname, mdfd,
- 					  devlist->next,
- 					  data_offset, &c, &s);
-+		} else if (s.consistency_policy != UnSet) {
-+			rv = Grow_consistency_policy(devlist->devname, mdfd, &c, &s);
- 		} else if (array_size == 0)
- 			pr_err("no changes to --grow\n");
- 		break;
-diff --git a/mdadm.h b/mdadm.h
-index ab1b7fc6..7173b258 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -1331,6 +1331,8 @@ extern int Grow_restart(struct supertype *st, struct mdinfo *info,
- extern int Grow_continue(int mdfd, struct supertype *st,
- 			 struct mdinfo *info, char *backup_file,
- 			 int forked, int freeze_reshape);
-+extern int Grow_consistency_policy(char *devname, int fd,
-+				   struct context *c, struct shape *s);
+@@ -769,6 +769,10 @@ int main(int argc, char *argv[])
+ 				continue;
+ 			if (strcmp(c.update, "force-no-bbl") == 0)
+ 				continue;
++			if (strcmp(c.update, "ppl") == 0)
++				continue;
++			if (strcmp(c.update, "no-ppl") == 0)
++				continue;
+ 			if (strcmp(c.update, "metadata") == 0)
+ 				continue;
+ 			if (strcmp(c.update, "revert-reshape") == 0)
+@@ -802,7 +806,7 @@ int main(int argc, char *argv[])
+ 		"     'sparc2.2', 'super-minor', 'uuid', 'name', 'nodes', 'resync',\n"
+ 		"     'summaries', 'homehost', 'home-cluster', 'byteorder', 'devicesize',\n"
+ 		"     'no-bitmap', 'metadata', 'revert-reshape'\n"
+-		"     'bbl', 'no-bbl', 'force-no-bbl'\n"
++		"     'bbl', 'no-bbl', 'force-no-bbl', 'ppl', 'no-ppl'\n"
+ 				);
+ 			exit(outf == stdout ? 0 : 2);
  
- extern int restore_backup(struct supertype *st,
- 			  struct mdinfo *content,
+diff --git a/super-intel.c b/super-intel.c
+index ad3a4536..53fab8a3 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -451,6 +451,7 @@ enum imsm_update_type {
+ 	update_general_migration_checkpoint,
+ 	update_size_change,
+ 	update_prealloc_badblocks_mem,
++	update_rwh_policy,
+ };
+ 
+ struct imsm_update_activate_spare {
+@@ -543,6 +544,12 @@ struct imsm_update_prealloc_bb_mem {
+ 	enum imsm_update_type type;
+ };
+ 
++struct imsm_update_rwh_policy {
++	enum imsm_update_type type;
++	int new_policy;
++	int dev_idx;
++};
++
+ static const char *_sys_dev_type[] = {
+ 	[SYS_DEV_UNKNOWN] = "Unknown",
+ 	[SYS_DEV_SAS] = "SAS",
+@@ -7370,6 +7377,34 @@ static int update_subarray_imsm(struct supertype *st, char *subarray,
+ 			}
+ 			super->updates_pending++;
+ 		}
++	} else if (strcmp(update, "ppl") == 0 ||
++		   strcmp(update, "no-ppl") == 0) {
++		int new_policy;
++		char *ep;
++		int vol = strtoul(subarray, &ep, 10);
++
++		if (*ep != '\0' || vol >= super->anchor->num_raid_devs)
++			return 2;
++
++		if (strcmp(update, "ppl") == 0)
++			new_policy = RWH_DISTRIBUTED;
++		else
++			new_policy = RWH_OFF;
++
++		if (st->update_tail) {
++			struct imsm_update_rwh_policy *u = xmalloc(sizeof(*u));
++
++			u->type = update_rwh_policy;
++			u->dev_idx = vol;
++			u->new_policy = new_policy;
++			append_metadata_update(st, u, sizeof(*u));
++		} else {
++			struct imsm_dev *dev;
++
++			dev = get_imsm_dev(super, vol);
++			dev->rwh_policy = new_policy;
++			super->updates_pending++;
++		}
+ 	} else
+ 		return 2;
+ 
+@@ -9596,6 +9631,21 @@ static void imsm_process_update(struct supertype *st,
+ 	}
+ 	case update_prealloc_badblocks_mem:
+ 		break;
++	case update_rwh_policy: {
++		struct imsm_update_rwh_policy *u = (void *)update->buf;
++		int target = u->dev_idx;
++		struct imsm_dev *dev = get_imsm_dev(super, target);
++		if (!dev) {
++			dprintf("could not find subarray-%d\n", target);
++			break;
++		}
++
++		if (dev->rwh_policy != u->new_policy) {
++			dev->rwh_policy = u->new_policy;
++			super->updates_pending++;
++		}
++		break;
++	}
+ 	default:
+ 		pr_err("error: unsuported process update type:(type: %d)\n",	type);
+ 	}
+@@ -9841,6 +9891,11 @@ static int imsm_prepare_update(struct supertype *st,
+ 		super->extra_space += sizeof(struct bbm_log) -
+ 			get_imsm_bbm_log_size(super->bbm_log);
+ 		break;
++	case update_rwh_policy: {
++		if (update->len < (int)sizeof(struct imsm_update_rwh_policy))
++			return 0;
++		break;
++	}
+ 	default:
+ 		return 0;
+ 	}
+diff --git a/super1.c b/super1.c
+index 76eeca11..541f31ee 100644
+--- a/super1.c
++++ b/super1.c
+@@ -1325,6 +1325,55 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+ 		sb->bblog_size = 0;
+ 		sb->bblog_shift = 0;
+ 		sb->bblog_offset = 0;
++	} else if (strcmp(update, "ppl") == 0) {
++		unsigned long long sb_offset = __le64_to_cpu(sb->super_offset);
++		unsigned long long data_offset = __le64_to_cpu(sb->data_offset);
++		unsigned long long data_size = __le64_to_cpu(sb->data_size);
++		long bb_offset = __le32_to_cpu(sb->bblog_offset);
++		int space;
++		int optimal_space;
++		int offset;
++
++		if (sb->feature_map & __cpu_to_le32(MD_FEATURE_BITMAP_OFFSET)) {
++			pr_err("Cannot add PPL to array with bitmap\n");
++			return -2;
++		}
++
++		if (sb->feature_map & __cpu_to_le32(MD_FEATURE_JOURNAL)) {
++			pr_err("Cannot add PPL to array with journal\n");
++			return -2;
++		}
++
++		if (sb_offset < data_offset) {
++			if (bb_offset)
++				space = bb_offset - 8;
++			else
++				space = data_offset - sb_offset - 8;
++			offset = 8;
++		} else {
++			offset = -(sb_offset - data_offset - data_size);
++			if (offset < INT16_MIN)
++				offset = INT16_MIN;
++			space = -(offset - bb_offset);
++		}
++
++		if (space < (PPL_HEADER_SIZE >> 9) + 8) {
++			pr_err("Not enough space to add ppl\n");
++			return -2;
++		}
++
++		optimal_space = choose_ppl_space(__le32_to_cpu(sb->chunksize));
++
++		if (space > optimal_space)
++			space = optimal_space;
++		if (space > UINT16_MAX)
++			space = UINT16_MAX;
++
++		sb->ppl.offset = __cpu_to_le16(offset);
++		sb->ppl.size = __cpu_to_le16(space);
++		sb->feature_map |= __cpu_to_le32(MD_FEATURE_PPL);
++	} else if (strcmp(update, "no-ppl") == 0) {
++		sb->feature_map &= ~ __cpu_to_le32(MD_FEATURE_PPL);
+ 	} else if (strcmp(update, "name") == 0) {
+ 		if (info->name[0] == 0)
+ 			sprintf(info->name, "%d", info->array.md_minor);
 -- 
 2.11.0
 
