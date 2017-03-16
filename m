@@ -1,7 +1,7 @@
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH v3 2/6] Detail: show consistency policy
-Date: Thu, 16 Mar 2017 22:09:44 +0100
-Message-ID: <20170316210948.21093-3-artur.paszkiewicz@intel.com>
+Subject: [PATCH v3 1/6] Generic support for --consistency-policy and PPL
+Date: Thu, 16 Mar 2017 22:09:43 +0100
+Message-ID: <20170316210948.21093-2-artur.paszkiewicz@intel.com>
 References: <20170316210948.21093-1-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20170316210948.21093-1-artur.paszkiewicz@intel.com>
@@ -10,328 +10,602 @@ To: jes.sorensen@gmail.com
 Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-Show the currently enabled consistency policy in the output from
---detail. Add 3 spaces to all existing items in Detail output to align
-with "Consistency Policy : ".
+Add a new parameter to mdadm: --consistency-policy=. It determines how
+the array maintains consistency in case of unexpected shutdown. This
+maps to the md sysfs attribute 'consistency_policy'. It can be used to
+create a raid5 array using PPL. Add the necessary plumbing to pass this
+option to metadata handlers. The write journal and bitmap
+functionalities are treated as different policies, which are implicitly
+selected when using --write-journal or --bitmap options.
 
 Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- Detail.c      | 90 +++++++++++++++++++++++++++++++++++------------------------
- super-ddf.c   |  6 ++--
- super-intel.c |  2 +-
- super0.c      |  4 +--
- super1.c      |  9 +++---
- 5 files changed, 65 insertions(+), 46 deletions(-)
+ Create.c      | 18 ++++++++++++++----
+ Kill.c        |  2 +-
+ ReadMe.c      |  7 ++++---
+ maps.c        | 10 ++++++++++
+ mdadm.8.in    | 40 +++++++++++++++++++++++++++++++++++++---
+ mdadm.c       | 55 ++++++++++++++++++++++++++++++++++++++++++++++++++++---
+ mdadm.h       | 21 ++++++++++++++++++---
+ super-ddf.c   |  6 +++---
+ super-gpt.c   |  2 +-
+ super-intel.c | 16 ++++++++--------
+ super-mbr.c   |  2 +-
+ super0.c      |  8 ++++----
+ super1.c      |  6 +++---
+ sysfs.c       | 11 +++++++++++
+ 14 files changed, 167 insertions(+), 37 deletions(-)
 
-diff --git a/Detail.c b/Detail.c
-index 509b0d41..3067fb69 100644
---- a/Detail.c
-+++ b/Detail.c
-@@ -394,24 +394,25 @@ int Detail(char *dev, struct context *c)
- 		printf("%s:\n", dev);
+diff --git a/Create.c b/Create.c
+index 2721884e..4080bf69 100644
+--- a/Create.c
++++ b/Create.c
+@@ -259,7 +259,8 @@ int Create(struct supertype *st, char *mddev,
+ 	if (st && ! st->ss->validate_geometry(st, s->level, s->layout, s->raiddisks,
+ 					      &s->chunk, s->size*2,
+ 					      data_offset, NULL,
+-					      &newsize, c->verbose>=0))
++					      &newsize, s->consistency_policy,
++					      c->verbose>=0))
+ 		return 1;
  
- 		if (container)
--			printf("      Container : %s, member %s\n", container, member);
-+			printf("         Container : %s, member %s\n", container,
-+			       member);
- 		else {
- 		if (sra && sra->array.major_version < 0)
--			printf("        Version : %s\n", sra->text_version);
-+			printf("           Version : %s\n", sra->text_version);
- 		else
--			printf("        Version : %d.%d\n",
-+			printf("           Version : %d.%d\n",
- 			       array.major_version, array.minor_version);
- 		}
+ 	if (s->chunk && s->chunk != UnSet) {
+@@ -358,7 +359,8 @@ int Create(struct supertype *st, char *mddev,
+ 						st, s->level, s->layout, s->raiddisks,
+ 						&s->chunk, s->size*2,
+ 						dv->data_offset, dname,
+-						&freesize, c->verbose > 0)) {
++						&freesize, s->consistency_policy,
++						c->verbose > 0)) {
+ 				case -1: /* Not valid, message printed, and not
+ 					  * worth checking any further */
+ 					exit(2);
+@@ -395,6 +397,7 @@ int Create(struct supertype *st, char *mddev,
+ 						       &s->chunk, s->size*2,
+ 						       dv->data_offset,
+ 						       dname, &freesize,
++						       s->consistency_policy,
+ 						       c->verbose >= 0)) {
  
- 		atime = array.ctime;
- 		if (atime)
--			printf("  Creation Time : %.24s\n", ctime(&atime));
-+			printf("     Creation Time : %.24s\n", ctime(&atime));
- 		if (array.raid_disks == 0 && external)
- 			str = "container";
- 		if (str)
--			printf("     Raid Level : %s\n", str);
-+			printf("        Raid Level : %s\n", str);
- 		if (larray_size)
--			printf("     Array Size : %llu%s\n", (larray_size>>10),
-+			printf("        Array Size : %llu%s\n", (larray_size>>10),
- 			       human_size(larray_size));
- 		if (array.level >= 1) {
- 			if (sra)
-@@ -420,38 +421,38 @@ int Detail(char *dev, struct context *c)
- 			    (larray_size >= 0xFFFFFFFFULL|| array.size == 0)) {
- 				unsigned long long dsize = get_component_size(fd);
- 				if (dsize > 0)
--					printf("  Used Dev Size : %llu%s\n",
-+					printf("     Used Dev Size : %llu%s\n",
- 					       dsize/2,
- 					 human_size((long long)dsize<<9));
- 				else
--					printf("  Used Dev Size : unknown\n");
-+					printf("     Used Dev Size : unknown\n");
- 			} else
--				printf("  Used Dev Size : %lu%s\n",
-+				printf("     Used Dev Size : %lu%s\n",
- 				       (unsigned long)array.size,
- 				       human_size((unsigned long long)array.size<<10));
- 		}
- 		if (array.raid_disks)
--			printf("   Raid Devices : %d\n", array.raid_disks);
--		printf("  Total Devices : %d\n", array.nr_disks);
-+			printf("      Raid Devices : %d\n", array.raid_disks);
-+		printf("     Total Devices : %d\n", array.nr_disks);
- 		if (!container &&
- 		    ((sra == NULL && array.major_version == 0) ||
- 		     (sra && sra->array.major_version == 0)))
--			printf("Preferred Minor : %d\n", array.md_minor);
-+			printf("   Preferred Minor : %d\n", array.md_minor);
- 		if (sra == NULL || sra->array.major_version >= 0)
--			printf("    Persistence : Superblock is %spersistent\n",
-+			printf("       Persistence : Superblock is %spersistent\n",
- 			       array.not_persistent?"not ":"");
- 		printf("\n");
- 		/* Only try GET_BITMAP_FILE for 0.90.01 and later */
- 		if (vers >= 9001 &&
- 		    ioctl(fd, GET_BITMAP_FILE, &bmf) == 0 &&
- 		    bmf.pathname[0]) {
--			printf("  Intent Bitmap : %s\n", bmf.pathname);
-+			printf("     Intent Bitmap : %s\n", bmf.pathname);
- 			printf("\n");
- 		} else if (array.state & (1<<MD_SB_BITMAP_PRESENT))
--			printf("  Intent Bitmap : Internal\n\n");
-+			printf("     Intent Bitmap : Internal\n\n");
- 		atime = array.utime;
- 		if (atime)
--			printf("    Update Time : %.24s\n", ctime(&atime));
-+			printf("       Update Time : %.24s\n", ctime(&atime));
- 		if (array.raid_disks) {
- 			static char *sync_action[] = {
- 				", recovering",  ", resyncing",
-@@ -465,7 +466,7 @@ int Detail(char *dev, struct context *c)
- 			else
- 				st = ", degraded";
+ 				pr_err("%s is not suitable for this array.\n",
+@@ -501,7 +504,8 @@ int Create(struct supertype *st, char *mddev,
+ 						       s->raiddisks,
+ 						       &s->chunk, minsize*2,
+ 						       data_offset,
+-						       NULL, NULL, 0)) {
++						       NULL, NULL,
++						       s->consistency_policy, 0)) {
+ 				pr_err("devices too large for RAID level %d\n", s->level);
+ 				return 1;
+ 			}
+@@ -528,6 +532,12 @@ int Create(struct supertype *st, char *mddev,
+ 	if (s->bitmap_file && strcmp(s->bitmap_file, "none") == 0)
+ 		s->bitmap_file = NULL;
  
--			printf("          State : %s%s%s%s%s%s \n",
-+			printf("             State : %s%s%s%s%s%s \n",
- 			       (array.state&(1<<MD_SB_CLEAN))?"clean":"active", st,
- 			       (!e || (e->percent < 0 && e->percent != RESYNC_PENDING &&
- 			       e->percent != RESYNC_DELAYED)) ? "" : sync_action[e->resync],
-@@ -473,27 +474,27 @@ int Detail(char *dev, struct context *c)
- 			       (e && e->percent == RESYNC_DELAYED) ? " (DELAYED)": "",
- 			       (e && e->percent == RESYNC_PENDING) ? " (PENDING)": "");
- 		} else if (inactive) {
--			printf("          State : inactive\n");
-+			printf("             State : inactive\n");
- 		}
- 		if (array.raid_disks)
--			printf(" Active Devices : %d\n", array.active_disks);
-+			printf("    Active Devices : %d\n", array.active_disks);
- 		if (array.working_disks > 0)
--			printf("Working Devices : %d\n", array.working_disks);
-+			printf("   Working Devices : %d\n", array.working_disks);
- 		if (array.raid_disks) {
--			printf(" Failed Devices : %d\n", array.failed_disks);
--			printf("  Spare Devices : %d\n", array.spare_disks);
-+			printf("    Failed Devices : %d\n", array.failed_disks);
-+			printf("     Spare Devices : %d\n", array.spare_disks);
- 		}
- 		printf("\n");
- 		if (array.level == 5) {
- 			str = map_num(r5layout, array.layout);
--			printf("         Layout : %s\n", str?str:"-unknown-");
-+			printf("            Layout : %s\n", str?str:"-unknown-");
- 		}
- 		if (array.level == 6) {
- 			str = map_num(r6layout, array.layout);
--			printf("         Layout : %s\n", str?str:"-unknown-");
-+			printf("            Layout : %s\n", str?str:"-unknown-");
- 		}
- 		if (array.level == 10) {
--			printf("         Layout :");
-+			printf("            Layout :");
- 			print_r10_layout(array.layout);
- 			printf("\n");
- 		}
-@@ -504,20 +505,35 @@ int Detail(char *dev, struct context *c)
- 		case 10:
- 		case 6:
- 			if (array.chunk_size)
--				printf("     Chunk Size : %dK\n\n",
-+				printf("        Chunk Size : %dK\n\n",
- 				       array.chunk_size/1024);
- 			break;
- 		case -1:
--			printf("       Rounding : %dK\n\n", array.chunk_size/1024);
-+			printf("          Rounding : %dK\n\n",
-+			       array.chunk_size/1024);
- 			break;
- 		default: break;
- 		}
- 
-+		if (array.raid_disks) {
-+			struct mdinfo *mdi = sysfs_read(fd, NULL,
-+							GET_CONSISTENCY_POLICY);
-+			if (mdi) {
-+				char *policy = map_num(consistency_policies,
-+						       mdi->consistency_policy);
-+				sysfs_free(mdi);
-+				if (policy)
-+					printf("Consistency Policy : %s\n\n",
-+					       policy);
-+			}
-+		}
++	if (s->consistency_policy == CONSISTENCY_POLICY_PPL &&
++	    !st->ss->write_init_ppl) {
++		pr_err("%s metadata does not support PPL\n", st->ss->name);
++		return 1;
++	}
 +
- 		if (e && e->percent >= 0) {
- 			static char *sync_action[] = {
- 				"Rebuild", "Resync",
- 				"Reshape", "Check"};
--			printf(" %7s Status : %d%% complete\n", sync_action[e->resync], e->percent);
-+			printf("    %7s Status : %d%% complete\n",
-+			       sync_action[e->resync], e->percent);
- 			is_rebuilding = 1;
+ 	if (!have_container && s->level > 0 && ((maxsize-s->size)*100 > maxsize)) {
+ 		if (c->runstop != 1 || c->verbose >= 0)
+ 			pr_err("largest drive (%s) exceeds size (%lluK) by more than 1%%\n",
+@@ -720,7 +730,7 @@ int Create(struct supertype *st, char *mddev,
+ 				name += 2;
  		}
- 		free_mdstat(ms);
-@@ -525,39 +541,41 @@ int Detail(char *dev, struct context *c)
- 		if ((st && st->sb) && (info && info->reshape_active)) {
- #if 0
- This is pretty boring
--			printf("  Reshape pos'n : %llu%s\n", (unsigned long long) info->reshape_progress<<9,
-+			printf("     Reshape pos'n : %llu%s\n",
-+			       (unsigned long long) info->reshape_progress<<9,
- 			       human_size((unsigned long long)info->reshape_progress<<9));
- #endif
- 			if (info->delta_disks != 0)
--				printf("  Delta Devices : %d, (%d->%d)\n",
-+				printf("     Delta Devices : %d, (%d->%d)\n",
- 				       info->delta_disks,
- 				       array.raid_disks - info->delta_disks,
- 				       array.raid_disks);
- 			if (info->new_level != array.level) {
- 				str = map_num(pers, info->new_level);
--				printf("      New Level : %s\n", str?str:"-unknown-");
-+				printf("         New Level : %s\n", str?str:"-unknown-");
- 			}
- 			if (info->new_level != array.level ||
- 			    info->new_layout != array.layout) {
- 				if (info->new_level == 5) {
- 					str = map_num(r5layout, info->new_layout);
--					printf("     New Layout : %s\n",
-+					printf("        New Layout : %s\n",
- 					       str?str:"-unknown-");
- 				}
- 				if (info->new_level == 6) {
- 					str = map_num(r6layout, info->new_layout);
--					printf("     New Layout : %s\n",
-+					printf("        New Layout : %s\n",
- 					       str?str:"-unknown-");
- 				}
- 				if (info->new_level == 10) {
--					printf("     New Layout : near=%d, %s=%d\n",
-+					printf("        New Layout : near=%d, %s=%d\n",
- 					       info->new_layout&255,
- 					       (info->new_layout&0x10000)?"offset":"far",
- 					       (info->new_layout>>8)&255);
- 				}
- 			}
- 			if (info->new_chunk != array.chunk_size)
--				printf("  New Chunksize : %dK\n", info->new_chunk/1024);
-+				printf("     New Chunksize : %dK\n",
-+				       info->new_chunk/1024);
- 			printf("\n");
- 		} else if (e && e->percent >= 0)
- 			printf("\n");
-@@ -572,7 +590,7 @@ This is pretty boring
- 			DIR *dir = opendir("/sys/block");
- 			struct dirent *de;
+ 	}
+-	if (!st->ss->init_super(st, &info.array, s->size, name, c->homehost, uuid,
++	if (!st->ss->init_super(st, &info.array, s, name, c->homehost, uuid,
+ 				data_offset))
+ 		goto abort_locked;
  
--			printf("  Member Arrays :");
-+			printf("     Member Arrays :");
+diff --git a/Kill.c b/Kill.c
+index f2fdb856..ff52561d 100644
+--- a/Kill.c
++++ b/Kill.c
+@@ -63,7 +63,7 @@ int Kill(char *dev, struct supertype *st, int force, int verbose, int noexcl)
+ 	rv = st->ss->load_super(st, fd, dev);
+ 	if (rv == 0 || (force && rv >= 2)) {
+ 		st->ss->free_super(st);
+-		st->ss->init_super(st, NULL, 0, "", NULL, NULL,
++		st->ss->init_super(st, NULL, NULL, "", NULL, NULL,
+ 				   INVALID_SECTORS);
+ 		if (st->ss->store_super(st, fd)) {
+ 			if (verbose >= 0)
+diff --git a/ReadMe.c b/ReadMe.c
+index 50d38076..a2acfc74 100644
+--- a/ReadMe.c
++++ b/ReadMe.c
+@@ -78,11 +78,11 @@ char Version[] = "mdadm - v" VERSION " - " VERS_DATE "\n";
+  *     found, it is started.
+  */
  
- 			while (dir && (de = readdir(dir)) != NULL) {
- 				char path[200];
+-char short_options[]="-ABCDEFGIQhVXYWZ:vqbc:i:l:p:m:n:x:u:c:d:z:U:N:sarfRSow1tye:";
++char short_options[]="-ABCDEFGIQhVXYWZ:vqbc:i:l:p:m:n:x:u:c:d:z:U:N:sarfRSow1tye:k:";
+ char short_bitmap_options[]=
+-		"-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:n:x:u:c:d:z:U:N:sarfRSow1tye:";
++		"-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:n:x:u:c:d:z:U:N:sarfRSow1tye:k:";
+ char short_bitmap_auto_options[]=
+-		"-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:n:x:u:c:d:z:U:N:sa:rfRSow1tye:";
++		"-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:n:x:u:c:d:z:U:N:sa:rfRSow1tye:k:";
+ 
+ struct option long_options[] = {
+     {"manage",    0, 0, ManageOpt},
+@@ -148,6 +148,7 @@ struct option long_options[] = {
+     {"nodes",1, 0, Nodes}, /* also for --assemble */
+     {"home-cluster",1, 0, ClusterName},
+     {"write-journal",1, 0, WriteJournal},
++    {"consistency-policy",1, 0, 'k'},
+ 
+     /* For assemble */
+     {"uuid",      1, 0, 'u'},
+diff --git a/maps.c b/maps.c
+index 64f1df2c..d9ee7de4 100644
+--- a/maps.c
++++ b/maps.c
+@@ -129,6 +129,16 @@ mapping_t faultylayout[] = {
+ 	{ NULL, 0}
+ };
+ 
++mapping_t consistency_policies[] = {
++	{ "unknown", CONSISTENCY_POLICY_UNKNOWN},
++	{ "none", CONSISTENCY_POLICY_NONE},
++	{ "resync", CONSISTENCY_POLICY_RESYNC},
++	{ "bitmap", CONSISTENCY_POLICY_BITMAP},
++	{ "journal", CONSISTENCY_POLICY_JOURNAL},
++	{ "ppl", CONSISTENCY_POLICY_PPL},
++	{ NULL, 0}
++};
++
+ char *map_num(mapping_t *map, int num)
+ {
+ 	while (map->name) {
+diff --git a/mdadm.8.in b/mdadm.8.in
+index df1d460d..cad5db53 100644
+--- a/mdadm.8.in
++++ b/mdadm.8.in
+@@ -724,7 +724,9 @@ When creating an array on devices which are 100G or larger,
+ .I mdadm
+ automatically adds an internal bitmap as it will usually be
+ beneficial.  This can be suppressed with
+-.B "\-\-bitmap=none".
++.B "\-\-bitmap=none"
++or by selecting a different consistency policy with
++.BR \-\-consistency\-policy .
+ 
+ .TP
+ .BR \-\-bitmap\-chunk=
+@@ -1020,6 +1022,36 @@ should be a SSD with reasonable lifetime.
+ Auto creation of symlinks in /dev to /dev/md, option --symlinks must
+ be 'no' or 'yes' and work with --create and --build.
+ 
++.TP
++.BR \-k ", " \-\-consistency\-policy=
++Specify how the array maintains consistency in case of unexpected shutdown.
++Only relevant for RAID levels with redundancy.
++Currently supported options are:
++.RS
++
++.TP
++.B resync
++Full resync is performed and all redundancy is regenerated when the array is
++started after unclean shutdown.
++
++.TP
++.B bitmap
++Resync assisted by a write-intent bitmap. Implicitly selected when using
++.BR \-\-bitmap .
++
++.TP
++.B journal
++For RAID levels 4/5/6, journal device is used to log transactions and replay
++after unclean shutdown. Implicitly selected when using
++.BR \-\-write\-journal .
++
++.TP
++.B ppl
++For RAID5 only, Partial Parity Log is used to close the write hole and
++eliminate resync. PPL is stored in the metadata region of RAID member drives,
++no additional journal drive is needed.
++.RE
++
+ 
+ .SH For assemble:
+ 
+@@ -2153,8 +2185,10 @@ in the array exceed 100G is size, an internal write-intent bitmap
+ will automatically be added unless some other option is explicitly
+ requested with the
+ .B \-\-bitmap
+-option.  In any case space for a bitmap will be reserved so that one
+-can be added layer with
++option or a different consistency policy is selected with the
++.B \-\-consistency\-policy
++option. In any case space for a bitmap will be reserved so that one
++can be added later with
+ .BR "\-\-grow \-\-bitmap=internal" .
+ 
+ If the metadata type supports it (currently only 1.x metadata), space
+diff --git a/mdadm.c b/mdadm.c
+index d6ad8dc2..65431b76 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -78,6 +78,7 @@ int main(int argc, char *argv[])
+ 		.level		= UnSet,
+ 		.layout		= UnSet,
+ 		.bitmap_chunk	= UnSet,
++		.consistency_policy	= UnSet,
+ 	};
+ 
+ 	char sys_hostname[256];
+@@ -1211,6 +1212,16 @@ int main(int argc, char *argv[])
+ 
+ 			s.journaldisks = 1;
+ 			continue;
++		case O(CREATE, 'k'):
++			s.consistency_policy = map_name(consistency_policies,
++							optarg);
++			if (s.consistency_policy == UnSet ||
++			    s.consistency_policy < CONSISTENCY_POLICY_RESYNC) {
++				pr_err("Invalid consistency policy: %s\n",
++				       optarg);
++				exit(2);
++			}
++			continue;
+ 		}
+ 		/* We have now processed all the valid options. Anything else is
+ 		 * an error
+@@ -1238,9 +1249,47 @@ int main(int argc, char *argv[])
+ 		exit(0);
+ 	}
+ 
+-	if (s.journaldisks && (s.level < 4 || s.level > 6)) {
+-		pr_err("--write-journal is only supported for RAID level 4/5/6.\n");
+-		exit(2);
++	if (s.journaldisks) {
++		if (s.level < 4 || s.level > 6) {
++			pr_err("--write-journal is only supported for RAID level 4/5/6.\n");
++			exit(2);
++		}
++		if (s.consistency_policy != UnSet &&
++		    s.consistency_policy != CONSISTENCY_POLICY_JOURNAL) {
++			pr_err("--write-journal is not supported with consistency policy: %s\n",
++			       map_num(consistency_policies, s.consistency_policy));
++			exit(2);
++		}
++	}
++
++	if (mode == CREATE && s.consistency_policy != UnSet) {
++		if (s.level <= 0) {
++			pr_err("--consistency-policy not meaningful with level %s.\n",
++			       map_num(pers, s.level));
++			exit(2);
++		} else if (s.consistency_policy == CONSISTENCY_POLICY_JOURNAL &&
++			   !s.journaldisks) {
++			pr_err("--write-journal is required for consistency policy: %s\n",
++			       map_num(consistency_policies, s.consistency_policy));
++			exit(2);
++		} else if (s.consistency_policy == CONSISTENCY_POLICY_PPL &&
++			   s.level != 5) {
++			pr_err("PPL consistency policy is only supported for RAID level 5.\n");
++			exit(2);
++		} else if (s.consistency_policy == CONSISTENCY_POLICY_BITMAP &&
++			   (!s.bitmap_file ||
++			    strcmp(s.bitmap_file, "none") == 0)) {
++			pr_err("--bitmap is required for consistency policy: %s\n",
++			       map_num(consistency_policies, s.consistency_policy));
++			exit(2);
++		} else if (s.bitmap_file &&
++			   strcmp(s.bitmap_file, "none") != 0 &&
++			   s.consistency_policy != CONSISTENCY_POLICY_BITMAP &&
++			   s.consistency_policy != CONSISTENCY_POLICY_JOURNAL) {
++			pr_err("--bitmap is not compatible with consistency policy: %s\n",
++			       map_num(consistency_policies, s.consistency_policy));
++			exit(2);
++		}
+ 	}
+ 
+ 	if (!mode && devs_found) {
+diff --git a/mdadm.h b/mdadm.h
+index 71b8afb9..ed4d7e4e 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -279,6 +279,15 @@ struct mdinfo {
+ 	int journal_device_required;
+ 	int journal_clean;
+ 
++	enum {
++		CONSISTENCY_POLICY_UNKNOWN,
++		CONSISTENCY_POLICY_NONE,
++		CONSISTENCY_POLICY_RESYNC,
++		CONSISTENCY_POLICY_BITMAP,
++		CONSISTENCY_POLICY_JOURNAL,
++		CONSISTENCY_POLICY_PPL,
++	} consistency_policy;
++
+ 	/* During reshape we can sometimes change the data_offset to avoid
+ 	 * over-writing still-valid data.  We need to know if there is space.
+ 	 * So getinfo_super will fill in space_before and space_after in sectors.
+@@ -426,6 +435,7 @@ enum special_options {
+ 	ClusterName,
+ 	ClusterConfirm,
+ 	WriteJournal,
++	ConsistencyPolicy,
+ };
+ 
+ enum prefix_standard {
+@@ -527,6 +537,7 @@ struct shape {
+ 	int	assume_clean;
+ 	int	write_behind;
+ 	unsigned long long size;
++	int	consistency_policy;
+ };
+ 
+ /* List of device names - wildcards expanded */
+@@ -618,6 +629,7 @@ enum sysfs_read_flags {
+ 	GET_STATE	= (1 << 23),
+ 	GET_ERROR	= (1 << 24),
+ 	GET_ARRAY_STATE = (1 << 25),
++	GET_CONSISTENCY_POLICY	= (1 << 26),
+ };
+ 
+ /* If fd >= 0, get the array it is open on,
+@@ -701,7 +713,7 @@ extern int restore_stripes(int *dest, unsigned long long *offsets,
+ 
+ extern char *map_num(mapping_t *map, int num);
+ extern int map_name(mapping_t *map, char *name);
+-extern mapping_t r5layout[], r6layout[], pers[], modes[], faultylayout[];
++extern mapping_t r5layout[], r6layout[], pers[], modes[], faultylayout[], consistency_policies[];
+ 
+ extern char *map_dev_preferred(int major, int minor, int create,
+ 			       char *prefer);
+@@ -863,7 +875,7 @@ extern struct superswitch {
+ 	 * metadata.
+ 	 */
+ 	int (*init_super)(struct supertype *st, mdu_array_info_t *info,
+-			  unsigned long long size, char *name,
++			  struct shape *s, char *name,
+ 			  char *homehost, int *uuid,
+ 			  unsigned long long data_offset);
+ 
+@@ -961,7 +973,7 @@ extern struct superswitch {
+ 				 int *chunk, unsigned long long size,
+ 				 unsigned long long data_offset,
+ 				 char *subdev, unsigned long long *freesize,
+-				 int verbose);
++				 int consistency_policy, int verbose);
+ 
+ 	/* Return a linked list of 'mdinfo' structures for all arrays
+ 	 * in the container.  For non-containers, it is like
+@@ -1059,6 +1071,9 @@ extern struct superswitch {
+ 	/* validate container after assemble */
+ 	int (*validate_container)(struct mdinfo *info);
+ 
++	/* write initial empty PPL on device */
++	int (*write_init_ppl)(struct supertype *st, struct mdinfo *info, int fd);
++
+ 	/* records new bad block in metadata */
+ 	int (*record_bad_block)(struct active_array *a, int n,
+ 					unsigned long long sector, int length);
 diff --git a/super-ddf.c b/super-ddf.c
-index cdd16a47..c6037c1c 100644
+index 1707ad1e..cdd16a47 100644
 --- a/super-ddf.c
 +++ b/super-ddf.c
-@@ -1742,10 +1742,10 @@ static void detail_super_ddf(struct supertype *st, char *homehost)
- 	struct ddf_super *sb = st->sb;
- 	int cnt = be16_to_cpu(sb->virt->populated_vdes);
+@@ -2290,7 +2290,7 @@ static unsigned int find_vde_by_guid(const struct ddf_super *ddf,
  
--	printf(" Container GUID : "); print_guid(sb->anchor.guid, 1);
-+	printf("    Container GUID : "); print_guid(sb->anchor.guid, 1);
- 	printf("\n");
--	printf("            Seq : %08x\n", be32_to_cpu(sb->active->seq));
--	printf("  Virtual Disks : %d\n", cnt);
-+	printf("               Seq : %08x\n", be32_to_cpu(sb->active->seq));
-+	printf("     Virtual Disks : %d\n", cnt);
- 	printf("\n");
- }
- #endif
+ static int init_super_ddf(struct supertype *st,
+ 			  mdu_array_info_t *info,
+-			  unsigned long long size, char *name, char *homehost,
++			  struct shape *s, char *name, char *homehost,
+ 			  int *uuid, unsigned long long data_offset)
+ {
+ 	/* This is primarily called by Create when creating a new array.
+@@ -2328,7 +2328,7 @@ static int init_super_ddf(struct supertype *st,
+ 	struct virtual_disk *vd;
+ 
+ 	if (st->sb)
+-		return init_super_ddf_bvd(st, info, size, name, homehost, uuid,
++		return init_super_ddf_bvd(st, info, s->size, name, homehost, uuid,
+ 					  data_offset);
+ 
+ 	if (posix_memalign((void**)&ddf, 512, sizeof(*ddf)) != 0) {
+@@ -3347,7 +3347,7 @@ static int validate_geometry_ddf(struct supertype *st,
+ 				 int *chunk, unsigned long long size,
+ 				 unsigned long long data_offset,
+ 				 char *dev, unsigned long long *freesize,
+-				 int verbose)
++				 int consistency_policy, int verbose)
+ {
+ 	int fd;
+ 	struct mdinfo *sra;
+diff --git a/super-gpt.c b/super-gpt.c
+index 8b080a05..bb38a975 100644
+--- a/super-gpt.c
++++ b/super-gpt.c
+@@ -205,7 +205,7 @@ static int validate_geometry(struct supertype *st, int level,
+ 			     int *chunk, unsigned long long size,
+ 			     unsigned long long data_offset,
+ 			     char *subdev, unsigned long long *freesize,
+-			     int verbose)
++			     int consistency_policy, int verbose)
+ {
+ 	pr_err("gpt metadata cannot be used this way\n");
+ 	return 0;
 diff --git a/super-intel.c b/super-intel.c
-index 6d16a191..120ce77c 100644
+index d5e95179..6d16a191 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -1986,7 +1986,7 @@ static void detail_super_imsm(struct supertype *st, char *homehost)
- 
- 	getinfo_super_imsm(st, &info, NULL);
- 	fname_from_uuid(st, &info, nbuf, ':');
--	printf("\n           UUID : %s\n", nbuf + 5);
-+	printf("\n              UUID : %s\n", nbuf + 5);
+@@ -5154,7 +5154,7 @@ static int check_name(struct intel_super *super, char *name, int quiet)
  }
  
- static void brief_detail_super_imsm(struct supertype *st)
+ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
+-				  unsigned long long size, char *name,
++				  struct shape *s, char *name,
+ 				  char *homehost, int *uuid,
+ 				  long long data_offset)
+ {
+@@ -5249,7 +5249,7 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
+ 	strncpy((char *) dev->volume, name, MAX_RAID_SERIAL_LEN);
+ 	array_blocks = calc_array_size(info->level, info->raid_disks,
+ 					       info->layout, info->chunk_size,
+-					       size * 2);
++					       s->size * 2);
+ 	/* round array size down to closest MB */
+ 	array_blocks = (array_blocks >> SECT_PER_MB_SHIFT) << SECT_PER_MB_SHIFT;
+ 
+@@ -5263,7 +5263,7 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
+ 	vol->curr_migr_unit = 0;
+ 	map = get_imsm_map(dev, MAP_0);
+ 	set_pba_of_lba0(map, super->create_offset);
+-	set_blocks_per_member(map, info_to_blocks_per_member(info, size));
++	set_blocks_per_member(map, info_to_blocks_per_member(info, s->size));
+ 	map->blocks_per_strip = __cpu_to_le16(info_to_blocks_per_strip(info));
+ 	map->failed_disk_num = ~0;
+ 	if (info->level > 0)
+@@ -5291,7 +5291,7 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
+ 		map->num_domains = 1;
+ 
+ 	/* info->size is only int so use the 'size' parameter instead */
+-	num_data_stripes = (size * 2) / info_to_blocks_per_strip(info);
++	num_data_stripes = (s->size * 2) / info_to_blocks_per_strip(info);
+ 	num_data_stripes /= map->num_domains;
+ 	set_num_data_stripes(map, num_data_stripes);
+ 
+@@ -5313,7 +5313,7 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
+ }
+ 
+ static int init_super_imsm(struct supertype *st, mdu_array_info_t *info,
+-			   unsigned long long size, char *name,
++		           struct shape *s, char *name,
+ 			   char *homehost, int *uuid,
+ 			   unsigned long long data_offset)
+ {
+@@ -5336,7 +5336,7 @@ static int init_super_imsm(struct supertype *st, mdu_array_info_t *info,
+ 	}
+ 
+ 	if (st->sb)
+-		return init_super_imsm_volume(st, info, size, name, homehost, uuid,
++		return init_super_imsm_volume(st, info, s, name, homehost, uuid,
+ 					      data_offset);
+ 
+ 	if (info)
+@@ -6913,7 +6913,7 @@ static int validate_geometry_imsm(struct supertype *st, int level, int layout,
+ 				  int raiddisks, int *chunk, unsigned long long size,
+ 				  unsigned long long data_offset,
+ 				  char *dev, unsigned long long *freesize,
+-				  int verbose)
++				  int consistency_policy, int verbose)
+ {
+ 	int fd, cfd;
+ 	struct mdinfo *sra;
+@@ -10950,7 +10950,7 @@ enum imsm_reshape_type imsm_analyze_change(struct supertype *st,
+ 				    geo->raid_disks + devNumChange,
+ 				    &chunk,
+ 				    geo->size, INVALID_SECTORS,
+-				    0, 0, 1))
++				    0, 0, info.consistency_policy, 1))
+ 		change = -1;
+ 
+ 	if (check_devs) {
+diff --git a/super-mbr.c b/super-mbr.c
+index f5e4ceab..1bbe57a9 100644
+--- a/super-mbr.c
++++ b/super-mbr.c
+@@ -193,7 +193,7 @@ static int validate_geometry(struct supertype *st, int level,
+ 			     int *chunk, unsigned long long size,
+ 			     unsigned long long data_offset,
+ 			     char *subdev, unsigned long long *freesize,
+-			     int verbose)
++			     int consistency_policy, int verbose)
+ {
+ 	pr_err("mbr metadata cannot be used this way\n");
+ 	return 0;
 diff --git a/super0.c b/super0.c
-index 0fec96b7..b2cdaec5 100644
+index 938cfd95..0fec96b7 100644
 --- a/super0.c
 +++ b/super0.c
-@@ -353,7 +353,7 @@ err:
- static void detail_super0(struct supertype *st, char *homehost)
+@@ -725,7 +725,7 @@ static int update_super0(struct supertype *st, struct mdinfo *info,
+  * We use the first 8 bytes (64bits) of the sha1 of the host name
+  */
+ static int init_super0(struct supertype *st, mdu_array_info_t *info,
+-		       unsigned long long size, char *ignored_name,
++		       struct shape *s, char *ignored_name,
+ 		       char *homehost, int *uuid,
+ 		       unsigned long long data_offset)
  {
- 	mdp_super_t *sb = st->sb;
--	printf("           UUID : ");
-+	printf("              UUID : ");
- 	if (sb->minor_version >= 90)
- 		printf("%08x:%08x:%08x:%08x", sb->set_uuid0, sb->set_uuid1,
- 		       sb->set_uuid2, sb->set_uuid3);
-@@ -367,7 +367,7 @@ static void detail_super0(struct supertype *st, char *homehost)
- 		if (memcmp(&sb->set_uuid2, hash, 8)==0)
- 			printf(" (local to host %s)", homehost);
- 	}
--	printf("\n         Events : %d.%d\n\n", sb->events_hi, sb->events_lo);
-+	printf("\n            Events : %d.%d\n\n", sb->events_hi, sb->events_lo);
- }
- 
- static void brief_detail_super0(struct supertype *st)
+@@ -764,8 +764,8 @@ static int init_super0(struct supertype *st, mdu_array_info_t *info,
+ 	sb->gvalid_words = 0; /* ignored */
+ 	sb->ctime = time(0);
+ 	sb->level = info->level;
+-	sb->size = size;
+-	if (size != (unsigned long long)sb->size)
++	sb->size = s->size;
++	if (s->size != (unsigned long long)sb->size)
+ 		return 0;
+ 	sb->nr_disks = info->nr_disks;
+ 	sb->raid_disks = info->raid_disks;
+@@ -1267,7 +1267,7 @@ static int validate_geometry0(struct supertype *st, int level,
+ 			      int *chunk, unsigned long long size,
+ 			      unsigned long long data_offset,
+ 			      char *subdev, unsigned long long *freesize,
+-			      int verbose)
++			      int consistency_policy, int verbose)
+ {
+ 	unsigned long long ldsize;
+ 	int fd;
 diff --git a/super1.c b/super1.c
-index fa238329..672cdde6 100644
+index 882cd61a..fa238329 100644
 --- a/super1.c
 +++ b/super1.c
-@@ -780,19 +780,20 @@ static void detail_super1(struct supertype *st, char *homehost)
- 	int i;
- 	int l = homehost ? strlen(homehost) : 0;
- 
--	printf("           Name : %.32s", sb->set_name);
-+	printf("              Name : %.32s", sb->set_name);
- 	if (l > 0 && l < 32 &&
- 	    sb->set_name[l] == ':' &&
- 	    strncmp(sb->set_name, homehost, l) == 0)
- 		printf("  (local to host %s)", homehost);
- 	if (bms->nodes > 0 && (__le32_to_cpu(sb->feature_map) & MD_FEATURE_BITMAP_OFFSET))
--	    printf("\n   Cluster Name : %-64s", bms->cluster_name);
--	printf("\n           UUID : ");
-+	    printf("\n      Cluster Name : %-64s", bms->cluster_name);
-+	printf("\n              UUID : ");
- 	for (i=0; i<16; i++) {
- 		if ((i&3)==0 && i != 0) printf(":");
- 		printf("%02x", sb->set_uuid[i]);
- 	}
--	printf("\n         Events : %llu\n\n", (unsigned long long)__le64_to_cpu(sb->events));
-+	printf("\n            Events : %llu\n\n",
-+	       (unsigned long long)__le64_to_cpu(sb->events));
+@@ -1397,7 +1397,7 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
  }
  
- static void brief_detail_super1(struct supertype *st)
+ static int init_super1(struct supertype *st, mdu_array_info_t *info,
+-		       unsigned long long size, char *name, char *homehost,
++		       struct shape *s, char *name, char *homehost,
+ 		       int *uuid, unsigned long long data_offset)
+ {
+ 	struct mdp_superblock_1 *sb;
+@@ -1450,7 +1450,7 @@ static int init_super1(struct supertype *st, mdu_array_info_t *info,
+ 	sb->ctime = __cpu_to_le64((unsigned long long)time(0));
+ 	sb->level = __cpu_to_le32(info->level);
+ 	sb->layout = __cpu_to_le32(info->layout);
+-	sb->size = __cpu_to_le64(size*2ULL);
++	sb->size = __cpu_to_le64(s->size*2ULL);
+ 	sb->chunksize = __cpu_to_le32(info->chunk_size>>9);
+ 	sb->raid_disks = __cpu_to_le32(info->raid_disks);
+ 
+@@ -2485,7 +2485,7 @@ static int validate_geometry1(struct supertype *st, int level,
+ 			      int *chunk, unsigned long long size,
+ 			      unsigned long long data_offset,
+ 			      char *subdev, unsigned long long *freesize,
+-			      int verbose)
++			      int consistency_policy, int verbose)
+ {
+ 	unsigned long long ldsize, devsize;
+ 	int bmspace;
+diff --git a/sysfs.c b/sysfs.c
+index b0657a04..53589a76 100644
+--- a/sysfs.c
++++ b/sysfs.c
+@@ -242,6 +242,17 @@ struct mdinfo *sysfs_read(int fd, char *devnm, unsigned long options)
+ 	} else
+ 		sra->sysfs_array_state[0] = 0;
+ 
++	if (options & GET_CONSISTENCY_POLICY) {
++		strcpy(base, "consistency_policy");
++		if (load_sys(fname, buf, sizeof(buf))) {
++			sra->consistency_policy = CONSISTENCY_POLICY_UNKNOWN;
++		} else {
++			sra->consistency_policy = map_name(consistency_policies, buf);
++			if (sra->consistency_policy == UnSet)
++				sra->consistency_policy = CONSISTENCY_POLICY_UNKNOWN;
++		}
++	}
++
+ 	if (! (options & GET_DEVS))
+ 		return sra;
+ 
 -- 
 2.11.0
 
