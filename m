@@ -1,7 +1,7 @@
 From: Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH v3 11/14] md: raid10: refactor code of read reshape's .bi_end_io
-Date: Fri, 17 Mar 2017 00:12:32 +0800
-Message-ID: <20170316161235.27110-12-tom.leiming@gmail.com>
+Subject: [PATCH v3 13/14] md: raid10: retrieve page from preallocated resync page array
+Date: Fri, 17 Mar 2017 00:12:34 +0800
+Message-ID: <20170316161235.27110-14-tom.leiming@gmail.com>
 References: <20170316161235.27110-1-tom.leiming@gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20170316161235.27110-1-tom.leiming@gmail.com>
@@ -10,73 +10,80 @@ To: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, linux-raid@vger.ker
 Cc: Ming Lei <tom.leiming@gmail.com>
 List-Id: linux-raid.ids
 
-reshape read request is a bit special and requires one extra
-bio which isn't allocated from r10buf_pool.
-
-Refactor the .bi_end_io for read reshape, so that we can use
-raid10's resync page mangement approach easily in the following
-patches.
+Now one page array is allocated for each resync bio, and we can
+retrieve page from this table directly.
 
 Signed-off-by: Ming Lei <tom.leiming@gmail.com>
 ---
- drivers/md/raid10.c | 28 ++++++++++++++++++----------
- 1 file changed, 18 insertions(+), 10 deletions(-)
+ drivers/md/raid10.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 2b40420299e3..98e53f39b66e 100644
+index d2cb68971486..8db3b0869be4 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -1909,17 +1909,9 @@ static int raid10_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
- 	return err;
- }
+@@ -2075,6 +2075,7 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
+ 	int i, first;
+ 	struct bio *tbio, *fbio;
+ 	int vcnt;
++	struct page **tpages, **fpages;
  
--static void end_sync_read(struct bio *bio)
-+static void __end_sync_read(struct r10bio *r10_bio, struct bio *bio, int d)
- {
--	struct r10bio *r10_bio = bio->bi_private;
- 	struct r10conf *conf = r10_bio->mddev->private;
--	int d;
--
--	if (bio == r10_bio->master_bio) {
--		/* this is a reshape read */
--		d = r10_bio->read_slot; /* really the read dev */
--	} else
--		d = find_bio_disk(conf, r10_bio, bio, NULL, NULL);
+ 	atomic_set(&r10_bio->remaining, 1);
  
- 	if (!bio->bi_error)
- 		set_bit(R10BIO_Uptodate, &r10_bio->state);
-@@ -1943,6 +1935,22 @@ static void end_sync_read(struct bio *bio)
- 	}
- }
+@@ -2090,6 +2091,7 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
+ 	fbio = r10_bio->devs[i].bio;
+ 	fbio->bi_iter.bi_size = r10_bio->sectors << 9;
+ 	fbio->bi_iter.bi_idx = 0;
++	fpages = get_resync_pages(fbio)->pages;
  
-+static void end_sync_read(struct bio *bio)
-+{
-+	struct r10bio *r10_bio = bio->bi_private;
-+	struct r10conf *conf = r10_bio->mddev->private;
-+	int d = find_bio_disk(conf, r10_bio, bio, NULL, NULL);
+ 	vcnt = (r10_bio->sectors + (PAGE_SIZE >> 9) - 1) >> (PAGE_SHIFT - 9);
+ 	/* now find blocks with errors */
+@@ -2104,6 +2106,8 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
+ 			continue;
+ 		if (i == first)
+ 			continue;
 +
-+	__end_sync_read(r10_bio, bio, d);
-+}
-+
-+static void end_reshape_read(struct bio *bio)
-+{
-+	struct r10bio *r10_bio = bio->bi_private;
-+
-+	__end_sync_read(r10_bio, bio, r10_bio->read_slot);
-+}
-+
- static void end_sync_request(struct r10bio *r10_bio)
- {
- 	struct mddev *mddev = r10_bio->mddev;
-@@ -4466,7 +4474,7 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr,
- 	read_bio->bi_iter.bi_sector = (r10_bio->devs[r10_bio->read_slot].addr
- 			       + rdev->data_offset);
- 	read_bio->bi_private = r10_bio;
--	read_bio->bi_end_io = end_sync_read;
-+	read_bio->bi_end_io = end_reshape_read;
- 	bio_set_op_attrs(read_bio, REQ_OP_READ, 0);
- 	read_bio->bi_flags &= (~0UL << BIO_RESET_BITS);
- 	read_bio->bi_error = 0;
++		tpages = get_resync_pages(tbio)->pages;
+ 		d = r10_bio->devs[i].devnum;
+ 		rdev = conf->mirrors[d].rdev;
+ 		if (!r10_bio->devs[i].bio->bi_error) {
+@@ -2116,8 +2120,8 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
+ 				int len = PAGE_SIZE;
+ 				if (sectors < (len / 512))
+ 					len = sectors * 512;
+-				if (memcmp(page_address(fbio->bi_io_vec[j].bv_page),
+-					   page_address(tbio->bi_io_vec[j].bv_page),
++				if (memcmp(page_address(fpages[j]),
++					   page_address(tpages[j]),
+ 					   len))
+ 					break;
+ 				sectors -= len/512;
+@@ -2215,6 +2219,7 @@ static void fix_recovery_read_error(struct r10bio *r10_bio)
+ 	int idx = 0;
+ 	int dr = r10_bio->devs[0].devnum;
+ 	int dw = r10_bio->devs[1].devnum;
++	struct page **pages = get_resync_pages(bio)->pages;
+ 
+ 	while (sectors) {
+ 		int s = sectors;
+@@ -2230,7 +2235,7 @@ static void fix_recovery_read_error(struct r10bio *r10_bio)
+ 		ok = sync_page_io(rdev,
+ 				  addr,
+ 				  s << 9,
+-				  bio->bi_io_vec[idx].bv_page,
++				  pages[idx],
+ 				  REQ_OP_READ, 0, false);
+ 		if (ok) {
+ 			rdev = conf->mirrors[dw].rdev;
+@@ -2238,7 +2243,7 @@ static void fix_recovery_read_error(struct r10bio *r10_bio)
+ 			ok = sync_page_io(rdev,
+ 					  addr,
+ 					  s << 9,
+-					  bio->bi_io_vec[idx].bv_page,
++					  pages[idx],
+ 					  REQ_OP_WRITE, 0, false);
+ 			if (!ok) {
+ 				set_bit(WriteErrorSeen, &rdev->flags);
 -- 
 2.9.3
 
