@@ -1,7 +1,7 @@
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH v3 4/6] super1: PPL support
-Date: Thu, 16 Mar 2017 22:09:46 +0100
-Message-ID: <20170316210948.21093-5-artur.paszkiewicz@intel.com>
+Subject: [PATCH v3 6/6] Grow: support consistency policy change
+Date: Thu, 16 Mar 2017 22:09:48 +0100
+Message-ID: <20170316210948.21093-7-artur.paszkiewicz@intel.com>
 References: <20170316210948.21093-1-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20170316210948.21093-1-artur.paszkiewicz@intel.com>
@@ -10,437 +10,287 @@ To: jes.sorensen@gmail.com
 Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-Enable creating and assembling raid5 arrays with PPL for 1.x metadata.
-
-When creating, reserve enough space for PPL and store its size and
-location in the superblock and set MD_FEATURE_PPL bit. Write an initial
-empty header in the PPL area on each device. PPL is stored in the
-metadata region reserved for internal write-intent bitmap, so don't
-allow using bitmap and PPL together.
-
-While at it, fix two endianness issues in write_empty_r5l_meta_block()
-and write_init_super1().
+Extend the --consistency-policy parameter to work also in Grow mode.
+Using it changes the currently active consistency policy in the kernel
+driver and updates the metadata to make this change permanent. Currently
+this supports only changing between "ppl" and "resync" policies, that is
+enabling or disabling PPL at runtime.
 
 Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- Assemble.c    |   3 ++
- Create.c      |   2 +
- Grow.c        |  15 +++++-
- Incremental.c |   3 ++
- mdadm.h       |   1 +
- super1.c      | 150 +++++++++++++++++++++++++++++++++++++++++++++++++++-------
- 6 files changed, 155 insertions(+), 19 deletions(-)
+ Grow.c     | 172 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ mdadm.8.in |  18 ++++++-
+ mdadm.c    |   3 ++
+ mdadm.h    |   2 +
+ 4 files changed, 194 insertions(+), 1 deletion(-)
 
-diff --git a/Assemble.c b/Assemble.c
-index 8e55b49f..c0984201 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -962,6 +962,9 @@ static int start_array(int mdfd,
- 		c->readonly = 1;
- 	}
- 
-+	if (content->consistency_policy == CONSISTENCY_POLICY_PPL)
-+		clean = 1;
-+
- 	rv = set_array_info(mdfd, st, content);
- 	if (rv && !err_ok) {
- 		pr_err("failed to set array info for %s: %s\n",
-diff --git a/Create.c b/Create.c
-index 4080bf69..10e7d108 100644
---- a/Create.c
-+++ b/Create.c
-@@ -524,6 +524,8 @@ int Create(struct supertype *st, char *mddev,
- 	if (!s->bitmap_file &&
- 	    s->level >= 1 &&
- 	    st->ss->add_internal_bitmap &&
-+	    (s->consistency_policy != CONSISTENCY_POLICY_RESYNC &&
-+	     s->consistency_policy != CONSISTENCY_POLICY_PPL) &&
- 	    (s->write_behind || s->size > 100*1024*1024ULL)) {
- 		if (c->verbose > 0)
- 			pr_err("automatically enabling write-intent bitmap on large array\n");
 diff --git a/Grow.c b/Grow.c
-index 455c5f90..e4351d7f 100755
+index e4351d7f..c01d0945 100755
 --- a/Grow.c
 +++ b/Grow.c
-@@ -290,6 +290,7 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
- 	int major = BITMAP_MAJOR_HI;
- 	int vers = md_get_version(fd);
- 	unsigned long long bitmapsize, array_size;
-+	struct mdinfo *mdi;
+@@ -528,6 +528,178 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
+ 	return 0;
+ }
  
- 	if (vers < 9003) {
- 		major = BITMAP_MAJOR_HOSTENDIAN;
-@@ -389,12 +390,23 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
- 		free(st);
- 		return 1;
- 	}
++int Grow_consistency_policy(char *devname, int fd, struct context *c, struct shape *s)
++{
++	struct supertype *st;
++	struct mdinfo *sra;
++	struct mdinfo *sd;
++	char *subarray = NULL;
++	int ret = 0;
++	char container_dev[PATH_MAX];
 +
-+	mdi = sysfs_read(fd, NULL, GET_CONSISTENCY_POLICY);
-+	if (mdi) {
-+		if (mdi->consistency_policy == CONSISTENCY_POLICY_PPL) {
-+			pr_err("Cannot add bitmap to array with PPL\n");
++	if (s->consistency_policy != CONSISTENCY_POLICY_RESYNC &&
++	    s->consistency_policy != CONSISTENCY_POLICY_PPL) {
++		pr_err("Operation not supported for consistency policy %s\n",
++		       map_num(consistency_policies, s->consistency_policy));
++		return 1;
++	}
++
++	st = super_by_fd(fd, &subarray);
++	if (!st)
++		return 1;
++
++	sra = sysfs_read(fd, NULL, GET_CONSISTENCY_POLICY|GET_LEVEL|
++				   GET_DEVS|GET_STATE);
++	if (!sra) {
++		ret = 1;
++		goto free_st;
++	}
++
++	if (s->consistency_policy == CONSISTENCY_POLICY_PPL &&
++	    !st->ss->write_init_ppl) {
++		pr_err("%s metadata does not support PPL\n", st->ss->name);
++		ret = 1;
++		goto free_info;
++	}
++
++	if (sra->array.level != 5) {
++		pr_err("Operation not supported for array level %d\n",
++				sra->array.level);
++		ret = 1;
++		goto free_info;
++	}
++
++	if (sra->consistency_policy == (unsigned)s->consistency_policy) {
++		pr_err("Consistency policy is already %s\n",
++		       map_num(consistency_policies, s->consistency_policy));
++		ret = 1;
++		goto free_info;
++	} else if (sra->consistency_policy != CONSISTENCY_POLICY_RESYNC &&
++		   sra->consistency_policy != CONSISTENCY_POLICY_PPL) {
++		pr_err("Current consistency policy is %s, cannot change to %s\n",
++		       map_num(consistency_policies, sra->consistency_policy),
++		       map_num(consistency_policies, s->consistency_policy));
++		ret = 1;
++		goto free_info;
++	}
++
++	if (subarray) {
++		char *update;
++
++		if (s->consistency_policy == CONSISTENCY_POLICY_PPL)
++			update = "ppl";
++		else
++			update = "no-ppl";
++
++		sprintf(container_dev, "/dev/%s", st->container_devnm);
++
++		ret = Update_subarray(container_dev, subarray, update, NULL,
++				      c->verbose);
++		if (ret)
++			goto free_info;
++	}
++
++	if (s->consistency_policy == CONSISTENCY_POLICY_PPL) {
++		struct mdinfo info;
++
++		if (subarray) {
++			struct mdinfo *mdi;
++			int cfd;
++
++			cfd = open(container_dev, O_RDWR|O_EXCL);
++			if (cfd < 0) {
++				pr_err("Failed to open %s\n", container_dev);
++				ret = 1;
++				goto free_info;
++			}
++
++			ret = st->ss->load_container(st, cfd, st->container_devnm);
++			close(cfd);
++
++			if (ret) {
++				pr_err("Cannot read superblock for %s\n",
++				       container_dev);
++				goto free_info;
++			}
++
++			mdi = st->ss->container_content(st, subarray);
++			info = *mdi;
 +			free(mdi);
-+			free(st);
-+			return 1;
 +		}
-+		free(mdi);
++
++		for (sd = sra->devs; sd; sd = sd->next) {
++			int dfd;
++			char *devpath;
++
++			if ((sd->disk.state & (1 << MD_DISK_SYNC)) == 0)
++				continue;
++
++			devpath = map_dev(sd->disk.major, sd->disk.minor, 0);
++			dfd = dev_open(devpath, O_RDWR);
++			if (dfd < 0) {
++				pr_err("Failed to open %s\n", devpath);
++				ret = 1;
++				goto free_info;
++			}
++
++			if (!subarray) {
++				ret = st->ss->load_super(st, dfd, NULL);
++				if (ret) {
++					pr_err("Failed to load super-block.\n");
++					close(dfd);
++					goto free_info;
++				}
++
++				ret = st->ss->update_super(st, sra, "ppl", devname,
++							   c->verbose, 0, NULL);
++				if (ret) {
++					close(dfd);
++					st->ss->free_super(st);
++					goto free_info;
++				}
++				st->ss->getinfo_super(st, &info, NULL);
++			}
++
++			ret |= sysfs_set_num(sra, sd, "ppl_sector", info.ppl_sector);
++			ret |= sysfs_set_num(sra, sd, "ppl_size", info.ppl_size);
++
++			if (ret) {
++				pr_err("Failed to set PPL attributes for %s\n",
++				       sd->sys_name);
++				close(dfd);
++				st->ss->free_super(st);
++				goto free_info;
++			}
++
++			ret = st->ss->write_init_ppl(st, &info, dfd);
++			if (ret)
++				pr_err("Failed to write PPL\n");
++
++			close(dfd);
++
++			if (!subarray)
++				st->ss->free_super(st);
++
++			if (ret)
++				goto free_info;
++		}
 +	}
 +
- 	if (strcmp(s->bitmap_file, "internal") == 0 ||
- 	    strcmp(s->bitmap_file, "clustered") == 0) {
- 		int rv;
- 		int d;
- 		int offset_setable = 0;
--		struct mdinfo *mdi;
- 		if (st->ss->add_internal_bitmap == NULL) {
- 			pr_err("Internal bitmaps not supported with %s metadata\n", st->ss->name);
- 			return 1;
-@@ -446,6 +458,7 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
- 			sysfs_init(mdi, fd, NULL);
- 			rv = sysfs_set_num_signed(mdi, NULL, "bitmap/location",
- 						  mdi->bitmap_offset);
-+			free(mdi);
- 		} else {
- 			if (strcmp(s->bitmap_file, "clustered") == 0)
- 				array.state |= (1 << MD_SB_CLUSTERED);
-diff --git a/Incremental.c b/Incremental.c
-index 0f507bb3..81afc7ec 100644
---- a/Incremental.c
-+++ b/Incremental.c
-@@ -528,6 +528,9 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
- 
- 	journal_device_missing = (info.journal_device_required) && (info.journal_clean == 0);
- 
-+	if (info.consistency_policy == CONSISTENCY_POLICY_PPL)
-+		info.array.state |= 1;
++	ret = sysfs_set_str(sra, NULL, "consistency_policy",
++			    map_num(consistency_policies,
++				    s->consistency_policy));
++	if (ret)
++		pr_err("Failed to change array consistency policy\n");
 +
- 	if (enough(info.array.level, info.array.raid_disks,
- 		   info.array.layout, info.array.state & 1,
- 		   avail) == 0) {
-diff --git a/mdadm.h b/mdadm.h
-index 10c20416..ab1b7fc6 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -302,6 +302,7 @@ struct mdinfo {
- 	long			bitmap_offset;	/* 0 == none, 1 == a file */
- 	unsigned int		ppl_size;
- 	unsigned long long	ppl_sector;
-+	int			ppl_offset;
- 	unsigned long		safe_mode_delay; /* ms delay to mark clean */
- 	int			new_level, delta_disks, new_layout, new_chunk;
- 	int			errors;
-diff --git a/super1.c b/super1.c
-index 672cdde6..76eeca11 100644
---- a/super1.c
-+++ b/super1.c
-@@ -48,10 +48,18 @@ struct mdp_superblock_1 {
- 
- 	__u32	chunksize;	/* in 512byte sectors */
- 	__u32	raid_disks;
--	__u32	bitmap_offset;	/* sectors after start of superblock that bitmap starts
--				 * NOTE: signed, so bitmap can be before superblock
--				 * only meaningful of feature_map[0] is set.
--				 */
-+	union {
-+		__u32	bitmap_offset;	/* sectors after start of superblock that bitmap starts
-+					 * NOTE: signed, so bitmap can be before superblock
-+					 * only meaningful of feature_map[0] is set.
-+					 */
++free_info:
++	sysfs_free(sra);
++free_st:
++	free(st);
++	free(subarray);
 +
-+		/* only meaningful when feature_map[MD_FEATURE_PPL] is set */
-+		struct {
-+			__s16 offset; /* sectors from start of superblock that ppl starts */
-+			__u16 size; /* ppl size in sectors */
-+		} ppl;
-+	};
- 
- 	/* These are only valid with feature bit '4' */
- 	__u32	new_level;	/* new level we are reshaping to		*/
-@@ -131,6 +139,7 @@ struct misc_dev_info {
- #define	MD_FEATURE_NEW_OFFSET		64 /* new_offset must be honoured */
- #define	MD_FEATURE_BITMAP_VERSIONED	256 /* bitmap version number checked properly */
- #define	MD_FEATURE_JOURNAL		512 /* support write journal */
-+#define	MD_FEATURE_PPL			1024 /* support PPL */
- #define	MD_FEATURE_ALL			(MD_FEATURE_BITMAP_OFFSET	\
- 					|MD_FEATURE_RECOVERY_OFFSET	\
- 					|MD_FEATURE_RESHAPE_ACTIVE	\
-@@ -140,6 +149,7 @@ struct misc_dev_info {
- 					|MD_FEATURE_NEW_OFFSET		\
- 					|MD_FEATURE_BITMAP_VERSIONED	\
- 					|MD_FEATURE_JOURNAL		\
-+					|MD_FEATURE_PPL			\
- 					)
- 
- #ifndef MDASSEMBLE
-@@ -289,6 +299,11 @@ static int awrite(struct align_fd *afd, void *buf, int len)
- 	return len;
- }
- 
-+static inline unsigned int choose_ppl_space(int chunk)
-+{
-+	return (PPL_HEADER_SIZE >> 9) + (chunk > 128*2 ? chunk : 128*2);
-+}
-+
- #ifndef MDASSEMBLE
- static void examine_super1(struct supertype *st, char *homehost)
- {
-@@ -392,6 +407,10 @@ static void examine_super1(struct supertype *st, char *homehost)
- 	if (sb->feature_map & __cpu_to_le32(MD_FEATURE_BITMAP_OFFSET)) {
- 		printf("Internal Bitmap : %ld sectors from superblock\n",
- 		       (long)(int32_t)__le32_to_cpu(sb->bitmap_offset));
-+	} else if (sb->feature_map & __cpu_to_le32(MD_FEATURE_PPL)) {
-+		printf("            PPL : %u sectors at offset %d sectors from superblock\n",
-+		       __le16_to_cpu(sb->ppl.size),
-+		       __le16_to_cpu(sb->ppl.offset));
- 	}
- 	if (sb->feature_map & __cpu_to_le32(MD_FEATURE_RESHAPE_ACTIVE)) {
- 		printf("  Reshape pos'n : %llu%s\n", (unsigned long long)__le64_to_cpu(sb->reshape_position)/2,
-@@ -934,10 +953,16 @@ static void getinfo_super1(struct supertype *st, struct mdinfo *info, char *map)
- 	if (__le32_to_cpu(bsb->nodes) > 1)
- 		info->array.state |= (1 << MD_SB_CLUSTERED);
- 
-+	super_offset = __le64_to_cpu(sb->super_offset);
- 	info->data_offset = __le64_to_cpu(sb->data_offset);
- 	info->component_size = __le64_to_cpu(sb->size);
--	if (sb->feature_map & __le32_to_cpu(MD_FEATURE_BITMAP_OFFSET))
-+	if (sb->feature_map & __le32_to_cpu(MD_FEATURE_BITMAP_OFFSET)) {
- 		info->bitmap_offset = (int32_t)__le32_to_cpu(sb->bitmap_offset);
-+	} else if (sb->feature_map & __le32_to_cpu(MD_FEATURE_PPL)) {
-+		info->ppl_offset = __le16_to_cpu(sb->ppl.offset);
-+		info->ppl_size = __le16_to_cpu(sb->ppl.size);
-+		info->ppl_sector = super_offset + info->ppl_offset;
-+	}
- 
- 	info->disk.major = 0;
- 	info->disk.minor = 0;
-@@ -948,7 +973,6 @@ static void getinfo_super1(struct supertype *st, struct mdinfo *info, char *map)
- 	else
- 		role = __le16_to_cpu(sb->dev_roles[__le32_to_cpu(sb->dev_number)]);
- 
--	super_offset = __le64_to_cpu(sb->super_offset);
- 	if (info->array.level <= 0)
- 		data_size = __le64_to_cpu(sb->data_size);
- 	else
-@@ -965,8 +989,8 @@ static void getinfo_super1(struct supertype *st, struct mdinfo *info, char *map)
- 				end = bboffset;
- 		}
- 
--		if (super_offset + info->bitmap_offset < end)
--			end = super_offset + info->bitmap_offset;
-+		if (super_offset + info->bitmap_offset + info->ppl_offset < end)
-+			end = super_offset + info->bitmap_offset + info->ppl_offset;
- 
- 		if (info->data_offset + data_size < end)
- 			info->space_after = end - data_size - info->data_offset;
-@@ -982,6 +1006,11 @@ static void getinfo_super1(struct supertype *st, struct mdinfo *info, char *map)
- 			bmend += size;
- 			if (bmend > earliest)
- 				earliest = bmend;
-+		} else if (info->ppl_offset > 0) {
-+			unsigned long long pplend = info->ppl_offset +
-+						    info->ppl_size;
-+			if (pplend > earliest)
-+				earliest = pplend;
- 		}
- 		if (sb->bblog_offset && sb->bblog_size) {
- 			unsigned long long bbend = super_offset;
-@@ -1075,8 +1104,20 @@ static void getinfo_super1(struct supertype *st, struct mdinfo *info, char *map)
- 	}
- 
- 	info->array.working_disks = working;
--	if (sb->feature_map & __le32_to_cpu(MD_FEATURE_JOURNAL))
-+
-+	if (sb->feature_map & __le32_to_cpu(MD_FEATURE_JOURNAL)) {
- 		info->journal_device_required = 1;
-+		info->consistency_policy = CONSISTENCY_POLICY_JOURNAL;
-+	} else if (sb->feature_map & __le32_to_cpu(MD_FEATURE_PPL)) {
-+		info->consistency_policy = CONSISTENCY_POLICY_PPL;
-+	} else if (sb->feature_map & __le32_to_cpu(MD_FEATURE_BITMAP_OFFSET)) {
-+		info->consistency_policy = CONSISTENCY_POLICY_BITMAP;
-+	} else if (info->array.level <= 0) {
-+		info->consistency_policy = CONSISTENCY_POLICY_NONE;
-+	} else {
-+		info->consistency_policy = CONSISTENCY_POLICY_RESYNC;
-+	}
-+
- 	info->journal_clean = 0;
- }
- 
-@@ -1239,6 +1280,9 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
- 		if (sb->feature_map & __cpu_to_le32(MD_FEATURE_BITMAP_OFFSET)) {
- 			bitmap_offset = (long)__le32_to_cpu(sb->bitmap_offset);
- 			bm_sectors = calc_bitmap_size(bms, 4096) >> 9;
-+		} else if (sb->feature_map & __cpu_to_le32(MD_FEATURE_PPL)) {
-+			bitmap_offset = (long)__le16_to_cpu(sb->ppl.offset);
-+			bm_sectors = (long)__le16_to_cpu(sb->ppl.size);
- 		}
- #endif
- 		if (sb_offset < data_offset) {
-@@ -1472,6 +1516,9 @@ static int init_super1(struct supertype *st, mdu_array_info_t *info,
- 
- 	memset(sb->dev_roles, 0xff, MAX_SB_SIZE - sizeof(struct mdp_superblock_1));
- 
-+	if (s->consistency_policy == CONSISTENCY_POLICY_PPL)
-+		sb->feature_map |= __cpu_to_le32(MD_FEATURE_PPL);
-+
- 	return 1;
- }
- 
-@@ -1643,10 +1690,49 @@ static unsigned long choose_bm_space(unsigned long devsize)
- 
- static void free_super1(struct supertype *st);
- 
--#define META_BLOCK_SIZE 4096
-+#ifndef MDASSEMBLE
-+
- __u32 crc32c_le(__u32 crc, unsigned char const *p, size_t len);
- 
--#ifndef MDASSEMBLE
-+static int write_init_ppl1(struct supertype *st, struct mdinfo *info, int fd)
-+{
-+	struct mdp_superblock_1 *sb = st->sb;
-+	void *buf;
-+	struct ppl_header *ppl_hdr;
-+	int ret;
-+
-+	ret = posix_memalign(&buf, 4096, PPL_HEADER_SIZE);
-+	if (ret) {
-+		pr_err("Failed to allocate PPL header buffer\n");
-+		return ret;
-+	}
-+
-+	memset(buf, 0, PPL_HEADER_SIZE);
-+	ppl_hdr = buf;
-+	memset(ppl_hdr->reserved, 0xff, PPL_HDR_RESERVED);
-+	ppl_hdr->signature = __cpu_to_le32(~crc32c_le(~0, sb->set_uuid,
-+						      sizeof(sb->set_uuid)));
-+	ppl_hdr->checksum = __cpu_to_le32(~crc32c_le(~0, buf, PPL_HEADER_SIZE));
-+
-+	if (lseek64(fd, info->ppl_sector * 512, SEEK_SET) < 0) {
-+		ret = errno;
-+		perror("Failed to seek to PPL header location");
-+	}
-+
-+	if (!ret && write(fd, buf, PPL_HEADER_SIZE) != PPL_HEADER_SIZE) {
-+		ret = errno;
-+		perror("Write PPL header failed");
-+	}
-+
-+	if (!ret)
-+		fsync(fd);
-+
-+	free(buf);
 +	return ret;
 +}
 +
-+#define META_BLOCK_SIZE 4096
+ /*
+  * When reshaping an array we might need to backup some data.
+  * This is written to all spares with a 'super_block' describing it.
+diff --git a/mdadm.8.in b/mdadm.8.in
+index 1178ed9b..744c12b5 100644
+--- a/mdadm.8.in
++++ b/mdadm.8.in
+@@ -126,7 +126,7 @@ of component devices and changing the number of active devices in
+ Linear and RAID levels 0/1/4/5/6,
+ changing the RAID level between 0, 1, 5, and 6, and between 0 and 10,
+ changing the chunk size and layout for RAID 0,4,5,6,10 as well as adding or
+-removing a write-intent bitmap.
++removing a write-intent bitmap and changing the array's consistency policy.
+ 
+ .TP
+ .B "Incremental Assembly"
+@@ -1050,6 +1050,10 @@ after unclean shutdown. Implicitly selected when using
+ For RAID5 only, Partial Parity Log is used to close the write hole and
+ eliminate resync. PPL is stored in the metadata region of RAID member drives,
+ no additional journal drive is needed.
 +
- static int write_empty_r5l_meta_block(struct supertype *st, int fd)
- {
- 	struct r5l_meta_block *mb;
-@@ -1673,7 +1759,7 @@ static int write_empty_r5l_meta_block(struct supertype *st, int fd)
- 	crc = crc32c_le(crc, (void *)mb, META_BLOCK_SIZE);
- 	mb->checksum = crc;
++.PP
++Can be used with \-\-grow to change the consistency policy of an active array
++in some cases. See CONSISTENCY POLICY CHANGES below.
+ .RE
  
--	if (lseek64(fd, (sb->data_offset) * 512, 0) < 0LL) {
-+	if (lseek64(fd, __le64_to_cpu(sb->data_offset) * 512, 0) < 0LL) {
- 		pr_err("cannot seek to offset of the meta block\n");
- 		goto fail_to_write;
- 	}
-@@ -1706,7 +1792,7 @@ static int write_init_super1(struct supertype *st)
  
- 	for (di = st->info; di; di = di->next) {
- 		if (di->disk.state & (1 << MD_DISK_JOURNAL))
--			sb->feature_map |= MD_FEATURE_JOURNAL;
-+			sb->feature_map |= __cpu_to_le32(MD_FEATURE_JOURNAL);
- 	}
+@@ -2694,6 +2698,8 @@ RAID0, RAID4, and RAID5, and between RAID0 and RAID10 (in the near-2 mode).
+ .IP \(bu 4
+ add a write-intent bitmap to any array which supports these bitmaps, or
+ remove a write-intent bitmap from such an array.
++.IP \(bu 4
++change the array's consistency policy.
+ .PP
  
- 	for (di = st->info; di; di = di->next) {
-@@ -1781,6 +1867,21 @@ static int write_init_super1(struct supertype *st)
- 					(((char *)sb) + MAX_SB_SIZE);
- 			bm_space = calc_bitmap_size(bms, 4096) >> 9;
- 			bm_offset = (long)__le32_to_cpu(sb->bitmap_offset);
-+		} else if (sb->feature_map & __cpu_to_le32(MD_FEATURE_PPL)) {
-+			bm_space = choose_ppl_space(__le32_to_cpu(sb->chunksize));
-+			if (bm_space > UINT16_MAX)
-+				bm_space = UINT16_MAX;
-+			if (st->minor_version == 0) {
-+				bm_offset = -bm_space - 8;
-+				if (bm_offset < INT16_MIN) {
-+					bm_offset = INT16_MIN;
-+					bm_space = -bm_offset - 8;
-+				}
-+			} else {
-+				bm_offset = 8;
-+			}
-+			sb->ppl.offset = __cpu_to_le16(bm_offset);
-+			sb->ppl.size = __cpu_to_le16(bm_space);
- 		} else {
- 			bm_space = choose_bm_space(array_size);
- 			bm_offset = 8;
-@@ -1852,8 +1953,17 @@ static int write_init_super1(struct supertype *st)
- 				goto error_out;
- 		}
+ Using GROW on containers is currently supported only for Intel's IMSM
+@@ -2850,6 +2856,16 @@ can be added.  Note that if you add a bitmap stored in a file which is
+ in a filesystem that is on the RAID array being affected, the system
+ will deadlock.  The bitmap must be on a separate filesystem.
  
--		if (rv == 0 && (__le32_to_cpu(sb->feature_map) & 1))
-+		if (rv == 0 &&
-+		    (__le32_to_cpu(sb->feature_map) & MD_FEATURE_BITMAP_OFFSET)) {
- 			rv = st->ss->write_bitmap(st, di->fd, NodeNumUpdate);
-+		} else if (rv == 0 &&
-+			 (__le32_to_cpu(sb->feature_map) & MD_FEATURE_PPL)) {
-+			struct mdinfo info;
++.SS CONSISTENCY POLICY CHANGES
 +
-+			st->ss->getinfo_super(st, &info, NULL);
-+			rv = st->ss->write_init_ppl(st, &info, di->fd);
-+		}
++The consistency policy of an active array can be changed by using the
++.B \-\-consistency\-policy
++option in Grow mode. Currently this works only for the
++.B ppl
++and
++.B resync
++policies and allows to enable or disable the RAID5 Partial Parity Log (PPL).
 +
- 		close(di->fd);
- 		di->fd = -1;
- 		if (rv)
-@@ -2121,11 +2231,13 @@ static __u64 avail_size1(struct supertype *st, __u64 devsize,
- 		return 0;
+ .SH INCREMENTAL MODE
  
- #ifndef MDASSEMBLE
--	if (__le32_to_cpu(super->feature_map)&MD_FEATURE_BITMAP_OFFSET) {
-+	if (__le32_to_cpu(super->feature_map) & MD_FEATURE_BITMAP_OFFSET) {
- 		/* hot-add. allow for actual size of bitmap */
- 		struct bitmap_super_s *bsb;
- 		bsb = (struct bitmap_super_s *)(((char*)super)+MAX_SB_SIZE);
- 		bmspace = calc_bitmap_size(bsb, 4096) >> 9;
-+	} else if (__le32_to_cpu(super->feature_map) & MD_FEATURE_PPL) {
-+		bmspace = __le16_to_cpu(super->ppl.size);
- 	}
- #endif
- 	/* Allow space for bad block log */
-@@ -2528,8 +2640,9 @@ static int validate_geometry1(struct supertype *st, int level,
- 		return 0;
- 	}
- 
--	/* creating:  allow suitable space for bitmap */
--	bmspace = choose_bm_space(devsize);
-+	/* creating:  allow suitable space for bitmap or PPL */
-+	bmspace = consistency_policy == CONSISTENCY_POLICY_PPL ?
-+		  choose_ppl_space((*chunk)*2) : choose_bm_space(devsize);
- 
- 	if (data_offset == INVALID_SECTORS)
- 		data_offset = st->data_offset;
-@@ -2564,7 +2677,7 @@ static int validate_geometry1(struct supertype *st, int level,
- 	switch(st->minor_version) {
- 	case 0: /* metadata at end.  Round down and subtract space to reserve */
- 		devsize = (devsize & ~(4ULL*2-1));
--		/* space for metadata, bblog, bitmap */
-+		/* space for metadata, bblog, bitmap/ppl */
- 		devsize -= 8*2 + 8 + bmspace;
+ .HP 12
+diff --git a/mdadm.c b/mdadm.c
+index 3d0da1ec..0db4cb33 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -1217,6 +1217,7 @@ int main(int argc, char *argv[])
+ 			s.journaldisks = 1;
+ 			continue;
+ 		case O(CREATE, 'k'):
++		case O(GROW, 'k'):
+ 			s.consistency_policy = map_name(consistency_policies,
+ 							optarg);
+ 			if (s.consistency_policy == UnSet ||
+@@ -1675,6 +1676,8 @@ int main(int argc, char *argv[])
+ 			rv = Grow_reshape(devlist->devname, mdfd,
+ 					  devlist->next,
+ 					  data_offset, &c, &s);
++		} else if (s.consistency_policy != UnSet) {
++			rv = Grow_consistency_policy(devlist->devname, mdfd, &c, &s);
+ 		} else if (array_size == 0)
+ 			pr_err("no changes to --grow\n");
  		break;
- 	case 1:
-@@ -2640,6 +2753,7 @@ struct superswitch super1 = {
- 	.add_to_super = add_to_super1,
- 	.examine_badblocks = examine_badblocks_super1,
- 	.copy_metadata = copy_metadata1,
-+	.write_init_ppl = write_init_ppl1,
- #endif
- 	.match_home = match_home1,
- 	.uuid_from_super = uuid_from_super1,
+diff --git a/mdadm.h b/mdadm.h
+index ab1b7fc6..7173b258 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -1331,6 +1331,8 @@ extern int Grow_restart(struct supertype *st, struct mdinfo *info,
+ extern int Grow_continue(int mdfd, struct supertype *st,
+ 			 struct mdinfo *info, char *backup_file,
+ 			 int forked, int freeze_reshape);
++extern int Grow_consistency_policy(char *devname, int fd,
++				   struct context *c, struct shape *s);
+ 
+ extern int restore_backup(struct supertype *st,
+ 			  struct mdinfo *content,
 -- 
 2.11.0
 
