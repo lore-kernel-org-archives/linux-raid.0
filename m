@@ -1,64 +1,67 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH v3 00/14]  md: cleanup on direct access to bvec table
-Date: Fri, 17 Mar 2017 00:12:21 +0800
-Message-ID: <20170316161235.27110-1-tom.leiming@gmail.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, linux-raid@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
-Cc: Ming Lei <tom.leiming@gmail.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: [GIT PULL] MD update for 4.11-rc3
+Date: Thu, 16 Mar 2017 09:40:56 -0700
+Message-ID: <20170316164056.pot4r65lokskmjns@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-In MD's resync I/O path, there are lots of direct access to bio's
-bvec table. This patchset kills almost all, and the conversion
-is quite straightforward. One root cause of direct access to bvec
-table is that resync I/O uses the bio's bvec to manage pages.
-In V1, as suggested by Shaohua, a new approach is used to manage
-these pages for resync I/O, turns out code becomes more clean
-and readable.
-
-Once direct access to bvec table in MD is cleaned up, we may make
-multipage bvec moving on.
-
-V3:
-	- improve pages allocation & bio clone for write behind(10/14)
-	- retrieve pages from preallocated page array, and avoid to user
-	bio helpers(14/14)
-	- change on helpers about managing resync io pages(03/14)
-
-V2:
-	- remove the patch for introducing/applying bio_remove_last_page()
-
-V1:
-	- allocate page array to manage resync pages
+Hi,
+Please pull MD fix for 4.11-rc3. This update includes some fixes and cleanups:
+- Fix a parity calculation bug of raid5 cache by Song
+- Fix a potential deadlock issue by me
+- Fix two endian issues by Jason
+- Fix a disk limitation issue by Neil
+- Other small fixes and cleanup
 
 Thanks,
-Ming
+Shaohua
 
-Ming Lei (14):
-  md: raid1/raid10: don't handle failure of bio_add_page()
-  md: move two macros into md.h
-  md: prepare for managing resync I/O pages in clean way
-  md: raid1: simplify r1buf_pool_free()
-  md: raid1: don't use bio's vec table to manage resync pages
-  md: raid1: retrieve page from pre-allocated resync page array
-  md: raid1: use bio helper in process_checks()
-  block: introduce bio_copy_data_partial
-  md: raid1: move 'offset' out of loop
-  md: raid1: improve write behind
-  md: raid10: refactor code of read reshape's .bi_end_io
-  md: raid10: don't use bio's vec table to manage resync pages
-  md: raid10: retrieve page from preallocated resync page array
-  md: raid10: avoid direct access to bvec table in
-    handle_reshape_read_error
+The following changes since commit ea6200e84182989a3cce9687cf79a23ac44ec4db:
 
- block/bio.c         |  60 +++++++++---
- drivers/md/md.h     |  55 +++++++++++
- drivers/md/raid1.c  | 267 ++++++++++++++++++++++++++++------------------------
- drivers/md/raid1.h  |  10 +-
- drivers/md/raid10.c | 224 +++++++++++++++++++++++--------------------
- include/linux/bio.h |   2 +
- 6 files changed, 376 insertions(+), 242 deletions(-)
+  Merge branch 'core-urgent-for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip (2017-03-08 14:45:31 -0800)
 
--- 
-2.9.3
+are available in the git repository at:
 
+  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git for-linus
+
+for you to fetch changes up to 11353b9d10392e79e32603d2178e75feb25eaf0d:
+
+  md/raid1: fix a trivial typo in comments (2017-03-14 11:10:44 -0700)
+
+----------------------------------------------------------------
+Guoqing Jiang (3):
+      md-cluster: free md_cluster_info if node leave cluster
+      md-cluster: remove useless memset from gather_all_resync_info
+      md: move funcs from pers->resize to update_size
+
+Jason Yan (2):
+      md: fix super_offset endianness in super_1_rdev_size_change
+      md: fix incorrect use of lexx_to_cpu in does_sb_need_changing
+
+NeilBrown (1):
+      md: don't impose the MD_SB_DISKS limit on arrays without metadata.
+
+Shaohua Li (3):
+      md/raid10: submit bio directly to replacement disk
+      md: delete dead code
+      md/raid1/10: fix potential deadlock
+
+Song Liu (1):
+      md/r5cache: fix set_syndrome_sources() for data in cache
+
+Zhilong Liu (1):
+      md/raid1: fix a trivial typo in comments
+
+ drivers/md/md-cluster.c |  2 +-
+ drivers/md/md.c         | 27 +++++++++++----------------
+ drivers/md/md.h         |  6 ------
+ drivers/md/raid1.c      | 29 ++++++++++++++++++++++++-----
+ drivers/md/raid10.c     | 41 ++++++++++++++++++++++++++++++++++-------
+ drivers/md/raid5.c      |  5 ++---
+ 6 files changed, 72 insertions(+), 38 deletions(-)
