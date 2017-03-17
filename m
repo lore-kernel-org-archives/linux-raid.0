@@ -1,68 +1,68 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: [PATCH 1/3] mdadm: Replace snprintf with strncpy at some places to avoid truncation
-Date: Fri, 17 Mar 2017 19:55:41 +0800
-Message-ID: <1489751743-11397-2-git-send-email-xni@redhat.com>
-References: <1489751743-11397-1-git-send-email-xni@redhat.com>
+From: Alexander Potapenko <glider@google.com>
+Subject: Re: [PATCH 6/7] md/raid10, LLVM: get rid of variable length array
+Date: Fri, 17 Mar 2017 13:31:23 +0100
+Message-ID: <CAG_fn=XcQLtcHRSm2BHYce9LMtyFJ+fWxfE4vYPCw+7U0DcrmQ@mail.gmail.com>
+References: <20170317001520.85223-1-md@google.com> <20170317001520.85223-7-md@google.com>
+ <20170317120837.pr74cv3xuj7qpoin@hirez.programming.kicks-ass.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1489751743-11397-1-git-send-email-xni@redhat.com>
+In-Reply-To: <20170317120837.pr74cv3xuj7qpoin@hirez.programming.kicks-ass.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Jes.Sorensen@gmail.com, ncroxon@redhat.com, artur.paszkiewicz@intel.com
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Michael Davidson <md@google.com>, Michal Marek <mmarek@suse.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Shaohua Li <shli@kernel.org>, Dmitry Vyukov <dvyukov@google.com>, Matthias Kaehlcke <mka@chromium.org>, x86@kernel.org, linux-kbuild@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-In gcc7 there are some building errors like:
-directive output may be truncated writing up to 31 bytes into a region of size 24
-snprintf(str, MPB_SIG_LEN, %s, mpb->sig);
+On Fri, Mar 17, 2017 at 1:08 PM, Peter Zijlstra <peterz@infradead.org> wrot=
+e:
+> On Thu, Mar 16, 2017 at 05:15:19PM -0700, Michael Davidson wrote:
+>> Replace a variable length array in a struct by allocating
+>> the memory for the entire struct in a char array on the stack.
+>>
+>> Signed-off-by: Michael Davidson <md@google.com>
+>> ---
+>>  drivers/md/raid10.c | 9 ++++-----
+>>  1 file changed, 4 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+>> index 063c43d83b72..158ebdff782c 100644
+>> --- a/drivers/md/raid10.c
+>> +++ b/drivers/md/raid10.c
+>> @@ -4654,11 +4654,10 @@ static int handle_reshape_read_error(struct mdde=
+v *mddev,
+>>       /* Use sync reads to get the blocks from somewhere else */
+>>       int sectors =3D r10_bio->sectors;
+>>       struct r10conf *conf =3D mddev->private;
+>> -     struct {
+>> -             struct r10bio r10_bio;
+>> -             struct r10dev devs[conf->copies];
+>> -     } on_stack;
+>> -     struct r10bio *r10b =3D &on_stack.r10_bio;
+>> +     char on_stack_r10_bio[sizeof(struct r10bio) +
+>> +                           conf->copies * sizeof(struct r10dev)]
+>> +                           __aligned(__alignof__(struct r10bio));
+>> +     struct r10bio *r10b =3D (struct r10bio *)on_stack_r10_bio;
+>>       int slot =3D 0;
+>>       int idx =3D 0;
+>>       struct bio_vec *bvec =3D r10_bio->master_bio->bi_io_vec;
+>
+>
+> That's disgusting. Why not fix LLVM to support this?
 
-It just need to copy one string to target. So use strncpy to replace it.
+IIUC there's only a handful of VLAIS instances in LLVM code, why not
+just drop them for the sake of better code portability?
+(To quote Linus, "this feature is an abomination":
+https://lkml.org/lkml/2013/9/23/500)
 
-Signed-off-by: Xiao Ni <xni@redhat.com>
----
- super-intel.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+--=20
+Alexander Potapenko
+Software Engineer
 
-diff --git a/super-intel.c b/super-intel.c
-index d5e9517..e1618f1 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -1811,7 +1811,8 @@ static void examine_super_imsm(struct supertype *st, char *homehost)
- 	__u32 reserved = imsm_reserved_sectors(super, super->disks);
- 	struct dl *dl;
- 
--	snprintf(str, MPB_SIG_LEN, "%s", mpb->sig);
-+	strncpy(str, (char *)mpb->sig, MPB_SIG_LEN);
-+	str[MPB_SIG_LEN-1] = '\0';
- 	printf("          Magic : %s\n", str);
- 	snprintf(str, strlen(MPB_VERSION_RAID0), "%s", get_imsm_version(mpb));
- 	printf("        Version : %s\n", get_imsm_version(mpb));
-@@ -5227,7 +5228,7 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
- 			disk->status = CONFIGURED_DISK | FAILED_DISK;
- 			disk->scsi_id = __cpu_to_le32(~(__u32)0);
- 			snprintf((char *) disk->serial, MAX_RAID_SERIAL_LEN,
--				 "missing:%d", i);
-+				 "missing:%d", (__u8)i);
- 		}
- 		find_missing(super);
- 	} else {
-@@ -7142,14 +7143,16 @@ static int update_subarray_imsm(struct supertype *st, char *subarray,
- 
- 			u->type = update_rename_array;
- 			u->dev_idx = vol;
--			snprintf((char *) u->name, MAX_RAID_SERIAL_LEN, "%s", name);
-+			strncpy((char *) u->name, name, MAX_RAID_SERIAL_LEN);
-+			u->name[MAX_RAID_SERIAL_LEN-1] = '\0';
- 			append_metadata_update(st, u, sizeof(*u));
- 		} else {
- 			struct imsm_dev *dev;
- 			int i;
- 
- 			dev = get_imsm_dev(super, vol);
--			snprintf((char *) dev->volume, MAX_RAID_SERIAL_LEN, "%s", name);
-+			strncpy((char *) dev->volume, name, MAX_RAID_SERIAL_LEN);
-+			dev->volume[MAX_RAID_SERIAL_LEN-1] = '\0';
- 			for (i = 0; i < mpb->num_raid_devs; i++) {
- 				dev = get_imsm_dev(super, i);
- 				handle_missing(super, dev);
--- 
-2.7.4
+Google Germany GmbH
+Erika-Mann-Stra=C3=9Fe, 33
+80636 M=C3=BCnchen
 
+Gesch=C3=A4ftsf=C3=BChrer: Matthew Scott Sucherman, Paul Terence Manicle
+Registergericht und -nummer: Hamburg, HRB 86891
+Sitz der Gesellschaft: Hamburg
