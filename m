@@ -1,48 +1,66 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH 6/7] md/raid10, LLVM: get rid of variable length array
-Date: Fri, 17 Mar 2017 13:08:37 +0100
-Message-ID: <20170317120837.pr74cv3xuj7qpoin@hirez.programming.kicks-ass.net>
-References: <20170317001520.85223-1-md@google.com>
- <20170317001520.85223-7-md@google.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170317001520.85223-7-md@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Michael Davidson <md@google.com>
-Cc: Michal Marek <mmarek@suse.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Shaohua Li <shli@kernel.org>, Alexander Potapenko <glider@google.com>, Dmitry Vyukov <dvyukov@google.com>, Matthias Kaehlcke <mka@chromium.org>, x86@kernel.org, linux-kbuild@vger.kernel.org, linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org
+From: Xiao Ni <xni@redhat.com>
+Subject: [PATCH 1/3] mdadm: Replace snprintf with strncpy at some places to avoid truncation
+Date: Fri, 17 Mar 2017 20:18:19 +0800
+Message-ID: <1489753099-11567-1-git-send-email-xni@redhat.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Jes.Sorensen@gmail.com, ncroxon@redhat.com, artur.paszkiewicz@intel.com
 List-Id: linux-raid.ids
 
-On Thu, Mar 16, 2017 at 05:15:19PM -0700, Michael Davidson wrote:
-> Replace a variable length array in a struct by allocating
-> the memory for the entire struct in a char array on the stack.
-> 
-> Signed-off-by: Michael Davidson <md@google.com>
-> ---
->  drivers/md/raid10.c | 9 ++++-----
->  1 file changed, 4 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 063c43d83b72..158ebdff782c 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -4654,11 +4654,10 @@ static int handle_reshape_read_error(struct mddev *mddev,
->  	/* Use sync reads to get the blocks from somewhere else */
->  	int sectors = r10_bio->sectors;
->  	struct r10conf *conf = mddev->private;
-> -	struct {
-> -		struct r10bio r10_bio;
-> -		struct r10dev devs[conf->copies];
-> -	} on_stack;
-> -	struct r10bio *r10b = &on_stack.r10_bio;
-> +	char on_stack_r10_bio[sizeof(struct r10bio) +
-> +			      conf->copies * sizeof(struct r10dev)]
-> +			      __aligned(__alignof__(struct r10bio));
-> +	struct r10bio *r10b = (struct r10bio *)on_stack_r10_bio;
->  	int slot = 0;
->  	int idx = 0;
->  	struct bio_vec *bvec = r10_bio->master_bio->bi_io_vec;
+In gcc7 there are some building errors like:
+directive output may be truncated writing up to 31 bytes into a region of size 24
+snprintf(str, MPB_SIG_LEN, %s, mpb->sig);
 
+It just need to copy one string to target. So use strncpy to replace it.
 
-That's disgusting. Why not fix LLVM to support this?
+Signed-off-by: Xiao Ni <xni@redhat.com>
+---
+ super-intel.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/super-intel.c b/super-intel.c
+index d5e9517..e1618f1 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -1811,7 +1811,8 @@ static void examine_super_imsm(struct supertype *st, char *homehost)
+ 	__u32 reserved = imsm_reserved_sectors(super, super->disks);
+ 	struct dl *dl;
+ 
+-	snprintf(str, MPB_SIG_LEN, "%s", mpb->sig);
++	strncpy(str, (char *)mpb->sig, MPB_SIG_LEN);
++	str[MPB_SIG_LEN-1] = '\0';
+ 	printf("          Magic : %s\n", str);
+ 	snprintf(str, strlen(MPB_VERSION_RAID0), "%s", get_imsm_version(mpb));
+ 	printf("        Version : %s\n", get_imsm_version(mpb));
+@@ -5227,7 +5228,7 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
+ 			disk->status = CONFIGURED_DISK | FAILED_DISK;
+ 			disk->scsi_id = __cpu_to_le32(~(__u32)0);
+ 			snprintf((char *) disk->serial, MAX_RAID_SERIAL_LEN,
+-				 "missing:%d", i);
++				 "missing:%d", (__u8)i);
+ 		}
+ 		find_missing(super);
+ 	} else {
+@@ -7142,14 +7143,16 @@ static int update_subarray_imsm(struct supertype *st, char *subarray,
+ 
+ 			u->type = update_rename_array;
+ 			u->dev_idx = vol;
+-			snprintf((char *) u->name, MAX_RAID_SERIAL_LEN, "%s", name);
++			strncpy((char *) u->name, name, MAX_RAID_SERIAL_LEN);
++			u->name[MAX_RAID_SERIAL_LEN-1] = '\0';
+ 			append_metadata_update(st, u, sizeof(*u));
+ 		} else {
+ 			struct imsm_dev *dev;
+ 			int i;
+ 
+ 			dev = get_imsm_dev(super, vol);
+-			snprintf((char *) dev->volume, MAX_RAID_SERIAL_LEN, "%s", name);
++			strncpy((char *) dev->volume, name, MAX_RAID_SERIAL_LEN);
++			dev->volume[MAX_RAID_SERIAL_LEN-1] = '\0';
+ 			for (i = 0; i < mpb->num_raid_devs; i++) {
+ 				dev = get_imsm_dev(super, i);
+ 				handle_missing(super, dev);
+-- 
+2.7.4
+
