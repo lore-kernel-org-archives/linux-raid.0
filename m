@@ -1,73 +1,46 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH v3] mdadm/r5cache: allow adding journal to array without journal
-Date: Fri, 17 Mar 2017 16:31:11 -0700
-Message-ID: <20170317233111.2452831-2-songliubraving@fb.com>
-References: <20170317233111.2452831-1-songliubraving@fb.com>
+From: hpa@zytor.com
+Subject: Re: [PATCH 3/7] x86, LLVM: suppress clang warnings about unaligned accesses
+Date: Fri, 17 Mar 2017 16:50:19 -0700
+Message-ID: <FB827022-C732-432A-8F31-734C88EBF7A4@zytor.com>
+References: <20170317001520.85223-1-md@google.com> <20170317001520.85223-4-md@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170317233111.2452831-1-songliubraving@fb.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com, Song Liu <songliubraving@fb.com>
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kbuild-owner@vger.kernel.org>
+In-Reply-To: <20170317001520.85223-4-md@google.com>
+Sender: linux-kbuild-owner@vger.kernel.org
+To: Michael Davidson <md@google.com>, Michal Marek <mmarek@suse.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Shaohua Li <shli@kernel.org>
+Cc: Alexander Potapenko <glider@google.com>, Dmitry Vyukov <dvyukov@google.com>, Matthias Kaehlcke <mka@chromium.org>, x86@kernel.org, linux-kbuild@vger.kernel.org, linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Currently, --add-journal can be only used to recreate broken journal
-for arrays with journal since  creation. As the kernel code getting
-more mature, this constraint is no longer necessary.
+On March 16, 2017 5:15:16 PM PDT, Michael Davidson <md@google.com> wrote:
+>Suppress clang warnings about potential unaliged accesses
+>to members in packed structs. This gets rid of almost 10,000
+>warnings about accesses to the ring 0 stack pointer in the TSS.
+>
+>Signed-off-by: Michael Davidson <md@google.com>
+>---
+> arch/x86/Makefile | 5 +++++
+> 1 file changed, 5 insertions(+)
+>
+>diff --git a/arch/x86/Makefile b/arch/x86/Makefile
+>index 894a8d18bf97..7f21703c475d 100644
+>--- a/arch/x86/Makefile
+>+++ b/arch/x86/Makefile
+>@@ -128,6 +128,11 @@ endif
+>         KBUILD_CFLAGS += $(call cc-option,-maccumulate-outgoing-args)
+> endif
+> 
+>+ifeq ($(cc-name),clang)
+>+# Suppress clang warnings about potential unaligned accesses.
+>+KBUILD_CFLAGS += $(call cc-disable-warning, address-of-packed-member)
+>+endif
+>+
+> ifdef CONFIG_X86_X32
+> 	x32_ld_ok := $(call try-run,\
+> 			/bin/echo -e '1: .quad 1b' | \
 
-This patch allows --add-journal to add journal to array without
-journal.
-
-Signed-off-by: Song Liu <songliubraving@fb.com>
----
- Manage.c   | 9 ---------
- mdadm.8.in | 5 ++---
- 2 files changed, 2 insertions(+), 12 deletions(-)
-
-diff --git a/Manage.c b/Manage.c
-index 5c3d2b9..d038b68 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -946,7 +946,6 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
- 
- 	/* only add journal to array that supports journaling */
- 	if (dv->disposition == 'j') {
--		struct mdinfo mdi;
- 		struct mdinfo *mdp;
- 
- 		mdp = sysfs_read(fd, NULL, GET_ARRAY_STATE);
-@@ -960,14 +959,6 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
- 			pr_err("%s is not readonly, cannot add journal.\n", devname);
- 			return -1;
- 		}
--
--		sysfs_free(mdp);
--
--		tst->ss->getinfo_super(tst, &mdi, NULL);
--		if (mdi.journal_device_required == 0) {
--			pr_err("%s does not support journal device.\n", devname);
--			return -1;
--		}
- 		disc.raid_disk = 0;
- 	}
- 
-diff --git a/mdadm.8.in b/mdadm.8.in
-index df1d460..9e5e896 100644
---- a/mdadm.8.in
-+++ b/mdadm.8.in
-@@ -1474,9 +1474,8 @@ the device is found or <slot>:missing in case the device is not found.
- 
- .TP
- .BR \-\-add-journal
--Recreate journal for RAID-4/5/6 array that lost a journal device. In the
--current implementation, this command cannot add a journal to an array
--that had a failed journal. To avoid interrupting on-going write opertions,
-+Add journal to an existing array, or recreate journal for RAID-4/5/6 array
-+that lost a journal device. To avoid interrupting on-going write opertions,
- .B \-\-add-journal
- only works for array in Read-Only state.
- 
+Why conditional on clang?
 -- 
-2.9.3
-
+Sent from my Android device with K-9 Mail. Please excuse my brevity.
