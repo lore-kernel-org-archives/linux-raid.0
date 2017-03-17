@@ -1,128 +1,53 @@
 From: jes.sorensen@gmail.com
-Subject: Re: [PATCH v3 3/6] imsm: PPL support
-Date: Fri, 17 Mar 2017 16:11:17 -0400
-Message-ID: <wrfj4lyrk6je.fsf@gmail.com>
-References: <20170316210948.21093-1-artur.paszkiewicz@intel.com>
-        <20170316210948.21093-4-artur.paszkiewicz@intel.com>
+Subject: Re: [PATCH 1/2] super1: ignore failfast flag for setting device role
+Date: Fri, 17 Mar 2017 16:20:58 -0400
+Message-ID: <wrfjwpbnirit.fsf@gmail.com>
+References: <1489769222-31855-1-git-send-email-gi-oh.kim@profitbricks.com>
+        <1489769222-31855-2-git-send-email-gi-oh.kim@profitbricks.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170316210948.21093-4-artur.paszkiewicz@intel.com> (Artur
-        Paszkiewicz's message of "Thu, 16 Mar 2017 22:09:45 +0100")
-Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1489769222-31855-2-git-send-email-gi-oh.kim@profitbricks.com>
+        (Gioh Kim's message of "Fri, 17 Mar 2017 17:47:01 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Gioh Kim <gi-oh.kim@profitbricks.com>
+Cc: neilb@suse.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Jack Wang <jinpu.wang@profitbricks.com>
 List-Id: linux-raid.ids
 
-Artur Paszkiewicz <artur.paszkiewicz@intel.com> writes:
-> Enable creating and assembling IMSM raid5 arrays with PPL. Update the
-> IMSM metadata format to include new fields used for PPL.
+Gioh Kim <gi-oh.kim@profitbricks.com> writes:
+> There is corner case for setting device role,
+> if new device has failfast flag.
+> The failfast flag should be ignored.
 >
-> Add structures for PPL metadata. They are used also by super1 and shared
-> with the kernel, so put them in md_p.h.
->
-> Write the initial empty PPL header when creating an array. When
-> assembling an array with PPL, validate the PPL header and in case it is
-> not correct allow to overwrite it if --force was provided.
->
-> Write the PPL location and size for a device to the new rdev sysfs
-> attributes 'ppl_sector' and 'ppl_size'. Enable PPL in the kernel by
-> writing to 'consistency_policy' before the array is activated.
->
-> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+> Signed-off-by: Gioh Kim <gi-oh.kim@profitbricks.com>
+> Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
 > ---
->  Assemble.c    |  49 +++++++++++
->  Makefile      |   5 +-
->  md_p.h        |  25 ++++++
->  mdadm.h       |   6 ++
->  super-intel.c | 274 +++++++++++++++++++++++++++++++++++++++++++++++++++++-----
->  sysfs.c       |  14 +++
->  6 files changed, 349 insertions(+), 24 deletions(-)
+>  super1.c | 8 +++++---
+>  1 file changed, 5 insertions(+), 3 deletions(-)
 >
-> diff --git a/Assemble.c b/Assemble.c
-> index 3da09033..8e55b49f 100644
-> --- a/Assemble.c
-> +++ b/Assemble.c
-> @@ -1942,6 +1942,55 @@ int assemble_container_content(struct supertype *st, int mdfd,
->  	map_update(NULL, fd2devnm(mdfd), content->text_version,
->  		   content->uuid, chosen_name);
+> diff --git a/super1.c b/super1.c
+> index 882cd61..1da33ef 100644
+> --- a/super1.c
+> +++ b/super1.c
+> @@ -1491,6 +1491,7 @@ static int add_to_super1(struct supertype *st, mdu_disk_info_t *dk,
+>  	struct devinfo *di, **dip;
+>  	bitmap_super_t *bms = (bitmap_super_t*)(((char*)sb) + MAX_SB_SIZE);
+>  	int rv, lockid;
+> +	int dk_state;
 >  
-> +	if (content->consistency_policy == CONSISTENCY_POLICY_PPL &&
-> +	    st->ss->validate_ppl) {
-> +		content->array.state |= 1;
-> +		err = 0;
-> +
-> +		for (dev = content->devs; dev; dev = dev->next) {
-> +			int dfd;
-> +			char *devpath;
-> +			int ret;
-> +
-> +			ret = st->ss->validate_ppl(st, content, dev);
-> +			if (ret == 0)
-> +				continue;
-> +
-> +			if (ret < 0) {
-> +				err = 1;
-> +				break;
-> +			}
-> +
-> +			if (!c->force) {
-> +				pr_err("%s contains invalid PPL - consider --force or --update-subarray with --update=no-ppl\n",
-> +					chosen_name);
-> +				content->array.state &= ~1;
-> +				avail[dev->disk.raid_disk] = 0;
-> +				break;
-> +			}
-> +
-> +			/* have --force - overwrite the invalid ppl */
-> +			devpath = map_dev(dev->disk.major, dev->disk.minor, 0);
-> +			dfd = dev_open(devpath, O_RDWR);
-> +			if (dfd < 0) {
-> +				pr_err("Failed to open %s\n", devpath);
-> +				err = 1;
-> +				break;
-> +			}
-> +
-> +			err = st->ss->write_init_ppl(st, content, dfd);
-> +			close(dfd);
-> +
-> +			if (err)
-> +				break;
-> +		}
-> +
-> +		if (err) {
-> +			free(avail);
-> +			return err;
-> +		}
-> +	}
-> +
->  	if (enough(content->array.level, content->array.raid_disks,
->  		   content->array.layout, content->array.state & 1, avail) == 0) {
->  		if (c->export && result)
-> diff --git a/Makefile b/Makefile
-> index a6f464c3..49da491f 100644
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -146,7 +146,7 @@ MON_OBJS = mdmon.o monitor.o managemon.o util.o maps.o mdstat.o sysfs.o \
->  	Kill.o sg_io.o dlink.o ReadMe.o super-intel.o \
->  	super-mbr.o super-gpt.o \
->  	super-ddf.o sha1.o crc32.o msg.o bitmap.o xmalloc.o \
-> -	platform-intel.o probe_roms.o
-> +	platform-intel.o probe_roms.o crc32c.o
+>  	if (bms->version == BITMAP_MAJOR_CLUSTERED && dlm_funs_ready()) {
+>  		rv = cluster_get_dlmlock(&lockid);
+> @@ -1501,11 +1502,12 @@ static int add_to_super1(struct supertype *st, mdu_disk_info_t *dk,
+>  		}
+>  	}
 >  
->  MON_SRCS = $(patsubst %.o,%.c,$(MON_OBJS))
->  
-> @@ -156,7 +156,8 @@ STATICOBJS = pwgr.o
->  ASSEMBLE_SRCS := mdassemble.c Assemble.c Manage.c config.c policy.c dlink.c util.c \
->  	maps.c lib.c xmalloc.c \
->  	super0.c super1.c super-ddf.c super-intel.c sha1.c crc32.c sg_io.c mdstat.c \
-> -	platform-intel.c probe_roms.c sysfs.c super-mbr.c super-gpt.c mapfile.c
-> +	platform-intel.c probe_roms.c sysfs.c super-mbr.c super-gpt.c mapfile.c \
-> +	crc32c.o
+> -	if ((dk->state & 6) == 6) /* active, sync */
+> +	dk_state &= ~(1<<MD_DISK_FAILFAST);
+> +	if ((dk_state & 6) == 6) /* active, sync */
+>  		*rp = __cpu_to_le16(dk->raid_disk);
 
-Hi Artur,
+This does not look right - you haven't assigned a value to dk_state, but
+then start masking bits out of it.
 
-This looks odd - sure you don't mean crc32c.c ?
-
-Thanks,
+Cheers,
 Jes
