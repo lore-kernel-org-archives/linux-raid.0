@@ -1,80 +1,28 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: [PATCH 3/3] mdadm: Specify enough length when write to buffer
-Date: Fri, 17 Mar 2017 19:55:43 +0800
-Message-ID: <1489751743-11397-4-git-send-email-xni@redhat.com>
-References: <1489751743-11397-1-git-send-email-xni@redhat.com>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH 5/7] x86, boot, LLVM: Use regparm=0 for memcpy and memset
+Date: Fri, 17 Mar 2017 13:08:55 +0100
+Message-ID: <20170317120855.zwqame63yvy5afhg@hirez.programming.kicks-ass.net>
+References: <20170317001520.85223-1-md@google.com>
+ <20170317001520.85223-6-md@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1489751743-11397-1-git-send-email-xni@redhat.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Jes.Sorensen@gmail.com, ncroxon@redhat.com, artur.paszkiewicz@intel.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-crypto-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170317001520.85223-6-md@google.com>
+Sender: linux-crypto-owner@vger.kernel.org
+To: Michael Davidson <md@google.com>
+Cc: Michal Marek <mmarek@suse.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Shaohua Li <shli@kernel.org>, Alexander Potapenko <glider@google.com>, Dmitry Vyukov <dvyukov@google.com>, Matthias Kaehlcke <mka@chromium.org>, x86@kernel.org, linux-kbuild@vger.kernel.org, linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-In Detail.c the buffer path in function Detail is defined as path[200],
-in fact the max lenth of content which needs to write to the buffer is
-287. Because the length of dname of struct dirent is 255.
-During building it reports error:
-error: ‘%s’ directive writing up to 255 bytes into a region of size 189
-[-Werror=format-overflow=]
+On Thu, Mar 16, 2017 at 05:15:18PM -0700, Michael Davidson wrote:
+> Use the standard regparm=0 calling convention for memcpy and
+> memset when building with clang.
+> 
+> This is a work around for a long standing clang bug
+> (see https://llvm.org/bugs/show_bug.cgi?id=3997) where
+> clang always uses the standard regparm=0 calling convention
+> for any implcit calls to memcpy and memset that it generates
+> (eg for structure assignments and initialization) even if an
+> alternate calling convention such as regparm=3 has been specified.
 
-In function examine_super0 there is a buffer nb with length 5.
-But it need to show a int type argument. The lenght of max
-number of int is 10. So the buffer length should be 11.
-
-In human_size function the length of buf is 30. During building
-there is a error:
-output between 20 and 47 bytes into a destination of size 30.
-Change the length to 47.
-
-Signed-off-by: Xiao Ni <xni@redhat.com>
----
- Detail.c | 2 +-
- super0.c | 2 +-
- util.c   | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/Detail.c b/Detail.c
-index 509b0d4..cb33794 100644
---- a/Detail.c
-+++ b/Detail.c
-@@ -575,7 +575,7 @@ This is pretty boring
- 			printf("  Member Arrays :");
- 
- 			while (dir && (de = readdir(dir)) != NULL) {
--				char path[200];
-+				char path[287];
- 				char vbuf[1024];
- 				int nlen = strlen(sra->sys_name);
- 				dev_t devid;
-diff --git a/super0.c b/super0.c
-index 938cfd9..f5b4507 100644
---- a/super0.c
-+++ b/super0.c
-@@ -231,7 +231,7 @@ static void examine_super0(struct supertype *st, char *homehost)
- 	     d++) {
- 		mdp_disk_t *dp;
- 		char *dv;
--		char nb[5];
-+		char nb[11];
- 		int wonly, failfast;
- 		if (d>=0) dp = &sb->disks[d];
- 		else dp = &sb->this_disk;
-diff --git a/util.c b/util.c
-index f100972..32bd909 100644
---- a/util.c
-+++ b/util.c
-@@ -811,7 +811,7 @@ unsigned long calc_csum(void *super, int bytes)
- #ifndef MDASSEMBLE
- char *human_size(long long bytes)
- {
--	static char buf[30];
-+	static char buf[47];
- 
- 	/* We convert bytes to either centi-M{ega,ibi}bytes or
- 	 * centi-G{igi,ibi}bytes, with appropriate rounding,
--- 
-2.7.4
-
+Seriously, fix LLVM already.
