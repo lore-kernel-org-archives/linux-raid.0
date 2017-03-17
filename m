@@ -1,42 +1,36 @@
 From: Gioh Kim <gi-oh.kim@profitbricks.com>
-Subject: [PATCH 2/2] super1: check and output faulty dev role
-Date: Fri, 17 Mar 2017 17:47:02 +0100
-Message-ID: <1489769222-31855-3-git-send-email-gi-oh.kim@profitbricks.com>
-References: <1489769222-31855-1-git-send-email-gi-oh.kim@profitbricks.com>
+Subject: [PATCH 0/2] mdadm: setting device role of raid1 disk with failfast
+Date: Fri, 17 Mar 2017 17:47:00 +0100
+Message-ID: <1489769222-31855-1-git-send-email-gi-oh.kim@profitbricks.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1489769222-31855-1-git-send-email-gi-oh.kim@profitbricks.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jes.sorensen@gmail.com
-Cc: neilb@suse.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Jack Wang <jinpu.wang@profitbricks.com>
+Cc: neilb@suse.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Gioh Kim <gi-oh.kim@profitbricks.com>
 List-Id: linux-raid.ids
 
-From: Jack Wang <jinpu.wang@profitbricks.com>
+Hi,
 
-Output the real dev role in examine_super1, it will help to
-find problem.
+I've found a case that failfast option of mdadm set a disk faulty wrongly.
+Following is my test case.
 
-Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
-Reviewed-by: Gioh Kim <gi-oh.kim@profitbricks.com>
----
- super1.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+mdadm --create /dev/md100 -l 1 --failfast -e 1.2 -n 2 /dev/vdb /dev/vdc
+mdadm /dev/md100 -a --failfast /dev/vdd
 
-diff --git a/super1.c b/super1.c
-index 1da33ef..0bf4715 100644
---- a/super1.c
-+++ b/super1.c
-@@ -501,8 +501,10 @@ static void examine_super1(struct supertype *st, char *homehost)
- #endif
- 	printf("   Device Role : ");
- 	role = role_from_sb(sb);
--	if (role >= MD_DISK_ROLE_FAULTY)
--		printf("spare\n");
-+	if (role == MD_DISK_ROLE_SPARE)
-+		printf("Spare\n");
-+	else if (role == MD_DISK_ROLE_FAULTY)
-+		printf("Faulty\n");
- 	else if (role == MD_DISK_ROLE_JOURNAL)
- 		printf("Journal\n");
- 	else if (sb->feature_map & __cpu_to_le32(MD_FEATURE_REPLACEMENT))
+If I use failfast option, the vdd disk was faulty wrongly.
+If not, it was spare.
+
+This patch fixes a corner case for setting device role and
+prints device role if it's faulty.
+This patch is based on "mdadm - v4.0-8-g72b616a - 2017-03-07".
+
+Gioh Kim (1):
+  super1: ignore failfast flag for setting device role
+
+Jack Wang (1):
+  super1: check and output faulty dev role
+
+ super1.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
+
 -- 
 2.5.0
