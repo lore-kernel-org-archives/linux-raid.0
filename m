@@ -1,46 +1,128 @@
 From: jes.sorensen@gmail.com
-Subject: Re: [PATCH 3/3] mdadm: Specify enough length when write to buffer
-Date: Fri, 17 Mar 2017 15:58:35 -0400
-Message-ID: <wrfj8to3k74k.fsf@gmail.com>
-References: <1489751743-11397-1-git-send-email-xni@redhat.com>
-        <1489751743-11397-4-git-send-email-xni@redhat.com>
+Subject: Re: [PATCH v3 3/6] imsm: PPL support
+Date: Fri, 17 Mar 2017 16:11:17 -0400
+Message-ID: <wrfj4lyrk6je.fsf@gmail.com>
+References: <20170316210948.21093-1-artur.paszkiewicz@intel.com>
+        <20170316210948.21093-4-artur.paszkiewicz@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1489751743-11397-4-git-send-email-xni@redhat.com> (Xiao Ni's
-        message of "Fri, 17 Mar 2017 19:55:43 +0800")
+In-Reply-To: <20170316210948.21093-4-artur.paszkiewicz@intel.com> (Artur
+        Paszkiewicz's message of "Thu, 16 Mar 2017 22:09:45 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: Xiao Ni <xni@redhat.com>
-Cc: linux-raid@vger.kernel.org, ncroxon@redhat.com, artur.paszkiewicz@intel.com
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Xiao Ni <xni@redhat.com> writes:
-> In Detail.c the buffer path in function Detail is defined as path[200],
-> in fact the max lenth of content which needs to write to the buffer is
-> 287. Because the length of dname of struct dirent is 255.
-> During building it reports error:
-> error: =E2=80=98%s=E2=80=99 directive writing up to 255 bytes into a regi=
-on of size 189
-> [-Werror=3Dformat-overflow=3D]
+Artur Paszkiewicz <artur.paszkiewicz@intel.com> writes:
+> Enable creating and assembling IMSM raid5 arrays with PPL. Update the
+> IMSM metadata format to include new fields used for PPL.
 >
-> In function examine_super0 there is a buffer nb with length 5.
-> But it need to show a int type argument. The lenght of max
-> number of int is 10. So the buffer length should be 11.
+> Add structures for PPL metadata. They are used also by super1 and shared
+> with the kernel, so put them in md_p.h.
 >
-> In human_size function the length of buf is 30. During building
-> there is a error:
-> output between 20 and 47 bytes into a destination of size 30.
-> Change the length to 47.
+> Write the initial empty PPL header when creating an array. When
+> assembling an array with PPL, validate the PPL header and in case it is
+> not correct allow to overwrite it if --force was provided.
 >
-> Signed-off-by: Xiao Ni <xni@redhat.com>
+> Write the PPL location and size for a device to the new rdev sysfs
+> attributes 'ppl_sector' and 'ppl_size'. Enable PPL in the kernel by
+> writing to 'consistency_policy' before the array is activated.
+>
+> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 > ---
->  Detail.c | 2 +-
->  super0.c | 2 +-
->  util.c   | 2 +-
->  3 files changed, 3 insertions(+), 3 deletions(-)
+>  Assemble.c    |  49 +++++++++++
+>  Makefile      |   5 +-
+>  md_p.h        |  25 ++++++
+>  mdadm.h       |   6 ++
+>  super-intel.c | 274 +++++++++++++++++++++++++++++++++++++++++++++++++++++-----
+>  sysfs.c       |  14 +++
+>  6 files changed, 349 insertions(+), 24 deletions(-)
+>
+> diff --git a/Assemble.c b/Assemble.c
+> index 3da09033..8e55b49f 100644
+> --- a/Assemble.c
+> +++ b/Assemble.c
+> @@ -1942,6 +1942,55 @@ int assemble_container_content(struct supertype *st, int mdfd,
+>  	map_update(NULL, fd2devnm(mdfd), content->text_version,
+>  		   content->uuid, chosen_name);
+>  
+> +	if (content->consistency_policy == CONSISTENCY_POLICY_PPL &&
+> +	    st->ss->validate_ppl) {
+> +		content->array.state |= 1;
+> +		err = 0;
+> +
+> +		for (dev = content->devs; dev; dev = dev->next) {
+> +			int dfd;
+> +			char *devpath;
+> +			int ret;
+> +
+> +			ret = st->ss->validate_ppl(st, content, dev);
+> +			if (ret == 0)
+> +				continue;
+> +
+> +			if (ret < 0) {
+> +				err = 1;
+> +				break;
+> +			}
+> +
+> +			if (!c->force) {
+> +				pr_err("%s contains invalid PPL - consider --force or --update-subarray with --update=no-ppl\n",
+> +					chosen_name);
+> +				content->array.state &= ~1;
+> +				avail[dev->disk.raid_disk] = 0;
+> +				break;
+> +			}
+> +
+> +			/* have --force - overwrite the invalid ppl */
+> +			devpath = map_dev(dev->disk.major, dev->disk.minor, 0);
+> +			dfd = dev_open(devpath, O_RDWR);
+> +			if (dfd < 0) {
+> +				pr_err("Failed to open %s\n", devpath);
+> +				err = 1;
+> +				break;
+> +			}
+> +
+> +			err = st->ss->write_init_ppl(st, content, dfd);
+> +			close(dfd);
+> +
+> +			if (err)
+> +				break;
+> +		}
+> +
+> +		if (err) {
+> +			free(avail);
+> +			return err;
+> +		}
+> +	}
+> +
+>  	if (enough(content->array.level, content->array.raid_disks,
+>  		   content->array.layout, content->array.state & 1, avail) == 0) {
+>  		if (c->export && result)
+> diff --git a/Makefile b/Makefile
+> index a6f464c3..49da491f 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -146,7 +146,7 @@ MON_OBJS = mdmon.o monitor.o managemon.o util.o maps.o mdstat.o sysfs.o \
+>  	Kill.o sg_io.o dlink.o ReadMe.o super-intel.o \
+>  	super-mbr.o super-gpt.o \
+>  	super-ddf.o sha1.o crc32.o msg.o bitmap.o xmalloc.o \
+> -	platform-intel.o probe_roms.o
+> +	platform-intel.o probe_roms.o crc32c.o
+>  
+>  MON_SRCS = $(patsubst %.o,%.c,$(MON_OBJS))
+>  
+> @@ -156,7 +156,8 @@ STATICOBJS = pwgr.o
+>  ASSEMBLE_SRCS := mdassemble.c Assemble.c Manage.c config.c policy.c dlink.c util.c \
+>  	maps.c lib.c xmalloc.c \
+>  	super0.c super1.c super-ddf.c super-intel.c sha1.c crc32.c sg_io.c mdstat.c \
+> -	platform-intel.c probe_roms.c sysfs.c super-mbr.c super-gpt.c mapfile.c
+> +	platform-intel.c probe_roms.c sysfs.c super-mbr.c super-gpt.c mapfile.c \
+> +	crc32c.o
 
-Applied!
+Hi Artur,
 
-Thanks!
+This looks odd - sure you don't mean crc32c.c ?
+
+Thanks,
 Jes
