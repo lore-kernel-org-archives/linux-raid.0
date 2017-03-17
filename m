@@ -1,8 +1,10 @@
 From: Xiao Ni <xni@redhat.com>
 Subject: [PATCH 1/3] mdadm: Replace snprintf with strncpy at some places to avoid truncation
-Date: Fri, 17 Mar 2017 20:18:19 +0800
-Message-ID: <1489753099-11567-1-git-send-email-xni@redhat.com>
+Date: Fri, 17 Mar 2017 19:55:41 +0800
+Message-ID: <1489751743-11397-2-git-send-email-xni@redhat.com>
+References: <1489751743-11397-1-git-send-email-xni@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1489751743-11397-1-git-send-email-xni@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: Jes.Sorensen@gmail.com, ncroxon@redhat.com, artur.paszkiewicz@intel.com
