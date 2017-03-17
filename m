@@ -1,46 +1,45 @@
-From: hpa@zytor.com
-Subject: Re: [PATCH 3/7] x86, LLVM: suppress clang warnings about unaligned accesses
-Date: Fri, 17 Mar 2017 16:50:19 -0700
-Message-ID: <FB827022-C732-432A-8F31-734C88EBF7A4@zytor.com>
-References: <20170317001520.85223-1-md@google.com> <20170317001520.85223-4-md@google.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: [PATCH v3] mdadm: change in add-journal support
+Date: Fri, 17 Mar 2017 16:31:10 -0700
+Message-ID: <20170317233111.2452831-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kbuild-owner@vger.kernel.org>
-In-Reply-To: <20170317001520.85223-4-md@google.com>
-Sender: linux-kbuild-owner@vger.kernel.org
-To: Michael Davidson <md@google.com>, Michal Marek <mmarek@suse.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Shaohua Li <shli@kernel.org>
-Cc: Alexander Potapenko <glider@google.com>, Dmitry Vyukov <dvyukov@google.com>, Matthias Kaehlcke <mka@chromium.org>, x86@kernel.org, linux-kbuild@vger.kernel.org, linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-On March 16, 2017 5:15:16 PM PDT, Michael Davidson <md@google.com> wrote:
->Suppress clang warnings about potential unaliged accesses
->to members in packed structs. This gets rid of almost 10,000
->warnings about accesses to the ring 0 stack pointer in the TSS.
->
->Signed-off-by: Michael Davidson <md@google.com>
->---
-> arch/x86/Makefile | 5 +++++
-> 1 file changed, 5 insertions(+)
->
->diff --git a/arch/x86/Makefile b/arch/x86/Makefile
->index 894a8d18bf97..7f21703c475d 100644
->--- a/arch/x86/Makefile
->+++ b/arch/x86/Makefile
->@@ -128,6 +128,11 @@ endif
->         KBUILD_CFLAGS += $(call cc-option,-maccumulate-outgoing-args)
-> endif
-> 
->+ifeq ($(cc-name),clang)
->+# Suppress clang warnings about potential unaligned accesses.
->+KBUILD_CFLAGS += $(call cc-disable-warning, address-of-packed-member)
->+endif
->+
-> ifdef CONFIG_X86_X32
-> 	x32_ld_ok := $(call try-run,\
-> 			/bin/echo -e '1: .quad 1b' | \
+I have made some confusion with previous versions of the change set, so
+I would like to resend and clarify.
 
-Why conditional on clang?
--- 
-Sent from my Android device with K-9 Mail. Please excuse my brevity.
+The very first version of this set has two patches, one for changes
+in --add-journal the other for new option of --remove-journal:
+
+http://marc.info/?l=linux-raid&m=148960265129793
+http://marc.info/?l=linux-raid&m=148960267329810
+
+After getting feedback from Shaohua, I realized that there is issue
+with the add-journal patch, and the remove-journal patch is not
+necessary. Therefore, I sent the second version of this set:
+
+http://marc.info/?l=linux-raid&m=148978754820615
+
+However, I forgot to make it clear that the first set should be discarded,
+which caused confusion.
+
+To make it clear, please discard all the patches above, and only apply the
+following patch.
+
+Thanks,
+Song
+
+Song Liu (1):
+  mdadm/r5cache: allow adding journal to array without journal
+
+ Manage.c   | 9 ---------
+ mdadm.8.in | 5 ++---
+ 2 files changed, 2 insertions(+), 12 deletions(-)
+
+--
+2.9.3
