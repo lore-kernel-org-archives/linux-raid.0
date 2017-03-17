@@ -1,46 +1,69 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: dm crypt: remove an impossible condition
-Date: Fri, 17 Mar 2017 17:38:19 -0400
-Message-ID: <20170317213819.GC6475@redhat.com>
-References: <20170317204655.GA28261@mwanda>
+From: jes.sorensen@gmail.com
+Subject: Re: [PATCH v2] mdadm/r5cache: allow adding journal to array without journal
+Date: Fri, 17 Mar 2017 15:50:40 -0400
+Message-ID: <wrfjlgs3k7hr.fsf@gmail.com>
+References: <20170316232405.3523257-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <20170317204655.GA28261@mwanda>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: kernel-janitors@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Milan Broz <gmazyland@gmail.com>, Alasdair Kergon <agk@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170316232405.3523257-1-songliubraving@fb.com> (Song Liu's
+        message of "Thu, 16 Mar 2017 16:24:05 -0700")
+Sender: linux-raid-owner@vger.kernel.org
+To: Song Liu <songliubraving@fb.com>
+Cc: linux-raid@vger.kernel.org, neilb@suse.com, kernel-team@fb.com
 List-Id: linux-raid.ids
 
-On Fri, Mar 17 2017 at  4:46pm -0400,
-Dan Carpenter <dan.carpenter@oracle.com> wrote:
+Song Liu <songliubraving@fb.com> writes:
+> Currently, --add-journal can be only used to recreate broken journal
+> for arrays with journal since  creation. As the kernel code getting
+> more mature, this constraint is no longer necessary.
+>
+> This patch allows --add-journal to add journal to array without
+> journal.
+>
+> Signed-off-by: Song Liu <songliubraving@fb.com>
+> ---
+>  Manage.c   | 9 ---------
+>  mdadm.8.in | 5 ++---
+>  2 files changed, 2 insertions(+), 12 deletions(-)
 
-> Static checkers complain that it doesn't make sense to check if "sval"
-> is NULL.  The intention was to check if strchr() returned NULL, but in
-> that situation "sval" would be "NULL + 1" so the check doesn't work.  We
-> know from the sscanf() that there is a ':' character in the string so
-> the check is unnecessary and can be removed.
-> 
-> Now that the check doesn't depend on "sval" it can be moved earlier
-> for readability.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Hi Song,
 
-Thanks Dan, I've folded this fix into the original commit, see:
-https://git.kernel.org/pub/scm/linux/kernel/git/device-mapper/linux-dm.git/commit/?h=dm-4.12&id=cf22cd5f3afe7335afee5659f7450000e8fa2a15
+I spotted this one after I had already applied the first patch with
+this title, so I went back and removed the original one and applied this
+one instead, but now the build breaks.
 
-I didn't add your Signed-off-by though, I can backfill that if you
-like.. it is just I didn't want to taint you with all the extensive
-changes in that commit.
+When posting a v2, please send it out as a response to the patch it is
+meant to replace, like this:
+  git send-email --in-reply-to=3D<....>
 
-Mike
+Second, please put a note in the commit why this is a v2.
+
+I am going to revert them all for now. Please send me a fresh consistent
+set to apply.
+
+Thanks,
+Jes
+
+cc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter -ggdb -D=
+Sendmail=3D\""/usr/sbin/sendmail -t"\" -DCONFFILE=3D\"/etc/mdadm.conf\" -DC=
+ONFFILE2=3D\"/etc/mdadm/mdadm.conf\" -DMAP_DIR=3D\"/run/mdadm\" -DMAP_FILE=
+=3D\"map\" -DMDMON_DIR=3D\"/run/mdadm\" -DFAILED_SLOTS_DIR=3D\"/run/mdadm/f=
+ailed-slots\" -DNO_COROSYNC -DNO_DLM -DVERSION=3D\"4.0-10-g707cf0a\" -DVERS=
+_DATE=3D"\"2017-03-17\"" -DUSE_PTHREADS -DBINDIR=3D\"/sbin\"  -c -o Manage.=
+o Manage.c
+Manage.c: In function =E2=80=98Manage_remove_journal=E2=80=99:
+Manage.c:199:26: error: =E2=80=98MD_SB_HAS_JOURNAL=E2=80=99 undeclared (fir=
+st use in this function)
+  if (!(array.state & (1<<MD_SB_HAS_JOURNAL))) {
+                          ^~~~~~~~~~~~~~~~~
+Manage.c:199:26: note: each undeclared identifier is reported only once for=
+ each function it appears in
+Manage.c:203:33: error: =E2=80=98MD_SB_JOURNAL_REMOVABLE=E2=80=99 undeclare=
+d (first use in this function)
+  } else if (!(array.state & (1<<MD_SB_JOURNAL_REMOVABLE))) {
+                                 ^~~~~~~~~~~~~~~~~~~~~~~
+<builtin>: recipe for target 'Manage.o' failed
+make: *** [Manage.o] Error 1
+
