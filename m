@@ -1,37 +1,36 @@
-From: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
-Subject: Re: Bit-Rot
-Date: Fri, 17 Mar 2017 17:59:36 +0100
-Message-ID: <CAJH6TXhzBxB_mXWk5dkJziffQzGmdfY9nRUm63Jxi39SB2Vfiw@mail.gmail.com>
-References: <CAJH6TXgimQ9Ru58GCvaxqTZrYE9yDYh9osq2tEP_sLTfV0gQmg@mail.gmail.com>
- <95588e39-f42e-54d4-e7ff-a70af51a77c1@youngman.org.uk> <CAJH6TXimNQ8raxBCT=aLhzLzRnbMh8adcF21BrOqp6G-cajLpw@mail.gmail.com>
- <alpine.DEB.2.02.1703050913530.30226@uplift.swm.pp.se> <20170306115648.GG7497@reaktio.net>
- <BD49CADF-6076-44CF-8291-DFE74EA2C6A7@redhat.com>
+From: Borislav Petkov <bp@alien8.de>
+Subject: Re: [PATCH 6/7] md/raid10, LLVM: get rid of variable length array
+Date: Fri, 17 Mar 2017 19:03:50 +0100
+Message-ID: <20170317180350.63jjysejk2i6vkon@pd.tnic>
+References: <20170317001520.85223-1-md@google.com>
+ <20170317001520.85223-7-md@google.com>
+ <20170317120837.pr74cv3xuj7qpoin@hirez.programming.kicks-ass.net>
+ <CAG_fn=XcQLtcHRSm2BHYce9LMtyFJ+fWxfE4vYPCw+7U0DcrmQ@mail.gmail.com>
+ <CAG_fn=WooTLkzex3hqPgO5pr7GsK3v7Z5riSA7K+-_S=S7rmBQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BD49CADF-6076-44CF-8291-DFE74EA2C6A7@redhat.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Brassow Jonathan <jbrassow@redhat.com>
-Cc: =?UTF-8?B?UGFzaSBLw6Rya2vDpGluZW4=?= <pasik@iki.fi>, Mikael Abrahamsson <swmike@swm.pp.se>, Anthony Youngman <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAG_fn=WooTLkzex3hqPgO5pr7GsK3v7Z5riSA7K+-_S=S7rmBQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alexander Potapenko <glider@google.com>
+Cc: Peter Zijlstra <peterz@infradead.org>, Michael Davidson <md@google.com>, Michal Marek <mmarek@suse.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Shaohua Li <shli@kernel.org>, Dmitry Vyukov <dvyukov@google.com>, Matthias Kaehlcke <mka@chromium.org>, x86@kernel.org, linux-kbuild@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2017-03-17 16:37 GMT+01:00 Brassow Jonathan <jbrassow@redhat.com>:
-> There is a device-mapper target that is designed to do precisely this - d=
-m-integrity (see dm-devel mailing list).  It currently being developed as p=
-art of an authenticated encryption project, but could be used for this too.=
-  Note that there is a performance penalty that comes from emulating this.
+On Fri, Mar 17, 2017 at 01:32:00PM +0100, Alexander Potapenko wrote:
+> > IIUC there's only a handful of VLAIS instances in LLVM code, why not
+> Sorry, "kernel code", not "LLVM code".
+> > just drop them for the sake of better code portability?
 
-Probably something similar could be obtained by checking, during a
-scrub, the majority of responses from all replica
+And what happens if someone else adds a variable thing like this
+somewhere else, builds with gcc, everything's fine and patch gets
+applied? Or something else llvm can't stomach.
 
-A sort of quorum
-If you have a 3 way mirror, and 2 disks reply with "1" and another
-reply with "0", the disk with "0" has triggered a bit rot
+Does that mean there'll be the occasional, every-so-often whack-a-mole
+patchset from someone, fixing the kernel build with llvm yet again?
 
-Is mdadm able to make this decision?  In a 2 way mirror would be
-impossible, as you can't know which disk has the correct data, but in
-a 3 way mirrors you have a majority.
+-- 
+Regards/Gruss,
+    Boris.
 
-Probably the same could be done in RAID-6, where you have 2 parity to evalu=
-ate.
+Good mailing practices for 400: avoid top-posting and trim the reply.
