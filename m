@@ -1,49 +1,53 @@
-From: Brassow Jonathan <jbrassow@redhat.com>
-Subject: Re: Bit-Rot
-Date: Fri, 17 Mar 2017 10:37:09 -0500
-Message-ID: <BD49CADF-6076-44CF-8291-DFE74EA2C6A7@redhat.com>
-References: <CAJH6TXgimQ9Ru58GCvaxqTZrYE9yDYh9osq2tEP_sLTfV0gQmg@mail.gmail.com> <95588e39-f42e-54d4-e7ff-a70af51a77c1@youngman.org.uk> <CAJH6TXimNQ8raxBCT=aLhzLzRnbMh8adcF21BrOqp6G-cajLpw@mail.gmail.com> <alpine.DEB.2.02.1703050913530.30226@uplift.swm.pp.se> <20170306115648.GG7497@reaktio.net>
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+From: Gioh Kim <gi-oh.kim@profitbricks.com>
+Subject: [PATCH 1/2] super1: ignore failfast flag for setting device role
+Date: Fri, 17 Mar 2017 17:47:01 +0100
+Message-ID: <1489769222-31855-2-git-send-email-gi-oh.kim@profitbricks.com>
+References: <1489769222-31855-1-git-send-email-gi-oh.kim@profitbricks.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170306115648.GG7497@reaktio.net>
+In-Reply-To: <1489769222-31855-1-git-send-email-gi-oh.kim@profitbricks.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?utf-8?Q?Pasi_K=C3=A4rkk=C3=A4inen?= <pasik@iki.fi>
-Cc: Mikael Abrahamsson <swmike@swm.pp.se>, Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, Anthony Youngman <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
+To: jes.sorensen@gmail.com
+Cc: neilb@suse.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Gioh Kim <gi-oh.kim@profitbricks.com>, Jack Wang <jinpu.wang@profitbricks.com>
 List-Id: linux-raid.ids
 
+There is corner case for setting device role,
+if new device has failfast flag.
+The failfast flag should be ignored.
 
-> On Mar 6, 2017, at 5:56 AM, Pasi Kärkkäinen <pasik@iki.fi> wrote:
-> 
-> On Sun, Mar 05, 2017 at 09:15:39AM +0100, Mikael Abrahamsson wrote:
->> On Fri, 3 Mar 2017, Gandalf Corvotempesta wrote:
->> 
->>> This is what ZFS does. This is what Gluster does. This is what BRTFS does.
->>> Adding this in mdadm could be an interesting feature.
->> 
->> This has been discussed several times. Yes, it would be interesting.
->> It's not easy to do because mdadm maps 4k blocks to 4k blocks. Only
->> way to "easily" add this I imagine, would be to have an additional
->> "checksum" block, so that raid6 would require 3 extra drives instead
->> of 2.
->> 
->> The answer historically has been "patches welcome".
->> 
-> 
-> There was/is an early prototype implementation of checksums for Linux MD RAID:
-> 
-> http://pages.cs.wisc.edu/~bpkroth/cs736/md-checksums/
-> http://pages.cs.wisc.edu/~bpkroth/cs736/md-checksums/md-checksums-presentation.pdf
-> http://pages.cs.wisc.edu/~bpkroth/cs736/md-checksums/md-checksums-paper.pdf
-> http://pages.cs.wisc.edu/~bpkroth/cs736/md-checksums/md-checksums-code.tar.bz2
-> 
-> 
-> Also there's the T10 DIF / DIX (Data Integrity Fields / Data Integrity eXtensions) functionality that could be used, at least if the hardware setup is SAS-based (SAS HBA + enterprise SAS disks and modern enough firmware on both that enable DIF/DIX..).
-> 
-> I guess MD RAID could also 'emulate' T10 DIF/DIX even if the HBA/disks don't support it.. but dunno if that makes any sense.
+Signed-off-by: Gioh Kim <gi-oh.kim@profitbricks.com>
+Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
+---
+ super1.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-There is a device-mapper target that is designed to do precisely this - dm-integrity (see dm-devel mailing list).  It currently being developed as part of an authenticated encryption project, but could be used for this too.  Note that there is a performance penalty that comes from emulating this.
-
- brassow
+diff --git a/super1.c b/super1.c
+index 882cd61..1da33ef 100644
+--- a/super1.c
++++ b/super1.c
+@@ -1491,6 +1491,7 @@ static int add_to_super1(struct supertype *st, mdu_disk_info_t *dk,
+ 	struct devinfo *di, **dip;
+ 	bitmap_super_t *bms = (bitmap_super_t*)(((char*)sb) + MAX_SB_SIZE);
+ 	int rv, lockid;
++	int dk_state;
+ 
+ 	if (bms->version == BITMAP_MAJOR_CLUSTERED && dlm_funs_ready()) {
+ 		rv = cluster_get_dlmlock(&lockid);
+@@ -1501,11 +1502,12 @@ static int add_to_super1(struct supertype *st, mdu_disk_info_t *dk,
+ 		}
+ 	}
+ 
+-	if ((dk->state & 6) == 6) /* active, sync */
++	dk_state &= ~(1<<MD_DISK_FAILFAST);
++	if ((dk_state & 6) == 6) /* active, sync */
+ 		*rp = __cpu_to_le16(dk->raid_disk);
+-	else if (dk->state & (1<<MD_DISK_JOURNAL))
++	else if (dk_state & (1<<MD_DISK_JOURNAL))
+                 *rp = MD_DISK_ROLE_JOURNAL;
+-	else if ((dk->state & ~2) == 0) /* active or idle -> spare */
++	else if ((dk_state & ~2) == 0) /* active or idle -> spare */
+ 		*rp = MD_DISK_ROLE_SPARE;
+ 	else
+ 		*rp = MD_DISK_ROLE_FAULTY;
+-- 
+2.5.0
 
