@@ -1,49 +1,227 @@
-From: Dmitry Vyukov <dvyukov@google.com>
-Subject: Re: [PATCH 0/7] LLVM: make x86_64 kernel build with clang.
-Date: Fri, 17 Mar 2017 09:17:40 +0100
-Message-ID: <CACT4Y+aeyXK5jwN4Nej-+u302zwC=uwQM4VkMBzesTCpQD4pLQ@mail.gmail.com>
-References: <20170317001520.85223-1-md@google.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170317001520.85223-1-md@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Michael Davidson <md@google.com>
-Cc: Michal Marek <mmarek@suse.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Shaohua Li <shli@kernel.org>, Alexander Potapenko <glider@google.com>, Matthias Kaehlcke <mka@chromium.org>, "x86@kernel.org" <x86@kernel.org>, "open list:KERNEL BUILD + fi..." <linux-kbuild@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: [PATCH V1] md/raid10: refactor some codes from raid10_write_request
+Date: Fri, 17 Mar 2017 17:45:17 +0800
+Message-ID: <1489743917-10895-1-git-send-email-gqjiang@suse.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: shli@fb.com, neilb@suse.com, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-On Fri, Mar 17, 2017 at 1:15 AM, Michael Davidson <md@google.com> wrote:
-> This patch set is sufficient to get the x86_64 kernel to build
-> and boot correctly with clang-3.8 or greater.
->
-> The resulting build still has about 300 warnings, very few of
-> which appear to be significant. Most of them should be fixable
-> with some minor code refactoring although a few of them, such
-> as the complaints about implict conversions between enumerated
-> types may be candidates for just being disabled.
+Previously, we clone both bio and repl_bio in raid10_write_request,
+then add the cloned bio to plug->pending or conf->pending_bio_list
+based on plug or not, and most of the logics are same for the two
+conditions.
 
-Thanks, Michael!
-This will help us a lot with KMSAN (uninit use detector) and code coverage.
+So introduce raid10_write_one_disk for it, and use replacement parameter
+to distinguish the difference. No functional changes in the patch.
 
+Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+---
+Changes from RFC:
+1. rename handle_clonebio to raid10_write_one_disk
+2. s/i/n_copy/ and s/int replacement/bool replacement/
 
-> Michael Davidson (7):
->   Makefile, LLVM: add -no-integrated-as to KBUILD_[AC]FLAGS
->   Makefile, x86, LLVM: disable unsupported optimization flags
->   x86, LLVM: suppress clang warnings about unaligned accesses
->   x86, boot, LLVM: #undef memcpy etc in string.c
->   x86, boot, LLVM: Use regparm=0 for memcpy and memset
->   md/raid10, LLVM: get rid of variable length array
->   crypto, x86, LLVM: aesni - fix token pasting
->
->  Makefile                                |  4 ++++
->  arch/x86/Makefile                       |  7 +++++++
->  arch/x86/boot/copy.S                    | 15 +++++++++++++--
->  arch/x86/boot/string.c                  |  9 +++++++++
->  arch/x86/boot/string.h                  | 13 +++++++++++++
->  arch/x86/crypto/aes_ctrby8_avx-x86_64.S |  7 ++-----
->  drivers/md/raid10.c                     |  9 ++++-----
->  7 files changed, 52 insertions(+), 12 deletions(-)
->
-> --
-> 2.12.0.367.g23dc2f6d3c-goog
->
+ drivers/md/raid10.c | 172 ++++++++++++++++++++++------------------------------
+ 1 file changed, 72 insertions(+), 100 deletions(-)
+
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index b1b1f982a722..a931e6e7b280 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1188,18 +1188,81 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+ 	return;
+ }
+ 
+-static void raid10_write_request(struct mddev *mddev, struct bio *bio,
+-				 struct r10bio *r10_bio)
++static void raid10_write_one_disk(struct mddev *mddev, struct r10bio *r10_bio,
++				  struct bio *bio, bool replacement,
++				  int n_copy, int max_sectors)
+ {
+-	struct r10conf *conf = mddev->private;
+-	int i;
+ 	const int op = bio_op(bio);
+ 	const unsigned long do_sync = (bio->bi_opf & REQ_SYNC);
+ 	const unsigned long do_fua = (bio->bi_opf & REQ_FUA);
+ 	unsigned long flags;
+-	struct md_rdev *blocked_rdev;
+ 	struct blk_plug_cb *cb;
+ 	struct raid10_plug_cb *plug = NULL;
++	struct r10conf *conf = mddev->private;
++	struct md_rdev *rdev;
++	int devnum = r10_bio->devs[i].devnum;
++	struct bio *mbio;
++
++	if (replacement) {
++		rdev = conf->mirrors[devnum].replacement;
++		if (rdev == NULL) {
++			/* Replacement just got moved to main 'rdev' */
++			smp_mb();
++			rdev = conf->mirrors[devnum].rdev;
++		}
++	} else
++		rdev = conf->mirrors[devnum].rdev;
++
++	mbio = bio_clone_fast(bio, GFP_NOIO, mddev->bio_set);
++	bio_trim(mbio, r10_bio->sector - bio->bi_iter.bi_sector, max_sectors);
++	if (replacement)
++		r10_bio->devs[i].repl_bio = mbio;
++	else
++		r10_bio->devs[i].bio = mbio;
++
++	mbio->bi_iter.bi_sector	= (r10_bio->devs[i].addr +
++				   choose_data_offset(r10_bio, rdev));
++	mbio->bi_bdev = rdev->bdev;
++	mbio->bi_end_io	= raid10_end_write_request;
++	bio_set_op_attrs(mbio, op, do_sync | do_fua);
++	if (!replacement && test_bit(FailFast, &conf->mirrors[devnum].rdev->flags)
++			 && enough(conf, devnum))
++		mbio->bi_opf |= MD_FAILFAST;
++	mbio->bi_private = r10_bio;
++
++	if (conf->mddev->gendisk)
++		trace_block_bio_remap(bdev_get_queue(mbio->bi_bdev),
++				      mbio, disk_devt(conf->mddev->gendisk),
++				      r10_bio->sector);
++	/* flush_pending_writes() needs access to the rdev so...*/
++	mbio->bi_bdev = (void *)rdev;
++
++	atomic_inc(&r10_bio->remaining);
++
++	cb = blk_check_plugged(raid10_unplug, mddev, sizeof(*plug));
++	if (cb)
++		plug = container_of(cb, struct raid10_plug_cb, cb);
++	else
++		plug = NULL;
++	spin_lock_irqsave(&conf->device_lock, flags);
++	if (plug) {
++		bio_list_add(&plug->pending, mbio);
++		plug->pending_cnt++;
++	} else {
++		bio_list_add(&conf->pending_bio_list, mbio);
++		conf->pending_count++;
++	}
++	spin_unlock_irqrestore(&conf->device_lock, flags);
++	if (!plug)
++		md_wakeup_thread(mddev->thread);
++}
++
++static void raid10_write_request(struct mddev *mddev, struct bio *bio,
++				 struct r10bio *r10_bio)
++{
++	struct r10conf *conf = mddev->private;
++	int i;
++	struct md_rdev *blocked_rdev;
+ 	sector_t sectors;
+ 	int sectors_handled;
+ 	int max_sectors;
+@@ -1402,101 +1465,10 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
+ 	bitmap_startwrite(mddev->bitmap, r10_bio->sector, r10_bio->sectors, 0);
+ 
+ 	for (i = 0; i < conf->copies; i++) {
+-		struct bio *mbio;
+-		int d = r10_bio->devs[i].devnum;
+-		if (r10_bio->devs[i].bio) {
+-			struct md_rdev *rdev = conf->mirrors[d].rdev;
+-			mbio = bio_clone_fast(bio, GFP_NOIO, mddev->bio_set);
+-			bio_trim(mbio, r10_bio->sector - bio->bi_iter.bi_sector,
+-				 max_sectors);
+-			r10_bio->devs[i].bio = mbio;
+-
+-			mbio->bi_iter.bi_sector	= (r10_bio->devs[i].addr+
+-					   choose_data_offset(r10_bio, rdev));
+-			mbio->bi_bdev = rdev->bdev;
+-			mbio->bi_end_io	= raid10_end_write_request;
+-			bio_set_op_attrs(mbio, op, do_sync | do_fua);
+-			if (test_bit(FailFast, &conf->mirrors[d].rdev->flags) &&
+-			    enough(conf, d))
+-				mbio->bi_opf |= MD_FAILFAST;
+-			mbio->bi_private = r10_bio;
+-
+-			if (conf->mddev->gendisk)
+-				trace_block_bio_remap(bdev_get_queue(mbio->bi_bdev),
+-						      mbio, disk_devt(conf->mddev->gendisk),
+-						      r10_bio->sector);
+-			/* flush_pending_writes() needs access to the rdev so...*/
+-			mbio->bi_bdev = (void*)rdev;
+-
+-			atomic_inc(&r10_bio->remaining);
+-
+-			cb = blk_check_plugged(raid10_unplug, mddev,
+-					       sizeof(*plug));
+-			if (cb)
+-				plug = container_of(cb, struct raid10_plug_cb,
+-						    cb);
+-			else
+-				plug = NULL;
+-			spin_lock_irqsave(&conf->device_lock, flags);
+-			if (plug) {
+-				bio_list_add(&plug->pending, mbio);
+-				plug->pending_cnt++;
+-			} else {
+-				bio_list_add(&conf->pending_bio_list, mbio);
+-				conf->pending_count++;
+-			}
+-			spin_unlock_irqrestore(&conf->device_lock, flags);
+-			if (!plug)
+-				md_wakeup_thread(mddev->thread);
+-		}
+-
+-		if (r10_bio->devs[i].repl_bio) {
+-			struct md_rdev *rdev = conf->mirrors[d].replacement;
+-			if (rdev == NULL) {
+-				/* Replacement just got moved to main 'rdev' */
+-				smp_mb();
+-				rdev = conf->mirrors[d].rdev;
+-			}
+-			mbio = bio_clone_fast(bio, GFP_NOIO, mddev->bio_set);
+-			bio_trim(mbio, r10_bio->sector - bio->bi_iter.bi_sector,
+-				 max_sectors);
+-			r10_bio->devs[i].repl_bio = mbio;
+-
+-			mbio->bi_iter.bi_sector	= (r10_bio->devs[i].addr +
+-					   choose_data_offset(r10_bio, rdev));
+-			mbio->bi_bdev = rdev->bdev;
+-			mbio->bi_end_io	= raid10_end_write_request;
+-			bio_set_op_attrs(mbio, op, do_sync | do_fua);
+-			mbio->bi_private = r10_bio;
+-
+-			if (conf->mddev->gendisk)
+-				trace_block_bio_remap(bdev_get_queue(mbio->bi_bdev),
+-						      mbio, disk_devt(conf->mddev->gendisk),
+-						      r10_bio->sector);
+-			/* flush_pending_writes() needs access to the rdev so...*/
+-			mbio->bi_bdev = (void*)rdev;
+-
+-			atomic_inc(&r10_bio->remaining);
+-
+-			cb = blk_check_plugged(raid10_unplug, mddev,
+-					       sizeof(*plug));
+-			if (cb)
+-				plug = container_of(cb, struct raid10_plug_cb,
+-						    cb);
+-			else
+-				plug = NULL;
+-			spin_lock_irqsave(&conf->device_lock, flags);
+-			if (plug) {
+-				bio_list_add(&plug->pending, mbio);
+-				plug->pending_cnt++;
+-			} else {
+-				bio_list_add(&conf->pending_bio_list, mbio);
+-				conf->pending_count++;
+-			}
+-			spin_unlock_irqrestore(&conf->device_lock, flags);
+-			if (!plug)
+-				md_wakeup_thread(mddev->thread);
+-		}
++		if (r10_bio->devs[i].bio)
++			raid10_write_one_disk(mddev, r10_bio, bio, false, i, max_sectors);
++		if (r10_bio->devs[i].repl_bio)
++			raid10_write_one_disk(mddev, r10_bio, bio, true, i, max_sectors);
+ 	}
+ 
+ 	/* Don't remove the bias on 'remaining' (one_write_done) until
+-- 
+2.6.2
+
