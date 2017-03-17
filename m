@@ -1,37 +1,81 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH 6/7] md/raid10, LLVM: get rid of variable length array
-Date: Fri, 17 Mar 2017 20:26:42 +0100
-Message-ID: <20170317192642.qnrf7xuopxzapl2r@hirez.programming.kicks-ass.net>
-References: <20170317001520.85223-1-md@google.com>
- <20170317001520.85223-7-md@google.com>
- <20170317120837.pr74cv3xuj7qpoin@hirez.programming.kicks-ass.net>
- <CAG_fn=XcQLtcHRSm2BHYce9LMtyFJ+fWxfE4vYPCw+7U0DcrmQ@mail.gmail.com>
- <CAG_fn=WooTLkzex3hqPgO5pr7GsK3v7Z5riSA7K+-_S=S7rmBQ@mail.gmail.com>
- <20170317180350.63jjysejk2i6vkon@pd.tnic>
- <CACT4Y+Ysvjz+UzEi0dTtsNxxnG7WXTiZPr+KSk8HHwSu7vX1ew@mail.gmail.com>
- <20170317185720.5s7qa6hl233t24ag@pd.tnic>
- <CACT4Y+bybdpqB71=inx8amwr188Mb2QyBeRTDdWZ3AFyDwVX0A@mail.gmail.com>
+From: jes.sorensen@gmail.com
+Subject: Re: [PATCH 1/3] mdadm: Replace snprintf with strncpy at some places to avoid truncation
+Date: Fri, 17 Mar 2017 15:55:43 -0400
+Message-ID: <wrfjh92rk79c.fsf@gmail.com>
+References: <1489751743-11397-1-git-send-email-xni@redhat.com>
+        <1489751743-11397-2-git-send-email-xni@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CACT4Y+bybdpqB71=inx8amwr188Mb2QyBeRTDdWZ3AFyDwVX0A@mail.gmail.com>
+In-Reply-To: <1489751743-11397-2-git-send-email-xni@redhat.com> (Xiao Ni's
+        message of "Fri, 17 Mar 2017 19:55:41 +0800")
 Sender: linux-raid-owner@vger.kernel.org
-To: Dmitry Vyukov <dvyukov@google.com>
-Cc: Borislav Petkov <bp@alien8.de>, Alexander Potapenko <glider@google.com>, Michael Davidson <md@google.com>, Michal Marek <mmarek@suse.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Shaohua Li <shli@kernel.org>, Matthias Kaehlcke <mka@chromium.org>, "x86@kernel.org" <x86@kernel.org>, "open list:KERNEL BUILD + fi..." <linux-kbuild@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org, kbuild-all@01.org, Fengguang Wu <fengguang.wu@intel.com>
+To: Xiao Ni <xni@redhat.com>
+Cc: linux-raid@vger.kernel.org, ncroxon@redhat.com, artur.paszkiewicz@intel.com
 List-Id: linux-raid.ids
 
-On Fri, Mar 17, 2017 at 08:05:16PM +0100, Dmitry Vyukov wrote:
-> You can also find some reasons in the Why section of LLVM-Linux project:
-> http://llvm.linuxfoundation.org/index.php/Main_Page
+Xiao Ni <xni@redhat.com> writes:
+> In gcc7 there are some building errors like:
+> directive output may be truncated writing up to 31 bytes into a region of size 24
+> snprintf(str, MPB_SIG_LEN, %s, mpb->sig);
+>
+> It just need to copy one string to target. So use strncpy to replace it.
+>
+> Signed-off-by: Xiao Ni <xni@redhat.com>
+> ---
+>  super-intel.c | 11 +++++++----
+>  1 file changed, 7 insertions(+), 4 deletions(-)
+>
+> diff --git a/super-intel.c b/super-intel.c
+> index d5e9517..e1618f1 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -1811,7 +1811,8 @@ static void examine_super_imsm(struct supertype *st, char *homehost)
+>  	__u32 reserved = imsm_reserved_sectors(super, super->disks);
+>  	struct dl *dl;
+>  
+> -	snprintf(str, MPB_SIG_LEN, "%s", mpb->sig);
+> +	strncpy(str, (char *)mpb->sig, MPB_SIG_LEN);
+> +	str[MPB_SIG_LEN-1] = '\0';
+>  	printf("          Magic : %s\n", str);
+>  	snprintf(str, strlen(MPB_VERSION_RAID0), "%s", get_imsm_version(mpb));
+>  	printf("        Version : %s\n", get_imsm_version(mpb));
 
-From that:
+Given str is defined as 'char str[MAX_SIGNATURE_LENGTH]', it would be
+more correct to use MAX_SIGNATURE_LENGTH as the size limit here.
 
- - LLVM/Clang is a fast moving project with many things fixed quickly
-   and features added.
+> @@ -5227,7 +5228,7 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
+>  			disk->status = CONFIGURED_DISK | FAILED_DISK;
+>  			disk->scsi_id = __cpu_to_le32(~(__u32)0);
+>  			snprintf((char *) disk->serial, MAX_RAID_SERIAL_LEN,
+> -				 "missing:%d", i);
+> +				 "missing:%d", (__u8)i);
+>  		}
+>  		find_missing(super);
+>  	} else {
 
-So what's the deal with that 5 year old bug you want us to work around?
+This is unrelated to the commit message.
 
-Also, clang doesn't support asm cc flags output and a few other
-extensions last time I checked.
+> @@ -7142,14 +7143,16 @@ static int update_subarray_imsm(struct supertype *st, char *subarray,
+>  
+>  			u->type = update_rename_array;
+>  			u->dev_idx = vol;
+> -			snprintf((char *) u->name, MAX_RAID_SERIAL_LEN, "%s", name);
+> +			strncpy((char *) u->name, name, MAX_RAID_SERIAL_LEN);
+> +			u->name[MAX_RAID_SERIAL_LEN-1] = '\0';
+>  			append_metadata_update(st, u, sizeof(*u));
+>  		} else {
+>  			struct imsm_dev *dev;
+>  			int i;
+>  
+>  			dev = get_imsm_dev(super, vol);
+> -			snprintf((char *) dev->volume, MAX_RAID_SERIAL_LEN, "%s", name);
+> +			strncpy((char *) dev->volume, name, MAX_RAID_SERIAL_LEN);
+> +			dev->volume[MAX_RAID_SERIAL_LEN-1] = '\0';
+>  			for (i = 0; i < mpb->num_raid_devs; i++) {
+>  				dev = get_imsm_dev(super, i);
+>  				handle_missing(super, dev);
 
+These two look fine.
+
+Jes
