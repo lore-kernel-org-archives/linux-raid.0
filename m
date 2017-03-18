@@ -1,37 +1,50 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: [PATCH 2/2] mdadm: Forced type conversion to avoid truncation
-Date: Sat, 18 Mar 2017 10:33:45 +0800
-Message-ID: <1489804425-4949-2-git-send-email-xni@redhat.com>
-References: <1489804425-4949-1-git-send-email-xni@redhat.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1489804425-4949-1-git-send-email-xni@redhat.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: jes.sorensen@gmail.com
-Cc: ncroxon@redhat.com, artur.paszkiewicz@intel.com, linux-raid@vger.kernel.org
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: dm crypt: remove an impossible condition
+Date: Sat, 18 Mar 2017 07:14:22 +0300
+Message-ID: <20170318041422.GC4102@mwanda>
+References: <20170317204655.GA28261@mwanda> <20170317213819.GC6475@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20170317213819.GC6475@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: kernel-janitors@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Milan Broz <gmazyland@gmail.com>, Alasdair Kergon <agk@redhat.com>
 List-Id: linux-raid.ids
 
-Gcc reports it needs 19 bytes to right to disk->serial. Because the type of argument i
-is int. But the meaning of i is failed disk number. So it doesn't need to use 19 bytes.
-Just add a type conversion to avoid this building error
+On Fri, Mar 17, 2017 at 05:38:19PM -0400, Mike Snitzer wrote:
+> On Fri, Mar 17 2017 at  4:46pm -0400,
+> Dan Carpenter <dan.carpenter@oracle.com> wrote:
+> 
+> > Static checkers complain that it doesn't make sense to check if "sval"
+> > is NULL.  The intention was to check if strchr() returned NULL, but in
+> > that situation "sval" would be "NULL + 1" so the check doesn't work.  We
+> > know from the sscanf() that there is a ':' character in the string so
+> > the check is unnecessary and can be removed.
+> > 
+> > Now that the check doesn't depend on "sval" it can be moved earlier
+> > for readability.
+> > 
+> > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> Thanks Dan, I've folded this fix into the original commit, see:
+> https://git.kernel.org/pub/scm/linux/kernel/git/device-mapper/linux-dm.git/commit/?h=dm-4.12&id=cf22cd5f3afe7335afee5659f7450000e8fa2a15
+> 
+> I didn't add your Signed-off-by though, I can backfill that if you
+> like.. it is just I didn't want to taint you with all the extensive
+> changes in that commit.
 
-Signed-off-by: Xiao Ni <xni@redhat.com>
----
- super-intel.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+That's fine, thanks.  Sign-off isn't really the appropriate tag anyway...
 
-diff --git a/super-intel.c b/super-intel.c
-index 343f20d..e1618f1 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -5228,7 +5228,7 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
- 			disk->status = CONFIGURED_DISK | FAILED_DISK;
- 			disk->scsi_id = __cpu_to_le32(~(__u32)0);
- 			snprintf((char *) disk->serial, MAX_RAID_SERIAL_LEN,
--				 "missing:%d", i);
-+				 "missing:%d", (__u8)i);
- 		}
- 		find_missing(super);
- 	} else {
--- 
-2.7.4
-
+regards,
+dan carpenter
