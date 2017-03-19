@@ -1,46 +1,65 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Read data from disk that was part of RAID1 array
-Date: Sun, 19 Mar 2017 10:18:32 +0000
-Message-ID: <58CE5AF8.5070907@youngman.org.uk>
-References: <008801d29ea3$3e858000$bb908000$@warren-selbert.com>
- <000c01d29f74$ae85c230$0b914690$@wnsdev.com>
+From: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
+Subject: Fwd: component device mismatches found
+Date: Sun, 19 Mar 2017 11:42:54 +0100
+Message-ID: <CAJH6TXhhYC0fenX3JZSwdaS+Rszdxkt8o4iLW6gK_dMsYe1JaA@mail.gmail.com>
+References: <CAJH6TXgA-5-PXmFdY7b1J8eYc3zbmb7ui8Fa8k+ihMKd7nQ8vw@mail.gmail.com>
+ <58CE5BB9.3090908@youngman.org.uk> <CAJH6TXhYYuh3v8FDDUisCpTZqVJ3WHEb_W0Ky=jkQHm1Y-fR4w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <000c01d29f74$ae85c230$0b914690$@wnsdev.com>
+In-Reply-To: <CAJH6TXhYYuh3v8FDDUisCpTZqVJ3WHEb_W0Ky=jkQHm1Y-fR4w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Sangas <pete@wnsdev.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 17/03/17 23:17, Peter Sangas wrote:
-> 
-> 
->> From: Peter Sangas [mailto:pete@wnsdev.com]
->> I have only one disk from a RAID1 array and I would like to read data from
-> one of the
->> partitions.  This there a way to mount this and read the data?
-> 
-> This worked for me:
-> 
-> mdadm --create /dev/md10 -l 1 -n 2 /dev/sda missing     md10 is chosen to
-> avoid conflicts with existing RAID1
-> 
-> mount /dev/md10 /mnt 
-> 
-NEVER NEVER NEVER use --create !!!
+/cc linux-raid
 
-YOU WERE LUCKY !!!
 
-Use something like --assemble --force, which will set up a working array
-if it can. If that had been an old array, with a different offset or
-superblock or the like, you would have trashed the superblock and
-created a new array, which thought that the data in the array was
-somewhere other than where it really was.
+---------- Forwarded message ----------
+From: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
+Date: 2017-03-19 11:42 GMT+01:00
+Subject: Re: component device mismatches found
+To: Wols Lists <antlists@youngman.org.uk>
 
-At which point, it would have been "go to your backups" or a major
-forensic recovery.
 
-Cheers,
-Wol
+2017-03-19 11:21 GMT+01:00 Wols Lists <antlists@youngman.org.uk>:
+> mdadm --detail /dev/md/0
 
+# mdadm --detail /dev/md0
+/dev/md0:
+        Version : 1.2
+  Creation Time : Mon Jul 25 12:55:48 2016
+     Raid Level : raid1
+     Array Size : 488382841 (465.76 GiB 500.10 GB)
+  Used Dev Size : 488382841 (465.76 GiB 500.10 GB)
+   Raid Devices : 3
+  Total Devices : 3
+    Persistence : Superblock is persistent
+
+    Update Time : Sun Mar 19 11:38:53 2017
+          State : clean, recovering
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 0
+  Spare Devices : 0
+
+ Rebuild Status : 83% complete
+
+           Name : x:0  (local to host x)
+           UUID : b2a5ed53:42890b73:dc6de22a:1ac12524
+         Events : 29170
+
+    Number   Major   Minor   RaidDevice State
+       0       8        1        0      active sync   /dev/sda1
+       1       8       17        1      active sync   /dev/sdb1
+       2       8       33        2      active sync   /dev/sdc1
+
+
+
+
+keep in mind that:
+1) i've done a check this morning, after seeing the mismatch error in syslog
+2) even this check has triggered a rebuild, probably due to the same mismatch.
+3) SMART doesn't report any errors,
+4) disks are "new", 5600 hours.
+5) swap is still unused
