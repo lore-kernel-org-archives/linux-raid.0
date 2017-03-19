@@ -1,65 +1,50 @@
-From: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
-Subject: Fwd: component device mismatches found
-Date: Sun, 19 Mar 2017 11:42:54 +0100
-Message-ID: <CAJH6TXhhYC0fenX3JZSwdaS+Rszdxkt8o4iLW6gK_dMsYe1JaA@mail.gmail.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: component device mismatches found
+Date: Sun, 19 Mar 2017 10:21:45 +0000
+Message-ID: <58CE5BB9.3090908@youngman.org.uk>
 References: <CAJH6TXgA-5-PXmFdY7b1J8eYc3zbmb7ui8Fa8k+ihMKd7nQ8vw@mail.gmail.com>
- <58CE5BB9.3090908@youngman.org.uk> <CAJH6TXhYYuh3v8FDDUisCpTZqVJ3WHEb_W0Ky=jkQHm1Y-fR4w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJH6TXhYYuh3v8FDDUisCpTZqVJ3WHEb_W0Ky=jkQHm1Y-fR4w@mail.gmail.com>
+In-Reply-To: <CAJH6TXgA-5-PXmFdY7b1J8eYc3zbmb7ui8Fa8k+ihMKd7nQ8vw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-/cc linux-raid
+On 19/03/17 10:00, Gandalf Corvotempesta wrote:
+> I've seen this in my log:
+> 
+> Mar 19 00:57:01 x /USR/SBIN/CRON[17832]: (root) CMD (if [ -x
+> /usr/share/mdadm/checkarray ]; then /usr/share/mdadm/checkarray --cron
+> --all --idle --quiet; fi)
+> Mar 19 00:57:01 x mdadm[1576]: RebuildStarted event detected on md
+> device /dev/md/0
+> Mar 19 01:30:21 x mdadm[1576]: Rebuild24 event detected on md device /dev/md/0
+> Mar 19 02:03:41 x mdadm[1576]: Rebuild47 event detected on md device /dev/md/0
+> Mar 19 02:37:02 x mdadm[1576]: Rebuild68 event detected on md device /dev/md/0
+> Mar 19 03:10:22 x mdadm[1576]: Rebuild87 event detected on md device /dev/md/0
+> Mar 19 03:38:00 x mdadm[1576]: RebuildFinished event detected on md
+> device /dev/md/0, component device  mismatches found: 4608
+> 
+> This is a 3way mirror.
+> 
+> I've tought that swap was the culpit, but swap isn't used:
+> 
+> # free -m
+>              total       used       free     shared    buffers     cached
+> Mem:         32230      31844        386          0       1679      26026
+> -/+ buffers/cache:       4137      28092
+> Swap:         8191          0       8191
+> 
+> and IIRC, linux never clean the swap usage up to 0.
+> 
+> Are my data safe ? Is something to be worried about ?
 
+mdadm --detail /dev/md/0
 
----------- Forwarded message ----------
-From: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
-Date: 2017-03-19 11:42 GMT+01:00
-Subject: Re: component device mismatches found
-To: Wols Lists <antlists@youngman.org.uk>
+I think we need a bit more info - it's not ringing any alarm bells for
+me, but I'm not an expert.
 
-
-2017-03-19 11:21 GMT+01:00 Wols Lists <antlists@youngman.org.uk>:
-> mdadm --detail /dev/md/0
-
-# mdadm --detail /dev/md0
-/dev/md0:
-        Version : 1.2
-  Creation Time : Mon Jul 25 12:55:48 2016
-     Raid Level : raid1
-     Array Size : 488382841 (465.76 GiB 500.10 GB)
-  Used Dev Size : 488382841 (465.76 GiB 500.10 GB)
-   Raid Devices : 3
-  Total Devices : 3
-    Persistence : Superblock is persistent
-
-    Update Time : Sun Mar 19 11:38:53 2017
-          State : clean, recovering
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 0
-  Spare Devices : 0
-
- Rebuild Status : 83% complete
-
-           Name : x:0  (local to host x)
-           UUID : b2a5ed53:42890b73:dc6de22a:1ac12524
-         Events : 29170
-
-    Number   Major   Minor   RaidDevice State
-       0       8        1        0      active sync   /dev/sda1
-       1       8       17        1      active sync   /dev/sdb1
-       2       8       33        2      active sync   /dev/sdc1
-
-
-
-
-keep in mind that:
-1) i've done a check this morning, after seeing the mismatch error in syslog
-2) even this check has triggered a rebuild, probably due to the same mismatch.
-3) SMART doesn't report any errors,
-4) disks are "new", 5600 hours.
-5) swap is still unused
+Cheers,
+Wol
