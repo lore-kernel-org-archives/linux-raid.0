@@ -1,46 +1,33 @@
-From: Wols Lists <antlists@youngman.org.uk>
+From: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
 Subject: Re: stripe_cache_size, some info
-Date: Mon, 20 Mar 2017 15:59:03 +0000
-Message-ID: <58CFFC47.3000306@youngman.org.uk>
+Date: Mon, 20 Mar 2017 17:24:32 +0100
+Message-ID: <CAJH6TXiSt3cwUqn5cyfzn0OTBp7HtC+wBV-24Wz1O2ZoPq8erQ@mail.gmail.com>
 References: <CAJH6TXhL4=MLanyvQh8UMkBmfkfjPd-frsCOC3PqLnDXCpMetw@mail.gmail.com>
+ <58CFFC47.3000306@youngman.org.uk> <CAJH6TXhOokv1sOQL7KLe==rJQZ6J8D0gscQKJ5MPXSm5ZLXg9w@mail.gmail.com>
+ <58D001BF.1030804@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJH6TXhL4=MLanyvQh8UMkBmfkfjPd-frsCOC3PqLnDXCpMetw@mail.gmail.com>
+In-Reply-To: <58D001BF.1030804@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, linux-raid@vger.kernel.org
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 19/03/17 18:35, Gandalf Corvotempesta wrote:
-> As I would like to replace most of our HW raid controller with mdadm,
-> any suggestion on how to improve RAID-6 speed ?
+2017-03-20 17:22 GMT+01:00 Wols Lists <antlists@youngman.org.uk>:
+> Get a cheap PCI(e) SATA card! You should be able to get something for
+> around GBP20, and if it's only temporary who cares if drives and cables
+> are left all over the place so long as the data is safe while you're
+> updating. :-)
 
-Burst speed, or sustained speed? Big difference ...
-> 
-> Modern CPU aren't an issue, I don't think that double-parity
-> calculation could create any bottleneck on a modern CPU.
+This means:
 
-Using a journal on an SSD will offload stuff and give you a decent burst
-speed, I suspect. You'll need to get benchmarks, but that should mean
-you don't notice a slow background write speed.
+1) that i'm using SATA on my servers
+2) that I can power down for adding a new card
+3) that I have enough HDD slots available
 
-> The real advantages of a raid controller are mostly 2:
-> 
-> 1) the writeback cache (1GB or 2GB)
-> 2) the ability to automatically replace a disk by hotswapping it.
-> 
-> Any solution to this ? For the "2", i've tried by configuring the
-> POLICY in mdadm.conf but new disk is never reconized and I always have
-> to manually add the new disk to the array.
+but
 
-I think you have to manually add the disk to the array (group) as a
-spare first.
-
-And I would avoid that entirely if I can - put the new disk in, do a
---replace, and then remove the old one. Doing a hotswap like that will
-increase the stress on the array, and increased stress means another
-disk is more likely to fail.
-
-Cheers,
-Wol
+1) usually I use SAS
+2) I can't power down the server when replacing a disk.
+3) our older server have all slot full.
