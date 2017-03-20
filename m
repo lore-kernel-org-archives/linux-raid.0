@@ -1,81 +1,109 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: on assembly and recovery of a hardware RAID
-Date: Mon, 20 Mar 2017 16:34:09 +1100
-Message-ID: <87lgs0cy0e.fsf@notabene.neil.brown.name>
-References: <CAAZLhTdaVM4fagN5=bqWpPx-DjyU6UZ69bJFf51FWMX7oeyJNw@mail.gmail.com> <87tw6weubu.fsf@notabene.neil.brown.name> <CAAZLhTcEhn2GezDSDJHOLv2VNSynzT-he0FRrVNbz1xtakLsMQ@mail.gmail.com> <87d1djdz8y.fsf@notabene.neil.brown.name> <CAAZLhTdn6xnB6Kuuhf8+VaSd5u6gekUSDSMnK+w5obZNxvNg8A@mail.gmail.com> <CAAZLhTcoU232uBs2zcK6TFj67Jru5oeNE_F0T2fQR6Un66OPXA@mail.gmail.com>
+From: Zhilong Liu <zlliu@suse.com>
+Subject: Re: [PATCH] mdadm:reminded external bitmap only supports ext[2-4]
+ filesystem
+Date: Mon, 20 Mar 2017 13:40:25 +0800
+Message-ID: <a7b17a87-88df-78ef-f223-046d8597bff2@suse.com>
+References: <1489987247-22681-1-git-send-email-zlliu@suse.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAZLhTcoU232uBs2zcK6TFj67Jru5oeNE_F0T2fQR6Un66OPXA@mail.gmail.com>
+In-Reply-To: <1489987247-22681-1-git-send-email-zlliu@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alfred Matthews <asm13243546@gmail.com>
+To: jes.sorensen@gmail.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
 
-On Sat, Mar 18 2017, Alfred Matthews wrote:
-
-> I've switched to the backup drives which are clones of the first, now,
-> so destructive operations are ok if necessary. Also signatures will
-> have changed.
+On 03/20/2017 01:20 PM, Zhilong Liu wrote:
+> mdadm: ensure that the external bitmap_file is
+> stored by ext[2-4] file system, because bmap()
+> of linux/driver/md/bitmap.c only implements in
+> inode.c of ext[2-4]. it's better to make users
+> aware of this scenario and give a prompt.
 >
-> 0. Hm. Evidently the system is JHFS instead of HFS+, per the output
-> below. Unsure if there is separate tooling in Debian.
+> steps:
+> zlliu:/home/liu/git-tree/mdadm # df -T /mnt/2
+> Filesystem     Type  1K-blocks     Used Available Use% Mounted on
+> /dev/sda5      btrfs 103078176 11110620  90902628  11% /
 >
-> 1. Mount via
+> ./mdadm -CR /dev/md0 -l1 -b /mnt/2 -n2 /dev/loop[0-1]
+
+   as the purpose to improve the prompt when using external bitmap
+mode, actually I disagree this patch for mdadm, it doesn't need to do
+this action in userland.
+   For errno rule, bmap() returned EINVAL indeed, but finally mdadm
+received the EINVAL by RUN_ARRAY.
+   I think it would be more user-friendly if prints one prompt and returned
+EINVAL at the same time when the bmap() got failure, so that user can
+be easy to know where the EINVAL comes.
+Such as:
+
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index 9fb2cca..0bff96b 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -381,6 +381,7 @@ static int read_page(struct file *file, unsigned 
+long index,
+                         bh->b_blocknr = bmap(inode, block);
+                         if (bh->b_blocknr == 0) {
+                                 /* Cannot use this file! */
++                               pr_err("external bitmap only supports to 
+write into a ext[2-4] file.\n");
+                                 ret = -EINVAL;
+                                 goto out;
+                         }
+
+    keep waiting for your comments for this scenario.
+
+Thanks,
+-Zhilong
+> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+> ---
+>   Create.c |  5 -----
+>   mdadm.c  | 15 +++++++++++++++
+>   2 files changed, 15 insertions(+), 5 deletions(-)
 >
-> mdadm --build /dev/md0 --level=0 -n2 --chunk=512K /dev/sdc2 /dev/sdb2
->
-> works just fine. Thanks!
->
-> 2. I'm still sticking with the non-destructive, non-mount edits for
-> now. So I can report the following:
->
-> hpfsck -v /dev/md0 | cat >> hpfsck_output.txt
->
-> yields some stuff probably more enlightening than prior.
+> diff --git a/Create.c b/Create.c
+> index 50ec85e..beec29f 100644
+> --- a/Create.c
+> +++ b/Create.c
+> @@ -827,11 +827,6 @@ int Create(struct supertype *st, char *mddev,
+>   			goto abort_locked;
+>   		}
+>   		bitmap_fd = open(s->bitmap_file, O_RDWR);
+> -		if (bitmap_fd < 0) {
+> -			pr_err("weird: %s cannot be openned\n",
+> -				s->bitmap_file);
+> -			goto abort_locked;
+> -		}
+>   		if (ioctl(mdfd, SET_BITMAP_FILE, bitmap_fd) < 0) {
+>   			pr_err("Cannot set bitmap file for %s: %s\n",
+>   				mddev, strerror(errno));
+> diff --git a/mdadm.c b/mdadm.c
+> index fcb33d1..566051f 100644
+> --- a/mdadm.c
+> +++ b/mdadm.c
+> @@ -1149,6 +1149,21 @@ int main(int argc, char *argv[])
+>   			    strcmp(optarg, "none") == 0 ||
+>   			    strchr(optarg, '/') != NULL) {
+>   				s.bitmap_file = optarg;
+> +				if (strchr(s.bitmap_file, '/') != NULL) {
+> +					bitmap_fd = open(s.bitmap_file, O_RDWR);
+> +					if (bitmap_fd < 0) {
+> +						pr_err("weird: %s cannot be openned\n", s.bitmap_file);
+> +						exit(2);
+> +					}
+> +					close(bitmap_fd);
+> +					struct statfs ext_bitmap;
+> +					statfs(s.bitmap_file, &ext_bitmap);
+> +					if (ext_bitmap.f_type != 0xEF53){
+> +						pr_err("external bitmap only supports ext[2-4] filesystem, %s.\n",
+> +							s.bitmap_file);
+> +						exit(2);
+> +					}
+> +				}
+>   				continue;
+>   			}
+>   			if (strcmp(optarg, "clustered") == 0) {
 
-This is promising until:
-
-
-> *** Checking Backup Volume Header:
-> Unexpected Volume signature '  ' expected 'H+'
-
-Here the backup volume header, which is 2 blocks (blocks are 8K) from
-the end of the device, looks wrong.
-This probably means the chunk size is wrong.
-I would suggest trying different chunksizes, starting at 4K and
-doubling, until this message goes away.
-That still might not be the correct chunk size, so I would continue up
-to several megabytes and find all the chunksizes that seem to work.
-Then look at what else hpfsck says on those.
-
-BTW, this:
-> Invalid total blocks 2BA8CC68, expected 0 Done ***
-is not a real problem, just some odd code.
-
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljPadEACgkQOeye3VZi
-gblVohAAnWuOQK8dKS9i9t/k1/3NrLPFNJOPTE+1lUp88+zaT75bq/tGrJmv4bHB
-T7fspEXAPj3PbyLwF6bAb3dMdA9GFH6riIOvneXgA5EIRrz36Zk2ZijvtWBb6g0n
-E6L25lYt1pkGZjeYhHj6U6UjpxPsWk0nmZrEkThDIpuRYFMKKQFlneo5XZlWMTjQ
-RgGpb8dBT3CF0ZuoWg31oeuVzVBTgsT6zRfOc7wETuqJuTY3WF2dMcUgTE0zjhmg
-kNmDInHWqRQTS815pW6AdYVGOLP+aDx3TmYkczn0+Bzf2Xw0uljMWWlyucv+g3rN
-9k5tCj2IOOqcnZKgW5ISA1LGk1gP+Y0VVQBw0H1TdEU+AMhmMRWkI1D+o2ZYaTBz
-IbKtm0BtpZNvKhcYkvfiuSovpwhfkvgT8UzVT3HYylVZEpLrYoPPhHkzcMrgvuNl
-M50rRGssZ9dInpg1tAoB52VLnN2oFlo+5vKPcs92p/h/Kh0CGcM/KK4xmgtaiqgI
-quOCGGlr4Up+VjEyDvxDCIsn63rvhHAvZegLAVdqDCfneYHumFGQ5UBjvsyYzBgl
-WoJOHuW7Yc1EhsnFW7Nbz6U4eEJ0RAUUG39s+f0UT1juxkAIV25SWt41scK+1q7V
-Mjlq/bErp49dD9qCTNjygIQniw7HERm5MF7/0ITvRVfewCJ+tOY=
-=Ri2g
------END PGP SIGNATURE-----
---=-=-=--
