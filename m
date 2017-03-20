@@ -1,52 +1,43 @@
 From: Gioh Kim <gi-oh.kim@profitbricks.com>
-Subject: [PATCHv2 1/2] super1: ignore failfast flag for setting device role
-Date: Mon, 20 Mar 2017 10:51:56 +0100
-Message-ID: <1490003517-4216-2-git-send-email-gi-oh.kim@profitbricks.com>
+Subject: [PATCHv2 2/2] super1: check and output faulty dev role
+Date: Mon, 20 Mar 2017 10:51:57 +0100
+Message-ID: <1490003517-4216-3-git-send-email-gi-oh.kim@profitbricks.com>
 References: <1490003517-4216-1-git-send-email-gi-oh.kim@profitbricks.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1490003517-4216-1-git-send-email-gi-oh.kim@profitbricks.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-raid-owner@vger.kernel.org
 To: jes.sorensen@gmail.com
-Cc: neilb@suse.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Gioh Kim <gi-oh.kim@profitbricks.com>, Jack Wang <jinpu.wang@profitbricks.com>
+Cc: neilb@suse.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Jack Wang <jinpu.wang@profitbricks.com>
 List-Id: linux-raid.ids
 
-There is corner case for setting device role,
-if new device has failfast flag.
-The failfast flag should be ignored.
+From: Jack Wang <jinpu.wang@profitbricks.com>
 
-Signed-off-by: Gioh Kim <gi-oh.kim@profitbricks.com>
+Output the real dev role in examine_super1, it will help to
+find problem.
+
 Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
+Reviewed-by: Gioh Kim <gi-oh.kim@profitbricks.com>
 ---
- super1.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ super1.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/super1.c b/super1.c
-index 882cd61..f3520ac 100644
+index f3520ac..c903371 100644
 --- a/super1.c
 +++ b/super1.c
-@@ -1491,6 +1491,7 @@ static int add_to_super1(struct supertype *st, mdu_disk_info_t *dk,
- 	struct devinfo *di, **dip;
- 	bitmap_super_t *bms = (bitmap_super_t*)(((char*)sb) + MAX_SB_SIZE);
- 	int rv, lockid;
-+	int dk_state;
- 
- 	if (bms->version == BITMAP_MAJOR_CLUSTERED && dlm_funs_ready()) {
- 		rv = cluster_get_dlmlock(&lockid);
-@@ -1501,11 +1502,12 @@ static int add_to_super1(struct supertype *st, mdu_disk_info_t *dk,
- 		}
- 	}
- 
--	if ((dk->state & 6) == 6) /* active, sync */
-+	dk_state = dk->state & ~(1<<MD_DISK_FAILFAST);
-+	if ((dk_state & 6) == 6) /* active, sync */
- 		*rp = __cpu_to_le16(dk->raid_disk);
--	else if (dk->state & (1<<MD_DISK_JOURNAL))
-+	else if (dk_state & (1<<MD_DISK_JOURNAL))
-                 *rp = MD_DISK_ROLE_JOURNAL;
--	else if ((dk->state & ~2) == 0) /* active or idle -> spare */
-+	else if ((dk_state & ~2) == 0) /* active or idle -> spare */
- 		*rp = MD_DISK_ROLE_SPARE;
- 	else
- 		*rp = MD_DISK_ROLE_FAULTY;
+@@ -501,8 +501,10 @@ static void examine_super1(struct supertype *st, char *homehost)
+ #endif
+ 	printf("   Device Role : ");
+ 	role = role_from_sb(sb);
+-	if (role >= MD_DISK_ROLE_FAULTY)
+-		printf("spare\n");
++	if (role == MD_DISK_ROLE_SPARE)
++		printf("Spare\n");
++	else if (role == MD_DISK_ROLE_FAULTY)
++		printf("Faulty\n");
+ 	else if (role == MD_DISK_ROLE_JOURNAL)
+ 		printf("Journal\n");
+ 	else if (sb->feature_map & __cpu_to_le32(MD_FEATURE_REPLACEMENT))
 -- 
 2.5.0
+
