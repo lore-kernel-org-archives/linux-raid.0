@@ -1,43 +1,42 @@
-From: Gioh Kim <gi-oh.kim@profitbricks.com>
-Subject: [PATCHv2 2/2] super1: check and output faulty dev role
-Date: Mon, 20 Mar 2017 10:51:57 +0100
-Message-ID: <1490003517-4216-3-git-send-email-gi-oh.kim@profitbricks.com>
-References: <1490003517-4216-1-git-send-email-gi-oh.kim@profitbricks.com>
+From: Zhilong Liu <zlliu@suse.com>
+Subject: [PATCH] mdadm/bitmap:fixed typos in comments of bitmap.h
+Date: Mon, 20 Mar 2017 18:46:39 +0800
+Message-ID: <1490006799-25459-1-git-send-email-zlliu@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1490003517-4216-1-git-send-email-gi-oh.kim@profitbricks.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: jes.sorensen@gmail.com
-Cc: neilb@suse.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Jack Wang <jinpu.wang@profitbricks.com>
+Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
-From: Jack Wang <jinpu.wang@profitbricks.com>
+bitmap.h: fixed trivial typos in comments
 
-Output the real dev role in examine_super1, it will help to
-find problem.
-
-Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
-Reviewed-by: Gioh Kim <gi-oh.kim@profitbricks.com>
+Signed-off-by: Zhilong Liu <zlliu@suse.com>
 ---
- super1.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ bitmap.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/super1.c b/super1.c
-index f3520ac..c903371 100644
---- a/super1.c
-+++ b/super1.c
-@@ -501,8 +501,10 @@ static void examine_super1(struct supertype *st, char *homehost)
- #endif
- 	printf("   Device Role : ");
- 	role = role_from_sb(sb);
--	if (role >= MD_DISK_ROLE_FAULTY)
--		printf("spare\n");
-+	if (role == MD_DISK_ROLE_SPARE)
-+		printf("Spare\n");
-+	else if (role == MD_DISK_ROLE_FAULTY)
-+		printf("Faulty\n");
- 	else if (role == MD_DISK_ROLE_JOURNAL)
- 		printf("Journal\n");
- 	else if (sb->feature_map & __cpu_to_le32(MD_FEATURE_REPLACEMENT))
+diff --git a/bitmap.h b/bitmap.h
+index b8fb071..7b1f80f 100644
+--- a/bitmap.h
++++ b/bitmap.h
+@@ -46,7 +46,7 @@
+  *
+  * The counter counts pending write requests, plus the on-disk bit.
+  * When the counter is '1' and the resync bits are clear, the on-disk
+- * bit can be cleared aswell, thus setting the counter to 0.
++ * bit can be cleared as well, thus setting the counter to 0.
+  * When we set a bit, or in the counter (to start a write), if the fields is
+  * 0, we first set the disk bit and set the counter to 1.
+  *
+@@ -185,7 +185,7 @@ struct bitmap_page {
+ 	 */
+ 	char *map;
+ 	/*
+-	 * in emergencies (when map cannot be alloced), hijack the map
++	 * in emergencies (when map cannot be allocated), hijack the map
+ 	 * pointer and use it as two counters itself
+ 	 */
+ 	unsigned int hijacked;
 -- 
-2.5.0
+2.6.6
 
