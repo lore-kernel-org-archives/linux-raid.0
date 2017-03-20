@@ -1,33 +1,42 @@
-From: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
-Subject: Re: stripe_cache_size, some info
-Date: Mon, 20 Mar 2017 17:24:32 +0100
-Message-ID: <CAJH6TXiSt3cwUqn5cyfzn0OTBp7HtC+wBV-24Wz1O2ZoPq8erQ@mail.gmail.com>
-References: <CAJH6TXhL4=MLanyvQh8UMkBmfkfjPd-frsCOC3PqLnDXCpMetw@mail.gmail.com>
- <58CFFC47.3000306@youngman.org.uk> <CAJH6TXhOokv1sOQL7KLe==rJQZ6J8D0gscQKJ5MPXSm5ZLXg9w@mail.gmail.com>
- <58D001BF.1030804@youngman.org.uk>
+From: "Peter Sangas" <pete@wnsdev.com>
+Subject: RE: Read data from disk that was part of RAID1 array
+Date: Mon, 20 Mar 2017 10:37:36 -0700
+Message-ID: <006a01d2a1a0$ac148170$043d8450$@wnsdev.com>
+References: <008801d29ea3$3e858000$bb908000$@warren-selbert.com> <000c01d29f74$ae85c230$0b914690$@wnsdev.com> <58CE5AF8.5070907@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+        charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <58D001BF.1030804@youngman.org.uk>
+In-Reply-To: <58CE5AF8.5070907@youngman.org.uk>
+Content-Language: en-us
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: linux-raid@vger.kernel.org
+To: 'Wols Lists' <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2017-03-20 17:22 GMT+01:00 Wols Lists <antlists@youngman.org.uk>:
-> Get a cheap PCI(e) SATA card! You should be able to get something for
-> around GBP20, and if it's only temporary who cares if drives and cables
-> are left all over the place so long as the data is safe while you're
-> updating. :-)
+> From: Wols Lists [mailto:antlists@youngman.org.uk]
+> NEVER NEVER NEVER use --create !!!
+> 
+> 
+> Use something like --assemble --force, which will set up a working array
+if it can. 
 
-This means:
+OK, I tried this command but received an error:
 
-1) that i'm using SATA on my servers
-2) that I can power down for adding a new card
-3) that I have enough HDD slots available
+mdadm --assemble --force  /dev/md10 /dev/sdc   
 
-but
+"Cannot assemble mbr metadata in /dev/sdc, no superblock"
 
-1) usually I use SAS
-2) I can't power down the server when replacing a disk.
-3) our older server have all slot full.
+What command do you suggest...?
+
+
+
+> If that had been an old array, with a different offset or superblock or
+the like...
+
+by "old" do you mean an array created using a different superblock format
+other than 1.2?
+
+Thanks,
+Pete
+
