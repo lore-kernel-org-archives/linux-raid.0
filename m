@@ -1,37 +1,42 @@
 From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH] mdadm/mdmon:deleted the abort_reshape never invoked
-Date: Mon, 20 Mar 2017 13:21:24 +0800
-Message-ID: <1489987284-22786-1-git-send-email-zlliu@suse.com>
+Subject: [PATCH] mdadm/Monitor:triggers core dump when stat2devnm return NULL
+Date: Mon, 20 Mar 2017 13:21:41 +0800
+Message-ID: <1489987301-22836-1-git-send-email-zlliu@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: jes.sorensen@gmail.com
 Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
-mdmon.c: abort_reshape() has implemented in Grow.c,
-this function doesn't make a lot of sense here.
+Monitor: ensure that the device should be a block
+device when uses --wait parameter, such as the 'f'
+and 'd' type file would be triggered core dumped.
+such as: ./mdadm --wait /dev/md/
 
+Reviewed-by: NeilBrown <neilb@suse.com>
 Signed-off-by: Zhilong Liu <zlliu@suse.com>
 ---
- mdmon.c | 5 -----
- 1 file changed, 5 deletions(-)
+ Monitor.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/mdmon.c b/mdmon.c
-index e4b73d9..95e9bba 100644
---- a/mdmon.c
-+++ b/mdmon.c
-@@ -580,11 +580,6 @@ int restore_stripes(int *dest, unsigned long long *offsets,
- 	return 1;
- }
+diff --git a/Monitor.c b/Monitor.c
+index 802a9d9..f8850d3 100644
+--- a/Monitor.c
++++ b/Monitor.c
+@@ -1002,7 +1002,12 @@ int Wait(char *dev)
+ 			strerror(errno));
+ 		return 2;
+ 	}
+-	strcpy(devnm, stat2devnm(&stb));
++	char *tmp = stat2devnm(&stb);
++	if (!tmp) {
++		pr_err("%s is not a block device.\n", dev);
++		return 2;
++	}
++	strcpy(devnm, tmp);
  
--void abort_reshape(struct mdinfo *sra)
--{
--	return;
--}
--
- int save_stripes(int *source, unsigned long long *offsets,
- 		 int raid_disks, int chunk_size, int level, int layout,
- 		 int nwrites, int *dest,
+ 	while(1) {
+ 		struct mdstat_ent *ms = mdstat_read(1, 0);
 -- 
 2.6.6
 
