@@ -1,61 +1,44 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Read data from disk that was part of RAID1 array
-Date: Mon, 20 Mar 2017 19:33:46 +0000
-Message-ID: <58D02E9A.7080300@youngman.org.uk>
-References: <008801d29ea3$3e858000$bb908000$@warren-selbert.com>
- <000c01d29f74$ae85c230$0b914690$@wnsdev.com>
- <58CE5AF8.5070907@youngman.org.uk>
- <006a01d2a1a0$ac148170$043d8450$@wnsdev.com>
+From: Alfred Matthews <asm13243546@gmail.com>
+Subject: Re: on assembly and recovery of a hardware RAID
+Date: Mon, 20 Mar 2017 17:42:05 -0400
+Message-ID: <CAAZLhTcNsjzLdEZyzG+kEuDhVye8pnuf6VhWzP=G0NL_aFX-5w@mail.gmail.com>
+References: <CAAZLhTdaVM4fagN5=bqWpPx-DjyU6UZ69bJFf51FWMX7oeyJNw@mail.gmail.com>
+ <87tw6weubu.fsf@notabene.neil.brown.name> <CAAZLhTcEhn2GezDSDJHOLv2VNSynzT-he0FRrVNbz1xtakLsMQ@mail.gmail.com>
+ <87d1djdz8y.fsf@notabene.neil.brown.name> <CAAZLhTdn6xnB6Kuuhf8+VaSd5u6gekUSDSMnK+w5obZNxvNg8A@mail.gmail.com>
+ <CAAZLhTcoU232uBs2zcK6TFj67Jru5oeNE_F0T2fQR6Un66OPXA@mail.gmail.com> <87lgs0cy0e.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <006a01d2a1a0$ac148170$043d8450$@wnsdev.com>
+In-Reply-To: <87lgs0cy0e.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Sangas <pete@wnsdev.com>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 20/03/17 17:37, Peter Sangas wrote:
->> From: Wols Lists [mailto:antlists@youngman.org.uk]
->> NEVER NEVER NEVER use --create !!!
->>
->>
->> Use something like --assemble --force, which will set up a working array
-> if it can. 
-> 
-> OK, I tried this command but received an error:
-> 
-> mdadm --assemble --force  /dev/md10 /dev/sdc   
-> 
-> "Cannot assemble mbr metadata in /dev/sdc, no superblock"
-> 
-> What command do you suggest...?
-> 
-That makes it sound like something had trashed the superblock, or maybe
-it was sdc1, or something. Anyways, it worked for you, so hopefully the
-question is academic.
-> 
-> 
->> If that had been an old array, with a different offset or superblock or
-> the like...
-> 
-> by "old" do you mean an array created using a different superblock format
-> other than 1.2?
-> 
-Yes. The superblock format is v1. Whether it's v1.0, v1.1 or v1.2
-depends on where the superblock is found. So if, for example, the array
-had been created with a v1.0 superblock, the data would probably have
-started at offset 2048, with the superblock at the end of the disk. v1.2
-puts the superblock near the start, maybe offset 4096? So you would have
-smashed some of your data, and also told the array to look in the wrong
-place for the start of the data.
+>> *** Checking Backup Volume Header:
+>> Unexpected Volume signature '  ' expected 'H+'
+>
+> Here the backup volume header, which is 2 blocks (blocks are 8K) from
+> the end of the device, looks wrong.
+> This probably means the chunk size is wrong.
+> I would suggest trying different chunksizes, starting at 4K and
+> doubling, until this message goes away.
+> That still might not be the correct chunk size, so I would continue up
+> to several megabytes and find all the chunksizes that seem to work.
+> Then look at what else hpfsck says on those.
 
-That's why --create is so dangerous - pick the wrong version and you can
-damage the data, but even if you pick the right version, all the default
-offsets and things have changed over the years (that's assuming they
-haven't also been modified by general array management), so you can
-easily lose where the data area starts.
+I'm not actually able to generate happy output in hpfsck using any of
+the following multiples of 4K
 
-Cheers,
-Wol
+4
+[...]
+8192
+16384
+32768
+65536
+131072
+262144
+524288
+1048576
+2097152
 
+Any chance it's not really an HFS system at all?
