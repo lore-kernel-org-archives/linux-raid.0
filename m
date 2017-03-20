@@ -1,36 +1,65 @@
-From: Reindl Harald <h.reindl@thelounge.net>
-Subject: Re: proactive disk replacement
-Date: Mon, 20 Mar 2017 14:25:48 +0100
-Message-ID: <56d66bd3-60c9-7e5c-d0b0-44f6b7f7fb7c@thelounge.net>
-References: <3FA2E00F-B107-4F3C-A9D3-A10CA5F81EC0@allygray.2y.net>
+From: Binoy Jayan <binoy.jayan@linaro.org>
+Subject: Re: [RFC PATCH v4] IV Generation algorithms for dm-crypt
+Date: Mon, 20 Mar 2017 20:08:19 +0530
+Message-ID: <CAHv-k_9xv3MH8VtNnN=bZOwNnMVHie+yQz9uyd+S-=qReGXM=g@mail.gmail.com>
+References: <1486463731-6224-1-git-send-email-binoy.jayan@linaro.org>
+ <CAOtvUMcN8s886978vE6T=AE79KkZsLBnXsmhewnb5PB0UyAG3A@mail.gmail.com>
+ <CAHv-k_8rgArzV2uQ64h1ZTNRpssX1jMf=RwuPoBmsjQ0FhCsWA@mail.gmail.com>
+ <68f70534-a309-46ba-a84d-8acc1e6620e5@gmail.com> <CAOtvUMf3c0fUjABmbfMrbs0W4gyhKVZyc_tZH3rQg65zF18YMg@mail.gmail.com>
+ <b563eb97-82ba-69d2-c4c5-66bc716a7507@gmail.com> <CAOtvUMePYT7OJDKL7i0y3y6Jvqsxyx6Je6g9aGKVq6PLZ_-Z8w@mail.gmail.com>
+ <2aef6e54-805f-e09b-ae66-c198f8c05335@gmail.com> <c835926e-c2bd-8a52-34db-6c605301bc2b@gmail.com>
+ <CAOtvUMdrQA4okKhiCyVmosQ4Oc2PHO4k4wLrDz-_fCyWB1rWBw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3FA2E00F-B107-4F3C-A9D3-A10CA5F81EC0@allygray.2y.net>
-Sender: linux-raid-owner@vger.kernel.org
-To: Jeff Allison <jeff.allison@allygray.2y.net>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAOtvUMdrQA4okKhiCyVmosQ4Oc2PHO4k4wLrDz-_fCyWB1rWBw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Gilad Ben-Yossef <gilad@benyossef.com>
+Cc: Milan Broz <gmazyland@gmail.com>, Oded <oded.golombek@arm.com>, Ofir <Ofir.Drang@arm.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, linux-crypto@vger.kernel.org, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Linux kernel mailing list <linux-kernel@vger.kernel.org>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Rajendra <rnayak@codeaurora.org>, Ondrej Mosnacek <omosnace@redhat.com>
 List-Id: linux-raid.ids
 
-
-
-Am 20.03.2017 um 13:47 schrieb Jeff Allison:
-> Hi all I’ve had a poke around but am yet to find something definitive.
+On 6 March 2017 at 20:08, Gilad Ben-Yossef <gilad@benyossef.com> wrote:
 >
-> I have a raid 5 array of 4 disks amounting to approx 5.5tb. Now this disks are getting a bit long in the tooth so before I get into problems I’ve bought 4 new disks to replace them.
+> I gave it a spin on a x86_64 with 8 CPUs with AES-NI using cryptd and
+> on Arm  using CryptoCell hardware accelerator.
 >
-> I have a backup so if it all goes west I’m covered. So I’m looking for suggestions.
+> There was no difference in performance between 512 and 4096 bytes
+> cluster size on the x86_64 (800 MB loop file system)
 >
-> My current plan is just to replace the 2tb drives with the new 3tb drives and move on, I’d like to do it on line with out having to trash the array and start again, so does anyone have a game plan for doing that.
+> There was an improvement in latency of 3.2% between 512 and 4096 bytes
+> cluster size on the Arm. I expect the performance benefits for this
+> test for Binoy's patch to be the same.
 >
-> Or is a 9tb raid 5 array the wrong thing to be doing and should I be doing something else 6tb raid 10 or something I’m open to suggestions.
+> In both cases the very naive test was a simple dd with block size of
+> 4096 bytes or the raw block device.
+>
+> I do not know what effect having a bigger cluster size would have on
+> have on other more complex file system operations.
+> Is there any specific benchmark worth testing with?
 
-you just manually fail them and replace them the same way as if they 
-would have died unexpected - done that multiple times
 
-on machines without bayes i just poweroff, replace a disk and then clone 
-the mbr and add the partitions also the same way as i do when one dies 
-(partitions in case you didn't use the whole drives for the array)
+The multiple instances issue in /proc/crypto is fixed. It was because of
+the IV code itself modifying the algorithm name inadvertently in the
+global crypto algorithm lookup table when it was splitting up
+"plain(cbc(aes))" into "plain" and "cbc(aes)" so as to invoke the child
+algorithm.
 
-http://bencane.com/2011/07/06/mdadm-manually-fail-a-drive/
+I ran a few tests with dd, bonnie and FIO under Qemu - x86 using the
+automated script [1] that I wrote to make the testing easy.
+The tests were done on software implementations of the algorithms
+as the real hardware was not available with me. According to the test,
+I found that the sequential reads and writes have a good improvement
+(5.7 %) in the data rate with the proposed solution while the random
+reads shows a very little improvement. When tested with FIO, the
+random writes also shows a small improvement (2.2%) but the random
+reads show a little deterioration in performance (4 %).
 
+When tested in arm hardware, only the sequential writes with bonnie
+shows improvement (5.6%). All other tests shows degraded performance
+in the absence of crypto hardware.
+
+[1] https://github.com/binoyjayan/utilities/blob/master/utils/dmtest
+Dependencies: dd [Full version], bonnie, fio
+
+Thanks,
+Binoy
