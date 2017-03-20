@@ -1,42 +1,32 @@
-From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH] mdadm/bitmap:fixed typos in comments of bitmap.h
-Date: Mon, 20 Mar 2017 18:46:39 +0800
-Message-ID: <1490006799-25459-1-git-send-email-zlliu@suse.com>
+From: Jeff Allison <jeff.allison@allygray.2y.net>
+Subject: proactive disk replacement
+Date: Mon, 20 Mar 2017 23:47:44 +1100
+Message-ID: <3FA2E00F-B107-4F3C-A9D3-A10CA5F81EC0@allygray.2y.net>
+Mime-Version: 1.0 (Mac OS X Mail 10.2 \(3259\))
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: jes.sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-bitmap.h: fixed trivial typos in comments
+Hi all I=E2=80=99ve had a poke around but am yet to find something =
+definitive.
 
-Signed-off-by: Zhilong Liu <zlliu@suse.com>
----
- bitmap.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I have a raid 5 array of 4 disks amounting to approx 5.5tb. Now this =
+disks are getting a bit long in the tooth so before I get into problems =
+I=E2=80=99ve bought 4 new disks to replace them.
 
-diff --git a/bitmap.h b/bitmap.h
-index b8fb071..7b1f80f 100644
---- a/bitmap.h
-+++ b/bitmap.h
-@@ -46,7 +46,7 @@
-  *
-  * The counter counts pending write requests, plus the on-disk bit.
-  * When the counter is '1' and the resync bits are clear, the on-disk
-- * bit can be cleared aswell, thus setting the counter to 0.
-+ * bit can be cleared as well, thus setting the counter to 0.
-  * When we set a bit, or in the counter (to start a write), if the fields is
-  * 0, we first set the disk bit and set the counter to 1.
-  *
-@@ -185,7 +185,7 @@ struct bitmap_page {
- 	 */
- 	char *map;
- 	/*
--	 * in emergencies (when map cannot be alloced), hijack the map
-+	 * in emergencies (when map cannot be allocated), hijack the map
- 	 * pointer and use it as two counters itself
- 	 */
- 	unsigned int hijacked;
--- 
-2.6.6
+I have a backup so if it all goes west I=E2=80=99m covered. So I=E2=80=99m=
+ looking for suggestions.
 
+My current plan is just to replace the 2tb drives with the new 3tb =
+drives and move on, I=E2=80=99d like to do it on line with out having to =
+trash the array and start again, so does anyone have a game plan for =
+doing that.
+
+Or is a 9tb raid 5 array the wrong thing to be doing and should I be =
+doing something else 6tb raid 10 or something I=E2=80=99m open to =
+suggestions.
+
+Cheers Jeff=
