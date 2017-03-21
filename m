@@ -1,117 +1,55 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: on assembly and recovery of a hardware RAID
-Date: Tue, 21 Mar 2017 13:38:14 +1100
-Message-ID: <87a88fcq21.fsf@notabene.neil.brown.name>
-References: <CAAZLhTdaVM4fagN5=bqWpPx-DjyU6UZ69bJFf51FWMX7oeyJNw@mail.gmail.com> <87tw6weubu.fsf@notabene.neil.brown.name> <CAAZLhTcEhn2GezDSDJHOLv2VNSynzT-he0FRrVNbz1xtakLsMQ@mail.gmail.com> <87d1djdz8y.fsf@notabene.neil.brown.name> <CAAZLhTdn6xnB6Kuuhf8+VaSd5u6gekUSDSMnK+w5obZNxvNg8A@mail.gmail.com> <CAAZLhTcoU232uBs2zcK6TFj67Jru5oeNE_F0T2fQR6Un66OPXA@mail.gmail.com> <87lgs0cy0e.fsf@notabene.neil.brown.name> <CAAZLhTcNsjzLdEZyzG+kEuDhVye8pnuf6VhWzP=G0NL_aFX-5w@mail.gmail.com>
+From: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+Subject: Re: [PATCH 24/29] drivers: convert iblock_req.pending from atomic_t
+ to refcount_t
+Date: Tue, 21 Mar 2017 00:18:07 -0700
+Message-ID: <1490080687.8236.102.camel@haakon3.risingtidesystems.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+	 <1488810076-3754-25-git-send-email-elena.reshetova@intel.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAZLhTcNsjzLdEZyzG+kEuDhVye8pnuf6VhWzP=G0NL_aFX-5w@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Alfred Matthews <asm13243546@gmail.com>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <open-iscsi+bncBDAIFWGVYMJRBMVHYPDAKGQEK4CCSNA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <1488810076-3754-25-git-send-email-elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: Elena Reshetova <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xen-devel-GuqFBffKawtpuQazS67q72D2FQJk+8+b@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux1394-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-tBiZLqfeLfOHmIFyCCdPziST3g8Odh+X@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-serial-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, Hans Liljestrand <ishkamiel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, David Windsor <dwindsor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
+Hi Elena,
 
-On Mon, Mar 20 2017, Alfred Matthews wrote:
+On Mon, 2017-03-06 at 16:21 +0200, Elena Reshetova wrote:
+> refcount_t type and corresponding API should be
+> used instead of atomic_t when the variable is used as
+> a reference counter. This allows to avoid accidental
+> refcounter overflows that might lead to use-after-free
+> situations.
+> 
+> Signed-off-by: Elena Reshetova <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> Signed-off-by: Hans Liljestrand <ishkamiel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Signed-off-by: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+> Signed-off-by: David Windsor <dwindsor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> ---
+>  drivers/target/target_core_iblock.c | 12 ++++++------
+>  drivers/target/target_core_iblock.h |  3 ++-
+>  2 files changed, 8 insertions(+), 7 deletions(-)
 
->>> *** Checking Backup Volume Header:
->>> Unexpected Volume signature '  ' expected 'H+'
->>
->> Here the backup volume header, which is 2 blocks (blocks are 8K) from
->> the end of the device, looks wrong.
->> This probably means the chunk size is wrong.
->> I would suggest trying different chunksizes, starting at 4K and
->> doubling, until this message goes away.
->> That still might not be the correct chunk size, so I would continue up
->> to several megabytes and find all the chunksizes that seem to work.
->> Then look at what else hpfsck says on those.
->
-> I'm not actually able to generate happy output in hpfsck using any of
-> the following multiples of 4K
->
-> 4
-> [...]
-> 8192
-> 16384
-> 32768
-> 65536
-> 131072
-> 262144
-> 524288
-> 1048576
-> 2097152
->
-> Any chance it's not really an HFS system at all?
+After reading up on this thread, it looks like various subsystem
+maintainers are now picking these atomic_t -> refcount_t conversions..
 
-Not likely.  hpfsck finds a perfectly valid superblock (or "Volume
-Header") at the start of the device.  It just cannot find the end one.
+That said, applied to target-pending/for-next and will plan to include
+for v4.12-rc1 merge window.
 
-The blocksize is:
-     blocksize       : 2000
+Thanks!
 
-which is in HEX, so 8K.
-The total_blocks is:
-     total_blocks    : 732482664
-
-which are 8K blocks, so 5859861312K or 5.4TB (using 1024*1024*1024).
-which matches the fact that each partition is 2.73TB.
-
-The problem seems to be that we are not combining the two partitions
-together in the correct way to create the original 5.4TB partition.
-
-All we know is that the backup volume header should look
-much like the main header, and particularly should have 'H+' in the
-signature, which is the first 2 bytes.
-i.e. the first two bytes of the volume headers should be
-0x4A2B
-
-The second (8K) block of the disk must look like this, and
-the second last should as well.
-If you can search through both devices for all 8K blocks which
-start with 0x4A2B, that might give us a hint what to look for.
-I would write a C program to do this.  I might take a while to run, but
-you can test on the first device, as you know block 2 matches.
-
-
-Hmmm... I've got a new theory.  The code is broken.
-fscheck_read_wrapper() in libhfsp/src/fscheck.c should set
-vol->maxblocks.
-It is set to a dummy value of '3' before this is called.
-In the "signature == HFS_VOLHEAD_SIG" it sets it properly,
-but in the "signature == HFSP_VOLHEAD_SIG" case (which applies to you)
-it doesn't.
-So it tries to read the backup from block "3-2", or block 1.  And there
-is nothing there.
-
-How is your C coding?  You could
-  apt-get source hfsplus
-and hack the code and try to build it yourself....
-
-
-NeilBrown
-
-
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljQkhYACgkQOeye3VZi
-gbmnIQ//VH+NJXH8QOS9BxF90jk4O2NffwKqlNbnXsNjxALH3xs2fVn/frUhwrKB
-39uAR5S4xjtQ/JrJZTUw0N8KKol2TIIjzzR6Ngu3MhBRws7AciOQBkIZjVmItEl5
-FD+6Inn6H2c+TZaSNNzem8pXtaCjS3TGItGzVitIlAGj3vKF/+blMBRkZOd0Y1AJ
-5vYJBWZGNX0BkK0nvulDWDZf/9UGpQuruhza3406yaPN2kGDj7M9si6qdW5qpHGJ
-nCQzyumrJPXSw3XMZk5c5AVoRiwacIvh46BwHebpxPA2/+wcEq2wq580BsqjT02Y
-l2Br5N1O+BEFSM/XF1fbrPrRRjGzlvu/DYnIWqQFkXC3VqhS21CQRa3X/c5VoPa0
-qSpDQInSY3X1+RTybbUFHLgWL0f8rN2mzgxYTAwdD6vVmgQa9K81I4Gzgn2AjoSA
-/BG2MvwXZ+fnkTTr425I4B3/YY6qqiphgFkm6SWiiykXBwusxl+s+ZxjAAfdAorq
-BKCu5D/DxsHb1ts3O8T1aBPlCJ1IskQN4M0cEJhcVeJg6H8GeJ+Y9xCfbbKP7TCK
-pUwREnHeDXMtrL99gqSa7fyoMCt0MELkoQ2vOLq1y66+siQ61kKk1uzQeqsx0XPG
-qBgDIHjfyLAqSWhS/RdG1T6fiFsSnQAust9UQtRPYolh7eYoyDc=
-=3FmX
------END PGP SIGNATURE-----
---=-=-=--
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
