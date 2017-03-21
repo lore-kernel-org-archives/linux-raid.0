@@ -1,87 +1,66 @@
-From: David Brown <david.brown@hesbynett.no>
+From: Wols Lists <antlists@youngman.org.uk>
 Subject: Re: proactive disk replacement
-Date: Tue, 21 Mar 2017 15:26:38 +0100
-Message-ID: <58D1381E.1080101@hesbynett.no>
-References: <3FA2E00F-B107-4F3C-A9D3-A10CA5F81EC0@allygray.2y.net> <11c21a22-4bbf-7b16-5e64-8932be768c68@websitemanagers.com.au> <CAPrpM6wtQe=h1AE-PbFr0-DyZ_wRN7gvibjfn86W0mQz77xnLg@mail.gmail.com> <f0916e66-8ea7-3363-3600-1d2cd68e85af@thelounge.net> <58D1244E.3040204@hesbynett.no> <CAJH6TXih4wv10WDGOA2PT-b8FSetx06D237HS_cpT4+Ap0d0dg@mail.gmail.com>
+Date: Tue, 21 Mar 2017 15:25:45 +0000
+Message-ID: <58D145F9.1080405@youngman.org.uk>
+References: <3FA2E00F-B107-4F3C-A9D3-A10CA5F81EC0@allygray.2y.net>
+ <11c21a22-4bbf-7b16-5e64-8932be768c68@websitemanagers.com.au>
+ <CAPrpM6wtQe=h1AE-PbFr0-DyZ_wRN7gvibjfn86W0mQz77xnLg@mail.gmail.com>
+ <f0916e66-8ea7-3363-3600-1d2cd68e85af@thelounge.net>
+ <02316742-3887-b811-3c77-aad29cda4077@websitemanagers.com.au>
+ <583576ca-a76c-3901-c196-6083791533ee@thelounge.net>
+ <58D126EB.7060707@hesbynett.no>
+ <09f4c794-8b17-05f5-10b7-6a3fa515bfa9@thelounge.net>
+ <58D13598.50403@hesbynett.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJH6TXih4wv10WDGOA2PT-b8FSetx06D237HS_cpT4+Ap0d0dg@mail.gmail.com>
+In-Reply-To: <58D13598.50403@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
-Cc: Reindl Harald <h.reindl@thelounge.net>, Jeff Allison <jeff.allison@allygray.2y.net>, Adam Goryachev <mailinglists@websitemanagers.com.au>, linux-raid@vger.kernel.org
+To: David Brown <david.brown@hesbynett.no>, Reindl Harald <h.reindl@thelounge.net>, Adam Goryachev <mailinglists@websitemanagers.com.au>, Jeff Allison <jeff.allison@allygray.2y.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 21/03/17 14:26, Gandalf Corvotempesta wrote:
-> 2017-03-21 14:02 GMT+01:00 David Brown <david.brown@hesbynett.no>:
->> Note that to cause failure in non-degraded RAID5 (or degraded RAID6),
->> your two URE's need to be on the same stripe in order to cause data
->> loss.  The chances of getting an URE somewhere on the disk are roughly
->> proportional to the size of the disk - but the chance of getting an URE
->> on the same stripe as another URE on another disk are basically
->> independent of the disk size, and it is extraordinarily small.
-> 
-> Little bit OT:
-> is this the same even for HW RAID Controllers like LSI Megaraid
-> or they tend to fail the rebuild in case of multiple URE even in
-> different stripes?
+On 21/03/17 14:15, David Brown wrote:
+>> for most arrays the disks have a similar age and usage pattern, so when
+>> > the first one fails it becomes likely that it don't take too long for
+>> > another one and so load and recovery time matters
 
-It should be true, for decent HW RAID setups.  One possible problem is
-the famous re-read timeouts - if you use a consumer hard drive with long
-re-read timeouts, and have not (or cannot) configure it to have a short
-timeout, then a hardware RAID controller might consider a drive to be
-completely dead while the drive is simply spending 30 seconds re-trying
-its read.  If the raid controller drops the drive, then it is like an
-URE in /all/ stripes at once!
+> False.  There is no reason to suspect that - certainly not to within the
+> hours or day it takes to rebuild your array.  Disk failure pattern shows
+> a peak within the first month or so (failures due to manufacturing or
+> handling), then a very low error rate for a few years, then a gradually
+> increasing rate after that.  There is not a very significant correlation
+> between drive failures within the same system, nor is there a very
+> significant correlation between usage and failures.
 
-> 
->> No, you cannot.  Your conclusion here is based on several totally
->> incorrect assumptions:
->>
->> 1. You think that RAID5/RAID6 recovery is more stressful, because the
->> parity is "all over the place".  This is wrong.
->>
->> 2. You think that random IO has higher chance of getting an URE than
->> linear IO.  This is wrong.
-> 
-> Totally agree.
-> 
->> 3. You think that getting an URE on one disk, then getting an URE on a
->> second disk, counts as a double failure that will break an single-parity
->> redundancy (RAID5, RAID1, RAID6 in degraded mode).  This is wrong - it
->> is only a problem if the two UREs are in the same stripe, which is quite
->> literally a one in a million chance.
-> 
-> I'm not sure about this.
-> The posted paper is talking about "standard" raid made with hw raid controllers
-> and I'm not sure if they are able to finish a rebuild in case of double URE even
-> if coming from different stripes.
-> 
-> I think they fail the whole rebuild.
-> 
+Except your argument and the claim don't match. You're right - disk
+failures follow the pattern you describe. BUT.
 
-I cannot imagine why that would be the case.
+If the array was created from completely new disks, then the usage
+patterns will be very similar, therefore there will be a statistical
+correlation between failures as compared to the population as a whole.
+(Bit like a false DNA match is much higher in an inbred town, than in a
+cosmopolitan city of immigrants.)
 
-Suppose you have seven drive RAID6, with data blocks ABCDE and parities
-PQ.  To make it simpler, assume that on this particular stripe, the
-order is ABCDEPQ.  If drive 5 has failed and you are rebuilding, the
-RAID system will read in ABCD-P-.  It will not read from drive 5 (since
-you are rebuilding it), and it will not bother reading drive 7 because
-it doesn't need the Q parity (it /might/ read it in as part of a
-streamed read).  It calculates E from ABCD and P, and writes it out.
-If, for example, drive 3 gets an URE at this point then it will read the
-Q parity and calculate C and E from ABD P and Q.  It will write out E to
-the rebuild drive, and also C to the drive with the URE - the drive will
-handle sector relocation as needed.  The result is that the stripe
-ABCDEPQ is correct on the disk.  The drive with the URE will not be
-dropped from the array.
+EVEN WORSE. The probability of all the drives coming off the same batch,
+and sharing the same systematic defects, is much much higher. One only
+has to look at the Seagate 3TB Barracuda mess to see a perfect example.
 
-Then it moves on to the next stripe, and repeats the process.  An URE
-here is independent of an URE in the previous stripe, and errors can
-again be corrected.
+In other words, IFF your array is built of a bunch of identical drives
+all bought at the same time, the risk of multiple failure is
+significantly higher. How significant that is I don't know, but it is a
+very valid reason for replacing your drives at semi-random intervals.
 
-It is possible that if there are a large number of UREs from a drive,
-that the RAID system will consider the whole drive bad and drop it.  But
-other than that, UREs will be treated independently.
+(Completely off topic :-) but a real-world demonstrable example is
+couples' initials. "Like chooses like" and if you compare a couple's
+first initials against what you would expect from a random sample, there
+is a VERY significant spike in couples that share the same initial.)
 
+To put it bluntly, if your array consists of disks with near-identical
+characteristics (including manufacturing batch), then your chances of
+random multiple failure are noticeably increased. Is it worth worrying
+about? If you can do something about it, of course!
+
+Cheers,
+Wol
