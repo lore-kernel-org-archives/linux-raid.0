@@ -1,44 +1,101 @@
-From: Reindl Harald <h.reindl@thelounge.net>
-Subject: Re: proactive disk replacement
-Date: Tue, 21 Mar 2017 13:03:22 +0100
-Message-ID: <8b108a89-9d17-63f0-de1c-80b17be4411a@thelounge.net>
-References: <3FA2E00F-B107-4F3C-A9D3-A10CA5F81EC0@allygray.2y.net>
- <11c21a22-4bbf-7b16-5e64-8932be768c68@websitemanagers.com.au>
- <CAPrpM6wtQe=h1AE-PbFr0-DyZ_wRN7gvibjfn86W0mQz77xnLg@mail.gmail.com>
- <f0916e66-8ea7-3363-3600-1d2cd68e85af@thelounge.net>
- <02316742-3887-b811-3c77-aad29cda4077@websitemanagers.com.au>
- <583576ca-a76c-3901-c196-6083791533ee@thelounge.net>
- <20170321113447.GA18665@metamorpher.de>
+From: Alfred Matthews <asm13243546@gmail.com>
+Subject: Re: on assembly and recovery of a hardware RAID
+Date: Tue, 21 Mar 2017 08:09:44 -0400
+Message-ID: <CAAZLhTdobNxkYNmp6y3cOrLAdMfTYt3kodzM0+a7E-G=q1QGtw@mail.gmail.com>
+References: <CAAZLhTdaVM4fagN5=bqWpPx-DjyU6UZ69bJFf51FWMX7oeyJNw@mail.gmail.com>
+ <87tw6weubu.fsf@notabene.neil.brown.name> <CAAZLhTcEhn2GezDSDJHOLv2VNSynzT-he0FRrVNbz1xtakLsMQ@mail.gmail.com>
+ <87d1djdz8y.fsf@notabene.neil.brown.name> <CAAZLhTdn6xnB6Kuuhf8+VaSd5u6gekUSDSMnK+w5obZNxvNg8A@mail.gmail.com>
+ <CAAZLhTcoU232uBs2zcK6TFj67Jru5oeNE_F0T2fQR6Un66OPXA@mail.gmail.com>
+ <87lgs0cy0e.fsf@notabene.neil.brown.name> <CAAZLhTcNsjzLdEZyzG+kEuDhVye8pnuf6VhWzP=G0NL_aFX-5w@mail.gmail.com>
+ <87a88fcq21.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170321113447.GA18665@metamorpher.de>
+In-Reply-To: <87a88fcq21.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Cc: Adam Goryachev <mailinglists@websitemanagers.com.au>, Jeff Allison <jeff.allison@allygray.2y.net>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Thanks, I'll take a look. Could use a project, insane as that sounds.
 
-
-Am 21.03.2017 um 12:34 schrieb Andreas Klauer:
-> On Tue, Mar 21, 2017 at 12:03:51PM +0100, Reindl Harald wrote:
->> but the point is that with RAID5/6 the recovery itself is *heavy random
->> IO* and that get *combined* with the random IO auf the normal workload
->> and that means *heavy load on the disks*
+On 20 March 2017 at 22:38, NeilBrown <neilb@suse.com> wrote:
+> On Mon, Mar 20 2017, Alfred Matthews wrote:
 >
-> Where do you get that random I/O idea from? Rebuild is linear.
-> Or what do you mean by random I/O in this context? (RAID rebuilds)
-> What kind of random things do you think the RAID is doing?
-
-the IO of a RAID5/6 rebuild is hardly linear beause the informations 
-(data + parity) are spread all over the disks while in case of RAID1/10 
-it is really linear
-
-> If you see read errors during rebuild, the most common cause is
-> that the rebuild also happens to be the first read test since forever.
-> (Happens to be the case for people who don't do any disk monitoring.)
+>>>> *** Checking Backup Volume Header:
+>>>> Unexpected Volume signature '  ' expected 'H+'
+>>>
+>>> Here the backup volume header, which is 2 blocks (blocks are 8K) from
+>>> the end of the device, looks wrong.
+>>> This probably means the chunk size is wrong.
+>>> I would suggest trying different chunksizes, starting at 4K and
+>>> doubling, until this message goes away.
+>>> That still might not be the correct chunk size, so I would continue up
+>>> to several megabytes and find all the chunksizes that seem to work.
+>>> Then look at what else hpfsck says on those.
+>>
+>> I'm not actually able to generate happy output in hpfsck using any of
+>> the following multiples of 4K
+>>
+>> 4
+>> [...]
+>> 8192
+>> 16384
+>> 32768
+>> 65536
+>> 131072
+>> 262144
+>> 524288
+>> 1048576
+>> 2097152
+>>
+>> Any chance it's not really an HFS system at all?
 >
->> here you go: http://www.zdnet.com/article/why-raid-6-stops-working-in-2019/
+> Not likely.  hpfsck finds a perfectly valid superblock (or "Volume
+> Header") at the start of the device.  It just cannot find the end one.
 >
-> This is just wrong
+> The blocksize is:
+>      blocksize       : 2000
+>
+> which is in HEX, so 8K.
+> The total_blocks is:
+>      total_blocks    : 732482664
+>
+> which are 8K blocks, so 5859861312K or 5.4TB (using 1024*1024*1024).
+> which matches the fact that each partition is 2.73TB.
+>
+> The problem seems to be that we are not combining the two partitions
+> together in the correct way to create the original 5.4TB partition.
+>
+> All we know is that the backup volume header should look
+> much like the main header, and particularly should have 'H+' in the
+> signature, which is the first 2 bytes.
+> i.e. the first two bytes of the volume headers should be
+> 0x4A2B
+>
+> The second (8K) block of the disk must look like this, and
+> the second last should as well.
+> If you can search through both devices for all 8K blocks which
+> start with 0x4A2B, that might give us a hint what to look for.
+> I would write a C program to do this.  I might take a while to run, but
+> you can test on the first device, as you know block 2 matches.
+>
+>
+> Hmmm... I've got a new theory.  The code is broken.
+> fscheck_read_wrapper() in libhfsp/src/fscheck.c should set
+> vol->maxblocks.
+> It is set to a dummy value of '3' before this is called.
+> In the "signature == HFS_VOLHEAD_SIG" it sets it properly,
+> but in the "signature == HFSP_VOLHEAD_SIG" case (which applies to you)
+> it doesn't.
+> So it tries to read the backup from block "3-2", or block 1.  And there
+> is nothing there.
+>
+> How is your C coding?  You could
+>   apt-get source hfsplus
+> and hack the code and try to build it yourself....
+>
+>
+> NeilBrown
+>
+>
