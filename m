@@ -1,44 +1,62 @@
-From: Alfred Matthews <asm13243546@gmail.com>
-Subject: Re: on assembly and recovery of a hardware RAID
-Date: Mon, 20 Mar 2017 17:42:05 -0400
-Message-ID: <CAAZLhTcNsjzLdEZyzG+kEuDhVye8pnuf6VhWzP=G0NL_aFX-5w@mail.gmail.com>
-References: <CAAZLhTdaVM4fagN5=bqWpPx-DjyU6UZ69bJFf51FWMX7oeyJNw@mail.gmail.com>
- <87tw6weubu.fsf@notabene.neil.brown.name> <CAAZLhTcEhn2GezDSDJHOLv2VNSynzT-he0FRrVNbz1xtakLsMQ@mail.gmail.com>
- <87d1djdz8y.fsf@notabene.neil.brown.name> <CAAZLhTdn6xnB6Kuuhf8+VaSd5u6gekUSDSMnK+w5obZNxvNg8A@mail.gmail.com>
- <CAAZLhTcoU232uBs2zcK6TFj67Jru5oeNE_F0T2fQR6Un66OPXA@mail.gmail.com> <87lgs0cy0e.fsf@notabene.neil.brown.name>
+From: Jeff Allison <jeff.allison@allygray.2y.net>
+Subject: Re: proactive disk replacement
+Date: Tue, 21 Mar 2017 13:33:49 +1100
+Message-ID: <CAPrpM6wtQe=h1AE-PbFr0-DyZ_wRN7gvibjfn86W0mQz77xnLg@mail.gmail.com>
+References: <3FA2E00F-B107-4F3C-A9D3-A10CA5F81EC0@allygray.2y.net> <11c21a22-4bbf-7b16-5e64-8932be768c68@websitemanagers.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87lgs0cy0e.fsf@notabene.neil.brown.name>
+In-Reply-To: <11c21a22-4bbf-7b16-5e64-8932be768c68@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->> *** Checking Backup Volume Header:
->> Unexpected Volume signature '  ' expected 'H+'
+I don't have a spare SATA slot I do however have a spare USB carrier,
+is that fast enough to be used temporarily?
+
+On 21 March 2017 at 01:59, Adam Goryachev
+<mailinglists@websitemanagers.com.au> wrote:
 >
-> Here the backup volume header, which is 2 blocks (blocks are 8K) from
-> the end of the device, looks wrong.
-> This probably means the chunk size is wrong.
-> I would suggest trying different chunksizes, starting at 4K and
-> doubling, until this message goes away.
-> That still might not be the correct chunk size, so I would continue up
-> to several megabytes and find all the chunksizes that seem to work.
-> Then look at what else hpfsck says on those.
-
-I'm not actually able to generate happy output in hpfsck using any of
-the following multiples of 4K
-
-4
-[...]
-8192
-16384
-32768
-65536
-131072
-262144
-524288
-1048576
-2097152
-
-Any chance it's not really an HFS system at all?
+>
+> On 20/3/17 23:47, Jeff Allison wrote:
+>>
+>> Hi all I=E2=80=99ve had a poke around but am yet to find something defin=
+itive.
+>>
+>> I have a raid 5 array of 4 disks amounting to approx 5.5tb. Now this dis=
+ks
+>> are getting a bit long in the tooth so before I get into problems I=E2=
+=80=99ve
+>> bought 4 new disks to replace them.
+>>
+>> I have a backup so if it all goes west I=E2=80=99m covered. So I=E2=80=
+=99m looking for
+>> suggestions.
+>>
+>> My current plan is just to replace the 2tb drives with the new 3tb drive=
+s
+>> and move on, I=E2=80=99d like to do it on line with out having to trash =
+the array
+>> and start again, so does anyone have a game plan for doing that.
+>
+> Yes, do not fail a disk and then replace it, use the newer replace method
+> (it keeps redundancy in the array).
+> Even better would be to add a disk, and convert to RAID6, then add a seco=
+nd
+> disk (using replace), and so on, then remove the last disk, grow the arra=
+y
+> to fill the 3TB, and then reduce the number of disks in the raid.
+> This way, you end up with RAID6...
+>>
+>> Or is a 9tb raid 5 array the wrong thing to be doing and should I be doi=
+ng
+>> something else 6tb raid 10 or something I=E2=80=99m open to suggestions.
+>
+> I'd feel safer with RAID6, but it depends on your requirements. RAID10 is
+> also a nice option, but, it depends...
+>
+> Regards,
+> Adam
+>
