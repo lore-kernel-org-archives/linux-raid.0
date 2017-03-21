@@ -1,41 +1,48 @@
 From: Phil Turmel <philip@turmel.org>
-Subject: Re: proactive disk replacement
-Date: Tue, 21 Mar 2017 13:00:06 -0400
-Message-ID: <b53e8bc9-89ca-0315-3f64-63e49a773739@turmel.org>
-References: <3FA2E00F-B107-4F3C-A9D3-A10CA5F81EC0@allygray.2y.net>
- <11c21a22-4bbf-7b16-5e64-8932be768c68@websitemanagers.com.au>
- <CAPrpM6wtQe=h1AE-PbFr0-DyZ_wRN7gvibjfn86W0mQz77xnLg@mail.gmail.com>
- <f0916e66-8ea7-3363-3600-1d2cd68e85af@thelounge.net>
- <58D1244E.3040204@hesbynett.no>
- <CAJH6TXih4wv10WDGOA2PT-b8FSetx06D237HS_cpT4+Ap0d0dg@mail.gmail.com>
- <58D1381E.1080101@hesbynett.no> <58D14764.60909@youngman.org.uk>
+Subject: Re: [RAID recovery] Unable to recover RAID5 array after disk failure
+Date: Tue, 21 Mar 2017 13:08:44 -0400
+Message-ID: <2bdccf88-7a0c-0a5a-e418-818b7343f867@turmel.org>
+References: <CAJ0QwkJqRbJtM9HiXL+cCj2TkQQRahGgWTwD9QKH_CBfbJeLKA@mail.gmail.com>
+ <0a6e4a82-665c-6e62-293f-151e41c67842@turmel.org>
+ <CAJ0QwkKAVLh7+kV_GsEL4O5hA+Pj=Y9sE_CBbWJJqDyA+gVqpA@mail.gmail.com>
+ <CAJ0QwkKuSKzE7_4h1aUA4XMyNAAdmFR4J6z+Z_vW5nsW3OcZtw@mail.gmail.com>
+ <c3ae0e4d-dccc-9cb4-72b0-28a1bde3c752@turmel.org>
+ <CAJ0QwkKG8_dCzTBYEPm5CpqWMQwM=f8YBAYtatNh=9U_7ygdnA@mail.gmail.com>
+ <f0536882-3a0b-b43c-317d-691d82c6923f@turmel.org>
+ <CAJ0Qwk+-Zz7RM8p7Ehy8aGuf+CQkPpbnBOaGNN77bP8cA5K9qg@mail.gmail.com>
+ <CAJ0QwkKbYuVFdkRn0ggFOqudQswNYnF+koVLSxQ_XTPQnLkhOg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <58D14764.60909@youngman.org.uk>
+In-Reply-To: <CAJ0QwkKbYuVFdkRn0ggFOqudQswNYnF+koVLSxQ_XTPQnLkhOg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, David Brown <david.brown@hesbynett.no>, Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
-Cc: Reindl Harald <h.reindl@thelounge.net>, Jeff Allison <jeff.allison@allygray.2y.net>, Adam Goryachev <mailinglists@websitemanagers.com.au>, linux-raid@vger.kernel.org
+To: Olivier Swinkels <olivier.swinkels@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 03/21/2017 11:31 AM, Wols Lists wrote:
-> On 21/03/17 14:26, David Brown wrote:
->> It is possible that if there are a large number of UREs from a
->> drive, that the RAID system will consider the whole drive bad and
->> drop it.  But other than that, UREs will be treated independently.
+Hi Olivier,
+
+{ Sorry, lot of work travel lately /-: }
+
+On 03/17/2017 03:25 PM, Olivier Swinkels wrote:
+
+> Hi Phil,
 > 
-> Doesn't mdadm have a setting that does exactly that? Too many UREs
-> and the drive gets dropped? I'm sure I've come across that
-> interfering with rebuilds.
+> Did you already have time to look at the results of the fsck check
+> and ext2/3/4 superblock search?
 
-Yes.  MD maintains a per-member-device counter of read errors and drops
-the device when the counter reaches 20 (twenty).  The counter is
-decremented by 10 (ten) once an hour.  A short burst of less than 20
-read errors will be tolerated, as long as they don't continue at more
-than 10/hour.
+Well, there are a few superblock candidates in your output, the lines
+showing ".X4R" for the first four bytes, but that converts to a
+timestamp of Sat, 14 Sep 2013 12:35:24 GMT.
 
-Last I checked, this behavior is hard-coded.
+Ewww.
+
+> I would really like some feedback, as I'm quite out of ideas.
+
+You should look at the other devices, but with that timestamp, the odds
+look very poor.
+
+Sorry.  Possibly try photorec or similar raw data recovery tools.
 
 Phil
-
