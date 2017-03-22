@@ -1,51 +1,63 @@
-From: Phil Turmel <philip@turmel.org>
+From: "John Stoffel" <john@stoffel.org>
 Subject: Re: proactive disk replacement
-Date: Wed, 22 Mar 2017 10:32:23 -0400
-Message-ID: <b5d52a2a-2662-86bf-5b65-10f3770a7d3a@turmel.org>
+Date: Wed, 22 Mar 2017 10:51:09 -0400
+Message-ID: <22738.36701.470391.167986@quad.stoffel.home>
 References: <3FA2E00F-B107-4F3C-A9D3-A10CA5F81EC0@allygray.2y.net>
- <11c21a22-4bbf-7b16-5e64-8932be768c68@websitemanagers.com.au>
- <CAPrpM6wtQe=h1AE-PbFr0-DyZ_wRN7gvibjfn86W0mQz77xnLg@mail.gmail.com>
- <f0916e66-8ea7-3363-3600-1d2cd68e85af@thelounge.net>
- <02316742-3887-b811-3c77-aad29cda4077@websitemanagers.com.au>
- <583576ca-a76c-3901-c196-6083791533ee@thelounge.net>
- <58D126EB.7060707@hesbynett.no>
- <09f4c794-8b17-05f5-10b7-6a3fa515bfa9@thelounge.net>
- <58D13598.50403@hesbynett.no> <58D145F9.1080405@youngman.org.uk>
- <58D14998.1060601@hesbynett.no>
- <f90b9218-85ef-6af1-fa78-e3641a307566@turmel.org>
- <CAJH6TXjXR1BM6UojbbgTNpCdyyMhfO4VOG0dxYUAV59PEY+O2g@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJH6TXjXR1BM6UojbbgTNpCdyyMhfO4VOG0dxYUAV59PEY+O2g@mail.gmail.com>
+In-Reply-To: <3FA2E00F-B107-4F3C-A9D3-A10CA5F81EC0@allygray.2y.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
-Cc: David Brown <david.brown@hesbynett.no>, Wols Lists <antlists@youngman.org.uk>, Reindl Harald <h.reindl@thelounge.net>, Adam Goryachev <mailinglists@websitemanagers.com.au>, Jeff Allison <jeff.allison@allygray.2y.net>, linux-raid@vger.kernel.org
+To: Jeff Allison <jeff.allison@allygray.2y.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 03/22/2017 09:53 AM, Gandalf Corvotempesta wrote:
 
-> Last years i've lose a server due to 4 (of 6) disks failures in less
-> than an hours during a rebuild.
-> 
-> The first failure was detected in the middle of the night. It was a
-> disconnection/reconnaction of a single disks.
-> The riconnection triggered a resync. During the resync another disk
-> failed. RAID6 recovered even from this double failure
-> but at about 60% of rebuild, the third disk failed bringing the whole raid down.
-> 
-> I was waked up by our monitoring system and looking at the server,
-> there was also a fourth disk down :)
-> 
-> 4 disks down in less than a hour. All disk was enterprise: SAS 15K,
-> not desktop drives.
+Jeff> Hi all I’ve had a poke around but am yet to find something
+Jeff> definitive.  I have a raid 5 array of 4 disks amounting to
+Jeff> approx 5.5tb. Now this disks are getting a bit long in the tooth
+Jeff> so before I get into problems I’ve bought 4 new disks to replace
+Jeff> them.
 
-You should win a prize, Gandalf.  In the several years I've participated
-on this mailing list, you are the first to describe such a catastrophe
-where the drives really were at fault, instead of timeout mismatch,
-power supplies, cables, or controllers.
+Can I suggest that you buy another disk and convert into a RAID6 setup
+for even more resiliency?  Esp with that much data (great that you
+have backups!) the piece of mind of an extra disk is well worth the
+cost in my mind.
 
-All four disks had permanent "FAILED" smartctl status after this, yes?
+Personally, I just go with RAID1 mirrors on large disks like this for
+my home system.  I don't have *that* much stuff... though my disks too
+are getting long in tooth.  
 
-Phil
+Jeff> I have a backup so if it all goes west I’m covered. So I’m
+Jeff> looking for suggestions.
+
+Jeff> My current plan is just to replace the 2tb drives with the new
+Jeff> 3tb drives and move on, I’d like to do it on line with out
+Jeff> having to trash the array and start again, so does anyone have a
+Jeff> game plan for doing that.
+
+You don't say how your system is setup, whether or not you have LVM on
+top of the MD RAID5 array or not.  If you, you could simply do:
+
+1. Build a new RAID6 array with five disks (buying another one like I
+   suggest above).
+
+2. Add this into your VG with the 4x2tb disks.
+
+3. pvmove all your data onto the new PVs:
+
+   pvmove -b <VG> <old-raid5-PV>
+
+And once it's done, you can them remove that PV from the VG and pull
+them from the system.  Or turn them into a scratch space until they
+die...
+
+Jeff> Or is a 9tb raid 5 array the wrong thing to be doing and should
+Jeff> I be doing something else 6tb raid 10 or something I’m open to
+Jeff> suggestions.
+
+Depends on how good your backups are and how critical it is that this
+data stay online.
+
+John
