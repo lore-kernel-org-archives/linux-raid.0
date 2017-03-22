@@ -1,63 +1,41 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: proactive disk replacement
-Date: Wed, 22 Mar 2017 10:51:09 -0400
-Message-ID: <22738.36701.470391.167986@quad.stoffel.home>
-References: <3FA2E00F-B107-4F3C-A9D3-A10CA5F81EC0@allygray.2y.net>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] percpu-refcount: support synchronous switch to atomic
+ mode.
+Date: Wed, 22 Mar 2017 11:00:29 -0400
+Message-ID: <20170322150029.GA7532@htj.duckdns.org>
+References: <87o9wuaxm3.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3FA2E00F-B107-4F3C-A9D3-A10CA5F81EC0@allygray.2y.net>
-Sender: linux-raid-owner@vger.kernel.org
-To: Jeff Allison <jeff.allison@allygray.2y.net>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <87o9wuaxm3.fsf@notabene.neil.brown.name>
+Sender: linux-kernel-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: Christoph Lameter <cl@linux.com>, linux-kernel@vger.kernel.org, Shaohua Li <shli@kernel.org>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Wed, Mar 22, 2017 at 12:50:12PM +1100, NeilBrown wrote:
+> 
+> percpu_ref_switch_to_atomic_sync() schedules the switch
+> to atomic mode, then waits for it to complete.
+> 
+> Also export percpu_ref_switch_to_* so they can be used from modules.
+> 
+> This will be used in md/raid to count the number of pending write
+> requests to an array.
+> We occasionally need to check if the count is zero, but most often
+> we don't care.
+> We always want updates to the counter to be fast, as in some cases
+> we count every 4K page.
+> 
+> Signed-off-by: NeilBrown <neilb@suse.com>
 
-Jeff> Hi all I’ve had a poke around but am yet to find something
-Jeff> definitive.  I have a raid 5 array of 4 disks amounting to
-Jeff> approx 5.5tb. Now this disks are getting a bit long in the tooth
-Jeff> so before I get into problems I’ve bought 4 new disks to replace
-Jeff> them.
+Acked-by: Tejun Heo <tj@kernel.org>
 
-Can I suggest that you buy another disk and convert into a RAID6 setup
-for even more resiliency?  Esp with that much data (great that you
-have backups!) the piece of mind of an extra disk is well worth the
-cost in my mind.
+Please feel free to route through other patches through md tree.  If
+preferable, I can route it through percpu/for-4.12.
 
-Personally, I just go with RAID1 mirrors on large disks like this for
-my home system.  I don't have *that* much stuff... though my disks too
-are getting long in tooth.  
+Thanks.
 
-Jeff> I have a backup so if it all goes west I’m covered. So I’m
-Jeff> looking for suggestions.
-
-Jeff> My current plan is just to replace the 2tb drives with the new
-Jeff> 3tb drives and move on, I’d like to do it on line with out
-Jeff> having to trash the array and start again, so does anyone have a
-Jeff> game plan for doing that.
-
-You don't say how your system is setup, whether or not you have LVM on
-top of the MD RAID5 array or not.  If you, you could simply do:
-
-1. Build a new RAID6 array with five disks (buying another one like I
-   suggest above).
-
-2. Add this into your VG with the 4x2tb disks.
-
-3. pvmove all your data onto the new PVs:
-
-   pvmove -b <VG> <old-raid5-PV>
-
-And once it's done, you can them remove that PV from the VG and pull
-them from the system.  Or turn them into a scratch space until they
-die...
-
-Jeff> Or is a 9tb raid 5 array the wrong thing to be doing and should
-Jeff> I be doing something else 6tb raid 10 or something I’m open to
-Jeff> suggestions.
-
-Depends on how good your backups are and how critical it is that this
-data stay online.
-
-John
+-- 
+tejun
