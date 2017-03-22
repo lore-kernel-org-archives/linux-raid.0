@@ -1,27 +1,54 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] block: trace completion of all bios.
-Date: Wed, 22 Mar 2017 05:51:49 -0700
-Message-ID: <20170322125149.GA29606@infradead.org>
-References: <877f3iave6.fsf@notabene.neil.brown.name>
+From: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
+Subject: Re: proactive disk replacement
+Date: Wed, 22 Mar 2017 14:53:19 +0100
+Message-ID: <CAJH6TXjXR1BM6UojbbgTNpCdyyMhfO4VOG0dxYUAV59PEY+O2g@mail.gmail.com>
+References: <3FA2E00F-B107-4F3C-A9D3-A10CA5F81EC0@allygray.2y.net>
+ <11c21a22-4bbf-7b16-5e64-8932be768c68@websitemanagers.com.au>
+ <CAPrpM6wtQe=h1AE-PbFr0-DyZ_wRN7gvibjfn86W0mQz77xnLg@mail.gmail.com>
+ <f0916e66-8ea7-3363-3600-1d2cd68e85af@thelounge.net> <02316742-3887-b811-3c77-aad29cda4077@websitemanagers.com.au>
+ <583576ca-a76c-3901-c196-6083791533ee@thelounge.net> <58D126EB.7060707@hesbynett.no>
+ <09f4c794-8b17-05f5-10b7-6a3fa515bfa9@thelounge.net> <58D13598.50403@hesbynett.no>
+ <58D145F9.1080405@youngman.org.uk> <58D14998.1060601@hesbynett.no> <f90b9218-85ef-6af1-fa78-e3641a307566@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <877f3iave6.fsf@notabene.neil.brown.name>
+In-Reply-To: <f90b9218-85ef-6af1-fa78-e3641a307566@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Shaohua Li <shli@kernel.org>, linux-kernel@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: David Brown <david.brown@hesbynett.no>, Wols Lists <antlists@youngman.org.uk>, Reindl Harald <h.reindl@thelounge.net>, Adam Goryachev <mailinglists@websitemanagers.com.au>, Jeff Allison <jeff.allison@allygray.2y.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Mar 22, 2017 at 01:38:09PM +1100, NeilBrown wrote:
-> 
-> Currently only dm and md/raid5 bios trigger trace_block_bio_complete().
-> Now that we have bio_chain(), it is not possible, in general, for a
-> driver to know when the bio is really complete.  Only bio_endio()
-> knows that.
-> 
-> So move the trace_block_bio_complete() call to bio_endio().
+2017-03-21 17:49 GMT+01:00 Phil Turmel <philip@turmel.org>:
+> The correlation is effectively immaterial in a non-degraded raid5 and
+> singly-degraded raid6 because recovery will succeed as long as any two
+> errors are in different 4k block/sector locations.  And for non-degraded
+> raid6, all three UREs must occur in the same block/sector to lose
+> data. Some participants in this discussion need to read the statistical
+> description of this stuff here:
+>
+> http://marc.info/?l=linux-raid&m=139050322510249&w=2
+>
+> As long as you are 'check' scrubbing every so often (I scrub weekly),
+> the odds of catastrophe on raid6 are the odds of something *else* taking
+> out the machine or controller, not the odds of simultaneous drive
+> failures.
 
-This will cause duplicate events for request based drivers.  You'll
-need to have a bio_endio_notrace or similar without that the request
-completion path can call.
+This is true but disk failures happens much more than multiple UREs on
+the same stripe.
+I think that in a RAID6 is much easier to loose data due to multiple
+disk failures.
+
+Last years i've lose a server due to 4 (of 6) disks failures in less
+than an hours during a rebuild.
+
+The first failure was detected in the middle of the night. It was a
+disconnection/reconnaction of a single disks.
+The riconnection triggered a resync. During the resync another disk
+failed. RAID6 recovered even from this double failure
+but at about 60% of rebuild, the third disk failed bringing the whole raid down.
+
+I was waked up by our monitoring system and looking at the server,
+there was also a fourth disk down :)
+
+4 disks down in less than a hour. All disk was enterprise: SAS 15K,
+not desktop drives.
