@@ -1,314 +1,156 @@
-From: heinzm@redhat.com
-Subject: [PATCH 2/2] dm raid: add raid4/5/6 journal mode support
-Date: Wed, 22 Mar 2017 17:44:23 +0100
-Message-ID: <20170322164423.20972-3-heinzm@redhat.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: mdadm: one question about the readonly and readwrite feature
+Date: Thu, 23 Mar 2017 08:55:46 +1100
+Message-ID: <87zigdt1r1.fsf@notabene.neil.brown.name>
+References: <774691e9-6b1e-5141-bc37-6e768c1c8fdc@suse.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <774691e9-6b1e-5141-bc37-6e768c1c8fdc@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: heinzm@redhat.com
+To: Zhilong Liu <zlliu@suse.com>, Jes Sorensen <jes.sorensen@gmail.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From: Heinz Mauelshagen <heinzm@redhat.com>
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Upstream commit 7a771ceac771d009f7203c40b256b0608d7ea2f8
-added journal support to close the raid4/5/6 "write hole".
+On Wed, Mar 22 2017, Zhilong Liu wrote:
 
-Uitilizing prerequisite
-"md: add raid4/5/6 journal mode API (for dm-raid use)",
-add support to switch the journal device cache mode between
-write-through (the current default) and write-back using
-the new r5c_journal_mode_set() API.
+> Hi, Neil;
+>
+>    Excuse me, according to read 'mdadm/tests/ToTest', I'm a little=20
+> confused about "readonly"
+> and "readwrite" feature, and I've no idea how to fix it. Thus I report=20
+> this question and I'm sorry
+> for this long description email.
+>
+> relevant linux/driver/md commit: 260fa034ef7a4ff8b73068b48ac497edd5217491
+>
+>    My question: If the array has been set the MD_CLOSING flag, although=20
+> hasn't removed the sysfs
+> folder because sysfs_remove_group() wasn't invoked, and now, how should=20
+> mdadm continue to
+> control this 'readonly' array?
 
-Mind in case of journal device failures the former 'only' causes
-the "write hole" to reoccur but the latter (i.e. "write-back")
-will cause data loss with dirty cache entries thus requiring
-resilient storage.
+MD_CLOSING should only be set for a short period or time to avoid
+certain races.  After the operation that set it completes, it should be
+cleared.
+It looks like this is a bug that was introduced in
+Commit: af8d8e6f0315 ("md: changes for MD_STILL_CLOSED flag")
+when MD_STILL_CLOSED was renamed to MD_CLOSING.
 
-Signed-off-by: Heinz Mauelshagen <heinzm@redhat.com>
----
- Documentation/device-mapper/dm-raid.txt |  12 +++-
- drivers/md/dm-raid.c                    | 104 ++++++++++++++++++++++++++++----
- 2 files changed, 102 insertions(+), 14 deletions(-)
+If we already had the tests for readonly/readwrite that you are working
+on, we might have caught the bug earlier - so I'm glad you are working
+on these tests..
 
-diff --git a/Documentation/device-mapper/dm-raid.txt b/Documentation/device-mapper/dm-raid.txt
-index 95c4c8d..baaf73c 100644
---- a/Documentation/device-mapper/dm-raid.txt
-+++ b/Documentation/device-mapper/dm-raid.txt
-@@ -170,6 +170,14 @@ The target is named "raid" and it accepts the following parameters:
- 		Takeover/reshape is not possible with a raid4/5/6 journal device;
- 		it has to be deconfigured before requesting these.
- 
-+	[journal_mode <mode>]
-+		This option sets the caching mode an journaled raid4/5/6 raid sets
-+		(see 'journal_dev <dev>' above) to 'writethrough' or 'writeback'.
-+		In case 'writeback' is selected the journal device has to be
-+		resilient and obviously may not suffer from the 'write hole'
-+		problem itself (e.g. use raid1/raid10) to avoid a single
-+		point of failure.
-+
- <#raid_devs>: The number of devices composing the array.
- 	Each device consists of two entries.  The first is the device
- 	containing the metadata (if any); the second is the one containing the
-@@ -254,7 +262,8 @@ recovery.  Here is a fuller description of the individual fields:
- 	<data_offset>   The current data offset to the start of the user data on
- 			each component device of a raid set (see the respective
- 			raid parameter to support out-of-place reshaping).
--	<journal_char>	'A' - active raid4/5/6 journal device.
-+	<journal_char>	'A' - active write-through journal device.
-+			'a' - active write-back journal device.
- 			'D' - dead journal device.
- 			'-' - no journal device.
- 
-@@ -334,3 +343,4 @@ Version History
- 1.10.1  Fix data corruption on reshape request
- 1.11.0  Fix table line argument order
- 	(wrong raid10_copies/raid10_format sequence)
-+1.11.1  Add support for raid4/5/6 journal mode
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index e07185f..0f61bb6 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (C) 2010-2011 Neil Brown
-- * Copyright (C) 2010-2016 Red Hat, Inc. All rights reserved.
-+ * Copyright (C) 2010-2017 Red Hat, Inc. All rights reserved.
-  *
-  * This file is released under the GPL.
-  */
-@@ -79,7 +79,10 @@ struct raid_dev {
- #define __CTR_FLAG_RAID10_USE_NEAR_SETS 14 /* 2 */ /* Only with raid10! */
- 
- /* New for v1.10.0 */
--#define __CTR_FLAG_JOURNAL_DEV		15 /* 2 */ /* Only with raid4/5/6! */
-+#define __CTR_FLAG_JOURNAL_DEV		15 /* 2 */ /* Only with raid4/5/6 (journal device)! */
-+
-+/* New for v1.11.1 */
-+#define __CTR_FLAG_JOURNAL_MODE		16 /* 2 */ /* Only with raid4/5/6 (journal mode)! */
- 
- /*
-  * Flags for rs->ctr_flags field.
-@@ -100,6 +103,7 @@ struct raid_dev {
- #define CTR_FLAG_DATA_OFFSET		(1 << __CTR_FLAG_DATA_OFFSET)
- #define CTR_FLAG_RAID10_USE_NEAR_SETS	(1 << __CTR_FLAG_RAID10_USE_NEAR_SETS)
- #define CTR_FLAG_JOURNAL_DEV		(1 << __CTR_FLAG_JOURNAL_DEV)
-+#define CTR_FLAG_JOURNAL_MODE		(1 << __CTR_FLAG_JOURNAL_MODE)
- 
- #define RESUME_STAY_FROZEN_FLAGS (CTR_FLAG_DELTA_DISKS | CTR_FLAG_DATA_OFFSET)
- 
-@@ -175,7 +179,8 @@ struct raid_dev {
- 				 CTR_FLAG_REGION_SIZE | \
- 				 CTR_FLAG_DELTA_DISKS | \
- 				 CTR_FLAG_DATA_OFFSET | \
--				 CTR_FLAG_JOURNAL_DEV)
-+				 CTR_FLAG_JOURNAL_DEV | \
-+				 CTR_FLAG_JOURNAL_MODE)
- 
- #define RAID6_VALID_FLAGS	(CTR_FLAG_SYNC | \
- 				 CTR_FLAG_REBUILD | \
-@@ -186,7 +191,8 @@ struct raid_dev {
- 				 CTR_FLAG_REGION_SIZE | \
- 				 CTR_FLAG_DELTA_DISKS | \
- 				 CTR_FLAG_DATA_OFFSET | \
--				 CTR_FLAG_JOURNAL_DEV)
-+				 CTR_FLAG_JOURNAL_DEV | \
-+				 CTR_FLAG_JOURNAL_MODE)
- /* ...valid options definitions per raid level */
- 
- /*
-@@ -239,6 +245,7 @@ struct raid_set {
- 	struct journal_dev {
- 		struct dm_dev *dev;
- 		struct md_rdev rdev;
-+		int mode;
- 	} journal_dev;
- 
- 	struct raid_dev dev[0];
-@@ -326,6 +333,7 @@ static struct arg_name_flag {
- 	{ CTR_FLAG_DELTA_DISKS, "delta_disks"},
- 	{ CTR_FLAG_RAID10_USE_NEAR_SETS, "raid10_use_near_sets"},
- 	{ CTR_FLAG_JOURNAL_DEV, "journal_dev" },
-+	{ CTR_FLAG_JOURNAL_MODE, "journal_mode" },
- };
- 
- /* Return argument name string for given @flag */
-@@ -344,6 +352,39 @@ static const char *dm_raid_arg_name_by_flag(const uint32_t flag)
- 	return NULL;
- }
- 
-+/* Define correlation of raid456 journal cache modes and dm-raid target line parameters */
-+static struct {
-+	const int mode;
-+	const char *param;
-+} _raid456_journal_mode[] = {
-+	{ R5C_JOURNAL_MODE_WRITE_THROUGH , "writethrough" },
-+	{ R5C_JOURNAL_MODE_WRITE_BACK    , "writeback" }
-+};
-+
-+/* Return MD raid4/5/6 journal mode for dm @journal_mode one */
-+static int dm_raid_journal_mode_to_md(const char *mode)
-+{
-+	int m = ARRAY_SIZE(_raid456_journal_mode);
-+
-+	while (m--)
-+		if (!strcasecmp(mode, _raid456_journal_mode[m].param))
-+			return _raid456_journal_mode[m].mode;
-+
-+	return -EINVAL;
-+}
-+
-+/* Return dm-raid raid4/5/6 journal mode string for @mode */
-+static const char *md_journal_mode_to_dm_raid(const int mode)
-+{
-+	int m = ARRAY_SIZE(_raid456_journal_mode);
-+
-+	while (m--)
-+		if (mode == _raid456_journal_mode[m].mode)
-+			return _raid456_journal_mode[m].param;
-+
-+	return "unknown";
-+}
-+
- /*
-  * Bool helpers to test for various raid levels of a raid set.
-  * It's level as reported by the superblock rather than
-@@ -1183,7 +1224,7 @@ static int parse_raid_params(struct raid_set *rs, struct dm_arg_set *as,
- 			continue;
- 		}
- 
--		/* "journal_dev dev" */
-+		/* "journal_dev <dev>" */
- 		if (!strcasecmp(key, dm_raid_arg_name_by_flag(CTR_FLAG_JOURNAL_DEV))) {
- 			int r;
- 			struct md_rdev *jdev;
-@@ -1211,10 +1252,32 @@ static int parse_raid_params(struct raid_set *rs, struct dm_arg_set *as,
- 				rs->ti->error = "No space for raid4/5/6 journal";
- 				return -ENOSPC;
- 			}
-+			rs->journal_dev.mode = R5C_JOURNAL_MODE_WRITE_THROUGH;
- 			set_bit(Journal, &jdev->flags);
- 			continue;
- 		}
- 
-+		/* "journal_mode <mode>" ("journal_dev" mandatory!) */
-+		if (!strcasecmp(key, dm_raid_arg_name_by_flag(CTR_FLAG_JOURNAL_MODE))) {
-+			int r;
-+
-+			if (!test_bit(__CTR_FLAG_JOURNAL_DEV, &rs->ctr_flags)) {
-+				rs->ti->error = "raid4/5/6 'journal_mode' is invalid without 'journal_dev'";
-+				return -EINVAL;
-+			}
-+			if (test_and_set_bit(__CTR_FLAG_JOURNAL_MODE, &rs->ctr_flags)) {
-+				rs->ti->error = "Only one raid4/5/6 'journal_mode' argument allowed";
-+				return -EINVAL;
-+			}
-+			r = dm_raid_journal_mode_to_md(arg);
-+			if (r < 0) {
-+				rs->ti->error = "Invalid 'journal_mode' argument";
-+				return r;
-+			}
-+			rs->journal_dev.mode = r;
-+			continue;
-+		}
-+
- 		/*
- 		 * Parameters with number values from here on.
- 		 */
-@@ -3076,6 +3139,16 @@ static int raid_ctr(struct dm_target *ti, unsigned int argc, char **argv)
- 	rs->callbacks.congested_fn = raid_is_congested;
- 	dm_table_add_target_callbacks(ti->table, &rs->callbacks);
- 
-+	/* If raid4/5/6 journal mode explictely requested (only possible with journal dev) -> set it */
-+	if (test_bit(__CTR_FLAG_JOURNAL_MODE, &rs->ctr_flags)) {
-+		r = r5c_journal_mode_set(&rs->md, rs->journal_dev.mode);
-+		if (r) {
-+			ti->error = "Failed to set raid4/5/6 journal mode";
-+			mddev_unlock(&rs->md);
-+			goto bad_journal_mode_set;
-+		}
-+	}
-+
- 	mddev_suspend(&rs->md);
- 
- 	/* Try to adjust the raid4/5/6 stripe cache size to the stripe size */
-@@ -3109,6 +3182,7 @@ static int raid_ctr(struct dm_target *ti, unsigned int argc, char **argv)
- 	mddev_unlock(&rs->md);
- 	return 0;
- 
-+bad_journal_mode_set:
- bad_stripe_cache:
- bad_check_reshape:
- 	md_stop(&rs->md);
-@@ -3180,18 +3254,18 @@ static const char *decipher_sync_action(struct mddev *mddev)
-  * Status characters:
-  *
-  *  'D' = Dead/Failed raid set component or raid4/5/6 journal device
-- *  'a' = Alive but not in-sync
-- *  'A' = Alive and in-sync raid set component or alive raid4/5/6 journal device
-+ *  'a' = Alive but not in-sync raid set component _or_ alive raid4/5/6 'write_back' journal device
-+ *  'A' = Alive and in-sync raid set component _or_ alive raid4/5/6 'write_through' journal device
-  *  '-' = Non-existing device (i.e. uspace passed '- -' into the ctr)
-  */
--static const char *__raid_dev_status(struct md_rdev *rdev, bool array_in_sync)
-+static const char *__raid_dev_status(struct raid_set *rs, struct md_rdev *rdev, bool array_in_sync)
- {
- 	if (!rdev->bdev)
- 		return "-";
- 	else if (test_bit(Faulty, &rdev->flags))
- 		return "D";
- 	else if (test_bit(Journal, &rdev->flags))
--		return "A";
-+		return (rs->journal_dev.mode == R5C_JOURNAL_MODE_WRITE_THROUGH) ? "A" : "a";
- 	else if (!array_in_sync || !test_bit(In_sync, &rdev->flags))
- 		return "a";
- 	else
-@@ -3315,7 +3389,7 @@ static void raid_status(struct dm_target *ti, status_type_t type,
- 
- 		/* HM FIXME: do we want another state char for raid0? It shows 'D'/'A'/'-' now */
- 		for (i = 0; i < rs->raid_disks; i++)
--			DMEMIT(__raid_dev_status(&rs->dev[i].rdev, array_in_sync));
-+			DMEMIT(__raid_dev_status(rs, &rs->dev[i].rdev, array_in_sync));
- 
- 		/*
- 		 * In-sync/Reshape ratio:
-@@ -3366,7 +3440,7 @@ static void raid_status(struct dm_target *ti, status_type_t type,
- 		 * v1.10.0+:
- 		 */
- 		DMEMIT(" %s", test_bit(__CTR_FLAG_JOURNAL_DEV, &rs->ctr_flags) ?
--			      __raid_dev_status(&rs->journal_dev.rdev, 0) : "-");
-+			      __raid_dev_status(rs, &rs->journal_dev.rdev, 0) : "-");
- 		break;
- 
- 	case STATUSTYPE_TABLE:
-@@ -3381,7 +3455,8 @@ static void raid_status(struct dm_target *ti, status_type_t type,
- 				  write_mostly_params +
- 				  hweight32(rs->ctr_flags & CTR_FLAG_OPTIONS_NO_ARGS) +
- 				  hweight32(rs->ctr_flags & CTR_FLAG_OPTIONS_ONE_ARG) * 2 +
--				  (test_bit(__CTR_FLAG_JOURNAL_DEV, &rs->ctr_flags) ? 2 : 0);
-+				  (test_bit(__CTR_FLAG_JOURNAL_DEV, &rs->ctr_flags) ? 2 : 0) +
-+				  (test_bit(__CTR_FLAG_JOURNAL_MODE, &rs->ctr_flags) ? 2 : 0);
- 
- 		/* Emit table line */
- 		/* This has to be in the documented order for userspace! */
-@@ -3433,6 +3508,9 @@ static void raid_status(struct dm_target *ti, status_type_t type,
- 		if (test_bit(__CTR_FLAG_JOURNAL_DEV, &rs->ctr_flags))
- 			DMEMIT(" %s %s", dm_raid_arg_name_by_flag(CTR_FLAG_JOURNAL_DEV),
- 					__get_dev_name(rs->journal_dev.dev));
-+		if (test_bit(__CTR_FLAG_JOURNAL_MODE, &rs->ctr_flags))
-+			DMEMIT(" %s %s", dm_raid_arg_name_by_flag(CTR_FLAG_JOURNAL_MODE),
-+					 md_journal_mode_to_dm_raid(rs->journal_dev.mode));
- 		DMEMIT(" %d", rs->raid_disks);
- 		for (i = 0; i < rs->raid_disks; i++)
- 			DMEMIT(" %s %s", __get_dev_name(rs->dev[i].meta_dev),
-@@ -3793,7 +3871,7 @@ static void raid_resume(struct dm_target *ti)
- 
- static struct target_type raid_target = {
- 	.name = "raid",
--	.version = {1, 11, 0},
-+	.version = {1, 11, 1},
- 	.module = THIS_MODULE,
- 	.ctr = raid_ctr,
- 	.dtr = raid_dtr,
--- 
-2.9.3
+Thanks,
+NeilBrown
 
+
+>    Of course, once we cannot operate the array, the 'readwrite' feature=20
+> would be never worked.
+>
+> Test step:
+> # ./mdadm -CR /dev/md0 -b internal -l1 -n2 /dev/loop[0-1] --assume-clean
+> # ./mdadm -o /dev/mdX
+>
+> # in md.h
+> enum mddev_flags {
+>          MD_ARRAY_FIRST_USE,     /* First use of array, needs=20
+> initialization */
+>          MD_CLOSING,             /* If set, we are closing the array, do=
+=20
+> not open it then */
+>
+> 1. In mdadm tool:
+>    the func: Manage_ro(dv->devname, mdfd, -1) would be never invoked=20
+> once the array has been
+> set 'readonly' before. the open_mddev() cannot get a valid file=20
+> descriptor any more. Most of mdadm
+> commands would be failure, I have to execute the "echo clear >=20
+> /sys/block/mdX/md/array_state".
+>
+> # refer to mdadm.c
+> ... ...
+> static int misc_list(struct mddev_dev *devlist,
+>                       struct mddev_ident *ident,
+>                       char *dump_directory,
+>                       struct supertype *ss, struct context *c)
+> {
+> ... ...
+>                  switch(dv->devname[0] =3D=3D '/') {
+>                          case 0:
+>                                  mdfd =3D open_dev(dv->devname);
+>                                  if (mdfd >=3D 0) break;
+>                          case 1:
+>                                  mdfd =3D open_mddev(dv->devname, 1);
+>                  }
+>                  if (mdfd>=3D0) {
+>                          switch(dv->disposition) {
+>                          case 'R':
+>                                  c->runstop =3D 1;
+>                                  rv |=3D Manage_run(dv->devname, mdfd, c)=
+;=20
+> break;
+>                          case 'S':
+>                                  rv |=3D Manage_stop(dv->devname, mdfd,=20
+> c->verbose, 0); break;
+>                          case 'o':
+>                                  rv |=3D Manage_ro(dv->devname, mdfd, 1);=
+=20
+> break;
+>                          case 'w':
+>                                  rv |=3D Manage_ro(dv->devname, mdfd, -1)=
+;=20
+> break;
+>                          }
+> 2. in md driver:
+> For readonly, the code path is:
+> ioctl(fd, STOP_ARRAY_RO, NULL)  - - > set_bit(MD_CLOSING, &mddev->flags)=
+=20
+> - - > md_set_readonly()
+>
+> cut a piece of code: - -> md_set_readonly() of md.c:
+> ... ...
+>          if (mddev->pers) {
+>                  __md_stop_writes(mddev);
+>
+>                  err  =3D -ENXIO;
+>                  if (mddev->ro=3D=3D1)
+>                          goto out;
+>                  mddev->ro =3D 1;
+>                  set_disk_ro(mddev->gendisk, 1);
+>                  clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+>                  set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);   - - >=20
+> I think it did nothing once readonly has been set.
+>                  md_wakeup_thread(mddev->thread);
+>                  sysfs_notify_dirent_safe(mddev->sysfs_state);
+>                  err =3D 0;
+> ... ...
+>
+> Thanks for your patience,
+> -Zhilong
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljS8uIACgkQOeye3VZi
+gbmV1Q//b/9JLRuW2hvimbkuX+M/LQfwZQ+SZIveM3nn9OPSF5FPJDcqEih+hmkL
+TT4ecr+0jMkDejX32pe8hK9cfBufEPZh3vkknHapD+yQ0bqH78dATascfBVFFwwj
+yBs3dBW/rNmYu9jWzMqqVEt3VIv4fFz5mpMDaVc0T79qdH/iDq5vdrefjvZ1ERTh
+fWD5r8tuecIl9v8B0q4UgWewJoJ55QNK1kLUMVavnaUjnLvvoIKdn/hz64OI+Fhv
+WhYk7xg/11gTGNDpXqcI8OykXbvWKBCztSMY7v9du0zM91Y/5v07ixuvsD2+3psv
+jFbL96jkBJTEbOudKtA191BY/xwck5FcFxq56tG5aL6m37Y+gPaSgizlK/CXObjx
+WwSr7v+wa/SThrHFHFDm1lKp/UkREn4w1KeY/5Nj8r4ma9P5OaVTRrnAXuMUUqXo
+wNzUMEntZO09BRKwEiLKbP4Pr/dv01/W1LYYnTeq3eIiqqvsfW3O609fWv7v0MHN
+290u/EN4Jxj0UlUGh7zqnDwpMDIpU7+p8aRGavl0xBKDYpqqU3FM1K4WR+WmxXF0
+5diUmCDYsaUrZzFzaR1sGAs9anVe6gId3qPGqbtyZAw8xpjsUlEmdbRkkz/8FsFf
+rlxMKYti6WgKzIFe4DHO/vf4sHmtDePhOSCQzVd1QcheaFLPH3A=
+=N6s3
+-----END PGP SIGNATURE-----
+--=-=-=--
