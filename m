@@ -1,13 +1,13 @@
 From: NeilBrown <neilb@suse.com>
-Subject: REALLY Fix bug in [md PATCH 02/15] md/raid5: simplfy delaying of writes while metadata is updated.
-Date: Wed, 22 Mar 2017 13:29:32 +1100
-Message-ID: <87inn2avsj.fsf@notabene.neil.brown.name>
-References: <148954692173.18641.1294690639716682540.stgit@noble> <148954711228.18641.2048575896322496918.stgit@noble> <87tw6may1v.fsf@notabene.neil.brown.name>
+Subject: IMPROVEMENT for Improvement for [md PATCH 15/15] MD: use per-cpu counter for writes_pending
+Date: Wed, 22 Mar 2017 13:34:20 +1100
+Message-ID: <87d1daavkj.fsf@notabene.neil.brown.name>
+References: <148954692173.18641.1294690639716682540.stgit@noble> <148954711465.18641.8222940807591984069.stgit@noble> <87lgryaxdq.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87tw6may1v.fsf@notabene.neil.brown.name>
+In-Reply-To: <87lgryaxdq.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org, hch@lst.de
@@ -18,53 +18,60 @@ Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-Using r1_bio->sector in call_bio_endio is more
-obviously-correct than bio->bi_iter.bi_sector,
-though both should have the same value.
+__ref_is_percpu() is documented as an internal interface,
+so best not to use it.
+We don't really need it, as ->sync_checkers is always 0
+when the writes_pending is in per-cpu mode.
 
-The inc_pending() call in handle_read_error() was missing.
-One should always accompany a bio_inc_remaining.
+So change to test ->sync_checkers, and update comments to match.
 
 Signed-off-by: NeilBrown <neilb@suse.com>
 =2D--
 
-Sorry, I left an unused variable...
+Sorry, there was an undefined variable in that version.
+
+This one is better.
+
 NeilBrown
 
 
- drivers/md/raid1.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/md/md.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index e566407b196f..2e2043cdcbf2 100644
-=2D-- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -247,7 +247,6 @@ static void call_bio_endio(struct r1bio *r1_bio)
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index adf2b5bdfd67..aeed8adeb5f1 100644
+=2D-- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -2266,8 +2266,8 @@ static bool set_in_sync(struct mddev *mddev)
+ 		    percpu_ref_is_zero(&mddev->writes_pending)) {
+ 			mddev->in_sync =3D 1;
+ 			/*
+=2D			 * Ensure in_sync is visible before switch back
+=2D			 * to percpu
++			 * Ensure ->in_sync is visible before we clear
++			 * ->sync_checkers.
+ 			 */
+ 			smp_mb();
+ 			set_bit(MD_SB_CHANGE_CLEAN, &mddev->sb_flags);
+@@ -7901,7 +7901,6 @@ EXPORT_SYMBOL(md_done_sync);
+  */
+ void md_write_start(struct mddev *mddev, struct bio *bi)
  {
- 	struct bio *bio =3D r1_bio->master_bio;
- 	struct r1conf *conf =3D r1_bio->mddev->private;
-=2D	sector_t bi_sector =3D bio->bi_iter.bi_sector;
-=20
- 	if (!test_bit(R1BIO_Uptodate, &r1_bio->state))
- 		bio->bi_error =3D -EIO;
-@@ -257,7 +256,7 @@ static void call_bio_endio(struct r1bio *r1_bio)
- 	 * Wake up any possible resync thread that waits for the device
- 	 * to go idle.
- 	 */
-=2D	allow_barrier(conf, bi_sector);
-+	allow_barrier(conf, r1_bio->sector);
- }
-=20
- static void raid_end_bio_io(struct r1bio *r1_bio)
-@@ -2543,6 +2542,7 @@ static void handle_read_error(struct r1conf *conf, st=
-ruct r1bio *r1_bio)
-=20
- 			r1_bio =3D alloc_r1bio(mddev, mbio, sectors_handled);
- 			set_bit(R1BIO_ReadError, &r1_bio->state);
-+			inc_pending(conf, r1_bio->sector);
-=20
- 			goto read_more;
- 		} else {
+=2D	unsigned long __percpu *notused;
+ 	int did_change =3D 0;
+ 	if (bio_data_dir(bi) !=3D WRITE)
+ 		return;
+@@ -7920,7 +7919,7 @@ void md_write_start(struct mddev *mddev, struct bio *=
+bi)
+ 	smp_mb(); /* Match smp_mb in set_in_sync() */
+ 	if (mddev->safemode =3D=3D 1)
+ 		mddev->safemode =3D 0;
+=2D	if (mddev->in_sync || !__ref_is_percpu(&mddev->writes_pending, &notused=
+)) {
++	if (mddev->in_sync || !mddev->sync_checkers) {
+ 		spin_lock(&mddev->lock);
+ 		if (mddev->in_sync) {
+ 			mddev->in_sync =3D 0;
 =2D-=20
 2.12.0
 
@@ -74,18 +81,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljR4YwACgkQOeye3VZi
-gbmMUhAAm3oTG+rHHxpmeeEpqgz+KepHs4q8XZiFbsEi0PtwHY5WfOJfROt64Fz4
-88BLINNz8CAScSP8yM7IErad1sbCB35JbQzqT9kQIxI2ESEC7yi0ElRLH4+3mb/u
-a8ev9MVfCAok4q0S4wtcsqg7bGllk0LlAxOmncjuPb4pGYQZxylfMq/y9LrCdL0L
-V8hSIf8SagqvVbD43/Ct72Q5obTS2NQ2L1UlCxXvlwVfakYayMpFoQngd1wRV4Uk
-Lw1DJvO0wV76NzdBrmbVlJ+nlY0GViZ0RFLnh6rvPrlpF6KN58XCNvVFdV+vsLd0
-EaLsjwAzppYrUYjLHdhDHP/7nSEx0lolqtafkHzoBvnxWzmrLPNCNY8krH6CPmlV
-orMZQBhRanJP+rL6O1EyY1+S5G+xmZaL6viQz6JillR6NrAddXMxsdTdVi/2fMna
-QzK9IF/x3K+wvURA2jnyd0z/l5XmWLgsdS5GwKfpBpRBzLw+oui1e1O/za8xwQil
-tWqAdERLZID5Bg3XRKtlj1gbDKu4Iz9gewcFZClrSE8jgE28TtdEIQUhHHKoj1oa
-VSV8sSt9KglUal5zFM8fuVcknmMo7XkA2iAr362OrEztpjNpMPGgljgsEvj5wxy3
-d8ONwXIRi+YWUQ127vEDvVcDXEMR0vMSJL7craaxVCkO8X23ySk=
-=ok5+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljR4qwACgkQOeye3VZi
+gblzmQ/+NMvgVJYpyTXUBvRYgCCwRr+yOzkBW8FzCt7SXkHZBrKQWd/n38eU2g+W
+EJmtlemdMPayWokIGB0ogGkGOyDni2qqeK7JG0lxgw6UU+4YyDYE0XZ7UToYmGL2
++oJVQBVuKFCI72DSE8EotlF8E3AmtDaDH8zjmIR00r4LiSK5K07UH5Q8f1QeG9Fp
+pZBrqv/qtXBSKCjv08le0mFG2rH/BvD8EkBxq6f3Q7iLXgySSLCKt294zlGHeCSg
+1UxlMeNbaZm+7/5VMCl9KLU79hIzjgySNHD6sz9pEM+oDlyiORzkXhbKAnax/kjm
+pQffEOx4iVyNfeHn6Zh//wkAAf951tCSW++yq3hFZxDNdZAh1AZjxHpQvyP18tpe
+Hq5zXLMmasRvTU7AHrHZHOsZlQdmJkRyDeEVJo77VbHT4rC2TrH8EzuIfO73ZQOT
+PxYzVQKnxDxjsbcKHLsHbpBkqcDLO9fJyNbHHURneHVrCz1auc+ahqpsZ16D20Km
+PcQbxINCmPlFyNzvvi1UqA7vCAeTMWmdT/zo7RASfedMFHRJWCah8i9SZE3N6IwR
+W3qdM4ID4ooarmhx5wfv4t9SUZ3N3dKb0WwMOeHhLtxEJR2mnQT4EZHJ939/r/Zf
+S8R/0w26JSAhtyq2XMbiNnh14TIAGCoo1bhbuFB4xhWpG8IfCJU=
+=M9/B
 -----END PGP SIGNATURE-----
 --=-=-=--
