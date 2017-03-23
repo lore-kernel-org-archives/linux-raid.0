@@ -1,278 +1,178 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [PATCH v2] block: trace completion of all bios.
-Date: Thu, 23 Mar 2017 17:29:02 +1100
-Message-ID: <87shm4a4lt.fsf@notabene.neil.brown.name>
-References: <877f3iave6.fsf@notabene.neil.brown.name>
-	<20170322125149.GA29606@infradead.org>
+Subject: Re: mdadm: one question about the readonly and readwrite feature
+Date: Thu, 23 Mar 2017 18:06:08 +1100
+Message-ID: <87poh8a2vz.fsf@notabene.neil.brown.name>
+References: <774691e9-6b1e-5141-bc37-6e768c1c8fdc@suse.com> <87zigdt1r1.fsf@notabene.neil.brown.name> <58D32AE2.1030303@suse.com> <871stobqvl.fsf@notabene.neil.brown.name> <600b22b5-762e-da9c-0d20-9023de4361b3@suse.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============8506014006343438143=="
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20170322125149.GA29606@infradead.org>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-raid@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Alasdair Kergon <agk@redhat.com>
-List-Id: linux-raid.ids
-
---===============8506014006343438143==
 Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+        micalg=pgp-sha256; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <600b22b5-762e-da9c-0d20-9023de4361b3@suse.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Zhilong Liu <zlliu@suse.com>, Guoqing Jiang <gqjiang@suse.com>, Jes Sorensen <jes.sorensen@gmail.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
+On Thu, Mar 23 2017, Zhilong Liu wrote:
 
-Currently only dm and md/raid5 bios trigger trace_block_bio_complete().
-Now that we have bio_chain(), it is not possible, in general, for a
-driver to know when the bio is really complete.  Only bio_endio()
-knows that.
+> On 03/23/2017 11:42 AM, NeilBrown wrote:
+>> On Thu, Mar 23 2017, Guoqing Jiang wrote:
+>>
+>>> On 03/23/2017 05:55 AM, NeilBrown wrote:
+>>>> On Wed, Mar 22 2017, Zhilong Liu wrote:
+>>>>
+>>>>> Hi, Neil;
+>>>>>
+>>>>>      Excuse me, according to read 'mdadm/tests/ToTest', I'm a little
+>>>>> confused about "readonly"
+>>>>> and "readwrite" feature, and I've no idea how to fix it. Thus I report
+>>>>> this question and I'm sorry
+>>>>> for this long description email.
+>>>>>
+>>>>> relevant linux/driver/md commit: 260fa034ef7a4ff8b73068b48ac497edd521=
+7491
+>>>>>
+>>>>>      My question: If the array has been set the MD_CLOSING flag, alth=
+ough
+>>>>> hasn't removed the sysfs
+>>>>> folder because sysfs_remove_group() wasn't invoked, and now, how shou=
+ld
+>>>>> mdadm continue to
+>>>>> control this 'readonly' array?
+>>>> MD_CLOSING should only be set for a short period or time to avoid
+>>>> certain races.  After the operation that set it completes, it should be
+>>>> cleared.
+>>>> It looks like this is a bug that was introduced in
+>>>> Commit: af8d8e6f0315 ("md: changes for MD_STILL_CLOSED flag")
+>>>> when MD_STILL_CLOSED was renamed to MD_CLOSING.
+>>> I guess it is because we set MD_CLOSING for STOP_ARRAY_RO cmd, then com=
+mit
+>>> af8d8e6f0315 ("md: changes for MD_STILL_CLOSED flag") did below changes:
+>>>
+>>> @@ -7075,9 +7073,13 @@ static int md_open(struct block_device *bdev,
+>>> fmode_t mode)
+>>>           if ((err =3D mutex_lock_interruptible(&mddev->open_mutex)))
+>>>                   goto out;
+>>>
+>>> +       if (test_bit(MD_CLOSING, &mddev->flags)) {
+>>> +               mutex_unlock(&mddev->open_mutex);
+>>> +               return -ENODEV;
+>>> +       }
+>>>
+>>> Maybe we need to differentiate "STOP_ARRAY" and "STOP_ARRAY_RO", or
+>>> revert above
+>>> changes.
+>>>
+>> No, your missing the point.
+>> What you describe above would change the effect of what MD_CLOSING does.
+>> We don't want to change it.  It is good.
+>> The problem is that when it has finished doing what it needs to do,
+>> we aren't clearing it. That is simply a bug.
+>>
+>> So something like this is needed.
+>
+> Sorry again, I have another question in md_set_readonly() of md.c
+> Although it has stopped all md writes operations, and I still prefer
+> to do set_disk_ro after md_wakeup_thread. refer to following code.
 
-So move the trace_block_bio_complete() call to bio_endio().
+Why?
+How do the actions performed by set_disk_ro() interact with the actions
+performed by md_wakeup_thread()?
 
-Now trace_block_bio_complete() pairs with trace_block_bio_queue().
-Any bio for which a 'queue' event is traced, will subsequently
-generate a 'complete' event.
+I'm not saying the code shouldn't be changed, just that there needs to
+be a clear explanation of the benefit.
 
-There are a few cases where completion tracing is not wanted.
-1/ If blk_update_request() has already generated a completion
-   trace event at the 'request' level, there is no point generating
-   one at the bio level too.  In this case the bi_sector and bi_size
-   will have changed, so the bio level event would be wrong
+NeilBrown
 
-2/ If the bio hasn't actually been queued yet, but is being aborted
-   early, then a trace event could be confusing.  Some filesystems
-   call bio_endio() and will need to use a different interface to
-   avoid tracing
 
-3/ The bio_integrity code interposes itself by replacing bi_end_io,
-   then restores it and calls bio_endio() again.  This would produce
-   two identical trace events if left like that.
-
-To handle these, we provide bio_endio_notrace().  This patch only adds
-uses of this in core code.  Separate patches will be needed to update
-the filesystems to avoid tracing.
-
-Signed-off-by: NeilBrown <neilb@suse.com>
-=2D--
- block/bio-integrity.c |  4 ++--
- block/bio.c           | 46 ++++++++++++++++++++++++++++++++++++++++++++++
- block/blk-core.c      |  2 +-
- drivers/md/dm.c       |  1 -
- drivers/md/raid5.c    |  8 --------
- include/linux/bio.h   |  1 +
- 6 files changed, 50 insertions(+), 12 deletions(-)
-
-diff --git a/block/bio-integrity.c b/block/bio-integrity.c
-index 5384713d48bc..28581e2f68fb 100644
-=2D-- a/block/bio-integrity.c
-+++ b/block/bio-integrity.c
-@@ -370,7 +370,7 @@ static void bio_integrity_verify_fn(struct work_struct =
-*work)
+>
+> cut the piece of code:
+> ... ...
+> static int md_set_readonly(struct mddev *mddev, struct block_device *bdev)
+> {
+> ... ...
+>          if (mddev->pers) {
+>                  __md_stop_writes(mddev);
+>
+>                  err  =3D -ENXIO;
+>                  if (mddev->ro=3D=3D1)
+>                          goto out;
+>                  mddev->ro =3D 1;
+>                  set_disk_ro(mddev->gendisk, 1);         ## --> I prefer=
 =20
- 	/* Restore original bio completion handler */
- 	bio->bi_end_io =3D bip->bip_end_io;
-=2D	bio_endio(bio);
-+	bio_endio_notrace(bio);
- }
-=20
- /**
-@@ -397,7 +397,7 @@ void bio_integrity_endio(struct bio *bio)
- 	 */
- 	if (bio->bi_error) {
- 		bio->bi_end_io =3D bip->bip_end_io;
-=2D		bio_endio(bio);
-+		bio_endio_notrace(bio);
-=20
- 		return;
- 	}
-diff --git a/block/bio.c b/block/bio.c
-index 5eec5e08417f..c8e5d24abd52 100644
-=2D-- a/block/bio.c
-+++ b/block/bio.c
-@@ -1811,6 +1811,45 @@ static inline bool bio_remaining_done(struct bio *bi=
-o)
- }
-=20
- /**
-+ * bio_endio_notrace - end I/O on a bio without tracing
-+ * @bio:	bio
-+ *
-+ * Description:
-+ *   bio_endio_notrace() will end I/O on the whole bio.
-+ *   bio_endio_notrace() should only be call if a completion trace
-+ *   event is not needed.  This can be the case if a request-level
-+ *   completion event has already been generated, if the bio is
-+ *   being completed early, before it was even queued.
-+ *
-+ **/
-+void bio_endio_notrace(struct bio *bio)
-+{
-+again:
-+	if (!bio_remaining_done(bio))
-+		return;
-+
-+	/*
-+	 * Need to have a real endio function for chained bios, otherwise
-+	 * various corner cases will break (like stacking block devices that
-+	 * save/restore bi_end_io) - however, we want to avoid unbounded
-+	 * recursion and blowing the stack. Tail call optimization would
-+	 * handle this, but compiling with frame pointers also disables
-+	 * gcc's sibling call optimization.
-+	 */
-+	if (bio->bi_end_io =3D=3D bio_chain_endio) {
-+		bio =3D __bio_chain_endio(bio);
-+		goto again;
-+	}
-+
-+	if (bio->bi_bdev)
-+		trace_block_bio_complete(bdev_get_queue(bio->bi_bdev),
-+					 bio, bio->bi_error);
-+	if (bio->bi_end_io)
-+		bio->bi_end_io(bio);
-+}
-+EXPORT_SYMBOL(bio_endio_notrace);
-+
-+/**
-  * bio_endio - end I/O on a bio
-  * @bio:	bio
-  *
-@@ -1818,6 +1857,10 @@ static inline bool bio_remaining_done(struct bio *bi=
-o)
-  *   bio_endio() will end I/O on the whole bio. bio_endio() is the preferr=
-ed
-  *   way to end I/O on a bio. No one should call bi_end_io() directly on a
-  *   bio unless they own it and thus know that it has an end_io function.
-+ *
-+ *   bio_endio() can be called several times on a bio that has been chained
-+ *   using bio_chain().  The ->bi_end_io() function will only be call the
-+ *   time.  At this point the BLK_TA_COMPLETE tracing event will be genera=
-ted.
-  **/
- void bio_endio(struct bio *bio)
- {
-@@ -1838,6 +1881,9 @@ void bio_endio(struct bio *bio)
- 		goto again;
- 	}
-=20
-+	if (bio->bi_bdev)
-+		trace_block_bio_complete(bdev_get_queue(bio->bi_bdev),
-+					 bio, bio->bi_error);
- 	if (bio->bi_end_io)
- 		bio->bi_end_io(bio);
- }
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 0eeb99ef654f..b6c76580a796 100644
-=2D-- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -142,7 +142,7 @@ static void req_bio_endio(struct request *rq, struct bi=
-o *bio,
-=20
- 	/* don't actually finish bio if it's part of flush sequence */
- 	if (bio->bi_iter.bi_size =3D=3D 0 && !(rq->rq_flags & RQF_FLUSH_SEQ))
-=2D		bio_endio(bio);
-+		bio_endio_notrace(bio);
- }
-=20
- void blk_dump_rq_flags(struct request *rq, char *msg)
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index f4ffd1eb8f44..f5f09ace690a 100644
-=2D-- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -810,7 +810,6 @@ static void dec_pending(struct dm_io *io, int error)
- 			queue_io(md, bio);
- 		} else {
- 			/* done with normal IO or empty flush */
-=2D			trace_block_bio_complete(md->queue, bio, io_error);
- 			bio->bi_error =3D io_error;
- 			bio_endio(bio);
- 		}
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 9a3b7da34137..f684cb566721 100644
-=2D-- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5141,8 +5141,6 @@ static void raid5_align_endio(struct bio *bi)
- 	rdev_dec_pending(rdev, conf->mddev);
-=20
- 	if (!error) {
-=2D		trace_block_bio_complete(bdev_get_queue(raid_bi->bi_bdev),
-=2D					 raid_bi, 0);
- 		bio_endio(raid_bi);
- 		if (atomic_dec_and_test(&conf->active_aligned_reads))
- 			wake_up(&conf->wait_for_quiescent);
-@@ -5727,10 +5725,6 @@ static void raid5_make_request(struct mddev *mddev, =
-struct bio * bi)
- 		md_write_end(mddev);
- 	remaining =3D raid5_dec_bi_active_stripes(bi);
- 	if (remaining =3D=3D 0) {
-=2D
-=2D
-=2D		trace_block_bio_complete(bdev_get_queue(bi->bi_bdev),
-=2D					 bi, 0);
- 		bio_endio(bi);
- 	}
- }
-@@ -6138,8 +6132,6 @@ static int  retry_aligned_read(struct r5conf *conf, s=
-truct bio *raid_bio)
- 	}
- 	remaining =3D raid5_dec_bi_active_stripes(raid_bio);
- 	if (remaining =3D=3D 0) {
-=2D		trace_block_bio_complete(bdev_get_queue(raid_bio->bi_bdev),
-=2D					 raid_bio, 0);
- 		bio_endio(raid_bio);
- 	}
- 	if (atomic_dec_and_test(&conf->active_aligned_reads))
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 8e521194f6fc..e0552bee227b 100644
-=2D-- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -418,6 +418,7 @@ static inline struct bio *bio_clone_kmalloc(struct bio =
-*bio, gfp_t gfp_mask)
- extern blk_qc_t submit_bio(struct bio *);
-=20
- extern void bio_endio(struct bio *);
-+extern void bio_endio_notrace(struct bio *);
-=20
- static inline void bio_io_error(struct bio *bio)
- {
-=2D-=20
-2.12.0
-
+> to do it after md_wakeup_thread.
+>                  clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+>                  set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>                  md_wakeup_thread(mddev->thread);     ## --> do=20
+> set_disk_ro after this step.
+>                  sysfs_notify_dirent_safe(mddev->sysfs_state);
+>                  err =3D 0;
+>          }
+> out:
+>          mutex_unlock(&mddev->open_mutex);
+>          return err;
+> }
+>
+> Thanks,
+> -Zhilong
+>> NeilBrown
+>>
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index 7e168ff1ae90..567aba246497 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -6934,6 +6934,7 @@ static int md_ioctl(struct block_device *bdev, fmo=
+de_t mode,
+>>   	void __user *argp =3D (void __user *)arg;
+>>   	struct mddev *mddev =3D NULL;
+>>   	int ro;
+>> +	bool did_set_md_closing =3D false;
+>>=20=20=20
+>>   	if (!md_ioctl_valid(cmd))
+>>   		return -ENOTTY;
+>> @@ -7023,7 +7024,9 @@ static int md_ioctl(struct block_device *bdev, fmo=
+de_t mode,
+>>   			err =3D -EBUSY;
+>>   			goto out;
+>>   		}
+>> +		WARN_ON_ONCE(test_bit(MD_CLOSING, &mddev->flags));
+>>   		set_bit(MD_CLOSING, &mddev->flags);
+>> +		did_set_md_closing =3D true;
+>>   		mutex_unlock(&mddev->open_mutex);
+>>   		sync_blockdev(bdev);
+>>   	}
+>> @@ -7216,6 +7219,8 @@ static int md_ioctl(struct block_device *bdev, fmo=
+de_t mode,
+>>   		mddev->hold_active =3D 0;
+>>   	mddev_unlock(mddev);
+>>   out:
+>> +	if (did_set_md_closing)
+>> +		clear_bit(MD_CLOSING, &mddev->flags);
+>>   	return err;
+>>   }
+>>   #ifdef CONFIG_COMPAT
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljTay4ACgkQOeye3VZi
-gbnEqBAAtYZEDLU2yESN4HkBMCZ7RaNlVv9RCZO3iLQlJSLXq0yNm7966ObtLGJW
-KbBjLbCkR8BGNza3dZwiRSqCCZMtEO2Amh0Xij7yWQZTHDBX3SejYasBF/VS9nbd
-Azv/Zm7sh6ZNtpeI85IZ852mo27rS8ZR2PDlLlr8eIkDo8eoUbvfBqJs9aHLWQd1
-lZs86x8YeazotysBLCw8W/MN7l5Uk+9N0fBttF3tVVRnOoOL8b6BE6JRkveTQf2N
-OaMvTQ/vd4aI3jUmQ9T7o3i06IfHJsucKUIJyNAkBEbOV+9gpq3E0tKFHR0rjSws
-/BEYVVrScdj3xZLjWJO5yAPw+2mPVJkrwexazPja3C3Koe7gjZY/lDKQwiZKvjVX
-V5oCTw961euyZAUaRdBtoiJKOdU7TXTEFNSYtKGZmIAPljdqhCQqpJlaWiR6xFxC
-zZ3l2X8xAGJ2ZgoQ0jRF1szHyrjqkFKjD6jfy2xHcoOuiWxIWtr7Na309yXfIuVk
-BpqhrPdPZihKLnO+89dz1/vCdi5ef7e5snxXF477pvMw11Powv5hcO19frOTmhf3
-QPW4Sl7K5nyE9M5WVgpmH9JcVG+Fr++lHRcs7dikOoK62nOJIFBQ1CXYFmSBOQcx
-xx/Yif4CW+hxU5w4t7YUgm0mSrTqEgH065xYumdmA2qT/7Pt0RE=
-=rz07
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljTc+AACgkQOeye3VZi
+gbm7TA//WdoztyVA4FAza2qFfbkxkxfO1wvOshiiWQB1ljc2PDQ7utinhMDrA1yi
+lVlSWxaB0nvGOBOk0u1EygtIpoNbjULO8Jdlb9PMg2FqFw7T2kNJ8npSjER7vgXU
+6ST7aP0huy7C52uSKhJy8OkC1pnJMRuojDLYhZ1EkJ5qiWsJCKSk7GJ5sutCHT/v
+ddCDB5JtwUC1GgNscyQHFzgieJazwOld0+ilc2Bwmwp0VUPlCDROiYwEldXxD2co
+Ts/FB3MvtfQZhQ0F+8BpTvvw5RjIE6bmzseUqQG9l6XerL3ifIB5yfMT5ukDnsA2
+B8T0riHTG1wrjOCihIWXCyNITOZhUyEfrAsKaQw961j6PZScNRkB100wMRwIJTkM
+YzLH/vyySbF8ydRuU7CSsJi0wDIf9/7+dWFfvzlSLYCivh0/LnuXAMM1bu6tsaQN
+L4rG5laBHg98OCza6vd/616rVRoWRrNRNyXvad8wwwkT+rcZj8osqWo1/Vfl+65B
+UW8/lArPfUs0evKO/6hIopbPzGdlgojh+9jL1Af3zifVejBhwcRDxE2JfTMdDM+7
+70w9ZzdmnMcP8IBcQPFiV1ImXY7eKFEdi4k+qArCAbNTSNkMDDNCFEWX8XPD/0CH
+xQnA/8AxKe/trgycyKOT9dxysTf+5zKHRDQ1dXJonhbsWhSpWbg=
+=vU1u
 -----END PGP SIGNATURE-----
 --=-=-=--
-
-
---===============8506014006343438143==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-
---===============8506014006343438143==--
