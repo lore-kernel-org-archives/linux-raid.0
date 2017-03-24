@@ -1,74 +1,95 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: stripe_cache_size, some info
-Date: Fri, 24 Mar 2017 16:47:47 +1100
-Message-ID: <87wpbf8buk.fsf@notabene.neil.brown.name>
-References: <CAJH6TXhL4=MLanyvQh8UMkBmfkfjPd-frsCOC3PqLnDXCpMetw@mail.gmail.com>
+Subject: Re: [PATCH v3 02/14] md: move two macros into md.h
+Date: Fri, 24 Mar 2017 16:57:37 +1100
+Message-ID: <87tw6j8be6.fsf@notabene.neil.brown.name>
+References: <20170316161235.27110-1-tom.leiming@gmail.com> <20170316161235.27110-3-tom.leiming@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJH6TXhL4=MLanyvQh8UMkBmfkfjPd-frsCOC3PqLnDXCpMetw@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, linux-raid@vger.kernel.org
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170316161235.27110-3-tom.leiming@gmail.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, linux-raid@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Cc: Ming Lei <tom.leiming@gmail.com>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Sun, Mar 19 2017, Gandalf Corvotempesta wrote:
+On Fri, Mar 17 2017, Ming Lei wrote:
 
-> Hi to all,
-> I need some info about stripe_cache_size
->
-> Is that a sort of "writeback" cache? Higher the number, higher the
-> amount of data to be cached in ram before writing to disks, right?
+> Both raid1 and raid10 share common resync
+> block size and page count, so move them into md.h.
 
-No.
-All of memory is potentially a write-back cache for all filesystems.
-the stripe_cache is a write-through cache which holds strips (one page
-per device) while reading missing blocks and computing parity.
+I don't think this is necessary.
+These are just "magic" numbers.  They don't have any real
+meaning and so don't belong in md.h, or and .h file.
 
-When the array is degraded, it is also used to hold the blocks in a
-strip will calculating the missing data.
+Possibly we should find more meaningful numbers, or make them auto-size
+or something.  I'm also happy for them to stay as they are for now.
+But I don't think we should pretend that they are meaningful.
 
->
-> Some questions:
->
-> 1) any upper limit for that value ? Can I set it near 1GB like most
-> hardware controller?
-
-It is currently limited to 32768, for no particularly good reason.
-Several stripes (so several times 64 with the default chunk size) is
-good.  Many stripes might help very random workloads.
-
-
-> 2) why on my RAID-6 I don't have /sys/block/md0/md/stripe_cache_size ?
-
-No idea.  I certainly should do.
-
-
->
-> As I would like to replace most of our HW raid controller with mdadm,
-> any suggestion on how to improve RAID-6 speed ?
->
-> Modern CPU aren't an issue, I don't think that double-parity
-> calculation could create any bottleneck on a modern CPU.
-> The real advantages of a raid controller are mostly 2:
->
-> 1) the writeback cache (1GB or 2GB)
-> 2) the ability to automatically replace a disk by hotswapping it.
->
-> Any solution to this ? For the "2", i've tried by configuring the
-> POLICY in mdadm.conf but new disk is never reconized and I always have
-> to manually add the new disk to the array.
-
-What, precisely, have you tried?  Please provide exact contents of
-config files (i.e mdadm.conf) and exact steps you took and what you
-expected to happen.
-
+Thanks,
 NeilBrown
 
 
+>
+> Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+> ---
+>  drivers/md/md.h     | 5 +++++
+>  drivers/md/raid1.c  | 2 --
+>  drivers/md/raid10.c | 3 ---
+>  3 files changed, 5 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index b8859cbf84b6..1d63239a1be4 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -715,4 +715,9 @@ static inline void mddev_check_writesame(struct mddev=
+ *mddev, struct bio *bio)
+>  	    !bdev_get_queue(bio->bi_bdev)->limits.max_write_same_sectors)
+>  		mddev->queue->limits.max_write_same_sectors =3D 0;
+>  }
+> +
+> +/* Maximum size of each resync request */
+> +#define RESYNC_BLOCK_SIZE (64*1024)
+> +#define RESYNC_PAGES ((RESYNC_BLOCK_SIZE + PAGE_SIZE-1) / PAGE_SIZE)
+> +
+>  #endif /* _MD_MD_H */
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 4a0b2ad5025e..908e2caeb704 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -94,10 +94,8 @@ static void r1bio_pool_free(void *r1_bio, void *data)
+>  	kfree(r1_bio);
+>  }
+>=20=20
+> -#define RESYNC_BLOCK_SIZE (64*1024)
+>  #define RESYNC_DEPTH 32
+>  #define RESYNC_SECTORS (RESYNC_BLOCK_SIZE >> 9)
+> -#define RESYNC_PAGES ((RESYNC_BLOCK_SIZE + PAGE_SIZE-1) / PAGE_SIZE)
+>  #define RESYNC_WINDOW (RESYNC_BLOCK_SIZE * RESYNC_DEPTH)
+>  #define RESYNC_WINDOW_SECTORS (RESYNC_WINDOW >> 9)
+>  #define CLUSTER_RESYNC_WINDOW (16 * RESYNC_WINDOW)
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index b4a56a488668..2b40420299e3 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -125,9 +125,6 @@ static void r10bio_pool_free(void *r10_bio, void *dat=
+a)
+>  	kfree(r10_bio);
+>  }
+>=20=20
+> -/* Maximum size of each resync request */
+> -#define RESYNC_BLOCK_SIZE (64*1024)
+> -#define RESYNC_PAGES ((RESYNC_BLOCK_SIZE + PAGE_SIZE-1) / PAGE_SIZE)
+>  /* amount of memory to reserve for resync requests */
+>  #define RESYNC_WINDOW (1024*1024)
+>  /* maximum number of concurrent requests, memory permitting */
+> --=20
+> 2.9.3
+>
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
@@ -79,18 +100,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljUswMACgkQOeye3VZi
-gbmW4Q//bFTkPmzO5Ga/eD72IxBqGBtEOMXpvfmq9TaFhAgSo4yhC6TiCAdvuyCj
-aAhys9VDTRKPi+j/N9GiNXdz/8yel4Gt/c3++pYYDpqKnwmJAQ1725m5e5CBTt8L
-bQ0bZ/T7naFXmGhYtHrO/3l2nUh3BPYqxOWpNL7whrp3L6PpVCmOwXF1ZH8W7n07
-6/WxcDEsjpFHB8vUO4osCoV3CmrTFtDpp2QNvG/9tPLUQ0NlmO+1Db1/bNh7XQpS
-Suow7c6YEjht1PAkqJGNtr1mdNVYbG/Qe/z8naRpLw5I3F9HwZV0930x4/fneFNH
-w/JJs7O2XRBuZ0xMs1X+srPlAnkbBEbQPZCTdzZw5E5nt3ptWw7sWD/SbLOUMl/3
-u6VlUqGoanEmb3AP8p2tDWGEMiUSTK/EcRSaLnHK7r6r2IoJtH32Xbj6MLiXSRbm
-jrfQ5G/E8d6F1OlkunELH5o9QzjBLfkIhDK4DGrIqB5T6pojhZetyuFPvE2yGzop
-K426h9CRsCygqlhs8HYnILpSrERSAra/+t4VKOZpentKMaWFsAzAEkqjS85jwRUi
-Y1jcd41gB4971CpMiM7iSxe2LFw3ggWZHcmzNZCBTNf0wEv9nzCQyUOrUUXy8YWj
-JR5ksfTRzbgAEQaLLLupXh9/xlDuDlnK1tKy7wkbVHOmrKLmIa4=
-=bQ/U
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljUtVEACgkQOeye3VZi
+gbmnvw/+IuR034Uh0nBzSbnOPErPGgN2t3aT2a1izfe0BffPI2Kbsr+i5kjI+Hpp
+HHtGpT3mw6Vkbf0LHz7GqmLvEpvHQRkHOmGo+OYTCN4HJi3TBAkKg4h6PTvA0IMl
+1ocqD1ap5FzpM+RNZ0m9Ld6OSQ4k2k3WJwQy8CQ47Fc6w5KM+mkbv84BWu2K0i9A
+X4nNsG5c1MHFi/uCOLVr2sYVKbVlhvLUJJyowi/RM3XQr1VrFH/1CcGqg715FTfP
+Kxrv3A4wmRTxJWUGWzDfrQMNyJQrvfIH46swhiM5tXUf1qUfNJ3aGK7+hEMFcaXg
+sT4/elbAACyFE3seSZbmf74WihiavmkGeECH3TZnQKpZhi7UDG1qkgPA655gciPI
+1UGfRbt5HcNtFfpiXdF0Tni0Rk65X1EEYp6K5yFvvXHpkJYkdLINMDlk4KwEM5sS
+2FG8bCjsstTJfPFJ9Ywm7c3AdzIJFRT5OFbBtI6p06R+uuZ5IogfHRFasbW4Zde+
+FTUeEraq6Y1ZFl+nHB7YGKPmFXWn0GR6nBjhF4ELoJP8Ii7NDyTiWrU9ufnH/Xix
++JlX02dpBj6zu06iXW6mQ568WDkEc0zaFzfLNTG5tJrpSp2tQmZ3MY1rwbH2cH7o
+6uD5qNWitWlZ5HTuxRDWNFIa22/v6RkFlcnftWK5pTMlXTnpkFI=
+=M8Wb
 -----END PGP SIGNATURE-----
 --=-=-=--
