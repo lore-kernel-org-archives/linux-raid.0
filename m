@@ -1,42 +1,61 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v3 02/14] md: move two macros into md.h
-Date: Fri, 24 Mar 2017 09:53:25 -0700
-Message-ID: <20170324165325.nek4kb4yezz2xmow@kernel.org>
-References: <20170316161235.27110-1-tom.leiming@gmail.com>
- <20170316161235.27110-3-tom.leiming@gmail.com>
- <87tw6j8be6.fsf@notabene.neil.brown.name>
+Subject: Re: [PATCH v2 1/2] md/raid5: Add change_consistency_policy to raid4
+ and raid6
+Date: Fri, 24 Mar 2017 10:08:59 -0700
+Message-ID: <20170324170859.fkbyn5ruqy7xyf5q@kernel.org>
+References: <20170316221409.3283344-1-songliubraving@fb.com>
+ <20170324144535.chk4jgktism4mvlu@kernel.org>
+ <8acaaf1e-7e67-2c9b-fc1f-7c9237131260@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <87tw6j8be6.fsf@notabene.neil.brown.name>
-Sender: linux-block-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Ming Lei <tom.leiming@gmail.com>, Jens Axboe <axboe@fb.com>, linux-raid@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+In-Reply-To: <8acaaf1e-7e67-2c9b-fc1f-7c9237131260@intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: Song Liu <songliubraving@fb.com>, linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com
 List-Id: linux-raid.ids
 
-On Fri, Mar 24, 2017 at 04:57:37PM +1100, Neil Brown wrote:
-> On Fri, Mar 17 2017, Ming Lei wrote:
+On Fri, Mar 24, 2017 at 04:17:16PM +0100, Artur Paszkiewicz wrote:
+> On 03/24/2017 03:45 PM, Shaohua Li wrote:
+> > On Thu, Mar 16, 2017 at 03:14:08PM -0700, Song Liu wrote:
+> >> Add change_consistency_policy to raid6_personality and
+> >> raid4_personality.
+> >>
+> >> Signed-off-by: Song Liu <songliubraving@fb.com>
+> >> ---
+> >>  drivers/md/raid5.c | 2 ++
+> >>  1 file changed, 2 insertions(+)
+> >>
+> >> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> >> index 88cc898..7a6e7ea 100644
+> >> --- a/drivers/md/raid5.c
+> >> +++ b/drivers/md/raid5.c
+> >> @@ -8408,6 +8408,7 @@ static struct md_personality raid6_personality =
+> >>  	.quiesce	= raid5_quiesce,
+> >>  	.takeover	= raid6_takeover,
+> >>  	.congested	= raid5_congested,
+> >> +	.change_consistency_policy = raid5_change_consistency_policy,
+> >>  };
+> >>  static struct md_personality raid5_personality =
+> >>  {
+> >> @@ -8456,6 +8457,7 @@ static struct md_personality raid4_personality =
+> >>  	.quiesce	= raid5_quiesce,
+> >>  	.takeover	= raid4_takeover,
+> >>  	.congested	= raid5_congested,
+> >> +	.change_consistency_policy = raid5_change_consistency_policy,
+> >>  };
+> > sorry for the late reply.
+> > 
+> > the change_consistency_policy is only for raid5 for a reason, ppl is only for
+> > raid5. I think you need to filter out raid 4/6 in
+> > raid5_change_consistency_policy for ppl.
 > 
-> > Both raid1 and raid10 share common resync
-> > block size and page count, so move them into md.h.
-> 
-> I don't think this is necessary.
-> These are just "magic" numbers.  They don't have any real
-> meaning and so don't belong in md.h, or and .h file.
-> 
-> Possibly we should find more meaningful numbers, or make them auto-size
-> or something.  I'm also happy for them to stay as they are for now.
-> But I don't think we should pretend that they are meaningful.
+> Not necessarily. There is a check in ppl_init_log() that won't allow
+> starting ppl if it's not raid5. But it certainly wouldn't hurt.
 
-I had the same concern when I looked at this patch firstly. The number for
-raid1/10 doesn't need to be the same. But if we don't move the number to a
-generic header, the third patch will become a little more complicated. I
-eventually ignored this issue. If we really need different number for raid1/10,
-lets do it at that time.
-
-I think your suggestion that moving the number to raid1-10.h makes sense, and
-add a comment declaring the number isn't required to be the same for raid1/10.
+It will still set the PPL flag for raid4/6. Checking raid 5 in
+change_consistency_policy is clearer anyway.
 
 Thanks,
 Shaohua
