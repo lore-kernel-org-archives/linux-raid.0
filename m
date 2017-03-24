@@ -1,54 +1,39 @@
-From: Dmitry Vyukov <dvyukov@google.com>
+From: Peter Zijlstra <peterz@infradead.org>
 Subject: Re: [PATCH 6/7] md/raid10, LLVM: get rid of variable length array
-Date: Fri, 24 Mar 2017 14:50:24 +0100
-Message-ID: <CACT4Y+bRWePGuZB-HCGBhHuENHAM=uDDv3i81fwZjNUKhNY2UA@mail.gmail.com>
-References: <20170317001520.85223-1-md@google.com> <20170317001520.85223-7-md@google.com>
+Date: Fri, 24 Mar 2017 15:09:36 +0100
+Message-ID: <20170324140936.45gjbfdjyyag5cce@hirez.programming.kicks-ass.net>
+References: <20170317001520.85223-1-md@google.com>
+ <20170317001520.85223-7-md@google.com>
  <20170317120837.pr74cv3xuj7qpoin@hirez.programming.kicks-ass.net>
  <CAG_fn=XcQLtcHRSm2BHYce9LMtyFJ+fWxfE4vYPCw+7U0DcrmQ@mail.gmail.com>
- <CAG_fn=WooTLkzex3hqPgO5pr7GsK3v7Z5riSA7K+-_S=S7rmBQ@mail.gmail.com>
- <20170317180350.63jjysejk2i6vkon@pd.tnic> <CACT4Y+Ysvjz+UzEi0dTtsNxxnG7WXTiZPr+KSk8HHwSu7vX1ew@mail.gmail.com>
- <20170317185720.5s7qa6hl233t24ag@pd.tnic> <CACT4Y+bybdpqB71=inx8amwr188Mb2QyBeRTDdWZ3AFyDwVX0A@mail.gmail.com>
- <20170317192642.qnrf7xuopxzapl2r@hirez.programming.kicks-ass.net> <20170317192935.d5almj4brat6uvlt@hirez.programming.kicks-ass.net>
+ <20170317124404.mt3jd5q5vyk63q2w@hirez.programming.kicks-ass.net>
+ <CA+=D-XXy9yEQc-jLxSqRUwq=4ADnFqaxnsjSzV4=8jOisym=bQ@mail.gmail.com>
+ <20170317192746.y5ade3bymifdni2p@hirez.programming.kicks-ass.net>
+ <96158847-4F1F-4293-8435-E111F39E3260@zytor.com>
+ <CACT4Y+awYCAwoCkh8PQ-i2BdkxeuFp9meVXp=Yv6hGY8YjDnQg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kbuild-owner@vger.kernel.org>
-In-Reply-To: <20170317192935.d5almj4brat6uvlt@hirez.programming.kicks-ass.net>
-Sender: linux-kbuild-owner@vger.kernel.org
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Borislav Petkov <bp@alien8.de>, Alexander Potapenko <glider@google.com>, Michael Davidson <md@google.com>, Michal Marek <mmarek@suse.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Shaohua Li <shli@kernel.org>, Matthias Kaehlcke <mka@chromium.org>, "x86@kernel.org" <x86@kernel.org>, "open list:KERNEL BUILD + fi..." <linux-kbuild@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org, kbuild-all@01.org, Fengguang Wu <fengguang.wu@intel.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-crypto-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CACT4Y+awYCAwoCkh8PQ-i2BdkxeuFp9meVXp=Yv6hGY8YjDnQg@mail.gmail.com>
+Sender: linux-crypto-owner@vger.kernel.org
+To: Dmitry Vyukov <dvyukov@google.com>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, Michael Davidson <md@google.com>, Alexander Potapenko <glider@google.com>, Michal Marek <mmarek@suse.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Shaohua Li <shli@kernel.org>, Matthias Kaehlcke <mka@chromium.org>, "x86@kernel.org" <x86@kernel.org>, "open list:KERNEL BUILD + fi..." <linux-kbuild@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Mar 17, 2017 at 8:29 PM, Peter Zijlstra <peterz@infradead.org> wrote:
-> On Fri, Mar 17, 2017 at 08:26:42PM +0100, Peter Zijlstra wrote:
->> On Fri, Mar 17, 2017 at 08:05:16PM +0100, Dmitry Vyukov wrote:
->> > You can also find some reasons in the Why section of LLVM-Linux project:
->> > http://llvm.linuxfoundation.org/index.php/Main_Page
->>
->> From that:
->>
->>  - LLVM/Clang is a fast moving project with many things fixed quickly
->>    and features added.
->>
->> So what's the deal with that 5 year old bug you want us to work around?
->>
->> Also, clang doesn't support asm cc flags output and a few other
->> extensions last time I checked.
->>
->
-> Another great one:
->
->  - BSD License (some people prefer this license to the GPL)
->
-> Seems a very weak argument to make when talking about the Linux Kernel
-> which is very explicitly GPLv2 (and not later).
+On Fri, Mar 24, 2017 at 02:47:15PM +0100, Dmitry Vyukov wrote:
+> > Seriously, you should have taken the hack the first time that this
+> > needs to be fixed.  Just because this is a fairly uncommon construct
+> > in the kernel doesn't mean it is not in userspace.
+> 
+> There is a reason why it is fairly uncommon in kernel.
 
-OK, I guess should not have referenced the llvm-linux page.
-So here are reasons on our side that I am ready to vouch:
+So first off; its not entirely clear that the code as it exists it
+correct. From a cursory reading of it and surrounding code, there is no
+actual upper limit on the variable. If I were stupid enough to make a
+raid with 64 devices I'd get a huge on-stack structure.
 
- - clang make it possible to implement KMSAN (dynamic detection of
-uses of uninit memory)
- - better code coverage for fuzzing
- - why simpler and faster development (e.g. we can port our user-space
-hardening technologies -- CFI and SafeStack)
+Since you're touching it; you should check these things.
 
-Michael is on a different team and has own reasons to do this.
+And secondly, refactor the code to not look like dog vomit. You can do
+more than the absolute minimal patch to make it compile, I'm sure.
