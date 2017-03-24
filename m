@@ -1,34 +1,34 @@
-From: Roman Mamedov <rm@romanrm.net>
-Subject: Re: stripe_cache_size, some info
-Date: Fri, 24 Mar 2017 11:00:47 +0500
-Message-ID: <20170324110047.6f89eb62@natsu>
-References: <CAJH6TXhL4=MLanyvQh8UMkBmfkfjPd-frsCOC3PqLnDXCpMetw@mail.gmail.com>
-        <87wpbf8buk.fsf@notabene.neil.brown.name>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: [PATCH v3 02/14] md: move two macros into md.h
+Date: Fri, 24 Mar 2017 14:30:27 +0800
+Message-ID: <CACVXFVNugXT5NA2_1UODDpcbhb_gHmF5M1-FAAoAy592tow8Rw@mail.gmail.com>
+References: <20170316161235.27110-1-tom.leiming@gmail.com> <20170316161235.27110-3-tom.leiming@gmail.com>
+ <87tw6j8be6.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87wpbf8buk.fsf@notabene.neil.brown.name>
+In-Reply-To: <87tw6j8be6.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.com>
-Cc: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, linux-raid@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-raid.ids
 
-On Fri, 24 Mar 2017 16:47:47 +1100
-NeilBrown <neilb@suse.com> wrote:
+On Fri, Mar 24, 2017 at 1:57 PM, NeilBrown <neilb@suse.com> wrote:
+> On Fri, Mar 17 2017, Ming Lei wrote:
+>
+>> Both raid1 and raid10 share common resync
+>> block size and page count, so move them into md.h.
+>
+> I don't think this is necessary.
+> These are just "magic" numbers.  They don't have any real
+> meaning and so don't belong in md.h, or and .h file.
 
-> > 1) any upper limit for that value ? Can I set it near 1GB like most
-> > hardware controller?
-> 
-> It is currently limited to 32768, for no particularly good reason.
+The thing is that RESYNC_PAGES is needed in the following patch 3:
 
-I feel it should be clarified that's in *PAGES* (4K on x86) per *ARRAY MEMBER*.
+     [PATCH v3 03/14] md: prepare for managing resync I/O pages in clean way
 
-So the calculation can get a little bit complex, it's not like you're setting
-it to 32 MB with that number.
+so how about moving the macros into raid1-10.h? Cause you suggest
+to create that header for holding the introduced helpers in patch3.
 
-For a 8-drive array that would be 32768 * 4096 * 8 = 1073741824 bytes (1GB).
-
--- 
-With respect,
-Roman
+Thanks,
+Ming
