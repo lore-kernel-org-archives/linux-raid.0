@@ -1,53 +1,60 @@
-From: Dmitry Vyukov <dvyukov@google.com>
-Subject: Re: [PATCH 6/7] md/raid10, LLVM: get rid of variable length array
-Date: Fri, 24 Mar 2017 15:22:00 +0100
-Message-ID: <CACT4Y+buj6Oors8MU8ZhbSePeQqJOWdQKThiDgaY6mGj=p7LUw@mail.gmail.com>
-References: <20170317120837.pr74cv3xuj7qpoin@hirez.programming.kicks-ass.net>
- <CAG_fn=XcQLtcHRSm2BHYce9LMtyFJ+fWxfE4vYPCw+7U0DcrmQ@mail.gmail.com>
- <CAG_fn=WooTLkzex3hqPgO5pr7GsK3v7Z5riSA7K+-_S=S7rmBQ@mail.gmail.com>
- <20170317180350.63jjysejk2i6vkon@pd.tnic> <CACT4Y+Ysvjz+UzEi0dTtsNxxnG7WXTiZPr+KSk8HHwSu7vX1ew@mail.gmail.com>
- <20170317185720.5s7qa6hl233t24ag@pd.tnic> <CACT4Y+bybdpqB71=inx8amwr188Mb2QyBeRTDdWZ3AFyDwVX0A@mail.gmail.com>
- <20170317192642.qnrf7xuopxzapl2r@hirez.programming.kicks-ass.net>
- <20170317192935.d5almj4brat6uvlt@hirez.programming.kicks-ass.net>
- <CACT4Y+bRWePGuZB-HCGBhHuENHAM=uDDv3i81fwZjNUKhNY2UA@mail.gmail.com> <20170324141053.lte3qq7mfl6krlkb@hirez.programming.kicks-ass.net>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH v2 1/2] md/raid5: Add change_consistency_policy to raid4
+ and raid6
+Date: Fri, 24 Mar 2017 07:45:35 -0700
+Message-ID: <20170324144535.chk4jgktism4mvlu@kernel.org>
+References: <20170316221409.3283344-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-crypto-owner@vger.kernel.org>
-In-Reply-To: <20170324141053.lte3qq7mfl6krlkb@hirez.programming.kicks-ass.net>
-Sender: linux-crypto-owner@vger.kernel.org
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Borislav Petkov <bp@alien8.de>, Alexander Potapenko <glider@google.com>, Michael Davidson <md@google.com>, Michal Marek <mmarek@suse.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Shaohua Li <shli@kernel.org>, Matthias Kaehlcke <mka@chromium.org>, "x86@kernel.org" <x86@kernel.org>, "open list:KERNEL BUILD + fi..." <linux-kbuild@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org, kbuild-all@01.org, Fengguang Wu <fengguang.wu@intel.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170316221409.3283344-1-songliubraving@fb.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Song Liu <songliubraving@fb.com>
+Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com
 List-Id: linux-raid.ids
 
-On Fri, Mar 24, 2017 at 3:10 PM, Peter Zijlstra <peterz@infradead.org> wrote:
-> On Fri, Mar 24, 2017 at 02:50:24PM +0100, Dmitry Vyukov wrote:
->> OK, I guess should not have referenced the llvm-linux page.
->> So here are reasons on our side that I am ready to vouch:
->>
->>  - clang make it possible to implement KMSAN (dynamic detection of
->> uses of uninit memory)
->
-> How does GCC make this impossible?
+On Thu, Mar 16, 2017 at 03:14:08PM -0700, Song Liu wrote:
+> Add change_consistency_policy to raid6_personality and
+> raid4_personality.
+> 
+> Signed-off-by: Song Liu <songliubraving@fb.com>
+> ---
+>  drivers/md/raid5.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 88cc898..7a6e7ea 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -8408,6 +8408,7 @@ static struct md_personality raid6_personality =
+>  	.quiesce	= raid5_quiesce,
+>  	.takeover	= raid6_takeover,
+>  	.congested	= raid5_congested,
+> +	.change_consistency_policy = raid5_change_consistency_policy,
+>  };
+>  static struct md_personality raid5_personality =
+>  {
+> @@ -8456,6 +8457,7 @@ static struct md_personality raid4_personality =
+>  	.quiesce	= raid5_quiesce,
+>  	.takeover	= raid4_takeover,
+>  	.congested	= raid5_congested,
+> +	.change_consistency_policy = raid5_change_consistency_policy,
+>  };
+sorry for the late reply.
 
-Too complex and too difficult to implement correctly on all corner
-cases. All other sanitizers were ported to gcc very quickly, but msan
-wasn't. Nobody is brave enough to even approach it.
+the change_consistency_policy is only for raid5 for a reason, ppl is only for
+raid5. I think you need to filter out raid 4/6 in
+raid5_change_consistency_policy for ppl.
 
->>  - better code coverage for fuzzing
->
-> How so? Why can't the same be achieved using GCC?
-
-Same reason.
-
->>  - why simpler and faster development (e.g. we can port our user-space
->> hardening technologies -- CFI and SafeStack)
->
-> That's just because you've already implemented this in clang, right? So
-> less work for you. Not because its impossible.
-
-I am not saying that it's impossible. It would just require
-unreasonable amount of time, and then perpetual maintenance to fix
-corner cases and regressions.
-
-For background: I implemented the current fuzzing coverage (KCOV) in
-gcc, and user-space tsan instrumentation in gcc.
+Thanks,
+Shaohua
+>  
+>  static int __init raid5_init(void)
+> -- 
+> 2.9.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
