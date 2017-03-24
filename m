@@ -1,138 +1,104 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: mdadm: one question about the readonly and readwrite feature
-Date: Fri, 24 Mar 2017 11:28:16 +1100
-Message-ID: <87d1d7a57j.fsf@notabene.neil.brown.name>
-References: <774691e9-6b1e-5141-bc37-6e768c1c8fdc@suse.com> <87zigdt1r1.fsf@notabene.neil.brown.name> <58D32AE2.1030303@suse.com> <871stobqvl.fsf@notabene.neil.brown.name> <600b22b5-762e-da9c-0d20-9023de4361b3@suse.com> <87poh8a2vz.fsf@notabene.neil.brown.name> <8aabda0c-023f-6033-26d1-c6a6c907b8e6@suse.com>
+Subject: Re: constant array_state active after specific jobs
+Date: Fri, 24 Mar 2017 16:25:35 +1100
+Message-ID: <8737e39rg0.fsf@notabene.neil.brown.name>
+References: <20170323104643.6cca7986@hal9.pdi.lan>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8aabda0c-023f-6033-26d1-c6a6c907b8e6@suse.com>
+In-Reply-To: <20170323104643.6cca7986@hal9.pdi.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Zhilong Liu <zlliu@suse.com>, Guoqing Jiang <gqjiang@suse.com>, Jes Sorensen <jes.sorensen@gmail.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: pdi <pdi@otenet.gr>, linux-raid@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Mar 23 2017, Zhilong Liu wrote:
+On Thu, Mar 23 2017, pdi wrote:
 
-> On 03/23/2017 03:06 PM, NeilBrown wrote:
->> Why?
->> How do the actions performed by set_disk_ro() interact with the actions
->> performed by md_wakeup_thread()?
->>
->> I'm not saying the code shouldn't be changed, just that there needs to
->> be a clear explanation of the benefit.
+> Greetings all,
 >
-> here just according to my understanding for readonly code path, welcome
-> the correction in my comments if I misunderstand this feature, :-).
-
-I'm sorry if this sounds harsh, but I get the impression that you aren't
-really trying to understand the code.  You are just guessing about what
-things might be doing, rather than doing careful research to determine
-exactly what the code does.
-
-Do you know what "set_disk_ro()" does?  What are the consequences of
-call it?  Until you know that, you cannot make any reasonable assessment
-on where the call should go.
-
-Do you know why we set MD_RECOVERY_NEEDED and wake up the thread?
-You seem to expect that it might cause some write out, however it
-happens just after a call to __md_stop_writes() which aims to stop all
-writes happening to the array.  So that seems unlikely (but is worth
-checking).
-
-
-> ... ...
-> static int md_set_readonly(struct mddev *mddev, struct block_device *bdev)
-> {
->          int err =3D 0;
->          int did_freeze =3D 0;
+> The problem in a nutshell is that an array is clean after boot, until
+> some specific jobs switch it to active where it remains until reboot.
 >
->          if (!test_bit(MD_RECOVERY_FROZEN, &mddev->recovery)) {
->                  did_freeze =3D 1;
->                  set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);  -->=20
-> here has set bit as FROZEN
->                  md_wakeup_thread(mddev->thread);
->          }
-> ... ...
+> A similar problem was discussed, and solved, in=20
+> https://www.spinics.net/lists/raid/msg46450.html. However, AFAICT,
+> it is not the same issue.
 >
->          if (mddev->pers) {
->                  __md_stop_writes(mddev);
-> /*
->   *  set FROZEN again, maybe can use test_and_set_bit(FROZEN) better, it=
-=20
-> doesn't matter.
+> I would be grateful for any insights as to why this happens and/or how
+> to prevent it.
+>
+> The relevant info follows, please let me know if anything further might
+> help.
+>
+> Many thanks in advance.
+>
+> - uname -a
+>   Linux hostname 4.4.38 #1 SMP Sun Dec 11 16:03:41 CST 2016 x86_64
+>   Intel(R) Core(TM)2 Duo CPU E8400 @ 3.00GHz GenuineIntel GNU/Linux
+> - mdadm -V
+>   mdadm - v3.3.4 - 3rd August 2015
+> - Desktop drives without sct/erc,
+>   with timeout mismatch correction as per
+>   https://raid.wiki.kernel.org/index.php/Timeout_Mismatch
+> - /dev/md9 is a raid10 array, 4 devices, far=3D2,
+>   with various dirs used as samba and nfs shares
+> - The array is in *constant* array_state active
+> - mdadm -D /dev/md9 | grep 'State :'
+>   State : active
+> - cat /sys/block/md9/md/array_state
+>   active
+> - watch -d 'grep md9 /proc/diskstats'
+>   remain unchanged
+> - uptime
+>   load average: 0.00, 0.00, 0.00
+> - cat /sys/block/md9/md/safe_mode_delay
+>   0.201
+> - echo 0.1 > /sys/block/md9/md/safe_mode_delay
+>   array_state remains active
+> - echo clean > /sys/block/md9/md/array_state
+>   echo: write error: Device or resource busy
+> - reboot (with or without prior check)
+>   array_state clean
+> - After reboot, array remains clean until some specific
+>   jobs put it in constant active state. Such jobs so far
+>   identified:
+>   - echo check > /sys/block/md9/md/sync_action
+>   - run an rsnapshot job
+>   - start a qemu/kvm vm
+> - Other jobs, like text/doc editing, multimedia playback,
+>   etc retain array_state clean
 
-Correct, it doesn't matter.
+This bug was introduced by
+Commit: 20d0189b1012 ("block: Introduce new bio_split()")
+in 3.14, and fixed by
+Commit: 9b622e2bbcf0 ("raid10: increment write counter after bio is split")
+in 4.8.
 
-
->   *  it flushed and synced all data, bitmap and superblock to array.
-
-Correct again.
-
-
->   */
->                  err  =3D -ENXIO;
->                  if (mddev->ro=3D=3D1)
->                          goto out;
->                  mddev->ro =3D 1;
-> /*
->   *  Here, I means that set_disk_ro until the daemon thread has=20
-> completed all operations
->   *  include of sync and recovery progress. set_disk_ro when the array=20
-> has cleaned totally,
->   *  then it would be safer.
-
-Completed which operations exactly?  __md_stop_writes() has called
-md_reap_sync_thread() so there cannot still be any recovery.  It has
-called pers->quiesce() so there cannot be any outstanding io.
-And just moving the call to afterwards would't cause it to wait for those
-supposed operations to complete.
-
->   *  I'm not sure MD_RECOVERY_NEEDED would be running once the array has=
-=20
-> set_disk_ro,
->   *  actually I don't know how to test this scenario, thus asked this=20
-> question.
-
-The first step is to understand the code.
-Your questions was "should we move this line to here", without asking any
-questions about what the code does, or showing much understanding of it.
-
-I do encourage you to ask questions, but it is best to start with
-questions that make sense.
-And once you have framed a question, try to answer it yourself.
-Read the code (e.g. the code for set_disk_ro()) if you haven't read it
-before, to be sure you understand what it does.
-And if you don't know why some code does something, it often helps to
-look through the git logs, or use "git blame" to find out when the code
-was added or changed.  Often the changelog of the patch will explain the
-purpose of the code.
+Maybe the latter patch should be sent to -stable ??
 
 NeilBrown
-
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljUaCAACgkQOeye3VZi
-gbloQw//cBwjW0KcHfDn1tOvRUFAoQBzi7NsbZOMHUMlkXFx/dUBP7riDqxUlVGp
-0Trr8k0uKadQnLNRjI5OTeJiCkYsJoSQ0z+imIf2JJOHiZLEUek1ScqanB0E36Uh
-otU6C81aqYpeCdree91qL6en8CDFR8CfAG/TxncB5WB+hfou+P+ZMwj7QCvL/YtJ
-PE5o7zPTrphym3n1lRd6U9HAypO7AJCV7Ulyj3NzXJ7p97Sgt1xaBdyn/BLeETDX
-cOU9JtS6AHUisS+s12e7rqWYgYlF2N+Y+udth288GiE6TvckwOuVMZPkZI+tiko0
-QJau7HPv3YD6DE1h+vgtYkdRNX/9aa2ZuGkCf0McBSqDll8iMwLtyqrVpogeVhpT
-Si/HPnwlQemm/BhOtiI7InGP02jrTZ6znIb3qHjb608v2aW4U7m5ldIByvjuyrM7
-I6M4al4WSnaFqtE4pkUYwtuYIMr/tq6JHvPXKHF/nyNEo6LoPPgdhE1lpYC0Pk1t
-GCDzOx4nZUmShNF4j0Ls3de3E29SwkE/7ZUZyatXPwu8Etm37vOYy8St+FSEE6Kj
-7ixgYOjohhphiylDqkXuYdGKDc0Za2a4eVgdCpg5dL2O9koDc+Yzt6teu+aMhpJi
-UfYmhHStUbG4nPG31eVq1z4EvsH0LWC14otudUqYAFGZIBsSpHw=
-=Hplf
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljUrdAACgkQOeye3VZi
+gbkX1BAAo5+PaK2bW54/qXg1Ve3Z8ep5JYG9D4J2QoFJCO9gRP94mOGk9fzi8SDs
+4HuOeqgT+pt2l+pgyCBso3mQgvkxfMtI6i1zHjTvB7xbgnP7bzyDG8SrMuIcMWzS
+ci4ZYcGcDrzggd2KE2/tYpDnf3mpOfxMB4/pYOjjgNLYDN8/2OKfeK6TbdjsA5fr
++XAzvF52buJK4pBcCiyF4nj3DWIqwWOFayYPk7QK1rBP4PYSTpvt2TcLidNMKgWx
+XqmqnF4P7oBVAyU1dQGs4d9zIN1NAn1m73F4O4/GsqLetVny+Vqx8t3uhlJyYZeW
+BsFb/QOBVhr4QHWx7c+S0goBc1BHs2da4viW65oqgoVA8JToTRh4+Bw68WU63ncS
+1twZplO41ItzYofqBdHo9bnEYXlRd1uuUZWfhuO4M3deyvEGlxm433kFs9Ne0bjO
+yj+jk7Hl+oVu485yhixyZTxwN1Ja0o0Eiafi1juP4btPeFjfGgo3uiC1lLvTUT0T
+2ok8Gac+DYSQamJnB1PH3GU0QBxmcgWfF4OwPw5B3t3Wq8ihwCnmGbx4YZzW6XSA
+GNpQcGcsAdgsgufXWMdZ3oSPr9kOddWT9+YZqthpvfdPqlp5cmLjYmBMS2F65SgK
+A5ZebwcZsmGG8Q7WfiZQyWW1rpzK2rGXJMrHYQJBHNCJ9RPcwVs=
+=BMDa
 -----END PGP SIGNATURE-----
 --=-=-=--
