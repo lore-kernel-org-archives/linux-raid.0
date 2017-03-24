@@ -1,64 +1,128 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md/raid5:fix typo in comments of resize_stripes
-Date: Thu, 23 Mar 2017 22:59:04 -0700
-Message-ID: <20170324055904.j4uxq46wtiastaj6@kernel.org>
-References: <1489673439-23594-1-git-send-email-zlliu@suse.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH v3 03/14] md: prepare for managing resync I/O pages in clean way
+Date: Fri, 24 Mar 2017 17:00:00 +1100
+Message-ID: <87r31n8ba7.fsf@notabene.neil.brown.name>
+References: <20170316161235.27110-1-tom.leiming@gmail.com> <20170316161235.27110-4-tom.leiming@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1489673439-23594-1-git-send-email-zlliu@suse.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Zhilong Liu <zlliu@suse.com>
-Cc: shli@fb.com, linux-raid@vger.kernel.org
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170316161235.27110-4-tom.leiming@gmail.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, linux-raid@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Cc: Ming Lei <tom.leiming@gmail.com>
 List-Id: linux-raid.ids
 
-On Thu, Mar 16, 2017 at 10:10:39PM +0800, Zhilong Liu wrote:
-> raid5.c: fix typo in comment of resize_stripes()
-> and delete repeated words.
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I merged this one and the bitmap one into a single patch and added into md tree, thanks!
- 
-> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+On Fri, Mar 17 2017, Ming Lei wrote:
+
+> Now resync I/O use bio's bec table to manage pages,
+> this way is very hacky, and may not work any more
+> once multipage bvec is introduced.
+>
+> So introduce helpers and new data structure for
+> managing resync I/O pages more cleanly.
+>
+> Signed-off-by: Ming Lei <tom.leiming@gmail.com>
 > ---
->  drivers/md/raid5.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 4fb09b3..cb55b3b 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -2209,7 +2209,7 @@ static int resize_stripes(struct r5conf *conf, int newsize)
->  	 *    pages have been transferred over, and the old kmem_cache is
->  	 *    freed when all stripes are done.
->  	 * 3/ reallocate conf->disks to be suitable bigger.  If this fails,
-> -	 *    we simple return a failre status - no need to clean anything up.
-> +	 *    we simple return a failure status - no need to clean anything up.
->  	 * 4/ allocate new pages for the new slots in the new stripe_heads.
->  	 *    If this fails, we don't bother trying the shrink the
->  	 *    stripe_heads down again, we just leave them as they are.
-> @@ -3448,7 +3448,7 @@ static int need_this_block(struct stripe_head *sh, struct stripe_head_state *s,
->  	    !test_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
->  		/* Pre-reads at not permitted until after short delay
->  		 * to gather multiple requests.  However if this
-> -		 * device is no Insync, the block could only be be computed
-> +		 * device is no Insync, the block could only be computed
->  		 * and there is no need to delay that.
->  		 */
->  		return 0;
-> @@ -3467,7 +3467,7 @@ static int need_this_block(struct stripe_head *sh, struct stripe_head_state *s,
->  
->  	/* If we are forced to do a reconstruct-write, either because
->  	 * the current RAID6 implementation only supports that, or
-> -	 * or because parity cannot be trusted and we are currently
-> +	 * because parity cannot be trusted and we are currently
->  	 * recovering it, there is extra need to be careful.
->  	 * If one of the devices that we would need to read, because
->  	 * it is not being overwritten (and maybe not written at all)
-> -- 
-> 2.6.6
-> 
+>  drivers/md/md.h | 50 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 50 insertions(+)
+
+I don't think this should go in md.h
+
+Maybe create a "raid1-10.h" or similar if you really want to.
+
+NeilBrown
+
+>
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index 1d63239a1be4..20c48032493b 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -720,4 +720,54 @@ static inline void mddev_check_writesame(struct mdde=
+v *mddev, struct bio *bio)
+>  #define RESYNC_BLOCK_SIZE (64*1024)
+>  #define RESYNC_PAGES ((RESYNC_BLOCK_SIZE + PAGE_SIZE-1) / PAGE_SIZE)
+>=20=20
+> +/* for managing resync I/O pages */
+> +struct resync_pages {
+> +	unsigned	idx;	/* for get/put page from the pool */
+> +	void		*raid_bio;
+> +	struct page	*pages[RESYNC_PAGES];
+> +};
+> +
+> +static inline int resync_alloc_pages(struct resync_pages *rp,
+> +				     gfp_t gfp_flags)
+> +{
+> +	int i;
+> +
+> +	for (i =3D 0; i < RESYNC_PAGES; i++) {
+> +		rp->pages[i] =3D alloc_page(gfp_flags);
+> +		if (!rp->pages[i])
+> +			goto out_free;
+> +	}
+> +
+> +	return 0;
+> +
+> + out_free:
+> +	while (--i >=3D 0)
+> +		put_page(rp->pages[i]);
+> +	return -ENOMEM;
+> +}
+> +
+> +static inline void resync_free_pages(struct resync_pages *rp)
+> +{
+> +	int i;
+> +
+> +	for (i =3D 0; i < RESYNC_PAGES; i++)
+> +		put_page(rp->pages[i]);
+> +}
+> +
+> +static inline void resync_get_all_pages(struct resync_pages *rp)
+> +{
+> +	int i;
+> +
+> +	for (i =3D 0; i < RESYNC_PAGES; i++)
+> +		get_page(rp->pages[i]);
+> +}
+> +
+> +static inline struct page *resync_fetch_page(struct resync_pages *rp,
+> +					     unsigned idx)
+> +{
+> +	if (WARN_ON_ONCE(idx >=3D RESYNC_PAGES))
+> +		return NULL;
+> +	return rp->pages[idx];
+> +}
+> +
+>  #endif /* _MD_MD_H */
+> --=20
+> 2.9.3
+>
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljUteAACgkQOeye3VZi
+gble+xAAihiLo5WaKz0cEyOtblxUr/beKmzAsAEo8TGXSCBbRpI8wFaL1MYLiGpB
+YbR2DErnasD8cgzWAXdT+2AVhRgeUhmWyNTPpko83O3uChcKWv7Q248FJyQCS5nP
+v9Oe6rII0chWdLxqSVaOG+l+N0TOzEtFY9TSbZPVaG0JlvG+49nwX7NNIY3eJv9o
+z+JkMqFC3dlRMpatpKvHLXNh+YbHEBd0dBf2NmX4hFEaXpXv/0cTGkeQJv2sRT+9
+DH7ubSfyVWssJEhR1ZILGR82S/TIeA0jxRyrP5J0TNlaNBFSojKHcvyDXALj46hH
+gASKtbZzIrMUw4LHFxC8bpBmROyFLCGQX3aqMJ+9AezrR/h5dnawPF/z0V9XYqDE
+Rq6lDkzPSMnFM9NaDIMUeRUbX4svK2g7xw0tHy1T7oCNScl6EA/RFkbrBzfRQbaD
+9vau/QIQ6Dtw9urEqvc4hqfeVTrWGU/tLVBjm2gc8m1LCNP9tXooOeRe1jdE2Ghm
+UQktz7Usz7XtCrZGhBi05aZdLOFeiKtt2CeoEuitxeeA7BJGJxpetZ7+POFNC6IR
+eFxBj+0SYSdmosx1ahF7T6Gn7fK2RDFqIM97hZGB5G4fKYkx6Ej8QTdIlTBXzOpR
+lXtBxGO6oxHksPccC/xH4g8WIlf/klUGeutHZAzBFPcFKq9u6fg=
+=uM4u
+-----END PGP SIGNATURE-----
+--=-=-=--
