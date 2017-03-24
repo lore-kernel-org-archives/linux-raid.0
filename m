@@ -1,214 +1,101 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH v3] block: trace completion of all bios.
-Date: Fri, 24 Mar 2017 14:47:41 +0800
-Message-ID: <CACVXFVNC=-_f1jYo5bYw7X6TT8-g7UThw3zzzfrMaKVarnJvSQ@mail.gmail.com>
-References: <877f3iave6.fsf@notabene.neil.brown.name> <20170322125149.GA29606@infradead.org>
- <87shm4a4lt.fsf@notabene.neil.brown.name> <20170323104331.GA16903@ming.t460p> <87fui3a65o.fsf@notabene.neil.brown.name>
+From: pdi <pdi@otenet.gr>
+Subject: Re: constant array_state active after specific jobs
+Date: Fri, 24 Mar 2017 09:04:42 +0200
+Message-ID: <20170324090442.3d01347b@hal9.pdi.lan>
+References: <20170323104643.6cca7986@hal9.pdi.lan>
+        <8737e39rg0.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <87fui3a65o.fsf@notabene.neil.brown.name>
-Sender: linux-block-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <8737e39rg0.fsf@notabene.neil.brown.name>
+Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, linux-block <linux-block@vger.kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, "open list:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Shaohua Li <shli@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Mar 24, 2017 at 8:07 AM, NeilBrown <neilb@suse.com> wrote:
->
-> Currently only dm and md/raid5 bios trigger
-> trace_block_bio_complete().  Now that we have bio_chain() and
-> bio_inc_remaining(), it is not possible, in general, for a driver to
-> know when the bio is really complete.  Only bio_endio() knows that.
->
-> So move the trace_block_bio_complete() call to bio_endio().
->
-> Now trace_block_bio_complete() pairs with trace_block_bio_queue().
-> Any bio for which a 'queue' event is traced, will subsequently
-> generate a 'complete' event.
->
-> There are a few cases where completion tracing is not wanted.
-> 1/ If blk_update_request() has already generated a completion
->    trace event at the 'request' level, there is no point generating
->    one at the bio level too.  In this case the bi_sector and bi_size
->    will have changed, so the bio level event would be wrong
->
-> 2/ If the bio hasn't actually been queued yet, but is being aborted
->    early, then a trace event could be confusing.  Some filesystems
->    call bio_endio() but do not want tracing.
->
-> 3/ The bio_integrity code interposes itself by replacing bi_end_io,
->    then restoring it and calling bio_endio() again.  This would produce
->    two identical trace events if left like that.
->
-> To handle these, we introduce a flag BIO_TRACE_COMPLETION and only
-> produce the trace event when this is set.
-> We address point 1 above by clearing the flag in blk_update_request().
-> We address point 2 above by only setting the flag when
-> generic_make_request() is called.
-> We address point 3 above by clearing the flag after generating a
-> completion event.
->
-> When bio_split() is used on a bio, particularly in blk_queue_split(),
-> there is an extra complication.  A new bio is split off the front, and
-> may be handle directly without going through generic_make_request().
-> The old bio, which has been advanced, is passed to
-> generic_make_request(), so it will trigger a trace event a second
-> time.
-> Probably the best result when a split happens is to see a single
-> 'queue' event for the whole bio, then multiple 'complete' events - one
-> for each component.  To achieve this was can:
-> - copy the BIO_TRACE_COMPLETION flag to the new bio in bio_split()
-> - avoid generating a 'queue' event if BIO_TRACE_COMPLETION is already set.
-> This way, the split-off bio won't create a queue event, the original
-> won't either even if it re-submitted to generic_make_request(),
-> but both will produce completion events, each for their own range.
->
-> So if generic_make_request() is called (which generates a QUEUED
-> event), then bi_endio() will create a single COMPLETE event for each
-> range that the bio is split into, unless the driver has explicitly
-> requested it not to.
->
-> Signed-off-by: NeilBrown <neilb@suse.com>
-> ---
->  block/bio.c               | 13 +++++++++++++
->  block/blk-core.c          | 10 +++++++++-
->  drivers/md/dm.c           |  1 -
->  drivers/md/raid5.c        |  8 --------
->  include/linux/blk_types.h |  4 +++-
->  5 files changed, 25 insertions(+), 11 deletions(-)
->
-> diff --git a/block/bio.c b/block/bio.c
-> index 5eec5e08417f..c1272986133e 100644
-> --- a/block/bio.c
-> +++ b/block/bio.c
-> @@ -1818,6 +1818,11 @@ static inline bool bio_remaining_done(struct bio *bio)
->   *   bio_endio() will end I/O on the whole bio. bio_endio() is the preferred
->   *   way to end I/O on a bio. No one should call bi_end_io() directly on a
->   *   bio unless they own it and thus know that it has an end_io function.
-> + *
-> + *   bio_endio() can be called several times on a bio that has been chained
-> + *   using bio_chain().  The ->bi_end_io() function will only be call the
-> + *   last time.  At this point the BLK_TA_COMPLETE tracing event will be
-> + *   generated if BIO_TRACE_COMPLETION is set.
->   **/
->  void bio_endio(struct bio *bio)
->  {
-> @@ -1838,6 +1843,11 @@ void bio_endio(struct bio *bio)
->                 goto again;
->         }
->
-> +       if (bio->bi_bdev && bio_flagged(bio, BIO_TRACE_COMPLETION)) {
-> +               trace_block_bio_complete(bdev_get_queue(bio->bi_bdev),
-> +                                        bio, bio->bi_error);
-> +               bio_clear_flag(bio, BIO_TRACE_COMPLETION);
-> +       }
->         if (bio->bi_end_io)
->                 bio->bi_end_io(bio);
->  }
-> @@ -1876,6 +1886,9 @@ struct bio *bio_split(struct bio *bio, int sectors,
->
->         bio_advance(bio, split->bi_iter.bi_size);
->
-> +       if (bio_flagged(bio, BIO_TRACE_COMPLETION))
-> +               bio_set_flag(bio, BIO_TRACE_COMPLETION);
-> +
->         return split;
->  }
->  EXPORT_SYMBOL(bio_split);
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index 0eeb99ef654f..b34b5b1b1bbf 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -1936,7 +1936,13 @@ generic_make_request_checks(struct bio *bio)
->         if (!blkcg_bio_issue_check(q, bio))
->                 return false;
->
-> -       trace_block_bio_queue(q, bio);
-> +       if (!bio_flagged(bio, BIO_TRACE_COMPLETION)) {
-> +               trace_block_bio_queue(q, bio);
-> +               /* Now that enqueuing has been traced, we need to trace
-> +                * completion as well.
-> +                */
-> +               bio_set_flag(bio, BIO_TRACE_COMPLETION);
-> +       }
->         return true;
->
->  not_supported:
-> @@ -2595,6 +2601,8 @@ bool blk_update_request(struct request *req, int error, unsigned int nr_bytes)
->                 if (bio_bytes == bio->bi_iter.bi_size)
->                         req->bio = bio->bi_next;
->
-> +               /* Completion has already been traced */
-> +               bio_clear_flag(bio, BIO_TRACE_COMPLETION);
->                 req_bio_endio(req, bio, bio_bytes, error);
->
->                 total_bytes += bio_bytes;
-> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-> index f4ffd1eb8f44..f5f09ace690a 100644
-> --- a/drivers/md/dm.c
-> +++ b/drivers/md/dm.c
-> @@ -810,7 +810,6 @@ static void dec_pending(struct dm_io *io, int error)
->                         queue_io(md, bio);
->                 } else {
->                         /* done with normal IO or empty flush */
-> -                       trace_block_bio_complete(md->queue, bio, io_error);
->                         bio->bi_error = io_error;
->                         bio_endio(bio);
->                 }
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 9a3b7da34137..f684cb566721 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -5141,8 +5141,6 @@ static void raid5_align_endio(struct bio *bi)
->         rdev_dec_pending(rdev, conf->mddev);
->
->         if (!error) {
-> -               trace_block_bio_complete(bdev_get_queue(raid_bi->bi_bdev),
-> -                                        raid_bi, 0);
->                 bio_endio(raid_bi);
->                 if (atomic_dec_and_test(&conf->active_aligned_reads))
->                         wake_up(&conf->wait_for_quiescent);
-> @@ -5727,10 +5725,6 @@ static void raid5_make_request(struct mddev *mddev, struct bio * bi)
->                 md_write_end(mddev);
->         remaining = raid5_dec_bi_active_stripes(bi);
->         if (remaining == 0) {
-> -
-> -
-> -               trace_block_bio_complete(bdev_get_queue(bi->bi_bdev),
-> -                                        bi, 0);
->                 bio_endio(bi);
->         }
->  }
-> @@ -6138,8 +6132,6 @@ static int  retry_aligned_read(struct r5conf *conf, struct bio *raid_bio)
->         }
->         remaining = raid5_dec_bi_active_stripes(raid_bio);
->         if (remaining == 0) {
-> -               trace_block_bio_complete(bdev_get_queue(raid_bio->bi_bdev),
-> -                                        raid_bio, 0);
->                 bio_endio(raid_bio);
->         }
->         if (atomic_dec_and_test(&conf->active_aligned_reads))
-> diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-> index d703acb55d0f..db7a57ee0e58 100644
-> --- a/include/linux/blk_types.h
-> +++ b/include/linux/blk_types.h
-> @@ -29,7 +29,7 @@ struct bio {
->                                                  * top bits REQ_OP. Use
->                                                  * accessors.
->                                                  */
-> -       unsigned short          bi_flags;       /* status, command, etc */
-> +       unsigned short          bi_flags;       /* status, etc */
->         unsigned short          bi_ioprio;
->
->         struct bvec_iter        bi_iter;
-> @@ -102,6 +102,8 @@ struct bio {
->  #define BIO_REFFED     8       /* bio has elevated ->bi_cnt */
->  #define BIO_THROTTLED  9       /* This bio has already been subjected to
->                                  * throttling rules. Don't do it again. */
-> +#define BIO_TRACE_COMPLETION 10        /* bio_endio() should trace the final completion
-> +                                * of this bio. */
+On Fri, 24 Mar 2017 16:25:35 +1100
+NeilBrown <neilb@suse.com> wrote:
 
-This may not be a good idea, since the flag space is quite small(12).
+> On Thu, Mar 23 2017, pdi wrote:
+> 
+> > Greetings all,
+> >
+> > The problem in a nutshell is that an array is clean after boot,
+> > until some specific jobs switch it to active where it remains until
+> > reboot.
+> >
+> > A similar problem was discussed, and solved, in 
+> > https://www.spinics.net/lists/raid/msg46450.html. However, AFAICT,
+> > it is not the same issue.
+> >
+> > I would be grateful for any insights as to why this happens and/or
+> > how to prevent it.
+> >
+> > The relevant info follows, please let me know if anything further
+> > might help.
+> >
+> > Many thanks in advance.
+> >
+> > - uname -a
+> >   Linux hostname 4.4.38 #1 SMP Sun Dec 11 16:03:41 CST 2016 x86_64
+> >   Intel(R) Core(TM)2 Duo CPU E8400 @ 3.00GHz GenuineIntel GNU/Linux
+> > - mdadm -V
+> >   mdadm - v3.3.4 - 3rd August 2015
+> > - Desktop drives without sct/erc,
+> >   with timeout mismatch correction as per
+> >   https://raid.wiki.kernel.org/index.php/Timeout_Mismatch
+> > - /dev/md9 is a raid10 array, 4 devices, far=2,
+> >   with various dirs used as samba and nfs shares
+> > - The array is in *constant* array_state active
+> > - mdadm -D /dev/md9 | grep 'State :'
+> >   State : active
+> > - cat /sys/block/md9/md/array_state
+> >   active
+> > - watch -d 'grep md9 /proc/diskstats'
+> >   remain unchanged
+> > - uptime
+> >   load average: 0.00, 0.00, 0.00
+> > - cat /sys/block/md9/md/safe_mode_delay
+> >   0.201
+> > - echo 0.1 > /sys/block/md9/md/safe_mode_delay
+> >   array_state remains active
+> > - echo clean > /sys/block/md9/md/array_state
+> >   echo: write error: Device or resource busy
+> > - reboot (with or without prior check)
+> >   array_state clean
+> > - After reboot, array remains clean until some specific
+> >   jobs put it in constant active state. Such jobs so far
+> >   identified:
+> >   - echo check > /sys/block/md9/md/sync_action
+> >   - run an rsnapshot job
+> >   - start a qemu/kvm vm
+> > - Other jobs, like text/doc editing, multimedia playback,
+> >   etc retain array_state clean  
+> 
+> This bug was introduced by
+> Commit: 20d0189b1012 ("block: Introduce new bio_split()")
+> in 3.14, and fixed by
+> Commit: 9b622e2bbcf0 ("raid10: increment write counter after bio is
+> split") in 4.8.
+> 
+> Maybe the latter patch should be sent to -stable ??
+> 
+> NeilBrown
 
-Thanks,
-Ming
+NeilBrown, thank you for your swift and concise answer.
+
+I gather you are referring to kernel version numbers. The described
+behaviour was first noticed many months ago with kernel 2.6.37.6, and
+persisted after a system upgrade and kernel 4.4.38. However, after the
+upgrade two things were corrected, the timeout mismatch, and a
+Current_Pending_Sector in one of the drives; which may, or may not,
+explain the occurrence with the older kernel.
+
+Is this constant active state in the data array something to worry about
+and try kernel >= 4.8, or shall I let be?
+
+pdi
+
+
+
