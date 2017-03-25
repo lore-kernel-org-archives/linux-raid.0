@@ -1,51 +1,102 @@
-From: Shaohua Li <shli@fb.com>
-Subject: [PATCH] md/raid1: skip data copy for behind io for discard request
-Date: Fri, 24 Mar 2017 15:20:47 -0700
-Message-ID: <7dd6d110d2eeafaf2980f08e6e0b318be654f72a.1490393962.git.shli@fb.com>
+From: Jason Yan <yanaijie@huawei.com>
+Subject: [PATCH] md/raid5-cache: fix payload endianness problem in raid5-cache
+Date: Sat, 25 Mar 2017 09:44:39 +0800
+Message-ID: <1490406279-20453-1-git-send-email-yanaijie@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Ming Lei <tom.leiming@gmail.com>
+To: shli@kernel.org, linux-raid@vger.kernel.org
+Cc: miaoxie@huawei.com, zhaohongjiang@huawei.com, Jason Yan <yanaijie@huawei.com>
 List-Id: linux-raid.ids
 
-discard request doesn't have data attached, so it's meaningless to
-allocate memory and copy from original bio for behind IO. And the copy
-is bogus because bio_copy_data_partial can't handle discard request.
+The payload->header.type and payload->size are little-endian, so just
+convert them to the right byte order.
 
-We don't support writesame/writezeros request so far.
-
-Cc: Ming Lei <tom.leiming@gmail.com>
-Signed-off-by: Shaohua Li <shli@fb.com>
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
 ---
- drivers/md/raid1.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/md/raid5-cache.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index c6a671f..b7d9651 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1102,6 +1102,10 @@ static struct bio *alloc_behind_master_bio(struct r1bio *r1_bio,
- 	if (!behind_bio)
- 		goto fail;
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 25eb048..b6194e0 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -2002,12 +2002,12 @@ r5l_recovery_verify_data_checksum_for_mb(struct r5l_log *log,
+ 		payload = (void *)mb + mb_offset;
+ 		payload_flush = (void *)mb + mb_offset;
  
-+	/* discard op, we don't support writezero/writesame yet */
-+	if (!bio_has_data(bio))
-+		goto skip_copy;
-+
- 	while (i < vcnt && size) {
- 		struct page *page;
- 		int len = min_t(int, PAGE_SIZE, size);
-@@ -1118,7 +1122,7 @@ static struct bio *alloc_behind_master_bio(struct r1bio *r1_bio,
+-		if (payload->header.type == R5LOG_PAYLOAD_DATA) {
++		if (le16_to_cpu(payload->header.type) == R5LOG_PAYLOAD_DATA) {
+ 			if (r5l_recovery_verify_data_checksum(
+ 				    log, ctx, page, log_offset,
+ 				    payload->checksum[0]) < 0)
+ 				goto mismatch;
+-		} else if (payload->header.type == R5LOG_PAYLOAD_PARITY) {
++		} else if (le16_to_cpu(payload->header.type) == R5LOG_PAYLOAD_PARITY) {
+ 			if (r5l_recovery_verify_data_checksum(
+ 				    log, ctx, page, log_offset,
+ 				    payload->checksum[0]) < 0)
+@@ -2019,12 +2019,12 @@ r5l_recovery_verify_data_checksum_for_mb(struct r5l_log *log,
+ 						 BLOCK_SECTORS),
+ 				    payload->checksum[1]) < 0)
+ 				goto mismatch;
+-		} else if (payload->header.type == R5LOG_PAYLOAD_FLUSH) {
++		} else if (le16_to_cpu(payload->header.type) == R5LOG_PAYLOAD_FLUSH) {
+ 			/* nothing to do for R5LOG_PAYLOAD_FLUSH here */
+ 		} else /* not R5LOG_PAYLOAD_DATA/PARITY/FLUSH */
+ 			goto mismatch;
  
- 	bio_copy_data_partial(behind_bio, bio, offset,
- 			      behind_bio->bi_iter.bi_size);
--
-+skip_copy:
- 	r1_bio->behind_master_bio = behind_bio;;
- 	set_bit(R1BIO_BehindIO, &r1_bio->state);
+-		if (payload->header.type == R5LOG_PAYLOAD_FLUSH) {
++		if (le16_to_cpu(payload->header.type) == R5LOG_PAYLOAD_FLUSH) {
+ 			mb_offset += sizeof(struct r5l_payload_flush) +
+ 				le32_to_cpu(payload_flush->size);
+ 		} else {
+@@ -2091,7 +2091,7 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
+ 		payload = (void *)mb + mb_offset;
+ 		payload_flush = (void *)mb + mb_offset;
  
+-		if (payload->header.type == R5LOG_PAYLOAD_FLUSH) {
++		if (le16_to_cpu(payload->header.type) == R5LOG_PAYLOAD_FLUSH) {
+ 			int i, count;
+ 
+ 			count = le32_to_cpu(payload_flush->size) / sizeof(__le64);
+@@ -2113,7 +2113,7 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
+ 		}
+ 
+ 		/* DATA or PARITY payload */
+-		stripe_sect = (payload->header.type == R5LOG_PAYLOAD_DATA) ?
++		stripe_sect = (le16_to_cpu(payload->header.type) == R5LOG_PAYLOAD_DATA) ?
+ 			raid5_compute_sector(
+ 				conf, le64_to_cpu(payload->location), 0, &dd,
+ 				NULL)
+@@ -2151,7 +2151,7 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
+ 			list_add_tail(&sh->lru, cached_stripe_list);
+ 		}
+ 
+-		if (payload->header.type == R5LOG_PAYLOAD_DATA) {
++		if (le16_to_cpu(payload->header.type) == R5LOG_PAYLOAD_DATA) {
+ 			if (!test_bit(STRIPE_R5C_CACHING, &sh->state) &&
+ 			    test_bit(R5_Wantwrite, &sh->dev[sh->pd_idx].flags)) {
+ 				r5l_recovery_replay_one_stripe(conf, sh, ctx);
+@@ -2159,7 +2159,7 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
+ 			}
+ 			r5l_recovery_load_data(log, sh, ctx, payload,
+ 					       log_offset);
+-		} else if (payload->header.type == R5LOG_PAYLOAD_PARITY)
++		} else if (le16_to_cpu(payload->header.type) == R5LOG_PAYLOAD_PARITY)
+ 			r5l_recovery_load_parity(log, sh, ctx, payload,
+ 						 log_offset);
+ 		else
+@@ -2361,7 +2361,7 @@ r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
+ 				payload = (void *)mb + offset;
+ 				payload->header.type = cpu_to_le16(
+ 					R5LOG_PAYLOAD_DATA);
+-				payload->size = BLOCK_SECTORS;
++				payload->size = cpu_to_le32(BLOCK_SECTORS);
+ 				payload->location = cpu_to_le64(
+ 					raid5_compute_blocknr(sh, i, 0));
+ 				addr = kmap_atomic(dev->page);
 -- 
-2.9.3
+2.5.0
 
