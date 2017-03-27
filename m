@@ -1,41 +1,84 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3] block: trace completion of all bios.
-Date: Mon, 27 Mar 2017 10:14:21 -0700
-Message-ID: <20170327171421.GA464@infradead.org>
-References: <877f3iave6.fsf@notabene.neil.brown.name>
-	<20170322125149.GA29606@infradead.org>
-	<87shm4a4lt.fsf@notabene.neil.brown.name>
-	<20170323104331.GA16903@ming.t460p>
-	<87fui3a65o.fsf@notabene.neil.brown.name>
-	<20170327090308.GA11757@infradead.org>
-	<87zig76oca.fsf@notabene.neil.brown.name>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: constant array_state active after specific jobs
+Date: Mon, 27 Mar 2017 11:08:05 -0700
+Message-ID: <20170327180805.bdnyxun3vbzn4tsu@kernel.org>
+References: <20170323104643.6cca7986@hal9.pdi.lan>
+ <8737e39rg0.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dm-devel-bounces@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <87zig76oca.fsf@notabene.neil.brown.name>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
+In-Reply-To: <8737e39rg0.fsf@notabene.neil.brown.name>
+Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Ming Lei <tom.leiming@gmail.com>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Alasdair Kergon <agk@redhat.com>
+Cc: pdi <pdi@otenet.gr>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-T24gTW9uLCBNYXIgMjcsIDIwMTcgYXQgMDg6NDk6NTdQTSArMTEwMCwgTmVpbEJyb3duIHdyb3Rl
-Ogo+IE9uIE1vbiwgTWFyIDI3IDIwMTcsIENocmlzdG9waCBIZWxsd2lnIHdyb3RlOgo+IAo+ID4g
-SSBkb24ndCByZWFsbHkgbGlrZSB0aGUgZmxhZyBhdCBhbGwuICBJJ2QgbXVjaCBwcmVmZXIgYSBf
-X2Jpb19lbmRpbwo+ID4gd2l0aCBhICdib29sIHRyYWNlJyBmbGFnLiAgQWxzbyBwbGVhc2UgcmVt
-b3ZlIHRoZSBtYW51YWwgdHJhY2luZyBpbgo+ID4gZG0uxIsuICBPbmNlIHRoYXQgaXMgZG9uZSBJ
-IHN1c3BlY3Qgd2UgY2FuIGFsc28gcmVtb3ZlIHRoZQo+ID4gYmxvY2tfYmlvX2NvbXBsZXRlIGV4
-cG9ydC4KPiAKPiBDYW4geW91IHNheSB3aHkgeW91IGRvbid0IGxpa2UgaXQ/CgpJdCB1c2VzIHVw
-IGEgcHJlY2lvdXMgYml0IGluIHRoZSBiaW8gZm9yIHNvbWV0aGluZyB0aGF0IHNob3VsZCBiZSBz
-dGF0ZQp0aGF0IGNhbiBiZSBkZXRlcm1pbmVkIGluIHRoZSBjYWxsZXIgYXQgY29tcGlsZSB0aW1l
-LgoKLS0KZG0tZGV2ZWwgbWFpbGluZyBsaXN0CmRtLWRldmVsQHJlZGhhdC5jb20KaHR0cHM6Ly93
-d3cucmVkaGF0LmNvbS9tYWlsbWFuL2xpc3RpbmZvL2RtLWRldmVs
+On Fri, Mar 24, 2017 at 04:25:35PM +1100, Neil Brown wrote:
+> On Thu, Mar 23 2017, pdi wrote:
+> 
+> > Greetings all,
+> >
+> > The problem in a nutshell is that an array is clean after boot, until
+> > some specific jobs switch it to active where it remains until reboot.
+> >
+> > A similar problem was discussed, and solved, in 
+> > https://www.spinics.net/lists/raid/msg46450.html. However, AFAICT,
+> > it is not the same issue.
+> >
+> > I would be grateful for any insights as to why this happens and/or how
+> > to prevent it.
+> >
+> > The relevant info follows, please let me know if anything further might
+> > help.
+> >
+> > Many thanks in advance.
+> >
+> > - uname -a
+> >   Linux hostname 4.4.38 #1 SMP Sun Dec 11 16:03:41 CST 2016 x86_64
+> >   Intel(R) Core(TM)2 Duo CPU E8400 @ 3.00GHz GenuineIntel GNU/Linux
+> > - mdadm -V
+> >   mdadm - v3.3.4 - 3rd August 2015
+> > - Desktop drives without sct/erc,
+> >   with timeout mismatch correction as per
+> >   https://raid.wiki.kernel.org/index.php/Timeout_Mismatch
+> > - /dev/md9 is a raid10 array, 4 devices, far=2,
+> >   with various dirs used as samba and nfs shares
+> > - The array is in *constant* array_state active
+> > - mdadm -D /dev/md9 | grep 'State :'
+> >   State : active
+> > - cat /sys/block/md9/md/array_state
+> >   active
+> > - watch -d 'grep md9 /proc/diskstats'
+> >   remain unchanged
+> > - uptime
+> >   load average: 0.00, 0.00, 0.00
+> > - cat /sys/block/md9/md/safe_mode_delay
+> >   0.201
+> > - echo 0.1 > /sys/block/md9/md/safe_mode_delay
+> >   array_state remains active
+> > - echo clean > /sys/block/md9/md/array_state
+> >   echo: write error: Device or resource busy
+> > - reboot (with or without prior check)
+> >   array_state clean
+> > - After reboot, array remains clean until some specific
+> >   jobs put it in constant active state. Such jobs so far
+> >   identified:
+> >   - echo check > /sys/block/md9/md/sync_action
+> >   - run an rsnapshot job
+> >   - start a qemu/kvm vm
+> > - Other jobs, like text/doc editing, multimedia playback,
+> >   etc retain array_state clean
+> 
+> This bug was introduced by
+> Commit: 20d0189b1012 ("block: Introduce new bio_split()")
+> in 3.14, and fixed by
+> Commit: 9b622e2bbcf0 ("raid10: increment write counter after bio is split")
+> in 4.8.
+> 
+> Maybe the latter patch should be sent to -stable ??
+
+Sure, looks suitable, will do it now.
+
+Thanks,
+Shaohua
