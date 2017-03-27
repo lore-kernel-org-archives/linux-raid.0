@@ -1,148 +1,24 @@
-From: =?UTF-8?B?546L6YeR5rWm?= <jinpuwang@gmail.com>
-Subject: Re: [mdadm PATCH 4/5] Add 'force' flag to *hot_remove_disk().
-Date: Mon, 27 Mar 2017 10:05:29 +0200
-Message-ID: <CAD9gYJJzJcc+adBEhYruMy3S7H1oLXRD+PO2T5dGH_NxQBqong@mail.gmail.com>
-References: <149058575542.15679.9804611071393072863.stgit@noble> <149058581604.15679.9993360149817038150.stgit@noble>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v3] block: trace completion of all bios.
+Date: Mon, 27 Mar 2017 02:03:08 -0700
+Message-ID: <20170327090308.GA11757@infradead.org>
+References: <877f3iave6.fsf@notabene.neil.brown.name>
+ <20170322125149.GA29606@infradead.org>
+ <87shm4a4lt.fsf@notabene.neil.brown.name>
+ <20170323104331.GA16903@ming.t460p>
+ <87fui3a65o.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <149058581604.15679.9993360149817038150.stgit@noble>
-Sender: linux-raid-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <87fui3a65o.fsf@notabene.neil.brown.name>
+Sender: linux-kernel-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.com>
-Cc: Jes Sorensen <jes.sorensen@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+Cc: Ming Lei <tom.leiming@gmail.com>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Shaohua Li <shli@kernel.org>, linux-kernel@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>
 List-Id: linux-raid.ids
 
-2017-03-27 5:36 GMT+02:00 NeilBrown <neilb@suse.com>:
-> In rare circumstances, the short period that *hot_remove_disk()
-> waits isn't long enough to IO to complete.  This particularly happens
-> when a device is failing and many retries are still happening.
->
-> We don't want to increase the normal wait time for "mdadm --remove"
-> as that might be use just to test if a device is active or not, and a
-> delay would be problematic.
-> So allow "--force" to mean that mdadm should try extra hard for a
-> --remove to complete, waiting up to 5 seconds.
->
-> Note that this patch fixes a comment which claim the previous
-> wait time was half a second, where it was really 50msec.
->
-> Signed-off-by: NeilBrown <neilb@suse.com>
-> ---
->  Grow.c   |    2 +-
->  Manage.c |   10 +++++-----
->  mdadm.h  |    4 ++--
->  util.c   |   10 +++++-----
->  4 files changed, 13 insertions(+), 13 deletions(-)
->
-> diff --git a/Grow.c b/Grow.c
-> index 218a70649c1f..e22661ca3dff 100755
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -2749,7 +2749,7 @@ static int impose_level(int fd, int level, char *devname, int verbose)
->                                 continue;
->                         ioctl(fd, SET_DISK_FAULTY,
->                               makedev(disk.major, disk.minor));
-> -                       hot_remove_disk(fd, makedev(disk.major, disk.minor));
-> +                       hot_remove_disk(fd, makedev(disk.major, disk.minor), 1);
->                 }
->         }
->         c = map_num(pers, level);
-> diff --git a/Manage.c b/Manage.c
-> index edf5798aa87d..55218d9b0a7d 100644
-> --- a/Manage.c
-> +++ b/Manage.c
-> @@ -1110,7 +1110,7 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
->  }
->
->  int Manage_remove(struct supertype *tst, int fd, struct mddev_dev *dv,
-> -                 int sysfd, unsigned long rdev, int verbose, char *devname)
-> +                 int sysfd, unsigned long rdev, int force, int verbose, char *devname)
->  {
->         int lfd = -1;
->         int err;
-> @@ -1177,9 +1177,9 @@ int Manage_remove(struct supertype *tst, int fd, struct mddev_dev *dv,
->                 /* device has been removed and we don't know
->                  * the major:minor number
->                  */
-> -               err = sys_hot_remove_disk(sysfd);
-> +               err = sys_hot_remove_disk(sysfd, force);
->         } else {
-> -               err = hot_remove_disk(fd, rdev);
-> +               err = hot_remove_disk(fd, rdev, force);
->                 if (err && errno == ENODEV) {
->                         /* Old kernels rejected this if no personality
->                          * is registered */
-> @@ -1603,7 +1603,7 @@ int Manage_subdevs(char *devname, int fd,
->
->                         if (dv->disposition == 'F')
->                                 /* Need to remove first */
-> -                               hot_remove_disk(fd, rdev);
-> +                               hot_remove_disk(fd, rdev, force);
->                         /* Make sure it isn't in use (in 2.6 or later) */
->                         tfd = dev_open(dv->devname, O_RDONLY|O_EXCL);
->                         if (tfd >= 0) {
-> @@ -1645,7 +1645,7 @@ int Manage_subdevs(char *devname, int fd,
->                                 rv = -1;
->                         } else
->                                 rv = Manage_remove(tst, fd, dv, sysfd,
-> -                                                  rdev, verbose,
-> +                                                  rdev, verbose, force,
->                                                    devname);
->                         if (sysfd >= 0)
->                                 close(sysfd);
-> diff --git a/mdadm.h b/mdadm.h
-> index 52952a800ace..3b3d24230a79 100644
-> --- a/mdadm.h
-> +++ b/mdadm.h
-> @@ -1476,8 +1476,8 @@ extern int add_disk(int mdfd, struct supertype *st,
->                     struct mdinfo *sra, struct mdinfo *info);
->  extern int remove_disk(int mdfd, struct supertype *st,
->                        struct mdinfo *sra, struct mdinfo *info);
-> -extern int hot_remove_disk(int mdfd, unsigned long dev);
-> -extern int sys_hot_remove_disk(int statefd);
-> +extern int hot_remove_disk(int mdfd, unsigned long dev, int force);
-> +extern int sys_hot_remove_disk(int statefd, int force);
->  extern int set_array_info(int mdfd, struct supertype *st, struct mdinfo *info);
->  unsigned long long min_recovery_start(struct mdinfo *array);
->
-> diff --git a/util.c b/util.c
-> index 43fd83e72ded..6fd582520f0d 100644
-> --- a/util.c
-> +++ b/util.c
-> @@ -1795,15 +1795,15 @@ int remove_disk(int mdfd, struct supertype *st,
->         return rv;
->  }
->
-> -int hot_remove_disk(int mdfd, unsigned long dev)
-> +int hot_remove_disk(int mdfd, unsigned long dev, int force)
->  {
-> -       int cnt = 5;
-> +       int cnt = force ? 500 : 5;
->         int ret;
->
->         /* HOT_REMOVE_DISK can fail with EBUSY if there are
->          * outstanding IO requests to the device.
->          * In this case, it can be helpful to wait a little while,
-> -        * up to half a second, for that IO to flush.
-> +        * up to 5 seconds if 'force' is set, or 50 msec if not.
->          */
->         while ((ret = ioctl(mdfd, HOT_REMOVE_DISK, dev)) == -1 &&
->                errno == EBUSY &&
-> @@ -1813,9 +1813,9 @@ int hot_remove_disk(int mdfd, unsigned long dev)
->         return ret;
->  }
->
-> -int sys_hot_remove_disk(int statefd)
-> +int sys_hot_remove_disk(int statefd, int force)
->  {
-> -       int cnt = 5;
-> +       int cnt = force ? 500 : 5;
->         int ret;
->
->         while ((ret = write(statefd, "remove", 6)) == -1 &&
->
->
-> --
-
-Ah, you've found and fix it,
-Reviewed-by: Jack Wang <jinpu.wang@profitbricks.com>
+I don't really like the flag at all.  I'd much prefer a __bio_endio
+with a 'bool trace' flag.  Also please remove the manual tracing in
+dm.ċ.  Once that is done I suspect we can also remove the
+block_bio_complete export.
