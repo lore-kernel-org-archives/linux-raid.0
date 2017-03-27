@@ -1,47 +1,57 @@
 From: jes.sorensen@gmail.com
-Subject: Re: [PATCH] mdadm/Monitor:triggers core dump when stat2devnm return NULL
-Date: Mon, 27 Mar 2017 18:25:20 -0400
-Message-ID: <wrfj7f3aichb.fsf@gmail.com>
-References: <1489987301-22836-1-git-send-email-zlliu@suse.com>
+Subject: Re: [PATCH] mdadm/Monitor:dev should be a block file when use --waitclean
+Date: Mon, 27 Mar 2017 18:29:40 -0400
+Message-ID: <wrfj37dyica3.fsf@gmail.com>
+References: <1489987317-22895-1-git-send-email-zlliu@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1489987301-22836-1-git-send-email-zlliu@suse.com> (Zhilong Liu's
-        message of "Mon, 20 Mar 2017 13:21:41 +0800")
+In-Reply-To: <1489987317-22895-1-git-send-email-zlliu@suse.com> (Zhilong Liu's
+        message of "Mon, 20 Mar 2017 13:21:57 +0800")
 Sender: linux-raid-owner@vger.kernel.org
 To: Zhilong Liu <zlliu@suse.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Zhilong Liu <zlliu@suse.com> writes:
-> Monitor: ensure that the device should be a block
-> device when uses --wait parameter, such as the 'f'
-> and 'd' type file would be triggered core dumped.
-> such as: ./mdadm --wait /dev/md/
-
-I modified the patch description here to make it easier to read.
-
-> Reviewed-by: NeilBrown <neilb@suse.com>
+> Monitor: mdadm --wait-clean /dev/mdX, the dev should
+> be a block file, otherwise fd2devnm returns NULL and
+> then triggers core dumped.
+>
 > Signed-off-by: Zhilong Liu <zlliu@suse.com>
 > ---
->  Monitor.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
+>  Monitor.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
 >
 > diff --git a/Monitor.c b/Monitor.c
-> index 802a9d9..f8850d3 100644
+> index f8850d3..5a2b5ca 100644
 > --- a/Monitor.c
 > +++ b/Monitor.c
-> @@ -1002,7 +1002,12 @@ int Wait(char *dev)
->  			strerror(errno));
->  		return 2;
->  	}
-> -	strcpy(devnm, stat2devnm(&stb));
-> +	char *tmp = stat2devnm(&stb);
+> @@ -1065,7 +1065,17 @@ int WaitClean(char *dev, int sock, int verbose)
+>  	struct mdinfo *mdi;
+>  	int rv = 1;
+>  	char devnm[32];
+> +	struct stat stb;
+>  
+> +	if (stat(dev, &stb) != 0) {
+> +		pr_err("Cannot find %s: %s\n", dev,
+> +			strerror(errno));
 
-Please do not declare variables in the middle of the codeflow, that is
-extremely bad programming practice.
+Please use the 80 characters in the line.
 
-I fixed this up and applied the patch.
+> +		return 2;
+> +	}
+> +	if ((S_IFMT & stb.st_mode) != S_IFBLK) {
+> +		pr_err("%s is not a block device.\n", dev);
+> +		return 2;
+> +	}
+>  	fd = open(dev, O_RDONLY);
+>  	if (fd < 0) {
+>  		if (verbose)
 
-Thanks,
+We have 7-8 instances of this throughout the code (stat and fstat).
+Maybe we should make it a utility function instead of duplicating it
+further.
+
+Cheers,
 Jes
