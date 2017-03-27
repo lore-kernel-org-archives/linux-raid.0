@@ -1,44 +1,125 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [mdadm PATCH 0/5] Assorted mdadm patch
+Subject: [mdadm PATCH 2/5] Retry HOT_REMOVE_DISK a few times.
 Date: Mon, 27 Mar 2017 14:36:55 +1100
-Message-ID: <149058575542.15679.9804611071393072863.stgit@noble>
+Message-ID: <149058581564.15679.7099618010536570804.stgit@noble>
+References: <149058575542.15679.9804611071393072863.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <149058575542.15679.9804611071393072863.stgit@noble>
 Sender: linux-raid-owner@vger.kernel.org
 To: Jes Sorensen <jes.sorensen@gmail.com>
 Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I found these while tidying up....
-I post a couple already, but then realised that I
-have quite a few, so here they are all together.
-Sorry for the duplication.
+HOT_REMOVE_DISK can fail with EBUSY if there are outstanding
+IO request that have not completed yet.  It can sometimes
+be helpful to wait a little while for these to complete.
 
-NeilBrown
+We already do this in impose_level() when reshaping a device,
+but not in Manage.c in response to an explicit --remove request.
 
+So create hot_remove_disk() to central this code, and call it
+where-ever it makes sense to wait for a HOT_REMOVE_DISK to succeed.
 
+Signed-off-by: NeilBrown <neilb@suse.com>
 ---
+ Grow.c   |    9 +--------
+ Manage.c |    4 ++--
+ mdadm.h  |    1 +
+ util.c   |   18 ++++++++++++++++++
+ 4 files changed, 22 insertions(+), 10 deletions(-)
 
-Hannes Reinecke (1):
-      udev-md-raid-assembly.rules: Skip non-ready devices
+diff --git a/Grow.c b/Grow.c
+index 455c5f90bf58..218a70649c1f 100755
+--- a/Grow.c
++++ b/Grow.c
+@@ -2736,7 +2736,6 @@ static int impose_level(int fd, int level, char *devname, int verbose)
+ 		for (d = 0, found = 0;
+ 		     d < MAX_DISKS && found < array.nr_disks;
+ 		     d++) {
+-			int cnt;
+ 			mdu_disk_info_t disk;
+ 			disk.number = d;
+ 			if (ioctl(fd, GET_DISK_INFO, &disk) < 0)
+@@ -2750,13 +2749,7 @@ static int impose_level(int fd, int level, char *devname, int verbose)
+ 				continue;
+ 			ioctl(fd, SET_DISK_FAULTY,
+ 			      makedev(disk.major, disk.minor));
+-			cnt = 5;
+-			while (ioctl(fd, HOT_REMOVE_DISK,
+-				     makedev(disk.major, disk.minor)) < 0
+-			       && errno == EBUSY
+-			       && cnt--) {
+-				usleep(10000);
+-			}
++			hot_remove_disk(fd, makedev(disk.major, disk.minor));
+ 		}
+ 	}
+ 	c = map_num(pers, level);
+diff --git a/Manage.c b/Manage.c
+index 5c3d2b9b1a9f..9139f96e1431 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -1183,7 +1183,7 @@ int Manage_remove(struct supertype *tst, int fd, struct mddev_dev *dv,
+ 		else
+ 			err = 0;
+ 	} else {
+-		err = ioctl(fd, HOT_REMOVE_DISK, rdev);
++		err = hot_remove_disk(fd, rdev);
+ 		if (err && errno == ENODEV) {
+ 			/* Old kernels rejected this if no personality
+ 			 * is registered */
+@@ -1607,7 +1607,7 @@ int Manage_subdevs(char *devname, int fd,
+ 
+ 			if (dv->disposition == 'F')
+ 				/* Need to remove first */
+-				ioctl(fd, HOT_REMOVE_DISK, rdev);
++				hot_remove_disk(fd, rdev);
+ 			/* Make sure it isn't in use (in 2.6 or later) */
+ 			tfd = dev_open(dv->devname, O_RDONLY|O_EXCL);
+ 			if (tfd >= 0) {
+diff --git a/mdadm.h b/mdadm.h
+index 71b8afb9fee6..53b3b5836841 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -1476,6 +1476,7 @@ extern int add_disk(int mdfd, struct supertype *st,
+ 		    struct mdinfo *sra, struct mdinfo *info);
+ extern int remove_disk(int mdfd, struct supertype *st,
+ 		       struct mdinfo *sra, struct mdinfo *info);
++extern int hot_remove_disk(int mdfd, unsigned long dev);
+ extern int set_array_info(int mdfd, struct supertype *st, struct mdinfo *info);
+ unsigned long long min_recovery_start(struct mdinfo *array);
+ 
+diff --git a/util.c b/util.c
+index f1009723ed04..e176a9d466cf 100644
+--- a/util.c
++++ b/util.c
+@@ -1795,6 +1795,24 @@ int remove_disk(int mdfd, struct supertype *st,
+ 	return rv;
+ }
+ 
++int hot_remove_disk(int mdfd, unsigned long dev)
++{
++	int cnt = 5;
++	int ret;
++
++	/* HOT_REMOVE_DISK can fail with EBUSY if there are
++	 * outstanding IO requests to the device.
++	 * In this case, it can be helpful to wait a little while,
++	 * up to half a second, for that IO to flush.
++	 */
++	while ((ret = ioctl(mdfd, HOT_REMOVE_DISK, dev)) == -1 &&
++	       errno == EBUSY &&
++	       cnt-- > 0)
++		usleep(10000);
++
++	return ret;
++}
++
+ int set_array_info(int mdfd, struct supertype *st, struct mdinfo *info)
+ {
+ 	/* Initialise kernel's knowledge of array.
 
-NeilBrown (4):
-      Retry HOT_REMOVE_DISK a few times.
-      Introduce sys_hot_remove_disk()
-      Add 'force' flag to *hot_remove_disk().
-      Detail: handle non-existent arrays better.
-
-
- Detail.c                    |    8 ++++++++
- Grow.c                      |    9 +--------
- Manage.c                    |   14 +++++---------
- mdadm.h                     |    2 ++
- udev-md-raid-assembly.rules |    3 +++
- util.c                      |   30 ++++++++++++++++++++++++++++++
- 6 files changed, 49 insertions(+), 17 deletions(-)
-
---
-Signature
 
