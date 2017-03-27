@@ -1,52 +1,40 @@
-From: Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: RFC: always use REQ_OP_WRITE_ZEROES for zeroing
-	offload
-Date: Mon, 27 Mar 2017 10:03:07 -0400
-Message-ID: <20170327140307.GA13020@redhat.com>
-References: <20170323143341.31549-1-hch@lst.de>
-	<20170323155410.GD1138@soda.linbit>
-	<20170327091056.GB6879@infradead.org>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Subject: Re: Re-assembling array after double device failure
+Date: Mon, 27 Mar 2017 16:31:13 +0200
+Message-ID: <20170327143113.GA19680@metamorpher.de>
+References: <20170327133813.GQ4349@bitfolk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170327091056.GB6879-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+In-Reply-To: <20170327133813.GQ4349@bitfolk.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Mar 27 2017 at  5:10am -0400,
-Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
+On Mon, Mar 27, 2017 at 01:38:13PM +0000, Andy Smith wrote:
+> I'm fairly confident that the drives themselves are actually okay -
+> nothing untoward in SMART data - so I'm not going to replace them at
+> this stage.
 
-> It sounds like you don't want to support traditional discard at all,
-> but only WRITE ZEROES.  So in many ways this series is the right way
-> forward.  It would be nice if we could do a full blown
-> REQ_OP_WRITE_ZEROES for dm_think that zeroes out partial blocks,
-> similar to what hardware that implements WRITE SAME of zeroes
-> or WRITE ZEROES would do.  I'll see if I could include that in my
-> series.
+You did not show any logs or SMART output. There is literally nothing 
+in your mail that points at timeouts. If your confidence is based on 
+the frequent "disk got kicked. must be timeouts!!1" mails on this list, 
+then I wish you all the best. Praying works for some people, right...?
 
-By "you" I assume you're referring to Lars?  Lars' approach for discard,
-when drbd is layered on dm-thinp, feels over-engineered.  Not his fault,
-the way discard and zeroing got conflated certainly lends itself to
-these ugly hacks.  SO I do appreciate that for anything to leverage
-discard_zeroes_data it needs to be reliable.  Which runs counter to how
-discard was implemented (discard may get silently dropped!)  But that is
-why dm-thinp doesn't advertise dzd.  Anyway...
+If you get two disks kicked, chances are something is seriously wrong.
+If there is any doubt at all, and no backups exist, ddrescue both drives.
+Better to make a copy you don't need than need a copy you didn't make.
 
-As for the blkdev_issue_zeroout() resorting to manually zeroing the
-range, if the discard fails or dzd not supported, that certainly
-requires DM thinp to implement manual zeroing of the head and tail of
-the range if partial blocks are being zeroed.  So I welcome any advances
-there.  It is probably something that is best left to Joe or myself to
-tackle.  But I'll gladly accept patches ;)
+Be very careful with mdadm --create. Defaults change over time and 
+rescue systems might give you old mdadm versions, so you have to 
+specify everything (metadata version, data offsets, ...).
+
+Consider using overlays for experiments:
+
+https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID#Making_the_harddisks_read-only_using_an_overlay_file
+
+(But not on faulty drives.)
+
+Regards
+Andreas Klauer
