@@ -1,54 +1,43 @@
-From: Gioh Kim <gi-oh.kim@profitbricks.com>
-Subject: Re: [PATCHv2 0/2] mdadm: setting device role of raid1 disk with
- failfast
-Date: Mon, 27 Mar 2017 12:59:24 +0200
-Message-ID: <20170327105923.GA6557@ws00837>
-References: <1490003517-4216-1-git-send-email-gi-oh.kim@profitbricks.com>
+From: SeongJae Park <sj38.park@gmail.com>
+Subject: Re: [PATCH 0/5] Fix dead URLs to ftp.kernel.org
+Date: Mon, 27 Mar 2017 21:42:48 +0900
+Message-ID: <CAEjAshqR0Nhp4Wkmkg_HrswsiuUb3rYJ=TOUSBSvoUT3FSWTjg@mail.gmail.com>
+References: <20170327054731.31882-1-sj38.park@gmail.com> <fabba6b8-8f8d-8f8f-1660-c579e6515563@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1490003517-4216-1-git-send-email-gi-oh.kim@profitbricks.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: jes.sorensen@gmail.com
-Cc: neilb@suse.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <fabba6b8-8f8d-8f8f-1660-c579e6515563@suse.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Michal Marek <mmarek@suse.com>
+Cc: rml@tech9.net, axboe@fb.com, shli@kernel.org, Ian Kent <raven@themaw.net>, yamada.masahito@socionext.com, linux-raid@vger.kernel.org, autofs@vger.kernel.org, linux-kbuild@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
-Is nobody interested in those patches?
+On Mon, Mar 27, 2017 at 8:54 PM, Michal Marek <mmarek@suse.com> wrote:
+> Dne 27.3.2017 v 07:47 SeongJae Park napsal(a):
+>> URLs to `ftp.kernel.org` exist here and there though `ftp.kernel.org` is
+>> already dead [0].  This patchset fixes those URLs to use `www.kernel.org`
+>> instead.
+>>
+>> The change is splitted into multiple patches for independent review and merge
+>> of each maintainer, though the change is trivial.
+>>
+>> [0] https://www.kernel.org/shutting-down-ftp-services.html
+>>
+>> SeongJae Park (5):
+>>   MAINTAINERS: Fix a dead URL to ftp.kernel.org
+>>   drivers/block: Fix a dead URL to ftp.kernel.org
+>>   drivers/md: Fix a dead URL to ftp.kernel.org
+>>   fs/autofs4: Fix a dead URL to ftp.kernel.org
+>>   scripts: Fix dead URLs to ftp.kernel.org
+>
+> I guess the change be sent in a single patch to the trivial tree.
 
-On Mon, Mar 20, 2017 at 10:51:55AM +0100, Gioh Kim wrote:
-> Hi,
-> 
-> I've found a case that failfast option of mdadm set a disk faulty wrongly.
-> Following is my test case.
-> 
-> mdadm --create /dev/md100 -l 1 --failfast -e 1.2 -n 2 /dev/vdb /dev/vdc
-> mdadm /dev/md100 -a --failfast /dev/vdd
-> 
-> If I use failfast option, the vdd disk was faulty wrongly.
-> If not, it was spare.
-> 
-> This patch fixes a corner case for setting device role and
-> prints device role if it's faulty.
-> This patch is based on "mdadm - v4.0-8-g72b616a - 2017-03-07".
-> 
-> v2: fix a typo of v1
-> 
-> Gioh Kim (1):
->   super1: ignore failfast flag for setting device role
-> 
-> Jack Wang (1):
->   super1: check and output faulty dev role
-> 
->  super1.c | 14 +++++++++-----
->  1 file changed, 9 insertions(+), 5 deletions(-)
-> 
-> -- 
-> 2.5.0
-> 
+Sounds reasonable.  I will post the single patch as a reply to this mail.
 
--- 
-Best regards,
-Gi-Oh Kim
-TEL: 0176 2697 8962
+
+Thanks,
+SeongJae Park
+
+>
+> Michal
+>
