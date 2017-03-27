@@ -1,34 +1,143 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [Drbd-dev] RFC: always use REQ_OP_WRITE_ZEROES for zeroing
- offload
-Date: Mon, 27 Mar 2017 15:08:16 +0000
-Message-ID: <1490627281.2461.4.camel@sandisk.com>
-References: <20170323143341.31549-1-hch@lst.de>
-         <20170323155410.GD1138@soda.linbit> <20170327091056.GB6879@infradead.org>
-         <20170327140307.GA13020@redhat.com>
+From: Anthony Youngman <antlists@youngman.org.uk>
+Subject: Re: Re-assembling array after double device failure
+Date: Mon, 27 Mar 2017 16:23:19 +0100
+Message-ID: <eb7bebad-f173-b6e9-75f8-182148eccc46@youngman.org.uk>
+References: <20170327133813.GQ4349@bitfolk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20170327140307.GA13020@redhat.com>
-Content-Language: en-US
-Content-ID: <631697B4B3796943B829130DF7C39672@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: "hch@infradead.org" <hch@infradead.org>, "snitzer@redhat.com" <snitzer@redhat.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "agk@redhat.com" <agk@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "philipp.reisner@linbit.com" <philipp.reisner@linbit.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>, "shli@kernel.org" <shli@kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170327133813.GQ4349@bitfolk.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 2017-03-27 at 10:03 -0400, Mike Snitzer wrote:
-> As for the blkdev_issue_zeroout() resorting to manually zeroing the
-> range, if the discard fails or dzd not supported, that certainly
-> requires DM thinp to implement manual zeroing of the head and tail of
-> the range if partial blocks are being zeroed.  So I welcome any advances
-> there.  It is probably something that is best left to Joe or myself to
-> tackle.  But I'll gladly accept patches ;)
 
-Some time ago I posted a patch series for the block layer that zeroes
-start and tail for nonaligned discard requests if dzd has been set. See
-also "[PATCH v3 0/5] Make blkdev_issue_discard() submit aligned discard
-requests" (https://www.spinics.net/lists/linux-block/msg02360.html).
 
-Bart.=
+On 27/03/17 14:38, Andy Smith wrote:
+> Hi,
+>
+> I'm attempting to clean up after what is most likely a
+> timeout-related double device failure (yes, I know).
+>
+> I just want to check I have the right procedure here.
+>
+> So, initial situation was a two device RAID-10 (sdc, sdd). sdc saw
+> some I/O errors and was kicked. Contents of /proc/mdstat after that:
+>
+> md4 : active raid10 sdc[0](F) sdd[1]
+>       3906886656 blocks super 1.2 512K chunks 2 far-copies [2/1] [_U]
+>       bitmap: 7/30 pages [28KB], 65536KB chunk
+>
+> A couple of hours later, sdd also saw some I/O errors and was
+> similarly kicked. Neither /dev/sdc nor sdd appear as device nodes in
+> the system any more at this point and the controller doesn't see
+> them.
+>
+> sdd was re-plugged and re-appeared as sdg.
+>
+> A mdadm --examine /dev/sdg looks like:
+>
+> /dev/sdg:
+>           Magic : a92b4efc
+>         Version : 1.2
+>     Feature Map : 0x1
+>      Array UUID : 4100ddce:8edf6082:ba50427e:60da0a42
+>            Name : elephant:4  (local to host elephant)
+>   Creation Time : Fri Nov 18 22:53:10 2016
+>      Raid Level : raid10
+>    Raid Devices : 2
+>
+>  Avail Dev Size : 7813775024 (3725.90 GiB 4000.65 GB)
+>      Array Size : 3906886656 (3725.90 GiB 4000.65 GB)
+>   Used Dev Size : 7813773312 (3725.90 GiB 4000.65 GB)
+>     Data Offset : 262144 sectors
+>    Super Offset : 8 sectors
+>    Unused Space : before=262056 sectors, after=1712 sectors
+>           State : active
+>     Device UUID : d9c9d81d:c487599a:3d3e3a30:0c512610
+>
+> Internal Bitmap : 8 sectors from superblock
+>     Update Time : Sun Mar 26 00:00:01 2017
+>   Bad Block Log : 512 entries available at offset 72 sectors
+>        Checksum : ec70d450 - correct
+>          Events : 298824
+>
+>          Layout : far=2
+>      Chunk Size : 512K
+>
+>    Device Role : Active device 1
+>    Array State : .A ('A' == active, '.' == missing, 'R' == replacing)
+>
+> mdadm config:
+>
+> $ grep -v '^#' /etc/mdadm/mdadm.conf | grep -v '^$'
+> DEVICE /dev/sd*
+> CREATE owner=root group=disk mode=0660 auto=yes
+> HOMEHOST <system>
+> MAILADDR root
+> ARRAY /dev/md/0  metadata=1.2 UUID=400bac1d:e2c5d6ef:fea3b8c8:bcb70f8f
+> ARRAY /dev/md/1  metadata=1.2 UUID=e29c8b89:705f0116:d888f77e:2b6e32f5
+> ARRAY /dev/md/2  metadata=1.2 UUID=039b3427:4be5157a:6e2d53bd:fe898803
+> ARRAY /dev/md/3  metadata=1.2 UUID=30f745ce:7ed41b53:4df72181:7406ea1d
+> ARRAY /dev/md/4  metadata=1.2 UUID=4100ddce:8edf6082:ba50427e:60da0a42
+> ARRAY /dev/md/5  metadata=1.2 UUID=957030cf:c09f023d:ceaebb27:e546f095
+>
+> (other arrays are on different devices and are not involved here)
+>
+> So, I think I need to:
+>
+> - Increase /sys/block/sdg/device/timeout to 180 (already done). TLER
+>   not supported.
+>
+> - Stop md4.
+>
+>   mdadm --stop /dev/md4
+>
+> - Assemble it again.
+>
+>   mdadm --assemble /dev/md4
+>
+>  Theory being that there is at least one good device (sdg that was
+>  sdd).
+>
+> - If that complains, I would then have to consider re-creating the
+>   array with something like:
+
+NEVER NEVER NEVER use --create except as a last resort. Try --assemble 
+--force. And if you are going to try it, as an absolute minimum, read 
+the kernel raid wiki, get lsdrv, run it AND MAKE SURE THE OUTPUT IS SAFE 
+SOMEWHERE.
+
+https://raid.wiki.kernel.org/index.php/Asking_for_help
+
+Snag is, you might end up with a non-functional array with two spare 
+drives. I'll have to step back and let the experts handle that if it 
+happens.
+>
+>   mdadm --create --assume-clean --level=10 --layout=f2 missing /dev/sdd
+>
+> - Once it's up and running, add sdc back in and let it sync
+>
+> - Make timeout changes permanent.
+
+I'd do this as the very first step - I think you need to put a script in 
+your run-level. There's a good sample script on the wiki.
+
+That way it'll get done as the system boots, and should prevent any 
+problems. Oh - and do scheduled scrubs, as the fact you're getting 
+timeout errors indicates that something is wrong - a scrub is probably 
+sufficient to clean it up.
+>
+> Does that seem correct?
+
+Hopefully fixing the timeout, followed by a --assemble --force, then a 
+scrub, will be all that's required.
+
+>
+> I'm fairly confident that the drives themselves are actually okay -
+> nothing untoward in SMART data - so I'm not going to replace them at
+> this stage.
+>
+Cheers,
+Wol
