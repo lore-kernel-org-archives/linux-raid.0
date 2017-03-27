@@ -1,60 +1,47 @@
 From: jes.sorensen@gmail.com
-Subject: Re: [PATCH] mdadm/grow: reshape would be stuck from raid1 to raid5
-Date: Mon, 27 Mar 2017 18:10:08 -0400
-Message-ID: <wrfjk27aid6n.fsf@gmail.com>
-References: <1489987229-22631-1-git-send-email-zlliu@suse.com>
+Subject: Re: [PATCH] mdadm/Monitor:triggers core dump when stat2devnm return NULL
+Date: Mon, 27 Mar 2017 18:25:20 -0400
+Message-ID: <wrfj7f3aichb.fsf@gmail.com>
+References: <1489987301-22836-1-git-send-email-zlliu@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1489987229-22631-1-git-send-email-zlliu@suse.com> (Zhilong Liu's
-        message of "Mon, 20 Mar 2017 13:20:29 +0800")
+In-Reply-To: <1489987301-22836-1-git-send-email-zlliu@suse.com> (Zhilong Liu's
+        message of "Mon, 20 Mar 2017 13:21:41 +0800")
 Sender: linux-raid-owner@vger.kernel.org
 To: Zhilong Liu <zlliu@suse.com>
-Cc: linux-raid@vger.kernel.org, Harald Hoyer <harald@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Zhilong Liu <zlliu@suse.com> writes:
-> it would be stuck at the beginning of reshape progress
-> when grows array from raid1 to raid5, correct the name
-> of mdadm-grow-continue@.service in continue_via_systemd.
->
-> reproduce steps:
-> ./mdadm -CR /dev/md0 -l1 -b internal -n2 /dev/loop[0-1]
-> ./mdadm --grow /dev/md0 -l5 -n3 -a /dev/loop2
->
+> Monitor: ensure that the device should be a block
+> device when uses --wait parameter, such as the 'f'
+> and 'd' type file would be triggered core dumped.
+> such as: ./mdadm --wait /dev/md/
+
+I modified the patch description here to make it easier to read.
+
+> Reviewed-by: NeilBrown <neilb@suse.com>
 > Signed-off-by: Zhilong Liu <zlliu@suse.com>
 > ---
->  Grow.c | 6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
+>  Monitor.c | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
 >
-> diff --git a/Grow.c b/Grow.c
-> index 455c5f9..10c02a1 100755
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -2808,13 +2808,11 @@ static int continue_via_systemd(char *devnm)
->  		 */
->  		close(2);
->  		open("/dev/null", O_WRONLY);
-> -		snprintf(pathbuf, sizeof(pathbuf), "mdadm-grow-continue@%s.service",
-> -			 devnm);
-> +		snprintf(pathbuf, sizeof(pathbuf), "mdadm-grow-continue@.service");
+> diff --git a/Monitor.c b/Monitor.c
+> index 802a9d9..f8850d3 100644
+> --- a/Monitor.c
+> +++ b/Monitor.c
+> @@ -1002,7 +1002,12 @@ int Wait(char *dev)
+>  			strerror(errno));
+>  		return 2;
+>  	}
+> -	strcpy(devnm, stat2devnm(&stb));
+> +	char *tmp = stat2devnm(&stb);
 
-My memory is rusty here, isn't systemctl interpreting the device name in
-mdadm-grow-continue@<device>.service as an argument?
+Please do not declare variables in the middle of the codeflow, that is
+extremely bad programming practice.
 
->  		status = execl("/usr/bin/systemctl", "systemctl",
->  			       "start",
->  			       pathbuf, NULL);
-> -		status = execl("/bin/systemctl", "systemctl", "start",
-> -			       pathbuf, NULL);
-> +		pr_err("/usr/bin/systemctl %s got failure\n", pathbuf);
->  		exit(1);
+I fixed this up and applied the patch.
 
-This assumes systemctl is location in /usr/bin only - you removed the
-fallback case for it being location in /bin.
-
-In addition, instead of saying 'got failure' lets do something with the
-errno value so the user gets a more descriptive error message.
-
-Cheers,
+Thanks,
 Jes
