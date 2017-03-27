@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [mdadm PATCH 4/5] Add 'force' flag to *hot_remove_disk().
+Subject: [mdadm PATCH 5/5] Detail: handle non-existent arrays better.
 Date: Mon, 27 Mar 2017 14:36:56 +1100
-Message-ID: <149058581604.15679.9993360149817038150.stgit@noble>
+Message-ID: <149058581623.15679.14330532500949622569.stgit@noble>
 References: <149058575542.15679.9804611071393072863.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,132 +13,40 @@ To: Jes Sorensen <jes.sorensen@gmail.com>
 Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-In rare circumstances, the short period that *hot_remove_disk()
-waits isn't long enough to IO to complete.  This particularly happens
-when a device is failing and many retries are still happening.
+If you call "mdadm --detail" with a device file for an array which
+doesn't exist, such as by
+  mknod /dev/md57 b 9 57
+  mdadm --detail /dev/md57
 
-We don't want to increase the normal wait time for "mdadm --remove"
-as that might be use just to test if a device is active or not, and a
-delay would be problematic.
-So allow "--force" to mean that mdadm should try extra hard for a
---remove to complete, waiting up to 5 seconds.
+you get an unhelpful message about and inactive RAID0, and return
+status is '0'.  This is confusing.
 
-Note that this patch fixes a comment which claim the previous
-wait time was half a second, where it was really 50msec.
+So catch this possibility and print a more useful message, and
+return a non-zero status.
 
 Signed-off-by: NeilBrown <neilb@suse.com>
 ---
- Grow.c   |    2 +-
- Manage.c |   10 +++++-----
- mdadm.h  |    4 ++--
- util.c   |   10 +++++-----
- 4 files changed, 13 insertions(+), 13 deletions(-)
+ Detail.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/Grow.c b/Grow.c
-index 218a70649c1f..e22661ca3dff 100755
---- a/Grow.c
-+++ b/Grow.c
-@@ -2749,7 +2749,7 @@ static int impose_level(int fd, int level, char *devname, int verbose)
- 				continue;
- 			ioctl(fd, SET_DISK_FAULTY,
- 			      makedev(disk.major, disk.minor));
--			hot_remove_disk(fd, makedev(disk.major, disk.minor));
-+			hot_remove_disk(fd, makedev(disk.major, disk.minor), 1);
- 		}
- 	}
- 	c = map_num(pers, level);
-diff --git a/Manage.c b/Manage.c
-index edf5798aa87d..55218d9b0a7d 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -1110,7 +1110,7 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
- }
- 
- int Manage_remove(struct supertype *tst, int fd, struct mddev_dev *dv,
--		  int sysfd, unsigned long rdev, int verbose, char *devname)
-+		  int sysfd, unsigned long rdev, int force, int verbose, char *devname)
- {
- 	int lfd = -1;
- 	int err;
-@@ -1177,9 +1177,9 @@ int Manage_remove(struct supertype *tst, int fd, struct mddev_dev *dv,
- 		/* device has been removed and we don't know
- 		 * the major:minor number
- 		 */
--		err = sys_hot_remove_disk(sysfd);
-+		err = sys_hot_remove_disk(sysfd, force);
+diff --git a/Detail.c b/Detail.c
+index 509b0d418768..d9d1b7092167 100644
+--- a/Detail.c
++++ b/Detail.c
+@@ -110,6 +110,14 @@ int Detail(char *dev, struct context *c)
+ 	if (ioctl(fd, GET_ARRAY_INFO, &array) == 0) {
+ 		inactive = 0;
+ 	} else if (errno == ENODEV && sra) {
++		if (sra->array.major_version == -1 &&
++		    sra->array.minor_version == -1 &&
++		    sra->devs == NULL) {
++			pr_err("Array associated with md device %s does not exist.\n", dev);
++			close(fd);
++			sysfs_free(sra);
++			return rv;
++		}
+ 		array = sra->array;
+ 		inactive = 1;
  	} else {
--		err = hot_remove_disk(fd, rdev);
-+		err = hot_remove_disk(fd, rdev, force);
- 		if (err && errno == ENODEV) {
- 			/* Old kernels rejected this if no personality
- 			 * is registered */
-@@ -1603,7 +1603,7 @@ int Manage_subdevs(char *devname, int fd,
- 
- 			if (dv->disposition == 'F')
- 				/* Need to remove first */
--				hot_remove_disk(fd, rdev);
-+				hot_remove_disk(fd, rdev, force);
- 			/* Make sure it isn't in use (in 2.6 or later) */
- 			tfd = dev_open(dv->devname, O_RDONLY|O_EXCL);
- 			if (tfd >= 0) {
-@@ -1645,7 +1645,7 @@ int Manage_subdevs(char *devname, int fd,
- 				rv = -1;
- 			} else
- 				rv = Manage_remove(tst, fd, dv, sysfd,
--						   rdev, verbose,
-+						   rdev, verbose, force,
- 						   devname);
- 			if (sysfd >= 0)
- 				close(sysfd);
-diff --git a/mdadm.h b/mdadm.h
-index 52952a800ace..3b3d24230a79 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -1476,8 +1476,8 @@ extern int add_disk(int mdfd, struct supertype *st,
- 		    struct mdinfo *sra, struct mdinfo *info);
- extern int remove_disk(int mdfd, struct supertype *st,
- 		       struct mdinfo *sra, struct mdinfo *info);
--extern int hot_remove_disk(int mdfd, unsigned long dev);
--extern int sys_hot_remove_disk(int statefd);
-+extern int hot_remove_disk(int mdfd, unsigned long dev, int force);
-+extern int sys_hot_remove_disk(int statefd, int force);
- extern int set_array_info(int mdfd, struct supertype *st, struct mdinfo *info);
- unsigned long long min_recovery_start(struct mdinfo *array);
- 
-diff --git a/util.c b/util.c
-index 43fd83e72ded..6fd582520f0d 100644
---- a/util.c
-+++ b/util.c
-@@ -1795,15 +1795,15 @@ int remove_disk(int mdfd, struct supertype *st,
- 	return rv;
- }
- 
--int hot_remove_disk(int mdfd, unsigned long dev)
-+int hot_remove_disk(int mdfd, unsigned long dev, int force)
- {
--	int cnt = 5;
-+	int cnt = force ? 500 : 5;
- 	int ret;
- 
- 	/* HOT_REMOVE_DISK can fail with EBUSY if there are
- 	 * outstanding IO requests to the device.
- 	 * In this case, it can be helpful to wait a little while,
--	 * up to half a second, for that IO to flush.
-+	 * up to 5 seconds if 'force' is set, or 50 msec if not.
- 	 */
- 	while ((ret = ioctl(mdfd, HOT_REMOVE_DISK, dev)) == -1 &&
- 	       errno == EBUSY &&
-@@ -1813,9 +1813,9 @@ int hot_remove_disk(int mdfd, unsigned long dev)
- 	return ret;
- }
- 
--int sys_hot_remove_disk(int statefd)
-+int sys_hot_remove_disk(int statefd, int force)
- {
--	int cnt = 5;
-+	int cnt = force ? 500 : 5;
- 	int ret;
- 
- 	while ((ret = write(statefd, "remove", 6)) == -1 &&
 
 
