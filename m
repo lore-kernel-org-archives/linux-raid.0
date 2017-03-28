@@ -1,59 +1,78 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH] Revert "md: raid1: use bio helper in process_checks()"
-Date: Tue, 28 Mar 2017 19:42:44 +0800
-Message-ID: <CACVXFVNzGV+P9CXcyqcV0_rJVM9F7dOR3_aX2xv0GQTsMaXX6A@mail.gmail.com>
-References: <20170328095029.3500369-1-arnd@arndb.de> <CACVXFVMX=0XBvSt7b-3XObw3SknPGqH9JZvT6jViYbZfzKqQEg@mail.gmail.com>
- <CAK8P3a0k9S-t1CvpcabNVJOFMWoieuSn6EEr4oB72+T=zQT=aw@mail.gmail.com>
+From: Zhilong Liu <zlliu@suse.com>
+Subject: Re: [PATCH] md:array cannot be opened again after 'md_set_readonly'
+Date: Tue, 28 Mar 2017 21:19:12 +0800
+Message-ID: <0c5289f3-0160-8d2d-a5d8-da126b2fb468@suse.com>
+References: <1490601145-5865-1-git-send-email-zlliu@suse.com>
+ <20170327182214.zde4kao2gz2lazgm@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAK8P3a0k9S-t1CvpcabNVJOFMWoieuSn6EEr4oB72+T=zQT=aw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Shaohua Li <shli@kernel.org>, NeilBrown <neilb@suse.com>, Jens Axboe <axboe@fb.com>, "colyli@suse.de" <colyli@suse.de>, Guoqing Jiang <gqjiang@suse.com>, Mike Christie <mchristi@redhat.com>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170327182214.zde4kao2gz2lazgm@kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: neilb@suse.com, shli@fb.com, linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-On Tue, Mar 28, 2017 at 7:35 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Tue, Mar 28, 2017 at 12:44 PM, Ming Lei <tom.leiming@gmail.com> wrote:
->> On Tue, Mar 28, 2017 at 5:49 PM, Arnd Bergmann <arnd@arndb.de> wrote:
->>> Commit 60928a91b0b3 ("md: raid1: use bio helper in process_checks()")
->>> is probably correct, but I get a new compile-time warning after
->>> it, and have trouble understanding what it fixes:
->>>
->>> drivers/md/raid1.c: In function 'sync_request_write':
->>> drivers/md/raid1.c:2172:9: error: 'page_len$' may be used uninitialized in this function [-Werror=maybe-uninitialized]
->>>      if (memcmp(page_address(ppages[j]),
->>>          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->>>          page_address(spages[j]),
->>>          ~~~~~~~~~~~~~~~~~~~~~~~~
->>>          page_len[j]))
->>>          ~~~~~~~~~~~~
->>> drivers/md/raid1.c:2160:7: note: 'page_len$' was declared here
->>>    int page_len[RESYNC_PAGES];
->>>        ^~~~~~~~
->>>
->>> This reverts it to resolve the warning.
->>
->> Please try the following patch:
->>
->>  https://lkml.org/lkml/2017/3/28/126
->
->
-> That patch will certainly shut up the warning, but will also prevent
-> the compiler from warning when the function gets changed in some
-> way that actually leads to an uninitialized use of the page_len array,
 
-Why do you think that it leads to an uninitialized use of the page_len array?
+On 03/28/2017 02:22 AM, Shaohua Li wrote:
+> On Mon, Mar 27, 2017 at 03:52:25PM +0800, Zhilong Liu wrote:
+>> This is a bug about array cannot be opened again after 'md_set_readonly',
+>> because the MD_CLOSING bit is still waiting for clear.
+>> MD_CLOSING should only be set for a short period or time to avoid certain
+>> races. After the operation that set it completes, it should be cleared.
+> where is the bit set? Why don't clear it after the operation but clear it in
+> set_readonly?
+>   
 
-The following code does initialize the array well enough for future use:
+it goes two paths after set MD_CLOSING bit, do_md_stop and md_set_readonly,
+the do_md_stop has done the md_clean to clear the mddev->flags, thus I 
+put it in
+md_set_readonly.
+Thanks for your suggestion, is the following changing good for you? here 
+it has
+finished what it needs to do, so clear the MD_CLOSING bit in time.
+if looks good, I would send this in new revision patch.
 
-               bio_for_each_segment_all(bi, sbio, j)
-                       page_len[j] = bi->bv_len;
-
-That is why we don't need to initialize the array explicitly, but just
-for killing
-the warning.
-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index f6ae1d6..e8c1130 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6868,6 +6868,7 @@ static int md_ioctl(struct block_device *bdev, 
+fmode_t mode,
+                 set_bit(MD_CLOSING, &mddev->flags);
+                 mutex_unlock(&mddev->open_mutex);
+                 sync_blockdev(bdev);
++               clear_bit(MD_CLOSING, &mddev->flags);
+         }
+         err = mddev_lock(mddev);
+         if (err) {
 
 Thanks,
-Ming Lei
+-Zhilong
+>> Reviewed-by: NeilBrown <neilb@suse.com>
+>> Cc: Guoqing Jiang <gqjiang@suse.com>
+>> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+>> ---
+>>   drivers/md/md.c | 1 +
+>>   1 file changed, 1 insertion(+)
+>>
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index f6ae1d6..7f2db7c 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -5588,6 +5588,7 @@ static int md_set_readonly(struct mddev *mddev, struct block_device *bdev)
+>>   	int err = 0;
+>>   	int did_freeze = 0;
+>>   
+>> +	test_and_clear_bit(MD_CLOSING, &mddev->flags);
+> I don't understand why this must be a test_and_clear.
+>
+> Thanks,
+> Shaohua
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
