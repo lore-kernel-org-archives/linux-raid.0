@@ -1,33 +1,37 @@
 From: jes.sorensen@gmail.com
-Subject: Re: [PATCH v4] mdadm/r5cache: allow adding journal to array without journal
-Date: Tue, 28 Mar 2017 14:15:23 -0400
-Message-ID: <wrfjzig5fetg.fsf@gmail.com>
-References: <20170328180444.3385563-1-songliubraving@fb.com>
+Subject: Re: [PATCH v3 3/6] imsm: PPL support
+Date: Tue, 28 Mar 2017 14:21:36 -0400
+Message-ID: <wrfjvaqtfej3.fsf@gmail.com>
+References: <20170316210948.21093-1-artur.paszkiewicz@intel.com>
+        <20170316210948.21093-4-artur.paszkiewicz@intel.com>
+        <wrfj4lyrk6je.fsf@gmail.com>
+        <b63748c5-0cdc-d332-e4d1-601f7c86ff80@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170328180444.3385563-1-songliubraving@fb.com> (Song Liu's
-        message of "Tue, 28 Mar 2017 11:04:44 -0700")
+In-Reply-To: <b63748c5-0cdc-d332-e4d1-601f7c86ff80@intel.com> (Artur
+        Paszkiewicz's message of "Mon, 20 Mar 2017 09:07:27 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>
-Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Song Liu <songliubraving@fb.com> writes:
-> Currently, --add-journal can be only used to recreate broken journal
-> for arrays with journal since  creation. As the kernel code getting
-> more mature, this constraint is no longer necessary.
+Artur Paszkiewicz <artur.paszkiewicz@intel.com> writes:
+> On 03/17/2017 09:11 PM, jes.sorensen@gmail.com wrote:
+>> Hi Artur,
+>> 
+>> This looks odd - sure you don't mean crc32c.c ?
 >
-> This patch allows --add-journal to add journal to array without
-> journal.
+> Of course this is a mistake, it should be crc32c.c. Sorry for that. But
+> surprisingly it builds correctly.
 >
-> Signed-off-by: Song Liu <songliubraving@fb.com>
-> ---
->  Manage.c   | 6 ------
->  mdadm.8.in | 5 ++---
->  2 files changed, 2 insertions(+), 9 deletions(-)
+> Thanks,
+> Artur
 
-Applied!
+Hi Artur,
+
+I can no longer apply this set. Would you mind sending me a fresh update
+so I don't end up botching it?
 
 Thanks,
 Jes
