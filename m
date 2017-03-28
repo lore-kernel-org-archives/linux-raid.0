@@ -1,57 +1,35 @@
 From: jes.sorensen@gmail.com
-Subject: Re: [PATCH v3] mdadm/r5cache: allow adding journal to array without journal
-Date: Tue, 28 Mar 2017 13:52:57 -0400
-Message-ID: <wrfjpoh1gufa.fsf@gmail.com>
-References: <20170317233111.2452831-1-songliubraving@fb.com>
-        <20170317233111.2452831-2-songliubraving@fb.com>
+Subject: Re: [PATCH 1/2] Replace snprintf with strncpy at some places to avoid truncation
+Date: Tue, 28 Mar 2017 13:55:05 -0400
+Message-ID: <wrfjlgrpgubq.fsf@gmail.com>
+References: <1489804425-4949-1-git-send-email-xni@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170317233111.2452831-2-songliubraving@fb.com> (Song Liu's
-        message of "Fri, 17 Mar 2017 16:31:11 -0700")
+In-Reply-To: <1489804425-4949-1-git-send-email-xni@redhat.com> (Xiao Ni's
+        message of "Sat, 18 Mar 2017 10:33:44 +0800")
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>
-Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org
+To: Xiao Ni <xni@redhat.com>
+Cc: ncroxon@redhat.com, artur.paszkiewicz@intel.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Song Liu <songliubraving@fb.com> writes:
-> Currently, --add-journal can be only used to recreate broken journal
-> for arrays with journal since  creation. As the kernel code getting
-> more mature, this constraint is no longer necessary.
+Xiao Ni <xni@redhat.com> writes:
+> In gcc7 there are some building errors like:
+> directive output may be truncated writing up to 31 bytes into a region of size 24
+> snprintf(str, MPB_SIG_LEN, %s, mpb->sig);
 >
-> This patch allows --add-journal to add journal to array without
-> journal.
+> It just need to copy one string to target. So use strncpy to replace it.
 >
-> Signed-off-by: Song Liu <songliubraving@fb.com>
+> For this line code: snprintf(str, MPB_SIG_LEN, %s, mpb->sig);
+> Because mpb->sig has the content of version after magic, so
+> it's better to use strncpy to replace snprintf too.
+>
+> Signed-off-by: Xiao Ni <xni@redhat.com>
 > ---
->  Manage.c   | 9 ---------
->  mdadm.8.in | 5 ++---
->  2 files changed, 2 insertions(+), 12 deletions(-)
->
-> diff --git a/Manage.c b/Manage.c
-> index 5c3d2b9..d038b68 100644
-> --- a/Manage.c
-> +++ b/Manage.c
-> @@ -946,7 +946,6 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
->  
->  	/* only add journal to array that supports journaling */
->  	if (dv->disposition == 'j') {
-> -		struct mdinfo mdi;
->  		struct mdinfo *mdp;
->  
->  		mdp = sysfs_read(fd, NULL, GET_ARRAY_STATE);
-> @@ -960,14 +959,6 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
->  			pr_err("%s is not readonly, cannot add journal.\n", devname);
->  			return -1;
->  		}
-> -
-> -		sysfs_free(mdp);
-> -
+>  super-intel.c | 9 ++++++---
+>  1 file changed, 6 insertions(+), 3 deletions(-)
 
-Song,
+Applied!
 
-Sorry for nagging you again on this one, however removing
-sysfs_free(mdp) means you are leaking mbp here.
-
-Cheers,
+Thanks,
 Jes
