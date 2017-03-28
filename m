@@ -1,76 +1,93 @@
 From: NeilBrown <neilb@suse.com>
 Subject: Re: [PATCH] md:array cannot be opened again after 'md_set_readonly'
-Date: Wed, 29 Mar 2017 08:13:36 +1100
-Message-ID: <87efxh6r5r.fsf@notabene.neil.brown.name>
-References: <1490601145-5865-1-git-send-email-zlliu@suse.com>
+Date: Wed, 29 Mar 2017 08:18:02 +1100
+Message-ID: <87bmsl6qyd.fsf@notabene.neil.brown.name>
+References: <1490601145-5865-1-git-send-email-zlliu@suse.com> <20170327182214.zde4kao2gz2lazgm@kernel.org> <0c5289f3-0160-8d2d-a5d8-da126b2fb468@suse.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1490601145-5865-1-git-send-email-zlliu@suse.com>
+In-Reply-To: <0c5289f3-0160-8d2d-a5d8-da126b2fb468@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: shli@fb.com
-Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>, Guoqing Jiang <gqjiang@suse.com>
+To: Zhilong Liu <zlliu@suse.com>, Shaohua Li <shli@kernel.org>
+Cc: shli@fb.com, linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Mar 27 2017, Zhilong Liu wrote:
+On Tue, Mar 28 2017, Zhilong Liu wrote:
 
-> This is a bug about array cannot be opened again after 'md_set_readonly',
-> because the MD_CLOSING bit is still waiting for clear.
-> MD_CLOSING should only be set for a short period or time to avoid certain
-> races. After the operation that set it completes, it should be cleared.
+> On 03/28/2017 02:22 AM, Shaohua Li wrote:
+>> On Mon, Mar 27, 2017 at 03:52:25PM +0800, Zhilong Liu wrote:
+>>> This is a bug about array cannot be opened again after 'md_set_readonly=
+',
+>>> because the MD_CLOSING bit is still waiting for clear.
+>>> MD_CLOSING should only be set for a short period or time to avoid certa=
+in
+>>> races. After the operation that set it completes, it should be cleared.
+>> where is the bit set? Why don't clear it after the operation but clear i=
+t in
+>> set_readonly?
+>>=20=20=20
 >
-> Reviewed-by: NeilBrown <neilb@suse.com>
-
-No I didn't.  I never reviewed this patch.  I don't agree with this
-patch. This patch is wrong.
-The flag is set in md_ioctl(), and it should be cleared in md_ioctl().
-
-NeilBrown
-
-> Cc: Guoqing Jiang <gqjiang@suse.com>
-> Signed-off-by: Zhilong Liu <zlliu@suse.com>
-> ---
->  drivers/md/md.c | 1 +
->  1 file changed, 1 insertion(+)
+> it goes two paths after set MD_CLOSING bit, do_md_stop and md_set_readonl=
+y,
+> the do_md_stop has done the md_clean to clear the mddev->flags, thus I=20
+> put it in
+> md_set_readonly.
+> Thanks for your suggestion, is the following changing good for you? here=
+=20
+> it has
+> finished what it needs to do, so clear the MD_CLOSING bit in time.
+> if looks good, I would send this in new revision patch.
 >
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index f6ae1d6..7f2db7c 100644
+> index f6ae1d6..e8c1130 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -5588,6 +5588,7 @@ static int md_set_readonly(struct mddev *mddev, str=
-uct block_device *bdev)
->  	int err =3D 0;
->  	int did_freeze =3D 0;
->=20=20
-> +	test_and_clear_bit(MD_CLOSING, &mddev->flags);
->  	if (!test_bit(MD_RECOVERY_FROZEN, &mddev->recovery)) {
->  		did_freeze =3D 1;
->  		set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-> --=20
-> 2.6.6
+> @@ -6868,6 +6868,7 @@ static int md_ioctl(struct block_device *bdev,=20
+> fmode_t mode,
+>                  set_bit(MD_CLOSING, &mddev->flags);
+>                  mutex_unlock(&mddev->open_mutex);
+>                  sync_blockdev(bdev);
+> +               clear_bit(MD_CLOSING, &mddev->flags);
+
+No.
+
+MD_CLOSING is used to prevent a race with md_open().
+md_open() blocks on open_mutex(), but we cannot hold that here for
+complicated reasons.
+So we set MD_CLOSING and need to keep it set at least until
+md_set_readonly() or do_md_stop() take that lock again.
+
+Clearing it here just opens up the race again.
+
+It needs to be cleared in md_ioctl, after any call to md_set_readonly()
+or do_md_stop().
+I've already posted a sample patch which has been tested.  Please don't
+do something completely different.
+
+NeilBrown
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlja0gAACgkQOeye3VZi
-gbkrBg/+L0PJtlGixnty4Sg6MrCUlSTnVIx2LfssQoS+RPtNCYFIcet83D0W0ERa
-HPJrPZQEe1RY3PaenBoOskBaOvd/BJLkaRGACDQ2vOPupHPNtBElbq6YwKWl5puN
-IEvxnsvbPgs09o2/K9aLOi/6+6YwFw3/KeLUPC6kZNREbVZUxgVXZCfHYREBK12h
-3Yqx3YxCgI8mT0DG6eCygdGZrXJXqyvdnaVlnziMHXBRo1GSL70w/vAoNW1s9y1L
-BQVU6L6g81CUVsrrDSuEmhtxGRC8Wq3R7ZVdgDRGHnC2TXAcVKtGprK60MzhX0MS
-fVIq/KCsYmML4mIhkZc4NfCkaa4nffElZCJB/0uNxFpPGcK1DWknlW009KkMLxcw
-xg9wAxeTE69myfaVXJztA6EVdMf4gErdNJkzB2O+4I4DzRxnc23MydAawKRm2OzT
-yY8tDevtcyCcnKACg+jnek14F+VF4vRsCqDjEN2jN7hehQZdYhSIYB32neSY7BLx
-UihvDuhdDwng94NJdJi4cKi79NMWhkrTaWb42Y1wIT0gSwrouEV5TXDsSJXa4Swx
-nFHNMO4FK0WbVS211OjOZ95U/qyg6TvMTTqKvKeoulyJj2RY7AUVt/ztMx0Rr6CG
-L/9nh49xo3rtjKvgw11DbAmCV+sOMZdmZ1VA4Vxtp0A/wR+FJB0=
-=aPKX
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlja0woACgkQOeye3VZi
+gbmhMw/9FrQOmyujRx579OV8WZknaSJ7q3LkSyqF/6LyHrpwy7ypjMywWq6DloJy
+b+xf6stLDsu7fUvtpxxiy3Gvg6WRjyqTiwLu/Nbf9uK+XpaxdAOgpx8RI54xXhMc
+8ncNYCOIee2N5Pfbu6m3savAsFg/q/7nhyLWtU0Ln+x0Jwe5oT3zIHmQYSXTWj8A
+8KUK50tV2xyWNXB6vInGix+FuGoOiy9oMU5x3zZOEqHWZTwTYOyBjW2qL0Xe02fl
+x7685YQ2xbq4cxDxdff2oyc3naEq/XxhHhu/hbCfzUiAzcg46TWWTwJjHqF4H8EI
+EJwWCNnQogYZ71UNJyvKbksRP0op2EOo6m1Z14Rd+zuYeIlSyI/atrOX5ucj+8JC
+VjJFqbieiKfjQLRq2+ubMzwp2YDP7jFDgr1bKxEVcGM9sjS6n/XhzYfLfzzJYAHp
+1xVp0wE4ljyli9ppCdDKDy27zz12NhwUQQTLliv2iZb9Iq0EmAlu4ySirVw2shBi
+sbrTaK5w3sD1Z4ISXJo9wpan4GnFAtJGlkEeCHEdaIDtxvPMrQPX0SI0+7bWhlkb
+oIzZNuaPmogx+NKhGnsQmd/liPnvp5/WG7Piq/aBje8OGzfUpqnx/0CE6+oNPWzE
+3s/JNo9VAekxqWrVkv5UVqbD/Fwjaz+Y7qK8ijBt01p5KH1nB8o=
+=gwbQ
 -----END PGP SIGNATURE-----
 --=-=-=--
