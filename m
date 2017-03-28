@@ -1,61 +1,83 @@
-From: <een@zmva.hu>
-Subject: 2541 linux-raid
-Date: Tue, 28 Mar 2017 04:33:15 -0000
-Message-ID: <149067559540.16099.13278194935634505955@bilink.com.br>
-Reply-To: <een@zmva.hu>
-Mime-Version: 1.0
-Content-Type: application/zip; name="652972856923.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: attachment
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] Revert "md: raid1: use bio helper in process_checks()"
+Date: Tue, 28 Mar 2017 11:49:57 +0200
+Message-ID: <20170328095029.3500369-1-arnd@arndb.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, NeilBrown <neilb@suse.com>, Ming Lei <tom.leiming@gmail.com>, Jens Axboe <axboe@fb.com>, "colyli@suse.de" <colyli@suse.de>, Guoqing Jiang <gqjiang@suse.com>, Mike Christie <mchristi@redhat.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-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
+Commit 60928a91b0b3 ("md: raid1: use bio helper in process_checks()")
+is probably correct, but I get a new compile-time warning after
+it, and have trouble understanding what it fixes:
+
+drivers/md/raid1.c: In function 'sync_request_write':
+drivers/md/raid1.c:2172:9: error: 'page_len$' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+     if (memcmp(page_address(ppages[j]),
+         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         page_address(spages[j]),
+         ~~~~~~~~~~~~~~~~~~~~~~~~
+         page_len[j]))
+         ~~~~~~~~~~~~
+drivers/md/raid1.c:2160:7: note: 'page_len$' was declared here
+   int page_len[RESYNC_PAGES];
+       ^~~~~~~~
+
+This reverts it to resolve the warning.
+
+Fixes: 60928a91b0b3 ("md: raid1: use bio helper in process_checks()")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/md/raid1.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index b7d9651286d4..4d176c8abc33 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -2113,7 +2113,6 @@ static void process_checks(struct r1bio *r1_bio)
+ 		int j;
+ 		int size;
+ 		int error;
+-		struct bio_vec *bi;
+ 		struct bio *b = r1_bio->bios[i];
+ 		struct resync_pages *rp = get_resync_pages(b);
+ 		if (b->bi_end_io != end_sync_read)
+@@ -2132,7 +2131,9 @@ static void process_checks(struct r1bio *r1_bio)
+ 		b->bi_private = rp;
+ 
+ 		size = b->bi_iter.bi_size;
+-		bio_for_each_segment_all(bi, b, j) {
++		for (j = 0; j < vcnt ; j++) {
++			struct bio_vec *bi;
++			bi = &b->bi_io_vec[j];
+ 			bi->bv_offset = 0;
+ 			if (size > PAGE_SIZE)
+ 				bi->bv_len = PAGE_SIZE;
+@@ -2156,22 +2157,17 @@ static void process_checks(struct r1bio *r1_bio)
+ 		int error = sbio->bi_error;
+ 		struct page **ppages = get_resync_pages(pbio)->pages;
+ 		struct page **spages = get_resync_pages(sbio)->pages;
+-		struct bio_vec *bi;
+-		int page_len[RESYNC_PAGES];
+ 
+ 		if (sbio->bi_end_io != end_sync_read)
+ 			continue;
+ 		/* Now we can 'fixup' the error value */
+ 		sbio->bi_error = 0;
+ 
+-		bio_for_each_segment_all(bi, sbio, j)
+-			page_len[j] = bi->bv_len;
+-
+ 		if (!error) {
+ 			for (j = vcnt; j-- ; ) {
+ 				if (memcmp(page_address(ppages[j]),
+ 					   page_address(spages[j]),
+-					   page_len[j]))
++					   sbio->bi_io_vec[j].bv_len))
+ 					break;
+ 			}
+ 		} else
+-- 
+2.9.0
