@@ -1,144 +1,128 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH] Revert "md: raid1: use bio helper in process_checks()"
-Date: Wed, 29 Mar 2017 00:13:46 +0800
-Message-ID: <CACVXFVN98gJHBGUwwP1u9Yxto_ft0LNv3Z0FXY4j+NBNAz_MLQ@mail.gmail.com>
-References: <20170328095029.3500369-1-arnd@arndb.de> <CACVXFVMX=0XBvSt7b-3XObw3SknPGqH9JZvT6jViYbZfzKqQEg@mail.gmail.com>
- <CAK8P3a0k9S-t1CvpcabNVJOFMWoieuSn6EEr4oB72+T=zQT=aw@mail.gmail.com>
- <CACVXFVNzGV+P9CXcyqcV0_rJVM9F7dOR3_aX2xv0GQTsMaXX6A@mail.gmail.com>
- <CAK8P3a1yV0M_3TwM2QkEKqL-teKNEcWRXuG4_GT27pM+rFoBPw@mail.gmail.com>
- <CACVXFVMWORnxVtuokRp=N1ELAk4UbkOr0n-hM2MOTbO7HLhLtw@mail.gmail.com> <CAK8P3a0NfY56C_L+ds2VOXFtdT--WrZ=CoMMmd1JTM84KoYs0A@mail.gmail.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH v5 3/7] raid5-ppl: Partial Parity Log write logging
+ implementation
+Date: Tue, 28 Mar 2017 09:16:59 -0700
+Message-ID: <20170328161659.yaonuvu5ns4gb7d2@kernel.org>
+References: <20170309090003.13298-1-artur.paszkiewicz@intel.com>
+ <20170309090003.13298-4-artur.paszkiewicz@intel.com>
+ <87wpbib88g.fsf@notabene.neil.brown.name>
+ <20170324164651.hewssoahtcm4sdxh@kernel.org>
+ <ab4ce9c9-46c6-4f5c-3821-964fc7c9744c@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAK8P3a0NfY56C_L+ds2VOXFtdT--WrZ=CoMMmd1JTM84KoYs0A@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Shaohua Li <shli@kernel.org>, NeilBrown <neilb@suse.com>, Jens Axboe <axboe@fb.com>, "colyli@suse.de" <colyli@suse.de>, Guoqing Jiang <gqjiang@suse.com>, Mike Christie <mchristi@redhat.com>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <ab4ce9c9-46c6-4f5c-3821-964fc7c9744c@intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: NeilBrown <neilb@suse.com>, shli@fb.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Mar 28, 2017 at 11:37 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Tue, Mar 28, 2017 at 5:02 PM, Ming Lei <tom.leiming@gmail.com> wrote:
->> On Tue, Mar 28, 2017 at 9:20 PM, Arnd Bergmann <arnd@arndb.de> wrote:
->>> On Tue, Mar 28, 2017 at 1:42 PM, Ming Lei <tom.leiming@gmail.com> wrote:
->
->>> What I meant is that a future change to the function might cause
->>> another bug to go unnoticed later.
->>
->> What is the future change? And what is another bug? Please don't suppose or
->> assume anything in future.
->>
->> BTW, I don't think it is a problem, and anyone who want to change the code
->> much should understand it first, right?
->
-> I did not have any specific change in mind, I was just following the
-> principle from https://rusty.ozlabs.org/?p=232
->
-> I tend to do a lot of fixes for warnings like this, and in general
-> adding a fake initialization will lead to worse object code while
-> changing the code to be easier to understand by the compiler
-> will also make it easier to understand by human readers, lead
-> to better object code and to being more robust against future
-> changes that would have otherwise triggered a correct warning.
+On Tue, Mar 28, 2017 at 04:12:37PM +0200, Artur Paszkiewicz wrote:
+> On 03/24/2017 05:46 PM, Shaohua Li wrote:
+> > On Wed, Mar 22, 2017 at 09:00:47AM +1100, Neil Brown wrote:
+> >> On Thu, Mar 09 2017, Artur Paszkiewicz wrote:
+> >>
+> >>> Implement the calculation of partial parity for a stripe and PPL write
+> >>> logging functionality. The description of PPL is added to the
+> >>> documentation. More details can be found in the comments in raid5-ppl.c.
+> >>>
+> >>> Attach a page for holding the partial parity data to stripe_head.
+> >>> Allocate it only if mddev has the MD_HAS_PPL flag set.
+> >>>
+> >>> Partial parity is the xor of not modified data chunks of a stripe and is
+> >>> calculated as follows:
+> >>>
+> >>> - reconstruct-write case:
+> >>>   xor data from all not updated disks in a stripe
+> >>>
+> >>> - read-modify-write case:
+> >>>   xor old data and parity from all updated disks in a stripe
+> >>>
+> >>> Implement it using the async_tx API and integrate into raid_run_ops().
+> >>> It must be called when we still have access to old data, so do it when
+> >>> STRIPE_OP_BIODRAIN is set, but before ops_run_prexor5(). The result is
+> >>> stored into sh->ppl_page.
+> >>>
+> >>> Partial parity is not meaningful for full stripe write and is not stored
+> >>> in the log or used for recovery, so don't attempt to calculate it when
+> >>> stripe has STRIPE_FULL_WRITE.
+> >>>
+> >>> Put the PPL metadata structures to md_p.h because userspace tools
+> >>> (mdadm) will also need to read/write PPL.
+> >>>
+> >>> Warn about using PPL with enabled disk volatile write-back cache for
+> >>> now. It can be removed once disk cache flushing before writing PPL is
+> >>> implemented.
+> >>>
+> >>> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+> >>
+> >> Sorry for the delay in getting to this for review...
+> >>
+> >>> +static struct ppl_io_unit *ppl_new_iounit(struct ppl_log *log,
+> >>> +					  struct stripe_head *sh)
+> >>> +{
+> >>> +	struct ppl_conf *ppl_conf = log->ppl_conf;
+> >>> +	struct ppl_io_unit *io;
+> >>> +	struct ppl_header *pplhdr;
+> >>> +
+> >>> +	io = mempool_alloc(ppl_conf->io_pool, GFP_ATOMIC);
+> >>> +	if (!io)
+> >>> +		return NULL;
+> >>> +
+> >>> +	memset(io, 0, sizeof(*io));
+> >>> +	io->log = log;
+> >>> +	INIT_LIST_HEAD(&io->log_sibling);
+> >>> +	INIT_LIST_HEAD(&io->stripe_list);
+> >>> +	atomic_set(&io->pending_stripes, 0);
+> >>> +	bio_init(&io->bio, io->biovec, PPL_IO_INLINE_BVECS);
+> >>> +
+> >>> +	io->header_page = mempool_alloc(ppl_conf->meta_pool, GFP_NOIO);
+> >>
+> >> I'm trying to understand how these two mempool_alloc()s relate, and
+> >> particularly why the first one needs to be GFP_ATOMIC, while the second
+> >> one can safely be GFP_NOIO.
+> >> I see that the allocated memory is freed in different places:
+> >> header_page is called from the bi_endio function as soon as the write
+> >> completes, while 'io' is freed later.  But I'm not sure that is enough
+> >> to make it safe.
+> >>
+> >> When working with mempools, you need to assume that the pool only
+> >> contains one element, and that every time you call mempool_alloc(), it
+> >> waits for that one element to be available.  While that doesn't usually
+> >> happen, it is possible and if that case isn't handled correctly, the
+> >> system can deadlock.
+> >>
+> >> If no memory is available when this mempool_alloc() is called, it will
+> >> block.  As it is called from the raid5d thread, the whole array will
+> >> block.  So this can only complete safely is the write request has
+> >> already been submitted - or if there is some other workqueue which
+> >> submit requests after a timeout or similar.
+> >> I don't see that in the code.  These ppl_io_unit structures can queue up
+> >> and are only submitted later by raid5d (I think).  So if raid5d waits
+> >> for one to become free, it will wait forever.
+> >>
+> >> One easy way around this problem (assuming my understanding is correct)
+> >> is to just have a single mempool which allocates both a struct
+> >> ppl_io_unit and a page.  You would need to define you own alloc/free
+> >> routines for the pool but that is easy enough.
+> >>
+> >> Then you only need a single mempool_alloc(), which can sensibly be
+> >> GFP_ATOMIC.
+> >> If that fails, you queue for later handling as you do now.  If it
+> >> succeeds, then you continue to use the memory without any risk of
+> >> deadlocking.
+> > 
+> > Maybe Artur is following the raid5-cache code, which uses GFP_ATOMIC with
+> > commit: 5036c39(raid5: allow r5l_io_unit allocations to fail). A single pool
+> > does make sense.
+> 
+> That's right, I based this on raid5-cache code. I like the approach that
+> Neil proposed, I'll test it some more and probably send a patch soon. Do
+> you think GFP_ATOMIC is necessary here or would GFP_NOWAIT be enough?
 
-What gcc can't understand is the following situation:
-
-1) int a[N];
-
-2) for(i = 0; i < vcnt1; i++)
-       a[i] = b[i];
-
-3) for (i = 0; i < vcnt2; i++)
-        c[i] = a[i];
-
-The warning is in 3), since gcc may think vcnt2 isn't same with vcnt1, but as
-I mentioned that two number is absolutely same, and shouldn't be
-changed in future.
-
-That is why I suggest to fix the warning via a[N] = {0}.
-
->
->>>> The following code does initialize the array well enough for future use:
->>>>
->>>>                bio_for_each_segment_all(bi, sbio, j)
->>>>                        page_len[j] = bi->bv_len;
->>>>
->>>> That is why we don't need to initialize the array explicitly, but just
->>>> for killing the warning.
->>>
->>> It's also a little less clear why that is safe than the original code:
->>> We rely on sbio->bi_vcnt to be the same as vcnt, but it requires
->>
->> That is absolutely true because all read bios in process_checks()
->> have same vector number, do you think it will be changed in future?
->
-> No, I have no reason to assume it would be changed.
->
->> And what we really rely on is that RESYNC_PAGES is equal to or bigger
->> than the vector number, and that is what we can guarantee.
->>
->>> careful reading of the function to see that this is always true.
->>> gcc warns because it cannot prove this to be the case, so if
->>> something changed here, it's likely that this would also not
->>> get noticed.
->>
->> The compiler can't understand runtime behaviour, and
->> we try to let gcc check more, but that is just fine if gcc can't.
->>
->> One big purpose of this patch is to remove direct access to
->> bvec table, so it can't be reverted, or do you have better idea?
->
-> From what I can tell, the following walk of the pages does not
-> have to be done in reverse, so we can perhaps use a single
-> bio_for_each_segment_all() (only for illustration, haven't
-> thought this through completely) :
->
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 4d176c8abc33..e4bcc7cec8da 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -2157,25 +2157,30 @@ static void process_checks(struct r1bio *r1_bio)
->                 int error = sbio->bi_error;
->                 struct page **ppages = get_resync_pages(pbio)->pages;
->                 struct page **spages = get_resync_pages(sbio)->pages;
-> +               struct bio_vec *bi;
-> +               int page_len[RESYNC_PAGES];
-> +
->
->                 if (sbio->bi_end_io != end_sync_read)
->                         continue;
->                 /* Now we can 'fixup' the error value */
->                 sbio->bi_error = 0;
->
-> -               if (!error) {
-> -                       for (j = vcnt; j-- ; ) {
-> -                               if (memcmp(page_address(ppages[j]),
-> -                                          page_address(spages[j]),
-> -                                          sbio->bi_io_vec[j].bv_len))
-> -                                       break;
-> -                       }
-> -               } else
-> -                       j = 0;
-> -               if (j >= 0)
-> +               if (error) {
->                         atomic64_add(r1_bio->sectors,
-> &mddev->resync_mismatches);
-> -               if (j < 0 || (test_bit(MD_RECOVERY_CHECK, &mddev->recovery)
-> -                             && !error)) {
-> +                       bio_copy_data(sbio, pbio);
-> +                       continue;
-> +               }
-> +
-> +               bio_for_each_segment_all(bi, sbio, j) {
-> +                       if (memcmp(page_address(ppages[j]),
-> +                                  page_address(spages[j]),
-> +                                          sbio->bi_io_vec[j].bv_len)) {
-
-The above line should be bi->bv_len, and this way should make the array
-not necessary, but still a bit ugly.
-
-I suggest to apply the simple fix first since it is correct, then we
-can refactor the code in this way
-later.
+Since we can handle error, I don't see the reason why we should use GFP_ATOMIC,
+GFP_NOWAIT is good to me.
 
 Thanks,
-Ming Lei
+Shaohua
