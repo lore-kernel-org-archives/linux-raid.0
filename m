@@ -1,82 +1,49 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md:array cannot be opened again after 'md_set_readonly'
-Date: Tue, 28 Mar 2017 09:12:28 -0700
-Message-ID: <20170328161228.ehesudpxc32zuzpc@kernel.org>
-References: <1490601145-5865-1-git-send-email-zlliu@suse.com>
- <20170327182214.zde4kao2gz2lazgm@kernel.org>
- <0c5289f3-0160-8d2d-a5d8-da126b2fb468@suse.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH 01/23] block: renumber REQ_OP_WRITE_ZEROES
+Date: Tue, 28 Mar 2017 16:12:46 +0000
+Message-ID: <1490717553.2573.4.camel@sandisk.com>
+References: <20170323143341.31549-1-hch@lst.de>
+         <20170323143341.31549-2-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <0c5289f3-0160-8d2d-a5d8-da126b2fb468@suse.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Zhilong Liu <zlliu@suse.com>
-Cc: neilb@suse.com, shli@fb.com, linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20170323143341.31549-2-hch@lst.de>
+Content-Language: en-US
+Content-ID: <B160B454ABBE5B4E8E2058151862CA8C@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: "agk@redhat.com" <agk@redhat.com>, "lars.ellenberg@linbit.com" <lars.ellenberg@linbit.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "philipp.reisner@linbit.com" <philipp.reisner@linbit.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "shli@kernel.org" <shli@kernel.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Mar 28, 2017 at 09:19:12PM +0800, Zhilong Liu wrote:
-> 
-> On 03/28/2017 02:22 AM, Shaohua Li wrote:
-> > On Mon, Mar 27, 2017 at 03:52:25PM +0800, Zhilong Liu wrote:
-> > > This is a bug about array cannot be opened again after 'md_set_readonly',
-> > > because the MD_CLOSING bit is still waiting for clear.
-> > > MD_CLOSING should only be set for a short period or time to avoid certain
-> > > races. After the operation that set it completes, it should be cleared.
-> > where is the bit set? Why don't clear it after the operation but clear it in
-> > set_readonly?
-> 
-> it goes two paths after set MD_CLOSING bit, do_md_stop and md_set_readonly,
-> the do_md_stop has done the md_clean to clear the mddev->flags, thus I put
-> it in
-> md_set_readonly.
-> Thanks for your suggestion, is the following changing good for you? here it
-> has
-> finished what it needs to do, so clear the MD_CLOSING bit in time.
-> if looks good, I would send this in new revision patch.
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index f6ae1d6..e8c1130 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -6868,6 +6868,7 @@ static int md_ioctl(struct block_device *bdev, fmode_t
-> mode,
->                 set_bit(MD_CLOSING, &mddev->flags);
->                 mutex_unlock(&mddev->open_mutex);
->                 sync_blockdev(bdev);
-> +               clear_bit(MD_CLOSING, &mddev->flags);
->         }
->         err = mddev_lock(mddev);
->         if (err) {
+On Thu, 2017-03-23 at 10:33 -0400, Christoph Hellwig wrote:
+> Make life easy for implementations that needs to send a data buffer
+> to the device (e.g. SCSI) by numbering it as a data out command.
+>=20
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  include/linux/blk_types.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+> index d703acb55d0f..6393c13a6498 100644
+> --- a/include/linux/blk_types.h
+> +++ b/include/linux/blk_types.h
+> @@ -160,7 +160,7 @@ enum req_opf {
+>  	/* write the same sector many times */
+>  	REQ_OP_WRITE_SAME	=3D 7,
+>  	/* write the zero filled sector many times */
+> -	REQ_OP_WRITE_ZEROES	=3D 8,
+> +	REQ_OP_WRITE_ZEROES	=3D 9,
+> =20
+>  	/* SCSI passthrough using struct scsi_request */
+>  	REQ_OP_SCSI_IN		=3D 32,
 
-It would be better done at the end of set_readonly to guarantee set ro done.
+Hello Christoph,
+
+Since REQ_OP_WRITE_ZEROES was introduced in kernel v4.10, do we need
+"Cc: stable" and "Fixes: a6f0788ec2881" tags for this patch?
 
 Thanks,
-Shaohua
-> Thanks,
-> -Zhilong
-> > > Reviewed-by: NeilBrown <neilb@suse.com>
-> > > Cc: Guoqing Jiang <gqjiang@suse.com>
-> > > Signed-off-by: Zhilong Liu <zlliu@suse.com>
-> > > ---
-> > >   drivers/md/md.c | 1 +
-> > >   1 file changed, 1 insertion(+)
-> > > 
-> > > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> > > index f6ae1d6..7f2db7c 100644
-> > > --- a/drivers/md/md.c
-> > > +++ b/drivers/md/md.c
-> > > @@ -5588,6 +5588,7 @@ static int md_set_readonly(struct mddev *mddev, struct block_device *bdev)
-> > >   	int err = 0;
-> > >   	int did_freeze = 0;
-> > > +	test_and_clear_bit(MD_CLOSING, &mddev->flags);
-> > I don't understand why this must be a test_and_clear.
-> > 
-> > Thanks,
-> > Shaohua
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> 
+
+Bart.=
