@@ -1,51 +1,42 @@
-From: Brian Norris <briannorris@chromium.org>
-Subject: [PATCH] dm: move dm_table_destroy() to same header as dm_table_create()
-Date: Tue, 28 Mar 2017 11:31:02 -0700
-Message-ID: <20170328183102.80620-1-briannorris@chromium.org>
+From: jes.sorensen@gmail.com
+Subject: Re: [mdadm PATCH 4/5] Add 'force' flag to *hot_remove_disk().
+Date: Tue, 28 Mar 2017 14:33:18 -0400
+Message-ID: <wrfja885fdzl.fsf@gmail.com>
+References: <149058575542.15679.9804611071393072863.stgit@noble>
+        <149058581604.15679.9993360149817038150.stgit@noble>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <149058581604.15679.9993360149817038150.stgit@noble> (NeilBrown's
+        message of "Mon, 27 Mar 2017 14:36:56 +1100")
 Sender: linux-raid-owner@vger.kernel.org
-To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Brian Norris <briannorris@chromium.org>
+To: NeilBrown <neilb@suse.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-If anyone is going to use dm_table_create(), they probably should be
-able to use dm_table_destroy() too. Move the dm_table_destroy()
-definition outside the private header, near dm_table_create()
+NeilBrown <neilb@suse.com> writes:
+> In rare circumstances, the short period that *hot_remove_disk()
+> waits isn't long enough to IO to complete.  This particularly happens
+> when a device is failing and many retries are still happening.
+>
+> We don't want to increase the normal wait time for "mdadm --remove"
+> as that might be use just to test if a device is active or not, and a
+> delay would be problematic.
+> So allow "--force" to mean that mdadm should try extra hard for a
+> --remove to complete, waiting up to 5 seconds.
+>
+> Note that this patch fixes a comment which claim the previous
+> wait time was half a second, where it was really 50msec.
+>
+> Signed-off-by: NeilBrown <neilb@suse.com>
+> ---
+>  Grow.c   |    2 +-
+>  Manage.c |   10 +++++-----
+>  mdadm.h  |    4 ++--
+>  util.c   |   10 +++++-----
+>  4 files changed, 13 insertions(+), 13 deletions(-)
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
- drivers/md/dm.h               | 1 -
- include/linux/device-mapper.h | 5 +++++
- 2 files changed, 5 insertions(+), 1 deletion(-)
+Applied!
 
-diff --git a/drivers/md/dm.h b/drivers/md/dm.h
-index f298b01f7ab3..c54d2f1934ce 100644
---- a/drivers/md/dm.h
-+++ b/drivers/md/dm.h
-@@ -48,7 +48,6 @@ struct dm_md_mempools;
- /*-----------------------------------------------------------------
-  * Internal table functions.
-  *---------------------------------------------------------------*/
--void dm_table_destroy(struct dm_table *t);
- void dm_table_event_callback(struct dm_table *t,
- 			     void (*fn)(void *), void *context);
- struct dm_target *dm_table_get_target(struct dm_table *t, unsigned int index);
-diff --git a/include/linux/device-mapper.h b/include/linux/device-mapper.h
-index a7e6903866fd..70cb6af56f67 100644
---- a/include/linux/device-mapper.h
-+++ b/include/linux/device-mapper.h
-@@ -472,6 +472,11 @@ void dm_table_set_type(struct dm_table *t, unsigned type);
- int dm_table_complete(struct dm_table *t);
- 
- /*
-+ * Destroy the table when finished.
-+ */
-+void dm_table_destroy(struct dm_table *t);
-+
-+/*
-  * Target may require that it is never sent I/O larger than len.
-  */
- int __must_check dm_set_target_max_io_len(struct dm_target *ti, sector_t len);
--- 
-2.12.2.564.g063fe858b8-goog
-
+Thanks,
+Jes
