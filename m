@@ -1,37 +1,37 @@
 From: jes.sorensen@gmail.com
-Subject: Re: [PATCH v3 3/6] imsm: PPL support
-Date: Tue, 28 Mar 2017 14:21:36 -0400
-Message-ID: <wrfjvaqtfej3.fsf@gmail.com>
-References: <20170316210948.21093-1-artur.paszkiewicz@intel.com>
-        <20170316210948.21093-4-artur.paszkiewicz@intel.com>
-        <wrfj4lyrk6je.fsf@gmail.com>
-        <b63748c5-0cdc-d332-e4d1-601f7c86ff80@intel.com>
+Subject: Re: [mdadm PATCH] udev-md-raid-assembly.rules: Skip non-ready devices
+Date: Tue, 28 Mar 2017 14:22:43 -0400
+Message-ID: <wrfjr31hfeh8.fsf@gmail.com>
+References: <87fuhz8thr.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <b63748c5-0cdc-d332-e4d1-601f7c86ff80@intel.com> (Artur
-        Paszkiewicz's message of "Mon, 20 Mar 2017 09:07:27 +0100")
+In-Reply-To: <87fuhz8thr.fsf@notabene.neil.brown.name> (NeilBrown's message of
+        "Mon, 27 Mar 2017 11:15:44 +1100")
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
 List-Id: linux-raid.ids
 
-Artur Paszkiewicz <artur.paszkiewicz@intel.com> writes:
-> On 03/17/2017 09:11 PM, jes.sorensen@gmail.com wrote:
->> Hi Artur,
->> 
->> This looks odd - sure you don't mean crc32c.c ?
+NeilBrown <neilb@suse.com> writes:
+> From: Hannes Reinecke <hare@suse.de>
 >
-> Of course this is a mistake, it should be crc32c.c. Sorry for that. But
-> surprisingly it builds correctly.
+> If a device isn't fully initialized (e.g if it should be
+> handled by multipathing) it should not be considered for
+> md/RAID auto-assembly.  Doing so can cause incorrect results
+> such as causing multipath to fail during startup.
 >
-> Thanks,
-> Artur
+> There is a convention that the udev environment variable
+> SYSTEMD_READY be set to zero for such devices.  So change
+> the mdadm rules to ignore devices with SYSTEMD_READY==0.
+>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> Signed-off-by: NeilBrown <neilb@suse.com>
+> ---
+>  udev-md-raid-assembly.rules | 3 +++
+>  1 file changed, 3 insertions(+)
 
-Hi Artur,
-
-I can no longer apply this set. Would you mind sending me a fresh update
-so I don't end up botching it?
+Applied!
 
 Thanks,
 Jes
