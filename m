@@ -1,38 +1,68 @@
-From: jes.sorensen@gmail.com
-Subject: Re: [PATCHv2 1/2] super1: ignore failfast flag for setting device role
-Date: Tue, 28 Mar 2017 14:01:58 -0400
-Message-ID: <wrfjd1d1gu09.fsf@gmail.com>
-References: <1490003517-4216-1-git-send-email-gi-oh.kim@profitbricks.com>
-        <1490003517-4216-2-git-send-email-gi-oh.kim@profitbricks.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: [PATCH v4] mdadm/r5cache: allow adding journal to array without journal
+Date: Tue, 28 Mar 2017 11:04:44 -0700
+Message-ID: <20170328180444.3385563-1-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1490003517-4216-2-git-send-email-gi-oh.kim@profitbricks.com>
-        (Gioh Kim's message of "Mon, 20 Mar 2017 10:51:56 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Gioh Kim <gi-oh.kim@profitbricks.com>
-Cc: neilb@suse.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Jack Wang <jinpu.wang@profitbricks.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-Gioh Kim <gi-oh.kim@profitbricks.com> writes:
-> There is corner case for setting device role,
-> if new device has failfast flag.
-> The failfast flag should be ignored.
->
-> Signed-off-by: Gioh Kim <gi-oh.kim@profitbricks.com>
-> Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
-> ---
->  super1.c | 8 +++++---
->  1 file changed, 5 insertions(+), 3 deletions(-)
+Currently, --add-journal can be only used to recreate broken journal
+for arrays with journal since  creation. As the kernel code getting
+more mature, this constraint is no longer necessary.
 
-Applied!
+This patch allows --add-journal to add journal to array without
+journal.
 
-Ideally I would like to get rid of the hardcoded values and use the bit
-defines instead, but the original code did the same, so I am going to
-take it.
+Signed-off-by: Song Liu <songliubraving@fb.com>
+---
+ Manage.c   | 6 ------
+ mdadm.8.in | 5 ++---
+ 2 files changed, 2 insertions(+), 9 deletions(-)
 
-I am leaving out the second patch for now, per Neil's comments. If you
-feel strongly about it, please conveince Neil first :)
+diff --git a/Manage.c b/Manage.c
+index 5c3d2b9..5ff5de3 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -946,7 +946,6 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+ 
+ 	/* only add journal to array that supports journaling */
+ 	if (dv->disposition == 'j') {
+-		struct mdinfo mdi;
+ 		struct mdinfo *mdp;
+ 
+ 		mdp = sysfs_read(fd, NULL, GET_ARRAY_STATE);
+@@ -963,11 +962,6 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+ 
+ 		sysfs_free(mdp);
+ 
+-		tst->ss->getinfo_super(tst, &mdi, NULL);
+-		if (mdi.journal_device_required == 0) {
+-			pr_err("%s does not support journal device.\n", devname);
+-			return -1;
+-		}
+ 		disc.raid_disk = 0;
+ 	}
+ 
+diff --git a/mdadm.8.in b/mdadm.8.in
+index df1d460..9e5e896 100644
+--- a/mdadm.8.in
++++ b/mdadm.8.in
+@@ -1474,9 +1474,8 @@ the device is found or <slot>:missing in case the device is not found.
+ 
+ .TP
+ .BR \-\-add-journal
+-Recreate journal for RAID-4/5/6 array that lost a journal device. In the
+-current implementation, this command cannot add a journal to an array
+-that had a failed journal. To avoid interrupting on-going write opertions,
++Add journal to an existing array, or recreate journal for RAID-4/5/6 array
++that lost a journal device. To avoid interrupting on-going write opertions,
+ .B \-\-add-journal
+ only works for array in Read-Only state.
+ 
+-- 
+2.9.3
 
-Thanks,
-Jes
