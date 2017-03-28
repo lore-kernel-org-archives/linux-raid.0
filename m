@@ -1,46 +1,61 @@
-From: Ian Kent <raven@themaw.net>
-Subject: Re: [PATCH 4/5] fs/autofs4: Fix a dead URL to ftp.kernel.org
-Date: Tue, 28 Mar 2017 10:02:01 +0800
-Message-ID: <1490666521.3187.0.camel@themaw.net>
-References: <20170327054731.31882-1-sj38.park@gmail.com>
-         <20170327054731.31882-5-sj38.park@gmail.com>
+From: <een@zmva.hu>
+Subject: 2541 linux-raid
+Date: Tue, 28 Mar 2017 04:33:15 -0000
+Message-ID: <149067559540.16099.13278194935634505955@bilink.com.br>
+Reply-To: <een@zmva.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <autofs-owner@vger.kernel.org>
-In-Reply-To: <20170327054731.31882-5-sj38.park@gmail.com>
-Sender: autofs-owner@vger.kernel.org
-To: SeongJae Park <sj38.park@gmail.com>, rml@tech9.net, axboe@fb.com, shli@kernel.org, yamada.masahito@socionext.com, mmarek@suse.com
-Cc: linux-raid@vger.kernel.org, autofs@vger.kernel.org, linux-kbuild@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: application/zip; name="652972856923.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: attachment
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 2017-03-27 at 14:47 +0900, SeongJae Park wrote:
-> As ftp.kernel.org is closed [0], this commit fixes a dead URL to
-> ftp.kernel.org in fs/autofs4/ to use www.kernel.org instead.
-> 
-> [0] https://www.kernel.org/shutting-down-ftp-services.html
-> 
-> Signed-off-by: SeongJae Park <sj38.park@gmail.com>
-
-ACK, and thanks for fixing this.
-
-> ---
->  fs/autofs4/Kconfig | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/autofs4/Kconfig b/fs/autofs4/Kconfig
-> index 1204d6384d39..44727bf18297 100644
-> --- a/fs/autofs4/Kconfig
-> +++ b/fs/autofs4/Kconfig
-> @@ -7,7 +7,7 @@ config AUTOFS4_FS
->  	  automounter (amd), which is a pure user space daemon.
->  
->  	  To use the automounter you need the user-space tools from
-> -	  <ftp://ftp.kernel.org/pub/linux/daemons/autofs/v4/>; you also
-> +	  <https://www.kernel.org/pub/linux/daemons/autofs/v4/>; you also
->  	  want to answer Y to "NFS file system support", below.
->  
->  	  To compile this support as a module, choose M here: the module will
-> be
---
-To unsubscribe from this list: send the line "unsubscribe autofs" in
+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
