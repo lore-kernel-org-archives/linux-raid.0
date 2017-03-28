@@ -1,25 +1,31 @@
 From: jes.sorensen@gmail.com
-Subject: Re: [PATCH] mdadm/bitmap:fixed typos in comments of bitmap.h
-Date: Tue, 28 Mar 2017 14:08:21 -0400
-Message-ID: <wrfj4lydgtpm.fsf@gmail.com>
-References: <1490006799-25459-1-git-send-email-zlliu@suse.com>
+Subject: Re: [PATCH v4] mdadm/r5cache: allow adding journal to array without journal
+Date: Tue, 28 Mar 2017 14:15:23 -0400
+Message-ID: <wrfjzig5fetg.fsf@gmail.com>
+References: <20170328180444.3385563-1-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1490006799-25459-1-git-send-email-zlliu@suse.com> (Zhilong Liu's
-        message of "Mon, 20 Mar 2017 18:46:39 +0800")
+In-Reply-To: <20170328180444.3385563-1-songliubraving@fb.com> (Song Liu's
+        message of "Tue, 28 Mar 2017 11:04:44 -0700")
 Sender: linux-raid-owner@vger.kernel.org
-To: Zhilong Liu <zlliu@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: Song Liu <songliubraving@fb.com>
+Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org
 List-Id: linux-raid.ids
 
-Zhilong Liu <zlliu@suse.com> writes:
-> bitmap.h: fixed trivial typos in comments
+Song Liu <songliubraving@fb.com> writes:
+> Currently, --add-journal can be only used to recreate broken journal
+> for arrays with journal since  creation. As the kernel code getting
+> more mature, this constraint is no longer necessary.
 >
-> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+> This patch allows --add-journal to add journal to array without
+> journal.
+>
+> Signed-off-by: Song Liu <songliubraving@fb.com>
 > ---
->  bitmap.h | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  Manage.c   | 6 ------
+>  mdadm.8.in | 5 ++---
+>  2 files changed, 2 insertions(+), 9 deletions(-)
 
 Applied!
 
