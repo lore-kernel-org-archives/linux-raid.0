@@ -1,70 +1,76 @@
-From: Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 03/23] sd: implement REQ_OP_WRITE_ZEROES
-Date: Tue, 28 Mar 2017 15:33:54 -0400
-Message-ID: <20170328193354.GB21445@redhat.com>
-References: <20170323143341.31549-1-hch@lst.de>
-	<20170323143341.31549-4-hch@lst.de>
-	<1490726988.2573.16.camel@sandisk.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH] md:array cannot be opened again after 'md_set_readonly'
+Date: Wed, 29 Mar 2017 08:13:36 +1100
+Message-ID: <87efxh6r5r.fsf@notabene.neil.brown.name>
+References: <1490601145-5865-1-git-send-email-zlliu@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1490726988.2573.16.camel-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: Bart Van Assche <Bart.VanAssche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Cc: "axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org" <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org" <philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org" <lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, "shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "hch-jcswGhMUV9g@public.gmane.org" <hch-jcswGhMUV9g@public.gmane.org>, "agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org" <drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1490601145-5865-1-git-send-email-zlliu@suse.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: shli@fb.com
+Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-On Tue, Mar 28 2017 at  2:50pm -0400,
-Bart Van Assche <Bart.VanAssche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org> wrote:
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> On Thu, 2017-03-23 at 10:33 -0400, Christoph Hellwig wrote:
-> > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> > index af632e350ab4..b6f70a09a301 100644
-> > --- a/drivers/scsi/sd.c
-> > +++ b/drivers/scsi/sd.c
-> > @@ -748,7 +748,7 @@ static int sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
-> >  	return scsi_init_io(cmd);
-> >  }
-> >  
-> > -static int sd_setup_write_same16_cmnd(struct scsi_cmnd *cmd)
-> > +static int sd_setup_write_same16_cmnd(struct scsi_cmnd *cmd, bool unmap)
-> >  {
-> >  	struct scsi_device *sdp = cmd->device;
-> >  	struct request *rq = cmd->request;
-> > @@ -765,13 +765,14 @@ static int sd_setup_write_same16_cmnd(struct scsi_cmnd *cmd)
-> >  
-> >  	cmd->cmd_len = 16;
-> >  	cmd->cmnd[0] = WRITE_SAME_16;
-> > -	cmd->cmnd[1] = 0x8; /* UNMAP */
-> > +	if (unmap)
-> > +		cmd->cmnd[1] = 0x8; /* UNMAP */
-> >  	put_unaligned_be64(sector, &cmd->cmnd[2]);
-> >  	put_unaligned_be32(nr_sectors, &cmd->cmnd[10]);
-> 
-> Hello Christoph,
-> 
-> A quote from SBC: "An OPTIMAL UNMAP GRANULARITY field set to a non-zero value
-> indicates the optimal granularity in logical blocks for unmap requests (e.g.,
-> an UNMAP command or a WRITE SAME (16) command with the UNMAP bit set to one).
-> An unmap request with a number of logical blocks that is not a multiple of
-> this value may result in unmap operations on fewer LBAs than requested."
-> 
-> This means that just like the start and end of a discard must be aligned on a
-> discard_granularity boundary, WRITE SAME commands with the UNMAP bit set must
-> also respect that granularity. I think this means that either
-> __blkdev_issue_zeroout() has to be modified such that it rejects unaligned
-> REQ_OP_WRITE_ZEROES operations or that blk_bio_write_same_split() has to be
-> modified such that it generates REQ_OP_WRITEs for the unaligned start and tail.
+On Mon, Mar 27 2017, Zhilong Liu wrote:
 
-That'd get DM thinp off the hook from having to zero the unaligned start
-and tail...
+> This is a bug about array cannot be opened again after 'md_set_readonly',
+> because the MD_CLOSING bit is still waiting for clear.
+> MD_CLOSING should only be set for a short period or time to avoid certain
+> races. After the operation that set it completes, it should be cleared.
+>
+> Reviewed-by: NeilBrown <neilb@suse.com>
+
+No I didn't.  I never reviewed this patch.  I don't agree with this
+patch. This patch is wrong.
+The flag is set in md_ioctl(), and it should be cleared in md_ioctl().
+
+NeilBrown
+
+> Cc: Guoqing Jiang <gqjiang@suse.com>
+> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+> ---
+>  drivers/md/md.c | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index f6ae1d6..7f2db7c 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -5588,6 +5588,7 @@ static int md_set_readonly(struct mddev *mddev, str=
+uct block_device *bdev)
+>  	int err =3D 0;
+>  	int did_freeze =3D 0;
+>=20=20
+> +	test_and_clear_bit(MD_CLOSING, &mddev->flags);
+>  	if (!test_bit(MD_RECOVERY_FROZEN, &mddev->recovery)) {
+>  		did_freeze =3D 1;
+>  		set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+> --=20
+> 2.6.6
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlja0gAACgkQOeye3VZi
+gbkrBg/+L0PJtlGixnty4Sg6MrCUlSTnVIx2LfssQoS+RPtNCYFIcet83D0W0ERa
+HPJrPZQEe1RY3PaenBoOskBaOvd/BJLkaRGACDQ2vOPupHPNtBElbq6YwKWl5puN
+IEvxnsvbPgs09o2/K9aLOi/6+6YwFw3/KeLUPC6kZNREbVZUxgVXZCfHYREBK12h
+3Yqx3YxCgI8mT0DG6eCygdGZrXJXqyvdnaVlnziMHXBRo1GSL70w/vAoNW1s9y1L
+BQVU6L6g81CUVsrrDSuEmhtxGRC8Wq3R7ZVdgDRGHnC2TXAcVKtGprK60MzhX0MS
+fVIq/KCsYmML4mIhkZc4NfCkaa4nffElZCJB/0uNxFpPGcK1DWknlW009KkMLxcw
+xg9wAxeTE69myfaVXJztA6EVdMf4gErdNJkzB2O+4I4DzRxnc23MydAawKRm2OzT
+yY8tDevtcyCcnKACg+jnek14F+VF4vRsCqDjEN2jN7hehQZdYhSIYB32neSY7BLx
+UihvDuhdDwng94NJdJi4cKi79NMWhkrTaWb42Y1wIT0gSwrouEV5TXDsSJXa4Swx
+nFHNMO4FK0WbVS211OjOZ95U/qyg6TvMTTqKvKeoulyJj2RY7AUVt/ztMx0Rr6CG
+L/9nh49xo3rtjKvgw11DbAmCV+sOMZdmZ1VA4Vxtp0A/wR+FJB0=
+=aPKX
+-----END PGP SIGNATURE-----
+--=-=-=--
