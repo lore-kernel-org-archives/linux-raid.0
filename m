@@ -1,100 +1,157 @@
-From: Dennis Yang <dennisyang@qnap.com>
-Subject: [PATCH] md: update slab_cache before releasing new stripes when stripes resizing
-Date: Wed, 29 Mar 2017 15:46:13 +0800
-Message-ID: <1490773573-32692-1-git-send-email-dennisyang@qnap.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: [PATCH v2] md/r5cache: gracefully handle journal device errors for writeback mode
+Date: Wed, 29 Mar 2017 01:00:13 -0700
+Message-ID: <20170329080013.1445439-1-songliubraving@fb.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Dennis Yang <dennisyang@qnap.com>
+Cc: shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-When growing raid5 device on machine with small memory, there is chance that
-mdadm will be killed and the following bug report can be observed. The same
-bug could also be reproduced in linux-4.10.6.
+For the raid456 with writeback cache, when journal device failed during
+normal operation, it is still possible to persist all data, as all
+pending data is still in stripe cache. However, it is necessary to handle
+journal failure gracefully.
 
-[57600.075774] BUG: unable to handle kernel NULL pointer dereference at           (null)
-[57600.083796] IP: [<ffffffff81a6aa87>] _raw_spin_lock+0x7/0x20
-[57600.110378] PGD 421cf067 PUD 4442d067 PMD 0
-[57600.114678] Oops: 0002 [#1] SMP
-[57600.180799] CPU: 1 PID: 25990 Comm: mdadm Tainted: P           O    4.2.8 #1
-[57600.187849] Hardware name: To be filled by O.E.M. To be filled by O.E.M./MAHOBAY, BIOS QV05AR66 03/06/2013
-[57600.197490] task: ffff880044e47240 ti: ffff880043070000 task.ti: ffff880043070000
-[57600.204963] RIP: 0010:[<ffffffff81a6aa87>]  [<ffffffff81a6aa87>] _raw_spin_lock+0x7/0x20
-[57600.213057] RSP: 0018:ffff880043073810  EFLAGS: 00010046
-[57600.218359] RAX: 0000000000000000 RBX: 000000000000000c RCX: ffff88011e296dd0
-[57600.225486] RDX: 0000000000000001 RSI: ffffe8ffffcb46c0 RDI: 0000000000000000
-[57600.232613] RBP: ffff880043073878 R08: ffff88011e5f8170 R09: 0000000000000282
-[57600.239739] R10: 0000000000000005 R11: 28f5c28f5c28f5c3 R12: ffff880043073838
-[57600.246872] R13: ffffe8ffffcb46c0 R14: 0000000000000000 R15: ffff8800b9706a00
-[57600.253999] FS:  00007f576106c700(0000) GS:ffff88011e280000(0000) knlGS:0000000000000000
-[57600.262078] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[57600.267817] CR2: 0000000000000000 CR3: 00000000428fe000 CR4: 00000000001406e0
-[57600.274942] Stack:
-[57600.276949]  ffffffff8114ee35 ffff880043073868 0000000000000282 000000000000eb3f
-[57600.284383]  ffffffff81119043 ffff880043073838 ffff880043073838 ffff88003e197b98
-[57600.291820]  ffffe8ffffcb46c0 ffff88003e197360 0000000000000286 ffff880043073968
-[57600.299254] Call Trace:
-[57600.301698]  [<ffffffff8114ee35>] ? cache_flusharray+0x35/0xe0
-[57600.307523]  [<ffffffff81119043>] ? __page_cache_release+0x23/0x110
-[57600.313779]  [<ffffffff8114eb53>] kmem_cache_free+0x63/0xc0
-[57600.319344]  [<ffffffff81579942>] drop_one_stripe+0x62/0x90
-[57600.324915]  [<ffffffff81579b5b>] raid5_cache_scan+0x8b/0xb0
-[57600.330563]  [<ffffffff8111b98a>] shrink_slab.part.36+0x19a/0x250
-[57600.336650]  [<ffffffff8111e38c>] shrink_zone+0x23c/0x250
-[57600.342039]  [<ffffffff8111e4f3>] do_try_to_free_pages+0x153/0x420
-[57600.348210]  [<ffffffff8111e851>] try_to_free_pages+0x91/0xa0
-[57600.353959]  [<ffffffff811145b1>] __alloc_pages_nodemask+0x4d1/0x8b0
-[57600.360303]  [<ffffffff8157a30b>] check_reshape+0x62b/0x770
-[57600.365866]  [<ffffffff8157a4a5>] raid5_check_reshape+0x55/0xa0
-[57600.371778]  [<ffffffff81583df7>] update_raid_disks+0xc7/0x110
-[57600.377604]  [<ffffffff81592b73>] md_ioctl+0xd83/0x1b10
-[57600.382827]  [<ffffffff81385380>] blkdev_ioctl+0x170/0x690
-[57600.388307]  [<ffffffff81195238>] block_ioctl+0x38/0x40
-[57600.393525]  [<ffffffff811731c5>] do_vfs_ioctl+0x2b5/0x480
-[57600.399010]  [<ffffffff8115e07b>] ? vfs_write+0x14b/0x1f0
-[57600.404400]  [<ffffffff811733cc>] SyS_ioctl+0x3c/0x70
-[57600.409447]  [<ffffffff81a6ad97>] entry_SYSCALL_64_fastpath+0x12/0x6a
-[57600.415875] Code: 00 00 00 00 55 48 89 e5 8b 07 85 c0 74 04 31 c0 5d c3 ba 01 00 00 00 f0 0f b1 17 85 c0 75 ef b0 01 5d c3 90 31 c0 ba 01 00 00 00 <f0> 0f b1 17 85 c0 75 01 c3 55 89 c6 48 89 e5 e8 85 d1 63 ff 5d
-[57600.435460] RIP  [<ffffffff81a6aa87>] _raw_spin_lock+0x7/0x20
-[57600.441208]  RSP <ffff880043073810>
-[57600.444690] CR2: 0000000000000000
-[57600.448000] ---[ end trace cbc6b5cc4bf9831d ]---
+During journal failures, this patch makes the follow changes to land data
+in cache to raid disks gracefully:
 
-The problem is that resize_stripes() releases new stripe_heads before assigning new
-slab cache to conf->slab_cache. If the shrinker function raid5_cache_scan() gets called
-after resize_stripes() starting releasing new stripes but right before new slab cache
-being assigned, it is possible that these new stripe_heads will be freed with the old
-slab_cache which was already been destoryed and that triggers this bug.
+1. In raid5_remove_disk(), flush all cached stripes;
+2. In handle_stripe(), allow stripes with data in journal (s.injournal > 0)
+   to make progress;
+3. In delay_towrite(), only process data in the cache (skip dev->towrite);
+4. In __get_priority_stripe(), set try_loprio to true, so no stripe stuck
+   in loprio_list
+5. In r5l_do_submit_io(), submit io->split_bio first (see inline comments
+   for details).
 
-Signed-off-by: Dennis Yang <dennisyang@qnap.com>
+Signed-off-by: Song Liu <songliubraving@fb.com>
 ---
- drivers/md/raid5.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/md/raid5-cache.c | 27 ++++++++++++++++++---------
+ drivers/md/raid5.c       | 28 ++++++++++++++++++++++++----
+ 2 files changed, 42 insertions(+), 13 deletions(-)
 
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index b6194e0..0838617 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -632,20 +632,29 @@ static void r5l_do_submit_io(struct r5l_log *log, struct r5l_io_unit *io)
+ 	__r5l_set_io_unit_state(io, IO_UNIT_IO_START);
+ 	spin_unlock_irqrestore(&log->io_list_lock, flags);
+ 
++	/*
++	 * In case of journal device failures, submit_bio will get error
++	 * and calls endio, then active stripes will continue write
++	 * process. Therefore, it is not necessary to check Faulty bit
++	 * of journal device here.
++	 *
++	 * However, calling r5l_log_endio(current_bio) may change
++	 * split_bio. Therefore, it is necessary to check split_bio before
++	 * submit current_bio.
++	 */
++	if (io->split_bio) {
++		if (io->has_flush)
++			io->split_bio->bi_opf |= REQ_PREFLUSH;
++		if (io->has_fua)
++			io->split_bio->bi_opf |= REQ_FUA;
++		submit_bio(io->split_bio);
++	}
++
+ 	if (io->has_flush)
+ 		io->current_bio->bi_opf |= REQ_PREFLUSH;
+ 	if (io->has_fua)
+ 		io->current_bio->bi_opf |= REQ_FUA;
+ 	submit_bio(io->current_bio);
+-
+-	if (!io->split_bio)
+-		return;
+-
+-	if (io->has_flush)
+-		io->split_bio->bi_opf |= REQ_PREFLUSH;
+-	if (io->has_fua)
+-		io->split_bio->bi_opf |= REQ_FUA;
+-	submit_bio(io->split_bio);
+ }
+ 
+ /* deferred io_unit will be dispatched here */
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 6661db2c..172edc1 100644
+index 6036d5e..4d3d1ab 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -2286,6 +2286,10 @@ static int resize_stripes(struct r5conf *conf, int newsize)
- 		err = -ENOMEM;
+@@ -3054,6 +3054,11 @@ sector_t raid5_compute_blocknr(struct stripe_head *sh, int i, int previous)
+  *      When LOG_CRITICAL, stripes with injournal == 0 will be sent to
+  *      no_space_stripes list.
+  *
++ *   3. during journal failure
++ *      In journal failure, we try to flush all cached data to raid disks
++ *      based on data in stripe cache. The array is read-only to upper
++ *      layers, so we would skip all pending writes.
++ *
+  */
+ static inline bool delay_towrite(struct r5conf *conf,
+ 				 struct r5dev *dev,
+@@ -3067,6 +3072,9 @@ static inline bool delay_towrite(struct r5conf *conf,
+ 	if (test_bit(R5C_LOG_CRITICAL, &conf->cache_state) &&
+ 	    s->injournal > 0)
+ 		return true;
++	/* case 3 above */
++	if (s->log_failed && s->injournal)
++		return true;
+ 	return false;
+ }
  
- 	mutex_unlock(&conf->cache_size_mutex);
-+	
-+	conf->slab_cache = sc;
-+	conf->active_name = 1-conf->active_name;
-+
- 	/* Step 4, return new stripes to service */
- 	while(!list_empty(&newstripes)) {
- 		nsh = list_entry(newstripes.next, struct stripe_head, lru);
-@@ -2303,8 +2307,6 @@ static int resize_stripes(struct r5conf *conf, int newsize)
- 	}
- 	/* critical section pass, GFP_NOIO no longer needed */
+@@ -4689,10 +4697,15 @@ static void handle_stripe(struct stripe_head *sh)
+ 	       " to_write=%d failed=%d failed_num=%d,%d\n",
+ 	       s.locked, s.uptodate, s.to_read, s.to_write, s.failed,
+ 	       s.failed_num[0], s.failed_num[1]);
+-	/* check if the array has lost more than max_degraded devices and,
++	/*
++	 * check if the array has lost more than max_degraded devices and,
+ 	 * if so, some requests might need to be failed.
++	 *
++	 * When journal device failed (log_failed), we will only process
++	 * the stripe if there is data need write to raid disks
+ 	 */
+-	if (s.failed > conf->max_degraded || s.log_failed) {
++	if (s.failed > conf->max_degraded ||
++	    (s.log_failed && s.injournal == 0)) {
+ 		sh->check_state = 0;
+ 		sh->reconstruct_state = 0;
+ 		break_stripe_batch_list(sh, 0);
+@@ -5272,7 +5285,8 @@ static struct stripe_head *__get_priority_stripe(struct r5conf *conf, int group)
+ 	struct list_head *handle_list = NULL;
+ 	struct r5worker_group *wg;
+ 	bool second_try = !r5c_is_writeback(conf->log);
+-	bool try_loprio = test_bit(R5C_LOG_TIGHT, &conf->cache_state);
++	bool try_loprio = test_bit(R5C_LOG_TIGHT, &conf->cache_state) ||
++		r5l_log_disk_error(conf);
  
--	conf->slab_cache = sc;
--	conf->active_name = 1-conf->active_name;
- 	if (!err)
- 		conf->pool_size = newsize;
- 	return err;
+ again:
+ 	wg = NULL;
+@@ -7526,6 +7540,7 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 	int number = rdev->raid_disk;
+ 	struct md_rdev **rdevp;
+ 	struct disk_info *p = conf->disks + number;
++	unsigned long flags;
+ 
+ 	print_raid5_conf(conf);
+ 	if (test_bit(Journal, &rdev->flags) && conf->log) {
+@@ -7535,7 +7550,12 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 		 * neilb: there is no locking about new writes here,
+ 		 * so this cannot be safe.
+ 		 */
+-		if (atomic_read(&conf->active_stripes)) {
++		if (atomic_read(&conf->active_stripes) ||
++		    atomic_read(&conf->r5c_cached_full_stripes) ||
++		    atomic_read(&conf->r5c_cached_partial_stripes)) {
++			spin_lock_irqsave(&conf->device_lock, flags);
++			r5c_flush_cache(conf, INT_MAX);
++			spin_unlock_irqrestore(&conf->device_lock, flags);
+ 			return -EBUSY;
+ 		}
+ 		log_exit(conf);
 -- 
-1.9.1
+2.9.3
 
