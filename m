@@ -1,65 +1,100 @@
-From: Anup Patel <anup.patel@broadcom.com>
-Subject: Re: [PATCH v6 0/4] Broadcom SBA RAID support
-Date: Wed, 29 Mar 2017 11:35:43 +0530
-Message-ID: <CAALAos-P6CDdWTJxg8YQfT1V+iCxUcbYHiQ35EdZzz9PnN3cuA@mail.gmail.com>
-References: <1488793408-25592-1-git-send-email-anup.patel@broadcom.com>
- <20170321083052.GY2843@localhost> <CAALAos-k_DBYAz49278wBr_GoceOKYVH_UuzTLn1h7QCiUd8pg@mail.gmail.com>
- <20170321091829.GZ2843@localhost>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Dennis Yang <dennisyang@qnap.com>
+Subject: [PATCH] md: update slab_cache before releasing new stripes when stripes resizing
+Date: Wed, 29 Mar 2017 15:46:13 +0800
+Message-ID: <1490773573-32692-1-git-send-email-dennisyang@qnap.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170321091829.GZ2843@localhost>
 Sender: linux-raid-owner@vger.kernel.org
-To: Vinod Koul <vinod.koul@intel.com>
-Cc: Jassi Brar <jassisinghbrar@gmail.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S . Miller" <davem@davemloft.net>, Dan Williams <dan.j.williams@intel.com>, Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>, Rob Rice <rob.rice@broadcom.com>, BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>, dmaengine@vger.kernel.org, Device Tree <devicetree@vger.kernel.org>, Linux ARM Kernel <linux-arm-kernel@lists.infradead.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: Dennis Yang <dennisyang@qnap.com>
 List-Id: linux-raid.ids
 
-On Tue, Mar 21, 2017 at 2:48 PM, Vinod Koul <vinod.koul@intel.com> wrote:
-> On Tue, Mar 21, 2017 at 02:17:21PM +0530, Anup Patel wrote:
->> On Tue, Mar 21, 2017 at 2:00 PM, Vinod Koul <vinod.koul@intel.com> wrote:
->> > On Mon, Mar 06, 2017 at 03:13:24PM +0530, Anup Patel wrote:
->> >> The Broadcom SBA RAID is a stream-based device which provides
->> >> RAID5/6 offload.
->> >>
->> >> It requires a SoC specific ring manager (such as Broadcom FlexRM
->> >> ring manager) to provide ring-based programming interface. Due to
->> >> this, the Broadcom SBA RAID driver (mailbox client) implements
->> >> DMA device having one DMA channel using a set of mailbox channels
->> >> provided by Broadcom SoC specific ring manager driver (mailbox
->> >> controller).
->> >>
->> >> The Broadcom SBA RAID hardware requires PQ disk position instead
->> >> of PQ disk coefficient. To address this, we have added raid_gflog
->> >> table which will help driver to convert PQ disk coefficient to PQ
->> >> disk position.
->> >>
->> >> This patchset is based on Linux-4.11-rc1 and depends on patchset
->> >> "[PATCH v5 0/2] Broadcom FlexRM ring manager support"
->> >
->> > Okay I applied and was about to push when I noticed this :(
->> >
->> > So what is the status of this..?
->>
->> PATCH2 is Acked but PATCH1 is under-review. Currently, its
->> v6 of that patchset.
->>
->> The only dependency on that patchset is the changes in
->> brcm-message.h which are required by this BCM-SBA-RAID
->> driver.
->>
->> @Jassi,
->> Can you please have a look at PATCH v6?
->
-> And I would need an immutable branch/tag once merged. I am going to keep
-> this series pending till then.
+When growing raid5 device on machine with small memory, there is chance that
+mdadm will be killed and the following bug report can be observed. The same
+bug could also be reproduced in linux-4.10.6.
 
-The Broadcom FlexRM patchset is pickedup by Jassi and
-can be found in mailbox-for-next branch of
-git://git.linaro.org/landing-teams/working/fujitsu/integration
+[57600.075774] BUG: unable to handle kernel NULL pointer dereference at           (null)
+[57600.083796] IP: [<ffffffff81a6aa87>] _raw_spin_lock+0x7/0x20
+[57600.110378] PGD 421cf067 PUD 4442d067 PMD 0
+[57600.114678] Oops: 0002 [#1] SMP
+[57600.180799] CPU: 1 PID: 25990 Comm: mdadm Tainted: P           O    4.2.8 #1
+[57600.187849] Hardware name: To be filled by O.E.M. To be filled by O.E.M./MAHOBAY, BIOS QV05AR66 03/06/2013
+[57600.197490] task: ffff880044e47240 ti: ffff880043070000 task.ti: ffff880043070000
+[57600.204963] RIP: 0010:[<ffffffff81a6aa87>]  [<ffffffff81a6aa87>] _raw_spin_lock+0x7/0x20
+[57600.213057] RSP: 0018:ffff880043073810  EFLAGS: 00010046
+[57600.218359] RAX: 0000000000000000 RBX: 000000000000000c RCX: ffff88011e296dd0
+[57600.225486] RDX: 0000000000000001 RSI: ffffe8ffffcb46c0 RDI: 0000000000000000
+[57600.232613] RBP: ffff880043073878 R08: ffff88011e5f8170 R09: 0000000000000282
+[57600.239739] R10: 0000000000000005 R11: 28f5c28f5c28f5c3 R12: ffff880043073838
+[57600.246872] R13: ffffe8ffffcb46c0 R14: 0000000000000000 R15: ffff8800b9706a00
+[57600.253999] FS:  00007f576106c700(0000) GS:ffff88011e280000(0000) knlGS:0000000000000000
+[57600.262078] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[57600.267817] CR2: 0000000000000000 CR3: 00000000428fe000 CR4: 00000000001406e0
+[57600.274942] Stack:
+[57600.276949]  ffffffff8114ee35 ffff880043073868 0000000000000282 000000000000eb3f
+[57600.284383]  ffffffff81119043 ffff880043073838 ffff880043073838 ffff88003e197b98
+[57600.291820]  ffffe8ffffcb46c0 ffff88003e197360 0000000000000286 ffff880043073968
+[57600.299254] Call Trace:
+[57600.301698]  [<ffffffff8114ee35>] ? cache_flusharray+0x35/0xe0
+[57600.307523]  [<ffffffff81119043>] ? __page_cache_release+0x23/0x110
+[57600.313779]  [<ffffffff8114eb53>] kmem_cache_free+0x63/0xc0
+[57600.319344]  [<ffffffff81579942>] drop_one_stripe+0x62/0x90
+[57600.324915]  [<ffffffff81579b5b>] raid5_cache_scan+0x8b/0xb0
+[57600.330563]  [<ffffffff8111b98a>] shrink_slab.part.36+0x19a/0x250
+[57600.336650]  [<ffffffff8111e38c>] shrink_zone+0x23c/0x250
+[57600.342039]  [<ffffffff8111e4f3>] do_try_to_free_pages+0x153/0x420
+[57600.348210]  [<ffffffff8111e851>] try_to_free_pages+0x91/0xa0
+[57600.353959]  [<ffffffff811145b1>] __alloc_pages_nodemask+0x4d1/0x8b0
+[57600.360303]  [<ffffffff8157a30b>] check_reshape+0x62b/0x770
+[57600.365866]  [<ffffffff8157a4a5>] raid5_check_reshape+0x55/0xa0
+[57600.371778]  [<ffffffff81583df7>] update_raid_disks+0xc7/0x110
+[57600.377604]  [<ffffffff81592b73>] md_ioctl+0xd83/0x1b10
+[57600.382827]  [<ffffffff81385380>] blkdev_ioctl+0x170/0x690
+[57600.388307]  [<ffffffff81195238>] block_ioctl+0x38/0x40
+[57600.393525]  [<ffffffff811731c5>] do_vfs_ioctl+0x2b5/0x480
+[57600.399010]  [<ffffffff8115e07b>] ? vfs_write+0x14b/0x1f0
+[57600.404400]  [<ffffffff811733cc>] SyS_ioctl+0x3c/0x70
+[57600.409447]  [<ffffffff81a6ad97>] entry_SYSCALL_64_fastpath+0x12/0x6a
+[57600.415875] Code: 00 00 00 00 55 48 89 e5 8b 07 85 c0 74 04 31 c0 5d c3 ba 01 00 00 00 f0 0f b1 17 85 c0 75 ef b0 01 5d c3 90 31 c0 ba 01 00 00 00 <f0> 0f b1 17 85 c0 75 01 c3 55 89 c6 48 89 e5 e8 85 d1 63 ff 5d
+[57600.435460] RIP  [<ffffffff81a6aa87>] _raw_spin_lock+0x7/0x20
+[57600.441208]  RSP <ffff880043073810>
+[57600.444690] CR2: 0000000000000000
+[57600.448000] ---[ end trace cbc6b5cc4bf9831d ]---
 
-Both patchset (Broadcom FlexRM patchset and this one) are
-also available in sba-raid-v7 branch of
-https://github.com/Broadcom/arm64-linux.git
+The problem is that resize_stripes() releases new stripe_heads before assigning new
+slab cache to conf->slab_cache. If the shrinker function raid5_cache_scan() gets called
+after resize_stripes() starting releasing new stripes but right before new slab cache
+being assigned, it is possible that these new stripe_heads will be freed with the old
+slab_cache which was already been destoryed and that triggers this bug.
 
-Regards,
-Anup
+Signed-off-by: Dennis Yang <dennisyang@qnap.com>
+---
+ drivers/md/raid5.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 6661db2c..172edc1 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -2286,6 +2286,10 @@ static int resize_stripes(struct r5conf *conf, int newsize)
+ 		err = -ENOMEM;
+ 
+ 	mutex_unlock(&conf->cache_size_mutex);
++	
++	conf->slab_cache = sc;
++	conf->active_name = 1-conf->active_name;
++
+ 	/* Step 4, return new stripes to service */
+ 	while(!list_empty(&newstripes)) {
+ 		nsh = list_entry(newstripes.next, struct stripe_head, lru);
+@@ -2303,8 +2307,6 @@ static int resize_stripes(struct r5conf *conf, int newsize)
+ 	}
+ 	/* critical section pass, GFP_NOIO no longer needed */
+ 
+-	conf->slab_cache = sc;
+-	conf->active_name = 1-conf->active_name;
+ 	if (!err)
+ 		conf->pool_size = newsize;
+ 	return err;
+-- 
+1.9.1
+
