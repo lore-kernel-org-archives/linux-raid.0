@@ -1,157 +1,164 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH v2] md/r5cache: gracefully handle journal device errors for writeback mode
-Date: Wed, 29 Mar 2017 01:00:13 -0700
-Message-ID: <20170329080013.1445439-1-songliubraving@fb.com>
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: Re: RAID6 rebuild oddity
+Date: Wed, 29 Mar 2017 16:12:52 +0800
+Message-ID: <5584b8b1-b4f1-0d2e-cbf3-f14b4127d031@fnarfbargle.com>
+References: <9eb215dd-437e-ac62-c4df-f3307d8fc4b4@fnarfbargle.com>
+ <87zig467z3.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87zig467z3.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com, Song Liu <songliubraving@fb.com>
+To: NeilBrown <neilb@suse.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-For the raid456 with writeback cache, when journal device failed during
-normal operation, it is still possible to persist all data, as all
-pending data is still in stripe cache. However, it is necessary to handle
-journal failure gracefully.
+On 29/03/17 12:08, NeilBrown wrote:
 
-During journal failures, this patch makes the follow changes to land data
-in cache to raid disks gracefully:
+>
+> sdj is getting twice the utilization of the others but only about 10%
+> more rKB/sec.  That suggests lots of seeking.
 
-1. In raid5_remove_disk(), flush all cached stripes;
-2. In handle_stripe(), allow stripes with data in journal (s.injournal > 0)
-   to make progress;
-3. In delay_towrite(), only process data in the cache (skip dev->towrite);
-4. In __get_priority_stripe(), set try_loprio to true, so no stripe stuck
-   in loprio_list
-5. In r5l_do_submit_io(), submit io->split_bio first (see inline comments
-   for details).
+Yes, something is not entirely sequential.
 
-Signed-off-by: Song Liu <songliubraving@fb.com>
----
- drivers/md/raid5-cache.c | 27 ++++++++++++++++++---------
- drivers/md/raid5.c       | 28 ++++++++++++++++++++++++----
- 2 files changed, 42 insertions(+), 13 deletions(-)
+> Does "fuser /dev/sdj" report anything funny?
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index b6194e0..0838617 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -632,20 +632,29 @@ static void r5l_do_submit_io(struct r5l_log *log, struct r5l_io_unit *io)
- 	__r5l_set_io_unit_state(io, IO_UNIT_IO_START);
- 	spin_unlock_irqrestore(&log->io_list_lock, flags);
- 
-+	/*
-+	 * In case of journal device failures, submit_bio will get error
-+	 * and calls endio, then active stripes will continue write
-+	 * process. Therefore, it is not necessary to check Faulty bit
-+	 * of journal device here.
-+	 *
-+	 * However, calling r5l_log_endio(current_bio) may change
-+	 * split_bio. Therefore, it is necessary to check split_bio before
-+	 * submit current_bio.
-+	 */
-+	if (io->split_bio) {
-+		if (io->has_flush)
-+			io->split_bio->bi_opf |= REQ_PREFLUSH;
-+		if (io->has_fua)
-+			io->split_bio->bi_opf |= REQ_FUA;
-+		submit_bio(io->split_bio);
-+	}
-+
- 	if (io->has_flush)
- 		io->current_bio->bi_opf |= REQ_PREFLUSH;
- 	if (io->has_fua)
- 		io->current_bio->bi_opf |= REQ_FUA;
- 	submit_bio(io->current_bio);
--
--	if (!io->split_bio)
--		return;
--
--	if (io->has_flush)
--		io->split_bio->bi_opf |= REQ_PREFLUSH;
--	if (io->has_fua)
--		io->split_bio->bi_opf |= REQ_FUA;
--	submit_bio(io->split_bio);
- }
- 
- /* deferred io_unit will be dispatched here */
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 6036d5e..4d3d1ab 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -3054,6 +3054,11 @@ sector_t raid5_compute_blocknr(struct stripe_head *sh, int i, int previous)
-  *      When LOG_CRITICAL, stripes with injournal == 0 will be sent to
-  *      no_space_stripes list.
-  *
-+ *   3. during journal failure
-+ *      In journal failure, we try to flush all cached data to raid disks
-+ *      based on data in stripe cache. The array is read-only to upper
-+ *      layers, so we would skip all pending writes.
-+ *
-  */
- static inline bool delay_towrite(struct r5conf *conf,
- 				 struct r5dev *dev,
-@@ -3067,6 +3072,9 @@ static inline bool delay_towrite(struct r5conf *conf,
- 	if (test_bit(R5C_LOG_CRITICAL, &conf->cache_state) &&
- 	    s->injournal > 0)
- 		return true;
-+	/* case 3 above */
-+	if (s->log_failed && s->injournal)
-+		return true;
- 	return false;
- }
- 
-@@ -4689,10 +4697,15 @@ static void handle_stripe(struct stripe_head *sh)
- 	       " to_write=%d failed=%d failed_num=%d,%d\n",
- 	       s.locked, s.uptodate, s.to_read, s.to_write, s.failed,
- 	       s.failed_num[0], s.failed_num[1]);
--	/* check if the array has lost more than max_degraded devices and,
-+	/*
-+	 * check if the array has lost more than max_degraded devices and,
- 	 * if so, some requests might need to be failed.
-+	 *
-+	 * When journal device failed (log_failed), we will only process
-+	 * the stripe if there is data need write to raid disks
- 	 */
--	if (s.failed > conf->max_degraded || s.log_failed) {
-+	if (s.failed > conf->max_degraded ||
-+	    (s.log_failed && s.injournal == 0)) {
- 		sh->check_state = 0;
- 		sh->reconstruct_state = 0;
- 		break_stripe_batch_list(sh, 0);
-@@ -5272,7 +5285,8 @@ static struct stripe_head *__get_priority_stripe(struct r5conf *conf, int group)
- 	struct list_head *handle_list = NULL;
- 	struct r5worker_group *wg;
- 	bool second_try = !r5c_is_writeback(conf->log);
--	bool try_loprio = test_bit(R5C_LOG_TIGHT, &conf->cache_state);
-+	bool try_loprio = test_bit(R5C_LOG_TIGHT, &conf->cache_state) ||
-+		r5l_log_disk_error(conf);
- 
- again:
- 	wg = NULL;
-@@ -7526,6 +7540,7 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
- 	int number = rdev->raid_disk;
- 	struct md_rdev **rdevp;
- 	struct disk_info *p = conf->disks + number;
-+	unsigned long flags;
- 
- 	print_raid5_conf(conf);
- 	if (test_bit(Journal, &rdev->flags) && conf->log) {
-@@ -7535,7 +7550,12 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
- 		 * neilb: there is no locking about new writes here,
- 		 * so this cannot be safe.
- 		 */
--		if (atomic_read(&conf->active_stripes)) {
-+		if (atomic_read(&conf->active_stripes) ||
-+		    atomic_read(&conf->r5c_cached_full_stripes) ||
-+		    atomic_read(&conf->r5c_cached_partial_stripes)) {
-+			spin_lock_irqsave(&conf->device_lock, flags);
-+			r5c_flush_cache(conf, INT_MAX);
-+			spin_unlock_irqrestore(&conf->device_lock, flags);
- 			return -EBUSY;
- 		}
- 		log_exit(conf);
--- 
-2.9.3
+No. No output. As far as I can tell nothing should be touching the disks 
+other than the md kernel thread.
 
+> Is there filesystem IO happening? If so, what filesystem?
+> Have you told the filesystem about the RAID layout?
+> Maybe the filesystem keeps reading some index blocks that are always on
+> the same drive.
+
+No. I probably wasn't as clear as I should have been in the initial 
+post. There was nothing mounted at the time.
+
+Right now the array contains one large LUKS container (dm-crypt). This 
+was mounted and a continuous dd done to the dm device to zero it out :
+
+4111195+1 records in
+4111195+1 records out
+34487205507072 bytes (34 TB) copied, 57781.1 s, 597 MB/s
+
+So there is no filesystem on the drive.
+
+I failed and removed sdi :
+
+root@test:~# mdadm --fail /dev/md0 /dev/sdi
+mdadm: set /dev/sdi faulty in /dev/md0
+root@test:~# mdadm --remove /dev/md0 /dev/sdi
+mdadm: hot removed /dev/sdi from /dev/md0
+root@test:~# mdadm --zero-superblock /dev/sdi
+root@test:~# mdadm --add /dev/md0 /dev/sdi
+mdadm: added /dev/sdi
+
+Rebooted the machine to remove all tweaks of things like stripe cache 
+size, readahead, NCQ and anything else.
+
+I opened the LUKS container, dd'd a meg to the start to write to the 
+array and kick off the resync, then closed the LUKS container. At this 
+point dm should no longer be touching the drive and I've verified the 
+device has gone.
+
+I then ran sync a couple of times and waited a couple of minutes until I 
+was positive _nothing_ was touching md0, then ran :
+
+blktrace -w 5 /dev/sd[bcdefgij] /dev/md0
+
+> So the problem moves from drive to drive?  Strongly suggests filesystem
+> metadata access to me.
+
+Again, sorry for me not being clear. The situation changes on a resync 
+specific basis. For example the reproduction I've done now I popped out 
+sdi rather than sdb, and now the bottleneck is sdg. It is the same if 
+the exact circumstances remain the same.
+
+>
+> If you can capture several seconds of trace on all drives plus the
+> array, compress it and host it somewhere, I can pick it up and have
+> look.
+
+I've captured 5 seconds. I was overly optimistic initially and tried 20 
+seconds, but that resulted in 100M bzipped.
+
+This is 19M. The kernel is a clean 4.10.6 compiled up half an hour ago 
+as I forgot to include block tracing in there.
+
+http://www.fnarfbargle.com/private/170329-Resync/resync-blktrace.tar.bz2
+
+root@test:~/bench# mdadm --detail /dev/md0
+/dev/md0:
+         Version : 1.2
+   Creation Time : Wed Mar 22 14:01:41 2017
+      Raid Level : raid6
+      Array Size : 35162348160 (33533.43 GiB 36006.24 GB)
+   Used Dev Size : 5860391360 (5588.90 GiB 6001.04 GB)
+    Raid Devices : 8
+   Total Devices : 8
+     Persistence : Superblock is persistent
+
+     Update Time : Wed Mar 29 16:08:20 2017
+           State : clean, degraded, recovering
+  Active Devices : 7
+Working Devices : 8
+  Failed Devices : 0
+   Spare Devices : 1
+
+          Layout : left-symmetric
+      Chunk Size : 64K
+
+  Rebuild Status : 2% complete
+
+            Name : test:0  (local to host test)
+            UUID : 93a09ba7:f159e9f5:7c478f16:6ca8858e
+          Events : 715
+
+     Number   Major   Minor   RaidDevice State
+        8       8       16        0      active sync   /dev/sdb
+        1       8       32        1      active sync   /dev/sdc
+        2       8       48        2      active sync   /dev/sdd
+        3       8       64        3      active sync   /dev/sde
+        4       8       80        4      active sync   /dev/sdf
+        5       8       96        5      active sync   /dev/sdg
+        9       8      128        6      spare rebuilding   /dev/sdi
+        7       8      144        7      active sync   /dev/sdj
+
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+            0.08    0.00    4.77    4.75    0.00   90.41
+
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s 
+avgrq-sz avgqu-sz   await r_await w_await  svctm  %util
+sda               0.00     1.40    0.00    3.00     0.00    10.60 
+7.07     0.01    4.67    0.00    4.67   4.67   1.40
+sdb           14432.20     0.00  120.20    0.00 57295.20     0.00 
+953.33     2.04   16.71   16.71    0.00   3.23  38.80
+sdc           14432.20     0.00  120.20    0.00 57295.20     0.00 
+953.33     1.99   16.26   16.26    0.00   3.21  38.60
+sdd           14432.20     0.00  120.80    0.00 57602.40     0.00 
+953.68     2.14   17.55   17.55    0.00   3.18  38.40
+sde           14432.20     0.00  120.80    0.00 57602.40     0.00 
+953.68     2.02   16.57   16.57    0.00   3.20  38.60
+sdf           14432.20     0.00  120.80    0.00 57602.40     0.00 
+953.68     2.08   17.04   17.04    0.00   3.25  39.20
+sdg           16135.40     0.00  224.60    0.00 65811.20     0.00 
+586.03   126.46  575.26  575.26    0.00   4.45 100.00
+sdh               0.00     1.40    0.00    3.00     0.00    10.60 
+7.07     0.02    6.67    0.00    6.67   6.67   2.00
+sdi               0.00 14982.60    0.00  123.20     0.00 59801.60 
+970.81     4.52   35.57    0.00   35.57   3.25  40.00
+sdj           14432.40     0.00  120.80    0.00 57603.20     0.00 
+953.70     1.84   15.07   15.07    0.00   3.06  37.00
+md1               0.00     0.00    0.00    0.00     0.00     0.00 
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+md2               0.00     0.00    0.00    2.20     0.00     8.80 
+8.00     0.00    0.00    0.00    0.00   0.00   0.00
+md0               0.00     0.00    0.00    0.00     0.00     0.00 
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+
+
+Thanks for having a look. It seems odd to me, but I can't figure it out.
+
+Regards,
+Brad
