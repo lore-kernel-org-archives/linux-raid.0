@@ -1,7 +1,7 @@
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH v4 5/6] Add 'ppl' and 'no-ppl' options for --update=
-Date: Wed, 29 Mar 2017 11:54:19 +0200
-Message-ID: <20170329095420.17855-6-artur.paszkiewicz@intel.com>
+Subject: [PATCH v4 2/6] Detail: show consistency policy
+Date: Wed, 29 Mar 2017 11:54:16 +0200
+Message-ID: <20170329095420.17855-3-artur.paszkiewicz@intel.com>
 References: <20170329095420.17855-1-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20170329095420.17855-1-artur.paszkiewicz@intel.com>
@@ -10,272 +10,328 @@ To: jes.sorensen@gmail.com
 Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-This can be used with --assemble for super1 and with --update-subarray
-for imsm to enable or disable PPL in the metadata.
+Show the currently enabled consistency policy in the output from
+--detail. Add 3 spaces to all existing items in Detail output to align
+with "Consistency Policy : ".
 
 Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- Assemble.c    |  6 ++++++
- mdadm.8.in    | 27 ++++++++++++++++++++++++---
- mdadm.c       |  6 +++++-
- super-intel.c | 55 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- super1.c      | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 139 insertions(+), 4 deletions(-)
+ Detail.c      | 90 +++++++++++++++++++++++++++++++++++------------------------
+ super-ddf.c   |  6 ++--
+ super-intel.c |  2 +-
+ super0.c      |  4 +--
+ super1.c      |  9 +++---
+ 5 files changed, 65 insertions(+), 46 deletions(-)
 
-diff --git a/Assemble.c b/Assemble.c
-index c0984201..6a6a56bf 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -602,6 +602,12 @@ static int load_devices(struct devs *devices, char *devmap,
- 			if (strcmp(c->update, "uuid") == 0 && !ident->uuid_set)
- 				random_uuid((__u8 *)ident->uuid);
+diff --git a/Detail.c b/Detail.c
+index 3d928553..136875be 100644
+--- a/Detail.c
++++ b/Detail.c
+@@ -402,24 +402,25 @@ int Detail(char *dev, struct context *c)
+ 		printf("%s:\n", dev);
  
-+			if (strcmp(c->update, "ppl") == 0 &&
-+			    ident->bitmap_fd >= 0) {
-+				pr_err("PPL is not compatible with bitmap\n");
-+				return -1;
+ 		if (container)
+-			printf("      Container : %s, member %s\n", container, member);
++			printf("         Container : %s, member %s\n", container,
++			       member);
+ 		else {
+ 		if (sra && sra->array.major_version < 0)
+-			printf("        Version : %s\n", sra->text_version);
++			printf("           Version : %s\n", sra->text_version);
+ 		else
+-			printf("        Version : %d.%d\n",
++			printf("           Version : %d.%d\n",
+ 			       array.major_version, array.minor_version);
+ 		}
+ 
+ 		atime = array.ctime;
+ 		if (atime)
+-			printf("  Creation Time : %.24s\n", ctime(&atime));
++			printf("     Creation Time : %.24s\n", ctime(&atime));
+ 		if (array.raid_disks == 0 && external)
+ 			str = "container";
+ 		if (str)
+-			printf("     Raid Level : %s\n", str);
++			printf("        Raid Level : %s\n", str);
+ 		if (larray_size)
+-			printf("     Array Size : %llu%s\n", (larray_size>>10),
++			printf("        Array Size : %llu%s\n", (larray_size>>10),
+ 			       human_size(larray_size));
+ 		if (array.level >= 1) {
+ 			if (sra)
+@@ -428,38 +429,38 @@ int Detail(char *dev, struct context *c)
+ 			    (larray_size >= 0xFFFFFFFFULL|| array.size == 0)) {
+ 				unsigned long long dsize = get_component_size(fd);
+ 				if (dsize > 0)
+-					printf("  Used Dev Size : %llu%s\n",
++					printf("     Used Dev Size : %llu%s\n",
+ 					       dsize/2,
+ 					 human_size((long long)dsize<<9));
+ 				else
+-					printf("  Used Dev Size : unknown\n");
++					printf("     Used Dev Size : unknown\n");
+ 			} else
+-				printf("  Used Dev Size : %lu%s\n",
++				printf("     Used Dev Size : %lu%s\n",
+ 				       (unsigned long)array.size,
+ 				       human_size((unsigned long long)array.size<<10));
+ 		}
+ 		if (array.raid_disks)
+-			printf("   Raid Devices : %d\n", array.raid_disks);
+-		printf("  Total Devices : %d\n", array.nr_disks);
++			printf("      Raid Devices : %d\n", array.raid_disks);
++		printf("     Total Devices : %d\n", array.nr_disks);
+ 		if (!container &&
+ 		    ((sra == NULL && array.major_version == 0) ||
+ 		     (sra && sra->array.major_version == 0)))
+-			printf("Preferred Minor : %d\n", array.md_minor);
++			printf("   Preferred Minor : %d\n", array.md_minor);
+ 		if (sra == NULL || sra->array.major_version >= 0)
+-			printf("    Persistence : Superblock is %spersistent\n",
++			printf("       Persistence : Superblock is %spersistent\n",
+ 			       array.not_persistent?"not ":"");
+ 		printf("\n");
+ 		/* Only try GET_BITMAP_FILE for 0.90.01 and later */
+ 		if (vers >= 9001 &&
+ 		    ioctl(fd, GET_BITMAP_FILE, &bmf) == 0 &&
+ 		    bmf.pathname[0]) {
+-			printf("  Intent Bitmap : %s\n", bmf.pathname);
++			printf("     Intent Bitmap : %s\n", bmf.pathname);
+ 			printf("\n");
+ 		} else if (array.state & (1<<MD_SB_BITMAP_PRESENT))
+-			printf("  Intent Bitmap : Internal\n\n");
++			printf("     Intent Bitmap : Internal\n\n");
+ 		atime = array.utime;
+ 		if (atime)
+-			printf("    Update Time : %.24s\n", ctime(&atime));
++			printf("       Update Time : %.24s\n", ctime(&atime));
+ 		if (array.raid_disks) {
+ 			static char *sync_action[] = {
+ 				", recovering",  ", resyncing",
+@@ -473,7 +474,7 @@ int Detail(char *dev, struct context *c)
+ 			else
+ 				st = ", degraded";
+ 
+-			printf("          State : %s%s%s%s%s%s \n",
++			printf("             State : %s%s%s%s%s%s \n",
+ 			       (array.state&(1<<MD_SB_CLEAN))?"clean":"active", st,
+ 			       (!e || (e->percent < 0 && e->percent != RESYNC_PENDING &&
+ 			       e->percent != RESYNC_DELAYED)) ? "" : sync_action[e->resync],
+@@ -481,27 +482,27 @@ int Detail(char *dev, struct context *c)
+ 			       (e && e->percent == RESYNC_DELAYED) ? " (DELAYED)": "",
+ 			       (e && e->percent == RESYNC_PENDING) ? " (PENDING)": "");
+ 		} else if (inactive) {
+-			printf("          State : inactive\n");
++			printf("             State : inactive\n");
+ 		}
+ 		if (array.raid_disks)
+-			printf(" Active Devices : %d\n", array.active_disks);
++			printf("    Active Devices : %d\n", array.active_disks);
+ 		if (array.working_disks > 0)
+-			printf("Working Devices : %d\n", array.working_disks);
++			printf("   Working Devices : %d\n", array.working_disks);
+ 		if (array.raid_disks) {
+-			printf(" Failed Devices : %d\n", array.failed_disks);
+-			printf("  Spare Devices : %d\n", array.spare_disks);
++			printf("    Failed Devices : %d\n", array.failed_disks);
++			printf("     Spare Devices : %d\n", array.spare_disks);
+ 		}
+ 		printf("\n");
+ 		if (array.level == 5) {
+ 			str = map_num(r5layout, array.layout);
+-			printf("         Layout : %s\n", str?str:"-unknown-");
++			printf("            Layout : %s\n", str?str:"-unknown-");
+ 		}
+ 		if (array.level == 6) {
+ 			str = map_num(r6layout, array.layout);
+-			printf("         Layout : %s\n", str?str:"-unknown-");
++			printf("            Layout : %s\n", str?str:"-unknown-");
+ 		}
+ 		if (array.level == 10) {
+-			printf("         Layout :");
++			printf("            Layout :");
+ 			print_r10_layout(array.layout);
+ 			printf("\n");
+ 		}
+@@ -512,20 +513,35 @@ int Detail(char *dev, struct context *c)
+ 		case 10:
+ 		case 6:
+ 			if (array.chunk_size)
+-				printf("     Chunk Size : %dK\n\n",
++				printf("        Chunk Size : %dK\n\n",
+ 				       array.chunk_size/1024);
+ 			break;
+ 		case -1:
+-			printf("       Rounding : %dK\n\n", array.chunk_size/1024);
++			printf("          Rounding : %dK\n\n",
++			       array.chunk_size/1024);
+ 			break;
+ 		default: break;
+ 		}
+ 
++		if (array.raid_disks) {
++			struct mdinfo *mdi = sysfs_read(fd, NULL,
++							GET_CONSISTENCY_POLICY);
++			if (mdi) {
++				char *policy = map_num(consistency_policies,
++						       mdi->consistency_policy);
++				sysfs_free(mdi);
++				if (policy)
++					printf("Consistency Policy : %s\n\n",
++					       policy);
 +			}
++		}
 +
- 			dfd = dev_open(devname,
- 				       tmpdev->disposition == 'I'
- 				       ? O_RDWR : (O_RDWR|O_EXCL));
-diff --git a/mdadm.8.in b/mdadm.8.in
-index cad5db53..1178ed9b 100644
---- a/mdadm.8.in
-+++ b/mdadm.8.in
-@@ -1176,6 +1176,8 @@ argument given to this flag can be one of
- .BR no\-bitmap ,
- .BR bbl ,
- .BR no\-bbl ,
-+.BR ppl ,
-+.BR no\-ppl ,
- .BR metadata ,
- or
- .BR super\-minor .
-@@ -1316,6 +1318,16 @@ option will cause any reservation of space for a bad block list to be
- removed.  If the bad block list contains entries, this will fail, as
- removing the list could cause data corruption.
+ 		if (e && e->percent >= 0) {
+ 			static char *sync_action[] = {
+ 				"Rebuild", "Resync",
+ 				"Reshape", "Check"};
+-			printf(" %7s Status : %d%% complete\n", sync_action[e->resync], e->percent);
++			printf("    %7s Status : %d%% complete\n",
++			       sync_action[e->resync], e->percent);
+ 			is_rebuilding = 1;
+ 		}
+ 		free_mdstat(ms);
+@@ -533,39 +549,41 @@ int Detail(char *dev, struct context *c)
+ 		if ((st && st->sb) && (info && info->reshape_active)) {
+ #if 0
+ This is pretty boring
+-			printf("  Reshape pos'n : %llu%s\n", (unsigned long long) info->reshape_progress<<9,
++			printf("     Reshape pos'n : %llu%s\n",
++			       (unsigned long long) info->reshape_progress<<9,
+ 			       human_size((unsigned long long)info->reshape_progress<<9));
+ #endif
+ 			if (info->delta_disks != 0)
+-				printf("  Delta Devices : %d, (%d->%d)\n",
++				printf("     Delta Devices : %d, (%d->%d)\n",
+ 				       info->delta_disks,
+ 				       array.raid_disks - info->delta_disks,
+ 				       array.raid_disks);
+ 			if (info->new_level != array.level) {
+ 				str = map_num(pers, info->new_level);
+-				printf("      New Level : %s\n", str?str:"-unknown-");
++				printf("         New Level : %s\n", str?str:"-unknown-");
+ 			}
+ 			if (info->new_level != array.level ||
+ 			    info->new_layout != array.layout) {
+ 				if (info->new_level == 5) {
+ 					str = map_num(r5layout, info->new_layout);
+-					printf("     New Layout : %s\n",
++					printf("        New Layout : %s\n",
+ 					       str?str:"-unknown-");
+ 				}
+ 				if (info->new_level == 6) {
+ 					str = map_num(r6layout, info->new_layout);
+-					printf("     New Layout : %s\n",
++					printf("        New Layout : %s\n",
+ 					       str?str:"-unknown-");
+ 				}
+ 				if (info->new_level == 10) {
+-					printf("     New Layout : near=%d, %s=%d\n",
++					printf("        New Layout : near=%d, %s=%d\n",
+ 					       info->new_layout&255,
+ 					       (info->new_layout&0x10000)?"offset":"far",
+ 					       (info->new_layout>>8)&255);
+ 				}
+ 			}
+ 			if (info->new_chunk != array.chunk_size)
+-				printf("  New Chunksize : %dK\n", info->new_chunk/1024);
++				printf("     New Chunksize : %dK\n",
++				       info->new_chunk/1024);
+ 			printf("\n");
+ 		} else if (e && e->percent >= 0)
+ 			printf("\n");
+@@ -580,7 +598,7 @@ This is pretty boring
+ 			DIR *dir = opendir("/sys/block");
+ 			struct dirent *de;
  
-+The
-+.B ppl
-+option will enable PPL for a RAID5 array and reserve space for PPL on each
-+device. There must be enough free space between the data and superblock and a
-+write-intent bitmap or journal must not be used.
-+
-+The
-+.B no\-ppl
-+option will disable PPL in the superblock.
-+
- .TP
- .BR \-\-freeze\-reshape
- Option is intended to be used in start-up scripts during initrd boot phase.
-@@ -2327,9 +2339,11 @@ superblock field in the subarray.  Similar to updating an array in
- .B \-U
- or
- .B \-\-update=
--option.  Currently only
--.B name
--is supported.
-+option. The supported options are
-+.BR name ,
-+.B ppl
-+and
-+.BR no\-ppl .
+-			printf("  Member Arrays :");
++			printf("     Member Arrays :");
  
- The
- .B name
-@@ -2340,6 +2354,13 @@ re\-assembled.  If updating
- would change the UUID of an active subarray this operation is blocked,
- and the command will end in an error.
+ 			while (dir && (de = readdir(dir)) != NULL) {
+ 				char path[287];
+diff --git a/super-ddf.c b/super-ddf.c
+index cdd16a47..c6037c1c 100644
+--- a/super-ddf.c
++++ b/super-ddf.c
+@@ -1742,10 +1742,10 @@ static void detail_super_ddf(struct supertype *st, char *homehost)
+ 	struct ddf_super *sb = st->sb;
+ 	int cnt = be16_to_cpu(sb->virt->populated_vdes);
  
-+The
-+.B ppl
-+and
-+.B no\-ppl
-+options enable and disable PPL in the metadata. Currently supported only for
-+IMSM subarrays.
-+
- .TP
- .B \-\-examine
- The device should be a component of an md array.
-diff --git a/mdadm.c b/mdadm.c
-index d4e82866..6edf3abb 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -769,6 +769,10 @@ int main(int argc, char *argv[])
- 				continue;
- 			if (strcmp(c.update, "force-no-bbl") == 0)
- 				continue;
-+			if (strcmp(c.update, "ppl") == 0)
-+				continue;
-+			if (strcmp(c.update, "no-ppl") == 0)
-+				continue;
- 			if (strcmp(c.update, "metadata") == 0)
- 				continue;
- 			if (strcmp(c.update, "revert-reshape") == 0)
-@@ -802,7 +806,7 @@ int main(int argc, char *argv[])
- 		"     'sparc2.2', 'super-minor', 'uuid', 'name', 'nodes', 'resync',\n"
- 		"     'summaries', 'homehost', 'home-cluster', 'byteorder', 'devicesize',\n"
- 		"     'no-bitmap', 'metadata', 'revert-reshape'\n"
--		"     'bbl', 'no-bbl', 'force-no-bbl'\n"
-+		"     'bbl', 'no-bbl', 'force-no-bbl', 'ppl', 'no-ppl'\n"
- 				);
- 			exit(outf == stdout ? 0 : 2);
- 
+-	printf(" Container GUID : "); print_guid(sb->anchor.guid, 1);
++	printf("    Container GUID : "); print_guid(sb->anchor.guid, 1);
+ 	printf("\n");
+-	printf("            Seq : %08x\n", be32_to_cpu(sb->active->seq));
+-	printf("  Virtual Disks : %d\n", cnt);
++	printf("               Seq : %08x\n", be32_to_cpu(sb->active->seq));
++	printf("     Virtual Disks : %d\n", cnt);
+ 	printf("\n");
+ }
+ #endif
 diff --git a/super-intel.c b/super-intel.c
-index 87fec8bc..785488a5 100644
+index 5d0f131f..2d92c8e3 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -451,6 +451,7 @@ enum imsm_update_type {
- 	update_general_migration_checkpoint,
- 	update_size_change,
- 	update_prealloc_badblocks_mem,
-+	update_rwh_policy,
- };
+@@ -1987,7 +1987,7 @@ static void detail_super_imsm(struct supertype *st, char *homehost)
  
- struct imsm_update_activate_spare {
-@@ -543,6 +544,12 @@ struct imsm_update_prealloc_bb_mem {
- 	enum imsm_update_type type;
- };
+ 	getinfo_super_imsm(st, &info, NULL);
+ 	fname_from_uuid(st, &info, nbuf, ':');
+-	printf("\n           UUID : %s\n", nbuf + 5);
++	printf("\n              UUID : %s\n", nbuf + 5);
+ }
  
-+struct imsm_update_rwh_policy {
-+	enum imsm_update_type type;
-+	int new_policy;
-+	int dev_idx;
-+};
-+
- static const char *_sys_dev_type[] = {
- 	[SYS_DEV_UNKNOWN] = "Unknown",
- 	[SYS_DEV_SAS] = "SAS",
-@@ -7373,6 +7380,34 @@ static int update_subarray_imsm(struct supertype *st, char *subarray,
- 			}
- 			super->updates_pending++;
- 		}
-+	} else if (strcmp(update, "ppl") == 0 ||
-+		   strcmp(update, "no-ppl") == 0) {
-+		int new_policy;
-+		char *ep;
-+		int vol = strtoul(subarray, &ep, 10);
-+
-+		if (*ep != '\0' || vol >= super->anchor->num_raid_devs)
-+			return 2;
-+
-+		if (strcmp(update, "ppl") == 0)
-+			new_policy = RWH_DISTRIBUTED;
-+		else
-+			new_policy = RWH_OFF;
-+
-+		if (st->update_tail) {
-+			struct imsm_update_rwh_policy *u = xmalloc(sizeof(*u));
-+
-+			u->type = update_rwh_policy;
-+			u->dev_idx = vol;
-+			u->new_policy = new_policy;
-+			append_metadata_update(st, u, sizeof(*u));
-+		} else {
-+			struct imsm_dev *dev;
-+
-+			dev = get_imsm_dev(super, vol);
-+			dev->rwh_policy = new_policy;
-+			super->updates_pending++;
-+		}
- 	} else
- 		return 2;
+ static void brief_detail_super_imsm(struct supertype *st)
+diff --git a/super0.c b/super0.c
+index 7a555e3b..10d9c40d 100644
+--- a/super0.c
++++ b/super0.c
+@@ -353,7 +353,7 @@ err:
+ static void detail_super0(struct supertype *st, char *homehost)
+ {
+ 	mdp_super_t *sb = st->sb;
+-	printf("           UUID : ");
++	printf("              UUID : ");
+ 	if (sb->minor_version >= 90)
+ 		printf("%08x:%08x:%08x:%08x", sb->set_uuid0, sb->set_uuid1,
+ 		       sb->set_uuid2, sb->set_uuid3);
+@@ -367,7 +367,7 @@ static void detail_super0(struct supertype *st, char *homehost)
+ 		if (memcmp(&sb->set_uuid2, hash, 8)==0)
+ 			printf(" (local to host %s)", homehost);
+ 	}
+-	printf("\n         Events : %d.%d\n\n", sb->events_hi, sb->events_lo);
++	printf("\n            Events : %d.%d\n\n", sb->events_hi, sb->events_lo);
+ }
  
-@@ -9599,6 +9634,21 @@ static void imsm_process_update(struct supertype *st,
- 	}
- 	case update_prealloc_badblocks_mem:
- 		break;
-+	case update_rwh_policy: {
-+		struct imsm_update_rwh_policy *u = (void *)update->buf;
-+		int target = u->dev_idx;
-+		struct imsm_dev *dev = get_imsm_dev(super, target);
-+		if (!dev) {
-+			dprintf("could not find subarray-%d\n", target);
-+			break;
-+		}
-+
-+		if (dev->rwh_policy != u->new_policy) {
-+			dev->rwh_policy = u->new_policy;
-+			super->updates_pending++;
-+		}
-+		break;
-+	}
- 	default:
- 		pr_err("error: unsuported process update type:(type: %d)\n",	type);
- 	}
-@@ -9844,6 +9894,11 @@ static int imsm_prepare_update(struct supertype *st,
- 		super->extra_space += sizeof(struct bbm_log) -
- 			get_imsm_bbm_log_size(super->bbm_log);
- 		break;
-+	case update_rwh_policy: {
-+		if (update->len < (int)sizeof(struct imsm_update_rwh_policy))
-+			return 0;
-+		break;
-+	}
- 	default:
- 		return 0;
- 	}
+ static void brief_detail_super0(struct supertype *st)
 diff --git a/super1.c b/super1.c
-index 409b6c32..e76f7777 100644
+index 4a0f0416..8df17a1c 100644
 --- a/super1.c
 +++ b/super1.c
-@@ -1325,6 +1325,55 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
- 		sb->bblog_size = 0;
- 		sb->bblog_shift = 0;
- 		sb->bblog_offset = 0;
-+	} else if (strcmp(update, "ppl") == 0) {
-+		unsigned long long sb_offset = __le64_to_cpu(sb->super_offset);
-+		unsigned long long data_offset = __le64_to_cpu(sb->data_offset);
-+		unsigned long long data_size = __le64_to_cpu(sb->data_size);
-+		long bb_offset = __le32_to_cpu(sb->bblog_offset);
-+		int space;
-+		int optimal_space;
-+		int offset;
-+
-+		if (sb->feature_map & __cpu_to_le32(MD_FEATURE_BITMAP_OFFSET)) {
-+			pr_err("Cannot add PPL to array with bitmap\n");
-+			return -2;
-+		}
-+
-+		if (sb->feature_map & __cpu_to_le32(MD_FEATURE_JOURNAL)) {
-+			pr_err("Cannot add PPL to array with journal\n");
-+			return -2;
-+		}
-+
-+		if (sb_offset < data_offset) {
-+			if (bb_offset)
-+				space = bb_offset - 8;
-+			else
-+				space = data_offset - sb_offset - 8;
-+			offset = 8;
-+		} else {
-+			offset = -(sb_offset - data_offset - data_size);
-+			if (offset < INT16_MIN)
-+				offset = INT16_MIN;
-+			space = -(offset - bb_offset);
-+		}
-+
-+		if (space < (PPL_HEADER_SIZE >> 9) + 8) {
-+			pr_err("Not enough space to add ppl\n");
-+			return -2;
-+		}
-+
-+		optimal_space = choose_ppl_space(__le32_to_cpu(sb->chunksize));
-+
-+		if (space > optimal_space)
-+			space = optimal_space;
-+		if (space > UINT16_MAX)
-+			space = UINT16_MAX;
-+
-+		sb->ppl.offset = __cpu_to_le16(offset);
-+		sb->ppl.size = __cpu_to_le16(space);
-+		sb->feature_map |= __cpu_to_le32(MD_FEATURE_PPL);
-+	} else if (strcmp(update, "no-ppl") == 0) {
-+		sb->feature_map &= ~ __cpu_to_le32(MD_FEATURE_PPL);
- 	} else if (strcmp(update, "name") == 0) {
- 		if (info->name[0] == 0)
- 			sprintf(info->name, "%d", info->array.md_minor);
+@@ -780,19 +780,20 @@ static void detail_super1(struct supertype *st, char *homehost)
+ 	int i;
+ 	int l = homehost ? strlen(homehost) : 0;
+ 
+-	printf("           Name : %.32s", sb->set_name);
++	printf("              Name : %.32s", sb->set_name);
+ 	if (l > 0 && l < 32 &&
+ 	    sb->set_name[l] == ':' &&
+ 	    strncmp(sb->set_name, homehost, l) == 0)
+ 		printf("  (local to host %s)", homehost);
+ 	if (bms->nodes > 0 && (__le32_to_cpu(sb->feature_map) & MD_FEATURE_BITMAP_OFFSET))
+-	    printf("\n   Cluster Name : %-64s", bms->cluster_name);
+-	printf("\n           UUID : ");
++	    printf("\n      Cluster Name : %-64s", bms->cluster_name);
++	printf("\n              UUID : ");
+ 	for (i=0; i<16; i++) {
+ 		if ((i&3)==0 && i != 0) printf(":");
+ 		printf("%02x", sb->set_uuid[i]);
+ 	}
+-	printf("\n         Events : %llu\n\n", (unsigned long long)__le64_to_cpu(sb->events));
++	printf("\n            Events : %llu\n\n",
++	       (unsigned long long)__le64_to_cpu(sb->events));
+ }
+ 
+ static void brief_detail_super1(struct supertype *st)
 -- 
 2.11.0
 
