@@ -1,74 +1,281 @@
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH v4 0/6] mdadm support for Partial Parity Log
-Date: Wed, 29 Mar 2017 11:54:14 +0200
-Message-ID: <20170329095420.17855-1-artur.paszkiewicz@intel.com>
+Subject: [PATCH v4 5/6] Add 'ppl' and 'no-ppl' options for --update=
+Date: Wed, 29 Mar 2017 11:54:19 +0200
+Message-ID: <20170329095420.17855-6-artur.paszkiewicz@intel.com>
+References: <20170329095420.17855-1-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170329095420.17855-1-artur.paszkiewicz@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: jes.sorensen@gmail.com
 Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-This is the mdadm part of the PPL functionality. It adds a new parameter to
-mdadm to allow selecting the consistency policy for an array and implements PPL
-as one of the policies.
+This can be used with --assemble for super1 and with --update-subarray
+for imsm to enable or disable PPL in the metadata.
 
-All of this is currently targeted and tested with imsm and super1 metadata
-arrays. The kernel patches are available on Shaohua's md tree on the for-next
-branch.
+Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+---
+ Assemble.c    |  6 ++++++
+ mdadm.8.in    | 27 ++++++++++++++++++++++++---
+ mdadm.c       |  6 +++++-
+ super-intel.c | 55 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ super1.c      | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 139 insertions(+), 4 deletions(-)
 
-v4:
-- Rebased to latest mdadm code.
-- Fixed a mistake in Makefile.
-- Added descriptions for --consistency-policy in --help messages.
-
-v3:
-- Rebased to latest mdadm code.
-- Replaced --rwh-policy with --consistency-policy.
-- Adjusted to the kernel interface changes.
-- Write the initial ppl header in mdadm when creating an array.
-- Validate ppl when starting an imsm array. 
-- Support for --update.
-- Support also 1.0 metadata.
-- Use Grow mode for enabing or disabling ppl for an active array.
-
-v2:
-- Rebased to latest mdadm code.
-- Fixed runtime policy switching.
-- Recognize IMSM PPL journal drive correctly.
-- Removed bitfields from imsm_dev.
-- Made dirty/consistent checks in imsm_set_array_state() more readable.
-- Added comment about calculating sb_start.
-
-Artur Paszkiewicz (6):
-  Generic support for --consistency-policy and PPL
-  Detail: show consistency policy
-  imsm: PPL support
-  super1: PPL support
-  Add 'ppl' and 'no-ppl' options for --update=
-  Grow: support consistency policy change
-
- Assemble.c    |  58 ++++++++++
- Create.c      |  20 +++-
- Detail.c      |  90 +++++++++------
- Grow.c        | 187 ++++++++++++++++++++++++++++++-
- Incremental.c |   3 +
- Kill.c        |   2 +-
- Makefile      |   5 +-
- ReadMe.c      |  97 ++++++++--------
- maps.c        |  10 ++
- md_p.h        |  25 +++++
- mdadm.8.in    |  85 ++++++++++++--
- mdadm.c       |  64 ++++++++++-
- mdadm.h       |  30 ++++-
- super-ddf.c   |  12 +-
- super-gpt.c   |   2 +-
- super-intel.c | 347 ++++++++++++++++++++++++++++++++++++++++++++++++++++------
- super-mbr.c   |   2 +-
- super0.c      |  12 +-
- super1.c      | 214 +++++++++++++++++++++++++++++++-----
- sysfs.c       |  25 +++++
- 20 files changed, 1116 insertions(+), 174 deletions(-)
-
+diff --git a/Assemble.c b/Assemble.c
+index c0984201..6a6a56bf 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -602,6 +602,12 @@ static int load_devices(struct devs *devices, char *devmap,
+ 			if (strcmp(c->update, "uuid") == 0 && !ident->uuid_set)
+ 				random_uuid((__u8 *)ident->uuid);
+ 
++			if (strcmp(c->update, "ppl") == 0 &&
++			    ident->bitmap_fd >= 0) {
++				pr_err("PPL is not compatible with bitmap\n");
++				return -1;
++			}
++
+ 			dfd = dev_open(devname,
+ 				       tmpdev->disposition == 'I'
+ 				       ? O_RDWR : (O_RDWR|O_EXCL));
+diff --git a/mdadm.8.in b/mdadm.8.in
+index cad5db53..1178ed9b 100644
+--- a/mdadm.8.in
++++ b/mdadm.8.in
+@@ -1176,6 +1176,8 @@ argument given to this flag can be one of
+ .BR no\-bitmap ,
+ .BR bbl ,
+ .BR no\-bbl ,
++.BR ppl ,
++.BR no\-ppl ,
+ .BR metadata ,
+ or
+ .BR super\-minor .
+@@ -1316,6 +1318,16 @@ option will cause any reservation of space for a bad block list to be
+ removed.  If the bad block list contains entries, this will fail, as
+ removing the list could cause data corruption.
+ 
++The
++.B ppl
++option will enable PPL for a RAID5 array and reserve space for PPL on each
++device. There must be enough free space between the data and superblock and a
++write-intent bitmap or journal must not be used.
++
++The
++.B no\-ppl
++option will disable PPL in the superblock.
++
+ .TP
+ .BR \-\-freeze\-reshape
+ Option is intended to be used in start-up scripts during initrd boot phase.
+@@ -2327,9 +2339,11 @@ superblock field in the subarray.  Similar to updating an array in
+ .B \-U
+ or
+ .B \-\-update=
+-option.  Currently only
+-.B name
+-is supported.
++option. The supported options are
++.BR name ,
++.B ppl
++and
++.BR no\-ppl .
+ 
+ The
+ .B name
+@@ -2340,6 +2354,13 @@ re\-assembled.  If updating
+ would change the UUID of an active subarray this operation is blocked,
+ and the command will end in an error.
+ 
++The
++.B ppl
++and
++.B no\-ppl
++options enable and disable PPL in the metadata. Currently supported only for
++IMSM subarrays.
++
+ .TP
+ .B \-\-examine
+ The device should be a component of an md array.
+diff --git a/mdadm.c b/mdadm.c
+index d4e82866..6edf3abb 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -769,6 +769,10 @@ int main(int argc, char *argv[])
+ 				continue;
+ 			if (strcmp(c.update, "force-no-bbl") == 0)
+ 				continue;
++			if (strcmp(c.update, "ppl") == 0)
++				continue;
++			if (strcmp(c.update, "no-ppl") == 0)
++				continue;
+ 			if (strcmp(c.update, "metadata") == 0)
+ 				continue;
+ 			if (strcmp(c.update, "revert-reshape") == 0)
+@@ -802,7 +806,7 @@ int main(int argc, char *argv[])
+ 		"     'sparc2.2', 'super-minor', 'uuid', 'name', 'nodes', 'resync',\n"
+ 		"     'summaries', 'homehost', 'home-cluster', 'byteorder', 'devicesize',\n"
+ 		"     'no-bitmap', 'metadata', 'revert-reshape'\n"
+-		"     'bbl', 'no-bbl', 'force-no-bbl'\n"
++		"     'bbl', 'no-bbl', 'force-no-bbl', 'ppl', 'no-ppl'\n"
+ 				);
+ 			exit(outf == stdout ? 0 : 2);
+ 
+diff --git a/super-intel.c b/super-intel.c
+index 87fec8bc..785488a5 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -451,6 +451,7 @@ enum imsm_update_type {
+ 	update_general_migration_checkpoint,
+ 	update_size_change,
+ 	update_prealloc_badblocks_mem,
++	update_rwh_policy,
+ };
+ 
+ struct imsm_update_activate_spare {
+@@ -543,6 +544,12 @@ struct imsm_update_prealloc_bb_mem {
+ 	enum imsm_update_type type;
+ };
+ 
++struct imsm_update_rwh_policy {
++	enum imsm_update_type type;
++	int new_policy;
++	int dev_idx;
++};
++
+ static const char *_sys_dev_type[] = {
+ 	[SYS_DEV_UNKNOWN] = "Unknown",
+ 	[SYS_DEV_SAS] = "SAS",
+@@ -7373,6 +7380,34 @@ static int update_subarray_imsm(struct supertype *st, char *subarray,
+ 			}
+ 			super->updates_pending++;
+ 		}
++	} else if (strcmp(update, "ppl") == 0 ||
++		   strcmp(update, "no-ppl") == 0) {
++		int new_policy;
++		char *ep;
++		int vol = strtoul(subarray, &ep, 10);
++
++		if (*ep != '\0' || vol >= super->anchor->num_raid_devs)
++			return 2;
++
++		if (strcmp(update, "ppl") == 0)
++			new_policy = RWH_DISTRIBUTED;
++		else
++			new_policy = RWH_OFF;
++
++		if (st->update_tail) {
++			struct imsm_update_rwh_policy *u = xmalloc(sizeof(*u));
++
++			u->type = update_rwh_policy;
++			u->dev_idx = vol;
++			u->new_policy = new_policy;
++			append_metadata_update(st, u, sizeof(*u));
++		} else {
++			struct imsm_dev *dev;
++
++			dev = get_imsm_dev(super, vol);
++			dev->rwh_policy = new_policy;
++			super->updates_pending++;
++		}
+ 	} else
+ 		return 2;
+ 
+@@ -9599,6 +9634,21 @@ static void imsm_process_update(struct supertype *st,
+ 	}
+ 	case update_prealloc_badblocks_mem:
+ 		break;
++	case update_rwh_policy: {
++		struct imsm_update_rwh_policy *u = (void *)update->buf;
++		int target = u->dev_idx;
++		struct imsm_dev *dev = get_imsm_dev(super, target);
++		if (!dev) {
++			dprintf("could not find subarray-%d\n", target);
++			break;
++		}
++
++		if (dev->rwh_policy != u->new_policy) {
++			dev->rwh_policy = u->new_policy;
++			super->updates_pending++;
++		}
++		break;
++	}
+ 	default:
+ 		pr_err("error: unsuported process update type:(type: %d)\n",	type);
+ 	}
+@@ -9844,6 +9894,11 @@ static int imsm_prepare_update(struct supertype *st,
+ 		super->extra_space += sizeof(struct bbm_log) -
+ 			get_imsm_bbm_log_size(super->bbm_log);
+ 		break;
++	case update_rwh_policy: {
++		if (update->len < (int)sizeof(struct imsm_update_rwh_policy))
++			return 0;
++		break;
++	}
+ 	default:
+ 		return 0;
+ 	}
+diff --git a/super1.c b/super1.c
+index 409b6c32..e76f7777 100644
+--- a/super1.c
++++ b/super1.c
+@@ -1325,6 +1325,55 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+ 		sb->bblog_size = 0;
+ 		sb->bblog_shift = 0;
+ 		sb->bblog_offset = 0;
++	} else if (strcmp(update, "ppl") == 0) {
++		unsigned long long sb_offset = __le64_to_cpu(sb->super_offset);
++		unsigned long long data_offset = __le64_to_cpu(sb->data_offset);
++		unsigned long long data_size = __le64_to_cpu(sb->data_size);
++		long bb_offset = __le32_to_cpu(sb->bblog_offset);
++		int space;
++		int optimal_space;
++		int offset;
++
++		if (sb->feature_map & __cpu_to_le32(MD_FEATURE_BITMAP_OFFSET)) {
++			pr_err("Cannot add PPL to array with bitmap\n");
++			return -2;
++		}
++
++		if (sb->feature_map & __cpu_to_le32(MD_FEATURE_JOURNAL)) {
++			pr_err("Cannot add PPL to array with journal\n");
++			return -2;
++		}
++
++		if (sb_offset < data_offset) {
++			if (bb_offset)
++				space = bb_offset - 8;
++			else
++				space = data_offset - sb_offset - 8;
++			offset = 8;
++		} else {
++			offset = -(sb_offset - data_offset - data_size);
++			if (offset < INT16_MIN)
++				offset = INT16_MIN;
++			space = -(offset - bb_offset);
++		}
++
++		if (space < (PPL_HEADER_SIZE >> 9) + 8) {
++			pr_err("Not enough space to add ppl\n");
++			return -2;
++		}
++
++		optimal_space = choose_ppl_space(__le32_to_cpu(sb->chunksize));
++
++		if (space > optimal_space)
++			space = optimal_space;
++		if (space > UINT16_MAX)
++			space = UINT16_MAX;
++
++		sb->ppl.offset = __cpu_to_le16(offset);
++		sb->ppl.size = __cpu_to_le16(space);
++		sb->feature_map |= __cpu_to_le32(MD_FEATURE_PPL);
++	} else if (strcmp(update, "no-ppl") == 0) {
++		sb->feature_map &= ~ __cpu_to_le32(MD_FEATURE_PPL);
+ 	} else if (strcmp(update, "name") == 0) {
+ 		if (info->name[0] == 0)
+ 			sprintf(info->name, "%d", info->array.md_minor);
 -- 
 2.11.0
 
