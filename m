@@ -1,41 +1,73 @@
-From: Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 22/23] drbd: implement REQ_OP_WRITE_ZEROES
-Date: Thu, 30 Mar 2017 09:49:57 -0400
-Message-ID: <20170330134957.GA508@redhat.com>
-References: <20170323143341.31549-1-hch@lst.de>
-	<20170323143341.31549-23-hch@lst.de>
-	<20170330100641.GI5939@soda.linbit> <20170330114408.GA15777@lst.de>
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: Grow set size issue
+Date: Thu, 30 Mar 2017 10:10:32 -0400
+Message-ID: <89891c04-620c-0dc2-97af-719b480aa4e5@gmail.com>
+References: <wrfjlgrodlbj.fsf@gmail.com>
+ <87o9wju5r0.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20170330114408.GA15777-jcswGhMUV9g@public.gmane.org>
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87o9wju5r0.fsf@notabene.neil.brown.name>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Mar 30 2017 at  7:44am -0400,
-Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org> wrote:
+On 03/29/2017 05:34 PM, NeilBrown wrote:
+> On Thu, Mar 30 2017, jes.sorensen@gmail.com wrote:
+>
+>> Hi Neil,
+>>
+>> In the below patch you changed the error handling, to make the kernel
+>> not setting the size of the device being an error. However we still have
+>> the code in place to handle the error, except it never triggers.
+>
+> So we do.  I should have removed all of that.
+> I should have just reverted
+> Commit: 65a9798b58b4 ("FIX: Detect error and rollback metadata")
+>
+>
+>>
+>> Question is do you remember the reason for this change? Old kernels not
+>> allowing it, are there any legitimate reasons for the kernel to refuse
+>> the size change?
+>
+> I needed to go further back to remind myself why we do these size change
+> at all.
+> The command being run here is "mdadm --grow /dev/mdX --size=foo"
+> which has a primary purpose of changing the component_size of the array.
+> What can happen is that someone makes all the components bigger
+> (E.g. with LVM) and then uses this command to set --size=max, and it
+> doesn't work.  That is because md doesn't know the devices are bigger.
+>
+> You can tell md that devices have changes size by writing to the "size"
+> attribute.
+> mdadm doesn't have an option for doing that per-device - you need to
+> poke into sysfs.
+>
+> To make it a bit easier, when you use "--grow --size=foo", mdadm will
+> always write "foo" to the "size" attribute of each device, just incase
+> that will be helpful. In the case where the device is now bigger, it
+> will.
+>
+> In the case where the size of the array is being reduced, it is not
+> permitted to change the "size" of each device until the "component_size"
+> of the array has changed, so these attempts to change "size" will fail.
+> But that isn't a problem.
+>
+> In short, the attempt to change "size" here is a convenience, and
+> optimization.  It doesn't matter if it fails.
+>
+> So please just revert all bits of the above commit that are still
+> present.
 
-> On Thu, Mar 30, 2017 at 12:06:41PM +0200, Lars Ellenberg wrote:
-> 
-> > Will it make an fstrim cause thinly provisioned
-> > devices to suddenly be fully allocated?
-> 
-> Not for SCSI devices.  Yes for dm-thinp until it implements
-> REQ_OP_WRITE_ZEROES, which will hopefully be soon.
+Hi Neil,
 
-I can work on this now.  Only question I have is: should DM thinp take
-care to zero any misaligned head and tail?  (I assume so but with all
-the back and forth between Bart, Paolo and Martin I figured I'd ask
-explicitly).
+Thanks for the explanation, I'll take the big hammer to the leftovers 
+and get rid of them.
+
+Cheers,
+Jes
+
+
