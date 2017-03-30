@@ -1,254 +1,80 @@
-From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH] mdadm/util:integrate fstat and stat into a utility function
-Date: Thu, 30 Mar 2017 12:46:22 +0800
-Message-ID: <20170330044622.2397-1-zlliu@suse.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
+From: Vinod Koul <vinod.koul@intel.com>
+Subject: Re: [PATCH v6 0/4] Broadcom SBA RAID support
+Date: Thu, 30 Mar 2017 10:19:40 +0530
+Message-ID: <20170330044940.GU9308@localhost>
+References: <1488793408-25592-1-git-send-email-anup.patel@broadcom.com>
+ <20170321083052.GY2843@localhost>
+ <CAALAos-k_DBYAz49278wBr_GoceOKYVH_UuzTLn1h7QCiUd8pg@mail.gmail.com>
+ <20170321091829.GZ2843@localhost>
+ <CAALAos-P6CDdWTJxg8YQfT1V+iCxUcbYHiQ35EdZzz9PnN3cuA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAALAos-P6CDdWTJxg8YQfT1V+iCxUcbYHiQ35EdZzz9PnN3cuA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jassi Brar <jassisinghbrar@gmail.com>
+Cc: Anup Patel <anup.patel@broadcom.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S . Miller" <davem@davemloft.net>, Dan Williams <dan.j.williams@intel.com>, Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>, Rob Rice <rob.rice@broadcom.com>, BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>, dmaengine@vger.kernel.org, Device Tree <devicetree@vger.kernel.org>, Linux ARM Kernel <linux-arm-kernel@lists.infradead.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-mdadm/util: lots of dupilicate codes about stat and fstat
-check the block device, move them into a utility function
-to make it concise.
+On Wed, Mar 29, 2017 at 11:35:43AM +0530, Anup Patel wrote:
+> On Tue, Mar 21, 2017 at 2:48 PM, Vinod Koul <vinod.koul@intel.com> wrote:
+> > On Tue, Mar 21, 2017 at 02:17:21PM +0530, Anup Patel wrote:
+> >> On Tue, Mar 21, 2017 at 2:00 PM, Vinod Koul <vinod.koul@intel.com> wrote:
+> >> > On Mon, Mar 06, 2017 at 03:13:24PM +0530, Anup Patel wrote:
+> >> >> The Broadcom SBA RAID is a stream-based device which provides
+> >> >> RAID5/6 offload.
+> >> >>
+> >> >> It requires a SoC specific ring manager (such as Broadcom FlexRM
+> >> >> ring manager) to provide ring-based programming interface. Due to
+> >> >> this, the Broadcom SBA RAID driver (mailbox client) implements
+> >> >> DMA device having one DMA channel using a set of mailbox channels
+> >> >> provided by Broadcom SoC specific ring manager driver (mailbox
+> >> >> controller).
+> >> >>
+> >> >> The Broadcom SBA RAID hardware requires PQ disk position instead
+> >> >> of PQ disk coefficient. To address this, we have added raid_gflog
+> >> >> table which will help driver to convert PQ disk coefficient to PQ
+> >> >> disk position.
+> >> >>
+> >> >> This patchset is based on Linux-4.11-rc1 and depends on patchset
+> >> >> "[PATCH v5 0/2] Broadcom FlexRM ring manager support"
+> >> >
+> >> > Okay I applied and was about to push when I noticed this :(
+> >> >
+> >> > So what is the status of this..?
+> >>
+> >> PATCH2 is Acked but PATCH1 is under-review. Currently, its
+> >> v6 of that patchset.
+> >>
+> >> The only dependency on that patchset is the changes in
+> >> brcm-message.h which are required by this BCM-SBA-RAID
+> >> driver.
+> >>
+> >> @Jassi,
+> >> Can you please have a look at PATCH v6?
+> >
+> > And I would need an immutable branch/tag once merged. I am going to keep
+> > this series pending till then.
+> 
+> The Broadcom FlexRM patchset is pickedup by Jassi and
+> can be found in mailbox-for-next branch of
+> git://git.linaro.org/landing-teams/working/fujitsu/integration
+> 
+> Both patchset (Broadcom FlexRM patchset and this one) are
+> also available in sba-raid-v7 branch of
+> https://github.com/Broadcom/arm64-linux.git
 
-Signed-off-by: Zhilong Liu <zlliu@suse.com>
----
- Assemble.c    |  9 +--------
- Build.c       | 10 +---------
- Create.c      |  5 +----
- Dump.c        |  3 +--
- Grow.c        |  4 +---
- Incremental.c | 27 +++------------------------
- Manage.c      |  9 +--------
- mdadm.h       |  1 +
- super-intel.c |  9 +--------
- util.c        | 15 +++++++++++++++
- 10 files changed, 26 insertions(+), 66 deletions(-)
+Jassi,
 
-diff --git a/Assemble.c b/Assemble.c
-index 6a6a56b..d3bfaa2 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -204,14 +204,7 @@ static int select_devices(struct mddev_dev *devlist,
- 				pr_err("cannot open device %s: %s\n",
- 				       devname, strerror(errno));
- 			tmpdev->used = 2;
--		} else if (fstat(dfd, &stb)< 0) {
--			/* Impossible! */
--			pr_err("fstat failed for %s: %s\n",
--			       devname, strerror(errno));
--			tmpdev->used = 2;
--		} else if ((stb.st_mode & S_IFMT) != S_IFBLK) {
--			pr_err("%s is not a block device.\n",
--			       devname);
-+		} else if (check_block_dev(devname)) {
- 			tmpdev->used = 2;
- 		} else if (must_be_container(dfd)) {
- 			if (st) {
-diff --git a/Build.c b/Build.c
-index a5fcc06..4fa606c 100644
---- a/Build.c
-+++ b/Build.c
-@@ -67,16 +67,8 @@ int Build(char *mddev, struct mddev_dev *devlist,
- 			missing_disks++;
- 			continue;
- 		}
--		if (stat(dv->devname, &stb)) {
--			pr_err("Cannot find %s: %s\n",
--				dv->devname, strerror(errno));
--			return 1;
--		}
--		if ((stb.st_mode & S_IFMT) != S_IFBLK) {
--			pr_err("%s is not a block device.\n",
--				dv->devname);
-+		if (check_block_dev(dv->devname))
- 			return 1;
--		}
- 	}
- 
- 	if (s->raiddisks != subdevs) {
-diff --git a/Create.c b/Create.c
-index 10e7d10..dbd9ce3 100644
---- a/Create.c
-+++ b/Create.c
-@@ -327,11 +327,8 @@ int Create(struct supertype *st, char *mddev,
- 				dname, strerror(errno));
- 			exit(2);
- 		}
--		if (fstat(dfd, &stb) != 0 ||
--		    (stb.st_mode & S_IFMT) != S_IFBLK) {
-+		if (check_block_dev(dname)) {
- 			close(dfd);
--			pr_err("%s is not a block device\n",
--				dname);
- 			exit(2);
- 		}
- 		close(dfd);
-diff --git a/Dump.c b/Dump.c
-index 7bdbf6f..29fc02a 100644
---- a/Dump.c
-+++ b/Dump.c
-@@ -131,8 +131,7 @@ int Dump_metadata(char *dev, char *dir, struct context *c,
- 		if (de->d_name[0] == '.')
- 			continue;
- 		xasprintf(&p, "/dev/disk/by-id/%s", de->d_name);
--		if (stat(p, &stb) != 0 ||
--		    (stb.st_mode & S_IFMT) != S_IFBLK ||
-+		if (check_block_dev(p) != 0 ||
- 		    stb.st_rdev != dstb.st_rdev) {
- 			/* Not this one */
- 			free(p);
-diff --git a/Grow.c b/Grow.c
-index b86b53e..063996d 100755
---- a/Grow.c
-+++ b/Grow.c
-@@ -145,9 +145,7 @@ int Grow_Add_device(char *devname, int fd, char *newdev)
- 		free(st);
- 		return 1;
- 	}
--	fstat(nfd, &stb);
--	if ((stb.st_mode & S_IFMT) != S_IFBLK) {
--		pr_err("%s is not a block device!\n", newdev);
-+	if (check_block_dev(newdev)) {
- 		close(nfd);
- 		free(st);
- 		return 1;
-diff --git a/Incremental.c b/Incremental.c
-index 81afc7e..b2fad39 100644
---- a/Incremental.c
-+++ b/Incremental.c
-@@ -108,18 +108,8 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
- 
- 	struct createinfo *ci = conf_get_create_info();
- 
--	if (stat(devname, &stb) < 0) {
--		if (c->verbose >= 0)
--			pr_err("stat failed for %s: %s.\n",
--				devname, strerror(errno));
-+	if (check_block_dev(devname))
- 		return rv;
--	}
--	if ((stb.st_mode & S_IFMT) != S_IFBLK) {
--		if (c->verbose >= 0)
--			pr_err("%s is not a block device.\n",
--				devname);
--		return rv;
--	}
- 	dfd = dev_open(devname, O_RDONLY);
- 	if (dfd < 0) {
- 		if (c->verbose >= 0)
-@@ -159,8 +149,7 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
- 		devlist = conf_get_devs();
- 		for (;devlist; devlist = devlist->next) {
- 			struct stat st2;
--			if (stat(devlist->devname, &st2) == 0 &&
--			    (st2.st_mode & S_IFMT) == S_IFBLK &&
-+			if (check_block_dev(devlist->devname) == 0 &&
- 			    st2.st_rdev == stb.st_rdev)
- 				break;
- 		}
-@@ -175,18 +164,8 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
- 	/* 2/ Find metadata, reject if none appropriate (check
- 	 *            version/name from args) */
- 
--	if (fstat(dfd, &stb) < 0) {
--		if (c->verbose >= 0)
--			pr_err("fstat failed for %s: %s.\n",
--				devname, strerror(errno));
-+	if (check_block_dev(devname))
- 		goto out;
--	}
--	if ((stb.st_mode & S_IFMT) != S_IFBLK) {
--		if (c->verbose >= 0)
--			pr_err("%s is not a block device.\n",
--				devname);
--		goto out;
--	}
- 
- 	dinfo.disk.major = major(stb.st_rdev);
- 	dinfo.disk.minor = minor(stb.st_rdev);
-diff --git a/Manage.c b/Manage.c
-index 55218d9..8687084 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -1543,17 +1543,10 @@ int Manage_subdevs(char *devname, int fd,
- 				close(tfd);
- 			} else {
- 				int open_err = errno;
--				if (stat(dv->devname, &stb) != 0) {
--					pr_err("Cannot find %s: %s\n",
--					       dv->devname, strerror(errno));
--					goto abort;
--				}
--				if ((stb.st_mode & S_IFMT) != S_IFBLK) {
-+				if (check_block_dev(dv->devname) != 0) {
- 					if (dv->disposition == 'M')
- 						/* non-fatal. Also improbable */
- 						continue;
--					pr_err("%s is not a block device.\n",
--					       dv->devname);
- 					goto abort;
- 				}
- 				if (dv->disposition == 'r')
-diff --git a/mdadm.h b/mdadm.h
-index dbf1f92..ad43a35 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -1416,6 +1416,7 @@ extern int parse_cluster_confirm_arg(char *inp, char **devname, int *slot);
- extern int check_ext2(int fd, char *name);
- extern int check_reiser(int fd, char *name);
- extern int check_raid(int fd, char *name);
-+extern int check_block_dev(char *dev);
- extern int check_partitions(int fd, char *dname,
- 			    unsigned long long freesize,
- 			    unsigned long long size);
-diff --git a/super-intel.c b/super-intel.c
-index 785488a..21b5887 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -6584,14 +6584,7 @@ count_volumes_list(struct md_list *devlist, char *homehost,
- 			dprintf("cannot open device %s: %s\n",
- 				devname, strerror(errno));
- 			tmpdev->used = 2;
--		} else if (fstat(dfd, &stb)< 0) {
--			/* Impossible! */
--			dprintf("fstat failed for %s: %s\n",
--				devname, strerror(errno));
--			tmpdev->used = 2;
--		} else if ((stb.st_mode & S_IFMT) != S_IFBLK) {
--			dprintf("%s is not a block device.\n",
--				devname);
-+		} else if (check_block_dev(devname)) {
- 			tmpdev->used = 2;
- 		} else if (must_be_container(dfd)) {
- 			struct supertype *cst;
-diff --git a/util.c b/util.c
-index 683c869..e7aeb54 100644
---- a/util.c
-+++ b/util.c
-@@ -750,6 +750,21 @@ int ask(char *mesg)
- }
- #endif /* MDASSEMBLE */
- 
-+int check_block_dev(char *dev)
-+{
-+	struct stat stb;
-+
-+	if (stat(dev, &stb) != 0) {
-+		pr_err("stat failed for %s: %s\n", dev, strerror(errno));
-+		return -1;
-+	}
-+	if ((S_IFMT & stb.st_mode) != S_IFBLK) {
-+		pr_err("%s is not a block device.\n", dev);
-+		return -1;
-+	}
-+	return 0;
-+}
-+
- int is_standard(char *dev, int *nump)
- {
- 	/* tests if dev is a "standard" md dev name.
+Can you provide an immutable branch/tag please for this, latter is
+preferred.
+
+Btw didn't find your tree in MAINTAINERS..
+
+> 
+> Regards,
+> Anup
+
 -- 
-2.10.2
-
+~Vinod
