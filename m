@@ -1,38 +1,40 @@
-From: Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: RFC: always use REQ_OP_WRITE_ZEROES for zeroing
-	offload
-Date: Thu, 30 Mar 2017 11:38:51 -0400
-Message-ID: <20170330153850.GA1031@redhat.com>
-References: <20170323143341.31549-1-hch@lst.de>
-	<20170330151257.GA910@redhat.com> <yq1lgrm3i36.fsf@oracle.com>
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: [PATCH v1] mdadm/grow: reshape would be stuck from raid1 to raid5
+Date: Thu, 30 Mar 2017 11:50:24 -0400
+Message-ID: <07299461-6f67-710a-fcb6-45b74e5d856d@gmail.com>
+References: <wrfjk27aid6n.fsf@gmail.com>
+ <20170330073808.6176-1-zlliu@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <yq1lgrm3i36.fsf-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170330073808.6176-1-zlliu@suse.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Zhilong Liu <zlliu@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Mar 30 2017 at 11:22am -0400,
-Martin K. Petersen <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org> wrote:
+On 03/30/2017 03:38 AM, Zhilong Liu wrote:
+> systemctl doesn't interpret mdadm-grow-continue@.service
+> correctly due to the wrong argument provided in [service],
+> it should be corrected %I as %i. Otherwise, if the service
+> cannot start by systemctl and the reshap progress would be
+> stuck all time when grows array from raid1 to raid5.
+>
+> reproduce steps:
+> ./mdadm -CR /dev/md0 -l1 -b internal -n2 /dev/loop[0-1]
+> ./mdadm --grow /dev/md0 -l5 -n3 -a /dev/loop2
+>
+> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+> ---
+>  systemd/mdadm-grow-continue@.service | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-> Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
-> 
-> > Would be very useful, particularly for testing, if
-> > drivers/scsi/scsi_debug.c were updated to support WRITE ZEROES.
-> 
-> There is no WRITE ZEROES in SCSI. You should be able to get the right
-> behavior with lbpws=1 lbprz=1.
+This solution looks more correct to me :)
 
-OK, thanks.
+Applied!
+
+Thanks,
+Jes
+
+
