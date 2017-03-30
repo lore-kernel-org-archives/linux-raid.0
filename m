@@ -1,73 +1,143 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: Grow set size issue
-Date: Thu, 30 Mar 2017 10:10:32 -0400
-Message-ID: <89891c04-620c-0dc2-97af-719b480aa4e5@gmail.com>
-References: <wrfjlgrodlbj.fsf@gmail.com>
- <87o9wju5r0.fsf@notabene.neil.brown.name>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH] imsm: use rounded size for metadata initialization
+Date: Thu, 30 Mar 2017 16:25:41 +0200
+Message-ID: <1490883941-31953-1-git-send-email-tomasz.majchrzak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87o9wju5r0.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: jes.sorensen@gmail.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
-On 03/29/2017 05:34 PM, NeilBrown wrote:
-> On Thu, Mar 30 2017, jes.sorensen@gmail.com wrote:
->
->> Hi Neil,
->>
->> In the below patch you changed the error handling, to make the kernel
->> not setting the size of the device being an error. However we still have
->> the code in place to handle the error, except it never triggers.
->
-> So we do.  I should have removed all of that.
-> I should have just reverted
-> Commit: 65a9798b58b4 ("FIX: Detect error and rollback metadata")
->
->
->>
->> Question is do you remember the reason for this change? Old kernels not
->> allowing it, are there any legitimate reasons for the kernel to refuse
->> the size change?
->
-> I needed to go further back to remind myself why we do these size change
-> at all.
-> The command being run here is "mdadm --grow /dev/mdX --size=foo"
-> which has a primary purpose of changing the component_size of the array.
-> What can happen is that someone makes all the components bigger
-> (E.g. with LVM) and then uses this command to set --size=max, and it
-> doesn't work.  That is because md doesn't know the devices are bigger.
->
-> You can tell md that devices have changes size by writing to the "size"
-> attribute.
-> mdadm doesn't have an option for doing that per-device - you need to
-> poke into sysfs.
->
-> To make it a bit easier, when you use "--grow --size=foo", mdadm will
-> always write "foo" to the "size" attribute of each device, just incase
-> that will be helpful. In the case where the device is now bigger, it
-> will.
->
-> In the case where the size of the array is being reduced, it is not
-> permitted to change the "size" of each device until the "component_size"
-> of the array has changed, so these attempts to change "size" will fail.
-> But that isn't a problem.
->
-> In short, the attempt to change "size" here is a convenience, and
-> optimization.  It doesn't matter if it fails.
->
-> So please just revert all bits of the above commit that are still
-> present.
+Array size is rounded to the nearest MB, however number of data stripes
+and blocks per disk are calculated using size passed by the user. If
+given size is not aligned, there is a mismatch. It's not possible to
+assemble raid0 migrated to raid5 since raid5 arrays use number of data
+stripes to calculate array size.
 
-Hi Neil,
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+---
+ super-intel.c | 52 ++++++++++++++++++++++++++++++++++------------------
+ 1 file changed, 34 insertions(+), 18 deletions(-)
 
-Thanks for the explanation, I'll take the big hammer to the leftovers 
-and get rid of them.
-
-Cheers,
-Jes
-
+diff --git a/super-intel.c b/super-intel.c
+index 785488a..84dfe2b 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -264,6 +264,8 @@ struct bbm_log {
+ static char *map_state_str[] = { "normal", "uninitialized", "degraded", "failed" };
+ #endif
+ 
++#define BLOCKS_PER_KB	(1024/512)
++
+ #define RAID_DISK_RESERVED_BLOCKS_IMSM_HI 2209
+ 
+ #define GEN_MIGR_AREA_SIZE 2048 /* General Migration Copy Area size in blocks */
+@@ -1324,6 +1326,19 @@ static int is_journal(struct imsm_disk *disk)
+ 	return (disk->status & JOURNAL_DISK) == JOURNAL_DISK;
+ }
+ 
++/* round array size down to closest MB and ensure it splits evenly
++ * between members
++ */
++static unsigned long long round_size_to_mb(unsigned long long size, unsigned int
++					   disk_count)
++{
++	size /= disk_count;
++	size = (size >> SECT_PER_MB_SHIFT) << SECT_PER_MB_SHIFT;
++	size *= disk_count;
++
++	return size;
++}
++
+ /* try to determine how much space is reserved for metadata from
+  * the last get_extents() entry on the smallest active disk,
+  * otherwise fallback to the default
+@@ -3330,11 +3345,10 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
+ 			if (used_disks > 0) {
+ 				array_blocks = blocks_per_member(map) *
+ 					used_disks;
+-				/* round array size down to closest MB
+-				 */
+-				info->custom_array_size = (array_blocks
+-						>> SECT_PER_MB_SHIFT)
+-						<< SECT_PER_MB_SHIFT;
++				info->custom_array_size =
++					round_size_to_mb(array_blocks,
++							 used_disks);
++
+ 			}
+ 		}
+ 		case MIGR_VERIFY:
+@@ -5241,6 +5255,8 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
+ 	unsigned long long array_blocks;
+ 	size_t size_old, size_new;
+ 	unsigned long long num_data_stripes;
++	unsigned int data_disks;
++	unsigned long long size_per_member;
+ 
+ 	if (super->orom && mpb->num_raid_devs >= super->orom->vpa) {
+ 		pr_err("This imsm-container already has the maximum of %d volumes\n", super->orom->vpa);
+@@ -5317,9 +5333,11 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
+ 	strncpy((char *) dev->volume, name, MAX_RAID_SERIAL_LEN);
+ 	array_blocks = calc_array_size(info->level, info->raid_disks,
+ 					       info->layout, info->chunk_size,
+-					       s->size * 2);
+-	/* round array size down to closest MB */
+-	array_blocks = (array_blocks >> SECT_PER_MB_SHIFT) << SECT_PER_MB_SHIFT;
++					       s->size * BLOCKS_PER_KB);
++	data_disks = get_data_disks(info->level, info->layout,
++				    info->raid_disks);
++	array_blocks = round_size_to_mb(array_blocks, data_disks);
++	size_per_member = array_blocks / data_disks;
+ 
+ 	dev->size_low = __cpu_to_le32((__u32) array_blocks);
+ 	dev->size_high = __cpu_to_le32((__u32) (array_blocks >> 32));
+@@ -5331,7 +5349,9 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
+ 	vol->curr_migr_unit = 0;
+ 	map = get_imsm_map(dev, MAP_0);
+ 	set_pba_of_lba0(map, super->create_offset);
+-	set_blocks_per_member(map, info_to_blocks_per_member(info, s->size));
++	set_blocks_per_member(map, info_to_blocks_per_member(info,
++							     size_per_member /
++							     BLOCKS_PER_KB));
+ 	map->blocks_per_strip = __cpu_to_le16(info_to_blocks_per_strip(info));
+ 	map->failed_disk_num = ~0;
+ 	if (info->level > 0)
+@@ -5359,7 +5379,7 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
+ 		map->num_domains = 1;
+ 
+ 	/* info->size is only int so use the 'size' parameter instead */
+-	num_data_stripes = (s->size * 2) / info_to_blocks_per_strip(info);
++	num_data_stripes = size_per_member / info_to_blocks_per_strip(info);
+ 	num_data_stripes /= map->num_domains;
+ 	set_num_data_stripes(map, num_data_stripes);
+ 
+@@ -7981,9 +8001,7 @@ static unsigned long long imsm_set_array_size(struct imsm_dev *dev,
+ 		array_blocks = new_size;
+ 	}
+ 
+-	/* round array size down to closest MB
+-	 */
+-	array_blocks = (array_blocks >> SECT_PER_MB_SHIFT) << SECT_PER_MB_SHIFT;
++	array_blocks = round_size_to_mb(array_blocks, used_disks);
+ 	dev->size_low = __cpu_to_le32((__u32)array_blocks);
+ 	dev->size_high = __cpu_to_le32((__u32)(array_blocks >> 32));
+ 
+@@ -8096,11 +8114,9 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
+ 					array_blocks =
+ 						blocks_per_member(map) *
+ 						used_disks;
+-					/* round array size down to closest MB
+-					 */
+-					array_blocks = (array_blocks
+-							>> SECT_PER_MB_SHIFT)
+-						<< SECT_PER_MB_SHIFT;
++					array_blocks =
++						round_size_to_mb(array_blocks,
++								 used_disks);
+ 					a->info.custom_array_size = array_blocks;
+ 					/* encourage manager to update array
+ 					 * size
+-- 
+1.8.3.1
 
