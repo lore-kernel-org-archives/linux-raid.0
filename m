@@ -1,249 +1,149 @@
-From: NeilBrown <neilb@suse.com>
+From: Brad Campbell <lists2009@fnarfbargle.com>
 Subject: Re: RAID6 rebuild oddity
-Date: Thu, 30 Mar 2017 11:49:11 +1100
-Message-ID: <87wpb7612w.fsf@notabene.neil.brown.name>
-References: <9eb215dd-437e-ac62-c4df-f3307d8fc4b4@fnarfbargle.com> <87zig467z3.fsf@notabene.neil.brown.name> <5584b8b1-b4f1-0d2e-cbf3-f14b4127d031@fnarfbargle.com>
+Date: Thu, 30 Mar 2017 09:22:40 +0800
+Message-ID: <a8ad0de2-5cec-1e70-0fff-1df911a02932@fnarfbargle.com>
+References: <9eb215dd-437e-ac62-c4df-f3307d8fc4b4@fnarfbargle.com>
+ <87zig467z3.fsf@notabene.neil.brown.name>
+ <5584b8b1-b4f1-0d2e-cbf3-f14b4127d031@fnarfbargle.com>
+ <87wpb7612w.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5584b8b1-b4f1-0d2e-cbf3-f14b4127d031@fnarfbargle.com>
+In-Reply-To: <87wpb7612w.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <lists2009@fnarfbargle.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.com>, Linux-RAID <linux-raid@vger.kernel.org>
 Cc: Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, Mar 29 2017, Brad Campbell wrote:
-
-> On 29/03/17 12:08, NeilBrown wrote:
+> NeilBrown
 >
->>
->> sdj is getting twice the utilization of the others but only about 10%
->> more rKB/sec.  That suggests lots of seeking.
+> This works for simple tests but might not be correct.
 >
-> Yes, something is not entirely sequential.
->
->> Does "fuser /dev/sdj" report anything funny?
->
-> No. No output. As far as I can tell nothing should be touching the disks=
-=20
-> other than the md kernel thread.
->
->> Is there filesystem IO happening? If so, what filesystem?
->> Have you told the filesystem about the RAID layout?
->> Maybe the filesystem keeps reading some index blocks that are always on
->> the same drive.
->
-> No. I probably wasn't as clear as I should have been in the initial=20
-> post. There was nothing mounted at the time.
->
-> Right now the array contains one large LUKS container (dm-crypt). This=20
-> was mounted and a continuous dd done to the dm device to zero it out :
->
-> 4111195+1 records in
-> 4111195+1 records out
-> 34487205507072 bytes (34 TB) copied, 57781.1 s, 597 MB/s
->
-> So there is no filesystem on the drive.
->
-> I failed and removed sdi :
->
-> root@test:~# mdadm --fail /dev/md0 /dev/sdi
-> mdadm: set /dev/sdi faulty in /dev/md0
-> root@test:~# mdadm --remove /dev/md0 /dev/sdi
-> mdadm: hot removed /dev/sdi from /dev/md0
-> root@test:~# mdadm --zero-superblock /dev/sdi
-> root@test:~# mdadm --add /dev/md0 /dev/sdi
-> mdadm: added /dev/sdi
->
-> Rebooted the machine to remove all tweaks of things like stripe cache=20
-> size, readahead, NCQ and anything else.
->
-> I opened the LUKS container, dd'd a meg to the start to write to the=20
-> array and kick off the resync, then closed the LUKS container. At this=20
-> point dm should no longer be touching the drive and I've verified the=20
-> device has gone.
->
-> I then ran sync a couple of times and waited a couple of minutes until I=
-=20
-> was positive _nothing_ was touching md0, then ran :
->
-> blktrace -w 5 /dev/sd[bcdefgij] /dev/md0
->
->> So the problem moves from drive to drive?  Strongly suggests filesystem
->> metadata access to me.
->
-> Again, sorry for me not being clear. The situation changes on a resync=20
-> specific basis. For example the reproduction I've done now I popped out=20
-> sdi rather than sdb, and now the bottleneck is sdg. It is the same if=20
-> the exact circumstances remain the same.
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index c523fd69a7bc..2eb45d57226c 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -3618,8 +3618,9 @@ static int fetch_block(struct stripe_head *sh, struct stripe_head_state *s,
+>   		BUG_ON(test_bit(R5_Wantread, &dev->flags));
+>   		BUG_ON(sh->batch_head);
+>   		if ((s->uptodate == disks - 1) &&
+> +		    ((sh->qd_idx >= 0 && sh->pd_idx == disk_idx) ||
+>   		    (s->failed && (disk_idx == s->failed_num[0] ||
+> -				   disk_idx == s->failed_num[1]))) {
+> +				   disk_idx == s->failed_num[1])))) {
+>   			/* have disk failed, and we're requested to fetch it;
+>   			 * do compute it
+>   			 */
 
-Now *that* is interesting!
+G'day Neil,
 
-In the first example you gave, device 0 was rebuilding and device 7 was
-slow.
-Now device 6 is rebuilding and device5 is slow.  Surely you see the
-pattern?
+Thanks for the in-depth analysis. I managed to follow most of it and 
+when I get some time I'll get my head into the code and see if I can 
+*really* follow along.
 
-Also, I previously observed that the slow device was getting 10% more
-read traffic, but I was being imprecise.
-In the first example  it was 16.2%, in the second it is 14.5.
-These are close to 1/7.
+As I'm not particularly fussed about the integrity of the system in its 
+current state, I patched the kernel, re-booted and kicked off the resync 
+again.
 
-There are 8 devices in the array, so there are 8 different layouts for
-stripes (the parity block can be on 8 different devices).  8 is close to
-7.
 
-How recovery *should* work on RAID6 is that for each strip we read all
-blocks except for the Q block (which isn't needed to rebuild a single
-device) and the block which has failed (of course).  For the stripe
-where the Q block has failed, we don't read the P block.  Just read all
-the data and calculate Q from that.
+Before patch :
 
-So for every 8-device strip, we read from 6 devices.  5 Data plus parity
-when data has failed, 6 data when P or Q has failed.
-So across each of the 8 different strip layouts, there are 48 reads
-Spread across 7 working devices....  using lower-case for blocks that
-aren't read and assuming first device is being recovered:
+brad@test:~$ cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+md0 : active raid6 sdb[8] sdj[7] sdi[9] sdg[5] sdf[4] sde[3] sdd[2] sdc[1]
+       35162348160 blocks super 1.2 level 6, 64k chunk, algorithm 2 
+[8/7] [UUUUUU_U]
+       [==============>......]  recovery = 72.0% (4222847296/5860391360) 
+finish=541.6min speed=50382K/sec
 
-           d  D  D  D  D  D  P  q
-           d  D  D  D  D  P  q  D
-           d  D  D  D  P  q  D  D
-           d  D  D  P  q  D  D  D
-           d  D  P  q  D  D  D  D
-           d  P  q  D  D  D  D  D
-           p  q  D  D  D  D  D  D
-           q  D  D  D  D  D  D  p
-totals:    0  7  7  7  7  7  7  6
 
-The device just "before" the missing device gets fewer reads,
-because we don't need to read P from that device.
-But we are seeing that it gets more reads.  The numbers suggest that
-it gets 8 reads (1/7 more than the others).  But the numbers also
-suggest that it gets lots of seeks.  Maybe after all the other devices
-have break read for one stripe, md/raid6 decides it does need those
-blocks and goes back to read them?  That would explain the seeking
-and the increased number of reads.
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+            1.32    0.00    7.02    1.37    0.00   90.29
 
-Time to look at the blktrace...
-Looking at sdj, each request is Queued 8 times (I wonder why) but the
-requests are completely sequential.
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s 
+avgrq-sz avgqu-sz   await r_await w_await  svctm  %util
+sda               0.00    19.00   10.20   22.40   114.40   139.00 
+15.55     0.52   15.95   26.27   11.25   5.03  16.40
+sdb           16514.60     0.00  141.00    0.00 67860.00     0.00 
+962.55     2.64   18.91   18.91    0.00   3.21  45.20
+sdc           16514.60     0.00  140.60    0.00 67655.20     0.00 
+962.38     2.06   14.77   14.77    0.00   2.79  39.20
+sdd           16514.60     0.00  140.60    0.00 67655.20     0.00 
+962.38     2.64   18.92   18.92    0.00   3.04  42.80
+sde           16514.60     0.00  140.60    0.00 67655.20     0.00 
+962.38     2.49   17.85   17.85    0.00   3.14  44.20
+sdf           16514.60     0.00  140.60    0.00 67655.20     0.00 
+962.38     2.24   16.05   16.05    0.00   2.86  40.20
+sdg           18459.80     0.00  269.40    0.00 74772.00     0.00 
+555.10    84.84  327.45  327.45    0.00   3.71 100.00
+sdh               0.00    19.00    1.80   22.40    24.80   139.00 
+13.54     0.25   10.17   10.00   10.18   5.87  14.20
+sdi               0.00 16390.20    0.00  136.60     0.00 66138.40 
+968.35     1.19    8.74    0.00    8.74   3.38  46.20
+sdj           16514.40     0.00  140.80    0.00 67654.40     0.00 
+961.00     2.25   16.11   16.11    0.00   2.86  40.20
+md1               0.00     0.00    0.00    4.80     0.00 4.60     
+1.92     0.00    0.00    0.00    0.00   0.00   0.00
+md2               0.00     0.00   12.00   32.60   139.20   131.20 
+12.13     0.00    0.00    0.00    0.00   0.00   0.00
+md0               0.00     0.00    0.00    0.00     0.00 0.00     
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+dm-0              0.00     0.00    0.00    0.00     0.00 0.00     
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
 
-  blkparse sdj* | awk '$6 =3D=3D "Q" && $8 !=3D prev {print $8, $8-prev ; p=
-rev=3D$8}'  | awk '$2 !=3D 8'
+After Patch :
 
-This means the 'Q' block is being read.  Not what I expected, but not
-too surprising.
+root@test:~# cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+md0 : active raid6 sdb[8] sdj[7] sdi[9] sdg[5] sdf[4] sde[3] sdd[2] sdc[1]
+       35162348160 blocks super 1.2 level 6, 64k chunk, algorithm 2 
+[8/7] [UUUUUU_U]
+       [==============>......]  recovery = 73.3% (4297641980/5860391360) 
+finish=284.7min speed=91465K/sec
 
-Looking at sdg, which is the problem device:
 
-  blkparse sdg* | awk '$6 =3D=3D "Q" && $8 !=3D prev {print $8-prev ; prev=
-=3D$8}'  \
-    | sort | uniq -c | sort -n | tail -60
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+            0.08    0.00    6.96    0.00    0.00   92.97
 
-There are lots of places we skip forward 904 sectors.  That is an 8
-sector read and a 896 sector seek. 896 sectors =3D 448K or 7 chunks
-(64K chunk size).
-These 7-chunk seeks are separated by 16 8-sector reads.  So it seems to
-be reading all the P (or maybe Q) blocks from a sequence of stripes.
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s 
+avgrq-sz avgqu-sz   await r_await w_await  svctm  %util
+sda               0.00     0.00    0.00    0.20     0.00 0.20     
+2.00     0.00    0.00    0.00    0.00   0.00   0.00
+sdb           28232.80     0.00  237.40    0.00 114502.40     0.00 
+964.64     8.53   36.05   36.05    0.00   4.15  98.60
+sdc           28232.80     0.00  236.00    0.00 113875.20     0.00 
+965.04     1.21    5.13    5.13    0.00   1.77  41.80
+sdd           28232.80     0.00  236.00    0.00 113875.20     0.00 
+965.04     1.28    5.42    5.42    0.00   1.85  43.60
+sde           28232.80     0.00  236.80    0.00 114195.20     0.00 
+964.49     2.74   11.65   11.65    0.00   2.77  65.60
+sdf           28232.80     0.00  236.00    0.00 113875.20     0.00 
+965.04     1.56    6.63    6.63    0.00   2.14  50.60
+sdg           28232.80     0.00  234.80    0.00 113273.60     0.00 
+964.85     3.06   12.86   12.86    0.00   2.82  66.20
+sdh               0.00     0.00    0.00    0.20     0.00 0.20     
+2.00     0.00    0.00    0.00    0.00   0.00   0.00
+sdi               0.00 28175.00    0.00  245.80     0.00 113683.20 
+925.01     0.96    3.91    0.00    3.91   2.89  71.00
+sdj           28232.80     0.00  236.00    0.00 113875.20     0.00 
+965.04     1.53    6.50    6.50    0.00   2.07  48.80
+md1               0.00     0.00    0.00    0.00     0.00 0.00     
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+md2               0.00     0.00    0.00    0.00     0.00 0.00     
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+md0               0.00     0.00    0.00    0.00     0.00 0.00     
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+dm-0              0.00     0.00    0.00    0.00     0.00 0.00     
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
 
-There are also lots of large back/forward seeks. They range from -31328
-to -71280 backward and 27584 to 66408  (with a couple of smaller ones).
+So that has significantly increased the rebuild speed, as you would expect.
 
-If we ignore all reads to sdg that are the result of seeking backwards -
-i.e. that are earlier that the largest offset seen so far:
 
-  blkparse sdg* | awk '$6 =3D=3D "Q" && $8 !=3D prev {if ($8>max) {print $8=
-; max=3D$8} ; prev=3D$8}' | awk '{print $1-prev; prev=3D$1}' | grep  -v 8
+Regards,
+Brad
+-- 
+Dolphins are so intelligent that within a few weeks they can
+train Americans to stand at the edge of the pool and throw them
+fish.
 
-we seek that (after an initial section) every block is being read.
-So it seems that sdg is seeking backwards to read some blocks that it
-has already read.
-
-So what really happens in that all the working devices read all blocks
-(although they don't really need Q), and sdg needs to seek backwards to
-re-read 1/8 of all blocks, probably the P block.
-
-So we should be seeing the rkB/s for the slow disk 1/8 more than the
-others.  i.e. 12.5%, not 14% or 16%.  The difference bothers me, but not
-very much.
-
-Now to look at the code.
-
-need_this_block() always returns 1 when s->syncing, so that is why
-we already read the Q block.  The distinction between recovery and
-resync isn't very strong in raid5/6.
-
-So on the stripes where Q has failed, we read all the Data and P.
-Then handle_parity_checks6() notice that there are enough devices that
-something is worth checking, so it checks the P.  This is destructive!
-of P.  The D blocks are xored into P and P is checked for all-zero.
-
-I always get lost following this next bit....
-I think that after deciding zero_sum_result is zero, check_state is set
-to check_state_compute_result.
-But before that is processed, we go around the loop again and notice
-that P is missing (because handle_parity_checks6() cleared R5_UPTODATE)
-so need_this_block() decided that we need to read it back in again.
-We don't calculate it because we only calculate blocks on failed
-devices (I'm sure we didn't used to do that).
-So we read P back in ... just as we see from the trace.
-
-Patch below makes the symptom go away in my testing, which confirms
-that I'm on the right track.
-
-Dan Williams changed the code to only recompute blocks from failed
-devices, way back in 2008.
-Commit: c337869d9501 ("md: do not compute parity unless it is on a failed d=
-rive")
-
-Back then we didn't have raid6 in the same code, so the fix was probably
-fine.
-
-I wonder what the best fix is.... Dan... Any thoughts?
-
-NeilBrown
-
-This works for simple tests but might not be correct.
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index c523fd69a7bc..2eb45d57226c 100644
-=2D-- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -3618,8 +3618,9 @@ static int fetch_block(struct stripe_head *sh, struct=
- stripe_head_state *s,
- 		BUG_ON(test_bit(R5_Wantread, &dev->flags));
- 		BUG_ON(sh->batch_head);
- 		if ((s->uptodate =3D=3D disks - 1) &&
-+		    ((sh->qd_idx >=3D 0 && sh->pd_idx =3D=3D disk_idx) ||
- 		    (s->failed && (disk_idx =3D=3D s->failed_num[0] ||
-=2D				   disk_idx =3D=3D s->failed_num[1]))) {
-+				   disk_idx =3D=3D s->failed_num[1])))) {
- 			/* have disk failed, and we're requested to fetch it;
- 			 * do compute it
- 			 */
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljcVggACgkQOeye3VZi
-gbmHZBAAq8BKKegYr36ADIeF2M79pYscR6XXix7X+sNXNsuv2z39oMoexG3/V7oX
-Wi27KKZjVPac7Dk5+9lAliHk941qn1AE64J92OlXRsqqJLgJp/O1G+Cw4OxZiyrs
-mdm1yzF1A/ecqunqcc9vArbpOTvdsvBLe+U3Uy7ULhCXSd5vaEgXpOY84pHN/1Fn
-GNonuac9P2vQ9M5dyrI9tXdu45IecoukZNrALPQZeYv9/ejLmP+YVx3nJx58Ca2V
-W+jNFbOmix2YHrdDrUjVeqQJFM3x9IiXUkBDfv8dlgDjljAM8jLXbmRtgq6WB8aU
-DU4Wuz2pt1cdgA3wRK95MY6Y7w23gZkdI6Ru9d9e0JBRjrfmFKZ6bgm/PCEMbCL0
-M6jecnspnHpHAmv+thSCdMPY2Te+6rDKL7NAGlcL/nsdvO2A7NPxkcCHnQgKNLLZ
-DkdD/G6l9lPhHzVb4OlS2YlfOcHe7ttxnVvtYiB06jzB4ZhfNgoZ+BvMfw+WnRUB
-6eyCd3pODHzcQ33PZE2OR04oDdYIzMY5xWl6S96h9TF4B5PWYoxMwBlbzPmzXQtq
-RNIEcFTViJ6epweMZleeMIk1YIN5xAIeT5xqm22MIxwdMItfotT8o5EeCKv6aTfF
-A7JxANIBFQUH+QAfaUqERMfBWBsmOoLifIijVXsbc0Ya3USOHe4=
-=tanK
------END PGP SIGNATURE-----
---=-=-=--
