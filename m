@@ -1,39 +1,57 @@
-From: "hch@lst.de" <hch@lst.de>
-Subject: Re: [PATCH 12/23] sd: handle REQ_UNMAP
-Date: Thu, 30 Mar 2017 19:30:20 +0200
-Message-ID: <20170330173020.GB24229@lst.de>
-References: <20170323143341.31549-1-hch@lst.de> <20170323143341.31549-13-hch@lst.de> <1490719722.2573.8.camel@sandisk.com> <20170330090201.GD12015@lst.de> <yq1h92a3hsv.fsf@oracle.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: [PATCHv2] mdadm.c: fix compile error "switch condition has
+ boolean value"
+Date: Thu, 30 Mar 2017 18:50:44 +0100
+Message-ID: <58DD4574.3020803@youngman.org.uk>
+References: <1490893093-4666-1-git-send-email-gi-oh.kim@profitbricks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <yq1h92a3hsv.fsf@oracle.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "hch@lst.de" <hch@lst.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>, "agk@redhat.com" <agk@redhat.com>, "lars.ellenberg@linbit.com" <lars.ellenberg@linbit.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "philipp.reisner@linbit.com" <philipp.reisner@linbit.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "shli@kernel.org" <shli@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1490893093-4666-1-git-send-email-gi-oh.kim@profitbricks.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Gioh Kim <gi-oh.kim@profitbricks.com>, jes.sorensen@gmail.com, neilb@suse.com
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Mar 30, 2017 at 11:28:32AM -0400, Martin K. Petersen wrote:
-> "hch@lst.de" <hch@lst.de> writes:
-> 
-> Christoph,
-> 
-> > On Tue, Mar 28, 2017 at 04:48:55PM +0000, Bart Van Assche wrote:
-> >> >  	if (sdp->no_write_same)
-> >> >  		return BLKPREP_INVALID;
-> >> >  	if (sdkp->ws16 || sector > 0xffffffff || nr_sectors > 0xffff)
-> >> 
-> >> Users can change the provisioning mode from user space from SD_LBP_WS16 into
-> >> SD_LBP_WS10 so I'm not sure it's safe to skip the (sdkp->ws16 || sector >
-> >> 0xffffffff || nr_sectors > 0xffff) check if REQ_UNMAP is set.
-> >
-> > They can, and if the device has too many sectors that will already cause
-> > discard to fail,
-> 
-> I'm not sure I understand what you mean by that?
+You can add my acked-by (never done it before, not sure how :-)
 
-If you manually change the provisioning mode to WS10 on a device that
-must use WRITE SAME (16) to be able to address all blocks you're already
-screwed right now, and with this patch you can screw yourself through
-the WRITE_ZEROES path in addition to the DISCARD path.
+Cheers,
+Wol
+
+On 30/03/17 17:58, Gioh Kim wrote:
+> Remove a boolean expression in switch condition
+> to prevent compile error of some compilers,
+> for example, gcc version 5.2.1 20151010 (Ubuntu 5.2.1-22ubuntu2).
+> 
+> Signed-off-by: Gioh Kim <gi-oh.kim@profitbricks.com>
+> ---
+>  mdadm.c | 14 ++++++--------
+>  1 file changed, 6 insertions(+), 8 deletions(-)
+> 
+> diff --git a/mdadm.c b/mdadm.c
+> index 0f32773..d6b5437 100644
+> --- a/mdadm.c
+> +++ b/mdadm.c
+> @@ -1965,14 +1965,12 @@ static int misc_list(struct mddev_dev *devlist,
+>  			rv |= SetAction(dv->devname, c->action);
+>  			continue;
+>  		}
+> -		switch(dv->devname[0] == '/') {
+> -			case 0:
+> -				mdfd = open_dev(dv->devname);
+> -				if (mdfd >= 0)
+> -					break;
+> -			case 1:
+> -				mdfd = open_mddev(dv->devname, 1);  
+> -		}
+> +
+> +		if (dv->devname[0] != '/')
+> +			mdfd = open_dev(dv->devname);
+> +		if (dv->devname[0] == '/' || mdfd < 0)
+> +			mdfd = open_mddev(dv->devname, 1);
+> +
+>  		if (mdfd >= 0) {
+>  			switch(dv->disposition) {
+>  			case 'R':
+> 
