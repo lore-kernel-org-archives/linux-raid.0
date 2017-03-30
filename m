@@ -1,81 +1,33 @@
-From: Gioh Kim <gi-oh.kim@profitbricks.com>
-Subject: Re: [PATCH 2/2] mdadm.c: fix compile error "switch condition has
- boolean value"
-Date: Thu, 30 Mar 2017 09:52:10 +0200
-Message-ID: <20170330075209.GF17378@ws00837>
-References: <1490780434-8720-1-git-send-email-gi-oh.kim@profitbricks.com>
- <1490780434-8720-2-git-send-email-gi-oh.kim@profitbricks.com>
- <wrfjpoh0dqzz.fsf@gmail.com>
- <87lgrnu5k4.fsf@notabene.neil.brown.name>
+From: "hch-jcswGhMUV9g@public.gmane.org" <hch-jcswGhMUV9g@public.gmane.org>
+Subject: Re: [PATCH 01/23] block: renumber REQ_OP_WRITE_ZEROES
+Date: Thu, 30 Mar 2017 10:53:43 +0200
+Message-ID: <20170330085343.GB12015@lst.de>
+References: <20170323143341.31549-1-hch@lst.de>
+	<20170323143341.31549-2-hch@lst.de>
+	<1490717553.2573.4.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <87lgrnu5k4.fsf@notabene.neil.brown.name>
-Sender: linux-kernel-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: jes.sorensen@gmail.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Wol <anthony@youngman.org.uk>
+In-Reply-To: <1490717553.2573.4.camel-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
+List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
+Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+To: Bart Van Assche <Bart.VanAssche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Cc: "axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org" <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org" <philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org" <lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, "shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "hch-jcswGhMUV9g@public.gmane.org" <hch-jcswGhMUV9g@public.gmane.org>, "agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org" <drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
 List-Id: linux-raid.ids
 
-On Thu, Mar 30, 2017 at 08:38:35AM +1100, NeilBrown wrote:
-> On Thu, Mar 30 2017, jes.sorensen@gmail.com wrote:
-> 
-> > Gioh Kim <gi-oh.kim@profitbricks.com> writes:
-> >> Remove a boolean expression in switch condition
-> >> to prevent compile error of some compilers.
-> >
-> > Please be specific, which compile is unable to handle this?
-> >
-> >> Signed-off-by: Gioh Kim <gi-oh.kim@profitbricks.com>
-> >> ---
-> >>  mdadm.c | 6 +++---
-> >>  1 file changed, 3 insertions(+), 3 deletions(-)
-> >>
-> >> diff --git a/mdadm.c b/mdadm.c
-> >> index 08ddcab..a98a051 100644
-> >> --- a/mdadm.c
-> >> +++ b/mdadm.c
-> >> @@ -1905,11 +1905,11 @@ static int misc_list(struct mddev_dev *devlist,
-> >>  			rv |= SetAction(dv->devname, c->action);
-> >>  			continue;
-> >>  		}
-> >> -		switch(dv->devname[0] == '/') {
-> >> -			case 0:
-> >> +		switch(dv->devname[0]) {
-> >> +			default:
-> >>  				mdfd = open_dev(dv->devname);
-> >>  				if (mdfd >= 0) break;
-> >> -			case 1:
-> >> +			case '/':
-> >>  				mdfd = open_mddev(dv->devname, 1);  
-> >>  		}
-> >>  		if (mdfd>=0) {
-> >
-> > While I agree the original code is ugly, I am not convinced your
-> > replacement is a lot prettier.
-> >
-> 
-> Maybe
-> 
-> 		if (dv->devname[0] == '/' ||
-> 		    (mdfd = open_dev(dv->devname)) < 0)
-> 				mdfd = open_mddev(dv->devname, 1);
-> 
-> ??
-> NeilBrown
+On Tue, Mar 28, 2017 at 04:12:46PM +0000, Bart Van Assche wrote:
+> Since REQ_OP_WRITE_ZEROES was introduced in kernel v4.10, do we need
+> "Cc: stable" and "Fixes: a6f0788ec2881" tags for this patch?
 
-Yes, the initial version I thought was:
-
-if (dev->devname[0] != '/')
-    mdfd = open_dev(dv->devname);
-if (dev->devname[0] == '/' || mdfd < 0)
-    mdfd = open_mddev(dv->devname, 1);
-
-But I thought you have a reason to use switch-case expression,
-so I kept switch-case.
-If you agree, I'll send v2 patch using if-expression.
-
--- 
-Best regards,
-Gi-Oh Kim
-TEL: 0176 2697 8962
+No.  This just works around the way scsi_setup_cmnd sets up the data
+direction.  Before this series it's not an issue because no one used
+the req_op data direction for setting up the dma direction.
