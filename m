@@ -1,269 +1,98 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH] mdadm/util:integrate fstat and stat into a utility
- function
-Date: Thu, 30 Mar 2017 14:46:51 -0400
-Message-ID: <38653956-4c7b-1e7c-7a50-4d3744a3a115@gmail.com>
-References: <20170330044622.2397-1-zlliu@suse.com>
+From: Heinz Mauelshagen <heinzm@redhat.com>
+Subject: Re: [PATCH][RFC] dm raid: Fix NULL pointer dereference
+ for raid1 without bitmap
+Date: Thu, 30 Mar 2017 21:30:53 +0200
+Message-ID: <f08783e3-30bd-fe51-ef15-163d02126b5b@redhat.com>
+References: <101041490886866@webcorp01f.yandex-team.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170330044622.2397-1-zlliu@suse.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Zhilong Liu <zlliu@suse.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Transfer-Encoding: base64
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <101041490886866@webcorp01f.yandex-team.ru>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: kmeaw@yandex-team.ru, linux-kernel <linux-kernel@vger.kernel.org>, dm-devel@redhat.com, linux-raid@vger.kernel.org
+Cc: =?UTF-8?B?0JDQvdC00YDQtdC5INCh0LzQtdGC0LDQvdC40L0=?= <asmetanin@yandex-team.ru>, shli@kernel.org, agk@redhat.com
 List-Id: linux-raid.ids
 
-On 03/30/2017 12:46 AM, Zhilong Liu wrote:
-> mdadm/util: lots of dupilicate codes about stat and fstat
-> check the block device, move them into a utility function
-> to make it concise.
->
-> Signed-off-by: Zhilong Liu <zlliu@suse.com>
-> ---
->  Assemble.c    |  9 +--------
->  Build.c       | 10 +---------
->  Create.c      |  5 +----
->  Dump.c        |  3 +--
->  Grow.c        |  4 +---
->  Incremental.c | 27 +++------------------------
->  Manage.c      |  9 +--------
->  mdadm.h       |  1 +
->  super-intel.c |  9 +--------
->  util.c        | 15 +++++++++++++++
->  10 files changed, 26 insertions(+), 66 deletions(-)
-
-I'm a little mixed on this one. Defaulting to stat() rather than fstat() 
-seems like a sledgehammer approach for the cases where we already have 
-the fd open. I would prefer to default to fstat or have two versions I'd 
-say.
-
-Cheers,
-Jes
-
-
-> diff --git a/Assemble.c b/Assemble.c
-> index 6a6a56b..d3bfaa2 100644
-> --- a/Assemble.c
-> +++ b/Assemble.c
-> @@ -204,14 +204,7 @@ static int select_devices(struct mddev_dev *devlist,
->  				pr_err("cannot open device %s: %s\n",
->  				       devname, strerror(errno));
->  			tmpdev->used = 2;
-> -		} else if (fstat(dfd, &stb)< 0) {
-> -			/* Impossible! */
-> -			pr_err("fstat failed for %s: %s\n",
-> -			       devname, strerror(errno));
-> -			tmpdev->used = 2;
-> -		} else if ((stb.st_mode & S_IFMT) != S_IFBLK) {
-> -			pr_err("%s is not a block device.\n",
-> -			       devname);
-> +		} else if (check_block_dev(devname)) {
->  			tmpdev->used = 2;
->  		} else if (must_be_container(dfd)) {
->  			if (st) {
-> diff --git a/Build.c b/Build.c
-> index a5fcc06..4fa606c 100644
-> --- a/Build.c
-> +++ b/Build.c
-> @@ -67,16 +67,8 @@ int Build(char *mddev, struct mddev_dev *devlist,
->  			missing_disks++;
->  			continue;
->  		}
-> -		if (stat(dv->devname, &stb)) {
-> -			pr_err("Cannot find %s: %s\n",
-> -				dv->devname, strerror(errno));
-> -			return 1;
-> -		}
-> -		if ((stb.st_mode & S_IFMT) != S_IFBLK) {
-> -			pr_err("%s is not a block device.\n",
-> -				dv->devname);
-> +		if (check_block_dev(dv->devname))
->  			return 1;
-> -		}
->  	}
->
->  	if (s->raiddisks != subdevs) {
-> diff --git a/Create.c b/Create.c
-> index 10e7d10..dbd9ce3 100644
-> --- a/Create.c
-> +++ b/Create.c
-> @@ -327,11 +327,8 @@ int Create(struct supertype *st, char *mddev,
->  				dname, strerror(errno));
->  			exit(2);
->  		}
-> -		if (fstat(dfd, &stb) != 0 ||
-> -		    (stb.st_mode & S_IFMT) != S_IFBLK) {
-> +		if (check_block_dev(dname)) {
->  			close(dfd);
-> -			pr_err("%s is not a block device\n",
-> -				dname);
->  			exit(2);
->  		}
->  		close(dfd);
-> diff --git a/Dump.c b/Dump.c
-> index 7bdbf6f..29fc02a 100644
-> --- a/Dump.c
-> +++ b/Dump.c
-> @@ -131,8 +131,7 @@ int Dump_metadata(char *dev, char *dir, struct context *c,
->  		if (de->d_name[0] == '.')
->  			continue;
->  		xasprintf(&p, "/dev/disk/by-id/%s", de->d_name);
-> -		if (stat(p, &stb) != 0 ||
-> -		    (stb.st_mode & S_IFMT) != S_IFBLK ||
-> +		if (check_block_dev(p) != 0 ||
->  		    stb.st_rdev != dstb.st_rdev) {
->  			/* Not this one */
->  			free(p);
-> diff --git a/Grow.c b/Grow.c
-> index b86b53e..063996d 100755
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -145,9 +145,7 @@ int Grow_Add_device(char *devname, int fd, char *newdev)
->  		free(st);
->  		return 1;
->  	}
-> -	fstat(nfd, &stb);
-> -	if ((stb.st_mode & S_IFMT) != S_IFBLK) {
-> -		pr_err("%s is not a block device!\n", newdev);
-> +	if (check_block_dev(newdev)) {
->  		close(nfd);
->  		free(st);
->  		return 1;
-> diff --git a/Incremental.c b/Incremental.c
-> index 81afc7e..b2fad39 100644
-> --- a/Incremental.c
-> +++ b/Incremental.c
-> @@ -108,18 +108,8 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
->
->  	struct createinfo *ci = conf_get_create_info();
->
-> -	if (stat(devname, &stb) < 0) {
-> -		if (c->verbose >= 0)
-> -			pr_err("stat failed for %s: %s.\n",
-> -				devname, strerror(errno));
-> +	if (check_block_dev(devname))
->  		return rv;
-> -	}
-> -	if ((stb.st_mode & S_IFMT) != S_IFBLK) {
-> -		if (c->verbose >= 0)
-> -			pr_err("%s is not a block device.\n",
-> -				devname);
-> -		return rv;
-> -	}
->  	dfd = dev_open(devname, O_RDONLY);
->  	if (dfd < 0) {
->  		if (c->verbose >= 0)
-> @@ -159,8 +149,7 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
->  		devlist = conf_get_devs();
->  		for (;devlist; devlist = devlist->next) {
->  			struct stat st2;
-> -			if (stat(devlist->devname, &st2) == 0 &&
-> -			    (st2.st_mode & S_IFMT) == S_IFBLK &&
-> +			if (check_block_dev(devlist->devname) == 0 &&
->  			    st2.st_rdev == stb.st_rdev)
->  				break;
->  		}
-> @@ -175,18 +164,8 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
->  	/* 2/ Find metadata, reject if none appropriate (check
->  	 *            version/name from args) */
->
-> -	if (fstat(dfd, &stb) < 0) {
-> -		if (c->verbose >= 0)
-> -			pr_err("fstat failed for %s: %s.\n",
-> -				devname, strerror(errno));
-> +	if (check_block_dev(devname))
->  		goto out;
-> -	}
-> -	if ((stb.st_mode & S_IFMT) != S_IFBLK) {
-> -		if (c->verbose >= 0)
-> -			pr_err("%s is not a block device.\n",
-> -				devname);
-> -		goto out;
-> -	}
->
->  	dinfo.disk.major = major(stb.st_rdev);
->  	dinfo.disk.minor = minor(stb.st_rdev);
-> diff --git a/Manage.c b/Manage.c
-> index 55218d9..8687084 100644
-> --- a/Manage.c
-> +++ b/Manage.c
-> @@ -1543,17 +1543,10 @@ int Manage_subdevs(char *devname, int fd,
->  				close(tfd);
->  			} else {
->  				int open_err = errno;
-> -				if (stat(dv->devname, &stb) != 0) {
-> -					pr_err("Cannot find %s: %s\n",
-> -					       dv->devname, strerror(errno));
-> -					goto abort;
-> -				}
-> -				if ((stb.st_mode & S_IFMT) != S_IFBLK) {
-> +				if (check_block_dev(dv->devname) != 0) {
->  					if (dv->disposition == 'M')
->  						/* non-fatal. Also improbable */
->  						continue;
-> -					pr_err("%s is not a block device.\n",
-> -					       dv->devname);
->  					goto abort;
->  				}
->  				if (dv->disposition == 'r')
-> diff --git a/mdadm.h b/mdadm.h
-> index dbf1f92..ad43a35 100644
-> --- a/mdadm.h
-> +++ b/mdadm.h
-> @@ -1416,6 +1416,7 @@ extern int parse_cluster_confirm_arg(char *inp, char **devname, int *slot);
->  extern int check_ext2(int fd, char *name);
->  extern int check_reiser(int fd, char *name);
->  extern int check_raid(int fd, char *name);
-> +extern int check_block_dev(char *dev);
->  extern int check_partitions(int fd, char *dname,
->  			    unsigned long long freesize,
->  			    unsigned long long size);
-> diff --git a/super-intel.c b/super-intel.c
-> index 785488a..21b5887 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -6584,14 +6584,7 @@ count_volumes_list(struct md_list *devlist, char *homehost,
->  			dprintf("cannot open device %s: %s\n",
->  				devname, strerror(errno));
->  			tmpdev->used = 2;
-> -		} else if (fstat(dfd, &stb)< 0) {
-> -			/* Impossible! */
-> -			dprintf("fstat failed for %s: %s\n",
-> -				devname, strerror(errno));
-> -			tmpdev->used = 2;
-> -		} else if ((stb.st_mode & S_IFMT) != S_IFBLK) {
-> -			dprintf("%s is not a block device.\n",
-> -				devname);
-> +		} else if (check_block_dev(devname)) {
->  			tmpdev->used = 2;
->  		} else if (must_be_container(dfd)) {
->  			struct supertype *cst;
-> diff --git a/util.c b/util.c
-> index 683c869..e7aeb54 100644
-> --- a/util.c
-> +++ b/util.c
-> @@ -750,6 +750,21 @@ int ask(char *mesg)
->  }
->  #endif /* MDASSEMBLE */
->
-> +int check_block_dev(char *dev)
-> +{
-> +	struct stat stb;
-> +
-> +	if (stat(dev, &stb) != 0) {
-> +		pr_err("stat failed for %s: %s\n", dev, strerror(errno));
-> +		return -1;
-> +	}
-> +	if ((S_IFMT & stb.st_mode) != S_IFBLK) {
-> +		pr_err("%s is not a block device.\n", dev);
-> +		return -1;
-> +	}
-> +	return 0;
-> +}
-> +
->  int is_standard(char *dev, int *nump)
->  {
->  	/* tests if dev is a "standard" md dev name.
->
-
+CkFja2VkLWJ5OiBIZWlueiBNYXVlbHNoYWdlbiA8aGVpbnptQHJlZGhhdC5jb20+CgpUaGlzIGlz
+IHRoZSBzaW1wbGVzdCB3YXkgdG8gc29sdmUgdGhlIGlzc3VlIGF0IGhhbmQKKGJpdG1hcF9sb2Fk
+KCkgcmV0dXJucyBzdWNjZXNzIHdpdGggbm9uLWV4aXN0aW5nIGJpdG1hcCkuCgpIZWluegoKT24g
+MDMvMzAvMjAxNyAwNToxNCBQTSwga21lYXdAeWFuZGV4LXRlYW0ucnUgd3JvdGU6Cj4gRnJvbTog
+RG1pdHJ5IEJpbHVub3YgPGttZWF3QHlhbmRleC10ZWFtLnJ1Pgo+Cj4gNDI1N2UwOCBpbnRyb2R1
+Y2VzIGEgYml0bWFwIHJlc2l6ZSBjYWxsIGR1cmluZyBwcmVyZXN1bWUgcGhhc2UuIFVzZXIKPiBj
+YW4gY3JlYXRlIGEgRE0gZGV2aWNlIHdpdGggInJhaWQiIHRhcmdldCBjb25maWd1cmVkIGFzIHJh
+aWQxIHdpdGggbm8KPiBtZXRhZGF0YSBkZXZpY2VzIHRvIGhvbGQgc3VwZXJibG9jay9iaXRtYXAg
+aW5mby4gSXQgY2FuIGJlIGFjaGlldmVkCj4gdXNpbmcgdGhlIGZvbGxvd2luZyBzZXF1ZW5jZToK
+Pgo+ICAgIHRydW5jYXRlIC1zIDMyTSAvZGV2L3NobS9yYWlkLXRlc3QKPiAgICBMT09QPSQobG9z
+ZXR1cCAtLXNob3cgLWYgL2Rldi9zaG0vcmFpZC10ZXN0KQo+ICAgIGRtc2V0dXAgY3JlYXRlIHJh
+aWQtdGVzdC1saW5lYXIwIC0tdGFibGUgIjAgMTAyNCBsaW5lYXIgJExPT1AgMCIKPiAgICBkbXNl
+dHVwIGNyZWF0ZSByYWlkLXRlc3QtbGluZWFyMSAtLXRhYmxlICIwIDEwMjQgbGluZWFyICRMT09Q
+IDEwMjQiCj4gICAgZG1zZXR1cCBjcmVhdGUgcmFpZC10ZXN0IC0tdGFibGUgIjAgMTAyNCByYWlk
+IHJhaWQxIDEgMjA0OCAyIC0gL2Rldi9tYXBwZXIvcmFpZC10ZXN0LWxpbmVhcjAgLSAvZGV2L21h
+cHBlci9yYWlkLXRlc3QtbGluZWFyMSIKPgo+IEl0IHJlc3VsdHMgaW4KPgo+IEtpbGxlZAo+IFsg
+NDAyOS4xMTAyMTZdIGRldmljZS1tYXBwZXI6IHJhaWQ6IElnbm9yaW5nIGNodW5rIHNpemUgcGFy
+YW1ldGVyIGZvciBSQUlEIDEKPiBbIDQwMjkuMTEwMjE3XSBkZXZpY2UtbWFwcGVyOiByYWlkOiBD
+aG9vc2luZyBkZWZhdWx0IHJlZ2lvbiBzaXplIG9mIDRNaUIKPiBbIDQwMjkuMTExMzQ5XSBtZC9y
+YWlkMTptZFg6IGFjdGl2ZSB3aXRoIDIgb3V0IG9mIDIgbWlycm9ycwo+IFsgNDAyOS4xMTQ3NzBd
+IEJVRzogdW5hYmxlIHRvIGhhbmRsZSBrZXJuZWwgTlVMTCBwb2ludGVyIGRlcmVmZXJlbmNlIGF0
+IDAwMDAwMDAwMDAwMDAwMzAKPiBbIDQwMjkuMTE0ODAyXSBJUDogYml0bWFwX3Jlc2l6ZSsweDI1
+LzB4N2MwIFttZF9tb2RdCj4gWyA0MDI5LjExNDgxNl0gUEdEIDAKPiDigKYKPiBbIDQwMjkuMTE1
+MDU5XSBIYXJkd2FyZSBuYW1lOiBBcXVhcml1cyBQcm8gUDMwIFM4NSBCVVktODY2L0I4NU0tRSwg
+QklPUyAyMzA0IDA1LzI1LzIwMTUKPiBbIDQwMjkuMTE1MDc5XSB0YXNrOiBmZmZmODgwMTVjYzI5
+YTgwIHRhc2suc3RhY2s6IGZmZmZjOTAwMDFhNWMwMDAKPiBbIDQwMjkuMTE1MDk3XSBSSVA6IDAw
+MTA6Yml0bWFwX3Jlc2l6ZSsweDI1LzB4N2MwIFttZF9tb2RdCj4gWyA0MDI5LjExNTExMl0gUlNQ
+OiAwMDE4OmZmZmZjOTAwMDFhNWZiNjggRUZMQUdTOiAwMDAxMDI0Ngo+IFsgNDAyOS4xMTUxMjdd
+IFJBWDogMDAwMDAwMDAwMDAwMDAwNSBSQlg6IDAwMDAwMDAwMDAwMDAwMDAgUkNYOiAwMDAwMDAw
+MDAwMDAwMDAwCj4gWyA0MDI5LjExNTE0Nl0gUkRYOiAwMDAwMDAwMDAwMDAwMDAwIFJTSTogMDAw
+MDAwMDAwMDAwMDQwMCBSREk6IDAwMDAwMDAwMDAwMDAwMDAKPiBbIDQwMjkuMTE1MTY2XSBSQlA6
+IGZmZmZjOTAwMDFhNWZjMjggUjA4OiAwMDAwMDAwODAwMDAwMDAwIFIwOTogMDAwMDAwMDhmZmZm
+ZmZmZgo+IFsgNDAyOS4xMTUxODVdIFIxMDogZmZmZmVhMDAwNTY2MTYwMCBSMTE6IGZmZmY4ODAx
+NWNjMjlhODAgUjEyOiBmZmZmODgwMjEyMzFmMDU4Cj4gWyA0MDI5LjExNTIwNF0gUjEzOiAwMDAw
+MDAwMDAwMDAwMDAwIFIxNDogMDAwMDAwMDAwMDAwMDAwMCBSMTU6IDAwMDAwMDAwMDAwMDAwMDAK
+PiBbIDQwMjkuMTE1MjIzXSBGUzogIDAwMDA3ZmU3M2E2YjQ3NDAoMDAwMCkgR1M6ZmZmZjg4MDIx
+ZWE4MDAwMCgwMDAwKSBrbmxHUzowMDAwMDAwMDAwMDAwMDAwCj4gWyA0MDI5LjExNTI0NV0gQ1M6
+ICAwMDEwIERTOiAwMDAwIEVTOiAwMDAwIENSMDogMDAwMDAwMDA4MDA1MDAzMwo+IFsgNDAyOS4x
+MTUyNjFdIENSMjogMDAwMDAwMDAwMDAwMDAzMCBDUjM6IDAwMDAwMDAxNTlhNzQwMDAgQ1I0OiAw
+MDAwMDAwMDAwMTQyNmUwCj4gWyA0MDI5LjExNTI4MV0gQ2FsbCBUcmFjZToKPiBbIDQwMjkuMTE1
+MjkxXSAgPyByYWlkX2l0ZXJhdGVfZGV2aWNlcysweDYzLzB4ODAgW2RtX3JhaWRdCj4gWyA0MDI5
+LjExNTMwOV0gID8gZG1fdGFibGVfYWxsX2RldmljZXNfYXR0cmlidXRlLmlzcmEuMjMrMHg0MS8w
+eDcwIFtkbV9tb2RdCj4gWyA0MDI5LjExNTMyOV0gID8gZG1fdGFibGVfc2V0X3Jlc3RyaWN0aW9u
+cysweDIyNS8weDJkMCBbZG1fbW9kXQo+IFsgNDAyOS4xMTUzNDZdICByYWlkX3ByZXJlc3VtZSsw
+eDgxLzB4MmUwIFtkbV9yYWlkXQo+IFsgNDAyOS4xMTUzNjFdICBkbV90YWJsZV9yZXN1bWVfdGFy
+Z2V0cysweDQ3LzB4ZTAgW2RtX21vZF0KPiBbIDQwMjkuMTE1Mzc4XSAgZG1fcmVzdW1lKzB4YTgv
+MHhkMCBbZG1fbW9kXQo+IFsgNDAyOS4xMTUzOTFdICBkZXZfc3VzcGVuZCsweDEyMy8weDI1MCBb
+ZG1fbW9kXQo+IFsgNDAyOS4xMTU0MDVdICA/IHRhYmxlX2xvYWQrMHgzNTAvMHgzNTAgW2RtX21v
+ZF0KPiBbIDQwMjkuMTE1NDE5XSAgY3RsX2lvY3RsKzB4MWMyLzB4NDkwIFtkbV9tb2RdCj4gWyA0
+MDI5LjExNTQzM10gIGRtX2N0bF9pb2N0bCsweGUvMHgyMCBbZG1fbW9kXQo+IFsgNDAyOS4xMTU0
+NDddICBkb192ZnNfaW9jdGwrMHg4ZC8weDVhMAo+IFsgNDAyOS4xMTU0NTldICA/IF9fX19mcHV0
+KzB4OS8weDEwCj4gWyA0MDI5LjExNTQ3MF0gID8gdGFza193b3JrX3J1bisweDc5LzB4YTAKPiBb
+IDQwMjkuMTE1NDgxXSAgU3lTX2lvY3RsKzB4M2MvMHg3MAo+IFsgNDAyOS4xMTU0OTNdICBlbnRy
+eV9TWVNDQUxMXzY0X2Zhc3RwYXRoKzB4MTMvMHg5NAo+Cj4gRnVuY3Rpb24gcmFpZF9wcmVyZXN1
+bWUgdGFrZXMgYW4gYXNzdW1wdGlvbiB0aGF0IHJhaWRfc2V0IGhhcyBhIGJpdG1hcCBlbmFibGVk
+Lgo+IENhbGwgdG8gYml0bWFwX2xvYWQoJnJzLT5tZCkgaW5zaWRlIF9fbG9hZF9kaXJ0eV9yZWdp
+b25fYml0bWFwIHdvdWxkIHJldHVybiAwIGV2ZW4KPiBpZiB0aGVyZSBpcyBubyBiaXRtYXAgcHJl
+c2VudC4KPgo+IFRoaXMgcGF0Y2ggYXZvaWRzIHJlc2l6aW5nIGFuIGFic2VudCBiaXRtYXAuCj4K
+PiBTaWduZWQtb2ZmLWJ5OiBEbWl0cnkgQmlsdW5vdiA8a21lYXdAeWFuZGV4LXRlYW0ucnU+Cj4g
+U2lnbmVkLW9mZi1ieTogQW5kcmV5IFNtZXRhbmluIDxhc21ldGFuaW5AeWFuZGV4LXRlYW0ucnU+
+Cj4gLS0tCj4gICBkcml2ZXJzL21kL2RtLXJhaWQuYyB8IDEgKwo+ICAgMSBmaWxlIGNoYW5nZWQs
+IDEgaW5zZXJ0aW9uKCspCj4KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9kbS1yYWlkLmMgYi9k
+cml2ZXJzL21kL2RtLXJhaWQuYwo+IGluZGV4IGY4NTY0ZDYzLi42N2E1NDA1ZSAxMDA2NDQKPiAt
+LS0gYS9kcml2ZXJzL21kL2RtLXJhaWQuYwo+ICsrKyBiL2RyaXZlcnMvbWQvZG0tcmFpZC5jCj4g
+QEAgLTM3MjcsNiArMzcyNyw3IEBAIHN0YXRpYyBpbnQgcmFpZF9wcmVyZXN1bWUoc3RydWN0IGRt
+X3RhcmdldCAqdGkpCj4gICAKPiAgIAkvKiBSZXNpemUgYml0bWFwIHRvIGFkanVzdCB0byBjaGFu
+Z2VkIHJlZ2lvbiBzaXplIChha2EgTUQgYml0bWFwIGNodW5rc2l6ZSkgKi8KPiAgIAlpZiAodGVz
+dF9iaXQoUlRfRkxBR19SU19CSVRNQVBfTE9BREVELCAmcnMtPnJ1bnRpbWVfZmxhZ3MpICYmCj4g
+KwkgICAgbWRkZXYtPmJpdG1hcCAmJgo+ICAgCSAgICBtZGRldi0+Yml0bWFwX2luZm8uY2h1bmtz
+aXplICE9IHRvX2J5dGVzKHJzLT5yZXF1ZXN0ZWRfYml0bWFwX2NodW5rX3NlY3RvcnMpKSB7Cj4g
+ICAJCXIgPSBiaXRtYXBfcmVzaXplKG1kZGV2LT5iaXRtYXAsIG1kZGV2LT5kZXZfc2VjdG9ycywK
+PiAgIAkJCQkgIHRvX2J5dGVzKHJzLT5yZXF1ZXN0ZWRfYml0bWFwX2NodW5rX3NlY3RvcnMpLCAw
+KTsKCi0tCmRtLWRldmVsIG1haWxpbmcgbGlzdApkbS1kZXZlbEByZWRoYXQuY29tCmh0dHBzOi8v
+d3d3LnJlZGhhdC5jb20vbWFpbG1hbi9saXN0aW5mby9kbS1kZXZlbA==
