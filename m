@@ -1,43 +1,81 @@
-From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH v1] mdadm/grow: reshape would be stuck from raid1 to raid5
-Date: Thu, 30 Mar 2017 15:38:08 +0800
-Message-ID: <20170330073808.6176-1-zlliu@suse.com>
-References: <wrfjk27aid6n.fsf@gmail.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjk27aid6n.fsf@gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
+From: Gioh Kim <gi-oh.kim@profitbricks.com>
+Subject: Re: [PATCH 2/2] mdadm.c: fix compile error "switch condition has
+ boolean value"
+Date: Thu, 30 Mar 2017 09:52:10 +0200
+Message-ID: <20170330075209.GF17378@ws00837>
+References: <1490780434-8720-1-git-send-email-gi-oh.kim@profitbricks.com>
+ <1490780434-8720-2-git-send-email-gi-oh.kim@profitbricks.com>
+ <wrfjpoh0dqzz.fsf@gmail.com>
+ <87lgrnu5k4.fsf@notabene.neil.brown.name>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <87lgrnu5k4.fsf@notabene.neil.brown.name>
+Sender: linux-kernel-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: jes.sorensen@gmail.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Wol <anthony@youngman.org.uk>
 List-Id: linux-raid.ids
 
-systemctl doesn't interpret mdadm-grow-continue@.service
-correctly due to the wrong argument provided in [service],
-it should be corrected %I as %i. Otherwise, if the service
-cannot start by systemctl and the reshap progress would be
-stuck all time when grows array from raid1 to raid5.
+On Thu, Mar 30, 2017 at 08:38:35AM +1100, NeilBrown wrote:
+> On Thu, Mar 30 2017, jes.sorensen@gmail.com wrote:
+> 
+> > Gioh Kim <gi-oh.kim@profitbricks.com> writes:
+> >> Remove a boolean expression in switch condition
+> >> to prevent compile error of some compilers.
+> >
+> > Please be specific, which compile is unable to handle this?
+> >
+> >> Signed-off-by: Gioh Kim <gi-oh.kim@profitbricks.com>
+> >> ---
+> >>  mdadm.c | 6 +++---
+> >>  1 file changed, 3 insertions(+), 3 deletions(-)
+> >>
+> >> diff --git a/mdadm.c b/mdadm.c
+> >> index 08ddcab..a98a051 100644
+> >> --- a/mdadm.c
+> >> +++ b/mdadm.c
+> >> @@ -1905,11 +1905,11 @@ static int misc_list(struct mddev_dev *devlist,
+> >>  			rv |= SetAction(dv->devname, c->action);
+> >>  			continue;
+> >>  		}
+> >> -		switch(dv->devname[0] == '/') {
+> >> -			case 0:
+> >> +		switch(dv->devname[0]) {
+> >> +			default:
+> >>  				mdfd = open_dev(dv->devname);
+> >>  				if (mdfd >= 0) break;
+> >> -			case 1:
+> >> +			case '/':
+> >>  				mdfd = open_mddev(dv->devname, 1);  
+> >>  		}
+> >>  		if (mdfd>=0) {
+> >
+> > While I agree the original code is ugly, I am not convinced your
+> > replacement is a lot prettier.
+> >
+> 
+> Maybe
+> 
+> 		if (dv->devname[0] == '/' ||
+> 		    (mdfd = open_dev(dv->devname)) < 0)
+> 				mdfd = open_mddev(dv->devname, 1);
+> 
+> ??
+> NeilBrown
 
-reproduce steps:
-./mdadm -CR /dev/md0 -l1 -b internal -n2 /dev/loop[0-1]
-./mdadm --grow /dev/md0 -l5 -n3 -a /dev/loop2
+Yes, the initial version I thought was:
 
-Signed-off-by: Zhilong Liu <zlliu@suse.com>
----
- systemd/mdadm-grow-continue@.service | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+if (dev->devname[0] != '/')
+    mdfd = open_dev(dv->devname);
+if (dev->devname[0] == '/' || mdfd < 0)
+    mdfd = open_mddev(dv->devname, 1);
 
-diff --git a/systemd/mdadm-grow-continue@.service b/systemd/mdadm-grow-continue@.service
-index 5c667d2..882bc0b 100644
---- a/systemd/mdadm-grow-continue@.service
-+++ b/systemd/mdadm-grow-continue@.service
-@@ -10,7 +10,7 @@ Description=Manage MD Reshape on /dev/%I
- DefaultDependencies=no
- 
- [Service]
--ExecStart=BINDIR/mdadm --grow --continue /dev/%I
-+ExecStart=BINDIR/mdadm --grow --continue /dev/%i
- StandardInput=null
- StandardOutput=null
- StandardError=null
+But I thought you have a reason to use switch-case expression,
+so I kept switch-case.
+If you agree, I'll send v2 patch using if-expression.
+
 -- 
-2.10.2
-
+Best regards,
+Gi-Oh Kim
+TEL: 0176 2697 8962
