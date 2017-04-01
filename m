@@ -1,61 +1,41 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH] md/raid10: remove unnecessary checks with 'first'
-Date: Sat,  1 Apr 2017 11:38:20 +0800
-Message-ID: <1491017900-8150-1-git-send-email-gqjiang@suse.com>
+From: Zhilong Liu <zlliu@suse.com>
+Subject: [PATCH 0/4] integrated stat and fstat into utility functions
+Date: Sat,  1 Apr 2017 20:51:41 +0800
+Message-ID: <20170401125145.14440-1-zlliu@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@fb.com, neilb@suse.com
+To: Jes.Sorensen@gmail.com
+Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
-Since the value of first is always '1', we can
-set min_offset_diff directly.
+hi, Jes;
 
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
----
- drivers/md/raid10.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+This patches focus on integrating stat and fstat operations, move the
+duplicated codes into one utility function, and also fixed one bug in
+waitclean(), it forgot to check the block device.
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 0f13d57..edaf8f4 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -3702,7 +3702,6 @@ static int raid10_run(struct mddev *mddev)
- 	struct md_rdev *rdev;
- 	sector_t size;
- 	sector_t min_offset_diff = 0;
--	int first = 1;
- 	bool discard_supported = false;
- 
- 	if (mddev->private == NULL) {
-@@ -3758,8 +3757,7 @@ static int raid10_run(struct mddev *mddev)
- 			diff = -diff;
- 		if (diff < 0)
- 			diff = 0;
--		if (first || diff < min_offset_diff)
--			min_offset_diff = diff;
-+		min_offset_diff = diff;
- 
- 		if (mddev->gendisk)
- 			disk_stack_limits(mddev->gendisk, rdev->bdev,
-@@ -4140,7 +4138,6 @@ static int raid10_start_reshape(struct mddev *mddev)
- 
- 	unsigned long before_length, after_length;
- 	sector_t min_offset_diff = 0;
--	int first = 1;
- 	struct geom new;
- 	struct r10conf *conf = mddev->private;
- 	struct md_rdev *rdev;
-@@ -4169,8 +4166,7 @@ static int raid10_start_reshape(struct mddev *mddev)
- 				diff = -diff;
- 			if (diff < 0)
- 				diff = 0;
--			if (first || diff < min_offset_diff)
--				min_offset_diff = diff;
-+			min_offset_diff = diff;
- 		}
- 	}
- 
+Thanks,
+Zhilong
+
+Zhilong Liu (4):
+  mdadm/util:integrate stat operations into one utility
+  mdadm/util:integrate fstat operations into one utility function
+  mdadm/Create:declaring an existing struct within same function
+  mdadm/Monitor:check the block device when use waitclean parameter
+
+ Assemble.c    | 15 ++++-----------
+ Build.c       | 21 +++------------------
+ Create.c      | 17 +++++++----------
+ Grow.c        |  4 +---
+ Incremental.c | 25 ++-----------------------
+ Manage.c      | 10 ++--------
+ Monitor.c     |  2 ++
+ bitmap.c      | 12 ++++--------
+ mdadm.h       |  2 ++
+ super-intel.c | 14 +++-----------
+ util.c        | 30 ++++++++++++++++++++++++++++++
+ 11 files changed, 60 insertions(+), 92 deletions(-)
+
 -- 
-2.6.6
+2.10.2
 
