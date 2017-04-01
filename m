@@ -1,41 +1,61 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH] dm ioctl: Remove double parentheses
-Date: Fri, 31 Mar 2017 19:07:33 -0700
-Message-ID: <1491012453.27353.25.camel@perches.com>
-References: <20170316164830.127026-1-mka@chromium.org>
-	<20170401015019.GA13986@google.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20170401015019.GA13986@google.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Matthias Kaehlcke <mka@chromium.org>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com
-Cc: Michael Davidson <md@google.com>, Grant Grundler <grundler@chromium.org>, linux-kernel@vger.kernel.org, Greg Hackmann <ghackmann@google.com>, linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: [PATCH] md/raid10: remove unnecessary checks with 'first'
+Date: Sat,  1 Apr 2017 11:38:20 +0800
+Message-ID: <1491017900-8150-1-git-send-email-gqjiang@suse.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: shli@fb.com, neilb@suse.com
 List-Id: linux-raid.ids
 
-On Fri, 2017-03-31 at 18:50 -0700, Matthias Kaehlcke wrote:
-> El Thu, Mar 16, 2017 at 09:48:30AM -0700 Matthias Kaehlcke ha dit:
-> 
-> > The extra pair of parantheses is not needed and causes clang to generate
-> > the following warning:
-> > 
-> > drivers/md/dm-ioctl.c:1776:11: error: equality comparison with extraneous parentheses [-Werror,-Wparentheses-equality]
-> >         if ((cmd == DM_DEV_CREATE_CMD)) {
-> >              ~~~~^~~~~~~~~~~~~~~~~~~~
-> > drivers/md/dm-ioctl.c:1776:11: note: remove extraneous parentheses around the comparison to silence this warning
-> >         if ((cmd == DM_DEV_CREATE_CMD)) {
-> >             ~    ^                   ~
-> > drivers/md/dm-ioctl.c:1776:11: note: use '=' to turn this equality comparison into an assignment
-> >         if ((cmd == DM_DEV_CREATE_CMD)) {
+Since the value of first is always '1', we can
+set min_offset_diff directly.
 
-There are dozens of these comparisons in the kernel.
-Are you fixing them all or just this one?
+Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+---
+ drivers/md/raid10.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 0f13d57..edaf8f4 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -3702,7 +3702,6 @@ static int raid10_run(struct mddev *mddev)
+ 	struct md_rdev *rdev;
+ 	sector_t size;
+ 	sector_t min_offset_diff = 0;
+-	int first = 1;
+ 	bool discard_supported = false;
+ 
+ 	if (mddev->private == NULL) {
+@@ -3758,8 +3757,7 @@ static int raid10_run(struct mddev *mddev)
+ 			diff = -diff;
+ 		if (diff < 0)
+ 			diff = 0;
+-		if (first || diff < min_offset_diff)
+-			min_offset_diff = diff;
++		min_offset_diff = diff;
+ 
+ 		if (mddev->gendisk)
+ 			disk_stack_limits(mddev->gendisk, rdev->bdev,
+@@ -4140,7 +4138,6 @@ static int raid10_start_reshape(struct mddev *mddev)
+ 
+ 	unsigned long before_length, after_length;
+ 	sector_t min_offset_diff = 0;
+-	int first = 1;
+ 	struct geom new;
+ 	struct r10conf *conf = mddev->private;
+ 	struct md_rdev *rdev;
+@@ -4169,8 +4166,7 @@ static int raid10_start_reshape(struct mddev *mddev)
+ 				diff = -diff;
+ 			if (diff < 0)
+ 				diff = 0;
+-			if (first || diff < min_offset_diff)
+-				min_offset_diff = diff;
++			min_offset_diff = diff;
+ 		}
+ 	}
+ 
+-- 
+2.6.6
+
