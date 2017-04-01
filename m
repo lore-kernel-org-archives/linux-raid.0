@@ -1,7 +1,7 @@
 From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH 1/4] mdadm/util:integrate stat operations into one utility
-Date: Sat,  1 Apr 2017 20:51:42 +0800
-Message-ID: <20170401125145.14440-2-zlliu@suse.com>
+Subject: [PATCH 3/4] mdadm/Create:declaring an existing struct within same function
+Date: Sat,  1 Apr 2017 20:51:44 +0800
+Message-ID: <20170401125145.14440-4-zlliu@suse.com>
 References: <20170401125145.14440-1-zlliu@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20170401125145.14440-1-zlliu@suse.com>
@@ -10,179 +10,52 @@ To: Jes.Sorensen@gmail.com
 Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
-mdadm/util: there are dupilicate codes about stat checking the
-block device, move the operations into one utility function and
-make it concise.
+Create:declaring 'struct stat stb' twice within the same
+function, rename stb as stb2 when declares 'struct stat'
+at the second time.
 
 Signed-off-by: Zhilong Liu <zlliu@suse.com>
 ---
- Assemble.c    |  5 ++---
- Build.c       | 21 +++------------------
- Incremental.c | 12 +-----------
- Manage.c      | 10 ++--------
- mdadm.h       |  1 +
- super-intel.c |  4 +---
- util.c        | 15 +++++++++++++++
- 7 files changed, 25 insertions(+), 43 deletions(-)
+ Create.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/Assemble.c b/Assemble.c
-index 672cd12..c6571e6 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -522,9 +522,8 @@ static int select_devices(struct mddev_dev *devlist,
- 		struct stat stb;
- 		if (tmpdev->used != 3)
- 			continue;
--		if (stat(tmpdev->devname, &stb)< 0) {
--			pr_err("fstat failed for %s: %s\n",
--			       tmpdev->devname, strerror(errno));
-+		if (check_blkdev_via_stat(tmpdev->devname) &&
-+		    stat(tmpdev->devname, &stb)) {
- 			tmpdev->used = 2;
- 		} else {
- 			struct dev_policy *pol = devid_policy(stb.st_rdev);
-diff --git a/Build.c b/Build.c
-index 691dd6f..b500ad7 100644
---- a/Build.c
-+++ b/Build.c
-@@ -67,16 +67,8 @@ int Build(char *mddev, struct mddev_dev *devlist,
- 			missing_disks++;
- 			continue;
- 		}
--		if (stat(dv->devname, &stb)) {
--			pr_err("Cannot find %s: %s\n",
--				dv->devname, strerror(errno));
--			return 1;
--		}
--		if ((stb.st_mode & S_IFMT) != S_IFBLK) {
--			pr_err("%s is not a block device.\n",
--				dv->devname);
-+		if (check_blkdev_via_stat(dv->devname))
- 			return 1;
--		}
- 	}
+diff --git a/Create.c b/Create.c
+index e43c1d6..619e68a 100644
+--- a/Create.c
++++ b/Create.c
+@@ -865,7 +865,7 @@ int Create(struct supertype *st, char *mddev,
+ 		for (dnum=0, raid_disk_num=0, dv = devlist ; dv ;
+ 		     dv=(dv->next)?(dv->next):moved_disk, dnum++) {
+ 			int fd;
+-			struct stat stb;
++			struct stat stb2;
+ 			struct mdinfo *inf = &infos[dnum];
  
- 	if (s->raiddisks != subdevs) {
-@@ -171,16 +163,9 @@ int Build(char *mddev, struct mddev_dev *devlist,
- 		int fd;
- 		if (strcmp("missing", dv->devname) == 0)
- 			continue;
--		if (stat(dv->devname, &stb)) {
--			pr_err("Weird: %s has disappeared.\n",
--				dv->devname);
-+		if (check_blkdev_via_stat(dv->devname))
- 			goto abort;
--		}
--		if ((stb.st_mode & S_IFMT)!= S_IFBLK) {
--			pr_err("Weird: %s is no longer a block device.\n",
--				dv->devname);
--			goto abort;
--		}
-+		stat(dv->devname, &stb);
- 		fd = open(dv->devname, O_RDONLY|O_EXCL);
- 		if (fd < 0) {
- 			pr_err("Cannot open %s: %s\n",
-diff --git a/Incremental.c b/Incremental.c
-index 28f1f77..78adf18 100644
---- a/Incremental.c
-+++ b/Incremental.c
-@@ -108,18 +108,8 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
- 
- 	struct createinfo *ci = conf_get_create_info();
- 
--	if (stat(devname, &stb) < 0) {
--		if (c->verbose >= 0)
--			pr_err("stat failed for %s: %s.\n",
--				devname, strerror(errno));
-+	if (check_blkdev_via_stat(devname) && stat(devname, &stb))
- 		return rv;
--	}
--	if ((stb.st_mode & S_IFMT) != S_IFBLK) {
--		if (c->verbose >= 0)
--			pr_err("%s is not a block device.\n",
--				devname);
--		return rv;
--	}
- 	dfd = dev_open(devname, O_RDONLY);
- 	if (dfd < 0) {
- 		if (c->verbose >= 0)
-diff --git a/Manage.c b/Manage.c
-index 618c98b..6aec65d 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -1544,17 +1544,11 @@ int Manage_subdevs(char *devname, int fd,
- 				close(tfd);
- 			} else {
- 				int open_err = errno;
--				if (stat(dv->devname, &stb) != 0) {
--					pr_err("Cannot find %s: %s\n",
--					       dv->devname, strerror(errno));
--					goto abort;
--				}
--				if ((stb.st_mode & S_IFMT) != S_IFBLK) {
-+				if (check_blkdev_via_stat(dv->devname) &&
-+				    stat(dv->devname, &stb)) {
- 					if (dv->disposition == 'M')
- 						/* non-fatal. Also improbable */
- 						continue;
--					pr_err("%s is not a block device.\n",
--					       dv->devname);
- 					goto abort;
+ 			if (dnum >= total_slots)
+@@ -921,9 +921,9 @@ int Create(struct supertype *st, char *mddev,
+ 							dv->devname);
+ 						goto abort_locked;
+ 					}
+-					fstat(fd, &stb);
+-					inf->disk.major = major(stb.st_rdev);
+-					inf->disk.minor = minor(stb.st_rdev);
++					fstat(fd, &stb2);
++					inf->disk.major = major(stb2.st_rdev);
++					inf->disk.minor = minor(stb2.st_rdev);
  				}
- 				if (dv->disposition == 'r')
-diff --git a/mdadm.h b/mdadm.h
-index 612bd86..0aea822 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -1422,6 +1422,7 @@ extern int check_raid(int fd, char *name);
- extern int check_partitions(int fd, char *dname,
- 			    unsigned long long freesize,
- 			    unsigned long long size);
-+extern int check_blkdev_via_stat(char *dev);
+ 				if (fd >= 0)
+ 					remove_partitions(fd);
+@@ -944,8 +944,8 @@ int Create(struct supertype *st, char *mddev,
  
- extern int get_mdp_major(void);
- extern int get_maj_min(char *dev, int *major, int *minor);
-diff --git a/super-intel.c b/super-intel.c
-index 84dfe2b..924ad8a 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -6953,9 +6953,7 @@ static int validate_geometry_imsm_volume(struct supertype *st, int level,
- 	}
- 
- 	/* This device must be a member of the set */
--	if (stat(dev, &stb) < 0)
--		return 0;
--	if ((S_IFMT & stb.st_mode) != S_IFBLK)
-+	if (check_blkdev_via_stat(dev) && stat(dev, &stb))
- 		return 0;
- 	for (dl = super->disks ; dl ; dl = dl->next) {
- 		if (dl->major == (int)major(stb.st_rdev) &&
-diff --git a/util.c b/util.c
-index 9fc7ba0..03d4256 100644
---- a/util.c
-+++ b/util.c
-@@ -774,6 +774,21 @@ int ask(char *mesg)
- }
- #endif /* MDASSEMBLE */
- 
-+int check_blkdev_via_stat(char *dev)
-+{
-+	struct stat stb;
-+
-+	if (stat(dev, &stb) != 0) {
-+		pr_err("stat failed for %s: %s\n", dev, strerror(errno));
-+		return -1;
-+	}
-+	if ((S_IFMT & stb.st_mode) != S_IFBLK) {
-+		pr_err("%s is not a block device.\n", dev);
-+		return -1;
-+	}
-+	return 0;
-+}
-+
- int is_standard(char *dev, int *nump)
- {
- 	/* tests if dev is a "standard" md dev name.
+ 				if (!have_container) {
+ 					/* getinfo_super might have lost these ... */
+-					inf->disk.major = major(stb.st_rdev);
+-					inf->disk.minor = minor(stb.st_rdev);
++					inf->disk.major = major(stb2.st_rdev);
++					inf->disk.minor = minor(stb2.st_rdev);
+ 				}
+ 				break;
+ 			case 2:
 -- 
 2.10.2
 
