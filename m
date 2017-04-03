@@ -1,60 +1,48 @@
-From: Michael Wang <yun.wang@profitbricks.com>
-Subject: [RFC PATCH] blk: reset 'bi_next' when bio is done inside request
-Date: Mon, 3 Apr 2017 14:05:16 +0200
-Message-ID: <9505ff12-7307-7dec-76b5-2a233a592634@profitbricks.com>
+From: Matthias Kaehlcke <mka@chromium.org>
+Subject: Re: [PATCH] dm ioctl: Remove double parentheses
+Date: Mon, 3 Apr 2017 09:56:53 -0700
+Message-ID: <20170403165653.GB13986@google.com>
+References: <20170316164830.127026-1-mka@chromium.org>
+ <20170401015019.GA13986@google.com>
+ <1491012453.27353.25.camel@perches.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-Sender: linux-block-owner@vger.kernel.org
-To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org
-Cc: Jens Axboe <axboe@kernel.dk>, Shaohua Li <shli@kernel.org>, NeilBrown <neilb@suse.com>, Jinpu Wang <jinpu.wang@profitbricks.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1491012453.27353.25.camel@perches.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Grant Grundler <grundler@chromium.org>, Michael Davidson <md@google.com>, Greg Hackmann <ghackmann@google.com>
 List-Id: linux-raid.ids
 
+Hi Joe,
 
-blk_attempt_plug_merge() try to merge bio into request and chain them
-by 'bi_next', while after the bio is done inside request, we forgot to
-reset the 'bi_next'.
+El Fri, Mar 31, 2017 at 07:07:33PM -0700 Joe Perches ha dit:
 
-This lead into BUG while removing all the underlying devices from md-raid1,
-the bio once go through:
+> On Fri, 2017-03-31 at 18:50 -0700, Matthias Kaehlcke wrote:
+> > El Thu, Mar 16, 2017 at 09:48:30AM -0700 Matthias Kaehlcke ha dit:
+> > 
+> > > The extra pair of parantheses is not needed and causes clang to generate
+> > > the following warning:
+> > > 
+> > > drivers/md/dm-ioctl.c:1776:11: error: equality comparison with extraneous parentheses [-Werror,-Wparentheses-equality]
+> > >         if ((cmd == DM_DEV_CREATE_CMD)) {
+> > >              ~~~~^~~~~~~~~~~~~~~~~~~~
+> > > drivers/md/dm-ioctl.c:1776:11: note: remove extraneous parentheses around the comparison to silence this warning
+> > >         if ((cmd == DM_DEV_CREATE_CMD)) {
+> > >             ~    ^                   ~
+> > > drivers/md/dm-ioctl.c:1776:11: note: use '=' to turn this equality comparison into an assignment
+> > >         if ((cmd == DM_DEV_CREATE_CMD)) {
+> 
+> There are dozens of these comparisons in the kernel.
+> Are you fixing them all or just this one?
 
-  md_do_sync()
-    sync_request()
-      generic_make_request()
-        blk_queue_bio()
-          blk_attempt_plug_merge()
-            CHAINED HERE
+For now I focus on occurrences that pop up in my builds. So far there
+have been two more:
 
-will keep chained and reused by:
+https://patchwork.kernel.org/patch/9626833/
+https://patchwork.kernel.org/patch/9631591/
 
-  raid1d()
-    sync_request_write()
-      generic_make_request()
-        BUG_ON(bio->bi_next)
+Thanks
 
-After reset the 'bi_next' this can no longer happen.
-
-Signed-off-by: Michael Wang <yun.wang@profitbricks.com>
----
- block/blk-core.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 43b7d06..91223b2 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -2619,8 +2619,10 @@ bool blk_update_request(struct request *req, int error, unsigned int nr_bytes)
-                struct bio *bio = req->bio;
-                unsigned bio_bytes = min(bio->bi_iter.bi_size, nr_bytes);
-
--               if (bio_bytes == bio->bi_iter.bi_size)
-+               if (bio_bytes == bio->bi_iter.bi_size) {
-                        req->bio = bio->bi_next;
-+                       bio->bi_next = NULL;
-+               }
-
-                req_bio_endio(req, bio, bio_bytes, error);
-
--- 
-2.5.0
+Matthias
