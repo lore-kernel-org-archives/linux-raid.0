@@ -1,97 +1,106 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [PATCH] md/raid6: Fix anomily when recovering a single device in RAID6.
-Date: Mon, 03 Apr 2017 12:11:32 +1000
-Message-ID: <87r31adyuj.fsf@notabene.neil.brown.name>
+Subject: Re: [PATCH] md/raid10: remove unnecessary checks with 'first'
+Date: Mon, 03 Apr 2017 12:21:21 +1000
+Message-ID: <87inmmdye6.fsf@notabene.neil.brown.name>
+References: <1491017900-8150-1-git-send-email-gqjiang@suse.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1491017900-8150-1-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: Brad Campbell <lists2009@fnarfbargle.com>, Linux-RAID <linux-raid@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>
+To: Guoqing Jiang <gqjiang@suse.com>, linux-raid@vger.kernel.org
+Cc: shli@fb.com
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
+On Sat, Apr 01 2017, Guoqing Jiang wrote:
 
-When recoverying a single missing/failed device in a RAID6,
-those stripes where the Q block is on the missing device are
-handled a bit differently.  In these cases it is easy to
-check that the P block is correct, so we do.  This results
-in the P block be destroy.  Consequently the P block needs
-to be read a second time in order to compute Q.  This causes
-lots of seeks and hurts performance.
+> Since the value of first is always '1', we can
+> set min_offset_diff directly.
 
-It shouldn't be necessary to re-read P as it can be computed
-from the DATA.  But we only compute blocks on missing
-devices, since c337869d9501 ("md: do not compute parity
-unless it is on a failed drive").
+Alternately, maybe the fact that first is always '1', is a sign of a bug
+that should be fixed.
 
-So relax the change made in that commit to allow computing
-of the P block in a RAID6 which it is the only missing that
-block.
+The calculation of "min_offset_diff" doesn't make much sense now.  It is
+just the last_offset_diff.
 
-This makes RAID6 recovery run much faster as the disk just
-"before" the recovering device is no longer seeking
-back-and-forth.
+I think the correct fix is to set "first =3D 0;" at the end of the
+rdev_for_each() loop.
 
-Reported-by-tested-by: Brad Campbell <lists2009@fnarfbargle.com>
-Reviewed-by: Dan Williams <dan.j.williams@intel.com>
-Signed-off-by: NeilBrown <neilb@suse.com>
-=2D--
- drivers/md/raid5.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+Thanks for spotting this.
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index c523fd69a7bc..aeb2e236a247 100644
-=2D-- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -3617,9 +3617,20 @@ static int fetch_block(struct stripe_head *sh, struc=
-t stripe_head_state *s,
- 		BUG_ON(test_bit(R5_Wantcompute, &dev->flags));
- 		BUG_ON(test_bit(R5_Wantread, &dev->flags));
- 		BUG_ON(sh->batch_head);
-+
-+		/*
-+		 * In the raid6 case if the only non-uptodate disk is P
-+		 * then we already trusted P to compute the other failed
-+		 * drives. It is safe to compute rather than re-read P.
-+		 * In other cases we only compute blocks from failed
-+		 * devices, otherwise check/repair might fail to detect
-+		 * a real inconsistency.
-+		 */
-+
- 		if ((s->uptodate =3D=3D disks - 1) &&
-+		    ((sh->qd_idx >=3D 0 && sh->pd_idx =3D=3D disk_idx) ||
- 		    (s->failed && (disk_idx =3D=3D s->failed_num[0] ||
-=2D				   disk_idx =3D=3D s->failed_num[1]))) {
-+				   disk_idx =3D=3D s->failed_num[1])))) {
- 			/* have disk failed, and we're requested to fetch it;
- 			 * do compute it
- 			 */
-=2D-=20
-2.12.0
+NeilBrown
 
+>
+> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+> ---
+>  drivers/md/raid10.c | 8 ++------
+>  1 file changed, 2 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 0f13d57..edaf8f4 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -3702,7 +3702,6 @@ static int raid10_run(struct mddev *mddev)
+>  	struct md_rdev *rdev;
+>  	sector_t size;
+>  	sector_t min_offset_diff =3D 0;
+> -	int first =3D 1;
+>  	bool discard_supported =3D false;
+>=20=20
+>  	if (mddev->private =3D=3D NULL) {
+> @@ -3758,8 +3757,7 @@ static int raid10_run(struct mddev *mddev)
+>  			diff =3D -diff;
+>  		if (diff < 0)
+>  			diff =3D 0;
+> -		if (first || diff < min_offset_diff)
+> -			min_offset_diff =3D diff;
+> +		min_offset_diff =3D diff;
+>=20=20
+>  		if (mddev->gendisk)
+>  			disk_stack_limits(mddev->gendisk, rdev->bdev,
+> @@ -4140,7 +4138,6 @@ static int raid10_start_reshape(struct mddev *mddev)
+>=20=20
+>  	unsigned long before_length, after_length;
+>  	sector_t min_offset_diff =3D 0;
+> -	int first =3D 1;
+>  	struct geom new;
+>  	struct r10conf *conf =3D mddev->private;
+>  	struct md_rdev *rdev;
+> @@ -4169,8 +4166,7 @@ static int raid10_start_reshape(struct mddev *mddev)
+>  				diff =3D -diff;
+>  			if (diff < 0)
+>  				diff =3D 0;
+> -			if (first || diff < min_offset_diff)
+> -				min_offset_diff =3D diff;
+> +			min_offset_diff =3D diff;
+>  		}
+>  	}
+>=20=20
+> --=20
+> 2.6.6
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljhr1QACgkQOeye3VZi
-gbm7qw/+K/kKD1UcY4W2I+1Gc5q6iRyWmCIQNNmwwuHv+n+2Htsp8MqLyESMvWB9
-ItswE3kU+b1X1EkLXceN8bK2oPDnMXtIe8bCINpW4xeGQ49qP9URZqGHs/aqIBFk
-BaFjXjTZpDBeEOKXe/1p1IlC4Iu71HrDiQlrFH8JiMtOt95+zsYCQ7PlowhpyOix
-R5IIHo2emJe4bOFf9x0xf2ZIub3onX/IaH+wU+hjI4oBfFa5Fee1e79OEzI5L9cL
-PHey1VIxF6k7dxbFYBDUrsTsn2Z2QLIfWBYhIHSibb/Clu+iREl6nFeyAdGSldE6
-qd/7gpWluaOra8SprULxHNJFh+S78ag6ECR4n+Ht58UU0RdAKBKAKW7V2Q9ZUpDH
-bvu/92EDEHWc4CJihLReq6fce4QGZilS6yeLguWu3vnWlayj1Teh6Gw9neSav+x8
-TicVLZonwRbeWUQ0Bi7nMUKM5DiczGbspo+UKuXC/cbzpcQXUzmkjFS5AxEJXuuF
-HCYUWqn+7XdZLXaOJxO/RxHvRROvAKtdf1mbo49XdEIzhYOc0z91Omnmb5N6Fb06
-kdw4AC01USoeNfZmldR0sidzf0IGtgyg4SpMP+HXfa19nZI9E9EV97mz+rubchzY
-HaTQMzhsk1/Thp9/C1D5H985yqurkhmx+HnXuj03MjGzZV2FA0Y=
-=mQmz
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljhsaEACgkQOeye3VZi
+gbljQQ/6A9KME9hzlpwjbDLZH/UvTIReX0GM9OjiSqqOazKgs+ijaSOOepF3vByD
+uWTwC3qG8oYc/h9Gk9y68RxOPJeX7Ha+I33aBH14yF3rgDB1XkrjLWLJDHwcdrjb
+IB9OoXKiVIrWXsc+CYD6LbarOdmN9Isre7xDGRLkymAujoVJTWRJ9HVJuEVR4VJc
+SQN5xoWF+AMmPjUfYj0MQ5SD6n2tgNOhBnnhw7j5oshbVYLnkZCaxDzTedYv+OP9
+vkWmXflgXF80Remr9yn87ckfvilHP0g2rGTuJA5GS/c+JcXkHA5PDouOfQ+0Onzg
+gQW3KQghRIWgaVxWcPQiwLNW49GBZiCchY/SAV/9/60wt7ARlDWJ0QBEYyRZeeGC
+aDCecVYAZ17AQyXwcxM+RTi7UFNQi1MpccsSfjgVbM4xr6dwuWiAiFiuCFMivZJN
+CFdEqxLo3dcvLRIrcuPEqcC+i6WAgFBU2rz+vDOsSio/CndsgMZ2NTnPrIBU4foK
+/VOAoGRMjVEduCxsLh31yj3CRuG16J3fWUX3wrq8vbP2TQdYvwQkOaT1flEORjeH
+YaNwGkL1hmPjoLwXOVCKuzBrku4ztYPNc60WnKyXOrszzCF/DvbEhP8acTvwPj/E
+G+pbjdWDRojGYyeMTUWs0pxtt53JSJmbahfryMupovojEmAaUeM=
+=SkEW
 -----END PGP SIGNATURE-----
 --=-=-=--
