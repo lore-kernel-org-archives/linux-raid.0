@@ -1,55 +1,81 @@
-From: Matthias Kaehlcke <mka@chromium.org>
-Subject: Re: [PATCH 3/7] x86, LLVM: suppress clang warnings about unaligned
- accesses
-Date: Mon, 3 Apr 2017 16:01:58 -0700
-Message-ID: <20170403230158.GA145051@google.com>
-References: <20170317001520.85223-1-md@google.com>
- <20170317001520.85223-4-md@google.com>
- <FB827022-C732-432A-8F31-734C88EBF7A4@zytor.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-crypto-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <FB827022-C732-432A-8F31-734C88EBF7A4@zytor.com>
-Sender: linux-crypto-owner@vger.kernel.org
-To: hpa@zytor.com
-Cc: Michael Davidson <md@google.com>, Michal Marek <mmarek@suse.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Shaohua Li <shli@kernel.org>, Alexander Potapenko <glider@google.com>, Dmitry Vyukov <dvyukov@google.com>, x86@kernel.org, linux-kbuild@vger.kernel.org, linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org
+From: Zhilong <zlliu@suse.com>
+Subject: Re: [PATCH v1] mdadm/grow: reshape would be stuck from raid1 to raid5
+Date: Tue, 4 Apr 2017 13:07:45 +0800
+Message-ID: <5B908F2B-D84A-4C4E-A0C6-863B6E793D75@suse.com>
+References: <wrfjk27aid6n.fsf@gmail.com> <20170330073808.6176-1-zlliu@suse.com> <87d1cukszu.fsf@notabene.neil.brown.name>
+Mime-Version: 1.0 (1.0)
+Content-Type: text/plain;
+        charset=gb2312
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87d1cukszu.fsf@notabene.neil.brown.name>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: Jes.Sorensen@gmail.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-El Fri, Mar 17, 2017 at 04:50:19PM -0700 hpa@zytor.com ha dit:
 
-> On March 16, 2017 5:15:16 PM PDT, Michael Davidson <md@google.com> wrote:
-> >Suppress clang warnings about potential unaliged accesses
-> >to members in packed structs. This gets rid of almost 10,000
-> >warnings about accesses to the ring 0 stack pointer in the TSS.
-> >
-> >Signed-off-by: Michael Davidson <md@google.com>
-> >---
-> > arch/x86/Makefile | 5 +++++
-> > 1 file changed, 5 insertions(+)
-> >
-> >diff --git a/arch/x86/Makefile b/arch/x86/Makefile
-> >index 894a8d18bf97..7f21703c475d 100644
-> >--- a/arch/x86/Makefile
-> >+++ b/arch/x86/Makefile
-> >@@ -128,6 +128,11 @@ endif
-> >         KBUILD_CFLAGS += $(call cc-option,-maccumulate-outgoing-args)
-> > endif
-> > 
-> >+ifeq ($(cc-name),clang)
-> >+# Suppress clang warnings about potential unaligned accesses.
-> >+KBUILD_CFLAGS += $(call cc-disable-warning, address-of-packed-member)
-> >+endif
-> >+
-> > ifdef CONFIG_X86_X32
-> > 	x32_ld_ok := $(call try-run,\
-> > 			/bin/echo -e '1: .quad 1b' | \
+
+Send from iPhone
+
+> 在 2017年4月3日，12:36，NeilBrown <neilb@suse.com> 写道：
 > 
-> Why conditional on clang?
+>> On Thu, Mar 30 2017, Zhilong Liu wrote:
+>> 
+>> systemctl doesn't interpret mdadm-grow-continue@.service
+>> correctly due to the wrong argument provided in [service],
+>> it should be corrected %I as %i. Otherwise, if the service
+>> cannot start by systemctl and the reshap progress would be
+>> stuck all time when grows array from raid1 to raid5.
+>> 
+>> reproduce steps:
+>> ./mdadm -CR /dev/md0 -l1 -b internal -n2 /dev/loop[0-1]
+>> ./mdadm --grow /dev/md0 -l5 -n3 -a /dev/loop2
+>> 
+>> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+>> ---
+>> systemd/mdadm-grow-continue@.service | 2 +-
+>> 1 file changed, 1 insertion(+), 1 deletion(-)
+>> 
+>> diff --git a/systemd/mdadm-grow-continue@.service b/systemd/mdadm-grow-continue@.service
+>> index 5c667d2..882bc0b 100644
+>> --- a/systemd/mdadm-grow-continue@.service
+>> +++ b/systemd/mdadm-grow-continue@.service
+>> @@ -10,7 +10,7 @@ Description=Manage MD Reshape on /dev/%I
+>> DefaultDependencies=no
+>> 
+>> [Service]
+>> -ExecStart=BINDIR/mdadm --grow --continue /dev/%I
+>> +ExecStart=BINDIR/mdadm --grow --continue /dev/%i
+> 
+> Do you know why this makes a difference?  I don't think it should.
+> man systemd.unit says that "%i" is the "Instance name" while "%I" is the
+> "Unescaped instance name".
+> 
+> The Instance name here is something like "md0" so there is nothing to
+> escape.
+> 
+> I would rather not change it unless we know exactly why it is broken,
+> and I don't find your explanation to be convincing.
+> 
 
-My understanding is that this warning is clang specific, it is not
-listed on https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
+Exactly, you're correct, in this case, %i and %I are the same. The root cause is the ExecStart part, all the path name should be verified by systemd-escape，such as:
+/sbin/mdadm should be corrected as sbin-mdadm, and /dev/%I should be -dev-%I. Thus I'm sorry for this patch, I do agree with you not to change it. And say sorry to Jes.
 
-Cheers
+Thanks 
+-zhilong 
 
-Matthias
+> NeilBrown
+> 
+> 
+>> StandardInput=null
+>> StandardOutput=null
+>> StandardError=null
+>> -- 
+>> 2.10.2
+>> 
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
