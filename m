@@ -1,67 +1,65 @@
-From: Guoqing Jiang <jgq516@gmail.com>
-Subject: Re: md-cluster Oops 4.9.13
-Date: Wed, 5 Apr 2017 11:01:32 +0800
-Message-ID: <58E45E0C.6030705@gmail.com>
-References: <CAHkw+Lcr1+sWsQPK_ijfTHwG+zxRYT+iNhWGdpYTNxVuQi8TOw@mail.gmail.com>
+From: NeilBrown <neilb@suse.com>
+Subject: [md PATCH 00/10] Simplify bio splitting and related code.
+Date: Wed, 05 Apr 2017 14:05:50 +1000
+Message-ID: <149136485390.25893.1797855041954158826.stgit@noble>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHkw+Lcr1+sWsQPK_ijfTHwG+zxRYT+iNhWGdpYTNxVuQi8TOw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marc Smith <marc.smith@mcc.edu>, linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+This is part of my little project to make bio splitting
+in Linux uniform and dead-lock free, in a way that will mean
+that we can get rid of all the bioset threads.
+
+The basic approach is that when a bio needs to be split, we call
+bio_split(), bio_chain() and then generic_make_request().
+We then proceed to handle the remainder without further splitting.
+Recent changes to generic_make_request() ensure that this will
+be safe from deadlocks, providing each bioset is used only once
+in the stack.
+
+This leads to simpler code in various places.  In particular, the
+splitting of bios that is needed to work around known bad blocks
+is now much less complex.  There is only ever one r1bio per bio.
+
+As you can see from
+ 10 files changed, 335 insertions(+), 540 deletions(-)
+there is a net reduction in code.
+
+Thanks,
+NeilBrown
+
+---
+
+NeilBrown (10):
+      md/raid1: simplify the splitting of requests.
+      md/raid1: simplify alloc_behind_master_bio()
+      Revert "block: introduce bio_copy_data_partial"
+      md/raid1: simplify handle_read_error().
+      md/raid1: factor out flush_bio_list()
+      md/raid10: simplify the splitting of requests.
+      md/raid10: simplify handle_read_error()
+      md/raid5: make chunk_aligned_read() split bios more cleanly.
+      md/linear: improve bio splitting.
+      md/raid0: fix up bio splitting.
 
 
-On 04/04/2017 10:06 PM, Marc Smith wrote:
-> Hi,
->
-> I encountered an oops this morning when stopping a MD array
-> (md-cluster)... there were 4 md-cluster array started, and they were
-> in the middle of a rebuild. I stopped the first one and then stopped
-> the second one immediately after and got the oops, here is a
-> transcript of what was on my terminal session:
->
-> [root@brimstone-1b ~]# mdadm --stop /dev/md/array1
-> mdadm: stopped /dev/md/array1
-> [root@brimstone-1b ~]# mdadm --stop /dev/md/array2
->
-> Message from syslogd@brimstone-1b at Tue Apr  4 09:54:40 2017 ...
-> brimstone-1b kernel: [649162.174685] BUG: unable to handle kernel NULL
-> pointer dereference at 0000000000000098
->
-> Using Linux 4.9.13 and here is the output from the kernel messages:
->
-> --snip--
-> [649158.014731] dlm: 5b3b8f94-7875-b323-5bb8-29fa6866f4a8: leaving the
-> lockspace group...
-> [649158.015233] dlm: 5b3b8f94-7875-b323-5bb8-29fa6866f4a8: group event done 0 0
-> [649158.015303] dlm: 5b3b8f94-7875-b323-5bb8-29fa6866f4a8:
-> release_lockspace final free
-> [649158.015331] md: unbind<nvme0n1p1>
-> [649158.042540] md: export_rdev(nvme0n1p1)
-> [649158.042546] md: unbind<nvme1n1p1>
-> [649158.048501] md: export_rdev(nvme1n1p1)
-> [649161.759022] md127: detected capacity change from 1000068874240 to 0
-> [649161.759025] md: md127 stopped.
-> [649162.174685] BUG: unable to handle kernel NULL pointer dereference
-> at 0000000000000098
-> [649162.174727] IP: [<ffffffff81868b40>] recv_daemon+0x1e9/0x373
+ block/bio.c         |   60 ++-------
+ drivers/md/linear.c |   75 +++++------
+ drivers/md/raid0.c  |   73 +++++------
+ drivers/md/raid1.c  |  346 ++++++++++++++++++++-------------------------------
+ drivers/md/raid1.h  |    2 
+ drivers/md/raid10.c |  282 ++++++++++++++----------------------------
+ drivers/md/raid10.h |    1 
+ drivers/md/raid5.c  |   33 +++--
+ drivers/md/raid5.h  |    1 
+ include/linux/bio.h |    2 
+ 10 files changed, 335 insertions(+), 540 deletions(-)
 
-Looks like the recv_daemon is still running after stop array, commit
-48df498 "md: move bitmap_destroy to the beginning of __md_stop"
-ensure it won't happen.
-
-
-[snip]
-
-> Perhaps this is already fixed in later versions? Let me know if you
-> need any additional information.
-
-Could you pls try with the latest version? Please let me know if you
-still see it, thanks.
-
-Regards,
-Guoqing
+--
+Signature
 
