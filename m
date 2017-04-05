@@ -1,51 +1,124 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: always use REQ_OP_WRITE_ZEROES for zeroing offload V2
-Date: Wed, 5 Apr 2017 16:51:42 +0200
-Message-ID: <20170405145142.GA5553@lst.de>
-References: <20170405142205.6477-1-hch@lst.de>
+From: jes.sorensen@gmail.com
+Subject: Re: [PATCH v1] mdadm/grow: reshape would be stuck from raid1 to raid5
+Date: Wed, 05 Apr 2017 11:37:30 -0400
+Message-ID: <wrfjh922euh1.fsf@gmail.com>
+References: <wrfjk27aid6n.fsf@gmail.com>
+        <20170330073808.6176-1-zlliu@suse.com>
+        <87d1cukszu.fsf@notabene.neil.brown.name>
+        <5B908F2B-D84A-4C4E-A0C6-863B6E793D75@suse.com>
+        <99E3B202-848D-49F2-BC8A-966A631DE508@suse.com>
+        <877f30k7ks.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20170405142205.6477-1-hch-jcswGhMUV9g@public.gmane.org>
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <877f30k7ks.fsf@notabene.neil.brown.name> (NeilBrown's message of
+        "Tue, 04 Apr 2017 16:30:59 +1000")
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: Zhilong <zlliu@suse.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Looks like the mail server crapped out under the load..
+NeilBrown <neilb@suse.com> writes:
+> On Tue, Apr 04 2017, Zhilong wrote:
+>
+>> Send from iPhone
+>>
+>>> =E5=9C=A8 2017=E5=B9=B44=E6=9C=884=E6=97=A5=EF=BC=8C13:07=EF=BC=8CZhilo=
+ng <zlliu@suse.com> =E5=86=99=E9=81=93=EF=BC=9A
+>>>=20
+>>>=20
+>>>=20
+>>> Send from iPhone
+>>>=20
+>>>>> =E5=9C=A8 2017=E5=B9=B44=E6=9C=883=E6=97=A5=EF=BC=8C12:36=EF=BC=8CNei=
+lBrown <neilb@suse.com> =E5=86=99=E9=81=93=EF=BC=9A
+>>>>>=20
+>>>>> On Thu, Mar 30 2017, Zhilong Liu wrote:
+>>>>>=20
+>>>>> systemctl doesn't interpret mdadm-grow-continue@.service
+>>>>> correctly due to the wrong argument provided in [service],
+>>>>> it should be corrected %I as %i. Otherwise, if the service
+>>>>> cannot start by systemctl and the reshap progress would be
+>>>>> stuck all time when grows array from raid1 to raid5.
+>>>>>=20
+>>>>> reproduce steps:
+>>>>> ./mdadm -CR /dev/md0 -l1 -b internal -n2 /dev/loop[0-1]
+>>>>> ./mdadm --grow /dev/md0 -l5 -n3 -a /dev/loop2
+>>>>>=20
+>>>>> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+>>>>> ---
+>>>>> systemd/mdadm-grow-continue@.service | 2 +-
+>>>>> 1 file changed, 1 insertion(+), 1 deletion(-)
+>>>>>=20
+>>>>> diff --git a/systemd/mdadm-grow-continue@.service
+>>>>> b/systemd/mdadm-grow-continue@.service
+>>>>> index 5c667d2..882bc0b 100644
+>>>>> --- a/systemd/mdadm-grow-continue@.service
+>>>>> +++ b/systemd/mdadm-grow-continue@.service
+>>>>> @@ -10,7 +10,7 @@ Description=3DManage MD Reshape on /dev/%I
+>>>>> DefaultDependencies=3Dno
+>>>>>=20
+>>>>> [Service]
+>>>>> -ExecStart=3DBINDIR/mdadm --grow --continue /dev/%I
+>>>>> +ExecStart=3DBINDIR/mdadm --grow --continue /dev/%i
+>>>>=20
+>>>> Do you know why this makes a difference?  I don't think it should.
+>>>> man systemd.unit says that "%i" is the "Instance name" while "%I" is t=
+he
+>>>> "Unescaped instance name".
+>>>>=20
+>>>> The Instance name here is something like "md0" so there is nothing to
+>>>> escape.
+>>>>=20
+>>>> I would rather not change it unless we know exactly why it is broken,
+>>>> and I don't find your explanation to be convincing.
+>>>>=20
+>>>=20
+>>> Exactly, you're correct, in this case, %i and %I are the same. The
+>>> root cause is the ExecStart part, all the path name should be
+>>> verified by systemd-escape=EF=BC=8Csuch as:
+>>> /sbin/mdadm should be corrected as sbin-mdadm, and /dev/%I should
+>>> be -dev-%I. Thus I'm sorry for this patch, I do agree with you not
+>>> to change it. And say sorry to Jes.
+>>>=20
+>>
+>> How about modifying this patch as:
+>>
+>> ExecStart=3D-sbin-mdadm --grow --continue -dev-%I
+>>
+>
+> Why do you think anything needs changing here?
+>
+> I have a tumbleweed install with the standard
+> mdadm-grow-continue@.server
+> file. i.e.
+>
+>   ExecStart=3D/sbin/mdadm --grow --continue /dev/%I=20
+>
+> I run
+>   strace -f -s 1000 -p 1 -o /tmp/strace
+>
+> in one window, then
+>
+>   systemctl start mdadm-grow-continue@md0.service
+>
+> in another.
+>
+> Then
+>
+>  grep execve /tmp/strace
+>
+> shows:
+>
+> 18680 execve("/sbin/mdadm", ["/sbin/mdadm", "--grow", "--continue", "/dev=
+/md0"], [/* 3 vars */] <unfinished ...>
+>
+> which shows that mdadm is being correctly.
+>
+> There is nothing to fix here that I can see.
 
-I'll resend tomorrow morning, in the meantime the git url below
-works.
+Unless I see some convincing arguments, I am going to revert this
+patch.
 
-On Wed, Apr 05, 2017 at 04:21:38PM +0200, Christoph Hellwig wrote:
-> This series makes REQ_OP_WRITE_ZEROES the only zeroing offload
-> supported by the block layer, and switches existing implementations
-> of REQ_OP_DISCARD that correctly set discard_zeroes_data to it,
-> removes incorrect discard_zeroes_data, and also switches WRITE SAME
-> based zeroing in SCSI to this new method.
-> 
-> The series is against the block for-next tree.
-> 
-> A git tree is also avaiable at:
-> 
->     git://git.infradead.org/users/hch/block.git discard-rework.2
-> 
-> Gitweb:
-> 
->     http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/discard-rework.2
-> 
-> Changes since V2:
->  - various spelling fixes
->  - various reviews captured
->  - two new patches from Martin at the end
----end quoted text---
+Jes
