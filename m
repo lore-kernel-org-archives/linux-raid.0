@@ -1,81 +1,67 @@
-From: <een@zmva.hu>
-Subject: 20047 linux-raid
-Date: Wed, 05 Apr 2017 02:50:35 -0000
-Message-ID: <149136063583.14370.8194105250411864053@wateen.net>
-Reply-To: <een@zmva.hu>
+From: Guoqing Jiang <jgq516@gmail.com>
+Subject: Re: md-cluster Oops 4.9.13
+Date: Wed, 5 Apr 2017 11:01:32 +0800
+Message-ID: <58E45E0C.6030705@gmail.com>
+References: <CAHkw+Lcr1+sWsQPK_ijfTHwG+zxRYT+iNhWGdpYTNxVuQi8TOw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="05452250.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: attachment
+In-Reply-To: <CAHkw+Lcr1+sWsQPK_ijfTHwG+zxRYT+iNhWGdpYTNxVuQi8TOw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Marc Smith <marc.smith@mcc.edu>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-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
+
+
+On 04/04/2017 10:06 PM, Marc Smith wrote:
+> Hi,
+>
+> I encountered an oops this morning when stopping a MD array
+> (md-cluster)... there were 4 md-cluster array started, and they were
+> in the middle of a rebuild. I stopped the first one and then stopped
+> the second one immediately after and got the oops, here is a
+> transcript of what was on my terminal session:
+>
+> [root@brimstone-1b ~]# mdadm --stop /dev/md/array1
+> mdadm: stopped /dev/md/array1
+> [root@brimstone-1b ~]# mdadm --stop /dev/md/array2
+>
+> Message from syslogd@brimstone-1b at Tue Apr  4 09:54:40 2017 ...
+> brimstone-1b kernel: [649162.174685] BUG: unable to handle kernel NULL
+> pointer dereference at 0000000000000098
+>
+> Using Linux 4.9.13 and here is the output from the kernel messages:
+>
+> --snip--
+> [649158.014731] dlm: 5b3b8f94-7875-b323-5bb8-29fa6866f4a8: leaving the
+> lockspace group...
+> [649158.015233] dlm: 5b3b8f94-7875-b323-5bb8-29fa6866f4a8: group event done 0 0
+> [649158.015303] dlm: 5b3b8f94-7875-b323-5bb8-29fa6866f4a8:
+> release_lockspace final free
+> [649158.015331] md: unbind<nvme0n1p1>
+> [649158.042540] md: export_rdev(nvme0n1p1)
+> [649158.042546] md: unbind<nvme1n1p1>
+> [649158.048501] md: export_rdev(nvme1n1p1)
+> [649161.759022] md127: detected capacity change from 1000068874240 to 0
+> [649161.759025] md: md127 stopped.
+> [649162.174685] BUG: unable to handle kernel NULL pointer dereference
+> at 0000000000000098
+> [649162.174727] IP: [<ffffffff81868b40>] recv_daemon+0x1e9/0x373
+
+Looks like the recv_daemon is still running after stop array, commit
+48df498 "md: move bitmap_destroy to the beginning of __md_stop"
+ensure it won't happen.
+
+
+[snip]
+
+> Perhaps this is already fixed in later versions? Let me know if you
+> need any additional information.
+
+Could you pls try with the latest version? Please let me know if you
+still see it, thanks.
+
+Regards,
+Guoqing
+
