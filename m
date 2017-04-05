@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [md PATCH 02/10] md/raid1: simplify alloc_behind_master_bio()
+Subject: [md PATCH 03/10] Revert "block: introduce bio_copy_data_partial"
 Date: Wed, 05 Apr 2017 14:05:50 +1000
-Message-ID: <149136515050.25893.5149255393971038064.stgit@noble>
+Message-ID: <149136515062.25893.13013004998471117345.stgit@noble>
 References: <149136485390.25893.1797855041954158826.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,53 +13,114 @@ To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Now that we always always pass an offset of 0 and a size
-that matches the bio to alloc_behind_master_bio(),
-we can remove the offset/size args and simplify the code.
-
-We could probably remove bio_copy_data_partial() too.
+This reverts commit 6f8802852f7e58a12177a86179803b9efaad98e2.
+bio_copy_data_partial() is no longer needed.
 
 Signed-off-by: NeilBrown <neilb@suse.com>
 ---
- drivers/md/raid1.c |   11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
+ block/bio.c         |   60 +++++++++++----------------------------------------
+ include/linux/bio.h |    2 --
+ 2 files changed, 13 insertions(+), 49 deletions(-)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 83853f65462a..06a13010f1b7 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1091,9 +1091,9 @@ static void unfreeze_array(struct r1conf *conf)
+diff --git a/block/bio.c b/block/bio.c
+index 036435995c55..12c2837c4277 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -990,8 +990,19 @@ int bio_alloc_pages(struct bio *bio, gfp_t gfp_mask)
  }
+ EXPORT_SYMBOL(bio_alloc_pages);
  
- static struct bio *alloc_behind_master_bio(struct r1bio *r1_bio,
--					   struct bio *bio,
--					   int offset, int size)
-+					   struct bio *bio)
+-static void __bio_copy_data(struct bio *dst, struct bio *src,
+-			    int offset, int size)
++/**
++ * bio_copy_data - copy contents of data buffers from one chain of bios to
++ * another
++ * @src: source bio list
++ * @dst: destination bio list
++ *
++ * If @src and @dst are single bios, bi_next must be NULL - otherwise, treats
++ * @src and @dst as linked lists of bios.
++ *
++ * Stops when it reaches the end of either @src or @dst - that is, copies
++ * min(src->bi_size, dst->bi_size) bytes (or the equivalent for lists of bios).
++ */
++void bio_copy_data(struct bio *dst, struct bio *src)
  {
-+	int size = bio->bi_iter.bi_size;
- 	unsigned vcnt = (size + PAGE_SIZE - 1) >> PAGE_SHIFT;
- 	int i = 0;
- 	struct bio *behind_bio = NULL;
-@@ -1120,8 +1120,7 @@ static struct bio *alloc_behind_master_bio(struct r1bio *r1_bio,
- 		i++;
+ 	struct bvec_iter src_iter, dst_iter;
+ 	struct bio_vec src_bv, dst_bv;
+@@ -1001,12 +1012,6 @@ static void __bio_copy_data(struct bio *dst, struct bio *src,
+ 	src_iter = src->bi_iter;
+ 	dst_iter = dst->bi_iter;
+ 
+-	/* for supporting partial copy */
+-	if (offset || size != src->bi_iter.bi_size) {
+-		bio_advance_iter(src, &src_iter, offset);
+-		src_iter.bi_size = size;
+-	}
+-
+ 	while (1) {
+ 		if (!src_iter.bi_size) {
+ 			src = src->bi_next;
+@@ -1043,47 +1048,8 @@ static void __bio_copy_data(struct bio *dst, struct bio *src,
+ 		bio_advance_iter(dst, &dst_iter, bytes);
  	}
+ }
+-
+-/**
+- * bio_copy_data - copy contents of data buffers from one chain of bios to
+- * another
+- * @src: source bio list
+- * @dst: destination bio list
+- *
+- * If @src and @dst are single bios, bi_next must be NULL - otherwise, treats
+- * @src and @dst as linked lists of bios.
+- *
+- * Stops when it reaches the end of either @src or @dst - that is, copies
+- * min(src->bi_size, dst->bi_size) bytes (or the equivalent for lists of bios).
+- */
+-void bio_copy_data(struct bio *dst, struct bio *src)
+-{
+-	__bio_copy_data(dst, src, 0, src->bi_iter.bi_size);
+-}
+ EXPORT_SYMBOL(bio_copy_data);
  
--	bio_copy_data_partial(behind_bio, bio, offset,
--			      behind_bio->bi_iter.bi_size);
-+	bio_copy_data(behind_bio, bio);
- skip_copy:
- 	r1_bio->behind_master_bio = behind_bio;;
- 	set_bit(R1BIO_BehindIO, &r1_bio->state);
-@@ -1464,9 +1463,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 			    (atomic_read(&bitmap->behind_writes)
- 			     < mddev->bitmap_info.max_write_behind) &&
- 			    !waitqueue_active(&bitmap->behind_wait)) {
--				mbio = alloc_behind_master_bio(r1_bio, bio,
--							       0,
--							       max_sectors << 9);
-+				mbio = alloc_behind_master_bio(r1_bio, bio);
- 			}
+-/**
+- * bio_copy_data_partial - copy partial contents of data buffers from one
+- * chain of bios to another
+- * @dst: destination bio list
+- * @src: source bio list
+- * @offset: starting copy from the offset
+- * @size: how many bytes to copy
+- *
+- * If @src and @dst are single bios, bi_next must be NULL - otherwise, treats
+- * @src and @dst as linked lists of bios.
+- *
+- * Stops when it reaches the end of either @src or @dst - that is, copies
+- * min(src->bi_size, dst->bi_size) bytes (or the equivalent for lists of bios).
+- */
+-void bio_copy_data_partial(struct bio *dst, struct bio *src,
+-			   int offset, int size)
+-{
+-	__bio_copy_data(dst, src, offset, size);
+-
+-}
+-EXPORT_SYMBOL(bio_copy_data_partial);
+-
+ struct bio_map_data {
+ 	int is_our_pages;
+ 	struct iov_iter iter;
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index fafef6343d1b..7cf8a6c70a3f 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -461,8 +461,6 @@ static inline void bio_flush_dcache_pages(struct bio *bi)
+ #endif
  
- 			bitmap_startwrite(bitmap, r1_bio->sector,
+ extern void bio_copy_data(struct bio *dst, struct bio *src);
+-extern void bio_copy_data_partial(struct bio *dst, struct bio *src,
+-				  int offset, int size);
+ extern int bio_alloc_pages(struct bio *bio, gfp_t gfp);
+ extern void bio_free_pages(struct bio *bio);
+ 
 
 
