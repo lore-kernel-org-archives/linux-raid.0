@@ -1,66 +1,88 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: mdadm - dmraid
-Date: Thu, 06 Apr 2017 16:00:46 +1000
-Message-ID: <87a87u13e9.fsf@notabene.neil.brown.name>
-References: <e8eb3b62-3b9e-e99f-f8c5-d92e176b9c0f@gmx.de>
+From: Daniel Axtens <dja@axtens.net>
+Subject: Re: [v2] raid6/altivec: Add vpermxor implementation for raid6 Q syndrome
+Date: Thu, 06 Apr 2017 16:13:25 +1000
+Message-ID: <87r316hxmi.fsf@possimpible.ozlabs.ibm.com>
+References: <20170406053816.5239-1-matthew.brown.dev@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e8eb3b62-3b9e-e99f-f8c5-d92e176b9c0f@gmx.de>
+In-Reply-To: <20170406053816.5239-1-matthew.brown.dev@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: gmx <hj.foellmer@gmx.de>, linux-raid@vger.kernel.org
+To: Matt Brown <matthew.brown.dev@gmail.com>, linuxppc-dev@lists.ozlabs.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hi Matt,
 
-On Wed, Apr 05 2017, gmx wrote:
-
-> there exist a problem between packages dmraid and mdadm
-
-What problem?
+Thanks for answering my questions and doing those fixes.
 
 
+> Bugs fixed:
+> 	- A small bug in pq.h regarding a missing and mismatched
+> 	  ifdef statement
+> 	- Fixed test/Makefile to correctly build test on ppc
 >
-> incompatibility between both is known. but both packages can be=20
-> installed simultan without message
 
-What incompatibility?  I don't know of one.
-Please be more specific.
+I think this commit should be labelled:
+Fixes: 4f8c55c5ad49 ("lib/raid6: build proper files on corresponding arch")
 
-NeilBrown
+mpe can probably add that when he merges - no need to do a new version :)
 
+>  else
+> -        HAS_ALTIVEC := $(shell printf '\#include <altivec.h>\nvector int a;\n' |\
+> -                         gcc -c -x c - >&/dev/null && \
+> -                         rm ./-.o && echo yes)
+> -        ifeq ($(HAS_ALTIVEC),yes)
+> -                OBJS += altivec1.o altivec2.o altivec4.o altivec8.o
+> +	 HAS_ALTIVEC := $(shell printf '\#include <altivec.h>\nvector int a;\n' |\
+> +			 gcc -c -x c - >/dev/null && rm ./-.o && echo yes)
+> +	 ifeq ($(HAS_ALTIVEC),yes)
+> +		CFLAGS += -I../../../arch/powerpc/include
+> +		CFLAGS += -DCONFIG_ALTIVEC
+> +		OBJS += altivec1.o altivec2.o altivec4.o altivec8.o \
+> +			vpermxor1.o vpermxor2.o vpermxor4.o vpermxor8.o
+>          endif
+>  endif
+Looks like vim has replaced spaces with tabs here. Not sure how much we
+care...
 
+>  ifeq ($(ARCH),tilegx)
+> @@ -97,6 +99,18 @@ altivec4.c: altivec.uc ../unroll.awk
+>  altivec8.c: altivec.uc ../unroll.awk
+>  	$(AWK) ../unroll.awk -vN=8 < altivec.uc > $@
 >
-> (result: problems - perhaps there are no problems in both packages but=20
-> together - even no kernel-problem)
->
-> greetings hj
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+... especially seeing as tabs are already used in the file here!
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+> +vpermxor1.c: vpermxor.uc ../unroll.awk
+> +	$(AWK) ../unroll.awk -vN=1 < vpermxor.uc > $@
+> +
+> +vpermxor2.c: vpermxor.uc ../unroll.awk
+> +	$(AWK) ../unroll.awk -vN=2 < vpermxor.uc > $@
+> +
+> +vpermxor4.c: vpermxor.uc ../unroll.awk
+> +	$(AWK) ../unroll.awk -vN=4 < vpermxor.uc > $@
+> +
+> +vpermxor8.c: vpermxor.uc ../unroll.awk
+> +	$(AWK) ../unroll.awk -vN=8 < vpermxor.uc > $@
+> +
+>  int1.c: int.uc ../unroll.awk
+>  	$(AWK) ../unroll.awk -vN=1 < int.uc > $@
+>  
+> +			/*Q syndrome */
+> +	/* Check if CPU has both altivec and the vpermxor instruction*/
+Very trivial nit: for future patches please make sure you have spaces
+between the beginning/end of a comment and the comment.
 
------BEGIN PGP SIGNATURE-----
+> +# ifdef __KERNEL__
+> +	return (cpu_has_feature(CONFIG_ALTIVEC) &&
+> +		cpu_has_feature(CPU_FTR_ARCH_207S));
+I think CPU_FTR_ARCH_207S implies Altivec? Again, not a real problem,
+I don't think it's really worth doing a respin for any of these, so:
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljl2Y4ACgkQOeye3VZi
-gbkWFBAAnOqrFA0xFqcyq1hfnaInjH27/IBl0oL/oU5tZTjT2gb+Fc8PB7TU1CTN
-d88yW1WuEMxsXQLCRhWPqjvw54/QHIv1oPkUKZlu6CXDltMKmD3kIRadkbh4TrCC
-3imAilexKsxBzJ9t59SOuPTCpaQZ38L17A2ZNGfz16pe5XX8ydRn31qQ4KFl6rsw
-A9fXV5hIHAhYB5AZ2ApkgOXNd2wRokdXhodzhAK2lUYjro7lS8mJ6OUBmL9lG7gb
-1YYgcjBZ3Ypa3z1iFef1yFfx6i90rpp66BWTQywUthVk/fwXS6r/r6TteL7R8rDN
-HB8QOeBv8IjE6yNOtUEWiZ9jyF+Zsah1qWNsgSWa6CbO+DH42n7lBjPOnFY76hOV
-jc8k6XA9B3ANap/Horg0QaXFA7QFkaN7sszUFcvXxy8swDZ7hleEmIkBsTZjMpXe
-rADOs6UJXzVfoTt9lbaxK97ZLUTgqjKtictuGhH0mloa3WwgUL6oDXjV04YaCHt/
-8dcUhyYFIG94zVnw3zsvjmUlhVjwdGyaL2U0l79w/Frg2vVV1BXX3FOVK0OEwLfG
-kai70uQpfelZTOqMuQdpurtM4h/tImZvilCOUvjbWHL9Ts4jGFw9/OmmzVdri8zC
-5G/BvtG/T0KgUaQ0NHLubbNLbzMkCxFOe9iq9ywY4rAmauo+OzE=
-=dh+H
------END PGP SIGNATURE-----
---=-=-=--
+Reviewed-by: Daniel Axtens <dja@axtens.net>
+
+Thanks for making Power faster!
+
+Regards,
+Daniel
+
