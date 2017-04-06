@@ -1,59 +1,46 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [md PATCH 08/10] md/raid5: make chunk_aligned_read() split bios more cleanly.
-Date: Thu, 06 Apr 2017 10:13:53 +1000
-Message-ID: <87tw62gzpa.fsf@notabene.neil.brown.name>
-References: <149136485390.25893.1797855041954158826.stgit@noble> <149136515124.25893.6650408840570246136.stgit@noble>
-Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: [PATCH V2] md/raid10: reset the 'first' at the end of loop
+Date: Thu,  6 Apr 2017 09:12:18 +0800
+Message-ID: <1491441138-16155-1-git-send-email-gqjiang@suse.com>
+References: <1491017900-8150-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <149136515124.25893.6650408840570246136.stgit@noble>
+In-Reply-To: <1491017900-8150-1-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: shli@fb.com, neilb@suse.com
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+We need to set "first = 0' at the end of rdev_for_each
+loop, so we can get the array's min_offset_diff correctly
+otherwise min_offset_diff just means the last rdev's
+offset diff.
 
+Suggested-by: NeilBrown <neilb@suse.com>
+Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+---
+ drivers/md/raid10.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Missed a split->raid_bio conversion here
-
-Signed-off-by: NeilBrown <neilb@suse.com>
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index c523fd69a7bc..683fbf7f22a8 100644
-=2D-- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5247,7 +5247,7 @@ static struct bio *chunk_aligned_read(struct mddev *m=
-ddev, struct bio *raid_bio)
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 0f13d57..e055ec9 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -3769,6 +3769,7 @@ static int raid10_run(struct mddev *mddev)
+ 
+ 		if (blk_queue_discard(bdev_get_queue(rdev->bdev)))
+ 			discard_supported = true;
++		first = 0;
  	}
-=20
- 	if (!raid5_read_one_chunk(mddev, raid_bio))
-=2D		return split;
-+		return raid_bio;
-=20
- 	return NULL;
- }
+ 
+ 	if (mddev->queue) {
+@@ -4172,6 +4173,7 @@ static int raid10_start_reshape(struct mddev *mddev)
+ 			if (first || diff < min_offset_diff)
+ 				min_offset_diff = diff;
+ 		}
++		first = 0;
+ 	}
+ 
+ 	if (max(before_length, after_length) > min_offset_diff)
+-- 
+2.6.6
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljliEIACgkQOeye3VZi
-gbkFzg//QfezRyyUkrmia5+ZgG/b4gOn+3D9qQX0b+2XBZdF8VG7s3cPVzecFuyA
-K5VbBA9H1Z50XRhQltGwxP6NKdNwU0g1aiBuevTWuhbAFfDzRmTjhUvi+YuWQUGk
-64WoBzrzQ0upgvXJCYqGhACsrCtsQbx7g2AVv8JVNdX6nwzoJqIgqrFaNOvmkrmr
-PG05wdiZWCGnsqOfTMbgdr6o2WDLWuF5pYrBP7fgY5Or/0JrUCOxpLz+bbY8gf5D
-350FRa5e6cdsIh7c60qChMlCi1m1auwk0tmipAUmLn+OEkD2sux5Z8dz9SGyDNPs
-18K8RG0W/AAeWNH5/CzzPrUeUi7ri/jp1UuvugM/8FQyQRWY53RMLiH7Jruqeisx
-PUFVNGM/ErFIsRlQzNjGQngjAGCbfrNjGtXXytPXD60opg+4O5Fe1fdsy7xJvMk2
-tdbFGrxHXLuY67mR1BqGc7Ql4NaMlsk8jInslIQAdfla6E7MuBY6uBdy7uCGt14y
-8ru/qU2bdPZbjIzspQvFH93QNhGn6zzhmjGapgPwwSsYCuPUBOLjHDQ/1JG3RC4i
-u1uWxusR01t5KBLpjJkG3svU5Modoo9L1HPrbCGb4qqZ0ZpSoYzc5h50m6ZDoidX
-SGkDaQro51sAY02XnWuU0XtvS7f1wnkqgd5PsHo89+tj9V0VCFs=
-=LWe+
------END PGP SIGNATURE-----
---=-=-=--
