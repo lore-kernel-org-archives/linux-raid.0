@@ -1,106 +1,140 @@
-From: Zhilong Liu <zlliu@suse.com>
-Subject: Re: Degraded RAID reshaping
-Date: Fri, 7 Apr 2017 17:06:45 +0800
-Message-ID: <e9685e3a-ae79-f00e-50b4-c46c551343a4@suse.com>
-References: <7C33B6CD-B871-4D42-86F6-D80BDDC6D639@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7C33B6CD-B871-4D42-86F6-D80BDDC6D639@gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Victor Helmholtz <victor.helmholtz@gmail.com>, linux-raid@vger.kernel.org
+From: Binoy Jayan <binoy.jayan@linaro.org>
+Subject: [RFC PATCH v5] IV Generation algorithms for dm-crypt
+Date: Fri,  7 Apr 2017 16:17:43 +0530
+Message-ID: <1491562064-23591-1-git-send-email-binoy.jayan@linaro.org>
+Return-path: <linux-crypto-owner@vger.kernel.org>
+Sender: linux-crypto-owner@vger.kernel.org
+To: Oded <oded.golombek@arm.com>, Ofir <Ofir.Drang@arm.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, linux-crypto@vger.kernel.org, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Rajendra <rnayak@codeaurora.org>, Milan Broz <gmazyland@gmail.com>, Gilad <gilad@benyossef.com>, Binoy Jayan <binoy.jayan@linaro.org>
 List-Id: linux-raid.ids
 
 
+===============================================================================
+dm-crypt optimization for larger block sizes
+===============================================================================
 
-On 04/07/2017 04:38 PM, Victor Helmholtz wrote:
-> Hi,
->
-> I have problem with reshaping a RAID6. I had a drive failure in 8 disk RAID6, and since I
-> don't need that much space anymore I decided to shrink array instead of buying replacement
-> disk. I executed following commands:
->
-> e2fsck -f /dev/md2
-> mdadm --grow -n7 /dev/md2
-> mdadm: this change will reduce the size of the array.
->         use --grow --array-size first to truncate array.
->         e.g. mdadm --grow /dev/md2 --array-size 14650664960
-> resize2fs /dev/md2 3500000000
-> mdadm /dev/md2 --grow --array-size=14650664960
-> e2fsck -f /dev/md2
-> mdadm --grow -n7 /dev/md2 --backup-file /root/mdadm-md2.backup
->
->
-> There was no errors and 'cat /proc/mdstat' reports reshape in progress:
->
-> Personalities : [raid6] [raid5] [raid4]
-> md2 : active raid6 sde1[1] sdn1[8] sdb1[9] sdr1[11] sdp1[10] sdl1[4] sdi1[3]
->        14650664960 blocks super 1.2 level 6, 512k chunk, algorithm 2 [7/6] [_UUUUUU]
->        [>....................]  reshape =  0.0% (1/2930132992) finish=9641968871.8min speed=0K/sec
->        bitmap: 22/22 pages [88KB], 65536KB chunk
->
-> unused devices: <none>
->
->
-> The problem is that there was no progress for more than an hour, the reshaping has stopped
-> at the fist chunk. Is this a bug or is it not possible to reshape degraded RAID? What
-> shall I do with the array, can I abort the reshape or is it going to reshape eventually?
->
-> Output of "mdadm --detail /dev/md2":
-> /dev/md2:
->          Version : 1.2
->    Creation Time : Sun Oct 19 22:10:51 2014
->       Raid Level : raid6
->       Array Size : 14650664960 (13971.96 GiB 15002.28 GB)
->    Used Dev Size : 2930132992 (2794.39 GiB 3000.46 GB)
->     Raid Devices : 7
->    Total Devices : 7
->      Persistence : Superblock is persistent
->
->    Intent Bitmap : Internal
->
->      Update Time : Fri Apr  7 08:38:29 2017
->            State : clean, degraded, reshaping
->   Active Devices : 7
-> Working Devices : 7
->   Failed Devices : 0
->    Spare Devices : 0
->
->           Layout : left-symmetric
->       Chunk Size : 512K
->
->   Reshape Status : 0% complete
->    Delta Devices : -1, (8->7)
->
->             Name : borox:2  (local to host borox)
->             UUID : 216515ea:4a08e3b7:022786cd:534b5f0f
->           Events : 148046
->
->      Number   Major   Minor   RaidDevice State
->         0       0        0        0      removed
->         1       8       65        1      active sync   /dev/sde1
->         3       8      129        2      active sync   /dev/sdi1
->         4       8      177        3      active sync   /dev/sdl1
->        10       8      241        4      active sync   /dev/sdp1
->        11      65       17        5      active sync   /dev/sdr1
->         9       8       17        6      active sync   /dev/sdb1
->
->         8       8      209        7      active sync   /dev/sdn1
+Currently, the iv generation algorithms are implemented in dm-crypt.c. The goal
+is to move these algorithms from the dm layer to the kernel crypto layer by
+implementing them as template ciphers so they can be used in relation with
+algorithms like aes, and with multiple modes like cbc, ecb etc. As part of this
+patchset, the iv-generation code is moved from the dm layer to the crypto layer
+and adapt the dm-layer to send a whole 'bio' (as defined in the block layer)
+at a time. Each bio contains the in memory representation of physically
+contiguous disk blocks. Since the bio itself may not be contiguous in main
+memory, the dm layer sets up a chained scatterlist of these blocks split into
+physically contiguous segments in memory so that DMA can be performed.
 
-please type "mdadm ---grow --continue /dev/md2" and recheck,
-check the "systemctl status mdadm-grow-continue@md2.service"
-check the "journalctl -xn", to make sure whether or not the instance
-of mdadm-grow-continue@.service has worked well.
+One challenge in doing so is that the IVs are generated based on a 512-byte
+sector number. This infact limits the block sizes to 512 bytes. But this should
+not be a problem if a hardware with iv generation support is used. The geniv
+itself splits the segments into sectors so it could choose the IV based on
+sector number. But it could be modelled in hardware effectively by not
+splitting up the segments in the bio.
 
-Thanks,
--Zhilong
-> Thanks,
-> Victor
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Another challenge faced is that dm-crypt has an option to use multiple keys.
+The key selection is done based on the sector number. If the whole bio is
+encrypted / decrypted with the same key, the encrypted volumes will not be
+compatible with the original dm-crypt [without the changes]. So, the key
+selection code is moved to crypto layer so the neighboring sectors are
+encrypted with a different key.
 
+The dm layer allocates space for iv. The hardware drivers can choose to make
+use of this space to generate their IVs sequentially or allocate it on their
+own. This can be moved to crypto layer too. Postponing this decision until
+the requirement to integrate milan's changes are clear.
+
+Interface to the crypto layer - include/crypto/geniv.h
+
+More information on test procedure can be found in v1.
+
+-------------------------------------------------------------------------------
+Peformance comparison [Tests on 1 GiB Volume] on db410c
+Test script:
+https://github.com/binoyjayan/utilities/blob/master/utils/dmtest
+dmtest -d <block device> -o out.log -s 1024 -r 384 -f 768
+-------------------------------------------------------------------------------
+
+This includes tests done with dd, fio and bonnie++ with the original dm-crypt
+and the proposed solution with algorithm 'essiv(cbc(aes-arm))' implemented
+in software. The hardware is yet to be evaluated. These tests are to make sure
+there is no drastic performance degradation on systems without hw crypto.
+
+Tests with dd [direct i/o]
+
+Sequential read            -0.134 %
+Sequential Write           +0.091 %
+
+Tests with fio [Aggregate bandwidth - aggrb]
+
+Random Read                +0.358 %
+Random Write               +0.010 %
+
+Tests with bonnie++ [768 MiB File, 384 MiB Ram]
+after mounting dm-crypt target as ext4
+
+Sequential o/p [per-char]  -2.876 %
+Sequential o/p [per-blk]   +0.992 %
+Sequential o/p [re-write]  +4.465 %
+
+Sequential i/p [per-char] -0.453 %
+Sequential i/p [per-blk]  -0.740 %
+
+Sequential create         -0.255 %
+Sequential delete         +0.042 %
+Random create             -0.007 %
+Random delete             +0.454 %
+
+NB: The '+' sign shows improvement and '-' shows degradation.
+    The tests were performed with minimal cpu load.
+    Tests with higher cpu load to be done
+
+Revisions:
+----------
+
+v1: https://patchwork.kernel.org/patch/9439175
+v2: https://patchwork.kernel.org/patch/9471923
+v3: https://lkml.org/lkml/2017/1/18/170
+v4: https://patchwork.kernel.org/patch/9559665
+
+v4 --> v5
+----------
+
+1. Fix for the multiple instance issue in /proc/crypto
+2. Few cosmetic changes including struct alignment
+3. Simplified 'struct geniv_req_info'
+
+v3 --> v4
+----------
+Fix for the bug reported by Gilad Ben-Yossef.
+The element '__ctx' in 'struct skcipher_request req' overflowed into the
+element 'struct scatterlist src' which immediately follows 'req' in
+'struct geniv_subreq' and corrupted src.
+
+v2 --> v3
+----------
+
+1. Moved iv algorithms in dm-crypt.c for control
+2. Key management code moved from dm layer to cryto layer
+   so that cipher instance selection can be made depending on key_index
+3. The revision v2 had scatterlist nodes created for every sector in the bio.
+   It is modified to create only once scatterlist node to reduce memory
+   foot print. Synchronous requests are processed sequentially. Asynchronous
+   requests are processed in parallel and is freed in the async callback.
+4. Changed allocation for sub-requests using mempool
+
+v1 --> v2
+----------
+
+1. dm-crypt changes to process larger block sizes (one segment in a bio)
+2. Incorporated changes w.r.t. comments from Herbert.
+
+Binoy Jayan (1):
+  crypto: Add IV generation algorithms
+
+ drivers/md/dm-crypt.c  | 1916 ++++++++++++++++++++++++++++++++++--------------
+ include/crypto/geniv.h |   47 ++
+ 2 files changed, 1424 insertions(+), 539 deletions(-)
+ create mode 100644 include/crypto/geniv.h
+
+-- 
+Binoy Jayan
