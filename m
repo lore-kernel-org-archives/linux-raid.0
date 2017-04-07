@@ -1,62 +1,81 @@
-From: Vinothkumar Raja <vinraja@cs.stonybrook.edu>
-Subject: [dm-devel] [PATCH] Fix for find_lowest_key in dm-btree.c
-Date: Thu,  6 Apr 2017 22:09:38 -0400
-Message-ID: <1491530978-6215-1-git-send-email-vinraja@cs.stonybrook.edu>
+From: Liuzhilong <zlliu@suse.de>
+Subject: Re: mdadm:compiled warning in mdadm.c:1974:29 treats as errors
+Date: Fri, 7 Apr 2017 11:53:23 +0800
+Message-ID: <e1096c87-1c91-93cb-25b0-5b82f65c19f6@suse.de>
+References: <F21EB93E-F788-4981-A8BD-7DA4AFC295F6@suse.com>
+ <wrfjd1cqeugb.fsf@gmail.com> <0492b02e-1c4d-02e7-a196-f15e8684e4f3@suse.com>
+ <a5f537c0-9b73-9a58-7566-0a242e0ff840@gmail.com>
+ <87r315yupy.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87r315yupy.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: agk@redhat.com, snitzer@redhat.com
-Cc: dm-devel@redhat.com, shli@kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, ezk@cs.stonybrook.edu, npanpalia@cs.stonybrook.edu, tarasov@vasily.name, Vinothkumar Raja <vinraja@cs.stonybrook.edu>, Erez Zadok <ezk@fsl.cs.sunysb.edu>
+To: NeilBrown <neilb@suse.com>, Jes Sorensen <jes.sorensen@gmail.com>, Liu Zhilong <zlliu@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-We are working on dm-dedup which is a device-mapper's dedup target that 
-provides transparent data deduplication of block devices. Every write 
-coming to a dm-dedup instance is deduplicated against previously written 
-data.  We’ve been working on this project for several years now. The 
-Github link for the same is https://github.com/dmdedup. Detailed design 
-and performance evaluation can be found in the following paper: 
-http://www.fsl.cs.stonybrook.edu/docs/ols-dmdedup/dmdedup-ols14.pdf.
 
-We are currently working on garbage collection for which we traverse our 
-btrees from lowest key to highest key. While using find_lowest_key and 
-find_highest_key, we noticed that find_lowest_key is giving incorrect 
-results. While the function find_key traverses the btree correctly for 
-finding the highest key, we found that there is an error in the way it 
-traverses the btree for retrieving the lowest key. The find_lowest_key 
-function fetches the first key of the rightmost block of the btree 
-instead of fetching the first key from the leftmost block. This patch 
-fixes the bug and gives us the correct result.  
 
-Signed-off-by: Erez Zadok <ezk@fsl.cs.sunysb.edu>
-Signed-off-by: Vinothkumar Raja <vinraja@cs.stonybrook.edu>
-Signed-off-by: Nidhi Panpalia <npanpalia@cs.stonybrook.edu>
+On 04/07/2017 07:36 AM, NeilBrown wrote:
+> On Thu, Apr 06 2017, Jes Sorensen wrote:
+>
+>> On 04/06/2017 04:21 AM, Liu Zhilong wrote:
+>>> hi,
+>>>
+>>> I found this compiling warning, and can reproduce on my Leap42.1,
+>>> Leap42.2 and SLES12 SP2 with v4.8.5 version of gcc.
+>>>
+>>> # gcc -v
+>>> Using built-in specs.
+>>> COLLECT_GCC=gcc
+>>> COLLECT_LTO_WRAPPER=/usr/lib64/gcc/x86_64-suse-linux/4.8/lto-wrapper
+>>> Target: x86_64-suse-linux
+>>> Configured with: ../configure --prefix=/usr --infodir=/usr/share/info
+>>> --mandir=/usr/share/man --libdir=/usr/lib64 --libexecdir=/usr/lib64
+>>> --enable-languages=c,c++,objc,fortran,obj-c++,java,ada
+>>> --enable-checking=release --with-gxx-include-dir=/usr/include/c++/4.8
+>>> --enable-ssp --disable-libssp --disable-plugin
+>>> --with-bugurl=http://bugs.opensuse.org/ --with-pkgversion='SUSE Linux'
+>>> --disable-libgcj --disable-libmudflap --with-slibdir=/lib64
+>>> --with-system-zlib --enable-__cxa_atexit
+>>> --enable-libstdcxx-allocator=new --disable-libstdcxx-pch
+>>> --enable-version-specific-runtime-libs --enable-linker-build-id
+>>> --enable-linux-futex --program-suffix=-4.8 --without-system-libunwind
+>>> --with-arch-32=i586 --with-tune=generic --build=x86_64-suse-linux
+>>> --host=x86_64-suse-linux
+>>> Thread model: posix
+>>> gcc version 4.8.5 (SUSE Linux)
+>>>
+>>> # make everything
+>>> ... ...
+>>> mdadm.c: In function ‘main’:
+>>> mdadm.c:1974:29: error: ‘mdfd’ may be used uninitialized in this
+>>> function [-Werror=maybe-uninitialized]
+>>>     if (dv->devname[0] == '/' || mdfd < 0)
+>>>                               ^
+>>> mdadm.c:1914:7: note: ‘mdfd’ was declared here
+>>>     int mdfd;
+>>>         ^
+>>> cc1: all warnings being treated as errors
+>>> Makefile:206: recipe for target 'mdadm.Os' failed
+>>> make: *** [mdadm.Os] Error 1
+>> Crappy compiler, you're running an old gcc. But sure, send me a patch
+>> that initializes mdfd to -1.
+> I would rather make the code more obviously correct.
+>
+> 		if (dv->devname[0] == '/' ||
+> 		    (mdfd = open_dev(dv->devname)) < 0)
+> 			mdfd = open_mddev(dv->devname, 1);
+>
+> well... it is more obvious to me.
 
----
- drivers/md/persistent-data/dm-btree.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+I also consider that it's better method for this compiling warning.
+And I can send this sample as a patch once jes agrees.
 
-diff --git a/drivers/md/persistent-data/dm-btree.c b/drivers/md/persistent-data/dm-btree.c
-index 02e2ee0..83121d1 100644
---- a/drivers/md/persistent-data/dm-btree.c
-+++ b/drivers/md/persistent-data/dm-btree.c
-@@ -902,9 +902,12 @@ static int find_key(struct ro_spine *s, dm_block_t block, bool find_highest,
- 		else
- 			*result_key = le64_to_cpu(ro_node(s)->keys[0]);
- 
--		if (next_block || flags & INTERNAL_NODE)
--			block = value64(ro_node(s), i);
--
-+		if (next_block || flags & INTERNAL_NODE) {
-+			if (find_highest)
-+				block = value64(ro_node(s), i);
-+			else
-+				block = value64(ro_node(s), 0);
-+		}
- 	} while (flags & INTERNAL_NODE);
- 
- 	if (next_block)
--- 
-1.8.3.1
+Thanks,
+-Zhilong
+
+> NeilBrown
 
