@@ -1,77 +1,35 @@
-From: Coly Li <colyli@suse.de>
-Subject: Re: Can we deprecate ioctl(RAID_VERSION)?
-Date: Fri, 7 Apr 2017 11:54:51 +0800
-Message-ID: <ff4b41cf-1ece-bac0-f39a-4361cad0354e@suse.de>
-References: <wrfjvaqid9ih.fsf@gmail.com> <wrfjr316d6f5.fsf@gmail.com>
- <87h922trit.fsf@notabene.neil.brown.name>
- <070d7f50-c8f0-d5df-89ed-adb8b7582d8a@gmail.com>
- <7f1cdca1-2781-d6da-265c-6a51061b3da0@suse.de>
- <0cdb9fe9-0eea-3c4f-af93-5894d04d680f@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <0cdb9fe9-0eea-3c4f-af93-5894d04d680f@gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <jes.sorensen@gmail.com>, NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, kernel-team@fb.com
+From: lixiubo@cmss.chinamobile.com
+Subject: [PATCH] bcache: Keep the labels the same in cache dev and cache set.
+Date: Fri,  7 Apr 2017 14:26:22 +0800
+Message-ID: <1491546382-17142-1-git-send-email-lixiubo@cmss.chinamobile.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: kent.overstreet@gmail.com
+Cc: inux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Xiubo Li <lixiubo@cmss.chinamobile.com>
 List-Id: linux-raid.ids
 
-On 2017/4/7 上午2:14, Jes Sorensen wrote:
-> On 04/06/2017 02:10 PM, Coly Li wrote:
->> On 2017/4/6 下午11:31, Jes Sorensen wrote:
->>> Neil,
->>>
->>> I see, thanks for explaining.
->>>
->>> The goal is to eventually get out of the ioctl() business and get to a
->>> state where we can do everything via sysfs/configfs. Right now we have a
->>> big mix between ioctl and sysfs where neither interface does everything.
->>> The recent issues with PPL (I think it was) showed that we had to add
->>> more ioctl support because the interfaces needed to do it for sysfs
->>> weren't quite there. My long term goal is to get that situation improved
->>> so we can avoid adding anymore ioctl interfaces and eventually allow for
->>> distros to build mdadm with ioctl support disabled. We had a discussion
->>> at LSF/MM in Boston about this (Hannes, Shaohua, Song, and myself).
->>>
->>> Reading the code I found it confusing that it was so tied to the patch
->>> level, but didn't do anything with the version numbers. At least
->>> intuitively if I bumped the version number, I would reset the patchlevel
->>> which would break things.
->>>
->>> I think it's fair to draw a line in the sand and say that mdadm-4.1+
->>> will not support kernels older than 2.6.15. I am open to the kernel
->>> version we pick here, but I would like to start deprecating some of the
->>> really old code. I have patches that does this in my tree, but I need to
->>> add a check for kernel version > 2.6.15. I am not aware what SuSE's
->>> enterprise kernel versions look like, but checking RHEL/CentOS RHEL5 was
->>> 2.6.18, while RHEL4 was 2.6.9 - and RHEL4 has been unsupported for quite
->>> a while. At least for RHEL/CentOS 2.6.15 as the line in the sand seems
->>> fine.
->>>
->>> For the kernel to expose features to userland in the future, I would
->>> prefer to go with a feature-flag style interface exposed via sysfs. That
->>> way a distro could enable one feature, but not the other in their kernel
->>> without having to worry about actual version numbers.
->>
->> BTW, I'd like to take on the kernel side stuffs.
->> IMHO, it would be better that we also set a timeline, after the
->> timeline, we should add new interface via configfs, and keep all legancy
->> ioctl implementation before this timeline.
->>
->> Coly
-> 
-> A volunteer! A volunteer!
-> 
-> I don't think we need to set a firm timeline for removing code from the
-> kernel at this point. What we can do is implement the new interfaces via
-> sysfs/configfs, and then make ioctl support a config option. Down the
-> line it will be evident if/when we can rip out the old code, but I see
-> that being years away.
+From: Xiubo Li <lixiubo@cmss.chinamobile.com>
 
-Not removing code, just after a timeline, new patch which adding new
-interface should go into configfs.
-I start to look into this now, hope to compose a first version patch set
-for comments in not too long time.
+Since the unusual characters from sysfs attributes have been stript
+for dc superblock label, so should here.
 
-Coly
+Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
+---
+ drivers/md/bcache/sysfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/md/bcache/sysfs.c b/drivers/md/bcache/sysfs.c
+index f90f136..d449f37 100644
+--- a/drivers/md/bcache/sysfs.c
++++ b/drivers/md/bcache/sysfs.c
+@@ -249,7 +249,7 @@
+ 		bch_write_bdev_super(dc, NULL);
+ 		if (dc->disk.c) {
+ 			memcpy(dc->disk.c->uuids[dc->disk.id].label,
+-			       buf, SB_LABEL_SIZE);
++			       dc->sb.label, strlen(dc->sb.label));
+ 			bch_uuid_write(dc->disk.c);
+ 		}
+ 		env = kzalloc(sizeof(struct kobj_uevent_env), GFP_KERNEL);
+-- 
+1.8.3.1
