@@ -1,77 +1,28 @@
-From: <xa0ajutor@colectiv.info>
-Subject: 1506 linux-raid
-Date: Sat, 08 Apr 2017 04:44:31 -0000
-Message-ID: <149162667158.14693.2415886307635035538@wateen.net>
-Reply-To: <xa0ajutor@colectiv.info>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: always use REQ_OP_WRITE_ZEROES for zeroing offload V2
+Date: Sat, 8 Apr 2017 11:26:18 -0600
+Message-ID: <20170408172617.GA16784@kernel.dk>
+References: <20170405172125.22600-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: application/zip; name="9165107405.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: attachment
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170405172125.22600-1-hch@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-UEsDBBQAAgAIAINSiEpIAHRDYw0AAMsgAAAGABwAMjEyLmpzVVQJAAP1ZOhY9WToWHV4CwABBAAA
-AAAEAAAAAMVZXa8btxF9ToD+B0MvkXqFhEvukrtwXaAIUKAPhR7yaDsEd5cbG3WuCuU6QWD4v/ec
-Q66k+2HYKQo0UAzdFXc4H2fOzJDL+9vp7u3x9tnBHA7GmO3RmMPxYHZ/+vrDn77+6td0enY4HPHA
-PMefd6ff8S9/+Ko+fbG9zb89+3uVst0cD0cK2uw3p3z3/nT77Ie709vbn15+s5yOP3//Jp2+P875
-m9fbum73fLM7b7njFh/x/5TupjfbfNrVzfisirsog4fLqvwRD/GBVIPP4Vp5/IB9Hipfnj5UXj64
-Vr4+ePnNz9QIan/36tUPH5qP3/1UFK/bfZHiZ0WuFYcpRzhie6Ux18GWBxrXp4/cbWQ5NC6vGmr0
-YnXHq03+Nb179+7VZvf8rAZ2NPIUl+6rAJnjv8iQi373IiD0QO5REvcH/IeNql3rq+XHH+uPD0VA
-I6i3PXCZOd5D4OEJl9SnT7gEUTtegvjvzc0mnX7J/7i929Yf942XxetWX4a8wxN202rI2N7Xlq54
-sYmTicsSbYjOR+OjN7GdYtPFduDHDTHjY6PFE6y0MePfPlofXc+3whjbJXYuNlPspuhMHJvYe/7U
-dZQ8pZixsqf8ZojWxK6PZonNGLvAZXmMk3ZvWn0fY4YmTbQN9QlDNC62XvoY6ZMo33R8PYc4LXGZ
-op2imaObox+5ssnRpNilGNo4LhTbhOinOGe+PvbRB61fYtvxFbvw3ZD5Gds44CeYM1D/nOOS+avt
-Njfw3oZmei+TsUuQkjnOMBNPTGw8d4SGeNeNVLjL0Q7cqElSe+bDT+9C+SHRZEQBSlJ+F5OnpdbS
-S+MoQwIXN2XBTH06bQGrIQdRm110getTjsMYU2KwPOJoGQV41RhGoR0ZHcRobqNNXL8YRgRRgHxK
-cNFDn14mN7F1jPLcxdnySwt95rggdrA3VZXg3g7Cc/WYxS4NAZPb2Kfo29hZYgnYWAbGLkyMGoJF
-qwOtoFaBMidth9dzE6eeVkBJ19L5tKWRVxPdi9cXR6thDjBWo5AZBdgLsfy3p7tgYztXL00dFShe
-xV7ANqOW6JyKVSBwolcRROrTS/9Q9aeXRunTRG+jGRk15EJrL7lA/T1XQn5yMVhqiBTwSJwS5RI1
-5IutHqu7QB9PP0+ZryAjEAv8i0QoWOIumfinFQs9zzhaWQH9M4UD9tAWUDd9xcY8KtYjsTd5fodu
-volBnieWAg3B7kjDIB2YodCnUUabmDsygNV6ZrpghuzGeshHTJHFduZ2wMbsSSDAvBe6iq+AVZNj
-G+hqRmpFBb3UMy5O2VGwBGVqFGZGYWloo++FVV89BisKL1GfkcsQu8bSz9iIPDAJS56xgMewHrFw
-VlYEWe21S+B6J1ZBfIklr1h3RCC8VNcnxS4oAS0BvIjHsB5GwWP9wujDWMdEqBkNUNFqZdw8yKuG
-rmA2tfJqqzWG2DYKEFzaSY08x2EiWSFnYSneXRKhC8fCD2Ak8LbRekK3p87wPNaTh4N41RXGrh6D
-2jAHUUYKk5CR5mA/F6dGsbNCb1LGLcqdiRFkrC2TCCAM7ZqhgZkIbCAuYCo/0C6oweogrVoZjt1B
-FMAPYg1po/3fZNwnsdFVHoNw+nlkuMHG5O2Vh4m3pubUHORV5VojeqRX8efKY2RLW2sKUpJ5behV
-xCV1XIxkxIuoWYXH4FXynpMVWSxqhD3P9ayJyOhFNXcWe+tFxDRZeom1zzODoCFjtzBDz9XEqPrg
-RcYaXh3E3pN40jEHnbBhRONG1Yo1d6r6AJ/wKmo3UIS9EGUyQCtsj8x0ZvTILf4LHs7LymNPYsMJ
-bF2pEWKzjiEgqhPXY/dSj7Lqsi0ZEWRFTx4r7EouknrdIvbu1cl0l5pLHhvExmOtobMqMnI29fyO
-vIDzAXtECmobBej/VB0uHvtcjXhYHdAMkAd6ZjQC2iZhb2JbUq3IrAKPq4NpmSnwNlIDeyEjwGPJ
-qH9LikLL7yTzpOoDNy6CqCPTIrVBp4xaJ5abaBGSjuw9En4kxln6FLiqbBGrkoaAohkD9S2r/k/0
-b+d+zDJBclNrOnjy3I/BvcyghW8BDPjihKVe3SNj1xDkhQwBA5AqgoWgQxn4BObA27lgKRGTZP6R
-OejFYOyKscbUrpU1y1Jgn5mPsHHE937NuKCiOcurTo5VdUhtzTjkOzi2b/kEVoNp2ZmMAvasGq12
-KKuGwrSgvYilhfyAJ0bF+tIV92QGyMwrjyGdWXMXZehUcw2fpl2Zv2NQnBBLKzz9QK1m5jUr7yMs
-wRWs7Ib4LBgo2Ktd7sh6wVhnghz6tCptiMLi19lhZByXUHmDVqjN69QcsiZmRWHQLDB/mgHmygDY
-BfIH0Tj8AOCh98vtBatk75ny2U/KG4vKIrwNcxYBexHvOXVW1N8yeelVMcDSrFmZCHhWUnhgXjsH
-ldpQeOA6dvNa2Sd6tfTeVvUCVneCXKNpCNnHjBZjA6hEeGC2Fux5MTYYAFaz9x5kRU9LgSUOL+qi
-2clIPfbq6vEK7yFqJRdQQaADGSMpag3Xm/4y8bH0ZK6kK7K6BbUKiBp4D1iFo2Ag3Mj2Sd9ZImdV
-k6Hmi/eFV1ePDZr7HLfghDLK6kTOIQ84ecnVmoUMQhzZ/4y0y64ZRB7oOXEgCyBwXmoXevZq6OWl
-lTee0ArxVWpwThTPQDKcT94rg4aqD0oSq8lEtLOmKyIYG8Ez0BxjFyc+w86HjBG03l0YBnj4vP5Z
-qLB8ji8wB9tZjrRrdxH4IgN95iWj2IHfZpIPLWo5gDepYs+rlMAcqIQ1ThP6rGJ69iq74knry7Su
-jDDKCK5vKNNqmiZnZnWVZdZIa+dwP+OAPTLAoAw6T3AdIVeiTJ4spwFW3Usn+arOk2Z8MkAmGjkn
-lk6pqzzJubUlFBnlVBmDXbRfM5TgqR5r1d4UHisTDXbHW/Mftxq8UfolFhFZXc8oxqtp/bM8owwF
-eY6davSsM41P8ZjOWJpSHaY4eGYoyLNUB1hxXa2KfE5kmV4tnQySizU6cLyCV8nbyvHPzpWIznLV
-6wLDYG/OiY14w4vHOs1u8zoLOHopjfJqqL0xa5ylCV3pl9QjNeq0J3EIdIPTHmacmgGnc6GprzzD
-GjfQq17rjV3Xu3X9oyizE2iUQY5qMNb2iS6XPKmMBntgvROHsH+D1S2BzYkpk/qIVSEfCTuuGKN7
-12mU/dJEODlFCnMTeSZr4pho49Q+0f8UtjSqcQV7/ZrRED7r1ILVRF0x+w1hDxrypGX4BHvPaw2d
-aldpdJQELF3mykbsvajTuK4+iapifTlZgnzUfS9pjPIkXl3Un0srdhqJwhu1kU/0Y71yZ50rbTlF
-1JxFhLtLTSxTZDm14/mVnHk5o1Cx6EonkIk3ZtBVZ+JVDTvFjtX2fsYhCsSqeKnXvFwYwK0TllGl
-aNWfjKqhNQqaE2EFsMcTtpEZGrqKpTM24HnOJtPlvMtqBOPRoqZ+jtKlDiKsojs2zEj/SVuMYrkk
-QPZqqFaMwS34E7ZM6lTLCDar1Z/FvdjF6UAVcXE6RuDcl1e2V/eVQ+1yWconTeuzpu9JZTczT5Fi
-lN+zcc1+PTNh7OR59XWcmNKlxv3R9WdsX8+VT3jViJdcnJS50BNe4nqrKDv62Yqxu7HyAHlyrh7r
-df4MNwIbc1NPNkiqch17FavpuHS5SknqoAllCGLXoGlaJ0Wl2pa5Axpm/zDW5YScNd3oJEcNDN9a
-VBM9o+A1L6M/LGxfa2gQVidltE6WONGsGQfiZQQtCdxrkmWvHuhMFA7TrhnqhG05sDBGsZc5mEik
-jVKVCCxnIAv1KXPluGYluogyfTPXxksGtUJ4cMy4SVbg4aKqDSvIxqn2b+xCVQEB48dd7jlDg45W
-grrQi/ygDCqVPak6nBngU2e/mg2t0Iu8KDW3nlI2OrtQRpD3fOXJfpAP1SPNpSaO6qnkPepvuFd3
-PRcXBsisp3koUVv7sabOWSy76mdqxgnhCD30gYYldkafclbJU7sk9hY+eQYy1a61130Keab03pq+
-jbopI1eMXti+ngWuTwMS2zBiSceJXN89capJ+euZBoyF+fzo6FjsvXl+78qIN0GPLit5a3jkVRlv
-zR7ctJrDkRJ+e/P2Xd7end7nnS67yr1XufjS2rcvdKlZLmLx0uNrMG5t6s3ggXsejy82Nxsu+9vp
-lH7fNt7vG9fvg9v33b5p2v2wd/hi3b4x3b71+8Humy7sudD3+w5/tWG3532tMccXdYsHt6OOt6N7
-XdNCq1ebV5s9b3fhC2i8HE/bei1bnkgYlMNv9dlfqvhv3+Xbn+7erI9vbtalNze7D2+Xbf3rry+q
-bXX97sNF4seqxc2Ly+12uWOse7yswl9/+8v78Ze707bZ293uxyrxZZX0evf84+bmfFX7mW+bbd21
-XBHXIO9KsMZTTv/SV94s3rtuLLH9+Pi6uyDi3qVjvcTlHTqk7wmn+3f2tPP46M6+Pn187S1nACpU
-FqbjGx1jdItKa7DR9aV48d0/092bl3Xd6239S2tfb3d/rqJ2r8s96z1F95vl3fF4osh0Ox9/3nzZ
-xfPZJjxck+h8/7p7/h9QSwECHgMUAAIACACDUohKSAB0Q2MNAADLIAAABgAYAAAAAAABAAAApIEA
-AAAAMjEyLmpzVVQFAAP1ZOhYdXgLAAEEAAAAAAQAAAAAUEsFBgAAAAABAAEATAAAAKMNAAAAAA==
+On Wed, Apr 05 2017, Christoph Hellwig wrote:
+> This series makes REQ_OP_WRITE_ZEROES the only zeroing offload
+> supported by the block layer, and switches existing implementations
+> of REQ_OP_DISCARD that correctly set discard_zeroes_data to it,
+> removes incorrect discard_zeroes_data, and also switches WRITE SAME
+> based zeroing in SCSI to this new method.
+> 
+> The series is against the block for-next tree.
+
+Added for 4.12, thanks Christoph.
+
+-- 
+Jens Axboe
