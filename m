@@ -1,41 +1,55 @@
-From: LM <linux-raid@moellendorf.eu>
-Subject: Level change from 4 disk RAID5 to 4 disk RAID6
-Date: Sat, 8 Apr 2017 23:42:39 +0200
-Message-ID: <20170408214239.GF10267@lars-laptop>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: Can we deprecate ioctl(RAID_VERSION)?
+Date: Mon, 10 Apr 2017 09:01:09 +1000
+Message-ID: <878tn9yymi.fsf@notabene.neil.brown.name>
+References: <wrfjvaqid9ih.fsf@gmail.com> <wrfjr316d6f5.fsf@gmail.com> <87h922trit.fsf@notabene.neil.brown.name> <070d7f50-c8f0-d5df-89ed-adb8b7582d8a@gmail.com> <87vaqhyx4i.fsf@notabene.neil.brown.name> <wrfjinmgqkjc.fsf@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <wrfjinmgqkjc.fsf@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: jes.sorensen@gmail.com
+Cc: linux-raid <linux-raid@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, kernel-team@fb.com
 List-Id: linux-raid.ids
 
-Hi,
+--=-=-=
+Content-Type: text/plain
 
-I have a 4 disk RAID5, the used dev size is 640.05 GB. Now I want to
-replace the 4 disks by 4 disks with a size of 2TB each.
+On Fri, Apr 07 2017, jes.sorensen@gmail.com wrote:
 
-As far as I understand the man page, this can be achieved by replacing
-the devices one after another and for each device rebuild the degraded
-array with:
+>
+> Next question since I am wearing my 'what is this old stuff doing' hat.
+> mdassemble? Does anything still use this? The reason is a lot of the
+> newer features are explicitly included, and switching to sysfs is
+> effectively going to kill it, unless it gets a major upgrade.
+>
 
-   mdadm /dev/md0 --add /dev/sdX1
+I was never a big fan, of mdassemble, but it is smaller than mdadm and
+some people apparently have (or had) space-constrained boot
+environments.
+Maybe post to the linux-raid list with a subject "mdassemble is going
+way, do you care?". ??
 
-Then the level change can be done together with growing the array:
+NeilBrown
 
-   mdadm --grow /dev/md0 --level=raid6 --backup-file=/root/backup-md0
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
-Does this work?
+-----BEGIN PGP SIGNATURE-----
 
-I am asking if it works, because the man page also says:
-
-> mdadm --grow /dev/md4 --level=6 --backup-file=/root/backup-md4
->        The array /dev/md4 which is currently a RAID5 array will
->        be converted to RAID6.  There should normally already be
->        a spare drive attached to the array as a RAID6 needs one
->        more drive than a matching RAID5.
-
-And in my case only the size of disks is increased, not their number.
-
-Thanks,
-Lars
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljqvTUACgkQOeye3VZi
+gbk46xAAwX9d6NO4ielb7rEcs8uZErO+v0aaQM5wGz56U9XJvRPgje9sO+pZZKBw
+sX0sL5Eptvm1Oye0uNVKXOhQSf3LHQyfELCK+4fcsI+DzuQ+tTyaJ+SIWrQXRbaB
+q9psBOyadmg10rYeYG65Vo3OZsBWoRJCdnp9mKqHJnYCNs3Zk2hUgDCO83L/FPRy
+So1hO89dMBwUc0Zd39ym673ZOGohHw0SNexR1maRkhBbOx2LS2DwkHXR4IkI45wr
+W2s/zMP57QLB3ZWOrQiXhWd77MCgqgXihIAAJqhmoyFDTmvQaoN20zoMpSvvj3Cq
+OYshHCUz6+Vib+XUgsZJDrfjAcKHQHCcz84yDkR3ogrknyB4vwVQ28rt0fyItFw1
+dF08i8z8Nx9A+utADdPmSvmn0wxjG5LUgyg0sNVhRW5R/SdTc3Xo3efF3ZAOMrCP
+uyRo/Wm/FJ+CN3CXpDRzvPM2retbreXQkuRrBjJ/ZRaPsCsExowzcw3mykvytX0B
+5Job13jpzvI+gFt+SD2ex2TiMWPp0yT2d+o4s6UJAgkVIgcMvhxbipOjLMRO2UVU
+OKgca+Fbc0W1jtgJ0HvRYjdoAuPlL+TT/otKIqLFZBbG/7zIAj1zl/G2K4P60ik0
+3+Md2svqaSN3B53ViEoOTYL2ic81cNxRWzd9LJ5MK82B9OJMKJw=
+=+kTz
+-----END PGP SIGNATURE-----
+--=-=-=--
