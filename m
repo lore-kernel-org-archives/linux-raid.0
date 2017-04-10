@@ -1,79 +1,37 @@
-From: <hp@ice-cool.eu>
-Subject: (unknown)
-Date: Mon, 10 Apr 2017 03:30:52 -0000
-Message-ID: <149179505250.7747.15988302075750832890@relinfo.ru>
-Reply-To: <hp@ice-cool.eu>
-Mime-Version: 1.0
-Content-Type: application/zip; name="7718637436266_linux-raid.zip"
-Content-Transfer-Encoding: base64
+From: Zhilong Liu <zlliu@suse.com>
+Subject: [PATCH] mdadm.c:fix compile warning "mdfd is uninitialized"
+Date: Mon, 10 Apr 2017 12:49:52 +0800
+Message-ID: <1491799792-6974-1-git-send-email-zlliu@suse.com>
+References: <016b495a-1361-0f29-0fcb-6af008625565@gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: attachment
-Subject: 
+In-Reply-To: <016b495a-1361-0f29-0fcb-6af008625565@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jes.Sorensen@gmail.com
+Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
-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
-AQBOAAAArw0AAAAA
+Initialized the mdfd as -1 to prevent compile error
+of some compilers.
+For example, gcc version 4.8.5(SUSE Linux).
+
+Signed-off-by: Zhilong Liu <zlliu@suse.com>
+---
+ mdadm.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/mdadm.c b/mdadm.c
+index 001ff68..41dae1d 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -1916,7 +1916,7 @@ static int misc_list(struct mddev_dev *devlist,
+ 	int rv = 0;
+ 
+ 	for (dv = devlist; dv; dv = (rv & 16) ? NULL : dv->next) {
+-		int mdfd;
++		int mdfd = -1;
+ 
+ 		switch(dv->disposition) {
+ 		case 'D':
+-- 
+2.6.6
+
