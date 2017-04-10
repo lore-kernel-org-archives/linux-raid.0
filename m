@@ -1,37 +1,38 @@
-From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH] mdadm.c:fix compile warning "mdfd is uninitialized"
-Date: Mon, 10 Apr 2017 12:49:52 +0800
-Message-ID: <1491799792-6974-1-git-send-email-zlliu@suse.com>
-References: <016b495a-1361-0f29-0fcb-6af008625565@gmail.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: Level change from 4 disk RAID5 to 4 disk RAID6
+Date: Mon, 10 Apr 2017 06:41:08 +0100
+Message-ID: <58EB1AF4.5010005@youngman.org.uk>
+References: <20170408214239.GF10267@lars-laptop>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <016b495a-1361-0f29-0fcb-6af008625565@gmail.com>
+In-Reply-To: <20170408214239.GF10267@lars-laptop>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
+To: LM <linux-raid@moellendorf.eu>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Initialized the mdfd as -1 to prevent compile error
-of some compilers.
-For example, gcc version 4.8.5(SUSE Linux).
+On 08/04/17 22:42, LM wrote:
+> Hi,
+> 
+> I have a 4 disk RAID5, the used dev size is 640.05 GB. Now I want to
+> replace the 4 disks by 4 disks with a size of 2TB each.
+> 
+> As far as I understand the man page, this can be achieved by replacing
+> the devices one after another and for each device rebuild the degraded
+> array with:
+> 
+>    mdadm /dev/md0 --add /dev/sdX1
 
-Signed-off-by: Zhilong Liu <zlliu@suse.com>
----
- mdadm.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Do you have a spare SATA port or whatever your drives are. If so, then
+use the --replace option to mdadm, don't fail then add. You're risking a
+drive failure taking out your array - not a good move.
 
-diff --git a/mdadm.c b/mdadm.c
-index 001ff68..41dae1d 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -1916,7 +1916,7 @@ static int misc_list(struct mddev_dev *devlist,
- 	int rv = 0;
- 
- 	for (dv = devlist; dv; dv = (rv & 16) ? NULL : dv->next) {
--		int mdfd;
-+		int mdfd = -1;
- 
- 		switch(dv->disposition) {
- 		case 'D':
--- 
-2.6.6
+And if you don't have a spare port, $20 for a PCI card or whatever is a
+good investment to keep your data safe.
 
+Have a look at the raid wiki - it tries to be a bit more verbose and
+easily comprehensible than the man page.
+
+Cheers,
+Wol
