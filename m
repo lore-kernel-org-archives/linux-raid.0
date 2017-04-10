@@ -1,80 +1,58 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md/raid6: Fix anomily when recovering a single device in
- RAID6.
-Date: Mon, 10 Apr 2017 10:34:08 -0700
-Message-ID: <20170410173408.qz35phxtzadcc44u@kernel.org>
-References: <87r31adyuj.fsf@notabene.neil.brown.name>
+Subject: Re: [PATCH V2] md/raid10: reset the 'first' at the end of loop
+Date: Mon, 10 Apr 2017 10:41:13 -0700
+Message-ID: <20170410174113.ffdkv6unvfanyrrg@kernel.org>
+References: <1491017900-8150-1-git-send-email-gqjiang@suse.com>
+ <1491441138-16155-1-git-send-email-gqjiang@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <87r31adyuj.fsf@notabene.neil.brown.name>
+In-Reply-To: <1491441138-16155-1-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Brad Campbell <lists2009@fnarfbargle.com>, Linux-RAID <linux-raid@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>
+To: Guoqing Jiang <gqjiang@suse.com>
+Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.com
 List-Id: linux-raid.ids
 
-On Mon, Apr 03, 2017 at 12:11:32PM +1000, Neil Brown wrote:
+On Thu, Apr 06, 2017 at 09:12:18AM +0800, Guoqing Jiang wrote:
+> We need to set "first = 0' at the end of rdev_for_each
+> loop, so we can get the array's min_offset_diff correctly
+> otherwise min_offset_diff just means the last rdev's
+> offset diff.
 > 
-> When recoverying a single missing/failed device in a RAID6,
-> those stripes where the Q block is on the missing device are
-> handled a bit differently.  In these cases it is easy to
-> check that the P block is correct, so we do.  This results
-> in the P block be destroy.  Consequently the P block needs
-> to be read a second time in order to compute Q.  This causes
-> lots of seeks and hurts performance.
-> 
-> It shouldn't be necessary to re-read P as it can be computed
-> from the DATA.  But we only compute blocks on missing
-> devices, since c337869d9501 ("md: do not compute parity
-> unless it is on a failed drive").
-> 
-> So relax the change made in that commit to allow computing
-> of the P block in a RAID6 which it is the only missing that
-> block.
-> 
-> This makes RAID6 recovery run much faster as the disk just
-> "before" the recovering device is no longer seeking
-> back-and-forth.
-> 
-> Reported-by-tested-by: Brad Campbell <lists2009@fnarfbargle.com>
-> Reviewed-by: Dan Williams <dan.j.williams@intel.com>
-> Signed-off-by: NeilBrown <neilb@suse.com>
+> Suggested-by: NeilBrown <neilb@suse.com>
+> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 
-Applied, thanks, very interesting analysis!
+applied, thanks!
 
 > ---
->  drivers/md/raid5.c | 13 ++++++++++++-
->  1 file changed, 12 insertions(+), 1 deletion(-)
+>  drivers/md/raid10.c | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index c523fd69a7bc..aeb2e236a247 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -3617,9 +3617,20 @@ static int fetch_block(struct stripe_head *sh, struct stripe_head_state *s,
->  		BUG_ON(test_bit(R5_Wantcompute, &dev->flags));
->  		BUG_ON(test_bit(R5_Wantread, &dev->flags));
->  		BUG_ON(sh->batch_head);
-> +
-> +		/*
-> +		 * In the raid6 case if the only non-uptodate disk is P
-> +		 * then we already trusted P to compute the other failed
-> +		 * drives. It is safe to compute rather than re-read P.
-> +		 * In other cases we only compute blocks from failed
-> +		 * devices, otherwise check/repair might fail to detect
-> +		 * a real inconsistency.
-> +		 */
-> +
->  		if ((s->uptodate == disks - 1) &&
-> +		    ((sh->qd_idx >= 0 && sh->pd_idx == disk_idx) ||
->  		    (s->failed && (disk_idx == s->failed_num[0] ||
-> -				   disk_idx == s->failed_num[1]))) {
-> +				   disk_idx == s->failed_num[1])))) {
->  			/* have disk failed, and we're requested to fetch it;
->  			 * do compute it
->  			 */
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 0f13d57..e055ec9 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -3769,6 +3769,7 @@ static int raid10_run(struct mddev *mddev)
+>  
+>  		if (blk_queue_discard(bdev_get_queue(rdev->bdev)))
+>  			discard_supported = true;
+> +		first = 0;
+>  	}
+>  
+>  	if (mddev->queue) {
+> @@ -4172,6 +4173,7 @@ static int raid10_start_reshape(struct mddev *mddev)
+>  			if (first || diff < min_offset_diff)
+>  				min_offset_diff = diff;
+>  		}
+> +		first = 0;
+>  	}
+>  
+>  	if (max(before_length, after_length) > min_offset_diff)
 > -- 
-> 2.12.0
+> 2.6.6
 > 
-
-
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
