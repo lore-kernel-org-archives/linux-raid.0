@@ -1,50 +1,66 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md.c:didn't unlock the mddev before return EINVAL in
- array_size_store
-Date: Mon, 10 Apr 2017 10:49:53 -0700
-Message-ID: <20170410174953.vkbsf373ytdxjyhv@kernel.org>
-References: <1491804955-7548-1-git-send-email-zlliu@suse.com>
+Subject: Re: [PATCH] md/raid1: avoid reusing a resync bio after error
+ handling.
+Date: Mon, 10 Apr 2017 11:04:58 -0700
+Message-ID: <20170410180458.5kco236g3gw2kcxm@kernel.org>
+References: <87bmsaguhe.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1491804955-7548-1-git-send-email-zlliu@suse.com>
+In-Reply-To: <87bmsaguhe.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Zhilong Liu <zlliu@suse.com>
-Cc: shli@fb.com, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>, Michael Wang <yun.wang@profitbricks.com>
 List-Id: linux-raid.ids
 
-On Mon, Apr 10, 2017 at 02:15:55PM +0800, Zhilong Liu wrote:
-> md.c: it needs to release the mddev lock before
-> the array_size_store() returns.
+On Thu, Apr 06, 2017 at 12:06:37PM +1000, Neil Brown wrote:
+> 
+> fix_sync_read_error() modifies a bio on a newly faulty
+> device by setting bi_end_io to end_sync_write.
+> This ensure that put_buf() will still call rdev_dec_pending()
+> as required, but makes sure that subsequent code in
+> fix_sync_read_error() doesn't try to read from the device.
+> 
+> Unfortunately this interacts badly with sync_request_write()
+> which assumes that any bio with bi_end_io set to non-NULL
+> other than end_sync_read is safe to write to.
+> 
+> As the device is now faulty it doesn't make sense to write.
+> As the bio was recently used for a read, it is "dirty"
+> and not suitable for immediate submission.
+> In particular, ->bi_next might be non-NULL, which will cause
+> generic_make_request() to complain.
+> 
+> Break this interaction by refusing to write to devices
+> which are marked as Faulty.
+> 
+> Reported-and-tested-by: Michael Wang <yun.wang@profitbricks.com>
+> Fixes: 2e52d449bcec ("md/raid1: add failfast handling for reads.")
+> Cc: stable@vger.kernel.org (v4.10+)
+> Signed-off-by: NeilBrown <neilb@suse.com>
 
-applied, thanks!
- 
-> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+Thanks, applied!
+
 > ---
->  drivers/md/md.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+>  drivers/md/raid1.c | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index f6ae1d6..5327236 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -4843,8 +4843,10 @@ array_size_store(struct mddev *mddev, const char *buf, size_t len)
->  		return err;
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index a70283753a35..9c1b2231d2db 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -2185,6 +2185,8 @@ static void sync_request_write(struct mddev *mddev, struct r1bio *r1_bio)
+>  		     (i == r1_bio->read_disk ||
+>  		      !test_bit(MD_RECOVERY_SYNC, &mddev->recovery))))
+>  			continue;
+> +		if (test_bit(Faulty, &conf->mirrors[i].rdev->flags))
+> +			continue;
 >  
->  	/* cluster raid doesn't support change array_sectors */
-> -	if (mddev_is_clustered(mddev))
-> +	if (mddev_is_clustered(mddev)) {
-> +		mddev_unlock(mddev);
->  		return -EINVAL;
-> +	}
->  
->  	if (strncmp(buf, "default", 7) == 0) {
->  		if (mddev->pers)
+>  		bio_set_op_attrs(wbio, REQ_OP_WRITE, 0);
+>  		if (test_bit(FailFast, &conf->mirrors[i].rdev->flags))
 > -- 
-> 2.6.6
+> 2.12.2
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
