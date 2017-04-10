@@ -1,83 +1,64 @@
-From: Marc Smith <marc.smith@mcc.edu>
-Subject: Re: md-cluster Oops 4.9.13
-Date: Mon, 10 Apr 2017 09:25:00 -0400
-Message-ID: <CAHkw+Ld=yv=LoBKFUxNO6dEocOKzq-pFR=Tfk50OULXJ8NN9eQ@mail.gmail.com>
-References: <CAHkw+Lcr1+sWsQPK_ijfTHwG+zxRYT+iNhWGdpYTNxVuQi8TOw@mail.gmail.com>
- <58E45E0C.6030705@gmail.com>
+From: Milan Broz <gmazyland@gmail.com>
+Subject: Re: [RFC PATCH v5] IV Generation algorithms for dm-crypt
+Date: Mon, 10 Apr 2017 16:00:39 +0200
+Message-ID: <774a9713-05ef-0162-0203-461254a04f6e@gmail.com>
+References: <1491562064-23591-1-git-send-email-binoy.jayan@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <58E45E0C.6030705@gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <jgq516@gmail.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-crypto-owner@vger.kernel.org>
+In-Reply-To: <1491562064-23591-1-git-send-email-binoy.jayan@linaro.org>
+Sender: linux-crypto-owner@vger.kernel.org
+To: Binoy Jayan <binoy.jayan@linaro.org>, Oded <oded.golombek@arm.com>, Ofir <Ofir.Drang@arm.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, linux-crypto@vger.kernel.org, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Rajendra <rnayak@codeaurora.org>, Milan Broz <gmazyland@gmail.com>, Gilad <gilad@benyossef.com>
 List-Id: linux-raid.ids
 
-Hi,
+On 04/07/2017 12:47 PM, Binoy Jayan wrote:
+> ===============================================================================
+> dm-crypt optimization for larger block sizes
+> ===============================================================================
+...
+> Tests with dd [direct i/o]
+> 
+> Sequential read            -0.134 %
+> Sequential Write           +0.091 %
+> 
+> Tests with fio [Aggregate bandwidth - aggrb]
+> 
+> Random Read                +0.358 %
+> Random Write               +0.010 %
+> 
+> Tests with bonnie++ [768 MiB File, 384 MiB Ram]
+> after mounting dm-crypt target as ext4
+> 
+> Sequential o/p [per-char]  -2.876 %
+> Sequential o/p [per-blk]   +0.992 %
+> Sequential o/p [re-write]  +4.465 %
+> 
+> Sequential i/p [per-char] -0.453 %
+> Sequential i/p [per-blk]  -0.740 %
+> 
+> Sequential create         -0.255 %
+> Sequential delete         +0.042 %
+> Random create             -0.007 %
+> Random delete             +0.454 %
+> 
+> NB: The '+' sign shows improvement and '-' shows degradation.
+>     The tests were performed with minimal cpu load.
+>     Tests with higher cpu load to be done
 
-Sorry for the delay... I was hoping to cherry-pick this and test
-against 4.9.x, but it didn't apply cleanly, although it looks trivial
-to do it by hand. Is it recommended/okay to test this patch against
-4.9.x? Will the fix eventually be merged into 4.9.x?
+Well, it is good that there is no performance degradation but it
+would be nice to have some user of it that proves it is really
+working for your hw.
 
+FYI - with patch that increases dmcrypt sector size to 4k
+I can see improvement in speed usually in 5-15% with sync AES-NI
+(depends on access pattern), with dmcrypt mapped to memory
+it is even close to 20% speed up (but such a configuration is
+completely artificial).
 
---Marc
+I wonder why increased dmcrypt sector size does not work for your hw,
+it should help as well (and can be combiuned later with this IV approach).
+(For native 4k drives this should be used in future anyway...)
 
-On Tue, Apr 4, 2017 at 11:01 PM, Guoqing Jiang <jgq516@gmail.com> wrote:
->
->
-> On 04/04/2017 10:06 PM, Marc Smith wrote:
->>
->> Hi,
->>
->> I encountered an oops this morning when stopping a MD array
->> (md-cluster)... there were 4 md-cluster array started, and they were
->> in the middle of a rebuild. I stopped the first one and then stopped
->> the second one immediately after and got the oops, here is a
->> transcript of what was on my terminal session:
->>
->> [root@brimstone-1b ~]# mdadm --stop /dev/md/array1
->> mdadm: stopped /dev/md/array1
->> [root@brimstone-1b ~]# mdadm --stop /dev/md/array2
->>
->> Message from syslogd@brimstone-1b at Tue Apr  4 09:54:40 2017 ...
->> brimstone-1b kernel: [649162.174685] BUG: unable to handle kernel NULL
->> pointer dereference at 0000000000000098
->>
->> Using Linux 4.9.13 and here is the output from the kernel messages:
->>
->> --snip--
->> [649158.014731] dlm: 5b3b8f94-7875-b323-5bb8-29fa6866f4a8: leaving the
->> lockspace group...
->> [649158.015233] dlm: 5b3b8f94-7875-b323-5bb8-29fa6866f4a8: group event
->> done 0 0
->> [649158.015303] dlm: 5b3b8f94-7875-b323-5bb8-29fa6866f4a8:
->> release_lockspace final free
->> [649158.015331] md: unbind<nvme0n1p1>
->> [649158.042540] md: export_rdev(nvme0n1p1)
->> [649158.042546] md: unbind<nvme1n1p1>
->> [649158.048501] md: export_rdev(nvme1n1p1)
->> [649161.759022] md127: detected capacity change from 1000068874240 to 0
->> [649161.759025] md: md127 stopped.
->> [649162.174685] BUG: unable to handle kernel NULL pointer dereference
->> at 0000000000000098
->> [649162.174727] IP: [<ffffffff81868b40>] recv_daemon+0x1e9/0x373
->
->
-> Looks like the recv_daemon is still running after stop array, commit
-> 48df498 "md: move bitmap_destroy to the beginning of __md_stop"
-> ensure it won't happen.
->
->
-> [snip]
->
->> Perhaps this is already fixed in later versions? Let me know if you
->> need any additional information.
->
->
-> Could you pls try with the latest version? Please let me know if you
-> still see it, thanks.
->
-> Regards,
-> Guoqing
->
+Milan
