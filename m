@@ -1,69 +1,46 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md:MD_CLOSING needs to be cleared after called
- md_set_readonly or do_md_stop
-Date: Mon, 10 Apr 2017 10:47:12 -0700
-Message-ID: <20170410174712.dz2tlgk4mh25sxhh@kernel.org>
-References: <1491448593-12938-1-git-send-email-zlliu@suse.com>
+Subject: Re: [PATCH] md.c:didn't unlock the mddev before return EINVAL in
+ array_size_store
+Date: Mon, 10 Apr 2017 10:49:53 -0700
+Message-ID: <20170410174953.vkbsf373ytdxjyhv@kernel.org>
+References: <1491804955-7548-1-git-send-email-zlliu@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1491448593-12938-1-git-send-email-zlliu@suse.com>
+In-Reply-To: <1491804955-7548-1-git-send-email-zlliu@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Zhilong Liu <zlliu@suse.com>
-Cc: shli@fb.com, linux-raid@vger.kernel.org, NeilBrown <neilb@suse.com>
+Cc: shli@fb.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Apr 06, 2017 at 11:16:33AM +0800, Zhilong Liu wrote:
-> From: NeilBrown <neilb@suse.com>
-> 
-> if called md_set_readonly and set MD_CLOSING bit, the mddev cannot
-> be opened any more due to the MD_CLOING bit wasn't cleared. Thus it
-> needs to be cleared in md_ioctl after any call to md_set_readonly()
-> or do_md_stop().
-> Fixes: af8d8e6f0315 ("md: changes for MD_STILL_CLOSED flag")
-> 
-> Signed-off-by: NeilBrown <neilb@suse.com>
+On Mon, Apr 10, 2017 at 02:15:55PM +0800, Zhilong Liu wrote:
+> md.c: it needs to release the mddev lock before
+> the array_size_store() returns.
+
+applied, thanks!
+ 
 > Signed-off-by: Zhilong Liu <zlliu@suse.com>
-
-thanks, applied! This one looks stable stuff too.
-
 > ---
-> 
->  drivers/md/md.c | 5 +++++
->  1 file changed, 5 insertions(+)
+>  drivers/md/md.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
 > 
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index f6ae1d6..906a4bf 100644
+> index f6ae1d6..5327236 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -6776,6 +6776,7 @@ static int md_ioctl(struct block_device *bdev, fmode_t mode,
->  	void __user *argp = (void __user *)arg;
->  	struct mddev *mddev = NULL;
->  	int ro;
-> +	bool did_set_md_closing = false;
+> @@ -4843,8 +4843,10 @@ array_size_store(struct mddev *mddev, const char *buf, size_t len)
+>  		return err;
 >  
->  	if (!md_ioctl_valid(cmd))
->  		return -ENOTTY;
-> @@ -6865,7 +6866,9 @@ static int md_ioctl(struct block_device *bdev, fmode_t mode,
->  			err = -EBUSY;
->  			goto out;
->  		}
-> +		WARN_ON_ONCE(test_bit(MD_CLOSING, &mddev->flags));
->  		set_bit(MD_CLOSING, &mddev->flags);
-> +		did_set_md_closing = true;
->  		mutex_unlock(&mddev->open_mutex);
->  		sync_blockdev(bdev);
->  	}
-> @@ -7058,6 +7061,8 @@ static int md_ioctl(struct block_device *bdev, fmode_t mode,
->  		mddev->hold_active = 0;
->  	mddev_unlock(mddev);
->  out:
-> +	if(did_set_md_closing)
-> +		clear_bit(MD_CLOSING, &mddev->flags);
->  	return err;
->  }
->  #ifdef CONFIG_COMPAT
+>  	/* cluster raid doesn't support change array_sectors */
+> -	if (mddev_is_clustered(mddev))
+> +	if (mddev_is_clustered(mddev)) {
+> +		mddev_unlock(mddev);
+>  		return -EINVAL;
+> +	}
+>  
+>  	if (strncmp(buf, "default", 7) == 0) {
+>  		if (mddev->pers)
 > -- 
 > 2.6.6
 > 
