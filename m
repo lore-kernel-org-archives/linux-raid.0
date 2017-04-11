@@ -1,44 +1,76 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: [PATCH 1/2] mdadm/manpage:update description for readonly in
- manpage
-Date: Tue, 11 Apr 2017 17:30:25 +0100
-Message-ID: <58ED04A1.4010508@youngman.org.uk>
-References: <1491811296-9118-1-git-send-email-zlliu@suse.com>
- <1491811478-9234-1-git-send-email-zlliu@suse.com>
- <6afe1397-3063-c5d7-58ba-f3dbdfa05336@gmail.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [md PATCH 00/10] Simplify bio splitting and related code.
+Date: Tue, 11 Apr 2017 10:01:12 -0700
+Message-ID: <20170411170112.4txdyjdat63qpsi6@kernel.org>
+References: <149136485390.25893.1797855041954158826.stgit@noble>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6afe1397-3063-c5d7-58ba-f3dbdfa05336@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <149136485390.25893.1797855041954158826.stgit@noble>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <jes.sorensen@gmail.com>, Zhilong Liu <zlliu@suse.com>
+To: NeilBrown <neilb@suse.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/04/17 15:51, Jes Sorensen wrote:
->>
->>  .TP
->>  .B \-\-readonly
->> -This will mark an active array as read-only, providing that it is
->> -not currently being used.
->> +This will set an active array as read-only status.
+On Wed, Apr 05, 2017 at 02:05:50PM +1000, Neil Brown wrote:
+> This is part of my little project to make bio splitting
+> in Linux uniform and dead-lock free, in a way that will mean
+> that we can get rid of all the bioset threads.
 > 
-> I think this chance is not good, and should be omitted.
-
-Agreed, except that I would change "providing" to "provided".
+> The basic approach is that when a bio needs to be split, we call
+> bio_split(), bio_chain() and then generic_make_request().
+> We then proceed to handle the remainder without further splitting.
+> Recent changes to generic_make_request() ensure that this will
+> be safe from deadlocks, providing each bioset is used only once
+> in the stack.
 > 
->>  .TP
->>  .B \-\-readwrite
->> -This will change a
->> +This will change an
->>  .B readonly
->>  array back to being read/write.
+> This leads to simpler code in various places.  In particular, the
+> splitting of bios that is needed to work around known bad blocks
+> is now much less complex.  There is only ever one r1bio per bio.
 > 
-> This change is grammatically incorrect I believe and the original text
-> is correct.
+> As you can see from
+>  10 files changed, 335 insertions(+), 540 deletions(-)
+> there is a net reduction in code.
 
-Agreed.
+Looks good and makes code simpler, applied, thanks Neil! The patch 1 and 6 need
+comments in the code to explain how deadlock is avoided though. Care to send a
+new patch?
 
-Cheers,
-Wol
+Thanks,
+Shaohua
+
+> 
+> Thanks,
+> NeilBrown
+> 
+> ---
+> 
+> NeilBrown (10):
+>       md/raid1: simplify the splitting of requests.
+>       md/raid1: simplify alloc_behind_master_bio()
+>       Revert "block: introduce bio_copy_data_partial"
+>       md/raid1: simplify handle_read_error().
+>       md/raid1: factor out flush_bio_list()
+>       md/raid10: simplify the splitting of requests.
+>       md/raid10: simplify handle_read_error()
+>       md/raid5: make chunk_aligned_read() split bios more cleanly.
+>       md/linear: improve bio splitting.
+>       md/raid0: fix up bio splitting.
+> 
+> 
+>  block/bio.c         |   60 ++-------
+>  drivers/md/linear.c |   75 +++++------
+>  drivers/md/raid0.c  |   73 +++++------
+>  drivers/md/raid1.c  |  346 ++++++++++++++++++++-------------------------------
+>  drivers/md/raid1.h  |    2 
+>  drivers/md/raid10.c |  282 ++++++++++++++----------------------------
+>  drivers/md/raid10.h |    1 
+>  drivers/md/raid5.c  |   33 +++--
+>  drivers/md/raid5.h  |    1 
+>  include/linux/bio.h |    2 
+>  10 files changed, 335 insertions(+), 540 deletions(-)
+> 
+> --
+> Signature
+> 
