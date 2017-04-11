@@ -1,43 +1,44 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: 4.10 + 765d704db: no improvemtn in write rates with md/raid5 group_thread_cnt > 0
-Date: Tue, 11 Apr 2017 11:01:39 +0100
-Message-ID: <874lxvgt4s.fsf@esperi.org.uk>
-References: <87zifvj61v.fsf@esperi.org.uk>
-        <20170410201057.qxypmzaw4gtmkwvd@kernel.org>
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: Can we deprecate ioctl(RAID_VERSION)?
+Date: Tue, 11 Apr 2017 10:46:06 -0400
+Message-ID: <fad96876-017b-ae43-a11d-6c0ea42fdbcf@gmail.com>
+References: <wrfjvaqid9ih.fsf@gmail.com> <wrfjr316d6f5.fsf@gmail.com>
+ <87h922trit.fsf@notabene.neil.brown.name>
+ <070d7f50-c8f0-d5df-89ed-adb8b7582d8a@gmail.com>
+ <87vaqhyx4i.fsf@notabene.neil.brown.name> <wrfjinmgqkjc.fsf@gmail.com>
+ <878tn9yymi.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170410201057.qxypmzaw4gtmkwvd@kernel.org> (Shaohua Li's
-        message of "Mon, 10 Apr 2017 13:10:57 -0700")
+In-Reply-To: <878tn9yymi.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, kernel-team@fb.com
 List-Id: linux-raid.ids
 
-On 10 Apr 2017, Shaohua Li stated:
-
-> On Wed, Apr 05, 2017 at 03:13:48PM +0100, Nix wrote:
->> So you'd expect write rates on a RAID-5 array to be higher than write rates on a
->> single spinning-rust disk, right? Because, even with Shaohua's commit
->> 765d704db1f583630d52 applied atop 4.10, I see little sign of it. Does this
->> commit depend upon something else to stop death by seeking with
->> group_thread_cnt > 0? It didn't look like it to me...
->> 
->> The results Shaohua showed in the original commit were very impressive, but for
->> the life of me I can't figure out how to get anything like them.
+On 04/09/2017 07:01 PM, NeilBrown wrote:
+> On Fri, Apr 07 2017, jes.sorensen@gmail.com wrote:
 >
-> That only works well with large iodepth. For single write, we are still far
-> from the BW in theory. I actually wrote in the commit log:
+>>
+>> Next question since I am wearing my 'what is this old stuff doing' hat.
+>> mdassemble? Does anything still use this? The reason is a lot of the
+>> newer features are explicitly included, and switching to sysfs is
+>> effectively going to kill it, unless it gets a major upgrade.
+>>
 >
-> "We are pretty close to the maximum bandwidth in the large iodepth
-> iodepth case. The performance gap of small iodepth sequential write
-> between software raid and theory value is still very big though, because
-> we don't have an efficient pipeline."
+> I was never a big fan, of mdassemble, but it is smaller than mdadm and
+> some people apparently have (or had) space-constrained boot
+> environments.
+> Maybe post to the linux-raid list with a subject "mdassemble is going
+> way, do you care?". ??
 
-Ah right, I missed the significance of that. So this helps only if you
-have multiple simultaneous multithreaded/async I/Os to the same file at
-the same time? Damn, no help in any of my common use cases yet :( :( :(
-except maybe massively-parallel compiles, but they are never write-bound
-except when linking, and *that* is serial.
+Makes sense - looking at the code it wasn't clear if it is even usable 
+in modern times since it ignores sysfs access.
 
-I guess I have to wait and hope for a better pipeline :)
+I'll post another message and get out the big hammer!
+
+Cheers,
+Jes
+
+
