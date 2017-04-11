@@ -1,32 +1,94 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH] mdadm.c:fix compile warning "mdfd is uninitialized"
-Date: Tue, 11 Apr 2017 11:28:14 -0400
-Message-ID: <9ca1b4d6-12db-7618-602d-8b70ad8bcb33@gmail.com>
-References: <016b495a-1361-0f29-0fcb-6af008625565@gmail.com>
- <1491799792-6974-1-git-send-email-zlliu@suse.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH 1/4] raid5-ppl: use a single mempool for ppl_io_unit and
+ header_page
+Date: Tue, 11 Apr 2017 08:41:24 -0700
+Message-ID: <20170411154124.nyvgqixjzjs2tzqd@kernel.org>
+References: <20170404111358.14829-1-artur.paszkiewicz@intel.com>
+ <20170404111358.14829-2-artur.paszkiewicz@intel.com>
+ <20170410190948.v33qgv63r423zfbb@kernel.org>
+ <87fd9082-46bb-0836-7882-f0f572904549@intel.com>
+ <029f973c-77be-fca9-952b-2d3921b5f6cd@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1491799792-6974-1-git-send-email-zlliu@suse.com>
+Content-Disposition: inline
+In-Reply-To: <029f973c-77be-fca9-952b-2d3921b5f6cd@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Zhilong Liu <zlliu@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: linux-raid@vger.kernel.org, songliubraving@fb.com
 List-Id: linux-raid.ids
 
-On 04/10/2017 12:49 AM, Zhilong Liu wrote:
-> Initialized the mdfd as -1 to prevent compile error
-> of some compilers.
-> For example, gcc version 4.8.5(SUSE Linux).
->
-> Signed-off-by: Zhilong Liu <zlliu@suse.com>
-> ---
->  mdadm.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+On Tue, Apr 11, 2017 at 11:20:13AM +0200, Artur Paszkiewicz wrote:
+> On 04/11/2017 10:28 AM, Artur Paszkiewicz wrote:
+> > On 04/10/2017 09:09 PM, Shaohua Li wrote:
+> >>> +static void *ppl_io_pool_alloc(gfp_t gfp_mask, void *pool_data)
+> >>> +{
+> >>> +	struct kmem_cache *kc = pool_data;
+> >>> +	struct ppl_io_unit *io;
+> >>> +
+> >>> +	io = kmem_cache_alloc(kc, gfp_mask);
+> >>> +	if (!io)
+> >>> +		return NULL;
+> >>> +
+> >>> +	io->header_page = alloc_page(gfp_mask);
+> >>> +	if (!io->header_page) {
+> >>> +		kmem_cache_free(kc, io);
+> >>> +		return NULL;
+> >>> +	}
+> >>> +
+> >>> +	return io;
+> >>
+> >> Maybe directly use GFP_NOWAIT here, we don't use other gfp
+> > 
+> > Do you mean ignore the gfp_mask parameter? I don't think we should do
+> > that. It is provided by the mempool implementation. We only use
+> > GFP_NOWAIT for explicit allocations, but GFP_KERNEL is used for
+> > allocating initial items in mempool_create().
+> > 
+> >>> +}
+> >>> +
+> >>> +static void ppl_io_pool_free(void *element, void *pool_data)
+> >>> +{
+> >>> +	struct kmem_cache *kc = pool_data;
+> >>> +	struct ppl_io_unit *io = element;
+> >>> +
+> >>> +	__free_page(io->header_page);
+> >>> +	kmem_cache_free(kc, io);
+> >>> +}
+> >>> +
+> >>>  static struct ppl_io_unit *ppl_new_iounit(struct ppl_log *log,
+> >>>  					  struct stripe_head *sh)
+> >>>  {
+> >>> @@ -202,18 +228,19 @@ static struct ppl_io_unit *ppl_new_iounit(struct ppl_log *log,
+> >>>  	struct ppl_io_unit *io;
+> >>>  	struct ppl_header *pplhdr;
+> >>>  
+> >>> -	io = mempool_alloc(ppl_conf->io_pool, GFP_ATOMIC);
+> >>> +	io = mempool_alloc(ppl_conf->io_pool, GFP_NOWAIT);
+> >>>  	if (!io)
+> >>>  		return NULL;
+> >>>  
+> >>> -	memset(io, 0, sizeof(*io));
+> >>>  	io->log = log;
+> >>> +	io->entries_count = 0;
+> >>> +	io->pp_size = 0;
+> >>> +	io->submitted = false;
+> >>
+> >> I'd suggest moving the memset to ppl_io_pool_alloc. Don't think we need to
+> >> optimize to avoid setting header_page. And doing memset is less error prone,
+> >> for example adding new fields.
+> > 
+> > OK, I'll change this and resend.
+> 
+> Well, on second thought, actually I can't move the memset to
+> ppl_io_pool_alloc. Mempool can use the preallocated elements, which are
+> then returned back to the pool after calling mempool_free() and can be
+> reused later. So a ppl_io_unit must be initialized after retrieving it
+> from mempool_alloc(). I can leave the memset in ppl_new_iounit() but
+> io->header_page pointer will have to be temporarily copied before
+> zeroing the iounit and then set back. Is this ok?
 
-Applied!
+Yes, that's preferred.
 
 Thanks,
-Jes
-
-
+Shaohua
