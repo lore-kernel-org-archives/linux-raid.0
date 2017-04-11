@@ -1,155 +1,77 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v2] raid5-ppl: use a single mempool for ppl_io_unit and
- header_page
-Date: Tue, 11 Apr 2017 14:58:10 -0700
-Message-ID: <20170411215810.d7f4hbc426r3hhyu@kernel.org>
-References: <20170411154124.nyvgqixjzjs2tzqd@kernel.org>
- <20170411185051.18780-1-artur.paszkiewicz@intel.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [md PATCH 00/10] Simplify bio splitting and related code.
+Date: Wed, 12 Apr 2017 09:27:07 +1000
+Message-ID: <871ssywmno.fsf@notabene.neil.brown.name>
+References: <149136485390.25893.1797855041954158826.stgit@noble> <20170411170112.4txdyjdat63qpsi6@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170411185051.18780-1-artur.paszkiewicz@intel.com>
+In-Reply-To: <20170411170112.4txdyjdat63qpsi6@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: linux-raid@vger.kernel.org, songliubraving@fb.com
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Apr 11, 2017 at 08:50:51PM +0200, Artur Paszkiewicz wrote:
-> Allocate both struct ppl_io_unit and its header_page from a shared
-> mempool to avoid a possible deadlock. Implement allocate and free
-> functions for the mempool, remove the second pool for allocating
-> header_page. The header_pages are now freed with their io_units, not
-> when the ppl bio completes. Also, use GFP_NOWAIT instead of GFP_ATOMIC
-> for allocating ppl_io_unit because we can handle failed allocations and
-> there is no reason to utilize emergency reserves.
-> 
-> Suggested-by: NeilBrown <neilb@suse.com>
-> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-applied, thanks!
-> ---
->  drivers/md/raid5-ppl.c | 53 +++++++++++++++++++++++++++++++++++---------------
->  1 file changed, 37 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
-> index 4eb0ebcf9c29..5d25bebf3328 100644
-> --- a/drivers/md/raid5-ppl.c
-> +++ b/drivers/md/raid5-ppl.c
-> @@ -102,7 +102,6 @@ struct ppl_conf {
->  	struct kmem_cache *io_kc;
->  	mempool_t *io_pool;
->  	struct bio_set *bs;
-> -	mempool_t *meta_pool;
->  
->  	/* used only for recovery */
->  	int recovered_entries;
-> @@ -197,25 +196,55 @@ ops_run_partial_parity(struct stripe_head *sh, struct raid5_percpu *percpu,
->  	return tx;
->  }
->  
-> +static void *ppl_io_pool_alloc(gfp_t gfp_mask, void *pool_data)
-> +{
-> +	struct kmem_cache *kc = pool_data;
-> +	struct ppl_io_unit *io;
-> +
-> +	io = kmem_cache_alloc(kc, gfp_mask);
-> +	if (!io)
-> +		return NULL;
-> +
-> +	io->header_page = alloc_page(gfp_mask);
-> +	if (!io->header_page) {
-> +		kmem_cache_free(kc, io);
-> +		return NULL;
-> +	}
-> +
-> +	return io;
-> +}
-> +
-> +static void ppl_io_pool_free(void *element, void *pool_data)
-> +{
-> +	struct kmem_cache *kc = pool_data;
-> +	struct ppl_io_unit *io = element;
-> +
-> +	__free_page(io->header_page);
-> +	kmem_cache_free(kc, io);
-> +}
-> +
->  static struct ppl_io_unit *ppl_new_iounit(struct ppl_log *log,
->  					  struct stripe_head *sh)
->  {
->  	struct ppl_conf *ppl_conf = log->ppl_conf;
->  	struct ppl_io_unit *io;
->  	struct ppl_header *pplhdr;
-> +	struct page *header_page;
->  
-> -	io = mempool_alloc(ppl_conf->io_pool, GFP_ATOMIC);
-> +	io = mempool_alloc(ppl_conf->io_pool, GFP_NOWAIT);
->  	if (!io)
->  		return NULL;
->  
-> +	header_page = io->header_page;
->  	memset(io, 0, sizeof(*io));
-> +	io->header_page = header_page;
-> +
->  	io->log = log;
->  	INIT_LIST_HEAD(&io->log_sibling);
->  	INIT_LIST_HEAD(&io->stripe_list);
->  	atomic_set(&io->pending_stripes, 0);
->  	bio_init(&io->bio, io->biovec, PPL_IO_INLINE_BVECS);
->  
-> -	io->header_page = mempool_alloc(ppl_conf->meta_pool, GFP_NOIO);
->  	pplhdr = page_address(io->header_page);
->  	clear_page(pplhdr);
->  	memset(pplhdr->reserved, 0xff, PPL_HDR_RESERVED);
-> @@ -371,8 +400,6 @@ static void ppl_log_endio(struct bio *bio)
->  	if (bio->bi_error)
->  		md_error(ppl_conf->mddev, log->rdev);
->  
-> -	mempool_free(io->header_page, ppl_conf->meta_pool);
-> -
->  	list_for_each_entry_safe(sh, next, &io->stripe_list, log_list) {
->  		list_del_init(&sh->log_list);
->  
-> @@ -1007,7 +1034,6 @@ static void __ppl_exit_log(struct ppl_conf *ppl_conf)
->  
->  	kfree(ppl_conf->child_logs);
->  
-> -	mempool_destroy(ppl_conf->meta_pool);
->  	if (ppl_conf->bs)
->  		bioset_free(ppl_conf->bs);
->  	mempool_destroy(ppl_conf->io_pool);
-> @@ -1113,25 +1139,20 @@ int ppl_init_log(struct r5conf *conf)
->  
->  	ppl_conf->io_kc = KMEM_CACHE(ppl_io_unit, 0);
->  	if (!ppl_conf->io_kc) {
-> -		ret = -EINVAL;
-> +		ret = -ENOMEM;
->  		goto err;
->  	}
->  
-> -	ppl_conf->io_pool = mempool_create_slab_pool(conf->raid_disks, ppl_conf->io_kc);
-> +	ppl_conf->io_pool = mempool_create(conf->raid_disks, ppl_io_pool_alloc,
-> +					   ppl_io_pool_free, ppl_conf->io_kc);
->  	if (!ppl_conf->io_pool) {
-> -		ret = -EINVAL;
-> +		ret = -ENOMEM;
->  		goto err;
->  	}
->  
->  	ppl_conf->bs = bioset_create(conf->raid_disks, 0);
->  	if (!ppl_conf->bs) {
-> -		ret = -EINVAL;
-> -		goto err;
-> -	}
-> -
-> -	ppl_conf->meta_pool = mempool_create_page_pool(conf->raid_disks, 0);
-> -	if (!ppl_conf->meta_pool) {
-> -		ret = -EINVAL;
-> +		ret = -ENOMEM;
->  		goto err;
->  	}
->  
-> -- 
-> 2.11.0
-> 
+On Tue, Apr 11 2017, Shaohua Li wrote:
+
+> On Wed, Apr 05, 2017 at 02:05:50PM +1000, Neil Brown wrote:
+>> This is part of my little project to make bio splitting
+>> in Linux uniform and dead-lock free, in a way that will mean
+>> that we can get rid of all the bioset threads.
+>>=20
+>> The basic approach is that when a bio needs to be split, we call
+>> bio_split(), bio_chain() and then generic_make_request().
+>> We then proceed to handle the remainder without further splitting.
+>> Recent changes to generic_make_request() ensure that this will
+>> be safe from deadlocks, providing each bioset is used only once
+>> in the stack.
+>>=20
+>> This leads to simpler code in various places.  In particular, the
+>> splitting of bios that is needed to work around known bad blocks
+>> is now much less complex.  There is only ever one r1bio per bio.
+>>=20
+>> As you can see from
+>>  10 files changed, 335 insertions(+), 540 deletions(-)
+>> there is a net reduction in code.
+>
+> Looks good and makes code simpler, applied, thanks Neil! The patch 1 and =
+6 need
+> comments in the code to explain how deadlock is avoided though. Care to s=
+end a
+> new patch?
+
+It isn't clear to me what sort of comment you want, or where it should
+go.
+It might make sense to have a comment near bio_split() explaining how to
+use it (i.e. explaining the pattern used in various patches here), but
+I don't see what sort of comments would help in raid1.c or raid10.c
+??
+
+Thanks,
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljtZksACgkQOeye3VZi
+gblvmg//ZnPBj6QOJKUUG770uNnqGs3xZVwDodcX8PQlNAPMdPlY/uUGAmfH9orB
+08oFwyvzgXyP5BNV5nFeVnd/0Nx4aEsCUO9OV8ZG/Qodl4T3XK13MmQL9xervdJX
+6vJ44OFJFapeHWMcLEIAiKwWaPk19DzjPMsBxWCOu3LYOCEfQ5H9N8bSys36oHlN
+ta4XmZ6Nv/FhFq8VDbUcXR1uim+kPeX2+pfolXKtz/5cI7+08dSfWUaiVJoM1Quu
+jEaxB8IfZAcEo62gaWfPSbM1DpRaj/9/kxITxSEUROKKryu4IgKGJg3zfGmkQFJT
+RgxNbFH/oz4fm4I9tjhpGNGBWz3osTjlRhoQehEP1OfUALpr2ap6f9iagVs3iU/b
+X3OjNi/TOYn05CLnXgdEsOPuF13feuIT1e389ok+2xuyYHnxR7sbSWX1FUsq9/yK
+gP4Ju2TlLI5Y/WfR7pqjJX3hpRflOXoaxuD+wCMKu0BeRstRskvESYU0/7qAivB/
+dyNlOTjWvDTjk08ziFyEJKQ57TdrWXbEyQMO61DbfJAfrFnxVeednjBnzPo5TEUI
+KyOWSlpMGV7SHvksoY+m+b/pethNyzvZIxvMvbwaRFcUmRcbYzW9iWNEDRS6CUzm
+X+Fq719606MKB4LARi/Vdb5t1vSihOM5iB5VsTianA1jlLGRlHw=
+=tyd0
+-----END PGP SIGNATURE-----
+--=-=-=--
