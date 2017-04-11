@@ -1,65 +1,43 @@
-From: Michael Wang <yun.wang@profitbricks.com>
-Subject: Re: [PATCH] md: return 0 instead of error in rdev_attr_show()
-Date: Tue, 11 Apr 2017 12:32:56 +0200
-Message-ID: <af0d5660-f4cc-2e7d-61f2-9f313c8dadb2@profitbricks.com>
-References: <769019bb-84a1-044f-bac1-d44ff1ee9177@profitbricks.com>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: 4.10 + 765d704db: no improvemtn in write rates with md/raid5 group_thread_cnt > 0
+Date: Tue, 11 Apr 2017 11:01:39 +0100
+Message-ID: <874lxvgt4s.fsf@esperi.org.uk>
+References: <87zifvj61v.fsf@esperi.org.uk>
+        <20170410201057.qxypmzaw4gtmkwvd@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <769019bb-84a1-044f-bac1-d44ff1ee9177@profitbricks.com>
+In-Reply-To: <20170410201057.qxypmzaw4gtmkwvd@kernel.org> (Shaohua Li's
+        message of "Mon, 10 Apr 2017 13:10:57 -0700")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: Shaohua Li <shli@kernel.org>, NeilBrown <neilb@suse.com>
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>
 List-Id: linux-raid.ids
 
-We found the upstream fix, sorry for the noise...
+On 10 Apr 2017, Shaohua Li stated:
 
-Regards,
-Michael Wang
+> On Wed, Apr 05, 2017 at 03:13:48PM +0100, Nix wrote:
+>> So you'd expect write rates on a RAID-5 array to be higher than write rates on a
+>> single spinning-rust disk, right? Because, even with Shaohua's commit
+>> 765d704db1f583630d52 applied atop 4.10, I see little sign of it. Does this
+>> commit depend upon something else to stop death by seeking with
+>> group_thread_cnt > 0? It didn't look like it to me...
+>> 
+>> The results Shaohua showed in the original commit were very impressive, but for
+>> the life of me I can't figure out how to get anything like them.
+>
+> That only works well with large iodepth. For single write, we are still far
+> from the BW in theory. I actually wrote in the commit log:
+>
+> "We are pretty close to the maximum bandwidth in the large iodepth
+> iodepth case. The performance gap of small iodepth sequential write
+> between software raid and theory value is still very big though, because
+> we don't have an efficient pipeline."
 
-On 04/11/2017 12:14 PM, Michael Wang wrote:
-> 
-> sysfs_kf_read() expect the show() callback return the dumped
-> length, while rdev_attr_show() can return the error which lead
-> into overflow:
-> 
->  BUG: unable to handle kernel paging request at ffff88040b084000
->  IP: [<ffffffff812fe8f4>] __memmove+0x24/0x1a0
->  PGD 1edb067 PUD 1ede067 PMD 406b9a063 PTE 800000040b084161
->  Oops: 0003 [#1] SMP 
->  [snip]
->  Call Trace:
->   [<ffffffff81208c30>] ? sysfs_kf_read+0x80/0xb0
->   [<ffffffff81207e0b>] kernfs_fop_read+0xab/0x160
->   [<ffffffff81190be8>] __vfs_read+0x28/0xd0
->   [<ffffffff811911f6>] vfs_read+0x86/0x130
->   [<ffffffff81191fa6>] SyS_read+0x46/0xa0
->   [<ffffffff8158bc97>] entry_SYSCALL_64_fastpath+0x12/0x6a
-> 
-> Simply return 0 in case of error solved the problem.
-> 
-> Signed-off-by: Michael Wang <yun.wang@profitbricks.com>
-> ---
->  drivers/md/md.c | 7 +++----
->  1 file changed, 3 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 1db88d7..d46d714 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -3271,10 +3271,9 @@ rdev_attr_show(struct kobject *kobj, struct attribute *attr, char *page)
->  	struct rdev_sysfs_entry *entry = container_of(attr, struct rdev_sysfs_entry, attr);
->  	struct md_rdev *rdev = container_of(kobj, struct md_rdev, kobj);
->  
-> -	if (!entry->show)
-> -		return -EIO;
-> -	if (!rdev->mddev)
-> -		return -EBUSY;
-> +	if (!entry->show || !rdev->mddev)
-> +		return 0;
-> +
->  	return entry->show(rdev, page);
->  }
->  
-> 
+Ah right, I missed the significance of that. So this helps only if you
+have multiple simultaneous multithreaded/async I/Os to the same file at
+the same time? Damn, no help in any of my common use cases yet :( :( :(
+except maybe massively-parallel compiles, but they are never write-bound
+except when linking, and *that* is serial.
+
+I guess I have to wait and hope for a better pipeline :)
