@@ -1,90 +1,58 @@
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: Re: [PATCH 1/4] raid5-ppl: use a single mempool for ppl_io_unit and
- header_page
-Date: Tue, 11 Apr 2017 11:20:13 +0200
-Message-ID: <029f973c-77be-fca9-952b-2d3921b5f6cd@intel.com>
-References: <20170404111358.14829-1-artur.paszkiewicz@intel.com>
- <20170404111358.14829-2-artur.paszkiewicz@intel.com>
- <20170410190948.v33qgv63r423zfbb@kernel.org>
- <87fd9082-46bb-0836-7882-f0f572904549@intel.com>
+From: Michael Wang <yun.wang@profitbricks.com>
+Subject: [PATCH] md: return 0 instead of error in rdev_attr_show()
+Date: Tue, 11 Apr 2017 12:14:48 +0200
+Message-ID: <769019bb-84a1-044f-bac1-d44ff1ee9177@profitbricks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87fd9082-46bb-0836-7882-f0f572904549@intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, songliubraving@fb.com
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: Shaohua Li <shli@kernel.org>, NeilBrown <neilb@suse.com>
 List-Id: linux-raid.ids
 
-On 04/11/2017 10:28 AM, Artur Paszkiewicz wrote:
-> On 04/10/2017 09:09 PM, Shaohua Li wrote:
->>> +static void *ppl_io_pool_alloc(gfp_t gfp_mask, void *pool_data)
->>> +{
->>> +	struct kmem_cache *kc = pool_data;
->>> +	struct ppl_io_unit *io;
->>> +
->>> +	io = kmem_cache_alloc(kc, gfp_mask);
->>> +	if (!io)
->>> +		return NULL;
->>> +
->>> +	io->header_page = alloc_page(gfp_mask);
->>> +	if (!io->header_page) {
->>> +		kmem_cache_free(kc, io);
->>> +		return NULL;
->>> +	}
->>> +
->>> +	return io;
->>
->> Maybe directly use GFP_NOWAIT here, we don't use other gfp
-> 
-> Do you mean ignore the gfp_mask parameter? I don't think we should do
-> that. It is provided by the mempool implementation. We only use
-> GFP_NOWAIT for explicit allocations, but GFP_KERNEL is used for
-> allocating initial items in mempool_create().
-> 
->>> +}
->>> +
->>> +static void ppl_io_pool_free(void *element, void *pool_data)
->>> +{
->>> +	struct kmem_cache *kc = pool_data;
->>> +	struct ppl_io_unit *io = element;
->>> +
->>> +	__free_page(io->header_page);
->>> +	kmem_cache_free(kc, io);
->>> +}
->>> +
->>>  static struct ppl_io_unit *ppl_new_iounit(struct ppl_log *log,
->>>  					  struct stripe_head *sh)
->>>  {
->>> @@ -202,18 +228,19 @@ static struct ppl_io_unit *ppl_new_iounit(struct ppl_log *log,
->>>  	struct ppl_io_unit *io;
->>>  	struct ppl_header *pplhdr;
->>>  
->>> -	io = mempool_alloc(ppl_conf->io_pool, GFP_ATOMIC);
->>> +	io = mempool_alloc(ppl_conf->io_pool, GFP_NOWAIT);
->>>  	if (!io)
->>>  		return NULL;
->>>  
->>> -	memset(io, 0, sizeof(*io));
->>>  	io->log = log;
->>> +	io->entries_count = 0;
->>> +	io->pp_size = 0;
->>> +	io->submitted = false;
->>
->> I'd suggest moving the memset to ppl_io_pool_alloc. Don't think we need to
->> optimize to avoid setting header_page. And doing memset is less error prone,
->> for example adding new fields.
-> 
-> OK, I'll change this and resend.
 
-Well, on second thought, actually I can't move the memset to
-ppl_io_pool_alloc. Mempool can use the preallocated elements, which are
-then returned back to the pool after calling mempool_free() and can be
-reused later. So a ppl_io_unit must be initialized after retrieving it
-from mempool_alloc(). I can leave the memset in ppl_new_iounit() but
-io->header_page pointer will have to be temporarily copied before
-zeroing the iounit and then set back. Is this ok?
+sysfs_kf_read() expect the show() callback return the dumped
+length, while rdev_attr_show() can return the error which lead
+into overflow:
 
-Thanks,
-Artur
+ BUG: unable to handle kernel paging request at ffff88040b084000
+ IP: [<ffffffff812fe8f4>] __memmove+0x24/0x1a0
+ PGD 1edb067 PUD 1ede067 PMD 406b9a063 PTE 800000040b084161
+ Oops: 0003 [#1] SMP 
+ [snip]
+ Call Trace:
+  [<ffffffff81208c30>] ? sysfs_kf_read+0x80/0xb0
+  [<ffffffff81207e0b>] kernfs_fop_read+0xab/0x160
+  [<ffffffff81190be8>] __vfs_read+0x28/0xd0
+  [<ffffffff811911f6>] vfs_read+0x86/0x130
+  [<ffffffff81191fa6>] SyS_read+0x46/0xa0
+  [<ffffffff8158bc97>] entry_SYSCALL_64_fastpath+0x12/0x6a
+
+Simply return 0 in case of error solved the problem.
+
+Signed-off-by: Michael Wang <yun.wang@profitbricks.com>
+---
+ drivers/md/md.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 1db88d7..d46d714 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -3271,10 +3271,9 @@ rdev_attr_show(struct kobject *kobj, struct attribute *attr, char *page)
+ 	struct rdev_sysfs_entry *entry = container_of(attr, struct rdev_sysfs_entry, attr);
+ 	struct md_rdev *rdev = container_of(kobj, struct md_rdev, kobj);
+ 
+-	if (!entry->show)
+-		return -EIO;
+-	if (!rdev->mddev)
+-		return -EBUSY;
++	if (!entry->show || !rdev->mddev)
++		return 0;
++
+ 	return entry->show(rdev, page);
+ }
+ 
+-- 
+2.5.0
