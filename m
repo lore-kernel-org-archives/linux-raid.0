@@ -1,94 +1,44 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH 1/4] raid5-ppl: use a single mempool for ppl_io_unit and
- header_page
-Date: Tue, 11 Apr 2017 08:41:24 -0700
-Message-ID: <20170411154124.nyvgqixjzjs2tzqd@kernel.org>
-References: <20170404111358.14829-1-artur.paszkiewicz@intel.com>
- <20170404111358.14829-2-artur.paszkiewicz@intel.com>
- <20170410190948.v33qgv63r423zfbb@kernel.org>
- <87fd9082-46bb-0836-7882-f0f572904549@intel.com>
- <029f973c-77be-fca9-952b-2d3921b5f6cd@intel.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: [PATCH 1/2] mdadm/manpage:update description for readonly in
+ manpage
+Date: Tue, 11 Apr 2017 17:30:25 +0100
+Message-ID: <58ED04A1.4010508@youngman.org.uk>
+References: <1491811296-9118-1-git-send-email-zlliu@suse.com>
+ <1491811478-9234-1-git-send-email-zlliu@suse.com>
+ <6afe1397-3063-c5d7-58ba-f3dbdfa05336@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <029f973c-77be-fca9-952b-2d3921b5f6cd@intel.com>
+In-Reply-To: <6afe1397-3063-c5d7-58ba-f3dbdfa05336@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: linux-raid@vger.kernel.org, songliubraving@fb.com
+To: Jes Sorensen <jes.sorensen@gmail.com>, Zhilong Liu <zlliu@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Apr 11, 2017 at 11:20:13AM +0200, Artur Paszkiewicz wrote:
-> On 04/11/2017 10:28 AM, Artur Paszkiewicz wrote:
-> > On 04/10/2017 09:09 PM, Shaohua Li wrote:
-> >>> +static void *ppl_io_pool_alloc(gfp_t gfp_mask, void *pool_data)
-> >>> +{
-> >>> +	struct kmem_cache *kc = pool_data;
-> >>> +	struct ppl_io_unit *io;
-> >>> +
-> >>> +	io = kmem_cache_alloc(kc, gfp_mask);
-> >>> +	if (!io)
-> >>> +		return NULL;
-> >>> +
-> >>> +	io->header_page = alloc_page(gfp_mask);
-> >>> +	if (!io->header_page) {
-> >>> +		kmem_cache_free(kc, io);
-> >>> +		return NULL;
-> >>> +	}
-> >>> +
-> >>> +	return io;
-> >>
-> >> Maybe directly use GFP_NOWAIT here, we don't use other gfp
-> > 
-> > Do you mean ignore the gfp_mask parameter? I don't think we should do
-> > that. It is provided by the mempool implementation. We only use
-> > GFP_NOWAIT for explicit allocations, but GFP_KERNEL is used for
-> > allocating initial items in mempool_create().
-> > 
-> >>> +}
-> >>> +
-> >>> +static void ppl_io_pool_free(void *element, void *pool_data)
-> >>> +{
-> >>> +	struct kmem_cache *kc = pool_data;
-> >>> +	struct ppl_io_unit *io = element;
-> >>> +
-> >>> +	__free_page(io->header_page);
-> >>> +	kmem_cache_free(kc, io);
-> >>> +}
-> >>> +
-> >>>  static struct ppl_io_unit *ppl_new_iounit(struct ppl_log *log,
-> >>>  					  struct stripe_head *sh)
-> >>>  {
-> >>> @@ -202,18 +228,19 @@ static struct ppl_io_unit *ppl_new_iounit(struct ppl_log *log,
-> >>>  	struct ppl_io_unit *io;
-> >>>  	struct ppl_header *pplhdr;
-> >>>  
-> >>> -	io = mempool_alloc(ppl_conf->io_pool, GFP_ATOMIC);
-> >>> +	io = mempool_alloc(ppl_conf->io_pool, GFP_NOWAIT);
-> >>>  	if (!io)
-> >>>  		return NULL;
-> >>>  
-> >>> -	memset(io, 0, sizeof(*io));
-> >>>  	io->log = log;
-> >>> +	io->entries_count = 0;
-> >>> +	io->pp_size = 0;
-> >>> +	io->submitted = false;
-> >>
-> >> I'd suggest moving the memset to ppl_io_pool_alloc. Don't think we need to
-> >> optimize to avoid setting header_page. And doing memset is less error prone,
-> >> for example adding new fields.
-> > 
-> > OK, I'll change this and resend.
+On 11/04/17 15:51, Jes Sorensen wrote:
+>>
+>>  .TP
+>>  .B \-\-readonly
+>> -This will mark an active array as read-only, providing that it is
+>> -not currently being used.
+>> +This will set an active array as read-only status.
 > 
-> Well, on second thought, actually I can't move the memset to
-> ppl_io_pool_alloc. Mempool can use the preallocated elements, which are
-> then returned back to the pool after calling mempool_free() and can be
-> reused later. So a ppl_io_unit must be initialized after retrieving it
-> from mempool_alloc(). I can leave the memset in ppl_new_iounit() but
-> io->header_page pointer will have to be temporarily copied before
-> zeroing the iounit and then set back. Is this ok?
+> I think this chance is not good, and should be omitted.
 
-Yes, that's preferred.
+Agreed, except that I would change "providing" to "provided".
+> 
+>>  .TP
+>>  .B \-\-readwrite
+>> -This will change a
+>> +This will change an
+>>  .B readonly
+>>  array back to being read/write.
+> 
+> This change is grammatically incorrect I believe and the original text
+> is correct.
 
-Thanks,
-Shaohua
+Agreed.
+
+Cheers,
+Wol
