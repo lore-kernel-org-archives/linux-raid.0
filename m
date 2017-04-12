@@ -1,47 +1,78 @@
-From: Reindl Harald <h.reindl@thelounge.net>
-Subject: Re: Linux software raid troubles
-Date: Wed, 12 Apr 2017 16:45:47 +0200
-Message-ID: <8e9a25fc-5c81-103c-2ffa-4b46f2aa8630@thelounge.net>
-References: <CAAO=44Y=8xrnWvMp214RFq9Y-KVDQVfEYa2vL-Ahgmbvgs6Y4w@mail.gmail.com>
+From: Coly Li <colyli@suse.de>
+Subject: Re: [md PATCH 2/2] md: support disabling of create-on-open semantics.
+Date: Wed, 12 Apr 2017 22:49:34 +0800
+Message-ID: <4e185cbe-cdbe-0f45-e060-99e408815e64@suse.de>
+References: <149197804398.19936.12809382889200123725.stgit@noble>
+ <149197837322.19936.7035050500466184535.stgit@noble>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAO=44Y=8xrnWvMp214RFq9Y-KVDQVfEYa2vL-Ahgmbvgs6Y4w@mail.gmail.com>
-Content-Language: de-CH
+In-Reply-To: <149197837322.19936.7035050500466184535.stgit@noble>
 Sender: linux-raid-owner@vger.kernel.org
-To: linuxknight <linuxknight@gmail.com>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>, Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-
-Am 12.04.2017 um 16:31 schrieb linuxknight:
-> Last weekend I was moving a server with a raid1 configuration,
-> controlled by a Intel Corporation 82801 SATA RAID Controller.  Upon
-> reboot I noticed the degraded message (server hadnt been rebooted in a
-> couple years).
+On 2017/4/12 下午2:26, NeilBrown wrote:
+> md allows a new array device to be created by simply
+> opening a device file.  This make it difficult to
+> remove the device and udev is likely to open the device file
+> as part of processing the REMOVE event.
 > 
-> The raid1 array was two 500gb black WD drives.  I wasnt able to locate
-> an identical 500gb disk, but did find a 2TB just to get things
-> mirrored again.  The bios screen accepted the replacement disk and
-> said it would rebuild in the OS.  mdsync seemed to do its thing but I
-> noticed mdmon process was taking 200% cpu.  I let it go a few days
-> thinking it was just taking longer than normal to sync, then rebooted.
-> It was in a complete failed state and wouldnt boot at all.  After
-> removing the 2TB disk I was able to boot into the OS again.  I just
-> assumed I needed a similar drive size for the second part of the
-> mirror.
+> There is an alternate mechanism for creating arrays
+> by writing to the new_array module parameter.
+> When using tools that work with this parameter, it is
+> best to disable the old semantics.
+> This new module parameter allows that.
+> 
+> Signed-off-by: NeilBrown <neilb@suse.com>
 
-when you talk about a "SATA RAID Controller" and "The bios screen 
-accepted the replacement disk and said it would rebuild in the OS" this 
-sadly is not a "linux software raid" at it's own
+Acked-by: Coly Li <colyli@suse.de>
 
-197 Current_Pending_Sector  -O--CK   200   200   000    -    9
-198 Offline_Uncorrectable   ----CK   200   200   000    -    7
-
-i would strongly suggest https://www.gnu.org/software/ddrescue/ and make 
-a image of that disk because after 39646 Power_On_Hours it's likely that 
-the remaining disk fails completly in a short time and you could at 
-least restore the disk-image with "dd" to a new disk if that happens as 
-well as mount it with as loop-device
+> ---
+>  drivers/md/md.c |   14 +++++++++++++-
+>  1 file changed, 13 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index c3d3bae947a1..a7ab769eacc3 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -174,6 +174,16 @@ static const struct block_device_operations md_fops;
+>  
+>  static int start_readonly;
+>  
+> +/*
+> + * The original mechanism for creating an md device is to create
+> + * a device node in /dev and to open it.  This causes races with device-close.
+> + * The preferred method is to write to the "new_array" module parameter.
+> + * This can avoid races.
+> + * Setting create_on_open to false disables the original mechanism
+> + * so all the races disappear.
+> + */
+> +static bool create_on_open = true;
+> +
+>  /* bio_clone_mddev
+>   * like bio_clone_bioset, but with a local bio set
+>   */
+> @@ -5286,7 +5296,8 @@ static int md_alloc(dev_t dev, char *name)
+>  
+>  static struct kobject *md_probe(dev_t dev, int *part, void *data)
+>  {
+> -	md_alloc(dev, NULL);
+> +	if (create_on_open)
+> +		md_alloc(dev, NULL);
+>  	return NULL;
+>  }
+>  
+> @@ -9202,6 +9213,7 @@ static int set_ro(const char *val, struct kernel_param *kp)
+>  module_param_call(start_ro, set_ro, get_ro, NULL, S_IRUSR|S_IWUSR);
+>  module_param(start_dirty_degraded, int, S_IRUGO|S_IWUSR);
+>  module_param_call(new_array, add_named_array, NULL, NULL, S_IWUSR);
+> +module_param(create_on_open, bool, S_IRUSR|S_IWUSR);
+>  
+>  MODULE_LICENSE("GPL");
+>  MODULE_DESCRIPTION("MD RAID framework");
+> 
+> 
 
