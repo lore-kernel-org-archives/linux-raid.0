@@ -1,49 +1,36 @@
 From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH v1 1/2] mdadm/manpage:update manpage for readonly parameter
-Date: Wed, 12 Apr 2017 16:36:38 +0800
-Message-ID: <1491986198-16642-1-git-send-email-zlliu@suse.com>
-References: <6afe1397-3063-c5d7-58ba-f3dbdfa05336@gmail.com>
+Subject: [PATCH v1 2/2] mdadm/manpage:clustered arrays don't support array-size yet
+Date: Wed, 12 Apr 2017 16:37:27 +0800
+Message-ID: <1491986247-16706-1-git-send-email-zlliu@suse.com>
+References: <1d2103a9-a7f2-54f8-ec51-ad0a04c6d9ae@gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6afe1397-3063-c5d7-58ba-f3dbdfa05336@gmail.com>
+In-Reply-To: <1d2103a9-a7f2-54f8-ec51-ad0a04c6d9ae@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Jes.Sorensen@gmail.com
 Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
-update readonly in manpage:
-Currently both the readwrite and readonly are worked well,
-update the readonly section.
-One commit in linux/driver/md. Cleared "MD_CLOSING bit" to
-Fixes: af8d8e6f0315 ("md: changes for MD_STILL_CLOSED flag")
+Update manpage for array-size section:
+Clustered arrays don't support the --array-size yet.
 
 Signed-off-by: Zhilong Liu <zlliu@suse.com>
 ---
- mdadm.8.in | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ mdadm.8.in | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/mdadm.8.in b/mdadm.8.in
-index 744c12b..f10a8b8 100644
+index f10a8b8..fb99a5c 100644
 --- a/mdadm.8.in
 +++ b/mdadm.8.in
-@@ -925,7 +925,8 @@ will not try to be so clever.
- Start the array
- .B read only
- rather than read-write as normal.  No writes will be allowed to the
--array, and no resync, recovery, or reshape will be started.
-+array, and no resync, recovery, or reshape will be started. It works with
-+Create, Assemble, Manage and Misc mode.
+@@ -541,6 +541,8 @@ A value of
+ restores the apparent size of the array to be whatever the real
+ amount of available space is.
  
++Clustered arrays do not support this parameter yet.
++
  .TP
- .BR \-a ", " "\-\-auto{=yes,md,mdp,part,p}{NN}"
-@@ -2232,7 +2233,7 @@ be in use.
- 
- .TP
- .B \-\-readonly
--start the array readonly \(em not supported yet.
-+start the array in readonly mode.
- 
- .SH MANAGE MODE
- .HP 12
+ .BR \-c ", " \-\-chunk=
+ Specify chunk size of kilobytes.  The default when creating an
 -- 
 2.6.6
 
