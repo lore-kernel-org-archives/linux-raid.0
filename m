@@ -1,95 +1,42 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: Re: md-cluster Oops 4.9.13
-Date: Wed, 12 Apr 2017 09:32:32 +0800
-Message-ID: <58ED83B0.6080209@suse.com>
-References: <CAHkw+Lcr1+sWsQPK_ijfTHwG+zxRYT+iNhWGdpYTNxVuQi8TOw@mail.gmail.com>
- <58E45E0C.6030705@gmail.com>
- <CAHkw+Ld=yv=LoBKFUxNO6dEocOKzq-pFR=Tfk50OULXJ8NN9eQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Matt Brown <matthew.brown.dev@gmail.com>
+Subject: [PATCH 1/2] lib/raid6: Build proper files on corresponding arch
+Date: Wed, 12 Apr 2017 11:35:51 +1000
+Message-ID: <20170412013552.21650-1-matthew.brown.dev@gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHkw+Ld=yv=LoBKFUxNO6dEocOKzq-pFR=Tfk50OULXJ8NN9eQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marc Smith <marc.smith@mcc.edu>
-Cc: linux-raid@vger.kernel.org
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-raid@vger.kernel.org, dja@axtens.net
 List-Id: linux-raid.ids
 
+Previously the raid6 test Makefile did not correctly build the files for
+testing on PowerPC. This patch fixes the bug, so that all appropriate files
+for PowerPC are built.
 
+Signed-off-by: Matt Brown <matthew.brown.dev@gmail.com>
+---
+ lib/raid6/test/Makefile | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-On 04/10/2017 09:25 PM, Marc Smith wrote:
-> Hi,
->
-> Sorry for the delay... I was hoping to cherry-pick this and test
-> against 4.9.x, but it didn't apply cleanly, although it looks trivial
-> to do it by hand. Is it recommended/okay to test this patch against
-> 4.9.x? Will the fix eventually be merged into 4.9.x?
-
-I think you can have a try with the patch then see what will happen, the 
-better
-way is try with the latest code though people don't like always update 
-kernel,
-but it is not a material for stable 4.9.x from my understanding.
-
-Thanks,
-Guoqing
-
->
->
-> --Marc
->
-> On Tue, Apr 4, 2017 at 11:01 PM, Guoqing Jiang <jgq516@gmail.com> wrote:
->>
->> On 04/04/2017 10:06 PM, Marc Smith wrote:
->>> Hi,
->>>
->>> I encountered an oops this morning when stopping a MD array
->>> (md-cluster)... there were 4 md-cluster array started, and they were
->>> in the middle of a rebuild. I stopped the first one and then stopped
->>> the second one immediately after and got the oops, here is a
->>> transcript of what was on my terminal session:
->>>
->>> [root@brimstone-1b ~]# mdadm --stop /dev/md/array1
->>> mdadm: stopped /dev/md/array1
->>> [root@brimstone-1b ~]# mdadm --stop /dev/md/array2
->>>
->>> Message from syslogd@brimstone-1b at Tue Apr  4 09:54:40 2017 ...
->>> brimstone-1b kernel: [649162.174685] BUG: unable to handle kernel NULL
->>> pointer dereference at 0000000000000098
->>>
->>> Using Linux 4.9.13 and here is the output from the kernel messages:
->>>
->>> --snip--
->>> [649158.014731] dlm: 5b3b8f94-7875-b323-5bb8-29fa6866f4a8: leaving the
->>> lockspace group...
->>> [649158.015233] dlm: 5b3b8f94-7875-b323-5bb8-29fa6866f4a8: group event
->>> done 0 0
->>> [649158.015303] dlm: 5b3b8f94-7875-b323-5bb8-29fa6866f4a8:
->>> release_lockspace final free
->>> [649158.015331] md: unbind<nvme0n1p1>
->>> [649158.042540] md: export_rdev(nvme0n1p1)
->>> [649158.042546] md: unbind<nvme1n1p1>
->>> [649158.048501] md: export_rdev(nvme1n1p1)
->>> [649161.759022] md127: detected capacity change from 1000068874240 to 0
->>> [649161.759025] md: md127 stopped.
->>> [649162.174685] BUG: unable to handle kernel NULL pointer dereference
->>> at 0000000000000098
->>> [649162.174727] IP: [<ffffffff81868b40>] recv_daemon+0x1e9/0x373
->>
->> Looks like the recv_daemon is still running after stop array, commit
->> 48df498 "md: move bitmap_destroy to the beginning of __md_stop"
->> ensure it won't happen.
->>
->>
->> [snip]
->>
->>> Perhaps this is already fixed in later versions? Let me know if you
->>> need any additional information.
->>
->> Could you pls try with the latest version? Please let me know if you
->> still see it, thanks.
->>
->> Regards,
->> Guoqing
->>
+diff --git a/lib/raid6/test/Makefile b/lib/raid6/test/Makefile
+index 9c333e9..62b26d1 100644
+--- a/lib/raid6/test/Makefile
++++ b/lib/raid6/test/Makefile
+@@ -44,10 +44,12 @@ else ifeq ($(HAS_NEON),yes)
+         CFLAGS += -DCONFIG_KERNEL_MODE_NEON=1
+ else
+         HAS_ALTIVEC := $(shell printf '\#include <altivec.h>\nvector int a;\n' |\
+-                         gcc -c -x c - >&/dev/null && \
+-                         rm ./-.o && echo yes)
++			 gcc -c -x c - >/dev/null && rm ./-.o && echo yes)
+         ifeq ($(HAS_ALTIVEC),yes)
+-                OBJS += altivec1.o altivec2.o altivec4.o altivec8.o
++		CFLAGS += -I../../../arch/powerpc/include
++		CFLAGS += -DCONFIG_ALTIVEC
++		OBJS += altivec1.o altivec2.o altivec4.o altivec8.o \
++			vpermxor1.o vpermxor2.o vpermxor4.o vpermxor8.o
+         endif
+ endif
+ ifeq ($(ARCH),tilegx)
+-- 
+2.9.3
 
