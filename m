@@ -1,60 +1,124 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [md PATCH 00/10] Simplify bio splitting and related code.
-Date: Tue, 11 Apr 2017 19:51:57 -0700
-Message-ID: <20170412025157.qlodbacq2afuvq6j@kernel.org>
-References: <149136485390.25893.1797855041954158826.stgit@noble>
- <20170411170112.4txdyjdat63qpsi6@kernel.org>
- <871ssywmno.fsf@notabene.neil.brown.name>
+From: NeilBrown <neilb@suse.com>
+Subject: [md PATCH 1/2] md: allow creation of mdNNN arrays via
+ md_mod/parameters/new_array
+Date: Wed, 12 Apr 2017 16:26:13 +1000
+Message-ID: <149197837299.19936.14922734851405940379.stgit@noble>
+References: <149197804398.19936.12809382889200123725.stgit@noble>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <871ssywmno.fsf@notabene.neil.brown.name>
+In-Reply-To: <149197804398.19936.12809382889200123725.stgit@noble>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, Coly Li <colyli@suse.de>
 List-Id: linux-raid.ids
 
-On Wed, Apr 12, 2017 at 09:27:07AM +1000, Neil Brown wrote:
-> On Tue, Apr 11 2017, Shaohua Li wrote:
-> 
-> > On Wed, Apr 05, 2017 at 02:05:50PM +1000, Neil Brown wrote:
-> >> This is part of my little project to make bio splitting
-> >> in Linux uniform and dead-lock free, in a way that will mean
-> >> that we can get rid of all the bioset threads.
-> >> 
-> >> The basic approach is that when a bio needs to be split, we call
-> >> bio_split(), bio_chain() and then generic_make_request().
-> >> We then proceed to handle the remainder without further splitting.
-> >> Recent changes to generic_make_request() ensure that this will
-> >> be safe from deadlocks, providing each bioset is used only once
-> >> in the stack.
-> >> 
-> >> This leads to simpler code in various places.  In particular, the
-> >> splitting of bios that is needed to work around known bad blocks
-> >> is now much less complex.  There is only ever one r1bio per bio.
-> >> 
-> >> As you can see from
-> >>  10 files changed, 335 insertions(+), 540 deletions(-)
-> >> there is a net reduction in code.
-> >
-> > Looks good and makes code simpler, applied, thanks Neil! The patch 1 and 6 need
-> > comments in the code to explain how deadlock is avoided though. Care to send a
-> > new patch?
-> 
-> It isn't clear to me what sort of comment you want, or where it should
-> go.
-> It might make sense to have a comment near bio_split() explaining how to
-> use it (i.e. explaining the pattern used in various patches here), but
-> I don't see what sort of comments would help in raid1.c or raid10.c
-> ??
+The intention when creating the "new_array" parameter and the
+possibility of having array names line "md_HOME" was to transition
+away from the old way of creating arrays and to eventually only use
+this new way.
 
-Both raid1.c and raid10.c have comments why we need offload the bio to
-raid1d/raid10d to avoid deadlock before, we also have comments to explain why
-we do bio_split() and then generic_make_request() before. Now these info are
-lost, so I hope we can add it back why the new way (bio_split and follow
-generic_make_request of next part) can avoid deadlock. That will be very
-helpful for others.
+The "old" way of creating array is to create a device node in /dev
+and then open it.  The act of opening creates the array.
+This is problematic because sometimes the device node can be opened
+when we don't want to create an array.  This can easily happen
+when some rule triggered by udev looks at a device as it is being
+destroyed.  The node in /dev continues to exist for a short period
+after an array is stopped, and opening it during this time recreates
+the array (as an inactive array).
 
-Thanks,
-Shaohua
+Unfortunately no clear plan for the transition was created.  It is now
+time to fix that.
+
+This patch allows devices with numeric names, like "md999" to be
+created by writing to "new_array".  This will only work if the minor
+number given is not already in use.  This will allow mdadm to
+support the creation of arrays with numbers > 511 (currently not
+possible) by writing to new_array.
+mdadm can, at some point, use this approach to create *all* arrays,
+which will allow the transition to only using the new-way.
+
+Signed-off-by: NeilBrown <neilb@suse.com>
+---
+ drivers/md/md.c |   34 ++++++++++++++++++++++++++++------
+ 1 file changed, 28 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 9fe930109012..c3d3bae947a1 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5164,6 +5164,14 @@ static void no_op(struct percpu_ref *r) {}
+ 
+ static int md_alloc(dev_t dev, char *name)
+ {
++	/* If dev is zero, name is the name of a device to allocate with
++	 * an arbitrary minor number.  It will be "md_???"
++	 * If dev is non-zero it must be a device number with a MAJOR of
++	 * MD_MAJOR or mdp_major.  In this case, if "name" is NULL, then
++	 * the device is being created by opening a node in /dev.
++	 * If "name" is not NULL, the device is being created by
++	 * writing to /sys/module/md_mod/parameters/new_array.
++	 */
+ 	static DEFINE_MUTEX(disks_mutex);
+ 	struct mddev *mddev = mddev_find(dev);
+ 	struct gendisk *disk;
+@@ -5189,7 +5197,7 @@ static int md_alloc(dev_t dev, char *name)
+ 	if (mddev->gendisk)
+ 		goto abort;
+ 
+-	if (name) {
++	if (name && !dev) {
+ 		/* Need to ensure that 'name' is not a duplicate.
+ 		 */
+ 		struct mddev *mddev2;
+@@ -5203,6 +5211,11 @@ static int md_alloc(dev_t dev, char *name)
+ 			}
+ 		spin_unlock(&all_mddevs_lock);
+ 	}
++	if (name && dev)
++		/*
++		 * Creating /dev/mdNNN via "newarray", so adjust hold_active.
++		 */
++		mddev->hold_active = UNTIL_STOP;
+ 
+ 	error = -ENOMEM;
+ 	mddev->queue = blk_alloc_queue(GFP_KERNEL);
+@@ -5279,21 +5292,30 @@ static struct kobject *md_probe(dev_t dev, int *part, void *data)
+ 
+ static int add_named_array(const char *val, struct kernel_param *kp)
+ {
+-	/* val must be "md_*" where * is not all digits.
+-	 * We allocate an array with a large free minor number, and
++	/* val must be "md_*" or "mdNNN".
++	 * For "md_*" we allocate an array with a large free minor number, and
+ 	 * set the name to val.  val must not already be an active name.
++	 * For "mdNNN" we allocate an array with the minor number NNN
++	 * which must not already be in use.
+ 	 */
+ 	int len = strlen(val);
+ 	char buf[DISK_NAME_LEN];
++	unsigned long devnum;
+ 
+ 	while (len && val[len-1] == '\n')
+ 		len--;
+ 	if (len >= DISK_NAME_LEN)
+ 		return -E2BIG;
+ 	strlcpy(buf, val, len+1);
+-	if (strncmp(buf, "md_", 3) != 0)
+-		return -EINVAL;
+-	return md_alloc(0, buf);
++	if (strncmp(buf, "md_", 3) == 0)
++		return md_alloc(0, buf);
++	if (strncmp(buf, "md", 2) == 0 &&
++	    isdigit(buf[2]) &&
++	    kstrtoul(buf+2, 10, &devnum) == 0 &&
++	    devnum <= MINORMASK)
++		return md_alloc(MKDEV(MD_MAJOR, devnum), NULL);
++
++	return -EINVAL;
+ }
+ 
+ static void md_safemode_timeout(unsigned long data)
+
+
