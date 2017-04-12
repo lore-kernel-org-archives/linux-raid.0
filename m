@@ -1,7 +1,7 @@
 From: linuxknight <linuxknight@gmail.com>
 Subject: Linux software raid troubles
-Date: Wed, 12 Apr 2017 10:06:19 -0400
-Message-ID: <CAAO=44Yk=-kJwSejxL3-svsYdoWmde+1+d+ku9pbkEF-AeF-hA@mail.gmail.com>
+Date: Wed, 12 Apr 2017 10:31:46 -0400
+Message-ID: <CAAO=44Y=8xrnWvMp214RFq9Y-KVDQVfEYa2vL-Ahgmbvgs6Y4w@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
@@ -759,4 +759,3 @@ md127 : inactive sda[1](S) sdb[0](S)
       5928 blocks super external:imsm
 
 unused devices: <none>
-mail:~/lsdrv #
