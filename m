@@ -1,72 +1,38 @@
-From: NeilBrown <neilb@suse.com>
-Subject: [md PATCH 2/2] md: support disabling of create-on-open semantics.
-Date: Wed, 12 Apr 2017 16:26:13 +1000
-Message-ID: <149197837322.19936.7035050500466184535.stgit@noble>
-References: <149197804398.19936.12809382889200123725.stgit@noble>
+From: Michael Ellerman <mpe@ellerman.id.au>
+Subject: Re: [PATCH 1/2] lib/raid6: Build proper files on corresponding arch
+Date: Wed, 12 Apr 2017 17:01:01 +1000
+Message-ID: <87wpaqt8ia.fsf@concordia.ellerman.id.au>
+References: <20170412013552.21650-1-matthew.brown.dev@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <149197804398.19936.12809382889200123725.stgit@noble>
+In-Reply-To: <20170412013552.21650-1-matthew.brown.dev@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, Coly Li <colyli@suse.de>
+To: Matt Brown <matthew.brown.dev@gmail.com>, linuxppc-dev@lists.ozlabs.org
+Cc: linux-raid@vger.kernel.org, dja@axtens.net
 List-Id: linux-raid.ids
 
-md allows a new array device to be created by simply
-opening a device file.  This make it difficult to
-remove the device and udev is likely to open the device file
-as part of processing the REMOVE event.
+Matt Brown <matthew.brown.dev@gmail.com> writes:
 
-There is an alternate mechanism for creating arrays
-by writing to the new_array module parameter.
-When using tools that work with this parameter, it is
-best to disable the old semantics.
-This new module parameter allows that.
+> diff --git a/lib/raid6/test/Makefile b/lib/raid6/test/Makefile
+> index 9c333e9..62b26d1 100644
+> --- a/lib/raid6/test/Makefile
+> +++ b/lib/raid6/test/Makefile
+> @@ -44,10 +44,12 @@ else ifeq ($(HAS_NEON),yes)
+>          CFLAGS += -DCONFIG_KERNEL_MODE_NEON=1
+>  else
+>          HAS_ALTIVEC := $(shell printf '\#include <altivec.h>\nvector int a;\n' |\
+> -                         gcc -c -x c - >&/dev/null && \
+> -                         rm ./-.o && echo yes)
+> +			 gcc -c -x c - >/dev/null && rm ./-.o && echo yes)
+>          ifeq ($(HAS_ALTIVEC),yes)
+> -                OBJS += altivec1.o altivec2.o altivec4.o altivec8.o
+> +		CFLAGS += -I../../../arch/powerpc/include
+> +		CFLAGS += -DCONFIG_ALTIVEC
+> +		OBJS += altivec1.o altivec2.o altivec4.o altivec8.o \
+> +			vpermxor1.o vpermxor2.o vpermxor4.o vpermxor8.o
 
-Signed-off-by: NeilBrown <neilb@suse.com>
----
- drivers/md/md.c |   14 +++++++++++++-
- 1 file changed, 13 insertions(+), 1 deletion(-)
+The whitespace in here is a bit of a mess, but you should follow what's
+there and use spaces to indent your additions.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index c3d3bae947a1..a7ab769eacc3 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -174,6 +174,16 @@ static const struct block_device_operations md_fops;
- 
- static int start_readonly;
- 
-+/*
-+ * The original mechanism for creating an md device is to create
-+ * a device node in /dev and to open it.  This causes races with device-close.
-+ * The preferred method is to write to the "new_array" module parameter.
-+ * This can avoid races.
-+ * Setting create_on_open to false disables the original mechanism
-+ * so all the races disappear.
-+ */
-+static bool create_on_open = true;
-+
- /* bio_clone_mddev
-  * like bio_clone_bioset, but with a local bio set
-  */
-@@ -5286,7 +5296,8 @@ static int md_alloc(dev_t dev, char *name)
- 
- static struct kobject *md_probe(dev_t dev, int *part, void *data)
- {
--	md_alloc(dev, NULL);
-+	if (create_on_open)
-+		md_alloc(dev, NULL);
- 	return NULL;
- }
- 
-@@ -9202,6 +9213,7 @@ static int set_ro(const char *val, struct kernel_param *kp)
- module_param_call(start_ro, set_ro, get_ro, NULL, S_IRUSR|S_IWUSR);
- module_param(start_dirty_degraded, int, S_IRUGO|S_IWUSR);
- module_param_call(new_array, add_named_array, NULL, NULL, S_IWUSR);
-+module_param(create_on_open, bool, S_IRUSR|S_IWUSR);
- 
- MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION("MD RAID framework");
-
-
+cheers
