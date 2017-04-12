@@ -1,77 +1,95 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [md PATCH 00/10] Simplify bio splitting and related code.
-Date: Wed, 12 Apr 2017 09:27:07 +1000
-Message-ID: <871ssywmno.fsf@notabene.neil.brown.name>
-References: <149136485390.25893.1797855041954158826.stgit@noble> <20170411170112.4txdyjdat63qpsi6@kernel.org>
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: Re: md-cluster Oops 4.9.13
+Date: Wed, 12 Apr 2017 09:32:32 +0800
+Message-ID: <58ED83B0.6080209@suse.com>
+References: <CAHkw+Lcr1+sWsQPK_ijfTHwG+zxRYT+iNhWGdpYTNxVuQi8TOw@mail.gmail.com>
+ <58E45E0C.6030705@gmail.com>
+ <CAHkw+Ld=yv=LoBKFUxNO6dEocOKzq-pFR=Tfk50OULXJ8NN9eQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170411170112.4txdyjdat63qpsi6@kernel.org>
+In-Reply-To: <CAHkw+Ld=yv=LoBKFUxNO6dEocOKzq-pFR=Tfk50OULXJ8NN9eQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
+To: Marc Smith <marc.smith@mcc.edu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Tue, Apr 11 2017, Shaohua Li wrote:
 
-> On Wed, Apr 05, 2017 at 02:05:50PM +1000, Neil Brown wrote:
->> This is part of my little project to make bio splitting
->> in Linux uniform and dead-lock free, in a way that will mean
->> that we can get rid of all the bioset threads.
->>=20
->> The basic approach is that when a bio needs to be split, we call
->> bio_split(), bio_chain() and then generic_make_request().
->> We then proceed to handle the remainder without further splitting.
->> Recent changes to generic_make_request() ensure that this will
->> be safe from deadlocks, providing each bioset is used only once
->> in the stack.
->>=20
->> This leads to simpler code in various places.  In particular, the
->> splitting of bios that is needed to work around known bad blocks
->> is now much less complex.  There is only ever one r1bio per bio.
->>=20
->> As you can see from
->>  10 files changed, 335 insertions(+), 540 deletions(-)
->> there is a net reduction in code.
+On 04/10/2017 09:25 PM, Marc Smith wrote:
+> Hi,
 >
-> Looks good and makes code simpler, applied, thanks Neil! The patch 1 and =
-6 need
-> comments in the code to explain how deadlock is avoided though. Care to s=
-end a
-> new patch?
+> Sorry for the delay... I was hoping to cherry-pick this and test
+> against 4.9.x, but it didn't apply cleanly, although it looks trivial
+> to do it by hand. Is it recommended/okay to test this patch against
+> 4.9.x? Will the fix eventually be merged into 4.9.x?
 
-It isn't clear to me what sort of comment you want, or where it should
-go.
-It might make sense to have a comment near bio_split() explaining how to
-use it (i.e. explaining the pattern used in various patches here), but
-I don't see what sort of comments would help in raid1.c or raid10.c
-??
+I think you can have a try with the patch then see what will happen, the 
+better
+way is try with the latest code though people don't like always update 
+kernel,
+but it is not a material for stable 4.9.x from my understanding.
 
 Thanks,
-NeilBrown
+Guoqing
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+>
+>
+> --Marc
+>
+> On Tue, Apr 4, 2017 at 11:01 PM, Guoqing Jiang <jgq516@gmail.com> wrote:
+>>
+>> On 04/04/2017 10:06 PM, Marc Smith wrote:
+>>> Hi,
+>>>
+>>> I encountered an oops this morning when stopping a MD array
+>>> (md-cluster)... there were 4 md-cluster array started, and they were
+>>> in the middle of a rebuild. I stopped the first one and then stopped
+>>> the second one immediately after and got the oops, here is a
+>>> transcript of what was on my terminal session:
+>>>
+>>> [root@brimstone-1b ~]# mdadm --stop /dev/md/array1
+>>> mdadm: stopped /dev/md/array1
+>>> [root@brimstone-1b ~]# mdadm --stop /dev/md/array2
+>>>
+>>> Message from syslogd@brimstone-1b at Tue Apr  4 09:54:40 2017 ...
+>>> brimstone-1b kernel: [649162.174685] BUG: unable to handle kernel NULL
+>>> pointer dereference at 0000000000000098
+>>>
+>>> Using Linux 4.9.13 and here is the output from the kernel messages:
+>>>
+>>> --snip--
+>>> [649158.014731] dlm: 5b3b8f94-7875-b323-5bb8-29fa6866f4a8: leaving the
+>>> lockspace group...
+>>> [649158.015233] dlm: 5b3b8f94-7875-b323-5bb8-29fa6866f4a8: group event
+>>> done 0 0
+>>> [649158.015303] dlm: 5b3b8f94-7875-b323-5bb8-29fa6866f4a8:
+>>> release_lockspace final free
+>>> [649158.015331] md: unbind<nvme0n1p1>
+>>> [649158.042540] md: export_rdev(nvme0n1p1)
+>>> [649158.042546] md: unbind<nvme1n1p1>
+>>> [649158.048501] md: export_rdev(nvme1n1p1)
+>>> [649161.759022] md127: detected capacity change from 1000068874240 to 0
+>>> [649161.759025] md: md127 stopped.
+>>> [649162.174685] BUG: unable to handle kernel NULL pointer dereference
+>>> at 0000000000000098
+>>> [649162.174727] IP: [<ffffffff81868b40>] recv_daemon+0x1e9/0x373
+>>
+>> Looks like the recv_daemon is still running after stop array, commit
+>> 48df498 "md: move bitmap_destroy to the beginning of __md_stop"
+>> ensure it won't happen.
+>>
+>>
+>> [snip]
+>>
+>>> Perhaps this is already fixed in later versions? Let me know if you
+>>> need any additional information.
+>>
+>> Could you pls try with the latest version? Please let me know if you
+>> still see it, thanks.
+>>
+>> Regards,
+>> Guoqing
+>>
 
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljtZksACgkQOeye3VZi
-gblvmg//ZnPBj6QOJKUUG770uNnqGs3xZVwDodcX8PQlNAPMdPlY/uUGAmfH9orB
-08oFwyvzgXyP5BNV5nFeVnd/0Nx4aEsCUO9OV8ZG/Qodl4T3XK13MmQL9xervdJX
-6vJ44OFJFapeHWMcLEIAiKwWaPk19DzjPMsBxWCOu3LYOCEfQ5H9N8bSys36oHlN
-ta4XmZ6Nv/FhFq8VDbUcXR1uim+kPeX2+pfolXKtz/5cI7+08dSfWUaiVJoM1Quu
-jEaxB8IfZAcEo62gaWfPSbM1DpRaj/9/kxITxSEUROKKryu4IgKGJg3zfGmkQFJT
-RgxNbFH/oz4fm4I9tjhpGNGBWz3osTjlRhoQehEP1OfUALpr2ap6f9iagVs3iU/b
-X3OjNi/TOYn05CLnXgdEsOPuF13feuIT1e389ok+2xuyYHnxR7sbSWX1FUsq9/yK
-gP4Ju2TlLI5Y/WfR7pqjJX3hpRflOXoaxuD+wCMKu0BeRstRskvESYU0/7qAivB/
-dyNlOTjWvDTjk08ziFyEJKQ57TdrWXbEyQMO61DbfJAfrFnxVeednjBnzPo5TEUI
-KyOWSlpMGV7SHvksoY+m+b/pethNyzvZIxvMvbwaRFcUmRcbYzW9iWNEDRS6CUzm
-X+Fq719606MKB4LARi/Vdb5t1vSihOM5iB5VsTianA1jlLGRlHw=
-=tyd0
------END PGP SIGNATURE-----
---=-=-=--
