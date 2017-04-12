@@ -1,95 +1,111 @@
-From: linuxknight <linuxknight@gmail.com>
+From: Reindl Harald <h.reindl@thelounge.net>
 Subject: Re: Linux software raid troubles
-Date: Wed, 12 Apr 2017 11:36:25 -0400
-Message-ID: <CAAO=44Y9YspCqyfvDgx30mGO_VhYZpuj9D8U1O6063B8VL61vw@mail.gmail.com>
+Date: Wed, 12 Apr 2017 18:11:19 +0200
+Message-ID: <e69c63cd-47aa-9bbd-b4bb-307f4dac4db1@thelounge.net>
 References: <CAAO=44Y=8xrnWvMp214RFq9Y-KVDQVfEYa2vL-Ahgmbvgs6Y4w@mail.gmail.com>
- <8e9a25fc-5c81-103c-2ffa-4b46f2aa8630@thelounge.net> <CAAO=44bsG1yrmYbag1eruNA_tdXxqiJptnRyPB=4TW6r5771HQ@mail.gmail.com>
+ <8e9a25fc-5c81-103c-2ffa-4b46f2aa8630@thelounge.net>
+ <CAAO=44bsG1yrmYbag1eruNA_tdXxqiJptnRyPB=4TW6r5771HQ@mail.gmail.com>
  <cbadbdeb-7e6b-7784-e49c-dd2801903bb6@thelounge.net>
+ <CAAO=44Y9YspCqyfvDgx30mGO_VhYZpuj9D8U1O6063B8VL61vw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cbadbdeb-7e6b-7784-e49c-dd2801903bb6@thelounge.net>
+In-Reply-To: <CAAO=44Y9YspCqyfvDgx30mGO_VhYZpuj9D8U1O6063B8VL61vw@mail.gmail.com>
+Content-Language: de-CH
 Sender: linux-raid-owner@vger.kernel.org
-To: Reindl Harald <h.reindl@thelounge.net>
+To: linuxknight <linuxknight@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thank you Reindl, Using your method would I be able to apply this IMG
-file to a fresh raid1 mirror and still have it be bootable?
 
-The reason I ask is I was looking at this guide,
-https://www.data-medics.com/forum/how-to-clone-a-hard-drive-with-bad-sectors-using-ddrescue-t133.html
-It has a method to transfer drive to drive.  I was thinking I would
-create the fresh RAID mirror on the dedicated LSI card, then ddrescue
-possibly bad drive to the new raid mirror.  Is this a bad idea?
 
-On Wed, Apr 12, 2017 at 11:29 AM, Reindl Harald <h.reindl@thelounge.net> wrote:
-> please no private-only respones
->
-> Am 12.04.2017 um 16:52 schrieb linuxknight:
+Am 12.04.2017 um 17:36 schrieb linuxknight:
+> Thank you Reindl, Using your method would I be able to apply this IMG
+> file to a fresh raid1 mirror and still have it be bootable?
+
+that's the whole point - there is no difference if you have another 
+phyiscal disk or a image-file as destination - thanks linux everything 
+is a file
+
+whenever you play around with disks which might fail or are already 
+broken take a complete image as soon as possible because before you try 
+to restore something from that image you can even copy that one, try to 
+mount it, play around and whenever you are unsure if you damaged it's 
+state just make a fresh copy from the untouched first backup
+
+> The reason I ask is I was looking at this guide,
+> https://www.data-medics.com/forum/how-to-clone-a-hard-drive-with-bad-sectors-using-ddrescue-t133.html
+> It has a method to transfer drive to drive.  I was thinking I would
+> create the fresh RAID mirror on the dedicated LSI card, then ddrescue
+> possibly bad drive to the new raid mirror.  Is this a bad idea?
+> 
+> On Wed, Apr 12, 2017 at 11:29 AM, Reindl Harald <h.reindl@thelounge.net> wrote:
+>> please no private-only respones
 >>
->> Thanks you for the reply.  I was just examining the hardward in my
->> server and it looks like there is an LSI card in there.  If I create a
->> new Hardware raid mirror in that controller, is it possible to use the
->> ddrescue to get my current OS onto that mirror and boot from it?  Im
->> unfamiliar with the ddrescue but will certainly read up more.
->
->
-> "ddrescue" is at the end of the day the same as "dd"
->
-> it reads the whole drive block-by-block and writes it to a image file, later
-> you can do "dd if=image.mig of=/dev/sdX bs=1M" and you get a 100% identical
-> state of the disk
->
-> so just put out that drive, connect it to a ordinary SATA adapter, take the
-> image and be happy that you have a backup, if the RAID-controller has stored
-> whatever metadata on begin of the drive it's also part of the image
->
-> and hence leave out that controller to get a 100% block-by-block copy of the
-> whole drive
->
->
->> On Wed, Apr 12, 2017 at 10:45 AM, Reindl Harald <h.reindl@thelounge.net>
->> wrote:
+>> Am 12.04.2017 um 16:52 schrieb linuxknight:
 >>>
->>>
->>>
->>> Am 12.04.2017 um 16:31 schrieb linuxknight:
+>>> Thanks you for the reply.  I was just examining the hardward in my
+>>> server and it looks like there is an LSI card in there.  If I create a
+>>> new Hardware raid mirror in that controller, is it possible to use the
+>>> ddrescue to get my current OS onto that mirror and boot from it?  Im
+>>> unfamiliar with the ddrescue but will certainly read up more.
+>>
+>>
+>> "ddrescue" is at the end of the day the same as "dd"
+>>
+>> it reads the whole drive block-by-block and writes it to a image file, later
+>> you can do "dd if=image.mig of=/dev/sdX bs=1M" and you get a 100% identical
+>> state of the disk
+>>
+>> so just put out that drive, connect it to a ordinary SATA adapter, take the
+>> image and be happy that you have a backup, if the RAID-controller has stored
+>> whatever metadata on begin of the drive it's also part of the image
+>>
+>> and hence leave out that controller to get a 100% block-by-block copy of the
+>> whole drive
+>>
+>>
+>>> On Wed, Apr 12, 2017 at 10:45 AM, Reindl Harald <h.reindl@thelounge.net>
+>>> wrote:
 >>>>
 >>>>
->>>> Last weekend I was moving a server with a raid1 configuration,
->>>> controlled by a Intel Corporation 82801 SATA RAID Controller.  Upon
->>>> reboot I noticed the degraded message (server hadnt been rebooted in a
->>>> couple years).
 >>>>
->>>> The raid1 array was two 500gb black WD drives.  I wasnt able to locate
->>>> an identical 500gb disk, but did find a 2TB just to get things
->>>> mirrored again.  The bios screen accepted the replacement disk and
->>>> said it would rebuild in the OS.  mdsync seemed to do its thing but I
->>>> noticed mdmon process was taking 200% cpu.  I let it go a few days
->>>> thinking it was just taking longer than normal to sync, then rebooted.
->>>> It was in a complete failed state and wouldnt boot at all.  After
->>>> removing the 2TB disk I was able to boot into the OS again.  I just
->>>> assumed I needed a similar drive size for the second part of the
->>>> mirror.
->>>
->>>
->>>
->>> when you talk about a "SATA RAID Controller" and "The bios screen
->>> accepted
->>> the replacement disk and said it would rebuild in the OS" this sadly is
->>> not
->>> a "linux software raid" at it's own
->>>
->>> 197 Current_Pending_Sector  -O--CK   200   200   000    -    9
->>> 198 Offline_Uncorrectable   ----CK   200   200   000    -    7
->>>
->>> i would strongly suggest https://www.gnu.org/software/ddrescue/ and make
->>> a
->>> image of that disk because after 39646 Power_On_Hours it's likely that
->>> the
->>> remaining disk fails completly in a short time and you could at least
->>> restore the disk-image with "dd" to a new disk if that happens as well as
->>> mount it with as loop-device
->
->
+>>>> Am 12.04.2017 um 16:31 schrieb linuxknight:
+>>>>>
+>>>>>
+>>>>> Last weekend I was moving a server with a raid1 configuration,
+>>>>> controlled by a Intel Corporation 82801 SATA RAID Controller.  Upon
+>>>>> reboot I noticed the degraded message (server hadnt been rebooted in a
+>>>>> couple years).
+>>>>>
+>>>>> The raid1 array was two 500gb black WD drives.  I wasnt able to locate
+>>>>> an identical 500gb disk, but did find a 2TB just to get things
+>>>>> mirrored again.  The bios screen accepted the replacement disk and
+>>>>> said it would rebuild in the OS.  mdsync seemed to do its thing but I
+>>>>> noticed mdmon process was taking 200% cpu.  I let it go a few days
+>>>>> thinking it was just taking longer than normal to sync, then rebooted.
+>>>>> It was in a complete failed state and wouldnt boot at all.  After
+>>>>> removing the 2TB disk I was able to boot into the OS again.  I just
+>>>>> assumed I needed a similar drive size for the second part of the
+>>>>> mirror.
+>>>>
+>>>>
+>>>>
+>>>> when you talk about a "SATA RAID Controller" and "The bios screen
+>>>> accepted
+>>>> the replacement disk and said it would rebuild in the OS" this sadly is
+>>>> not
+>>>> a "linux software raid" at it's own
+>>>>
+>>>> 197 Current_Pending_Sector  -O--CK   200   200   000    -    9
+>>>> 198 Offline_Uncorrectable   ----CK   200   200   000    -    7
+>>>>
+>>>> i would strongly suggest https://www.gnu.org/software/ddrescue/ and make
+>>>> a
+>>>> image of that disk because after 39646 Power_On_Hours it's likely that
+>>>> the
+>>>> remaining disk fails completly in a short time and you could at least
+>>>> restore the disk-image with "dd" to a new disk if that happens as well as
+>>>> mount it with as loop-device
+
