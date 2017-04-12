@@ -1,289 +1,60 @@
-From: Matt Brown <matthew.brown.dev@gmail.com>
-Subject: [PATCH v3 2/2] raid6/altivec: Add vpermxor implementation for raid6 Q syndrome
-Date: Wed, 12 Apr 2017 11:35:52 +1000
-Message-ID: <20170412013552.21650-2-matthew.brown.dev@gmail.com>
-References: <20170412013552.21650-1-matthew.brown.dev@gmail.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [md PATCH 00/10] Simplify bio splitting and related code.
+Date: Tue, 11 Apr 2017 19:51:57 -0700
+Message-ID: <20170412025157.qlodbacq2afuvq6j@kernel.org>
+References: <149136485390.25893.1797855041954158826.stgit@noble>
+ <20170411170112.4txdyjdat63qpsi6@kernel.org>
+ <871ssywmno.fsf@notabene.neil.brown.name>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170412013552.21650-1-matthew.brown.dev@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <871ssywmno.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-raid@vger.kernel.org, dja@axtens.net
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The raid6 Q syndrome check has been optimised using the vpermxor
-instruction. This instruction was made available with POWER8, ISA version
-2.07. It allows for both vperm and vxor instructions to be done in a single
-instruction. This has been tested for correctness on a ppc64le vm with a
-basic RAID6 setup containing 5 drives.
+On Wed, Apr 12, 2017 at 09:27:07AM +1000, Neil Brown wrote:
+> On Tue, Apr 11 2017, Shaohua Li wrote:
+> 
+> > On Wed, Apr 05, 2017 at 02:05:50PM +1000, Neil Brown wrote:
+> >> This is part of my little project to make bio splitting
+> >> in Linux uniform and dead-lock free, in a way that will mean
+> >> that we can get rid of all the bioset threads.
+> >> 
+> >> The basic approach is that when a bio needs to be split, we call
+> >> bio_split(), bio_chain() and then generic_make_request().
+> >> We then proceed to handle the remainder without further splitting.
+> >> Recent changes to generic_make_request() ensure that this will
+> >> be safe from deadlocks, providing each bioset is used only once
+> >> in the stack.
+> >> 
+> >> This leads to simpler code in various places.  In particular, the
+> >> splitting of bios that is needed to work around known bad blocks
+> >> is now much less complex.  There is only ever one r1bio per bio.
+> >> 
+> >> As you can see from
+> >>  10 files changed, 335 insertions(+), 540 deletions(-)
+> >> there is a net reduction in code.
+> >
+> > Looks good and makes code simpler, applied, thanks Neil! The patch 1 and 6 need
+> > comments in the code to explain how deadlock is avoided though. Care to send a
+> > new patch?
+> 
+> It isn't clear to me what sort of comment you want, or where it should
+> go.
+> It might make sense to have a comment near bio_split() explaining how to
+> use it (i.e. explaining the pattern used in various patches here), but
+> I don't see what sort of comments would help in raid1.c or raid10.c
+> ??
 
-The performance benchmarks are from the raid6test in the /lib/raid6/test
-directory. These results are from an IBM Firestone machine with ppc64le
-architecture. The benchmark results show a 35% speed increase over the best
-existing algorithm for powerpc (altivec). The raid6test has also been run
-on a big-endian ppc64 vm to ensure it also works for big-endian
-architectures.
+Both raid1.c and raid10.c have comments why we need offload the bio to
+raid1d/raid10d to avoid deadlock before, we also have comments to explain why
+we do bio_split() and then generic_make_request() before. Now these info are
+lost, so I hope we can add it back why the new way (bio_split and follow
+generic_make_request of next part) can avoid deadlock. That will be very
+helpful for others.
 
-	Performance benchmarks:
-		raid6: altivecx4 gen() 18773 MB/s
-		raid6: altivecx8 gen() 19438 MB/s
-
-		raid6: vpermxor4 gen() 25112 MB/s
-	    	raid6: vpermxor8 gen() 26279 MB/s
-
-Note: Fixed minor bug in altivec.uc regarding missing and mismatched ifdef
-statements.
-
-Signed-off-by: Matt Brown <matthew.brown.dev@gmail.com>
----
-Changelog
-v2
-	- Change CONFIG_ALTIVEC to CPU_FTR_ALTIVEC_COMP
-	- Seperate bug fix into different patch
----
- include/linux/raid/pq.h |   4 ++
- lib/raid6/Makefile      |  27 ++++++++++++-
- lib/raid6/algos.c       |   4 ++
- lib/raid6/altivec.uc    |   3 ++
- lib/raid6/test/Makefile |  14 ++++++-
- lib/raid6/vpermxor.uc   | 104 ++++++++++++++++++++++++++++++++++++++++++++++++
- 6 files changed, 154 insertions(+), 2 deletions(-)
- create mode 100644 lib/raid6/vpermxor.uc
-
-diff --git a/include/linux/raid/pq.h b/include/linux/raid/pq.h
-index 4d57bba..3df9aa6 100644
---- a/include/linux/raid/pq.h
-+++ b/include/linux/raid/pq.h
-@@ -107,6 +107,10 @@ extern const struct raid6_calls raid6_avx512x2;
- extern const struct raid6_calls raid6_avx512x4;
- extern const struct raid6_calls raid6_tilegx8;
- extern const struct raid6_calls raid6_s390vx8;
-+extern const struct raid6_calls raid6_vpermxor1;
-+extern const struct raid6_calls raid6_vpermxor2;
-+extern const struct raid6_calls raid6_vpermxor4;
-+extern const struct raid6_calls raid6_vpermxor8;
- 
- struct raid6_recov_calls {
- 	void (*data2)(int, size_t, int, int, void **);
-diff --git a/lib/raid6/Makefile b/lib/raid6/Makefile
-index 3057011..7775aad 100644
---- a/lib/raid6/Makefile
-+++ b/lib/raid6/Makefile
-@@ -4,7 +4,8 @@ raid6_pq-y	+= algos.o recov.o tables.o int1.o int2.o int4.o \
- 		   int8.o int16.o int32.o
- 
- raid6_pq-$(CONFIG_X86) += recov_ssse3.o recov_avx2.o mmx.o sse1.o sse2.o avx2.o avx512.o recov_avx512.o
--raid6_pq-$(CONFIG_ALTIVEC) += altivec1.o altivec2.o altivec4.o altivec8.o
-+raid6_pq-$(CONFIG_ALTIVEC) += altivec1.o altivec2.o altivec4.o altivec8.o \
-+				vpermxor1.o vpermxor2.o vpermxor4.o vpermxor8.o
- raid6_pq-$(CONFIG_KERNEL_MODE_NEON) += neon.o neon1.o neon2.o neon4.o neon8.o
- raid6_pq-$(CONFIG_TILEGX) += tilegx8.o
- raid6_pq-$(CONFIG_S390) += s390vx8.o recov_s390xc.o
-@@ -88,6 +89,30 @@ $(obj)/altivec8.c:   UNROLL := 8
- $(obj)/altivec8.c:   $(src)/altivec.uc $(src)/unroll.awk FORCE
- 	$(call if_changed,unroll)
- 
-+CFLAGS_vpermxor1.o += $(altivec_flags)
-+targets += vpermxor1.c
-+$(obj)/vpermxor1.c: UNROLL := 1
-+$(obj)/vpermxor1.c: $(src)/vpermxor.uc $(src)/unroll.awk FORCE
-+	$(call if_changed,unroll)
-+
-+CFLAGS_vpermxor2.o += $(altivec_flags)
-+targets += vpermxor2.c
-+$(obj)/vpermxor2.c: UNROLL := 2
-+$(obj)/vpermxor2.c: $(src)/vpermxor.uc $(src)/unroll.awk FORCE
-+	$(call if_changed,unroll)
-+
-+CFLAGS_vpermxor4.o += $(altivec_flags)
-+targets += vpermxor4.c
-+$(obj)/vpermxor4.c: UNROLL := 4
-+$(obj)/vpermxor4.c: $(src)/vpermxor.uc $(src)/unroll.awk FORCE
-+	$(call if_changed,unroll)
-+
-+CFLAGS_vpermxor8.o += $(altivec_flags)
-+targets += vpermxor8.c
-+$(obj)/vpermxor8.c: UNROLL := 8
-+$(obj)/vpermxor8.c: $(src)/vpermxor.uc $(src)/unroll.awk FORCE
-+	$(call if_changed,unroll)
-+
- CFLAGS_neon1.o += $(NEON_FLAGS)
- targets += neon1.c
- $(obj)/neon1.c:   UNROLL := 1
-diff --git a/lib/raid6/algos.c b/lib/raid6/algos.c
-index 7857049..edd4f69 100644
---- a/lib/raid6/algos.c
-+++ b/lib/raid6/algos.c
-@@ -74,6 +74,10 @@ const struct raid6_calls * const raid6_algos[] = {
- 	&raid6_altivec2,
- 	&raid6_altivec4,
- 	&raid6_altivec8,
-+	&raid6_vpermxor1,
-+	&raid6_vpermxor2,
-+	&raid6_vpermxor4,
-+	&raid6_vpermxor8,
- #endif
- #if defined(CONFIG_TILEGX)
- 	&raid6_tilegx8,
-diff --git a/lib/raid6/altivec.uc b/lib/raid6/altivec.uc
-index 682aae8..d20ed0d 100644
---- a/lib/raid6/altivec.uc
-+++ b/lib/raid6/altivec.uc
-@@ -24,10 +24,13 @@
- 
- #include <linux/raid/pq.h>
- 
-+#ifdef CONFIG_ALTIVEC
-+
- #include <altivec.h>
- #ifdef __KERNEL__
- # include <asm/cputable.h>
- # include <asm/switch_to.h>
-+#endif /* __KERNEL__ */
- 
- /*
-  * This is the C data type to use.  We use a vector of
-diff --git a/lib/raid6/test/Makefile b/lib/raid6/test/Makefile
-index 2c7b60e..9c333e9 100644
---- a/lib/raid6/test/Makefile
-+++ b/lib/raid6/test/Makefile
-@@ -97,6 +97,18 @@ altivec4.c: altivec.uc ../unroll.awk
- altivec8.c: altivec.uc ../unroll.awk
- 	$(AWK) ../unroll.awk -vN=8 < altivec.uc > $@
- 
-+vpermxor1.c: vpermxor.uc ../unroll.awk
-+	$(AWK) ../unroll.awk -vN=1 < vpermxor.uc > $@
-+
-+vpermxor2.c: vpermxor.uc ../unroll.awk
-+	$(AWK) ../unroll.awk -vN=2 < vpermxor.uc > $@
-+
-+vpermxor4.c: vpermxor.uc ../unroll.awk
-+	$(AWK) ../unroll.awk -vN=4 < vpermxor.uc > $@
-+
-+vpermxor8.c: vpermxor.uc ../unroll.awk
-+	$(AWK) ../unroll.awk -vN=8 < vpermxor.uc > $@
-+
- int1.c: int.uc ../unroll.awk
- 	$(AWK) ../unroll.awk -vN=1 < int.uc > $@
- 
-@@ -122,7 +134,7 @@ tables.c: mktables
- 	./mktables > tables.c
- 
- clean:
--	rm -f *.o *.a mktables mktables.c *.uc int*.c altivec*.c neon*.c tables.c raid6test
-+	rm -f *.o *.a mktables mktables.c *.uc int*.c altivec*.c vpermxor*.c neon*.c tables.c raid6test
- 	rm -f tilegx*.c
- 
- spotless: clean
-diff --git a/lib/raid6/vpermxor.uc b/lib/raid6/vpermxor.uc
-new file mode 100644
-index 0000000..31a324d
---- /dev/null
-+++ b/lib/raid6/vpermxor.uc
-@@ -0,0 +1,104 @@
-+/*
-+ * Copyright 2017, Matt Brown, IBM Corp.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version
-+ * 2 of the License, or (at your option) any later version.
-+ *
-+ * vpermxor$#.c
-+ *
-+ * Based on H. Peter Anvin's paper - The mathematics of RAID-6
-+ *
-+ * $#-way unrolled portable integer math RAID-6 instruction set
-+ * This file is postprocessed using unroll.awk
-+ *
-+ * vpermxor$#.c makes use of the vpermxor opcode to optimise the RAID6 Q
-+ * syndrome calculations.
-+ * This can be run on systems which have both Altivec and the vpermxor opcode.
-+ *
-+ * This instruction was introduced in POWER8 - ISA v2.07.
-+ */
-+
-+#include <linux/raid/pq.h>
-+#ifdef CONFIG_ALTIVEC
-+
-+#include <altivec.h>
-+#ifdef __KERNEL__
-+#include <asm/cputable.h>
-+#include <asm/switch_to.h>
-+#endif
-+
-+typedef vector unsigned char unative_t;
-+#define NSIZE sizeof(unative_t)
-+
-+static const vector unsigned char gf_low = {0x1e, 0x1c, 0x1a, 0x18, 0x16, 0x14,
-+					    0x12, 0x10, 0x0e, 0x0c, 0x0a, 0x08,
-+					    0x06, 0x04, 0x02,0x00};
-+static const vector unsigned char gf_high = {0xfd, 0xdd, 0xbd, 0x9d, 0x7d, 0x5d,
-+					     0x3d, 0x1d, 0xe0, 0xc0, 0xa0, 0x80,
-+					     0x60, 0x40, 0x20, 0x00};
-+
-+static void noinline raid6_vpermxor$#_gen_syndrome_real(int disks, size_t bytes,
-+							void **ptrs)
-+{
-+	u8 **dptr = (u8 **)ptrs;
-+	u8 *p, *q;
-+	int d, z, z0;
-+	unative_t wp$$, wq$$, wd$$;
-+
-+	z0 = disks - 3;		/* Highest data disk */
-+	p = dptr[z0+1];		/* XOR parity */
-+	q = dptr[z0+2];		/* RS syndrome */
-+
-+	for (d = 0; d < bytes; d += NSIZE*$#) {
-+		wp$$ = wq$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE];
-+
-+		for (z = z0-1; z>=0; z--) {
-+			wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE];
-+			/* P syndrome */
-+			wp$$ = vec_xor(wp$$, wd$$);
-+
-+			/*Q syndrome */
-+			asm("vpermxor %0,%1,%2,%3":"=v"(wq$$):"v"(gf_high), "v"(gf_low), "v"(wq$$));
-+			wq$$ = vec_xor(wq$$, wd$$);
-+		}
-+		*(unative_t *)&p[d+NSIZE*$$] = wp$$;
-+		*(unative_t *)&q[d+NSIZE*$$] = wq$$;
-+	}
-+}
-+
-+static void raid6_vpermxor$#_gen_syndrome(int disks, size_t bytes, void **ptrs)
-+{
-+	preempt_disable();
-+	enable_kernel_altivec();
-+
-+	raid6_vpermxor$#_gen_syndrome_real(disks, bytes, ptrs);
-+
-+	disable_kernel_altivec();
-+	preempt_enable();
-+}
-+
-+int raid6_have_altivec_vpermxor(void);
-+#if $# == 1
-+int raid6_have_altivec_vpermxor(void)
-+{
-+	/* Check if CPU has both altivec and the vpermxor instruction*/
-+# ifdef __KERNEL__
-+	return (cpu_has_feature(CPU_FTR_ALTIVEC_COMP) &&
-+		cpu_has_feature(CPU_FTR_ARCH_207S));
-+# else
-+	return 1;
-+#endif
-+
-+}
-+#endif
-+
-+const struct raid6_calls raid6_vpermxor$# = {
-+	raid6_vpermxor$#_gen_syndrome,
-+	NULL,
-+	raid6_have_altivec_vpermxor,
-+	"vpermxor$#",
-+	0
-+};
-+#endif
--- 
-2.9.3
-
+Thanks,
+Shaohua
