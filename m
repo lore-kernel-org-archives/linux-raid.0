@@ -1,43 +1,42 @@
-From: Binoy Jayan <binoy.jayan@linaro.org>
-Subject: Re: [RFC PATCH v5] IV Generation algorithms for dm-crypt
-Date: Thu, 13 Apr 2017 14:16:43 +0530
-Message-ID: <CAHv-k_98gM8Je+Yi5+Yj5s=6-qxNuuYY1x=ypy_dk6gL=WqyKg@mail.gmail.com>
-References: <1491562064-23591-1-git-send-email-binoy.jayan@linaro.org> <774a9713-05ef-0162-0203-461254a04f6e@gmail.com>
+From: Reindl Harald <h.reindl@thelounge.net>
+Subject: Re: disk initialize priority
+Date: Thu, 13 Apr 2017 11:09:11 +0200
+Message-ID: <43e44c4b-37d6-9734-b323-5b432ef27d52@thelounge.net>
+References: <CAC6SzHJAM-AbCiK7rqhgk4CJcyZ4C-yW0kt_rr3hgk+F-WMCiQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-crypto-owner@vger.kernel.org>
-In-Reply-To: <774a9713-05ef-0162-0203-461254a04f6e@gmail.com>
-Sender: linux-crypto-owner@vger.kernel.org
-To: Milan Broz <gmazyland@gmail.com>
-Cc: Oded <oded.golombek@arm.com>, Ofir <Ofir.Drang@arm.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, linux-crypto@vger.kernel.org, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Linux kernel mailing list <linux-kernel@vger.kernel.org>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Rajendra <rnayak@codeaurora.org>, Gilad <gilad@benyossef.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAC6SzHJAM-AbCiK7rqhgk4CJcyZ4C-yW0kt_rr3hgk+F-WMCiQ@mail.gmail.com>
+Content-Language: de-CH
+Sender: linux-raid-owner@vger.kernel.org
+To: d tbsky <tbskyd@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Milan,
 
-On 10 April 2017 at 19:30, Milan Broz <gmazyland@gmail.com> wrote:
 
-Thank you for the reply.
+Am 13.04.2017 um 10:13 schrieb d tbsky:
+> Hi:
+>       I just tried to install rhel 7.3 on a 4 disk raid6. it's a
+> minimal install but took 3 hours to finish. I found the disk
+> initialize speed is around 150MB/sec. in past the disk initialize
+> speed will down to slow speed when there are other disk IO, but it
+> seems not the case in rhel 7.3.
+> 
+>      I have check the below parameter:
+>      cat /proc/sys/dev/raid/speed_limit_min  -> 1000
+>      cat /proc/sys/dev/raid/speed_limit_max -> 200000
+> 
+>      when the system is idle, the init speed is also about 150M/sec, so
+> the system is use all the power to init when there are other disk IO.
+> 
+>       is it normal? where should I check?
 
-> Well, it is good that there is no performance degradation but it
-> would be nice to have some user of it that proves it is really
-> working for your hw.
+sysctl.conf:
+dev.raid.speed_limit_min = 10000
+dev.raid.speed_limit_max = 50000
 
-I have been able to get access to a hardware with IV generation support
-a few days back. The hardware I was having before did not have IV
-generation support. Will be able to come up with numbers after making
-it work with the new one.
+sysctl -p
 
-> FYI - with patch that increases dmcrypt sector size to 4k
-> I can see improvement in speed usually in 5-15% with sync AES-NI
-> (depends on access pattern), with dmcrypt mapped to memory
-> it is even close to 20% speed up (but such a configuration is
-> completely artificial).
->
-> I wonder why increased dmcrypt sector size does not work for your hw,
-> it should help as well (and can be combiuned later with this IV approach).
-> (For native 4k drives this should be used in future anyway...)
-
-I think it should work well too with backward incompatibility.
-
-Thanks,
-Binoy
+and it will adjust itself within seconds - the same works if that values 
+are too low and raid-check would take forever
