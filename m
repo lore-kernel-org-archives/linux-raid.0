@@ -1,46 +1,71 @@
 From: d tbsky <tbskyd@gmail.com>
 Subject: Re: disk initialize priority
-Date: Thu, 13 Apr 2017 17:56:04 +0800
-Message-ID: <CAC6SzH+Hkonv3cAiEKz-qbYGrza73BqNkgT6MnXkYo4mLEAqCw@mail.gmail.com>
+Date: Thu, 13 Apr 2017 17:58:58 +0800
+Message-ID: <CAC6SzHKhn5j6f8DOcebFT2H5zRgnBbpJsnsncQocWRVS7DLWXg@mail.gmail.com>
 References: <CAC6SzHJAM-AbCiK7rqhgk4CJcyZ4C-yW0kt_rr3hgk+F-WMCiQ@mail.gmail.com>
- <20170413143736.5ac148d0@natsu>
+ <43e44c4b-37d6-9734-b323-5b432ef27d52@thelounge.net> <CAC6SzHKWeLMSn1Z3W0KyBaUw+5MLmnMxLbh130gxM071t8VeFw@mail.gmail.com>
+ <fc31c172-f988-32a4-c9b2-93bc7f3bfc90@thelounge.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170413143736.5ac148d0@natsu>
+In-Reply-To: <fc31c172-f988-32a4-c9b2-93bc7f3bfc90@thelounge.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.net>
+To: Reindl Harald <h.reindl@thelounge.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2017-04-13 17:37 GMT+08:00 Roman Mamedov <rm@romanrm.net>:
-> On Thu, 13 Apr 2017 16:13:41 +0800
-> d tbsky <tbskyd@gmail.com> wrote:
+2017-04-13 17:47 GMT+08:00 Reindl Harald <h.reindl@thelounge.net>:
 >
->> in past the disk initialize
->> speed will down to slow speed when there are other disk IO, but it
->> seems not the case in rhel 7.3.
 >
-> It was changed some time ago with:
+> Am 13.04.2017 um 11:44 schrieb d tbsky:
+>>
+>> 2017-04-13 17:09 GMT+08:00 Reindl Harald <h.reindl@thelounge.net>:
+>>>
+>>>
+>>>
+>>> Am 13.04.2017 um 10:13 schrieb d tbsky:
+>>>>
+>>>>
+>>>> Hi:
+>>>>        I just tried to install rhel 7.3 on a 4 disk raid6. it's a
+>>>> minimal install but took 3 hours to finish. I found the disk
+>>>> initialize speed is around 150MB/sec. in past the disk initialize
+>>>> speed will down to slow speed when there are other disk IO, but it
+>>>> seems not the case in rhel 7.3.
+>>>>
+>>>>       I have check the below parameter:
+>>>>       cat /proc/sys/dev/raid/speed_limit_min  -> 1000
+>>>>       cat /proc/sys/dev/raid/speed_limit_max -> 200000
+>>>>
+>>>>       when the system is idle, the init speed is also about 150M/sec, so
+>>>> the system is use all the power to init when there are other disk IO.
+>>>>
+>>>>        is it normal? where should I check?
+>>>
+>>>
+>>>
+>>> sysctl.conf:
+>>> dev.raid.speed_limit_min = 10000
+>>> dev.raid.speed_limit_max = 50000
+>>>
+>>> sysctl -p
+>>>
+>>> and it will adjust itself within seconds - the same works if that values
+>>> are
+>>> too low and raid-check would take forever
+>>
+>>
+>> hi: my problem is the speed is too high, not too low...
 >
->   "md: allow resync to go faster when there is competing IO"
->   https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=ac8fa4196d205ac8fff3f8932bddbad4f16e4110
 >
-> and a problem like you describe has been reported:
+> and?
 >
->   https://www.spinics.net/lists/raid/msg51363.html
->
-> Some patches have been discussed, but apparently there is no fix for it up to
-> this day, as the current code in question looks the same as in the above patch.
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/md/md.c#n8138
->
-> --
-> With respect,
-> Roman
+> you said it is at 200000
+> i showed you how to reduce it to 50000 or whatever you want
 
 hi:
-    thanks for the hint. I will try to report RHEL to see what
-happened. I didn't notice these in previous versions.
+   sorry I didn't understand you correctly. thanks for the hint. I
+will try to resolve the root cause of the problem.
 
 Regards,
 tbskyd
