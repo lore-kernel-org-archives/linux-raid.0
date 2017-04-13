@@ -1,87 +1,38 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH] md/raid10: introduce handle_badblocks
-Date: Thu, 13 Apr 2017 17:28:28 +0800
-Message-ID: <1492075708-4412-1-git-send-email-gqjiang@suse.com>
+From: Roman Mamedov <rm@romanrm.net>
+Subject: Re: disk initialize priority
+Date: Thu, 13 Apr 2017 14:37:36 +0500
+Message-ID: <20170413143736.5ac148d0@natsu>
+References: <CAC6SzHJAM-AbCiK7rqhgk4CJcyZ4C-yW0kt_rr3hgk+F-WMCiQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAC6SzHJAM-AbCiK7rqhgk4CJcyZ4C-yW0kt_rr3hgk+F-WMCiQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@kernel.org, neilb@suse.com, Guoqing Jiang <gqjiang@suse.com>
+To: d tbsky <tbskyd@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If the state of r10bio is either R10BIO_IsSync or
-R10BIO_IsRecover, then handle_write_completed calls
-the same logic to clear or set badblock for bio and
-repl_bio, so refactor these codes to a new function
-named handle_badblocks.
+On Thu, 13 Apr 2017 16:13:41 +0800
+d tbsky <tbskyd@gmail.com> wrote:
 
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
----
- drivers/md/raid10.c | 42 +++++++++++++++++-------------------------
- 1 file changed, 17 insertions(+), 25 deletions(-)
+> in past the disk initialize
+> speed will down to slow speed when there are other disk IO, but it
+> seems not the case in rhel 7.3.
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 4167091..a707772 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -2620,6 +2620,20 @@ static void handle_read_error(struct mddev *mddev, struct r10bio *r10_bio)
- 	raid10_read_request(mddev, r10_bio->master_bio, r10_bio);
- }
- 
-+static void handle_badblocks(struct r10bio *r10_bio, struct md_rdev *rdev,
-+			     struct r10conf *conf, int slot, bool repl)
-+{
-+	struct bio *bio = repl ? r10_bio->devs[slot].repl_bio :
-+				 r10_bio->devs[slot].bio;
-+	sector_t addr = r10_bio->devs[slot].addr;
-+
-+	if (!bio->bi_error)
-+		rdev_clear_badblocks(rdev, addr, r10_bio->sectors, 0);
-+	else
-+		if (!rdev_set_badblocks(rdev, addr, r10_bio->sectors, 0))
-+			md_error(conf->mddev, rdev);
-+}
-+
- static void handle_write_completed(struct r10conf *conf, struct r10bio *r10_bio)
- {
- 	/* Some sort of write request has finished and it
-@@ -2638,34 +2652,12 @@ static void handle_write_completed(struct r10conf *conf, struct r10bio *r10_bio)
- 			rdev = conf->mirrors[dev].rdev;
- 			if (r10_bio->devs[m].bio == NULL)
- 				continue;
--			if (!r10_bio->devs[m].bio->bi_error) {
--				rdev_clear_badblocks(
--					rdev,
--					r10_bio->devs[m].addr,
--					r10_bio->sectors, 0);
--			} else {
--				if (!rdev_set_badblocks(
--					    rdev,
--					    r10_bio->devs[m].addr,
--					    r10_bio->sectors, 0))
--					md_error(conf->mddev, rdev);
--			}
-+			handle_badblocks(r10_bio, rdev, conf, m, false);
-+
- 			rdev = conf->mirrors[dev].replacement;
- 			if (r10_bio->devs[m].repl_bio == NULL)
- 				continue;
--
--			if (!r10_bio->devs[m].repl_bio->bi_error) {
--				rdev_clear_badblocks(
--					rdev,
--					r10_bio->devs[m].addr,
--					r10_bio->sectors, 0);
--			} else {
--				if (!rdev_set_badblocks(
--					    rdev,
--					    r10_bio->devs[m].addr,
--					    r10_bio->sectors, 0))
--					md_error(conf->mddev, rdev);
--			}
-+			handle_badblocks(r10_bio, rdev, conf, m, true);
- 		}
- 		put_buf(r10_bio);
- 	} else {
+It was changed some time ago with:
+
+  "md: allow resync to go faster when there is competing IO"
+  https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=ac8fa4196d205ac8fff3f8932bddbad4f16e4110
+
+and a problem like you describe has been reported:
+
+  https://www.spinics.net/lists/raid/msg51363.html
+
+Some patches have been discussed, but apparently there is no fix for it up to
+this day, as the current code in question looks the same as in the above patch.
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/md/md.c#n8138
+
 -- 
-2.6.6
-
+With respect,
+Roman
