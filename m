@@ -1,105 +1,61 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md/raid10: introduce handle_badblocks
-Date: Thu, 13 Apr 2017 13:50:09 -0700
-Message-ID: <20170413205009.sksydhfvx6nom2oo@kernel.org>
-References: <1492075708-4412-1-git-send-email-gqjiang@suse.com>
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: GET_ARRAY_INFO assumptions?
+Date: Thu, 13 Apr 2017 17:06:03 -0400
+Message-ID: <0c3633e4-df8c-c59a-17d4-917495931ba1@gmail.com>
+References: <ab07d303-85fb-e912-e4fa-9ee66a1277cc@gmail.com>
+ <20170413203742.wg6mrnzedw7ew5ky@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1492075708-4412-1-git-send-email-gqjiang@suse.com>
+In-Reply-To: <20170413203742.wg6mrnzedw7ew5ky@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>
-Cc: linux-raid@vger.kernel.org, neilb@suse.com
+To: Shaohua Li <shli@kernel.org>
+Cc: NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Apr 13, 2017 at 05:28:28PM +0800, Guoqing Jiang wrote:
-> If the state of r10bio is either R10BIO_IsSync or
-> R10BIO_IsRecover, then handle_write_completed calls
-> the same logic to clear or set badblock for bio and
-> repl_bio, so refactor these codes to a new function
-> named handle_badblocks.
-> 
-> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-> ---
->  drivers/md/raid10.c | 42 +++++++++++++++++-------------------------
->  1 file changed, 17 insertions(+), 25 deletions(-)
+On 04/13/2017 04:37 PM, Shaohua Li wrote:
+> On Thu, Apr 13, 2017 at 01:50:06PM -0400, Jes Sorensen wrote:
+>> Hi Neil,
+>>
+>> Looking at trying to phase out the ioctl usage, I am trying to introduce a
+>> helper for the 'is the array valid' situation.
+>>
+>> Now looking at places like Incremental.c (around like 557 in my current
+>> tree):
+>> 	/* 7b/ if yes, */
+>> 	/* - if number of OK devices match expected, or -R and there */
+>> 	/*             are enough, */
+>> 	/*   + add any bitmap file  */
+>> 	/*   + start the array (auto-readonly). */
+>>
+>> 	if (md_get_array_info(mdfd, &ainf) == 0) {
+>> 		if (c->export) {
+>> 			printf("MD_STARTED=already\n");
+>> 		} else if (c->verbose >= 0)
+>> 			pr_err("%s attached to %s which is already active.\n",
+>> 			       devname, chosen_name);
+>> 		rv = 0;
+>> 		goto out_unlock;
+>> 	}
+>>
+>> I am wondering if there are any side effects/assumptions about
+>> GET_ARRAY_INFO that I am not considering? Basically I am making the
+>> assumption that if /sys/block/md<X>/md exists, the array is valid.
+>
+> what does 'valid' really mean? md<x>/md exists after a md device is allocated,
+> the md device might not have any under layer disks bound yet.
+>
+>> The code in Incremental.c already deals with sysfs higher up in the code, so
+>> I guess the question is if the above test is even relevant anymore?
+>>
+>> Alternative, do we need export a new state in sysfs 'running'?
+>
+> I'd assume 'running' means the md device has a personality attached. See
+> array_state_show(), !running == 'clear' or 'inactive'.
 
-I'm reluctant to accept this one. Don't get me wrong, this does reduce the code
-lines a little bit, but not much. The problem, I think, is the name.
-handle_badblocks describes a big scope, it actually makes coding reading
-harder. So if you can find a better name, I'll merge this.
+Good point, I guess what I am trying to figure out is what is assumed 
+when ioctl(GET_ARRAY_INFO) returns 0 and how do we map it to sysfs?
 
-Thanks,
-Shaohua
+Jes
 
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 4167091..a707772 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -2620,6 +2620,20 @@ static void handle_read_error(struct mddev *mddev, struct r10bio *r10_bio)
->  	raid10_read_request(mddev, r10_bio->master_bio, r10_bio);
->  }
->  
-> +static void handle_badblocks(struct r10bio *r10_bio, struct md_rdev *rdev,
-> +			     struct r10conf *conf, int slot, bool repl)
-> +{
-> +	struct bio *bio = repl ? r10_bio->devs[slot].repl_bio :
-> +				 r10_bio->devs[slot].bio;
-> +	sector_t addr = r10_bio->devs[slot].addr;
-> +
-> +	if (!bio->bi_error)
-> +		rdev_clear_badblocks(rdev, addr, r10_bio->sectors, 0);
-> +	else
-> +		if (!rdev_set_badblocks(rdev, addr, r10_bio->sectors, 0))
-> +			md_error(conf->mddev, rdev);
-> +}
-> +
->  static void handle_write_completed(struct r10conf *conf, struct r10bio *r10_bio)
->  {
->  	/* Some sort of write request has finished and it
-> @@ -2638,34 +2652,12 @@ static void handle_write_completed(struct r10conf *conf, struct r10bio *r10_bio)
->  			rdev = conf->mirrors[dev].rdev;
->  			if (r10_bio->devs[m].bio == NULL)
->  				continue;
-> -			if (!r10_bio->devs[m].bio->bi_error) {
-> -				rdev_clear_badblocks(
-> -					rdev,
-> -					r10_bio->devs[m].addr,
-> -					r10_bio->sectors, 0);
-> -			} else {
-> -				if (!rdev_set_badblocks(
-> -					    rdev,
-> -					    r10_bio->devs[m].addr,
-> -					    r10_bio->sectors, 0))
-> -					md_error(conf->mddev, rdev);
-> -			}
-> +			handle_badblocks(r10_bio, rdev, conf, m, false);
-> +
->  			rdev = conf->mirrors[dev].replacement;
->  			if (r10_bio->devs[m].repl_bio == NULL)
->  				continue;
-> -
-> -			if (!r10_bio->devs[m].repl_bio->bi_error) {
-> -				rdev_clear_badblocks(
-> -					rdev,
-> -					r10_bio->devs[m].addr,
-> -					r10_bio->sectors, 0);
-> -			} else {
-> -				if (!rdev_set_badblocks(
-> -					    rdev,
-> -					    r10_bio->devs[m].addr,
-> -					    r10_bio->sectors, 0))
-> -					md_error(conf->mddev, rdev);
-> -			}
-> +			handle_badblocks(r10_bio, rdev, conf, m, true);
->  		}
->  		put_buf(r10_bio);
->  	} else {
-> -- 
-> 2.6.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
