@@ -1,284 +1,119 @@
-From: Matt Brown <matthew.brown.dev@gmail.com>
-Subject: [v4 2/2] raid6/altivec: Add vpermxor implementation for raid6 Q syndrome
-Date: Thu, 13 Apr 2017 09:15:46 +1000
-Message-ID: <20170412231546.15715-2-matthew.brown.dev@gmail.com>
-References: <20170412231546.15715-1-matthew.brown.dev@gmail.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [md PATCH] md: handle read-only member devices better.
+Date: Wed, 12 Apr 2017 22:47:23 -0700
+Message-ID: <20170413054723.2spvhtze6bljkaop@kernel.org>
+References: <87a87lutj7.fsf@notabene.neil.brown.name>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170412231546.15715-1-matthew.brown.dev@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <87a87lutj7.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: linuxppc-dev@lists.ozlabs.org
-Cc: dja@axtens.net, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>, Nanda Kishore Chinnaram <Nanda_Kishore_Chinna@dell.com>
 List-Id: linux-raid.ids
 
-The raid6 Q syndrome check has been optimised using the vpermxor
-instruction. This instruction was made available with POWER8, ISA version
-2.07. It allows for both vperm and vxor instructions to be done in a single
-instruction. This has been tested for correctness on a ppc64le vm with a
-basic RAID6 setup containing 5 drives.
+On Thu, Apr 13, 2017 at 08:53:48AM +1000, Neil Brown wrote:
+> 
+> 1/ If an array has any read-only devices when it is started,
+>    the array itself must be read-only
+> 2/ A read-only device cannot be added to an array after it is
+>    started.
+> 3/ Setting an array to read-write should not succeed
+>    if any member devices are read-only
 
-The performance benchmarks are from the raid6test in the /lib/raid6/test
-directory. These results are from an IBM Firestone machine with ppc64le
-architecture. The benchmark results show a 35% speed increase over the best
-existing algorithm for powerpc (altivec). The raid6test has also been run
-on a big-endian ppc64 vm to ensure it also works for big-endian
-architectures.
+Didn't get these. We call md_import_device() first to open under layer disk. We
+always use FMOD_READ|FMOD_WRITE to open the disk. So if the disk is ro,
+md_import_device should fail, we don't add the disk to the array. Why would we
+have such issues?
 
-	Performance benchmarks:
-		raid6: altivecx4 gen() 18773 MB/s
-		raid6: altivecx8 gen() 19438 MB/s
+Thanks,
+Shaohua
+ 
+> Reported-and-Tested-by: Nanda Kishore Chinnaram <Nanda_Kishore_Chinna@dell.com>
+> Signed-off-by: NeilBrown <neilb@suse.com>
+> ---
+>  drivers/md/md.c | 41 ++++++++++++++++++++++++++---------------
+>  1 file changed, 26 insertions(+), 15 deletions(-)
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 22894303d335..9fe930109012 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -2093,6 +2093,10 @@ static int bind_rdev_to_array(struct md_rdev *rdev, struct mddev *mddev)
+>  	if (find_rdev(mddev, rdev->bdev->bd_dev))
+>  		return -EEXIST;
+>  
+> +	if ((bdev_read_only(rdev->bdev) || bdev_read_only(rdev->meta_bdev)) &&
+> +	    mddev->pers)
+> +		return -EROFS;
+> +
+>  	/* make sure rdev->sectors exceeds mddev->dev_sectors */
+>  	if (!test_bit(Journal, &rdev->flags) &&
+>  	    rdev->sectors &&
+> @@ -5345,6 +5349,13 @@ int md_run(struct mddev *mddev)
+>  			continue;
+>  		sync_blockdev(rdev->bdev);
+>  		invalidate_bdev(rdev->bdev);
+> +		if (mddev->ro != 1 &&
+> +		    (bdev_read_only(rdev->bdev) ||
+> +		     bdev_read_only(rdev->meta_bdev))) {
+> +			mddev->ro = 1;
+> +			if (mddev->gendisk)
+> +				set_disk_ro(mddev->gendisk, 1);
+> +		}
+>  
+>  		/* perform some consistency tests on the device.
+>  		 * We don't want the data to overlap the metadata,
+> @@ -5569,6 +5580,9 @@ static int do_md_run(struct mddev *mddev)
+>  static int restart_array(struct mddev *mddev)
+>  {
+>  	struct gendisk *disk = mddev->gendisk;
+> +	struct md_rdev *rdev;
+> +	bool has_journal = false;
+> +	bool has_readonly = false;
+>  
+>  	/* Complain if it has no devices */
+>  	if (list_empty(&mddev->disks))
+> @@ -5577,24 +5591,21 @@ static int restart_array(struct mddev *mddev)
+>  		return -EINVAL;
+>  	if (!mddev->ro)
+>  		return -EBUSY;
+> -	if (test_bit(MD_HAS_JOURNAL, &mddev->flags)) {
+> -		struct md_rdev *rdev;
+> -		bool has_journal = false;
+> -
+> -		rcu_read_lock();
+> -		rdev_for_each_rcu(rdev, mddev) {
+> -			if (test_bit(Journal, &rdev->flags) &&
+> -			    !test_bit(Faulty, &rdev->flags)) {
+> -				has_journal = true;
+> -				break;
+> -			}
+> -		}
+> -		rcu_read_unlock();
+>  
+> +	rcu_read_lock();
+> +	rdev_for_each_rcu(rdev, mddev) {
+> +		if (test_bit(Journal, &rdev->flags) &&
+> +		    !test_bit(Faulty, &rdev->flags))
+> +			has_journal = true;
+> +		if (bdev_read_only(rdev->bdev))
+> +			has_readonly = true;
+> +	}
+> +	rcu_read_unlock();
+> +	if (test_bit(MD_HAS_JOURNAL, &mddev->flags) && !has_journal)
+>  		/* Don't restart rw with journal missing/faulty */
+> -		if (!has_journal)
+>  			return -EINVAL;
+> -	}
+> +	if (has_readonly)
+> +		return -EROFS;
+>  
+>  	mddev->safemode = 0;
+>  	mddev->ro = 0;
+> -- 
+> 2.12.2
+> 
 
-		raid6: vpermxor4 gen() 25112 MB/s
-	    	raid6: vpermxor8 gen() 26279 MB/s
-
-Note: Fixed minor bug in pq.h regarding missing and mismatched ifdef
-statements.
-
-Signed-off-by: Matt Brown <matthew.brown.dev@gmail.com>
----
- include/linux/raid/pq.h |   4 ++
- lib/raid6/Makefile      |  27 ++++++++++++-
- lib/raid6/algos.c       |   4 ++
- lib/raid6/altivec.uc    |   3 ++
- lib/raid6/test/Makefile |  14 ++++++-
- lib/raid6/vpermxor.uc   | 104 ++++++++++++++++++++++++++++++++++++++++++++++++
- 6 files changed, 154 insertions(+), 2 deletions(-)
- create mode 100644 lib/raid6/vpermxor.uc
-
-diff --git a/include/linux/raid/pq.h b/include/linux/raid/pq.h
-index 4d57bba..3df9aa6 100644
---- a/include/linux/raid/pq.h
-+++ b/include/linux/raid/pq.h
-@@ -107,6 +107,10 @@ extern const struct raid6_calls raid6_avx512x2;
- extern const struct raid6_calls raid6_avx512x4;
- extern const struct raid6_calls raid6_tilegx8;
- extern const struct raid6_calls raid6_s390vx8;
-+extern const struct raid6_calls raid6_vpermxor1;
-+extern const struct raid6_calls raid6_vpermxor2;
-+extern const struct raid6_calls raid6_vpermxor4;
-+extern const struct raid6_calls raid6_vpermxor8;
- 
- struct raid6_recov_calls {
- 	void (*data2)(int, size_t, int, int, void **);
-diff --git a/lib/raid6/Makefile b/lib/raid6/Makefile
-index 3057011..db095a7 100644
---- a/lib/raid6/Makefile
-+++ b/lib/raid6/Makefile
-@@ -4,7 +4,8 @@ raid6_pq-y	+= algos.o recov.o tables.o int1.o int2.o int4.o \
- 		   int8.o int16.o int32.o
- 
- raid6_pq-$(CONFIG_X86) += recov_ssse3.o recov_avx2.o mmx.o sse1.o sse2.o avx2.o avx512.o recov_avx512.o
--raid6_pq-$(CONFIG_ALTIVEC) += altivec1.o altivec2.o altivec4.o altivec8.o
-+raid6_pq-$(CONFIG_ALTIVEC) += altivec1.o altivec2.o altivec4.o altivec8.o \
-+                              vpermxor1.o vpermxor2.o vpermxor4.o vpermxor8.o
- raid6_pq-$(CONFIG_KERNEL_MODE_NEON) += neon.o neon1.o neon2.o neon4.o neon8.o
- raid6_pq-$(CONFIG_TILEGX) += tilegx8.o
- raid6_pq-$(CONFIG_S390) += s390vx8.o recov_s390xc.o
-@@ -88,6 +89,30 @@ $(obj)/altivec8.c:   UNROLL := 8
- $(obj)/altivec8.c:   $(src)/altivec.uc $(src)/unroll.awk FORCE
- 	$(call if_changed,unroll)
- 
-+CFLAGS_vpermxor1.o += $(altivec_flags)
-+targets += vpermxor1.c
-+$(obj)/vpermxor1.c: UNROLL := 1
-+$(obj)/vpermxor1.c: $(src)/vpermxor.uc $(src)/unroll.awk FORCE
-+	$(call if_changed,unroll)
-+
-+CFLAGS_vpermxor2.o += $(altivec_flags)
-+targets += vpermxor2.c
-+$(obj)/vpermxor2.c: UNROLL := 2
-+$(obj)/vpermxor2.c: $(src)/vpermxor.uc $(src)/unroll.awk FORCE
-+	$(call if_changed,unroll)
-+
-+CFLAGS_vpermxor4.o += $(altivec_flags)
-+targets += vpermxor4.c
-+$(obj)/vpermxor4.c: UNROLL := 4
-+$(obj)/vpermxor4.c: $(src)/vpermxor.uc $(src)/unroll.awk FORCE
-+	$(call if_changed,unroll)
-+
-+CFLAGS_vpermxor8.o += $(altivec_flags)
-+targets += vpermxor8.c
-+$(obj)/vpermxor8.c: UNROLL := 8
-+$(obj)/vpermxor8.c: $(src)/vpermxor.uc $(src)/unroll.awk FORCE
-+	$(call if_changed,unroll)
-+
- CFLAGS_neon1.o += $(NEON_FLAGS)
- targets += neon1.c
- $(obj)/neon1.c:   UNROLL := 1
-diff --git a/lib/raid6/algos.c b/lib/raid6/algos.c
-index 7857049..edd4f69 100644
---- a/lib/raid6/algos.c
-+++ b/lib/raid6/algos.c
-@@ -74,6 +74,10 @@ const struct raid6_calls * const raid6_algos[] = {
- 	&raid6_altivec2,
- 	&raid6_altivec4,
- 	&raid6_altivec8,
-+	&raid6_vpermxor1,
-+	&raid6_vpermxor2,
-+	&raid6_vpermxor4,
-+	&raid6_vpermxor8,
- #endif
- #if defined(CONFIG_TILEGX)
- 	&raid6_tilegx8,
-diff --git a/lib/raid6/altivec.uc b/lib/raid6/altivec.uc
-index 682aae8..d20ed0d 100644
---- a/lib/raid6/altivec.uc
-+++ b/lib/raid6/altivec.uc
-@@ -24,10 +24,13 @@
- 
- #include <linux/raid/pq.h>
- 
-+#ifdef CONFIG_ALTIVEC
-+
- #include <altivec.h>
- #ifdef __KERNEL__
- # include <asm/cputable.h>
- # include <asm/switch_to.h>
-+#endif /* __KERNEL__ */
- 
- /*
-  * This is the C data type to use.  We use a vector of
-diff --git a/lib/raid6/test/Makefile b/lib/raid6/test/Makefile
-index 2c7b60e..9c333e9 100644
---- a/lib/raid6/test/Makefile
-+++ b/lib/raid6/test/Makefile
-@@ -97,6 +97,18 @@ altivec4.c: altivec.uc ../unroll.awk
- altivec8.c: altivec.uc ../unroll.awk
- 	$(AWK) ../unroll.awk -vN=8 < altivec.uc > $@
- 
-+vpermxor1.c: vpermxor.uc ../unroll.awk
-+	$(AWK) ../unroll.awk -vN=1 < vpermxor.uc > $@
-+
-+vpermxor2.c: vpermxor.uc ../unroll.awk
-+	$(AWK) ../unroll.awk -vN=2 < vpermxor.uc > $@
-+
-+vpermxor4.c: vpermxor.uc ../unroll.awk
-+	$(AWK) ../unroll.awk -vN=4 < vpermxor.uc > $@
-+
-+vpermxor8.c: vpermxor.uc ../unroll.awk
-+	$(AWK) ../unroll.awk -vN=8 < vpermxor.uc > $@
-+
- int1.c: int.uc ../unroll.awk
- 	$(AWK) ../unroll.awk -vN=1 < int.uc > $@
- 
-@@ -122,7 +134,7 @@ tables.c: mktables
- 	./mktables > tables.c
- 
- clean:
--	rm -f *.o *.a mktables mktables.c *.uc int*.c altivec*.c neon*.c tables.c raid6test
-+	rm -f *.o *.a mktables mktables.c *.uc int*.c altivec*.c vpermxor*.c neon*.c tables.c raid6test
- 	rm -f tilegx*.c
- 
- spotless: clean
-diff --git a/lib/raid6/vpermxor.uc b/lib/raid6/vpermxor.uc
-new file mode 100644
-index 0000000..31a324d
---- /dev/null
-+++ b/lib/raid6/vpermxor.uc
-@@ -0,0 +1,104 @@
-+/*
-+ * Copyright 2017, Matt Brown, IBM Corp.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version
-+ * 2 of the License, or (at your option) any later version.
-+ *
-+ * vpermxor$#.c
-+ *
-+ * Based on H. Peter Anvin's paper - The mathematics of RAID-6
-+ *
-+ * $#-way unrolled portable integer math RAID-6 instruction set
-+ * This file is postprocessed using unroll.awk
-+ *
-+ * vpermxor$#.c makes use of the vpermxor opcode to optimise the RAID6 Q
-+ * syndrome calculations.
-+ * This can be run on systems which have both Altivec and the vpermxor opcode.
-+ *
-+ * This instruction was introduced in POWER8 - ISA v2.07.
-+ */
-+
-+#include <linux/raid/pq.h>
-+#ifdef CONFIG_ALTIVEC
-+
-+#include <altivec.h>
-+#ifdef __KERNEL__
-+#include <asm/cputable.h>
-+#include <asm/switch_to.h>
-+#endif
-+
-+typedef vector unsigned char unative_t;
-+#define NSIZE sizeof(unative_t)
-+
-+static const vector unsigned char gf_low = {0x1e, 0x1c, 0x1a, 0x18, 0x16, 0x14,
-+					    0x12, 0x10, 0x0e, 0x0c, 0x0a, 0x08,
-+					    0x06, 0x04, 0x02,0x00};
-+static const vector unsigned char gf_high = {0xfd, 0xdd, 0xbd, 0x9d, 0x7d, 0x5d,
-+					     0x3d, 0x1d, 0xe0, 0xc0, 0xa0, 0x80,
-+					     0x60, 0x40, 0x20, 0x00};
-+
-+static void noinline raid6_vpermxor$#_gen_syndrome_real(int disks, size_t bytes,
-+							void **ptrs)
-+{
-+	u8 **dptr = (u8 **)ptrs;
-+	u8 *p, *q;
-+	int d, z, z0;
-+	unative_t wp$$, wq$$, wd$$;
-+
-+	z0 = disks - 3;		/* Highest data disk */
-+	p = dptr[z0+1];		/* XOR parity */
-+	q = dptr[z0+2];		/* RS syndrome */
-+
-+	for (d = 0; d < bytes; d += NSIZE*$#) {
-+		wp$$ = wq$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE];
-+
-+		for (z = z0-1; z>=0; z--) {
-+			wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE];
-+			/* P syndrome */
-+			wp$$ = vec_xor(wp$$, wd$$);
-+
-+			/*Q syndrome */
-+			asm("vpermxor %0,%1,%2,%3":"=v"(wq$$):"v"(gf_high), "v"(gf_low), "v"(wq$$));
-+			wq$$ = vec_xor(wq$$, wd$$);
-+		}
-+		*(unative_t *)&p[d+NSIZE*$$] = wp$$;
-+		*(unative_t *)&q[d+NSIZE*$$] = wq$$;
-+	}
-+}
-+
-+static void raid6_vpermxor$#_gen_syndrome(int disks, size_t bytes, void **ptrs)
-+{
-+	preempt_disable();
-+	enable_kernel_altivec();
-+
-+	raid6_vpermxor$#_gen_syndrome_real(disks, bytes, ptrs);
-+
-+	disable_kernel_altivec();
-+	preempt_enable();
-+}
-+
-+int raid6_have_altivec_vpermxor(void);
-+#if $# == 1
-+int raid6_have_altivec_vpermxor(void)
-+{
-+	/* Check if CPU has both altivec and the vpermxor instruction*/
-+# ifdef __KERNEL__
-+	return (cpu_has_feature(CPU_FTR_ALTIVEC_COMP) &&
-+		cpu_has_feature(CPU_FTR_ARCH_207S));
-+# else
-+	return 1;
-+#endif
-+
-+}
-+#endif
-+
-+const struct raid6_calls raid6_vpermxor$# = {
-+	raid6_vpermxor$#_gen_syndrome,
-+	NULL,
-+	raid6_have_altivec_vpermxor,
-+	"vpermxor$#",
-+	0
-+};
-+#endif
--- 
-2.9.3
 
