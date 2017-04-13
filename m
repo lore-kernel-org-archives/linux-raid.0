@@ -1,42 +1,87 @@
-From: Reindl Harald <h.reindl@thelounge.net>
-Subject: Re: disk initialize priority
-Date: Thu, 13 Apr 2017 11:09:11 +0200
-Message-ID: <43e44c4b-37d6-9734-b323-5b432ef27d52@thelounge.net>
-References: <CAC6SzHJAM-AbCiK7rqhgk4CJcyZ4C-yW0kt_rr3hgk+F-WMCiQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: [PATCH] md/raid10: introduce handle_badblocks
+Date: Thu, 13 Apr 2017 17:28:28 +0800
+Message-ID: <1492075708-4412-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAC6SzHJAM-AbCiK7rqhgk4CJcyZ4C-yW0kt_rr3hgk+F-WMCiQ@mail.gmail.com>
-Content-Language: de-CH
 Sender: linux-raid-owner@vger.kernel.org
-To: d tbsky <tbskyd@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: shli@kernel.org, neilb@suse.com, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
+If the state of r10bio is either R10BIO_IsSync or
+R10BIO_IsRecover, then handle_write_completed calls
+the same logic to clear or set badblock for bio and
+repl_bio, so refactor these codes to a new function
+named handle_badblocks.
 
+Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+---
+ drivers/md/raid10.c | 42 +++++++++++++++++-------------------------
+ 1 file changed, 17 insertions(+), 25 deletions(-)
 
-Am 13.04.2017 um 10:13 schrieb d tbsky:
-> Hi:
->       I just tried to install rhel 7.3 on a 4 disk raid6. it's a
-> minimal install but took 3 hours to finish. I found the disk
-> initialize speed is around 150MB/sec. in past the disk initialize
-> speed will down to slow speed when there are other disk IO, but it
-> seems not the case in rhel 7.3.
-> 
->      I have check the below parameter:
->      cat /proc/sys/dev/raid/speed_limit_min  -> 1000
->      cat /proc/sys/dev/raid/speed_limit_max -> 200000
-> 
->      when the system is idle, the init speed is also about 150M/sec, so
-> the system is use all the power to init when there are other disk IO.
-> 
->       is it normal? where should I check?
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 4167091..a707772 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -2620,6 +2620,20 @@ static void handle_read_error(struct mddev *mddev, struct r10bio *r10_bio)
+ 	raid10_read_request(mddev, r10_bio->master_bio, r10_bio);
+ }
+ 
++static void handle_badblocks(struct r10bio *r10_bio, struct md_rdev *rdev,
++			     struct r10conf *conf, int slot, bool repl)
++{
++	struct bio *bio = repl ? r10_bio->devs[slot].repl_bio :
++				 r10_bio->devs[slot].bio;
++	sector_t addr = r10_bio->devs[slot].addr;
++
++	if (!bio->bi_error)
++		rdev_clear_badblocks(rdev, addr, r10_bio->sectors, 0);
++	else
++		if (!rdev_set_badblocks(rdev, addr, r10_bio->sectors, 0))
++			md_error(conf->mddev, rdev);
++}
++
+ static void handle_write_completed(struct r10conf *conf, struct r10bio *r10_bio)
+ {
+ 	/* Some sort of write request has finished and it
+@@ -2638,34 +2652,12 @@ static void handle_write_completed(struct r10conf *conf, struct r10bio *r10_bio)
+ 			rdev = conf->mirrors[dev].rdev;
+ 			if (r10_bio->devs[m].bio == NULL)
+ 				continue;
+-			if (!r10_bio->devs[m].bio->bi_error) {
+-				rdev_clear_badblocks(
+-					rdev,
+-					r10_bio->devs[m].addr,
+-					r10_bio->sectors, 0);
+-			} else {
+-				if (!rdev_set_badblocks(
+-					    rdev,
+-					    r10_bio->devs[m].addr,
+-					    r10_bio->sectors, 0))
+-					md_error(conf->mddev, rdev);
+-			}
++			handle_badblocks(r10_bio, rdev, conf, m, false);
++
+ 			rdev = conf->mirrors[dev].replacement;
+ 			if (r10_bio->devs[m].repl_bio == NULL)
+ 				continue;
+-
+-			if (!r10_bio->devs[m].repl_bio->bi_error) {
+-				rdev_clear_badblocks(
+-					rdev,
+-					r10_bio->devs[m].addr,
+-					r10_bio->sectors, 0);
+-			} else {
+-				if (!rdev_set_badblocks(
+-					    rdev,
+-					    r10_bio->devs[m].addr,
+-					    r10_bio->sectors, 0))
+-					md_error(conf->mddev, rdev);
+-			}
++			handle_badblocks(r10_bio, rdev, conf, m, true);
+ 		}
+ 		put_buf(r10_bio);
+ 	} else {
+-- 
+2.6.6
 
-sysctl.conf:
-dev.raid.speed_limit_min = 10000
-dev.raid.speed_limit_max = 50000
-
-sysctl -p
-
-and it will adjust itself within seconds - the same works if that values 
-are too low and raid-check would take forever
