@@ -1,45 +1,92 @@
-From: Stephane Thiell <sthiell@stanford.edu>
-Subject: Re: disk initialize priority
-Date: Thu, 13 Apr 2017 17:44:55 +0000
-Message-ID: <636725EE-596D-43F5-A208-9FC9E61F1775@stanford.edu>
-References: <CAC6SzHJAM-AbCiK7rqhgk4CJcyZ4C-yW0kt_rr3hgk+F-WMCiQ@mail.gmail.com>
- <43e44c4b-37d6-9734-b323-5b432ef27d52@thelounge.net>
- <CAC6SzHKWeLMSn1Z3W0KyBaUw+5MLmnMxLbh130gxM071t8VeFw@mail.gmail.com>
- <fc31c172-f988-32a4-c9b2-93bc7f3bfc90@thelounge.net>
- <20170413150514.6b92d81f@natsu>
- <CAC6SzHLj4FL_=7FwSwvaziYAOs95hwhRgoG6qaZPvgMBsXJBsg@mail.gmail.com>
- <20170413153419.73377864@natsu>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: GET_ARRAY_INFO assumptions?
+Date: Thu, 13 Apr 2017 13:37:42 -0700
+Message-ID: <20170413203742.wg6mrnzedw7ew5ky@kernel.org>
+References: <ab07d303-85fb-e912-e4fa-9ee66a1277cc@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170413153419.73377864@natsu>
-Content-Language: en-US
-Content-ID: <2F087725DE0DA74C8E6D19B884846B99@namprd02.prod.outlook.com>
+Content-Disposition: inline
+In-Reply-To: <ab07d303-85fb-e912-e4fa-9ee66a1277cc@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.net>
-Cc: d tbsky <tbskyd@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Jes Sorensen <jes.sorensen@gmail.com>
+Cc: NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-PiBPbiBBcHIgMTMsIDIwMTcsIGF0IDM6MzQgQU0sIFJvbWFuIE1hbWVkb3YgPHJtQHJvbWFucm0u
-bmV0PiB3cm90ZToNCj4gDQo+IE9uIFRodSwgMTMgQXByIDIwMTcgMTg6MjU6NDQgKzA4MDANCj4g
-ZCB0YnNreSA8dGJza3lkQGdtYWlsLmNvbT4gd3JvdGU6DQo+IA0KPj4gICAgIFJIRUwgNyB1c2Ug
-a2VybmVsIDMuMTAgc28gaXQgc2hvdWxkIG5vdCBiZSBhZmZlY3RlZC4gYXQgbGVhc3QNCj4+IFJI
-RUwgNy4yIEkgZGlkbid0IG5vdGljZSB0aGlzIGtpbmQgb2YgcHJvYmxlbS4gbWF5YmUgUkhFTCA3
-LjMgcHVsbA0KPj4gc29tZSBmZWF0dXJlL3BhdGNoIGZyb20gdXBzdHJlYW0ga2VybmVsLiBJIHdp
-bGwgdHJ5IHRvIHJlcG9ydCB0bw0KPj4gcmVkaGF0IGJ1Z3ppbGxhIHRvIHNlZSBpZiB0aGV5IGNh
-biBmaXggdGhlc2UuDQo+IA0KPiBPdXQgb2YgY3VyaW91c2l0eSBJIGNoZWNrZWQgdGhlIFJIRUwg
-Ny4zIGtlcm5lbCAzLjEwIHNvdXJjZSBhcyBhdmFpbGFibGUgYXQ6DQo+IGh0dHA6Ly92YXVsdC5j
-ZW50b3Mub3JnLzcuMy4xNjExL3VwZGF0ZXMvU291cmNlL1NQYWNrYWdlcy9rZXJuZWwtMy4xMC4w
-LTUxNC4xMC4yLmVsNy5zcmMucnBtDQo+IGFuZCB5ZXMgaW5kZWVkIHRoZXkgaGF2ZSBpbmNsdWRl
-ZCB0aGF0IHBhdGNoIGZyb20gdGhlIHVwc3RyZWFtIDQueCBrZXJuZWwuDQo+IA0KDQpJbnRlcmVz
-dGluZy4NCg0KSnVzdCB0byBzYXkgdGhhdCBJIGhhdmUgbm90aWNlZCBhIHNpbWlsYXIgaXNzdWUg
-b24gQ2VudE9TIDcuMyAodXNpbmcgMy4xMC4wLTUxNC4xMC4yLmVsN19sdXN0cmUueDg2XzY0KS4g
-SSBhbSB1c2luZyBtdWx0aXBsZSByYWlkNiBtZCAoOCsyKSBhbmQgSSBoYWQgdG8gZGVwbG95IGEg
-Y3JvbiBzY3JpcHQgdGhhdCBjaGVja3MgaWYgZWFjaCByYWlkIGlzIGRlZ3JhZGVkIG9yIG5vdCwg
-YW5kIHNldCBzcGVlZF9saW1pdF9tYXggYWNjb3JkaW5nbHkgKGVnLiBoaWdoZXIg4oCccHJpb3Jp
-dHnigJ0gZm9yIHJlYnVpbGQgaWYgYXJyYXkgZGVncmFkZWQpIGJ1dCBhbHdheXMgYmVsb3cgdGhl
-IG1heCB0aHJvdWdocHV04oCmIG9yIG90aGVyIHVzZXIgSS9PcyBiZWNvbWUgdG9vIHNsb3cuIE5v
-dCBpZGVhbCBidXQgd29ya3MgZmluZSB0aGlzIHdheS4NCg0KQmVzdCByZWdhcmRzLA0KDQpTdMOp
-cGhhbmU=
+On Thu, Apr 13, 2017 at 01:50:06PM -0400, Jes Sorensen wrote:
+> Hi Neil,
+> 
+> Looking at trying to phase out the ioctl usage, I am trying to introduce a
+> helper for the 'is the array valid' situation.
+> 
+> Now looking at places like Incremental.c (around like 557 in my current
+> tree):
+> 	/* 7b/ if yes, */
+> 	/* - if number of OK devices match expected, or -R and there */
+> 	/*             are enough, */
+> 	/*   + add any bitmap file  */
+> 	/*   + start the array (auto-readonly). */
+> 
+> 	if (md_get_array_info(mdfd, &ainf) == 0) {
+> 		if (c->export) {
+> 			printf("MD_STARTED=already\n");
+> 		} else if (c->verbose >= 0)
+> 			pr_err("%s attached to %s which is already active.\n",
+> 			       devname, chosen_name);
+> 		rv = 0;
+> 		goto out_unlock;
+> 	}
+> 
+> I am wondering if there are any side effects/assumptions about
+> GET_ARRAY_INFO that I am not considering? Basically I am making the
+> assumption that if /sys/block/md<X>/md exists, the array is valid.
 
+what does 'valid' really mean? md<x>/md exists after a md device is allocated,
+the md device might not have any under layer disks bound yet.
+
+> The code in Incremental.c already deals with sysfs higher up in the code, so
+> I guess the question is if the above test is even relevant anymore?
+> 
+> Alternative, do we need export a new state in sysfs 'running'?
+
+I'd assume 'running' means the md device has a personality attached. See
+array_state_show(), !running == 'clear' or 'inactive'.
+
+
+Thanks,
+Shaohua
+> Thoughts?
+> 
+> Jes
+> 
+> diff --git a/util.c b/util.c
+> index a695c45..99ed015 100644
+> --- a/util.c
+> +++ b/util.c
+> @@ -200,6 +200,22 @@ out:
+>         return ret;
+>  }
+> 
+> +int md_valid_array(int fd)
+> +{
+> +       struct mdinfo *sra;
+> +       struct mdu_array_info_s array;
+> +       int ret;
+> +
+> +       sra = xcalloc(1, sizeof(*sra));
+> +       ret = sysfs_init(sra, fd, NULL);
+> +       free(sra);
+> +
+> +       if (ret)
+> +               ret = ioctl(fd, GET_ARRAY_INFO, &array);
+> +
+> +       return !ret;
+> +}
+> +
+>  /*
+>   * Get array info from the kernel. Longer term we want to deprecate the
+>   * ioctl and get it from sysfs.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
