@@ -1,59 +1,72 @@
-From: Paul Menzel <pm.debian@googlemail.com>
-Subject: Re: [PATCH 0/4] integrated stat and fstat into utility functions
-Date: Fri, 14 Apr 2017 14:31:54 +0200
-Message-ID: <1492173114.8709.29.camel@googlemail.com>
-References: <20170401125145.14440-1-zlliu@suse.com>
+From: linuxknight <linuxknight@gmail.com>
+Subject: Re: Linux software raid troubles
+Date: Fri, 14 Apr 2017 11:01:45 -0400
+Message-ID: <CAAO=44YCU+OF-xBytuMCHEtV7WbHE6EVyJ_9ncGmM9VNWcj9MA@mail.gmail.com>
+References: <CAAO=44Y=8xrnWvMp214RFq9Y-KVDQVfEYa2vL-Ahgmbvgs6Y4w@mail.gmail.com>
+ <8e9a25fc-5c81-103c-2ffa-4b46f2aa8630@thelounge.net> <CAAO=44bsG1yrmYbag1eruNA_tdXxqiJptnRyPB=4TW6r5771HQ@mail.gmail.com>
+ <cbadbdeb-7e6b-7784-e49c-dd2801903bb6@thelounge.net> <CAAO=44Y9YspCqyfvDgx30mGO_VhYZpuj9D8U1O6063B8VL61vw@mail.gmail.com>
+ <d1695ac6-5912-860a-0b70-e0d9a322002e@suddenlinkmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
-        boundary="=-7/IqgvSaxIoCrAZMxEEb"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170401125145.14440-1-zlliu@suse.com>
+In-Reply-To: <d1695ac6-5912-860a-0b70-e0d9a322002e@suddenlinkmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Zhilong Liu <zlliu@suse.com>, Jes.Sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org
+To: "David C. Rankin" <drankinatty@suddenlinkmail.com>
+Cc: mdraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+David thanks for this additional follow-up.  I was mistaken about the
+LSI card, it was actually a SiL 3124.  The OS didnt see the raid as
+one drive, so its another one of these fake raid cards.  I did get a
+good image.so Im going to re-os this weekend and use the software raid
+method.
 
---=-7/IqgvSaxIoCrAZMxEEb
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+One last question, is it acceptable to let graphical installers setup
+the software raid for me or should I use one disk and create a raid
+mirror later once the OS is setup?
 
-Dear Zhilong,
-
-
-Am Samstag, den 01.04.2017, 20:51 +0800 schrieb Zhilong Liu:
-
-[=E2=80=A6]
-
-> Zhilong Liu (4):
->   mdadm/util:integrate stat operations into one utility
->   mdadm/util:integrate fstat operations into one utility function
->   mdadm/Create:declaring an existing struct within same function
->   mdadm/Monitor:check the block device when use waitclean parameter
-
-Just a small wish, could you please add exactly one space between the
-=E2=80=9Csubsystem prefix=E2=80=9D and the summary?
-
-Like *mdadm/util: Integrate stat =E2=80=A6*. That=E2=80=99d be great.
-
-[=E2=80=A6]
-
-
-Thanks,
-
-Paul
---=-7/IqgvSaxIoCrAZMxEEb
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iHcEABECADcWIQQ8+w9d414FAVARIpk9fVorbA4dWAUCWPDBOhkccG0uZGViaWFu
-QGdvb2dsZW1haWwuY29tAAoJED19WitsDh1YEAAAoIwMxOIh3FpmIHy9ld9kNoQ1
-8KZZAJ9JxTn80n6qlTR7NshREf2ieCDs/A==
-=Um+r
------END PGP SIGNATURE-----
-
---=-7/IqgvSaxIoCrAZMxEEb--
-
+On Fri, Apr 14, 2017 at 12:43 AM, David C. Rankin
+<drankinatty@suddenlinkmail.com> wrote:
+> On 04/12/2017 10:36 AM, linuxknight wrote:
+>> Thank you Reindl, Using your method would I be able to apply this IMG
+>> file to a fresh raid1 mirror and still have it be bootable?
+>>
+>> The reason I ask is I was looking at this guide,
+>> https://www.data-medics.com/forum/how-to-clone-a-hard-drive-with-bad-sectors-using-ddrescue-t133.html
+>> It has a method to transfer drive to drive.  I was thinking I would
+>> create the fresh RAID mirror on the dedicated LSI card, then ddrescue
+>> possibly bad drive to the new raid mirror.  Is this a bad idea?
+>
+> Take the dd advise, but... you initially indicated:
+>
+> <quote>
+> I was moving a server with a raid1 configuration,
+> controlled by a Intel Corporation 82801 SATA RAID Controller
+> </quote>
+>
+> Now you are saying
+>
+> <quote>
+>> It has a method to transfer drive to drive.  I was thinking I would
+>> create the fresh RAID mirror on the dedicated LSI card
+> </quote>
+>
+> Note: the Intel and LSI cards may not have compatible RAID metadata. (That is
+> one of the major benefits of using linux-raid (software RAID) you are not
+> constrained by differing hardware RAID specifications.)
+>
+> You also mention "to a fresh raid1 mirror and still have it be bootable?" If
+> you image the drive with dd, the mbr or bootloader will still be present on in
+> the image and on the drive, so as long as you can tell the OS to boot from
+> that drive you should be fine (as long as the controller can access the
+> information)
+>
+> A good general howto on setting up linux-raid is
+> https://wiki.archlinux.org/index.php/RAID
+>
+> --
+> David C. Rankin, J.D.,P.E.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
