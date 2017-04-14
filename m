@@ -1,63 +1,60 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH 1/4] mdadm/util:integrate stat operations into one utility
-Date: Fri, 14 Apr 2017 11:20:29 -0400
-Message-ID: <e41b85e9-53ff-5f94-f80d-02ebd4e36238@gmail.com>
-References: <20170401125145.14440-1-zlliu@suse.com>
- <20170401125145.14440-2-zlliu@suse.com> <wrfj8tneeu8k.fsf@gmail.com>
- <0f6a630a-c53a-090e-67c3-8132f6d7b08e@suse.com>
+From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+Subject: Re: [PATCH 01/22] scatterlist: Introduce sg_map helper functions
+Date: Fri, 14 Apr 2017 09:34:28 -0600
+Message-ID: <18f05078-5b2c-2e9b-c8ad-e23c02942b58@deltatee.com>
+References: <1492121135-4437-1-git-send-email-logang@deltatee.com>
+ <1492121135-4437-2-git-send-email-logang@deltatee.com>
+ <20170414083518.GA25471@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <0f6a630a-c53a-090e-67c3-8132f6d7b08e@suse.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Liu Zhilong <zlliu@suse.com>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <20170414083518.GA25471-jcswGhMUV9g@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, rds-devel-N0ozoZBvEnrZJqsBc5GL+g@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ming Lin <ming.l-Vzezgt5dB6uUEJcrhfAQsw@public.gmane.org>, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, sparmaintainer-GLv8BlqOqDDQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, megaraidlinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linaro-mm-sig-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj@k>
 List-Id: linux-raid.ids
 
-On 04/14/2017 06:14 AM, Liu Zhilong wrote:
->
->
-> On 04/05/2017 11:42 PM, jes.sorensen@gmail.com wrote:
->> Zhilong Liu <zlliu@suse.com> writes:
-[snip]
->> For a function like this, lets name it better md_is_blkdev()
->
-> How about return the devid after checking? Because always need the
-> stb.st_rdev to parse
-> the major and minor number. Although "util.c" has "devnm2devid" to
-> gather the devid via
-> to devnm, but it's convenient to return devid when check the blkdev with
-> absolute path.
-> would you mind the function like this?
->
-> // returns dev-id when success, return 0 when failure
-> dev_t stat_md_is_blkdev(char *dev)
-> {
->     struct stat stb;
->
->     if (stat(dev, &stb) != 0) {
->         pr_err("stat failed for %s: %s\n", dev, strerror(errno));
->         return 0;
->     }
->     if ((S_IFMT & stb.st_mode) != S_IFBLK) {
->         pr_err("%s is not a block device.\n", dev);
->         return 0;
->     }
->     return stb.st_rdev;
-> }
 
-I am generally wary of too many smart handlers, but I think it makes 
-some sense here to de-duplicate the repeated code.
 
-That said, your function would ditch the error information, and the 
-caller wouldn't know why it failed. If you made it more like this and 
-return the error code, plus stick the major/minor number into rdev, if 
-one is provided:
+On 14/04/17 02:35 AM, Christoph Hellwig wrote:
+>> +
+>>  static inline int is_dma_buf_file(struct file *);
+>>  
+>>  struct dma_buf_list {
+> 
+> I think the right fix here is to rename the operation to unmap_atomic
+> and send out a little patch for that ASAP.
 
-int stat_md_is_blkdev(char *devname, *dev_t rdev)
-{
-}
+Ok, I can do that next week.
 
-Jes
+> I'd rather have separate functions for kmap vs kmap_atomic instead of
+> the flags parameter.  And while you're at it just always pass the 0
+> offset parameter instead of adding a wrapper..
+> 
+> Otherwise this looks good to me.
 
+I settled on the flags because I thought the interface could be expanded
+to do more things like automatically copy iomem to a bounce buffer (with
+a flag). It'd also be possible to add things like vmap and
+physical_address to the interface which would cover even more sg_page
+users. All the implementations would then share the common offset
+calculations, and switching between them becomes a matter of changing a
+couple flags.
+
+If you're still not convinced by the above arguments  then I'll change
+it but I did have reasons for choosing to do it this way.
+
+I am fine with removing the offset versions. I will make that change.
+
+Thanks,
+
+Logan
