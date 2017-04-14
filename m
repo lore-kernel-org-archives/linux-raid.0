@@ -1,42 +1,107 @@
-From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: Re: [PATCH 03/22] libiscsi: Make use of new the sg_map helper function
-Date: Fri, 14 Apr 2017 09:37:20 -0600
-Message-ID: <85eda3a6-edab-e59e-d2d4-c3af5599d0fd@deltatee.com>
-References: <1492121135-4437-1-git-send-email-logang@deltatee.com>
- <1492121135-4437-4-git-send-email-logang@deltatee.com>
- <20170414083607.GB25471@lst.de>
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: GET_ARRAY_INFO assumptions?
+Date: Fri, 14 Apr 2017 11:48:57 -0400
+Message-ID: <c0a29266-fdf4-2f07-aabd-6aa1f55d7d46@gmail.com>
+References: <ab07d303-85fb-e912-e4fa-9ee66a1277cc@gmail.com>
+ <20170413203742.wg6mrnzedw7ew5ky@kernel.org>
+ <0c3633e4-df8c-c59a-17d4-917495931ba1@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <20170414083607.GB25471-jcswGhMUV9g@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, rds-devel-N0ozoZBvEnrZJqsBc5GL+g@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ming Lin <ming.l-Vzezgt5dB6uUEJcrhfAQsw@public.gmane.org>, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, sparmaintainer-GLv8BlqOqDDQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, megaraidlinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linaro-mm-sig-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj@k>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <0c3633e4-df8c-c59a-17d4-917495931ba1@gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 04/13/2017 05:06 PM, Jes Sorensen wrote:
+> On 04/13/2017 04:37 PM, Shaohua Li wrote:
+>> On Thu, Apr 13, 2017 at 01:50:06PM -0400, Jes Sorensen wrote:
+>>> Hi Neil,
+>>>
+>>> Looking at trying to phase out the ioctl usage, I am trying to
+>>> introduce a
+>>> helper for the 'is the array valid' situation.
+>>>
+>>> Now looking at places like Incremental.c (around like 557 in my current
+>>> tree):
+>>>     /* 7b/ if yes, */
+>>>     /* - if number of OK devices match expected, or -R and there */
+>>>     /*             are enough, */
+>>>     /*   + add any bitmap file  */
+>>>     /*   + start the array (auto-readonly). */
+>>>
+>>>     if (md_get_array_info(mdfd, &ainf) == 0) {
+>>>         if (c->export) {
+>>>             printf("MD_STARTED=already\n");
+>>>         } else if (c->verbose >= 0)
+>>>             pr_err("%s attached to %s which is already active.\n",
+>>>                    devname, chosen_name);
+>>>         rv = 0;
+>>>         goto out_unlock;
+>>>     }
+>>>
+>>> I am wondering if there are any side effects/assumptions about
+>>> GET_ARRAY_INFO that I am not considering? Basically I am making the
+>>> assumption that if /sys/block/md<X>/md exists, the array is valid.
+>>
+>> what does 'valid' really mean? md<x>/md exists after a md device is
+>> allocated,
+>> the md device might not have any under layer disks bound yet.
+>>
+>>> The code in Incremental.c already deals with sysfs higher up in the
+>>> code, so
+>>> I guess the question is if the above test is even relevant anymore?
+>>>
+>>> Alternative, do we need export a new state in sysfs 'running'?
+>>
+>> I'd assume 'running' means the md device has a personality attached. See
+>> array_state_show(), !running == 'clear' or 'inactive'.
+>
+> Good point, I guess what I am trying to figure out is what is assumed
+> when ioctl(GET_ARRAY_INFO) returns 0 and how do we map it to sysfs?
 
+Looking some more at this, it may be simpler than I thought. How about 
+this approach (only compile tested):
 
-On 14/04/17 02:36 AM, Christoph Hellwig wrote:
-> On Thu, Apr 13, 2017 at 04:05:16PM -0600, Logan Gunthorpe wrote:
->> Convert the kmap and kmap_atomic uses to the sg_map function. We now
->> store the flags for the kmap instead of a boolean to indicate
->> atomicitiy. We also propogate a possible kmap error down and create
->> a new ISCSI_TCP_INTERNAL_ERR error type for this.
-> 
-> Can you split out the new error handling into a separate prep patch
-> which should go to the iscsi maintainers ASAP?
-> 
+int md_array_active(int fd)
+{
+	struct mdinfo *sra;
+	struct mdu_array_info_s array;
+	int ret;
 
-Yes, I can do that. I'd just have thought they'd want to see the use
-case for the new error before accepting a patch like that...
+	sra = sysfs_read(fd, NULL, GET_VERSION | GET_DISKS);
+	if (sra) {
+		if (!sra->array.raid_disks &&
+		    !(sra->array.major_version == -1 &&
+		      sra->array.minor_version == -2))
+			ret = -ENODEV;
+		else
+			ret = 0;
 
-Logan
+		free(sra);
+	} else {
+		ret = ioctl(fd, GET_ARRAY_INFO, &array);
+	}
+
+	return !ret;
+}
+
+Note 'major = -1 && minor = -2' is sysfs_read's way of saying 'external'.
+
+This pretty much mimics what the kernel does in the ioctl handler for 
+GET_ARRAY_INFO:
+
+	case GET_ARRAY_INFO:
+		if (!mddev->raid_disks && !mddev->external)
+			err = -ENODEV;
+		else
+			err = get_array_info(mddev, argp);
+		goto out;
+
+What do you think?
+
+Cheers,
+Jes
+
