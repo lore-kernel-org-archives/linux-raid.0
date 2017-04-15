@@ -1,93 +1,101 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [md PATCH] md: handle read-only member devices better.
-Date: Sat, 15 Apr 2017 14:45:31 +1000
-Message-ID: <877f2muvmc.fsf@notabene.neil.brown.name>
-References: <87a87lutj7.fsf@notabene.neil.brown.name> <20170413054723.2spvhtze6bljkaop@kernel.org>
+From: Harsh Jain <harshjain.prof-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 08/22] crypto: chcr: Make use of the new sg_map helper
+ function
+Date: Sat, 15 Apr 2017 10:23:33 +0530
+Message-ID: <CAFXBA=k74+9jRZQX4r_iGoL8yiDbXPDTLw+AELEb1LeT_jeKiQ@mail.gmail.com>
+References: <1492121135-4437-1-git-send-email-logang@deltatee.com>
+ <1492121135-4437-9-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170413054723.2spvhtze6bljkaop@kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>, Nanda Kishore Chinnaram <Nanda_Kishore_Chinna@dell.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <1492121135-4437-9-git-send-email-logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>, harsh-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org
+Cc: Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, rds-devel-N0ozoZBvEnrZJqsBc5GL+g@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ming Lin <ming.l-Vzezgt5dB6uUEJcrhfAQsw@public.gmane.org>, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, sparmaintainer-GLv8BlqOqDDQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, megaraidlinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linaro-mm-sig-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev@
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Fri, Apr 14, 2017 at 3:35 AM, Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org> wrote:
+> The get_page in this area looks *highly* suspect due to there being no
+> corresponding put_page. However, I've left that as is to avoid breaking
+> things.
+chcr driver will post the request to LLD driver cxgb4 and put_page is
+implemented there. it will no harm. Any how
+we have removed the below code from driver.
 
-On Wed, Apr 12 2017, Shaohua Li wrote:
+http://www.mail-archive.com/linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org/msg24561.html
 
-> On Thu, Apr 13, 2017 at 08:53:48AM +1000, Neil Brown wrote:
->>=20
->> 1/ If an array has any read-only devices when it is started,
->>    the array itself must be read-only
->> 2/ A read-only device cannot be added to an array after it is
->>    started.
->> 3/ Setting an array to read-write should not succeed
->>    if any member devices are read-only
+After this merge we can ignore your patch. Thanks
+
 >
-> Didn't get these. We call md_import_device() first to open under layer di=
-sk. We
-> always use FMOD_READ|FMOD_WRITE to open the disk. So if the disk is ro,
-> md_import_device should fail, we don't add the disk to the array. Why wou=
-ld we
-> have such issues?
+> I've also removed the KMAP_ATOMIC_ARGS check as it appears to be dead
+> code that dates back to when it was first committed...
+
+
 >
-
-Because life isn't always as simple as we might like it to be. :-(
-
-md_import_device() calls lock_rdev() which calls blkdev_get_by_dev().
-
-blkdev_get_by_dev() doesn't pay much attention to the mode, nor does
-blkdev_get() which it calls.  The main place where FMODE_WRITE could be
-rejected on a read-only device is in the device's 'open()' function.  A
-few open functions do check for read-only, but it isn't at all
-consistent.
-scsi/sd.c does, block/loop.c doesn't, nor does nvme.  Most drivers seem
-to ignore the mode.
-
-blkdev_get_by_path() has
-
-	if ((mode & FMODE_WRITE) && bdev_read_only(bdev)) {
-		blkdev_put(bdev, mode);
-		return ERR_PTR(-EACCES);
-	}
-
-so when you open a device by path name you always get this check, but
-not when you open a device by device-number like md does.
-It is worth having a look at
-Commit: e51900f7d38c ("block: revert block_dev read-only check")
-from 2011.  The bdev_read_only() check was in blkdev_get() for a while,
-but it was moved out because doing that broke md and dm and others.
-
-So at present, callers of blkdev_get_by_dev() need to do their own
-bdev_read_only() tests before writing.
-We could discuss where in md.c is the best place to put them, but unless
-you want to take on a largish project to 'fix' (or audit) all callers of
-blkdev_get_by_dev(), they need to go in md somewhere.
-
-Thanks,
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljxpWsACgkQOeye3VZi
-gbmRjBAAhq3aB49WnY5gGv97g7CrKaoThYXWQdRG+JDGcDAe6vjUu5Msz09SWo2l
-pfOexrHNj7r/KqiqBLzuwK6QvhvAw649Y47S+11D95YUmjibhFF4Kni5e+1hB1RV
-jm2BwFbq8JWAHH2QhdrBMWqlmrP4FwHz1HtEs6/ESEicPmfPaktRp9wfXlHyLMSN
-Qu84U8d19WZMB1ZhvCU+Ofr7o3kEWwpXfaSVvqjlZh9g/18gNS4DFoIZQQSyQJ2i
-vg0rIoBk7kMPxmG7ZxRADT44fdByQSmpOhHhQn/Hew16OOQg0prN7W7yO3fo9tj3
-dWV9zUNupG6l6PlkMrQ/DfkYdO4X+16+E+gALQFg00XbjhVBIA6yW4FlXPGMPjpv
-PjLsn11JMSkAOTd1MILUq9hN2sye8W3aZ0Ja0cbp5RpJqsDKzcp8RIYwAu8QLwq/
-mIF+VCBc7mic12xZlPGbcp/BjPnGma2bZbM0ngIe6/zCz6aZXtcnmwQVchZH0Dm6
-a6CE9n0qQciHdDrKR4wH/cFoz6qbzvD7vBxjMh4vojc+V4X5sBjcGmsSeirTY+ab
-rTaDXMHY31PgjYtASDvxc4+0r3PV8D7x/973z7/IkdQ+UPt8loZm4Mqwd6KRXpSu
-lD18rQjOhlhAfvsJDqy23wVrXo9WeWMtXG3gCWTCRpvceBiHbWg=
-=2zdf
------END PGP SIGNATURE-----
---=-=-=--
+> Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+> ---
+>  drivers/crypto/chelsio/chcr_algo.c | 28 +++++++++++++++-------------
+>  1 file changed, 15 insertions(+), 13 deletions(-)
+>
+> diff --git a/drivers/crypto/chelsio/chcr_algo.c b/drivers/crypto/chelsio/chcr_algo.c
+> index 41bc7f4..a993d1d 100644
+> --- a/drivers/crypto/chelsio/chcr_algo.c
+> +++ b/drivers/crypto/chelsio/chcr_algo.c
+> @@ -1489,22 +1489,21 @@ static struct sk_buff *create_authenc_wr(struct aead_request *req,
+>         return ERR_PTR(-EINVAL);
+>  }
+>
+> -static void aes_gcm_empty_pld_pad(struct scatterlist *sg,
+> -                                 unsigned short offset)
+> +static int aes_gcm_empty_pld_pad(struct scatterlist *sg,
+> +                                unsigned short offset)
+>  {
+> -       struct page *spage;
+>         unsigned char *addr;
+>
+> -       spage = sg_page(sg);
+> -       get_page(spage); /* so that it is not freed by NIC */
+> -#ifdef KMAP_ATOMIC_ARGS
+> -       addr = kmap_atomic(spage, KM_SOFTIRQ0);
+> -#else
+> -       addr = kmap_atomic(spage);
+> -#endif
+> -       memset(addr + sg->offset, 0, offset + 1);
+> +       get_page(sg_page(sg)); /* so that it is not freed by NIC */
+> +
+> +       addr = sg_map(sg, SG_KMAP_ATOMIC);
+> +       if (IS_ERR(addr))
+> +               return PTR_ERR(addr);
+> +
+> +       memset(addr, 0, offset + 1);
+> +       sg_unmap(sg, addr, SG_KMAP_ATOMIC);
+>
+> -       kunmap_atomic(addr);
+> +       return 0;
+>  }
+>
+>  static int set_msg_len(u8 *block, unsigned int msglen, int csize)
+> @@ -1940,7 +1939,10 @@ static struct sk_buff *create_gcm_wr(struct aead_request *req,
+>         if (req->cryptlen) {
+>                 write_sg_to_skb(skb, &frags, src, req->cryptlen);
+>         } else {
+> -               aes_gcm_empty_pld_pad(req->dst, authsize - 1);
+> +               err = aes_gcm_empty_pld_pad(req->dst, authsize - 1);
+> +               if (err)
+> +                       goto dstmap_fail;
+> +
+>                 write_sg_to_skb(skb, &frags, reqctx->dst, crypt_len);
+>
+>         }
+> --
+> 2.1.4
+>
