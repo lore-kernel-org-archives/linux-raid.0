@@ -1,87 +1,93 @@
-From: <citydesk@thereporteronline.com>
-Subject: 31187 linux-raid
-Date: Fri, 14 Apr 2017 19:52:54 -0000
-Message-ID: <149219957414.10872.1058213654529301156@telenet.ru>
-Reply-To: <citydesk@thereporteronline.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [md PATCH] md: handle read-only member devices better.
+Date: Sat, 15 Apr 2017 14:45:31 +1000
+Message-ID: <877f2muvmc.fsf@notabene.neil.brown.name>
+References: <87a87lutj7.fsf@notabene.neil.brown.name> <20170413054723.2spvhtze6bljkaop@kernel.org>
 Mime-Version: 1.0
-Content-Type: application/zip; name="04563488649164.zip"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: attachment
+In-Reply-To: <20170413054723.2spvhtze6bljkaop@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Shaohua Li <shli@kernel.org>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>, Nanda Kishore Chinnaram <Nanda_Kishore_Chinna@dell.com>
 List-Id: linux-raid.ids
 
-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
-qg8AAAAA
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, Apr 12 2017, Shaohua Li wrote:
+
+> On Thu, Apr 13, 2017 at 08:53:48AM +1000, Neil Brown wrote:
+>>=20
+>> 1/ If an array has any read-only devices when it is started,
+>>    the array itself must be read-only
+>> 2/ A read-only device cannot be added to an array after it is
+>>    started.
+>> 3/ Setting an array to read-write should not succeed
+>>    if any member devices are read-only
+>
+> Didn't get these. We call md_import_device() first to open under layer di=
+sk. We
+> always use FMOD_READ|FMOD_WRITE to open the disk. So if the disk is ro,
+> md_import_device should fail, we don't add the disk to the array. Why wou=
+ld we
+> have such issues?
+>
+
+Because life isn't always as simple as we might like it to be. :-(
+
+md_import_device() calls lock_rdev() which calls blkdev_get_by_dev().
+
+blkdev_get_by_dev() doesn't pay much attention to the mode, nor does
+blkdev_get() which it calls.  The main place where FMODE_WRITE could be
+rejected on a read-only device is in the device's 'open()' function.  A
+few open functions do check for read-only, but it isn't at all
+consistent.
+scsi/sd.c does, block/loop.c doesn't, nor does nvme.  Most drivers seem
+to ignore the mode.
+
+blkdev_get_by_path() has
+
+	if ((mode & FMODE_WRITE) && bdev_read_only(bdev)) {
+		blkdev_put(bdev, mode);
+		return ERR_PTR(-EACCES);
+	}
+
+so when you open a device by path name you always get this check, but
+not when you open a device by device-number like md does.
+It is worth having a look at
+Commit: e51900f7d38c ("block: revert block_dev read-only check")
+from 2011.  The bdev_read_only() check was in blkdev_get() for a while,
+but it was moved out because doing that broke md and dm and others.
+
+So at present, callers of blkdev_get_by_dev() need to do their own
+bdev_read_only() tests before writing.
+We could discuss where in md.c is the best place to put them, but unless
+you want to take on a largish project to 'fix' (or audit) all callers of
+blkdev_get_by_dev(), they need to go in md somewhere.
+
+Thanks,
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljxpWsACgkQOeye3VZi
+gbmRjBAAhq3aB49WnY5gGv97g7CrKaoThYXWQdRG+JDGcDAe6vjUu5Msz09SWo2l
+pfOexrHNj7r/KqiqBLzuwK6QvhvAw649Y47S+11D95YUmjibhFF4Kni5e+1hB1RV
+jm2BwFbq8JWAHH2QhdrBMWqlmrP4FwHz1HtEs6/ESEicPmfPaktRp9wfXlHyLMSN
+Qu84U8d19WZMB1ZhvCU+Ofr7o3kEWwpXfaSVvqjlZh9g/18gNS4DFoIZQQSyQJ2i
+vg0rIoBk7kMPxmG7ZxRADT44fdByQSmpOhHhQn/Hew16OOQg0prN7W7yO3fo9tj3
+dWV9zUNupG6l6PlkMrQ/DfkYdO4X+16+E+gALQFg00XbjhVBIA6yW4FlXPGMPjpv
+PjLsn11JMSkAOTd1MILUq9hN2sye8W3aZ0Ja0cbp5RpJqsDKzcp8RIYwAu8QLwq/
+mIF+VCBc7mic12xZlPGbcp/BjPnGma2bZbM0ngIe6/zCz6aZXtcnmwQVchZH0Dm6
+a6CE9n0qQciHdDrKR4wH/cFoz6qbzvD7vBxjMh4vojc+V4X5sBjcGmsSeirTY+ab
+rTaDXMHY31PgjYtASDvxc4+0r3PV8D7x/973z7/IkdQ+UPt8loZm4Mqwd6KRXpSu
+lD18rQjOhlhAfvsJDqy23wVrXo9WeWMtXG3gCWTCRpvceBiHbWg=
+=2zdf
+-----END PGP SIGNATURE-----
+--=-=-=--
