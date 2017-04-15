@@ -1,38 +1,64 @@
-From: Logan Gunthorpe <logang@deltatee.com>
-Subject: Re: [PATCH 09/22] dm-crypt: Make use of the new sg_map helper in 4
- call sites
-Date: Sat, 15 Apr 2017 11:47:00 -0600
-Message-ID: <19b18d76-57fa-0a4f-252d-5d735105a159@deltatee.com>
-References: <1492121135-4437-1-git-send-email-logang@deltatee.com>
- <1492121135-4437-10-git-send-email-logang@deltatee.com>
- <20170414083921.GC25471@lst.de>
- <302ae5ab-d515-5427-2e54-d58a9cdb8241@deltatee.com>
- <22703638-27a9-7dc5-5180-536f61661592@gmail.com>
+From: Anthony Youngman <antlists@youngman.org.uk>
+Subject: Re: [md PATCH] md: handle read-only member devices better.
+Date: Sat, 15 Apr 2017 21:22:03 +0100
+Message-ID: <006d05e1-2517-ca5c-00b4-c699a5bd793d@youngman.org.uk>
+References: <87a87lutj7.fsf@notabene.neil.brown.name>
+ <20170413054723.2spvhtze6bljkaop@kernel.org>
+ <877f2muvmc.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <22703638-27a9-7dc5-5180-536f61661592@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Milan Broz <gmazyland@gmail.com>, Christoph Hellwig <hch@lst.de>
-Cc: Steve Wise <swise@opengridcomputing.com>, linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>, target-devel@vger.kernel.org, Sumit Semwal <sumit.semwal@linaro.org>, devel@driverdev.osuosl.org, rds-devel@oss.oracle.com, Sagi Grimberg <sagi@grimberg.me>, linux-scsi@vger.kernel.org, Matthew Wilcox <mawilcox@microsoft.com>, linux-rdma@vger.kernel.org, fcoe-devel@open-fcoe.org, Ross Zwisler <ross.zwisler@linux.intel.com>, open-iscsi@googlegroups.com, linux-media@vger.kernel.org, Ming Lin <ming.l@ssi.samsung.com>, intel-gfx@lists.freedesktop.org, sparmaintainer@unisys.com, linux-raid@vger.kernel.org, dri-devel@lists.freedesktop.org, Dan Williams <dan.j.williams@intel.com>, megaraidlinux.pdl@broadcom.com, Jens Axboe <axboe@kernel.dk>, linaro-mm-sig@
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <877f2muvmc.fsf@notabene.neil.brown.name>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>, Shaohua Li <shli@kernel.org>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>, Nanda Kishore Chinnaram <Nanda_Kishore_Chinna@dell.com>
 List-Id: linux-raid.ids
 
-Thanks for the information Milan.
+On 15/04/17 05:45, NeilBrown wrote:
+> So at present, callers of blkdev_get_by_dev() need to do their own
+> bdev_read_only() tests before writing.
+> We could discuss where in md.c is the best place to put them, but unless
+> you want to take on a largish project to 'fix' (or audit) all callers of
+> blkdev_get_by_dev(), they need to go in md somewhere.
 
-On 15/04/17 06:10 AM, Milan Broz wrote:
-> I think your patch is ok (if it is just plain conversion), if it is
-> really needed, we can switch to ahash later in follow-up patch.
+anthony@crappit:~/gitstuff/linux-stable> git grep -a blkdev_get_by_dev > 
+blkdev_get_by_dev.txt
+anthony@crappit:~/gitstuff/linux-stable> cat blkdev_get_by_dev.txt
+drivers/block/xen-blkback/xenbus.c:     bdev = 
+blkdev_get_by_dev(vbd->pdevice, vbd->readonly ?
+drivers/md/dm.c:        bdev = blkdev_get_by_dev(dev, td->dm_dev.mode | 
+FMODE_EXCL, _claim_ptr);
+drivers/md/md.c:        bdev = blkdev_get_by_dev(dev, 
+FMODE_READ|FMODE_WRITE|FMODE_EXCL,
+drivers/mtd/devices/block2mtd.c:                bdev = 
+blkdev_get_by_dev(devt, mode, dev);
+fs/block_dev.c: * blkdev_get_by_dev - open a block device by device number
+fs/block_dev.c:struct block_device *blkdev_get_by_dev(dev_t dev, fmode_t 
+mode, void *holder)
+fs/block_dev.c:EXPORT_SYMBOL(blkdev_get_by_dev);
+fs/ext4/super.c:        bdev = blkdev_get_by_dev(dev, 
+FMODE_READ|FMODE_WRITE|FMODE_EXCL, sb);
+fs/f2fs/super.c: 
+blkdev_get_by_dev(sbi->sb->s_bdev->bd_dev,
+fs/jfs/jfs_logmgr.c:    bdev = blkdev_get_by_dev(sbi->logdev, 
+FMODE_READ|FMODE_WRITE|FMODE_EXCL,
+fs/nfs/blocklayout/dev.c:       bdev = blkdev_get_by_dev(dev, FMODE_READ 
+| FMODE_WRITE, NULL);
+fs/reiserfs/journal.c:          journal->j_dev_bd = 
+blkdev_get_by_dev(jdev, blkdev_mode,
+include/linux/fs.h:extern struct block_device *blkdev_get_by_dev(dev_t 
+dev, fmode_t mode,
+kernel/power/swap.c:    hib_resume_bdev = 
+blkdev_get_by_dev(swsusp_resume_device,
+anthony@crappit:~/gitstuff/linux-stable>
 
-Sounds good to me.
+So, if I'm mad enough to take this on, does that mean going through all 
+of these checking/fixing them to test for a return code of -EACCESS?
 
-> p.s.
-> there is a lot of lists on cc, but for this patch is missing dm-devel, dmcrypt changes
-> need to go through Mike's tree (I added dm-devel to cc:)
+No promises that I will, I keep on wanting to do this sort of stuff and 
+then life gets in the way, but if I can't do it it'll go on the list of 
+projects on the raid wiki.
 
-Oh, sorry, I thought I had included all the lists. My hope however would
-be to get the first patch merged and then re-send the remaining patches
-to their respective maintainers. So that would have happened later. It's
-hard to manage patches otherwise with such large distribution lists.
-
-Logan
+Cheers,
+Wol
