@@ -1,64 +1,62 @@
-From: Anthony Youngman <antlists@youngman.org.uk>
-Subject: Re: [md PATCH] md: handle read-only member devices better.
-Date: Sat, 15 Apr 2017 21:22:03 +0100
-Message-ID: <006d05e1-2517-ca5c-00b4-c699a5bd793d@youngman.org.uk>
-References: <87a87lutj7.fsf@notabene.neil.brown.name>
- <20170413054723.2spvhtze6bljkaop@kernel.org>
- <877f2muvmc.fsf@notabene.neil.brown.name>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Coly Li <colyli@suse.de>
+Subject: [PATCH] mdadm: retire mdassemble in make everything
+Date: Sun, 16 Apr 2017 15:01:29 +0800
+Message-ID: <20170416070129.26071-1-colyli@suse.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <877f2muvmc.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, Shaohua Li <shli@kernel.org>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>, Nanda Kishore Chinnaram <Nanda_Kishore_Chinna@dell.com>
+To: linux-raid@vger.kernel.org
+Cc: Coly Li <colyli@suse.de>, Jes Sorensen <jes.sorensen@gmail.com>
 List-Id: linux-raid.ids
 
-On 15/04/17 05:45, NeilBrown wrote:
-> So at present, callers of blkdev_get_by_dev() need to do their own
-> bdev_read_only() tests before writing.
-> We could discuss where in md.c is the best place to put them, but unless
-> you want to take on a largish project to 'fix' (or audit) all callers of
-> blkdev_get_by_dev(), they need to go in md somewhere.
+make everything reports no rule to make mdassemble, because mdassemble
+is removed from mdadm. This patch removes mdassemble from "everything"
+in Makefile, now there is no failure when compiling a static mdadm binary.
 
-anthony@crappit:~/gitstuff/linux-stable> git grep -a blkdev_get_by_dev > 
-blkdev_get_by_dev.txt
-anthony@crappit:~/gitstuff/linux-stable> cat blkdev_get_by_dev.txt
-drivers/block/xen-blkback/xenbus.c:     bdev = 
-blkdev_get_by_dev(vbd->pdevice, vbd->readonly ?
-drivers/md/dm.c:        bdev = blkdev_get_by_dev(dev, td->dm_dev.mode | 
-FMODE_EXCL, _claim_ptr);
-drivers/md/md.c:        bdev = blkdev_get_by_dev(dev, 
-FMODE_READ|FMODE_WRITE|FMODE_EXCL,
-drivers/mtd/devices/block2mtd.c:                bdev = 
-blkdev_get_by_dev(devt, mode, dev);
-fs/block_dev.c: * blkdev_get_by_dev - open a block device by device number
-fs/block_dev.c:struct block_device *blkdev_get_by_dev(dev_t dev, fmode_t 
-mode, void *holder)
-fs/block_dev.c:EXPORT_SYMBOL(blkdev_get_by_dev);
-fs/ext4/super.c:        bdev = blkdev_get_by_dev(dev, 
-FMODE_READ|FMODE_WRITE|FMODE_EXCL, sb);
-fs/f2fs/super.c: 
-blkdev_get_by_dev(sbi->sb->s_bdev->bd_dev,
-fs/jfs/jfs_logmgr.c:    bdev = blkdev_get_by_dev(sbi->logdev, 
-FMODE_READ|FMODE_WRITE|FMODE_EXCL,
-fs/nfs/blocklayout/dev.c:       bdev = blkdev_get_by_dev(dev, FMODE_READ 
-| FMODE_WRITE, NULL);
-fs/reiserfs/journal.c:          journal->j_dev_bd = 
-blkdev_get_by_dev(jdev, blkdev_mode,
-include/linux/fs.h:extern struct block_device *blkdev_get_by_dev(dev_t 
-dev, fmode_t mode,
-kernel/power/swap.c:    hib_resume_bdev = 
-blkdev_get_by_dev(swsusp_resume_device,
-anthony@crappit:~/gitstuff/linux-stable>
+Signed-off-by: Coly Li <colyli@suse.de>
+Cc: Jes Sorensen <jes.sorensen@gmail.com>
+---
+ Makefile | 11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
 
-So, if I'm mad enough to take this on, does that mean going through all 
-of these checking/fixing them to test for a return code of -EACCESS?
+diff --git a/Makefile b/Makefile
+index a5d2a0a..5655812 100644
+--- a/Makefile
++++ b/Makefile
+@@ -169,12 +169,10 @@ check_rundir:
+ 	fi
+ 
+ everything: all mdadm.static swap_super test_stripe raid6check \
+-	mdassemble mdassemble.auto mdassemble.static mdassemble.man \
+ 	mdadm.Os mdadm.O2 man
+ everything-test: all mdadm.static swap_super test_stripe \
+-	mdassemble.auto mdassemble.static mdassemble.man \
+ 	mdadm.Os mdadm.O2 man
+-# mdadm.uclibc and mdassemble.uclibc don't work on x86-64
++# mdadm.uclibc doesn't work on x86-64
+ # mdadm.tcc doesn't work..
+ 
+ mdadm : $(OBJS) | check_rundir
+@@ -226,9 +224,6 @@ md.man : md.4
+ mdadm.conf.man : mdadm.conf.5
+ 	man -l mdadm.conf.5 > mdadm.conf.man
+ 
+-mdassemble.man : mdassemble.8
+-	man -l mdassemble.8 > mdassemble.man
+-
+ raid6check.man : raid6check.8
+ 	man -l raid6check.8 > raid6check.man
+ 
+@@ -293,9 +288,7 @@ test: mdadm mdmon test_stripe swap_super raid6check
+ clean :
+ 	rm -f mdadm mdmon $(OBJS) $(MON_OBJS) $(STATICOBJS) core *.man \
+ 	mdadm.tcc mdadm.uclibc mdadm.static *.orig *.porig *.rej *.alt .merge_file_* \
+-	mdadm.Os mdadm.O2 mdmon.O2 \
+-	mdassemble mdassemble.static mdassemble.auto mdassemble.uclibc \
+-	mdassemble.klibc swap_super \
++	mdadm.Os mdadm.O2 mdmon.O2 swap_super \
+ 	init.cpio.gz mdadm.uclibc.static test_stripe raid6check raid6check.o mdmon \
+ 	mdadm.8
+ 
+-- 
+2.10.2
 
-No promises that I will, I keep on wanting to do this sort of stuff and 
-then life gets in the way, but if I can't do it it'll go on the list of 
-projects on the raid wiki.
-
-Cheers,
-Wol
