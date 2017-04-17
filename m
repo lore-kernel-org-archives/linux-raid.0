@@ -1,206 +1,84 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: Re: [PATCH v2] md/r5cache: gracefully handle journal device errors
- for writeback mode
-Date: Mon, 17 Apr 2017 20:18:40 +0000
-Message-ID: <DC3F96B4-EA7B-4431-B5F8-BEC053052B7C@fb.com>
-References: <20170329080013.1445439-1-songliubraving@fb.com>
- <20170410162149.due7ihii7ibrz5pl@kernel.org>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH] md/raid10: wait up frozen array in handle_write_completed
+Date: Tue, 18 Apr 2017 09:04:01 +1000
+Message-ID: <87shl6tz4u.fsf@notabene.neil.brown.name>
+References: <20170417091105.27180-1-gqjiang@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170410162149.due7ihii7ibrz5pl@kernel.org>
-Content-Language: en-US
-Content-ID: <91713DC073CD9141A636599C31431A6C@namprd15.prod.outlook.com>
+In-Reply-To: <20170417091105.27180-1-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Shaohua Li <shli@fb.com>, NeilBrown <neilb@suse.com>, Kernel Team <Kernel-team@fb.com>, Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@infradead.org>, "jes.sorensen@gmail.com" <jes.sorensen@gmail.com>
+To: Guoqing Jiang <gqjiang@suse.com>, linux-raid@vger.kernel.org
+Cc: shli@kernel.org
 List-Id: linux-raid.ids
 
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> On Apr 10, 2017, at 9:21 AM, Shaohua Li <shli@kernel.org> wrote:
->=20
-> On Wed, Mar 29, 2017 at 01:00:13AM -0700, Song Liu wrote:
->> For the raid456 with writeback cache, when journal device failed during
->> normal operation, it is still possible to persist all data, as all
->> pending data is still in stripe cache. However, it is necessary to handl=
-e
->> journal failure gracefully.
->>=20
->> During journal failures, this patch makes the follow changes to land dat=
-a
->> in cache to raid disks gracefully:
->>=20
->> 1. In raid5_remove_disk(), flush all cached stripes;
->> 2. In handle_stripe(), allow stripes with data in journal (s.injournal >=
- 0)
->>   to make progress;
->> 3. In delay_towrite(), only process data in the cache (skip dev->towrite=
-);
->> 4. In __get_priority_stripe(), set try_loprio to true, so no stripe stuc=
-k
->>   in loprio_list
->> 5. In r5l_do_submit_io(), submit io->split_bio first (see inline comment=
-s
->>   for details).=20
->> Signed-off-by: Song Liu <songliubraving@fb.com>
->> ---
->> drivers/md/raid5-cache.c | 27 ++++++++++++++++++---------
->> drivers/md/raid5.c       | 28 ++++++++++++++++++++++++----
->> 2 files changed, 42 insertions(+), 13 deletions(-)
->>=20
->> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
->> index b6194e0..0838617 100644
->> --- a/drivers/md/raid5-cache.c
->> +++ b/drivers/md/raid5-cache.c
->> @@ -632,20 +632,29 @@ static void r5l_do_submit_io(struct r5l_log *log, =
-struct r5l_io_unit *io)
->> 	__r5l_set_io_unit_state(io, IO_UNIT_IO_START);
->> 	spin_unlock_irqrestore(&log->io_list_lock, flags);
->>=20
->> +	/*
->> +	 * In case of journal device failures, submit_bio will get error
->> +	 * and calls endio, then active stripes will continue write
->> +	 * process. Therefore, it is not necessary to check Faulty bit
->> +	 * of journal device here.
->> +	 *
->> +	 * However, calling r5l_log_endio(current_bio) may change
->> +	 * split_bio. Therefore, it is necessary to check split_bio before
->> +	 * submit current_bio.
->> +	 */
->=20
-> sorry, for the delay. what did you mean 'calling r5l_log_endio may change
-> split_bio'? The split_bio is chained into current_bio. The endio of
-> current_bio(r5l_log_endio) is only called after all chained bio completio=
-n. I
-> didn't get the point why this change.
+On Mon, Apr 17 2017, Guoqing Jiang wrote:
 
-This happens when io->split_bio is NULL. In such cases, r5l_log_endio() may=
-=20
-free the io_unit, and thus change io->split_bio. I will revise the comments=
-.=20
+> Since nr_queued is changed, we need to call wake_up here
+> if the array is already frozen and waiting for condition
+> "nr_pending =3D=3D nr_queued + extra" to be true.
+>
+> And commit 824e47daddbf ("RAID1: avoid unnecessary spin
+> locks in I/O barrier code") which has already added the
+> wake_up for raid1.
+>
+> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+> ---
+>  drivers/md/raid10.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+>
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 4167091..acb3f46 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -2704,6 +2704,11 @@ static void handle_write_completed(struct r10conf =
+*conf, struct r10bio *r10_bio)
+>  			list_add(&r10_bio->retry_list, &conf->bio_end_io_list);
+>  			conf->nr_queued++;
+>  			spin_unlock_irq(&conf->device_lock);
+> +			/*
+> +			 * In case freeze_array() is waiting for condition
+> +			 * nr_pending =3D=3D nr_queued + extra to be true.
+> +			 */
+> +			wake_up(&conf->wait_barrier);
+>  			md_wakeup_thread(conf->mddev->thread);
+>  		} else {
+>  			if (test_bit(R10BIO_WriteError,
+> --=20
+> 2.10.0
 
->=20
->> +	if (io->split_bio) {
->> +		if (io->has_flush)
->> +			io->split_bio->bi_opf |=3D REQ_PREFLUSH;
->> +		if (io->has_fua)
->> +			io->split_bio->bi_opf |=3D REQ_FUA;
->> +		submit_bio(io->split_bio);
->> +	}
->> +
->> 	if (io->has_flush)
->> 		io->current_bio->bi_opf |=3D REQ_PREFLUSH;
->> 	if (io->has_fua)
->> 		io->current_bio->bi_opf |=3D REQ_FUA;
->> 	submit_bio(io->current_bio);
->> -
->> -	if (!io->split_bio)
->> -		return;
->> -
->> -	if (io->has_flush)
->> -		io->split_bio->bi_opf |=3D REQ_PREFLUSH;
->> -	if (io->has_fua)
->> -		io->split_bio->bi_opf |=3D REQ_FUA;
->> -	submit_bio(io->split_bio);
->> }
->>=20
->> /* deferred io_unit will be dispatched here */
->> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> index 6036d5e..4d3d1ab 100644
->> --- a/drivers/md/raid5.c
->> +++ b/drivers/md/raid5.c
->> @@ -3054,6 +3054,11 @@ sector_t raid5_compute_blocknr(struct stripe_head=
- *sh, int i, int previous)
->>  *      When LOG_CRITICAL, stripes with injournal =3D=3D 0 will be sent =
-to
->>  *      no_space_stripes list.
->>  *
->> + *   3. during journal failure
->> + *      In journal failure, we try to flush all cached data to raid dis=
-ks
->> + *      based on data in stripe cache. The array is read-only to upper
->> + *      layers, so we would skip all pending writes.
->> + *
->>  */
->> static inline bool delay_towrite(struct r5conf *conf,
->> 				 struct r5dev *dev,
->> @@ -3067,6 +3072,9 @@ static inline bool delay_towrite(struct r5conf *co=
-nf,
->> 	if (test_bit(R5C_LOG_CRITICAL, &conf->cache_state) &&
->> 	    s->injournal > 0)
->> 		return true;
->> +	/* case 3 above */
->> +	if (s->log_failed && s->injournal)
->> +		return true;
->> 	return false;
->> }
->>=20
->> @@ -4689,10 +4697,15 @@ static void handle_stripe(struct stripe_head *sh=
-)
->> 	       " to_write=3D%d failed=3D%d failed_num=3D%d,%d\n",
->> 	       s.locked, s.uptodate, s.to_read, s.to_write, s.failed,
->> 	       s.failed_num[0], s.failed_num[1]);
->> -	/* check if the array has lost more than max_degraded devices and,
->> +	/*
->> +	 * check if the array has lost more than max_degraded devices and,
->> 	 * if so, some requests might need to be failed.
->> +	 *
->> +	 * When journal device failed (log_failed), we will only process
->> +	 * the stripe if there is data need write to raid disks
->> 	 */
->> -	if (s.failed > conf->max_degraded || s.log_failed) {
->> +	if (s.failed > conf->max_degraded ||
->> +	    (s.log_failed && s.injournal =3D=3D 0)) {
->> 		sh->check_state =3D 0;
->> 		sh->reconstruct_state =3D 0;
->> 		break_stripe_batch_list(sh, 0);
->> @@ -5272,7 +5285,8 @@ static struct stripe_head *__get_priority_stripe(s=
-truct r5conf *conf, int group)
->> 	struct list_head *handle_list =3D NULL;
->> 	struct r5worker_group *wg;
->> 	bool second_try =3D !r5c_is_writeback(conf->log);
->> -	bool try_loprio =3D test_bit(R5C_LOG_TIGHT, &conf->cache_state);
->> +	bool try_loprio =3D test_bit(R5C_LOG_TIGHT, &conf->cache_state) ||
->> +		r5l_log_disk_error(conf);
->>=20
->> again:
->> 	wg =3D NULL;
->> @@ -7526,6 +7540,7 @@ static int raid5_remove_disk(struct mddev *mddev, =
-struct md_rdev *rdev)
->> 	int number =3D rdev->raid_disk;
->> 	struct md_rdev **rdevp;
->> 	struct disk_info *p =3D conf->disks + number;
->> +	unsigned long flags;
->>=20
->> 	print_raid5_conf(conf);
->> 	if (test_bit(Journal, &rdev->flags) && conf->log) {
->> @@ -7535,7 +7550,12 @@ static int raid5_remove_disk(struct mddev *mddev,=
- struct md_rdev *rdev)
->> 		 * neilb: there is no locking about new writes here,
->> 		 * so this cannot be safe.
->> 		 */
->> -		if (atomic_read(&conf->active_stripes)) {
->> +		if (atomic_read(&conf->active_stripes) ||
->> +		    atomic_read(&conf->r5c_cached_full_stripes) ||
->> +		    atomic_read(&conf->r5c_cached_partial_stripes)) {
->> +			spin_lock_irqsave(&conf->device_lock, flags);
->> +			r5c_flush_cache(conf, INT_MAX);
->> +			spin_unlock_irqrestore(&conf->device_lock, flags);
->> 			return -EBUSY;
->=20
-> It's weird this is called in raid5_remove_disk, shouldn't this be called =
-in log
-> disk error in case user doesn't remove the log disk? And this is a policy
-> change. User might not want to do the flush, as this exposes write hole. =
-I
-> think at least we should print info out here to warn user the flush.
+Reviewed-by: NeilBrown <neilb@suse.com>
 
-Yeah, it is better to flush cache in in raid5_error(). Let me try that.=20
-
-I think flushing cache here is the best solution so far, as valid data is o=
-nly=20
-stored in DRAM before the flush. I will add a warning.=20
+I think I looked at this once before and convinced myself that
+md_wakeup_thread() would wake up the only thread that might be waiting
+in freeze_array().  This is completely wrong, so I don't know why I
+thought it:-(
 
 Thanks,
-Song=
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlj1SeEACgkQOeye3VZi
+gbmcSw/9HYL0tWulGA778jGEpfmy4JfRDzt3NkPKAjUB01Tvc/qkPtxv2hieiAt3
+K2ht/OMyMMaH2oBVM1ffmx6RlZUpxlPNwnuyLWSAIlGQXzTq3Uf+abcQRgCk1qwd
+UIippScVDJCgOa7NfDqRaqR6tpvfDChGDj80zC8ttwhoDYvD4oS5FVFrakcJ4YP6
+DoJdyO/2TnMCGQMBdTEmrwyObExUlVBvFsRbSIZetxIEU4NgO7c2swFUcg6JM/nJ
+Yt07v94d0oIYn0qeikQHaWAE2ONoyoZ+IzreAdcH2J0YXUtjUxVLGobaKFqwHf12
+vwKIbGJSJTgt959ii0B3IWnNr8F53yqgrDcaJ7sep9aps47WZ1f4XkJeJ2LyEyrh
+ZqqDk8jtVTk9PMkB41RB664F8f2XMGQiRg4Ceg+6mDGOmp0gm7YhW0NhQG1mhMYI
+0iIeAxm7Tic/UJs4taooQoGDEq+Kq2GXChKcjeRbZv/50S+ZHT8qgf0wh3a8E7b0
+Fgk+p897vwDLPLbLeabCjBFmKTTp+OHpQM23ut6JsgHK0YQS1pDJqYh4QdBbNXgs
+Yb0a0y8+a58xdkwxv5wq9I4n+IMsti65lp61xeRNZJbZ1pTt6Fuc+n5uTN008ey0
+stb31Vm0vUvG5p2DhYAK3QALPGqVlTi4PAPhdpyDxyd8K8QBvjg=
+=xHks
+-----END PGP SIGNATURE-----
+--=-=-=--
