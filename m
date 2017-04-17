@@ -1,47 +1,32 @@
-From: Zhilong Liu <zlliu@suse.com>
-Subject: Re: [PATCH 0/4] integrated stat and fstat into utility functions
-Date: Mon, 17 Apr 2017 10:23:31 +0800
-Message-ID: <a9a89bd5-9958-7f98-b4e0-d4e5bc74bf3d@suse.com>
-References: <20170401125145.14440-1-zlliu@suse.com>
- <1492173114.8709.29.camel@googlemail.com>
+From: Reindl Harald <h.reindl@thelounge.net>
+Subject: Re: Lost second disk during resync, can I recover?
+Date: Mon, 17 Apr 2017 08:40:40 +0200
+Message-ID: <45fd34ce-08f3-e3e9-8f53-9cc2c26626c5@thelounge.net>
+References: <CABM35JeXN_+coqggH4JDxCvvYAeqD4jt0FHHY=ykMMRofdQDJQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1492173114.8709.29.camel@googlemail.com>
+In-Reply-To: <CABM35JeXN_+coqggH4JDxCvvYAeqD4jt0FHHY=ykMMRofdQDJQ@mail.gmail.com>
+Content-Language: de-CH
 Sender: linux-raid-owner@vger.kernel.org
-To: Paul Menzel <pm.debian@googlemail.com>, Jes.Sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org
+To: Adam B <adam.backer@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
 
-On 04/14/2017 08:31 PM, Paul Menzel wrote:
-> Dear Zhilong,
->
->
-> Am Samstag, den 01.04.2017, 20:51 +0800 schrieb Zhilong Liu:
->
-> […]
->
->> Zhilong Liu (4):
->>    mdadm/util:integrate stat operations into one utility
->>    mdadm/util:integrate fstat operations into one utility function
->>    mdadm/Create:declaring an existing struct within same function
->>    mdadm/Monitor:check the block device when use waitclean parameter
-> Just a small wish, could you please add exactly one space between the
-> “subsystem prefix” and the summary?
->
-> Like *mdadm/util: Integrate stat …*. That’d be great.
->
-> […]
+Am 17.04.2017 um 02:30 schrieb Adam B:
+> I've got a synology ds1812+
+> Could have sworn I did raid 6, but md says raid5 (dont recall
+> personalities pre-failure)
+> Lost disk 2, was rebuilding and disk 6 crashed
 
-Thanks very much for your suggestion. :-).
+> But nothing is happening, recovery-wise:
+> 
+> root@ds:~# mdadm -D /dev/md125
+> /dev/md125:
+>          Version : 1.2
+>    Creation Time : Fri Oct 17 22:45:17 2014
+>       Raid Level : raid5
 
-Best regards,
-Zhilong
->
-> Thanks,
->
-> Paul
-
+if you lost 2 disks on RAID5 you are done
