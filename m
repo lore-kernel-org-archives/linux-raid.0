@@ -1,130 +1,42 @@
-From: Zhilong Liu <zlliu@suse.com>
-Subject: Re: [PATCH 1/4] mdadm/util:integrate stat operations into one utility
-Date: Mon, 17 Apr 2017 15:18:42 +0800
-Message-ID: <226b42c6-f6c8-4f6c-b43d-a1c24bcdbe1f@suse.com>
-References: <20170401125145.14440-1-zlliu@suse.com>
- <20170401125145.14440-2-zlliu@suse.com> <wrfj8tneeu8k.fsf@gmail.com>
- <0f6a630a-c53a-090e-67c3-8132f6d7b08e@suse.com>
- <e41b85e9-53ff-5f94-f80d-02ebd4e36238@gmail.com>
- <db0ed456-77cb-2188-24f7-a970a5a6be80@suse.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: [PATCH] md/raid10: wait up frozen array in handle_write_completed
+Date: Mon, 17 Apr 2017 17:11:05 +0800
+Message-ID: <20170417091105.27180-1-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <db0ed456-77cb-2188-24f7-a970a5a6be80@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <jes.sorensen@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: shli@kernel.org, neilb@suse.com
 List-Id: linux-raid.ids
 
+Since nr_queued is changed, we need to call wake_up here
+if the array is already frozen and waiting for condition
+"nr_pending == nr_queued + extra" to be true.
 
+And commit 824e47daddbf ("RAID1: avoid unnecessary spin
+locks in I/O barrier code") which has already added the
+wake_up for raid1.
 
-On 04/17/2017 03:08 PM, Liu Zhilong wrote:
->
->
-> On 04/14/2017 11:20 PM, Jes Sorensen wrote:
->> On 04/14/2017 06:14 AM, Liu Zhilong wrote:
->>>
->>>
->>> On 04/05/2017 11:42 PM, jes.sorensen@gmail.com wrote:
->>>> Zhilong Liu <zlliu@suse.com> writes:
->> [snip]
->>>> For a function like this, lets name it better md_is_blkdev()
->>>
->>> How about return the devid after checking? Because always need the
->>> stb.st_rdev to parse
->>> the major and minor number. Although "util.c" has "devnm2devid" to
->>> gather the devid via
->>> to devnm, but it's convenient to return devid when check the blkdev 
->>> with
->>> absolute path.
->>> would you mind the function like this?
->>>
->>> // returns dev-id when success, return 0 when failure
->>> dev_t stat_md_is_blkdev(char *dev)
->>> {
->>>     struct stat stb;
->>>
->>>     if (stat(dev, &stb) != 0) {
->>>         pr_err("stat failed for %s: %s\n", dev, strerror(errno));
->>>         return 0;
->>>     }
->>>     if ((S_IFMT & stb.st_mode) != S_IFBLK) {
->>>         pr_err("%s is not a block device.\n", dev);
->>>         return 0;
->>>     }
->>>     return stb.st_rdev;
->>> }
->>
->> I am generally wary of too many smart handlers, but I think it makes 
->> some sense here to de-duplicate the repeated code.
->>
->> That said, your function would ditch the error information, and the 
->> caller wouldn't know why it failed. If you made it more like this and 
->> return the error code, plus stick the major/minor number into rdev, 
->> if one is provided:
->>
->> int stat_md_is_blkdev(char *devname, *dev_t rdev)
->> {
->> }
->>
->
-> I want to integrate two situations into one function.
-> 1. only check the 'dev'(such as /dev/loop2) whether or not is block 
-> device.
-> 2. optionally return the rdev-id after checking the block device.
-> this sample "int stat_md_is_blkdev(char *devname, *dev_t rdev)" is 
-> smart for the situation 2. but for situation 1, the second parameter 
-> is a little waste.
->
-> how about like this?
-> dev_t stat_md_is_blkdev(char *devname, bool require_rdev)
-> {
->     struct stat stb;
->
->        if (stat(devname, &stb) != 0) {
->                printf("stat failed for %s.\n", devname);
+Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+---
+ drivers/md/raid10.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-in addition:  the errno wouldn't be missed in the final patch.
-pr_err("stat failed for %s: %s\n", dev, strerror(errno));
-
-Thanks,
--Zhilong
->                return 1;
->        }
->        if ((S_IFMT & stb.st_mode) != S_IFBLK) {
->                printf("%s is not a block device.\n", devname);
->                return 1;
->        }
->        if (require_rdev)
->           return stb.st_rdev;
->     return 0;
-> }
->
-> the caller would be like this,
-> situation 1:
-> char dev[20] = "/dev/loop2";
-> if (stat_md_is_blkdev(dev, false))
->   return 1;
->
-> situation 2:
-> dev_t st_rdev;
-> char dev[20] = "/dev/loop2";
-> st_rdev = stat_md_is_blkdev(dev, true);
-> if (st_rdev == 1)
->   return 1;
->
->
-> Thanks very much,
-> -Zhilong
->
->> Jes
->>
->>
->
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 4167091..acb3f46 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -2704,6 +2704,11 @@ static void handle_write_completed(struct r10conf *conf, struct r10bio *r10_bio)
+ 			list_add(&r10_bio->retry_list, &conf->bio_end_io_list);
+ 			conf->nr_queued++;
+ 			spin_unlock_irq(&conf->device_lock);
++			/*
++			 * In case freeze_array() is waiting for condition
++			 * nr_pending == nr_queued + extra to be true.
++			 */
++			wake_up(&conf->wait_barrier);
+ 			md_wakeup_thread(conf->mddev->thread);
+ 		} else {
+ 			if (test_bit(R10BIO_WriteError,
+-- 
+2.10.0
 
