@@ -1,87 +1,62 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH v6 0/3] dm: boot a mapped device without an initramfs
-Date: Tue, 18 Apr 2017 10:37:59 -0700
-Message-ID: <CAGXu5jLD+0POz1sopyZNNqDAiq2MZ5ZYdjs43jX5OnWxkZt1Lg@mail.gmail.com>
-References: <20170418164240.18079-1-enric.balletbo@collabora.com>
+From: Adam B <adam.backer@gmail.com>
+Subject: Re: Lost second disk during resync, can I recover?
+Date: Tue, 18 Apr 2017 11:03:31 -0700
+Message-ID: <CABM35JfHks3iVAyGpRoA=rF6i_p6zD75JkungtKaf2nvGxUWLA@mail.gmail.com>
+References: <CABM35JeXN_+coqggH4JDxCvvYAeqD4jt0FHHY=ykMMRofdQDJQ@mail.gmail.com>
+ <20170417140800.0731c206@natsu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170418164240.18079-1-enric.balletbo@collabora.com>
+In-Reply-To: <20170417140800.0731c206@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Enric Balletbo i Serra <enric.balletbo@collabora.com>
-Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Will Drewry <wad@chromium.org>, dm-devel@redhat.com, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Guenter Roeck <groeck@google.com>, David Zeuthen <zeuthen@google.com>
+To: Roman Mamedov <rm@romanrm.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Apr 18, 2017 at 9:42 AM, Enric Balletbo i Serra
-<enric.balletbo@collabora.com> wrote:
-> Hello,
->
-> Some of these patches were send few years back, I saw that first
-> version was send to this list in 2010, and after version 4 did not
-> land [1]. Some days ago I resend the patches [2] and few hours later I
-> noticed that one year ago was send a v5 version [3] and I was not aware.
->
-> There was some discussion about v5 and during the discussion Mike Snitzer
-> proposed that at least a change of the syntax is required, we're really
-> interested on see this upstream as is extensively used in ChromeOS based
-> devices so I'm wondering if we can restart the discussion and hopefully
-> we will be able to do the modifications needed.
->
-> So my first question is, apart of the change of the syntax, what more
-> should be changed?
+Thanks Roman -- that was what it took to get it recovering.. cheers
+for noticing.  It has bad blocks but I am able to get the data needed.
 
-AFAIK, this was the main change needed. Change the syntax and plumb
-into the ioctl interface. The discussion ended with Mike being open to
-the idea, and for me to go work on it. I haven't had time to work on
-it, though, so it has continued to be a locally carried patch:
-https://www.redhat.com/archives/dm-devel/2016-February/msg00199.html
 
-More recently David Zeuthen has been poking at this code, so I've
-included him on CC here, in case there are new developments.
 
--Kees
-
+On Mon, Apr 17, 2017 at 2:08 AM, Roman Mamedov <rm@romanrm.net> wrote:
+> On Sun, 16 Apr 2017 17:30:26 -0700
+> Adam B <adam.backer@gmail.com> wrote:
 >
-> Thanks for your help,
->  Enric
+>> I've got a synology ds1812+
+>> Could have sworn I did raid 6, but md says raid5 (dont recall
+>> personalities pre-failure)
+>> Lost disk 2, was rebuilding and disk 6 crashed.
+>>
+>> Booting from a fresh machine, and attempting to discover the arrays
+>> (md125 is the target)
+>>
+>> root@ds:~# mdadm --assemble --scan
+>> mdadm: /dev/md/DiskStation:2 assembled from 6 drives - not enough to
+>> start the array.
+>> mdadm: /dev/md/1_1 has been started with 7 drives (out of 8).
+>> mdadm: /dev/md/0_1 has been started with 7 drives (out of 8).
+>> mdadm: /dev/md/DiskStation:2 exists - ignoring
+>> mdadm: /dev/md125 assembled from 6 drives - not enough to start the array.
+>> root@ds:~# cat /proc/mdstat
+>> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+>> md126 : active raid1 sda1[0] sdh1[7] sdg1[6] sde1[4] sdd1[3] sdc1[2] sdb1[1]
+>>       2490176 blocks [8/7] [UUUUU_UU]
+>>
+>> md127 : active raid1 sda2[0] sdb2[7] sdh2[6] sdg2[5] sde2[3] sdd2[2] sdc2[1]
+>>       2097088 blocks [8/7] [UUUU_UUU]
+>>
+>> md2 : active raid5 sdf3[5]
+>>       20478809792 blocks super 1.2 level 5, 64k chunk, algorithm 2
+>> [8/1] [_____U__]
 >
-> [1] Patchwork links:
->     https://patchwork.kernel.org/patch/104857/
->     https://patchwork.kernel.org/patch/104856/
->     https://patchwork.kernel.org/patch/104858/
+> From a quick glance it's not clear what is sdf3, why it's got an array of its
+> own, and why later you don't try to do anything with it (didn't try re-add,
+> neither list in assemble, nor examine). Isn't it that one more drive you need
+> (even if partially bad) that would let you start the RAID5?
 >
-> [2] https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1375276.html
->
-> [3] https://www.redhat.com/archives/dm-devel/2016-February/msg00112.html
->
->
-> Brian Norris (1):
->   dm: make some mapped_device functions available
->
-> Will Drewry (2):
->   dm: export a table+mapped device to the ioctl interface
->   init: add support to directly boot to a mapped device
->
->  Documentation/admin-guide/kernel-parameters.rst |   1 +
->  Documentation/admin-guide/kernel-parameters.txt |   3 +
->  Documentation/device-mapper/boot.txt            |  65 ++++
->  drivers/md/dm-ioctl.c                           |  36 ++
->  drivers/md/dm.h                                 |   8 -
->  include/linux/device-mapper.h                   |  19 +
->  init/Makefile                                   |   1 +
->  init/do_mounts.c                                |   1 +
->  init/do_mounts.h                                |  10 +
->  init/do_mounts_dm.c                             | 448 ++++++++++++++++++++++++
->  10 files changed, 584 insertions(+), 8 deletions(-)
->  create mode 100644 Documentation/device-mapper/boot.txt
->  create mode 100644 init/do_mounts_dm.c
+> Also perhaps before being able to do anything with it you will need to stop
+> its "md2" array.
 >
 > --
-> 2.9.3
->
-
-
-
--- 
-Kees Cook
-Pixel Security
+> With respect,
+> Roman
