@@ -1,43 +1,31 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: mdadm Consistency Policy initialization
-Date: Wed, 19 Apr 2017 12:19:35 -0400
-Message-ID: <a3050c46-f017-1c3d-3fc5-2a1b4d976db8@gmail.com>
-References: <9b041a85-7d61-75c8-7fbf-857e095ab838@gmail.com>
- <8c3ddfa5-2069-b2e2-40c6-e1ec14b2461f@intel.com>
+From: Greg Thelen <gthelen@google.com>
+Subject: Re: [PATCH] uapi: fix linux/raid/md_p.h userspace compilation error
+Date: Wed, 19 Apr 2017 09:59:19 -0700
+Message-ID: <CAHH2K0bVH6f2yw-vuJtOHsk+z44o=vhzoXkSLwpsvvCnp2cRbA@mail.gmail.com>
+References: <xr93wpak0xkb.fsf@gthelen.mtv.corp.google.com> <20170419084806.28405-1-artur.paszkiewicz@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8c3ddfa5-2069-b2e2-40c6-e1ec14b2461f@intel.com>
+In-Reply-To: <20170419084806.28405-1-artur.paszkiewicz@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: linux-raid@vger.kernel.org
+Cc: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org, ncroxon@redhat.com
 List-Id: linux-raid.ids
 
-On 04/19/2017 06:29 AM, Artur Paszkiewicz wrote:
-> On 04/18/2017 06:50 PM, Jes Sorensen wrote:
->> Hi Artur,
->>
->> In 5308f11727b889965efe5ac0e854d197c2b51f6d you introduced struct mdinfo: enum consistency_policy, but in mdadm.c you initialize it to UnSet which isn't part of the enum.
->>
->> Is there any actual difference between CONSISTENCY_POLICY_UNKNOWN and UnSet? It seems suboptimal to mix and match within the enum like this, and if CONSISTENCY_POLICY_UNKNOWN does the job, couldn't we just initialize with that?
+On Wed, Apr 19, 2017 at 1:48 AM, Artur Paszkiewicz
+<artur.paszkiewicz@intel.com> wrote:
+> Use __le32 and __le64 instead of u32 and u64.
 >
-> Hi Jes,
+> This fixes klibc build error:
+>   In file included from /klibc/usr/klibc/../include/sys/md.h:30:0,
+>                    from /klibc/usr/kinit/do_mounts_md.c:19:
+>   /linux-next/usr/include/linux/raid/md_p.h:414:51: error: 'u32' undeclared here (not in a function)
+>     (PPL_HEADER_SIZE - PPL_HDR_RESERVED - 4 * sizeof(u32) - sizeof(u64))
 >
-> The "enum consistency_policy" and "mapping_t consistency_policies[]"
-> represent values that can appear in sysfs. md/consistency_policy can be
-> "unknown" when the array is inactive. On the other hand, UnSet just
-> means that the --consistency-policy= parameter was not provided by the
-> user. I wanted to differentiate between these two cases. If you think
-> this is redundant I can change it and use CONSISTENCY_POLICY_UNKNOWN
-> instead, this should be straightforward.
+> Reported-by: Greg Thelen <gthelen@google.com>
+> Reported-by: Nigel Croxon <ncroxon@redhat.com>
+> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 
-Hi Artur,
+Tested-by: Greg Thelen <gthelen@google.com>
 
-I would prefer to either use CONSISTENCY_POLICY_UNKNOWN or introduce a 
-new state within the enum so we don't cross pollute the namespace.
-
-Cheers,
-Jes
-
-
+My klibc builds are working again.  Thanks.
