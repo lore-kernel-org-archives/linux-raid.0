@@ -1,44 +1,43 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 26/27] scsi: sd: Separate zeroout and discard command
- choices
-Date: Wed, 19 Apr 2017 16:56:31 +0200
-Message-ID: <58c3d6a6-924e-cc86-1907-a9fd02a39c0e@redhat.com>
-References: <20170405172125.22600-1-hch@lst.de>
- <20170405172125.22600-27-hch@lst.de>
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: mdadm Consistency Policy initialization
+Date: Wed, 19 Apr 2017 12:19:35 -0400
+Message-ID: <a3050c46-f017-1c3d-3fc5-2a1b4d976db8@gmail.com>
+References: <9b041a85-7d61-75c8-7fbf-857e095ab838@gmail.com>
+ <8c3ddfa5-2069-b2e2-40c6-e1ec14b2461f@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170405172125.22600-27-hch@lst.de>
+In-Reply-To: <8c3ddfa5-2069-b2e2-40c6-e1ec14b2461f@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, lars.ellenberg@linbit.com
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 04/19/2017 06:29 AM, Artur Paszkiewicz wrote:
+> On 04/18/2017 06:50 PM, Jes Sorensen wrote:
+>> Hi Artur,
+>>
+>> In 5308f11727b889965efe5ac0e854d197c2b51f6d you introduced struct mdinfo: enum consistency_policy, but in mdadm.c you initialize it to UnSet which isn't part of the enum.
+>>
+>> Is there any actual difference between CONSISTENCY_POLICY_UNKNOWN and UnSet? It seems suboptimal to mix and match within the enum like this, and if CONSISTENCY_POLICY_UNKNOWN does the job, couldn't we just initialize with that?
+>
+> Hi Jes,
+>
+> The "enum consistency_policy" and "mapping_t consistency_policies[]"
+> represent values that can appear in sysfs. md/consistency_policy can be
+> "unknown" when the array is inactive. On the other hand, UnSet just
+> means that the --consistency-policy= parameter was not provided by the
+> user. I wanted to differentiate between these two cases. If you think
+> this is redundant I can change it and use CONSISTENCY_POLICY_UNKNOWN
+> instead, this should be straightforward.
+
+Hi Artur,
+
+I would prefer to either use CONSISTENCY_POLICY_UNKNOWN or introduce a 
+new state within the enum so we don't cross pollute the namespace.
+
+Cheers,
+Jes
 
 
-On 05/04/2017 19:21, Christoph Hellwig wrote:
-> +static ssize_t
-> +zeroing_mode_store(struct device *dev, struct device_attribute *attr,
-> +		   const char *buf, size_t count)
-> +{
-> +	struct scsi_disk *sdkp = to_scsi_disk(dev);
-> +
-> +	if (!capable(CAP_SYS_ADMIN))
-> +		return -EACCES;
-> +
-> +
-> +	if (!strncmp(buf, zeroing_mode[SD_ZERO_WRITE], 20))
-> +		sdkp->zeroing_mode = SD_ZERO_WRITE;
-> +	else if (!strncmp(buf, zeroing_mode[SD_ZERO_WS], 20))
-> +		sdkp->zeroing_mode = SD_ZERO_WS;
-> +	else if (!strncmp(buf, zeroing_mode[SD_ZERO_WS16_UNMAP], 20))
-> +		sdkp->zeroing_mode = SD_ZERO_WS16_UNMAP;
-> +	else if (!strncmp(buf, zeroing_mode[SD_ZERO_WS10_UNMAP], 20))
-> +		sdkp->zeroing_mode = SD_ZERO_WS10_UNMAP;
-
-Should this be conditional on lbprz, lbpws, lbpws10 and max_ws_blocks?
-
-Thanks,
-
-Paolo
