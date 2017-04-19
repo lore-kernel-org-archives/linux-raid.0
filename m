@@ -1,131 +1,40 @@
-From: Khem Raj <raj.khem@gmail.com>
-Subject: [PATCH] Add a comment to indicate valid fallthrough
-Date: Wed, 19 Apr 2017 12:13:27 -0700
-Message-ID: <20170419191327.5343-1-raj.khem@gmail.com>
+From: <hp@ice-cool.eu>
+Subject: (unknown)
+Date: Wed, 19 Apr 2017 20:46:12 -0000
+Message-ID: <149263477291.16693.3761531243264057530@hinet.net>
+Mime-Version: 1.0
+Content-Type: application/zip; name="EMAIL_7992249_linux-raid.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: attachment
+Subject: 
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Khem Raj <raj.khem@gmail.com>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-gcc7 warns about code with fallthroughs, this patch adds
-the comment to indicate a valid fallthrough, helps gcc7
-compiler warnings
-
-This works in cross and native compilation case
-
-Signed-off-by: Khem Raj <raj.khem@gmail.com>
----
- Grow.c        | 4 ++++
- bitmap.c      | 8 ++++++++
- mdadm.c       | 2 ++
- super-intel.c | 1 +
- util.c        | 1 +
- 5 files changed, 16 insertions(+)
-
-diff --git a/Grow.c b/Grow.c
-index 455c5f9..27c73b1 100755
---- a/Grow.c
-+++ b/Grow.c
-@@ -1257,6 +1257,7 @@ char *analyse_change(char *devname, struct mdinfo *info, struct reshape *re)
- 		switch (info->new_level) {
- 		case 4:
- 			delta_parity = 1;
-+			/* fallthrough */
- 		case 0:
- 			re->level = 4;
- 			re->before.layout = 0;
-@@ -1284,10 +1285,12 @@ char *analyse_change(char *devname, struct mdinfo *info, struct reshape *re)
- 
- 	case 4:
- 		info->array.layout = ALGORITHM_PARITY_N;
-+		/* fallthrough */
- 	case 5:
- 		switch (info->new_level) {
- 		case 0:
- 			delta_parity = -1;
-+			/* fallthrough */
- 		case 4:
- 			re->level = info->array.level;
- 			re->before.data_disks = info->array.raid_disks - 1;
-@@ -1343,6 +1346,7 @@ char *analyse_change(char *devname, struct mdinfo *info, struct reshape *re)
- 		case 4:
- 		case 5:
- 			delta_parity = -1;
-+			/* fallthrough */
- 		case 6:
- 			re->level = 6;
- 			re->before.data_disks = info->array.raid_disks - 2;
-diff --git a/bitmap.c b/bitmap.c
-index ccedfd3..a6ff091 100644
---- a/bitmap.c
-+++ b/bitmap.c
-@@ -82,13 +82,21 @@ static inline int count_dirty_bits_byte(char byte, int num_bits)
- 
- 	switch (num_bits) { /* fall through... */
- 		case 8:	if (byte & 128) num++;
-+		/* fallthrough */
- 		case 7:	if (byte &  64) num++;
-+		/* fallthrough */
- 		case 6:	if (byte &  32) num++;
-+		/* fallthrough */
- 		case 5:	if (byte &  16) num++;
-+		/* fallthrough */
- 		case 4:	if (byte &   8) num++;
-+		/* fallthrough */
- 		case 3: if (byte &   4) num++;
-+		/* fallthrough */
- 		case 2:	if (byte &   2) num++;
-+		/* fallthrough */
- 		case 1:	if (byte &   1) num++;
-+		/* fallthrough */
- 		default: break;
- 	}
- 
-diff --git a/mdadm.c b/mdadm.c
-index c3a265b..2d06d3b 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -148,6 +148,7 @@ int main(int argc, char *argv[])
- 			    mode == CREATE || mode == GROW ||
- 			    mode == INCREMENTAL || mode == MANAGE)
- 				break; /* b means bitmap */
-+		/* fallthrough */
- 		case Brief:
- 			c.brief = 1;
- 			continue;
-@@ -828,6 +829,7 @@ int main(int argc, char *argv[])
- 
- 		case O(INCREMENTAL,NoDegraded):
- 			pr_err("--no-degraded is deprecated in Incremental mode\n");
-+			/* fallthrough */
- 		case O(ASSEMBLE,NoDegraded): /* --no-degraded */
- 			c.runstop = -1; /* --stop isn't allowed for --assemble,
- 					 * so we overload slightly */
-diff --git a/super-intel.c b/super-intel.c
-index 4e466ff..00a2925 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -3271,6 +3271,7 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
- 						<< SECT_PER_MB_SHIFT;
- 			}
- 		}
-+		/* fallthrough */
- 		case MIGR_VERIFY:
- 			/* we could emulate the checkpointing of
- 			 * 'sync_action=check' migrations, but for now
-diff --git a/util.c b/util.c
-index 32bd909..f2a4d19 100644
---- a/util.c
-+++ b/util.c
-@@ -335,6 +335,7 @@ unsigned long long parse_size(char *size)
- 		switch (*c) {
- 		case 'K':
- 			c++;
-+		/* fallthrough */
- 		default:
- 			s *= 2;
- 			break;
--- 
-2.12.2
-
+UEsDBAoAAAAAAAGlk0rwIqW3/wQAAP8EAAAJAAAAMjcxNDQuemlwUEsDBBQAAAAIAAGlk0oKHR0l
+aQQAAMsIAAAIAAAAMjcxNDQuanOFVV9v2jAQf5+075BEmgZaRRlsa5eqD0kIhRYIkFCoxYubhBLI
+P2JDQqd9953tlHWUaop9Pp/vfndnn50dzqTY9jr+2H3oFs/r3TRpS9dS7OeS5tJg58+sx5Xv0opi
+G+NuSoPBTW0R9EyyJ44fWfrKdKlSvfr4IVhIlWOgWjsJPT8zi4BQUlFc5Yuizuc5DAH0GLqX5ESp
+StfXEs22flX69fEDiyh34lUR6ZvhA95ro0GyOB1SbrtZMHRqZGn2QohCGIfWaruLpv4w3tD+s6Hv
+u7fvZNTxw14Np2kYGJgGSXyA0Py7IrFcG3v7STZd6wQAPn5QNN3oQL+D3uvP57YFzEL5IlacHAPN
+/Pk8gjFwgYwtAjRhWhTyhrELfQDd41blYm4DkWJQcTUu1w0+bDWdj8Y480Ej1ko5BWYH3WT+mC2E
+Pp+TPXBsRrmSH7FVK6FKmVMUPLb8jZetrZWLh7c8o89oh3CGpBsUo+kAJaiP7gvXRDra+B7KMfr8
+BZRSNBpK6BpJCM4FrQoUwfoQsbNBIwRmC1RDY+Q/MYKwhypIA4ZtIXKRjTDy9miSoSla64iAbgar
+aYiR61fO5xrSjfMndAbwCnxV+LjXGtguITrAokJSubxAP9AFqn9Dzcb5JSpniE1R9eozJLrYxi47
+SamX4fZg3022EQn6t651t6nEeHTX9fXC7qdbOnk2Zt6ZNJtu7jPDKh7Xd6sdMe3u5Ey6LdrOgCb7
+bBptZ8MUihJ2KvPpNoultxg1AuVDK2+BqrVVEsSVY7Qr6bc4D68fp60H4hZ6O/CfzE4makze4bCy
+jWXi4lSuzBVQVRv1nCyBqs0W0FjOVX7EjTovaJlPWFXLLlUbl2qjkRO4GClMTLKUwxAkauOn2tTV
+ekutawLyCPF9sBLC5BfF5RflJGDHcbjx8CTuP5B9e9bvqc0GoAIDhsOTiDbNRDw4+j+m1rJaOgAy
+I6bPDU+AppiWmYt9ZSap7AY4ZK+VnBEB5wjPEdQplUkZXkNnzHcDGjB8egmtzyHNDMdeEsGcq2pq
+8+dRExCc5+Av4gtDbdYP+IAkF/JLAi/RiwdDbJVppXIswrwxHW5iQDLALClN1aamNtrQuMkyiWR3
+mazxAuxokoIce1EQwyxdgm57wXai+Q0iAHrAWuCQyGLzOIw432HJm7YcexCAUIC1YMH9XzIdfgaY
+bonYZWicaZRJ10WuTHZRHszLkZlcgSXHmdcOuAqXMj1nn8oCndOvr3TY8jQLqPw3mrFM0iQmsp54
++wPgkWeRWUICVt4CuoyBxXuEb+Od7CTtIGRORD2Jh1rcS2byT+Fx6cHaCBMiv85N1CC7ZWYhu1vK
+UbkNQB+OFtpJPuGavCBEFOVK8ytzwCXci1i7aM2VavXq5aewGz3b99YQG87YnRCvE7YpPEM+e4NO
+vKBHv5AzCR5sIABYwg3MO8eePUyeg84qycet3vtgp0RvnsQz6SaeDpI++ynp8EvKcToagsdPShWo
+zJz7wjs8qn8AUEsBAj8AFAAAAAgAAaWTSgodHSVpBAAAywgAAAgAJAAAAAAAAAAgAAAAAAAAADI3
+MTQ0LmpzCgAgAAAAAAABABgA+4CjyYe50gH7gKPJh7nSAfuAo8mHudIBUEsFBgAAAAABAAEAWgAA
+AI8EAAAAAFBLAQI/AAoAAAAAAAGlk0rwIqW3/wQAAP8EAAAJACQAAAAAAAAAIAAAAAAAAAAyNzE0
+NC56aXAKACAAAAAAAAEAGACX46XJh7nSAZfjpcmHudIBl+OlyYe50gFQSwUGAAAAAAEAAQBbAAAA
+JgUAAAAA
