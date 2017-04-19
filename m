@@ -1,62 +1,43 @@
-From: Adam B <adam.backer@gmail.com>
-Subject: Re: Lost second disk during resync, can I recover?
-Date: Tue, 18 Apr 2017 11:03:31 -0700
-Message-ID: <CABM35JfHks3iVAyGpRoA=rF6i_p6zD75JkungtKaf2nvGxUWLA@mail.gmail.com>
-References: <CABM35JeXN_+coqggH4JDxCvvYAeqD4jt0FHHY=ykMMRofdQDJQ@mail.gmail.com>
- <20170417140800.0731c206@natsu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: [PATCH] uapi: fix linux/raid/md_p.h userspace compilation error
+Date: Wed, 19 Apr 2017 10:48:06 +0200
+Message-ID: <20170419084806.28405-1-artur.paszkiewicz@intel.com>
+References: <xr93wpak0xkb.fsf@gthelen.mtv.corp.google.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170417140800.0731c206@natsu>
+In-Reply-To: <xr93wpak0xkb.fsf@gthelen.mtv.corp.google.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.net>
-Cc: linux-raid@vger.kernel.org
+To: shli@fb.com
+Cc: linux-raid@vger.kernel.org, gthelen@google.com, ncroxon@redhat.com, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-Thanks Roman -- that was what it took to get it recovering.. cheers
-for noticing.  It has bad blocks but I am able to get the data needed.
+Use __le32 and __le64 instead of u32 and u64.
 
+This fixes klibc build error:
+  In file included from /klibc/usr/klibc/../include/sys/md.h:30:0,
+                   from /klibc/usr/kinit/do_mounts_md.c:19:
+  /linux-next/usr/include/linux/raid/md_p.h:414:51: error: 'u32' undeclared here (not in a function)
+    (PPL_HEADER_SIZE - PPL_HDR_RESERVED - 4 * sizeof(u32) - sizeof(u64))
 
+Reported-by: Greg Thelen <gthelen@google.com>
+Reported-by: Nigel Croxon <ncroxon@redhat.com>
+Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+---
+ include/uapi/linux/raid/md_p.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-On Mon, Apr 17, 2017 at 2:08 AM, Roman Mamedov <rm@romanrm.net> wrote:
-> On Sun, 16 Apr 2017 17:30:26 -0700
-> Adam B <adam.backer@gmail.com> wrote:
->
->> I've got a synology ds1812+
->> Could have sworn I did raid 6, but md says raid5 (dont recall
->> personalities pre-failure)
->> Lost disk 2, was rebuilding and disk 6 crashed.
->>
->> Booting from a fresh machine, and attempting to discover the arrays
->> (md125 is the target)
->>
->> root@ds:~# mdadm --assemble --scan
->> mdadm: /dev/md/DiskStation:2 assembled from 6 drives - not enough to
->> start the array.
->> mdadm: /dev/md/1_1 has been started with 7 drives (out of 8).
->> mdadm: /dev/md/0_1 has been started with 7 drives (out of 8).
->> mdadm: /dev/md/DiskStation:2 exists - ignoring
->> mdadm: /dev/md125 assembled from 6 drives - not enough to start the array.
->> root@ds:~# cat /proc/mdstat
->> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
->> md126 : active raid1 sda1[0] sdh1[7] sdg1[6] sde1[4] sdd1[3] sdc1[2] sdb1[1]
->>       2490176 blocks [8/7] [UUUUU_UU]
->>
->> md127 : active raid1 sda2[0] sdb2[7] sdh2[6] sdg2[5] sde2[3] sdd2[2] sdc2[1]
->>       2097088 blocks [8/7] [UUUU_UUU]
->>
->> md2 : active raid5 sdf3[5]
->>       20478809792 blocks super 1.2 level 5, 64k chunk, algorithm 2
->> [8/1] [_____U__]
->
-> From a quick glance it's not clear what is sdf3, why it's got an array of its
-> own, and why later you don't try to do anything with it (didn't try re-add,
-> neither list in assemble, nor examine). Isn't it that one more drive you need
-> (even if partially bad) that would let you start the RAID5?
->
-> Also perhaps before being able to do anything with it you will need to stop
-> its "md2" array.
->
-> --
-> With respect,
-> Roman
+diff --git a/include/uapi/linux/raid/md_p.h b/include/uapi/linux/raid/md_p.h
+index d9a1ead867b9..d500bd224979 100644
+--- a/include/uapi/linux/raid/md_p.h
++++ b/include/uapi/linux/raid/md_p.h
+@@ -411,7 +411,7 @@ struct ppl_header_entry {
+ #define PPL_HEADER_SIZE 4096
+ #define PPL_HDR_RESERVED 512
+ #define PPL_HDR_ENTRY_SPACE \
+-	(PPL_HEADER_SIZE - PPL_HDR_RESERVED - 4 * sizeof(u32) - sizeof(u64))
++	(PPL_HEADER_SIZE - PPL_HDR_RESERVED - 4 * sizeof(__le32) - sizeof(__le64))
+ #define PPL_HDR_MAX_ENTRIES \
+ 	(PPL_HDR_ENTRY_SPACE / sizeof(struct ppl_header_entry))
+ 
+-- 
+2.11.0
+
