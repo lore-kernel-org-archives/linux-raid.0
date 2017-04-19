@@ -1,31 +1,131 @@
-From: Greg Thelen <gthelen@google.com>
-Subject: Re: [PATCH] uapi: fix linux/raid/md_p.h userspace compilation error
-Date: Wed, 19 Apr 2017 09:59:19 -0700
-Message-ID: <CAHH2K0bVH6f2yw-vuJtOHsk+z44o=vhzoXkSLwpsvvCnp2cRbA@mail.gmail.com>
-References: <xr93wpak0xkb.fsf@gthelen.mtv.corp.google.com> <20170419084806.28405-1-artur.paszkiewicz@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Khem Raj <raj.khem@gmail.com>
+Subject: [PATCH] Add a comment to indicate valid fallthrough
+Date: Wed, 19 Apr 2017 12:13:27 -0700
+Message-ID: <20170419191327.5343-1-raj.khem@gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170419084806.28405-1-artur.paszkiewicz@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org, ncroxon@redhat.com
+To: linux-raid@vger.kernel.org
+Cc: Khem Raj <raj.khem@gmail.com>
 List-Id: linux-raid.ids
 
-On Wed, Apr 19, 2017 at 1:48 AM, Artur Paszkiewicz
-<artur.paszkiewicz@intel.com> wrote:
-> Use __le32 and __le64 instead of u32 and u64.
->
-> This fixes klibc build error:
->   In file included from /klibc/usr/klibc/../include/sys/md.h:30:0,
->                    from /klibc/usr/kinit/do_mounts_md.c:19:
->   /linux-next/usr/include/linux/raid/md_p.h:414:51: error: 'u32' undeclared here (not in a function)
->     (PPL_HEADER_SIZE - PPL_HDR_RESERVED - 4 * sizeof(u32) - sizeof(u64))
->
-> Reported-by: Greg Thelen <gthelen@google.com>
-> Reported-by: Nigel Croxon <ncroxon@redhat.com>
-> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+gcc7 warns about code with fallthroughs, this patch adds
+the comment to indicate a valid fallthrough, helps gcc7
+compiler warnings
 
-Tested-by: Greg Thelen <gthelen@google.com>
+This works in cross and native compilation case
 
-My klibc builds are working again.  Thanks.
+Signed-off-by: Khem Raj <raj.khem@gmail.com>
+---
+ Grow.c        | 4 ++++
+ bitmap.c      | 8 ++++++++
+ mdadm.c       | 2 ++
+ super-intel.c | 1 +
+ util.c        | 1 +
+ 5 files changed, 16 insertions(+)
+
+diff --git a/Grow.c b/Grow.c
+index 455c5f9..27c73b1 100755
+--- a/Grow.c
++++ b/Grow.c
+@@ -1257,6 +1257,7 @@ char *analyse_change(char *devname, struct mdinfo *info, struct reshape *re)
+ 		switch (info->new_level) {
+ 		case 4:
+ 			delta_parity = 1;
++			/* fallthrough */
+ 		case 0:
+ 			re->level = 4;
+ 			re->before.layout = 0;
+@@ -1284,10 +1285,12 @@ char *analyse_change(char *devname, struct mdinfo *info, struct reshape *re)
+ 
+ 	case 4:
+ 		info->array.layout = ALGORITHM_PARITY_N;
++		/* fallthrough */
+ 	case 5:
+ 		switch (info->new_level) {
+ 		case 0:
+ 			delta_parity = -1;
++			/* fallthrough */
+ 		case 4:
+ 			re->level = info->array.level;
+ 			re->before.data_disks = info->array.raid_disks - 1;
+@@ -1343,6 +1346,7 @@ char *analyse_change(char *devname, struct mdinfo *info, struct reshape *re)
+ 		case 4:
+ 		case 5:
+ 			delta_parity = -1;
++			/* fallthrough */
+ 		case 6:
+ 			re->level = 6;
+ 			re->before.data_disks = info->array.raid_disks - 2;
+diff --git a/bitmap.c b/bitmap.c
+index ccedfd3..a6ff091 100644
+--- a/bitmap.c
++++ b/bitmap.c
+@@ -82,13 +82,21 @@ static inline int count_dirty_bits_byte(char byte, int num_bits)
+ 
+ 	switch (num_bits) { /* fall through... */
+ 		case 8:	if (byte & 128) num++;
++		/* fallthrough */
+ 		case 7:	if (byte &  64) num++;
++		/* fallthrough */
+ 		case 6:	if (byte &  32) num++;
++		/* fallthrough */
+ 		case 5:	if (byte &  16) num++;
++		/* fallthrough */
+ 		case 4:	if (byte &   8) num++;
++		/* fallthrough */
+ 		case 3: if (byte &   4) num++;
++		/* fallthrough */
+ 		case 2:	if (byte &   2) num++;
++		/* fallthrough */
+ 		case 1:	if (byte &   1) num++;
++		/* fallthrough */
+ 		default: break;
+ 	}
+ 
+diff --git a/mdadm.c b/mdadm.c
+index c3a265b..2d06d3b 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -148,6 +148,7 @@ int main(int argc, char *argv[])
+ 			    mode == CREATE || mode == GROW ||
+ 			    mode == INCREMENTAL || mode == MANAGE)
+ 				break; /* b means bitmap */
++		/* fallthrough */
+ 		case Brief:
+ 			c.brief = 1;
+ 			continue;
+@@ -828,6 +829,7 @@ int main(int argc, char *argv[])
+ 
+ 		case O(INCREMENTAL,NoDegraded):
+ 			pr_err("--no-degraded is deprecated in Incremental mode\n");
++			/* fallthrough */
+ 		case O(ASSEMBLE,NoDegraded): /* --no-degraded */
+ 			c.runstop = -1; /* --stop isn't allowed for --assemble,
+ 					 * so we overload slightly */
+diff --git a/super-intel.c b/super-intel.c
+index 4e466ff..00a2925 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -3271,6 +3271,7 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
+ 						<< SECT_PER_MB_SHIFT;
+ 			}
+ 		}
++		/* fallthrough */
+ 		case MIGR_VERIFY:
+ 			/* we could emulate the checkpointing of
+ 			 * 'sync_action=check' migrations, but for now
+diff --git a/util.c b/util.c
+index 32bd909..f2a4d19 100644
+--- a/util.c
++++ b/util.c
+@@ -335,6 +335,7 @@ unsigned long long parse_size(char *size)
+ 		switch (*c) {
+ 		case 'K':
+ 			c++;
++		/* fallthrough */
+ 		default:
+ 			s *= 2;
+ 			break;
+-- 
+2.12.2
+
