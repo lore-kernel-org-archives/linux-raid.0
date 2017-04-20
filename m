@@ -1,40 +1,38 @@
-From: <hp@ice-cool.eu>
-Subject: (unknown)
-Date: Wed, 19 Apr 2017 20:46:12 -0000
-Message-ID: <149263477291.16693.3761531243264057530@hinet.net>
+From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 26/27] scsi: sd: Separate zeroout and discard
+	command choices
+Date: Wed, 19 Apr 2017 21:34:18 -0400
+Message-ID: <yq1a87bsvz9.fsf@oracle.com>
+References: <20170405172125.22600-1-hch@lst.de>
+	<20170405172125.22600-27-hch@lst.de>
+	<58c3d6a6-924e-cc86-1907-a9fd02a39c0e@redhat.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="EMAIL_7992249_linux-raid.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: attachment
-Subject: 
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+In-Reply-To: <58c3d6a6-924e-cc86-1907-a9fd02a39c0e-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> (Paolo
+	Bonzini's message of "Wed, 19 Apr 2017 16:56:31 +0200")
+List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
+List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
+Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+To: Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
 List-Id: linux-raid.ids
 
-UEsDBAoAAAAAAAGlk0rwIqW3/wQAAP8EAAAJAAAAMjcxNDQuemlwUEsDBBQAAAAIAAGlk0oKHR0l
-aQQAAMsIAAAIAAAAMjcxNDQuanOFVV9v2jAQf5+075BEmgZaRRlsa5eqD0kIhRYIkFCoxYubhBLI
-P2JDQqd9953tlHWUaop9Pp/vfndnn50dzqTY9jr+2H3oFs/r3TRpS9dS7OeS5tJg58+sx5Xv0opi
-G+NuSoPBTW0R9EyyJ44fWfrKdKlSvfr4IVhIlWOgWjsJPT8zi4BQUlFc5Yuizuc5DAH0GLqX5ESp
-StfXEs22flX69fEDiyh34lUR6ZvhA95ro0GyOB1SbrtZMHRqZGn2QohCGIfWaruLpv4w3tD+s6Hv
-u7fvZNTxw14Np2kYGJgGSXyA0Py7IrFcG3v7STZd6wQAPn5QNN3oQL+D3uvP57YFzEL5IlacHAPN
-/Pk8gjFwgYwtAjRhWhTyhrELfQDd41blYm4DkWJQcTUu1w0+bDWdj8Y480Ej1ko5BWYH3WT+mC2E
-Pp+TPXBsRrmSH7FVK6FKmVMUPLb8jZetrZWLh7c8o89oh3CGpBsUo+kAJaiP7gvXRDra+B7KMfr8
-BZRSNBpK6BpJCM4FrQoUwfoQsbNBIwRmC1RDY+Q/MYKwhypIA4ZtIXKRjTDy9miSoSla64iAbgar
-aYiR61fO5xrSjfMndAbwCnxV+LjXGtguITrAokJSubxAP9AFqn9Dzcb5JSpniE1R9eozJLrYxi47
-SamX4fZg3022EQn6t651t6nEeHTX9fXC7qdbOnk2Zt6ZNJtu7jPDKh7Xd6sdMe3u5Ey6LdrOgCb7
-bBptZ8MUihJ2KvPpNoultxg1AuVDK2+BqrVVEsSVY7Qr6bc4D68fp60H4hZ6O/CfzE4makze4bCy
-jWXi4lSuzBVQVRv1nCyBqs0W0FjOVX7EjTovaJlPWFXLLlUbl2qjkRO4GClMTLKUwxAkauOn2tTV
-ekutawLyCPF9sBLC5BfF5RflJGDHcbjx8CTuP5B9e9bvqc0GoAIDhsOTiDbNRDw4+j+m1rJaOgAy
-I6bPDU+AppiWmYt9ZSap7AY4ZK+VnBEB5wjPEdQplUkZXkNnzHcDGjB8egmtzyHNDMdeEsGcq2pq
-8+dRExCc5+Av4gtDbdYP+IAkF/JLAi/RiwdDbJVppXIswrwxHW5iQDLALClN1aamNtrQuMkyiWR3
-mazxAuxokoIce1EQwyxdgm57wXai+Q0iAHrAWuCQyGLzOIw432HJm7YcexCAUIC1YMH9XzIdfgaY
-bonYZWicaZRJ10WuTHZRHszLkZlcgSXHmdcOuAqXMj1nn8oCndOvr3TY8jQLqPw3mrFM0iQmsp54
-+wPgkWeRWUICVt4CuoyBxXuEb+Od7CTtIGRORD2Jh1rcS2byT+Fx6cHaCBMiv85N1CC7ZWYhu1vK
-UbkNQB+OFtpJPuGavCBEFOVK8ytzwCXci1i7aM2VavXq5aewGz3b99YQG87YnRCvE7YpPEM+e4NO
-vKBHv5AzCR5sIABYwg3MO8eePUyeg84qycet3vtgp0RvnsQz6SaeDpI++ynp8EvKcToagsdPShWo
-zJz7wjs8qn8AUEsBAj8AFAAAAAgAAaWTSgodHSVpBAAAywgAAAgAJAAAAAAAAAAgAAAAAAAAADI3
-MTQ0LmpzCgAgAAAAAAABABgA+4CjyYe50gH7gKPJh7nSAfuAo8mHudIBUEsFBgAAAAABAAEAWgAA
-AI8EAAAAAFBLAQI/AAoAAAAAAAGlk0rwIqW3/wQAAP8EAAAJACQAAAAAAAAAIAAAAAAAAAAyNzE0
-NC56aXAKACAAAAAAAAEAGACX46XJh7nSAZfjpcmHudIBl+OlyYe50gFQSwUGAAAAAAEAAQBbAAAA
-JgUAAAAA
+
+Paolo,
+
+> Should this be conditional on lbprz, lbpws, lbpws10 and max_ws_blocks?
+
+It is intentional that things can be overridden from userland for
+devices that report the "wrong" thing. We do the same for discard so
+people can set up udev rules.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
