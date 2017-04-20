@@ -1,44 +1,61 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [mdadm PATCH 1/4] Grow_continue_command: ensure 'content' is properly
- initialised.
+Subject: [mdadm PATCH 0/4] Assorted mdadm patches
 Date: Thu, 20 Apr 2017 12:40:05 +1000
-Message-ID: <149265600552.31004.6577040107424525064.stgit@noble>
-References: <149265560315.31004.3851231165281498425.stgit@noble>
+Message-ID: <149265560315.31004.3851231165281498425.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <149265560315.31004.3851231165281498425.stgit@noble>
 Sender: linux-raid-owner@vger.kernel.org
 To: Jes Sorensen <jes.sorensen@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Grow_continue_command() call verify_reshape_position(), which assumes
-that info->sys_name is initialised.
-'info' in verify_reshape_position() is 'content' in Grow_continue_command().
+These are 4 unrelated patches that I've gathered
+over the last few weeks.
+The last one is probably the most interesting and one
+that you should probably think carefully before apply
+(but I hope you'll decide in favour).
 
-In the st->ss->external != 0 branch of that function, sysfs_init() is called
-to initialize content->sys_name.
-In the st->ss->external == 0 branch, ->sys_name is not initialized so
-verify_reshape_position() will not do the right thing.
+When you --assemble -or --create an array, udev immediately has a look
+at the new device and might act on that content.  e.g. tell udisks it
+can mount a filesystem, or tell mdadm that there is part of a RAID
+array in here.
 
-Signed-off-by: NeilBrown <neilb@suse.com>
+When you --assemble an array you want that to happen.
+When you --create it, you don't.
+udev cannot distinguish 'assemble' from 'create'.
+This can be annoying.
+
+The way I have found to tell udev about the distinction to create a
+/run/udev/rules.d/01-mdadm.rules file which marks any newly appearing
+md array as SYSTEMD_READY==0.  This is created before the array, and
+removed once the array exisits (and hopefully has been handled by
+udev).
+Most udev rules which might process a newly appearing device will
+avoid doing so i SYSTEMD_READY is set to 0.
+
+Thanks,
+NeilBrown
+
+
 ---
- Grow.c |    1 +
- 1 file changed, 1 insertion(+)
 
-diff --git a/Grow.c b/Grow.c
-index 15f4ed1253bf..c6967ed1c9c7 100755
---- a/Grow.c
-+++ b/Grow.c
-@@ -5002,6 +5002,7 @@ int Grow_continue_command(char *devname, int fd,
- 			goto Grow_continue_command_exit;
- 		}
- 		content = &array;
-+		sysfs_init(content, fd, NULL);
- 		/* Need to load a superblock.
- 		 * FIXME we should really get what we need from
- 		 * sysfs
+NeilBrown (4):
+      Grow_continue_command: ensure 'content' is properly initialised.
+      systemd/mdadm-last-resort: use ConditionPathExists instead of Conflicts
+      Detail: ensure --export names are acceptable as shell variables.
+      Create: tell udev device is not ready when first created.
 
+
+ Create.c                           |    9 +++++++++
+ Detail.c                           |   12 +++++++++---
+ Grow.c                             |    1 +
+ lib.c                              |   22 ++++++++++++++++++++++
+ mdadm.h                            |    2 ++
+ systemd/mdadm-last-resort@.service |    2 +-
+ 6 files changed, 44 insertions(+), 4 deletions(-)
+
+--
+Signature
 
