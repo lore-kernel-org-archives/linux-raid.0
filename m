@@ -1,47 +1,32 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: mdadm Consistency Policy initialization
-Date: Thu, 20 Apr 2017 12:08:01 -0400
-Message-ID: <2ca923fa-c147-f8c9-2399-f3a0e0d1721a@gmail.com>
-References: <9b041a85-7d61-75c8-7fbf-857e095ab838@gmail.com>
- <8c3ddfa5-2069-b2e2-40c6-e1ec14b2461f@intel.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: MD raid microconference of Plumber Conf 2017
+Date: Thu, 20 Apr 2017 09:34:16 -0700
+Message-ID: <20170420163416.ia3bceztgbp2xsme@kernel.org>
+References: <ba3c9ca4-df07-8174-cf0e-bc1a2a2d7b82@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8c3ddfa5-2069-b2e2-40c6-e1ec14b2461f@intel.com>
+Content-Disposition: inline
+In-Reply-To: <ba3c9ca4-df07-8174-cf0e-bc1a2a2d7b82@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: linux-raid@vger.kernel.org
+To: Coly Li <colyli@suse.de>
+Cc: "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 04/19/2017 06:29 AM, Artur Paszkiewicz wrote:
-> On 04/18/2017 06:50 PM, Jes Sorensen wrote:
->> Hi Artur,
->>
->> In 5308f11727b889965efe5ac0e854d197c2b51f6d you introduced struct mdinfo: enum consistency_policy, but in mdadm.c you initialize it to UnSet which isn't part of the enum.
->>
->> Is there any actual difference between CONSISTENCY_POLICY_UNKNOWN and UnSet? It seems suboptimal to mix and match within the enum like this, and if CONSISTENCY_POLICY_UNKNOWN does the job, couldn't we just initialize with that?
->
-> Hi Jes,
->
-> The "enum consistency_policy" and "mapping_t consistency_policies[]"
-> represent values that can appear in sysfs. md/consistency_policy can be
-> "unknown" when the array is inactive. On the other hand, UnSet just
-> means that the --consistency-policy= parameter was not provided by the
-> user. I wanted to differentiate between these two cases. If you think
-> this is redundant I can change it and use CONSISTENCY_POLICY_UNKNOWN
-> instead, this should be straightforward.
+On Thu, Apr 20, 2017 at 10:57:26PM +0800, Coly Li wrote:
+> Hi MD developers,
+> 
+> I just propose a microconference proposal to Linux Plumber Conf 2017,
+> the topic is "MD raid general discussion".
+> 
+> The proposal wiki page can be found here:
+> http://wiki.linuxplumbersconf.org/2017:md_raid_general_discussion
+> 
+> Please help to add more information to this wiki page (topics,
+> attendees, and other information). I do hope we can meet during LPC2017
+> and have face to face conversation, that will be great :-)
 
-Hi Artur,
+Awesome, thanks Coly! I think I'll be there.
 
-I made some changes to map_name() and noticed that you already there 
-default to CONSISTENCY_POLICY_UNKNOWN if it returns UnSet in 
-sysfs_read(). However given that you do a lot of checks manually outside 
-of sysfs.c, I dind't change the code there for now. I think we the 
-change I made to map_name() it should be possible to simply a bunch of 
-that checking code.
-
-Cheers,
-Jes
-
-
+Thanks,
+Shaohua
