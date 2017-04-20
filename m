@@ -1,61 +1,57 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [mdadm PATCH 0/4] Assorted mdadm patches
+Subject: [mdadm PATCH 2/4] systemd/mdadm-last-resort: use ConditionPathExists
+ instead of Conflicts
 Date: Thu, 20 Apr 2017 12:40:05 +1000
-Message-ID: <149265560315.31004.3851231165281498425.stgit@noble>
+Message-ID: <149265600571.31004.1241857541944212398.stgit@noble>
+References: <149265560315.31004.3851231165281498425.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <149265560315.31004.3851231165281498425.stgit@noble>
 Sender: linux-raid-owner@vger.kernel.org
 To: Jes Sorensen <jes.sorensen@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-These are 4 unrelated patches that I've gathered
-over the last few weeks.
-The last one is probably the most interesting and one
-that you should probably think carefully before apply
-(but I hope you'll decide in favour).
+Commit cec72c071bbe ("systemd/mdadm-last-resort: add Conflicts to .service file.")
 
-When you --assemble -or --create an array, udev immediately has a look
-at the new device and might act on that content.  e.g. tell udisks it
-can mount a filesystem, or tell mdadm that there is part of a RAID
-array in here.
+added a 'Conflicts' directive to the mdadm-last-resort@.service file in
+the hope that this would make sure the service didn't run after the device
+was active, even if the timer managed to get started, which is possible in
+race conditions.
 
-When you --assemble an array you want that to happen.
-When you --create it, you don't.
-udev cannot distinguish 'assemble' from 'create'.
-This can be annoying.
+This seemed to work is testing, but it isn't clear why, and it is known
+to cause problems.
+If systemd happens to know that the mentioned device is a dependency of a
+mount point, the Conflicts can unmount that mountpoint, which is certainly
+not wanted.
 
-The way I have found to tell udev about the distinction to create a
-/run/udev/rules.d/01-mdadm.rules file which marks any newly appearing
-md array as SYSTEMD_READY==0.  This is created before the array, and
-removed once the array exisits (and hopefully has been handled by
-udev).
-Most udev rules which might process a newly appearing device will
-avoid doing so i SYSTEMD_READY is set to 0.
+So remove the "Conflicts" and instead use
+ ConditionPathExists=!/sys/devices/virtual/block/%i/md/sync_action
 
-Thanks,
-NeilBrown
+The "sync_action" file exists for any array which requires last-resort
+handling, and only appears when the array is activated.  So it is safe
+to rely on it to determine if the last-resort is really needed.
 
-
+Fixes: cec72c071bbe ("systemd/mdadm-last-resort: add Conflicts to .service file.")
+Signed-off-by: NeilBrown <neilb@suse.com>
 ---
-
-NeilBrown (4):
-      Grow_continue_command: ensure 'content' is properly initialised.
-      systemd/mdadm-last-resort: use ConditionPathExists instead of Conflicts
-      Detail: ensure --export names are acceptable as shell variables.
-      Create: tell udev device is not ready when first created.
-
-
- Create.c                           |    9 +++++++++
- Detail.c                           |   12 +++++++++---
- Grow.c                             |    1 +
- lib.c                              |   22 ++++++++++++++++++++++
- mdadm.h                            |    2 ++
  systemd/mdadm-last-resort@.service |    2 +-
- 6 files changed, 44 insertions(+), 4 deletions(-)
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---
-Signature
+diff --git a/systemd/mdadm-last-resort@.service b/systemd/mdadm-last-resort@.service
+index e93d72b2b45e..f9d4d12738a3 100644
+--- a/systemd/mdadm-last-resort@.service
++++ b/systemd/mdadm-last-resort@.service
+@@ -1,7 +1,7 @@
+ [Unit]
+ Description=Activate md array even though degraded
+ DefaultDependencies=no
+-Conflicts=sys-devices-virtual-block-%i.device
++ConditionPathExists=!/sys/devices/virtual/block/%i/md/sync_action
+ 
+ [Service]
+ Type=oneshot
+
 
