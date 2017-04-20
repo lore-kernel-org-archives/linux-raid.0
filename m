@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [mdadm PATCH 2/4] systemd/mdadm-last-resort: use ConditionPathExists
- instead of Conflicts
-Date: Thu, 20 Apr 2017 12:40:05 +1000
-Message-ID: <149265600571.31004.1241857541944212398.stgit@noble>
+Subject: [mdadm PATCH 3/4] Detail: ensure --export names are acceptable as shell
+ variables.
+Date: Thu, 20 Apr 2017 12:40:06 +1000
+Message-ID: <149265600586.31004.10549541527467125631.stgit@noble>
 References: <149265560315.31004.3851231165281498425.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,44 +14,64 @@ To: Jes Sorensen <jes.sorensen@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Commit cec72c071bbe ("systemd/mdadm-last-resort: add Conflicts to .service file.")
+If an array contains a device which has a name that
+contains something other than alphnumerics and underscores,
+then some values reported by "mdadm --detail --export" will
+not be valid as variable assignment of the shell.
+This particularly affects dm devices.
+e.g.
+   MD_DEVICE_dm-4_ROLE=1
+   MD_DEVICE_dm-4_DEV=/dev/dm-4
 
-added a 'Conflicts' directive to the mdadm-last-resort@.service file in
-the hope that this would make sure the service didn't run after the device
-was active, even if the timer managed to get started, which is possible in
-race conditions.
+As it is particularly useful to be able to work with these
+in a shell script, and as the precise name is not important,
+change all non-alphanumerics to '_'.
 
-This seemed to work is testing, but it isn't clear why, and it is known
-to cause problems.
-If systemd happens to know that the mentioned device is a dependency of a
-mount point, the Conflicts can unmount that mountpoint, which is certainly
-not wanted.
+   MD_DEVICE_dm_4_ROLE=1
+   MD_DEVICE_dm_4_DEV=/dev/dm-4
 
-So remove the "Conflicts" and instead use
- ConditionPathExists=!/sys/devices/virtual/block/%i/md/sync_action
-
-The "sync_action" file exists for any array which requires last-resort
-handling, and only appears when the array is activated.  So it is safe
-to rely on it to determine if the last-resort is really needed.
-
-Fixes: cec72c071bbe ("systemd/mdadm-last-resort: add Conflicts to .service file.")
 Signed-off-by: NeilBrown <neilb@suse.com>
 ---
- systemd/mdadm-last-resort@.service |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ Detail.c |   12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-diff --git a/systemd/mdadm-last-resort@.service b/systemd/mdadm-last-resort@.service
-index e93d72b2b45e..f9d4d12738a3 100644
---- a/systemd/mdadm-last-resort@.service
-+++ b/systemd/mdadm-last-resort@.service
-@@ -1,7 +1,7 @@
- [Unit]
- Description=Activate md array even though degraded
- DefaultDependencies=no
--Conflicts=sys-devices-virtual-block-%i.device
-+ConditionPathExists=!/sys/devices/virtual/block/%i/md/sync_action
+diff --git a/Detail.c b/Detail.c
+index d4e620438f93..7c3dac8ba8ec 100644
+--- a/Detail.c
++++ b/Detail.c
+@@ -25,6 +25,7 @@
+ #include	"mdadm.h"
+ #include	"md_p.h"
+ #include	"md_u.h"
++#include	<ctype.h>
+ #include	<dirent.h>
  
- [Service]
- Type=oneshot
+ static int cmpstringp(const void *p1, const void *p2)
+@@ -276,17 +277,22 @@ int Detail(char *dev, struct context *c)
+ 				char *path =
+ 					map_dev(mdi->disk.major,
+ 						mdi->disk.minor, 0);
++				char *sysdev = xstrdup(mdi->sys_name + 1);
++				char *cp;
++				for (cp = sysdev; *cp; cp++)
++					if (!isalnum(*cp))
++						*cp = '_';
+ 
+ 				if (mdi->disk.raid_disk >= 0)
+ 					printf("MD_DEVICE_%s_ROLE=%d\n",
+-					       mdi->sys_name+4,
++					       sysdev,
+ 					       mdi->disk.raid_disk);
+ 				else
+ 					printf("MD_DEVICE_%s_ROLE=spare\n",
+-					       mdi->sys_name+4);
++					       sysdev);
+ 				if (path)
+ 					printf("MD_DEVICE_%s_DEV=%s\n",
+-					       mdi->sys_name+4, path);
++					       sysdev, path);
+ 			}
+ 		}
+ 		goto out;
 
 
