@@ -1,63 +1,67 @@
-From: Masahiro Yamada <yamada.masahiro@socionext.com>
-Subject: Re: [PATCH 1/7] Makefile, LLVM: add -no-integrated-as to KBUILD_[AC]FLAGS
-Date: Fri, 21 Apr 2017 16:49:53 +0900
-Message-ID: <CAK7LNAS0i=Qtoqk3hZMhAyQOXWf-8=fb0bSMh=gMJ3-bunQ_5Q@mail.gmail.com>
-References: <20170317001520.85223-1-md@google.com> <20170317001520.85223-2-md@google.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Enric Balletbo i Serra <enric.balletbo@collabora.com>
+Subject: [PATCH] dm-crypt: run in a WQ_HIGHPRI workqueue
+Date: Fri, 21 Apr 2017 11:11:36 +0200
+Message-ID: <20170421091136.28322-1-enric.balletbo@collabora.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170317001520.85223-2-md@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Michael Davidson <md@google.com>
-Cc: Michal Marek <mmarek@suse.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Shaohua Li <shli@kernel.org>, Alexander Potapenko <glider@google.com>, Dmitry Vyukov <dvyukov@google.com>, Matthias Kaehlcke <mka@chromium.org>, X86 ML <x86@kernel.org>, Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org
+To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, timmurray@google.com
+Cc: dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, ghackmann@google.com
 List-Id: linux-raid.ids
 
-Hi Michael,
+From: Tim Murray <timmurray@google.com>
 
+Running dm-crypt in a standard workqueue results in IO competing for CPU
+time with standard user apps, which can lead to pipeline bubbles and
+seriously degraded performance. Move to a WQ_HIGHPRI workqueue to
+protect against that.
 
-2017-03-17 9:15 GMT+09:00 Michael Davidson <md@google.com>:
-> Add -no-integrated-as to KBUILD_AFLAGS and KBUILD_CFLAGS
-> for clang.
+Signed-off-by: Tim Murray <timmurray@google.com>
+Signed-off-by: Enric Balletbo i Serra <enric.balletbo@collabora.com>
+---
+We think that would be interesting share one issue that we have and know
+the opinion of the maintainers about this patch.
 
-From the code-diff, it is apparent that
-you added -no-integrated-as.
+One of the major causes of Bullhead devices slowdowns, is that when the
+system is under load, the kworkers responsible for dm-verity and dm-crypt
+are runnable but may not run for 10s of ms per iteration. This then results
+in mmcqd not being called as often, and the net effect is that disk IO
+performance goes to zero. We can see significant improvements when moving
+to a WQ_HIGHPRI workqueue for verity and kcryptd.
+---
+ drivers/md/dm-crypt.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
 
-Rather, I'd like to see "why" in the git-log.
-
-Obviously, clang needs this patch to build the kernel,
-but can you describe the reason why the integrated assembler is bad?
-
-With git-log reworded, I will pick up this shortly.
-
-Thanks!
-
-
-
-> Signed-off-by: Michael Davidson <md@google.com>
-> ---
->  Makefile | 2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/Makefile b/Makefile
-> index b841fb36beb2..b21fd0ca2946 100644
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -704,6 +704,8 @@ KBUILD_CFLAGS += $(call cc-disable-warning, tautological-compare)
->  # See modpost pattern 2
->  KBUILD_CFLAGS += $(call cc-option, -mno-global-merge,)
->  KBUILD_CFLAGS += $(call cc-option, -fcatch-undefined-behavior)
-> +KBUILD_CFLAGS += $(call cc-option, -no-integrated-as)
-> +KBUILD_AFLAGS += $(call cc-option, -no-integrated-as)
->  else
->
->  # These warnings generated too much noise in a regular build.
-
-
-
-
-
-
-
+diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
+index 8dbecf1..0b7ffa2 100644
+--- a/drivers/md/dm-crypt.c
++++ b/drivers/md/dm-crypt.c
+@@ -2738,16 +2738,24 @@ static int crypt_ctr(struct dm_target *ti, unsigned int argc, char **argv)
+ 	}
+ 
+ 	ret = -ENOMEM;
+-	cc->io_queue = alloc_workqueue("kcryptd_io", WQ_MEM_RECLAIM, 1);
++	cc->io_queue = alloc_workqueue("kcryptd_io",
++				       WQ_HIGHPRI |
++				       WQ_MEM_RECLAIM,
++				       1);
+ 	if (!cc->io_queue) {
+ 		ti->error = "Couldn't create kcryptd io queue";
+ 		goto bad;
+ 	}
+ 
+ 	if (test_bit(DM_CRYPT_SAME_CPU, &cc->flags))
+-		cc->crypt_queue = alloc_workqueue("kcryptd", WQ_CPU_INTENSIVE | WQ_MEM_RECLAIM, 1);
++		cc->crypt_queue = alloc_workqueue("kcryptd",
++						  WQ_HIGHPRI |
++						  WQ_MEM_RECLAIM, 1);
+ 	else
+-		cc->crypt_queue = alloc_workqueue("kcryptd", WQ_CPU_INTENSIVE | WQ_MEM_RECLAIM | WQ_UNBOUND,
++		cc->crypt_queue = alloc_workqueue("kcryptd",
++						  WQ_HIGHPRI |
++						  WQ_MEM_RECLAIM |
++						  WQ_UNBOUND,
+ 						  num_online_cpus());
+ 	if (!cc->crypt_queue) {
+ 		ti->error = "Couldn't create kcryptd queue";
 -- 
-Best Regards
-Masahiro Yamada
+2.9.3
