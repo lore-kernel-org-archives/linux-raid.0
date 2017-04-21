@@ -1,57 +1,118 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 3.18-stable] dm bufio: hide bogus warning
-Date: Fri, 21 Apr 2017 15:41:10 +0200
-Message-ID: <20170421134212.2727744-1-arnd@arndb.de>
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: Re: GET_ARRAY_INFO assumptions?
+Date: Fri, 21 Apr 2017 16:06:34 +0200
+Message-ID: <20170421140634.GA3073@proton.igk.intel.com>
+References: <ab07d303-85fb-e912-e4fa-9ee66a1277cc@gmail.com>
+ <20170413203742.wg6mrnzedw7ew5ky@kernel.org>
+ <0c3633e4-df8c-c59a-17d4-917495931ba1@gmail.com>
+ <c0a29266-fdf4-2f07-aabd-6aa1f55d7d46@gmail.com>
+ <87k26itx2v.fsf@notabene.neil.brown.name>
+ <59ca76c6-1f1f-4d9c-4eb9-d468131e0d55@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: stable@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>, Mike Snitzer <snitzer@redhat.com>, gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, Alasdair Kergon <agk@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <59ca76c6-1f1f-4d9c-4eb9-d468131e0d55@gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Jes Sorensen <jes.sorensen@gmail.com>
+Cc: NeilBrown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-mips-gcc-5.3 warns about correct code on linux-3.18 and earlier:
+On Thu, Apr 20, 2017 at 12:05:54PM -0400, Jes Sorensen wrote:
+> On 04/17/2017 07:48 PM, NeilBrown wrote:
+> >On Fri, Apr 14 2017, Jes Sorensen wrote:
+> >>Looking some more at this, it may be simpler than I thought. How about
+> >>this approach (only compile tested):
+> >>
+> >>int md_array_active(int fd)
+> >>{
+> >>	struct mdinfo *sra;
+> >>	struct mdu_array_info_s array;
+> >>	int ret;
+> >>
+> >>	sra = sysfs_read(fd, NULL, GET_VERSION | GET_DISKS);
+> >>	if (sra) {
+> >>		if (!sra->array.raid_disks &&
+> >>		    !(sra->array.major_version == -1 &&
+> >>		      sra->array.minor_version == -2))
+> >>			ret = -ENODEV;
+> >>		else
+> >>			ret = 0;
+> >>
+> >>		free(sra);
+> >>	} else {
+> >>		ret = ioctl(fd, GET_ARRAY_INFO, &array);
+> >>	}
+> >>
+> >>	return !ret;
+> >>}
+> >>
+> >>Note 'major = -1 && minor = -2' is sysfs_read's way of saying 'external'.
+> >>
+> >>This pretty much mimics what the kernel does in the ioctl handler for
+> >>GET_ARRAY_INFO:
+> >>
+> >>	case GET_ARRAY_INFO:
+> >>		if (!mddev->raid_disks && !mddev->external)
+> >>			err = -ENODEV;
+> >>		else
+> >>			err = get_array_info(mddev, argp);
+> >>		goto out;
+> >>
+> >>What do you think?
+> >
+> >I think that it accurately mimics what the current code does.
+> >I'm not sure that is what we really want.
+> >For testing in Incremental.c if an array is "active" we really
+> >should be testing more than "raid_disks != 0".
+> >We should be testing, as Shaohua suggested, if
+> >array_state != 'clear' or 'inactive'.
+> >You cannot get that info through the ioctl interface, so I suppose
+> >I decided the current test was 'close enough'.
+> >If we are going to stop supported kernels that don't have (e.g.)
+> >array_state, then we should really fo the right thing and test
+> >array_state.
+> 
+> I think I got it right this time and pushed it into git. It made
+> things a lot prettier too IMHO :)
+> 
+> In the process I also changed the behavior of
+> sysfs_read(GET_ARRAY_STATE) as I really didn't like how it was
+> copying in the string rather than parsing it.
+> 
+> I am traveling at the moment and don't yet have my new raid test box
+> setup back at the office, so my testing is limited. If I broke
+> something badly, feel free to throw rotten tomatoes at me.
+> 
 
-In file included from ../include/linux/blkdev.h:4:0,
-                 from ../drivers/md/dm-bufio.h:12,
-                 from ../drivers/md/dm-bufio.c:9:
-../drivers/md/dm-bufio.c: In function 'alloc_buffer':
-../include/linux/sched.h:1975:56: warning: 'noio_flag' may be used uninitialized in this function [-Wmaybe-uninitialized]
-  current->flags = (current->flags & ~PF_MEMALLOC_NOIO) | flags;
-                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
-../drivers/md/dm-bufio.c:325:11: note: 'noio_flag' was declared here
+Hi Jes,
 
-The warning disappeared on later kernels with this commit: be0c37c985ed
-("MIPS: Rearrange PTE bits into fixed positions.")  I assume this only
-happened because it changed some inlining decisions.
+Compilation with "-O2" flag fails:
 
-On 3.18.y, we can shut up the warning by adding an extra initialization.
+CXFLAGS=-O2 make
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/md/dm-bufio.c | 1 +
- 1 file changed, 1 insertion(+)
+cc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter -O2
+-DSendmail=\""/usr/sbin/sendmail -t"\" -DCONFFILE=\"/etc/mdadm.conf\"
+-DCONFFILE2=\"/etc/mdadm/mdadm.conf\" -DMAP_DIR=\"/run/mdadm\"
+-DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\"
+-DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DNO_COROSYNC -DNO_DLM
+-DVERSION=\"4.0-85-g4435675\" -DVERS_DATE="\"2017-04-20\"" -DUSE_PTHREADS
+-DBINDIR=\"/sbin\"  -c -o Query.o Query.c
 
-diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
-index ecbd3ffcf359..91fe43b98c96 100644
---- a/drivers/md/dm-bufio.c
-+++ b/drivers/md/dm-bufio.c
-@@ -349,6 +349,7 @@ static void *alloc_buffer_data(struct dm_bufio_client *c, gfp_t gfp_mask,
- 	 * as if GFP_NOIO was specified.
- 	 */
- 
-+	noio_flag = 0;
- 	if (gfp_mask & __GFP_NORETRY)
- 		noio_flag = memalloc_noio_save();
- 
--- 
-2.9.0
+Query.c: In function ‘Query’:
+Query.c:92:9: error: ‘level’ may be used uninitialized in this function
+[-Werror=maybe-uninitialized]
+   printf("%s: %s %s %d devices, %d spare%s. Use mdadm --detail for more
+   detail.\n",
+            ^
+Query.c:92:9: error: ‘spare_disks’ may be used uninitialized in
+this function [-Werror=maybe-uninitialized]
+Query.c:92:9: error: ‘raid_disks’ may be used uninitialized in
+this function [-Werror=maybe-uninitialized]
+cc1: all warnings being treated as errors
+make: *** [Query.o] Error 1
+
+Regards,
+
+Tomek
