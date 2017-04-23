@@ -1,55 +1,47 @@
-From: <xa0ajutor@colectiv.info>
-Subject: 15772 linux-raid
-Date: Sat, 22 Apr 2017 04:24:38 -0000
-Message-ID: <149283507827.20066.10571165413706964701@surnet.ru>
+From: =?UTF-8?Q?Patrik_Dahlstr=c3=b6m?= <risca@powerlamerz.org>
+Subject: Recover array after I panicked
+Date: Sun, 23 Apr 2017 11:47:34 +0200
+Message-ID: <3957da08-6ff4-3c15-e499-157244a767aa@powerlamerz.org>
 Mime-Version: 1.0
-Content-Type: application/zip; name="820.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: attachment
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-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
-u9IBUEsFBgAAAAABAAEAWwAAAMkIAAAAAA==
+Hello,
+
+Here's the story:
+
+I started with a 5x6 TB raid5 array. I added another 6 TB drive and
+started to grow the array. However, one of my SATA cables were bad and
+the reshape gave me lots of I/O errors.
+
+Instead of fixing the SATA cable issue directly, I shutdown the server
+and swapped places of 2 drives. My reasoning was that putting the new
+drive in a good slot would reduce the I/O errors. Bad move, I know. I
+tried a few commands but was not able to continue the reshape.
+
+I then took out the server from the rack and replaced the SATA cable. No
+more I/O errors, but at this point I am unable to recreate the array.
+This is when I really started to panic. After multiple attempts at
+rescuing the array, I tried running the Permute_array.pl script [1] with
+some local modifications to additionally try different chunk sizes. So
+far I've had no luck.
+
+I don't remember what commands I have run.
+I have the OS on a separate drive, i.e. /var/log and /etc is intact.
+raid metadata version is 1.2.
+Ubuntu 16.04.02 LTS
+Kernel 4.4.0-72-generic
+mdadm 3.3
+
+
+Is there any help you can offer?
+
+
+[1] https://raid.wiki.kernel.org/index.php/Permute_array.pl
+
+
+
