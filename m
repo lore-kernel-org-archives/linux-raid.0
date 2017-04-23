@@ -1,41 +1,111 @@
-From: =?UTF-8?Q?Patrik_Dahlstr=c3=b6m?= <risca@powerlamerz.org>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
 Subject: Re: Recover array after I panicked
-Date: Sun, 23 Apr 2017 16:45:24 +0200
-Message-ID: <02a6e7e8-f6cc-eb60-7298-4211c26fd2fd@powerlamerz.org>
+Date: Sun, 23 Apr 2017 16:48:35 +0200
+Message-ID: <20170423144835.GB12093@metamorpher.de>
 References: <3957da08-6ff4-3c15-e499-157244a767aa@powerlamerz.org>
- <20170423101639.GA4471@metamorpher.de>
- <37269c2b-1788-a0b6-6d91-84c6b6bdd16c@powerlamerz.org>
- <20170423104606.GA4603@metamorpher.de>
- <754209bb-9990-2a36-2233-d7d1273c8e37@powerlamerz.org>
- <20170423131605.GA9955@metamorpher.de>
- <9fcdece2-68b7-8e5b-5995-caf15af18bf3@powerlamerz.org>
- <20170423143640.GA12093@metamorpher.de>
+ <807de641-043c-41a0-cffe-e28710503aba@fnarfbargle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170423143640.GA12093@metamorpher.de>
+Content-Disposition: inline
+In-Reply-To: <807de641-043c-41a0-cffe-e28710503aba@fnarfbargle.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Cc: linux-raid@vger.kernel.org
+To: Brad Campbell <lists2009@fnarfbargle.com>
+Cc: Patrik =?iso-8859-1?Q?Dahlstr=F6m?= <risca@powerlamerz.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Sun, Apr 23, 2017 at 10:06:15PM +0800, Brad Campbell wrote:
+> Nobody seems to have mentioned the reshape issue.
 
+Good point.
 
-On 04/23/2017 04:36 PM, Andreas Klauer wrote:
-> On Sun, Apr 23, 2017 at 03:49:16PM +0200, Patrik Dahlström wrote:
->>> Again, you'd do this with overlays only...
->> I did
->> $ mdadm --create /dev/md1 --assume-clean --data-offset=128M --level=5 --raid-devices=5 /dev/mapper/sd[abdce]
->> $ dmesg | tail
-> 
-> Hi,
-> 
-> the shell globbing style [abdce] actually expands alphabetically,
-> you probably have to write {a,b,d,c,e} instead.
-I spelled it out for every device but no change in the result I'm
-afraid. It still won't mount it, nor will fsck recognize it.
+If it was mid-reshape you need two sets of overlays, 
+create two RAIDs (one for each configuration), and 
+then find the point where it converges.
 
-Doesn't the triggered reshape pose an issue here? It went ~16 % through.
+> If my reading of the code is correct (and my memory
+> is any good), simply adding a disk to a raid5 on a 
+> recent enough kernel should make the resync go backwards.
 
-// Patrik
+Doesn't it cut the offset by half and grow forwards...?
+
+With growing a disk that should give you a segment where 
+data is identical for both 5-disk and 6-disk RAID-5. 
+And that's where you join them using dmsetup linear.
+
+Before:
+
+/dev/loop0:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 4611f41b:0464e815:8b6f9cfe:b29c56fd
+           Name : EIS:42  (local to host EIS)
+  Creation Time : Sun Apr 23 16:44:59 2017
+     Raid Level : raid5
+   Raid Devices : 5
+
+ Avail Dev Size : 11720783024 (5588.90 GiB 6001.04 GB)
+     Array Size : 23441565696 (22355.62 GiB 24004.16 GB)
+  Used Dev Size : 11720782848 (5588.90 GiB 6001.04 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=262064 sectors, after=176 sectors
+          State : clean
+    Device UUID : acd8d9fd:7b7cf9a0:f63369d1:907ffa66
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Sun Apr 23 16:44:59 2017
+  Bad Block Log : 512 entries available at offset 32 sectors
+       Checksum : f89bdc5 - correct
+         Events : 2
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 0
+   Array State : AAAAA ('A' == active, '.' == missing, 'R' == replacing)
+
+After/During grow:
+
+/dev/loop0:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x45
+     Array UUID : 4611f41b:0464e815:8b6f9cfe:b29c56fd
+           Name : EIS:42  (local to host EIS)
+  Creation Time : Sun Apr 23 16:44:59 2017
+     Raid Level : raid5
+   Raid Devices : 6
+
+ Avail Dev Size : 11720783024 (5588.90 GiB 6001.04 GB)
+     Array Size : 29301957120 (27944.52 GiB 30005.20 GB)
+  Used Dev Size : 11720782848 (5588.90 GiB 6001.04 GB)
+    Data Offset : 262144 sectors
+|     New Offset : 257024 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : acd8d9fd:7b7cf9a0:f63369d1:907ffa66
+
+Internal Bitmap : 8 sectors from superblock
+|  Reshape pos'n : 1472000 (1437.50 MiB 1507.33 MB)
+|  Delta Devices : 1 (5->6)
+
+    Update Time : Sun Apr 23 16:45:38 2017
+  Bad Block Log : 512 entries available at offset 32 sectors
+       Checksum : fbd9a55 - correct
+         Events : 30
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 0
+   Array State : AAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+
+Basically you have to know the New Offset 
+(search first 128M of your drives for filesystem headers, that should be it)
+and then guess the Reshape pos'n by comparing raw data at offset X 
+(find non-zero data at identical offsets for both raid sets)
+
+Regards
+Andreas Klauer
