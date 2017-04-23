@@ -1,7 +1,7 @@
 From: =?UTF-8?Q?Patrik_Dahlstr=c3=b6m?= <risca@powerlamerz.org>
 Subject: Re: Recover array after I panicked
-Date: Sun, 23 Apr 2017 18:29:18 +0200
-Message-ID: <9092a1dd-6738-c417-3095-91cb7d459367@powerlamerz.org>
+Date: Sun, 23 Apr 2017 21:21:28 +0200
+Message-ID: <718f75d1-b74f-f788-783a-6ffbdff275a8@powerlamerz.org>
 References: <3957da08-6ff4-3c15-e499-157244a767aa@powerlamerz.org>
  <807de641-043c-41a0-cffe-e28710503aba@fnarfbargle.com>
  <20170423144835.GB12093@metamorpher.de>
@@ -18,16 +18,8 @@ Cc: Brad Campbell <lists2009@fnarfbargle.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-
 On 04/23/2017 05:42 PM, Andreas Klauer wrote:
 > On Sun, Apr 23, 2017 at 05:11:08PM +0200, Patrik Dahlström wrote:
->> * I try to find 0x53EF (ext4 magic) within the first 128M of
->> /dev/sd[abcde]. Not after? This will be an indication of my "New
->> Offset". I need to adjust the offset a bit since the ext4 magic is
->> located at 0x438 offset.
-> 
-> Yes, that should be about it.
->  
 >> * I create a 5 and a 6 drive raid set and try to find an offset where
 >> they both carry the same raw data. With some overlays, I should be able
 >> to create both these raids at the same time, correct?
@@ -61,25 +53,9 @@ On 04/23/2017 05:42 PM, Andreas Klauer wrote:
 > would be what you have to find. You have to be wary of false 
 > matches though (such as zeroes or other common patterns of data 
 > you might find anywhere).
-> 
-> And there's one more thing, you mentioned a disk had a bad sata cable.
-> If that disk got kicked and reshape went on for a while afterwards, 
-> you should take that disk out of consideration. (Specify as "missing" 
-> when creating the arrays.) It will have outdated/unreshaped data on 
-> it that would be hard to incorporate into your recovery attempt...
-The bad SATA cable has been there for a while and reported spurious I/O
-errors on the old 5 disk raid. It really started to produce I/O errors
-when I placed the new drive in that slot.
+I just thought of something: since /dev/sdf is a completely new disk,
+shouldn't I be able to locate the starting point by looking at how much
+of the new disk is filled. It comes filled with zeros from factory, right?
 
-Is it OK to specify the new drive as missing? No special information
-that should be located on that drive?
-
-I wrote a small program to help me locate the correct offset:
-https://gist.github.com/Risca/3eda5e7aba3dc6b72d61e79eaf7cc147
-
-I am on the right track with that program?
-
-> 
-> Regards
-> Andreas Klauer
-> 
+Best regards
+// Patrik
