@@ -1,81 +1,79 @@
-From: =?UTF-8?Q?Patrik_Dahlstr=c3=b6m?= <risca@powerlamerz.org>
-Subject: Re: Recover array after I panicked
-Date: Mon, 24 Apr 2017 23:56:26 +0200
-Message-ID: <a88537bc-a133-482a-e726-7d3680727af6@powerlamerz.org>
-References: <3957da08-6ff4-3c15-e499-157244a767aa@powerlamerz.org>
- <20170423101639.GA4471@metamorpher.de>
- <37269c2b-1788-a0b6-6d91-84c6b6bdd16c@powerlamerz.org>
- <20170423104606.GA4603@metamorpher.de>
- <754209bb-9990-2a36-2233-d7d1273c8e37@powerlamerz.org>
- <58FC91B8.5090603@youngman.org.uk> <20170423165810.75b5836e@natsu>
- <58FC99ED.7080705@youngman.org.uk>
- <e4c2acc6-420a-e454-fe74-c82737a1bbf0@powerlamerz.org>
- <09feff90-bb2b-7e27-599e-40284ca004ae@turmel.org>
+From: Stephane Thiell <sthiell@stanford.edu>
+Subject: mismatch_cnt > 0 during initial sync?
+Date: Mon, 24 Apr 2017 22:01:19 +0000
+Message-ID: <9A8A3C34-EED0-42FF-B631-7AD1D6EAF9A2@stanford.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <09feff90-bb2b-7e27-599e-40284ca004ae@turmel.org>
+Content-Language: en-US
+Content-ID: <5CFF72EFD8ACDE43BADA75D4DE679FBE@namprd02.prod.outlook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>, Wols Lists <antlists@youngman.org.uk>, Roman Mamedov <rm@romanrm.net>
-Cc: Andreas Klauer <Andreas.Klauer@metamorpher.de>, linux-raid@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
+Hi all,
 
-On 04/24/2017 11:04 PM, Phil Turmel wrote:
-> On 04/23/2017 08:15 AM, Patrik Dahlström wrote:
->>
->>
->> On 04/23/2017 02:11 PM, Wols Lists wrote:
->>> On 23/04/17 12:58, Roman Mamedov wrote:
->>>> On Sun, 23 Apr 2017 12:36:24 +0100
->>>> Wols Lists <antlists@youngman.org.uk> wrote:
->>>>
->>>>> And, as the raid wiki tells you, download lspci and run that
->>>>
->>>> Maybe you meant lsdrv. https://github.com/pturmel/lsdrv
->>>>
->>> Sorry, yes I did ... (too many ls_xxx commands :-)
->> Ok, I had to patch lsdrv a bit to make it run. Diff:
-> 
-> Thanks for the patch.  Could you elaborate a bit on the errors you
-> received so I can reproduce and document this fully?
-Sure. It started out with this error:
-$ ./lsdrv
-Traceback (most recent call last):
-  File "./lsdrv", line 413, in <module>
-    probe_block('/sys/block/'+x)
-  File "./lsdrv", line 389, in probe_block
-    blk.FS = "MD %s (%s/%s)%s %s" % (blk.array.md.LEVEL, blk.slave.slot,
-blk.array.md.raid_disks, peers, blk.slave.state)
-AttributeError: 'NoneType' object has no attribute 'LEVEL'
+Is it normal to get any mismatch_cnt > 0 during the initial sync? I just cr=
+eated a few new new raid6 volumes, and one of them is showing an increasing=
+ number of mismatch_cnt during its initial resync. Nothing is visible in th=
+e console nor after a smart short test (I also started a long test just in =
+case).
 
-So I added an if statement for blk.array.md.
-Next, I got this error:
-$ ./lsdrv
-Traceback (most recent call last):
-  File "./lsdrv", line 414, in <module>
-    probe_block('/sys/block/'+x)
-  File "./lsdrv", line 406, in probe_block
-    blk.FS += " '%s'" % blk.ID_FS_LABEL
-TypeError: unsupported operand type(s) for +=: 'NoneType' and 'str'
 
-That's what the other 2 if statements are for. I don't claim to know the
-root cause of the errors, I've simply worked around them.
+$ mdadm --detail /dev/md7
+/dev/md7:
+        Version : 1.2
+  Creation Time : Mon Apr 24 10:07:18 2017
+     Raid Level : raid6
+     Array Size : 62511163904 (59615.29 GiB 64011.43 GB)
+  Used Dev Size : 7813895488 (7451.91 GiB 8001.43 GB)
+   Raid Devices : 10
+  Total Devices : 10
+    Persistence : Superblock is persistent
 
-> 
-> Also, do you have some large files (media files, perhaps) that you know
-> are in your array but you have a copy in hand?  If so, you could use the
-> findHash script in my github account to map how that file is laid out on
-> your array's devices.  Since large media files tend to be contiguous,
-> such a map would definitively show your chunk size and device order.
-I'll take a look. I definitely have some large continuous files on this
-array.
-> 
-> It would also show if your data offsets are consistent among the member
-> drives (but not the absolute value of the offset).
-> 
-> Phil
-> 
-> 
+  Intent Bitmap : Internal
+
+    Update Time : Mon Apr 24 14:52:12 2017
+          State : clean, resyncing=20
+ Active Devices : 10
+Working Devices : 10
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+  Resync Status : 24% complete
+
+           Name : oak-io1-s2:7  (local to host oak-io1-s2)
+           UUID : 6ece9d71:a97f9497:4612ed73:44dfdc0a
+         Events : 3308
+
+    Number   Major   Minor   RaidDevice State
+       0     253       62        0      active sync   /dev/dm-62
+       1     253       63        1      active sync   /dev/dm-63
+       2     253       72        2      active sync   /dev/dm-72
+       3     253       75        3      active sync   /dev/dm-75
+       4     253       89        4      active sync   /dev/dm-89
+       5     253       87        5      active sync   /dev/dm-87
+       6     253      119        6      active sync   /dev/dm-119
+       7     253       97        7      active sync   /dev/dm-97
+       8     253      103        8      active sync   /dev/dm-103
+       9     253      107        9      active sync   /dev/dm-107
+
+$ cat /sys/block/md7/md/sync_completed
+3795284824 / 15627790976
+
+$ cat /sys/block/md7/md/mismatch_cnt=20
+3424
+
+versions:
+  mdadm-3.4-14.el7_3.1.x86_64
+  CentOS7 (3.10.0-514.10.2.el7_lustre.x86_64)
+
+Thanks!
+
+Stephan=
+
