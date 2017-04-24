@@ -1,127 +1,45 @@
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH] Don't use UnSet with consistency_policy
-Date: Mon, 24 Apr 2017 16:03:26 +0200
-Message-ID: <20170424140326.2707-1-artur.paszkiewicz@intel.com>
+From: =?UTF-8?Q?Patrik_Dahlstr=C3=B6m?= <risca@powerlamerz.org>
+Subject: Re: Recover array after I panicked
+Date: Mon, 24 Apr 2017 16:05:39 +0200
+Message-ID: <CAHKno4BwvVTtwqrHjTF8seSgR-QArmvATwuNy_21ctUPdh0biA@mail.gmail.com>
+References: <20170423144835.GB12093@metamorpher.de> <f353b7fc-a63a-5503-5cda-6a62698f69ae@powerlamerz.org>
+ <20170423154240.GA3494@metamorpher.de> <718f75d1-b74f-f788-783a-6ffbdff275a8@powerlamerz.org>
+ <63d6d0f5-d9b1-1218-b98e-48f9cf21a8bc@fnarfbargle.com> <CAHKno4AZukKvOEkVXPYMtnu1nypXLi95HaiFw+WNhAKP4KoLkg@mail.gmail.com>
+ <20170424110455.GA4949@metamorpher.de> <CAHKno4A12N6UGGtJQJRkY0aPbFBBf0Rek91th9Cnx6XWJGouWg@mail.gmail.com>
+ <20170424123706.GA6798@metamorpher.de> <CAHKno4BR3kdsLU9AnNHvarc-e6UibNr7WQks2ssPX4pE1ZoUpA@mail.gmail.com>
+ <20170424133946.GA7057@metamorpher.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170424133946.GA7057@metamorpher.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: jes.sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Cc: Brad Campbell <lists2009@fnarfbargle.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Use CONSISTENCY_POLICY_UNKNOWN instead. Simplify some checks because
-since 5e8e35fb7e17 ("maps: Use keyvalue for null terminator to indicate
-'unset' value") map_name() can return this default directly.
+2017-04-24 15:39 GMT+02:00, Andreas Klauer <Andreas.Klauer@metamorpher.de>:
+> On Mon, Apr 24, 2017 at 02:54:50PM +0200, Patrik Dahlstr=C3=B6m wrote:
+>> What offset are you referring to here? The --data-offset to the mdadm
+>> --create command?
+>
+> Yes, data offset...
+It all makes sense to me now! I believe I was still in sort of a
+panicked mode yesterday. The pieces are starting to make more sense
+today.
 
-Suggested-by: Jes Sorensen <Jes.Sorensen@gmail.com>
-Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
----
- maps.c        |  2 +-
- mdadm.c       | 12 ++++++------
- super-intel.c |  4 +---
- sysfs.c       | 10 ++++------
- 4 files changed, 12 insertions(+), 16 deletions(-)
+> Another thing you can check is, pick an arbitrary offset that does not
+> have zeroes on the disks, and see if the XOR matches for 5, or 6 disks.
+I will try that when I get home.
+>
+> If you have a 5disk parity match in the zone that should be 6disks,
+> then maybe one of your earlier mdadm create experiments started to
+> sync the raid.
+This is definitely a possibility.
+>
+> This would be yet another nail in your coffin.
+Could you define how big nail? I can live with some data loss, but
+preferably not 20 TB.
 
-diff --git a/maps.c b/maps.c
-index 11dd3d20..8fe0a6df 100644
---- a/maps.c
-+++ b/maps.c
-@@ -137,7 +137,7 @@ mapping_t consistency_policies[] = {
- 	{ "bitmap", CONSISTENCY_POLICY_BITMAP},
- 	{ "journal", CONSISTENCY_POLICY_JOURNAL},
- 	{ "ppl", CONSISTENCY_POLICY_PPL},
--	{ NULL, UnSet }
-+	{ NULL, CONSISTENCY_POLICY_UNKNOWN }
- };
- 
- mapping_t sysfs_array_states[] = {
-diff --git a/mdadm.c b/mdadm.c
-index 41dae1db..b689e328 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
- 		.level		= UnSet,
- 		.layout		= UnSet,
- 		.bitmap_chunk	= UnSet,
--		.consistency_policy	= UnSet,
-+		.consistency_policy	= CONSISTENCY_POLICY_UNKNOWN,
- 	};
- 
- 	char sys_hostname[256];
-@@ -1228,8 +1228,7 @@ int main(int argc, char *argv[])
- 		case O(GROW, 'k'):
- 			s.consistency_policy = map_name(consistency_policies,
- 							optarg);
--			if (s.consistency_policy == UnSet ||
--			    s.consistency_policy < CONSISTENCY_POLICY_RESYNC) {
-+			if (s.consistency_policy < CONSISTENCY_POLICY_RESYNC) {
- 				pr_err("Invalid consistency policy: %s\n",
- 				       optarg);
- 				exit(2);
-@@ -1267,7 +1266,7 @@ int main(int argc, char *argv[])
- 			pr_err("--write-journal is only supported for RAID level 4/5/6.\n");
- 			exit(2);
- 		}
--		if (s.consistency_policy != UnSet &&
-+		if (s.consistency_policy != CONSISTENCY_POLICY_UNKNOWN &&
- 		    s.consistency_policy != CONSISTENCY_POLICY_JOURNAL) {
- 			pr_err("--write-journal is not supported with consistency policy: %s\n",
- 			       map_num(consistency_policies, s.consistency_policy));
-@@ -1275,7 +1274,8 @@ int main(int argc, char *argv[])
- 		}
- 	}
- 
--	if (mode == CREATE && s.consistency_policy != UnSet) {
-+	if (mode == CREATE &&
-+	    s.consistency_policy != CONSISTENCY_POLICY_UNKNOWN) {
- 		if (s.level <= 0) {
- 			pr_err("--consistency-policy not meaningful with level %s.\n",
- 			       map_num(pers, s.level));
-@@ -1687,7 +1687,7 @@ int main(int argc, char *argv[])
- 			rv = Grow_reshape(devlist->devname, mdfd,
- 					  devlist->next,
- 					  data_offset, &c, &s);
--		} else if (s.consistency_policy != UnSet) {
-+		} else if (s.consistency_policy != CONSISTENCY_POLICY_UNKNOWN) {
- 			rv = Grow_consistency_policy(devlist->devname, mdfd, &c, &s);
- 		} else if (array_size == 0)
- 			pr_err("no changes to --grow\n");
-diff --git a/super-intel.c b/super-intel.c
-index 0aed57c8..fbff215c 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -5369,9 +5369,7 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
- 	}
- 	mpb->num_raid_devs++;
- 
--	if (s->consistency_policy == UnSet ||
--	    s->consistency_policy == CONSISTENCY_POLICY_RESYNC ||
--	    s->consistency_policy == CONSISTENCY_POLICY_NONE) {
-+	if (s->consistency_policy <= CONSISTENCY_POLICY_RESYNC) {
- 		dev->rwh_policy = RWH_OFF;
- 	} else if (s->consistency_policy == CONSISTENCY_POLICY_PPL) {
- 		dev->rwh_policy = RWH_DISTRIBUTED;
-diff --git a/sysfs.c b/sysfs.c
-index 712f8b3e..aa30de5c 100644
---- a/sysfs.c
-+++ b/sysfs.c
-@@ -254,13 +254,11 @@ struct mdinfo *sysfs_read(int fd, char *devnm, unsigned long options)
- 
- 	if (options & GET_CONSISTENCY_POLICY) {
- 		strcpy(base, "consistency_policy");
--		if (load_sys(fname, buf, sizeof(buf))) {
-+		if (load_sys(fname, buf, sizeof(buf)))
- 			sra->consistency_policy = CONSISTENCY_POLICY_UNKNOWN;
--		} else {
--			sra->consistency_policy = map_name(consistency_policies, buf);
--			if (sra->consistency_policy == UnSet)
--				sra->consistency_policy = CONSISTENCY_POLICY_UNKNOWN;
--		}
-+		else
-+			sra->consistency_policy = map_name(consistency_policies,
-+							   buf);
- 	}
- 
- 	if (! (options & GET_DEVS))
--- 
-2.11.0
-
+Best regards
+Patrik Dahlstr=C3=B6m
