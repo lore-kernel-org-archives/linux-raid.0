@@ -1,46 +1,127 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: mdadm Consistency Policy initialization
-Date: Mon, 24 Apr 2017 09:45:37 -0400
-Message-ID: <543e7925-fe73-df55-bfdd-1fa0f10eb126@gmail.com>
-References: <9b041a85-7d61-75c8-7fbf-857e095ab838@gmail.com>
- <8c3ddfa5-2069-b2e2-40c6-e1ec14b2461f@intel.com>
- <2ca923fa-c147-f8c9-2399-f3a0e0d1721a@gmail.com>
- <ac885b46-4f5f-c18c-ee45-a5d1886466e9@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: [PATCH] Don't use UnSet with consistency_policy
+Date: Mon, 24 Apr 2017 16:03:26 +0200
+Message-ID: <20170424140326.2707-1-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ac885b46-4f5f-c18c-ee45-a5d1886466e9@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: linux-raid@vger.kernel.org
+To: jes.sorensen@gmail.com
+Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-On 04/24/2017 06:07 AM, Artur Paszkiewicz wrote:
-> On 04/20/2017 06:08 PM, Jes Sorensen wrote:
->> On 04/19/2017 06:29 AM, Artur Paszkiewicz wrote:
->>> Hi Jes,
->>>
->>> The "enum consistency_policy" and "mapping_t consistency_policies[]"
->>> represent values that can appear in sysfs. md/consistency_policy can be
->>> "unknown" when the array is inactive. On the other hand, UnSet just
->>> means that the --consistency-policy= parameter was not provided by the
->>> user. I wanted to differentiate between these two cases. If you think
->>> this is redundant I can change it and use CONSISTENCY_POLICY_UNKNOWN
->>> instead, this should be straightforward.
->>
->> Hi Artur,
->>
->> I made some changes to map_name() and noticed that you already there default to CONSISTENCY_POLICY_UNKNOWN if it returns UnSet in sysfs_read(). However given that you do a lot of checks manually outside of sysfs.c, I dind't change the code there for now. I think we the change I made to map_name() it should be possible to simply a bunch of that checking code.
->
-> Hi Jes,
->
-> It does seem to be better this way. I'll send a patch that removes using
-> UnSet from all consistency policy related places soon.
+Use CONSISTENCY_POLICY_UNKNOWN instead. Simplify some checks because
+since 5e8e35fb7e17 ("maps: Use keyvalue for null terminator to indicate
+'unset' value") map_name() can return this default directly.
 
-Awesome!
+Suggested-by: Jes Sorensen <Jes.Sorensen@gmail.com>
+Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+---
+ maps.c        |  2 +-
+ mdadm.c       | 12 ++++++------
+ super-intel.c |  4 +---
+ sysfs.c       | 10 ++++------
+ 4 files changed, 12 insertions(+), 16 deletions(-)
 
-I am glad you like it.
-
-Jes
+diff --git a/maps.c b/maps.c
+index 11dd3d20..8fe0a6df 100644
+--- a/maps.c
++++ b/maps.c
+@@ -137,7 +137,7 @@ mapping_t consistency_policies[] = {
+ 	{ "bitmap", CONSISTENCY_POLICY_BITMAP},
+ 	{ "journal", CONSISTENCY_POLICY_JOURNAL},
+ 	{ "ppl", CONSISTENCY_POLICY_PPL},
+-	{ NULL, UnSet }
++	{ NULL, CONSISTENCY_POLICY_UNKNOWN }
+ };
+ 
+ mapping_t sysfs_array_states[] = {
+diff --git a/mdadm.c b/mdadm.c
+index 41dae1db..b689e328 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
+ 		.level		= UnSet,
+ 		.layout		= UnSet,
+ 		.bitmap_chunk	= UnSet,
+-		.consistency_policy	= UnSet,
++		.consistency_policy	= CONSISTENCY_POLICY_UNKNOWN,
+ 	};
+ 
+ 	char sys_hostname[256];
+@@ -1228,8 +1228,7 @@ int main(int argc, char *argv[])
+ 		case O(GROW, 'k'):
+ 			s.consistency_policy = map_name(consistency_policies,
+ 							optarg);
+-			if (s.consistency_policy == UnSet ||
+-			    s.consistency_policy < CONSISTENCY_POLICY_RESYNC) {
++			if (s.consistency_policy < CONSISTENCY_POLICY_RESYNC) {
+ 				pr_err("Invalid consistency policy: %s\n",
+ 				       optarg);
+ 				exit(2);
+@@ -1267,7 +1266,7 @@ int main(int argc, char *argv[])
+ 			pr_err("--write-journal is only supported for RAID level 4/5/6.\n");
+ 			exit(2);
+ 		}
+-		if (s.consistency_policy != UnSet &&
++		if (s.consistency_policy != CONSISTENCY_POLICY_UNKNOWN &&
+ 		    s.consistency_policy != CONSISTENCY_POLICY_JOURNAL) {
+ 			pr_err("--write-journal is not supported with consistency policy: %s\n",
+ 			       map_num(consistency_policies, s.consistency_policy));
+@@ -1275,7 +1274,8 @@ int main(int argc, char *argv[])
+ 		}
+ 	}
+ 
+-	if (mode == CREATE && s.consistency_policy != UnSet) {
++	if (mode == CREATE &&
++	    s.consistency_policy != CONSISTENCY_POLICY_UNKNOWN) {
+ 		if (s.level <= 0) {
+ 			pr_err("--consistency-policy not meaningful with level %s.\n",
+ 			       map_num(pers, s.level));
+@@ -1687,7 +1687,7 @@ int main(int argc, char *argv[])
+ 			rv = Grow_reshape(devlist->devname, mdfd,
+ 					  devlist->next,
+ 					  data_offset, &c, &s);
+-		} else if (s.consistency_policy != UnSet) {
++		} else if (s.consistency_policy != CONSISTENCY_POLICY_UNKNOWN) {
+ 			rv = Grow_consistency_policy(devlist->devname, mdfd, &c, &s);
+ 		} else if (array_size == 0)
+ 			pr_err("no changes to --grow\n");
+diff --git a/super-intel.c b/super-intel.c
+index 0aed57c8..fbff215c 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -5369,9 +5369,7 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
+ 	}
+ 	mpb->num_raid_devs++;
+ 
+-	if (s->consistency_policy == UnSet ||
+-	    s->consistency_policy == CONSISTENCY_POLICY_RESYNC ||
+-	    s->consistency_policy == CONSISTENCY_POLICY_NONE) {
++	if (s->consistency_policy <= CONSISTENCY_POLICY_RESYNC) {
+ 		dev->rwh_policy = RWH_OFF;
+ 	} else if (s->consistency_policy == CONSISTENCY_POLICY_PPL) {
+ 		dev->rwh_policy = RWH_DISTRIBUTED;
+diff --git a/sysfs.c b/sysfs.c
+index 712f8b3e..aa30de5c 100644
+--- a/sysfs.c
++++ b/sysfs.c
+@@ -254,13 +254,11 @@ struct mdinfo *sysfs_read(int fd, char *devnm, unsigned long options)
+ 
+ 	if (options & GET_CONSISTENCY_POLICY) {
+ 		strcpy(base, "consistency_policy");
+-		if (load_sys(fname, buf, sizeof(buf))) {
++		if (load_sys(fname, buf, sizeof(buf)))
+ 			sra->consistency_policy = CONSISTENCY_POLICY_UNKNOWN;
+-		} else {
+-			sra->consistency_policy = map_name(consistency_policies, buf);
+-			if (sra->consistency_policy == UnSet)
+-				sra->consistency_policy = CONSISTENCY_POLICY_UNKNOWN;
+-		}
++		else
++			sra->consistency_policy = map_name(consistency_policies,
++							   buf);
+ 	}
+ 
+ 	if (! (options & GET_DEVS))
+-- 
+2.11.0
 
