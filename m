@@ -1,46 +1,195 @@
-From: =?UTF-8?Q?Patrik_Dahlstr=C3=B6m?= <risca@powerlamerz.org>
-Subject: Re: Recover array after I panicked
-Date: Mon, 24 Apr 2017 09:34:04 +0200
-Message-ID: <CAHKno4AZukKvOEkVXPYMtnu1nypXLi95HaiFw+WNhAKP4KoLkg@mail.gmail.com>
-References: <3957da08-6ff4-3c15-e499-157244a767aa@powerlamerz.org>
- <807de641-043c-41a0-cffe-e28710503aba@fnarfbargle.com> <20170423144835.GB12093@metamorpher.de>
- <f353b7fc-a63a-5503-5cda-6a62698f69ae@powerlamerz.org> <20170423154240.GA3494@metamorpher.de>
- <718f75d1-b74f-f788-783a-6ffbdff275a8@powerlamerz.org> <63d6d0f5-d9b1-1218-b98e-48f9cf21a8bc@fnarfbargle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+From: Bongkyu Kim <bongkyu.kim@lge.com>
+Subject: [PATCH] dm verity: deferred hash checking for restart/logging mode
+Date: Mon, 24 Apr 2017 16:34:20 +0900
+Message-ID: <1493019260-43938-1-git-send-email-bongkyu.kim@lge.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <63d6d0f5-d9b1-1218-b98e-48f9cf21a8bc@fnarfbargle.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <lists2009@fnarfbargle.com>
-Cc: Andreas Klauer <Andreas.Klauer@metamorpher.de>, linux-raid@vger.kernel.org
+To: agk@redhat.com, snitzer@redhat.com
+Cc: dm-devel@redhat.com, shli@kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Bongkyu Kim <bongkyu.kim@lge.com>
 List-Id: linux-raid.ids
 
-2017-04-24 4:09 GMT+02:00, Brad Campbell <lists2009@fnarfbargle.com>:
-> On 24/04/17 03:21, Patrik Dahlstr=C3=B6m wrote:
->
->> I just thought of something: since /dev/sdf is a completely new disk,
->> shouldn't I be able to locate the starting point by looking at how much
->> of the new disk is filled. It comes filled with zeros from factory,
->> right?
->
-> Pretty close. You should also be able to see how the reshape worked
-> (front to back, back to front) and you should get a pretty good idea of
-> the data-offset by the gap between the superblock and the data.
-I've let a program compare both raid sets (5 and 6 disk) overnight. So
-far it has gone from 128 MB to 14 TB without finding common data. Does
-that tell us anything?
-Should I pause the comparison and look at the end of sdf to find the
-last written offset? I currently only have 1 shell in Ubuntu
-maintenance/rescue mode
->
-> I must say I'm having trouble imagining a more difficult recovery
-> scenario, so at least you present an interesting challenge.
-I always like a challenge, but this one I believe I could've skipped :)
->
-> There's a lot to be said for the old "Don't panic" mantra, but hindsight
-> is always 20/20.
-All too true
+This patch introduces deferred hash checking for dm-verity.
+In case of restart and logging mode, I/O return first and hash checking is
+deferred. It can improve dm-verity's performance greatly.
 
-Best regards
-// Patrik
+This is my testing on qualcomm snapdragon 821 platform with UFS 2.0.
+dd if=/dev/block/dm-0 of=/dev/null bs=1024 count=1000000
+- vanilla: 238.14 MB/s
+- patched: 331.52 MB/s (+39.2%)
+
+fio --rw=randread --size=64M --bs=4k --filename=/dev/block/dm-0 --name=job1
+    --name=job2 --name=job3 --name=job4
+- vanilla: 325.21 MB/s
+- patched: 356.42 MB/s (+9.6%)
+
+One major concoren is security risk.
+If data is tampered, this data will not return -EIO, and can be transferred
+to user process. But, device will be rebooted after hash verification.
+After rebooting, device will work with EIO mode.
+In my opinion, this is enough for gurantee integrity by each power cycles.
+
+Signed-off-by: Bongkyu Kim <bongkyu.kim@lge.com>
+---
+ drivers/md/dm-verity-target.c | 58 ++++++++++++++++++++++++++++++++++++++++---
+ drivers/md/dm.c               | 17 +++++++++++--
+ drivers/md/dm.h               |  4 +++
+ 3 files changed, 73 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/md/dm-verity-target.c b/drivers/md/dm-verity-target.c
+index 7335d8a..37c4d9c 100644
+--- a/drivers/md/dm-verity-target.c
++++ b/drivers/md/dm-verity-target.c
+@@ -16,6 +16,7 @@
+ 
+ #include "dm-verity.h"
+ #include "dm-verity-fec.h"
++#include "dm.h"
+ 
+ #include <linux/module.h>
+ #include <linux/reboot.h>
+@@ -62,6 +63,9 @@ struct buffer_aux {
+ 	int hash_verified;
+ };
+ 
++static void verity_submit_prefetch(struct dm_verity *v,
++		struct dm_verity_io *io);
++
+ /*
+  * Initialize struct buffer_aux for a freshly created buffer.
+  */
+@@ -462,12 +466,35 @@ static void verity_finish_io(struct dm_verity_io *io, int error)
+ 	struct dm_verity *v = io->v;
+ 	struct bio *bio = dm_bio_from_per_bio_data(io, v->ti->per_io_data_size);
+ 
+-	bio->bi_end_io = io->orig_bi_end_io;
+-	bio->bi_error = error;
++	if (v->mode == DM_VERITY_MODE_EIO) {
++		bio->bi_end_io = io->orig_bi_end_io;
++		bio->bi_error = error;
++	}
+ 
+ 	verity_fec_finish_io(io);
+ 
+-	bio_endio(bio);
++	if (v->mode == DM_VERITY_MODE_EIO) {
++		bio_endio(bio);
++	} else {
++		struct dm_target_io *tio = container_of(bio,
++				struct dm_target_io, clone);
++		struct dm_io *dmio = tio->io;
++		struct bio *ori_bio = dm_io_get_bio(dmio);
++		struct bio_vec *bv;
++		int i;
++
++		bio_put(bio);
++		free_io(dm_io_get_md(dmio), dmio);
++
++		bio_for_each_segment_all(bv, ori_bio, i) {
++			struct page *page = bv->bv_page;
++
++			put_page(page);
++		}
++
++		bio_put(ori_bio);
++
++	}
+ }
+ 
+ static void verity_work(struct work_struct *w)
+@@ -486,6 +513,28 @@ static void verity_end_io(struct bio *bio)
+ 		return;
+ 	}
+ 
++	if (io->v->mode != DM_VERITY_MODE_EIO) {
++		struct dm_target_io *tio = container_of(bio,
++				struct dm_target_io, clone);
++		struct bio *ori_bio = dm_io_get_bio(tio->io);
++		struct bio_vec *bv;
++		int i;
++
++		bio_for_each_segment_all(bv, ori_bio, i) {
++			struct page *page = bv->bv_page;
++
++			get_page(page);
++		}
++
++		bio_get(ori_bio);
++		bio_get(bio);
++
++		bio->bi_end_io = io->orig_bi_end_io;
++		bio_endio(bio);
++
++		verity_submit_prefetch(io->v, io);
++	}
++
+ 	INIT_WORK(&io->work, verity_work);
+ 	queue_work(io->v->verify_wq, &io->work);
+ }
+@@ -586,7 +635,8 @@ static int verity_map(struct dm_target *ti, struct bio *bio)
+ 
+ 	verity_fec_init_io(io);
+ 
+-	verity_submit_prefetch(v, io);
++	if (v->mode == DM_VERITY_MODE_EIO)
++		verity_submit_prefetch(v, io);
+ 
+ 	generic_make_request(bio);
+ 
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index 8bf3977..9eca0a0 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -164,6 +164,18 @@ static unsigned dm_get_numa_node(void)
+ 					 DM_NUMA_NODE, num_online_nodes() - 1);
+ }
+ 
++struct bio *dm_io_get_bio(struct dm_io *io)
++{
++	return io->bio;
++}
++EXPORT_SYMBOL(dm_io_get_bio);
++
++struct mapped_device *dm_io_get_md(struct dm_io *io)
++{
++	return io->md;
++}
++EXPORT_SYMBOL(dm_io_get_md);
++
+ static int __init local_init(void)
+ {
+ 	int r = -ENOMEM;
+@@ -489,7 +501,7 @@ static struct dm_io *alloc_io(struct mapped_device *md)
+ 	return mempool_alloc(md->io_pool, GFP_NOIO);
+ }
+ 
+-static void free_io(struct mapped_device *md, struct dm_io *io)
++void free_io(struct mapped_device *md, struct dm_io *io)
+ {
+ 	mempool_free(io, md->io_pool);
+ }
+@@ -796,7 +808,8 @@ static void dec_pending(struct dm_io *io, int error)
+ 		io_error = io->error;
+ 		bio = io->bio;
+ 		end_io_acct(io);
+-		free_io(md, io);
++		if (atomic_read(&bio->__bi_cnt) <= 1)
++			free_io(md, io);
+ 
+ 		if (io_error == DM_ENDIO_REQUEUE)
+ 			return;
+diff --git a/drivers/md/dm.h b/drivers/md/dm.h
+index f298b01..b026178 100644
+--- a/drivers/md/dm.h
++++ b/drivers/md/dm.h
+@@ -213,4 +213,8 @@ void dm_free_md_mempools(struct dm_md_mempools *pools);
+  */
+ unsigned dm_get_reserved_bio_based_ios(void);
+ 
++struct bio *dm_io_get_bio(struct dm_io *io);
++struct mapped_device *dm_io_get_md(struct dm_io *io);
++void free_io(struct mapped_device *md, struct dm_io *io);
++
+ #endif
+-- 
+2.6.2
+
