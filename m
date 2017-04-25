@@ -1,65 +1,52 @@
-From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v2 19/21] mmc: sdricoh_cs: Make use of the new sg_map helper
- function
-Date: Tue, 25 Apr 2017 12:21:06 -0600
-Message-ID: <1493144468-22493-20-git-send-email-logang@deltatee.com>
-References: <1493144468-22493-1-git-send-email-logang@deltatee.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: Recover array after I panicked
+Date: Tue, 25 Apr 2017 19:22:33 +0100
+Message-ID: <58FF93E9.6070408@youngman.org.uk>
+References: <20170424110455.GA4949@metamorpher.de>
+ <CAHKno4A12N6UGGtJQJRkY0aPbFBBf0Rek91th9Cnx6XWJGouWg@mail.gmail.com>
+ <20170424123706.GA6798@metamorpher.de>
+ <CAHKno4BR3kdsLU9AnNHvarc-e6UibNr7WQks2ssPX4pE1ZoUpA@mail.gmail.com>
+ <20170424133946.GA7057@metamorpher.de>
+ <727eeaf5-b856-305d-99b6-e42f3383b699@powerlamerz.org>
+ <20170425001614.GA3936@metamorpher.de>
+ <CAHKno4A7umuNBUPaHk0vmgj2fnjPgBi2oZJWidhKKaRX7ekgKA@mail.gmail.com>
+ <20170425090122.GA4488@metamorpher.de>
+ <CAHKno4AuKNxYiMazUy+hRJ2kJCdNNYw5L0uExvWc_52Ocn5V=g@mail.gmail.com>
+ <20170425110807.GA5159@metamorpher.de>
+ <CAHKno4BfQG61pYMtcUf8NrzPt3dtNM=xe_DAb7Ypt4Qy_=1QkQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <1493144468-22493-1-git-send-email-logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, megaraidlinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, sparmaintainer-GLv8BlqOqDDQT0dZR+AlfA@public.gmane.org, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Ulf Hansson <ulf.hansson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Sascha Sommer <saschasommer-KuiJ5kEpwI6ELgA04lAiVw@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAHKno4BfQG61pYMtcUf8NrzPt3dtNM=xe_DAb7Ypt4Qy_=1QkQ@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: =?UTF-8?Q?Patrik_Dahlstr=c3=b6m?= <risca@powerlamerz.org>, Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Cc: Brad Campbell <lists2009@fnarfbargle.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a straightforward conversion to the new function.
+On 25/04/17 12:37, Patrik Dahlström wrote:
+> I'm not sure how I would backup 20 TB of data. I'll backup what I can,
+> of course. The most essential.
 
-Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Cc: Sascha Sommer <saschasommer-KuiJ5kEpwI6ELgA04lAiVw@public.gmane.org>
-Cc: Ulf Hansson <ulf.hansson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
----
- drivers/mmc/host/sdricoh_cs.c | 14 +++++++++-----
- 1 file changed, 9 insertions(+), 5 deletions(-)
+Buy some cheap disks :-)
 
-diff --git a/drivers/mmc/host/sdricoh_cs.c b/drivers/mmc/host/sdricoh_cs.c
-index 5ff26ab..03225c3 100644
---- a/drivers/mmc/host/sdricoh_cs.c
-+++ b/drivers/mmc/host/sdricoh_cs.c
-@@ -319,16 +319,20 @@ static void sdricoh_request(struct mmc_host *mmc, struct mmc_request *mrq)
- 		for (i = 0; i < data->blocks; i++) {
- 			size_t len = data->blksz;
- 			u8 *buf;
--			struct page *page;
- 			int result;
--			page = sg_page(data->sg);
- 
--			buf = kmap(page) + data->sg->offset + (len * i);
-+			buf = sg_map(data->sg, (len * i), SG_KMAP);
-+			if (IS_ERR(buf)) {
-+				cmd->error = PTR_ERR(buf);
-+				break;
-+			}
-+
- 			result =
- 				sdricoh_blockio(host,
- 					data->flags & MMC_DATA_READ, buf, len);
--			kunmap(page);
--			flush_dcache_page(page);
-+			sg_unmap(data->sg, buf, (len * i), SG_KMAP);
-+
-+			flush_dcache_page(sg_page(data->sg));
- 			if (result) {
- 				dev_err(dev, "sdricoh_request: cmd %i "
- 					"block transfer failed\n", cmd->opcode);
--- 
-2.1.4
+A quick skim gives me £111 for a 4TB drive, but that'll be tricky to
+find. It is a Barracuda, however ...
+
+https://www.eclipsecomputers.com/Product/4TB-Seagate-Barracuda-5900rpm-SATA3-64Mb-HardDrive/
+
+Better are 8TB (£260) or 10TB (£365, £420) drives, but they're pricy.
+
+https://www.eclipsecomputers.com/Product/8Tb-Seagate-SkyHawk-7200rpm-SATA3-256Mb-Hard-Drive/
+
+https://www.eclipsecomputers.com/Product/10Tb-Seagate-IronWolf-7200rpm-SATA3-256Mb-Hard-Drive/
+
+https://www.eclipsecomputers.com/Product/10Tb-Seagate-IronWolf-Pro-7200rpm-SATA3-256Mb-Hard-Drive/
+
+If it's just a temporary backup, I'd try and get another couple of
+drives same as your raid, and beg borrow or steal as many drives from
+your friends as you need. Your local little computer shop might have a
+load of drives salvaged from dead pc's that you can borrow (or maybe not :-(
+
+Cheers,
+Wol
