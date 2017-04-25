@@ -1,77 +1,49 @@
-From: =?UTF-8?Q?Patrik_Dahlstr=C3=B6m?= <risca@powerlamerz.org>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
 Subject: Re: Recover array after I panicked
-Date: Tue, 25 Apr 2017 13:37:53 +0200
-Message-ID: <CAHKno4BfQG61pYMtcUf8NrzPt3dtNM=xe_DAb7Ypt4Qy_=1QkQ@mail.gmail.com>
-References: <20170424110455.GA4949@metamorpher.de> <CAHKno4A12N6UGGtJQJRkY0aPbFBBf0Rek91th9Cnx6XWJGouWg@mail.gmail.com>
- <20170424123706.GA6798@metamorpher.de> <CAHKno4BR3kdsLU9AnNHvarc-e6UibNr7WQks2ssPX4pE1ZoUpA@mail.gmail.com>
- <20170424133946.GA7057@metamorpher.de> <727eeaf5-b856-305d-99b6-e42f3383b699@powerlamerz.org>
- <20170425001614.GA3936@metamorpher.de> <CAHKno4A7umuNBUPaHk0vmgj2fnjPgBi2oZJWidhKKaRX7ekgKA@mail.gmail.com>
- <20170425090122.GA4488@metamorpher.de> <CAHKno4AuKNxYiMazUy+hRJ2kJCdNNYw5L0uExvWc_52Ocn5V=g@mail.gmail.com>
+Date: Tue, 25 Apr 2017 14:41:00 +0200
+Message-ID: <20170425124100.GA7449@metamorpher.de>
+References: <20170424123706.GA6798@metamorpher.de>
+ <CAHKno4BR3kdsLU9AnNHvarc-e6UibNr7WQks2ssPX4pE1ZoUpA@mail.gmail.com>
+ <20170424133946.GA7057@metamorpher.de>
+ <727eeaf5-b856-305d-99b6-e42f3383b699@powerlamerz.org>
+ <20170425001614.GA3936@metamorpher.de>
+ <CAHKno4A7umuNBUPaHk0vmgj2fnjPgBi2oZJWidhKKaRX7ekgKA@mail.gmail.com>
+ <20170425090122.GA4488@metamorpher.de>
+ <CAHKno4AuKNxYiMazUy+hRJ2kJCdNNYw5L0uExvWc_52Ocn5V=g@mail.gmail.com>
  <20170425110807.GA5159@metamorpher.de>
+ <CAHKno4BfQG61pYMtcUf8NrzPt3dtNM=xe_DAb7Ypt4Qy_=1QkQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170425110807.GA5159@metamorpher.de>
+Content-Disposition: inline
+In-Reply-To: <CAHKno4BfQG61pYMtcUf8NrzPt3dtNM=xe_DAb7Ypt4Qy_=1QkQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+To: Patrik =?iso-8859-1?Q?Dahlstr=F6m?= <risca@powerlamerz.org>
 Cc: Brad Campbell <lists2009@fnarfbargle.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2017-04-25 13:08 GMT+02:00, Andreas Klauer <Andreas.Klauer@metamorpher.de>:
-> On Tue, Apr 25, 2017 at 12:40:37PM +0200, Patrik Dahlstr=C3=B6m wrote:
->> I was thinking if it was in fact a 5 disk raid + garbage from 1 disk,
->> then the checksum would be correct if the garbage disk was filtered
->> out. Does that make sens?
->
-> No. With one disk missing there is no parity (no way to verify it).
->
->> You mentioned something about linear device mapping before. What is
->> that? Is it something I could experiment with? How do I do that?
->
-> https://www.kernel.org/doc/Documentation/device-mapper/linear.txt
->
-> Once you have found where data overlaps on both raids, you create
-> a linear mapping of start..X of the 6disk raid, followed by X..end
-> of the 5disk RAID.
->
-> That way you get a device that holds your data intact as a whole,
-> whereas the raid sets would give you the first half of data on
-> the 6disk raid set (what was already reshaped) and the other half
-> on the 5disk raid set (what had yet to be reshaped).
->
-> This is only a way to get read access at the data, making the raid
-> work as a standalone again (resume reshape with lost raid metadata)
-> is another problem, to be tackled after you backed up your data ;)
-I'm not sure how I would backup 20 TB of data. I'll backup what I can,
-of course. The most essential.
->
->> Output of examine calls:
->
->> /dev/mapper/sda:
->>     Data Offset : 252928 sectors
->
->> /dev/mapper/sda-2:
->>     Data Offset : 252928 sectors
->
-> Wrong.
->
-> mdadm --grow changes the offset, so:
-Oh, I see. Does it do that every time I grow? In that case the
-original 5disk raid won't have 128M offset either.
-The full history of this raid:
-1. 2x6 TB + md0 (4x2 TB striped) <- data offset at 128M
-2. replace md0 with 6 TB, rebuild data. Shouldn't change data offset
-since this is basically the same as replacing a faulty disk, right?
-3. Grow to 4x6 TB <- data offset changed (unknown).
-4. Grow to 5x6 TB <- data offset changed (unknown).
-5. Grow to 6x6 TB <- data offset changed. This is when the problem started.
+On Tue, Apr 25, 2017 at 01:37:53PM +0200, Patrik Dahlström wrote:
+> Oh, I see. Does it do that every time I grow? In that case the
+> original 5disk raid won't have 128M offset either.
 
-Does the data offset change by a fixed or calculated value?
-Can I calculate the data offset by comparing to known data?
+The 128M offset is what we guessed from the device size and log output 
+you provided a few mails back in the discussion.
 
-I must say that you help has been most valuable. You have my eternal gratit=
-ude.
+On raid assembly the raid capacity is printed in the syslog and that's 
+the capacity it would have with your disk size and 128M offset.
 
-Best regards
-// Patrik
+So I'd start with that if possible...
+
+> Does the data offset change by a fixed or calculated value?
+> Can I calculate the data offset by comparing to known data?
+
+I guess it depends on mdadm/kernel version, and also the exact command, 
+the number of disks involved, the chunk size, ...
+
+For example the offset does not shift when you use --backup-file.
+
+Without metadata it's a puzzle.
+
+Regards
+Andreas Klauer
