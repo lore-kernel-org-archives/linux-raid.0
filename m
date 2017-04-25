@@ -1,84 +1,97 @@
-From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Subject: Re: Recover array after I panicked
-Date: Tue, 25 Apr 2017 02:16:14 +0200
-Message-ID: <20170425001614.GA3936@metamorpher.de>
-References: <20170423154240.GA3494@metamorpher.de>
- <718f75d1-b74f-f788-783a-6ffbdff275a8@powerlamerz.org>
- <63d6d0f5-d9b1-1218-b98e-48f9cf21a8bc@fnarfbargle.com>
- <CAHKno4AZukKvOEkVXPYMtnu1nypXLi95HaiFw+WNhAKP4KoLkg@mail.gmail.com>
- <20170424110455.GA4949@metamorpher.de>
- <CAHKno4A12N6UGGtJQJRkY0aPbFBBf0Rek91th9Cnx6XWJGouWg@mail.gmail.com>
- <20170424123706.GA6798@metamorpher.de>
- <CAHKno4BR3kdsLU9AnNHvarc-e6UibNr7WQks2ssPX4pE1ZoUpA@mail.gmail.com>
- <20170424133946.GA7057@metamorpher.de>
- <727eeaf5-b856-305d-99b6-e42f3383b699@powerlamerz.org>
+From: Stephane Thiell <sthiell@stanford.edu>
+Subject: Re: mismatch_cnt > 0 during initial sync?
+Date: Tue, 25 Apr 2017 05:14:37 +0000
+Message-ID: <D974501A-3A8C-438B-A043-8E44DE6D18C7@stanford.edu>
+References: <9A8A3C34-EED0-42FF-B631-7AD1D6EAF9A2@stanford.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <727eeaf5-b856-305d-99b6-e42f3383b699@powerlamerz.org>
+In-Reply-To: <9A8A3C34-EED0-42FF-B631-7AD1D6EAF9A2@stanford.edu>
+Content-Language: en-US
+Content-ID: <0011F9BCD31F99459635020BF6C1B229@namprd02.prod.outlook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Patrik =?iso-8859-1?Q?Dahlstr=F6m?= <risca@powerlamerz.org>
-Cc: Brad Campbell <lists2009@fnarfbargle.com>, linux-raid@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Apr 25, 2017 at 01:00:47AM +0200, Patrik Dahlström wrote:
-> 6 disk raid xor check: 84 ^ f6 ^ 87 ^ 96 ^ e1 ^ 82 == 0, OK
+I just did some tests and this seems normal if one of the raid disk previou=
+sly has some non-zero data.  Perhaps there should be a note about that in m=
+d(4) or elsewhere? (sorry if I missed it)
 
-This should be the 6 disk raid area.
+Thanks,
 
-> 5 disk raid xor check: 46 ^ 73 ^ 6d ^ 06 ^ 5e == 0, OK
+Stephan
 
-This should be the 5 disk raid area.
+> On Apr 24, 2017, at 3:01 PM, Stephane Thiell <sthiell@stanford.edu> wrote=
+:
+>=20
+>=20
+> Hi all,
+>=20
+> Is it normal to get any mismatch_cnt > 0 during the initial sync? I just =
+created a few new new raid6 volumes, and one of them is showing an increasi=
+ng number of mismatch_cnt during its initial resync. Nothing is visible in =
+the console nor after a smart short test (I also started a long test just i=
+n case).
+>=20
+>=20
+> $ mdadm --detail /dev/md7
+> /dev/md7:
+>        Version : 1.2
+>  Creation Time : Mon Apr 24 10:07:18 2017
+>     Raid Level : raid6
+>     Array Size : 62511163904 (59615.29 GiB 64011.43 GB)
+>  Used Dev Size : 7813895488 (7451.91 GiB 8001.43 GB)
+>   Raid Devices : 10
+>  Total Devices : 10
+>    Persistence : Superblock is persistent
+>=20
+>  Intent Bitmap : Internal
+>=20
+>    Update Time : Mon Apr 24 14:52:12 2017
+>          State : clean, resyncing=20
+> Active Devices : 10
+> Working Devices : 10
+> Failed Devices : 0
+>  Spare Devices : 0
+>=20
+>         Layout : left-symmetric
+>     Chunk Size : 64K
+>=20
+>  Resync Status : 24% complete
+>=20
+>           Name : oak-io1-s2:7  (local to host oak-io1-s2)
+>           UUID : 6ece9d71:a97f9497:4612ed73:44dfdc0a
+>         Events : 3308
+>=20
+>    Number   Major   Minor   RaidDevice State
+>       0     253       62        0      active sync   /dev/dm-62
+>       1     253       63        1      active sync   /dev/dm-63
+>       2     253       72        2      active sync   /dev/dm-72
+>       3     253       75        3      active sync   /dev/dm-75
+>       4     253       89        4      active sync   /dev/dm-89
+>       5     253       87        5      active sync   /dev/dm-87
+>       6     253      119        6      active sync   /dev/dm-119
+>       7     253       97        7      active sync   /dev/dm-97
+>       8     253      103        8      active sync   /dev/dm-103
+>       9     253      107        9      active sync   /dev/dm-107
+>=20
+> $ cat /sys/block/md7/md/sync_completed
+> 3795284824 / 15627790976
+>=20
+> $ cat /sys/block/md7/md/mismatch_cnt=20
+> 3424
+>=20
+> versions:
+>  mdadm-3.4-14.el7_3.1.x86_64
+>  CentOS7 (3.10.0-514.10.2.el7_lustre.x86_64)
+>=20
+> Thanks!
+>=20
+> Stephan
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-> 6 disk raid xor check: 46 ^ 73 ^ 6d ^ 06 ^ 5e ^ 00 == 0, OK
 
-Still 5 disks... grow did not progess until here, 
-and the 6th disk is likely zero because it's new.
-
-> But immediately before that, I can't get the xor sums to line up:
-> 0xfaa287ffff: b0 ^ 6d ^ 13 ^ 1b ^ b7 != ae (62 actually), NOK
-> This would mean that it's incorrect for both 5 and 6 disk raids.
-
-Not too sure about this point.
-
-If it up and died in mid-grow there might be a chunk that's wrong.
-
-But that's a few kilobytes, not...
-
-> That is a span of ~52 GB where I presumably can't get the checksums
-> right. What does all this mean? What am I missing?
-
-...well, it would make sense if a disk got kicked / went missing 
-and it progressed the reshape for another ~52GB afterwards. 
-
-If you still had your original md metadata the --examine would clear
-that point up but unfortunately...
-
-In a /dev/md that doesn't have that same disk as missing, this would 
-result in roughly ~260-320Gs of data that is garbage (because one drive 
-was not reshaped but the others were so every nth chunk is wrong).
-
-You might still be able to survive that (if the raid6 <-> raid5 overlap 
-zone is larger than that - I didn't do the math, but at a progress of 
-17% of your 6T disks you've added about 1T? Might just work out).
-
-So you might have these zones on your RAIDs
-
-6DISK: ?G VALID-DATA : ~320G of GARBAGE : ?G 5DISK-WRONGOFFSET-NONSENSE
-5DISK: ?G 6DISK-WRONGOFFSET-NONSENSE : ~260G of GARBAGE : ?G VALID DATA
-
-And you're hoping the VALID DATA areas will overlap. They would if it 
-progressed far enough with all disks and not too far with one missing.
-
-Or you just have to identify the questionable drive and kick it out.
-
-You have some experimenteering to do :-|
-
-( 
-    Not sure if I'm still making sense at this point. Sorry.
-)
-
-Regards
-Andreas Klauer
