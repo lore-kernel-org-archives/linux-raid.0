@@ -1,66 +1,82 @@
-From: Logan Gunthorpe <logang@deltatee.com>
-Subject: Re: [PATCH v2 01/21] scatterlist: Introduce sg_map helper functions
-Date: Wed, 26 Apr 2017 12:11:33 -0600
-Message-ID: <4736d44e-bbcf-5d59-a1a9-317d0f4da847@deltatee.com>
-References: <1493144468-22493-1-git-send-email-logang@deltatee.com>
- <1493144468-22493-2-git-send-email-logang@deltatee.com>
- <20170426074416.GA7936@lst.de>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [bug report] md-cluster: Fix adding of new disk with new reload code
+Date: Wed, 26 Apr 2017 22:59:40 +0300
+Message-ID: <20170426195940.l64pymopsbv36o7e@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20170426074416.GA7936@lst.de>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: dri-devel@lists.freedesktop.org, Stephen Bates <sbates@raithlin.com>, dm-devel@redhat.com, target-devel@vger.kernel.org, Sumit Semwal <sumit.semwal@linaro.org>, devel@driverdev.osuosl.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, open-iscsi@googlegroups.com, linux-media@vger.kernel.org, intel-gfx@lists.freedesktop.org, sparmaintainer@unisys.com, linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, megaraidlinux.pdl@broadcom.com, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, netdev@vger.kernel.org, Matthew Wilcox <mawilcox@microsoft.com>, linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: rgoldwyn@suse.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-CgpPbiAyNi8wNC8xNyAwMTo0NCBBTSwgQ2hyaXN0b3BoIEhlbGx3aWcgd3JvdGU6Cj4gSSB0aGlu
-ayB3ZSdsbCBhdCBsZWFzdCBuZWVkIGEgZHJhZnQgb2YgdGhvc2UgdG8gbWFrZSBzZW5zZSBvZiB0
-aGVzZQo+IHBhdGNoZXMuICBPdGhlcndpc2UgdGhleSBqdXN0IGxvb2sgdmVyeSBjbHVtc3kuCgpP
-aywgSSdsbCB3b3JrIHVwIGEgZHJhZnQgcHJvcG9zYWwgYW5kIHNlbmQgaXQgaW4gYSBjb3VwbGUg
-ZGF5cy4gQnV0CndpdGhvdXQgYSBsb3Qgb2YgY2xlYW51cCBzdWNoIGFzIHRoaXMgc2VyaWVzIGl0
-J3Mgbm90IGdvaW5nIHRvIGV2ZW4gYmUKYWJsZSB0byBjb21waWxlLgoKPiBJJ20gc29ycnkgYnV0
-IHRoaXMgQVBJIGlzIGp1c3QgYSB0cmFpbndyZWNrLiAgUmlnaHQgbm93IHdlIGhhdmUgdGhlCj4g
-bmljZSBsaXR0bGUga21hcF9hdG9taWMgQVBJLCB3aGljaCBuZXZlciBmYWlscyBhbmQgaGFzIGEg
-dmVyeSBuaWNlCj4gY2FsbGluZyBjb252ZW50aW9uIHdoZXJlIHdlIGp1c3QgcGFzcyBiYWNrIHRo
-ZSByZXR1cm4gYWRkcmVzcywgYnV0IGRvZXMKPiBub3Qgc3VwcG9ydCBzbGVlcGluZyBpbnNpZGUg
-dGhlIGNyaXRpY2FsIHNlY3Rpb24uCj4gCj4gQW5kIGttYXAsIHdo0ZZjaCBtYXkgZmFpbCBhbmQg
-cmVxdWlyZXMgdGhlIG9yaWdpbmFsIHBhZ2UgdG8gYmUgcGFzc2VkCj4gYmFjay4gIEFueXRoaW5n
-IHRoYXQgbWl4ZXMgdGhlc2UgdHdvIGNvbmNlcHRzIHVwIGlzIHNpbXBseSBhIG5vbi1zdGFydGVy
-LgoKT2ssIHdlbGwgZm9yIHN0YXJ0ZXJzIEkgdGhpbmsgeW91IGFyZSBtaXN0YWtlbiBhYm91dCBr
-bWFwIGJlaW5nIGFibGUgdG8KZmFpbC4gSSdtIGhhdmluZyBhIGhhcmQgdGltZSBmaW5kaW5nIG1h
-bnkgdXNlcnMgb2YgdGhhdCBmdW5jdGlvbiB0aGF0CmJvdGhlciB0byBjaGVjayBmb3IgYW4gZXJy
-b3Igd2hlbiBjYWxsaW5nIGl0LiBUaGUgbWFpbiBkaWZmaWN1bHR5IHdlCmhhdmUgbm93IGlzIHRo
-YXQgbmVpdGhlciBvZiB0aG9zZSBmdW5jdGlvbnMgYXJlIGV4cGVjdGVkIHRvIGZhaWwgYW5kIHdl
-Cm5lZWQgdGhlbSB0byBiZSBhYmxlIHRvIGluIGNhc2VzIHdoZXJlIHRoZSBwYWdlIGRvZXNuJ3Qg
-bWFwIHRvIHN5c3RlbQpSQU0uIFRoaXMgcGF0Y2ggc2VyaWVzIGlzIHRyeWluZyB0byBhZGRyZXNz
-IGl0IGZvciB1c2VycyBvZiBzY2F0dGVybGlzdC4KSSdtIGNlcnRhaW5seSBvcGVuIHRvIG90aGVy
-IHN1Z2dlc3Rpb25zLgoKSSBhbHNvIGhhdmUgdG8gZGlzYWdyZWUgdGhhdCBrbWFwIGFuZCBrbWFw
-X2F0b21pYyBhcmUgYWxsIHRoYXQgIm5pY2UiLgpFeGNlcHQgZm9yIHRoZSBzbGVlcGluZyByZXN0
-cmljdGlvbiBhbmQgcGVyZm9ybWFuY2UsIHRoZXkgZWZmZWN0aXZlbHkgZG8KdGhlIHNhbWUgdGhp
-bmcuIEFuZCBpdCB3YXMgbmVjZXNzYXJ5IHRvIHdyaXRlIGEgbWFjcm8gd3JhcHBlciBhcm91bmQK
-a3VubWFwX2F0b21pYyB0byBlbnN1cmUgdGhhdCB1c2VycyBvZiB0aGF0IGZ1bmN0aW9uIGRvbid0
-IHNjcmV3IGl0IHVwLgooU2VlIDU5Nzc4MWYzZTUuKSBJJ2Qgc2F5IHRoZSBrbWFwL2ttYXBfYXRv
-bWljIGZ1bmN0aW9ucyBhcmUgdGhlCnRyYWlud3JlY2sgYW5kIEknbSB0cnlpbmcgdG8gZG8gbXkg
-YmVzdCB0byBjbGVhbnVwIGEgZmV3IGNhc2VzLgoKVGhlcmUgYXJlIGEgZmFpciBudW1iZXIgb2Yg
-Y2FzZXMgaW4gdGhlIGtlcm5lbCB0aGF0IGRvIHNvbWV0aGluZyBsaWtlOgoKaWYgKHNvbWV0aGlu
-ZykKICAgIHggPSBrbWFwKHBhZ2UpOwplbHNlCiAgICB4ID0ga21hcF9hdG9taWMocGFnZSk7Ci4u
-LgppZiAoc29tZXRoaW5nKQogICAga3VubWFwKHBhZ2UpCmVsc2UKICAgIGt1bm1hcF9hdG9taWMo
-eCkKCldoaWNoIGp1c3Qgc2VlbXMgY3VtYmVyc29tZSB0byBtZS4KCkluIGFueSBjYXNlLCBpZiB5
-b3UgY2FuIGFjY2VwdCBhbiBzZ19rbWFwIGFuZCBzZ19rbWFwX2F0b21pYyBhcGkganVzdApzYXkg
-c28gYW5kIEknbGwgbWFrZSB0aGUgY2hhbmdlLiBCdXQgSSdsbCBzdGlsbCBuZWVkIGEgZmxhZ3Mg
-dmFyaWFibGUKZm9yIFNHX01BUF9NVVNUX05PVF9GQUlMIHRvIHN1cHBvcnQgbGVnYWN5IGNhc2Vz
-IHRoYXQgaGF2ZSBubyBmYWlsIHBhdGgKYW5kIGJvdGggb2YgdGhvc2UgZnVuY3Rpb25zIHdpbGwg
-bmVlZCB0byBiZSBwcmV0dHkgbmVhcmx5IHJlcGxpY2FzIG9mCmVhY2ggb3RoZXIuCgpMb2dhbgoK
-Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmRldmVsIG1h
-aWxpbmcgbGlzdApkZXZlbEBsaW51eGRyaXZlcnByb2plY3Qub3JnCmh0dHA6Ly9kcml2ZXJkZXYu
-bGludXhkcml2ZXJwcm9qZWN0Lm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaXZlcmRldi1kZXZlbAo=
+Hello Goldwyn Rodrigues,
+
+The patch dbb64f8635f5: "md-cluster: Fix adding of new disk with new
+reload code" from Oct 1, 2015, leads to the following static checker
+warning:
+
+	drivers/md/md-cluster.c:1341 add_new_disk()
+	warn: inconsistent returns 'cinfo->recv_mutex'.
+	  Locked on  : 1315,1341
+	  Unlocked on: 1341
+
+drivers/md/md-cluster.c
+  1300  static int add_new_disk(struct mddev *mddev, struct md_rdev *rdev)
+  1301  {
+  1302          struct md_cluster_info *cinfo = mddev->cluster_info;
+  1303          struct cluster_msg cmsg;
+  1304          int ret = 0;
+  1305          struct mdp_superblock_1 *sb = page_address(rdev->sb_page);
+  1306          char *uuid = sb->device_uuid;
+  1307  
+  1308          memset(&cmsg, 0, sizeof(cmsg));
+  1309          cmsg.type = cpu_to_le32(NEWDISK);
+  1310          memcpy(cmsg.uuid, uuid, 16);
+  1311          cmsg.raid_slot = cpu_to_le32(rdev->desc_nr);
+  1312          lock_comm(cinfo, 1);
+                ^^^^^^^^^^^^^^^^^^^
+We take the lock here.
+
+  1313          ret = __sendmsg(cinfo, &cmsg);
+  1314          if (ret)
+  1315                  return ret;
+
+Should we unlock on failure here?
+
+  1316          cinfo->no_new_dev_lockres->flags |= DLM_LKF_NOQUEUE;
+  1317          ret = dlm_lock_sync(cinfo->no_new_dev_lockres, DLM_LOCK_EX);
+  1318          cinfo->no_new_dev_lockres->flags &= ~DLM_LKF_NOQUEUE;
+  1319          /* Some node does not "see" the device */
+  1320          if (ret == -EAGAIN)
+  1321                  ret = -ENOENT;
+  1322          if (ret)
+  1323                  unlock_comm(cinfo);
+
+Because we do here.  I think we're only supposed to hold the lock on
+success but how this all works with cancel etc looked slightly
+complicated so I decided to ask instead of sending a patch.
+
+  1324          else {
+  1325                  dlm_lock_sync(cinfo->no_new_dev_lockres, DLM_LOCK_CR);
+  1326                  /* Since MD_CHANGE_DEVS will be set in add_bound_rdev which
+  1327                   * will run soon after add_new_disk, the below path will be
+  1328                   * invoked:
+  1329                   *   md_wakeup_thread(mddev->thread)
+  1330                   *      -> conf->thread (raid1d)
+  1331                   *      -> md_check_recovery -> md_update_sb
+  1332                   *      -> metadata_update_start/finish
+  1333                   * MD_CLUSTER_SEND_LOCKED_ALREADY will be cleared eventually.
+  1334                   *
+  1335                   * For other failure cases, metadata_update_cancel and
+  1336                   * add_new_disk_cancel also clear below bit as well.
+  1337                   * */
+  1338                  set_bit(MD_CLUSTER_SEND_LOCKED_ALREADY, &cinfo->state);
+  1339                  wake_up(&cinfo->wait);
+  1340          }
+  1341          return ret;
+  1342  }
+
+regards,
+dan carpenter
