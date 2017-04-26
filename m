@@ -1,100 +1,131 @@
-From: Coly Li <colyli@suse.de>
-Subject: Re: [MD PATCH 1/1] Don't add nr_pending for resync requests
-Date: Wed, 26 Apr 2017 16:40:20 +0800
-Message-ID: <599ae320-3375-8bd6-f1cd-4091ecc0a529@suse.de>
-References: <1493023635-5652-1-git-send-email-xni@redhat.com>
- <20170425171034.peeh6uuvwycqtise@kernel.org>
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>
+Subject: Re: [PATCH v2 01/21] scatterlist: Introduce sg_map helper functions
+Date: Wed, 26 Apr 2017 10:59:17 +0200
+Message-ID: <5dfc5bf5-482c-b5bb-029c-7cee80925f37@amd.com>
+References: <1493144468-22493-1-git-send-email-logang@deltatee.com>
+ <1493144468-22493-2-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170425171034.peeh6uuvwycqtise@kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>, Xiao Ni <xni@redhat.com>
-Cc: linux-raid@vger.kernel.org, ncroxon@redhat.com, neilb@suse.com
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Transfer-Encoding: base64
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <1493144468-22493-2-git-send-email-logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, megaraidlinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, sparmaintainer-GLv8BlqOqDDQT0dZR+AlfA@public.gmane.org, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-raid.ids
 
-On 2017/4/26 上午1:10, Shaohua Li wrote:
-> Hi,
-> Cc: Coly and Neil.
-> 
-> On Mon, Apr 24, 2017 at 04:47:15PM +0800, Xiao Ni wrote:
->> In newer barrier codes, raise_barrier waits if conf->nr_pending[idx] is not zero.
->> After all the conditions are true, the resync request can go on be handling. But
->> it adds conf->nr_pending[idx] again. The next resync request hit the same bucket
->> idx need to wait the resync request which is submitted before. The performance
->> of resync/recovery is degraded.
->>
->> I did some tests:
->> 1. Before removing the codes, the resync performance is:
->> Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s avgrq-sz avgqu-sz   await r_await w_await  svctm  %util
->> sdc               0.00     0.00    0.00  164.00     0.00    10.13   126.46     0.95    5.80    0.00    5.80   5.82  95.40
->> sdb               0.00     0.00  163.00    2.00    10.19     0.00   126.47     0.04    0.25    0.18    5.50   0.25   4.10
->> 2. After removing the codes, the resync performance is:
->> Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s avgrq-sz avgqu-sz   await r_await w_await  svctm  %util
->> sdc               0.00  2164.00    0.00  751.00     0.00   182.06   496.49     7.49    9.95    0.00    9.95   1.33 100.00
->> sdb            2162.00     0.00  752.00    0.00   182.25     0.00   496.34     0.56    0.74    0.74    0.00   0.65  48.80
-> 
-> A big resync regression, thanks to check it! Your analysis makes sense to me,
-> but the patch doesn't. freeze_array() depends on nr_pending to wait for all
-> normal IO and resync. This change will make the wait for resync disappear.
-> 
-> I think the problem is we are abusing nr_pending here. freeze_array() waits for
-> a condition which doesn't need to be maintained by nr_pending. It makes sense
-> raise_barrier to wait for nr_pending caused by normal IO, but it doesn't make
-> sense to wait for other raise_barrier.
-> 
-> We could add another vairable, increase it in raise_barrier, decrease it in
-> lower_barrier and let freeze_array() check the new variable. That should fix
-> the problem and not expose race condition for freeze_array().
-
-Shaohua,
-
-Adding another variable to recode pending resync I/O is good idea. We
-can do something like this,
-
-@@ -869,7 +869,7 @@ static void raise_barrier()
-
--       atomic_inc(&conf->nr_pending[idx]);
-+       atomic_inc(&conf->nr_resync_pending[idx]);
-        spin_unlock_irq(&conf->resync_lock);
- }
-
-@@ -880,7 +880,7 @@ static void lower_barrier()
-
-        atomic_dec(&conf->barrier[idx]);
--       atomic_dec(&conf->nr_pending[idx]);
-+       atomic_dec(&conf->nr_resync_pending[idx]);
-        wake_up(&conf->wait_barrier);
- }
-
-@@ -1018,7 +1018,8 @@ static int get_unqueued_pending()
-        int idx, ret;
-
-        for (ret = 0, idx = 0; idx < BARRIER_BUCKETS_NR; idx++)
--               ret += atomic_read(&conf->nr_pending[idx]) -
-+               ret += atomic_read(&conf->nr_pending[idx]) +
-+                       atomic_read(&conf->nr_resync_pending[idx]) -
-                        atomic_read(&conf->nr_queued[idx]);
-
-        return ret;
-
-Xiao,
-
-Nice catch! From your email, it seems resync request on raid1 device can
-be non-linear, otherwise, it won't hit same barrier bucket by different
-resync I/O to raise barrier. This is some thing I don't know. Thank you !
-
-The reason to increase conf->nr_pending[idx] is from 'commit 34e97f17
-("md/raid1: count resync requests in nr_pending.")', because normal I/O
-and resync I/O can happen at same time on same raid1 device. And both of
-them can be queued by reschedule_retry(), raise_barrier() need to
-increase conf->nr_pending[idx] to make sure pending I/Os will be equal
-to queued I/Os when array is frozen. We cannot remove
-conf->nr_pending[idx] operations from raise_barrier()/lower_barrier().
-
-Would you like to compose a patch by Shaohua's suggestion ?
-
-Thanks.
-
-Coly Li
+QW0gMjUuMDQuMjAxNyB1bSAyMDoyMCBzY2hyaWViIExvZ2FuIEd1bnRob3JwZToKPiBUaGlzIHBh
+dGNoIGludHJvZHVjZXMgZnVuY3Rpb25zIHdoaWNoIGttYXAgdGhlIHBhZ2VzIGluc2lkZSBhbiBz
+Z2wuCj4gVGhlc2UgZnVuY3Rpb25zIHJlcGxhY2UgYSBjb21tb24gcGF0dGVybiBvZiBrbWFwKHNn
+X3BhZ2Uoc2cpKSB0aGF0IGlzCj4gdXNlZCBpbiBtb3JlIHRoYW4gNTAgcGxhY2VzIHdpdGhpbiB0
+aGUga2VybmVsLgo+Cj4gVGhlIG1vdGl2YXRpb24gZm9yIHRoaXMgd29yayBpcyB0byBldmVudHVh
+bGx5IHNhZmVseSBzdXBwb3J0IHNnbHMgdGhhdAo+IGNvbnRhaW4gaW8gbWVtb3J5LiBJbiBvcmRl
+ciBmb3IgdGhhdCB0byB3b3JrLCBhbnkgYWNjZXNzIHRvIHRoZSBjb250ZW50cwo+IG9mIGFuIGlv
+bWVtIFNHTCB3aWxsIG5lZWQgdG8gYmUgZG9uZSB3aXRoIGlvbWVtY3B5IG9yIGhpdCBzb21lIHdh
+cm5pbmcuCj4gKFRoZSBleGFjdCBkZXRhaWxzIG9mIGhvdyB0aGlzIHdpbGwgd29yayBoYXZlIHll
+dCB0byBiZSB3b3JrZWQgb3V0LikKPiBIYXZpbmcgYWxsIHRoZSBrbWFwcyBpbiBvbmUgcGxhY2Ug
+aXMganVzdCBhIGZpcnN0IHN0ZXAgaW4gdGhhdAo+IGRpcmVjdGlvbi4gQWRkaXRpb25hbGx5LCBz
+ZWVpbmcgdGhpcyBoZWxwcyBjdXQgZG93biB0aGUgdXNlcnMgb2Ygc2dfcGFnZSwKPiBpdCBzaG91
+bGQgbWFrZSBhbnkgZWZmb3J0IHRvIGdvIHRvIHN0cnVjdC1wYWdlLWxlc3MgRE1BcyBhIGxpdHRs
+ZQo+IGVhc2llciAoc2hvdWxkIHRoYXQgaWRlYSBldmVyIHN3aW5nIGJhY2sgaW50byBmYXZvdXIg
+YWdhaW4pLgo+Cj4gQSBmbGFncyBvcHRpb24gaXMgYWRkZWQgdG8gc2VsZWN0IGJldHdlZW4gYSBy
+ZWd1bGFyIG9yIGF0b21pYyBtYXBwaW5nIHNvCj4gdGhlc2UgZnVuY3Rpb25zIGNhbiByZXBsYWNl
+IGttYXAoc2dfcGFnZSBvciBrbWFwX2F0b21pYyhzZ19wYWdlLgo+IEZ1dHVyZSB3b3JrIG1heSBl
+eHBhbmQgdGhpcyB0byBoYXZlIGZsYWdzIGZvciB1c2luZyBwYWdlX2FkZHJlc3Mgb3IKPiB2bWFw
+LiBXZSBpbmNsdWRlIGEgZmxhZyB0byByZXF1aXJlIHRoZSBmdW5jdGlvbiBub3QgdG8gZmFpbCB0
+bwo+IHN1cHBvcnQgbGVnYWN5IGNvZGUgdGhhdCBoYXMgbm8gZWFzeSBlcnJvciBwYXRoLiBNdWNo
+IGZ1cnRoZXIgaW4gdGhlCj4gZnV0dXJlLCB0aGVyZSBtYXkgYmUgYSBmbGFnIHRvIGFsbG9jYXRl
+IG1lbW9yeSBhbmQgY29weSB0aGUgZGF0YQo+IGZyb20vdG8gaW9tZW0uCj4KPiBXZSBhbHNvIGFk
+ZCB0aGUgc2VtYW50aWMgdGhhdCBzZ19tYXAgY2FuIGZhaWwgdG8gY3JlYXRlIGEgbWFwcGluZywK
+PiBkZXNwaXRlIHRoZSBmYWN0IHRoYXQgdGhlIGN1cnJlbnQgY29kZSB0aGlzIGlzIHJlcGxhY2lu
+ZyBpcyBhc3N1bWVkIHRvCj4gbmV2ZXIgZmFpbCBhbmQgdGhlIGN1cnJlbnQgdmVyc2lvbiBvZiB0
+aGVzZSBmdW5jdGlvbnMgY2Fubm90IGZhaWwuIFRoaXMKPiBpcyB0byBzdXBwb3J0IGlvbWVtIHdo
+aWNoIG1heSBlaXRoZXIgaGF2ZSB0byBmYWlsIHRvIGNyZWF0ZSB0aGUgbWFwcGluZyBvcgo+IGFs
+bG9jYXRlIG1lbW9yeSBhcyBhIGJvdW5jZSBidWZmZXIgd2hpY2ggaXRzZWxmIGNhbiBmYWlsLgo+
+Cj4gQWxzbywgaW4gdGVybXMgb2YgY2xlYW51cCwgYSBmZXcgb2YgdGhlIGV4aXN0aW5nIGttYXAo
+c2dfcGFnZSkgdXNlcnMKPiBwbGF5IHRoaW5ncyBhIGJpdCBsb29zZSBpbiB0ZXJtcyBvZiB3aGV0
+aGVyIHRoZXkgYXBwbHkgc2ctPm9mZnNldAo+IHNvIHVzaW5nIHRoZXNlIGhlbHBlciBmdW5jdGlv
+bnMgc2hvdWxkIGhlbHAgYXZvaWQgc3VjaCBpc3N1ZXMuCj4KPiBTaWduZWQtb2ZmLWJ5OiBMb2dh
+biBHdW50aG9ycGUgPGxvZ2FuZ0BkZWx0YXRlZS5jb20+Cj4gLS0tCgpHb29kIHRvIGtub3cgdGhh
+dCBzb21lYm9keSBpcyB3b3JraW5nIG9uIHRoaXMuIFRob3NlIHByb2JsZW1zIHRyb3VibGVkIAp1
+cyBhcyB3ZWxsLgoKUGF0Y2ggaXMgQWNrZWQtYnk6IENocmlzdGlhbiBLw7ZuaWcgPGNocmlzdGlh
+bi5rb2VuaWdAYW1kLmNvbT4uCgpSZWdhcmRzLApDaHJpc3RpYW4uCgo+ICAgaW5jbHVkZS9saW51
+eC9zY2F0dGVybGlzdC5oIHwgODUgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKysrCj4gICAxIGZpbGUgY2hhbmdlZCwgODUgaW5zZXJ0aW9ucygrKQo+Cj4gZGlmZiAt
+LWdpdCBhL2luY2x1ZGUvbGludXgvc2NhdHRlcmxpc3QuaCBiL2luY2x1ZGUvbGludXgvc2NhdHRl
+cmxpc3QuaAo+IGluZGV4IGNiM2M4ZmUuLmZhZDE3MGIgMTAwNjQ0Cj4gLS0tIGEvaW5jbHVkZS9s
+aW51eC9zY2F0dGVybGlzdC5oCj4gKysrIGIvaW5jbHVkZS9saW51eC9zY2F0dGVybGlzdC5oCj4g
+QEAgLTUsNiArNSw3IEBACj4gICAjaW5jbHVkZSA8bGludXgvdHlwZXMuaD4KPiAgICNpbmNsdWRl
+IDxsaW51eC9idWcuaD4KPiAgICNpbmNsdWRlIDxsaW51eC9tbS5oPgo+ICsjaW5jbHVkZSA8bGlu
+dXgvaGlnaG1lbS5oPgo+ICAgI2luY2x1ZGUgPGFzbS9pby5oPgo+ICAgCj4gICBzdHJ1Y3Qgc2Nh
+dHRlcmxpc3Qgewo+IEBAIC0xMjYsNiArMTI3LDkwIEBAIHN0YXRpYyBpbmxpbmUgc3RydWN0IHBh
+Z2UgKnNnX3BhZ2Uoc3RydWN0IHNjYXR0ZXJsaXN0ICpzZykKPiAgIAlyZXR1cm4gKHN0cnVjdCBw
+YWdlICopKChzZyktPnBhZ2VfbGluayAmIH4weDMpOwo+ICAgfQo+ICAgCj4gKyNkZWZpbmUgU0df
+S01BUAkJICAgICAoMSA8PCAwKQkvKiBjcmVhdGUgYSBtYXBwaW5nIHdpdGgga21hcCAqLwo+ICsj
+ZGVmaW5lIFNHX0tNQVBfQVRPTUlDCSAgICAgKDEgPDwgMSkJLyogY3JlYXRlIGEgbWFwcGluZyB3
+aXRoIGttYXBfYXRvbWljICovCj4gKyNkZWZpbmUgU0dfTUFQX01VU1RfTk9UX0ZBSUwgKDEgPDwg
+MikJLyogaW5kaWNhdGUgc2dfbWFwIHNob3VsZCBub3QgZmFpbCAqLwo+ICsKPiArLyoqCj4gKyAq
+IHNnX21hcCAtIGttYXAgYSBwYWdlIGluc2lkZSBhbiBzZ2wKPiArICogQHNnOgkJU0cgZW50cnkK
+PiArICogQG9mZnNldDoJT2Zmc2V0IGludG8gZW50cnkKPiArICogQGZsYWdzOglGbGFncyBmb3Ig
+Y3JlYXRpbmcgdGhlIG1hcHBpbmcKPiArICoKPiArICogRGVzY3JpcHRpb246Cj4gKyAqICAgVXNl
+IHRoaXMgZnVuY3Rpb24gdG8gbWFwIGEgcGFnZSBpbiB0aGUgc2NhdHRlcmxpc3QgYXQgdGhlIHNw
+ZWNpZmllZAo+ICsgKiAgIG9mZnNldC4gc2ctPm9mZnNldCBpcyBhbHJlYWR5IGFkZGVkIGZvciB5
+b3UuIE5vdGU6IHRoZSBzZW1hbnRpY3Mgb2YKPiArICogICB0aGlzIGZ1bmN0aW9uIGFyZSB0aGF0
+IGl0IG1heSBmYWlsLiBUaHVzLCBpdHMgb3V0cHV0IHNob3VsZCBiZSBjaGVja2VkCj4gKyAqICAg
+d2l0aCBJU19FUlIgYW5kIFBUUl9FUlIuIE90aGVyd2lzZSwgYSBwb2ludGVyIHRvIHRoZSBzcGVj
+aWZpZWQgb2Zmc2V0Cj4gKyAqICAgaW4gdGhlIG1hcHBlZCBwYWdlIGlzIHJldHVybmVkLgo+ICsg
+Kgo+ICsgKiAgIEZsYWdzIGNhbiBiZSBhbnkgb2Y6Cj4gKyAqCSogU0dfS01BUAkJLSBVc2Uga21h
+cCB0byBjcmVhdGUgdGhlIG1hcHBpbmcKPiArICoJKiBTR19LTUFQX0FUT01JQwktIFVzZSBrbWFw
+X2F0b21pYyB0byBtYXAgdGhlIHBhZ2UgYXRvbW1pY2FsbHkuCj4gKyAqCQkJCSAgVGh1cywgdGhl
+IHJ1bGVzIG9mIHRoYXQgZnVuY3Rpb24gYXBwbHk6IHRoZQo+ICsgKgkJCQkgIGNwdSBtYXkgbm90
+IHNsZWVwIHVudGlsIGl0IGlzIHVubWFwZWQuCj4gKyAqCSogU0dfTUFQX01VU1RfTk9UX0ZBSUwJ
+LSBJbmRpY2F0ZSB0aGF0IHNnX21hcCBtdXN0IG5vdCBmYWlsLgo+ICsgKgkJCQkgIElmIGl0IGRv
+ZXMsIGl0IHdpbGwgaXNzdWUgYSBCVUdfT04gaW5zdGVhZC4KPiArICoJCQkJICBUaGlzIGlzIGlu
+dGVuZGVkIGZvciBsZWdhY3kgY29kZSBvbmx5LCBpdAo+ICsgKgkJCQkgIGlzIG5vdCB0byBiZSB1
+c2VkIGluIG5ldyBjb2RlLgo+ICsgKgo+ICsgKiAgIEFsc28sIGNvbnNpZGVyIGNhcmVmdWxseSB3
+aGV0aGVyIHRoaXMgZnVuY3Rpb24gaXMgYXBwcm9wcmlhdGUuIEl0IGlzCj4gKyAqICAgbGFyZ2Vs
+eSBub3QgcmVjb21tZW5kZWQgZm9yIG5ldyBjb2RlIGFuZCBpZiB0aGUgc2dsIGNhbWUgZnJvbSBh
+bm90aGVyCj4gKyAqICAgc3Vic3lzdGVtIGFuZCB5b3UgZG9uJ3Qga25vdyB3aGF0IGtpbmQgb2Yg
+bWVtb3J5IG1pZ2h0IGJlIGluIHRoZSBsaXN0Cj4gKyAqICAgdGhlbiB5b3UgZGVmaW5pdGVseSBz
+aG91bGQgbm90IGNhbGwgaXQuIE5vbi1tYXBwYWJsZSBtZW1vcnkgbWF5IGJlIGluCj4gKyAqICAg
+dGhlIHNnbCBhbmQgdGh1cyB0aGlzIGZ1bmN0aW9uIG1heSBmYWlsIHVuZXhwZWN0ZWRseS4gQ29u
+c2lkZXIgdXNpbmcKPiArICogICBzZ19jb3B5X3RvX2J1ZmZlciBpbnN0ZWFkLgo+ICsgKiovCj4g
+K3N0YXRpYyBpbmxpbmUgdm9pZCAqc2dfbWFwKHN0cnVjdCBzY2F0dGVybGlzdCAqc2csIHNpemVf
+dCBvZmZzZXQsIGludCBmbGFncykKPiArewo+ICsJc3RydWN0IHBhZ2UgKnBnOwo+ICsJdW5zaWdu
+ZWQgaW50IHBnX29mZjsKPiArCXZvaWQgKnJldDsKPiArCj4gKwlvZmZzZXQgKz0gc2ctPm9mZnNl
+dDsKPiArCXBnID0gbnRoX3BhZ2Uoc2dfcGFnZShzZyksIG9mZnNldCA+PiBQQUdFX1NISUZUKTsK
+PiArCXBnX29mZiA9IG9mZnNldF9pbl9wYWdlKG9mZnNldCk7Cj4gKwo+ICsJaWYgKGZsYWdzICYg
+U0dfS01BUF9BVE9NSUMpCj4gKwkJcmV0ID0ga21hcF9hdG9taWMocGcpICsgcGdfb2ZmOwo+ICsJ
+ZWxzZSBpZiAoZmxhZ3MgJiBTR19LTUFQKQo+ICsJCXJldCA9IGttYXAocGcpICsgcGdfb2ZmOwo+
+ICsJZWxzZQo+ICsJCXJldCA9IEVSUl9QVFIoLUVJTlZBTCk7Cj4gKwo+ICsJLyoKPiArCSAqIElu
+IHRoZW9yeSwgdGhpcyBjYW4ndCBoYXBwZW4geWV0LiBPbmNlIHdlIHN0YXJ0IGFkZGluZwo+ICsJ
+ICogdW5tYXBhYmxlIG1lbW9yeSwgaXQgYWxzbyBzaG91bGRuJ3QgaGFwcGVuIHVubGVzcyBkZXZl
+bG9wZXJzCj4gKwkgKiBzdGFydCBwdXR0aW5nIHVubWFwcGFibGUgc3RydWN0IHBhZ2VzIGluIHNn
+bHMgYW5kIHBhc3NpbmcKPiArCSAqIGl0IHRvIGNvZGUgdGhhdCBkb2Vzbid0IHN1cHBvcnQgaXQu
+Cj4gKwkgKi8KPiArCUJVR19PTihmbGFncyAmIFNHX01BUF9NVVNUX05PVF9GQUlMICYmIElTX0VS
+UihyZXQpKTsKPiArCj4gKwlyZXR1cm4gcmV0Owo+ICt9Cj4gKwo+ICsvKioKPiArICogc2dfdW5t
+YXAgLSB1bm1hcCBhIHBhZ2UgdGhhdCB3YXMgbWFwcGVkIHdpdGggc2dfbWFwX29mZnNldAo+ICsg
+KiBAc2c6CQlTRyBlbnRyeQo+ICsgKiBAYWRkcjoJYWRkcmVzcyByZXR1cm5lZCBieSBzZ19tYXBf
+b2Zmc2V0Cj4gKyAqIEBvZmZzZXQ6CU9mZnNldCBpbnRvIGVudHJ5IChzYW1lIGFzIHNwZWNpZmll
+ZCBmb3Igc2dfbWFwKQo+ICsgKiBAZmxhZ3M6CUZsYWdzLCB3aGljaCBhcmUgdGhlIHNhbWUgc3Bl
+Y2lmaWVkIGZvciBzZ19tYXAKPiArICoKPiArICogRGVzY3JpcHRpb246Cj4gKyAqICAgVW5tYXAg
+dGhlIHBhZ2UgdGhhdCB3YXMgbWFwcGVkIHdpdGggc2dfbWFwX29mZnNldAo+ICsgKiovCj4gK3N0
+YXRpYyBpbmxpbmUgdm9pZCBzZ191bm1hcChzdHJ1Y3Qgc2NhdHRlcmxpc3QgKnNnLCB2b2lkICph
+ZGRyLAo+ICsJCQkgICAgc2l6ZV90IG9mZnNldCwgaW50IGZsYWdzKQo+ICt7Cj4gKwlzdHJ1Y3Qg
+cGFnZSAqcGcgPSBudGhfcGFnZShzZ19wYWdlKHNnKSwgb2Zmc2V0ID4+IFBBR0VfU0hJRlQpOwo+
+ICsJdW5zaWduZWQgaW50IHBnX29mZiA9IG9mZnNldF9pbl9wYWdlKG9mZnNldCk7Cj4gKwo+ICsJ
+aWYgKGZsYWdzICYgU0dfS01BUF9BVE9NSUMpCj4gKwkJa3VubWFwX2F0b21pYyhhZGRyIC0gc2ct
+Pm9mZnNldCAtIHBnX29mZik7Cj4gKwllbHNlIGlmIChmbGFncyAmIFNHX0tNQVApCj4gKwkJa3Vu
+bWFwKHBnKTsKPiArfQo+ICsKPiAgIC8qKgo+ICAgICogc2dfc2V0X2J1ZiAtIFNldCBzZyBlbnRy
+eSB0byBwb2ludCBhdCBnaXZlbiBkYXRhCj4gICAgKiBAc2c6CQkgU0cgZW50cnkKCgpfX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpMaW51eC1udmRpbW0gbWFp
+bGluZyBsaXN0CkxpbnV4LW52ZGltbUBsaXN0cy4wMS5vcmcKaHR0cHM6Ly9saXN0cy4wMS5vcmcv
+bWFpbG1hbi9saXN0aW5mby9saW51eC1udmRpbW0K
