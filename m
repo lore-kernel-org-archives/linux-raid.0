@@ -1,80 +1,100 @@
-From: Peter Rajnoha <prajnoha@redhat.com>
-Subject: Re: [mdadm PATCH 4/4] Create: tell udev device is not ready when
- first created.
-Date: Wed, 26 Apr 2017 12:19:15 +0200
-Message-ID: <40a5fbff-9eef-07b3-fe1b-fb9a888cfb8b@redhat.com>
-References: <149265560315.31004.3851231165281498425.stgit@noble>
- <149265600601.31004.323865505557190368.stgit@noble>
- <dedd27cd-9c2e-f244-d8aa-7a074679d3c6@gmail.com>
- <87mvbasqx6.fsf@notabene.neil.brown.name>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+From: Xiao Ni <xni@redhat.com>
+Subject: [MD PATCH 1/1] Use a new variable to count flighting sync requests
+Date: Wed, 26 Apr 2017 21:32:19 +0800
+Message-ID: <1493213539-15970-1-git-send-email-xni@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87mvbasqx6.fsf@notabene.neil.brown.name>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, Jes Sorensen <jes.sorensen@gmail.com>
-Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com
+To: linux-raid@vger.kernel.org
+Cc: shli@kernel.org, colyli@suse.de, neilb@suse.com, ncroxon@redhat.com
 List-Id: linux-raid.ids
 
-On 04/20/2017 11:35 PM, NeilBrown wrote:
-> On Thu, Apr 20 2017, Jes Sorensen wrote:
-...
->> Second, isn't this going to be racey if you have multiple arrays 
->> running? I am wondering if we cannot find a solution that relies on a 
->> permanently installed udev rule that we enable/disable with systemctl 
->> and use the device name as an argument?
-> 
-> There would only be a problematic race of an array as being created at
-> the same time that another array is being assembled.  Is that at all
-> likely?  They tend to happen at different parts of the usage cycle...  I
-> guess we shouldn't assume though.
-> 
-> I admit that blocking *all* arrays was a short cut.  We need to create
-> the udev rule before the new device is first activated, and keep it in
-> existence until after the array has been started and the fd on /dev/mdXX
-> has been closed - and then a bit more because udev doesn't respond
-> instantly.
-> In some cases we don't know the name of the md device until
-> create_mddev() chooses on with find_free_devnum().
-> So if we want to block udev from handling a device, we need to put the
-> block into effect (e.g. create the rules.d file) in mddev_create() just
-> before the call to open_dev_excl().
-> 
-> If we wanted an more permanent udev rule, we would need to record the
-> devices that should be ignored in the filesystem somewhere else.
-> Maybe in /run/mdadm.
-> e.g.
-> 
->  KERNEL=="md*", TEST="/run/mdadm/creating-$kernel", ENV{SYSTEMD_READY}="0"
-> 
-> Then we could have something like the following (untested) in mdadm.
-> Does that seem more suitable?
-> 
+In new barrier codes, raise_barrier waits if conf->nr_pending[idx] is not zero.
+After all the conditions are true, the resync request can go on be handled. But
+it adds conf->nr_pending[idx] again. The next resync request hit the same bucket
+idx need to wait the resync request which is submitted before. The performance
+of resync/recovery is degraded.
+So we should use a new variable to count sync requests which are in flight.
 
-Yes, please, if possible, go for a permanent udev rule surely - this
-will make it much easier for other foreign tools to hook in properly if
-needed and it would also be much easier to debug.
+Suggested-by: Shaohua Li <shli@kernel.org>
+Suggested-by: Coly Li <colyli@suse.de>
+Signed-off-by: Xiao Ni <xni@redhat.com>
+---
+ drivers/md/raid1.c | 14 +++++++++++---
+ drivers/md/raid1.h |  1 +
+ 2 files changed, 12 insertions(+), 3 deletions(-)
 
-But, wouldn't it be better if we could just pass this information ("not
-initialized yet") as RUN_ARRAY md ioctl parameter? In that case the md
-driver in kernel could add the variable to the uevent it generates which
-userspace udev rules could check for easily. This way, we don't need to
-hassle with creating files in filesystem and the information would be
-directly a part of the uevent the md kernel driver generates (so
-directly accessible in udev rules too). Also, possibly adding more
-variables for other future scenarios if needed.
-
-We use something similar in device-mapper already where we pass flags
-(besides other things) as a device-mapper ioctl parameter which then
-gets into the uevent as DM_COOKIE uevent variable (which in turn the
-udev rules can decode into individual flags). This method proved to be
-working well for us to solve the problem of uninitialized data area so
-we don't get into trouble with scans from udev (see also dm_ioctl
-structure in usr/include/linux/dm-ioctl.h and the dm_kobject_uevent
-function in drivers/md/dm.c for the kernel part; in udev rules the flags
-are then various DM_UDEV_* variables we check for)
-
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index a34f587..3c304ef 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -869,7 +869,7 @@ static void raise_barrier(struct r1conf *conf, sector_t sector_nr)
+ 			     atomic_read(&conf->barrier[idx]) < RESYNC_DEPTH,
+ 			    conf->resync_lock);
+ 
+-	atomic_inc(&conf->nr_pending[idx]);
++	atomic_inc(&conf->nr_sync_pending[idx]);
+ 	spin_unlock_irq(&conf->resync_lock);
+ }
+ 
+@@ -880,7 +880,7 @@ static void lower_barrier(struct r1conf *conf, sector_t sector_nr)
+ 	BUG_ON(atomic_read(&conf->barrier[idx]) <= 0);
+ 
+ 	atomic_dec(&conf->barrier[idx]);
+-	atomic_dec(&conf->nr_pending[idx]);
++	atomic_dec(&conf->nr_sync_pending[idx]);
+ 	wake_up(&conf->wait_barrier);
+ }
+ 
+@@ -1018,7 +1018,8 @@ static int get_unqueued_pending(struct r1conf *conf)
+ 	int idx, ret;
+ 
+ 	for (ret = 0, idx = 0; idx < BARRIER_BUCKETS_NR; idx++)
+-		ret += atomic_read(&conf->nr_pending[idx]) -
++		ret += atomic_read(&conf->nr_pending[idx]) +
++			atomic_read(&conf->nr_sync_pending[idx]) -
+ 			atomic_read(&conf->nr_queued[idx]);
+ 
+ 	return ret;
+@@ -3024,6 +3025,11 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+ 	if (!conf->nr_pending)
+ 		goto abort;
+ 
++	conf->nr_sync_pending = kcalloc(BARRIER_BUCKETS_NR,
++				   sizeof(atomic_t), GFP_KERNEL);
++	if (!conf->nr_sync_pending)
++		goto abort;
++
+ 	conf->nr_waiting = kcalloc(BARRIER_BUCKETS_NR,
+ 				   sizeof(atomic_t), GFP_KERNEL);
+ 	if (!conf->nr_waiting)
+@@ -3136,6 +3142,7 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+ 		kfree(conf->mirrors);
+ 		safe_put_page(conf->tmppage);
+ 		kfree(conf->poolinfo);
++		kfree(conf->nr_sync_pending);
+ 		kfree(conf->nr_pending);
+ 		kfree(conf->nr_waiting);
+ 		kfree(conf->nr_queued);
+@@ -3241,6 +3248,7 @@ static void raid1_free(struct mddev *mddev, void *priv)
+ 	kfree(conf->mirrors);
+ 	safe_put_page(conf->tmppage);
+ 	kfree(conf->poolinfo);
++	kfree(conf->nr_sync_pending);
+ 	kfree(conf->nr_pending);
+ 	kfree(conf->nr_waiting);
+ 	kfree(conf->nr_queued);
+diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
+index dd22a37..a3580ee 100644
+--- a/drivers/md/raid1.h
++++ b/drivers/md/raid1.h
+@@ -85,6 +85,7 @@ struct r1conf {
+ 	wait_queue_head_t	wait_barrier;
+ 	spinlock_t		resync_lock;
+ 	atomic_t		*nr_pending;
++	atomic_t		*nr_sync_pending;
+ 	atomic_t		*nr_waiting;
+ 	atomic_t		*nr_queued;
+ 	atomic_t		*barrier;
 -- 
-Peter
+2.7.4
+
