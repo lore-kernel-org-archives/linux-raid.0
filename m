@@ -1,50 +1,137 @@
-From: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Subject: [PATCH 1/1] IMSM: Initialize my_vol_raid_dev_num during vol creation
-Date: Wed, 26 Apr 2017 11:08:07 +0200
-Message-ID: <20170426090807.10328-1-pawel.baldysiak@intel.com>
+From: Xiao Ni <xni@redhat.com>
+Subject: Re: [MD PATCH 1/1] Don't add nr_pending for resync requests
+Date: Wed, 26 Apr 2017 05:22:08 -0400 (EDT)
+Message-ID: <228146615.1231110.1493198528975.JavaMail.zimbra@redhat.com>
+References: <1493023635-5652-1-git-send-email-xni@redhat.com> <20170425171034.peeh6uuvwycqtise@kernel.org> <599ae320-3375-8bd6-f1cd-4091ecc0a529@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <599ae320-3375-8bd6-f1cd-4091ecc0a529@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: jes.serensen@gmail.com, Pawel Baldysiak <pawel.baldysiak@intel.com>
+To: Coly Li <colyli@suse.de>
+Cc: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, ncroxon@redhat.com, neilb@suse.com
 List-Id: linux-raid.ids
 
-This field was not initialized so far. This ID needs to be unique
-for every newly created array in container.
 
-Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
----
- super-intel.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c
-index 0aed57c..d5c77c0 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -232,8 +232,13 @@ struct imsm_super {
- 	__u32 orig_family_num;		/* 0x40 - 0x43 original family num */
- 	__u32 pwr_cycle_count;		/* 0x44 - 0x47 simulated power cycle count for array */
- 	__u32 bbm_log_size;		/* 0x48 - 0x4B - size of bad Block Mgmt Log in bytes */
--#define IMSM_FILLERS 35
--	__u32 filler[IMSM_FILLERS];	/* 0x4C - 0xD7 RAID_MPB_FILLERS */
-+	__u16 num_raid_devs_created;	/* 0x4C - 0x4D Used for generating unique
-+					 * volume IDs for raid_dev created in this array
-+					 * (starts at 1)
-+					 */
-+	__u16 filler1;			/* 0x4E - 0x4F */
-+#define IMSM_FILLERS 34
-+	__u32 filler[IMSM_FILLERS];	/* 0x50 - 0xD7 RAID_MPB_FILLERS */
- 	struct imsm_disk disk[1];	/* 0xD8 diskTbl[numDisks] */
- 	/* here comes imsm_dev[num_raid_devs] */
- 	/* here comes BBM logs */
-@@ -5368,6 +5373,8 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
- 		set_imsm_ord_tbl_ent(map, i, IMSM_ORD_REBUILD);
- 	}
- 	mpb->num_raid_devs++;
-+	mpb->num_raid_devs_created++;
-+	dev->my_vol_raid_dev_num = mpb->num_raid_devs_created;
- 
- 	if (s->consistency_policy == UnSet ||
- 	    s->consistency_policy == CONSISTENCY_POLICY_RESYNC ||
--- 
-2.9.3
+----- Original Message -----
+> From: "Coly Li" <colyli@suse.de>
+> To: "Shaohua Li" <shli@kernel.org>, "Xiao Ni" <xni@redhat.com>
+> Cc: linux-raid@vger.kernel.org, ncroxon@redhat.com, neilb@suse.com
+> Sent: Wednesday, April 26, 2017 4:40:20 PM
+> Subject: Re: [MD PATCH 1/1] Don't add nr_pending for resync requests
+> 
+> On 2017/4/26 上午1:10, Shaohua Li wrote:
+> > Hi,
+> > Cc: Coly and Neil.
+> > 
+> > On Mon, Apr 24, 2017 at 04:47:15PM +0800, Xiao Ni wrote:
+> >> In newer barrier codes, raise_barrier waits if conf->nr_pending[idx] is
+> >> not zero.
+> >> After all the conditions are true, the resync request can go on be
+> >> handling. But
+> >> it adds conf->nr_pending[idx] again. The next resync request hit the same
+> >> bucket
+> >> idx need to wait the resync request which is submitted before. The
+> >> performance
+> >> of resync/recovery is degraded.
+> >>
+> >> I did some tests:
+> >> 1. Before removing the codes, the resync performance is:
+> >> Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s avgrq-sz
+> >> avgqu-sz   await r_await w_await  svctm  %util
+> >> sdc               0.00     0.00    0.00  164.00     0.00    10.13   126.46
+> >> 0.95    5.80    0.00    5.80   5.82  95.40
+> >> sdb               0.00     0.00  163.00    2.00    10.19     0.00   126.47
+> >> 0.04    0.25    0.18    5.50   0.25   4.10
+> >> 2. After removing the codes, the resync performance is:
+> >> Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s avgrq-sz
+> >> avgqu-sz   await r_await w_await  svctm  %util
+> >> sdc               0.00  2164.00    0.00  751.00     0.00   182.06   496.49
+> >> 7.49    9.95    0.00    9.95   1.33 100.00
+> >> sdb            2162.00     0.00  752.00    0.00   182.25     0.00   496.34
+> >> 0.56    0.74    0.74    0.00   0.65  48.80
+> > 
+> > A big resync regression, thanks to check it! Your analysis makes sense to
+> > me,
+> > but the patch doesn't. freeze_array() depends on nr_pending to wait for all
+> > normal IO and resync. This change will make the wait for resync disappear.
+> > 
+> > I think the problem is we are abusing nr_pending here. freeze_array() waits
+> > for
+> > a condition which doesn't need to be maintained by nr_pending. It makes
+> > sense
+> > raise_barrier to wait for nr_pending caused by normal IO, but it doesn't
+> > make
+> > sense to wait for other raise_barrier.
+> > 
+> > We could add another vairable, increase it in raise_barrier, decrease it in
+> > lower_barrier and let freeze_array() check the new variable. That should
+> > fix
+> > the problem and not expose race condition for freeze_array().
+> 
+> Shaohua,
+> 
+> Adding another variable to recode pending resync I/O is good idea. We
+> can do something like this,
+> 
+> @@ -869,7 +869,7 @@ static void raise_barrier()
+> 
+> -       atomic_inc(&conf->nr_pending[idx]);
+> +       atomic_inc(&conf->nr_resync_pending[idx]);
+>         spin_unlock_irq(&conf->resync_lock);
+>  }
+> 
+> @@ -880,7 +880,7 @@ static void lower_barrier()
+> 
+>         atomic_dec(&conf->barrier[idx]);
+> -       atomic_dec(&conf->nr_pending[idx]);
+> +       atomic_dec(&conf->nr_resync_pending[idx]);
+>         wake_up(&conf->wait_barrier);
+>  }
+> 
+> @@ -1018,7 +1018,8 @@ static int get_unqueued_pending()
+>         int idx, ret;
+> 
+>         for (ret = 0, idx = 0; idx < BARRIER_BUCKETS_NR; idx++)
+> -               ret += atomic_read(&conf->nr_pending[idx]) -
+> +               ret += atomic_read(&conf->nr_pending[idx]) +
+> +                       atomic_read(&conf->nr_resync_pending[idx]) -
+>                         atomic_read(&conf->nr_queued[idx]);
+> 
+>         return ret;
+> 
+> Xiao,
+> 
+> Nice catch! From your email, it seems resync request on raid1 device can
+> be non-linear, otherwise, it won't hit same barrier bucket by different
+> resync I/O to raise barrier. This is some thing I don't know. Thank you !
 
+Hi Coly and shaohua
+
+Sorry I don't understand "non-linear raid1 device". What's the meaning about this?
+In raid1_sync_request, it can handle RESYNC_PAGES pages. It's 64KB. So there is a
+chance that different resync requests hit the same bucket id. Because the bucket unit
+is 64MB. Am I right?
+> 
+> The reason to increase conf->nr_pending[idx] is from 'commit 34e97f17
+> ("md/raid1: count resync requests in nr_pending.")', because normal I/O
+> and resync I/O can happen at same time on same raid1 device. And both of
+> them can be queued by reschedule_retry(), raise_barrier() need to
+> increase conf->nr_pending[idx] to make sure pending I/Os will be equal
+> to queued I/Os when array is frozen. We cannot remove
+> conf->nr_pending[idx] operations from raise_barrier()/lower_barrier().
+> 
+> Would you like to compose a patch by Shaohua's suggestion ?
+> 
+
+
+Sure, I'll re-send the patch later. 
+
+At first I didn't understand the relationship about nr_pending and nr_queued. 
+If I remove the action adding nr_pending for resync requests. There maybe one
+deadlock in freeze_array. Thanks for the explanation. 
+
+Regards
+Xiao
