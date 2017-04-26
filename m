@@ -1,53 +1,66 @@
-From: Coly Li <colyli@suse.de>
-Subject: Re: [MD PATCH 1/1] Use a new variable to count flighting sync
- requests
-Date: Wed, 26 Apr 2017 23:38:31 +0800
-Message-ID: <584ea129-d6ad-fa48-6295-806e3f951811@suse.de>
-References: <1493213539-15970-1-git-send-email-xni@redhat.com>
- <20170426150850.lxe2ktt4uhljcp5y@kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+Subject: Re: [PATCH v2 01/21] scatterlist: Introduce sg_map helper functions
+Date: Wed, 26 Apr 2017 12:11:33 -0600
+Message-ID: <4736d44e-bbcf-5d59-a1a9-317d0f4da847@deltatee.com>
+References: <1493144468-22493-1-git-send-email-logang@deltatee.com>
+ <1493144468-22493-2-git-send-email-logang@deltatee.com>
+ <20170426074416.GA7936@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170426150850.lxe2ktt4uhljcp5y@kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>, Xiao Ni <xni@redhat.com>
-Cc: linux-raid@vger.kernel.org, neilb@suse.com, ncroxon@redhat.com
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20170426074416.GA7936@lst.de>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: dri-devel@lists.freedesktop.org, Stephen Bates <sbates@raithlin.com>, dm-devel@redhat.com, target-devel@vger.kernel.org, Sumit Semwal <sumit.semwal@linaro.org>, devel@driverdev.osuosl.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, open-iscsi@googlegroups.com, linux-media@vger.kernel.org, intel-gfx@lists.freedesktop.org, sparmaintainer@unisys.com, linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, megaraidlinux.pdl@broadcom.com, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, netdev@vger.kernel.org, Matthew Wilcox <mawilcox@microsoft.com>, linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 List-Id: linux-raid.ids
 
-On 2017/4/26 下午11:08, Shaohua Li wrote:
-> On Wed, Apr 26, 2017 at 09:32:19PM +0800, Xiao Ni wrote:
->> In new barrier codes, raise_barrier waits if conf->nr_pending[idx] is not zero.
->> After all the conditions are true, the resync request can go on be handled. But
->> it adds conf->nr_pending[idx] again. The next resync request hit the same bucket
->> idx need to wait the resync request which is submitted before. The performance
->> of resync/recovery is degraded.
->> So we should use a new variable to count sync requests which are in flight.
->>
->> Suggested-by: Shaohua Li <shli@kernel.org>
->> Suggested-by: Coly Li <colyli@suse.de>
->> Signed-off-by: Xiao Ni <xni@redhat.com>
->> ---
->>  drivers/md/raid1.c | 14 +++++++++++---
->>  drivers/md/raid1.h |  1 +
->>  2 files changed, 12 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
->> index a34f587..3c304ef 100644
->> --- a/drivers/md/raid1.c
->> +++ b/drivers/md/raid1.c
->> @@ -869,7 +869,7 @@ static void raise_barrier(struct r1conf *conf, sector_t sector_nr)
->>  			     atomic_read(&conf->barrier[idx]) < RESYNC_DEPTH,
->>  			    conf->resync_lock);
->>  
->> -	atomic_inc(&conf->nr_pending[idx]);
->> +	atomic_inc(&conf->nr_sync_pending[idx]);
-> 
-> Any reason why nr_sync_pending is an array? Looks a single atomic is enough to me.
-> 
-
-Yes, you are right. A single atomic works fine :-)
-
-
-Coly
-
+CgpPbiAyNi8wNC8xNyAwMTo0NCBBTSwgQ2hyaXN0b3BoIEhlbGx3aWcgd3JvdGU6Cj4gSSB0aGlu
+ayB3ZSdsbCBhdCBsZWFzdCBuZWVkIGEgZHJhZnQgb2YgdGhvc2UgdG8gbWFrZSBzZW5zZSBvZiB0
+aGVzZQo+IHBhdGNoZXMuICBPdGhlcndpc2UgdGhleSBqdXN0IGxvb2sgdmVyeSBjbHVtc3kuCgpP
+aywgSSdsbCB3b3JrIHVwIGEgZHJhZnQgcHJvcG9zYWwgYW5kIHNlbmQgaXQgaW4gYSBjb3VwbGUg
+ZGF5cy4gQnV0CndpdGhvdXQgYSBsb3Qgb2YgY2xlYW51cCBzdWNoIGFzIHRoaXMgc2VyaWVzIGl0
+J3Mgbm90IGdvaW5nIHRvIGV2ZW4gYmUKYWJsZSB0byBjb21waWxlLgoKPiBJJ20gc29ycnkgYnV0
+IHRoaXMgQVBJIGlzIGp1c3QgYSB0cmFpbndyZWNrLiAgUmlnaHQgbm93IHdlIGhhdmUgdGhlCj4g
+bmljZSBsaXR0bGUga21hcF9hdG9taWMgQVBJLCB3aGljaCBuZXZlciBmYWlscyBhbmQgaGFzIGEg
+dmVyeSBuaWNlCj4gY2FsbGluZyBjb252ZW50aW9uIHdoZXJlIHdlIGp1c3QgcGFzcyBiYWNrIHRo
+ZSByZXR1cm4gYWRkcmVzcywgYnV0IGRvZXMKPiBub3Qgc3VwcG9ydCBzbGVlcGluZyBpbnNpZGUg
+dGhlIGNyaXRpY2FsIHNlY3Rpb24uCj4gCj4gQW5kIGttYXAsIHdo0ZZjaCBtYXkgZmFpbCBhbmQg
+cmVxdWlyZXMgdGhlIG9yaWdpbmFsIHBhZ2UgdG8gYmUgcGFzc2VkCj4gYmFjay4gIEFueXRoaW5n
+IHRoYXQgbWl4ZXMgdGhlc2UgdHdvIGNvbmNlcHRzIHVwIGlzIHNpbXBseSBhIG5vbi1zdGFydGVy
+LgoKT2ssIHdlbGwgZm9yIHN0YXJ0ZXJzIEkgdGhpbmsgeW91IGFyZSBtaXN0YWtlbiBhYm91dCBr
+bWFwIGJlaW5nIGFibGUgdG8KZmFpbC4gSSdtIGhhdmluZyBhIGhhcmQgdGltZSBmaW5kaW5nIG1h
+bnkgdXNlcnMgb2YgdGhhdCBmdW5jdGlvbiB0aGF0CmJvdGhlciB0byBjaGVjayBmb3IgYW4gZXJy
+b3Igd2hlbiBjYWxsaW5nIGl0LiBUaGUgbWFpbiBkaWZmaWN1bHR5IHdlCmhhdmUgbm93IGlzIHRo
+YXQgbmVpdGhlciBvZiB0aG9zZSBmdW5jdGlvbnMgYXJlIGV4cGVjdGVkIHRvIGZhaWwgYW5kIHdl
+Cm5lZWQgdGhlbSB0byBiZSBhYmxlIHRvIGluIGNhc2VzIHdoZXJlIHRoZSBwYWdlIGRvZXNuJ3Qg
+bWFwIHRvIHN5c3RlbQpSQU0uIFRoaXMgcGF0Y2ggc2VyaWVzIGlzIHRyeWluZyB0byBhZGRyZXNz
+IGl0IGZvciB1c2VycyBvZiBzY2F0dGVybGlzdC4KSSdtIGNlcnRhaW5seSBvcGVuIHRvIG90aGVy
+IHN1Z2dlc3Rpb25zLgoKSSBhbHNvIGhhdmUgdG8gZGlzYWdyZWUgdGhhdCBrbWFwIGFuZCBrbWFw
+X2F0b21pYyBhcmUgYWxsIHRoYXQgIm5pY2UiLgpFeGNlcHQgZm9yIHRoZSBzbGVlcGluZyByZXN0
+cmljdGlvbiBhbmQgcGVyZm9ybWFuY2UsIHRoZXkgZWZmZWN0aXZlbHkgZG8KdGhlIHNhbWUgdGhp
+bmcuIEFuZCBpdCB3YXMgbmVjZXNzYXJ5IHRvIHdyaXRlIGEgbWFjcm8gd3JhcHBlciBhcm91bmQK
+a3VubWFwX2F0b21pYyB0byBlbnN1cmUgdGhhdCB1c2VycyBvZiB0aGF0IGZ1bmN0aW9uIGRvbid0
+IHNjcmV3IGl0IHVwLgooU2VlIDU5Nzc4MWYzZTUuKSBJJ2Qgc2F5IHRoZSBrbWFwL2ttYXBfYXRv
+bWljIGZ1bmN0aW9ucyBhcmUgdGhlCnRyYWlud3JlY2sgYW5kIEknbSB0cnlpbmcgdG8gZG8gbXkg
+YmVzdCB0byBjbGVhbnVwIGEgZmV3IGNhc2VzLgoKVGhlcmUgYXJlIGEgZmFpciBudW1iZXIgb2Yg
+Y2FzZXMgaW4gdGhlIGtlcm5lbCB0aGF0IGRvIHNvbWV0aGluZyBsaWtlOgoKaWYgKHNvbWV0aGlu
+ZykKICAgIHggPSBrbWFwKHBhZ2UpOwplbHNlCiAgICB4ID0ga21hcF9hdG9taWMocGFnZSk7Ci4u
+LgppZiAoc29tZXRoaW5nKQogICAga3VubWFwKHBhZ2UpCmVsc2UKICAgIGt1bm1hcF9hdG9taWMo
+eCkKCldoaWNoIGp1c3Qgc2VlbXMgY3VtYmVyc29tZSB0byBtZS4KCkluIGFueSBjYXNlLCBpZiB5
+b3UgY2FuIGFjY2VwdCBhbiBzZ19rbWFwIGFuZCBzZ19rbWFwX2F0b21pYyBhcGkganVzdApzYXkg
+c28gYW5kIEknbGwgbWFrZSB0aGUgY2hhbmdlLiBCdXQgSSdsbCBzdGlsbCBuZWVkIGEgZmxhZ3Mg
+dmFyaWFibGUKZm9yIFNHX01BUF9NVVNUX05PVF9GQUlMIHRvIHN1cHBvcnQgbGVnYWN5IGNhc2Vz
+IHRoYXQgaGF2ZSBubyBmYWlsIHBhdGgKYW5kIGJvdGggb2YgdGhvc2UgZnVuY3Rpb25zIHdpbGwg
+bmVlZCB0byBiZSBwcmV0dHkgbmVhcmx5IHJlcGxpY2FzIG9mCmVhY2ggb3RoZXIuCgpMb2dhbgoK
+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmRldmVsIG1h
+aWxpbmcgbGlzdApkZXZlbEBsaW51eGRyaXZlcnByb2plY3Qub3JnCmh0dHA6Ly9kcml2ZXJkZXYu
+bGludXhkcml2ZXJwcm9qZWN0Lm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaXZlcmRldi1kZXZlbAo=
