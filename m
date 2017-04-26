@@ -1,137 +1,80 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: Re: [MD PATCH 1/1] Don't add nr_pending for resync requests
-Date: Wed, 26 Apr 2017 05:22:08 -0400 (EDT)
-Message-ID: <228146615.1231110.1493198528975.JavaMail.zimbra@redhat.com>
-References: <1493023635-5652-1-git-send-email-xni@redhat.com> <20170425171034.peeh6uuvwycqtise@kernel.org> <599ae320-3375-8bd6-f1cd-4091ecc0a529@suse.de>
+From: Peter Rajnoha <prajnoha@redhat.com>
+Subject: Re: [mdadm PATCH 4/4] Create: tell udev device is not ready when
+ first created.
+Date: Wed, 26 Apr 2017 12:19:15 +0200
+Message-ID: <40a5fbff-9eef-07b3-fe1b-fb9a888cfb8b@redhat.com>
+References: <149265560315.31004.3851231165281498425.stgit@noble>
+ <149265600601.31004.323865505557190368.stgit@noble>
+ <dedd27cd-9c2e-f244-d8aa-7a074679d3c6@gmail.com>
+ <87mvbasqx6.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <599ae320-3375-8bd6-f1cd-4091ecc0a529@suse.de>
+In-Reply-To: <87mvbasqx6.fsf@notabene.neil.brown.name>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Coly Li <colyli@suse.de>
-Cc: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, ncroxon@redhat.com, neilb@suse.com
+To: NeilBrown <neilb@suse.com>, Jes Sorensen <jes.sorensen@gmail.com>
+Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-
-
------ Original Message -----
-> From: "Coly Li" <colyli@suse.de>
-> To: "Shaohua Li" <shli@kernel.org>, "Xiao Ni" <xni@redhat.com>
-> Cc: linux-raid@vger.kernel.org, ncroxon@redhat.com, neilb@suse.com
-> Sent: Wednesday, April 26, 2017 4:40:20 PM
-> Subject: Re: [MD PATCH 1/1] Don't add nr_pending for resync requests
+On 04/20/2017 11:35 PM, NeilBrown wrote:
+> On Thu, Apr 20 2017, Jes Sorensen wrote:
+...
+>> Second, isn't this going to be racey if you have multiple arrays 
+>> running? I am wondering if we cannot find a solution that relies on a 
+>> permanently installed udev rule that we enable/disable with systemctl 
+>> and use the device name as an argument?
 > 
-> On 2017/4/26 上午1:10, Shaohua Li wrote:
-> > Hi,
-> > Cc: Coly and Neil.
-> > 
-> > On Mon, Apr 24, 2017 at 04:47:15PM +0800, Xiao Ni wrote:
-> >> In newer barrier codes, raise_barrier waits if conf->nr_pending[idx] is
-> >> not zero.
-> >> After all the conditions are true, the resync request can go on be
-> >> handling. But
-> >> it adds conf->nr_pending[idx] again. The next resync request hit the same
-> >> bucket
-> >> idx need to wait the resync request which is submitted before. The
-> >> performance
-> >> of resync/recovery is degraded.
-> >>
-> >> I did some tests:
-> >> 1. Before removing the codes, the resync performance is:
-> >> Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s avgrq-sz
-> >> avgqu-sz   await r_await w_await  svctm  %util
-> >> sdc               0.00     0.00    0.00  164.00     0.00    10.13   126.46
-> >> 0.95    5.80    0.00    5.80   5.82  95.40
-> >> sdb               0.00     0.00  163.00    2.00    10.19     0.00   126.47
-> >> 0.04    0.25    0.18    5.50   0.25   4.10
-> >> 2. After removing the codes, the resync performance is:
-> >> Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s avgrq-sz
-> >> avgqu-sz   await r_await w_await  svctm  %util
-> >> sdc               0.00  2164.00    0.00  751.00     0.00   182.06   496.49
-> >> 7.49    9.95    0.00    9.95   1.33 100.00
-> >> sdb            2162.00     0.00  752.00    0.00   182.25     0.00   496.34
-> >> 0.56    0.74    0.74    0.00   0.65  48.80
-> > 
-> > A big resync regression, thanks to check it! Your analysis makes sense to
-> > me,
-> > but the patch doesn't. freeze_array() depends on nr_pending to wait for all
-> > normal IO and resync. This change will make the wait for resync disappear.
-> > 
-> > I think the problem is we are abusing nr_pending here. freeze_array() waits
-> > for
-> > a condition which doesn't need to be maintained by nr_pending. It makes
-> > sense
-> > raise_barrier to wait for nr_pending caused by normal IO, but it doesn't
-> > make
-> > sense to wait for other raise_barrier.
-> > 
-> > We could add another vairable, increase it in raise_barrier, decrease it in
-> > lower_barrier and let freeze_array() check the new variable. That should
-> > fix
-> > the problem and not expose race condition for freeze_array().
+> There would only be a problematic race of an array as being created at
+> the same time that another array is being assembled.  Is that at all
+> likely?  They tend to happen at different parts of the usage cycle...  I
+> guess we shouldn't assume though.
 > 
-> Shaohua,
+> I admit that blocking *all* arrays was a short cut.  We need to create
+> the udev rule before the new device is first activated, and keep it in
+> existence until after the array has been started and the fd on /dev/mdXX
+> has been closed - and then a bit more because udev doesn't respond
+> instantly.
+> In some cases we don't know the name of the md device until
+> create_mddev() chooses on with find_free_devnum().
+> So if we want to block udev from handling a device, we need to put the
+> block into effect (e.g. create the rules.d file) in mddev_create() just
+> before the call to open_dev_excl().
 > 
-> Adding another variable to recode pending resync I/O is good idea. We
-> can do something like this,
+> If we wanted an more permanent udev rule, we would need to record the
+> devices that should be ignored in the filesystem somewhere else.
+> Maybe in /run/mdadm.
+> e.g.
 > 
-> @@ -869,7 +869,7 @@ static void raise_barrier()
+>  KERNEL=="md*", TEST="/run/mdadm/creating-$kernel", ENV{SYSTEMD_READY}="0"
 > 
-> -       atomic_inc(&conf->nr_pending[idx]);
-> +       atomic_inc(&conf->nr_resync_pending[idx]);
->         spin_unlock_irq(&conf->resync_lock);
->  }
-> 
-> @@ -880,7 +880,7 @@ static void lower_barrier()
-> 
->         atomic_dec(&conf->barrier[idx]);
-> -       atomic_dec(&conf->nr_pending[idx]);
-> +       atomic_dec(&conf->nr_resync_pending[idx]);
->         wake_up(&conf->wait_barrier);
->  }
-> 
-> @@ -1018,7 +1018,8 @@ static int get_unqueued_pending()
->         int idx, ret;
-> 
->         for (ret = 0, idx = 0; idx < BARRIER_BUCKETS_NR; idx++)
-> -               ret += atomic_read(&conf->nr_pending[idx]) -
-> +               ret += atomic_read(&conf->nr_pending[idx]) +
-> +                       atomic_read(&conf->nr_resync_pending[idx]) -
->                         atomic_read(&conf->nr_queued[idx]);
-> 
->         return ret;
-> 
-> Xiao,
-> 
-> Nice catch! From your email, it seems resync request on raid1 device can
-> be non-linear, otherwise, it won't hit same barrier bucket by different
-> resync I/O to raise barrier. This is some thing I don't know. Thank you !
-
-Hi Coly and shaohua
-
-Sorry I don't understand "non-linear raid1 device". What's the meaning about this?
-In raid1_sync_request, it can handle RESYNC_PAGES pages. It's 64KB. So there is a
-chance that different resync requests hit the same bucket id. Because the bucket unit
-is 64MB. Am I right?
-> 
-> The reason to increase conf->nr_pending[idx] is from 'commit 34e97f17
-> ("md/raid1: count resync requests in nr_pending.")', because normal I/O
-> and resync I/O can happen at same time on same raid1 device. And both of
-> them can be queued by reschedule_retry(), raise_barrier() need to
-> increase conf->nr_pending[idx] to make sure pending I/Os will be equal
-> to queued I/Os when array is frozen. We cannot remove
-> conf->nr_pending[idx] operations from raise_barrier()/lower_barrier().
-> 
-> Would you like to compose a patch by Shaohua's suggestion ?
+> Then we could have something like the following (untested) in mdadm.
+> Does that seem more suitable?
 > 
 
+Yes, please, if possible, go for a permanent udev rule surely - this
+will make it much easier for other foreign tools to hook in properly if
+needed and it would also be much easier to debug.
 
-Sure, I'll re-send the patch later. 
+But, wouldn't it be better if we could just pass this information ("not
+initialized yet") as RUN_ARRAY md ioctl parameter? In that case the md
+driver in kernel could add the variable to the uevent it generates which
+userspace udev rules could check for easily. This way, we don't need to
+hassle with creating files in filesystem and the information would be
+directly a part of the uevent the md kernel driver generates (so
+directly accessible in udev rules too). Also, possibly adding more
+variables for other future scenarios if needed.
 
-At first I didn't understand the relationship about nr_pending and nr_queued. 
-If I remove the action adding nr_pending for resync requests. There maybe one
-deadlock in freeze_array. Thanks for the explanation. 
+We use something similar in device-mapper already where we pass flags
+(besides other things) as a device-mapper ioctl parameter which then
+gets into the uevent as DM_COOKIE uevent variable (which in turn the
+udev rules can decode into individual flags). This method proved to be
+working well for us to solve the problem of uninitialized data area so
+we don't get into trouble with scans from udev (see also dm_ioctl
+structure in usr/include/linux/dm-ioctl.h and the dm_kobject_uevent
+function in drivers/md/dm.c for the kernel part; in udev rules the flags
+are then various DM_UDEV_* variables we check for)
 
-Regards
-Xiao
+-- 
+Peter
