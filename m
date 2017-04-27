@@ -1,104 +1,61 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: Re: [bug report] md-cluster: Fix adding of new disk with new reload
- code
-Date: Thu, 27 Apr 2017 10:52:00 +0800
-Message-ID: <59015CD0.3080505@suse.com>
-References: <20170426195940.l64pymopsbv36o7e@mwanda>
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Subject: Re: [PATCH v2 07/21] crypto: shash, caam: Make use of the new sg_map
+ helper function
+Date: Thu, 27 Apr 2017 11:56:03 +0800
+Message-ID: <20170427035603.GA32212@gondor.apana.org.au>
+References: <1493144468-22493-1-git-send-email-logang@deltatee.com>
+ <1493144468-22493-8-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170426195940.l64pymopsbv36o7e@mwanda>
-Sender: linux-raid-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>, rgoldwyn@suse.com
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1493144468-22493-8-git-send-email-logang@deltatee.com>
+Sender: netdev-owner@vger.kernel.org
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org, linux-nvdimm@lists.01.org, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, megaraidlinux.pdl@broadcom.com, sparmaintainer@unisys.com, devel@driverdev.osuosl.org, target-devel@vger.kernel.org, netdev@vger.kernel.org, linux-rdma@vger.kernel.org, dm-devel@redhat.com, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Jens Axboe <axboe@kernel.dk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>
 List-Id: linux-raid.ids
 
-HI,
+On Tue, Apr 25, 2017 at 12:20:54PM -0600, Logan Gunthorpe wrote:
+> Very straightforward conversion to the new function in the caam driver
+> and shash library.
+> 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Cc: Herbert Xu <herbert@gondor.apana.org.au>
+> Cc: "David S. Miller" <davem@davemloft.net>
+> ---
+>  crypto/shash.c                | 9 ++++++---
+>  drivers/crypto/caam/caamalg.c | 8 +++-----
+>  2 files changed, 9 insertions(+), 8 deletions(-)
+> 
+> diff --git a/crypto/shash.c b/crypto/shash.c
+> index 5e31c8d..5914881 100644
+> --- a/crypto/shash.c
+> +++ b/crypto/shash.c
+> @@ -283,10 +283,13 @@ int shash_ahash_digest(struct ahash_request *req, struct shash_desc *desc)
+>  	if (nbytes < min(sg->length, ((unsigned int)(PAGE_SIZE)) - offset)) {
+>  		void *data;
+>  
+> -		data = kmap_atomic(sg_page(sg));
+> -		err = crypto_shash_digest(desc, data + offset, nbytes,
+> +		data = sg_map(sg, 0, SG_KMAP_ATOMIC);
+> +		if (IS_ERR(data))
+> +			return PTR_ERR(data);
+> +
+> +		err = crypto_shash_digest(desc, data, nbytes,
+>  					  req->result);
+> -		kunmap_atomic(data);
+> +		sg_unmap(sg, data, 0, SG_KMAP_ATOMIC);
+>  		crypto_yield(desc->flags);
+>  	} else
+>  		err = crypto_shash_init(desc) ?:
 
-Thanks for check.
+Nack.  This is an optimisation for the special case of a single
+SG list entry.  In fact in the common case the kmap_atomic should
+disappear altogether in the no-highmem case.  So replacing it
+with sg_map is not acceptable.
 
-On 04/27/2017 03:59 AM, Dan Carpenter wrote:
-> Hello Goldwyn Rodrigues,
->
-> The patch dbb64f8635f5: "md-cluster: Fix adding of new disk with new
-> reload code" from Oct 1, 2015, leads to the following static checker
-> warning:
->
-> 	drivers/md/md-cluster.c:1341 add_new_disk()
-> 	warn: inconsistent returns 'cinfo->recv_mutex'.
-> 	  Locked on  : 1315,1341
-> 	  Unlocked on: 1341
->
-> drivers/md/md-cluster.c
->    1300  static int add_new_disk(struct mddev *mddev, struct md_rdev *rdev)
->    1301  {
->    1302          struct md_cluster_info *cinfo = mddev->cluster_info;
->    1303          struct cluster_msg cmsg;
->    1304          int ret = 0;
->    1305          struct mdp_superblock_1 *sb = page_address(rdev->sb_page);
->    1306          char *uuid = sb->device_uuid;
->    1307
->    1308          memset(&cmsg, 0, sizeof(cmsg));
->    1309          cmsg.type = cpu_to_le32(NEWDISK);
->    1310          memcpy(cmsg.uuid, uuid, 16);
->    1311          cmsg.raid_slot = cpu_to_le32(rdev->desc_nr);
->    1312          lock_comm(cinfo, 1);
->                  ^^^^^^^^^^^^^^^^^^^
-> We take the lock here.
->
->    1313          ret = __sendmsg(cinfo, &cmsg);
->    1314          if (ret)
->    1315                  return ret;
->
-> Should we unlock on failure here?
-
-I agree we may need the unlock here, since both add_new_disk_cancel and
-unlock_comm are not called for the failure case, it is not right.
-
-But I think Goldwyn knows better, let's wait for his comment.
-
-
->    1316          cinfo->no_new_dev_lockres->flags |= DLM_LKF_NOQUEUE;
->    1317          ret = dlm_lock_sync(cinfo->no_new_dev_lockres, DLM_LOCK_EX);
->    1318          cinfo->no_new_dev_lockres->flags &= ~DLM_LKF_NOQUEUE;
->    1319          /* Some node does not "see" the device */
->    1320          if (ret == -EAGAIN)
->    1321                  ret = -ENOENT;
->    1322          if (ret)
->    1323                  unlock_comm(cinfo);
->
-> Because we do here.  I think we're only supposed to hold the lock on
-> success but how this all works with cancel etc looked slightly
-> complicated so I decided to ask instead of sending a patch.
-
-Please take a look with comments from L1326 to L1337, unlock will be 
-called eventually by
-metadata_update_finish (for successful case) or 
-metadata_update_cancel/add_new_disk_cancel
-(for failure case).
-
->
->    1324          else {
->    1325                  dlm_lock_sync(cinfo->no_new_dev_lockres, DLM_LOCK_CR);
->    1326                  /* Since MD_CHANGE_DEVS will be set in add_bound_rdev which
->    1327                   * will run soon after add_new_disk, the below path will be
->    1328                   * invoked:
->    1329                   *   md_wakeup_thread(mddev->thread)
->    1330                   *      -> conf->thread (raid1d)
->    1331                   *      -> md_check_recovery -> md_update_sb
->    1332                   *      -> metadata_update_start/finish
->    1333                   * MD_CLUSTER_SEND_LOCKED_ALREADY will be cleared eventually.
->    1334                   *
->    1335                   * For other failure cases, metadata_update_cancel and
->    1336                   * add_new_disk_cancel also clear below bit as well.
->    1337                   * */
->    1338                  set_bit(MD_CLUSTER_SEND_LOCKED_ALREADY, &cinfo->state);
->    1339                  wake_up(&cinfo->wait);
->    1340          }
->    1341          return ret;
->    1342  }
->
-
-Regards,
-Guoqing
+Cheers,
+-- 
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
