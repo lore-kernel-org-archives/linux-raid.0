@@ -1,59 +1,80 @@
-From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: Re: [PATCH v2 15/21] xen-blkfront: Make use of the new sg_map helper
- function
-Date: Thu, 27 Apr 2017 17:03:45 -0600
-Message-ID: <3a7c0d27-0744-4e91-b37f-3885c50455e8@deltatee.com>
-References: <1493144468-22493-1-git-send-email-logang@deltatee.com>
- <1493144468-22493-16-git-send-email-logang@deltatee.com>
- <20170426073720.okv33ly2ldepilti@dhcp-3-128.uk.xensource.com>
- <df6586e2-7d45-6b0b-facb-4dea882df06e@deltatee.com>
- <20170427205339.GB26330@obsidianresearch.com>
- <02ba3c7b-5fab-a06c-fbbf-c3be1c0fae1b@deltatee.com>
- <20170427221132.GA30036@obsidianresearch.com>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Subject: Re: Recover array after I panicked
+Date: Fri, 28 Apr 2017 01:12:42 +0200
+Message-ID: <20170427231242.GA5138@metamorpher.de>
+References: <20170424123706.GA6798@metamorpher.de>
+ <CAHKno4BR3kdsLU9AnNHvarc-e6UibNr7WQks2ssPX4pE1ZoUpA@mail.gmail.com>
+ <20170424133946.GA7057@metamorpher.de>
+ <727eeaf5-b856-305d-99b6-e42f3383b699@powerlamerz.org>
+ <20170425001614.GA3936@metamorpher.de>
+ <CAHKno4A7umuNBUPaHk0vmgj2fnjPgBi2oZJWidhKKaRX7ekgKA@mail.gmail.com>
+ <20170425090122.GA4488@metamorpher.de>
+ <CAHKno4AuKNxYiMazUy+hRJ2kJCdNNYw5L0uExvWc_52Ocn5V=g@mail.gmail.com>
+ <20170425110807.GA5159@metamorpher.de>
+ <5c3f7876-1b25-7020-5e7d-01776e7c9903@powerlamerz.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <20170427221132.GA30036-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
-Cc: Boris Ostrovsky <boris.ostrovsky-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Juergen Gross <jgross-IBi9RG/b67k@public.gmane.org>, Julien Grall <julien.grall-5wv7dgnIgG8@public.gmane.org>, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, sparmaintainer-GLv8BlqOqDDQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, megaraidlinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh@linuxfoundati>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <5c3f7876-1b25-7020-5e7d-01776e7c9903@powerlamerz.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Patrik =?iso-8859-1?Q?Dahlstr=F6m?= <risca@powerlamerz.org>
+Cc: Brad Campbell <lists2009@fnarfbargle.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thu, Apr 27, 2017 at 09:57:20PM +0200, Patrik Dahlström wrote:
+> Success! Using a 126M as data offset gave me valid data for the 5 disk
+> raid and using linear device mapping I'm able to access my data again.
 
+Nice.
 
-On 27/04/17 04:11 PM, Jason Gunthorpe wrote:
-> On Thu, Apr 27, 2017 at 03:53:37PM -0600, Logan Gunthorpe wrote:
-> Well, that is in the current form, with more users it would make sense
-> to optimize for the single page case, eg by providing the existing
-> call, providing a faster single-page-only variant of the copy, perhaps
-> even one that is inlined.
+> Some is probably corrupted from my previous destructive recovery
+> attempts, but it seems like most of the data is still there and
+> accessible. I will start backup up the most essential data now.
 
-Ok, does it make sense then to have an sg_copy_page_to_buffer (or some
-such... I'm having trouble thinking of a sane name that isn't too long).
-That just does k(un)map_atomic and memcpy? I could try that if it makes
-sense to people.
+If nothing else happened, I'd expect it to be intact (or at least 
+not any more corrupt than it would be after a regular power loss).
+If you encounter any files with corrupted contents, you could use 
+`filefrag` or `hdparm --fibmap` to determine where it is physically 
+located and then perhaps see if that's anywhere near your danger zone. 
+It could still mean you didn't choose the correct X for linear mapping.
 
->> Switching the for_each_sg to sg_miter is probably the nicer solution as
->> it takes care of the mapping and the offset/length accounting for you
->> and will have similar performance.
+But of course, I don't know everything that happened. :-P
+
+> > This is only a way to get read access at the data, making the raid 
+> > work as a standalone again (resume reshape with lost raid metadata) 
+> > is another problem, to be tackled after you backed up your data ;)
 > 
-> sg_miter will still fail when the sg contains __iomem, however I would
-> expect that the sg_copy will work with iomem, by using the __iomem
-> memcpy variant.
+> Now, how do we do this?
 
-Yes, that's true. Any sg_miters that ever see iomem will need to be
-converted to support it. This isn't much different than the other
-kmap(sg_page()) users I was converting that will also fail if they see
-iomem. Though, I suspect an sg_miter user would be easier to convert to
-iomem than a random kmap user.
+Well, there's an elegant approach that works beautifully and perfectly 
+and entirely risk free... and then there's a simple, stupid, quick&dirty.
+Only problem is, I'm way too lazy to describe the elegant one. Shucks.
 
-Logan
+The quick and dirty method is... grow using dd from 5disk raid (overlay)
+to 6disk raid (no overlay) starting from the correct offset (verify!). 
+That resumes your reshape in an offline-ish, hackish manner, and once 
+it's done you have the whole thing. That's the theory anyway.
+
+Pseudocode:
+
+mdadm --create /dev/md5 --assume-clean /dev/overlay/{a,b,c}
+mdadm --create /dev/md6 --assume-clean /dev/{a,b,c,d} # +1 drive
+losetup --offset=X /dev/loop55 /dev/md5
+losetup --offset=X /dev/loop66 /dev/md6
+cmp /dev/loop55 /dev/loop66 # much identical, so wow
+dd bs=1M status=progress if=/dev/loop55 of=/dev/loop66
+
+It's dangerous, okay?
+I didn't tell you to do it, okay?
+Don't blame me, okay?
+Backup your stuff first, okay?
+
+As this writes to your drives, you have only one shot to get it right.
+You're not allowed to mount until dd is done. It's an offline operation.
+If dd were to be aborted for any reason, the offset would shift to X+n.
+If dd were to encounter write errors without aborting, corruption ensues.
+
+Regards
+Andreas Klauer
