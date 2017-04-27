@@ -1,50 +1,55 @@
-From: Reindl Harald <h.reindl@thelounge.net>
-Subject: Re: Recovery on new 2TB disk: finish=7248.4min (raid1)
-Date: Thu, 27 Apr 2017 21:42:27 +0200
-Message-ID: <b74c3cae-a55d-9306-16fe-5b811c20ec89@thelounge.net>
-References: <590117CD.1000009@tesco.net>
- <22785.65375.947842.648174@quad.stoffel.home>
- <5492628.c8B43Z4h0G@matkor-lenovo>
- <22786.16524.435313.304834@quad.stoffel.home>
+From: =?UTF-8?Q?Patrik_Dahlstr=c3=b6m?= <risca@powerlamerz.org>
+Subject: Re: Recover array after I panicked
+Date: Thu, 27 Apr 2017 21:57:20 +0200
+Message-ID: <5c3f7876-1b25-7020-5e7d-01776e7c9903@powerlamerz.org>
+References: <20170424110455.GA4949@metamorpher.de>
+ <CAHKno4A12N6UGGtJQJRkY0aPbFBBf0Rek91th9Cnx6XWJGouWg@mail.gmail.com>
+ <20170424123706.GA6798@metamorpher.de>
+ <CAHKno4BR3kdsLU9AnNHvarc-e6UibNr7WQks2ssPX4pE1ZoUpA@mail.gmail.com>
+ <20170424133946.GA7057@metamorpher.de>
+ <727eeaf5-b856-305d-99b6-e42f3383b699@powerlamerz.org>
+ <20170425001614.GA3936@metamorpher.de>
+ <CAHKno4A7umuNBUPaHk0vmgj2fnjPgBi2oZJWidhKKaRX7ekgKA@mail.gmail.com>
+ <20170425090122.GA4488@metamorpher.de>
+ <CAHKno4AuKNxYiMazUy+hRJ2kJCdNNYw5L0uExvWc_52Ocn5V=g@mail.gmail.com>
+ <20170425110807.GA5159@metamorpher.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <22786.16524.435313.304834@quad.stoffel.home>
-Content-Language: de-CH
+In-Reply-To: <20170425110807.GA5159@metamorpher.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Stoffel <john@stoffel.org>, Mateusz Korniak <mateusz-lists@ant.gliwice.pl>
-Cc: Ron Leach <ronleach@tesco.net>, linux-raid@vger.kernel.org
+To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Cc: Brad Campbell <lists2009@fnarfbargle.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-
-Am 27.04.2017 um 21:03 schrieb John Stoffel:
-> Mateusz> They will be synced one by one, just like one big md device.
+On 04/25/2017 01:08 PM, Andreas Klauer wrote:
+> On Tue, Apr 25, 2017 at 12:40:37PM +0200, Patrik Dahlström wrote:
+>> You mentioned something about linear device mapping before. What is
+>> that? Is it something I could experiment with? How do I do that?
 > 
-> No, big MD devices are sync'd in parallel assuming MD thinks they're
-> on seperate devices
-
-if they are on sepearte drives it's no problem and no "seek storm"
-
-> Now in this case I admit I might have jumped the
-> gun, but I'm mostly commenting on the use of multiple MD RAID setups
-> on a single pair of disks.
+> https://www.kernel.org/doc/Documentation/device-mapper/linear.txt
 > 
-> It's inefficient.  It's a pain to manage.  You lose flexibility to
-> resize.
+> Once you have found where data overlaps on both raids, you create 
+> a linear mapping of start..X of the 6disk raid, followed by X..end 
+> of the 5disk RAID.
+> 
+> That way you get a device that holds your data intact as a whole, 
+> whereas the raid sets would give you the first half of data on 
+> the 6disk raid set (what was already reshaped) and the other half 
+> on the 5disk raid set (what had yet to be reshaped).
 
-which don't matter if you have LVM on top
+Success! Using a 126M as data offset gave me valid data for the 5 disk
+raid and using linear device mapping I'm able to access my data again.
+Some is probably corrupted from my previous destructive recovery
+attempts, but it seems like most of the data is still there and
+accessible. I will start backup up the most essential data now.
 
-> Just create a single MD device across the entire disk (or possibly two
-> if you want to boot off one mirrored pair) and then use LVM on top to
-> carve out storage.  More flexible
+> This is only a way to get read access at the data, making the raid 
+> work as a standalone again (resume reshape with lost raid metadata) 
+> is another problem, to be tackled after you backed up your data ;)
 
-but you can't boot from a RAID5/RAID6/RAID10 so you have a single point 
-of failure of a single boot disk or need at least two additional disks 
-for a redundant boot device
+Now, how do we do this?
 
-frankly on a proper designed storage machine you have no need for 
-flexibility and resize because for it's entire lifetime you have enough 
-storage at all and in case of LVM it don't matter how many md-devices 
-are underlying the LVM
+// Patrik
