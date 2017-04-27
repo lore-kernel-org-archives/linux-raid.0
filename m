@@ -1,57 +1,78 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2 01/21] scatterlist: Introduce sg_map helper functions
-Date: Thu, 27 Apr 2017 08:53:38 +0200
-Message-ID: <20170427065338.GA20677@lst.de>
-References: <1493144468-22493-1-git-send-email-logang@deltatee.com> <1493144468-22493-2-git-send-email-logang@deltatee.com> <20170426074416.GA7936@lst.de> <4736d44e-bbcf-5d59-a1a9-317d0f4da847@deltatee.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-crypto-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4736d44e-bbcf-5d59-a1a9-317d0f4da847@deltatee.com>
-Sender: linux-crypto-owner@vger.kernel.org
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org, linux-nvdimm@lists.01.org, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, megaraidlinux.pdl@broadcom.com, sparmaintainer@unisys.com, devel@driverdev.osuosl.org, target-devel@vger.kernel.org, netdev@vger.kernel.org, linux-rdma@vger.kernel.org, dm-devel@redhat.com, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Jens Axboe <axboe@kernel.dk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>
+From: Xiao Ni <xni@redhat.com>
+Subject: [MD PATCH v2 1/1] Use a new variable to count flighting sync requests
+Date: Thu, 27 Apr 2017 16:28:49 +0800
+Message-ID: <1493281729-5366-1-git-send-email-xni@redhat.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: shli@kernel.org, colyli@suse.de, ncroxon@redhat.com
 List-Id: linux-raid.ids
 
-On Wed, Apr 26, 2017 at 12:11:33PM -0600, Logan Gunthorpe wrote:
-> Ok, well for starters I think you are mistaken about kmap being able to
-> fail. I'm having a hard time finding many users of that function that
-> bother to check for an error when calling it.
+In new barrier codes, raise_barrier waits if conf->nr_pending[idx] is not zero.
+After all the conditions are true, the resync request can go on be handled. But
+it adds conf->nr_pending[idx] again. The next resync request hit the same bucket
+idx need to wait the resync request which is submitted before. The performance
+of resync/recovery is degraded.
+So we should use a new variable to count sync requests which are in flight.
 
-A quick audit of the arch code shows you're right - kmap can't fail
-anywhere anymore.
+I did a simple test:
+1. Without the patch, create a raid1 with two disks. The resync speed:
+Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s avgrq-sz avgqu-sz   await r_await w_await  svctm  %util
+sdb               0.00     0.00  166.00    0.00    10.38     0.00   128.00     0.03    0.20    0.20    0.00   0.19   3.20
+sdc               0.00     0.00    0.00  166.00     0.00    10.38   128.00     0.96    5.77    0.00    5.77   5.75  95.50
+2. With the patch, the result is:
+sdb            2214.00     0.00  766.00    0.00   185.69     0.00   496.46     2.80    3.66    3.66    0.00   1.03  79.10
+sdc               0.00  2205.00    0.00  769.00     0.00   186.44   496.52     5.25    6.84    0.00    6.84   1.30 100.10
 
-> The main difficulty we
-> have now is that neither of those functions are expected to fail and we
-> need them to be able to in cases where the page doesn't map to system
-> RAM. This patch series is trying to address it for users of scatterlist.
-> I'm certainly open to other suggestions.
+Suggested-by: Shaohua Li <shli@kernel.org>
+Signed-off-by: Xiao Ni <xni@redhat.com>
+---
+ drivers/md/raid1.c | 5 +++--
+ drivers/md/raid1.h | 1 +
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-I think you'll need to follow the existing kmap semantics and never
-fail the iomem version either.  Otherwise you'll have a special case
-that's almost never used that has a different error path.
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index a34f587..ff5ee53 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -869,7 +869,7 @@ static void raise_barrier(struct r1conf *conf, sector_t sector_nr)
+ 			     atomic_read(&conf->barrier[idx]) < RESYNC_DEPTH,
+ 			    conf->resync_lock);
+ 
+-	atomic_inc(&conf->nr_pending[idx]);
++	atomic_inc(&conf->nr_sync_pending);
+ 	spin_unlock_irq(&conf->resync_lock);
+ }
+ 
+@@ -880,7 +880,7 @@ static void lower_barrier(struct r1conf *conf, sector_t sector_nr)
+ 	BUG_ON(atomic_read(&conf->barrier[idx]) <= 0);
+ 
+ 	atomic_dec(&conf->barrier[idx]);
+-	atomic_dec(&conf->nr_pending[idx]);
++	atomic_dec(&conf->nr_sync_pending);
+ 	wake_up(&conf->wait_barrier);
+ }
+ 
+@@ -1017,6 +1017,7 @@ static int get_unqueued_pending(struct r1conf *conf)
+ {
+ 	int idx, ret;
+ 
++	ret = atomic_read(&conf->nr_sync_pending);
+ 	for (ret = 0, idx = 0; idx < BARRIER_BUCKETS_NR; idx++)
+ 		ret += atomic_read(&conf->nr_pending[idx]) -
+ 			atomic_read(&conf->nr_queued[idx]);
+diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
+index dd22a37..1668f22 100644
+--- a/drivers/md/raid1.h
++++ b/drivers/md/raid1.h
+@@ -84,6 +84,7 @@ struct r1conf {
+ 	 */
+ 	wait_queue_head_t	wait_barrier;
+ 	spinlock_t		resync_lock;
++	atomic_t		nr_sync_pending;
+ 	atomic_t		*nr_pending;
+ 	atomic_t		*nr_waiting;
+ 	atomic_t		*nr_queued;
+-- 
+2.7.4
 
-> There are a fair number of cases in the kernel that do something like:
-> 
-> if (something)
->     x = kmap(page);
-> else
->     x = kmap_atomic(page);
-> ...
-> if (something)
->     kunmap(page)
-> else
->     kunmap_atomic(x)
-> 
-> Which just seems cumbersome to me.
-
-Passing a different flag based on something isn't really much better.
-
-> In any case, if you can accept an sg_kmap and sg_kmap_atomic api just
-> say so and I'll make the change. But I'll still need a flags variable
-> for SG_MAP_MUST_NOT_FAIL to support legacy cases that have no fail path
-> and both of those functions will need to be pretty nearly replicas of
-> each other.
-
-Again, wrong way.  Suddenly making things fail for your special case
-that normally don't fail is a receipe for bugs.
