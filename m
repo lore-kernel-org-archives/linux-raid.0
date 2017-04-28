@@ -1,41 +1,138 @@
-From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
-Subject: Re: How important is SCTERC?
-Date: Fri, 28 Apr 2017 14:07:51 +0100
-Message-ID: <22787.16039.574815.87299@tree.ty.sabi.co.uk>
-References: <48135126-cd8e-6321-77e6-06ae349ecc03@gmail.com>
+From: Khem Raj <raj.khem@gmail.com>
+Subject: Re: [PATCH] Add a comment to indicate valid fallthrough
+Date: Fri, 28 Apr 2017 08:16:49 -0700
+Message-ID: <CAMKF1srRpPc6P_etZAv3eUx9HewTDF5yoF3pnjZeVGH9Pizq1A@mail.gmail.com>
+References: <20170419191327.5343-1-raj.khem@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <48135126-cd8e-6321-77e6-06ae349ecc03@gmail.com>
+In-Reply-To: <20170419191327.5343-1-raj.khem@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: Khem Raj <raj.khem@gmail.com>
 List-Id: linux-raid.ids
 
-> [ ... ] I do run tler.sh that sets 180s timeout for drives
-> that do not have scterc from /etc/rc.local. Am I putting my
-> data in serious danger?
+ping
 
-No.
-
-> I only have videos and tv recordings in this md
-
-The problem with SCT/ERC absence is that the 2-3 minutes of
-retries suspend IO for that long, and for people running
-interactive applications (usually LAMP-style web applications)
-that is a bad idea, but in your case you seem to have just a
-personal archive of entertainment files.
-
-For interactive "enterprise" applications the common practice is
-to reduce the error timeout to 1-2 seconds, so the failing drive
-drops out of the MD set quickly and can be replaced, minimizing
-delays.
-
-> which can be replaced with significant effort (about 12TB of
-> movies and tv shows will take some time to copy from my
-> DVDs/BDs)
-
-Backups are very important, and RAID is not an alternative to
-backups. You can buy and use SMR disk drives as if they were
-tapes (or with a filesystem like NILFS2) to do that backup, and
-they are quite cheap.
+On Wed, Apr 19, 2017 at 12:13 PM, Khem Raj <raj.khem@gmail.com> wrote:
+> gcc7 warns about code with fallthroughs, this patch adds
+> the comment to indicate a valid fallthrough, helps gcc7
+> compiler warnings
+>
+> This works in cross and native compilation case
+>
+> Signed-off-by: Khem Raj <raj.khem@gmail.com>
+> ---
+>  Grow.c        | 4 ++++
+>  bitmap.c      | 8 ++++++++
+>  mdadm.c       | 2 ++
+>  super-intel.c | 1 +
+>  util.c        | 1 +
+>  5 files changed, 16 insertions(+)
+>
+> diff --git a/Grow.c b/Grow.c
+> index 455c5f9..27c73b1 100755
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -1257,6 +1257,7 @@ char *analyse_change(char *devname, struct mdinfo *info, struct reshape *re)
+>                 switch (info->new_level) {
+>                 case 4:
+>                         delta_parity = 1;
+> +                       /* fallthrough */
+>                 case 0:
+>                         re->level = 4;
+>                         re->before.layout = 0;
+> @@ -1284,10 +1285,12 @@ char *analyse_change(char *devname, struct mdinfo *info, struct reshape *re)
+>
+>         case 4:
+>                 info->array.layout = ALGORITHM_PARITY_N;
+> +               /* fallthrough */
+>         case 5:
+>                 switch (info->new_level) {
+>                 case 0:
+>                         delta_parity = -1;
+> +                       /* fallthrough */
+>                 case 4:
+>                         re->level = info->array.level;
+>                         re->before.data_disks = info->array.raid_disks - 1;
+> @@ -1343,6 +1346,7 @@ char *analyse_change(char *devname, struct mdinfo *info, struct reshape *re)
+>                 case 4:
+>                 case 5:
+>                         delta_parity = -1;
+> +                       /* fallthrough */
+>                 case 6:
+>                         re->level = 6;
+>                         re->before.data_disks = info->array.raid_disks - 2;
+> diff --git a/bitmap.c b/bitmap.c
+> index ccedfd3..a6ff091 100644
+> --- a/bitmap.c
+> +++ b/bitmap.c
+> @@ -82,13 +82,21 @@ static inline int count_dirty_bits_byte(char byte, int num_bits)
+>
+>         switch (num_bits) { /* fall through... */
+>                 case 8: if (byte & 128) num++;
+> +               /* fallthrough */
+>                 case 7: if (byte &  64) num++;
+> +               /* fallthrough */
+>                 case 6: if (byte &  32) num++;
+> +               /* fallthrough */
+>                 case 5: if (byte &  16) num++;
+> +               /* fallthrough */
+>                 case 4: if (byte &   8) num++;
+> +               /* fallthrough */
+>                 case 3: if (byte &   4) num++;
+> +               /* fallthrough */
+>                 case 2: if (byte &   2) num++;
+> +               /* fallthrough */
+>                 case 1: if (byte &   1) num++;
+> +               /* fallthrough */
+>                 default: break;
+>         }
+>
+> diff --git a/mdadm.c b/mdadm.c
+> index c3a265b..2d06d3b 100644
+> --- a/mdadm.c
+> +++ b/mdadm.c
+> @@ -148,6 +148,7 @@ int main(int argc, char *argv[])
+>                             mode == CREATE || mode == GROW ||
+>                             mode == INCREMENTAL || mode == MANAGE)
+>                                 break; /* b means bitmap */
+> +               /* fallthrough */
+>                 case Brief:
+>                         c.brief = 1;
+>                         continue;
+> @@ -828,6 +829,7 @@ int main(int argc, char *argv[])
+>
+>                 case O(INCREMENTAL,NoDegraded):
+>                         pr_err("--no-degraded is deprecated in Incremental mode\n");
+> +                       /* fallthrough */
+>                 case O(ASSEMBLE,NoDegraded): /* --no-degraded */
+>                         c.runstop = -1; /* --stop isn't allowed for --assemble,
+>                                          * so we overload slightly */
+> diff --git a/super-intel.c b/super-intel.c
+> index 4e466ff..00a2925 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -3271,6 +3271,7 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
+>                                                 << SECT_PER_MB_SHIFT;
+>                         }
+>                 }
+> +               /* fallthrough */
+>                 case MIGR_VERIFY:
+>                         /* we could emulate the checkpointing of
+>                          * 'sync_action=check' migrations, but for now
+> diff --git a/util.c b/util.c
+> index 32bd909..f2a4d19 100644
+> --- a/util.c
+> +++ b/util.c
+> @@ -335,6 +335,7 @@ unsigned long long parse_size(char *size)
+>                 switch (*c) {
+>                 case 'K':
+>                         c++;
+> +               /* fallthrough */
+>                 default:
+>                         s *= 2;
+>                         break;
+> --
+> 2.12.2
+>
