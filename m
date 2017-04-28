@@ -1,128 +1,85 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: Re: [MD PATCH v2 1/1] Use a new variable to count flighting sync
- requests
-Date: Fri, 28 Apr 2017 01:18:37 -0400 (EDT)
-Message-ID: <25286079.2019909.1493356717905.JavaMail.zimbra@redhat.com>
-References: <1493281729-5366-1-git-send-email-xni@redhat.com> <20170427205801.ev7hfj4vkgttlqex@kernel.org> <20170427210516.key5efxmifbxd3sz@kernel.org>
+From: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
+Subject: Re: [PATCH v2 07/21] crypto: shash, caam: Make use of the new sg_map
+ helper function
+Date: Fri, 28 Apr 2017 14:30:39 +0800
+Message-ID: <20170428063039.GB6817@gondor.apana.org.au>
+References: <1493144468-22493-1-git-send-email-logang@deltatee.com>
+ <1493144468-22493-8-git-send-email-logang@deltatee.com>
+ <20170427035603.GA32212@gondor.apana.org.au>
+ <94123cbf-3287-f05e-7267-0bcf08ab0a8b@deltatee.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170427210516.key5efxmifbxd3sz@kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, colyli@suse.de, ncroxon@redhat.com
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <94123cbf-3287-f05e-7267-0bcf08ab0a8b-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+Cc: dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, sparmaintainer-GLv8BlqOqDDQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, megaraidlinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
 List-Id: linux-raid.ids
 
-
-
------ Original Message -----
-> From: "Shaohua Li" <shli@kernel.org>
-> To: "Xiao Ni" <xni@redhat.com>
-> Cc: linux-raid@vger.kernel.org, colyli@suse.de, ncroxon@redhat.com
-> Sent: Friday, April 28, 2017 5:05:16 AM
-> Subject: Re: [MD PATCH v2 1/1] Use a new variable to count flighting sync requests
+On Thu, Apr 27, 2017 at 09:45:57AM -0600, Logan Gunthorpe wrote:
 > 
-> On Thu, Apr 27, 2017 at 01:58:01PM -0700, Shaohua Li wrote:
-> > On Thu, Apr 27, 2017 at 04:28:49PM +0800, Xiao Ni wrote:
-> > > In new barrier codes, raise_barrier waits if conf->nr_pending[idx] is not
-> > > zero.
-> > > After all the conditions are true, the resync request can go on be
-> > > handled. But
-> > > it adds conf->nr_pending[idx] again. The next resync request hit the same
-> > > bucket
-> > > idx need to wait the resync request which is submitted before. The
-> > > performance
-> > > of resync/recovery is degraded.
-> > > So we should use a new variable to count sync requests which are in
-> > > flight.
-> > > 
-> > > I did a simple test:
-> > > 1. Without the patch, create a raid1 with two disks. The resync speed:
-> > > Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s
-> > > avgrq-sz avgqu-sz   await r_await w_await  svctm  %util
-> > > sdb               0.00     0.00  166.00    0.00    10.38     0.00
-> > > 128.00     0.03    0.20    0.20    0.00   0.19   3.20
-> > > sdc               0.00     0.00    0.00  166.00     0.00    10.38
-> > > 128.00     0.96    5.77    0.00    5.77   5.75  95.50
-> > > 2. With the patch, the result is:
-> > > sdb            2214.00     0.00  766.00    0.00   185.69     0.00
-> > > 496.46     2.80    3.66    3.66    0.00   1.03  79.10
-> > > sdc               0.00  2205.00    0.00  769.00     0.00   186.44
-> > > 496.52     5.25    6.84    0.00    6.84   1.30 100.10
-> > > 
-> > > Suggested-by: Shaohua Li <shli@kernel.org>
-> > > Signed-off-by: Xiao Ni <xni@redhat.com>
+> 
+> On 26/04/17 09:56 PM, Herbert Xu wrote:
+> > On Tue, Apr 25, 2017 at 12:20:54PM -0600, Logan Gunthorpe wrote:
+> >> Very straightforward conversion to the new function in the caam driver
+> >> and shash library.
+> >>
+> >> Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+> >> Cc: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
+> >> Cc: "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+> >> ---
+> >>  crypto/shash.c                | 9 ++++++---
+> >>  drivers/crypto/caam/caamalg.c | 8 +++-----
+> >>  2 files changed, 9 insertions(+), 8 deletions(-)
+> >>
+> >> diff --git a/crypto/shash.c b/crypto/shash.c
+> >> index 5e31c8d..5914881 100644
+> >> --- a/crypto/shash.c
+> >> +++ b/crypto/shash.c
+> >> @@ -283,10 +283,13 @@ int shash_ahash_digest(struct ahash_request *req, struct shash_desc *desc)
+> >>  	if (nbytes < min(sg->length, ((unsigned int)(PAGE_SIZE)) - offset)) {
+> >>  		void *data;
+> >>  
+> >> -		data = kmap_atomic(sg_page(sg));
+> >> -		err = crypto_shash_digest(desc, data + offset, nbytes,
+> >> +		data = sg_map(sg, 0, SG_KMAP_ATOMIC);
+> >> +		if (IS_ERR(data))
+> >> +			return PTR_ERR(data);
+> >> +
+> >> +		err = crypto_shash_digest(desc, data, nbytes,
+> >>  					  req->result);
+> >> -		kunmap_atomic(data);
+> >> +		sg_unmap(sg, data, 0, SG_KMAP_ATOMIC);
+> >>  		crypto_yield(desc->flags);
+> >>  	} else
+> >>  		err = crypto_shash_init(desc) ?:
 > > 
-> > applied, thanks!
-> > > ---
-> > >  drivers/md/raid1.c | 5 +++--
-> > >  drivers/md/raid1.h | 1 +
-> > >  2 files changed, 4 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> > > index a34f587..ff5ee53 100644
-> > > --- a/drivers/md/raid1.c
-> > > +++ b/drivers/md/raid1.c
-> > > @@ -869,7 +869,7 @@ static void raise_barrier(struct r1conf *conf,
-> > > sector_t sector_nr)
-> > >  			     atomic_read(&conf->barrier[idx]) < RESYNC_DEPTH,
-> > >  			    conf->resync_lock);
-> > >  
-> > > -	atomic_inc(&conf->nr_pending[idx]);
-> > > +	atomic_inc(&conf->nr_sync_pending);
-> > >  	spin_unlock_irq(&conf->resync_lock);
-> > >  }
-> > >  
-> > > @@ -880,7 +880,7 @@ static void lower_barrier(struct r1conf *conf,
-> > > sector_t sector_nr)
-> > >  	BUG_ON(atomic_read(&conf->barrier[idx]) <= 0);
-> > >  
-> > >  	atomic_dec(&conf->barrier[idx]);
-> > > -	atomic_dec(&conf->nr_pending[idx]);
-> > > +	atomic_dec(&conf->nr_sync_pending);
-> > >  	wake_up(&conf->wait_barrier);
-> > >  }
-> > >  
-> > > @@ -1017,6 +1017,7 @@ static int get_unqueued_pending(struct r1conf
-> > > *conf)
-> > >  {
-> > >  	int idx, ret;
-> > >  
-> > > +	ret = atomic_read(&conf->nr_sync_pending);
-> > >  	for (ret = 0, idx = 0; idx < BARRIER_BUCKETS_NR; idx++)
+> > Nack.  This is an optimisation for the special case of a single
+> > SG list entry.  In fact in the common case the kmap_atomic should
+> > disappear altogether in the no-highmem case.  So replacing it
+> > with sg_map is not acceptable.
 > 
-> actually I deleted the 'ret = 0'
+> What you seem to have missed is that sg_map is just a thin wrapper
+> around kmap_atomic. Perhaps with a future check for a mappable page.
+> This change should have zero impact on performance.
 
-Sorry, I didn't notice this. I need more attention. And thanks
-for the modification. 
+You are right.  Indeed the existing code looks buggy as they
+don't take sg->offset into account when doing the kmap.  Could
+you send me some patches that fix these problems first so that
+they can be easily backported?
 
-Xiao 
-
-> 
-> > >  		ret += atomic_read(&conf->nr_pending[idx]) -
-> > >  			atomic_read(&conf->nr_queued[idx]);
-> > > diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
-> > > index dd22a37..1668f22 100644
-> > > --- a/drivers/md/raid1.h
-> > > +++ b/drivers/md/raid1.h
-> > > @@ -84,6 +84,7 @@ struct r1conf {
-> > >  	 */
-> > >  	wait_queue_head_t	wait_barrier;
-> > >  	spinlock_t		resync_lock;
-> > > +	atomic_t		nr_sync_pending;
-> > >  	atomic_t		*nr_pending;
-> > >  	atomic_t		*nr_waiting;
-> > >  	atomic_t		*nr_queued;
-> > > --
-> > > 2.7.4
-> > > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Thanks,
+-- 
+Email: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
