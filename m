@@ -1,35 +1,59 @@
-From: =?UTF-8?Q?Patrik_Dahlstr=C3=B6m?= <risca@powerlamerz.org>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
 Subject: Re: Recover array after I panicked
-Date: Fri, 28 Apr 2017 12:31:43 +0200
-Message-ID: <CAHKno4DWXfOw-ejU5zfh_A8WiG7haSafNTbJLM4Ue1oTCFksyw@mail.gmail.com>
-References: <20170424133946.GA7057@metamorpher.de> <727eeaf5-b856-305d-99b6-e42f3383b699@powerlamerz.org>
- <20170425001614.GA3936@metamorpher.de> <CAHKno4A7umuNBUPaHk0vmgj2fnjPgBi2oZJWidhKKaRX7ekgKA@mail.gmail.com>
- <20170425090122.GA4488@metamorpher.de> <CAHKno4AuKNxYiMazUy+hRJ2kJCdNNYw5L0uExvWc_52Ocn5V=g@mail.gmail.com>
- <20170425110807.GA5159@metamorpher.de> <5c3f7876-1b25-7020-5e7d-01776e7c9903@powerlamerz.org>
- <20170427231242.GA5138@metamorpher.de> <CAHKno4DBXT5n7wYosie_WHBhzXnHj0CFkdjv7_VAN2NVF-Ng4g@mail.gmail.com>
+Date: Fri, 28 Apr 2017 13:39:25 +0200
+Message-ID: <20170428113925.GB3793@metamorpher.de>
+References: <20170425001614.GA3936@metamorpher.de>
+ <CAHKno4A7umuNBUPaHk0vmgj2fnjPgBi2oZJWidhKKaRX7ekgKA@mail.gmail.com>
+ <20170425090122.GA4488@metamorpher.de>
+ <CAHKno4AuKNxYiMazUy+hRJ2kJCdNNYw5L0uExvWc_52Ocn5V=g@mail.gmail.com>
+ <20170425110807.GA5159@metamorpher.de>
+ <5c3f7876-1b25-7020-5e7d-01776e7c9903@powerlamerz.org>
+ <20170427231242.GA5138@metamorpher.de>
+ <CAHKno4DBXT5n7wYosie_WHBhzXnHj0CFkdjv7_VAN2NVF-Ng4g@mail.gmail.com>
  <20170428095252.GA3793@metamorpher.de>
+ <CAHKno4DWXfOw-ejU5zfh_A8WiG7haSafNTbJLM4Ue1oTCFksyw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170428095252.GA3793@metamorpher.de>
+Content-Disposition: inline
+In-Reply-To: <CAHKno4DWXfOw-ejU5zfh_A8WiG7haSafNTbJLM4Ue1oTCFksyw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+To: Patrik =?iso-8859-1?Q?Dahlstr=F6m?= <risca@powerlamerz.org>
 Cc: Brad Campbell <lists2009@fnarfbargle.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2017-04-28 11:52 GMT+02:00, Andreas Klauer <Andreas.Klauer@metamorpher.de>:
-> On Fri, Apr 28, 2017 at 09:11:45AM +0200, Patrik Dahlstr=C3=B6m wrote:
->> Is it missing a 'skip=3D<offset/1M>'  here?
->
-> In this example the offset is provided by the loop devices.
->
-Yes, I saw that after I sent my reply.
+On Fri, Apr 28, 2017 at 12:31:43PM +0200, Patrik Dahlström wrote:
+> Can't I reduce my risks by doing it the other way around?
 
-Can't I reduce my risks by doing it the other way around? Restore the
-5 disk raid and then restart the reshape?
-dd if=3D/dev/md6 bs=3D1M count=3DX/1M of=3D/dev/md5
-mdadm --grow --raid-devices=3D6 /dev/md5 --add /dev/sdf
---backup-file=3D/root/grow_md5.bak
+Not like this.
 
-It's a bit more disk I/O, but less risk
+> dd if=/dev/md6 bs=1M count=X/1M of=/dev/md5
+
+Writes into data you haven't read yet, so you end up reading data 
+you just wrote and write that again... the result will be garbage.
+
+ddrescue has a reverse mode but implementation details matter a lot. 
+It might be tempting because your progress is just 10-20%ish but 
+going forwards is a lot safer here.
+
+If you must go backwards you should use mdadm's revert-reshape 
+for which you need RAID metadata that properly represents the 
+current mid-grow state of your RAID (the elegant approach).
+
+You can produce such metadata by
+
+truncate -s <drivesize> a b c d e f
+losetup --find -show
+mdadm --create 5disk
+mdadm --grow 6disk
+<fallocate punchhole in the background>
+<adapt sync_speed_min/max in the background>
+<watch progress until X>
+mdadm --stop
+mdadm --examine <verify correct offsets and reshape pos'n>
+
+Tadaa.
+
+Regards
+Andreas Klauer
