@@ -1,85 +1,54 @@
-From: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
-Subject: Re: [PATCH v2 07/21] crypto: shash, caam: Make use of the new sg_map
- helper function
-Date: Fri, 28 Apr 2017 14:30:39 +0800
-Message-ID: <20170428063039.GB6817@gondor.apana.org.au>
-References: <1493144468-22493-1-git-send-email-logang@deltatee.com>
- <1493144468-22493-8-git-send-email-logang@deltatee.com>
- <20170427035603.GA32212@gondor.apana.org.au>
- <94123cbf-3287-f05e-7267-0bcf08ab0a8b@deltatee.com>
+From: Ron Leach <ronleach@tesco.net>
+Subject: Re: Recovery on new 2TB disk: finish=7248.4min (raid1)
+Date: Fri, 28 Apr 2017 08:05:42 +0100
+Message-ID: <5902E9C6.3090601@tesco.net>
+References: <590117CD.1000009@tesco.net> <22785.65375.947842.648174@quad.stoffel.home> <e76a0a07-2306-e63a-a1f7-48d103eefd62@thelounge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <94123cbf-3287-f05e-7267-0bcf08ab0a8b-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Cc: dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, sparmaintainer-GLv8BlqOqDDQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, megaraidlinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <e76a0a07-2306-e63a-a1f7-48d103eefd62@thelounge.net>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Apr 27, 2017 at 09:45:57AM -0600, Logan Gunthorpe wrote:
-> 
-> 
-> On 26/04/17 09:56 PM, Herbert Xu wrote:
-> > On Tue, Apr 25, 2017 at 12:20:54PM -0600, Logan Gunthorpe wrote:
-> >> Very straightforward conversion to the new function in the caam driver
-> >> and shash library.
-> >>
-> >> Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-> >> Cc: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
-> >> Cc: "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-> >> ---
-> >>  crypto/shash.c                | 9 ++++++---
-> >>  drivers/crypto/caam/caamalg.c | 8 +++-----
-> >>  2 files changed, 9 insertions(+), 8 deletions(-)
-> >>
-> >> diff --git a/crypto/shash.c b/crypto/shash.c
-> >> index 5e31c8d..5914881 100644
-> >> --- a/crypto/shash.c
-> >> +++ b/crypto/shash.c
-> >> @@ -283,10 +283,13 @@ int shash_ahash_digest(struct ahash_request *req, struct shash_desc *desc)
-> >>  	if (nbytes < min(sg->length, ((unsigned int)(PAGE_SIZE)) - offset)) {
-> >>  		void *data;
-> >>  
-> >> -		data = kmap_atomic(sg_page(sg));
-> >> -		err = crypto_shash_digest(desc, data + offset, nbytes,
-> >> +		data = sg_map(sg, 0, SG_KMAP_ATOMIC);
-> >> +		if (IS_ERR(data))
-> >> +			return PTR_ERR(data);
-> >> +
-> >> +		err = crypto_shash_digest(desc, data, nbytes,
-> >>  					  req->result);
-> >> -		kunmap_atomic(data);
-> >> +		sg_unmap(sg, data, 0, SG_KMAP_ATOMIC);
-> >>  		crypto_yield(desc->flags);
-> >>  	} else
-> >>  		err = crypto_shash_init(desc) ?:
-> > 
-> > Nack.  This is an optimisation for the special case of a single
-> > SG list entry.  In fact in the common case the kmap_atomic should
-> > disappear altogether in the no-highmem case.  So replacing it
-> > with sg_map is not acceptable.
-> 
-> What you seem to have missed is that sg_map is just a thin wrapper
-> around kmap_atomic. Perhaps with a future check for a mappable page.
-> This change should have zero impact on performance.
+On 27/04/2017 15:43, Reindl Harald wrote:
+> [root@rh:~]$ cat /proc/mdstat
+> Personalities : [raid10] [raid1]
+> md0 : active raid1 sda1[0] sdc1[1] sdb1[3] sdd1[2]
+> 511988 blocks super 1.0 [4/4] [UUUU]
+>
+> md1 : active raid10 sda2[0] sdc2[1] sdd2[2] sdb2[3]
+> 30716928 blocks super 1.1 512K chunks 2 near-copies [4/4] [UUUU]
+>
+> md2 : active raid10 sda3[0] sdc3[1] sdd3[2] sdb3[3]
+> 3875222528 blocks super 1.1 512K chunks 2 near-copies [4/4] [UUUU]
+> [========>............] check = 44.4% (1721204032/3875222528)
+> finish=470.9min speed=76232K/sec
+>
 
-You are right.  Indeed the existing code looks buggy as they
-don't take sg->offset into account when doing the kmap.  Could
-you send me some patches that fix these problems first so that
-they can be easily backported?
+Those were the sort of times that I used to see on this machine.
 
-Thanks,
--- 
-Email: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+I've fixed it now, though.  There were some clues in syslog - gdm3 was 
+alerting 2 or 3 times each second, continually.  This was because I'd 
+taken this server offline and across to a workbench to change the 
+disk.  I'd restarted the machine, partitioned it, etc, and issued 
+those --add commands, without a screen or keyboard, just over ssh.  I 
+hadn't realised that gdm3 would panic, causing a couple of acpid 
+messages as well each time.
+
+Someone on the Debian list pointed out that gdm3 was a service and 
+could be stopped for this circumstance.  Doing that seemed to release 
+mdadm to recovering at its normal rate; all the mds are fully 
+replicated, now.
+
+Thanks to folks for contributing their thoughts, some interesting 
+insights came up as well which will be useful in the future.  This is 
+quite an old server (still actively used), created before I realised 
+the drawbacks of having so many partitions for each part of the 
+filesystem; I don't do this on more-recent systems, which look more 
+like the setup you show here.
+
+Anyway, all seems ok now, and thanks again,
+
+regards, Ron
