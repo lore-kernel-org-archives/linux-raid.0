@@ -1,138 +1,41 @@
-From: Khem Raj <raj.khem@gmail.com>
-Subject: Re: [PATCH] Add a comment to indicate valid fallthrough
-Date: Fri, 28 Apr 2017 08:16:49 -0700
-Message-ID: <CAMKF1srRpPc6P_etZAv3eUx9HewTDF5yoF3pnjZeVGH9Pizq1A@mail.gmail.com>
-References: <20170419191327.5343-1-raj.khem@gmail.com>
+From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+Subject: Re: [PATCH v2 07/21] crypto: shash, caam: Make use of the new sg_map
+ helper function
+Date: Fri, 28 Apr 2017 10:53:45 -0600
+Message-ID: <5a08708b-c3b8-41fe-96de-607a109eacbd@deltatee.com>
+References: <1493144468-22493-1-git-send-email-logang@deltatee.com>
+ <1493144468-22493-8-git-send-email-logang@deltatee.com>
+ <20170427035603.GA32212@gondor.apana.org.au>
+ <94123cbf-3287-f05e-7267-0bcf08ab0a8b@deltatee.com>
+ <20170428063039.GB6817@gondor.apana.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170419191327.5343-1-raj.khem@gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Khem Raj <raj.khem@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <20170428063039.GB6817-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
+Cc: dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, sparmaintainer-GLv8BlqOqDDQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, megaraidlinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
 List-Id: linux-raid.ids
 
-ping
 
-On Wed, Apr 19, 2017 at 12:13 PM, Khem Raj <raj.khem@gmail.com> wrote:
-> gcc7 warns about code with fallthroughs, this patch adds
-> the comment to indicate a valid fallthrough, helps gcc7
-> compiler warnings
->
-> This works in cross and native compilation case
->
-> Signed-off-by: Khem Raj <raj.khem@gmail.com>
-> ---
->  Grow.c        | 4 ++++
->  bitmap.c      | 8 ++++++++
->  mdadm.c       | 2 ++
->  super-intel.c | 1 +
->  util.c        | 1 +
->  5 files changed, 16 insertions(+)
->
-> diff --git a/Grow.c b/Grow.c
-> index 455c5f9..27c73b1 100755
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -1257,6 +1257,7 @@ char *analyse_change(char *devname, struct mdinfo *info, struct reshape *re)
->                 switch (info->new_level) {
->                 case 4:
->                         delta_parity = 1;
-> +                       /* fallthrough */
->                 case 0:
->                         re->level = 4;
->                         re->before.layout = 0;
-> @@ -1284,10 +1285,12 @@ char *analyse_change(char *devname, struct mdinfo *info, struct reshape *re)
->
->         case 4:
->                 info->array.layout = ALGORITHM_PARITY_N;
-> +               /* fallthrough */
->         case 5:
->                 switch (info->new_level) {
->                 case 0:
->                         delta_parity = -1;
-> +                       /* fallthrough */
->                 case 4:
->                         re->level = info->array.level;
->                         re->before.data_disks = info->array.raid_disks - 1;
-> @@ -1343,6 +1346,7 @@ char *analyse_change(char *devname, struct mdinfo *info, struct reshape *re)
->                 case 4:
->                 case 5:
->                         delta_parity = -1;
-> +                       /* fallthrough */
->                 case 6:
->                         re->level = 6;
->                         re->before.data_disks = info->array.raid_disks - 2;
-> diff --git a/bitmap.c b/bitmap.c
-> index ccedfd3..a6ff091 100644
-> --- a/bitmap.c
-> +++ b/bitmap.c
-> @@ -82,13 +82,21 @@ static inline int count_dirty_bits_byte(char byte, int num_bits)
->
->         switch (num_bits) { /* fall through... */
->                 case 8: if (byte & 128) num++;
-> +               /* fallthrough */
->                 case 7: if (byte &  64) num++;
-> +               /* fallthrough */
->                 case 6: if (byte &  32) num++;
-> +               /* fallthrough */
->                 case 5: if (byte &  16) num++;
-> +               /* fallthrough */
->                 case 4: if (byte &   8) num++;
-> +               /* fallthrough */
->                 case 3: if (byte &   4) num++;
-> +               /* fallthrough */
->                 case 2: if (byte &   2) num++;
-> +               /* fallthrough */
->                 case 1: if (byte &   1) num++;
-> +               /* fallthrough */
->                 default: break;
->         }
->
-> diff --git a/mdadm.c b/mdadm.c
-> index c3a265b..2d06d3b 100644
-> --- a/mdadm.c
-> +++ b/mdadm.c
-> @@ -148,6 +148,7 @@ int main(int argc, char *argv[])
->                             mode == CREATE || mode == GROW ||
->                             mode == INCREMENTAL || mode == MANAGE)
->                                 break; /* b means bitmap */
-> +               /* fallthrough */
->                 case Brief:
->                         c.brief = 1;
->                         continue;
-> @@ -828,6 +829,7 @@ int main(int argc, char *argv[])
->
->                 case O(INCREMENTAL,NoDegraded):
->                         pr_err("--no-degraded is deprecated in Incremental mode\n");
-> +                       /* fallthrough */
->                 case O(ASSEMBLE,NoDegraded): /* --no-degraded */
->                         c.runstop = -1; /* --stop isn't allowed for --assemble,
->                                          * so we overload slightly */
-> diff --git a/super-intel.c b/super-intel.c
-> index 4e466ff..00a2925 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -3271,6 +3271,7 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
->                                                 << SECT_PER_MB_SHIFT;
->                         }
->                 }
-> +               /* fallthrough */
->                 case MIGR_VERIFY:
->                         /* we could emulate the checkpointing of
->                          * 'sync_action=check' migrations, but for now
-> diff --git a/util.c b/util.c
-> index 32bd909..f2a4d19 100644
-> --- a/util.c
-> +++ b/util.c
-> @@ -335,6 +335,7 @@ unsigned long long parse_size(char *size)
->                 switch (*c) {
->                 case 'K':
->                         c++;
-> +               /* fallthrough */
->                 default:
->                         s *= 2;
->                         break;
-> --
-> 2.12.2
->
+
+On 28/04/17 12:30 AM, Herbert Xu wrote:
+> You are right.  Indeed the existing code looks buggy as they
+> don't take sg->offset into account when doing the kmap.  Could
+> you send me some patches that fix these problems first so that
+> they can be easily backported?
+
+Ok, I think the only buggy one in crypto is hifn_795x. Shash and caam
+both do have the sg->offset accounted for. I'll send a patch for the
+buggy one shortly.
+
+Logan
