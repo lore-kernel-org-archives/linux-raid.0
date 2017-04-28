@@ -1,87 +1,50 @@
-From: <mdavis@cc76.k12.il.us>
-Subject: 15592 linux-raid
-Date: Fri, 28 Apr 2017 19:45:07 -0000
-Message-ID: <149340870751.22260.8979140956024100750@agir-asso.org>
+From: =?UTF-8?Q?Patrik_Dahlstr=c3=b6m?= <risca@powerlamerz.org>
+Subject: Re: Recover array after I panicked
+Date: Sat, 29 Apr 2017 00:46:15 +0200
+Message-ID: <4c5d312b-fba6-da20-e08f-ed1a4ba5c313@powerlamerz.org>
+References: <20170424123706.GA6798@metamorpher.de>
+ <CAHKno4BR3kdsLU9AnNHvarc-e6UibNr7WQks2ssPX4pE1ZoUpA@mail.gmail.com>
+ <20170424133946.GA7057@metamorpher.de>
+ <727eeaf5-b856-305d-99b6-e42f3383b699@powerlamerz.org>
+ <20170425001614.GA3936@metamorpher.de>
+ <CAHKno4A7umuNBUPaHk0vmgj2fnjPgBi2oZJWidhKKaRX7ekgKA@mail.gmail.com>
+ <20170425090122.GA4488@metamorpher.de>
+ <CAHKno4AuKNxYiMazUy+hRJ2kJCdNNYw5L0uExvWc_52Ocn5V=g@mail.gmail.com>
+ <20170425110807.GA5159@metamorpher.de>
+ <5c3f7876-1b25-7020-5e7d-01776e7c9903@powerlamerz.org>
+ <20170427231242.GA5138@metamorpher.de>
 Mime-Version: 1.0
-Content-Type: application/zip; name="46.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: attachment
+In-Reply-To: <20170427231242.GA5138@metamorpher.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Cc: Brad Campbell <lists2009@fnarfbargle.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-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
+
+
+On 04/28/2017 01:12 AM, Andreas Klauer wrote:
+> On Thu, Apr 27, 2017 at 09:57:20PM +0200, Patrik Dahlström wrote:
+> The quick and dirty method is... grow using dd from 5disk raid (overlay)
+> to 6disk raid (no overlay) starting from the correct offset (verify!). 
+> That resumes your reshape in an offline-ish, hackish manner, and once 
+> it's done you have the whole thing. That's the theory anyway.
+> 
+> Pseudocode:
+> 
+> mdadm --create /dev/md5 --assume-clean /dev/overlay/{a,b,c}
+> mdadm --create /dev/md6 --assume-clean /dev/{a,b,c,d} # +1 drive
+I'm stuck at this step
+$ mdadm --create --assume-clean /dev/md1 --data-offset=126464K --level=5 --raid-devices=6 /dev/sda /dev/sdb /dev/sdd /dev/sdc /dev/sde /dev/sdf
+mdadm: cannot open /dev/sda: Device or resource busy
+
+My overlay setup is keeping /dev/sd[abdce] busy. How do I setup the
+overlay to keep it from occupying the disks?
+Overlays are currently created like this:
+$ dmsetup create ${b} --table "0 $size_bkl snapshot $d $loop P 8"
+
+Best regards
+// Patrik
+
