@@ -1,41 +1,109 @@
-From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: Re: [PATCH v2 07/21] crypto: shash, caam: Make use of the new sg_map
- helper function
-Date: Fri, 28 Apr 2017 10:53:45 -0600
-Message-ID: <5a08708b-c3b8-41fe-96de-607a109eacbd@deltatee.com>
-References: <1493144468-22493-1-git-send-email-logang@deltatee.com>
- <1493144468-22493-8-git-send-email-logang@deltatee.com>
- <20170427035603.GA32212@gondor.apana.org.au>
- <94123cbf-3287-f05e-7267-0bcf08ab0a8b@deltatee.com>
- <20170428063039.GB6817@gondor.apana.org.au>
+From: Julia Cartwright <julia@ni.com>
+Subject: [PATCH] md/raid5: make use of spin_lock_irq over local_irq_disable + spin_lock
+Date: Fri, 28 Apr 2017 12:41:02 -0500
+Message-ID: <20170428174102.30003-1-julia@ni.com>
+References: <20170427185719.708758b6@brick.gerasiov.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <20170428063039.GB6817-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
-Cc: dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, sparmaintainer-GLv8BlqOqDDQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, megaraidlinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170427185719.708758b6@brick.gerasiov.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: linux-raid@vger.kernel.org, linux-rt-users@vger.kernel.org, linux-kernel@vger.kernel.org, Alexander GQ Gerasiov <gq@cs.msu.su>
 List-Id: linux-raid.ids
 
+On mainline, there is no functional difference, just less code, and
+symmetric lock/unlock paths.
 
+On PREEMPT_RT builds, this fixes the following warning, seen by
+Alexander GQ Gerasiov, due to the sleeping nature of spinlocks.
 
-On 28/04/17 12:30 AM, Herbert Xu wrote:
-> You are right.  Indeed the existing code looks buggy as they
-> don't take sg->offset into account when doing the kmap.  Could
-> you send me some patches that fix these problems first so that
-> they can be easily backported?
+   BUG: sleeping function called from invalid context at kernel/locking/rtmutex.c:993
+   in_atomic(): 0, irqs_disabled(): 1, pid: 58, name: kworker/u12:1
+   CPU: 5 PID: 58 Comm: kworker/u12:1 Tainted: G        W       4.9.20-rt16-stand6-686 #1
+   Hardware name: Supermicro SYS-5027R-WRF/X9SRW-F, BIOS 3.2a 10/28/2015
+   Workqueue: writeback wb_workfn (flush-253:0)
+   Call Trace:
+    dump_stack+0x47/0x68
+    ? migrate_enable+0x4a/0xf0
+    ___might_sleep+0x101/0x180
+    rt_spin_lock+0x17/0x40
+    add_stripe_bio+0x4e3/0x6c0 [raid456]
+    ? preempt_count_add+0x42/0xb0
+    raid5_make_request+0x737/0xdd0 [raid456]
 
-Ok, I think the only buggy one in crypto is hifn_795x. Shash and caam
-both do have the sg->offset accounted for. I'll send a patch for the
-buggy one shortly.
+Reported-by: Alexander GQ Gerasiov <gq@redlab-i.ru>
+Tested-by: Alexander GQ Gerasiov <gq@redlab-i.ru>
+Signed-off-by: Julia Cartwright <julia@ni.com>
+---
+Hey All-
 
-Logan
+While this fixes a problem on RT primarily, the patch is equally applicable
+upstream, as such probably makes sense to be pulled through the md tree.  It
+may also make sense to be pulled directly into rt-devel.
+
+Alexander-
+
+I turned your "I confirm the fix" to a 'Tested-by', let me know if that's a problem.
+
+Thanks,
+
+   Julia
+
+ drivers/md/raid5.c | 17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index fa2c4de32a64..54dc2995aeee 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -110,8 +110,7 @@ static inline void unlock_device_hash_lock(struct r5conf *conf, int hash)
+ static inline void lock_all_device_hash_locks_irq(struct r5conf *conf)
+ {
+ 	int i;
+-	local_irq_disable();
+-	spin_lock(conf->hash_locks);
++	spin_lock_irq(conf->hash_locks);
+ 	for (i = 1; i < NR_STRIPE_HASH_LOCKS; i++)
+ 		spin_lock_nest_lock(conf->hash_locks + i, conf->hash_locks);
+ 	spin_lock(&conf->device_lock);
+@@ -121,9 +120,9 @@ static inline void unlock_all_device_hash_locks_irq(struct r5conf *conf)
+ {
+ 	int i;
+ 	spin_unlock(&conf->device_lock);
+-	for (i = NR_STRIPE_HASH_LOCKS; i; i--)
+-		spin_unlock(conf->hash_locks + i - 1);
+-	local_irq_enable();
++	for (i = NR_STRIPE_HASH_LOCKS - 1; i; i--)
++		spin_unlock(conf->hash_locks + i);
++	spin_unlock_irq(conf->hash_locks);
+ }
+ 
+ /* bio's attached to a stripe+device for I/O are linked together in bi_sector
+@@ -732,12 +731,11 @@ static bool is_full_stripe_write(struct stripe_head *sh)
+ 
+ static void lock_two_stripes(struct stripe_head *sh1, struct stripe_head *sh2)
+ {
+-	local_irq_disable();
+ 	if (sh1 > sh2) {
+-		spin_lock(&sh2->stripe_lock);
++		spin_lock_irq(&sh2->stripe_lock);
+ 		spin_lock_nested(&sh1->stripe_lock, 1);
+ 	} else {
+-		spin_lock(&sh1->stripe_lock);
++		spin_lock_irq(&sh1->stripe_lock);
+ 		spin_lock_nested(&sh2->stripe_lock, 1);
+ 	}
+ }
+@@ -745,8 +743,7 @@ static void lock_two_stripes(struct stripe_head *sh1, struct stripe_head *sh2)
+ static void unlock_two_stripes(struct stripe_head *sh1, struct stripe_head *sh2)
+ {
+ 	spin_unlock(&sh1->stripe_lock);
+-	spin_unlock(&sh2->stripe_lock);
+-	local_irq_enable();
++	spin_unlock_irq(&sh2->stripe_lock);
+ }
+ 
+ /* Only freshly new full stripe normal write stripe can be added to a batch list */
+-- 
+2.12.0
