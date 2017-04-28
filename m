@@ -1,31 +1,144 @@
-From: Mateusz Korniak <mateusz-lists@ant.gliwice.pl>
-Subject: Re: Recovery on new 2TB disk: finish=7248.4min (raid1)
-Date: Fri, 28 Apr 2017 09:30:44 +0200
-Message-ID: <3662808.assHz4yi0z@matkor-lenovo>
-References: <590117CD.1000009@tesco.net> <22786.16524.435313.304834@quad.stoffel.home> <b74c3cae-a55d-9306-16fe-5b811c20ec89@thelounge.net>
+From: Peter Rajnoha <prajnoha@redhat.com>
+Subject: Re: [mdadm PATCH 4/4] Create: tell udev device is not ready when
+ first created.
+Date: Fri, 28 Apr 2017 11:08:25 +0200
+Message-ID: <f9977410-5a8e-1a78-1406-fc9875f83d13@redhat.com>
+References: <149265560315.31004.3851231165281498425.stgit@noble>
+ <149265600601.31004.323865505557190368.stgit@noble>
+ <dedd27cd-9c2e-f244-d8aa-7a074679d3c6@gmail.com>
+ <87mvbasqx6.fsf@notabene.neil.brown.name>
+ <40a5fbff-9eef-07b3-fe1b-fb9a888cfb8b@redhat.com>
+ <87k265rxsm.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <b74c3cae-a55d-9306-16fe-5b811c20ec89@thelounge.net>
+In-Reply-To: <87k265rxsm.fsf@notabene.neil.brown.name>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Reindl Harald <h.reindl@thelounge.net>
-Cc: John Stoffel <john@stoffel.org>, Ron Leach <ronleach@tesco.net>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>, Jes Sorensen <jes.sorensen@gmail.com>
+Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-On Thursday 27 of April 2017 21:42:27 Reindl Harald wrote:
-> > Just create a single MD device across the entire disk (...)
->=20
-> but you can't boot from a RAID5/RAID6/RAID10
+On 04/28/2017 05:55 AM, NeilBrown wrote:
+> On Wed, Apr 26 2017, Peter Rajnoha wrote:
+> 
+>> On 04/20/2017 11:35 PM, NeilBrown wrote:
+>>> If we wanted an more permanent udev rule, we would need to record the
+>>> devices that should be ignored in the filesystem somewhere else.
+>>> Maybe in /run/mdadm.
+>>> e.g.
+>>>
+>>>  KERNEL=="md*", TEST="/run/mdadm/creating-$kernel", ENV{SYSTEMD_READY}="0"
+>>>
+>>> Then we could have something like the following (untested) in mdadm.
+>>> Does that seem more suitable?
+>>>
+>>
+>> Yes, please, if possible, go for a permanent udev rule surely - this
+>> will make it much easier for other foreign tools to hook in properly if
+>> needed and it would also be much easier to debug.
+> 
+> I'm leaning towards the files-in-/run/mdadm approach too.  I'll make a
+> proper patch.
+> 
+>>
+>> But, wouldn't it be better if we could just pass this information ("not
+>> initialized yet") as RUN_ARRAY md ioctl parameter? In that case the md
+>> driver in kernel could add the variable to the uevent it generates which
+>> userspace udev rules could check for easily. This way, we don't need to
+>> hassle with creating files in filesystem and the information would be
+>> directly a part of the uevent the md kernel driver generates (so
+>> directly accessible in udev rules too). Also, possibly adding more
+>> variables for other future scenarios if needed.
+> 
+> When would we clear the "not initialised yet" flag in the kernel, and
+> how?  And would that be enough.
 
-Since some time you can boot from LVM LV having PV(s) on RAID10 with gr=
-ub2.
+The flag wouldn't be stored in kernel, md kernel driver would just pass
+the flag with the uevent as it received in with ioctl/sysfs request to
+create a new dev. The udev in userspace would handle the state
+transition then from "flagged as not-initialized" state to "initilized"
+by checking the sequence of events as they come.
 
+We should have this sequence I assume:
 
---=20
-Mateusz Korniak
-"(...) mam brata - powa=C5=BCny, domator, liczykrupa, hipokryta, pobo=C5=
-=BCni=C5=9B,
- =09kr=C3=B3tko m=C3=B3wi=C4=85c - podpora spo=C5=82ecze=C5=84stwa."
-=09=09=09=09Nikos Kazantzakis - "Grek Zorba"
+  1) "add" (creating dev, not usable yet)
+  2) "change" (activated dev, but not initialized yet)
+  3) "synthetic change" (after wiping the dev and closing it, the WATCH
+rule fires)
 
+> 
+> When mdadm creates an md array, at least 3 uevents get generated.
+> The first is generated when the md device object is created, either by
+> opening the /dev/mdXX file, or by writing magic to somewhere in sysfs.
+> The second is generated when the array is started and the content is
+> visible.
+> The third is generated when mdadm closes the file descriptor.  It opens
+> /dev/mdXX for O_RDWR and performs ioctls on this, and then closes it.
+> Because udev uses inotify to watch for a 'close for a writable file
+> descriptor', this generates another event.
+> 
+> We need to ensure that none of these cause udev to run anything that
+> inspects the contents of the array.
+> Of the three, only the second one is directly under the control of the
+> md module, so only that one can add an environment variable.
+> 
+> It might be possible to avoid the last one (by not opening for write),
+> but I cannot see a way to avoid the first one.
+
+So the first event is the "add" event ("md device object created") - in
+this case, the device is not yet usable anyway I suppose, so we can skip
+udev scans for this event right away (unless it's the synthetic "add"
+event which is generated by writing "add" to /sys/block/.../uevent file
+or alternatively using udevadm trigger - but we should be able to
+recognize this event "synthetic add event" because it always comes after
+the activating "change" event, otherwise we can skip scans).
+
+The second event, which is the "change" event, would be marked with the
+new "not initialized" flag. And so we skip the scans in udev too.
+
+Then mdadm opens the devive, clears any old content/signatures the data
+area may contain, then closes it - this generates the third event -
+which is the "synthetic change" event (as a result of the inotify WATCH
+rule). And this one would drop the "not initialized" flag in udev db and
+the scans in udev are now enabled.
+
+So we should be able to handle all three kinds of events I think.
+
+Now, as for even better synthetic event recognition, I've proposed a
+patch recently where udev as well as any other tool generating these
+synthetic events can add variables for more detailed event
+identification, so this one should help us in the future even more in
+these situations: https://lkml.org/lkml/2017/3/15/461. With this, we can
+even disable the WATCH rule till the device is properly initialized and
+the tool can generate the event itself by writing the
+/sys/block/.../uevent file with a variable that the tool can then wait
+for even (so the tool doesn't exit till the device is not properly
+initialized). Once this initialization is all done, the WATCH rule can
+be enabled for the dev. Also, with this, we don't need to be afraid that
+some other tool fired the WATCH rule by chance if it opened the dev for
+RW and closed it by mistake before we had a chance to initialize it
+(which would fire the synthetic change event before the
+wiping/initialization).
+
+> 
+> I don't think that making a file appear in /run is really very different
+> from making a variable appear in a uevent.   If the variable were
+> describing the event itself there would be a different, but it would be
+> describing the state of the device.  So the only important difference is
+> "which is easier to work with".  I think creating an deleting a file is
+> easier to setting and clearing a variable.
+> 
+
+Yes, I agree that it's an alternative solution - it definitely and
+surely improves current situation, either if we choose to write the file
+or pass the flag in the uevent directly. It's just that with the
+information written in filesystem, we have something external to check
+for in addition to processing the uevent variables while we don't need
+to, I think. As I described the sequence of events above, I think we
+should be able to recognize the events properly and we should be able to
+drop the flag automatically.
+
+-- 
+Peter
