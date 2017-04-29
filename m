@@ -1,39 +1,54 @@
-From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Subject: Re: Recover array after I panicked
-Date: Sat, 29 Apr 2017 11:56:56 +0200
-Message-ID: <20170429095656.GA4030@metamorpher.de>
-References: <20170424133946.GA7057@metamorpher.de>
- <727eeaf5-b856-305d-99b6-e42f3383b699@powerlamerz.org>
- <20170425001614.GA3936@metamorpher.de>
- <CAHKno4A7umuNBUPaHk0vmgj2fnjPgBi2oZJWidhKKaRX7ekgKA@mail.gmail.com>
- <20170425090122.GA4488@metamorpher.de>
- <CAHKno4AuKNxYiMazUy+hRJ2kJCdNNYw5L0uExvWc_52Ocn5V=g@mail.gmail.com>
- <20170425110807.GA5159@metamorpher.de>
- <5c3f7876-1b25-7020-5e7d-01776e7c9903@powerlamerz.org>
- <20170427231242.GA5138@metamorpher.de>
- <4c5d312b-fba6-da20-e08f-ed1a4ba5c313@powerlamerz.org>
+From: Ram Ramesh <rramesh2400@gmail.com>
+Subject: Re: How important is SCTERC?
+Date: Sat, 29 Apr 2017 18:45:38 -0500
+Message-ID: <64b80fbc-8ee9-c137-3da5-fffc563a7a6d@gmail.com>
+References: <48135126-cd8e-6321-77e6-06ae349ecc03@gmail.com>
+ <22787.16039.574815.87299@tree.ty.sabi.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4c5d312b-fba6-da20-e08f-ed1a4ba5c313@powerlamerz.org>
+In-Reply-To: <22787.16039.574815.87299@tree.ty.sabi.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Patrik =?iso-8859-1?Q?Dahlstr=F6m?= <risca@powerlamerz.org>
-Cc: Brad Campbell <lists2009@fnarfbargle.com>, linux-raid@vger.kernel.org
+To: Peter Grandi <pg@lxra2.for.sabi.co.UK>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, Apr 29, 2017 at 12:46:15AM +0200, Patrik Dahlström wrote:
-> mdadm: cannot open /dev/sda: Device or resource busy
+On 04/28/2017 08:07 AM, Peter Grandi wrote:
+>> [ ... ] I do run tler.sh that sets 180s timeout for drives
+>> that do not have scterc from /etc/rc.local. Am I putting my
+>> data in serious danger?
+> No.
+>
+>> I only have videos and tv recordings in this md
+> The problem with SCT/ERC absence is that the 2-3 minutes of
+> retries suspend IO for that long, and for people running
+> interactive applications (usually LAMP-style web applications)
+> that is a bad idea, but in your case you seem to have just a
+> personal archive of entertainment files.
+>
+> For interactive "enterprise" applications the common practice is
+> to reduce the error timeout to 1-2 seconds, so the failing drive
+> drops out of the MD set quickly and can be replaced, minimizing
+> delays.
+Interestingly, the drives did not pass SMART test and mkfs.ext4 -c -c  
+checks. So, I returned them. I plan to buy WD gold (the other extreme in 
+price point :-)
+>
+>> which can be replaced with significant effort (about 12TB of
+>> movies and tv shows will take some time to copy from my
+>> DVDs/BDs)
+> Backups are very important, and RAID is not an alternative to
+> backups. You can buy and use SMR disk drives as if they were
+> tapes (or with a filesystem like NILFS2) to do that backup, and
+> they are quite cheap.
+I am using my actual DVDs as backup. For TV shows they are available in 
+Netflix, if I really want to watch them again.
+However, your point is well taken. I will think about backup as my 
+collection has grown over the years and it will be really a pain to go 
+back to DVDs to populate my media server.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Well, normally you're not supposed to do this. :-)
-Easy to wreck your data if you do.
 
-> My overlay setup is keeping /dev/sd[abdce] busy. How do I setup the
-> overlay to keep it from occupying the disks?
-
-You could create the RAID first and the overlay afterwards.
-Or you can create loop devices on the busy devices and use those.
-
-Regards
-Andreas Klauer
