@@ -1,80 +1,81 @@
-From: Nix <nix@esperi.org.uk>
+From: Roman Mamedov <rm@romanrm.net>
 Subject: Re: Recovery on new 2TB disk: finish=7248.4min (raid1)
-Date: Sun, 30 Apr 2017 17:10:22 +0100
-Message-ID: <87fugpkhap.fsf@esperi.org.uk>
+Date: Sun, 30 Apr 2017 21:47:29 +0500
+Message-ID: <20170430214729.2a02cce5@natsu>
 References: <590117CD.1000009@tesco.net>
-        <22785.65375.947842.648174@quad.stoffel.home>
-        <5492628.c8B43Z4h0G@matkor-lenovo>
-        <22786.16524.435313.304834@quad.stoffel.home>
-        <87o9veje3v.fsf@esperi.org.uk> <20170430182134.0e8c6dc0@natsu>
+ <22785.65375.947842.648174@quad.stoffel.home>
+ <5492628.c8B43Z4h0G@matkor-lenovo>
+ <22786.16524.435313.304834@quad.stoffel.home>
+ <87o9veje3v.fsf@esperi.org.uk>
+ <20170430182134.0e8c6dc0@natsu>
+ <87fugpkhap.fsf@esperi.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170430182134.0e8c6dc0@natsu> (Roman Mamedov's message of "Sun,
-        30 Apr 2017 18:21:34 +0500")
+In-Reply-To: <87fugpkhap.fsf@esperi.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.net>
+To: Nix <nix@esperi.org.uk>
 Cc: John Stoffel <john@stoffel.org>, Mateusz Korniak <mateusz-lists@ant.gliwice.pl>, Ron Leach <ronleach@tesco.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 30 Apr 2017, Roman Mamedov spake thusly:
+On Sun, 30 Apr 2017 17:10:22 +0100
+Nix <nix@esperi.org.uk> wrote:
 
-> On Sun, 30 Apr 2017 13:04:36 +0100
-> Nix <nix@esperi.org.uk> wrote:
->
->> Aside: the storage server I've just set up has a different rationale for
->> having multiple mds. There's one in the 'fast part' of the rotating
->> rust, and one in the 'slow part' (for big archival stuff that is rarely
->> written to); the slow one has an LVM PV directly atop it, but the fast
->> one has a bcache and then an LVM PV built atop that. The fast disk also
->> has an md journal on SSD. Both are joined into one LVM VG. (The
->> filesystem journals on the fast part are also on the SSD.)
->
-> It's not like the difference between the so called "fast" and "slow" parts is
-> 100- or even 10-fold. Just SSD-cache the entire thing (I prefer lvmcache not
-> bcache) and go.
+> > It's not like the difference between the so called "fast" and "slow" parts is
+> > 100- or even 10-fold. Just SSD-cache the entire thing (I prefer lvmcache not
+> > bcache) and go.
+> 
+> I'd do that if SSDs had infinite lifespan. They really don't. :)
+> lvmcache doesn't cache everything, only frequently-referenced things, so
+> the problem is not so extreme there -- but
 
-I'd do that if SSDs had infinite lifespan. They really don't. :)
+Yes I was concerned the lvmcache will over-use the SSD by mistakenly caching
+streaming linear writes and the like -- and it absolutely doesn't. (it can
+during the initial fill-up of the cache, but not afterwards).
 
-lvmcache doesn't cache everything, only frequently-referenced things, so
-the problem is not so extreme there -- but the fact that it has to be
-set up anew for *each LV* is a complete killer for me, since I have
-encrypted filesystems and things that *have* to be on separate LVs and I
-really do not want to try to figure out the right balance between
-distinct caches, thanks (oh and also you have to get the metadata size
-right, and if you get it wrong and it runs out of space all hell breaks
-loose, AIUI). bcaching the whole block device avoids all this pointless
-complexity. bcache just works.
+Get an MLC-based SSD if that gives more peace of mind, but tests show even the
+less durable TLC-based ones have lifespan measuring in hundreds of TB.
+http://techreport.com/review/27909/the-ssd-endurance-experiment-theyre-all-dead
 
->> So I have a chunk of 'slow space' for things like ISOs and video files
->> that are rarely written to (so a RAID journal is needless) and never
->> want to be SSD-cached, and another (bigger) chunk of space for
->> everything else, SSD-cached for speed and RAID-journalled for powerfail
->> integrity.
->> 
->> (... actually it's more complex than that: there is *also* a RAID-0
->> containing an ext4 sans filesystem journal at the start of the disk for
->> transient stuff like build trees that are easily regenerated, rarely
->> needed more than once, and where journalling the writes or caching the
->> reads on SSD is a total waste of SSD lifespan. If *that* gets corrupted,
->> the boot machinery simply re-mkfses it.)
->
-> You have too much time on your hands if you have nothing better to do than
-> to babysit all that b/s.
+One SSD that I have currently has 19 TB written to it over its entire 4.5 year
+lifespan. Over the past few months of being used as lvmcache for a 14 TB
+bulk data array and a separate /home FS, new writes average at about 16 GB/day.
+Given a VERY conservative 120 TBW endurance estimate, this SSD should last me
+all the way into year 2034 at least.
 
-This is a one-off with tooling to manage it: from my perspective, I just
-kick off the autobuilders etc and they'll automatically use transient
-space for objdirs. (And obviously this is all scripted so it is no
-harder than making or removing directories would be: typing 'mktransient
-foo' to automatically create a dir in transient space and set up a bind
-mount to it -- persisted across boots -- in the directory' foo' is
-literally a few letters more than typing 'mkdir foo'.)
+> the fact that it has to be set up anew for *each LV* is a complete killer
+> for me, since I have encrypted filesystems and things that *have* to be on
+> separate LVs and I really do not want to try to figure out the right balance
+> between distinct caches, thanks (oh and also you have to get the metadata
+> size right, and if you get it wrong and it runs out of space all hell breaks
+> loose, AIUI). bcaching the whole block device avoids all this pointless
+> complexity. bcache just works.
 
-Frankly the annoyance factor of having to replace the SSD years in
-advance because every test build does several gigabytes of objdir writes
-that I'm not going to care about in fifteen minutes would be far higher
-than the annoyance factor of having to, uh, write three scripts about
-fifteen lines long to manage the transient space.
+Oh yes I wish they had a VG-level lvmcache. Still, it feels more mature than
+bcache, the latter barely has any userspace management and monitoring tools
+(having to fiddle with "echo > /sys/..." and "cat /sys/..." is not the state
+of something you'd call a finished product). And the killer for me was that
+there is no way to stop using bcache on a partition, once it's a "bcache
+backing device" there is no way to migrate back to a raw partition, you're
+stuck with it.
+
+> This is a one-off with tooling to manage it: from my perspective, I just
+> kick off the autobuilders etc and they'll automatically use transient
+> space for objdirs. (And obviously this is all scripted so it is no
+> harder than making or removing directories would be: typing 'mktransient
+> foo' to automatically create a dir in transient space and set up a bind
+> mount to it -- persisted across boots -- in the directory' foo' is
+> literally a few letters more than typing 'mkdir foo'.)
+
+Sorry for being rather blunt initially, still IMO the amount if micromanagement
+required (and complexity introduced) is staggering compared to the benefits
+reaped -- and it all appears to stem from underestimating the modern SSDs.
+I'd suggest just get one and try "killing" it with your casual daily usage,
+you'll find (via TBW numbers you will see in SMART compared even to vendor
+spec'd ones, not to mention what tech sites' field tests show) that you just
+can't, not until deep into a dozen of years later into the future.
 
 -- 
-NULL && (void)
+With respect,
+Roman
