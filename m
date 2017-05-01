@@ -1,32 +1,15 @@
-From: "jdd@dodin.org" <jdd@dodin.org>
-Subject: Re: fixing raid1
-Date: Mon, 1 May 2017 19:43:30 +0200
-Message-ID: <a2ebd87b-52b2-3182-b9ff-fa2981dda558@dodin.org>
-References: <c416bcba-7a5d-a409-42ca-2eb82eca32b7@dodin.org>
- <20170501221954.52b2dd76@natsu>
+From: Loans Service <contact@grdc.esdm.go.id>
+Subject: Fast Loans
+Date: Mon, 01 May 2017 16:58:42 +0530
+Message-ID: <20170501112707.94CF13855E9__44854.3837097988$1493665813$gmane$org@server-09.grdc.esdm.go.id>
+Reply-To: payingfunds@3mail.ie
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170501221954.52b2dd76@natsu>
+Content-Description: Mail message body
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: Recipients <contact@grdc.esdm.go.id>
 List-Id: linux-raid.ids
 
-Le 01/05/2017 à 19:19, Roman Mamedov a écrit :
-
-> It appears you just need to do the 2nd step as listed in that wiki,
->
->   mdadm --grow /dev/md127 --raid-devices=2
->
-> Did you try it?
-
-
-I didn't (grow... was thinking it was to make it bigger :-()
-
-but it works perfectly
-
-done
-
-Thanks
-jdd
+Do you need a loan to pay up bill or to start a business? Email Us
