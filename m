@@ -1,39 +1,46 @@
-From: Anthony Youngman <antlists@youngman.org.uk>
-Subject: Re: Recovery on new 2TB disk: finish=7248.4min (raid1)
-Date: Mon, 1 May 2017 22:44:47 +0100
-Message-ID: <fd7647b6-9932-9fee-3555-4aebd0388e25@youngman.org.uk>
-References: <590117CD.1000009@tesco.net>
- <22785.65375.947842.648174@quad.stoffel.home>
- <5492628.c8B43Z4h0G@matkor-lenovo>
- <22786.16524.435313.304834@quad.stoffel.home> <87o9veje3v.fsf@esperi.org.uk>
- <20170430182134.0e8c6dc0@natsu> <87fugpkhap.fsf@esperi.org.uk>
- <20170430214729.2a02cce5@natsu> <8737cojn54.fsf@esperi.org.uk>
+From: Adam Thompson <athompso@athompso.net>
+Subject: Big-endian RAID5 recovery problem
+Date: Mon, 01 May 2017 16:39:07 -0500
+Message-ID: <5c6e6e5d93d4056839e4f370e00a8e08@mail.athompso.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8737cojn54.fsf@esperi.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nix <nix@esperi.org.uk>, Roman Mamedov <rm@romanrm.net>
-Cc: John Stoffel <john@stoffel.org>, Mateusz Korniak <mateusz-lists@ant.gliwice.pl>, Ron Leach <ronleach@tesco.net>, linux-raid@vger.kernel.org
+To: MUUG Roundtable <roundtable@muug.ca>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+So I've got 4 IDE HDDs, each with 3 RAID partitions on them, that were 
+part of a RAID array in a now-very-dead NAS.
 
+Of course, I need to get data off them that wasn't backed up anywhere 
+else.
 
-On 01/05/17 22:13, Nix wrote:
-> [linux-raid list: sorry, this is getting quite off-topic, though I'm
->  finding the argument(?) quite fascinating. I can take it off-list if
->  you like.]
+I've got a 4-port USB3 PCIe card, and 4 IDE/SATA USB adapters, and all 
+the hardware seems to work.  So far, so good.
 
-1) I'm finding it fascinating, too ... :-)
+The problem is that the disks use the v0.90 metadata format, and they 
+came from a big-endian system, not a little-endian system.  MD 
+superblocks *since* v0.90 are endian-agnostic, but back in v0.90, the 
+superblock was byte-order specific.
 
-2) We get a reasonable amount of other stuff which I think is off-topic 
-for raid but is cc'd to the list because it's relevant to linux
+mdadm(8) on an Intel processor refuses to acknowledge the existence of 
+the superblock.  Testdisk detects it and correctly identifies it as a 
+Big-endian v0.90 superblock.
 
-3) At some point it would be nice to have this sort of stuff on the 
-wiki, so people have up-to-date performance figures. Snag is, someone's 
-got to run a load of benchmarks, document it, and do a lot of work for 
-little personal benefit ...
+I'm reluctant to blindly do a forced --create on the four disks, because 
+I'm not 100% certain of the RAID topology; there are at least two RAID 
+devices, one of which was hidden from the user, so I have no a-priori 
+knowledge of its RAID level or layout.
 
-Cheers,
-Wol
+The filesystems on the md(4) devices are, AFAIK, all XFS, and so should 
+(hopefully) not have any endianness issues.
+
+I can't find any modern big-endian Linux systems... looks like all the 
+ARM distros run in little-endian mode.
+
+Any suggestions on the best way to move forward?
+
+Thanks,
+-Adam
