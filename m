@@ -1,41 +1,45 @@
-From: Shaohua Li <shli@fb.com>
-Subject: [PATCH] md/raid10: skip spare disk as 'first' disk
-Date: Mon, 1 May 2017 12:22:01 -0700
-Message-ID: <7adb3f88bd6d611511ad14dcf8da6898e5f8168d.1493666464.git.shli@fb.com>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: Recovery on new 2TB disk: finish=7248.4min (raid1)
+Date: Mon, 01 May 2017 21:12:54 +0100
+Message-ID: <877f20jpyx.fsf@esperi.org.uk>
+References: <590117CD.1000009@tesco.net>
+        <22785.65375.947842.648174@quad.stoffel.home>
+        <5492628.c8B43Z4h0G@matkor-lenovo>
+        <22786.16524.435313.304834@quad.stoffel.home>
+        <87o9veje3v.fsf@esperi.org.uk> <20170430182134.0e8c6dc0@natsu>
+        <87fugpkhap.fsf@esperi.org.uk> <59061BFF.2070503@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <59061BFF.2070503@youngman.org.uk> (Wols Lists's message of "Sun,
+        30 Apr 2017 18:16:47 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Guoqing Jiang <gqjiang@suse.com>, NeilBrown <neilb@suse.com>
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: Roman Mamedov <rm@romanrm.net>, John Stoffel <john@stoffel.org>, Mateusz Korniak <mateusz-lists@ant.gliwice.pl>, Ron Leach <ronleach@tesco.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Commit 6f287ca(md/raid10: reset the 'first' at the end of loop) ignores
-a case in reshape, the first rdev could be a spare disk, which shouldn't
-be accounted as the first disk since it doesn't include the offset info.
+On 30 Apr 2017, Wols Lists verbalised:
 
-Fix: 6f287ca(md/raid10: reset the 'first' at the end of loop)
-Cc: Guoqing Jiang <gqjiang@suse.com>
-Cc: NeilBrown <neilb@suse.com>
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- drivers/md/raid10.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> On 30/04/17 17:10, Nix wrote:
+>> This is a one-off with tooling to manage it: from my perspective, I just
+>> kick off the autobuilders etc and they'll automatically use transient
+>> space for objdirs. (And obviously this is all scripted so it is no
+>> harder than making or removing directories would be: typing 'mktransient
+>> foo' to automatically create a dir in transient space and set up a bind
+>> mount to it -- persisted across boots -- in the directory' foo' is
+>> literally a few letters more than typing 'mkdir foo'.)
+>
+> This sounds like me with tmpfs. Okay, mine don't persist across reboots,
+> but if it's in your build scripts, can't they create a tmpfs and do the
+> builds in that?
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 2883b72..cce23be 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -4079,8 +4079,8 @@ static int raid10_start_reshape(struct mddev *mddev)
- 				diff = 0;
- 			if (first || diff < min_offset_diff)
- 				min_offset_diff = diff;
-+			first = 0;
- 		}
--		first = 0;
- 	}
- 
- 	if (max(before_length, after_length) > min_offset_diff)
+Even though I have 128GiB RAM, I don't want a tmpfs for everything
+(though I use it for a lot, oh yes). Some of the transient stuff is
+things like QEMU CoW disk images that I don't want to lose on every
+reboot (though rebuilding them is not too annoying, it is not totally
+ignorable either); other stuff is things like vapoursynth intermediates
+which can easily exceed 500GiB, which are only ever read once but
+nonetheless just won't fit.
+
 -- 
-2.9.3
-
+NULL && (void)
