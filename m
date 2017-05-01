@@ -1,117 +1,65 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md/raid5: make use of spin_lock_irq over
- local_irq_disable + spin_lock
-Date: Mon, 1 May 2017 16:11:32 -0700
-Message-ID: <20170501231132.owb6rjgo3dujxh7b@kernel.org>
-References: <20170427185719.708758b6@brick.gerasiov.net>
- <20170428174102.30003-1-julia@ni.com>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: Recovery on new 2TB disk: finish=7248.4min (raid1)
+Date: Tue, 02 May 2017 00:26:58 +0100
+Message-ID: <87mvawi2f1.fsf@esperi.org.uk>
+References: <590117CD.1000009@tesco.net>
+        <22785.65375.947842.648174@quad.stoffel.home>
+        <5492628.c8B43Z4h0G@matkor-lenovo>
+        <22786.16524.435313.304834@quad.stoffel.home>
+        <87o9veje3v.fsf@esperi.org.uk> <20170430182134.0e8c6dc0@natsu>
+        <87fugpkhap.fsf@esperi.org.uk> <20170430214729.2a02cce5@natsu>
+        <8737cojn54.fsf@esperi.org.uk> <20170502024657.6d33fd88@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170428174102.30003-1-julia@ni.com>
+In-Reply-To: <20170502024657.6d33fd88@natsu> (Roman Mamedov's message of "Tue,
+        2 May 2017 02:46:57 +0500")
 Sender: linux-raid-owner@vger.kernel.org
-To: Julia Cartwright <julia@ni.com>
-Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>, linux-raid@vger.kernel.org, linux-rt-users@vger.kernel.org, linux-kernel@vger.kernel.org, Alexander GQ Gerasiov <gq@cs.msu.su>
+To: Roman Mamedov <rm@romanrm.net>
+Cc: John Stoffel <john@stoffel.org>, Mateusz Korniak <mateusz-lists@ant.gliwice.pl>, Ron Leach <ronleach@tesco.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Apr 28, 2017 at 12:41:02PM -0500, Julia Cartwright wrote:
-> On mainline, there is no functional difference, just less code, and
-> symmetric lock/unlock paths.
-> 
-> On PREEMPT_RT builds, this fixes the following warning, seen by
-> Alexander GQ Gerasiov, due to the sleeping nature of spinlocks.
-> 
->    BUG: sleeping function called from invalid context at kernel/locking/rtmutex.c:993
->    in_atomic(): 0, irqs_disabled(): 1, pid: 58, name: kworker/u12:1
->    CPU: 5 PID: 58 Comm: kworker/u12:1 Tainted: G        W       4.9.20-rt16-stand6-686 #1
->    Hardware name: Supermicro SYS-5027R-WRF/X9SRW-F, BIOS 3.2a 10/28/2015
->    Workqueue: writeback wb_workfn (flush-253:0)
->    Call Trace:
->     dump_stack+0x47/0x68
->     ? migrate_enable+0x4a/0xf0
->     ___might_sleep+0x101/0x180
->     rt_spin_lock+0x17/0x40
->     add_stripe_bio+0x4e3/0x6c0 [raid456]
->     ? preempt_count_add+0x42/0xb0
->     raid5_make_request+0x737/0xdd0 [raid456]
-> 
-> Reported-by: Alexander GQ Gerasiov <gq@redlab-i.ru>
-> Tested-by: Alexander GQ Gerasiov <gq@redlab-i.ru>
-> Signed-off-by: Julia Cartwright <julia@ni.com>
+On 1 May 2017, Roman Mamedov outgrape:
 
-applied, thanks!
+> On Mon, 01 May 2017 22:13:59 +0100
+> Nix <nix@esperi.org.uk> wrote:
+>> I'd be more worried about the complexity required to just figure out the
+>> space needed for half a dozen sets of lvmcache metadata and cache
+>> filesystems.
+>
+> Metadata can be implicitly created and auto-managed in recent lvm versions 
+> http://fibrevillage.com/storage/460-how-to-create-lvm-cache-logical-volume
+> ("Automatic pool metadata LV"). If not, the rule of thumb suggested everywhere
 
-> ---
-> Hey All-
+Useful.
+
+> is 1/1000 of the cache volume size; I doubled that just in case, and looks
+> like I didn't have to, as my metadata partitions are only about 9.5% full each.
+
+Still seems like something that shouldn't need to be in a separate LV at
+all (though .1% is not something to be worried about: it just seems
+inelegant to me).
+
+> As for half a dozen sets, I'd reconsider the need for those, as well as the
+> entire fast/slow HDD tracks separation, just SSD-cache everything and let it
+> figure out to not cache streaming writes on your video transcodes, or even bulk
+> writes during your compile tests (while still caching the filesystem metadata).
 > 
-> While this fixes a problem on RT primarily, the patch is equally applicable
-> upstream, as such probably makes sense to be pulled through the md tree.  It
-> may also make sense to be pulled directly into rt-devel.
-> 
-> Alexander-
-> 
-> I turned your "I confirm the fix" to a 'Tested-by', let me know if that's a problem.
-> 
-> Thanks,
-> 
->    Julia
-> 
->  drivers/md/raid5.c | 17 +++++++----------
->  1 file changed, 7 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index fa2c4de32a64..54dc2995aeee 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -110,8 +110,7 @@ static inline void unlock_device_hash_lock(struct r5conf *conf, int hash)
->  static inline void lock_all_device_hash_locks_irq(struct r5conf *conf)
->  {
->  	int i;
-> -	local_irq_disable();
-> -	spin_lock(conf->hash_locks);
-> +	spin_lock_irq(conf->hash_locks);
->  	for (i = 1; i < NR_STRIPE_HASH_LOCKS; i++)
->  		spin_lock_nest_lock(conf->hash_locks + i, conf->hash_locks);
->  	spin_lock(&conf->device_lock);
-> @@ -121,9 +120,9 @@ static inline void unlock_all_device_hash_locks_irq(struct r5conf *conf)
->  {
->  	int i;
->  	spin_unlock(&conf->device_lock);
-> -	for (i = NR_STRIPE_HASH_LOCKS; i; i--)
-> -		spin_unlock(conf->hash_locks + i - 1);
-> -	local_irq_enable();
-> +	for (i = NR_STRIPE_HASH_LOCKS - 1; i; i--)
-> +		spin_unlock(conf->hash_locks + i);
-> +	spin_unlock_irq(conf->hash_locks);
->  }
->  
->  /* bio's attached to a stripe+device for I/O are linked together in bi_sector
-> @@ -732,12 +731,11 @@ static bool is_full_stripe_write(struct stripe_head *sh)
->  
->  static void lock_two_stripes(struct stripe_head *sh1, struct stripe_head *sh2)
->  {
-> -	local_irq_disable();
->  	if (sh1 > sh2) {
-> -		spin_lock(&sh2->stripe_lock);
-> +		spin_lock_irq(&sh2->stripe_lock);
->  		spin_lock_nested(&sh1->stripe_lock, 1);
->  	} else {
-> -		spin_lock(&sh1->stripe_lock);
-> +		spin_lock_irq(&sh1->stripe_lock);
->  		spin_lock_nested(&sh2->stripe_lock, 1);
->  	}
->  }
-> @@ -745,8 +743,7 @@ static void lock_two_stripes(struct stripe_head *sh1, struct stripe_head *sh2)
->  static void unlock_two_stripes(struct stripe_head *sh1, struct stripe_head *sh2)
->  {
->  	spin_unlock(&sh1->stripe_lock);
-> -	spin_unlock(&sh2->stripe_lock);
-> -	local_irq_enable();
-> +	spin_unlock_irq(&sh2->stripe_lock);
->  }
->  
->  /* Only freshly new full stripe normal write stripe can be added to a batch list */
-> -- 
-> 2.12.0
-> 
+> However the world of pain begins if you want to have multiple guest VMs each
+> with its disk as a separate LV. One solution (that doesn't sound too clean but
+> perhaps could work), is stacked LVM, i.e. a PV of a different volume group made
+> on top of a cached LV.
+
+Yeah. Or, as I have, multiple LVs for encrypted filesystems with
+distinct passphrases and mount lifetimes, all of which I want to cache.
+(And I want the cache to cache the *encrypted* data, obviously, but both
+LVM and bcache will do that.)
+
+I think LVM needs something like bcache's cache sets -- i.e. the ability
+to have one cache for multiple LVs (this would be even more flexible
+than doing it at the VG level, since you retain the current ability to
+cache only some LVs without having to figure out how much cache each
+needs).
+
+-- 
+NULL && (void)
