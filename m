@@ -1,39 +1,35 @@
 From: Anthony Youngman <antlists@youngman.org.uk>
-Subject: Re: Recovery on new 2TB disk: finish=7248.4min (raid1)
-Date: Mon, 1 May 2017 22:53:14 +0100
-Message-ID: <6398208a-1345-bdec-4be6-a8bd98bfb089@youngman.org.uk>
-References: <590117CD.1000009@tesco.net>
- <22785.65375.947842.648174@quad.stoffel.home>
- <5492628.c8B43Z4h0G@matkor-lenovo>
- <22786.16524.435313.304834@quad.stoffel.home> <87o9veje3v.fsf@esperi.org.uk>
- <20170430182134.0e8c6dc0@natsu> <87fugpkhap.fsf@esperi.org.uk>
- <20170430214729.2a02cce5@natsu> <8737cojn54.fsf@esperi.org.uk>
- <20170502024657.6d33fd88@natsu>
+Subject: Re: Big-endian RAID5 recovery problem
+Date: Mon, 1 May 2017 22:59:14 +0100
+Message-ID: <0ab1ea1b-8035-512e-0b0a-819e15929f41@youngman.org.uk>
+References: <5c6e6e5d93d4056839e4f370e00a8e08@mail.athompso.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170502024657.6d33fd88@natsu>
+In-Reply-To: <5c6e6e5d93d4056839e4f370e00a8e08@mail.athompso.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.net>, Nix <nix@esperi.org.uk>
-Cc: John Stoffel <john@stoffel.org>, Mateusz Korniak <mateusz-lists@ant.gliwice.pl>, Ron Leach <ronleach@tesco.net>, linux-raid@vger.kernel.org
+To: Adam Thompson <athompso@athompso.net>, MUUG Roundtable <roundtable@muug.ca>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 01/05/17 22:46, Roman Mamedov wrote:
-> On Mon, 01 May 2017 22:13:59 +0100
-> Nix <nix@esperi.org.uk> wrote:
->
->>> (having to fiddle with "echo > /sys/..." and "cat /sys/..." is not the state
->>> of something you'd call a finished product).
->> You mean, like md? :)
-> You must be kidding. On the contrary I was looking to present md as the
-> example of how it should be done, with its all-encompassing and extremely
-> capable 'mdadm' tool -- and a complete lack of a similar tool for bcache.
->
-That's what I understood you to mean, but you are aware that SOME raid 
-management still has to be done with echo > /sys/... ?
+On 01/05/17 22:39, Adam Thompson wrote:
 
-So mdadm isn't perfect, not  by a long chalk, yet :-)
+>
+> I'm reluctant to blindly do a forced --create on the four disks, because
+> I'm not 100% certain of the RAID topology; there are at least two RAID
+> devices, one of which was hidden from the user, so I have no a-priori
+> knowledge of its RAID level or layout.
+>
+Get hold of lsdrv, and see what that tells you. (Look at the raid wiki 
+for details.) I don't know if it will have endian issues, but if it 
+doesn't an expert will probably be able to chime straight in and tell 
+you the create command.
+
+The other thing is, read up on overlays because, if you overlay those 
+disks, you will be able to "create" without actually writing to the 
+disks. That way you can test - and even do a complete backup and 
+recovery - without ever actually writing to, and altering, the original 
+disks.
 
 Cheers,
 Wol
