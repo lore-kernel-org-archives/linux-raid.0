@@ -1,50 +1,59 @@
-From: Roman Mamedov <rm@romanrm.net>
-Subject: Re: Recovery on new 2TB disk: finish=7248.4min (raid1)
-Date: Tue, 2 May 2017 03:03:07 +0500
-Message-ID: <20170502030307.4d7a77dd@natsu>
-References: <590117CD.1000009@tesco.net>
-        <22785.65375.947842.648174@quad.stoffel.home>
-        <5492628.c8B43Z4h0G@matkor-lenovo>
-        <22786.16524.435313.304834@quad.stoffel.home>
-        <87o9veje3v.fsf@esperi.org.uk>
-        <20170430182134.0e8c6dc0@natsu>
-        <87fugpkhap.fsf@esperi.org.uk>
-        <20170430214729.2a02cce5@natsu>
-        <8737cojn54.fsf@esperi.org.uk>
-        <20170502024657.6d33fd88@natsu>
-        <6398208a-1345-bdec-4be6-a8bd98bfb089@youngman.org.uk>
+From: Adam Thompson <athompso@athompso.net>
+Subject: Re: Big-endian RAID5 recovery problem
+Date: Mon, 01 May 2017 17:33:11 -0500
+Message-ID: <8aa82733243a09e48ba87d6282d8f791@mail.athompso.net>
+References: <5c6e6e5d93d4056839e4f370e00a8e08@mail.athompso.net>
+ <0ab1ea1b-8035-512e-0b0a-819e15929f41@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6398208a-1345-bdec-4be6-a8bd98bfb089@youngman.org.uk>
+In-Reply-To: <0ab1ea1b-8035-512e-0b0a-819e15929f41@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
 To: Anthony Youngman <antlists@youngman.org.uk>
-Cc: Nix <nix@esperi.org.uk>, John Stoffel <john@stoffel.org>, Mateusz Korniak <mateusz-lists@ant.gliwice.pl>, Ron Leach <ronleach@tesco.net>, linux-raid@vger.kernel.org
+Cc: MUUG Roundtable <roundtable@muug.ca>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 1 May 2017 22:53:14 +0100
-Anthony Youngman <antlists@youngman.org.uk> wrote:
+On 2017-05-01 16:59, Anthony Youngman wrote:
+> Get hold of lsdrv, and see what that tells you. (Look at the raid wiki
+> for details.) I don't know if it will have endian issues, but if it
+> doesn't an expert will probably be able to chime straight in and tell
+> you the create command.
 
-> That's what I understood you to mean, but you are aware that SOME raid 
-> management still has to be done with echo > /sys/... ?
-> 
-> So mdadm isn't perfect, not  by a long chalk, yet :-)
+Ah!  And that took me straight to the "asking for help" page.
 
-Well, why not post some examples of what you find yourself doing often
-via /sys, that's not available in mdadm (maybe as a new thread).
+The raw data is here: 
+https://gist.github.com/anonymous/321b6db3160c259c4a4dd549817a3d07
 
-One that I remember is the "want_replacement" mechanism, which was initially
-only available via "echo > /sys/..." but quickly got added to mdadm as
-"--replace".
+To summarize:
+* smartctl either fails to run or shows nothing wrong (depending on the 
+vintage of drive, maybe?);
+* mdadm --examine fails to read the superblock because of the endianness 
+issue (see 
+https://raid.wiki.kernel.org/index.php/RAID_superblock_formats#The_version-0.90_Superblock_Format)
+* lsdrv fails to report any useful MD topology information I could see 
+(other than confirming that each md device had four members, one 
+partition on each drive)
 
-People (and various outdated wikis) also tend to suggest using "echo check..."
-or "echo repair...", but those are available in mdadm as well, via "--action=".
+I also see 3 "FD" type partitions on each disk, but lsdrv only 
+identifies *2* of them as belonging to an MD array.  Not sure what's up 
+with that.
 
-Lastly, I change the "stripe_cache_size" via /sys/, but that's fine-tuning,
-which feels OK to do via sysfs parameters, whereas needing to use sysfs for the
-most basic operations of managing the storage system does not.
 
--- 
-With respect,
-Roman
+> The other thing is, read up on overlays because, if you overlay those
+> disks, you will be able to "create" without actually writing to the
+> disks. That way you can test - and even do a complete backup and
+> recovery - without ever actually writing to, and altering, the
+> original disks.
+
+Currently reading, thanks.  Didn't know overlays could be used for block 
+devices.
+
+
+Spinning up a QEMU instance of Linux-PPC or Linux-MIPS with the disks in 
+pass-through mode has also been mentioned, but... ugh.  Anecdotal 
+reports from the web suggest that doing so would just be opening up a 
+second rabbit hole in addition to the one I'm already headed down.
+
+-Adam
