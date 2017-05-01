@@ -1,212 +1,70 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [dm-devel] [mdadm PATCH 4/4] Create: tell udev device is not ready when first created.
-Date: Mon, 01 May 2017 14:35:17 +1000
-Message-ID: <8737cpry7u.fsf@notabene.neil.brown.name>
-References: <149265560315.31004.3851231165281498425.stgit@noble> <149265600601.31004.323865505557190368.stgit@noble> <dedd27cd-9c2e-f244-d8aa-7a074679d3c6@gmail.com> <87mvbasqx6.fsf@notabene.neil.brown.name> <40a5fbff-9eef-07b3-fe1b-fb9a888cfb8b@redhat.com> <87k265rxsm.fsf@notabene.neil.brown.name> <f9977410-5a8e-1a78-1406-fc9875f83d13@redhat.com>
+From: "jdd@dodin.org" <jdd@dodin.org>
+Subject: fixing raid1
+Date: Mon, 1 May 2017 18:34:14 +0200
+Message-ID: <c416bcba-7a5d-a409-42ca-2eb82eca32b7@dodin.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f9977410-5a8e-1a78-1406-fc9875f83d13@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Rajnoha <prajnoha@redhat.com>, Jes Sorensen <jes.sorensen@gmail.com>
-Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hello,
 
-On Fri, Apr 28 2017, Peter Rajnoha wrote:
+I'm new to this mailing list, so forgive me if I break some etiquette
 
-> On 04/28/2017 05:55 AM, NeilBrown wrote:
->> On Wed, Apr 26 2017, Peter Rajnoha wrote:
->>=20
->>> On 04/20/2017 11:35 PM, NeilBrown wrote:
->>>> If we wanted an more permanent udev rule, we would need to record the
->>>> devices that should be ignored in the filesystem somewhere else.
->>>> Maybe in /run/mdadm.
->>>> e.g.
->>>>
->>>>  KERNEL=3D=3D"md*", TEST=3D"/run/mdadm/creating-$kernel", ENV{SYSTEMD_=
-READY}=3D"0"
->>>>
->>>> Then we could have something like the following (untested) in mdadm.
->>>> Does that seem more suitable?
->>>>
->>>
->>> Yes, please, if possible, go for a permanent udev rule surely - this
->>> will make it much easier for other foreign tools to hook in properly if
->>> needed and it would also be much easier to debug.
->>=20
->> I'm leaning towards the files-in-/run/mdadm approach too.  I'll make a
->> proper patch.
->>=20
->>>
->>> But, wouldn't it be better if we could just pass this information ("not
->>> initialized yet") as RUN_ARRAY md ioctl parameter? In that case the md
->>> driver in kernel could add the variable to the uevent it generates which
->>> userspace udev rules could check for easily. This way, we don't need to
->>> hassle with creating files in filesystem and the information would be
->>> directly a part of the uevent the md kernel driver generates (so
->>> directly accessible in udev rules too). Also, possibly adding more
->>> variables for other future scenarios if needed.
->>=20
->> When would we clear the "not initialised yet" flag in the kernel, and
->> how?  And would that be enough.
->
-> The flag wouldn't be stored in kernel, md kernel driver would just pass
-> the flag with the uevent as it received in with ioctl/sysfs request to
-> create a new dev. The udev in userspace would handle the state
-> transition then from "flagged as not-initialized" state to "initilized"
-> by checking the sequence of events as they come.
->
-> We should have this sequence I assume:
->
->   1) "add" (creating dev, not usable yet)
->   2) "change" (activated dev, but not initialized yet)
->   3) "synthetic change" (after wiping the dev and closing it, the WATCH
-> rule fires)
->
+I have an academic problem. I mean that the target computer in not in 
+production and do not hold any essential data. I try to learn some 
+aspects of linux raid.
 
-"Should" is arguable, but there are no guarantees of this sequence.
+I have built a three disks raid1 on openSUSE 42.2. so far so good, all 
+worked perfectly
 
-A particular cause of irregular sequencing is when an array is assembled
-by the initrd, then after the real root is mounted, something runs
-  udevadm trigger --action=3Dadd
-(e.g. systemd-udev-triggger.service).
+but later on I had no more use of the machine with as much disks, and 
+wanted to reclaim one disk. This one was in a esata dock.
 
-In that case, 'add' is the first and only message that the
-full-root-available udev sees, so it is not safe to ignore the array as
-"not usable yet".
+At the moment I didn't found a way to make this cleanly (I found it it 
+too late in the linux raid wiki 
+https://raid.wiki.kernel.org/index.php/A_guide_to_mdadm#Removing_a_disk_from_an_array)
 
+so, I stopped the computer and removed the dock.
 
->>=20
->> When mdadm creates an md array, at least 3 uevents get generated.
->> The first is generated when the md device object is created, either by
->> opening the /dev/mdXX file, or by writing magic to somewhere in sysfs.
->> The second is generated when the array is started and the content is
->> visible.
->> The third is generated when mdadm closes the file descriptor.  It opens
->> /dev/mdXX for O_RDWR and performs ioctls on this, and then closes it.
->> Because udev uses inotify to watch for a 'close for a writable file
->> descriptor', this generates another event.
->>=20
->> We need to ensure that none of these cause udev to run anything that
->> inspects the contents of the array.
->> Of the three, only the second one is directly under the control of the
->> md module, so only that one can add an environment variable.
->>=20
->> It might be possible to avoid the last one (by not opening for write),
->> but I cannot see a way to avoid the first one.
->
-> So the first event is the "add" event ("md device object created") - in
-> this case, the device is not yet usable anyway I suppose, so we can skip
-> udev scans for this event right away (unless it's the synthetic "add"
-> event which is generated by writing "add" to /sys/block/.../uevent file
-> or alternatively using udevadm trigger - but we should be able to
-> recognize this event "synthetic add event" because it always comes after
-> the activating "change" event, otherwise we can skip scans).
+The computer rebooted perfectly, but in slightly degraded mode (see below)
 
-"not yet usable anyway" is not reliable.  It is very easy for mdadm to
-finish making the array usable before udev gets around to processing the
-initial "add" event.
+I don't find a way to tell the system that it have to forget the third 
+disk. May be it's not necessary.
 
-You seem to be suggesting that udev rules should try to reverse-engineer
-the sequence of events and deduce what is meant from that sequence.  I
-doubt that would be very robust.
+Do you have a clue?
 
+thanks
+jdd
 
->
-> The second event, which is the "change" event, would be marked with the
-> new "not initialized" flag. And so we skip the scans in udev too.
+# mdadm --detail /dev/md127
+/dev/md127:
+         Version : 1.0
+   Creation Time : Wed Dec 21 22:43:31 2016
+      Raid Level : raid1
+      Array Size : 976758592 (931.51 GiB 1000.20 GB)
+   Used Dev Size : 976758592 (931.51 GiB 1000.20 GB)
+    Raid Devices : 3
+   Total Devices : 2
+     Persistence : Superblock is persistent
 
-(one obvious problem with this approach is that it cannot work with old
-kernels, while my approach only requires an update to mdadm)
+   Intent Bitmap : Internal
 
->
-> Then mdadm opens the devive, clears any old content/signatures the data
-> area may contain, then closes it - this generates the third event -
-> which is the "synthetic change" event (as a result of the inotify WATCH
-> rule). And this one would drop the "not initialized" flag in udev db and
-> the scans in udev are now enabled.
+     Update Time : Mon May  1 15:29:48 2017
+           State : clean, degraded
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : 0
+   Spare Devices : 0
 
-Nope, it would be incorrect for mdadm to clear any old content.
-Sometimes people want to ignore old content.  Sometimes they very
-definitely want to use it.  It would be wrong for any code to try to
-guess what is wanted.
+            Name : any:jdd-raid
+            UUID : 4d57c009:5d7fc724:07376d9a:8ecb39a2
+          Events : 9592
 
-
->
-> So we should be able to handle all three kinds of events I think.
->
-> Now, as for even better synthetic event recognition, I've proposed a
-> patch recently where udev as well as any other tool generating these
-> synthetic events can add variables for more detailed event
-> identification, so this one should help us in the future even more in
-> these situations: https://lkml.org/lkml/2017/3/15/461. With this, we can
-> even disable the WATCH rule till the device is properly initialized and
-> the tool can generate the event itself by writing the
-> /sys/block/.../uevent file with a variable that the tool can then wait
-> for even (so the tool doesn't exit till the device is not properly
-> initialized). Once this initialization is all done, the WATCH rule can
-> be enabled for the dev. Also, with this, we don't need to be afraid that
-> some other tool fired the WATCH rule by chance if it opened the dev for
-> RW and closed it by mistake before we had a chance to initialize it
-> (which would fire the synthetic change event before the
-> wiping/initialization).
-
-It sounds to me like you are adding a lot of complexity to an
-already-fragile system.  I'm not filled with confidence - sorry.
-
-Thanks,
-NeilBrown
-
-
->
->>=20
->> I don't think that making a file appear in /run is really very different
->> from making a variable appear in a uevent.   If the variable were
->> describing the event itself there would be a different, but it would be
->> describing the state of the device.  So the only important difference is
->> "which is easier to work with".  I think creating an deleting a file is
->> easier to setting and clearing a variable.
->>=20
->
-> Yes, I agree that it's an alternative solution - it definitely and
-> surely improves current situation, either if we choose to write the file
-> or pass the flag in the uevent directly. It's just that with the
-> information written in filesystem, we have something external to check
-> for in addition to processing the uevent variables while we don't need
-> to, I think. As I described the sequence of events above, I think we
-> should be able to recognize the events properly and we should be able to
-> drop the flag automatically.
->
-> --=20
-> Peter
->
-> --
-> dm-devel mailing list
-> dm-devel@redhat.com
-> https://www.redhat.com/mailman/listinfo/dm-devel
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlkGuwUACgkQOeye3VZi
-gbn8eBAArnA5pLEdhkJ4OtA8y2wu5zRmyUAj+Ft64LAuj69NntW/FM7cHG8b+EFd
-UbNPApVX7KSH+orhe+rNbg3hRcMggFxrrxxFmzmqlw8LkBYPrhisXndbjCXdnBVB
-doJqmRxDzGihI/t/GaNSiV4O89zMFUrKAELwotp9GJamt0tALphhfzDOICybJnC/
-XwMYwrS0r9xpgI7Wr5W7IfoFdA2xriEjqJSY4Edhm/litg9dIyVdLJBadztT6QSA
-QNaO/4Ej6sb8n4/zujeWitH9lTZFhbEwxs3Ka0G4e2KDtcIZZFoGG0Xk/CP1ThT1
-Wq2KWp9Q0sryVJqmTisGukBmWzFnv/UjsPE6fp++nbylbOQHRgcOjGvAwpu70CFC
-WCY092TybIn9hs+iMXkHuPd/m3KKhfT1CYz//lXt4UnMX9SkzsUtZtdvQ85HEBUD
-UhQyDpu8D4LlPJXdW5g5U79NAqSilFw0HmJZOiv/7dVwtD52iU730Km6EuLzdZBp
-DwbRLBpA5vuEweLkXEG+8qznZdThQN43EY16DMliJKytRwMje5RQuF550+jWkF3W
-E8EhwhUvoNsK6z094R1lUhsmaWggOwdleCo8W2t72KDsb+qD3D5qlrYTukJ6Eabz
-tglBB2WqikfjzKMQB2z06P3ve1kypYqML1fPFHESrgxx9i6yfxE=
-=ncJj
------END PGP SIGNATURE-----
---=-=-=--
+     Number   Major   Minor   RaidDevice State
+        0       8        1        0      active sync   /dev/sda1
+        1       8       17        1      active sync   /dev/sdb1
+        -       0        0        2      removed
