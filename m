@@ -1,54 +1,58 @@
-From: Brad Campbell <lists2009@fnarfbargle.com>
-Subject: Re: Recover array after I panicked
-Date: Tue, 2 May 2017 21:11:45 +0800
-Message-ID: <c596aafe-d5c7-8508-4848-b51bf6156690@fnarfbargle.com>
-References: <20170424133946.GA7057@metamorpher.de>
- <727eeaf5-b856-305d-99b6-e42f3383b699@powerlamerz.org>
- <20170425001614.GA3936@metamorpher.de>
- <CAHKno4A7umuNBUPaHk0vmgj2fnjPgBi2oZJWidhKKaRX7ekgKA@mail.gmail.com>
- <20170425090122.GA4488@metamorpher.de>
- <CAHKno4AuKNxYiMazUy+hRJ2kJCdNNYw5L0uExvWc_52Ocn5V=g@mail.gmail.com>
- <20170425110807.GA5159@metamorpher.de>
- <5c3f7876-1b25-7020-5e7d-01776e7c9903@powerlamerz.org>
- <20170427231242.GA5138@metamorpher.de>
- <4c5d312b-fba6-da20-e08f-ed1a4ba5c313@powerlamerz.org>
- <20170429095656.GA4030@metamorpher.de>
- <37245817-43d3-7c93-98fe-8b8ce54396ad@powerlamerz.org>
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: [mdadm PATCH] Create: tell udev md device is not ready when first
+ created.
+Date: Tue, 2 May 2017 09:32:10 -0400
+Message-ID: <c5fe5d16-5ca6-94b0-fd5b-0b6009d78bab@gmail.com>
+References: <149265560315.31004.3851231165281498425.stgit@noble>
+ <149265600601.31004.323865505557190368.stgit@noble>
+ <dedd27cd-9c2e-f244-d8aa-7a074679d3c6@gmail.com>
+ <87mvbasqx6.fsf@notabene.neil.brown.name>
+ <40a5fbff-9eef-07b3-fe1b-fb9a888cfb8b@redhat.com>
+ <87h919ruj5.fsf@notabene.neil.brown.name>
+ <6bd347e1-170c-48e9-1171-09ff143ace83@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <37245817-43d3-7c93-98fe-8b8ce54396ad@powerlamerz.org>
+In-Reply-To: <6bd347e1-170c-48e9-1171-09ff143ace83@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?Q?Patrik_Dahlstr=c3=b6m?= <risca@powerlamerz.org>, Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Cc: linux-raid@vger.kernel.org
+To: Peter Rajnoha <prajnoha@redhat.com>, NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-On 02/05/17 21:08, Patrik Dahlström wrote:
+On 04/28/2017 05:28 AM, Peter Rajnoha wrote:
+> On 04/28/2017 07:05 AM, NeilBrown wrote:
+>>
+>> When an array is created the content is not initialized,
+>> so it could have remnants of an old filesystem or md array
+>> etc on it.
+>> udev will see this and might try to activate it, which is almost
+>> certainly not what is wanted.
+>>
+>> So create a mechanism for mdadm to communicate with udev to tell
+>> it that the device isn't ready.  This mechanism is the existance
+>> of a file /run/mdadm/created-mdXXX where mdXXX is the md device name.
+>>
+>> When creating an array, mdadm will create the file.
+>> A new udev rule file, 01-md-raid-creating.rules, will detect the
+>> precense of thst file and set ENV{SYSTEMD_READY}="0".
+>> This is fairly uniformly used to suppress actions based on the
+>> contents of the device.
+>
+> The scans in udev are primarily directed by blkid call which detects the
+> signatures and based on this information various other udev rules fire.
+>
+> The blkid as well as wipefs uses common libblkid library to detect these
+> signatures - is mdadm going to use libblkid to wipe the signatures on MD
+> device initialization or is it relying on external tools to do this? How
+> is mdadm actually initializing/wiping the newly created MD device?
 
->
-> On 04/29/2017 11:56 AM, Andreas Klauer wrote:
->> On Sat, Apr 29, 2017 at 12:46:15AM +0200, Patrik Dahlström wrote:
->> You could create the RAID first and the overlay afterwards.
->> Or you can create loop devices on the busy devices and use those.
-> I solved it by creating loop devices and use dd. I let it finish, then
-> ran fsck and resize2fs on the partition and now my data is back!
->
-> Thank you all for your invaluable help!
->
-> Would it be worth it for me to write up an article on the wiki on how to
-> re-create messed up metadata?
->
-> Best regards
-> // Patrik
->
+mdadm doesn't wipe data and it isn't supposed to. Being able to create 
+an array from drives with existing data is a feature.
 
-Yes please! And maybe an extra warning about getting full --detail and 
---examine information *before* making any alterations to an array!
+It is the responsibility of the system administrator to handle drives 
+with existing data, in the same way the administrator is expected to 
+handle insertion of USB drives or external drives being powered on.
 
-Regards,
--- 
-Dolphins are so intelligent that within a few weeks they can
-train Americans to stand at the edge of the pool and throw them
-fish.
+Jes
 
