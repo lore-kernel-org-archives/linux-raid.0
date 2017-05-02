@@ -1,78 +1,103 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 5/6] md: Adjust six function calls together with a variable
- assignment in faulty_status()
-Date: Tue, 2 May 2017 16:29:39 +0200
-Message-ID: <2af19638-e678-3386-f45e-ddaee2c6e9e1@users.sourceforge.net>
+Subject: [PATCH 6/6] md: Add some spaces for better code readability
+Date: Tue, 2 May 2017 16:31:00 +0200
+Message-ID: <9ef3d847-cab3-d7e4-7d76-2c41700df779@users.sourceforge.net>
 References: <f05bfc4e-7935-7e87-cc85-f0d9c5e3846a@users.sourceforge.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <f05bfc4e-7935-7e87-cc85-f0d9c5e3846a@users.sourceforge.net>
 Content-Language: en-GB
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.com>, Shaohua Li <shli@kernel.org>
 Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
 List-Id: linux-raid.ids
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Tue, 2 May 2017 15:35:35 +0200
+Date: Tue, 2 May 2017 16:00:45 +0200
 
-The script "checkpatch.pl" pointed information out like the following.
-
-ERROR: do not use assignment in if condition
-
-Thus fix the affected source code places.
+Use space characters and blank lines at some source code places
+according to the Linux coding style convention.
 
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/md/faulty.c | 19 ++++++++++++-------
- 1 file changed, 12 insertions(+), 7 deletions(-)
+ drivers/md/faulty.c | 27 +++++++++++++++------------
+ 1 file changed, 15 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/md/faulty.c b/drivers/md/faulty.c
-index f5536c91be5c..2573009b1265 100644
+index 2573009b1265..434c3643c9c3 100644
 --- a/drivers/md/faulty.c
 +++ b/drivers/md/faulty.c
-@@ -231,28 +231,33 @@ static void faulty_status(struct seq_file *seq, struct mddev *mddev)
- 	struct faulty_conf *conf = mddev->private;
- 	int n;
+@@ -110,19 +110,20 @@ static int check_sector(struct faulty_conf *conf, sector_t start, sector_t end,
+ {
+ 	/* If we find a ReadFixable sector, we fix it ... */
+ 	int i;
+-	for (i=0; i<conf->nfaults; i++)
++
++	for (i = 0; i < conf->nfaults; i++)
+ 		if (conf->faults[i] >= start &&
+ 		    conf->faults[i] < end) {
+ 			/* found it ... */
+ 			switch (conf->modes[i] * 2 + dir) {
+-			case WritePersistent*2+WRITE: return 1;
+-			case ReadPersistent*2+READ: return 1;
+-			case ReadFixable*2+READ: return 1;
+-			case ReadFixable*2+WRITE:
++			case WritePersistent * 2 + WRITE: return 1;
++			case ReadPersistent * 2 + READ: return 1;
++			case ReadFixable * 2 + READ: return 1;
++			case ReadFixable * 2 + WRITE:
+ 				conf->modes[i] = NoPersist;
+ 				return 0;
+-			case AllPersist*2+READ:
+-			case AllPersist*2+WRITE: return 1;
++			case AllPersist * 2 + READ:
++			case AllPersist * 2 + WRITE: return 1;
+ 			default:
+ 				return 0;
+ 			}
+@@ -134,9 +135,10 @@ static void add_sector(struct faulty_conf *conf, sector_t start, int mode)
+ {
+ 	int i;
+ 	int n = conf->nfaults;
+-	for (i=0; i<conf->nfaults; i++)
++
++	for (i = 0; i < conf->nfaults; i++)
+ 		if (conf->faults[i] == start) {
+-			switch(mode) {
++			switch (mode) {
+ 			case NoPersist: conf->modes[i] = mode; return;
+ 			case WritePersistent:
+ 				if (conf->modes[i] == ReadPersistent ||
+@@ -167,7 +169,7 @@ static void add_sector(struct faulty_conf *conf, sector_t start, int mode)
+ 	conf->faults[n] = start;
+ 	conf->modes[n] = mode;
+ 	if (conf->nfaults == n)
+-		conf->nfaults = n+1;
++		conf->nfaults = n + 1;
+ }
  
--	if ((n=atomic_read(&conf->counters[WriteTransient])) != 0)
-+	n = atomic_read(&conf->counters[WriteTransient]);
-+	if (n != 0)
- 		seq_printf(seq, " WriteTransient=%d(%d)",
- 			   n, conf->period[WriteTransient]);
+ static void faulty_make_request(struct mddev *mddev, struct bio *bio)
+@@ -278,7 +280,8 @@ static int faulty_reshape(struct mddev *mddev)
+ 		conf->nfaults = 0;
+ 	else if (mode == ClearErrors) {
+ 		int i;
+-		for (i=0 ; i < Modes ; i++) {
++
++		for (i = 0; i < Modes; i++) {
+ 			conf->period[i] = 0;
+ 			atomic_set(&conf->counters[i], 0);
+ 		}
+@@ -317,7 +320,7 @@ static int faulty_run(struct mddev *mddev)
+ 	if (!conf)
+ 		return -ENOMEM;
  
--	if ((n=atomic_read(&conf->counters[ReadTransient])) != 0)
-+	n = atomic_read(&conf->counters[ReadTransient]);
-+	if (n != 0)
- 		seq_printf(seq, " ReadTransient=%d(%d)",
- 			   n, conf->period[ReadTransient]);
- 
--	if ((n=atomic_read(&conf->counters[WritePersistent])) != 0)
-+	n = atomic_read(&conf->counters[WritePersistent]);
-+	if (n != 0)
- 		seq_printf(seq, " WritePersistent=%d(%d)",
- 			   n, conf->period[WritePersistent]);
- 
--	if ((n=atomic_read(&conf->counters[ReadPersistent])) != 0)
-+	n = atomic_read(&conf->counters[ReadPersistent]);
-+	if (n != 0)
- 		seq_printf(seq, " ReadPersistent=%d(%d)",
- 			   n, conf->period[ReadPersistent]);
- 
--
--	if ((n=atomic_read(&conf->counters[ReadFixable])) != 0)
-+	n = atomic_read(&conf->counters[ReadFixable]);
-+	if (n != 0)
- 		seq_printf(seq, " ReadFixable=%d(%d)",
- 			   n, conf->period[ReadFixable]);
- 
--	if ((n=atomic_read(&conf->counters[WriteAll])) != 0)
-+	n = atomic_read(&conf->counters[WriteAll]);
-+	if (n != 0)
- 		seq_puts(seq, " WriteAll");
- 
- 	seq_printf(seq, " nfaults=%d", conf->nfaults);
+-	for (i=0; i<Modes; i++) {
++	for (i = 0; i < Modes; i++) {
+ 		atomic_set(&conf->counters[i], 0);
+ 		conf->period[i] = 0;
+ 	}
 -- 
 2.12.2
+
