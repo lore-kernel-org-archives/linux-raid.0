@@ -1,103 +1,42 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 6/6] md: Add some spaces for better code readability
-Date: Tue, 2 May 2017 16:31:00 +0200
-Message-ID: <9ef3d847-cab3-d7e4-7d76-2c41700df779@users.sourceforge.net>
-References: <f05bfc4e-7935-7e87-cc85-f0d9c5e3846a@users.sourceforge.net>
+From: Geliang Tang <geliangtang@gmail.com>
+Subject: Re: [PATCH] md/bitmap: use i_blocksize()
+Date: Tue, 2 May 2017 22:33:21 +0800
+Message-ID: <20170502143321.wjifra4yvnqitc6d@ThinkPad>
+References: <0a58b38c7ddfbbc8f56cb8d815114bd4357a6016.1484895399.git.geliangtang@gmail.com>
+ <2e7ac27f6ca34bfa01f3b6906fdf409c348e9187.1484895660.git.geliangtang@gmail.com>
+ <20170121181307.mbvoe45ca3d7sufv@kernel.org>
+ <20170122015030.d6sccz76asvvnvzz@OptiPlex>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f05bfc4e-7935-7e87-cc85-f0d9c5e3846a@users.sourceforge.net>
-Content-Language: en-GB
+Content-Disposition: inline
+In-Reply-To: <20170122015030.d6sccz76asvvnvzz@OptiPlex>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.com>, Shaohua Li <shli@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Coly Li <colyli@suse.de>
 List-Id: linux-raid.ids
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Tue, 2 May 2017 16:00:45 +0200
+On Sun, Jan 22, 2017 at 09:50:30AM +0800, Geliang Tang wrote:
+> On Sat, Jan 21, 2017 at 10:13:07AM -0800, Shaohua Li wrote:
+> > On Fri, Jan 20, 2017 at 10:29:52PM +0800, Geliang Tang wrote:
+> > > Since i_blocksize() helper has been defined in fs.h, use it instead
+> > > of open-coding.
+> > 
+> > which tree is this patch applied to? I can't find it in Linus's tree
+> > 
+> 
+> This patch is against the last linux-next tree, next-20170120. It
+> depends on the patch '2651ed7 fs: add i_blocksize()' which isn't merged
+> into Linus's tree yet.
+> 
+> -Geliang
 
-Use space characters and blank lines at some source code places
-according to the Linux coding style convention.
+Hi Shaohua,
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/md/faulty.c | 27 +++++++++++++++------------
- 1 file changed, 15 insertions(+), 12 deletions(-)
+The i_blocksize() helper has been merged into Linus's tree already, and
+this patch is still valid. Could you please reconsider it if this patch
+can be applied?
 
-diff --git a/drivers/md/faulty.c b/drivers/md/faulty.c
-index 2573009b1265..434c3643c9c3 100644
---- a/drivers/md/faulty.c
-+++ b/drivers/md/faulty.c
-@@ -110,19 +110,20 @@ static int check_sector(struct faulty_conf *conf, sector_t start, sector_t end,
- {
- 	/* If we find a ReadFixable sector, we fix it ... */
- 	int i;
--	for (i=0; i<conf->nfaults; i++)
-+
-+	for (i = 0; i < conf->nfaults; i++)
- 		if (conf->faults[i] >= start &&
- 		    conf->faults[i] < end) {
- 			/* found it ... */
- 			switch (conf->modes[i] * 2 + dir) {
--			case WritePersistent*2+WRITE: return 1;
--			case ReadPersistent*2+READ: return 1;
--			case ReadFixable*2+READ: return 1;
--			case ReadFixable*2+WRITE:
-+			case WritePersistent * 2 + WRITE: return 1;
-+			case ReadPersistent * 2 + READ: return 1;
-+			case ReadFixable * 2 + READ: return 1;
-+			case ReadFixable * 2 + WRITE:
- 				conf->modes[i] = NoPersist;
- 				return 0;
--			case AllPersist*2+READ:
--			case AllPersist*2+WRITE: return 1;
-+			case AllPersist * 2 + READ:
-+			case AllPersist * 2 + WRITE: return 1;
- 			default:
- 				return 0;
- 			}
-@@ -134,9 +135,10 @@ static void add_sector(struct faulty_conf *conf, sector_t start, int mode)
- {
- 	int i;
- 	int n = conf->nfaults;
--	for (i=0; i<conf->nfaults; i++)
-+
-+	for (i = 0; i < conf->nfaults; i++)
- 		if (conf->faults[i] == start) {
--			switch(mode) {
-+			switch (mode) {
- 			case NoPersist: conf->modes[i] = mode; return;
- 			case WritePersistent:
- 				if (conf->modes[i] == ReadPersistent ||
-@@ -167,7 +169,7 @@ static void add_sector(struct faulty_conf *conf, sector_t start, int mode)
- 	conf->faults[n] = start;
- 	conf->modes[n] = mode;
- 	if (conf->nfaults == n)
--		conf->nfaults = n+1;
-+		conf->nfaults = n + 1;
- }
- 
- static void faulty_make_request(struct mddev *mddev, struct bio *bio)
-@@ -278,7 +280,8 @@ static int faulty_reshape(struct mddev *mddev)
- 		conf->nfaults = 0;
- 	else if (mode == ClearErrors) {
- 		int i;
--		for (i=0 ; i < Modes ; i++) {
-+
-+		for (i = 0; i < Modes; i++) {
- 			conf->period[i] = 0;
- 			atomic_set(&conf->counters[i], 0);
- 		}
-@@ -317,7 +320,7 @@ static int faulty_run(struct mddev *mddev)
- 	if (!conf)
- 		return -ENOMEM;
- 
--	for (i=0; i<Modes; i++) {
-+	for (i = 0; i < Modes; i++) {
- 		atomic_set(&conf->counters[i], 0);
- 		conf->period[i] = 0;
- 	}
--- 
-2.12.2
+Thanks.
 
+-Geliang
