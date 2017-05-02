@@ -1,204 +1,146 @@
-From: Marc Smith <marc.smith@mcc.edu>
-Subject: Re: md-cluster Oops 4.9.13
-Date: Tue, 2 May 2017 14:30:24 -0400
-Message-ID: <CAHkw+LfStCAZcyULSWM9g3iKMncnHCJgHgR5tSKak-hDUcU5Kw@mail.gmail.com>
-References: <CAHkw+Lcr1+sWsQPK_ijfTHwG+zxRYT+iNhWGdpYTNxVuQi8TOw@mail.gmail.com>
- <58E45E0C.6030705@gmail.com> <CAHkw+Ld=yv=LoBKFUxNO6dEocOKzq-pFR=Tfk50OULXJ8NN9eQ@mail.gmail.com>
- <58ED83B0.6080209@suse.com>
+From: Bernd <berndman80@gmx.de>
+Subject: Fwd: Please Help! Degraded Raid6
+Date: Tue, 02 May 2017 23:11:10 +0200
+Message-ID: <C7A7AD68-1ABB-4186-8228-BC89B95E4571@gmx.de>
+References: <C89BFE2F-0C7A-47CA-A970-EA90C0FF053A@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <58ED83B0.6080209@suse.com>
+In-Reply-To: <C89BFE2F-0C7A-47CA-A970-EA90C0FF053A@gmx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
-
-I was finally able to test this, and I modified the original patch to
-apply cleanly against 4.9.13. I tried several times to reproduce this
-oops, and wasn't successful, so it looks good. Here is the modified
-patch:
-
-diff -Naur a/drivers/md/bitmap.c b/drivers/md/bitmap.c
---- a/drivers/md/bitmap.c       2017-02-26 05:11:18.000000000 -0500
-+++ b/drivers/md/bitmap.c       2017-04-14 11:22:18.325093619 -0400
-@@ -1734,6 +1734,20 @@
-        kfree(bitmap);
- }
-
-+void bitmap_wait_behind_writes(struct mddev *mddev)
-+{
-+       struct bitmap *bitmap = mddev->bitmap;
-+
-+       /* wait for behind writes to complete */
-+       if (bitmap && atomic_read(&bitmap->behind_writes) > 0) {
-+               pr_debug("md:%s: behind writes in progress - waiting
-to stop.\n",
-+                        mdname(mddev));
-+               /* need to kick something here to make sure I/O goes? */
-+               wait_event(bitmap->behind_wait,
-+                          atomic_read(&bitmap->behind_writes) == 0);
-+       }
-+}
-+
- void bitmap_destroy(struct mddev *mddev)
- {
-        struct bitmap *bitmap = mddev->bitmap;
-@@ -1741,6 +1755,8 @@
-        if (!bitmap) /* there was no bitmap */
-                return;
-
-+       bitmap_wait_behind_writes(mddev);
-+
-        mutex_lock(&mddev->bitmap_info.mutex);
-        spin_lock(&mddev->lock);
-        mddev->bitmap = NULL; /* disconnect from the md device */
-diff -Naur a/drivers/md/bitmap.h b/drivers/md/bitmap.h
---- a/drivers/md/bitmap.h       2017-02-26 05:11:18.000000000 -0500
-+++ b/drivers/md/bitmap.h       2017-04-14 10:49:03.999868295 -0400
-@@ -269,6 +269,7 @@
-                  int chunksize, int init);
- int bitmap_copy_from_slot(struct mddev *mddev, int slot,
-                                sector_t *lo, sector_t *hi, bool clear_bits);
-+void bitmap_wait_behind_writes(struct mddev *mddev);
- #endif
-
- #endif
-diff -Naur a/drivers/md/md.c b/drivers/md/md.c
---- a/drivers/md/md.c   2017-02-26 05:11:18.000000000 -0500
-+++ b/drivers/md/md.c   2017-04-14 10:57:52.344539569 -0400
-@@ -5513,15 +5513,7 @@
-
- static void mddev_detach(struct mddev *mddev)
- {
--       struct bitmap *bitmap = mddev->bitmap;
--       /* wait for behind writes to complete */
--       if (bitmap && atomic_read(&bitmap->behind_writes) > 0) {
--               printk(KERN_INFO "md:%s: behind writes in progress -
-waiting to stop.\n",
--                      mdname(mddev));
--               /* need to kick something here to make sure I/O goes? */
--               wait_event(bitmap->behind_wait,
--                          atomic_read(&bitmap->behind_writes) == 0);
--       }
-+       bitmap_wait_behind_writes(mddev);
-        if (mddev->pers && mddev->pers->quiesce) {
-                mddev->pers->quiesce(mddev, 1);
-                mddev->pers->quiesce(mddev, 0);
-@@ -5534,6 +5526,7 @@
- static void __md_stop(struct mddev *mddev)
- {
-        struct md_personality *pers = mddev->pers;
-+       bitmap_destroy(mddev);
-        mddev_detach(mddev);
-        /* Ensure ->event_work is done */
-        flush_workqueue(md_misc_wq);
-@@ -5554,7 +5547,6 @@
-         * This is called from dm-raid
-         */
-        __md_stop(mddev);
--       bitmap_destroy(mddev);
-        if (mddev->bio_set)
-                bioset_free(mddev->bio_set);
- }
-@@ -5692,7 +5684,6 @@
-        if (mode == 0) {
-                printk(KERN_INFO "md: %s stopped.\n", mdname(mddev));
-
--               bitmap_destroy(mddev);
-                if (mddev->bitmap_info.file) {
-                        struct file *f = mddev->bitmap_info.file;
-                        spin_lock(&mddev->lock);
 
 
---Marc
+
+-------- Ursprüngliche Nachricht --------
+Von: Bernd <berndman80@gmx.de>
+Gesendet: 2. Mai 2017 22:52:38 MESZ
+An: linux-raid@vger.kernel.org
+CC: neilb@suse.de
+Betreff: Please Help! Degraded Raid6 
+
+Hello, 
+I have a problem with my degraded raid6 and hope you can help me. Please excuse if my english is not so well...
+A few days ago i wanted to boot my server and while booting the electricity fuse dropped out. And my raid 6 was in the state active degraded not started. It was degraded with 7 of 8 devices before the crash. I was able to boot with the 7 devices and had all my data. Now when booting all devices are spares and when ich do mdadm --run --force /dev/md0 the state is active degraded not started. Im not able to run the raid and can't touch my data. Add or readd the removed device is denied. System removed it a time ago without my help...think i have to recreate with one missing device. And think a have lost my superblocks...Please help. Dont know what to do. Don't want loose all my data! ...thank you for your help  Bernd
 
 
-On Tue, Apr 11, 2017 at 9:32 PM, Guoqing Jiang <gqjiang@suse.com> wrote:
->
->
-> On 04/10/2017 09:25 PM, Marc Smith wrote:
->>
->> Hi,
->>
->> Sorry for the delay... I was hoping to cherry-pick this and test
->> against 4.9.x, but it didn't apply cleanly, although it looks trivial
->> to do it by hand. Is it recommended/okay to test this patch against
->> 4.9.x? Will the fix eventually be merged into 4.9.x?
->
->
-> I think you can have a try with the patch then see what will happen, the
-> better
-> way is try with the latest code though people don't like always update
-> kernel,
-> but it is not a material for stable 4.9.x from my understanding.
->
-> Thanks,
-> Guoqing
->
->
->>
->>
->> --Marc
->>
->> On Tue, Apr 4, 2017 at 11:01 PM, Guoqing Jiang <jgq516@gmail.com> wrote:
->>>
->>>
->>> On 04/04/2017 10:06 PM, Marc Smith wrote:
->>>>
->>>> Hi,
->>>>
->>>> I encountered an oops this morning when stopping a MD array
->>>> (md-cluster)... there were 4 md-cluster array started, and they were
->>>> in the middle of a rebuild. I stopped the first one and then stopped
->>>> the second one immediately after and got the oops, here is a
->>>> transcript of what was on my terminal session:
->>>>
->>>> [root@brimstone-1b ~]# mdadm --stop /dev/md/array1
->>>> mdadm: stopped /dev/md/array1
->>>> [root@brimstone-1b ~]# mdadm --stop /dev/md/array2
->>>>
->>>> Message from syslogd@brimstone-1b at Tue Apr  4 09:54:40 2017 ...
->>>> brimstone-1b kernel: [649162.174685] BUG: unable to handle kernel NULL
->>>> pointer dereference at 0000000000000098
->>>>
->>>> Using Linux 4.9.13 and here is the output from the kernel messages:
->>>>
->>>> --snip--
->>>> [649158.014731] dlm: 5b3b8f94-7875-b323-5bb8-29fa6866f4a8: leaving the
->>>> lockspace group...
->>>> [649158.015233] dlm: 5b3b8f94-7875-b323-5bb8-29fa6866f4a8: group event
->>>> done 0 0
->>>> [649158.015303] dlm: 5b3b8f94-7875-b323-5bb8-29fa6866f4a8:
->>>> release_lockspace final free
->>>> [649158.015331] md: unbind<nvme0n1p1>
->>>> [649158.042540] md: export_rdev(nvme0n1p1)
->>>> [649158.042546] md: unbind<nvme1n1p1>
->>>> [649158.048501] md: export_rdev(nvme1n1p1)
->>>> [649161.759022] md127: detected capacity change from 1000068874240 to 0
->>>> [649161.759025] md: md127 stopped.
->>>> [649162.174685] BUG: unable to handle kernel NULL pointer dereference
->>>> at 0000000000000098
->>>> [649162.174727] IP: [<ffffffff81868b40>] recv_daemon+0x1e9/0x373
->>>
->>>
->>> Looks like the recv_daemon is still running after stop array, commit
->>> 48df498 "md: move bitmap_destroy to the beginning of __md_stop"
->>> ensure it won't happen.
->>>
->>>
->>> [snip]
->>>
->>>> Perhaps this is already fixed in later versions? Let me know if you
->>>> need any additional information.
->>>
->>>
->>> Could you pls try with the latest version? Please let me know if you
->>> still see it, thanks.
->>>
->>> Regards,
->>> Guoqing
->>>
->
+This is what i tried:
+
+berndman@berndman:~$ sudo mdadm --detail /dev/md0
+/dev/md0:
+        Version : 1.2
+  Creation Time : Wed Dec 19 20:39:11 2012
+     Raid Level : raid6
+  Used Dev Size : 1953509376 (1863.01 GiB 2000.39 GB)
+   Raid Devices : 8
+  Total Devices : 7
+    Persistence : Superblock is persistent
+
+    Update Time : Fri Mar 31 14:56:50 2017
+          State : active, degraded, Not Started 
+ Active Devices : 7
+Working Devices : 7
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 4096K
+
+           Name : berndman:0  (local to host berndman)
+           UUID : 26f8d8f1:530a3a85:31e4df5e:adc64cb8
+         Events : 1686
+
+    Number   Major   Minor   RaidDevice State
+       0       8       81        0      active sync   /dev/sdf1
+       1       8       49        1      active sync   /dev/sdd1
+       8       8        1        2      active sync   /
+dev/sda1
+       3       8       65        3      active sync   /dev/sde1
+       4       8      129        4      active sync   /dev/sdi1
+       5       8       33        5      active sync   /dev/sdc1
+       6       8       17        6      active sync   /dev/sdb1
+       7       0        0        7      removed
+
+
+
+berndman@berndman:~$ sudo cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
+md0 : inactive sdi1[4] sda1[8] sdd1[1] sde1[3] sdf1[0] sdc1[5] sdb1[6]
+      13674587752 blocks super 1.2
+                                                                                                                                                                                                                                                                               
+unused devices: <none>            
+
+
+                                                                                                                                                                                                                                        
+berndman@berndman:~$ sudo mdadm --run /dev/md0                                                                                                                                                                                                                              
+mdadm: failed to run array /dev/md0: Input/output error 
+
+
+
+
+                                                                                                                                                                                                                       
+berndman@berndman:~$ sudo mdadm --examine /dev/sd[a-z]                                                                                                                                                                                                
+/dev/sda:                                                                                                                                                                                                                                                                      
+   MBR Magic : aa55                                                                                                                                                                                                                                                            
+Partition[0] :   3907027120 sectors at         2048 (type fd)                                                                                                                                                                                                                  
+/dev/sdb:                                                                                                                                                                                                                                                                      
+   MBR Magic : aa55                                                                                                                                                                                                                                                            
+Partition[0] :   3907027120 sectors at         2048 (type fd)                                                                                                                                                                                                                  
+/dev/sdc:                                                                                                                                                                                                                                                                      
+   MBR Magic : aa55                                                                                                                                                                                                                                                            
+Partition[0] :   3907027120 sectors at         2048 (type fd)                                                                                                                                                                                                                  
+/dev/sdd:                                                                                                                                                                                                                                                                      
+   MBR Magic : aa55                                                                                                                                                                                                                                                            
+Partition[0] :   3907027120 sectors at         2048 (type fd)                                                                                                                                                                                                                  
+/dev/sde:                                                                                                                                                                                                                                                                      
+   MBR Magic : aa55                                                                                                                                                                                                                                                            
+Partition[0] :   3907027120 sectors at         2048 (type fd)                                                                                                                                                                                                                  
+/dev/sdf:                                                                                                                                                                                                                                                                      
+   MBR Magic : aa55                                                                                                                                                                                                                                                            
+Partition[0] :   3907027120 sectors at         2048 (type fd)                                                                                                                                                                                                                  
+/dev/sdg:                                                                                                                                                                                                                                                                      
+   MBR Magic : aa55                                                                                                                                                                                                                                                            
+Partition[0] :     73969664 sectors at         2048 (type 83)                                                                                                                                                                                                                  
+Partition[1] :      4190210 sectors at     73973758 (type 05)                                                                                                                                                                                                                  
+/dev/sdh:                                                                                                                                                                                                                                                                      
+          Magic : a92b4efc                                                                                                                                                                                                                                                     
+        Version : 1.2
+    Feature Map : 0x2
+     Array UUID : 26f8d8f1:530a3a85:31e4df5e:adc64cb8
+           Name : berndman:0  (local to host berndman)
+  Creation Time : Wed Dec 19 20:39:11 2012
+     Raid Level : raid6
+   Raid Devices : 8
+
+ Avail Dev Size : 3907027120 (1863.02 GiB 2000.40 GB)
+     Array Size : 23442112512 (11178.07 GiB 12002.36 GB)
+  Used Dev Size : 3907018752 (1863.01 GiB 2000.39 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+Recovery Offset : 0 sectors
+          State : clean
+    Device UUID : 0be2a583:659bbe6e:7d8c93dc:6592505b
+
+    Update Time : Fri Jul 10 22:32:34 2015
+       Checksum : b60eeb71 - correct
+         Events : 607
+
+         Layout : left-symmetric
+     Chunk Size : 4096K
+
+   Device Role : Active device 7
+   Array State : AAAAAAAA ('A' == active, '.' == missing)
+/dev/sdi:
+   MBR Magic : aa55
+Partition[0] :   3907027120 sectors at         2048 (type fd)
+
+
+
+berndman@berndman:~$ sudo mdadm --assemble --run --force /dev/md0 /dev/sd[abcdefi]1
+mdadm: cannot open device /dev/sda1: Device or resource busy
+mdadm: /dev/sda1 has no superblock - assembly aborted
+berndman@berndman:~$
