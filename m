@@ -1,31 +1,34 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: mdadm/mdmon Name vs argv[0]
-Date: Tue, 2 May 2017 10:19:08 -0400
-Message-ID: <a61470a2-2c3b-3f4a-5712-dfb87f3acad8@gmail.com>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH 0/6] md: Fine-tuning for some function implementations
+Date: Tue, 2 May 2017 16:23:43 +0200
+Message-ID: <f05bfc4e-7935-7e87-cc85-f0d9c5e3846a@users.sourceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: pawel.baldysiak@intel.com
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-GB
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.com>, Shaohua Li <shli@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Pawel,
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Tue, 2 May 2017 16:12:34 +0200
 
-In the below commit you changed the handling of how mdadm/mdmon handles 
-printing the name of the running process.
+Some update suggestions were taken into account
+from static source code analysis.
 
-However, if people for some reason decided to change the names of 
-mdadm/mdmon this would no longer be correct.
+Markus Elfring (6):
+  Replace seven seq_printf() calls by seq_putc()
+  Replace 17 seq_printf() calls by seq_puts()
+  Adjust four function calls together with a variable assignment
+  Use seq_puts() in faulty_status()
+  Adjust six function calls together with a variable assignment in faulty_status()
+  Add some spaces for better code readability
 
-Do you remember if there is any reason why you didn't use argv[0] for this?
+ drivers/md/faulty.c | 48 ++++++++++++++++++++++----------------
+ drivers/md/md.c     | 66 +++++++++++++++++++++++++++++------------------------
+ 2 files changed, 64 insertions(+), 50 deletions(-)
 
-commit d56dd607ba433d9334f0fb4114fe081742ae4361
-Author: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Date:   Wed Feb 11 22:25:03 2015 +0100
-
-     Change way of printing name of a process
-
-Cheers,
-Jes
+-- 
+2.12.2
