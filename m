@@ -1,50 +1,31 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: Re: [PATCH] md/raid10: skip spare disk as 'first' disk
-Date: Tue, 2 May 2017 09:22:57 +0800
-Message-ID: <5907DF71.10806@suse.com>
-References: <7adb3f88bd6d611511ad14dcf8da6898e5f8168d.1493666464.git.shli@fb.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Big-endian RAID5 recovery problem
+Date: Mon, 1 May 2017 22:47:22 -0400
+Message-ID: <9683b4c3-d4b6-47a6-63cf-90e95eed5b72@turmel.org>
+References: <5c6e6e5d93d4056839e4f370e00a8e08@mail.athompso.net>
+ <0ab1ea1b-8035-512e-0b0a-819e15929f41@youngman.org.uk>
+ <8aa82733243a09e48ba87d6282d8f791@mail.athompso.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7adb3f88bd6d611511ad14dcf8da6898e5f8168d.1493666464.git.shli@fb.com>
+In-Reply-To: <8aa82733243a09e48ba87d6282d8f791@mail.athompso.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
-Cc: NeilBrown <neilb@suse.com>
+To: Adam Thompson <athompso@athompso.net>, Anthony Youngman <antlists@youngman.org.uk>
+Cc: MUUG Roundtable <roundtable@muug.ca>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 05/01/2017 06:33 PM, Adam Thompson wrote:
 
+> Spinning up a QEMU instance of Linux-PPC or Linux-MIPS with the disks in
+> pass-through mode has also been mentioned, but... ugh.  Anecdotal
+> reports from the web suggest that doing so would just be opening up a
+> second rabbit hole in addition to the one I'm already headed down.
 
-On 05/02/2017 03:22 AM, Shaohua Li wrote:
-> Commit 6f287ca(md/raid10: reset the 'first' at the end of loop) ignores
-> a case in reshape, the first rdev could be a spare disk, which shouldn't
-> be accounted as the first disk since it doesn't include the offset info.
+Actually, this is a very good idea.  If you can successfully assemble
+within one of these VMs, you could use the --update=metadata option to
+convert to v1.0 superblocks.  Cleanly shut down, and then the arrays
+would be usable in the host.
 
-Acked-by: Guoqing Jiang <gqjiang@suse.com>
-
-Thanks,
-Guoqing
-
-> Fix: 6f287ca(md/raid10: reset the 'first' at the end of loop)
-> Cc: Guoqing Jiang <gqjiang@suse.com>
-> Cc: NeilBrown <neilb@suse.com>
-> Signed-off-by: Shaohua Li <shli@fb.com>
-> ---
->   drivers/md/raid10.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 2883b72..cce23be 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -4079,8 +4079,8 @@ static int raid10_start_reshape(struct mddev *mddev)
->   				diff = 0;
->   			if (first || diff < min_offset_diff)
->   				min_offset_diff = diff;
-> +			first = 0;
->   		}
-> -		first = 0;
->   	}
->   
->   	if (max(before_length, after_length) > min_offset_diff)
+Phil
 
