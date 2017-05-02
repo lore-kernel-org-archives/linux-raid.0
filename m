@@ -1,42 +1,64 @@
-From: Geliang Tang <geliangtang@gmail.com>
-Subject: Re: [PATCH] md/bitmap: use i_blocksize()
-Date: Tue, 2 May 2017 22:33:21 +0800
-Message-ID: <20170502143321.wjifra4yvnqitc6d@ThinkPad>
-References: <0a58b38c7ddfbbc8f56cb8d815114bd4357a6016.1484895399.git.geliangtang@gmail.com>
- <2e7ac27f6ca34bfa01f3b6906fdf409c348e9187.1484895660.git.geliangtang@gmail.com>
- <20170121181307.mbvoe45ca3d7sufv@kernel.org>
- <20170122015030.d6sccz76asvvnvzz@OptiPlex>
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: [PATCH 1/1] IMSM: Initialize my_vol_raid_dev_num during vol
+ creation
+Date: Tue, 2 May 2017 10:49:33 -0400
+Message-ID: <84dba5d7-a0e1-4fa0-1e31-15e730d15ac6@gmail.com>
+References: <20170426090807.10328-1-pawel.baldysiak@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170122015030.d6sccz76asvvnvzz@OptiPlex>
+In-Reply-To: <20170426090807.10328-1-pawel.baldysiak@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Coly Li <colyli@suse.de>
+To: Pawel Baldysiak <pawel.baldysiak@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Jan 22, 2017 at 09:50:30AM +0800, Geliang Tang wrote:
-> On Sat, Jan 21, 2017 at 10:13:07AM -0800, Shaohua Li wrote:
-> > On Fri, Jan 20, 2017 at 10:29:52PM +0800, Geliang Tang wrote:
-> > > Since i_blocksize() helper has been defined in fs.h, use it instead
-> > > of open-coding.
-> > 
-> > which tree is this patch applied to? I can't find it in Linus's tree
-> > 
-> 
-> This patch is against the last linux-next tree, next-20170120. It
-> depends on the patch '2651ed7 fs: add i_blocksize()' which isn't merged
-> into Linus's tree yet.
-> 
-> -Geliang
+On 04/26/2017 05:08 AM, Pawel Baldysiak wrote:
+> This field was not initialized so far. This ID needs to be unique
+> for every newly created array in container.
+>
+> Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+> ---
+>  super-intel.c | 11 +++++++++--
+>  1 file changed, 9 insertions(+), 2 deletions(-)
+>
+> diff --git a/super-intel.c b/super-intel.c
+> index 0aed57c..d5c77c0 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -232,8 +232,13 @@ struct imsm_super {
+>  	__u32 orig_family_num;		/* 0x40 - 0x43 original family num */
+>  	__u32 pwr_cycle_count;		/* 0x44 - 0x47 simulated power cycle count for array */
+>  	__u32 bbm_log_size;		/* 0x48 - 0x4B - size of bad Block Mgmt Log in bytes */
+> -#define IMSM_FILLERS 35
+> -	__u32 filler[IMSM_FILLERS];	/* 0x4C - 0xD7 RAID_MPB_FILLERS */
+> +	__u16 num_raid_devs_created;	/* 0x4C - 0x4D Used for generating unique
+> +					 * volume IDs for raid_dev created in this array
+> +					 * (starts at 1)
+> +					 */
+> +	__u16 filler1;			/* 0x4E - 0x4F */
+> +#define IMSM_FILLERS 34
+> +	__u32 filler[IMSM_FILLERS];	/* 0x50 - 0xD7 RAID_MPB_FILLERS */
+>  	struct imsm_disk disk[1];	/* 0xD8 diskTbl[numDisks] */
+>  	/* here comes imsm_dev[num_raid_devs] */
+>  	/* here comes BBM logs */
+> @@ -5368,6 +5373,8 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
+>  		set_imsm_ord_tbl_ent(map, i, IMSM_ORD_REBUILD);
+>  	}
+>  	mpb->num_raid_devs++;
+> +	mpb->num_raid_devs_created++;
+> +	dev->my_vol_raid_dev_num = mpb->num_raid_devs_created;
+>
+>  	if (s->consistency_policy == UnSet ||
+>  	    s->consistency_policy == CONSISTENCY_POLICY_RESYNC ||
+>
 
-Hi Shaohua,
+Applied!
 
-The i_blocksize() helper has been merged into Linus's tree already, and
-this patch is still valid. Could you please reconsider it if this patch
-can be applied?
+I didn't see this one as you got my email address wrong, but it's in my 
+tree now.
 
-Thanks.
+Thanks,
+Jes
 
--Geliang
