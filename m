@@ -1,87 +1,43 @@
-From: <citydesk@thereporteronline.com>
-Subject: 40335 linux-raid
-Date: Tue, 02 May 2017 08:11:23 -0000
-Message-ID: <149371268343.23200.9028595672571304688@orange.sk>
+From: Trevor Cordes <trevor@tecnopolis.ca>
+Subject: Re: [RndTbl] Big-endian RAID5 recovery problem
+Date: Tue, 2 May 2017 02:29:26 -0500
+Message-ID: <20170502022926.20938dd5@pog.tecnopolis.ca>
+References: <5c6e6e5d93d4056839e4f370e00a8e08@mail.athompso.net>
 Mime-Version: 1.0
-Content-Type: application/zip; name="6794.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: attachment
+In-Reply-To: <5c6e6e5d93d4056839e4f370e00a8e08@mail.athompso.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Adam Thompson <athompso@athompso.net>
+Cc: Continuation of Round Table discussion <roundtable@muug.ca>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-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
+On 2017-05-01 Adam Thompson wrote:
+> The problem is that the disks use the v0.90 metadata format, and they 
+> came from a big-endian system, not a little-endian system.  MD 
+> superblocks *since* v0.90 are endian-agnostic, but back in v0.90, the 
+> superblock was byte-order specific.
+
+This may sound crazy, but conceivably you could (using the md source
+code) find where the superblock lives (just the first copy should be
+enough), hex edit the superblock and (again using the source) swap
+bytes around to change the endian-ness.  Then make sure any future
+mdadm commands are just using the first superblock (which I think is
+the default).
+
+If there's some kind of checksum involved, then the endian-ness may
+affect it (??), and fudging that may be quite difficult (compared to
+finding a big-endian box out there to borrow instead!).
+
+No matter what you do, I would instantly dd each real disk into files
+in your own big fs and work on the copies.  No reason to ever write to
+the originals, keep them as backups.  I *think* you can use mdadm on
+plain files(??) otherwise I guess you could subpartition a big disk.
+Ya, it will be cheesy to run RAID5 all off of 1 disk, but in this case
+performance won't be critical.
+
+Lastly, I would make sure to start the array in such a way that for
+sure it won't resync, so either get all 3 preset perfectly, or leave 1
+as missing, or I think there's a command to not start if it would
+result in a dirty array.
