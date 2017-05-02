@@ -1,31 +1,41 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Big-endian RAID5 recovery problem
-Date: Mon, 1 May 2017 22:47:22 -0400
-Message-ID: <9683b4c3-d4b6-47a6-63cf-90e95eed5b72@turmel.org>
-References: <5c6e6e5d93d4056839e4f370e00a8e08@mail.athompso.net>
- <0ab1ea1b-8035-512e-0b0a-819e15929f41@youngman.org.uk>
- <8aa82733243a09e48ba87d6282d8f791@mail.athompso.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+From: Zhilong Liu <zlliu@suse.com>
+Subject: [mdadm PATCH 0/2] unify stat and fstat into functions
+Date: Tue,  2 May 2017 11:26:44 +0800
+Message-ID: <20170502032646.20220-1-zlliu@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8aa82733243a09e48ba87d6282d8f791@mail.athompso.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Thompson <athompso@athompso.net>, Anthony Youngman <antlists@youngman.org.uk>
-Cc: MUUG Roundtable <roundtable@muug.ca>, linux-raid@vger.kernel.org
+To: Jes.Sorensen@gmail.com
+Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
-On 05/01/2017 06:33 PM, Adam Thompson wrote:
+Hi, Jes;
 
-> Spinning up a QEMU instance of Linux-PPC or Linux-MIPS with the disks in
-> pass-through mode has also been mentioned, but... ugh.  Anecdotal
-> reports from the web suggest that doing so would just be opening up a
-> second rabbit hole in addition to the one I'm already headed down.
+This two patches mainly unified the stat and fstat operations,
+declare new function for them and decrease the repeated codes.
+Also fix one bug in WaitClean(), it forgot to check the block
+device.
 
-Actually, this is a very good idea.  If you can successfully assemble
-within one of these VMs, you could use the --update=metadata option to
-convert to v1.0 superblocks.  Cleanly shut down, and then the arrays
-would be usable in the host.
+Thanks,
+Zhilong
 
-Phil
+Zhilong Liu (2):
+  util: unify fstat operations into function
+  util: unify stat operations into function
+
+ Assemble.c    | 24 +++++++-----------------
+ Build.c       | 30 +++++++-----------------------
+ Create.c      | 23 ++++++++++-------------
+ Grow.c        | 10 ++++------
+ Incremental.c | 52 +++++++++++++++-------------------------------------
+ Manage.c      | 13 ++-----------
+ Monitor.c     | 16 ++++------------
+ bitmap.c      | 10 +---------
+ mdadm.h       |  2 ++
+ super-ddf.c   | 10 ++++------
+ super-intel.c | 23 +++++++----------------
+ util.c        | 34 ++++++++++++++++++++++++++++++++++
+ 12 files changed, 97 insertions(+), 150 deletions(-)
+
+-- 
+2.10.2
 
