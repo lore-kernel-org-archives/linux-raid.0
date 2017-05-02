@@ -1,338 +1,39 @@
-From: Zhilong Liu <zlliu@suse.com>
-Subject: [mdadm PATCH 2/2] util: unify stat operations into function
-Date: Tue,  2 May 2017 11:26:46 +0800
-Message-ID: <20170502032646.20220-3-zlliu@suse.com>
-References: <20170502032646.20220-1-zlliu@suse.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: Recovery on new 2TB disk: finish=7248.4min (raid1)
+Date: Tue, 2 May 2017 07:10:42 +0100
+Message-ID: <590822E2.1080009@youngman.org.uk>
+References: <590117CD.1000009@tesco.net>
+ <22785.65375.947842.648174@quad.stoffel.home>
+ <5492628.c8B43Z4h0G@matkor-lenovo>
+ <22786.16524.435313.304834@quad.stoffel.home> <87o9veje3v.fsf@esperi.org.uk>
+ <20170430182134.0e8c6dc0@natsu> <87fugpkhap.fsf@esperi.org.uk>
+ <20170430214729.2a02cce5@natsu> <8737cojn54.fsf@esperi.org.uk>
+ <20170502024657.6d33fd88@natsu>
+ <6398208a-1345-bdec-4be6-a8bd98bfb089@youngman.org.uk>
+ <20170502030307.4d7a77dd@natsu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170502032646.20220-1-zlliu@suse.com>
+In-Reply-To: <20170502030307.4d7a77dd@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
+To: Roman Mamedov <rm@romanrm.net>
+Cc: Nix <nix@esperi.org.uk>, John Stoffel <john@stoffel.org>, Mateusz Korniak <mateusz-lists@ant.gliwice.pl>, Ron Leach <ronleach@tesco.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-declare new function to integrate repeated stat operations,
-the devname is necessary and the *rdev is optional argument,
-parse the pointer of dev_t *rdev, if valid, assigned device
-number to rdev, if NULL, ignores.
+On 01/05/17 23:03, Roman Mamedov wrote:
+>> > That's what I understood you to mean, but you are aware that SOME raid 
+>> > management still has to be done with echo > /sys/... ?
+>> > 
+>> > So mdadm isn't perfect, not  by a long chalk, yet :-)
+> Well, why not post some examples of what you find yourself doing often
+> via /sys, that's not available in mdadm (maybe as a new thread).
 
-Signed-off-by: Zhilong Liu <zlliu@suse.com>
----
- Assemble.c    |  7 ++-----
- Build.c       | 25 ++++---------------------
- Incremental.c | 21 ++++-----------------
- Manage.c      | 11 +----------
- Monitor.c     | 16 ++++------------
- mdadm.h       |  1 +
- super-ddf.c   | 10 ++++------
- super-intel.c | 10 ++++------
- util.c        | 17 +++++++++++++++++
- 9 files changed, 41 insertions(+), 77 deletions(-)
+I *should* do, rather than I *do* do, but your everyday general
+maintenance tasks, like scrubbing?
 
-diff --git a/Assemble.c b/Assemble.c
-index 58bf96d..55267cc 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -510,15 +510,12 @@ static int select_devices(struct mddev_dev *devlist,
- 
- 	/* Now reject spares that don't match domains of identified members */
- 	for (tmpdev = devlist; tmpdev; tmpdev = tmpdev->next) {
--		struct stat stb;
- 		if (tmpdev->used != 3)
- 			continue;
--		if (stat(tmpdev->devname, &stb)< 0) {
--			pr_err("fstat failed for %s: %s\n",
--			       tmpdev->devname, strerror(errno));
-+		if (stat_md_is_blkdev(tmpdev->devname, &rdev)) {
- 			tmpdev->used = 2;
- 		} else {
--			struct dev_policy *pol = devid_policy(stb.st_rdev);
-+			struct dev_policy *pol = devid_policy(rdev);
- 			int dt = domain_test(domains, pol, NULL);
- 			if (inargv && dt != 0)
- 				/* take this spare as domains match
-diff --git a/Build.c b/Build.c
-index 25aa4ea..0dcfa48 100644
---- a/Build.c
-+++ b/Build.c
-@@ -41,7 +41,6 @@ int Build(char *mddev, struct mddev_dev *devlist,
- 	 * cc = chunk size factor: 0==4k, 1==8k etc.
- 	 */
- 	int i;
--	struct stat stb;
- 	dev_t rdev;
- 	int subdevs = 0, missing_disks = 0;
- 	struct mddev_dev *dv;
-@@ -65,16 +64,8 @@ int Build(char *mddev, struct mddev_dev *devlist,
- 			missing_disks++;
- 			continue;
- 		}
--		if (stat(dv->devname, &stb)) {
--			pr_err("Cannot find %s: %s\n",
--				dv->devname, strerror(errno));
--			return 1;
--		}
--		if ((stb.st_mode & S_IFMT) != S_IFBLK) {
--			pr_err("%s is not a block device.\n",
--				dv->devname);
-+		if (stat_md_is_blkdev(dv->devname, NULL))
- 			return 1;
--		}
- 	}
- 
- 	if (s->raiddisks != subdevs) {
-@@ -162,16 +153,8 @@ int Build(char *mddev, struct mddev_dev *devlist,
- 
- 		if (strcmp("missing", dv->devname) == 0)
- 			continue;
--		if (stat(dv->devname, &stb)) {
--			pr_err("Weird: %s has disappeared.\n",
--				dv->devname);
-+		if (stat_md_is_blkdev(dv->devname, &rdev))
- 			goto abort;
--		}
--		if ((stb.st_mode & S_IFMT)!= S_IFBLK) {
--			pr_err("Weird: %s is no longer a block device.\n",
--				dv->devname);
--			goto abort;
--		}
- 		fd = open(dv->devname, O_RDONLY|O_EXCL);
- 		if (fd < 0) {
- 			pr_err("Cannot open %s: %s\n",
-@@ -187,8 +170,8 @@ int Build(char *mddev, struct mddev_dev *devlist,
- 		disk.state = (1<<MD_DISK_SYNC) | (1<<MD_DISK_ACTIVE);
- 		if (dv->writemostly == FlagSet)
- 			disk.state |= 1<<MD_DISK_WRITEMOSTLY;
--		disk.major = major(stb.st_rdev);
--		disk.minor = minor(stb.st_rdev);
-+		disk.major = major(rdev);
-+		disk.minor = minor(rdev);
- 		if (ioctl(mdfd, ADD_NEW_DISK, &disk)) {
- 			pr_err("ADD_NEW_DISK failed for %s: %s\n",
- 			       dv->devname, strerror(errno));
-diff --git a/Incremental.c b/Incremental.c
-index 6512af8..772461e 100644
---- a/Incremental.c
-+++ b/Incremental.c
-@@ -86,8 +86,7 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
- 	 * - if number of OK devices match expected, or -R and there are enough,
- 	 *   start the array (auto-readonly).
- 	 */
--	struct stat stb;
--	dev_t rdev;
-+	dev_t rdev, rdev2;
- 	struct mdinfo info, dinfo;
- 	struct mdinfo *sra = NULL, *d;
- 	struct mddev_ident *match;
-@@ -109,18 +108,8 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
- 
- 	struct createinfo *ci = conf_get_create_info();
- 
--	if (stat(devname, &stb) < 0) {
--		if (c->verbose >= 0)
--			pr_err("stat failed for %s: %s.\n",
--				devname, strerror(errno));
--		return rv;
--	}
--	if ((stb.st_mode & S_IFMT) != S_IFBLK) {
--		if (c->verbose >= 0)
--			pr_err("%s is not a block device.\n",
--				devname);
-+	if (stat_md_is_blkdev(devname, &rdev))
- 		return rv;
--	}
- 	dfd = dev_open(devname, O_RDONLY);
- 	if (dfd < 0) {
- 		if (c->verbose >= 0)
-@@ -159,10 +148,8 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
- 	if (!devlist) {
- 		devlist = conf_get_devs();
- 		for (;devlist; devlist = devlist->next) {
--			struct stat st2;
--			if (stat(devlist->devname, &st2) == 0 &&
--			    (st2.st_mode & S_IFMT) == S_IFBLK &&
--			    st2.st_rdev == stb.st_rdev)
-+			if (stat_md_is_blkdev(devlist->devname, &rdev2) == 0 &&
-+			    rdev2 == rdev)
- 				break;
- 		}
- 	}
-diff --git a/Manage.c b/Manage.c
-index 69c68ba..56ad8ce 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -1512,24 +1512,16 @@ int Manage_subdevs(char *devname, int fd,
- 			 */
- 			rdev = makedev(mj, mn);
- 		} else {
--			struct stat stb;
- 			tfd = dev_open(dv->devname, O_RDONLY);
- 			if (tfd >= 0) {
- 				fstat_md_is_blkdev(tfd, dv->devname, &rdev);
- 				close(tfd);
- 			} else {
- 				int open_err = errno;
--				if (stat(dv->devname, &stb) != 0) {
--					pr_err("Cannot find %s: %s\n",
--					       dv->devname, strerror(errno));
--					goto abort;
--				}
--				if ((stb.st_mode & S_IFMT) != S_IFBLK) {
-+				if (stat_md_is_blkdev(dv->devname, &rdev)) {
- 					if (dv->disposition == 'M')
- 						/* non-fatal. Also improbable */
- 						continue;
--					pr_err("%s is not a block device.\n",
--					       dv->devname);
- 					goto abort;
- 				}
- 				if (dv->disposition == 'r')
-@@ -1546,7 +1538,6 @@ int Manage_subdevs(char *devname, int fd,
- 					goto abort;
- 				}
- 			}
--			rdev = stb.st_rdev;
- 		}
- 		switch(dv->disposition){
- 		default:
-diff --git a/Monitor.c b/Monitor.c
-index 1f15377..78363dd 100644
---- a/Monitor.c
-+++ b/Monitor.c
-@@ -993,23 +993,13 @@ static void link_containers_with_subarrays(struct state *list)
- /* Not really Monitor but ... */
- int Wait(char *dev)
- {
--	struct stat stb;
- 	char devnm[32];
--	char *tmp;
- 	int rv = 1;
- 	int frozen_remaining = 3;
- 
--	if (stat(dev, &stb) != 0) {
--		pr_err("Cannot find %s: %s\n", dev,
--			strerror(errno));
-+	if (stat_md_is_blkdev(dev, NULL))
- 		return 2;
--	}
--	tmp = stat2devnm(&stb);
--	if (!tmp) {
--		pr_err("%s is not a block device.\n", dev);
--		return 2;
--	}
--	strcpy(devnm, tmp);
-+	strcpy(devnm, dev);
- 
- 	while(1) {
- 		struct mdstat_ent *ms = mdstat_read(1, 0);
-@@ -1068,6 +1058,8 @@ int WaitClean(char *dev, int sock, int verbose)
- 	int rv = 1;
- 	char devnm[32];
- 
-+	if (stat_md_is_blkdev(dev, NULL))
-+		return 2;
- 	fd = open(dev, O_RDONLY);
- 	if (fd < 0) {
- 		if (verbose)
-diff --git a/mdadm.h b/mdadm.h
-index 1d63932..f45e5f4 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -1434,6 +1434,7 @@ extern int check_partitions(int fd, char *dname,
- 			    unsigned long long freesize,
- 			    unsigned long long size);
- extern int fstat_md_is_blkdev(int fd, char *devname, dev_t *rdev);
-+extern int stat_md_is_blkdev(char *devname, dev_t *rdev);
- 
- extern int get_mdp_major(void);
- extern int get_maj_min(char *dev, int *major, int *minor);
-diff --git a/super-ddf.c b/super-ddf.c
-index 796eaa5..ad77464 100644
---- a/super-ddf.c
-+++ b/super-ddf.c
-@@ -3490,7 +3490,7 @@ static int validate_geometry_ddf_bvd(struct supertype *st,
- 				     char *dev, unsigned long long *freesize,
- 				     int verbose)
- {
--	struct stat stb;
-+	dev_t rdev;
- 	struct ddf_super *ddf = st->sb;
- 	struct dl *dl;
- 	unsigned long long maxsize;
-@@ -3526,13 +3526,11 @@ static int validate_geometry_ddf_bvd(struct supertype *st,
- 		return 1;
- 	}
- 	/* This device must be a member of the set */
--	if (stat(dev, &stb) < 0)
--		return 0;
--	if ((S_IFMT & stb.st_mode) != S_IFBLK)
-+	if (stat_md_is_blkdev(dev, NULL))
- 		return 0;
- 	for (dl = ddf->dlist ; dl ; dl = dl->next) {
--		if (dl->major == (int)major(stb.st_rdev) &&
--		    dl->minor == (int)minor(stb.st_rdev))
-+		if (dl->major == (int)major(rdev) &&
-+		    dl->minor == (int)minor(rdev))
- 			break;
- 	}
- 	if (!dl) {
-diff --git a/super-intel.c b/super-intel.c
-index c16edfb..0fef01e 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -6850,7 +6850,7 @@ static int validate_geometry_imsm_volume(struct supertype *st, int level,
- 					 unsigned long long *freesize,
- 					 int verbose)
- {
--	struct stat stb;
-+	dev_t rdev;
- 	struct intel_super *super = st->sb;
- 	struct imsm_super *mpb;
- 	struct dl *dl;
-@@ -6915,13 +6915,11 @@ static int validate_geometry_imsm_volume(struct supertype *st, int level,
- 	}
- 
- 	/* This device must be a member of the set */
--	if (stat(dev, &stb) < 0)
--		return 0;
--	if ((S_IFMT & stb.st_mode) != S_IFBLK)
-+	if (stat_md_is_blkdev(dev, &rdev))
- 		return 0;
- 	for (dl = super->disks ; dl ; dl = dl->next) {
--		if (dl->major == (int)major(stb.st_rdev) &&
--		    dl->minor == (int)minor(stb.st_rdev))
-+		if (dl->major == (int)major(rdev) &&
-+		    dl->minor == (int)minor(rdev))
- 			break;
- 	}
- 	if (!dl) {
-diff --git a/util.c b/util.c
-index 6294fff..c466078 100644
---- a/util.c
-+++ b/util.c
-@@ -723,6 +723,23 @@ int fstat_md_is_blkdev(int fd, char *devname, dev_t *rdev)
- 	return 0;
- }
- 
-+int stat_md_is_blkdev(char *devname, dev_t *rdev)
-+{
-+	struct stat stb;
-+
-+	if (stat(devname, &stb) != 0) {
-+		pr_err("stat failed for %s: %s\n", devname, strerror(errno));
-+		return 1;
-+	}
-+	if ((S_IFMT & stb.st_mode) != S_IFBLK) {
-+		pr_err("%s is not a block device.\n", devname);
-+		return 1;
-+	}
-+	if (rdev)
-+		*rdev = stb.st_rdev;
-+	return 0;
-+}
-+
- int ask(char *mesg)
- {
- 	char *add = "";
--- 
-2.10.2
+I'm not aware of *any* day-to-day tasks that you do using mdadm - oh and
+if you don't scrub it's not an uncommon cause of arrays crashing...
 
+Cheers,
+Wol
