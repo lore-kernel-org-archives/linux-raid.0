@@ -1,45 +1,59 @@
-From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Subject: Re: Fwd: Please Help! Degraded Raid6
-Date: Wed, 3 May 2017 00:01:54 +0200
-Message-ID: <20170502220154.GA12721@metamorpher.de>
-References: <C89BFE2F-0C7A-47CA-A970-EA90C0FF053A@gmx.de>
- <C7A7AD68-1ABB-4186-8228-BC89B95E4571@gmx.de>
+From: Liuzhilong <zlliu@suse.de>
+Subject: Re: [PATCH] change back 0644 permission for Grow.c
+Date: Wed, 3 May 2017 11:16:40 +0800
+Message-ID: <97f9931d-2af5-fad1-bf3b-ad476b23de72@suse.de>
+References: <1493717233-32524-1-git-send-email-zlliu@suse.com>
+ <832ae4d1-4127-6b48-06b8-6b709a191b38@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <C7A7AD68-1ABB-4186-8228-BC89B95E4571@gmx.de>
+In-Reply-To: <832ae4d1-4127-6b48-06b8-6b709a191b38@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bernd <berndman80@gmx.de>
+To: Jes Sorensen <jes.sorensen@gmail.com>, Zhilong Liu <zlliu@suse.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, May 02, 2017 at 11:11:10PM +0200, Bernd wrote:
-> berndman@berndman:~$ sudo mdadm --examine /dev/sd[a-z]
 
-You're using the wrong devices in your commands 
-so the output is not the least bit interesting.
 
-> /dev/sda:
->    MBR Magic : aa55
-> Partition[0] :   3907027120 sectors at         2048 (type fd)
-> /dev/sdb:
->    MBR Magic : aa55
-> Partition[0] :   3907027120 sectors at         2048 (type fd)
+On 05/02/2017 09:45 PM, Jes Sorensen wrote:
+> On 05/02/2017 05:27 AM, Zhilong Liu wrote:
+>> Fixes commit:
+>> 26714713cd2b ("mdadm: Change timestamps to unsigned data type.")
+>>
+>> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+>> ---
+>>  Grow.c | 0
+>>  1 file changed, 0 insertions(+), 0 deletions(-)
+>>  mode change 100755 => 100644 Grow.c
+>>
+>> diff --git a/Grow.c b/Grow.c
+>> old mode 100755
+>> new mode 100644
+>>
+>
+> Hi Zhilong,
+>
+> Not quite sure what you expect me to do with this one......
+>
+> Maybe including the patch would help :)
+>
 
-> /dev/sdh:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x2
->      Array UUID : 26f8d8f1:530a3a85:31e4df5e:adc64cb8
+commit: 26714713cd2bad9e0bf7f4669f6cc4659ceaab6c
+it changes the permission of Grow.c and mdadm.h from 644 to 755,
+the mdadm.h has changed permission back to 644 according to the
+commit: 26714713cd2bad9e0bf7f4669f6cc4659ceaab6c from Neil.
+Thus I sent this patch to change back 0644 permission for Grow.c.
+The source file doesn't need the executable permission.
 
-Well except for this but need all of them.
+Thanks,
+-Zhilong
+> Cheers,
+> Jes
+>
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
->     Update Time : Fri Jul 10 22:32:34 2015
-
-I hope it's not yet another case of a drive dropped out back 
-in 2015 and you never doing anything about it in two years... 
-Monitoring and instant email notification, is it that difficult?
-
-Regards
-Andreas Klauer
