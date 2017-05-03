@@ -1,58 +1,80 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH] change back 0644 permission for Grow.c
-Date: Wed, 3 May 2017 10:51:36 -0400
-Message-ID: <df037778-8ed5-8bef-dd53-c3cf471466d0@gmail.com>
-References: <1493717233-32524-1-git-send-email-zlliu@suse.com>
- <832ae4d1-4127-6b48-06b8-6b709a191b38@gmail.com>
- <97f9931d-2af5-fad1-bf3b-ad476b23de72@suse.de>
+From: Alfred Matthews <asm13243546@gmail.com>
+Subject: Re: on assembly and recovery of a hardware RAID
+Date: Wed, 3 May 2017 15:44:56 +0000
+Message-ID: <CAAZLhTf=GHmSDcY8Eb9SzevofFbDD7f-N8DKZiFkq9j2XV4mQA@mail.gmail.com>
+References: <CAAZLhTdaVM4fagN5=bqWpPx-DjyU6UZ69bJFf51FWMX7oeyJNw@mail.gmail.com>
+ <87tw6weubu.fsf@notabene.neil.brown.name> <CAAZLhTcEhn2GezDSDJHOLv2VNSynzT-he0FRrVNbz1xtakLsMQ@mail.gmail.com>
+ <87d1djdz8y.fsf@notabene.neil.brown.name> <CAAZLhTdn6xnB6Kuuhf8+VaSd5u6gekUSDSMnK+w5obZNxvNg8A@mail.gmail.com>
+ <CAAZLhTcoU232uBs2zcK6TFj67Jru5oeNE_F0T2fQR6Un66OPXA@mail.gmail.com>
+ <87lgs0cy0e.fsf@notabene.neil.brown.name> <CAAZLhTcNsjzLdEZyzG+kEuDhVye8pnuf6VhWzP=G0NL_aFX-5w@mail.gmail.com>
+ <87a88fcq21.fsf@notabene.neil.brown.name> <CAAZLhTdobNxkYNmp6y3cOrLAdMfTYt3kodzM0+a7E-G=q1QGtw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <97f9931d-2af5-fad1-bf3b-ad476b23de72@suse.de>
+In-Reply-To: <CAAZLhTdobNxkYNmp6y3cOrLAdMfTYt3kodzM0+a7E-G=q1QGtw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Liuzhilong <zlliu@suse.de>, Zhilong Liu <zlliu@suse.com>
+To: NeilBrown <neilb@suse.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 05/02/2017 11:16 PM, Liuzhilong wrote:
->
->
-> On 05/02/2017 09:45 PM, Jes Sorensen wrote:
->> On 05/02/2017 05:27 AM, Zhilong Liu wrote:
->>> Fixes commit:
->>> 26714713cd2b ("mdadm: Change timestamps to unsigned data type.")
->>>
->>> Signed-off-by: Zhilong Liu <zlliu@suse.com>
->>> ---
->>>  Grow.c | 0
->>>  1 file changed, 0 insertions(+), 0 deletions(-)
->>>  mode change 100755 => 100644 Grow.c
->>>
->>> diff --git a/Grow.c b/Grow.c
->>> old mode 100755
->>> new mode 100644
->>>
+Sorry to disappear for a bit.
+
+Of necessity I've migrated to another working system and I'm in Arch.
+Utility here is fsck.hfs as opposed to hpfsck. I'd like to post that
+output.
+
+mdadm --build /dev/md0 --level=0 -n2 --chunk=8K /dev/sdb2 /dev/sdc2
+
+works, then,
+
+fsck.hfs -v /dev/md0
+*** Checking volume MDB
+  drSigWord      = 0xffffffff
+  drCrDate       = Mon Feb  6 06:28:15 2040
+  drLsMod        = Mon Feb  6 06:28:15 2040
+  drAtrb         = BUSY | HLOCKED | UMOUNTED | BBSPARED | BVINCONSIS |
+COPYPROT | SLOCKED
+  drNmFls        = 65535
+  drVBMSt        = 65535
+  drAllocPtr     = 65535
+  drNmAlBlks     = 65535
+  drAlBlkSiz     = 4294967295
+  drClpSiz       = 4294967295
+  drAlBlSt       = 65535
+  drNxtCNID      = 4294967295
+  drFreeBks      = 65535
+  drVN           = ""
+  drVolBkUp      = Mon Feb  6 06:28:15 2040
+  drVSeqNum      = 4294967295
+  drWrCnt        = 4294967295
+  drXTClpSiz     = 4294967295
+  drCTClpSiz     = 4294967295
+  drNmRtDirs     = 65535
+  drFilCnt       = 4294967295
+  drDirCnt       = 4294967295
+  drEmbedSigWord = 0xffff
+  drEmbedExtent  = 65535[65535..131069]
+  drXTFlSize     = 4294967295
+  drXTExtRec     =
+65535[65535..131069]+65535[65535..131069]+65535[65535..131069]
+  drCTFlSize     = 4294967295
+  drCTExtRec     =
+65535[65535..131069]+65535[65535..131069]+65535[65535..131069]
+Bad volume signature (0xffffffff); should be 0x4244. Fix? y
+Volume creation date is in the future (Mon Feb  6 06:28:15 2040). Fix? y
+Volume last modify date is in the future (Mon Feb  6 06:28:15 2040). Fix? y
+Volume bitmap starts at unusual location (1), not 3. Fix? y
+*** Checking volume structure
+*** Checking extents overflow B*-tree
+
+It's possible that I was unwise in accepting the changes from fsck.
+
 >>
->> Hi Zhilong,
+>> How is your C coding?  You could
+>>   apt-get source hfsplus
+>> and hack the code and try to build it yourself....
 >>
->> Not quite sure what you expect me to do with this one......
->>
->> Maybe including the patch would help :)
->>
->
-> commit: 26714713cd2bad9e0bf7f4669f6cc4659ceaab6c
-> it changes the permission of Grow.c and mdadm.h from 644 to 755,
-> the mdadm.h has changed permission back to 644 according to the
-> commit: 26714713cd2bad9e0bf7f4669f6cc4659ceaab6c from Neil.
-> Thus I sent this patch to change back 0644 permission for Grow.c.
-> The source file doesn't need the executable permission.
 
-You are right indeed!
+Still fine. By now not clear if this is what's needed.
 
-Applied!
-
-Thanks,
-Jes
-
-
+Al
