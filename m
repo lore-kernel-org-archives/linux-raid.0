@@ -1,80 +1,94 @@
-From: Alfred Matthews <asm13243546@gmail.com>
-Subject: Re: on assembly and recovery of a hardware RAID
-Date: Wed, 3 May 2017 15:44:56 +0000
-Message-ID: <CAAZLhTf=GHmSDcY8Eb9SzevofFbDD7f-N8DKZiFkq9j2XV4mQA@mail.gmail.com>
-References: <CAAZLhTdaVM4fagN5=bqWpPx-DjyU6UZ69bJFf51FWMX7oeyJNw@mail.gmail.com>
- <87tw6weubu.fsf@notabene.neil.brown.name> <CAAZLhTcEhn2GezDSDJHOLv2VNSynzT-he0FRrVNbz1xtakLsMQ@mail.gmail.com>
- <87d1djdz8y.fsf@notabene.neil.brown.name> <CAAZLhTdn6xnB6Kuuhf8+VaSd5u6gekUSDSMnK+w5obZNxvNg8A@mail.gmail.com>
- <CAAZLhTcoU232uBs2zcK6TFj67Jru5oeNE_F0T2fQR6Un66OPXA@mail.gmail.com>
- <87lgs0cy0e.fsf@notabene.neil.brown.name> <CAAZLhTcNsjzLdEZyzG+kEuDhVye8pnuf6VhWzP=G0NL_aFX-5w@mail.gmail.com>
- <87a88fcq21.fsf@notabene.neil.brown.name> <CAAZLhTdobNxkYNmp6y3cOrLAdMfTYt3kodzM0+a7E-G=q1QGtw@mail.gmail.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [GIT PULL] MD update for 4.12
+Date: Wed, 3 May 2017 10:27:47 -0700
+Message-ID: <CA+55aFxD4mukK20ukU6LySD_Ro9XD+k1SU5O3+3-A67EG8ER6w@mail.gmail.com>
+References: <20170501225048.whxlxsoebnxcfyto@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAZLhTdobNxkYNmp6y3cOrLAdMfTYt3kodzM0+a7E-G=q1QGtw@mail.gmail.com>
+In-Reply-To: <20170501225048.whxlxsoebnxcfyto@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Sorry to disappear for a bit.
+On Mon, May 1, 2017 at 3:50 PM, Shaohua Li <shli@kernel.org> wrote:
+>
+> Please pull MD update for 4.12. There are conflicts between MD tree and block
+> tree, so I did a merge before the pull request.
 
-Of necessity I've migrated to another working system and I'm in Arch.
-Utility here is fsck.hfs as opposed to hpfsck. I'd like to post that
-output.
+I pulled this, but *please* don't do those broken merges.
 
-mdadm --build /dev/md0 --level=0 -n2 --chunk=8K /dev/sdb2 /dev/sdc2
+Why is it broken? Let me just count the merge message in its entirety:
 
-works, then,
+    "Merge branch 'md-next' into md-linus"
 
-fsck.hfs -v /dev/md0
-*** Checking volume MDB
-  drSigWord      = 0xffffffff
-  drCrDate       = Mon Feb  6 06:28:15 2040
-  drLsMod        = Mon Feb  6 06:28:15 2040
-  drAtrb         = BUSY | HLOCKED | UMOUNTED | BBSPARED | BVINCONSIS |
-COPYPROT | SLOCKED
-  drNmFls        = 65535
-  drVBMSt        = 65535
-  drAllocPtr     = 65535
-  drNmAlBlks     = 65535
-  drAlBlkSiz     = 4294967295
-  drClpSiz       = 4294967295
-  drAlBlSt       = 65535
-  drNxtCNID      = 4294967295
-  drFreeBks      = 65535
-  drVN           = ""
-  drVolBkUp      = Mon Feb  6 06:28:15 2040
-  drVSeqNum      = 4294967295
-  drWrCnt        = 4294967295
-  drXTClpSiz     = 4294967295
-  drCTClpSiz     = 4294967295
-  drNmRtDirs     = 65535
-  drFilCnt       = 4294967295
-  drDirCnt       = 4294967295
-  drEmbedSigWord = 0xffff
-  drEmbedExtent  = 65535[65535..131069]
-  drXTFlSize     = 4294967295
-  drXTExtRec     =
-65535[65535..131069]+65535[65535..131069]+65535[65535..131069]
-  drCTFlSize     = 4294967295
-  drCTExtRec     =
-65535[65535..131069]+65535[65535..131069]+65535[65535..131069]
-Bad volume signature (0xffffffff); should be 0x4244. Fix? y
-Volume creation date is in the future (Mon Feb  6 06:28:15 2040). Fix? y
-Volume last modify date is in the future (Mon Feb  6 06:28:15 2040). Fix? y
-Volume bitmap starts at unusual location (1), not 3. Fix? y
-*** Checking volume structure
-*** Checking extents overflow B*-tree
+that's it. That doesn't really help anything. There is *no*
+explanation for the merge. No "What", no "Why", nothing to explain why
+you are merging with that _particular_ point in history.
 
-It's possible that I was unwise in accepting the changes from fsck.
+In contrast, when I do merges, even if I don't have a lot of commit
+message (and I try to have explanations - I will complain to
+submaintainers if they don't give me enough information), there's very
+much some implied information: "somebody asked Linus to pull this
+point". I don't just randomly merge random points in development.
 
->>
->> How is your C coding?  You could
->>   apt-get source hfsplus
->> and hack the code and try to build it yourself....
->>
+That merge, in contrast, very much merged completely random points in time.
 
-Still fine. By now not clear if this is what's needed.
+In fact, the particular point you merged makes no sense at all and is
+probably the *worst* possible kind of merge point. It's not just a
+random point in time (me having just merged the LED drivers), it's a
+point in the middle of the first day of the merge window. Which is
+just about the *worst* possible thing to do, because that's often the
+point that is the least reliable.
 
-Al
+Seriously. DO NOT DO THIS!
+
+I'm perfectly happy handling merge conflicts. I *much* prefer that
+over this kind of "easy but crappy merge".
+
+I appreciate it a lot if submaintainers do a "test merge" to see what
+might conflict, and then explain what the conflict is and why it
+happened in the pull request. That's absolutely lovely - it's a nice
+heads-up about what happened, and it shows that you cared and you knew
+about the conflict, and it makes me all warm and fuzzy.
+
+But this kind of random bad merge of me tree during the most volatile
+time of the merge window? That's just wrong. It doesn't even help me,
+I probably spent about as much time looking at the conflct with your
+merge in place as I would have when I resolved it, and then spent more
+time writing this "please don't do this" rant than it would have taken
+me to just do the merge.
+
+Yes, occasionally the conflicts end up being nasty enough that I ask
+people to verify my work.  And _very_ occasionally I might ask you to
+actually do the merge for me, but I don't recall when something was
+really messy enough for that to happen. This did not look that messy
+at all.
+
+I have sent a variation of this email to people (and the mailing list)
+probably approaching a hundred times over the 10+ years we've used
+git.
+
+Don't do back-merges unless you have a *really* good reason for it,
+and if you have that reason, you had damn well *explain* that reason
+in the merge message.
+
+And "make the merge easier for Linus" is _never_ a good reason. If you
+want to make life easier for me, please just do that test-merge and
+explanation of what's going on: lots of maintainers do that, and I
+really appreciate it. If you feel the merge isn't trivial, you can
+even make the merge available as a ".. this is how I merged it" branch
+- when people do that, I will actually end up doing the merge on my
+own first (without looking at your merge), and then re-do the whole
+thing *with* your merge in a test-branch, and verify the differences.
+Because the differences (if there are any - it's seldom the case other
+than trivial whitespace or other slight differences) are actually
+really interesting markers for me, and tend to show where subtle
+issues were.
+
+But don't ask me to pull a pre-merged thing that just hides the conflicts.
+
+Please please please don't do this.
+
+                   Linus
