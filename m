@@ -1,83 +1,59 @@
-From: Zhilong Liu <zlliu@suse.com>
-Subject: Re: [mdadm PATCH] Create: move STOP_ARRAY to abort_locked
-Date: Thu, 4 May 2017 20:20:55 +0800
-Message-ID: <430f083a-2501-cb74-4ac1-89d1c4620a03@suse.com>
-References: <1493190229-14329-1-git-send-email-zlliu@suse.com>
+From: Alasdair G Kergon <agk@redhat.com>
+Subject: Re: [dm-devel] [PATCH v6 0/3] dm: boot a mapped device without an
+        initramfs
+Date: Thu, 4 May 2017 14:20:07 +0100
+Message-ID: <20170504132007.GG4943@agk-dp.fab.redhat.com>
+References: <20170418164240.18079-1-enric.balletbo@collabora.com> <CAGXu5jLD+0POz1sopyZNNqDAiq2MZ5ZYdjs43jX5OnWxkZt1Lg@mail.gmail.com> <CAFqH_51YLoYrNcw+Fb99LbSY63wVWg+MW7nBYQqWjV6qfOAmNQ@mail.gmail.com> <20170504121452.GF4943@agk-dp.fab.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1493190229-14329-1-git-send-email-zlliu@suse.com>
+Content-Disposition: inline
+In-Reply-To: <20170504121452.GF4943@agk-dp.fab.redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org
+To: Enric Balletbo Serra <eballetbo@gmail.com>
+Cc: Kees Cook <keescook@chromium.org>, Will Drewry <wad@chromium.org>, Guenter Roeck <groeck@google.com>, Mike Snitzer <snitzer@redhat.com>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, David Zeuthen <zeuthen@google.com>, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, dm-devel@redhat.com, Enric Balletbo i Serra <enric.balletbo@collabora.com>, Shaohua Li <shli@kernel.org>, Alasdair Kergon <agk@redhat.com>
 List-Id: linux-raid.ids
 
-Hi Jes,
+Some more thoughts with your example, dmsetup might look like:
 
-apply for review, this is a bug I ever encountered.
+# dmsetup create --bootformat "lroot:uuid,rw,0 2097152 linear 8:2 0, \
+2097152 2097152 linear 8:3 0, 4194304 2097152 linear 8:4 0"
 
+- also supporting creating multiple devices if the semi-colon is used
 
-On 04/26/2017 03:03 PM, Zhilong Liu wrote:
-> The sysfs entry and devnm would be created once create_mddev()
-> performed successfully, but the creating isn't completed here,
-> move STOP_ARRAY to abort_locked, the purpose is to cleanup the
-> partially created array.
->
-> Signed-off-by: Zhilong Liu <zlliu@suse.com>
-> ---
->   Create.c | 11 ++++-------
->   1 file changed, 4 insertions(+), 7 deletions(-)
->
-> diff --git a/Create.c b/Create.c
-> index 6ca0924..fe0ab7e 100644
-> --- a/Create.c
-> +++ b/Create.c
-> @@ -904,10 +904,8 @@ int Create(struct supertype *st, char *mddev,
->   					remove_partitions(fd);
->   				if (st->ss->add_to_super(st, &inf->disk,
->   							 fd, dv->devname,
-> -							 dv->data_offset)) {
-> -					ioctl(mdfd, STOP_ARRAY, NULL);
-> +							 dv->data_offset))
->   					goto abort_locked;
-> -				}
->   				st->ss->getinfo_super(st, inf, NULL);
->   				safe_mode_delay = inf->safe_mode_delay;
->   
-> @@ -1008,7 +1006,6 @@ int Create(struct supertype *st, char *mddev,
->   			sysfs_set_safemode(&info, safe_mode_delay);
->   			if (err) {
->   				pr_err("failed to activate array.\n");
-> -				ioctl(mdfd, STOP_ARRAY, NULL);
->   				goto abort;
->   			}
->   		} else if (c->readonly &&
-> @@ -1018,7 +1015,6 @@ int Create(struct supertype *st, char *mddev,
->   					  "array_state", "readonly") < 0) {
->   				pr_err("Failed to start array: %s\n",
->   				       strerror(errno));
-> -				ioctl(mdfd, STOP_ARRAY, NULL);
->   				goto abort;
->   			}
->   		} else {
-> @@ -1030,7 +1026,6 @@ int Create(struct supertype *st, char *mddev,
->   				if (info.array.chunk_size & (info.array.chunk_size-1)) {
->   					cont_err("Problem may be that chunk size is not a power of 2\n");
->   				}
-> -				ioctl(mdfd, STOP_ARRAY, NULL);
->   				goto abort;
->   			}
->   			/* if start_ro module parameter is set, array is
-> @@ -1061,7 +1056,9 @@ int Create(struct supertype *st, char *mddev,
->   	map_remove(&map, fd2devnm(mdfd));
->   	map_unlock(&map);
->   
-> -	if (mdfd >= 0)
-> +	if (mdfd >= 0) {
-> +		ioctl(mdfd, STOP_ARRAY, NULL);
->   		close(mdfd);
-> +	}
->   	return 1;
->   }
+- colon to separate name from uuid, like we already do major:minor 
+- colon to separate other flags from rw if we need them in future
+
+- splitting first on a unescaped semi-colons, then on the first two
+unescaped commas, and then on unescaped commas and then unescaped spaces
+within the table
+
+- backslash escapes the following character so it is never a treated
+as a separator
+  - lroot\:uuid\;\\\ \"\, would be a device with no uuid and the name
+    lroot:uuid;\ ",  (on a non-udev system without name mangling)
+
+# dmsetup ls --bootformat lroot
+dm="lroot:uuid,rw,0 2097152 linear 8:2 0, 2097152 2097152 \
+linear 8:3 0, 4194304 2097152 linear 8:4 0"
+
+# dmsetup ls --bootformat
+(all devices on one output line)
+
+While the code also supports devices in the /dev/sda2 format for 
+convenience, please use the preferred 8:2 format in any implementation
+and documented examples (to avoid the unnecessary dependency on /dev and
+its dependencies).
+
+Or with some alternative name for the option
+--boot[format|param]
+--short[format]
+--kernelparam
+--condensed
+other suggestions?
+
+dmsetup create --condensed
+dmsetup ls --condensed
+
+Alasdair
 
