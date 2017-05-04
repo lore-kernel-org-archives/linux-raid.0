@@ -1,7 +1,7 @@
 From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH v1 2/2] mdadm/util: unify stat checking blkdev into function
-Date: Thu,  4 May 2017 20:16:22 +0800
-Message-ID: <20170504121622.4014-3-zlliu@suse.com>
+Subject: [PATCH v1 1/2] mdadm/util: unify fstat checking blkdev into function
+Date: Thu,  4 May 2017 20:16:21 +0800
+Message-ID: <20170504121622.4014-2-zlliu@suse.com>
 References: <20170504121622.4014-1-zlliu@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20170504121622.4014-1-zlliu@suse.com>
@@ -10,317 +10,421 @@ To: Jes.Sorensen@gmail.com
 Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
-declare function stat_is_blkdev() to integrate repeated stat
-checking blkdev operations, it returns 'true/1' when it is a
-block device, and returns 'false/0' when it isn't.
-The devname is necessary parameter, *rdev is optional, parse
-the pointer of dev_t *rdev, if valid, assigned device number
-to dev_t *rdev, if NULL, ignores.
+declare function fstat_is_blkdev() to integrate repeated fstat
+checking block device operations, it returns true/1 when it is
+a block device, and returns false/0 when it isn't.
+The fd and devname are necessary parameters, *rdev is optional,
+parse the pointer of dev_t *rdev, if valid, assigned the device
+number to dev_t *rdev, if NULL, ignores.
 
 Signed-off-by: Zhilong Liu <zlliu@suse.com>
 ---
- Assemble.c    |  7 ++-----
- Build.c       | 25 ++++---------------------
- Incremental.c | 21 ++++-----------------
- Manage.c      | 11 +----------
- Monitor.c     | 16 ++++------------
+ Assemble.c    | 19 +++++++------------
+ Build.c       |  5 +++--
+ Create.c      | 23 ++++++++++-------------
+ Grow.c        | 10 ++++------
+ Incremental.c | 33 ++++++++++++---------------------
+ Manage.c      |  2 +-
+ bitmap.c      | 13 ++++---------
  mdadm.h       |  1 +
- super-ddf.c   | 10 ++++------
- super-intel.c | 10 ++++------
+ super-intel.c | 13 +++----------
  util.c        | 17 +++++++++++++++++
- 9 files changed, 41 insertions(+), 77 deletions(-)
+ 10 files changed, 62 insertions(+), 74 deletions(-)
 
 diff --git a/Assemble.c b/Assemble.c
-index 9d0a89f..30d5838 100644
+index a9442c8..9d0a89f 100644
 --- a/Assemble.c
 +++ b/Assemble.c
-@@ -512,15 +512,12 @@ static int select_devices(struct mddev_dev *devlist,
+@@ -149,6 +149,7 @@ static int select_devices(struct mddev_dev *devlist,
+ 	struct mdinfo *content = NULL;
+ 	int report_mismatch = ((inargv && c->verbose >= 0) || c->verbose > 0);
+ 	struct domainlist *domains = NULL;
++	dev_t rdev;
  
- 	/* Now reject spares that don't match domains of identified members */
- 	for (tmpdev = devlist; tmpdev; tmpdev = tmpdev->next) {
+ 	tmpdev = devlist; num_devs = 0;
+ 	while (tmpdev) {
+@@ -169,7 +170,6 @@ static int select_devices(struct mddev_dev *devlist,
+ 	     tmpdev = tmpdev ? tmpdev->next : NULL) {
+ 		char *devname = tmpdev->devname;
+ 		int dfd;
 -		struct stat stb;
- 		if (tmpdev->used != 3)
- 			continue;
--		if (stat(tmpdev->devname, &stb)< 0) {
--			pr_err("fstat failed for %s: %s\n",
--			       tmpdev->devname, strerror(errno));
-+		if (!stat_is_blkdev(tmpdev->devname, &rdev)) {
+ 		struct supertype *tst;
+ 		struct dev_policy *pol = NULL;
+ 		int found_container = 0;
+@@ -204,14 +204,7 @@ static int select_devices(struct mddev_dev *devlist,
+ 				pr_err("cannot open device %s: %s\n",
+ 				       devname, strerror(errno));
  			tmpdev->used = 2;
- 		} else {
--			struct dev_policy *pol = devid_policy(stb.st_rdev);
-+			struct dev_policy *pol = devid_policy(rdev);
- 			int dt = domain_test(domains, pol, NULL);
- 			if (inargv && dt != 0)
- 				/* take this spare as domains match
+-		} else if (fstat(dfd, &stb)< 0) {
+-			/* Impossible! */
+-			pr_err("fstat failed for %s: %s\n",
+-			       devname, strerror(errno));
+-			tmpdev->used = 2;
+-		} else if ((stb.st_mode & S_IFMT) != S_IFBLK) {
+-			pr_err("%s is not a block device.\n",
+-			       devname);
++		} else if (!fstat_is_blkdev(dfd, devname, &rdev)) {
+ 			tmpdev->used = 2;
+ 		} else if (must_be_container(dfd)) {
+ 			if (st) {
+@@ -234,7 +227,8 @@ static int select_devices(struct mddev_dev *devlist,
+ 					       devname);
+ 				tmpdev->used = 2;
+ 			} else if (auto_assem &&
+-				   !conf_test_metadata(tst->ss->name, (pol = devid_policy(stb.st_rdev)),
++				   !conf_test_metadata(tst->ss->name,
++						       (pol = devid_policy(rdev)),
+ 						       tst->ss->match_home(tst, c->homehost) == 1)) {
+ 				if (report_mismatch)
+ 					pr_err("%s has metadata type %s for which auto-assembly is disabled\n",
+@@ -261,7 +255,8 @@ static int select_devices(struct mddev_dev *devlist,
+ 					       tst->ss->name, devname);
+ 				tmpdev->used = 2;
+ 			} else if (auto_assem && st == NULL &&
+-				   !conf_test_metadata(tst->ss->name, (pol = devid_policy(stb.st_rdev)),
++				   !conf_test_metadata(tst->ss->name,
++						       (pol = devid_policy(rdev)),
+ 						       tst->ss->match_home(tst, c->homehost) == 1)) {
+ 				if (report_mismatch)
+ 					pr_err("%s has metadata type %s for which auto-assembly is disabled\n",
+@@ -484,7 +479,7 @@ static int select_devices(struct mddev_dev *devlist,
+ 		/* Collect domain information from members only */
+ 		if (tmpdev && tmpdev->used == 1) {
+ 			if (!pol)
+-				pol = devid_policy(stb.st_rdev);
++				pol = devid_policy(rdev);
+ 			domain_merge(&domains, pol, tst?tst->ss->name:NULL);
+ 		}
+ 		dev_policy_free(pol);
 diff --git a/Build.c b/Build.c
-index 2d84b96..ad59867 100644
+index 665d906..2d84b96 100644
 --- a/Build.c
 +++ b/Build.c
-@@ -41,7 +41,6 @@ int Build(char *mddev, struct mddev_dev *devlist,
- 	 * cc = chunk size factor: 0==4k, 1==8k etc.
+@@ -42,6 +42,7 @@ int Build(char *mddev, struct mddev_dev *devlist,
  	 */
  	int i;
--	struct stat stb;
- 	dev_t rdev;
+ 	struct stat stb;
++	dev_t rdev;
  	int subdevs = 0, missing_disks = 0;
  	struct mddev_dev *dv;
-@@ -65,16 +64,8 @@ int Build(char *mddev, struct mddev_dev *devlist,
- 			missing_disks++;
- 			continue;
+ 	int bitmap_fd;
+@@ -126,8 +127,8 @@ int Build(char *mddev, struct mddev_dev *devlist,
+ 	array.nr_disks = s->raiddisks;
+ 	array.raid_disks = s->raiddisks;
+ 	array.md_minor = 0;
+-	if (fstat(mdfd, &stb) == 0)
+-		array.md_minor = minor(stb.st_rdev);
++	if (fstat_is_blkdev(mdfd, mddev, &rdev))
++		array.md_minor = minor(rdev);
+ 	array.not_persistent = 1;
+ 	array.state = 0; /* not clean, but no errors */
+ 	if (s->assume_clean)
+diff --git a/Create.c b/Create.c
+index df1bc20..239545f 100644
+--- a/Create.c
++++ b/Create.c
+@@ -89,8 +89,8 @@ int Create(struct supertype *st, char *mddev,
+ 	char *maxdisc = NULL;
+ 	int dnum, raid_disk_num;
+ 	struct mddev_dev *dv;
++	dev_t rdev;
+ 	int fail = 0, warn = 0;
+-	struct stat stb;
+ 	int first_missing = subdevs * 2;
+ 	int second_missing = subdevs * 2;
+ 	int missing_disks = 0;
+@@ -325,11 +325,8 @@ int Create(struct supertype *st, char *mddev,
+ 				dname, strerror(errno));
+ 			exit(2);
  		}
--		if (stat(dv->devname, &stb)) {
--			pr_err("Cannot find %s: %s\n",
--				dv->devname, strerror(errno));
--			return 1;
--		}
--		if ((stb.st_mode & S_IFMT) != S_IFBLK) {
--			pr_err("%s is not a block device.\n",
--				dv->devname);
-+		if (!stat_is_blkdev(dv->devname, NULL))
- 			return 1;
--		}
+-		if (fstat(dfd, &stb) != 0 ||
+-		    (stb.st_mode & S_IFMT) != S_IFBLK) {
++		if (!fstat_is_blkdev(dfd, dname, NULL)) {
+ 			close(dfd);
+-			pr_err("%s is not a block device\n",
+-				dname);
+ 			exit(2);
+ 		}
+ 		close(dfd);
+@@ -641,8 +638,8 @@ int Create(struct supertype *st, char *mddev,
+ 	 * with, but it chooses to trust me instead. Sigh
+ 	 */
+ 	info.array.md_minor = 0;
+-	if (fstat(mdfd, &stb) == 0)
+-		info.array.md_minor = minor(stb.st_rdev);
++	if (fstat_is_blkdev(mdfd, mddev, &rdev))
++		info.array.md_minor = minor(rdev);
+ 	info.array.not_persistent = 0;
+ 
+ 	if (((s->level == 4 || s->level == 5) &&
+@@ -841,7 +838,6 @@ int Create(struct supertype *st, char *mddev,
+ 		for (dnum = 0, raid_disk_num = 0, dv = devlist; dv;
+ 		     dv = (dv->next) ? (dv->next) : moved_disk, dnum++) {
+ 			int fd;
+-			struct stat stb2;
+ 			struct mdinfo *inf = &infos[dnum];
+ 
+ 			if (dnum >= total_slots)
+@@ -897,9 +893,10 @@ int Create(struct supertype *st, char *mddev,
+ 							dv->devname);
+ 						goto abort_locked;
+ 					}
+-					fstat(fd, &stb2);
+-					inf->disk.major = major(stb2.st_rdev);
+-					inf->disk.minor = minor(stb2.st_rdev);
++					if (!fstat_is_blkdev(fd, dv->devname, &rdev))
++						return 1;
++					inf->disk.major = major(rdev);
++					inf->disk.minor = minor(rdev);
+ 				}
+ 				if (fd >= 0)
+ 					remove_partitions(fd);
+@@ -920,8 +917,8 @@ int Create(struct supertype *st, char *mddev,
+ 
+ 				if (!have_container) {
+ 					/* getinfo_super might have lost these ... */
+-					inf->disk.major = major(stb2.st_rdev);
+-					inf->disk.minor = minor(stb2.st_rdev);
++					inf->disk.major = major(rdev);
++					inf->disk.minor = minor(rdev);
+ 				}
+ 				break;
+ 			case 2:
+diff --git a/Grow.c b/Grow.c
+index f4bd301..a527436 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -109,7 +109,7 @@ int Grow_Add_device(char *devname, int fd, char *newdev)
+ 	 */
+ 	struct mdinfo info;
+ 
+-	struct stat stb;
++	dev_t rdev;
+ 	int nfd, fd2;
+ 	int d, nd;
+ 	struct supertype *st = NULL;
+@@ -145,9 +145,7 @@ int Grow_Add_device(char *devname, int fd, char *newdev)
+ 		free(st);
+ 		return 1;
  	}
+-	fstat(nfd, &stb);
+-	if ((stb.st_mode & S_IFMT) != S_IFBLK) {
+-		pr_err("%s is not a block device!\n", newdev);
++	if (!fstat_is_blkdev(nfd, newdev, &rdev)) {
+ 		close(nfd);
+ 		free(st);
+ 		return 1;
+@@ -198,8 +196,8 @@ int Grow_Add_device(char *devname, int fd, char *newdev)
+ 	 */
  
- 	if (s->raiddisks != subdevs) {
-@@ -162,16 +153,8 @@ int Build(char *mddev, struct mddev_dev *devlist,
- 
- 		if (strcmp("missing", dv->devname) == 0)
- 			continue;
--		if (stat(dv->devname, &stb)) {
--			pr_err("Weird: %s has disappeared.\n",
--				dv->devname);
-+		if (!stat_is_blkdev(dv->devname, &rdev))
- 			goto abort;
--		}
--		if ((stb.st_mode & S_IFMT)!= S_IFBLK) {
--			pr_err("Weird: %s is no longer a block device.\n",
--				dv->devname);
--			goto abort;
--		}
- 		fd = open(dv->devname, O_RDONLY|O_EXCL);
- 		if (fd < 0) {
- 			pr_err("Cannot open %s: %s\n",
-@@ -187,8 +170,8 @@ int Build(char *mddev, struct mddev_dev *devlist,
- 		disk.state = (1<<MD_DISK_SYNC) | (1<<MD_DISK_ACTIVE);
- 		if (dv->writemostly == FlagSet)
- 			disk.state |= 1<<MD_DISK_WRITEMOSTLY;
--		disk.major = major(stb.st_rdev);
--		disk.minor = minor(stb.st_rdev);
-+		disk.major = major(rdev);
-+		disk.minor = minor(rdev);
- 		if (ioctl(mdfd, ADD_NEW_DISK, &disk)) {
- 			pr_err("ADD_NEW_DISK failed for %s: %s\n",
- 			       dv->devname, strerror(errno));
+ 	info.disk.number = d;
+-	info.disk.major = major(stb.st_rdev);
+-	info.disk.minor = minor(stb.st_rdev);
++	info.disk.major = major(rdev);
++	info.disk.minor = minor(rdev);
+ 	info.disk.raid_disk = d;
+ 	info.disk.state = (1 << MD_DISK_SYNC) | (1 << MD_DISK_ACTIVE);
+ 	st->ss->update_super(st, &info, "linear-grow-new", newdev,
 diff --git a/Incremental.c b/Incremental.c
-index 11a34e7..97b2e99 100644
+index 8909f2f..11a34e7 100644
 --- a/Incremental.c
 +++ b/Incremental.c
-@@ -86,8 +86,7 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
- 	 * - if number of OK devices match expected, or -R and there are enough,
+@@ -87,6 +87,7 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
  	 *   start the array (auto-readonly).
  	 */
--	struct stat stb;
--	dev_t rdev;
-+	dev_t rdev, rdev2;
+ 	struct stat stb;
++	dev_t rdev;
  	struct mdinfo info, dinfo;
  	struct mdinfo *sra = NULL, *d;
  	struct mddev_ident *match;
-@@ -108,18 +107,8 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
+@@ -174,21 +175,11 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
+ 	/* 2/ Find metadata, reject if none appropriate (check
+ 	 *            version/name from args) */
  
- 	struct createinfo *ci = conf_get_create_info();
- 
--	if (stat(devname, &stb) < 0) {
+-	if (fstat(dfd, &stb) < 0) {
 -		if (c->verbose >= 0)
--			pr_err("stat failed for %s: %s.\n",
+-			pr_err("fstat failed for %s: %s.\n",
 -				devname, strerror(errno));
--		return rv;
+-		goto out;
 -	}
 -	if ((stb.st_mode & S_IFMT) != S_IFBLK) {
 -		if (c->verbose >= 0)
 -			pr_err("%s is not a block device.\n",
 -				devname);
-+	if (!stat_is_blkdev(devname, &rdev))
- 		return rv;
++	if (!fstat_is_blkdev(dfd, devname, &rdev))
+ 		goto out;
 -	}
- 	dfd = dev_open(devname, O_RDONLY);
- 	if (dfd < 0) {
- 		if (c->verbose >= 0)
-@@ -158,10 +147,8 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
- 	if (!devlist) {
- 		devlist = conf_get_devs();
- 		for (;devlist; devlist = devlist->next) {
--			struct stat st2;
--			if (stat(devlist->devname, &st2) == 0 &&
--			    (st2.st_mode & S_IFMT) == S_IFBLK &&
--			    st2.st_rdev == stb.st_rdev)
-+			if (stat_is_blkdev(devlist->devname, &rdev2) &&
-+			    rdev2 == rdev)
- 				break;
+ 
+-	dinfo.disk.major = major(stb.st_rdev);
+-	dinfo.disk.minor = minor(stb.st_rdev);
++	dinfo.disk.major = major(rdev);
++	dinfo.disk.minor = minor(rdev);
+ 
+ 	policy = disk_policy(&dinfo);
+ 	have_target = policy_check_path(&dinfo, &target_array);
+@@ -339,8 +330,8 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
  		}
- 	}
+ 
+ 		dinfo = info;
+-		dinfo.disk.major = major(stb.st_rdev);
+-		dinfo.disk.minor = minor(stb.st_rdev);
++		dinfo.disk.major = major(rdev);
++		dinfo.disk.minor = minor(rdev);
+ 		if (add_disk(mdfd, st, &info, &dinfo) != 0) {
+ 			pr_err("failed to add %s to new array %s: %s.\n",
+ 				devname, chosen_name, strerror(errno));
+@@ -441,8 +432,8 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
+ 				goto out_unlock;
+ 			}
+ 		}
+-		info.disk.major = major(stb.st_rdev);
+-		info.disk.minor = minor(stb.st_rdev);
++		info.disk.major = major(rdev);
++		info.disk.minor = minor(rdev);
+ 		/* add disk needs to know about containers */
+ 		if (st->ss->external)
+ 			sra->array.level = LEVEL_CONTAINER;
+@@ -863,12 +854,12 @@ static int array_try_spare(char *devname, int *dfdp, struct dev_policy *pol,
+ 	 * Return 0 on success, or some exit code on failure, probably 1.
+ 	 */
+ 	int rv = 1;
+-	struct stat stb;
++	dev_t rdev;
+ 	struct map_ent *mp, *map = NULL;
+ 	struct mdinfo *chosen = NULL;
+ 	int dfd = *dfdp;
+ 
+-	if (fstat(dfd, &stb) != 0)
++	if (!fstat_is_blkdev(dfd, devname, &rdev))
+ 		return 1;
+ 
+ 	/*
+@@ -1038,8 +1029,8 @@ static int array_try_spare(char *devname, int *dfdp, struct dev_policy *pol,
+ 			devlist.writemostly = FlagDefault;
+ 			devlist.failfast = FlagDefault;
+ 			devlist.devname = chosen_devname;
+-			sprintf(chosen_devname, "%d:%d", major(stb.st_rdev),
+-				minor(stb.st_rdev));
++			sprintf(chosen_devname, "%d:%d", major(rdev),
++				minor(rdev));
+ 			devlist.disposition = 'a';
+ 			close(dfd);
+ 			*dfdp = -1;
 diff --git a/Manage.c b/Manage.c
-index af55266..2c82326 100644
+index 230309b..af55266 100644
 --- a/Manage.c
 +++ b/Manage.c
-@@ -1510,24 +1510,16 @@ int Manage_subdevs(char *devname, int fd,
- 			 */
- 			rdev = makedev(mj, mn);
- 		} else {
--			struct stat stb;
+@@ -1513,7 +1513,7 @@ int Manage_subdevs(char *devname, int fd,
+ 			struct stat stb;
  			tfd = dev_open(dv->devname, O_RDONLY);
  			if (tfd >= 0) {
- 				fstat_is_blkdev(tfd, dv->devname, &rdev);
+-				fstat(tfd, &stb);
++				fstat_is_blkdev(tfd, dv->devname, &rdev);
  				close(tfd);
  			} else {
  				int open_err = errno;
--				if (stat(dv->devname, &stb) != 0) {
--					pr_err("Cannot find %s: %s\n",
--					       dv->devname, strerror(errno));
--					goto abort;
--				}
--				if ((stb.st_mode & S_IFMT) != S_IFBLK) {
-+				if (!stat_is_blkdev(dv->devname, &rdev))
- 					if (dv->disposition == 'M')
- 						/* non-fatal. Also improbable */
- 						continue;
--					pr_err("%s is not a block device.\n",
--					       dv->devname);
- 					goto abort;
- 				}
- 				if (dv->disposition == 'r')
-@@ -1544,7 +1536,6 @@ int Manage_subdevs(char *devname, int fd,
- 					goto abort;
- 				}
- 			}
--			rdev = stb.st_rdev;
- 		}
- 		switch(dv->disposition){
- 		default:
-diff --git a/Monitor.c b/Monitor.c
-index 1f15377..e2b36ff 100644
---- a/Monitor.c
-+++ b/Monitor.c
-@@ -993,23 +993,13 @@ static void link_containers_with_subarrays(struct state *list)
- /* Not really Monitor but ... */
- int Wait(char *dev)
+diff --git a/bitmap.c b/bitmap.c
+index 16a6b73..3653660 100644
+--- a/bitmap.c
++++ b/bitmap.c
+@@ -183,7 +183,6 @@ static int
+ bitmap_file_open(char *filename, struct supertype **stp, int node_num)
  {
+ 	int fd;
 -	struct stat stb;
- 	char devnm[32];
--	char *tmp;
- 	int rv = 1;
- 	int frozen_remaining = 3;
+ 	struct supertype *st = *stp;
  
--	if (stat(dev, &stb) != 0) {
--		pr_err("Cannot find %s: %s\n", dev,
+ 	fd = open(filename, O_RDONLY|O_DIRECT);
+@@ -193,14 +192,7 @@ bitmap_file_open(char *filename, struct supertype **stp, int node_num)
+ 		return -1;
+ 	}
+ 
+-	if (fstat(fd, &stb) < 0) {
+-		pr_err("failed to determine bitmap file/device type: %s\n",
 -			strerror(errno));
-+	if (!stat_is_blkdev(dev, NULL))
- 		return 2;
+-		close(fd);
+-		return -1;
 -	}
--	tmp = stat2devnm(&stb);
--	if (!tmp) {
--		pr_err("%s is not a block device.\n", dev);
--		return 2;
--	}
--	strcpy(devnm, tmp);
-+	strcpy(devnm, dev);
+-
+-	if ((stb.st_mode & S_IFMT) == S_IFBLK) {
++	if (fstat_is_blkdev(fd, filename, NULL)) {
+ 		/* block device, so we are probably after an internal bitmap */
+ 		if (!st)
+ 			st = guess_super(fd);
+@@ -221,6 +213,9 @@ bitmap_file_open(char *filename, struct supertype **stp, int node_num)
+ 		}
  
- 	while(1) {
- 		struct mdstat_ent *ms = mdstat_read(1, 0);
-@@ -1068,6 +1058,8 @@ int WaitClean(char *dev, int sock, int verbose)
- 	int rv = 1;
- 	char devnm[32];
+ 		*stp = st;
++	} else {
++		close(fd);
++		return -1;
+ 	}
  
-+	if (!stat_is_blkdev(dev, NULL))
-+		return 2;
- 	fd = open(dev, O_RDONLY);
- 	if (fd < 0) {
- 		if (verbose)
+ 	return fd;
 diff --git a/mdadm.h b/mdadm.h
-index 4adb840..a92feb2 100644
+index 07ee963..4adb840 100644
 --- a/mdadm.h
 +++ b/mdadm.h
-@@ -1435,6 +1435,7 @@ extern int check_partitions(int fd, char *dname,
+@@ -1434,6 +1434,7 @@ extern int check_raid(int fd, char *name);
+ extern int check_partitions(int fd, char *dname,
  			    unsigned long long freesize,
  			    unsigned long long size);
- extern int fstat_is_blkdev(int fd, char *devname, dev_t *rdev);
-+extern int stat_is_blkdev(char *devname, dev_t *rdev);
++extern int fstat_is_blkdev(int fd, char *devname, dev_t *rdev);
  
  extern int get_mdp_major(void);
  extern int get_maj_min(char *dev, int *major, int *minor);
-diff --git a/super-ddf.c b/super-ddf.c
-index 796eaa5..9c82f4f 100644
---- a/super-ddf.c
-+++ b/super-ddf.c
-@@ -3490,7 +3490,7 @@ static int validate_geometry_ddf_bvd(struct supertype *st,
- 				     char *dev, unsigned long long *freesize,
- 				     int verbose)
- {
--	struct stat stb;
-+	dev_t rdev;
- 	struct ddf_super *ddf = st->sb;
- 	struct dl *dl;
- 	unsigned long long maxsize;
-@@ -3526,13 +3526,11 @@ static int validate_geometry_ddf_bvd(struct supertype *st,
- 		return 1;
- 	}
- 	/* This device must be a member of the set */
--	if (stat(dev, &stb) < 0)
--		return 0;
--	if ((S_IFMT & stb.st_mode) != S_IFBLK)
-+	if (!stat_is_blkdev(dev, NULL))
- 		return 0;
- 	for (dl = ddf->dlist ; dl ; dl = dl->next) {
--		if (dl->major == (int)major(stb.st_rdev) &&
--		    dl->minor == (int)minor(stb.st_rdev))
-+		if (dl->major == (int)major(rdev) &&
-+		    dl->minor == (int)minor(rdev))
- 			break;
- 	}
- 	if (!dl) {
 diff --git a/super-intel.c b/super-intel.c
-index c4196ea..e13c940 100644
+index 36f77d3..c4196ea 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -6855,7 +6855,7 @@ static int validate_geometry_imsm_volume(struct supertype *st, int level,
- 					 unsigned long long *freesize,
- 					 int verbose)
- {
--	struct stat stb;
-+	dev_t rdev;
- 	struct intel_super *super = st->sb;
- 	struct imsm_super *mpb;
- 	struct dl *dl;
-@@ -6920,13 +6920,11 @@ static int validate_geometry_imsm_volume(struct supertype *st, int level,
- 	}
+@@ -6562,7 +6562,7 @@ count_volumes_list(struct md_list *devlist, char *homehost,
  
- 	/* This device must be a member of the set */
--	if (stat(dev, &stb) < 0)
--		return 0;
--	if ((S_IFMT & stb.st_mode) != S_IFBLK)
-+	if (!stat_is_blkdev(dev, &rdev))
- 		return 0;
- 	for (dl = super->disks ; dl ; dl = dl->next) {
--		if (dl->major == (int)major(stb.st_rdev) &&
--		    dl->minor == (int)minor(stb.st_rdev))
-+		if (dl->major == (int)major(rdev) &&
-+		    dl->minor == (int)minor(rdev))
- 			break;
- 	}
- 	if (!dl) {
+ 	for (tmpdev = devlist; tmpdev; tmpdev = tmpdev->next) {
+ 		char *devname = tmpdev->devname;
+-		struct stat stb;
++		dev_t rdev;
+ 		struct supertype *tst;
+ 		int dfd;
+ 		if (tmpdev->used > 1)
+@@ -6578,14 +6578,7 @@ count_volumes_list(struct md_list *devlist, char *homehost,
+ 			dprintf("cannot open device %s: %s\n",
+ 				devname, strerror(errno));
+ 			tmpdev->used = 2;
+-		} else if (fstat(dfd, &stb)< 0) {
+-			/* Impossible! */
+-			dprintf("fstat failed for %s: %s\n",
+-				devname, strerror(errno));
+-			tmpdev->used = 2;
+-		} else if ((stb.st_mode & S_IFMT) != S_IFBLK) {
+-			dprintf("%s is not a block device.\n",
+-				devname);
++		} else if (!fstat_is_blkdev(dfd, devname, &rdev)) {
+ 			tmpdev->used = 2;
+ 		} else if (must_be_container(dfd)) {
+ 			struct supertype *cst;
+@@ -6607,7 +6600,7 @@ count_volumes_list(struct md_list *devlist, char *homehost,
+ 			if (cst)
+ 				cst->ss->free_super(cst);
+ 		} else {
+-			tmpdev->st_rdev = stb.st_rdev;
++			tmpdev->st_rdev = rdev;
+ 			if (tst->ss->load_super(tst,dfd, NULL)) {
+ 				dprintf("no RAID superblock on %s\n",
+ 					devname);
 diff --git a/util.c b/util.c
-index a92faf8..11ff2cc 100644
+index c7585ac..a92faf8 100644
 --- a/util.c
 +++ b/util.c
-@@ -747,6 +747,23 @@ int fstat_is_blkdev(int fd, char *devname, dev_t *rdev)
+@@ -730,6 +730,23 @@ int check_raid(int fd, char *name)
  	return 1;
  }
  
-+int stat_is_blkdev(char *devname, dev_t *rdev)
++int fstat_is_blkdev(int fd, char *devname, dev_t *rdev)
 +{
 +	struct stat stb;
 +
-+	if (stat(devname, &stb) != 0) {
-+		pr_err("stat failed for %s: %s\n", devname, strerror(errno));
++	if (fstat(fd, &stb) != 0) {
++		pr_err("fstat failed for %s: %s\n", devname, strerror(errno));
 +		return 0;
 +	}
 +	if ((S_IFMT & stb.st_mode) != S_IFBLK) {
