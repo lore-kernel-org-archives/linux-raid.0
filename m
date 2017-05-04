@@ -1,47 +1,54 @@
-From: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Subject: Re: mdadm/mdmon Name vs argv[0]
-Date: Thu, 4 May 2017 15:40:00 +0200
-Message-ID: <3f64ba3e-e931-6055-8621-a91c637e0174@intel.com>
-References: <a61470a2-2c3b-3f4a-5712-dfb87f3acad8@gmail.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: Fault tolerance in RAID0 with badblocks
+Date: Thu, 4 May 2017 14:44:25 +0100
+Message-ID: <590B3039.3060000@youngman.org.uk>
+References: <03294ec0-2df0-8c1c-dd98-2e9e5efb6f4f@hale.ee>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <a61470a2-2c3b-3f4a-5712-dfb87f3acad8@gmail.com>
-Content-Language: en-US
+In-Reply-To: <03294ec0-2df0-8c1c-dd98-2e9e5efb6f4f@hale.ee>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <jes.sorensen@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: "Ravi (Tom) Hale" <ravi@hale.ee>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 05/02/2017 04:19 PM, Jes Sorensen wrote:
-> Hi Pawel,
-> 
-> In the below commit you changed the handling of how mdadm/mdmon handles 
-> printing the name of the running process.
-> 
-> However, if people for some reason decided to change the names of 
-> mdadm/mdmon this would no longer be correct.
-> 
-> Do you remember if there is any reason why you didn't use argv[0] for this?
-> 
-> commit d56dd607ba433d9334f0fb4114fe081742ae4361
-> Author: Pawel Baldysiak <pawel.baldysiak@intel.com>
-> Date:   Wed Feb 11 22:25:03 2015 +0100
-> 
->      Change way of printing name of a process
-> 
-> Cheers,
-> Jes
-Hi Jes,
+On 04/05/17 11:04, Ravi (Tom) Hale wrote:
+> Since btrfs doesn't support badblocks, this btrfs mailing list post[1]
+> suggested to use mdadm RAID0 3.1+.
 
-We did not consider this option once we were implementing the change.
-Also, I was not considering that someone would like to change the 
-mdadm/mdmon names :)
+Having read the email you linked to, I don't think mdadm will be any
+help at all ...
+> 
+> Is there a way of having blocks from a spare device automatically
+> replacing bad blocks when they are next written to (like SMART does for
+> HDDs)?
 
-I see one potential issue with usage of argv[0]:
-If you look into mdmon's code (start of the main()),
-you will see that first char is replaced with '@'.
+What quite do you mean?
+> 
+> Or would mdadm be able to add a "badblocks layer" to btrfs in some other
+> way?
 
-Thanks
-Pawel
+No. With modern hard drives, no filesystem should pay any attention to
+badblocks - it's all handled in the drive firmware. Badblocks is an
+unfortunate legacy from the past when drives really were CHS, and the
+layer above needed some way of knowing which blocks were bad and should
+be avoided. mdadm has had a lot of grief with its handling of badblocks,
+and getting drives confused, and it's all totally unnecessary anyway.
+
+Let the drive worry about what blocks are bad. One major point behind
+LBA is it hides the actual disk layout from the computer, and allows the
+drive to relocate blocks that aren't working properly. Let it do its job.
+
+If you want to use raid, don't bother with 0. Use mdadm and raid 5 or 6
+to combine your drives, and create a btrfs filesystem on top. (Don't
+bother with raid1 - that part of btrfs apparently works well, so use the
+filesystem variant, not an external one.)
+> 
+> My use case is mining storj - I don't mind some data loss.
+
+Using a badblock list will have no impact on this whatsoever.
+> 
+> [1] https://www.spinics.net/lists/linux-btrfs/msg40909.html
+> 
+Cheers,
+Wol
