@@ -1,38 +1,31 @@
-From: Roman Mamedov <rm@romanrm.net>
-Subject: Re: RAID creation resync behaviors
-Date: Thu, 4 May 2017 13:06:27 +0500
-Message-ID: <20170504130627.4f20f79c@natsu>
-References: <20170503202748.7r243wj5h4polt6y@kernel.org>
-        <20170503235856.GA9698@metamorpher.de>
-        <20170504022258.eov6xh2zwtbfvcch@kernel.org>
-        <20170504075551.GA3929@metamorpher.de>
+From: "Ravi (Tom) Hale" <ravi@hale.ee>
+Subject: Fault tolerance in RAID0 with badblocks
+Date: Thu, 4 May 2017 17:04:34 +0700
+Message-ID: <03294ec0-2df0-8c1c-dd98-2e9e5efb6f4f@hale.ee>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170504075551.GA3929@metamorpher.de>
+Content-Language: en-AU
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Cc: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, jes.sorensen@gmail.com, neilb@suse.de
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 4 May 2017 09:55:51 +0200
-Andreas Klauer <Andreas.Klauer@metamorpher.de> wrote:
+Since btrfs doesn't support badblocks, this btrfs mailing list post[1]
+suggested to use mdadm RAID0 3.1+.
 
-> For example? I was under the impression that pretty much all of them do. 
-> Even the ones that don't advertize it returned zero after trim for me. 
-> [Sometimes you get original data but that's Linux; gone after drop_caches]
-> (Of course, I don't have access to that many different models of SSD...)
-> 
-> But what do they actually return then? Original data?
+Is there a way of having blocks from a spare device automatically
+replacing bad blocks when they are next written to (like SMART does for
+HDDs)?
 
-Consult Wikipedia at least, if not the original ATA standards documents:
-https://en.wikipedia.org/wiki/Trim_(computing)#ATA
-Can return "undefined", "something that is the same every time" or "zeroes".
-Apparently the OS can query which is to be expected with a particular device,
-but firstly, you can't necessarily trust that 100%, and secondly, that's
-operating on a level lower (ATA) than where md is.
+Or would mdadm be able to add a "badblocks layer" to btrfs in some other
+way?
+
+My use case is mining storj - I don't mind some data loss.
+
+[1] https://www.spinics.net/lists/linux-btrfs/msg40909.html
 
 -- 
-With respect,
-Roman
+Cheers,
+
+Tom Hale
