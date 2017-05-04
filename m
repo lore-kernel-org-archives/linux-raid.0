@@ -1,91 +1,114 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: RAID creation resync behaviors
-Date: Thu, 4 May 2017 17:02:05 +0100
-Message-ID: <590B507D.6050609@youngman.org.uk>
-References: <20170503202748.7r243wj5h4polt6y@kernel.org>
- <fe3c30e4-b0dd-639e-7db7-344aa93ce198@hesbynett.no>
- <20170504015454.d4obiuume6e3yrdv@kernel.org> <590ADA3F.8070909@hesbynett.no>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+From: Zhilong <zlliu@suse.com>
+Subject: Re: [mdadm PATCH] Create: move STOP_ARRAY to abort_locked
+Date: Fri, 5 May 2017 01:42:57 +0800
+Message-ID: <AA2D71C7-75F8-49D0-BE97-52A227EA6DA3@suse.com>
+References: <1493190229-14329-1-git-send-email-zlliu@suse.com> <430f083a-2501-cb74-4ac1-89d1c4620a03@suse.com> <2c1c277c-2fd2-27a8-e6a5-23b1ced3ec90@gmail.com>
+Mime-Version: 1.0 (1.0)
+Content-Type: text/plain;
+        charset=gb2312
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <590ADA3F.8070909@hesbynett.no>
+In-Reply-To: <2c1c277c-2fd2-27a8-e6a5-23b1ced3ec90@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>, Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, jes.sorensen@gmail.com, neilb@suse.de
+To: Jes Sorensen <jes.sorensen@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 04/05/17 08:37, David Brown wrote:
-> On 04/05/17 03:54, Shaohua Li wrote:
->> > On Wed, May 03, 2017 at 11:06:01PM +0200, David Brown wrote:
->>> >> On 03/05/17 22:27, Shaohua Li wrote:
->>>> >>> Hi,
->>>> >>>
->>>> >>> Currently we have different resync behaviors in array creation.
->>>> >>>
->>>> >>> - raid1: copy data from disk 0 to disk 1 (overwrite)
->>>> >>> - raid10: read both disks, compare and write if there is difference (compare-write)
->>>> >>> - raid4/5: read first n-1 disks, calculate parity and then write parity to the last disk (overwrite)
->>>> >>> - raid6: read all disks, calculate parity and compare, and write if there is difference (compare-write)
->>>> >>>
->>>> >>> Write whole disk is very unfriendly for SSD, because it reduces lifetime. And
->>>> >>> if user already does a trim before creation, the unncessary write could make
->>>> >>> SSD slower in the future. Could we prefer compare-write to overwrite if mdadm
->>>> >>> detects the disks are SSD? Surely sometimes compare-write is slower than
->>>> >>> overwrite, so maybe add new option in mdadm. An option to let mdadm trim SSD
->>>> >>> before creation sounds reasonable too.
->>>> >>>
->>> >>
->>> >> When doing the first sync, md tracks how far its sync has got, keeping a
->>> >> record in the metadata in case it has to be restarted (such as due to a
->>> >> reboot while syncing).  Why not simply /not/ sync stripes until you first
->>> >> write to them?  It may be that a counter of synced stripes is not enough,
->>> >> and you need a bitmap (like the write intent bitmap), but it would reduce
->>> >> the creation sync time to 0 and avoid any writes at all.
->> > 
->> > For raid 4/5/6, this means we always must do a full stripe write for any normal
->> > write if it hits a range not synced. This would harm the performance of the
->> > norma write.
-> Agreed.  The unused sectors could be set to 0, rather than read from the
-> disks - that would reduce the latency and be friendly to high-end SSDs
-> with compression (zero blocks compress quite well!).
-> 
->> > For raid1/10, this sounds more appealing. But since each bit in
->> > the bitmap will stand for a range. If only part of the range is written by
->> > normal IO, we have two choices. sync the range immediately and clear the bit,
->> > this sync will impact normal IO. Don't do the sync immediately, but since the
->> > bit is set (which means the range isn't synced), read IO can only access the
->> > first disk, which is harmful too.
->> > 
-> This could be done in a more sophisticated manner.  (Yes, I appreciate
-> that "sophisticated" or "complex" are a serious disadvantage - I'm just
-> throwing up ideas that could be considered.)
-> 
-> Divide the array into "sync blocks", each covering a range of stripes,
-> with a bitmap of three states - unused, partially synced, fully synced.
->  All blocks start off unused.  If a write is made to a previously unused
-> block, that block becomes partially synced, and the write has to be done
-> as a full stripe write.  For a partially synced block, keep a list of
-> ranges of synced stripes (a list will normally be smaller than a bitmap
-> here).  Whenever there are partially synced blocks in the array, have a
-> low priority process (like the normal array creation sync process, or
-> rebuild processes) sync the stripes until the block is finished as a
-> fully synced block.
-> 
-> That should let you delay the time-consuming and write intensive
-> creation sync until you actually need to sync the blocks, without /too/
-> much overhead in metadata or in delays when using the disk.
 
-I was thinking along those lines. You mentioned earlier what I would
-think of as a "high water mark" - or "how far have we used the array".
-The only snag I can think of there is if you start writing in the middle
-of the array so your idea of blocks sounds a lot better.
 
-The other thing - this would probably be a synonym of "--assume-clean"
-but create a flag "--new-array". This would have to be an opt-in - it
-tells mdadm that whatever is on the disk is garbage, and when it does
-sync it can safely just stream zeroes to the disk - no reads or parity
-checks required ... :-) (This idea might need a few tweaks :-)
+发自我的 iPhone
 
-Cheers,
-Wol
+> 在 2017年5月4日，22:54，Jes Sorensen <jes.sorensen@gmail.com> 写道：
+> 
+>> On 05/04/2017 08:20 AM, Zhilong Liu wrote:
+>> Hi Jes,
+>> 
+>> apply for review, this is a bug I ever encountered.
+> 
+> Zhilong,
+> 
+> Under what circumstances do you see this?
+> 
+
+I have tested this path after invoking create_mddev, such as issue the command:
+./mdadm -CR /dev/md0 -b internal -l1 -n2 /dev/loop[0-1] --size 63
+It would fail and print unsupported chunk size. But the device /dev/md0 and sysfs didn't cleanup after abort creating.
+ For raid1, the chunk size is not meaningful, but mdadm doesn't allow component size is less than 64k when creating bitmap, thus I choose this command to test.
+
+Thanks,
+Zhilong 
+
+> Thanks,
+> Jes
+> 
+>> 
+>>> On 04/26/2017 03:03 PM, Zhilong Liu wrote:
+>>> The sysfs entry and devnm would be created once create_mddev()
+>>> performed successfully, but the creating isn't completed here,
+>>> move STOP_ARRAY to abort_locked, the purpose is to cleanup the
+>>> partially created array.
+>>> 
+>>> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+>>> ---
+>>>  Create.c | 11 ++++-------
+>>>  1 file changed, 4 insertions(+), 7 deletions(-)
+>>> 
+>>> diff --git a/Create.c b/Create.c
+>>> index 6ca0924..fe0ab7e 100644
+>>> --- a/Create.c
+>>> +++ b/Create.c
+>>> @@ -904,10 +904,8 @@ int Create(struct supertype *st, char *mddev,
+>>>                      remove_partitions(fd);
+>>>                  if (st->ss->add_to_super(st, &inf->disk,
+>>>                               fd, dv->devname,
+>>> -                             dv->data_offset)) {
+>>> -                    ioctl(mdfd, STOP_ARRAY, NULL);
+>>> +                             dv->data_offset))
+>>>                      goto abort_locked;
+>>> -                }
+>>>                  st->ss->getinfo_super(st, inf, NULL);
+>>>                  safe_mode_delay = inf->safe_mode_delay;
+>>>  @@ -1008,7 +1006,6 @@ int Create(struct supertype *st, char *mddev,
+>>>              sysfs_set_safemode(&info, safe_mode_delay);
+>>>              if (err) {
+>>>                  pr_err("failed to activate array.\n");
+>>> -                ioctl(mdfd, STOP_ARRAY, NULL);
+>>>                  goto abort;
+>>>              }
+>>>          } else if (c->readonly &&
+>>> @@ -1018,7 +1015,6 @@ int Create(struct supertype *st, char *mddev,
+>>>                        "array_state", "readonly") < 0) {
+>>>                  pr_err("Failed to start array: %s\n",
+>>>                         strerror(errno));
+>>> -                ioctl(mdfd, STOP_ARRAY, NULL);
+>>>                  goto abort;
+>>>              }
+>>>          } else {
+>>> @@ -1030,7 +1026,6 @@ int Create(struct supertype *st, char *mddev,
+>>>                  if (info.array.chunk_size &
+>>> (info.array.chunk_size-1)) {
+>>>                      cont_err("Problem may be that chunk size is not
+>>> a power of 2\n");
+>>>                  }
+>>> -                ioctl(mdfd, STOP_ARRAY, NULL);
+>>>                  goto abort;
+>>>              }
+>>>              /* if start_ro module parameter is set, array is
+>>> @@ -1061,7 +1056,9 @@ int Create(struct supertype *st, char *mddev,
+>>>      map_remove(&map, fd2devnm(mdfd));
+>>>      map_unlock(&map);
+>>>  -    if (mdfd >= 0)
+>>> +    if (mdfd >= 0) {
+>>> +        ioctl(mdfd, STOP_ARRAY, NULL);
+>>>          close(mdfd);
+>>> +    }
+>>>      return 1;
+>>>  }
+>> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
