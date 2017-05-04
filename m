@@ -1,58 +1,93 @@
 From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: mdadm/mdmon Name vs argv[0]
-Date: Thu, 4 May 2017 10:45:56 -0400
-Message-ID: <f40434ba-5963-71b9-38e3-67f5b93a056f@gmail.com>
-References: <a61470a2-2c3b-3f4a-5712-dfb87f3acad8@gmail.com>
- <3f64ba3e-e931-6055-8621-a91c637e0174@intel.com>
+Subject: Re: [mdadm PATCH] Create: move STOP_ARRAY to abort_locked
+Date: Thu, 4 May 2017 10:54:48 -0400
+Message-ID: <2c1c277c-2fd2-27a8-e6a5-23b1ced3ec90@gmail.com>
+References: <1493190229-14329-1-git-send-email-zlliu@suse.com>
+ <430f083a-2501-cb74-4ac1-89d1c4620a03@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3f64ba3e-e931-6055-8621-a91c637e0174@intel.com>
+In-Reply-To: <430f083a-2501-cb74-4ac1-89d1c4620a03@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Pawel Baldysiak <pawel.baldysiak@intel.com>
+To: Zhilong Liu <zlliu@suse.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 05/04/2017 09:40 AM, Pawel Baldysiak wrote:
-> On 05/02/2017 04:19 PM, Jes Sorensen wrote:
->> Hi Pawel,
->>
->> In the below commit you changed the handling of how mdadm/mdmon
->> handles printing the name of the running process.
->>
->> However, if people for some reason decided to change the names of
->> mdadm/mdmon this would no longer be correct.
->>
->> Do you remember if there is any reason why you didn't use argv[0] for
->> this?
->>
->> commit d56dd607ba433d9334f0fb4114fe081742ae4361
->> Author: Pawel Baldysiak <pawel.baldysiak@intel.com>
->> Date:   Wed Feb 11 22:25:03 2015 +0100
->>
->>      Change way of printing name of a process
->>
->> Cheers,
->> Jes
+On 05/04/2017 08:20 AM, Zhilong Liu wrote:
 > Hi Jes,
 >
-> We did not consider this option once we were implementing the change.
-> Also, I was not considering that someone would like to change the
-> mdadm/mdmon names :)
->
-> I see one potential issue with usage of argv[0]:
-> If you look into mdmon's code (start of the main()),
-> you will see that first char is replaced with '@'.
+> apply for review, this is a bug I ever encountered.
 
-Good point!
+Zhilong,
 
-I somehow thought we weren't doing the name mangling anymore.
+Under what circumstances do you see this?
 
-However we could copy from argv[0] before mangling the name. That way we 
-would have generic code, rather than hard coded names.
-
-Cheers,
+Thanks,
 Jes
 
+>
+> On 04/26/2017 03:03 PM, Zhilong Liu wrote:
+>> The sysfs entry and devnm would be created once create_mddev()
+>> performed successfully, but the creating isn't completed here,
+>> move STOP_ARRAY to abort_locked, the purpose is to cleanup the
+>> partially created array.
+>>
+>> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+>> ---
+>>   Create.c | 11 ++++-------
+>>   1 file changed, 4 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/Create.c b/Create.c
+>> index 6ca0924..fe0ab7e 100644
+>> --- a/Create.c
+>> +++ b/Create.c
+>> @@ -904,10 +904,8 @@ int Create(struct supertype *st, char *mddev,
+>>                       remove_partitions(fd);
+>>                   if (st->ss->add_to_super(st, &inf->disk,
+>>                                fd, dv->devname,
+>> -                             dv->data_offset)) {
+>> -                    ioctl(mdfd, STOP_ARRAY, NULL);
+>> +                             dv->data_offset))
+>>                       goto abort_locked;
+>> -                }
+>>                   st->ss->getinfo_super(st, inf, NULL);
+>>                   safe_mode_delay = inf->safe_mode_delay;
+>>   @@ -1008,7 +1006,6 @@ int Create(struct supertype *st, char *mddev,
+>>               sysfs_set_safemode(&info, safe_mode_delay);
+>>               if (err) {
+>>                   pr_err("failed to activate array.\n");
+>> -                ioctl(mdfd, STOP_ARRAY, NULL);
+>>                   goto abort;
+>>               }
+>>           } else if (c->readonly &&
+>> @@ -1018,7 +1015,6 @@ int Create(struct supertype *st, char *mddev,
+>>                         "array_state", "readonly") < 0) {
+>>                   pr_err("Failed to start array: %s\n",
+>>                          strerror(errno));
+>> -                ioctl(mdfd, STOP_ARRAY, NULL);
+>>                   goto abort;
+>>               }
+>>           } else {
+>> @@ -1030,7 +1026,6 @@ int Create(struct supertype *st, char *mddev,
+>>                   if (info.array.chunk_size &
+>> (info.array.chunk_size-1)) {
+>>                       cont_err("Problem may be that chunk size is not
+>> a power of 2\n");
+>>                   }
+>> -                ioctl(mdfd, STOP_ARRAY, NULL);
+>>                   goto abort;
+>>               }
+>>               /* if start_ro module parameter is set, array is
+>> @@ -1061,7 +1056,9 @@ int Create(struct supertype *st, char *mddev,
+>>       map_remove(&map, fd2devnm(mdfd));
+>>       map_unlock(&map);
+>>   -    if (mdfd >= 0)
+>> +    if (mdfd >= 0) {
+>> +        ioctl(mdfd, STOP_ARRAY, NULL);
+>>           close(mdfd);
+>> +    }
+>>       return 1;
+>>   }
+>
 
