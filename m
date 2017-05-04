@@ -1,83 +1,84 @@
-From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+From: NeilBrown <neilb@suse.com>
 Subject: Re: RAID creation resync behaviors
-Date: Thu, 4 May 2017 01:58:56 +0200
-Message-ID: <20170503235856.GA9698@metamorpher.de>
+Date: Thu, 04 May 2017 11:07:01 +1000
+Message-ID: <87inlhpgzu.fsf@notabene.neil.brown.name>
 References: <20170503202748.7r243wj5h4polt6y@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 In-Reply-To: <20170503202748.7r243wj5h4polt6y@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, jes.sorensen@gmail.com, neilb@suse.de
+To: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
+Cc: jes.sorensen@gmail.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-On Wed, May 03, 2017 at 01:27:48PM -0700, Shaohua Li wrote:
-> Write whole disk is very unfriendly for SSD, because it reduces lifetime.
-> And if user already does a trim before creation, the unncessary write 
-> could make SSD slower in the future.
+--=-=-=
+Content-Type: text/plain
 
-I'm not a kernel developer so maybe I shouldn't reply. Feel free to ignore.
+On Wed, May 03 2017, Shaohua Li wrote:
 
-I don't see this as a big issue, whoever uses SSD will likely also fstrim, 
-so all SSD will know about free blocks regardless how the drive was added 
-to the RAID.
+> Hi,
+>
+> Currently we have different resync behaviors in array creation.
+>
+> - raid1: copy data from disk 0 to disk 1 (overwrite)
+> - raid10: read both disks, compare and write if there is difference (compare-write)
+> - raid4/5: read first n-1 disks, calculate parity and then write parity to the last disk (overwrite)
+> - raid6: read all disks, calculate parity and compare, and write if there is difference (compare-write)
 
-You don't resync everyday and once populated with data you just can't help 
-but have many writes when adding / replacing drives. No way around it.
+The approach taken for raid1 and raid4/5 provides the fastest sync for
+an array built on uninitialised spinning devices.
+RAID6 could use the same approach but would involve more CPU and so
+the original author of the RAID6 code (hpa) chose to go for the low-CPU
+cost option.  I don't know if tests were done, or if they would still be
+valid on new hardware.
+The raid10 approach comes from "it is too hard to optimize in general
+because different RAID10 layouts have different trade-offs, so just
+take the easy way out."
 
-> An option to let mdadm trim SSD before creation sounds reasonable too.
+>
+> Write whole disk is very unfriendly for SSD, because it reduces lifetime. And
+> if user already does a trim before creation, the unncessary write could make
+> SSD slower in the future. Could we prefer compare-write to overwrite if mdadm
+> detects the disks are SSD? Surely sometimes compare-write is slower than
+> overwrite, so maybe add new option in mdadm. An option to let mdadm trim SSD
+> before creation sounds reasonable too.
 
-This is my personal opinion but - there is way too much trim in Linux. 
+An option to ask mdadm to trim the data space and then --assume-clean
+certainly sounds reasonable.
 
-On HDD if you did a botched mkfs on the wrong device you still had a chance 
-to recover data, with SSD it's all gone in an eyeblink, because mkfs.ext4 
-and other programs unfortunately do trim without asking. Lots of people 
-come to this list only after already playing with mdadm --create and if 
-mdadm simply started trimming SSDs too, then all would be lost.
-LVM has these nice metadata backups but they're rendered useless 
-if lvm.conf has issue_discards set to 1. Etc...
+One possible approach would be to use compare-write until some
+threshold of writes were crossed, then switch to over-write.  That could
+work well for RAID1, but could be awkward to manage for RAID5.
+Possibly mdadm could read the first few megas of each device in RAID5
+and try to guess if many writes will be needed.  If they will, the
+current approach is best.  If not, assemble the array so that
+compare-write is used.
 
-And it's entirely superfluous, there was a big hullabaloo when SSD were 
-new, everyone was concerned about how quickly they'd die when written to, 
-but tests show their endurance is considerably greater than advertized. 
-A single RAID resync won't put a dent in even a consumer's SSD lifetime.
+I'm in favour of providing options and making the defaults "not
+terrible".  I think they currently are "not terrible", but maybe they
+can be better in some cases.
 
-At the same time you have two utilities blkdiscard and fstrim so anyone  
-who desires to trim can already easily do so with little effort. For SSD 
-that return zero after TRIM you can already create like this:
+NeilBrown
 
-blkdiscard device1
-blkdiscard device2
-blkdiscard device3
-echo 3 > /proc/sys/vm/drop_caches # optional: Linux caches trimmed data
-mdadm --create --assume-clean /dev/md ... device1 device2 device3
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
-If you wanted mdadm to do that directly, how about a mdadm --create --trim 
-which implies assume-clean? But in my opinion it should not happen unasked.
-If it was up to me I'd even add a prompt asking to confirm dataloss...
+-----BEGIN PGP SIGNATURE-----
 
-As for overwrite vs. compare-write, I don't know if it's possible or 
-how painful it would be to implement but could you start out comparing, 
-continue while the data actually matches, but switch to presumably much 
-faster overwrite mode once there are sufficient mismatches? Perhaps with a 
-fallback option so it can go back to compare later if data starts to match.
-
-So kind of a smart-compare-overwrite mode which would go something like:
-
-Compare. Match.
-Compare. Match.
-Compare. Mismatch. Overwrite.
-Compare. Mismatch. Overwrite x2.
-Compare. Mismatch. Overwrite x4.
-Compare. Match.
-Compare. Mismatch. Overwrite x8.
-Compare. Mismatch. Overwrite x16.
-
-Perhaps cap the overwrite multiplier at a certain point...
-
-Maybe a silly idea, I don't know.
-
-Regards
-Andreas Klauer
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlkKfrUACgkQOeye3VZi
+gbnDPQ/6A/SEG+L/wyBIT28Mo789PXJFW0BCT0GNV2LROMFqhwcS7Hv3bNUBBabm
+SuQo1VMDQQxBJNSEZxG2hL3RAf0LWRNXZkJFl8DHnlAworRISVabdUD+vb0LWzBQ
+MPy9bFvrlE7cOeQtxzuXbNq0jGxx/wQROcCEfNLfizTtc/pipZQcetpP1KPiBpE5
+JVfr1AqW3G86JS8n0iFS/1iY9o92VfQ5Wa+Ph0EQEYaGL0O88qAd6So1EzSBOslv
+E8wtWr7EZw0yu4FC2NOEeGEGajg8cH+AaVWL/my9iYlsfgc+nzo6InEZ5FJj4jlF
+9c+fsNOQZr5CeYAvF911jqyw/XzYT2mZD+udPPKf65TyMmho+ut0vtc1Z+yVCZ0a
+YXWYv98J46R4aMSmdNINcQhjWWdy4nDGowsGVIEosthYX19cZmBbn5Z9YgScLEd9
+YKYYc5iOwFWPdgFNRteiO1qHsRGlLJ+J/aInsgKs+70KjLNgyUl0ej8w9VRkbCNM
+rzaXbYB29JHZJwc7rFfWG2jG4691dThNIi+D7Vt4tre0XGdeIlhwicUuqkxgIdb/
+ihPsj8EqRTHLxWpeh5aHAS//qYcsTPEHQjUNxMTUBRyL3fCUC94wEMEgTitVvF7X
+nPTYSq6E3XrF+h9KpI0zl0khRT2I83vgDMJu5fZwzY7I/vP4ZJA=
+=GdLL
+-----END PGP SIGNATURE-----
+--=-=-=--
