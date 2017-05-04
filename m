@@ -1,59 +1,47 @@
-From: Alasdair G Kergon <agk@redhat.com>
-Subject: Re: [dm-devel] [PATCH v6 0/3] dm: boot a mapped device without an
-        initramfs
-Date: Thu, 4 May 2017 14:20:07 +0100
-Message-ID: <20170504132007.GG4943@agk-dp.fab.redhat.com>
-References: <20170418164240.18079-1-enric.balletbo@collabora.com> <CAGXu5jLD+0POz1sopyZNNqDAiq2MZ5ZYdjs43jX5OnWxkZt1Lg@mail.gmail.com> <CAFqH_51YLoYrNcw+Fb99LbSY63wVWg+MW7nBYQqWjV6qfOAmNQ@mail.gmail.com> <20170504121452.GF4943@agk-dp.fab.redhat.com>
+From: Pawel Baldysiak <pawel.baldysiak@intel.com>
+Subject: Re: mdadm/mdmon Name vs argv[0]
+Date: Thu, 4 May 2017 15:40:00 +0200
+Message-ID: <3f64ba3e-e931-6055-8621-a91c637e0174@intel.com>
+References: <a61470a2-2c3b-3f4a-5712-dfb87f3acad8@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170504121452.GF4943@agk-dp.fab.redhat.com>
+In-Reply-To: <a61470a2-2c3b-3f4a-5712-dfb87f3acad8@gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Enric Balletbo Serra <eballetbo@gmail.com>
-Cc: Kees Cook <keescook@chromium.org>, Will Drewry <wad@chromium.org>, Guenter Roeck <groeck@google.com>, Mike Snitzer <snitzer@redhat.com>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, David Zeuthen <zeuthen@google.com>, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, dm-devel@redhat.com, Enric Balletbo i Serra <enric.balletbo@collabora.com>, Shaohua Li <shli@kernel.org>, Alasdair Kergon <agk@redhat.com>
+To: Jes Sorensen <jes.sorensen@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Some more thoughts with your example, dmsetup might look like:
+On 05/02/2017 04:19 PM, Jes Sorensen wrote:
+> Hi Pawel,
+> 
+> In the below commit you changed the handling of how mdadm/mdmon handles 
+> printing the name of the running process.
+> 
+> However, if people for some reason decided to change the names of 
+> mdadm/mdmon this would no longer be correct.
+> 
+> Do you remember if there is any reason why you didn't use argv[0] for this?
+> 
+> commit d56dd607ba433d9334f0fb4114fe081742ae4361
+> Author: Pawel Baldysiak <pawel.baldysiak@intel.com>
+> Date:   Wed Feb 11 22:25:03 2015 +0100
+> 
+>      Change way of printing name of a process
+> 
+> Cheers,
+> Jes
+Hi Jes,
 
-# dmsetup create --bootformat "lroot:uuid,rw,0 2097152 linear 8:2 0, \
-2097152 2097152 linear 8:3 0, 4194304 2097152 linear 8:4 0"
+We did not consider this option once we were implementing the change.
+Also, I was not considering that someone would like to change the 
+mdadm/mdmon names :)
 
-- also supporting creating multiple devices if the semi-colon is used
+I see one potential issue with usage of argv[0]:
+If you look into mdmon's code (start of the main()),
+you will see that first char is replaced with '@'.
 
-- colon to separate name from uuid, like we already do major:minor 
-- colon to separate other flags from rw if we need them in future
-
-- splitting first on a unescaped semi-colons, then on the first two
-unescaped commas, and then on unescaped commas and then unescaped spaces
-within the table
-
-- backslash escapes the following character so it is never a treated
-as a separator
-  - lroot\:uuid\;\\\ \"\, would be a device with no uuid and the name
-    lroot:uuid;\ ",  (on a non-udev system without name mangling)
-
-# dmsetup ls --bootformat lroot
-dm="lroot:uuid,rw,0 2097152 linear 8:2 0, 2097152 2097152 \
-linear 8:3 0, 4194304 2097152 linear 8:4 0"
-
-# dmsetup ls --bootformat
-(all devices on one output line)
-
-While the code also supports devices in the /dev/sda2 format for 
-convenience, please use the preferred 8:2 format in any implementation
-and documented examples (to avoid the unnecessary dependency on /dev and
-its dependencies).
-
-Or with some alternative name for the option
---boot[format|param]
---short[format]
---kernelparam
---condensed
-other suggestions?
-
-dmsetup create --condensed
-dmsetup ls --condensed
-
-Alasdair
-
+Thanks
+Pawel
