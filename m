@@ -1,114 +1,77 @@
-From: Zhilong <zlliu@suse.com>
-Subject: Re: [mdadm PATCH] Create: move STOP_ARRAY to abort_locked
-Date: Fri, 5 May 2017 01:42:57 +0800
-Message-ID: <AA2D71C7-75F8-49D0-BE97-52A227EA6DA3@suse.com>
-References: <1493190229-14329-1-git-send-email-zlliu@suse.com> <430f083a-2501-cb74-4ac1-89d1c4620a03@suse.com> <2c1c277c-2fd2-27a8-e6a5-23b1ced3ec90@gmail.com>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain;
-        charset=gb2312
-Content-Transfer-Encoding: 8BIT
+From: NeilBrown <neilb@suse.com>
+Subject: Re: RAID creation resync behaviors
+Date: Fri, 05 May 2017 07:57:32 +1000
+Message-ID: <877f1wp9o3.fsf@notabene.neil.brown.name>
+References: <20170503202748.7r243wj5h4polt6y@kernel.org> <fe3c30e4-b0dd-639e-7db7-344aa93ce198@hesbynett.no> <20170504015454.d4obiuume6e3yrdv@kernel.org> <590ADA3F.8070909@hesbynett.no>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2c1c277c-2fd2-27a8-e6a5-23b1ced3ec90@gmail.com>
+In-Reply-To: <590ADA3F.8070909@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <jes.sorensen@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: David Brown <david.brown@hesbynett.no>, Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, jes.sorensen@gmail.com, neilb@suse.de
 List-Id: linux-raid.ids
 
+--=-=-=
+Content-Type: text/plain
 
+On Thu, May 04 2017, David Brown wrote:
 
-发自我的 iPhone
+>
+> I have another couple of questions that might be relevant, but I am
+> really not sure about the correct answers.
+>
+> First, if you have a stripe that you know is unused - it has not been
+> written to since the array was created - could the raid layer safely
+> return all zeros if an attempt was made to read the stripe?
 
-> 在 2017年5月4日，22:54，Jes Sorensen <jes.sorensen@gmail.com> 写道：
-> 
->> On 05/04/2017 08:20 AM, Zhilong Liu wrote:
->> Hi Jes,
->> 
->> apply for review, this is a bug I ever encountered.
-> 
-> Zhilong,
-> 
-> Under what circumstances do you see this?
-> 
+"know is unused" and "it has not been written to since the array was
+created" are not necessarily the same thing.
 
-I have tested this path after invoking create_mddev, such as issue the command:
-./mdadm -CR /dev/md0 -b internal -l1 -n2 /dev/loop[0-1] --size 63
-It would fail and print unsupported chunk size. But the device /dev/md0 and sysfs didn't cleanup after abort creating.
- For raid1, the chunk size is not meaningful, but mdadm doesn't allow component size is less than 64k when creating bitmap, thus I choose this command to test.
+If I have some devices which used to have a RAID5 array but for which
+the metadata got destroyed, I might carefully "create" a RAID5 over the
+devices and then have access to my data.  This has been done more than
+once - it is not just theoretical.
 
-Thanks,
-Zhilong 
+But if you really "know" it is unused, then returning zeros should be fine.
 
-> Thanks,
-> Jes
-> 
->> 
->>> On 04/26/2017 03:03 PM, Zhilong Liu wrote:
->>> The sysfs entry and devnm would be created once create_mddev()
->>> performed successfully, but the creating isn't completed here,
->>> move STOP_ARRAY to abort_locked, the purpose is to cleanup the
->>> partially created array.
->>> 
->>> Signed-off-by: Zhilong Liu <zlliu@suse.com>
->>> ---
->>>  Create.c | 11 ++++-------
->>>  1 file changed, 4 insertions(+), 7 deletions(-)
->>> 
->>> diff --git a/Create.c b/Create.c
->>> index 6ca0924..fe0ab7e 100644
->>> --- a/Create.c
->>> +++ b/Create.c
->>> @@ -904,10 +904,8 @@ int Create(struct supertype *st, char *mddev,
->>>                      remove_partitions(fd);
->>>                  if (st->ss->add_to_super(st, &inf->disk,
->>>                               fd, dv->devname,
->>> -                             dv->data_offset)) {
->>> -                    ioctl(mdfd, STOP_ARRAY, NULL);
->>> +                             dv->data_offset))
->>>                      goto abort_locked;
->>> -                }
->>>                  st->ss->getinfo_super(st, inf, NULL);
->>>                  safe_mode_delay = inf->safe_mode_delay;
->>>  @@ -1008,7 +1006,6 @@ int Create(struct supertype *st, char *mddev,
->>>              sysfs_set_safemode(&info, safe_mode_delay);
->>>              if (err) {
->>>                  pr_err("failed to activate array.\n");
->>> -                ioctl(mdfd, STOP_ARRAY, NULL);
->>>                  goto abort;
->>>              }
->>>          } else if (c->readonly &&
->>> @@ -1018,7 +1015,6 @@ int Create(struct supertype *st, char *mddev,
->>>                        "array_state", "readonly") < 0) {
->>>                  pr_err("Failed to start array: %s\n",
->>>                         strerror(errno));
->>> -                ioctl(mdfd, STOP_ARRAY, NULL);
->>>                  goto abort;
->>>              }
->>>          } else {
->>> @@ -1030,7 +1026,6 @@ int Create(struct supertype *st, char *mddev,
->>>                  if (info.array.chunk_size &
->>> (info.array.chunk_size-1)) {
->>>                      cont_err("Problem may be that chunk size is not
->>> a power of 2\n");
->>>                  }
->>> -                ioctl(mdfd, STOP_ARRAY, NULL);
->>>                  goto abort;
->>>              }
->>>              /* if start_ro module parameter is set, array is
->>> @@ -1061,7 +1056,9 @@ int Create(struct supertype *st, char *mddev,
->>>      map_remove(&map, fd2devnm(mdfd));
->>>      map_unlock(&map);
->>>  -    if (mdfd >= 0)
->>> +    if (mdfd >= 0) {
->>> +        ioctl(mdfd, STOP_ARRAY, NULL);
->>>          close(mdfd);
->>> +    }
->>>      return 1;
->>>  }
->> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+>
+> Second, when syncing an unused stripe (such as during creation), rather
+> than reading the old data and copying it or generating parities, could
+> we simply write all zeros to all the blocks in the stripes?  For many
+> SSDs, this is very efficient.
 
+If you were happy to destroy whatever was there before (see above
+recovery example for when you wouldn't), then it might be possible to
+make this work.
+You would need to be careful not to write zeros over a region that the
+filesystem has already used.
+That means you either disable all writes until the initialization
+completes (waste of time), or you add complexity to track which strips
+have been written and which haven't, and only initialise strips that have
+not been written.  This complexity would only be used once in the entire
+life of the RAID.  That might not be best use of resources.
+
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlkLo88ACgkQOeye3VZi
+gbnbow/+IT0XNJu/Ke52xfTz6Zs3EozbhRtir6o3mVVs1JVxWV24kN7VAJOdSsD9
+VYRbS+ChiA/w6U/ZkvxylMsJucZRzC3/bgXhOG9VmFMvwwFlcpNnzfio8af+e9zV
+TS2h5d9IqtrYLNOHDoGrmXXkFY4tB0OuxMGTzxTI4lDMsAS9o5mggvEgghBRgL1b
+ewBcPJZuBiXhJx6mgtiEI/hEw4aP3fKjUX2VcDgWI97tauAN2jKNCD5go67VFqa6
+AkOtiVub/FF1lTzy21TQBMxvCnCPFMmwqhIOJf2sdaA/gGYar1pXcYukjnOjI6mz
+dAfNAm4wrdBOS4xV5r+wsn6t88Katiac53Eqrx8Oxk72k2WpDlA0bq3ngactgeFs
+TLsu0M3Gzdu8NH6om9Ubgq6gE4KYm9ZWNJ2tYzZzr4mWkreZyjBEehJfh41Jl612
+d1p47JJ/2/u2iA02jPFYkioKzN+bOoArOlL/3i1gpEOxeYta9vI4ZS4OQ9UEEYZ6
+o8VM3jdecyjNMwbCkZQuERfdOL3Y7JJwZxctPichrdfxQsb+hhgyvMm+Ths/pJPn
+ghsjcWyUhSJ6wbXmh8q0yvxsX461gN+DJdCyWShNBEX5iJ12dcfsqGvM53eM/cQz
+hyTI9+X2wpHGEunX4Rgd+bEkqpVEubwKVr2AdF+u4BVF5lxhkBQ=
+=eCFh
+-----END PGP SIGNATURE-----
+--=-=-=--
