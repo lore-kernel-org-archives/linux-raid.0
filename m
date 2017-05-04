@@ -1,93 +1,33 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [mdadm PATCH] Create: move STOP_ARRAY to abort_locked
-Date: Thu, 4 May 2017 10:54:48 -0400
-Message-ID: <2c1c277c-2fd2-27a8-e6a5-23b1ced3ec90@gmail.com>
-References: <1493190229-14329-1-git-send-email-zlliu@suse.com>
- <430f083a-2501-cb74-4ac1-89d1c4620a03@suse.com>
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: Re: RAID creation resync behaviors
+Date: Thu, 4 May 2017 23:20:12 +0800
+Message-ID: <38474044-df35-b214-ca9c-35d9debe92fe@fnarfbargle.com>
+References: <20170503202748.7r243wj5h4polt6y@kernel.org>
+ <20170503235856.GA9698@metamorpher.de>
+ <20170504022258.eov6xh2zwtbfvcch@kernel.org>
+ <20170504075551.GA3929@metamorpher.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <430f083a-2501-cb74-4ac1-89d1c4620a03@suse.com>
+In-Reply-To: <20170504075551.GA3929@metamorpher.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Zhilong Liu <zlliu@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: Andreas Klauer <Andreas.Klauer@metamorpher.de>, Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, jes.sorensen@gmail.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-On 05/04/2017 08:20 AM, Zhilong Liu wrote:
-> Hi Jes,
->
-> apply for review, this is a bug I ever encountered.
-
-Zhilong,
-
-Under what circumstances do you see this?
-
-Thanks,
-Jes
-
->
-> On 04/26/2017 03:03 PM, Zhilong Liu wrote:
->> The sysfs entry and devnm would be created once create_mddev()
->> performed successfully, but the creating isn't completed here,
->> move STOP_ARRAY to abort_locked, the purpose is to cleanup the
->> partially created array.
+On 04/05/17 15:55, Andreas Klauer wrote:
+> On Wed, May 03, 2017 at 07:22:58PM -0700, Shaohua Li wrote:
 >>
->> Signed-off-by: Zhilong Liu <zlliu@suse.com>
->> ---
->>   Create.c | 11 ++++-------
->>   1 file changed, 4 insertions(+), 7 deletions(-)
+>> Unfortunately not all SSD return zero after trim.
 >>
->> diff --git a/Create.c b/Create.c
->> index 6ca0924..fe0ab7e 100644
->> --- a/Create.c
->> +++ b/Create.c
->> @@ -904,10 +904,8 @@ int Create(struct supertype *st, char *mddev,
->>                       remove_partitions(fd);
->>                   if (st->ss->add_to_super(st, &inf->disk,
->>                                fd, dv->devname,
->> -                             dv->data_offset)) {
->> -                    ioctl(mdfd, STOP_ARRAY, NULL);
->> +                             dv->data_offset))
->>                       goto abort_locked;
->> -                }
->>                   st->ss->getinfo_super(st, inf, NULL);
->>                   safe_mode_delay = inf->safe_mode_delay;
->>   @@ -1008,7 +1006,6 @@ int Create(struct supertype *st, char *mddev,
->>               sysfs_set_safemode(&info, safe_mode_delay);
->>               if (err) {
->>                   pr_err("failed to activate array.\n");
->> -                ioctl(mdfd, STOP_ARRAY, NULL);
->>                   goto abort;
->>               }
->>           } else if (c->readonly &&
->> @@ -1018,7 +1015,6 @@ int Create(struct supertype *st, char *mddev,
->>                         "array_state", "readonly") < 0) {
->>                   pr_err("Failed to start array: %s\n",
->>                          strerror(errno));
->> -                ioctl(mdfd, STOP_ARRAY, NULL);
->>                   goto abort;
->>               }
->>           } else {
->> @@ -1030,7 +1026,6 @@ int Create(struct supertype *st, char *mddev,
->>                   if (info.array.chunk_size &
->> (info.array.chunk_size-1)) {
->>                       cont_err("Problem may be that chunk size is not
->> a power of 2\n");
->>                   }
->> -                ioctl(mdfd, STOP_ARRAY, NULL);
->>                   goto abort;
->>               }
->>               /* if start_ro module parameter is set, array is
->> @@ -1061,7 +1056,9 @@ int Create(struct supertype *st, char *mddev,
->>       map_remove(&map, fd2devnm(mdfd));
->>       map_unlock(&map);
->>   -    if (mdfd >= 0)
->> +    if (mdfd >= 0) {
->> +        ioctl(mdfd, STOP_ARRAY, NULL);
->>           close(mdfd);
->> +    }
->>       return 1;
->>   }
 >
+> For example? I was under the impression that pretty much all of them do.
+
+Pretty much every Samsung except the 840 Pro it seems. Certainly my 830s 
+and 850s don't.
+
+> Even the ones that don't advertize it returned zero after trim for me.
+
+You got lucky.
 
