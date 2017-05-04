@@ -1,49 +1,45 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: DM_INTEGRITY Kconfig help (was: Re: dm: add integrity target)
-Date: Thu, 4 May 2017 09:39:53 +0200
-Message-ID: <CAMuHMdVLrENTe=KnCgjVU3=voohKTe3LLEohLt+=JZnJ5Uuqiw@mail.gmail.com>
-References: <CAMuHMdWafrUq0tbHsOS2Gm579Amv0LpYAqk=Kqg4t8fqgbWDgw@mail.gmail.com>
- <6988fc7b-1ab4-4c7a-c7c9-121271ddd970@gmail.com>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Subject: Re: RAID creation resync behaviors
+Date: Thu, 4 May 2017 09:55:51 +0200
+Message-ID: <20170504075551.GA3929@metamorpher.de>
+References: <20170503202748.7r243wj5h4polt6y@kernel.org>
+ <20170503235856.GA9698@metamorpher.de>
+ <20170504022258.eov6xh2zwtbfvcch@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <6988fc7b-1ab4-4c7a-c7c9-121271ddd970@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Milan Broz <gmazyland@gmail.com>
-Cc: Mikulas Patocka <mpatocka@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170504022258.eov6xh2zwtbfvcch@kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, jes.sorensen@gmail.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-Hi Milan,
+On Wed, May 03, 2017 at 07:22:58PM -0700, Shaohua Li wrote:
+> 
+> Unfortunately not all SSD return zero after trim.
+>  
 
-On Thu, May 4, 2017 at 9:31 AM, Milan Broz <gmazyland@gmail.com> wrote:
-> On 05/04/2017 08:03 AM, Geert Uytterhoeven wrote:
->>> +config DM_INTEGRITY
->>> +       tristate "Integrity target"
->>> +       depends on BLK_DEV_DM
->>> +       select BLK_DEV_INTEGRITY
->>> +       select DM_BUFIO
->>> +       select CRYPTO
->>> +       select ASYNC_XOR
->>> +       ---help---
->>> +          This is the integrity target.
->>
->> Which is...?
->>
->> Can you please extend the help message for the uneducated?
->
-> Yes, sorry, this is our oversight.
->
-> Mike already promised that this text will be extended in the next patchset.
+For example? I was under the impression that pretty much all of them do. 
+Even the ones that don't advertize it returned zero after trim for me. 
+[Sometimes you get original data but that's Linux; gone after drop_caches]
+(Of course, I don't have access to that many different models of SSD...)
 
-Thanks, good to know this is planned.
+But what do they actually return then? Original data? This might seem 
+fine at first but it can't be the case, right? I mean, even if the SSD 
+does not erase a trimmed block right away, sooner or later it would, 
+in order to re-use it for new data and wear leveling. If it's never 
+re-used what is the point of trimming it in the first place?
 
-Gr{oetje,eeting}s,
+So it seems to me even if an SSD attempted to keep returning original data 
+for a while, sooner or later it would be gone and if that happens randomly, 
+as far as your RAID is concerned you will be in mismatch hell anyways. 
+So after a full trim, you can skip the initial sync either way.
 
-                        Geert
+Mismatches might also be an issue for SSD that do return zero after trim, 
+but have different erase block sizes / trim boundaries / partition offsets.
+Or does read zero after trim actually mean it works at 4K page resolution? 
+Never mind, then. :-)
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Regards
+Andreas Klauer
