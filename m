@@ -1,73 +1,101 @@
 From: Shaohua Li <shli@kernel.org>
 Subject: Re: RAID creation resync behaviors
-Date: Wed, 3 May 2017 19:04:52 -0700
-Message-ID: <20170504020452.kcmjgxnk7zsx7kdx@kernel.org>
+Date: Wed, 3 May 2017 19:22:58 -0700
+Message-ID: <20170504022258.eov6xh2zwtbfvcch@kernel.org>
 References: <20170503202748.7r243wj5h4polt6y@kernel.org>
- <87inlhpgzu.fsf@notabene.neil.brown.name>
+ <20170503235856.GA9698@metamorpher.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <87inlhpgzu.fsf@notabene.neil.brown.name>
+In-Reply-To: <20170503235856.GA9698@metamorpher.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
+To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
 Cc: linux-raid@vger.kernel.org, jes.sorensen@gmail.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-On Thu, May 04, 2017 at 11:07:01AM +1000, Neil Brown wrote:
-> On Wed, May 03 2017, Shaohua Li wrote:
+On Thu, May 04, 2017 at 01:58:56AM +0200, Andreas Klauer wrote:
+> On Wed, May 03, 2017 at 01:27:48PM -0700, Shaohua Li wrote:
+> > Write whole disk is very unfriendly for SSD, because it reduces lifetime.
+> > And if user already does a trim before creation, the unncessary write 
+> > could make SSD slower in the future.
 > 
-> > Hi,
-> >
-> > Currently we have different resync behaviors in array creation.
-> >
-> > - raid1: copy data from disk 0 to disk 1 (overwrite)
-> > - raid10: read both disks, compare and write if there is difference (compare-write)
-> > - raid4/5: read first n-1 disks, calculate parity and then write parity to the last disk (overwrite)
-> > - raid6: read all disks, calculate parity and compare, and write if there is difference (compare-write)
+> I'm not a kernel developer so maybe I shouldn't reply. Feel free to ignore.
 > 
-> The approach taken for raid1 and raid4/5 provides the fastest sync for
-> an array built on uninitialised spinning devices.
-> RAID6 could use the same approach but would involve more CPU and so
-> the original author of the RAID6 code (hpa) chose to go for the low-CPU
-> cost option.  I don't know if tests were done, or if they would still be
-> valid on new hardware.
-> The raid10 approach comes from "it is too hard to optimize in general
-> because different RAID10 layouts have different trade-offs, so just
-> take the easy way out."
-
-ok, thanks for the explanation! 
-> >
-> > Write whole disk is very unfriendly for SSD, because it reduces lifetime. And
-> > if user already does a trim before creation, the unncessary write could make
-> > SSD slower in the future. Could we prefer compare-write to overwrite if mdadm
-> > detects the disks are SSD? Surely sometimes compare-write is slower than
-> > overwrite, so maybe add new option in mdadm. An option to let mdadm trim SSD
-> > before creation sounds reasonable too.
+> I don't see this as a big issue, whoever uses SSD will likely also fstrim, 
+> so all SSD will know about free blocks regardless how the drive was added 
+> to the RAID.
 > 
-> An option to ask mdadm to trim the data space and then --assume-clean
-> certainly sounds reasonable.
+> You don't resync everyday and once populated with data you just can't help 
+> but have many writes when adding / replacing drives. No way around it.
 
-This doesn't work well. read returns 0 for trimmed data space in some SSDs, but
-not all. If not, we will have trouble.
+I agree fstrim doesn't make issue smaller. But there are still extra writes,
+which if we can avoid in an easy way, we should do it.
 
-> One possible approach would be to use compare-write until some
-> threshold of writes were crossed, then switch to over-write.  That could
-> work well for RAID1, but could be awkward to manage for RAID5.
-> Possibly mdadm could read the first few megas of each device in RAID5
-> and try to guess if many writes will be needed.  If they will, the
-> current approach is best.  If not, assemble the array so that
-> compare-write is used.
+> > An option to let mdadm trim SSD before creation sounds reasonable too.
+> 
+> This is my personal opinion but - there is way too much trim in Linux. 
+> 
+> On HDD if you did a botched mkfs on the wrong device you still had a chance 
+> to recover data, with SSD it's all gone in an eyeblink, because mkfs.ext4 
+> and other programs unfortunately do trim without asking. Lots of people 
+> come to this list only after already playing with mdadm --create and if 
+> mdadm simply started trimming SSDs too, then all would be lost.
+> LVM has these nice metadata backups but they're rendered useless 
+> if lvm.conf has issue_discards set to 1. Etc...
 
-I think this makes sense if we do trim first, assume in most SSDs read return 0
-for trimmed space. Maybe trim first, and check if read returns 0. If returns 0,
-do compare-write (even assume-clean), otherwise overwrite.
+Totally understand the concerns. I think a new option is required for this and
+it should not be default.
 
-> I'm in favour of providing options and making the defaults "not
-> terrible".  I think they currently are "not terrible", but maybe they
-> can be better in some cases.
+> And it's entirely superfluous, there was a big hullabaloo when SSD were 
+> new, everyone was concerned about how quickly they'd die when written to, 
+> but tests show their endurance is considerably greater than advertized. 
+> A single RAID resync won't put a dent in even a consumer's SSD lifetime.
 
-Agree, more options are required.
+From my experience, if my filesystem under a SSD is nearly full, I found the
+system is unstable in at least one type of SSD. Fully write a SSD not just
+reduces the lifetime, it also makes firmware of SSD has higher chance to fail.
+
+> At the same time you have two utilities blkdiscard and fstrim so anyone  
+> who desires to trim can already easily do so with little effort. For SSD 
+> that return zero after TRIM you can already create like this:
+> 
+> blkdiscard device1
+> blkdiscard device2
+> blkdiscard device3
+> echo 3 > /proc/sys/vm/drop_caches # optional: Linux caches trimmed data
+> mdadm --create --assume-clean /dev/md ... device1 device2 device3
+
+Unfortunately not all SSD return zero after trim.
+ 
+> If you wanted mdadm to do that directly, how about a mdadm --create --trim 
+> which implies assume-clean? But in my opinion it should not happen unasked.
+> If it was up to me I'd even add a prompt asking to confirm dataloss...
+> 
+> As for overwrite vs. compare-write, I don't know if it's possible or 
+> how painful it would be to implement but could you start out comparing, 
+> continue while the data actually matches, but switch to presumably much 
+> faster overwrite mode once there are sufficient mismatches? Perhaps with a 
+> fallback option so it can go back to compare later if data starts to match.
+> 
+> So kind of a smart-compare-overwrite mode which would go something like:
+> 
+> Compare. Match.
+> Compare. Match.
+> Compare. Mismatch. Overwrite.
+> Compare. Mismatch. Overwrite x2.
+> Compare. Mismatch. Overwrite x4.
+> Compare. Match.
+> Compare. Mismatch. Overwrite x8.
+> Compare. Mismatch. Overwrite x16.
+> 
+> Perhaps cap the overwrite multiplier at a certain point...
+> 
+> Maybe a silly idea, I don't know.
+
+This certainly is an interesting idea. Not sure if we should put complex
+heuristics into kernel side though. If there is easy approach in mdadm side, it
+definitely will be preferred.
 
 Thanks,
 Shaohua
