@@ -1,89 +1,83 @@
-From: NeilBrown <neilb@suse.com>
-Subject: [mdadm PATCH] Fix typo in new udev rule.
-Date: Fri, 05 May 2017 15:16:15 +1000
-Message-ID: <87r303opcw.fsf@notabene.neil.brown.name>
-References: <149265560315.31004.3851231165281498425.stgit@noble> <149265600601.31004.323865505557190368.stgit@noble> <dedd27cd-9c2e-f244-d8aa-7a074679d3c6@gmail.com> <87mvbasqx6.fsf@notabene.neil.brown.name> <40a5fbff-9eef-07b3-fe1b-fb9a888cfb8b@redhat.com> <87h919ruj5.fsf@notabene.neil.brown.name> <85c9e9e1-3d2c-9f88-e923-235fb69a4188@redhat.com>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: RAID creation resync behaviors
+Date: Fri, 05 May 2017 08:46:51 +0200
+Message-ID: <590C1FDB.5090904@hesbynett.no>
+References: <20170503202748.7r243wj5h4polt6y@kernel.org> <fe3c30e4-b0dd-639e-7db7-344aa93ce198@hesbynett.no> <20170504015454.d4obiuume6e3yrdv@kernel.org> <590ADA3F.8070909@hesbynett.no> <877f1wp9o3.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <85c9e9e1-3d2c-9f88-e923-235fb69a4188@redhat.com>
+In-Reply-To: <877f1wp9o3.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Rajnoha <prajnoha@redhat.com>, Jes Sorensen <jes.sorensen@gmail.com>
-Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com
+To: NeilBrown <neilb@suse.com>, Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, jes.sorensen@gmail.com, neilb@suse.de
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On 04/05/17 23:57, NeilBrown wrote:
+> On Thu, May 04 2017, David Brown wrote:
+> 
+>>
+>> I have another couple of questions that might be relevant, but I am
+>> really not sure about the correct answers.
+>>
+>> First, if you have a stripe that you know is unused - it has not been
+>> written to since the array was created - could the raid layer safely
+>> return all zeros if an attempt was made to read the stripe?
+> 
+> "know is unused" and "it has not been written to since the array was
+> created" are not necessarily the same thing.
+> 
+> If I have some devices which used to have a RAID5 array but for which
+> the metadata got destroyed, I might carefully "create" a RAID5 over the
+> devices and then have access to my data.  This has been done more than
+> once - it is not just theoretical.
 
+That is true, of course - anything like this would have to be optional
+(command line switches in mdadm, for example).
 
-As pointed out by Peter Rajnoha, the correct usage in udev is
-TEST=3D=3D"file", not TEST=3D"file".
+There is also the opposite situation - when you /have/ had something
+written to the array, but now you know it is unused (due to a trim).
+Knowing the stripe is unused might make a later partial write a little
+faster, and it would certainly speed up a scrub or other consistency
+check since unused stripes can be skipped.
 
-Also improve a related comment which was a bit informal.
+> 
+> But if you really "know" it is unused, then returning zeros should be fine.
+> 
+>>
+>> Second, when syncing an unused stripe (such as during creation), rather
+>> than reading the old data and copying it or generating parities, could
+>> we simply write all zeros to all the blocks in the stripes?  For many
+>> SSDs, this is very efficient.
+> 
+> If you were happy to destroy whatever was there before (see above
+> recovery example for when you wouldn't), then it might be possible to
+> make this work.
 
-Reported-by: Peter Rajnoha <prajnoha@redhat.com>
-Fixes: cd6cbb08c458 ("Create: tell udev md device is not ready when first c=
-reated.")
-Signed-off-by: NeilBrown <neilb@suse.com>
-=2D--
+As above, this would have to be option-controlled.  (I have had occasion
+to pull disks from one dead server to recover them on another machine -
+it's nerve-racking enough at the best of times, without fearing that you
+will zero out your remaining good disks!)
 
-Thanks Peter!  Properly tested as well :-)
+> You would need to be careful not to write zeros over a region that the
+> filesystem has already used.
 
-NeilBrown
+Yes, but that should not be a difficult problem - the array is created
+before the filesystem.
 
+> That means you either disable all writes until the initialization
+> completes (waste of time), or you add complexity to track which strips
+> have been written and which haven't, and only initialise strips that have
+> not been written.  This complexity would only be used once in the entire
+> life of the RAID.  That might not be best use of resources.
+> 
 
- lib.c                       | 2 +-
- udev-md-raid-creating.rules | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+I am not sure I see how this would be a problem.  But it is something
+that would need to be considered carefully when looking at details of
+implementing these ideas (if anyone thinks they would be worth
+implementing).
 
-diff --git a/lib.c b/lib.c
-index 7e44b1f27fcc..be093e8c30cb 100644
-=2D-- a/lib.c
-+++ b/lib.c
-@@ -165,7 +165,7 @@ char *fd2devnm(int fd)
-=20
- /* When we create a new array, we don't want the content to
-  * be immediately examined by udev - it is probably meaningless.
-=2D * So create /run/mdadm/creating-FOO and expect that a udev
-+ * So create /run/mdadm/creating-mdXXX and expect that a udev
-  * rule will noticed this and act accordingly.
-  */
- static char block_path[] =3D "/run/mdadm/creating-%s";
-diff --git a/udev-md-raid-creating.rules b/udev-md-raid-creating.rules
-index 2be466bcefd2..9bef8d1103f5 100644
-=2D-- a/udev-md-raid-creating.rules
-+++ b/udev-md-raid-creating.rules
-@@ -4,4 +4,4 @@
- # the array is not "ready" and we should make sure the
- # content is ignored.
-=20
-=2DKERNEL=3D=3D"md*", TEST=3D"/run/mdadm/creating-$kernel", ENV{SYSTEMD_REA=
-DY}=3D"0"
-+KERNEL=3D=3D"md*", TEST=3D=3D"/run/mdadm/creating-$kernel", ENV{SYSTEMD_RE=
-ADY}=3D"0"
-=2D-=20
-2.12.2
+mvh.,
 
+David
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlkMCp8ACgkQOeye3VZi
-gbmwCg/+Oiq3AZ7hYKWNIEMK3ZszUzl2wRR4jvHSaiBYdFivxrB4MmJdq8EnH7J4
-DnmHEtUpQ86p02+6XD3B116Tp2jsRreCpV/xFSllghQUcR3zuYv/x4UPb5L/0u4v
-QFSRSRrhbkNekQtlMe6gaMwopNHiXE2fFVdKL8qsNX0WhBtlF7su9T82cJHeeqNi
-RKIMETmrcZ49i4XNk9p+SGkJ5Lp2xLArCMhPihQ1Rva+PtG4xSLzzGgO0HcGagNM
-nTZf+Dl21uGI60D3PLxGa1f9kSlhJ+sqA7u6WNgF6jO9sFuZqund/aLr3D9h6NEZ
-7fhzs3r+k5hrJG3tYJiCZjNcBxydN5HW68d8aUINrbEvavs47D6RZr5yHAGMT+j/
-bkNdR+tbVae5Nhi87QxHupAeKJYm6+bAHijjSe5STVZaFnuRgsj5affMt7B78W/O
-ojhitfDcZLdcH0Vo+qUjnZJK6NsHy9NtDwT5iZcBeUD73TgEVOVYByCsUM9tQfsv
-HcFYcgc+qu86cZF4pyBBrZqgx1VzvsoH+hvoqqcUt79qDnFgwHDcp0wxCcfn62m7
-GHcgKreXal5T7qDCKyt3AbkkbOZc37TuAmc1AuACuxD3n5F9Ma0GoLm/0/mmiqp6
-evQ7MLP3Rr8j7MLzCUypCt+TwoOw7oV8OVRrWAM4U+s2x8sIU4o=
-=ycDs
------END PGP SIGNATURE-----
---=-=-=--
