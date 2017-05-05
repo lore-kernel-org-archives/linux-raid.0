@@ -1,75 +1,89 @@
-From: "Ravi (Tom) Hale" <ravi@hale.ee>
-Subject: Re: Fault tolerance with badblocks
-Date: Fri, 5 May 2017 11:03:05 +0700
-Message-ID: <84184eb3-52c4-e7ad-cd5b-5021b5cf47ee@hale.ee>
-References: <03294ec0-2df0-8c1c-dd98-2e9e5efb6f4f@hale.ee>
- <590B3039.3060000@youngman.org.uk>
+From: NeilBrown <neilb@suse.com>
+Subject: [mdadm PATCH] Fix typo in new udev rule.
+Date: Fri, 05 May 2017 15:16:15 +1000
+Message-ID: <87r303opcw.fsf@notabene.neil.brown.name>
+References: <149265560315.31004.3851231165281498425.stgit@noble> <149265600601.31004.323865505557190368.stgit@noble> <dedd27cd-9c2e-f244-d8aa-7a074679d3c6@gmail.com> <87mvbasqx6.fsf@notabene.neil.brown.name> <40a5fbff-9eef-07b3-fe1b-fb9a888cfb8b@redhat.com> <87h919ruj5.fsf@notabene.neil.brown.name> <85c9e9e1-3d2c-9f88-e923-235fb69a4188@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <590B3039.3060000@youngman.org.uk>
-Content-Language: en-AU
+In-Reply-To: <85c9e9e1-3d2c-9f88-e923-235fb69a4188@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
+To: Peter Rajnoha <prajnoha@redhat.com>, Jes Sorensen <jes.sorensen@gmail.com>
+Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-On 04/05/17 20:44, Wols Lists wrote:
-> On 04/05/17 11:04, Ravi (Tom) Hale wrote:
->> Is there a way of having blocks from a spare device automatically
->> replacing bad blocks when they are next written to (like SMART does for
->> HDDs)?
-> 
-> What quite do you mean?
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I mean: should a bad block be identified, any writes to that virtual
-block are redirected to another good LBA block held in a spare pool
-which would need to be inaccessible for other purposes (so that they are
-indeed spare).
 
->> Or would mdadm be able to add a "badblocks layer" to btrfs in some other
->> way?
-> 
-> No. With modern hard drives, no filesystem should pay any attention to
-> badblocks - it's all handled in the drive firmware.
+As pointed out by Peter Rajnoha, the correct usage in udev is
+TEST=3D=3D"file", not TEST=3D"file".
 
-ext4 supports this, and is a relatively modern filesystem released in
-December 2008. While it could be argued that this is for legacy support,
-This feature still adds value (see below).
+Also improve a related comment which was a bit informal.
 
-> mdadm has had a lot of grief with its handling of badblocks,
-> and getting drives confused, and it's all totally unnecessary anyway.
+Reported-by: Peter Rajnoha <prajnoha@redhat.com>
+Fixes: cd6cbb08c458 ("Create: tell udev md device is not ready when first c=
+reated.")
+Signed-off-by: NeilBrown <neilb@suse.com>
+=2D--
 
-The use case is simple: What if I want to have more goodblocks to
-correct for badblocks than Seagate thinks I should have?
+Thanks Peter!  Properly tested as well :-)
 
-Eg, a charity or poor student wanting to get the most out of their old
-hardware.
+NeilBrown
 
-In my case, I don't care about actual data loss (RAID0).
 
-However, in the usual case, running RAID 1, 5 or 6 with a pool of spare
-goodblocks would allow extending the life of hardware considerably while
-still providing a poor-man's margin of redundancy.
+ lib.c                       | 2 +-
+ udev-md-raid-creating.rules | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-> Let the drive worry about what blocks are bad. One major point behind
-> LBA is it hides the actual disk layout from the computer, and allows the
-> drive to relocate blocks that aren't working properly. Let it do its job.
+diff --git a/lib.c b/lib.c
+index 7e44b1f27fcc..be093e8c30cb 100644
+=2D-- a/lib.c
++++ b/lib.c
+@@ -165,7 +165,7 @@ char *fd2devnm(int fd)
+=20
+ /* When we create a new array, we don't want the content to
+  * be immediately examined by udev - it is probably meaningless.
+=2D * So create /run/mdadm/creating-FOO and expect that a udev
++ * So create /run/mdadm/creating-mdXXX and expect that a udev
+  * rule will noticed this and act accordingly.
+  */
+ static char block_path[] =3D "/run/mdadm/creating-%s";
+diff --git a/udev-md-raid-creating.rules b/udev-md-raid-creating.rules
+index 2be466bcefd2..9bef8d1103f5 100644
+=2D-- a/udev-md-raid-creating.rules
++++ b/udev-md-raid-creating.rules
+@@ -4,4 +4,4 @@
+ # the array is not "ready" and we should make sure the
+ # content is ignored.
+=20
+=2DKERNEL=3D=3D"md*", TEST=3D"/run/mdadm/creating-$kernel", ENV{SYSTEMD_REA=
+DY}=3D"0"
++KERNEL=3D=3D"md*", TEST=3D=3D"/run/mdadm/creating-$kernel", ENV{SYSTEMD_RE=
+ADY}=3D"0"
+=2D-=20
+2.12.2
 
-Until it can't do its job any more because it runs out of its
-manufacturer determined fixed-size spare pool. Yes there are things to
-consider for performance like having the physical good sector being
-close to the physical bad sector, so a spare data area could be
-allocated every N usable data areas.
 
-And perhaps I could write that one day. :)
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
->> My use case is mining storj - I don't mind some data loss.
-> 
-> Using a badblock list will have no impact on this whatsoever.
+-----BEGIN PGP SIGNATURE-----
 
-A corrupted file is a corrupted file, and can be deleted at minimal
-loss. I just don't want the next file being corrupted by the same badblock.
-
--- 
-Tom
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlkMCp8ACgkQOeye3VZi
+gbmwCg/+Oiq3AZ7hYKWNIEMK3ZszUzl2wRR4jvHSaiBYdFivxrB4MmJdq8EnH7J4
+DnmHEtUpQ86p02+6XD3B116Tp2jsRreCpV/xFSllghQUcR3zuYv/x4UPb5L/0u4v
+QFSRSRrhbkNekQtlMe6gaMwopNHiXE2fFVdKL8qsNX0WhBtlF7su9T82cJHeeqNi
+RKIMETmrcZ49i4XNk9p+SGkJ5Lp2xLArCMhPihQ1Rva+PtG4xSLzzGgO0HcGagNM
+nTZf+Dl21uGI60D3PLxGa1f9kSlhJ+sqA7u6WNgF6jO9sFuZqund/aLr3D9h6NEZ
+7fhzs3r+k5hrJG3tYJiCZjNcBxydN5HW68d8aUINrbEvavs47D6RZr5yHAGMT+j/
+bkNdR+tbVae5Nhi87QxHupAeKJYm6+bAHijjSe5STVZaFnuRgsj5affMt7B78W/O
+ojhitfDcZLdcH0Vo+qUjnZJK6NsHy9NtDwT5iZcBeUD73TgEVOVYByCsUM9tQfsv
+HcFYcgc+qu86cZF4pyBBrZqgx1VzvsoH+hvoqqcUt79qDnFgwHDcp0wxCcfn62m7
+GHcgKreXal5T7qDCKyt3AbkkbOZc37TuAmc1AuACuxD3n5F9Ma0GoLm/0/mmiqp6
+evQ7MLP3Rr8j7MLzCUypCt+TwoOw7oV8OVRrWAM4U+s2x8sIU4o=
+=ycDs
+-----END PGP SIGNATURE-----
+--=-=-=--
