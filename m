@@ -1,77 +1,76 @@
-From: Adam Thompson <athompso@athompso.net>
-Subject: Re: [RndTbl] Big-endian RAID5 recovery problem
-Date: Fri, 05 May 2017 14:22:44 -0500
-Message-ID: <0fed0cadfe6c29f8fef4c9a341766bdd@athompso.net>
-References: <5c6e6e5d93d4056839e4f370e00a8e08@mail.athompso.net>
- <20170502135934.59548e17@natsu>
+From: pg@btrfs.list.sabi.co.UK (Peter Grandi)
+Subject: Re: Fault tolerance with badblocks
+Date: Fri, 5 May 2017 21:23:04 +0100
+Message-ID: <22796.57128.627832.878830@tree.ty.sabi.co.uk>
+References: <03294ec0-2df0-8c1c-dd98-2e9e5efb6f4f@hale.ee>
+        <590B3039.3060000@youngman.org.uk>
+        <84184eb3-52c4-e7ad-cd5b-5021b5cf47ee@hale.ee>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170502135934.59548e17@natsu>
+In-Reply-To: <84184eb3-52c4-e7ad-cd5b-5021b5cf47ee@hale.ee>
 Sender: linux-raid-owner@vger.kernel.org
-To: Continuation of Round Table discussion <roundtable@muug.ca>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2017-05-02 03:59, Roman Mamedov wrote:
-> On Mon, 01 May 2017 16:39:07 -0500
-> Adam Thompson <athompso@athompso.net> wrote:
-> 
->> I can't find any modern big-endian Linux systems... looks like all the
->> ARM distros run in little-endian mode.
-> 
-> Here are QEMU images for debian-mips (should be big-endian, as opposed 
-> to
-> debian-mipsel): https://people.debian.org/~aurel32/qemu/mips/
-> 
-> Of course it will run purely in software, but most likely more than 
-> fast enough
-> to copy away the data.
-> 
-> Not entirely sure that particular emulated MIPS system support more 
-> than 4
-> drives), but it appears that a starting point could be (man 
-> qemu-system):
-> 
->            Instead of -hda, -hdb, -hdc, -hdd, you can use:
-> 
->                    qemu-system-i386 -drive file=file,index=0,media=disk
->                    qemu-system-i386 -drive file=file,index=1,media=disk
->                    qemu-system-i386 -drive file=file,index=2,media=disk
->                    qemu-system-i386 -drive file=file,index=3,media=disk
-> 
-> with indexes 0..5, as you need the boot disk, all 4 drives, and one 
-> more as
-> the backup destination.
-> 
-> May or may not be the best way, but IMO beats trying to hex-edit the
-> superblock right away.
+>> No. With modern hard drives, no filesystem should pay any
+>> attention to badblocks - it's all handled in the drive firmware.
 
+> ext4 supports this,
 
-So I now have:
-  4 x old IDE hard drives,
-  plugged into 4 x USB3-to-IDE adapters,
-  plugged into a 4x USB3 PCIe 1x adapter card,
-  plugged into an Ubuntu desktop i5 system @ 3.3GHz,
-  passed through into QEMU as virtual SCSI devices,
-  connected to a virtual AMD am53c974 SCSI adapter,
-  connected to a virtual Malta-series MIPS64 series,
-  emulated by QEMU.
+Also JFS also supports bad-block avoidance, but only at 'mkfs' time
+and JFS does this for legacy reason: Linux JFS supports this because
+it is a port of JFS/2 from OS/2 which was a port of JFS version 1
+from AIX in 1990.
 
-Yikes!
+> and is a relatively modern filesystem released in December
+> 2008.
 
-The good news is that as soon as the Debian kernel booted, it 
-auto-detected the RAID arrays and started re-silvering them.
+It is just a retread of 'ext3' which itself was a recycling of
+'ext2' which was in turn a clone of the 4BSD FFS, and we are talking
+of design decisions taken in 1982-3, not 2008.
 
-The bad news is: 1) that I thought I had attached the devices in 
-read-only mode (oops); and 2) it's re-syncing the MD array at 
-~5000Kb/sec.
+> While it could be argued that this is for legacy support,
 
-I'll leave it to sync over the weekend (praying for no power outages), 
-but I sure hope I can upgrade the metadata block instead of doing this 
-all through a QEMU (non-accelerated) VM!
+It is for legacy support. Once upon a time a drive's controller was
+the main CPU itself, and the kernel had to manage bad block sparing
+(as well as rotational layout and track buffering). That was up to
+around 20-30 years ago :-).
 
-Thanks for the suggestions so far,
--Adam
+> This feature still adds value (see below).
+
+It adds value if one underestimates typical disk drive failure
+modes.  It is quite irritating even for me that a drive with way
+less than 1% bad blocks becomes effectively unusable, but long
+experience tells me that once a drive starts to grow defects to the
+point that manufacturer spare sectors run out there is usually a
+reason for it and sooner than later it will be almost completely
+unusable.
+
+[ ... ]
+
+> The use case is simple: What if I want to have more goodblocks to
+> correct for badblocks than Seagate thinks I should have?
+
+The answer is also simple: if you think you know better than
+Seagate, or if you think that Seagate deliberately allocates too few
+spare sector, you ask Seagate for custom firmware that allocates
+more of a disk capacity for spares. I suspect that with an order of
+at least 100,000 drives they will be happy to help. :-)
+
+> Eg, a charity or poor student wanting to get the most out of their
+> old hardware.
+
+If it is your itch, and you think you know better than the rest
+of the industry, scratch your itch: send patches :-).
+
+Other people know that usually keeping decaying drives in use is
+fairly pointless. Legend is that USSR computer engineers perfected
+that art though, but they worked in special circumstances.  For a
+similar example look at the BadRAM and similar modules:
+
+  https://help.ubuntu.com/community/BadRAM
+  http://rick.vanrein.org/linux/badram/
+
+They haven't become that popular... :-)
