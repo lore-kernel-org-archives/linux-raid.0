@@ -1,35 +1,39 @@
-From: Trevor Cordes <trevor@tecnopolis.ca>
-Subject: Re: [RndTbl] Big-endian RAID5 recovery problem
-Date: Sat, 6 May 2017 01:41:17 -0500
-Message-ID: <20170506014117.4d3f1689@pog.tecnopolis.ca>
-References: <5c6e6e5d93d4056839e4f370e00a8e08@mail.athompso.net>
-        <87fugio7cy.fsf@notabene.neil.brown.name>
+From: "Ravi (Tom) Hale" <ravi@hale.ee>
+Subject: Re: Fault tolerance with badblocks
+Date: Sat, 6 May 2017 18:21:53 +0700
+Message-ID: <bd917050-cf73-6922-bb20-c5ccf02ba51c@hale.ee>
+References: <03294ec0-2df0-8c1c-dd98-2e9e5efb6f4f@hale.ee>
+ <590B3039.3060000@youngman.org.uk>
+ <84184eb3-52c4-e7ad-cd5b-5021b5cf47ee@hale.ee>
+ <d2b25ec0-c401-07df-2231-a37117878589@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87fugio7cy.fsf@notabene.neil.brown.name>
+In-Reply-To: <d2b25ec0-c401-07df-2231-a37117878589@youngman.org.uk>
+Content-Language: en-AU
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Continuation of Round Table discussion <roundtable@muug.ca>, Adam Thompson <athompso@athompso.net>, linux-raid@vger.kernel.org
+To: Anthony Youngman <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2017-05-06 NeilBrown wrote:
-> On Mon, May 01 2017, Adam Thompson wrote:
-> 
-> > The problem is that the disks use the v0.90 metadata format, and
-> > they came from a big-endian system, not a little-endian system.  MD 
-> > superblocks *since* v0.90 are endian-agnostic, but back in v0.90,
-> > the superblock was byte-order specific.
-> 
-> Look for "--update=byteorder" in the mdadm man page.
+On 06/05/17 02:20, Anthony Youngman wrote:
+> Bear in mind I'm speculating slightly here ... but how are you going to
+> know when the drive has run out of its spare-pool? Bear in mind that
+> most SSDs, it seems, will commit suicide at this point ...
 
-Doh!  Make that double-doh!  So easy, yet so hidden.  I'll request one
-little tweak/feature: can the man page be updated so that that option
-has the word "endian" somewhere in its description?  I think most of us
-did as the first attempt at helping: man mdadm, search endian.  When
-that failed, no one thought to search byteorder!  Even google didn't
-fix that one, at least not for my web searches.
+Intel and Samsung SSDs support S.M.A.R.T. (but not my personal laptop).
 
-Thanks linux-RAID guys (especially Neil), once again you make the
-difficult easy.
+> Bear in mind also, that any *within* *spec* drive can have an "accident"
+> every 10TB and still be considered perfectly okay. Which means that if
+> you do what you are supposed to do (rewrite the block) you're risking
+> the drive remapping the block - and getting closer to the drive bricking
+> itself. But if you trap the error yourself and add it to the badblocks
+> list, you are risking throwing away perfectly decent blocks that just
+> hiccuped.
+
+For hiccups, having a bad-read-count for each suspected-bad block could
+be sensible. If that number goes above <small-threshold> it's very
+likely that the block is indeed bad and should be avoided in future.
+
+-- 
+Tom Hale
