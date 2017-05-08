@@ -1,67 +1,156 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: Fault tolerance with badblocks
-Date: Mon, 08 May 2017 15:50:16 +0100
-Message-ID: <87h90v8kt3.fsf@esperi.org.uk>
-References: <03294ec0-2df0-8c1c-dd98-2e9e5efb6f4f@hale.ee>
-        <590B3039.3060000@youngman.org.uk>
-        <84184eb3-52c4-e7ad-cd5b-5021b5cf47ee@hale.ee>
-        <d2b25ec0-c401-07df-2231-a37117878589@youngman.org.uk>
-        <bd917050-cf73-6922-bb20-c5ccf02ba51c@hale.ee>
-        <590DC905.60207@youngman.org.uk>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH] md/md0: optimize raid0 discard handling
+Date: Mon, 8 May 2017 09:37:43 -0700
+Message-ID: <20170508163743.xkct4eoylpjrg72c@kernel.org>
+References: <1af0237c374a1e276663fa17824e8345165fcca6.1494203680.git.shli@fb.com>
+ <979e4da4-3d31-da5d-459f-0dceecc95a3b@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <590DC905.60207@youngman.org.uk> (Wols Lists's message of "Sat, 6
-        May 2017 14:00:53 +0100")
+Content-Disposition: inline
+In-Reply-To: <979e4da4-3d31-da5d-459f-0dceecc95a3b@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: "Ravi (Tom) Hale" <ravi@hale.ee>, linux-raid@vger.kernel.org
+To: Coly Li <colyli@suse.de>
+Cc: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org, Kernel-team@fb.com, NeilBrown <neilb@suse.com>
 List-Id: linux-raid.ids
 
-On 6 May 2017, Wols Lists outgrape:
+On Mon, May 08, 2017 at 03:31:47PM +0800, Coly Li wrote:
+> On 2017/5/8 上午8:36, Shaohua Li wrote:
+> > There are complaints that raid0 discard handling is slow. Currently we
+> > divide discard request into chunks and dispatch to underlayer disks. The
+> > block layer will do merge to form big requests. This causes a lot of
+> > request split/merge and uses significant CPU time.
+> > 
+> > A simple idea is to calculate the range for each raid disk for an IO
+> > request and send a discard request to raid disks, which will avoid the
+> > split/merge completely. Previously Coly tried the approach, but the
+> > implementation was too complex because of raid0 zones. This patch always
+> > split bio in zone boundary and handle bio within one zone. It simplifies
+> > the implementation a lot.
+> > 
+> > Cc: NeilBrown <neilb@suse.com>
+> > Cc: Coly Li <colyli@suse.de>
+> > Signed-off-by: Shaohua Li <shli@fb.com>
+> > ---
+> >  drivers/md/raid0.c | 116 ++++++++++++++++++++++++++++++++++++++++++++++-------
+> >  1 file changed, 102 insertions(+), 14 deletions(-)
+> > 
+> > diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> > index 84e5859..d6c0bc7 100644
+> > --- a/drivers/md/raid0.c
+> > +++ b/drivers/md/raid0.c
+> > @@ -385,7 +385,7 @@ static int raid0_run(struct mddev *mddev)
+> >  		blk_queue_max_hw_sectors(mddev->queue, mddev->chunk_sectors);
+> >  		blk_queue_max_write_same_sectors(mddev->queue, mddev->chunk_sectors);
+> >  		blk_queue_max_write_zeroes_sectors(mddev->queue, mddev->chunk_sectors);
+> > -		blk_queue_max_discard_sectors(mddev->queue, mddev->chunk_sectors);
+> > +		blk_queue_max_discard_sectors(mddev->queue, UINT_MAX);
+> >  
+> >  		blk_queue_io_min(mddev->queue, mddev->chunk_sectors << 9);
+> >  		blk_queue_io_opt(mddev->queue,
+> > @@ -459,6 +459,95 @@ static inline int is_io_in_chunk_boundary(struct mddev *mddev,
+> >  	}
+> >  }
+> >  
+> > +static void raid0_handle_discard(struct mddev *mddev, struct bio *bio)
+> > +{
+> > +	struct r0conf *conf = mddev->private;
+> > +	struct strip_zone *zone;
+> > +	sector_t start = bio->bi_iter.bi_sector;
+> > +	sector_t end;
+> > +	unsigned int stripe_size;
+> > +	sector_t first_stripe_index, last_stripe_index;
+> > +	sector_t start_disk_offset;
+> > +	unsigned int start_disk_index;
+> > +	sector_t end_disk_offset;
+> > +	unsigned int end_disk_index;
+> > +	unsigned int disk;
+> > +
+> > +	zone = find_zone(conf, &start);
+> > +
+> > +	if (bio_end_sector(bio) > zone->zone_end) {
+> > +		struct bio *split = bio_split(bio,
+> > +			zone->zone_end - bio->bi_iter.bi_sector, GFP_NOIO,
+> > +			mddev->bio_set);
+> > +		bio_chain(split, bio);
+> > +		generic_make_request(bio);
+> > +		bio = split;
+> > +		end = zone->zone_end;
+> > +	} else
+> > +		end = bio_end_sector(bio);
+> > +
+> 
+> Nice, good idea. Indeed, I have a WIP patch which trys to follow your
+> idea, but no clean as yours.
+> 
+> 
+> > +	if (zone != conf->strip_zone)
+> > +		end = end - zone[-1].zone_end;
+> > +
+> > +	/* Now start and end is the offset in zone */
+> > +	stripe_size = zone->nb_dev * mddev->chunk_sectors;
+> > +
+> > +	first_stripe_index = start;
+> > +	sector_div(first_stripe_index, stripe_size);
+> > +	last_stripe_index = end;
+> > +	sector_div(last_stripe_index, stripe_size);
+> > +
+> > +	start_disk_index = (int)(start - first_stripe_index * stripe_size) /
+> > +		mddev->chunk_sectors;
+> > +	start_disk_offset = ((int)(start - first_stripe_index * stripe_size) %
+> > +		mddev->chunk_sectors) +
+> > +		first_stripe_index * mddev->chunk_sectors;
+> > +	end_disk_index = (int)(end - last_stripe_index * stripe_size) /
+> > +		mddev->chunk_sectors;
+> > +	end_disk_offset = ((int)(end - last_stripe_index * stripe_size) %
+> > +		mddev->chunk_sectors) +
+> > +		last_stripe_index * mddev->chunk_sectors;
+> > +
+> 
+> Nice code, again! Much simpler. It is enjoyed experience when reading
+> these calculation :-)
+> 
+> 
+> > +	for (disk = 0; disk < zone->nb_dev; disk++) {
+> > +		sector_t dev_start, dev_end;
+> > +		struct bio *discard_bio = NULL;
+> > +		struct md_rdev *rdev;
+> > +
+> > +		if (disk < start_disk_index)
+> > +			dev_start = (first_stripe_index + 1) *
+> > +				mddev->chunk_sectors;
+> > +		else if (disk > start_disk_index)
+> > +			dev_start = first_stripe_index * mddev->chunk_sectors;
+> > +		else
+> > +			dev_start = start_disk_offset;
+> > +
+> > +		if (disk < end_disk_index)
+> > +			dev_end = (last_stripe_index + 1) * mddev->chunk_sectors;
+> > +		else if (disk > end_disk_index)
+> > +			dev_end = last_stripe_index * mddev->chunk_sectors;
+> > +		else
+> > +			dev_end = end_disk_offset;
+> > +
+> > +		if (dev_end <= dev_start)
+> > +			continue;
+> > +
+> > +		rdev = conf->devlist[(zone - conf->strip_zone) *
+> > +			conf->strip_zone[0].nb_dev + disk];
+> > +		if (__blkdev_issue_discard(rdev->bdev,
+> > +			dev_start + zone->dev_start + rdev->data_offset,
+> > +			dev_end - dev_start, GFP_NOIO, 0, &discard_bio) ||
+> > +		    !discard_bio)
+> > +			continue;
+> 
+> Could you please give me any hint ? Why __blkdev_issue_discard() is
+> called here. The following generic_make_request() will issue the bio to
+> underlying device and call __blkdev_issue_discard() in its code path
+> eventually, why call this function explicitly here?
 
-> On 06/05/17 12:21, Ravi (Tom) Hale wrote:
->>> Bear in mind also, that any *within* *spec* drive can have an "accident"
->>> > every 10TB and still be considered perfectly okay. Which means that if
->>> > you do what you are supposed to do (rewrite the block) you're risking
->>> > the drive remapping the block - and getting closer to the drive bricking
->>> > itself. But if you trap the error yourself and add it to the badblocks
->>> > list, you are risking throwing away perfectly decent blocks that just
->>> > hiccuped.
->
->> For hiccups, having a bad-read-count for each suspected-bad block could
->> be sensible. If that number goes above <small-threshold> it's very
->> likely that the block is indeed bad and should be avoided in future.
->
-> Except you have the second law of thermodynamics in play - "what man
-> proposes, nature opposes". This could well screw up big time.
->
-> DRAM memory needs to be refreshed by a read-write cycle every few
-> nanoseconds. Hard drives are the same, actually, except that the
-> interval is measured in years, not nanoseconds. Fill your brand new hard
-> drive with data, then hammer it gently over a few years. Especially if a
-> block's neighbours are repeatedly rewritten but this particular block is
-> never touched, it is likely to become unreadable.
->
-> So it will fail your test - reads will repeatedly fail - but if the
-> firmware was given a look-in (by rewriting it) it wouldn't be remapped.
+I was going to allocate a bio, init it and dispatch it to raid disks, but found
+__blkdev_issue_discard essentially does these, so reuse it. did you see any
+problem?
 
-You mean it *would* be remapped (and all would be well).
-
-I wonder... scrubbing is not very useful with md, particularly with RAID
-6, because it does no writes unless something mismatches, and on failure
-there is no attempt to determine which of the N disks is bad and rewrite
-its contents from the other devices (nor, as I understand it, does it
-clearly say which drive gave the error, so even failing it out and
-resyncing it is hard).
-
-If there was a way to get md to *rewrite* everything during scrub,
-rather than just checking, this might help (in addition to letting the
-drive refresh the magnetization of absolutely everything). "repair" mode
-appears to do no writes until an error is found, whereupon (on RAID 6)
-it proceeds to make a "repair" that is more likely than not to overwrite
-good data with bad. Optionally writing what's already there on non-error
-seems like it might be a worthwhile (and fairly simple) change.
-
--- 
-NULL && (void)
+Thanks,
+Shaohua
