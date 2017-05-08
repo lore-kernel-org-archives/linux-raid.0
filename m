@@ -1,89 +1,94 @@
-From: Anthony Youngman <antlists@youngman.org.uk>
-Subject: Re: Fault tolerance with badblocks
-Date: Mon, 8 May 2017 21:27:13 +0100
-Message-ID: <c5307694-034c-b610-8a27-3bf272cac380@youngman.org.uk>
-References: <03294ec0-2df0-8c1c-dd98-2e9e5efb6f4f@hale.ee>
- <590B3039.3060000@youngman.org.uk>
- <84184eb3-52c4-e7ad-cd5b-5021b5cf47ee@hale.ee>
- <d2b25ec0-c401-07df-2231-a37117878589@youngman.org.uk>
- <bd917050-cf73-6922-bb20-c5ccf02ba51c@hale.ee>
- <590DC905.60207@youngman.org.uk> <87h90v8kt3.fsf@esperi.org.uk>
- <1533bba8-41cb-2c50-b28a-52786e463072@turmel.org>
- <87vapb6s9h.fsf@esperi.org.uk>
+From: Pavel Shilovsky <pshilovsky@samba.org>
+Subject: Re: [RFC 08/10] cifs: move to generic async completion
+Date: Mon, 8 May 2017 13:56:03 -0700
+Message-ID: <CAKywueTvdNwnzwmMj+0qigZ24EZeksO0--t5mqwXN4r5a4C70g@mail.gmail.com>
+References: <1494075602-5061-1-git-send-email-gilad@benyossef.com> <1494075602-5061-9-git-send-email-gilad@benyossef.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87vapb6s9h.fsf@esperi.org.uk>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: Nix <nix@esperi.org.uk>, Phil Turmel <philip@turmel.org>
-Cc: "Ravi (Tom) Hale" <ravi@hale.ee>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-crypto-owner@vger.kernel.org>
+In-Reply-To: <1494075602-5061-9-git-send-email-gilad@benyossef.com>
+Sender: linux-crypto-owner@vger.kernel.org
+To: Gilad Ben-Yossef <gilad@benyossef.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>, Ofir Drang <ofir.drang@arm.com>, Gilad Ben-Yossef <gilad.benyossef@arm.com>, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, Kernel Mailing List <linux-kernel@vger.kernel.org>, keyrings@vger.kernel.orglinux-
 List-Id: linux-raid.ids
 
+2017-05-06 5:59 GMT-07:00 Gilad Ben-Yossef <gilad@benyossef.com>:
+> cifs starts an async. crypto op and waits for their completion.
+> Move it over to generic code doing the same.
+>
+> Signed-off-by: Gilad Ben-Yossef <gilad@benyossef.com>
+> ---
+>  fs/cifs/smb2ops.c | 30 ++++--------------------------
+>  1 file changed, 4 insertions(+), 26 deletions(-)
+>
+> diff --git a/fs/cifs/smb2ops.c b/fs/cifs/smb2ops.c
+> index 152e37f..cee7bb3 100644
+> --- a/fs/cifs/smb2ops.c
+> +++ b/fs/cifs/smb2ops.c
+> @@ -1706,22 +1706,6 @@ init_sg(struct smb_rqst *rqst, u8 *sign)
+>         return sg;
+>  }
+>
+> -struct cifs_crypt_result {
+> -       int err;
+> -       struct completion completion;
+> -};
+> -
+> -static void cifs_crypt_complete(struct crypto_async_request *req, int err)
+> -{
+> -       struct cifs_crypt_result *res = req->data;
+> -
+> -       if (err == -EINPROGRESS)
+> -               return;
+> -
+> -       res->err = err;
+> -       complete(&res->completion);
+> -}
+> -
+>  static int
+>  smb2_get_enc_key(struct TCP_Server_Info *server, __u64 ses_id, int enc, u8 *key)
+>  {
+> @@ -1762,12 +1746,10 @@ crypt_message(struct TCP_Server_Info *server, struct smb_rqst *rqst, int enc)
+>         struct aead_request *req;
+>         char *iv;
+>         unsigned int iv_len;
+> -       struct cifs_crypt_result result = {0, };
+> +       DECLARE_CRYPTO_WAIT(wait);
+>         struct crypto_aead *tfm;
+>         unsigned int crypt_len = le32_to_cpu(tr_hdr->OriginalMessageSize);
+>
+> -       init_completion(&result.completion);
+> -
+>         rc = smb2_get_enc_key(server, tr_hdr->SessionId, enc, key);
+>         if (rc) {
+>                 cifs_dbg(VFS, "%s: Could not get %scryption key\n", __func__,
+> @@ -1825,14 +1807,10 @@ crypt_message(struct TCP_Server_Info *server, struct smb_rqst *rqst, int enc)
+>         aead_request_set_ad(req, assoc_data_len);
+>
+>         aead_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG,
+> -                                 cifs_crypt_complete, &result);
+> +                                 crypto_req_done, &wait);
+>
+> -       rc = enc ? crypto_aead_encrypt(req) : crypto_aead_decrypt(req);
+> -
+> -       if (rc == -EINPROGRESS || rc == -EBUSY) {
+> -               wait_for_completion(&result.completion);
+> -               rc = result.err;
+> -       }
+> +       rc = crypto_wait_req(enc ? crypto_aead_encrypt(req)
+> +                               : crypto_aead_decrypt(req), &wait);
+>
+>         if (!rc && enc)
+>                 memcpy(&tr_hdr->Signature, sign, SMB2_SIGNATURE_SIZE);
+> --
+> 2.1.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-cifs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+Acked-by: Pavel Shilovsky <pshilov@microsoft.com>
 
-On 08/05/17 20:52, Nix wrote:
-> On 8 May 2017, Phil Turmel verbalised:
-> 
->> On 05/08/2017 10:50 AM, Nix wrote:
->>
->>> I wonder... scrubbing is not very useful with md, particularly with RAID
->>> 6, because it does no writes unless something mismatches,
->>
->> This is wrong.  The purpose of scrubbing is to expose any sectors that
->> have degraded (as Wol describes) to the point of generating a read
->> error.  A "check" scrub only writes back to the sectors that report a
->> URE, giving the drive firmware a chance to fix or relocate the sector.
->>
->> A check scrub will NOT write on mismatch, just increment the mismatch
->> counter.  This is the recommended regular scrubbing operation.  You want
->> to know when mismatches occur.
-> 
-> And... then what do you do? On RAID-6, it appears the answer is "live
-> with a high probability of inevitable corruption". That's not very good.
-> (AIUI, if a check scrub finds a URE, it'll rewrite it, and when in the
-> common case the drive spares it out and the write succeeds, this will
-> not be reported as a mismatch: is this right?)
-
-I think you're misunderstanding RAID here. IF the drive says "I can't 
-read this block", the RAID reconstructs the block, and rewrites it. No 
-corruption.
-
-If the scrub finds a mismatch, then the drives are reporting 
-"everything's fine here". Something's gone wrong, but the question is 
-what? If you've got a four-drive raid that reports a mismatch, how do 
-you know which of the four drives is corrupt? Doing an auto-correct here 
-risks doing even more damage. (I think a raid-6 could recover, but 
-raid-5 is toast ...)
-
-And seeing as drives are pretty much guaranteed (unless something's gone 
-BADLY wrong) to either (a) accurately return the data written, or (b) 
-return a read error, that means a data mismatch indicates something is 
-seriously wrong that is NOTHING to do with the drives.
-
-<snip>
-> 
-> If a sector weakens purely because of neighbouring writes or temperature
-> or a vibrating housing or something (i.e. not because of actual damage),
-> so that a rewrite will strengthen it and relocation was never necessary,
-> surely you've just saved a pointless bit of sector sparing? (I don't
-> know: I'm not sure what the relative frequency of these things is. Read
-> and write errors in general are so rare that it's quite possible I'm
-> worrying about nothing at all. I do know I forgot to scrub my old
-> hardware RAID array for about three years and nothing bad happened...)
-> 
-Yes you have saved a sector sparing. Note that a consumer 3TB drive can 
-return, on average, one error every time it's read from end to end 3 
-times, and still be considered "within spec" ie "not faulty" by the 
-manufacturer. And that's a *brand* *new* drive. That's why building a 
-large array using consumer drives is a stupid idea - 4 x 3TB drives and 
-a *within* *spec* array must expect to handle at least one error every 
-scrub.
-
-Okay - most drives are actually way over spec, and could probably be 
-read end-to-end many times without a single error, but you'd be a fool 
-to gamble on it.
-
-Cheers,
-Wol
+Best regards,
+Pavel Shilovsky
