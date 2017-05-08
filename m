@@ -1,123 +1,171 @@
-From: Stephane Thiell <sthiell@stanford.edu>
-Subject: BUG_ON(sh->batch_head) in init_stripe()
-Date: Mon, 8 May 2017 17:15:49 +0000
-Message-ID: <1E249B1F-4030-4482-ABB9-E18A87B5CD47@stanford.edu>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH] md: don't return -EAGAIN in md_allow_write for external
+ metadata arrays
+Date: Mon, 8 May 2017 10:32:27 -0700
+Message-ID: <20170508173227.z35uspqodoq4yiqr@kernel.org>
+References: <20170508095655.27350-1-artur.paszkiewicz@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
-Content-ID: <EF820FBB4421F946975CD1E6AA056533@namprd02.prod.outlook.com>
+Content-Disposition: inline
+In-Reply-To: <20170508095655.27350-1-artur.paszkiewicz@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: shli@fb.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-SGkgbGlzdCwNCg0KSSBoYXZlIGEgcmVjdXJyaW5nIGlzc3VlIHVzaW5nIHJhaWQ2IHdoaWNoIHJl
-c3VsdHMgaW4gYSBwYW5pYyBkdWUgdG8gYSBCVUdfT04oc2gtPmJhdGNoX2hlYWQpLiBEdXJpbmcg
-bGFzdCB3ZWVrZW5kLCB0aGUgaXNzdWUgb2NjdXJyZWQgZHVyaW5nIGEgd2Vla2x5IHJhaWQtY2hl
-Y2suIFRoZSByYWlkIHZvbHVtZXMgKDEyIHRvdGFsKSBhcmUgcHJldHR5IG5ldywgbm8gbWlzbWF0
-Y2ggbm9yIGhhcmR3YXJlIGVycm9ycyBoYXZlIGJlZW4gZGV0ZWN0ZWQuDQoNCls1MzUwODkuMzY5
-MzU3XSBrZXJuZWwgQlVHIGF0IGRyaXZlcnMvbWQvcmFpZDUuYzo1MjchDQpbNTM1MDg5LjM3NDcw
-MF0gaW52YWxpZCBvcGNvZGU6IDAwMDAgWyMxXSBTTVAgDQpbNTM1MDg5LjM3OTM4NF0gTW9kdWxl
-cyBsaW5rZWQgaW46IC4uLg0KWzUzNTA4OS41MDM1MDldIENQVTogMzQgUElEOiAyODAwNjEgQ29t
-bTogbWQwX3Jlc3luYyBUYWludGVkOiBHICAgICAgICAgICBPRSAgLS0tLS0tLS0tLS0tICAgMy4x
-MC4wLTUxNC4xMC4yLmVsN19sdXN0cmUueDg2XzY0ICMxDQoNClRoaXMgaXMgdGhlIGJhY2t0cmFj
-ZToNCg0KY3Jhc2g+IGJ0IDI4MDA2MQ0KUElEOiAyODAwNjEgIFRBU0s6IGZmZmY4ODAwNzU3Y2Rl
-MjAgIENQVTogMzQgIENPTU1BTkQ6ICJtZDBfcmVzeW5jIg0KICMwIFtmZmZmODgwMjRlMjE3ODMw
-XSBtYWNoaW5lX2tleGVjIGF0IGZmZmZmZmZmODEwNTliZGINCiAjMSBbZmZmZjg4MDI0ZTIxNzg5
-MF0gX19jcmFzaF9rZXhlYyBhdCBmZmZmZmZmZjgxMTA1MzgyDQogIzIgW2ZmZmY4ODAyNGUyMTc5
-NjBdIGNyYXNoX2tleGVjIGF0IGZmZmZmZmZmODExMDU0NzANCiAjMyBbZmZmZjg4MDI0ZTIxNzk3
-OF0gb29wc19lbmQgYXQgZmZmZmZmZmY4MTY4ZjUwOA0KICM0IFtmZmZmODgwMjRlMjE3OWEwXSBk
-aWUgYXQgZmZmZmZmZmY4MTAyZTkzYg0KICM1IFtmZmZmODgwMjRlMjE3OWQwXSBkb190cmFwIGF0
-IGZmZmZmZmZmODE2OGViYzANCiAjNiBbZmZmZjg4MDI0ZTIxN2EyMF0gZG9faW52YWxpZF9vcCBh
-dCBmZmZmZmZmZjgxMDJiMTQ0DQogIzcgW2ZmZmY4ODAyNGUyMTdhZDBdIGludmFsaWRfb3AgYXQg
-ZmZmZmZmZmY4MTY5ODRkZQ0KICAgIFtleGNlcHRpb24gUklQOiByYWlkNV9nZXRfYWN0aXZlX3N0
-cmlwZSsxODA5XQ0KICAgIFJJUDogZmZmZmZmZmZhMGU0ZWQ3MSAgUlNQOiBmZmZmODgwMjRlMjE3
-Yjg4ICBSRkxBR1M6IDAwMDEwMDg2DQogICAgUkFYOiAwMDAwMDAwMDAwMDAwMDAwICBSQlg6IGZm
-ZmY4ODNmZTVlNDA0MDggIFJDWDogZGVhZDAwMDAwMDAwMDIwMA0KICAgIFJEWDogMDAwMDAwMDAw
-MDAwMDAwMCAgUlNJOiAwMDAwMDAwMDAwMDAwMDAwICBSREk6IGZmZmY4ODIzZWJmNDVjYTANCiAg
-ICBSQlA6IGZmZmY4ODAyNGUyMTdjMzAgICBSODogZmZmZjg4MjNlYmY0NWNiMCAgIFI5OiAwMDAw
-MDAwMDAwMDAwMDgwDQogICAgUjEwOiAwMDAwMDAwMDAwMDAwMDA2ICBSMTE6IDAwMDAwMDAwMDAw
-MDAwMDAgIFIxMjogZmZmZjg4M2ZlNWU0MDQwMA0KICAgIFIxMzogZmZmZjg4MjNlYmY0NWNhMCAg
-UjE0OiAwMDAwMDAwMDAwMDAwMDAwICBSMTU6IDAwMDAwMDAwMDAwMDAwMDANCiAgICBPUklHX1JB
-WDogZmZmZmZmZmZmZmZmZmZmZiAgQ1M6IDAwMTAgIFNTOiAwMDE4DQogIzggW2ZmZmY4ODAyNGUy
-MTdiODBdIHJhaWQ1X2dldF9hY3RpdmVfc3RyaXBlIGF0IGZmZmZmZmZmYTBlNGU5OTYgW3JhaWQ0
-NTZdDQogIzkgW2ZmZmY4ODAyNGUyMTdiZTBdIHJhaWQ1X3JlbGVhc2Vfc3RyaXBlIGF0IGZmZmZm
-ZmZmYTBlNDhmMjQgW3JhaWQ0NTZdDQojMTAgW2ZmZmY4ODAyNGUyMTdjMzhdIHJhaWQ1X3N5bmNf
-cmVxdWVzdCBhdCBmZmZmZmZmZmEwZTUzYzRiIFtyYWlkNDU2XQ0KIzExIFtmZmZmODgwMjRlMjE3
-Y2E4XSBtZF9kb19zeW5jIGF0IGZmZmZmZmZmODE0ZmVmOWINCiMxMiBbZmZmZjg4MDI0ZTIxN2U1
-MF0gbWRfdGhyZWFkIGF0IGZmZmZmZmZmODE0ZmIxYjUNCiMxMyBbZmZmZjg4MDI0ZTIxN2VjOF0g
-a3RocmVhZCBhdCBmZmZmZmZmZjgxMGIwNmZmDQojMTQgW2ZmZmY4ODAyNGUyMTdmNTBdIHJldF9m
-cm9tX2ZvcmsgYXQgZmZmZmZmZmY4MTY5NmI5OA0KDQpJdCBhcHBlYXJzIHRvIGJlIHRyaWdnZXJl
-ZCBieSBCVUdfT04oc2gtPmJhdGNoX2hlYWQpIGluIGluaXRfc3RyaXBlKCk6DQoNCmNyYXNoPiBs
-IGRyaXZlcnMvbWQvcmFpZDUuYzo1MjQNCjUxOSAgICAgc3RhdGljIHZvaWQgaW5pdF9zdHJpcGUo
-c3RydWN0IHN0cmlwZV9oZWFkICpzaCwgc2VjdG9yX3Qgc2VjdG9yLCBpbnQgcHJldmlvdXMpDQo1
-MjAgICAgIHsNCjUyMSAgICAgICAgICAgICBzdHJ1Y3QgcjVjb25mICpjb25mID0gc2gtPnJhaWRf
-Y29uZjsNCjUyMiAgICAgICAgICAgICBpbnQgaSwgc2VxOw0KNTIzICAgICANCjUyNCAgICAgICAg
-ICAgICBCVUdfT04oYXRvbWljX3JlYWQoJnNoLT5jb3VudCkgIT0gMCk7DQo1MjUgICAgICAgICAg
-ICAgQlVHX09OKHRlc3RfYml0KFNUUklQRV9IQU5ETEUsICZzaC0+c3RhdGUpKTsNCjUyNiAgICAg
-ICAgICAgICBCVUdfT04oc3RyaXBlX29wZXJhdGlvbnNfYWN0aXZlKHNoKSk7DQo1MjcgICAgICAg
-ICAgICAgQlVHX09OKHNoLT5iYXRjaF9oZWFkKTsgICAgPDw8DQo1MjggDQoNCk90aGVyIEkvT3Mg
-d2VyZSBwcm9jZXNzZWQgYXQgdGhpcyB0aW1lLCBidXQgSSBhbSBub3Qgc3VyZSBob3cgdG8gY2hl
-Y2sgdGhhdCB0aGV5IHdlcmUgYWN0dWFsbHkgb24gdGhlIHNhbWUgbWQ6DQoNCmNyYXNoPiBwcyB8
-IGdyZXAgIj4iDQo8c25pcD4NCj4gNTk2ODQgICAgICAyICAyOCAgZmZmZjg4NDA3ZmRjMGZiMCAg
-UlUgICAwLjAgICAgICAgMCAgICAgIDAgIFttZDBfcmFpZDZdDQo+IDYxNDc5ICAgICAgMiAgMTcg
-IGZmZmY4ODNlNDZlODAwMDAgIFVOICAgMC4wICAgICAgIDAgICAgICAwICBbbGxfb3N0X2lvMDFf
-MDAxXQ0KPiAyMjA3NDggICAgICAyICAyMyAgZmZmZjg4MWZiN2FiOGZiMCAgVU4gICAwLjAgICAg
-ICAgMCAgICAgIDAgIFtsbF9vc3RfaW8wMV8wMTFdDQo+IDIyMDc1MCAgICAgIDIgIDE5ICBmZmZm
-ODgxZmI3YWJjZTcwICBVTiAgIDAuMCAgICAgICAwICAgICAgMCAgW2xsX29zdF9pbzAxXzAxM10N
-Cj4gMjc5MTU4ICAgICAgMiAgMTQgIGZmZmY4ODNhYjQ2YjRlNzAgIFJVICAgMC4wICAgICAgIDAg
-ICAgICAwICBbbWQyMl9yZXN5bmNdDQo+IDI4MDA2MSAgICAgIDIgIDM0ICBmZmZmODgwMDc1N2Nk
-ZTIwICBSVSAgIDAuMCAgICAgICAwICAgICAgMCAgW21kMF9yZXN5bmNdDQo+IDI4MDgyOSAgICAg
-IDIgICA2ICBmZmZmODgxYzcyMjk2ZGQwICBSVSAgIDAuMCAgICAgICAwICAgICAgMCAgW21kNl9y
-ZXN5bmNdDQoNCmV4YW1wbGUgb2YgcG9zc2libGUgY29uY3VycmVudCB3cml0aW5nIHRocmVhZDoN
-Cg0KY3Jhc2g+IGJ0IDYxNDc5DQpQSUQ6IDYxNDc5ICBUQVNLOiBmZmZmODgzZTQ2ZTgwMDAwICBD
-UFU6IDE3ICBDT01NQU5EOiAibGxfb3N0X2lvMDFfMDAxIg0KICMwIFtmZmZmODgzZmZjODA1ZTU4
-XSBjcmFzaF9ubWlfY2FsbGJhY2sgYXQgZmZmZmZmZmY4MTA0ZDJlMg0KICMxIFtmZmZmODgzZmZj
-ODA1ZTY4XSBubWlfaGFuZGxlIGF0IGZmZmZmZmZmODE2OGY2OTkNCiAjMiBbZmZmZjg4M2ZmYzgw
-NWViMF0gZG9fbm1pIGF0IGZmZmZmZmZmODE2OGY4MTMNCiAjMyBbZmZmZjg4M2ZmYzgwNWVmMF0g
-ZW5kX3JlcGVhdF9ubWkgYXQgZmZmZmZmZmY4MTY4ZWFkMw0KICAgIFtleGNlcHRpb24gUklQOiBf
-cmF3X3NwaW5fbG9ja19pcnErNjNdDQogICAgUklQOiBmZmZmZmZmZjgxNjhlMDlmICBSU1A6IGZm
-ZmY4ODNlNDZlM2Y1ODggIFJGTEFHUzogMDAwMDAwMDINCiAgICBSQVg6IDAwMDAwMDAwMDAwMDQ0
-YzIgIFJCWDogZmZmZjg4M2ZlNWU0MDQwOCAgUkNYOiAwMDAwMDAwMDAwMDBjNDY0DQogICAgUkRY
-OiAwMDAwMDAwMDAwMDBjNDY4ICBSU0k6IDAwMDAwMDAwMDAwMGM0NjggIFJESTogZmZmZjg4M2Zl
-NWU0MDQwOA0KICAgIFJCUDogZmZmZjg4M2U0NmUzZjU4OCAgIFI4OiAwMDAwMDAwMDAwMDAwMDAw
-ICAgUjk6IDAwMDAwMDAwMDAwMDAwODANCiAgICBSMTA6IDAwMDAwMDAwMDAwMDAwMDIgIFIxMTog
-MDAwMDAwMDAwMDAwMDAwMCAgUjEyOiBmZmZmODgzZmU1ZTQwNDAwDQogICAgUjEzOiAwMDAwMDAw
-MDAwMDAwMDAwICBSMTQ6IGZmZmY4ODNmZTBlNjE5MDAgIFIxNTogMDAwMDAwMDAwMDAwMDAwMA0K
-ICAgIE9SSUdfUkFYOiBmZmZmZmZmZmZmZmZmZmZmICBDUzogMDAxMCAgU1M6IDAwMTgNCi0tLSA8
-Tk1JIGV4Y2VwdGlvbiBzdGFjaz4gLS0tDQogIzQgW2ZmZmY4ODNlNDZlM2Y1ODhdIF9yYXdfc3Bp
-bl9sb2NrX2lycSBhdCBmZmZmZmZmZjgxNjhlMDlmDQogIzUgW2ZmZmY4ODNlNDZlM2Y1OTBdIHJh
-aWQ1X2dldF9hY3RpdmVfc3RyaXBlIGF0IGZmZmZmZmZmYTBlNGU2Y2IgW3JhaWQ0NTZdDQogIzYg
-W2ZmZmY4ODNlNDZlM2Y2NDhdIHJhaWQ1X21ha2VfcmVxdWVzdCBhdCBmZmZmZmZmZmEwZTRlZjU1
-IFtyYWlkNDU2XQ0KICM3IFtmZmZmODgzZTQ2ZTNmNzM4XSBtZF9tYWtlX3JlcXVlc3QgYXQgZmZm
-ZmZmZmY4MTRmN2RmYw0KICM4IFtmZmZmODgzZTQ2ZTNmNzk4XSBnZW5lcmljX21ha2VfcmVxdWVz
-dCBhdCBmZmZmZmZmZjgxMmVlOTM5DQogIzkgW2ZmZmY4ODNlNDZlM2Y3ZTBdIHN1Ym1pdF9iaW8g
-YXQgZmZmZmZmZmY4MTJlZWE4MQ0KIzEwIFtmZmZmODgzZTQ2ZTNmODM4XSBvc2Rfc3VibWl0X2Jp
-byBhdCBmZmZmZmZmZmExMGEwYmNjIFtvc2RfbGRpc2tmc10NCiMxMSBbZmZmZjg4M2U0NmUzZjg0
-OF0gb3NkX2RvX2JpbyBhdCBmZmZmZmZmZmExMGEzMDA3IFtvc2RfbGRpc2tmc10NCiMxMiBbZmZm
-Zjg4M2U0NmUzZjk2OF0gb3NkX3dyaXRlX2NvbW1pdCBhdCBmZmZmZmZmZmExMGEzYjk0IFtvc2Rf
-bGRpc2tmc10NCiMxMyBbZmZmZjg4M2U0NmUzZmEwOF0gb2ZkX2NvbW1pdHJ3X3dyaXRlIGF0IGZm
-ZmZmZmZmYTExMTM3NzQgW29mZF0NCiMxNCBbZmZmZjg4M2U0NmUzZmE4MF0gb2ZkX2NvbW1pdHJ3
-IGF0IGZmZmZmZmZmYTExMTZmMmQgW29mZF0NCiMxNSBbZmZmZjg4M2U0NmUzZmIwOF0gb2JkX2Nv
-bW1pdHJ3IGF0IGZmZmZmZmZmYTBjNDNjMjIgW3B0bHJwY10NCiMxNiBbZmZmZjg4M2U0NmUzZmI3
-MF0gdGd0X2Jyd193cml0ZSBhdCBmZmZmZmZmZmEwYzFiZmMxIFtwdGxycGNdDQojMTcgW2ZmZmY4
-ODNlNDZlM2ZjZDhdIHRndF9yZXF1ZXN0X2hhbmRsZSBhdCBmZmZmZmZmZmEwYzE4Mjc1IFtwdGxy
-cGNdDQojMTggW2ZmZmY4ODNlNDZlM2ZkMjBdIHB0bHJwY19zZXJ2ZXJfaGFuZGxlX3JlcXVlc3Qg
-YXQgZmZmZmZmZmZhMGJjNDFmYiBbcHRscnBjXQ0KIzE5IFtmZmZmODgzZTQ2ZTNmZGU4XSBwdGxy
-cGNfbWFpbiBhdCBmZmZmZmZmZmEwYmM4MmIwIFtwdGxycGNdDQojMjAgW2ZmZmY4ODNlNDZlM2Zl
-YzhdIGt0aHJlYWQgYXQgZmZmZmZmZmY4MTBiMDZmZg0KIzIxIFtmZmZmODgzZTQ2ZTNmZjUwXSBy
-ZXRfZnJvbV9mb3JrIGF0IGZmZmZmZmZmODE2OTZiOTgNCg0KDQpUaGUgc2FtZSBpc3N1ZSBoYXBw
-ZW5lZCBkdXJpbmcgYSBoZWF2eSBJT1IgYmVuY2htYXJrIGEgZmV3IG1vbnRocyBhZ28gYW5kIHdh
-cyBkZXNjcmliZWQgaW4gaHR0cHM6Ly9qaXJhLmhwZGQuaW50ZWwuY29tL2Jyb3dzZS9MVS04OTE3
-IChvbiBhIHNsaWdodGx5IG9sZGVyIGVsNyBrZXJuZWwpLg0KDQpJIGFsc28gZm91bmQgb3V0IHRo
-YXQgb3RoZXIgdXNlcnMgaGF2ZSBkZXNjcmliZWQgc2ltaWxhciBpc3N1ZXMsIGxpa2Ugb24gdGhp
-cyB0aHJlYWQ6IGh0dHBzOi8vbGttbC5vcmcvbGttbC8yMDE2LzEyLzIzLzIwNQ0KDQpOb3csIEkg
-aGF2ZSBhIGNyYXNoIGR1bXAgYW5kIEnigJltIHRyeWluZyB0byB1bmRlcnN0YW5kIHdoeSBzaC0+
-YmF0Y2hfaGVhZCBjb3VsZCBiZSBzZXQgaW4gaW5pdF9zdHJpcGUoKSwgd2hpY2ggaXMgY2FsbGVk
-IGJ5IHJhaWQ1X2dldF9hY3RpdmVfc3RyaXBlKCkgd2hlbiBfX2ZpbmRfc3RyaXBlKCkgZmFpbGVk
-IEJVVCBnZXRfZnJlZV9zdHJpcGUoKSBzdWNjZWVkZWQuIElmIHNoLT5iYXRjaF9oZWFkIGlzIHNl
-dCBpbiB0aGF0IGNhc2UsIHRoYXQgbWVhbnMgdGhlIGlkbGUgc3RyaXBlIGZvdW5kIGhhZCBpdCBz
-ZXTigKYNCg0KRG9lcyBzb21lb25lIGhhdmUgYW55IGlkZWEgb2YgaG93IHRvIHRyb3VibGVzaG9v
-dCBvciBzb2x2ZSB0aGlzPw0KDQpUaGFua3MhDQoNClN0ZXBoYW4=
+On Mon, May 08, 2017 at 11:56:55AM +0200, Artur Paszkiewicz wrote:
+> This essentially reverts commit b5470dc5fc18 ("md: resolve external
+> metadata handling deadlock in md_allow_write") with some adjustments.
+> 
+> Since commit 6791875e2e53 ("md: make reconfig_mutex optional for writes
+> to md sysfs files.") changing array_state to 'active' does not use
+> mddev_lock() and will not cause a deadlock with md_allow_write(). This
+> revert simplifies userspace tools that write to sysfs attributes like
+> "stripe_cache_size" or "consistency_policy" because it removes the need
+> for special handling for external metadata arrays, checking for EAGAIN
+> and retrying the write.
 
+applied, thanks!
+ 
+> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+> ---
+>  drivers/md/md.c    | 20 ++++++++------------
+>  drivers/md/md.h    |  2 +-
+>  drivers/md/raid1.c |  9 +++------
+>  drivers/md/raid5.c | 12 +++---------
+>  4 files changed, 15 insertions(+), 28 deletions(-)
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 82f798be964f..10367ffe92e3 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -8022,18 +8022,15 @@ EXPORT_SYMBOL(md_write_end);
+>   * may proceed without blocking.  It is important to call this before
+>   * attempting a GFP_KERNEL allocation while holding the mddev lock.
+>   * Must be called with mddev_lock held.
+> - *
+> - * In the ->external case MD_SB_CHANGE_PENDING can not be cleared until mddev->lock
+> - * is dropped, so return -EAGAIN after notifying userspace.
+>   */
+> -int md_allow_write(struct mddev *mddev)
+> +void md_allow_write(struct mddev *mddev)
+>  {
+>  	if (!mddev->pers)
+> -		return 0;
+> +		return;
+>  	if (mddev->ro)
+> -		return 0;
+> +		return;
+>  	if (!mddev->pers->sync_request)
+> -		return 0;
+> +		return;
+>  
+>  	spin_lock(&mddev->lock);
+>  	if (mddev->in_sync) {
+> @@ -8046,13 +8043,12 @@ int md_allow_write(struct mddev *mddev)
+>  		spin_unlock(&mddev->lock);
+>  		md_update_sb(mddev, 0);
+>  		sysfs_notify_dirent_safe(mddev->sysfs_state);
+> +		/* wait for the dirty state to be recorded in the metadata */
+> +		wait_event(mddev->sb_wait,
+> +			   !test_bit(MD_SB_CHANGE_CLEAN, &mddev->sb_flags) &&
+> +			   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
+>  	} else
+>  		spin_unlock(&mddev->lock);
+> -
+> -	if (test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags))
+> -		return -EAGAIN;
+> -	else
+> -		return 0;
+>  }
+>  EXPORT_SYMBOL_GPL(md_allow_write);
+>  
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index 4e75d121bfcc..11f15146ce51 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -665,7 +665,7 @@ extern int sync_page_io(struct md_rdev *rdev, sector_t sector, int size,
+>  			bool metadata_op);
+>  extern void md_do_sync(struct md_thread *thread);
+>  extern void md_new_event(struct mddev *mddev);
+> -extern int md_allow_write(struct mddev *mddev);
+> +extern void md_allow_write(struct mddev *mddev);
+>  extern void md_wait_for_blocked_rdev(struct md_rdev *rdev, struct mddev *mddev);
+>  extern void md_set_array_sectors(struct mddev *mddev, sector_t array_sectors);
+>  extern int md_check_no_bitmap(struct mddev *mddev);
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 7ed59351fe97..7c1f73398800 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -3197,7 +3197,7 @@ static int raid1_reshape(struct mddev *mddev)
+>  	struct r1conf *conf = mddev->private;
+>  	int cnt, raid_disks;
+>  	unsigned long flags;
+> -	int d, d2, err;
+> +	int d, d2;
+>  
+>  	/* Cannot change chunk_size, layout, or level */
+>  	if (mddev->chunk_sectors != mddev->new_chunk_sectors ||
+> @@ -3209,11 +3209,8 @@ static int raid1_reshape(struct mddev *mddev)
+>  		return -EINVAL;
+>  	}
+>  
+> -	if (!mddev_is_clustered(mddev)) {
+> -		err = md_allow_write(mddev);
+> -		if (err)
+> -			return err;
+> -	}
+> +	if (!mddev_is_clustered(mddev))
+> +		md_allow_write(mddev);
+>  
+>  	raid_disks = mddev->raid_disks + mddev->delta_disks;
+>  
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 3809a2192132..f8055a7abb4b 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -2309,14 +2309,12 @@ static int resize_stripes(struct r5conf *conf, int newsize)
+>  	struct stripe_head *osh, *nsh;
+>  	LIST_HEAD(newstripes);
+>  	struct disk_info *ndisks;
+> -	int err;
+> +	int err = 0;
+>  	struct kmem_cache *sc;
+>  	int i;
+>  	int hash, cnt;
+>  
+> -	err = md_allow_write(conf->mddev);
+> -	if (err)
+> -		return err;
+> +	md_allow_write(conf->mddev);
+>  
+>  	/* Step 1 */
+>  	sc = kmem_cache_create(conf->cache_name[1-conf->active_name],
+> @@ -6310,7 +6308,6 @@ int
+>  raid5_set_cache_size(struct mddev *mddev, int size)
+>  {
+>  	struct r5conf *conf = mddev->private;
+> -	int err;
+>  
+>  	if (size <= 16 || size > 32768)
+>  		return -EINVAL;
+> @@ -6322,10 +6319,7 @@ raid5_set_cache_size(struct mddev *mddev, int size)
+>  		;
+>  	mutex_unlock(&conf->cache_size_mutex);
+>  
+> -
+> -	err = md_allow_write(mddev);
+> -	if (err)
+> -		return err;
+> +	md_allow_write(mddev);
+>  
+>  	mutex_lock(&conf->cache_size_mutex);
+>  	while (size > conf->max_nr_stripes)
+> -- 
+> 2.11.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
