@@ -1,94 +1,81 @@
-From: Pavel Shilovsky <pshilovsky@samba.org>
-Subject: Re: [RFC 08/10] cifs: move to generic async completion
-Date: Mon, 8 May 2017 13:56:03 -0700
-Message-ID: <CAKywueTvdNwnzwmMj+0qigZ24EZeksO0--t5mqwXN4r5a4C70g@mail.gmail.com>
-References: <1494075602-5061-1-git-send-email-gilad@benyossef.com> <1494075602-5061-9-git-send-email-gilad@benyossef.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Fault tolerance with badblocks
+Date: Mon, 8 May 2017 16:56:24 -0400
+Message-ID: <e2196f02-2b94-8afb-06a0-9695d441c890@turmel.org>
+References: <03294ec0-2df0-8c1c-dd98-2e9e5efb6f4f@hale.ee>
+ <590B3039.3060000@youngman.org.uk>
+ <84184eb3-52c4-e7ad-cd5b-5021b5cf47ee@hale.ee>
+ <d2b25ec0-c401-07df-2231-a37117878589@youngman.org.uk>
+ <bd917050-cf73-6922-bb20-c5ccf02ba51c@hale.ee>
+ <590DC905.60207@youngman.org.uk> <87h90v8kt3.fsf@esperi.org.uk>
+ <1533bba8-41cb-2c50-b28a-52786e463072@turmel.org>
+ <87vapb6s9h.fsf@esperi.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-crypto-owner@vger.kernel.org>
-In-Reply-To: <1494075602-5061-9-git-send-email-gilad@benyossef.com>
-Sender: linux-crypto-owner@vger.kernel.org
-To: Gilad Ben-Yossef <gilad@benyossef.com>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>, Ofir Drang <ofir.drang@arm.com>, Gilad Ben-Yossef <gilad.benyossef@arm.com>, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, Kernel Mailing List <linux-kernel@vger.kernel.org>, keyrings@vger.kernel.orglinux-
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87vapb6s9h.fsf@esperi.org.uk>
+Sender: linux-raid-owner@vger.kernel.org
+To: Nix <nix@esperi.org.uk>
+Cc: Wols Lists <antlists@youngman.org.uk>, "Ravi (Tom) Hale" <ravi@hale.ee>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2017-05-06 5:59 GMT-07:00 Gilad Ben-Yossef <gilad@benyossef.com>:
-> cifs starts an async. crypto op and waits for their completion.
-> Move it over to generic code doing the same.
->
-> Signed-off-by: Gilad Ben-Yossef <gilad@benyossef.com>
-> ---
->  fs/cifs/smb2ops.c | 30 ++++--------------------------
->  1 file changed, 4 insertions(+), 26 deletions(-)
->
-> diff --git a/fs/cifs/smb2ops.c b/fs/cifs/smb2ops.c
-> index 152e37f..cee7bb3 100644
-> --- a/fs/cifs/smb2ops.c
-> +++ b/fs/cifs/smb2ops.c
-> @@ -1706,22 +1706,6 @@ init_sg(struct smb_rqst *rqst, u8 *sign)
->         return sg;
->  }
->
-> -struct cifs_crypt_result {
-> -       int err;
-> -       struct completion completion;
-> -};
-> -
-> -static void cifs_crypt_complete(struct crypto_async_request *req, int err)
-> -{
-> -       struct cifs_crypt_result *res = req->data;
-> -
-> -       if (err == -EINPROGRESS)
-> -               return;
-> -
-> -       res->err = err;
-> -       complete(&res->completion);
-> -}
-> -
->  static int
->  smb2_get_enc_key(struct TCP_Server_Info *server, __u64 ses_id, int enc, u8 *key)
->  {
-> @@ -1762,12 +1746,10 @@ crypt_message(struct TCP_Server_Info *server, struct smb_rqst *rqst, int enc)
->         struct aead_request *req;
->         char *iv;
->         unsigned int iv_len;
-> -       struct cifs_crypt_result result = {0, };
-> +       DECLARE_CRYPTO_WAIT(wait);
->         struct crypto_aead *tfm;
->         unsigned int crypt_len = le32_to_cpu(tr_hdr->OriginalMessageSize);
->
-> -       init_completion(&result.completion);
-> -
->         rc = smb2_get_enc_key(server, tr_hdr->SessionId, enc, key);
->         if (rc) {
->                 cifs_dbg(VFS, "%s: Could not get %scryption key\n", __func__,
-> @@ -1825,14 +1807,10 @@ crypt_message(struct TCP_Server_Info *server, struct smb_rqst *rqst, int enc)
->         aead_request_set_ad(req, assoc_data_len);
->
->         aead_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG,
-> -                                 cifs_crypt_complete, &result);
-> +                                 crypto_req_done, &wait);
->
-> -       rc = enc ? crypto_aead_encrypt(req) : crypto_aead_decrypt(req);
-> -
-> -       if (rc == -EINPROGRESS || rc == -EBUSY) {
-> -               wait_for_completion(&result.completion);
-> -               rc = result.err;
-> -       }
-> +       rc = crypto_wait_req(enc ? crypto_aead_encrypt(req)
-> +                               : crypto_aead_decrypt(req), &wait);
->
->         if (!rc && enc)
->                 memcpy(&tr_hdr->Signature, sign, SMB2_SIGNATURE_SIZE);
-> --
-> 2.1.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-cifs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On 05/08/2017 03:52 PM, Nix wrote:
+> On 8 May 2017, Phil Turmel verbalised:
+> 
+>> On 05/08/2017 10:50 AM, Nix wrote:
 
-Acked-by: Pavel Shilovsky <pshilov@microsoft.com>
+> And... then what do you do? On RAID-6, it appears the answer is "live
+> with a high probability of inevitable corruption".
 
-Best regards,
-Pavel Shilovsky
+No, you investigate the quality of your data and the integrity of the
+rest of the system, as something *other* than a drive problem caused the
+mismatch.  (Swap is a known exception, though.)
+
+> That's not very good.
+> (AIUI, if a check scrub finds a URE, it'll rewrite it, and when in the
+> common case the drive spares it out and the write succeeds, this will
+> not be reported as a mismatch: is this right?)
+
+This is also wrong, because you are assuming sparing-out is the common
+case.  A read error does not automatically trigger relocation.  It
+triggers *verification* of the next *write*.  In young drives,
+successful rewrite in place is the common case.  As the drive ages,
+rewrites will begin relocating because there really is a new problem at
+that spot, not simple thermal/magnetic decay.
+
+But keep in mind that the firmware of the drive will start verification
+of a sector only if it gets a *read* error.  Such sectors get marked as
+"pending" relocations until they are written again.  If that write
+verifies correct, the "pending" status simply goes away.  Ordinary
+writes to presumed-ok sectors are *not* verified.  (There'd be a huge
+difference between read and write speeds on rotating media if they were.)
+
+{ Drive self tests might do some pre-emptive rewriting of marginal
+sectors -- it's not something drive manufacturers are documenting.  But
+a drive self-test cannot fix an unreadable sector -- it doesn't know
+what to write there. }
+
+>> This is actually counterproductive.  Rewriting everything may refresh
+>> the magnetism on weakening sectors, but will also prevent the drive from
+>> *finding* weakening sectors that really do need relocation.
+> 
+> If a sector weakens purely because of neighbouring writes or temperature
+> or a vibrating housing or something (i.e. not because of actual damage),
+> so that a rewrite will strengthen it and relocation was never necessary,
+> surely you've just saved a pointless bit of sector sparing? (I don't
+> know: I'm not sure what the relative frequency of these things is. Read
+> and write errors in general are so rare that it's quite possible I'm
+> worrying about nothing at all. I do know I forgot to scrub my old
+> hardware RAID array for about three years and nothing bad happened...)
+
+Drives that are in applications that get *read* pretty often don't need
+much if any scrubbing -- the application itself will expose problem
+sectors.  Hobbyists and home media servers can go months with specific
+files unread, so developing problems can hit in clusters.  Regular
+scrubbing will catch these problems before they take your array down.
+
+And you can't compare hardware array behavior to MD -- they have their
+own algorithms to take care of attached disks without OS intervention.
+
+Phil
