@@ -1,49 +1,46 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Fault tolerance with badblocks
-Date: Tue, 9 May 2017 17:23:35 -0400
-Message-ID: <e39961f2-5399-ab45-1da0-7dffe36cf536@turmel.org>
-References: <03294ec0-2df0-8c1c-dd98-2e9e5efb6f4f@hale.ee>
- <590B3039.3060000@youngman.org.uk>
- <84184eb3-52c4-e7ad-cd5b-5021b5cf47ee@hale.ee>
- <d2b25ec0-c401-07df-2231-a37117878589@youngman.org.uk>
- <bd917050-cf73-6922-bb20-c5ccf02ba51c@hale.ee>
- <590DC905.60207@youngman.org.uk> <87h90v8kt3.fsf@esperi.org.uk>
- <1533bba8-41cb-2c50-b28a-52786e463072@turmel.org>
- <87vapb6s9h.fsf@esperi.org.uk>
- <c5307694-034c-b610-8a27-3bf272cac380@youngman.org.uk>
- <87inla73vz.fsf@esperi.org.uk> <5911A371.3030008@hesbynett.no>
- <878tm65kyx.fsf@esperi.org.uk>
- <1f354d53-9eeb-7e00-d2c0-f2fa571cf8c8@turmel.org>
- <87mval4x6k.fsf@esperi.org.uk>
+From: Chris Worley <worleys@gmail.com>
+Subject: Re: In Direct I/O, no matter how big the read/write, the bio's are
+ all 4KB
+Date: Tue, 9 May 2017 11:26:23 -1000
+Message-ID: <CANWz5fh_wkbug56gPwqH9pYO+hGdSgi+H-56bANpb8Q159zOfQ@mail.gmail.com>
+References: <CANWz5fgNgnZ6R9md1TwD16nZzhAzX-t8BaOsN5-x-FfEE3_h3Q@mail.gmail.com>
+ <20170509201441.GA17309@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87mval4x6k.fsf@esperi.org.uk>
+In-Reply-To: <20170509201441.GA17309@infradead.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nix <nix@esperi.org.uk>
-Cc: David Brown <david.brown@hesbynett.no>, Anthony Youngman <antlists@youngman.org.uk>, "Ravi (Tom) Hale" <ravi@hale.ee>, linux-raid@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linuxraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 05/09/2017 04:01 PM, Nix wrote:
-> On 9 May 2017, Phil Turmel told this:
+On Tue, May 9, 2017 at 10:14 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Tue, May 09, 2017 at 10:03:24AM -1000, Chris Worley wrote:
+>> I realize DIO needs to be 4KB aligned,
+>
+> Actually many file systems do support sector size aligned direct I/O,
+> which could be 512 byte aligned.  But as that's not your point :)
+>
+>> but why do large I/Os get
+>> chopped down into 4KB bio's?
+>
+> They shouldn't.  What kernel version is this on?
 
->> The bottom line is that any kernel that implements the auto-correct you
->> seem to think is a slam dunk will be shunned by any system administrator
->> who actually cares about their data.  Your obtuseness notwithstanding.
-> 
-> Gee, thanks heaps. Next time I want randomly insulting by someone who
-> doesn't bother to tell me his actual *arguments* in any message before
-> the one that starts on the insults, I'll come straight to you.
+$ uname -r
+3.10.0-514.6.2.el7.x86_64
 
-Ok, yeah, I was a bit harsh.  Ad hominem is not appropriate.  Not that
-the shunning wouldn't happen.
+>
+>> Doing a blocktrace of the md device, even though the app is writing at
+>> 512KB, the MD driver is receiving 4KB bio's.
+>
+> The direct I/O code is using bio_add_page to build the bios it submits.
+> It might be interesting to see which of the checks in it triggers
+> an early return after the first page.
 
-As for the arguments, well, *everyone* on this list is providing
-arguments and you are ignoring them.  Whether you are filtering facts on
-pre-conceived ideas about raid6 or simply can't understand the points,
-the result *appears* obtuse.
+I vaguely recall the noop scheduler's only task is to merge adjacent
+blocks.  In my case, there's "none" (no schedular at all) for all
+block devices chained together.  Is that the issue?
 
-And now, please all drop me from the CC.
+Thanks,
 
-Phil
+Chris
