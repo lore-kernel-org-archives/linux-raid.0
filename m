@@ -1,45 +1,36 @@
-From: Tim Small <tim@buttersideup.com>
-Subject: Re: Fault tolerance with badblocks
-Date: Tue, 9 May 2017 13:15:46 +0100
-Message-ID: <7dfa3eff-9194-002d-918b-42fbae865df3@buttersideup.com>
-References: <03294ec0-2df0-8c1c-dd98-2e9e5efb6f4f@hale.ee>
- <590B3039.3060000@youngman.org.uk>
- <84184eb3-52c4-e7ad-cd5b-5021b5cf47ee@hale.ee>
- <d2b25ec0-c401-07df-2231-a37117878589@youngman.org.uk>
- <bd917050-cf73-6922-bb20-c5ccf02ba51c@hale.ee>
- <590DC905.60207@youngman.org.uk> <87h90v8kt3.fsf@esperi.org.uk>
- <591171BD.3060707@hesbynett.no> <87efvy73n9.fsf@esperi.org.uk>
- <9306fd68-4eeb-f487-a500-27050050af98@fnarfbargle.com>
- <87wp9q5n49.fsf@esperi.org.uk>
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: [PATCH] mdadm/md.4: set page-length as 1000 to avoid warnings
+ from grotty
+Date: Tue, 9 May 2017 10:53:02 -0400
+Message-ID: <38a9316c-41e1-4c7f-a278-84e597db23e9@gmail.com>
+References: <20170509062517.20755-1-zlliu@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87wp9q5n49.fsf@esperi.org.uk>
+In-Reply-To: <20170509062517.20755-1-zlliu@suse.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Nix <nix@esperi.org.uk>
+To: Zhilong Liu <zlliu@suse.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 05/09/2017 02:25 AM, Zhilong Liu wrote:
+> "nroff" ("man") or ("tbl") needs a long page to avoid warnings
+> from "grotty", set 'pl' as 1000 to fix the following issue.
+> 
+> This command invokes by Makefile rule.
+> linux-tjrh:~/mdadm # man -l md.4 > test
+> grotty:<standard input> (<standard input>):5967:
+> character above first line discarded
+> ... ...
+> 
+> Signed-off-by: Zhilong Liu <zlliu@suse.com>
 
-On 09/05/17 11:40, Nix wrote:
-> I've had disk failures without warning, and
-> non-failed disks with both read and write errors that would not go away,
-> but that SMART reallocation value just stayed stuck at zero through all
-> of it.
+I am not an nroff expert, so I'll take your word for it.
 
-Really?  I see them pretty frequently...  Let's see
+Applied!
 
-server1, RAID6 (4 disks), reallocated_sector_ct: 0 9 1 0
-server2, RAID5 (4 disks), reallocated_sector_ct: 0 0 0 0
-server3, RAID6 (5 disks), reallocated_sector_ct: 34 754 15 115 1
-server4, RAID5 (4 disks), reallocated_sector_ct: 0 0 0 0
-server5, RAID5 (4 disks), reallocated_sector_ct: 0 0 0 0
+Thanks,
+Jes
 
-Disk 2 in server3 (which has drives which are a bit long in the tooth)
-is scheduled to be replaced next time I visit that site.
-
-Are you looking at the 'raw' column in the smartctl output?
-
-
-Tim
