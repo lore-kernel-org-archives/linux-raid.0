@@ -1,7 +1,7 @@
 From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: [PATCH 3/5] imsm: don't allow disks with different sector size in one array
-Date: Tue,  9 May 2017 12:25:45 +0200
-Message-ID: <1494325547-3028-4-git-send-email-tomasz.majchrzak@intel.com>
+Subject: [PATCH 4/5] Allow more spare selection criteria
+Date: Tue,  9 May 2017 12:25:46 +0200
+Message-ID: <1494325547-3028-5-git-send-email-tomasz.majchrzak@intel.com>
 References: <1494325547-3028-1-git-send-email-tomasz.majchrzak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1494325547-3028-1-git-send-email-tomasz.majchrzak@intel.com>
@@ -12,66 +12,340 @@ List-Id: linux-raid.ids
 
 From: Alexey Obitotskiy <aleksey.obitotskiy@intel.com>
 
-As there is no support in IMSM for arrays including disks with different
-sector sizes, don't allow to create such configuration. Also skip the
-disk with unsuitable sector size when looking for spares in the same
-container.
+Disks can be moved across containers in order to be used as a spare
+drive for reubild. At the moment the only requirement checked for such
+disk is its size (if it matches donor expectations). In order to
+introduce more criteria rename corresponding superswitch method to more
+generic name and move function parameter to a structure. This change is
+a big edit but it doesn't introduce any changes in code logic, it just
+updates function naming and parameters.
 
 Signed-off-by: Alexey Obitotskiy <aleksey.obitotskiy@intel.com>
 Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 ---
- super-intel.c | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ Incremental.c | 18 +++++++++++-------
+ Monitor.c     | 30 ++++++++++++++++--------------
+ mdadm.h       | 16 +++++++++++-----
+ super-intel.c | 33 +++++++++++++++++++++------------
+ util.c        |  6 +++---
+ 5 files changed, 62 insertions(+), 41 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c
-index cfb10d5..e88fe82 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -5468,6 +5468,22 @@ static int init_super_imsm(struct supertype *st, mdu_array_info_t *info,
- 	return 1;
+diff --git a/Incremental.c b/Incremental.c
+index 680d318..fe9d644 100644
+--- a/Incremental.c
++++ b/Incremental.c
+@@ -867,7 +867,7 @@ static int array_try_spare(char *devname, int *dfdp, struct dev_policy *pol,
+ 		struct domainlist *dl = NULL;
+ 		struct mdinfo *sra;
+ 		unsigned long long devsize;
+-		unsigned long long component_size = 0;
++		struct spare_criteria sc = {0};
+ 
+ 		if (is_subarray(mp->metadata))
+ 			continue;
+@@ -936,7 +936,8 @@ static int array_try_spare(char *devname, int *dfdp, struct dev_policy *pol,
+ 			}
+ 			if (st3->ss->load_container &&
+ 			    !st3->ss->load_container(st3, mdfd, mp->path)) {
+-				component_size = st3->ss->min_acceptable_spare_size(st3);
++				if (st3->ss->get_spare_criteria)
++					st3->ss->get_spare_criteria(st3, &sc);
+ 				st3->ss->free_super(st3);
+ 			}
+ 			free(st3);
+@@ -947,7 +948,7 @@ static int array_try_spare(char *devname, int *dfdp, struct dev_policy *pol,
+ 					 sra->devs ? sra->devs->data_offset :
+ 					 INVALID_SECTORS) <
+ 		     sra->component_size) ||
+-		    (sra->component_size == 0 && devsize < component_size)) {
++		    (sra->component_size == 0 && devsize < sc.min_size)) {
+ 			if (verbose > 1)
+ 				pr_err("not adding %s to %s as it is too small\n",
+ 					devname, mp->path);
+@@ -1624,12 +1625,15 @@ static int Incremental_container(struct supertype *st, char *devname,
+ 		struct supertype *sst =
+ 			super_imsm.match_metadata_desc("imsm");
+ 		struct mdinfo *sinfo;
+-		unsigned long long min_size = 0;
+-		if (st->ss->min_acceptable_spare_size)
+-			min_size = st->ss->min_acceptable_spare_size(st);
++
+ 		if (!sst->ss->load_container(sst, sfd, NULL)) {
++			struct spare_criteria sc = {0};
++
++			if (st->ss->get_spare_criteria)
++				st->ss->get_spare_criteria(st, &sc);
++
+ 			close(sfd);
+-			sinfo = container_choose_spares(sst, min_size,
++			sinfo = container_choose_spares(sst, &sc,
+ 							domains, NULL,
+ 							st->ss->name, 0);
+ 			sst->ss->free_super(sst);
+diff --git a/Monitor.c b/Monitor.c
+index e2b36ff..4a7afd7 100644
+--- a/Monitor.c
++++ b/Monitor.c
+@@ -747,13 +747,14 @@ static int add_new_arrays(struct mdstat_ent *mdstat, struct state **statelist,
+ 	return new_found;
  }
  
-+static int drive_validate_sector_size(struct intel_super *super, struct dl *dl)
-+{
-+	unsigned int member_sector_size;
-+
-+	if (dl->fd < 0) {
-+		pr_err("Invalid file descriptor for %s\n", dl->devname);
-+		return 0;
-+	}
-+
-+	if (!get_dev_sector_size(dl->fd, dl->devname, &member_sector_size))
-+		return 0;
-+	if (member_sector_size != super->sector_size)
-+		return 0;
-+	return 1;
-+}
-+
- static int add_to_super_imsm_volume(struct supertype *st, mdu_disk_info_t *dk,
- 				     int fd, char *devname)
+-static int get_min_spare_size_required(struct state *st, unsigned long long *sizep)
++static int get_required_spare_criteria(struct state *st,
++				       struct spare_criteria *sc)
  {
-@@ -5507,6 +5523,11 @@ static int add_to_super_imsm_volume(struct supertype *st, mdu_disk_info_t *dk,
- 		return 1;
+ 	int fd;
+ 
+ 	if (!st->metadata ||
+-	    !st->metadata->ss->min_acceptable_spare_size) {
+-		*sizep = 0;
++	    !st->metadata->ss->get_spare_criteria) {
++		sc->min_size = 0;
+ 		return 0;
  	}
  
-+	if (!drive_validate_sector_size(super, dl)) {
-+		pr_err("Combining drives of different sector size in one volume is not allowed\n");
-+		return 1;
-+	}
+@@ -767,7 +768,8 @@ static int get_min_spare_size_required(struct state *st, unsigned long long *siz
+ 	close(fd);
+ 	if (!st->metadata->sb)
+ 		return 1;
+-	*sizep = st->metadata->ss->min_acceptable_spare_size(st->metadata);
 +
- 	/* add a pristine spare to the metadata */
- 	if (dl->index < 0) {
- 		dl->index = super->anchor->num_disks;
-@@ -8440,6 +8461,9 @@ static struct dl *imsm_add_spare(struct intel_super *super, int slot,
- 		if (dl->index == -1 && !activate_new)
- 			continue;
++	st->metadata->ss->get_spare_criteria(st->metadata, sc);
+ 	st->metadata->ss->free_super(st->metadata);
  
-+		if (!drive_validate_sector_size(super, dl))
-+			continue;
+ 	return 0;
+@@ -799,7 +801,7 @@ static int check_donor(struct state *from, struct state *to)
+ }
+ 
+ static dev_t choose_spare(struct state *from, struct state *to,
+-			struct domainlist *domlist, unsigned long long min_size)
++			struct domainlist *domlist, struct spare_criteria *sc)
+ {
+ 	int d;
+ 	dev_t dev = 0;
+@@ -814,9 +816,9 @@ static dev_t choose_spare(struct state *from, struct state *to,
+ 			    test_partition_from_id(from->devid[d]))
+ 				continue;
+ 
+-			if (min_size &&
++			if (sc->min_size &&
+ 			    dev_size_from_id(from->devid[d], &dev_size) &&
+-			    dev_size < min_size)
++			    dev_size < sc->min_size)
+ 				continue;
+ 
+ 			pol = devid_policy(from->devid[d]);
+@@ -833,7 +835,7 @@ static dev_t choose_spare(struct state *from, struct state *to,
+ 
+ static dev_t container_choose_spare(struct state *from, struct state *to,
+ 				    struct domainlist *domlist,
+-				    unsigned long long min_size, int active)
++				    struct spare_criteria *sc, int active)
+ {
+ 	/* This is similar to choose_spare, but we cannot trust devstate,
+ 	 * so we need to read the metadata instead
+@@ -884,7 +886,7 @@ static dev_t container_choose_spare(struct state *from, struct state *to,
+ 	}
+ 
+ 	/* We only need one spare so full list not needed */
+-	list = container_choose_spares(st, min_size, domlist, from->spare_group,
++	list = container_choose_spares(st, sc, domlist, from->spare_group,
+ 				       to->metadata->ss->name, 1);
+ 	if (list) {
+ 		struct mdinfo *disks = list->devs;
+@@ -900,6 +902,7 @@ static void try_spare_migration(struct state *statelist, struct alert_info *info
+ {
+ 	struct state *from;
+ 	struct state *st;
++	struct spare_criteria sc;
+ 
+ 	link_containers_with_subarrays(statelist);
+ 	for (st = statelist; st; st = st->next)
+@@ -908,7 +911,6 @@ static void try_spare_migration(struct state *statelist, struct alert_info *info
+ 			struct domainlist *domlist = NULL;
+ 			int d;
+ 			struct state *to = st;
+-			unsigned long long min_size;
+ 
+ 			if (to->parent_devnm[0] && !to->parent)
+ 				/* subarray monitored without parent container
+@@ -919,14 +921,14 @@ static void try_spare_migration(struct state *statelist, struct alert_info *info
+ 				/* member of a container */
+ 				to = to->parent;
+ 
+-			if (get_min_spare_size_required(to, &min_size))
++			if (get_required_spare_criteria(to, &sc))
+ 				continue;
+ 			if (to->metadata->ss->external) {
+ 				/* We must make sure there is
+ 				 * no suitable spare in container already.
+ 				 * If there is we don't add more */
+ 				dev_t devid = container_choose_spare(
+-					to, to, NULL, min_size, st->active);
++					to, to, NULL, &sc, st->active);
+ 				if (devid > 0)
+ 					continue;
+ 			}
+@@ -949,10 +951,10 @@ static void try_spare_migration(struct state *statelist, struct alert_info *info
+ 					continue;
+ 				if (from->metadata->ss->external)
+ 					devid = container_choose_spare(
+-						from, to, domlist, min_size, 0);
++						from, to, domlist, &sc, 0);
+ 				else
+ 					devid = choose_spare(from, to, domlist,
+-							     min_size);
++							     &sc);
+ 				if (devid > 0
+ 				    && move_spare(from->devname, to->devname, devid)) {
+ 					alert("MoveSpare", to->devname, from->devname, info);
+diff --git a/mdadm.h b/mdadm.h
+index a92feb2..8da7fd3 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -361,6 +361,10 @@ struct createinfo {
+ 	struct supertype *supertype;
+ };
+ 
++struct spare_criteria {
++	unsigned long long min_size;
++};
 +
- 		/* Does this unused device have the requisite free space?
- 		 * It needs to be able to cover all member volumes
- 		 */
+ enum mode {
+ 	ASSEMBLE=1,
+ 	BUILD,
+@@ -940,11 +944,13 @@ extern struct superswitch {
+ 	 */
+ 	__u64 (*avail_size)(struct supertype *st, __u64 size,
+ 			    unsigned long long data_offset);
+-	/* This is similar to 'avail_size' in purpose, but is used for
+-	 * containers for which there is no 'component size' to compare.
+-	 * This reports that whole-device size which is a minimum
++	/*
++	 * Return spare criteria for array:
++	 * - minimum disk size can be used in array;
++	 * Return values: 0 - for success and -EINVAL on error.
+ 	 */
+-	unsigned long long (*min_acceptable_spare_size)(struct supertype *st);
++	int (*get_spare_criteria)(struct supertype *st,
++				  struct spare_criteria *sc);
+ 	/* Find somewhere to put a bitmap - possibly auto-size it - and
+ 	 * update the metadata to record this.  The array may be newly
+ 	 * created, in which case data_size may be updated, or it might
+@@ -1507,7 +1513,7 @@ extern int assemble_container_content(struct supertype *st, int mdfd,
+ #define	INCR_ALREADY	4
+ #define	INCR_YES	8
+ extern struct mdinfo *container_choose_spares(struct supertype *st,
+-					      unsigned long long min_size,
++					      struct spare_criteria *criteria,
+ 					      struct domainlist *domlist,
+ 					      char *spare_group,
+ 					      const char *metadata, int get_one);
+diff --git a/super-intel.c b/super-intel.c
+index e88fe82..be973f8 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -1383,37 +1383,44 @@ static __u32 imsm_min_reserved_sectors(struct intel_super *super)
+ 	return  (remainder < rv) ? remainder : rv;
+ }
+ 
+-/* Return minimum size of a spare that can be used in this array*/
+-static unsigned long long min_acceptable_spare_size_imsm(struct supertype *st)
++/*
++ * Return minimum size of a spare and sector size
++ * that can be used in this array
++ */
++int get_spare_criteria_imsm(struct supertype *st, struct spare_criteria *c)
+ {
+ 	struct intel_super *super = st->sb;
+ 	struct dl *dl;
+ 	struct extent *e;
+ 	int i;
+-	unsigned long long rv = 0;
++	unsigned long long size = 0;
++
++	c->min_size = 0;
+ 
+ 	if (!super)
+-		return rv;
++		return -EINVAL;
+ 	/* find first active disk in array */
+ 	dl = super->disks;
+ 	while (dl && (is_failed(&dl->disk) || dl->index == -1))
+ 		dl = dl->next;
+ 	if (!dl)
+-		return rv;
++		return -EINVAL;
+ 	/* find last lba used by subarrays */
+ 	e = get_extents(super, dl);
+ 	if (!e)
+-		return rv;
++		return -EINVAL;
+ 	for (i = 0; e[i].size; i++)
+ 		continue;
+ 	if (i > 0)
+-		rv = e[i-1].start + e[i-1].size;
++		size = e[i-1].start + e[i-1].size;
+ 	free(e);
+ 
+ 	/* add the amount of space needed for metadata */
+-	rv = rv + imsm_min_reserved_sectors(super);
++	size += imsm_min_reserved_sectors(super);
++
++	c->min_size = size * 512;
+ 
+-	return rv * 512;
++	return 0;
+ }
+ 
+ static int is_gen_migration(struct imsm_dev *dev);
+@@ -10817,8 +10824,10 @@ static int imsm_reshape_is_allowed_on_container(struct supertype *st,
+  */
+ static struct mdinfo *get_spares_for_grow(struct supertype *st)
+ {
+-	unsigned long long min_size = min_acceptable_spare_size_imsm(st);
+-	return container_choose_spares(st, min_size, NULL, NULL, NULL, 0);
++	struct spare_criteria sc;
++
++	get_spare_criteria_imsm(st, &sc);
++	return container_choose_spares(st, &sc, NULL, NULL, NULL, 0);
+ }
+ 
+ /******************************************************************************
+@@ -11853,7 +11862,7 @@ struct superswitch super_imsm = {
+ 	.update_super	= update_super_imsm,
+ 
+ 	.avail_size	= avail_size_imsm,
+-	.min_acceptable_spare_size = min_acceptable_spare_size_imsm,
++	.get_spare_criteria = get_spare_criteria_imsm,
+ 
+ 	.compare_super	= compare_super_imsm,
+ 
+diff --git a/util.c b/util.c
+index 11ff2cc..8b3c67d 100644
+--- a/util.c
++++ b/util.c
+@@ -2107,7 +2107,7 @@ int experimental(void)
+  * if spare_group given add it to domains of each spare
+  * metadata allows to test domains using metadata of destination array */
+ struct mdinfo *container_choose_spares(struct supertype *st,
+-				       unsigned long long min_size,
++				       struct spare_criteria *criteria,
+ 				       struct domainlist *domlist,
+ 				       char *spare_group,
+ 				       const char *metadata, int get_one)
+@@ -2131,9 +2131,9 @@ struct mdinfo *container_choose_spares(struct supertype *st,
+ 			unsigned long long dev_size;
+ 			dev_t dev = makedev(d->disk.major,d->disk.minor);
+ 
+-			if (!min_size ||
++			if (!criteria->min_size ||
+ 			   (dev_size_from_id(dev,  &dev_size) &&
+-			    dev_size >= min_size))
++			    dev_size >= criteria->min_size))
+ 				found = 1;
+ 			/* check if domain matches */
+ 			if (found && domlist) {
 -- 
 1.8.3.1
 
