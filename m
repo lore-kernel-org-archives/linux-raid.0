@@ -1,45 +1,61 @@
 From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH 0/5] Don't combine disks with different sector size in the
- array
-Date: Tue, 9 May 2017 14:18:54 -0400
-Message-ID: <e972c34e-5a78-93d2-06b4-3d870550fb43@gmail.com>
-References: <1494325547-3028-1-git-send-email-tomasz.majchrzak@intel.com>
+Subject: Re: RAID creation resync behaviors
+Date: Tue, 9 May 2017 14:39:23 -0400
+Message-ID: <1fca5ff4-358a-e0cf-d1a4-fc33ecdcbd62@gmail.com>
+References: <20170503202748.7r243wj5h4polt6y@kernel.org>
+ <87inlhpgzu.fsf@notabene.neil.brown.name>
+ <20170504020452.kcmjgxnk7zsx7kdx@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1494325547-3028-1-git-send-email-tomasz.majchrzak@intel.com>
+In-Reply-To: <20170504020452.kcmjgxnk7zsx7kdx@kernel.org>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>, linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>, NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-On 05/09/2017 06:25 AM, Tomasz Majchrzak wrote:
-> IMSM doesn't allow to create arrays including drives with different sector
-> sizes.
+On 05/03/2017 10:04 PM, Shaohua Li wrote:
+> On Thu, May 04, 2017 at 11:07:01AM +1000, Neil Brown wrote:
+>> On Wed, May 03 2017, Shaohua Li wrote:
+>>
+>>> Hi,
+>>>
+>>> Currently we have different resync behaviors in array creation.
+>>>
+>>> - raid1: copy data from disk 0 to disk 1 (overwrite)
+>>> - raid10: read both disks, compare and write if there is difference (compare-write)
+>>> - raid4/5: read first n-1 disks, calculate parity and then write parity to the last disk (overwrite)
+>>> - raid6: read all disks, calculate parity and compare, and write if there is difference (compare-write)
+>>
+>> The approach taken for raid1 and raid4/5 provides the fastest sync for
+>> an array built on uninitialised spinning devices.
+>> RAID6 could use the same approach but would involve more CPU and so
+>> the original author of the RAID6 code (hpa) chose to go for the low-CPU
+>> cost option.  I don't know if tests were done, or if they would still be
+>> valid on new hardware.
+>> The raid10 approach comes from "it is too hard to optimize in general
+>> because different RAID10 layouts have different trade-offs, so just
+>> take the easy way out."
 > 
-> Following patchset blocks all paths to create such configuration:
->   * explicit array create
->   * array rebuild (spare in the same container, spare moved across containers)
->   * array grow
+> ok, thanks for the explanation!
+>>>
+>>> Write whole disk is very unfriendly for SSD, because it reduces lifetime. And
+>>> if user already does a trim before creation, the unncessary write could make
+>>> SSD slower in the future. Could we prefer compare-write to overwrite if mdadm
+>>> detects the disks are SSD? Surely sometimes compare-write is slower than
+>>> overwrite, so maybe add new option in mdadm. An option to let mdadm trim SSD
+>>> before creation sounds reasonable too.
+>>
+>> An option to ask mdadm to trim the data space and then --assume-clean
+>> certainly sounds reasonable.
 > 
-> Alexey Obitotskiy (5):
->    imsm: allow drives in a container regardless of sector size
->    imsm: allocate buffer to support maximum sector size
->    imsm: don't allow disks with different sector size in one array
->    Allow more spare selection criteria
->    Add sector size as spare selection criterion
-> 
->   Incremental.c | 18 ++++++++-----
->   Monitor.c     | 38 ++++++++++++++++----------
->   mdadm.h       | 19 +++++++++----
->   super-intel.c | 86 ++++++++++++++++++++++++++++++++++++++++-------------------
->   util.c        | 37 ++++++++++++++++++++++---
->   5 files changed, 140 insertions(+), 58 deletions(-)
-> 
+> This doesn't work well. read returns 0 for trimmed data space in some SSDs, but
+> not all. If not, we will have trouble.
 
-Applied!
+/sys/block/<device>/queue/discard_zeroes_data
 
-Thanks,
+We could use this as an indicator for what to do.
+
 Jes
-
