@@ -1,74 +1,61 @@
-From: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
-Subject: Re: [PATCH 25/27] block: remove the discard_zeroes_data
-	flag
-Date: Mon, 08 May 2017 23:46:14 -0700
-Message-ID: <1494312374.16894.36.camel@haakon3.risingtidesystems.com>
-References: <20170405172125.22600-1-hch@lst.de>
-	<20170405172125.22600-26-hch@lst.de>
-	<1493671519.2665.15.camel@sandisk.com>
-	<1493707425.23202.77.camel@haakon3.risingtidesystems.com>
-	<1493709373.23202.79.camel@haakon3.risingtidesystems.com>
-	<20170502072328.GA11522@lst.de>
-	<1493782395.23202.84.camel@haakon3.risingtidesystems.com>
-	<20170507092209.GA27370@lst.de>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: Fault tolerance with badblocks
+Date: Tue, 09 May 2017 09:37:33 +0200
+Message-ID: <591171BD.3060707@hesbynett.no>
+References: <03294ec0-2df0-8c1c-dd98-2e9e5efb6f4f@hale.ee>        <590B3039.3060000@youngman.org.uk>        <84184eb3-52c4-e7ad-cd5b-5021b5cf47ee@hale.ee>        <d2b25ec0-c401-07df-2231-a37117878589@youngman.org.uk>        <bd917050-cf73-6922-bb20-c5ccf02ba51c@hale.ee>        <590DC905.60207@youngman.org.uk> <87h90v8kt3.fsf@esperi.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-In-Reply-To: <20170507092209.GA27370-jcswGhMUV9g@public.gmane.org>
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: "hch-jcswGhMUV9g@public.gmane.org" <hch-jcswGhMUV9g@public.gmane.org>
-Cc: "axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org" <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org" <philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Bart Van Assche <Bart.VanAssche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>, "lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org" <lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, "shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org" <drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87h90v8kt3.fsf@esperi.org.uk>
+Sender: linux-raid-owner@vger.kernel.org
+To: Nix <nix@esperi.org.uk>, Wols Lists <antlists@youngman.org.uk>
+Cc: "Ravi (Tom) Hale" <ravi@hale.ee>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 2017-05-07 at 11:22 +0200, hch-jcswGhMUV9g@public.gmane.org wrote:
-> On Tue, May 02, 2017 at 08:33:15PM -0700, Nicholas A. Bellinger wrote:
-> > The larger target/iblock conversion patch looks like post v4.12 material
-> > at this point, so to avoid breakage wrt to existing LBPRZ behavior, I'll
-> > plan to push the following patch post -rc1.
+On 08/05/17 16:50, Nix wrote:
+
 > 
-> I don't think this is safe.  If you want to do the aboe you also
-> need to ensure ->execute_unmap always zeroes the data.  For actual
-> files in the file backend we should be all fine, but for the block
-> device case [1] and iblock we'd need to use blkdev_issue_zeroout
-> instead of blkdev_issue_discard when unmap_zeroes_data is set.
+> I wonder... scrubbing is not very useful with md, particularly with RAID
+> 6, because it does no writes unless something mismatches, and on failure
+> there is no attempt to determine which of the N disks is bad and rewrite
+> its contents from the other devices (nor, as I understand it, does it
+> clearly say which drive gave the error, so even failing it out and
+> resyncing it is hard).
 > 
-> [1] which btw already seems broken as it doesn't invalidate cached
-> data when issuing a discard.
 
-Mmm, for [1] that would appear to be true, but after a deeper look at
-existing code I don't think this is the case.
+Please read Neil Brown's article on this: "Smart or simple RAID
+recovery?" <http://neil.brown.name/blog/20100211050355>
 
-The reason being is target backend attributes emulate_tpu and
-emulate_tpws are strictly user configurable, and aren't automatically
-set based upon the underlying IBLOCK block_device support for either
-one.
+> If there was a way to get md to *rewrite* everything during scrub,
+> rather than just checking, this might help (in addition to letting the
+> drive refresh the magnetization of absolutely everything). "repair" mode
+> appears to do no writes until an error is found, whereupon (on RAID 6)
+> it proceeds to make a "repair" that is more likely than not to overwrite
+> good data with bad. Optionally writing what's already there on non-error
+> seems like it might be a worthwhile (and fairly simple) change.
+> 
 
-According to pre v4.12-rc1 code, q->limits.discard_zeroes_data was only
-enabled by drivers/scsi/sd.c:sd_config_discard() for
-sdkp->provisioning_mode WRITE_SAME with LBPRZ = 1 or explicit ZERO, and
-for NVME for devices that supported NVME_QUIRK_DISCARD_ZEROES.  Eg: Only
-real DISCARD + ZERO support.
+Scrubbing /does/ rewrite disk blocks - when necessary.  It does not do
+it explicitly, but the disks handle this themselves.
 
-In your changes to v4.12-rc1, this logic to signal real DISCARD + zero
-support for SCSI and NVMe via q->limits.max_write_zeroes_sectors has not
-changed..
+To the processor, a disk block is 4K of data.  But to the disk and its
+controllers, it is 4K plus a sizeable amount of error checking and
+correcting bits.  Some are spread out within the block, some are
+collected together at the end of the block.  The ECC system can handle a
+large number of failed bits, either in lumps caused by a physical defect
+on the disk surface, or spread out due to the slow decay of the magnetic
+orientation, or hits by cosmic rays.
 
-So AFAICT, regardless if the user sets emulate_tpu or emulate_tpws for a
-IBLOCK backend, SCSI host code will have to choose sdkp->zeroing_mode
-WRITE_SAME with LBPRZ or explicit ZERO, and NVMe host code will have to
-chose a ctrl NVME_QUIRK_DEALLOCATE_ZEROES before
-q->limits.max_write_zeroes_sectors != 0 is propagated up to target code,
-and LBPRZ = 1 is signaled via READ_CAPACITY_16 and EVPD = 0xb2.
+When the disk is asked to read a block, it pulls up the data and the ECC
+bits, and uses this to check and re-construct the 4K of data, and a
+measure of how many errors were corrected.  On modern high-capacity
+drives, it is normal that some errors are corrected on a read.  But if
+more than a certain level occur, then the firmware will trigger a
+re-write automatically to the same sector.  This will then be re-read.
+If the error rate is low, fine.  If it is high, then the sector will be
+remapped by the disk.
 
-That said, simply propagating up q->limits.max_write_zeroes_sectors as
-dev_attrib->unmap_zeroes_data following existing code still looks like
-the right thing to do.
+So simply /reading/ the data, as far as the processor is concerned, will
+cause re-writes as and when needed.
+
