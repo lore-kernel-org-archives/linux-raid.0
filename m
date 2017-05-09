@@ -1,45 +1,48 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Fault tolerance with badblocks
-Date: Tue, 9 May 2017 10:05:33 -0600
-Message-ID: <CAJCQCtQyLjcut=DvPz1QeL8axRMrewkFm3JAOKB66uqWMRHePg@mail.gmail.com>
-References: <03294ec0-2df0-8c1c-dd98-2e9e5efb6f4f@hale.ee> <590B3039.3060000@youngman.org.uk>
- <84184eb3-52c4-e7ad-cd5b-5021b5cf47ee@hale.ee> <d2b25ec0-c401-07df-2231-a37117878589@youngman.org.uk>
- <bd917050-cf73-6922-bb20-c5ccf02ba51c@hale.ee> <590DC905.60207@youngman.org.uk>
- <87h90v8kt3.fsf@esperi.org.uk> <1533bba8-41cb-2c50-b28a-52786e463072@turmel.org>
- <87vapb6s9h.fsf@esperi.org.uk> <c5307694-034c-b610-8a27-3bf272cac380@youngman.org.uk>
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+Subject: Where to best put the journal device physically?
+Date: Tue, 9 May 2017 18:10:11 +0200
+Message-ID: <5a7aa1b2-5bfb-3123-3abf-3dd8231c54ae@molgen.mpg.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <c5307694-034c-b610-8a27-3bf272cac380@youngman.org.uk>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Anthony Youngman <antlists@youngman.org.uk>
-Cc: Nix <nix@esperi.org.uk>, Phil Turmel <philip@turmel.org>, "Ravi (Tom) Hale" <ravi@hale.ee>, Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, May 8, 2017 at 2:27 PM, Anthony Youngman
-<antlists@youngman.org.uk> wrote:
+Dear Linux RAID folks,
 
 
-> Yes you have saved a sector sparing. Note that a consumer 3TB drive can
-> return, on average, one error every time it's read from end to end 3 times,
-> and still be considered "within spec" ie "not faulty" by the manufacturer.
+One stupid practical question, for using the journalling support [1].
 
-All specs say "less than" which means it's a maximum permissible rate,
-not an average. We have no idea what the minimum error rate is - we
-being consumers. It's possible high volume users (e.g. Backblaze) have
-data on this by now.
+Currently, enclosures with 16 3.5 inch drives and hardware RAID 
+controllers are used here. Almost all systems have such a hardware RAID 
+controller, so moving a enclosure is as simple as plugging the cable 
+into a different controller card, and updating some maps.
+
+When using a software RAID with an SSD as a journal device, I see the 
+following options.
+
+1.   We need to keep track if a system has a journal device installed, 
+and if not install one, when moving an enclosure. (Make sure there are 
+as many slots for SSDs as you have enclosures.)
+2.   We make sure, in every system, there is a spare SSD drive, usable 
+as journal device. (Make sure there as many slots for SSDs as you have 
+enclosures.)
+3.   There are enclosures, which provide a slot for such a journal 
+device. Maybe even battery backed?
+
+Are there more options?
+
+It’d be awesome, if you shared, how you deal with this, or point me to 
+the right direction.
 
 
+Kind regards,
 
-> And that's a *brand* *new* drive. That's why building a large array using
-> consumer drives is a stupid idea - 4 x 3TB drives and a *within* *spec*
-> array must expect to handle at least one error every scrub.
-
-The requirement for any large array is quickly abandoning reattempted
-reads in favor of reporting a read error. That's the main reason why
-consumer drives are a bad idea, is that it can hang user space waiting
-on the long recovery of a drive.
+Paul
 
 
--- 
-Chris Murphy
+[1] 
+https://kernelnewbies.org/Linux_4.11#head-b75ccfe3ece97a066328c2b2a782434291bf00c6
