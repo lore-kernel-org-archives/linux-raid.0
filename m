@@ -1,191 +1,239 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH v4 2/2] md/r5cache: gracefully handle journal device errors for writeback mode
-Date: Mon, 8 May 2017 17:39:25 -0700
-Message-ID: <20170509003925.3480693-2-songliubraving@fb.com>
-References: <20170509003925.3480693-1-songliubraving@fb.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH] md/md0: optimize raid0 discard handling
+Date: Tue, 09 May 2017 11:03:02 +1000
+Message-ID: <87r2zyn8op.fsf@notabene.neil.brown.name>
+References: <1af0237c374a1e276663fa17824e8345165fcca6.1494203680.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170509003925.3480693-1-songliubraving@fb.com>
+In-Reply-To: <1af0237c374a1e276663fa17824e8345165fcca6.1494203680.git.shli@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com, Song Liu <songliubraving@fb.com>
+To: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
+Cc: Kernel-team@fb.com, Coly Li <colyli@suse.de>
 List-Id: linux-raid.ids
 
-For the raid456 with writeback cache, when journal device failed during
-normal operation, it is still possible to persist all data, as all
-pending data is still in stripe cache. However, it is necessary to handle
-journal failure gracefully.
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-During journal failures, this patch makes the follow changes to land data
-in cache to raid disks gracefully:
+On Sun, May 07 2017, Shaohua Li wrote:
 
-1. In handle_stripe(), allow stripes with data in journal (s.injournal > 0)
-   to make progress;
-2. In delay_towrite(), only process data in the cache (skip dev->towrite);
-3. In __get_priority_stripe(), set try_loprio to true, so no stripe stuck
-   in loprio_list
+> There are complaints that raid0 discard handling is slow. Currently we
+> divide discard request into chunks and dispatch to underlayer disks. The
+> block layer will do merge to form big requests. This causes a lot of
+> request split/merge and uses significant CPU time.
+>
+> A simple idea is to calculate the range for each raid disk for an IO
+> request and send a discard request to raid disks, which will avoid the
+> split/merge completely. Previously Coly tried the approach, but the
+> implementation was too complex because of raid0 zones. This patch always
+> split bio in zone boundary and handle bio within one zone. It simplifies
+> the implementation a lot.
+>
+> Cc: NeilBrown <neilb@suse.com>
+> Cc: Coly Li <colyli@suse.de>
+> Signed-off-by: Shaohua Li <shli@fb.com>
 
-Signed-off-by: Song Liu <songliubraving@fb.com>
----
- drivers/md/raid5-cache.c | 13 ++++++++++---
- drivers/md/raid5-log.h   |  3 ++-
- drivers/md/raid5.c       | 29 +++++++++++++++++++++++------
- 3 files changed, 35 insertions(+), 10 deletions(-)
+Reviewed-by: NeilBrown <neilb@suse.com>
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index dc1dba6..e6032f6 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -24,6 +24,7 @@
- #include "md.h"
- #include "raid5.h"
- #include "bitmap.h"
-+#include "raid5-log.h"
- 
- /*
-  * metadata/data stored in disk with 4k size unit (a block) regardless
-@@ -679,6 +680,7 @@ static void r5c_disable_writeback_async(struct work_struct *work)
- 		return;
- 	pr_info("md/raid:%s: Disabling writeback cache for degraded array.\n",
- 		mdname(mddev));
-+	md_update_sb(mddev, 1);
- 	mddev_suspend(mddev);
- 	log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_THROUGH;
- 	mddev_resume(mddev);
-@@ -1557,6 +1559,8 @@ void r5l_wake_reclaim(struct r5l_log *log, sector_t space)
- void r5l_quiesce(struct r5l_log *log, int state)
- {
- 	struct mddev *mddev;
-+	struct r5conf *conf;
-+
- 	if (!log || state == 2)
- 		return;
- 	if (state == 0)
-@@ -1564,10 +1568,12 @@ void r5l_quiesce(struct r5l_log *log, int state)
- 	else if (state == 1) {
- 		/* make sure r5l_write_super_and_discard_space exits */
- 		mddev = log->rdev->mddev;
-+		conf = mddev->private;
- 		wake_up(&mddev->sb_wait);
- 		kthread_park(log->reclaim_thread->tsk);
- 		r5l_wake_reclaim(log, MaxSector);
--		r5l_do_reclaim(log);
-+		if (!r5l_log_disk_error(conf))
-+			r5l_do_reclaim(log);
- 	}
- }
- 
-@@ -2982,7 +2988,7 @@ static int r5l_load_log(struct r5l_log *log)
- 	return ret;
- }
- 
--void r5c_update_on_rdev_error(struct mddev *mddev)
-+void r5c_update_on_rdev_error(struct mddev *mddev, struct md_rdev *rdev)
- {
- 	struct r5conf *conf = mddev->private;
- 	struct r5l_log *log = conf->log;
-@@ -2990,7 +2996,8 @@ void r5c_update_on_rdev_error(struct mddev *mddev)
- 	if (!log)
- 		return;
- 
--	if (raid5_calc_degraded(conf) > 0 &&
-+	if ((raid5_calc_degraded(conf) > 0 ||
-+	     test_bit(Journal, &rdev->flags)) &&
- 	    conf->log->r5c_journal_mode == R5C_JOURNAL_MODE_WRITE_BACK)
- 		schedule_work(&log->disable_writeback_work);
- }
-diff --git a/drivers/md/raid5-log.h b/drivers/md/raid5-log.h
-index 2709710..328d67a 100644
---- a/drivers/md/raid5-log.h
-+++ b/drivers/md/raid5-log.h
-@@ -28,7 +28,8 @@ extern void r5c_flush_cache(struct r5conf *conf, int num);
- extern void r5c_check_stripe_cache_usage(struct r5conf *conf);
- extern void r5c_check_cached_full_stripe(struct r5conf *conf);
- extern struct md_sysfs_entry r5c_journal_mode;
--extern void r5c_update_on_rdev_error(struct mddev *mddev);
-+extern void r5c_update_on_rdev_error(struct mddev *mddev,
-+				     struct md_rdev *rdev);
- extern bool r5c_big_stripe_cached(struct r5conf *conf, sector_t sect);
- 
- extern struct dma_async_tx_descriptor *
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index f8055a7..0ac57a9 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -2689,7 +2689,7 @@ static void raid5_error(struct mddev *mddev, struct md_rdev *rdev)
- 		bdevname(rdev->bdev, b),
- 		mdname(mddev),
- 		conf->raid_disks - mddev->degraded);
--	r5c_update_on_rdev_error(mddev);
-+	r5c_update_on_rdev_error(mddev, rdev);
- }
- 
- /*
-@@ -3050,6 +3050,11 @@ sector_t raid5_compute_blocknr(struct stripe_head *sh, int i, int previous)
-  *      When LOG_CRITICAL, stripes with injournal == 0 will be sent to
-  *      no_space_stripes list.
-  *
-+ *   3. during journal failure
-+ *      In journal failure, we try to flush all cached data to raid disks
-+ *      based on data in stripe cache. The array is read-only to upper
-+ *      layers, so we would skip all pending writes.
-+ *
-  */
- static inline bool delay_towrite(struct r5conf *conf,
- 				 struct r5dev *dev,
-@@ -3063,6 +3068,9 @@ static inline bool delay_towrite(struct r5conf *conf,
- 	if (test_bit(R5C_LOG_CRITICAL, &conf->cache_state) &&
- 	    s->injournal > 0)
- 		return true;
-+	/* case 3 above */
-+	if (s->log_failed && s->injournal)
-+		return true;
- 	return false;
- }
- 
-@@ -4696,10 +4704,15 @@ static void handle_stripe(struct stripe_head *sh)
- 	       " to_write=%d failed=%d failed_num=%d,%d\n",
- 	       s.locked, s.uptodate, s.to_read, s.to_write, s.failed,
- 	       s.failed_num[0], s.failed_num[1]);
--	/* check if the array has lost more than max_degraded devices and,
-+	/*
-+	 * check if the array has lost more than max_degraded devices and,
- 	 * if so, some requests might need to be failed.
-+	 *
-+	 * When journal device failed (log_failed), we will only process
-+	 * the stripe if there is data need write to raid disks
- 	 */
--	if (s.failed > conf->max_degraded || s.log_failed) {
-+	if (s.failed > conf->max_degraded ||
-+	    (s.log_failed && s.injournal == 0)) {
- 		sh->check_state = 0;
- 		sh->reconstruct_state = 0;
- 		break_stripe_batch_list(sh, 0);
-@@ -5272,8 +5285,10 @@ static struct stripe_head *__get_priority_stripe(struct r5conf *conf, int group)
- 	struct stripe_head *sh, *tmp;
- 	struct list_head *handle_list = NULL;
- 	struct r5worker_group *wg;
--	bool second_try = !r5c_is_writeback(conf->log);
--	bool try_loprio = test_bit(R5C_LOG_TIGHT, &conf->cache_state);
-+	bool second_try = !r5c_is_writeback(conf->log) &&
-+		!r5l_log_disk_error(conf);
-+	bool try_loprio = test_bit(R5C_LOG_TIGHT, &conf->cache_state) ||
-+		r5l_log_disk_error(conf);
- 
- again:
- 	wg = NULL;
-@@ -7521,7 +7536,9 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
- 		 * neilb: there is no locking about new writes here,
- 		 * so this cannot be safe.
- 		 */
--		if (atomic_read(&conf->active_stripes)) {
-+		if (atomic_read(&conf->active_stripes) ||
-+		    atomic_read(&conf->r5c_cached_full_stripes) ||
-+		    atomic_read(&conf->r5c_cached_partial_stripes)) {
- 			return -EBUSY;
- 		}
- 		log_exit(conf);
--- 
-2.9.3
+I'm a little bit bothered by the use for __blkdev_issue_discard() which
+uses bio_alloc(), which allocates from fs_bio_set.  This code isn't in a
+filesystem, so it feels wrong.
 
+fs_bio_set has 4 entries.  If 4 different threads call
+__blkdev_issue_discard() on a raid0 device, they could get allocated all
+of the entries from the pool.  Then when raid0 calls
+__blkdev_issue_discard(), the pool is empty.
+
+I don't think this is actually a problem as discard (presumably) doesn't
+happen on the write-out-for-memory-reclaim path, so the bio_alloc() will
+eventually be able to get memory from kmalloc() rather than from the
+pool.
+
+Maybe next_bio() should use the bio_split pool from
+bio->bi_bdev->queue.  But it probably doesn't really matter.
+
+Thanks,
+NeilBrown
+
+
+> ---
+>  drivers/md/raid0.c | 116 ++++++++++++++++++++++++++++++++++++++++++++++-=
+------
+>  1 file changed, 102 insertions(+), 14 deletions(-)
+>
+> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> index 84e5859..d6c0bc7 100644
+> --- a/drivers/md/raid0.c
+> +++ b/drivers/md/raid0.c
+> @@ -385,7 +385,7 @@ static int raid0_run(struct mddev *mddev)
+>  		blk_queue_max_hw_sectors(mddev->queue, mddev->chunk_sectors);
+>  		blk_queue_max_write_same_sectors(mddev->queue, mddev->chunk_sectors);
+>  		blk_queue_max_write_zeroes_sectors(mddev->queue, mddev->chunk_sectors);
+> -		blk_queue_max_discard_sectors(mddev->queue, mddev->chunk_sectors);
+> +		blk_queue_max_discard_sectors(mddev->queue, UINT_MAX);
+>=20=20
+>  		blk_queue_io_min(mddev->queue, mddev->chunk_sectors << 9);
+>  		blk_queue_io_opt(mddev->queue,
+> @@ -459,6 +459,95 @@ static inline int is_io_in_chunk_boundary(struct mdd=
+ev *mddev,
+>  	}
+>  }
+>=20=20
+> +static void raid0_handle_discard(struct mddev *mddev, struct bio *bio)
+> +{
+> +	struct r0conf *conf =3D mddev->private;
+> +	struct strip_zone *zone;
+> +	sector_t start =3D bio->bi_iter.bi_sector;
+> +	sector_t end;
+> +	unsigned int stripe_size;
+> +	sector_t first_stripe_index, last_stripe_index;
+> +	sector_t start_disk_offset;
+> +	unsigned int start_disk_index;
+> +	sector_t end_disk_offset;
+> +	unsigned int end_disk_index;
+> +	unsigned int disk;
+> +
+> +	zone =3D find_zone(conf, &start);
+> +
+> +	if (bio_end_sector(bio) > zone->zone_end) {
+> +		struct bio *split =3D bio_split(bio,
+> +			zone->zone_end - bio->bi_iter.bi_sector, GFP_NOIO,
+> +			mddev->bio_set);
+> +		bio_chain(split, bio);
+> +		generic_make_request(bio);
+> +		bio =3D split;
+> +		end =3D zone->zone_end;
+> +	} else
+> +		end =3D bio_end_sector(bio);
+> +
+> +	if (zone !=3D conf->strip_zone)
+> +		end =3D end - zone[-1].zone_end;
+> +
+> +	/* Now start and end is the offset in zone */
+> +	stripe_size =3D zone->nb_dev * mddev->chunk_sectors;
+> +
+> +	first_stripe_index =3D start;
+> +	sector_div(first_stripe_index, stripe_size);
+> +	last_stripe_index =3D end;
+> +	sector_div(last_stripe_index, stripe_size);
+> +
+> +	start_disk_index =3D (int)(start - first_stripe_index * stripe_size) /
+> +		mddev->chunk_sectors;
+> +	start_disk_offset =3D ((int)(start - first_stripe_index * stripe_size) %
+> +		mddev->chunk_sectors) +
+> +		first_stripe_index * mddev->chunk_sectors;
+> +	end_disk_index =3D (int)(end - last_stripe_index * stripe_size) /
+> +		mddev->chunk_sectors;
+> +	end_disk_offset =3D ((int)(end - last_stripe_index * stripe_size) %
+> +		mddev->chunk_sectors) +
+> +		last_stripe_index * mddev->chunk_sectors;
+> +
+> +	for (disk =3D 0; disk < zone->nb_dev; disk++) {
+> +		sector_t dev_start, dev_end;
+> +		struct bio *discard_bio =3D NULL;
+> +		struct md_rdev *rdev;
+> +
+> +		if (disk < start_disk_index)
+> +			dev_start =3D (first_stripe_index + 1) *
+> +				mddev->chunk_sectors;
+> +		else if (disk > start_disk_index)
+> +			dev_start =3D first_stripe_index * mddev->chunk_sectors;
+> +		else
+> +			dev_start =3D start_disk_offset;
+> +
+> +		if (disk < end_disk_index)
+> +			dev_end =3D (last_stripe_index + 1) * mddev->chunk_sectors;
+> +		else if (disk > end_disk_index)
+> +			dev_end =3D last_stripe_index * mddev->chunk_sectors;
+> +		else
+> +			dev_end =3D end_disk_offset;
+> +
+> +		if (dev_end <=3D dev_start)
+> +			continue;
+> +
+> +		rdev =3D conf->devlist[(zone - conf->strip_zone) *
+> +			conf->strip_zone[0].nb_dev + disk];
+> +		if (__blkdev_issue_discard(rdev->bdev,
+> +			dev_start + zone->dev_start + rdev->data_offset,
+> +			dev_end - dev_start, GFP_NOIO, 0, &discard_bio) ||
+> +		    !discard_bio)
+> +			continue;
+> +		bio_chain(discard_bio, bio);
+> +		if (mddev->gendisk)
+> +			trace_block_bio_remap(bdev_get_queue(rdev->bdev),
+> +				discard_bio, disk_devt(mddev->gendisk),
+> +				bio->bi_iter.bi_sector);
+> +		generic_make_request(discard_bio);
+> +	}
+> +	bio_endio(bio);
+> +}
+> +
+>  static void raid0_make_request(struct mddev *mddev, struct bio *bio)
+>  {
+>  	struct strip_zone *zone;
+> @@ -473,6 +562,11 @@ static void raid0_make_request(struct mddev *mddev, =
+struct bio *bio)
+>  		return;
+>  	}
+>=20=20
+> +	if (unlikely((bio_op(bio) =3D=3D REQ_OP_DISCARD))) {
+> +		raid0_handle_discard(mddev, bio);
+> +		return;
+> +	}
+> +
+>  	bio_sector =3D bio->bi_iter.bi_sector;
+>  	sector =3D bio_sector;
+>  	chunk_sects =3D mddev->chunk_sectors;
+> @@ -498,19 +592,13 @@ static void raid0_make_request(struct mddev *mddev,=
+ struct bio *bio)
+>  	bio->bi_iter.bi_sector =3D sector + zone->dev_start +
+>  		tmp_dev->data_offset;
+>=20=20
+> -	if (unlikely((bio_op(bio) =3D=3D REQ_OP_DISCARD) &&
+> -		     !blk_queue_discard(bdev_get_queue(bio->bi_bdev)))) {
+> -		/* Just ignore it */
+> -		bio_endio(bio);
+> -	} else {
+> -		if (mddev->gendisk)
+> -			trace_block_bio_remap(bdev_get_queue(bio->bi_bdev),
+> -					      bio, disk_devt(mddev->gendisk),
+> -					      bio_sector);
+> -		mddev_check_writesame(mddev, bio);
+> -		mddev_check_write_zeroes(mddev, bio);
+> -		generic_make_request(bio);
+> -	}
+> +	if (mddev->gendisk)
+> +		trace_block_bio_remap(bdev_get_queue(bio->bi_bdev),
+> +				      bio, disk_devt(mddev->gendisk),
+> +				      bio_sector);
+> +	mddev_check_writesame(mddev, bio);
+> +	mddev_check_write_zeroes(mddev, bio);
+> +	generic_make_request(bio);
+>  }
+>=20=20
+>  static void raid0_status(struct seq_file *seq, struct mddev *mddev)
+> --=20
+> 2.9.3
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlkRFUYACgkQOeye3VZi
+gbmK8Q/+IccA6tEt5msl1mN3jFNL7xbvUfWNP/eGlMjfK2dWPecrosn5GrRqM6la
+BxY/x3UjbIRrYcxB7Ep7sY5BMtXBKP3Oohq7VB+LxXOMDR6dlbP/8QarNEfaXO4C
+PEzqc3zESxnOHeBArNHB+vv3nAia+UGDTN6DVkSQyhcF/7bTqCraXAX/LBx4ZnHD
+9UjQ04anZPw+MT846WPbcNme6itbcAsrfaoNEdv2YNnoeJaPHfykBFLhIAiO0O8b
+/O1Vydy9Nwp7j7LLo9ttmqNcJ81rGzeIyDsXiNZz7Vrk3H++mF1FaYHSMKBUC4yn
+/5hJt6L/C/ZdkPzqd16X7UcV01A7VMnG7dNElruYSv1pwAeQV+KNv3skT5oqtrU3
+LSZEhcrfUZNeHjZlf9NZcF0qi2g9dVLjWIunMj/qn3ywN+sB/uYcRg/txX6zIDdb
+ecHQeGjMGjygJgrvbuF0fnhoVj3Cl/RGDqY0E4fLH72GEWrCRKw6LuREgG25WVsE
+yX8S3FmA0YfSEir6Gc90e4+IDWz2J2QUQASAstrDdNxMkI59rmA9xh8UQjb6ciDc
+HlGKA1gu5VIWjtRsjnSR8hDBeEJ35zg9EZE1CFtN9554AHDqfUhD2sWlx60QDNc8
+yzB14mukvfbQQch4O0fp5Ri58ykrcq1kfK+ngIyuaL+z8KN5lpM=
+=jctP
+-----END PGP SIGNATURE-----
+--=-=-=--
