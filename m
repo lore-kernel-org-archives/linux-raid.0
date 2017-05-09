@@ -1,189 +1,37 @@
-From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: [PATCH 5/5] Add sector size as spare selection criterion
-Date: Tue,  9 May 2017 12:25:47 +0200
-Message-ID: <1494325547-3028-6-git-send-email-tomasz.majchrzak@intel.com>
-References: <1494325547-3028-1-git-send-email-tomasz.majchrzak@intel.com>
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: Re: Fault tolerance with badblocks
+Date: Tue, 9 May 2017 18:28:20 +0800
+Message-ID: <9306fd68-4eeb-f487-a500-27050050af98@fnarfbargle.com>
+References: <03294ec0-2df0-8c1c-dd98-2e9e5efb6f4f@hale.ee>
+ <590B3039.3060000@youngman.org.uk>
+ <84184eb3-52c4-e7ad-cd5b-5021b5cf47ee@hale.ee>
+ <d2b25ec0-c401-07df-2231-a37117878589@youngman.org.uk>
+ <bd917050-cf73-6922-bb20-c5ccf02ba51c@hale.ee>
+ <590DC905.60207@youngman.org.uk> <87h90v8kt3.fsf@esperi.org.uk>
+ <591171BD.3060707@hesbynett.no> <87efvy73n9.fsf@esperi.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1494325547-3028-1-git-send-email-tomasz.majchrzak@intel.com>
+In-Reply-To: <87efvy73n9.fsf@esperi.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: jes.sorensen@gmail.com, Alexey Obitotskiy <aleksey.obitotskiy@intel.com>, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+To: Nix <nix@esperi.org.uk>, David Brown <david.brown@hesbynett.no>
+Cc: Wols Lists <antlists@youngman.org.uk>, "Ravi (Tom) Hale" <ravi@hale.ee>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Alexey Obitotskiy <aleksey.obitotskiy@intel.com>
+On 09/05/17 17:58, Nix wrote:
+>  md doesn't repair the corruption, even though on RAID-6 it could.
 
-Add sector size as new spare selection criterion. Assume that 0 means
-there is no requirement for the sector size in the array. Skip disks
-with unsuitable sector size when looking for a spare to move across
-containers.
+Patches are *always* welcome.
 
-Signed-off-by: Alexey Obitotskiy <aleksey.obitotskiy@intel.com>
-Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
----
- Incremental.c |  4 ++--
- Monitor.c     |  8 ++++++++
- mdadm.h       |  3 +++
- super-intel.c |  2 ++
- util.c        | 31 ++++++++++++++++++++++++++++++-
- 5 files changed, 45 insertions(+), 3 deletions(-)
+> but one wonders how many disks actually *do* this. It's hard to
+> tell because sector sparing is so quiet: it's not always even reflected
+> in the SMART data, AIUI.
 
-diff --git a/Incremental.c b/Incremental.c
-index fe9d644..30dc7a2 100644
---- a/Incremental.c
-+++ b/Incremental.c
-@@ -867,7 +867,7 @@ static int array_try_spare(char *devname, int *dfdp, struct dev_policy *pol,
- 		struct domainlist *dl = NULL;
- 		struct mdinfo *sra;
- 		unsigned long long devsize;
--		struct spare_criteria sc = {0};
-+		struct spare_criteria sc = {0, 0};
- 
- 		if (is_subarray(mp->metadata))
- 			continue;
-@@ -1627,7 +1627,7 @@ static int Incremental_container(struct supertype *st, char *devname,
- 		struct mdinfo *sinfo;
- 
- 		if (!sst->ss->load_container(sst, sfd, NULL)) {
--			struct spare_criteria sc = {0};
-+			struct spare_criteria sc = {0, 0};
- 
- 			if (st->ss->get_spare_criteria)
- 				st->ss->get_spare_criteria(st, &sc);
-diff --git a/Monitor.c b/Monitor.c
-index 4a7afd7..288f8cc 100644
---- a/Monitor.c
-+++ b/Monitor.c
-@@ -755,6 +755,7 @@ static int get_required_spare_criteria(struct state *st,
- 	if (!st->metadata ||
- 	    !st->metadata->ss->get_spare_criteria) {
- 		sc->min_size = 0;
-+		sc->sector_size = 0;
- 		return 0;
- 	}
- 
-@@ -811,6 +812,7 @@ static dev_t choose_spare(struct state *from, struct state *to,
- 		    from->devstate[d] == 0) {
- 			struct dev_policy *pol;
- 			unsigned long long dev_size;
-+			unsigned int dev_sector_size;
- 
- 			if (to->metadata->ss->external &&
- 			    test_partition_from_id(from->devid[d]))
-@@ -821,6 +823,12 @@ static dev_t choose_spare(struct state *from, struct state *to,
- 			    dev_size < sc->min_size)
- 				continue;
- 
-+			if (sc->sector_size &&
-+			    dev_sector_size_from_id(from->devid[d],
-+						    &dev_sector_size) &&
-+			    sc->sector_size != dev_sector_size)
-+				continue;
-+
- 			pol = devid_policy(from->devid[d]);
- 			if (from->spare_group)
- 				pol_add(&pol, pol_domain,
-diff --git a/mdadm.h b/mdadm.h
-index 8da7fd3..ec0a39e 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -363,6 +363,7 @@ struct createinfo {
- 
- struct spare_criteria {
- 	unsigned long long min_size;
-+	unsigned int sector_size;
- };
- 
- enum mode {
-@@ -947,6 +948,7 @@ extern struct superswitch {
- 	/*
- 	 * Return spare criteria for array:
- 	 * - minimum disk size can be used in array;
-+	 * - sector size can be used in array.
- 	 * Return values: 0 - for success and -EINVAL on error.
- 	 */
- 	int (*get_spare_criteria)(struct supertype *st,
-@@ -1189,6 +1191,7 @@ extern int get_dev_size(int fd, char *dname, unsigned long long *sizep);
- extern int get_dev_sector_size(int fd, char *dname, unsigned int *sectsizep);
- extern int must_be_container(int fd);
- extern int dev_size_from_id(dev_t id, unsigned long long *size);
-+extern int dev_sector_size_from_id(dev_t id, unsigned int *size);
- void wait_for(char *dev, int fd);
- 
- /*
-diff --git a/super-intel.c b/super-intel.c
-index be973f8..ba6f810 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -1396,6 +1396,7 @@ int get_spare_criteria_imsm(struct supertype *st, struct spare_criteria *c)
- 	unsigned long long size = 0;
- 
- 	c->min_size = 0;
-+	c->sector_size = 0;
- 
- 	if (!super)
- 		return -EINVAL;
-@@ -1419,6 +1420,7 @@ int get_spare_criteria_imsm(struct supertype *st, struct spare_criteria *c)
- 	size += imsm_min_reserved_sectors(super);
- 
- 	c->min_size = size * 512;
-+	c->sector_size = super->sector_size;
- 
- 	return 0;
- }
-diff --git a/util.c b/util.c
-index 8b3c67d..fc9cd3f 100644
---- a/util.c
-+++ b/util.c
-@@ -1265,6 +1265,23 @@ int dev_size_from_id(dev_t id, unsigned long long *size)
- 	return 0;
- }
- 
-+int dev_sector_size_from_id(dev_t id, unsigned int *size)
-+{
-+	char buf[20];
-+	int fd;
-+
-+	sprintf(buf, "%d:%d", major(id), minor(id));
-+	fd = dev_open(buf, O_RDONLY);
-+	if (fd < 0)
-+		return 0;
-+	if (get_dev_sector_size(fd, NULL, size)) {
-+		close(fd);
-+		return 1;
-+	}
-+	close(fd);
-+	return 0;
-+}
-+
- struct supertype *dup_super(struct supertype *orig)
- {
- 	struct supertype *st;
-@@ -2129,12 +2146,24 @@ struct mdinfo *container_choose_spares(struct supertype *st,
- 		if (d->disk.state == 0) {
- 			/* check if size is acceptable */
- 			unsigned long long dev_size;
-+			unsigned int dev_sector_size;
-+			int size_valid = 0;
-+			int sector_size_valid = 0;
-+
- 			dev_t dev = makedev(d->disk.major,d->disk.minor);
- 
- 			if (!criteria->min_size ||
- 			   (dev_size_from_id(dev,  &dev_size) &&
- 			    dev_size >= criteria->min_size))
--				found = 1;
-+				size_valid = 1;
-+
-+			if (!criteria->sector_size ||
-+			    (dev_sector_size_from_id(dev, &dev_sector_size) &&
-+			     criteria->sector_size == dev_sector_size))
-+				sector_size_valid = 1;
-+
-+			found = size_valid && sector_size_valid;
-+
- 			/* check if domain matches */
- 			if (found && domlist) {
- 				struct dev_policy *pol = devid_policy(dev);
--- 
-1.8.3.1
+Decent SAS drvies do it routinely *and* they tell you in the SMART data 
+how long it has been since the last scrub, how long it is until the next 
+scrub and how many errors it has silently corrected over the drive life. 
+You get what you pay for.
+
+Brad
 
