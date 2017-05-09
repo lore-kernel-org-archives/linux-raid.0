@@ -1,53 +1,38 @@
-From: Nix <nix@esperi.org.uk>
+From: Reindl Harald <h.reindl@thelounge.net>
 Subject: Re: Fault tolerance with badblocks
-Date: Tue, 09 May 2017 11:40:54 +0100
-Message-ID: <87wp9q5n49.fsf@esperi.org.uk>
+Date: Tue, 9 May 2017 12:50:53 +0200
+Message-ID: <e03e2dd0-7283-314d-b5d7-b7ffc5a9c039@thelounge.net>
 References: <03294ec0-2df0-8c1c-dd98-2e9e5efb6f4f@hale.ee>
-        <590B3039.3060000@youngman.org.uk>
-        <84184eb3-52c4-e7ad-cd5b-5021b5cf47ee@hale.ee>
-        <d2b25ec0-c401-07df-2231-a37117878589@youngman.org.uk>
-        <bd917050-cf73-6922-bb20-c5ccf02ba51c@hale.ee>
-        <590DC905.60207@youngman.org.uk> <87h90v8kt3.fsf@esperi.org.uk>
-        <591171BD.3060707@hesbynett.no> <87efvy73n9.fsf@esperi.org.uk>
-        <9306fd68-4eeb-f487-a500-27050050af98@fnarfbargle.com>
+ <590B3039.3060000@youngman.org.uk>
+ <84184eb3-52c4-e7ad-cd5b-5021b5cf47ee@hale.ee>
+ <d2b25ec0-c401-07df-2231-a37117878589@youngman.org.uk>
+ <bd917050-cf73-6922-bb20-c5ccf02ba51c@hale.ee>
+ <590DC905.60207@youngman.org.uk> <87h90v8kt3.fsf@esperi.org.uk>
+ <1533bba8-41cb-2c50-b28a-52786e463072@turmel.org>
+ <87vapb6s9h.fsf@esperi.org.uk>
+ <e2196f02-2b94-8afb-06a0-9695d441c890@turmel.org>
+ <871sry728q.fsf@esperi.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <9306fd68-4eeb-f487-a500-27050050af98@fnarfbargle.com> (Brad
-        Campbell's message of "Tue, 9 May 2017 18:28:20 +0800")
+In-Reply-To: <871sry728q.fsf@esperi.org.uk>
+Content-Language: de-CH
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <lists2009@fnarfbargle.com>
-Cc: David Brown <david.brown@hesbynett.no>, Wols Lists <antlists@youngman.org.uk>, "Ravi (Tom) Hale" <ravi@hale.ee>, linux-raid@vger.kernel.org
+To: Nix <nix@esperi.org.uk>, Phil Turmel <philip@turmel.org>
+Cc: Wols Lists <antlists@youngman.org.uk>, "Ravi (Tom) Hale" <ravi@hale.ee>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 9 May 2017, Brad Campbell stated:
 
-> On 09/05/17 17:58, Nix wrote:
->>  md doesn't repair the corruption, even though on RAID-6 it could.
->
-> Patches are *always* welcome.
 
-Oh good. I might well look at that.
+Am 09.05.2017 um 12:28 schrieb Nix:
+> Honestly, scrubs are looking less and less desirable the more I talk
+> about them. Massive worry inducers that don't actually spot problems in
+> any meaningful sense (not even at the level of "there is a problem on
+> this disk", just "there is a problem on this array")
 
->> but one wonders how many disks actually *do* this. It's hard to
->> tell because sector sparing is so quiet: it's not always even reflected
->> in the SMART data, AIUI.
->
-> Decent SAS drvies do it routinely *and* they tell you in the SMART
-> data how long it has been since the last scrub, how long it is until
-> the next scrub and how many errors it has silently corrected over the
-> drive life. You get what you pay for.
+that is your opinion
 
-Enterprise SATA drives appear similar except that they don't do the
-scrubbing automatically: you have to trigger a SMART self-test. (I'm
-wondering if that's enough, and perhaps I can ignore RAID scrubbing
-entirely, except that if something *does* go wrong I won't know.)
-
-Of course I haven't yet owned a drive that has ever deigned to give a
-nonzero sector-sparing value in any of its SMART info, and I've been
-using allegedly-enterprise drives (first SCSI, then SATA) for about
-fifteen years now. I've had disk failures without warning, and
-non-failed disks with both read and write errors that would not go away,
-but that SMART reallocation value just stayed stuck at zero through all
-of it. I'm wondering if smartctl is even reading the right field, but
-it's hard to imagine how it couldn't be...
+my expierience over years using md-arrays is that *everytime* smartd 
+triggered a alert mail that a drive will fail soon it happened while the 
+scrub was running and so you can replace drives as soon as possible
