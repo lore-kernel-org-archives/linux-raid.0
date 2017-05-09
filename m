@@ -1,61 +1,45 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH] IMSM: Correct --examine output for 4k disks
-Date: Tue, 9 May 2017 12:04:27 -0400
-Message-ID: <1aca3793-3786-00dc-910e-920a21a1108b@gmail.com>
-References: <1494331407-2049-1-git-send-email-mariusz.dabrowski@intel.com>
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: Fault tolerance with badblocks
+Date: Tue, 9 May 2017 10:05:33 -0600
+Message-ID: <CAJCQCtQyLjcut=DvPz1QeL8axRMrewkFm3JAOKB66uqWMRHePg@mail.gmail.com>
+References: <03294ec0-2df0-8c1c-dd98-2e9e5efb6f4f@hale.ee> <590B3039.3060000@youngman.org.uk>
+ <84184eb3-52c4-e7ad-cd5b-5021b5cf47ee@hale.ee> <d2b25ec0-c401-07df-2231-a37117878589@youngman.org.uk>
+ <bd917050-cf73-6922-bb20-c5ccf02ba51c@hale.ee> <590DC905.60207@youngman.org.uk>
+ <87h90v8kt3.fsf@esperi.org.uk> <1533bba8-41cb-2c50-b28a-52786e463072@turmel.org>
+ <87vapb6s9h.fsf@esperi.org.uk> <c5307694-034c-b610-8a27-3bf272cac380@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1494331407-2049-1-git-send-email-mariusz.dabrowski@intel.com>
-Content-Language: en-US
+In-Reply-To: <c5307694-034c-b610-8a27-3bf272cac380@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mariusz Dabrowski <mariusz.dabrowski@intel.com>, linux-raid@vger.kernel.org
-Cc: Maksymilian Kunt <maksymilian.kunt@intel.com>
+To: Anthony Youngman <antlists@youngman.org.uk>
+Cc: Nix <nix@esperi.org.uk>, Phil Turmel <philip@turmel.org>, "Ravi (Tom) Hale" <ravi@hale.ee>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 05/09/2017 08:03 AM, Mariusz Dabrowski wrote:
-> From: Maksymilian Kunt <maksymilian.kunt@intel.com>
-> 
-> "Array Size" and "Per Dev Size" are incorrect for disks with sector size
-> different than 512B.
-> 
-> Calculate "Array Size" and "Per Dev Size" based on sector size. Additionally
-> print "Sector Size".
-> 
-> Signed-off-by: Maksymilian Kunt <maksymilian.kunt@intel.com>
-> Signed-off-by: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
-> ---
->   super-intel.c | 7 +++++--
->   1 file changed, 5 insertions(+), 2 deletions(-)
+On Mon, May 8, 2017 at 2:27 PM, Anthony Youngman
+<antlists@youngman.org.uk> wrote:
 
-I am a little wary of this change as it changes the order of the output. 
-Does anyone have tools parsing this information which could break from this?
 
-Jes
+> Yes you have saved a sector sparing. Note that a consumer 3TB drive can
+> return, on average, one error every time it's read from end to end 3 times,
+> and still be considered "within spec" ie "not faulty" by the manufacturer.
 
-> diff --git a/super-intel.c b/super-intel.c
-> index e13c940..147a70c 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -1473,13 +1473,16 @@ static void print_imsm_dev(struct intel_super *super,
->   		       ord & IMSM_ORD_REBUILD ? " (out-of-sync)" : "");
->   	} else
->   		printf("      This Slot : ?\n");
-> +	printf("    Sector Size : %u\n", super->sector_size);
->   	sz = __le32_to_cpu(dev->size_high);
->   	sz <<= 32;
->   	sz += __le32_to_cpu(dev->size_low);
-> -	printf("     Array Size : %llu%s\n", (unsigned long long)sz,
-> +	printf("     Array Size : %llu%s\n",
-> +		   (unsigned long long)sz * 512 / super->sector_size,
->   	       human_size(sz * 512));
->   	sz = blocks_per_member(map);
-> -	printf("   Per Dev Size : %llu%s\n", (unsigned long long)sz,
-> +	printf("   Per Dev Size : %llu%s\n",
-> +		   (unsigned long long)sz * 512 / super->sector_size,
->   	       human_size(sz * 512));
->   	printf("  Sector Offset : %llu\n",
->   		pba_of_lba0(map));
-> 
+All specs say "less than" which means it's a maximum permissible rate,
+not an average. We have no idea what the minimum error rate is - we
+being consumers. It's possible high volume users (e.g. Backblaze) have
+data on this by now.
 
+
+
+> And that's a *brand* *new* drive. That's why building a large array using
+> consumer drives is a stupid idea - 4 x 3TB drives and a *within* *spec*
+> array must expect to handle at least one error every scrub.
+
+The requirement for any large array is quickly abandoning reattempted
+reads in favor of reporting a read error. That's the main reason why
+consumer drives are a bad idea, is that it can hang user space waiting
+on the long recovery of a drive.
+
+
+-- 
+Chris Murphy
