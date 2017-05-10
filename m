@@ -1,47 +1,27 @@
-From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: Resync of the degraded RAID10 array
-Date: Wed, 10 May 2017 16:00:44 +0200
-Message-ID: <20170510140044.GA23565@proton.igk.intel.com>
+From: "hch@lst.de" <hch@lst.de>
+Subject: Re: [PATCH 25/27] block: remove the discard_zeroes_data flag
+Date: Wed, 10 May 2017 16:06:27 +0200
+Message-ID: <20170510140627.GA23759@lst.de>
+References: <20170405172125.22600-1-hch@lst.de> <20170405172125.22600-26-hch@lst.de> <1493671519.2665.15.camel@sandisk.com> <1493707425.23202.77.camel@haakon3.risingtidesystems.com> <1493709373.23202.79.camel@haakon3.risingtidesystems.com> <20170502072328.GA11522@lst.de> <1493782395.23202.84.camel@haakon3.risingtidesystems.com> <20170507092209.GA27370@lst.de> <1494312374.16894.36.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+In-Reply-To: <1494312374.16894.36.camel@haakon3.risingtidesystems.com>
+Sender: linux-block-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: "hch@lst.de" <hch@lst.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>, "agk@redhat.com" <agk@redhat.com>, "lars.ellenberg@linbit.com" <lars.ellenberg@linbit.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "philipp.reisner@linbit.com" <philipp.reisner@linbit.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "shli@kernel.org" <shli@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi all,
+On Mon, May 08, 2017 at 11:46:14PM -0700, Nicholas A. Bellinger wrote:
+> That said, simply propagating up q->limits.max_write_zeroes_sectors as
+> dev_attrib->unmap_zeroes_data following existing code still looks like
+> the right thing to do.
 
-I wonder what should be the resync behaviour for the degraded RAID10 array.
+It is not.  Martin has decoupled write same/zeroes support from discard
+support.  Any device will claim to support it initially, and we'll
+only clear the flag if a Write Same command fails.
 
-cat /proc/mdstat
-Personalities : [raid10] 
-md127 : active raid10 nvme3n1[3] nvme2n1[2] nvme1n1[1] nvme0n1[0]
-      2097152 blocks super 1.2 512K chunks 2 near-copies [4/4] [UUUU]
-	  [==>..................]  resync = 11.0% (232704/2097152) finish=0.1min speed=232704K/sec
-
-mdadm -If nvme3n1
-mdadm: set nvme3n1 faulty in md127
-mdadm: hot removed nvme3n1 from md127
-
-cat /proc/mdstat
-Personalities : [raid10] 
-md127 : active (auto-read-only) raid10 nvme2n1[2] nvme1n1[1] nvme0n1[0]
-      2097152 blocks super 1.2 512K chunks 2 near-copies [4/3] [UUU_]
-	  resync=PENDING
-
-cat /sys/block/md127/md/resync_start
-465408
-
-At the moment it stops the resync. When new disk is added to the array, the
-recovery starts and completes, however no resync for the first 2 disks takes
-place and array is reported as clean when it's really out-of-sync.
-
-My kernel version is 4.11.
-
-What is the expected behaviour? Shall resync continue on 3-disk RAID10 or
-shall it be restarted when recovery completes?
-
-Regards,
-
-Tomek
+So even if LBPRZ is not set you can trivially get into a situation
+where discard is supported through UNMAP, and you'll incorrectly
+set LBPRZ and will cause data corruption.
