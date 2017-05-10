@@ -1,178 +1,145 @@
-From: Mimi Zohar <zohar@linux.vnet.ibm.com>
-Subject: Re: [RFC 09/10] ima: move to generic async completion
-Date: Wed, 10 May 2017 17:26:08 -0400
-Message-ID: <1494451568.3006.30.camel@linux.vnet.ibm.com>
-References: <1494075602-5061-1-git-send-email-gilad@benyossef.com>
-         <1494075602-5061-10-git-send-email-gilad@benyossef.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: Re: [PATCH v4 2/2] md/r5cache: gracefully handle journal device
+ errors for writeback mode
+Date: Wed, 10 May 2017 21:45:05 +0000
+Message-ID: <72F7A8AB-A6BD-4C52-B8AF-11C5E71CFEF4@fb.com>
+References: <20170509003925.3480693-1-songliubraving@fb.com>
+ <20170509003925.3480693-2-songliubraving@fb.com>
+ <20170510170043.4v4ijoxmfty6hndf@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-security-module-owner@vger.kernel.org>
-In-Reply-To: <1494075602-5061-10-git-send-email-gilad@benyossef.com>
-Sender: owner-linux-security-module@vger.kernel.org
-To: Gilad Ben-Yossef <gilad@benyossef.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>
-Cc: Ofir Drang <ofir.drang@arm.com>, Gilad Ben-Yossef <gilad.benyossef@arm.com>, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, keyrings@vger.kernel.org, linux-raid@vger.kernel.org, linux-cifs@vger.kernel.org, samba-technical@lists.samba.org, linux-fsdevel@vger.kernel.org, linux-ima-devel@lists.sourceforge.net, linux-ima-user@lists.sourceforge.net, linux-security-module@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170510170043.4v4ijoxmfty6hndf@kernel.org>
+Content-Language: en-US
+Content-ID: <FE503093F40DCD44A15203E399F775AC@namprd15.prod.outlook.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Shaohua Li <shli@fb.com>, "neilb@suse.com" <neilb@suse.com>, Kernel Team <Kernel-team@fb.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "hch@infradead.org" <hch@infradead.org>, "jes.sorensen@gmail.com" <jes.sorensen@gmail.com>
 List-Id: linux-raid.ids
 
-On Sat, 2017-05-06 at 15:59 +0300, Gilad Ben-Yossef wrote:
-> ima starts several async. crypto ops and  waits for their completions.
-> Move it over to generic code doing the same.
-> 
-> Signed-off-by: Gilad Ben-Yossef <gilad@benyossef.com>
 
-Acked-by: Mimi Zohar <zohar@linux.vnet.ibm.com>
+> On May 10, 2017, at 10:01 AM, Shaohua Li <shli@kernel.org> wrote:
+>=20
+> On Mon, May 08, 2017 at 05:39:25PM -0700, Song Liu wrote:
+>> For the raid456 with writeback cache, when journal device failed during
+>> normal operation, it is still possible to persist all data, as all
+>> pending data is still in stripe cache. However, it is necessary to handl=
+e
+>> journal failure gracefully.
+>>=20
+>> During journal failures, this patch makes the follow changes to land dat=
+a
+>> in cache to raid disks gracefully:
+>>=20
+>> 1. In handle_stripe(), allow stripes with data in journal (s.injournal >=
+ 0)
+>>   to make progress;
+>> 2. In delay_towrite(), only process data in the cache (skip dev->towrite=
+);
+>> 3. In __get_priority_stripe(), set try_loprio to true, so no stripe stuc=
+k
+>>   in loprio_list
+>=20
+> Applied the first patch. For this patch, I don't have a clear picture abo=
+ut
+> what you are trying to do. Please describe the steps we are doing to do a=
+fter
+> journal failure.
 
-> ---
->  security/integrity/ima/ima_crypto.c | 56 +++++++++++--------------------------
->  1 file changed, 17 insertions(+), 39 deletions(-)
-> 
-> diff --git a/security/integrity/ima/ima_crypto.c b/security/integrity/ima/ima_crypto.c
-> index 802d5d2..0e4db1fe 100644
-> --- a/security/integrity/ima/ima_crypto.c
-> +++ b/security/integrity/ima/ima_crypto.c
-> @@ -27,11 +27,6 @@
-> 
->  #include "ima.h"
-> 
-> -struct ahash_completion {
-> -	struct completion completion;
-> -	int err;
-> -};
-> -
->  /* minimum file size for ahash use */
->  static unsigned long ima_ahash_minsize;
->  module_param_named(ahash_minsize, ima_ahash_minsize, ulong, 0644);
-> @@ -196,30 +191,13 @@ static void ima_free_atfm(struct crypto_ahash *tfm)
->  		crypto_free_ahash(tfm);
->  }
-> 
-> -static void ahash_complete(struct crypto_async_request *req, int err)
-> +static inline int ahash_wait(int err, struct crypto_wait *wait)
->  {
-> -	struct ahash_completion *res = req->data;
-> 
-> -	if (err == -EINPROGRESS)
-> -		return;
-> -	res->err = err;
-> -	complete(&res->completion);
-> -}
-> +	err = crypto_wait_req(err, wait);
-> 
-> -static int ahash_wait(int err, struct ahash_completion *res)
-> -{
-> -	switch (err) {
-> -	case 0:
-> -		break;
-> -	case -EINPROGRESS:
-> -	case -EBUSY:
-> -		wait_for_completion(&res->completion);
-> -		reinit_completion(&res->completion);
-> -		err = res->err;
-> -		/* fall through */
-> -	default:
-> +	if (err)
->  		pr_crit_ratelimited("ahash calculation failed: err: %d\n", err);
-> -	}
-> 
->  	return err;
->  }
-> @@ -233,7 +211,7 @@ static int ima_calc_file_hash_atfm(struct file *file,
->  	int rc, read = 0, rbuf_len, active = 0, ahash_rc = 0;
->  	struct ahash_request *req;
->  	struct scatterlist sg[1];
-> -	struct ahash_completion res;
-> +	struct crypto_wait wait;
->  	size_t rbuf_size[2];
-> 
->  	hash->length = crypto_ahash_digestsize(tfm);
-> @@ -242,12 +220,12 @@ static int ima_calc_file_hash_atfm(struct file *file,
->  	if (!req)
->  		return -ENOMEM;
-> 
-> -	init_completion(&res.completion);
-> +	crypto_init_wait(&wait);
->  	ahash_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG |
->  				   CRYPTO_TFM_REQ_MAY_SLEEP,
-> -				   ahash_complete, &res);
-> +				   crypto_req_done, &wait);
-> 
-> -	rc = ahash_wait(crypto_ahash_init(req), &res);
-> +	rc = ahash_wait(crypto_ahash_init(req), &wait);
->  	if (rc)
->  		goto out1;
-> 
-> @@ -288,7 +266,7 @@ static int ima_calc_file_hash_atfm(struct file *file,
->  			 * read/request, wait for the completion of the
->  			 * previous ahash_update() request.
->  			 */
-> -			rc = ahash_wait(ahash_rc, &res);
-> +			rc = ahash_wait(ahash_rc, &wait);
->  			if (rc)
->  				goto out3;
->  		}
-> @@ -304,7 +282,7 @@ static int ima_calc_file_hash_atfm(struct file *file,
->  			 * read/request, wait for the completion of the
->  			 * previous ahash_update() request.
->  			 */
-> -			rc = ahash_wait(ahash_rc, &res);
-> +			rc = ahash_wait(ahash_rc, &wait);
->  			if (rc)
->  				goto out3;
->  		}
-> @@ -318,7 +296,7 @@ static int ima_calc_file_hash_atfm(struct file *file,
->  			active = !active; /* swap buffers, if we use two */
->  	}
->  	/* wait for the last update request to complete */
-> -	rc = ahash_wait(ahash_rc, &res);
-> +	rc = ahash_wait(ahash_rc, &wait);
->  out3:
->  	if (read)
->  		file->f_mode &= ~FMODE_READ;
-> @@ -327,7 +305,7 @@ static int ima_calc_file_hash_atfm(struct file *file,
->  out2:
->  	if (!rc) {
->  		ahash_request_set_crypt(req, NULL, hash->digest, 0);
-> -		rc = ahash_wait(crypto_ahash_final(req), &res);
-> +		rc = ahash_wait(crypto_ahash_final(req), &wait);
->  	}
->  out1:
->  	ahash_request_free(req);
-> @@ -527,7 +505,7 @@ static int calc_buffer_ahash_atfm(const void *buf, loff_t len,
->  {
->  	struct ahash_request *req;
->  	struct scatterlist sg;
-> -	struct ahash_completion res;
-> +	struct crypto_wait wait;
->  	int rc, ahash_rc = 0;
-> 
->  	hash->length = crypto_ahash_digestsize(tfm);
-> @@ -536,12 +514,12 @@ static int calc_buffer_ahash_atfm(const void *buf, loff_t len,
->  	if (!req)
->  		return -ENOMEM;
-> 
-> -	init_completion(&res.completion);
-> +	crypto_init_wait(&wait);
->  	ahash_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG |
->  				   CRYPTO_TFM_REQ_MAY_SLEEP,
-> -				   ahash_complete, &res);
-> +				   crypto_req_done, &wait);
-> 
-> -	rc = ahash_wait(crypto_ahash_init(req), &res);
-> +	rc = ahash_wait(crypto_ahash_init(req), &wait);
->  	if (rc)
->  		goto out;
-> 
-> @@ -551,10 +529,10 @@ static int calc_buffer_ahash_atfm(const void *buf, loff_t len,
->  	ahash_rc = crypto_ahash_update(req);
-> 
->  	/* wait for the update request to complete */
-> -	rc = ahash_wait(ahash_rc, &res);
-> +	rc = ahash_wait(ahash_rc, &wait);
->  	if (!rc) {
->  		ahash_request_set_crypt(req, NULL, hash->digest, 0);
-> -		rc = ahash_wait(crypto_ahash_final(req), &res);
-> +		rc = ahash_wait(crypto_ahash_final(req), &wait);
->  	}
->  out:
->  	ahash_request_free(req);
+I will add more description to the next version.=20
+
+>=20
+>> Signed-off-by: Song Liu <songliubraving@fb.com>
+>> ---
+>> drivers/md/raid5-cache.c | 13 ++++++++++---
+>> drivers/md/raid5-log.h   |  3 ++-
+>> drivers/md/raid5.c       | 29 +++++++++++++++++++++++------
+>> 3 files changed, 35 insertions(+), 10 deletions(-)
+>>=20
+>> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+>> index dc1dba6..e6032f6 100644
+>> --- a/drivers/md/raid5-cache.c
+>> +++ b/drivers/md/raid5-cache.c
+>> @@ -24,6 +24,7 @@
+>> #include "md.h"
+>> #include "raid5.h"
+>> #include "bitmap.h"
+>> +#include "raid5-log.h"
+>>=20
+>> /*
+>>  * metadata/data stored in disk with 4k size unit (a block) regardless
+>> @@ -679,6 +680,7 @@ static void r5c_disable_writeback_async(struct work_=
+struct *work)
+>> 		return;
+>> 	pr_info("md/raid:%s: Disabling writeback cache for degraded array.\n",
+>> 		mdname(mddev));
+>> +	md_update_sb(mddev, 1);
+>=20
+> Why this? And md_update_sb must be called within mddev->reconfig_mutex lo=
+cked.
+
+This is to avoid skipping in handle_stripe():
+
+        if (s.handle_bad_blocks ||
+            test_bit(MD_SB_CHANGE_PENDING, &conf->mddev->sb_flags)) {
+                set_bit(STRIPE_HANDLE, &sh->state);
+                goto finish;
+        }
+
+I haven't got a better idea than calling md_update_sb() somewhere. It is al=
+so tricky
+to lock mddev->reconfigured_mutex here, due to potential deadlocking with=20
+mddev->open_mutex.=20
+
+Do you have suggestions on this?
+
+
+>> 	mddev_suspend(mddev);
+>> 	log->r5c_journal_mode =3D R5C_JOURNAL_MODE_WRITE_THROUGH;
+>> 	mddev_resume(mddev);
+>> @@ -1557,6 +1559,8 @@ void r5l_wake_reclaim(struct r5l_log *log, sector_=
+t space)
+>> void r5l_quiesce(struct r5l_log *log, int state)
+>> {
+>> 	struct mddev *mddev;
+>> +	struct r5conf *conf;
+>> +
+>> 	if (!log || state =3D=3D 2)
+>> 		return;
+>> 	if (state =3D=3D 0)
+>> @@ -1564,10 +1568,12 @@ void r5l_quiesce(struct r5l_log *log, int state)
+>> 	else if (state =3D=3D 1) {
+>> 		/* make sure r5l_write_super_and_discard_space exits */
+>> 		mddev =3D log->rdev->mddev;
+>> +		conf =3D mddev->private;
+>> 		wake_up(&mddev->sb_wait);
+>> 		kthread_park(log->reclaim_thread->tsk);
+>> 		r5l_wake_reclaim(log, MaxSector);
+>> -		r5l_do_reclaim(log);
+>> +		if (!r5l_log_disk_error(conf))
+>> +			r5l_do_reclaim(log);
+>=20
+> I think r5c_disable_writeback_async() will call into this, so we flush al=
+l
+> stripe cache out to raid disks, why skip the reclaim?
+>=20
+
+r5l_do_reclaim() reclaims log space with 2 steps:
+1. clear all io_unit lists (flushing_ios, etc.) by waking up mddev->thread.=
+=20
+2. update log_tail in the journal device, and issue discard to journal devi=
+ce.=20
+
+When we are handling log failures in r5c_disable_writeback_async(), we are=
+=20
+flushing the cache, so it is not necessary to wake up mddev->thread. Also,=
+=20
+with log device error, it is not necessary update log_tail or issue discard=
+.=20
+
+Therefore, r5l_do_reclaim is not necessary in log disk errors.=20
+
+Thanks,
+Song
 
