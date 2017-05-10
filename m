@@ -1,15 +1,15 @@
 From: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 05/16] uuid: add the v1 layout to uuid_t
-Date: Wed, 10 May 2017 19:21:46 +0100
-Message-ID: <2650.1494440506@warthog.procyon.org.uk>
-References: <20170510180214.16852-6-hch@lst.de>
+Subject: Re: [PATCH 06/16] afs: switch to use uuid_t and uuid_gen
+Date: Wed, 10 May 2017 19:22:57 +0100
+Message-ID: <2704.1494440577@warthog.procyon.org.uk>
+References: <20170510180214.16852-7-hch@lst.de>
  <20170510180214.16852-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <20170510180214.16852-6-hch-jcswGhMUV9g@public.gmane.org>
-Content-ID: <2633.1494440506.1-S6HVgzuS8uM4Awkfq6JHfwNdhmdF6hFW@public.gmane.org>
+In-Reply-To: <20170510180214.16852-7-hch-jcswGhMUV9g@public.gmane.org>
+Content-ID: <2703.1494440577.1-S6HVgzuS8uM4Awkfq6JHfwNdhmdF6hFW@public.gmane.org>
 List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
  <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
 List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
@@ -25,9 +25,6 @@ List-Id: linux-raid.ids
 
 Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org> wrote:
 
-> Turn the content of uuid_t into a union and add the fields for the v1
-> interpretation to it.
-> 
 > Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 
 Reviewed-by: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
