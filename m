@@ -1,59 +1,75 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH] IMSM: Correct --examine output for 4k disks
-Date: Wed, 10 May 2017 11:18:18 -0400
-Message-ID: <e27a148f-f0bf-8713-ceca-f37b4fb2fb88@gmail.com>
-References: <1494331407-2049-1-git-send-email-mariusz.dabrowski@intel.com>
- <1aca3793-3786-00dc-910e-920a21a1108b@gmail.com>
- <5e8e5353-e42d-0ea0-1928-7d4608a884b8@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: shli@kernel.org
+Subject: [PATCH] md:raid1/10: avoid unnecessary locking
+Date: Wed, 10 May 2017 08:52:28 -0700
+Message-ID: <1946dca4cbeb08911e4fcc155d1b2ffa8bc6c0a2.1494431492.git.shli@fb.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5e8e5353-e42d-0ea0-1928-7d4608a884b8@intel.com>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Mariusz Dabrowski <mariusz.dabrowski@intel.com>, linux-raid@vger.kernel.org
-Cc: Maksymilian Kunt <maksymilian.kunt@intel.com>
+To: linux-raid@vger.kernel.org
+Cc: Shaohua Li <shli@fb.com>, NeilBrown <neilb@suse.com>
 List-Id: linux-raid.ids
 
-On 05/10/2017 04:43 AM, Mariusz Dabrowski wrote:
-> On 05/09/2017 06:04 PM, Jes Sorensen wrote:
->  > On 05/09/2017 08:03 AM, Mariusz Dabrowski wrote:
->  >> From: Maksymilian Kunt <maksymilian.kunt@intel.com>
->  >>
->  >> "Array Size" and "Per Dev Size" are incorrect for disks with sector 
-> size
->  >> different than 512B.
->  >>
->  >> Calculate "Array Size" and "Per Dev Size" based on sector size. 
-> Additionally
->  >> print "Sector Size".
->  >>
->  >> Signed-off-by: Maksymilian Kunt <maksymilian.kunt@intel.com>
->  >> Signed-off-by: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
->  >> ---
->  >>   super-intel.c | 7 +++++--
->  >>   1 file changed, 5 insertions(+), 2 deletions(-)
->  >
->  > I am a little wary of this change as it changes the order of the 
-> output. Does
->  > anyone have tools parsing this information which could break from this?
->  >
->  > Jes
->  >
-> 
-> Hi Jes,
-> 
-> some time ago we have added "RWH Policy" field to --examine output and 
-> we haven't heard any complaints about that change.
-> Also it is better to parse output from --export option which is 
-> unchanged in this patch.
+From: Shaohua Li <shli@fb.com>
 
-Hi Mariusz,
+If we add bios to block plugging list, locking is unnecessry, since the block
+unplug is guaranteed not to run at that time.
 
-That is correct, however the policy stuff was added to the end of the 
-output, it didn't change the existing part. I am a little mixed on this 
-one, but I do agree --export should be the recommended use case for scripts.
+Cc: NeilBrown <neilb@suse.com>
+Signed-off-by: Shaohua Li <shli@fb.com>
+---
+ drivers/md/raid1.c  | 7 +++----
+ drivers/md/raid10.c | 7 +++----
+ 2 files changed, 6 insertions(+), 8 deletions(-)
 
-Cheers,
-Jes
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 7c1f73398800..a17ed6218d51 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1529,17 +1529,16 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 			plug = container_of(cb, struct raid1_plug_cb, cb);
+ 		else
+ 			plug = NULL;
+-		spin_lock_irqsave(&conf->device_lock, flags);
+ 		if (plug) {
+ 			bio_list_add(&plug->pending, mbio);
+ 			plug->pending_cnt++;
+ 		} else {
++			spin_lock_irqsave(&conf->device_lock, flags);
+ 			bio_list_add(&conf->pending_bio_list, mbio);
+ 			conf->pending_count++;
+-		}
+-		spin_unlock_irqrestore(&conf->device_lock, flags);
+-		if (!plug)
++			spin_unlock_irqrestore(&conf->device_lock, flags);
+ 			md_wakeup_thread(mddev->thread);
++		}
+ 	}
+ 
+ 	r1_bio_write_done(r1_bio);
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 6b86a0032cf8..4343d7ff9916 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1282,17 +1282,16 @@ static void raid10_write_one_disk(struct mddev *mddev, struct r10bio *r10_bio,
+ 		plug = container_of(cb, struct raid10_plug_cb, cb);
+ 	else
+ 		plug = NULL;
+-	spin_lock_irqsave(&conf->device_lock, flags);
+ 	if (plug) {
+ 		bio_list_add(&plug->pending, mbio);
+ 		plug->pending_cnt++;
+ 	} else {
++		spin_lock_irqsave(&conf->device_lock, flags);
+ 		bio_list_add(&conf->pending_bio_list, mbio);
+ 		conf->pending_count++;
+-	}
+-	spin_unlock_irqrestore(&conf->device_lock, flags);
+-	if (!plug)
++		spin_unlock_irqrestore(&conf->device_lock, flags);
+ 		md_wakeup_thread(mddev->thread);
++	}
+ }
+ 
+ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
+-- 
+2.11.0
+
