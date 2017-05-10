@@ -1,48 +1,29 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: RAID creation resync behaviors
-Date: Wed, 10 May 2017 10:30:29 -0700
-Message-ID: <20170510173029.7cumdgokh6viebgq@kernel.org>
-References: <20170503202748.7r243wj5h4polt6y@kernel.org>
- <87inlhpgzu.fsf@notabene.neil.brown.name>
- <20170504020452.kcmjgxnk7zsx7kdx@kernel.org>
- <1fca5ff4-358a-e0cf-d1a4-fc33ecdcbd62@gmail.com>
- <87o9v1n56m.fsf@notabene.neil.brown.name>
- <76407cb7-437b-142e-e74b-ddd56f3f4ddb@gmail.com>
- <yq1k25prbd4.fsf@oracle.com>
- <08ba08b3-0e8c-c064-6b35-9084545e2c22@gmail.com>
- <yq1bmr1rasn.fsf@oracle.com>
- <f73c7524-5d35-6104-11b1-2c658b43c68d@gmail.com>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: cleanup UUID types
+Date: Wed, 10 May 2017 20:01:58 +0200
+Message-ID: <20170510180214.16852-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <f73c7524-5d35-6104-11b1-2c658b43c68d@gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <jes.sorensen@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org, neilb@suse.de
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-On Tue, May 09, 2017 at 05:22:57PM -0400, Jes Sorensen wrote:
-> On 05/09/2017 05:16 PM, Martin K. Petersen wrote:
-> > 
-> > Jes,
-> > 
-> > > This is fine within the kernel, however it is not overly useful for
-> > > mdadm to determine which strategy to apply when syncing devices.
-> > 
-> > BLKZEROOUT
-> > 
-> 
-> Trying to read the code, as this ioctl doesn't seem to be documented
-> anywhere I can find.... it looks like this ioctl zeroes out a device.
-> 
-> It doesn't help me obtain the information I need to make a decision in mdadm
-> as whether to overwrite all or compare+write when resyncing a RAID array.
+Hi all,
 
-The best way I can think is if we find the disks are SSD, trim the disks, and
-read some random places. If all return 0, the guess is the SSD returns 0 after
-trim, so do compare-write resync otherwise overwrite. Surely this needs extra
-mdadm option to enable. We can only reliably detect a SSD, others lie.
-
-Thanks,
-Shaohua
+this series, which is a combined effort from Amir, Andy and me introduces
+new uuid_t and guid_t type names that are less confusing than the existing
+types, adds new helpers for them and starts switching the fs code over to
+it.  Andy has additional patches on top to convert many of the users
+that use char arrays for UUIDs and GUIDs to these (or rather a predecessor
+for now until updated).
