@@ -1,34 +1,50 @@
-From: Roman Mamedov <rm@romanrm.net>
-Subject: Re: Network based (iSCSI) RAID1 setup
-Date: Wed, 10 May 2017 14:03:23 +0500
-Message-ID: <20170510140323.256edb95@natsu>
-References: <dc2c3583-14da-435b-0177-8cee749a1cd0@assyoma.it>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] dm ioctl: make dm_open and dm_release release
+Date: Wed, 10 May 2017 10:18:21 +0100
+Message-ID: <20170510091821.17995-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <dc2c3583-14da-435b-0177-8cee749a1cd0@assyoma.it>
-Sender: linux-raid-owner@vger.kernel.org
-To: Gionatan Danti <g.danti@assyoma.it>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 10 May 2017 10:42:54 +0200
-Gionatan Danti <g.danti@assyoma.it> wrote:
+From: Colin Ian King <colin.king@canonical.com>
 
-> even if in my preliminary tests this seems to work 
-> reasonably well, do you feel that such solution can be used for 
-> production workloads? Or something with a more specific focus, as DRBD, 
-> remains the preferred solution?
+Making dm_open and dm_release static fixes the sparse warnings:
 
-First thing that comes to mind, you should look into setting the remote device
-as --write-mostly, so that the local one is preferred for all reads (as long as
-it's up).
+warning: symbol 'dm_open' was not declared. Should it be static?
+warning: symbol 'dm_release' was not declared. Should it be static?
 
-But to be honest DRBD may indeed be a better solution for this use case, as
-it's built specifically with it in mind, and likely has all the various
-gotchas that might arise already thought about and handled properly.
+Fixes: ab2c6224f4c0c ("dm: a basic support for using the select or poll function")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/md/dm-ioctl.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/md/dm-ioctl.c b/drivers/md/dm-ioctl.c
+index 70dc5db90ef2..d45c68115d4c 100644
+--- a/drivers/md/dm-ioctl.c
++++ b/drivers/md/dm-ioctl.c
+@@ -1893,7 +1893,7 @@ static long dm_compat_ctl_ioctl(struct file *file, uint command, ulong u)
+ #define dm_compat_ctl_ioctl NULL
+ #endif
+ 
+-int dm_open(struct inode *inode, struct file *filp)
++static int dm_open(struct inode *inode, struct file *filp)
+ {
+ 	int r;
+ 	struct dm_file *priv;
+@@ -1911,7 +1911,7 @@ int dm_open(struct inode *inode, struct file *filp)
+ 	return 0;
+ }
+ 
+-int dm_release(struct inode *inode, struct file *filp)
++static int dm_release(struct inode *inode, struct file *filp)
+ {
+ 	kfree(filp->private_data);
+ 	return 0;
 -- 
-With respect,
-Roman
+2.11.0
