@@ -1,50 +1,36 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Fault tolerance with badblocks
-Date: Tue, 9 May 2017 21:06:49 -0600
-Message-ID: <CAJCQCtSYMcMpySc9YCaExXxhSTB5XgRRhuEM2Drh1qosTPqnsw@mail.gmail.com>
-References: <03294ec0-2df0-8c1c-dd98-2e9e5efb6f4f@hale.ee> <590B3039.3060000@youngman.org.uk>
- <84184eb3-52c4-e7ad-cd5b-5021b5cf47ee@hale.ee> <d2b25ec0-c401-07df-2231-a37117878589@youngman.org.uk>
- <bd917050-cf73-6922-bb20-c5ccf02ba51c@hale.ee> <590DC905.60207@youngman.org.uk>
- <87h90v8kt3.fsf@esperi.org.uk> <1533bba8-41cb-2c50-b28a-52786e463072@turmel.org>
- <87vapb6s9h.fsf@esperi.org.uk> <c5307694-034c-b610-8a27-3bf272cac380@youngman.org.uk>
- <CAJCQCtQyLjcut=DvPz1QeL8axRMrewkFm3JAOKB66uqWMRHePg@mail.gmail.com> <59120114.6080702@youngman.org.uk>
+From: Ram Ramesh <rramesh2400@gmail.com>
+Subject: How to delay mdadm assembly until all component drives are
+ recognized/ready?
+Date: Tue, 9 May 2017 22:13:57 -0500
+Message-ID: <243ef080-c32f-f423-3a98-af70194f994b@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <59120114.6080702@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: Chris Murphy <lists@colorremedies.com>, Nix <nix@esperi.org.uk>, Phil Turmel <philip@turmel.org>, "Ravi (Tom) Hale" <ravi@hale.ee>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, May 9, 2017 at 11:49 AM, Wols Lists <antlists@youngman.org.uk> wrote:
-> On 09/05/17 17:05, Chris Murphy wrote:
->>> Yes you have saved a sector sparing. Note that a consumer 3TB drive can
->>> > return, on average, one error every time it's read from end to end 3 times,
->>> > and still be considered "within spec" ie "not faulty" by the manufacturer.
->
->> All specs say "less than" which means it's a maximum permissible rate,
->> not an average. We have no idea what the minimum error rate is - we
->> being consumers. It's possible high volume users (e.g. Backblaze) have
->> data on this by now.
->>
-> In other words, an error rate that high is "acceptable".
+Today, I noticed that my RAID6 md0 was assembled in degraded state with 
+two drives in failed state after a pm-suspend and restart. Both of these 
+drives were attached toSAS9211-8I controller. The other drives are 
+attached to motherboard. I have not had this on a normal boot/reboot. 
+Also, in this particular case, mythtv recording was going on when 
+suspended and therefore as soon as resumed that used this md0.
 
-It's acceptable in that the manufacturer sells products with such
-specification and consumers buy them. It's totally voluntary. There
-are drives with one and two orders of magnitude lower unrecoverable
-error rates and some people buy them and pay extra to get that spec as
-a feature among other features.
+Upon inspection, it appears (I am not sure here) that mdadm assembled 
+the array even before the drives were ready to be used. All I had to do 
+was to remove and re-add them to bring the array back to "good" state. I 
+am wondering if there is a way to tell mdadm to wait for all drives to 
+be ready before assembling. Also, if there is something that I can add 
+to resume scripts that will help, please let me know.
 
+Kernel: Linux zym 3.13.0-106-generic #153-Ubuntu SMP
+mdadm - v3.2.5 - 18th May 2012
 
-> And to design software that quite explicitly expects greater perfection
-> than the hardware itself is guaranteed to provide is, in my humble
-> opinion, downright negligent!!!
+Failed drives are HGST NAS and WD Gold with less than a year of usage. 
+So I doubt they are bad drives by any means.
 
-How does the software expect a lower error rate than the drive specification?
+Ramesh
 
 
-
-
--- 
-Chris Murphy
