@@ -1,75 +1,61 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: Network based (iSCSI) RAID1 setup
-Date: Wed, 10 May 2017 22:08:07 +1000
-Message-ID: <651c37fe-68b2-2dd7-a429-e62c994de60b@websitemanagers.com.au>
-References: <dc2c3583-14da-435b-0177-8cee749a1cd0@assyoma.it>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH v2] raid1: prefer disk without bad blocks
+Date: Wed, 10 May 2017 15:16:20 +0200
+Message-ID: <1494422180-22772-1-git-send-email-tomasz.majchrzak@intel.com>
+References: <1494413599-8749-1-git-send-email-tomasz.majchrzak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <dc2c3583-14da-435b-0177-8cee749a1cd0@assyoma.it>
+In-Reply-To: <1494413599-8749-1-git-send-email-tomasz.majchrzak@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gionatan Danti <g.danti@assyoma.it>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: shli@kernel.org, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
+If an array consists of two drives and the first drive has the bad
+block, the read request to the region overlapping the bad block chooses
+the same disk (with bad block) as device to read from over and over and
+the request gets stuck. If the first disk only partially overlaps with
+bad block, it becomes a candidate ("best disk") for shorter range of
+sectors. The second disk is capable of reading the entire requested
+range and it is updated accordingly, however it is not recorded as a
+best device for the request. In the end the request is sent to the first
+disk to read entire range of sectors. It fails and is re-tried in a
+moment but with the same outcome.
 
+Actually it is quite likely scenario but it had little exposure in my
+test until commit 715d40b93b10 ("md/raid1: add failfast handling for
+reads.") removed preference for idle disk. Such scenario had been passing
+as second disk was always chosen when idle.
 
-On 10/5/17 18:42, Gionatan Danti wrote:
-> Hi all,
-> I'm trying to understand if, and how, mdadm can be used with network 
-> attached devices (iSCSI, in this case). I have a very simple setup 
-> with two 1 GB drives, the first being a local disk (a logical volume, 
-> really) and the second a remote iSCSI disk.
->
-> First question: even if in my preliminary tests this seems to work 
-> reasonably well, do you feel that such solution can be used for 
-> production workloads? Or something with a more specific focus, as 
-> DRBD, remains the preferred solution?
->
-It depends on your definition of production, but for me, the answer is 
-no. Once upon a time, I used MD to do RAID1 between a local SSD and a 
-remote device with NBD and that worked well, (apart from the fact I 
-needed to manually re-add the remote device after a reboot, or whenever 
-it dropped out for any other reason). It did save me when the local SSD 
-died, and I was able to keep running purely from the remote NBD device 
-until I could get in and replace the local SSD.
+Update a candidate ("best disk") to read from if disk can read entire
+range. Do it only if other disk has already been chosen as a candidate
+for a smaller range. Otherwise, don't update it - let the head position /
+disk type logic to select a disk.
 
-Today, I use DRBD, and would much prefer that compared to MD + NBD.
-> I'm using two CentOS 7.3 x86-64 boxes, with kernel version 
-> 3.10.0-514.16.1.el7.x86_64 and mdadm v3.4 - 28th January 2016. Here 
-> you can find my current RAID1 setup, where /dev/sdb is the iSCSI disk:
->
-> So, second question: how to enable auto re-add for the remote device 
-> when it become available again? For example:
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+---
+ drivers/md/raid1.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-I don't know, but I guess you need to work out what udev rules are 
-triggered when the iscsi device is "connected", and then get that to 
-trigger the MD add rules. Possibly you could try to create a partition 
-on the iscsi, and then use sdb1 for the RAID array, there might be 
-better handling by udev in that case (I really don't know, just making 
-random suggestions here).
-> Even if /dev/sdb is now visible, it is not auto re-added to the array. 
-> If I run mdadm /dev/sdb --incremental --run I see the device added as 
-> a spare:
->
-> [root@gdanti-laptop g.danti]# cat /proc/mdstat
-> Personalities : [raid1]
-> md200 : active (auto-read-only) raid1 sdb[1](S) dm-3[0]
->       1047552 blocks super 1.2 [2/1] [U_]
->       bitmap: 0/1 pages [0KB], 65536KB chunk
->
-> unused devices: <none>
->
-> Third question: with --incremental adds device as a spare, rather than 
-> active?
->
-Is it because the raid isn't actually running? Perhaps you need to start 
-the array first?
-> I've looked at the POLICY directive in mdadm.conf, but I am unable to 
-> make it work by auto re-adding iSCSI devices when they become up again.
-I'd suggest using DRBD, it handles all these things a lot better because 
-it is normal events for it, and a lot more people will be able to assist 
-when something goes wrong with it.
+v2:
+  updated the title not to include internal defect number :)
 
-Regards,
-Adam
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index a1f3fbe..e7ab3bb 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -628,8 +628,11 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+ 					break;
+ 			}
+ 			continue;
+-		} else
++		} else {
++			if ((sectors > best_good_sectors) && (best_disk >= 0))
++				best_disk = disk;
+ 			best_good_sectors = sectors;
++		}
+ 
+ 		if (best_disk >= 0)
+ 			/* At least two disks to choose from so failfast is OK */
+-- 
+1.8.3.1
+
