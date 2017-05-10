@@ -1,75 +1,39 @@
-From: shli@kernel.org
-Subject: [PATCH] md:raid1/10: avoid unnecessary locking
-Date: Wed, 10 May 2017 08:52:28 -0700
-Message-ID: <1946dca4cbeb08911e4fcc155d1b2ffa8bc6c0a2.1494431492.git.shli@fb.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: MD device tinning documentation
+Date: Wed, 10 May 2017 09:00:19 -0700
+Message-ID: <20170510160019.6v2bb34kmu6rvr44@kernel.org>
+References: <CA+DJSLwbsUhhK_T+K6YOBX_BLdgRn=qZjz3LUAK92A0_9sL0FQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CA+DJSLwbsUhhK_T+K6YOBX_BLdgRn=qZjz3LUAK92A0_9sL0FQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Shaohua Li <shli@fb.com>, NeilBrown <neilb@suse.com>
+To: Vladimir Fedorkov <vlad@astellar.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Shaohua Li <shli@fb.com>
+On Mon, May 08, 2017 at 01:22:53PM +0300, Vladimir Fedorkov wrote:
+> Hello there!
+> 
+> I'm running benchmarks and it looks like that md device is only
+> utilizing single core which it limiting it's performance on concurrent
+> (4+ threads) writes with 8 SSD drives in software RAID10
+> 
+> Kernel: Linux host 4.10.12-1.el7.elrepo.x86_64 #1 SMP Fri Apr 21
+> 09:58:15 EDT 2017 x86_64 x86_64 x86_64 GNU/Linux
+> 
+> Exact numbers are here: http://astellar.com/images/sysbench_rnd_writes.png
+> 
+> Could you please let me know if there is multi-threaded support on MD
+> devices in 4.x kernels and point me to the documentation (preferred)
+> or source code which describes tunable parts of /dev/mdXX devices.
 
-If we add bios to block plugging list, locking is unnecessry, since the block
-unplug is guaranteed not to run at that time.
+There is no knob for tunning. At most time, raid10 directly sends IO to
+underlayer disks directly from upperlayer thread, so it's multi-threaded. The
+problem is we have some locking issues in the barrier side. Coly improved the
+raid1 scalability with a new barrier implementation (fd76863e37fe RAID1: a new
+I/O barrier implementation to remove resync window), but raid10 is left behind.
 
-Cc: NeilBrown <neilb@suse.com>
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- drivers/md/raid1.c  | 7 +++----
- drivers/md/raid10.c | 7 +++----
- 2 files changed, 6 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 7c1f73398800..a17ed6218d51 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1529,17 +1529,16 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 			plug = container_of(cb, struct raid1_plug_cb, cb);
- 		else
- 			plug = NULL;
--		spin_lock_irqsave(&conf->device_lock, flags);
- 		if (plug) {
- 			bio_list_add(&plug->pending, mbio);
- 			plug->pending_cnt++;
- 		} else {
-+			spin_lock_irqsave(&conf->device_lock, flags);
- 			bio_list_add(&conf->pending_bio_list, mbio);
- 			conf->pending_count++;
--		}
--		spin_unlock_irqrestore(&conf->device_lock, flags);
--		if (!plug)
-+			spin_unlock_irqrestore(&conf->device_lock, flags);
- 			md_wakeup_thread(mddev->thread);
-+		}
- 	}
- 
- 	r1_bio_write_done(r1_bio);
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 6b86a0032cf8..4343d7ff9916 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1282,17 +1282,16 @@ static void raid10_write_one_disk(struct mddev *mddev, struct r10bio *r10_bio,
- 		plug = container_of(cb, struct raid10_plug_cb, cb);
- 	else
- 		plug = NULL;
--	spin_lock_irqsave(&conf->device_lock, flags);
- 	if (plug) {
- 		bio_list_add(&plug->pending, mbio);
- 		plug->pending_cnt++;
- 	} else {
-+		spin_lock_irqsave(&conf->device_lock, flags);
- 		bio_list_add(&conf->pending_bio_list, mbio);
- 		conf->pending_count++;
--	}
--	spin_unlock_irqrestore(&conf->device_lock, flags);
--	if (!plug)
-+		spin_unlock_irqrestore(&conf->device_lock, flags);
- 		md_wakeup_thread(mddev->thread);
-+	}
- }
- 
- static void raid10_write_request(struct mddev *mddev, struct bio *bio,
--- 
-2.11.0
-
+Thanks,
+Shaohua
