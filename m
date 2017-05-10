@@ -1,39 +1,60 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: MD device tinning documentation
-Date: Wed, 10 May 2017 09:00:19 -0700
-Message-ID: <20170510160019.6v2bb34kmu6rvr44@kernel.org>
-References: <CA+DJSLwbsUhhK_T+K6YOBX_BLdgRn=qZjz3LUAK92A0_9sL0FQ@mail.gmail.com>
+Subject: Re: [PATCH] md/md0: optimize raid0 discard handling
+Date: Wed, 10 May 2017 09:09:33 -0700
+Message-ID: <20170510160933.rtv4m23a4wmilzqe@kernel.org>
+References: <1af0237c374a1e276663fa17824e8345165fcca6.1494203680.git.shli@fb.com>
+ <87r2zyn8op.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CA+DJSLwbsUhhK_T+K6YOBX_BLdgRn=qZjz3LUAK92A0_9sL0FQ@mail.gmail.com>
+In-Reply-To: <87r2zyn8op.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Vladimir Fedorkov <vlad@astellar.com>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org, Kernel-team@fb.com, Coly Li <colyli@suse.de>
 List-Id: linux-raid.ids
 
-On Mon, May 08, 2017 at 01:22:53PM +0300, Vladimir Fedorkov wrote:
-> Hello there!
+On Tue, May 09, 2017 at 11:03:02AM +1000, Neil Brown wrote:
+> On Sun, May 07 2017, Shaohua Li wrote:
 > 
-> I'm running benchmarks and it looks like that md device is only
-> utilizing single core which it limiting it's performance on concurrent
-> (4+ threads) writes with 8 SSD drives in software RAID10
+> > There are complaints that raid0 discard handling is slow. Currently we
+> > divide discard request into chunks and dispatch to underlayer disks. The
+> > block layer will do merge to form big requests. This causes a lot of
+> > request split/merge and uses significant CPU time.
+> >
+> > A simple idea is to calculate the range for each raid disk for an IO
+> > request and send a discard request to raid disks, which will avoid the
+> > split/merge completely. Previously Coly tried the approach, but the
+> > implementation was too complex because of raid0 zones. This patch always
+> > split bio in zone boundary and handle bio within one zone. It simplifies
+> > the implementation a lot.
+> >
+> > Cc: NeilBrown <neilb@suse.com>
+> > Cc: Coly Li <colyli@suse.de>
+> > Signed-off-by: Shaohua Li <shli@fb.com>
 > 
-> Kernel: Linux host 4.10.12-1.el7.elrepo.x86_64 #1 SMP Fri Apr 21
-> 09:58:15 EDT 2017 x86_64 x86_64 x86_64 GNU/Linux
+> Reviewed-by: NeilBrown <neilb@suse.com>
 > 
-> Exact numbers are here: http://astellar.com/images/sysbench_rnd_writes.png
+> I'm a little bit bothered by the use for __blkdev_issue_discard() which
+> uses bio_alloc(), which allocates from fs_bio_set.  This code isn't in a
+> filesystem, so it feels wrong.
 > 
-> Could you please let me know if there is multi-threaded support on MD
-> devices in 4.x kernels and point me to the documentation (preferred)
-> or source code which describes tunable parts of /dev/mdXX devices.
+> fs_bio_set has 4 entries.  If 4 different threads call
+> __blkdev_issue_discard() on a raid0 device, they could get allocated all
+> of the entries from the pool.  Then when raid0 calls
+> __blkdev_issue_discard(), the pool is empty.
+> 
+> I don't think this is actually a problem as discard (presumably) doesn't
+> happen on the write-out-for-memory-reclaim path, so the bio_alloc() will
+> eventually be able to get memory from kmalloc() rather than from the
+> pool.
+> 
+> Maybe next_bio() should use the bio_split pool from
+> bio->bi_bdev->queue.  But it probably doesn't really matter.
 
-There is no knob for tunning. At most time, raid10 directly sends IO to
-underlayer disks directly from upperlayer thread, so it's multi-threaded. The
-problem is we have some locking issues in the barrier side. Coly improved the
-raid1 scalability with a new barrier implementation (fd76863e37fe RAID1: a new
-I/O barrier implementation to remove resync window), but raid10 is left behind.
+Indead this part isn't comfortable. I'd suppose discard is only called in
+transaction thread of fs, so only one thread is calling into discard. Probably
+not a big deal.
 
 Thanks,
 Shaohua
