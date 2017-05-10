@@ -1,51 +1,44 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Fault tolerance with badblocks
-Date: Wed, 10 May 2017 12:09:59 -0600
-Message-ID: <CAJCQCtTeEwdGmeL=hBF-nPMHNBTWm2wtyM_SGKkpuW3gYez2PQ@mail.gmail.com>
-References: <03294ec0-2df0-8c1c-dd98-2e9e5efb6f4f@hale.ee> <590B3039.3060000@youngman.org.uk>
- <84184eb3-52c4-e7ad-cd5b-5021b5cf47ee@hale.ee> <d2b25ec0-c401-07df-2231-a37117878589@youngman.org.uk>
- <bd917050-cf73-6922-bb20-c5ccf02ba51c@hale.ee> <590DC905.60207@youngman.org.uk>
- <87h90v8kt3.fsf@esperi.org.uk> <1533bba8-41cb-2c50-b28a-52786e463072@turmel.org>
- <87vapb6s9h.fsf@esperi.org.uk> <c5307694-034c-b610-8a27-3bf272cac380@youngman.org.uk>
- <87inla73vz.fsf@esperi.org.uk> <5911A371.3030008@hesbynett.no>
- <878tm65kyx.fsf@esperi.org.uk> <5911AED4.9030007@hesbynett.no>
- <CAJCQCtSaLbp4T+j97Ds6xqPmhVwnncGU2UV2_9HEbEJyr6fy+Q@mail.gmail.com>
- <59121C1C.1050101@youngman.org.uk> <CAJCQCtR0y-g+8dKC2-fykmFnOPKMA5YQs-Hku67c79SMECQrEg@mail.gmail.com>
- <CACsGCyQGoR_9dr7aYGZn1i2VWm8KWKgi1fy2x6met=UePw2OQw@mail.gmail.com>
+From: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 03/16] uuid: rename uuid types
+Date: Wed, 10 May 2017 19:20:36 +0100
+Message-ID: <2612.1494440436@warthog.procyon.org.uk>
+References: <20170510180214.16852-4-hch@lst.de>
+ <20170510180214.16852-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CACsGCyQGoR_9dr7aYGZn1i2VWm8KWKgi1fy2x6met=UePw2OQw@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Edward Kuns <eddie.kuns@gmail.com>
-Cc: Chris Murphy <lists@colorremedies.com>, Wols Lists <antlists@youngman.org.uk>, Linux-RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <20170510180214.16852-4-hch-jcswGhMUV9g@public.gmane.org>
+Content-ID: <2611.1494440436.1-S6HVgzuS8uM4Awkfq6JHfwNdhmdF6hFW@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-On Wed, May 10, 2017 at 10:44 AM, Edward Kuns <eddie.kuns@gmail.com> wrote:
-> On Tue, May 9, 2017 at 10:53 PM, Chris Murphy <lists@colorremedies.com> wrote:
->> Scrubs don't happen by default.
->
-> From the perspective of Linux Raid authors, that is true.  However,
-> the version of Fedora I have installed on my server at home does
-> weekly scrubs by default.
+Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org> wrote:
 
-That is a check scrub, not a repair scrub, so it still wouldn't
-obliterate "good" P & Q by default.
+> -#define NULL_UUID_LE							\
+> -	UUID_LE(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00,	\
+> -		0x00, 0x00, 0x00, 0x00)
+> +#define NULL_GUID							\
+> +	GUID(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00,	\
+> +	     0x00, 0x00, 0x00, 0x00)
+>  
+> -#define NULL_UUID_BE							\
+> -	UUID_BE(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00,	\
+> -		0x00, 0x00, 0x00, 0x00)
+> +#define NULL_UUID							\
+> +	UUID(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00,	\
+> +	     0x00, 0x00, 0x00, 0x00)
 
-> This is arguably a good thing, considering
-> that many people installing this OS will not proactively research the
-> technologies in use holding their server together and won't know that
-> there are certain maintenance activities that are essential if you
-> care about your data.
->
-> I'm not getting involved in the bigger discussion.  My opinion is too
-> uninformed to say anything there.  I just wanted to point out that
-> *from the viewpoint of some users*, scrubs *will* happen by default.
-> That is all.
+These are UAPI and ought not to be renamed.
 
-
-Absolutely, just not the kind of scrub that's being accused of
-damaging assumed to be good P & Q parity.
-
--- 
-Chris Murphy
+David
