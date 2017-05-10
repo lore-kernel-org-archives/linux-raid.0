@@ -1,60 +1,39 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md/md0: optimize raid0 discard handling
-Date: Wed, 10 May 2017 09:09:33 -0700
-Message-ID: <20170510160933.rtv4m23a4wmilzqe@kernel.org>
-References: <1af0237c374a1e276663fa17824e8345165fcca6.1494203680.git.shli@fb.com>
- <87r2zyn8op.fsf@notabene.neil.brown.name>
+From: Edward Kuns <eddie.kuns@gmail.com>
+Subject: Re: Fault tolerance with badblocks
+Date: Wed, 10 May 2017 11:44:46 -0500
+Message-ID: <CACsGCyQGoR_9dr7aYGZn1i2VWm8KWKgi1fy2x6met=UePw2OQw@mail.gmail.com>
+References: <03294ec0-2df0-8c1c-dd98-2e9e5efb6f4f@hale.ee> <590B3039.3060000@youngman.org.uk>
+ <84184eb3-52c4-e7ad-cd5b-5021b5cf47ee@hale.ee> <d2b25ec0-c401-07df-2231-a37117878589@youngman.org.uk>
+ <bd917050-cf73-6922-bb20-c5ccf02ba51c@hale.ee> <590DC905.60207@youngman.org.uk>
+ <87h90v8kt3.fsf@esperi.org.uk> <1533bba8-41cb-2c50-b28a-52786e463072@turmel.org>
+ <87vapb6s9h.fsf@esperi.org.uk> <c5307694-034c-b610-8a27-3bf272cac380@youngman.org.uk>
+ <87inla73vz.fsf@esperi.org.uk> <5911A371.3030008@hesbynett.no>
+ <878tm65kyx.fsf@esperi.org.uk> <5911AED4.9030007@hesbynett.no>
+ <CAJCQCtSaLbp4T+j97Ds6xqPmhVwnncGU2UV2_9HEbEJyr6fy+Q@mail.gmail.com>
+ <59121C1C.1050101@youngman.org.uk> <CAJCQCtR0y-g+8dKC2-fykmFnOPKMA5YQs-Hku67c79SMECQrEg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87r2zyn8op.fsf@notabene.neil.brown.name>
+In-Reply-To: <CAJCQCtR0y-g+8dKC2-fykmFnOPKMA5YQs-Hku67c79SMECQrEg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org, Kernel-team@fb.com, Coly Li <colyli@suse.de>
+To: Chris Murphy <lists@colorremedies.com>
+Cc: Wols Lists <antlists@youngman.org.uk>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, May 09, 2017 at 11:03:02AM +1000, Neil Brown wrote:
-> On Sun, May 07 2017, Shaohua Li wrote:
-> 
-> > There are complaints that raid0 discard handling is slow. Currently we
-> > divide discard request into chunks and dispatch to underlayer disks. The
-> > block layer will do merge to form big requests. This causes a lot of
-> > request split/merge and uses significant CPU time.
-> >
-> > A simple idea is to calculate the range for each raid disk for an IO
-> > request and send a discard request to raid disks, which will avoid the
-> > split/merge completely. Previously Coly tried the approach, but the
-> > implementation was too complex because of raid0 zones. This patch always
-> > split bio in zone boundary and handle bio within one zone. It simplifies
-> > the implementation a lot.
-> >
-> > Cc: NeilBrown <neilb@suse.com>
-> > Cc: Coly Li <colyli@suse.de>
-> > Signed-off-by: Shaohua Li <shli@fb.com>
-> 
-> Reviewed-by: NeilBrown <neilb@suse.com>
-> 
-> I'm a little bit bothered by the use for __blkdev_issue_discard() which
-> uses bio_alloc(), which allocates from fs_bio_set.  This code isn't in a
-> filesystem, so it feels wrong.
-> 
-> fs_bio_set has 4 entries.  If 4 different threads call
-> __blkdev_issue_discard() on a raid0 device, they could get allocated all
-> of the entries from the pool.  Then when raid0 calls
-> __blkdev_issue_discard(), the pool is empty.
-> 
-> I don't think this is actually a problem as discard (presumably) doesn't
-> happen on the write-out-for-memory-reclaim path, so the bio_alloc() will
-> eventually be able to get memory from kmalloc() rather than from the
-> pool.
-> 
-> Maybe next_bio() should use the bio_split pool from
-> bio->bi_bdev->queue.  But it probably doesn't really matter.
+On Tue, May 9, 2017 at 10:53 PM, Chris Murphy <lists@colorremedies.com> wrote:
+> Scrubs don't happen by default.
 
-Indead this part isn't comfortable. I'd suppose discard is only called in
-transaction thread of fs, so only one thread is calling into discard. Probably
-not a big deal.
+From the perspective of Linux Raid authors, that is true.  However,
+the version of Fedora I have installed on my server at home does
+weekly scrubs by default.  This is arguably a good thing, considering
+that many people installing this OS will not proactively research the
+technologies in use holding their server together and won't know that
+there are certain maintenance activities that are essential if you
+care about your data.
 
-Thanks,
-Shaohua
+I'm not getting involved in the bigger discussion.  My opinion is too
+uninformed to say anything there.  I just wanted to point out that
+*from the viewpoint of some users*, scrubs *will* happen by default.
+That is all.
+
+            Eddie
