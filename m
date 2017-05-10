@@ -1,43 +1,56 @@
-From: Gionatan Danti <g.danti@assyoma.it>
-Subject: Re: Network based (iSCSI) RAID1 setup
-Date: Wed, 10 May 2017 12:25:18 +0200
-Message-ID: <fb55f684-d7a3-e31a-fcb3-602d8a058c5c@assyoma.it>
-References: <dc2c3583-14da-435b-0177-8cee749a1cd0@assyoma.it>
- <20170510140323.256edb95@natsu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH][HSD116699] raid1: prefer disk without bad blocks
+Date: Wed, 10 May 2017 12:53:19 +0200
+Message-ID: <1494413599-8749-1-git-send-email-tomasz.majchrzak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170510140323.256edb95@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: shli@kernel.org, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
-On 10/05/2017 11:03, Roman Mamedov wrote:
-> First thing that comes to mind, you should look into setting the remote device
-> as --write-mostly, so that the local one is preferred for all reads (as long as
-> it's up).
+If an array consists of two drives and the first drive has the bad
+block, the read request to the region overlapping the bad block chooses
+the same disk (with bad block) as device to read from over and over and
+the request gets stuck. If the first disk only partially overlaps with
+bad block, it becomes a candidate ("best disk") for shorter range of
+sectors. The second disk is capable of reading the entire requested
+range and it is updated accordingly, however it is not recorded as a
+best device for the request. In the end the request is sent to the first
+disk to read entire range of sectors. It fails and is re-tried in a
+moment but with the same outcome.
 
-Sure, and it is planned. However, for initial testing, I want to leave 
-as many parameters to their default settings.
+Actually it is quite likely scenario but it had little exposure in my
+test until commit 715d40b93b10 ("md/raid1: add failfast handling for
+reads.") removed preference for idle disk. Such scenario had been passing
+as second disk was always chosen when idle.
 
-> But to be honest DRBD may indeed be a better solution for this use case, as
-> it's built specifically with it in mind, and likely has all the various
-> gotchas that might arise already thought about and handled properly.
->
+Update a candidate ("best disk") to read from if disk can read entire
+range. Do it only if other disk has already been chosen as a candidate
+for a smaller range. Otherwise, don't update it - let the head position /
+disk type logic to select a disk.
 
-To tell the truth, I already use DRBD 8.4 in production workloads and I 
-are quite satisfied with it. However, DRBD 8.4 only supports 2 hosts 
-(ie: master and slave), and DRBD 9.x (which supports multi-node 
-replication) is a relatively new, deep re-write of the old codebase 
-which significantly expanded scope.
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+---
+ drivers/md/raid1.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-So my interest in mdadm-based network replication...
-
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index a1f3fbe..e7ab3bb 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -628,8 +628,11 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+ 					break;
+ 			}
+ 			continue;
+-		} else
++		} else {
++			if ((sectors > best_good_sectors) && (best_disk >= 0))
++				best_disk = disk;
+ 			best_good_sectors = sectors;
++		}
+ 
+ 		if (best_disk >= 0)
+ 			/* At least two disks to choose from so failfast is OK */
 -- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+1.8.3.1
+
