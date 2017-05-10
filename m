@@ -1,47 +1,53 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: RAID creation resync behaviors
-Date: Tue, 09 May 2017 19:56:05 -0400
-Message-ID: <yq1y3u5potm.fsf@oracle.com>
-References: <20170503202748.7r243wj5h4polt6y@kernel.org>
-        <87inlhpgzu.fsf@notabene.neil.brown.name>
-        <20170504020452.kcmjgxnk7zsx7kdx@kernel.org>
-        <1fca5ff4-358a-e0cf-d1a4-fc33ecdcbd62@gmail.com>
-        <87o9v1n56m.fsf@notabene.neil.brown.name>
-        <76407cb7-437b-142e-e74b-ddd56f3f4ddb@gmail.com>
-        <yq1k25prbd4.fsf@oracle.com>
-        <08ba08b3-0e8c-c064-6b35-9084545e2c22@gmail.com>
-        <yq1bmr1rasn.fsf@oracle.com>
-        <f73c7524-5d35-6104-11b1-2c658b43c68d@gmail.com>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: In Direct I/O, no matter how big the read/write, the bio's are
+ all 4KB
+Date: Wed, 10 May 2017 10:47:53 +0800
+Message-ID: <CACVXFVPoudOOyrJ_w0o7U6jG5e8SHEfr-Hn8bAVfPgmVST5dPA@mail.gmail.com>
+References: <CANWz5fgNgnZ6R9md1TwD16nZzhAzX-t8BaOsN5-x-FfEE3_h3Q@mail.gmail.com>
+ <20170509201441.GA17309@infradead.org> <CANWz5fh_wkbug56gPwqH9pYO+hGdSgi+H-56bANpb8Q159zOfQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f73c7524-5d35-6104-11b1-2c658b43c68d@gmail.com> (Jes Sorensen's
-        message of "Tue, 9 May 2017 17:22:57 -0400")
+In-Reply-To: <CANWz5fh_wkbug56gPwqH9pYO+hGdSgi+H-56bANpb8Q159zOfQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <jes.sorensen@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, NeilBrown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, neilb@suse.de
+To: Chris Worley <worleys@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linuxraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-
-Jes,
-
->> BLKZEROOUT
+On Wed, May 10, 2017 at 5:26 AM, Chris Worley <worleys@gmail.com> wrote:
+> On Tue, May 9, 2017 at 10:14 AM, Christoph Hellwig <hch@infradead.org> wrote:
+>> On Tue, May 09, 2017 at 10:03:24AM -1000, Chris Worley wrote:
+>>> I realize DIO needs to be 4KB aligned,
 >>
+>> Actually many file systems do support sector size aligned direct I/O,
+>> which could be 512 byte aligned.  But as that's not your point :)
+>>
+>>> but why do large I/Os get
+>>> chopped down into 4KB bio's?
+>>
+>> They shouldn't.  What kernel version is this on?
 >
-> Trying to read the code, as this ioctl doesn't seem to be documented
-> anywhere I can find.... it looks like this ioctl zeroes out a device.
+> $ uname -r
+> 3.10.0-514.6.2.el7.x86_64
 >
-> It doesn't help me obtain the information I need to make a decision in
-> mdadm as whether to overwrite all or compare+write when resyncing a RAID
-> array.
+>>
+>>> Doing a blocktrace of the md device, even though the app is writing at
+>>> 512KB, the MD driver is receiving 4KB bio's.
+>>
+>> The direct I/O code is using bio_add_page to build the bios it submits.
+>> It might be interesting to see which of the checks in it triggers
+>> an early return after the first page.
+>
+> I vaguely recall the noop scheduler's only task is to merge adjacent
+> blocks.  In my case, there's "none" (no schedular at all) for all
+> block devices chained together.  Is that the issue?
 
-I wasn't trying to solve your policy decision problem. I was merely
-responding to Shaohua's concerns about discard vs. zeroes and wearing
-out the media.
+It shouldn't be related with scheduler since page is added to bio's bvec
+table first. As Christoph mentioned, maybe some queue's limits are violated,
+and pages from the 2nd one can't be added into any more.  Since it might
+depend on specific md setting, could you share your md setting or
+detailed reproduction steps?
 
-If you want to act based on the media type, the best heuristic we have
-right now is the rotational sysfs attribute / BLKROTATIONAL ioctl. It'll
-be one for spinning rust and zero for pretty much everything else.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+thanks,
+Ming Lei
