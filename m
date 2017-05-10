@@ -1,27 +1,59 @@
-From: "hch@lst.de" <hch@lst.de>
-Subject: Re: [PATCH 25/27] block: remove the discard_zeroes_data flag
-Date: Wed, 10 May 2017 16:06:27 +0200
-Message-ID: <20170510140627.GA23759@lst.de>
-References: <20170405172125.22600-1-hch@lst.de> <20170405172125.22600-26-hch@lst.de> <1493671519.2665.15.camel@sandisk.com> <1493707425.23202.77.camel@haakon3.risingtidesystems.com> <1493709373.23202.79.camel@haakon3.risingtidesystems.com> <20170502072328.GA11522@lst.de> <1493782395.23202.84.camel@haakon3.risingtidesystems.com> <20170507092209.GA27370@lst.de> <1494312374.16894.36.camel@haakon3.risingtidesystems.com>
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: [PATCH] IMSM: Correct --examine output for 4k disks
+Date: Wed, 10 May 2017 11:18:18 -0400
+Message-ID: <e27a148f-f0bf-8713-ceca-f37b4fb2fb88@gmail.com>
+References: <1494331407-2049-1-git-send-email-mariusz.dabrowski@intel.com>
+ <1aca3793-3786-00dc-910e-920a21a1108b@gmail.com>
+ <5e8e5353-e42d-0ea0-1928-7d4608a884b8@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1494312374.16894.36.camel@haakon3.risingtidesystems.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: "hch@lst.de" <hch@lst.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>, "agk@redhat.com" <agk@redhat.com>, "lars.ellenberg@linbit.com" <lars.ellenberg@linbit.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "philipp.reisner@linbit.com" <philipp.reisner@linbit.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "shli@kernel.org" <shli@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5e8e5353-e42d-0ea0-1928-7d4608a884b8@intel.com>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: Mariusz Dabrowski <mariusz.dabrowski@intel.com>, linux-raid@vger.kernel.org
+Cc: Maksymilian Kunt <maksymilian.kunt@intel.com>
 List-Id: linux-raid.ids
 
-On Mon, May 08, 2017 at 11:46:14PM -0700, Nicholas A. Bellinger wrote:
-> That said, simply propagating up q->limits.max_write_zeroes_sectors as
-> dev_attrib->unmap_zeroes_data following existing code still looks like
-> the right thing to do.
+On 05/10/2017 04:43 AM, Mariusz Dabrowski wrote:
+> On 05/09/2017 06:04 PM, Jes Sorensen wrote:
+>  > On 05/09/2017 08:03 AM, Mariusz Dabrowski wrote:
+>  >> From: Maksymilian Kunt <maksymilian.kunt@intel.com>
+>  >>
+>  >> "Array Size" and "Per Dev Size" are incorrect for disks with sector 
+> size
+>  >> different than 512B.
+>  >>
+>  >> Calculate "Array Size" and "Per Dev Size" based on sector size. 
+> Additionally
+>  >> print "Sector Size".
+>  >>
+>  >> Signed-off-by: Maksymilian Kunt <maksymilian.kunt@intel.com>
+>  >> Signed-off-by: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
+>  >> ---
+>  >>   super-intel.c | 7 +++++--
+>  >>   1 file changed, 5 insertions(+), 2 deletions(-)
+>  >
+>  > I am a little wary of this change as it changes the order of the 
+> output. Does
+>  > anyone have tools parsing this information which could break from this?
+>  >
+>  > Jes
+>  >
+> 
+> Hi Jes,
+> 
+> some time ago we have added "RWH Policy" field to --examine output and 
+> we haven't heard any complaints about that change.
+> Also it is better to parse output from --export option which is 
+> unchanged in this patch.
 
-It is not.  Martin has decoupled write same/zeroes support from discard
-support.  Any device will claim to support it initially, and we'll
-only clear the flag if a Write Same command fails.
+Hi Mariusz,
 
-So even if LBPRZ is not set you can trivially get into a situation
-where discard is supported through UNMAP, and you'll incorrectly
-set LBPRZ and will cause data corruption.
+That is correct, however the policy stuff was added to the end of the 
+output, it didn't change the existing part. I am a little mixed on this 
+one, but I do agree --export should be the recommended use case for scripts.
+
+Cheers,
+Jes
