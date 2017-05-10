@@ -1,8 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 10/16] uuid: hoist helpers uuid_equal() and uuid_copy() from
- xfs
-Date: Wed, 10 May 2017 20:02:08 +0200
-Message-ID: <20170510180214.16852-11-hch@lst.de>
+Subject: [PATCH 11/16] uuid: hoist uuid_is_null() helper from libnvdimm
+Date: Wed, 10 May 2017 20:02:09 +0200
+Message-ID: <20170510180214.16852-12-hch@lst.de>
 References: <20170510180214.16852-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -24,83 +23,108 @@ List-Id: linux-raid.ids
 
 From: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-These helper are used to compare and copy two uuid_t type objects.
+Hoist the libnvdimm helper as an inline helper to linux/uuid.h
+using an auxiliary const variable uuid_null in lib/uuid.c.
 
+[hch: also add the guid variant.  Both do the same but I'd like
+to keep casts to a minimum]
+
+The common helper uses the new abstract type uuid_t * instead of
+u8 *.
+
+Suggested-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Signed-off-by: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-[hch: also provide the respective guid_ versions]
+[hch: added guid_is_null]
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- fs/xfs/uuid.c        |  6 ------
- fs/xfs/uuid.h        |  7 -------
- include/linux/uuid.h | 20 ++++++++++++++++++++
- 3 files changed, 20 insertions(+), 13 deletions(-)
+ drivers/nvdimm/btt_devs.c |  9 +--------
+ include/linux/uuid.h      | 13 +++++++++++++
+ lib/uuid.c                |  5 +++++
+ 3 files changed, 19 insertions(+), 8 deletions(-)
 
-diff --git a/fs/xfs/uuid.c b/fs/xfs/uuid.c
-index 937deaf2128d..737c186ea98b 100644
---- a/fs/xfs/uuid.c
-+++ b/fs/xfs/uuid.c
-@@ -30,9 +30,3 @@ uuid_is_nil(uuid_t *uuid)
- 		if (*cp++) return 0;	/* not nil */
- 	return 1;	/* is nil */
+diff --git a/drivers/nvdimm/btt_devs.c b/drivers/nvdimm/btt_devs.c
+index 4b76af2b8715..734290d30557 100644
+--- a/drivers/nvdimm/btt_devs.c
++++ b/drivers/nvdimm/btt_devs.c
+@@ -222,13 +222,6 @@ struct device *nd_btt_create(struct nd_region *nd_region)
+ 	return dev;
  }
--
--int
--uuid_equal(uuid_t *uuid1, uuid_t *uuid2)
--{
--	return memcmp(uuid1, uuid2, sizeof(uuid_t)) ? 0 : 1;
--}
-diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
-index 65b5cebf2f99..5aea49bf0963 100644
---- a/fs/xfs/uuid.h
-+++ b/fs/xfs/uuid.h
-@@ -19,12 +19,5 @@
- #define __XFS_SUPPORT_UUID_H__
  
- extern int uuid_is_nil(uuid_t *uuid);
--extern int uuid_equal(uuid_t *uuid1, uuid_t *uuid2);
--
--static inline void
--uuid_copy(uuid_t *dst, uuid_t *src)
+-static bool uuid_is_null(u8 *uuid)
 -{
--	memcpy(dst, src, sizeof(uuid_t));
+-	static const u8 null_uuid[16];
+-
+-	return (memcmp(uuid, null_uuid, 16) == 0);
 -}
+-
+ /**
+  * nd_btt_arena_is_valid - check if the metadata layout is valid
+  * @nd_btt:	device with BTT geometry and backing device info
+@@ -249,7 +242,7 @@ bool nd_btt_arena_is_valid(struct nd_btt *nd_btt, struct btt_sb *super)
+ 	if (memcmp(super->signature, BTT_SIG, BTT_SIG_LEN) != 0)
+ 		return false;
  
- #endif	/* __XFS_SUPPORT_UUID_H__ */
+-	if (!uuid_is_null(super->parent_uuid))
++	if (!guid_is_null((guid_t *)&super->parent_uuid))
+ 		if (memcmp(super->parent_uuid, parent_uuid, 16) != 0)
+ 			return false;
+ 
 diff --git a/include/linux/uuid.h b/include/linux/uuid.h
-index 28a5a894b926..b7fec8b266eb 100644
+index b7fec8b266eb..2f9bdc88079e 100644
 --- a/include/linux/uuid.h
 +++ b/include/linux/uuid.h
-@@ -29,11 +29,31 @@ static inline int guid_cmp(const guid_t u1, const guid_t u2)
+@@ -24,6 +24,9 @@
+  */
+ #define	UUID_STRING_LEN		36
+ 
++extern const guid_t guid_null;
++extern const uuid_t uuid_null;
++
+ static inline int guid_cmp(const guid_t u1, const guid_t u2)
+ {
  	return memcmp(&u1, &u2, sizeof(guid_t));
+@@ -39,6 +42,11 @@ static inline void guid_copy(guid_t *dst, const guid_t *src)
+ 	memcpy(dst, src, sizeof(guid_t));
  }
  
-+static inline bool guid_equal(const guid_t *u1, const guid_t *u2)
++static inline bool guid_is_null(guid_t *guid)
 +{
-+	return memcmp(u1, u2, sizeof(guid_t)) == 0;
-+}
-+
-+static inline void guid_copy(guid_t *dst, const guid_t *src)
-+{
-+	memcpy(dst, src, sizeof(guid_t));
++	return guid_equal(guid, &guid_null);
 +}
 +
  static inline int uuid_cmp(const uuid_t u1, const uuid_t u2)
  {
  	return memcmp(&u1, &u2, sizeof(uuid_t));
+@@ -54,6 +62,11 @@ static inline void uuid_copy(uuid_t *dst, const uuid_t *src)
+ 	memcpy(dst, src, sizeof(uuid_t));
  }
  
-+static inline bool uuid_equal(const uuid_t *u1, const uuid_t *u2)
++static inline bool uuid_is_null(uuid_t *uuid)
 +{
-+	return memcmp(u1, u2, sizeof(uuid_t)) == 0;
-+}
-+
-+static inline void uuid_copy(uuid_t *dst, const uuid_t *src)
-+{
-+	memcpy(dst, src, sizeof(uuid_t));
++	return uuid_equal(uuid, &uuid_null);
 +}
 +
  void generate_random_uuid(unsigned char uuid[16]);
  
  extern void guid_gen(guid_t *u);
+diff --git a/lib/uuid.c b/lib/uuid.c
+index 003bf6823003..25145bfb0eaa 100644
+--- a/lib/uuid.c
++++ b/lib/uuid.c
+@@ -21,6 +21,11 @@
+ #include <linux/uuid.h>
+ #include <linux/random.h>
+ 
++const guid_t guid_null;
++EXPORT_SYMBOL(guid_null);
++const uuid_t uuid_null;
++EXPORT_SYMBOL(uuid_null);
++
+ const u8 guid_index[16] = {3,2,1,0,5,4,7,6,8,9,10,11,12,13,14,15};
+ const u8 uuid_index[16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
+ 
 -- 
 2.11.0
