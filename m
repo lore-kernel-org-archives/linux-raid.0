@@ -1,104 +1,81 @@
-From: Zhilong Liu <zlliu@suse.com>
-Subject: Re: [mdadm PATCH] Create: move STOP_ARRAY to abort_locked
-Date: Thu, 11 May 2017 21:01:34 +0800
-Message-ID: <521fc317-a4c8-f3f9-1f20-448626249c3e@suse.com>
-References: <1493190229-14329-1-git-send-email-zlliu@suse.com>
- <430f083a-2501-cb74-4ac1-89d1c4620a03@suse.com>
- <2c1c277c-2fd2-27a8-e6a5-23b1ced3ec90@gmail.com>
- <be1df636-2bbb-2757-7a96-264d2d1a4b65@suse.com>
- <2b947e61-36b6-0c6c-c25c-a9d2831cca11@suse.com>
- <8275d868-ad51-209b-e46f-9d7f1c60d1a3@gmail.com>
+From: Gionatan Danti <g.danti@assyoma.it>
+Subject: Re: Network based (iSCSI) RAID1 setup
+Date: Thu, 11 May 2017 17:09:04 +0200
+Message-ID: <9dbee0bd-c2c1-513d-3474-a44cb7a66f38@assyoma.it>
+References: <dc2c3583-14da-435b-0177-8cee749a1cd0@assyoma.it>
+ <651c37fe-68b2-2dd7-a429-e62c994de60b@websitemanagers.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8275d868-ad51-209b-e46f-9d7f1c60d1a3@gmail.com>
+In-Reply-To: <651c37fe-68b2-2dd7-a429-e62c994de60b@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <jes.sorensen@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 10/05/2017 14:08, Adam Goryachev wrote:
+> It depends on your definition of production, but for me, the answer is
+> no. Once upon a time, I used MD to do RAID1 between a local SSD and a
+> remote device with NBD and that worked well, (apart from the fact I
+> needed to manually re-add the remote device after a reboot, or whenever
+> it dropped out for any other reason). It did save me when the local SSD
+> died, and I was able to keep running purely from the remote NBD device
+> until I could get in and replace the local SSD.
+>
+> Today, I use DRBD, and would much prefer that compared to MD + NBD.
 
+Thanks for your feedback, Adam. I agree with your, for the reasons 
+expressed below. Hoping to be useful for others, I'll document here my 
+findings.
 
-On 05/09/2017 01:54 AM, Jes Sorensen wrote:
-> On 05/07/2017 09:50 PM, Zhilong Liu wrote:
+>> I'm using two CentOS 7.3 x86-64 boxes, with kernel version
+>> 3.10.0-514.16.1.el7.x86_64 and mdadm v3.4 - 28th January 2016. Here
+>> you can find my current RAID1 setup, where /dev/sdb is the iSCSI disk:
 >>
->>
->> On 05/05/2017 11:31 AM, Liu Zhilong wrote:
->>>
->>>
->>> On 05/04/2017 10:54 PM, Jes Sorensen wrote:
->>>> On 05/04/2017 08:20 AM, Zhilong Liu wrote:
->>>>> Hi Jes,
->>>>>
->>>>> apply for review, this is a bug I ever encountered.
->>>>
->>>> Zhilong,
->>>>
->>>> Under what circumstances do you see this?
->>>>
->>>
->>> Issued the command:
->>> linux-g0sr:/home/test # ./mdadm -CR /dev/md0 -l1 -n2 -b internal
->>> /dev/loop[0-1] --size 63
->>> ... ... ...
->>> mdadm: Given bitmap chunk size not supported.
->>> linux-g0sr:/home/test # ls /dev/md0
->>> /dev/md0
->>> linux-g0sr:/home/test # ls /sys/block/md0/md/
->>> array_size   bitmap      component_size  level metadata_version
->>> raid_disks         reshape_position safe_mode_delay
->>> array_state  chunk_size  layout          max_read_errors
->>> new_dev           reshape_direction  resync_start
->>>
->>> create_mddev() writes the devnm to
->>> /sys/module/md_mod/parameter/new_array,
->>> then in md.c, module_param_call() called the 'set' function of
->>> add_named_array(),
->>> md_alloc() init_and_add the kobject for devm, finally the devnm device
->>> has created
->>> and sysfs has registered after create_mddev executed successfully.
->>> Thus it's better
->>> to STOP_ARRAY in any case after create_mddev() invoked.
->>>
->>
->> this patch depends on the kernel commit:
->> 039b7225e6e9 ("md: allow creation of mdNNN arrays via
->> md_mod/parameters/new_array")
->> Neil's patch has set "mddev->hold_active = UNTIL_STOP", thus the
->> STOP_ARRAY can work
->> well on this situation.
+>> So, second question: how to enable auto re-add for the remote device
+>> when it become available again? For example:
 >
-> OK now I am confused - are you saying this change will only work after 
-> Neil's kernel patch has been applied? That would be no good, mdadm 
-> needs to work on older kernels too.
->
+> I don't know, but I guess you need to work out what udev rules are
+> triggered when the iscsi device is "connected", and then get that to
+> trigger the MD add rules. Possibly you could try to create a partition
+> on the iscsi, and then use sdb1 for the RAID array, there might be
+> better handling by udev in that case (I really don't know, just making
+> random suggestions here).
 
-Yes, I do agree your kindly reminding. In order to fix this scenario that
-exit the process abnormally but create_mddev() has invoked, so how
-about declaring one utility function to do STOP_ARRAY like following,
-it's a better way to stop the array if it opened by O_EXCL flag.
+I worked out how to enable auto re-add: the key was to include a default 
+"POLICY action=re-add" in /etc/mdadm.conf; at this point, any removed 
+disk will be re-attached automatically when it newly become visible.
 
-cut the piece code from Manage_stop():
-... ...
-     /* As we have an O_EXCL open, any use of the device
-      * which blocks STOP_ARRAY is probably a transient use,
-      * so it is reasonable to retry for a while - 5 seconds.
-      */
-     count = 25; err = 0;
-     while (count && fd >= 0
-            && (err = ioctl(fd, STOP_ARRAY, NULL)) < 0
-            && errno == EBUSY) {
-         usleep(200000);
-         count --;
-     }
-... ...
+With a catch: in iSCSI, when the remote disk become unresponsive and it 
+is dropped, it is *not* removed (by udev) from the disk entries found in 
+/dev. As both the remove and the auto-readd processes depends on udev 
+events triggering changes to the /dev directory (ie: a drive 
+disappearing and/or reappearing), rebooting the remote host will cause 
+the iSCSI-imported disk to be marked as failed, but not as removed (due 
+to its entries in /dev being *not* removed); later, when the iSCSI disk 
+become visible again, it is re-added as a spare.
 
-Thanks,
--Zhilong
+So, while mdadm by itself worked quite well with networked disks, I 
+agree with Adam in that, for production workloads, this is a too fragile 
+setup. Specifically:
+- the default iSCSI timeout (120 seconds) it way too high and need to be 
+adjusted;
+- as, by default, mdadm scans all disk devices for valid arrays, *both* 
+the local and remote machines can see the md array. This must be avoided 
+with the using of the ARRAY <ignore> directive in the mdadm.conf file on 
+the remote machines (ie: the one which exports the iSCSI drives);
+- udev is clearly not geared for managing events caused by remote disks 
+which suddenly disconnect without advice.
 
-> Jes
->
->
->
+In the end, no problems seems related to mdadm itself, which remains a 
+wonderful and extremely flexible tool to manage software RAIDs. Thank 
+you all for the hard works.
 
+Regards.
+
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
