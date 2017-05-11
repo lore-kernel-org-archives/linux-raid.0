@@ -1,42 +1,54 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: [PATCH 03/16] uuid: rename uuid types
-Date: Thu, 11 May 2017 09:59:26 +0200
-Message-ID: <20170511075926.GC19837@lst.de>
-References: <20170510180214.16852-1-hch@lst.de>
- <20170510180214.16852-4-hch@lst.de>
- <CAOQ4uxjSpCgM=RK5jXkuY5HmseQT2EKh_huntvK2ADKBuNqi4A@mail.gmail.com>
+From: Eric Biggers <ebiggers3@gmail.com>
+Subject: Re: [RFC 01/10] crypto: factor async completion for general use
+Date: Thu, 11 May 2017 01:09:21 -0700
+Message-ID: <20170511080921.GB7533@zzz>
+References: <1494075602-5061-1-git-send-email-gilad@benyossef.com>
+ <1494075602-5061-2-git-send-email-gilad@benyossef.com>
+ <20170511035527.GA2936@zzz>
+ <CAOtvUMezWBrHtGxJCBJHVks-XJdSCOMrRj3evsNdY=cB==wc-g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-crypto-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxjSpCgM=RK5jXkuY5HmseQT2EKh_huntvK2ADKBuNqi4A-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-xfs <linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+In-Reply-To: <CAOtvUMezWBrHtGxJCBJHVks-XJdSCOMrRj3evsNdY=cB==wc-g@mail.gmail.com>
+Sender: linux-crypto-owner@vger.kernel.org
+To: Gilad Ben-Yossef <gilad@benyossef.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>, Ofir Drang <ofir.drang@arm.com>, Gilad Ben-Yossef <gilad.benyossef@arm.com>, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, Linux kernel mailing list <linux-kernel@vger.kernel.org>, keyrings@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, May 10, 2017 at 10:15:51PM +0300, Amir Goldstein wrote:
-> > +static inline int uuid_cmp(const uuid_t u1, const uuid_t u2)
-> >  {
-> > -       return memcmp(&u1, &u2, sizeof(uuid_be));
-> > +       return memcmp(&u1, &u2, sizeof(uuid_t));
-> >  }
+On Thu, May 11, 2017 at 10:29:47AM +0300, Gilad Ben-Yossef wrote:
+> > With regards to the wait being uninterruptible, I agree that this should be the
+> > default behavior, because I think users waiting for specific crypto requests are
+> > generally not prepared to handle the wait actually being interrupted.  After
+> > interruption the crypto operation will still proceed in the background, and it
+> > will use buffers which the caller has in many cases already freed.  However, I'd
+> > suggest taking a close look at anything that was actually doing an interruptible
+> > wait before, to see whether it was a bug or intentional (or "doesn't matter").
 > >
+> > And yes there could always be a crypto_wait_req_interruptible() introduced if
+> > some users need it.
 > 
+> So this one was a bit of a shocker.  I though the  _interruptible use
+> sites seemed
+> wrong in the sense of being needless. However, after reading your feedback and
+> reviewing the code I'm pretty sure every single one of them (including
+> the one I've
+> added in dm-verity-target.c this merge window)  are down right dangerous and
+> can cause random data corruption... so thanks for pointing this out!
 > 
-> I think we should use this opportunity to change these to (uuid_t *, uuid_t *)
-> which is more in line with the rest of the helpers including the new helpers
-> hoisted from xfs.
+> I though of this patch set as a "make the code pretty" for 4.13 kind
+> of patch set.
+> Looks like it's a bug fix now, maybe even stable material.
+> 
+> Anyway, I'll roll a v2 and we'll see.
+> 
 
-Or just kill them off - uuid/guid_equals is the better interface for all
-existing users as far as I can tell.  My updated series already kills
-off the be/uuid one, the le/guid one will need a bit more work, though.
+Any that are called only by kernel threads would theoretically be safe since
+kernel threads don't ordinarily receive signals.  But I think that at least the
+drbg and gcm waits can be reached by user threads, since they can be called via
+algif_rng and algif_aead respectively.
+
+I recommend putting any important fixes first, so they can be backported without
+depending on crypto_wait_req().
+
+Eric
