@@ -1,73 +1,49 @@
-From: Gilad Ben-Yossef <gilad@benyossef.com>
-Subject: Re: [RFC 01/10] crypto: factor async completion for general use
-Date: Thu, 11 May 2017 10:29:47 +0300
-Message-ID: <CAOtvUMezWBrHtGxJCBJHVks-XJdSCOMrRj3evsNdY=cB==wc-g@mail.gmail.com>
-References: <1494075602-5061-1-git-send-email-gilad@benyossef.com>
- <1494075602-5061-2-git-send-email-gilad@benyossef.com> <20170511035527.GA2936@zzz>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: Re: [PATCH 16/16] fs: switch ->s_uuid to uuid_t
+Date: Thu, 11 May 2017 09:58:25 +0200
+Message-ID: <20170511075825.GB19837@lst.de>
+References: <20170510180214.16852-1-hch@lst.de>
+ <20170510180214.16852-17-hch@lst.de>
+ <CAOQ4uxga2U6OS8N5MnBoytyWP8Fbf8qQCS1cnsPqjoby=Mxc1w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-security-module-owner@vger.kernel.org>
-In-Reply-To: <20170511035527.GA2936@zzz>
-Sender: owner-linux-security-module@vger.kernel.org
-To: Eric Biggers <ebiggers3@gmail.com>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>, Ofir Drang <ofir.drang@arm.com>, Gilad Ben-Yossef <gilad.benyossef@arm.com>, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, Linux kernel mailing list <linux-kernel@vger.kernel.org>, keyrings@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxga2U6OS8N5MnBoytyWP8Fbf8qQCS1cnsPqjoby=Mxc1w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-xfs <linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-raid.ids
 
-Hi Eric,
+On Wed, May 10, 2017 at 10:08:25PM +0300, Amir Goldstein wrote:
+> On Wed, May 10, 2017 at 9:02 PM, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org> wrote:
+> > For some file systems we still memcpy into it, but in various places this
+> > already allows us to use the proper uuid helpers.  More to come..
+> > Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+> > ---
+> 
+> Series looks good!
+> 
+> My main concern is that filesystems with char uuid[16] are here to stay,
+> or maybe, will be converted slowly.
 
-On Thu, May 11, 2017 at 6:55 AM, Eric Biggers <ebiggers3@gmail.com> wrote:
-> Hi Gilad,
->
-> On Sat, May 06, 2017 at 03:59:50PM +0300, Gilad Ben-Yossef wrote:
->> Invoking a possibly async. crypto op and waiting for completion
->> while correctly handling backlog processing is a common task
->> in the crypto API implementation and outside users of it.
->>
->> This patch re-factors one of the in crypto API implementation in
->> preparation for using it across the board instead of hand
->> rolled versions.
->
-> Thanks for doing this!  It annoyed me too that there wasn't a helper function
-> for this.  Just a few comments below:
->
+I'll take a stab to convert them ASAP, and add s_uuid support for you
+to more file systems once this initial series is done.
 
-Thank you for the review.
-I will incorporate the feedback into v2.
+> 
+> Considering this, perhaps we should have a helper/macro to copy from
+> char[16] to *uuid_t and maybe  BUILD_BUG_ON the size comparison?
+> #define bytes_to_uuid(dst, src) ...
 
-...
-
-> With regards to the wait being uninterruptible, I agree that this should be the
-> default behavior, because I think users waiting for specific crypto requests are
-> generally not prepared to handle the wait actually being interrupted.  After
-> interruption the crypto operation will still proceed in the background, and it
-> will use buffers which the caller has in many cases already freed.  However, I'd
-> suggest taking a close look at anything that was actually doing an interruptible
-> wait before, to see whether it was a bug or intentional (or "doesn't matter").
->
-> And yes there could always be a crypto_wait_req_interruptible() introduced if
-> some users need it.
-
-So this one was a bit of a shocker.  I though the  _interruptible use
-sites seemed
-wrong in the sense of being needless. However, after reading your feedback and
-reviewing the code I'm pretty sure every single one of them (including
-the one I've
-added in dm-verity-target.c this merge window)  are down right dangerous and
-can cause random data corruption... so thanks for pointing this out!
-
-I though of this patch set as a "make the code pretty" for 4.13 kind
-of patch set.
-Looks like it's a bug fix now, maybe even stable material.
-
-Anyway, I'll roll a v2 and we'll see.
-
-Thanks,
-Gilad
-
--- 
-Gilad Ben-Yossef
-Chief Coffee Drinker
-
-"If you take a class in large-scale robotics, can you end up in a
-situation where the homework eats your dog?"
- -- Jean-Baptiste Queru
+If the mix of proper types and u8 arrays was to stay that'd be the way
+to go, but I'd rather fix things up in a merge window or two instead
+of leaving us in a transitionary state forever.
