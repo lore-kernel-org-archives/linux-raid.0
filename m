@@ -1,184 +1,115 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH v5] md/r5cache: gracefully handle journal device errors for writeback mode
-Date: Thu, 11 May 2017 15:28:28 -0700
-Message-ID: <20170511222828.2142993-1-songliubraving@fb.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH] md:raid1/10: avoid unnecessary locking
+Date: Fri, 12 May 2017 08:29:56 +1000
+Message-ID: <87lgq3kowr.fsf@notabene.neil.brown.name>
+References: <1946dca4cbeb08911e4fcc155d1b2ffa8bc6c0a2.1494431492.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1946dca4cbeb08911e4fcc155d1b2ffa8bc6c0a2.1494431492.git.shli@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com, Song Liu <songliubraving@fb.com>
+To: shli@kernel.org, linux-raid@vger.kernel.org
+Cc: Shaohua Li <shli@fb.com>
 List-Id: linux-raid.ids
 
-For the raid456 with writeback cache, when journal device failed during
-normal operation, it is still possible to persist all data, as all
-pending data is still in stripe cache. However, it is necessary to handle
-journal failure gracefully.
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-During journal failures, the following logic handles the graceful shutdown
-of journal:
-1. raid5_error() marks the device as Faulty and schedules async work
-   log->disable_writeback_work;
-2. In disable_writeback_work (r5c_disable_writeback_async), the mddev is
-   suspended, set to write through, and then resumed. mddev_suspend()
-   flushes all cached stripes;
-3. All cached stripes need to be flushed carefully to the RAID array.
+On Wed, May 10 2017, shli@kernel.org wrote:
 
-This patch fixes issues within the process above:
-1. In r5c_update_on_rdev_error() schedule disable_writeback_work for
-   journal failures;
-2. In r5c_disable_writeback_async(), wait for MD_SB_CHANGE_PENDING,
-   since raid5_error() updates superblock.
-3. In handle_stripe(), allow stripes with data in journal (s.injournal > 0)
-   to make progress during log_failed;
-4. In delay_towrite(), if log failed only process data in the cache (skip
-   new writes in dev->towrite);
-5. In __get_priority_stripe(), process loprio_list during journal device
-   failures.
-6. In raid5_remove_disk(), wait for all cached stripes are flushed before
-   calling log_exit().
+> From: Shaohua Li <shli@fb.com>
+>
+> If we add bios to block plugging list, locking is unnecessry, since the b=
+lock
+> unplug is guaranteed not to run at that time.
 
-Signed-off-by: Song Liu <songliubraving@fb.com>
----
- drivers/md/raid5-cache.c | 11 +++++++++--
- drivers/md/raid5-log.h   |  3 ++-
- drivers/md/raid5.c       | 29 +++++++++++++++++++++++------
- 3 files changed, 34 insertions(+), 9 deletions(-)
+Yes, that make sense.  Thanks
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index a6a62e2..cc3f844 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -24,6 +24,7 @@
- #include "md.h"
- #include "raid5.h"
- #include "bitmap.h"
-+#include "raid5-log.h"
- 
- /*
-  * metadata/data stored in disk with 4k size unit (a block) regardless
-@@ -680,6 +681,11 @@ static void r5c_disable_writeback_async(struct work_struct *work)
- 		return;
- 	pr_info("md/raid:%s: Disabling writeback cache for degraded array.\n",
- 		mdname(mddev));
-+
-+	/* wait superblock change before suspend */
-+	wait_event(mddev->sb_wait,
-+		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
-+
- 	mddev_suspend(mddev);
- 	log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_THROUGH;
- 	mddev_resume(mddev);
-@@ -2983,7 +2989,7 @@ static int r5l_load_log(struct r5l_log *log)
- 	return ret;
- }
- 
--void r5c_update_on_rdev_error(struct mddev *mddev)
-+void r5c_update_on_rdev_error(struct mddev *mddev, struct md_rdev *rdev)
- {
- 	struct r5conf *conf = mddev->private;
- 	struct r5l_log *log = conf->log;
-@@ -2991,7 +2997,8 @@ void r5c_update_on_rdev_error(struct mddev *mddev)
- 	if (!log)
- 		return;
- 
--	if (raid5_calc_degraded(conf) > 0 &&
-+	if ((raid5_calc_degraded(conf) > 0 ||
-+	     test_bit(Journal, &rdev->flags)) &&
- 	    conf->log->r5c_journal_mode == R5C_JOURNAL_MODE_WRITE_BACK)
- 		schedule_work(&log->disable_writeback_work);
- }
-diff --git a/drivers/md/raid5-log.h b/drivers/md/raid5-log.h
-index 2709710..328d67a 100644
---- a/drivers/md/raid5-log.h
-+++ b/drivers/md/raid5-log.h
-@@ -28,7 +28,8 @@ extern void r5c_flush_cache(struct r5conf *conf, int num);
- extern void r5c_check_stripe_cache_usage(struct r5conf *conf);
- extern void r5c_check_cached_full_stripe(struct r5conf *conf);
- extern struct md_sysfs_entry r5c_journal_mode;
--extern void r5c_update_on_rdev_error(struct mddev *mddev);
-+extern void r5c_update_on_rdev_error(struct mddev *mddev,
-+				     struct md_rdev *rdev);
- extern bool r5c_big_stripe_cached(struct r5conf *conf, sector_t sect);
- 
- extern struct dma_async_tx_descriptor *
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index f8055a7..0ac57a9 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -2689,7 +2689,7 @@ static void raid5_error(struct mddev *mddev, struct md_rdev *rdev)
- 		bdevname(rdev->bdev, b),
- 		mdname(mddev),
- 		conf->raid_disks - mddev->degraded);
--	r5c_update_on_rdev_error(mddev);
-+	r5c_update_on_rdev_error(mddev, rdev);
- }
- 
- /*
-@@ -3050,6 +3050,11 @@ sector_t raid5_compute_blocknr(struct stripe_head *sh, int i, int previous)
-  *      When LOG_CRITICAL, stripes with injournal == 0 will be sent to
-  *      no_space_stripes list.
-  *
-+ *   3. during journal failure
-+ *      In journal failure, we try to flush all cached data to raid disks
-+ *      based on data in stripe cache. The array is read-only to upper
-+ *      layers, so we would skip all pending writes.
-+ *
-  */
- static inline bool delay_towrite(struct r5conf *conf,
- 				 struct r5dev *dev,
-@@ -3063,6 +3068,9 @@ static inline bool delay_towrite(struct r5conf *conf,
- 	if (test_bit(R5C_LOG_CRITICAL, &conf->cache_state) &&
- 	    s->injournal > 0)
- 		return true;
-+	/* case 3 above */
-+	if (s->log_failed && s->injournal)
-+		return true;
- 	return false;
- }
- 
-@@ -4696,10 +4704,15 @@ static void handle_stripe(struct stripe_head *sh)
- 	       " to_write=%d failed=%d failed_num=%d,%d\n",
- 	       s.locked, s.uptodate, s.to_read, s.to_write, s.failed,
- 	       s.failed_num[0], s.failed_num[1]);
--	/* check if the array has lost more than max_degraded devices and,
-+	/*
-+	 * check if the array has lost more than max_degraded devices and,
- 	 * if so, some requests might need to be failed.
-+	 *
-+	 * When journal device failed (log_failed), we will only process
-+	 * the stripe if there is data need write to raid disks
- 	 */
--	if (s.failed > conf->max_degraded || s.log_failed) {
-+	if (s.failed > conf->max_degraded ||
-+	    (s.log_failed && s.injournal == 0)) {
- 		sh->check_state = 0;
- 		sh->reconstruct_state = 0;
- 		break_stripe_batch_list(sh, 0);
-@@ -5272,8 +5285,10 @@ static struct stripe_head *__get_priority_stripe(struct r5conf *conf, int group)
- 	struct stripe_head *sh, *tmp;
- 	struct list_head *handle_list = NULL;
- 	struct r5worker_group *wg;
--	bool second_try = !r5c_is_writeback(conf->log);
--	bool try_loprio = test_bit(R5C_LOG_TIGHT, &conf->cache_state);
-+	bool second_try = !r5c_is_writeback(conf->log) &&
-+		!r5l_log_disk_error(conf);
-+	bool try_loprio = test_bit(R5C_LOG_TIGHT, &conf->cache_state) ||
-+		r5l_log_disk_error(conf);
- 
- again:
- 	wg = NULL;
-@@ -7521,7 +7536,9 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
- 		 * neilb: there is no locking about new writes here,
- 		 * so this cannot be safe.
- 		 */
--		if (atomic_read(&conf->active_stripes)) {
-+		if (atomic_read(&conf->active_stripes) ||
-+		    atomic_read(&conf->r5c_cached_full_stripes) ||
-+		    atomic_read(&conf->r5c_cached_partial_stripes)) {
- 			return -EBUSY;
- 		}
- 		log_exit(conf);
--- 
-2.9.3
+Reviewed-by: NeilBrown <neilb@suse.com>
 
+
+>
+> Cc: NeilBrown <neilb@suse.com>
+> Signed-off-by: Shaohua Li <shli@fb.com>
+> ---
+>  drivers/md/raid1.c  | 7 +++----
+>  drivers/md/raid10.c | 7 +++----
+>  2 files changed, 6 insertions(+), 8 deletions(-)
+>
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 7c1f73398800..a17ed6218d51 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -1529,17 +1529,16 @@ static void raid1_write_request(struct mddev *mdd=
+ev, struct bio *bio,
+>  			plug =3D container_of(cb, struct raid1_plug_cb, cb);
+>  		else
+>  			plug =3D NULL;
+> -		spin_lock_irqsave(&conf->device_lock, flags);
+>  		if (plug) {
+>  			bio_list_add(&plug->pending, mbio);
+>  			plug->pending_cnt++;
+>  		} else {
+> +			spin_lock_irqsave(&conf->device_lock, flags);
+>  			bio_list_add(&conf->pending_bio_list, mbio);
+>  			conf->pending_count++;
+> -		}
+> -		spin_unlock_irqrestore(&conf->device_lock, flags);
+> -		if (!plug)
+> +			spin_unlock_irqrestore(&conf->device_lock, flags);
+>  			md_wakeup_thread(mddev->thread);
+> +		}
+>  	}
+>=20=20
+>  	r1_bio_write_done(r1_bio);
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 6b86a0032cf8..4343d7ff9916 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -1282,17 +1282,16 @@ static void raid10_write_one_disk(struct mddev *m=
+ddev, struct r10bio *r10_bio,
+>  		plug =3D container_of(cb, struct raid10_plug_cb, cb);
+>  	else
+>  		plug =3D NULL;
+> -	spin_lock_irqsave(&conf->device_lock, flags);
+>  	if (plug) {
+>  		bio_list_add(&plug->pending, mbio);
+>  		plug->pending_cnt++;
+>  	} else {
+> +		spin_lock_irqsave(&conf->device_lock, flags);
+>  		bio_list_add(&conf->pending_bio_list, mbio);
+>  		conf->pending_count++;
+> -	}
+> -	spin_unlock_irqrestore(&conf->device_lock, flags);
+> -	if (!plug)
+> +		spin_unlock_irqrestore(&conf->device_lock, flags);
+>  		md_wakeup_thread(mddev->thread);
+> +	}
+>  }
+>=20=20
+>  static void raid10_write_request(struct mddev *mddev, struct bio *bio,
+> --=20
+> 2.11.0
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlkU5eQACgkQOeye3VZi
+gbkT8w/+JCM/MH6qoJiwxIoINFTVMOcf+KwYRxfoymsxk1zogWG+h2xR8dlpfcRl
+crih0lj47DwbSWERtGgb7vmamMLwFjR/KgDngLZs6RIwpkqc1pU1zk/DO5D7hNwU
+1Ie/jyBI7JGTTz+lix8vHAXhE0hsiaIOXp/RLroeNC2AexV9dVHGZ7W7xBh0oYt+
+CV9gvRC1YQJU+iTiFUTvYKY3TC39hSAu7pzHOVi21VYYrzJkY+23yueKGhFQHIYf
+5uEkfYg1hLv074zObr/lHp0CLoreKTZ+TLEibG2I8XVW1wqZA2e4uKT9A6lhkTzn
+/p20PWnzqRR1y04kG5E8negbuooaS7LcaAO+ANrPjcuQ3dLBS76iNJ2sgdfL/ncn
+NFVazOVS3IG9M/t9XhjEflJawfqPRB5kL3RPN2vy+IJXCna+8nr6kqkx3CZ+FIIi
+0PkbpMbavzkltKf190qNZNn3rr2LolCptdAKPD+B6++dZ4Phthgm8pYNdqESMBgJ
+bieli+xioX6jkfQV0WN32yh9wiCLJA4+BtFxU00Nu4By5l2DooVHn6J/+WW+U4rm
+HSP+T0O9FT2u4Sd3Y62aOVrzNAWVZ/flPNq9XtGmsKJVyMdNc+91M9OmQXXcvnEZ
+NPJFbJfeJbW1Vb/2b9OVcVAqDwejfK9W2bVsx04Ay2EwUhYguAM=
+=mVWL
+-----END PGP SIGNATURE-----
+--=-=-=--
