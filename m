@@ -1,37 +1,60 @@
-From: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [PATCH 05/16] uuid: add the v1 layout to uuid_t
-Date: Thu, 11 May 2017 14:40:38 +0300
-Message-ID: <1494502838.6967.4.camel@linux.intel.com>
-References: <20170510180214.16852-1-hch@lst.de>
- <20170510180214.16852-6-hch@lst.de>
+From: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
+Subject: Re: [PATCH] IMSM: Correct --examine output for 4k disks
+Date: Thu, 11 May 2017 13:49:48 +0200
+Message-ID: <ce37f19d-85f7-b360-4b8f-c54cd5a2915e@intel.com>
+References: <1494331407-2049-1-git-send-email-mariusz.dabrowski@intel.com>
+ <1aca3793-3786-00dc-910e-920a21a1108b@gmail.com>
+ <5e8e5353-e42d-0ea0-1928-7d4608a884b8@intel.com>
+ <e27a148f-f0bf-8713-ceca-f37b4fb2fb88@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <20170510180214.16852-6-hch-jcswGhMUV9g@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <e27a148f-f0bf-8713-ceca-f37b4fb2fb88@gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Jes Sorensen <jes.sorensen@gmail.com>, linux-raid@vger.kernel.org
+Cc: Maksymilian Kunt <maksymilian.kunt@intel.com>
 List-Id: linux-raid.ids
 
-T24gV2VkLCAyMDE3LTA1LTEwIGF0IDIwOjAyICswMjAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
-ZToKPiBUdXJuIHRoZSBjb250ZW50IG9mIHV1aWRfdCBpbnRvIGEgdW5pb24gYW5kIGFkZCB0aGUg
-ZmllbGRzIGZvciB0aGUgdjEKPiBpbnRlcnByZXRhdGlvbiB0byBpdC4KCkluIHRoZSBicmFuY2gg
-aXQgaGFzIGZpeCBmb3IgVVVJRCgpIHdydCB1bmlvbiBjaGFuZ2UsIGJ1dCB0aGVyZSBtaXNzZWQK
-c2ltaWxhciBmb3IgR1VJRCgpLgoKKyNkZWZpbmUgVVVJRChhLCBfYiwgYywgZDAsIGQxLCBkMiwg
-ZDMsIGQ0LCBkNSwgZDYsCmQ3KcKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBcCit7
-IC5iID0geyBcCgpeXl4gVGhpcyBzaG91bGQgYmUgZG9uZSBmb3IgR1VJRCgpIGFzIHdlbGwuCgpX
-aGlsZSBoZXJlLCBjYW4gd2UgaW5kZW50IFwgdG8gYmUgdGhlIHNhbWUgYXMgb2YgdGhlIHJlc3Qg
-bGluZXMgaW4KbWFjcm8ocykgPwoKLS0gCkFuZHkgU2hldmNoZW5rbyA8YW5kcml5LnNoZXZjaGVu
-a29AbGludXguaW50ZWwuY29tPgpJbnRlbCBGaW5sYW5kIE95Cl9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fCkxpbnV4LW52ZGltbSBtYWlsaW5nIGxpc3QKTGlu
-dXgtbnZkaW1tQGxpc3RzLjAxLm9yZwpodHRwczovL2xpc3RzLjAxLm9yZy9tYWlsbWFuL2xpc3Rp
-bmZvL2xpbnV4LW52ZGltbQo=
+On 05/10/2017 05:18 PM, Jes Sorensen wrote:
+> On 05/10/2017 04:43 AM, Mariusz Dabrowski wrote:
+>> On 05/09/2017 06:04 PM, Jes Sorensen wrote:
+>>  > On 05/09/2017 08:03 AM, Mariusz Dabrowski wrote:
+>>  >> From: Maksymilian Kunt <maksymilian.kunt@intel.com>
+>>  >>
+>>  >> "Array Size" and "Per Dev Size" are incorrect for disks with sector size
+>>  >> different than 512B.
+>>  >>
+>>  >> Calculate "Array Size" and "Per Dev Size" based on sector size. Additionally
+>>  >> print "Sector Size".
+>>  >>
+>>  >> Signed-off-by: Maksymilian Kunt <maksymilian.kunt@intel.com>
+>>  >> Signed-off-by: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
+>>  >> ---
+>>  >>   super-intel.c | 7 +++++--
+>>  >>   1 file changed, 5 insertions(+), 2 deletions(-)
+>>  >
+>>  > I am a little wary of this change as it changes the order of the output. Does
+>>  > anyone have tools parsing this information which could break from this?
+>>  >
+>>  > Jes
+>>  >
+>>
+>> Hi Jes,
+>>
+>> some time ago we have added "RWH Policy" field to --examine output and we
+>> haven't heard any complaints about that change.
+>> Also it is better to parse output from --export option which is unchanged in
+>> this patch.
+>
+> Hi Mariusz,
+>
+> That is correct, however the policy stuff was added to the end of the output, it
+> didn't change the existing part. I am a little mixed on this one, but I do agree
+> --export should be the recommended use case for scripts.
+>
+> Cheers,
+> Jes
+
+Are you willing to accept this patch if no one disagrees or should I remove this 
+additional field and resend the patch?
