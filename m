@@ -1,77 +1,43 @@
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-Subject: Building mdadm in parallel fails
-Date: Thu, 11 May 2017 11:05:05 +0200
-Message-ID: <b9ef7f70-a7c6-b170-4a23-e33074893951@molgen.mpg.de>
+From: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [PATCH 03/16] uuid: rename uuid types
+Date: Thu, 11 May 2017 14:38:07 +0300
+Message-ID: <1494502687.6967.2.camel@linux.intel.com>
+References: <20170510180214.16852-4-hch@lst.de>
+ <20170510180214.16852-1-hch@lst.de>
+ <2612.1494440436@warthog.procyon.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <2612.1494440436-S6HVgzuS8uM4Awkfq6JHfwNdhmdF6hFW@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-Dear mdadm folks,
-
-
-I hope this list is the correct forum to report this issue to.
-
-Building the utility mdadm 4.0 with in parallel with 62 cores, gives the 
-error below. Building with `-j1` works.
-
-```
-$ make -j62 PREFIX=/usr EPREFIX=/usr BINDIR=/usr/bin SBINDIR=/usr/sbin 
-LIBEXECDIR=/usr/libexec SYSCONFDIR=/etc SHAREDSTATEDIR=/var 
-LOCALSTATEDIR=/var LIBDIR=/usr/lib INCLUDEDIR=/usr/include 
-DATAROOTDIR=/usr/share DATADIR=/usr/share INFODIR=/usr/share/info 
-LOCALEDIR=/usr/share/locale MANDIR=/usr/share/man 
-DOCDIR=/usr/share/doc/mdadm V=1 everything[…]
-cc -o mdadm.Os -Wall -Werror -Wstrict-prototypes -Wextra 
--Wno-unused-parameter -ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" 
--DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" 
--DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" 
--DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DNO_COROSYNC -DNO_DLM 
--DUSE_PTHREADS -DBINDIR=\"/usr/bin\"  -DHAVE_STDINT_H -Os mdadm.c 
-config.c policy.c mdstat.c ReadMe.c util.c maps.c lib.c Manage.c 
-Assemble.c Build.c Create.c Detail.c Examine.c Grow.c Monitor.c dlink.c 
-Kill.c Query.c Incremental.c Dump.c mdopen.c super0.c super1.c 
-super-ddf.c super-intel.c bitmap.c super-mbr.c super-gpt.c restripe.c 
-sysfs.c sha1.c mapfile.c crc32.c sg_io.c msg.c xmalloc.c 
-platform-intel.c probe_roms.c crc32c.c -ldl
-> cc -o mdmon.O2 -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter -ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" -DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" -DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" -DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DNO_COROSYNC -DNO_DLM   -DUSE_PTHREADS -DBINDIR=\"/usr/bin\"  -pthread -DHAVE_STDINT_H -O2 -D_FORTIFY_SOURCE=2 mdmon.c monitor.c managemon.c util.c maps.c mdstat.c sysfs.c policy.c lib.c Kill.c sg_io.c dlink.c ReadMe.c super-intel.c super-mbr.c super-gpt.c super-ddf.c sha1.c crc32.c msg.c bitmap.c xmalloc.c platform-intel.c probe_roms.c -ldl
-sed -e 's/{DEFAULT_METADATA}/1.2/g' \
--e 's,{MAP_PATH},/run/mdadm/map,g'  mdadm.8.in > mdadm.8
-man -l md.4 > md.man
-man -l mdadm.conf.5 > mdadm.conf.man
-man -l mdmon.8 > mdmon.man
-man -l raid6check.8 > raid6check.man
-man -l mdadm.8 > mdadm.man
-rm -f mdadm.o config.o policy.o mdstat.o  ReadMe.o util.o maps.o lib.o 
-Manage.o Assemble.o Build.o Create.o Detail.o Examine.o Grow.o Monitor.o 
-dlink.o Kill.o Query.o Incremental.o Dump.o mdopen.o super0.o super1.o 
-super-ddf.o super-intel.o bitmap.o super-mbr.o super-gpt.o restripe.o 
-sysfs.o sha1.o mapfile.o crc32.o sg_io.o msg.o xmalloc.o 
-platform-intel.o probe_roms.o crc32c.o
-> cc  -DBINDIR=\"/usr/bin\" -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter -ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" -DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" -DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" -DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DNO_COROSYNC -DNO_DLM   -DUSE_PTHREADS -DMDASSEMBLE -DMDASSEMBLE_AUTO -static -DHAVE_STDINT_H -o mdassemble.static mdassemble.c Assemble.c Manage.c config.c policy.c dlink.c util.c maps.c lib.c xmalloc.c super0.c super1.c super-ddf.c super-intel.c sha1.c crc32.c sg_io.c mdstat.c platform-intel.c probe_roms.c sysfs.c super-mbr.c super-gpt.c mapfile.c mdopen.c pwgr.c
-cc -ggdb  -o raid6check raid6check.o restripe.o sysfs.o maps.o lib.o 
-xmalloc.o dlink.o
-cc: error: restripe.o: No such file or directory
-cc: error: sysfs.o: No such file or directory
-cc: error: maps.o: No such file or directory
-cc: error: lib.o: No such file or directory
-cc: error: xmalloc.o: No such file or directory
-cc: error: dlink.o: No such file or directory
-Makefile:217: recipe for target 'raid6check' failed
-make: *** [raid6check] Error 1
-make: *** Waiting for unfinished jobs....
-/usr/bin/ld: cannot find xmalloc.o: No such file or directory
-collect2: error: ld returned 1 exit status
-Makefile:214: recipe for target 'test_stripe' failed
-make: *** [test_stripe] Error 1
-make[1]: Leaving directory '/dev/shm/bee-joey/mdadm/mdadm-4.0-0/source'
-mv mdassemble.static mdassemble.auto
-```
-
-Kind regards,
-
-Paul
+T24gV2VkLCAyMDE3LTA1LTEwIGF0IDE5OjIwICswMTAwLCBEYXZpZCBIb3dlbGxzIHdyb3RlOgo+
+IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPiB3cm90ZToKPiAKPiA+IC0jZGVmaW5lIE5V
+TExfVVVJRF9MRQkJCQkJCQo+ID4gCVwKPiA+IC0JVVVJRF9MRSgweDAwMDAwMDAwLCAweDAwMDAs
+IDB4MDAwMCwgMHgwMCwgMHgwMCwgMHgwMCwgMHgwMCwKPiA+IAlcCj4gPiAtCQkweDAwLCAweDAw
+LCAweDAwLCAweDAwKQo+ID4gKyNkZWZpbmUgTlVMTF9HVUlECQkJCQkJCQo+ID4gXAo+ID4gKwlH
+VUlEKDB4MDAwMDAwMDAsIDB4MDAwMCwgMHgwMDAwLCAweDAwLCAweDAwLCAweDAwLCAweDAwLAkK
+PiA+IFwKPiA+ICsJwqDCoMKgwqDCoDB4MDAsIDB4MDAsIDB4MDAsIDB4MDApCj4gPiDCoAo+ID4g
+LSNkZWZpbmUgTlVMTF9VVUlEX0JFCQkJCQkJCj4gPiAJXAo+ID4gLQlVVUlEX0JFKDB4MDAwMDAw
+MDAsIDB4MDAwMCwgMHgwMDAwLCAweDAwLCAweDAwLCAweDAwLCAweDAwLAo+ID4gCVwKPiA+IC0J
+CTB4MDAsIDB4MDAsIDB4MDAsIDB4MDApCj4gPiArI2RlZmluZSBOVUxMX1VVSUQJCQkJCQkJCj4g
+PiBcCj4gPiArCVVVSUQoMHgwMDAwMDAwMCwgMHgwMDAwLCAweDAwMDAsIDB4MDAsIDB4MDAsIDB4
+MDAsIDB4MDAsCQo+ID4gXAo+ID4gKwnCoMKgwqDCoMKgMHgwMCwgMHgwMCwgMHgwMCwgMHgwMCkK
+PiAKPiBUaGVzZSBhcmUgVUFQSSBhbmQgb3VnaHQgbm90IHRvIGJlIHJlbmFtZWQuCj4gCgpHb29k
+IHBvaW50LiBJIHNlZSBpbiB0aGUgYnJhbmNoIGl0J3MgYWxyZWFkeSBmaXhlZC4KCgotLSAKQW5k
+eSBTaGV2Y2hlbmtvIDxhbmRyaXkuc2hldmNoZW5rb0BsaW51eC5pbnRlbC5jb20+CkludGVsIEZp
+bmxhbmQgT3kKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
+TGludXgtbnZkaW1tIG1haWxpbmcgbGlzdApMaW51eC1udmRpbW1AbGlzdHMuMDEub3JnCmh0dHBz
+Oi8vbGlzdHMuMDEub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtbnZkaW1tCg==
