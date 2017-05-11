@@ -1,37 +1,104 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: [PATCH 05/16] uuid: add the v1 layout to uuid_t
-Date: Thu, 11 May 2017 14:07:18 +0200
-Message-ID: <20170511120718.GA27480@lst.de>
-References: <20170510180214.16852-1-hch@lst.de>
- <20170510180214.16852-6-hch@lst.de> <1494502838.6967.4.camel@linux.intel.com>
+From: Zhilong Liu <zlliu@suse.com>
+Subject: Re: [mdadm PATCH] Create: move STOP_ARRAY to abort_locked
+Date: Thu, 11 May 2017 21:01:34 +0800
+Message-ID: <521fc317-a4c8-f3f9-1f20-448626249c3e@suse.com>
+References: <1493190229-14329-1-git-send-email-zlliu@suse.com>
+ <430f083a-2501-cb74-4ac1-89d1c4620a03@suse.com>
+ <2c1c277c-2fd2-27a8-e6a5-23b1ced3ec90@gmail.com>
+ <be1df636-2bbb-2757-7a96-264d2d1a4b65@suse.com>
+ <2b947e61-36b6-0c6c-c25c-a9d2831cca11@suse.com>
+ <8275d868-ad51-209b-e46f-9d7f1c60d1a3@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1494502838.6967.4.camel-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <8275d868-ad51-209b-e46f-9d7f1c60d1a3@gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Jes Sorensen <jes.sorensen@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-T24gVGh1LCBNYXkgMTEsIDIwMTcgYXQgMDI6NDA6MzhQTSArMDMwMCwgQW5keSBTaGV2Y2hlbmtv
-IHdyb3RlOgo+IE9uIFdlZCwgMjAxNy0wNS0xMCBhdCAyMDowMiArMDIwMCwgQ2hyaXN0b3BoIEhl
-bGx3aWcgd3JvdGU6Cj4gPiBUdXJuIHRoZSBjb250ZW50IG9mIHV1aWRfdCBpbnRvIGEgdW5pb24g
-YW5kIGFkZCB0aGUgZmllbGRzIGZvciB0aGUgdjEKPiA+IGludGVycHJldGF0aW9uIHRvIGl0Lgo+
-IAo+IEluIHRoZSBicmFuY2ggaXQgaGFzIGZpeCBmb3IgVVVJRCgpIHdydCB1bmlvbiBjaGFuZ2Us
-IGJ1dCB0aGVyZSBtaXNzZWQKPiBzaW1pbGFyIGZvciBHVUlEKCkuCgpBY3R1YWxseSBVVUlEIG5l
-ZWRlZCB0aGlzIGJlY2F1c2UgdXVpZF90IGhhcyBhIHVu0ZZvbiBpbnNpZGUsIEdVSUQKc2hvdWxk
-IG5vdCBuZWVkIGl0IGJlY2F1c2UgaXQgZG9lc24ndC4KCj4gV2hpbGUgaGVyZSwgY2FuIHdlIGlu
-ZGVudCBcIHRvIGJlIHRoZSBzYW1lIGFzIG9mIHRoZSByZXN0IGxpbmVzIGluCj4gbWFjcm8ocykg
-PwoKU3VyZS4KX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
-TGludXgtbnZkaW1tIG1haWxpbmcgbGlzdApMaW51eC1udmRpbW1AbGlzdHMuMDEub3JnCmh0dHBz
-Oi8vbGlzdHMuMDEub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtbnZkaW1tCg==
+
+
+On 05/09/2017 01:54 AM, Jes Sorensen wrote:
+> On 05/07/2017 09:50 PM, Zhilong Liu wrote:
+>>
+>>
+>> On 05/05/2017 11:31 AM, Liu Zhilong wrote:
+>>>
+>>>
+>>> On 05/04/2017 10:54 PM, Jes Sorensen wrote:
+>>>> On 05/04/2017 08:20 AM, Zhilong Liu wrote:
+>>>>> Hi Jes,
+>>>>>
+>>>>> apply for review, this is a bug I ever encountered.
+>>>>
+>>>> Zhilong,
+>>>>
+>>>> Under what circumstances do you see this?
+>>>>
+>>>
+>>> Issued the command:
+>>> linux-g0sr:/home/test # ./mdadm -CR /dev/md0 -l1 -n2 -b internal
+>>> /dev/loop[0-1] --size 63
+>>> ... ... ...
+>>> mdadm: Given bitmap chunk size not supported.
+>>> linux-g0sr:/home/test # ls /dev/md0
+>>> /dev/md0
+>>> linux-g0sr:/home/test # ls /sys/block/md0/md/
+>>> array_size   bitmap      component_size  level metadata_version
+>>> raid_disks         reshape_position safe_mode_delay
+>>> array_state  chunk_size  layout          max_read_errors
+>>> new_dev           reshape_direction  resync_start
+>>>
+>>> create_mddev() writes the devnm to
+>>> /sys/module/md_mod/parameter/new_array,
+>>> then in md.c, module_param_call() called the 'set' function of
+>>> add_named_array(),
+>>> md_alloc() init_and_add the kobject for devm, finally the devnm device
+>>> has created
+>>> and sysfs has registered after create_mddev executed successfully.
+>>> Thus it's better
+>>> to STOP_ARRAY in any case after create_mddev() invoked.
+>>>
+>>
+>> this patch depends on the kernel commit:
+>> 039b7225e6e9 ("md: allow creation of mdNNN arrays via
+>> md_mod/parameters/new_array")
+>> Neil's patch has set "mddev->hold_active = UNTIL_STOP", thus the
+>> STOP_ARRAY can work
+>> well on this situation.
+>
+> OK now I am confused - are you saying this change will only work after 
+> Neil's kernel patch has been applied? That would be no good, mdadm 
+> needs to work on older kernels too.
+>
+
+Yes, I do agree your kindly reminding. In order to fix this scenario that
+exit the process abnormally but create_mddev() has invoked, so how
+about declaring one utility function to do STOP_ARRAY like following,
+it's a better way to stop the array if it opened by O_EXCL flag.
+
+cut the piece code from Manage_stop():
+... ...
+     /* As we have an O_EXCL open, any use of the device
+      * which blocks STOP_ARRAY is probably a transient use,
+      * so it is reasonable to retry for a while - 5 seconds.
+      */
+     count = 25; err = 0;
+     while (count && fd >= 0
+            && (err = ioctl(fd, STOP_ARRAY, NULL)) < 0
+            && errno == EBUSY) {
+         usleep(200000);
+         count --;
+     }
+... ...
+
+Thanks,
+-Zhilong
+
+> Jes
+>
+>
+>
+
