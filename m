@@ -1,121 +1,184 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: on assembly and recovery of a hardware RAID
-Date: Fri, 12 May 2017 08:27:06 +1000
-Message-ID: <87o9uzkp1h.fsf@notabene.neil.brown.name>
-References: <CAAZLhTdaVM4fagN5=bqWpPx-DjyU6UZ69bJFf51FWMX7oeyJNw@mail.gmail.com> <87tw6weubu.fsf@notabene.neil.brown.name> <CAAZLhTcEhn2GezDSDJHOLv2VNSynzT-he0FRrVNbz1xtakLsMQ@mail.gmail.com> <87d1djdz8y.fsf@notabene.neil.brown.name> <CAAZLhTdn6xnB6Kuuhf8+VaSd5u6gekUSDSMnK+w5obZNxvNg8A@mail.gmail.com> <CAAZLhTcoU232uBs2zcK6TFj67Jru5oeNE_F0T2fQR6Un66OPXA@mail.gmail.com> <87lgs0cy0e.fsf@notabene.neil.brown.name> <CAAZLhTcNsjzLdEZyzG+kEuDhVye8pnuf6VhWzP=G0NL_aFX-5w@mail.gmail.com> <87a88fcq21.fsf@notabene.neil.brown.name> <CAAZLhTdobNxkYNmp6y3cOrLAdMfTYt3kodzM0+a7E-G=q1QGtw@mail.gmail.com> <CAAZLhTf=GHmSDcY8Eb9SzevofFbDD7f-N8DKZiFkq9j2XV4mQA@mail.gmail.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: [PATCH v5] md/r5cache: gracefully handle journal device errors for writeback mode
+Date: Thu, 11 May 2017 15:28:28 -0700
+Message-ID: <20170511222828.2142993-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAZLhTf=GHmSDcY8Eb9SzevofFbDD7f-N8DKZiFkq9j2XV4mQA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alfred Matthews <asm13243546@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
+For the raid456 with writeback cache, when journal device failed during
+normal operation, it is still possible to persist all data, as all
+pending data is still in stripe cache. However, it is necessary to handle
+journal failure gracefully.
 
-On Wed, May 03 2017, Alfred Matthews wrote:
+During journal failures, the following logic handles the graceful shutdown
+of journal:
+1. raid5_error() marks the device as Faulty and schedules async work
+   log->disable_writeback_work;
+2. In disable_writeback_work (r5c_disable_writeback_async), the mddev is
+   suspended, set to write through, and then resumed. mddev_suspend()
+   flushes all cached stripes;
+3. All cached stripes need to be flushed carefully to the RAID array.
 
-> Sorry to disappear for a bit.
->
-> Of necessity I've migrated to another working system and I'm in Arch.
-> Utility here is fsck.hfs as opposed to hpfsck. I'd like to post that
-> output.
+This patch fixes issues within the process above:
+1. In r5c_update_on_rdev_error() schedule disable_writeback_work for
+   journal failures;
+2. In r5c_disable_writeback_async(), wait for MD_SB_CHANGE_PENDING,
+   since raid5_error() updates superblock.
+3. In handle_stripe(), allow stripes with data in journal (s.injournal > 0)
+   to make progress during log_failed;
+4. In delay_towrite(), if log failed only process data in the cache (skip
+   new writes in dev->towrite);
+5. In __get_priority_stripe(), process loprio_list during journal device
+   failures.
+6. In raid5_remove_disk(), wait for all cached stripes are flushed before
+   calling log_exit().
 
-I wonder if they are the same thing, or completely different.
+Signed-off-by: Song Liu <songliubraving@fb.com>
+---
+ drivers/md/raid5-cache.c | 11 +++++++++--
+ drivers/md/raid5-log.h   |  3 ++-
+ drivers/md/raid5.c       | 29 +++++++++++++++++++++++------
+ 3 files changed, 34 insertions(+), 9 deletions(-)
 
->
-> mdadm --build /dev/md0 --level=0 -n2 --chunk=8K /dev/sdb2 /dev/sdc2
->
-> works, then,
->
-> fsck.hfs -v /dev/md0
-> *** Checking volume MDB
->   drSigWord      = 0xffffffff
->   drCrDate       = Mon Feb  6 06:28:15 2040
->   drLsMod        = Mon Feb  6 06:28:15 2040
->   drAtrb         = BUSY | HLOCKED | UMOUNTED | BBSPARED | BVINCONSIS |
-> COPYPROT | SLOCKED
->   drNmFls        = 65535
->   drVBMSt        = 65535
->   drAllocPtr     = 65535
->   drNmAlBlks     = 65535
->   drAlBlkSiz     = 4294967295
->   drClpSiz       = 4294967295
->   drAlBlSt       = 65535
->   drNxtCNID      = 4294967295
->   drFreeBks      = 65535
->   drVN           = ""
->   drVolBkUp      = Mon Feb  6 06:28:15 2040
->   drVSeqNum      = 4294967295
->   drWrCnt        = 4294967295
->   drXTClpSiz     = 4294967295
->   drCTClpSiz     = 4294967295
->   drNmRtDirs     = 65535
->   drFilCnt       = 4294967295
->   drDirCnt       = 4294967295
->   drEmbedSigWord = 0xffff
->   drEmbedExtent  = 65535[65535..131069]
->   drXTFlSize     = 4294967295
->   drXTExtRec     =
-> 65535[65535..131069]+65535[65535..131069]+65535[65535..131069]
->   drCTFlSize     = 4294967295
->   drCTExtRec     =
-> 65535[65535..131069]+65535[65535..131069]+65535[65535..131069]
-> Bad volume signature (0xffffffff); should be 0x4244. Fix? y
-> Volume creation date is in the future (Mon Feb  6 06:28:15 2040). Fix? y
-> Volume last modify date is in the future (Mon Feb  6 06:28:15 2040). Fix? y
-> Volume bitmap starts at unusual location (1), not 3. Fix? y
-> *** Checking volume structure
-> *** Checking extents overflow B*-tree
->
-> It's possible that I was unwise in accepting the changes from fsck.
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index a6a62e2..cc3f844 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -24,6 +24,7 @@
+ #include "md.h"
+ #include "raid5.h"
+ #include "bitmap.h"
++#include "raid5-log.h"
+ 
+ /*
+  * metadata/data stored in disk with 4k size unit (a block) regardless
+@@ -680,6 +681,11 @@ static void r5c_disable_writeback_async(struct work_struct *work)
+ 		return;
+ 	pr_info("md/raid:%s: Disabling writeback cache for degraded array.\n",
+ 		mdname(mddev));
++
++	/* wait superblock change before suspend */
++	wait_event(mddev->sb_wait,
++		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
++
+ 	mddev_suspend(mddev);
+ 	log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_THROUGH;
+ 	mddev_resume(mddev);
+@@ -2983,7 +2989,7 @@ static int r5l_load_log(struct r5l_log *log)
+ 	return ret;
+ }
+ 
+-void r5c_update_on_rdev_error(struct mddev *mddev)
++void r5c_update_on_rdev_error(struct mddev *mddev, struct md_rdev *rdev)
+ {
+ 	struct r5conf *conf = mddev->private;
+ 	struct r5l_log *log = conf->log;
+@@ -2991,7 +2997,8 @@ void r5c_update_on_rdev_error(struct mddev *mddev)
+ 	if (!log)
+ 		return;
+ 
+-	if (raid5_calc_degraded(conf) > 0 &&
++	if ((raid5_calc_degraded(conf) > 0 ||
++	     test_bit(Journal, &rdev->flags)) &&
+ 	    conf->log->r5c_journal_mode == R5C_JOURNAL_MODE_WRITE_BACK)
+ 		schedule_work(&log->disable_writeback_work);
+ }
+diff --git a/drivers/md/raid5-log.h b/drivers/md/raid5-log.h
+index 2709710..328d67a 100644
+--- a/drivers/md/raid5-log.h
++++ b/drivers/md/raid5-log.h
+@@ -28,7 +28,8 @@ extern void r5c_flush_cache(struct r5conf *conf, int num);
+ extern void r5c_check_stripe_cache_usage(struct r5conf *conf);
+ extern void r5c_check_cached_full_stripe(struct r5conf *conf);
+ extern struct md_sysfs_entry r5c_journal_mode;
+-extern void r5c_update_on_rdev_error(struct mddev *mddev);
++extern void r5c_update_on_rdev_error(struct mddev *mddev,
++				     struct md_rdev *rdev);
+ extern bool r5c_big_stripe_cached(struct r5conf *conf, sector_t sect);
+ 
+ extern struct dma_async_tx_descriptor *
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index f8055a7..0ac57a9 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -2689,7 +2689,7 @@ static void raid5_error(struct mddev *mddev, struct md_rdev *rdev)
+ 		bdevname(rdev->bdev, b),
+ 		mdname(mddev),
+ 		conf->raid_disks - mddev->degraded);
+-	r5c_update_on_rdev_error(mddev);
++	r5c_update_on_rdev_error(mddev, rdev);
+ }
+ 
+ /*
+@@ -3050,6 +3050,11 @@ sector_t raid5_compute_blocknr(struct stripe_head *sh, int i, int previous)
+  *      When LOG_CRITICAL, stripes with injournal == 0 will be sent to
+  *      no_space_stripes list.
+  *
++ *   3. during journal failure
++ *      In journal failure, we try to flush all cached data to raid disks
++ *      based on data in stripe cache. The array is read-only to upper
++ *      layers, so we would skip all pending writes.
++ *
+  */
+ static inline bool delay_towrite(struct r5conf *conf,
+ 				 struct r5dev *dev,
+@@ -3063,6 +3068,9 @@ static inline bool delay_towrite(struct r5conf *conf,
+ 	if (test_bit(R5C_LOG_CRITICAL, &conf->cache_state) &&
+ 	    s->injournal > 0)
+ 		return true;
++	/* case 3 above */
++	if (s->log_failed && s->injournal)
++		return true;
+ 	return false;
+ }
+ 
+@@ -4696,10 +4704,15 @@ static void handle_stripe(struct stripe_head *sh)
+ 	       " to_write=%d failed=%d failed_num=%d,%d\n",
+ 	       s.locked, s.uptodate, s.to_read, s.to_write, s.failed,
+ 	       s.failed_num[0], s.failed_num[1]);
+-	/* check if the array has lost more than max_degraded devices and,
++	/*
++	 * check if the array has lost more than max_degraded devices and,
+ 	 * if so, some requests might need to be failed.
++	 *
++	 * When journal device failed (log_failed), we will only process
++	 * the stripe if there is data need write to raid disks
+ 	 */
+-	if (s.failed > conf->max_degraded || s.log_failed) {
++	if (s.failed > conf->max_degraded ||
++	    (s.log_failed && s.injournal == 0)) {
+ 		sh->check_state = 0;
+ 		sh->reconstruct_state = 0;
+ 		break_stripe_batch_list(sh, 0);
+@@ -5272,8 +5285,10 @@ static struct stripe_head *__get_priority_stripe(struct r5conf *conf, int group)
+ 	struct stripe_head *sh, *tmp;
+ 	struct list_head *handle_list = NULL;
+ 	struct r5worker_group *wg;
+-	bool second_try = !r5c_is_writeback(conf->log);
+-	bool try_loprio = test_bit(R5C_LOG_TIGHT, &conf->cache_state);
++	bool second_try = !r5c_is_writeback(conf->log) &&
++		!r5l_log_disk_error(conf);
++	bool try_loprio = test_bit(R5C_LOG_TIGHT, &conf->cache_state) ||
++		r5l_log_disk_error(conf);
+ 
+ again:
+ 	wg = NULL;
+@@ -7521,7 +7536,9 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 		 * neilb: there is no locking about new writes here,
+ 		 * so this cannot be safe.
+ 		 */
+-		if (atomic_read(&conf->active_stripes)) {
++		if (atomic_read(&conf->active_stripes) ||
++		    atomic_read(&conf->r5c_cached_full_stripes) ||
++		    atomic_read(&conf->r5c_cached_partial_stripes)) {
+ 			return -EBUSY;
+ 		}
+ 		log_exit(conf);
+-- 
+2.9.3
 
-Definitely possible.
-
-Given how many of the numbers listed above are 0xffff or 0xffffffff, it
-is unlikely that the tool found anything useful.
-
->
->>>
->>> How is your C coding?  You could
->>>   apt-get source hfsplus
->>> and hack the code and try to build it yourself....
->>>
->
-> Still fine. By now not clear if this is what's needed.
-
-I don't think I can be of further help, sorry.
-
-NeilBrown
-
-
->
-> Al
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlkU5ToACgkQOeye3VZi
-gbllGBAAvdShgo142BB4Rau75IsJrmAeRDhPIDc5iXtZtrwSpdjUD/kLxTiWELiq
-JmgAoWq41klCREnsg7AcNNM4XND0EAWo6IQYhV81BXz9AlGi+hVHAqb+gCPAtuXH
-SRIfYis6Fv0liVmnfIivbmCvq0IZcdhzW+DxLPEtR/sclWwVO9xkR7+cE6AOUj5i
-llPz5upZ8xa80oKDeBhXwlbuOBVvG66qz1NzoiTai3WzaYukTwBFlR/uJr10j8GY
-0Zr0IKKeFd46Lb0zCENCaJTcFdJwc0qtxR8HEaRwLwkMJWugCeXsoL3KexwRgEUK
-ObxvjDJ+aZjBQApIUMLV1MoGh0cZaFXLrDrKsN8ZQpw7EOk00edDY83EI7OuixjI
-B0KpYoMc/nAMctZl2iV9lrmgtPpJhXgocVYP4TmX0cIQ/xlYZq3fp6FQv6GEb1d7
-Flz2uAFsbrfThZRfpC2nTRE9uCXLPGkKUb7IelBfps3dgmXaTjk/lDo7ZqeldkVa
-Q/5lk6Arpw+6U5XFb4dS6sGBqMig1FQaKVZ9FnWzOE29DKboSox4lq3aVAQ5bq4Z
-O+3HPBxbfvaA2VYCvEHB2ks5Cgl19y7DaI7EniG2ebvXsI5bY/MB6XzhwP7z3xgL
-ITDXvMhEokc22UrDZxLffEePnqHCW5/6Q+pyVI1N1RxLDTZ+ZE8=
-=ucQG
------END PGP SIGNATURE-----
---=-=-=--
