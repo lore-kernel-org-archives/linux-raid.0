@@ -1,67 +1,77 @@
-From: Gilad Ben-Yossef <gilad@benyossef.com>
-Subject: Re: [RFC 01/10] crypto: factor async completion for general use
-Date: Thu, 11 May 2017 11:55:21 +0300
-Message-ID: <CAOtvUMfd8=pZXrdqH8dOoEnBy+eMp9G_hnMsfUK+_eJ_rN6bcQ@mail.gmail.com>
-References: <1494075602-5061-1-git-send-email-gilad@benyossef.com>
- <1494075602-5061-2-git-send-email-gilad@benyossef.com> <20170511035527.GA2936@zzz>
- <CAOtvUMezWBrHtGxJCBJHVks-XJdSCOMrRj3evsNdY=cB==wc-g@mail.gmail.com> <20170511080921.GB7533@zzz>
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+Subject: Building mdadm in parallel fails
+Date: Thu, 11 May 2017 11:05:05 +0200
+Message-ID: <b9ef7f70-a7c6-b170-4a23-e33074893951@molgen.mpg.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-doc-owner@vger.kernel.org>
-In-Reply-To: <20170511080921.GB7533@zzz>
-Sender: linux-doc-owner@vger.kernel.org
-To: Eric Biggers <ebiggers3@gmail.com>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>, Ofir Drang <ofir.drang@arm.com>, Gilad Ben-Yossef <gilad.benyossef@arm.com>, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, Linux kernel mailing list <linux-kernel@vger.kernel.org>, keyrings@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, May 11, 2017 at 11:09 AM, Eric Biggers <ebiggers3@gmail.com> wrote:
-> On Thu, May 11, 2017 at 10:29:47AM +0300, Gilad Ben-Yossef wrote:
->> > With regards to the wait being uninterruptible, I agree that this should be the
->> > default behavior, because I think users waiting for specific crypto requests are
->> > generally not prepared to handle the wait actually being interrupted.  After
->> > interruption the crypto operation will still proceed in the background, and it
->> > will use buffers which the caller has in many cases already freed.  However, I'd
->> > suggest taking a close look at anything that was actually doing an interruptible
->> > wait before, to see whether it was a bug or intentional (or "doesn't matter").
->> >
->> > And yes there could always be a crypto_wait_req_interruptible() introduced if
->> > some users need it.
->>
->> So this one was a bit of a shocker.  I though the  _interruptible use
->> sites seemed
->> wrong in the sense of being needless. However, after reading your feedback and
->> reviewing the code I'm pretty sure every single one of them (including
->> the one I've
->> added in dm-verity-target.c this merge window)  are down right dangerous and
->> can cause random data corruption... so thanks for pointing this out!
->>
->> I though of this patch set as a "make the code pretty" for 4.13 kind
->> of patch set.
->> Looks like it's a bug fix now, maybe even stable material.
->>
->> Anyway, I'll roll a v2 and we'll see.
->>
->
-> Any that are called only by kernel threads would theoretically be safe since
-> kernel threads don't ordinarily receive signals.  But I think that at least the
-> drbg and gcm waits can be reached by user threads, since they can be called via
-> algif_rng and algif_aead respectively.
->
-> I recommend putting any important fixes first, so they can be backported without
-> depending on crypto_wait_req().
->
+Dear mdadm folks,
 
-OK, I'll send out a separate bug fix series first and rebase the
-crypto_wait one on top
-of it then.
 
-Thanks,
-Gilad
+I hope this list is the correct forum to report this issue to.
 
--- 
-Gilad Ben-Yossef
-Chief Coffee Drinker
+Building the utility mdadm 4.0 with in parallel with 62 cores, gives the 
+error below. Building with `-j1` works.
 
-"If you take a class in large-scale robotics, can you end up in a
-situation where the homework eats your dog?"
- -- Jean-Baptiste Queru
+```
+$ make -j62 PREFIX=/usr EPREFIX=/usr BINDIR=/usr/bin SBINDIR=/usr/sbin 
+LIBEXECDIR=/usr/libexec SYSCONFDIR=/etc SHAREDSTATEDIR=/var 
+LOCALSTATEDIR=/var LIBDIR=/usr/lib INCLUDEDIR=/usr/include 
+DATAROOTDIR=/usr/share DATADIR=/usr/share INFODIR=/usr/share/info 
+LOCALEDIR=/usr/share/locale MANDIR=/usr/share/man 
+DOCDIR=/usr/share/doc/mdadm V=1 everything[…]
+cc -o mdadm.Os -Wall -Werror -Wstrict-prototypes -Wextra 
+-Wno-unused-parameter -ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" 
+-DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" 
+-DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" 
+-DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DNO_COROSYNC -DNO_DLM 
+-DUSE_PTHREADS -DBINDIR=\"/usr/bin\"  -DHAVE_STDINT_H -Os mdadm.c 
+config.c policy.c mdstat.c ReadMe.c util.c maps.c lib.c Manage.c 
+Assemble.c Build.c Create.c Detail.c Examine.c Grow.c Monitor.c dlink.c 
+Kill.c Query.c Incremental.c Dump.c mdopen.c super0.c super1.c 
+super-ddf.c super-intel.c bitmap.c super-mbr.c super-gpt.c restripe.c 
+sysfs.c sha1.c mapfile.c crc32.c sg_io.c msg.c xmalloc.c 
+platform-intel.c probe_roms.c crc32c.c -ldl
+> cc -o mdmon.O2 -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter -ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" -DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" -DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" -DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DNO_COROSYNC -DNO_DLM   -DUSE_PTHREADS -DBINDIR=\"/usr/bin\"  -pthread -DHAVE_STDINT_H -O2 -D_FORTIFY_SOURCE=2 mdmon.c monitor.c managemon.c util.c maps.c mdstat.c sysfs.c policy.c lib.c Kill.c sg_io.c dlink.c ReadMe.c super-intel.c super-mbr.c super-gpt.c super-ddf.c sha1.c crc32.c msg.c bitmap.c xmalloc.c platform-intel.c probe_roms.c -ldl
+sed -e 's/{DEFAULT_METADATA}/1.2/g' \
+-e 's,{MAP_PATH},/run/mdadm/map,g'  mdadm.8.in > mdadm.8
+man -l md.4 > md.man
+man -l mdadm.conf.5 > mdadm.conf.man
+man -l mdmon.8 > mdmon.man
+man -l raid6check.8 > raid6check.man
+man -l mdadm.8 > mdadm.man
+rm -f mdadm.o config.o policy.o mdstat.o  ReadMe.o util.o maps.o lib.o 
+Manage.o Assemble.o Build.o Create.o Detail.o Examine.o Grow.o Monitor.o 
+dlink.o Kill.o Query.o Incremental.o Dump.o mdopen.o super0.o super1.o 
+super-ddf.o super-intel.o bitmap.o super-mbr.o super-gpt.o restripe.o 
+sysfs.o sha1.o mapfile.o crc32.o sg_io.o msg.o xmalloc.o 
+platform-intel.o probe_roms.o crc32c.o
+> cc  -DBINDIR=\"/usr/bin\" -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter -ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" -DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" -DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" -DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DNO_COROSYNC -DNO_DLM   -DUSE_PTHREADS -DMDASSEMBLE -DMDASSEMBLE_AUTO -static -DHAVE_STDINT_H -o mdassemble.static mdassemble.c Assemble.c Manage.c config.c policy.c dlink.c util.c maps.c lib.c xmalloc.c super0.c super1.c super-ddf.c super-intel.c sha1.c crc32.c sg_io.c mdstat.c platform-intel.c probe_roms.c sysfs.c super-mbr.c super-gpt.c mapfile.c mdopen.c pwgr.c
+cc -ggdb  -o raid6check raid6check.o restripe.o sysfs.o maps.o lib.o 
+xmalloc.o dlink.o
+cc: error: restripe.o: No such file or directory
+cc: error: sysfs.o: No such file or directory
+cc: error: maps.o: No such file or directory
+cc: error: lib.o: No such file or directory
+cc: error: xmalloc.o: No such file or directory
+cc: error: dlink.o: No such file or directory
+Makefile:217: recipe for target 'raid6check' failed
+make: *** [raid6check] Error 1
+make: *** Waiting for unfinished jobs....
+/usr/bin/ld: cannot find xmalloc.o: No such file or directory
+collect2: error: ld returned 1 exit status
+Makefile:214: recipe for target 'test_stripe' failed
+make: *** [test_stripe] Error 1
+make[1]: Leaving directory '/dev/shm/bee-joey/mdadm/mdadm-4.0-0/source'
+mv mdassemble.static mdassemble.auto
+```
+
+Kind regards,
+
+Paul
