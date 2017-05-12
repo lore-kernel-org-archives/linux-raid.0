@@ -1,55 +1,91 @@
-From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Subject: Re: RFC - Raid error detection and auto-recovery (was Fault tolerance
- with badblocks)
-Date: Fri, 12 May 2017 09:31:49 +1000
-Message-ID: <4da6b084-e975-0d33-806f-40cf94434559@eyal.emu.id.au>
-References: <591314F4.2010702@youngman.org.uk>
- <20170510170744.GB2925@lazy.lzy>
+From: Song Liu <songliubraving@fb.com>
+Subject: [PATCH] md/r5cache: handle sync with data in write back cache
+Date: Thu, 11 May 2017 17:03:44 -0700
+Message-ID: <20170512000344.2509283-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170510170744.GB2925@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-On 11/05/17 03:07, Piergiorgio Sartor wrote:
-> On Wed, May 10, 2017 at 02:26:12PM +0100, Wols Lists wrote:
-[trim]
->>
->> Coders and code welcome ... :-)
->
-> I just would like to stress the fact that
-> there is user-space code (raid6check) which
-> perform check, possibily repair, on RAID6.
+Currently, sync of raid456 array cannot make progress when hitting
+data in writeback r5cache.
 
-Short summary: the detect/correct options suggested by the OP are valuable.
+This patch fixes this issue by flushing cached data of the stripe
+before processing the sync request. This is achived by:
 
-raid6check is not the same thing. As an exercise I decided to run raid6check
-instead of a raid 'check'. It is *very* slow. It seems to read the disks
-sequentially (not in parallel).
+1. In handle_stripe(), do not set STRIPE_SYNCING if the stripe is
+   in write back cache;
+2. In r5c_try_caching_write(), handle the stripe in sync with write
+   through;
+3. In do_release_stripe(), make stripe in sync write out and send
+   it to the state machine.
 
-After running for a day iostat shows the disks are read at about 6.5MB/s each,
-which is a fraction of the raw performance of the disks (above 160MB/s).
-These are 4TB disks so I expect the run will last about a week?
-It probably started faster and will end slower.
+Signed-off-by: Song Liu <songliubraving@fb.com>
+---
+ drivers/md/raid5-cache.c |  5 ++++-
+ drivers/md/raid5.c       | 21 +++++++++++++++------
+ 2 files changed, 19 insertions(+), 7 deletions(-)
 
-A raid check starts at over 140MB/s and ends at above 70MB/s. It completes
-in just under 10 hours.
-
-For reference, the smart long test time suggests around 450 minutes (7.5 hours).
-
-I checked iostat when there was no other activity on this array.
-Unfortunately the program does not offer any progress option that I can see.
-
-cheers
-
-> bye,
->
->>
->> Cheers,
->> Wol
-
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index a6a62e2..f476105 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -2631,8 +2631,11 @@ int r5c_try_caching_write(struct r5conf *conf,
+ 	 * When run in degraded mode, array is set to write-through mode.
+ 	 * This check helps drain pending write safely in the transition to
+ 	 * write-through mode.
++	 *
++	 * When a stripe is syncing, the write is also handled in write
++	 * through mode.
+ 	 */
+-	if (s->failed) {
++	if (s->failed || test_bit(STRIPE_SYNCING, &sh->state)) {
+ 		r5c_make_stripe_write_out(sh);
+ 		return -EAGAIN;
+ 	}
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index f8055a7..680b1f6 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -233,11 +233,15 @@ static void do_release_stripe(struct r5conf *conf, struct stripe_head *sh,
+ 			if (test_bit(R5_InJournal, &sh->dev[i].flags))
+ 				injournal++;
+ 	/*
+-	 * When quiesce in r5c write back, set STRIPE_HANDLE for stripes with
+-	 * data in journal, so they are not released to cached lists
++	 * In the following cases, the stripe cannot be released to cached
++	 * lists. Therefore, we make the stripe write out and set
++	 * STRIPE_HANDLE:
++	 *   1. when quiesce in r5c write back;
++	 *   2. when resync is requested fot the stripe.
+ 	 */
+-	if (conf->quiesce && r5c_is_writeback(conf->log) &&
+-	    !test_bit(STRIPE_HANDLE, &sh->state) && injournal != 0) {
++	if (test_bit(STRIPE_SYNC_REQUESTED, &sh->state) ||
++	    (conf->quiesce && r5c_is_writeback(conf->log) &&
++	     !test_bit(STRIPE_HANDLE, &sh->state) && injournal != 0)) {
+ 		if (test_bit(STRIPE_R5C_CACHING, &sh->state))
+ 			r5c_make_stripe_write_out(sh);
+ 		set_bit(STRIPE_HANDLE, &sh->state);
+@@ -4648,8 +4652,13 @@ static void handle_stripe(struct stripe_head *sh)
+ 
+ 	if (test_bit(STRIPE_SYNC_REQUESTED, &sh->state) && !sh->batch_head) {
+ 		spin_lock(&sh->stripe_lock);
+-		/* Cannot process 'sync' concurrently with 'discard' */
+-		if (!test_bit(STRIPE_DISCARD, &sh->state) &&
++		/*
++		 * Cannot process 'sync' concurrently with 'discard'.
++		 * Flush data in r5cache before 'sync'.
++		 */
++		if (!test_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state) &&
++		    !test_bit(STRIPE_R5C_FULL_STRIPE, &sh->state) &&
++		    !test_bit(STRIPE_DISCARD, &sh->state) &&
+ 		    test_and_clear_bit(STRIPE_SYNC_REQUESTED, &sh->state)) {
+ 			set_bit(STRIPE_SYNCING, &sh->state);
+ 			clear_bit(STRIPE_INSYNC, &sh->state);
 -- 
-Eyal Lebedinsky (eyal@eyal.emu.id.au)
+2.9.3
+
