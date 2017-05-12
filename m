@@ -1,44 +1,106 @@
-From: Maarten van Malland <maartenvanmalland@gmail.com>
-Subject: Re: Adding journal to existing raid5 arrary
-Date: Fri, 12 May 2017 15:19:27 +0200
-Message-ID: <CAC8wJ3G+ETxMX-0FWbJBdDEPHjX1Mth7huOj_g5J_27Yg+3Y2g@mail.gmail.com>
-References: <CAC8wJ3FYKvdoLNmOerTgK+yd7p8ZhPXDLW0Z6V6Q+QpJb9MDMA@mail.gmail.com>
- <1471470369-397690-1-git-send-email-songliubraving@fb.com>
- <CAC8wJ3Fjj=ANPpL8MxN_gmcs721TjkMUOooeEh_giAONFx4q-Q@mail.gmail.com> <0599434D-7C37-48D9-A04F-6A86CF0BF38F@fb.com>
+From: Alfred Matthews <asm13243546@gmail.com>
+Subject: Re: on assembly and recovery of a hardware RAID
+Date: Fri, 12 May 2017 15:57:34 +0000
+Message-ID: <CAAZLhTfg3YN1cKhq7_gzvPMu3ZD0wMdh=tAQB8G_T5DFO5A-Gw@mail.gmail.com>
+References: <CAAZLhTdaVM4fagN5=bqWpPx-DjyU6UZ69bJFf51FWMX7oeyJNw@mail.gmail.com>
+ <87tw6weubu.fsf@notabene.neil.brown.name> <CAAZLhTcEhn2GezDSDJHOLv2VNSynzT-he0FRrVNbz1xtakLsMQ@mail.gmail.com>
+ <87d1djdz8y.fsf@notabene.neil.brown.name> <CAAZLhTdn6xnB6Kuuhf8+VaSd5u6gekUSDSMnK+w5obZNxvNg8A@mail.gmail.com>
+ <CAAZLhTcoU232uBs2zcK6TFj67Jru5oeNE_F0T2fQR6Un66OPXA@mail.gmail.com>
+ <87lgs0cy0e.fsf@notabene.neil.brown.name> <CAAZLhTcNsjzLdEZyzG+kEuDhVye8pnuf6VhWzP=G0NL_aFX-5w@mail.gmail.com>
+ <87a88fcq21.fsf@notabene.neil.brown.name> <CAAZLhTdobNxkYNmp6y3cOrLAdMfTYt3kodzM0+a7E-G=q1QGtw@mail.gmail.com>
+ <CAAZLhTf=GHmSDcY8Eb9SzevofFbDD7f-N8DKZiFkq9j2XV4mQA@mail.gmail.com> <87o9uzkp1h.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <0599434D-7C37-48D9-A04F-6A86CF0BF38F@fb.com>
+In-Reply-To: <87o9uzkp1h.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I was wondering if this is now possible to do with kernel 4.11? It's
-not completely clear to me from the release notes.
+Thanks. You've been tremendously helpful thus far. I appreciate it.
+Will post any successful results.
 
-Thank you,
-
-Maarten
-
-On Thu, Aug 18, 2016 at 6:03 PM, Song Liu <songliubraving@fb.com> wrote:
-> Yes, we do plan to add removal as well.
+On 11 May 2017 at 22:27, NeilBrown <neilb@suse.com> wrote:
+> On Wed, May 03 2017, Alfred Matthews wrote:
 >
-> Thanks,
-> Song
+>> Sorry to disappear for a bit.
+>>
+>> Of necessity I've migrated to another working system and I'm in Arch.
+>> Utility here is fsck.hfs as opposed to hpfsck. I'd like to post that
+>> output.
 >
->>> On 8/18/16, 12:51 AM, "Maarten van Malland" <maartenvanmalland@gmail.com> wrote:
+> I wonder if they are the same thing, or completely different.
 >
->     Well that explains that then :-). Is it also planned to support
->     removal of the journal device? I can imagine that there are cases
->     (such as performance issues) that you would like to revert to the old
->     situation...
+>>
+>> mdadm --build /dev/md0 --level=0 -n2 --chunk=8K /dev/sdb2 /dev/sdc2
+>>
+>> works, then,
+>>
+>> fsck.hfs -v /dev/md0
+>> *** Checking volume MDB
+>>   drSigWord      = 0xffffffff
+>>   drCrDate       = Mon Feb  6 06:28:15 2040
+>>   drLsMod        = Mon Feb  6 06:28:15 2040
+>>   drAtrb         = BUSY | HLOCKED | UMOUNTED | BBSPARED | BVINCONSIS |
+>> COPYPROT | SLOCKED
+>>   drNmFls        = 65535
+>>   drVBMSt        = 65535
+>>   drAllocPtr     = 65535
+>>   drNmAlBlks     = 65535
+>>   drAlBlkSiz     = 4294967295
+>>   drClpSiz       = 4294967295
+>>   drAlBlSt       = 65535
+>>   drNxtCNID      = 4294967295
+>>   drFreeBks      = 65535
+>>   drVN           = ""
+>>   drVolBkUp      = Mon Feb  6 06:28:15 2040
+>>   drVSeqNum      = 4294967295
+>>   drWrCnt        = 4294967295
+>>   drXTClpSiz     = 4294967295
+>>   drCTClpSiz     = 4294967295
+>>   drNmRtDirs     = 65535
+>>   drFilCnt       = 4294967295
+>>   drDirCnt       = 4294967295
+>>   drEmbedSigWord = 0xffff
+>>   drEmbedExtent  = 65535[65535..131069]
+>>   drXTFlSize     = 4294967295
+>>   drXTExtRec     =
+>> 65535[65535..131069]+65535[65535..131069]+65535[65535..131069]
+>>   drCTFlSize     = 4294967295
+>>   drCTExtRec     =
+>> 65535[65535..131069]+65535[65535..131069]+65535[65535..131069]
+>> Bad volume signature (0xffffffff); should be 0x4244. Fix? y
+>> Volume creation date is in the future (Mon Feb  6 06:28:15 2040). Fix? y
+>> Volume last modify date is in the future (Mon Feb  6 06:28:15 2040). Fix? y
+>> Volume bitmap starts at unusual location (1), not 3. Fix? y
+>> *** Checking volume structure
+>> *** Checking extents overflow B*-tree
+>>
+>> It's possible that I was unwise in accepting the changes from fsck.
 >
->     On Wed, Aug 17, 2016 at 11:46 PM, Song Liu <songliubraving@fb.com> wrote:
->     > Currently, --add-journal does not support adding journal to an existing array,
->     > We plan to add that soon.
->     >
->     > Song
->     >
+> Definitely possible.
+>
+> Given how many of the numbers listed above are 0xffff or 0xffffffff, it
+> is unlikely that the tool found anything useful.
+>
+>>
+>>>>
+>>>> How is your C coding?  You could
+>>>>   apt-get source hfsplus
+>>>> and hack the code and try to build it yourself....
+>>>>
+>>
+>> Still fine. By now not clear if this is what's needed.
+>
+> I don't think I can be of further help, sorry.
+>
+> NeilBrown
 >
 >
+>>
+>> Al
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
