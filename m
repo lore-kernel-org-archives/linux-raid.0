@@ -1,59 +1,44 @@
-From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: [PATCH v3] raid1: prefer disk without bad blocks
-Date: Fri, 12 May 2017 14:26:10 +0200
-Message-ID: <1494591970-5610-1-git-send-email-tomasz.majchrzak@intel.com>
-References: <20170512122358.GA5359@proton.igk.intel.com>
+From: Maarten van Malland <maartenvanmalland@gmail.com>
+Subject: Re: Adding journal to existing raid5 arrary
+Date: Fri, 12 May 2017 15:19:27 +0200
+Message-ID: <CAC8wJ3G+ETxMX-0FWbJBdDEPHjX1Mth7huOj_g5J_27Yg+3Y2g@mail.gmail.com>
+References: <CAC8wJ3FYKvdoLNmOerTgK+yd7p8ZhPXDLW0Z6V6Q+QpJb9MDMA@mail.gmail.com>
+ <1471470369-397690-1-git-send-email-songliubraving@fb.com>
+ <CAC8wJ3Fjj=ANPpL8MxN_gmcs721TjkMUOooeEh_giAONFx4q-Q@mail.gmail.com> <0599434D-7C37-48D9-A04F-6A86CF0BF38F@fb.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170512122358.GA5359@proton.igk.intel.com>
+In-Reply-To: <0599434D-7C37-48D9-A04F-6A86CF0BF38F@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@kernel.org, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+To: Song Liu <songliubraving@fb.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-If an array consists of two drives and the first drive has the bad
-block, the read request to the region overlapping the bad block chooses
-the same disk (with bad block) as device to read from over and over and
-the request gets stuck. If the first disk only partially overlaps with
-bad block, it becomes a candidate ("best disk") for shorter range of
-sectors. The second disk is capable of reading the entire requested
-range and it is updated accordingly, however it is not recorded as a
-best device for the request. In the end the request is sent to the first
-disk to read entire range of sectors. It fails and is re-tried in a
-moment but with the same outcome.
+I was wondering if this is now possible to do with kernel 4.11? It's
+not completely clear to me from the release notes.
 
-Actually it is quite likely scenario but it had little exposure in my
-test until commit 715d40b93b10 ("md/raid1: add failfast handling for
-reads.") removed preference for idle disk. Such scenario had been
-passing as second disk was always chosen when idle.
+Thank you,
 
-Reset a candidate ("best disk") to read from if disk can read entire
-range. Do it only if other disk has already been chosen as a candidate
-for a smaller range. The head position / disk type logic will select
-the best disk to read from - it is fine as disk with bad block won't be
-considered for it.
+Maarten
 
-Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
----
- drivers/md/raid1.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 7c1f733..c5b32aa 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -666,8 +666,11 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
- 					break;
- 			}
- 			continue;
--		} else
-+		} else {
-+			if ((sectors > best_good_sectors) && (best_disk >= 0))
-+				best_disk = -1;
- 			best_good_sectors = sectors;
-+		}
- 
- 		if (best_disk >= 0)
- 			/* At least two disks to choose from so failfast is OK */
--- 
-1.8.3.1
-
+On Thu, Aug 18, 2016 at 6:03 PM, Song Liu <songliubraving@fb.com> wrote:
+> Yes, we do plan to add removal as well.
+>
+> Thanks,
+> Song
+>
+>>> On 8/18/16, 12:51 AM, "Maarten van Malland" <maartenvanmalland@gmail.com> wrote:
+>
+>     Well that explains that then :-). Is it also planned to support
+>     removal of the journal device? I can imagine that there are cases
+>     (such as performance issues) that you would like to revert to the old
+>     situation...
+>
+>     On Wed, Aug 17, 2016 at 11:46 PM, Song Liu <songliubraving@fb.com> wrote:
+>     > Currently, --add-journal does not support adding journal to an existing array,
+>     > We plan to add that soon.
+>     >
+>     > Song
+>     >
+>
+>
