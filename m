@@ -1,157 +1,150 @@
-From: Lidong Zhong <lzhong@suse.com>
-Subject: Re: [PATCH] super1: fix sb->max_dev when adding a new disk in linear
- array
-Date: Mon, 15 May 2017 19:33:44 +0800
-Message-ID: <72a92868-468c-039b-bd03-b1fbed1db82c@suse.com>
-References: <20170512015145.18542-1-lzhong@suse.com>
- <66dcee83-e0d3-be5f-d8c4-f06b342afea8@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH] Get failed disk count from array state
+Date: Mon, 15 May 2017 14:17:16 +0200
+Message-ID: <1494850636-28438-1-git-send-email-tomasz.majchrzak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <66dcee83-e0d3-be5f-d8c4-f06b342afea8@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Coly Li <colyli@suse.de>
-Cc: linux-raid@vger.kernel.org, Jes.Sorensen@gmail.com
+To: linux-raid@vger.kernel.org
+Cc: jes.sorensen@gmail.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
+Recent commit has changed the way failed disks are counted. It breaks
+recovery for external metadata arrays as failed disks are not part of
+the array and have no corresponding entries is sysfs (they are only
+reported for containers) so degraded arrays show no failed disks.
 
+Recent commit overwrites GET_DEGRADED result prior to GET_STATE and it
+is not set again if GET_STATE has not been requested. As GET_STATE
+provides the same information as GET_DEGRADED, the latter is not needed
+anymore. Remove GET_DEGRADED option and replace it with GET_STATE
+option.
 
-On 05/12/2017 03:53 PM, Coly Li wrote:
-> On 2017/5/12 上午9:51, Lidong Zhong wrote:
->> The value of sb->max_dev will always be increased by 1 when adding
->> a new disk in linear array. It causes an inconsistence between each
->> disk in the array and the "Array State" value of "mdadm --examine DISK"
->> is wrong. For example, when adding the first new disk into linear array
->> it will be:
->>
->> Array State : RAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
->> ('A' == active, '.' == missing, 'R' == replacing)
->>
->> Adding the second disk into linear array it will be
->>
->> Array State : .AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
->> ('A' == active, '.' == missing, 'R' == replacing)
->>
->> Signed-off-by: Lidong Zhong<lzhong@suse.com>
+Don't count number of failed disks looking at sysfs entries but
+calculate it at the end. Do it only for arrays as containers report
+no disks, just spares.
 
-Hi Coly,
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+---
+ Incremental.c | 14 ++++----------
+ managemon.c   |  4 ++--
+ mdadm.h       |  1 -
+ raid6check.c  |  2 +-
+ sysfs.c       | 17 +++++++----------
+ 5 files changed, 14 insertions(+), 24 deletions(-)
 
-Thanks for your reply.
-
-> The above description does not very well explain why this fix is necessary.
->
-> For linear device, there was a race condition and got fixed already.
-> There are users encountered such bug in old kernel, when they trying to
-> add a hard disk into a linear device. After the kernel panic caused by
-> the race issue in old md linear code, they reboot from the fixed kernel,
-> and find 'R' or '?' marks from Array State output.
->
-> After analyze the metadata, we found value of
-> sb->dev_roles[sb->max_dev-1] is 0, but which should be
-> MD_DISK_ROLE_FAULTY. The reason for the error is, when adding a disk
-> into linear device, mdadm first increases sb->max_dev value, but not set
-> its role value. So the corresponding role value keeps as 0, which is
-> same as No.0 disk's role value in the linear device.
->
-> So mdadm -E will find there are 2 same role value for No.0 disk, and the
-> first state character of Array State is marked as 'R'. If such a panic
-> happened multiple times, there are more bogus zero value at tail of
-> dev_roles[], so the character of Array State is marked as '?'.
->
-> Now the kernel part is fixed, but mdadm part is not fixed yet. This
-> patch is an effort to avoid bogus dev_roles[] value if kernel panic
-> happens in follow ioctl system call (although the possibility is quite
-> low and who can tel ...).
-
-Not exactly the kernel panic we met in another bug triggers the error value
-of sb->max_dev. You can reproduce this problem easily by adding a new
-disk into a linear array. Here is the original logic:
-
-The super block written  to the new added device is read from the last disk
-of the linear array. And it does some changes including max_dev and 
-dev_roles,
-
-1259     } else if (strcmp(update, "linear-grow-new") == 0) {
-1260         unsigned int i;
-1261         int fd;
-1262         unsigned int max = __le32_to_cpu(sb->max_dev);
-1263
-1264         for (i = 0; i < max; i++)
-1265             if (__le16_to_cpu(sb->dev_roles[i]) >=
-1266 MD_DISK_ROLE_FAULTY)
-1267 break;
-1268         sb->dev_number = __cpu_to_le32(i);
-1269         info->disk.number = i;
-1270         if (max >= __le32_to_cpu(sb->max_dev))
-1271             sb->max_dev = __cpu_to_le32(max+1);
-
-But because max always equals to __le32_to_cpu(sb->max_dev)) in line 
-1270, the
-value of sb->max_dev is always increased by 1 for the new added device 
-and the
-sb->dev_roles[ sb->max_dev] is not initialized to 0xfffe. While the 
-sb->max_dev in
-the original disks are not changed
-
-1295     } else if (strcmp(update, "linear-grow-update") == 0) {
-1296         sb->raid_disks = __cpu_to_le32(info->array.raid_disks);
-1297         sb->dev_roles[info->disk.number] =
-1298             __cpu_to_le16(info->disk.raid_disk);
->> ---
->>   super1.c | 8 +++++++-
->>   1 file changed, 7 insertions(+), 1 deletion(-)
->>
->> diff --git a/super1.c b/super1.c
->> index 87a74cb..4fb655f 100644
->> --- a/super1.c
->> +++ b/super1.c
->> @@ -1184,8 +1184,10 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
->>   				break;
->>   		sb->dev_number = __cpu_to_le32(i);
->>   		info->disk.number = i;
->> -		if (max >= __le32_to_cpu(sb->max_dev))
->> +		if (i >= __le32_to_cpu(sb->max_dev)) {
->>   			sb->max_dev = __cpu_to_le32(max+1);
->> +			sb->dev_roles[sb->max_dev] = __cpu_to_le16(MD_DISK_ROLE_FAULTY);
->> +		}
->>
->>   		random_uuid(sb->device_uuid);
-> The above part makes sense to me.
->
->
->
->>
->> @@ -1214,6 +1216,10 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
->>   		sb->raid_disks = __cpu_to_le32(info->array.raid_disks);
->>   		sb->dev_roles[info->disk.number] =
->>   			__cpu_to_le16(info->disk.raid_disk);
->> +		if (sb->raid_disks+1 >= __le32_to_cpu(sb->max_dev)) {
->> +			sb->max_dev = __cpu_to_le32(sb->raid_disks+1);
->> +			sb->dev_roles[sb->max_dev] = __cpu_to_le16(MD_DISK_ROLE_FAULTY);
->> +		}
->>   	} else if (strcmp(update, "resync") == 0) {
->>   		/* make sure resync happens */
->>   		sb->resync_offset = 0ULL;
->>
-> Just a lazy question, could you please explain a little bit why you also
-> modify here ? Thanks.
-
-I didn't see the sb->max_dev and dev_roles value are correctly set when 
-the disks in array
-are really more than sb->max_dev, both in kernel and userspace.
-
-Thanks,
-Lidong
-
-> Coly
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message tomajordomo@vger.kernel.org
-> More majordomo info athttp://vger.kernel.org/majordomo-info.html
->
-
+diff --git a/Incremental.c b/Incremental.c
+index 680d318..64b63a1 100644
+--- a/Incremental.c
++++ b/Incremental.c
+@@ -886,16 +886,10 @@ static int array_try_spare(char *devname, int *dfdp, struct dev_policy *pol,
+ 		}
+ 		sra = sysfs_read(-1, mp->devnm,
+ 				 GET_DEVS|GET_OFFSET|GET_SIZE|GET_STATE|
+-				 GET_DEGRADED|GET_COMPONENT|GET_VERSION);
+-		if (!sra) {
+-			/* Probably a container - no degraded info */
+-			sra = sysfs_read(-1, mp->devnm,
+-					 GET_DEVS|GET_OFFSET|GET_SIZE|GET_STATE|
+-					 GET_COMPONENT|GET_VERSION);
+-			if (sra)
+-				sra->array.failed_disks = -1;
+-		}
+-		if (!sra)
++				 GET_COMPONENT|GET_VERSION);
++		if (sra)
++			sra->array.failed_disks = -1;
++		else
+ 			continue;
+ 		if (st == NULL) {
+ 			int i;
+diff --git a/managemon.c b/managemon.c
+index 3c1d4cb..f1eb68a 100644
+--- a/managemon.c
++++ b/managemon.c
+@@ -685,8 +685,8 @@ static void manage_new(struct mdstat_ent *mdstat,
+ 
+ 	mdi = sysfs_read(-1, mdstat->devnm,
+ 			 GET_LEVEL|GET_CHUNK|GET_DISKS|GET_COMPONENT|
+-			 GET_DEGRADED|GET_SAFEMODE|
+-			 GET_DEVS|GET_OFFSET|GET_SIZE|GET_STATE|GET_LAYOUT);
++			 GET_SAFEMODE|GET_DEVS|GET_OFFSET|GET_SIZE|GET_STATE|
++			 GET_LAYOUT);
+ 
+ 	if (!mdi)
+ 		return;
+diff --git a/mdadm.h b/mdadm.h
+index a92feb2..38b2180 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -632,7 +632,6 @@ enum sysfs_read_flags {
+ 	GET_MISMATCH	= (1 << 5),
+ 	GET_VERSION	= (1 << 6),
+ 	GET_DISKS	= (1 << 7),
+-	GET_DEGRADED	= (1 << 8),
+ 	GET_SAFEMODE	= (1 << 9),
+ 	GET_BITMAP_LOCATION = (1 << 10),
+ 
+diff --git a/raid6check.c b/raid6check.c
+index 551f835..a8e6005 100644
+--- a/raid6check.c
++++ b/raid6check.c
+@@ -562,7 +562,7 @@ int main(int argc, char *argv[])
+ 			  GET_LEVEL|
+ 			  GET_LAYOUT|
+ 			  GET_DISKS|
+-			  GET_DEGRADED |
++			  GET_STATE |
+ 			  GET_COMPONENT|
+ 			  GET_CHUNK|
+ 			  GET_DEVS|
+diff --git a/sysfs.c b/sysfs.c
+index f7967e8..dff986a 100644
+--- a/sysfs.c
++++ b/sysfs.c
+@@ -162,18 +162,12 @@ struct mdinfo *sysfs_read(int fd, char *devnm, unsigned long options)
+ 			goto abort;
+ 		sra->array.layout = strtoul(buf, NULL, 0);
+ 	}
+-	if (options & GET_DISKS) {
++	if (options & (GET_DISKS|GET_STATE)) {
+ 		strcpy(base, "raid_disks");
+ 		if (load_sys(fname, buf, sizeof(buf)))
+ 			goto abort;
+ 		sra->array.raid_disks = strtoul(buf, NULL, 0);
+ 	}
+-	if (options & GET_DEGRADED) {
+-		strcpy(base, "degraded");
+-		if (load_sys(fname, buf, sizeof(buf)))
+-			goto abort;
+-		sra->array.failed_disks = strtoul(buf, NULL, 0);
+-	}
+ 	if (options & GET_COMPONENT) {
+ 		strcpy(base, "component_size");
+ 		if (load_sys(fname, buf, sizeof(buf)))
+@@ -362,10 +356,8 @@ struct mdinfo *sysfs_read(int fd, char *devnm, unsigned long options)
+ 				dev->disk.state |= (1<<MD_DISK_SYNC);
+ 				sra->array.active_disks++;
+ 			}
+-			if (strstr(buf, "faulty")) {
++			if (strstr(buf, "faulty"))
+ 				dev->disk.state |= (1<<MD_DISK_FAULTY);
+-				sra->array.failed_disks++;
+-			}
+ 			if (dev->disk.state == 0)
+ 				sra->array.spare_disks++;
+ 		}
+@@ -376,6 +368,11 @@ struct mdinfo *sysfs_read(int fd, char *devnm, unsigned long options)
+ 			dev->errors = strtoul(buf, NULL, 0);
+ 		}
+ 	}
++
++	if ((options & GET_STATE) && sra->array.raid_disks)
++		sra->array.failed_disks = sra->array.raid_disks -
++			sra->array.active_disks - sra->array.spare_disks;
++
+ 	closedir(dir);
+ 	return sra;
+ 
+-- 
+1.8.3.1
 
