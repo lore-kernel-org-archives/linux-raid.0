@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 14/17] xfs: use the common helper uuid_is_null()
-Date: Mon, 15 May 2017 17:43:05 +0200
-Message-ID: <20170515154308.26739-15-hch@lst.de>
+Subject: [PATCH 10/17] afs: switch to use uuid_t and uuid_gen
+Date: Mon, 15 May 2017 17:43:01 +0200
+Message-ID: <20170515154308.26739-11-hch@lst.de>
 References: <20170515154308.26739-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,178 +21,155 @@ To: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>,
 Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-From: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-
-Use the common helper uuid_is_null() and remove the xfs specific
-helper uuid_is_nil().
-
-The common helper does not check for the NULL pointer value as
-xfs helper did, but xfs code never calls the helper with a pointer
-that can be NULL.
-
-Conform comments and warning strings to use the term 'null uuid'
-instead of 'nil uuid', because this is the terminology used by
-lib/uuid.c and its users. It is also the terminology used in
-userspace by libuuid and xfsprogs.
-
-Signed-off-by: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-[hch: remove now unused uuid.[ch]]
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Reviewed-by: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- fs/xfs/Makefile          |  3 +--
- fs/xfs/uuid.c            | 32 --------------------------------
- fs/xfs/uuid.h            | 23 -----------------------
- fs/xfs/xfs_linux.h       |  1 -
- fs/xfs/xfs_log_recover.c |  6 +++---
- fs/xfs/xfs_mount.c       |  8 ++++----
- 6 files changed, 8 insertions(+), 65 deletions(-)
- delete mode 100644 fs/xfs/uuid.c
- delete mode 100644 fs/xfs/uuid.h
+ fs/afs/cmservice.c | 46 +++++++++++++++++++++++-----------------------
+ fs/afs/internal.h  |  2 +-
+ fs/afs/main.c      |  4 ++--
+ 3 files changed, 26 insertions(+), 26 deletions(-)
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 5c90f82b8f6b..a6e955bfead8 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -98,8 +98,7 @@ xfs-y				+= xfs_aops.o \
- 				   xfs_sysfs.o \
- 				   xfs_trans.o \
- 				   xfs_xattr.o \
--				   kmem.o \
--				   uuid.o
-+				   kmem.o
- 
- # low-level transaction/log code
- xfs-y				+= xfs_log.o \
-diff --git a/fs/xfs/uuid.c b/fs/xfs/uuid.c
-deleted file mode 100644
-index 737c186ea98b..000000000000
---- a/fs/xfs/uuid.c
-+++ /dev/null
-@@ -1,32 +0,0 @@
--/*
-- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#include <xfs.h>
--
--int
--uuid_is_nil(uuid_t *uuid)
--{
--	int	i;
--	char	*cp = (char *)uuid;
--
--	if (uuid == NULL)
--		return 0;
--	/* implied check of version number here... */
--	for (i = 0; i < sizeof *uuid; i++)
--		if (*cp++) return 0;	/* not nil */
--	return 1;	/* is nil */
--}
-diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
-deleted file mode 100644
-index 5aea49bf0963..000000000000
---- a/fs/xfs/uuid.h
-+++ /dev/null
-@@ -1,23 +0,0 @@
--/*
-- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#ifndef __XFS_SUPPORT_UUID_H__
--#define __XFS_SUPPORT_UUID_H__
--
--extern int uuid_is_nil(uuid_t *uuid);
--
--#endif	/* __XFS_SUPPORT_UUID_H__ */
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index 2c33d915e550..2d167fe643ec 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -43,7 +43,6 @@ typedef __u32			xfs_nlink_t;
- 
- #include "kmem.h"
- #include "mrlock.h"
--#include "uuid.h"
- 
- #include <linux/semaphore.h>
- #include <linux/mm.h>
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index cd0b077deb35..8cec1e5505a4 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -352,13 +352,13 @@ xlog_header_check_mount(
+diff --git a/fs/afs/cmservice.c b/fs/afs/cmservice.c
+index 3062cceb5c2a..d4e77d12570c 100644
+--- a/fs/afs/cmservice.c
++++ b/fs/afs/cmservice.c
+@@ -350,7 +350,7 @@ static int afs_deliver_cb_init_call_back_state3(struct afs_call *call)
  {
- 	ASSERT(head->h_magicno == cpu_to_be32(XLOG_HEADER_MAGIC_NUM));
- 
--	if (uuid_is_nil(&head->h_fs_uuid)) {
-+	if (uuid_is_null(&head->h_fs_uuid)) {
- 		/*
- 		 * IRIX doesn't write the h_fs_uuid or h_fmt fields. If
--		 * h_fs_uuid is nil, we assume this log was last mounted
-+		 * h_fs_uuid is null, we assume this log was last mounted
- 		 * by IRIX and continue.
- 		 */
--		xfs_warn(mp, "nil uuid in log - IRIX style log");
-+		xfs_warn(mp, "null uuid in log - IRIX style log");
- 	} else if (unlikely(!uuid_equal(&mp->m_sb.sb_uuid, &head->h_fs_uuid))) {
- 		xfs_warn(mp, "log has mismatched uuid - can't recover");
- 		xlog_header_check_dump(mp, head);
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 742e4a61c0bc..682b336a7a6a 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -80,14 +80,14 @@ xfs_uuid_mount(
- 	if (mp->m_flags & XFS_MOUNT_NOUUID)
- 		return 0;
- 
--	if (uuid_is_nil(uuid)) {
--		xfs_warn(mp, "Filesystem has nil UUID - can't mount");
-+	if (uuid_is_null(uuid)) {
-+		xfs_warn(mp, "Filesystem has null UUID - can't mount");
- 		return -EINVAL;
- 	}
- 
- 	mutex_lock(&xfs_uuid_table_mutex);
- 	for (i = 0, hole = -1; i < xfs_uuid_table_size; i++) {
--		if (uuid_is_nil(&xfs_uuid_table[i])) {
-+		if (uuid_is_null(&xfs_uuid_table[i])) {
- 			hole = i;
- 			continue;
+ 	struct sockaddr_rxrpc srx;
+ 	struct afs_server *server;
+-	struct uuid_v1 *r;
++	uuid_t *r;
+ 	unsigned loop;
+ 	__be32 *b;
+ 	int ret;
+@@ -380,20 +380,20 @@ static int afs_deliver_cb_init_call_back_state3(struct afs_call *call)
  		}
-@@ -124,7 +124,7 @@ xfs_uuid_unmount(
  
- 	mutex_lock(&xfs_uuid_table_mutex);
- 	for (i = 0; i < xfs_uuid_table_size; i++) {
--		if (uuid_is_nil(&xfs_uuid_table[i]))
-+		if (uuid_is_null(&xfs_uuid_table[i]))
- 			continue;
- 		if (!uuid_equal(uuid, &xfs_uuid_table[i]))
- 			continue;
+ 		_debug("unmarshall UUID");
+-		call->request = kmalloc(sizeof(struct uuid_v1), GFP_KERNEL);
++		call->request = kmalloc(sizeof(uuid_t), GFP_KERNEL);
+ 		if (!call->request)
+ 			return -ENOMEM;
+ 
+ 		b = call->buffer;
+ 		r = call->request;
+-		r->time_low			= b[0];
+-		r->time_mid			= htons(ntohl(b[1]));
+-		r->time_hi_and_version		= htons(ntohl(b[2]));
+-		r->clock_seq_hi_and_reserved 	= ntohl(b[3]);
+-		r->clock_seq_low		= ntohl(b[4]);
++		r->v1.time_low			= b[0];
++		r->v1.time_mid			= htons(ntohl(b[1]));
++		r->v1.time_hi_and_version	= htons(ntohl(b[2]));
++		r->v1.clock_seq_hi_and_reserved = ntohl(b[3]);
++		r->v1.clock_seq_low		= ntohl(b[4]);
+ 
+ 		for (loop = 0; loop < 6; loop++)
+-			r->node[loop] = ntohl(b[loop + 5]);
++			r->v1.node[loop] = ntohl(b[loop + 5]);
+ 
+ 		call->offset = 0;
+ 		call->unmarshall++;
+@@ -453,7 +453,7 @@ static int afs_deliver_cb_probe(struct afs_call *call)
+ static void SRXAFSCB_ProbeUuid(struct work_struct *work)
+ {
+ 	struct afs_call *call = container_of(work, struct afs_call, work);
+-	struct uuid_v1 *r = call->request;
++	uuid_t *r = call->request;
+ 
+ 	struct {
+ 		__be32	match;
+@@ -476,7 +476,7 @@ static void SRXAFSCB_ProbeUuid(struct work_struct *work)
+  */
+ static int afs_deliver_cb_probe_uuid(struct afs_call *call)
+ {
+-	struct uuid_v1 *r;
++	uuid_t *r;
+ 	unsigned loop;
+ 	__be32 *b;
+ 	int ret;
+@@ -502,20 +502,20 @@ static int afs_deliver_cb_probe_uuid(struct afs_call *call)
+ 		}
+ 
+ 		_debug("unmarshall UUID");
+-		call->request = kmalloc(sizeof(struct uuid_v1), GFP_KERNEL);
++		call->request = kmalloc(sizeof(uuid_t), GFP_KERNEL);
+ 		if (!call->request)
+ 			return -ENOMEM;
+ 
+ 		b = call->buffer;
+ 		r = call->request;
+-		r->time_low			= b[0];
+-		r->time_mid			= htons(ntohl(b[1]));
+-		r->time_hi_and_version		= htons(ntohl(b[2]));
+-		r->clock_seq_hi_and_reserved 	= ntohl(b[3]);
+-		r->clock_seq_low		= ntohl(b[4]);
++		r->v1.time_low			= b[0];
++		r->v1.time_mid			= htons(ntohl(b[1]));
++		r->v1.time_hi_and_version	= htons(ntohl(b[2]));
++		r->v1.clock_seq_hi_and_reserved = ntohl(b[3]);
++		r->v1.clock_seq_low		= ntohl(b[4]);
+ 
+ 		for (loop = 0; loop < 6; loop++)
+-			r->node[loop] = ntohl(b[loop + 5]);
++			r->v1.node[loop] = ntohl(b[loop + 5]);
+ 
+ 		call->offset = 0;
+ 		call->unmarshall++;
+@@ -568,13 +568,13 @@ static void SRXAFSCB_TellMeAboutYourself(struct work_struct *work)
+ 	memset(&reply, 0, sizeof(reply));
+ 	reply.ia.nifs = htonl(nifs);
+ 
+-	reply.ia.uuid[0] = afs_uuid.time_low;
+-	reply.ia.uuid[1] = htonl(ntohs(afs_uuid.time_mid));
+-	reply.ia.uuid[2] = htonl(ntohs(afs_uuid.time_hi_and_version));
+-	reply.ia.uuid[3] = htonl((s8) afs_uuid.clock_seq_hi_and_reserved);
+-	reply.ia.uuid[4] = htonl((s8) afs_uuid.clock_seq_low);
++	reply.ia.uuid[0] = afs_uuid.v1.time_low;
++	reply.ia.uuid[1] = htonl(ntohs(afs_uuid.v1.time_mid));
++	reply.ia.uuid[2] = htonl(ntohs(afs_uuid.v1.time_hi_and_version));
++	reply.ia.uuid[3] = htonl((s8) afs_uuid.v1.clock_seq_hi_and_reserved);
++	reply.ia.uuid[4] = htonl((s8) afs_uuid.v1.clock_seq_low);
+ 	for (loop = 0; loop < 6; loop++)
+-		reply.ia.uuid[loop + 5] = htonl((s8) afs_uuid.node[loop]);
++		reply.ia.uuid[loop + 5] = htonl((s8) afs_uuid.v1.node[loop]);
+ 
+ 	if (ifs) {
+ 		for (loop = 0; loop < nifs; loop++) {
+diff --git a/fs/afs/internal.h b/fs/afs/internal.h
+index 393672997cc2..7de45c8686a2 100644
+--- a/fs/afs/internal.h
++++ b/fs/afs/internal.h
+@@ -544,7 +544,7 @@ extern int afs_drop_inode(struct inode *);
+  * main.c
+  */
+ extern struct workqueue_struct *afs_wq;
+-extern struct uuid_v1 afs_uuid;
++extern uuid_t afs_uuid;
+ 
+ /*
+  * misc.c
+diff --git a/fs/afs/main.c b/fs/afs/main.c
+index 51d7d17bca57..75b3d3a8b1ba 100644
+--- a/fs/afs/main.c
++++ b/fs/afs/main.c
+@@ -31,7 +31,7 @@ static char *rootcell;
+ module_param(rootcell, charp, 0);
+ MODULE_PARM_DESC(rootcell, "root AFS cell name and VL server IP addr list");
+ 
+-struct uuid_v1 afs_uuid;
++uuid_t afs_uuid;
+ struct workqueue_struct *afs_wq;
+ 
+ /*
+@@ -43,7 +43,7 @@ static int __init afs_init(void)
+ 
+ 	printk(KERN_INFO "kAFS: Red Hat AFS client v0.1 registering.\n");
+ 
+-	generate_random_uuid((unsigned char *)&afs_uuid);
++	uuid_gen(&afs_uuid);
+ 
+ 	/* create workqueue */
+ 	ret = -ENOMEM;
 -- 
 2.11.0
