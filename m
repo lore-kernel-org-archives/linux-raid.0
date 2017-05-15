@@ -1,146 +1,157 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: RFC - Raid error detection and auto-recovery (was Fault tolerance with badblocks)
-Date: Mon, 15 May 2017 12:11:53 +0100
-Message-ID: <87vap2tlvq.fsf@esperi.org.uk>
-References: <591314F4.2010702@youngman.org.uk>
-        <87lgpyn5sf.fsf@notabene.neil.brown.name>
+From: Lidong Zhong <lzhong@suse.com>
+Subject: Re: [PATCH] super1: fix sb->max_dev when adding a new disk in linear
+ array
+Date: Mon, 15 May 2017 19:33:44 +0800
+Message-ID: <72a92868-468c-039b-bd03-b1fbed1db82c@suse.com>
+References: <20170512015145.18542-1-lzhong@suse.com>
+ <66dcee83-e0d3-be5f-d8c4-f06b342afea8@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87lgpyn5sf.fsf@notabene.neil.brown.name> (NeilBrown's message of
-        "Mon, 15 May 2017 13:43:44 +1000")
+In-Reply-To: <66dcee83-e0d3-be5f-d8c4-f06b342afea8@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Wols Lists <antlists@youngman.org.uk>, linux-raid <linux-raid@vger.kernel.org>
+To: Coly Li <colyli@suse.de>
+Cc: linux-raid@vger.kernel.org, Jes.Sorensen@gmail.com
 List-Id: linux-raid.ids
 
-On 15 May 2017, NeilBrown told this:
 
-> On Wed, May 10 2017, Wols Lists wrote:
->
->> This discussion seems to have become a bit heated, but I think we have
->> the following:
->
-> ... much of which is throwing baseless accusations at the people who
-> provide you will an open operating system kernel without any charge.
-> This is not an approach that is likely to win you any friends.
 
-For what it's worth, I intend no accusations. Nobody cackled and cried
-"oh yeah let's avoid repairing things! That way my disk-fault army shall
-TAKE OVER THE WORLD!!!!"
-
-I just thought that doing something might be preferable to doing nothing
-in those limited cases where you can be sure that one side is definitely
-wrong, even if you don't know that the other side is definitely right.
-I'm fairly sure this was a misconception on my part: see below. "Smart"
-repair is, I think, impossible to do reliably, no matter how much parity
-you have: you need actual ECC, which is of course a completely different
-thing from RAID.
-
->> FURTHER FACTUAL TIDBITS:
+On 05/12/2017 03:53 PM, Coly Li wrote:
+> On 2017/5/12 上午9:51, Lidong Zhong wrote:
+>> The value of sb->max_dev will always be increased by 1 when adding
+>> a new disk in linear array. It causes an inconsistence between each
+>> disk in the array and the "Array State" value of "mdadm --examine DISK"
+>> is wrong. For example, when adding the first new disk into linear array
+>> it will be:
 >>
->> The usual response seems to be to push the problem somewhere else. For
->> example "The user should keep backups". BUT HOW? I've investigated!
+>> Array State : RAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+>> ('A' == active, '.' == missing, 'R' == replacing)
 >>
->> Let's say I buy a spare drive for my backup. But I installed raid to
->> avoid being at the mercy of a single drive. Now I am again because my
->> backup is a single drive! BIG FAIL.
->
-> Not necessarily.  What is the chance that your backup device and your
-> main storage device both fail at the same time?  I accept that it is
-> non-zero, but so is the chance of being hit by a bus.  Backups don't
-> help there.
-
-This very fact, after all, the reason why RAID 6 is better than RAID 5
-in the first place :)
-
->> Okay, I'll buy two drives, and have a backup raid. But what if my backup
->> raid is reporting a mismatch count too? Now I have TWO copies where I
->> can't vouch for their integrity. Double the trouble. BIG FAIL.
->
-> Creating a checksum of each file that you backup is not conceptually
-> hard -
-
-In fact with many backup systems, particularly those based on
-content-addressable filesystems like git, it is impossible to avoid.
-
->         much easier that always having an accurate checksum of all files
-> that are currently 'live' on your system.  That would allow you to check
-> the integrity of your backups.
-
-I actually cheat. I *could* diff everything, but given that the time it
-takes to do that is dominated hugely by the need to reread everything to
-re-SHA-1 it, I diff my backups by running another one. 'git diff' on the
-resulting commits tells me very rapidly exactly what has changed (albeit
-in a somewhat annoying format consisting of variable-size blocks of
-files, but it's easy to tell what files and what metadata have altered).
-This does waste space with a "useless" backup, though: if I thought
-there might be massive corruption I'd symlink my bup backup somewhere
-else and do the test comparison backup there. It's easier to delete the
-rubble that way. (But, frankly, in that case I'd probably have seen the
-massive corruption and be doing a restore from backup in any case.)
-
->> PROPOSAL: Enable integrity checking.
+>> Adding the second disk into linear array it will be
 >>
->> We need to create something like /sys/md/array/verify_data_on_read. If
->> that's set to true and we can check integrity (ie not raid-0), rather
->> than reading just the data disks, we read the entire stripe, check the
->> mirror or parity, and then decide what to do. If we can return
+>> Array State : .AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+>> ('A' == active, '.' == missing, 'R' == replacing)
+>>
+>> Signed-off-by: Lidong Zhong<lzhong@suse.com>
 
-How *do* you decide what to do, though? That's the root of this whole
-argument. This isn't something the admin has *time* to respond to, nor a
-UI in place to do so.
+Hi Coly,
 
->> error-corrected data obviously we do. I think we should return an error
->> if we can't, no?
+Thanks for your reply.
+
+> The above description does not very well explain why this fix is necessary.
 >
-> Why "obviously"?  Unless you can explain the cause of an inconsistency,
-> you cannot justify one action over any other.  Probable cause is
-> sufficient.
+> For linear device, there was a race condition and got fixed already.
+> There are users encountered such bug in old kernel, when they trying to
+> add a hard disk into a linear device. After the kernel panic caused by
+> the race issue in old md linear code, they reboot from the fixed kernel,
+> and find 'R' or '?' marks from Array State output.
 >
-> Returning a read error when inconsistency is detected, is a valid response.
+> After analyze the metadata, we found value of
+> sb->dev_roles[sb->max_dev-1] is 0, but which should be
+> MD_DISK_ROLE_FAULTY. The reason for the error is, when adding a disk
+> into linear device, mdadm first increases sb->max_dev value, but not set
+> its role value. So the corresponding role value keeps as 0, which is
+> same as No.0 disk's role value in the linear device.
+>
+> So mdadm -E will find there are 2 same role value for No.0 disk, and the
+> first state character of Array State is marked as 'R'. If such a panic
+> happened multiple times, there are more bogus zero value at tail of
+> dev_roles[], so the character of Array State is marked as '?'.
+>
+> Now the kernel part is fixed, but mdadm part is not fixed yet. This
+> patch is an effort to avoid bogus dev_roles[] value if kernel panic
+> happens in follow ioctl system call (although the possibility is quite
+> low and who can tel ...).
 
-It *is* one that programs are likely to react rather violently to (how
-many programs test for -EIO at all?) or ignore (if it happens on
-close()) but frankly if you hit an I/O error there isn't much most
-programs *can* do to continue normally, and at least it'll tell you what
-program's data is unhappy and the program might tell you what file is
-affected. What does a filesystem do if its metadata is -EIOed, though?
-That might be... less pleasant.
+Not exactly the kernel panic we met in another bug triggers the error value
+of sb->max_dev. You can reproduce this problem easily by adding a new
+disk into a linear array. Here is the original logic:
 
-I think the point here is that we'd like some way to recover that lets
-us get back to the most-likely-consistent state. However, on going over
-the RAID-6 maths again I think I see where I was wrong. In the absence
-of P, Q, P *or* Q or one of P and Q and a data stripe, you can
-reconstruct the rest, but the only reason you can do that is because
-they are either correct or absent: you can trust them if they're there,
-and you cannot mistake a missing stripe for one that isn't missing.
+The super block written  to the new added device is read from the last disk
+of the linear array. And it does some changes including max_dev and 
+dev_roles,
 
-If one syndrome is *wrong* the probability is equal that it is wrong
-because it was mis-set by some read or write error or that *the other
-syndrome* is wrong, or that both are right and *one stripe* is wrong:
-any change to the data in that stripe will affect *both* of them, so you
-have no grounds to say "Q is inconsistent, fix it". It could just as
-well be P, or a random stripe, and you have no idea which. There are
-always changes to the data that will affect only P, and not Q, so there
-are no errors you can reliably identify by P/Q consistency checks. (Here
-I assume that no error can affect both, which is clearly not true but
-just makes everything even harder to get right!)
+1259     } else if (strcmp(update, "linear-grow-new") == 0) {
+1260         unsigned int i;
+1261         int fd;
+1262         unsigned int max = __le32_to_cpu(sb->max_dev);
+1263
+1264         for (i = 0; i < max; i++)
+1265             if (__le16_to_cpu(sb->dev_roles[i]) >=
+1266 MD_DISK_ROLE_FAULTY)
+1267 break;
+1268         sb->dev_number = __cpu_to_le32(i);
+1269         info->disk.number = i;
+1270         if (max >= __le32_to_cpu(sb->max_dev))
+1271             sb->max_dev = __cpu_to_le32(max+1);
 
-Reporting the location of the error so you can fix it without wiping and
-rewriting the whole filesystem does seem desirable, though. :) I/O
-errors are reported in dmesg by the block layer: so should this be.
+But because max always equals to __le32_to_cpu(sb->max_dev)) in line 
+1270, the
+value of sb->max_dev is always increased by 1 for the new added device 
+and the
+sb->dev_roles[ sb->max_dev] is not initialized to 0xfffe. While the 
+sb->max_dev in
+the original disks are not changed
 
->> NEVER THROW AWAY USER DATA IF YOU CAN RECONSTRUCT IT !!!
+1295     } else if (strcmp(update, "linear-grow-update") == 0) {
+1296         sb->raid_disks = __cpu_to_le32(info->array.raid_disks);
+1297         sb->dev_roles[info->disk.number] =
+1298             __cpu_to_le16(info->disk.raid_disk);
+>> ---
+>>   super1.c | 8 +++++++-
+>>   1 file changed, 7 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/super1.c b/super1.c
+>> index 87a74cb..4fb655f 100644
+>> --- a/super1.c
+>> +++ b/super1.c
+>> @@ -1184,8 +1184,10 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+>>   				break;
+>>   		sb->dev_number = __cpu_to_le32(i);
+>>   		info->disk.number = i;
+>> -		if (max >= __le32_to_cpu(sb->max_dev))
+>> +		if (i >= __le32_to_cpu(sb->max_dev)) {
+>>   			sb->max_dev = __cpu_to_le32(max+1);
+>> +			sb->dev_roles[sb->max_dev] = __cpu_to_le16(MD_DISK_ROLE_FAULTY);
+>> +		}
+>>
+>>   		random_uuid(sb->device_uuid);
+> The above part makes sense to me.
+>
+>
+>
+>>
+>> @@ -1214,6 +1216,10 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+>>   		sb->raid_disks = __cpu_to_le32(info->array.raid_disks);
+>>   		sb->dev_roles[info->disk.number] =
+>>   			__cpu_to_le16(info->disk.raid_disk);
+>> +		if (sb->raid_disks+1 >= __le32_to_cpu(sb->max_dev)) {
+>> +			sb->max_dev = __cpu_to_le32(sb->raid_disks+1);
+>> +			sb->dev_roles[sb->max_dev] = __cpu_to_le16(MD_DISK_ROLE_FAULTY);
+>> +		}
+>>   	} else if (strcmp(update, "resync") == 0) {
+>>   		/* make sure resync happens */
+>>   		sb->resync_offset = 0ULL;
+>>
+> Just a lazy question, could you please explain a little bit why you also
+> modify here ? Thanks.
 
-I don't think you can in this case. If Q "looks wrong", it might be
-because Q was damaged or because *any one stripe* was damaged in a
-countervailing fashion (you don't need two, you only need one). You
-likely have more data stripes than P/Q, but P/Q are written more often.
-It does indeed seem to be a toss-up, or rather down to the nature of the
-failure, which is more likely. And nobody has a clue what that failure
-will be in advance and probably not even when it happens.
+I didn't see the sb->max_dev and dev_roles value are correctly set when 
+the disks in array
+are really more than sb->max_dev, both in kernel and userspace.
 
-And so another lovely idea is destroyed by merciless mathematics. This
-universe sucks, I want a better one. Also Neil should solve the halting
-problem for us in 4.13. RAID is meant to stop things halting, right? :P
+Thanks,
+Lidong
+
+> Coly
+>
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message tomajordomo@vger.kernel.org
+> More majordomo info athttp://vger.kernel.org/majordomo-info.html
+>
+
+
