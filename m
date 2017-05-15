@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 13/17] md: namespace private helper names
-Date: Mon, 15 May 2017 17:43:04 +0200
-Message-ID: <20170515154308.26739-14-hch@lst.de>
+Subject: [PATCH 14/17] xfs: use the common helper uuid_is_null()
+Date: Mon, 15 May 2017 17:43:05 +0200
+Message-ID: <20170515154308.26739-15-hch@lst.de>
 References: <20170515154308.26739-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,55 +23,176 @@ List-Id: linux-raid.ids
 
 From: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-The md private helper uuid_equal() collides with a generic helper
-of the same name.
+Use the common helper uuid_is_null() and remove the xfs specific
+helper uuid_is_nil().
 
-Rename the md private helper to md_uuid_equal() and do the same for
-md_sb_equal().
+The common helper does not check for the NULL pointer value as
+xfs helper did, but xfs code never calls the helper with a pointer
+that can be NULL.
 
-Cc: Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Conform comments and warning strings to use the term 'null uuid'
+instead of 'nil uuid', because this is the terminology used by
+lib/uuid.c and its users. It is also the terminology used in
+userspace by libuuid and xfsprogs.
+
 Signed-off-by: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+[hch: remove now unused uuid.[ch]]
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- drivers/md/md.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ fs/xfs/Makefile          |  3 +--
+ fs/xfs/uuid.c            | 32 --------------------------------
+ fs/xfs/uuid.h            | 23 -----------------------
+ fs/xfs/xfs_linux.h       |  1 -
+ fs/xfs/xfs_log_recover.c |  6 +++---
+ fs/xfs/xfs_mount.c       |  8 ++++----
+ 6 files changed, 8 insertions(+), 65 deletions(-)
+ delete mode 100644 fs/xfs/uuid.c
+ delete mode 100644 fs/xfs/uuid.h
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 82f798be964f..65795cc4cb7d 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -825,7 +825,7 @@ static int read_disk_sb(struct md_rdev *rdev, int size)
- 	return -EINVAL;
- }
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 5c90f82b8f6b..a6e955bfead8 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -98,8 +98,7 @@ xfs-y				+= xfs_aops.o \
+ 				   xfs_sysfs.o \
+ 				   xfs_trans.o \
+ 				   xfs_xattr.o \
+-				   kmem.o \
+-				   uuid.o
++				   kmem.o
  
--static int uuid_equal(mdp_super_t *sb1, mdp_super_t *sb2)
-+static int md_uuid_equal(mdp_super_t *sb1, mdp_super_t *sb2)
- {
- 	return	sb1->set_uuid0 == sb2->set_uuid0 &&
- 		sb1->set_uuid1 == sb2->set_uuid1 &&
-@@ -833,7 +833,7 @@ static int uuid_equal(mdp_super_t *sb1, mdp_super_t *sb2)
- 		sb1->set_uuid3 == sb2->set_uuid3;
- }
+ # low-level transaction/log code
+ xfs-y				+= xfs_log.o \
+diff --git a/fs/xfs/uuid.c b/fs/xfs/uuid.c
+deleted file mode 100644
+index 737c186ea98b..000000000000
+--- a/fs/xfs/uuid.c
++++ /dev/null
+@@ -1,32 +0,0 @@
+-/*
+- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#include <xfs.h>
+-
+-int
+-uuid_is_nil(uuid_t *uuid)
+-{
+-	int	i;
+-	char	*cp = (char *)uuid;
+-
+-	if (uuid == NULL)
+-		return 0;
+-	/* implied check of version number here... */
+-	for (i = 0; i < sizeof *uuid; i++)
+-		if (*cp++) return 0;	/* not nil */
+-	return 1;	/* is nil */
+-}
+diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
+deleted file mode 100644
+index 5aea49bf0963..000000000000
+--- a/fs/xfs/uuid.h
++++ /dev/null
+@@ -1,23 +0,0 @@
+-/*
+- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#ifndef __XFS_SUPPORT_UUID_H__
+-#define __XFS_SUPPORT_UUID_H__
+-
+-extern int uuid_is_nil(uuid_t *uuid);
+-
+-#endif	/* __XFS_SUPPORT_UUID_H__ */
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 2c33d915e550..2d167fe643ec 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -43,7 +43,6 @@ typedef __u32			xfs_nlink_t;
  
--static int sb_equal(mdp_super_t *sb1, mdp_super_t *sb2)
-+static int md_sb_equal(mdp_super_t *sb1, mdp_super_t *sb2)
+ #include "kmem.h"
+ #include "mrlock.h"
+-#include "uuid.h"
+ 
+ #include <linux/semaphore.h>
+ #include <linux/mm.h>
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index cd0b077deb35..8cec1e5505a4 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -352,13 +352,13 @@ xlog_header_check_mount(
  {
- 	int ret;
- 	mdp_super_t *tmp1, *tmp2;
-@@ -1025,12 +1025,12 @@ static int super_90_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor
- 	} else {
- 		__u64 ev1, ev2;
- 		mdp_super_t *refsb = page_address(refdev->sb_page);
--		if (!uuid_equal(refsb, sb)) {
-+		if (!md_uuid_equal(refsb, sb)) {
- 			pr_warn("md: %s has different UUID to %s\n",
- 				b, bdevname(refdev->bdev,b2));
- 			goto abort;
+ 	ASSERT(head->h_magicno == cpu_to_be32(XLOG_HEADER_MAGIC_NUM));
+ 
+-	if (uuid_is_nil(&head->h_fs_uuid)) {
++	if (uuid_is_null(&head->h_fs_uuid)) {
+ 		/*
+ 		 * IRIX doesn't write the h_fs_uuid or h_fmt fields. If
+-		 * h_fs_uuid is nil, we assume this log was last mounted
++		 * h_fs_uuid is null, we assume this log was last mounted
+ 		 * by IRIX and continue.
+ 		 */
+-		xfs_warn(mp, "nil uuid in log - IRIX style log");
++		xfs_warn(mp, "null uuid in log - IRIX style log");
+ 	} else if (unlikely(!uuid_equal(&mp->m_sb.sb_uuid, &head->h_fs_uuid))) {
+ 		xfs_warn(mp, "log has mismatched uuid - can't recover");
+ 		xlog_header_check_dump(mp, head);
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 742e4a61c0bc..682b336a7a6a 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -80,14 +80,14 @@ xfs_uuid_mount(
+ 	if (mp->m_flags & XFS_MOUNT_NOUUID)
+ 		return 0;
+ 
+-	if (uuid_is_nil(uuid)) {
+-		xfs_warn(mp, "Filesystem has nil UUID - can't mount");
++	if (uuid_is_null(uuid)) {
++		xfs_warn(mp, "Filesystem has null UUID - can't mount");
+ 		return -EINVAL;
+ 	}
+ 
+ 	mutex_lock(&xfs_uuid_table_mutex);
+ 	for (i = 0, hole = -1; i < xfs_uuid_table_size; i++) {
+-		if (uuid_is_nil(&xfs_uuid_table[i])) {
++		if (uuid_is_null(&xfs_uuid_table[i])) {
+ 			hole = i;
+ 			continue;
  		}
--		if (!sb_equal(refsb, sb)) {
-+		if (!md_sb_equal(refsb, sb)) {
- 			pr_warn("md: %s has same UUID but different superblock to %s\n",
- 				b, bdevname(refdev->bdev, b2));
- 			goto abort;
+@@ -124,7 +124,7 @@ xfs_uuid_unmount(
+ 
+ 	mutex_lock(&xfs_uuid_table_mutex);
+ 	for (i = 0; i < xfs_uuid_table_size; i++) {
+-		if (uuid_is_nil(&xfs_uuid_table[i]))
++		if (uuid_is_null(&xfs_uuid_table[i]))
+ 			continue;
+ 		if (!uuid_equal(uuid, &xfs_uuid_table[i]))
+ 			continue;
 -- 
 2.11.0
