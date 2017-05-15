@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 07/17] uuid: remove the now unused uuid_be_cmp helper
-Date: Mon, 15 May 2017 17:42:58 +0200
-Message-ID: <20170515154308.26739-8-hch@lst.de>
+Subject: [PATCH 09/17] s390/sysinfo: use uuid_is_null instead of opencoding it
+Date: Mon, 15 May 2017 17:43:00 +0200
+Message-ID: <20170515154308.26739-10-hch@lst.de>
 References: <20170515154308.26739-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,22 +23,21 @@ List-Id: linux-raid.ids
 
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- include/linux/uuid.h | 5 -----
- 1 file changed, 5 deletions(-)
+ arch/s390/kernel/sysinfo.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/linux/uuid.h b/include/linux/uuid.h
-index aef21b580b17..21218351ae26 100644
---- a/include/linux/uuid.h
-+++ b/include/linux/uuid.h
-@@ -92,9 +92,4 @@ static inline int uuid_le_cmp(const guid_t u1, const guid_t u2)
- 	return memcmp(&u1, &u2, sizeof(guid_t));
- }
+diff --git a/arch/s390/kernel/sysinfo.c b/arch/s390/kernel/sysinfo.c
+index eefcb54872a5..fb869b103825 100644
+--- a/arch/s390/kernel/sysinfo.c
++++ b/arch/s390/kernel/sysinfo.c
+@@ -242,7 +242,7 @@ static void print_ext_name(struct seq_file *m, int lvl,
  
--static inline int uuid_be_cmp(const uuid_t u1, const uuid_t u2)
--{
--	return memcmp(&u1, &u2, sizeof(uuid_t));
--}
--
- #endif
+ static void print_uuid(struct seq_file *m, int i, struct sysinfo_3_2_2 *info)
+ {
+-	if (!memcmp(&info->vm[i].uuid, &NULL_UUID_BE, sizeof(uuid_be)))
++	if (uuid_is_null(&info->vm[i].uuid))
+ 		return;
+ 	seq_printf(m, "VM%02d UUID:            %pUb\n", i, &info->vm[i].uuid);
+ }
 -- 
 2.11.0
