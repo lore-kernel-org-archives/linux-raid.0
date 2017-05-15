@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 04/17] uuid: don't export guid_index and uuid_index
-Date: Mon, 15 May 2017 17:42:55 +0200
-Message-ID: <20170515154308.26739-5-hch@lst.de>
+Subject: [PATCH 02/17] xfs: use uuid_be to implement the uuid_t type
+Date: Mon, 15 May 2017 17:42:53 +0200
+Message-ID: <20170515154308.26739-3-hch@lst.de>
 References: <20170515154308.26739-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,27 +21,50 @@ To: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>,
 Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-These are only used in uuid.c and vsprintf.c and aren't something modules
-should use directly.
+Use the generic Linux definition to implement our UUID type, this will
+allow using more generic infrastructure in the future.
 
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- lib/uuid.c | 2 --
- 1 file changed, 2 deletions(-)
+ fs/xfs/uuid.h      | 4 ----
+ fs/xfs/xfs_linux.h | 3 +++
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/lib/uuid.c b/lib/uuid.c
-index f80dc63f6ca8..003bf6823003 100644
---- a/lib/uuid.c
-+++ b/lib/uuid.c
-@@ -22,9 +22,7 @@
- #include <linux/random.h>
+diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
+index 104db0f3bed6..4f1441ba4fa5 100644
+--- a/fs/xfs/uuid.h
++++ b/fs/xfs/uuid.h
+@@ -18,10 +18,6 @@
+ #ifndef __XFS_SUPPORT_UUID_H__
+ #define __XFS_SUPPORT_UUID_H__
  
- const u8 guid_index[16] = {3,2,1,0,5,4,7,6,8,9,10,11,12,13,14,15};
--EXPORT_SYMBOL(guid_index);
- const u8 uuid_index[16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
--EXPORT_SYMBOL(uuid_index);
+-typedef struct {
+-	unsigned char	__u_bits[16];
+-} uuid_t;
+-
+ extern int uuid_is_nil(uuid_t *uuid);
+ extern int uuid_equal(uuid_t *uuid1, uuid_t *uuid2);
+ extern void uuid_getnodeuniq(uuid_t *uuid, int fsid [2]);
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 044fb0e15390..89ee5ec66837 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -19,6 +19,7 @@
+ #define __XFS_LINUX__
  
- /***************************************************************
-  * Random UUID interface
+ #include <linux/types.h>
++#include <linux/uuid.h>
+ 
+ /*
+  * Kernel specific type declarations for XFS
+@@ -38,6 +39,8 @@ typedef __s64			xfs_daddr_t;	/* <disk address> type */
+ typedef __u32			xfs_dev_t;
+ typedef __u32			xfs_nlink_t;
+ 
++typedef uuid_be			uuid_t;
++
+ #include "xfs_types.h"
+ 
+ #include "kmem.h"
 -- 
 2.11.0
