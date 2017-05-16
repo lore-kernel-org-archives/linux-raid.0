@@ -1,39 +1,59 @@
-From: Vinod Koul <vinod.koul-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v8 0/4] Broadcom SBA RAID support
-Date: Tue, 16 May 2017 10:02:40 +0530
-Message-ID: <20170516043239.GH15061@localhost>
-References: <1494824695-21797-1-git-send-email-anup.patel@broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1494824695-21797-1-git-send-email-anup.patel-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Anup Patel <anup.patel-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Cc: Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jassi Brar <jassisinghbrar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ray Jui <rjui-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Scott Branden <sbranden-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Jon Mason <jonmason-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Rob Rice <rob.rice-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, bcm-kernel-feedback-list-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, dmaengine-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Lidong Zhong <lzhong@suse.com>
+Subject: [PATCH] super1: fix sb->max_dev when adding a new disk in linear array
+Date: Tue, 16 May 2017 12:51:29 +0800
+Message-ID: <20170516045129.21815-1-lzhong@suse.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: colyli@suse.com, Jes.Sorensen@gmail.com, neilb@suse.com
 List-Id: linux-raid.ids
 
-On Mon, May 15, 2017 at 10:34:51AM +0530, Anup Patel wrote:
-> The Broadcom SBA RAID is a stream-based device which provides
-> RAID5/6 offload.
-> 
-> It requires a SoC specific ring manager (such as Broadcom FlexRM
-> ring manager) to provide ring-based programming interface. Due to
-> this, the Broadcom SBA RAID driver (mailbox client) implements
-> DMA device having one DMA channel using a set of mailbox channels
-> provided by Broadcom SoC specific ring manager driver (mailbox
-> controller).
-> 
-> The Broadcom SBA RAID hardware requires PQ disk position instead
-> of PQ disk coefficient. To address this, we have added raid_gflog
-> table which will help driver to convert PQ disk coefficient to PQ
-> disk position.
+The value of sb->max_dev will always be increased by 1 when adding
+a new disk in linear array. It causes an inconsistence between each
+disk in the array and the "Array State" value of "mdadm --examine DISK"
+is wrong. For example, when adding the first new disk into linear array
+it will be:
 
-Applied, now
+Array State : RAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+('A' == active, '.' == missing, 'R' == replacing)
 
+Adding the second disk into linear array it will be
+
+Array State : .AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+('A' == active, '.' == missing, 'R' == replacing)
+
+Signed-off-by: Lidong Zhong <lzhong@suse.com>
+---
+ super1.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/super1.c b/super1.c
+index 87a74cb..3d49bee 100644
+--- a/super1.c
++++ b/super1.c
+@@ -1184,8 +1184,10 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+ 				break;
+ 		sb->dev_number = __cpu_to_le32(i);
+ 		info->disk.number = i;
+-		if (max >= __le32_to_cpu(sb->max_dev))
++		if (i >= __le32_to_cpu(sb->max_dev)) {
+ 			sb->max_dev = __cpu_to_le32(max+1);
++			sb->dev_roles[sb->max_dev] = __cpu_to_le16(MD_DISK_ROLE_SPARE);
++		}
+ 
+ 		random_uuid(sb->device_uuid);
+ 
+@@ -1214,6 +1216,10 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+ 		sb->raid_disks = __cpu_to_le32(info->array.raid_disks);
+ 		sb->dev_roles[info->disk.number] =
+ 			__cpu_to_le16(info->disk.raid_disk);
++		if (sb->raid_disks+1 >= __le32_to_cpu(sb->max_dev)) {
++			sb->max_dev = __cpu_to_le32(sb->raid_disks+1);
++			sb->dev_roles[sb->max_dev] = __cpu_to_le16(MD_DISK_ROLE_SPARE);
++		}
+ 	} else if (strcmp(update, "resync") == 0) {
+ 		/* make sure resync happens */
+ 		sb->resync_offset = 0ULL;
 -- 
-~Vinod
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+2.12.0
+
