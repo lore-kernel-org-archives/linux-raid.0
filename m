@@ -1,159 +1,79 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: A sector-of-mismatch warning patch (was Re: Fault tolerance with badblocks)
-Date: Wed, 17 May 2017 07:11:17 +1000
-Message-ID: <87bmqsmrre.fsf@notabene.neil.brown.name>
-References: <03294ec0-2df0-8c1c-dd98-2e9e5efb6f4f@hale.ee> <590B3039.3060000@youngman.org.uk> <84184eb3-52c4-e7ad-cd5b-5021b5cf47ee@hale.ee> <d2b25ec0-c401-07df-2231-a37117878589@youngman.org.uk> <bd917050-cf73-6922-bb20-c5ccf02ba51c@hale.ee> <590DC905.60207@youngman.org.uk> <87h90v8kt3.fsf@esperi.org.uk> <1533bba8-41cb-2c50-b28a-52786e463072@turmel.org> <87vapb6s9h.fsf@esperi.org.uk> <c5307694-034c-b610-8a27-3bf272cac380@youngman.org.uk> <87inla73vz.fsf@esperi.org.uk> <5911A371.3030008@hesbynett.no> <878tm65kyx.fsf@esperi.org.uk> <5911AED4.9030007@hesbynett.no> <CAJCQCtSaLbp4T+j97Ds6xqPmhVwnncGU2UV2_9HEbEJyr6fy+Q@mail.gmail.com> <87bmr14u5f.fsf_-_@esperi.org.uk> <87efvpmqf6.fsf@notabene.neil.brown.name>
+Subject: Re: How to delay mdadm assembly until all component drives are recognized/ready?
+Date: Wed, 17 May 2017 07:25:10 +1000
+Message-ID: <877f1gmr49.fsf@notabene.neil.brown.name>
+References: <243ef080-c32f-f423-3a98-af70194f994b@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87efvpmqf6.fsf@notabene.neil.brown.name>
+In-Reply-To: <243ef080-c32f-f423-3a98-af70194f994b@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nix <nix@esperi.org.uk>, Chris Murphy <lists@colorremedies.com>
-Cc: David Brown <david.brown@hesbynett.no>, Anthony Youngman <antlists@youngman.org.uk>, Phil Turmel <philip@turmel.org>, "Ravi (Tom) Hale" <ravi@hale.ee>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Ram Ramesh <rramesh2400@gmail.com>, Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, May 16 2017, NeilBrown wrote:
+On Tue, May 09 2017, Ram Ramesh wrote:
 
-> On Tue, May 09 2017, Nix wrote:
+> Today, I noticed that my RAID6 md0 was assembled in degraded state with=20
+> two drives in failed state after a pm-suspend and restart. Both of these=
+=20
+> drives were attached toSAS9211-8I controller. The other drives are=20
+> attached to motherboard. I have not had this on a normal boot/reboot.=20
+> Also, in this particular case, mythtv recording was going on when=20
+> suspended and therefore as soon as resumed that used this md0.
 >
->> On 9 May 2017, Chris Murphy verbalised:
->>
->>> 1. md reports all data drives and the LBAs for the affected stripe
->>
->> Enough rambling from me. Here's a hilariously untested patch against
->> 4.11 (as in I haven't even booted with it: my systems are kind of in
->> flux right now as I migrate to the md-based server that got me all
->> concerned about this). It compiles! And it's definitely safer than
->> trying a repair, and makes it possible to recover from a real mismatch
->> without losing all your hair in the process, or determine that a
->> mismatch is spurious or irrelevant. And that's enough for me, frankly.
->> This is a very rare problem, one hopes.
->>
->> (It's probably not ideal, because the error is just known to be
->> somewhere in that stripe, not on that sector, which makes determining
->> the affected data somewhat harder. But at least you can figure out what
->> filesystem it's on. :) )
->>
->> 8<------------------------------------------------------------->8
->> From: Nick Alcock <nick.alcock@oracle.com>
->> Subject: [PATCH] md: report sector of stripes with check mismatches
->>
->> This makes it possible, with appropriate filesystem support, for a
->> sysadmin to tell what is affected by the mismatch, and whether
->> it should be ignored (if it's inside a swap partition, for
->> instance).
->>
->> We ratelimit to prevent log flooding: if there are so many
->> mismatches that ratelimiting is necessary, the individual messages
->> are relatively unlikely to be important (either the machine is
->> swapping like crazy or something is very wrong with the disk).
->>
->> Signed-off-by: Nick Alcock <nick.alcock@oracle.com>
->> ---
->>  drivers/md/raid5.c | 16 ++++++++++++----
->>  1 file changed, 12 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> index ed5cd705b985..bcd2e5150e29 100644
->> --- a/drivers/md/raid5.c
->> +++ b/drivers/md/raid5.c
->> @@ -3959,10 +3959,14 @@ static void handle_parity_checks5(struct r5conf =
-*conf, struct stripe_head *sh,
->>  			set_bit(STRIPE_INSYNC, &sh->state);
->>  		else {
->>  			atomic64_add(STRIPE_SECTORS, &conf->mddev->resync_mismatches);
->> -			if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery))
->> +			if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery)) {
->>  				/* don't try to repair!! */
->>  				set_bit(STRIPE_INSYNC, &sh->state);
->> -			else {
->> +				pr_warn_ratelimited("%s: mismatch around sector "
->> +						    "%llu\n", __func__,
->> +						    (unsigned long long)
->> +						    sh->sector);
->> +			} else {
+> Upon inspection, it appears (I am not sure here) that mdadm assembled=20
+> the array even before the drives were ready to be used. All I had to do=20
+> was to remove and re-add them to bring the array back to "good" state. I=
+=20
+> am wondering if there is a way to tell mdadm to wait for all drives to=20
+> be ready before assembling. Also, if there is something that I can add=20
+> to resume scripts that will help, please let me know.
 >
-> I think there is no point giving the function name,
-> but that you should give the name of the array.
-> Also "around" is a little vague.
-> Maybe something like:
+> Kernel: Linux zym 3.13.0-106-generic #153-Ubuntu SMP
+> mdadm - v3.2.5 - 18th May 2012
 >
->> +				pr_warn_ratelimited("%s: mismatch sector in range "
->> +						    "%llu-%llu\n", mdname(conf->mddev),
->> +						    (unsigned long long) sh->sector,
->> +						    (unsigned long long) sh->sector + STRIPE_SECTORS);
->
-> As an optional enhancement, you could add "will recalculate P/Q" or
-> "left unchanged" as appropriate.
->
-> Providing at least that the array name is included in the message, I
-> support this patch.
+> Failed drives are HGST NAS and WD Gold with less than a year of usage.=20
+> So I doubt they are bad drives by any means.
 
-Actually, I have another caveat.  I don't think we want these messages
-during initial resync, or any resync.  Only during a 'check' or
-'repair'.
-So add a check for MD_RECOVERY_REQUESTED or maybe for
-  sh->sectors >=3D conf->mddev->recovery_cp
+This is a question that needs to be addressed by your distro.  mdadm
+just does what it is told to do by init/udev/systemd scripts.
+
+The preferred way for array startup to happen is that when udev
+discovers a new device, "mdadm --incremental $DEV" is run, and mdadm
+includes the device into an array as appropriate.  mdadm will not
+normally activate the array until all expected devices have appeared.
+After some timeout "mdadm -IRs" or "mdadm --run /dev/mdXX" can be run to
+start the array even though it is degraded.
+
+The udev-* scripts and systemd/* unit files provided with current
+upstream mdadm do this, with a 30 second timeout.
+If a given distro doesn't use these scripts, you need to take it up
+with them.
 
 NeilBrown
-
-
->
-> NeilBrown
->
->
->
->>  				sh->check_state =3D check_state_compute_run;
->>  				set_bit(STRIPE_COMPUTE_RUN, &sh->state);
->>  				set_bit(STRIPE_OP_COMPUTE_BLK, &s->ops_request);
->> @@ -4111,10 +4115,14 @@ static void handle_parity_checks6(struct r5conf =
-*conf, struct stripe_head *sh,
->>  			}
->>  		} else {
->>  			atomic64_add(STRIPE_SECTORS, &conf->mddev->resync_mismatches);
->> -			if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery))
->> +			if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery)) {
->>  				/* don't try to repair!! */
->>  				set_bit(STRIPE_INSYNC, &sh->state);
->> -			else {
->> +				pr_warn_ratelimited("%s: mismatch around sector "
->> +						    "%llu\n", __func__,
->> +						    (unsigned long long)
->> +						    sh->sector);
->> +			} else {
->>  				int *target =3D &sh->ops.target;
->>=20=20
->>  				sh->ops.target =3D -1;
->> --=20
->> 2.12.2.212.gea238cf35.dirty
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlkbavUACgkQOeye3VZi
-gbnWuQ/7BGrpG/fu6ggNZmrSPoxtEwA46z25VkOFUxFuSCXGxZge7x+U0gVKazPv
-s8giu98WxhPBDNngFjvI2/3Nfx2qYPTrsFGTPV40iLZpM4v9qYzi22mMsMmXTTBi
-HQgymBDRzRRRihO1mr3MGAD4J2YIK4fX3uBwqQsHb1iAe2g3VXAuMOZn1VtXgQdU
-Q4zEZpK5sptENxjZ0e6mkkrawBbyHvoU0vxdzZJmbZLTdtonVk2Go8gaG8j3bgNv
-2XMfkf22MgmtQGcKgl6+KRLiKFai5RUWbzyUFQkNalkhU3gpSIVOJygtsdRmtv76
-I63sBkQ6RF2YyO26AUuInce1yW609a7CDVQXsJYE750ixQ0iZWtrjWA4dlpRCBgJ
-3+uisQXBhhdi8XJOWDmDTJLSjhmCOtTo0n1G25pTS2qEKfcdGEPq28o/WuH+o4tA
-9lmtXxmtvAHvwIHOAHOWwGEAHSzJbThRGbeQHtGr5m5sAt4yVZADueXu98C6XUPN
-jx7k70OH6qu+pt3/TWzOTyFSlPWY+KW+8Zt7MR0trWQXznMxJzKbv8wJjsyD7ZZM
-UhBugWrrtsoUfUYE1zp1mb3N/koq06wNnys8E3bbLPlF5x4eUS7cwKjnM7wnoOsT
-+Ymq5U06wBtqmowdtaYE/YbAM85R1jomeLESrd0mJsKyPrpWIu0=
-=R6n2
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlkbbjYACgkQOeye3VZi
+gbkGnQ/+JqG2A+ZWem1Yj7DNrTMR/mhahGJJddRH2snc5f9uOYhCx9rH/2NiIOZZ
+Bu0m9OYI7ByigaoAS/T0/ywaSxverN+R56AfpAmqiY5V7WFZzaHh1DuiXkCJ5rLC
+6xD4xL7h4vLAHEtkcU/BNTM95RHQDnPpN4R6DJQw16kEdyd7thNxiLmaNIREq3LQ
+1h1OaIXlQbAkA8oROzIhYKysjrKLH1Piv4kzh4wWhi7AVym8tan/pAOlNHbVzsjU
+1cSyc4uj0h8KD/HWXPzif7br1FCfOIZAkEHY4LE4UWsObhyjl0ej8dPMkE+YVn1P
+/Rhc4hwWegxTUiyXaufvQ60yAI4TWu2NOtBdPoThFtAFrxK1w2vDZB3QLwX3Q7N/
+7M83xPyG3h/rBsRoctqGZOyqPXojTiVBGIG4qEUmcxsBwMYoBdkkwjttJMspBKCt
+rNeMhJOdyRBnqkjKocGvSInGMGw/ZyPdnZl0WINuHfAk6SsxRRXMijldzgqPETfA
+XmROF6F4bqM3YutNkcmsZ2iB6yNgviCQMKr1riXcsGtHgbpWCsUAK6jxYopY6H3n
+LZvhnBXX0bsO1YYQ+MVXzPmO7nVB8hGTD/zzmse9bkZpUwFKWuY58FGXilhbEh13
+BXyASeWWc+69BVD/lXHx6AUHWpHJou9VXN7ngCGToHbkSG6/Ttc=
+=HcaQ
 -----END PGP SIGNATURE-----
 --=-=-=--
