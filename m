@@ -1,128 +1,100 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: A sector-of-mismatch warning patch (was Re: Fault tolerance with badblocks)
-Date: Tue, 16 May 2017 10:13:31 +0100
-Message-ID: <87pof9rwp0.fsf@esperi.org.uk>
-References: <03294ec0-2df0-8c1c-dd98-2e9e5efb6f4f@hale.ee>
-        <590B3039.3060000@youngman.org.uk>
-        <84184eb3-52c4-e7ad-cd5b-5021b5cf47ee@hale.ee>
-        <d2b25ec0-c401-07df-2231-a37117878589@youngman.org.uk>
-        <bd917050-cf73-6922-bb20-c5ccf02ba51c@hale.ee>
-        <590DC905.60207@youngman.org.uk> <87h90v8kt3.fsf@esperi.org.uk>
-        <1533bba8-41cb-2c50-b28a-52786e463072@turmel.org>
-        <87vapb6s9h.fsf@esperi.org.uk>
-        <c5307694-034c-b610-8a27-3bf272cac380@youngman.org.uk>
-        <87inla73vz.fsf@esperi.org.uk> <5911A371.3030008@hesbynett.no>
-        <878tm65kyx.fsf@esperi.org.uk> <5911AED4.9030007@hesbynett.no>
-        <CAJCQCtSaLbp4T+j97Ds6xqPmhVwnncGU2UV2_9HEbEJyr6fy+Q@mail.gmail.com>
-        <87bmr14u5f.fsf_-_@esperi.org.uk>
-        <87efvpmqf6.fsf@notabene.neil.brown.name>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: RFC - Raid error detection and auto-recovery (was Fault tolerance
+ with badblocks)
+Date: Tue, 16 May 2017 11:33:50 +0100
+Message-ID: <591AD58E.6090408@youngman.org.uk>
+References: <591314F4.2010702@youngman.org.uk>
+ <87lgpyn5sf.fsf@notabene.neil.brown.name> <87vap2tlvq.fsf@esperi.org.uk>
+ <5919B0AC.30705@youngman.org.uk>
+ <7ba308d7-6954-8cd9-e623-93b940c5e370@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87efvpmqf6.fsf@notabene.neil.brown.name> (NeilBrown's message of
-        "Tue, 16 May 2017 13:27:57 +1000")
+In-Reply-To: <7ba308d7-6954-8cd9-e623-93b940c5e370@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Chris Murphy <lists@colorremedies.com>, David Brown <david.brown@hesbynett.no>, Anthony Youngman <antlists@youngman.org.uk>, Phil Turmel <philip@turmel.org>, "Ravi (Tom) Hale" <ravi@hale.ee>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Phil Turmel <philip@turmel.org>, Nix <nix@esperi.org.uk>, NeilBrown <neilb@suse.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 16 May 2017, NeilBrown said:
+On 15/05/17 23:31, Phil Turmel wrote:
+> On 05/15/2017 09:44 AM, Wols Lists wrote:
+>> On 15/05/17 12:11, Nix wrote:
+>>> I think the point here is that we'd like some way to recover that lets
+>>> us get back to the most-likely-consistent state. However, on going over
+>>> the RAID-6 maths again I think I see where I was wrong. In the absence
+>>> of P, Q, P *or* Q or one of P and Q and a data stripe, you can
+>>> reconstruct the rest, but the only reason you can do that is because
+>>> they are either correct or absent: you can trust them if they're there,
+>>> and you cannot mistake a missing stripe for one that isn't missing.
+>>
+>> The point of Peter Anvin's paper, though, was that it IS possible to
+>> correct raid-6 if ONE of P, Q, or a data stripe is corrupt.
+> 
+> If and only if it is known that all but the supposedly corrupt block
+> were written together (complete stripe) and no possibility of
+> perturbation occurred between the original calculation of P,Q in the CPU
+> and original transmission of all of these blocks to the member drives.
 
->> -			else {
->> +				pr_warn_ratelimited("%s: mismatch around sector "
->> +						    "%llu\n", __func__,
->> +						    (unsigned long long)
->> +						    sh->sector);
->> +			} else {
->
-> I think there is no point giving the function name,
-> but that you should give the name of the array.
+NO! This is a "can't see the wood for the trees" situation. If one block
+in a raid-6 is corrupt, we can correct it. That's maths, that's what the
+maths says, and it is not only possible, but *definite*.
 
-*ouch* I can't believe I forgot that. I have more than one array
-myself... "we have a fault but we don't know what array it's on" is not
-much of an improvement over the status quo, really! (though you could
-make a good guess by looking for preceding sync-start messages, you can
-of course sync two arrays at the same time...)
+WHAT caused the corruption, and HOW, is irrelevant. The only requirement
+is that *just one block is lost*. If that's the case we can recover.
+> 
+> Since incomplete writes and a whole host of hardware corruptions are
+> known to happen, you *don't* have enough information to automatically
+> repair.
 
-> Also "around" is a little vague.
+And I would guess that in most of the cases you are talking about, it's
+not just one block that is lost. In that case we don't have enough
+information to repair, full stop! And if I feed it into Peter's equation
+the result would be nonsense so I wouldn't bother trying. (As in, I
+would feed it into Peter's equation, but I'd stop there.)
+> 
+> The only unambiguous signal MD raid receives that a particular block is
+> corrupt is an Unrecoverable Read Error from a drive.  MD fixes these
+> from available redundancy.  All other sources of corruption require
+> assistance from an upper layer or from administrator input.
+> 
+> There's no magic wand, Wol.
+> 
+I know there isn't a magic wand. BUT. What is the chance of a
+multi-block corruption looking like a single-block error? Pretty low I
+think, and according to Peter Anvin's paper it gives off some pretty
+clear signals that "something's not right".
 
-Intentionally: I couldn't think of the right terminology. Yours is
-better.
+At the end of the day, as I see it, MD raid *can* do data integrity. So
+if the user thinks the performance hit is worth it, why not?
 
-> Maybe something like:
->
->> +				pr_warn_ratelimited("%s: mismatch sector in range "
->> +						    "%llu-%llu\n", mdname(conf->mddev),
->> +						    (unsigned long long) sh->sector,
->> +						    (unsigned long long) sh->sector + STRIPE_SECTORS);
+MD raid *can* do data recovery. So why not?
 
-Nice! Here's a rerolled patch. (We exceed the 80-char limit but that's
-pr_warn_ratelimited()'s fault for having such a long name!)
+And yes, given the opportunity I will write it myself. I just have to be
+honest and say my family situation interferes with that desire fairly
+drastically (which is why I've put a lot of effort in elsewhere, that
+doesn't require long stretches of concentration).
 
-Tested by making a raid array on a bunch of sparse files then dding a
-byte of garbage into one of them and checking it. I got a nice error
-message, name and all, and the sector count looked good.
+All your scenarios you are throwing at me, can you come up with ANY that
+will BOTH corrupt more than one block AND make it look like a single
+block error? As I look at it, I will only bother correcting errors that
+look correctable. Which means, in probably 99.9% of cases, I get it
+right. (And if I don't bother, the data's lost, anyway!)
+
+Looked at from the other side, IFF we have a correctable error, and fix
+it by recalculating P & Q, that gives us AT BEST a 50% chance of getting
+it right, and it gets worse the more disks we have. Especially if our
+problem is that something has accidentally stomped on just one disk. Or
+that we've got several dodgy disks that we've had to ddrescue...
 
 
-From f05a451d46900849c7965a0e7dde085f1fb50dfc Mon Sep 17 00:00:00 2001
-From: Nick Alcock <nick.alcock@oracle.com>
-Date: Tue, 9 May 2017 21:55:17 +0100
-Subject: [PATCH] md: report sector of stripes with check mismatches
+Neil mentioned elsewhere that he's not sure about btrfs and zfs. Can
+they actually do data recovery, or just data integrity? And I'm on the
+opensuse mailing list. I would NOT say btrfs is ready for the
+casual/naive user. I suspect most of the smoke on the mailing list is
+people who've been burnt in the past, but there still seems to be a
+trickle of people reporting "an update ate my root partition". For which
+the usual advice seems to be "reformat and reinstall" :-(
 
-This makes it possible, with appropriate filesystem support, for a
-sysadmin to tell what is affected by the mismatch, and whether
-it should be ignored (if it's inside a swap partition, for
-instance).
-
-We ratelimit to prevent log flooding: if there are so many
-mismatches that ratelimiting is necessary, the individual messages
-are relatively unlikely to be important (either the machine is
-swapping like crazy or something is very wrong with the disk).
-
-Signed-off-by: Nick Alcock <nick.alcock@oracle.com>
----
- drivers/md/raid5.c | 18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index ed5cd705b985..937314051be5 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -3959,10 +3959,15 @@ static void handle_parity_checks5(struct r5conf *conf, struct stripe_head *sh,
- 			set_bit(STRIPE_INSYNC, &sh->state);
- 		else {
- 			atomic64_add(STRIPE_SECTORS, &conf->mddev->resync_mismatches);
--			if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery))
-+			if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery)) {
- 				/* don't try to repair!! */
- 				set_bit(STRIPE_INSYNC, &sh->state);
--			else {
-+				pr_warn_ratelimited("%s: mismatch sector in range "
-+						    "%llu-%llu\n", mdname(conf->mddev),
-+						    (unsigned long long) sh->sector,
-+						    (unsigned long long) sh->sector +
-+						    STRIPE_SECTORS);
-+			} else {
- 				sh->check_state = check_state_compute_run;
- 				set_bit(STRIPE_COMPUTE_RUN, &sh->state);
- 				set_bit(STRIPE_OP_COMPUTE_BLK, &s->ops_request);
-@@ -4111,10 +4116,15 @@ static void handle_parity_checks6(struct r5conf *conf, struct stripe_head *sh,
- 			}
- 		} else {
- 			atomic64_add(STRIPE_SECTORS, &conf->mddev->resync_mismatches);
--			if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery))
-+			if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery)) {
- 				/* don't try to repair!! */
- 				set_bit(STRIPE_INSYNC, &sh->state);
--			else {
-+				pr_warn_ratelimited("%s: mismatch sector in range "
-+						    "%llu-%llu\n", mdname(conf->mddev),
-+						    (unsigned long long) sh->sector,
-+						    (unsigned long long) sh->sector +
-+						    STRIPE_SECTORS);
-+			} else {
- 				int *target = &sh->ops.target;
- 
- 				sh->ops.target = -1;
--- 
-2.12.2.212.gea238cf35.dirty
+Cheers,
+Wol
