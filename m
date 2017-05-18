@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 21/23] nvme: switch to uuid_t
-Date: Thu, 18 May 2017 08:27:03 +0200
-Message-ID: <20170518062705.25902-22-hch@lst.de>
+Subject: [PATCH 22/23] scsi_debug: switch to uuid_t
+Date: Thu, 18 May 2017 08:27:04 +0200
+Message-ID: <20170518062705.25902-23-hch@lst.de>
 References: <20170518062705.25902-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,126 +23,54 @@ List-Id: linux-raid.ids
 
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- drivers/nvme/host/fabrics.c | 8 ++++----
- drivers/nvme/host/fabrics.h | 2 +-
- drivers/nvme/host/fc.c      | 3 +--
- drivers/nvme/target/nvmet.h | 1 +
- include/linux/nvme-fc.h     | 3 +--
- include/linux/nvme.h        | 2 +-
- 6 files changed, 9 insertions(+), 10 deletions(-)
+ drivers/scsi/scsi_debug.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/nvme/host/fabrics.c b/drivers/nvme/host/fabrics.c
-index 990e6fb32a63..c190d7e36900 100644
---- a/drivers/nvme/host/fabrics.c
-+++ b/drivers/nvme/host/fabrics.c
-@@ -58,7 +58,7 @@ static struct nvmf_host *nvmf_host_add(const char *hostnqn)
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 17249c3650fe..35ee09644cfb 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -245,7 +245,7 @@ struct sdebug_dev_info {
+ 	unsigned int channel;
+ 	unsigned int target;
+ 	u64 lun;
+-	uuid_be lu_name;
++	uuid_t lu_name;
+ 	struct sdebug_host_info *sdbg_host;
+ 	unsigned long uas_bm[1];
+ 	atomic_t num_in_q;
+@@ -965,7 +965,7 @@ static const u64 naa3_comp_c = 0x3111111000000000ULL;
+ static int inquiry_vpd_83(unsigned char *arr, int port_group_id,
+ 			  int target_dev_id, int dev_id_num,
+ 			  const char *dev_id_str, int dev_id_str_len,
+-			  const uuid_be *lu_name)
++			  const uuid_t *lu_name)
+ {
+ 	int num, port_a;
+ 	char b[32];
+@@ -3568,7 +3568,7 @@ static void sdebug_q_cmd_wq_complete(struct work_struct *work)
+ }
  
- 	kref_init(&host->ref);
- 	memcpy(host->nqn, hostnqn, NVMF_NQN_SIZE);
--	uuid_be_gen(&host->id);
-+	uuid_gen(&host->id);
+ static bool got_shared_uuid;
+-static uuid_be shared_uuid;
++static uuid_t shared_uuid;
  
- 	list_add_tail(&host->list, &nvmf_hosts);
- out_unlock:
-@@ -75,7 +75,7 @@ static struct nvmf_host *nvmf_host_default(void)
- 		return NULL;
- 
- 	kref_init(&host->ref);
--	uuid_be_gen(&host->id);
-+	uuid_gen(&host->id);
- 	snprintf(host->nqn, NVMF_NQN_SIZE,
- 		"nqn.2014-08.org.nvmexpress:NVMf:uuid:%pUb", &host->id);
- 
-@@ -395,7 +395,7 @@ int nvmf_connect_admin_queue(struct nvme_ctrl *ctrl)
- 	if (!data)
- 		return -ENOMEM;
- 
--	memcpy(&data->hostid, &ctrl->opts->host->id, sizeof(uuid_be));
-+	uuid_copy(&data->hostid, &ctrl->opts->host->id);
- 	data->cntlid = cpu_to_le16(0xffff);
- 	strncpy(data->subsysnqn, ctrl->opts->subsysnqn, NVMF_NQN_SIZE);
- 	strncpy(data->hostnqn, ctrl->opts->host->nqn, NVMF_NQN_SIZE);
-@@ -454,7 +454,7 @@ int nvmf_connect_io_queue(struct nvme_ctrl *ctrl, u16 qid)
- 	if (!data)
- 		return -ENOMEM;
- 
--	memcpy(&data->hostid, &ctrl->opts->host->id, sizeof(uuid_be));
-+	uuid_copy(&data->hostid, &ctrl->opts->host->id);
- 	data->cntlid = cpu_to_le16(ctrl->cntlid);
- 	strncpy(data->subsysnqn, ctrl->opts->subsysnqn, NVMF_NQN_SIZE);
- 	strncpy(data->hostnqn, ctrl->opts->host->nqn, NVMF_NQN_SIZE);
-diff --git a/drivers/nvme/host/fabrics.h b/drivers/nvme/host/fabrics.h
-index f5a9c1fb186f..29be7600689d 100644
---- a/drivers/nvme/host/fabrics.h
-+++ b/drivers/nvme/host/fabrics.h
-@@ -36,7 +36,7 @@ struct nvmf_host {
- 	struct kref		ref;
- 	struct list_head	list;
- 	char			nqn[NVMF_NQN_SIZE];
--	uuid_be			id;
-+	uuid_t			id;
- };
- 
- /**
-diff --git a/drivers/nvme/host/fc.c b/drivers/nvme/host/fc.c
-index 70e689bf1cad..da95e85cadec 100644
---- a/drivers/nvme/host/fc.c
-+++ b/drivers/nvme/host/fc.c
-@@ -882,8 +882,7 @@ nvme_fc_connect_admin_queue(struct nvme_fc_ctrl *ctrl,
- 	assoc_rqst->assoc_cmd.sqsize = cpu_to_be16(qsize);
- 	/* Linux supports only Dynamic controllers */
- 	assoc_rqst->assoc_cmd.cntlid = cpu_to_be16(0xffff);
--	memcpy(&assoc_rqst->assoc_cmd.hostid, &ctrl->ctrl.opts->host->id,
--		min_t(size_t, FCNVME_ASSOC_HOSTID_LEN, sizeof(uuid_be)));
-+	uuid_copy(&assoc_rqst->assoc_cmd.hostid, &ctrl->ctrl.opts->host->id);
- 	strncpy(assoc_rqst->assoc_cmd.hostnqn, ctrl->ctrl.opts->host->nqn,
- 		min(FCNVME_ASSOC_HOSTNQN_LEN, NVMF_NQN_SIZE));
- 	strncpy(assoc_rqst->assoc_cmd.subnqn, ctrl->ctrl.opts->subsysnqn,
-diff --git a/drivers/nvme/target/nvmet.h b/drivers/nvme/target/nvmet.h
-index 7cb77ba5993b..204f4066c971 100644
---- a/drivers/nvme/target/nvmet.h
-+++ b/drivers/nvme/target/nvmet.h
-@@ -21,6 +21,7 @@
- #include <linux/percpu-refcount.h>
- #include <linux/list.h>
- #include <linux/mutex.h>
-+#include <linux/uuid.h>
- #include <linux/nvme.h>
- #include <linux/configfs.h>
- #include <linux/rcupdate.h>
-diff --git a/include/linux/nvme-fc.h b/include/linux/nvme-fc.h
-index e997c4a49a88..bc711a10be05 100644
---- a/include/linux/nvme-fc.h
-+++ b/include/linux/nvme-fc.h
-@@ -177,7 +177,6 @@ struct fcnvme_lsdesc_rjt {
- };
- 
- 
--#define FCNVME_ASSOC_HOSTID_LEN		16
- #define FCNVME_ASSOC_HOSTNQN_LEN	256
- #define FCNVME_ASSOC_SUBNQN_LEN		256
- 
-@@ -191,7 +190,7 @@ struct fcnvme_lsdesc_cr_assoc_cmd {
- 	__be16	cntlid;
- 	__be16	sqsize;
- 	__be32	rsvd52;
--	u8	hostid[FCNVME_ASSOC_HOSTID_LEN];
-+	uuid_t	hostid;
- 	u8	hostnqn[FCNVME_ASSOC_HOSTNQN_LEN];
- 	u8	subnqn[FCNVME_ASSOC_SUBNQN_LEN];
- 	u8	rsvd632[384];
-diff --git a/include/linux/nvme.h b/include/linux/nvme.h
-index b625bacf37ef..d88e925f82ce 100644
---- a/include/linux/nvme.h
-+++ b/include/linux/nvme.h
-@@ -843,7 +843,7 @@ struct nvmf_connect_command {
- };
- 
- struct nvmf_connect_data {
--	__u8		hostid[16];
-+	uuid_t		hostid;
- 	__le16		cntlid;
- 	char		resv4[238];
- 	char		subsysnqn[NVMF_NQN_FIELD_LEN];
+ static struct sdebug_dev_info *sdebug_device_create(
+ 			struct sdebug_host_info *sdbg_host, gfp_t flags)
+@@ -3578,12 +3578,12 @@ static struct sdebug_dev_info *sdebug_device_create(
+ 	devip = kzalloc(sizeof(*devip), flags);
+ 	if (devip) {
+ 		if (sdebug_uuid_ctl == 1)
+-			uuid_be_gen(&devip->lu_name);
++			uuid_gen(&devip->lu_name);
+ 		else if (sdebug_uuid_ctl == 2) {
+ 			if (got_shared_uuid)
+ 				devip->lu_name = shared_uuid;
+ 			else {
+-				uuid_be_gen(&shared_uuid);
++				uuid_gen(&shared_uuid);
+ 				got_shared_uuid = true;
+ 				devip->lu_name = shared_uuid;
+ 			}
 -- 
 2.11.0
