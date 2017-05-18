@@ -1,59 +1,53 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: A sector-of-mismatch warning patch (was Re: Fault tolerance with
- badblocks)
-Date: Wed, 17 May 2017 17:07:02 -0700
-Message-ID: <20170518000624.xmvttuyio6llu25r@kernel.org>
-References: <c5307694-034c-b610-8a27-3bf272cac380@youngman.org.uk>
- <87inla73vz.fsf@esperi.org.uk>
- <5911A371.3030008@hesbynett.no>
- <878tm65kyx.fsf@esperi.org.uk>
- <5911AED4.9030007@hesbynett.no>
- <CAJCQCtSaLbp4T+j97Ds6xqPmhVwnncGU2UV2_9HEbEJyr6fy+Q@mail.gmail.com>
- <87bmr14u5f.fsf_-_@esperi.org.uk>
- <87efvpmqf6.fsf@notabene.neil.brown.name>
- <87bmqsmrre.fsf@notabene.neil.brown.name>
- <871sroscey.fsf@esperi.org.uk>
+Subject: Re: [PATCH] md-cluster: fix potential lock issue in add_new_disk
+Date: Wed, 17 May 2017 17:07:30 -0700
+Message-ID: <20170518000730.q22ladboa2wrlolo@kernel.org>
+References: <1494914485-16288-1-git-send-email-gqjiang@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <871sroscey.fsf@esperi.org.uk>
+In-Reply-To: <1494914485-16288-1-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nix <nix@esperi.org.uk>
-Cc: NeilBrown <neilb@suse.com>, Chris Murphy <lists@colorremedies.com>, David Brown <david.brown@hesbynett.no>, Anthony Youngman <antlists@youngman.org.uk>, Phil Turmel <philip@turmel.org>, "Ravi (Tom) Hale" <ravi@hale.ee>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Guoqing Jiang <gqjiang@suse.com>
+Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 List-Id: linux-raid.ids
 
-On Tue, May 16, 2017 at 10:46:13PM +0100, Nix wrote:
-> On 16 May 2017, NeilBrown spake thusly:
+On Tue, May 16, 2017 at 02:01:25PM +0800, Guoqing Jiang wrote:
+> The add_new_disk returns with communication locked if
+> __sendmsg returns failure, fix it with call unlock_comm
+> before return.
 > 
-> > Actually, I have another caveat.  I don't think we want these messages
-> > during initial resync, or any resync.  Only during a 'check' or
-> > 'repair'.
-> > So add a check for MD_RECOVERY_REQUESTED or maybe for
-> >   sh->sectors >= conf->mddev->recovery_cp
-> 
-> I completely agree, but it's already inside MD_RECOVERY_CHECK:
-> 
-> if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery)) {
->         /* don't try to repair!! */
->         set_bit(STRIPE_INSYNC, &sh->state);
->         pr_warn_ratelimited("%s: mismatch sector in range "
->                             "%llu-%llu\n", mdname(conf->mddev),
->                             (unsigned long long) sh->sector,
->                             (unsigned long long) sh->sector +
->                             STRIPE_SECTORS);
-> } else {
-> 
-> Doesn't that already mean that someone has explicitly triggered a check
-> action?
+> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+> CC: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 
+queued, thanks!
 
-Hi,
-So the idea is: run 'check' and report mismatch, userspace (raid6check for
-example) uses the reported info to fix the mismatch. The pr_warn_ratelimited
-isn't a good way to communicate the info to userspace. I'm wondering why we
-don't just run raid6check solely, it can do the job like what kernel does and
-we avoid the crappy pr_warn_ratelimited.
-
-Thanks,
-Shaohua
+> ---
+>  drivers/md/md-cluster.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+> index 7299ce2..03082e1 100644
+> --- a/drivers/md/md-cluster.c
+> +++ b/drivers/md/md-cluster.c
+> @@ -1311,8 +1311,10 @@ static int add_new_disk(struct mddev *mddev, struct md_rdev *rdev)
+>  	cmsg.raid_slot = cpu_to_le32(rdev->desc_nr);
+>  	lock_comm(cinfo, 1);
+>  	ret = __sendmsg(cinfo, &cmsg);
+> -	if (ret)
+> +	if (ret) {
+> +		unlock_comm(cinfo);
+>  		return ret;
+> +	}
+>  	cinfo->no_new_dev_lockres->flags |= DLM_LKF_NOQUEUE;
+>  	ret = dlm_lock_sync(cinfo->no_new_dev_lockres, DLM_LOCK_EX);
+>  	cinfo->no_new_dev_lockres->flags &= ~DLM_LKF_NOQUEUE;
+> -- 
+> 2.6.6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
