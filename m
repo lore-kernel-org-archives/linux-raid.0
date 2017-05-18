@@ -1,112 +1,175 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 07/23] uuid: hoist helpers uuid_equal() and uuid_copy() from xfs
-Date: Thu, 18 May 2017 08:26:49 +0200
-Message-ID: <20170518062705.25902-8-hch@lst.de>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: [PATCH 10/23] afs: switch to use uuid_t and uuid_gen
+Date: Thu, 18 May 2017 08:26:52 +0200
+Message-ID: <20170518062705.25902-11-hch@lst.de>
 References: <20170518062705.25902-1-hch@lst.de>
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170518062705.25902-1-hch@lst.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
-Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <20170518062705.25902-1-hch-jcswGhMUV9g@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-These helper are used to compare and copy two uuid_t type objects.
-
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-[hch: also provide the respective guid_ versions]
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Reviewed-by: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- fs/xfs/uuid.c        |  6 ------
- fs/xfs/uuid.h        |  7 -------
- include/linux/uuid.h | 20 ++++++++++++++++++++
- lib/test_uuid.c      |  4 ++--
- 4 files changed, 22 insertions(+), 15 deletions(-)
+ fs/afs/cmservice.c | 46 +++++++++++++++++++++++-----------------------
+ fs/afs/internal.h  |  2 +-
+ fs/afs/main.c      |  4 ++--
+ 3 files changed, 26 insertions(+), 26 deletions(-)
 
-diff --git a/fs/xfs/uuid.c b/fs/xfs/uuid.c
-index b83f76b6d410..29ed78c8637b 100644
---- a/fs/xfs/uuid.c
-+++ b/fs/xfs/uuid.c
-@@ -55,9 +55,3 @@ uuid_is_nil(uuid_t *uuid)
- 		if (*cp++) return 0;	/* not nil */
- 	return 1;	/* is nil */
- }
--
--int
--uuid_equal(uuid_t *uuid1, uuid_t *uuid2)
--{
--	return memcmp(uuid1, uuid2, sizeof(uuid_t)) ? 0 : 1;
--}
-diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
-index 4f1441ba4fa5..86bbed071e79 100644
---- a/fs/xfs/uuid.h
-+++ b/fs/xfs/uuid.h
-@@ -19,13 +19,6 @@
- #define __XFS_SUPPORT_UUID_H__
+diff --git a/fs/afs/cmservice.c b/fs/afs/cmservice.c
+index 3062cceb5c2a..d4e77d12570c 100644
+--- a/fs/afs/cmservice.c
++++ b/fs/afs/cmservice.c
+@@ -350,7 +350,7 @@ static int afs_deliver_cb_init_call_back_state3(struct afs_call *call)
+ {
+ 	struct sockaddr_rxrpc srx;
+ 	struct afs_server *server;
+-	struct uuid_v1 *r;
++	uuid_t *r;
+ 	unsigned loop;
+ 	__be32 *b;
+ 	int ret;
+@@ -380,20 +380,20 @@ static int afs_deliver_cb_init_call_back_state3(struct afs_call *call)
+ 		}
  
- extern int uuid_is_nil(uuid_t *uuid);
--extern int uuid_equal(uuid_t *uuid1, uuid_t *uuid2);
- extern void uuid_getnodeuniq(uuid_t *uuid, int fsid [2]);
+ 		_debug("unmarshall UUID");
+-		call->request = kmalloc(sizeof(struct uuid_v1), GFP_KERNEL);
++		call->request = kmalloc(sizeof(uuid_t), GFP_KERNEL);
+ 		if (!call->request)
+ 			return -ENOMEM;
  
--static inline void
--uuid_copy(uuid_t *dst, uuid_t *src)
--{
--	memcpy(dst, src, sizeof(uuid_t));
--}
--
- #endif	/* __XFS_SUPPORT_UUID_H__ */
-diff --git a/include/linux/uuid.h b/include/linux/uuid.h
-index 8bd1da4ec95d..7aff929007dd 100644
---- a/include/linux/uuid.h
-+++ b/include/linux/uuid.h
-@@ -64,6 +64,26 @@ typedef struct {
+ 		b = call->buffer;
+ 		r = call->request;
+-		r->time_low			= b[0];
+-		r->time_mid			= htons(ntohl(b[1]));
+-		r->time_hi_and_version		= htons(ntohl(b[2]));
+-		r->clock_seq_hi_and_reserved 	= ntohl(b[3]);
+-		r->clock_seq_low		= ntohl(b[4]);
++		r->v1.time_low			= b[0];
++		r->v1.time_mid			= htons(ntohl(b[1]));
++		r->v1.time_hi_and_version	= htons(ntohl(b[2]));
++		r->v1.clock_seq_hi_and_reserved = ntohl(b[3]);
++		r->v1.clock_seq_low		= ntohl(b[4]);
+ 
+ 		for (loop = 0; loop < 6; loop++)
+-			r->node[loop] = ntohl(b[loop + 5]);
++			r->v1.node[loop] = ntohl(b[loop + 5]);
+ 
+ 		call->offset = 0;
+ 		call->unmarshall++;
+@@ -453,7 +453,7 @@ static int afs_deliver_cb_probe(struct afs_call *call)
+ static void SRXAFSCB_ProbeUuid(struct work_struct *work)
+ {
+ 	struct afs_call *call = container_of(work, struct afs_call, work);
+-	struct uuid_v1 *r = call->request;
++	uuid_t *r = call->request;
+ 
+ 	struct {
+ 		__be32	match;
+@@ -476,7 +476,7 @@ static void SRXAFSCB_ProbeUuid(struct work_struct *work)
   */
- #define	UUID_STRING_LEN		36
+ static int afs_deliver_cb_probe_uuid(struct afs_call *call)
+ {
+-	struct uuid_v1 *r;
++	uuid_t *r;
+ 	unsigned loop;
+ 	__be32 *b;
+ 	int ret;
+@@ -502,20 +502,20 @@ static int afs_deliver_cb_probe_uuid(struct afs_call *call)
+ 		}
  
-+static inline bool guid_equal(const guid_t *u1, const guid_t *u2)
-+{
-+	return memcmp(u1, u2, sizeof(guid_t)) == 0;
-+}
-+
-+static inline void guid_copy(guid_t *dst, const guid_t *src)
-+{
-+	memcpy(dst, src, sizeof(guid_t));
-+}
-+
-+static inline bool uuid_equal(const uuid_t *u1, const uuid_t *u2)
-+{
-+	return memcmp(u1, u2, sizeof(uuid_t)) == 0;
-+}
-+
-+static inline void uuid_copy(uuid_t *dst, const uuid_t *src)
-+{
-+	memcpy(dst, src, sizeof(uuid_t));
-+}
-+
- void generate_random_uuid(unsigned char uuid[16]);
+ 		_debug("unmarshall UUID");
+-		call->request = kmalloc(sizeof(struct uuid_v1), GFP_KERNEL);
++		call->request = kmalloc(sizeof(uuid_t), GFP_KERNEL);
+ 		if (!call->request)
+ 			return -ENOMEM;
  
- extern void guid_gen(guid_t *u);
-diff --git a/lib/test_uuid.c b/lib/test_uuid.c
-index 9cad846fd805..4d05189e5f87 100644
---- a/lib/test_uuid.c
-+++ b/lib/test_uuid.c
-@@ -71,7 +71,7 @@ static void __init test_uuid_test(const struct test_uuid_data *data)
- 		test_uuid_failed("conversion", false, false, data->uuid, NULL);
+ 		b = call->buffer;
+ 		r = call->request;
+-		r->time_low			= b[0];
+-		r->time_mid			= htons(ntohl(b[1]));
+-		r->time_hi_and_version		= htons(ntohl(b[2]));
+-		r->clock_seq_hi_and_reserved 	= ntohl(b[3]);
+-		r->clock_seq_low		= ntohl(b[4]);
++		r->v1.time_low			= b[0];
++		r->v1.time_mid			= htons(ntohl(b[1]));
++		r->v1.time_hi_and_version	= htons(ntohl(b[2]));
++		r->v1.clock_seq_hi_and_reserved = ntohl(b[3]);
++		r->v1.clock_seq_low		= ntohl(b[4]);
  
- 	total_tests++;
--	if (uuid_le_cmp(data->le, le)) {
-+	if (!guid_equal(&data->le, &le)) {
- 		sprintf(buf, "%pUl", &le);
- 		test_uuid_failed("cmp", false, false, data->uuid, buf);
- 	}
-@@ -82,7 +82,7 @@ static void __init test_uuid_test(const struct test_uuid_data *data)
- 		test_uuid_failed("conversion", false, true, data->uuid, NULL);
+ 		for (loop = 0; loop < 6; loop++)
+-			r->node[loop] = ntohl(b[loop + 5]);
++			r->v1.node[loop] = ntohl(b[loop + 5]);
  
- 	total_tests++;
--	if (uuid_be_cmp(data->be, be)) {
-+	if (uuid_equal(&data->be, &be)) {
- 		sprintf(buf, "%pUb", &be);
- 		test_uuid_failed("cmp", false, true, data->uuid, buf);
- 	}
+ 		call->offset = 0;
+ 		call->unmarshall++;
+@@ -568,13 +568,13 @@ static void SRXAFSCB_TellMeAboutYourself(struct work_struct *work)
+ 	memset(&reply, 0, sizeof(reply));
+ 	reply.ia.nifs = htonl(nifs);
+ 
+-	reply.ia.uuid[0] = afs_uuid.time_low;
+-	reply.ia.uuid[1] = htonl(ntohs(afs_uuid.time_mid));
+-	reply.ia.uuid[2] = htonl(ntohs(afs_uuid.time_hi_and_version));
+-	reply.ia.uuid[3] = htonl((s8) afs_uuid.clock_seq_hi_and_reserved);
+-	reply.ia.uuid[4] = htonl((s8) afs_uuid.clock_seq_low);
++	reply.ia.uuid[0] = afs_uuid.v1.time_low;
++	reply.ia.uuid[1] = htonl(ntohs(afs_uuid.v1.time_mid));
++	reply.ia.uuid[2] = htonl(ntohs(afs_uuid.v1.time_hi_and_version));
++	reply.ia.uuid[3] = htonl((s8) afs_uuid.v1.clock_seq_hi_and_reserved);
++	reply.ia.uuid[4] = htonl((s8) afs_uuid.v1.clock_seq_low);
+ 	for (loop = 0; loop < 6; loop++)
+-		reply.ia.uuid[loop + 5] = htonl((s8) afs_uuid.node[loop]);
++		reply.ia.uuid[loop + 5] = htonl((s8) afs_uuid.v1.node[loop]);
+ 
+ 	if (ifs) {
+ 		for (loop = 0; loop < nifs; loop++) {
+diff --git a/fs/afs/internal.h b/fs/afs/internal.h
+index 393672997cc2..7de45c8686a2 100644
+--- a/fs/afs/internal.h
++++ b/fs/afs/internal.h
+@@ -544,7 +544,7 @@ extern int afs_drop_inode(struct inode *);
+  * main.c
+  */
+ extern struct workqueue_struct *afs_wq;
+-extern struct uuid_v1 afs_uuid;
++extern uuid_t afs_uuid;
+ 
+ /*
+  * misc.c
+diff --git a/fs/afs/main.c b/fs/afs/main.c
+index 51d7d17bca57..75b3d3a8b1ba 100644
+--- a/fs/afs/main.c
++++ b/fs/afs/main.c
+@@ -31,7 +31,7 @@ static char *rootcell;
+ module_param(rootcell, charp, 0);
+ MODULE_PARM_DESC(rootcell, "root AFS cell name and VL server IP addr list");
+ 
+-struct uuid_v1 afs_uuid;
++uuid_t afs_uuid;
+ struct workqueue_struct *afs_wq;
+ 
+ /*
+@@ -43,7 +43,7 @@ static int __init afs_init(void)
+ 
+ 	printk(KERN_INFO "kAFS: Red Hat AFS client v0.1 registering.\n");
+ 
+-	generate_random_uuid((unsigned char *)&afs_uuid);
++	uuid_gen(&afs_uuid);
+ 
+ 	/* create workqueue */
+ 	ret = -ENOMEM;
 -- 
 2.11.0
-
