@@ -1,63 +1,80 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: Shouldn't the /sys/block/md*/queue/max_*sectors_kb be set to the
- chunk size?
-Date: Thu, 18 May 2017 14:48:45 -0700
-Message-ID: <20170518214845.v7ltyetvi4bxiviq@kernel.org>
-References: <CANWz5fiQ1O5k43QKfurd84nwdeCZL0-EOD6p_2vp+wHaJmsVEw@mail.gmail.com>
- <20170518185023.3z5byy5uqpfb46w6@kernel.org>
- <CANWz5fhwLVxirvQ7j5Re66hD0uRsh4QpOapkKVM0+MK+pSXu+Q@mail.gmail.com>
+From: Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Subject: Re: [PATCH 15/23] block: remove blk_part_pack_uuid
+Date: Thu, 18 May 2017 19:15:15 -0400
+Message-ID: <1495149315.3404.2.camel@linux.vnet.ibm.com>
+References: <20170518062705.25902-1-hch@lst.de>
+ <20170518062705.25902-16-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CANWz5fhwLVxirvQ7j5Re66hD0uRsh4QpOapkKVM0+MK+pSXu+Q@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Chris Worley <worleys@gmail.com>
-Cc: linuxraid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <20170518062705.25902-16-hch-jcswGhMUV9g@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-On Thu, May 18, 2017 at 11:33:45AM -1000, Chris Worley wrote:
-> On Thu, May 18, 2017 at 8:50 AM, Shaohua Li <shli@kernel.org> wrote:
-> > On Thu, May 18, 2017 at 05:52:28AM -1000, Chris Worley wrote:
-> >> I'm obviously missing something...
-> >>
-> >> If chunk size is a stride, why is the
-> >> /sys/block/md*/queue/max_*sectors_kb being inherited from one of the
-> >> underlying devices rather than being set to the chunk size or the
-> >> drive multiple of their max sector settings?
-> >
-> > We set it to chunk size unless underlying disks have a smaller max_*sectors_kb.
-> > Underlying disks usually have much bigger max_sectors than chunk size.
+On Thu, 2017-05-18 at 08:26 +0200, Christoph Hellwig wrote:
+> This helper was only used by IMA of all things, which would get spurious
+> errors if CONFIG_BLOCK is disabled.  Just opencode the call there.
 > 
-> And if not the case, then, for maximum efficiency/performance, the
-> chunk size should be lowered to the max sector size for the device...
-> or maybe the [devices max sector size] / [number of devices]?
-> 
-> >
-> >> Or, in other words, would the chunk size setting have a natural upper
-> >> bound/limit of one of the drives max_sectors, or the sum of all of the
-> >> constituent drives max sectors?
-> >
-> > I don't know such upper bound and don't think it matters. The max_sectors
-> > basically is the size we split the bio to fit for one underlying disk.
-> 
-> I realize that, but am thinking that, if the chunk size was larger,
-> you would want (for performance/efficiency) the max sector size for
-> the MD device to be larger than the underlying device too, which the
-> MD driver would then break-up into the underlying devices max sector
-> size?  Or, is it more efficient to have the OS break-up the bios into
-> the smaller sizes for the driver?
-> 
-> For example, if there are four devices, each with 128KB max sectors,
-> and the chunk size is 512K, wouldn't MD want the bio to show the users
-> complete 512K write in a single bio for MD to dole-out to the
-> different devices, rather than receiving four different bio's?
+> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 
-We could do something like this. But if we accept a single 512k write in a
-single bio, md still need to split them to 4 bios and send the 4 bios to
-underlying disks. In current implementation we get 4 bios directly and don't
-need to do the split. This's the difference. I'd doubt your suggestion (one big
-bio) has better performance, but if you can prove it, we definitely can change.
+Acked-by: Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 
-Thanks,
-Shaohua
+> ---
+>  include/linux/genhd.h               | 11 -----------
+>  security/integrity/ima/ima_policy.c |  3 +--
+>  2 files changed, 1 insertion(+), 13 deletions(-)
+> 
+> diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+> index acff9437e5c3..e619fae2f037 100644
+> --- a/include/linux/genhd.h
+> +++ b/include/linux/genhd.h
+> @@ -219,12 +219,6 @@ static inline struct gendisk *part_to_disk(struct hd_struct *part)
+>  	return NULL;
+>  }
+> 
+> -static inline int blk_part_pack_uuid(const u8 *uuid_str, u8 *to)
+> -{
+> -	uuid_be_to_bin(uuid_str, (uuid_be *)to);
+> -	return 0;
+> -}
+> -
+>  static inline int disk_max_parts(struct gendisk *disk)
+>  {
+>  	if (disk->flags & GENHD_FL_EXT_DEVT)
+> @@ -736,11 +730,6 @@ static inline dev_t blk_lookup_devt(const char *name, int partno)
+>  	dev_t devt = MKDEV(0, 0);
+>  	return devt;
+>  }
+> -
+> -static inline int blk_part_pack_uuid(const u8 *uuid_str, u8 *to)
+> -{
+> -	return -EINVAL;
+> -}
+>  #endif /* CONFIG_BLOCK */
+> 
+>  #endif /* _LINUX_GENHD_H */
+> diff --git a/security/integrity/ima/ima_policy.c b/security/integrity/ima/ima_policy.c
+> index 3ab1067db624..49fbc3e8f012 100644
+> --- a/security/integrity/ima/ima_policy.c
+> +++ b/security/integrity/ima/ima_policy.c
+> @@ -717,8 +717,7 @@ static int ima_parse_rule(char *rule, struct ima_rule_entry *entry)
+>  				break;
+>  			}
+> 
+> -			result = blk_part_pack_uuid(args[0].from,
+> -						    entry->fsuuid);
+> +			result = uuid_to_bin(args[0].from, (uuid_t *)&entry->fsuuid);
+>  			if (!result)
+>  				entry->flags |= IMA_FSUUID;
+>  			break;
