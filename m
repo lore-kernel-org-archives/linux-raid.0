@@ -1,25 +1,61 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: cleanup UUID types V3
-Date: Thu, 18 May 2017 08:26:42 +0200
-Message-ID: <20170518062705.25902-1-hch@lst.de>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
-Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: [PATCH 01/23] xfs: use uuid_copy() helper to abstract uuid_t
+Date: Thu, 18 May 2017 08:26:43 +0200
+Message-ID: <20170518062705.25902-2-hch@lst.de>
+References: <20170518062705.25902-1-hch@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <20170518062705.25902-1-hch-jcswGhMUV9g@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-Hi all,
+From: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-this series, which is a combined effort from Amir, Andy and me introduces
-new uuid_t and guid_t type names that are less confusing than the existing
-types, adds new helpers for them and starts switching the fs code over to
-it.  Andy has additional patches on top to convert many of the users
-that use char arrays for UUIDs and GUIDs to these (or rather a predecessor
-for now until updated).
+uuid_t definition is about to change.
 
-Changes since V3:
- - stop exposing uuid_be/uuid_t to userspace
- - remove uuid_be entirely
+Signed-off-by: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+---
+ fs/xfs/xfs_inode_item.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
-Changes since V2:
- - various cleanups
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 08cb7d1a4a3a..013cc78d7daf 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -834,9 +834,7 @@ xfs_inode_item_format_convert(
+ 		in_f->ilf_dsize = in_f32->ilf_dsize;
+ 		in_f->ilf_ino = in_f32->ilf_ino;
+ 		/* copy biggest field of ilf_u */
+-		memcpy(in_f->ilf_u.ilfu_uuid.__u_bits,
+-		       in_f32->ilf_u.ilfu_uuid.__u_bits,
+-		       sizeof(uuid_t));
++		uuid_copy(&in_f->ilf_u.ilfu_uuid, &in_f32->ilf_u.ilfu_uuid);
+ 		in_f->ilf_blkno = in_f32->ilf_blkno;
+ 		in_f->ilf_len = in_f32->ilf_len;
+ 		in_f->ilf_boffset = in_f32->ilf_boffset;
+@@ -851,9 +849,7 @@ xfs_inode_item_format_convert(
+ 		in_f->ilf_dsize = in_f64->ilf_dsize;
+ 		in_f->ilf_ino = in_f64->ilf_ino;
+ 		/* copy biggest field of ilf_u */
+-		memcpy(in_f->ilf_u.ilfu_uuid.__u_bits,
+-		       in_f64->ilf_u.ilfu_uuid.__u_bits,
+-		       sizeof(uuid_t));
++		uuid_copy(&in_f->ilf_u.ilfu_uuid, &in_f64->ilf_u.ilfu_uuid);
+ 		in_f->ilf_blkno = in_f64->ilf_blkno;
+ 		in_f->ilf_len = in_f64->ilf_len;
+ 		in_f->ilf_boffset = in_f64->ilf_boffset;
+-- 
+2.11.0
