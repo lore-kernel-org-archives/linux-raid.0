@@ -1,38 +1,36 @@
-From: Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 13/23] md: namespace private helper names
-Date: Thu, 18 May 2017 11:32:04 -0700
-Message-ID: <20170518183204.adade5y4dcwpeslz@kernel.org>
-References: <20170518062705.25902-1-hch@lst.de>
- <20170518062705.25902-14-hch@lst.de>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: Shouldn't the /sys/block/md*/queue/max_*sectors_kb be set to the
+ chunk size?
+Date: Thu, 18 May 2017 11:50:23 -0700
+Message-ID: <20170518185023.3z5byy5uqpfb46w6@kernel.org>
+References: <CANWz5fiQ1O5k43QKfurd84nwdeCZL0-EOD6p_2vp+wHaJmsVEw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170518062705.25902-14-hch-jcswGhMUV9g@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <CANWz5fiQ1O5k43QKfurd84nwdeCZL0-EOD6p_2vp+wHaJmsVEw@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Chris Worley <worleys@gmail.com>
+Cc: linuxraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, May 18, 2017 at 08:26:55AM +0200, Christoph Hellwig wrote:
-> From: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+On Thu, May 18, 2017 at 05:52:28AM -1000, Chris Worley wrote:
+> I'm obviously missing something...
 > 
-> The md private helper uuid_equal() collides with a generic helper
-> of the same name.
-> 
-> Rename the md private helper to md_uuid_equal() and do the same for
-> md_sb_equal().
-> 
-> Signed-off-by: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+> If chunk size is a stride, why is the
+> /sys/block/md*/queue/max_*sectors_kb being inherited from one of the
+> underlying devices rather than being set to the chunk size or the
+> drive multiple of their max sector settings?
 
-Reviewed-by: Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+We set it to chunk size unless underlying disks have a smaller max_*sectors_kb.
+Underlying disks usually have much bigger max_sectors than chunk size.
+ 
+> Or, in other words, would the chunk size setting have a natural upper
+> bound/limit of one of the drives max_sectors, or the sum of all of the
+> constituent drives max sectors?
+
+I don't know such upper bound and don't think it matters. The max_sectors
+basically is the size we split the bio to fit for one underlying disk.
+
+Thanks,
+Shaohua
