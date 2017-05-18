@@ -1,16 +1,22 @@
 From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: [PATCH] manpage: bad block support for IMSM
-Date: Thu, 18 May 2017 15:10:41 +0200
-Message-ID: <1495113041-19753-1-git-send-email-tomasz.majchrzak@intel.com>
+Subject: [PATCH v2] manpage: bad block support for IMSM
+Date: Thu, 18 May 2017 15:14:49 +0200
+Message-ID: <1495113289-20167-1-git-send-email-tomasz.majchrzak@intel.com>
+References: <1495113041-19753-1-git-send-email-tomasz.majchrzak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1495113041-19753-1-git-send-email-tomasz.majchrzak@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: jes.sorensen@gmail.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 ---
  mdadm.8.in | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
+
+v2:
+  signed-off-by added
 
 diff --git a/mdadm.8.in b/mdadm.8.in
 index fb99a5c..38a08d4 100644
