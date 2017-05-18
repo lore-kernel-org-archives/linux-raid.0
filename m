@@ -1,642 +1,365 @@
-From: Enric Balletbo i Serra <enric.balletbo@collabora.com>
-Subject: [PATCH v7 1/2] init: add support to directly boot to a mapped device
-Date: Thu, 18 May 2017 18:29:10 +0200
-Message-ID: <20170518162911.15538-2-enric.balletbo@collabora.com>
-References: <20170518162911.15538-1-enric.balletbo@collabora.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170518162911.15538-1-enric.balletbo@collabora.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com
-Cc: Will Drewry <wad@chromium.org>, Kees Cook <keescook@chromium.org>
+From: "Darrick J. Wong" <darrick.wong-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 04/23] uuid: rename uuid types
+Date: Thu, 18 May 2017 10:42:08 -0700
+Message-ID: <20170518174208.GC4519@birch.djwong.org>
+References: <20170518062705.25902-1-hch@lst.de>
+ <20170518062705.25902-5-hch@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20170518062705.25902-5-hch-jcswGhMUV9g@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-From: Will Drewry <wad@chromium.org>
+On Thu, May 18, 2017 at 08:26:46AM +0200, Christoph Hellwig wrote:
+> Our "little endian" UUID really is a Wintel GUID, so rename it and its
+> helpers such (guid_t).  The big endian UUID is the only true one, so
+> give it the name uuid_t.  The uuid_le and uuid_be names are retained for
+> now, but will hopefully go away soon.  The exception to that are the _cmp
+> helpers that will be replaced by better primites ASAP and thus don't
 
-Add a dm= kernel parameter modeled after the md= parameter from
-do_mounts_md. It allows for device-mapper targets to be configured at
-boot time for use early in the boot process (as the root device or
-otherwise).
+I misread that as "better primates ASAP" :)
 
-Signed-off-by: Will Drewry <wad@chromium.org>
-Signed-off-by: Kees Cook <keescook@chromium.org>
-[rework to use dm_ioctl calls]
-Signed-off-by: Enric Balletbo i Serra <enric.balletbo@collabora.com>
----
- Documentation/admin-guide/kernel-parameters.rst |   1 +
- Documentation/admin-guide/kernel-parameters.txt |   3 +
- Documentation/device-mapper/dm-boot.txt         |  65 ++++
- init/Makefile                                   |   1 +
- init/do_mounts.c                                |   1 +
- init/do_mounts.h                                |  10 +
- init/do_mounts_dm.c                             | 459 ++++++++++++++++++++++++
- 7 files changed, 540 insertions(+)
- create mode 100644 Documentation/device-mapper/dm-boot.txt
- create mode 100644 init/do_mounts_dm.c
+(Assuming you meant 'primitives'?)
 
-diff --git a/Documentation/admin-guide/kernel-parameters.rst b/Documentation/admin-guide/kernel-parameters.rst
-index 33b90e27..9de2984 100644
---- a/Documentation/admin-guide/kernel-parameters.rst
-+++ b/Documentation/admin-guide/kernel-parameters.rst
-@@ -93,6 +93,7 @@ parameter is applicable::
- 	BLACKFIN Blackfin architecture is enabled.
- 	CLK	Common clock infrastructure is enabled.
- 	CMA	Contiguous Memory Area support is enabled.
-+	DM	Device mapper support is enabled.
- 	DRM	Direct Rendering Management support is enabled.
- 	DYNAMIC_DEBUG Build in debug messages and enable them at runtime
- 	EDD	BIOS Enhanced Disk Drive Services (EDD) is enabled
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 33a3b54..4415254 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -830,6 +830,9 @@
- 
- 	dis_ucode_ldr	[X86] Disable the microcode loader.
- 
-+	dm=		[DM] Allows early creation of a device-mapper device.
-+			See Documentation/device-mapper/boot.txt.
-+
- 	dma_debug=off	If the kernel is compiled with DMA_API_DEBUG support,
- 			this option disables the debugging code at boot.
- 
-diff --git a/Documentation/device-mapper/dm-boot.txt b/Documentation/device-mapper/dm-boot.txt
-new file mode 100644
-index 0000000..50f08ec
---- /dev/null
-+++ b/Documentation/device-mapper/dm-boot.txt
-@@ -0,0 +1,65 @@
-+Boot time creation of mapped devices
-+====================================
-+
-+It is possible to configure a device mapper device to act as the root
-+device for your system in two ways.
-+
-+The first is to build an initial ramdisk which boots to a minimal
-+userspace which configures the device, then pivot_root(8) in to it.
-+
-+The second is to possible when the device-mapper and any targets are
-+compiled into the kernel (not a module), one or more device-mappers may
-+be created and used as the root device at boot time with the parameters
-+given with the boot line dm=...
-+
-+The format is specified as a simple string of data separated by commas and
-+optionally semi-colons, where:
-+ - a comma is used to separate fields like name, uuid, flags and table (specifies
-+   one device)
-+ - a semi-colon is used to separate devices.
-+
-+So the format will look like this:
-+
-+ dm=<dev_name>,<uuid>,<flags>,<table>[,<table>+][;<dev_name>,<uuid>,<flags>,<table>[,<table>+]]+
-+
-+Where,
-+	<dev_name>	::= The device name.
-+	<uuid>		::= xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx | ""
-+	<flags>		::= "ro" | "rw"
-+	<table>		::= <start> <length> <type> <options>
-+	<type>		::= "verity" | "bootcache" | ...
-+
-+The dm line may be as normal when using the dmsetup tool when using the
-+--bootformat argument.
-+
-+Unless renamed by udev, the device node created will be dm-0 as the
-+first minor number for the device-mapper is used during early creation.
-+
-+Examples
-+========
-+An example of booting to a linear array made up of user-mode linux block
-+devices:
-+
-+  dm="lroot,,rw, 0 4096 linear 98:16 0, 4096 4096 linear 98:32 0" \
-+  root=/dev/dm-0
-+
-+This will boot to a rw dm-linear target of 8192 sectors split across two
-+block devices identified by their major:minor numbers.  After boot, udev
-+will rename this target to /dev/mapper/lroot (depending on the rules).
-+No uuid was assigned.
-+
-+An example of multiple device-mappers, with the dm="..." contents shown
-+here split on multiple lines for readability:
-+
-+    vboot,,ro,
-+      0 1768000 bootcache
-+        aa55b119-2a47-8c45-946a-5ac57765011f+1
-+        76e9be054b15884a9fa85973e9cb274c93afadb6
-+        1768000 100000 23 20000;
-+    vroot,,ro,
-+      0 1740800 verity 254:0 254:0 1740800 sha1
-+        76e9be054b15884a9fa85973e9cb274c93afadb6
-+        5b3549d54d6c7a3837b9b81ed72e49463a64c03680c47835bef94d768e5646fe;
-+    vram,,rw,
-+      0 32768 linear 1:0 0,
-+      32768 32768 linear 1:1 0
-diff --git a/init/Makefile b/init/Makefile
-index c4fb455..30424d7 100644
---- a/init/Makefile
-+++ b/init/Makefile
-@@ -20,6 +20,7 @@ mounts-y			:= do_mounts.o
- mounts-$(CONFIG_BLK_DEV_RAM)	+= do_mounts_rd.o
- mounts-$(CONFIG_BLK_DEV_INITRD)	+= do_mounts_initrd.o
- mounts-$(CONFIG_BLK_DEV_MD)	+= do_mounts_md.o
-+mounts-$(CONFIG_BLK_DEV_DM)	+= do_mounts_dm.o
- 
- # dependencies on generated files need to be listed explicitly
- $(obj)/version.o: include/generated/compile.h
-diff --git a/init/do_mounts.c b/init/do_mounts.c
-index c2de510..8b9182b 100644
---- a/init/do_mounts.c
-+++ b/init/do_mounts.c
-@@ -566,6 +566,7 @@ void __init prepare_namespace(void)
- 	wait_for_device_probe();
- 
- 	md_run_setup();
-+	dm_run_setup();
- 
- 	if (saved_root_name[0]) {
- 		root_device_name = saved_root_name;
-diff --git a/init/do_mounts.h b/init/do_mounts.h
-index 282d65b..4e71c29 100644
---- a/init/do_mounts.h
-+++ b/init/do_mounts.h
-@@ -60,3 +60,13 @@ void md_run_setup(void);
- static inline void md_run_setup(void) {}
- 
- #endif
-+
-+#ifdef CONFIG_BLK_DEV_DM
-+
-+void dm_run_setup(void);
-+
-+#else
-+
-+static inline void dm_run_setup(void) {}
-+
-+#endif
-diff --git a/init/do_mounts_dm.c b/init/do_mounts_dm.c
-new file mode 100644
-index 0000000..87c4300
---- /dev/null
-+++ b/init/do_mounts_dm.c
-@@ -0,0 +1,459 @@
-+/*
-+ * do_mounts_dm.c
-+ * Copyright (C) 2017 The Chromium OS Authors <chromium-os-dev@chromium.org>
-+ * Based on do_mounts_md.c
-+ *
-+ * This file is released under the GPLv2.
-+ */
-+#include <linux/async.h>
-+#include <linux/ctype.h>
-+#include <linux/device-mapper.h>
-+#include <linux/fs.h>
-+#include <linux/string.h>
-+#include <linux/delay.h>
-+
-+#include "do_mounts.h"
-+
-+#define DM_MAX_DEVICES 256
-+#define DM_MAX_NAME 32
-+#define DM_MAX_UUID 129
-+
-+#define DM_MSG_PREFIX "init"
-+
-+#define is_even(a) (((a) & 1) == 0)
-+
-+/* See Documentation/device-mapper/dm-boot.txt for dm="..." format details. */
-+
-+struct target {
-+	sector_t start;
-+	sector_t length;
-+	char *type;
-+	char *params;
-+	/* simple singly linked list */
-+	struct target *next;
-+};
-+
-+struct dm_device {
-+	int minor;
-+	int ro;
-+	char name[DM_MAX_NAME];
-+	char uuid[DM_MAX_UUID];
-+	struct target *table;
-+	int table_count;
-+	/* simple singly linked list */
-+	struct dm_device *next;
-+};
-+
-+static struct {
-+	unsigned long num_devices;
-+	char *str;
-+} dm_setup_args __initdata;
-+
-+static int dm_early_setup __initdata;
-+
-+static void __init *_align(void *ptr, unsigned int a)
-+{
-+	register unsigned long agn = --a;
-+
-+	return (void *) (((unsigned long) ptr + agn) & ~agn);
-+}
-+
-+/*
-+ * Unescape characters in situ, it replaces all occurrences of "\c"
-+ * with 'c'. This is normally used to unescape colons and semi-colons used
-+ * in boot format.
-+ */
-+static char __init *_unescape_char(char *str, const char c)
-+{
-+	int i = 0, j = 0;
-+	int len = strlen(str);
-+
-+	if (len < 2)
-+		return str;
-+
-+	while (j < len - 1) {
-+		if (str[j] == '\\' && str[j + 1] == c) {
-+			j = j + 2;
-+			str[i++] = c;
-+			continue;
-+		}
-+		str[i++] = str[j++];
-+	}
-+
-+	if (j == len - 1)
-+		str[i++] = str[j];
-+
-+	str[i] = '\0';
-+
-+	return str;
-+}
-+
-+static void __init dm_setup_cleanup(struct dm_device *devices)
-+{
-+	struct dm_device *dev = devices;
-+
-+	while (dev) {
-+		struct dm_device *old_dev = dev;
-+		struct target *table = dev->table;
-+
-+		while (table) {
-+			struct target *old_table = table;
-+
-+			kfree(table->type);
-+			kfree(table->params);
-+			table = table->next;
-+			kfree(old_table);
-+			dev->table_count--;
-+		}
-+		WARN_ON(dev->table_count);
-+		dev = dev->next;
-+		kfree(old_dev);
-+	}
-+}
-+
-+/*
-+ * Splits a string into tokens ignoring escaped chars
-+ *
-+ * Updates @s to point after the token, ready for the next call.
-+ *
-+ * @str: The string to be searched
-+ * @c: The character to search for
-+ *
-+ * Returns:
-+ *   The string found or NULL.
-+ */
-+static char __init *dm_find_unescaped_char(char **str, const char c)
-+{
-+	char *s = *str;
-+	char *p = strchr(*str, c);
-+
-+	/* loop through all the characters */
-+	while (p != NULL) {
-+		/* scan backwards through preceding escapes */
-+		char *q = p;
-+
-+		while (q > s && *(q - 1) == '\\')
-+			--q;
-+		/* even number of escapes so c is a token */
-+		if (is_even(p - q)) {
-+			*p = '\0';
-+			*str = p + 1;
-+			return s;
-+		}
-+		/* else odd escapes so c is escaped, keep going */
-+		p = strchr(p + 1, c);
-+	}
-+
-+	if (strlen(*str)) {
-+		*str += strlen(*str);
-+		return s;
-+	}
-+
-+	return NULL;
-+}
-+
-+static struct target __init *dm_parse_table(struct dm_device *dev, char *str)
-+{
-+	char type[DM_MAX_TYPE_NAME], *ptr;
-+	struct target *table;
-+	int n;
-+
-+	/* trim trailing space */
-+	for (ptr = str + strlen(str) - 1; ptr >= str; ptr--)
-+		if (!isspace((int) *ptr))
-+			break;
-+	ptr++;
-+	*ptr = '\0';
-+
-+	/* trim leading space */
-+	for (ptr = str; *ptr && isspace((int) *ptr); ptr++)
-+		;
-+
-+	if (!*ptr)
-+		return NULL;
-+
-+	table = kzalloc(sizeof(struct target), GFP_KERNEL);
-+	if (!table)
-+		return NULL;
-+
-+	if (sscanf(ptr, "%llu %llu %s %n", &table->start, &table->length,
-+		   type, &n) < 3) {
-+		DMERR("invalid format of table \"%s\"", str);
-+		goto parse_fail;
-+	}
-+
-+	table->type = kstrndup(type, strlen(type), GFP_KERNEL);
-+	if (!table->type) {
-+		DMERR("invalid type of table");
-+		goto parse_fail;
-+	}
-+
-+	ptr += n;
-+	table->params = kstrndup(ptr, strlen(ptr), GFP_KERNEL);
-+	if (!table->params) {
-+		DMERR("invalid params for table");
-+		goto parse_fail;
-+	}
-+
-+	dev->table_count++;
-+
-+	return table;
-+
-+parse_fail:
-+	kfree(table);
-+	return NULL;
-+}
-+
-+static int __init dm_parse_device(struct dm_device *dev, char *dev_info)
-+{
-+	int field = 0;
-+	char *str = dev_info, *ptr = dev_info;
-+	struct target *table;
-+	struct target **tail = &dev->table;
-+
-+	while ((str = dm_find_unescaped_char(&ptr, ',')) != NULL) {
-+		str = _unescape_char(str, ',');
-+		switch (field) {
-+		case 0: /* set device name */
-+			strncpy(dev->name, str, strlen(str));
-+			break;
-+		case 1: /* set uuid if any */
-+			strncpy(dev->uuid, str, strlen(str));
-+			break;
-+		case 2:
-+			/* set as read-only if flags = "ro" | "" */
-+			if (!strncmp(str, "ro", strlen(str)) || !strlen(str))
-+				dev->ro = 1;
-+			else if (!strncmp(str, "rw", strlen(str)))
-+				dev->ro = 0;
-+			else
-+				return -EINVAL;
-+			break;
-+		default:
-+			table = dm_parse_table(dev, str);
-+			if (!table)
-+				goto parse_fail;
-+
-+			*tail = table;
-+			tail = &table->next;
-+
-+			break;
-+		}
-+		field++;
-+	}
-+
-+	if (field < 4)
-+		goto parse_fail;
-+
-+	return 0;
-+
-+parse_fail:
-+	return -EINVAL;
-+}
-+
-+static struct dm_device __init *dm_parse_args(void)
-+{
-+	struct dm_device *devices = NULL;
-+	struct dm_device **tail = &devices;
-+	struct dm_device *dev;
-+	char *dev_info, *str = dm_setup_args.str;
-+
-+	while ((dev_info = dm_find_unescaped_char(&str, ';')) != NULL) {
-+		dev_info = _unescape_char(dev_info, ';');
-+		dev = kzalloc(sizeof(*dev), GFP_KERNEL);
-+		if (!dev)
-+			goto error;
-+
-+		if (dm_parse_device(dev, dev_info))
-+			goto error;
-+
-+		*tail = dev;
-+		tail = &dev->next;
-+		/*
-+		 * devices are given minor numbers 0 - n-1 in the order they are
-+		 * found in the arg string.
-+		 */
-+		dev->minor = dm_setup_args.num_devices++;
-+
-+		if (dm_setup_args.num_devices > DM_MAX_DEVICES) {
-+			DMERR("too many devices %lu > %d",
-+			      dm_setup_args.num_devices, DM_MAX_DEVICES);
-+			goto error;
-+		}
-+	}
-+	return devices;
-+error:
-+	dm_setup_cleanup(devices);
-+	return NULL;
-+}
-+
-+/*
-+ * Parse the command-line parameters given our kernel, but do not
-+ * actually try to invoke the DM device now; that is handled by
-+ * dm_setup_drives after the low-level disk drivers have initialised.
-+ * dm format is described at the top of the file.
-+ *
-+ * Because dm minor numbers are assigned in ascending order starting with 0,
-+ * You can assume the first device is /dev/dm-0, the next device is /dev/dm-1,
-+ * and so forth.
-+ */
-+static int __init dm_setup(char *str)
-+{
-+	if (!str) {
-+		DMERR("Invalid arguments supplied to dm=.");
-+		return 0;
-+	}
-+
-+	DMDEBUG("Want to parse \"%s\"", str);
-+
-+	dm_setup_args.num_devices = 0;
-+	dm_setup_args.str = str;
-+
-+	dm_early_setup = 1;
-+
-+	return 1;
-+}
-+
-+static char __init *dm_add_target(struct target *table, char *out, char *end)
-+{
-+	char *out_sp = out;
-+	struct dm_target_spec sp;
-+	size_t sp_size = sizeof(struct dm_target_spec);
-+	int len;
-+	char *pt;
-+
-+	if (strlen(table->type) >= sizeof(sp.target_type)) {
-+		DMERR("target type name %s is too long.", table->type);
-+		return NULL;
-+	}
-+
-+	sp.status = 0;
-+	sp.sector_start = table->start;
-+	sp.length = table->length;
-+	strncpy(sp.target_type, table->type, sizeof(sp.target_type) - 1);
-+	sp.target_type[sizeof(sp.target_type) - 1] = '\0';
-+
-+	out += sp_size;
-+	pt = table->params;
-+	len = strlen(table->params);
-+
-+	if ((out >= end) || (out + len + 1) >= end) {
-+		DMERR("ran out of memory building ioctl parameter");
-+		return NULL;
-+	}
-+
-+	strcpy(out, table->params);
-+	out += len + 1;
-+	/* align next block */
-+	out = _align(out, 8);
-+
-+	sp.next = out - out_sp;
-+	memcpy(out_sp, &sp, sp_size);
-+
-+	return out;
-+}
-+
-+static struct dm_ioctl __init *dm_setup_ioctl(struct dm_device *dev, int flags)
-+{
-+	const size_t min_size = 16 * 1024;
-+	size_t len = sizeof(struct dm_ioctl);
-+	struct dm_ioctl *dmi;
-+	struct target *table = dev->table;
-+	char *b, *e;
-+
-+	if (len < min_size)
-+		len = min_size;
-+
-+	dmi = kzalloc(len, GFP_KERNEL);
-+	if (!dmi)
-+		return NULL;
-+
-+	dmi->version[0] = 4;
-+	dmi->version[1] = 0;
-+	dmi->version[2] = 0;
-+	dmi->data_size = len;
-+	dmi->data_start = sizeof(struct dm_ioctl);
-+	dmi->flags = flags;
-+	dmi->dev = dev->minor;
-+	dmi->target_count = dev->table_count;
-+	dmi->event_nr = 1;
-+
-+	strncpy(dmi->name, dev->name, sizeof(dmi->name));
-+
-+	b = (char *) (dmi + 1);
-+	e = (char *) dmi + len;
-+
-+	while (table != NULL) {
-+		DMDEBUG("device %s adding table '%llu %llu %s %s'",
-+			dev->name,
-+			(unsigned long long) table->start,
-+			(unsigned long long) table->length,
-+			table->type, table->params);
-+		b = dm_add_target(table, b, e);
-+		if (!b)
-+			return NULL;
-+		table = table->next;
-+	}
-+
-+	return dmi;
-+}
-+
-+static void __init dm_setup_drives(void)
-+{
-+	struct dm_device *dev;
-+	int flags;
-+	struct dm_device *devices;
-+	struct dm_ioctl *io = NULL;
-+
-+	devices = dm_parse_args();
-+
-+	for (dev = devices; dev; dev = dev->next) {
-+		io = dm_setup_ioctl(dev, 0);
-+		if (!io)
-+			return;
-+		/* create a new device */
-+		if (dm_ioctl_cmd(DM_DEV_CREATE, io)) {
-+			DMERR("failed to create device %s", dev->name);
-+			goto out_free;
-+		}
-+		kfree(io);
-+
-+		flags = DM_STATUS_TABLE_FLAG;
-+		if (dev->ro)
-+			flags |= DM_READONLY_FLAG;
-+
-+		io = dm_setup_ioctl(dev, flags);
-+		if (!io)
-+			return;
-+		/* load a table into the 'inactive' slot for the device. */
-+		if (dm_ioctl_cmd(DM_TABLE_LOAD, io)) {
-+			DMERR("failed to load device %s tables", dev->name);
-+			goto out_free;
-+		}
-+		kfree(io);
-+
-+		io = dm_setup_ioctl(dev, 0);
-+		if (!io)
-+			return;
-+		/* resume and the device should be ready. */
-+		if (dm_ioctl_cmd(DM_DEV_SUSPEND, io)) {
-+			DMERR("failed to resume device %s", dev->name);
-+			goto out_free;
-+		}
-+
-+		DMINFO("dm-%d (%s) is ready", dev->minor, dev->name);
-+	}
-+
-+out_free:
-+	kfree(io);
-+}
-+
-+__setup("dm=", dm_setup);
-+
-+void __init dm_run_setup(void)
-+{
-+	if (!dm_early_setup)
-+		return;
-+	DMINFO("attempting early device configuration.");
-+	dm_setup_drives();
-+}
--- 
-2.9.3
+Other than that,
+Reviewed-by: Darrick J. Wong <darrick.wong-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 
+--D
+
+> get the new names.
+> 
+> Also remove the existing typedef in XFS that's now been superceeded by
+> the generic type name.
+> 
+> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+> [andy: also update the UUID_LE/UUID_BE macros including fallout]
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+> ---
+>  fs/xfs/xfs_linux.h        |  2 --
+>  include/linux/uuid.h      | 55 +++++++++++++++++++++++++++--------------------
+>  include/uapi/linux/uuid.h | 12 +++++++----
+>  lib/test_uuid.c           | 32 +++++++++++++--------------
+>  lib/uuid.c                | 28 ++++++++++++------------
+>  lib/vsprintf.c            |  4 ++--
+>  6 files changed, 72 insertions(+), 61 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+> index 89ee5ec66837..2c33d915e550 100644
+> --- a/fs/xfs/xfs_linux.h
+> +++ b/fs/xfs/xfs_linux.h
+> @@ -39,8 +39,6 @@ typedef __s64			xfs_daddr_t;	/* <disk address> type */
+>  typedef __u32			xfs_dev_t;
+>  typedef __u32			xfs_nlink_t;
+>  
+> -typedef uuid_be			uuid_t;
+> -
+>  #include "xfs_types.h"
+>  
+>  #include "kmem.h"
+> diff --git a/include/linux/uuid.h b/include/linux/uuid.h
+> index de3aea206562..0410cd002282 100644
+> --- a/include/linux/uuid.h
+> +++ b/include/linux/uuid.h
+> @@ -20,19 +20,15 @@
+>  
+>  typedef struct {
+>  	__u8 b[16];
+> -} uuid_be;
+> +} uuid_t;
+>  
+> -#define UUID_BE(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)		\
+> -((uuid_be)								\
+> +#define UUID(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)			\
+> +((uuid_t)								\
+>  {{ ((a) >> 24) & 0xff, ((a) >> 16) & 0xff, ((a) >> 8) & 0xff, (a) & 0xff, \
+>     ((b) >> 8) & 0xff, (b) & 0xff,					\
+>     ((c) >> 8) & 0xff, (c) & 0xff,					\
+>     (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
+>  
+> -#define NULL_UUID_BE							\
+> -	UUID_BE(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00,	\
+> -		0x00, 0x00, 0x00, 0x00)
+> -
+>  /*
+>   * V1 (time-based) UUID definition [RFC 4122].
+>   * - the timestamp is a 60-bit value, split 32/16/12, and goes in 100ns
+> @@ -63,27 +59,40 @@ struct uuid_v1 {
+>   */
+>  #define	UUID_STRING_LEN		36
+>  
+> -static inline int uuid_le_cmp(const uuid_le u1, const uuid_le u2)
+> -{
+> -	return memcmp(&u1, &u2, sizeof(uuid_le));
+> -}
+> -
+> -static inline int uuid_be_cmp(const uuid_be u1, const uuid_be u2)
+> -{
+> -	return memcmp(&u1, &u2, sizeof(uuid_be));
+> -}
+> -
+>  void generate_random_uuid(unsigned char uuid[16]);
+>  
+> -extern void uuid_le_gen(uuid_le *u);
+> -extern void uuid_be_gen(uuid_be *u);
+> +extern void guid_gen(guid_t *u);
+> +extern void uuid_gen(uuid_t *u);
+>  
+>  bool __must_check uuid_is_valid(const char *uuid);
+>  
+> -extern const u8 uuid_le_index[16];
+> -extern const u8 uuid_be_index[16];
+> +extern const u8 guid_index[16];
+> +extern const u8 uuid_index[16];
+> +
+> +int guid_to_bin(const char *uuid, guid_t *u);
+> +int uuid_to_bin(const char *uuid, uuid_t *u);
+>  
+> -int uuid_le_to_bin(const char *uuid, uuid_le *u);
+> -int uuid_be_to_bin(const char *uuid, uuid_be *u);
+> +/* backwards compatibility, don't use in new code */
+> +typedef uuid_t uuid_be;
+> +#define UUID_BE(a, _b, c, d0, d1, d2, d3, d4, d5, d6, d7) \
+> +	UUID(a, _b, c, d0, d1, d2, d3, d4, d5, d6, d7)
+> +#define NULL_UUID_BE 							\
+> +	UUID_BE(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00,	\
+> +	     0x00, 0x00, 0x00, 0x00)
+> +
+> +#define uuid_le_gen(u)		guid_gen(u)
+> +#define uuid_be_gen(u)		uuid_gen(u)
+> +#define uuid_le_to_bin(guid, u)	guid_to_bin(guid, u)
+> +#define uuid_be_to_bin(uuid, u)	uuid_to_bin(uuid, u)
+> +
+> +static inline int uuid_le_cmp(const guid_t u1, const guid_t u2)
+> +{
+> +	return memcmp(&u1, &u2, sizeof(guid_t));
+> +}
+> +
+> +static inline int uuid_be_cmp(const uuid_t u1, const uuid_t u2)
+> +{
+> +	return memcmp(&u1, &u2, sizeof(uuid_t));
+> +}
+>  
+>  #endif
+> diff --git a/include/uapi/linux/uuid.h b/include/uapi/linux/uuid.h
+> index 0099756c4bac..1eeeca973315 100644
+> --- a/include/uapi/linux/uuid.h
+> +++ b/include/uapi/linux/uuid.h
+> @@ -22,17 +22,21 @@
+>  
+>  typedef struct {
+>  	__u8 b[16];
+> -} uuid_le;
+> +} guid_t;
+>  
+> -#define UUID_LE(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)		\
+> -((uuid_le)								\
+> +#define GUID(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)			\
+> +((guid_t)								\
+>  {{ (a) & 0xff, ((a) >> 8) & 0xff, ((a) >> 16) & 0xff, ((a) >> 24) & 0xff, \
+>     (b) & 0xff, ((b) >> 8) & 0xff,					\
+>     (c) & 0xff, ((c) >> 8) & 0xff,					\
+>     (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
+>  
+> +/* backwards compatibility, don't use in new code */
+> +typedef guid_t uuid_le;
+> +#define UUID_LE(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)		\
+> +	GUID(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)
+>  #define NULL_UUID_LE							\
+>  	UUID_LE(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00,	\
+> -		0x00, 0x00, 0x00, 0x00)
+> +	     0x00, 0x00, 0x00, 0x00)
+>  
+>  #endif /* _UAPI_LINUX_UUID_H_ */
+> diff --git a/lib/test_uuid.c b/lib/test_uuid.c
+> index 547d3127a3cf..9cad846fd805 100644
+> --- a/lib/test_uuid.c
+> +++ b/lib/test_uuid.c
+> @@ -11,25 +11,25 @@
+>  
+>  struct test_uuid_data {
+>  	const char *uuid;
+> -	uuid_le le;
+> -	uuid_be be;
+> +	guid_t le;
+> +	uuid_t be;
+>  };
+>  
+>  static const struct test_uuid_data test_uuid_test_data[] = {
+>  	{
+>  		.uuid = "c33f4995-3701-450e-9fbf-206a2e98e576",
+> -		.le = UUID_LE(0xc33f4995, 0x3701, 0x450e, 0x9f, 0xbf, 0x20, 0x6a, 0x2e, 0x98, 0xe5, 0x76),
+> -		.be = UUID_BE(0xc33f4995, 0x3701, 0x450e, 0x9f, 0xbf, 0x20, 0x6a, 0x2e, 0x98, 0xe5, 0x76),
+> +		.le = GUID(0xc33f4995, 0x3701, 0x450e, 0x9f, 0xbf, 0x20, 0x6a, 0x2e, 0x98, 0xe5, 0x76),
+> +		.be = UUID(0xc33f4995, 0x3701, 0x450e, 0x9f, 0xbf, 0x20, 0x6a, 0x2e, 0x98, 0xe5, 0x76),
+>  	},
+>  	{
+>  		.uuid = "64b4371c-77c1-48f9-8221-29f054fc023b",
+> -		.le = UUID_LE(0x64b4371c, 0x77c1, 0x48f9, 0x82, 0x21, 0x29, 0xf0, 0x54, 0xfc, 0x02, 0x3b),
+> -		.be = UUID_BE(0x64b4371c, 0x77c1, 0x48f9, 0x82, 0x21, 0x29, 0xf0, 0x54, 0xfc, 0x02, 0x3b),
+> +		.le = GUID(0x64b4371c, 0x77c1, 0x48f9, 0x82, 0x21, 0x29, 0xf0, 0x54, 0xfc, 0x02, 0x3b),
+> +		.be = UUID(0x64b4371c, 0x77c1, 0x48f9, 0x82, 0x21, 0x29, 0xf0, 0x54, 0xfc, 0x02, 0x3b),
+>  	},
+>  	{
+>  		.uuid = "0cb4ddff-a545-4401-9d06-688af53e7f84",
+> -		.le = UUID_LE(0x0cb4ddff, 0xa545, 0x4401, 0x9d, 0x06, 0x68, 0x8a, 0xf5, 0x3e, 0x7f, 0x84),
+> -		.be = UUID_BE(0x0cb4ddff, 0xa545, 0x4401, 0x9d, 0x06, 0x68, 0x8a, 0xf5, 0x3e, 0x7f, 0x84),
+> +		.le = GUID(0x0cb4ddff, 0xa545, 0x4401, 0x9d, 0x06, 0x68, 0x8a, 0xf5, 0x3e, 0x7f, 0x84),
+> +		.be = UUID(0x0cb4ddff, 0xa545, 0x4401, 0x9d, 0x06, 0x68, 0x8a, 0xf5, 0x3e, 0x7f, 0x84),
+>  	},
+>  };
+>  
+> @@ -61,13 +61,13 @@ static void __init test_uuid_failed(const char *prefix, bool wrong, bool be,
+>  
+>  static void __init test_uuid_test(const struct test_uuid_data *data)
+>  {
+> -	uuid_le le;
+> -	uuid_be be;
+> +	guid_t le;
+> +	uuid_t be;
+>  	char buf[48];
+>  
+>  	/* LE */
+>  	total_tests++;
+> -	if (uuid_le_to_bin(data->uuid, &le))
+> +	if (guid_to_bin(data->uuid, &le))
+>  		test_uuid_failed("conversion", false, false, data->uuid, NULL);
+>  
+>  	total_tests++;
+> @@ -78,7 +78,7 @@ static void __init test_uuid_test(const struct test_uuid_data *data)
+>  
+>  	/* BE */
+>  	total_tests++;
+> -	if (uuid_be_to_bin(data->uuid, &be))
+> +	if (uuid_to_bin(data->uuid, &be))
+>  		test_uuid_failed("conversion", false, true, data->uuid, NULL);
+>  
+>  	total_tests++;
+> @@ -90,17 +90,17 @@ static void __init test_uuid_test(const struct test_uuid_data *data)
+>  
+>  static void __init test_uuid_wrong(const char *data)
+>  {
+> -	uuid_le le;
+> -	uuid_be be;
+> +	guid_t le;
+> +	uuid_t be;
+>  
+>  	/* LE */
+>  	total_tests++;
+> -	if (!uuid_le_to_bin(data, &le))
+> +	if (!guid_to_bin(data, &le))
+>  		test_uuid_failed("negative", true, false, data, NULL);
+>  
+>  	/* BE */
+>  	total_tests++;
+> -	if (!uuid_be_to_bin(data, &be))
+> +	if (!uuid_to_bin(data, &be))
+>  		test_uuid_failed("negative", true, true, data, NULL);
+>  }
+>  
+> diff --git a/lib/uuid.c b/lib/uuid.c
+> index 37687af77ff8..f80dc63f6ca8 100644
+> --- a/lib/uuid.c
+> +++ b/lib/uuid.c
+> @@ -21,10 +21,10 @@
+>  #include <linux/uuid.h>
+>  #include <linux/random.h>
+>  
+> -const u8 uuid_le_index[16] = {3,2,1,0,5,4,7,6,8,9,10,11,12,13,14,15};
+> -EXPORT_SYMBOL(uuid_le_index);
+> -const u8 uuid_be_index[16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
+> -EXPORT_SYMBOL(uuid_be_index);
+> +const u8 guid_index[16] = {3,2,1,0,5,4,7,6,8,9,10,11,12,13,14,15};
+> +EXPORT_SYMBOL(guid_index);
+> +const u8 uuid_index[16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
+> +EXPORT_SYMBOL(uuid_index);
+>  
+>  /***************************************************************
+>   * Random UUID interface
+> @@ -53,21 +53,21 @@ static void __uuid_gen_common(__u8 b[16])
+>  	b[8] = (b[8] & 0x3F) | 0x80;
+>  }
+>  
+> -void uuid_le_gen(uuid_le *lu)
+> +void guid_gen(guid_t *lu)
+>  {
+>  	__uuid_gen_common(lu->b);
+>  	/* version 4 : random generation */
+>  	lu->b[7] = (lu->b[7] & 0x0F) | 0x40;
+>  }
+> -EXPORT_SYMBOL_GPL(uuid_le_gen);
+> +EXPORT_SYMBOL_GPL(guid_gen);
+>  
+> -void uuid_be_gen(uuid_be *bu)
+> +void uuid_gen(uuid_t *bu)
+>  {
+>  	__uuid_gen_common(bu->b);
+>  	/* version 4 : random generation */
+>  	bu->b[6] = (bu->b[6] & 0x0F) | 0x40;
+>  }
+> -EXPORT_SYMBOL_GPL(uuid_be_gen);
+> +EXPORT_SYMBOL_GPL(uuid_gen);
+>  
+>  /**
+>    * uuid_is_valid - checks if UUID string valid
+> @@ -115,14 +115,14 @@ static int __uuid_to_bin(const char *uuid, __u8 b[16], const u8 ei[16])
+>  	return 0;
+>  }
+>  
+> -int uuid_le_to_bin(const char *uuid, uuid_le *u)
+> +int guid_to_bin(const char *uuid, guid_t *u)
+>  {
+> -	return __uuid_to_bin(uuid, u->b, uuid_le_index);
+> +	return __uuid_to_bin(uuid, u->b, guid_index);
+>  }
+> -EXPORT_SYMBOL(uuid_le_to_bin);
+> +EXPORT_SYMBOL(guid_to_bin);
+>  
+> -int uuid_be_to_bin(const char *uuid, uuid_be *u)
+> +int uuid_to_bin(const char *uuid, uuid_t *u)
+>  {
+> -	return __uuid_to_bin(uuid, u->b, uuid_be_index);
+> +	return __uuid_to_bin(uuid, u->b, uuid_index);
+>  }
+> -EXPORT_SYMBOL(uuid_be_to_bin);
+> +EXPORT_SYMBOL(uuid_to_bin);
+> diff --git a/lib/vsprintf.c b/lib/vsprintf.c
+> index 2d41de3f98a1..9f37d6208e99 100644
+> --- a/lib/vsprintf.c
+> +++ b/lib/vsprintf.c
+> @@ -1308,14 +1308,14 @@ char *uuid_string(char *buf, char *end, const u8 *addr,
+>  	char uuid[UUID_STRING_LEN + 1];
+>  	char *p = uuid;
+>  	int i;
+> -	const u8 *index = uuid_be_index;
+> +	const u8 *index = uuid_index;
+>  	bool uc = false;
+>  
+>  	switch (*(++fmt)) {
+>  	case 'L':
+>  		uc = true;		/* fall-through */
+>  	case 'l':
+> -		index = uuid_le_index;
+> +		index = guid_index;
+>  		break;
+>  	case 'B':
+>  		uc = true;
+> -- 
+> 2.11.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
