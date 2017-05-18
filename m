@@ -1,53 +1,25 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md-cluster: fix potential lock issue in add_new_disk
-Date: Wed, 17 May 2017 17:07:30 -0700
-Message-ID: <20170518000730.q22ladboa2wrlolo@kernel.org>
-References: <1494914485-16288-1-git-send-email-gqjiang@suse.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Christoph Hellwig <hch@lst.de>
+Subject: cleanup UUID types V3
+Date: Thu, 18 May 2017 08:26:42 +0200
+Message-ID: <20170518062705.25902-1-hch@lst.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1494914485-16288-1-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>
-Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, May 16, 2017 at 02:01:25PM +0800, Guoqing Jiang wrote:
-> The add_new_disk returns with communication locked if
-> __sendmsg returns failure, fix it with call unlock_comm
-> before return.
-> 
-> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-> CC: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+Hi all,
 
-queued, thanks!
+this series, which is a combined effort from Amir, Andy and me introduces
+new uuid_t and guid_t type names that are less confusing than the existing
+types, adds new helpers for them and starts switching the fs code over to
+it.  Andy has additional patches on top to convert many of the users
+that use char arrays for UUIDs and GUIDs to these (or rather a predecessor
+for now until updated).
 
-> ---
->  drivers/md/md-cluster.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-> index 7299ce2..03082e1 100644
-> --- a/drivers/md/md-cluster.c
-> +++ b/drivers/md/md-cluster.c
-> @@ -1311,8 +1311,10 @@ static int add_new_disk(struct mddev *mddev, struct md_rdev *rdev)
->  	cmsg.raid_slot = cpu_to_le32(rdev->desc_nr);
->  	lock_comm(cinfo, 1);
->  	ret = __sendmsg(cinfo, &cmsg);
-> -	if (ret)
-> +	if (ret) {
-> +		unlock_comm(cinfo);
->  		return ret;
-> +	}
->  	cinfo->no_new_dev_lockres->flags |= DLM_LKF_NOQUEUE;
->  	ret = dlm_lock_sync(cinfo->no_new_dev_lockres, DLM_LOCK_EX);
->  	cinfo->no_new_dev_lockres->flags &= ~DLM_LKF_NOQUEUE;
-> -- 
-> 2.6.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Changes since V3:
+ - stop exposing uuid_be/uuid_t to userspace
+ - remove uuid_be entirely
+
+Changes since V2:
+ - various cleanups
