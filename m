@@ -1,63 +1,88 @@
-From: Lidong Zhong <lzhong@suse.com>
-Subject: [PATCH v3] super1: fix sb->max_dev when adding a new disk in linear array
-Date: Fri, 19 May 2017 14:06:38 +0800
-Message-ID: <20170519060638.4470-1-lzhong@suse.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, neilb@suse.com
-Cc: colyli@suse.com, Jes.Sorensen@gmail.com
+From: Enric Balletbo Serra <eballetbo@gmail.com>
+Subject: Re: [PATCH v7 0/2] dm: boot a mapped device without an
+	initramfs
+Date: Fri, 19 May 2017 09:06:36 +0200
+Message-ID: <CAFqH_52vbi1eM4tLg1tTtzxHpC4OObLWM8jp3nbMnsWv=LE93g@mail.gmail.com>
+References: <20170518162911.15538-1-enric.balletbo@collabora.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20170518162911.15538-1-enric.balletbo@collabora.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: dm-devel@redhat.com
+Cc: Kees Cook <keescook@chromium.org>, Mike Snitzer <snitzer@redhat.com>, linux-doc@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, linux-lvm@redhat.com, Alasdair Kergon <agk@redhat.com>
 List-Id: linux-raid.ids
 
-The value of sb->max_dev will always be increased by 1 when adding
-a new disk in linear array. It causes an inconsistence between each
-disk in the array and the "Array State" value of "mdadm --examine DISK"
-is wrong. For example, when adding the first new disk into linear array
-it will be:
+Hi,
 
-Array State : RAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-('A' == active, '.' == missing, 'R' == replacing)
+2017-05-18 18:29 GMT+02:00 Enric Balletbo i Serra
+<enric.balletbo@collabora.com>:
+> Dear all,
+>
+> So here is a new version of the patches to be reviewed, this time as
+> suggested by Alasdair the patches are reworked to match with the new
+> dmsetup bootformat feature [1]. These patches are not reviewed yet but
+> the format was discussed in the IRC and was suggested to send the
+> kernel patches in parallel.
+>
+> Changes since v6:
+>  - Add a new function to issue the equivalent of a DM ioctl programatically.
+>  - Use the new ioctl interface to create the devices.
+>  - Use a comma-delimited and semi-colon delimited dmsetup-like commands.
+>
+> Changes since v5:
+>  - https://www.redhat.com/archives/dm-devel/2016-February/msg00112.html
+>
+> [1] https://www.redhat.com/archives/linux-lvm/2017-May/msg00047.html
+>
+> Wating for your feedback,
+>
+> Enric Balletbo i Serra (1):
+>   dm ioctl: add a device mapper ioctl function.
+>
+> Will Drewry (1):
+>   init: add support to directly boot to a mapped device
+>
+>  Documentation/admin-guide/kernel-parameters.rst |   1 +
+>  Documentation/admin-guide/kernel-parameters.txt |   3 +
+>  Documentation/device-mapper/dm-boot.txt         |  65 ++++
+>  drivers/md/dm-ioctl.c                           |  45 +++
+>  include/linux/device-mapper.h                   |   6 +
+>  init/Makefile                                   |   1 +
+>  init/do_mounts.c                                |   1 +
+>  init/do_mounts.h                                |  10 +
+>  init/do_mounts_dm.c                             | 459 ++++++++++++++++++++++++
+>  9 files changed, 591 insertions(+)
+>  create mode 100644 Documentation/device-mapper/dm-boot.txt
+>  create mode 100644 init/do_mounts_dm.c
+>
+> --
+> 2.9.3
+>
+> --
+> dm-devel mailing list
+> dm-devel@redhat.com
+> https://www.redhat.com/mailman/listinfo/dm-devel
 
-Adding the second disk into linear array it will be
+Rebasing the patches against current linux-next I just noticied that
+there is a build error due commit
 
-Array State : .AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-('A' == active, '.' == missing, 'R' == replacing)
+commit e516db4f676ac88c7c7f698f8047178e8accc3b8
+Author: Mikulas Patocka <mpatocka@redhat.com>
+Date:   Fri May 5 11:12:52 2017 -0700
 
-Signed-off-by: Lidong Zhong <lzhong@suse.com>
----
- super1.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+    dm ioctl: add a new DM_DEV_ARM_POLL ioctl
 
-diff --git a/super1.c b/super1.c
-index 2fcb814..811923f 100644
---- a/super1.c
-+++ b/super1.c
-@@ -1267,8 +1267,13 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
- 				break;
- 		sb->dev_number = __cpu_to_le32(i);
- 		info->disk.number = i;
--		if (max >= __le32_to_cpu(sb->max_dev))
--			sb->max_dev = __cpu_to_le32(max+1);
-+		if (i >= max) {
-+			while (max <= i) {
-+				sb->dev_roles[max] = __cpu_to_le16(MD_DISK_ROLE_SPARE);
-+				max += 1;
-+			}
-+			sb->max_dev = __cpu_to_le32(max);
-+		}
- 
- 		random_uuid(sb->device_uuid);
- 
-@@ -1296,6 +1301,10 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
- 		sb->raid_disks = __cpu_to_le32(info->array.raid_disks);
- 		sb->dev_roles[info->disk.number] =
- 			__cpu_to_le16(info->disk.raid_disk);
-+		if (sb->raid_disks+1 >= __le32_to_cpu(sb->max_dev)) {
-+			sb->dev_roles[sb->raid_disks] = __cpu_to_le16(MD_DISK_ROLE_SPARE);
-+			sb->max_dev = __cpu_to_le32(sb->raid_disks+1);
-+		}
- 	} else if (strcmp(update, "resync") == 0) {
- 		/* make sure resync happens */
- 		sb->resync_offset = 0ULL;
--- 
-2.12.0
+So I'll send v8 to fix this.
 
+Best regards,
+  Enric
