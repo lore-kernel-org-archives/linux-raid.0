@@ -1,74 +1,42 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: A sector-of-mismatch warning patch (was Re: Fault tolerance with
- badblocks)
-Date: Fri, 19 May 2017 09:55:17 -0700
-Message-ID: <20170519165517.257ny67pxkcbtpkq@kernel.org>
-References: <5911A371.3030008@hesbynett.no>
- <878tm65kyx.fsf@esperi.org.uk>
- <5911AED4.9030007@hesbynett.no>
- <CAJCQCtSaLbp4T+j97Ds6xqPmhVwnncGU2UV2_9HEbEJyr6fy+Q@mail.gmail.com>
- <87bmr14u5f.fsf_-_@esperi.org.uk>
- <87efvpmqf6.fsf@notabene.neil.brown.name>
- <87bmqsmrre.fsf@notabene.neil.brown.name>
- <871sroscey.fsf@esperi.org.uk>
- <87h90hlac0.fsf@notabene.neil.brown.name>
- <8737c13zn8.fsf@esperi.org.uk>
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: [PATCH] Get failed disk count from array state
+Date: Fri, 19 May 2017 15:43:07 -0400
+Message-ID: <bc4470f4-20bf-c45a-9d96-385e4b46e1e3@gmail.com>
+References: <1494850636-28438-1-git-send-email-tomasz.majchrzak@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <8737c13zn8.fsf@esperi.org.uk>
+In-Reply-To: <1494850636-28438-1-git-send-email-tomasz.majchrzak@intel.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Nix <nix@esperi.org.uk>
-Cc: NeilBrown <neilb@suse.com>, Chris Murphy <lists@colorremedies.com>, David Brown <david.brown@hesbynett.no>, Anthony Youngman <antlists@youngman.org.uk>, Phil Turmel <philip@turmel.org>, "Ravi (Tom) Hale" <ravi@hale.ee>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, May 19, 2017 at 11:32:43AM +0100, Nix wrote:
-> On 19 May 2017, NeilBrown said:
+On 05/15/2017 08:17 AM, Tomasz Majchrzak wrote:
+> Recent commit has changed the way failed disks are counted. It breaks
+> recovery for external metadata arrays as failed disks are not part of
+> the array and have no corresponding entries is sysfs (they are only
+> reported for containers) so degraded arrays show no failed disks.
 > 
-> > On Tue, May 16 2017, Nix wrote:
-> >
-> >> On 16 May 2017, NeilBrown spake thusly:
-> >>
-> >>> Actually, I have another caveat.  I don't think we want these messages
-> >>> during initial resync, or any resync.  Only during a 'check' or
-> >>> 'repair'.
-> >>> So add a check for MD_RECOVERY_REQUESTED or maybe for
-> >>>   sh->sectors >= conf->mddev->recovery_cp
-> >>
-> >> I completely agree, but it's already inside MD_RECOVERY_CHECK:
-> >>
-> >> if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery)) {
-> >>         /* don't try to repair!! */
-> >>         set_bit(STRIPE_INSYNC, &sh->state);
-> >>         pr_warn_ratelimited("%s: mismatch sector in range "
-> >>                             "%llu-%llu\n", mdname(conf->mddev),
-> >>                             (unsigned long long) sh->sector,
-> >>                             (unsigned long long) sh->sector +
-> >>                             STRIPE_SECTORS);
-> >> } else {
-> >>
-> >> Doesn't that already mean that someone has explicitly triggered a check
-> >> action?
-> >
-> > Uhmm... yeah.  I lose track of which flags me what exactly.
-> > You log messages aren't generated when 'repair' is used, only when
-> > 'check' is.
-> > I can see why you might have chosen that, but I wonder if it is best.
+> Recent commit overwrites GET_DEGRADED result prior to GET_STATE and it
+> is not set again if GET_STATE has not been requested. As GET_STATE
+> provides the same information as GET_DEGRADED, the latter is not needed
+> anymore. Remove GET_DEGRADED option and replace it with GET_STATE
+> option.
 > 
-> I'm not sure what the point is of being told when repair is used: hey,
-> there was an inconsistency here but there isn't any more! I suppose you
-> could still use it to see if the repair did the right thing. My problem
-> on that front was that I'm not sure what flag should be used to catch
-> repair but not resync etc: everywhere else in the code, repair is in an
-> unadorned else branch... is it the *lack* of MD_RECOVERY_CHECK and the
-> presence of, uh, something else?
-MD_RECOVERY_SYNC && MD_RECOVERY_REQUESTED && MD_RECOVERY_CHECK == check
-MD_RECOVERY_SYNC && MD_RECOVERY_REQUESTED == repair
-MD_RECOVERY_SYNC && !MD_RECOVERY_REQUESTED == resync
+> Don't count number of failed disks looking at sysfs entries but
+> calculate it at the end. Do it only for arrays as containers report
+> no disks, just spares.
 
-Don't see the poin to print the info for 'repair'. 'repair' already changes the
-data, how could we use the info?
+Hi Tomasz,
+
+I have been sitting on a stack of patches in this area as I wanted to 
+test them before pushing them out. I finally got a change to run the 
+testsuite and pushed them, but your patch no longer applied.
+
+Would you mind having a look at the current trunk and see how you want 
+to address it?
 
 Thanks,
-Shaohua
+Jes
