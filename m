@@ -1,34 +1,63 @@
-From: Reindl Harald <h.reindl@thelounge.net>
-Subject: Re: How to backup of large md raid volumes?
-Date: Fri, 19 May 2017 07:49:43 +0200
-Message-ID: <28a4540b-c5ac-bd8d-c030-6d718a02fdfc@thelounge.net>
-References: <442a4af0-00d2-853d-5294-84ae0353262b@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Lidong Zhong <lzhong@suse.com>
+Subject: [PATCH v3] super1: fix sb->max_dev when adding a new disk in linear array
+Date: Fri, 19 May 2017 14:06:38 +0800
+Message-ID: <20170519060638.4470-1-lzhong@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <442a4af0-00d2-853d-5294-84ae0353262b@gmail.com>
-Content-Language: de-CH
 Sender: linux-raid-owner@vger.kernel.org
-To: Ram Ramesh <rramesh2400@gmail.com>, Linux Raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org, neilb@suse.com
+Cc: colyli@suse.com, Jes.Sorensen@gmail.com
 List-Id: linux-raid.ids
 
+The value of sb->max_dev will always be increased by 1 when adding
+a new disk in linear array. It causes an inconsistence between each
+disk in the array and the "Array State" value of "mdadm --examine DISK"
+is wrong. For example, when adding the first new disk into linear array
+it will be:
 
+Array State : RAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+('A' == active, '.' == missing, 'R' == replacing)
 
-Am 18.05.2017 um 23:37 schrieb Ram Ramesh:
-> Any one have a method to backup large volumes like md raid6 (16TB)? 
-> Since the backup will not fit in one disk (in many cases and mine too) I 
-> am wondering, if there is a known/easy technique to backup using 
-> multiple usb hard drives. I googed and found a few fancy backup 
-> utils/systems like Amanda etc. They are overkill for me. I am choosing 
-> not to back up simply because of the complexity of setup as the data in 
-> my RAID volume is NOT precious and can be replaced with a week of effort.
-> 
-> If any one can think of some thing simple, please point me to it and I 
-> will do the reading to figure out
+Adding the second disk into linear array it will be
 
-https://www.amazon.com/16TB-Desktop-External-Drive-WDBLWE0160JCH-NESN/dp/B01B6BN1CU
+Array State : .AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+('A' == active, '.' == missing, 'R' == replacing)
 
-499$ is not that much for a 16 TB external backup disk and whn you 
-format it with BTRFS and enable compression you most likely have a lot 
-fo space and your backup finally is just a single rsync command
+Signed-off-by: Lidong Zhong <lzhong@suse.com>
+---
+ super1.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/super1.c b/super1.c
+index 2fcb814..811923f 100644
+--- a/super1.c
++++ b/super1.c
+@@ -1267,8 +1267,13 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+ 				break;
+ 		sb->dev_number = __cpu_to_le32(i);
+ 		info->disk.number = i;
+-		if (max >= __le32_to_cpu(sb->max_dev))
+-			sb->max_dev = __cpu_to_le32(max+1);
++		if (i >= max) {
++			while (max <= i) {
++				sb->dev_roles[max] = __cpu_to_le16(MD_DISK_ROLE_SPARE);
++				max += 1;
++			}
++			sb->max_dev = __cpu_to_le32(max);
++		}
+ 
+ 		random_uuid(sb->device_uuid);
+ 
+@@ -1296,6 +1301,10 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+ 		sb->raid_disks = __cpu_to_le32(info->array.raid_disks);
+ 		sb->dev_roles[info->disk.number] =
+ 			__cpu_to_le16(info->disk.raid_disk);
++		if (sb->raid_disks+1 >= __le32_to_cpu(sb->max_dev)) {
++			sb->dev_roles[sb->raid_disks] = __cpu_to_le16(MD_DISK_ROLE_SPARE);
++			sb->max_dev = __cpu_to_le32(sb->raid_disks+1);
++		}
+ 	} else if (strcmp(update, "resync") == 0) {
+ 		/* make sure resync happens */
+ 		sb->resync_offset = 0ULL;
+-- 
+2.12.0
+
