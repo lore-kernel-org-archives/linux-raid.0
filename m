@@ -1,73 +1,39 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: A sector-of-mismatch warning patch (was Re: Fault tolerance with badblocks)
-Date: Fri, 19 May 2017 11:32:43 +0100
-Message-ID: <8737c13zn8.fsf@esperi.org.uk>
-References: <03294ec0-2df0-8c1c-dd98-2e9e5efb6f4f@hale.ee>
-        <590B3039.3060000@youngman.org.uk>
-        <84184eb3-52c4-e7ad-cd5b-5021b5cf47ee@hale.ee>
-        <d2b25ec0-c401-07df-2231-a37117878589@youngman.org.uk>
-        <bd917050-cf73-6922-bb20-c5ccf02ba51c@hale.ee>
-        <590DC905.60207@youngman.org.uk> <87h90v8kt3.fsf@esperi.org.uk>
-        <1533bba8-41cb-2c50-b28a-52786e463072@turmel.org>
-        <87vapb6s9h.fsf@esperi.org.uk>
-        <c5307694-034c-b610-8a27-3bf272cac380@youngman.org.uk>
-        <87inla73vz.fsf@esperi.org.uk> <5911A371.3030008@hesbynett.no>
-        <878tm65kyx.fsf@esperi.org.uk> <5911AED4.9030007@hesbynett.no>
-        <CAJCQCtSaLbp4T+j97Ds6xqPmhVwnncGU2UV2_9HEbEJyr6fy+Q@mail.gmail.com>
-        <87bmr14u5f.fsf_-_@esperi.org.uk>
-        <87efvpmqf6.fsf@notabene.neil.brown.name>
-        <87bmqsmrre.fsf@notabene.neil.brown.name>
-        <871sroscey.fsf@esperi.org.uk>
-        <87h90hlac0.fsf@notabene.neil.brown.name>
+From: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 03/23] uuid: remove uuid_be defintions from the uapi header
+Date: Fri, 19 May 2017 11:58:41 +0100
+Message-ID: <13041.1495191521@warthog.procyon.org.uk>
+References: <20170518071352.GA515@lst.de> <20170518062705.25902-1-hch@lst.de>
+ <20170518062705.25902-4-hch@lst.de> <1495091565.31562.28.camel@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87h90hlac0.fsf@notabene.neil.brown.name> (NeilBrown's message of
-        "Fri, 19 May 2017 14:49:51 +1000")
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Chris Murphy <lists@colorremedies.com>, David Brown <david.brown@hesbynett.no>, Anthony Youngman <antlists@youngman.org.uk>, Phil Turmel <philip@turmel.org>, "Ravi (Tom) Hale" <ravi@hale.ee>, Linux-RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <20170518071352.GA515-jcswGhMUV9g@public.gmane.org>
+Content-ID: <13040.1495191521.1-S6HVgzuS8uM4Awkfq6JHfwNdhmdF6hFW@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Joe Perches <joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-On 19 May 2017, NeilBrown said:
+Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org> wrote:
 
-> On Tue, May 16 2017, Nix wrote:
->
->> On 16 May 2017, NeilBrown spake thusly:
->>
->>> Actually, I have another caveat.  I don't think we want these messages
->>> during initial resync, or any resync.  Only during a 'check' or
->>> 'repair'.
->>> So add a check for MD_RECOVERY_REQUESTED or maybe for
->>>   sh->sectors >= conf->mddev->recovery_cp
->>
->> I completely agree, but it's already inside MD_RECOVERY_CHECK:
->>
->> if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery)) {
->>         /* don't try to repair!! */
->>         set_bit(STRIPE_INSYNC, &sh->state);
->>         pr_warn_ratelimited("%s: mismatch sector in range "
->>                             "%llu-%llu\n", mdname(conf->mddev),
->>                             (unsigned long long) sh->sector,
->>                             (unsigned long long) sh->sector +
->>                             STRIPE_SECTORS);
->> } else {
->>
->> Doesn't that already mean that someone has explicitly triggered a check
->> action?
->
-> Uhmm... yeah.  I lose track of which flags me what exactly.
-> You log messages aren't generated when 'repair' is used, only when
-> 'check' is.
-> I can see why you might have chosen that, but I wonder if it is best.
+> It's not a userspace ABI, so by defintion it does not break an
+> existing user program.
 
-I'm not sure what the point is of being told when repair is used: hey,
-there was an inconsistency here but there isn't any more! I suppose you
-could still use it to see if the repair did the right thing. My problem
-on that front was that I'm not sure what flag should be used to catch
-repair but not resync etc: everywhere else in the code, repair is in an
-unadorned else branch... is it the *lack* of MD_RECOVERY_CHECK and the
-presence of, uh, something else?
+That's an invalid assumption.  It is a de facto userspace ABI as it has been
+exposed in /usr/include/linux/uuid.h for some time.
 
--- 
-NULL && (void)
+> If someone was using it they should be using uuid_t from libuuid instead, as
+> that gives them the routines to deal with it.
+
+Yes, they should - but that doesn't mean they do.
+
+David
