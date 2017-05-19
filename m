@@ -1,88 +1,66 @@
-From: Enric Balletbo Serra <eballetbo@gmail.com>
-Subject: Re: [PATCH v7 0/2] dm: boot a mapped device without an
-	initramfs
-Date: Fri, 19 May 2017 09:06:36 +0200
-Message-ID: <CAFqH_52vbi1eM4tLg1tTtzxHpC4OObLWM8jp3nbMnsWv=LE93g@mail.gmail.com>
-References: <20170518162911.15538-1-enric.balletbo@collabora.com>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: A sector-of-mismatch warning patch (was Re: Fault tolerance with badblocks)
+Date: Fri, 19 May 2017 11:31:23 +0100
+Message-ID: <877f1d3zpg.fsf@esperi.org.uk>
+References: <c5307694-034c-b610-8a27-3bf272cac380@youngman.org.uk>
+        <87inla73vz.fsf@esperi.org.uk> <5911A371.3030008@hesbynett.no>
+        <878tm65kyx.fsf@esperi.org.uk> <5911AED4.9030007@hesbynett.no>
+        <CAJCQCtSaLbp4T+j97Ds6xqPmhVwnncGU2UV2_9HEbEJyr6fy+Q@mail.gmail.com>
+        <87bmr14u5f.fsf_-_@esperi.org.uk>
+        <87efvpmqf6.fsf@notabene.neil.brown.name>
+        <87bmqsmrre.fsf@notabene.neil.brown.name>
+        <871sroscey.fsf@esperi.org.uk>
+        <20170518000624.xmvttuyio6llu25r@kernel.org>
+        <87efvlla69.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20170518162911.15538-1-enric.balletbo@collabora.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: dm-devel@redhat.com
-Cc: Kees Cook <keescook@chromium.org>, Mike Snitzer <snitzer@redhat.com>, linux-doc@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, linux-lvm@redhat.com, Alasdair Kergon <agk@redhat.com>
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87efvlla69.fsf@notabene.neil.brown.name> (NeilBrown's message of
+        "Fri, 19 May 2017 14:53:18 +1000")
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: Shaohua Li <shli@kernel.org>, Chris Murphy <lists@colorremedies.com>, David Brown <david.brown@hesbynett.no>, Anthony Youngman <antlists@youngman.org.uk>, Phil Turmel <philip@turmel.org>, "Ravi (Tom) Hale" <ravi@hale.ee>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+On 19 May 2017, NeilBrown verbalised:
 
-2017-05-18 18:29 GMT+02:00 Enric Balletbo i Serra
-<enric.balletbo@collabora.com>:
-> Dear all,
+> On Wed, May 17 2017, Shaohua Li wrote:
 >
-> So here is a new version of the patches to be reviewed, this time as
-> suggested by Alasdair the patches are reworked to match with the new
-> dmsetup bootformat feature [1]. These patches are not reviewed yet but
-> the format was discussed in the IRC and was suggested to send the
-> kernel patches in parallel.
->
-> Changes since v6:
->  - Add a new function to issue the equivalent of a DM ioctl programatically.
->  - Use the new ioctl interface to create the devices.
->  - Use a comma-delimited and semi-colon delimited dmsetup-like commands.
->
-> Changes since v5:
->  - https://www.redhat.com/archives/dm-devel/2016-February/msg00112.html
->
-> [1] https://www.redhat.com/archives/linux-lvm/2017-May/msg00047.html
->
-> Wating for your feedback,
->
-> Enric Balletbo i Serra (1):
->   dm ioctl: add a device mapper ioctl function.
->
-> Will Drewry (1):
->   init: add support to directly boot to a mapped device
->
->  Documentation/admin-guide/kernel-parameters.rst |   1 +
->  Documentation/admin-guide/kernel-parameters.txt |   3 +
->  Documentation/device-mapper/dm-boot.txt         |  65 ++++
->  drivers/md/dm-ioctl.c                           |  45 +++
->  include/linux/device-mapper.h                   |   6 +
->  init/Makefile                                   |   1 +
->  init/do_mounts.c                                |   1 +
->  init/do_mounts.h                                |  10 +
->  init/do_mounts_dm.c                             | 459 ++++++++++++++++++++++++
->  9 files changed, 591 insertions(+)
->  create mode 100644 Documentation/device-mapper/dm-boot.txt
->  create mode 100644 init/do_mounts_dm.c
->
-> --
-> 2.9.3
->
-> --
-> dm-devel mailing list
-> dm-devel@redhat.com
-> https://www.redhat.com/mailman/listinfo/dm-devel
+>> On Tue, May 16, 2017 at 10:46:13PM +0100, Nix wrote:
+>>> Doesn't that already mean that someone has explicitly triggered a check
+>>> action?
+>>
+>> So the idea is: run 'check' and report mismatch, userspace (raid6check for
+>> example) uses the reported info to fix the mismatch. The pr_warn_ratelimited
+>> isn't a good way to communicate the info to userspace. I'm wondering why we
+>> don't just run raid6check solely, it can do the job like what kernel does and
+>> we avoid the crappy pr_warn_ratelimited.
 
-Rebasing the patches against current linux-next I just noticied that
-there is a build error due commit
+It'll do when there are a few inconsistencies but you don't want to
+spend days recovering a huge array to fix a small but nonzero
+mismatch_cnt, or to reassure you that yes, these mismatch_cnts are in
+swap, ignore them. When there are a lot, enough that a ratelimited
+warning hits its rate limit, Neil's right: the array is probably toast.
+The limit is then important to stop log flooding.
 
-commit e516db4f676ac88c7c7f698f8047178e8accc3b8
-Author: Mikulas Patocka <mpatocka@redhat.com>
-Date:   Fri May 5 11:12:52 2017 -0700
+> If we really wanted a seamless "fix the raid6 thing" (which I don't
+> think we do),
 
-    dm ioctl: add a new DM_DEV_ARM_POLL ioctl
+Oh, I want seamless everything -- the seamlessness and flexibility of md
+are its killer features over hardware RAID in my eyes -- but I'm
+convinced that this is probably too hard to test and simply too
+disruptive to bother with for a likely vanishingly rare failure mode all
+entangled with fairly hot paths.
 
-So I'll send v8 to fix this.
+>               we'd probably make the list of inconsistencies appear in a
+> sysfs file.  That would be less 'crappy'.  But as I say, I don't think
+> we really want to do that.
 
-Best regards,
-  Enric
+Aren't sysfs files in effect length-limited to one page (or at least
+length-limited by virtue of being stored in memory?) It seems to me this
+would just bring the same problem ratelimit is solving right back again,
+except a sysfs file doesn't have a logging daemon sucking the contents
+out constantly so you can overwrite your old output without worrying.
+(And there is no other daemon running to do that, except mdadm in
+monitor mode, which might not be running and really this job feels out
+of scope for it anyway.)
