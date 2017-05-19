@@ -1,127 +1,72 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH] super1: fix sb->max_dev when adding a new disk in linear array
-Date: Fri, 19 May 2017 14:36:53 +1000
-Message-ID: <87pof5laxm.fsf@notabene.neil.brown.name>
-References: <20170516045129.21815-1-lzhong@suse.com>
+Subject: Re: A sector-of-mismatch warning patch (was Re: Fault tolerance with badblocks)
+Date: Fri, 19 May 2017 14:49:51 +1000
+Message-ID: <87h90hlac0.fsf@notabene.neil.brown.name>
+References: <03294ec0-2df0-8c1c-dd98-2e9e5efb6f4f@hale.ee> <590B3039.3060000@youngman.org.uk> <84184eb3-52c4-e7ad-cd5b-5021b5cf47ee@hale.ee> <d2b25ec0-c401-07df-2231-a37117878589@youngman.org.uk> <bd917050-cf73-6922-bb20-c5ccf02ba51c@hale.ee> <590DC905.60207@youngman.org.uk> <87h90v8kt3.fsf@esperi.org.uk> <1533bba8-41cb-2c50-b28a-52786e463072@turmel.org> <87vapb6s9h.fsf@esperi.org.uk> <c5307694-034c-b610-8a27-3bf272cac380@youngman.org.uk> <87inla73vz.fsf@esperi.org.uk> <5911A371.3030008@hesbynett.no> <878tm65kyx.fsf@esperi.org.uk> <5911AED4.9030007@hesbynett.no> <CAJCQCtSaLbp4T+j97Ds6xqPmhVwnncGU2UV2_9HEbEJyr6fy+Q@mail.gmail.com> <87bmr14u5f.fsf_-_@esperi.org.uk> <87efvpmqf6.fsf@notabene.neil.brown.name> <87bmqsmrre.fsf@notabene.neil.brown.name> <871sroscey.fsf@esperi.org.uk>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170516045129.21815-1-lzhong@suse.com>
+In-Reply-To: <871sroscey.fsf@esperi.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lidong Zhong <lzhong@suse.com>, linux-raid@vger.kernel.org
-Cc: colyli@suse.com, Jes.Sorensen@gmail.com
+To: Nix <nix@esperi.org.uk>
+Cc: Chris Murphy <lists@colorremedies.com>, David Brown <david.brown@hesbynett.no>, Anthony Youngman <antlists@youngman.org.uk>, Phil Turmel <philip@turmel.org>, "Ravi (Tom) Hale" <ravi@hale.ee>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Tue, May 16 2017, Lidong Zhong wrote:
+On Tue, May 16 2017, Nix wrote:
 
-> The value of sb->max_dev will always be increased by 1 when adding
-> a new disk in linear array. It causes an inconsistence between each
-> disk in the array and the "Array State" value of "mdadm --examine DISK"
-> is wrong. For example, when adding the first new disk into linear array
-> it will be:
+> On 16 May 2017, NeilBrown spake thusly:
 >
-> Array State : RAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-> ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D replacing)
+>> Actually, I have another caveat.  I don't think we want these messages
+>> during initial resync, or any resync.  Only during a 'check' or
+>> 'repair'.
+>> So add a check for MD_RECOVERY_REQUESTED or maybe for
+>>   sh->sectors >= conf->mddev->recovery_cp
 >
-> Adding the second disk into linear array it will be
+> I completely agree, but it's already inside MD_RECOVERY_CHECK:
 >
-> Array State : .AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-> ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D replacing)
+> if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery)) {
+>         /* don't try to repair!! */
+>         set_bit(STRIPE_INSYNC, &sh->state);
+>         pr_warn_ratelimited("%s: mismatch sector in range "
+>                             "%llu-%llu\n", mdname(conf->mddev),
+>                             (unsigned long long) sh->sector,
+>                             (unsigned long long) sh->sector +
+>                             STRIPE_SECTORS);
+> } else {
 >
-> Signed-off-by: Lidong Zhong <lzhong@suse.com>
-> ---
->  super1.c | 8 +++++++-
->  1 file changed, 7 insertions(+), 1 deletion(-)
->
-> diff --git a/super1.c b/super1.c
-> index 87a74cb..3d49bee 100644
-> --- a/super1.c
-> +++ b/super1.c
-> @@ -1184,8 +1184,10 @@ static int update_super1(struct supertype *st, str=
-uct mdinfo *info,
->  				break;
->  		sb->dev_number =3D __cpu_to_le32(i);
->  		info->disk.number =3D i;
-> -		if (max >=3D __le32_to_cpu(sb->max_dev))
-> +		if (i >=3D __le32_to_cpu(sb->max_dev)) {
+> Doesn't that already mean that someone has explicitly triggered a check
+> action?
 
-This change is correct - thanks.  Though
-    if (i >=3D max) {
+Uhmm... yeah.  I lose track of which flags me what exactly.
+You log messages aren't generated when 'repair' is used, only when
+'check' is.
+I can see why you might have chosen that, but I wonder if it is best.
 
-might be clearer and simpler.
+But I'm OK with this patch as it stands.
 
-
->  			sb->max_dev =3D __cpu_to_le32(max+1);
-> +			sb->dev_roles[sb->max_dev] =3D __cpu_to_le16(MD_DISK_ROLE_SPARE);
-
-This change is wrong.
-At the very least, the dev_roles[] array needs to be indexed by a
-host-order number, not a little-endian number.
-But the change is not needed because dev_roles[max_dev] is never used.
-See role_from_sb().
-dev_rols[max_dev - 1] does need to be set, but the line
-
-		sb->dev_roles[i] =3D __cpu_to_le16(info->disk.raid_disk);
-
-almost certainly does that.
-It might be better to do
-  if (i >=3D max) {
-     while (max <=3D i) {
-        sb->dev_roles[max] =3D __cpu_to_le16(MD_DISK_ROLE_SPARE);
-        max +=3D 1;
-     }
-     sb->max_dev =3D __cpu_to_le32(max);
-  }
-
-> +		}
->=20=20
->  		random_uuid(sb->device_uuid);
->=20=20
-> @@ -1214,6 +1216,10 @@ static int update_super1(struct supertype *st, str=
-uct mdinfo *info,
->  		sb->raid_disks =3D __cpu_to_le32(info->array.raid_disks);
->  		sb->dev_roles[info->disk.number] =3D
->  			__cpu_to_le16(info->disk.raid_disk);
-> +		if (sb->raid_disks+1 >=3D __le32_to_cpu(sb->max_dev)) {
-> +			sb->max_dev =3D __cpu_to_le32(sb->raid_disks+1);
-> +			sb->dev_roles[sb->max_dev] =3D __cpu_to_le16(MD_DISK_ROLE_SPARE);
-
-Again, max_dev is little-endian, so cannot be used as an index.
-And I think you are updating the wrong element in the dev_roles array.
-
-Thanks,
 NeilBrown
-
-
-> +		}
->  	} else if (strcmp(update, "resync") =3D=3D 0) {
->  		/* make sure resync happens */
->  		sb->resync_offset =3D 0ULL;
-> --=20
-> 2.12.0
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlkedmcACgkQOeye3VZi
-gbnGEhAAtECCQuD9npUJjTYn2/7r2cBOENlTzzwedLwW8ECA1Oycsl83JEWNJg+e
-pWbG/neomcXTiOPeoyQDFc/AW//2yzV+xPt82fEoYuqlRYvlrjFYovJ1HJQQ0dmr
-1/NuVN3ljk2Pdyyhxyw/0XjAVy6ggkmm3YsPvWD0RK6pp3dD5gHOvLkLgtYnzk7n
-t7gdt0hS7VY3HQz2obWdFZrWpr2ucCbrlB4XGnqGAae6jGB5FM9EMOGXRb/DyBun
-kRQa73MKfPcn9Q188S1kFnNM9EWKYKUhS+rwOJveE8yj20dATO0A2yYG7lZi9r/x
-BvsRidkUTIbJT9GrMqQftTqmRU5ngmFI8J6nx3NWj5mtoxQuSe2FOHGc/d2ffP6+
-3HpYAMFRHx1G0zc3vEUHBjq0OOfb4Zn7LgCOslV6FYkfpjehLjGKEPGsQuhRmR+2
-UhFPadEceUN3ADHURzymg9/m2GufbK1Ec/caaucDg7w45l6WmwiaJyzMP+dFS2/E
-wb/XaprS9FGeVM4nPk75ts7SCQE+iKbkFznlTYmZtEm2K9HSoOhSx06I1GyBl+Z4
-a4OT/GwufJErwc16wQNr9y+Ej9OwN2HRGWlLcP0BLMIvcxFL6UfmyuC4nHYOE2ih
-rlV05sW3Vmf8PGDC8isO1e7Lb2AbttDZmYT/Vn90kMiLFhetZAw=
-=5atf
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlkeeW8ACgkQOeye3VZi
+gblqbw//WjgpF5pF0o5lIRC7WvekhnEPIFQVg0FS3ZCCQjuG4Bp8/TapqVcZWNeJ
+8SVOZ5pe4GlWWLBLvynR2xirzrfVSswRCclMxtoRdTm4PlIbEdzTh9MDcNaEQljn
+U7CxnUVtrW7//Z1IH+eZc5yfACIkjLiVjAQsDtbUDLlM4yI4Mez8COeFHN4Kd9uo
+W0Rs3PKrHo/KOhzR6oWZk4pvcdkKUKKEg3ySAc8VYVmycmE99KQf1fKFGlbAVKrp
+hd2azS/Pd9SSYsCBFmKe8RmZI2I5ViiEI/BLT2hCtdUPv5z/r1sPT/AKLfJT7fLQ
+lxTkhtWvXeqJj7JpgT5gZxdF1YZfytBkuwf8JoDGd3xNXwJa1sOXGvzFq1wdbDlb
+sfLdFT8UQODfCdjr0KOCMxgU5SjU/TDYIKJgPV9mK/cHFYuqKqo1Rb8xuJkGVuAU
+u6afjrwwdGQ88f5Th650JJxhXNckDkaZE1zHwxczvNJyMTvq3WBsZv2Rpug7AsBY
+53e8nJiKiWm1Sn/1efBVc1hIOb+/ydx55OWtYJdZfpd9jgvp1NwcS73ARl8TgtTj
+Yxo3UY0HVwj1EpMrPBqmMZjrGvxhGUArDbHOTma67vagE0ShBJY3Wx42ryPmnfO8
+okx/LCk3cB07F8dGHOXCpuIvIMDtDflettNfBaF3Czwac5nQRFI=
+=zYhS
 -----END PGP SIGNATURE-----
 --=-=-=--
