@@ -1,77 +1,127 @@
-From: Victor Helmholtz <victor.helmholtz@gmail.com>
-Subject: Re: How to backup of large md raid volumes?
-Date: Fri, 19 May 2017 05:36:07 +0100
-Message-ID: <D1B586A9-7094-44F4-9FD9-566D0DCC2178@gmail.com>
-References: <442a4af0-00d2-853d-5294-84ae0353262b@gmail.com> <75dc802b-1572-3c6f-ed62-4333deece4c2@websitemanagers.com.au> <8b840e53-1be2-b1b5-632f-e75f0c6c53b7@gmail.com>
-Mime-Version: 1.0 (Mac OS X Mail 9.3 \(3124\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH] super1: fix sb->max_dev when adding a new disk in linear array
+Date: Fri, 19 May 2017 14:36:53 +1000
+Message-ID: <87pof5laxm.fsf@notabene.neil.brown.name>
+References: <20170516045129.21815-1-lzhong@suse.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8b840e53-1be2-b1b5-632f-e75f0c6c53b7@gmail.com>
+In-Reply-To: <20170516045129.21815-1-lzhong@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux Raid <linux-raid@vger.kernel.org>
+To: Lidong Zhong <lzhong@suse.com>, linux-raid@vger.kernel.org
+Cc: colyli@suse.com, Jes.Sorensen@gmail.com
 List-Id: linux-raid.ids
 
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> On 19 May 2017, at 04:39, Ram Ramesh <rramesh2400@gmail.com> wrote:
->=20
-> On 05/18/2017 08:34 PM, Adam Goryachev wrote:
->> On 19/05/17 07:37, Ram Ramesh wrote:
->>> Any one have a method to backup large volumes like md raid6 (16TB)? =
-Since the backup will not fit in one disk (in many cases and mine too) I =
-am wondering, if there is a known/easy technique to backup using =
-multiple usb hard drives. I googed and found a few fancy backup =
-utils/systems like Amanda etc. They are overkill for me. I am choosing =
-not to back up simply because of the complexity of setup as the data in =
-my RAID volume is NOT precious and can be replaced with a week of =
-effort.
->>>=20
->>> If any one can think of some thing simple, please point me to it and =
-I will do the reading to figure out.
->>>=20
->> I suppose it depends on what you want to achieve. There are various =
-options such as mirroring to another raid6 array (ie, RAID60) but really =
-that isn't a backup, it's another replica.
->> I use backuppc for my backups, it works well under linux with rsync, =
-I'm sure there are many various options (including amanda which I've =
-used in the past). Ultimately, it depends on your requirements, backups =
-vary significantly depending on needs/etc.
->>=20
->> Regards,
->> Adam
->>=20
->>=20
-> Here is a summary of what I like to do. I want to backup files on to =
-(multiple) disks that will be loaded on to a USB dock. Simple one to one =
-copy is all I am looking for. I am not interested in full vs. =
-incremental or keeping versions of files for restore. My data is just =
-movies and songs. All I want is a SW that understands links (to avoid =
-duplicates) and copy files in batch on to multiple disks. I want content =
-of each (backup) disk to be independent. This way if one backup disk =
-dies, I have all other files unaffected by this failure. The only reason =
-I did not try multi-volume tar is the lack of independence across disks.
->=20
-> I suppose this is a backup question rather than RAID question. I asked =
-here because the size of RAID volumes make it impossible to back up to a =
-single drive and this is a more common problem RAID world rather than =
-general user forum in a backup mailing list.
->=20
-> Ramesh
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" =
-in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Tue, May 16 2017, Lidong Zhong wrote:
 
-I have never tried it myself, but my understanding is that in =
-multi-volume GNU tar archive each volume is independent. Tar manual =
-states:
-> Each volume is itself a valid GNU tar archive, so it can be read =
-without any special options. Consequently any file member residing =
-entirely on one volume can be extracted or otherwise operated upon =
-without needing the other volume. Sure enough, to extract a split member =
-you would need all volumes its parts reside on.
+> The value of sb->max_dev will always be increased by 1 when adding
+> a new disk in linear array. It causes an inconsistence between each
+> disk in the array and the "Array State" value of "mdadm --examine DISK"
+> is wrong. For example, when adding the first new disk into linear array
+> it will be:
+>
+> Array State : RAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+> ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D replacing)
+>
+> Adding the second disk into linear array it will be
+>
+> Array State : .AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+> ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D replacing)
+>
+> Signed-off-by: Lidong Zhong <lzhong@suse.com>
+> ---
+>  super1.c | 8 +++++++-
+>  1 file changed, 7 insertions(+), 1 deletion(-)
+>
+> diff --git a/super1.c b/super1.c
+> index 87a74cb..3d49bee 100644
+> --- a/super1.c
+> +++ b/super1.c
+> @@ -1184,8 +1184,10 @@ static int update_super1(struct supertype *st, str=
+uct mdinfo *info,
+>  				break;
+>  		sb->dev_number =3D __cpu_to_le32(i);
+>  		info->disk.number =3D i;
+> -		if (max >=3D __le32_to_cpu(sb->max_dev))
+> +		if (i >=3D __le32_to_cpu(sb->max_dev)) {
 
-Regards
-Victor=
+This change is correct - thanks.  Though
+    if (i >=3D max) {
+
+might be clearer and simpler.
+
+
+>  			sb->max_dev =3D __cpu_to_le32(max+1);
+> +			sb->dev_roles[sb->max_dev] =3D __cpu_to_le16(MD_DISK_ROLE_SPARE);
+
+This change is wrong.
+At the very least, the dev_roles[] array needs to be indexed by a
+host-order number, not a little-endian number.
+But the change is not needed because dev_roles[max_dev] is never used.
+See role_from_sb().
+dev_rols[max_dev - 1] does need to be set, but the line
+
+		sb->dev_roles[i] =3D __cpu_to_le16(info->disk.raid_disk);
+
+almost certainly does that.
+It might be better to do
+  if (i >=3D max) {
+     while (max <=3D i) {
+        sb->dev_roles[max] =3D __cpu_to_le16(MD_DISK_ROLE_SPARE);
+        max +=3D 1;
+     }
+     sb->max_dev =3D __cpu_to_le32(max);
+  }
+
+> +		}
+>=20=20
+>  		random_uuid(sb->device_uuid);
+>=20=20
+> @@ -1214,6 +1216,10 @@ static int update_super1(struct supertype *st, str=
+uct mdinfo *info,
+>  		sb->raid_disks =3D __cpu_to_le32(info->array.raid_disks);
+>  		sb->dev_roles[info->disk.number] =3D
+>  			__cpu_to_le16(info->disk.raid_disk);
+> +		if (sb->raid_disks+1 >=3D __le32_to_cpu(sb->max_dev)) {
+> +			sb->max_dev =3D __cpu_to_le32(sb->raid_disks+1);
+> +			sb->dev_roles[sb->max_dev] =3D __cpu_to_le16(MD_DISK_ROLE_SPARE);
+
+Again, max_dev is little-endian, so cannot be used as an index.
+And I think you are updating the wrong element in the dev_roles array.
+
+Thanks,
+NeilBrown
+
+
+> +		}
+>  	} else if (strcmp(update, "resync") =3D=3D 0) {
+>  		/* make sure resync happens */
+>  		sb->resync_offset =3D 0ULL;
+> --=20
+> 2.12.0
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlkedmcACgkQOeye3VZi
+gbnGEhAAtECCQuD9npUJjTYn2/7r2cBOENlTzzwedLwW8ECA1Oycsl83JEWNJg+e
+pWbG/neomcXTiOPeoyQDFc/AW//2yzV+xPt82fEoYuqlRYvlrjFYovJ1HJQQ0dmr
+1/NuVN3ljk2Pdyyhxyw/0XjAVy6ggkmm3YsPvWD0RK6pp3dD5gHOvLkLgtYnzk7n
+t7gdt0hS7VY3HQz2obWdFZrWpr2ucCbrlB4XGnqGAae6jGB5FM9EMOGXRb/DyBun
+kRQa73MKfPcn9Q188S1kFnNM9EWKYKUhS+rwOJveE8yj20dATO0A2yYG7lZi9r/x
+BvsRidkUTIbJT9GrMqQftTqmRU5ngmFI8J6nx3NWj5mtoxQuSe2FOHGc/d2ffP6+
+3HpYAMFRHx1G0zc3vEUHBjq0OOfb4Zn7LgCOslV6FYkfpjehLjGKEPGsQuhRmR+2
+UhFPadEceUN3ADHURzymg9/m2GufbK1Ec/caaucDg7w45l6WmwiaJyzMP+dFS2/E
+wb/XaprS9FGeVM4nPk75ts7SCQE+iKbkFznlTYmZtEm2K9HSoOhSx06I1GyBl+Z4
+a4OT/GwufJErwc16wQNr9y+Ej9OwN2HRGWlLcP0BLMIvcxFL6UfmyuC4nHYOE2ih
+rlV05sW3Vmf8PGDC8isO1e7Lb2AbttDZmYT/Vn90kMiLFhetZAw=
+=5atf
+-----END PGP SIGNATURE-----
+--=-=-=--
