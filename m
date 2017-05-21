@@ -1,89 +1,112 @@
-From: Ram Ramesh <rramesh2400@gmail.com>
-Subject: Re: How to backup of large md raid volumes?
-Date: Sun, 21 May 2017 14:48:01 -0500
-Message-ID: <aa7ddea5-f700-a41f-8782-cd0fa6ffe7f9@gmail.com>
-References: <442a4af0-00d2-853d-5294-84ae0353262b@gmail.com>
- <75dc802b-1572-3c6f-ed62-4333deece4c2@websitemanagers.com.au>
- <8b840e53-1be2-b1b5-632f-e75f0c6c53b7@gmail.com>
- <95546cb8-e195-a693-f4c8-e8b250cec30e@cas.homelinux.org>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: A sector-of-mismatch warning patch (was Re: Fault tolerance with badblocks)
+Date: Mon, 22 May 2017 08:00:42 +1000
+Message-ID: <87tw4dkgz9.fsf@notabene.neil.brown.name>
+References: <5911A371.3030008@hesbynett.no> <878tm65kyx.fsf@esperi.org.uk> <5911AED4.9030007@hesbynett.no> <CAJCQCtSaLbp4T+j97Ds6xqPmhVwnncGU2UV2_9HEbEJyr6fy+Q@mail.gmail.com> <87bmr14u5f.fsf_-_@esperi.org.uk> <87efvpmqf6.fsf@notabene.neil.brown.name> <87bmqsmrre.fsf@notabene.neil.brown.name> <871sroscey.fsf@esperi.org.uk> <87h90hlac0.fsf@notabene.neil.brown.name> <8737c13zn8.fsf@esperi.org.uk> <20170519165517.257ny67pxkcbtpkq@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <95546cb8-e195-a693-f4c8-e8b250cec30e@cas.homelinux.org>
+In-Reply-To: <20170519165517.257ny67pxkcbtpkq@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux Raid <linux-raid@vger.kernel.org>
-Cc: Chris Schanzle <mdadm@cas.homelinux.org>
+To: Shaohua Li <shli@kernel.org>, Nix <nix@esperi.org.uk>
+Cc: Chris Murphy <lists@colorremedies.com>, David Brown <david.brown@hesbynett.no>, Anthony Youngman <antlists@youngman.org.uk>, Phil Turmel <philip@turmel.org>, "Ravi (Tom) Hale" <ravi@hale.ee>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 05/21/2017 12:04 PM, Chris Schanzle wrote:
-> On 05/18/2017 11:39 PM, Ram Ramesh wrote:
->> On 05/18/2017 08:34 PM, Adam Goryachev wrote:
->>> On 19/05/17 07:37, Ram Ramesh wrote:
->>>> Any one have a method to backup large volumes like md raid6 (16TB)? 
->>>> Since the backup will not fit in one disk (in many cases and mine 
->>>> too) I am wondering, if there is a known/easy technique to backup 
->>>> using multiple usb hard drives. I googed and found a few fancy 
->>>> backup utils/systems like Amanda etc. They are overkill for me. I 
->>>> am choosing not to back up simply because of the complexity of 
->>>> setup as the data in my RAID volume is NOT precious and can be 
->>>> replaced with a week of effort.
->>>>
->>>> If any one can think of some thing simple, please point me to it 
->>>> and I will do the reading to figure out.
->>>>
->>> I suppose it depends on what you want to achieve. There are various 
->>> options such as mirroring to another raid6 array (ie, RAID60) but 
->>> really that isn't a backup, it's another replica.
->>> I use backuppc for my backups, it works well under linux with rsync, 
->>> I'm sure there are many various options (including amanda which I've 
->>> used in the past). Ultimately, it depends on your requirements, 
->>> backups vary significantly depending on needs/etc.
->>>
->>> Regards,
->>> Adam
->>>
->>>
->> Here is a summary of what I like to do. I want to backup files on to 
->> (multiple) disks that will be loaded on to a USB dock. Simple one to 
->> one copy is all I am looking for. I am not interested in full vs. 
->> incremental or keeping versions of files for restore. My data is just 
->> movies and songs. All I want is a SW that understands links (to avoid 
->> duplicates) and copy files in batch on to multiple disks. I want 
->> content of each (backup) disk to be independent. This way if one 
->> backup disk dies, I have all other files unaffected by this failure. 
->> The only reason I did not try multi-volume tar is the lack of 
->> independence across disks.
->>
->> I suppose this is a backup question rather than RAID question. I 
->> asked here because the size of RAID volumes make it impossible to 
->> back up to a single drive and this is a more common problem RAID 
->> world rather than general user forum in a backup mailing list.
->>
->> Ramesh
->
-> Thanks for the additional info on your requirements.
->
-> Rsync will be your best/fastest tool, as writing 16 TB of data over 
-> USB will likely take days for a full backup...and that seems silly 
-> when you probably already have 90% of the data already.
->
-> If one drive failures are a concern, why not use RAID5 for your group 
-> of USB backup disks?  Might take you a bit more effort 
-> starting/stopping the array, but I'm sure you'll enjoy the large 
-> single volume/filesystem in the long run.   Use a fairly large 
-> --chunk= size for your large files.  I have had very positive 
-> experience with XFS for large multimedia filesystems (mythtv user and 
-> 20TB backup servers).
-> If the drives you choose to use are desktop grade, be sure to increase 
-> the timeouts.  Search this list archives for Chris Murphy's subject: 
-> "Re: URE, link resets, user hostile defaults".
->
-The only problem with raid is that all disks need to be present to 
-create md. I only have the ability to load two disks and the disks are 
-fairly small compared to RAID l (3TB vs. 16TB) So RAID5 won't work. 
-Besides, I do not want to use RAID to backup RAID as my worry is md 
-going bad and preventing access to my files. It is not disk that I am 
-worried about mdadm layout and requirement that many disk to be alive to 
-get even one file.
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Fri, May 19 2017, Shaohua Li wrote:
+
+> On Fri, May 19, 2017 at 11:32:43AM +0100, Nix wrote:
+>> On 19 May 2017, NeilBrown said:
+>>=20
+>> > On Tue, May 16 2017, Nix wrote:
+>> >
+>> >> On 16 May 2017, NeilBrown spake thusly:
+>> >>
+>> >>> Actually, I have another caveat.  I don't think we want these messag=
+es
+>> >>> during initial resync, or any resync.  Only during a 'check' or
+>> >>> 'repair'.
+>> >>> So add a check for MD_RECOVERY_REQUESTED or maybe for
+>> >>>   sh->sectors >=3D conf->mddev->recovery_cp
+>> >>
+>> >> I completely agree, but it's already inside MD_RECOVERY_CHECK:
+>> >>
+>> >> if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery)) {
+>> >>         /* don't try to repair!! */
+>> >>         set_bit(STRIPE_INSYNC, &sh->state);
+>> >>         pr_warn_ratelimited("%s: mismatch sector in range "
+>> >>                             "%llu-%llu\n", mdname(conf->mddev),
+>> >>                             (unsigned long long) sh->sector,
+>> >>                             (unsigned long long) sh->sector +
+>> >>                             STRIPE_SECTORS);
+>> >> } else {
+>> >>
+>> >> Doesn't that already mean that someone has explicitly triggered a che=
+ck
+>> >> action?
+>> >
+>> > Uhmm... yeah.  I lose track of which flags me what exactly.
+>> > You log messages aren't generated when 'repair' is used, only when
+>> > 'check' is.
+>> > I can see why you might have chosen that, but I wonder if it is best.
+>>=20
+>> I'm not sure what the point is of being told when repair is used: hey,
+>> there was an inconsistency here but there isn't any more! I suppose you
+>> could still use it to see if the repair did the right thing. My problem
+>> on that front was that I'm not sure what flag should be used to catch
+>> repair but not resync etc: everywhere else in the code, repair is in an
+>> unadorned else branch... is it the *lack* of MD_RECOVERY_CHECK and the
+>> presence of, uh, something else?
+> MD_RECOVERY_SYNC && MD_RECOVERY_REQUESTED && MD_RECOVERY_CHECK =3D=3D che=
+ck
+> MD_RECOVERY_SYNC && MD_RECOVERY_REQUESTED =3D=3D repair
+> MD_RECOVERY_SYNC && !MD_RECOVERY_REQUESTED =3D=3D resync
+>
+> Don't see the poin to print the info for 'repair'. 'repair' already chang=
+es the
+> data, how could we use the info?
+
+Surprising data is can be potentially valuable.
+I don't think you should *ever* get an inconsistency in a RAID6 unless
+you have faulty hardware.
+If you do, then any information about the nature of the inconsistency
+might be valuable in understanding the hardware fault.
+I don't know in advance how I would interpret the data, but I do
+know that if I didn't have the data, then I wouldn't be able to
+interpret it.
+
+However .... running "repair" when you don't know exactly what has
+happened and why, is probably a bad idea.  So logging probably won't
+provide value.
+I wouldn't go out of my way to add extra logging for the 'repair' case,
+but I certainly wouldn't go out of my way to avoid logging in that case.
+
+It seems inconsistent to log for 'check' but not 'repair', but it isn't
+a big deal for me.
+
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlkiDgoACgkQOeye3VZi
+gbk4MA/9GMVCxRE7qxrE/MNu7A1E3b26Zb3STt3ufGlYmpn0TXAz/QvCrvBONhmH
+l5FmAJeKFaDI5XJCE2FW6pW0gKkuX89AQBbKtAUKtmNUkUpVPsEZLI6flfQIMUYL
+WWmSySKK0/HnxJRyP+16SSI4c1OZVzur0dn6sAep5oG4EjJ6xPJKuezwS7AYfNf8
+y1K7fpcAza0lsSqn3qHgcXE6XqUTFqW1z3EIxOT2t60aYmZGVvNW/bFIuEISkobN
+1IfA0Sp6Z70JIvt5u8s0UTSy/58e1bUb4s/ee9GAvBDTW8PcBVSN2ktPw8TqouvY
+6OufjUWWbWbVJKKuGHHFxwVWhblEEmT5SYy9XoJD77fpR/+og+ZDruHyFxe75Lh2
+uzDj/nd/x1rU8aPo82yXHzmSJjQvI0SUwv9MYIxiC3L7SZ1hbDiJ/3ifZCKEg06d
+SxE+1sgU/IbQJTzkHIlyYphckXc/SpTHqvYS7CffB4jDhsUA0aAYtwvvGrNTGw2B
+6YJeyIG7nFgFJimw8X84Xc4ZxnFmtxpfQJbgCDpgXcipuFarYP/gV+rA5a/kfP1/
+xxYx0eQnaIFJ1UK3mkMOmCWq0ppCDxpR7W7hD+8XcN9P93N3pylaEi9ICvmUWWJO
+/L2cUfdoWHIAdDaHQQAVblt5YAtneMRleitdAf4U1dp1GNePRLw=
+=Hm+T
+-----END PGP SIGNATURE-----
+--=-=-=--
