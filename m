@@ -1,64 +1,39 @@
-From: <citydesk@thereporteronline.com>
-Subject: (unknown)
-Date: Sat, 20 May 2017 20:00:58 -0000
-Message-ID: <149531045827.31457.9539551652725883002@chtts.ru>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: Re: [PATCH 03/23] uuid: remove uuid_be defintions from the uapi header
+Date: Sun, 21 May 2017 08:55:57 +0200
+Message-ID: <20170521065557.GC13004@lst.de>
+References: <20170518071352.GA515@lst.de> <20170518062705.25902-1-hch@lst.de>
+ <20170518062705.25902-4-hch@lst.de> <1495091565.31562.28.camel@perches.com>
+ <13041.1495191521@warthog.procyon.org.uk>
 Mime-Version: 1.0
-Content-Type: application/zip; name="39874.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: attachment
-Subject: 
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <13041.1495191521-S6HVgzuS8uM4Awkfq6JHfwNdhmdF6hFW@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Joe Perches <joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-raid.ids
 
-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
-op/d0dIBUEsFBgAAAAABAAEAWwAAAJQKAAAAAA==
+On Fri, May 19, 2017 at 11:58:41AM +0100, David Howells wrote:
+> Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org> wrote:
+> 
+> > It's not a userspace ABI, so by defintion it does not break an
+> > existing user program.
+> 
+> That's an invalid assumption.  It is a de facto userspace ABI as it has been
+> exposed in /usr/include/linux/uuid.h for some time.
+
+It is never passed through any kernel interface, which by defintion does
+not make it an ABI.  And even if it was we are not going to change the
+ABI for a uuid_t ever.  We're just changing the internal name, and stop
+exposing the old name which was never used in an ABI to userspace.
