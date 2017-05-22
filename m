@@ -1,41 +1,63 @@
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: Re: [PATCH 10/23] afs: switch to use uuid_t and uuid_gen
-Date: Mon, 22 May 2017 21:49:17 +0300
-Message-ID: <1495478957.6967.69.camel@linux.intel.com>
+From: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [PATCH 13/23] md: namespace private helper names
+Date: Mon, 22 May 2017 21:52:27 +0300
+Message-ID: <1495479147.6967.70.camel@linux.intel.com>
 References: <20170518062705.25902-1-hch@lst.de>
-         <20170518062705.25902-11-hch@lst.de>
+ <20170518062705.25902-14-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170518062705.25902-11-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
-Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <20170518062705.25902-14-hch-jcswGhMUV9g@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-On Thu, 2017-05-18 at 08:26 +0200, Christoph Hellwig wrote:
-
-Changelog?
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: David Howells <dhowells@redhat.com>
-
-> @@ -453,7 +453,7 @@ static int afs_deliver_cb_probe(struct afs_call
-> *call)
->  static void SRXAFSCB_ProbeUuid(struct work_struct *work)
->  {
->  	struct afs_call *call = container_of(work, struct afs_call,
-> work);
-> -	struct uuid_v1 *r = call->request;
-> +	uuid_t *r = call->request;
->  
->  	struct {
->  		__be32	match;
-> 
-
-Just to double check that this doesn't create a union aliasing.
-
--- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+T24gVGh1LCAyMDE3LTA1LTE4IGF0IDA4OjI2ICswMjAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
+ZToKPiBGcm9tOiBBbWlyIEdvbGRzdGVpbiA8YW1pcjczaWxAZ21haWwuY29tPgo+IAo+IFRoZSBt
+ZCBwcml2YXRlIGhlbHBlciB1dWlkX2VxdWFsKCkgY29sbGlkZXMgd2l0aCBhIGdlbmVyaWMgaGVs
+cGVyCj4gb2YgdGhlIHNhbWUgbmFtZS4KPiAKPiBSZW5hbWUgdGhlIG1kIHByaXZhdGUgaGVscGVy
+IHRvIG1kX3V1aWRfZXF1YWwoKSBhbmQgZG8gdGhlIHNhbWUgZm9yCj4gbWRfc2JfZXF1YWwoKS4K
+PiAKCldoaWxlIHBhdGNoIGlzIGdvb2QsIHNob3VsZG4ndCBpdCBnbyBiZWZvcmUgd2UgaW50cm9k
+dWNlIHRob3NlIGhlbHBlcnM/Cgo+IENjOiBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+Cj4g
+U2lnbmVkLW9mZi1ieTogQW1pciBHb2xkc3RlaW4gPGFtaXI3M2lsQGdtYWlsLmNvbT4KPiBTaWdu
+ZWQtb2ZmLWJ5OiBDaHJpc3RvcGggSGVsbHdpZyA8aGNoQGxzdC5kZT4KPiAtLS0KPiDCoGRyaXZl
+cnMvbWQvbWQuYyB8IDggKysrKy0tLS0KPiDCoDEgZmlsZSBjaGFuZ2VkLCA0IGluc2VydGlvbnMo
+KyksIDQgZGVsZXRpb25zKC0pCj4gCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvbWQuYyBiL2Ry
+aXZlcnMvbWQvbWQuYwo+IGluZGV4IDgyZjc5OGJlOTY0Zi4uNjU3OTVjYzRjYjdkIDEwMDY0NAo+
+IC0tLSBhL2RyaXZlcnMvbWQvbWQuYwo+ICsrKyBiL2RyaXZlcnMvbWQvbWQuYwo+IEBAIC04MjUs
+NyArODI1LDcgQEAgc3RhdGljIGludCByZWFkX2Rpc2tfc2Ioc3RydWN0IG1kX3JkZXYgKnJkZXYs
+IGludAo+IHNpemUpCj4gwqAJcmV0dXJuIC1FSU5WQUw7Cj4gwqB9Cj4gwqAKPiAtc3RhdGljIGlu
+dCB1dWlkX2VxdWFsKG1kcF9zdXBlcl90ICpzYjEsIG1kcF9zdXBlcl90ICpzYjIpCj4gK3N0YXRp
+YyBpbnQgbWRfdXVpZF9lcXVhbChtZHBfc3VwZXJfdCAqc2IxLCBtZHBfc3VwZXJfdCAqc2IyKQo+
+IMKgewo+IMKgCXJldHVybglzYjEtPnNldF91dWlkMCA9PSBzYjItPnNldF91dWlkMCAmJgo+IMKg
+CQlzYjEtPnNldF91dWlkMSA9PSBzYjItPnNldF91dWlkMSAmJgo+IEBAIC04MzMsNyArODMzLDcg
+QEAgc3RhdGljIGludCB1dWlkX2VxdWFsKG1kcF9zdXBlcl90ICpzYjEsCj4gbWRwX3N1cGVyX3Qg
+KnNiMikKPiDCoAkJc2IxLT5zZXRfdXVpZDMgPT0gc2IyLT5zZXRfdXVpZDM7Cj4gwqB9Cj4gwqAK
+PiAtc3RhdGljIGludCBzYl9lcXVhbChtZHBfc3VwZXJfdCAqc2IxLCBtZHBfc3VwZXJfdCAqc2Iy
+KQo+ICtzdGF0aWMgaW50IG1kX3NiX2VxdWFsKG1kcF9zdXBlcl90ICpzYjEsIG1kcF9zdXBlcl90
+ICpzYjIpCj4gwqB7Cj4gwqAJaW50IHJldDsKPiDCoAltZHBfc3VwZXJfdCAqdG1wMSwgKnRtcDI7
+Cj4gQEAgLTEwMjUsMTIgKzEwMjUsMTIgQEAgc3RhdGljIGludCBzdXBlcl85MF9sb2FkKHN0cnVj
+dCBtZF9yZGV2ICpyZGV2LAo+IHN0cnVjdCBtZF9yZGV2ICpyZWZkZXYsIGludCBtaW5vcgo+IMKg
+CX0gZWxzZSB7Cj4gwqAJCV9fdTY0IGV2MSwgZXYyOwo+IMKgCQltZHBfc3VwZXJfdCAqcmVmc2Ig
+PSBwYWdlX2FkZHJlc3MocmVmZGV2LT5zYl9wYWdlKTsKPiAtCQlpZiAoIXV1aWRfZXF1YWwocmVm
+c2IsIHNiKSkgewo+ICsJCWlmICghbWRfdXVpZF9lcXVhbChyZWZzYiwgc2IpKSB7Cj4gwqAJCQlw
+cl93YXJuKCJtZDogJXMgaGFzIGRpZmZlcmVudCBVVUlEIHRvICVzXG4iLAo+IMKgCQkJCWIsIGJk
+ZXZuYW1lKHJlZmRldi0+YmRldixiMikpOwo+IMKgCQkJZ290byBhYm9ydDsKPiDCoAkJfQo+IC0J
+CWlmICghc2JfZXF1YWwocmVmc2IsIHNiKSkgewo+ICsJCWlmICghbWRfc2JfZXF1YWwocmVmc2Is
+IHNiKSkgewo+IMKgCQkJcHJfd2FybigibWQ6ICVzIGhhcyBzYW1lIFVVSUQgYnV0IGRpZmZlcmVu
+dAo+IHN1cGVyYmxvY2sgdG8gJXNcbiIsCj4gwqAJCQkJYiwgYmRldm5hbWUocmVmZGV2LT5iZGV2
+LCBiMikpOwo+IMKgCQkJZ290byBhYm9ydDsKCi0tIApBbmR5IFNoZXZjaGVua28gPGFuZHJpeS5z
+aGV2Y2hlbmtvQGxpbnV4LmludGVsLmNvbT4KSW50ZWwgRmlubGFuZCBPeQpfX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpMaW51eC1udmRpbW0gbWFpbGluZyBs
+aXN0CkxpbnV4LW52ZGltbUBsaXN0cy4wMS5vcmcKaHR0cHM6Ly9saXN0cy4wMS5vcmcvbWFpbG1h
+bi9saXN0aW5mby9saW51eC1udmRpbW0K
