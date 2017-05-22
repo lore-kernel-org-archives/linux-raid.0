@@ -1,72 +1,119 @@
-From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Subject: Reducing the number of devices in a degraded RAID-5
-Date: Mon, 22 May 2017 14:53:32 +0200
-Message-ID: <20170522125332.GA18406@metamorpher.de>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: 4.11.2: reshape raid5 -> raid6 atop bcache deadlocks at start on md_attr_store / raid5_make_request
+Date: Mon, 22 May 2017 16:30:27 +0100
+Message-ID: <87o9ukykmk.fsf@esperi.org.uk>
+References: <87lgppz221.fsf@esperi.org.uk>
+        <87a865jf9a.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <87a865jf9a.fsf@notabene.neil.brown.name> (NeilBrown's message of
+        "Mon, 22 May 2017 21:35:29 +1000")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+[linux-bcache removed, not a bcache bug]
 
-this is not a recovery question, no real data involved. Thanks for helping!
+On 22 May 2017, NeilBrown said this:
 
-Suppose you have a failing drive in RAID-5 but you wanted to move to 
-fewer drives anyway, so one way or another you're going to reduce 
-the number of drives in your RAID.
+> Congratulations.  You have found a bug that dates from 2011.
 
-Given a RAID 5 with 5 drives            [UUUUU]
-Reducing it by one drive results in     [UUUU] + Spare
-Okay.
+Oh so not that old then! (My personal record, in a previous job, was a
+bug in allegedly critical functionality that entirely stopped it working
+and had been broken for around fourteen years. Like hell it was
+critical.)
 
-Given a degraded RAID 5 with 5 drives   [_UUUU]
-Reducing it by one drive results in     [_UUU] + Spare
-Still okay? Rebuild must be started manually.
+> Commit: 68866e425be2 ("MD: no sync IO while suspended")
+>
+> (I think).
+>
+> A write request gets to raid5_make_request() before mddev_suspend() sets
+> mddev->suspended.
+> raid5_make_request() needs md_write_start() to mark the array "dirty"
+> which it asks the md thread to do, but before the thread gets to the
+> task, mddev->suspend has been set, so md_check_recovery() doesn't update
+> the superblock, so md_write_start() doesn't proceed, so the request
+> never completes, so mddev_suspend() blocks indefinitely.
 
-It seems reducing a degraded RAID is a bad idea, 
-since there is no redundancy for a very long time.
+Ooof. Looks like it's fsync()ing something -- not sure what, though.
+The previous time it was a metadata update...
 
-So what you might end up doing is a three step process:
+Hm. I note that ->events is meant to be for things like device additions
+and array starts. RAID5 -> RAID6 reshaping appears to push this up a
+lot:
 
--> [_UUUU] (Degraded)
+         Events : 1475948
 
-Step 1: Add another drive (redundancy first)
+(it was at around 4000 before this -- itself rather mystifying, given
+that I've only rebooted this machine 27 times, and the array's probably
+been assembled less than 20 times, and was created with the same number
+of devices it has now.)
 
--> [UUUUU]
-    ^ added drive
+The other array has only 92 events (it was at 30-something before I
+tried this reshape).
 
-Step 2: Reduce by one drive
+> I think that md_check_recovery() need to test for mddev->suspended
+> somewhere else.
+> It needs to allow superblock updates, and probably needs to reap the
+> recovery thread, but must not start a new recovery thread.
 
--> [UUUU] + Spare
+My question would be, is all the intricate stuff md_check_recovery() is
+doing valid on an mddev that's not only suspended but detached? Because
+we detach right after the suspension in level_store()...
 
-Step 3: --replace the previously added drive
-        (if the spare happened to be one of the drives you wanted to keep)
+(btw, you probably want to remove the comment above enum array_state
+that says that "suspended" is "not supported yet", too.)
 
--> [UUUU]
-    ^ former spare
+> Probably something like this:
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index f6ae1d67bcd0..dbca31be22a1 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -8364,8 +8364,6 @@ static void md_start_sync(struct work_struct *ws)
+>   */
+>  void md_check_recovery(struct mddev *mddev)
+>  {
+> -	if (mddev->suspended)
+> -		return;
+>  
+>  	if (mddev->bitmap)
+>  		bitmap_daemon_work(mddev);
+> @@ -8484,6 +8482,7 @@ void md_check_recovery(struct mddev *mddev)
+>  		clear_bit(MD_RECOVERY_DONE, &mddev->recovery);
+>  
+>  		if (!test_and_clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery) ||
+> +		    mddev->suspended ||
+>  		    test_bit(MD_RECOVERY_FROZEN, &mddev->recovery))
+>  			goto not_running;
+>  		/* no recovery is running.
+>
+> though it's late so don't trust anything I write.
 
-This way the process is redundant but it takes a very long time, 
-three separate reshape/rebuilds instead of just one.
+This may end up clearing MD_RECOVERY_INTR and MD_RECOVERY_DONE, but I
+guess in this context it's safe to do so... looks OK otherwise to the
+totally ignorant fool reading this patch!
 
-Steps to reproduce the [_UUUU] -> [_UUU] + Spare case:
-(using linux 4.10, mdadm 4.0)
+Hm, being picky now, md_check_recovery() might be slightly easier to
+read if that governing mutex_trylock() conditional was inverted:
 
-# truncate -s 100M 1.img 2.img 3.img 4.img
-# devices=$(for f in ?.img; do losetup --find --show "$f"; done)
-# mdadm --create /dev/md42 --level=5 --raid-devices=5 missing $devices
-md42 : active raid5 loop4[4] loop3[3] loop2[2] loop1[1]
-      405504 blocks super 1.2 level 5, 512k chunk, algorithm 2 [5/4] [_UUUU]
-# mdadm --grow /dev/md42 --array-size 304128
-# mdadm --grow /dev/md42 --backup-file=md42.backup --raid-devices=4
-md42 : active raid5 loop4[4](S) loop3[3] loop2[2] loop1[1]
-      304128 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/3] [_UUU]
-# not rebuilding until you re-add the spare
+	if (mddev_trylock(mddev))
+		return;
 
-Is it possible to do [_UUUU] -> [UUUU] in a single step?
-I haven't found a way. Any ideas?
+Then you could de-indent most of the function by one indentation
+level...
 
-Regards
-Andreas Klauer
+> If you try again it will almost certainly succeed.  I suspect this is a
+> hard race to hit - well done!!!
+
+I'll give it a try -- I hit it twice in succession, once with a
+--backup-file, once without. Since mdadm does not warn about the lack of
+a --backup-file, I guess the statement in the manual that it is
+essential to provide one when changing RAID levels is untrue: I suspect
+that it's necessary *if* you're not increasing the number of disks at
+the same time, but since I'm growing into a spare, adding a
+--backup-file only slows it down?
+
+I might run a backup first though. :)
