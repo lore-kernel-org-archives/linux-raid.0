@@ -1,239 +1,120 @@
-From: Nix <nix@esperi.org.uk>
-Subject: 4.11.2: reshape raid5 -> raid6 atop bcache deadlocks at start on md_attr_store / raid5_make_request
-Date: Mon, 22 May 2017 10:13:58 +0100
-Message-ID: <87lgppz221.fsf@esperi.org.uk>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH v4] super1: fix sb->max_dev when adding a new disk in linear array
+Date: Mon, 22 May 2017 21:07:33 +1000
+Message-ID: <87d1b1jgju.fsf@notabene.neil.brown.name>
+References: <20170522061612.29410-1-lzhong@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170522061612.29410-1-lzhong@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, linux-bcache <linux-bcache@vger.kernel.org>
+To: Lidong Zhong <lzhong@suse.com>, linux-raid@vger.kernel.org
+Cc: colyli@suse.com, Jes.Sorensen@gmail.com
 List-Id: linux-raid.ids
 
-[I think bcache is blameless here, but there may be some interaction, so
- I've Cc:ed both lists. I'm fairly sure the problem is mddev_suspend()
- being called from level_store() and scheduling after suspension has
- happened, but I'm not sure what the fix might be.]
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-So I have a box with three RAID arrays on the same physical
-rotating-rust devices:
+On Mon, May 22 2017, Lidong Zhong wrote:
 
- - a RAID-0 /dev/md/transient atop /dev/sd*2
- - a RAID-5 /dev/md/fast, a bcache backing device (with disabled cache
-   for now) atop /dev/sd*3
- - a RAID-5 /dev/md/slow atop /dev/sd*4.
+> The value of sb->max_dev will always be increased by 1 when adding
+> a new disk in linear array. It causes an inconsistence between each
+> disk in the array and the "Array State" value of "mdadm --examine DISK"
+> is wrong. For example, when adding the first new disk into linear array
+> it will be:
+>
+> Array State : RAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+> ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D replacing)
+>
+> Adding the second disk into linear array it will be
+>
+> Array State : .AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+> ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D replacing)
+>
+> Signed-off-by: Lidong Zhong <lzhong@suse.com>
+> ---
+>  super1.c | 9 ++++++++-
+>  1 file changed, 8 insertions(+), 1 deletion(-)
+>
+> diff --git a/super1.c b/super1.c
+> index 2fcb814..03cea72 100644
+> --- a/super1.c
+> +++ b/super1.c
+> @@ -1267,8 +1267,10 @@ static int update_super1(struct supertype *st, str=
+uct mdinfo *info,
+>  				break;
+>  		sb->dev_number =3D __cpu_to_le32(i);
+>  		info->disk.number =3D i;
+> -		if (max >=3D __le32_to_cpu(sb->max_dev))
+> +		if (i >=3D max) {
+> +			sb->dev_roles[max] =3D __cpu_to_le16(MD_DISK_ROLE_SPARE);
 
-The rootfs and everything the system needs to run, including mdadm, is
-on /dev/md/fast. fs-wise, everything is using xfs except for
-/dev/md/transient, which houses an ext4 (unjournalled, for speed over
-robustness).
+Why do you assign to dev_roles[max]?
+max must equal i here, and a few lines later:
+		sb->dev_roles[i] =3D __cpu_to_le16(info->disk.raid_disk);
 
-I just got a new disk and grew /dev/md/transient to use it without
-incident, then grew /dev/md/slow into a RAID-6:
+your assignment is over-written.  So it is pointless.
+If i was greater than max (which should be impossible), you assignment
+here would corrupt the dev_roles table.
 
-mdadm --add /dev/md/slow /dev/sdf4
-mdadm --grow /dev/md/slow --level=6 --backup-file=/.transient/backup-slow
+Please drop this assignment.
 
-This worked fine.
+>  			sb->max_dev =3D __cpu_to_le32(max+1);
+> +		}
+>=20=20
+>  		random_uuid(sb->device_uuid);
+>=20=20
+> @@ -1293,9 +1295,14 @@ static int update_super1(struct supertype *st, str=
+uct mdinfo *info,
+>  			}
+>  		}
+>  	} else if (strcmp(update, "linear-grow-update") =3D=3D 0) {
+> +		unsigned int max =3D __le32_to_cpu(sb->max_dev);
+>  		sb->raid_disks =3D __cpu_to_le32(info->array.raid_disks);
+>  		sb->dev_roles[info->disk.number] =3D
+>  			__cpu_to_le16(info->disk.raid_disk);
+> +		if (info->array.raid_disks >=3D max) {
 
-But the *exact same command* applied to /dev/md/fast hangs:
+if raid_disks =3D=3D max there is no need to change anything.
+It is only when raid_disks > max that you need to increase max.
 
-mdadm --add /dev/md/fast /dev/sdf3
-mdadm --grow /dev/md/fast --level=6 --backup-file=/.transient/backup-fast
-[hang here]
+> +			sb->dev_roles[max] =3D __cpu_to_le16(MD_DISK_ROLE_SPARE);
 
-At this point, all disk I/O to /dev/md/fast appears suspended: because /
-is on it, this leaves me rather unable to do anything but reboot.
-Thankfully the deadlock seemingly happens before anything crucial is
-done, and the machine reboots and brigns up /dev/md/fast as an
-unreshaped raid5 array with a spare.
+When you increase max, you do need to assign MD_DISK_ROLE_SPARE to the
+new element, but you need to do that *before* disk.raid_disk is
+assigned, in case info->disk.number =3D=3D max (as it could be for the
+recently added device).
 
-Is this workflow impossible? Do you have to reshape the device the
-rootfs is on from early userspace or something like that? If so... this
-leaves a crucial mdadm running across the early userspace transition:
-what do we do about the fs the backup file is on (since the transition
-usually deletes everything)? Do we even *need* a backup file for a
-reshape that's growing onto a spare, as the manpage suggests we do? Do
-we simply have to leave the machine unavailable for days while the
-reshape completes? (I hope not.)
+NeilBrown
 
-That hangcheck output I was able to capture by eye suggests a deadlock
-in block I/O during a brief instant of suspended I/O to the device. The
-first hang we see comes from bcache, but since it's in "none" mode this
-is pretty clearly just a writeback (note the md_make_request at the top
-there):
 
-[  248.877539] Workqueue: bcache cached_dev_nodata
-[  248.888590] Call Trace:
-[  248.899337]  __schedule+0x290/0x810
-[  248.909745]  schedule+0x36/0x80
-[  248.920113]  md_make_request+0x9c/0x220
-[  248.930229]  ? wake_atomic_t_function+0x60/0x60
-[  248.940063]  generic_make_request+0xfc/0x260
-[  248.949803]  cached_dev_nodata+0x28/0x80
-[  248.959393]  ? cached_dev_nodata+0x28/0x80
-[  248.968998]  process_one_work+0x1e3/0x440
-[  248.978414]  worker_thread+0x48/0x4d0
-[  248.987596]  kthread+0x108/0x140
-[  248.996747]  ? process_one_work+0x440/0x440
-[  249.005965]  ? __kthread_create_on_node+0x150/0x150
-[  249.015264]  ret_from_fork+0x29/0x40
-[  249.024544] INFO: task kworker/u40:5:245 blocked for more than 120 seconds.
+> +			sb->max_dev =3D __cpu_to_le32(max+1);
+> +		}
+>  	} else if (strcmp(update, "resync") =3D=3D 0) {
+>  		/* make sure resync happens */
+>  		sb->resync_offset =3D 0ULL;
+> --=20
+> 2.12.0
 
-This is fairly obviously
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
-        /* If it's a flush, we send the flush to the backing device too */
-        closure_bio_submit(bio, cl);
+-----BEGIN PGP SIGNATURE-----
 
-in drivers/md/bcache/request.c, which is fine.
-
-After that we start to see xfs writeback hangs, all hanging on
-md_make_request() or I/O scheduling:
-
-[  249.062946] Workqueue: writeback wb_workfn (flush-252:5)
-[  249.072733] Call Trace:
-[  249.082390]  __schedule+0x290/0x810
-[  249.092053]  schedule+0x36/0x80
-[  249.101568]  md_make_request+0x9c/0x220
-[  249.110956]  ? wake_atomic_t_function+0x60/0x60
-[  249.120202]  generic_make_request+0xfc/0x260
-[  249.129219]  submit_bio+0x64/0x120
-[  249.137968]  ? submit_bio+0x64/0x120
-[  249.146840]  ? xfs_setfilesize_trans_alloc.isra.4+0x2f/0x70
-[  249.155822]  xfs_submit_ioend+0x70/0x190
-[  249.164805]  xfs_vm_writepages+0x65/0x70
-[  249.173620]  do_writepages+0x1e/0x30
-[  249.182239]  __writeback_single_inode+0x45/0x320
-[  249.190838]  writeback_sb_inodes+0x191/0x490
-[  249.199459]  __writeback_inodes_wb+0x92/0xc0
-[  249.207988]  wb_writeback+0x243/0x2d0
-[  249.216395]  wb_workfn+0x299/0x360
-[  249.224851]  ? wb_workfn+0x299/0x360
-[  249.233393]  process_one_work+0x1e3/0x440
-[  249.242049]  worker_thread+0x48/0x4d0
-[  249.250404]  kthread+0x108/0x140
-[  249.258408]  ? process_one_work+0x440/0x440
-[  249.266148]  ? __kthread_create_on_node+0x150/0x150
-[  249.273652]  ret_from_fork+0x29/0x40
-
-[  249.310928] Workqueue: xfs-cil/dm-5 xlog_cil_push_work
-[  249.318453] Call Trace:
-[  249.325929]  __schedule+0x290/0x810
-[  249.333456]  schedule+0x36/0x80
-[  249.340940]  schedule_timeout+0x207/0x360
-[  249.348461]  ? cached_dev_make_request+0x2bc/0xd00
-[  249.356018]  io_schedule_timeout+0x1e/0x50
-[  249.363533]  ? io_schedule_timeout+0x1e/0x50
-[  249.371078]  wait_for_common_io.constprop.0+0x92/0x110
-[  249.378711]  ? try_to_wake_up+0x400/0x400
-[  249.386339]  wait_for_completion_io+0x18/0x20
-[  249.394026]  submit_bio_wait+0x59/0x70
-[  249.401685]  blkdev_issue_flush+0x5c/0x90
-[  249.409321]  xfs_blkdev_issue_flush+0x19/0x20
-[  249.416951]  xlog_sync+0x2a1/0x3b0
-[  249.424439]  xlog_state_release_iclog+0x6d/0xd0
-[  249.431857]  xlog_write+0x64a/0x6e0
-[  249.439092]  xlog_cil_push+0x230/0x450
-[  249.446169]  xlog_cil_push_work+0x15/0x20
-[  249.453128]  process_one_work+0x1e3/0x440
-[  249.460030]  worker_thread+0x221/0x4d0
-[  249.466942]  kthread+0x108/0x140
-[  249.473843]  ? process_one_work+0x440/0x440
-[  249.480762]  ? __kthread_create_on_node+0x150/0x150
-[  249.487743]  ret_from_fork+0x29/0x40
-
-[  249.524000] Workqueue: xfs-log/dm-5 xfs_log_worker
-[  249.531490] Call Trace:
-[  249.538923]  __schedule+0x290/0x810
-[  249.546366]  schedule+0x36/0x80
-[  249.553756]  schedule_timeout+0x207/0x360
-[  249.561132]  ? check_preempt_curr+0x79/0x90
-[  249.568514]  ? ttwu_do_wakeup.isra.15+0x1e/0x160
-[  249.575957]  wait_for_common+0xaa/0x160
-[  249.583432]  ? wait_for_common+0xaa/0x160
-[  249.590943]  ? try_to_wake_up+0x400/0x400
-[  249.598447]  wait_for_completion+0x1d/0x20
-[  249.605984]  flush_work+0xfb/0x1b0
-[  249.613509]  ? flush_workqueue_prep_pwqs+0x1a0/0x1a0
-[  249.621093]  xlog_cil_force_lsn+0x75/0x1d0
-[  249.628640]  ? dequeue_task_fair+0x757/0x1920
-[  249.636169]  _xfs_log_force+0x76/0x280
-[  249.643524]  ? xfs_log_worker+0x32/0x100
-[  249.650715]  xfs_log_force+0x2c/0x80
-[  249.657719]  xfs_log_worker+0x32/0x100
-[  249.664653]  process_one_work+0x1e3/0x440
-[  249.671498]  worker_thread+0x48/0x4d0
-[  249.678354]  kthread+0x108/0x140
-[  249.685218]  ? process_one_work+0x440/0x440
-[  249.692123]  ? __kthread_create_on_node+0x150/0x150
-[  249.699057]  ret_from_fork+0x29/0x40
-
-[  249.727654] syslog-ng       D    0  1658   1657 0x00000000
-[  249.735066] Call Trace:
-[  249.742333]  __schedule+0x290/0x810
-[  249.749624]  schedule+0x36/0x80
-[  249.756915]  md_write_start+0x8f/0x160
-[  249.764185]  ? wake_atomic_t_function+0x60/0x60
-[  249.771469]  raid5_make_request+0x7a/0xd40
-[  249.778762]  ? bch_data_insert_start+0x4da/0x5e0
-[  249.786143]  ? wake_atomic_t_function+0x60/0x60
-[  249.793571]  md_make_request+0xe3/0x220
-[  249.800976]  generic_make_request+0xfc/0x260
-[  249.808383]  submit_bio+0x64/0x120
-[  249.815838]  ? submit_bio+0x64/0x120
-[  249.823253]  ? xfs_setfilesize_trans_alloc.isra.4+0x2f/0x70
-[  249.830757]  xfs_submit_ioend+0x70/0x190
-[  249.838269]  xfs_vm_writepages+0x65/0x70
-[  249.845668]  do_writepages+0x1e/0x30
-[  249.852899]  __filemap_fdatawrite_range+0x71/0x90
-[  249.860023]  filemap_write_and_wait_range+0x2a/0x70
-[  249.867061]  xfs_file_fsync+0x54/0x190
-[  249.874007]  vfs_fsync_range+0x49/0xa0
-[  249.880934]  ? __fdget_pos+0x17/0x50
-[  249.887793]  ? vfs_writev+0x3c/0x50
-[  249.894700]  do_fsync+0x3d/0x70
-[  249.901565]  SyS_fsync+0x10/0x20
-
-I think we are stuck inside the
-
-        if (mddev->suspended) {
-
-block in md_make_request() in all these cases.
-
-... and finally it becomes clear that mdadm is blocked and we are in
-real trouble:
-
-[  249.965701] INFO: task mdadm:2712 blocked for more than 120 seconds.
-[  249.973003]       Not tainted 4.11.2-00005-g87b2117c3309-dirty #2
-[  249.980381] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[  249.987999] mdadm           D    0  2712   2020 0x00000000
-[  249.995681] Call Trace:
-[  250.003273]  __schedule+0x290/0x810
-[  250.010885]  schedule+0x36/0x80
-[  250.018503]  mddev_suspend+0xb3/0xe0
-[  250.026158]  ? wake_atomic_t_function+0x60/0x60
-[  250.033856]  level_store+0x1a7/0x6c0
-[  250.041478]  ? md_ioctl+0xb7/0x1c10
-[  250.049075]  ? putname+0x53/0x60
-[  250.056554]  md_attr_store+0x83/0xc0
-[  250.063922]  sysfs_kf_write+0x37/0x40
-[  250.071082]  kernfs_fop_write+0x110/0x1a0
-[  250.078127]  __vfs_write+0x28/0x120
-[  250.085166]  ? kernfs_iop_get_link+0x172/0x1e0
-[  250.092199]  ? __alloc_fd+0x3f/0x170
-[  250.099271]  vfs_write+0xb6/0x1d0
-[  250.106307]  SyS_write+0x46/0xb0
-[  250.113227]  entry_SYSCALL_64_fastpath+0x13/0x94
-
-I'm not sure what this is waiting on. It could be *any* of
-
-        synchronize_rcu();
-        wait_event(mddev->sb_wait, atomic_read(&mddev->active_io) == 0);
-        mddev->pers->quiesce(mddev, 1);
-
-since they all can probably schedule and if quiescing involves talking
-to the device, we have already suspended it, so we're doomed.
-
-I'm not sure how we can quiesce before we suspend and prevent things
-from trying to issue more crucial requests (paging in mdadm?) before we
-resume again, but I'm fairly sure that *something* different needs to be
-done.
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlkixnUACgkQOeye3VZi
+gbmyKQ//WaLYoavvHKZvA0CRASMYyXoW2pmVIlR61TgJB9rtdZ3kyjrgtEDSlL0R
+wgAwm/vpE6pVRNNLjj9+CA8tFV2KlEJPAb6H9v54RC8pkpyIDbCqcU1Xgs7PuiEL
+ceXlEDLO/OER0M2bUIg413PS0e48vBLQly6MRp4sUizhUFvUaVejtuUXRKMkIoKL
+hT9/5Aqukek3oifTjl6GynVJ+ffouQ1ylx4J6cRVtlg3Vj+WGGQZVE1SQXXz56l4
+vsngRCqdQyq1hYSuU7jK0Od5u0n5YIQ6hnY1HGpKwaFfCnNrQ8qkn3n7PmPAYPto
+Yrh4d5RvajqvM0gqDoJcUyc2T/i75rvSKyfAgcb8jL9cvFO6HU2UqrEOB2WfnE3N
+kgCC55VKF6qYUcDCNpgziDbdfxHzEBFBm3h99WVyn8wd3YLhI0DgTST4+sjq0Q+y
+uihFNXP4c2LFWyIoB2t0F2BzEzdcu6N0IgticIedmiz5DuQsZsf2C+PsQ5x1A46t
+BAFgsnUEOGX8gwdLvUwk9/iUpweTmqVxbxODL2aHIzy86TV4C4d2v6hpcD1rNunj
+CCpPfH4JUuhj31dnKbwIB+LYbxALUKF/98VSJ4PNV2smk6v3oTUbTShV69PZyBYH
++Hx1Donr6a5EXhdSv1v3taOJtRayjRYdAyCSp3YZUTAk4lI8tKs=
+=o078
+-----END PGP SIGNATURE-----
+--=-=-=--
