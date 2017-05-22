@@ -1,91 +1,54 @@
-From: Roger Heflin <rogerheflin@gmail.com>
-Subject: Re: raid5 to raid6 reshape never appeared to start, how to cancel/revert
-Date: Mon, 22 May 2017 15:04:20 -0500
-Message-ID: <CAAMCDedqUJXZFMwtqPVDjwoau42goEMcOLTbLX1fGdT7teQQQQ@mail.gmail.com>
-References: <CAAMCDefCqUCY4Pd5im1u-JPh_SLG6BG8Onb8JxuPwoAkgXOkrA@mail.gmail.com>
- <20170522193304.GA4379@metamorpher.de>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: 4.11.2: reshape raid5 -> raid6 atop bcache deadlocks at start on md_attr_store / raid5_make_request
+Date: Mon, 22 May 2017 21:43:12 +0100
+Message-ID: <87k258y65b.fsf@esperi.org.uk>
+References: <87lgppz221.fsf@esperi.org.uk>
+        <87a865jf9a.fsf@notabene.neil.brown.name>
+        <87o9ukykmk.fsf@esperi.org.uk> <592336E6.8080906@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170522193304.GA4379@metamorpher.de>
+In-Reply-To: <592336E6.8080906@youngman.org.uk> (Wols Lists's message of "Mon,
+        22 May 2017 20:07:18 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, May 22, 2017 at 2:33 PM, Andreas Klauer
-<Andreas.Klauer@metamorpher.de> wrote:
-> On Mon, May 22, 2017 at 01:57:44PM -0500, Roger Heflin wrote:
->> I had a 3 disk raid5 with a hot spare.  I ran this:
->> mdadm --grow /dev/md126 --level=6 --backup-file /root/r6rebuild
->>
->> I suspect I should have changed the number of devices in the above command to 4.
->
-> It doesn't hurt to specify, but that much is implied.
-> Growing 3 device raid5 + spare to raid6 results in 4 device raid6.
->
+On 22 May 2017, Wols Lists verbalised:
 
-Yes.
+> aiui, provided you're using a v1 superblock, the data offset means there
+> is spare space on the drives precisely for the purpose (one of then at
+> least) of keeping a backup. So the reshape will start reshaping into the
+> spare space and eliminate the need for the backup - the new version of
+> the stripe will be safely written before the space occupied by the old
+> stripe is required.
 
->> The backup-file was created on a separate ssd.
->
-> Is there anything meaningful in this file?
->
+But it's only a few KiB by default! The amount of seeking needed to
+reshape with such a small intermediate would be fairly horrific. (It was
+bad enough as it was: the reshape of 7TiB took more than two days,
+running at under 15MiB/s, though the component drives can all handle
+220MiB/s easily. The extra time was spent seeking to and from the
+backup, it seems.)
 
-16MB in size, but od -x indicates all zeros, so no, there is nothing
-meaningful in the file.
+> Typically, the new layout will move the data offset, pushing the data
+> block up or down.
 
->> trying assemble now gets this:
->>  mdadm --assemble /dev/md126 /dev/sd[abe]1 /dev/sdd
->> --backup-file=/root/r6rebuild
->> mdadm: Failed to restore critical section for reshape, sorry.
->>
->> examine shows this (sdd was the spare when the --grow was issues)
->>  mdadm --examine /dev/sdd
->> /dev/sdd1:
->
-> You wrote /dev/sdd above, is it sdd1 now?
->
->>         Version : 0.91.00
->
-> Ancient metadata. You could probably update it to 1.0...
->
+Will it? Why? You'd need to move the data offset quite a long way to
+make enough space for the 500MiB backup file I saw being created during
+my last reshape.
 
-I know.
+(Though, for me, this is somewhat redundant:
 
->>   Reshape pos'n : 0
->
-> So maybe nothing at all changed on disk?
->
-> You could try your luck with overlay
->
-> https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID#Making_the_harddisks_read-only_using_an_overlay_file
->
-> mdadm --create /dev/md42 --metadata=0.90 --level=5 --chunk=64 \
->       --raid-devices=3 /dev/overlay/{a,b,c}
->
->> It does appear that I added sdd rather than sdd1 but I don't believe
->> that is anything critical to the issue as it should still work fine
->> with the entire disk.
->
-> It is critical because if you use the wrong one the data will be shifted.
->
-> If the partition goes to the very end of the drive, I think the 0.90
-> metadata could be interpreted both ways (as metadata for partition
-> as well as whole drive).
->
-> If possible you should find some way to migrate to 1.2 metadata.
-> But worry about it once you have access to your data.
->
+    Data Offset : 262144 sectors
 
-I deal with others messing up partition/no partition recoveries often
-enough to not be worried about how to debug and/or fix that mistake.
+because I set a data offset specifically to allow reshaping without
+having to move anything. Is the idea that reshaping that adds data
+spindles will move the data offset such that it is (still) on a chunk or
+stripe multiple? That's neat, if so, and means I wasted 128MiB on this,
+uh, 12TiB array. OK I'm not terribly blown away by this, particularly
+given that I'm wasting the same again inside the bcache partition for
+the same reason: I'm sure mdadm won't move *that* data offset.)
 
-I found a patch from Neil from 2016 that may be solution to this
-issue, I am not clear if it is an exact match to my issue, it looks
-pretty close.
-
-http://comments.gmane.org/gmane.linux.raid/51095
-
-> Regards
-> Andreas Klauer
+-- 
+NULL && (void)
