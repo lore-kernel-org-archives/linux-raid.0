@@ -1,39 +1,70 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: 4.11.2: reshape raid5 -> raid6 atop bcache deadlocks at start on
- md_attr_store / raid5_make_request
-Date: Mon, 22 May 2017 20:07:18 +0100
-Message-ID: <592336E6.8080906@youngman.org.uk>
-References: <87lgppz221.fsf@esperi.org.uk>
- <87a865jf9a.fsf@notabene.neil.brown.name> <87o9ukykmk.fsf@esperi.org.uk>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Subject: Re: raid5 to raid6 reshape never appeared to start, how to
+ cancel/revert
+Date: Mon, 22 May 2017 21:33:04 +0200
+Message-ID: <20170522193304.GA4379@metamorpher.de>
+References: <CAAMCDefCqUCY4Pd5im1u-JPh_SLG6BG8Onb8JxuPwoAkgXOkrA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87o9ukykmk.fsf@esperi.org.uk>
+Content-Disposition: inline
+In-Reply-To: <CAAMCDefCqUCY4Pd5im1u-JPh_SLG6BG8Onb8JxuPwoAkgXOkrA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nix <nix@esperi.org.uk>, NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: Roger Heflin <rogerheflin@gmail.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 22/05/17 16:30, Nix wrote:
-> I'll give it a try -- I hit it twice in succession, once with a
-> --backup-file, once without. Since mdadm does not warn about the lack of
-> a --backup-file, I guess the statement in the manual that it is
-> essential to provide one when changing RAID levels is untrue: I suspect
-> that it's necessary *if* you're not increasing the number of disks at
-> the same time, but since I'm growing into a spare, adding a
-> --backup-file only slows it down?
+On Mon, May 22, 2017 at 01:57:44PM -0500, Roger Heflin wrote:
+> I had a 3 disk raid5 with a hot spare.  I ran this:
+> mdadm --grow /dev/md126 --level=6 --backup-file /root/r6rebuild
+> 
+> I suspect I should have changed the number of devices in the above command to 4.
 
-I did discuss this with Neil while I wrote it, so I hope I got it right :-)
+It doesn't hurt to specify, but that much is implied.
+Growing 3 device raid5 + spare to raid6 results in 4 device raid6.
 
-https://raid.wiki.kernel.org/index.php/A_guide_to_mdadm#Array_internals_and_how_it_affects_mdadm
+> The backup-file was created on a separate ssd.
 
-aiui, provided you're using a v1 superblock, the data offset means there
-is spare space on the drives precisely for the purpose (one of then at
-least) of keeping a backup. So the reshape will start reshaping into the
-spare space and eliminate the need for the backup - the new version of
-the stripe will be safely written before the space occupied by the old
-stripe is required.
+Is there anything meaningful in this file?
+ 
+> trying assemble now gets this:
+>  mdadm --assemble /dev/md126 /dev/sd[abe]1 /dev/sdd
+> --backup-file=/root/r6rebuild
+> mdadm: Failed to restore critical section for reshape, sorry.
+> 
+> examine shows this (sdd was the spare when the --grow was issues)
+>  mdadm --examine /dev/sdd
+> /dev/sdd1:
 
-Cheers,
-Wol
+You wrote /dev/sdd above, is it sdd1 now? 
+
+>         Version : 0.91.00
+
+Ancient metadata. You could probably update it to 1.0...
+
+>   Reshape pos'n : 0
+
+So maybe nothing at all changed on disk?
+
+You could try your luck with overlay
+
+https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID#Making_the_harddisks_read-only_using_an_overlay_file
+
+mdadm --create /dev/md42 --metadata=0.90 --level=5 --chunk=64 \
+      --raid-devices=3 /dev/overlay/{a,b,c}
+
+> It does appear that I added sdd rather than sdd1 but I don't believe
+> that is anything critical to the issue as it should still work fine
+> with the entire disk.
+
+It is critical because if you use the wrong one the data will be shifted.
+
+If the partition goes to the very end of the drive, I think the 0.90 
+metadata could be interpreted both ways (as metadata for partition 
+as well as whole drive).
+
+If possible you should find some way to migrate to 1.2 metadata.
+But worry about it once you have access to your data.
+
+Regards
+Andreas Klauer
