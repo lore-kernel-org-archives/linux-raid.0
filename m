@@ -1,63 +1,86 @@
-From: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [PATCH 13/23] md: namespace private helper names
-Date: Mon, 22 May 2017 21:52:27 +0300
-Message-ID: <1495479147.6967.70.camel@linux.intel.com>
-References: <20170518062705.25902-1-hch@lst.de>
- <20170518062705.25902-14-hch@lst.de>
+From: Roger Heflin <rogerheflin@gmail.com>
+Subject: raid5 to raid6 reshape never appeared to start, how to cancel/revert
+Date: Mon, 22 May 2017 13:57:44 -0500
+Message-ID: <CAAMCDefCqUCY4Pd5im1u-JPh_SLG6BG8Onb8JxuPwoAkgXOkrA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <20170518062705.25902-14-hch-jcswGhMUV9g@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-T24gVGh1LCAyMDE3LTA1LTE4IGF0IDA4OjI2ICswMjAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
-ZToKPiBGcm9tOiBBbWlyIEdvbGRzdGVpbiA8YW1pcjczaWxAZ21haWwuY29tPgo+IAo+IFRoZSBt
-ZCBwcml2YXRlIGhlbHBlciB1dWlkX2VxdWFsKCkgY29sbGlkZXMgd2l0aCBhIGdlbmVyaWMgaGVs
-cGVyCj4gb2YgdGhlIHNhbWUgbmFtZS4KPiAKPiBSZW5hbWUgdGhlIG1kIHByaXZhdGUgaGVscGVy
-IHRvIG1kX3V1aWRfZXF1YWwoKSBhbmQgZG8gdGhlIHNhbWUgZm9yCj4gbWRfc2JfZXF1YWwoKS4K
-PiAKCldoaWxlIHBhdGNoIGlzIGdvb2QsIHNob3VsZG4ndCBpdCBnbyBiZWZvcmUgd2UgaW50cm9k
-dWNlIHRob3NlIGhlbHBlcnM/Cgo+IENjOiBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+Cj4g
-U2lnbmVkLW9mZi1ieTogQW1pciBHb2xkc3RlaW4gPGFtaXI3M2lsQGdtYWlsLmNvbT4KPiBTaWdu
-ZWQtb2ZmLWJ5OiBDaHJpc3RvcGggSGVsbHdpZyA8aGNoQGxzdC5kZT4KPiAtLS0KPiDCoGRyaXZl
-cnMvbWQvbWQuYyB8IDggKysrKy0tLS0KPiDCoDEgZmlsZSBjaGFuZ2VkLCA0IGluc2VydGlvbnMo
-KyksIDQgZGVsZXRpb25zKC0pCj4gCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvbWQuYyBiL2Ry
-aXZlcnMvbWQvbWQuYwo+IGluZGV4IDgyZjc5OGJlOTY0Zi4uNjU3OTVjYzRjYjdkIDEwMDY0NAo+
-IC0tLSBhL2RyaXZlcnMvbWQvbWQuYwo+ICsrKyBiL2RyaXZlcnMvbWQvbWQuYwo+IEBAIC04MjUs
-NyArODI1LDcgQEAgc3RhdGljIGludCByZWFkX2Rpc2tfc2Ioc3RydWN0IG1kX3JkZXYgKnJkZXYs
-IGludAo+IHNpemUpCj4gwqAJcmV0dXJuIC1FSU5WQUw7Cj4gwqB9Cj4gwqAKPiAtc3RhdGljIGlu
-dCB1dWlkX2VxdWFsKG1kcF9zdXBlcl90ICpzYjEsIG1kcF9zdXBlcl90ICpzYjIpCj4gK3N0YXRp
-YyBpbnQgbWRfdXVpZF9lcXVhbChtZHBfc3VwZXJfdCAqc2IxLCBtZHBfc3VwZXJfdCAqc2IyKQo+
-IMKgewo+IMKgCXJldHVybglzYjEtPnNldF91dWlkMCA9PSBzYjItPnNldF91dWlkMCAmJgo+IMKg
-CQlzYjEtPnNldF91dWlkMSA9PSBzYjItPnNldF91dWlkMSAmJgo+IEBAIC04MzMsNyArODMzLDcg
-QEAgc3RhdGljIGludCB1dWlkX2VxdWFsKG1kcF9zdXBlcl90ICpzYjEsCj4gbWRwX3N1cGVyX3Qg
-KnNiMikKPiDCoAkJc2IxLT5zZXRfdXVpZDMgPT0gc2IyLT5zZXRfdXVpZDM7Cj4gwqB9Cj4gwqAK
-PiAtc3RhdGljIGludCBzYl9lcXVhbChtZHBfc3VwZXJfdCAqc2IxLCBtZHBfc3VwZXJfdCAqc2Iy
-KQo+ICtzdGF0aWMgaW50IG1kX3NiX2VxdWFsKG1kcF9zdXBlcl90ICpzYjEsIG1kcF9zdXBlcl90
-ICpzYjIpCj4gwqB7Cj4gwqAJaW50IHJldDsKPiDCoAltZHBfc3VwZXJfdCAqdG1wMSwgKnRtcDI7
-Cj4gQEAgLTEwMjUsMTIgKzEwMjUsMTIgQEAgc3RhdGljIGludCBzdXBlcl85MF9sb2FkKHN0cnVj
-dCBtZF9yZGV2ICpyZGV2LAo+IHN0cnVjdCBtZF9yZGV2ICpyZWZkZXYsIGludCBtaW5vcgo+IMKg
-CX0gZWxzZSB7Cj4gwqAJCV9fdTY0IGV2MSwgZXYyOwo+IMKgCQltZHBfc3VwZXJfdCAqcmVmc2Ig
-PSBwYWdlX2FkZHJlc3MocmVmZGV2LT5zYl9wYWdlKTsKPiAtCQlpZiAoIXV1aWRfZXF1YWwocmVm
-c2IsIHNiKSkgewo+ICsJCWlmICghbWRfdXVpZF9lcXVhbChyZWZzYiwgc2IpKSB7Cj4gwqAJCQlw
-cl93YXJuKCJtZDogJXMgaGFzIGRpZmZlcmVudCBVVUlEIHRvICVzXG4iLAo+IMKgCQkJCWIsIGJk
-ZXZuYW1lKHJlZmRldi0+YmRldixiMikpOwo+IMKgCQkJZ290byBhYm9ydDsKPiDCoAkJfQo+IC0J
-CWlmICghc2JfZXF1YWwocmVmc2IsIHNiKSkgewo+ICsJCWlmICghbWRfc2JfZXF1YWwocmVmc2Is
-IHNiKSkgewo+IMKgCQkJcHJfd2FybigibWQ6ICVzIGhhcyBzYW1lIFVVSUQgYnV0IGRpZmZlcmVu
-dAo+IHN1cGVyYmxvY2sgdG8gJXNcbiIsCj4gwqAJCQkJYiwgYmRldm5hbWUocmVmZGV2LT5iZGV2
-LCBiMikpOwo+IMKgCQkJZ290byBhYm9ydDsKCi0tIApBbmR5IFNoZXZjaGVua28gPGFuZHJpeS5z
-aGV2Y2hlbmtvQGxpbnV4LmludGVsLmNvbT4KSW50ZWwgRmlubGFuZCBPeQpfX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpMaW51eC1udmRpbW0gbWFpbGluZyBs
-aXN0CkxpbnV4LW52ZGltbUBsaXN0cy4wMS5vcmcKaHR0cHM6Ly9saXN0cy4wMS5vcmcvbWFpbG1h
-bi9saXN0aW5mby9saW51eC1udmRpbW0K
+I had a 3 disk raid5 with a hot spare.  I ran this:
+mdadm --grow /dev/md126 --level=6 --backup-file /root/r6rebuild
+
+I suspect I should have changed the number of devices in the above command to 4.
+
+The reshape "started" according to /proc/mdstat but never got past
+block 1, and the time to complete started going up.  I did stop the
+array and have tried to do a revert-reshape but it indicates it will
+only revert a number of devices change.
+
+The backup-file was created on a separate ssd.
+
+trying assemble now gets this:
+ mdadm --assemble /dev/md126 /dev/sd[abe]1 /dev/sdd
+--backup-file=/root/r6rebuild
+mdadm: Failed to restore critical section for reshape, sorry.
+
+examine shows this (sdd was the spare when the --grow was issues)
+ mdadm --examine /dev/sdd
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 0.91.00
+           UUID : 2fb920b1:ce7407fd:dd1a1aa6:74dcda71
+  Creation Time : Wed May 19 19:04:03 2010
+     Raid Level : raid6
+  Used Dev Size : 488384384 (465.76 GiB 500.11 GB)
+     Array Size : 976768768 (931.52 GiB 1000.21 GB)
+
+
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 126
+
+  Reshape pos'n : 0
+     New Layout : left-symmetric
+
+    Update Time : Mon May 22 09:25:38 2017
+          State : clean
+Internal Bitmap : present
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : bc406f24 - correct
+         Events : 6140735
+
+         Layout : left-symmetric-6
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     3       8       48        3      active   /dev/sdd
+
+   0     0       8       17        0      active sync   /dev/sdb1
+   1     1       8       65        1      active sync   /dev/sde1
+   2     2       8        1        2      active sync   /dev/sda1
+   3     3       8       48        3      active   /dev/sdd
+
+mdadm-3.4-2.fc25.x86_64
+
+kernel 4.10.15.200 fc25 fully updated as of 2 days ago.
+
+Examine seems to indicate that the reshape never stopped but the
+revert is unable to cancel this grow even though it did not start at
+all.
+
+The data is not super critical I don't believe I lose anything as this
+one is being used primarily for backups.
+
+It does appear that I added sdd rather than sdd1 but I don't believe
+that is anything critical to the issue as it should still work fine
+with the entire disk.
+
+Ideas on how to abort the reshape that never started or how to get it
+to continue?   The desired final target is a 4 disk raid6.  I have not
+as of yet rebooted.
