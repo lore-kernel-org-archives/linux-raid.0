@@ -1,71 +1,41 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: 4.11.2: reshape raid5 -> raid6 atop bcache deadlocks at start on md_attr_store / raid5_make_request
-Date: Tue, 23 May 2017 11:10:39 +0100
-Message-ID: <87d1azx4rk.fsf@esperi.org.uk>
-References: <87lgppz221.fsf@esperi.org.uk>
-        <87a865jf9a.fsf@notabene.neil.brown.name>
-        <87o9ukykmk.fsf@esperi.org.uk> <592336E6.8080906@youngman.org.uk>
-        <87k258y65b.fsf@esperi.org.uk>
-        <871srgjrnf.fsf@notabene.neil.brown.name>
+From: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [PATCH 10/23] afs: switch to use uuid_t and uuid_gen
+Date: Tue, 23 May 2017 16:11:39 +0300
+Message-ID: <1495545099.6967.81.camel@linux.intel.com>
+References: <20170518062705.25902-1-hch@lst.de>
+ <20170518062705.25902-11-hch@lst.de>
+ <1495478957.6967.69.camel@linux.intel.com> <20170523084956.GB20121@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <871srgjrnf.fsf@notabene.neil.brown.name> (NeilBrown's message of
-        "Tue, 23 May 2017 11:20:04 +1000")
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <20170523084956.GB20121-jcswGhMUV9g@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-On 23 May 2017, NeilBrown outgrape:
-
-> On Mon, May 22 2017, Nix wrote:
->
->> On 22 May 2017, Wols Lists verbalised:
->>
->> But it's only a few KiB by default! The amount of seeking needed to
->> reshape with such a small intermediate would be fairly horrific. (It was
->> bad enough as it was: the reshape of 7TiB took more than two days,
->> running at under 15MiB/s, though the component drives can all handle
->> 220MiB/s easily. The extra time was spent seeking to and from the
->> backup, it seems.)
->
-> If the space before were "only a few KiB", it wouldn't be used.
-> You need at least 1 full stripe, typically more.
-> Current mdadm leaves several megabytes I think.
-
-I was about to protest and say "oh but it doesn't"... but it helps if
-I'm looking at the right machine. It does, but it didn't in 2009 :)
-
->> spindles will move the data offset such that it is (still) on a chunk or
->> stripe multiple? That's neat, if so, and means I wasted 128MiB on this,
->> uh, 12TiB array. OK I'm not terribly blown away by this, particularly
->> given that I'm wasting the same again inside the bcache partition for
->> the same reason: I'm sure mdadm won't move *that* data offset.)
->
-> Data offset is always moved by a multiple of the chunk size.
-
-Right, so the overlying fs might not be doing full-stripe writes after a
-reshape, even if it thinks it is, but it will certainly be doing
-chunk-multiple writes.
-
-> When I create a 12-device raid5 on 1TB devices, then examine one of them,
-> it says:
->
->     Data Offset : 262144 sectors
->    Unused Space : before=262064 sectors, after=0 sectors
->      Chunk Size : 512K
-
-(which is 21.3... stripes.)
-
-> so there is 130Megabytes of space per device, enough for 255 chunks.
-> When mdadm moves the Data Offset to allow a reshape to happen without a
-> backup file, it aims to use half the available space.  So it would use
-> about 60Meg in about 120 chunks or 720Meg total across all devices.
-> This is more than the 500MiB backup file you saw.
-
-Right. The message in the manpage saying that backup files are required
-for a level change is obsolete, then (and I probably slowed down my last
-reshape by specifying one, since seeking to the backup file at the other
-end of the disk would have been *much* slower than seeking to that slack
-space before the data offset).
+T24gVHVlLCAyMDE3LTA1LTIzIGF0IDEwOjQ5ICswMjAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
+ZToKPiBPbiBNb24sIE1heSAyMiwgMjAxNyBhdCAwOTo0OToxN1BNICswMzAwLCBBbmR5IFNoZXZj
+aGVua28gd3JvdGU6Cj4gPiA+IMKgCXN0cnVjdCBhZnNfY2FsbCAqY2FsbCA9IGNvbnRhaW5lcl9v
+Zih3b3JrLCBzdHJ1Y3QKPiA+ID4gYWZzX2NhbGwsCj4gPiA+IHdvcmspOwo+ID4gPiAtCXN0cnVj
+dCB1dWlkX3YxICpyID0gY2FsbC0+cmVxdWVzdDsKPiA+ID4gKwl1dWlkX3QgKnIgPSBjYWxsLT5y
+ZXF1ZXN0Owo+ID4gPiDCoAo+ID4gPiDCoAlzdHJ1Y3Qgewo+ID4gPiDCoAkJX19iZTMyCW1hdGNo
+Owo+ID4gPiAKPiA+IAo+ID4gSnVzdCB0byBkb3VibGUgY2hlY2sgdGhhdCB0aGlzIGRvZXNuJ3Qg
+Y3JlYXRlIGEgdW5pb24gYWxpYXNpbmcuCj4gCj4gV2hhdCBkbyB5b3UgbWVhbiB3aXRoIHRoYXQ/
+CgpTaW5jZSB3ZSBpbnRyb2R1Y2VkIGEgdW5pb24gaXQncyBwb3NzaWJsZSB0aGF0IHdlIG1pZ2h0
+IGFjY2VzcyB0aGUKbWVtYmVyIHdoaWNoIHdhc24ndCBsYXN0IG1vZGlmaWVkIG9uZS4gU28sIG15
+IGNvbW1lbnQgaXMgdG8gZ2l2ZSBhbgphdHRlbnRpb24gb24gc3VjaCBwb3NzaWJpbGl0eSBhbmQg
+YXZvaWQgaWYgdGhlcmUgaXMgYW4gYWxpYXNpbmcKaGFwcGVuZWQuCgotLSAKQW5keSBTaGV2Y2hl
+bmtvIDxhbmRyaXkuc2hldmNoZW5rb0BsaW51eC5pbnRlbC5jb20+CkludGVsIEZpbmxhbmQgT3kK
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KTGludXgtbnZk
+aW1tIG1haWxpbmcgbGlzdApMaW51eC1udmRpbW1AbGlzdHMuMDEub3JnCmh0dHBzOi8vbGlzdHMu
+MDEub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtbnZkaW1tCg==
