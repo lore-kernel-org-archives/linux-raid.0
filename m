@@ -1,41 +1,71 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: [PATCH 10/23] afs: switch to use uuid_t and uuid_gen
-Date: Tue, 23 May 2017 10:49:56 +0200
-Message-ID: <20170523084956.GB20121@lst.de>
-References: <20170518062705.25902-1-hch@lst.de>
- <20170518062705.25902-11-hch@lst.de>
- <1495478957.6967.69.camel@linux.intel.com>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: 4.11.2: reshape raid5 -> raid6 atop bcache deadlocks at start on md_attr_store / raid5_make_request
+Date: Tue, 23 May 2017 11:10:39 +0100
+Message-ID: <87d1azx4rk.fsf@esperi.org.uk>
+References: <87lgppz221.fsf@esperi.org.uk>
+        <87a865jf9a.fsf@notabene.neil.brown.name>
+        <87o9ukykmk.fsf@esperi.org.uk> <592336E6.8080906@youngman.org.uk>
+        <87k258y65b.fsf@esperi.org.uk>
+        <871srgjrnf.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1495478957.6967.69.camel-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <871srgjrnf.fsf@notabene.neil.brown.name> (NeilBrown's message of
+        "Tue, 23 May 2017 11:20:04 +1000")
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, May 22, 2017 at 09:49:17PM +0300, Andy Shevchenko wrote:
-> > =A0	struct afs_call *call =3D container_of(work, struct afs_call,
-> > work);
-> > -	struct uuid_v1 *r =3D call->request;
-> > +	uuid_t *r =3D call->request;
-> > =A0
-> > =A0	struct {
-> > =A0		__be32	match;
-> > =
+On 23 May 2017, NeilBrown outgrape:
 
-> =
+> On Mon, May 22 2017, Nix wrote:
+>
+>> On 22 May 2017, Wols Lists verbalised:
+>>
+>> But it's only a few KiB by default! The amount of seeking needed to
+>> reshape with such a small intermediate would be fairly horrific. (It was
+>> bad enough as it was: the reshape of 7TiB took more than two days,
+>> running at under 15MiB/s, though the component drives can all handle
+>> 220MiB/s easily. The extra time was spent seeking to and from the
+>> backup, it seems.)
+>
+> If the space before were "only a few KiB", it wouldn't be used.
+> You need at least 1 full stripe, typically more.
+> Current mdadm leaves several megabytes I think.
 
-> Just to double check that this doesn't create a union aliasing.
+I was about to protest and say "oh but it doesn't"... but it helps if
+I'm looking at the right machine. It does, but it didn't in 2009 :)
 
-What do you mean with that?
+>> spindles will move the data offset such that it is (still) on a chunk or
+>> stripe multiple? That's neat, if so, and means I wasted 128MiB on this,
+>> uh, 12TiB array. OK I'm not terribly blown away by this, particularly
+>> given that I'm wasting the same again inside the bcache partition for
+>> the same reason: I'm sure mdadm won't move *that* data offset.)
+>
+> Data offset is always moved by a multiple of the chunk size.
+
+Right, so the overlying fs might not be doing full-stripe writes after a
+reshape, even if it thinks it is, but it will certainly be doing
+chunk-multiple writes.
+
+> When I create a 12-device raid5 on 1TB devices, then examine one of them,
+> it says:
+>
+>     Data Offset : 262144 sectors
+>    Unused Space : before=262064 sectors, after=0 sectors
+>      Chunk Size : 512K
+
+(which is 21.3... stripes.)
+
+> so there is 130Megabytes of space per device, enough for 255 chunks.
+> When mdadm moves the Data Offset to allow a reshape to happen without a
+> backup file, it aims to use half the available space.  So it would use
+> about 60Meg in about 120 chunks or 720Meg total across all devices.
+> This is more than the 500MiB backup file you saw.
+
+Right. The message in the manpage saying that backup files are required
+for a level change is obsolete, then (and I probably slowed down my last
+reshape by specifying one, since seeking to the backup file at the other
+end of the disk would have been *much* slower than seeking to that slack
+space before the data offset).
