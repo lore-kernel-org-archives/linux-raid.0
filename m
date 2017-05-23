@@ -1,70 +1,134 @@
-From: <mdavis@cc76.k12.il.us>
-Subject: (unknown)
-Date: Tue, 23 May 2017 02:19:28 -0000
-Message-ID: <149550596881.6152.1256678732023437705@ksn.ru>
+From: Lidong Zhong <lzhong@suse.com>
+Subject: Re: [PATCH v4] super1: fix sb->max_dev when adding a new disk in
+ linear array
+Date: Tue, 23 May 2017 11:55:28 +0800
+Message-ID: <20e71aa6-e9e0-312f-747a-d25b872d2af8@suse.com>
+References: <20170522061612.29410-1-lzhong@suse.com>
+ <87d1b1jgju.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: application/zip; name="6775563555.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Subject: 
-Content-Disposition: attachment
+In-Reply-To: <87d1b1jgju.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
+Cc: colyli@suse.com, Jes.Sorensen@gmail.com
 List-Id: linux-raid.ids
 
-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
+
+
+On 05/22/2017 07:07 PM, NeilBrown wrote:
+> On Mon, May 22 2017, Lidong Zhong wrote:
+>
+>> The value of sb->max_dev will always be increased by 1 when adding
+>> a new disk in linear array. It causes an inconsistence between each
+>> disk in the array and the "Array State" value of "mdadm --examine DISK"
+>> is wrong. For example, when adding the first new disk into linear array
+>> it will be:
+>>
+>> Array State : RAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+>> ('A' == active, '.' == missing, 'R' == replacing)
+>>
+>> Adding the second disk into linear array it will be
+>>
+>> Array State : .AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+>> ('A' == active, '.' == missing, 'R' == replacing)
+>>
+>> Signed-off-by: Lidong Zhong <lzhong@suse.com>
+>> ---
+>>  super1.c | 9 ++++++++-
+>>  1 file changed, 8 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/super1.c b/super1.c
+>> index 2fcb814..03cea72 100644
+>> --- a/super1.c
+>> +++ b/super1.c
+>> @@ -1267,8 +1267,10 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+>>  				break;
+>>  		sb->dev_number = __cpu_to_le32(i);
+>>  		info->disk.number = i;
+>> -		if (max >= __le32_to_cpu(sb->max_dev))
+>> +		if (i >= max) {
+>> +			sb->dev_roles[max] = __cpu_to_le16(MD_DISK_ROLE_SPARE);
+>
+
+Hi Neil,
+
+> Why do you assign to dev_roles[max]?
+
+I meant to assure there will always be a spare spot in dev_roles[],
+that is sb->max_dev at least is at lease 1 more than raid_disks.
+Now I see what you mean in your reply to my last version patch.
+
+> max must equal i here, and a few lines later:
+> 		sb->dev_roles[i] = __cpu_to_le16(info->disk.raid_disk);
+>
+> your assignment is over-written.  So it is pointless.
+> If i was greater than max (which should be impossible), you assignment
+> here would corrupt the dev_roles table.
+>
+> Please drop this assignment.
+
+Yes, just increase the max_dev value is enough.
+
+>
+>>  			sb->max_dev = __cpu_to_le32(max+1);
+>> +		}
+>>
+>>  		random_uuid(sb->device_uuid);
+>>
+>> @@ -1293,9 +1295,14 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+>>  			}
+>>  		}
+>>  	} else if (strcmp(update, "linear-grow-update") == 0) {
+>> +		unsigned int max = __le32_to_cpu(sb->max_dev);
+>>  		sb->raid_disks = __cpu_to_le32(info->array.raid_disks);
+>>  		sb->dev_roles[info->disk.number] =
+>>  			__cpu_to_le16(info->disk.raid_disk);
+>> +		if (info->array.raid_disks >= max) {
+>
+> if raid_disks == max there is no need to change anything.
+> It is only when raid_disks > max that you need to increase max.
+>
+
+Yes, the max_dev should only be updated when raid_disks > max.
+
+>> +			sb->dev_roles[max] = __cpu_to_le16(MD_DISK_ROLE_SPARE);
+>
+> When you increase max, you do need to assign MD_DISK_ROLE_SPARE to the
+> new element, but you need to do that *before* disk.raid_disk is
+> assigned, in case info->disk.number == max (as it could be for the
+> recently added device).
+>
+I think it's also pointless to assign MD_DISK_ROLE_SPARE
+since there is no SPARE in dev_roles when we need to update
+sb->max_dev. The newly added device will not meet the condition
+as max_dev has already been updated, that's saying, we only
+need to update the max_dev value for original disks.
+The following code should work
+
+1297     } else if (strcmp(update, "linear-grow-update") == 0) {
+1298         unsigned int max = __le32_to_cpu(sb->max_dev);
+1299         sb->raid_disks = __cpu_to_le32(info->array.raid_disks);
+1300         sb->dev_roles[info->disk.number] =
+1301             __cpu_to_le16(info->disk.raid_disk);
+1302         if (info->array.raid_disks > max) { 
+ 
+
+1303             sb->max_dev = __cpu_to_le32(max+1);
+1304         }
+
+Thank you for your patient review.
+
+Lidong
+
+> NeilBrown
+>
+>
+>> +			sb->max_dev = __cpu_to_le32(max+1);
+>> +		}
+>>  	} else if (strcmp(update, "resync") == 0) {
+>>  		/* make sure resync happens */
+>>  		sb->resync_offset = 0ULL;
+>> --
+>> 2.12.0
