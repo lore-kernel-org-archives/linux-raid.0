@@ -1,79 +1,87 @@
-From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: [PATCH] Detail: don't exit if ioctl has been successful
-Date: Wed, 24 May 2017 11:34:22 +0200
-Message-ID: <1495618462-23016-1-git-send-email-tomasz.majchrzak@intel.com>
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH RESEND] md: Make flush bios explicitely sync
+Date: Wed, 24 May 2017 13:40:13 +0200
+Message-ID: <20170524114013.14130-1-jack@suse.cz>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: jes.sorensen@gmail.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+To: Shaohua Li <shli@kernel.org>
+Cc: Jan Kara <jack@suse.cz>, linux-raid@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-When GET_ARRAY_INFO ioctl is successful, mdadm exits with an error.
-It breaks udev and no links in /dev/md are created.
+Commit b685d3d65ac7 "block: treat REQ_FUA and REQ_PREFLUSH as
+synchronous" removed REQ_SYNC flag from WRITE_{FUA|PREFLUSH|...}
+definitions.  generic_make_request_checks() however strips REQ_FUA and
+REQ_PREFLUSH flags from a bio when the storage doesn't report volatile
+write cache and thus write effectively becomes asynchronous which can
+lead to performance regressions
 
-Also change debug print to error print in the message indicating lack
-of the link to facilitate debugging similar issues in the future.
+Fix the problem by making sure all bios which are synchronous are
+properly marked with REQ_SYNC.
 
-Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+CC: linux-raid@vger.kernel.org
+CC: Shaohua Li <shli@kernel.org>
+CC: Mike Snitzer <snitzer@redhat.com>
+CC: dm-devel@redhat.com
+Fixes: b685d3d65ac791406e0dfd8779cc9b3707fea5a3
+Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- Detail.c | 27 +++++++++++++++------------
- util.c   |  2 +-
- 2 files changed, 16 insertions(+), 13 deletions(-)
+ drivers/md/dm-snap-persistent.c | 3 ++-
+ drivers/md/md.c                 | 2 +-
+ drivers/md/raid5-cache.c        | 4 ++--
+ 3 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/Detail.c b/Detail.c
-index ef2370c..0adccb7 100644
---- a/Detail.c
-+++ b/Detail.c
-@@ -99,21 +99,24 @@ int Detail(char *dev, struct context *c)
- 	inactive = (sra->array_state == ARRAY_ACTIVE ||
- 		    sra->array_state == ARRAY_CLEAR);
- 	st = super_by_fd(fd, &subarray);
--	if (md_get_array_info(fd, &array) && errno == ENODEV) {
--		if (sra->array.major_version == -1 &&
--		    sra->array.minor_version == -1 &&
--		    sra->devs == NULL) {
--			pr_err("Array associated with md device %s does not exist.\n", dev);
-+	if (md_get_array_info(fd, &array)) {
-+		if (errno == ENODEV) {
-+			if (sra->array.major_version == -1 &&
-+			    sra->array.minor_version == -1 &&
-+			    sra->devs == NULL) {
-+				pr_err("Array associated with md device %s does not exist.\n",
-+				       dev);
-+				close(fd);
-+				sysfs_free(sra);
-+				return rv;
-+			}
-+			array = sra->array;
-+		} else {
-+			pr_err("cannot get array detail for %s: %s\n",
-+			       dev, strerror(errno));
- 			close(fd);
--			sysfs_free(sra);
- 			return rv;
- 		}
--		array = sra->array;
--	} else {
--		pr_err("cannot get array detail for %s: %s\n",
--		       dev, strerror(errno));
--		close(fd);
--		return rv;
- 	}
+Guys, I don't know enough about DM/MD to judge whether I've identified all the
+places that want REQ_SYNC right. Can you please have a look?
+
+diff --git a/drivers/md/dm-snap-persistent.c b/drivers/md/dm-snap-persistent.c
+index b93476c3ba3f..b92ab4cb0710 100644
+--- a/drivers/md/dm-snap-persistent.c
++++ b/drivers/md/dm-snap-persistent.c
+@@ -741,7 +741,8 @@ static void persistent_commit_exception(struct dm_exception_store *store,
+ 	/*
+ 	 * Commit exceptions to disk.
+ 	 */
+-	if (ps->valid && area_io(ps, REQ_OP_WRITE, REQ_PREFLUSH | REQ_FUA))
++	if (ps->valid && area_io(ps, REQ_OP_WRITE,
++				 REQ_SYNC | REQ_PREFLUSH | REQ_FUA))
+ 		ps->valid = 0;
  
- 	if (fstat(fd, &stb) != 0 && !S_ISBLK(stb.st_mode))
-diff --git a/util.c b/util.c
-index 11ff2cc..2e148ef 100644
---- a/util.c
-+++ b/util.c
-@@ -1173,7 +1173,7 @@ void wait_for(char *dev, int fd)
- 			delay *= 2;
- 	}
- 	if (i == 25)
--		dprintf("timeout waiting for %s\n", dev);
-+		pr_err("timeout waiting for %s\n", dev);
- }
+ 	/*
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 10367ffe92e3..212a6777ff31 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -765,7 +765,7 @@ void md_super_write(struct mddev *mddev, struct md_rdev *rdev,
+ 	    test_bit(FailFast, &rdev->flags) &&
+ 	    !test_bit(LastDev, &rdev->flags))
+ 		ff = MD_FAILFAST;
+-	bio->bi_opf = REQ_OP_WRITE | REQ_PREFLUSH | REQ_FUA | ff;
++	bio->bi_opf = REQ_OP_WRITE | REQ_SYNC | REQ_PREFLUSH | REQ_FUA | ff;
  
- struct superswitch *superlist[] =
+ 	atomic_inc(&mddev->pending_writes);
+ 	submit_bio(bio);
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 4c00bc248287..0a7af8b0a80a 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -1782,7 +1782,7 @@ static int r5l_log_write_empty_meta_block(struct r5l_log *log, sector_t pos,
+ 	mb->checksum = cpu_to_le32(crc32c_le(log->uuid_checksum,
+ 					     mb, PAGE_SIZE));
+ 	if (!sync_page_io(log->rdev, pos, PAGE_SIZE, page, REQ_OP_WRITE,
+-			  REQ_FUA, false)) {
++			  REQ_SYNC | REQ_FUA, false)) {
+ 		__free_page(page);
+ 		return -EIO;
+ 	}
+@@ -2388,7 +2388,7 @@ r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
+ 		mb->checksum = cpu_to_le32(crc32c_le(log->uuid_checksum,
+ 						     mb, PAGE_SIZE));
+ 		sync_page_io(log->rdev, ctx->pos, PAGE_SIZE, page,
+-			     REQ_OP_WRITE, REQ_FUA, false);
++			     REQ_OP_WRITE, REQ_SYNC | REQ_FUA, false);
+ 		sh->log_start = ctx->pos;
+ 		list_add_tail(&sh->r5c, &log->stripe_in_journal_list);
+ 		atomic_inc(&log->stripe_in_journal_count);
 -- 
-1.8.3.1
+2.12.0
 
