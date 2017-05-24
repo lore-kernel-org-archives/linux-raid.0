@@ -1,171 +1,118 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH v4] super1: fix sb->max_dev when adding a new disk in linear array
-Date: Wed, 24 May 2017 11:57:02 +1000
-Message-ID: <87k257hv9t.fsf@notabene.neil.brown.name>
-References: <20170522061612.29410-1-lzhong@suse.com> <87d1b1jgju.fsf@notabene.neil.brown.name> <20e71aa6-e9e0-312f-747a-d25b872d2af8@suse.com>
+Subject: Re: Reducing the number of devices in a degraded RAID-5
+Date: Wed, 24 May 2017 12:12:32 +1000
+Message-ID: <87h90bhujz.fsf@notabene.neil.brown.name>
+References: <20170522125332.GA18406@metamorpher.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20e71aa6-e9e0-312f-747a-d25b872d2af8@suse.com>
+In-Reply-To: <20170522125332.GA18406@metamorpher.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lidong Zhong <lzhong@suse.com>, linux-raid@vger.kernel.org
-Cc: colyli@suse.com, Jes.Sorensen@gmail.com
+To: Andreas Klauer <Andreas.Klauer@metamorpher.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, May 23 2017, Lidong Zhong wrote:
+On Mon, May 22 2017, Andreas Klauer wrote:
 
-> On 05/22/2017 07:07 PM, NeilBrown wrote:
->> On Mon, May 22 2017, Lidong Zhong wrote:
->>
->>> The value of sb->max_dev will always be increased by 1 when adding
->>> a new disk in linear array. It causes an inconsistence between each
->>> disk in the array and the "Array State" value of "mdadm --examine DISK"
->>> is wrong. For example, when adding the first new disk into linear array
->>> it will be:
->>>
->>> Array State : RAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
->>> ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D replacing)
->>>
->>> Adding the second disk into linear array it will be
->>>
->>> Array State : .AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
->>> ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D replacing)
->>>
->>> Signed-off-by: Lidong Zhong <lzhong@suse.com>
->>> ---
->>>  super1.c | 9 ++++++++-
->>>  1 file changed, 8 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/super1.c b/super1.c
->>> index 2fcb814..03cea72 100644
->>> --- a/super1.c
->>> +++ b/super1.c
->>> @@ -1267,8 +1267,10 @@ static int update_super1(struct supertype *st, s=
-truct mdinfo *info,
->>>  				break;
->>>  		sb->dev_number =3D __cpu_to_le32(i);
->>>  		info->disk.number =3D i;
->>> -		if (max >=3D __le32_to_cpu(sb->max_dev))
->>> +		if (i >=3D max) {
->>> +			sb->dev_roles[max] =3D __cpu_to_le16(MD_DISK_ROLE_SPARE);
->>
+> Hi,
 >
-> Hi Neil,
+> this is not a recovery question, no real data involved. Thanks for helpin=
+g!
 >
->> Why do you assign to dev_roles[max]?
+> Suppose you have a failing drive in RAID-5 but you wanted to move to=20
+> fewer drives anyway, so one way or another you're going to reduce=20
+> the number of drives in your RAID.
 >
-> I meant to assure there will always be a spare spot in dev_roles[],
-> that is sb->max_dev at least is at lease 1 more than raid_disks.
-> Now I see what you mean in your reply to my last version patch.
+> Given a RAID 5 with 5 drives            [UUUUU]
+> Reducing it by one drive results in     [UUUU] + Spare
+> Okay.
 >
->> max must equal i here, and a few lines later:
->> 		sb->dev_roles[i] =3D __cpu_to_le16(info->disk.raid_disk);
->>
->> your assignment is over-written.  So it is pointless.
->> If i was greater than max (which should be impossible), you assignment
->> here would corrupt the dev_roles table.
->>
->> Please drop this assignment.
+> Given a degraded RAID 5 with 5 drives   [_UUUU]
+> Reducing it by one drive results in     [_UUU] + Spare
+> Still okay? Rebuild must be started manually.
 >
-> Yes, just increase the max_dev value is enough.
+> It seems reducing a degraded RAID is a bad idea,=20
+> since there is no redundancy for a very long time.
 >
->>
->>>  			sb->max_dev =3D __cpu_to_le32(max+1);
->>> +		}
->>>
->>>  		random_uuid(sb->device_uuid);
->>>
->>> @@ -1293,9 +1295,14 @@ static int update_super1(struct supertype *st, s=
-truct mdinfo *info,
->>>  			}
->>>  		}
->>>  	} else if (strcmp(update, "linear-grow-update") =3D=3D 0) {
->>> +		unsigned int max =3D __le32_to_cpu(sb->max_dev);
->>>  		sb->raid_disks =3D __cpu_to_le32(info->array.raid_disks);
->>>  		sb->dev_roles[info->disk.number] =3D
->>>  			__cpu_to_le16(info->disk.raid_disk);
->>> +		if (info->array.raid_disks >=3D max) {
->>
->> if raid_disks =3D=3D max there is no need to change anything.
->> It is only when raid_disks > max that you need to increase max.
->>
+> So what you might end up doing is a three step process:
 >
-> Yes, the max_dev should only be updated when raid_disks > max.
+> -> [_UUUU] (Degraded)
 >
->>> +			sb->dev_roles[max] =3D __cpu_to_le16(MD_DISK_ROLE_SPARE);
->>
->> When you increase max, you do need to assign MD_DISK_ROLE_SPARE to the
->> new element, but you need to do that *before* disk.raid_disk is
->> assigned, in case info->disk.number =3D=3D max (as it could be for the
->> recently added device).
->>
-> I think it's also pointless to assign MD_DISK_ROLE_SPARE
-> since there is no SPARE in dev_roles when we need to update
-> sb->max_dev. The newly added device will not meet the condition
-> as max_dev has already been updated, that's saying, we only
-> need to update the max_dev value for original disks.
-> The following code should work
+> Step 1: Add another drive (redundancy first)
 >
-> 1297     } else if (strcmp(update, "linear-grow-update") =3D=3D 0) {
-> 1298         unsigned int max =3D __le32_to_cpu(sb->max_dev);
-> 1299         sb->raid_disks =3D __cpu_to_le32(info->array.raid_disks);
-> 1300         sb->dev_roles[info->disk.number] =3D
-> 1301             __cpu_to_le16(info->disk.raid_disk);
-> 1302         if (info->array.raid_disks > max) {=20
->=20=20
+> -> [UUUUU]
+>     ^ added drive
 >
-> 1303             sb->max_dev =3D __cpu_to_le32(max+1);
-> 1304         }
+> Step 2: Reduce by one drive
+>
+> -> [UUUU] + Spare
+>
+> Step 3: --replace the previously added drive
+>         (if the spare happened to be one of the drives you wanted to keep)
+>
+> -> [UUUU]
+>     ^ former spare
+>
+> This way the process is redundant but it takes a very long time,=20
+> three separate reshape/rebuilds instead of just one.
+>
+> Steps to reproduce the [_UUUU] -> [_UUU] + Spare case:
+> (using linux 4.10, mdadm 4.0)
+>
+> # truncate -s 100M 1.img 2.img 3.img 4.img
+> # devices=3D$(for f in ?.img; do losetup --find --show "$f"; done)
+> # mdadm --create /dev/md42 --level=3D5 --raid-devices=3D5 missing $devices
+> md42 : active raid5 loop4[4] loop3[3] loop2[2] loop1[1]
+>       405504 blocks super 1.2 level 5, 512k chunk, algorithm 2 [5/4] [_UU=
+UU]
+> # mdadm --grow /dev/md42 --array-size 304128
+> # mdadm --grow /dev/md42 --backup-file=3Dmd42.backup --raid-devices=3D4
+> md42 : active raid5 loop4[4](S) loop3[3] loop2[2] loop1[1]
+>       304128 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/3] [_UU=
+U]
+> # not rebuilding until you re-add the spare
+>
+> Is it possible to do [_UUUU] -> [UUUU] in a single step?
+> I haven't found a way. Any ideas?
 
-Increasing max_dev and not initializing will leave the last entry in
-dev_roles[] uninitialised.  That isn't good.
+I hoped that
+  mdadm --grow /dev/md42 --backup-file=3D... --raid-device=3D4 --add /dev/l=
+oop4
 
-MD_DISK_ROLE_SPARE doesn't mean there is a spare device in that slot.
-It means that if there is a device in that slot, it must be spare.
-If you leave it uninitialised, it will probably be zero, and then
-you will get "?" in the mdadm output again.
+would have worked, but it doesn't.
+What does work is:
+ # start with a degraded array, device 0 missing
+ mdadm --grow /dev/md42 --array-size=3D.....
+ echo frozen > /sys/block/md42/md/sync_action
+ mdadm /dev/md42 --add /dev/loop0
+ echo 0 > /sys/block/md42/md/dev-loop0/slot
+ mdadm --grow /dev/md42 --backup-file=3D... --raid-devices=3D4
+
 
 NeilBrown
 
-
->
-> Thank you for your patient review.
->
-> Lidong
->
->> NeilBrown
->>
->>
->>> +			sb->max_dev =3D __cpu_to_le32(max+1);
->>> +		}
->>>  	} else if (strcmp(update, "resync") =3D=3D 0) {
->>>  		/* make sure resync happens */
->>>  		sb->resync_offset =3D 0ULL;
->>> --
->>> 2.12.0
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlkk6G4ACgkQOeye3VZi
-gbnsWg/8D+Q1VsOACdx+9HLqLBcICfxXorSRUPDPL+nSkBA2GiyRHJq3tCkqFVsl
-zlVcpGZMuadgLQ2mNMVtR3mLV2QHvt46q2h2j4/wcNDXXMQ3LVMKwG2v3WjdPJa/
-NyCQWYdzdZwoCuPb8xdix5NuGSRdQrDTOeRiHSDCMcyQBBo82sxzSmlad+sApZw8
-rmsOm/+4jdlkZZQeW2k3/0vxw4Q9NUu0GdY7lAB3N+rs+Y1dTYplVto+oXXSzhVi
-77fDMaOrHeaNsWrsmonOkHBrzWAHGngo/ndY8LzcYDTpBJiB92supIQuGHkGL7Jh
-zDhrWOHfDuK4Uf1sqSEczKm3bvyOlALsqSFd3+m71EtiVMxajz7JtgZKfg6TgKY8
-6t5UaKru2XxS+gNVnt9yjfezeZeZEjFQsXoz4NJqktfYiaBSBt2acrKrV5XP/PjQ
-PN9Ns0MwOvGZ92MXRQd5HEnyUYSoCSt2AemsJqdQmxMyRCrfbhEU8xIWTtkw5i9q
-kVc8dFO+LkMyyjntU+w0Xy3DutK3tMce0dAa4TS7Ahl2Qv9Q5rUXIM3LH0Sqi+54
-7v5LVp0MwOXpbeeOTk60ilbbjCmy+DaYc874ljH9n2ge1wv7yb+PH3YMR/qpO1M8
-9GbKhSigCquLkPAxZvS5oXpXWGO2JJBh8ZN4RWKuiAD6okUR23o=
-=+ZkQ
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlkk7BAACgkQOeye3VZi
+gbn7jg//XyH5gpFWN4/FoydDsldlNBWGzKuU4XMKDP4BBNfsCXW87GUABeOXwbWW
+NPYKvGPF9zh4iYeysvikSFghjsDqylglGGqCDGt74n56AghL7FwrtIE7+Dxao8iZ
+KcZMNjm43G7DMMRqLl59nGqHphkwKk1Djio6hql8CpxBFD/5sLG2UJzmqneCy1tK
+/n7pK9gOq1Yiv3Teodctr1PQNn0mW+5PtmfSFkjyOVRMPfzJuAwp96cXk7sWX1sR
+Nw2PR4EJPiGiphMz2Ebtg7XY5+ng9aXVCfQ1OQhw0A96Nxnj/myGj/r3pIlJmdSr
+dOjftv0PZvWOt+9F2Ofgpo7PIcsn8sirkjSTSTr53/6pMxx9OV5pfrhUBItInu5T
+8hA6OTuLXWa8N2GkfGkHQk+ziHiLIu4rNiIzYgCUDXpuXw+FWEeVH62+hG2o3bru
+tCAjbUJnprtchZlySUnM5w5ZkgwkMZH1tIj3d155408sMtCvbUtXTSvycSTNu/iu
+R0pqMmgh1s1gGbHJGnrRzqwLfLBygOsiTvw9+khsMZLgHfgwmcpoLiK1QydCxqb+
+A39BhanRA7iEoYaDbV2QqVPF7mbQan25yJzYjTFwOtGq36eQyBnFanAvSus3v/Ac
+wef4ImcSUj3Plji87AaSrLWYOSnEf+XBRtMnZrGhFU/GA0mfMMI=
+=+smh
 -----END PGP SIGNATURE-----
 --=-=-=--
