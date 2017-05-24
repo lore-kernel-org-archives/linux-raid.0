@@ -1,33 +1,44 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH] Detail: don't exit if ioctl has been successful
-Date: Wed, 24 May 2017 13:28:49 -0400
-Message-ID: <6ff3ea15-c767-ed9a-b2d7-00a387198b3c@gmail.com>
-References: <1495618462-23016-1-git-send-email-tomasz.majchrzak@intel.com>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: 4.11.2: reshape raid5 -> raid6 atop bcache deadlocks at start on md_attr_store / raid5_make_request
+Date: Wed, 24 May 2017 20:42:48 +0100
+Message-ID: <87d1ayhwhz.fsf@esperi.org.uk>
+References: <87lgppz221.fsf@esperi.org.uk>
+        <87a865jf9a.fsf@notabene.neil.brown.name>
+        <87fufwy3lr.fsf@esperi.org.uk>
+        <87poezhwsa.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1495618462-23016-1-git-send-email-tomasz.majchrzak@intel.com>
-Content-Language: en-US
+In-Reply-To: <87poezhwsa.fsf@notabene.neil.brown.name> (NeilBrown's message of
+        "Wed, 24 May 2017 11:24:21 +1000")
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 05/24/2017 05:34 AM, Tomasz Majchrzak wrote:
-> When GET_ARRAY_INFO ioctl is successful, mdadm exits with an error.
-> It breaks udev and no links in /dev/md are created.
-> 
-> Also change debug print to error print in the message indicating lack
-> of the link to facilitate debugging similar issues in the future.
-> 
-> Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-> ---
->   Detail.c | 27 +++++++++++++++------------
->   util.c   |  2 +-
->   2 files changed, 16 insertions(+), 13 deletions(-)
+On 24 May 2017, NeilBrown said:
+> Alternately, this might do it.
 
-Applied!
+Bingo! Ticking away nicely:
 
-Thanks,
-Jes
+[  147.538274] md/raid:md125: device sda3 operational as raid disk 0
+[  147.574356] md/raid:md125: device sdd3 operational as raid disk 3
+[  147.586482] md/raid:md125: device sdc3 operational as raid disk 2
+[  147.598571] md/raid:md125: device sdb3 operational as raid disk 1
+[  147.613949] md/raid:md125: raid level 6 active with 4 out of 5 devices, algorithm 18
+[  147.776155] md: reshape of RAID array md125
 
+md125 : active raid6 sda3[0] sdf3[5] sdd3[4] sdc3[2] sdb3[1]
+      15391689216 blocks super 1.2 level 6, 512k chunk, algorithm 18 [5/4] [UUUU_]
+      [>....................]  reshape =  0.0% (2669056/5130563072) finish=1363.5min speed=62678K/sec
+
+(wow, this is a lot faster: only 1363 min / 70MiB/s, versus the
+--backup-file one, for an array half the size, that was >2500 min,
+12MiB/s. I mean, yes, it was at the slow end of the disk, but they don't
+differ in speed *that* much.)
+
+Machine still perfectly responsive, as if on reshape was happening at
+all. (But then, I've got used to that. The last time I saw any md resync-
+induced delays was long ago when I had a sym53c75 in the loop with an
+I/O rate of 10MiB/s. I think delays are unavoidable with something
+that slow in there.)
