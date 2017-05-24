@@ -1,87 +1,74 @@
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH RESEND] md: Make flush bios explicitely sync
-Date: Wed, 24 May 2017 13:40:13 +0200
-Message-ID: <20170524114013.14130-1-jack@suse.cz>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: 4.11.2: reshape raid5 -> raid6 atop bcache deadlocks at start on md_attr_store / raid5_make_request
+Date: Wed, 24 May 2017 14:28:33 +0100
+Message-ID: <87bmqio03i.fsf@esperi.org.uk>
+References: <87lgppz221.fsf@esperi.org.uk>
+        <87a865jf9a.fsf@notabene.neil.brown.name>
+        <87fufwy3lr.fsf@esperi.org.uk>
+        <87poezhwsa.fsf@notabene.neil.brown.name>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87poezhwsa.fsf@notabene.neil.brown.name> (NeilBrown's message of
+        "Wed, 24 May 2017 11:24:21 +1000")
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: Jan Kara <jack@suse.cz>, linux-raid@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Commit b685d3d65ac7 "block: treat REQ_FUA and REQ_PREFLUSH as
-synchronous" removed REQ_SYNC flag from WRITE_{FUA|PREFLUSH|...}
-definitions.  generic_make_request_checks() however strips REQ_FUA and
-REQ_PREFLUSH flags from a bio when the storage doesn't report volatile
-write cache and thus write effectively becomes asynchronous which can
-lead to performance regressions
+On 24 May 2017, NeilBrown uttered the following:
 
-Fix the problem by making sure all bios which are synchronous are
-properly marked with REQ_SYNC.
+> On Mon, May 22 2017, Nix wrote:
+>
+>> Everything else hangs the same way, too. This was surprising enough that
+>> I double-checked to be sure the patch was applied: it was. I suspect the
+>> deadlock is somewhat different than you supposed... (and quite possibly
+>> not a race at all, or I wouldn't be hitting it so consistently, every
+>> time. I mean, I only need to miss it *once* and I'll have reshaped... :) )
+>>
+>> It seems I can reproduce this on demand, so if you want to throw a patch
+>> with piles of extra printks my way, feel free.
+>
+> Did you have md_write_start being called by syslog-ng again?
 
-CC: linux-raid@vger.kernel.org
-CC: Shaohua Li <shli@kernel.org>
-CC: Mike Snitzer <snitzer@redhat.com>
-CC: dm-devel@redhat.com
-Fixes: b685d3d65ac791406e0dfd8779cc9b3707fea5a3
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- drivers/md/dm-snap-persistent.c | 3 ++-
- drivers/md/md.c                 | 2 +-
- drivers/md/raid5-cache.c        | 4 ++--
- 3 files changed, 5 insertions(+), 4 deletions(-)
+Yeah.
 
-Guys, I don't know enough about DM/MD to judge whether I've identified all the
-places that want REQ_SYNC right. Can you please have a look?
+> I wonder what syslog is logging - presumably something about the reshape
+> starting.
 
-diff --git a/drivers/md/dm-snap-persistent.c b/drivers/md/dm-snap-persistent.c
-index b93476c3ba3f..b92ab4cb0710 100644
---- a/drivers/md/dm-snap-persistent.c
-+++ b/drivers/md/dm-snap-persistent.c
-@@ -741,7 +741,8 @@ static void persistent_commit_exception(struct dm_exception_store *store,
- 	/*
- 	 * Commit exceptions to disk.
- 	 */
--	if (ps->valid && area_io(ps, REQ_OP_WRITE, REQ_PREFLUSH | REQ_FUA))
-+	if (ps->valid && area_io(ps, REQ_OP_WRITE,
-+				 REQ_SYNC | REQ_PREFLUSH | REQ_FUA))
- 		ps->valid = 0;
- 
- 	/*
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 10367ffe92e3..212a6777ff31 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -765,7 +765,7 @@ void md_super_write(struct mddev *mddev, struct md_rdev *rdev,
- 	    test_bit(FailFast, &rdev->flags) &&
- 	    !test_bit(LastDev, &rdev->flags))
- 		ff = MD_FAILFAST;
--	bio->bi_opf = REQ_OP_WRITE | REQ_PREFLUSH | REQ_FUA | ff;
-+	bio->bi_opf = REQ_OP_WRITE | REQ_SYNC | REQ_PREFLUSH | REQ_FUA | ff;
- 
- 	atomic_inc(&mddev->pending_writes);
- 	submit_bio(bio);
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 4c00bc248287..0a7af8b0a80a 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -1782,7 +1782,7 @@ static int r5l_log_write_empty_meta_block(struct r5l_log *log, sector_t pos,
- 	mb->checksum = cpu_to_le32(crc32c_le(log->uuid_checksum,
- 					     mb, PAGE_SIZE));
- 	if (!sync_page_io(log->rdev, pos, PAGE_SIZE, page, REQ_OP_WRITE,
--			  REQ_FUA, false)) {
-+			  REQ_SYNC | REQ_FUA, false)) {
- 		__free_page(page);
- 		return -EIO;
- 	}
-@@ -2388,7 +2388,7 @@ r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
- 		mb->checksum = cpu_to_le32(crc32c_le(log->uuid_checksum,
- 						     mb, PAGE_SIZE));
- 		sync_page_io(log->rdev, ctx->pos, PAGE_SIZE, page,
--			     REQ_OP_WRITE, REQ_FUA, false);
-+			     REQ_OP_WRITE, REQ_SYNC | REQ_FUA, false);
- 		sh->log_start = ctx->pos;
- 		list_add_tail(&sh->r5c, &log->stripe_in_journal_list);
- 		atomic_inc(&log->stripe_in_journal_count);
+Almost certainly.
+
+> If you kill syslog-ng, can you start the reshape?
+
+If I kill syslog-ng the entire network gets very unhappy and most of
+userspace across all of it blocks solid waiting for a syslog-ng that
+isn't there in very little time. It's the primary log host... :/ I might
+switch back to the old log host (primary until three weeks ago) and try
+again, but honestly the amount of ongoing traffic on this array is such
+that I suspect *something* will creep in no matter what you do. (The
+only reason process accounting's not going there is because I'm dumping
+it on the RAID-0 array I already reshaped.)
+
+(e.g. this time I also saw write traffic from mysqld. God knows what it
+was doing: the database there is about the most idle database ever --
+which is why I don't care about its being on RAID-5/6 -- and I know for
+sure that it currently has a grand total of zero clients connected.)
+
+Plus there's the usual pile of ongoing "you are still breathing so I'll
+do more backlogged stuff" XFS metadata updates, rmap traffic, etc.
+
+> Alternately, this might do it.
+> I think the root problem is that it isn't safe to call mddev_suspend()
+> while holding the reconfig_mutex.
+> For complete safety I probably need to move the request_module() call
+> earlier, as that could block if a device was suspended (no memory
+> allocation allowed while device is suspended).
+
+I'll give this a try!
+
+(I'm not sure what to do if it *works* -- how do I test any later
+changes? I might reshape back to RAID-5 + spare again just so I can test
+later stuff, but that would take ages: the array is over 14TiB...)
+
 -- 
-2.12.0
-
+NULL && (void)
