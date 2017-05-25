@@ -1,49 +1,98 @@
-From: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [PATCH 10/23] afs: switch to use uuid_t and uuid_gen
-Date: Thu, 25 May 2017 16:29:21 +0300
-Message-ID: <1495718961.6967.117.camel@linux.intel.com>
-References: <20170518062705.25902-1-hch@lst.de>
- <20170518062705.25902-11-hch@lst.de>
- <1495478957.6967.69.camel@linux.intel.com> <20170523084956.GB20121@lst.de>
- <1495545099.6967.81.camel@linux.intel.com> <20170525130027.GA30194@lst.de>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [Patch v5] super1: fix sb->max_dev when adding a new disk in linear array
+Date: Fri, 26 May 2017 07:51:54 +1000
+Message-ID: <87vaoohaf9.fsf@notabene.neil.brown.name>
+References: <20170525092811.3868-1-lzhong@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <20170525130027.GA30194-jcswGhMUV9g@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170525092811.3868-1-lzhong@suse.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Lidong Zhong <lzhong@suse.com>, linux-raid@vger.kernel.org
+Cc: colyli@suse.com, Jes.Sorensen@gmail.com
 List-Id: linux-raid.ids
 
-T24gVGh1LCAyMDE3LTA1LTI1IGF0IDE1OjAwICswMjAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
-ZToKPiBPbiBUdWUsIE1heSAyMywgMjAxNyBhdCAwNDoxMTozOVBNICswMzAwLCBBbmR5IFNoZXZj
-aGVua28gd3JvdGU6Cj4gPiBTaW5jZSB3ZSBpbnRyb2R1Y2VkIGEgdW5pb24gaXQncyBwb3NzaWJs
-ZSB0aGF0IHdlIG1pZ2h0IGFjY2VzcyB0aGUKPiA+IG1lbWJlciB3aGljaCB3YXNuJ3QgbGFzdCBt
-b2RpZmllZCBvbmUuIFNvLCBteSBjb21tZW50IGlzIHRvIGdpdmUgYW4KPiA+IGF0dGVudGlvbiBv
-biBzdWNoIHBvc3NpYmlsaXR5IGFuZCBhdm9pZCBpZiB0aGVyZSBpcyBhbiBhbGlhc2luZwo+ID4g
-aGFwcGVuZWQuCj4gCj4gV2UgZG8gZm9yIEFGUyAoYW5kIFhGUyBmb3IgZnMgZnNpZCkuwqDCoE15
-IHByZWZlcmVuY2Ugd291bGQgYmUgdG8KPiBub3QgaGF2ZSB0aGUgdjEgc3RydWN0IGRlZmludGlv
-biBidXQgaW5zdGVhZCBwcm92aWRlIGEgZmV3Cj4gaGVscGVycyBpbiB1dWlkLmggdGhhdCB1c2Ug
-Z2V0X3VuYWxpZ25lZF9iZSogaWYgbmVlZGVkOgo+IAo+IAl1dWlkX3YxX3RpbWVfbG93KCkKPiAJ
-dXVpZF92MV90aW1lX21pZCgpCj4gCXV1aWRfdjFfdGltZV90aW1lX2hpX2FuZF92ZXJzaW9uKCku
-Lgo+IAo+IEZyb20gaGlzIHByZXZpb3VzbHkgcmVwbHkgaXQgc2VlbXMgbGlrZSBEYXZlIGRvZXNu
-J3QgbGlrZSB0aGF0IGlkZWEKPiB0b28gbXVjaCwgaW4gd2hpY2ggY2FzZSBJIHN1c3BlY3QgbW92
-aW5nIHN0cnVjdCB1dWlkX3YxIGJhY2sgaW50bwo+IGFmcyBhbmQgbGl2aW5nIHdpdGggY2FzdCBp
-biBpdCBpcyB0aGUgd2F5IHRvIGdvLgoKUGVyc29uYWxseSBJIGRvbid0IGxpa2UgdGhhdCB1bmlv
-biBzdHVmZiwgc28sIGRlZmluaXRlbHkgbXkgdm90ZSB0byBnZXQKcmlkIG9mIEFGUyBzdHVmZiBp
-biBnZW5lcmljIGhlbHBlcnMuCgpPVE9IIGlmIHRoZXJlIHdpbGwgYmUgbW9yZSB1c2VycyBvZiBz
-dWNoIEFQSSB0aGVuIHNvbWV0aGluZyBsaWtlIHlvdQpwcm9wb3NlZCB3b3VsZCBiZSBzdWZmaWNp
-ZW50IHdpdGhvdXQgaW50cm9kdWNpbmcgYSB1bmlvbi4KCi0tIApBbmR5IFNoZXZjaGVua28gPGFu
-ZHJpeS5zaGV2Y2hlbmtvQGxpbnV4LmludGVsLmNvbT4KSW50ZWwgRmlubGFuZCBPeQpfX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpMaW51eC1udmRpbW0gbWFp
-bGluZyBsaXN0CkxpbnV4LW52ZGltbUBsaXN0cy4wMS5vcmcKaHR0cHM6Ly9saXN0cy4wMS5vcmcv
-bWFpbG1hbi9saXN0aW5mby9saW51eC1udmRpbW0K
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Thu, May 25 2017, Lidong Zhong wrote:
+
+> The value of sb->max_dev will always be increased by 1 when adding
+> a new disk in linear array. It causes an inconsistence between each
+> disk in the array and the "Array State" value of "mdadm --examine DISK"
+> is wrong. For example, when adding the first new disk into linear array
+> it will be:
+>
+> Array State : RAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+> ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D replacing)
+>
+> Adding the second disk into linear array it will be
+>
+> Array State : .AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+> ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D replacing)
+>
+> Signed-off-by: Lidong Zhong <lzhong@suse.com>
+
+Reviewed-by: NeilBrown <neilb@suse.com>
+
+Thanks,
+NeilBrown
+
+> ---
+>  super1.c | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+>
+> diff --git a/super1.c b/super1.c
+> index 2fcb814..86ec850 100644
+> --- a/super1.c
+> +++ b/super1.c
+> @@ -1267,8 +1267,9 @@ static int update_super1(struct supertype *st, stru=
+ct mdinfo *info,
+>  				break;
+>  		sb->dev_number =3D __cpu_to_le32(i);
+>  		info->disk.number =3D i;
+> -		if (max >=3D __le32_to_cpu(sb->max_dev))
+> +		if (i >=3D max) {
+>  			sb->max_dev =3D __cpu_to_le32(max+1);
+> +		}
+>=20=20
+>  		random_uuid(sb->device_uuid);
+>=20=20
+> @@ -1293,7 +1294,11 @@ static int update_super1(struct supertype *st, str=
+uct mdinfo *info,
+>  			}
+>  		}
+>  	} else if (strcmp(update, "linear-grow-update") =3D=3D 0) {
+> +		int max =3D __le32_to_cpu(sb->max_dev);
+>  		sb->raid_disks =3D __cpu_to_le32(info->array.raid_disks);
+> +		if (info->array.raid_disks > max) {
+> +			sb->max_dev =3D __cpu_to_le32(max+1);
+> +		}
+>  		sb->dev_roles[info->disk.number] =3D
+>  			__cpu_to_le16(info->disk.raid_disk);
+>  	} else if (strcmp(update, "resync") =3D=3D 0) {
+> --=20
+> 2.12.0
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlknUfwACgkQOeye3VZi
+gbkxpQ//fOsCbx18a9niZi5vs83MnmV2S1frDWjdQxlIoe5RL8sYYRz7HxxKxT2C
+hVe6JhcLbucUCseiqEjwxKyTHjv/YaomLqMHn7PYyfw7dsbesWgchhE1Bo1uvJZK
+KTWtwmCnAQB0U/vOf5FOnsDnOnJxNUoGQrYkotbGvRNoILvDEzpTaRbqk9l5oUZ3
+ViHvF5woUMSzFIxASPejSwn791E6vUY7Sgn+RL2me7YfFUsQCrdLLKRGYYojK0pQ
+/MOJR/W7O6YxwWcJUaLK9v4k4kEMnY8a/re2yPX6nfoeU3UyDFUTfL1J3Ln1zlfM
+RkvPzWVRj1OfmQu3RuqaKVm4tGhX4kIO+hD2S3FUmiC+Bk7OZZh0iEF5W1pQT/eA
+sZK1+m/dTCfY8rUaOklGjcq7b4wVxoEvzP9g3kRt5a6ItBRyOq7Hl+i3dpRFD/h9
+QTcKTUIXzYnfoSQU2wHemsSs9Bn8SbL6Kq1tTvFsjzya0nnqa6hA/2ai972eJDrB
+NQi1AaXZaSdgqmSkE0PLB87yl5wcnDAdGArKadS6UjVLbjQfpUwLiopob4kWakEE
+Tp2aHrOZb8fIDQ5yIlO7GCl6QBm0gyA8u8jnv4dwdF/CiaNP3X6+nHHpScTOaPwi
+Ydp8peno482qSJI9rTdp6toS6yDzdy5BTNDwtmQhPWvV6EfAARg=
+=uANV
+-----END PGP SIGNATURE-----
+--=-=-=--
