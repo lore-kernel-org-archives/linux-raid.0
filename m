@@ -1,59 +1,41 @@
-From: Lidong Zhong <lzhong@suse.com>
-Subject: [Patch v5] super1: fix sb->max_dev when adding a new disk in linear array
-Date: Thu, 25 May 2017 17:28:11 +0800
-Message-ID: <20170525092811.3868-1-lzhong@suse.com>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: 4.11.2: reshape raid5 -> raid6 atop bcache deadlocks at start on md_attr_store / raid5_make_request
+Date: Thu, 25 May 2017 13:14:43 +0100
+Message-ID: <87d1axb0b0.fsf@esperi.org.uk>
+References: <87lgppz221.fsf@esperi.org.uk>
+        <87a865jf9a.fsf@notabene.neil.brown.name>
+        <87fufwy3lr.fsf@esperi.org.uk>
+        <87poezhwsa.fsf@notabene.neil.brown.name>
+        <87bmqio03i.fsf@esperi.org.uk>
+        <874lw9iuwn.fsf@notabene.neil.brown.name>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <874lw9iuwn.fsf@notabene.neil.brown.name> (NeilBrown's message of
+        "Thu, 25 May 2017 11:31:52 +1000")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, neilb@suse.com
-Cc: colyli@suse.com, Jes.Sorensen@gmail.com
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The value of sb->max_dev will always be increased by 1 when adding
-a new disk in linear array. It causes an inconsistence between each
-disk in the array and the "Array State" value of "mdadm --examine DISK"
-is wrong. For example, when adding the first new disk into linear array
-it will be:
+On 25 May 2017, NeilBrown spake thusly:
 
-Array State : RAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-('A' == active, '.' == missing, 'R' == replacing)
+> On Wed, May 24 2017, Nix wrote:
+>>
+>> (I'm not sure what to do if it *works* -- how do I test any later
+>> changes? I might reshape back to RAID-5 + spare again just so I can test
+>> later stuff, but that would take ages: the array is over 14TiB...)
+>
+> If it works (which it did), then we'll have enough understanding that it
+> should be easy to simulate the problem accurately in a VM.
+> I don't think there is any need for you to experiment further on your
+> data.
 
-Adding the second disk into linear array it will be
+If you need me to, I can -- this machine isn't commissioned yet (though
+the plan *is* to do so next weekend, I can put it off: I've put it off
+before...)
 
-Array State : .AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-('A' == active, '.' == missing, 'R' == replacing)
+Plus I have plenty of backups. :)
 
-Signed-off-by: Lidong Zhong <lzhong@suse.com>
----
- super1.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/super1.c b/super1.c
-index 2fcb814..86ec850 100644
---- a/super1.c
-+++ b/super1.c
-@@ -1267,8 +1267,9 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
- 				break;
- 		sb->dev_number = __cpu_to_le32(i);
- 		info->disk.number = i;
--		if (max >= __le32_to_cpu(sb->max_dev))
-+		if (i >= max) {
- 			sb->max_dev = __cpu_to_le32(max+1);
-+		}
- 
- 		random_uuid(sb->device_uuid);
- 
-@@ -1293,7 +1294,11 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
- 			}
- 		}
- 	} else if (strcmp(update, "linear-grow-update") == 0) {
-+		int max = __le32_to_cpu(sb->max_dev);
- 		sb->raid_disks = __cpu_to_le32(info->array.raid_disks);
-+		if (info->array.raid_disks > max) {
-+			sb->max_dev = __cpu_to_le32(max+1);
-+		}
- 		sb->dev_roles[info->disk.number] =
- 			__cpu_to_le16(info->disk.raid_disk);
- 	} else if (strcmp(update, "resync") == 0) {
 -- 
-2.12.0
-
+NULL && (void)
