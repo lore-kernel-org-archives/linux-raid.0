@@ -1,77 +1,66 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: Reducing the number of devices in a degraded RAID-5
-Date: Fri, 26 May 2017 15:13:11 +1000
-Message-ID: <87d1awgpzs.fsf@notabene.neil.brown.name>
-References: <20170522125332.GA18406@metamorpher.de> <87h90bhujz.fsf@notabene.neil.brown.name> <20170525072436.GA24881@metamorpher.de>
+From: Lidong Zhong <lzhong@suse.com>
+Subject: Re: [Patch v1] Detail: fix a bug when trying to show the detail of a
+ raid device
+Date: Fri, 26 May 2017 14:33:08 +0800
+Message-ID: <075dc0fd-6b96-2994-a2fd-e5130d50a19b@suse.com>
+References: <20170526024216.10248-1-lzhong@suse.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170525072436.GA24881@metamorpher.de>
+In-Reply-To: <20170526024216.10248-1-lzhong@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: colyli@suse.com, Jes.Sorensen@gmail.com, neilb@suse.com
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hi,
+Please ignore this patch. It has been fixed by Tomasz two days ago.
+Sorry for the noise.
 
-On Thu, May 25 2017, Andreas Klauer wrote:
+Thanks,
+Lidong
 
-> On Wed, May 24, 2017 at 12:12:32PM +1000, NeilBrown wrote:
->> What does work is:
->>  # start with a degraded array, device 0 missing
->>  mdadm --grow /dev/md42 --array-size=3D.....
->>  echo frozen > /sys/block/md42/md/sync_action
->>  mdadm /dev/md42 --add /dev/loop0
->>  echo 0 > /sys/block/md42/md/dev-loop0/slot
->>  mdadm --grow /dev/md42 --backup-file=3D... --raid-devices=3D4
+On 05/26/2017 10:42 AM, Lidong Zhong wrote:
+> It's introduced from commit a4dcdb23ea63.
 >
-> Wow. Thanks.
+> Signed-off-by: Lidong Zhong <lzhong@suse.com>
+> ---
+>  Detail.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
 >
-> This should merge Step 1+2, but not Step 3, right?
-
-Right.  Doing step 3 at the same time is not possible.
-
-NeilBrown
-
-
+> diff --git a/Detail.c b/Detail.c
+> index bf881ff..c89b927 100644
+> --- a/Detail.c
+> +++ b/Detail.c
+> @@ -98,8 +98,8 @@ int Detail(char *dev, struct context *c)
+>  		    sra->array.minor_version == -2);
+>  	inactive = (sra->array_state == ARRAY_ACTIVE ||
+>  		    sra->array_state == ARRAY_CLEAR);
+> -	st = super_by_fd(fd, &subarray);
+> -	if (md_get_array_info(fd, &array) && errno == ENODEV) {
+> +	rv = md_get_array_info(fd, &array);
+> +	if (rv && errno == ENODEV) {
+>  		if (sra->array.major_version == -1 &&
+>  		    sra->array.minor_version == -1 &&
+>  		    sra->devs == NULL) {
+> @@ -109,7 +109,7 @@ int Detail(char *dev, struct context *c)
+>  			return rv;
+>  		}
+>  		array = sra->array;
+> -	} else {
+> +	} else if (rv) {
+>  		pr_err("cannot get array detail for %s: %s\n",
+>  		       dev, strerror(errno));
+>  		close(fd);
+> @@ -118,8 +118,8 @@ int Detail(char *dev, struct context *c)
 >
-> I really need to take a closer look at the things in /sys/.../md/...
+>  	if (fstat(fd, &stb) != 0 && !S_ISBLK(stb.st_mode))
+>  		stb.st_rdev = 0;
+> -	rv = 0;
 >
-> Seems like you can do great things with it... terrible, yes, but great.
+> +	st = super_by_fd(fd, &subarray);
+>  	if (st)
+>  		max_disks = st->max_devs;
 >
-> (
->   Step 3 would be turning slot 4 to-be-spare into slot 0,=20
->   without --add ing another device at all.
 >
->   That's what would happen if /dev/loop0 was actually backed=20
->   by and thus identical with the slot4 device.
->
->   But that's playing dirty.
-> )
->
-> Regards
-> Andreas Klauer
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlknuWkACgkQOeye3VZi
-gbmXWA/+NPGrG6Z91D03PXGeHLHoOKnHvmXTInI0aHiAroD0nXZKvbnZcuC1RsI9
-qA5yYU6saw5hs2B8WY0aEvoj/PYcL/LYayE3pPJLKDVV+MLTVqAJYFVMHrapn1XG
-IvGTR9X7pjoj7BMOkpBNuvpZlvrdCdC0ozW6im87bgvFJlUq7bl1ATlRVS7vUsEn
-S8XPF8Fl2xaQe7cedWF8TY1FUaF5e7C53KjzgNURCjjFS3io3EUKkNqYL73BIbw0
-KTyqEgdg+up1CUhSUWg9ItNux1u5TseqzaUeUtyFOKbtH8jAgu/BSxSNDFlrR/CC
-e0yPHIhuPPgLQnCcfOkj+9aYKlv9ReXDm35LWy9JKDfNYJ18tjyfZGBtp5cqfMIq
-cmN7GAV88XcN1clE2b5iF/q62r8RBWFMTjd/uP6QUZDtJHrsqWB+ulxB/d5i9fDZ
-q5DaVfLt4X//HqgkZcHJg+IbuqUvzi6d/7x6UsjAQcAVdFmktl/oL1KS1BUJy6ix
-KflTi1F2UizFySSp+b07HjBACeIocSLzpaeq8OJ0cXLCzcpuhmfZfIqvvmlw8SLc
-mRJnO+7jF0yTKjuw/tHojf1qFW4B6gPfg7nHLeeGelhnCf53PzO0BHa/leV7ugBx
-rruEXpHZr8XepGU4VTq6fJVncFDCtf0Bq5o3soTvokG3qF5ZJpk=
-=TN3c
------END PGP SIGNATURE-----
---=-=-=--
