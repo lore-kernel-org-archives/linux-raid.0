@@ -1,112 +1,215 @@
-From: Roger Heflin <rogerheflin@gmail.com>
-Subject: Re: raid5 to raid6 reshape never appeared to start, how to cancel/revert
-Date: Fri, 26 May 2017 14:27:54 -0500
-Message-ID: <CAAMCDecn=2Kr-P5G5qQrcSRnVFeiFSJo6KJSwvJFBfbb0d8kJg@mail.gmail.com>
-References: <CAAMCDefCqUCY4Pd5im1u-JPh_SLG6BG8Onb8JxuPwoAkgXOkrA@mail.gmail.com>
- <20170522193304.GA4379@metamorpher.de> <CAAMCDedqUJXZFMwtqPVDjwoau42goEMcOLTbLX1fGdT7teQQQQ@mail.gmail.com>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: [PATCH 01/22] Revert "afs: Move UUID struct to linux/uuid.h"
+Date: Sun, 28 May 2017 13:19:47 +0300
+Message-ID: <20170528102008.30276-2-hch@lst.de>
+References: <20170528102008.30276-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAMCDedqUJXZFMwtqPVDjwoau42goEMcOLTbLX1fGdT7teQQQQ@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <20170528102008.30276-1-hch-jcswGhMUV9g@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-On Mon, May 22, 2017 at 3:04 PM, Roger Heflin <rogerheflin@gmail.com> wrote:
-> On Mon, May 22, 2017 at 2:33 PM, Andreas Klauer
-> <Andreas.Klauer@metamorpher.de> wrote:
->> On Mon, May 22, 2017 at 01:57:44PM -0500, Roger Heflin wrote:
->>> I had a 3 disk raid5 with a hot spare.  I ran this:
->>> mdadm --grow /dev/md126 --level=6 --backup-file /root/r6rebuild
->>>
->>> I suspect I should have changed the number of devices in the above command to 4.
->>
->> It doesn't hurt to specify, but that much is implied.
->> Growing 3 device raid5 + spare to raid6 results in 4 device raid6.
->>
->
-> Yes.
->
->>> The backup-file was created on a separate ssd.
->>
->> Is there anything meaningful in this file?
->>
->
-> 16MB in size, but od -x indicates all zeros, so no, there is nothing
-> meaningful in the file.
->
->>> trying assemble now gets this:
->>>  mdadm --assemble /dev/md126 /dev/sd[abe]1 /dev/sdd
->>> --backup-file=/root/r6rebuild
->>> mdadm: Failed to restore critical section for reshape, sorry.
->>>
->>> examine shows this (sdd was the spare when the --grow was issues)
->>>  mdadm --examine /dev/sdd
->>> /dev/sdd1:
->>
->> You wrote /dev/sdd above, is it sdd1 now?
->>
->>>         Version : 0.91.00
->>
->> Ancient metadata. You could probably update it to 1.0...
->>
->
-> I know.
->
->>>   Reshape pos'n : 0
->>
->> So maybe nothing at all changed on disk?
->>
->> You could try your luck with overlay
->>
->> https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID#Making_the_harddisks_read-only_using_an_overlay_file
->>
->> mdadm --create /dev/md42 --metadata=0.90 --level=5 --chunk=64 \
->>       --raid-devices=3 /dev/overlay/{a,b,c}
->>
->>> It does appear that I added sdd rather than sdd1 but I don't believe
->>> that is anything critical to the issue as it should still work fine
->>> with the entire disk.
->>
->> It is critical because if you use the wrong one the data will be shifted.
->>
->> If the partition goes to the very end of the drive, I think the 0.90
->> metadata could be interpreted both ways (as metadata for partition
->> as well as whole drive).
->>
->> If possible you should find some way to migrate to 1.2 metadata.
->> But worry about it once you have access to your data.
->>
->
-> I deal with others messing up partition/no partition recoveries often
-> enough to not be worried about how to debug and/or fix that mistake.
->
-> I found a patch from Neil from 2016 that may be solution to this
-> issue, I am not clear if it is an exact match to my issue, it looks
-> pretty close.
->
-> http://comments.gmane.org/gmane.linux.raid/51095
->
->> Regards
->> Andreas Klauer
+This reverts commit ff548773106ec7f8031bc6172e0234bd2a02c19c.
 
-Thanks for the ideas.   The patch I mentioned was already in the mdadm
-that I had so that was no help.
+The V1 uuid intrepreatation in struct form isn't really useful to the
+rest of the kernel, and not really compatible to it either, so move it
+back to AFS instead of polluting the global uuid.h.
 
-I got it back by doing an -assume-clean and initially I could see the
-pv but not the vg, I checked the device and it did look like a few kb
-was missing between the pv label and the first vgdata I saw on the
-disk.
+Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+---
+ fs/afs/cmservice.c   | 28 ++++++++++++++--------------
+ fs/afs/internal.h    | 26 +++++++++++++++++++++++++-
+ fs/afs/main.c        |  2 +-
+ include/linux/uuid.h | 24 ------------------------
+ 4 files changed, 40 insertions(+), 40 deletions(-)
 
-I tried a vgcfgrestore and that failed with some weird errors I have
-never seen before about failure to write and checksum failures (and I
-have used vgcfgrestore a number of times successfully before).  I
-finally saved out the first 1M for data to another disk and then
-zeroed where the header should have been and did a pvrestore --uuid
-and then a vgcfgrestore again and a vgchange -ay and it found the lv
-and the filesystem appears to be fully intact.  I am guessing that
-something did write to a few k to the disk during the attempt to raid6
-it.  I am verifying and/or saving anything that I want (there may be
-nothing important on it) and then will rebuild it as a new raid6 with
-new metadata.
+diff --git a/fs/afs/cmservice.c b/fs/afs/cmservice.c
+index 3062cceb5c2a..734604829a13 100644
+--- a/fs/afs/cmservice.c
++++ b/fs/afs/cmservice.c
+@@ -350,7 +350,7 @@ static int afs_deliver_cb_init_call_back_state3(struct afs_call *call)
+ {
+ 	struct sockaddr_rxrpc srx;
+ 	struct afs_server *server;
+-	struct uuid_v1 *r;
++	struct afs_uuid *r;
+ 	unsigned loop;
+ 	__be32 *b;
+ 	int ret;
+@@ -380,15 +380,15 @@ static int afs_deliver_cb_init_call_back_state3(struct afs_call *call)
+ 		}
+ 
+ 		_debug("unmarshall UUID");
+-		call->request = kmalloc(sizeof(struct uuid_v1), GFP_KERNEL);
++		call->request = kmalloc(sizeof(struct afs_uuid), GFP_KERNEL);
+ 		if (!call->request)
+ 			return -ENOMEM;
+ 
+ 		b = call->buffer;
+ 		r = call->request;
+-		r->time_low			= b[0];
+-		r->time_mid			= htons(ntohl(b[1]));
+-		r->time_hi_and_version		= htons(ntohl(b[2]));
++		r->time_low			= ntohl(b[0]);
++		r->time_mid			= ntohl(b[1]);
++		r->time_hi_and_version		= ntohl(b[2]);
+ 		r->clock_seq_hi_and_reserved 	= ntohl(b[3]);
+ 		r->clock_seq_low		= ntohl(b[4]);
+ 
+@@ -453,7 +453,7 @@ static int afs_deliver_cb_probe(struct afs_call *call)
+ static void SRXAFSCB_ProbeUuid(struct work_struct *work)
+ {
+ 	struct afs_call *call = container_of(work, struct afs_call, work);
+-	struct uuid_v1 *r = call->request;
++	struct afs_uuid *r = call->request;
+ 
+ 	struct {
+ 		__be32	match;
+@@ -476,7 +476,7 @@ static void SRXAFSCB_ProbeUuid(struct work_struct *work)
+  */
+ static int afs_deliver_cb_probe_uuid(struct afs_call *call)
+ {
+-	struct uuid_v1 *r;
++	struct afs_uuid *r;
+ 	unsigned loop;
+ 	__be32 *b;
+ 	int ret;
+@@ -502,15 +502,15 @@ static int afs_deliver_cb_probe_uuid(struct afs_call *call)
+ 		}
+ 
+ 		_debug("unmarshall UUID");
+-		call->request = kmalloc(sizeof(struct uuid_v1), GFP_KERNEL);
++		call->request = kmalloc(sizeof(struct afs_uuid), GFP_KERNEL);
+ 		if (!call->request)
+ 			return -ENOMEM;
+ 
+ 		b = call->buffer;
+ 		r = call->request;
+-		r->time_low			= b[0];
+-		r->time_mid			= htons(ntohl(b[1]));
+-		r->time_hi_and_version		= htons(ntohl(b[2]));
++		r->time_low			= ntohl(b[0]);
++		r->time_mid			= ntohl(b[1]);
++		r->time_hi_and_version		= ntohl(b[2]);
+ 		r->clock_seq_hi_and_reserved 	= ntohl(b[3]);
+ 		r->clock_seq_low		= ntohl(b[4]);
+ 
+@@ -568,9 +568,9 @@ static void SRXAFSCB_TellMeAboutYourself(struct work_struct *work)
+ 	memset(&reply, 0, sizeof(reply));
+ 	reply.ia.nifs = htonl(nifs);
+ 
+-	reply.ia.uuid[0] = afs_uuid.time_low;
+-	reply.ia.uuid[1] = htonl(ntohs(afs_uuid.time_mid));
+-	reply.ia.uuid[2] = htonl(ntohs(afs_uuid.time_hi_and_version));
++	reply.ia.uuid[0] = htonl(afs_uuid.time_low);
++	reply.ia.uuid[1] = htonl(afs_uuid.time_mid);
++	reply.ia.uuid[2] = htonl(afs_uuid.time_hi_and_version);
+ 	reply.ia.uuid[3] = htonl((s8) afs_uuid.clock_seq_hi_and_reserved);
+ 	reply.ia.uuid[4] = htonl((s8) afs_uuid.clock_seq_low);
+ 	for (loop = 0; loop < 6; loop++)
+diff --git a/fs/afs/internal.h b/fs/afs/internal.h
+index 393672997cc2..fb63b8ee4d40 100644
+--- a/fs/afs/internal.h
++++ b/fs/afs/internal.h
+@@ -410,6 +410,30 @@ struct afs_interface {
+ 	unsigned	mtu;		/* MTU of interface */
+ };
+ 
++/*
++ * UUID definition [internet draft]
++ * - the timestamp is a 60-bit value, split 32/16/12, and goes in 100ns
++ *   increments since midnight 15th October 1582
++ *   - add AFS_UUID_TO_UNIX_TIME to convert unix time in 100ns units to UUID
++ *     time
++ * - the clock sequence is a 14-bit counter to avoid duplicate times
++ */
++struct afs_uuid {
++	u32		time_low;			/* low part of timestamp */
++	u16		time_mid;			/* mid part of timestamp */
++	u16		time_hi_and_version;		/* high part of timestamp and version  */
++#define AFS_UUID_TO_UNIX_TIME	0x01b21dd213814000ULL
++#define AFS_UUID_TIMEHI_MASK	0x0fff
++#define AFS_UUID_VERSION_TIME	0x1000	/* time-based UUID */
++#define AFS_UUID_VERSION_NAME	0x3000	/* name-based UUID */
++#define AFS_UUID_VERSION_RANDOM	0x4000	/* (pseudo-)random generated UUID */
++	u8		clock_seq_hi_and_reserved;	/* clock seq hi and variant */
++#define AFS_UUID_CLOCKHI_MASK	0x3f
++#define AFS_UUID_VARIANT_STD	0x80
++	u8		clock_seq_low;			/* clock seq low */
++	u8		node[6];			/* spatially unique node ID (MAC addr) */
++};
++
+ /*****************************************************************************/
+ /*
+  * cache.c
+@@ -544,7 +568,7 @@ extern int afs_drop_inode(struct inode *);
+  * main.c
+  */
+ extern struct workqueue_struct *afs_wq;
+-extern struct uuid_v1 afs_uuid;
++extern struct afs_uuid afs_uuid;
+ 
+ /*
+  * misc.c
+diff --git a/fs/afs/main.c b/fs/afs/main.c
+index 51d7d17bca57..9944770849da 100644
+--- a/fs/afs/main.c
++++ b/fs/afs/main.c
+@@ -31,7 +31,7 @@ static char *rootcell;
+ module_param(rootcell, charp, 0);
+ MODULE_PARM_DESC(rootcell, "root AFS cell name and VL server IP addr list");
+ 
+-struct uuid_v1 afs_uuid;
++struct afs_uuid afs_uuid;
+ struct workqueue_struct *afs_wq;
+ 
+ /*
+diff --git a/include/linux/uuid.h b/include/linux/uuid.h
+index 4dff73a89758..2d095fc60204 100644
+--- a/include/linux/uuid.h
++++ b/include/linux/uuid.h
+@@ -19,30 +19,6 @@
+ #include <uapi/linux/uuid.h>
+ 
+ /*
+- * V1 (time-based) UUID definition [RFC 4122].
+- * - the timestamp is a 60-bit value, split 32/16/12, and goes in 100ns
+- *   increments since midnight 15th October 1582
+- *   - add AFS_UUID_TO_UNIX_TIME to convert unix time in 100ns units to UUID
+- *     time
+- * - the clock sequence is a 14-bit counter to avoid duplicate times
+- */
+-struct uuid_v1 {
+-	__be32		time_low;			/* low part of timestamp */
+-	__be16		time_mid;			/* mid part of timestamp */
+-	__be16		time_hi_and_version;		/* high part of timestamp and version  */
+-#define UUID_TO_UNIX_TIME	0x01b21dd213814000ULL
+-#define UUID_TIMEHI_MASK	0x0fff
+-#define UUID_VERSION_TIME	0x1000	/* time-based UUID */
+-#define UUID_VERSION_NAME	0x3000	/* name-based UUID */
+-#define UUID_VERSION_RANDOM	0x4000	/* (pseudo-)random generated UUID */
+-	u8		clock_seq_hi_and_reserved;	/* clock seq hi and variant */
+-#define UUID_CLOCKHI_MASK	0x3f
+-#define UUID_VARIANT_STD	0x80
+-	u8		clock_seq_low;			/* clock seq low */
+-	u8		node[6];			/* spatially unique node ID (MAC addr) */
+-};
+-
+-/*
+  * The length of a UUID string ("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
+  * not including trailing NUL.
+  */
+-- 
+2.11.0
