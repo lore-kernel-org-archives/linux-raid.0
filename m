@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 01/22] Revert "afs: Move UUID struct to linux/uuid.h"
-Date: Sun, 28 May 2017 13:19:47 +0300
-Message-ID: <20170528102008.30276-2-hch@lst.de>
+Subject: [PATCH 03/22] xfs: use uuid_be to implement the uuid_t type
+Date: Sun, 28 May 2017 13:19:49 +0300
+Message-ID: <20170528102008.30276-4-hch@lst.de>
 References: <20170528102008.30276-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,195 +21,54 @@ To: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>,
 Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-This reverts commit ff548773106ec7f8031bc6172e0234bd2a02c19c.
-
-The V1 uuid intrepreatation in struct form isn't really useful to the
-rest of the kernel, and not really compatible to it either, so move it
-back to AFS instead of polluting the global uuid.h.
+Use the generic Linux definition to implement our UUID type, this will
+allow using more generic infrastructure in the future.
 
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Reviewed-by: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Reviewed-by: Brian Foster <bfoster-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Reviewed-by: Darrick J. Wong <darrick.wong-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 ---
- fs/afs/cmservice.c   | 28 ++++++++++++++--------------
- fs/afs/internal.h    | 26 +++++++++++++++++++++++++-
- fs/afs/main.c        |  2 +-
- include/linux/uuid.h | 24 ------------------------
- 4 files changed, 40 insertions(+), 40 deletions(-)
+ fs/xfs/uuid.h      | 4 ----
+ fs/xfs/xfs_linux.h | 3 +++
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/fs/afs/cmservice.c b/fs/afs/cmservice.c
-index 3062cceb5c2a..734604829a13 100644
---- a/fs/afs/cmservice.c
-+++ b/fs/afs/cmservice.c
-@@ -350,7 +350,7 @@ static int afs_deliver_cb_init_call_back_state3(struct afs_call *call)
- {
- 	struct sockaddr_rxrpc srx;
- 	struct afs_server *server;
--	struct uuid_v1 *r;
-+	struct afs_uuid *r;
- 	unsigned loop;
- 	__be32 *b;
- 	int ret;
-@@ -380,15 +380,15 @@ static int afs_deliver_cb_init_call_back_state3(struct afs_call *call)
- 		}
+diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
+index 104db0f3bed6..4f1441ba4fa5 100644
+--- a/fs/xfs/uuid.h
++++ b/fs/xfs/uuid.h
+@@ -18,10 +18,6 @@
+ #ifndef __XFS_SUPPORT_UUID_H__
+ #define __XFS_SUPPORT_UUID_H__
  
- 		_debug("unmarshall UUID");
--		call->request = kmalloc(sizeof(struct uuid_v1), GFP_KERNEL);
-+		call->request = kmalloc(sizeof(struct afs_uuid), GFP_KERNEL);
- 		if (!call->request)
- 			return -ENOMEM;
- 
- 		b = call->buffer;
- 		r = call->request;
--		r->time_low			= b[0];
--		r->time_mid			= htons(ntohl(b[1]));
--		r->time_hi_and_version		= htons(ntohl(b[2]));
-+		r->time_low			= ntohl(b[0]);
-+		r->time_mid			= ntohl(b[1]);
-+		r->time_hi_and_version		= ntohl(b[2]);
- 		r->clock_seq_hi_and_reserved 	= ntohl(b[3]);
- 		r->clock_seq_low		= ntohl(b[4]);
- 
-@@ -453,7 +453,7 @@ static int afs_deliver_cb_probe(struct afs_call *call)
- static void SRXAFSCB_ProbeUuid(struct work_struct *work)
- {
- 	struct afs_call *call = container_of(work, struct afs_call, work);
--	struct uuid_v1 *r = call->request;
-+	struct afs_uuid *r = call->request;
- 
- 	struct {
- 		__be32	match;
-@@ -476,7 +476,7 @@ static void SRXAFSCB_ProbeUuid(struct work_struct *work)
-  */
- static int afs_deliver_cb_probe_uuid(struct afs_call *call)
- {
--	struct uuid_v1 *r;
-+	struct afs_uuid *r;
- 	unsigned loop;
- 	__be32 *b;
- 	int ret;
-@@ -502,15 +502,15 @@ static int afs_deliver_cb_probe_uuid(struct afs_call *call)
- 		}
- 
- 		_debug("unmarshall UUID");
--		call->request = kmalloc(sizeof(struct uuid_v1), GFP_KERNEL);
-+		call->request = kmalloc(sizeof(struct afs_uuid), GFP_KERNEL);
- 		if (!call->request)
- 			return -ENOMEM;
- 
- 		b = call->buffer;
- 		r = call->request;
--		r->time_low			= b[0];
--		r->time_mid			= htons(ntohl(b[1]));
--		r->time_hi_and_version		= htons(ntohl(b[2]));
-+		r->time_low			= ntohl(b[0]);
-+		r->time_mid			= ntohl(b[1]);
-+		r->time_hi_and_version		= ntohl(b[2]);
- 		r->clock_seq_hi_and_reserved 	= ntohl(b[3]);
- 		r->clock_seq_low		= ntohl(b[4]);
- 
-@@ -568,9 +568,9 @@ static void SRXAFSCB_TellMeAboutYourself(struct work_struct *work)
- 	memset(&reply, 0, sizeof(reply));
- 	reply.ia.nifs = htonl(nifs);
- 
--	reply.ia.uuid[0] = afs_uuid.time_low;
--	reply.ia.uuid[1] = htonl(ntohs(afs_uuid.time_mid));
--	reply.ia.uuid[2] = htonl(ntohs(afs_uuid.time_hi_and_version));
-+	reply.ia.uuid[0] = htonl(afs_uuid.time_low);
-+	reply.ia.uuid[1] = htonl(afs_uuid.time_mid);
-+	reply.ia.uuid[2] = htonl(afs_uuid.time_hi_and_version);
- 	reply.ia.uuid[3] = htonl((s8) afs_uuid.clock_seq_hi_and_reserved);
- 	reply.ia.uuid[4] = htonl((s8) afs_uuid.clock_seq_low);
- 	for (loop = 0; loop < 6; loop++)
-diff --git a/fs/afs/internal.h b/fs/afs/internal.h
-index 393672997cc2..fb63b8ee4d40 100644
---- a/fs/afs/internal.h
-+++ b/fs/afs/internal.h
-@@ -410,6 +410,30 @@ struct afs_interface {
- 	unsigned	mtu;		/* MTU of interface */
- };
- 
-+/*
-+ * UUID definition [internet draft]
-+ * - the timestamp is a 60-bit value, split 32/16/12, and goes in 100ns
-+ *   increments since midnight 15th October 1582
-+ *   - add AFS_UUID_TO_UNIX_TIME to convert unix time in 100ns units to UUID
-+ *     time
-+ * - the clock sequence is a 14-bit counter to avoid duplicate times
-+ */
-+struct afs_uuid {
-+	u32		time_low;			/* low part of timestamp */
-+	u16		time_mid;			/* mid part of timestamp */
-+	u16		time_hi_and_version;		/* high part of timestamp and version  */
-+#define AFS_UUID_TO_UNIX_TIME	0x01b21dd213814000ULL
-+#define AFS_UUID_TIMEHI_MASK	0x0fff
-+#define AFS_UUID_VERSION_TIME	0x1000	/* time-based UUID */
-+#define AFS_UUID_VERSION_NAME	0x3000	/* name-based UUID */
-+#define AFS_UUID_VERSION_RANDOM	0x4000	/* (pseudo-)random generated UUID */
-+	u8		clock_seq_hi_and_reserved;	/* clock seq hi and variant */
-+#define AFS_UUID_CLOCKHI_MASK	0x3f
-+#define AFS_UUID_VARIANT_STD	0x80
-+	u8		clock_seq_low;			/* clock seq low */
-+	u8		node[6];			/* spatially unique node ID (MAC addr) */
-+};
-+
- /*****************************************************************************/
- /*
-  * cache.c
-@@ -544,7 +568,7 @@ extern int afs_drop_inode(struct inode *);
-  * main.c
-  */
- extern struct workqueue_struct *afs_wq;
--extern struct uuid_v1 afs_uuid;
-+extern struct afs_uuid afs_uuid;
- 
- /*
-  * misc.c
-diff --git a/fs/afs/main.c b/fs/afs/main.c
-index 51d7d17bca57..9944770849da 100644
---- a/fs/afs/main.c
-+++ b/fs/afs/main.c
-@@ -31,7 +31,7 @@ static char *rootcell;
- module_param(rootcell, charp, 0);
- MODULE_PARM_DESC(rootcell, "root AFS cell name and VL server IP addr list");
- 
--struct uuid_v1 afs_uuid;
-+struct afs_uuid afs_uuid;
- struct workqueue_struct *afs_wq;
- 
- /*
-diff --git a/include/linux/uuid.h b/include/linux/uuid.h
-index 4dff73a89758..2d095fc60204 100644
---- a/include/linux/uuid.h
-+++ b/include/linux/uuid.h
-@@ -19,30 +19,6 @@
- #include <uapi/linux/uuid.h>
- 
- /*
-- * V1 (time-based) UUID definition [RFC 4122].
-- * - the timestamp is a 60-bit value, split 32/16/12, and goes in 100ns
-- *   increments since midnight 15th October 1582
-- *   - add AFS_UUID_TO_UNIX_TIME to convert unix time in 100ns units to UUID
-- *     time
-- * - the clock sequence is a 14-bit counter to avoid duplicate times
-- */
--struct uuid_v1 {
--	__be32		time_low;			/* low part of timestamp */
--	__be16		time_mid;			/* mid part of timestamp */
--	__be16		time_hi_and_version;		/* high part of timestamp and version  */
--#define UUID_TO_UNIX_TIME	0x01b21dd213814000ULL
--#define UUID_TIMEHI_MASK	0x0fff
--#define UUID_VERSION_TIME	0x1000	/* time-based UUID */
--#define UUID_VERSION_NAME	0x3000	/* name-based UUID */
--#define UUID_VERSION_RANDOM	0x4000	/* (pseudo-)random generated UUID */
--	u8		clock_seq_hi_and_reserved;	/* clock seq hi and variant */
--#define UUID_CLOCKHI_MASK	0x3f
--#define UUID_VARIANT_STD	0x80
--	u8		clock_seq_low;			/* clock seq low */
--	u8		node[6];			/* spatially unique node ID (MAC addr) */
--};
+-typedef struct {
+-	unsigned char	__u_bits[16];
+-} uuid_t;
 -
--/*
-  * The length of a UUID string ("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
-  * not including trailing NUL.
-  */
+ extern int uuid_is_nil(uuid_t *uuid);
+ extern int uuid_equal(uuid_t *uuid1, uuid_t *uuid2);
+ extern void uuid_getnodeuniq(uuid_t *uuid, int fsid [2]);
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 044fb0e15390..89ee5ec66837 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -19,6 +19,7 @@
+ #define __XFS_LINUX__
+ 
+ #include <linux/types.h>
++#include <linux/uuid.h>
+ 
+ /*
+  * Kernel specific type declarations for XFS
+@@ -38,6 +39,8 @@ typedef __s64			xfs_daddr_t;	/* <disk address> type */
+ typedef __u32			xfs_dev_t;
+ typedef __u32			xfs_nlink_t;
+ 
++typedef uuid_be			uuid_t;
++
+ #include "xfs_types.h"
+ 
+ #include "kmem.h"
 -- 
 2.11.0
