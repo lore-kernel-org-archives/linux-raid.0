@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 21/22] tmpfs: generate random sb->s_uuid
-Date: Sun, 28 May 2017 13:20:07 +0300
-Message-ID: <20170528102008.30276-22-hch@lst.de>
+Subject: [PATCH 22/22] MAINTAINERS: add uuid entry
+Date: Sun, 28 May 2017 13:20:08 +0300
+Message-ID: <20170528102008.30276-23-hch@lst.de>
 References: <20170528102008.30276-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -18,41 +18,38 @@ List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
 Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
 Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
 To: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-From: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+I'll keep maintaining whatever little changed we need here, with Andy as
+my designated reviewer.
 
-This is used by overlayfs to encode intrasystem unique file handles.
-
-Suggested-by: Miklos Szeredi <mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Signed-off-by: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- mm/shmem.c | 2 ++
- 1 file changed, 2 insertions(+)
+ MAINTAINERS | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/mm/shmem.c b/mm/shmem.c
-index e67d6ba4e98e..391f2dcca727 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -75,6 +75,7 @@ static struct vfsmount *shm_mnt;
- #include <uapi/linux/memfd.h>
- #include <linux/userfaultfd_k.h>
- #include <linux/rmap.h>
-+#include <linux/uuid.h>
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 053c3bdd1fe5..660c14729205 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -13463,6 +13463,17 @@ W:	http://en.wikipedia.org/wiki/Util-linux
+ T:	git git://git.kernel.org/pub/scm/utils/util-linux/util-linux.git
+ S:	Maintained
  
- #include <linux/uaccess.h>
- #include <asm/pgtable.h>
-@@ -3761,6 +3762,7 @@ int shmem_fill_super(struct super_block *sb, void *data, int silent)
- #ifdef CONFIG_TMPFS_POSIX_ACL
- 	sb->s_flags |= MS_POSIXACL;
- #endif
-+	uuid_gen(&sb->s_uuid);
- 
- 	inode = shmem_get_inode(sb, NULL, S_IFDIR | sbinfo->mode, 0, VM_NORESERVE);
- 	if (!inode)
++UUID HELPERS
++M:	Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
++R:	Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
++L:	linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
++T:	git git://git.infradead.org/users/hch/uuid.git
++F:	lib/uuid.c
++F:	lib/test_uuid.c
++F:	include/linux/uuid.h
++F:	include/uapi/linux/uuid.h
++S:	Maintained
++
+ UVESAFB DRIVER
+ M:	Michal Januszewski <spock-aBrp7R+bbdUdnm+yROfE0A@public.gmane.org>
+ L:	linux-fbdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 -- 
 2.11.0
