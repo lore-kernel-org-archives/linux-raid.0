@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 09/22] uuid: hoist uuid_is_null() helper from libnvdimm
-Date: Sun, 28 May 2017 13:19:55 +0300
-Message-ID: <20170528102008.30276-10-hch@lst.de>
+Subject: [PATCH 12/22] xfs: use the common helper uuid_is_null()
+Date: Sun, 28 May 2017 13:19:58 +0300
+Message-ID: <20170528102008.30276-13-hch@lst.de>
 References: <20170528102008.30276-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,107 +21,180 @@ To: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>,
 Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-Hoist the libnvdimm helper as an inline helper to linux/uuid.h
-using an auxiliary const variable uuid_null in lib/uuid.c.
+From: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-[hch: also add the guid variant.  Both do the same but I'd like
-to keep casts to a minimum]
+Use the common helper uuid_is_null() and remove the xfs specific
+helper uuid_is_nil().
 
-The common helper uses the new abstract type uuid_t * instead of
-u8 *.
+The common helper does not check for the NULL pointer value as
+xfs helper did, but xfs code never calls the helper with a pointer
+that can be NULL.
 
-Suggested-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Conform comments and warning strings to use the term 'null uuid'
+instead of 'nil uuid', because this is the terminology used by
+lib/uuid.c and its users. It is also the terminology used in
+userspace by libuuid and xfsprogs.
+
 Signed-off-by: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-[hch: added guid_is_null]
+[hch: remove now unused uuid.[ch]]
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Acked-by: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Reviewed-by: Brian Foster <bfoster-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Reviewed-by: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 ---
- drivers/nvdimm/btt_devs.c |  9 +--------
- include/linux/uuid.h      | 13 +++++++++++++
- lib/uuid.c                |  5 +++++
- 3 files changed, 19 insertions(+), 8 deletions(-)
+ fs/xfs/Makefile          |  3 +--
+ fs/xfs/uuid.c            | 32 --------------------------------
+ fs/xfs/uuid.h            | 23 -----------------------
+ fs/xfs/xfs_linux.h       |  1 -
+ fs/xfs/xfs_log_recover.c |  6 +++---
+ fs/xfs/xfs_mount.c       |  8 ++++----
+ 6 files changed, 8 insertions(+), 65 deletions(-)
+ delete mode 100644 fs/xfs/uuid.c
+ delete mode 100644 fs/xfs/uuid.h
 
-diff --git a/drivers/nvdimm/btt_devs.c b/drivers/nvdimm/btt_devs.c
-index ae00dc0d9791..4c989bb9a8a0 100644
---- a/drivers/nvdimm/btt_devs.c
-+++ b/drivers/nvdimm/btt_devs.c
-@@ -222,13 +222,6 @@ struct device *nd_btt_create(struct nd_region *nd_region)
- 	return dev;
- }
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 5c90f82b8f6b..a6e955bfead8 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -98,8 +98,7 @@ xfs-y				+= xfs_aops.o \
+ 				   xfs_sysfs.o \
+ 				   xfs_trans.o \
+ 				   xfs_xattr.o \
+-				   kmem.o \
+-				   uuid.o
++				   kmem.o
  
--static bool uuid_is_null(u8 *uuid)
+ # low-level transaction/log code
+ xfs-y				+= xfs_log.o \
+diff --git a/fs/xfs/uuid.c b/fs/xfs/uuid.c
+deleted file mode 100644
+index 737c186ea98b..000000000000
+--- a/fs/xfs/uuid.c
++++ /dev/null
+@@ -1,32 +0,0 @@
+-/*
+- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#include <xfs.h>
+-
+-int
+-uuid_is_nil(uuid_t *uuid)
 -{
--	static const u8 null_uuid[16];
+-	int	i;
+-	char	*cp = (char *)uuid;
 -
--	return (memcmp(uuid, null_uuid, 16) == 0);
+-	if (uuid == NULL)
+-		return 0;
+-	/* implied check of version number here... */
+-	for (i = 0; i < sizeof *uuid; i++)
+-		if (*cp++) return 0;	/* not nil */
+-	return 1;	/* is nil */
 -}
+diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
+deleted file mode 100644
+index 5aea49bf0963..000000000000
+--- a/fs/xfs/uuid.h
++++ /dev/null
+@@ -1,23 +0,0 @@
+-/*
+- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#ifndef __XFS_SUPPORT_UUID_H__
+-#define __XFS_SUPPORT_UUID_H__
 -
- /**
-  * nd_btt_arena_is_valid - check if the metadata layout is valid
-  * @nd_btt:	device with BTT geometry and backing device info
-@@ -249,7 +242,7 @@ bool nd_btt_arena_is_valid(struct nd_btt *nd_btt, struct btt_sb *super)
- 	if (memcmp(super->signature, BTT_SIG, BTT_SIG_LEN) != 0)
- 		return false;
+-extern int uuid_is_nil(uuid_t *uuid);
+-
+-#endif	/* __XFS_SUPPORT_UUID_H__ */
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 2c33d915e550..2d167fe643ec 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -43,7 +43,6 @@ typedef __u32			xfs_nlink_t;
  
--	if (!uuid_is_null(super->parent_uuid))
-+	if (!guid_is_null((guid_t *)&super->parent_uuid))
- 		if (memcmp(super->parent_uuid, parent_uuid, 16) != 0)
- 			return false;
+ #include "kmem.h"
+ #include "mrlock.h"
+-#include "uuid.h"
  
-diff --git a/include/linux/uuid.h b/include/linux/uuid.h
-index b4b147f52d6c..06224311b0d0 100644
---- a/include/linux/uuid.h
-+++ b/include/linux/uuid.h
-@@ -35,6 +35,9 @@ typedef struct {
-  */
- #define	UUID_STRING_LEN		36
- 
-+extern const guid_t guid_null;
-+extern const uuid_t uuid_null;
-+
- static inline bool guid_equal(const guid_t *u1, const guid_t *u2)
+ #include <linux/semaphore.h>
+ #include <linux/mm.h>
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index cd0b077deb35..8cec1e5505a4 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -352,13 +352,13 @@ xlog_header_check_mount(
  {
- 	return memcmp(u1, u2, sizeof(guid_t)) == 0;
-@@ -45,6 +48,11 @@ static inline void guid_copy(guid_t *dst, const guid_t *src)
- 	memcpy(dst, src, sizeof(guid_t));
- }
+ 	ASSERT(head->h_magicno == cpu_to_be32(XLOG_HEADER_MAGIC_NUM));
  
-+static inline bool guid_is_null(guid_t *guid)
-+{
-+	return guid_equal(guid, &guid_null);
-+}
-+
- static inline bool uuid_equal(const uuid_t *u1, const uuid_t *u2)
- {
- 	return memcmp(u1, u2, sizeof(uuid_t)) == 0;
-@@ -55,6 +63,11 @@ static inline void uuid_copy(uuid_t *dst, const uuid_t *src)
- 	memcpy(dst, src, sizeof(uuid_t));
- }
+-	if (uuid_is_nil(&head->h_fs_uuid)) {
++	if (uuid_is_null(&head->h_fs_uuid)) {
+ 		/*
+ 		 * IRIX doesn't write the h_fs_uuid or h_fmt fields. If
+-		 * h_fs_uuid is nil, we assume this log was last mounted
++		 * h_fs_uuid is null, we assume this log was last mounted
+ 		 * by IRIX and continue.
+ 		 */
+-		xfs_warn(mp, "nil uuid in log - IRIX style log");
++		xfs_warn(mp, "null uuid in log - IRIX style log");
+ 	} else if (unlikely(!uuid_equal(&mp->m_sb.sb_uuid, &head->h_fs_uuid))) {
+ 		xfs_warn(mp, "log has mismatched uuid - can't recover");
+ 		xlog_header_check_dump(mp, head);
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 51f7d03ef86c..54452967e35e 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -80,14 +80,14 @@ xfs_uuid_mount(
+ 	if (mp->m_flags & XFS_MOUNT_NOUUID)
+ 		return 0;
  
-+static inline bool uuid_is_null(uuid_t *uuid)
-+{
-+	return uuid_equal(uuid, &uuid_null);
-+}
-+
- void generate_random_uuid(unsigned char uuid[16]);
+-	if (uuid_is_nil(uuid)) {
+-		xfs_warn(mp, "Filesystem has nil UUID - can't mount");
++	if (uuid_is_null(uuid)) {
++		xfs_warn(mp, "Filesystem has null UUID - can't mount");
+ 		return -EINVAL;
+ 	}
  
- extern void guid_gen(guid_t *u);
-diff --git a/lib/uuid.c b/lib/uuid.c
-index 003bf6823003..25145bfb0eaa 100644
---- a/lib/uuid.c
-+++ b/lib/uuid.c
-@@ -21,6 +21,11 @@
- #include <linux/uuid.h>
- #include <linux/random.h>
+ 	mutex_lock(&xfs_uuid_table_mutex);
+ 	for (i = 0, hole = -1; i < xfs_uuid_table_size; i++) {
+-		if (uuid_is_nil(&xfs_uuid_table[i])) {
++		if (uuid_is_null(&xfs_uuid_table[i])) {
+ 			hole = i;
+ 			continue;
+ 		}
+@@ -124,7 +124,7 @@ xfs_uuid_unmount(
  
-+const guid_t guid_null;
-+EXPORT_SYMBOL(guid_null);
-+const uuid_t uuid_null;
-+EXPORT_SYMBOL(uuid_null);
-+
- const u8 guid_index[16] = {3,2,1,0,5,4,7,6,8,9,10,11,12,13,14,15};
- const u8 uuid_index[16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
- 
+ 	mutex_lock(&xfs_uuid_table_mutex);
+ 	for (i = 0; i < xfs_uuid_table_size; i++) {
+-		if (uuid_is_nil(&xfs_uuid_table[i]))
++		if (uuid_is_null(&xfs_uuid_table[i]))
+ 			continue;
+ 		if (!uuid_equal(uuid, &xfs_uuid_table[i]))
+ 			continue;
 -- 
 2.11.0
