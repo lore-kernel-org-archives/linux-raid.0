@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 10/22] S390/sysinfo: use uuid_is_null instead of opencoding it
-Date: Sun, 28 May 2017 13:19:56 +0300
-Message-ID: <20170528102008.30276-11-hch@lst.de>
+Subject: [PATCH 13/22] block: remove blk_part_pack_uuid
+Date: Sun, 28 May 2017 13:19:59 +0300
+Message-ID: <20170528102008.30276-14-hch@lst.de>
 References: <20170528102008.30276-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,50 +21,60 @@ To: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>,
 Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-And switch to use uuid_t instead of the old uuid_be type.
+This helper was only used by IMA of all things, which would get spurious
+errors if CONFIG_BLOCK is disabled.  Just opencode the call there.
 
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 Reviewed-by: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Acked-by: Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 Reviewed-by: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 ---
- arch/s390/include/asm/sysinfo.h | 4 ++--
- arch/s390/kernel/sysinfo.c      | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ include/linux/genhd.h               | 11 -----------
+ security/integrity/ima/ima_policy.c |  3 +--
+ 2 files changed, 1 insertion(+), 13 deletions(-)
 
-diff --git a/arch/s390/include/asm/sysinfo.h b/arch/s390/include/asm/sysinfo.h
-index e784bed6ed7f..2b498e58b914 100644
---- a/arch/s390/include/asm/sysinfo.h
-+++ b/arch/s390/include/asm/sysinfo.h
-@@ -109,7 +109,7 @@ struct sysinfo_2_2_2 {
- 	unsigned short cpus_shared;
- 	char reserved_4[3];
- 	unsigned char vsne;
--	uuid_be uuid;
-+	uuid_t uuid;
- 	char reserved_5[160];
- 	char ext_name[256];
- };
-@@ -134,7 +134,7 @@ struct sysinfo_3_2_2 {
- 		char reserved_1[3];
- 		unsigned char evmne;
- 		unsigned int reserved_2;
--		uuid_be uuid;
-+		uuid_t uuid;
- 	} vm[8];
- 	char reserved_3[1504];
- 	char ext_names[8][256];
-diff --git a/arch/s390/kernel/sysinfo.c b/arch/s390/kernel/sysinfo.c
-index eefcb54872a5..fb869b103825 100644
---- a/arch/s390/kernel/sysinfo.c
-+++ b/arch/s390/kernel/sysinfo.c
-@@ -242,7 +242,7 @@ static void print_ext_name(struct seq_file *m, int lvl,
- 
- static void print_uuid(struct seq_file *m, int i, struct sysinfo_3_2_2 *info)
- {
--	if (!memcmp(&info->vm[i].uuid, &NULL_UUID_BE, sizeof(uuid_be)))
-+	if (uuid_is_null(&info->vm[i].uuid))
- 		return;
- 	seq_printf(m, "VM%02d UUID:            %pUb\n", i, &info->vm[i].uuid);
+diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+index acff9437e5c3..e619fae2f037 100644
+--- a/include/linux/genhd.h
++++ b/include/linux/genhd.h
+@@ -219,12 +219,6 @@ static inline struct gendisk *part_to_disk(struct hd_struct *part)
+ 	return NULL;
  }
+ 
+-static inline int blk_part_pack_uuid(const u8 *uuid_str, u8 *to)
+-{
+-	uuid_be_to_bin(uuid_str, (uuid_be *)to);
+-	return 0;
+-}
+-
+ static inline int disk_max_parts(struct gendisk *disk)
+ {
+ 	if (disk->flags & GENHD_FL_EXT_DEVT)
+@@ -736,11 +730,6 @@ static inline dev_t blk_lookup_devt(const char *name, int partno)
+ 	dev_t devt = MKDEV(0, 0);
+ 	return devt;
+ }
+-
+-static inline int blk_part_pack_uuid(const u8 *uuid_str, u8 *to)
+-{
+-	return -EINVAL;
+-}
+ #endif /* CONFIG_BLOCK */
+ 
+ #endif /* _LINUX_GENHD_H */
+diff --git a/security/integrity/ima/ima_policy.c b/security/integrity/ima/ima_policy.c
+index 3ab1067db624..49fbc3e8f012 100644
+--- a/security/integrity/ima/ima_policy.c
++++ b/security/integrity/ima/ima_policy.c
+@@ -717,8 +717,7 @@ static int ima_parse_rule(char *rule, struct ima_rule_entry *entry)
+ 				break;
+ 			}
+ 
+-			result = blk_part_pack_uuid(args[0].from,
+-						    entry->fsuuid);
++			result = uuid_to_bin(args[0].from, (uuid_t *)&entry->fsuuid);
+ 			if (!result)
+ 				entry->flags |= IMA_FSUUID;
+ 			break;
 -- 
 2.11.0
