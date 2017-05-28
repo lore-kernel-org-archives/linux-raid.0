@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 04/22] md: namespace private helper names
-Date: Sun, 28 May 2017 13:19:50 +0300
-Message-ID: <20170528102008.30276-5-hch@lst.de>
+Subject: [PATCH 05/22] uuid: remove uuid_be defintions from the uapi header
+Date: Sun, 28 May 2017 13:19:51 +0300
+Message-ID: <20170528102008.30276-6-hch@lst.de>
 References: <20170528102008.30276-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,58 +21,78 @@ To: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>,
 Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-From: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+We don't use uuid_be and the UUID_BE constants in any uapi headers, so make
+them private to the kernel.
 
-The md private helper uuid_equal() collides with a generic helper
-of the same name.
-
-Rename the md private helper to md_uuid_equal() and do the same for
-md_sb_equal().
-
-Signed-off-by: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Reviewed-by: Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Reviewed-by: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Reviewed-by: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 ---
- drivers/md/md.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ include/linux/uuid.h      | 15 +++++++++++++++
+ include/uapi/linux/uuid.h | 16 ----------------
+ 2 files changed, 15 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 10367ffe92e3..b9ab268ba7f9 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -825,7 +825,7 @@ static int read_disk_sb(struct md_rdev *rdev, int size)
- 	return -EINVAL;
- }
+diff --git a/include/linux/uuid.h b/include/linux/uuid.h
+index 2d095fc60204..30fb13018e29 100644
+--- a/include/linux/uuid.h
++++ b/include/linux/uuid.h
+@@ -18,6 +18,21 @@
  
--static int uuid_equal(mdp_super_t *sb1, mdp_super_t *sb2)
-+static int md_uuid_equal(mdp_super_t *sb1, mdp_super_t *sb2)
- {
- 	return	sb1->set_uuid0 == sb2->set_uuid0 &&
- 		sb1->set_uuid1 == sb2->set_uuid1 &&
-@@ -833,7 +833,7 @@ static int uuid_equal(mdp_super_t *sb1, mdp_super_t *sb2)
- 		sb1->set_uuid3 == sb2->set_uuid3;
- }
+ #include <uapi/linux/uuid.h>
  
--static int sb_equal(mdp_super_t *sb1, mdp_super_t *sb2)
-+static int md_sb_equal(mdp_super_t *sb1, mdp_super_t *sb2)
- {
- 	int ret;
- 	mdp_super_t *tmp1, *tmp2;
-@@ -1025,12 +1025,12 @@ static int super_90_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor
- 	} else {
- 		__u64 ev1, ev2;
- 		mdp_super_t *refsb = page_address(refdev->sb_page);
--		if (!uuid_equal(refsb, sb)) {
-+		if (!md_uuid_equal(refsb, sb)) {
- 			pr_warn("md: %s has different UUID to %s\n",
- 				b, bdevname(refdev->bdev,b2));
- 			goto abort;
- 		}
--		if (!sb_equal(refsb, sb)) {
-+		if (!md_sb_equal(refsb, sb)) {
- 			pr_warn("md: %s has same UUID but different superblock to %s\n",
- 				b, bdevname(refdev->bdev, b2));
- 			goto abort;
++typedef struct {
++	__u8 b[16];
++} uuid_be;
++
++#define UUID_BE(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)		\
++((uuid_be)								\
++{{ ((a) >> 24) & 0xff, ((a) >> 16) & 0xff, ((a) >> 8) & 0xff, (a) & 0xff, \
++   ((b) >> 8) & 0xff, (b) & 0xff,					\
++   ((c) >> 8) & 0xff, (c) & 0xff,					\
++   (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
++
++#define NULL_UUID_BE							\
++	UUID_BE(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00,	\
++		0x00, 0x00, 0x00, 0x00)
++
+ /*
+  * The length of a UUID string ("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
+  * not including trailing NUL.
+diff --git a/include/uapi/linux/uuid.h b/include/uapi/linux/uuid.h
+index 3738e5fb6a4d..0099756c4bac 100644
+--- a/include/uapi/linux/uuid.h
++++ b/include/uapi/linux/uuid.h
+@@ -24,10 +24,6 @@ typedef struct {
+ 	__u8 b[16];
+ } uuid_le;
+ 
+-typedef struct {
+-	__u8 b[16];
+-} uuid_be;
+-
+ #define UUID_LE(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)		\
+ ((uuid_le)								\
+ {{ (a) & 0xff, ((a) >> 8) & 0xff, ((a) >> 16) & 0xff, ((a) >> 24) & 0xff, \
+@@ -35,20 +31,8 @@ typedef struct {
+    (c) & 0xff, ((c) >> 8) & 0xff,					\
+    (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
+ 
+-#define UUID_BE(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)		\
+-((uuid_be)								\
+-{{ ((a) >> 24) & 0xff, ((a) >> 16) & 0xff, ((a) >> 8) & 0xff, (a) & 0xff, \
+-   ((b) >> 8) & 0xff, (b) & 0xff,					\
+-   ((c) >> 8) & 0xff, (c) & 0xff,					\
+-   (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
+-
+ #define NULL_UUID_LE							\
+ 	UUID_LE(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00,	\
+ 		0x00, 0x00, 0x00, 0x00)
+ 
+-#define NULL_UUID_BE							\
+-	UUID_BE(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00,	\
+-		0x00, 0x00, 0x00, 0x00)
+-
+-
+ #endif /* _UAPI_LINUX_UUID_H_ */
 -- 
 2.11.0
