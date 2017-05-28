@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 13/22] block: remove blk_part_pack_uuid
-Date: Sun, 28 May 2017 13:19:59 +0300
-Message-ID: <20170528102008.30276-14-hch@lst.de>
+Subject: [PATCH 14/22] ima/policy: switch to use uuid_t
+Date: Sun, 28 May 2017 13:20:00 +0300
+Message-ID: <20170528102008.30276-15-hch@lst.de>
 References: <20170528102008.30276-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,60 +21,60 @@ To: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>,
 Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-This helper was only used by IMA of all things, which would get spurious
-errors if CONFIG_BLOCK is disabled.  Just opencode the call there.
-
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 Reviewed-by: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Acked-by: Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 Reviewed-by: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 ---
- include/linux/genhd.h               | 11 -----------
- security/integrity/ima/ima_policy.c |  3 +--
- 2 files changed, 1 insertion(+), 13 deletions(-)
+ security/integrity/ima/ima_policy.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index acff9437e5c3..e619fae2f037 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -219,12 +219,6 @@ static inline struct gendisk *part_to_disk(struct hd_struct *part)
- 	return NULL;
- }
- 
--static inline int blk_part_pack_uuid(const u8 *uuid_str, u8 *to)
--{
--	uuid_be_to_bin(uuid_str, (uuid_be *)to);
--	return 0;
--}
--
- static inline int disk_max_parts(struct gendisk *disk)
- {
- 	if (disk->flags & GENHD_FL_EXT_DEVT)
-@@ -736,11 +730,6 @@ static inline dev_t blk_lookup_devt(const char *name, int partno)
- 	dev_t devt = MKDEV(0, 0);
- 	return devt;
- }
--
--static inline int blk_part_pack_uuid(const u8 *uuid_str, u8 *to)
--{
--	return -EINVAL;
--}
- #endif /* CONFIG_BLOCK */
- 
- #endif /* _LINUX_GENHD_H */
 diff --git a/security/integrity/ima/ima_policy.c b/security/integrity/ima/ima_policy.c
-index 3ab1067db624..49fbc3e8f012 100644
+index 49fbc3e8f012..da3e7d50e0d7 100644
 --- a/security/integrity/ima/ima_policy.c
 +++ b/security/integrity/ima/ima_policy.c
-@@ -717,8 +717,7 @@ static int ima_parse_rule(char *rule, struct ima_rule_entry *entry)
+@@ -61,7 +61,7 @@ struct ima_rule_entry {
+ 	enum ima_hooks func;
+ 	int mask;
+ 	unsigned long fsmagic;
+-	u8 fsuuid[16];
++	uuid_t fsuuid;
+ 	kuid_t uid;
+ 	kuid_t fowner;
+ 	bool (*uid_op)(kuid_t, kuid_t);    /* Handlers for operators       */
+@@ -244,7 +244,7 @@ static bool ima_match_rules(struct ima_rule_entry *rule, struct inode *inode,
+ 	    && rule->fsmagic != inode->i_sb->s_magic)
+ 		return false;
+ 	if ((rule->flags & IMA_FSUUID) &&
+-	    memcmp(rule->fsuuid, inode->i_sb->s_uuid, sizeof(rule->fsuuid)))
++	    memcmp(&rule->fsuuid, inode->i_sb->s_uuid, sizeof(rule->fsuuid)))
+ 		return false;
+ 	if ((rule->flags & IMA_UID) && !rule->uid_op(cred->uid, rule->uid))
+ 		return false;
+@@ -711,13 +711,12 @@ static int ima_parse_rule(char *rule, struct ima_rule_entry *entry)
+ 		case Opt_fsuuid:
+ 			ima_log_string(ab, "fsuuid", args[0].from);
+ 
+-			if (memchr_inv(entry->fsuuid, 0x00,
+-				       sizeof(entry->fsuuid))) {
++			if (uuid_is_null(&entry->fsuuid)) {
+ 				result = -EINVAL;
  				break;
  			}
  
--			result = blk_part_pack_uuid(args[0].from,
--						    entry->fsuuid);
-+			result = uuid_to_bin(args[0].from, (uuid_t *)&entry->fsuuid);
+-			result = uuid_to_bin(args[0].from, (uuid_t *)&entry->fsuuid);
++			result = uuid_to_bin(args[0].from, &entry->fsuuid);
  			if (!result)
  				entry->flags |= IMA_FSUUID;
  			break;
+@@ -1086,7 +1085,7 @@ int ima_policy_show(struct seq_file *m, void *v)
+ 	}
+ 
+ 	if (entry->flags & IMA_FSUUID) {
+-		seq_printf(m, "fsuuid=%pU", entry->fsuuid);
++		seq_printf(m, "fsuuid=%pU", &entry->fsuuid);
+ 		seq_puts(m, " ");
+ 	}
+ 
 -- 
 2.11.0
