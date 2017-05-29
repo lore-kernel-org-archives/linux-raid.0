@@ -1,119 +1,56 @@
-From: Gilad Ben-Yossef <gilad@benyossef.com>
-Subject: [PATCH v2 11/11] crypto: adapt api sample to use async. op wait
-Date: Mon, 29 May 2017 11:22:58 +0300
-Message-ID: <1496046180-21962-12-git-send-email-gilad@benyossef.com>
-References: <1496046180-21962-1-git-send-email-gilad@benyossef.com>
-Return-path: <linux-security-module-owner@vger.kernel.org>
-In-Reply-To: <1496046180-21962-1-git-send-email-gilad@benyossef.com>
-Sender: owner-linux-security-module@vger.kernel.org
-To: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>
-Cc: Eric Biggers <ebiggers3@gmail.com>, Ofir Drang <ofir.drang@arm.com>, Pavel Shilovsky <pshilov@microsoft.com>, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, keyrings@vger.kernel.org, linux-raid@vger.kernel.org, linux-cifs@vger.kernel.org, samba-technical@lists.samba.org, linux-fscrypt@vger.kernel.org, linux-ima-devel@lists.sourceforge.net, linux-ima-user@lists.sourceforge.net, linux-security-module@vger.kernel.org
+From: Nix <nix@esperi.org.uk>
+Subject: Re: mdadm --misc --readonly -> ENODEV indefinitely
+Date: Mon, 29 May 2017 13:20:23 +0100
+Message-ID: <87bmqbzwfs.fsf@esperi.org.uk>
+References: <87y3th2rdu.fsf@esperi.org.uk>
+        <877f10hgx8.fsf@notabene.neil.brown.name>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <877f10hgx8.fsf@notabene.neil.brown.name> (NeilBrown's message of
+        "Mon, 29 May 2017 06:20:35 +1000")
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The code sample is waiting for an async. crypto op completion.
-Adapt sample to use the new generic infrastructure to do the same.
+On 28 May 2017, NeilBrown told this:
 
-This also fixes a possible data coruption bug created by the
-use of wait_for_completion_interruptible() without dealing
-correctly with an interrupt aborting the wait prior to the
-async op finishing.
+> On Sun, May 28 2017, Nix wrote:
+>
+>> So I was trying to flip on the RAID journal now I'd fully populated my
+>> array and cut over to it. So, from early userspace, I did
+>>
+>>    # first line done by initramfs scripting
+>>    /sbin/mdadm --assemble --scan --auto=md --freeze-reshape
+>>    mdadm --misc --readonly /dev/md/fast
+>>    mdadm --manage /dev/md/fast --add-journal /dev/ssd1
+>>    mdadm --misc --readwrite /dev/md/fast
+>>
+>> This did not work as planned, or indeed at all. After the first
+>> --readonly, all requests for /dev/md/fast report "No such device or
+>> address" until a reboot, though /proc/mdstat says the thing is still
+>> there and /sys/block/md125/dev reports no change in major/minor numbers.
+>> (I don't have udev in my early-userspace environment, but mdev reports
+>> no change, either.)
+[...]
+> Commit: 065e519e71b2 ("md: MD_CLOSING needs to be cleared after called md_set_readonly or do_md_stop")
+>
+> Broken in v4.9-rc1
+> Fixed in v4.12-rc1
 
-Signed-off-by: Gilad Ben-Yossef <gilad@benyossef.com>
----
- Documentation/crypto/api-samples.rst | 52 +++++++-----------------------------
- 1 file changed, 10 insertions(+), 42 deletions(-)
+Oh, apologies -- I should have checked master. :/ didn't think of it.
+(And the fix hasn't hit stable in the two months since. I sort of
+assumed promotion to stable was usually faster than that... but I guess
+it depends on how much free time gregkh has.)
 
-diff --git a/Documentation/crypto/api-samples.rst b/Documentation/crypto/api-samples.rst
-index d021fd9..73b466b 100644
---- a/Documentation/crypto/api-samples.rst
-+++ b/Documentation/crypto/api-samples.rst
-@@ -7,59 +7,27 @@ Code Example For Symmetric Key Cipher Operation
- ::
- 
- 
--    struct tcrypt_result {
--        struct completion completion;
--        int err;
--    };
--
-     /* tie all data structures together */
-     struct skcipher_def {
-         struct scatterlist sg;
-         struct crypto_skcipher *tfm;
-         struct skcipher_request *req;
--        struct tcrypt_result result;
-+        struct crypto_wait wait;
-     };
- 
--    /* Callback function */
--    static void test_skcipher_cb(struct crypto_async_request *req, int error)
--    {
--        struct tcrypt_result *result = req->data;
--
--        if (error == -EINPROGRESS)
--            return;
--        result->err = error;
--        complete(&result->completion);
--        pr_info("Encryption finished successfully\n");
--    }
--
-     /* Perform cipher operation */
-     static unsigned int test_skcipher_encdec(struct skcipher_def *sk,
-                          int enc)
-     {
--        int rc = 0;
-+        int rc;
- 
-         if (enc)
--            rc = crypto_skcipher_encrypt(sk->req);
-+            rc = crypto_wait_req(crypto_skcipher_encrypt(sk->req), &sk->wait);
-         else
--            rc = crypto_skcipher_decrypt(sk->req);
--
--        switch (rc) {
--        case 0:
--            break;
--        case -EINPROGRESS:
--        case -EBUSY:
--            rc = wait_for_completion_interruptible(
--                &sk->result.completion);
--            if (!rc && !sk->result.err) {
--                reinit_completion(&sk->result.completion);
--                break;
--            }
--        default:
--            pr_info("skcipher encrypt returned with %d result %d\n",
--                rc, sk->result.err);
--            break;
--        }
--        init_completion(&sk->result.completion);
-+            rc = crypto_wait_req(crypto_skcipher_decrypt(sk->req), &sk->wait);
-+
-+	if (rc)
-+		pr_info("skcipher encrypt returned with result %d\n", rc);
- 
-         return rc;
-     }
-@@ -89,8 +57,8 @@ Code Example For Symmetric Key Cipher Operation
-         }
- 
-         skcipher_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG,
--                          test_skcipher_cb,
--                          &sk.result);
-+                          crypto_req_done,
-+                          &sk.wait);
- 
-         /* AES 256 with random key */
-         get_random_bytes(&key, 32);
-@@ -122,7 +90,7 @@ Code Example For Symmetric Key Cipher Operation
-         /* We encrypt one block */
-         sg_init_one(&sk.sg, scratchpad, 16);
-         skcipher_request_set_crypt(req, &sk.sg, &sk.sg, 16, ivdata);
--        init_completion(&sk.result.completion);
-+        crypto_init_wait(&sk.wait);
- 
-         /* encrypt data */
-         ret = test_skcipher_encdec(&sk, 1);
+... my arrays are all humming along now, RAID-6ed and much faster than
+they ever were with hardware RAID. I'm back in md land for good, where
+bugs can actually get *fixed* without booting off a DOS floppy and doing
+a reflash of horrible non-free firmware that if it goes wrong will make
+my machine unusable.
+
+The sense of freedom is undeniable :) thank you, mders one and all!
+
 -- 
-2.1.4
-
+NULL && (void)
