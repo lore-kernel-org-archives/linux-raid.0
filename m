@@ -1,304 +1,75 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: 4.11.2: reshape raid5 -> raid6 atop bcache deadlocks at start on md_attr_store / raid5_make_request
-Date: Mon, 29 May 2017 09:17:10 +1000
-Message-ID: <871sr8h8qx.fsf@notabene.neil.brown.name>
-References: <87lgppz221.fsf@esperi.org.uk> <87a865jf9a.fsf@notabene.neil.brown.name> <87fufwy3lr.fsf@esperi.org.uk> <87poezhwsa.fsf@notabene.neil.brown.name> <20170524225735.555dpfe24mi6yxrb@kernel.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170524225735.555dpfe24mi6yxrb@kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: Nix <nix@esperi.org.uk>, linux-raid@vger.kernel.org
+From: Gilad Ben-Yossef <gilad@benyossef.com>
+Subject: [PATCH v2 00/11] introduce crypto wait for async op
+Date: Mon, 29 May 2017 11:22:47 +0300
+Message-ID: <1496046180-21962-1-git-send-email-gilad@benyossef.com>
+Return-path: <linux-crypto-owner@vger.kernel.org>
+Sender: linux-crypto-owner@vger.kernel.org
+To: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>
+Cc: Eric Biggers <ebiggers3@gmail.com>, Ofir Drang <ofir.drang@arm.com>, Pavel Shilovsky <pshilov@microsoft.com>, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, keyrings@vger.kernel.org, linux-raid@vger.kernel.org, linux-cifs@vger.kernel.org, samba-technical@lists.samba.org, linux-fscrypt@vger.kernel.org, linux-ima-devel@lists.sourceforge.net, linux-ima-user@lists.sourceforge.net, linux-security-module@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Many users of kernel async. crypto services have a pattern of
+starting an async. crypto op and than using a completion
+to wait for it to end, resulting of the same code repeating
+itself in multiple places, sometime with coding errors.
 
-On Wed, May 24 2017, Shaohua Li wrote:
+This patch aims to introduce a generic "wait for async.
+crypto op to complete" functions and move all the users
+I could find to use it.  This gets rid of almost 300
+lines of code and uncovered a few bugs in existing code
+(separate bug fix patch set sent previously).
 
-> On Wed, May 24, 2017 at 11:24:21AM +1000, Neil Brown wrote:
->> On Mon, May 22 2017, Nix wrote:
->>=20
->> > On 22 May 2017, NeilBrown told this:
->> >
->> >> Probably something like this:
->> >>
->> >> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> >> index f6ae1d67bcd0..dbca31be22a1 100644
->> >> --- a/drivers/md/md.c
->> >> +++ b/drivers/md/md.c
->> >> @@ -8364,8 +8364,6 @@ static void md_start_sync(struct work_struct *w=
-s)
->> >>   */
->> >>  void md_check_recovery(struct mddev *mddev)
->> >>  {
->> >> -	if (mddev->suspended)
->> >> -		return;
->> >>=20=20
->> >>  	if (mddev->bitmap)
->> >>  		bitmap_daemon_work(mddev);
->> >> @@ -8484,6 +8482,7 @@ void md_check_recovery(struct mddev *mddev)
->> >>  		clear_bit(MD_RECOVERY_DONE, &mddev->recovery);
->> >>=20=20
->> >>  		if (!test_and_clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery) ||
->> >> +		    mddev->suspended ||
->> >>  		    test_bit(MD_RECOVERY_FROZEN, &mddev->recovery))
->> >>  			goto not_running;
->> >>  		/* no recovery is running.
->> >>
->> >> though it's late so don't trust anything I write.
->> >>
->> >> If you try again it will almost certainly succeed.  I suspect this is=
- a
->> >> hard race to hit - well done!!!
->> >
->> > Definitely not a hard race to hit :( I just hit it again with this
->> > patch.
->> >
->> > Absolutely identical hang:
->> >
->> > [  495.833520] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disa=
-bles this message.
->> > [  495.840618] mdadm           D    0  2700   2537 0x00000000
->> > [  495.847762] Call Trace:
->> > [  495.854825]  __schedule+0x290/0x810
->> > [  495.861905]  schedule+0x36/0x80
->> > [  495.868934]  mddev_suspend+0xb3/0xe0
->> > [  495.875926]  ? wake_atomic_t_function+0x60/0x60
->> > [  495.882976]  level_store+0x1a7/0x6c0
->> > [  495.889953]  ? md_ioctl+0xb7/0x1c10
->> > [  495.896901]  ? putname+0x53/0x60
->> > [  495.903807]  md_attr_store+0x83/0xc0
->> > [  495.910684]  sysfs_kf_write+0x37/0x40
->> > [  495.917547]  kernfs_fop_write+0x110/0x1a0
->> > [  495.924429]  __vfs_write+0x28/0x120
->> > [  495.931270]  ? kernfs_iop_get_link+0x172/0x1e0
->> > [  495.938126]  ? __alloc_fd+0x3f/0x170
->> > [  495.944906]  vfs_write+0xb6/0x1d0
->> > [  495.951646]  SyS_write+0x46/0xb0
->> > [  495.958338]  entry_SYSCALL_64_fastpath+0x13/0x94
->> >
->> > Everything else hangs the same way, too. This was surprising enough th=
-at
->> > I double-checked to be sure the patch was applied: it was. I suspect t=
-he
->> > deadlock is somewhat different than you supposed... (and quite possibly
->> > not a race at all, or I wouldn't be hitting it so consistently, every
->> > time. I mean, I only need to miss it *once* and I'll have reshaped... =
-:) )
->> >
->> > It seems I can reproduce this on demand, so if you want to throw a pat=
-ch
->> > with piles of extra printks my way, feel free.
->>=20
->> Did you have md_write_start being called by syslog-ng again?
->> I wonder what syslog is logging - presumably something about the reshape
->> starting.
->> If you kill syslog-ng, can you start the reshape?
->>=20
->> Alternately, this might do it.
->> I think the root problem is that it isn't safe to call mddev_suspend()
->> while holding the reconfig_mutex.
->> For complete safety I probably need to move the request_module() call
->> earlier, as that could block if a device was suspended (no memory
->> allocation allowed while device is suspended).
->>=20
->> Thanks,
->> NeilBrown
->>=20
->>=20
->>=20
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index 10367ffe92e3..a7b9c0576479 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -324,8 +324,12 @@ static blk_qc_t md_make_request(struct request_queu=
-e *q, struct bio *bio)
->>  void mddev_suspend(struct mddev *mddev)
->>  {
->>  	WARN_ON_ONCE(mddev->thread && current =3D=3D mddev->thread->tsk);
->> +
->>  	if (mddev->suspended++)
->>  		return;
->> +#ifdef CONFIG_LOCKDEP
->> +	WARN_ON_ONCE(debug_locks && lockdep_is_held(&mddev->reconfig_mutex));
->> +#endif
->>  	synchronize_rcu();
->>  	wait_event(mddev->sb_wait, atomic_read(&mddev->active_io) =3D=3D 0);
->>  	mddev->pers->quiesce(mddev, 1);
->> @@ -3594,9 +3598,12 @@ level_store(struct mddev *mddev, const char *buf,=
- size_t len)
->>  	if (slen =3D=3D 0 || slen >=3D sizeof(clevel))
->>  		return -EINVAL;
->>=20=20
->> +	mddev_suspend(mddev);
->>  	rv =3D mddev_lock(mddev);
->> -	if (rv)
->> +	if (rv) {
->> +		mddev_resume(mddev);
->>  		return rv;
->> +	}
->>=20=20
->>  	if (mddev->pers =3D=3D NULL) {
->>  		strncpy(mddev->clevel, buf, slen);
->> @@ -3687,7 +3694,6 @@ level_store(struct mddev *mddev, const char *buf, =
-size_t len)
->>  	}
->>=20=20
->>  	/* Looks like we have a winner */
->> -	mddev_suspend(mddev);
->>  	mddev_detach(mddev);
->>=20=20
->>  	spin_lock(&mddev->lock);
->> @@ -3771,13 +3777,13 @@ level_store(struct mddev *mddev, const char *buf=
-, size_t len)
->>  	blk_set_stacking_limits(&mddev->queue->limits);
->>  	pers->run(mddev);
->>  	set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
->> -	mddev_resume(mddev);
->>  	if (!mddev->thread)
->>  		md_update_sb(mddev, 1);
->>  	sysfs_notify(&mddev->kobj, NULL, "level");
->>  	md_new_event(mddev);
->>  	rv =3D len;
->>  out_unlock:
->> +	mddev_resume(mddev);
->>  	mddev_unlock(mddev);
->>  	return rv;
->>  }
->> @@ -4490,6 +4496,7 @@ action_store(struct mddev *mddev, const char *page=
-, size_t len)
->>  		int err;
->>  		if (mddev->pers->start_reshape =3D=3D NULL)
->>  			return -EINVAL;
->> +		mddev_suspend(mddev);
->>  		err =3D mddev_lock(mddev);
->>  		if (!err) {
->>  			if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
->> @@ -4500,6 +4507,7 @@ action_store(struct mddev *mddev, const char *page=
-, size_t len)
->>  			}
->>  			mddev_unlock(mddev);
->>  		}
->> +		mddev_resume(mddev);
->>  		if (err)
->>  			return err;
->>  		sysfs_notify(&mddev->kobj, NULL, "degraded");
->
-> The analysis makes a lot of sense, thanks! The patch looks not solving the
-> problem though, because check_recovery will not write super if suspended =
-isn't
-> 0.
->
-> I'm thinking of alternative wayt to fix this issue. A request which stall=
-s in
-> md_write_start reallys isn't an active IO. We could add another counter in
-> md_write_start to record stalled request there. Then in mddev_suspend, wa=
-it
-> event will wait for atomic_read(&mddev->active_io) =3D=3D the_new_counter.
->
+The patch set was boot tested on x86_64 and arm64 which
+at the very least tests the crypto users via testmgr
+but I am less confident regarding some of the other
+users and would love more testers.
+ 
+Changes from v1:
+- Address review comments from Eric Biggers.
+- Separated out bug fixes of existing code and rebase
+  on top of that patch set.
+- Rename 'ecr' to 'wait' in fscrypto code.
+- Split patch introducing the new API from the change
+  moving over the algif code which it originated from
+  to the new API.
+- Inline crypto_wait_req().
+- Some code indentation fixes.
 
-Sorry I didn't respond to this suggestion earlier.
+Gilad Ben-Yossef (11):
+  crypto: introduce crypto wait for async op
+  crypto: move algif to generic async completion
+  crypto: move pub key to generic async completion
+  crypto: move drbg to generic async completion
+  crypto: move gcm to generic async completion
+  crypto: move testmgr to generic async completion
+  dm: move dm-verity to generic async completion
+  fscrypt: move to generic async completion
+  cifs: move to generic async completion
+  ima: move to generic async completion
+  crypto: adapt api sample to use async. op wait
 
-It is important that
-   mddev_suspend(mddev)
-   mddev_detach(mddev)
+ Documentation/crypto/api-samples.rst |  52 ++--------
+ crypto/af_alg.c                      |  27 -----
+ crypto/algif_aead.c                  |  14 +--
+ crypto/algif_hash.c                  |  29 +++---
+ crypto/algif_skcipher.c              |  15 ++-
+ crypto/api.c                         |  13 +++
+ crypto/asymmetric_keys/public_key.c  |  28 +-----
+ crypto/drbg.c                        |  34 ++-----
+ crypto/gcm.c                         |  32 ++----
+ crypto/testmgr.c                     | 184 +++++++++++------------------------
+ drivers/md/dm-verity-target.c        |  81 ++++-----------
+ drivers/md/dm-verity.h               |   5 -
+ fs/cifs/smb2ops.c                    |  30 +-----
+ fs/crypto/crypto.c                   |  28 +-----
+ fs/crypto/fname.c                    |  36 ++-----
+ fs/crypto/fscrypt_private.h          |  10 --
+ fs/crypto/keyinfo.c                  |  21 +---
+ include/crypto/drbg.h                |   3 +-
+ include/crypto/if_alg.h              |  14 ---
+ include/linux/crypto.h               |  41 ++++++++
+ security/integrity/ima/ima_crypto.c  |  56 ++++-------
+ 21 files changed, 220 insertions(+), 533 deletions(-)
 
-results in the personality module being unused so it can be removed, as
-module_put() will soon be called.
-If a thread is stuck in md_write_start(), then when it is released it
-will return to the personality's make_request function and will execute
-code in the module.  So we cannot safely remove call module_put() while
-code is blocked in md_write_start().
-
-We could possibly move the md_write_start() call into md_make_request(),
-so the personality code will never block.
-Maybe something like this?
-We probably also need to change all md_write_start() call is modules to
-md_write_inc().
-
-Thanks,
-NeilBrown
-
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 10367ffe92e3..3e45bb429a22 100644
-=2D-- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -277,6 +277,7 @@ static blk_qc_t md_make_request(struct request_queue *q=
-, struct bio *bio)
- 		bio_endio(bio);
- 		return BLK_QC_T_NONE;
- 	}
-+check_suspended:
- 	smp_rmb(); /* Ensure implications of  'active' are visible */
- 	rcu_read_lock();
- 	if (mddev->suspended) {
-@@ -294,6 +295,13 @@ static blk_qc_t md_make_request(struct request_queue *=
-q, struct bio *bio)
- 	}
- 	atomic_inc(&mddev->active_io);
- 	rcu_read_unlock();
-+	if (rw =3D=3D WRITE) {
-+		md_write_start(mddev, bio);
-+		if (test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags)) {
-+			md_write_end(mddev);
-+			goto check_suspended;
-+		}
-+	}
-=20
- 	/*
- 	 * save the sectors now since our bio can
-@@ -309,6 +317,8 @@ static blk_qc_t md_make_request(struct request_queue *q=
-, struct bio *bio)
- 	part_stat_add(cpu, &mddev->gendisk->part0, sectors[rw], sectors);
- 	part_stat_unlock();
-=20
-+	md_write_end(mddev);
-+
- 	if (atomic_dec_and_test(&mddev->active_io) && mddev->suspended)
- 		wake_up(&mddev->sb_wait);
-=20
-@@ -327,6 +337,7 @@ void mddev_suspend(struct mddev *mddev)
- 	if (mddev->suspended++)
- 		return;
- 	synchronize_rcu();
-+	wake_up(&mddev->sb_wait);
- 	wait_event(mddev->sb_wait, atomic_read(&mddev->active_io) =3D=3D 0);
- 	mddev->pers->quiesce(mddev, 1);
-=20
-@@ -7979,7 +7990,7 @@ void md_write_start(struct mddev *mddev, struct bio *=
-bi)
- 	if (did_change)
- 		sysfs_notify_dirent_safe(mddev->sysfs_state);
- 	wait_event(mddev->sb_wait,
-=2D		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
-+		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags) && !mddev->suspende=
-d);
- }
- EXPORT_SYMBOL(md_write_start);
-=20
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlkrWngACgkQOeye3VZi
-gbn/oRAAuCb6JnimvRxujJfqIpqtg04LUk2kHnbEKaT8KvJh4DaWt78LybSOb+th
-rE8qbitdIcvUPr4pDuMT0rLmy8oIHUHVs0/LijXk7tCtjDmnllWPSoAI8QVKQSH+
-f6X0CHWaXRkvr4fEKJreZ6lCRQlW5+YUWI2tTm7mcVwuggrNg976QeusiruN5FJg
-nqFYru0NblUU76XINtK+iVUwL4rwTqBy0Nriqha4ipJfxN4KX75TfYYXLFqoLQG7
-FpcKzAxe+F9bJuXy9SyAOPjDwsJykeorRrFYnGO7hjopcHWvKYfg0IOxDw1OvY07
-1p1Thh0MHkFraVthHcBU1AaKpPfo9T2hehI0/On4qel8kYmfNXfmUiO6J8HoumCe
-2n29JdJ6TUuusMp3iS6bJSI75EZVn50hxAmgCZpgoylN3eY23/kpFoDx6EpEoLAR
-V+RUXwQ178reTBFqW5mMJl6fIkj+revEx7+O+RjYmXQ9v4r4jS+uVfFSwnwJyIkv
-e58sQMNMAgwvIbDTUGFXXby/WmvHwwupmV2jE3jVJ4rcHYSrlS9uxsy77MAEQyJT
-fNq2Z47s6vaiFrZDYORhrwWObCEv8VIc6oFEYbhTr5MZ0q3eWafYpDhF0aT5vtVG
-O8lmeUCc582YqTjxA+AbsrZdxOyQ8HXS6U3xgjpvFCHccPYRUjc=
-=yR2P
------END PGP SIGNATURE-----
---=-=-=--
+-- 
+2.1.4
