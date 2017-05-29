@@ -1,56 +1,53 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: mdadm --misc --readonly -> ENODEV indefinitely
-Date: Mon, 29 May 2017 13:20:23 +0100
-Message-ID: <87bmqbzwfs.fsf@esperi.org.uk>
-References: <87y3th2rdu.fsf@esperi.org.uk>
-        <877f10hgx8.fsf@notabene.neil.brown.name>
+From: Stephan =?ISO-8859-1?Q?M=FCller?= <smueller@chronox.de>
+Subject: Re: [PATCH v2 04/11] crypto: move drbg to generic async
+	completion
+Date: Mon, 29 May 2017 11:04:01 +0200
+Message-ID: <1638335.mkZCLTBCSi@tauon.chronox.de>
+References: <1496046180-21962-1-git-send-email-gilad@benyossef.com>
+	<1496046180-21962-5-git-send-email-gilad@benyossef.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <877f10hgx8.fsf@notabene.neil.brown.name> (NeilBrown's message of
-        "Mon, 29 May 2017 06:20:35 +1000")
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <1496046180-21962-5-git-send-email-gilad@benyossef.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Gilad Ben-Yossef <gilad@benyossef.com>
+Cc: linux-security-module@l.org, Mike Snitzer <snitzer@redhat.com>, linux-doc@vger.kernel.org, David Howells <dhowells@redhat.com>, dm-devel@redhat.com, keyrings@vger.kernel.org, linux-ima-devel@lists.sourceforge.net, Pavel Shilovsky <pshilov@microsoft.com>, Alasdair Kergon <agk@redhat.com>, linux-cifs@vger.kernel.org, Herbert Xu <herbert@gondor.apana.org.au>, Jonathan Corbet <corbet@lwn.net>, Mimi Zohar <zohar@linux.vnet.ibm.com>, "Serge E. Hallyn" <serge@hallyn.com>, linux-ima-user@lists.sourceforge.net, Eric Biggers <ebiggers3@gmail.com>, linux-raid@vger.kernel.org, linux-fscrypt@vger.kernel.org, James Morris <james.l.morris@oracle.com>, Jaegeuk Kim <jaegeuk@kernel.org>, Ofir Drang <ofir.drang@arm.com>, "Theodore Y. Ts'o" <tytso@mit.edu>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, samba-technical@lists.samba.org, linux-kernel@vger.kernel.org, Steve French <sfrench@sam>
 List-Id: linux-raid.ids
 
-On 28 May 2017, NeilBrown told this:
+Am Montag, 29. Mai 2017, 10:22:51 CEST schrieb Gilad Ben-Yossef:
 
-> On Sun, May 28 2017, Nix wrote:
->
->> So I was trying to flip on the RAID journal now I'd fully populated my
->> array and cut over to it. So, from early userspace, I did
->>
->>    # first line done by initramfs scripting
->>    /sbin/mdadm --assemble --scan --auto=md --freeze-reshape
->>    mdadm --misc --readonly /dev/md/fast
->>    mdadm --manage /dev/md/fast --add-journal /dev/ssd1
->>    mdadm --misc --readwrite /dev/md/fast
->>
->> This did not work as planned, or indeed at all. After the first
->> --readonly, all requests for /dev/md/fast report "No such device or
->> address" until a reboot, though /proc/mdstat says the thing is still
->> there and /sys/block/md125/dev reports no change in major/minor numbers.
->> (I don't have udev in my early-userspace environment, but mdev reports
->> no change, either.)
-[...]
-> Commit: 065e519e71b2 ("md: MD_CLOSING needs to be cleared after called md_set_readonly or do_md_stop")
->
-> Broken in v4.9-rc1
-> Fixed in v4.12-rc1
+Hi Gilad,
 
-Oh, apologies -- I should have checked master. :/ didn't think of it.
-(And the fix hasn't hit stable in the two months since. I sort of
-assumed promotion to stable was usually faster than that... but I guess
-it depends on how much free time gregkh has.)
+> DRBG is starting an async. crypto op and waiting for it complete.
+> Move it over to generic code doing the same.
+> =
 
-... my arrays are all humming along now, RAID-6ed and much faster than
-they ever were with hardware RAID. I'm back in md land for good, where
-bugs can actually get *fixed* without booting off a DOS floppy and doing
-a reflash of horrible non-free firmware that if it goes wrong will make
-my machine unusable.
+> The code now also passes CRYPTO_TFM_REQ_MAY_SLEEP flag indicating
+> crypto request memory allocation may use GFP_KERNEL which should
+> be perfectly fine as the code is obviously sleeping for the
+> completion of the request any way.
+> =
 
-The sense of freedom is undeniable :) thank you, mders one and all!
+> Signed-off-by: Gilad Ben-Yossef <gilad@benyossef.com>
 
--- 
-NULL && (void)
+Acked-by: Stephan M=FCller <smueller@chronox.de>
+
+However, please note that there is a patch "crypto:drbg- Fixes panic in =
+
+wait_for_completion call." which adds another init_completion. I guess that =
+
+needs conversion to crypto_init_wait as well, once this patch set is accept=
+ed.
+
+
+Ciao
+Stephan
