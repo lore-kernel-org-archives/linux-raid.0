@@ -1,53 +1,32 @@
-From: Stephan =?ISO-8859-1?Q?M=FCller?= <smueller@chronox.de>
-Subject: Re: [PATCH v2 04/11] crypto: move drbg to generic async
-	completion
-Date: Mon, 29 May 2017 11:04:01 +0200
-Message-ID: <1638335.mkZCLTBCSi@tauon.chronox.de>
-References: <1496046180-21962-1-git-send-email-gilad@benyossef.com>
-	<1496046180-21962-5-git-send-email-gilad@benyossef.com>
+From: David Howells <dhowells@redhat.com>
+Subject: Re: [PATCH 01/22] Revert "afs: Move UUID struct to linux/uuid.h"
+Date: Tue, 30 May 2017 11:00:04 +0100
+Message-ID: <9377.1496138404@warthog.procyon.org.uk>
+References: <20170528102008.30276-2-hch@lst.de> <20170528102008.30276-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1496046180-21962-5-git-send-email-gilad@benyossef.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Gilad Ben-Yossef <gilad@benyossef.com>
-Cc: linux-security-module@l.org, Mike Snitzer <snitzer@redhat.com>, linux-doc@vger.kernel.org, David Howells <dhowells@redhat.com>, dm-devel@redhat.com, keyrings@vger.kernel.org, linux-ima-devel@lists.sourceforge.net, Pavel Shilovsky <pshilov@microsoft.com>, Alasdair Kergon <agk@redhat.com>, linux-cifs@vger.kernel.org, Herbert Xu <herbert@gondor.apana.org.au>, Jonathan Corbet <corbet@lwn.net>, Mimi Zohar <zohar@linux.vnet.ibm.com>, "Serge E. Hallyn" <serge@hallyn.com>, linux-ima-user@lists.sourceforge.net, Eric Biggers <ebiggers3@gmail.com>, linux-raid@vger.kernel.org, linux-fscrypt@vger.kernel.org, James Morris <james.l.morris@oracle.com>, Jaegeuk Kim <jaegeuk@kernel.org>, Ofir Drang <ofir.drang@arm.com>, "Theodore Y. Ts'o" <tytso@mit.edu>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, samba-technical@lists.samba.org, linux-kernel@vger.kernel.org, Steve French <sfrench@sam>
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170528102008.30276-2-hch@lst.de>
+Content-ID: <9376.1496138404.1@warthog.procyon.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: dhowells@redhat.com, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org
 List-Id: linux-raid.ids
 
-Am Montag, 29. Mai 2017, 10:22:51 CEST schrieb Gilad Ben-Yossef:
+Christoph Hellwig <hch@lst.de> wrote:
 
-Hi Gilad,
+> This reverts commit ff548773106ec7f8031bc6172e0234bd2a02c19c.
+> 
+> The V1 uuid intrepreatation in struct form isn't really useful to the
+> rest of the kernel, and not really compatible to it either, so move it
+> back to AFS instead of polluting the global uuid.h.
 
-> DRBG is starting an async. crypto op and waiting for it complete.
-> Move it over to generic code doing the same.
-> =
+This isn't going to work.  You've effectively changed the types of the fields
+in the UUID struct from BE to CPU-endian, but you're still calling
+generate_random_uuid(), which produces a BE UUID.  You need to leave the
+struct members as __beXX or stop using the core UUID routines.
 
-> The code now also passes CRYPTO_TFM_REQ_MAY_SLEEP flag indicating
-> crypto request memory allocation may use GFP_KERNEL which should
-> be perfectly fine as the code is obviously sleeping for the
-> completion of the request any way.
-> =
+Just move the struct uuid_v1 as-is to the afs headers and rename it to struct
+afs_uuid.  You can then leave the (un)marshalling code alone.
 
-> Signed-off-by: Gilad Ben-Yossef <gilad@benyossef.com>
-
-Acked-by: Stephan M=FCller <smueller@chronox.de>
-
-However, please note that there is a patch "crypto:drbg- Fixes panic in =
-
-wait_for_completion call." which adds another init_completion. I guess that =
-
-needs conversion to crypto_init_wait as well, once this patch set is accept=
-ed.
-
-
-Ciao
-Stephan
+David
