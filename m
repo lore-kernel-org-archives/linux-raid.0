@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 22/24] scsi_debug: switch to uuid_t
-Date: Wed, 31 May 2017 18:18:24 +0200
-Message-ID: <20170531161826.23243-23-hch@lst.de>
+Subject: [PATCH 23/24] tmpfs: generate random sb->s_uuid
+Date: Wed, 31 May 2017 18:18:25 +0200
+Message-ID: <20170531161826.23243-24-hch@lst.de>
 References: <20170531161826.23243-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -18,61 +18,41 @@ List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
 Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
 Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
 To: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Reviewed-by: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
----
- drivers/scsi/scsi_debug.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+From: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 17249c3650fe..35ee09644cfb 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -245,7 +245,7 @@ struct sdebug_dev_info {
- 	unsigned int channel;
- 	unsigned int target;
- 	u64 lun;
--	uuid_be lu_name;
-+	uuid_t lu_name;
- 	struct sdebug_host_info *sdbg_host;
- 	unsigned long uas_bm[1];
- 	atomic_t num_in_q;
-@@ -965,7 +965,7 @@ static const u64 naa3_comp_c = 0x3111111000000000ULL;
- static int inquiry_vpd_83(unsigned char *arr, int port_group_id,
- 			  int target_dev_id, int dev_id_num,
- 			  const char *dev_id_str, int dev_id_str_len,
--			  const uuid_be *lu_name)
-+			  const uuid_t *lu_name)
- {
- 	int num, port_a;
- 	char b[32];
-@@ -3568,7 +3568,7 @@ static void sdebug_q_cmd_wq_complete(struct work_struct *work)
- }
+This is used by overlayfs to encode intrasystem unique file handles.
+
+Suggested-by: Miklos Szeredi <mszeredi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Signed-off-by: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+---
+ mm/shmem.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/mm/shmem.c b/mm/shmem.c
+index e67d6ba4e98e..391f2dcca727 100644
+--- a/mm/shmem.c
++++ b/mm/shmem.c
+@@ -75,6 +75,7 @@ static struct vfsmount *shm_mnt;
+ #include <uapi/linux/memfd.h>
+ #include <linux/userfaultfd_k.h>
+ #include <linux/rmap.h>
++#include <linux/uuid.h>
  
- static bool got_shared_uuid;
--static uuid_be shared_uuid;
-+static uuid_t shared_uuid;
+ #include <linux/uaccess.h>
+ #include <asm/pgtable.h>
+@@ -3761,6 +3762,7 @@ int shmem_fill_super(struct super_block *sb, void *data, int silent)
+ #ifdef CONFIG_TMPFS_POSIX_ACL
+ 	sb->s_flags |= MS_POSIXACL;
+ #endif
++	uuid_gen(&sb->s_uuid);
  
- static struct sdebug_dev_info *sdebug_device_create(
- 			struct sdebug_host_info *sdbg_host, gfp_t flags)
-@@ -3578,12 +3578,12 @@ static struct sdebug_dev_info *sdebug_device_create(
- 	devip = kzalloc(sizeof(*devip), flags);
- 	if (devip) {
- 		if (sdebug_uuid_ctl == 1)
--			uuid_be_gen(&devip->lu_name);
-+			uuid_gen(&devip->lu_name);
- 		else if (sdebug_uuid_ctl == 2) {
- 			if (got_shared_uuid)
- 				devip->lu_name = shared_uuid;
- 			else {
--				uuid_be_gen(&shared_uuid);
-+				uuid_gen(&shared_uuid);
- 				got_shared_uuid = true;
- 				devip->lu_name = shared_uuid;
- 			}
+ 	inode = shmem_get_inode(sb, NULL, S_IFDIR | sbinfo->mode, 0, VM_NORESERVE);
+ 	if (!inode)
 -- 
 2.11.0
