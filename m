@@ -1,93 +1,96 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH 2/2] md: Make flush bios explicitely sync
-Date: Wed, 31 May 2017 09:23:46 -0700
-Message-ID: <20170531162346.iwdkhp6cdr5y2uvn@kernel.org>
-References: <20170531074433.14298-1-jack@suse.cz>
- <20170531074433.14298-3-jack@suse.cz>
+From: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [PATCH 08/24] uuid: rename uuid_to_bin to uuid_parse
+Date: Wed, 31 May 2017 21:14:35 +0300
+Message-ID: <1496254475.28981.36.camel@linux.intel.com>
+References: <20170531161826.23243-1-hch@lst.de>
+ <20170531161826.23243-9-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170531074433.14298-3-jack@suse.cz>
-Sender: stable-owner@vger.kernel.org
-To: Jan Kara <jack@suse.cz>
-Cc: linux-raid@vger.kernel.org, stable@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <20170531161826.23243-9-hch-jcswGhMUV9g@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-On Wed, May 31, 2017 at 09:44:33AM +0200, Jan Kara wrote:
-> Commit b685d3d65ac7 "block: treat REQ_FUA and REQ_PREFLUSH as
-> synchronous" removed REQ_SYNC flag from WRITE_{FUA|PREFLUSH|...}
-> definitions.  generic_make_request_checks() however strips REQ_FUA and
-> REQ_PREFLUSH flags from a bio when the storage doesn't report volatile
-> write cache and thus write effectively becomes asynchronous which can
-> lead to performance regressions
-> 
-> Fix the problem by making sure all bios which are synchronous are
-> properly marked with REQ_SYNC.
-
-Applied, thanks!
- 
-> CC: linux-raid@vger.kernel.org
-> CC: Shaohua Li <shli@kernel.org>
-> Fixes: b685d3d65ac791406e0dfd8779cc9b3707fea5a3
-> CC: stable@vger.kernel.org
-> Signed-off-by: Jan Kara <jack@suse.cz>
-> ---
->  drivers/md/md.c          | 2 +-
->  drivers/md/raid5-cache.c | 4 ++--
->  drivers/md/raid5-ppl.c   | 4 ++--
->  3 files changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 10367ffe92e3..212a6777ff31 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -765,7 +765,7 @@ void md_super_write(struct mddev *mddev, struct md_rdev *rdev,
->  	    test_bit(FailFast, &rdev->flags) &&
->  	    !test_bit(LastDev, &rdev->flags))
->  		ff = MD_FAILFAST;
-> -	bio->bi_opf = REQ_OP_WRITE | REQ_PREFLUSH | REQ_FUA | ff;
-> +	bio->bi_opf = REQ_OP_WRITE | REQ_SYNC | REQ_PREFLUSH | REQ_FUA | ff;
->  
->  	atomic_inc(&mddev->pending_writes);
->  	submit_bio(bio);
-> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index 4c00bc248287..0a7af8b0a80a 100644
-> --- a/drivers/md/raid5-cache.c
-> +++ b/drivers/md/raid5-cache.c
-> @@ -1782,7 +1782,7 @@ static int r5l_log_write_empty_meta_block(struct r5l_log *log, sector_t pos,
->  	mb->checksum = cpu_to_le32(crc32c_le(log->uuid_checksum,
->  					     mb, PAGE_SIZE));
->  	if (!sync_page_io(log->rdev, pos, PAGE_SIZE, page, REQ_OP_WRITE,
-> -			  REQ_FUA, false)) {
-> +			  REQ_SYNC | REQ_FUA, false)) {
->  		__free_page(page);
->  		return -EIO;
->  	}
-> @@ -2388,7 +2388,7 @@ r5c_recovery_rewrite_data_only_stripes(struct r5l_log *log,
->  		mb->checksum = cpu_to_le32(crc32c_le(log->uuid_checksum,
->  						     mb, PAGE_SIZE));
->  		sync_page_io(log->rdev, ctx->pos, PAGE_SIZE, page,
-> -			     REQ_OP_WRITE, REQ_FUA, false);
-> +			     REQ_OP_WRITE, REQ_SYNC | REQ_FUA, false);
->  		sh->log_start = ctx->pos;
->  		list_add_tail(&sh->r5c, &log->stripe_in_journal_list);
->  		atomic_inc(&log->stripe_in_journal_count);
-> diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
-> index 5d25bebf3328..ccce92e68d7f 100644
-> --- a/drivers/md/raid5-ppl.c
-> +++ b/drivers/md/raid5-ppl.c
-> @@ -907,8 +907,8 @@ static int ppl_write_empty_header(struct ppl_log *log)
->  	pplhdr->checksum = cpu_to_le32(~crc32c_le(~0, pplhdr, PAGE_SIZE));
->  
->  	if (!sync_page_io(rdev, rdev->ppl.sector - rdev->data_offset,
-> -			  PPL_HEADER_SIZE, page, REQ_OP_WRITE | REQ_FUA, 0,
-> -			  false)) {
-> +			  PPL_HEADER_SIZE, page, REQ_OP_WRITE | REQ_SYNC |
-> +			  REQ_FUA, 0, false)) {
->  		md_error(rdev->mddev, rdev);
->  		ret = -EIO;
->  	}
-> -- 
-> 2.12.3
-> 
+T24gV2VkLCAyMDE3LTA1LTMxIGF0IDE4OjE4ICswMjAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
+ZToKPiBUaGlzIG1hdGNoZXMgdGhlIHVzZXJzcGFjZSB2ZXJzaW9uIG9mIGl0LCBhbmQgZGVzY3Jp
+YmVzIHRoZQo+IGZ1bmN0aW9uYWxpdHkKPiBtdWNoIGJldHRlci7CoMKgQWxzbyBkbyB0aGUgc2Ft
+ZSBmb3IgdGhlIGd1aWQgdmVyc2lvbi4KPiAKCk5vIG9iamVjdGlvbnMgZm9yIHJlbmFtaW5nLCB0
+aG91Z2ggSSdtIHByZXR0eSBzdXJlIGl0IHNob3VsZCBiZSBzcXVhc2hlZAp0byBwYXRjaCA2LgoK
+PiBTaWduZWQtb2ZmLWJ5OiBDaHJpc3RvcGggSGVsbHdpZyA8aGNoQGxzdC5kZT4KPiAtLS0KPiDC
+oGluY2x1ZGUvbGludXgvdXVpZC5oIHzCoMKgOCArKysrLS0tLQo+IMKgbGliL3Rlc3RfdXVpZC5j
+wqDCoMKgwqDCoMKgfMKgwqA4ICsrKystLS0tCj4gwqBsaWIvdXVpZC5jwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoHwgMTQgKysrKysrKy0tLS0tLS0KPiDCoDMgZmlsZXMgY2hhbmdlZCwgMTUgaW5zZXJ0
+aW9ucygrKSwgMTUgZGVsZXRpb25zKC0pCj4gCj4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgv
+dXVpZC5oIGIvaW5jbHVkZS9saW51eC91dWlkLmgKPiBpbmRleCBhOWQwZmRiYTU0MDQuLjgyYjE2
+NWI1NzlmNSAxMDA2NDQKPiAtLS0gYS9pbmNsdWRlL2xpbnV4L3V1aWQuaAo+ICsrKyBiL2luY2x1
+ZGUvbGludXgvdXVpZC5oCj4gQEAgLTQ1LDggKzQ1LDggQEAgYm9vbCBfX211c3RfY2hlY2sgdXVp
+ZF9pc192YWxpZChjb25zdCBjaGFyICp1dWlkKTsKPiDCoGV4dGVybiBjb25zdCB1OCBndWlkX2lu
+ZGV4WzE2XTsKPiDCoGV4dGVybiBjb25zdCB1OCB1dWlkX2luZGV4WzE2XTsKPiDCoAo+IC1pbnQg
+Z3VpZF90b19iaW4oY29uc3QgY2hhciAqdXVpZCwgZ3VpZF90ICp1KTsKPiAtaW50IHV1aWRfdG9f
+YmluKGNvbnN0IGNoYXIgKnV1aWQsIHV1aWRfdCAqdSk7Cj4gK2ludCBndWlkX3BhcnNlKGNvbnN0
+IGNoYXIgKnV1aWQsIGd1aWRfdCAqdSk7Cj4gK2ludCB1dWlkX3BhcnNlKGNvbnN0IGNoYXIgKnV1
+aWQsIHV1aWRfdCAqdSk7Cj4gwqAKPiDCoC8qIGJhY2t3YXJkcyBjb21wYXRpYmlsaXR5LCBkb24n
+dCB1c2UgaW4gbmV3IGNvZGUgKi8KPiDCoHR5cGVkZWYgdXVpZF90IHV1aWRfYmU7Cj4gQEAgLTU4
+LDggKzU4LDggQEAgdHlwZWRlZiB1dWlkX3QgdXVpZF9iZTsKPiDCoAo+IMKgI2RlZmluZSB1dWlk
+X2xlX2dlbih1KQkJZ3VpZF9nZW4odSkKPiDCoCNkZWZpbmUgdXVpZF9iZV9nZW4odSkJCXV1aWRf
+Z2VuKHUpCj4gLSNkZWZpbmUgdXVpZF9sZV90b19iaW4oZ3VpZCwgdSkJZ3VpZF90b19iaW4oZ3Vp
+ZCwgdSkKPiAtI2RlZmluZSB1dWlkX2JlX3RvX2Jpbih1dWlkLCB1KQl1dWlkX3RvX2Jpbih1dWlk
+LCB1KQo+ICsjZGVmaW5lIHV1aWRfbGVfdG9fYmluKGd1aWQsIHUpCWd1aWRfcGFyc2UoZ3VpZCwg
+dSkKPiArI2RlZmluZSB1dWlkX2JlX3RvX2Jpbih1dWlkLCB1KQl1dWlkX3BhcnNlKHV1aWQsIHUp
+Cj4gwqAKPiDCoHN0YXRpYyBpbmxpbmUgaW50IHV1aWRfbGVfY21wKGNvbnN0IGd1aWRfdCB1MSwg
+Y29uc3QgZ3VpZF90IHUyKQo+IMKgewo+IGRpZmYgLS1naXQgYS9saWIvdGVzdF91dWlkLmMgYi9s
+aWIvdGVzdF91dWlkLmMKPiBpbmRleCA5Y2FkODQ2ZmQ4MDUuLmVkZGE1MzZhN2I0NSAxMDA2NDQK
+PiAtLS0gYS9saWIvdGVzdF91dWlkLmMKPiArKysgYi9saWIvdGVzdF91dWlkLmMKPiBAQCAtNjcs
+NyArNjcsNyBAQCBzdGF0aWMgdm9pZCBfX2luaXQgdGVzdF91dWlkX3Rlc3QoY29uc3Qgc3RydWN0
+Cj4gdGVzdF91dWlkX2RhdGEgKmRhdGEpCj4gwqAKPiDCoAkvKiBMRSAqLwo+IMKgCXRvdGFsX3Rl
+c3RzKys7Cj4gLQlpZiAoZ3VpZF90b19iaW4oZGF0YS0+dXVpZCwgJmxlKSkKPiArCWlmIChndWlk
+X3BhcnNlKGRhdGEtPnV1aWQsICZsZSkpCj4gwqAJCXRlc3RfdXVpZF9mYWlsZWQoImNvbnZlcnNp
+b24iLCBmYWxzZSwgZmFsc2UsIGRhdGEtCj4gPnV1aWQsIE5VTEwpOwo+IMKgCj4gwqAJdG90YWxf
+dGVzdHMrKzsKPiBAQCAtNzgsNyArNzgsNyBAQCBzdGF0aWMgdm9pZCBfX2luaXQgdGVzdF91dWlk
+X3Rlc3QoY29uc3Qgc3RydWN0Cj4gdGVzdF91dWlkX2RhdGEgKmRhdGEpCj4gwqAKPiDCoAkvKiBC
+RSAqLwo+IMKgCXRvdGFsX3Rlc3RzKys7Cj4gLQlpZiAodXVpZF90b19iaW4oZGF0YS0+dXVpZCwg
+JmJlKSkKPiArCWlmICh1dWlkX3BhcnNlKGRhdGEtPnV1aWQsICZiZSkpCj4gwqAJCXRlc3RfdXVp
+ZF9mYWlsZWQoImNvbnZlcnNpb24iLCBmYWxzZSwgdHJ1ZSwgZGF0YS0KPiA+dXVpZCwgTlVMTCk7
+Cj4gwqAKPiDCoAl0b3RhbF90ZXN0cysrOwo+IEBAIC05NSwxMiArOTUsMTIgQEAgc3RhdGljIHZv
+aWQgX19pbml0IHRlc3RfdXVpZF93cm9uZyhjb25zdCBjaGFyCj4gKmRhdGEpCj4gwqAKPiDCoAkv
+KiBMRSAqLwo+IMKgCXRvdGFsX3Rlc3RzKys7Cj4gLQlpZiAoIWd1aWRfdG9fYmluKGRhdGEsICZs
+ZSkpCj4gKwlpZiAoIWd1aWRfcGFyc2UoZGF0YSwgJmxlKSkKPiDCoAkJdGVzdF91dWlkX2ZhaWxl
+ZCgibmVnYXRpdmUiLCB0cnVlLCBmYWxzZSwgZGF0YSwKPiBOVUxMKTsKPiDCoAo+IMKgCS8qIEJF
+ICovCj4gwqAJdG90YWxfdGVzdHMrKzsKPiAtCWlmICghdXVpZF90b19iaW4oZGF0YSwgJmJlKSkK
+PiArCWlmICghdXVpZF9wYXJzZShkYXRhLCAmYmUpKQo+IMKgCQl0ZXN0X3V1aWRfZmFpbGVkKCJu
+ZWdhdGl2ZSIsIHRydWUsIHRydWUsIGRhdGEsIE5VTEwpOwo+IMKgfQo+IMKgCj4gZGlmZiAtLWdp
+dCBhL2xpYi91dWlkLmMgYi9saWIvdXVpZC5jCj4gaW5kZXggZjgwZGM2M2Y2Y2E4Li45MGJlZTcz
+ZjdiZDcgMTAwNjQ0Cj4gLS0tIGEvbGliL3V1aWQuYwo+ICsrKyBiL2xpYi91dWlkLmMKPiBAQCAt
+OTcsNyArOTcsNyBAQCBib29sIHV1aWRfaXNfdmFsaWQoY29uc3QgY2hhciAqdXVpZCkKPiDCoH0K
+PiDCoEVYUE9SVF9TWU1CT0wodXVpZF9pc192YWxpZCk7Cj4gwqAKPiAtc3RhdGljIGludCBfX3V1
+aWRfdG9fYmluKGNvbnN0IGNoYXIgKnV1aWQsIF9fdTggYlsxNl0sIGNvbnN0IHU4Cj4gZWlbMTZd
+KQo+ICtzdGF0aWMgaW50IF9fdXVpZF9wYXJzZShjb25zdCBjaGFyICp1dWlkLCBfX3U4IGJbMTZd
+LCBjb25zdCB1OAo+IGVpWzE2XSkKPiDCoHsKPiDCoAlzdGF0aWMgY29uc3QgdTggc2lbMTZdID0K
+PiB7MCwyLDQsNiw5LDExLDE0LDE2LDE5LDIxLDI0LDI2LDI4LDMwLDMyLDM0fTsKPiDCoAl1bnNp
+Z25lZCBpbnQgaTsKPiBAQCAtMTE1LDE0ICsxMTUsMTQgQEAgc3RhdGljIGludCBfX3V1aWRfdG9f
+YmluKGNvbnN0IGNoYXIgKnV1aWQsIF9fdTgKPiBiWzE2XSwgY29uc3QgdTggZWlbMTZdKQo+IMKg
+CXJldHVybiAwOwo+IMKgfQo+IMKgCj4gLWludCBndWlkX3RvX2Jpbihjb25zdCBjaGFyICp1dWlk
+LCBndWlkX3QgKnUpCj4gK2ludCBndWlkX3BhcnNlKGNvbnN0IGNoYXIgKnV1aWQsIGd1aWRfdCAq
+dSkKPiDCoHsKPiAtCXJldHVybiBfX3V1aWRfdG9fYmluKHV1aWQsIHUtPmIsIGd1aWRfaW5kZXgp
+Owo+ICsJcmV0dXJuIF9fdXVpZF9wYXJzZSh1dWlkLCB1LT5iLCBndWlkX2luZGV4KTsKPiDCoH0K
+PiAtRVhQT1JUX1NZTUJPTChndWlkX3RvX2Jpbik7Cj4gK0VYUE9SVF9TWU1CT0woZ3VpZF9wYXJz
+ZSk7Cj4gwqAKPiAtaW50IHV1aWRfdG9fYmluKGNvbnN0IGNoYXIgKnV1aWQsIHV1aWRfdCAqdSkK
+PiAraW50IHV1aWRfcGFyc2UoY29uc3QgY2hhciAqdXVpZCwgdXVpZF90ICp1KQo+IMKgewo+IC0J
+cmV0dXJuIF9fdXVpZF90b19iaW4odXVpZCwgdS0+YiwgdXVpZF9pbmRleCk7Cj4gKwlyZXR1cm4g
+X191dWlkX3BhcnNlKHV1aWQsIHUtPmIsIHV1aWRfaW5kZXgpOwo+IMKgfQo+IC1FWFBPUlRfU1lN
+Qk9MKHV1aWRfdG9fYmluKTsKPiArRVhQT1JUX1NZTUJPTCh1dWlkX3BhcnNlKTsKCi0tIApBbmR5
+IFNoZXZjaGVua28gPGFuZHJpeS5zaGV2Y2hlbmtvQGxpbnV4LmludGVsLmNvbT4KSW50ZWwgRmlu
+bGFuZCBPeQpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpM
+aW51eC1udmRpbW0gbWFpbGluZyBsaXN0CkxpbnV4LW52ZGltbUBsaXN0cy4wMS5vcmcKaHR0cHM6
+Ly9saXN0cy4wMS5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1udmRpbW0K
