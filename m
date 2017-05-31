@@ -1,96 +1,32 @@
-From: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [PATCH 08/24] uuid: rename uuid_to_bin to uuid_parse
-Date: Wed, 31 May 2017 21:14:35 +0300
-Message-ID: <1496254475.28981.36.camel@linux.intel.com>
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: Re: [PATCH 15/24] block: remove blk_part_pack_uuid
+Date: Wed, 31 May 2017 21:16:34 +0300
+Message-ID: <1496254594.28981.37.camel@linux.intel.com>
 References: <20170531161826.23243-1-hch@lst.de>
- <20170531161826.23243-9-hch@lst.de>
+         <20170531161826.23243-16-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <20170531161826.23243-9-hch-jcswGhMUV9g@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20170531161826.23243-16-hch@lst.de>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>, Dan Williams <dan.j.williams@intel.com>, David Howells <dhowells@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>, Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org
 List-Id: linux-raid.ids
 
-T24gV2VkLCAyMDE3LTA1LTMxIGF0IDE4OjE4ICswMjAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
-ZToKPiBUaGlzIG1hdGNoZXMgdGhlIHVzZXJzcGFjZSB2ZXJzaW9uIG9mIGl0LCBhbmQgZGVzY3Jp
-YmVzIHRoZQo+IGZ1bmN0aW9uYWxpdHkKPiBtdWNoIGJldHRlci7CoMKgQWxzbyBkbyB0aGUgc2Ft
-ZSBmb3IgdGhlIGd1aWQgdmVyc2lvbi4KPiAKCk5vIG9iamVjdGlvbnMgZm9yIHJlbmFtaW5nLCB0
-aG91Z2ggSSdtIHByZXR0eSBzdXJlIGl0IHNob3VsZCBiZSBzcXVhc2hlZAp0byBwYXRjaCA2LgoK
-PiBTaWduZWQtb2ZmLWJ5OiBDaHJpc3RvcGggSGVsbHdpZyA8aGNoQGxzdC5kZT4KPiAtLS0KPiDC
-oGluY2x1ZGUvbGludXgvdXVpZC5oIHzCoMKgOCArKysrLS0tLQo+IMKgbGliL3Rlc3RfdXVpZC5j
-wqDCoMKgwqDCoMKgfMKgwqA4ICsrKystLS0tCj4gwqBsaWIvdXVpZC5jwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoHwgMTQgKysrKysrKy0tLS0tLS0KPiDCoDMgZmlsZXMgY2hhbmdlZCwgMTUgaW5zZXJ0
-aW9ucygrKSwgMTUgZGVsZXRpb25zKC0pCj4gCj4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgv
-dXVpZC5oIGIvaW5jbHVkZS9saW51eC91dWlkLmgKPiBpbmRleCBhOWQwZmRiYTU0MDQuLjgyYjE2
-NWI1NzlmNSAxMDA2NDQKPiAtLS0gYS9pbmNsdWRlL2xpbnV4L3V1aWQuaAo+ICsrKyBiL2luY2x1
-ZGUvbGludXgvdXVpZC5oCj4gQEAgLTQ1LDggKzQ1LDggQEAgYm9vbCBfX211c3RfY2hlY2sgdXVp
-ZF9pc192YWxpZChjb25zdCBjaGFyICp1dWlkKTsKPiDCoGV4dGVybiBjb25zdCB1OCBndWlkX2lu
-ZGV4WzE2XTsKPiDCoGV4dGVybiBjb25zdCB1OCB1dWlkX2luZGV4WzE2XTsKPiDCoAo+IC1pbnQg
-Z3VpZF90b19iaW4oY29uc3QgY2hhciAqdXVpZCwgZ3VpZF90ICp1KTsKPiAtaW50IHV1aWRfdG9f
-YmluKGNvbnN0IGNoYXIgKnV1aWQsIHV1aWRfdCAqdSk7Cj4gK2ludCBndWlkX3BhcnNlKGNvbnN0
-IGNoYXIgKnV1aWQsIGd1aWRfdCAqdSk7Cj4gK2ludCB1dWlkX3BhcnNlKGNvbnN0IGNoYXIgKnV1
-aWQsIHV1aWRfdCAqdSk7Cj4gwqAKPiDCoC8qIGJhY2t3YXJkcyBjb21wYXRpYmlsaXR5LCBkb24n
-dCB1c2UgaW4gbmV3IGNvZGUgKi8KPiDCoHR5cGVkZWYgdXVpZF90IHV1aWRfYmU7Cj4gQEAgLTU4
-LDggKzU4LDggQEAgdHlwZWRlZiB1dWlkX3QgdXVpZF9iZTsKPiDCoAo+IMKgI2RlZmluZSB1dWlk
-X2xlX2dlbih1KQkJZ3VpZF9nZW4odSkKPiDCoCNkZWZpbmUgdXVpZF9iZV9nZW4odSkJCXV1aWRf
-Z2VuKHUpCj4gLSNkZWZpbmUgdXVpZF9sZV90b19iaW4oZ3VpZCwgdSkJZ3VpZF90b19iaW4oZ3Vp
-ZCwgdSkKPiAtI2RlZmluZSB1dWlkX2JlX3RvX2Jpbih1dWlkLCB1KQl1dWlkX3RvX2Jpbih1dWlk
-LCB1KQo+ICsjZGVmaW5lIHV1aWRfbGVfdG9fYmluKGd1aWQsIHUpCWd1aWRfcGFyc2UoZ3VpZCwg
-dSkKPiArI2RlZmluZSB1dWlkX2JlX3RvX2Jpbih1dWlkLCB1KQl1dWlkX3BhcnNlKHV1aWQsIHUp
-Cj4gwqAKPiDCoHN0YXRpYyBpbmxpbmUgaW50IHV1aWRfbGVfY21wKGNvbnN0IGd1aWRfdCB1MSwg
-Y29uc3QgZ3VpZF90IHUyKQo+IMKgewo+IGRpZmYgLS1naXQgYS9saWIvdGVzdF91dWlkLmMgYi9s
-aWIvdGVzdF91dWlkLmMKPiBpbmRleCA5Y2FkODQ2ZmQ4MDUuLmVkZGE1MzZhN2I0NSAxMDA2NDQK
-PiAtLS0gYS9saWIvdGVzdF91dWlkLmMKPiArKysgYi9saWIvdGVzdF91dWlkLmMKPiBAQCAtNjcs
-NyArNjcsNyBAQCBzdGF0aWMgdm9pZCBfX2luaXQgdGVzdF91dWlkX3Rlc3QoY29uc3Qgc3RydWN0
-Cj4gdGVzdF91dWlkX2RhdGEgKmRhdGEpCj4gwqAKPiDCoAkvKiBMRSAqLwo+IMKgCXRvdGFsX3Rl
-c3RzKys7Cj4gLQlpZiAoZ3VpZF90b19iaW4oZGF0YS0+dXVpZCwgJmxlKSkKPiArCWlmIChndWlk
-X3BhcnNlKGRhdGEtPnV1aWQsICZsZSkpCj4gwqAJCXRlc3RfdXVpZF9mYWlsZWQoImNvbnZlcnNp
-b24iLCBmYWxzZSwgZmFsc2UsIGRhdGEtCj4gPnV1aWQsIE5VTEwpOwo+IMKgCj4gwqAJdG90YWxf
-dGVzdHMrKzsKPiBAQCAtNzgsNyArNzgsNyBAQCBzdGF0aWMgdm9pZCBfX2luaXQgdGVzdF91dWlk
-X3Rlc3QoY29uc3Qgc3RydWN0Cj4gdGVzdF91dWlkX2RhdGEgKmRhdGEpCj4gwqAKPiDCoAkvKiBC
-RSAqLwo+IMKgCXRvdGFsX3Rlc3RzKys7Cj4gLQlpZiAodXVpZF90b19iaW4oZGF0YS0+dXVpZCwg
-JmJlKSkKPiArCWlmICh1dWlkX3BhcnNlKGRhdGEtPnV1aWQsICZiZSkpCj4gwqAJCXRlc3RfdXVp
-ZF9mYWlsZWQoImNvbnZlcnNpb24iLCBmYWxzZSwgdHJ1ZSwgZGF0YS0KPiA+dXVpZCwgTlVMTCk7
-Cj4gwqAKPiDCoAl0b3RhbF90ZXN0cysrOwo+IEBAIC05NSwxMiArOTUsMTIgQEAgc3RhdGljIHZv
-aWQgX19pbml0IHRlc3RfdXVpZF93cm9uZyhjb25zdCBjaGFyCj4gKmRhdGEpCj4gwqAKPiDCoAkv
-KiBMRSAqLwo+IMKgCXRvdGFsX3Rlc3RzKys7Cj4gLQlpZiAoIWd1aWRfdG9fYmluKGRhdGEsICZs
-ZSkpCj4gKwlpZiAoIWd1aWRfcGFyc2UoZGF0YSwgJmxlKSkKPiDCoAkJdGVzdF91dWlkX2ZhaWxl
-ZCgibmVnYXRpdmUiLCB0cnVlLCBmYWxzZSwgZGF0YSwKPiBOVUxMKTsKPiDCoAo+IMKgCS8qIEJF
-ICovCj4gwqAJdG90YWxfdGVzdHMrKzsKPiAtCWlmICghdXVpZF90b19iaW4oZGF0YSwgJmJlKSkK
-PiArCWlmICghdXVpZF9wYXJzZShkYXRhLCAmYmUpKQo+IMKgCQl0ZXN0X3V1aWRfZmFpbGVkKCJu
-ZWdhdGl2ZSIsIHRydWUsIHRydWUsIGRhdGEsIE5VTEwpOwo+IMKgfQo+IMKgCj4gZGlmZiAtLWdp
-dCBhL2xpYi91dWlkLmMgYi9saWIvdXVpZC5jCj4gaW5kZXggZjgwZGM2M2Y2Y2E4Li45MGJlZTcz
-ZjdiZDcgMTAwNjQ0Cj4gLS0tIGEvbGliL3V1aWQuYwo+ICsrKyBiL2xpYi91dWlkLmMKPiBAQCAt
-OTcsNyArOTcsNyBAQCBib29sIHV1aWRfaXNfdmFsaWQoY29uc3QgY2hhciAqdXVpZCkKPiDCoH0K
-PiDCoEVYUE9SVF9TWU1CT0wodXVpZF9pc192YWxpZCk7Cj4gwqAKPiAtc3RhdGljIGludCBfX3V1
-aWRfdG9fYmluKGNvbnN0IGNoYXIgKnV1aWQsIF9fdTggYlsxNl0sIGNvbnN0IHU4Cj4gZWlbMTZd
-KQo+ICtzdGF0aWMgaW50IF9fdXVpZF9wYXJzZShjb25zdCBjaGFyICp1dWlkLCBfX3U4IGJbMTZd
-LCBjb25zdCB1OAo+IGVpWzE2XSkKPiDCoHsKPiDCoAlzdGF0aWMgY29uc3QgdTggc2lbMTZdID0K
-PiB7MCwyLDQsNiw5LDExLDE0LDE2LDE5LDIxLDI0LDI2LDI4LDMwLDMyLDM0fTsKPiDCoAl1bnNp
-Z25lZCBpbnQgaTsKPiBAQCAtMTE1LDE0ICsxMTUsMTQgQEAgc3RhdGljIGludCBfX3V1aWRfdG9f
-YmluKGNvbnN0IGNoYXIgKnV1aWQsIF9fdTgKPiBiWzE2XSwgY29uc3QgdTggZWlbMTZdKQo+IMKg
-CXJldHVybiAwOwo+IMKgfQo+IMKgCj4gLWludCBndWlkX3RvX2Jpbihjb25zdCBjaGFyICp1dWlk
-LCBndWlkX3QgKnUpCj4gK2ludCBndWlkX3BhcnNlKGNvbnN0IGNoYXIgKnV1aWQsIGd1aWRfdCAq
-dSkKPiDCoHsKPiAtCXJldHVybiBfX3V1aWRfdG9fYmluKHV1aWQsIHUtPmIsIGd1aWRfaW5kZXgp
-Owo+ICsJcmV0dXJuIF9fdXVpZF9wYXJzZSh1dWlkLCB1LT5iLCBndWlkX2luZGV4KTsKPiDCoH0K
-PiAtRVhQT1JUX1NZTUJPTChndWlkX3RvX2Jpbik7Cj4gK0VYUE9SVF9TWU1CT0woZ3VpZF9wYXJz
-ZSk7Cj4gwqAKPiAtaW50IHV1aWRfdG9fYmluKGNvbnN0IGNoYXIgKnV1aWQsIHV1aWRfdCAqdSkK
-PiAraW50IHV1aWRfcGFyc2UoY29uc3QgY2hhciAqdXVpZCwgdXVpZF90ICp1KQo+IMKgewo+IC0J
-cmV0dXJuIF9fdXVpZF90b19iaW4odXVpZCwgdS0+YiwgdXVpZF9pbmRleCk7Cj4gKwlyZXR1cm4g
-X191dWlkX3BhcnNlKHV1aWQsIHUtPmIsIHV1aWRfaW5kZXgpOwo+IMKgfQo+IC1FWFBPUlRfU1lN
-Qk9MKHV1aWRfdG9fYmluKTsKPiArRVhQT1JUX1NZTUJPTCh1dWlkX3BhcnNlKTsKCi0tIApBbmR5
-IFNoZXZjaGVua28gPGFuZHJpeS5zaGV2Y2hlbmtvQGxpbnV4LmludGVsLmNvbT4KSW50ZWwgRmlu
-bGFuZCBPeQpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpM
-aW51eC1udmRpbW0gbWFpbGluZyBsaXN0CkxpbnV4LW52ZGltbUBsaXN0cy4wMS5vcmcKaHR0cHM6
-Ly9saXN0cy4wMS5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1udmRpbW0K
+On Wed, 2017-05-31 at 18:18 +0200, Christoph Hellwig wrote:
+> This helper was only used by IMA of all things, which would get
+> spurious
+> errors if CONFIG_BLOCK is disabled.  Just opencode the call there.
+
+> -			result = blk_part_pack_uuid(args[0].from,
+> -						    entry->fsuuid);
+> +			result = uuid_to_bin(args[0].from, (uuid_t
+> *)&entry->fsuuid);
+> 
+
+uuid_parse() ?
+
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
