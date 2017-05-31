@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 12/24] S390/sysinfo: use uuid_is_null instead of opencoding it
-Date: Wed, 31 May 2017 18:18:14 +0200
-Message-ID: <20170531161826.23243-13-hch@lst.de>
+Subject: [PATCH 13/24] xfs: remove uuid_getnodeuniq and xfs_uu_t
+Date: Wed, 31 May 2017 18:18:15 +0200
+Message-ID: <20170531161826.23243-14-hch@lst.de>
 References: <20170531161826.23243-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,50 +21,78 @@ To: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>,
 Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-And switch to use uuid_t instead of the old uuid_be type.
+Opencode uuid_getnodeuniq in the only caller, and directly decode
+the uuid_t representation instead of using a structure cast for it.
 
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Reviewed-by: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 ---
- arch/s390/include/asm/sysinfo.h | 4 ++--
- arch/s390/kernel/sysinfo.c      | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ fs/xfs/uuid.c      | 25 -------------------------
+ fs/xfs/uuid.h      |  1 -
+ fs/xfs/xfs_mount.c |  5 ++++-
+ 3 files changed, 4 insertions(+), 27 deletions(-)
 
-diff --git a/arch/s390/include/asm/sysinfo.h b/arch/s390/include/asm/sysinfo.h
-index e784bed6ed7f..2b498e58b914 100644
---- a/arch/s390/include/asm/sysinfo.h
-+++ b/arch/s390/include/asm/sysinfo.h
-@@ -109,7 +109,7 @@ struct sysinfo_2_2_2 {
- 	unsigned short cpus_shared;
- 	char reserved_4[3];
- 	unsigned char vsne;
--	uuid_be uuid;
-+	uuid_t uuid;
- 	char reserved_5[160];
- 	char ext_name[256];
- };
-@@ -134,7 +134,7 @@ struct sysinfo_3_2_2 {
- 		char reserved_1[3];
- 		unsigned char evmne;
- 		unsigned int reserved_2;
--		uuid_be uuid;
-+		uuid_t uuid;
- 	} vm[8];
- 	char reserved_3[1504];
- 	char ext_names[8][256];
-diff --git a/arch/s390/kernel/sysinfo.c b/arch/s390/kernel/sysinfo.c
-index eefcb54872a5..fb869b103825 100644
---- a/arch/s390/kernel/sysinfo.c
-+++ b/arch/s390/kernel/sysinfo.c
-@@ -242,7 +242,7 @@ static void print_ext_name(struct seq_file *m, int lvl,
+diff --git a/fs/xfs/uuid.c b/fs/xfs/uuid.c
+index 29ed78c8637b..737c186ea98b 100644
+--- a/fs/xfs/uuid.c
++++ b/fs/xfs/uuid.c
+@@ -17,31 +17,6 @@
+  */
+ #include <xfs.h>
  
- static void print_uuid(struct seq_file *m, int i, struct sysinfo_3_2_2 *info)
+-/* IRIX interpretation of an uuid_t */
+-typedef struct {
+-	__be32	uu_timelow;
+-	__be16	uu_timemid;
+-	__be16	uu_timehi;
+-	__be16	uu_clockseq;
+-	__be16	uu_node[3];
+-} xfs_uu_t;
+-
+-/*
+- * uuid_getnodeuniq - obtain the node unique fields of a UUID.
+- *
+- * This is not in any way a standard or condoned UUID function;
+- * it just something that's needed for user-level file handles.
+- */
+-void
+-uuid_getnodeuniq(uuid_t *uuid, int fsid [2])
+-{
+-	xfs_uu_t *uup = (xfs_uu_t *)uuid;
+-
+-	fsid[0] = (be16_to_cpu(uup->uu_clockseq) << 16) |
+-		   be16_to_cpu(uup->uu_timemid);
+-	fsid[1] = be32_to_cpu(uup->uu_timelow);
+-}
+-
+ int
+ uuid_is_nil(uuid_t *uuid)
  {
--	if (!memcmp(&info->vm[i].uuid, &NULL_UUID_BE, sizeof(uuid_be)))
-+	if (uuid_is_null(&info->vm[i].uuid))
- 		return;
- 	seq_printf(m, "VM%02d UUID:            %pUb\n", i, &info->vm[i].uuid);
- }
+diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
+index 86bbed071e79..5aea49bf0963 100644
+--- a/fs/xfs/uuid.h
++++ b/fs/xfs/uuid.h
+@@ -19,6 +19,5 @@
+ #define __XFS_SUPPORT_UUID_H__
+ 
+ extern int uuid_is_nil(uuid_t *uuid);
+-extern void uuid_getnodeuniq(uuid_t *uuid, int fsid [2]);
+ 
+ #endif	/* __XFS_SUPPORT_UUID_H__ */
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 2eaf81859166..51f7d03ef86c 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -793,7 +793,10 @@ xfs_mountfs(
+ 	 *  Copies the low order bits of the timestamp and the randomly
+ 	 *  set "sequence" number out of a UUID.
+ 	 */
+-	uuid_getnodeuniq(&sbp->sb_uuid, mp->m_fixedfsid);
++	mp->m_fixedfsid[0] =
++		(get_unaligned_be16(&sbp->sb_uuid.b[8]) << 16) |
++		 get_unaligned_be16(&sbp->sb_uuid.b[4]);
++	mp->m_fixedfsid[1] = get_unaligned_be32(&sbp->sb_uuid.b[0]);
+ 
+ 	mp->m_dmevmask = 0;	/* not persistent; set after each mount */
+ 
 -- 
 2.11.0
