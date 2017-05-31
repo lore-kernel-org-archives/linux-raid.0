@@ -1,40 +1,172 @@
-From: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 01/22] Revert "afs: Move UUID struct to linux/uuid.h"
-Date: Wed, 31 May 2017 11:33:15 +0100
-Message-ID: <22157.1496226795@warthog.procyon.org.uk>
-References: <20170531094157.GA10511@lst.de>
- <20170528102008.30276-2-hch@lst.de> <20170528102008.30276-1-hch@lst.de>
- <9377.1496138404@warthog.procyon.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <20170531094157.GA10511-jcswGhMUV9g@public.gmane.org>
-Content-ID: <22156.1496226795.1-S6HVgzuS8uM4Awkfq6JHfwNdhmdF6hFW@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH v2] Get failed disk count from array state
+Date: Wed, 31 May 2017 12:46:57 +0200
+Message-ID: <1496227617-25207-1-git-send-email-tomasz.majchrzak@intel.com>
+References: <bc4470f4-20bf-c45a-9d96-385e4b46e1e3@gmail.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <bc4470f4-20bf-c45a-9d96-385e4b46e1e3@gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: jes.sorensen@gmail.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
-Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org> wrote:
+Recent commit has changed the way failed disks are counted. It breaks
+recovery for external metadata arrays as failed disks are not part of
+the array and have no corresponding entries is sysfs (they are only
+reported for containers) so degraded arrays show no failed disks.
 
-> Does the afs protocol require a v1 uuid or does it just use the formwat on
-> the wire?
+Recent commit overwrites GET_DEGRADED result prior to GET_STATE and it
+is not set again if GET_STATE has not been requested. As GET_STATE
+provides the same information as GET_DEGRADED, the latter is not needed
+anymore. Remove GET_DEGRADED option and replace it with GET_STATE
+option.
 
-The format it uses on the wire is separate XDR encoding of each of the fields
-in the uuid_v1 struct, counting the elements of the node[] array separately.
+Don't count number of failed disks looking at sysfs entries but
+calculate it at the end. Do it only for arrays as containers report
+no disks, just spares.
 
-I'm not sure that the servers actually parse the contents of the UUID, but I
-can't be sure as I don't have access to the source for all of them.
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+---
+ Incremental.c | 14 ++++----------
+ Monitor.c     |  4 ++--
+ managemon.c   |  4 ++--
+ mdadm.h       |  1 -
+ raid6check.c  |  2 +-
+ sysfs.c       | 18 ++++++++----------
+ 6 files changed, 17 insertions(+), 26 deletions(-)
 
-OpenAFS and AuriStor will at least accept the version field being 4, however.
+v2:
+  adapted to apply to latest upstream version
 
-David
+diff --git a/Incremental.c b/Incremental.c
+index 30dc7a2..6cf2174 100644
+--- a/Incremental.c
++++ b/Incremental.c
+@@ -886,16 +886,10 @@ static int array_try_spare(char *devname, int *dfdp, struct dev_policy *pol,
+ 		}
+ 		sra = sysfs_read(-1, mp->devnm,
+ 				 GET_DEVS|GET_OFFSET|GET_SIZE|GET_STATE|
+-				 GET_DEGRADED|GET_COMPONENT|GET_VERSION);
+-		if (!sra) {
+-			/* Probably a container - no degraded info */
+-			sra = sysfs_read(-1, mp->devnm,
+-					 GET_DEVS|GET_OFFSET|GET_SIZE|GET_STATE|
+-					 GET_COMPONENT|GET_VERSION);
+-			if (sra)
+-				sra->array.failed_disks = -1;
+-		}
+-		if (!sra)
++				 GET_COMPONENT|GET_VERSION);
++		if (sra)
++			sra->array.failed_disks = -1;
++		else
+ 			continue;
+ 		if (st == NULL) {
+ 			int i;
+diff --git a/Monitor.c b/Monitor.c
+index 725f47d..bef2f1b 100644
+--- a/Monitor.c
++++ b/Monitor.c
+@@ -485,8 +485,8 @@ static int check_array(struct state *st, struct mdstat_ent *mdstat,
+ 	if (st->devnm[0] == 0)
+ 		strcpy(st->devnm, fd2devnm(fd));
+ 
+-	sra = sysfs_read(-1, st->devnm, GET_LEVEL | GET_DISKS | GET_DEGRADED |
+-			 GET_MISMATCH | GET_DEVS | GET_STATE);
++	sra = sysfs_read(-1, st->devnm, GET_LEVEL | GET_DISKS | GET_MISMATCH |
++			 GET_DEVS | GET_STATE);
+ 	if (!sra)
+ 		goto disappeared;
+ 
+diff --git a/managemon.c b/managemon.c
+index a8df666..68f0c2d 100644
+--- a/managemon.c
++++ b/managemon.c
+@@ -685,8 +685,8 @@ static void manage_new(struct mdstat_ent *mdstat,
+ 
+ 	mdi = sysfs_read(-1, mdstat->devnm,
+ 			 GET_LEVEL|GET_CHUNK|GET_DISKS|GET_COMPONENT|
+-			 GET_DEGRADED|GET_SAFEMODE|
+-			 GET_DEVS|GET_OFFSET|GET_SIZE|GET_STATE|GET_LAYOUT);
++			 GET_SAFEMODE|GET_DEVS|GET_OFFSET|GET_SIZE|GET_STATE|
++			 GET_LAYOUT);
+ 
+ 	if (!mdi)
+ 		return;
+diff --git a/mdadm.h b/mdadm.h
+index ec0a39e..ee9b837 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -637,7 +637,6 @@ enum sysfs_read_flags {
+ 	GET_MISMATCH	= (1 << 5),
+ 	GET_VERSION	= (1 << 6),
+ 	GET_DISKS	= (1 << 7),
+-	GET_DEGRADED	= (1 << 8),
+ 	GET_SAFEMODE	= (1 << 9),
+ 	GET_BITMAP_LOCATION = (1 << 10),
+ 
+diff --git a/raid6check.c b/raid6check.c
+index 551f835..a8e6005 100644
+--- a/raid6check.c
++++ b/raid6check.c
+@@ -562,7 +562,7 @@ int main(int argc, char *argv[])
+ 			  GET_LEVEL|
+ 			  GET_LAYOUT|
+ 			  GET_DISKS|
+-			  GET_DEGRADED |
++			  GET_STATE |
+ 			  GET_COMPONENT|
+ 			  GET_CHUNK|
+ 			  GET_DEVS|
+diff --git a/sysfs.c b/sysfs.c
+index e47f5e4..78d2b52 100644
+--- a/sysfs.c
++++ b/sysfs.c
+@@ -162,18 +162,12 @@ struct mdinfo *sysfs_read(int fd, char *devnm, unsigned long options)
+ 			goto abort;
+ 		sra->array.layout = strtoul(buf, NULL, 0);
+ 	}
+-	if (options & GET_DISKS) {
++	if (options & (GET_DISKS|GET_STATE)) {
+ 		strcpy(base, "raid_disks");
+ 		if (load_sys(fname, buf, sizeof(buf)))
+ 			goto abort;
+ 		sra->array.raid_disks = strtoul(buf, NULL, 0);
+ 	}
+-	if (options & GET_DEGRADED) {
+-		strcpy(base, "degraded");
+-		if (load_sys(fname, buf, sizeof(buf)))
+-			goto abort;
+-		sra->array.failed_disks = strtoul(buf, NULL, 0);
+-	}
+ 	if (options & GET_COMPONENT) {
+ 		strcpy(base, "component_size");
+ 		if (load_sys(fname, buf, sizeof(buf)))
+@@ -359,10 +353,9 @@ struct mdinfo *sysfs_read(int fd, char *devnm, unsigned long options)
+ 			strcpy(dbase, "state");
+ 			if (load_sys(fname, buf, sizeof(buf)))
+ 				goto abort;
+-			if (strstr(buf, "faulty")) {
++			if (strstr(buf, "faulty"))
+ 				dev->disk.state |= (1<<MD_DISK_FAULTY);
+-				sra->array.failed_disks++;
+-			} else {
++			else {
+ 				sra->array.working_disks++;
+ 				if (strstr(buf, "in_sync")) {
+ 					dev->disk.state |= (1<<MD_DISK_SYNC);
+@@ -379,6 +372,11 @@ struct mdinfo *sysfs_read(int fd, char *devnm, unsigned long options)
+ 			dev->errors = strtoul(buf, NULL, 0);
+ 		}
+ 	}
++
++	if ((options & GET_STATE) && sra->array.raid_disks)
++		sra->array.failed_disks = sra->array.raid_disks -
++			sra->array.active_disks - sra->array.spare_disks;
++
+ 	closedir(dir);
+ 	return sra;
+ 
+-- 
+1.8.3.1
+
