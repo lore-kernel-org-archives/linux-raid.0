@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 19/24] partitions/ldm: switch to use uuid_t
-Date: Wed, 31 May 2017 18:18:21 +0200
-Message-ID: <20170531161826.23243-20-hch@lst.de>
+Subject: [PATCH 21/24] nvme: switch to uuid_t
+Date: Wed, 31 May 2017 18:18:23 +0200
+Message-ID: <20170531161826.23243-22-hch@lst.de>
 References: <20170531161826.23243-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,95 +21,138 @@ To: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>,
 Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Steven Whitehouse <swhiteho-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-And the uuid helpers.
-
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 Reviewed-by: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Reviewed-by: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 ---
- block/partitions/ldm.c | 10 +++++-----
- block/partitions/ldm.h |  6 ++----
- 2 files changed, 7 insertions(+), 9 deletions(-)
+ drivers/nvme/host/fabrics.c | 8 ++++----
+ drivers/nvme/host/fabrics.h | 2 +-
+ drivers/nvme/host/fc.c      | 3 +--
+ drivers/nvme/target/nvmet.h | 1 +
+ include/linux/nvme-fc.h     | 3 +--
+ include/linux/nvme.h        | 3 ++-
+ 6 files changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/block/partitions/ldm.c b/block/partitions/ldm.c
-index edcea70674c9..2a365c756648 100644
---- a/block/partitions/ldm.c
-+++ b/block/partitions/ldm.c
-@@ -115,7 +115,7 @@ static bool ldm_parse_privhead(const u8 *data, struct privhead *ph)
- 		ldm_error("PRIVHEAD disk size doesn't match real disk size");
- 		return false;
- 	}
--	if (uuid_be_to_bin(data + 0x0030, (uuid_be *)ph->disk_id)) {
-+	if (uuid_parse(data + 0x0030, &ph->disk_id)) {
- 		ldm_error("PRIVHEAD contains an invalid GUID.");
- 		return false;
- 	}
-@@ -234,7 +234,7 @@ static bool ldm_compare_privheads (const struct privhead *ph1,
- 		(ph1->logical_disk_size  == ph2->logical_disk_size)	&&
- 		(ph1->config_start       == ph2->config_start)		&&
- 		(ph1->config_size        == ph2->config_size)		&&
--		!memcmp (ph1->disk_id, ph2->disk_id, GUID_SIZE));
-+		uuid_equal(&ph1->disk_id, &ph2->disk_id));
- }
+diff --git a/drivers/nvme/host/fabrics.c b/drivers/nvme/host/fabrics.c
+index 990e6fb32a63..c190d7e36900 100644
+--- a/drivers/nvme/host/fabrics.c
++++ b/drivers/nvme/host/fabrics.c
+@@ -58,7 +58,7 @@ static struct nvmf_host *nvmf_host_add(const char *hostnqn)
+ 
+ 	kref_init(&host->ref);
+ 	memcpy(host->nqn, hostnqn, NVMF_NQN_SIZE);
+-	uuid_be_gen(&host->id);
++	uuid_gen(&host->id);
+ 
+ 	list_add_tail(&host->list, &nvmf_hosts);
+ out_unlock:
+@@ -75,7 +75,7 @@ static struct nvmf_host *nvmf_host_default(void)
+ 		return NULL;
+ 
+ 	kref_init(&host->ref);
+-	uuid_be_gen(&host->id);
++	uuid_gen(&host->id);
+ 	snprintf(host->nqn, NVMF_NQN_SIZE,
+ 		"nqn.2014-08.org.nvmexpress:NVMf:uuid:%pUb", &host->id);
+ 
+@@ -395,7 +395,7 @@ int nvmf_connect_admin_queue(struct nvme_ctrl *ctrl)
+ 	if (!data)
+ 		return -ENOMEM;
+ 
+-	memcpy(&data->hostid, &ctrl->opts->host->id, sizeof(uuid_be));
++	uuid_copy(&data->hostid, &ctrl->opts->host->id);
+ 	data->cntlid = cpu_to_le16(0xffff);
+ 	strncpy(data->subsysnqn, ctrl->opts->subsysnqn, NVMF_NQN_SIZE);
+ 	strncpy(data->hostnqn, ctrl->opts->host->nqn, NVMF_NQN_SIZE);
+@@ -454,7 +454,7 @@ int nvmf_connect_io_queue(struct nvme_ctrl *ctrl, u16 qid)
+ 	if (!data)
+ 		return -ENOMEM;
+ 
+-	memcpy(&data->hostid, &ctrl->opts->host->id, sizeof(uuid_be));
++	uuid_copy(&data->hostid, &ctrl->opts->host->id);
+ 	data->cntlid = cpu_to_le16(ctrl->cntlid);
+ 	strncpy(data->subsysnqn, ctrl->opts->subsysnqn, NVMF_NQN_SIZE);
+ 	strncpy(data->hostnqn, ctrl->opts->host->nqn, NVMF_NQN_SIZE);
+diff --git a/drivers/nvme/host/fabrics.h b/drivers/nvme/host/fabrics.h
+index f5a9c1fb186f..29be7600689d 100644
+--- a/drivers/nvme/host/fabrics.h
++++ b/drivers/nvme/host/fabrics.h
+@@ -36,7 +36,7 @@ struct nvmf_host {
+ 	struct kref		ref;
+ 	struct list_head	list;
+ 	char			nqn[NVMF_NQN_SIZE];
+-	uuid_be			id;
++	uuid_t			id;
+ };
  
  /**
-@@ -557,7 +557,7 @@ static struct vblk * ldm_get_disk_objid (const struct ldmdb *ldb)
- 
- 	list_for_each (item, &ldb->v_disk) {
- 		struct vblk *v = list_entry (item, struct vblk, list);
--		if (!memcmp (v->vblk.disk.disk_id, ldb->ph.disk_id, GUID_SIZE))
-+		if (uuid_equal(&v->vblk.disk.disk_id, &ldb->ph.disk_id))
- 			return v;
- 	}
- 
-@@ -892,7 +892,7 @@ static bool ldm_parse_dsk3 (const u8 *buffer, int buflen, struct vblk *vb)
- 	disk = &vb->vblk.disk;
- 	ldm_get_vstr (buffer + 0x18 + r_diskid, disk->alt_name,
- 		sizeof (disk->alt_name));
--	if (uuid_be_to_bin(buffer + 0x19 + r_name, (uuid_be *)disk->disk_id))
-+	if (uuid_parse(buffer + 0x19 + r_name, &disk->disk_id))
- 		return false;
- 
- 	return true;
-@@ -927,7 +927,7 @@ static bool ldm_parse_dsk4 (const u8 *buffer, int buflen, struct vblk *vb)
- 		return false;
- 
- 	disk = &vb->vblk.disk;
--	memcpy (disk->disk_id, buffer + 0x18 + r_name, GUID_SIZE);
-+	uuid_copy(&disk->disk_id, (uuid_t *)(buffer + 0x18 + r_name));
- 	return true;
- }
- 
-diff --git a/block/partitions/ldm.h b/block/partitions/ldm.h
-index 374242c0971a..f4c6055df956 100644
---- a/block/partitions/ldm.h
-+++ b/block/partitions/ldm.h
-@@ -112,8 +112,6 @@ struct frag {				/* VBLK Fragment handling */
- 
- /* In memory LDM database structures. */
- 
--#define GUID_SIZE		16
--
- struct privhead {			/* Offsets and sizes are in sectors. */
- 	u16	ver_major;
- 	u16	ver_minor;
-@@ -121,7 +119,7 @@ struct privhead {			/* Offsets and sizes are in sectors. */
- 	u64	logical_disk_size;
- 	u64	config_start;
- 	u64	config_size;
--	u8	disk_id[GUID_SIZE];
-+	uuid_t	disk_id;
+diff --git a/drivers/nvme/host/fc.c b/drivers/nvme/host/fc.c
+index 5b14cbefb724..96b983bb44bd 100644
+--- a/drivers/nvme/host/fc.c
++++ b/drivers/nvme/host/fc.c
+@@ -878,8 +878,7 @@ nvme_fc_connect_admin_queue(struct nvme_fc_ctrl *ctrl,
+ 	assoc_rqst->assoc_cmd.sqsize = cpu_to_be16(qsize);
+ 	/* Linux supports only Dynamic controllers */
+ 	assoc_rqst->assoc_cmd.cntlid = cpu_to_be16(0xffff);
+-	memcpy(&assoc_rqst->assoc_cmd.hostid, &ctrl->ctrl.opts->host->id,
+-		min_t(size_t, FCNVME_ASSOC_HOSTID_LEN, sizeof(uuid_be)));
++	uuid_copy(&assoc_rqst->assoc_cmd.hostid, &ctrl->ctrl.opts->host->id);
+ 	strncpy(assoc_rqst->assoc_cmd.hostnqn, ctrl->ctrl.opts->host->nqn,
+ 		min(FCNVME_ASSOC_HOSTNQN_LEN, NVMF_NQN_SIZE));
+ 	strncpy(assoc_rqst->assoc_cmd.subnqn, ctrl->ctrl.opts->subsysnqn,
+diff --git a/drivers/nvme/target/nvmet.h b/drivers/nvme/target/nvmet.h
+index cfc5c7fb0ab7..8ff6e430b30a 100644
+--- a/drivers/nvme/target/nvmet.h
++++ b/drivers/nvme/target/nvmet.h
+@@ -21,6 +21,7 @@
+ #include <linux/percpu-refcount.h>
+ #include <linux/list.h>
+ #include <linux/mutex.h>
++#include <linux/uuid.h>
+ #include <linux/nvme.h>
+ #include <linux/configfs.h>
+ #include <linux/rcupdate.h>
+diff --git a/include/linux/nvme-fc.h b/include/linux/nvme-fc.h
+index e997c4a49a88..bc711a10be05 100644
+--- a/include/linux/nvme-fc.h
++++ b/include/linux/nvme-fc.h
+@@ -177,7 +177,6 @@ struct fcnvme_lsdesc_rjt {
  };
  
- struct tocblock {			/* We have exactly two bitmaps. */
-@@ -154,7 +152,7 @@ struct vblk_dgrp {			/* VBLK Disk Group */
+ 
+-#define FCNVME_ASSOC_HOSTID_LEN		16
+ #define FCNVME_ASSOC_HOSTNQN_LEN	256
+ #define FCNVME_ASSOC_SUBNQN_LEN		256
+ 
+@@ -191,7 +190,7 @@ struct fcnvme_lsdesc_cr_assoc_cmd {
+ 	__be16	cntlid;
+ 	__be16	sqsize;
+ 	__be32	rsvd52;
+-	u8	hostid[FCNVME_ASSOC_HOSTID_LEN];
++	uuid_t	hostid;
+ 	u8	hostnqn[FCNVME_ASSOC_HOSTNQN_LEN];
+ 	u8	subnqn[FCNVME_ASSOC_SUBNQN_LEN];
+ 	u8	rsvd632[384];
+diff --git a/include/linux/nvme.h b/include/linux/nvme.h
+index b625bacf37ef..e400a69fa1d3 100644
+--- a/include/linux/nvme.h
++++ b/include/linux/nvme.h
+@@ -16,6 +16,7 @@
+ #define _LINUX_NVME_H
+ 
+ #include <linux/types.h>
++#include <linux/uuid.h>
+ 
+ /* NQN names in commands fields specified one size */
+ #define NVMF_NQN_FIELD_LEN	256
+@@ -843,7 +844,7 @@ struct nvmf_connect_command {
  };
  
- struct vblk_disk {			/* VBLK Disk */
--	u8	disk_id[GUID_SIZE];
-+	uuid_t	disk_id;
- 	u8	alt_name[128];
- };
- 
+ struct nvmf_connect_data {
+-	__u8		hostid[16];
++	uuid_t		hostid;
+ 	__le16		cntlid;
+ 	char		resv4[238];
+ 	char		subsysnqn[NVMF_NQN_FIELD_LEN];
 -- 
 2.11.0
