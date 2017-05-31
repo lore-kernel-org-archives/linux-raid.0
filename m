@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 18/24] overlayfs: use uuid_t instead of uuid_be
-Date: Wed, 31 May 2017 18:18:20 +0200
-Message-ID: <20170531161826.23243-19-hch@lst.de>
+Subject: [PATCH 20/24] sysctl: switch to use uuid_t
+Date: Wed, 31 May 2017 18:18:22 +0200
+Message-ID: <20170531161826.23243-21-hch@lst.de>
 References: <20170531161826.23243-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -25,35 +25,30 @@ Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 Reviewed-by: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Reviewed-by: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 ---
- fs/overlayfs/copy_up.c   | 2 +-
- fs/overlayfs/overlayfs.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ kernel/sysctl_binary.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
-index 5b795873f7fa..2a67e8c13098 100644
---- a/fs/overlayfs/copy_up.c
-+++ b/fs/overlayfs/copy_up.c
-@@ -233,7 +233,7 @@ int ovl_set_attr(struct dentry *upperdentry, struct kstat *stat)
- 	return err;
- }
+diff --git a/kernel/sysctl_binary.c b/kernel/sysctl_binary.c
+index ece4b177052b..939a158eab11 100644
+--- a/kernel/sysctl_binary.c
++++ b/kernel/sysctl_binary.c
+@@ -1119,7 +1119,7 @@ static ssize_t bin_uuid(struct file *file,
+ 	/* Only supports reads */
+ 	if (oldval && oldlen) {
+ 		char buf[UUID_STRING_LEN + 1];
+-		uuid_be uuid;
++		uuid_t uuid;
  
--static struct ovl_fh *ovl_encode_fh(struct dentry *lower, uuid_be *uuid)
-+static struct ovl_fh *ovl_encode_fh(struct dentry *lower, uuid_t *uuid)
- {
- 	struct ovl_fh *fh;
- 	int fh_type, fh_len, dwords;
-diff --git a/fs/overlayfs/overlayfs.h b/fs/overlayfs/overlayfs.h
-index caa36cb9c46d..cb0fc450419b 100644
---- a/fs/overlayfs/overlayfs.h
-+++ b/fs/overlayfs/overlayfs.h
-@@ -55,7 +55,7 @@ struct ovl_fh {
- 	u8 len;		/* size of this header + size of fid */
- 	u8 flags;	/* OVL_FH_FLAG_* */
- 	u8 type;	/* fid_type of fid */
--	uuid_be uuid;	/* uuid of filesystem */
-+	uuid_t uuid;	/* uuid of filesystem */
- 	u8 fid[0];	/* file identifier */
- } __packed;
+ 		result = kernel_read(file, 0, buf, sizeof(buf) - 1);
+ 		if (result < 0)
+@@ -1128,7 +1128,7 @@ static ssize_t bin_uuid(struct file *file,
+ 		buf[result] = '\0';
  
+ 		result = -EIO;
+-		if (uuid_be_to_bin(buf, &uuid))
++		if (uuid_parse(buf, &uuid))
+ 			goto out;
+ 
+ 		if (oldlen > 16)
 -- 
 2.11.0
