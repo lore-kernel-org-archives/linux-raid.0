@@ -1,42 +1,74 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: The dev node can't be released at once after stopping raid
-Date: Wed, 31 May 2017 23:47:19 -0400 (EDT)
-Message-ID: <1159964415.16461871.1496288839399.JavaMail.zimbra@redhat.com>
-References: <51439640.15505639.1496113073965.JavaMail.zimbra@redhat.com>
+From: Zhilong Liu <zlliu@suse.com>
+Subject: Re: The dev node can't be released at once after stopping raid
+Date: Thu, 1 Jun 2017 12:43:49 +0800
+Message-ID: <43bca632-9d77-2063-603c-6dcf47f3d250@suse.com>
+References: <1159964415.16461871.1496288839399.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51439640.15505639.1496113073965.JavaMail.zimbra@redhat.com>
+In-Reply-To: <1159964415.16461871.1496288839399.JavaMail.zimbra@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Xiao Ni <xni@redhat.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all
 
-I tried with the latest linux stable kernel and latest mdadm.
 
-After stopping a raid device, the dev node directory can't be released
-at once. I did a simple test, the script is:
+On 06/01/2017 11:47 AM, Xiao Ni wrote:
+> Hi all
+>
+> I tried with the latest linux stable kernel and latest mdadm.
+>
+> After stopping a raid device, the dev node directory can't be released
+> at once. I did a simple test, the script is:
+>
+> #!/bin/sh
+>
+> while [ 1 ]; do
+> mdadm -CR /dev/md0 -l1 -n2 /dev/loop0 /dev/loop1
+> sleep 5
+> mdadm -S /dev/md0
+> ls /dev/md0
+> sleep 1
+> ls /dev/md0
+> done
+>
+> mdadm: stopped /dev/md0
+> /dev/md0
+> ls: cannot access /dev/md0: No such file or directory
+>
+> It usually detects dev node /dev/md0 isn't released after stopping raid.
+> I'm not sure whether it's a bug or not. Do we need to do some job to
+> make sure that the node should be released before command mdadm -S return?
 
-#!/bin/sh
+it's waiting for processing the udev events. we can monitor it via to "# 
+udevadm monitor".
 
-while [ 1 ]; do 
-mdadm -CR /dev/md0 -l1 -n2 /dev/loop0 /dev/loop1 
-sleep 5
-mdadm -S /dev/md0 
-ls /dev/md0
-sleep 1
-ls /dev/md0
-done
+For mdadm -S /dev/md0, Manage_stop() has already did the errno checking,
 
-mdadm: stopped /dev/md0
-/dev/md0
-ls: cannot access /dev/md0: No such file or directory
+cut piece of code from Manage.c
+.. .. .. ..
+done:
 
-It usually detects dev node /dev/md0 isn't released after stopping raid. 
-I'm not sure whether it's a bug or not. Do we need to do some job to
-make sure that the node should be released before command mdadm -S return?
+     /* As we have an O_EXCL open, any use of the device
+      * which blocks STOP_ARRAY is probably a transient use,
+      * so it is reasonable to retry for a while - 5 seconds.
+      */
+     count = 25; err = 0;
+     while (count && fd >= 0 &&
+            (err = ioctl(fd, STOP_ARRAY, NULL)) < 0 && errno == EBUSY) {
+         usleep(200000);
+         count --;
+     }
 
-Best Regards
-Xiao
+Best regards,
+-Zhilong
+
+> Best Regards
+> Xiao
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
