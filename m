@@ -1,66 +1,97 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH] md: simplify code with bio_io_error
-Date: Fri,  2 Jun 2017 15:49:14 +0800
-Message-ID: <20170602074914.26842-1-gqjiang@suse.com>
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: Re: Grow set size issue
+Date: Fri, 2 Jun 2017 13:01:10 +0200
+Message-ID: <20170602110110.GA29246@proton.igk.intel.com>
+References: <wrfjlgrodlbj.fsf@gmail.com>
+ <87o9wju5r0.fsf@notabene.neil.brown.name>
+ <89891c04-620c-0dc2-97af-719b480aa4e5@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <89891c04-620c-0dc2-97af-719b480aa4e5@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@kernel.org, Guoqing Jiang <gqjiang@suse.com>
+To: Jes Sorensen <jes.sorensen@gmail.com>
+Cc: NeilBrown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-bio_io_error was introduced in the commit 4246a0b
-("block: add a bi_error field to struct bio"), so
-use it to simplify code.
+On Thu, Mar 30, 2017 at 10:10:32AM -0400, Jes Sorensen wrote:
+> On 03/29/2017 05:34 PM, NeilBrown wrote:
+> >On Thu, Mar 30 2017, jes.sorensen@gmail.com wrote:
+> >
+> >>Hi Neil,
+> >>
+> >>In the below patch you changed the error handling, to make the kernel
+> >>not setting the size of the device being an error. However we still have
+> >>the code in place to handle the error, except it never triggers.
+> >
+> >So we do.  I should have removed all of that.
+> >I should have just reverted
+> >Commit: 65a9798b58b4 ("FIX: Detect error and rollback metadata")
+> >
+> >
+> >>
+> >>Question is do you remember the reason for this change? Old kernels not
+> >>allowing it, are there any legitimate reasons for the kernel to refuse
+> >>the size change?
+> >
+> >I needed to go further back to remind myself why we do these size change
+> >at all.
+> >The command being run here is "mdadm --grow /dev/mdX --size=foo"
+> >which has a primary purpose of changing the component_size of the array.
+> >What can happen is that someone makes all the components bigger
+> >(E.g. with LVM) and then uses this command to set --size=max, and it
+> >doesn't work.  That is because md doesn't know the devices are bigger.
+> >
+> >You can tell md that devices have changes size by writing to the "size"
+> >attribute.
+> >mdadm doesn't have an option for doing that per-device - you need to
+> >poke into sysfs.
+> >
+> >To make it a bit easier, when you use "--grow --size=foo", mdadm will
+> >always write "foo" to the "size" attribute of each device, just incase
+> >that will be helpful. In the case where the device is now bigger, it
+> >will.
+> >
+> >In the case where the size of the array is being reduced, it is not
+> >permitted to change the "size" of each device until the "component_size"
+> >of the array has changed, so these attempts to change "size" will fail.
+> >But that isn't a problem.
+> >
+> >In short, the attempt to change "size" here is a convenience, and
+> >optimization.  It doesn't matter if it fails.
+> >
+> >So please just revert all bits of the above commit that are still
+> >present.
+> 
+> Hi Neil,
+> 
+> Thanks for the explanation, I'll take the big hammer to the
+> leftovers and get rid of them.
+> 
+> Jes
 
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
----
- drivers/md/raid1.c  | 3 +--
- drivers/md/raid10.c | 3 +--
- drivers/md/raid5.c  | 3 +--
- 3 files changed, 3 insertions(+), 6 deletions(-)
+Hi,
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index af5056d..c20eb78 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -802,8 +802,7 @@ static void flush_bio_list(struct r1conf *conf, struct bio *bio)
- 		bio->bi_next = NULL;
- 		bio->bi_bdev = rdev->bdev;
- 		if (test_bit(Faulty, &rdev->flags)) {
--			bio->bi_error = -EIO;
--			bio_endio(bio);
-+			bio_io_error(bio);
- 		} else if (unlikely((bio_op(bio) == REQ_OP_DISCARD) &&
- 				    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
- 			/* Just ignore it */
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 4343d7f..ceb9709 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -913,8 +913,7 @@ static void flush_pending_writes(struct r10conf *conf)
- 			bio->bi_next = NULL;
- 			bio->bi_bdev = rdev->bdev;
- 			if (test_bit(Faulty, &rdev->flags)) {
--				bio->bi_error = -EIO;
--				bio_endio(bio);
-+				bio_io_error(bio);
- 			} else if (unlikely((bio_op(bio) ==  REQ_OP_DISCARD) &&
- 					    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
- 				/* Just ignore it */
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 7220646..57aa044 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -3429,8 +3429,7 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
- 				struct bio *nextbi =
- 					r5_next_bio(bi, sh->dev[i].sector);
- 
--				bi->bi_error = -EIO;
--				bio_endio(bi);
-+				bio_io_error(bi);
- 				bi = nextbi;
- 			}
- 		}
--- 
-2.10.0
+The commit 758b327cf5a ("Grow: Remove unnecessary optimization") breaks grow
+operation for external metadata.
 
+mdadm --create /dev/md/imsm0 --metadata=imsm --raid-devices=4 /dev/nvme[0-3]n1 --run
+mdadm --create /dev/md/r5 --level=5 --chunk 64 --size=1G --raid-devices=3 /dev/nvme[0-2]n1 --run --assume-clean
+
+MDADM_EXPERIMENTAL=1 mdadm --grow /dev/md/r5 --size=2G
+mdadm: Cannot set device size for /dev/md/r5: No space left on device
+
+From update_size in MD driver:
+
+	if (avail < num_sectors)
+		-ENOSPC;
+
+In the above case 'avail' is set to old value (1GiB) and new size requested
+('num_sectors') is 2GiB.
+
+Shall we revert the recent change then?
+
+Regards,
+
+Tomek
