@@ -1,97 +1,53 @@
-From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: Re: Grow set size issue
-Date: Fri, 2 Jun 2017 13:01:10 +0200
-Message-ID: <20170602110110.GA29246@proton.igk.intel.com>
-References: <wrfjlgrodlbj.fsf@gmail.com>
- <87o9wju5r0.fsf@notabene.neil.brown.name>
- <89891c04-620c-0dc2-97af-719b480aa4e5@gmail.com>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: A sector-of-mismatch warning patch (was Re: Fault tolerance with badblocks)
+Date: Fri, 02 Jun 2017 13:28:52 +0100
+Message-ID: <877f0upo8r.fsf@esperi.org.uk>
+References: <878tm65kyx.fsf@esperi.org.uk> <5911AED4.9030007@hesbynett.no>
+        <CAJCQCtSaLbp4T+j97Ds6xqPmhVwnncGU2UV2_9HEbEJyr6fy+Q@mail.gmail.com>
+        <87bmr14u5f.fsf_-_@esperi.org.uk>
+        <87efvpmqf6.fsf@notabene.neil.brown.name>
+        <87bmqsmrre.fsf@notabene.neil.brown.name>
+        <871sroscey.fsf@esperi.org.uk>
+        <20170518000624.xmvttuyio6llu25r@kernel.org>
+        <87efvlla69.fsf@notabene.neil.brown.name>
+        <877f1d3zpg.fsf@esperi.org.uk>
+        <20170519164800.v76xyx3h4x3rydqz@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <89891c04-620c-0dc2-97af-719b480aa4e5@gmail.com>
+In-Reply-To: <20170519164800.v76xyx3h4x3rydqz@kernel.org> (Shaohua Li's
+        message of "Fri, 19 May 2017 09:48:00 -0700")
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <jes.sorensen@gmail.com>
-Cc: NeilBrown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
+To: Shaohua Li <shli@kernel.org>
+Cc: NeilBrown <neilb@suse.com>, Chris Murphy <lists@colorremedies.com>, David Brown <david.brown@hesbynett.no>, Anthony Youngman <antlists@youngman.org.uk>, Phil Turmel <philip@turmel.org>, "Ravi (Tom) Hale" <ravi@hale.ee>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Mar 30, 2017 at 10:10:32AM -0400, Jes Sorensen wrote:
-> On 03/29/2017 05:34 PM, NeilBrown wrote:
-> >On Thu, Mar 30 2017, jes.sorensen@gmail.com wrote:
-> >
-> >>Hi Neil,
-> >>
-> >>In the below patch you changed the error handling, to make the kernel
-> >>not setting the size of the device being an error. However we still have
-> >>the code in place to handle the error, except it never triggers.
-> >
-> >So we do.  I should have removed all of that.
-> >I should have just reverted
-> >Commit: 65a9798b58b4 ("FIX: Detect error and rollback metadata")
-> >
-> >
-> >>
-> >>Question is do you remember the reason for this change? Old kernels not
-> >>allowing it, are there any legitimate reasons for the kernel to refuse
-> >>the size change?
-> >
-> >I needed to go further back to remind myself why we do these size change
-> >at all.
-> >The command being run here is "mdadm --grow /dev/mdX --size=foo"
-> >which has a primary purpose of changing the component_size of the array.
-> >What can happen is that someone makes all the components bigger
-> >(E.g. with LVM) and then uses this command to set --size=max, and it
-> >doesn't work.  That is because md doesn't know the devices are bigger.
-> >
-> >You can tell md that devices have changes size by writing to the "size"
-> >attribute.
-> >mdadm doesn't have an option for doing that per-device - you need to
-> >poke into sysfs.
-> >
-> >To make it a bit easier, when you use "--grow --size=foo", mdadm will
-> >always write "foo" to the "size" attribute of each device, just incase
-> >that will be helpful. In the case where the device is now bigger, it
-> >will.
-> >
-> >In the case where the size of the array is being reduced, it is not
-> >permitted to change the "size" of each device until the "component_size"
-> >of the array has changed, so these attempts to change "size" will fail.
-> >But that isn't a problem.
-> >
-> >In short, the attempt to change "size" here is a convenience, and
-> >optimization.  It doesn't matter if it fails.
-> >
-> >So please just revert all bits of the above commit that are still
-> >present.
-> 
-> Hi Neil,
-> 
-> Thanks for the explanation, I'll take the big hammer to the
-> leftovers and get rid of them.
-> 
-> Jes
+[getting back to this...]
 
-Hi,
+On 19 May 2017, Shaohua Li told this:
+> On Fri, May 19, 2017 at 11:31:23AM +0100, Nix wrote:
+>> On 19 May 2017, NeilBrown verbalised:
+>> >               we'd probably make the list of inconsistencies appear in a
+>> > sysfs file.  That would be less 'crappy'.  But as I say, I don't think
+>> > we really want to do that.
+>> 
+>> Aren't sysfs files in effect length-limited to one page (or at least
+>> length-limited by virtue of being stored in memory?) It seems to me this
+>> would just bring the same problem ratelimit is solving right back again,
+>> except a sysfs file doesn't have a logging daemon sucking the contents
+>> out constantly so you can overwrite your old output without worrying.
+>> (And there is no other daemon running to do that, except mdadm in
+>> monitor mode, which might not be running and really this job feels out
+>> of scope for it anyway.)
+>
+> No, my question is not the print is ratelimited. The problem is dmesg isn't a
+> good way to communicate info to userspace. You can easily lose all dmesg info
+> with a simple 'dmesg -c'. sysfs file is more reliable. Length-limited isn't a
+> problem, as you said, if there are a lot of mismatch, the array is toast.
 
-The commit 758b327cf5a ("Grow: Remove unnecessary optimization") breaks grow
-operation for external metadata.
+I agree that in future having a mechanism for reporting this more easily
+usable by programs would be good, and sysfs does seem like just such a
+mechanism.
 
-mdadm --create /dev/md/imsm0 --metadata=imsm --raid-devices=4 /dev/nvme[0-3]n1 --run
-mdadm --create /dev/md/r5 --level=5 --chunk 64 --size=1G --raid-devices=3 /dev/nvme[0-2]n1 --run --assume-clean
-
-MDADM_EXPERIMENTAL=1 mdadm --grow /dev/md/r5 --size=2G
-mdadm: Cannot set device size for /dev/md/r5: No space left on device
-
-From update_size in MD driver:
-
-	if (avail < num_sectors)
-		-ENOSPC;
-
-In the above case 'avail' is set to old value (1GiB) and new size requested
-('num_sectors') is 2GiB.
-
-Shall we revert the recent change then?
-
-Regards,
-
-Tomek
+-- 
+NULL && (void)
