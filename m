@@ -1,52 +1,80 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: [GIT PULL] MD update for 4.12-rc4
-Date: Fri, 2 Jun 2017 09:19:28 -0700
-Message-ID: <20170602161928.ttyedwasje6wnsny@kernel.org>
+Subject: Re: [PATCH] md: simplify code with bio_io_error
+Date: Fri, 2 Jun 2017 09:29:26 -0700
+Message-ID: <20170602162926.onnaflcf26ahuoti@kernel.org>
+References: <20170602074914.26842-1-gqjiang@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+In-Reply-To: <20170602074914.26842-1-gqjiang@suse.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Guoqing Jiang <gqjiang@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
-Several patches for MD. One notable is making flush bios sync, others fix small
-issues. Please pull!
+On Fri, Jun 02, 2017 at 03:49:14PM +0800, Guoqing Jiang wrote:
+> bio_io_error was introduced in the commit 4246a0b
+> ("block: add a bi_error field to struct bio"), so
+> use it to simplify code.
+> 
+> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 
-Thanks,
-Shaohua
+Applied, thanks! There are several other places which could use conversion, I added
+too.
 
-The following changes since commit 08332893e37af6ae779367e78e444f8f9571511d:
-
-  Linux 4.12-rc2 (2017-05-21 19:30:23 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git tags/md/4.12-rc4
-
-for you to fetch changes up to 5a8948f8a32ba56c17b3fb75d318ac98157f3ba5:
-
-  md: Make flush bios explicitely sync (2017-05-31 09:25:53 -0700)
-
-----------------------------------------------------------------
-Guoqing Jiang (1):
-      md-cluster: fix potential lock issue in add_new_disk
-
-Jan Kara (1):
-      md: Make flush bios explicitely sync
-
-Kyungchan Koh (1):
-      md: uuid debug statement now in processor byte order.
-
-Nix (1):
-      md: report sector of stripes with check mismatches
-
- drivers/md/bitmap.c      |  8 ++++----
- drivers/md/md-cluster.c  |  4 +++-
- drivers/md/md.c          |  2 +-
- drivers/md/raid5-cache.c |  4 ++--
- drivers/md/raid5-ppl.c   |  4 ++--
- drivers/md/raid5.c       | 18 ++++++++++++++----
- 6 files changed, 26 insertions(+), 14 deletions(-)
+> ---
+>  drivers/md/raid1.c  | 3 +--
+>  drivers/md/raid10.c | 3 +--
+>  drivers/md/raid5.c  | 3 +--
+>  3 files changed, 3 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index af5056d..c20eb78 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -802,8 +802,7 @@ static void flush_bio_list(struct r1conf *conf, struct bio *bio)
+>  		bio->bi_next = NULL;
+>  		bio->bi_bdev = rdev->bdev;
+>  		if (test_bit(Faulty, &rdev->flags)) {
+> -			bio->bi_error = -EIO;
+> -			bio_endio(bio);
+> +			bio_io_error(bio);
+>  		} else if (unlikely((bio_op(bio) == REQ_OP_DISCARD) &&
+>  				    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
+>  			/* Just ignore it */
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 4343d7f..ceb9709 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -913,8 +913,7 @@ static void flush_pending_writes(struct r10conf *conf)
+>  			bio->bi_next = NULL;
+>  			bio->bi_bdev = rdev->bdev;
+>  			if (test_bit(Faulty, &rdev->flags)) {
+> -				bio->bi_error = -EIO;
+> -				bio_endio(bio);
+> +				bio_io_error(bio);
+>  			} else if (unlikely((bio_op(bio) ==  REQ_OP_DISCARD) &&
+>  					    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
+>  				/* Just ignore it */
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 7220646..57aa044 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -3429,8 +3429,7 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
+>  				struct bio *nextbi =
+>  					r5_next_bio(bi, sh->dev[i].sector);
+>  
+> -				bi->bi_error = -EIO;
+> -				bio_endio(bi);
+> +				bio_io_error(bi);
+>  				bi = nextbi;
+>  			}
+>  		}
+> -- 
+> 2.10.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
