@@ -1,112 +1,107 @@
-From: Paul Tonelli <paul@tonel.li>
-Subject: Re: Recovery after accidental raid5 superblock rewrite
-Date: Mon, 5 Jun 2017 00:58:03 +0200
-Message-ID: <b8b6eb18-2952-86ee-5329-9e4f4c406c3d@tonel.li>
-References: <2009e689-39b7-14fa-44bd-3288f96b9c91@tonel.li>
- <20170603212011.GA13271@metamorpher.de>
- <12fc0496-423a-bca6-ac57-ed40958645e7@tonel.li>
- <20170603232919.GA17108@metamorpher.de>
+From: Marc MERLIN <marc@merlins.org>
+Subject: 9 second recovery when re-adding a drive that got kicked out?
+Date: Sun, 4 Jun 2017 15:38:17 -0700
+Message-ID: <20170604223817.ntxlvafgfa2umww2@merlins.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170603232919.GA17108@metamorpher.de>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Cc: linux-raid@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello again, things are somewhat improving, I haven't got my data but I 
-have got things to do:
+Howdy,
 
-On 06/04/2017 01:29 AM, Andreas Klauer wrote:
-> Good catch. It would probably move the data offset.
->
-> # truncate -s 3TB a b c
-> # mdadm --create /dev/md42 --level=5 --raid-devices=2 /dev/loop[01]
-> # mdadm --examine /dev/loop0
->      Data Offset : 262144 sectors
-> # mdadm --grow /dev/md42 --raid-devices=3 --add /dev/loop2
-> # mdadm --examine /dev/loop0
->      Data Offset : 262144 sectors
->       New Offset : 260096 sectors
->
-> So on re-create you have to find and specify the correct --data-offset.
->
-> How to determine the correct data offset? See if you can find LVM magic
-> string "LABELONE" in the first 256MiB of the two disks you didn't
-> dd-overwrite. That minus 512 bytes should be the correct offset.
->
-> # hexdump -C /dev/some-pv
-> 00000000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-> *
-> 00000200  4c 41 42 45 4c 4f 4e 45  01 00 00 00 00 00 00 00  |LABELONE........|
-> 00000210  55 87 20 ff 20 00 00 00  4c 56 4d 32 20 30 30 31  |U. . ...LVM2 001|
->
-> If unlucky it just happened to be in the drive you overwrite.
-> In that case you have to xor the two others.
-I  did find this one at that exact offset 26096 = (133169664 - 512)/512 
-on the sdc drive (I rebuilt the xor by rebuilding  the raid, using 
-overlays this time, it speeds up things a lot compared to my previous tests)
+Can you confirm that I understand how the write intent bitmap works, and
+that it doesn't cover the entire array, but only a part of it, and once
+you overflow it, syncing reverts to syncing the entire array?
 
-so this matches the commands. Now, after doing a pvcreate and a 
-vgcfgrestore using the backup lvm file, e2fsck still refuses to run, but 
-testdisk now finds a lot more superblocks:
+I had a raid5 array with 5 6TB drives.
 
-    ext4                      267262 8729457661 8729190400
-    ext4                      791550 8729981949 8729190400
-    ext4                     1315838 8730506237 8729190400
-    ext4                     1840126 8731030525 8729190400
-    ext4                     6034430 8735224829 8729190400
-    ext4                     6558718 8735749117 8729190400
-    ext4                    12325886 8741516285 8729190400
-    ext4                    20714494 8749904893 8729190400
-    ext4                    32248830 8761439229 8729190400
+/dev/sdl1 got kicked out due to a bus disk error of some kind.
+The drive is fine, it was a cabling issue, so I fixed the cabling,
+re-added it, and did
 
-  I also find the following backups superblocks when looping with e2fsck 
--b XXX:
+gargamel:~# mdadm -a /dev/md6 /dev/sdl1
 
-using testdisk:
+Then I saw this:
+[ 1001.728134] md: recovery of RAID array md6
+[ 1010.975255] md: md6: recovery done.
 
-```
-33408
-98944
-164480
-230016
-...
-```
+Before the re-add:
+md6 : active raid5 sdk1[5] sdb1[3] sdm1[2] sdj1[1]
+      23441555456 blocks super 1.2 level 5, 512k chunk, algorithm 2 [5/4] [_UUUU]
+      bitmap: 3/44 pages [12KB], 65536KB chunk
 
-and they always have a +640 difference with what a new ext4 I would 
-create on this volume doing:
+After the re-add (syncing now just to be safe):
+md6 : active raid5 sdl1[0] sdj1[1] sdk1[5] sdf1[3] sdm1[2]
+      23441555456 blocks super 1.2 level 5, 512k chunk, algorithm 2 [5/5] [UUUUU]
+      [>....................]  check =  0.8% (49258960/5860388864) finish=569.3min speed=170093K/sec
+      bitmap: 0/44 pages [0KB], 65536KB chunk
 
-```
-mke2fs /dev/vg0/data -n:
-Superblock backups stored on blocks:
-         32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 
-2654208,
-         4096000, 7962624, 11239424, 20480000, 23887872, 71663616, 
-78675968,
-         102400000, 214990848, 512000000, 550731776, 644972544
-```
+https://raid.wiki.kernel.org/index.php/Mdstat
+Explains a bit, I don't think it says how big a page is, but it seems to
+be 4KB.
 
-So I believe I still have an offset issue of 640 sectors or something 
-like this. Still digging this issue
+So let's say I have 64MB chuncks, each take 16 bits.
+The whole array is 22,892,144MiB
+That's 357,689 chunks, or about 700KB (16 bits per chunk) to keep all the
+state, but there is 44 pages of 4KB, or 176KB of write intent
+state.
 
-I have tried to rebuild the ext4 superblock on top of the logical volume 
-with the  "offset" option of mke2fs.ext4, but this did not work (e2fsck 
-is still not running by itself):
+The first bitmap line shows 3 pages totallying 12KB, so each page
+contains 4KB, or 2048 chunks per page.
+Did the above say that I had 6144 chunks that needed to be synced?
+
+If so it would be 6144 * 65536KB = 393,216 MB to write
+They were written in 9 seconds, so the sync happened at 43MB/s, which is
+believeable.
+
+The part I'm not too clear about is 44 pages of intent isn't enough to
+cover all my data.
+Is the idea that once I overflow that write intent bitmap, then it
+reverts to resyncing the entire array?
+
+I looked at https://raid.wiki.kernel.org/index.php/Write-intent_bitmap
+but didn't see anything about that specific bit.
 
 
-```
+Array details if that helps:
+gargamel:~# mdadm --examine /dev/sdl1
+/dev/sdl1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 66bccdfb:afbf9683:fcf1f12e:f2af2dcb
+           Name : gargamel.svh.merlins.org:6  (local to host gargamel.svh.merlins.org)
+  Creation Time : Thu Jan 28 14:38:40 2016
+     Raid Level : raid5
+   Raid Devices : 5
 
-mke2fs -E offset=640 -n -S /dev/vg0/data
+ Avail Dev Size : 11720777728 (5588.90 GiB 6001.04 GB)
+     Array Size : 23441555456 (22355.61 GiB 24004.15 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=262056 sectors, after=0 sectors
+          State : clean
+    Device UUID : ca4598ba:de585baa:b9935222:e06ac97d
 
-```
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Sun Jun  4 15:08:45 2017
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : d645f600 - correct
+         Events : 84917
 
+         Layout : left-symmetric
+     Chunk Size : 512K
 
-I am still digging around to know where this 640 offset comes from, but 
-as the last mail made me go forward significantly (thank you Andreas), I 
-am trying again.
+   Device Role : Active device 0
+   Array State : AAAAA ('A' == active, '.' == missing, 'R' == replacing)
 
-thanks again for reading me to this point.
-
+Thanks,
+Marc
+-- 
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/                         | PGP 1024R/763BE901
