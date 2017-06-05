@@ -1,70 +1,152 @@
-From: <citydesk@thereporteronline.com>
-Subject: (unknown)
-Date: Mon, 05 Jun 2017 04:30:15 -0000
-Message-ID: <149663701588.4334.5477487794107878538@vnpt.vn>
+From: NeilBrown <neilb@suse.com>
+Subject: [PATCH] md: initialise ->writes_pending in personality modules.
+Date: Mon, 05 Jun 2017 16:05:13 +1000
+Message-ID: <87zidnc6li.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: application/zip; name="721224187.zip"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: attachment
-Subject: 
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com, Heinz Mauelshagen <heinzm@redhat.com>
 List-Id: linux-raid.ids
 
-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
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+
+The new per-cpu counter for writes_pending is initialised in
+md_alloc(), which is not called by dm-raid.
+So dm-raid fails when md_write_start() is called.
+
+Move the initialization to the personality modules
+that need it.  This way it is always initialised when needed,
+but isn't unnecessarily initialized (requiring memory allocation)
+when the personality doesn't use writes_pending.
+
+Reported-by: Heinz Mauelshagen <heinzm@redhat.com>
+Fixes: 4ad23a976413 ("MD: use per-cpu counter for writes_pending")
+Signed-off-by: NeilBrown <neilb@suse.com>
+=2D--
+ drivers/md/md.c     | 16 ++++++++++++----
+ drivers/md/md.h     |  1 +
+ drivers/md/raid1.c  |  2 ++
+ drivers/md/raid10.c |  3 +++
+ drivers/md/raid5.c  |  3 +++
+ 5 files changed, 21 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 10367ffe92e3..23f4adf3a8cc 100644
+=2D-- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5174,6 +5174,18 @@ static void mddev_delayed_delete(struct work_struct =
+*ws)
+=20
+ static void no_op(struct percpu_ref *r) {}
+=20
++int mddev_init_writes_pending(struct mddev *mddev)
++{
++	if (mddev->writes_pending.percpu_count_ptr)
++		return 0;
++	if (percpu_ref_init(&mddev->writes_pending, no_op, 0, GFP_KERNEL) < 0)
++		return -ENOMEM;
++	/* We want to start with the refcount at zero */
++	percpu_ref_put(&mddev->writes_pending);
++	return 0;
++}
++EXPORT_SYMBOL_GPL(mddev_init_writes_pending);
++
+ static int md_alloc(dev_t dev, char *name)
+ {
+ 	/*
+@@ -5239,10 +5251,6 @@ static int md_alloc(dev_t dev, char *name)
+ 	blk_queue_make_request(mddev->queue, md_make_request);
+ 	blk_set_stacking_limits(&mddev->queue->limits);
+=20
+=2D	if (percpu_ref_init(&mddev->writes_pending, no_op, 0, GFP_KERNEL) < 0)
+=2D		goto abort;
+=2D	/* We want to start with the refcount at zero */
+=2D	percpu_ref_put(&mddev->writes_pending);
+ 	disk =3D alloc_disk(1 << shift);
+ 	if (!disk) {
+ 		blk_cleanup_queue(mddev->queue);
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 11f15146ce51..0fa1de42c42b 100644
+=2D-- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -648,6 +648,7 @@ extern void md_unregister_thread(struct md_thread **thr=
+eadp);
+ extern void md_wakeup_thread(struct md_thread *thread);
+ extern void md_check_recovery(struct mddev *mddev);
+ extern void md_reap_sync_thread(struct mddev *mddev);
++extern int mddev_init_writes_pending(struct mddev *mddev);
+ extern void md_write_start(struct mddev *mddev, struct bio *bi);
+ extern void md_write_inc(struct mddev *mddev, struct bio *bi);
+ extern void md_write_end(struct mddev *mddev);
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index af5056d56878..e1a7e3d4c5e4 100644
+=2D-- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -3063,6 +3063,8 @@ static int raid1_run(struct mddev *mddev)
+ 			mdname(mddev));
+ 		return -EIO;
+ 	}
++	if (mddev_init_writes_pending(mddev) < 0)
++		return -ENOMEM;
+ 	/*
+ 	 * copy the already verified devices into our private RAID1
+ 	 * bookkeeping area. [whatever we allocate in run(),
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 4343d7ff9916..797ed60abd5e 100644
+=2D-- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -3611,6 +3611,9 @@ static int raid10_run(struct mddev *mddev)
+ 	int first =3D 1;
+ 	bool discard_supported =3D false;
+=20
++	if (mddev_init_writes_pending(mddev) < 0)
++		return -ENOMEM;
++
+ 	if (mddev->private =3D=3D NULL) {
+ 		conf =3D setup_conf(mddev);
+ 		if (IS_ERR(conf))
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 9c4f7659f8b1..861fc9a8d1be 100644
+=2D-- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -7108,6 +7108,9 @@ static int raid5_run(struct mddev *mddev)
+ 	long long min_offset_diff =3D 0;
+ 	int first =3D 1;
+=20
++	if (mddev_init_writes_pending(mddev) < 0)
++		return -ENOMEM;
++
+ 	if (mddev->recovery_cp !=3D MaxSector)
+ 		pr_notice("md/raid:%s: not clean -- starting background reconstruction\n=
+",
+ 			  mdname(mddev));
+=2D-=20
+2.12.2
+
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlk09JwACgkQOeye3VZi
+gbnFsw//f6t2MJX71u3T9gt0cD3wWOtgngvFrHLBNOUI1DyVRj9Fxi+JRJxN93Fz
+ES6R8V+tOMtjsad5n4oPk61cVfh3qWxBTTRBmnMDgCpNrJu8VSDddvrYYVz1RTCm
+6HOr0Rc0t80sY50UFKVgHKO3JZfl4iGL5Qy/5RBkf8R3EYjWfQsGFKFX+Bxwrjwx
+Hfsqkw47qt3g8NgKrxZWAk/nKGJF9uSrAGVuc0eDTV+V8DfTuZbUxT9i2kJi0joe
+RrqZAoKOgIG8gEj3gkuzJOxIsAVKAk5R67n3ks57dDbQR6DAhUucGC3y0q5H2OKP
+W7pxZQx0iD2cGufPkIG/rs+VA4zYSvWZoCoXFjUI3M8DsNjollhohuhx956to6sE
+Oo9fbigletWGaQiQ2SnxRRlGVxC9997Gk73wJauHI7jflX2D8+O8P7Cs7QZsxIJD
+yoUdJU1fMuT13CtasFnDzbphKtotdluWW81uX24vspg0l+OaU10nrDjXMXRrY1BY
+SDbYidJYa9SZIxkq3r/tVBkaJ5RwO+edYMhhZbi94mITZItSQc4b/CGhe12w0xaH
+Pmt9Dt9RRzPiW7FHOCJFTMdmAaUFKcVhJWPhueBwXuB1/VYb3F5tYYs19d0sFUxa
+ANhV0UfKSSGpYPfjd1StuFWLY1lo8Pxs5xC4cZbDW4j8Tj5VM5s=
+=KbXf
+-----END PGP SIGNATURE-----
+--=-=-=--
