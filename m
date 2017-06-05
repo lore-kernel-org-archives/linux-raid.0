@@ -1,33 +1,23 @@
 From: CoolCold <coolthecold@gmail.com>
-Subject: Re: RAID10 performance with 20 drives
-Date: Mon, 5 Jun 2017 16:52:27 +0700
-Message-ID: <CAGqmV7rX7H_sTuJ7RBVHZX+TCTcWAH0K32CimD0oeEB_r32AyQ@mail.gmail.com>
-References: <CAGqmV7p4_r+ca+Wq_UXcY4RDa7WwE2nWkgXF+Sn3ChwLEmkurQ@mail.gmail.com>
- <20170531191441.40240b7f@natsu> <CAGqmV7qB=8a_peu2gsU9Xne6v4nymT-O+vhDwkwaUJhyYpkieg@mail.gmail.com>
- <20170601063318.GJ24459@reaktio.net> <CAAMCDecqU+adgyg5pLokVgZ+Dh32a5Cezaaqygps16zqzM7j1Q@mail.gmail.com>
- <CAMNNMLEuutwLE8xft+ZEo=ShxRP=rJEq1kzNtVbgE5RBTOYcrQ@mail.gmail.com>
+Subject: internal write-intent bitmap is horribly slow with RAID10 over 20 drives
+Date: Mon, 5 Jun 2017 17:06:11 +0700
+Message-ID: <CAGqmV7qRh+_BXAr-qf6vUkiZyzi69E8CiX_vA92tZV2LfDxq_A@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAMNNMLEuutwLE8xft+ZEo=ShxRP=rJEq1kzNtVbgE5RBTOYcrQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nikhil Kshirsagar <nkshirsa@redhat.com>
-Cc: Roger Heflin <rogerheflin@gmail.com>, =?UTF-8?B?UGFzaSBLw6Rya2vDpGluZW4=?= <pasik@iki.fi>, Roman Mamedov <rm@romanrm.net>, Linux RAID <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 Hello!
-The data i was able to find with lsscsi:
-Enclosure:
-[0:0:24:0]   enclosu LSI      SAS3x40          0601  -
-  state=3Drunning queue_depth=3D254 scsi_level=3D6 type=3D13 device_blocked=
-=3D0 timeout=3D0
+Keep testing the new box and while having not the best sync speed,
+it's not the worst thing I found.
 
-Server https://www.supermicro.com/products/system/2u/2028/ssg-2028r-e1cr24l=
-.cfm
+Doing FIO testing, for RAID10 over 20 10k RPM drives, I have very bad
+performance, like _45_ iops only.
 
-Drives are:
-=3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
+Drives:
+=== START OF INFORMATION SECTION ===
 Vendor:               TOSHIBA
 Product:              AL14SEB18EQ
 Revision:             0101
@@ -46,118 +36,102 @@ SMART support is:     Available - device has SMART capability.
 SMART support is:     Enabled
 Temperature Warning:  Enabled
 
-(don't think it matters though)
 
-On Thu, Jun 1, 2017 at 6:31 PM, Nikhil Kshirsagar <nkshirsa@redhat.com> wro=
-te:
-> Did you check max_sectors_kb ? We found once, in some setups with raid, i=
-n
-> particular with HP raid controllers, larger number of drives seemed to
-> reduce the value of max_sectors_kb. Sorry if its already mentioned, I
-> haven't read the entire thread in detail.
->
-> On Thu, Jun 1, 2017 at 4:50 PM, Roger Heflin <rogerheflin@gmail.com> wrot=
-e:
->>
->> Also supply an "iostat -x 1 5" since that will show each disks usage.
->>
->> vmstat in my experience does not appear to show internal MD disk traffic=
-.
->>
->> On Thu, Jun 1, 2017 at 1:33 AM, Pasi K=C3=A4rkk=C3=A4inen <pasik@iki.fi>=
- wrote:
->> > On Thu, Jun 01, 2017 at 12:59:01PM +0700, CoolCold wrote:
->> >> Hello!
->> >> Roman, i've updated the kernel to 4.11 and started "check" action,
->> >> results are basically the same, output on github
->> >> https://gist.github.com/CoolCold/663de7c006490d7fd0ac7cc98b7a6844
->> >> 1 cpu is overloaded, not more than 1.3 - 1.4GB/sec
->> >>
->> >
->> > You need to provide more details about the actual storage setup.
->> >
->> > Like already said/asked for:
->> >
->> > - Which HBA are you using?
->> > - Which PCIe link speed are you using for the HBA?
->> > - Which driver version for the HBA?
->> > - Which HBA firmware version?
->> >
->> > - How are the disks connected to the HBA ? Direct-connect, or via an
->> > Expander?
->> > - If you have an expander, what's the (SAS) link speed/count between t=
-he
->> > HBA(s) and the Expander?
->> >
->> >
->> > -- Pasi
->> >
->> >> On Wed, May 31, 2017 at 9:14 PM, Roman Mamedov <rm@romanrm.net> wrote=
-:
->> >> > On Wed, 31 May 2017 19:20:10 +0700
->> >> > CoolCold <coolthecold@gmail.com> wrote:
->> >> >
->> >> >> Creation (disable write intent bitmap, with bitmap all is much
->> >> >> worse):
->> >> >> mdadm --create -c 64 -b none -n 20 -l 10 /dev/md1 /dev/sde /dev/sd=
-f
->> >> >> /dev/sdg /dev/sdh /dev/sdi /dev/sdj /dev/sdk /dev/sdl /dev/sdm
->> >> >> /dev/sdn /dev/sdo /dev/sdp /dev/sdq /dev/sdr /dev/sds /dev/sdt
->> >> >> /dev/sdu /dev/sdv /dev/sdw /dev/sdx
->> >> >>
->> >> >> kernel:
->> >> >> [root@spare-a17484327407661 rovchinnikov]# cat /proc/version
->> >> >> Linux version 3.10.0-327.el7.x86_64
->> >> >> (builder@kbuilder.dev.centos.org)
->> >> >> (gcc version 4.8.3 20140911 (Red Hat 4.8.3-9) (GCC) ) #1 SMP Thu N=
-ov
->> >> >> 19 22:10:57 UTC 2015
->> >> >>
->> >> >> So, the question is - why cpu usage is so high and I suppose is a
->> >> >> limit here?
->> >> >
->> >> > Definitely try a newer kernel, 4.4 at the very least; if no changes
->> >> > then 4.11.
->> >> >
->> >> > Also I would suggest to try out larger chunk sizes, such as 512 and
->> >> > 1024 KB.
->> >> >
->> >> > If you plan to use this long-term in production, also read up on th=
-e
->> >> > various
->> >> > RAID10 data layouts and their benefits and downsides (man md, searc=
-h
->> >> > for
->> >> > "layout"; and search the Internet for benchmarks of all three).
->> >> >
->> >> > --
->> >> > With respect,
->> >> > Roman
->> >>
->> >>
->> >>
->> >> --
->> >> Best regards,
->> >> [COOLCOLD-RIPN]
->> >> --
->> >> To unsubscribe from this list: send the line "unsubscribe linux-raid"
->> >> in
->> >> the body of a message to majordomo@vger.kernel.org
->> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> > --
->> > To unsubscribe from this list: send the line "unsubscribe linux-raid" =
-in
->> > the body of a message to majordomo@vger.kernel.org
->> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
+Output from fio with internal write-intent bitmap:
+Jobs: 1 (f=1): [w(1)] [28.3% done] [0KB/183KB/0KB /s] [0/45/0 iops]
+[eta 07m:11s]
+
+array definition:
+[root@spare-a17484327407661 rovchinnikov]# cat /proc/mdstat
+Personalities : [raid1] [raid10] [raid6] [raid5] [raid4]
+md1 : active raid10 sdx[19] sdw[18] sdv[17] sdu[16] sdt[15] sds[14]
+sdr[13] sdq[12] sdp[11] sdo[10] sdn[9] sdm[8] sdl[7] sdk[6] sdj[5]
+sdi[4] sdh[3] sdg[2] sdf[1] sde[0]
+      17580330880 blocks super 1.2 64K chunks 2 near-copies [20/20]
+[UUUUUUUUUUUUUUUUUUUU]
+      bitmap: 0/66 pages [0KB], 131072KB chunk
+
+Setting journal to be
+1) on SSD (separate drives), shows
+Jobs: 1 (f=1): [w(1)] [5.0% done] [0KB/18783KB/0KB /s] [0/4695/0 iops]
+[eta 09m:31s]
+2) to 'none' (disabling) shows
+Jobs: 1 (f=1): [w(1)] [14.0% done] [0KB/18504KB/0KB /s] [0/4626/0
+iops] [eta 08m:36s]
+
+All bitmap manipulations was on running array,
+
+Sample output from iostat with internal bitmap (array of interest is md1):
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s
+avgrq-sz avgqu-sz   await r_await w_await  svctm  %util
+sdz               0.00     0.00    0.00    0.00     0.00     0.00
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+sdy               0.00     0.00    0.00    0.00     0.00     0.00
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+sda               0.00     0.00    0.00    0.00     0.00     0.00
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+sdb               0.00     0.00    0.00    0.00     0.00     0.00
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+sdc               0.00     0.00    0.00    0.00     0.00     0.00
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+sdd               0.00     0.00    0.00    0.00     0.00     0.00
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+sde               0.00     0.00    0.00   47.00     0.00   542.00
+23.06     0.67   14.34    0.00   14.34  14.28  67.10
+sdh               0.00     0.00    0.00   50.00     0.00   734.00
+29.36     0.68   13.66    0.00   13.66  13.60  68.00
+sdi               0.00     0.00    0.00   46.00     0.00   478.00
+20.78     0.67   14.63    0.00   14.63  14.54  66.90
+sdf               0.00     0.00    0.00   47.00     0.00   542.00
+23.06     0.67   14.28    0.00   14.28  14.21  66.80
+sdl               0.00     0.00    0.00   45.00     0.00   414.00
+18.40     0.66   14.78    0.00   14.78  14.69  66.10
+sdn               0.00     0.00    0.00   44.00     0.00   350.00
+15.91     0.66   14.95    0.00   14.95  14.95  65.80
+sdj               0.00     0.00    0.00   46.00     0.00   478.00
+20.78     0.65   14.22    0.00   14.22  14.13  65.00
+sdk               0.00     0.00    0.00   46.00     0.00   418.00
+18.17     0.65   14.35    0.00   14.35  13.98  64.30
+sdm               0.00     0.00    0.00   44.00     0.00   350.00
+15.91     0.62   14.18    0.00   14.18  14.14  62.20
+sdp               0.00     0.00    0.00   43.00     0.00   286.00
+13.30     0.62   14.56    0.00   14.56  14.51  62.40
+sdg               0.00     0.00    0.00   50.00     0.00   734.00
+29.36     0.68   13.58    0.00   13.58  13.52  67.60
+sdv               0.00     0.00    0.00   43.00     0.00   346.00
+16.09     0.67   15.19    0.00   15.19  15.49  66.60
+sdr               0.00     0.00    0.00   44.00     0.00   410.00
+18.64     0.66   14.59    0.00   14.59  14.86  65.40
+sds               0.00     0.00    0.00   43.00     0.00   286.00
+13.30     0.65   15.07    0.00   15.07  15.02  64.60
+sdt               0.00     0.00    0.00   42.00     0.00   282.00
+13.43     0.65   15.17    0.00   15.17  15.48  65.00
+sdo               0.00     0.00    0.00   43.00     0.00   286.00
+13.30     0.64   14.93    0.00   14.93  14.88  64.00
+sdq               0.00     0.00    0.00   45.00     0.00   414.00
+18.40     0.66   14.67    0.00   14.67  14.62  65.80
+sdw               0.00     0.00    0.00   43.00     0.00   346.00
+16.09     0.66   14.93    0.00   14.93  15.21  65.40
+sdu               0.00     0.00    0.00   44.00     0.00   350.00
+15.91     0.64   14.55    0.00   14.55  14.50  63.80
+sdx               0.00     0.00    0.00   44.00     0.00   350.00
+15.91     0.64   14.55    0.00   14.55  14.48  63.70
+md127             0.00     0.00    0.00    0.00     0.00     0.00
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+md126             0.00     0.00    0.00    0.00     0.00     0.00
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+md125             0.00     0.00    0.00    0.00     0.00     0.00
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+md1               0.00     0.00    0.00   41.00     0.00  2624.00
+128.00     0.00    0.00    0.00    0.00   0.00   0.00
+md2               0.00     0.00    0.00    0.00     0.00     0.00
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
 
 
+The same picture on 3.10.0-327.el7.x86_64 and 4.11 kernel.
 
---=20
+Any advises would be very helpful.
+
+-- 
 Best regards,
 [COOLCOLD-RIPN]
