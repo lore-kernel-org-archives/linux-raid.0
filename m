@@ -1,67 +1,39 @@
-From: CoolCold <coolthecold@gmail.com>
-Subject: Re: internal write-intent bitmap is horribly slow with RAID10 over 20 drives
-Date: Mon, 5 Jun 2017 19:30:07 +0700
-Message-ID: <CAGqmV7oyh4uTn6c4L5mAtA5tfw5c4jRJebJMP-Ojx07KoSMazQ@mail.gmail.com>
-References: <CAGqmV7qRh+_BXAr-qf6vUkiZyzi69E8CiX_vA92tZV2LfDxq_A@mail.gmail.com>
- <79ff8fa9-4282-4907-bacf-e9083bac3670@hesbynett.no>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH] Grow: set component size prior to array size
+Date: Mon,  5 Jun 2017 16:09:44 +0200
+Message-ID: <1496671784-1612-1-git-send-email-tomasz.majchrzak@intel.com>
+References: <7964b1f5-5092-238b-403e-ed4fba584746@gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <79ff8fa9-4282-4907-bacf-e9083bac3670@hesbynett.no>
+In-Reply-To: <7964b1f5-5092-238b-403e-ed4fba584746@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: jes.sorensen@gmail.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
-Hello!
-Thanks for your proposals.
+It is a partial revert of commit 758b327cf5a7 ("Grow: Remove unnecessary
+optimization"). For native metadata component size is set in kernel for
+entire disk space. As external metadata supports multiple arrays within
+one disk, the component size is set to array size. If component size is
+not updated prior to array size update, the grow operation fails.
 
-From my POV, having ~ 100 iops per drive is completely okay, as you
-see from iostat/fio output it's not even near the case.
-Hope this clarifies.
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+---
+ Grow.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-On Mon, Jun 5, 2017 at 5:55 PM, David Brown <david.brown@hesbynett.no> wrote:
->
->
-> On 05/06/17 12:06, CoolCold wrote:
->>
->> Hello!
->> Keep testing the new box and while having not the best sync speed,
->> it's not the worst thing I found.
->>
->> Doing FIO testing, for RAID10 over 20 10k RPM drives, I have very bad
->> performance, like _45_ iops only.
->>
->
-> <snip>
->
->>
->> Any advises would be very helpful.
->>
->
-> The best advice I can give you is to take a step back, and try to be clear
-> what problem you are trying to solve here.  What is this system supposed to
-> do?  What are your requirements?  What are your use-cases?
->
-> Attempting to optimise the sync speed (or IOPS) of a 20 drive RAID10 set is
-> a totally pointless exercise in itself.  At best, it would be a torture test
-> for md raid.  There is no system in the world where the specifications are
-> "make the fastest 20 drive RAID10 setup" - at least, not from a sane IT
-> management.
->
-> When you have a clear picture of what you actually /need/, what you /want/,
-> what you /have/, and how you want to use it all - /then/, and only then, is
-> it time to look at possible RAID setups, filesystem arrangements,
-> alternative hardware, etc.  Then you ask for advice on this list (or
-> elsewhere - but this list is a good starting point), learning about the pros
-> and cons of a variety of possible arrangements.
->
-> Once you have collected these ideas, with different balances in performance,
-> safety, space efficiency, features, cost, etc., you can then test them out
-> and look at benchmarks to see if they will work in practice.
-
-
-
+diff --git a/Grow.c b/Grow.c
+index ecf5ca0..4ecb1d8 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -1977,6 +1977,8 @@ int Grow_reshape(char *devname, int fd,
+ 		 */
+ 		min_csize = 0;
+ 		for (mdi = sra->devs; mdi; mdi = mdi->next) {
++			sysfs_set_num(sra, mdi, "size", s->size == MAX_SIZE ? 0
++				      : s->size);
+ 			if (array.not_persistent == 0 &&
+ 			    array.major_version == 0 &&
+ 			    get_linux_version() < 3001000) {
 -- 
-Best regards,
-[COOLCOLD-RIPN]
+1.8.3.1
+
