@@ -1,40 +1,37 @@
-From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: Re: [PATCH] Grow: set component size prior to array size
-Date: Tue, 6 Jun 2017 16:47:32 +0200
-Message-ID: <20170606144732.GA1070@proton.igk.intel.com>
-References: <7964b1f5-5092-238b-403e-ed4fba584746@gmail.com>
- <1496671784-1612-1-git-send-email-tomasz.majchrzak@intel.com>
- <611d0b8e-f42f-48de-c881-bd55339d434c@gmail.com>
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: mdadm: Apply to revert the commit of a4dcdb23
+Date: Tue, 6 Jun 2017 12:02:15 -0400
+Message-ID: <0d1a79b0-a7fd-656d-5cfd-a85b4398c284@gmail.com>
+References: <0010fa6f-f227-cdd8-31ef-7073ec46546a@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <611d0b8e-f42f-48de-c881-bd55339d434c@gmail.com>
+In-Reply-To: <0010fa6f-f227-cdd8-31ef-7073ec46546a@suse.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <jes.sorensen@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Zhilong Liu <zlliu@suse.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Jun 05, 2017 at 11:06:48AM -0400, Jes Sorensen wrote:
-> On 06/05/2017 10:09 AM, Tomasz Majchrzak wrote:
-> >It is a partial revert of commit 758b327cf5a7 ("Grow: Remove unnecessary
-> >optimization"). For native metadata component size is set in kernel for
-> >entire disk space. As external metadata supports multiple arrays within
-> >one disk, the component size is set to array size. If component size is
-> >not updated prior to array size update, the grow operation fails.
-> >
-> >Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-> >---
-> >  Grow.c | 2 ++
-> >  1 file changed, 2 insertions(+)
+On 06/06/2017 05:25 AM, Zhilong Liu wrote:
+> Hi, Jes;
+>     Excuse me, there is one problematic commit for Detail.c,
+> a4dcdb23(Detail: determine array state from sysfs).
+> This commit does change the codes meaning and it didn't
+> run to the right path. This commit was result in a bug that
+> Detail() cannot work normally.
 > 
-> Applied!
+> For example:
+> # ./mdadm -CR /dev/md0 -l1 -n2 /dev/loop[0-1] --assume-clean
+> # ./mdadm -D /dev/md0
+> mdadm: cannot get array detail for /dev/md0: No such file or directory
 > 
-> Thanks,
-> Jes
->
+> Thanks very much,
+> -Zhilong
 
-Would you mind pushing it to the repository? I'd like to have it ported into
-certain Linux distribution.
+Please be more specific and explain what you believe is wrong. I prefer 
+a patch fixing the issue to just reverting things.
 
-Tomek
+Jes
+
