@@ -1,56 +1,73 @@
 From: Zhilong Liu <zlliu@suse.com>
-Subject: Re: mdadm: Apply to revert the commit of a4dcdb23
-Date: Wed, 7 Jun 2017 10:03:59 +0800
-Message-ID: <29c6a3b1-f408-53c0-b496-2fba0e0cc9c8@suse.com>
-References: <0010fa6f-f227-cdd8-31ef-7073ec46546a@suse.com>
- <0d1a79b0-a7fd-656d-5cfd-a85b4398c284@gmail.com>
+Subject: Re: [PATCH] mdadm: Send version text to stdout rather than stderr
+Date: Wed, 7 Jun 2017 10:11:01 +0800
+Message-ID: <4ec799ad-b2d5-db8a-516f-5a8341250ae2@suse.com>
+References: <1496735987-10653-1-git-send-email-zlliu@suse.com>
+ <877f0od124.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <0d1a79b0-a7fd-656d-5cfd-a85b4398c284@gmail.com>
+In-Reply-To: <877f0od124.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <jes.sorensen@gmail.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.com>, Jes.Sorensen@gmail.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
 
-On 06/07/2017 12:02 AM, Jes Sorensen wrote:
-> On 06/06/2017 05:25 AM, Zhilong Liu wrote:
->> Hi, Jes;
->>     Excuse me, there is one problematic commit for Detail.c,
->> a4dcdb23(Detail: determine array state from sysfs).
->> This commit does change the codes meaning and it didn't
->> run to the right path. This commit was result in a bug that
->> Detail() cannot work normally.
->>
->> For example:
->> # ./mdadm -CR /dev/md0 -l1 -n2 /dev/loop[0-1] --assume-clean
->> # ./mdadm -D /dev/md0
->> mdadm: cannot get array detail for /dev/md0: No such file or directory
->>
->> Thanks very much,
->> -Zhilong
+On 06/07/2017 09:44 AM, NeilBrown wrote:
+> On Tue, Jun 06 2017, Zhilong Liu wrote:
 >
-> Please be more specific and explain what you believe is wrong. I 
-> prefer a patch fixing the issue to just reverting things.
+>> This helps with piping to a paper.
+> It might help you, but it is an API change and could cause problems for
+> others.
 >
+> Some programs, such as "mount -V", send version info to stdout.
+> Others, like "gcc -v", send it to stderr.
+> There is no uniform standard, it is best to leave the behavior
+> unchanged.
+>
+> If you need to capture the output use
+>     mdadm -V |& ...
+> or
+>     mdadm -V 2>&1
+>
+> or similar.
 
-I just re-checked the mailing-list, found the email that post the commit 
-of 9b8fea914f82
-from Tomasz in May.24th, it has already fixed this issue. please ignore 
-this mail. Sorry
-for that.
+Thanks for your detail explanations. Yes, I just encountered this issue 
+in my progress of improving ./mdadm/test script,
+the ./mdadm --version always prints to stderr, thus I post this email, 
+and I have already used "2>&1" in my test script.
 
-Thanks,
+Thanks very much,
 -Zhilong
 
-> Jes
+> NeilBrtown
 >
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+>> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+>> ---
+>>   mdadm.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/mdadm.c b/mdadm.c
+>> index 70b16f2..0f736d7 100644
+>> --- a/mdadm.c
+>> +++ b/mdadm.c
+>> @@ -139,7 +139,7 @@ int main(int argc, char *argv[])
+>>   			continue;
+>>   
+>>   		case 'V':
+>> -			fputs(Version, stderr);
+>> +			fputs(Version, stdout);
+>>   			exit(0);
+>>   
+>>   		case 'v': c.verbose++;
+>> -- 
+>> 2.6.6
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
