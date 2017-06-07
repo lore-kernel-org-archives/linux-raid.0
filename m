@@ -1,46 +1,77 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH] mdadm: Send version text to stdout rather than stderr
-Date: Wed, 7 Jun 2017 11:21:50 -0400
-Message-ID: <321080ab-7d03-ddc0-1685-ae318d505238@gmail.com>
-References: <1496735987-10653-1-git-send-email-zlliu@suse.com>
- <877f0od124.fsf@notabene.neil.brown.name>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: [PATCH] md: don't use flush_signals in userspace processes
+Date: Wed, 7 Jun 2017 19:05:31 -0400 (EDT)
+Message-ID: <alpine.LRH.2.02.1706071834250.22850@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <877f0od124.fsf@notabene.neil.brown.name>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, Zhilong Liu <zlliu@suse.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>, NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>
 List-Id: linux-raid.ids
 
-On 06/06/2017 09:44 PM, NeilBrown wrote:
-> On Tue, Jun 06 2017, Zhilong Liu wrote:
-> 
->> This helps with piping to a paper.
-> 
-> It might help you, but it is an API change and could cause problems for
-> others.
-> 
-> Some programs, such as "mount -V", send version info to stdout.
-> Others, like "gcc -v", send it to stderr.
-> There is no uniform standard, it is best to leave the behavior
-> unchanged.
-> 
-> If you need to capture the output use
->     mdadm -V |& ...
-> or
->     mdadm -V 2>&1
-> 
-> or similar.
-> 
-> NeilBrtown
+The function flush_signals clears all pending signals for the process. It
+may be used by kernel threads when we need to prepare a kernel thread for
+responding to signals. However using this function for an userspaces
+processes is incorrect - clearing signals without the program expecting it
+can cause misbehavior.
 
-I agree with mr Brtown here :)
+The raid1 and raid5 code uses flush_signals in its request routine because
+it wants to prepare for an interruptible wait. This patch drops
+flush_signals and uses sigprocmask instead to block all signals (including
+SIGKILL) around the schedule() call. The signals are not lost, but the
+schedule() call won't respond to them.
 
-Changing the API is a big issue. We need to avoid this unless it is 
-absolutely necessary, so we don't break things for people trying to run 
-newer mdadm on older distros or those relying on third party scripts.
+Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+Cc: stable@vger.kernel.org
 
-Jes
+---
+ drivers/md/raid1.c |    5 ++++-
+ drivers/md/raid5.c |    5 ++++-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
+
+Index: linux-4.12-rc4/drivers/md/raid1.c
+===================================================================
+--- linux-4.12-rc4.orig/drivers/md/raid1.c
++++ linux-4.12-rc4/drivers/md/raid1.c
+@@ -1335,7 +1335,7 @@ static void raid1_write_request(struct m
+ 		 */
+ 		DEFINE_WAIT(w);
+ 		for (;;) {
+-			flush_signals(current);
++			sigset_t full, old;
+ 			prepare_to_wait(&conf->wait_barrier,
+ 					&w, TASK_INTERRUPTIBLE);
+ 			if (bio_end_sector(bio) <= mddev->suspend_lo ||
+@@ -1345,7 +1345,10 @@ static void raid1_write_request(struct m
+ 				     bio->bi_iter.bi_sector,
+ 				     bio_end_sector(bio))))
+ 				break;
++			sigfillset(&full);
++			sigprocmask(SIG_BLOCK, &full, &old);
+ 			schedule();
++			sigprocmask(SIG_SETMASK, &old, NULL);
+ 		}
+ 		finish_wait(&conf->wait_barrier, &w);
+ 	}
+Index: linux-4.12-rc4/drivers/md/raid5.c
+===================================================================
+--- linux-4.12-rc4.orig/drivers/md/raid5.c
++++ linux-4.12-rc4/drivers/md/raid5.c
+@@ -5693,12 +5693,15 @@ static void raid5_make_request(struct md
+ 				 * userspace, we want an interruptible
+ 				 * wait.
+ 				 */
+-				flush_signals(current);
+ 				prepare_to_wait(&conf->wait_for_overlap,
+ 						&w, TASK_INTERRUPTIBLE);
+ 				if (logical_sector >= mddev->suspend_lo &&
+ 				    logical_sector < mddev->suspend_hi) {
++					sigset_t full, old;
++					sigfillset(&full);
++					sigprocmask(SIG_BLOCK, &full, &old);
+ 					schedule();
++					sigprocmask(SIG_SETMASK, &old, NULL);
+ 					do_prepare = true;
+ 				}
+ 				goto retry;
