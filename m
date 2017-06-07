@@ -1,73 +1,58 @@
-From: Zhilong Liu <zlliu@suse.com>
-Subject: Re: [PATCH] mdadm: Send version text to stdout rather than stderr
-Date: Wed, 7 Jun 2017 10:11:01 +0800
-Message-ID: <4ec799ad-b2d5-db8a-516f-5a8341250ae2@suse.com>
-References: <1496735987-10653-1-git-send-email-zlliu@suse.com>
- <877f0od124.fsf@notabene.neil.brown.name>
+From: Marc MERLIN <marc@merlins.org>
+Subject: Re: 9 second recovery when re-adding a drive that got kicked out?
+Date: Tue, 6 Jun 2017 20:03:25 -0700
+Message-ID: <20170607030325.p6xrklioralqxqis@merlins.org>
+References: <e70502a2-8bef-f771-6063-df0b0accc090@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <877f0od124.fsf@notabene.neil.brown.name>
+Content-Disposition: inline
+In-Reply-To: <e70502a2-8bef-f771-6063-df0b0accc090@turmel.org>
+ <87r2yxdazc.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, Jes.Sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>, Phil Turmel <philip@turmel.org>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Tue, Jun 06, 2017 at 01:57:27PM +1000, NeilBrown wrote:
+> > The first bitmap line shows 3 pages totallying 12KB, so each page
+> > contains 4KB, or 2048 chunks per page.
+> > Did the above say that I had 6144 chunks that needed to be synced?
+> 
+> No.  It said that of the 44 pages of space that might be needed to store
+> 16-bit counters that each represent 1 bitmap-chunk, only 3 of those
+> pages would contain non-zero counters, so only 3 had been allocated.
+> 
+> There could be as few as 3 chunks that need to be recovered, or there
+> could be as many a 3*2048 chunks, or any number in between.
+ 
+Ah, I see. I wasn't clear about that part, thanks.
 
+> Had you run "mdadm --examine-bitmap /dev/sdk1" before the re-add, it
+> would have told you how many bits were set at that time.
 
-On 06/07/2017 09:44 AM, NeilBrown wrote:
-> On Tue, Jun 06 2017, Zhilong Liu wrote:
->
->> This helps with piping to a paper.
-> It might help you, but it is an API change and could cause problems for
-> others.
->
-> Some programs, such as "mount -V", send version info to stdout.
-> Others, like "gcc -v", send it to stderr.
-> There is no uniform standard, it is best to leave the behavior
-> unchanged.
->
-> If you need to capture the output use
->     mdadm -V |& ...
-> or
->     mdadm -V 2>&1
->
-> or similar.
+Noted for next time, thanks.
 
-Thanks for your detail explanations. Yes, I just encountered this issue 
-in my progress of improving ./mdadm/test script,
-the ./mdadm --version always prints to stderr, thus I post this email, 
-and I have already used "2>&1" in my test script.
+> > The part I'm not too clear about is 44 pages of intent isn't enough to
+> > cover all my data.
+> 
+> 44 pages means 90112 16 bit counters, one for each 64M on each device.
+> 90112 * 64M = 5632 GiB or 5905GB.
+> That is the size of each device.
 
-Thanks very much,
--Zhilong
+Ah, so it's not based on the 512k chunk size, I see. 
 
-> NeilBrtown
->
->> Signed-off-by: Zhilong Liu <zlliu@suse.com>
->> ---
->>   mdadm.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/mdadm.c b/mdadm.c
->> index 70b16f2..0f736d7 100644
->> --- a/mdadm.c
->> +++ b/mdadm.c
->> @@ -139,7 +139,7 @@ int main(int argc, char *argv[])
->>   			continue;
->>   
->>   		case 'V':
->> -			fputs(Version, stderr);
->> +			fputs(Version, stdout);
->>   			exit(0);
->>   
->>   		case 'v': c.verbose++;
->> -- 
->> 2.6.6
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> One bit in the bitmap (one counter in the internal bitmap) corresponds
+> to "a set of data the might be out of sync" which, in your case, is a
+> 64MB wide stripe across all devices.
 
+I got that part now, just now where the 64MB came from, or how I ended
+up with 44 pages of intent maps if it's not based on my chunk size.
+
+Thanks,
+Marc
+-- 
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/                         | PGP 1024R/763BE901
