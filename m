@@ -1,87 +1,72 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH] mdadm: Send version text to stdout rather than stderr
-Date: Wed, 07 Jun 2017 11:44:03 +1000
-Message-ID: <877f0od124.fsf@notabene.neil.brown.name>
-References: <1496735987-10653-1-git-send-email-zlliu@suse.com>
+Subject: Re: [PATCH] md: fix deadlock between mddev_suspend() and md_write_start()
+Date: Wed, 07 Jun 2017 11:45:24 +1000
+Message-ID: <874lvsd0zv.fsf@notabene.neil.brown.name>
+References: <87lgppz221.fsf@esperi.org.uk> <87a865jf9a.fsf@notabene.neil.brown.name> <87fufwy3lr.fsf@esperi.org.uk> <87poezhwsa.fsf@notabene.neil.brown.name> <20170524225735.555dpfe24mi6yxrb@kernel.org> <871sr8h8qx.fsf@notabene.neil.brown.name> <20170530174133.qdj2qsopwug2opp6@kernel.org> <87wp8rc4jg.fsf@notabene.neil.brown.name> <20170606000115.jijxe6xvkclm4tsb@kernel.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1496735987-10653-1-git-send-email-zlliu@suse.com>
+In-Reply-To: <20170606000115.jijxe6xvkclm4tsb@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
+To: Shaohua Li <shli@kernel.org>
+Cc: Nix <nix@esperi.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Jun 06 2017, Zhilong Liu wrote:
+On Mon, Jun 05 2017, Shaohua Li wrote:
 
-> This helps with piping to a paper.
-
-It might help you, but it is an API change and could cause problems for
-others.
-
-Some programs, such as "mount -V", send version info to stdout.
-Others, like "gcc -v", send it to stderr.
-There is no uniform standard, it is best to leave the behavior
-unchanged.
-
-If you need to capture the output use
-   mdadm -V |& ...
-or
-   mdadm -V 2>&1
-
-or similar.
-
-NeilBrtown
-
+> On Mon, Jun 05, 2017 at 04:49:39PM +1000, Neil Brown wrote:
+>>=20
+>> If mddev_suspend() races with md_write_start() we can deadlock
+>> with mddev_suspend() waiting for the request that is currently
+>> in md_write_start() to complete the ->make_request() call,
+>> and md_write_start() waiting for the metadata to be updated
+>> to mark the array as 'dirty'.
+>> As metadata updates done by md_check_recovery() only happen then
+>> the mddev_lock() can be claimed, and as mddev_suspend() is often
+>> called with the lock held, these threads wait indefinitely for each
+>> other.
+>>=20
+>> We fix this by having md_write_start() abort if mddev_suspend()
+>> is happening, and ->make_request() aborts if md_write_start()
+>> aborted.
+>> md_make_request() can detect this abort, decrease the ->active_io
+>> count, and wait for mddev_suspend().
 >
-> Signed-off-by: Zhilong Liu <zlliu@suse.com>
-> ---
->  mdadm.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> Applied the two patches, thanks! For this one, I added md_start_write sym=
+bol back. Will
+> push these to Linus in the 4.12 cycle.
 >
-> diff --git a/mdadm.c b/mdadm.c
-> index 70b16f2..0f736d7 100644
-> --- a/mdadm.c
-> +++ b/mdadm.c
-> @@ -139,7 +139,7 @@ int main(int argc, char *argv[])
->  			continue;
->=20=20
->  		case 'V':
-> -			fputs(Version, stderr);
-> +			fputs(Version, stdout);
->  			exit(0);
->=20=20
->  		case 'v': c.verbose++;
-> --=20
-> 2.6.6
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+Thanks for fixing the md_start_write export!  At one stage in
+development I made it "static", but then forgot the export when I put it
+back :-(
+
+Thanks,
+NeilBrown
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlk3WmUACgkQOeye3VZi
-gbkToBAAlivun7eTYXHUMkXtMFE1+ZxhtVuE1ouww/w+CErzeav7nSuZy1gOZcWw
-uFTVTSrMk36PlFYwy7Ylit7u3YKnNO8TMdxzcp20IUf8M7vUVL9rOW1Y9Mzj9rfC
-xKogUN8Cn7LhVrsQVrd0FatqrKCBf+3EM0zSp8xtoGwhudmI7eVwSGEweqO7tZHs
-EewMVRF5XGudx/ksDojyPkc9X2deSiy0zAoGngnk86q/rtug5vBIBTsXKzg3UkQP
-GLZeKk726s+8fIjiib8yWXHsbXpoaxbpPsV5LczrilXBufWivd7ccj0DtPOEVE6w
-k7eh8eNX5/mndHio03K60687EWON5Na098WFlQQYFQHUitjN6Aw3SRWUY8y36O1h
-V3qlXP3STPUH4EwBOOnwH1XRUimAagyXpbEaJTmbXWCI844xzZP4TCJvpiaOSCIY
-pDQGgThmkaZ0FaAGiOaibs4r7guMplYaL1SCi6rtmn7Qt9qjwUjwJmFBV/rPkcCj
-x8vz+Akpw+AIE6uUSPNN8uiTBPVULV8B3yYAUM6Azchdl1YazeZZ/NXh6IZHGgus
-5q9Y8Bb2jKmkQ7rAGJ4bHgBqGrva4WV+nxPmwfol9VeFMSFy523S+M5huDn17a83
-CKPBZZHT3w5Jy1ek4iTZUL8jC5msrI7MXCS0JorMktG9BvFBLDY=
-=xllz
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlk3WrYACgkQOeye3VZi
+gbkHLQ/9G9xSN9v+LE5rr87AWpqjL8XQRuLaCBH2qVQV+OvZm4Fl+Vk0TNxpw2Ew
+AUg+DH4pnwrVpdVihn+kyZRFecJyzgKNCLsSA27MJvarZ+/sov5NjuBdcFXjR+fp
+YFF0mYbsT5sRLU1JKiPjszKomlJ4Y4c646jk2ftz2LaWaJ0tgd+WvvpVE2AxdGr9
+SZAxt/z7j/mopusrDNcc9zR5dxMCHe9CGy0lruKZz9U2YzYvc9PRorSF9qgPfs4B
+AIGnwbgkPl+av4WGJxPTR5EDvR6b2CZKtTGy9ZG45w79CorXW5oLRM/1L52rTseZ
+Jlp8iQvXFqHTTo3cuP80U+FWxNcJb+zgpcgI14S0/W64BUb817ih9cO6KYSSmgq0
+qa7FEii5CmvvwrJsS4IuAS+/5RajDrfkedMz9CqA8KD5QVHOZFW4esgLEj5l8ppg
+x+4NSA7aLvyjeVUHG/Fz0A4IG1Ke+FZLBcWCVQH0UrbZZvb7He2Ha0PM0nRsfOFy
+i0wzZsezqcGPtt51E3yHzlvCcnm7Sp3KNF3iVhSWTavK0F6ttbkvIPomCvnjzAm6
+Gx3Oofj396GeCl8Z8Vt6uhZHCQWHgPgSM98A9Gyl16GAu9lvBiFUWQlFg5ixSGcR
+517RpIt/GkAfxF1ymg4W5HFtHXOZlWbYuelk3lbdm5aX5fWeR6s=
+=30h6
 -----END PGP SIGNATURE-----
 --=-=-=--
