@@ -1,97 +1,87 @@
-From: <mdavis@cc76.k12.il.us>
-Subject: (unknown)
-Date: Tue, 06 Jun 2017 23:46:12 -0000
-Message-ID: <149679277215.19456.1714355295380422792@iol.cz>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH] mdadm: Send version text to stdout rather than stderr
+Date: Wed, 07 Jun 2017 11:44:03 +1000
+Message-ID: <877f0od124.fsf@notabene.neil.brown.name>
+References: <1496735987-10653-1-git-send-email-zlliu@suse.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="37913653393087.zip"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: attachment
-Subject: 
+In-Reply-To: <1496735987-10653-1-git-send-email-zlliu@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jes.Sorensen@gmail.com
+Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
-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
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, Jun 06 2017, Zhilong Liu wrote:
+
+> This helps with piping to a paper.
+
+It might help you, but it is an API change and could cause problems for
+others.
+
+Some programs, such as "mount -V", send version info to stdout.
+Others, like "gcc -v", send it to stderr.
+There is no uniform standard, it is best to leave the behavior
+unchanged.
+
+If you need to capture the output use
+   mdadm -V |& ...
+or
+   mdadm -V 2>&1
+
+or similar.
+
+NeilBrtown
+
+>
+> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+> ---
+>  mdadm.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/mdadm.c b/mdadm.c
+> index 70b16f2..0f736d7 100644
+> --- a/mdadm.c
+> +++ b/mdadm.c
+> @@ -139,7 +139,7 @@ int main(int argc, char *argv[])
+>  			continue;
+>=20=20
+>  		case 'V':
+> -			fputs(Version, stderr);
+> +			fputs(Version, stdout);
+>  			exit(0);
+>=20=20
+>  		case 'v': c.verbose++;
+> --=20
+> 2.6.6
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlk3WmUACgkQOeye3VZi
+gbkToBAAlivun7eTYXHUMkXtMFE1+ZxhtVuE1ouww/w+CErzeav7nSuZy1gOZcWw
+uFTVTSrMk36PlFYwy7Ylit7u3YKnNO8TMdxzcp20IUf8M7vUVL9rOW1Y9Mzj9rfC
+xKogUN8Cn7LhVrsQVrd0FatqrKCBf+3EM0zSp8xtoGwhudmI7eVwSGEweqO7tZHs
+EewMVRF5XGudx/ksDojyPkc9X2deSiy0zAoGngnk86q/rtug5vBIBTsXKzg3UkQP
+GLZeKk726s+8fIjiib8yWXHsbXpoaxbpPsV5LczrilXBufWivd7ccj0DtPOEVE6w
+k7eh8eNX5/mndHio03K60687EWON5Na098WFlQQYFQHUitjN6Aw3SRWUY8y36O1h
+V3qlXP3STPUH4EwBOOnwH1XRUimAagyXpbEaJTmbXWCI844xzZP4TCJvpiaOSCIY
+pDQGgThmkaZ0FaAGiOaibs4r7guMplYaL1SCi6rtmn7Qt9qjwUjwJmFBV/rPkcCj
+x8vz+Akpw+AIE6uUSPNN8uiTBPVULV8B3yYAUM6Azchdl1YazeZZ/NXh6IZHGgus
+5q9Y8Bb2jKmkQ7rAGJ4bHgBqGrva4WV+nxPmwfol9VeFMSFy523S+M5huDn17a83
+CKPBZZHT3w5Jy1ek4iTZUL8jC5msrI7MXCS0JorMktG9BvFBLDY=
+=xllz
+-----END PGP SIGNATURE-----
+--=-=-=--
