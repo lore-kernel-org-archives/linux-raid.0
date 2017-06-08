@@ -1,32 +1,69 @@
-From: Jean-Michel Hautbois <jhautbois@gmail.com>
-Subject: HW RAID with ASM 1062R
-Date: Thu, 8 Jun 2017 19:41:24 +0200
-Message-ID: <CAL8zT=gMdGEN86f8t+XnZe-cZawirmQxTKFC0UF3cg6bW8NSDQ@mail.gmail.com>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: Re: [PATCH] md: don't use flush_signals in userspace processes
+Date: Thu, 8 Jun 2017 16:51:19 -0400 (EDT)
+Message-ID: <alpine.LRH.2.02.1706081641160.12323@file01.intranet.prod.int.rdu2.redhat.com>
+References: <alpine.LRH.2.02.1706071834250.22850@file01.intranet.prod.int.rdu2.redhat.com> <87h8zrart4.fsf@notabene.neil.brown.name> <20170608171551.ytxk3yz6xxsfbqma@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170608171551.ytxk3yz6xxsfbqma@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>
 List-Id: linux-raid.ids
 
-Hi !
 
-I am quite new with HW RAID drivers, and I want to support a PCIe /
-2xSATA board based on ASM1062R chip.
-It is seen as AHCI so Linux can see the disks and that's something.
-But now, I want to modify the configuration to use RAID-0 or RAID-1,
-and there is nothing right now, according to my search ?
-This chip understands vendor commands using a CMD/ACK message with MMIO offsets.
 
-I now have several questions (maybe irrelevant :)) :
-- Where should this driver be ? md ? scsi ?
-- These vendor commands are under NDA right now, so I think it should
-not be written in the driver obviously, but I am pretty sure there is
-a nice way to do it ;-) ?
-Basically, this is a 32 bits word with CMD and some args, and an ACK
-with some args, which should be parsed.
-Should it be in a specific proprietary user space application (yuck !) ?
+On Thu, 8 Jun 2017, Shaohua Li wrote:
 
-Thanks for your help, this is a very early stage exploration, so feel
-free to give any idea :D.
-JM
+> On Thu, Jun 08, 2017 at 04:59:03PM +1000, Neil Brown wrote:
+> > On Wed, Jun 07 2017, Mikulas Patocka wrote:
+> > 
+> > > The function flush_signals clears all pending signals for the process. It
+> > > may be used by kernel threads when we need to prepare a kernel thread for
+> > > responding to signals. However using this function for an userspaces
+> > > processes is incorrect - clearing signals without the program expecting it
+> > > can cause misbehavior.
+> > >
+> > > The raid1 and raid5 code uses flush_signals in its request routine because
+> > > it wants to prepare for an interruptible wait. This patch drops
+> > > flush_signals and uses sigprocmask instead to block all signals (including
+> > > SIGKILL) around the schedule() call. The signals are not lost, but the
+> > > schedule() call won't respond to them.
+> > >
+> > > Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+> > > Cc: stable@vger.kernel.org
+> > 
+> > Thanks for catching that!
+> > 
+> > Acked-by: NeilBrown <neilb@suse.com>
+> 
+> Applied, thanks!
+> 
+> Neil,
+> Not about the patch itself. I had question about that part of code. Dropped
+> others since this is raid related. I didn't get the point why it's a
+> TASK_INTERRUPTIBLE sleep. It seems suggesting the thread will bail out if a
+> signal is sent. But I didn't see we check the signal and exit the loop. What's
+> the correct behavior here? Since the suspend range is controlled by userspace,
+
+As I understand the code - the purpose is to have an UNINTERRUPTIBLE sleep 
+that isn't accounted in load average and that doesn't trigger the hung 
+task warning.
+
+There should really be something like TASK_UNINTERRUPTIBLE_LONG for this 
+purpose.
+
+> I think the correct behavior is if user kills the thread, we exit the loop. So
+> it seems like to be we check if there is fatal signal pending, exit the loop,
+> and return IO error. Not sure if we should return IO error though.
+
+No, this is not correct - if we report an I/O error for the affected bio, 
+it could corrupt filesystem or confuse other device mapper targets that 
+could be on the top of MD. It is not right to corrupt filesystem if the 
+user kills a process.
+
+> Thanks,
+> Shaohua
+
+Mikulas
