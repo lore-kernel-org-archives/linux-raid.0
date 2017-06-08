@@ -1,576 +1,311 @@
-From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH 2/3 v1] mdadm/test: Refactor the codes of 'test' script
-Date: Thu,  8 Jun 2017 17:20:28 +0800
-Message-ID: <1496913628-22779-1-git-send-email-zlliu@suse.com>
-References: <1496827888-17118-3-git-send-email-zlliu@suse.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1496827888-17118-3-git-send-email-zlliu@suse.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: kernel BUG at lib/percpu-refcount.c:192
+Date: Thu, 8 Jun 2017 09:38:29 -0400
+Message-ID: <20170608133829.GA32626@redhat.com>
+References: <5fd9ae4c-2cf3-360c-ed50-f2517aafda7a@redhat.com>
+	<9dcf0086-6d8a-29db-2a27-6c63af988388@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <9dcf0086-6d8a-29db-2a27-6c63af988388@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Marian Csontos <mcsontos@redhat.com>
+Cc: linux-raid@vger.kernel.org, Heinz Mauelshagen <heinzm@redhat.com>, device-mapper development <dm-devel@redhat.com>
 List-Id: linux-raid.ids
 
-Adding functions:
-die()
-  uniform the abnormal situations that have to abort.
-check_env()
-  do various basic checking before running test suite.
-save_log()
-  collect array infos, include of dmesg, superblock,
-  bitmap and /proc/mdstat.
-main()
-  the core function of this script.
+On Thu, Jun 08 2017 at  4:29am -0400,
+Marian Csontos <mcsontos@redhat.com> wrote:
 
-Improve functions:
-cleanup()
-  clear dmesg and remove the /vat/tmp/mdtest* files.
-mdadm()
-  clear superblock once creating or building arrays
-  every time, because it's always creating arrays
-  many times in a test case.
-check()
-  just tidy up with die(), didn't change code meanings.
-testdev()
-  add checking $1 must be a block device, add 'return 0'
-  in final because this function exists in last line of
-  test case, such as tests/05r6tor0.
-do_test()
-  add checking abnormal dmesg and changing log management.
-do_help()
-  just recommend a better way to print Usage.
-parse_args()
-  just tidy up.
+> Mike, Heinz, help please!
+> 
+> RC4 and still present:
+> 
+> [  248.815709] CPU: 0 PID: 21 Comm: rcuos/1 Not tainted
+> 4.12.0-0.rc4.git2.1.fc27.x86_64 #1
+> [  248.816841] Hardware name: Red Hat KVM, BIOS 0.5.1 01/01/2007
+> 
+> ...and it affects RAID1 as well.
+> 
+> Is this md wrong or is there a more serious issue? And if so is it a
+> known one?
+> I have not found any reference anywhere except this dm-devel thread.
+> Is this a problem in LVM RAID only?
 
-Signed-off-by: Zhilong Liu <zlliu@suse.com>
----
- test | 346 +++++++++++++++++++++++++++++++++++++------------------------------
- 1 file changed, 191 insertions(+), 155 deletions(-)
+Unclear.
+ 
+> Where to forward this? LKML? Fedora Bugzilla?
 
-diff --git a/test b/test
-index 7942d6e..37b3096 100755
---- a/test
-+++ b/test
-@@ -1,35 +1,17 @@
- #!/bin/bash
- #
- # run test suite for mdadm
--user=`id -un`
--if [ " $user" != " root" ]
--then
--	echo >&2 "test: testing can only be done as 'root'."
--	exit 1
--fi
--
--prefix='[0-9][0-9]'
--
--dir=`pwd`
-+dir=$(pwd)
- mdadm=$dir/mdadm
--if [ \! -x $mdadm ]
--then
--	echo >&2 "test: $mdadm isn't usable."
--fi
--
- testdir="tests"
--logdir="$testdir/logs"
--logsave=0
--exitonerror=1
-+targetdir="/var/tmp"
-+logdir="$targetdir"
-+config=/tmp/mdadm.conf
- 
--echo "Testing on linux-$(uname -r) kernel"
-+savelogs=0
-+exitonerror=1
-+prefix='[0-9][0-9]'
- 
--# Check whether to run multipath tests
--modprobe multipath 2> /dev/null
--if grep -s 'Personalities : .*multipath' > /dev/null /proc/mdstat
--then
--	MULTIPATH="yes"
--fi
- INTEGRITY=yes
- DEVTYPE=loop
- LVM_VOLGROUP=mdtest
-@@ -46,7 +28,6 @@ mdp1=/dev/md_d1
- 
- # We test mdadm on loop-back block devices.
- # dir for storing files should be settable by command line maybe
--targetdir=/var/tmp
- size=20000
- # super0, round down to multiple of 64 and substract 64
- mdsize0=19904
-@@ -68,7 +49,51 @@ mdsize12=19988
- # ddf needs bigger devices as 32Meg is reserved!
- ddfsize=65536
- 
--config=/tmp/mdadm.conf
-+# $1 is optional parameter, it shows why to save log
-+save_log() {
-+	status=$1
-+	logfile="$status""$_basename".log
-+
-+	cat $targetdir/stderr >> $targetdir/log
-+	cp $targetdir/log $logdir/$_basename.log
-+	echo "## $HOSTNAME: saving dmesg." >> $logdir/$logfile
-+	dmesg -c >> $logdir/$logfile
-+	$mdadm -As 2> /dev/null
-+	echo "## $HOSTNAME: saving proc mdstat." >> $logdir/$logfile
-+	cat /proc/mdstat >> $logdir/$logfile
-+	array=($(mdadm -Ds | cut -d' ' -f2))
-+	echo "## $HOSTNAME: mdadm -D ${array[@]}" >> $logdir/$logfile
-+	$mdadm -D ${array[@]} >> $logdir/$logfile
-+	[ "$1" == "fail" ] &&
-+		echo "FAILED - see $logdir/$_basename.log and $logdir/$logfile for details"
-+	# ignore saving external(external file, imsm...) bitmap
-+	cat /proc/mdstat | grep -q "linear\|external" && return 0
-+	if [ $DEVTYPE == 'lvm' ]
-+	then
-+		# not supported lvm type yet
-+		echo
-+	elif [ $DEVTYPE == 'loop' ]
-+	then
-+		if [ ! -z ${array[@]} -a ${#array[@]} -ge 1 ]
-+		then
-+			md_disks=($($mdadm -D -Y ${array[@]} | grep "/dev/$DEVTYPE" | cut -d'=' -f2))
-+			cat /proc/mdstat | grep -q "bitmap"
-+			if [ $? -eq 0 ]
-+			then
-+				echo "## $HOSTNAME: mdadm -X ${md_disks[@]}" >> $logdir/$logfile
-+				$mdadm -X ${md_disks[@]} >> $logdir/$logfile
-+			fi
-+		else
-+			echo "## $HOSTNAME: no array assembled!" >> $logdir/$logfile
-+		fi
-+	fi
-+}
-+
-+die() {
-+	echo -e "\n\tERROR: $* \n"
-+	save_log fail
-+	exit 2
-+}
- 
- cleanup() {
- 	udevadm settle
-@@ -77,8 +102,9 @@ cleanup() {
- 	loop)
- 		for d in 0 1 2 3 4 5 6 7  8 9 10 11 12 13
- 		do
--			losetup -d /dev/loop$d # rm -f $targetdir/mdtest$d
-+			losetup -d /dev/loop$d
- 			rm -f /dev/disk/by-path/loop*
-+			rm -f /var/tmp/mdtest$d
- 		done
- 		;;
- 	lvm)
-@@ -88,6 +114,7 @@ cleanup() {
- 		done
- 		;;
- 	esac
-+	dmesg -c > /dev/null
- }
- 
- ctrl_c() {
-@@ -98,23 +125,21 @@ do_setup() {
- 	trap cleanup 0 1 3 15
- 	trap ctrl_c 2
- 
-+	[ -d $logdir ] || mkdir -p $logdir
- 	# make sure there are no loop devices remaining.
- 	# udev started things can sometimes prevent them being stopped
- 	# immediately
- 	while grep loop /proc/partitions > /dev/null 2>&1
- 	do
--		mdadm -Ss
-+		$mdadm -Ssq
- 		losetup -d /dev/loop[0-9]* 2> /dev/null
--		sleep 1
-+		sleep 0.2
- 	done
- 	devlist=
- 	for d in 0 1 2 3 4 5 6 7 8 9 10 11 12 13
- 	do
- 		sz=$size
--		if [ $d -gt 7 ]
--		then
--			sz=$ddfsize
--		fi
-+		[ $d -gt 7 ] && sz=$ddfsize
- 		case $DEVTYPE in
- 		loop)
- 			[ -f $targetdir/mdtest$d ] ||
-@@ -169,7 +194,17 @@ mdadm() {
- 		;;
- 	esac
- 	case $* in
--	*-C* )
-+	*-C* | *--create* | *-B* | *--build* )
-+		# clear superblock every time once creating or
-+		# building arrays, because it's always creating
-+		# and building array many times in a test case.
-+		for args in $*
-+		do
-+			[[ $args =~ "/dev/" ]] && {
-+				[[ $args =~ "md" ]] ||
-+					$mdadm --zero $args > /dev/null
-+			}
-+		done
- 		$mdadm 2> $targetdir/stderr --quiet "$@" --auto=yes
- 		;;
- 	* )
-@@ -191,39 +226,28 @@ mdadm() {
- check() {
- 	case $1 in
- 	spares )
--		spares=`tr '] ' '\012\012' < /proc/mdstat | grep -c '(S)' || exit 0`
--		if [ $spares -ne $2 ]
--		then
--			echo >&2 "ERROR expected $2 spares, found $spares"
--			exit 1
--		fi
-+		spares=$(tr '] ' '\012\012' < /proc/mdstat | grep -c '(S)' || exit 0)
-+		[ $spares -ne $2 ] &&
-+			die "expected $2 spares, found $spares"
- 		;;
- 	raid* | linear )
--		grep -s "active $1 " /proc/mdstat > /dev/null || {
--			echo >&2 "ERROR active $1 not found"
--			cat /proc/mdstat
--			exit 1
--		}
-+		grep -sq "active $1 " /proc/mdstat ||
-+			die "active $1 not found"
- 		;;
- 	algorithm )
--		grep -s " algorithm $2 " /proc/mdstat > /dev/null || {
--			echo >&2 "ERROR algorithm $2 not found"
--			cat /proc/mdstat
--			exit 1
--		}
-+		grep -sq " algorithm $2 " /proc/mdstat ||
-+			die "algorithm $2 not found"
- 		;;
- 	resync | recovery | reshape )
- 		cnt=5
--		while ! grep -s $1 /proc/mdstat > /dev/null
-+		while ! grep -sq $1 /proc/mdstat
- 		do
- 			if [ $cnt -gt 0 ] && grep -v idle /sys/block/md*/md/sync_action > /dev/null
- 			then # Something isn't idle - wait a bit
- 				sleep 0.5
- 				cnt=$[cnt-1]
- 			else
--				echo >&2 ERROR no $1 happening
--				cat /proc/mdstat
--				exit 1
-+				die "no $1 happening"
- 			fi
- 		done
- 		;;
-@@ -234,22 +258,18 @@ check() {
- 		# to do can still take a little longer than expected.
- 		# add an extra check: is sync_completed shows the end is reached, assume
- 		# there is no recovery.
--		if grep -s -E '(resync|recovery|reshape) *=' > /dev/null /proc/mdstat
-+		if grep -sq -E '(resync|recovery|reshape) *=' /proc/mdstat
- 		then
- 			incomplete=`grep / /sys/block/md*/md/sync_completed 2> /dev/null | sed '/^ *\([0-9]*\) \/ \1/d'`
--			if [ -n "$incomplete" ]
--			then
--				echo >&2 "ERROR resync or recovery is happening!"
--				cat /proc/mdstat
--				exit 1
--			fi
-+			[ -n "$incomplete" ] &&
-+				die "resync or recovery is happening!"
- 		fi
- 		;;
- 	wait )
- 		p=`cat /proc/sys/dev/raid/speed_limit_max`
- 		echo 2000000 > /proc/sys/dev/raid/speed_limit_max
- 		sleep 0.1
--		while grep -E '(resync|recovery|reshape|check|repair) *=' > /dev/null /proc/mdstat ||
-+		while grep -Eq '(resync|recovery|reshape|check|repair) *=' /proc/mdstat ||
- 			grep -v idle > /dev/null /sys/block/md*/md/sync_action
- 		do
- 			sleep 0.5
-@@ -257,45 +277,28 @@ check() {
- 		echo $p > /proc/sys/dev/raid/speed_limit_max
- 		;;
- 	state )
--		grep -s "blocks.*\[$2\]\$" /proc/mdstat > /dev/null || {
--			echo >&2 "ERROR state $2 not found!"
--			cat /proc/mdstat
--			exit 1
--		}
-+		grep -sq "blocks.*\[$2\]\$" /proc/mdstat ||
-+			die "state $2 not found!"
- 		sleep 0.5
- 		;;
- 	bitmap )
--		grep -s bitmap > /dev/null /proc/mdstat || {
--			echo >&2 ERROR no bitmap
--			cat /proc/mdstat
--			exit 1
--		}
-+		grep -sq bitmap /proc/mdstat ||
-+			die "no bitmap"
- 		;;
- 	nobitmap )
--		if grep -s "bitmap" > /dev/null /proc/mdstat
--		then
--			echo >&2 ERROR bitmap present
--			cat /proc/mdstat
--			exit 1
--		fi
-+		grep -sq "bitmap" /proc/mdstat &&
-+			die "bitmap present"
- 		;;
- 	readonly )
--		grep -s "read-only" > /dev/null /proc/mdstat || {
--			echo >&2 "ERROR array is not read-only!"
--			cat /proc/mdstat
--			exit 1
--		}
-+		grep -sq "read-only" /proc/mdstat ||
-+			die "array is not read-only!"
- 		;;
- 	inactive )
--		grep -s "inactive" > /dev/null /proc/mdstat || {
--			echo >&2 "ERROR array is not inactive!"
--			cat /proc/mdstat
--			exit 1
--		}
-+		grep -sq "inactive" /proc/mdstat ||
-+			die "array is not inactive!"
- 		;;
- 	* )
--		echo >&2 ERROR unknown check $1
--		exit 1
-+		die "unknown check $1"
- 		;;
- 	esac
- }
-@@ -311,6 +314,8 @@ no_errors() {
- 
- # basic device test
- testdev() {
-+	# $1 must be a block device
-+	[ -b $1 ] || die "$1 isn't a block device."
- 	udevadm settle
- 	dev=$1
- 	cnt=$2
-@@ -329,20 +334,11 @@ testdev() {
- 		rasize=$[rasize/DEV_ROUND_K/2]
- 		rasize=$[rasize*DEV_ROUND_K*2]
- 	fi
--	if [ `/sbin/blockdev --getsize $dev` -eq 0 ]
--	then
--		sleep 2
--	fi
-+	[ `/sbin/blockdev --getsize $dev` -eq 0 ] && sleep 2
- 	_sz=`/sbin/blockdev --getsize $dev`
--	if [ $rasize -lt $_sz -o $[rasize*4/5] -gt $_sz ]
--	then
--		echo "ERROR: size is wrong for $dev: $cnt * $dvsize (chunk=$chunk) = $rasize, not $_sz"
--		exit 1
--	fi
--}
--
--fast_sync() {
--	echo 200000 > /proc/sys/dev/raid/speed_limit_max
-+	[ $rasize -lt $_sz -o $[rasize*4/5] -gt $_sz ] &&
-+		die "size is wrong for $dev: $cnt * $dvsize (chunk=$chunk) = $rasize, not $_sz"
-+	return 0
- }
- 
- rotest() {
-@@ -359,7 +355,6 @@ do_test() {
- 		# stop all arrays, just incase some script left an array active.
- 		$mdadm -Ssq 2> /dev/null
- 		mdadm --zero $devlist 2> /dev/null
--		mdadm --zero $devlist 2> /dev/null
- 		# this might have been reset: restore the default.
- 		echo 2000 > /proc/sys/dev/raid/speed_limit_max
- 		# source script in a subshell, so it has access to our
-@@ -367,45 +362,40 @@ do_test() {
- 		echo -ne "$_script... "
- 		if ( set -ex ; . $_script ) &> $targetdir/log
- 		then
-+			dmesg | grep -iq "error\|call trace\|segfault" &&
-+				die "dmesg prints errors when testing $_basename!"
- 			echo "succeeded"
- 			_fail=0
- 		else
--			log=log
--			cat $targetdir/stderr >> $targetdir/log
--			echo "=======================dmesg=================" >> $targetdir/log
--			dmesg | tail -n 200 >> $targetdir/log
--			if [ $exitonerror == 0 ]; then
--				log=log-`basename $_script`
--				mv $targetdir/log $logdir/$log
--			fi
--			echo "FAILED - see $logdir/$log for details"
-+			save_log fail
- 			_fail=1
- 		fi
- 		if [ "$savelogs" == "1" ]
- 		then
--			cp $targetdir/log $logdir/$_basename.log
--		fi
--		if [ "$_fail" == "1" -a "$exitonerror" == "1" ]
--		then
--			exit 1
-+			[ "$targetdir" != "$logdir" ] &&
-+				mv -f $targetdir/log $logdir/$_basename.log
- 		fi
-+		[ "$_fail" == "1" -a "$exitonerror" == "1" ] && exit 1
- 	fi
- }
- 
- do_help() {
--	echo "Usage: $0 [options]"
--	echo " Options:"
--	echo "    --tests=<test1,test2,..>    Comma separated list of tests to run"
--	echo "    --disable-multipath         Disable any tests involving multipath"
--	echo "    --disable-integrity         Disable slow tests of RAID[56] consistency"
--	echo "    --logdir=<directory>        Directory to save logfiles in"
--	echo "    --save-logs                 Save all logs in <logdir>"
--	echo "    --keep-going                Don't stop on error, ie. run all tests"
--	echo "    --dev=[loop|lvm|ram]        Use loop devices (default), LVM, or RAM disk"
--	echo "    --volgroup=<name>           LVM volume group for LVM test"
--	echo "    setup                       Setup test environment and exit"
--	echo "    cleanup                     Cleanup test environment"
--	echo "    <prefix>                    Run tests with <prefix>"
-+	cat <<-EOF
-+	Usage: $0 [options]
-+	Options:
-+		--tests=<test1,test2,..>    Comma separated list of tests to run
-+		--disable-multipath         Disable any tests involving multipath
-+		--disable-integrity         Disable slow tests of RAID[56] consistency
-+		--logdir=<directory>        Directory to save all logfiles in
-+		--save-logs                 Usually use with --logdir together
-+		--keep-going                Don't stop on error, ie. run all tests
-+		--dev=[loop|lvm|ram]        Use loop devices (default), LVM, or RAM disk
-+		--volgroup=<name>           LVM volume group for LVM test
-+		setup                       Setup test environment and exit
-+		cleanup                     Cleanup test environment
-+		<prefix>                    Run tests with <prefix>
-+	EOF
-+	exit 0
- }
- 
- parse_args() {
-@@ -457,38 +447,84 @@ parse_args() {
- 			;;
- 		--help )
- 			do_help
--			exit 0
- 			;;
- 		-* )
- 			echo " $0: Unknown argument: $i"
- 			do_help
--			exit 0
- 			;;
- 		esac
- 	done
- }
- 
--logdir=$targetdir
--parse_args $@
-+check_env() {
-+	user=$(id -un)
-+	[ "X$user" != "Xroot" ] && {
-+		echo "test: testing can only be done as 'root'."
-+		exit 1
-+	}
-+	[ -x "raid6check" -a -x $mdadm ] || {
-+		echo "test: please run 'make everything' before perform testing."
-+		exit 1
-+	}
-+	for cmd in mdadm lsblk df udevadm losetup mkfs.ext3
-+	do
-+		which $cmd > /dev/null || {
-+			echo "$cmd command not found!"
-+			exit 1
-+		}
-+	done
-+	mdadm_src_ver="$($mdadm -V 2>&1)"
-+	mdadm_sbin_ver="$($(which mdadm) -V 2>&1)"
-+	if [ "$mdadm_src_ver" != "$mdadm_sbin_ver" ]
-+	then
-+		# it's nessesary to 'make install' mdadm to /SBIN/DIR,
-+		# such as systemd/mdadm-grow-continue@.service, would
-+		# run as an instance by systemd when reshape happens,
-+		# thus ensure that the correct mdadm is in testing.
-+		echo "test: please run 'make install' before testing."
-+		exit 1
-+	fi
-+	if ! $(df -T . | grep -iq ext)
-+	then
-+		# 'external file' bitmap only supports with ext[2-4] file system
-+		echo "test: please run test suite with ext[2-4] file system."
-+		exit 1
-+	fi
-+	if $(lsblk -a | grep -iq raid)
-+	then
-+		# For test purpose, it's better to make environment simple,
-+		# donot run mdadm -Ss directly if there are RAIDs working.
-+		echo "test: please run test suite without running RAIDs environment."
-+		exit 1
-+	fi
-+	# Check whether to run multipath tests
-+	modprobe multipath 2> /dev/null
-+	grep -sq 'Personalities : .*multipath' /proc/mdstat &&
-+		MULTIPATH="yes"
-+}
- 
--do_setup
--mkdir -p $logdir
-+main() {
-+	check_env
-+	do_setup
-+
-+	echo "Testing on linux-$(uname -r) kernel"
-+	[ "$savelogs" == "1" ] &&
-+		echo "Saving logs to $logdir"
-+	if [ "x$TESTLIST" != "x" ]
-+	then
-+		for script in $TESTLIST
-+		do
-+			do_test $testdir/$script
-+		done
-+	else
-+		for script in $testdir/$prefix $testdir/$prefix*[^~]
-+		do
-+			do_test $script
-+		done
-+	fi
- 
--if [ "$savelogs" == "1" ]
--then
--	echo "Saving logs to $logdir"
--fi
-+	exit 0
-+}
- 
--if [ "x$TESTLIST" != "x" ]
--then
--	for script in $TESTLIST
--	do
--		do_test $testdir/$script
--	done
--else
--	for script in $testdir/$prefix $testdir/$prefix*[^~]
--	do
--		do_test $script
--	done
--fi
--exit 0
-+parse_args $@
-+main
--- 
-2.6.6
+Certainly linux-raid (now cc'd).
 
+> Is there anything else I should provide?
+
+The linewrapping makes it hard to read these logs, but I'll defer to
+others to weigh-in on any additional info needed.
+
+Mike
+
+> -- Martian
+> 
+> On 05/18/2017 10:33 AM, Marian Csontos wrote:
+> >When running `lvm lvcreate --type raid5 --size 4194304B --name
+> >meta_r5 LVMTEST12279nqymhamb_vg --yes` there's a warning followed
+> >by the bug.
+> >
+> >Also at [  192.140142] it looks like there is an uninitialized
+> >variable somewhere.
+> >
+> >env: rawhide, kvm, 2 (V)CPUs
+> >lvm2: upstream
+> >kernel: 4.12.0-0.rc1.git1.1.fc27.x86_64
+> >
+> >----
+> >
+> >[  192.131076] mdX: bitmap file is out of date, doing full recovery
+> >
+> >[  192.140142] percpu ref (          (null)) <= 0
+> >(-9223372036854775807) after switching to atomic
+> >
+> >[  192.140180] ------------[ cut here ]------------
+> >[  192.143734] WARNING: CPU: 0 PID: 10 at
+> >lib/percpu-refcount.c:155
+> >percpu_ref_switch_to_atomic_rcu+0x1cd/0x1f0
+> >[  192.146353] Modules linked in: dm_raid raid456
+> >async_raid6_recov async_memcpy async_pq async_xor async_tx xor
+> >raid6_pq ...|dm_thin_pool dm_cache_smq dm_cache dm_persistent_data
+> >dm_bio_prison libcrc32c loop crct10dif_pclmul crc32_pclmul
+> >crc32c_intel     ...|ppdev ghash_clmulni_intel acpi_cpufreq
+> >virtio_net virtio_balloon tpm_tis joydev tpm_tis_core parport_pc
+> >parport tpm i2c_piix4     ...|virtio_blk cirrus drm_kms_helper ttm
+> >drm serio_raw virtio_pci virtio_ring virtio ata_generic pata_acpi
+> >[  192.154276] CPU: 0 PID: 10 Comm: rcuos/0 Not tainted
+> >4.12.0-0.rc1.git1.1.fc27.x86_64 #1
+> >[  192.155684] Hardware name: Red Hat KVM, BIOS 0.5.1 01/01/2007
+> >[  192.156741] task: ffff8d5bb6e73100 task.stack: ffffa9a3c0360000
+> >[  192.157830] RIP: 0010:percpu_ref_switch_to_atomic_rcu+0x1cd/0x1f0
+> >[  192.158956] RSP: 0018:ffffa9a3c0363e50 EFLAGS: 00010282
+> >[  192.159899] RAX: 0000000000000053 RBX: 8000000000000000 RCX:
+> >0000000000000000
+> >[  192.161192] RDX: 0000000000000000 RSI: ffff8d5bb6e73d90 RDI:
+> >0000000000000247
+> >[  192.162483] RBP: ffffa9a3c0363e68 R08: 0000000000000000 R09:
+> >0000000000000000
+> >[  192.163762] R10: ffffa9a3c0363e00 R11: 0000000000000000 R12:
+> >0000000000000000
+> >[  192.165144] R13: ffff8d5bb5252580 R14: ffff8d5bb5252580 R15:
+> >0000000000000000
+> >[  192.166437] FS:  0000000000000000(0000)
+> >GS:ffff8d5bb7800000(0000) knlGS:0000000000000000
+> >[  192.169392] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> >[  192.171893] CR2: 00007ffc83d87d98 CR3: 0000000013e11000 CR4:
+> >00000000000006f0
+> >[  192.174692] Call Trace:
+> >[  192.176627]  ? percpu_ref_reinit+0x140/0x140
+> >[  192.178875]  rcu_nocb_kthread+0x1ae/0x580
+> >[  192.181174]  kthread+0x133/0x150
+> >[  192.183305]  ? rcu_eqs_enter_common.constprop.68+0x1c0/0x1c0
+> >[  192.185813]  ? kthread_create_on_node+0x70/0x70
+> >[  192.188110]  ret_from_fork+0x31/0x40
+> >[  192.190338] Code: ff ff ff 80 3d a6 71 b9 00 00 0f 85 c1 fe ff
+> >ff 49 8b 55 d8 49 8b 75 e8 48 c7 c7 f0 2b ce 8b c6 05 8a 71 b9 00
+> >...|01 e8 89 95 d4 ff <0f> ff e9 9f fe ff ff f0 49 83 6d d8 01 0f
+> >85 05 ff ff ff 48 89
+> >[  192.196842] ---[ end trace fbf926294c454ffa ]---
+> >
+> >[  192.199425] ------------[ cut here ]------------
+> >[  192.200346] kernel BUG at lib/percpu-refcount.c:192!
+> >[  192.200346] invalid opcode: 0000 [#1] SMP
+> >[  192.200346] Modules linked in: dm_raid raid456
+> >async_raid6_recov async_memcpy async_pq async_xor async_tx xor
+> >raid6_pq ...|dm_thin_pool dm_cache_smq dm_cache dm_persistent_data
+> >dm_bio_prison libcrc32c loop crct10dif_pclmul crc32_pclmul
+> >crc32c_intel     ...|ppdev ghash_clmulni_intel acpi_cpufreq
+> >virtio_net virtio_balloon tpm_tis joydev tpm_tis_core parport_pc
+> >parport tpm i2c_piix4     ...|virtio_blk cirrus drm_kms_helper ttm
+> >drm serio_raw virtio_pci virtio_ring virtio ata_generic pata_acpi
+> >[  192.211647] CPU: 0 PID: 13767 Comm: mdX_raid5 Tainted: G
+> >W   4.12.0-0.rc1.git1.1.fc27.x86_64 #1
+> >[  192.211647] Hardware name: Red Hat KVM, BIOS 0.5.1 01/01/2007
+> >[  192.211647] task: ffff8d5bb15f3100 task.stack: ffffa9a3c0d10000
+> >[  192.211647] RIP: 0010:__percpu_ref_switch_mode+0x278/0x280
+> >[  192.211647] RSP: 0018:ffffa9a3c0d13ce8 EFLAGS: 00010046
+> >[  192.211647] RAX: 0000000000000001 RBX: ffff8d5bb5252558 RCX:
+> >0000000000000000
+> >[  192.211647] RDX: 0000000000000001 RSI: ffffffff8c05a098 RDI:
+> >0000000000000046
+> >[  192.211647] RBP: ffffa9a3c0d13d30 R08: 0000000000000001 R09:
+> >0000000000000000
+> >[  192.211647] R10: ffffa9a3c0d13ca0 R11: ffffffff8c05a098 R12:
+> >0000000000000000
+> >[  192.211647] R13: 0000000000000000 R14: ffff8d5bb15f3100 R15:
+> >ffff8d5bb508f000
+> >[  192.211647] FS:  0000000000000000(0000)
+> >GS:ffff8d5bb7800000(0000) knlGS:0000000000000000
+> >[  192.211647] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> >[  192.211647] CR2: 00007ffc83d87d98 CR3: 0000000013e11000 CR4:
+> >00000000000006f0
+> >[  192.211647] Call Trace:
+> >[  192.211647]  percpu_ref_switch_to_percpu+0x27/0x40
+> >[  192.211647]  set_in_sync+0xd4/0xe0
+> >[  192.211647]  md_check_recovery+0x1f5/0x4e0
+> >[  192.211647]  raid5d+0x56/0x6a0 [raid456]
+> >[  192.211647]  ? finish_wait+0x72/0x90
+> >[  192.211647]  ? trace_hardirqs_on_caller+0xf4/0x190
+> >[  192.211647]  ? trace_hardirqs_on+0xd/0x10
+> >[  192.211647]  md_thread+0x138/0x180
+> >[  192.211647]  ? md_thread+0x138/0x180
+> >[  192.211647]  ? finish_wait+0x90/0x90
+> >[  192.211647]  kthread+0x133/0x150
+> >[  192.211647]  ? find_pers+0x70/0x70
+> >[  192.211647]  ? kthread_create_on_node+0x70/0x70
+> >[  192.211647]  ret_from_fork+0x31/0x40
+> >[  192.211647] Code: f0 4a c8 8b be d5 03 00 00 48 c7 c7 b1 75 c7
+> >8b c6 05 ef 75 b9 00 01 e8 97 d2 c4 ff e9 e8 fe ff ff f0 48 83 03
+> >...|01 e9 bf fe ff ff <0f> 0b e8 21 d9 be ff 90 55 48 89 e5 41 55
+> >41 54 53 48 89 fb 48
+> >[  192.211647] RIP: __percpu_ref_switch_mode+0x278/0x280 RSP:
+> >ffffa9a3c0d13ce8
+> >[  192.211647] ---[ end trace fbf926294c454ffb ]---
+> >
+> >[  192.211647] BUG: sleeping function called from invalid context
+> >at ./include/linux/percpu-rwsem.h:33
+> >[  192.211647] in_atomic(): 1, irqs_disabled(): 1, pid: 13767,
+> >name: mdX_raid5
+> >[  192.211647] INFO: lockdep is turned off.
+> >[  192.211647] irq event stamp: 68
+> >[  192.211647] hardirqs last  enabled at (67):
+> >[<ffffffff8b983586>] _raw_spin_unlock_irqrestore+0x36/0x60
+> >[  192.211647] hardirqs last disabled at (68):
+> >[<ffffffff8b983c47>] _raw_spin_lock_irqsave+0x27/0x90
+> >[  192.211647] softirqs last  enabled at (0): [<ffffffff8b0ae308>]
+> >copy_process.part.26+0x618/0x1ee0
+> >[  192.211647] softirqs last disabled at (0): [<          (null)>]
+> >(null)
+> >[  192.211647] CPU: 0 PID: 13767 Comm: mdX_raid5 Tainted: G      D
+> >W   4.12.0-0.rc1.git1.1.fc27.x86_64 #1
+> >[  192.211647] Hardware name: Red Hat KVM, BIOS 0.5.1 01/01/2007
+> >[  192.211647] Call Trace:
+> >[  192.211647]  dump_stack+0x8e/0xcd
+> >[  192.211647]  ___might_sleep+0x144/0x260
+> >[  192.211647]  __might_sleep+0x4a/0x80
+> >[  192.211647]  exit_signals+0x33/0x240
+> >[  192.211647]  do_exit+0xb4/0xd30
+> >[  192.211647]  ? kthread+0x133/0x150
+> >[  192.211647]  ? find_pers+0x70/0x70
+> >[  192.211647]  rewind_stack_do_exit+0x17/0x20
+> >
+> >[  192.211647] note: mdX_raid5[13767] exited with preempt_count 2
+> >
+> >[  220.071005] NMI watchdog: BUG: soft lockup - CPU#1 stuck for
+> >22s! [lvm:13678]
+> >[  220.071079] Modules linked in: dm_raid raid456
+> >async_raid6_recov async_memcpy async_pq async_xor async_tx xor
+> >raid6_pq ...|dm_thin_pool dm_cache_smq dm_cache dm_persistent_data
+> >dm_bio_prison libcrc32c loop crct10dif_pclmul crc32_pclmul
+> >crc32c_intel     ...|ppdev ghash_clmulni_intel acpi_cpufreq
+> >virtio_net virtio_balloon tpm_tis joydev tpm_tis_core parport_pc
+> >parport tpm i2c_piix4     ...|virtio_blk cirrus drm_kms_helper ttm
+> >drm serio_raw virtio_pci virtio_ring virtio ata_generic pata_acpi
+> >[  220.083131] irq event stamp: 313716
+> >[  220.087117] hardirqs last  enabled at (313715):
+> >[<ffffffff8b983da7>] entry_SYSCALL_64_fastpath+0x5/0xbe
+> >[  220.091109] hardirqs last disabled at (313716):
+> >[<ffffffff8b97afe4>] __schedule+0xc4/0xb40
+> >[  220.091109] softirqs last  enabled at (301518):
+> >[<ffffffff8b988d52>] __do_softirq+0x382/0x4ed
+> >[  220.095114] softirqs last disabled at (301511):
+> >[<ffffffff8b0b8e7f>] irq_exit+0x10f/0x120
+> >[  220.099150] CPU: 1 PID: 13678 Comm: lvm Tainted: G      D W
+> >4.12.0-0.rc1.git1.1.fc27.x86_64 #1
+> >[  220.103049] Hardware name: Red Hat KVM, BIOS 0.5.1 01/01/2007
+> >[  220.103049] task: ffff8d5bb3c03100 task.stack: ffffa9a3c155c000
+> >[  220.107103] RIP: 0010:queued_spin_lock_slowpath+0x25/0x1b0
+> >[  220.107103] RSP: 0018:ffffa9a3c155f720 EFLAGS: 00000202
+> >ORIG_RAX: ffffffffffffff10
+> >[  220.111144] RAX: 0000000000000001 RBX: ffff8d5bb5252448 RCX:
+> >0000000000000000
+> >[  220.115126] RDX: 0000000000000001 RSI: 0000000000000001 RDI:
+> >ffff8d5bb5252448
+> >[  220.115126] RBP: ffffa9a3c155f720 R08: 0000000000000000 R09:
+> >0000000000000000
+> >[  220.119130] R10: ffffa9a3c155f6d0 R11: ffff8d5bb3c03100 R12:
+> >ffff8d5bb5252448
+> >[  220.123139] R13: ffff8d5bb5252448 R14: ffff8d5bb379ca20 R15:
+> >ffff8d5bb5252058
+> >[  220.127118] FS:  00007f1f8253b880(0000)
+> >GS:ffff8d5bb7a00000(0000) knlGS:0000000000000000
+> >[  220.127118] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> >[  220.131158] CR2: 00007fe2715ae000 CR3: 0000000075108000 CR4:
+> >00000000000006e0
+> >[  220.135114] Call Trace:
+> >[  220.135114]  do_raw_spin_lock+0xb2/0xc0
+> >[  220.139145]  _raw_spin_lock+0x55/0x70
+> >[  220.139145]  md_write_start+0x143/0x360
+> >[  220.143126]  ? probe_sched_wakeup+0x1c/0x20
+> >[  220.143126]  ? check_preempt_curr+0x27/0xb0
+> >[  220.147147]  raid5_make_request+0xd0/0x1060 [raid456]
+> >[  220.147147]  ? _raw_spin_unlock_irqrestore+0x5b/0x60
+> >[  220.151162]  ? try_to_wake_up+0x58/0x520
+> >[  220.151162]  ? finish_wait+0x90/0x90
+> >[  220.155099]  ? mempool_alloc_slab+0x1d/0x30
+> >[  220.155099]  ? finish_wait+0x90/0x90
+> >[  220.159136]  raid_map+0x2b/0x40 [dm_raid]
+> >[  220.159136]  __map_bio+0xc9/0x2b0
+> >[  220.163115]  ? dm_put_table_device+0xd0/0xd0
+> >[  220.163115]  __split_and_process_bio+0x293/0x590
+> >[  220.167133]  dm_make_request+0x7f/0x120
+> >[  220.167133]  ? generic_make_request+0xf9/0x3b0
+> >[  220.171131]  generic_make_request+0x126/0x3b0
+> >[  220.171131]  ? iov_iter_get_pages+0xc9/0x300
+> >[  220.175138]  submit_bio+0x73/0x150
+> >[  220.175138]  ? submit_bio+0x73/0x150
+> >[  220.179132]  ? bio_iov_iter_get_pages+0xe0/0x120
+> >[  220.179132]  ? __blkdev_direct_IO_simple+0x168/0x320
+> >[  220.183114]  __blkdev_direct_IO_simple+0x184/0x320
+> >[  220.183114]  ? lock_acquire+0xa3/0x1f0
+> >[  220.187129]  ? bdput+0x20/0x20
+> >[  220.187129]  blkdev_direct_IO+0x3b1/0x3e0
+> >[  220.191112]  ? blkdev_direct_IO+0x3b1/0x3e0
+> >[  220.191112]  ? current_time+0x1a/0x70
+> >[  220.195108]  ? trace_hardirqs_on+0xd/0x10
+> >[  220.195108]  generic_file_direct_write+0x9c/0x110
+> >[  220.199114]  ? generic_file_direct_write+0x9c/0x110
+> >[  220.199114]  __generic_file_write_iter+0xbe/0x1d0
+> >[  220.199114]  blkdev_write_iter+0x96/0x110
+> >[  220.203115]  __vfs_write+0xe8/0x160
+> >[  220.203115]  ? __vfs_write+0xe8/0x160
+> >[  220.207211]  vfs_write+0xc6/0x1c0
+> >[  220.207211]  SyS_write+0x58/0xc0
+> >[  220.207211]  entry_SYSCALL_64_fastpath+0x1f/0xbe
+> >[  220.211130] RIP: 0033:0x7f1f81309290
+> >[  220.211130] RSP: 002b:00007fffba453af8 EFLAGS: 00000246
+> >ORIG_RAX: 0000000000000001
+> >[  220.215116] RAX: ffffffffffffffda RBX: 0000000000000001 RCX:
+> >00007f1f81309290
+> >[  220.215116] RDX: 0000000000001000 RSI: 000055f0c4ab4000 RDI:
+> >000000000000000c
+> >[  220.219114] RBP: 00007f1f815d5583 R08: fffffffffffffff0 R09:
+> >0000000000000000
+> >[  220.219114] R10: 00007f1f815d4b38 R11: 0000000000000246 R12:
+> >0000000000000001
+> >[  220.223148] R13: 0000000000000001 R14: 00007f1f815d5500 R15:
+> >00007f1f815d08c0
+> >[  220.223148] Code: 1f 80 00 00 00 00 66 66 66 66 90 55 48 89 e5
+> >66 66 90 66 90 ba 01 00 00 00 8b 07 85 c0 75 0a f0 0f b1 17 85 c0
+> >...|75 f2 5d c3 f3 90 <eb> ec 81 fe 00 01 00 00 0f 84 1a 01 00 00
+> >41 b8 01 01 00 00 b9
+> >
+> >-- 
+> >dm-devel mailing list
+> >dm-devel@redhat.com
+> >https://www.redhat.com/mailman/listinfo/dm-devel
+> 
