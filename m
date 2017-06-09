@@ -1,50 +1,35 @@
-From: <mdavis@cc76.k12.il.us>
-Subject: 7340 linux-raid
-Date: Fri, 09 Jun 2017 10:45:50 -0000
-Message-ID: <149700515099.19457.6763818145331618422@asianet.co.th>
-Reply-To: <mdavis@cc76.k12.il.us>
+From: Marian Csontos <mcsontos@redhat.com>
+Subject: Re: [dm-devel] kernel BUG at lib/percpu-refcount.c:192
+Date: Fri, 9 Jun 2017 14:40:39 +0200
+Message-ID: <b15d955d-d25f-afe9-b6eb-af34078115bd@redhat.com>
+References: <5fd9ae4c-2cf3-360c-ed50-f2517aafda7a@redhat.com>
+ <9dcf0086-6d8a-29db-2a27-6c63af988388@redhat.com>
+ <20170608133829.GA32626@redhat.com>
+ <20170608170719.6kkk4g2gwzrko7wr@kernel.org>
 Mime-Version: 1.0
-Content-Type: application/zip; name="2890322.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: attachment
+In-Reply-To: <20170608170719.6kkk4g2gwzrko7wr@kernel.org>
+Content-Language: en-MW
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Shaohua Li <shli@kernel.org>, Mike Snitzer <snitzer@redhat.com>
+Cc: linux-raid@vger.kernel.org, Heinz Mauelshagen <heinzm@redhat.com>, device-mapper development <dm-devel@redhat.com>
 List-Id: linux-raid.ids
 
-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
-AGEHAAAAAA==
+On 06/08/2017 07:07 PM, Shaohua Li wrote:
+
+> 
+> Neil fixed a bug in this side recently, which is pretty similar like the
+> reported, I'll push the patch to upstream soon. Could you please try my
+> for-next tree, and check if you still have the issue?
+> 
+> Thanks,
+> Shaohua
+
+Kernel with the patch applied runs so far fine. All raid tests passed, 
+and the whole test suite is being run now.
+
+Thanks!
+
+-- Martian
