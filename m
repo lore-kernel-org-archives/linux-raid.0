@@ -1,35 +1,51 @@
-From: Marian Csontos <mcsontos@redhat.com>
-Subject: Re: [dm-devel] kernel BUG at lib/percpu-refcount.c:192
-Date: Fri, 9 Jun 2017 14:40:39 +0200
-Message-ID: <b15d955d-d25f-afe9-b6eb-af34078115bd@redhat.com>
-References: <5fd9ae4c-2cf3-360c-ed50-f2517aafda7a@redhat.com>
- <9dcf0086-6d8a-29db-2a27-6c63af988388@redhat.com>
- <20170608133829.GA32626@redhat.com>
- <20170608170719.6kkk4g2gwzrko7wr@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH] Grow: don't allow to enable PPL when reshape is in progress
+Date: Fri,  9 Jun 2017 16:20:19 +0200
+Message-ID: <1497018019-11809-1-git-send-email-tomasz.majchrzak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170608170719.6kkk4g2gwzrko7wr@kernel.org>
-Content-Language: en-MW
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>, Mike Snitzer <snitzer@redhat.com>
-Cc: linux-raid@vger.kernel.org, Heinz Mauelshagen <heinzm@redhat.com>, device-mapper development <dm-devel@redhat.com>
+To: linux-raid@vger.kernel.org
+Cc: jes.sorensen@gmail.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
-On 06/08/2017 07:07 PM, Shaohua Li wrote:
+Don't allow to enable PPL consistency policy when reshape is in progress.
+Current PPL implementation doesn't work when reshape is taking place.
 
-> 
-> Neil fixed a bug in this side recently, which is pretty similar like the
-> reported, I'll push the patch to upstream soon. Could you please try my
-> for-next tree, and check if you still have the issue?
-> 
-> Thanks,
-> Shaohua
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+---
+ Grow.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-Kernel with the patch applied runs so far fine. All raid tests passed, 
-and the whole test suite is being run now.
+diff --git a/Grow.c b/Grow.c
+index 4ecb1d8..1a93391 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -530,6 +530,7 @@ int Grow_consistency_policy(char *devname, int fd, struct context *c, struct sha
+ 	char *subarray = NULL;
+ 	int ret = 0;
+ 	char container_dev[PATH_MAX];
++	char buf[20];
+ 
+ 	if (s->consistency_policy != CONSISTENCY_POLICY_RESYNC &&
+ 	    s->consistency_policy != CONSISTENCY_POLICY_PPL) {
+@@ -577,6 +578,17 @@ int Grow_consistency_policy(char *devname, int fd, struct context *c, struct sha
+ 		goto free_info;
+ 	}
+ 
++	if (s->consistency_policy == CONSISTENCY_POLICY_PPL) {
++		if (sysfs_get_str(sra, NULL, "sync_action", buf, 20) <= 0) {
++			ret = 1;
++			goto free_info;
++		} else if (strcmp(buf, "reshape\n") == 0) {
++			pr_err("PPL cannot be enabled when reshape is in progress\n");
++			ret = 1;
++			goto free_info;
++		}
++	}
++
+ 	if (subarray) {
+ 		char *update;
+ 
+-- 
+1.8.3.1
 
-Thanks!
-
--- Martian
