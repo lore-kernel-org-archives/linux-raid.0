@@ -1,293 +1,148 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: My md won't assemble even when disks are in clean state.
-Date: Fri, 9 Jun 2017 11:48:10 +1000
-Message-ID: <da15e516-9d92-9b37-0df4-9a53e56e10ba@websitemanagers.com.au>
-References: <f8d51bbd-6df7-2ea0-ba6f-8831a2b3e390@gmail.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH] md: don't use flush_signals in userspace processes
+Date: Fri, 09 Jun 2017 11:49:45 +1000
+Message-ID: <87vao69bgm.fsf@notabene.neil.brown.name>
+References: <alpine.LRH.2.02.1706071834250.22850@file01.intranet.prod.int.rdu2.redhat.com> <87h8zrart4.fsf@notabene.neil.brown.name> <20170608171551.ytxk3yz6xxsfbqma@kernel.org> <alpine.LRH.2.02.1706081641160.12323@file01.intranet.prod.int.rdu2.redhat.com> <877f0mb2b6.fsf@notabene.neil.brown.name> <20170608225858.z23vabbkzsf3lgl5@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f8d51bbd-6df7-2ea0-ba6f-8831a2b3e390@gmail.com>
-Content-Language: en-CA
-Sender: linux-raid-owner@vger.kernel.org
-To: Ram Ramesh <rramesh2400@gmail.com>, Linux Raid <linux-raid@vger.kernel.org>
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170608225858.z23vabbkzsf3lgl5@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: Mikulas Patocka <mpatocka@redhat.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>
 List-Id: linux-raid.ids
 
-On 09/06/17 11:44, Ram Ramesh wrote:
-> Hi,
->
->   Today my host had a power outage due to user mistake in the middle 
-> of a disk replacement. The replacement was simply to replace an 
-> old/smaller disk with new/larger one. No drive had failed prior to 
-> replacement.  My /dev/md0 is a RAID6 with 6 disks prior to replacement 
-> (sd{b,c,e,f,g,h}1) I started replacement with this following commands
->
-> 1. mdadm /dev/md0 --add /dev/sdi1
-> 2. echo want-replacement > /sys/block/md0/md/dev-sdg1/state
->
-> It was going to take about 6hr for the rebuild to complete. Then the 
-> power outage happened about 1hr in to the replacement.
-> On reboot the array has all 7 (old 6+new 1) as spares and failed to 
-> assemble. The disk names have also changed which did not surprise me. 
-> mdadm --assemble -force did not work. It reported that all spares are 
-> busy. I suspect that it has 7 disk for 6 array raid6 and does not know 
-> which 6 to pick to bring up the array. Looking at the disk vendor and 
-> serial numbers, I think the replacement is /dev/sdf1 and the one 
-> getting replaced is /dev/sdi1 in the following details (Note that pre 
-> crash this was called /dev/sdg1)
->
->    zym [root] 27 > mdadm --version
->    mdadm - v3.2.5 - 18th May 2012
->
->    zym [root] 28 > uname -a
->    Linux zym 3.13.0-106-generic #153-Ubuntu SMP Tue Dec 6 15:44:32 UTC
->    2016 x86_64 x86_64 x86_64 GNU/Linux
->
->    zym [root] 29 > cat /etc/os-release
->    NAME="Ubuntu"
->    VERSION="14.04.5 LTS, Trusty Tahr"
->    ID=ubuntu
->    ID_LIKE=debian
->    PRETTY_NAME="Ubuntu 14.04.5 LTS"
->    VERSION_ID="14.04"
->    HOME_URL="http://www.ubuntu.com/"
->    SUPPORT_URL="http://help.ubuntu.com/"
->    BUG_REPORT_URL="http://bugs.launchpad.net/ubuntu/"
->
->    zym [root] 31 > cat /proc/mdstat
->    Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
->    [raid4] [raid10]
->    md0 : inactive sdi1[7](S) sdg1[11](S) sdh1[6](S) sdf1[12](S)
->    sde1[10](S) sdd1[8](S) sdc1[9](S)
->           39069229300 blocks super 1.2
->
->    unused devices: <none>
->
->    foreach i ( /dev/sd{c,d,e,f,h,i}1 )
->    sudo mdadm --examine $i >> /tmp/examine
->    end
->
->    zym [root] 32 > cat /tmp/examine
->    /dev/sdc1:
->               Magic : a92b4efc
->             Version : 1.2
->         Feature Map : 0x1
->          Array UUID : 0e9f76b5:4a89171a:a930bccd:78749144
->                Name : zym:0  (local to host zym)
->       Creation Time : Mon Apr 22 00:08:12 2013
->          Raid Level : raid6
->        Raid Devices : 6
->
->      Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
->          Array Size : 15627545856 (14903.59 GiB 16002.61 GB)
->       Used Dev Size : 7813772928 (3725.90 GiB 4000.65 GB)
->         Data Offset : 262144 sectors
->        Super Offset : 8 sectors
->               State : clean
->         Device UUID : 05bb9634:4ecf803a:c519c886:cf3f4867
->
->    Internal Bitmap : 8 sectors from superblock
->         Update Time : Thu Jun  8 19:11:59 2017
->            Checksum : cdf085c0 - correct
->              Events : 290068
->
->              Layout : left-symmetric
->          Chunk Size : 64K
->
->        Device Role : Active device 5
->        Array State : AAAA?A ('A' == active, '.' == missing)
->
->    /dev/sdd1:
->               Magic : a92b4efc
->             Version : 1.2
->         Feature Map : 0x1
->          Array UUID : 0e9f76b5:4a89171a:a930bccd:78749144
->                Name : zym:0  (local to host zym)
->       Creation Time : Mon Apr 22 00:08:12 2013
->          Raid Level : raid6
->        Raid Devices : 6
->
->      Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
->          Array Size : 15627545856 (14903.59 GiB 16002.61 GB)
->       Used Dev Size : 7813772928 (3725.90 GiB 4000.65 GB)
->         Data Offset : 262144 sectors
->        Super Offset : 8 sectors
->               State : clean
->         Device UUID : 7e16d55d:3f00c22b:44a750ab:b50a4b5d
->
->    Internal Bitmap : 8 sectors from superblock
->         Update Time : Thu Jun  8 19:11:59 2017
->            Checksum : 2fb6a8f - correct
->              Events : 290068
->
->              Layout : left-symmetric
->          Chunk Size : 64K
->
->        Device Role : Active device 0
->        Array State : AAAA?A ('A' == active, '.' == missing)
->
->    /dev/sde1:
->               Magic : a92b4efc
->             Version : 1.2
->         Feature Map : 0x1
->          Array UUID : 0e9f76b5:4a89171a:a930bccd:78749144
->                Name : zym:0  (local to host zym)
->       Creation Time : Mon Apr 22 00:08:12 2013
->          Raid Level : raid6
->        Raid Devices : 6
->
->      Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
->          Array Size : 15627545856 (14903.59 GiB 16002.61 GB)
->       Used Dev Size : 7813772928 (3725.90 GiB 4000.65 GB)
->         Data Offset : 262144 sectors
->        Super Offset : 8 sectors
->               State : clean
->         Device UUID : 7e035b56:d1e1882b:e78a08ad:3ba50667
->
->    Internal Bitmap : 8 sectors from superblock
->         Update Time : Thu Jun  8 19:11:59 2017
->            Checksum : 6bbb74c - correct
->              Events : 290068
->
->              Layout : left-symmetric
->          Chunk Size : 64K
->
->        Device Role : Active device 2
->        Array State : AAAA?A ('A' == active, '.' == missing)
->
->    /dev/sdf1:
->               Magic : a92b4efc
->             Version : 1.2
->         Feature Map : 0x1
->          Array UUID : 0e9f76b5:4a89171a:a930bccd:78749144
->                Name : zym:0  (local to host zym)
->       Creation Time : Mon Apr 22 00:08:12 2013
->          Raid Level : raid6
->        Raid Devices : 6
->
->      Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
->          Array Size : 15627545856 (14903.59 GiB 16002.61 GB)
->       Used Dev Size : 7813772928 (3725.90 GiB 4000.65 GB)
->         Data Offset : 262144 sectors
->        Super Offset : 8 sectors
->               State : clean
->         Device UUID : 94251d51:a616e735:e7baccdb:3610013b
->
->    Internal Bitmap : 8 sectors from superblock
->         Update Time : Thu Jun  8 19:11:59 2017
->            Checksum : e9aab94 - correct
->              Events : 290068
->
->              Layout : left-symmetric
->          Chunk Size : 64K
->
->        Device Role : Active device 1
->        Array State : AAAA?A ('A' == active, '.' == missing)
->
->    /dev/sdg1:
->               Magic : a92b4efc
->             Version : 1.2
->         Feature Map : 0x1
->          Array UUID : 0e9f76b5:4a89171a:a930bccd:78749144
->                Name : zym:0  (local to host zym)
->       Creation Time : Mon Apr 22 00:08:12 2013
->          Raid Level : raid6
->        Raid Devices : 6
->
->      Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
->          Array Size : 15627545856 (14903.59 GiB 16002.61 GB)
->       Used Dev Size : 7813772928 (3725.90 GiB 4000.65 GB)
->         Data Offset : 262144 sectors
->        Super Offset : 8 sectors
->               State : clean
->         Device UUID : ad285b4d:222eea5e:0baad052:02eeb7d2
->
->    Internal Bitmap : 8 sectors from superblock
->         Update Time : Thu Jun  8 19:11:59 2017
->            Checksum : 429690b8 - correct
->              Events : 290068
->
->              Layout : left-symmetric
->          Chunk Size : 64K
->
->        Device Role : Active device 3
->        Array State : AAAA?A ('A' == active, '.' == missing)
->
->    /dev/sdh1:
->               Magic : a92b4efc
->             Version : 1.2
->         Feature Map : 0x13
->          Array UUID : 0e9f76b5:4a89171a:a930bccd:78749144
->                Name : zym:0  (local to host zym)
->       Creation Time : Mon Apr 22 00:08:12 2013
->          Raid Level : raid6
->        Raid Devices : 6
->
->      Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
->          Array Size : 15627545856 (14903.59 GiB 16002.61 GB)
->       Used Dev Size : 7813772928 (3725.90 GiB 4000.65 GB)
->         Data Offset : 262144 sectors
->        Super Offset : 8 sectors
->    Recovery Offset : 1192713176 sectors
->               State : clean
->         Device UUID : 0ddd2a83:872da375:c7cb7a93:c5bd2ea1
->
->    Internal Bitmap : 8 sectors from superblock
->         Update Time : Thu Jun  8 19:11:59 2017
->            Checksum : e55791e1 - correct
->              Events : 290068
->
->              Layout : left-symmetric
->          Chunk Size : 64K
->
->        Device Role : Active device 4
->        Array State : AAAA?A ('A' == active, '.' == missing)
->
->    /dev/sdi1:
->               Magic : a92b4efc
->             Version : 1.2
->         Feature Map : 0x1
->          Array UUID : 0e9f76b5:4a89171a:a930bccd:78749144
->                Name : zym:0  (local to host zym)
->       Creation Time : Mon Apr 22 00:08:12 2013
->          Raid Level : raid6
->        Raid Devices : 6
->
->      Avail Dev Size : 7813772943 (3725.90 GiB 4000.65 GB)
->          Array Size : 15627545856 (14903.59 GiB 16002.61 GB)
->       Used Dev Size : 7813772928 (3725.90 GiB 4000.65 GB)
->         Data Offset : 262144 sectors
->        Super Offset : 8 sectors
->               State : clean
->         Device UUID : 6c35eb93:149c874e:48f7572b:fc6161cc
->
->    Internal Bitmap : 8 sectors from superblock
->         Update Time : Thu Jun  8 19:11:59 2017
->            Checksum : 6214969b - correct
->              Events : 290068
->
->              Layout : left-symmetric
->          Chunk Size : 64K
->
->        Device Role : Active device 4
->        Array State : AAAA?A ('A' == active, '.' == missing)
->    zym [root] 33 >
->
->    ***smartctl output omitted as all disks are healthy with no errors***
->
-> Thanks in advance for your help. 
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-You might need to do a "mdadm --stop /dev/md0" before trying to do a 
-start again (ie, they are busy because they are already used by MD, stop 
-md0 so that they are all unused, then try to assemble again.
+On Thu, Jun 08 2017, Shaohua Li wrote:
 
-Just remember, don't re-create the array without a full backup, or 
-specific advice from someone (else) on the list.
+> On Fri, Jun 09, 2017 at 07:24:29AM +1000, Neil Brown wrote:
+>> On Thu, Jun 08 2017, Mikulas Patocka wrote:
+>>=20
+>> > On Thu, 8 Jun 2017, Shaohua Li wrote:
+>> >
+>> >> On Thu, Jun 08, 2017 at 04:59:03PM +1000, Neil Brown wrote:
+>> >> > On Wed, Jun 07 2017, Mikulas Patocka wrote:
+>> >> >=20
+>> >> > > The function flush_signals clears all pending signals for the pro=
+cess. It
+>> >> > > may be used by kernel threads when we need to prepare a kernel th=
+read for
+>> >> > > responding to signals. However using this function for an userspa=
+ces
+>> >> > > processes is incorrect - clearing signals without the program exp=
+ecting it
+>> >> > > can cause misbehavior.
+>> >> > >
+>> >> > > The raid1 and raid5 code uses flush_signals in its request routin=
+e because
+>> >> > > it wants to prepare for an interruptible wait. This patch drops
+>> >> > > flush_signals and uses sigprocmask instead to block all signals (=
+including
+>> >> > > SIGKILL) around the schedule() call. The signals are not lost, bu=
+t the
+>> >> > > schedule() call won't respond to them.
+>> >> > >
+>> >> > > Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+>> >> > > Cc: stable@vger.kernel.org
+>> >> >=20
+>> >> > Thanks for catching that!
+>> >> >=20
+>> >> > Acked-by: NeilBrown <neilb@suse.com>
+>> >>=20
+>> >> Applied, thanks!
+>> >>=20
+>> >> Neil,
+>> >> Not about the patch itself. I had question about that part of code. D=
+ropped
+>> >> others since this is raid related. I didn't get the point why it's a
+>> >> TASK_INTERRUPTIBLE sleep. It seems suggesting the thread will bail ou=
+t if a
+>> >> signal is sent. But I didn't see we check the signal and exit the loo=
+p. What's
+>> >> the correct behavior here? Since the suspend range is controlled by u=
+serspace,
+>> >
+>> > As I understand the code - the purpose is to have an UNINTERRUPTIBLE s=
+leep=20
+>> > that isn't accounted in load average and that doesn't trigger the hung=
+=20
+>> > task warning.
+>>=20
+>> Exactly my reason - yes.
+>>=20
+>> >
+>> > There should really be something like TASK_UNINTERRUPTIBLE_LONG for th=
+is=20
+>> > purpose.
+>>=20
+>> That would be nice.
+>>=20
+>> >
+>> >> I think the correct behavior is if user kills the thread, we exit the=
+ loop. So
+>> >> it seems like to be we check if there is fatal signal pending, exit t=
+he loop,
+>> >> and return IO error. Not sure if we should return IO error though.
+>> >
+>> > No, this is not correct - if we report an I/O error for the affected b=
+io,=20
+>> > it could corrupt filesystem or confuse other device mapper targets tha=
+t=20
+>> > could be on the top of MD. It is not right to corrupt filesystem if th=
+e=20
+>> > user kills a process.
+>>=20
+>> Yes, we are too deep to even return something like ERESTARTSYS.
+>> Blocking is the only option.
+>
+> My concern is if the app controlling the suspend range dies, other threads
+> will block in the kernel side forever. We can't even force kill them.  Th=
+is
+> is an unfortunate behavior. Would adding a timeout here make sense? The a=
+pp
+> controlling the suspend range looks part of the disk firmware now. If the
+> firmware doesn't respond, returning IO timeout is normal.
 
-Hope that helps :)
+Yes, this happens.
+You can write to /sys/block/mdXX/md/suspend_lo to unblock it, but most
+people don't know this.
 
-Regards,
-Adam
+A timeout might be appropriate, but I would want it to be quite a long
+one.  Several minutes at least...
+Though if I found I wanted to do some careful raid6repair surgery on an
+array, and so suspending the problematic region and started work, I
+might get annoyed if I/O started getting errors, instead of just waiting
+like I asked.... but maybe that is a rather far-fetched scenario.
 
--- 
-Adam Goryachev Website Managers www.websitemanagers.com.au
+Thanks,
+NeilBrown
+
+
+>
+> Thanks,
+> Shaohua
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlk5/rsACgkQOeye3VZi
+gblw/A//T7kXcmEGKU73SKTjyyyW9ZT9XIu7UBQr11icR/nrhsdshqcaXkzCtKzA
+sqid2+l9g8c7ZqtExUsW6lheFreZsYXD9oF4NS5MWhKoDC7x0+ocbl07v6rXV9rC
+3Khpkbd4h69OCBTTb6+M7RVnUIJzQyKNroV50A88bdSLq+2Lg4cOU5mPpnTMevhx
+y1QkH6XKJEmBJvSPU+SZyalAJBNCUEkeUuzD/h4sRBZhFbjXAwidPB9iANY8F2aZ
+ttlcINw0tOxZjgREyV6ImO47Dz8pXfb7mLc/KT9yqVTewoYhhDEjcvKOgcrqkjTb
+6rPjCpZWOeFNkckahYcspkJ0HjpeBUcVOFQ5BjulbLuBje4lvUXM+xMiSEzn9GD0
+5yfOsL7q9LKzF19zjSPbnHakKzr6M4rmK+Qk5izsfuCYIHf0jKFYc6Z9O7BMprf5
+mdo5YK2QMSC0aO0JAtjn5SupIQrQREFNTwIQUg8/rPiSA/nvLkg/elNXSqbAGt2x
+z/F8YauHtDhWqbX942UHsIFUslj211LPV8kmJ4BkNPkHuTSPLlA3tfMAqlpld7C9
+dCiydn4BvEa30XP5EfzCmPdHQ60/fWOnGSBkDk2rWr1ysJrbaUwpDS/tXlPNsmhc
+f/p29W9V3qK5xN0oSnakDavJl8nNDk0L990E4y8Th+KeV4mRg9M=
+=rOXt
+-----END PGP SIGNATURE-----
+--=-=-=--
