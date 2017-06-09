@@ -1,70 +1,301 @@
-From: <citydesk@thereporteronline.com>
-Subject: (unknown)
-Date: Fri, 09 Jun 2017 04:30:23 -0000
-Message-ID: <149698262314.12492.4208422069530792867@san.ru>
+From: Ram Ramesh <rramesh2400@gmail.com>
+Subject: Re: My md won't assemble even when disks are in clean state.
+Date: Fri, 9 Jun 2017 00:44:45 -0500
+Message-ID: <4353246d-a092-e342-6ef7-091d8e9d77c5@gmail.com>
+References: <f8d51bbd-6df7-2ea0-ba6f-8831a2b3e390@gmail.com>
+ <da15e516-9d92-9b37-0df4-9a53e56e10ba@websitemanagers.com.au>
 Mime-Version: 1.0
-Content-Type: application/zip; name="846894449555915.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: attachment
-Subject: 
+In-Reply-To: <da15e516-9d92-9b37-0df4-9a53e56e10ba@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>, Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-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
+On 06/08/2017 08:48 PM, Adam Goryachev wrote:
+> On 09/06/17 11:44, Ram Ramesh wrote:
+>> Hi,
+>>
+>>   Today my host had a power outage due to user mistake in the middle 
+>> of a disk replacement. The replacement was simply to replace an 
+>> old/smaller disk with new/larger one. No drive had failed prior to 
+>> replacement.  My /dev/md0 is a RAID6 with 6 disks prior to 
+>> replacement (sd{b,c,e,f,g,h}1) I started replacement with this 
+>> following commands
+>>
+>> 1. mdadm /dev/md0 --add /dev/sdi1
+>> 2. echo want-replacement > /sys/block/md0/md/dev-sdg1/state
+>>
+>> It was going to take about 6hr for the rebuild to complete. Then the 
+>> power outage happened about 1hr in to the replacement.
+>> On reboot the array has all 7 (old 6+new 1) as spares and failed to 
+>> assemble. The disk names have also changed which did not surprise me. 
+>> mdadm --assemble -force did not work. It reported that all spares are 
+>> busy. I suspect that it has 7 disk for 6 array raid6 and does not 
+>> know which 6 to pick to bring up the array. Looking at the disk 
+>> vendor and serial numbers, I think the replacement is /dev/sdf1 and 
+>> the one getting replaced is /dev/sdi1 in the following details (Note 
+>> that pre crash this was called /dev/sdg1)
+>>
+>>    zym [root] 27 > mdadm --version
+>>    mdadm - v3.2.5 - 18th May 2012
+>>
+>>    zym [root] 28 > uname -a
+>>    Linux zym 3.13.0-106-generic #153-Ubuntu SMP Tue Dec 6 15:44:32 UTC
+>>    2016 x86_64 x86_64 x86_64 GNU/Linux
+>>
+>>    zym [root] 29 > cat /etc/os-release
+>>    NAME="Ubuntu"
+>>    VERSION="14.04.5 LTS, Trusty Tahr"
+>>    ID=ubuntu
+>>    ID_LIKE=debian
+>>    PRETTY_NAME="Ubuntu 14.04.5 LTS"
+>>    VERSION_ID="14.04"
+>>    HOME_URL="http://www.ubuntu.com/"
+>>    SUPPORT_URL="http://help.ubuntu.com/"
+>>    BUG_REPORT_URL="http://bugs.launchpad.net/ubuntu/"
+>>
+>>    zym [root] 31 > cat /proc/mdstat
+>>    Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+>>    [raid4] [raid10]
+>>    md0 : inactive sdi1[7](S) sdg1[11](S) sdh1[6](S) sdf1[12](S)
+>>    sde1[10](S) sdd1[8](S) sdc1[9](S)
+>>           39069229300 blocks super 1.2
+>>
+>>    unused devices: <none>
+>>
+>>    foreach i ( /dev/sd{c,d,e,f,h,i}1 )
+>>    sudo mdadm --examine $i >> /tmp/examine
+>>    end
+>>
+>>    zym [root] 32 > cat /tmp/examine
+>>    /dev/sdc1:
+>>               Magic : a92b4efc
+>>             Version : 1.2
+>>         Feature Map : 0x1
+>>          Array UUID : 0e9f76b5:4a89171a:a930bccd:78749144
+>>                Name : zym:0  (local to host zym)
+>>       Creation Time : Mon Apr 22 00:08:12 2013
+>>          Raid Level : raid6
+>>        Raid Devices : 6
+>>
+>>      Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
+>>          Array Size : 15627545856 (14903.59 GiB 16002.61 GB)
+>>       Used Dev Size : 7813772928 (3725.90 GiB 4000.65 GB)
+>>         Data Offset : 262144 sectors
+>>        Super Offset : 8 sectors
+>>               State : clean
+>>         Device UUID : 05bb9634:4ecf803a:c519c886:cf3f4867
+>>
+>>    Internal Bitmap : 8 sectors from superblock
+>>         Update Time : Thu Jun  8 19:11:59 2017
+>>            Checksum : cdf085c0 - correct
+>>              Events : 290068
+>>
+>>              Layout : left-symmetric
+>>          Chunk Size : 64K
+>>
+>>        Device Role : Active device 5
+>>        Array State : AAAA?A ('A' == active, '.' == missing)
+>>
+>>    /dev/sdd1:
+>>               Magic : a92b4efc
+>>             Version : 1.2
+>>         Feature Map : 0x1
+>>          Array UUID : 0e9f76b5:4a89171a:a930bccd:78749144
+>>                Name : zym:0  (local to host zym)
+>>       Creation Time : Mon Apr 22 00:08:12 2013
+>>          Raid Level : raid6
+>>        Raid Devices : 6
+>>
+>>      Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
+>>          Array Size : 15627545856 (14903.59 GiB 16002.61 GB)
+>>       Used Dev Size : 7813772928 (3725.90 GiB 4000.65 GB)
+>>         Data Offset : 262144 sectors
+>>        Super Offset : 8 sectors
+>>               State : clean
+>>         Device UUID : 7e16d55d:3f00c22b:44a750ab:b50a4b5d
+>>
+>>    Internal Bitmap : 8 sectors from superblock
+>>         Update Time : Thu Jun  8 19:11:59 2017
+>>            Checksum : 2fb6a8f - correct
+>>              Events : 290068
+>>
+>>              Layout : left-symmetric
+>>          Chunk Size : 64K
+>>
+>>        Device Role : Active device 0
+>>        Array State : AAAA?A ('A' == active, '.' == missing)
+>>
+>>    /dev/sde1:
+>>               Magic : a92b4efc
+>>             Version : 1.2
+>>         Feature Map : 0x1
+>>          Array UUID : 0e9f76b5:4a89171a:a930bccd:78749144
+>>                Name : zym:0  (local to host zym)
+>>       Creation Time : Mon Apr 22 00:08:12 2013
+>>          Raid Level : raid6
+>>        Raid Devices : 6
+>>
+>>      Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
+>>          Array Size : 15627545856 (14903.59 GiB 16002.61 GB)
+>>       Used Dev Size : 7813772928 (3725.90 GiB 4000.65 GB)
+>>         Data Offset : 262144 sectors
+>>        Super Offset : 8 sectors
+>>               State : clean
+>>         Device UUID : 7e035b56:d1e1882b:e78a08ad:3ba50667
+>>
+>>    Internal Bitmap : 8 sectors from superblock
+>>         Update Time : Thu Jun  8 19:11:59 2017
+>>            Checksum : 6bbb74c - correct
+>>              Events : 290068
+>>
+>>              Layout : left-symmetric
+>>          Chunk Size : 64K
+>>
+>>        Device Role : Active device 2
+>>        Array State : AAAA?A ('A' == active, '.' == missing)
+>>
+>>    /dev/sdf1:
+>>               Magic : a92b4efc
+>>             Version : 1.2
+>>         Feature Map : 0x1
+>>          Array UUID : 0e9f76b5:4a89171a:a930bccd:78749144
+>>                Name : zym:0  (local to host zym)
+>>       Creation Time : Mon Apr 22 00:08:12 2013
+>>          Raid Level : raid6
+>>        Raid Devices : 6
+>>
+>>      Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
+>>          Array Size : 15627545856 (14903.59 GiB 16002.61 GB)
+>>       Used Dev Size : 7813772928 (3725.90 GiB 4000.65 GB)
+>>         Data Offset : 262144 sectors
+>>        Super Offset : 8 sectors
+>>               State : clean
+>>         Device UUID : 94251d51:a616e735:e7baccdb:3610013b
+>>
+>>    Internal Bitmap : 8 sectors from superblock
+>>         Update Time : Thu Jun  8 19:11:59 2017
+>>            Checksum : e9aab94 - correct
+>>              Events : 290068
+>>
+>>              Layout : left-symmetric
+>>          Chunk Size : 64K
+>>
+>>        Device Role : Active device 1
+>>        Array State : AAAA?A ('A' == active, '.' == missing)
+>>
+>>    /dev/sdg1:
+>>               Magic : a92b4efc
+>>             Version : 1.2
+>>         Feature Map : 0x1
+>>          Array UUID : 0e9f76b5:4a89171a:a930bccd:78749144
+>>                Name : zym:0  (local to host zym)
+>>       Creation Time : Mon Apr 22 00:08:12 2013
+>>          Raid Level : raid6
+>>        Raid Devices : 6
+>>
+>>      Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
+>>          Array Size : 15627545856 (14903.59 GiB 16002.61 GB)
+>>       Used Dev Size : 7813772928 (3725.90 GiB 4000.65 GB)
+>>         Data Offset : 262144 sectors
+>>        Super Offset : 8 sectors
+>>               State : clean
+>>         Device UUID : ad285b4d:222eea5e:0baad052:02eeb7d2
+>>
+>>    Internal Bitmap : 8 sectors from superblock
+>>         Update Time : Thu Jun  8 19:11:59 2017
+>>            Checksum : 429690b8 - correct
+>>              Events : 290068
+>>
+>>              Layout : left-symmetric
+>>          Chunk Size : 64K
+>>
+>>        Device Role : Active device 3
+>>        Array State : AAAA?A ('A' == active, '.' == missing)
+>>
+>>    /dev/sdh1:
+>>               Magic : a92b4efc
+>>             Version : 1.2
+>>         Feature Map : 0x13
+>>          Array UUID : 0e9f76b5:4a89171a:a930bccd:78749144
+>>                Name : zym:0  (local to host zym)
+>>       Creation Time : Mon Apr 22 00:08:12 2013
+>>          Raid Level : raid6
+>>        Raid Devices : 6
+>>
+>>      Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
+>>          Array Size : 15627545856 (14903.59 GiB 16002.61 GB)
+>>       Used Dev Size : 7813772928 (3725.90 GiB 4000.65 GB)
+>>         Data Offset : 262144 sectors
+>>        Super Offset : 8 sectors
+>>    Recovery Offset : 1192713176 sectors
+>>               State : clean
+>>         Device UUID : 0ddd2a83:872da375:c7cb7a93:c5bd2ea1
+>>
+>>    Internal Bitmap : 8 sectors from superblock
+>>         Update Time : Thu Jun  8 19:11:59 2017
+>>            Checksum : e55791e1 - correct
+>>              Events : 290068
+>>
+>>              Layout : left-symmetric
+>>          Chunk Size : 64K
+>>
+>>        Device Role : Active device 4
+>>        Array State : AAAA?A ('A' == active, '.' == missing)
+>>
+>>    /dev/sdi1:
+>>               Magic : a92b4efc
+>>             Version : 1.2
+>>         Feature Map : 0x1
+>>          Array UUID : 0e9f76b5:4a89171a:a930bccd:78749144
+>>                Name : zym:0  (local to host zym)
+>>       Creation Time : Mon Apr 22 00:08:12 2013
+>>          Raid Level : raid6
+>>        Raid Devices : 6
+>>
+>>      Avail Dev Size : 7813772943 (3725.90 GiB 4000.65 GB)
+>>          Array Size : 15627545856 (14903.59 GiB 16002.61 GB)
+>>       Used Dev Size : 7813772928 (3725.90 GiB 4000.65 GB)
+>>         Data Offset : 262144 sectors
+>>        Super Offset : 8 sectors
+>>               State : clean
+>>         Device UUID : 6c35eb93:149c874e:48f7572b:fc6161cc
+>>
+>>    Internal Bitmap : 8 sectors from superblock
+>>         Update Time : Thu Jun  8 19:11:59 2017
+>>            Checksum : 6214969b - correct
+>>              Events : 290068
+>>
+>>              Layout : left-symmetric
+>>          Chunk Size : 64K
+>>
+>>        Device Role : Active device 4
+>>        Array State : AAAA?A ('A' == active, '.' == missing)
+>>    zym [root] 33 >
+>>
+>>    ***smartctl output omitted as all disks are healthy with no errors***
+>>
+>> Thanks in advance for your help. 
+>
+> You might need to do a "mdadm --stop /dev/md0" before trying to do a 
+> start again (ie, they are busy because they are already used by MD, 
+> stop md0 so that they are all unused, then try to assemble again.
+>
+> Just remember, don't re-create the array without a full backup, or 
+> specific advice from someone (else) on the list.
+>
+> Hope that helps :)
+>
+> Regards,
+> Adam
+>
+Thanks. That did it. I was able to assemble. It assembled degraded and I 
+--re-added the remaining drives and it accepted without any issue. There 
+was no rebuild after --re-add which is consistent with the examine 
+output above that all disks are clean. Did fsck a couple of times for a 
+good measure and things seem normal now.
+
+Ramesh
+
