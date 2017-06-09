@@ -1,59 +1,42 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH 0/3] mdadm/test: Refactor the codes of 'test' script
-Date: Fri, 9 Jun 2017 11:08:23 -0400
-Message-ID: <d92b0a65-198b-3637-83a1-a71b78cdfd43@gmail.com>
-References: <1496827888-17118-1-git-send-email-zlliu@suse.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: [GIT PULL] MD update for 4.12-rc5
+Date: Fri, 9 Jun 2017 09:32:33 -0700
+Message-ID: <20170609163233.7qbmycvsjrd7c62i@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1496827888-17118-1-git-send-email-zlliu@suse.com>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: Zhilong Liu <zlliu@suse.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 06/07/2017 05:31 AM, Zhilong Liu wrote:
-> Hi, Jes;
->    This patchset mainly focus on improving the 'test' script, rip it
-> apart and put it together in a more coherent form.
->    Over 3 months passed, the RFC patch of improving 'test' hadn't received
-> any ideas, thus I post this sample version that I have tested many times.
->    It's just the beginning to improve the test part of mdadm, any questions
-> is very welcome.
-> 
->    Sorry for that, I haven't added the function suggested from Guoqing, cut
-> the words from the email tree of
-> "ANNOUNCE: mdadm 4.0 - A tool for managing md Soft RAID under Linux":
-> 
-> Guoqing asked:
-> ...
-> Is current test can run the test for different raid level, say,
-> "./test --raidtype=raid1"
-> could execute all the *r1* tests, does it make sense to do it if we don't
-> support it now.
-> ...
-> 
->    Just list this suggestion here, waiting for ideas.
-> 
-> RFC patch mail-tree:
-> [PATCH RFC] test: revise 'test' and make it easier to understand
-> Acked-by: Neil Brown
-> And suggest to split those changing into smaller patches from Guoqing.
+Hi,
+One bug fix from Neil Brown for MD. The bug is introduced in this cycle. Please
+pull!
 
-The whole test infrastructure is something I would like to see rewamped 
-and modernized, so you starting to work on this is excellent.
+Thanks,
+Shaohua
 
-With regard to your question, then having an option to say 'run all 
-raid1 tests' is probably good, we should have that for all raid levels, 
-imsm, and ddf.
+The following changes since commit 3c2993b8c6143d8a5793746a54eba8f86f95240f:
 
-I also would like to see a more flexible way to configure the tests, 
-like it should be possible to specify a bunch of physical devices for 
-the tests, instead of relying on loop devices.
+  Linux 4.12-rc4 (2017-06-04 16:47:43 -0700)
 
-Cheers,
-Jes
+are available in the git repository at:
 
+  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git tags/md/4.12-rc5
 
+for you to fetch changes up to a415c0f10627913793709ddb75add09d2ea334dc:
+
+  md: initialise ->writes_pending in personality modules. (2017-06-05 16:04:35 -0700)
+
+----------------------------------------------------------------
+NeilBrown (1):
+      md: initialise ->writes_pending in personality modules.
+
+ drivers/md/md.c     | 16 ++++++++++++----
+ drivers/md/md.h     |  1 +
+ drivers/md/raid1.c  |  2 ++
+ drivers/md/raid10.c |  3 +++
+ drivers/md/raid5.c  |  3 +++
+ 5 files changed, 21 insertions(+), 4 deletions(-)
