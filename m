@@ -1,81 +1,35 @@
-From: Zhilong Liu <zlliu@suse.com>
-Subject: Re: [PATCH 0/3] mdadm/test: Refactor the codes of 'test' script
-Date: Mon, 12 Jun 2017 10:32:00 +0800
-Message-ID: <3e74fb16-4405-533d-1ef3-2169f18d0613@suse.com>
-References: <1496827888-17118-1-git-send-email-zlliu@suse.com>
- <d92b0a65-198b-3637-83a1-a71b78cdfd43@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Lidong Zhong <lzhong@suse.com>
+Subject: [PATCH] md: change the initialization value for a spare device spot to MD_DISK_ROLE_SPARE
+Date: Mon, 12 Jun 2017 10:45:55 +0800
+Message-ID: <20170612024555.1120-1-lzhong@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <d92b0a65-198b-3637-83a1-a71b78cdfd43@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <jes.sorensen@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+The value for spare spot of sb->dev_roles is changed from
+MD_DISK_ROLE_FAULTY to MD_DISK_ROLE_SPARE to keep align
+with the value when the superblock is firstly created in
+userspace.
 
+Signed-off-by: Lidong Zhong <lzhong@suse.com>
+---
+ drivers/md/md.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-On 06/09/2017 11:08 PM, Jes Sorensen wrote:
-> On 06/07/2017 05:31 AM, Zhilong Liu wrote:
->> Hi, Jes;
->>    This patchset mainly focus on improving the 'test' script, rip it
->> apart and put it together in a more coherent form.
->>    Over 3 months passed, the RFC patch of improving 'test' hadn't 
->> received
->> any ideas, thus I post this sample version that I have tested many 
->> times.
->>    It's just the beginning to improve the test part of mdadm, any 
->> questions
->> is very welcome.
->>
->>    Sorry for that, I haven't added the function suggested from 
->> Guoqing, cut
->> the words from the email tree of
->> "ANNOUNCE: mdadm 4.0 - A tool for managing md Soft RAID under Linux":
->>
->> Guoqing asked:
->> ...
->> Is current test can run the test for different raid level, say,
->> "./test --raidtype=raid1"
->> could execute all the *r1* tests, does it make sense to do it if we 
->> don't
->> support it now.
->> ...
->>
->>    Just list this suggestion here, waiting for ideas.
->>
->> RFC patch mail-tree:
->> [PATCH RFC] test: revise 'test' and make it easier to understand
->> Acked-by: Neil Brown
->> And suggest to split those changing into smaller patches from Guoqing.
->
-> The whole test infrastructure is something I would like to see 
-> rewamped and modernized, so you starting to work on this is excellent.
->
-> With regard to your question, then having an option to say 'run all 
-> raid1 tests' is probably good, we should have that for all raid 
-> levels, imsm, and ddf.
->
-> I also would like to see a more flexible way to configure the tests, 
-> like it should be possible to specify a bunch of physical devices for 
-> the tests, instead of relying on loop devices.
-
-I would send another sample version once complete your suggestions. 
-Thanks for your ideas.
-Welcome various requirements during I'm doing this.
-
-Thanks,
--Zhilong
-
->
-> Cheers,
-> Jes
->
->
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 87edc342ccb3..a9aacedefbca 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -1852,7 +1852,7 @@ static void super_1_sync(struct mddev *mddev, struct md_rdev *rdev)
+ 		max_dev = le32_to_cpu(sb->max_dev);
+ 
+ 	for (i=0; i<max_dev;i++)
+-		sb->dev_roles[i] = cpu_to_le16(MD_DISK_ROLE_FAULTY);
++		sb->dev_roles[i] = cpu_to_le16(MD_DISK_ROLE_SPARE);
+ 
+ 	if (test_bit(MD_HAS_JOURNAL, &mddev->flags))
+ 		sb->feature_map |= cpu_to_le32(MD_FEATURE_JOURNAL);
+-- 
+2.12.0
 
