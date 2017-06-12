@@ -1,38 +1,81 @@
-From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Subject: Re: Recovery after accidental raid5 superblock rewrite
-Date: Sat, 10 Jun 2017 22:41:05 +0200
-Message-ID: <20170610204105.GA19409@metamorpher.de>
-References: <2009e689-39b7-14fa-44bd-3288f96b9c91@tonel.li>
- <20170603212011.GA13271@metamorpher.de>
- <12fc0496-423a-bca6-ac57-ed40958645e7@tonel.li>
- <20170603232919.GA17108@metamorpher.de>
- <b8b6eb18-2952-86ee-5329-9e4f4c406c3d@tonel.li>
- <20170605092454.GA3651@metamorpher.de>
- <dfa4dd0d-c68a-4e1b-aac7-649f7f1a72f6@tonel.li>
- <20170605235619.GA8478@metamorpher.de>
- <5f9ed8be-ec90-17bc-3e45-0721689a62a8@tonel.li>
+From: Zhilong Liu <zlliu@suse.com>
+Subject: Re: [PATCH 0/3] mdadm/test: Refactor the codes of 'test' script
+Date: Mon, 12 Jun 2017 10:32:00 +0800
+Message-ID: <3e74fb16-4405-533d-1ef3-2169f18d0613@suse.com>
+References: <1496827888-17118-1-git-send-email-zlliu@suse.com>
+ <d92b0a65-198b-3637-83a1-a71b78cdfd43@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5f9ed8be-ec90-17bc-3e45-0721689a62a8@tonel.li>
+In-Reply-To: <d92b0a65-198b-3637-83a1-a71b78cdfd43@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Paul Tonelli <paul@tonel.li>
+To: Jes Sorensen <jes.sorensen@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Jun 10, 2017 at 10:04:16PM +0200, Paul Tonelli wrote:
-> I believe the offset we manually specify is after the default one on a 
-> raid assembly with 3 disks, so it should have rebuilt the previous LVM 
-> superblock, or am I missing something (again).
 
-It should be the reverse. When you grow the raid, the offset shrinks.
 
-Not able to provide further insights. You have a LVM2 header which, 
-given the correct offset, should appear on the /dev/md device and 
-in that case everything else should appear too.
+On 06/09/2017 11:08 PM, Jes Sorensen wrote:
+> On 06/07/2017 05:31 AM, Zhilong Liu wrote:
+>> Hi, Jes;
+>>    This patchset mainly focus on improving the 'test' script, rip it
+>> apart and put it together in a more coherent form.
+>>    Over 3 months passed, the RFC patch of improving 'test' hadn't 
+>> received
+>> any ideas, thus I post this sample version that I have tested many 
+>> times.
+>>    It's just the beginning to improve the test part of mdadm, any 
+>> questions
+>> is very welcome.
+>>
+>>    Sorry for that, I haven't added the function suggested from 
+>> Guoqing, cut
+>> the words from the email tree of
+>> "ANNOUNCE: mdadm 4.0 - A tool for managing md Soft RAID under Linux":
+>>
+>> Guoqing asked:
+>> ...
+>> Is current test can run the test for different raid level, say,
+>> "./test --raidtype=raid1"
+>> could execute all the *r1* tests, does it make sense to do it if we 
+>> don't
+>> support it now.
+>> ...
+>>
+>>    Just list this suggestion here, waiting for ideas.
+>>
+>> RFC patch mail-tree:
+>> [PATCH RFC] test: revise 'test' and make it easier to understand
+>> Acked-by: Neil Brown
+>> And suggest to split those changing into smaller patches from Guoqing.
+>
+> The whole test infrastructure is something I would like to see 
+> rewamped and modernized, so you starting to work on this is excellent.
+>
+> With regard to your question, then having an option to say 'run all 
+> raid1 tests' is probably good, we should have that for all raid 
+> levels, imsm, and ddf.
+>
+> I also would like to see a more flexible way to configure the tests, 
+> like it should be possible to specify a bunch of physical devices for 
+> the tests, instead of relying on loop devices.
 
-If that is not the case then things will be a lot more complicated.
+I would send another sample version once complete your suggestions. 
+Thanks for your ideas.
+Welcome various requirements during I'm doing this.
 
-Regards
-Andreas Klauer
+Thanks,
+-Zhilong
+
+>
+> Cheers,
+> Jes
+>
+>
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
