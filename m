@@ -1,50 +1,30 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [RFC PATCH] md/raid1: remove unused bio in sync_request_write
-Date: Thu, 15 Jun 2017 10:04:31 -0700
-Message-ID: <20170615170431.43guhslraqbjpltr@kernel.org>
-References: <20170615090025.22826-1-gqjiang@suse.com>
+From: "VS  -  .41" <mspway@municomas.gob.pe>
+Subject: [*Working with you |18.1*]
+Date: Wed, 14 Jun 2017 06:03:42 +0200
+Message-ID: <20170614040413.350EA44D28B@mail.municomas.gob.pe>
+Reply-To: mspway@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170615090025.22826-1-gqjiang@suse.com>
+Content-Description: Mail message body
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>
-Cc: shli@fb.com, neilb@suse.com, linux-raid@vger.kernel.org
+To: mspway@municomas.gob.pe
 List-Id: linux-raid.ids
 
-On Thu, Jun 15, 2017 at 05:00:25PM +0800, Guoqing Jiang wrote:
-> The "bio" is not used in sync_request_write after commit a68e58703575
-> ("md/raid1: split out two sub-functions from sync_request_write").
+[*Hello and good day.
 
-applied, wondering why gcc doesn't report this.
- 
-> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-> ---
-> Not sure if my understanding is right, so it is for RFC. 
-> 
->  drivers/md/raid1.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 6701993..9c51e31 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -2181,9 +2181,7 @@ static void sync_request_write(struct mddev *mddev, struct r1bio *r1_bio)
->  	struct r1conf *conf = mddev->private;
->  	int i;
->  	int disks = conf->raid_disks * 2;
-> -	struct bio *bio, *wbio;
-> -
-> -	bio = r1_bio->bios[r1_bio->read_disk];
-> +	struct bio *wbio;
->  
->  	if (!test_bit(R1BIO_Uptodate, &r1_bio->state))
->  		/* ouch - failed to read all of that. */
-> -- 
-> 2.10.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I am looking to work with a reputable individual/firm to engage in a profit oriented ventures in your country and perhaps with your assistance, we could get low tax rates.
+
+I have the directive of Mr. Mikhail Khodorkovsky to source for partner abroad who can accommodate and manage 150M & 350M USD respectively. The sums are derived from an executed project with Yukos Oil Company before the company was merged with Rosneft Oil Corporation in Russia.
+
+We shall apply for the necessary paper work required to re-profile your name as the receipient and also ensure payment is carried out by Rosneft into a bank account in your name. I guaranty we would execute this business under a legitimate arrangement without breach of the law.
+
+Further details will follow upon your positive reply.
+
+Regards,
+
+Vladimir Stankov*].
+
+--
+This message has been scanned for viruses and dangerous content by MailScanner, and is believed to be clean.
