@@ -1,83 +1,40 @@
-From: Lidong Zhong <lzhong@suse.com>
-Subject: Re: [PATCH] md: change the initialization value for a spare device
- spot to MD_DISK_ROLE_SPARE
-Date: Wed, 14 Jun 2017 11:16:43 +0800
-Message-ID: <6e1c6747-f063-a99e-8358-9b994e2e8be2@suse.com>
-References: <20170612024555.1120-1-lzhong@suse.com>
- <20170613171708.roims6ja6vtuwwlo@kernel.org>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [PATCH] block: missing break in process_queued_bios()
+Date: Wed, 14 Jun 2017 12:04:37 +0300
+Message-ID: <20170614090437.GA31017@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170613171708.roims6ja6vtuwwlo@kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>, jes.sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Disposition: inline
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Alasdair Kergon <agk@redhat.com>, Christoph Hellwig <hch@lst.de>
+Cc: linux-raid@vger.kernel.org, kernel-janitors@vger.kernel.org, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Mike Snitzer <snitzer@redhat.com>
 List-Id: linux-raid.ids
 
+This used to be a fall through case, but we shifted code around and I
+think we want a break here now.
 
+Fixes: 4e4cbee93d56 ("block: switch bios to blk_status_t")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-On 06/14/2017 01:17 AM, Shaohua Li wrote:
-> On Mon, Jun 12, 2017 at 10:45:55AM +0800, Lidong Zhong wrote:
->> The value for spare spot of sb->dev_roles is changed from
->> MD_DISK_ROLE_FAULTY to MD_DISK_ROLE_SPARE to keep align
->> with the value when the superblock is firstly created in
->> userspace.
->
-> Could you point out where mdadm does this?
->
-Hi Shaohua,
-
-It's done in init_super1() during initialization.
-1615memset(sb->dev_roles,0xff, 
- 
-
-1616            MAX_SB_SIZE - sizeof(struct mdp_superblock_1));
-
-> I'm wondering what's the impact here. If there is a disk, we will set correct
-> role at the end of super_1_sync(), otherwise faulty sounds more reasonable.
->
-
-Actually there is no impact if it works fine. I found the value for
-spare slot in sb->dev_roles is changed while debugging a problem.
-That's the reason I submit this patch.
-
-Thanks,
-Lidong
-
-> Jes,
-> Could you help check this?
->
-> Thanks,
-> Shaohua
->
->> Signed-off-by: Lidong Zhong <lzhong@suse.com>
->> ---
->>  drivers/md/md.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index 87edc342ccb3..a9aacedefbca 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -1852,7 +1852,7 @@ static void super_1_sync(struct mddev *mddev, struct md_rdev *rdev)
->>  		max_dev = le32_to_cpu(sb->max_dev);
->>
->>  	for (i=0; i<max_dev;i++)
->> -		sb->dev_roles[i] = cpu_to_le16(MD_DISK_ROLE_FAULTY);
->> +		sb->dev_roles[i] = cpu_to_le16(MD_DISK_ROLE_SPARE);
->>
->>  	if (test_bit(MD_HAS_JOURNAL, &mddev->flags))
->>  		sb->feature_map |= cpu_to_le32(MD_FEATURE_JOURNAL);
->> --
->> 2.12.0
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+index a7d2e0840cc5..0e8ab5bb3575 100644
+--- a/drivers/md/dm-mpath.c
++++ b/drivers/md/dm-mpath.c
+@@ -625,6 +625,7 @@ static void process_queued_bios(struct work_struct *work)
+ 		case DM_MAPIO_KILL:
+ 			bio->bi_status = BLK_STS_IOERR;
+ 			bio_endio(bio);
++			break;
+ 		case DM_MAPIO_REQUEUE:
+ 			bio->bi_status = BLK_STS_DM_REQUEUE;
+ 			bio_endio(bio);
