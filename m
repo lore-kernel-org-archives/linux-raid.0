@@ -1,144 +1,48 @@
-From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH v2 3/3] mdadm/test: Add '--disks=' to support testing phsical devices
-Date: Wed, 14 Jun 2017 21:02:53 +0800
-Message-ID: <1497445373-27985-4-git-send-email-zlliu@suse.com>
-References: <1497445373-27985-1-git-send-email-zlliu@suse.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: block: missing break in process_queued_bios()
+Date: Wed, 14 Jun 2017 09:18:13 -0400
+Message-ID: <20170614131813.GA10647@redhat.com>
+References: <20170614090437.GA31017@elgon.mountain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1497445373-27985-1-git-send-email-zlliu@suse.com>
+Content-Disposition: inline
+In-Reply-To: <20170614090437.GA31017@elgon.mountain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>, axboe@kernel.dk
+Cc: Alasdair Kergon <agk@redhat.com>, Christoph Hellwig <hch@lst.de>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-raid.ids
 
-If test mode has set as '--dev=disk', then users can specify
-the argument of "--disks" to test a bunch of physical devices.
-For example: ./test --dev=disk --disks=/dev/sda{2..15}
-could execute all test cases on physical devices.
+On Wed, Jun 14 2017 at  5:04am -0400,
+Dan Carpenter <dan.carpenter@oracle.com> wrote:
 
-Currently, the --dev=disk mode would confilct with testdev()
-in current test cases, thus ignore testing testdev() if has
-set --dev=disk mode.
+> This used to be a fall through case, but we shifted code around and I
+> think we want a break here now.
+> 
+> Fixes: 4e4cbee93d56 ("block: switch bios to blk_status_t")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+> index a7d2e0840cc5..0e8ab5bb3575 100644
+> --- a/drivers/md/dm-mpath.c
+> +++ b/drivers/md/dm-mpath.c
+> @@ -625,6 +625,7 @@ static void process_queued_bios(struct work_struct *work)
+>  		case DM_MAPIO_KILL:
+>  			bio->bi_status = BLK_STS_IOERR;
+>  			bio_endio(bio);
+> +			break;
+>  		case DM_MAPIO_REQUEUE:
+>  			bio->bi_status = BLK_STS_DM_REQUEUE;
+>  			bio_endio(bio);
 
-Signed-off-by: Zhilong Liu <zlliu@suse.com>
----
- test | 37 ++++++++++++++++++++++++++++++++-----
- 1 file changed, 32 insertions(+), 5 deletions(-)
+Annoyed with myself for missing this during my review...
 
-diff --git a/test b/test
-index df2eeab..87e2df2 100755
---- a/test
-+++ b/test
-@@ -73,11 +73,11 @@ save_log() {
- 	then
- 		# not supported lvm type yet
- 		echo
--	elif [ $DEVTYPE == 'loop' ]
-+	elif [ "$DEVTYPE" == 'loop' -o "$DEVTYPE" == 'disk' ]
- 	then
- 		if [ ! -z ${array[@]} -a ${#array[@]} -ge 1 ]
- 		then
--			md_disks=($($mdadm -D -Y ${array[@]} | grep "/dev/$DEVTYPE" | cut -d'=' -f2))
-+			md_disks=($($mdadm -D -Y ${array[@]} | grep "/dev/" | cut -d'=' -f2))
- 			cat /proc/mdstat | grep -q "bitmap"
- 			if [ $? -eq 0 ]
- 			then
-@@ -114,6 +114,9 @@ cleanup() {
- 			eval "lvremove --quiet -f \$dev$d"
- 		done
- 		;;
-+	disk )
-+		$mdadm --zero ${disks[@]} &> /dev/null
-+		;;
- 	esac
- }
- 
-@@ -128,6 +131,7 @@ do_setup() {
- 	[ -d $logdir ] || mkdir -p $logdir
- 	dmesg -c > /dev/null
- 
-+	devlist=
- 	if [ "$DEVTYPE" == "loop" ]
- 	then
- 		# make sure there are no loop devices remaining.
-@@ -139,8 +143,22 @@ do_setup() {
- 			losetup -d /dev/loop[0-9]* 2> /dev/null
- 			sleep 0.2
- 		done
-+	elif [ "$DEVTYPE" == "disk" ]
-+	then
-+		if [ ! -z "$disks" ]
-+		then
-+			for d in $(seq 0 ${#disks[@]})
-+			do
-+				eval "dev$d=${disks[$d]}"
-+				eval devlist=\"\$devlist \$dev$d\"
-+				eval devlist$d=\"\$devlist\"
-+			done
-+			$mdadm --zero ${disks[@]} &> /dev/null
-+		else
-+			echo "Forget to provide physical devices for disk mode."
-+			exit 1
-+		fi
- 	fi
--	devlist=
- 	for d in 0 1 2 3 4 5 6 7 8 9 10 11 12 13
- 	do
- 		sz=$size
-@@ -320,6 +338,7 @@ no_errors() {
- # basic device test
- testdev() {
- 	[ -b $1 ] || die "$1 isn't a block device."
-+	[ "$DEVTYPE" == "disk" ] && return 0
- 	udevadm settle
- 	dev=$1
- 	cnt=$2
-@@ -383,6 +402,7 @@ do_test() {
- do_help() {
- 	cat <<-EOF
- 	Usage: $0 [options]
-+	Example for disk mode: ./test --dev=disk --disks=/dev/sda{2..15}
- 	Options:
- 		--tests=test1,test2,...     Comma separated list of tests to run
- 		--raidtype=                 raid0|linear|raid1|raid456|raid10|ddf|imsm
-@@ -391,7 +411,8 @@ do_help() {
- 		--logdir=directory          Directory to save all logfiles in
- 		--save-logs                 Usually use with --logdir together
- 		--keep-going | --no-error   Don't stop on error, ie. run all tests
--		--dev=loop|lvm|ram          Use loop devices (default), LVM, or RAM disk
-+		--dev=loop|lvm|ram|disk     Use loop devices (default), LVM, RAM or disk
-+		--disks=                    Provide a bunch of physical devices for test
- 		--volgroup=name             LVM volume group for LVM test
- 		setup                       Setup test environment and exit
- 		cleanup                     Cleanup test environment
-@@ -476,6 +497,9 @@ parse_args() {
- 			ram )
- 				DEVTYPE=ram
- 				;;
-+			disk )
-+				DEVTYPE=disk
-+				;;
- 			* )
- 				echo "Unknown argument: $i"
- 				do_help
-@@ -483,6 +507,9 @@ parse_args() {
- 				;;
- 			esac
- 			;;
-+		--disks=* )
-+			disks=(${disks[*]} ${i##*=})
-+			;;
- 		--volgroup=* )
- 			LVM_VOLGROUP=`expr "x$i" : 'x[^=]*=\(.*\)'`
- 			;;
-@@ -509,7 +536,7 @@ check_env() {
- 		echo "test: please run 'make everything' before perform testing."
- 		exit 1
- 	}
--	cmds=(mdadm lsblk df udevadm losetup mkfs.ext3 fsck)
-+	cmds=(mdadm lsblk df udevadm losetup mkfs.ext3 fsck seq)
- 	for cmd in ${cmds[@]}
- 	do
- 		which $cmd > /dev/null || {
--- 
-2.6.6
+The subject should be:
+"dm mpath: add missing break in process_queued_bios()"
 
+Also, this should go through Jens and I'll rebase my linux-dm branches
+accordingly.  Jens, please pick this up.
+
+Acked-by: Mike Snitzer <snitzer@redhat.com>
+
+Thanks!
