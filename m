@@ -1,34 +1,56 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] block: missing break in process_queued_bios()
-Date: Wed, 14 Jun 2017 11:07:42 +0200
-Message-ID: <20170614090742.GA15501@lst.de>
-References: <20170614090437.GA31017@elgon.mountain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <20170614090437.GA31017@elgon.mountain>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, kernel-janitors@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Christoph Hellwig <hch@lst.de>, Alasdair Kergon <agk@redhat.com>
+From: Zhilong Liu <zlliu@suse.com>
+Subject: [PATCH v2 0/3] Refactor and revamp the 'test' script
+Date: Wed, 14 Jun 2017 21:02:50 +0800
+Message-ID: <1497445373-27985-1-git-send-email-zlliu@suse.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Jes.Sorensen@gmail.com
+Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
-On Wed, Jun 14, 2017 at 12:04:37PM +0300, Dan Carpenter wrote:
-> This used to be a fall through case, but we shifted code around and I
-> think we want a break here now.
-> 
-> Fixes: 4e4cbee93d56 ("block: switch bios to blk_status_t")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Hi, Jes;
+  Mainly added the suggestions from v1. I'm awared that these patches
+maybe still to improve, draft them just from my understanding. I would
+improve for any defect, and thanks for your patience to point out.
 
-Thanks Dan, this looks coreect:
+Still need ideas about testdev():
+- Now the 'test' has supported new arguments like --disks= to test physical
+  devices, but testdev() in all cases was designed by loop mode, we should
+  decide whether or not the 'disk' mode also supports the testdev() testing.
+  Currently, I have ignored the testdev() testing and make it 'return 0' if
+  has set --dev=disk mode in this patch version.
 
-Acked-by: Christoph Hellwig <hch@lst.de>
+For --raidtype:
+- I have devided the raid levels to
+  raid0|linear|raid1|raid456|raid10|ddf|imsm
+For --disks:
+- It supports user to specify physical devices as follow.
+  Example: ./test --dev=disk --disks=/dev/sda{5..16} or
+           ./test --dev=disk --disks=/dev/sd{a..m}
+
+Changes from v1:
+- Refactor and improve all functions of test 'script'.
+- Add --raidtype argument to support testing different raid
+  level cases.
+- Add --disks argument to support testing physical devices
+
+v1 mail-tree:
+[PATCH 0/3] mdadm/test: Refactor the codes of 'test' script
+RFC patch mail-tree:
+[PATCH RFC] test: revise 'test' and make it easier to understand
+
+
+Thanks very much,
+-Zhilong
+
+Zhilong Liu (3):
+  mdadm/test: Refactor and revamp 'test' script
+  mdadm/test: Add '--raidtype=' to run different raidlevel cases
+  mdadm/test: Add '--disks=' to support testing phsical devices
+
+ test | 464 +++++++++++++++++++++++++++++++++++++++++--------------------------
+ 1 file changed, 285 insertions(+), 179 deletions(-)
+
+-- 
+2.6.6
+
