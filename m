@@ -1,7 +1,7 @@
 From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH v2 2/3] mdadm/test: Add '--raidtype=' to run different raidlevel cases
-Date: Wed, 14 Jun 2017 21:02:52 +0800
-Message-ID: <1497445373-27985-3-git-send-email-zlliu@suse.com>
+Subject: [PATCH v2 3/3] mdadm/test: Add '--disks=' to support testing phsical devices
+Date: Wed, 14 Jun 2017 21:02:53 +0800
+Message-ID: <1497445373-27985-4-git-send-email-zlliu@suse.com>
 References: <1497445373-27985-1-git-send-email-zlliu@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1497445373-27985-1-git-send-email-zlliu@suse.com>
@@ -10,66 +10,135 @@ To: Jes.Sorensen@gmail.com
 Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
-It supports to specify the argument of "--raidtype"
-to run the different raid level cases. Details refer
-to the do_help() usage.
-For example: ./test --raidtype=raid1
-could execute all the raid1 test cases under tests/.
+If test mode has set as '--dev=disk', then users can specify
+the argument of "--disks" to test a bunch of physical devices.
+For example: ./test --dev=disk --disks=/dev/sda{2..15}
+could execute all test cases on physical devices.
+
+Currently, the --dev=disk mode would confilct with testdev()
+in current test cases, thus ignore testing testdev() if has
+set --dev=disk mode.
 
 Signed-off-by: Zhilong Liu <zlliu@suse.com>
 ---
- test | 31 +++++++++++++++++++++++++++++++
- 1 file changed, 31 insertions(+)
+ test | 37 ++++++++++++++++++++++++++++++++-----
+ 1 file changed, 32 insertions(+), 5 deletions(-)
 
 diff --git a/test b/test
-index 7ee523b..df2eeab 100755
+index df2eeab..87e2df2 100755
 --- a/test
 +++ b/test
-@@ -385,6 +385,7 @@ do_help() {
+@@ -73,11 +73,11 @@ save_log() {
+ 	then
+ 		# not supported lvm type yet
+ 		echo
+-	elif [ $DEVTYPE == 'loop' ]
++	elif [ "$DEVTYPE" == 'loop' -o "$DEVTYPE" == 'disk' ]
+ 	then
+ 		if [ ! -z ${array[@]} -a ${#array[@]} -ge 1 ]
+ 		then
+-			md_disks=($($mdadm -D -Y ${array[@]} | grep "/dev/$DEVTYPE" | cut -d'=' -f2))
++			md_disks=($($mdadm -D -Y ${array[@]} | grep "/dev/" | cut -d'=' -f2))
+ 			cat /proc/mdstat | grep -q "bitmap"
+ 			if [ $? -eq 0 ]
+ 			then
+@@ -114,6 +114,9 @@ cleanup() {
+ 			eval "lvremove --quiet -f \$dev$d"
+ 		done
+ 		;;
++	disk )
++		$mdadm --zero ${disks[@]} &> /dev/null
++		;;
+ 	esac
+ }
+ 
+@@ -128,6 +131,7 @@ do_setup() {
+ 	[ -d $logdir ] || mkdir -p $logdir
+ 	dmesg -c > /dev/null
+ 
++	devlist=
+ 	if [ "$DEVTYPE" == "loop" ]
+ 	then
+ 		# make sure there are no loop devices remaining.
+@@ -139,8 +143,22 @@ do_setup() {
+ 			losetup -d /dev/loop[0-9]* 2> /dev/null
+ 			sleep 0.2
+ 		done
++	elif [ "$DEVTYPE" == "disk" ]
++	then
++		if [ ! -z "$disks" ]
++		then
++			for d in $(seq 0 ${#disks[@]})
++			do
++				eval "dev$d=${disks[$d]}"
++				eval devlist=\"\$devlist \$dev$d\"
++				eval devlist$d=\"\$devlist\"
++			done
++			$mdadm --zero ${disks[@]} &> /dev/null
++		else
++			echo "Forget to provide physical devices for disk mode."
++			exit 1
++		fi
+ 	fi
+-	devlist=
+ 	for d in 0 1 2 3 4 5 6 7 8 9 10 11 12 13
+ 	do
+ 		sz=$size
+@@ -320,6 +338,7 @@ no_errors() {
+ # basic device test
+ testdev() {
+ 	[ -b $1 ] || die "$1 isn't a block device."
++	[ "$DEVTYPE" == "disk" ] && return 0
+ 	udevadm settle
+ 	dev=$1
+ 	cnt=$2
+@@ -383,6 +402,7 @@ do_test() {
+ do_help() {
+ 	cat <<-EOF
  	Usage: $0 [options]
++	Example for disk mode: ./test --dev=disk --disks=/dev/sda{2..15}
  	Options:
  		--tests=test1,test2,...     Comma separated list of tests to run
-+		--raidtype=                 raid0|linear|raid1|raid456|raid10|ddf|imsm
- 		--disable-multipath         Disable any tests involving multipath
- 		--disable-integrity         Disable slow tests of RAID[56] consistency
+ 		--raidtype=                 raid0|linear|raid1|raid456|raid10|ddf|imsm
+@@ -391,7 +411,8 @@ do_help() {
  		--logdir=directory          Directory to save all logfiles in
-@@ -419,6 +420,36 @@ parse_args() {
- 		--tests=* )
- 			TESTLIST=($(echo ${i##*=} | sed -e 's/,/ /g'))
+ 		--save-logs                 Usually use with --logdir together
+ 		--keep-going | --no-error   Don't stop on error, ie. run all tests
+-		--dev=loop|lvm|ram          Use loop devices (default), LVM, or RAM disk
++		--dev=loop|lvm|ram|disk     Use loop devices (default), LVM, RAM or disk
++		--disks=                    Provide a bunch of physical devices for test
+ 		--volgroup=name             LVM volume group for LVM test
+ 		setup                       Setup test environment and exit
+ 		cleanup                     Cleanup test environment
+@@ -476,6 +497,9 @@ parse_args() {
+ 			ram )
+ 				DEVTYPE=ram
+ 				;;
++			disk )
++				DEVTYPE=disk
++				;;
+ 			* )
+ 				echo "Unknown argument: $i"
+ 				do_help
+@@ -483,6 +507,9 @@ parse_args() {
+ 				;;
+ 			esac
  			;;
-+		--raidtype=* )
-+			case ${i##*=} in
-+			raid0 )
-+				TESTLIST=($(ls $testdir | grep "[0-9][0-9]r0\|raid0"))
-+				;;
-+			linear )
-+				TESTLIST=($(ls $testdir | grep "linear"))
-+				;;
-+			raid1 )
-+				TESTLIST=($(ls $testdir | grep "[0-9][0-9]r1\|raid1" | grep -vi raid10))
-+				;;
-+			raid456 )
-+				TESTLIST=($(ls $testdir | grep "[0-9][0-9]r[4-6]\|raid[4-6]"))
-+				;;
-+			raid10 )
-+				TESTLIST=($(ls $testdir | grep "[0-9][0-9]r10\|raid10"))
-+				;;
-+			ddf )
-+				TESTLIST=($(ls $testdir | grep "[0-9][0-9]ddf"))
-+				;;
-+			imsm )
-+				TESTLIST=($(ls $testdir | grep "[0-9][0-9]imsm"))
-+				;;
-+			* )
-+				echo "Unknown argument: $i"
-+				do_help
-+				exit 1
-+				;;
-+			esac
++		--disks=* )
++			disks=(${disks[*]} ${i##*=})
 +			;;
- 		--logdir=* )
- 			logdir="${i##*=}"
+ 		--volgroup=* )
+ 			LVM_VOLGROUP=`expr "x$i" : 'x[^=]*=\(.*\)'`
  			;;
+@@ -509,7 +536,7 @@ check_env() {
+ 		echo "test: please run 'make everything' before perform testing."
+ 		exit 1
+ 	}
+-	cmds=(mdadm lsblk df udevadm losetup mkfs.ext3 fsck)
++	cmds=(mdadm lsblk df udevadm losetup mkfs.ext3 fsck seq)
+ 	for cmd in ${cmds[@]}
+ 	do
+ 		which $cmd > /dev/null || {
 -- 
 2.6.6
 
