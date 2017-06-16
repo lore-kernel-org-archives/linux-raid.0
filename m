@@ -1,54 +1,42 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md/bitmap: don't read page from device with Bitmap_sync
-Date: Fri, 16 Jun 2017 10:36:13 -0700
-Message-ID: <20170616173613.c2cp6qt2hmoebgct@kernel.org>
-References: <20170616091927.12959-1-gqjiang@suse.com>
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: Re: [PATCH] md: make suspend range wait timed out
+Date: Sat, 17 Jun 2017 02:06:23 +0800
+Message-ID: <40a41d94-b930-e402-9ce4-4d4f47873e64@fnarfbargle.com>
+References: <d95473d287e196a86a83390cb9c136913643bd61.1497037210.git.shli@fb.com>
+ <877f0c7gvr.fsf@notabene.neil.brown.name>
+ <20170616155204.myffyxp5tuoctcoo@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170616091927.12959-1-gqjiang@suse.com>
+In-Reply-To: <20170616155204.myffyxp5tuoctcoo@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>
-Cc: neilb@suse.com, linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>, NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Mikulas Patocka <mpatocka@redhat.com>
 List-Id: linux-raid.ids
 
-On Fri, Jun 16, 2017 at 05:19:27PM +0800, Guoqing Jiang wrote:
-> The device owns Bitmap_sync flag needs recovery
-> to become in sync, and read page from this type
-> device could get stale status.
-> 
-> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-> ---
-> When develop for clustered raid10 feature, if add a
-> disk under grow mode in master node, I could get
-> the "bitmap superblock UUID mismatch" warning due
-> to the page is read from Bitmap_sync device.
-> 
->  drivers/md/bitmap.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-> index bf7419a..bf34cd8 100644
-> --- a/drivers/md/bitmap.c
-> +++ b/drivers/md/bitmap.c
-> @@ -156,7 +156,8 @@ static int read_sb_page(struct mddev *mddev, loff_t offset,
->  
->  	rdev_for_each(rdev, mddev) {
->  		if (! test_bit(In_sync, &rdev->flags)
+On 16/06/17 23:52, Shaohua Li wrote:
+> On Fri, Jun 16, 2017 at 01:26:00PM +1000, Neil Brown wrote:
+>> If an md device is left suspended, then the current code will block IO
+>> indefinitely.  This patch will at a 20minute times to every single
+>> request, which will mean IO proceeds, but extremely slowly.  I don't see
+>> that as a useful improvement.
+>
+> It returns error, so application will not dispatch more IO. But I agree a
+> timeout to clear the suspend looks a better policy.
 
-Why In_sync is set for the rdev? I think it shoudn't.
+If you insist on doing this, make the default timeout configurable and 
+set it to wait forever by default. That way there is no change in 
+current behaviour.
 
-> -		    || test_bit(Faulty, &rdev->flags))
-> +		    || test_bit(Faulty, &rdev->flags)
-> +		    || test_bit(Bitmap_sync, &rdev->flags))
+There are a number of times I've tickled those values to suspend things 
+while doing something sinister to the array. I'd be mighty upset if I 
+got called away and came back to find the kernel had resumed underneath 
+me because it thinks it knows best.
 
-I didn't see code clears the Bitmap_sync bit after disk is synced, so likely
-there is bug in this side.
-
->  			continue;
->  
->  		target = offset + index * (PAGE_SIZE/512);
-> -- 
-> 2.10.0
-> 
+Regards,
+Brad
+-- 
+Dolphins are so intelligent that within a few weeks they can
+train Americans to stand at the edge of the pool and throw them
+fish.
