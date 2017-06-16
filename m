@@ -1,55 +1,61 @@
-From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: [PATCH] Monitor: don't assume mdadm parameter is a block device
-Date: Fri, 16 Jun 2017 16:02:58 +0200
-Message-ID: <1497621778-8967-1-git-send-email-tomasz.majchrzak@intel.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH] md: make suspend range wait timed out
+Date: Fri, 16 Jun 2017 08:52:04 -0700
+Message-ID: <20170616155204.myffyxp5tuoctcoo@kernel.org>
+References: <d95473d287e196a86a83390cb9c136913643bd61.1497037210.git.shli@fb.com>
+ <877f0c7gvr.fsf@notabene.neil.brown.name>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <877f0c7gvr.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: jes.sorensen@gmail.com, zlliu@suse.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Mikulas Patocka <mpatocka@redhat.com>
 List-Id: linux-raid.ids
 
-If symlink (e.g. /dev/md/raid) is passed as a parameter to mdadm --wait,
-it fails as it's not able to find a corresponding entry in /proc/mdstat
-output. Get parameter file major:minor and look for block device name in
-sysfs. This commit is partial revert of commit 9e04ac1c43e6
-("mdadm/util: unify fstat checking blkdev into function").
+On Fri, Jun 16, 2017 at 01:26:00PM +1000, Neil Brown wrote:
+> On Fri, Jun 09 2017, Shaohua Li wrote:
+> 
+> > From: Shaohua Li <shli@fb.com>
+> >
+> > suspend range is controlled by userspace. If userspace doesn't clear suspend
+> > range, it's possible a thread will wait for the range forever, we can't even
+> > kill it. This is bad behavior. Add a timeout in the wait. If timeout happens,
+> > we return IO error. The app controlling suspend range looks like part of disk
+> > firmware, if disk isn't responded for a long time, timed out IO error is
+> > returned.
+> >
+> > A simple search in SCSI code shows maximum IO timeout is 120s, so I use this
+> > value here too.
+> 
+> I really don't like this.  It is an API change with no really
+> justification.  Has the current behavior caused a problem?
 
-Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
----
- Monitor.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+This centainly causes problem. Set the suspend range will make application
+stall for ever, don't you think this is a problem?
 
-v2:
- next Zhilong Liu commit id
+> Both md and dm export  APIs which allow IO to be suspended while
+> changes are made.  Changing that to a timed-out period needs, I think,
+> to be clearly justified.
+> 
+> If it is changed to a timed-out period, then that should be explicit,
+> rather than having each request independently time out.
+> i.e. when the suspend is initiated, the end-time should be computed, and
+> any IO would block until that time, not block for some number of
+> seconds.
 
-diff --git a/Monitor.c b/Monitor.c
-index bef2f1b..c9f24bd 100644
---- a/Monitor.c
-+++ b/Monitor.c
-@@ -982,12 +982,21 @@ static void link_containers_with_subarrays(struct state *list)
- int Wait(char *dev)
- {
- 	char devnm[32];
-+	dev_t rdev;
-+	char *tmp;
- 	int rv = 1;
- 	int frozen_remaining = 3;
- 
--	if (!stat_is_blkdev(dev, NULL))
-+	if (!stat_is_blkdev(dev, &rdev))
-+		return 2;
-+
-+	tmp = devid2devnm(rdev);
-+	if (!tmp) {
-+		pr_err("Cannot get md device name.\n");
- 		return 2;
--	strcpy(devnm, dev);
-+	}
-+
-+	strcpy(devnm, tmp);
- 
- 	while(1) {
- 		struct mdstat_ent *ms = mdstat_read(1, 0);
--- 
-1.8.3.1
+Ok, this makes sense. We can add a timeout. If it's expired, we clear suspend
+range. Userspace should know what they are doing.
 
+> 
+> If an md device is left suspended, then the current code will block IO
+> indefinitely.  This patch will at a 20minute times to every single
+> request, which will mean IO proceeds, but extremely slowly.  I don't see
+> that as a useful improvement.
+
+It returns error, so application will not dispatch more IO. But I agree a
+timeout to clear the suspend looks a better policy.
+
+Thanks,
+Shaohua
