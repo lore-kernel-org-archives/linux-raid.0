@@ -1,112 +1,137 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH] md: make suspend range wait timed out
-Date: Mon, 19 Jun 2017 07:30:50 +1000
-Message-ID: <87vant3rw5.fsf@notabene.neil.brown.name>
-References: <d95473d287e196a86a83390cb9c136913643bd61.1497037210.git.shli@fb.com> <877f0c7gvr.fsf@notabene.neil.brown.name> <20170616155204.myffyxp5tuoctcoo@kernel.org>
+Subject: Re: mismatch_cnt > 0 during initial sync?
+Date: Mon, 19 Jun 2017 07:34:49 +1000
+Message-ID: <87shix3rpi.fsf@notabene.neil.brown.name>
+References: <9A8A3C34-EED0-42FF-B631-7AD1D6EAF9A2@stanford.edu> <D974501A-3A8C-438B-A043-8E44DE6D18C7@stanford.edu>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170616155204.myffyxp5tuoctcoo@kernel.org>
+In-Reply-To: <D974501A-3A8C-438B-A043-8E44DE6D18C7@stanford.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>, Mikulas Patocka <mpatocka@redhat.com>
+To: Stephane Thiell <sthiell@stanford.edu>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, Jun 16 2017, Shaohua Li wrote:
+On Tue, Apr 25 2017, Stephane Thiell wrote:
 
-> On Fri, Jun 16, 2017 at 01:26:00PM +1000, Neil Brown wrote:
->> On Fri, Jun 09 2017, Shaohua Li wrote:
->>=20
->> > From: Shaohua Li <shli@fb.com>
->> >
->> > suspend range is controlled by userspace. If userspace doesn't clear s=
-uspend
->> > range, it's possible a thread will wait for the range forever, we can'=
-t even
->> > kill it. This is bad behavior. Add a timeout in the wait. If timeout h=
-appens,
->> > we return IO error. The app controlling suspend range looks like part =
-of disk
->> > firmware, if disk isn't responded for a long time, timed out IO error =
-is
->> > returned.
->> >
->> > A simple search in SCSI code shows maximum IO timeout is 120s, so I us=
-e this
->> > value here too.
->>=20
->> I really don't like this.  It is an API change with no really
->> justification.  Has the current behavior caused a problem?
->
-> This centainly causes problem. Set the suspend range will make application
-> stall for ever, don't you think this is a problem?
+> I just did some tests and this seems normal if one of the raid disk previ=
+ously has some non-zero data.  Perhaps there should be a note about that in=
+ md(4) or elsewhere? (sorry if I missed it)
 
-I agree that it could cause a problem.  I'm asking it is actually, in
-practice, causes a problem.  Do you have reports from people saying "the
-IO to my RAID array is hanging, what is wrong?" and you look into it and
-find out that suspend_hi is larger than suspend_lo?
+From=20the perspective of md, the initial sync is no different from any
+other sync.  It will count the number of mismatches that it finds and
+fixes.
 
-And if that does happen, is this really the best way to fix it?
+Feel free to post a patch for md.4 or elsewhere to clarify this.
 
->
->> Both md and dm export  APIs which allow IO to be suspended while
->> changes are made.  Changing that to a timed-out period needs, I think,
->> to be clearly justified.
->>=20
->> If it is changed to a timed-out period, then that should be explicit,
->> rather than having each request independently time out.
->> i.e. when the suspend is initiated, the end-time should be computed, and
->> any IO would block until that time, not block for some number of
->> seconds.
->
-> Ok, this makes sense. We can add a timeout. If it's expired, we clear sus=
-pend
-> range. Userspace should know what they are doing.
->
->>=20
->> If an md device is left suspended, then the current code will block IO
->> indefinitely.  This patch will at a 20minute times to every single
->> request, which will mean IO proceeds, but extremely slowly.  I don't see
->> that as a useful improvement.
->
-> It returns error, so application will not dispatch more IO. But I agree a
-> timeout to clear the suspend looks a better policy.
-
-Write errors only get back to the application if it calls fsync(), and
-many don't do that.  Write errors can easily cause a filesystem to go
-read-only, and require an fsck.  I think we should be very cautious
-about triggering write errors.
-
-NFS will hang indefinitely rather then return an error if the server is
-not available.  That can certainly be annoying, but the alternative has
-been tried, and it leads to random data corruption.
-The two cases are only comparable at a very high level, but I think
-this result should encourage substantial caution.
-
+Thanks,
 NeilBrown
+
+
+>
+> Thanks,
+>
+> Stephan
+>
+>> On Apr 24, 2017, at 3:01 PM, Stephane Thiell <sthiell@stanford.edu> wrot=
+e:
+>>=20
+>>=20
+>> Hi all,
+>>=20
+>> Is it normal to get any mismatch_cnt > 0 during the initial sync? I just=
+ created a few new new raid6 volumes, and one of them is showing an increas=
+ing number of mismatch_cnt during its initial resync. Nothing is visible in=
+ the console nor after a smart short test (I also started a long test just =
+in case).
+>>=20
+>>=20
+>> $ mdadm --detail /dev/md7
+>> /dev/md7:
+>>        Version : 1.2
+>>  Creation Time : Mon Apr 24 10:07:18 2017
+>>     Raid Level : raid6
+>>     Array Size : 62511163904 (59615.29 GiB 64011.43 GB)
+>>  Used Dev Size : 7813895488 (7451.91 GiB 8001.43 GB)
+>>   Raid Devices : 10
+>>  Total Devices : 10
+>>    Persistence : Superblock is persistent
+>>=20
+>>  Intent Bitmap : Internal
+>>=20
+>>    Update Time : Mon Apr 24 14:52:12 2017
+>>          State : clean, resyncing=20
+>> Active Devices : 10
+>> Working Devices : 10
+>> Failed Devices : 0
+>>  Spare Devices : 0
+>>=20
+>>         Layout : left-symmetric
+>>     Chunk Size : 64K
+>>=20
+>>  Resync Status : 24% complete
+>>=20
+>>           Name : oak-io1-s2:7  (local to host oak-io1-s2)
+>>           UUID : 6ece9d71:a97f9497:4612ed73:44dfdc0a
+>>         Events : 3308
+>>=20
+>>    Number   Major   Minor   RaidDevice State
+>>       0     253       62        0      active sync   /dev/dm-62
+>>       1     253       63        1      active sync   /dev/dm-63
+>>       2     253       72        2      active sync   /dev/dm-72
+>>       3     253       75        3      active sync   /dev/dm-75
+>>       4     253       89        4      active sync   /dev/dm-89
+>>       5     253       87        5      active sync   /dev/dm-87
+>>       6     253      119        6      active sync   /dev/dm-119
+>>       7     253       97        7      active sync   /dev/dm-97
+>>       8     253      103        8      active sync   /dev/dm-103
+>>       9     253      107        9      active sync   /dev/dm-107
+>>=20
+>> $ cat /sys/block/md7/md/sync_completed
+>> 3795284824 / 15627790976
+>>=20
+>> $ cat /sys/block/md7/md/mismatch_cnt=20
+>> 3424
+>>=20
+>> versions:
+>>  mdadm-3.4-14.el7_3.1.x86_64
+>>  CentOS7 (3.10.0-514.10.2.el7_lustre.x86_64)
+>>=20
+>> Thanks!
+>>=20
+>> Stephan
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAllG8Q0ACgkQOeye3VZi
-gbmSYRAAxGmYXwA0boqjcyMifWuTrFHqSYH3sR97Wof9eCROd0CmJWOwphiLeUvp
-cPFENc/rxt1vPbzOR/6FaGbQPbltRZqKRZxPTCR7q2XRclLOdMDtxdl5LxSgttpb
-t0A89GQTt+8g/38JGHa7AT/6pkEcFAVUBtkHk50cC5xfEYLXbd8cXlGiogLTH18J
-Wyg7dGRejh1edqTESBLfixOa+MXFa/BfZkqxvA90+PIuB5/LbdFbbrNzeAnyDWVC
-Ufzs67TeoRLMWakrzobVlPlNAe3or5rMJRcePC7Cu3L74bx1IXd04C6kqktotZmc
-3rQ72Xej1Z+9E+Rh1LSEy5tKjwPx6LLFqjMFkprlP6n6hMpXPzp30A/RDtOJJGEE
-9N0wL605N4W636fFyqj7dNUBzMzLTIf8Qy7KmnRBLGNiYTjcmmJk2bEJclQ2yq5E
-UrDfWrh4Znq8M+gcXU11z1ENZKVXL8qcbzyhBXdkGYgp6hlP0HOqR5oqpEci8p8v
-GQThSkIdFp88z/YzznORuYjljYJuEbYzIaP0Ob1kBykpEoYYr1PuCplRszYeq95Z
-RuJZcAvxHL9mzB7kiwaT4khxV1M4WAKFXorOdCKq2B73QbCwNM51fNmbmcXnIcPB
-Rute/NhfC57d5NRbM8qI5V0SMC6iUZDHMol/L0k07ErytuZ0Exg=
-=MUy4
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAllG8fsACgkQOeye3VZi
+gbms9Q//TwRf/3BsnunO6w2JumMIy05buR8d1Lcw4OUDScC+7Ar+FQloXTj8gHma
+wiKCd1jkJNeXlXfa7zdeK8iYtw9us4fg5xpjBJ1KUSd+5eIORDnaf5jAl/86vMh/
+KScmL3YvMkjsOq71+LVS9DayXvB2Bjro8ZM2SCO+s6Zd7IcYH2GSfUfsa4LCC2St
+B6Svsx8DESaK3zs2/LeXy4oi5Skior3AXjf/+lIAZbGQ8tkp7SaXKwL9W4vVOhoF
+lQ3zllyjCu43tPhabUHIA+GT+pIhUSCwFFCvRDLHPniIXsnLfYEw9/rET/xENBsp
+7aj6ApI2Y6g8uf9eLIPa4Rp7jcyDu+9O8tsuwWsFaykptBi8LzfZKQF1y/XqO0U1
+fQESjFmjc4Rqx5+ZJVK2uYH+gGariij+4mHu84pfpnggUvBKVz58ON1gnfROe4oM
+d0sZVQA93gPN3eysR+dPfnONInsYPgqNyWStoihFsC5bV3liMglJaf/qcfRi9enG
+f5K+WRO7oxBdOqecDdQV+CrugLnuOxfR6ZnOUfzUcsAuzi8JcgWa5LpN+D4eTEQb
+ZNac2LwXuAMM6bekAPoMRBaEHQutl0lzZBo+VU6LO4IrI07HukEv5SAqtB3/Yo41
+FBf7moX4RZvVynTfaNTK8Rhh1fKb+ZB5B/x9Nr+g4JIYGbaRHLw=
+=6UH6
 -----END PGP SIGNATURE-----
 --=-=-=--
