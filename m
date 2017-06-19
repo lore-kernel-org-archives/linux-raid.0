@@ -1,126 +1,84 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH] md/bitmap: don't read page from device with Bitmap_sync
-Date: Mon, 19 Jun 2017 09:11:23 +1000
-Message-ID: <87h8zc51t0.fsf@notabene.neil.brown.name>
-References: <20170616091927.12959-1-gqjiang@suse.com> <20170616173613.c2cp6qt2hmoebgct@kernel.org>
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: Re: [PATCH] Monitor: don't assume mdadm parameter is a block device
+Date: Mon, 19 Jun 2017 11:16:58 +0200
+Message-ID: <20170619091658.GA9305@proton.igk.intel.com>
+References: <1497621778-8967-1-git-send-email-tomasz.majchrzak@intel.com>
+ <585FFF8D-0238-4AB3-AA77-4C3C00C3C55D@suse.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170616173613.c2cp6qt2hmoebgct@kernel.org>
+Content-Disposition: inline
+In-Reply-To: <585FFF8D-0238-4AB3-AA77-4C3C00C3C55D@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>, Guoqing Jiang <gqjiang@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: Zhilong Liu <zlliu@suse.com>
+Cc: linux-raid@vger.kernel.org, jes.sorensen@gmail.com
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Sun, Jun 18, 2017 at 10:10:02PM +0800, Zhilong Liu wrote:
+> 
+> 
+> > 在 2017年6月16日，22:02，Tomasz Majchrzak <tomasz.majchrzak@intel.com> 写道：
+> > 
+> > If symlink (e.g. /dev/md/raid) is passed as a parameter to mdadm --wait,
+> > it fails as it's not able to find a corresponding entry in /proc/mdstat
+> > output. Get parameter file major:minor and look for block device name in
+> > sysfs. This commit is partial revert of commit 9e04ac1c43e6
+> > ("mdadm/util: unify fstat checking blkdev into function").
+> > 
+> 
+> Thanks very much for catching this.  Just remind a typo in (commit title), correct fstat as stat.
 
-On Fri, Jun 16 2017, Shaohua Li wrote:
+Will do.
 
-> On Fri, Jun 16, 2017 at 05:19:27PM +0800, Guoqing Jiang wrote:
->> The device owns Bitmap_sync flag needs recovery
->> to become in sync, and read page from this type
->> device could get stale status.
->>=20
->> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
->> ---
->> When develop for clustered raid10 feature, if add a
->> disk under grow mode in master node, I could get
->> the "bitmap superblock UUID mismatch" warning due
->> to the page is read from Bitmap_sync device.
->>=20
->>  drivers/md/bitmap.c | 3 ++-
->>  1 file changed, 2 insertions(+), 1 deletion(-)
->>=20
->> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
->> index bf7419a..bf34cd8 100644
->> --- a/drivers/md/bitmap.c
->> +++ b/drivers/md/bitmap.c
->> @@ -156,7 +156,8 @@ static int read_sb_page(struct mddev *mddev, loff_t =
-offset,
->>=20=20
->>  	rdev_for_each(rdev, mddev) {
->>  		if (! test_bit(In_sync, &rdev->flags)
->
-> Why In_sync is set for the rdev? I think it shoudn't.
+> 
+> > Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+> > ---
+> > Monitor.c | 13 +++++++++++--
+> > 1 file changed, 11 insertions(+), 2 deletions(-)
+> > 
+> > v2:
+> > next Zhilong Liu commit id
+> > 
+> > diff --git a/Monitor.c b/Monitor.c
+> > index bef2f1b..c9f24bd 100644
+> > --- a/Monitor.c
+> > +++ b/Monitor.c
+> > @@ -982,12 +982,21 @@ static void link_containers_with_subarrays(struct state *list)
+> > int Wait(char *dev)
+> > {
+> >    char devnm[32];
+> > +    dev_t rdev;
+> > +    char *tmp;
+> >    int rv = 1;
+> >    int frozen_remaining = 3;
+> > 
+> > -    if (!stat_is_blkdev(dev, NULL))
+> > +    if (!stat_is_blkdev(dev, &rdev))
+> > +        return 2;
+> > +
+> > +    tmp = devid2devnm(rdev);
+> > +    if (!tmp) {
+> > +        pr_err("Cannot get md device name.\n");
+> >        return 2;
+> > -    strcpy(devnm, dev);
+> > +    }
+> > +
+> > +    strcpy(devnm, tmp);
+> > 
+> 
+> Quite agreed with the code here, just a small question,  I may use 
+> > strcpy(devnm, devid2devnm(rdev));
+> directly since stat_is_blkdev() has returned the major/minor devid. I don't know "get md device name " would be failed in which scenario. 
+> I'm asking this question since I haven't been familiar with all raids situations. :-)
+> 
+> Thanks again,
+> Zhilong
 
-There are several states a device can be in.
-If ->raid_disk is < 0, then the device is a spare, and doesn't contain
-    and valid data.
-Otherwise ->raid_disk >=3D0 and:
-   In_sync is clear, which means that blocks before ->recovery_offset
-       contain valid data, and blocks after there don't
-   In_sync is set, which means ->recovery_offset is irrelevant and
-       should be treated as MaxSector
-   Bitmap_sync is set, which could apply in either of the above cases,
-       and means blocks corresponding to bits that are set in the bitmap
-       may not be up to date.
+Well, there could be a race and RAID array might get stopped between two
+calls (stat_is_blkdev, devid2devnm) so corresponding sysfs entry would not
+exist. Also I don't think we should assume devid2devnm implementation won't
+change one day. I just did it safe way, otherwise static code analyzers
+would complain.
 
-Bitmap_sync is only relevant before a device has been handed to the
-personality.  After it has been added, ->recovery_cp ensures that the
-blocks that might be wrong are not read until until the bitmap-based
-recovery has fixed them up.
-
-Bitmap_sync is only use to stop the device from being given to the
-personality if a recovery won't be started because the array is
-read-only.
-
-So it is perfectly valid for both In_sync and Bitmap_sync to be set.
-If they are, it makes sense to avoid reading bitmap information from the
-Bitmap_sync device, as that will be out-of-date.
-
-I'm not quite sure why Guoqing is getting a UUID mismatch ... it
-suggests that the new device wasn't initialized properly.  So there
-might be another bug.  But I think this is definitely a bug.
-=20=20=20=20=20
-
->
->> -		    || test_bit(Faulty, &rdev->flags))
->> +		    || test_bit(Faulty, &rdev->flags)
->> +		    || test_bit(Bitmap_sync, &rdev->flags))
->
-> I didn't see code clears the Bitmap_sync bit after disk is synced, so lik=
-ely
-> there is bug in this side.
-
-There is no need to clear Bitmap_sync.  It stays set until it becomes
-irrelevant.
-
-Thanks,
-NeilBrown
-
-
->
->>  			continue;
->>=20=20
->>  		target =3D offset + index * (PAGE_SIZE/512);
->> --=20
->> 2.10.0
->>=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAllHCJ0ACgkQOeye3VZi
-gbmbUhAApj9/sCbacufE1fZSm0MYy5j357KwQENLH25NBpIJp7xZFK4anTdBeD6U
-kwWwue1w5ZzSzYJTRSX2+fRlL5fuPZ8xenw2iDb42noWK/IGgoeSFRMJE/ijOZMq
-FRrN86/y6w+370aJIYNZ8D8sRi6zpr4TZuXmCwvlpvTIhCQ9S4KWhhmGZj1FB8mE
-NPSmVnwXOd+MuLSq37nx0jsEgiFnIyo1KGxLypB6YWseiIHuIHrmlU/yTMvs67n6
-Y7nnDwI5VVgTTmkrtMHDJQONeubHGYTBtvHkOo/ERE2iqBn9Lzmq0xoCIjOPL6i1
-j+MWVPX8xzB4LIoSAVUTyZrjE46LbQxzDpnKLqXVWNlpegytxZhvOu3w+wHry0Gw
-ddaX8Kr+/478o3MKotwAKMUwHKg8TfbT8wd3/gEyKoj17uCywBardtZjTb/8PMvm
-UesHbUfv/JUD0C17NmdAOKX6L7zdxuDt7XdbZmwV+0kDjkAds5T2T9iE3Piyjguj
-mgPocaYyQK7UsH+h4nJ+Kav6uGG9HNNT1EpWXE6EZ+O7y0o8m7VYjnnwtDkc/uVv
-TbL8NmxS+ugF5E28x6KnsiLZ2rkWBwTptQWU+eCP/uLtI/HIZFFLXNU65zrJzbNP
-PcmtJRR+7fOjCkIg8xr3zwKj5wxbKxMmEAc0KvPu23SHi7hnK4Q=
-=C7Qa
------END PGP SIGNATURE-----
---=-=-=--
+Tomek
