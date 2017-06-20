@@ -1,112 +1,105 @@
-From: NeilBrown <neilb@suse.com>
-Subject: RE: mismatch_cnt > 0 during initial sync?
-Date: Tue, 20 Jun 2017 14:14:59 +1000
-Message-ID: <87lgon2t30.fsf@notabene.neil.brown.name>
-References: <9A8A3C34-EED0-42FF-B631-7AD1D6EAF9A2@stanford.edu> <D974501A-3A8C-438B-A043-8E44DE6D18C7@stanford.edu> <87shix3rpi.fsf@notabene.neil.brown.name> <009901d2e946$a3eff400$ebcfdc00$@wnsdev.com>
+From: <xa0ajutor@colectiv.info>
+Subject: (unknown)
+Date: Tue, 20 Jun 2017 06:29:52 -0000
+Message-ID: <149794019213.23067.1799840710564926872@vnpt.vn>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: application/zip; name="3786494.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <009901d2e946$a3eff400$ebcfdc00$@wnsdev.com>
+Content-Disposition: attachment
+Subject: 
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Sangas <pete@wnsdev.com>, 'Stephane Thiell' <sthiell@stanford.edu>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, Jun 19 2017, Peter Sangas wrote:
-
->> From: NeilBrown [mailto:neilb@suse.com]
->> Sent: Sunday, June 18, 2017 2:35 PM
->> Subject: Re: mismatch_cnt > 0 during initial sync?
->>=20
->>=20
->> From the perspective of md, the initial sync is no different from any
-> other sync.  It
->> will count the number of mismatches that it finds and fixes.
->>=20
->
-> Should a sync always fix a mismatch it encounters?   I have a RAID1 with 3
-> disks.  Sometimes I need to replace one disk and after adding a replaceme=
-nt
-> disk syslog indicates  "RebuildFinished event detected on md device
-> /dev/md/2, component device  mismatches found: 256 (on raid level 1)" but
-> says nothing about fixing it.
-
-No, it wouldn't say anything about fixing things.  That is assumed.
-
->
-> cat /sys/block/md2/md/last_sync_action
-> recovery
-
-This is a recovery, not a resync.  They are different.
-
-Recovery is when you add a device to an array, and the data that should
-be there is recovered from elsewhere.
-
-Resync is when the redundancy in the array might be compromised, so it
-is repaired, possibly by read-check-maybe_write.  Possibly by
-read-write.
-
-For raid1, recovery and resync and require similar.  For raid5 they are
-very different.
-
-The mismatch count is only reset when a resync starts, not when a
-recovery (or reshape) starts.  So mdadm shouldn't really report the
-mismatches when the recovery finishes.  The number is left over from the
-most recent resync.
-
-raid1 only counts when a resync is requested, either by writing "check"
-or "repair" to the sync_action file in sysfs.  An automatic resync after
-and unclean shutdown (or when array is started) just copies blocks
-without checking, so it has nothing to count.
-"repair" repairs any inconsistencies found, "check" doesn't.  Both count
-inconsistencies.
-
-raid5/raid6 counts for resync, check, and repair (but not for recover or
-reshape).
-By default, when the array is created, raid5 performs a recovery,
-nominating one of the devices to be the "spare" with the others assumed
-to have "correct" data.  This is faster than assuming they are all
-"correct", and performing a resync.
-RAID6 (the array used in the original question) does resync, rather than
-recovery, on initial creation - because 2-drive recovery is/was thought
-to have performance issues.
-
-So: mdadm should be modified to not report "mismatches found" is
-"last_sync_action" is recovery or reshape.
-
-Thanks,
-NeilBrown
-
-
->
-> mdadm -V
-> mdadm - v3.3 - 3rd September 2013
->
->
-> Thank you,
-> Pete
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAllIoUUACgkQOeye3VZi
-gbkYqA//UjkiJJ2b36XiOI8XDd2wirKu0t0D6PrmjWumpsdRM8g/ZKk1TesgpN51
-JmgPoo5oPZmG3ABct5L4lEiGvS5fCt71/5tqrIhcueXMQxRWmNAHeVvkceP19AyG
-ChnGDZphbRglEYjsq9IQr86v2vjjunhAwcS5JrCsDNWWhG9/8ateSZ5mlUwmmmkt
-dKi+9w43K1yyt7v4RC6ECDf5XdAN08/rBK87iKIt9LezfcYg5ykfkUfYkNs3ZKI/
-Rjs2TTCWtmoE3jnRpvtxLH313yOhwet3htgqjqSAyXsLUI+jThu55MVoC/wLkK+a
-2DEx32kuCKXz7F1gX2eUdAfOGkak+3p6vyNPPZWvOXUVQHe8189RB7mK1eUEUzs+
-/m8b8lk0jNB7w18rbosH+T0qwcJvDDiv0AYzlpIityLocp7SXnChjrCtBYKcj/rR
-e+oSl2h5Z9s3Bn81eW1pMRJ82yMBBmecuG2SPmhiD6RZiicD8xvwLT/RMfF2JAxN
-KqbZKlXQObj1y97iBHKrVG9p2RSMDZLos2owdUaX0QOMlVL4PL9rFwlFZM53Awo6
-TE70L1je59WoAZxF3aepWEpjsNRcnGW/5DP/Aw0dvk3UzMD1bJgq11NiuUNco0RE
-jP7DOsWjxKIzFdZDtHqEvv5owbiOVyCQ7I6RXt0WZNIN7U+cxHE=
-=KJoW
------END PGP SIGNATURE-----
---=-=-=--
+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
+AAAA
