@@ -1,95 +1,99 @@
-From: Zhilong Liu <zlliu@suse.com>
-Subject: Re: [PATCH] Monitor: don't assume mdadm parameter is a block device
-Date: Tue, 20 Jun 2017 08:30:46 +0800
-Message-ID: <066955AE-A004-4C33-8CB1-8DCAC4DA28E0@suse.com>
-References: <1497621778-8967-1-git-send-email-tomasz.majchrzak@intel.com> <585FFF8D-0238-4AB3-AA77-4C3C00C3C55D@suse.com> <20170619091658.GA9305@proton.igk.intel.com>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain;
-        charset=gb2312
-Content-Transfer-Encoding: 8BIT
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH] md/bitmap: don't read page from device with Bitmap_sync
+Date: Mon, 19 Jun 2017 17:41:58 -0700
+Message-ID: <20170620004158.lrry5ig5epvmcqfc@kernel.org>
+References: <20170616091927.12959-1-gqjiang@suse.com>
+ <20170616173613.c2cp6qt2hmoebgct@kernel.org>
+ <87h8zc51t0.fsf@notabene.neil.brown.name>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170619091658.GA9305@proton.igk.intel.com>
+Content-Disposition: inline
+In-Reply-To: <87h8zc51t0.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Cc: linux-raid@vger.kernel.org, jes.sorensen@gmail.com
+To: NeilBrown <neilb@suse.com>
+Cc: Guoqing Jiang <gqjiang@suse.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-
-> 在 2017年6月19日，17:16，Tomasz Majchrzak <tomasz.majchrzak@intel.com> 写道：
+On Mon, Jun 19, 2017 at 09:11:23AM +1000, Neil Brown wrote:
+> On Fri, Jun 16 2017, Shaohua Li wrote:
 > 
->> On Sun, Jun 18, 2017 at 10:10:02PM +0800, Zhilong Liu wrote:
->> 
->> 
->>> 在 2017年6月16日，22:02，Tomasz Majchrzak <tomasz.majchrzak@intel.com> 写道：
->>> 
->>> If symlink (e.g. /dev/md/raid) is passed as a parameter to mdadm --wait,
->>> it fails as it's not able to find a corresponding entry in /proc/mdstat
->>> output. Get parameter file major:minor and look for block device name in
->>> sysfs. This commit is partial revert of commit 9e04ac1c43e6
->>> ("mdadm/util: unify fstat checking blkdev into function").
->>> 
->> 
->> Thanks very much for catching this.  Just remind a typo in (commit title), correct fstat as stat.
+> > On Fri, Jun 16, 2017 at 05:19:27PM +0800, Guoqing Jiang wrote:
+> >> The device owns Bitmap_sync flag needs recovery
+> >> to become in sync, and read page from this type
+> >> device could get stale status.
+> >> 
+> >> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+> >> ---
+> >> When develop for clustered raid10 feature, if add a
+> >> disk under grow mode in master node, I could get
+> >> the "bitmap superblock UUID mismatch" warning due
+> >> to the page is read from Bitmap_sync device.
+> >> 
+> >>  drivers/md/bitmap.c | 3 ++-
+> >>  1 file changed, 2 insertions(+), 1 deletion(-)
+> >> 
+> >> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+> >> index bf7419a..bf34cd8 100644
+> >> --- a/drivers/md/bitmap.c
+> >> +++ b/drivers/md/bitmap.c
+> >> @@ -156,7 +156,8 @@ static int read_sb_page(struct mddev *mddev, loff_t offset,
+> >>  
+> >>  	rdev_for_each(rdev, mddev) {
+> >>  		if (! test_bit(In_sync, &rdev->flags)
+> >
+> > Why In_sync is set for the rdev? I think it shoudn't.
 > 
-> Will do.
+> There are several states a device can be in.
+> If ->raid_disk is < 0, then the device is a spare, and doesn't contain
+>     and valid data.
+> Otherwise ->raid_disk >=0 and:
+>    In_sync is clear, which means that blocks before ->recovery_offset
+>        contain valid data, and blocks after there don't
+>    In_sync is set, which means ->recovery_offset is irrelevant and
+>        should be treated as MaxSector
+>    Bitmap_sync is set, which could apply in either of the above cases,
+>        and means blocks corresponding to bits that are set in the bitmap
+>        may not be up to date.
 > 
->> 
->>> Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
->>> ---
->>> Monitor.c | 13 +++++++++++--
->>> 1 file changed, 11 insertions(+), 2 deletions(-)
->>> 
->>> v2:
->>> next Zhilong Liu commit id
->>> 
->>> diff --git a/Monitor.c b/Monitor.c
->>> index bef2f1b..c9f24bd 100644
->>> --- a/Monitor.c
->>> +++ b/Monitor.c
->>> @@ -982,12 +982,21 @@ static void link_containers_with_subarrays(struct state *list)
->>> int Wait(char *dev)
->>> {
->>>   char devnm[32];
->>> +    dev_t rdev;
->>> +    char *tmp;
->>>   int rv = 1;
->>>   int frozen_remaining = 3;
->>> 
->>> -    if (!stat_is_blkdev(dev, NULL))
->>> +    if (!stat_is_blkdev(dev, &rdev))
->>> +        return 2;
->>> +
->>> +    tmp = devid2devnm(rdev);
->>> +    if (!tmp) {
->>> +        pr_err("Cannot get md device name.\n");
->>>       return 2;
->>> -    strcpy(devnm, dev);
->>> +    }
->>> +
->>> +    strcpy(devnm, tmp);
->>> 
->> 
->> Quite agreed with the code here, just a small question,  I may use 
->>> strcpy(devnm, devid2devnm(rdev));
->> directly since stat_is_blkdev() has returned the major/minor devid. I don't know "get md device name " would be failed in which scenario. 
->> I'm asking this question since I haven't been familiar with all raids situations. :-)
->> 
->> Thanks again,
->> Zhilong
+> Bitmap_sync is only relevant before a device has been handed to the
+> personality.  After it has been added, ->recovery_cp ensures that the
+> blocks that might be wrong are not read until until the bitmap-based
+> recovery has fixed them up.
 > 
-> Well, there could be a race and RAID array might get stopped between two
-> calls (stat_is_blkdev, devid2devnm) so corresponding sysfs entry would not
-> exist. Also I don't think we should assume devid2devnm implementation won't
-> change one day. I just did it safe way, otherwise static code analyzers
-> would complain.
+> Bitmap_sync is only use to stop the device from being given to the
+> personality if a recovery won't be started because the array is
+> read-only.
 > 
-
-Thanks very much for the correction. :-)
-
-Zhilong 
-
-
-> Tomek
+> So it is perfectly valid for both In_sync and Bitmap_sync to be set.
+> If they are, it makes sense to avoid reading bitmap information from the
+> Bitmap_sync device, as that will be out-of-date.
 > 
+> I'm not quite sure why Guoqing is getting a UUID mismatch ... it
+> suggests that the new device wasn't initialized properly.  So there
+> might be another bug.  But I think this is definitely a bug.
 
+Can you describe a scenario a disk has both bits set? I had hard time to
+imagine it.
+
+md_update_sb will update super and bitmap super at almost the same time. It's
+possible we update super but not bitmap super and there is power loss. Is this
+the case we have the both bits set? There seems no mechanism to prevent the
+first disk has older bitmap super than the second disk in this scenario.
+ 
+> >
+> >> -		    || test_bit(Faulty, &rdev->flags))
+> >> +		    || test_bit(Faulty, &rdev->flags)
+> >> +		    || test_bit(Bitmap_sync, &rdev->flags))
+> >
+> > I didn't see code clears the Bitmap_sync bit after disk is synced, so likely
+> > there is bug in this side.
+> 
+> There is no need to clear Bitmap_sync.  It stays set until it becomes
+> irrelevant.
+
+Hmm, if we use in this way, we should add comments there to declare this bit
+can only be used very early.
+
+Thanks,
+Shaohua
