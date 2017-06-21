@@ -1,128 +1,151 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md/bitmap: don't read page from device with Bitmap_sync
-Date: Wed, 21 Jun 2017 10:47:19 -0700
-Message-ID: <20170621174719.dwih6qdk2a5nd7yl@kernel.org>
-References: <20170616091927.12959-1-gqjiang@suse.com>
- <20170616173613.c2cp6qt2hmoebgct@kernel.org>
- <87h8zc51t0.fsf@notabene.neil.brown.name>
- <20170620004158.lrry5ig5epvmcqfc@kernel.org>
- <87o9tj2tse.fsf@notabene.neil.brown.name>
+Subject: Re: [PATCH] md: use a separate bio_set for synchronous IO.
+Date: Wed, 21 Jun 2017 10:49:16 -0700
+Message-ID: <20170621174916.mpxddat2vbiolrik@kernel.org>
+References: <87wp861cfe.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <87o9tj2tse.fsf@notabene.neil.brown.name>
+In-Reply-To: <87wp861cfe.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.com>
-Cc: Guoqing Jiang <gqjiang@suse.com>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jun 20, 2017 at 01:59:45PM +1000, Neil Brown wrote:
-> On Mon, Jun 19 2017, Shaohua Li wrote:
+On Wed, Jun 21, 2017 at 09:12:21AM +1000, Neil Brown wrote:
 > 
-> > On Mon, Jun 19, 2017 at 09:11:23AM +1000, Neil Brown wrote:
-> >> On Fri, Jun 16 2017, Shaohua Li wrote:
-> >> 
-> >> > On Fri, Jun 16, 2017 at 05:19:27PM +0800, Guoqing Jiang wrote:
-> >> >> The device owns Bitmap_sync flag needs recovery
-> >> >> to become in sync, and read page from this type
-> >> >> device could get stale status.
-> >> >> 
-> >> >> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-> >> >> ---
-> >> >> When develop for clustered raid10 feature, if add a
-> >> >> disk under grow mode in master node, I could get
-> >> >> the "bitmap superblock UUID mismatch" warning due
-> >> >> to the page is read from Bitmap_sync device.
-> >> >> 
-> >> >>  drivers/md/bitmap.c | 3 ++-
-> >> >>  1 file changed, 2 insertions(+), 1 deletion(-)
-> >> >> 
-> >> >> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-> >> >> index bf7419a..bf34cd8 100644
-> >> >> --- a/drivers/md/bitmap.c
-> >> >> +++ b/drivers/md/bitmap.c
-> >> >> @@ -156,7 +156,8 @@ static int read_sb_page(struct mddev *mddev, loff_t offset,
-> >> >>  
-> >> >>  	rdev_for_each(rdev, mddev) {
-> >> >>  		if (! test_bit(In_sync, &rdev->flags)
-> >> >
-> >> > Why In_sync is set for the rdev? I think it shoudn't.
-> >> 
-> >> There are several states a device can be in.
-> >> If ->raid_disk is < 0, then the device is a spare, and doesn't contain
-> >>     and valid data.
-> >> Otherwise ->raid_disk >=0 and:
-> >>    In_sync is clear, which means that blocks before ->recovery_offset
-> >>        contain valid data, and blocks after there don't
-> >>    In_sync is set, which means ->recovery_offset is irrelevant and
-> >>        should be treated as MaxSector
-> >>    Bitmap_sync is set, which could apply in either of the above cases,
-> >>        and means blocks corresponding to bits that are set in the bitmap
-> >>        may not be up to date.
-> >> 
-> >> Bitmap_sync is only relevant before a device has been handed to the
-> >> personality.  After it has been added, ->recovery_cp ensures that the
-> >> blocks that might be wrong are not read until until the bitmap-based
-> >> recovery has fixed them up.
-> >> 
-> >> Bitmap_sync is only use to stop the device from being given to the
-> >> personality if a recovery won't be started because the array is
-> >> read-only.
-> >> 
-> >> So it is perfectly valid for both In_sync and Bitmap_sync to be set.
-> >> If they are, it makes sense to avoid reading bitmap information from the
-> >> Bitmap_sync device, as that will be out-of-date.
-> >> 
-> >> I'm not quite sure why Guoqing is getting a UUID mismatch ... it
-> >> suggests that the new device wasn't initialized properly.  So there
-> >> might be another bug.  But I think this is definitely a bug.
-> >
-> > Can you describe a scenario a disk has both bits set? I had hard time to
-> > imagine it.
+> md devices allocate a bio_set and use it for two
+> distinct purposes.
+> mddev->bio_set is used to clone bios as part of sending
+> upper level requests down to lower level devices,
+> and it is also use for synchronous IO such as superblock
+> and bitmap updates, and for correcting read errors.
 > 
-> An array with a bitmap has a device fail (cable break?).
-> So the bitmap stops clearing bits and ->events_cleared stays
-> where it was, with the same value as events in the superblock
-> of the failed device.
+> This multiple usage can lead to deadlocks.  It is likely
+> that cloned bios might be queued for write and to be
+> waiting for a metadata update before the write can be permitted.
+> If the cloning exhausted mddev->bio_set, the metadata update
+> may not be able to proceed.
 > 
-> The device then starts working (cable is replaced) and
-> it device is added back to the array.
-> super_1_validate notices that the array has a bitmap and that the event
-> count in the new device is >= mddev->bitmap->events_cleared, but <
-> mddev->events.
-> i.e. it is in the range for which a bitmap-based recovery is both
-> possible and needed.
-> So it sets Bitmap_sync.
-> Then it notices that the 'role' in a valid role for the array,
-> so that role is stored in rdev->saved_raid_disk and, as there is no
-> MD_FEATURE_RECOVERY_OFFSET, In_sync is set.
-> A similar sequence can happen in super_90_validate.
+> This scenario has been seen during heavy testing, with lots of IO and
+> lots of memory pressure.
+> 
+> Address this by adding a new bio_set specifically for synchronous IO.
+> All synchronous IO goes directly to the underlying device and is not
+> queued at the md level, so request using entries from the new
+> mddev->sync_set will complete in a timely fashion.
+> Requests that use mddev->bio_set will sometimes need to wait
+> for synchronous IO, but will no longer risk deadlocking that iO.
+> 
+> Also: small simplification in mddev_put(): there is no need to
+> wait until the spinlock is released before calling bioset_free().
 
-This part is quite confusing actually. The failed device is kicked out, so the
-array is degraded. When we readd the device, we shouldn't set In_sync.
-
-Actually we set In_sync in super_1_validate, we then clear it in add_bound_rdev
-and reset it till recovery finishes. Set it till recovery finishes makes sense
-to me, the super_1_validate is confusing.
+applied, thanks
  
-> >
-> > md_update_sb will update super and bitmap super at almost the same time. It's
-> > possible we update super but not bitmap super and there is power loss. Is this
-> > the case we have the both bits set? There seems no mechanism to prevent the
-> > first disk has older bitmap super than the second disk in this scenario.
+> Signed-off-by: NeilBrown <neilb@suse.com>
+> ---
+>  drivers/md/md.c | 27 ++++++++++++++++++++-------
+>  drivers/md/md.h |  3 +++
+>  2 files changed, 23 insertions(+), 7 deletions(-)
 > 
-> This isn't really about the superblock and bitmap on the one device
-> being in sync or not.
-> It is the superblock on one (failed) device having a different event
-> count than the bitmap (on the other devices) that is actively being used
-> by the array.
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 87edc342ccb3..9d0eb50c458e 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -203,6 +203,14 @@ struct bio *bio_alloc_mddev(gfp_t gfp_mask, int nr_iovecs,
+>  }
+>  EXPORT_SYMBOL_GPL(bio_alloc_mddev);
+>  
+> +static struct bio *md_bio_alloc_sync(struct mddev *mddev)
+> +{
+> +	if (!mddev->sync_set)
+> +		return bio_alloc(GFP_NOIO, 1);
+> +
+> +	return bio_alloc_bioset(GFP_NOIO, 1, mddev->sync_set);
+> +}
+> +
+>  /*
+>   * We have a system wide 'event count' that is incremented
+>   * on any 'interesting' event, and readers of /proc/mdstat
+> @@ -462,8 +470,6 @@ static void mddev_delayed_delete(struct work_struct *ws);
+>  
+>  static void mddev_put(struct mddev *mddev)
+>  {
+> -	struct bio_set *bs = NULL;
+> -
+>  	if (!atomic_dec_and_lock(&mddev->active, &all_mddevs_lock))
+>  		return;
+>  	if (!mddev->raid_disks && list_empty(&mddev->disks) &&
+> @@ -471,8 +477,12 @@ static void mddev_put(struct mddev *mddev)
+>  		/* Array is not configured at all, and not held active,
+>  		 * so destroy it */
+>  		list_del_init(&mddev->all_mddevs);
+> -		bs = mddev->bio_set;
+> +		if (mddev->bio_set)
+> +			bioset_free(mddev->bio_set);
+> +		if (mddev->sync_set)
+> +			bioset_free(mddev->sync_set);
+>  		mddev->bio_set = NULL;
+> +		mddev->sync_set = NULL;
+>  		if (mddev->gendisk) {
+>  			/* We did a probe so need to clean up.  Call
+>  			 * queue_work inside the spinlock so that
+> @@ -485,8 +495,6 @@ static void mddev_put(struct mddev *mddev)
+>  			kfree(mddev);
+>  	}
+>  	spin_unlock(&all_mddevs_lock);
+> -	if (bs)
+> -		bioset_free(bs);
+>  }
+>  
+>  static void md_safemode_timeout(unsigned long data);
+> @@ -751,7 +759,7 @@ void md_super_write(struct mddev *mddev, struct md_rdev *rdev,
+>  	if (test_bit(Faulty, &rdev->flags))
+>  		return;
+>  
+> -	bio = bio_alloc_mddev(GFP_NOIO, 1, mddev);
+> +	bio = md_bio_alloc_sync(mddev);
+>  
+>  	atomic_inc(&rdev->nr_pending);
+>  
+> @@ -783,7 +791,7 @@ int md_super_wait(struct mddev *mddev)
+>  int sync_page_io(struct md_rdev *rdev, sector_t sector, int size,
+>  		 struct page *page, int op, int op_flags, bool metadata_op)
+>  {
+> -	struct bio *bio = bio_alloc_mddev(GFP_NOIO, 1, rdev->mddev);
+> +	struct bio *bio = md_bio_alloc_sync(rdev->mddev);
+>  	int ret;
+>  
+>  	bio->bi_bdev = (metadata_op && rdev->meta_bdev) ?
+> @@ -5432,6 +5440,11 @@ int md_run(struct mddev *mddev)
+>  		if (!mddev->bio_set)
+>  			return -ENOMEM;
+>  	}
+> +	if (mddev->sync_set == NULL) {
+> +		mddev->sync_set = bioset_create(BIO_POOL_SIZE, 0);
+> +		if (!mddev->sync_set)
+> +			return -ENOMEM;
+> +	}
+>  
+>  	spin_lock(&pers_lock);
+>  	pers = find_pers(mddev->level, mddev->clevel);
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index 0fa1de42c42b..a1c7aa89bb67 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -444,6 +444,9 @@ struct mddev {
+>  	struct attribute_group		*to_remove;
+>  
+>  	struct bio_set			*bio_set;
+> +	struct bio_set			*sync_set; /* for sync operations like
+> +						   * metadata and bitmap writes
+> +						   */
+>  
+>  	/* Generic flush handling.
+>  	 * The last to finish preflush schedules a worker to submit
+> -- 
+> 2.12.2
+> 
 
-My point is we could use a disk's superblock, but its bitmap superblock is
-stale (even is old)
 
-Anyway, I still didn't understand when the problem could happen. Maybe Guoqing
-can clarify.
-
-Thanks,
-Shaohua
