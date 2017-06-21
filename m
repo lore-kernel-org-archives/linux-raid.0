@@ -1,34 +1,40 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: 9 second recovery when re-adding a drive that got kicked out?
-Date: Wed, 21 Jun 2017 12:08:59 +0100
-Message-ID: <87fuetvbqs.fsf@esperi.org.uk>
-References: <20170604223817.ntxlvafgfa2umww2@merlins.org>
-        <87r2yxdazc.fsf@notabene.neil.brown.name>
-        <20170620182745.rbufznqe4tuxqttq@merlins.org>
-        <20170620183154.GA5303@merlins.org>
-        <87efue2x06.fsf@notabene.neil.brown.name>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: Re: [PATCH] md: make suspend range wait timed out
+Date: Wed, 21 Jun 2017 10:09:08 -0400 (EDT)
+Message-ID: <alpine.LRH.2.02.1706211007560.29243@file01.intranet.prod.int.rdu2.redhat.com>
+References: <d95473d287e196a86a83390cb9c136913643bd61.1497037210.git.shli@fb.com> <877f0c7gvr.fsf@notabene.neil.brown.name> <20170616155204.myffyxp5tuoctcoo@kernel.org> <87vant3rw5.fsf@notabene.neil.brown.name> <20170620005443.hil23ffizavctgkq@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87efue2x06.fsf@notabene.neil.brown.name> (NeilBrown's message of
-        "Wed, 21 Jun 2017 07:02:33 +1000")
+In-Reply-To: <20170620005443.hil23ffizavctgkq@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Marc MERLIN <marc@merlins.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Shaohua Li <shli@kernel.org>
+Cc: NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org, Shaohua Li <shli@fb.com>
 List-Id: linux-raid.ids
 
-On 20 Jun 2017, NeilBrown verbalised:
 
-> On Tue, Jun 20 2017, Marc MERLIN wrote:
->> The progress meter was wrong, it recovered in 3mn:
->> Jun 20 11:19:28 gargamel kernel: [  916.007017] md: recovery of RAID array md8
->> Jun 20 11:22:41 gargamel kernel: [ 1108.395580] md: md8: recovery done.
->
-> It is a progress bar - haven't you learned by now that they are *always*
-> wrong :-)
 
-I'd call this progress bar remarkably right by the standards of the
-field -- it never jumps backwards :)
+On Mon, 19 Jun 2017, Shaohua Li wrote:
 
--- 
-NULL && (void)
+> > Write errors only get back to the application if it calls fsync(), and
+> > many don't do that.  Write errors can easily cause a filesystem to go
+> > read-only, and require an fsck.  I think we should be very cautious
+> > about triggering write errors.
+> > 
+> > NFS will hang indefinitely rather then return an error if the server is
+> > not available.  That can certainly be annoying, but the alternative has
+> > been tried, and it leads to random data corruption.
+> > The two cases are only comparable at a very high level, but I think
+> > this result should encourage substantial caution.
+> 
+> It's hard to say if an IO error or an infinite wait is better, but since there
+> is better option in this case, I don't want to argue. I'll repost a patch to
+> reset suspend range after a timeout, assume this is your suggestion.
+> 
+> Thanks,
+> Shaohua
+
+Automatically resetting the suspend range could result in data corruption, 
+so it is even worse than a deadlock.
+
+Mikulas
