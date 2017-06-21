@@ -1,151 +1,96 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md: use a separate bio_set for synchronous IO.
-Date: Wed, 21 Jun 2017 10:49:16 -0700
-Message-ID: <20170621174916.mpxddat2vbiolrik@kernel.org>
-References: <87wp861cfe.fsf@notabene.neil.brown.name>
+From: "r23@anchordrop.net" <r23@anchordrop.net>
+Subject: Re: raid-1  starting with 1 drive after brief hiatus with cruddy
+ controller.
+Date: Wed, 21 Jun 2017 14:29:35 -0400
+Message-ID: <20170621142935.6480a42c@e20>
+References: <20170618001410.6fa96469@e20>
+        <871sqh57x5.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87wp861cfe.fsf@notabene.neil.brown.name>
+In-Reply-To: <871sqh57x5.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jun 21, 2017 at 09:12:21AM +1000, Neil Brown wrote:
-> 
-> md devices allocate a bio_set and use it for two
-> distinct purposes.
-> mddev->bio_set is used to clone bios as part of sending
-> upper level requests down to lower level devices,
-> and it is also use for synchronous IO such as superblock
-> and bitmap updates, and for correcting read errors.
-> 
-> This multiple usage can lead to deadlocks.  It is likely
-> that cloned bios might be queued for write and to be
-> waiting for a metadata update before the write can be permitted.
-> If the cloning exhausted mddev->bio_set, the metadata update
-> may not be able to proceed.
-> 
-> This scenario has been seen during heavy testing, with lots of IO and
-> lots of memory pressure.
-> 
-> Address this by adding a new bio_set specifically for synchronous IO.
-> All synchronous IO goes directly to the underlying device and is not
-> queued at the md level, so request using entries from the new
-> mddev->sync_set will complete in a timely fashion.
-> Requests that use mddev->bio_set will sometimes need to wait
-> for synchronous IO, but will no longer risk deadlocking that iO.
-> 
-> Also: small simplification in mddev_put(): there is no need to
-> wait until the spinlock is released before calling bioset_free().
+Hi All,
 
-applied, thanks
- 
-> Signed-off-by: NeilBrown <neilb@suse.com>
-> ---
->  drivers/md/md.c | 27 ++++++++++++++++++++-------
->  drivers/md/md.h |  3 +++
->  2 files changed, 23 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 87edc342ccb3..9d0eb50c458e 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -203,6 +203,14 @@ struct bio *bio_alloc_mddev(gfp_t gfp_mask, int nr_iovecs,
->  }
->  EXPORT_SYMBOL_GPL(bio_alloc_mddev);
->  
-> +static struct bio *md_bio_alloc_sync(struct mddev *mddev)
-> +{
-> +	if (!mddev->sync_set)
-> +		return bio_alloc(GFP_NOIO, 1);
-> +
-> +	return bio_alloc_bioset(GFP_NOIO, 1, mddev->sync_set);
-> +}
-> +
->  /*
->   * We have a system wide 'event count' that is incremented
->   * on any 'interesting' event, and readers of /proc/mdstat
-> @@ -462,8 +470,6 @@ static void mddev_delayed_delete(struct work_struct *ws);
->  
->  static void mddev_put(struct mddev *mddev)
->  {
-> -	struct bio_set *bs = NULL;
-> -
->  	if (!atomic_dec_and_lock(&mddev->active, &all_mddevs_lock))
->  		return;
->  	if (!mddev->raid_disks && list_empty(&mddev->disks) &&
-> @@ -471,8 +477,12 @@ static void mddev_put(struct mddev *mddev)
->  		/* Array is not configured at all, and not held active,
->  		 * so destroy it */
->  		list_del_init(&mddev->all_mddevs);
-> -		bs = mddev->bio_set;
-> +		if (mddev->bio_set)
-> +			bioset_free(mddev->bio_set);
-> +		if (mddev->sync_set)
-> +			bioset_free(mddev->sync_set);
->  		mddev->bio_set = NULL;
-> +		mddev->sync_set = NULL;
->  		if (mddev->gendisk) {
->  			/* We did a probe so need to clean up.  Call
->  			 * queue_work inside the spinlock so that
-> @@ -485,8 +495,6 @@ static void mddev_put(struct mddev *mddev)
->  			kfree(mddev);
->  	}
->  	spin_unlock(&all_mddevs_lock);
-> -	if (bs)
-> -		bioset_free(bs);
->  }
->  
->  static void md_safemode_timeout(unsigned long data);
-> @@ -751,7 +759,7 @@ void md_super_write(struct mddev *mddev, struct md_rdev *rdev,
->  	if (test_bit(Faulty, &rdev->flags))
->  		return;
->  
-> -	bio = bio_alloc_mddev(GFP_NOIO, 1, mddev);
-> +	bio = md_bio_alloc_sync(mddev);
->  
->  	atomic_inc(&rdev->nr_pending);
->  
-> @@ -783,7 +791,7 @@ int md_super_wait(struct mddev *mddev)
->  int sync_page_io(struct md_rdev *rdev, sector_t sector, int size,
->  		 struct page *page, int op, int op_flags, bool metadata_op)
->  {
-> -	struct bio *bio = bio_alloc_mddev(GFP_NOIO, 1, rdev->mddev);
-> +	struct bio *bio = md_bio_alloc_sync(rdev->mddev);
->  	int ret;
->  
->  	bio->bi_bdev = (metadata_op && rdev->meta_bdev) ?
-> @@ -5432,6 +5440,11 @@ int md_run(struct mddev *mddev)
->  		if (!mddev->bio_set)
->  			return -ENOMEM;
->  	}
-> +	if (mddev->sync_set == NULL) {
-> +		mddev->sync_set = bioset_create(BIO_POOL_SIZE, 0);
-> +		if (!mddev->sync_set)
-> +			return -ENOMEM;
-> +	}
->  
->  	spin_lock(&pers_lock);
->  	pers = find_pers(mddev->level, mddev->clevel);
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 0fa1de42c42b..a1c7aa89bb67 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -444,6 +444,9 @@ struct mddev {
->  	struct attribute_group		*to_remove;
->  
->  	struct bio_set			*bio_set;
-> +	struct bio_set			*sync_set; /* for sync operations like
-> +						   * metadata and bitmap writes
-> +						   */
->  
->  	/* Generic flush handling.
->  	 * The last to finish preflush schedules a worker to submit
-> -- 
-> 2.12.2
-> 
+mdadm --assemble /dev/md/debian:0 --update=name -v /dev/sdb2 --run
 
+started the container with the 1 drive and I was able to mount it !!
+
+Thank you all very much. Happy day :)
+
+root@mars:~/raid/bin/util#  mdadm --assemble /dev/md/debian:0 --update=name -v /dev/sdb2 --run
+mdadm: looking for devices for /dev/md/debian:0
+mdadm: /dev/sdb2 is identified as a member of /dev/md/debian:0, slot 1.
+mdadm: no uptodate device for slot 0 of /dev/md/debian:0
+mdadm: added /dev/sdb2 to /dev/md/debian:0 as 1
+mdadm: /dev/md/debian:0 has been started with 1 drive (out of 2).
+root@mars:~/raid/bin/util# mkdir /mnt/thanks
+root@mars:~/raid/bin/util# mount -o ro /dev/md/debian:0 /mnt/thanks
+root@mars:~/raid/bin/util# cd /mnt/thanks
+root@mars:/mnt/thanks# ls -l
+total 63900
+drwxr-xr-x 19 root   userme     4096 Nov  7....
+::
+::
+::
+----------------
+
+On Mon, 19 Jun 2017 06:59:18 +1000
+NeilBrown <neilb@suse.com> wrote:
+
+> On Sun, Jun 18 2017, r23@anchordrop.net wrote:
+> >
+> > root@mars:~/raid/bin# mdadm --misc --examine /dev/sdb2
+> > /dev/sdb2:
+> >           Magic : a92b4efc
+> >         Version : 1.2
+> >     Feature Map : 0x1
+> >      Array UUID : 2a3489a6:b430c744:2c89a792:98521913
+> >            Name : debian:0
+> >   Creation Time : Sat May  9 17:44:25 2015
+> >      Raid Level : raid1
+> >    Raid Devices : 2
+> >
+> >  Avail Dev Size : 9765179392 (4656.40 GiB 4999.77 GB)
+> >      Array Size : 4882589696 (4656.40 GiB 4999.77 GB)
+> >     Data Offset : 262144 sectors
+> >    Super Offset : 8 sectors
+> >    Unused Space : before=262056 sectors, after=0 sectors
+> >           State : clean
+> >     Device UUID : 4697b088:5d3b1ae5:55d30f65:516df63d
+> >
+> > Internal Bitmap : 8 sectors from superblock
+> >     Update Time : Wed Jun 14 23:53:27 2017
+> >   Bad Block Log : 512 entries available at offset 72 sectors
+> >        Checksum : 1f245410 - expected 1f249410
+> 
+> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 
+> checksum is wrong.
+> 
+> > root@mars:~/raid/bin/util/lsdrv#  mdadm
+> > --assemble /dev/md/debian:0  -v /dev/sdb2 --run mdadm: looking for
+> > devices for /dev/md/debian:0 mdadm: /dev/sdb2 is identified as a
+> > member of /dev/md/debian:0, slot 1. mdadm: no uptodate device for
+> > slot 0 of /dev/md/debian:0 mdadm: failed to add /dev/sdb2
+> > to /dev/md/debian:0: Invalid argument
+> 
+> Bad checksum caused kernel to reject the device.
+> 
+> There is no obvious way to correct the checksum, but I think you can
+> force it by using the --update option to --assemble
+> e.g.
+> 
+>   mdadm --assemble /dev/md/debian:0 --update=name -v /dev/sdb2
+> 
+> When doing that, you should check that other fields all look correct
+> first, because something must have changed to affect the bitmap.
+> (I cannot see anything that looks wrong)
+> 
+> NeilBrown
 
