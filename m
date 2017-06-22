@@ -1,145 +1,263 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: Re: [PATCH] md/bitmap: don't read page from device with Bitmap_sync
-Date: Thu, 22 Jun 2017 14:45:10 +0800
-Message-ID: <3e4cd32d-9044-bf20-7295-9b2f3392635e@suse.com>
-References: <20170616091927.12959-1-gqjiang@suse.com>
- <20170616173613.c2cp6qt2hmoebgct@kernel.org>
- <87h8zc51t0.fsf@notabene.neil.brown.name>
- <20170620004158.lrry5ig5epvmcqfc@kernel.org>
- <87o9tj2tse.fsf@notabene.neil.brown.name>
- <20170621174719.dwih6qdk2a5nd7yl@kernel.org>
+From: d tbsky <tbskyd@gmail.com>
+Subject: Re: mdadm goes crazy after changing chunk size
+Date: Thu, 22 Jun 2017 16:08:19 +0800
+Message-ID: <CAC6SzHJwyD07OZxPEJUD7BUKJDXA9OvpVTGeJW7PhxYz2EUS2w@mail.gmail.com>
+References: <CAC6SzHLu35=V88phP_X_OO472NbPXhjzGzraFUMEabSXgz1N0w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170621174719.dwih6qdk2a5nd7yl@kernel.org>
+In-Reply-To: <CAC6SzHLu35=V88phP_X_OO472NbPXhjzGzraFUMEabSXgz1N0w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>, NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi:
+    I know why mdadm refuse to grow. when I change chunk size, the
+disk data-offset increase. how can I recover the space?
+I tried "mdadm --grow  --data-offset=128M /dev/md2", but get response
+"mdadm: --data-offset too small on /dev/sde1"
+
+data-offset result like below:
+
+ mdadm -E /dev/sde1
+/dev/sde1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 5b2c25fc:b4ccc860:ba8685fe:5e0433f7
+           Name : love-1:3  (local to host love-1)
+  Creation Time : Tue Jun 13 15:21:32 2017
+     Raid Level : raid5
+   Raid Devices : 3
+
+ Avail Dev Size : 5263812239 (2509.98 GiB 2695.07 GB)
+     Array Size : 5263812224 (5019.96 GiB 5390.14 GB)
+  Used Dev Size : 5263812224 (2509.98 GiB 2695.07 GB)
+    Data Offset : 2550222848 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=2550222760 sectors, after=15 sectors
+          State : clean
+    Device UUID : 26d406ad:9dd2dcc1:d37a3d36:edb8431e
+
+    Update Time : Thu Jun 22 15:54:33 2017
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : 3dceb21f - correct
+         Events : 5183
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+   Device Role : Active device 0
+   Array State : AAA ('A' == active, '.' == missing, 'R' == replacing)
 
 
-On 06/22/2017 01:47 AM, Shaohua Li wrote:
-> On Tue, Jun 20, 2017 at 01:59:45PM +1000, Neil Brown wrote:
->> On Mon, Jun 19 2017, Shaohua Li wrote:
->>
->>> On Mon, Jun 19, 2017 at 09:11:23AM +1000, Neil Brown wrote:
->>>> On Fri, Jun 16 2017, Shaohua Li wrote:
->>>>
->>>>> On Fri, Jun 16, 2017 at 05:19:27PM +0800, Guoqing Jiang wrote:
->>>>>> The device owns Bitmap_sync flag needs recovery
->>>>>> to become in sync, and read page from this type
->>>>>> device could get stale status.
->>>>>>
->>>>>> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
->>>>>> ---
->>>>>> When develop for clustered raid10 feature, if add a
->>>>>> disk under grow mode in master node, I could get
->>>>>> the "bitmap superblock UUID mismatch" warning due
->>>>>> to the page is read from Bitmap_sync device.
->>>>>>
->>>>>>   drivers/md/bitmap.c | 3 ++-
->>>>>>   1 file changed, 2 insertions(+), 1 deletion(-)
->>>>>>
->>>>>> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
->>>>>> index bf7419a..bf34cd8 100644
->>>>>> --- a/drivers/md/bitmap.c
->>>>>> +++ b/drivers/md/bitmap.c
->>>>>> @@ -156,7 +156,8 @@ static int read_sb_page(struct mddev *mddev, loff_t offset,
->>>>>>   
->>>>>>   	rdev_for_each(rdev, mddev) {
->>>>>>   		if (! test_bit(In_sync, &rdev->flags)
->>>>> Why In_sync is set for the rdev? I think it shoudn't.
->>>> There are several states a device can be in.
->>>> If ->raid_disk is < 0, then the device is a spare, and doesn't contain
->>>>      and valid data.
->>>> Otherwise ->raid_disk >=0 and:
->>>>     In_sync is clear, which means that blocks before ->recovery_offset
->>>>         contain valid data, and blocks after there don't
->>>>     In_sync is set, which means ->recovery_offset is irrelevant and
->>>>         should be treated as MaxSector
->>>>     Bitmap_sync is set, which could apply in either of the above cases,
->>>>         and means blocks corresponding to bits that are set in the bitmap
->>>>         may not be up to date.
->>>>
->>>> Bitmap_sync is only relevant before a device has been handed to the
->>>> personality.  After it has been added, ->recovery_cp ensures that the
->>>> blocks that might be wrong are not read until until the bitmap-based
->>>> recovery has fixed them up.
->>>>
->>>> Bitmap_sync is only use to stop the device from being given to the
->>>> personality if a recovery won't be started because the array is
->>>> read-only.
->>>>
->>>> So it is perfectly valid for both In_sync and Bitmap_sync to be set.
->>>> If they are, it makes sense to avoid reading bitmap information from the
->>>> Bitmap_sync device, as that will be out-of-date.
->>>>
->>>> I'm not quite sure why Guoqing is getting a UUID mismatch ... it
->>>> suggests that the new device wasn't initialized properly.  So there
->>>> might be another bug.  But I think this is definitely a bug.
->>> Can you describe a scenario a disk has both bits set? I had hard time to
->>> imagine it.
->> An array with a bitmap has a device fail (cable break?).
->> So the bitmap stops clearing bits and ->events_cleared stays
->> where it was, with the same value as events in the superblock
->> of the failed device.
->>
->> The device then starts working (cable is replaced) and
->> it device is added back to the array.
->> super_1_validate notices that the array has a bitmap and that the event
->> count in the new device is >= mddev->bitmap->events_cleared, but <
->> mddev->events.
->> i.e. it is in the range for which a bitmap-based recovery is both
->> possible and needed.
->> So it sets Bitmap_sync.
->> Then it notices that the 'role' in a valid role for the array,
->> so that role is stored in rdev->saved_raid_disk and, as there is no
->> MD_FEATURE_RECOVERY_OFFSET, In_sync is set.
->> A similar sequence can happen in super_90_validate.
-> This part is quite confusing actually. The failed device is kicked out, so the
-> array is degraded. When we readd the device, we shouldn't set In_sync.
+
+2017-06-21 11:31 GMT+08:00 d tbsky <tbskyd@gmail.com>:
+> Hi:
+>     I want to test the performance of different chunk size, so I
+> create a small raid (about 20G~200G) and use command like "mdadm
+> --grow -c 64 /dev/md2) to change the chunk size.
 >
-> Actually we set In_sync in super_1_validate, we then clear it in add_bound_rdev
-> and reset it till recovery finishes. Set it till recovery finishes makes sense
-> to me, the super_1_validate is confusing.
->   
->>> md_update_sb will update super and bitmap super at almost the same time. It's
->>> possible we update super but not bitmap super and there is power loss. Is this
->>> the case we have the both bits set? There seems no mechanism to prevent the
->>> first disk has older bitmap super than the second disk in this scenario.
->> This isn't really about the superblock and bitmap on the one device
->> being in sync or not.
->> It is the superblock on one (failed) device having a different event
->> count than the bitmap (on the other devices) that is actively being used
->> by the array.
-> My point is we could use a disk's superblock, but its bitmap superblock is
-> stale (even is old)
+>   after changing chunk size, I found almost every time the raid can
+> not re-assemble after reboot.
+> the error message shows like "xxx does not have a valid v1.2
+> superblock, not importing!".
 >
-> Anyway, I still didn't understand when the problem could happen. Maybe Guoqing
-> can clarify.
-
-My case is not same as what Neil described. But if add a disk to cluster 
-raid10 under grow
-mode, I can see:
-
-1. super_1_validate sets Bitmap_sync flag first, this is because the new 
-added disk's event
-is less than array's event. But for native raid, both of the events are 
-0, so Bitmap_sync is
-not set, this difference is caused by do_md_run only calls 
-md_allow_write for clustered raid,
-and IIRC we have to do it to resolve deadlock.
-
-2.  In_sync is set by raid10_start_reshape.
-This is called by either clustered raid or native raid, I don't think we 
-can change it here ...
-
-Based on the above, it is possible that both of the two flags can exist 
-together.
-
-Thanks,
-Guoqing
-
-
+>    I found I can use "mdadm --assemble --update=devicesize ....." to
+> correct it. so I just continue my testing.
+>
+>    now testing is done, so I want to grow the small raid to full size,
+> but I am surprised that the " Used Dev Size" stocked at some stage and
+> can not grow to full size. maybe I miss some command parameter?
+>
+>    I think I need to re-create the raid. but maybe someone is
+> interested to see what happened. my environment is rhel 7.3 (but
+> redhat backport kernel 4.x softwareraid stack to their 3.10 kernel).
+>
+>   I have several testing raidset. below is a 4disk raid6:
+> ==========================================================================================
+> command "mdadm --detail /dev/md1":
+>
+> /dev/md1:
+>         Version : 1.2
+>   Creation Time : Mon Jun  5 17:58:52 2017
+>      Raid Level : raid6
+>      Array Size : 4116416128 (3925.72 GiB 4215.21 GB)
+>   Used Dev Size : 2058208064 (1962.86 GiB 2107.61 GB)
+>    Raid Devices : 4
+>   Total Devices : 4
+>     Persistence : Superblock is persistent
+>
+>     Update Time : Wed Jun 21 11:06:32 2017
+>           State : clean
+>  Active Devices : 4
+> Working Devices : 4
+>  Failed Devices : 0
+>   Spare Devices : 0
+>
+>          Layout : left-symmetric
+>      Chunk Size : 64K
+>
+>            Name : localhost.localdomain:pv00
+>            UUID : cc6a6b68:3d066e91:8bac3ba0:96448f78
+>          Events : 8180
+>
+>     Number   Major   Minor   RaidDevice State
+>        0       8        3        0      active sync   /dev/sda3
+>        1       8       19        1      active sync   /dev/sdb3
+>        5       8       51        2      active sync   /dev/sdd3
+>        4       8       35        3      active sync   /dev/sdc3
+> ==========================================================================================
+> ==========================================================================================
+> command "fdisk -lu /dev/sda /dev/sdb /dev/sdc /dev/sdd":
+>
+> Disk /dev/sda: 4000.8 GB, 4000787030016 bytes, 7814037168 sectors
+> Units = sectors of 1 * 512 = 512 bytes
+> Sector size (logical/physical): 512 bytes / 4096 bytes
+> I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+> Disk label type: gpt
+>
+>
+> #         Start          End    Size  Type            Name
+>  1         2048         4095      1M  BIOS boot parti
+>  2         4096       620543    301M  Linux RAID
+>  3       620544   7814037134    3.7T  Linux RAID
+>
+> Disk /dev/sdb: 4000.8 GB, 4000787030016 bytes, 7814037168 sectors
+> Units = sectors of 1 * 512 = 512 bytes
+> Sector size (logical/physical): 512 bytes / 4096 bytes
+> I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+> Disk label type: gpt
+>
+>
+> #         Start          End    Size  Type            Name
+>  1         2048         4095      1M  BIOS boot parti
+>  2         4096       620543    301M  Linux RAID
+>  3       620544   7814037134    3.7T  Linux RAID
+>
+> Disk /dev/sdc: 4000.8 GB, 4000787030016 bytes, 7814037168 sectors
+> Units = sectors of 1 * 512 = 512 bytes
+> Sector size (logical/physical): 512 bytes / 4096 bytes
+> I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+> Disk label type: gpt
+>
+>
+> #         Start          End    Size  Type            Name
+>  1         2048         4095      1M  BIOS boot parti
+>  2         4096       620543    301M  Linux RAID
+>  3       620544   7814037134    3.7T  Linux RAID
+>
+> Disk /dev/sdd: 4000.8 GB, 4000787030016 bytes, 7814037168 sectors
+> Units = sectors of 1 * 512 = 512 bytes
+> Sector size (logical/physical): 512 bytes / 4096 bytes
+> I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+> Disk label type: gpt
+>
+>
+> #         Start          End    Size  Type            Name
+>  1         2048         4095      1M  BIOS boot parti
+>  2         4096       620543    301M  Linux RAID
+>  3       620544   7814037134    3.7T  Linux RAID
+> ==========================================================================================
+> ==========================================================================================
+> command "mdadm --grow --size=max /dev/md1":
+>
+> mdadm: component size of /dev/md1 unchanged at 2058208064K
+> ==========================================================================================
+>
+>
+> another raid5 is more strange. it assemble correctly after change
+> chunk size (this is unusual in my testing environment without
+> "--update=devicesize").
+> the strange part is the md2 huge bitmap chunk:
+> ==========================================================================================
+> command "cat /proc/mdstat"
+>
+> Personalities : [raid1] [raid6] [raid5] [raid4]
+> md2 : active raid5 sde1[0] sdf1[1] sdg1[3]
+>       5263812224 blocks super 1.2 level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+>       bitmap: 0/1 pages [0KB], 18014398507384832KB chunk
+>
+> md0 : active raid1 sdc2[4] sdb2[1] sda2[0] sdd2[5]
+>       308160 blocks super 1.0 [4/4] [UUUU]
+>       bitmap: 0/1 pages [0KB], 65536KB chunk
+>
+> md1 : active raid6 sdd3[5] sdb3[1] sdc3[4] sda3[0]
+>       4116416128 blocks super 1.2 level 6, 64k chunk, algorithm 2 [4/4] [UUUU]
+>
+> unused devices: <none>
+> ==========================================================================================
+>
+>
+> the raid5 device also can not grow to full size:
+> ==========================================================================================
+> command "mdadm --detail /dev/md2"
+>
+> /dev/md2:
+>         Version : 1.2
+>   Creation Time : Tue Jun 13 15:21:32 2017
+>      Raid Level : raid5
+>      Array Size : 5263812224 (5019.96 GiB 5390.14 GB)
+>   Used Dev Size : 2631906112 (2509.98 GiB 2695.07 GB)
+>    Raid Devices : 3
+>   Total Devices : 3
+>     Persistence : Superblock is persistent
+>
+>   Intent Bitmap : Internal
+>
+>     Update Time : Wed Jun 21 10:45:39 2017
+>           State : clean
+>  Active Devices : 3
+> Working Devices : 3
+>  Failed Devices : 0
+>   Spare Devices : 0
+>
+>          Layout : left-symmetric
+>      Chunk Size : 64K
+>
+>            Name : love-1:3  (local to host love-1)
+>            UUID : 5b2c25fc:b4ccc860:ba8685fe:5e0433f7
+>          Events : 5176
+>
+>     Number   Major   Minor   RaidDevice State
+>        0       8       65        0      active sync   /dev/sde1
+>        1       8       81        1      active sync   /dev/sdf1
+>        3       8       97        2      active sync   /dev/sdg1
+> ==========================================================================================
+> ==========================================================================================
+> command "fdisk -lu /dev/sde /dev/sdf /dev/sdg":
+>
+> Disk /dev/sde: 4000.8 GB, 4000787030016 bytes, 7814037168 sectors
+> Units = sectors of 1 * 512 = 512 bytes
+> Sector size (logical/physical): 512 bytes / 4096 bytes
+> I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+> Disk label type: gpt
+>
+>
+> #         Start          End    Size  Type            Name
+>  1         2048   7814037134    3.7T  Linux RAID
+>
+> Disk /dev/sdf: 4000.8 GB, 4000787030016 bytes, 7814037168 sectors
+> Units = sectors of 1 * 512 = 512 bytes
+> Sector size (logical/physical): 512 bytes / 4096 bytes
+> I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+> Disk label type: gpt
+>
+>
+> #         Start          End    Size  Type            Name
+>  1         2048   7814037134    3.7T  Linux RAID
+>
+> Disk /dev/sdg: 4000.8 GB, 4000787030016 bytes, 7814037168 sectors
+> Units = sectors of 1 * 512 = 512 bytes
+> Sector size (logical/physical): 512 bytes / 4096 bytes
+> I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+> Disk label type: gpt
+>
+>
+> #         Start          End    Size  Type            Name
+>  1         2048   7814037134    3.7T  Linux RAID
+> ==========================================================================================
+> ==========================================================================================
+> command "mdadm --grow --size=max /dev/md2"
+> mdadm: component size of /dev/md2 unchanged at 2631906112K
+> ==========================================================================================
