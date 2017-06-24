@@ -1,76 +1,201 @@
-From: <citydesk@thereporteronline.com>
-Subject: (unknown)
-Date: Sat, 24 Jun 2017 00:35:53 -0000
-Message-ID: <149826455361.4332.6179600823353614453@vnpt-hanoi.com.vn>
+From: Hubert Reevez <hubereevez@gmail.com>
+Subject: can't add a larger spare for a failed smaller disk
+Date: Sun, 25 Jun 2017 00:21:40 +0200
+Message-ID: <CAAK+==bmLQ6EGm806+feV=PGp1xB7vMwtEXXD3dJZA8fHn-osQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="EMAIL_77134398_linux-raid.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Subject: 
-Content-Disposition: attachment
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-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
+Hi,
+
+I'm trying to add a larger spare in replacement to a smaller one. I'm
+really stuck here.... ;(
+
+Here is what I did : --fail /dev/sdc then --remove /dev/sdc
+
+Added the new one (which is also sdc now) can't assemble the new one !
+
+If I try to assemble here is what it comes :
+---------------------------------------------------------
+root@Zetta:~# mdadm --assemble /dev/md0 --verbose /dev/sdc
+mdadm: looking for devices for /dev/md0
+mdadm: /dev/sdc is busy - skipping
+-------------------------------------------------------
+
+
+If I tried to stop the array and assemble, here is what it comes :
+
+--------------------------------
+
+root@Zetta:~# mdadm --assemble /dev/md0 --verbose /dev/sdc
+mdadm: looking for devices for /dev/md0
+mdadm: /dev/sdc is identified as a member of /dev/md0, slot -1.
+mdadm: no uptodate device for slot 0 of /dev/md0
+mdadm: no uptodate device for slot 1 of /dev/md0
+mdadm: no uptodate device for slot 2 of /dev/md0
+mdadm: no uptodate device for slot 3 of /dev/md0
+mdadm: no uptodate device for slot 4 of /dev/md0
+mdadm: no uptodate device for slot 5 of /dev/md0
+mdadm: added /dev/sdc to /dev/md0 as -1
+mdadm: /dev/md0 assembled from 0 drives and 1 spare - not enough to
+start the array
+
+-------------------------------------------------
+
+Thanks for your help !!!!!
+
+
+Here some infos (I had a sdg larger than 1,5 to)
+
+------------------------------------
+root@Zetta:~# blockdev --getsize64 /dev/sd[abcefg] 1500301910016
+2000398934016 2000398934016 1500301910016 1500301910016 2000398934016
+
+---------------------------------------------------------------------------------------------
+root@Zetta:~# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : inactive sdf[0] sdc[7](S) sdg[6] sdb[4] sde[3] sda[2]
+      10255693264 blocks super 1.2
+
+unused devices: <none>
+---------------------------------------------------------------------------------------------
+
+root@Zetta:~# mdadm --detail /dev/md0
+/dev/md0:
+        Version : 1.2
+  Creation Time : Sat Aug 31 01:10:06 2013
+     Raid Level : raid6
+  Used Dev Size : 1465137152 (1397.26 GiB 1500.30 GB)
+   Raid Devices : 6
+  Total Devices : 6
+    Persistence : Superblock is persistent
+
+    Update Time : Fri Jun 23 15:43:33 2017
+          State : active, degraded, Not Started
+ Active Devices : 5
+Working Devices : 6
+ Failed Devices : 0
+  Spare Devices : 1
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+           Name : zetta:0
+           UUID : 96b0e7b7:83aa203f:1545031b:43caaa85
+         Events : 54841
+
+    Number   Major   Minor   RaidDevice State
+       0       8       80        0      active sync   /dev/sdf
+       1       0        0        1      removed
+       2       8        0        2      active sync   /dev/sda
+       3       8       64        3      active sync   /dev/sde
+       4       8       16        4      active sync   /dev/sdb
+       6       8       96        5      active sync   /dev/sdg
+
+       7       8       32        -      spare   /dev/sdc
+--------------------------------------------------------------------------------------------------------------------
+
+root@Zetta:~# fdisk -l
+
+Disk /dev/sda: 1500.3 GB, 1500301910016 bytes
+255 heads, 63 sectors/track, 182401 cylinders, total 2930277168 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00000000
+
+Disk /dev/sda doesn't contain a valid partition table
+
+Disk /dev/sdb: 2000.4 GB, 2000398934016 bytes
+255 heads, 63 sectors/track, 243201 cylinders, total 3907029168 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+Disk identifier: 0x00000000
+
+Disk /dev/sdb doesn't contain a valid partition table
+
+Disk /dev/sdc: 2000.4 GB, 2000398934016 bytes
+255 heads, 63 sectors/track, 243201 cylinders, total 3907029168 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+Disk identifier: 0x00000000
+
+Disk /dev/sdc doesn't contain a valid partition table
+
+Disk /dev/sdd: 100.0 GB, 100030242816 bytes
+255 heads, 63 sectors/track, 12161 cylinders, total 195371568 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x0008101c
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdd1   *        2048   187367423    93682688   83  Linux
+/dev/sdd2       187369470   195371007     4000769    5  Extended
+/dev/sdd5       187369472   195371007     4000768   82  Linux swap / Solaris
+
+Disk /dev/sde: 1500.3 GB, 1500301910016 bytes
+255 heads, 63 sectors/track, 182401 cylinders, total 2930277168 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+Disk identifier: 0x00000000
+
+Disk /dev/sde doesn't contain a valid partition table
+
+Disk /dev/sdf: 1500.3 GB, 1500301910016 bytes
+255 heads, 63 sectors/track, 182401 cylinders, total 2930277168 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+Disk identifier: 0x00000000
+
+Disk /dev/sdf doesn't contain a valid partition table
+
+Disk /dev/sdg: 2000.4 GB, 2000398934016 bytes
+255 heads, 63 sectors/track, 243201 cylinders, total 3907029168 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+Disk identifier: 0x00000000
+
+Disk /dev/sdg doesn't contain a valid partition table
+------------------------------------------------------------------------------------------
+
+root@Zetta:~# blkid
+/dev/sda: UUID="96b0e7b7-83aa-203f-1545-031b43caaa85"
+UUID_SUB="70983681-b5c2-9f70-1801-948b1b7c97d1" LABEL="zetta:0"
+TYPE="linux_raid_member"
+/dev/sdb: UUID="96b0e7b7-83aa-203f-1545-031b43caaa85"
+UUID_SUB="66843575-1a9c-30a6-8172-29f3ded468dc" LABEL="zetta:0"
+TYPE="linux_raid_member"
+/dev/sde: UUID="96b0e7b7-83aa-203f-1545-031b43caaa85"
+UUID_SUB="ee7eab8f-dc90-e3be-146d-a4e09d104418" LABEL="zetta:0"
+TYPE="linux_raid_member"
+/dev/sdf: UUID="96b0e7b7-83aa-203f-1545-031b43caaa85"
+UUID_SUB="b2460066-00b1-5070-cfe3-7ac67aae96c1" LABEL="zetta:0"
+TYPE="linux_raid_member"
+/dev/sdc: UUID="96b0e7b7-83aa-203f-1545-031b43caaa85"
+UUID_SUB="06bd9fd3-7b1a-b0e0-b9f0-029882f39624" LABEL="zetta:0"
+TYPE="linux_raid_member"
+/dev/sdd1: UUID="b364f189-c9af-4774-92ba-a49307966cf7" TYPE="ext4"
+/dev/sdd5: UUID="c78b6a64-1caa-4290-bc1a-eebe67731ca5" TYPE="swap"
+/dev/sdg: UUID="96b0e7b7-83aa-203f-1545-031b43caaa85"
+UUID_SUB="440f9a88-1d42-020c-ba4d-d303afb76c7c" LABEL="zetta:0"
+TYPE="linux_raid_member"
+------------------------------------------------------------------------------------------------------------
+mdadm -E /dev/sd[abcefg]
+
+https://pastebin.com/zzz3jFvP
+
+-------------------------------------------------------------------------------------------------------------------
+
+mdadm.conf :
+DEVICE partitions CREATE owner=root group=disk mode=0660 auto=yes
+HOMEHOST <system>  ARRAY /dev/md/zetta:0 metadata=1.2 name=zetta:0
+UUID=96b0e7b7:83aa203f:1545031b:43caaa85
