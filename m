@@ -1,76 +1,28 @@
-From: <citydesk@thereporteronline.com>
-Subject: (unknown)
-Date: Sun, 25 Jun 2017 18:13:01 -0000
-Message-ID: <149841438108.12492.1358655768615543325@telenet.ru>
+From: Hubert Reevez <hubereevez@gmail.com>
+Subject: Re: can't add a larger spare for a failed smaller disk
+Date: Sun, 25 Jun 2017 20:32:30 +0200
+Message-ID: <CAAK+==Y_P8hdhRoHnbGK7NujMYe2ERs6wztA-7CP_4MpZxZTRw@mail.gmail.com>
+References: <CAAK+==bmLQ6EGm806+feV=PGp1xB7vMwtEXXD3dJZA8fHn-osQ@mail.gmail.com>
+ <CAFCYAsePbzqj7=0BORYGSvQFAOY9SCDAfX1hQmj-8gH2dFj3WA@mail.gmail.com>
+ <CAAK+==YbNyjFryhDmJe2Y67rcGzZKvaKX2BaEJzZTuMTN98jRw@mail.gmail.com>
+ <CAFCYAsexbWzffTdouwjQQf0=ZrSx+67c3rWtHcTX9K0nZ5Uuxw@mail.gmail.com>
+ <CAAK+==Y1h9GPw-5jmtnXKNPP6aYz3ezKre-MKSPvW9Sbjv7hdQ@mail.gmail.com>
+ <CAFCYAsdDdBVxFuj1S_5vOTNO3KN0mqA+hjbD99Ea53AadXuMFA@mail.gmail.com>
+ <CAAK+==YioRVH4LAYVHmfuF41+T-emBwoMawp4xBPyowYTp9_tA@mail.gmail.com> <CAAK+==bH6JcdtXYGhf+zJ_g1XvzKUnNEyTfpcdgDnuJ8WhmG3w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="EMAIL_7883405_linux-raid.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: attachment
-Subject: 
+In-Reply-To: <CAAK+==bH6JcdtXYGhf+zJ_g1XvzKUnNEyTfpcdgDnuJ8WhmG3w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jeff Johnson <jeff.johnson@aeoncomputing.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-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
+All seems to went good, but data offset are not equal on sdc and sdg,
+should I grow ? or something else ? thanks again
+
+
+md0 : active raid6 sdf[0] sdg[6] sdb[4] sde[3] sda[2] sdc[7]
+5860548608 blocks super 1.2 level 6, 512k chunk, algorithm 2 [6/6] [UUUUUU]
+
+
+mdadm -E : https://pastebin.com/hs7F5Ppi
