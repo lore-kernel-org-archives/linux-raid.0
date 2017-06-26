@@ -1,7 +1,7 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH v2 12/51] md: raid10: avoid to access bvec table directly
-Date: Mon, 26 Jun 2017 20:09:55 +0800
-Message-ID: <20170626121034.3051-13-ming.lei@redhat.com>
+Subject: [PATCH v2 36/51] md: raid1: convert to bio_for_each_segment_all_sp()
+Date: Mon, 26 Jun 2017 20:10:19 +0800
+Message-ID: <20170626121034.3051-37-ming.lei@redhat.com>
 References: <20170626121034.3051-1-ming.lei@redhat.com>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <20170626121034.3051-1-ming.lei@redhat.com>
@@ -10,60 +10,33 @@ To: Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@infradead.org>, Huang Ying
 Cc: linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, Ming Lei <ming.lei@redhat.com>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Inside sync_request_write(), .bi_vcnt is written after this bio
-is reseted, this way won't work any more after multipage bvec
-is enabled.
-
-So reset_bvec_table() is introduced for re-add these pages into
-bio, then .bi_vcnt needn't to be touched any more.
-
 Cc: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/md/raid10.c | 22 ++++++++++++++++++++--
- 1 file changed, 20 insertions(+), 2 deletions(-)
+ drivers/md/raid1.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 5026e7ad51d3..2fca1fe67092 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1995,6 +1995,24 @@ static void end_sync_write(struct bio *bio)
- 	end_sync_request(r10_bio);
- }
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 835c42396861..ca4b9ff8d39b 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -2135,13 +2135,14 @@ static void process_checks(struct r1bio *r1_bio)
+ 		struct page **spages = get_resync_pages(sbio)->pages;
+ 		struct bio_vec *bi;
+ 		int page_len[RESYNC_PAGES] = { 0 };
++		struct bvec_iter_all bia;
  
-+/* called after bio_reset() */
-+static void reset_bvec_table(struct bio *bio, struct resync_pages *rp, int size)
-+{
-+	/* initialize bvec table again */
-+	rp->idx = 0;
-+	do {
-+		struct page *page = resync_fetch_page(rp, rp->idx++);
-+		int len = min_t(int, size, PAGE_SIZE);
-+
-+		/*
-+		 * won't fail because the vec table is big
-+		 * enough to hold all these pages
-+		 */
-+		bio_add_page(bio, page, len, 0);
-+		size -= len;
-+	} while (rp->idx < RESYNC_PAGES && size > 0);
-+}
-+
- /*
-  * Note: sync and recover and handled very differently for raid10
-  * This code is for resync.
-@@ -2087,8 +2105,8 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
- 		rp = get_resync_pages(tbio);
- 		bio_reset(tbio);
+ 		if (sbio->bi_end_io != end_sync_read)
+ 			continue;
+ 		/* Now we can 'fixup' the error value */
+ 		sbio->bi_status = 0;
  
--		tbio->bi_vcnt = vcnt;
--		tbio->bi_iter.bi_size = fbio->bi_iter.bi_size;
-+		reset_bvec_table(tbio, rp, fbio->bi_iter.bi_size);
-+
- 		rp->raid_bio = r10_bio;
- 		tbio->bi_private = rp;
- 		tbio->bi_iter.bi_sector = r10_bio->devs[i].addr;
+-		bio_for_each_segment_all(bi, sbio, j)
++		bio_for_each_segment_all_sp(bi, sbio, j, bia)
+ 			page_len[j] = bi->bv_len;
+ 
+ 		if (!status) {
 -- 
 2.9.4
 
