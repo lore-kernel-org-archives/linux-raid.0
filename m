@@ -1,41 +1,74 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH 2/2] bcache: Update continue_at() documentation
-Date: Wed, 28 Jun 2017 14:48:18 +0300
-Message-ID: <20170628114818.c7avv5773pa4gb37@mwanda>
-References: <20170628114707.5oy4wmslmrethlzn@mwanda>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: Disk Monitoring
+Date: Wed, 28 Jun 2017 13:43:56 +0100
+Message-ID: <5953A48C.9080500@youngman.org.uk>
+References: <CAJH6TXgvrVckHDmh1oiN9mupLrsS2NP3J44bG1_wE9Nnx4=yHQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-bcache-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170628114707.5oy4wmslmrethlzn@mwanda>
-Sender: linux-bcache-owner@vger.kernel.org
-To: Kent Overstreet <kent.overstreet@gmail.com>
-Cc: Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, Ingo Molnar <mingo@kernel.org>, Coly Li <colyli@suse.de>, Yijing Wang <wangyijing@huawei.com>, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAJH6TXgvrVckHDmh1oiN9mupLrsS2NP3J44bG1_wE9Nnx4=yHQ@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-continue_at() doesn't have a return statement anymore.
+On 28/06/17 11:25, Gandalf Corvotempesta wrote:
+> Hi to all
+> I always used hardwre raid but with my next server I would like to use mdadm.
+> 
+> Some questions:
+> 
+> 1) all raid controllers have proactive monitoring features, like
+> patrol read, consistency check and (more or less) some SMART
+> integration.
+> Any counterpart in mdadm?
+> 
+> 2) thanks to this features, raid controller are usually able to detect
+> disk issues before they cause data-loss. what about mdadm ?
+> 
+> How and when do you replace disks ? Based on which params? Do you
+> always wait for a total failure before replacing the disk?
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Not wise. mdadm has the --replace option which will copy a failing
+drive. This ensures redundancy is not lost during a disk replacement
+(unless other stuff goes wrong too).
 
-diff --git a/drivers/md/bcache/closure.h b/drivers/md/bcache/closure.h
-index 1ec84ca81146..295b7e43f92c 100644
---- a/drivers/md/bcache/closure.h
-+++ b/drivers/md/bcache/closure.h
-@@ -312,8 +312,6 @@ static inline void closure_wake_up(struct closure_waitlist *list)
-  * been dropped with closure_put()), it will resume execution at @fn running out
-  * of @wq (or, if @wq is NULL, @fn will be called by closure_put() directly).
-  *
-- * NOTE: This macro expands to a return in the calling function!
-- *
-  * This is because after calling continue_at() you no longer have a ref on @cl,
-  * and whatever @cl owns may be freed out from under you - a running closure fn
-  * has a ref on its own closure which continue_at() drops.
-@@ -340,8 +338,6 @@ do {									\
-  * Causes @fn to be executed out of @cl, in @wq context (or called directly if
-  * @wq is NULL).
-  *
-- * NOTE: like continue_at(), this macro expands to a return in the caller!
-- *
-  * The ref the caller of continue_at_nobarrier() had on @cl is now owned by @fn,
-  * thus it's not safe to touch anything protected by @cl after a
-  * continue_at_nobarrier().
+You need to use stuff like SMART to monitor disk health, read up on
+smartctl. Okay, disks often fail unexpectedly even when SMART says
+they're healthy, but if things like the relocate count start climbing
+it's an indication of trouble ...
+
+Some people are very aggressive and replace disks at the first hint of
+trouble. Other people only replace disks when things start going badly
+wrong. Your call. The whole point of raid is to enable recovery when
+things have otherwise gone irretrievably wrong, but it's best not to
+push your luck that far as many people have found out ...
+> 
+> Is mdadm able to notify some possible bad-things before they happens ?
+
+You probably need to turn on kernel logging. And monitor the logs!
+
+Also keep an eye on /proc/mdstat.
+
+I don't know what state xosview is in at the moment but that's my
+favourite monitoring tool. Run it on the server with the array, use X to
+display it on your local desktop. Last I checked, the raid monitoring
+stuff was broken, but the author knows and was fixing it.
+> 
+> Many times in the past our raid controllers forced a bad sector
+> reallocation during proactive tasks like patrol read. This saved me
+> many times before. I've tried to not replace a disks when this
+> reallocation was made (it was a test server) and after some weeks the
+> disk failed totally.
+
+Read up on how disks fail. If you tell mdadm to do a "scrub" it will
+read the array from end to end. This should cause any dodgy sectors to
+be rewritten. Note that this doesn't mean anything is wrong - just as
+RAM decays and needs to be refreshed every few nanoseconds, so disk
+decays and needs to be refreshed every few years. It's only when the
+magnetic coating begins to physically decay that you need to worry about
+the health of the disk on that score.
+
+Cheers,
+Wol
+
