@@ -1,61 +1,27 @@
-From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+From: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
 Subject: Re: Disk Monitoring
-Date: Thu, 29 Jun 2017 12:14:00 +0200
-Message-ID: <20170629101400.GA4604@metamorpher.de>
-References: <20170628131917.BF1911235B6@gemini.denx.de>
- <CAJH6TXhJ8HoH=tnxreZ4EAFYQYDh05KHAQxwoLqp1f7zQM4N0g@mail.gmail.com>
+Date: Thu, 29 Jun 2017 12:14:04 +0200
+Message-ID: <CAJH6TXi8L-x7NiyAqG+22xosqAJ39LB0e_N6b-9PiMrhA2jnjg@mail.gmail.com>
+References: <20170628131917.BF1911235B6@gemini.denx.de> <CAJH6TXhJ8HoH=tnxreZ4EAFYQYDh05KHAQxwoLqp1f7zQM4N0g@mail.gmail.com>
+ <38899f11-c6d2-cab7-eb25-093cfa802b40@thelounge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAJH6TXhJ8HoH=tnxreZ4EAFYQYDh05KHAQxwoLqp1f7zQM4N0g@mail.gmail.com>
+In-Reply-To: <38899f11-c6d2-cab7-eb25-093cfa802b40@thelounge.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
+To: Reindl Harald <h.reindl@thelounge.net>
 Cc: Wolfgang Denk <wd@denx.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jun 29, 2017 at 11:52:01AM +0200, Gandalf Corvotempesta wrote:
-> disk0 has sector X (unused) failed.
-> It's unused, thus, kernel knows nothing about that and is operting
-> normally, no warning message or anything. If you don't access sector
-> X, you wont be notified.
-> 
-> Now, disk1 hard-fail. You have to replace that.
-> During the resync, you have to resync the whole array, but disk0,
-> sectorX is unreadable.
-> The resync will fail and the whole array is down.
+2017-06-29 12:10 GMT+02:00 Reindl Harald <h.reindl@thelounge.net>:
+> there is nothing like "unused part of the array" since the linux-raid-layer
+> knows nothing about the filesystem on top and hence a raid-check (scrub)
+> reads every block as said hardware controller
 
-> Am I missing something?
+Yes, this during a scrub.
+Without a scrub, kernel know nothing about an unused part of the array.
 
-Not really. It's just that you have to set up the monitoring yourself, 
-whichever way you feel comfortable with.
-
-SMART has a selftest feature which causes the disk to read sectors.
-You can do whole disk at once (long selftest) or in segments 
-(selective selftest). I prefer the selective since that allows you 
-to place the selftest in the time window of least activity.
-
-Instead of spending an entire day (or two) testing the whole drive 
-you can put in an hour or two of testing every night and have it 
-cover the entire drive over X days.
-
-mdadm can also perform RAID checks, reading everything including 
-parity, RAID layer would attempt to fix read errors then, and you 
-can also check mismatch_cnt.
-
-The mdadm checks can also done region by region to distribute 
-load over several days but I think it's still not a direct option 
-for mdadm, the region can be set via /proc or /sys somewhere...
-
-Both smartmontools and mdadm should be set up to run such checks 
-periodically, and instantly notify you by email if any problem occurs.
-
-If a disk has problems, replace it, otherwise it's a gamble. 
-Whatever promises RAID makes regarding redundancy, it always 
-assumes the other drives to work 100%.
-
-It's very unlikely to encounter read errors during rebuild if 
-you ran regular checks and didn't forcibly keep bad drives.
-
-Regards
-Andreas Klauer
+Let's assume a unreadable sector is found during a scrub. What
+happens? mdadm kick-out the disk from the array? It tried to
+reallocate the failed sector somewhere keeping the disk up and running
+(and thus, resolving the URE that would prevent a successful resync?)
