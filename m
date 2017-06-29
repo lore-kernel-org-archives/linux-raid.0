@@ -1,7 +1,7 @@
 From: Mateusz Korniak <mateusz-lists@ant.gliwice.pl>
 Subject: Re: Disk Monitoring
-Date: Thu, 29 Jun 2017 12:20:43 +0200
-Message-ID: <7688279.9aYLlOU3Xu@matkor-lenovo>
+Date: Thu, 29 Jun 2017 12:14:56 +0200
+Message-ID: <2113365.0QvyMCaQ9I@matkor-lenovo>
 References: <20170628131917.BF1911235B6@gemini.denx.de> <CAJH6TXhJ8HoH=tnxreZ4EAFYQYDh05KHAQxwoLqp1f7zQM4N0g@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -18,9 +18,10 @@ On Thursday 29 of June 2017 11:52:01 Gandalf Corvotempesta wrote:
 > (probably in an unallocated part of the array, thus the OS doesn't
 > know anything about that).
 
-Also SMART long test should perform "read/verify scan of all of the use=
-r data=20
-area", so it is good idea to do it periodically and monitor results.
+One can read of all disks/partitions used by RAIDs by script
+/usr/share/mdadm/checkarray=20
+
+In many distros it is set to be performed monthly out-of-box.
 
 --=20
 Mateusz Korniak
