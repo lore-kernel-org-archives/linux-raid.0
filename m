@@ -1,25 +1,22 @@
-From: Reindl Harald <h.reindl@thelounge.net>
+From: Wols Lists <antlists@youngman.org.uk>
 Subject: Re: Disk Monitoring
-Date: Thu, 29 Jun 2017 12:37:02 +0200
-Message-ID: <167de591-7d06-dfa7-f7e6-01a2ee4fd0e5@thelounge.net>
+Date: Thu, 29 Jun 2017 15:28:57 +0100
+Message-ID: <59550EA9.9070506@youngman.org.uk>
 References: <20170628131917.BF1911235B6@gemini.denx.de>
  <CAJH6TXhJ8HoH=tnxreZ4EAFYQYDh05KHAQxwoLqp1f7zQM4N0g@mail.gmail.com>
  <38899f11-c6d2-cab7-eb25-093cfa802b40@thelounge.net>
  <CAJH6TXi8L-x7NiyAqG+22xosqAJ39LB0e_N6b-9PiMrhA2jnjg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <CAJH6TXi8L-x7NiyAqG+22xosqAJ39LB0e_N6b-9PiMrhA2jnjg@mail.gmail.com>
-Content-Language: de-CH
 Sender: linux-raid-owner@vger.kernel.org
 To: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
-Cc: Wolfgang Denk <wd@denx.de>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-
-Am 29.06.2017 um 12:14 schrieb Gandalf Corvotempesta:
+On 29/06/17 11:14, Gandalf Corvotempesta wrote:
 > 2017-06-29 12:10 GMT+02:00 Reindl Harald <h.reindl@thelounge.net>:
 >> there is nothing like "unused part of the array" since the linux-raid-layer
 >> knows nothing about the filesystem on top and hence a raid-check (scrub)
@@ -33,13 +30,20 @@ Am 29.06.2017 um 12:14 schrieb Gandalf Corvotempesta:
 > reallocate the failed sector somewhere keeping the disk up and running
 > (and thus, resolving the URE that would prevent a successful resync?)
 
-it tries to re-write the data block (depending if repair is enabled)
+As I said, read up on disk failure modes. If mdadm finds an unreadable
+sector, it does a full stripe read, recalculates the unreadable sector,
+and writes it back.
 
-normally the disk firmware itself is aware of that event and realloctes 
-a spare block so the rewrite just suceeds until the disk runs out of 
-spare sectors
+If the read failed because the magnetism has decayed, this will reset it
+and everything will be hunky-dory again.
 
-but well, even if it just kicks out the disk soon enough you can replace 
-it, the array rebuilds and nothing happened - without smart-check/scrub 
-sooner or later it's detected due rebuild after a disk failed and the 
-array is gone
+If the read failed because the magnetic layer is failing, it will
+trigger a relocate (which SMART should pick up) and alarm bells should
+start ringing. It might be benign, the magnetic properties of the layer
+might be failing such that that bit can no longer record properly, or it
+could be that the layer itself is starting to fail, at which point you
+are heading for platter failure, a head crash, and serious pain.
+
+Cheers,
+Wol
+
