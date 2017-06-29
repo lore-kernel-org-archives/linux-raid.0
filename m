@@ -1,32 +1,23 @@
-From: Mateusz Korniak <mateusz-lists@ant.gliwice.pl>
+From: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
 Subject: Re: Disk Monitoring
-Date: Thu, 29 Jun 2017 12:14:56 +0200
-Message-ID: <2113365.0QvyMCaQ9I@matkor-lenovo>
+Date: Thu, 29 Jun 2017 12:25:03 +0200
+Message-ID: <CAJH6TXgp4CdrJ9a3Ku-R8Tj5Am+zeyRO_Bc_hFidWVLZW1f9vQ@mail.gmail.com>
 References: <20170628131917.BF1911235B6@gemini.denx.de> <CAJH6TXhJ8HoH=tnxreZ4EAFYQYDh05KHAQxwoLqp1f7zQM4N0g@mail.gmail.com>
+ <7688279.9aYLlOU3Xu@matkor-lenovo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJH6TXhJ8HoH=tnxreZ4EAFYQYDh05KHAQxwoLqp1f7zQM4N0g@mail.gmail.com>
+In-Reply-To: <7688279.9aYLlOU3Xu@matkor-lenovo>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
+To: Mateusz Korniak <mateusz-lists@ant.gliwice.pl>
 Cc: Wolfgang Denk <wd@denx.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday 29 of June 2017 11:52:01 Gandalf Corvotempesta wrote:
-> During a patrol read some bad sectors where found
-> (probably in an unallocated part of the array, thus the OS doesn't
-> know anything about that).
+2017-06-29 12:20 GMT+02:00 Mateusz Korniak <mateusz-lists@ant.gliwice.pl>:
+> Also SMART long test should perform "read/verify scan of all of the user data
+> area", so it is good idea to do it periodically and monitor results.
 
-One can read of all disks/partitions used by RAIDs by script
-/usr/share/mdadm/checkarray=20
-
-In many distros it is set to be performed monthly out-of-box.
-
---=20
-Mateusz Korniak
-"(...) mam brata - powa=C5=BCny, domator, liczykrupa, hipokryta, pobo=C5=
-=BCni=C5=9B,
- =09kr=C3=B3tko m=C3=B3wi=C4=85c - podpora spo=C5=82ecze=C5=84stwa."
-=09=09=09=09Nikos Kazantzakis - "Grek Zorba"
-
+I'm already using this, but is not very reliable.
+I had some disks failed by hw raid controller due to unreadable sector
+(3/11) still passing the smart long test
+and some failed smart long test still passing the hw raid check
