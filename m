@@ -1,112 +1,55 @@
-From: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
-Subject: [PATCH] md: add a 'md_numa_node' module parameter
-Date: Fri, 30 Jun 2017 16:57:01 +0800
-Message-ID: <1498813021-2538-1-git-send-email-liuzhengyuan@kylinos.cn>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: Big Endian RAID discovery problem (metadata 1!)
+Date: Fri, 30 Jun 2017 12:23:02 +0200
+Message-ID: <5ad440930939d721bf43a8aedb3150d9@sf-tec.de>
+References: <3667530.kn15F7ggIU@daneel.sf-tec.de>
+ <AE3DE84B-9DF9-40DD-8DE2-1DD3D3CE3650@athompso.net>
+ <10863311.m9o1njCPed@daneel.sf-tec.de>
+ <20170629215453.oswihni5xwcsbihq@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170629215453.oswihni5xwcsbihq@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@kernel.org, neilb@suse.com, liuyun01@kylinos.cn
+To: Shaohua Li <shli@kernel.org>
+Cc: Adam Thompson <athompso@athompso.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This module parameter allows user to control which numa node
-the memory for mainly structures (e.g. mddev, md_rdev,
-request_queue, gendisk) is allocated from. The idea came from
-commit 115485e83f49 ("dm: add 'dm_numa_node' module parameter").
-If we don't set this parameter while loading module, it won't
-affect the md default behavior.
+Am 2017-06-29 23:54, schrieb Shaohua Li:
+> On Wed, Jun 28, 2017 at 10:14:21PM +0200, Rolf Eike Beer wrote:
+>> Am Mittwoch, 28. Juni 2017, 13:55:09 schrieb Adam Thompson:
+>> > If you search the archives, I had a very similar problem a few months ago.
+>> > There is already an option to mdadm to update a v1 superblock in the wrong
+>> > byte order.  It just wasn't obvious when looking at the mdadm man page.
+>> > Going from memory, search for "byte order" instead of "endian" to find the
+>> > option. -Adam
+>> 
+>> If you refer to --update=byteorder, the documentation says it is only 
+>> for
+>> v0.90 metadata. Also it's only the super_offset field so far, other 
+>> fields like
+>> magic are correct.
+> 
+> There are patches in this side to correctly handle endian:
+> 
+> 1345921393ba md: fix incorrect use of lexx_to_cpu in 
+> does_sb_need_changing
+> 3fb632e40d76 md: fix super_offset endianness in 
+> super_1_rdev_size_change
+> 
+> probably we should make these into -stable tree, but I never got 
+> reports on
+> this side. can you try?
 
-numa_node_id field is added so personality such as raid0 could
-inherit the node from mddev, for other personality which has its
-own handling thread we could add such a module parameter too.I
-would send those patches soon.
+That likely is the problem, it was kernel 4.10.2 that was used when the 
+array was expanded. Yes, this should really get backported. And 
+something like "byteorder2" for mdadm to make it easier for people with 
+such arrays to fix that would be awesome.
 
-Signed-off-by: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
----
- drivers/md/md.c | 13 +++++++++----
- drivers/md/md.h |  2 ++
- 2 files changed, 11 insertions(+), 4 deletions(-)
+After changing the sb_offset and csum fields (and UUID, to avoid bad 
+resync from the old member on sda2) and writing the sectors back my 
+array now works again.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 092b48f..aa44e92 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -184,6 +184,8 @@ static int start_readonly;
-  */
- static bool create_on_open = true;
- 
-+static int md_numa_node = NUMA_NO_NODE;
-+
- /* bio_clone_mddev
-  * like bio_clone, but with a local bio set
-  */
-@@ -588,7 +590,7 @@ static struct mddev *mddev_find(dev_t unit)
- 	}
- 	spin_unlock(&all_mddevs_lock);
- 
--	new = kzalloc(sizeof(*new), GFP_KERNEL);
-+	new = kzalloc_node(sizeof(*new), GFP_KERNEL, md_numa_node);
- 	if (!new)
- 		return NULL;
- 
-@@ -598,6 +600,7 @@ static struct mddev *mddev_find(dev_t unit)
- 	else
- 		new->md_minor = MINOR(unit) >> MdpMinorShift;
- 
-+	new->numa_node_id = md_numa_node;
- 	mddev_init(new);
- 
- 	goto retry;
-@@ -3387,7 +3390,7 @@ static struct md_rdev *md_import_device(dev_t newdev, int super_format, int supe
- 	struct md_rdev *rdev;
- 	sector_t size;
- 
--	rdev = kzalloc(sizeof(*rdev), GFP_KERNEL);
-+	rdev = kzalloc_node(sizeof(*rdev), GFP_KERNEL, md_numa_node);
- 	if (!rdev)
- 		return ERR_PTR(-ENOMEM);
- 
-@@ -5256,7 +5259,7 @@ static int md_alloc(dev_t dev, char *name)
- 		mddev->hold_active = UNTIL_STOP;
- 
- 	error = -ENOMEM;
--	mddev->queue = blk_alloc_queue(GFP_KERNEL);
-+	mddev->queue = blk_alloc_queue_node(GFP_KERNEL, md_numa_node);
- 	if (!mddev->queue)
- 		goto abort;
- 	mddev->queue->queuedata = mddev;
-@@ -5264,7 +5267,7 @@ static int md_alloc(dev_t dev, char *name)
- 	blk_queue_make_request(mddev->queue, md_make_request);
- 	blk_set_stacking_limits(&mddev->queue->limits);
- 
--	disk = alloc_disk(1 << shift);
-+	disk = alloc_disk_node(1 << shift, md_numa_node);
- 	if (!disk) {
- 		blk_cleanup_queue(mddev->queue);
- 		mddev->queue = NULL;
-@@ -9252,6 +9255,8 @@ module_param_call(start_ro, set_ro, get_ro, NULL, S_IRUSR|S_IWUSR);
- module_param(start_dirty_degraded, int, S_IRUGO|S_IWUSR);
- module_param_call(new_array, add_named_array, NULL, NULL, S_IWUSR);
- module_param(create_on_open, bool, S_IRUSR|S_IWUSR);
-+module_param(md_numa_node, int, S_IRUGO | S_IWUSR);
-+MODULE_PARM_DESC(md_numa_node, "NUMA node for md device memory allocations");
- 
- MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION("MD RAID framework");
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 991f0fe..5c91033 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -459,6 +459,8 @@ struct mddev {
- 	void (*sync_super)(struct mddev *mddev, struct md_rdev *rdev);
- 	struct md_cluster_info		*cluster_info;
- 	unsigned int			good_device_nr;	/* good device num within cluster raid */
-+
-+	int numa_node_id;
- };
- 
- enum recovery_flags {
--- 
-2.7.4
-
-
-
+Eike
