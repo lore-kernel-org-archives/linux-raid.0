@@ -1,129 +1,416 @@
-From: Gilad Ben-Yossef <gilad@benyossef.com>
-Subject: [PATCH v3 03/28] crypto: ccm: use -EIOCBQUEUED for
-	backlog indication
-Date: Sun,  2 Jul 2017 17:41:45 +0300
-Message-ID: <1499006535-19760-4-git-send-email-gilad@benyossef.com>
+From: Gilad Ben-Yossef <gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
+Subject: [PATCH v3 01/28] crypto: change backlog return code to -EIOCBQUEUED
+Date: Sun,  2 Jul 2017 17:41:43 +0300
+Message-ID: <1499006535-19760-2-git-send-email-gilad__41967.9872495637$1499006611$gmane$org@benyossef.com>
 References: <1499006535-19760-1-git-send-email-gilad@benyossef.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1499006535-19760-1-git-send-email-gilad@benyossef.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Tom Lendacky <thomas.lendacky@amd.com>, Gary Hook <gary.hook@amd.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Arnaud Ebalard <arno@natisbad.org>, Matthias Brugger <matthias.bgg@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, keyrings@vger.kernel.org, linux-arm-kernel@lis
-Cc: Ofir Drang <ofir.drang@arm.com>
+Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+In-Reply-To: <1499006535-19760-1-git-send-email-gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
+List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
+Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+To: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tom Lendacky <thomas.lendacky-5C7GfCeVMHo@public.gmane.org>, Gary Hook <gary.hook-5C7GfCeVMHo@public.gmane.org>, Boris Brezillon <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Arnaud Ebalard <arno-LkuqDEemtHBg9hUCZPvPmw@public.gmane.org>, Matthias Brugger <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alasdair Kergon <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Steve French <sfrench-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, "Theodore Y. Ts'o" <tytso-3s7WtUTddSA@public.gmane.org>, Jaegeuk Kim <jaegeuk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Dmitry Kasatkin <dmitry.kasatkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, keyrings-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel@lists
+Cc: Ofir Drang <ofir.drang-5wv7dgnIgG8@public.gmane.org>
 List-Id: linux-raid.ids
 
-Replace -EBUSY with -EIOCBQUEUED for backlog queueing indication
-as part of new API
+The crypto API was using the -EBUSY return value to indicate
+both a hard failure to submit a crypto operation into a
+transformation provider when the latter was busy and the backlog
+mechanism was not enabled as well as a notification that the operation
+was queued into the backlog when the backlog mechanism was enabled.
 
-Signed-off-by: Gilad Ben-Yossef <gilad@benyossef.com>
+Having the same return code indicate two very different conditions
+depending on a flag is both error prone and requires extra runtime
+check like the following to discern between the cases:
+
+	if (err == -EINPROGRESS ||
+	    (err == -EBUSY && (ahash_request_flags(req) &
+			       CRYPTO_TFM_REQ_MAY_BACKLOG)))
+
+This patch changes the return code used to indicate a crypto op
+was queued in the backlog to -EIOCBQUEUED, thus resolving both
+issues.
+
+Signed-off-by: Gilad Ben-Yossef <gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
 ---
+ crypto/af_alg.c                     |  2 +-
+ crypto/ahash.c                      | 12 +++---------
+ crypto/algapi.c                     |  6 ++++--
+ crypto/asymmetric_keys/public_key.c |  2 +-
+ crypto/chacha20poly1305.c           |  2 +-
+ crypto/cryptd.c                     |  4 +---
+ crypto/cts.c                        |  6 ++----
+ crypto/drbg.c                       |  2 +-
+ crypto/gcm.c                        |  2 +-
+ crypto/lrw.c                        |  8 ++------
+ crypto/rsa-pkcs1pad.c               | 16 ++++------------
+ crypto/tcrypt.c                     |  6 +++---
+ crypto/testmgr.c                    | 12 ++++++------
+ crypto/xts.c                        |  8 ++------
+ 14 files changed, 32 insertions(+), 56 deletions(-)
 
-This patch should be squashed with the first patch in the series
-when applied.
-
- drivers/crypto/ccp/ccp-crypto-main.c | 10 +++++-----
- drivers/crypto/ccp/ccp-dev.c         |  8 +++++---
- drivers/crypto/ccp/ccp-dmaengine.c   |  2 +-
- 3 files changed, 11 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/crypto/ccp/ccp-crypto-main.c b/drivers/crypto/ccp/ccp-crypto-main.c
-index 8dccbdd..dff1998 100644
---- a/drivers/crypto/ccp/ccp-crypto-main.c
-+++ b/drivers/crypto/ccp/ccp-crypto-main.c
-@@ -84,7 +84,7 @@ struct ccp_crypto_cpu {
- 
- static inline bool ccp_crypto_success(int err)
+diff --git a/crypto/af_alg.c b/crypto/af_alg.c
+index 3556d8e..c67daba 100644
+--- a/crypto/af_alg.c
++++ b/crypto/af_alg.c
+@@ -484,7 +484,7 @@ int af_alg_wait_for_completion(int err, struct af_alg_completion *completion)
  {
--	if (err && (err != -EINPROGRESS) && (err != -EBUSY))
-+	if (err && (err != -EINPROGRESS) && (err != -EIOCBQUEUED))
- 		return false;
+ 	switch (err) {
+ 	case -EINPROGRESS:
+-	case -EBUSY:
++	case -EIOCBQUEUED:
+ 		wait_for_completion(&completion->completion);
+ 		reinit_completion(&completion->completion);
+ 		err = completion->err;
+diff --git a/crypto/ahash.c b/crypto/ahash.c
+index 826cd7a..65d08db 100644
+--- a/crypto/ahash.c
++++ b/crypto/ahash.c
+@@ -334,9 +334,7 @@ static int ahash_op_unaligned(struct ahash_request *req,
+ 		return err;
  
- 	return true;
-@@ -148,7 +148,7 @@ static void ccp_crypto_complete(void *data, int err)
+ 	err = op(req);
+-	if (err == -EINPROGRESS ||
+-	    (err == -EBUSY && (ahash_request_flags(req) &
+-			       CRYPTO_TFM_REQ_MAY_BACKLOG)))
++	if (err == -EINPROGRESS || err == -EIOCBQUEUED)
+ 		return err;
  
- 	if (err == -EINPROGRESS) {
- 		/* Only propagate the -EINPROGRESS if necessary */
--		if (crypto_cmd->ret == -EBUSY) {
-+		if (crypto_cmd->ret == -EIOCBQUEUED) {
- 			crypto_cmd->ret = -EINPROGRESS;
- 			req->complete(req, -EINPROGRESS);
- 		}
-@@ -166,8 +166,8 @@ static void ccp_crypto_complete(void *data, int err)
- 		backlog->req->complete(backlog->req, -EINPROGRESS);
- 	}
+ 	ahash_restore_req(req, err);
+@@ -394,9 +392,7 @@ static int ahash_def_finup_finish1(struct ahash_request *req, int err)
+ 	req->base.complete = ahash_def_finup_done2;
  
--	/* Transition the state from -EBUSY to -EINPROGRESS first */
--	if (crypto_cmd->ret == -EBUSY)
-+	/* Transition the state from -EIOCBQUEUED to -EINPROGRESS first */
-+	if (crypto_cmd->ret == -EIOCBQUEUED)
- 		req->complete(req, -EINPROGRESS);
+ 	err = crypto_ahash_reqtfm(req)->final(req);
+-	if (err == -EINPROGRESS ||
+-	    (err == -EBUSY && (ahash_request_flags(req) &
+-			       CRYPTO_TFM_REQ_MAY_BACKLOG)))
++	if (err == -EINPROGRESS || err == -EIOCBQUEUED)
+ 		return err;
  
- 	/* Completion callbacks */
-@@ -243,7 +243,7 @@ static int ccp_crypto_enqueue_cmd(struct ccp_crypto_cmd *crypto_cmd)
- 	}
+ out:
+@@ -432,9 +428,7 @@ static int ahash_def_finup(struct ahash_request *req)
+ 		return err;
  
- 	if (req_queue.cmd_count >= CCP_CRYPTO_MAX_QLEN) {
--		ret = -EBUSY;
-+		ret = -EIOCBQUEUED;
- 		if (req_queue.backlog == &req_queue.cmds)
- 			req_queue.backlog = &crypto_cmd->entry;
- 	}
-diff --git a/drivers/crypto/ccp/ccp-dev.c b/drivers/crypto/ccp/ccp-dev.c
-index 2506b50..b7006d7 100644
---- a/drivers/crypto/ccp/ccp-dev.c
-+++ b/drivers/crypto/ccp/ccp-dev.c
-@@ -269,7 +269,7 @@ EXPORT_SYMBOL_GPL(ccp_version);
-  * Queue a cmd to be processed by the CCP. If queueing the cmd
-  * would exceed the defined length of the cmd queue the cmd will
-  * only be queued if the CCP_CMD_MAY_BACKLOG flag is set and will
-- * result in a return code of -EBUSY.
-+ * result in a return code of -EIOCBQUEUED;
-  *
-  * The callback routine specified in the ccp_cmd struct will be
-  * called to notify the caller of completion (if the cmd was not
-@@ -280,7 +280,7 @@ EXPORT_SYMBOL_GPL(ccp_version);
-  *
-  * The cmd has been successfully queued if:
-  *   the return code is -EINPROGRESS or
-- *   the return code is -EBUSY and CCP_CMD_MAY_BACKLOG flag is set
-+ *   the return code is -EIOCBQUEUED
-  */
- int ccp_enqueue_cmd(struct ccp_cmd *cmd)
- {
-@@ -307,8 +307,10 @@ int ccp_enqueue_cmd(struct ccp_cmd *cmd)
+ 	err = tfm->update(req);
+-	if (err == -EINPROGRESS ||
+-	    (err == -EBUSY && (ahash_request_flags(req) &
+-			       CRYPTO_TFM_REQ_MAY_BACKLOG)))
++	if (err == -EINPROGRESS || err == -EIOCBQUEUED)
+ 		return err;
  
- 	if (ccp->cmd_count >= MAX_CMD_QLEN) {
- 		ret = -EBUSY;
--		if (cmd->flags & CCP_CMD_MAY_BACKLOG)
-+		if (cmd->flags & CCP_CMD_MAY_BACKLOG) {
- 			list_add_tail(&cmd->entry, &ccp->backlog);
-+			ret = -EIOCBQUEUED;
+ 	return ahash_def_finup_finish1(req, err);
+diff --git a/crypto/algapi.c b/crypto/algapi.c
+index e4cc761..3bfd1fa 100644
+--- a/crypto/algapi.c
++++ b/crypto/algapi.c
+@@ -897,9 +897,11 @@ int crypto_enqueue_request(struct crypto_queue *queue,
+ 	int err = -EINPROGRESS;
+ 
+ 	if (unlikely(queue->qlen >= queue->max_qlen)) {
+-		err = -EBUSY;
+-		if (!(request->flags & CRYPTO_TFM_REQ_MAY_BACKLOG))
++		if (!(request->flags & CRYPTO_TFM_REQ_MAY_BACKLOG)) {
++			err = -EBUSY;
+ 			goto out;
 +		}
- 	} else {
- 		ret = -EINPROGRESS;
- 		ccp->cmd_count++;
-diff --git a/drivers/crypto/ccp/ccp-dmaengine.c b/drivers/crypto/ccp/ccp-dmaengine.c
-index e00be01..ab67304 100644
---- a/drivers/crypto/ccp/ccp-dmaengine.c
-+++ b/drivers/crypto/ccp/ccp-dmaengine.c
-@@ -146,7 +146,7 @@ static int ccp_issue_next_cmd(struct ccp_dma_desc *desc)
- 		desc->tx_desc.cookie, cmd);
++		err = -EIOCBQUEUED;
+ 		if (queue->backlog == &queue->list)
+ 			queue->backlog = &request->list;
+ 	}
+diff --git a/crypto/asymmetric_keys/public_key.c b/crypto/asymmetric_keys/public_key.c
+index 3cd6e12..3fad1fd 100644
+--- a/crypto/asymmetric_keys/public_key.c
++++ b/crypto/asymmetric_keys/public_key.c
+@@ -141,7 +141,7 @@ int public_key_verify_signature(const struct public_key *pkey,
+ 	 * signature and returns that to us.
+ 	 */
+ 	ret = crypto_akcipher_verify(req);
+-	if ((ret == -EINPROGRESS) || (ret == -EBUSY)) {
++	if ((ret == -EINPROGRESS) || (ret == -EIOCBQUEUED)) {
+ 		wait_for_completion(&compl.completion);
+ 		ret = compl.err;
+ 	}
+diff --git a/crypto/chacha20poly1305.c b/crypto/chacha20poly1305.c
+index db1bc31..e0e2785 100644
+--- a/crypto/chacha20poly1305.c
++++ b/crypto/chacha20poly1305.c
+@@ -79,7 +79,7 @@ static inline void async_done_continue(struct aead_request *req, int err,
+ 	if (!err)
+ 		err = cont(req);
  
- 	ret = ccp_enqueue_cmd(&cmd->ccp_cmd);
--	if (!ret || (ret == -EINPROGRESS) || (ret == -EBUSY))
-+	if (!ret || (ret == -EINPROGRESS) || (ret == -EIOCBQUEUED))
- 		return 0;
+-	if (err != -EINPROGRESS && err != -EBUSY)
++	if (err != -EINPROGRESS && err != -EIOCBQUEUED)
+ 		aead_request_complete(req, err);
+ }
  
- 	dev_dbg(desc->ccp->dev, "%s - error: ret=%d, tx %d, cmd=%p\n", __func__,
+diff --git a/crypto/cryptd.c b/crypto/cryptd.c
+index 0508c48..5daca13 100644
+--- a/crypto/cryptd.c
++++ b/crypto/cryptd.c
+@@ -137,16 +137,14 @@ static int cryptd_enqueue_request(struct cryptd_queue *queue,
+ 	int cpu, err;
+ 	struct cryptd_cpu_queue *cpu_queue;
+ 	atomic_t *refcnt;
+-	bool may_backlog;
+ 
+ 	cpu = get_cpu();
+ 	cpu_queue = this_cpu_ptr(queue->cpu_queue);
+ 	err = crypto_enqueue_request(&cpu_queue->queue, request);
+ 
+ 	refcnt = crypto_tfm_ctx(request->tfm);
+-	may_backlog = request->flags & CRYPTO_TFM_REQ_MAY_BACKLOG;
+ 
+-	if (err == -EBUSY && !may_backlog)
++	if (err == -EBUSY)
+ 		goto out_put_cpu;
+ 
+ 	queue_work_on(cpu, kcrypto_wq, &cpu_queue->work);
+diff --git a/crypto/cts.c b/crypto/cts.c
+index 243f591..e2068dc 100644
+--- a/crypto/cts.c
++++ b/crypto/cts.c
+@@ -136,8 +136,7 @@ static void crypto_cts_encrypt_done(struct crypto_async_request *areq, int err)
+ 		goto out;
+ 
+ 	err = cts_cbc_encrypt(req);
+-	if (err == -EINPROGRESS ||
+-	    (err == -EBUSY && req->base.flags & CRYPTO_TFM_REQ_MAY_BACKLOG))
++	if (err == -EINPROGRESS || err == -EIOCBQUEUED)
+ 		return;
+ 
+ out:
+@@ -229,8 +228,7 @@ static void crypto_cts_decrypt_done(struct crypto_async_request *areq, int err)
+ 		goto out;
+ 
+ 	err = cts_cbc_decrypt(req);
+-	if (err == -EINPROGRESS ||
+-	    (err == -EBUSY && req->base.flags & CRYPTO_TFM_REQ_MAY_BACKLOG))
++	if (err == -EINPROGRESS || err == -EIOCBQUEUED)
+ 		return;
+ 
+ out:
+diff --git a/crypto/drbg.c b/crypto/drbg.c
+index 633a88e..850b451 100644
+--- a/crypto/drbg.c
++++ b/crypto/drbg.c
+@@ -1767,7 +1767,7 @@ static int drbg_kcapi_sym_ctr(struct drbg_state *drbg,
+ 		case 0:
+ 			break;
+ 		case -EINPROGRESS:
+-		case -EBUSY:
++		case -EIOCBQUEUED:
+ 			wait_for_completion(&drbg->ctr_completion);
+ 			if (!drbg->ctr_async_err) {
+ 				reinit_completion(&drbg->ctr_completion);
+diff --git a/crypto/gcm.c b/crypto/gcm.c
+index 3841b5e..ffac821 100644
+--- a/crypto/gcm.c
++++ b/crypto/gcm.c
+@@ -151,7 +151,7 @@ static int crypto_gcm_setkey(struct crypto_aead *aead, const u8 *key,
+ 				   sizeof(data->hash), data->iv);
+ 
+ 	err = crypto_skcipher_encrypt(&data->req);
+-	if (err == -EINPROGRESS || err == -EBUSY) {
++	if (err == -EINPROGRESS || err == -EIOCBQUEUED) {
+ 		wait_for_completion(&data->result.completion);
+ 		err = data->result.err;
+ 	}
+diff --git a/crypto/lrw.c b/crypto/lrw.c
+index a8bfae4..e2b1378 100644
+--- a/crypto/lrw.c
++++ b/crypto/lrw.c
+@@ -328,9 +328,7 @@ static int do_encrypt(struct skcipher_request *req, int err)
+ 		      crypto_skcipher_encrypt(subreq) ?:
+ 		      post_crypt(req);
+ 
+-		if (err == -EINPROGRESS ||
+-		    (err == -EBUSY &&
+-		     req->base.flags & CRYPTO_TFM_REQ_MAY_BACKLOG))
++		if (err == -EINPROGRESS || err == -EIOCBQUEUED)
+ 			return err;
+ 	}
+ 
+@@ -380,9 +378,7 @@ static int do_decrypt(struct skcipher_request *req, int err)
+ 		      crypto_skcipher_decrypt(subreq) ?:
+ 		      post_crypt(req);
+ 
+-		if (err == -EINPROGRESS ||
+-		    (err == -EBUSY &&
+-		     req->base.flags & CRYPTO_TFM_REQ_MAY_BACKLOG))
++		if (err == -EINPROGRESS || err == -EIOCBQUEUED)
+ 			return err;
+ 	}
+ 
+diff --git a/crypto/rsa-pkcs1pad.c b/crypto/rsa-pkcs1pad.c
+index 407c64b..3c82542 100644
+--- a/crypto/rsa-pkcs1pad.c
++++ b/crypto/rsa-pkcs1pad.c
+@@ -279,9 +279,7 @@ static int pkcs1pad_encrypt(struct akcipher_request *req)
+ 				   req->dst, ctx->key_size - 1, req->dst_len);
+ 
+ 	err = crypto_akcipher_encrypt(&req_ctx->child_req);
+-	if (err != -EINPROGRESS &&
+-			(err != -EBUSY ||
+-			 !(req->base.flags & CRYPTO_TFM_REQ_MAY_BACKLOG)))
++	if (err != -EINPROGRESS && err != -EIOCBQUEUED)
+ 		return pkcs1pad_encrypt_sign_complete(req, err);
+ 
+ 	return err;
+@@ -383,9 +381,7 @@ static int pkcs1pad_decrypt(struct akcipher_request *req)
+ 				   ctx->key_size);
+ 
+ 	err = crypto_akcipher_decrypt(&req_ctx->child_req);
+-	if (err != -EINPROGRESS &&
+-			(err != -EBUSY ||
+-			 !(req->base.flags & CRYPTO_TFM_REQ_MAY_BACKLOG)))
++	if (err != -EINPROGRESS && err != -EIOCBQUEUED)
+ 		return pkcs1pad_decrypt_complete(req, err);
+ 
+ 	return err;
+@@ -440,9 +436,7 @@ static int pkcs1pad_sign(struct akcipher_request *req)
+ 				   req->dst, ctx->key_size - 1, req->dst_len);
+ 
+ 	err = crypto_akcipher_sign(&req_ctx->child_req);
+-	if (err != -EINPROGRESS &&
+-			(err != -EBUSY ||
+-			 !(req->base.flags & CRYPTO_TFM_REQ_MAY_BACKLOG)))
++	if (err != -EINPROGRESS && err != -EIOCBQUEUED)
+ 		return pkcs1pad_encrypt_sign_complete(req, err);
+ 
+ 	return err;
+@@ -561,9 +555,7 @@ static int pkcs1pad_verify(struct akcipher_request *req)
+ 				   ctx->key_size);
+ 
+ 	err = crypto_akcipher_verify(&req_ctx->child_req);
+-	if (err != -EINPROGRESS &&
+-			(err != -EBUSY ||
+-			 !(req->base.flags & CRYPTO_TFM_REQ_MAY_BACKLOG)))
++	if (err != -EINPROGRESS && err != -EIOCBQUEUED)
+ 		return pkcs1pad_verify_complete(req, err);
+ 
+ 	return err;
+diff --git a/crypto/tcrypt.c b/crypto/tcrypt.c
+index 0dd6a43..57f7ac4 100644
+--- a/crypto/tcrypt.c
++++ b/crypto/tcrypt.c
+@@ -97,7 +97,7 @@ static void tcrypt_complete(struct crypto_async_request *req, int err)
+ 
+ static inline int do_one_aead_op(struct aead_request *req, int ret)
+ {
+-	if (ret == -EINPROGRESS || ret == -EBUSY) {
++	if (ret == -EINPROGRESS || ret == -EIOCBQUEUED) {
+ 		struct tcrypt_result *tr = req->base.data;
+ 
+ 		ret = wait_for_completion_interruptible(&tr->completion);
+@@ -397,7 +397,7 @@ static void test_hash_sg_init(struct scatterlist *sg)
+ 
+ static inline int do_one_ahash_op(struct ahash_request *req, int ret)
+ {
+-	if (ret == -EINPROGRESS || ret == -EBUSY) {
++	if (ret == -EINPROGRESS || ret == -EIOCBQUEUED) {
+ 		struct tcrypt_result *tr = req->base.data;
+ 
+ 		wait_for_completion(&tr->completion);
+@@ -765,7 +765,7 @@ static void test_hash_speed(const char *algo, unsigned int secs,
+ 
+ static inline int do_one_acipher_op(struct skcipher_request *req, int ret)
+ {
+-	if (ret == -EINPROGRESS || ret == -EBUSY) {
++	if (ret == -EINPROGRESS || ret == -EIOCBQUEUED) {
+ 		struct tcrypt_result *tr = req->base.data;
+ 
+ 		wait_for_completion(&tr->completion);
+diff --git a/crypto/testmgr.c b/crypto/testmgr.c
+index 7125ba3..fb5418f 100644
+--- a/crypto/testmgr.c
++++ b/crypto/testmgr.c
+@@ -195,7 +195,7 @@ static void testmgr_free_buf(char *buf[XBUFSIZE])
+ 
+ static int wait_async_op(struct tcrypt_result *tr, int ret)
+ {
+-	if (ret == -EINPROGRESS || ret == -EBUSY) {
++	if (ret == -EINPROGRESS || ret == -EIOCBQUEUED) {
+ 		wait_for_completion(&tr->completion);
+ 		reinit_completion(&tr->completion);
+ 		ret = tr->err;
+@@ -425,7 +425,7 @@ static int __test_hash(struct crypto_ahash *tfm,
+ 		case 0:
+ 			break;
+ 		case -EINPROGRESS:
+-		case -EBUSY:
++		case -EIOCBQUEUED:
+ 			wait_for_completion(&tresult.completion);
+ 			reinit_completion(&tresult.completion);
+ 			ret = tresult.err;
+@@ -723,7 +723,7 @@ static int __test_aead(struct crypto_aead *tfm, int enc,
+ 			}
+ 			break;
+ 		case -EINPROGRESS:
+-		case -EBUSY:
++		case -EIOCBQUEUED:
+ 			wait_for_completion(&result.completion);
+ 			reinit_completion(&result.completion);
+ 			ret = result.err;
+@@ -880,7 +880,7 @@ static int __test_aead(struct crypto_aead *tfm, int enc,
+ 			}
+ 			break;
+ 		case -EINPROGRESS:
+-		case -EBUSY:
++		case -EIOCBQUEUED:
+ 			wait_for_completion(&result.completion);
+ 			reinit_completion(&result.completion);
+ 			ret = result.err;
+@@ -1171,7 +1171,7 @@ static int __test_skcipher(struct crypto_skcipher *tfm, int enc,
+ 		case 0:
+ 			break;
+ 		case -EINPROGRESS:
+-		case -EBUSY:
++		case -EIOCBQUEUED:
+ 			wait_for_completion(&result.completion);
+ 			reinit_completion(&result.completion);
+ 			ret = result.err;
+@@ -1279,7 +1279,7 @@ static int __test_skcipher(struct crypto_skcipher *tfm, int enc,
+ 		case 0:
+ 			break;
+ 		case -EINPROGRESS:
+-		case -EBUSY:
++		case -EIOCBQUEUED:
+ 			wait_for_completion(&result.completion);
+ 			reinit_completion(&result.completion);
+ 			ret = result.err;
+diff --git a/crypto/xts.c b/crypto/xts.c
+index d86c11a..b4b90cc 100644
+--- a/crypto/xts.c
++++ b/crypto/xts.c
+@@ -269,9 +269,7 @@ static int do_encrypt(struct skcipher_request *req, int err)
+ 		      crypto_skcipher_encrypt(subreq) ?:
+ 		      post_crypt(req);
+ 
+-		if (err == -EINPROGRESS ||
+-		    (err == -EBUSY &&
+-		     req->base.flags & CRYPTO_TFM_REQ_MAY_BACKLOG))
++		if (err == -EINPROGRESS || err == -EIOCBQUEUED)
+ 			return err;
+ 	}
+ 
+@@ -321,9 +319,7 @@ static int do_decrypt(struct skcipher_request *req, int err)
+ 		      crypto_skcipher_decrypt(subreq) ?:
+ 		      post_crypt(req);
+ 
+-		if (err == -EINPROGRESS ||
+-		    (err == -EBUSY &&
+-		     req->base.flags & CRYPTO_TFM_REQ_MAY_BACKLOG))
++		if (err == -EINPROGRESS || err == -EIOCBQUEUED)
+ 			return err;
+ 	}
+ 
 -- 
 2.1.4
