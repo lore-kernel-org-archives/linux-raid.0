@@ -1,258 +1,183 @@
 From: Gilad Ben-Yossef <gilad@benyossef.com>
-Subject: [PATCH v3 21/28] fscrypt: move to generic async completion
-Date: Sun,  2 Jul 2017 17:42:03 +0300
-Message-ID: <1499006535-19760-22-git-send-email-gilad__9453.60400151021$1499006859$gmane$org@benyossef.com>
+Subject: [PATCH v3 23/28] ima: move to generic async completion
+Date: Sun,  2 Jul 2017 17:42:05 +0300
+Message-ID: <1499006535-19760-24-git-send-email-gilad@benyossef.com>
 References: <1499006535-19760-1-git-send-email-gilad@benyossef.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Return-path: <dm-devel-bounces@redhat.com>
 In-Reply-To: <1499006535-19760-1-git-send-email-gilad@benyossef.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Tom Lendacky <thomas.lendacky@amd.com>, Gary Hook <gary.hook@amd.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Arnaud Ebalard <arno@natisbad.org>, Matthias Brugger <matthias.bgg@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, keyrings@vger.kernel.org, linux-arm-kernel@lists
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Tom Lendacky <thomas.lendacky@amd.com>, Gary Hook <gary.hook@amd.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Arnaud Ebalard <arno@natisbad.org>, Matthias Brugger <matthias.bgg@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, keyrings@vger.kernel.org, linux-arm-kernel@lis
 Cc: Ofir Drang <ofir.drang@arm.com>
 List-Id: linux-raid.ids
 
-fscrypt starts several async. crypto ops and waiting for them to
-complete. Move it over to generic code doing the same.
+ima starts several async crypto ops and  waits for their completions.
+Move it over to generic code doing the same.
 
 Signed-off-by: Gilad Ben-Yossef <gilad@benyossef.com>
+Acked-by: Mimi Zohar <zohar@linux.vnet.ibm.com>
 ---
- fs/crypto/crypto.c          | 29 +++++------------------------
- fs/crypto/fname.c           | 36 ++++++------------------------------
- fs/crypto/fscrypt_private.h | 10 ----------
- fs/crypto/keyinfo.c         | 21 +++------------------
- 4 files changed, 14 insertions(+), 82 deletions(-)
+ security/integrity/ima/ima_crypto.c | 56 +++++++++++--------------------------
+ 1 file changed, 17 insertions(+), 39 deletions(-)
 
-diff --git a/fs/crypto/crypto.c b/fs/crypto/crypto.c
-index c5c89ed..4e8740f 100644
---- a/fs/crypto/crypto.c
-+++ b/fs/crypto/crypto.c
-@@ -126,21 +126,6 @@ struct fscrypt_ctx *fscrypt_get_ctx(const struct inode *inode, gfp_t gfp_flags)
- }
- EXPORT_SYMBOL(fscrypt_get_ctx);
+diff --git a/security/integrity/ima/ima_crypto.c b/security/integrity/ima/ima_crypto.c
+index 226dd88..0e4db1fe 100644
+--- a/security/integrity/ima/ima_crypto.c
++++ b/security/integrity/ima/ima_crypto.c
+@@ -27,11 +27,6 @@
  
--/**
-- * page_crypt_complete() - completion callback for page crypto
-- * @req: The asynchronous cipher request context
-- * @res: The result of the cipher operation
-- */
--static void page_crypt_complete(struct crypto_async_request *req, int res)
--{
--	struct fscrypt_completion_result *ecr = req->data;
--
--	if (res == -EINPROGRESS)
--		return;
--	ecr->res = res;
--	complete(&ecr->completion);
--}
--
- int fscrypt_do_page_crypto(const struct inode *inode, fscrypt_direction_t rw,
- 			   u64 lblk_num, struct page *src_page,
- 			   struct page *dest_page, unsigned int len,
-@@ -151,7 +136,7 @@ int fscrypt_do_page_crypto(const struct inode *inode, fscrypt_direction_t rw,
- 		u8 padding[FS_IV_SIZE - sizeof(__le64)];
- 	} iv;
- 	struct skcipher_request *req = NULL;
--	DECLARE_FS_COMPLETION_RESULT(ecr);
-+	DECLARE_CRYPTO_WAIT(wait);
- 	struct scatterlist dst, src;
- 	struct fscrypt_info *ci = inode->i_crypt_info;
- 	struct crypto_skcipher *tfm = ci->ci_ctfm;
-@@ -179,7 +164,7 @@ int fscrypt_do_page_crypto(const struct inode *inode, fscrypt_direction_t rw,
+ #include "ima.h"
  
- 	skcipher_request_set_callback(
- 		req, CRYPTO_TFM_REQ_MAY_BACKLOG | CRYPTO_TFM_REQ_MAY_SLEEP,
--		page_crypt_complete, &ecr);
-+		crypto_req_done, &wait);
- 
- 	sg_init_table(&dst, 1);
- 	sg_set_page(&dst, dest_page, len, offs);
-@@ -187,14 +172,10 @@ int fscrypt_do_page_crypto(const struct inode *inode, fscrypt_direction_t rw,
- 	sg_set_page(&src, src_page, len, offs);
- 	skcipher_request_set_crypt(req, &src, &dst, len, &iv);
- 	if (rw == FS_DECRYPT)
--		res = crypto_skcipher_decrypt(req);
-+		res = crypto_wait_req(crypto_skcipher_decrypt(req), &wait);
- 	else
--		res = crypto_skcipher_encrypt(req);
--	if (res == -EINPROGRESS || res == -EIOCBQUEUED) {
--		BUG_ON(req->base.data != &ecr);
--		wait_for_completion(&ecr.completion);
--		res = ecr.res;
--	}
-+		res = crypto_wait_req(crypto_skcipher_encrypt(req), &wait);
-+
- 	skcipher_request_free(req);
- 	if (res) {
- 		printk_ratelimited(KERN_ERR
-diff --git a/fs/crypto/fname.c b/fs/crypto/fname.c
-index ad9f814..a80a0d3 100644
---- a/fs/crypto/fname.c
-+++ b/fs/crypto/fname.c
-@@ -15,21 +15,6 @@
- #include "fscrypt_private.h"
- 
- /**
-- * fname_crypt_complete() - completion callback for filename crypto
-- * @req: The asynchronous cipher request context
-- * @res: The result of the cipher operation
-- */
--static void fname_crypt_complete(struct crypto_async_request *req, int res)
--{
--	struct fscrypt_completion_result *ecr = req->data;
--
--	if (res == -EINPROGRESS)
--		return;
--	ecr->res = res;
--	complete(&ecr->completion);
--}
--
--/**
-  * fname_encrypt() - encrypt a filename
-  *
-  * The caller must have allocated sufficient memory for the @oname string.
-@@ -40,7 +25,7 @@ static int fname_encrypt(struct inode *inode,
- 			const struct qstr *iname, struct fscrypt_str *oname)
- {
- 	struct skcipher_request *req = NULL;
--	DECLARE_FS_COMPLETION_RESULT(ecr);
-+	DECLARE_CRYPTO_WAIT(wait);
- 	struct fscrypt_info *ci = inode->i_crypt_info;
- 	struct crypto_skcipher *tfm = ci->ci_ctfm;
- 	int res = 0;
-@@ -76,17 +61,12 @@ static int fname_encrypt(struct inode *inode,
- 	}
- 	skcipher_request_set_callback(req,
- 			CRYPTO_TFM_REQ_MAY_BACKLOG | CRYPTO_TFM_REQ_MAY_SLEEP,
--			fname_crypt_complete, &ecr);
-+			crypto_req_done, &wait);
- 	sg_init_one(&sg, oname->name, cryptlen);
- 	skcipher_request_set_crypt(req, &sg, &sg, cryptlen, iv);
- 
- 	/* Do the encryption */
--	res = crypto_skcipher_encrypt(req);
--	if (res == -EINPROGRESS || res == -EBUSY) {
--		/* Request is being completed asynchronously; wait for it */
--		wait_for_completion(&ecr.completion);
--		res = ecr.res;
--	}
-+	res = crypto_wait_req(crypto_skcipher_encrypt(req), &wait);
- 	skcipher_request_free(req);
- 	if (res < 0) {
- 		printk_ratelimited(KERN_ERR
-@@ -110,7 +90,7 @@ static int fname_decrypt(struct inode *inode,
- 				struct fscrypt_str *oname)
- {
- 	struct skcipher_request *req = NULL;
--	DECLARE_FS_COMPLETION_RESULT(ecr);
-+	DECLARE_CRYPTO_WAIT(wait);
- 	struct scatterlist src_sg, dst_sg;
- 	struct fscrypt_info *ci = inode->i_crypt_info;
- 	struct crypto_skcipher *tfm = ci->ci_ctfm;
-@@ -131,7 +111,7 @@ static int fname_decrypt(struct inode *inode,
- 	}
- 	skcipher_request_set_callback(req,
- 		CRYPTO_TFM_REQ_MAY_BACKLOG | CRYPTO_TFM_REQ_MAY_SLEEP,
--		fname_crypt_complete, &ecr);
-+		crypto_req_done, &wait);
- 
- 	/* Initialize IV */
- 	memset(iv, 0, FS_CRYPTO_BLOCK_SIZE);
-@@ -140,11 +120,7 @@ static int fname_decrypt(struct inode *inode,
- 	sg_init_one(&src_sg, iname->name, iname->len);
- 	sg_init_one(&dst_sg, oname->name, oname->len);
- 	skcipher_request_set_crypt(req, &src_sg, &dst_sg, iname->len, iv);
--	res = crypto_skcipher_decrypt(req);
--	if (res == -EINPROGRESS || res == -EBUSY) {
--		wait_for_completion(&ecr.completion);
--		res = ecr.res;
--	}
-+	res = crypto_wait_req(crypto_skcipher_decrypt(req), &wait);
- 	skcipher_request_free(req);
- 	if (res < 0) {
- 		printk_ratelimited(KERN_ERR
-diff --git a/fs/crypto/fscrypt_private.h b/fs/crypto/fscrypt_private.h
-index a1d5021..c0f1881 100644
---- a/fs/crypto/fscrypt_private.h
-+++ b/fs/crypto/fscrypt_private.h
-@@ -69,16 +69,6 @@ typedef enum {
- #define FS_CTX_REQUIRES_FREE_ENCRYPT_FL		0x00000001
- #define FS_CTX_HAS_BOUNCE_BUFFER_FL		0x00000002
- 
--struct fscrypt_completion_result {
+-struct ahash_completion {
 -	struct completion completion;
--	int res;
+-	int err;
 -};
 -
--#define DECLARE_FS_COMPLETION_RESULT(ecr) \
--	struct fscrypt_completion_result ecr = { \
--		COMPLETION_INITIALIZER_ONSTACK((ecr).completion), 0 }
--
--
- /* crypto.c */
- extern int fscrypt_initialize(unsigned int cop_flags);
- extern struct workqueue_struct *fscrypt_read_workqueue;
-diff --git a/fs/crypto/keyinfo.c b/fs/crypto/keyinfo.c
-index 018c588..3c84cac 100644
---- a/fs/crypto/keyinfo.c
-+++ b/fs/crypto/keyinfo.c
-@@ -17,17 +17,6 @@
+ /* minimum file size for ahash use */
+ static unsigned long ima_ahash_minsize;
+ module_param_named(ahash_minsize, ima_ahash_minsize, ulong, 0644);
+@@ -196,30 +191,13 @@ static void ima_free_atfm(struct crypto_ahash *tfm)
+ 		crypto_free_ahash(tfm);
+ }
  
- static struct crypto_shash *essiv_hash_tfm;
- 
--static void derive_crypt_complete(struct crypto_async_request *req, int rc)
--{
--	struct fscrypt_completion_result *ecr = req->data;
--
--	if (rc == -EINPROGRESS)
--		return;
--
--	ecr->res = rc;
--	complete(&ecr->completion);
--}
--
- /**
-  * derive_key_aes() - Derive a key using AES-128-ECB
-  * @deriving_key: Encryption key used for derivation.
-@@ -42,7 +31,7 @@ static int derive_key_aes(u8 deriving_key[FS_AES_128_ECB_KEY_SIZE],
+-static void ahash_complete(struct crypto_async_request *req, int err)
++static inline int ahash_wait(int err, struct crypto_wait *wait)
  {
- 	int res = 0;
- 	struct skcipher_request *req = NULL;
--	DECLARE_FS_COMPLETION_RESULT(ecr);
-+	DECLARE_CRYPTO_WAIT(wait);
- 	struct scatterlist src_sg, dst_sg;
- 	struct crypto_skcipher *tfm = crypto_alloc_skcipher("ecb(aes)", 0, 0);
+-	struct ahash_completion *res = req->data;
  
-@@ -59,7 +48,7 @@ static int derive_key_aes(u8 deriving_key[FS_AES_128_ECB_KEY_SIZE],
- 	}
- 	skcipher_request_set_callback(req,
- 			CRYPTO_TFM_REQ_MAY_BACKLOG | CRYPTO_TFM_REQ_MAY_SLEEP,
--			derive_crypt_complete, &ecr);
-+			crypto_req_done, &wait);
- 	res = crypto_skcipher_setkey(tfm, deriving_key,
- 					FS_AES_128_ECB_KEY_SIZE);
- 	if (res < 0)
-@@ -69,11 +58,7 @@ static int derive_key_aes(u8 deriving_key[FS_AES_128_ECB_KEY_SIZE],
- 	sg_init_one(&dst_sg, derived_raw_key, source_key->size);
- 	skcipher_request_set_crypt(req, &src_sg, &dst_sg, source_key->size,
- 				   NULL);
--	res = crypto_skcipher_encrypt(req);
--	if (res == -EINPROGRESS || res == -EBUSY) {
--		wait_for_completion(&ecr.completion);
--		res = ecr.res;
+-	if (err == -EINPROGRESS)
+-		return;
+-	res->err = err;
+-	complete(&res->completion);
+-}
++	err = crypto_wait_req(err, wait);
+ 
+-static int ahash_wait(int err, struct ahash_completion *res)
+-{
+-	switch (err) {
+-	case 0:
+-		break;
+-	case -EINPROGRESS:
+-	case -EIOCBQUEUED:
+-		wait_for_completion(&res->completion);
+-		reinit_completion(&res->completion);
+-		err = res->err;
+-		/* fall through */
+-	default:
++	if (err)
+ 		pr_crit_ratelimited("ahash calculation failed: err: %d\n", err);
 -	}
-+	res = crypto_wait_req(crypto_skcipher_encrypt(req), &wait);
+ 
+ 	return err;
+ }
+@@ -233,7 +211,7 @@ static int ima_calc_file_hash_atfm(struct file *file,
+ 	int rc, read = 0, rbuf_len, active = 0, ahash_rc = 0;
+ 	struct ahash_request *req;
+ 	struct scatterlist sg[1];
+-	struct ahash_completion res;
++	struct crypto_wait wait;
+ 	size_t rbuf_size[2];
+ 
+ 	hash->length = crypto_ahash_digestsize(tfm);
+@@ -242,12 +220,12 @@ static int ima_calc_file_hash_atfm(struct file *file,
+ 	if (!req)
+ 		return -ENOMEM;
+ 
+-	init_completion(&res.completion);
++	crypto_init_wait(&wait);
+ 	ahash_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG |
+ 				   CRYPTO_TFM_REQ_MAY_SLEEP,
+-				   ahash_complete, &res);
++				   crypto_req_done, &wait);
+ 
+-	rc = ahash_wait(crypto_ahash_init(req), &res);
++	rc = ahash_wait(crypto_ahash_init(req), &wait);
+ 	if (rc)
+ 		goto out1;
+ 
+@@ -288,7 +266,7 @@ static int ima_calc_file_hash_atfm(struct file *file,
+ 			 * read/request, wait for the completion of the
+ 			 * previous ahash_update() request.
+ 			 */
+-			rc = ahash_wait(ahash_rc, &res);
++			rc = ahash_wait(ahash_rc, &wait);
+ 			if (rc)
+ 				goto out3;
+ 		}
+@@ -304,7 +282,7 @@ static int ima_calc_file_hash_atfm(struct file *file,
+ 			 * read/request, wait for the completion of the
+ 			 * previous ahash_update() request.
+ 			 */
+-			rc = ahash_wait(ahash_rc, &res);
++			rc = ahash_wait(ahash_rc, &wait);
+ 			if (rc)
+ 				goto out3;
+ 		}
+@@ -318,7 +296,7 @@ static int ima_calc_file_hash_atfm(struct file *file,
+ 			active = !active; /* swap buffers, if we use two */
+ 	}
+ 	/* wait for the last update request to complete */
+-	rc = ahash_wait(ahash_rc, &res);
++	rc = ahash_wait(ahash_rc, &wait);
+ out3:
+ 	if (read)
+ 		file->f_mode &= ~FMODE_READ;
+@@ -327,7 +305,7 @@ static int ima_calc_file_hash_atfm(struct file *file,
+ out2:
+ 	if (!rc) {
+ 		ahash_request_set_crypt(req, NULL, hash->digest, 0);
+-		rc = ahash_wait(crypto_ahash_final(req), &res);
++		rc = ahash_wait(crypto_ahash_final(req), &wait);
+ 	}
+ out1:
+ 	ahash_request_free(req);
+@@ -527,7 +505,7 @@ static int calc_buffer_ahash_atfm(const void *buf, loff_t len,
+ {
+ 	struct ahash_request *req;
+ 	struct scatterlist sg;
+-	struct ahash_completion res;
++	struct crypto_wait wait;
+ 	int rc, ahash_rc = 0;
+ 
+ 	hash->length = crypto_ahash_digestsize(tfm);
+@@ -536,12 +514,12 @@ static int calc_buffer_ahash_atfm(const void *buf, loff_t len,
+ 	if (!req)
+ 		return -ENOMEM;
+ 
+-	init_completion(&res.completion);
++	crypto_init_wait(&wait);
+ 	ahash_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG |
+ 				   CRYPTO_TFM_REQ_MAY_SLEEP,
+-				   ahash_complete, &res);
++				   crypto_req_done, &wait);
+ 
+-	rc = ahash_wait(crypto_ahash_init(req), &res);
++	rc = ahash_wait(crypto_ahash_init(req), &wait);
+ 	if (rc)
+ 		goto out;
+ 
+@@ -551,10 +529,10 @@ static int calc_buffer_ahash_atfm(const void *buf, loff_t len,
+ 	ahash_rc = crypto_ahash_update(req);
+ 
+ 	/* wait for the update request to complete */
+-	rc = ahash_wait(ahash_rc, &res);
++	rc = ahash_wait(ahash_rc, &wait);
+ 	if (!rc) {
+ 		ahash_request_set_crypt(req, NULL, hash->digest, 0);
+-		rc = ahash_wait(crypto_ahash_final(req), &res);
++		rc = ahash_wait(crypto_ahash_final(req), &wait);
+ 	}
  out:
- 	skcipher_request_free(req);
- 	crypto_free_skcipher(tfm);
+ 	ahash_request_free(req);
 -- 
 2.1.4
