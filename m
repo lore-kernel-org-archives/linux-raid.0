@@ -1,309 +1,242 @@
-From: Gilad Ben-Yossef <gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
-Subject: [PATCH v3 15/28] crypto: move algif to generic async completion
-Date: Sun,  2 Jul 2017 17:41:57 +0300
-Message-ID: <1499006535-19760-16-git-send-email-gilad__49212.518570903$1499006805$gmane$org@benyossef.com>
+From: Gilad Ben-Yossef <gilad@benyossef.com>
+Subject: [PATCH v3 20/28] dm: move dm-verity to generic async
+	completion
+Date: Sun,  2 Jul 2017 17:42:02 +0300
+Message-ID: <1499006535-19760-21-git-send-email-gilad@benyossef.com>
 References: <1499006535-19760-1-git-send-email-gilad@benyossef.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <1499006535-19760-1-git-send-email-gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
-List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-To: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tom Lendacky <thomas.lendacky-5C7GfCeVMHo@public.gmane.org>, Gary Hook <gary.hook-5C7GfCeVMHo@public.gmane.org>, Boris Brezillon <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Arnaud Ebalard <arno-LkuqDEemtHBg9hUCZPvPmw@public.gmane.org>, Matthias Brugger <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alasdair Kergon <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Steve French <sfrench-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, "Theodore Y. Ts'o" <tytso-3s7WtUTddSA@public.gmane.org>, Jaegeuk Kim <jaegeuk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Dmitry Kasatkin <dmitry.kasatkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, keyrings-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel@lists
-Cc: Ofir Drang <ofir.drang-5wv7dgnIgG8@public.gmane.org>
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <1499006535-19760-1-git-send-email-gilad@benyossef.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Tom Lendacky <thomas.lendacky@amd.com>, Gary Hook <gary.hook@amd.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Arnaud Ebalard <arno@natisbad.org>, Matthias Brugger <matthias.bgg@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, keyrings@vger.kernel.org, linux-arm-kernel@lis
+Cc: Ofir Drang <ofir.drang@arm.com>
 List-Id: linux-raid.ids
 
-algif starts several async crypto ops and waits for their completion.
+dm-verity is starting async. crypto ops and waiting for them to complete.
 Move it over to generic code doing the same.
 
-Signed-off-by: Gilad Ben-Yossef <gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
----
- crypto/af_alg.c         | 27 ---------------------------
- crypto/algif_aead.c     | 14 +++++++-------
- crypto/algif_hash.c     | 29 +++++++++++++----------------
- crypto/algif_skcipher.c | 15 +++++++--------
- include/crypto/if_alg.h | 14 --------------
- 5 files changed, 27 insertions(+), 72 deletions(-)
+This also fixes a possible data coruption bug created by the
+use of wait_for_completion_interruptible() without dealing
+correctly with an interrupt aborting the wait prior to the
+async op finishing.
 
-diff --git a/crypto/af_alg.c b/crypto/af_alg.c
-index c67daba..bf4acaf 100644
---- a/crypto/af_alg.c
-+++ b/crypto/af_alg.c
-@@ -480,33 +480,6 @@ int af_alg_cmsg_send(struct msghdr *msg, struct af_alg_control *con)
+Signed-off-by: Gilad Ben-Yossef <gilad@benyossef.com>
+---
+ drivers/md/dm-verity-target.c | 81 +++++++++++--------------------------------
+ drivers/md/dm-verity.h        |  5 ---
+ 2 files changed, 20 insertions(+), 66 deletions(-)
+
+diff --git a/drivers/md/dm-verity-target.c b/drivers/md/dm-verity-target.c
+index 4fe7d18..343dd0d 100644
+--- a/drivers/md/dm-verity-target.c
++++ b/drivers/md/dm-verity-target.c
+@@ -92,74 +92,33 @@ static sector_t verity_position_at_level(struct dm_verity *v, sector_t block,
+ 	return block >> (level * v->hash_per_block_bits);
  }
- EXPORT_SYMBOL_GPL(af_alg_cmsg_send);
  
--int af_alg_wait_for_completion(int err, struct af_alg_completion *completion)
+-/*
+- * Callback function for asynchrnous crypto API completion notification
+- */
+-static void verity_op_done(struct crypto_async_request *base, int err)
 -{
--	switch (err) {
--	case -EINPROGRESS:
--	case -EIOCBQUEUED:
--		wait_for_completion(&completion->completion);
--		reinit_completion(&completion->completion);
--		err = completion->err;
--		break;
--	};
--
--	return err;
--}
--EXPORT_SYMBOL_GPL(af_alg_wait_for_completion);
--
--void af_alg_complete(struct crypto_async_request *req, int err)
--{
--	struct af_alg_completion *completion = req->data;
+-	struct verity_result *res = (struct verity_result *)base->data;
 -
 -	if (err == -EINPROGRESS)
 -		return;
 -
--	completion->err = err;
--	complete(&completion->completion);
+-	res->err = err;
+-	complete(&res->completion);
 -}
--EXPORT_SYMBOL_GPL(af_alg_complete);
 -
- static int __init af_alg_init(void)
+-/*
+- * Wait for async crypto API callback
+- */
+-static inline int verity_complete_op(struct verity_result *res, int ret)
+-{
+-	switch (ret) {
+-	case 0:
+-		break;
+-
+-	case -EINPROGRESS:
+-	case -EIOCBQUEUED:
+-		ret = wait_for_completion_interruptible(&res->completion);
+-		if (!ret)
+-			ret = res->err;
+-		reinit_completion(&res->completion);
+-		break;
+-
+-	default:
+-		DMERR("verity_wait_hash: crypto op submission failed: %d", ret);
+-	}
+-
+-	if (unlikely(ret < 0))
+-		DMERR("verity_wait_hash: crypto op failed: %d", ret);
+-
+-	return ret;
+-}
+-
+ static int verity_hash_update(struct dm_verity *v, struct ahash_request *req,
+ 				const u8 *data, size_t len,
+-				struct verity_result *res)
++				struct crypto_wait *wait)
  {
- 	int err = proto_register(&alg_proto, 0);
-diff --git a/crypto/algif_aead.c b/crypto/algif_aead.c
-index 8af664f..4881cb1 100644
---- a/crypto/algif_aead.c
-+++ b/crypto/algif_aead.c
-@@ -57,7 +57,7 @@ struct aead_ctx {
+ 	struct scatterlist sg;
  
- 	void *iv;
+ 	sg_init_one(&sg, data, len);
+ 	ahash_request_set_crypt(req, &sg, NULL, len);
  
--	struct af_alg_completion completion;
-+	struct crypto_wait wait;
+-	return verity_complete_op(res, crypto_ahash_update(req));
++	return crypto_wait_req(crypto_ahash_update(req), wait);
+ }
  
- 	unsigned long used;
+ /*
+  * Wrapper for crypto_ahash_init, which handles verity salting.
+  */
+ static int verity_hash_init(struct dm_verity *v, struct ahash_request *req,
+-				struct verity_result *res)
++				struct crypto_wait *wait)
+ {
+ 	int r;
  
-@@ -648,10 +648,10 @@ static int aead_recvmsg_sync(struct socket *sock, struct msghdr *msg, int flags)
- 			       used, ctx->iv);
- 	aead_request_set_ad(&ctx->aead_req, ctx->aead_assoclen);
+ 	ahash_request_set_tfm(req, v->tfm);
+ 	ahash_request_set_callback(req, CRYPTO_TFM_REQ_MAY_SLEEP |
+ 					CRYPTO_TFM_REQ_MAY_BACKLOG,
+-					verity_op_done, (void *)res);
+-	init_completion(&res->completion);
++					crypto_req_done, (void *)wait);
++	crypto_init_wait(wait);
  
--	err = af_alg_wait_for_completion(ctx->enc ?
--					 crypto_aead_encrypt(&ctx->aead_req) :
--					 crypto_aead_decrypt(&ctx->aead_req),
--					 &ctx->completion);
-+	err = crypto_wait_req(ctx->enc ?
-+			      crypto_aead_encrypt(&ctx->aead_req) :
-+			      crypto_aead_decrypt(&ctx->aead_req),
-+			      &ctx->wait);
+-	r = verity_complete_op(res, crypto_ahash_init(req));
++	r = crypto_wait_req(crypto_ahash_init(req), wait);
  
- 	if (err) {
- 		/* EBADMSG implies a valid cipher operation took place */
-@@ -912,7 +912,7 @@ static int aead_accept_parent_nokey(void *private, struct sock *sk)
- 	ctx->enc = 0;
- 	ctx->tsgl.cur = 0;
- 	ctx->aead_assoclen = 0;
--	af_alg_init_completion(&ctx->completion);
-+	crypto_init_wait(&ctx->wait);
- 	sg_init_table(ctx->tsgl.sg, ALG_MAX_PAGES);
- 	INIT_LIST_HEAD(&ctx->list);
- 
-@@ -920,7 +920,7 @@ static int aead_accept_parent_nokey(void *private, struct sock *sk)
- 
- 	aead_request_set_tfm(&ctx->aead_req, aead);
- 	aead_request_set_callback(&ctx->aead_req, CRYPTO_TFM_REQ_MAY_BACKLOG,
--				  af_alg_complete, &ctx->completion);
-+				  crypto_req_done, &ctx->wait);
- 
- 	sk->sk_destruct = aead_sock_destruct;
- 
-diff --git a/crypto/algif_hash.c b/crypto/algif_hash.c
-index 5e92bd2..6a6739a 100644
---- a/crypto/algif_hash.c
-+++ b/crypto/algif_hash.c
-@@ -26,7 +26,7 @@ struct hash_ctx {
- 
- 	u8 *result;
- 
--	struct af_alg_completion completion;
-+	struct crypto_wait wait;
- 
- 	unsigned int len;
- 	bool more;
-@@ -88,8 +88,7 @@ static int hash_sendmsg(struct socket *sock, struct msghdr *msg,
- 		if ((msg->msg_flags & MSG_MORE))
- 			hash_free_result(sk, ctx);
- 
--		err = af_alg_wait_for_completion(crypto_ahash_init(&ctx->req),
--						&ctx->completion);
-+		err = crypto_wait_req(crypto_ahash_init(&ctx->req), &ctx->wait);
- 		if (err)
- 			goto unlock;
- 	}
-@@ -110,8 +109,8 @@ static int hash_sendmsg(struct socket *sock, struct msghdr *msg,
- 
- 		ahash_request_set_crypt(&ctx->req, ctx->sgl.sg, NULL, len);
- 
--		err = af_alg_wait_for_completion(crypto_ahash_update(&ctx->req),
--						 &ctx->completion);
-+		err = crypto_wait_req(crypto_ahash_update(&ctx->req),
-+				      &ctx->wait);
- 		af_alg_free_sg(&ctx->sgl);
- 		if (err)
- 			goto unlock;
-@@ -129,8 +128,8 @@ static int hash_sendmsg(struct socket *sock, struct msghdr *msg,
- 			goto unlock;
- 
- 		ahash_request_set_crypt(&ctx->req, NULL, ctx->result, 0);
--		err = af_alg_wait_for_completion(crypto_ahash_final(&ctx->req),
--						 &ctx->completion);
-+		err = crypto_wait_req(crypto_ahash_final(&ctx->req),
-+				      &ctx->wait);
+ 	if (unlikely(r < 0)) {
+ 		DMERR("crypto_ahash_init failed: %d", r);
+@@ -167,18 +126,18 @@ static int verity_hash_init(struct dm_verity *v, struct ahash_request *req,
  	}
  
- unlock:
-@@ -171,7 +170,7 @@ static ssize_t hash_sendpage(struct socket *sock, struct page *page,
- 	} else {
- 		if (!ctx->more) {
- 			err = crypto_ahash_init(&ctx->req);
--			err = af_alg_wait_for_completion(err, &ctx->completion);
-+			err = crypto_wait_req(err, &ctx->wait);
- 			if (err)
- 				goto unlock;
+ 	if (likely(v->salt_size && (v->version >= 1)))
+-		r = verity_hash_update(v, req, v->salt, v->salt_size, res);
++		r = verity_hash_update(v, req, v->salt, v->salt_size, wait);
+ 
+ 	return r;
+ }
+ 
+ static int verity_hash_final(struct dm_verity *v, struct ahash_request *req,
+-			     u8 *digest, struct verity_result *res)
++			     u8 *digest, struct crypto_wait *wait)
+ {
+ 	int r;
+ 
+ 	if (unlikely(v->salt_size && (!v->version))) {
+-		r = verity_hash_update(v, req, v->salt, v->salt_size, res);
++		r = verity_hash_update(v, req, v->salt, v->salt_size, wait);
+ 
+ 		if (r < 0) {
+ 			DMERR("verity_hash_final failed updating salt: %d", r);
+@@ -187,7 +146,7 @@ static int verity_hash_final(struct dm_verity *v, struct ahash_request *req,
+ 	}
+ 
+ 	ahash_request_set_crypt(req, NULL, digest, 0);
+-	r = verity_complete_op(res, crypto_ahash_final(req));
++	r = crypto_wait_req(crypto_ahash_final(req), wait);
+ out:
+ 	return r;
+ }
+@@ -196,17 +155,17 @@ int verity_hash(struct dm_verity *v, struct ahash_request *req,
+ 		const u8 *data, size_t len, u8 *digest)
+ {
+ 	int r;
+-	struct verity_result res;
++	struct crypto_wait wait;
+ 
+-	r = verity_hash_init(v, req, &res);
++	r = verity_hash_init(v, req, &wait);
+ 	if (unlikely(r < 0))
+ 		goto out;
+ 
+-	r = verity_hash_update(v, req, data, len, &res);
++	r = verity_hash_update(v, req, data, len, &wait);
+ 	if (unlikely(r < 0))
+ 		goto out;
+ 
+-	r = verity_hash_final(v, req, digest, &res);
++	r = verity_hash_final(v, req, digest, &wait);
+ 
+ out:
+ 	return r;
+@@ -389,7 +348,7 @@ int verity_hash_for_block(struct dm_verity *v, struct dm_verity_io *io,
+  * Calculates the digest for the given bio
+  */
+ int verity_for_io_block(struct dm_verity *v, struct dm_verity_io *io,
+-			struct bvec_iter *iter, struct verity_result *res)
++			struct bvec_iter *iter, struct crypto_wait *wait)
+ {
+ 	unsigned int todo = 1 << v->data_dev_block_bits;
+ 	struct bio *bio = dm_bio_from_per_bio_data(io, v->ti->per_io_data_size);
+@@ -414,7 +373,7 @@ int verity_for_io_block(struct dm_verity *v, struct dm_verity_io *io,
+ 		 */
+ 		sg_set_page(&sg, bv.bv_page, len, bv.bv_offset);
+ 		ahash_request_set_crypt(req, &sg, NULL, len);
+-		r = verity_complete_op(res, crypto_ahash_update(req));
++		r = crypto_wait_req(crypto_ahash_update(req), wait);
+ 
+ 		if (unlikely(r < 0)) {
+ 			DMERR("verity_for_io_block crypto op failed: %d", r);
+@@ -482,7 +441,7 @@ static int verity_verify_io(struct dm_verity_io *io)
+ 	struct dm_verity *v = io->v;
+ 	struct bvec_iter start;
+ 	unsigned b;
+-	struct verity_result res;
++	struct crypto_wait wait;
+ 
+ 	for (b = 0; b < io->n_blocks; b++) {
+ 		int r;
+@@ -507,17 +466,17 @@ static int verity_verify_io(struct dm_verity_io *io)
+ 			continue;
  		}
-@@ -179,7 +178,7 @@ static ssize_t hash_sendpage(struct socket *sock, struct page *page,
- 		err = crypto_ahash_update(&ctx->req);
- 	}
  
--	err = af_alg_wait_for_completion(err, &ctx->completion);
-+	err = crypto_wait_req(err, &ctx->wait);
- 	if (err)
- 		goto unlock;
+-		r = verity_hash_init(v, req, &res);
++		r = verity_hash_init(v, req, &wait);
+ 		if (unlikely(r < 0))
+ 			return r;
  
-@@ -215,17 +214,15 @@ static int hash_recvmsg(struct socket *sock, struct msghdr *msg, size_t len,
- 	ahash_request_set_crypt(&ctx->req, NULL, ctx->result, 0);
+ 		start = io->iter;
+-		r = verity_for_io_block(v, io, &io->iter, &res);
++		r = verity_for_io_block(v, io, &io->iter, &wait);
+ 		if (unlikely(r < 0))
+ 			return r;
  
- 	if (!result && !ctx->more) {
--		err = af_alg_wait_for_completion(
--				crypto_ahash_init(&ctx->req),
--				&ctx->completion);
-+		err = crypto_wait_req(crypto_ahash_init(&ctx->req), &ctx->wait);
- 		if (err)
- 			goto unlock;
- 	}
+ 		r = verity_hash_final(v, req, verity_io_real_digest(v, io),
+-					&res);
++					&wait);
+ 		if (unlikely(r < 0))
+ 			return r;
  
- 	if (!result || ctx->more) {
- 		ctx->more = 0;
--		err = af_alg_wait_for_completion(crypto_ahash_final(&ctx->req),
--						 &ctx->completion);
-+		err = crypto_wait_req(crypto_ahash_final(&ctx->req),
-+				      &ctx->wait);
- 		if (err)
- 			goto unlock;
- 	}
-@@ -476,13 +473,13 @@ static int hash_accept_parent_nokey(void *private, struct sock *sk)
- 	ctx->result = NULL;
- 	ctx->len = len;
- 	ctx->more = 0;
--	af_alg_init_completion(&ctx->completion);
-+	crypto_init_wait(&ctx->wait);
- 
- 	ask->private = ctx;
- 
- 	ahash_request_set_tfm(&ctx->req, hash);
- 	ahash_request_set_callback(&ctx->req, CRYPTO_TFM_REQ_MAY_BACKLOG,
--				   af_alg_complete, &ctx->completion);
-+				   crypto_req_done, &ctx->wait);
- 
- 	sk->sk_destruct = hash_sock_destruct;
- 
-diff --git a/crypto/algif_skcipher.c b/crypto/algif_skcipher.c
-index 43839b0..75fa9a5 100644
---- a/crypto/algif_skcipher.c
-+++ b/crypto/algif_skcipher.c
-@@ -43,7 +43,7 @@ struct skcipher_ctx {
- 
- 	void *iv;
- 
--	struct af_alg_completion completion;
-+	struct crypto_wait wait;
- 
- 	atomic_t inflight;
- 	size_t used;
-@@ -684,11 +684,10 @@ static int skcipher_recvmsg_sync(struct socket *sock, struct msghdr *msg,
- 		skcipher_request_set_crypt(&ctx->req, sg, ctx->rsgl.sg, used,
- 					   ctx->iv);
- 
--		err = af_alg_wait_for_completion(
--				ctx->enc ?
--					crypto_skcipher_encrypt(&ctx->req) :
--					crypto_skcipher_decrypt(&ctx->req),
--				&ctx->completion);
-+		err = crypto_wait_req(ctx->enc ?
-+				      crypto_skcipher_encrypt(&ctx->req) :
-+				      crypto_skcipher_decrypt(&ctx->req),
-+				      &ctx->wait);
- 
- free:
- 		af_alg_free_sg(&ctx->rsgl);
-@@ -948,14 +947,14 @@ static int skcipher_accept_parent_nokey(void *private, struct sock *sk)
- 	ctx->merge = 0;
- 	ctx->enc = 0;
- 	atomic_set(&ctx->inflight, 0);
--	af_alg_init_completion(&ctx->completion);
-+	crypto_init_wait(&ctx->wait);
- 
- 	ask->private = ctx;
- 
- 	skcipher_request_set_tfm(&ctx->req, skcipher);
- 	skcipher_request_set_callback(&ctx->req, CRYPTO_TFM_REQ_MAY_SLEEP |
- 						 CRYPTO_TFM_REQ_MAY_BACKLOG,
--				      af_alg_complete, &ctx->completion);
-+				      crypto_req_done, &ctx->wait);
- 
- 	sk->sk_destruct = skcipher_sock_destruct;
- 
-diff --git a/include/crypto/if_alg.h b/include/crypto/if_alg.h
-index e2b9c6f..86764fb 100644
---- a/include/crypto/if_alg.h
-+++ b/include/crypto/if_alg.h
-@@ -14,7 +14,6 @@
- #define _CRYPTO_IF_ALG_H
- 
- #include <linux/compiler.h>
--#include <linux/completion.h>
- #include <linux/if_alg.h>
- #include <linux/scatterlist.h>
- #include <linux/types.h>
-@@ -37,11 +36,6 @@ struct alg_sock {
- 	void *private;
+diff --git a/drivers/md/dm-verity.h b/drivers/md/dm-verity.h
+index a59e0ad..b675bc0 100644
+--- a/drivers/md/dm-verity.h
++++ b/drivers/md/dm-verity.h
+@@ -90,11 +90,6 @@ struct dm_verity_io {
+ 	 */
  };
  
--struct af_alg_completion {
+-struct verity_result {
 -	struct completion completion;
 -	int err;
 -};
 -
- struct af_alg_control {
- 	struct af_alg_iv *iv;
- 	int op;
-@@ -81,17 +75,9 @@ void af_alg_link_sg(struct af_alg_sgl *sgl_prev, struct af_alg_sgl *sgl_new);
- 
- int af_alg_cmsg_send(struct msghdr *msg, struct af_alg_control *con);
- 
--int af_alg_wait_for_completion(int err, struct af_alg_completion *completion);
--void af_alg_complete(struct crypto_async_request *req, int err);
--
- static inline struct alg_sock *alg_sk(struct sock *sk)
+ static inline struct ahash_request *verity_io_hash_req(struct dm_verity *v,
+ 						     struct dm_verity_io *io)
  {
- 	return (struct alg_sock *)sk;
- }
- 
--static inline void af_alg_init_completion(struct af_alg_completion *completion)
--{
--	init_completion(&completion->completion);
--}
--
- #endif	/* _CRYPTO_IF_ALG_H */
 -- 
 2.1.4
