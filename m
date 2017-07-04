@@ -1,58 +1,70 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH v2] md/bitmap: don't read page from device with Bitmap_sync
-Date: Tue,  4 Jul 2017 11:20:30 +0800
-Message-ID: <20170704032030.27665-1-gqjiang@suse.com>
+From: <xa0ajutor@colectiv.info>
+Subject: (unknown)
+Date: Tue, 04 Jul 2017 06:01:03 -0000
+Message-ID: <149914806325.4332.16630255998460536683@v4.ngi.it>
+Mime-Version: 1.0
+Content-Type: application/zip; name="EMAIL_56923235589997_linux-raid.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
+Subject: 
+Content-Disposition: attachment
 Sender: linux-raid-owner@vger.kernel.org
-To: shli@kernel.org, neilb@suse.com
-Cc: linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The device owns Bitmap_sync flag needs recovery
-to become in sync, and read page from this type
-device could get stale status.
-
-Also add comments for Bitmap_sync bit per the
-suggestion from Shaohua and Neil.
-
-Previous disscussion can be found here:
-https://marc.info/?t=149760428900004&r=1&w=2
-
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
----
- drivers/md/bitmap.c | 3 ++-
- drivers/md/md.h     | 4 +++-
- 2 files changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index f4eace5..40f3cd7 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -156,7 +156,8 @@ static int read_sb_page(struct mddev *mddev, loff_t offset,
- 
- 	rdev_for_each(rdev, mddev) {
- 		if (! test_bit(In_sync, &rdev->flags)
--		    || test_bit(Faulty, &rdev->flags))
-+		    || test_bit(Faulty, &rdev->flags)
-+		    || test_bit(Bitmap_sync, &rdev->flags))
- 			continue;
- 
- 		target = offset + index * (PAGE_SIZE/512);
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 991f0fe..b50eb4a 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -134,7 +134,9 @@ enum flag_bits {
- 	Faulty,			/* device is known to have a fault */
- 	In_sync,		/* device is in_sync with rest of array */
- 	Bitmap_sync,		/* ..actually, not quite In_sync.  Need a
--				 * bitmap-based recovery to get fully in sync
-+				 * bitmap-based recovery to get fully in sync.
-+				 * The bit is only meaningful before device
-+				 * has been passed to pers->hot_add_disk.
- 				 */
- 	WriteMostly,		/* Avoid reading if at all possible */
- 	AutoDetected,		/* added by auto-detect */
--- 
-2.10.0
-
+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
