@@ -1,70 +1,43 @@
-From: <citydesk@thereporteronline.com>
-Subject: (unknown)
-Date: Tue, 04 Jul 2017 08:52:06 -0000
-Message-ID: <149915832677.12492.16122066714552954368@saturn-internet.ru>
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: Re: [MDADM PATCH 1/1] Array size is wrong when run mdadm -E
+Date: Tue, 4 Jul 2017 17:03:30 +0800
+Message-ID: <595B59E2.10407@suse.com>
+References: <1499151006-7924-1-git-send-email-xni@redhat.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="EMAIL_77904176_linux-raid.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: attachment
-Subject: 
+In-Reply-To: <1499151006-7924-1-git-send-email-xni@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Xiao Ni <xni@redhat.com>, linux-raid@vger.kernel.org
+Cc: ncroxon@redhat.com, jes.sorensen@gmail.com
 List-Id: linux-raid.ids
 
-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
-AAAEAAAAAFBLBQYAAAAAAQABAE4AAAD4CwAAAAA=
+
+
+On 07/04/2017 02:50 PM, Xiao Ni wrote:
+> The size of array shows wrongly. It shifs wrong number.
+>
+> Signed-off-by: Xiao Ni <xni@redhat.com>
+> ---
+>   super1.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/super1.c b/super1.c
+> index 86ec850..f3b864d 100644
+> --- a/super1.c
+> +++ b/super1.c
+> @@ -366,7 +366,7 @@ static void examine_super1(struct supertype *st, char *homehost)
+>   		}
+>   		if (ddsks) {
+>   			long long asize = __le64_to_cpu(sb->size);
+> -			asize = (asize << 9) * ddsks / ddsks_denom;
+> +			asize = (asize << 10) * ddsks / ddsks_denom;
+>   			printf("     Array Size : %llu%s\n",
+>   			       asize >> 10,  human_size(asize));
+>   		}
+
+IIRC, sb->size represents the num of sectors, so the shift should be 9.
+
+Thanks,
+Guoqing
