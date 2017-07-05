@@ -1,46 +1,103 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Linear device of two arrays
-Date: Wed, 5 Jul 2017 19:07:22 +0100
-Message-ID: <595D2ADA.8010907@youngman.org.uk>
-References: <CALee7hZYgLNO2siDJNtFge_BoocTXX-9BSgRHmMJH8MaH6V3LA@mail.gmail.com>
- <20170705214250.0ea99538@natsu>
+From: <een@zmva.hu>
+Subject: (unknown)
+Date: Wed, 05 Jul 2017 21:18:49 -0000
+Message-ID: <149928952999.2143.3502503337900254459@vnpt.vn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: application/zip; name="EMAIL_3767374_linux-raid.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170705214250.0ea99538@natsu>
+Content-Disposition: attachment
+Subject: 
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.net>, Veljko <veljko3@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 05/07/17 17:42, Roman Mamedov wrote:
-> On Wed, 5 Jul 2017 17:34:09 +0200
-> Veljko <veljko3@gmail.com> wrote:
-> 
->> Hello,
->>
->> I have a RAID10 device which I have formated using the mkfs.xfs
->> defaults (Stan helped me with this few years back). I reached 88%
->> capacity and it is time to expand it. I bought 4 more drives to create
->> another RIAD10 array. I would like to create linear device out of
->> those two and grow XFS across the 2nd device. How can this be done
->> without loosing the existing device's data? I would also like to add a
->> spare HDD. Do I have to have a separate spare HDD for each array or
->> one can be used by both of them?
-> 
-> Why make another RAID10? With modern versions of mdadm and kernel you should
-> be able to simply reshape the current RAID10 to increase the number of
-> devices used from 4 to 8.
-> 
-> 
-I was thinking of replying, but isn't that not possible for some
-versions of RAID-10?
-
-My feeling was, if you can't just add drives to the existing raid 10,
-create a new one which you can expand, migrate the fs across (btrfs
-would let you do that live, I believe, so xfs probably can too), then
-you can scrap the old raid-10 and add the drives into the new one.
-
-Cheers,
-Wol
+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
+MnLT9dIBUEsFBgAAAAABAAEAYwAAADsTAAAAAA==
