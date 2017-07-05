@@ -1,151 +1,69 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: Re: [MDADM PATCH 1/1] Array size is wrong when run mdadm -E
-Date: Tue, 4 Jul 2017 23:24:13 -0400 (EDT)
-Message-ID: <514944746.28660486.1499225053730.JavaMail.zimbra@redhat.com>
-References: <1499151006-7924-1-git-send-email-xni@redhat.com> <595B59E2.10407@suse.com> <1330216631.28557919.1499162158000.JavaMail.zimbra@redhat.com> <03fe6bb9-714e-bebb-1bbe-63a9d6ccee69@suse.com> <961848702.28655534.1499222431603.JavaMail.zimbra@redhat.com> <937c54e7-272d-ba24-d977-35a62ca6b684@suse.com>
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: Re: [MD PATCH 1/1] Raid5 should update rdev->sectors after reshape
+Date: Wed, 5 Jul 2017 16:51:59 +0800
+Message-ID: <5ae7006a-ae4f-d5c2-7d89-93535457d570@suse.com>
+References: <1499149794-7309-1-git-send-email-xni@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <937c54e7-272d-ba24-d977-35a62ca6b684@suse.com>
+In-Reply-To: <1499149794-7309-1-git-send-email-xni@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>
-Cc: linux-raid@vger.kernel.org, ncroxon@redhat.com, jes sorensen <jes.sorensen@gmail.com>
+To: Xiao Ni <xni@redhat.com>, linux-raid@vger.kernel.org
+Cc: ncroxon@redhat.com, tbskyd@gmail.com, shli@kernel.org
 List-Id: linux-raid.ids
 
 
 
------ Original Message -----
-> From: "Guoqing Jiang" <gqjiang@suse.com>
-> To: "Xiao Ni" <xni@redhat.com>
-> Cc: linux-raid@vger.kernel.org, ncroxon@redhat.com, "jes sorensen" <jes.sorensen@gmail.com>
-> Sent: Wednesday, July 5, 2017 11:21:57 AM
-> Subject: Re: [MDADM PATCH 1/1] Array size is wrong when run mdadm -E
-> 
-> 
-> 
-> On 07/05/2017 10:40 AM, Xiao Ni wrote:
-> >
-> > ----- Original Message -----
-> >> From: "Guoqing Jiang" <gqjiang@suse.com>
-> >> To: "Xiao Ni" <xni@redhat.com>
-> >> Cc: linux-raid@vger.kernel.org, ncroxon@redhat.com, "jes sorensen"
-> >> <jes.sorensen@gmail.com>
-> >> Sent: Wednesday, July 5, 2017 9:56:35 AM
-> >> Subject: Re: [MDADM PATCH 1/1] Array size is wrong when run mdadm -E
-> >>
-> >>
-> >>
-> >> On 07/04/2017 05:55 PM, Xiao Ni wrote:
-> >>> ----- Original Message -----
-> >>>> From: "Guoqing Jiang" <gqjiang@suse.com>
-> >>>> To: "Xiao Ni" <xni@redhat.com>, linux-raid@vger.kernel.org
-> >>>> Cc: ncroxon@redhat.com, "jes sorensen" <jes.sorensen@gmail.com>
-> >>>> Sent: Tuesday, July 4, 2017 5:03:30 PM
-> >>>> Subject: Re: [MDADM PATCH 1/1] Array size is wrong when run mdadm -E
-> >>>>
-> >>>>
-> >>>>
-> >>>> On 07/04/2017 02:50 PM, Xiao Ni wrote:
-> >>>>> The size of array shows wrongly. It shifs wrong number.
-> >>>>>
-> >>>>> Signed-off-by: Xiao Ni <xni@redhat.com>
-> >>>>> ---
-> >>>>>     super1.c | 2 +-
-> >>>>>     1 file changed, 1 insertion(+), 1 deletion(-)
-> >>>>>
-> >>>>> diff --git a/super1.c b/super1.c
-> >>>>> index 86ec850..f3b864d 100644
-> >>>>> --- a/super1.c
-> >>>>> +++ b/super1.c
-> >>>>> @@ -366,7 +366,7 @@ static void examine_super1(struct supertype *st,
-> >>>>> char
-> >>>>> *homehost)
-> >>>>>     		}
-> >>>>>     		if (ddsks) {
-> >>>>>     			long long asize = __le64_to_cpu(sb->size);
-> >>>>> -			asize = (asize << 9) * ddsks / ddsks_denom;
-> >>>>> +			asize = (asize << 10) * ddsks / ddsks_denom;
-> >>>>>     			printf("     Array Size : %llu%s\n",
-> >>>>>     			       asize >> 10,  human_size(asize));
-> >>>>>     		}
-> >>>> IIRC, sb->size represents the num of sectors, so the shift should be 9.
-> >>> Yes, it should be 9. It should pass bytes to human_size. Thanks for this.
-> >>> It was introduced in d4633e06dfc01723911627fcb104af2ffb6f6a95. So there
-> >>> is
-> >>> the same problem in super0. Is it ok:
-> >>>
-> >>> diff --git a/super0.c b/super0.c
-> >>> index 756cab5..4b4680c 100644
-> >>> --- a/super0.c
-> >>> +++ b/super0.c
-> >>> @@ -131,9 +131,9 @@ static void examine_super0(struct supertype *st, char
-> >>> *homehost)
-> >>>                   }
-> >>>                   if (ddsks) {
-> >>>                           long long asize = sb->size;
-> >>> -                       asize = (asize << 10) * ddsks / ddsks_denom;
-> >>> +                       asize = (asize << 9) * ddsks / ddsks_denom;
-> >>>                           printf("     Array Size : %llu%s\n",
-> >>> -                              asize >> 10,  human_size(asize));
-> >>> +                              asize >> 9,  human_size(asize));
-> >>>                   }
-> >> No, for 0.9 metadata, sb->size means KB not sector.
-> >>
-> > Thanks for this.
-> >
-> >>>           }
-> >>>           printf("   Raid Devices : %d\n", sb->raid_disks);
-> >>> diff --git a/super1.c b/super1.c
-> >>> index 86ec850..2bb1454 100644
-> >>> --- a/super1.c
-> >>> +++ b/super1.c
-> >>> @@ -368,7 +368,7 @@ static void examine_super1(struct supertype *st, char
-> >>> *homehost)
-> >>>                           long long asize = __le64_to_cpu(sb->size);
-> >>>                           asize = (asize << 9) * ddsks / ddsks_denom;
-> >>>                           printf("     Array Size : %llu%s\n",
-> >>> -                              asize >> 10,  human_size(asize));
-> >>> +                              asize >> 9,  human_size(asize));
-> >>>                   }
-> >>>                   if (sb->size != sb->data_size)
-> >>>                           printf("  Used Dev Size : %llu%s\n",
-> >> It is better that you can provide the output of "mdadm -E DISK" etc to
-> >> prove
-> >> current code is wrong, at least I can see correct output from my side.
-> > [root@dell-per210-01 mdadm]# mdadm -E /dev/loop0
-> > /dev/loop0:
-> >            Magic : a92b4efc
-> >          Version : 1.2
-> >      Feature Map : 0x0
-> >       Array UUID : 34f18365:ebf46416:ae1f365d:71cc579c
-> >             Name : 0
-> >    Creation Time : Tue Jul  4 02:09:03 2017
-> >       Raid Level : raid5
-> >     Raid Devices : 3
-> >
-> >   Avail Dev Size : 8261632 (3.94 GiB 4.23 GB)
-> >       Array Size : 6291456 (6.00 GiB 6.44 GB)
-> >    Used Dev Size : 6291456 (3.00 GiB 3.22 GB)
-> >
-> > Ah, I know it wants to show Array Size in KB. It's a raid5 with 3 loop
-> > devices.
-> > I thought they are all sectors subconsciously. But it's better to show
-> > sizes with
-> > the same unit. Right?
-> 
-> Perhaps that is why the human_size is used here.
+On 07/04/2017 02:29 PM, Xiao Ni wrote:
+> The raid5 md device is created by the disks which we don't use the total size. For example,
+> the size of the device is 5G and it just uses 3G of the devices to create one raid5 device.
+> Then change the chunksize and wait reshape to finish. After reshape finishing stop the raid
+> and assemble it again. It fails.
+> mdadm -CR /dev/md0 -l5 -n3 /dev/loop[0-2] --size=3G --chunk=32 --assume-clean
+> mdadm /dev/md0 --grow --chunk=64
+> wait reshape to finish
+> mdadm -S /dev/md0
+> mdadm -As
+> The error messages:
+> [197519.814302] md: loop1 does not have a valid v1.2 superblock, not importing!
+> [197519.821686] md: md_import_device returned -22
+>
+> After reshape the data offset is changed. It selects backwards direction in this condition.
+> In function super_1_load it compares the available space of the underlying device with
+> sb->data_size. The new data offset gets bigger after reshape. So super_1_load returns -EINVAL.
+> sb->data_size is updated in md_finish_reshape. So add md_finish_reshape in end_reshape.
 
-But it's really too strange that Array Size is same with Used Dev Size. It's
-easy to get confused. 
+IMO, md_finish_reshape doesn't update sb->data_size directly, but it 
+updates rdev->sectors,
+then super_1_sync sets sb->data_size based on rdev->sectors.
 
-Regards
-Xiao
-> 
-> Thanks,
-> Guoqing
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Acked-by: Guoqing Jiang <gqjiang@suse.com>
+
+Thanks,
+Guoqing
+
+> Signed-off-by: Xiao Ni <xni@redhat.com>
+> ---
+>   drivers/md/raid5.c | 4 +---
+>   1 file changed, 1 insertion(+), 3 deletions(-)
+>
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index ec0f951..e7f527c 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -7947,12 +7947,10 @@ static void end_reshape(struct r5conf *conf)
+>   {
+>   
+>   	if (!test_bit(MD_RECOVERY_INTR, &conf->mddev->recovery)) {
+> -		struct md_rdev *rdev;
+>   
+>   		spin_lock_irq(&conf->device_lock);
+>   		conf->previous_raid_disks = conf->raid_disks;
+> -		rdev_for_each(rdev, conf->mddev)
+> -			rdev->data_offset = rdev->new_data_offset;
+> +		md_finish_reshape(conf->mddev);
+>   		smp_wmb();
+>   		conf->reshape_progress = MaxSector;
+>   		conf->mddev->reshape_position = MaxSector;
+
