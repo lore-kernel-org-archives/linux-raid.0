@@ -1,55 +1,25 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: [MD PATCH 1/1 -v2] Raid5 should update rdev->sectors after reshape
-Date: Wed,  5 Jul 2017 17:34:04 +0800
-Message-ID: <1499247244-4483-1-git-send-email-xni@redhat.com>
+From: Veljko <veljko3@gmail.com>
+Subject: Linear device of two arrays
+Date: Wed, 5 Jul 2017 17:34:09 +0200
+Message-ID: <CALee7hZYgLNO2siDJNtFge_BoocTXX-9BSgRHmMJH8MaH6V3LA@mail.gmail.com>
+Reply-To: veljko3@gmail.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: ncroxon@redhat.com, tbskyd@gmail.com, shli@kernel.org, gqjiang@suse.com
 List-Id: linux-raid.ids
 
-The raid5 md device is created by the disks which we don't use the total size. For example,
-the size of the device is 5G and it just uses 3G of the devices to create one raid5 device.
-Then change the chunksize and wait reshape to finish. After reshape finishing stop the raid
-and assemble it again. It fails.
-mdadm -CR /dev/md0 -l5 -n3 /dev/loop[0-2] --size=3G --chunk=32 --assume-clean
-mdadm /dev/md0 --grow --chunk=64
-wait reshape to finish
-mdadm -S /dev/md0
-mdadm -As
-The error messages:
-[197519.814302] md: loop1 does not have a valid v1.2 superblock, not importing!
-[197519.821686] md: md_import_device returned -22
+Hello,
 
-After reshape the data offset is changed. It selects backwards direction in this condition.
-In function super_1_load it compares the available space of the underlying device with
-sb->data_size. The new data offset gets bigger after reshape. So super_1_load returns -EINVAL.
-rdev->sectors is updated in md_finish_reshape. Then sb->data_size is set in super_1_sync based
-on rdev->sectors. So add md_finish_reshape in end_reshape.
+I have a RAID10 device which I have formated using the mkfs.xfs
+defaults (Stan helped me with this few years back). I reached 88%
+capacity and it is time to expand it. I bought 4 more drives to create
+another RIAD10 array. I would like to create linear device out of
+those two and grow XFS across the 2nd device. How can this be done
+without loosing the existing device's data? I would also like to add a
+spare HDD. Do I have to have a separate spare HDD for each array or
+one can be used by both of them?
 
-Signed-off-by: Xiao Ni <xni@redhat.com>
----
- drivers/md/raid5.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index ec0f951..e7f527c 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -7947,12 +7947,10 @@ static void end_reshape(struct r5conf *conf)
- {
- 
- 	if (!test_bit(MD_RECOVERY_INTR, &conf->mddev->recovery)) {
--		struct md_rdev *rdev;
- 
- 		spin_lock_irq(&conf->device_lock);
- 		conf->previous_raid_disks = conf->raid_disks;
--		rdev_for_each(rdev, conf->mddev)
--			rdev->data_offset = rdev->new_data_offset;
-+		md_finish_reshape(conf->mddev);
- 		smp_wmb();
- 		conf->reshape_progress = MaxSector;
- 		conf->mddev->reshape_position = MaxSector;
--- 
-2.7.4
-
+Regards,
+Veljko
