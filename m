@@ -1,90 +1,29 @@
-From: <een@zmva.hu>
-Subject: (unknown)
-Date: Thu, 06 Jul 2017 14:11:23 -0000
-Message-ID: <149935028390.4332.62527106310936998@poneytelecom.eu>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: Linear device of two arrays
+Date: Fri, 07 Jul 2017 12:07:35 +0100
+Message-ID: <8737a8o688.fsf@esperi.org.uk>
+References: <CALee7hZYgLNO2siDJNtFge_BoocTXX-9BSgRHmMJH8MaH6V3LA@mail.gmail.com>
+        <20170705214250.0ea99538@natsu> <595D2ADA.8010907@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: application/zip; name="EMAIL_938012525_linux-raid.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-Subject: 
-Content-Disposition: attachment
+In-Reply-To: <595D2ADA.8010907@youngman.org.uk> (Wols Lists's message of "Wed,
+        5 Jul 2017 19:07:22 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: Roman Mamedov <rm@romanrm.net>, Veljko <veljko3@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-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
-YQAAAEYQAAAAAA==
+On 5 Jul 2017, Wols Lists spake thusly:
+> My feeling was, if you can't just add drives to the existing raid 10,
+> create a new one which you can expand, migrate the fs across (btrfs
+> would let you do that live, I believe, so xfs probably can too), then
+> you can scrap the old raid-10 and add the drives into the new one.
+
+In extremis you can always connect multiple block devices into one, or
+indeed multiple *pieces* of them into one, using dmsetup with the linear
+table. (However, this is not persistent, so you'd need to script redoing
+it on every boot.)
+
+-- 
+NULL && (void)
