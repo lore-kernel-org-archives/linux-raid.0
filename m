@@ -1,43 +1,37 @@
-From: Roman Mamedov <rm@romanrm.net>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
 Subject: Re: Linear device of two arrays
-Date: Sat, 8 Jul 2017 02:53:18 +0500
-Message-ID: <20170708025318.216210e7@natsu>
+Date: Sat, 8 Jul 2017 00:20:30 +0200
+Message-ID: <20170707222030.GA26535@metamorpher.de>
 References: <CALee7hZYgLNO2siDJNtFge_BoocTXX-9BSgRHmMJH8MaH6V3LA@mail.gmail.com>
-        <20170705214250.0ea99538@natsu>
-        <595D2ADA.8010907@youngman.org.uk>
-        <CALee7hZqmLK19tSEEFBgSWMKm9TRoUqLBCxUmbNJpwmM45BjTQ@mail.gmail.com>
-        <20170707212036.GA26305@metamorpher.de>
+ <20170705214250.0ea99538@natsu>
+ <595D2ADA.8010907@youngman.org.uk>
+ <CALee7hZqmLK19tSEEFBgSWMKm9TRoUqLBCxUmbNJpwmM45BjTQ@mail.gmail.com>
+ <20170707212036.GA26305@metamorpher.de>
+ <20170708025318.216210e7@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170707212036.GA26305@metamorpher.de>
+Content-Disposition: inline
+In-Reply-To: <20170708025318.216210e7@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+To: Roman Mamedov <rm@romanrm.net>
 Cc: Veljko <veljko3@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 7 Jul 2017 23:20:36 +0200
-Andreas Klauer <Andreas.Klauer@metamorpher.de> wrote:
+On Sat, Jul 08, 2017 at 02:53:18AM +0500, Roman Mamedov wrote:
+> however it requires a shrinkable filesystem, and XFS cannot be shrunk.
 
-> Put LVM on top?
-> 
-> You could create LVM on the new array, copy your files over, then extend.
-> 
-> If you know LVM _really_ well, it's also possible to convert existing 
-> filesystems without moving data (other than relocating the parts 
-> occupied/unusable by LVM, i.e. one extent-size worth of data at 
-> start and end of disk).
+There's a description of the manual process here:
 
-There is this tool which can convert filesystems/partitions to LVM in-place:
+https://wiki.ubuntuusers.de/Howto/LVM_nachtr%C3%A4glich_einrichten/
 
-  https://github.com/g2p/blocks
+(Sorry it's in German)
 
-however it requires a shrinkable filesystem, and XFS cannot be shrunk.
+You have to adapt it to use two extents on another PV instead 
+of shrinking the filesystem or growing the existing blockdevice.
 
-(Also it appears unmaintained with a number of long-standing unresolved
-issues).
+It can be done, but yeah it's a bit of voodoo.
+Copying is safer.
 
--- 
-With respect,
-Roman
+Regards
+Andreas Klauer
