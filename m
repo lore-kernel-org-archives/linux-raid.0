@@ -1,7 +1,7 @@
 From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
 Subject: Re: Linear device of two arrays
-Date: Sat, 8 Jul 2017 00:20:30 +0200
-Message-ID: <20170707222030.GA26535@metamorpher.de>
+Date: Sat, 8 Jul 2017 00:33:26 +0200
+Message-ID: <20170707223326.GA26568@metamorpher.de>
 References: <CALee7hZYgLNO2siDJNtFge_BoocTXX-9BSgRHmMJH8MaH6V3LA@mail.gmail.com>
  <20170705214250.0ea99538@natsu>
  <595D2ADA.8010907@youngman.org.uk>
@@ -21,17 +21,19 @@ List-Id: linux-raid.ids
 On Sat, Jul 08, 2017 at 02:53:18AM +0500, Roman Mamedov wrote:
 > however it requires a shrinkable filesystem, and XFS cannot be shrunk.
 
-There's a description of the manual process here:
+And an easy way to adapt may be thus:
 
-https://wiki.ubuntuusers.de/Howto/LVM_nachtr%C3%A4glich_einrichten/
+Just backup the last 100M of the filesystem. Then you can consider 
+the filesystem to be shrunk by 100M. Not really, but it covers 
+the space that will be lost in the LVM conversion (two extents).
 
-(Sorry it's in German)
+When the conversion is done, you grow the LV back to original size, 
+(now that's using two extents on another PV you have to provide) 
+and restore the 100M you backed up to the LV.
 
-You have to adapt it to use two extents on another PV instead 
-of shrinking the filesystem or growing the existing blockdevice.
-
-It can be done, but yeah it's a bit of voodoo.
-Copying is safer.
+The conversion is an offline operation anyways so it doesn't matter 
+whether you really shrank the filesystem or not, as long as you can 
+provide enough space for an LV of the original partition size.
 
 Regards
 Andreas Klauer
