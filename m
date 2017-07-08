@@ -1,74 +1,78 @@
 From: Ram Ramesh <rramesh2400@gmail.com>
 Subject: Re: My MD is too big to resize ext4.
-Date: Sat, 8 Jul 2017 13:12:11 -0500
-Message-ID: <ae47b321-07d1-2157-c217-844447e51ce2@gmail.com>
+Date: Sat, 8 Jul 2017 13:19:08 -0500
+Message-ID: <f4e57040-177d-39b9-ee30-95b82b1ac15a@gmail.com>
 References: <6c827d07-19d8-017b-ca95-5e6f84b7821a@gmail.com>
- <20170708065040.GA3682@metamorpher.de>
+ <02786811-5d00-af90-adfd-82ae3f9f0781@fnarfbargle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170708065040.GA3682@metamorpher.de>
+In-Reply-To: <02786811-5d00-af90-adfd-82ae3f9f0781@fnarfbargle.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Cc: Linux Raid <linux-raid@vger.kernel.org>
+To: Brad Campbell <lists2009@fnarfbargle.com>, Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 07/08/2017 01:50 AM, Andreas Klauer wrote:
-> On Fri, Jul 07, 2017 at 07:41:13PM -0500, Ram Ramesh wrote:
->> On the web, I only found one solution that required upgrading kernel to
->> some very recent one (not in my distro) and getting the bleeding edge
->> resize2fs. This makes me nervous. Is there a solution that avoids this.
-> Well, if that works nowadays, then just go for it (LiveCD).
-> For details you should ask the ext4 mailing list I guess.
+On 07/08/2017 02:34 AM, Brad Campbell wrote:
+> On 08/07/17 08:41, Ram Ramesh wrote:
+>> Hi,
+>>
+>> I asked in other linux forums and did not get enough info. So I come
+>> here even though this is not mdadm/RAID issue.
+>>
+>> I replaced 3TB disks in my 6-disk RAID6 with 6TB and now my md0 is 24TB.
+>> I had 32bit version of ext4 on it which can only be grown to 16TB. Any
+>> one had this issue before and any _/inplace/_ good solution to grow ext4
+>> to full 24TB? It is unlikely that I will be able to back up and recreate
+>> file system.
 >
-> You can assemble your RAID in read-only mode and then use
-> overlays for a non-destructive test run. To make really extra sure
-> you could even export it via NBD/KVM to see if the old kernel
-> is able to mount it.
+> Ignore this first suggestion if you are absolutely reliant on data 
+> integrity and don't have backups of any critical data.
 >
-> IIRC, btrfs also has a migration path (ext4 to btrfs converter)
-> and then you could grow that. But then you're stuck with btrfs.
+> Take 2 of the 6TB drives, create a 12TB RAID0 or Linear and copy all 
+> your data to that.
 >
->> My filesystem is on md0 drive so I guess partitioning and making into 2x
->> 12TB ext4 will not work. I am not even sure if we can partition md like
->> any other disk.
-> Adding a partition table or LVM header would shift the start position.
-> So it would involve moving/shifting all your data in-place or using
-> a conversion to LVM. (We just had that in the thread above yours,
-> subject "linear device of two arrays")
+> Create the 6 drive RAID6 with 2 disks missing, copy all the data back, 
+> then add the disks you used in the first copy back to the array.
 >
-> If your RAID has a large enough data offset, you could shift that
-> to add some extra space at the start of the RAID, but it has to
-> be done with great care (must be aligned to whatever your RAID
-> layout is so data will be intact and not garbled).
 >
-> All in-place operations are kind of hackish/dangerous.
+> I had this issue a few years ago and decided buying some extra disks 
+> to use as scratch was a better move for me. In your shoes I would have 
+> found 6 extra SATA ports on a machine (any machine), created the new 
+> filesystem and rsynced the data across, then swapped the disks into 
+> the production machine.
 >
-> I actually prefer using several smaller filesystems over one gigantic one.
-> It's all great until your one and only filesystem goes corrupt.
+> In fact I've just done that migrating from 14x2TB drives to 8x6TB 
+> drives, but I keep a staging machine around for testing that has 15 
+> drive bays for just this sort of migration.
 >
-> Regards
-> Andreas Klauer
+> This is the 4th time I've done it in 13 years. 15x250GB -> 8x1TB -> 
+> 14x2TB -> 8x6TB. The advantage is you never lose data integrity or 
+> redundancy, and you can keep the old drives around in a box until you 
+> are sure the new build is reliable.
+>
+> Alternatively, find a machine with 6 slots, build a RAID6 from the 
+> drives you already have. Copy the data across, re-format the new array 
+> and copy the data back. A bit of double handling, but no loss of 
+> redundancy or integrity. Run md5 or something over all the files to 
+> make sure it's all good, or use rsync with the "always checksum" 
+> option, although this is slow.
+>
+> Brad
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Thanks. After thinking a bit more, I also like several smaller ext4/mds 
-than large one. Since this is a mythtv machine, it can share multiple 
-mount point and distribute data smartly (in its own sense).
-
-In order to create several md devices out of the 6x6TB drives I have, I 
-have to do the following. Let me know if this sounds possible.
-
-    1. My MD uses partitions sd{b,c,d,e,f,g}1 instead of full disks. So 
-I can create partitions on the drive instead of on the MD.
-    2. This means I need to shrink my current md device to smaller size 
-(say 12TB-14TB) - need to check my current
-          active ext4 data size. It is definitely less than 16TB.
-    3. Repartition the disks to create sd{b-g}2 for the reamining unused 
-6xnTB area.
-    4. Created md1 with sd{b-g]2 to get md1.
-    5. Mount and use md1.
-
-Do you see every step here reasonably safe to try on a 
-unmounted/readonly md disks.
+Thanks for the details. I think I have 2x4TB and 2x3TB spares. This is 
+enough for the data I have and I have scripted a way to distribute files 
+across those to make a mock backup/snapshot. They are old drives and I 
+do not trust their shelf life. So, I consider that there is no backup. 
+However, for short/week exercise, it may be considered as a safe data. 
+So, I am not that paranoid about doing inplace changes. I just don't 
+like to choose known risky paths - a more tested approach is preferred 
+even if it has nonzero propability of failure. That is all.
 
 Ramesh
+
+
