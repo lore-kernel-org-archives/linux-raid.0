@@ -1,102 +1,62 @@
-From: Stan Hoeppner <stan@hardwarefreak.org>
-Subject: Re: Linear device of two arrays
-Date: Sat, 8 Jul 2017 16:24:10 -0500
-Message-ID: <5afd5cea-06b8-8524-e4f5-8534f23bd714@hardwarefreak.org>
-References: <CALee7hZYgLNO2siDJNtFge_BoocTXX-9BSgRHmMJH8MaH6V3LA@mail.gmail.com>
- <20170705214250.0ea99538@natsu> <595D2ADA.8010907@youngman.org.uk>
- <CALee7hZqmLK19tSEEFBgSWMKm9TRoUqLBCxUmbNJpwmM45BjTQ@mail.gmail.com>
- <df053262-9334-1070-c24a-5d2f91402716@hardwarefreak.org>
- <CALee7haowPD0DKPtEQUN8M8LDCNOq62SDrk5VNMO5C+5iUqtrQ@mail.gmail.com>
+From: Ram Ramesh <rramesh2400@gmail.com>
+Subject: Re: My MD is too big to resize ext4.
+Date: Sat, 8 Jul 2017 17:22:20 -0500
+Message-ID: <8ead21dd-d52a-42cd-ee0c-bc403b56a63f@gmail.com>
+References: <6c827d07-19d8-017b-ca95-5e6f84b7821a@gmail.com>
+ <20170708065040.GA3682@metamorpher.de>
+ <ae47b321-07d1-2157-c217-844447e51ce2@gmail.com>
+ <20170708194427.GA15208@metamorpher.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CALee7haowPD0DKPtEQUN8M8LDCNOq62SDrk5VNMO5C+5iUqtrQ@mail.gmail.com>
+In-Reply-To: <20170708194427.GA15208@metamorpher.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: veljko3@gmail.com, linux-raid@vger.kernel.org, neilb@suse.com
+To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Cc: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 07/08/2017 05:26 AM, Veljko wrote:
-> On Sat, Jul 8, 2017 at 12:52 AM, Stan Hoeppner <stan@hardwarefreak.org> wrote:
->> On 07/07/2017 03:26 PM, Veljko wrote:
->>> I just noticed that I replied to Wol insted to list.
->>>
->>> On Wed, Jul 5, 2017 at 8:07 PM, Wols Lists <antlists@youngman.org.uk>
->>> wrote:
->>>> On 05/07/17 17:42, Roman Mamedov wrote:
->>>>> On Wed, 5 Jul 2017 17:34:09 +0200
->>>>> Veljko <veljko3@gmail.com> wrote:
->>>>>
->>>>>> Hello,
->>>>>>
->>>>>> I have a RAID10 device which I have formated using the mkfs.xfs
->>>>>> defaults (Stan helped me with this few years back). I reached 88%
->>>>>> capacity and it is time to expand it. I bought 4 more drives to create
->>>>>> another RIAD10 array. I would like to create linear device out of
->>>>>> those two and grow XFS across the 2nd device. How can this be done
->>>>>> without loosing the existing device's data? I would also like to add a
->>>>>> spare HDD. Do I have to have a separate spare HDD for each array or
->>>>>> one can be used by both of them?
->>>>> Why make another RAID10? With modern versions of mdadm and kernel you
->>>>> should
->>>>> be able to simply reshape the current RAID10 to increase the number of
->>>>> devices used from 4 to 8.
->>>>>
->>>>>
->>>> I was thinking of replying, but isn't that not possible for some
->>>> versions of RAID-10?
->>>>
->>>> My feeling was, if you can't just add drives to the existing raid 10,
->>>> create a new one which you can expand, migrate the fs across (btrfs
->>>> would let you do that live, I believe, so xfs probably can too), then
->>>> you can scrap the old raid-10 and add the drives into the new one.
->>>>
->>>> Cheers,
->>>> Wol
->>>
->>> Thanks for your input, Roman and Wol.
->>>
->>> Expanding existing RAID is one of the options, but I was advised by
->>> Stan Hoeppner to do it this way and I tend to believe him on this
->>> subject. With my metadata heavy backup workload, this will provide
->>> better performance.
->>>
->>> So my question is still, how can an existing array be added to linear
->>> device, and it's file system expanded over the second array.
->> For this to work the existing RAID10 array must already be a member of a
->> linear device with one component device.  If this linear array already
->> exists then you could add another RAID10 array to the linear device.  If you
->> currently have an XFS filesystem sitting atop a 'bare' RAID10 then I don't
->> believe the linear option will work for you.  Thus I'd tend to agree with
->> others that reshaping your current RAID10 is the best option.
->>
->> My apologies if I wasn't clear in my previous advice.
->>
->> Stan
-> Here is your previous advice:
-> "Do not use LVM.  Directly format the RAID10 device using the mkfs.xfs
-> defaults.  mkfs.xfs will read the md configuration and automatically
-> align the filesystem to the stripe width.
+On 07/08/2017 02:44 PM, Andreas Klauer wrote:
+> On Sat, Jul 08, 2017 at 01:12:11PM -0500, Ram Ramesh wrote:
+>>      1. My MD uses partitions sd{b,c,d,e,f,g}1 instead of full disks. So
+>> I can create partitions on the drive instead of on the MD.
+>>      2. This means I need to shrink my current md device to smaller size
+>> (say 12TB-14TB) - need to check my current
+>>            active ext4 data size. It is definitely less than 16TB.
+>>      3. Repartition the disks to create sd{b-g}2 for the reamining unused
+>> 6xnTB area.
+>>      4. Created md1 with sd{b-g]2 to get md1.
+>>      5. Mount and use md1.
+> Should work; you have to shrink the filesystem first, (or stick to
+> whatever size it has now), then the md, then the partition.
 >
-> When the filesystem reaches 85% capacity, add 4 more drives and create
-> another RAID10 array.  At that point we'll teach you how to create a
-> linear device of the two arrays and grow XFS across the 2nd array."
+> What makes this risky is that you have to pick the correct sizes.
+> When growing you can't go wrong. When shrinking, you have to be
+> careful not to shrink too much. Filesystems don't like it at all
+> if their end is missing, and md doesn't like it if the block device
+> is smaller than what it says in the metadata.
 >
->  From this I concluded that it is possible to create linear device
-> using existing array, but since it is not the case, I'll just have to
-> create new array, move data to it, than add first array to a new
-> linear device (1 member), copy my data to it, and than join second
-> device to it. I wanted to avoid all this copying but will have to do
-> it. Than I will add one drive to spare-group both arrays will be a
-> members of, as advised by Andreas. Does this sound OK?
+> So you have to determine the exact filesystem size (tune2fs -l),
+> and take mdadm data offsets into account.
+>
+> Not necessary if you know what you're doing but if in doubt,
+> you can leave a safety margin with each of these steps.
+>
+> Regards
+> Andreas Klauer
+My df shows that I use 10431258240 blocks (1K) in my ext4 on the md. 
+This is less than 10T. So, resize2fs to 11T should be fine. I will 
+shrink md to 11.5T and partition to 12T. I will use 2^30 to mean TB. Is 
+0.5T enough margin in each case?
 
-Yes.  Although, I was hoping Neil Brown would chime in here. I'm not 
-entirely sure that you can't do this the way I originally mentioned.
+I can also stretch the limit to 15TB for ext4 and 15.5 for md and 16TB 
+for partiton. Is this better because it maxes out the 32bit
+ext4? Somehow something tells me pushing the limit is always a bad idea 
+as mistakes generally happen on checking  boundary conditions.
 
-> Regards,
-> Veljko
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Alternatively, I can do resize2fs with -M to minimal size, but the man 
+says calculations are not perfect for 1/2K block sizes. However, I see 
+that dumpe2fs says I have 4K blocks.
+
+Ramesh
 
