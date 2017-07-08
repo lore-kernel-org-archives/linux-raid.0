@@ -1,33 +1,83 @@
-From: Ram Ramesh <rramesh2400@gmail.com>
-Subject: My MD is too big to resize ext4.
-Date: Fri, 7 Jul 2017 19:41:13 -0500
-Message-ID: <6c827d07-19d8-017b-ca95-5e6f84b7821a@gmail.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: [GIT PULL] MD update for 4.13
+Date: Fri, 7 Jul 2017 18:09:29 -0700
+Message-ID: <20170708010929.3ztmrjo76wj4rtkh@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Linux Raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
 Hi,
+Please pull MD update for 4.13. This update only includes several bug fixes:
 
-I asked in other linux forums and did not get enough info. So I come 
-here even though this is not mdadm/RAID issue.
+- Neil Brown fixes a deadlock in MD suspend and a potential bug in bio allocation.
+- Mikulas Patocka fixes a signal issue
+- Guoqing Jiang fixes a typo in FailFast test
+- Other trival fixes
 
-I replaced 3TB disks in my 6-disk RAID6 with 6TB and now my md0 is 24TB. 
-I had 32bit version of ext4 on it which can only be grown to 16TB. Any 
-one had this issue before and any _/inplace/_ good solution to grow ext4 
-to full 24TB? It is unlikely that I will be able to back up and recreate 
-file system.
+Please note, there is a merge conflict with block tree and causes build error,
+which could be fixed by this one:
 
-My filesystem is on md0 drive so I guess partitioning and making into 2x 
-12TB ext4 will not work. I am not even sure if we can partition md like 
-any other disk.
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index c4d41b03324b..8cdca0296749 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5450,7 +5450,7 @@ int md_run(struct mddev *mddev)
+ 			return -ENOMEM;
+ 	}
+ 	if (mddev->sync_set == NULL) {
+-		mddev->sync_set = bioset_create(BIO_POOL_SIZE, 0);
++		mddev->sync_set = bioset_create(BIO_POOL_SIZE, 0, BIOSET_NEED_BVECS);
+ 		if (!mddev->sync_set)
+ 			return -ENOMEM;
+ 	}
 
-On the web, I only found one solution that required upgrading kernel to 
-some very recent one (not in my distro) and getting the bleeding edge 
-resize2fs. This makes me nervous. Is there a solution that avoids this.
+Thanks,
+Shaohua
 
-Ramesh
 
+The following changes since commit 63f700aab4c11d46626de3cd051dae56cf7e9056:
+
+  Merge tag 'xtensa-20170612' of git://github.com/jcmvbkbc/linux-xtensa (2017-06-13 15:09:10 +0900)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git for-next
+
+for you to fetch changes up to 7184ef8bab0cb865c3cea9dd1a675771145df0af:
+
+  MD: fix sleep in atomic (2017-07-03 14:38:59 -0700)
+
+----------------------------------------------------------------
+Guoqing Jiang (2):
+      md/raid10: fix FailFast test for wrong device
+      md/raid1: remove unused bio in sync_request_write
+
+Lidong Zhong (1):
+      md: change the initialization value for a spare device spot to MD_DISK_ROLE_SPARE
+
+Mikulas Patocka (1):
+      md: don't use flush_signals in userspace processes
+
+NeilBrown (2):
+      md: fix deadlock between mddev_suspend() and md_write_start()
+      md: use a separate bio_set for synchronous IO.
+
+Shaohua Li (2):
+      MD: fix a null dereference
+      MD: fix sleep in atomic
+
+ drivers/md/faulty.c    |  5 +++--
+ drivers/md/linear.c    |  7 ++++---
+ drivers/md/md.c        | 47 ++++++++++++++++++++++++++++++++++++++---------
+ drivers/md/md.h        |  7 +++++--
+ drivers/md/multipath.c |  8 ++++----
+ drivers/md/raid0.c     |  7 ++++---
+ drivers/md/raid1.c     | 20 ++++++++++++--------
+ drivers/md/raid10.c    | 16 +++++++++-------
+ drivers/md/raid5.c     | 22 +++++++++++++---------
+ 9 files changed, 92 insertions(+), 47 deletions(-)
