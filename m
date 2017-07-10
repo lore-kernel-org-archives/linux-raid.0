@@ -1,272 +1,149 @@
-From: Veljko <veljko3@gmail.com>
-Subject: Re: Linear device of two arrays
-Date: Mon, 10 Jul 2017 13:03:51 +0200
-Message-ID: <e394625b-18d7-d141-3957-3c16c9bc6e44@gmail.com>
-References: <CALee7hZYgLNO2siDJNtFge_BoocTXX-9BSgRHmMJH8MaH6V3LA@mail.gmail.com>
- <20170705214250.0ea99538@natsu> <595D2ADA.8010907@youngman.org.uk>
- <CALee7hZqmLK19tSEEFBgSWMKm9TRoUqLBCxUmbNJpwmM45BjTQ@mail.gmail.com>
- <df053262-9334-1070-c24a-5d2f91402716@hardwarefreak.org>
- <CALee7haowPD0DKPtEQUN8M8LDCNOq62SDrk5VNMO5C+5iUqtrQ@mail.gmail.com>
- <5afd5cea-06b8-8524-e4f5-8534f23bd714@hardwarefreak.org>
- <87van15j9b.fsf@notabene.neil.brown.name>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH 1/5] md: add a 'md_numa_node' module parameter
+Date: Mon, 10 Jul 2017 10:28:44 -0700
+Message-ID: <20170710172844.hfln24mylpyaoxnw@kernel.org>
+References: <1498893658-18409-1-git-send-email-liuzhengyuan@kylinos.cn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87van15j9b.fsf@notabene.neil.brown.name>
+Content-Disposition: inline
+In-Reply-To: <1498893658-18409-1-git-send-email-liuzhengyuan@kylinos.cn>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
+Cc: linux-raid@vger.kernel.org, neilb@suse.com, colyli@suse.de, liuyun01@kylinos.cn
 List-Id: linux-raid.ids
 
-On 07/10/2017 12:37 AM, NeilBrown wrote:
-> I wasn't clear to me that I needed to chime in..  and the complete lack
-> of details (not even an "mdadm --examine" output), meant I could only
-> answer in vague generalizations.
-> However, seeing you asked.
-> If you really want to have a 'linear' of 2 RAID10s, then
-> 0/ unmount the xfs filesystem
-> 1/ backup the last few megabytes of the device
->     dd if=/dev/mdXX of=/safe/place/backup bs=1M skip=$BIGNUM
-> 2/ create a linear array of the two RAID10s, ensuring the
->    metadata is v1.0, and the dataoffset is zero (should be default with
->    1.0)
->     mdadm -C /dev/mdZZ -l linear -n 2 -e 1.0 --data-offset=0 /dev/mdXX /dev/mdYY
-> 3/ restore the saved data
->     dd of=/dev/mdZZ if=/safe/place/backup bs=1M seek=$BIGNUM
-> 4/ grow the xfs filesystem
-> 5/ be happy.
->
-> I cannot comment on the values of "few" and "$BUGNUM" without seeing
-> specifics.
->
-> NeilBrown
+On Sat, Jul 01, 2017 at 03:20:54PM +0800, Zhengyuan Liu wrote:
+> This module parameter allows user to control which numa node
+> the memory for mainly structures (e.g. mddev, md_rdev,
+> request_queue, gendisk) is allocated from. The idea came from
+> commit 115485e83f49 ("dm: add 'dm_numa_node' module parameter").
+> If we don't set this parameter while loading module, it won't
+> affect the md default behavior.
+> 
+> numa_node_id field is added so personality such as raid0 could
+> inherit the node from mddev, for other personality which has its
+> own handling thread we could add such a module parameter too.
+> 
+> This patch includes a bug fix about parameter range check suggested
+> by Coly Li <colyli@suse.de>.
+> 
+> Signed-off-by: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
 
-Thanks for your response, Neil!
+Can you give an example why this is useful?
 
-md0 is boot (raid1), md1 is root (raid10) and md2 is data (raid10) that 
-I need to expand. Here are details:
+If we have several raid arrays, we can't control numa node for them separately.
+And in the patch 4/5, one array could have two different parameters to control
+memory allocation. this is weird. I have no idea how users use this feature.
 
+If we really want to support numa node, would it be better to deduce the numa
+node from the combination of all underlayer disks?
 
-# mdadm --detail /dev/md0
-/dev/md0:
-         Version : 1.2
-   Creation Time : Mon Sep 10 14:45:11 2012
-      Raid Level : raid1
-      Array Size : 488128 (476.77 MiB 499.84 MB)
-   Used Dev Size : 488128 (476.77 MiB 499.84 MB)
-    Raid Devices : 2
-   Total Devices : 2
-     Persistence : Superblock is persistent
+Thanks,
+Shaohua
 
-     Update Time : Mon Jul  3 11:57:24 2017
-           State : clean
-  Active Devices : 2
-Working Devices : 2
-  Failed Devices : 0
-   Spare Devices : 0
-
-            Name : backup1:0  (local to host backup1)
-            UUID : e5a17766:b4df544d:c2770d6e:214113ec
-          Events : 302
-
-     Number   Major   Minor   RaidDevice State
-        2       8       18        0      active sync   /dev/sdb2
-        3       8       34        1      active sync   /dev/sdc2
-
-
-# mdadm --detail /dev/md1
-/dev/md1:
-         Version : 1.2
-   Creation Time : Fri Sep 14 12:39:00 2012
-      Raid Level : raid10
-      Array Size : 97590272 (93.07 GiB 99.93 GB)
-   Used Dev Size : 48795136 (46.53 GiB 49.97 GB)
-    Raid Devices : 4
-   Total Devices : 4
-     Persistence : Superblock is persistent
-
-     Update Time : Mon Jul 10 12:30:46 2017
-           State : clean
-  Active Devices : 4
-Working Devices : 4
-  Failed Devices : 0
-   Spare Devices : 0
-
-          Layout : near=2
-      Chunk Size : 512K
-
-            Name : backup1:1  (local to host backup1)
-            UUID : 91560d5a:245bbc56:cc08b0ce:9c78fea1
-          Events : 1003350
-
-     Number   Major   Minor   RaidDevice State
-        4       8       19        0      active sync set-A   /dev/sdb3
-        6       8       35        1      active sync set-B   /dev/sdc3
-        7       8       50        2      active sync set-A   /dev/sdd2
-        5       8        2        3      active sync set-B   /dev/sda2
-
-
-# mdadm --detail /dev/md2
-/dev/md2:
-         Version : 1.2
-   Creation Time : Fri Sep 14 12:40:13 2012
-      Raid Level : raid10
-      Array Size : 5761631232 (5494.72 GiB 5899.91 GB)
-   Used Dev Size : 2880815616 (2747.36 GiB 2949.96 GB)
-    Raid Devices : 4
-   Total Devices : 4
-     Persistence : Superblock is persistent
-
-     Update Time : Mon Jul 10 12:32:51 2017
-           State : clean
-  Active Devices : 4
-Working Devices : 4
-  Failed Devices : 0
-   Spare Devices : 0
-
-          Layout : near=2
-      Chunk Size : 512K
-
-            Name : backup1:2  (local to host backup1)
-            UUID : f6eeaa57:a55f36ff:6980a62a:d4781e44
-          Events : 2689040
-
-     Number   Major   Minor   RaidDevice State
-        4       8       20        0      active sync set-A   /dev/sdb4
-        6       8       36        1      active sync set-B   /dev/sdc4
-        7       8       51        2      active sync set-A   /dev/sdd3
-        5       8        3        3      active sync set-B   /dev/sda3
-
-
-And here is examine output for md2 partitions:
-
-# mdadm --examine /dev/sda3
-/dev/sda3:
-           Magic : a92b4efc
-         Version : 1.2
-     Feature Map : 0x0
-      Array UUID : f6eeaa57:a55f36ff:6980a62a:d4781e44
-            Name : backup1:2  (local to host backup1)
-   Creation Time : Fri Sep 14 12:40:13 2012
-      Raid Level : raid10
-    Raid Devices : 4
-
-  Avail Dev Size : 5762609152 (2747.83 GiB 2950.46 GB)
-      Array Size : 5761631232 (5494.72 GiB 5899.91 GB)
-   Used Dev Size : 5761631232 (2747.36 GiB 2949.96 GB)
-     Data Offset : 262144 sectors
-    Super Offset : 8 sectors
-    Unused Space : before=262064 sectors, after=977920 sectors
-           State : clean
-     Device UUID : 92beeec2:7ff92b1d:473a9641:2a078b16
-
-     Update Time : Mon Jul 10 12:35:53 2017
-        Checksum : d1abfc30 - correct
-          Events : 2689040
-
-          Layout : near=2
-      Chunk Size : 512K
-
-    Device Role : Active device 3
-    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
-
-
-# mdadm --examine /dev/sdb4
-/dev/sdb4:
-           Magic : a92b4efc
-         Version : 1.2
-     Feature Map : 0x0
-      Array UUID : f6eeaa57:a55f36ff:6980a62a:d4781e44
-            Name : backup1:2  (local to host backup1)
-   Creation Time : Fri Sep 14 12:40:13 2012
-      Raid Level : raid10
-    Raid Devices : 4
-
-  Avail Dev Size : 5761632256 (2747.36 GiB 2949.96 GB)
-      Array Size : 5761631232 (5494.72 GiB 5899.91 GB)
-   Used Dev Size : 5761631232 (2747.36 GiB 2949.96 GB)
-     Data Offset : 262144 sectors
-    Super Offset : 8 sectors
-    Unused Space : before=262064 sectors, after=1024 sectors
-           State : clean
-     Device UUID : 01e1cb21:01a011a9:85761911:9b4d437a
-
-     Update Time : Mon Jul 10 12:37:00 2017
-        Checksum : ef9b6012 - correct
-          Events : 2689040
-
-          Layout : near=2
-      Chunk Size : 512K
-
-    Device Role : Active device 0
-    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
-
-
-
-# mdadm --examine /dev/sdc4
-/dev/sdc4:
-           Magic : a92b4efc
-         Version : 1.2
-     Feature Map : 0x0
-      Array UUID : f6eeaa57:a55f36ff:6980a62a:d4781e44
-            Name : backup1:2  (local to host backup1)
-   Creation Time : Fri Sep 14 12:40:13 2012
-      Raid Level : raid10
-    Raid Devices : 4
-
-  Avail Dev Size : 5761632256 (2747.36 GiB 2949.96 GB)
-      Array Size : 5761631232 (5494.72 GiB 5899.91 GB)
-   Used Dev Size : 5761631232 (2747.36 GiB 2949.96 GB)
-     Data Offset : 262144 sectors
-    Super Offset : 8 sectors
-    Unused Space : before=262064 sectors, after=1024 sectors
-           State : clean
-     Device UUID : 1a2c966f:a78ffaf3:83cf37d4:135087b7
-
-     Update Time : Mon Jul 10 12:37:53 2017
-        Checksum : 88b0f680 - correct
-          Events : 2689040
-
-          Layout : near=2
-      Chunk Size : 512K
-
-    Device Role : Active device 1
-    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
-
-
-
-
-# mdadm --examine /dev/sdd3
-/dev/sdd3:
-           Magic : a92b4efc
-         Version : 1.2
-     Feature Map : 0x0
-      Array UUID : f6eeaa57:a55f36ff:6980a62a:d4781e44
-            Name : backup1:2  (local to host backup1)
-   Creation Time : Fri Sep 14 12:40:13 2012
-      Raid Level : raid10
-    Raid Devices : 4
-
-  Avail Dev Size : 5762609152 (2747.83 GiB 2950.46 GB)
-      Array Size : 5761631232 (5494.72 GiB 5899.91 GB)
-   Used Dev Size : 5761631232 (2747.36 GiB 2949.96 GB)
-     Data Offset : 262144 sectors
-    Super Offset : 8 sectors
-    Unused Space : before=262064 sectors, after=977920 sectors
-           State : clean
-     Device UUID : 52f92e76:15228eee:a20c1ee5:8d4a17d2
-
-     Update Time : Mon Jul 10 12:38:24 2017
-        Checksum : b56275df - correct
-          Events : 2689040
-
-          Layout : near=2
-      Chunk Size : 512K
-
-    Device Role : Active device 2
-    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
-
-
-
-Regards,
-Veljko
+> ---
+>  drivers/md/md.c | 18 ++++++++++++++----
+>  drivers/md/md.h |  2 ++
+>  2 files changed, 16 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 092b48f..fae93db 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -184,6 +184,8 @@ static int start_readonly;
+>   */
+>  static bool create_on_open = true;
+>  
+> +static int md_numa_node = NUMA_NO_NODE;
+> +
+>  /* bio_clone_mddev
+>   * like bio_clone, but with a local bio set
+>   */
+> @@ -588,7 +590,7 @@ static struct mddev *mddev_find(dev_t unit)
+>  	}
+>  	spin_unlock(&all_mddevs_lock);
+>  
+> -	new = kzalloc(sizeof(*new), GFP_KERNEL);
+> +	new = kzalloc_node(sizeof(*new), GFP_KERNEL, md_numa_node);
+>  	if (!new)
+>  		return NULL;
+>  
+> @@ -598,6 +600,7 @@ static struct mddev *mddev_find(dev_t unit)
+>  	else
+>  		new->md_minor = MINOR(unit) >> MdpMinorShift;
+>  
+> +	new->numa_node_id = md_numa_node;
+>  	mddev_init(new);
+>  
+>  	goto retry;
+> @@ -3387,7 +3390,7 @@ static struct md_rdev *md_import_device(dev_t newdev, int super_format, int supe
+>  	struct md_rdev *rdev;
+>  	sector_t size;
+>  
+> -	rdev = kzalloc(sizeof(*rdev), GFP_KERNEL);
+> +	rdev = kzalloc_node(sizeof(*rdev), GFP_KERNEL, md_numa_node);
+>  	if (!rdev)
+>  		return ERR_PTR(-ENOMEM);
+>  
+> @@ -5256,7 +5259,7 @@ static int md_alloc(dev_t dev, char *name)
+>  		mddev->hold_active = UNTIL_STOP;
+>  
+>  	error = -ENOMEM;
+> -	mddev->queue = blk_alloc_queue(GFP_KERNEL);
+> +	mddev->queue = blk_alloc_queue_node(GFP_KERNEL, md_numa_node);
+>  	if (!mddev->queue)
+>  		goto abort;
+>  	mddev->queue->queuedata = mddev;
+> @@ -5264,7 +5267,7 @@ static int md_alloc(dev_t dev, char *name)
+>  	blk_queue_make_request(mddev->queue, md_make_request);
+>  	blk_set_stacking_limits(&mddev->queue->limits);
+>  
+> -	disk = alloc_disk(1 << shift);
+> +	disk = alloc_disk_node(1 << shift, md_numa_node);
+>  	if (!disk) {
+>  		blk_cleanup_queue(mddev->queue);
+>  		mddev->queue = NULL;
+> @@ -8969,6 +8972,11 @@ static int __init md_init(void)
+>  	register_reboot_notifier(&md_notifier);
+>  	raid_table_header = register_sysctl_table(raid_root_table);
+>  
+> +	if (md_numa_node < NUMA_NO_NODE)
+> +		md_numa_node = NUMA_NO_NODE;
+> +	else if (md_numa_node > (num_online_nodes() - 1))
+> +		md_numa_node = num_online_nodes() - 1;
+> +
+>  	md_geninit();
+>  	return 0;
+>  
+> @@ -9252,6 +9260,8 @@ module_param_call(start_ro, set_ro, get_ro, NULL, S_IRUSR|S_IWUSR);
+>  module_param(start_dirty_degraded, int, S_IRUGO|S_IWUSR);
+>  module_param_call(new_array, add_named_array, NULL, NULL, S_IWUSR);
+>  module_param(create_on_open, bool, S_IRUSR|S_IWUSR);
+> +module_param(md_numa_node, int, S_IRUGO);
+> +MODULE_PARM_DESC(md_numa_node, "NUMA node for md device memory allocations");
+>  
+>  MODULE_LICENSE("GPL");
+>  MODULE_DESCRIPTION("MD RAID framework");
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index 991f0fe..5c91033 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -459,6 +459,8 @@ struct mddev {
+>  	void (*sync_super)(struct mddev *mddev, struct md_rdev *rdev);
+>  	struct md_cluster_info		*cluster_info;
+>  	unsigned int			good_device_nr;	/* good device num within cluster raid */
+> +
+> +	int numa_node_id;
+>  };
+>  
+>  enum recovery_flags {
+> -- 
+> 2.7.4
+> 
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
