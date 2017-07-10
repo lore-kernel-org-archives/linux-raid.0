@@ -1,67 +1,63 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v2] md/bitmap: don't read page from device with
- Bitmap_sync
-Date: Mon, 10 Jul 2017 10:29:45 -0700
-Message-ID: <20170710172945.cfbr5aidjrd5pfx2@kernel.org>
-References: <20170704032030.27665-1-gqjiang@suse.com>
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: [PATCH v2 1/3] mdadm/test: Refactor and revamp 'test' script
+Date: Mon, 10 Jul 2017 13:31:49 -0400
+Message-ID: <0eb07878-815c-82c8-c869-1646ab4e4863@gmail.com>
+References: <1497445373-27985-1-git-send-email-zlliu@suse.com>
+ <1497445373-27985-2-git-send-email-zlliu@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170704032030.27665-1-gqjiang@suse.com>
+In-Reply-To: <1497445373-27985-2-git-send-email-zlliu@suse.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>
-Cc: neilb@suse.com, linux-raid@vger.kernel.org
+To: Zhilong Liu <zlliu@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jul 04, 2017 at 11:20:30AM +0800, Guoqing Jiang wrote:
-> The device owns Bitmap_sync flag needs recovery
-> to become in sync, and read page from this type
-> device could get stale status.
+On 06/14/2017 09:02 AM, Zhilong Liu wrote:
+> Adding functions:
+> die()
+>    uniform the abnormal situations that have to abort.
+> check_env()
+>    do various basic checking before running test suite.
+> save_log()
+>    collect array infos, include of dmesg, superblock,
+>    bitmap and /proc/mdstat.
+> main()
+>    the core function of this script.
 > 
-> Also add comments for Bitmap_sync bit per the
-> suggestion from Shaohua and Neil.
+> Improve functions:
+> cleanup()
+>    clear dmesg and remove the /vat/tmp/mdtest* files.
+> mdadm()
+>    clear superblock once creating or building arrays
+>    every time, because it's always creating arrays
+>    many times in a test case.
+> check()
+>    just tidy up with die(), didn't change code meanings.
+> testdev()
+>    add checking $1 must be a block device, add 'return 0'
+>    in final because this function exists in last line of
+>    test case, such as tests/05r6tor0.
+> do_test()
+>    add checking abnormal dmesg and changing log management.
+> do_help()
+>    just recommend a better way to print Usage.
+> parse_args()
+>    revamp and improve.
 > 
-> Previous disscussion can be found here:
-> https://marc.info/?t=149760428900004&r=1&w=2
+> Delete function:
+> fast_sync()
+>    It's no longer used, so get rid of it.
 > 
-> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+> Signed-off-by: Zhilong Liu <zlliu@suse.com>
 
 Applied!
-> ---
->  drivers/md/bitmap.c | 3 ++-
->  drivers/md/md.h     | 4 +++-
->  2 files changed, 5 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-> index f4eace5..40f3cd7 100644
-> --- a/drivers/md/bitmap.c
-> +++ b/drivers/md/bitmap.c
-> @@ -156,7 +156,8 @@ static int read_sb_page(struct mddev *mddev, loff_t offset,
->  
->  	rdev_for_each(rdev, mddev) {
->  		if (! test_bit(In_sync, &rdev->flags)
-> -		    || test_bit(Faulty, &rdev->flags))
-> +		    || test_bit(Faulty, &rdev->flags)
-> +		    || test_bit(Bitmap_sync, &rdev->flags))
->  			continue;
->  
->  		target = offset + index * (PAGE_SIZE/512);
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 991f0fe..b50eb4a 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -134,7 +134,9 @@ enum flag_bits {
->  	Faulty,			/* device is known to have a fault */
->  	In_sync,		/* device is in_sync with rest of array */
->  	Bitmap_sync,		/* ..actually, not quite In_sync.  Need a
-> -				 * bitmap-based recovery to get fully in sync
-> +				 * bitmap-based recovery to get fully in sync.
-> +				 * The bit is only meaningful before device
-> +				 * has been passed to pers->hot_add_disk.
->  				 */
->  	WriteMostly,		/* Avoid reading if at all possible */
->  	AutoDetected,		/* added by auto-detect */
-> -- 
-> 2.10.0
-> 
+
+I fixed the s/vat/var/ issue.
+
+Thanks,
+Jes
+
+
