@@ -1,168 +1,272 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH v3 05/14] md: raid1: don't use bio's vec table to manage
- resync pages
-Date: Mon, 10 Jul 2017 15:25:41 +0800
-Message-ID: <20170710072538.GA32208@ming.t460p>
-References: <20170316161235.27110-1-tom.leiming@gmail.com>
- <20170316161235.27110-6-tom.leiming@gmail.com>
- <87mv8d5ht7.fsf@notabene.neil.brown.name>
- <CACVXFVP69kLQyr0NOY7zXMZ_bdJYCV7fBbDrKdFF9fBPBTsU-g@mail.gmail.com>
- <20170710041304.GB15321@ming.t460p>
- <87h8yk6h50.fsf@notabene.neil.brown.name>
+From: Veljko <veljko3@gmail.com>
+Subject: Re: Linear device of two arrays
+Date: Mon, 10 Jul 2017 13:03:51 +0200
+Message-ID: <e394625b-18d7-d141-3957-3c16c9bc6e44@gmail.com>
+References: <CALee7hZYgLNO2siDJNtFge_BoocTXX-9BSgRHmMJH8MaH6V3LA@mail.gmail.com>
+ <20170705214250.0ea99538@natsu> <595D2ADA.8010907@youngman.org.uk>
+ <CALee7hZqmLK19tSEEFBgSWMKm9TRoUqLBCxUmbNJpwmM45BjTQ@mail.gmail.com>
+ <df053262-9334-1070-c24a-5d2f91402716@hardwarefreak.org>
+ <CALee7haowPD0DKPtEQUN8M8LDCNOq62SDrk5VNMO5C+5iUqtrQ@mail.gmail.com>
+ <5afd5cea-06b8-8524-e4f5-8534f23bd714@hardwarefreak.org>
+ <87van15j9b.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87h8yk6h50.fsf@notabene.neil.brown.name>
-Sender: linux-block-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Ming Lei <tom.leiming@gmail.com>, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87van15j9b.fsf@notabene.neil.brown.name>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jul 10, 2017 at 02:38:19PM +1000, NeilBrown wrote:
-> On Mon, Jul 10 2017, Ming Lei wrote:
-> 
-> > On Mon, Jul 10, 2017 at 11:35:12AM +0800, Ming Lei wrote:
-> >> On Mon, Jul 10, 2017 at 7:09 AM, NeilBrown <neilb@suse.com> wrote:
-> ...
-> >> >> +
-> >> >> +             rp->idx = 0;
-> >> >
-> >> > This is the only place the ->idx is initialized, in r1buf_pool_alloc().
-> >> > The mempool alloc function is suppose to allocate memory, not initialize
-> >> > it.
-> >> >
-> >> > If the mempool_alloc() call cannot allocate memory it will use memory
-> >> > from the pool.  If this memory has already been used, then it will no
-> >> > longer have the initialized value.
-> >> >
-> >> > In short: you need to initialise memory *after* calling
-> >> > mempool_alloc(), unless you ensure it is reset to the init values before
-> >> > calling mempool_free().
-> >> >
-> >> > https://bugzilla.kernel.org/show_bug.cgi?id=196307
-> >> 
-> >> OK, thanks for posting it out.
-> >> 
-> >> Another fix might be to reinitialize the variable(rp->idx = 0) in
-> >> r1buf_pool_free().
-> >> Or just set it as zero every time when it is used.
-> >> 
-> >> But I don't understand why mempool_free() calls pool->free() at the end of
-> >> this function, which may cause to run pool->free() on a new allocated buf,
-> >> seems a bug in mempool?
-> >
-> > Looks I missed the 'return' in mempool_free(), so it is fine.
-> >
-> > How about the following fix?
-> 
-> It looks like it would probably work, but it is rather unusual to
-> initialise something just before freeing it.
-> 
-> Couldn't you just move the initialization to shortly after the
-> mempool_alloc() call.  There looks like a good place that already loops
-> over all the bios....
+On 07/10/2017 12:37 AM, NeilBrown wrote:
+> I wasn't clear to me that I needed to chime in..  and the complete lack
+> of details (not even an "mdadm --examine" output), meant I could only
+> answer in vague generalizations.
+> However, seeing you asked.
+> If you really want to have a 'linear' of 2 RAID10s, then
+> 0/ unmount the xfs filesystem
+> 1/ backup the last few megabytes of the device
+>     dd if=/dev/mdXX of=/safe/place/backup bs=1M skip=$BIGNUM
+> 2/ create a linear array of the two RAID10s, ensuring the
+>    metadata is v1.0, and the dataoffset is zero (should be default with
+>    1.0)
+>     mdadm -C /dev/mdZZ -l linear -n 2 -e 1.0 --data-offset=0 /dev/mdXX /dev/mdYY
+> 3/ restore the saved data
+>     dd of=/dev/mdZZ if=/safe/place/backup bs=1M seek=$BIGNUM
+> 4/ grow the xfs filesystem
+> 5/ be happy.
+>
+> I cannot comment on the values of "few" and "$BUGNUM" without seeing
+> specifics.
+>
+> NeilBrown
 
-OK, follows the revised patch according to your suggestion.
----
+Thanks for your response, Neil!
 
-From 68f9936635b3dda13c87a6b6125ac543145bb940 Mon Sep 17 00:00:00 2001
-From: Ming Lei <ming.lei@redhat.com>
-Date: Mon, 10 Jul 2017 15:16:16 +0800
-Subject: [PATCH] MD: move initialization of resync pages' index out of mempool
- allocator
-
-mempool_alloc() is only responsible for allocation, not for initialization,
-so we need to move the initialization of resync pages's index out of the
-allocator function.
-
-Reported-by: NeilBrown <neilb@suse.com>
-Fixes: f0250618361d(md: raid10: don't use bio's vec table to manage resync pages)
-Fixes: 98d30c5812c3(md: raid1: don't use bio's vec table to manage resync pages)
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- drivers/md/raid1.c  | 4 +++-
- drivers/md/raid10.c | 6 +++++-
- 2 files changed, 8 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index e1a7e3d4c5e4..26f5efba0504 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -170,7 +170,6 @@ static void * r1buf_pool_alloc(gfp_t gfp_flags, void *data)
- 			resync_get_all_pages(rp);
- 		}
- 
--		rp->idx = 0;
- 		rp->raid_bio = r1_bio;
- 		bio->bi_private = rp;
- 	}
-@@ -2698,6 +2697,9 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
- 		struct md_rdev *rdev;
- 		bio = r1_bio->bios[i];
- 
-+		/* This initialization should follow mempool_alloc() */
-+		get_resync_pages(bio)->idx = 0;
-+
- 		rdev = rcu_dereference(conf->mirrors[i].rdev);
- 		if (rdev == NULL ||
- 		    test_bit(Faulty, &rdev->flags)) {
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 797ed60abd5e..5ebcb7487284 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -221,7 +221,6 @@ static void * r10buf_pool_alloc(gfp_t gfp_flags, void *data)
- 			resync_get_all_pages(rp);
- 		}
- 
--		rp->idx = 0;
- 		rp->raid_bio = r10_bio;
- 		bio->bi_private = rp;
- 		if (rbio) {
-@@ -3095,6 +3094,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
- 				bio = r10_bio->devs[0].bio;
- 				bio->bi_next = biolist;
- 				biolist = bio;
-+				get_resync_pages(bio)->idx = 0;
- 				bio->bi_end_io = end_sync_read;
- 				bio_set_op_attrs(bio, REQ_OP_READ, 0);
- 				if (test_bit(FailFast, &rdev->flags))
-@@ -3120,6 +3120,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
- 					bio = r10_bio->devs[1].bio;
- 					bio->bi_next = biolist;
- 					biolist = bio;
-+					get_resync_pages(bio)->idx = 0;
- 					bio->bi_end_io = end_sync_write;
- 					bio_set_op_attrs(bio, REQ_OP_WRITE, 0);
- 					bio->bi_iter.bi_sector = to_addr
-@@ -3146,6 +3147,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
- 					break;
- 				bio->bi_next = biolist;
- 				biolist = bio;
-+				get_resync_pages(bio)->idx = 0;
- 				bio->bi_end_io = end_sync_write;
- 				bio_set_op_attrs(bio, REQ_OP_WRITE, 0);
- 				bio->bi_iter.bi_sector = to_addr +
-@@ -3291,6 +3293,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
- 			atomic_inc(&r10_bio->remaining);
- 			bio->bi_next = biolist;
- 			biolist = bio;
-+			get_resync_pages(bio)->idx = 0;
- 			bio->bi_end_io = end_sync_read;
- 			bio_set_op_attrs(bio, REQ_OP_READ, 0);
- 			if (test_bit(FailFast, &conf->mirrors[d].rdev->flags))
-@@ -3314,6 +3317,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
- 			sector = r10_bio->devs[i].addr;
- 			bio->bi_next = biolist;
- 			biolist = bio;
-+			get_resync_pages(bio)->idx = 0;
- 			bio->bi_end_io = end_sync_write;
- 			bio_set_op_attrs(bio, REQ_OP_WRITE, 0);
- 			if (test_bit(FailFast, &conf->mirrors[d].rdev->flags))
--- 
-2.9.4
+md0 is boot (raid1), md1 is root (raid10) and md2 is data (raid10) that 
+I need to expand. Here are details:
 
 
+# mdadm --detail /dev/md0
+/dev/md0:
+         Version : 1.2
+   Creation Time : Mon Sep 10 14:45:11 2012
+      Raid Level : raid1
+      Array Size : 488128 (476.77 MiB 499.84 MB)
+   Used Dev Size : 488128 (476.77 MiB 499.84 MB)
+    Raid Devices : 2
+   Total Devices : 2
+     Persistence : Superblock is persistent
 
--- 
-Ming
+     Update Time : Mon Jul  3 11:57:24 2017
+           State : clean
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : 0
+   Spare Devices : 0
+
+            Name : backup1:0  (local to host backup1)
+            UUID : e5a17766:b4df544d:c2770d6e:214113ec
+          Events : 302
+
+     Number   Major   Minor   RaidDevice State
+        2       8       18        0      active sync   /dev/sdb2
+        3       8       34        1      active sync   /dev/sdc2
+
+
+# mdadm --detail /dev/md1
+/dev/md1:
+         Version : 1.2
+   Creation Time : Fri Sep 14 12:39:00 2012
+      Raid Level : raid10
+      Array Size : 97590272 (93.07 GiB 99.93 GB)
+   Used Dev Size : 48795136 (46.53 GiB 49.97 GB)
+    Raid Devices : 4
+   Total Devices : 4
+     Persistence : Superblock is persistent
+
+     Update Time : Mon Jul 10 12:30:46 2017
+           State : clean
+  Active Devices : 4
+Working Devices : 4
+  Failed Devices : 0
+   Spare Devices : 0
+
+          Layout : near=2
+      Chunk Size : 512K
+
+            Name : backup1:1  (local to host backup1)
+            UUID : 91560d5a:245bbc56:cc08b0ce:9c78fea1
+          Events : 1003350
+
+     Number   Major   Minor   RaidDevice State
+        4       8       19        0      active sync set-A   /dev/sdb3
+        6       8       35        1      active sync set-B   /dev/sdc3
+        7       8       50        2      active sync set-A   /dev/sdd2
+        5       8        2        3      active sync set-B   /dev/sda2
+
+
+# mdadm --detail /dev/md2
+/dev/md2:
+         Version : 1.2
+   Creation Time : Fri Sep 14 12:40:13 2012
+      Raid Level : raid10
+      Array Size : 5761631232 (5494.72 GiB 5899.91 GB)
+   Used Dev Size : 2880815616 (2747.36 GiB 2949.96 GB)
+    Raid Devices : 4
+   Total Devices : 4
+     Persistence : Superblock is persistent
+
+     Update Time : Mon Jul 10 12:32:51 2017
+           State : clean
+  Active Devices : 4
+Working Devices : 4
+  Failed Devices : 0
+   Spare Devices : 0
+
+          Layout : near=2
+      Chunk Size : 512K
+
+            Name : backup1:2  (local to host backup1)
+            UUID : f6eeaa57:a55f36ff:6980a62a:d4781e44
+          Events : 2689040
+
+     Number   Major   Minor   RaidDevice State
+        4       8       20        0      active sync set-A   /dev/sdb4
+        6       8       36        1      active sync set-B   /dev/sdc4
+        7       8       51        2      active sync set-A   /dev/sdd3
+        5       8        3        3      active sync set-B   /dev/sda3
+
+
+And here is examine output for md2 partitions:
+
+# mdadm --examine /dev/sda3
+/dev/sda3:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : f6eeaa57:a55f36ff:6980a62a:d4781e44
+            Name : backup1:2  (local to host backup1)
+   Creation Time : Fri Sep 14 12:40:13 2012
+      Raid Level : raid10
+    Raid Devices : 4
+
+  Avail Dev Size : 5762609152 (2747.83 GiB 2950.46 GB)
+      Array Size : 5761631232 (5494.72 GiB 5899.91 GB)
+   Used Dev Size : 5761631232 (2747.36 GiB 2949.96 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=262064 sectors, after=977920 sectors
+           State : clean
+     Device UUID : 92beeec2:7ff92b1d:473a9641:2a078b16
+
+     Update Time : Mon Jul 10 12:35:53 2017
+        Checksum : d1abfc30 - correct
+          Events : 2689040
+
+          Layout : near=2
+      Chunk Size : 512K
+
+    Device Role : Active device 3
+    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+
+
+# mdadm --examine /dev/sdb4
+/dev/sdb4:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : f6eeaa57:a55f36ff:6980a62a:d4781e44
+            Name : backup1:2  (local to host backup1)
+   Creation Time : Fri Sep 14 12:40:13 2012
+      Raid Level : raid10
+    Raid Devices : 4
+
+  Avail Dev Size : 5761632256 (2747.36 GiB 2949.96 GB)
+      Array Size : 5761631232 (5494.72 GiB 5899.91 GB)
+   Used Dev Size : 5761631232 (2747.36 GiB 2949.96 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=262064 sectors, after=1024 sectors
+           State : clean
+     Device UUID : 01e1cb21:01a011a9:85761911:9b4d437a
+
+     Update Time : Mon Jul 10 12:37:00 2017
+        Checksum : ef9b6012 - correct
+          Events : 2689040
+
+          Layout : near=2
+      Chunk Size : 512K
+
+    Device Role : Active device 0
+    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+
+
+
+# mdadm --examine /dev/sdc4
+/dev/sdc4:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : f6eeaa57:a55f36ff:6980a62a:d4781e44
+            Name : backup1:2  (local to host backup1)
+   Creation Time : Fri Sep 14 12:40:13 2012
+      Raid Level : raid10
+    Raid Devices : 4
+
+  Avail Dev Size : 5761632256 (2747.36 GiB 2949.96 GB)
+      Array Size : 5761631232 (5494.72 GiB 5899.91 GB)
+   Used Dev Size : 5761631232 (2747.36 GiB 2949.96 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=262064 sectors, after=1024 sectors
+           State : clean
+     Device UUID : 1a2c966f:a78ffaf3:83cf37d4:135087b7
+
+     Update Time : Mon Jul 10 12:37:53 2017
+        Checksum : 88b0f680 - correct
+          Events : 2689040
+
+          Layout : near=2
+      Chunk Size : 512K
+
+    Device Role : Active device 1
+    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+
+
+
+
+# mdadm --examine /dev/sdd3
+/dev/sdd3:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : f6eeaa57:a55f36ff:6980a62a:d4781e44
+            Name : backup1:2  (local to host backup1)
+   Creation Time : Fri Sep 14 12:40:13 2012
+      Raid Level : raid10
+    Raid Devices : 4
+
+  Avail Dev Size : 5762609152 (2747.83 GiB 2950.46 GB)
+      Array Size : 5761631232 (5494.72 GiB 5899.91 GB)
+   Used Dev Size : 5761631232 (2747.36 GiB 2949.96 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=262064 sectors, after=977920 sectors
+           State : clean
+     Device UUID : 52f92e76:15228eee:a20c1ee5:8d4a17d2
+
+     Update Time : Mon Jul 10 12:38:24 2017
+        Checksum : b56275df - correct
+          Events : 2689040
+
+          Layout : near=2
+      Chunk Size : 512K
+
+    Device Role : Active device 2
+    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+
+
+
+Regards,
+Veljko
