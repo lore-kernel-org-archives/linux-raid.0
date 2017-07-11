@@ -1,149 +1,76 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH v3 05/14] md: raid1: don't use bio's vec table to manage resync pages
-Date: Tue, 11 Jul 2017 09:14:01 +1000
-Message-ID: <874luj6g1y.fsf@notabene.neil.brown.name>
-References: <20170316161235.27110-1-tom.leiming@gmail.com> <20170316161235.27110-6-tom.leiming@gmail.com> <87mv8d5ht7.fsf@notabene.neil.brown.name> <CACVXFVP69kLQyr0NOY7zXMZ_bdJYCV7fBbDrKdFF9fBPBTsU-g@mail.gmail.com> <20170710041304.GB15321@ming.t460p> <87h8yk6h50.fsf@notabene.neil.brown.name> <20170710072538.GA32208@ming.t460p> <20170710190549.luj7zrnq7mo4x36b@kernel.org>
+From: Xiao Ni <xni@redhat.com>
+Subject: Re: [MD PATCH 1/1 -v2] Raid5 should update rdev->sectors after
+ reshape
+Date: Tue, 11 Jul 2017 08:52:30 +0800
+Message-ID: <294b6345-ceb9-2452-a544-58696c789135@redhat.com>
+References: <1499247244-4483-1-git-send-email-xni@redhat.com>
+ <20170710174330.avznqdpakf4guiec@kernel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170710190549.luj7zrnq7mo4x36b@kernel.org>
-Sender: linux-block-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>, Ming Lei <ming.lei@redhat.com>
-Cc: Ming Lei <tom.leiming@gmail.com>, Jens Axboe <axboe@fb.com>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170710174330.avznqdpakf4guiec@kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, ncroxon@redhat.com, tbskyd@gmail.com, gqjiang@suse.com
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Mon, Jul 10 2017, Shaohua Li wrote:
 
-> On Mon, Jul 10, 2017 at 03:25:41PM +0800, Ming Lei wrote:
->> On Mon, Jul 10, 2017 at 02:38:19PM +1000, NeilBrown wrote:
->> > On Mon, Jul 10 2017, Ming Lei wrote:
->> >=20
->> > > On Mon, Jul 10, 2017 at 11:35:12AM +0800, Ming Lei wrote:
->> > >> On Mon, Jul 10, 2017 at 7:09 AM, NeilBrown <neilb@suse.com> wrote:
->> > ...
->> > >> >> +
->> > >> >> +             rp->idx =3D 0;
->> > >> >
->> > >> > This is the only place the ->idx is initialized, in r1buf_pool_al=
-loc().
->> > >> > The mempool alloc function is suppose to allocate memory, not ini=
-tialize
->> > >> > it.
->> > >> >
->> > >> > If the mempool_alloc() call cannot allocate memory it will use me=
-mory
->> > >> > from the pool.  If this memory has already been used, then it wil=
-l no
->> > >> > longer have the initialized value.
->> > >> >
->> > >> > In short: you need to initialise memory *after* calling
->> > >> > mempool_alloc(), unless you ensure it is reset to the init values=
- before
->> > >> > calling mempool_free().
->> > >> >
->> > >> > https://bugzilla.kernel.org/show_bug.cgi?id=3D196307
->> > >>=20
->> > >> OK, thanks for posting it out.
->> > >>=20
->> > >> Another fix might be to reinitialize the variable(rp->idx =3D 0) in
->> > >> r1buf_pool_free().
->> > >> Or just set it as zero every time when it is used.
->> > >>=20
->> > >> But I don't understand why mempool_free() calls pool->free() at the=
- end of
->> > >> this function, which may cause to run pool->free() on a new allocat=
-ed buf,
->> > >> seems a bug in mempool?
->> > >
->> > > Looks I missed the 'return' in mempool_free(), so it is fine.
->> > >
->> > > How about the following fix?
->> >=20
->> > It looks like it would probably work, but it is rather unusual to
->> > initialise something just before freeing it.
->> >=20
->> > Couldn't you just move the initialization to shortly after the
->> > mempool_alloc() call.  There looks like a good place that already loops
->> > over all the bios....
->>=20
->> OK, follows the revised patch according to your suggestion.
+On 07/11/2017 01:43 AM, Shaohua Li wrote:
+> On Wed, Jul 05, 2017 at 05:34:04PM +0800, Xiao Ni wrote:
+>> The raid5 md device is created by the disks which we don't use the total size. For example,
+>> the size of the device is 5G and it just uses 3G of the devices to create one raid5 device.
+>> Then change the chunksize and wait reshape to finish. After reshape finishing stop the raid
+>> and assemble it again. It fails.
+>> mdadm -CR /dev/md0 -l5 -n3 /dev/loop[0-2] --size=3G --chunk=32 --assume-clean
+>> mdadm /dev/md0 --grow --chunk=64
+>> wait reshape to finish
+>> mdadm -S /dev/md0
+>> mdadm -As
+>> The error messages:
+>> [197519.814302] md: loop1 does not have a valid v1.2 superblock, not importing!
+>> [197519.821686] md: md_import_device returned -22
+>>
+>> After reshape the data offset is changed. It selects backwards direction in this condition.
+>> In function super_1_load it compares the available space of the underlying device with
+>> sb->data_size. The new data offset gets bigger after reshape. So super_1_load returns -EINVAL.
+>> rdev->sectors is updated in md_finish_reshape. Then sb->data_size is set in super_1_sync based
+>> on rdev->sectors. So add md_finish_reshape in end_reshape.
+>>
+>> Signed-off-by: Xiao Ni <xni@redhat.com>
+> Applied, thanks! Will add to stable too.
+>
+> Can you also add the test to mdadm test suite?
 
-Thanks.
+Sure, I'll add this test suite.
 
-That isn't as tidy as I hoped.  So I went deeper into the code to try to
-understand why...
+Regards
+Xiao
+>
+>> ---
+>>   drivers/md/raid5.c | 4 +---
+>>   1 file changed, 1 insertion(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>> index ec0f951..e7f527c 100644
+>> --- a/drivers/md/raid5.c
+>> +++ b/drivers/md/raid5.c
+>> @@ -7947,12 +7947,10 @@ static void end_reshape(struct r5conf *conf)
+>>   {
+>>   
+>>   	if (!test_bit(MD_RECOVERY_INTR, &conf->mddev->recovery)) {
+>> -		struct md_rdev *rdev;
+>>   
+>>   		spin_lock_irq(&conf->device_lock);
+>>   		conf->previous_raid_disks = conf->raid_disks;
+>> -		rdev_for_each(rdev, conf->mddev)
+>> -			rdev->data_offset = rdev->new_data_offset;
+>> +		md_finish_reshape(conf->mddev);
+>>   		smp_wmb();
+>>   		conf->reshape_progress = MaxSector;
+>>   		conf->mddev->reshape_position = MaxSector;
+>> -- 
+>> 2.7.4
+>>
 
-I think that maybe we should just discard the ->idx field completely.
-It is only used in this code:
-
-	do {
-		struct page *page;
-		int len =3D PAGE_SIZE;
-		if (sector_nr + (len>>9) > max_sector)
-			len =3D (max_sector - sector_nr) << 9;
-		if (len =3D=3D 0)
-			break;
-		for (bio=3D biolist ; bio ; bio=3Dbio->bi_next) {
-			struct resync_pages *rp =3D get_resync_pages(bio);
-			page =3D resync_fetch_page(rp, rp->idx++);
-			/*
-			 * won't fail because the vec table is big enough
-			 * to hold all these pages
-			 */
-			bio_add_page(bio, page, len, 0);
-		}
-		nr_sectors +=3D len>>9;
-		sector_nr +=3D len>>9;
-	} while (get_resync_pages(biolist)->idx < RESYNC_PAGES);
-
-and all of the different 'rp' always have the same value for 'idx'.
-This code is more complex than it needs to be.  This is because it used
-to be possible for bio_add_page() to fail.  That cannot happen any more.
-So we can make the code something like:
-
-  for (idx =3D 0; idx < RESYNC_PAGES; idx++) {
-     struct page *page;
-     int len =3D PAGE_SIZE;
-     if (sector_nr + (len >> 9) > max_sector)
-         len =3D (max_sector - sector_nr) << 9
-     if (len =3D=3D 0)
-         break;
-     for (bio =3D biolist; bio; bio =3D bio->bi_next) {
-        struct resync_pages *rp =3D get_resync_pages(bio);
-        page =3D resync_fetch_page(rp, idx);
-        bio_add_page(bio, page, len, 0);
-     }
-     nr_sectors +=3D len >> 9;
-     sector_nr +=3D len >> 9;
-  }
-
-Or did I miss something?
-
-Thanks,
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAllkCjsACgkQOeye3VZi
-gbnjDg//WsZC/Xdj/lu3t9jZYtYPTx3SNfeRqAH7KhBqN7sFkCnySWGwqPWxvEMl
-nNUtEuLELsiiaIsQ0fbcgO6LFp9f+70DgMvvZP3zcWb+tpzq7USEo7Z7KeBzaIve
-gow90QCHVXrSl29dLPzHhZmXjyBjpZZuD//DHNJPGW6SZGzckWIMRnRWuXnmer6y
-kQumDgyR41IqA/GsC7UBqxtq4QsxKr+1DZVZx84eTiEOZTyXVktRNbBcZWsXNTKv
-qGWftfHXn5ian544j1/sRj0aV8NKmSHZr2oJTqxOawuhLDwJi7eynghtnBjqr86t
-gPnTn17iZFqQ7MJQuiVsgWW00h21B05adHCd8NN5mcQc1wtgbGfh+QQyZTuAChSJ
-1vG2q2EZoVv/jx9ipcsEnTljW18OWrTgZ2E+hYxIe4LPXfkOexB4kCJTQ9319VBr
-Ck+d0hRasa4gjof2T0TdZQIrDesQA2KKba9xyjtNSLP6w047p1AE6FA732vxbEae
-JFzYWed4QZnu0XCYDaQiRBH/tIbK4V2HLnVua9rSrIlOfAnweMnxdZxF2EUpDj0k
-x9+JE+3WZIDvIjuhJvTamIWr6tHBYXA8L+YGCeqjcoXIqfiPb7mar3X85m9tUuR+
-j3BINm9CBthh4N0DZTINP84Gl75CoSTkJDAGDV5UiZEwkNVpb2A=
-=7fAz
------END PGP SIGNATURE-----
---=-=-=--
