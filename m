@@ -1,76 +1,39 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: Re: [MD PATCH 1/1 -v2] Raid5 should update rdev->sectors after
- reshape
-Date: Tue, 11 Jul 2017 08:52:30 +0800
-Message-ID: <294b6345-ceb9-2452-a544-58696c789135@redhat.com>
-References: <1499247244-4483-1-git-send-email-xni@redhat.com>
- <20170710174330.avznqdpakf4guiec@kernel.org>
+From: Ram Ramesh <rramesh2400@gmail.com>
+Subject: Need to shrink md component disk partitions - what is the best
+ method?
+Date: Mon, 10 Jul 2017 21:27:27 -0500
+Message-ID: <317ec719-0979-e1ae-b6ad-7192ef074ac4@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170710174330.avznqdpakf4guiec@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, ncroxon@redhat.com, tbskyd@gmail.com, gqjiang@suse.com
+To: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+I shrunk md device to suit my needs and now I need to shrink the 
+partition of each component device so that I can reuse the unused space 
+on the component disks. Every google search that I encountered only 
+outlines a method where you fail, remove, re-partition, add, sync each 
+disk. With bitmap, I guess each sync will be very fast as data is really 
+not being changed. Since I have raid6, I should be able to work on one 
+disk at a time without much risk also.
 
+However, is this the recommended method? Why not simply boot on a rescue 
+system, do not assemble the array, simply change all partitions and 
+reboot the original system so that the array will get assembled the 
+normal way? Is this too risky or inferior?
 
-On 07/11/2017 01:43 AM, Shaohua Li wrote:
-> On Wed, Jul 05, 2017 at 05:34:04PM +0800, Xiao Ni wrote:
->> The raid5 md device is created by the disks which we don't use the total size. For example,
->> the size of the device is 5G and it just uses 3G of the devices to create one raid5 device.
->> Then change the chunksize and wait reshape to finish. After reshape finishing stop the raid
->> and assemble it again. It fails.
->> mdadm -CR /dev/md0 -l5 -n3 /dev/loop[0-2] --size=3G --chunk=32 --assume-clean
->> mdadm /dev/md0 --grow --chunk=64
->> wait reshape to finish
->> mdadm -S /dev/md0
->> mdadm -As
->> The error messages:
->> [197519.814302] md: loop1 does not have a valid v1.2 superblock, not importing!
->> [197519.821686] md: md_import_device returned -22
->>
->> After reshape the data offset is changed. It selects backwards direction in this condition.
->> In function super_1_load it compares the available space of the underlying device with
->> sb->data_size. The new data offset gets bigger after reshape. So super_1_load returns -EINVAL.
->> rdev->sectors is updated in md_finish_reshape. Then sb->data_size is set in super_1_sync based
->> on rdev->sectors. So add md_finish_reshape in end_reshape.
->>
->> Signed-off-by: Xiao Ni <xni@redhat.com>
-> Applied, thanks! Will add to stable too.
->
-> Can you also add the test to mdadm test suite?
+While we are at it, mdadm -E says
+>  Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
+>      Array Size : 12348030976 (11776.00 GiB 12644.38 GB)
+>   Used Dev Size : 6174015488 (2944.00 GiB 3161.10 GB)
+What is Used Dev Size? Is is the last sector used or the number of 
+sectors used? If my current partition(s) start at 2048, does it mean I 
+should end the md partitions on or after 6174015488 or (6174015488+2048)?
 
-Sure, I'll add this test suite.
+How do I make mdadm scrub the entire array even though bit map says 
+there is no need?
 
-Regards
-Xiao
->
->> ---
->>   drivers/md/raid5.c | 4 +---
->>   1 file changed, 1 insertion(+), 3 deletions(-)
->>
->> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> index ec0f951..e7f527c 100644
->> --- a/drivers/md/raid5.c
->> +++ b/drivers/md/raid5.c
->> @@ -7947,12 +7947,10 @@ static void end_reshape(struct r5conf *conf)
->>   {
->>   
->>   	if (!test_bit(MD_RECOVERY_INTR, &conf->mddev->recovery)) {
->> -		struct md_rdev *rdev;
->>   
->>   		spin_lock_irq(&conf->device_lock);
->>   		conf->previous_raid_disks = conf->raid_disks;
->> -		rdev_for_each(rdev, conf->mddev)
->> -			rdev->data_offset = rdev->new_data_offset;
->> +		md_finish_reshape(conf->mddev);
->>   		smp_wmb();
->>   		conf->reshape_progress = MaxSector;
->>   		conf->mddev->reshape_position = MaxSector;
->> -- 
->> 2.7.4
->>
+Ramesh
 
