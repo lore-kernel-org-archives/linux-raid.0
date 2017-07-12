@@ -1,35 +1,43 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Interesting mount problem on openSUSE
-Date: Wed, 12 Jul 2017 14:59:39 +0100
-Message-ID: <59662B4B.3040504@youngman.org.uk>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH] raid5-ppl: use BIOSET_NEED_BVECS when creating bioset
+Date: Wed, 12 Jul 2017 09:25:42 -0700
+Message-ID: <20170712162542.xw7shzvmdumcie3h@kernel.org>
+References: <20170711141624.27051-1-artur.paszkiewicz@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170711141624.27051-1-artur.paszkiewicz@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Not my problem !!! Seen on the opensuse mailing list - a current thread...
+On Tue, Jul 11, 2017 at 04:16:24PM +0200, Artur Paszkiewicz wrote:
+> This bioset is used for allocating bios with nr_iovecs > 0 so this flag
+> must be set.
+> 
+> Fixes: 011067b05668 ("blk: replace bioset_create_nobvec() with a flags arg to bioset_create()")
+> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 
-Somebody has created a v1.0 mirror, which mounts fine on openSUSE 12.2,
-but not Leap 42.2.
-
-The two drives making up the mirror are sdb9 and sdc9, and the array is
-called md9.
-
-The filesystem on md9 is the same size as sdb9 or sdc9. The guess is the
-array was created, and then the file system was created on one of the sd
-devices.
-
-The weirdo is why 12.2 mounts the partition fine, but 42.2 won't. Has
-collision checking been tightened up? Might there be a change in the
-superblock where the filesystem has overwritten it in a manner 42.2 can
-detect but 12.2 can't?
-
-As I say, it's not my problem, and it's clearly an incorrect
-configuration, but it's weird why the older distro has no problem but
-the newer one won't mount it.
-
-Cheers,
-Wol
+Applied, thanks!
+> ---
+>  drivers/md/raid5-ppl.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
+> index 77cce3573aa8..44ad5baf3206 100644
+> --- a/drivers/md/raid5-ppl.c
+> +++ b/drivers/md/raid5-ppl.c
+> @@ -1150,7 +1150,7 @@ int ppl_init_log(struct r5conf *conf)
+>  		goto err;
+>  	}
+>  
+> -	ppl_conf->bs = bioset_create(conf->raid_disks, 0, 0);
+> +	ppl_conf->bs = bioset_create(conf->raid_disks, 0, BIOSET_NEED_BVECS);
+>  	if (!ppl_conf->bs) {
+>  		ret = -ENOMEM;
+>  		goto err;
+> -- 
+> 2.13.1
+> 
