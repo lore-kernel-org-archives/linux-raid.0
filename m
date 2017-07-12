@@ -1,31 +1,30 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] dm bufio: Fix error code in
-        dm_bufio_write_dirty_buffers()
-Date: Wed, 12 Jul 2017 09:30:07 +0200
-Message-ID: <20170712073007.GA6260@lst.de>
-References: <20170712072634.qtm4tq7xlnp572hs@mwanda>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170712072634.qtm4tq7xlnp572hs@mwanda>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Alasdair Kergon <agk@redhat.com>, Christoph Hellwig <hch@lst.de>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, kernel-janitors@vger.kernel.org
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH 0/2] md: two patches
+Date: Wed, 12 Jul 2017 16:28:09 +0800
+Message-ID: <20170712082809.369-1-ming.lei@redhat.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
+Cc: NeilBrown <neilb@suse.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@infradead.org>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-raid.ids
 
-On Wed, Jul 12, 2017 at 10:26:34AM +0300, Dan Carpenter wrote:
-> We should be returning normal negative error codes here.  The "a"
-> variables comes from &c->async_write_error which is a blk_status_t
-> converted to a regular error code.
-> 
-> In the current code, the blk_status_t gets propogated back to
-> pool_create() and eventually results in an Oops.
+This 1st patch fixes one issue introduced in the following two
+commits:
+	Fixes: f0250618361d(md: raid10: don't use bio's vec table to manage resync pages)
+	Fixes: 98d30c5812c3(md: raid1: don't use bio's vec table to manage resync pages)
 
-And sparse correctly warns about this, so no idea how this slipped in..
+The 2nd one initializes bvec table of bio via bio_add_page() after bio_reset().
 
-> 
-> Fixes: 4e4cbee93d56 ("block: switch bios to blk_status_t")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Ming Lei (2):
+  md: remove 'idx' from 'struct resync_pages'
+  md: raid1/raid10: initialize bvec table via bio_add_page()
+
+ drivers/md/md.c     | 21 +++++++++++++++++++++
+ drivers/md/md.h     |  4 +++-
+ drivers/md/raid1.c  | 22 +++++-----------------
+ drivers/md/raid10.c | 10 +++++-----
+ 4 files changed, 34 insertions(+), 23 deletions(-)
+
+-- 
+2.9.4
