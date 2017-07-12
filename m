@@ -1,125 +1,37 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH v3 05/14] md: raid1: don't use bio's vec table to manage
- resync pages
-Date: Wed, 12 Jul 2017 09:40:10 +0800
-Message-ID: <CACVXFVOu92NhB+TmytW8Nk6bmL83cDHJFCf=gH5a_+GM6ov5kA@mail.gmail.com>
-References: <20170316161235.27110-1-tom.leiming@gmail.com> <20170316161235.27110-6-tom.leiming@gmail.com>
- <87mv8d5ht7.fsf@notabene.neil.brown.name> <CACVXFVP69kLQyr0NOY7zXMZ_bdJYCV7fBbDrKdFF9fBPBTsU-g@mail.gmail.com>
- <20170710041304.GB15321@ming.t460p> <87h8yk6h50.fsf@notabene.neil.brown.name>
- <20170710072538.GA32208@ming.t460p> <20170710190549.luj7zrnq7mo4x36b@kernel.org>
- <874luj6g1y.fsf@notabene.neil.brown.name>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [PATCH] dm bufio: Fix error code in dm_bufio_write_dirty_buffers()
+Date: Wed, 12 Jul 2017 10:26:34 +0300
+Message-ID: <20170712072634.qtm4tq7xlnp572hs@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <874luj6g1y.fsf@notabene.neil.brown.name>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Shaohua Li <shli@kernel.org>, Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@fb.com>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: Alasdair Kergon <agk@redhat.com>, Christoph Hellwig <hch@lst.de>
+Cc: Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jul 11, 2017 at 7:14 AM, NeilBrown <neilb@suse.com> wrote:
-> On Mon, Jul 10 2017, Shaohua Li wrote:
->
->> On Mon, Jul 10, 2017 at 03:25:41PM +0800, Ming Lei wrote:
->>> On Mon, Jul 10, 2017 at 02:38:19PM +1000, NeilBrown wrote:
->>> > On Mon, Jul 10 2017, Ming Lei wrote:
->>> >
->>> > > On Mon, Jul 10, 2017 at 11:35:12AM +0800, Ming Lei wrote:
->>> > >> On Mon, Jul 10, 2017 at 7:09 AM, NeilBrown <neilb@suse.com> wrote:
->>> > ...
->>> > >> >> +
->>> > >> >> +             rp->idx = 0;
->>> > >> >
->>> > >> > This is the only place the ->idx is initialized, in r1buf_pool_alloc().
->>> > >> > The mempool alloc function is suppose to allocate memory, not initialize
->>> > >> > it.
->>> > >> >
->>> > >> > If the mempool_alloc() call cannot allocate memory it will use memory
->>> > >> > from the pool.  If this memory has already been used, then it will no
->>> > >> > longer have the initialized value.
->>> > >> >
->>> > >> > In short: you need to initialise memory *after* calling
->>> > >> > mempool_alloc(), unless you ensure it is reset to the init values before
->>> > >> > calling mempool_free().
->>> > >> >
->>> > >> > https://bugzilla.kernel.org/show_bug.cgi?id=196307
->>> > >>
->>> > >> OK, thanks for posting it out.
->>> > >>
->>> > >> Another fix might be to reinitialize the variable(rp->idx = 0) in
->>> > >> r1buf_pool_free().
->>> > >> Or just set it as zero every time when it is used.
->>> > >>
->>> > >> But I don't understand why mempool_free() calls pool->free() at the end of
->>> > >> this function, which may cause to run pool->free() on a new allocated buf,
->>> > >> seems a bug in mempool?
->>> > >
->>> > > Looks I missed the 'return' in mempool_free(), so it is fine.
->>> > >
->>> > > How about the following fix?
->>> >
->>> > It looks like it would probably work, but it is rather unusual to
->>> > initialise something just before freeing it.
->>> >
->>> > Couldn't you just move the initialization to shortly after the
->>> > mempool_alloc() call.  There looks like a good place that already loops
->>> > over all the bios....
->>>
->>> OK, follows the revised patch according to your suggestion.
->
-> Thanks.
->
-> That isn't as tidy as I hoped.  So I went deeper into the code to try to
-> understand why...
->
-> I think that maybe we should just discard the ->idx field completely.
-> It is only used in this code:
->
->         do {
->                 struct page *page;
->                 int len = PAGE_SIZE;
->                 if (sector_nr + (len>>9) > max_sector)
->                         len = (max_sector - sector_nr) << 9;
->                 if (len == 0)
->                         break;
->                 for (bio= biolist ; bio ; bio=bio->bi_next) {
->                         struct resync_pages *rp = get_resync_pages(bio);
->                         page = resync_fetch_page(rp, rp->idx++);
->                         /*
->                          * won't fail because the vec table is big enough
->                          * to hold all these pages
->                          */
->                         bio_add_page(bio, page, len, 0);
->                 }
->                 nr_sectors += len>>9;
->                 sector_nr += len>>9;
->         } while (get_resync_pages(biolist)->idx < RESYNC_PAGES);
->
-> and all of the different 'rp' always have the same value for 'idx'.
-> This code is more complex than it needs to be.  This is because it used
-> to be possible for bio_add_page() to fail.  That cannot happen any more.
-> So we can make the code something like:
->
->   for (idx = 0; idx < RESYNC_PAGES; idx++) {
->      struct page *page;
->      int len = PAGE_SIZE;
->      if (sector_nr + (len >> 9) > max_sector)
->          len = (max_sector - sector_nr) << 9
->      if (len == 0)
->          break;
->      for (bio = biolist; bio; bio = bio->bi_next) {
->         struct resync_pages *rp = get_resync_pages(bio);
->         page = resync_fetch_page(rp, idx);
->         bio_add_page(bio, page, len, 0);
->      }
->      nr_sectors += len >> 9;
->      sector_nr += len >> 9;
->   }
->
-> Or did I miss something?
+We should be returning normal negative error codes here.  The "a"
+variables comes from &c->async_write_error which is a blk_status_t
+converted to a regular error code.
 
-I think this approach is much clean.
+In the current code, the blk_status_t gets propogated back to
+pool_create() and eventually results in an Oops.
 
+Fixes: 4e4cbee93d56 ("block: switch bios to blk_status_t")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
---
-Ming Lei
+diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
+index 850ff6c67994..44f4a8ac95bd 100644
+--- a/drivers/md/dm-bufio.c
++++ b/drivers/md/dm-bufio.c
+@@ -1258,8 +1258,7 @@ EXPORT_SYMBOL_GPL(dm_bufio_write_dirty_buffers_async);
+  */
+ int dm_bufio_write_dirty_buffers(struct dm_bufio_client *c)
+ {
+-	blk_status_t a;
+-	int f;
++	int a, f;
+ 	unsigned long buffers_processed = 0;
+ 	struct dm_buffer *b, *tmp;
+ 
