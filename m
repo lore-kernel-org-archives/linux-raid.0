@@ -1,109 +1,56 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH 2/2] md: raid1/raid10: initialize bvec table via
- bio_add_page()
-Date: Thu, 13 Jul 2017 17:20:52 +0800
-Message-ID: <20170713092050.GG670@ming.t460p>
-References: <20170712082912.491-1-ming.lei@redhat.com>
- <87zic92oiq.fsf@notabene.neil.brown.name>
- <20170713013710.GC670@ming.t460p>
- <87inix2ftj.fsf@notabene.neil.brown.name>
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: [mdadm PATCH 1/1] mdadm/test: Add one test case for raid5 reshape
+Date: Thu, 13 Jul 2017 10:27:11 -0400
+Message-ID: <6a8862cb-8ca3-ccc9-54f7-f3a99bb436a8@gmail.com>
+References: <1499937259-16791-1-git-send-email-xni@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87inix2ftj.fsf@notabene.neil.brown.name>
-Sender: linux-block-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-block@vger.kernel.org, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@infradead.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1499937259-16791-1-git-send-email-xni@redhat.com>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: Xiao Ni <xni@redhat.com>, linux-raid@vger.kernel.org
+Cc: shli@kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jul 13, 2017 at 01:09:28PM +1000, NeilBrown wrote:
-> On Thu, Jul 13 2017, Ming Lei wrote:
+On 07/13/2017 05:14 AM, Xiao Ni wrote:
+> This case trys to allow raid5 reshape to use backwards direction.
+> It changes chunksize after reshape and stop the raid. Then start
+> the raid again.
 > 
-> > On Thu, Jul 13, 2017 at 10:01:33AM +1000, NeilBrown wrote:
-> >> On Wed, Jul 12 2017, Ming Lei wrote:
-> >> 
-> >> > We will support multipage bvec soon, so initialize bvec
-> >> > table using the standardy way instead of writing the
-> >> > talbe directly. Otherwise it won't work any more once
-> >> > multipage bvec is enabled.
-> >> >
-> >> > Acked-by: Guoqing Jiang <gqjiang@suse.com>
-> >> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> >> > ---
-> >> >  drivers/md/md.c     | 21 +++++++++++++++++++++
-> >> >  drivers/md/md.h     |  3 +++
-> >> >  drivers/md/raid1.c  | 16 ++--------------
-> >> >  drivers/md/raid10.c |  4 ++--
-> >> >  4 files changed, 28 insertions(+), 16 deletions(-)
-> >> >
-> >> > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> >> > index 8cdca0296749..cc8dcd928dde 100644
-> >> > --- a/drivers/md/md.c
-> >> > +++ b/drivers/md/md.c
-> >> > @@ -9130,6 +9130,27 @@ void md_reload_sb(struct mddev *mddev, int nr)
-> >> >  }
-> >> >  EXPORT_SYMBOL(md_reload_sb);
-> >> >  
-> >> > +/* generally called after bio_reset() for reseting bvec */
-> >> > +void md_bio_reset_resync_pages(struct bio *bio, struct resync_pages *rp,
-> >> > +			       int size)
-> >> > +{
-> >> > +	int idx = 0;
-> >> > +
-> >> > +	/* initialize bvec table again */
-> >> > +	do {
-> >> > +		struct page *page = resync_fetch_page(rp, idx);
-> >> > +		int len = min_t(int, size, PAGE_SIZE);
-> >> > +
-> >> > +		/*
-> >> > +		 * won't fail because the vec table is big
-> >> > +		 * enough to hold all these pages
-> >> > +		 */
-> >> > +		bio_add_page(bio, page, len, 0);
-> >> > +		size -= len;
-> >> > +	} while (idx++ < RESYNC_PAGES && size > 0);
-> >> > +}
-> >> > +EXPORT_SYMBOL(md_bio_reset_resync_pages);
-> >> 
-> >> I really don't think this is a good idea.
-> >> This code is specific to raid1/raid10.  It is not generic md code.  So
-> >> it doesn't belong here.
-> >
-> > We already added 'struct resync_pages' in drivers/md/md.h, so I think
-> > it is reasonable to add this function into drivers/md/md.c
+> Signed-off-by: Xiao Ni <xni@redhat.com>
+> ---
+>   tests/02r5grow | 12 ++++++++++++
+>   1 file changed, 12 insertions(+)
 > 
-> Alternative perspective: it was unreasonable to add "resync_pages" to
-> md.h.
-> 
-> >
-> >> 
-> >> If you want to remove code duplication, then work on moving all raid1
-> >> functionality into raid10.c, then discard raid1.c
-> >
-> > This patch is for avoiding new code duplication, not for removing current
-> > duplication.
-> >
-> >> 
-> >> Or at the very least, have a separate "raid1-10.c" file for the common
-> >> code.
-> >
-> > You suggested it last time, but looks too overkill to be taken. But if
-> > someone wants to refactor raid1 and raid10, I think it can be a good start,
-> > but still not belong to this patch.
-> 
-> You are trying to create common code for raid1 and raid10.  This does
-> not belong in md.c.
-> If you really want to have a single copy of common code, then it exactly
-> is the role of this patch to create a place to put it.
-> I'm not saying you should put all common code in raid1-10.c.   Just the
-> function that you have identified.
+> diff --git a/tests/02r5grow b/tests/02r5grow
+> index 386e82e..14d05d6 100644
+> --- a/tests/02r5grow
+> +++ b/tests/02r5grow
+> @@ -34,3 +34,15 @@ check nosync
+>   sh tests/testdev $md0 3 $[size/2] 128
+>   
+>   mdadm -S $md0
+> +
+> +# create a raid5 array and change the chunk
+> +mdadm -CR $md0 --level raid5 --metadata=1.1 --chunk=32 --raid-disks 3 --size $[size/2] $dev1 $dev2 $dev3
+> +check wait
+> +check state UUU
+> +
+> +mdadm $md0 --grow --chunk=64
+> +mdadm --wait $md0
 
-I really don't want to waste time on this kind of thing, I can do
-either one frankly.
+You are not checking the outcome of your chunk change operation. Running 
+a test and not making sure it succeeds kinda makes it useless.
 
-Shaohua, could you share me which way you like to merge? I can do it in
-either way.
+Cheers,
+Jes
 
--- 
-Ming
+
+> +
+> +mdadm -S $md0
+> +mdadm -As
+> +mdadm -Ss
+> 
+
