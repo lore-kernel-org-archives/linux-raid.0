@@ -1,48 +1,36 @@
-From: Roman Mamedov <rm@romanrm.net>
-Subject: Re: Filesystem corruption on RAID1
-Date: Thu, 13 Jul 2017 21:48:56 +0500
-Message-ID: <20170713214856.4a5c8778@natsu>
-References: <c2fe6593-c806-ab9f-fcff-8327c013237b@assyoma.it>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: [PATCH 0/2] md/raid6: improvements for ARM/arm64
+Date: Thu, 13 Jul 2017 18:15:59 +0100
+Message-ID: <20170713171601.25440-1-ard.biesheuvel@linaro.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <c2fe6593-c806-ab9f-fcff-8327c013237b@assyoma.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gionatan Danti <g.danti@assyoma.it>
-Cc: linux-raid@vger.kernel.org
+To: linux-arm-kernel@lists.infradead.org, linux-raid@vger.kernel.org
+Cc: shli@kernel.org, stockhausen@collogia.de, linux@armlinux.org.uk, will.deacon@arm.com, catalin.marinas@arm.com, Ard Biesheuvel <ard.biesheuvel@linaro.org>
 List-Id: linux-raid.ids
 
-On Thu, 13 Jul 2017 17:35:12 +0200
-Gionatan Danti <g.danti@assyoma.it> wrote:
+1. Use a faster algorithm for the delta syndrome
+2. Implement recovery routines in NEON
 
-> Jul 10 03:24:01 nas kernel: ata1.00: failed command: READ FPDMA QUEUED
+As before, NEON intrinsics are used, which means the same code can be
+compiled for ARM as well as arm64.
 
-Failed reads are not as bad, as they are just retried.
+Given that there does not seem to be a maintainer for lib/raid6, could
+we take this through one of the ARM trees instead?
 
-> Jul 12 03:14:41 nas kernel: ata1.00: failed command: WRITE FPDMA QUEUED
+Ard Biesheuvel (2):
+  md/raid6: use faster multiplication for ARM NEON delta syndrome
+  md/raid6: implement recovery using ARM NEON intrinsics
 
-But these WILL cause incorrect data written to disk, in my experience. After
-that, one of your disks will contain some corruption, whether in files, or (as
-you discovered) in the filesystem itself. mdadm may or may not read from that
-disk, as it chooses the mirror for reads pretty much randomly, using the least
-loaded one. And even though the other disk still contains good data, there is
-no mechanism for the user-space to say "hey, this doesn't look right, what's
-on the other mirror?"
-
-Check your cables and/or disks themselves.
-
-If you know that only one disk had these write errors all the time, you could
-try disconnecting it from mirror, and checking if you can get a more
-consistent view of the filesystem on the remaining one.
-
-P.S: about my case (which I witnessed on a RAID6):
-
-  * copy a file to the array, one disk will hit tons of WRITE FPDMA QUEUED
-    errors (due to insufficient power and/or bad data cable).
-  * the file that was just copied, turns out to be corrupted when reading back.
-  * the problem disk WILL NOT get kicked from the array during this.
+ include/linux/raid/pq.h      |   1 +
+ lib/raid6/Makefile           |   4 +-
+ lib/raid6/algos.c            |   3 +
+ lib/raid6/neon.uc            |  33 +++++-
+ lib/raid6/recov_neon.c       | 110 ++++++++++++++++++
+ lib/raid6/recov_neon_inner.c | 117 ++++++++++++++++++++
+ 6 files changed, 264 insertions(+), 4 deletions(-)
+ create mode 100644 lib/raid6/recov_neon.c
+ create mode 100644 lib/raid6/recov_neon_inner.c
 
 -- 
-With respect,
-Roman
+2.9.3
+
