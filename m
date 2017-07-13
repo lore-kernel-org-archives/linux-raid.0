@@ -1,57 +1,58 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: [opensuse] raid device mounting problem in Leap 42.2
-Date: Fri, 14 Jul 2017 00:18:05 +0100
-Message-ID: <5967FFAD.6030807@youngman.org.uk>
-References: <a7cc2751c4c0b89dee040c1522590fb5@gmail.hu>
- <ok4bkp$gb0$1@saturn.local.net> <41e64fb5b9e54bf18aff2d663d0649d8@gmail.hu>
- <CAA91j0UND1UmwOc46G+o1Mh3dKMG9M_HiYxFdXwWO03D=EztpA@mail.gmail.com>
- <76df60214c0039114ba0a4b6f0f515bc@gmail.hu>
- <CAA91j0WXkBnSa+F7u95SWMCtR6nYnUN3uzRLj9jqPoCFX2LNXQ@mail.gmail.com>
- <596628E7.8020905@youngman.org.uk>
- <CAA91j0Uyz2xZkpo3YDrkQRhYt5FoG4b-Bwhc7HF3ko40i1xs3A@mail.gmail.com>
- <d71443c0d631c80af4d09c6098b85359@gmail.hu>
+From: Anthony Youngman <antlists@youngman.org.uk>
+Subject: Re: Why can't I re-add my drive after partition shrink?
+Date: Fri, 14 Jul 2017 00:37:26 +0100
+Message-ID: <3774c1cf-563c-bd03-4e57-15cbe0cd7fb3@youngman.org.uk>
+References: <2ea5ed99-05b5-25d2-c9d4-8ce1f4945eaa@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <d71443c0d631c80af4d09c6098b85359@gmail.hu>
+In-Reply-To: <2ea5ed99-05b5-25d2-c9d4-8ce1f4945eaa@gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: opensuse@opensuse.org, linux-raid <linux-raid@vger.kernel.org>
+To: Ram Ramesh <rramesh2400@gmail.com>, Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 13/07/17 23:46, Istvan Gabor wrote:
-> On Wed, 12 Jul 2017 17:05:17 +0300, Andrei Borzenkov wrote:
->> On Wed, Jul 12, 2017 at 4:49 PM, Wols Lists <antlists@youngman.org.uk>
->> wrote:
->>>
->>> But I suspect that going back into 12.2, and shrinking the filesystem
->>> (MAKE SURE you shrink the md device, not the sd device)
+On 14/07/17 00:17, Ram Ramesh wrote:
+> I am trying to shring my mdadm underlying disks/partitions as a way of 
+> reclaiming space after md shrink operation. Here is my md
+>> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] 
+>> [raid4] [raid10]
+>> md0 : active raid6 sdb1[6] sdg1[11] sdd1[12] sdf1[8] sde1[9] sdc1[10]
+>>       12348030976 blocks super 1.2 level 6, 64k chunk, algorithm 2 
+>> [6/6] [UUUUUU]
+>>       bitmap: 2/23 pages [8KB], 65536KB chunk
 >>
->> Quite the opposite. Attempting to shrink filesystem that is already
->> effectively corrupted is potentially dangerous. So the right thing
->> here is to stop md, backup superblocks (in case they will be
+>> unused devices: <none>
 > 
-> I am puzzled. Do I need to backup the raid superblock or the device
-> superblocks or all? How do I backup the superblock? I googled but only
-> find how to recover from superblock backup.
+> Here is my mdadm detail about /dev/sdb1
+>> Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
+>>      Array Size : 12348030976 (11776.00 GiB 12644.38 GB)
+>>   Used Dev Size : 6174015488 (2944.00 GiB 3161.10 GB)
+> I fail, remove and repartition /dev/sdb1 so that new partition table 
+> looks like this. (No change to data obviously)
+>>    New partition table:
+>>    Number  Start (sector)    End (sector)  Size       Code  Name
+>>        1            2048      6442452991   3.0 TiB     FD00  Linux RAID
+>>        2      6442452992     11721045134   2.5 TiB     FD00  Linux RAID
 > 
-The best bet is to ask the linux-raid list what to do.
-
-For the raid list, this is the array I mentioned where the filesystem,
-and the partitions the raid was on, were the same size.
-
-So we have a v1.0 mirror where the filesystem on the mirror uses up ALL
-the space on the md device, not just the free space that it's supposed
-to use, with all the issues that brings like filling up the filesystem
-will overwrite the superblock.
-
-So what's the best way to recover? Will just shrinking the filesystem
-bring everything back the way it should be, or are we better just
-mounting the original filesystem from one disk as if it weren't a
-mirror, and then recreating the mirror on the other disk, copying the
-data, and then adding the first disk back in to put everything back the
-way it should have been?
+> Since new /dev/sdb1 is significantly bigger than what mdadm says that it 
+> is using, I thought I could simply re-add the drive. However, I get
+>> sudo mdadm /dev/md0 --re-add /dev/sdb1
+>> ***mdadm: --re-add for /dev/sdb1 to /dev/md0 is not possible***
+> Why? What did I miss here? Is it possible to fix this so that I can 
+> repartition other drives and -re-add them without having to go through 
+> full rebuild after each change?
+> 
+> I researched as much as I could on the net and came up with nothing 
+> except some one saying that mdadm keeps something at the end of the disk 
+> regardless of what it says about "Used Dev Size." Is it possible to move 
+> this info so that I could re-add?
+> 
+I can't say why it won't re-add, but what's at the end of the disk is 
+the superblock - except it isn't at the end. The 0.9, or v1.0, 
+superblocks are at the end, but you've got a v1.2 superblock which is 
+stored at the start - to be precise, 4K in from the front of the partition.
 
 Cheers,
 Wol
-
