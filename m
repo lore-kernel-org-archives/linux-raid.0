@@ -1,76 +1,86 @@
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [PATCH 1/2] md/raid6: use faster multiplication for ARM NEON
- delta syndrome
-Date: Thu, 13 Jul 2017 19:00:12 +0100
-Message-ID: <CAKv+Gu865hPJZ=7L8dQgN1coALhb3+6rY7HGbd=bRisK7W6yWw@mail.gmail.com>
-References: <20170713171601.25440-1-ard.biesheuvel@linaro.org>
- <20170713171601.25440-2-ard.biesheuvel@linaro.org> <12EF8D94C6F8734FB2FF37B9FBEDD173010E029C61@EXCHANGE.collogia.de>
+From: Gionatan Danti <g.danti@assyoma.it>
+Subject: Re: Filesystem corruption on RAID1
+Date: Thu, 13 Jul 2017 23:28:16 +0200
+Message-ID: <592f19bf608e9a959f9445f7f25c5dad@assyoma.it>
+References: <c2fe6593-c806-ab9f-fcff-8327c013237b@assyoma.it>
+ <20170713214856.4a5c8778@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <12EF8D94C6F8734FB2FF37B9FBEDD173010E029C61@EXCHANGE.collogia.de>
+In-Reply-To: <20170713214856.4a5c8778@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Markus Stockhausen <stockhausen@collogia.de>
-Cc: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "shli@kernel.org" <shli@kernel.org>, "linux@armlinux.org.uk" <linux@armlinux.org.uk>, "will.deacon@arm.com" <will.deacon@arm.com>, "catalin.marinas@arm.com" <catalin.marinas@arm.com>
+To: Roman Mamedov <rm@romanrm.net>
+Cc: linux-raid@vger.kernel.org, g.danti@assyoma.it
 List-Id: linux-raid.ids
 
-On 13 July 2017 at 18:51, Markus Stockhausen <stockhausen@collogia.de> wrote:
->> Von: Ard Biesheuvel [ard.biesheuvel@linaro.org]
->> Gesendet: Donnerstag, 13. Juli 2017 19:16
->> An: linux-arm-kernel@lists.infradead.org; linux-raid@vger.kernel.org
->> Cc: shli@kernel.org; Markus Stockhausen; linux@armlinux.org.uk; will.deacon@arm.com; catalin.marinas@arm.com; Ard Biesheuvel
->> Betreff: [PATCH 1/2] md/raid6: use faster multiplication for ARM NEON delta syndrome
->>
->> The P/Q left side optimization in the delta syndrome simply involves
->> repeatedly multiplying a value by polynomial 'x' in GF(2^8). Given
->> that 'x * x * x * x' equals 'x^4' even in the polynomial world, we
->> can accelerate this substantially by performing up to 4 such operations
->> at once, using the NEON instructions for polynomial multiplication.
->>
->> Results on a Cortex-A57 running in 64-bit mode:
->>
->>   Before:
->>   -------
->>   raid6: neonx1   xor()  1680 MB/s
->>   raid6: neonx2   xor()  2286 MB/s
->>   raid6: neonx4   xor()  3162 MB/s
->>   raid6: neonx8   xor()  3389 MB/s
->>
->>   After:
->>   ------
->>   raid6: neonx1   xor()  2281 MB/s
->>   raid6: neonx2   xor()  3362 MB/s
->>   raid6: neonx4   xor()  3787 MB/s
->>   raid6: neonx8   xor()  4239 MB/s
->
-> Nice optimiziation. Nevertheless the test algorithm favours this implementation. See:
->
-> int start = (disks>>1)-1, stop = disks-3; /* work on the second half of the disks */
->
-> What gives the before/after test if you work on the middle data disks and not on
-> the right ones? In the 4K page size this should be  start = 3, stop = 11 instead of
-> start = 7, stop = 13. Given the large gain you see the impact should be lower but
-> at least in the >10% range.
->
+Il 13-07-2017 18:48 Roman Mamedov ha scritto:
+> 
+> Failed reads are not as bad, as they are just retried.
+> 
 
-Relative before and after (using raid6test rather than the kernel
-module this time, so they should not be compared with the numbers
-above)
+I agree, I reported them only to give a broad picture of the system 
+state :)
 
-before
-raid6: neonx1   xor()  1773 MB/s
-raid6: neonx2   xor()  2362 MB/s
-raid6: neonx4   xor()  3223 MB/s
-raid6: neonx8   xor()  3375 MB/s
+>> Jul 12 03:14:41 nas kernel: ata1.00: failed command: WRITE FPDMA 
+>> QUEUED
+> 
+> But these WILL cause incorrect data written to disk, in my experience. 
+> After
+> that, one of your disks will contain some corruption, whether in files, 
+> or (as
+> you discovered) in the filesystem itself.
 
-after
-raid6: neonx1   xor()  2259 MB/s
-raid6: neonx2   xor()  2975 MB/s
-raid6: neonx4   xor()  3404 MB/s
-raid6: neonx8   xor()  3788 MB/s
+This is the "scary" part: if the write was not acknowledged as committed 
+to disk, why the block layer did not report it to the MD driver? Or if 
+the block layer reported that, why MD did not kick the disk out of the 
+array?
 
-So your estimate is correct: 12% speedup for neonx8 in the 'start = 7,
-stop = 13' case
+> mdadm may or may not read from that
+> disk, as it chooses the mirror for reads pretty much randomly, using 
+> the least
+> loaded one. And even though the other disk still contains good data, 
+> there is
+> no mechanism for the user-space to say "hey, this doesn't look right, 
+> what's
+> on the other mirror?"
+
+I understand and agree with that. I'm fully aware that MD can not (by 
+design) detect/correct corrupted data. However, I wonder if, and why, a 
+disk with obvious errors was not kicked out of the array.
+
+> 
+> Check your cables and/or disks themselves.
+> 
+
+I tried reseating and inverting the cables ;)
+Let see if the problem disappears or if it "follow" the 
+cable/drive/interface...
+
+> If you know that only one disk had these write errors all the time, you 
+> could
+> try disconnecting it from mirror, and checking if you can get a more
+> consistent view of the filesystem on the remaining one.
+> 
+> P.S: about my case (which I witnessed on a RAID6):
+> 
+>   * copy a file to the array, one disk will hit tons of WRITE FPDMA 
+> QUEUED
+>     errors (due to insufficient power and/or bad data cable).
+>   * the file that was just copied, turns out to be corrupted when 
+> reading back.
+>   * the problem disk WILL NOT get kicked from the array during this.
+
+Wow, a die-hard data corruption. It seems VERY similar to what happened 
+to me, and the key problem seems the same: a failing drive was not 
+detached from the array in a timely fashion.
+
+Thanks very much for reporting, Roman.
 
 -- 
-Ard.
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
