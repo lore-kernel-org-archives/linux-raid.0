@@ -1,48 +1,49 @@
-From: Gionatan Danti <g.danti@assyoma.it>
-Subject: Re: Filesystem corruption on RAID1
-Date: Fri, 14 Jul 2017 00:34:59 +0200
-Message-ID: <cd37f90b86eb67be4c893b7fdf112692@assyoma.it>
-References: <c2fe6593-c806-ab9f-fcff-8327c013237b@assyoma.it>
- <20170713214856.4a5c8778@natsu>
- <592f19bf608e9a959f9445f7f25c5dad@assyoma.it>
- <d1255092-73f5-1ca4-0e68-69ff37631a26@thelounge.net>
+From: Ram Ramesh <rramesh2400@gmail.com>
+Subject: Why can't I re-add my drive after partition shrink?
+Date: Thu, 13 Jul 2017 18:17:03 -0500
+Message-ID: <2ea5ed99-05b5-25d2-c9d4-8ce1f4945eaa@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <d1255092-73f5-1ca4-0e68-69ff37631a26@thelounge.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Reindl Harald <h.reindl@thelounge.net>
-Cc: Roman Mamedov <rm@romanrm.net>, linux-raid@vger.kernel.org, g.danti@assyoma.it
+To: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Il 13-07-2017 23:34 Reindl Harald ha scritto:
-> maybe because the disk is, well, not in a good shape and don't know
-> that by itself
-> 
+I am trying to shring my mdadm underlying disks/partitions as a way of 
+reclaiming space after md shrink operation. Here is my md
+> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] 
+> [raid4] [raid10]
+> md0 : active raid6 sdb1[6] sdg1[11] sdd1[12] sdf1[8] sde1[9] sdc1[10]
+>       12348030976 blocks super 1.2 level 6, 64k chunk, algorithm 2 
+> [6/6] [UUUUUU]
+>       bitmap: 2/23 pages [8KB], 65536KB chunk
+>
+> unused devices: <none>
 
-But the kernel *does* know that, as the dmesg entries clearly show. 
-Basically, some SATA commands timed-out and/or were aborted. As the 
-kernel reported these erros in dmesg, why do not use these information 
-to stop a failing disk?
+Here is my mdadm detail about /dev/sdb1
+> Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
+>      Array Size : 12348030976 (11776.00 GiB 12644.38 GB)
+>   Used Dev Size : 6174015488 (2944.00 GiB 3161.10 GB)
+I fail, remove and repartition /dev/sdb1 so that new partition table 
+looks like this. (No change to data obviously)
+>    New partition table:
+>    Number  Start (sector)    End (sector)  Size       Code  Name
+>        1            2048      6442452991   3.0 TiB     FD00  Linux RAID
+>        2      6442452992     11721045134   2.5 TiB     FD00  Linux RAID
 
-> 
-> (and no filesystems with checksums won't magically recover
-> your data, they just tell you realier they are gone)
-> 
+Since new /dev/sdb1 is significantly bigger than what mdadm says that it 
+is using, I thought I could simply re-add the drive. However, I get
+> sudo mdadm /dev/md0 --re-add /dev/sdb1
+> ***mdadm: --re-add for /dev/sdb1 to /dev/md0 is not possible***
+Why? What did I miss here? Is it possible to fix this so that I can 
+repartition other drives and -re-add them without having to go through 
+full rebuild after each change?
 
-Checksummed filesystem that integrates their block-level management 
-(read: ZFS or BTRFS) can recover the missing/corrupted data by the 
-healthy disks, discarging corrupted data based on the checksum mismatch.
+I researched as much as I could on the net and came up with nothing 
+except some one saying that mdadm keeps something at the end of the disk 
+regardless of what it says about "Used Dev Size." Is it possible to move 
+this info so that I could re-add?
 
-Anyway, this has nothing to do with linux software RAID. I was only 
-"thinking loud" :)
-Thanks.
+Ramesh
 
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
