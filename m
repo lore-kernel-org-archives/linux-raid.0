@@ -1,129 +1,197 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH v2 2/3] md: raid1/raid10: initialize bvec table via bio_add_page()
-Date: Fri, 14 Jul 2017 16:14:43 +0800
-Message-ID: <20170714081444.32645-3-ming.lei@redhat.com>
+Subject: [PATCH v2 3/3] md: raid1-10: move raid1/raid10 common code into raid1-10.c
+Date: Fri, 14 Jul 2017 16:14:44 +0800
+Message-ID: <20170714081444.32645-4-ming.lei@redhat.com>
 References: <20170714081444.32645-1-ming.lei@redhat.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170714081444.32645-1-ming.lei@redhat.com>
-Sender: linux-raid-owner@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
 Cc: NeilBrown <neilb@suse.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@infradead.org>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-raid.ids
 
-We will support multipage bvec soon, so initialize bvec
-table using the standardy way instead of writing the
-talbe directly. Otherwise it won't work any more once
-multipage bvec is enabled.
+No function change, just move 'struct resync_pages' and related
+helpers into raid1-10.c
 
-Acked-by: Guoqing Jiang <gqjiang@suse.com>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/md/raid1-10.c | 19 +++++++++++++++++++
- drivers/md/raid1.c    | 18 ++++--------------
- drivers/md/raid10.c   |  6 ++++--
- 3 files changed, 27 insertions(+), 16 deletions(-)
- create mode 100644 drivers/md/raid1-10.c
+ drivers/md/md.h       | 53 -------------------------------------------
+ drivers/md/raid1-10.c | 62 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/md/raid1.c    |  9 --------
+ drivers/md/raid10.c   |  9 --------
+ 4 files changed, 62 insertions(+), 71 deletions(-)
 
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 2c780aa8d07f..004a21c214e8 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -729,57 +729,4 @@ static inline void mddev_check_write_zeroes(struct mddev *mddev, struct bio *bio
+ 	    !bdev_get_queue(bio->bi_bdev)->limits.max_write_zeroes_sectors)
+ 		mddev->queue->limits.max_write_zeroes_sectors = 0;
+ }
+-
+-/* Maximum size of each resync request */
+-#define RESYNC_BLOCK_SIZE (64*1024)
+-#define RESYNC_PAGES ((RESYNC_BLOCK_SIZE + PAGE_SIZE-1) / PAGE_SIZE)
+-
+-/* for managing resync I/O pages */
+-struct resync_pages {
+-	void		*raid_bio;
+-	struct page	*pages[RESYNC_PAGES];
+-};
+-
+-static inline int resync_alloc_pages(struct resync_pages *rp,
+-				     gfp_t gfp_flags)
+-{
+-	int i;
+-
+-	for (i = 0; i < RESYNC_PAGES; i++) {
+-		rp->pages[i] = alloc_page(gfp_flags);
+-		if (!rp->pages[i])
+-			goto out_free;
+-	}
+-
+-	return 0;
+-
+-out_free:
+-	while (--i >= 0)
+-		put_page(rp->pages[i]);
+-	return -ENOMEM;
+-}
+-
+-static inline void resync_free_pages(struct resync_pages *rp)
+-{
+-	int i;
+-
+-	for (i = 0; i < RESYNC_PAGES; i++)
+-		put_page(rp->pages[i]);
+-}
+-
+-static inline void resync_get_all_pages(struct resync_pages *rp)
+-{
+-	int i;
+-
+-	for (i = 0; i < RESYNC_PAGES; i++)
+-		get_page(rp->pages[i]);
+-}
+-
+-static inline struct page *resync_fetch_page(struct resync_pages *rp,
+-					     unsigned idx)
+-{
+-	if (WARN_ON_ONCE(idx >= RESYNC_PAGES))
+-		return NULL;
+-	return rp->pages[idx];
+-}
+ #endif /* _MD_MD_H */
 diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
-new file mode 100644
-index 000000000000..3adb5b9dc4b4
---- /dev/null
+index 3adb5b9dc4b4..9f2670b45f31 100644
+--- a/drivers/md/raid1-10.c
 +++ b/drivers/md/raid1-10.c
-@@ -0,0 +1,19 @@
-+/* generally called after bio_reset() for reseting bvec */
-+static void md_bio_reset_resync_pages(struct bio *bio, struct resync_pages *rp,
-+			       int size)
+@@ -1,3 +1,65 @@
++/* Maximum size of each resync request */
++#define RESYNC_BLOCK_SIZE (64*1024)
++#define RESYNC_PAGES ((RESYNC_BLOCK_SIZE + PAGE_SIZE-1) / PAGE_SIZE)
++
++/* for managing resync I/O pages */
++struct resync_pages {
++	void		*raid_bio;
++	struct page	*pages[RESYNC_PAGES];
++};
++
++static inline int resync_alloc_pages(struct resync_pages *rp,
++				     gfp_t gfp_flags)
 +{
-+	int idx = 0;
++	int i;
 +
-+	/* initialize bvec table again */
-+	do {
-+		struct page *page = resync_fetch_page(rp, idx);
-+		int len = min_t(int, size, PAGE_SIZE);
++	for (i = 0; i < RESYNC_PAGES; i++) {
++		rp->pages[i] = alloc_page(gfp_flags);
++		if (!rp->pages[i])
++			goto out_free;
++	}
 +
-+		/*
-+		 * won't fail because the vec table is big
-+		 * enough to hold all these pages
-+		 */
-+		bio_add_page(bio, page, len, 0);
-+		size -= len;
-+	} while (idx++ < RESYNC_PAGES && size > 0);
++	return 0;
++
++out_free:
++	while (--i >= 0)
++		put_page(rp->pages[i]);
++	return -ENOMEM;
 +}
++
++static inline void resync_free_pages(struct resync_pages *rp)
++{
++	int i;
++
++	for (i = 0; i < RESYNC_PAGES; i++)
++		put_page(rp->pages[i]);
++}
++
++static inline void resync_get_all_pages(struct resync_pages *rp)
++{
++	int i;
++
++	for (i = 0; i < RESYNC_PAGES; i++)
++		get_page(rp->pages[i]);
++}
++
++static inline struct page *resync_fetch_page(struct resync_pages *rp,
++					     unsigned idx)
++{
++	if (WARN_ON_ONCE(idx >= RESYNC_PAGES))
++		return NULL;
++	return rp->pages[idx];
++}
++
++/*
++ * 'strct resync_pages' stores actual pages used for doing the resync
++ *  IO, and it is per-bio, so make .bi_private points to it.
++ */
++static inline struct resync_pages *get_resync_pages(struct bio *bio)
++{
++	return bio->bi_private;
++}
++
+ /* generally called after bio_reset() for reseting bvec */
+ static void md_bio_reset_resync_pages(struct bio *bio, struct resync_pages *rp,
+ 			       int size)
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 0896c772a560..fe86ab18961b 100644
+index fe86ab18961b..8387eb1540cd 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -81,6 +81,8 @@ static void lower_barrier(struct r1conf *conf, sector_t sector_nr);
- #define raid1_log(md, fmt, args...)				\
- 	do { if ((md)->queue) blk_add_trace_msg((md)->queue, "raid1 " fmt, ##args); } while (0)
+@@ -84,15 +84,6 @@ static void lower_barrier(struct r1conf *conf, sector_t sector_nr);
+ #include "raid1-10.c"
  
-+#include "raid1-10.c"
-+
  /*
-  * 'strct resync_pages' stores actual pages used for doing the resync
-  *  IO, and it is per-bio, so make .bi_private points to it.
-@@ -2085,10 +2087,7 @@ static void process_checks(struct r1bio *r1_bio)
- 	/* Fix variable parts of all bios */
- 	vcnt = (r1_bio->sectors + PAGE_SIZE / 512 - 1) >> (PAGE_SHIFT - 9);
- 	for (i = 0; i < conf->raid_disks * 2; i++) {
--		int j;
--		int size;
- 		blk_status_t status;
--		struct bio_vec *bi;
- 		struct bio *b = r1_bio->bios[i];
- 		struct resync_pages *rp = get_resync_pages(b);
- 		if (b->bi_end_io != end_sync_read)
-@@ -2097,8 +2096,6 @@ static void process_checks(struct r1bio *r1_bio)
- 		status = b->bi_status;
- 		bio_reset(b);
- 		b->bi_status = status;
--		b->bi_vcnt = vcnt;
--		b->bi_iter.bi_size = r1_bio->sectors << 9;
- 		b->bi_iter.bi_sector = r1_bio->sector +
- 			conf->mirrors[i].rdev->data_offset;
- 		b->bi_bdev = conf->mirrors[i].rdev->bdev;
-@@ -2106,15 +2103,8 @@ static void process_checks(struct r1bio *r1_bio)
- 		rp->raid_bio = r1_bio;
- 		b->bi_private = rp;
- 
--		size = b->bi_iter.bi_size;
--		bio_for_each_segment_all(bi, b, j) {
--			bi->bv_offset = 0;
--			if (size > PAGE_SIZE)
--				bi->bv_len = PAGE_SIZE;
--			else
--				bi->bv_len = size;
--			size -= PAGE_SIZE;
--		}
-+		/* initialize bvec table again */
-+		md_bio_reset_resync_pages(b, rp, r1_bio->sectors << 9);
- 	}
- 	for (primary = 0; primary < conf->raid_disks * 2; primary++)
- 		if (r1_bio->bios[primary]->bi_end_io == end_sync_read &&
+- * 'strct resync_pages' stores actual pages used for doing the resync
+- *  IO, and it is per-bio, so make .bi_private points to it.
+- */
+-static inline struct resync_pages *get_resync_pages(struct bio *bio)
+-{
+-	return bio->bi_private;
+-}
+-
+-/*
+  * for resync bio, r1bio pointer can be retrieved from the per-bio
+  * 'struct resync_pages'.
+  */
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index fa8bcf04e791..9952721e1cde 100644
+index 9952721e1cde..e2617d0f37dc 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -110,6 +110,8 @@ static void end_reshape(struct r10conf *conf);
- #define raid10_log(md, fmt, args...)				\
- 	do { if ((md)->queue) blk_add_trace_msg((md)->queue, "raid10 " fmt, ##args); } while (0)
+@@ -113,15 +113,6 @@ static void end_reshape(struct r10conf *conf);
+ #include "raid1-10.c"
  
-+#include "raid1-10.c"
-+
  /*
-  * 'strct resync_pages' stores actual pages used for doing the resync
-  *  IO, and it is per-bio, so make .bi_private points to it.
-@@ -2086,8 +2088,8 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
- 		rp = get_resync_pages(tbio);
- 		bio_reset(tbio);
- 
--		tbio->bi_vcnt = vcnt;
--		tbio->bi_iter.bi_size = fbio->bi_iter.bi_size;
-+		md_bio_reset_resync_pages(tbio, rp, fbio->bi_iter.bi_size);
-+
- 		rp->raid_bio = r10_bio;
- 		tbio->bi_private = rp;
- 		tbio->bi_iter.bi_sector = r10_bio->devs[i].addr;
+- * 'strct resync_pages' stores actual pages used for doing the resync
+- *  IO, and it is per-bio, so make .bi_private points to it.
+- */
+-static inline struct resync_pages *get_resync_pages(struct bio *bio)
+-{
+-	return bio->bi_private;
+-}
+-
+-/*
+  * for resync bio, r10bio pointer can be retrieved from the per-bio
+  * 'struct resync_pages'.
+  */
 -- 
 2.9.4
-
