@@ -1,36 +1,38 @@
-From: Roman Mamedov <rm@romanrm.net>
-Subject: Re: Filesystem corruption on RAID1
-Date: Fri, 14 Jul 2017 12:22:38 +0500
-Message-ID: <20170714122238.77031d6e@natsu>
-References: <c2fe6593-c806-ab9f-fcff-8327c013237b@assyoma.it>
- <20170713214856.4a5c8778@natsu>
- <592f19bf608e9a959f9445f7f25c5dad@assyoma.it>
- <d1255092-73f5-1ca4-0e68-69ff37631a26@thelounge.net>
- <cd37f90b86eb67be4c893b7fdf112692@assyoma.it>
- <CAJCQCtS=o27zF_sUEv0rTos_0x_7tNMdudBaDDOwxSvTz3zE5w@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH v2 0/3] md: three misc changes
+Date: Fri, 14 Jul 2017 16:14:41 +0800
+Message-ID: <20170714081444.32645-1-ming.lei@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJCQCtS=o27zF_sUEv0rTos_0x_7tNMdudBaDDOwxSvTz3zE5w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
+Cc: NeilBrown <neilb@suse.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@infradead.org>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-raid.ids
 
-On Thu, 13 Jul 2017 19:48:29 -0600
-Chris Murphy <lists@colorremedies.com> wrote:
+This 1st patch fixes one issue introduced in the following two
+commits:
+	Fixes: f0250618361d(md: raid10: don't use bio's vec table to manage resync pages)
+	Fixes: 98d30c5812c3(md: raid1: don't use bio's vec table to manage resync pages)
 
-> Btrfs still tolerates many errors, read and write
+The 2nd one initializes bvec table of bio via bio_add_page() after bio_reset().
 
-Actually it was Btrfs which saved me back then. Btrfs was making two copies
-of metadata blocks and restored corrupted copies from good ones, and also
-signaled me that user files were also affected (via data checksums).
+The 3rd one moves the common definitation and helpers into raid1-10.c. 
 
-FS checksums do work, and if you have redundancy for the corrupted part (such
-as metadata DUP by default, or data DUP (unusual) or data RAID1), allow the FS
-to sustain through corruptions, including hardware-caused ones.
+V2:
+	- fix 'page_idx' increasement in patch 1
+	- move raid1/raid10 common code to raid1-raid10.c, as suggested by Neil
+
+Ming Lei (3):
+  md: remove 'idx' from 'struct resync_pages'
+  md: raid1/raid10: initialize bvec table via bio_add_page()
+  md: raid1-10: move raid1/raid10 common code into raid1-10.c
+
+ drivers/md/md.h       | 54 ----------------------------------
+ drivers/md/raid1-10.c | 81 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/md/raid1.c    | 31 ++++----------------
+ drivers/md/raid10.c   | 19 ++++--------
+ 4 files changed, 93 insertions(+), 92 deletions(-)
+ create mode 100644 drivers/md/raid1-10.c
 
 -- 
-With respect,
-Roman
+2.9.4
+
