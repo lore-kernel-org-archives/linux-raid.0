@@ -1,197 +1,75 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH v2 3/3] md: raid1-10: move raid1/raid10 common code into raid1-10.c
-Date: Fri, 14 Jul 2017 16:14:44 +0800
-Message-ID: <20170714081444.32645-4-ming.lei@redhat.com>
-References: <20170714081444.32645-1-ming.lei@redhat.com>
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170714081444.32645-1-ming.lei@redhat.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
-Cc: NeilBrown <neilb@suse.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@infradead.org>, Ming Lei <ming.lei@redhat.com>
+From: Gionatan Danti <g.danti@assyoma.it>
+Subject: Re: Filesystem corruption on RAID1
+Date: Fri, 14 Jul 2017 12:46:57 +0200
+Message-ID: <9eea45ddc0f80f4f4e238b5c2527a1fa@assyoma.it>
+References: <c2fe6593-c806-ab9f-fcff-8327c013237b@assyoma.it>
+ <20170713214856.4a5c8778@natsu>
+ <592f19bf608e9a959f9445f7f25c5dad@assyoma.it>
+ <d1255092-73f5-1ca4-0e68-69ff37631a26@thelounge.net>
+ <cd37f90b86eb67be4c893b7fdf112692@assyoma.it>
+ <770b09d3-cff6-b6b2-0a51-5d11e8bac7e9@thelounge.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <770b09d3-cff6-b6b2-0a51-5d11e8bac7e9@thelounge.net>
+Sender: linux-raid-owner@vger.kernel.org
+To: Reindl Harald <h.reindl@thelounge.net>
+Cc: Roman Mamedov <rm@romanrm.net>, linux-raid@vger.kernel.org, g.danti@assyoma.it
 List-Id: linux-raid.ids
 
-No function change, just move 'struct resync_pages' and related
-helpers into raid1-10.c
+Il 14-07-2017 02:32 Reindl Harald ha scritto:
+> because you won't be that happy when the kernel spits out a disk each
+> time a random SATA command times out - the 4 RAID10 disks on my
+> workstation are from 2011 and showed them too several times in the
+> past while they are just fine
+> 
+> here you go:
+> http://strugglers.net/~andy/blog/2015/11/09/linux-software-raid-and-drive-timeouts/
 
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- drivers/md/md.h       | 53 -------------------------------------------
- drivers/md/raid1-10.c | 62 +++++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/md/raid1.c    |  9 --------
- drivers/md/raid10.c   |  9 --------
- 4 files changed, 62 insertions(+), 71 deletions(-)
+Hi, so a premature/preventive drive detachment is not a silver bullet, 
+and I buy it. However, I would at least expect this behavior to be 
+configurable. Maybe it is, and I am missing something?
 
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 2c780aa8d07f..004a21c214e8 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -729,57 +729,4 @@ static inline void mddev_check_write_zeroes(struct mddev *mddev, struct bio *bio
- 	    !bdev_get_queue(bio->bi_bdev)->limits.max_write_zeroes_sectors)
- 		mddev->queue->limits.max_write_zeroes_sectors = 0;
- }
--
--/* Maximum size of each resync request */
--#define RESYNC_BLOCK_SIZE (64*1024)
--#define RESYNC_PAGES ((RESYNC_BLOCK_SIZE + PAGE_SIZE-1) / PAGE_SIZE)
--
--/* for managing resync I/O pages */
--struct resync_pages {
--	void		*raid_bio;
--	struct page	*pages[RESYNC_PAGES];
--};
--
--static inline int resync_alloc_pages(struct resync_pages *rp,
--				     gfp_t gfp_flags)
--{
--	int i;
--
--	for (i = 0; i < RESYNC_PAGES; i++) {
--		rp->pages[i] = alloc_page(gfp_flags);
--		if (!rp->pages[i])
--			goto out_free;
--	}
--
--	return 0;
--
--out_free:
--	while (--i >= 0)
--		put_page(rp->pages[i]);
--	return -ENOMEM;
--}
--
--static inline void resync_free_pages(struct resync_pages *rp)
--{
--	int i;
--
--	for (i = 0; i < RESYNC_PAGES; i++)
--		put_page(rp->pages[i]);
--}
--
--static inline void resync_get_all_pages(struct resync_pages *rp)
--{
--	int i;
--
--	for (i = 0; i < RESYNC_PAGES; i++)
--		get_page(rp->pages[i]);
--}
--
--static inline struct page *resync_fetch_page(struct resync_pages *rp,
--					     unsigned idx)
--{
--	if (WARN_ON_ONCE(idx >= RESYNC_PAGES))
--		return NULL;
--	return rp->pages[idx];
--}
- #endif /* _MD_MD_H */
-diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
-index 3adb5b9dc4b4..9f2670b45f31 100644
---- a/drivers/md/raid1-10.c
-+++ b/drivers/md/raid1-10.c
-@@ -1,3 +1,65 @@
-+/* Maximum size of each resync request */
-+#define RESYNC_BLOCK_SIZE (64*1024)
-+#define RESYNC_PAGES ((RESYNC_BLOCK_SIZE + PAGE_SIZE-1) / PAGE_SIZE)
-+
-+/* for managing resync I/O pages */
-+struct resync_pages {
-+	void		*raid_bio;
-+	struct page	*pages[RESYNC_PAGES];
-+};
-+
-+static inline int resync_alloc_pages(struct resync_pages *rp,
-+				     gfp_t gfp_flags)
-+{
-+	int i;
-+
-+	for (i = 0; i < RESYNC_PAGES; i++) {
-+		rp->pages[i] = alloc_page(gfp_flags);
-+		if (!rp->pages[i])
-+			goto out_free;
-+	}
-+
-+	return 0;
-+
-+out_free:
-+	while (--i >= 0)
-+		put_page(rp->pages[i]);
-+	return -ENOMEM;
-+}
-+
-+static inline void resync_free_pages(struct resync_pages *rp)
-+{
-+	int i;
-+
-+	for (i = 0; i < RESYNC_PAGES; i++)
-+		put_page(rp->pages[i]);
-+}
-+
-+static inline void resync_get_all_pages(struct resync_pages *rp)
-+{
-+	int i;
-+
-+	for (i = 0; i < RESYNC_PAGES; i++)
-+		get_page(rp->pages[i]);
-+}
-+
-+static inline struct page *resync_fetch_page(struct resync_pages *rp,
-+					     unsigned idx)
-+{
-+	if (WARN_ON_ONCE(idx >= RESYNC_PAGES))
-+		return NULL;
-+	return rp->pages[idx];
-+}
-+
-+/*
-+ * 'strct resync_pages' stores actual pages used for doing the resync
-+ *  IO, and it is per-bio, so make .bi_private points to it.
-+ */
-+static inline struct resync_pages *get_resync_pages(struct bio *bio)
-+{
-+	return bio->bi_private;
-+}
-+
- /* generally called after bio_reset() for reseting bvec */
- static void md_bio_reset_resync_pages(struct bio *bio, struct resync_pages *rp,
- 			       int size)
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index fe86ab18961b..8387eb1540cd 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -84,15 +84,6 @@ static void lower_barrier(struct r1conf *conf, sector_t sector_nr);
- #include "raid1-10.c"
- 
- /*
-- * 'strct resync_pages' stores actual pages used for doing the resync
-- *  IO, and it is per-bio, so make .bi_private points to it.
-- */
--static inline struct resync_pages *get_resync_pages(struct bio *bio)
--{
--	return bio->bi_private;
--}
--
--/*
-  * for resync bio, r1bio pointer can be retrieved from the per-bio
-  * 'struct resync_pages'.
-  */
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 9952721e1cde..e2617d0f37dc 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -113,15 +113,6 @@ static void end_reshape(struct r10conf *conf);
- #include "raid1-10.c"
- 
- /*
-- * 'strct resync_pages' stores actual pages used for doing the resync
-- *  IO, and it is per-bio, so make .bi_private points to it.
-- */
--static inline struct resync_pages *get_resync_pages(struct bio *bio)
--{
--	return bio->bi_private;
--}
--
--/*
-  * for resync bio, r10bio pointer can be retrieved from the per-bio
-  * 'struct resync_pages'.
-  */
+Anyway, what really surprise me is *not* the drive to not be detached, 
+rather permitting that corruption make its way into real data. I naively 
+expect that when a WRITE_QUEUED or CACHE_FLUSH command aborts/fails 
+(which *will* cause data corruption if not properly handled) the I/O 
+layer has the following possibilities:
+
+a) retry the write/flush. You don't want to retry indefinitely, so the 
+kernel need some type of counter/threshold; when the counter is reached, 
+continue with b). This would mask out sporadic errors, while propagating 
+recurring ones;
+
+b) notify the upper layer that a write error happened. For synchronized 
+and direct writes it can notify that by simply returning the correct 
+exit code to the calling function. In this case, the block layer should 
+return an error to the MD driver, which must act accordlying: for 
+example, dropping the disk from the array.
+
+c) do nothing. This seems to me by far the worst choice.
+
+If b) is correcly implemented, it should prevent corruption to 
+accumulate on the drives.
+
+Please also note the *type* of corrupted data: not only user data, but 
+filesystem journal and metadata also. The latter should be protected by 
+the using of write barriers / FUAs, so they should be able to stop 
+themselves *before* corruption.
+
+So I have some very important questions:
+- how does MD behave when flushing data to disk?
+- does it propagate write barriers?
+- when a write barrier fails, is the error propagated to the upper 
+layers?
+
+Thanks you all.
+
 -- 
-2.9.4
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
