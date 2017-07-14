@@ -1,69 +1,73 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: Why can't I re-add my drive after partition shrink?
-Date: Fri, 14 Jul 2017 11:35:46 +1000
-Message-ID: <87tw2f2425.fsf@notabene.neil.brown.name>
-References: <2ea5ed99-05b5-25d2-c9d4-8ce1f4945eaa@gmail.com>
+Subject: Re: [opensuse] raid device mounting problem in Leap 42.2
+Date: Fri, 14 Jul 2017 11:40:01 +1000
+Message-ID: <87r2xj23v2.fsf@notabene.neil.brown.name>
+References: <a7cc2751c4c0b89dee040c1522590fb5@gmail.hu> <ok4bkp$gb0$1@saturn.local.net> <41e64fb5b9e54bf18aff2d663d0649d8@gmail.hu> <CAA91j0UND1UmwOc46G+o1Mh3dKMG9M_HiYxFdXwWO03D=EztpA@mail.gmail.com> <76df60214c0039114ba0a4b6f0f515bc@gmail.hu> <CAA91j0WXkBnSa+F7u95SWMCtR6nYnUN3uzRLj9jqPoCFX2LNXQ@mail.gmail.com> <596628E7.8020905@youngman.org.uk> <CAA91j0Uyz2xZkpo3YDrkQRhYt5FoG4b-Bwhc7HF3ko40i1xs3A@mail.gmail.com> <d71443c0d631c80af4d09c6098b85359@gmail.hu> <5967FFAD.6030807@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2ea5ed99-05b5-25d2-c9d4-8ce1f4945eaa@gmail.com>
+In-Reply-To: <5967FFAD.6030807@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ram Ramesh <rramesh2400@gmail.com>, Linux Raid <linux-raid@vger.kernel.org>
+To: Wols Lists <antlists@youngman.org.uk>, opensuse@opensuse.org, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Jul 13 2017, Ram Ramesh wrote:
+On Fri, Jul 14 2017, Wols Lists wrote:
 
-> I am trying to shring my mdadm underlying disks/partitions as a way of=20
-> reclaiming space after md shrink operation. Here is my md
->> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]=20
->> [raid4] [raid10]
->> md0 : active raid6 sdb1[6] sdg1[11] sdd1[12] sdf1[8] sde1[9] sdc1[10]
->>       12348030976 blocks super 1.2 level 6, 64k chunk, algorithm 2=20
->> [6/6] [UUUUUU]
->>       bitmap: 2/23 pages [8KB], 65536KB chunk
->>
->> unused devices: <none>
->
-> Here is my mdadm detail about /dev/sdb1
->> Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
->>      Array Size : 12348030976 (11776.00 GiB 12644.38 GB)
->>   Used Dev Size : 6174015488 (2944.00 GiB 3161.10 GB)
-> I fail, remove and repartition /dev/sdb1 so that new partition table=20
-> looks like this. (No change to data obviously)
->>    New partition table:
->>    Number  Start (sector)    End (sector)  Size       Code  Name
->>        1            2048      6442452991   3.0 TiB     FD00  Linux RAID
->>        2      6442452992     11721045134   2.5 TiB     FD00  Linux RAID
->
-> Since new /dev/sdb1 is significantly bigger than what mdadm says that it=
-=20
-> is using, I thought I could simply re-add the drive. However, I get
->> sudo mdadm /dev/md0 --re-add /dev/sdb1
->> ***mdadm: --re-add for /dev/sdb1 to /dev/md0 is not possible***
-> Why? What did I miss here? Is it possible to fix this so that I can=20
-> repartition other drives and -re-add them without having to go through=20
-> full rebuild after each change?
+> On 13/07/17 23:46, Istvan Gabor wrote:
+>> On Wed, 12 Jul 2017 17:05:17 +0300, Andrei Borzenkov wrote:
+>>> On Wed, Jul 12, 2017 at 4:49 PM, Wols Lists <antlists@youngman.org.uk>
+>>> wrote:
+>>>>
+>>>> But I suspect that going back into 12.2, and shrinking the filesystem
+>>>> (MAKE SURE you shrink the md device, not the sd device)
+>>>
+>>> Quite the opposite. Attempting to shrink filesystem that is already
+>>> effectively corrupted is potentially dangerous. So the right thing
+>>> here is to stop md, backup superblocks (in case they will be
+>>=20
+>> I am puzzled. Do I need to backup the raid superblock or the device
+>> superblocks or all?
 
-Please report output of "mdadm --examine" on both a device that is active
-in the array, and the device that you are trying to add.
-Also "mdadm --examine-bitmap" of a device that is active in the array.
+You cannot have too many backups.
+
+>>                      How do I backup the superblock? I googled but only
+
+mdadm --dump=3D/some/directory list of devices.
+
+>> find how to recover from superblock backup.
+>>=20
+> The best bet is to ask the linux-raid list what to do.
+>
+> For the raid list, this is the array I mentioned where the filesystem,
+> and the partitions the raid was on, were the same size.
+
+To the byte?  I really like to see the output of commands that report
+sizes, rather than have someone claim "were the same size".  It isn't
+that I don't trust you.  I just don't trust humans in general (myself inclu=
+ded).
 
 NeilBrown
 
 >
-> I researched as much as I could on the net and came up with nothing=20
-> except some one saying that mdadm keeps something at the end of the disk=
-=20
-> regardless of what it says about "Used Dev Size." Is it possible to move=
-=20
-> this info so that I could re-add?
+> So we have a v1.0 mirror where the filesystem on the mirror uses up ALL
+> the space on the md device, not just the free space that it's supposed
+> to use, with all the issues that brings like filling up the filesystem
+> will overwrite the superblock.
 >
-> Ramesh
+> So what's the best way to recover? Will just shrinking the filesystem
+> bring everything back the way it should be, or are we better just
+> mounting the original filesystem from one disk as if it weren't a
+> mirror, and then recreating the mirror on the other disk, copying the
+> data, and then adding the first disk back in to put everything back the
+> way it should have been?
+>
+> Cheers,
+> Wol
 >
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
@@ -75,18 +79,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlloH/QACgkQOeye3VZi
-gbny3A//e6O/UYM4CFrKScSC9hym9wGdln2Z1mFr7jcYnGMsr2GjuotHe0AnxeHH
-ITcJaUBs55my9nSxHbMNhqWwmB/hcFjClX62/qy3ozkbVgnYxBh2gZT9toPOobkI
-3vZdXYkIANkrFd5iDh09p1zN7S3CIzS9OUZ9p2BZEjffUN/urhO9/1y6TMW3uD1g
-44c71kgFvdK0LxX3WtH2X0BcTJRlZYaWR9VC8fWj5x9cB+zRSXNX8PTc1yV+rJey
-2L6ofqVfdYbGNbQXtPv37vJl5dmXmNtu4gb50XRcnXv9R0rldiFDz4VtpC0u4rz1
-IKg4pD+R3vgmSvj5mKKALijOFy21V1bFV2JePKB+nmOCRf6WoLib9P5Gpf3r6V0b
-298ws2bY68IKASpuLbM3k4HBFebjtYL7EdGRG7tslf9NoEOxwGa+5/ytL19K8nDL
-sx/X4oAS8V/W4BdahYWZiXLBgN5kNZoH/KjwbkQh9UfURWV2wSm4QtFdVqUhJ5Ck
-bzwI9iu47T2gFE8Q2z5Rk9nVKe6exuIBKQFyQCf9ByNjzFa2/6uBvHXrBqV4OVvm
-nkH3Zs+fZzGGZfyy0MivspC+/CqFbENvfkvN1ELl6I510GEeFEP2BIoRauVAEh99
-OkNKYE69hqrwOWga2MbQLBF18oONVphGSAFD18ljcLOi/axs+X4=
-=GRL1
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlloIPIACgkQOeye3VZi
+gbmOlQ/+KjVpizzAEN5bYt/I8CQuzJlcVCv3XL/ZlXBWmFuOf8OFpceXDY16u0Xb
+zNDe58AHLDf/yoJbj94m1Xuvv78f0FAKCTaJXObsbNCdrwqpD6UnOD9Qureq9n3m
+31pcO2o00To9nZIaTzkRiCYI+5TXNx0FH/2ziMOok7nlPbnf+6GTCCx0jdBB7m+k
+HX5j+QmzcJmtobvil4fxsBZOcNwmdF0wPFi8YJiuqrsXRSeFdHoSDELlIldYSDUt
+Iold+BV/kTtgn/o8F7IDbuILB1Uv5H0gm/ILSpQamufuqiP81ysEC2MaIybJeVk3
+08s3OdxQMZMRhllhkusjjePD6nUjGaahSp+B0LhPbiVrGJnyoEtv621Q032CHRkP
+jHxL/joQ04fSL/CIobIqs09PkMdjkXC9auwccTd3AaS9xERf3E2bTl9ABN8SlD3g
+3k9EwdnMww8kdQGuqrmriJOKziLlU802biURciH6f42Z3N5QNJBtC8J6O8pZ2hz2
+39WFR84b/Qqp6SBkstwldUKuQHHhssne1awn4TfVnBR0VdsFmvrhh+ghGx1w551+
+E1abaAPYFitcdsGjSAB5bjE6/0ppG9KbHqPoiYKQ4U3cTkLYEl5NQlWyvC/PJl+m
+p59RWD14xqQTZMKZFYzLLQlyUmVFrE9sXfi6C+mT5o+3YQ8n4Fc=
+=gOwV
 -----END PGP SIGNATURE-----
 --=-=-=--
