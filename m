@@ -1,53 +1,100 @@
-From: Reindl Harald <h.reindl@thelounge.net>
-Subject: Re: Filesystem corruption on RAID1
-Date: Fri, 14 Jul 2017 12:58:39 +0200
-Message-ID: <5ed0b31a-4f46-5a23-a3a4-35e4190bcfad@thelounge.net>
-References: <c2fe6593-c806-ab9f-fcff-8327c013237b@assyoma.it>
- <20170713214856.4a5c8778@natsu> <592f19bf608e9a959f9445f7f25c5dad@assyoma.it>
- <d1255092-73f5-1ca4-0e68-69ff37631a26@thelounge.net>
- <cd37f90b86eb67be4c893b7fdf112692@assyoma.it>
- <770b09d3-cff6-b6b2-0a51-5d11e8bac7e9@thelounge.net>
- <9eea45ddc0f80f4f4e238b5c2527a1fa@assyoma.it>
+From: Veljko <veljko3@gmail.com>
+Subject: Re: Linear device of two arrays
+Date: Fri, 14 Jul 2017 15:40:40 +0200
+Message-ID: <1eefd627-1aba-a795-05f0-d2106d3a62a3@gmail.com>
+References: <CALee7hZYgLNO2siDJNtFge_BoocTXX-9BSgRHmMJH8MaH6V3LA@mail.gmail.com>
+ <20170705214250.0ea99538@natsu> <595D2ADA.8010907@youngman.org.uk>
+ <CALee7hZqmLK19tSEEFBgSWMKm9TRoUqLBCxUmbNJpwmM45BjTQ@mail.gmail.com>
+ <df053262-9334-1070-c24a-5d2f91402716@hardwarefreak.org>
+ <CALee7haowPD0DKPtEQUN8M8LDCNOq62SDrk5VNMO5C+5iUqtrQ@mail.gmail.com>
+ <5afd5cea-06b8-8524-e4f5-8534f23bd714@hardwarefreak.org>
+ <87van15j9b.fsf@notabene.neil.brown.name>
+ <e394625b-18d7-d141-3957-3c16c9bc6e44@gmail.com>
+ <87o9sn232n.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <9eea45ddc0f80f4f4e238b5c2527a1fa@assyoma.it>
-Content-Language: de-CH
+In-Reply-To: <87o9sn232n.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gionatan Danti <g.danti@assyoma.it>
-Cc: Roman Mamedov <rm@romanrm.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 07/14/2017 03:57 AM, NeilBrown wrote:
+>
+> Presumably you also have an md3 raid10 which you want to attach to the
+> end of md2?
+
+Yes, I just created it. It's resyncing.
 
 
-Am 14.07.2017 um 12:46 schrieb Gionatan Danti:
-> Il 14-07-2017 02:32 Reindl Harald ha scritto:
->> because you won't be that happy when the kernel spits out a disk each
->> time a random SATA command times out - the 4 RAID10 disks on my
->> workstation are from 2011 and showed them too several times in the
->> past while they are just fine
+> md2 is 5761631232 sectors.
+>   2880815616 kilobytes
+>   2813296.5 (binary)megabytes.
+>
+> When you include that into a "linear" you will lose a few K from the
+> end.
+> It might be sensible to cause the "linear" to use whole stripes from
+> the raid10, where a stripe is 1M (2 512K chunks).
+> If you did that, you would lose a little over 1M.
+> So backup the last 3.5 M of the raid10.  This is much more than you need.
+>
+> ie.
+>
+>   dd if=/dev/md2 of=SOMEWHERE/SAFE bs=1M skip=2813293
+
+I'm little confused. What I'm backuping is last 3.5M of used space, 
+right? How is that only ~2.7T? df shows 4.8T of used space.
+
+Rest of the instructions are clear and I'll try it as soon as md3 is 
+synced.
+
+Thanks Neil!
+
+> (dd treats 'M' as 1024*1024, MB is 1000*1000)
+>
+> If the file this creates is not 3.5M, then something went wrong.  Stop
+> here.
+>
+> Just to be safe you might want to backup the first few megabytes.  You
+> won't need this unless something goes wrong
+>   dd if=/dev/md2 of=SOMEWHERE/ELSE bs=1M count=10
+>
+> Now create the linear from /dev/md2 and /dev/md3(?).  Be sure to use
+> "-e 1.0 --data-offset=0".  This creates /dev/md4
+>
+> Now restore the first backup
+>
+>  dd if=SOMEWHERE/SAFE of=/dev/md4 bs=1M seek=2813293
+>
+> Be sure to use the same bs= and seek= as you did the first time.
+> Be sure it is copying from the back and to the new linear raid.
+>
+> You should now be done. Check your xfs filesystem, and maybe even mount
+> it and use it.
+>
+> NeilBrown
+>
 >>
->> here you go:
->> http://strugglers.net/~andy/blog/2015/11/09/linux-software-raid-and-drive-timeouts/ 
+>> # mdadm --detail /dev/md2
+>> /dev/md2:
+>>          Version : 1.2
+>>    Creation Time : Fri Sep 14 12:40:13 2012
+>>       Raid Level : raid10
+>>       Array Size : 5761631232 (5494.72 GiB 5899.91 GB)
+>>    Used Dev Size : 2880815616 (2747.36 GiB 2949.96 GB)
+>>     Raid Devices : 4
+>>    Total Devices : 4
+>>      Persistence : Superblock is persistent
 >>
-> 
-> Hi, so a premature/preventive drive detachment is not a silver bullet, 
-> and I buy it. However, I would at least expect this behavior to be 
-> configurable. Maybe it is, and I am missing something?
+>>      Update Time : Mon Jul 10 12:32:51 2017
+>>            State : clean
+>>   Active Devices : 4
+>> Working Devices : 4
+>>   Failed Devices : 0
+>>    Spare Devices : 0
+>>
+>>           Layout : near=2
+>>       Chunk Size : 512K
+>>
 
-dunno, maybe it is, but it wouldn't be wise because in case of a RAID5 
-rebuilding after a disk-failure would become even more dangerous on a 
-large array as it is already
-
-> Anyway, what really surprise me is *not* the drive to not be detached, 
-> rather permitting that corruption make its way into real data. I naively 
-> expect that when a WRITE_QUEUED or CACHE_FLUSH command aborts/fails 
-> (which *will* cause data corruption if not properly handled) the I/O 
-> layer has the following possibilities:
-
-given that i have seen at least SD-cards confirming over hours sucessful 
-writes with no single error in the syslog maybe it was one of the rare 
-cases where the hardware lied and if that is the case you have nearly no 
-chance on the software layer except verify each write with a uncached 
-read of the block which would have a unacceptable impact on performance
