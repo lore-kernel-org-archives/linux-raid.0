@@ -1,96 +1,60 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [opensuse] raid device mounting problem in Leap 42.2
-Date: Fri, 14 Jul 2017 11:40:01 +1000
-Message-ID: <87r2xj23v2.fsf@notabene.neil.brown.name>
-References: <a7cc2751c4c0b89dee040c1522590fb5@gmail.hu> <ok4bkp$gb0$1@saturn.local.net> <41e64fb5b9e54bf18aff2d663d0649d8@gmail.hu> <CAA91j0UND1UmwOc46G+o1Mh3dKMG9M_HiYxFdXwWO03D=EztpA@mail.gmail.com> <76df60214c0039114ba0a4b6f0f515bc@gmail.hu> <CAA91j0WXkBnSa+F7u95SWMCtR6nYnUN3uzRLj9jqPoCFX2LNXQ@mail.gmail.com> <596628E7.8020905@youngman.org.uk> <CAA91j0Uyz2xZkpo3YDrkQRhYt5FoG4b-Bwhc7HF3ko40i1xs3A@mail.gmail.com> <d71443c0d631c80af4d09c6098b85359@gmail.hu> <5967FFAD.6030807@youngman.org.uk>
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: Filesystem corruption on RAID1
+Date: Thu, 13 Jul 2017 19:48:29 -0600
+Message-ID: <CAJCQCtS=o27zF_sUEv0rTos_0x_7tNMdudBaDDOwxSvTz3zE5w@mail.gmail.com>
+References: <c2fe6593-c806-ab9f-fcff-8327c013237b@assyoma.it>
+ <20170713214856.4a5c8778@natsu> <592f19bf608e9a959f9445f7f25c5dad@assyoma.it>
+ <d1255092-73f5-1ca4-0e68-69ff37631a26@thelounge.net> <cd37f90b86eb67be4c893b7fdf112692@assyoma.it>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5967FFAD.6030807@youngman.org.uk>
+In-Reply-To: <cd37f90b86eb67be4c893b7fdf112692@assyoma.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, opensuse@opensuse.org, linux-raid <linux-raid@vger.kernel.org>
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, Jul 14 2017, Wols Lists wrote:
-
-> On 13/07/17 23:46, Istvan Gabor wrote:
->> On Wed, 12 Jul 2017 17:05:17 +0300, Andrei Borzenkov wrote:
->>> On Wed, Jul 12, 2017 at 4:49 PM, Wols Lists <antlists@youngman.org.uk>
->>> wrote:
->>>>
->>>> But I suspect that going back into 12.2, and shrinking the filesystem
->>>> (MAKE SURE you shrink the md device, not the sd device)
->>>
->>> Quite the opposite. Attempting to shrink filesystem that is already
->>> effectively corrupted is potentially dangerous. So the right thing
->>> here is to stop md, backup superblocks (in case they will be
->>=20
->> I am puzzled. Do I need to backup the raid superblock or the device
->> superblocks or all?
-
-You cannot have too many backups.
-
->>                      How do I backup the superblock? I googled but only
-
-mdadm --dump=3D/some/directory list of devices.
-
->> find how to recover from superblock backup.
->>=20
-> The best bet is to ask the linux-raid list what to do.
+On Thu, Jul 13, 2017 at 4:34 PM, Gionatan Danti <g.danti@assyoma.it> wrote:
+> Il 13-07-2017 23:34 Reindl Harald ha scritto:
+>>
+>> maybe because the disk is, well, not in a good shape and don't know
+>> that by itself
+>>
 >
-> For the raid list, this is the array I mentioned where the filesystem,
-> and the partitions the raid was on, were the same size.
-
-To the byte?  I really like to see the output of commands that report
-sizes, rather than have someone claim "were the same size".  It isn't
-that I don't trust you.  I just don't trust humans in general (myself inclu=
-ded).
-
-NeilBrown
-
+> But the kernel *does* know that, as the dmesg entries clearly show.
+> Basically, some SATA commands timed-out and/or were aborted. As the kernel
+> reported these erros in dmesg, why do not use these information to stop a
+> failing disk?
 >
-> So we have a v1.0 mirror where the filesystem on the mirror uses up ALL
-> the space on the md device, not just the free space that it's supposed
-> to use, with all the issues that brings like filling up the filesystem
-> will overwrite the superblock.
+>>
+>> (and no filesystems with checksums won't magically recover
+>> your data, they just tell you realier they are gone)
+>>
 >
-> So what's the best way to recover? Will just shrinking the filesystem
-> bring everything back the way it should be, or are we better just
-> mounting the original filesystem from one disk as if it weren't a
-> mirror, and then recreating the mirror on the other disk, copying the
-> data, and then adding the first disk back in to put everything back the
-> way it should have been?
+> Checksummed filesystem that integrates their block-level management (read:
+> ZFS or BTRFS) can recover the missing/corrupted data by the healthy disks,
+> discarging corrupted data based on the checksum mismatch.
 >
-> Cheers,
-> Wol
+> Anyway, this has nothing to do with linux software RAID. I was only
+> "thinking loud" :)
+> Thanks.
 >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
 
------BEGIN PGP SIGNATURE-----
+Dealing with device betrayal at a hardware level is a difficult
+problem. I'm under the impression the md driver is very intolerant of
+write failure and would eject a drive even with a single failed write?
+It would seem to be disqualifying for RAID.
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlloIPIACgkQOeye3VZi
-gbmOlQ/+KjVpizzAEN5bYt/I8CQuzJlcVCv3XL/ZlXBWmFuOf8OFpceXDY16u0Xb
-zNDe58AHLDf/yoJbj94m1Xuvv78f0FAKCTaJXObsbNCdrwqpD6UnOD9Qureq9n3m
-31pcO2o00To9nZIaTzkRiCYI+5TXNx0FH/2ziMOok7nlPbnf+6GTCCx0jdBB7m+k
-HX5j+QmzcJmtobvil4fxsBZOcNwmdF0wPFi8YJiuqrsXRSeFdHoSDELlIldYSDUt
-Iold+BV/kTtgn/o8F7IDbuILB1Uv5H0gm/ILSpQamufuqiP81ysEC2MaIybJeVk3
-08s3OdxQMZMRhllhkusjjePD6nUjGaahSp+B0LhPbiVrGJnyoEtv621Q032CHRkP
-jHxL/joQ04fSL/CIobIqs09PkMdjkXC9auwccTd3AaS9xERf3E2bTl9ABN8SlD3g
-3k9EwdnMww8kdQGuqrmriJOKziLlU802biURciH6f42Z3N5QNJBtC8J6O8pZ2hz2
-39WFR84b/Qqp6SBkstwldUKuQHHhssne1awn4TfVnBR0VdsFmvrhh+ghGx1w551+
-E1abaAPYFitcdsGjSAB5bjE6/0ppG9KbHqPoiYKQ4U3cTkLYEl5NQlWyvC/PJl+m
-p59RWD14xqQTZMKZFYzLLQlyUmVFrE9sXfi6C+mT5o+3YQ8n4Fc=
-=gOwV
------END PGP SIGNATURE-----
---=-=-=--
+Btrfs still tolerates many errors, read and write, so it can still be
+a problem there too. But yes it does have an independent way to
+unambiguously determine whether file system metadata, or extent data,
+is corrupt. It also often keeps two copies of metadata (the file
+system itself). Another option (read-only) is dm-verity, but that is
+not RAID, it uses forward error correction and cryptographic hash
+verification.
+
+
+
+-- 
+Chris Murphy
