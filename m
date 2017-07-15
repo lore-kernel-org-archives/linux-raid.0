@@ -1,140 +1,120 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: Linear device of two arrays
-Date: Sat, 15 Jul 2017 10:12:26 +1000
-Message-ID: <87shhyzhg5.fsf@notabene.neil.brown.name>
-References: <CALee7hZYgLNO2siDJNtFge_BoocTXX-9BSgRHmMJH8MaH6V3LA@mail.gmail.com> <20170705214250.0ea99538@natsu> <595D2ADA.8010907@youngman.org.uk> <CALee7hZqmLK19tSEEFBgSWMKm9TRoUqLBCxUmbNJpwmM45BjTQ@mail.gmail.com> <df053262-9334-1070-c24a-5d2f91402716@hardwarefreak.org> <CALee7haowPD0DKPtEQUN8M8LDCNOq62SDrk5VNMO5C+5iUqtrQ@mail.gmail.com> <5afd5cea-06b8-8524-e4f5-8534f23bd714@hardwarefreak.org> <87van15j9b.fsf@notabene.neil.brown.name> <e394625b-18d7-d141-3957-3c16c9bc6e44@gmail.com> <87o9sn232n.fsf@notabene.neil.brown.name> <1eefd627-1aba-a795-05f0-d2106d3a62a3@gmail.com>
+From: Ram Ramesh <rramesh2400@gmail.com>
+Subject: Re: Why can't I re-add my drive after partition shrink?
+Date: Fri, 14 Jul 2017 19:17:54 -0500
+Message-ID: <0341a04d-9aa5-7665-d9ff-527fe9fc8238@gmail.com>
+References: <2ea5ed99-05b5-25d2-c9d4-8ce1f4945eaa@gmail.com>
+ <87tw2f2425.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1eefd627-1aba-a795-05f0-d2106d3a62a3@gmail.com>
+In-Reply-To: <87tw2f2425.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Veljko <veljko3@gmail.com>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>, Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, Jul 14 2017, Veljko wrote:
-
-> On 07/14/2017 03:57 AM, NeilBrown wrote:
->>
->> Presumably you also have an md3 raid10 which you want to attach to the
->> end of md2?
+On 07/13/2017 08:35 PM, NeilBrown wrote:
+> <snip
+> Please report output of "mdadm --examine" on both a device that is active
+> in the array, and the device that you are trying to add.
+> Also "mdadm --examine-bitmap" of a device that is active in the array.
 >
-> Yes, I just created it. It's resyncing.
+> NeilBrown
 >
+>> I researched as much as I could on the net and came up with nothing
+>> except some one saying that mdadm keeps something at the end of the disk
+>> regardless of what it says about "Used Dev Size." Is it possible to move
+>> this info so that I could re-add?
+>>
+>> Ramesh
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Neil,
+
+   Since the problem, I did not want to leave my md in degraded state. 
+So, I added my drive back and paid the penalty for rebuilding. I have 
+other disks that need to be resized and *can get you want*. Please let 
+me know if that is what you meant. If  you wanted the current info after 
+successfully rebuilding the array after a regular add, it is below.
+
+First the device that is currently in after a regular add.
+> zym [rramesh] 497 > sudo mdadm --examine /dev/sdb1
+> /dev/sdb1:
+>           Magic : a92b4efc
+>         Version : 1.2
+>     Feature Map : 0x1
+>      Array UUID : 0e9f76b5:4a89171a:a930bccd:78749144
+>            Name : zym:0  (local to host zym)
+>   Creation Time : Mon Apr 22 00:08:12 2013
+>      Raid Level : raid6
+>    Raid Devices : 6
 >
->> md2 is 5761631232 sectors.
->>   2880815616 kilobytes
->>   2813296.5 (binary)megabytes.
->>
->> When you include that into a "linear" you will lose a few K from the
->> end.
->> It might be sensible to cause the "linear" to use whole stripes from
->> the raid10, where a stripe is 1M (2 512K chunks).
->> If you did that, you would lose a little over 1M.
->> So backup the last 3.5 M of the raid10.  This is much more than you need.
->>
->> ie.
->>
->>   dd if=3D/dev/md2 of=3DSOMEWHERE/SAFE bs=3D1M skip=3D2813293
+>  Avail Dev Size : 6442188800 (3071.88 GiB 3298.40 GB)
+>      Array Size : 12348030976 (11776.00 GiB 12644.38 GB)
+>   Used Dev Size : 6174015488 (2944.00 GiB 3161.10 GB)
+>     Data Offset : 262144 sectors
+>    Super Offset : 8 sectors
+>           State : clean
+>     Device UUID : 702ca77d:564d69ff:e45d9679:64c314fa
 >
-> I'm little confused. What I'm backuping is last 3.5M of used space,=20
-> right? How is that only ~2.7T? df shows 4.8T of used space.
-
-You were right to check.
-
-md2 is 5761631232 kilobytes, not sectors.
-so 5626593 (binary) megabytes (exactly)
-
-So command should be
-
->>   dd if=3D/dev/md2 of=3DSOMEWHERE/SAFE bs=3D1M skip=3D5626590
-
-and expect it to create a 3M file.
-
-Use this 'skip' number of the 'seek' number later.
-
-NeilBrown
-
-
+> Internal Bitmap : 8 sectors from superblock
+>     Update Time : Fri Jul 14 18:36:37 2017
+>        Checksum : c5502356 - correct
+>          Events : 297182
 >
-> Rest of the instructions are clear and I'll try it as soon as md3 is=20
-> synced.
+>          Layout : left-symmetric
+>      Chunk Size : 64K
 >
-> Thanks Neil!
+>    Device Role : Active device 4
+>    Array State : AAAAAA ('A' == active, '.' == missing)
+
+Member disk that has been in the array before /dev/sdb1 resize
+> zym [rramesh] 498 > sudo mdadm --examine /dev/sdc1
+> /dev/sdc1:
+>           Magic : a92b4efc
+>         Version : 1.2
+>     Feature Map : 0x1
+>      Array UUID : 0e9f76b5:4a89171a:a930bccd:78749144
+>            Name : zym:0  (local to host zym)
+>   Creation Time : Mon Apr 22 00:08:12 2013
+>      Raid Level : raid6
+>    Raid Devices : 6
 >
->> (dd treats 'M' as 1024*1024, MB is 1000*1000)
->>
->> If the file this creates is not 3.5M, then something went wrong.  Stop
->> here.
->>
->> Just to be safe you might want to backup the first few megabytes.  You
->> won't need this unless something goes wrong
->>   dd if=3D/dev/md2 of=3DSOMEWHERE/ELSE bs=3D1M count=3D10
->>
->> Now create the linear from /dev/md2 and /dev/md3(?).  Be sure to use
->> "-e 1.0 --data-offset=3D0".  This creates /dev/md4
->>
->> Now restore the first backup
->>
->>  dd if=3DSOMEWHERE/SAFE of=3D/dev/md4 bs=3D1M seek=3D2813293
->>
->> Be sure to use the same bs=3D and seek=3D as you did the first time.
->> Be sure it is copying from the back and to the new linear raid.
->>
->> You should now be done. Check your xfs filesystem, and maybe even mount
->> it and use it.
->>
->> NeilBrown
->>
->>>
->>> # mdadm --detail /dev/md2
->>> /dev/md2:
->>>          Version : 1.2
->>>    Creation Time : Fri Sep 14 12:40:13 2012
->>>       Raid Level : raid10
->>>       Array Size : 5761631232 (5494.72 GiB 5899.91 GB)
->>>    Used Dev Size : 2880815616 (2747.36 GiB 2949.96 GB)
->>>     Raid Devices : 4
->>>    Total Devices : 4
->>>      Persistence : Superblock is persistent
->>>
->>>      Update Time : Mon Jul 10 12:32:51 2017
->>>            State : clean
->>>   Active Devices : 4
->>> Working Devices : 4
->>>   Failed Devices : 0
->>>    Spare Devices : 0
->>>
->>>           Layout : near=3D2
->>>       Chunk Size : 512K
->>>
+>  Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
+>      Array Size : 12348030976 (11776.00 GiB 12644.38 GB)
+>   Used Dev Size : 6174015488 (2944.00 GiB 3161.10 GB)
+>     Data Offset : 262144 sectors
+>    Super Offset : 8 sectors
+>           State : clean
+>     Device UUID : 7e035b56:d1e1882b:e78a08ad:3ba50667
 >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Internal Bitmap : 8 sectors from superblock
+>     Update Time : Fri Jul 14 18:36:37 2017
+>        Checksum : a5288a4c - correct
+>          Events : 297182
+>
+>          Layout : left-symmetric
+>      Chunk Size : 64K
+>
+>    Device Role : Active device 2
+>    Array State : AAAAAA ('A' == active, '.' == missing)
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+Now examine bit map on /dev/sdb1 (device that got in after a regular add)
+> zym [rramesh] 499 > sudo mdadm --examine-bitmap /dev/sdb1
+>         Filename : /dev/sdb1
+>            Magic : 6d746962
+>          Version : 4
+>             UUID : 0e9f76b5:4a89171a:a930bccd:78749144
+>           Events : 297182
+>   Events Cleared : 297182
+>            State : OK
+>        Chunksize : 64 MB
+>           Daemon : 5s flush period
+>       Write Mode : Normal
+>        Sync Size : 3087007744 (2944.00 GiB 3161.10 GB)
+>           Bitmap : 47104 bits (chunks), 0 dirty (0.0%)
 
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAllpXe0ACgkQOeye3VZi
-gbmHKA//TRAozcxZPD0mn7pI0qer9euJ7bKrA9qVTdRgDodvXlLhaxT9OPha1KrU
-Qx1xVlucSsJ1AxQF9Nkh2CsAa8WX1WLfNqABaOU6epCtW5PfuEsmSQPe+Tr5saby
-lPULXMcL0nhCV9IIi3w4rHmuvYwTac3DpujBFxDLr6KQ+Y/4t+DOJdQhMMOtbn0t
-+uPE6hGz0DeDgSDFie5pyEOi9onoaq1F+v1P3FeQ0EM38WHUWe5atEfR5y1Jr75J
-Qj5tiEf8etH3hokN9hhsQk73sFAsIUbmHKjBzWO/Fq1use9gksMSehFCY2hgT+fK
-By7D7yzAjo7qsgpmSS82PN4/qL3HALmVNIkZYzaKsebFc51hWNl2WzsgJxlWZZ9k
-ixr/O0LHbpOA4Zpjnv4LXFYOvJQDLJSfzTCqdGhKb7ZlggQwITuaeDRJOXm4VHhM
-lq4WUdxLNusadB+AsQjzyNzYuXux4mEcyYhJ+7W51cO8o3vW3dP+reSXL7K569dx
-2QFobg+0RZHqEmh37zWAqKb56cXksS3d6N6klwPAo0rubsrYsQus0PgqmaROeZic
-pk98/TJch71ONc61UdCzFn+3MyffXMP3efGs9dtOauGCr/vBom/Tz7YPXmKuerUj
-9EMMT1amus9woKxd5CN4b4Q8NWz7EsUW48i1M5++FzmnDLJd8UM=
-=9uyt
------END PGP SIGNATURE-----
---=-=-=--
+Ramesh
