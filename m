@@ -1,211 +1,107 @@
-From: Coly Li <colyli@suse.de>
-Subject: Re: [PATCH v2 3/3] md: raid1-10: move raid1/raid10 common code into
- raid1-10.c
-Date: Sun, 16 Jul 2017 13:14:12 +0800
-Message-ID: <72dd4c34-f780-e20f-f604-3edf018b138a@suse.de>
-References: <20170714081444.32645-1-ming.lei@redhat.com>
- <20170714081444.32645-4-ming.lei@redhat.com>
+From: Jean-Pierre Human <jphuman@gmail.com>
+Subject: Re: Superblocks lost on all disks in array.
+Date: Sun, 16 Jul 2017 18:46:15 +0200
+Message-ID: <CAH_1uby=5GvrRfE5v_UYNyNev_5ZLWP1Sr48me5siR+Gm_yrGA@mail.gmail.com>
+References: <CAH_1ubwzXd9C8OBheZv+Z5oFTVt2rG+RATHrhKy6uiVv84y_SA@mail.gmail.com>
+ <20170715172643.GA24000@metamorpher.de> <CAH_1ubxjJzNzhV7JCjspPruUv7uJxTwVeYrjOCQv4wUMcfZBrQ@mail.gmail.com>
+ <f18f569d-88fe-d35d-8c85-319d431af770@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170714081444.32645-4-ming.lei@redhat.com>
-Content-Language: en-US
+In-Reply-To: <f18f569d-88fe-d35d-8c85-319d431af770@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, NeilBrown <neilb@suse.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@infradead.org>
+To: Anthony Youngman <antlists@youngman.org.uk>
+Cc: Andreas Klauer <Andreas.Klauer@metamorpher.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2017/7/14 下午4:14, Ming Lei wrote:
-> No function change, just move 'struct resync_pages' and related
-> helpers into raid1-10.c
+On Sun, Jul 16, 2017 at 1:03 AM, Anthony Youngman
+<antlists@youngman.org.uk> wrote:
+>
+>
+> On 15/07/17 19:05, Jean-Pierre Human wrote:
+>>
+>> On Sat, Jul 15, 2017 at 7:26 PM, Andreas Klauer
+>> <Andreas.Klauer@metamorpher.de> wrote:
+>
+>
+>> Hi Andreas
+>>
+>> Thanks for the prompt response,
+>>
+>> Yes I did not use a partition table. I have always in the past used
+>> partitions but recently noticed a trend to use the device, wont do
+>> that again.
+>>
+>> I am really not sure what wrote those partitions there. I only see
+>> free space in them if I check with fdisk.
+>>
+>> I am sure it was metadata version 1.2
+>>
+>> I will attempt to recover using the overlay, will post my results.
+>
+>
+> Good call. The whole point of overlays is to enable you to write-protect the
+> physical disks. That means (of course) that you can't make matters worse.
+> That's always the worry - that an attempt at a fix will damage the content
+> of the disks and make a recovery harder/impossible.
+>>
+>>
+>> Thanks again for your help.
+>>
+> A little more (hopefully) help - on the wiki the last entry in the "When
+> things go wrogn" section is about recovering a trashed array. As it says,
+> it's a work in progress, but it gives you various hints about how to search
+> the disk for clues as to where your data is, and hence what all those things
+> like offsets are.
+>
+> Have you ever added disks to your array? Rebuilt and changed its
+> configuration? This can mess about with the superblock values changing them
+> from the defaults. This is information the list will want.
+>
+> If you have trouble getting overlays to work, search for clues like this on
+> your list and get back here for help. ON NO ACCOUNT do anything that will
+> actually write to your disks unless you are absolutely confident that you've
+> found the correct magic incantation.
+>
+> There are plenty of people here who will help you get your data back - and
+> they've got a good track record! Unfortunately, I'm "learning by
+> documenting" so I'm quite happy to give you hints and guidance, but I can't
+> say for certain what is likely to work.
+>
+> Cheers,
+> Wol
 
-Please give me a hint, I don't find where raid1-10.c is ....
+Hello List
 
-Thanks.
+I am happy to say I managed to recover all the data and it was perfectly intact.
 
-Coly
+To address some of the above questions, the array and server install
+are relatively new 3 months or so. There have been no disk additions,
+replacements or failures. I had issues getting the overlay working
+mainly due to my lack of understanding  and time restraints (used dd
+and sfdisk to kinda make backups of the important bits).
 
-> 
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> ---
->  drivers/md/md.h       | 53 -------------------------------------------
->  drivers/md/raid1-10.c | 62 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  drivers/md/raid1.c    |  9 --------
->  drivers/md/raid10.c   |  9 --------
->  4 files changed, 62 insertions(+), 71 deletions(-)
-> 
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 2c780aa8d07f..004a21c214e8 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -729,57 +729,4 @@ static inline void mddev_check_write_zeroes(struct mddev *mddev, struct bio *bio
->  	    !bdev_get_queue(bio->bi_bdev)->limits.max_write_zeroes_sectors)
->  		mddev->queue->limits.max_write_zeroes_sectors = 0;
->  }
-> -
-> -/* Maximum size of each resync request */
-> -#define RESYNC_BLOCK_SIZE (64*1024)
-> -#define RESYNC_PAGES ((RESYNC_BLOCK_SIZE + PAGE_SIZE-1) / PAGE_SIZE)
-> -
-> -/* for managing resync I/O pages */
-> -struct resync_pages {
-> -	void		*raid_bio;
-> -	struct page	*pages[RESYNC_PAGES];
-> -};
-> -
-> -static inline int resync_alloc_pages(struct resync_pages *rp,
-> -				     gfp_t gfp_flags)
-> -{
-> -	int i;
-> -
-> -	for (i = 0; i < RESYNC_PAGES; i++) {
-> -		rp->pages[i] = alloc_page(gfp_flags);
-> -		if (!rp->pages[i])
-> -			goto out_free;
-> -	}
-> -
-> -	return 0;
-> -
-> -out_free:
-> -	while (--i >= 0)
-> -		put_page(rp->pages[i]);
-> -	return -ENOMEM;
-> -}
-> -
-> -static inline void resync_free_pages(struct resync_pages *rp)
-> -{
-> -	int i;
-> -
-> -	for (i = 0; i < RESYNC_PAGES; i++)
-> -		put_page(rp->pages[i]);
-> -}
-> -
-> -static inline void resync_get_all_pages(struct resync_pages *rp)
-> -{
-> -	int i;
-> -
-> -	for (i = 0; i < RESYNC_PAGES; i++)
-> -		get_page(rp->pages[i]);
-> -}
-> -
-> -static inline struct page *resync_fetch_page(struct resync_pages *rp,
-> -					     unsigned idx)
-> -{
-> -	if (WARN_ON_ONCE(idx >= RESYNC_PAGES))
-> -		return NULL;
-> -	return rp->pages[idx];
-> -}
->  #endif /* _MD_MD_H */
-> diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
-> index 3adb5b9dc4b4..9f2670b45f31 100644
-> --- a/drivers/md/raid1-10.c
-> +++ b/drivers/md/raid1-10.c
-> @@ -1,3 +1,65 @@
-> +/* Maximum size of each resync request */
-> +#define RESYNC_BLOCK_SIZE (64*1024)
-> +#define RESYNC_PAGES ((RESYNC_BLOCK_SIZE + PAGE_SIZE-1) / PAGE_SIZE)
-> +
-> +/* for managing resync I/O pages */
-> +struct resync_pages {
-> +	void		*raid_bio;
-> +	struct page	*pages[RESYNC_PAGES];
-> +};
-> +
-> +static inline int resync_alloc_pages(struct resync_pages *rp,
-> +				     gfp_t gfp_flags)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i < RESYNC_PAGES; i++) {
-> +		rp->pages[i] = alloc_page(gfp_flags);
-> +		if (!rp->pages[i])
-> +			goto out_free;
-> +	}
-> +
-> +	return 0;
-> +
-> +out_free:
-> +	while (--i >= 0)
-> +		put_page(rp->pages[i]);
-> +	return -ENOMEM;
-> +}
-> +
-> +static inline void resync_free_pages(struct resync_pages *rp)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i < RESYNC_PAGES; i++)
-> +		put_page(rp->pages[i]);
-> +}
-> +
-> +static inline void resync_get_all_pages(struct resync_pages *rp)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i < RESYNC_PAGES; i++)
-> +		get_page(rp->pages[i]);
-> +}
-> +
-> +static inline struct page *resync_fetch_page(struct resync_pages *rp,
-> +					     unsigned idx)
-> +{
-> +	if (WARN_ON_ONCE(idx >= RESYNC_PAGES))
-> +		return NULL;
-> +	return rp->pages[idx];
-> +}
-> +
-> +/*
-> + * 'strct resync_pages' stores actual pages used for doing the resync
-> + *  IO, and it is per-bio, so make .bi_private points to it.
-> + */
-> +static inline struct resync_pages *get_resync_pages(struct bio *bio)
-> +{
-> +	return bio->bi_private;
-> +}
-> +
->  /* generally called after bio_reset() for reseting bvec */
->  static void md_bio_reset_resync_pages(struct bio *bio, struct resync_pages *rp,
->  			       int size)
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index fe86ab18961b..8387eb1540cd 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -84,15 +84,6 @@ static void lower_barrier(struct r1conf *conf, sector_t sector_nr);
->  #include "raid1-10.c"
->  
->  /*
-> - * 'strct resync_pages' stores actual pages used for doing the resync
-> - *  IO, and it is per-bio, so make .bi_private points to it.
-> - */
-> -static inline struct resync_pages *get_resync_pages(struct bio *bio)
-> -{
-> -	return bio->bi_private;
-> -}
-> -
-> -/*
->   * for resync bio, r1bio pointer can be retrieved from the per-bio
->   * 'struct resync_pages'.
->   */
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 9952721e1cde..e2617d0f37dc 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -113,15 +113,6 @@ static void end_reshape(struct r10conf *conf);
->  #include "raid1-10.c"
->  
->  /*
-> - * 'strct resync_pages' stores actual pages used for doing the resync
-> - *  IO, and it is per-bio, so make .bi_private points to it.
-> - */
-> -static inline struct resync_pages *get_resync_pages(struct bio *bio)
-> -{
-> -	return bio->bi_private;
-> -}
-> -
-> -/*
->   * for resync bio, r10bio pointer can be retrieved from the per-bio
->   * 'struct resync_pages'.
->   */
-> 
+Using the same disk order, mdadm version and settings when it was
+initially installed it started perfectly with a --create
+--assume-clean. The existing LVM was also still intact and once the
+ISCSI connection was back online the data was there. I feel I got very
+lucky mainly due to the server being in a roughly constant error free
+state since install.
 
+The odd thing was that after I had the array running and before I had
+started the ISCSI, I had to reboot the server, when it came up the
+newly written superblocks were gone again and I had to --create
+--assume-clean to get it running again. Once I have secured this data
+I will find out why this is happening.
+
+The documentation on the wiki is very helpful and the most concise I
+came across. The overlay feature I will spend sometime with to
+understand as in the future I may need this. It just left me asking a
+lot of questions like if I have LVM and no filesystem on the device
+will it work or how should I adopt the setup for that etc. This
+exercise has opened my eyes to just how resilient and flexible mdadm
+can be.
+
+Thanks again for all the help and advice.
+
+J-P Human
