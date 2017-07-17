@@ -1,54 +1,46 @@
-From: Veljko <veljko3@gmail.com>
-Subject: Re: Linear device of two arrays
-Date: Mon, 17 Jul 2017 12:16:34 +0200
-Message-ID: <38e015fa-a07c-8f1a-3a04-384d973966be@gmail.com>
-References: <CALee7hZYgLNO2siDJNtFge_BoocTXX-9BSgRHmMJH8MaH6V3LA@mail.gmail.com>
- <20170705214250.0ea99538@natsu> <595D2ADA.8010907@youngman.org.uk>
- <CALee7hZqmLK19tSEEFBgSWMKm9TRoUqLBCxUmbNJpwmM45BjTQ@mail.gmail.com>
- <df053262-9334-1070-c24a-5d2f91402716@hardwarefreak.org>
- <CALee7haowPD0DKPtEQUN8M8LDCNOq62SDrk5VNMO5C+5iUqtrQ@mail.gmail.com>
- <5afd5cea-06b8-8524-e4f5-8534f23bd714@hardwarefreak.org>
- <87van15j9b.fsf@notabene.neil.brown.name>
- <e394625b-18d7-d141-3957-3c16c9bc6e44@gmail.com>
- <87o9sn232n.fsf@notabene.neil.brown.name>
- <1eefd627-1aba-a795-05f0-d2106d3a62a3@gmail.com>
- <87shhyzhg5.fsf@notabene.neil.brown.name>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH v2 0/3] md: three misc changes
+Date: Mon, 17 Jul 2017 09:41:47 -0700
+Message-ID: <20170717164147.unwgwb4ekmwexc3m@kernel.org>
+References: <20170714081444.32645-1-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87shhyzhg5.fsf@notabene.neil.brown.name>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170714081444.32645-1-ming.lei@redhat.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: linux-raid@vger.kernel.org, NeilBrown <neilb@suse.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-raid.ids
 
-On 07/15/2017 02:12 AM, NeilBrown wrote:
+On Fri, Jul 14, 2017 at 04:14:41PM +0800, Ming Lei wrote:
+> This 1st patch fixes one issue introduced in the following two
+> commits:
+> 	Fixes: f0250618361d(md: raid10: don't use bio's vec table to manage resync pages)
+> 	Fixes: 98d30c5812c3(md: raid1: don't use bio's vec table to manage resync pages)
+> 
+> The 2nd one initializes bvec table of bio via bio_add_page() after bio_reset().
+> 
+> The 3rd one moves the common definitation and helpers into raid1-10.c. 
 
-> So command should be
->
->>>   dd if=/dev/md2 of=SOMEWHERE/SAFE bs=1M skip=5626590
->
-> and expect it to create a 3M file.
->
-> Use this 'skip' number of the 'seek' number later.
->
-> NeilBrown
-
-Thanks, Neil, now it makes more sense.
-
-I tried to create new linear device, but mdadm is complaining about 
-data-offset:
-
-# mdadm -C /dev/md4 -l linear -n 2 --rounding=1M -e 1.0 --data-offset=0 
-/dev/md2 /dev/md3
-  mdadm: invalid data-offset: 0
-
-I'm using Debian 8.8 if it makes any difference.
-
-# mdadm -V
-  mdadm - v3.3.2 - 21st August 2014
-
-What could be the problem?
-
-Regards,
-Veljko
+applied, thanks!
+ 
+> V2:
+> 	- fix 'page_idx' increasement in patch 1
+> 	- move raid1/raid10 common code to raid1-raid10.c, as suggested by Neil
+> 
+> Ming Lei (3):
+>   md: remove 'idx' from 'struct resync_pages'
+>   md: raid1/raid10: initialize bvec table via bio_add_page()
+>   md: raid1-10: move raid1/raid10 common code into raid1-10.c
+> 
+>  drivers/md/md.h       | 54 ----------------------------------
+>  drivers/md/raid1-10.c | 81 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/md/raid1.c    | 31 ++++----------------
+>  drivers/md/raid10.c   | 19 ++++--------
+>  4 files changed, 93 insertions(+), 92 deletions(-)
+>  create mode 100644 drivers/md/raid1-10.c
+> 
+> -- 
+> 2.9.4
+> 
