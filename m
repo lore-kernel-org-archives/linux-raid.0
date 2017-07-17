@@ -1,126 +1,62 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: Superblocks lost on all disks in array.
-Date: Mon, 17 Jul 2017 10:41:20 +1000
-Message-ID: <e8e9fdef-54bf-5674-dfa7-f353edb31a3e@websitemanagers.com.au>
-References: <CAH_1ubwzXd9C8OBheZv+Z5oFTVt2rG+RATHrhKy6uiVv84y_SA@mail.gmail.com>
- <20170715172643.GA24000@metamorpher.de>
- <CAH_1ubxjJzNzhV7JCjspPruUv7uJxTwVeYrjOCQv4wUMcfZBrQ@mail.gmail.com>
- <f18f569d-88fe-d35d-8c85-319d431af770@youngman.org.uk>
- <CAH_1uby=5GvrRfE5v_UYNyNev_5ZLWP1Sr48me5siR+Gm_yrGA@mail.gmail.com>
+From: Ram Ramesh <rramesh2400@gmail.com>
+Subject: Re: Why can't I re-add my drive after partition shrink?
+Date: Mon, 17 Jul 2017 00:15:47 -0500
+Message-ID: <8d3e1264-2f0a-6ee9-52b5-edddc1e6f185@gmail.com>
+References: <2ea5ed99-05b5-25d2-c9d4-8ce1f4945eaa@gmail.com>
+ <87tw2f2425.fsf@notabene.neil.brown.name>
+ <0341a04d-9aa5-7665-d9ff-527fe9fc8238@gmail.com>
+ <87pod0ypmh.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAH_1uby=5GvrRfE5v_UYNyNev_5ZLWP1Sr48me5siR+Gm_yrGA@mail.gmail.com>
-Content-Language: en-CA
+In-Reply-To: <87pod0ypmh.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jean-Pierre Human <jphuman@gmail.com>, Anthony Youngman <antlists@youngman.org.uk>
-Cc: Andreas Klauer <Andreas.Klauer@metamorpher.de>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>, Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 17/07/17 02:46, Jean-Pierre Human wrote:
-> On Sun, Jul 16, 2017 at 1:03 AM, Anthony Youngman
-> <antlists@youngman.org.uk> wrote:
->>
->> On 15/07/17 19:05, Jean-Pierre Human wrote:
->>> On Sat, Jul 15, 2017 at 7:26 PM, Andreas Klauer
->>> <Andreas.Klauer@metamorpher.de> wrote:
->>
->>> Hi Andreas
->>>
->>> Thanks for the prompt response,
->>>
->>> Yes I did not use a partition table. I have always in the past used
->>> partitions but recently noticed a trend to use the device, wont do
->>> that again.
->>>
->>> I am really not sure what wrote those partitions there. I only see
->>> free space in them if I check with fdisk.
->>>
->>> I am sure it was metadata version 1.2
->>>
->>> I will attempt to recover using the overlay, will post my results.
->>
->> Good call. The whole point of overlays is to enable you to write-protect the
->> physical disks. That means (of course) that you can't make matters worse.
->> That's always the worry - that an attempt at a fix will damage the content
->> of the disks and make a recovery harder/impossible.
->>>
->>> Thanks again for your help.
->>>
->> A little more (hopefully) help - on the wiki the last entry in the "When
->> things go wrogn" section is about recovering a trashed array. As it says,
->> it's a work in progress, but it gives you various hints about how to search
->> the disk for clues as to where your data is, and hence what all those things
->> like offsets are.
->>
->> Have you ever added disks to your array? Rebuilt and changed its
->> configuration? This can mess about with the superblock values changing them
->> from the defaults. This is information the list will want.
->>
->> If you have trouble getting overlays to work, search for clues like this on
->> your list and get back here for help. ON NO ACCOUNT do anything that will
->> actually write to your disks unless you are absolutely confident that you've
->> found the correct magic incantation.
->>
->> There are plenty of people here who will help you get your data back - and
->> they've got a good track record! Unfortunately, I'm "learning by
->> documenting" so I'm quite happy to give you hints and guidance, but I can't
->> say for certain what is likely to work.
->>
->> Cheers,
->> Wol
-> Hello List
+On 07/16/2017 05:37 PM, NeilBrown wrote:
+> On Fri, Jul 14 2017, Ram Ramesh wrote:
 >
-> I am happy to say I managed to recover all the data and it was perfectly intact.
+>> On 07/13/2017 08:35 PM, NeilBrown wrote:
+>>> <snip
+>>> Please report output of "mdadm --examine" on both a device that is active
+>>> in the array, and the device that you are trying to add.
+>>> Also "mdadm --examine-bitmap" of a device that is active in the array.
+>>>
+>>> NeilBrown
+>>>
+>>>> I researched as much as I could on the net and came up with nothing
+>>>> except some one saying that mdadm keeps something at the end of the disk
+>>>> regardless of what it says about "Used Dev Size." Is it possible to move
+>>>> this info so that I could re-add?
+>>>>
+>>>> Ramesh
+>>>>
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Neil,
+>>
+>>     Since the problem, I did not want to leave my md in degraded state.
+>> So, I added my drive back and paid the penalty for rebuilding. I have
+>> other disks that need to be resized and *can get you want*. Please let
+>> me know if that is what you meant. If  you wanted the current info after
+>> successfully rebuilding the array after a regular add, it is below.
+> I only requested the information because it might help fix, or explain,
+> your difficulty.  If you don't currently have a difficulty, then I don't
+> need to look at any details.
 >
-> To address some of the above questions, the array and server install
-> are relatively new 3 months or so. There have been no disk additions,
-> replacements or failures. I had issues getting the overlay working
-> mainly due to my lack of understanding  and time restraints (used dd
-> and sfdisk to kinda make backups of the important bits).
->
-> Using the same disk order, mdadm version and settings when it was
-> initially installed it started perfectly with a --create
-> --assume-clean. The existing LVM was also still intact and once the
-> ISCSI connection was back online the data was there. I feel I got very
-> lucky mainly due to the server being in a roughly constant error free
-> state since install.
->
-> The odd thing was that after I had the array running and before I had
-> started the ISCSI, I had to reboot the server, when it came up the
-> newly written superblocks were gone again and I had to --create
-> --assume-clean to get it running again. Once I have secured this data
-> I will find out why this is happening.
+> Thanks,
+> NeilBrown
 
-I can't be sure, but I suspect what happened is this:
-1) setup the write overlay
-2) Do the rapairs/etc
-3) Export drive and test
-4) Reboot - everything is lost
+Thanks for your time. Yes, I still have the problem as I need to shrink 
+other 5 disks in the array and I like to re-add rather than add and 
+rebuild each time.
 
-The reason for this is that the write overlay has been lost by the 
-reboot, which is the point of the write overlay, it can easily be thrown 
-away if you accidentally messed up.
-What you need to verify now is that:
-1) You are not using a write overlay for your current/live data, or else 
-you will lose it after the next reboot
-2) Reboot and make sure everything works properly, so you are not left 
-in a similar issue next time
+The host with the array is currently busy, and I will get this info 
+tomorrow  when I attempt the process on my next hard drive.
 
-Regards,
-Adam
+Ramesh
 
-
--- 
--- 
-Adam Goryachev Website Managers www.websitemanagers.com.au
--- 
-The information in this e-mail is confidential and may be legally privileged.
-It is intended solely for the addressee. Access to this e-mail by anyone else
-is unauthorised. If you are not the intended recipient, any disclosure,
-copying, distribution or any action taken or omitted to be taken in reliance
-on it, is prohibited and may be unlawful. If you have received this message
-in error, please notify us immediately. Please also destroy and delete the
-message from your computer. Viruses - Any loss/damage incurred by receiving
-this email is not the sender's responsibility.
