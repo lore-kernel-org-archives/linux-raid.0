@@ -1,62 +1,137 @@
-From: Maarten <maarten@ultratux.net>
-Subject: Re: 3-disk fail on raid-6, examining my options...
-Date: Tue, 18 Jul 2017 23:29:48 +0200
-Message-ID: <f7afb0d1-579d-9647-6055-99093b74cc3a@ultratux.net>
-References: <07b77b80-4bee-3820-6a0d-3323ef06a3f3@ultratux.net>
- <596E6D72.8050108@youngman.org.uk> <20170718202550.GA2533@animx.eu.org>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: [PATCH] md/raid1: fix writebehind bio clone
+Date: Wed, 19 Jul 2017 06:51:06 +0800
+Message-ID: <CACVXFVNkTKhGqooGNww1iqSpw1dBCsDTJ6E1QX8a_P=CACG_1A@mail.gmail.com>
+References: <90e5fed8cd2b5dff7b393de121460671ebdd1260.1500398441.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170718202550.GA2533@animx.eu.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <90e5fed8cd2b5dff7b393de121460671ebdd1260.1500398441.git.shli@fb.com>
+Sender: stable-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, Shaohua Li <shli@fb.com>, "4.12+" <stable@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 07/18/2017 10:25 PM, Wakko Warner wrote:
-> Wols Lists wrote:
->> On 18/07/17 18:20, Maarten wrote:
->>> Now from what I've gathered over the years and from earlier incidents, I
->>> have now 1 (one) chance left to rescue data off this array; by hopefully
->>> cloning the bad 3rd-failed drive with the aid of dd_rescue and
->>> re-assembling --force the fully-degraded array. (Only IF that drive is
->>> still responsive and can be cloned)
->>
->> If it clones successfully, great. If it clones, but with badblocks, I
->> keep on asking - is there any way we can work together to turn
->> dd-rescue's log into a utility that will flag failed blocks as "unreadable"?
-> 
-> I wrote a shell script that will output a device mapper table to do this. 
-> It will do either zero or error targets for failed blocks.  It's not
-> automatic and does require a block device (loop for files).  I've used this
-> several times at work and works for me.
-> 
-> I'm not sure if this is what you're talking about or not, but if you want
-> the script, I'll post it.
+On Wed, Jul 19, 2017 at 1:21 AM, Shaohua Li <shli@kernel.org> wrote:
+> From: Shaohua Li <shli@fb.com>
+>
+> After bio is submitted, we should not clone it as its bi_iter might be
+> invalid by driver. This is the case of behind_master_bio. In certain
+> situration, we could dispatch behind_master_bio immediately for the
+> first disk and then clone it for other disks.
 
-For me, I don't think it will make much difference. On top of the array
-there are a number of LVM volumes. Of most of them I have full and
-current backups. Some of it is [now] free space. There are two volumes
-that hold data that is both important to me and not backed up recently
-enough.
+If I understand it correctly, it should be caused by dispatching
+the master bio during the loop either via flushing plug or md_wakeup_thread().
 
-Those two volumes together take up about 33%-40% of the total size. So
-the chances of bad sectors affecting these are also (somewhat) smaller.
-And the data will still be valuable to me, even when it has some silent
-corruption.
+If so, could we just add the bios into one temp pending list inside
+the loop? Then
+merge the temp list into conf->pending_bio_list after loop and
+schedule to dispatch
+them all? This way looks a bit more efficient.
 
-No, my main question that I seek a definitive answer to is whether the
-two drives that failed earlier hold anything of worth, or that any
-salvaging data using them is out of the question.
+Thanks,
+Ming
 
-In the mean time, I occupy my time with copying the data I wanted to
-copy onto the array to a remote system, and to make sure all my backups
-and copies that were not redundant get proper redundancy. I will not
-'touch' the machine with the broken array until all that is sorted (it
-has an other raid-6 array, which is healthy... for now at least).
-
-I hope the 3rd failed drive won't deteriorate during that time, but
-under the circumstances, I'm going to take that risk nonetheless.
-
-regards,
-Maarten
+>
+> https://bugzilla.kernel.org/show_bug.cgi?id=196383
+>
+> Reported-by: Markus <m4rkusxxl@web.de>
+> Cc: Ming Lei <tom.leiming@gmail.com>
+> Fix: 841c1316c7da(md: raid1: improve write behind)
+> Cc: stable@vger.kernel.org (4.12+)
+> Signed-off-by: Shaohua Li <shli@fb.com>
+> ---
+>  drivers/md/raid1.c | 30 ++++++++++--------------------
+>  1 file changed, 10 insertions(+), 20 deletions(-)
+>
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 8387eb1540cd..5622f521830b 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -484,10 +484,6 @@ static void raid1_end_write_request(struct bio *bio)
+>         }
+>
+>         if (behind) {
+> -               /* we release behind master bio when all write are done */
+> -               if (r1_bio->behind_master_bio == bio)
+> -                       to_put = NULL;
+> -
+>                 if (test_bit(WriteMostly, &rdev->flags))
+>                         atomic_dec(&r1_bio->behind_remaining);
+>
+> @@ -1080,7 +1076,7 @@ static void unfreeze_array(struct r1conf *conf)
+>         wake_up(&conf->wait_barrier);
+>  }
+>
+> -static struct bio *alloc_behind_master_bio(struct r1bio *r1_bio,
+> +static void alloc_behind_master_bio(struct r1bio *r1_bio,
+>                                            struct bio *bio)
+>  {
+>         int size = bio->bi_iter.bi_size;
+> @@ -1090,7 +1086,7 @@ static struct bio *alloc_behind_master_bio(struct r1bio *r1_bio,
+>
+>         behind_bio = bio_alloc_mddev(GFP_NOIO, vcnt, r1_bio->mddev);
+>         if (!behind_bio)
+> -               goto fail;
+> +               return;
+>
+>         /* discard op, we don't support writezero/writesame yet */
+>         if (!bio_has_data(bio))
+> @@ -1115,14 +1111,13 @@ static struct bio *alloc_behind_master_bio(struct r1bio *r1_bio,
+>         r1_bio->behind_master_bio = behind_bio;;
+>         set_bit(R1BIO_BehindIO, &r1_bio->state);
+>
+> -       return behind_bio;
+> +       return;
+>
+>  free_pages:
+>         pr_debug("%dB behind alloc failed, doing sync I/O\n",
+>                  bio->bi_iter.bi_size);
+>         bio_free_pages(behind_bio);
+> -fail:
+> -       return behind_bio;
+> +       bio_put(behind_bio);
+>  }
+>
+>  struct raid1_plug_cb {
+> @@ -1475,7 +1470,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+>                             (atomic_read(&bitmap->behind_writes)
+>                              < mddev->bitmap_info.max_write_behind) &&
+>                             !waitqueue_active(&bitmap->behind_wait)) {
+> -                               mbio = alloc_behind_master_bio(r1_bio, bio);
+> +                               alloc_behind_master_bio(r1_bio, bio);
+>                         }
+>
+>                         bitmap_startwrite(bitmap, r1_bio->sector,
+> @@ -1485,14 +1480,11 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+>                         first_clone = 0;
+>                 }
+>
+> -               if (!mbio) {
+> -                       if (r1_bio->behind_master_bio)
+> -                               mbio = bio_clone_fast(r1_bio->behind_master_bio,
+> -                                                     GFP_NOIO,
+> -                                                     mddev->bio_set);
+> -                       else
+> -                               mbio = bio_clone_fast(bio, GFP_NOIO, mddev->bio_set);
+> -               }
+> +               if (r1_bio->behind_master_bio)
+> +                       mbio = bio_clone_fast(r1_bio->behind_master_bio,
+> +                                             GFP_NOIO, mddev->bio_set);
+> +               else
+> +                       mbio = bio_clone_fast(bio, GFP_NOIO, mddev->bio_set);
+>
+>                 if (r1_bio->behind_master_bio) {
+>                         if (test_bit(WriteMostly, &conf->mirrors[i].rdev->flags))
+> @@ -2346,8 +2338,6 @@ static int narrow_write_error(struct r1bio *r1_bio, int i)
+>                         wbio = bio_clone_fast(r1_bio->behind_master_bio,
+>                                               GFP_NOIO,
+>                                               mddev->bio_set);
+> -                       /* We really need a _all clone */
+> -                       wbio->bi_iter = (struct bvec_iter){ 0 };
+>                 } else {
+>                         wbio = bio_clone_fast(r1_bio->master_bio, GFP_NOIO,
+>                                               mddev->bio_set);
+> --
+> 2.11.0
+>
