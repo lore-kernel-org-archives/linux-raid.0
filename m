@@ -1,85 +1,49 @@
-From: Maarten <maarten@ultratux.net>
-Subject: 3-disk fail on raid-6, examining my options...
-Date: Tue, 18 Jul 2017 19:20:37 +0200
-Message-ID: <07b77b80-4bee-3820-6a0d-3323ef06a3f3@ultratux.net>
+From: Shaohua Li <shli@kernel.org>
+Subject: [GIT PULL] MD update for 4.13-rc2
+Date: Tue, 18 Jul 2017 11:49:34 -0700
+Message-ID: <20170718184934.lu3fioskpjvh7qib@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Argh.. Murphy can be such a troll... :(
+Hi,
+Please pull 3 MD fixes:
+- raid5-ppl fix by Artur. This one is introduced in this release cycle.
+- raid5 reshape fix by Xiao. This is an old bug and will be added to stable.
+- Bitmap fix by Guoqing.
 
-Hi all,
+Thanks,
+Shaohua
 
-While I was in the process of migrating all my raid-6 arrays to raid-1
-arrays (with either two or three member disks), I got stung severely.
-(Obviously I shouldn't have been so stupid as to write to an array not
-yet fully copied, but that is now too late to undo)
+The following changes since commit af3c8d98508d37541d4bf57f13a984a7f73a328c:
 
+  Merge tag 'drm-for-v4.13' of git://people.freedesktop.org/~airlied/linux (2017-07-09 18:48:37 -0700)
 
-  What probably happened:
-A six-disk raid-6 array suffered a simultaneous two-disk failure which
-went unnoticed for a number of hours, and then inevitably got hit by a
--catastrophic- 3rd disk failure during the following night.
+are available in the git repository at:
 
+  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git tags/md/4.13-rc2
 
-The first two disks that failed have exactly identical event counters
-according to mdadm -E <disk device> which leads me to believe that it is
-probably the SATA card/controller that failed/oops'ed, not the disks
-themselves. But at this point that has not yet been verified.
+for you to fetch changes up to 6409e84ec58fc4c0085d8921f8e01815dc871971:
 
-The third disk, and the array, have a substantially higher event
-counter. This makes complete sense, since the array was being actively
-_written_ to at the time. (Yes, alas...) *Bangs head against desk*
+  raid5-ppl: use BIOSET_NEED_BVECS when creating bioset (2017-07-12 09:26:37 -0700)
 
+----------------------------------------------------------------
+Artur Paszkiewicz (1):
+      raid5-ppl: use BIOSET_NEED_BVECS when creating bioset
 
-Now from what I've gathered over the years and from earlier incidents, I
-have now 1 (one) chance left to rescue data off this array; by hopefully
-cloning the bad 3rd-failed drive with the aid of dd_rescue and
-re-assembling --force the fully-degraded array. (Only IF that drive is
-still responsive and can be cloned)
+Guoqing Jiang (1):
+      md/bitmap: don't read page from device with Bitmap_sync
 
-My feeling is, the two ``good'' drives with the lower event counter are
-now more useful as paperweights than to help restore any data... But I
-like to have certainty before I try other ways to restore (or recreate)
-data...
+Xiao Ni (1):
+      Raid5 should update rdev->sectors after reshape
 
-Is there any hope?
-
-
-Here are some snippets from mdadm:
-
-md0 : active raid6 sdh1[10] sdj1[8] sdm1[9] sdb1[3](F) sde1[7](F) sdd1[6](F)
-7799470080 blocks super 1.2 level 6, 512k chunk, algorithm 2 [6/3] [U___UU]
-
-
-mdadm -E /dev/sde1:
-    Update Time : Mon Jul 17 15:49:44 2017
-       Checksum : fdc7fdd7 - correct
-         Events : 58235
-    Array State : AAAAAA ('A' == active, '.' == missing)
-
-mdadm -E /dev/sdb1:
-    Update Time : Mon Jul 17 15:49:44 2017
-       Checksum : cd97800c - correct
-         Events : 58235
-    Array State : AAAAAA ('A' == active, '.' == missing)
-
-mdadm -E /dev/sdd1:
-    Update Time : Tue Jul 18 01:47:33 2017
-       Checksum : d00eff1d - correct
-         Events : 69129
-    Array State : AA..AA ('A' == active, '.' == missing)
-
-mdadm --detail /dev/md0
- Failed Devices : 3
-         Events : 69132
-
-
-Thanks for any insights...
-
-regards,
-Maarten
+ drivers/md/bitmap.c    | 3 ++-
+ drivers/md/md.h        | 4 +++-
+ drivers/md/raid5-ppl.c | 2 +-
+ drivers/md/raid5.c     | 4 +---
+ 4 files changed, 7 insertions(+), 6 deletions(-)
