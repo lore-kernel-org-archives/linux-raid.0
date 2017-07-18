@@ -1,49 +1,36 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: [GIT PULL] MD update for 4.13-rc2
-Date: Tue, 18 Jul 2017 11:49:34 -0700
-Message-ID: <20170718184934.lu3fioskpjvh7qib@kernel.org>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: 3-disk fail on raid-6, examining my options...
+Date: Tue, 18 Jul 2017 21:20:02 +0100
+Message-ID: <596E6D72.8050108@youngman.org.uk>
+References: <07b77b80-4bee-3820-6a0d-3323ef06a3f3@ultratux.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <07b77b80-4bee-3820-6a0d-3323ef06a3f3@ultratux.net>
+Sender: linux-raid-owner@vger.kernel.org
+To: Maarten <maarten@ultratux.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
-Please pull 3 MD fixes:
-- raid5-ppl fix by Artur. This one is introduced in this release cycle.
-- raid5 reshape fix by Xiao. This is an old bug and will be added to stable.
-- Bitmap fix by Guoqing.
+On 18/07/17 18:20, Maarten wrote:
+> Now from what I've gathered over the years and from earlier incidents, I
+> have now 1 (one) chance left to rescue data off this array; by hopefully
+> cloning the bad 3rd-failed drive with the aid of dd_rescue and
+> re-assembling --force the fully-degraded array. (Only IF that drive is
+> still responsive and can be cloned)
 
-Thanks,
-Shaohua
+If it clones successfully, great. If it clones, but with badblocks, I
+keep on asking - is there any way we can work together to turn
+dd-rescue's log into a utility that will flag failed blocks as "unreadable"?
 
-The following changes since commit af3c8d98508d37541d4bf57f13a984a7f73a328c:
+This project is mentioned on the wiki, the idea being that you can tell
+the hard drive to return a read error if the computer tries to access
+certain blocks. This "fake" read error means that we can then use a
+partially copied disk to rebuild an array knowing that we will get an
+error rather than silent corruption if we try and access the faulty block.
 
-  Merge tag 'drm-for-v4.13' of git://people.freedesktop.org/~airlied/linux (2017-07-09 18:48:37 -0700)
+At least then, we know what is damaged rather than trying to
+integrity-check an entire disk in the hope that we'll detect the corruption.
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git tags/md/4.13-rc2
-
-for you to fetch changes up to 6409e84ec58fc4c0085d8921f8e01815dc871971:
-
-  raid5-ppl: use BIOSET_NEED_BVECS when creating bioset (2017-07-12 09:26:37 -0700)
-
-----------------------------------------------------------------
-Artur Paszkiewicz (1):
-      raid5-ppl: use BIOSET_NEED_BVECS when creating bioset
-
-Guoqing Jiang (1):
-      md/bitmap: don't read page from device with Bitmap_sync
-
-Xiao Ni (1):
-      Raid5 should update rdev->sectors after reshape
-
- drivers/md/bitmap.c    | 3 ++-
- drivers/md/md.h        | 4 +++-
- drivers/md/raid5-ppl.c | 2 +-
- drivers/md/raid5.c     | 4 +---
- 4 files changed, 7 insertions(+), 6 deletions(-)
+Cheers,
+Wol
