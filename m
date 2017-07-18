@@ -1,118 +1,85 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: [PATCH] md/raid1: fix writebehind bio clone
-Date: Tue, 18 Jul 2017 10:21:56 -0700
-Message-ID: <90e5fed8cd2b5dff7b393de121460671ebdd1260.1500398441.git.shli@fb.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
+From: Maarten <maarten@ultratux.net>
+Subject: 3-disk fail on raid-6, examining my options...
+Date: Tue, 18 Jul 2017 19:20:37 +0200
+Message-ID: <07b77b80-4bee-3820-6a0d-3323ef06a3f3@ultratux.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Shaohua Li <shli@fb.com>, Ming Lei <tom.leiming@gmail.com>, "4.12+" <stable@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From: Shaohua Li <shli@fb.com>
+Argh.. Murphy can be such a troll... :(
 
-After bio is submitted, we should not clone it as its bi_iter might be
-invalid by driver. This is the case of behind_master_bio. In certain
-situration, we could dispatch behind_master_bio immediately for the
-first disk and then clone it for other disks.
+Hi all,
 
-https://bugzilla.kernel.org/show_bug.cgi?id=196383
+While I was in the process of migrating all my raid-6 arrays to raid-1
+arrays (with either two or three member disks), I got stung severely.
+(Obviously I shouldn't have been so stupid as to write to an array not
+yet fully copied, but that is now too late to undo)
 
-Reported-by: Markus <m4rkusxxl@web.de>
-Cc: Ming Lei <tom.leiming@gmail.com>
-Fix: 841c1316c7da(md: raid1: improve write behind)
-Cc: stable@vger.kernel.org (4.12+)
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- drivers/md/raid1.c | 30 ++++++++++--------------------
- 1 file changed, 10 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 8387eb1540cd..5622f521830b 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -484,10 +484,6 @@ static void raid1_end_write_request(struct bio *bio)
- 	}
- 
- 	if (behind) {
--		/* we release behind master bio when all write are done */
--		if (r1_bio->behind_master_bio == bio)
--			to_put = NULL;
--
- 		if (test_bit(WriteMostly, &rdev->flags))
- 			atomic_dec(&r1_bio->behind_remaining);
- 
-@@ -1080,7 +1076,7 @@ static void unfreeze_array(struct r1conf *conf)
- 	wake_up(&conf->wait_barrier);
- }
- 
--static struct bio *alloc_behind_master_bio(struct r1bio *r1_bio,
-+static void alloc_behind_master_bio(struct r1bio *r1_bio,
- 					   struct bio *bio)
- {
- 	int size = bio->bi_iter.bi_size;
-@@ -1090,7 +1086,7 @@ static struct bio *alloc_behind_master_bio(struct r1bio *r1_bio,
- 
- 	behind_bio = bio_alloc_mddev(GFP_NOIO, vcnt, r1_bio->mddev);
- 	if (!behind_bio)
--		goto fail;
-+		return;
- 
- 	/* discard op, we don't support writezero/writesame yet */
- 	if (!bio_has_data(bio))
-@@ -1115,14 +1111,13 @@ static struct bio *alloc_behind_master_bio(struct r1bio *r1_bio,
- 	r1_bio->behind_master_bio = behind_bio;;
- 	set_bit(R1BIO_BehindIO, &r1_bio->state);
- 
--	return behind_bio;
-+	return;
- 
- free_pages:
- 	pr_debug("%dB behind alloc failed, doing sync I/O\n",
- 		 bio->bi_iter.bi_size);
- 	bio_free_pages(behind_bio);
--fail:
--	return behind_bio;
-+	bio_put(behind_bio);
- }
- 
- struct raid1_plug_cb {
-@@ -1475,7 +1470,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 			    (atomic_read(&bitmap->behind_writes)
- 			     < mddev->bitmap_info.max_write_behind) &&
- 			    !waitqueue_active(&bitmap->behind_wait)) {
--				mbio = alloc_behind_master_bio(r1_bio, bio);
-+				alloc_behind_master_bio(r1_bio, bio);
- 			}
- 
- 			bitmap_startwrite(bitmap, r1_bio->sector,
-@@ -1485,14 +1480,11 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 			first_clone = 0;
- 		}
- 
--		if (!mbio) {
--			if (r1_bio->behind_master_bio)
--				mbio = bio_clone_fast(r1_bio->behind_master_bio,
--						      GFP_NOIO,
--						      mddev->bio_set);
--			else
--				mbio = bio_clone_fast(bio, GFP_NOIO, mddev->bio_set);
--		}
-+		if (r1_bio->behind_master_bio)
-+			mbio = bio_clone_fast(r1_bio->behind_master_bio,
-+					      GFP_NOIO, mddev->bio_set);
-+		else
-+			mbio = bio_clone_fast(bio, GFP_NOIO, mddev->bio_set);
- 
- 		if (r1_bio->behind_master_bio) {
- 			if (test_bit(WriteMostly, &conf->mirrors[i].rdev->flags))
-@@ -2346,8 +2338,6 @@ static int narrow_write_error(struct r1bio *r1_bio, int i)
- 			wbio = bio_clone_fast(r1_bio->behind_master_bio,
- 					      GFP_NOIO,
- 					      mddev->bio_set);
--			/* We really need a _all clone */
--			wbio->bi_iter = (struct bvec_iter){ 0 };
- 		} else {
- 			wbio = bio_clone_fast(r1_bio->master_bio, GFP_NOIO,
- 					      mddev->bio_set);
--- 
-2.11.0
+  What probably happened:
+A six-disk raid-6 array suffered a simultaneous two-disk failure which
+went unnoticed for a number of hours, and then inevitably got hit by a
+-catastrophic- 3rd disk failure during the following night.
+
+
+The first two disks that failed have exactly identical event counters
+according to mdadm -E <disk device> which leads me to believe that it is
+probably the SATA card/controller that failed/oops'ed, not the disks
+themselves. But at this point that has not yet been verified.
+
+The third disk, and the array, have a substantially higher event
+counter. This makes complete sense, since the array was being actively
+_written_ to at the time. (Yes, alas...) *Bangs head against desk*
+
+
+Now from what I've gathered over the years and from earlier incidents, I
+have now 1 (one) chance left to rescue data off this array; by hopefully
+cloning the bad 3rd-failed drive with the aid of dd_rescue and
+re-assembling --force the fully-degraded array. (Only IF that drive is
+still responsive and can be cloned)
+
+My feeling is, the two ``good'' drives with the lower event counter are
+now more useful as paperweights than to help restore any data... But I
+like to have certainty before I try other ways to restore (or recreate)
+data...
+
+Is there any hope?
+
+
+Here are some snippets from mdadm:
+
+md0 : active raid6 sdh1[10] sdj1[8] sdm1[9] sdb1[3](F) sde1[7](F) sdd1[6](F)
+7799470080 blocks super 1.2 level 6, 512k chunk, algorithm 2 [6/3] [U___UU]
+
+
+mdadm -E /dev/sde1:
+    Update Time : Mon Jul 17 15:49:44 2017
+       Checksum : fdc7fdd7 - correct
+         Events : 58235
+    Array State : AAAAAA ('A' == active, '.' == missing)
+
+mdadm -E /dev/sdb1:
+    Update Time : Mon Jul 17 15:49:44 2017
+       Checksum : cd97800c - correct
+         Events : 58235
+    Array State : AAAAAA ('A' == active, '.' == missing)
+
+mdadm -E /dev/sdd1:
+    Update Time : Tue Jul 18 01:47:33 2017
+       Checksum : d00eff1d - correct
+         Events : 69129
+    Array State : AA..AA ('A' == active, '.' == missing)
+
+mdadm --detail /dev/md0
+ Failed Devices : 3
+         Events : 69132
+
+
+Thanks for any insights...
+
+regards,
+Maarten
