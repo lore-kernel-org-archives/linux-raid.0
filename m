@@ -1,37 +1,51 @@
 From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH 0/4] mdadm/test: Update for mdadm test part
-Date: Wed, 19 Jul 2017 19:11:11 +0800
-Message-ID: <1500462675-6463-1-git-send-email-zlliu@suse.com>
+Subject: [PATCH 1/4] test/00readonly: Add unit case for testing readonly/readwrite
+Date: Wed, 19 Jul 2017 19:11:12 +0800
+Message-ID: <1500462675-6463-2-git-send-email-zlliu@suse.com>
+References: <1500462675-6463-1-git-send-email-zlliu@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1500462675-6463-1-git-send-email-zlliu@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Jes.Sorensen@gmail.com
 Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
-1. add a new unit case for testing readonly/readwrite feature, it
-   covers common metadata versions and raid levels.
-2. fixed a issue reported by Xiao Ni, shell got parsing error when
-   array[] has few members, so just check the array[0] is enough.
-3. get rid of the useless test files.
+This is a test case for testing --readonly and
+--readwrite feature, it covers common metadata
+versions and raid levels.
 
-Thanks,
-Zhilong
-
-Zhilong Liu (4):
-  test/00readonly: Add unit case for testing readonly/readwrite
-  mdadm/test: Fixed the condition parsing error for array[]
-  mdadm/test: Get rid of tests/testdev
-  mdadm/test: Get rid of tests/check
-
- test             |  2 +-
+Signed-off-by: Zhilong Liu <zlliu@suse.com>
+---
  tests/00readonly | 20 ++++++++++++++++++++
- tests/check      | 35 -----------------------------------
- tests/testdev    | 13 -------------
- 4 files changed, 21 insertions(+), 49 deletions(-)
+ 1 file changed, 20 insertions(+)
  create mode 100644 tests/00readonly
- delete mode 100644 tests/check
- delete mode 100644 tests/testdev
 
+diff --git a/tests/00readonly b/tests/00readonly
+new file mode 100644
+index 0000000..8467da7
+--- /dev/null
++++ b/tests/00readonly
+@@ -0,0 +1,20 @@
++#!/bin/bash
++
++for metadata in 0.9 1.0 1.1 1.2
++do
++	for level in linear raid0 raid1 raid4 raid5 raid6 raid10
++	do
++		mdadm -CR $md0 -l $level -n 4 --metadata=$metadata \
++			$dev1 $dev2 $dev3 $dev4 --assume-clean
++		check nosync
++		check $level
++		mdadm -ro $md0
++		check readonly &&
++			[ "$(cat /sys/block/md0/md/array_state)" == "readonly" ]
++		mdadm -w $md0
++		check $level
++		mdadm -S $md0
++	done
++done
++
++exit 0
 -- 
 1.8.3.1
 
