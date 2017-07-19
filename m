@@ -1,146 +1,80 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md/raid1: fix writebehind bio clone
-Date: Tue, 18 Jul 2017 16:04:37 -0700
-Message-ID: <20170718230437.xdlmxjzedhm4jilf@kernel.org>
-References: <90e5fed8cd2b5dff7b393de121460671ebdd1260.1500398441.git.shli@fb.com>
- <CACVXFVNkTKhGqooGNww1iqSpw1dBCsDTJ6E1QX8a_P=CACG_1A@mail.gmail.com>
+From: Bogo Mipps <bogo.mipps@gmail.com>
+Subject: Re: Advice please re failed Raid6
+Date: Wed, 19 Jul 2017 13:52:59 +1200
+Message-ID: <f79a45b9-590b-4d3c-d387-81abfb02743d@gmail.com>
+References: <9dca5b7a-b60e-0e93-41fd-49d092d8b27b@gmail.com>
+ <22892.649.826246.644975@tree.ty.sabi.co.uk>
+Reply-To: bogo.mipps@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CACVXFVNkTKhGqooGNww1iqSpw1dBCsDTJ6E1QX8a_P=CACG_1A@mail.gmail.com>
+In-Reply-To: <22892.649.826246.644975@tree.ty.sabi.co.uk>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Ming Lei <tom.leiming@gmail.com>
-Cc: "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>, Shaohua Li <shli@fb.com>, "4.12+" <stable@vger.kernel.org>
+To: Peter Grandi <pg@lxraid2.for.sabi.co.UK>, Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Jul 19, 2017 at 06:51:06AM +0800, Ming Lei wrote:
-> On Wed, Jul 19, 2017 at 1:21 AM, Shaohua Li <shli@kernel.org> wrote:
-> > From: Shaohua Li <shli@fb.com>
-> >
-> > After bio is submitted, we should not clone it as its bi_iter might be
-> > invalid by driver. This is the case of behind_master_bio. In certain
-> > situration, we could dispatch behind_master_bio immediately for the
-> > first disk and then clone it for other disks.
+On 07/17/2017 12:19 PM, Peter Grandi wrote:
+> The line that worries a bit is this:
 > 
-> If I understand it correctly, it should be caused by dispatching
-> the master bio during the loop either via flushing plug or md_wakeup_thread().
+>    Jul 5 21:06:18 keruru mdadm[2497]: RebuildFinished event
+>    detected on md  device /dev/md0, component device mismatches
+>    found: 1847058224 (on raid  level 6)
 > 
-> If so, could we just add the bios into one temp pending list inside
-> the loop? Then
-> merge the temp list into conf->pending_bio_list after loop and
-> schedule to dispatch
-> them all? This way looks a bit more efficient.
+> That seems to indicate that pretty much every block was a
+> mismatch. Which would have happened if you put in a blank drive
+> and then used '--create --assume-clean' instead of '--assemble
+> --force'. But '--assume-clean" explicitly skips a rebuild, and I
+> wonder whether you omitted that yoiu have triggered a "repair"
+> in 'sync_action'. Also the message is reported by 'mdadm', and
+> it may be that 'mdadm' was running in daemon mode and triggering
+> a periodic "repair". I can't remember the defaults.
+> 
+> HOWEVER there is a very subtle detail: the order of the devices
+> from '--examine' is: 0: 'sdb', 1: 'sdc', 2: 'sdd', 3: 'sde' but
+> you recreated the set in a different order. The order of the
+> devices does not matter if they have MD superblocks,.but here
+> you are using '--create' to make new superblocks, and they order
+> must match exactly the original order.
+> 
+>> root@keruru:/var/log# mdadm --create --assume-clean --level=6 --raid-devices=4 --size=1953382912 /dev/md0 /dev/sdb /dev/sde /dev/sdd /dev/sdc
+> 
+> Probably the best thing you can do is to rerun this with members
+> "missing /dev/sdc /dev/sdd /dev/sde". and then use 'blkid /dev/md0'
+> to check whether the data in it is recognized again. If so add
+> '/dev/sdb'. I did a quick test here of something close to that
+> and it worked...
 
-that's possible, but narrow_write_error will clone it after we already dispatch
-the bio, so I thought it's more clean to just clone one bio.
+Thanks for responding, Peter.  Much appreciated.
 
-Thanks,
-Shaohua
- 
-> Thanks,
-> Ming
-> 
-> >
-> > https://bugzilla.kernel.org/show_bug.cgi?id=196383
-> >
-> > Reported-by: Markus <m4rkusxxl@web.de>
-> > Cc: Ming Lei <tom.leiming@gmail.com>
-> > Fix: 841c1316c7da(md: raid1: improve write behind)
-> > Cc: stable@vger.kernel.org (4.12+)
-> > Signed-off-by: Shaohua Li <shli@fb.com>
-> > ---
-> >  drivers/md/raid1.c | 30 ++++++++++--------------------
-> >  1 file changed, 10 insertions(+), 20 deletions(-)
-> >
-> > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> > index 8387eb1540cd..5622f521830b 100644
-> > --- a/drivers/md/raid1.c
-> > +++ b/drivers/md/raid1.c
-> > @@ -484,10 +484,6 @@ static void raid1_end_write_request(struct bio *bio)
-> >         }
-> >
-> >         if (behind) {
-> > -               /* we release behind master bio when all write are done */
-> > -               if (r1_bio->behind_master_bio == bio)
-> > -                       to_put = NULL;
-> > -
-> >                 if (test_bit(WriteMostly, &rdev->flags))
-> >                         atomic_dec(&r1_bio->behind_remaining);
-> >
-> > @@ -1080,7 +1076,7 @@ static void unfreeze_array(struct r1conf *conf)
-> >         wake_up(&conf->wait_barrier);
-> >  }
-> >
-> > -static struct bio *alloc_behind_master_bio(struct r1bio *r1_bio,
-> > +static void alloc_behind_master_bio(struct r1bio *r1_bio,
-> >                                            struct bio *bio)
-> >  {
-> >         int size = bio->bi_iter.bi_size;
-> > @@ -1090,7 +1086,7 @@ static struct bio *alloc_behind_master_bio(struct r1bio *r1_bio,
-> >
-> >         behind_bio = bio_alloc_mddev(GFP_NOIO, vcnt, r1_bio->mddev);
-> >         if (!behind_bio)
-> > -               goto fail;
-> > +               return;
-> >
-> >         /* discard op, we don't support writezero/writesame yet */
-> >         if (!bio_has_data(bio))
-> > @@ -1115,14 +1111,13 @@ static struct bio *alloc_behind_master_bio(struct r1bio *r1_bio,
-> >         r1_bio->behind_master_bio = behind_bio;;
-> >         set_bit(R1BIO_BehindIO, &r1_bio->state);
-> >
-> > -       return behind_bio;
-> > +       return;
-> >
-> >  free_pages:
-> >         pr_debug("%dB behind alloc failed, doing sync I/O\n",
-> >                  bio->bi_iter.bi_size);
-> >         bio_free_pages(behind_bio);
-> > -fail:
-> > -       return behind_bio;
-> > +       bio_put(behind_bio);
-> >  }
-> >
-> >  struct raid1_plug_cb {
-> > @@ -1475,7 +1470,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
-> >                             (atomic_read(&bitmap->behind_writes)
-> >                              < mddev->bitmap_info.max_write_behind) &&
-> >                             !waitqueue_active(&bitmap->behind_wait)) {
-> > -                               mbio = alloc_behind_master_bio(r1_bio, bio);
-> > +                               alloc_behind_master_bio(r1_bio, bio);
-> >                         }
-> >
-> >                         bitmap_startwrite(bitmap, r1_bio->sector,
-> > @@ -1485,14 +1480,11 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
-> >                         first_clone = 0;
-> >                 }
-> >
-> > -               if (!mbio) {
-> > -                       if (r1_bio->behind_master_bio)
-> > -                               mbio = bio_clone_fast(r1_bio->behind_master_bio,
-> > -                                                     GFP_NOIO,
-> > -                                                     mddev->bio_set);
-> > -                       else
-> > -                               mbio = bio_clone_fast(bio, GFP_NOIO, mddev->bio_set);
-> > -               }
-> > +               if (r1_bio->behind_master_bio)
-> > +                       mbio = bio_clone_fast(r1_bio->behind_master_bio,
-> > +                                             GFP_NOIO, mddev->bio_set);
-> > +               else
-> > +                       mbio = bio_clone_fast(bio, GFP_NOIO, mddev->bio_set);
-> >
-> >                 if (r1_bio->behind_master_bio) {
-> >                         if (test_bit(WriteMostly, &conf->mirrors[i].rdev->flags))
-> > @@ -2346,8 +2338,6 @@ static int narrow_write_error(struct r1bio *r1_bio, int i)
-> >                         wbio = bio_clone_fast(r1_bio->behind_master_bio,
-> >                                               GFP_NOIO,
-> >                                               mddev->bio_set);
-> > -                       /* We really need a _all clone */
-> > -                       wbio->bi_iter = (struct bvec_iter){ 0 };
-> >                 } else {
-> >                         wbio = bio_clone_fast(r1_bio->master_bio, GFP_NOIO,
-> >                                               mddev->bio_set);
-> > --
-> > 2.11.0
-> >
+Did I do it right? (See below)
+
+root@keruru:~# mdadm --create --assume-clean --level=6 --raid-devices=4 
+--size=1953382912 /dev/md0 missing /dev/sdc /dev/sdd /dev/sde
+mdadm: /dev/sdc appears to be part of a raid array:
+     level=raid6 devices=4 ctime=Tue Jul 11 17:33:12 2017
+mdadm: /dev/sdd appears to be part of a raid array:
+     level=raid6 devices=4 ctime=Tue Jul 11 17:33:12 2017
+mdadm: /dev/sde appears to be part of a raid array:
+     level=raid6 devices=4 ctime=Tue Jul 11 17:33:12 2017
+Continue creating array? y
+mdadm: Defaulting to version 1.2 metadata
+mdadm: array /dev/md0 started.
+
+root@keruru:~# blkid /dev/md0
+root@keruru:~#
+
+root@keruru:~# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : active (auto-read-only) raid6 sde[3] sdd[2] sdc[1]
+       3906765824 blocks super 1.2 level 6, 512k chunk, algorithm 2 
+[4/3] [_UUU]
+
+unused devices: <none>
+
+No reading from blkid, so I am assuming 'not good'.  But I've done 
+nothing further in case I misunderstood your suggestion.
+
+
+
