@@ -1,54 +1,56 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: 3-disk fail on raid-6, examining my options...
-Date: Wed, 19 Jul 2017 12:51:43 +0100
-Message-ID: <596F47CF.6020007@youngman.org.uk>
-References: <07b77b80-4bee-3820-6a0d-3323ef06a3f3@ultratux.net>
- <596E6D72.8050108@youngman.org.uk> <20170718202550.GA2533@animx.eu.org>
+From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
+Subject: Re: Advice please re failed Raid6
+Date: Wed, 19 Jul 2017 13:36:56 +0100
+Message-ID: <22895.21096.215892.928052@tree.ty.sabi.co.uk>
+References: <9dca5b7a-b60e-0e93-41fd-49d092d8b27b@gmail.com>
+        <22892.649.826246.644975@tree.ty.sabi.co.uk>
+        <f79a45b9-590b-4d3c-d387-81abfb02743d@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170718202550.GA2533@animx.eu.org>
+In-Reply-To: <f79a45b9-590b-4d3c-d387-81abfb02743d@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wakko Warner <wakko@animx.eu.org>
-Cc: Maarten <maarten@ultratux.net>, linux-raid@vger.kernel.org
+To: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 18/07/17 21:25, Wakko Warner wrote:
-> Wols Lists wrote:
->> On 18/07/17 18:20, Maarten wrote:
->>> Now from what I've gathered over the years and from earlier incidents, I
->>> have now 1 (one) chance left to rescue data off this array; by hopefully
->>> cloning the bad 3rd-failed drive with the aid of dd_rescue and
->>> re-assembling --force the fully-degraded array. (Only IF that drive is
->>> still responsive and can be cloned)
->>
->> If it clones successfully, great. If it clones, but with badblocks, I
->> keep on asking - is there any way we can work together to turn
->> dd-rescue's log into a utility that will flag failed blocks as "unreadable"?
-> 
-> I wrote a shell script that will output a device mapper table to do this. 
-> It will do either zero or error targets for failed blocks.  It's not
-> automatic and does require a block device (loop for files).  I've used this
-> several times at work and works for me.
-> 
-> I'm not sure if this is what you're talking about or not, but if you want
-> the script, I'll post it.
-> 
-I'm not sure I understand what you're saying, but I'm certainly
-interested. It'll probably end up on the wiki if that's okay with you?
+> Did I do it right? (See below)
 
-I'll aim to understand and document it so others will be able hopefully
-to use it as a "fire and forget" tool (inasmuch as you can
-fire-and-forget any recovery task :-)
+> root@keruru:~# mdadm --create --assume-clean --level=6 --raid-devices=4 
+> --size=1953382912 /dev/md0 missing /dev/sdc /dev/sdd /dev/sde
+> mdadm: /dev/sdc appears to be part of a raid array:
+>      level=raid6 devices=4 ctime=Tue Jul 11 17:33:12 2017
+> mdadm: /dev/sdd appears to be part of a raid array:
+>      level=raid6 devices=4 ctime=Tue Jul 11 17:33:12 2017
+> mdadm: /dev/sde appears to be part of a raid array:
+>      level=raid6 devices=4 ctime=Tue Jul 11 17:33:12 2017
+> Continue creating array? y
+> mdadm: Defaulting to version 1.2 metadata
+> mdadm: array /dev/md0 started.
 
-What I'm thinking of is a utility that uses "hdparm --make-bad-sector".
-The idea being that if you have multiple disk failures, you can at least
-clone everything worth having off the broken disks, and then you can run
-a "tar . > /dev/null" or do a sync or whatever, and know that if it
-reads successfully off the array it isn't corrupt. Unless you're unlucky
-enough to have multiple drives fail in the same stripe, you should then
-recover your array no problem.
+This looks good, but is based on your original '--examine'
+report as to the order of the devices, and whether they are
+still bound to the same names 'sd[bcde]'.
 
-Cheers,
-Wol
+> root@keruru:~# blkid /dev/md0
+
+> root@keruru:~# cat /proc/mdstat
+> Personalities : [raid6] [raid5] [raid4]
+> md0 : active (auto-read-only) raid6 sde[3] sdd[2] sdc[1]
+>        3906765824 blocks super 1.2 level 6, 512k chunk, algorithm 2 
+> [4/3] [_UUU]
+
+> unused devices: <none>
+
+The 'mdstat' actually looks good, but 'blkid' should have
+worked.
+
+As I was saying, it is not clear to me whether the 'mdadm' daemon
+instance triggered a 'check' or a 'repair' (bad news). I hope
+that you disabled that in the meantime while you try to fix the
+mistake.
+
+Trigger a 'check' and see if the set is consistent; if it is
+consistent but the content cannot be read/mounted then 'repair'
+rewrote it, if it is not consistent, try a different order or
+3-way subset of 'sd[bcde]'.
