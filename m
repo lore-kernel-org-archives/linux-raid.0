@@ -1,43 +1,57 @@
 From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH 3/4] mdadm/test: Get rid of tests/testdev
-Date: Wed, 19 Jul 2017 19:11:14 +0800
-Message-ID: <1500462675-6463-4-git-send-email-zlliu@suse.com>
-References: <1500462675-6463-1-git-send-email-zlliu@suse.com>
+Subject: [PATCH v2 1/4] test/00readonly: Add unit case for testing readonly/readwrite
+Date: Wed, 19 Jul 2017 19:37:23 +0800
+Message-ID: <1500464243-6811-1-git-send-email-zlliu@suse.com>
+References: <1500462675-6463-2-git-send-email-zlliu@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1500462675-6463-1-git-send-email-zlliu@suse.com>
+In-Reply-To: <1500462675-6463-2-git-send-email-zlliu@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Jes.Sorensen@gmail.com
 Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
-It's time to get rid of the tests/testdev due
-to it has covered by testdev() in 'test'.
+This is a test case for testing --readonly and
+--readwrite feature, it covers common metadata
+versions and raid levels.
 
 Signed-off-by: Zhilong Liu <zlliu@suse.com>
 ---
- tests/testdev | 13 -------------
- 1 file changed, 13 deletions(-)
- delete mode 100644 tests/testdev
 
-diff --git a/tests/testdev b/tests/testdev
-deleted file mode 100644
-index 8b6e6f0..0000000
---- a/tests/testdev
-+++ /dev/null
-@@ -1,13 +0,0 @@
--dev=$1
--cnt=$2
--size=$3
--chunk=$4
--mkfs -j $dev > /dev/null 2>&1 && fsck -fn $dev >&2
--dsize=$[size/chunk]
--dsize=$[dsize*chunk]
--rasize=$[dsize*2*cnt]
--if [ $rasize -ne `/sbin/blockdev --getsize $dev` ]
--then
--  echo "ERROR: size is wrong for $dev: $cnt * $size (chunk=$chunk) = $rasize, not `/sbin/blockdev --getsize $dev`"
--  exit 1;
--fi
+Changing from v1:
+improve checking sysfs configure.
+
+ tests/00readonly | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+ create mode 100644 tests/00readonly
+
+diff --git a/tests/00readonly b/tests/00readonly
+new file mode 100644
+index 0000000..28b0fa1
+--- /dev/null
++++ b/tests/00readonly
+@@ -0,0 +1,22 @@
++#!/bin/bash
++
++for metadata in 0.9 1.0 1.1 1.2
++do
++	for level in linear raid0 raid1 raid4 raid5 raid6 raid10
++	do
++		mdadm -CR $md0 -l $level -n 4 --metadata=$metadata \
++			$dev1 $dev2 $dev3 $dev4 --assume-clean
++		check nosync
++		check $level
++		mdadm -ro $md0
++		check readonly
++		state=$(cat /sys/block/md0/md/array_state)
++		[ "$state" == "readonly" ] ||
++			die "array_state should be 'readonly', but is $state"
++		mdadm -w $md0
++		check $level
++		mdadm -S $md0
++	done
++done
++
++exit 0
 -- 
-1.8.3.1
+2.6.6
 
