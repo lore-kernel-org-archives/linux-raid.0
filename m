@@ -1,57 +1,54 @@
-From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH v2 1/4] test/00readonly: Add unit case for testing readonly/readwrite
-Date: Wed, 19 Jul 2017 19:37:23 +0800
-Message-ID: <1500464243-6811-1-git-send-email-zlliu@suse.com>
-References: <1500462675-6463-2-git-send-email-zlliu@suse.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: 3-disk fail on raid-6, examining my options...
+Date: Wed, 19 Jul 2017 12:51:43 +0100
+Message-ID: <596F47CF.6020007@youngman.org.uk>
+References: <07b77b80-4bee-3820-6a0d-3323ef06a3f3@ultratux.net>
+ <596E6D72.8050108@youngman.org.uk> <20170718202550.GA2533@animx.eu.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1500462675-6463-2-git-send-email-zlliu@suse.com>
+In-Reply-To: <20170718202550.GA2533@animx.eu.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
+To: Wakko Warner <wakko@animx.eu.org>
+Cc: Maarten <maarten@ultratux.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a test case for testing --readonly and
---readwrite feature, it covers common metadata
-versions and raid levels.
+On 18/07/17 21:25, Wakko Warner wrote:
+> Wols Lists wrote:
+>> On 18/07/17 18:20, Maarten wrote:
+>>> Now from what I've gathered over the years and from earlier incidents, I
+>>> have now 1 (one) chance left to rescue data off this array; by hopefully
+>>> cloning the bad 3rd-failed drive with the aid of dd_rescue and
+>>> re-assembling --force the fully-degraded array. (Only IF that drive is
+>>> still responsive and can be cloned)
+>>
+>> If it clones successfully, great. If it clones, but with badblocks, I
+>> keep on asking - is there any way we can work together to turn
+>> dd-rescue's log into a utility that will flag failed blocks as "unreadable"?
+> 
+> I wrote a shell script that will output a device mapper table to do this. 
+> It will do either zero or error targets for failed blocks.  It's not
+> automatic and does require a block device (loop for files).  I've used this
+> several times at work and works for me.
+> 
+> I'm not sure if this is what you're talking about or not, but if you want
+> the script, I'll post it.
+> 
+I'm not sure I understand what you're saying, but I'm certainly
+interested. It'll probably end up on the wiki if that's okay with you?
 
-Signed-off-by: Zhilong Liu <zlliu@suse.com>
----
+I'll aim to understand and document it so others will be able hopefully
+to use it as a "fire and forget" tool (inasmuch as you can
+fire-and-forget any recovery task :-)
 
-Changing from v1:
-improve checking sysfs configure.
+What I'm thinking of is a utility that uses "hdparm --make-bad-sector".
+The idea being that if you have multiple disk failures, you can at least
+clone everything worth having off the broken disks, and then you can run
+a "tar . > /dev/null" or do a sync or whatever, and know that if it
+reads successfully off the array it isn't corrupt. Unless you're unlucky
+enough to have multiple drives fail in the same stripe, you should then
+recover your array no problem.
 
- tests/00readonly | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
- create mode 100644 tests/00readonly
-
-diff --git a/tests/00readonly b/tests/00readonly
-new file mode 100644
-index 0000000..28b0fa1
---- /dev/null
-+++ b/tests/00readonly
-@@ -0,0 +1,22 @@
-+#!/bin/bash
-+
-+for metadata in 0.9 1.0 1.1 1.2
-+do
-+	for level in linear raid0 raid1 raid4 raid5 raid6 raid10
-+	do
-+		mdadm -CR $md0 -l $level -n 4 --metadata=$metadata \
-+			$dev1 $dev2 $dev3 $dev4 --assume-clean
-+		check nosync
-+		check $level
-+		mdadm -ro $md0
-+		check readonly
-+		state=$(cat /sys/block/md0/md/array_state)
-+		[ "$state" == "readonly" ] ||
-+			die "array_state should be 'readonly', but is $state"
-+		mdadm -w $md0
-+		check $level
-+		mdadm -S $md0
-+	done
-+done
-+
-+exit 0
--- 
-2.6.6
-
+Cheers,
+Wol
