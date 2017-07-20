@@ -1,88 +1,111 @@
-From: Ram Ramesh <rramesh2400@gmail.com>
-Subject: Re: Why can't I re-add my drive after partition shrink?
-Date: Wed, 19 Jul 2017 19:39:14 -0500
-Message-ID: <05a2d9b7-3b6a-2b49-53ad-3436061558fc@gmail.com>
-References: <2ea5ed99-05b5-25d2-c9d4-8ce1f4945eaa@gmail.com>
- <87tw2f2425.fsf@notabene.neil.brown.name>
- <0341a04d-9aa5-7665-d9ff-527fe9fc8238@gmail.com>
- <87pod0ypmh.fsf@notabene.neil.brown.name>
- <8d3e1264-2f0a-6ee9-52b5-edddc1e6f185@gmail.com>
- <ad3c5c59-dc37-2573-341a-39a381621746@gmail.com>
- <87fudsxbmz.fsf@notabene.neil.brown.name>
+From: Bogo Mipps <bogo.mipps@gmail.com>
+Subject: Re: Advice please re failed Raid6
+Date: Thu, 20 Jul 2017 15:59:41 +1200
+Message-ID: <84473722-a72a-3da8-fcaa-ae6203b76b1f@gmail.com>
+References: <9dca5b7a-b60e-0e93-41fd-49d092d8b27b@gmail.com>
+ <22892.649.826246.644975@tree.ty.sabi.co.uk>
+ <f79a45b9-590b-4d3c-d387-81abfb02743d@gmail.com>
+ <22895.21096.215892.928052@tree.ty.sabi.co.uk>
+Reply-To: bogo.mipps@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87fudsxbmz.fsf@notabene.neil.brown.name>
+In-Reply-To: <22895.21096.215892.928052@tree.ty.sabi.co.uk>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, Linux Raid <linux-raid@vger.kernel.org>
+To: Peter Grandi <pg@lxra2.for.sabi.co.UK>, Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 07/19/2017 06:14 PM, NeilBrown wrote:
-> On Wed, Jul 19 2017, Ram Ramesh wrote:
->
->> Here is my attempt to repeat the steps in my last attempt to remove,
->> repartition, re-add. Last time I did it on /dev/sdb. Now I am going to
->> do it on /dev/sdc. Note that I have not been successful as you see at
->> the end. I am going to keep the array degraded so that I can still get
->> old info from /dev/sdc1, if you need anything else. I will keep it this
->> way till tomorrow and then add the device for md to rebuild. Please ask
->> anything else before that or send me a note to keep the array degraded
->> so that you can examine /dev/sdc1 more.
-> Thanks.  I *love* getting all the details.  You cannot send too many
-> details!
->
-> This:
->> <good device still in md0>
->>> zym [rramesh] 265 > sudo  mdadm --examine /dev/sdb1
->>> /dev/sdb1:
-> ..
->>>   Avail Dev Size : 6442188800 (3071.88 GiB 3298.40 GB)
-> and this:
->
->> <device just removed and repartitioned>
->>> zym [rramesh] 267 > sudo mdadm --examine /dev/sdc1
->>> /dev/sdc1:
-> ...
->>>   Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
-> Shows the key difference.  "Avail Dev Size", aka sb->data_size, is
-> wrong.  We can fix it.
->
->> <Cannot re-add!!!!>
->>> zym [rramesh] 270 > sudo mdadm /dev/md0 --re-add /dev/sdc1
->>> mdadm: --re-add for /dev/sdc1 to /dev/md0 is not possible
-> Please try
->     sudo mdadm /dev/md0 --re-add /dev/sdc1 --update=devicesize
->
-> Thanks,
-> NeilBrown
+On 07/20/2017 12:36 AM, Peter Grandi wrote:
+>> Did I do it right? (See below)
+> 
+>> root@keruru:~# mdadm --create --assume-clean --level=6 --raid-devices=4
+>> --size=1953382912 /dev/md0 missing /dev/sdc /dev/sdd /dev/sde
+>> mdadm: /dev/sdc appears to be part of a raid array:
+>>       level=raid6 devices=4 ctime=Tue Jul 11 17:33:12 2017
+>> mdadm: /dev/sdd appears to be part of a raid array:
+>>       level=raid6 devices=4 ctime=Tue Jul 11 17:33:12 2017
+>> mdadm: /dev/sde appears to be part of a raid array:
+>>       level=raid6 devices=4 ctime=Tue Jul 11 17:33:12 2017
+>> Continue creating array? y
+>> mdadm: Defaulting to version 1.2 metadata
+>> mdadm: array /dev/md0 started.
+> 
+> This looks good, but is based on your original '--examine'
+> report as to the order of the devices, and whether they are
+> still bound to the same names 'sd[bcde]'.
+> 
+>> root@keruru:~# blkid /dev/md0
+> 
+>> root@keruru:~# cat /proc/mdstat
+>> Personalities : [raid6] [raid5] [raid4]
+>> md0 : active (auto-read-only) raid6 sde[3] sdd[2] sdc[1]
+>>         3906765824 blocks super 1.2 level 6, 512k chunk, algorithm 2
+>> [4/3] [_UUU]
+> 
+>> unused devices: <none>
+> 
+> The 'mdstat' actually looks good, but 'blkid' should have
+> worked.
+> 
+> As I was saying, it is not clear to me whether the 'mdadm' daemon
+> instance triggered a 'check' or a 'repair' (bad news). I hope
+> that you disabled that in the meantime while you try to fix the
+> mistake.
+> 
+> Trigger a 'check' and see if the set is consistent; if it is
+> consistent but the content cannot be read/mounted then 'repair'
+> rewrote it, if it is not consistent, try a different order or
+> 3-way subset of 'sd[bcde]'.
 
-Neil,
+Tried different order: sde, sdc, sdd. blkid worked. Added sdb as you 
+suggested.  Currently rebuilding. Log below. Fingers crossed. Will 
+report result.
 
-Thanks a ton. That does it. It got re-added without any issue. It is 
-rebuilding because the array was used to record two TV programs when it 
-was in degraded state. But the re-add is accepted.
+  root@keruru:~# mdadm --create --assume-clean --level=6 
+--raid-devices=4 /dev/md0 /dev/sde /dev/sdc /dev/sdd missing
+mdadm: /dev/sde appears to be part of a raid array:
+     level=raid6 devices=4 ctime=Wed Jul 19 13:40:04 2017
+mdadm: /dev/sdc appears to be part of a raid array:
+     level=raid6 devices=4 ctime=Wed Jul 19 13:40:04 2017
+mdadm: /dev/sdd appears to be part of a raid array:
+     level=raid6 devices=4 ctime=Wed Jul 19 13:40:04 2017
+Continue creating array? y
+mdadm: Defaulting to version 1.2 metadata
+mdadm: array /dev/md0 started.
+root@keruru:~# blkid
+/dev/sda1: UUID="3a26cce9-4598-4000-a921-1cde5ba78682" TYPE="ext4"
+/dev/sda5: UUID="9761c2be-fef2-4ec6-8fff-dd69aa9e4eb2" TYPE="swap"
+/dev/sdd: UUID="ca038387-a44e-2bb8-c2fd-abe8e9062ffd" 
+UUID_SUB="8e502cd5-74ef-7b15-1bc3-6f2465e7a695" LABEL="keruru:0" 
+TYPE="linux_raid_member"
+/dev/sdc: UUID="ca038387-a44e-2bb8-c2fd-abe8e9062ffd" 
+UUID_SUB="aeb6626b-3dc2-3fa8-0fd5-947081866c49" LABEL="keruru:0" 
+TYPE="linux_raid_member"
+/dev/sde: UUID="ca038387-a44e-2bb8-c2fd-abe8e9062ffd" 
+UUID_SUB="bfff697b-c3ae-9e70-9ca9-ba168a30cbd2" LABEL="keruru:0" 
+TYPE="linux_raid_member"
 
-> zym [rramesh] 274 > sudo mdadm /dev/md0 --re-add /dev/sdc1 
-> --update=devicesize
-> Size was 11720780943
-> Size is 6442188800
-> mdadm: re-added /dev/sdc1
-> zym [rramesh] 275 > cat /proc/mdstat
-> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] 
-> [raid4] [raid10]
-> md0 : active raid6 sdc1[10] sdb1[6] sdg1[11] sdd1[12] sdf1[8] sde1[9]
->       12348030976 blocks super 1.2 level 6, 64k chunk, algorithm 2 
-> [6/5] [UU_UUU]
->       [========>............]  recovery = 42.6% 
-> (1316769920/3087007744) finish=292.2min speed=100952K/sec
->       bitmap: 2/23 pages [8KB], 65536KB chunk
->
-> unused devices: <none>
+root@keruru:~# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : active (auto-read-only) raid6 sdd[2] sdc[1] sde[0]
+       3906765824 blocks super 1.2 level 6, 512k chunk, algorithm 2 
+[4/3] [UUU_]
+unused devices: <none>
 
-Wol,
+root@keruru:~# mdadm --add /dev/md0 /dev/sdb
+mdadm: added /dev/sdb
 
-    If you read this, this may worth a mention on wiki page.
+root@keruru:~# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid6 sdb[4] sdd[2] sdc[1] sde[0]
+       3906765824 blocks super 1.2 level 6, 512k chunk, algorithm 2 
+[4/3] [UUU_]
+       [>....................]  recovery =  0.0% (1258088/1953382912) 
+finish=413.7min speed=78630K/sec
 
-Ramesh
+unused devices: <none>
+root@keruru:~#
+
 
