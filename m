@@ -1,7 +1,7 @@
 From: Georgios Petasis <petasisg@yahoo.gr>
 Subject: raid 1 assembled but inactive - works from a "live" distribution...
-Date: Thu, 20 Jul 2017 13:36:59 +0300
-Message-ID: <b600b4b8-fe7a-304a-62ec-8fa58bf004e7@yahoo.gr>
+Date: Thu, 20 Jul 2017 14:04:24 +0300
+Message-ID: <b9a1822b-ab01-2cb3-e417-85aafec9a3d2@yahoo.gr>
 Reply-To: petasisg@yahoo.gr
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
@@ -77,4 +77,5 @@ work with mdadm v4.
 Regards,
 
 George
+
 
