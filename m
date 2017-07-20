@@ -1,99 +1,80 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Why can't I re-add my drive after partition shrink?
-Date: Thu, 20 Jul 2017 11:23:46 +0100
-Message-ID: <597084B2.7030205@youngman.org.uk>
-References: <2ea5ed99-05b5-25d2-c9d4-8ce1f4945eaa@gmail.com>
- <87tw2f2425.fsf@notabene.neil.brown.name>
- <0341a04d-9aa5-7665-d9ff-527fe9fc8238@gmail.com>
- <87pod0ypmh.fsf@notabene.neil.brown.name>
- <8d3e1264-2f0a-6ee9-52b5-edddc1e6f185@gmail.com>
- <ad3c5c59-dc37-2573-341a-39a381621746@gmail.com>
- <87fudsxbmz.fsf@notabene.neil.brown.name>
- <05a2d9b7-3b6a-2b49-53ad-3436061558fc@gmail.com>
+From: Georgios Petasis <petasisg@yahoo.gr>
+Subject: raid 1 assembled but inactive - works from a "live" distribution...
+Date: Thu, 20 Jul 2017 13:36:59 +0300
+Message-ID: <b600b4b8-fe7a-304a-62ec-8fa58bf004e7@yahoo.gr>
+Reply-To: petasisg@yahoo.gr
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <05a2d9b7-3b6a-2b49-53ad-3436061558fc@gmail.com>
+Content-Language: English & Greek
 Sender: linux-raid-owner@vger.kernel.org
-To: Ram Ramesh <rramesh2400@gmail.com>, NeilBrown <neilb@suse.com>, Linux Raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 20/07/17 01:39, Ram Ramesh wrote:
-> On 07/19/2017 06:14 PM, NeilBrown wrote:
->> On Wed, Jul 19 2017, Ram Ramesh wrote:
->>
->>> Here is my attempt to repeat the steps in my last attempt to remove,
->>> repartition, re-add. Last time I did it on /dev/sdb. Now I am going to
->>> do it on /dev/sdc. Note that I have not been successful as you see at
->>> the end. I am going to keep the array degraded so that I can still get
->>> old info from /dev/sdc1, if you need anything else. I will keep it this
->>> way till tomorrow and then add the device for md to rebuild. Please ask
->>> anything else before that or send me a note to keep the array degraded
->>> so that you can examine /dev/sdc1 more.
->> Thanks.  I *love* getting all the details.  You cannot send too many
->> details!
->>
->> This:
->>> <good device still in md0>
->>>> zym [rramesh] 265 > sudo  mdadm --examine /dev/sdb1
->>>> /dev/sdb1:
->> ..
->>>>   Avail Dev Size : 6442188800 (3071.88 GiB 3298.40 GB)
->> and this:
->>
->>> <device just removed and repartitioned>
->>>> zym [rramesh] 267 > sudo mdadm --examine /dev/sdc1
->>>> /dev/sdc1:
->> ...
->>>>   Avail Dev Size : 11720780943 (5588.90 GiB 6001.04 GB)
->> Shows the key difference.  "Avail Dev Size", aka sb->data_size, is
->> wrong.  We can fix it.
->>
->>> <Cannot re-add!!!!>
->>>> zym [rramesh] 270 > sudo mdadm /dev/md0 --re-add /dev/sdc1
->>>> mdadm: --re-add for /dev/sdc1 to /dev/md0 is not possible
->> Please try
->>     sudo mdadm /dev/md0 --re-add /dev/sdc1 --update=devicesize
->>
->> Thanks,
->> NeilBrown
-> 
-> Neil,
-> 
-> Thanks a ton. That does it. It got re-added without any issue. It is
-> rebuilding because the array was used to record two TV programs when it
-> was in degraded state. But the re-add is accepted.
-> 
->> zym [rramesh] 274 > sudo mdadm /dev/md0 --re-add /dev/sdc1
->> --update=devicesize
->> Size was 11720780943
->> Size is 6442188800
->> mdadm: re-added /dev/sdc1
->> zym [rramesh] 275 > cat /proc/mdstat
->> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
->> [raid4] [raid10]
->> md0 : active raid6 sdc1[10] sdb1[6] sdg1[11] sdd1[12] sdf1[8] sde1[9]
->>       12348030976 blocks super 1.2 level 6, 64k chunk, algorithm 2
->> [6/5] [UU_UUU]
->>       [========>............]  recovery = 42.6%
->> (1316769920/3087007744) finish=292.2min speed=100952K/sec
->>       bitmap: 2/23 pages [8KB], 65536KB chunk
->>
->> unused devices: <none>
-> 
-> Wol,
-> 
->    If you read this, this may worth a mention on wiki page.
-> 
-> Ramesh
-> 
-Got that :-)
+Hi all,
 
-I'll have to think how to do that - probably a section on the use of
---update to fix problems. Anyway, I've marked this email so when I work
-my way through stuff I'll find it :-)
+I have a fedora 25 (mdadm v3.4 - 28 Jan 2016), where out of blue, it 
+stopped booting. The problem was because it could not mount some 
+filesystems that were software raid1 devices. No disk failures. cat 
+/proc/mdstat shows:
 
-Cheers,
-Wol
+Personalities :
+md0 : inactive sdb1[1] sda1[0]
+       1228797952 blocks super 1.2
+
+md2 : inactive sdb3[2] sda3[0]
+       507344896 blocks super 1.2
+
+md1 : inactive sda2[0] sdb2[2]
+       2047997952 blocks super 1.2
+
+unused devices: <none>
+
+What is strange, is that it does not say it is a raid1 array (all of 
+them are).
+
+mdadm -D /dev/md0 shows:
+/dev/md0:
+         Version : 1.2
+   Creation Time : Sat Feb  4 08:50:18 2012
+      Raid Level : raid1
+   Used Dev Size : 614398840 (585.94 GiB 629.14 GB)
+    Raid Devices : 2
+   Total Devices : 2
+     Persistence : Superblock is persistent
+
+     Update Time : Wed Jul 19 22:46:24 2017
+           State : active, Not Started
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : 0
+   Spare Devices : 0
+
+            Name : server.intellitech.gr:0  (local to host 
+server.intellitech.gr)
+            UUID : 6f903cce:5f6b3df4:c865924f:b05e2cd4
+          Events : 447211
+
+     Number   Major   Minor   RaidDevice State
+        0       8        1        0      active sync /dev/sda1
+        1       8       17        1      active sync /dev/sdb1
+
+I booted my pc with a live dvd of fedora 26 (and not 25 as the system), 
+having mdadm v4.0, and everything works as expected. I can see the 3 
+raid devices, I can mount them and see their contents.
+
+So I am puzzled why mdadm 4 can use the devices, and mdadm 3.4 cannot 
+any more. How can I fix this?
+
+(I have backups of all 3 filesystems, taken with dd from the live dvd, 
+where the raid devices work. The backups can be mounted)
+
+I am thinking like destroying completely the arrays and recreate them, 
+but I feel that there is a much simpler solution, as the raid arrays 
+work with mdadm v4.
+
+Regards,
+
+George
 
