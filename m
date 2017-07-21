@@ -1,45 +1,49 @@
-From: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
-Subject: [PATCH] Monitor: Include containers in spare migration
-Date: Fri, 21 Jul 2017 14:58:04 +0200
-Message-ID: <1500641884-13924-1-git-send-email-mariusz.tkaczyk@intel.com>
+From: maxin.john@gmail.com
+Subject: [PATCH 1/3] mdadm.h: Undefine dprintf before redefining
+Date: Fri, 21 Jul 2017 16:25:58 +0300
+Message-ID: <1500643560-21322-1-git-send-email-maxin.john@gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: jes.sorensen@gmail.com, Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+Cc: Khem Raj <raj.khem@gmail.com>, "Maxin B. John" <maxin.john@intel.com>
 List-Id: linux-raid.ids
 
-md_array_active used GET_ARRAY_INFO ioctl to find out if array is
-active. If called for a container, it also returned true as ioctl for
-container was successful. sysfs implementation of md_array_active
-returns false for container and spare migration for external metadata
-doesn't work.
+From: Khem Raj <raj.khem@gmail.com>
 
-One option would be to make sysfs implementation work the same way as
-ioctl implementation, however md_array_active is a misleading function
-name to return true for inactive containers. As ioctl implementation is
-supposed to be abandoned one day, let's keep different (but correct)
-behaviour. Most of the callers of md_array_active don't use it on a
-containers anyway so change the only place where it matters.
+dprintf is also defined in libc see
+usr/include/bits/stdio2.h, this comes into
+play especially when fortify sources is enabled
+and compilers like clang reports the override
 
-Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
-Reviewed-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+In file included from policy.c:25:
+./mdadm.h:1562:9: error: 'dprintf' macro redefined [-Werror,-Wmacro-redefined]
+        ^
+/mnt/oe/openembedded-core/build/tmp-glibc/sysroots/qemux86/usr/include/bits/stdio2.h:145:12: note: previous definition is here
+
+Signed-off-by: Khem Raj <raj.khem@gmail.com>
+Signed-off-by: Maxin B. John <maxin.john@intel.com>
 ---
- Monitor.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ mdadm.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/Monitor.c b/Monitor.c
-index 8d753ca..ac9e421 100644
---- a/Monitor.c
-+++ b/Monitor.c
-@@ -494,7 +494,7 @@ static int check_array(struct state *st, struct mdstat_ent *mdstat,
+diff --git a/mdadm.h b/mdadm.h
+index ee9b837..55c707a 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -1647,11 +1647,13 @@ static inline char *to_subarray(struct mdstat_ent *ent, char *container)
+ }
  
- 	is_container = mse->level == NULL;
- 
--	if (!md_array_active(fd))
-+	if (!is_container && !md_array_active(fd))
- 		goto disappeared;
- 
- 	fcntl(fd, F_SETFD, FD_CLOEXEC);
+ #ifdef DEBUG
++#undef dprintf
+ #define dprintf(fmt, arg...) \
+ 	fprintf(stderr, "%s: %s: "fmt, Name, __func__, ##arg)
+ #define dprintf_cont(fmt, arg...) \
+ 	fprintf(stderr, fmt, ##arg)
+ #else
++#undef dprintf
+ #define dprintf(fmt, arg...) \
+         ({ if (0) fprintf(stderr, "%s: %s: " fmt, Name, __func__, ##arg); 0; })
+ #define dprintf_cont(fmt, arg...) \
 -- 
-1.8.3.1
+2.4.0
 
