@@ -1,91 +1,110 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: Linear device of two arrays
-Date: Fri, 21 Jul 2017 08:00:44 +1000
-Message-ID: <87d18uydir.fsf@notabene.neil.brown.name>
-References: <CALee7hZYgLNO2siDJNtFge_BoocTXX-9BSgRHmMJH8MaH6V3LA@mail.gmail.com> <20170705214250.0ea99538@natsu> <595D2ADA.8010907@youngman.org.uk> <CALee7hZqmLK19tSEEFBgSWMKm9TRoUqLBCxUmbNJpwmM45BjTQ@mail.gmail.com> <df053262-9334-1070-c24a-5d2f91402716@hardwarefreak.org> <CALee7haowPD0DKPtEQUN8M8LDCNOq62SDrk5VNMO5C+5iUqtrQ@mail.gmail.com> <5afd5cea-06b8-8524-e4f5-8534f23bd714@hardwarefreak.org> <87van15j9b.fsf@notabene.neil.brown.name> <e394625b-18d7-d141-3957-3c16c9bc6e44@gmail.com> <87o9sn232n.fsf@notabene.neil.brown.name> <1eefd627-1aba-a795-05f0-d2106d3a62a3@gmail.com> <87shhyzhg5.fsf@notabene.neil.brown.name> <38e015fa-a07c-8f1a-3a04-384d973966be@gmail.com>
+From: Bogo Mipps <bogo.mipps@gmail.com>
+Subject: Re: Advice please re failed Raid6
+Date: Fri, 21 Jul 2017 12:44:18 +1200
+Message-ID: <ea81b594-9da1-4efb-2c6d-3bf50cf9e3e9@gmail.com>
+References: <9dca5b7a-b60e-0e93-41fd-49d092d8b27b@gmail.com>
+ <22892.649.826246.644975@tree.ty.sabi.co.uk>
+ <f79a45b9-590b-4d3c-d387-81abfb02743d@gmail.com>
+ <22895.21096.215892.928052@tree.ty.sabi.co.uk>
+ <cf9aac00-91b3-3cb5-bceb-df5d7113b933@gmail.com>
+Reply-To: bogo.mipps@gmail.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <38e015fa-a07c-8f1a-3a04-384d973966be@gmail.com>
+In-Reply-To: <cf9aac00-91b3-3cb5-bceb-df5d7113b933@gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Veljko <veljko3@gmail.com>, linux-raid@vger.kernel.org
+To: Peter Grandi <pg@lxra2.for.sabi.co.UK>, Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, Jul 17 2017, Veljko wrote:
-
-> On 07/15/2017 02:12 AM, NeilBrown wrote:
->
->> So command should be
+On 07/20/2017 03:55 PM, Bogo Mipps wrote:
+> On 07/20/2017 12:36 AM, Peter Grandi wrote:
+>>> Did I do it right? (See below)
 >>
->>>>   dd if=3D/dev/md2 of=3DSOMEWHERE/SAFE bs=3D1M skip=3D5626590
+>>> root@keruru:~# mdadm --create --assume-clean --level=6 --raid-devices=4
+>>> --size=1953382912 /dev/md0 missing /dev/sdc /dev/sdd /dev/sde
+>>> mdadm: /dev/sdc appears to be part of a raid array:
+>>>       level=raid6 devices=4 ctime=Tue Jul 11 17:33:12 2017
+>>> mdadm: /dev/sdd appears to be part of a raid array:
+>>>       level=raid6 devices=4 ctime=Tue Jul 11 17:33:12 2017
+>>> mdadm: /dev/sde appears to be part of a raid array:
+>>>       level=raid6 devices=4 ctime=Tue Jul 11 17:33:12 2017
+>>> Continue creating array? y
+>>> mdadm: Defaulting to version 1.2 metadata
+>>> mdadm: array /dev/md0 started.
 >>
->> and expect it to create a 3M file.
+>> This looks good, but is based on your original '--examine'
+>> report as to the order of the devices, and whether they are
+>> still bound to the same names 'sd[bcde]'.
 >>
->> Use this 'skip' number of the 'seek' number later.
+>>> root@keruru:~# blkid /dev/md0
 >>
->> NeilBrown
->
-> Thanks, Neil, now it makes more sense.
->
-> I tried to create new linear device, but mdadm is complaining about=20
-> data-offset:
->
-> # mdadm -C /dev/md4 -l linear -n 2 --rounding=3D1M -e 1.0 --data-offset=
-=3D0=20
-> /dev/md2 /dev/md3
->   mdadm: invalid data-offset: 0
+>>> root@keruru:~# cat /proc/mdstat
+>>> Personalities : [raid6] [raid5] [raid4]
+>>> md0 : active (auto-read-only) raid6 sde[3] sdd[2] sdc[1]
+>>>         3906765824 blocks super 1.2 level 6, 512k chunk, algorithm 2
+>>> [4/3] [_UUU]
+>>
+>>> unused devices: <none>
+>>
+>> The 'mdstat' actually looks good, but 'blkid' should have
+>> worked.
+>>
+>> As I was saying, it is not clear to me whether the 'mdadm' daemon
+>> instance triggered a 'check' or a 'repair' (bad news). I hope
+>> that you disabled that in the meantime while you try to fix the
+>> mistake.
+>>
+>> Trigger a 'check' and see if the set is consistent; if it is
+>> consistent but the content cannot be read/mounted then 'repair'
+>> rewrote it, if it is not consistent, try a different order or
+>> 3-way subset of 'sd[bcde]'.
+> 
+> Tried different order: sde, sdc, sdd and blkid worked. Added sdb as you 
+> suggested.  Currently rebuilding. Log below. Fingers crossed. Will 
+> report result.
 
-Bother.
- mdadm uses "parse_size()" to parse the offset, and this rejects
- "0", which makes sense for a size, but not for an offset.
+Peter, here is where I come unstuck.  Where to from here? Raid6 has 
+rebuilt, apparently successfully, but I can't mount. I hesitate to make 
+another move without advice ...
 
- Just leave the "--data-offset=3D0" out. I checked and that is defintely
- the default for 1.0.
+root@keruru:~# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid6 sdb[4] sdd[2] sdc[1] sde[0]
+       3906765824 blocks super 1.2 level 6, 512k chunk, algorithm 2 
+[4/3] [UUU_]
+       [=============>.......]  recovery = 69.3% (1353992192/1953382912) 
+finish=162.5min speed=61440K/sec
 
-> I noticed that md2 and md3 use 1.2 metadata. Can that be the issue?=20
+unused devices: <none>
 
-No the metadata on md4 is quite independent of the metadata on md2 and md3.
+root@keruru:~# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid6 sdb[4] sdd[2] sdc[1] sde[0]
+       3906765824 blocks super 1.2 level 6, 512k chunk, algorithm 2 
+[4/4] [UUUU]
 
-NeilBrown
+unused devices: <none>
 
+root@keruru:/# mount /dev/md0 /mnt/md0
+mount: you must specify the filesystem type
 
->
-> I'm using Debian 8.8 if it makes any difference.
->
-> # mdadm -V
->   mdadm - v3.3.2 - 21st August 2014
->
-> What could be the problem?
->
-> Regards,
-> Veljko
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+root@keruru:/# mount -t ext4 /dev/md0 /mnt/md0
+mount: wrong fs type, bad option, bad superblock on /dev/md0,
+        missing codepage or helper program, or other error
+        In some cases useful info is found in syslog - try
+        dmesg | tail  or so
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+root@keruru:/# dmesg | tail
+[29458.547966] RAID conf printout:
+[29458.547981]  --- level:6 rd:4 wd:4
+[29458.547989]  disk 0, o:1, dev:sde
+[29458.547995]  disk 1, o:1, dev:sdc
+[29458.548001]  disk 2, o:1, dev:sdd
+[29458.548007]  disk 3, o:1, dev:sdb
+[48138.300934] EXT4-fs (md0): VFS: Can't find ext4 filesystem
+[48138.301411] EXT4-fs (md0): VFS: Can't find ext4 filesystem
+[48138.301856] EXT4-fs (md0): VFS: Can't find ext4 filesystem
+[48155.451147] EXT4-fs (md0): VFS: Can't find ext4 filesystem
 
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAllxKA8ACgkQOeye3VZi
-gbkcZQ/+NdeFqKg9W60/oyOs/7hOARgqrOTa4b3ehqQe1rXxDmwCoqwWQtU5i5Zr
-aeXKLZ8O2zKzlhPpK77vN+eo+tfGeOJtXjQwlIBGdS61TmceudaWys0QAEIor1p9
-jYL2weQDpWGP/ZQcbIrHz5cWDJ1ZMoaSF6pNoya6ITTLrhdv/qx6jmocDec3LvQ+
-6M++gz53ygsIEBlXifYZBGmgL0GSxDmS0I985YVWJDqXtxyCaHaQVWxdBNz2+rKx
-WJwAiXOkX3pKVT/LLnp/JDMACVrR9scOaMRytxv9XhlKR67VHb2C8iERpjkxPs9g
-PCITYYsN114DcFpPKd/AIAucPcgKMs7/85gn8+YQB3r474D1VW13neevGiK1ZnsC
-DhTxP/wvlAT14P0VygddlDS+2AkFznQaeiw/psD8UYSmu+9IrHnMqT3kfyKlUzTe
-0xPC+T8xgKWmZSBpmUsZs7rAfSEDRtw1b2jkOMOlzQrYQ1YqXxcuxTLvly4PilSX
-CZZd+YQyz3a2I2aZFhUXENXXTIIIeRfWxZb+BiK8zvQcLejPvMHp60P8VENTCea/
-tO0hSYixmpNvCmZtGfaQgSkoFNM5S+vyXMrrR8rLNgiBUKDGmDbzuTTOW3uwkUPz
-r+05uervC+LQHzuZXXy7aUQSULpap6eK1K655ekTHkBOT1k5KBI=
-=ny/M
------END PGP SIGNATURE-----
---=-=-=--
