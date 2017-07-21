@@ -1,56 +1,44 @@
 From: maxin.john@gmail.com
-Subject: [PATCH 2/3] mdadm.h: include sys/sysmacros.h for major/minor defintions
-Date: Fri, 21 Jul 2017 16:25:59 +0300
-Message-ID: <1500643560-21322-2-git-send-email-maxin.john@gmail.com>
+Subject: [PATCH 3/3] monitor.c: Fix build in x32 ABI
+Date: Fri, 21 Jul 2017 16:26:00 +0300
+Message-ID: <1500643560-21322-3-git-send-email-maxin.john@gmail.com>
 References: <1500643560-21322-1-git-send-email-maxin.john@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1500643560-21322-1-git-send-email-maxin.john@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Khem Raj <raj.khem@gmail.com>, "Maxin B. John" <maxin.john@intel.com>
+Cc: =?UTF-8?q?An=C3=ADbal=20Lim=C3=B3n?= <anibal.limon@linux.intel.com>, "Maxin B. John" <maxin.john@intel.com>
 List-Id: linux-raid.ids
 
-From: Khem Raj <raj.khem@gmail.com>
+From: Aníbal Limón <anibal.limon@linux.intel.com>
 
-glibc 2.25 is warning about it if applications depend on
-sys/types.h for these macros, it expects to be included
-from <sys/sysmacros.h>
+When we try to print time_t values as a long int it causes an error
+because time_t data type in x32 ABI is long long int.
 
-Fixes
-| Grow.c:3534:13: error: In the GNU C Library, "minor" is defined
-|  by <sys/sysmacros.h>. For historical compatibility, it is
-|  currently defined by <sys/types.h> as well, but we plan to
-|  remove this soon. To use "minor", include <sys/sysmacros.h>
-|  directly. If you did not intend to use a system-defined macro
-|  "minor", you should undefine it after including <sys/types.h>. [-Werror]
-| Query.c: In function 'Query':
-| Query.c:105:13: error: In the GNU C Library, "makedev" is defined
-|  by <sys/sysmacros.h>. For historical compatibility, it is
-|  currently defined by <sys/types.h> as well, but we plan to
-|  remove this soon. To use "makedev", include <sys/sysmacros.h>
-|  directly. If you did not intend to use a system-defined macro
-|  "makedev", you should undefine it after including <sys/types.h>. [-Werror]
-|           makedev((unsigned)disc.major,(unsigned)disc.minor) == stb.st_rdev)
-|              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Signed-off-by: Khem Raj <raj.khem@gmail.com>
 Signed-off-by: Maxin B. John <maxin.john@intel.com>
 ---
- mdadm.h | 1 +
- 1 file changed, 1 insertion(+)
+ monitor.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/mdadm.h b/mdadm.h
-index 55c707a..dce5f82 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -34,6 +34,7 @@ extern __off64_t lseek64 __P ((int __fd, __off64_t __offset, int __whence));
- #endif
+diff --git a/monitor.c b/monitor.c
+index 81537ed..7cd9b8a 100644
+--- a/monitor.c
++++ b/monitor.c
+@@ -447,7 +447,11 @@ static int read_and_act(struct active_array *a, fd_set *fds)
+ 	}
  
- #include	<sys/types.h>
-+#include	<sys/sysmacros.h>
- #include	<sys/stat.h>
- #include	<stdint.h>
- #include	<stdlib.h>
+ 	gettimeofday(&tv, NULL);
++#if defined(__x86_64__) && defined(__ILP32__)
++	dprintf("(%d): %lld.%06lld state:%s prev:%s action:%s prev: %s start:%llu\n",
++#else
+ 	dprintf("(%d): %ld.%06ld state:%s prev:%s action:%s prev: %s start:%llu\n",
++#endif
+ 		a->info.container_member,
+ 		tv.tv_sec, tv.tv_usec,
+ 		array_states[a->curr_state],
 -- 
 2.4.0
 
