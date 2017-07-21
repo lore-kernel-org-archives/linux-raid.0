@@ -1,71 +1,99 @@
-From: Veljko <veljko3@gmail.com>
-Subject: Re: Linear device of two arrays
-Date: Fri, 21 Jul 2017 11:15:37 +0200
-Message-ID: <be3ba727-2456-3507-e6d8-5b46d8b64339@gmail.com>
-References: <CALee7hZYgLNO2siDJNtFge_BoocTXX-9BSgRHmMJH8MaH6V3LA@mail.gmail.com>
- <20170705214250.0ea99538@natsu> <595D2ADA.8010907@youngman.org.uk>
- <CALee7hZqmLK19tSEEFBgSWMKm9TRoUqLBCxUmbNJpwmM45BjTQ@mail.gmail.com>
- <df053262-9334-1070-c24a-5d2f91402716@hardwarefreak.org>
- <CALee7haowPD0DKPtEQUN8M8LDCNOq62SDrk5VNMO5C+5iUqtrQ@mail.gmail.com>
- <5afd5cea-06b8-8524-e4f5-8534f23bd714@hardwarefreak.org>
- <87van15j9b.fsf@notabene.neil.brown.name>
- <e394625b-18d7-d141-3957-3c16c9bc6e44@gmail.com>
- <87o9sn232n.fsf@notabene.neil.brown.name>
- <1eefd627-1aba-a795-05f0-d2106d3a62a3@gmail.com>
- <87shhyzhg5.fsf@notabene.neil.brown.name>
- <38e015fa-a07c-8f1a-3a04-384d973966be@gmail.com>
- <87d18uydir.fsf@notabene.neil.brown.name>
+From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
+Subject: Re: Advice please re failed Raid6
+Date: Fri, 21 Jul 2017 10:48:08 +0100
+Message-ID: <22897.52696.164078.23536@tree.ty.sabi.co.uk>
+References: <9dca5b7a-b60e-0e93-41fd-49d092d8b27b@gmail.com>
+        <22892.649.826246.644975@tree.ty.sabi.co.uk>
+        <f79a45b9-590b-4d3c-d387-81abfb02743d@gmail.com>
+        <22895.21096.215892.928052@tree.ty.sabi.co.uk>
+        <cf9aac00-91b3-3cb5-bceb-df5d7113b933@gmail.com>
+        <ea81b594-9da1-4efb-2c6d-3bf50cf9e3e9@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87d18uydir.fsf@notabene.neil.brown.name>
+In-Reply-To: <ea81b594-9da1-4efb-2c6d-3bf50cf9e3e9@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 07/21/2017 12:00 AM, NeilBrown wrote:
-> On Mon, Jul 17 2017, Veljko wrote:
->
->> On 07/15/2017 02:12 AM, NeilBrown wrote:
->>
->>> So command should be
->>>
->>>>>   dd if=/dev/md2 of=SOMEWHERE/SAFE bs=1M skip=5626590
->>>
->>> and expect it to create a 3M file.
->>>
->>> Use this 'skip' number of the 'seek' number later.
->>>
->>> NeilBrown
->>
->> Thanks, Neil, now it makes more sense.
->>
->> I tried to create new linear device, but mdadm is complaining about
->> data-offset:
->>
->> # mdadm -C /dev/md4 -l linear -n 2 --rounding=1M -e 1.0 --data-offset=0
->> /dev/md2 /dev/md3
->>   mdadm: invalid data-offset: 0
->
-> Bother.
->  mdadm uses "parse_size()" to parse the offset, and this rejects
->  "0", which makes sense for a size, but not for an offset.
->
->  Just leave the "--data-offset=0" out. I checked and that is defintely
->  the default for 1.0.
->
->> I noticed that md2 and md3 use 1.2 metadata. Can that be the issue?
->
-> No the metadata on md4 is quite independent of the metadata on md2 and md3.
->
-> NeilBrown
+>> Tried different order: sde, sdc, sdd and blkid worked.
 
-Yes, now it works. I was able to create new linear device, restored the 
-saved 3M file and grown xfs. It was really fast and indeed, I'm happy.
+It is not clear what "blkid worked" means here. It should have
+reported an 'ext4' filesystem.
 
-Thank you very much, Neil!
+>> Added sdb as you suggested.
 
-Regards,
-Veljko
+I actually wrote: "try a different order or 3-way subset of
+'sd[bcde]'." Perhaps "3-way subset" was not clear. Only when the
+right subset in the right order were found adding a fourth
+member was worth it.
 
+Also it matter enormously whether "Added sdb" was done after
+recreating the set with four members with 'missing' or just 3.
+It is not clear what you have done.
+
+Also I had written: "not clear to me whether the 'mdadm' daemon
+instance triggered a 'check' or a 'repair'" and you seem to have
+not looked into that.
+
+Also I had written: "I hope that you disabled that in the
+meantime" and it is not clear whether you have done so.
+
+Also I had written: "Trigger a 'check' and see if the set is
+consistent", and I have no idea whether that happened and what
+the result was.
+
+Your actions and reports seem to be somewhat lackadaisical and
+distracted as to what is a quite subtle situation.
+
+>> Currently rebuilding.
+
+Adding back 'sdb' and rebuilding: you can leave that to the
+point where you have found the right order. Also before adding
+'sdb' you would have used 'wipefs'/'mdadm --zero' it, I hope.
+
+> Peter, here is where I come unstuck.  Where to from here?
+> Raid6 has rebuilt, apparently successfully, but I can't mount.
+
+It's difficult to say, because it is not clear what is going on,
+because if the right order of members is (sdb sde sdc sdd) the
+original output of 'mdadm --examine' is not consistent with that.
+
+The issue here continues to be what is the right order of the
+devices as members, and I am not sure that you know which
+devices are which. I don't know how accurate are your reports
+as to what happened and as to what you are doing.
+
+> [29458.547989]  disk 0, o:1, dev:sde
+> [29458.547995]  disk 1, o:1, dev:sdc
+> [29458.548001]  disk 2, o:1, dev:sdd
+> [29458.548007]  disk 3, o:1, dev:sdb
+
+To me it seems pretty unlikely that 'sdb' would be member 3, but
+again given your conflicting information as to past and current
+actions, I cannot guess what is really going on.
+
+But then your situation should be pretty easy: according to your
+reports, you have a set of 4 devices in RAID6, which means that
+any 2 devices of the 4 are sufficient to make the set work. The
+only problem is knowing in which positions.
+
+For the first stripe, the first 512KiB on each drive, the layout
+will be:
+
+     member 0: the first 512KiB of the 'ext4', with the superblock.
+     member 1: the second 512KiB of the 'ext4', with a distinctive layout.
+     member 2: 512KiB of P (XOR parity), looking like gibberish.
+     member 3: 512KiB of Q (syndrome), looking like gibberish.
+
+It might be interesting to see the output of:
+
+   for D in c d e
+   do
+     echo
+     echo "*** $D"
+     blkid /dev/sd$D
+     dd bs=512K count=1 if=/dev/sd$D | file -
+     dd bs=512K count=1 if=/dev/sd$D | strings -a
+   done
