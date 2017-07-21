@@ -1,103 +1,71 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH V2] md: simplify code with bio_io_error
-Date: Fri, 21 Jul 2017 16:33:44 +0800
-Message-ID: <20170721083344.32134-1-gqjiang@suse.com>
+From: Veljko <veljko3@gmail.com>
+Subject: Re: Linear device of two arrays
+Date: Fri, 21 Jul 2017 11:15:37 +0200
+Message-ID: <be3ba727-2456-3507-e6d8-5b46d8b64339@gmail.com>
+References: <CALee7hZYgLNO2siDJNtFge_BoocTXX-9BSgRHmMJH8MaH6V3LA@mail.gmail.com>
+ <20170705214250.0ea99538@natsu> <595D2ADA.8010907@youngman.org.uk>
+ <CALee7hZqmLK19tSEEFBgSWMKm9TRoUqLBCxUmbNJpwmM45BjTQ@mail.gmail.com>
+ <df053262-9334-1070-c24a-5d2f91402716@hardwarefreak.org>
+ <CALee7haowPD0DKPtEQUN8M8LDCNOq62SDrk5VNMO5C+5iUqtrQ@mail.gmail.com>
+ <5afd5cea-06b8-8524-e4f5-8534f23bd714@hardwarefreak.org>
+ <87van15j9b.fsf@notabene.neil.brown.name>
+ <e394625b-18d7-d141-3957-3c16c9bc6e44@gmail.com>
+ <87o9sn232n.fsf@notabene.neil.brown.name>
+ <1eefd627-1aba-a795-05f0-d2106d3a62a3@gmail.com>
+ <87shhyzhg5.fsf@notabene.neil.brown.name>
+ <38e015fa-a07c-8f1a-3a04-384d973966be@gmail.com>
+ <87d18uydir.fsf@notabene.neil.brown.name>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87d18uydir.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: shli@kernel.org
-Cc: linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
+To: NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Since bio_io_error sets bi_status to BLK_STS_IOERR,
-and calls bio_endio, so we can use it directly.
+On 07/21/2017 12:00 AM, NeilBrown wrote:
+> On Mon, Jul 17 2017, Veljko wrote:
+>
+>> On 07/15/2017 02:12 AM, NeilBrown wrote:
+>>
+>>> So command should be
+>>>
+>>>>>   dd if=/dev/md2 of=SOMEWHERE/SAFE bs=1M skip=5626590
+>>>
+>>> and expect it to create a 3M file.
+>>>
+>>> Use this 'skip' number of the 'seek' number later.
+>>>
+>>> NeilBrown
+>>
+>> Thanks, Neil, now it makes more sense.
+>>
+>> I tried to create new linear device, but mdadm is complaining about
+>> data-offset:
+>>
+>> # mdadm -C /dev/md4 -l linear -n 2 --rounding=1M -e 1.0 --data-offset=0
+>> /dev/md2 /dev/md3
+>>   mdadm: invalid data-offset: 0
+>
+> Bother.
+>  mdadm uses "parse_size()" to parse the offset, and this rejects
+>  "0", which makes sense for a size, but not for an offset.
+>
+>  Just leave the "--data-offset=0" out. I checked and that is defintely
+>  the default for 1.0.
+>
+>> I noticed that md2 and md3 use 1.2 metadata. Can that be the issue?
+>
+> No the metadata on md4 is quite independent of the metadata on md2 and md3.
+>
+> NeilBrown
 
-And as mentioned by Shaohua, there are also two
-places in raid5.c can use bio_io_error either.
+Yes, now it works. I was able to create new linear device, restored the 
+saved 3M file and grown xfs. It was really fast and indeed, I'm happy.
 
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
----
-V2:
-No changes, just rebased on latest kernel tree.
+Thank you very much, Neil!
 
- drivers/md/raid1.c  | 3 +--
- drivers/md/raid10.c | 6 ++----
- drivers/md/raid5.c  | 9 +++------
- 3 files changed, 6 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 1d235cc..f50958d 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -790,8 +790,7 @@ static void flush_bio_list(struct r1conf *conf, struct bio *bio)
- 		bio->bi_next = NULL;
- 		bio->bi_bdev = rdev->bdev;
- 		if (test_bit(Faulty, &rdev->flags)) {
--			bio->bi_status = BLK_STS_IOERR;
--			bio_endio(bio);
-+			bio_io_error(bio);
- 		} else if (unlikely((bio_op(bio) == REQ_OP_DISCARD) &&
- 				    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
- 			/* Just ignore it */
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index e2617d0..f55d4cc 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -905,8 +905,7 @@ static void flush_pending_writes(struct r10conf *conf)
- 			bio->bi_next = NULL;
- 			bio->bi_bdev = rdev->bdev;
- 			if (test_bit(Faulty, &rdev->flags)) {
--				bio->bi_status = BLK_STS_IOERR;
--				bio_endio(bio);
-+				bio_io_error(bio);
- 			} else if (unlikely((bio_op(bio) ==  REQ_OP_DISCARD) &&
- 					    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
- 				/* Just ignore it */
-@@ -1090,8 +1089,7 @@ static void raid10_unplug(struct blk_plug_cb *cb, bool from_schedule)
- 		bio->bi_next = NULL;
- 		bio->bi_bdev = rdev->bdev;
- 		if (test_bit(Faulty, &rdev->flags)) {
--			bio->bi_status = BLK_STS_IOERR;
--			bio_endio(bio);
-+			bio_io_error(bio);
- 		} else if (unlikely((bio_op(bio) ==  REQ_OP_DISCARD) &&
- 				    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
- 			/* Just ignore it */
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index aeeb8d6..4904dff 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -3381,9 +3381,8 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
- 			sh->dev[i].sector + STRIPE_SECTORS) {
- 			struct bio *nextbi = r5_next_bio(bi, sh->dev[i].sector);
- 
--			bi->bi_status = BLK_STS_IOERR;
- 			md_write_end(conf->mddev);
--			bio_endio(bi);
-+			bio_io_error(bi);
- 			bi = nextbi;
- 		}
- 		if (bitmap_end)
-@@ -3403,9 +3402,8 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
- 		       sh->dev[i].sector + STRIPE_SECTORS) {
- 			struct bio *bi2 = r5_next_bio(bi, sh->dev[i].sector);
- 
--			bi->bi_status = BLK_STS_IOERR;
- 			md_write_end(conf->mddev);
--			bio_endio(bi);
-+			bio_io_error(bi);
- 			bi = bi2;
- 		}
- 
-@@ -3429,8 +3427,7 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
- 				struct bio *nextbi =
- 					r5_next_bio(bi, sh->dev[i].sector);
- 
--				bi->bi_status = BLK_STS_IOERR;
--				bio_endio(bi);
-+				bio_io_error(bi);
- 				bi = nextbi;
- 			}
- 		}
--- 
-2.10.0
+Regards,
+Veljko
 
