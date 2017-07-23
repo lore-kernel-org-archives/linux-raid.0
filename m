@@ -1,129 +1,114 @@
-From: MasterPrenium <masterprenium.lkml@gmail.com>
-Subject: Superblocks lost on 5/6 disks
-Date: Sun, 23 Jul 2017 01:54:00 +0200
-Message-ID: <1b693f6a-28e9-2a3a-7b62-2d9bdb52cf31@gmail.com>
+From: Bogo Mipps <bogo.mipps@gmail.com>
+Subject: Re: Advice please re failed Raid6
+Date: Sun, 23 Jul 2017 12:13:47 +1200
+Message-ID: <8a03a92a-305e-806a-7af0-b1564eba7338@gmail.com>
+References: <9dca5b7a-b60e-0e93-41fd-49d092d8b27b@gmail.com>
+ <22892.649.826246.644975@tree.ty.sabi.co.uk>
+ <f79a45b9-590b-4d3c-d387-81abfb02743d@gmail.com>
+ <22895.21096.215892.928052@tree.ty.sabi.co.uk>
+ <cf9aac00-91b3-3cb5-bceb-df5d7113b933@gmail.com>
+ <ea81b594-9da1-4efb-2c6d-3bf50cf9e3e9@gmail.com>
+ <22897.52696.164078.23536@tree.ty.sabi.co.uk>
+Reply-To: bogo.mipps@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-GB
+In-Reply-To: <22897.52696.164078.23536@tree.ty.sabi.co.uk>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: "MasterPrenium@gmail.com" <MasterPrenium@gmail.com>
+To: Peter Grandi <pg@lxra2.for.sabi.co.UK>, Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi guys,
+On 07/21/2017 09:48 PM, Peter Grandi wrote:
+>>> Tried different order: sde, sdc, sdd and blkid worked.
+> 
+> It is not clear what "blkid worked" means here. It should have
+> reported an 'ext4' filesystem.
+> 
+>>> Added sdb as you suggested.
+> 
+> I actually wrote: "try a different order or 3-way subset of
+> 'sd[bcde]'." Perhaps "3-way subset" was not clear. Only when the
+> right subset in the right order were found adding a fourth
+> member was worth it.
+> 
+> Also it matter enormously whether "Added sdb" was done after
+> recreating the set with four members with 'missing' or just 3.
+> It is not clear what you have done.
+> 
+> Also I had written: "not clear to me whether the 'mdadm' daemon
+> instance triggered a 'check' or a 'repair'" and you seem to have
+> not looked into that.
+> 
+> Also I had written: "I hope that you disabled that in the
+> meantime" and it is not clear whether you have done so.
+> 
+> Also I had written: "Trigger a 'check' and see if the set is
+> consistent", and I have no idea whether that happened and what
+> the result was.
+> 
+> Your actions and reports seem to be somewhat lackadaisical and
+> distracted as to what is a quite subtle situation.
+> 
+>>> Currently rebuilding.
+> 
+> Adding back 'sdb' and rebuilding: you can leave that to the
+> point where you have found the right order. Also before adding
+> 'sdb' you would have used 'wipefs'/'mdadm --zero' it, I hope.
+> 
+>> Peter, here is where I come unstuck.  Where to from here?
+>> Raid6 has rebuilt, apparently successfully, but I can't mount.
+> 
+> It's difficult to say, because it is not clear what is going on,
+> because if the right order of members is (sdb sde sdc sdd) the
+> original output of 'mdadm --examine' is not consistent with that.
+> 
+> The issue here continues to be what is the right order of the
+> devices as members, and I am not sure that you know which
+> devices are which. I don't know how accurate are your reports
+> as to what happened and as to what you are doing.
+> 
+>> [29458.547989]  disk 0, o:1, dev:sde
+>> [29458.547995]  disk 1, o:1, dev:sdc
+>> [29458.548001]  disk 2, o:1, dev:sdd
+>> [29458.548007]  disk 3, o:1, dev:sdb
+> 
+> To me it seems pretty unlikely that 'sdb' would be member 3, but
+> again given your conflicting information as to past and current
+> actions, I cannot guess what is really going on.
+> 
+> But then your situation should be pretty easy: according to your
+> reports, you have a set of 4 devices in RAID6, which means that
+> any 2 devices of the 4 are sufficient to make the set work. The
+> only problem is knowing in which positions.
+> 
+> For the first stripe, the first 512KiB on each drive, the layout
+> will be:
+> 
+>       member 0: the first 512KiB of the 'ext4', with the superblock.
+>       member 1: the second 512KiB of the 'ext4', with a distinctive layout.
+>       member 2: 512KiB of P (XOR parity), looking like gibberish.
+>       member 3: 512KiB of Q (syndrome), looking like gibberish.
+> 
+> It might be interesting to see the output of:
+> 
+>     for D in c d e
+>     do
+>       echo
+>       echo "*** $D"
+>       blkid /dev/sd$D
+>       dd bs=512K count=1 if=/dev/sd$D | file -
+>       dd bs=512K count=1 if=/dev/sd$D | strings -a
+>     done
 
-I was running a raid 6 array, made of 6x 3TB drives. Everything was
-working fine on this server.
-I decided to shut it down in order to made a usual dust cleaning, no
-problem here. I'm 99% sure I check the raid stack status before shutting
-it down (/proc/mdstat) and everything was fine.
-When I started back the server (please note I started it on a LiveCD,
-because I originally wanted to setup a new / (root) system which has
-nothing to deal with the raid 6 array). I changed my mind and decided to
-boot the original OS, the array wasn't up at startup. No problem I tried
-to assemble it, but mdadm claimed that it can't assemble the array since
-there was only one disk out of 6.
-All disk were present, but superblock was zero-ed.
-No SMART error or anything that could make me think of hard drive failure.
+Peter, thank you for your detailed response. Much appreciated. My major 
+regret is not coming to this list earlier. I only discovered, far too 
+late, that I should have taken expert advice before I attempted any 
+remedial work. Too much erroneous information flying around the 'net.
 
-Please note the server was runing an old kernel, on which the array was
-made, it's a kernel 3.5.7, and the livecd had a newer version 4.9.24.
+I will now carefully follow your suggestions as above and report back in 
+a couple of days. The data on this Raid set is irreplaceable, and I want 
+to do everything I can to regain access.
 
-The array which was originally built was a raid 5 with 5 drives, I grew
-it up to 6 drives in raid 6 when I had some hard drives failure.
-Everything was synchronised since a long time. At least a few months.
-
-The array was : /dev/md/3TB, with partitions /dev/sd[c-h]1.
-
-mdadm --examine /dev/sdc1 give me the correct superblock infos :
-
-/dev/sdc1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 9372578e:331a752a:d132dbef:3a67286d
-           Name : Server:3TB
-  Creation Time : Sun Aug 21 00:27:32 2016
-     Raid Level : raid6
-   Raid Devices : 6
-
- Avail Dev Size : 5860528128 (2794.52 GiB 3000.59 GB)
-     Array Size : 8589928448 (8191.99 GiB 8796.09 GB)
-  Used Dev Size : 4294964224 (2048.00 GiB 2199.02 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=1968 sectors, after=1565563904 sectors
-          State : clean
-    Device UUID : d8051645:40eff7c2:7eb00722:711efe7a
-
-    Update Time : Sat Jul 22 11:58:51 2017
-       Checksum : 1b841a0e - correct
-         Events : 463
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 0
-   Array State : AAAAAA ('A' == active, '.' == missing, 'R' == replacing)
-
-
-
-but
-
-mdadm --examine on all other drives said "No md superblock detected on
-xxxx".
-
-
-- blkid also report nothing on UUID_SUB= parameter, neither label etc
-... Only work on /dev/sdc1 (I also got another raid 5 stack on this
-server which is still running flawlessly).
-
-- gparted (on the livecd), cannot guess what type of partition hard
-drives are running (except sdc).
-
-I also tried some force assemble etc ... and got some message that mdadm
-was expecting a superblock value, but got "0000000" instead.
-
-I dump 8K of first sector of the partition and they were completely
-blank (except for sdc).
-
-
-So I definitely lost my superblock informations on 5 out of 6 drives.
-
-
-Maybe I panic a bit and made now some mistakes. But here what I've tried :
-Only on one drive (/dev/sdd) (as a test) I tried re-creating the
-partition (was thinking the problem could be here, because I already had
-such kind of issue (another setup, but maybe same kernel), and after
-re-creating the partition (I always use the same scheme), the device was
-back again).
-
-I've tried re-creating the array, with --assume-clean, but I think there
-could be some order for the drive ? I don't know what is the original
-order. Nevermind it doesn't work.
-
-I restore a backup of the 50 first Megabytes of sdc to get back it's
-original information and superblock.
-
-
-But now I'm stucked and I'm asking for your help.
-
-==> Can I copy the "working" (ie : original sdc) superblock to other
-drives to make it work ?
-I've looked a bit with some hex dump. I can copy data from sdc to sdd
-(for ex), but I don't know how to make the checksum correct (or how to
-change the device UUID).
-
-If someone can give me more informations, or some guidance ...
-
-
-Any help would be greatly appreciated.
-
-Btw, I still don't know how the superblocks could have been zeroed.
-
-Regards,
-
-MasterPrenium
-
+Regards.
