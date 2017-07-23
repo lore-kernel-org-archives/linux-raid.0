@@ -1,114 +1,57 @@
-From: Bogo Mipps <bogo.mipps@gmail.com>
-Subject: Re: Advice please re failed Raid6
-Date: Sun, 23 Jul 2017 12:13:47 +1200
-Message-ID: <8a03a92a-305e-806a-7af0-b1564eba7338@gmail.com>
-References: <9dca5b7a-b60e-0e93-41fd-49d092d8b27b@gmail.com>
- <22892.649.826246.644975@tree.ty.sabi.co.uk>
- <f79a45b9-590b-4d3c-d387-81abfb02743d@gmail.com>
- <22895.21096.215892.928052@tree.ty.sabi.co.uk>
- <cf9aac00-91b3-3cb5-bceb-df5d7113b933@gmail.com>
- <ea81b594-9da1-4efb-2c6d-3bf50cf9e3e9@gmail.com>
- <22897.52696.164078.23536@tree.ty.sabi.co.uk>
-Reply-To: bogo.mipps@gmail.com
+From: Veljko <veljko3@gmail.com>
+Subject: Re: Linear device of two arrays
+Date: Sun, 23 Jul 2017 12:05:27 +0200
+Message-ID: <20170723100518.GA5988@obsidian.example.com>
+References: <87van15j9b.fsf@notabene.neil.brown.name>
+ <e394625b-18d7-d141-3957-3c16c9bc6e44@gmail.com>
+ <87o9sn232n.fsf@notabene.neil.brown.name>
+ <1eefd627-1aba-a795-05f0-d2106d3a62a3@gmail.com>
+ <87shhyzhg5.fsf@notabene.neil.brown.name>
+ <38e015fa-a07c-8f1a-3a04-384d973966be@gmail.com>
+ <87d18uydir.fsf@notabene.neil.brown.name>
+ <be3ba727-2456-3507-e6d8-5b46d8b64339@gmail.com>
+ <cc2ff16e-5368-b828-6acc-6698d6e0b521@gmail.com>
+ <871sp8xeey.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <22897.52696.164078.23536@tree.ty.sabi.co.uk>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <871sp8xeey.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Grandi <pg@lxra2.for.sabi.co.UK>, Linux Raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/21/2017 09:48 PM, Peter Grandi wrote:
->>> Tried different order: sde, sdc, sdd and blkid worked.
+On 2017-Jul-23 09:03, NeilBrown wrote:
+> The UUID you give to mount is the UUID of the filesystem, not of the
+> device (or array) which stores the filesystem.
 > 
-> It is not clear what "blkid worked" means here. It should have
-> reported an 'ext4' filesystem.
-> 
->>> Added sdb as you suggested.
-> 
-> I actually wrote: "try a different order or 3-way subset of
-> 'sd[bcde]'." Perhaps "3-way subset" was not clear. Only when the
-> right subset in the right order were found adding a fourth
-> member was worth it.
-> 
-> Also it matter enormously whether "Added sdb" was done after
-> recreating the set with four members with 'missing' or just 3.
-> It is not clear what you have done.
-> 
-> Also I had written: "not clear to me whether the 'mdadm' daemon
-> instance triggered a 'check' or a 'repair'" and you seem to have
-> not looked into that.
-> 
-> Also I had written: "I hope that you disabled that in the
-> meantime" and it is not clear whether you have done so.
-> 
-> Also I had written: "Trigger a 'check' and see if the set is
-> consistent", and I have no idea whether that happened and what
-> the result was.
-> 
-> Your actions and reports seem to be somewhat lackadaisical and
-> distracted as to what is a quite subtle situation.
-> 
->>> Currently rebuilding.
-> 
-> Adding back 'sdb' and rebuilding: you can leave that to the
-> point where you have found the right order. Also before adding
-> 'sdb' you would have used 'wipefs'/'mdadm --zero' it, I hope.
-> 
->> Peter, here is where I come unstuck.  Where to from here?
->> Raid6 has rebuilt, apparently successfully, but I can't mount.
-> 
-> It's difficult to say, because it is not clear what is going on,
-> because if the right order of members is (sdb sde sdc sdd) the
-> original output of 'mdadm --examine' is not consistent with that.
-> 
-> The issue here continues to be what is the right order of the
-> devices as members, and I am not sure that you know which
-> devices are which. I don't know how accurate are your reports
-> as to what happened and as to what you are doing.
-> 
->> [29458.547989]  disk 0, o:1, dev:sde
->> [29458.547995]  disk 1, o:1, dev:sdc
->> [29458.548001]  disk 2, o:1, dev:sdd
->> [29458.548007]  disk 3, o:1, dev:sdb
-> 
-> To me it seems pretty unlikely that 'sdb' would be member 3, but
-> again given your conflicting information as to past and current
-> actions, I cannot guess what is really going on.
-> 
-> But then your situation should be pretty easy: according to your
-> reports, you have a set of 4 devices in RAID6, which means that
-> any 2 devices of the 4 are sufficient to make the set work. The
-> only problem is knowing in which positions.
-> 
-> For the first stripe, the first 512KiB on each drive, the layout
-> will be:
-> 
->       member 0: the first 512KiB of the 'ext4', with the superblock.
->       member 1: the second 512KiB of the 'ext4', with a distinctive layout.
->       member 2: 512KiB of P (XOR parity), looking like gibberish.
->       member 3: 512KiB of Q (syndrome), looking like gibberish.
-> 
-> It might be interesting to see the output of:
-> 
->     for D in c d e
->     do
->       echo
->       echo "*** $D"
->       blkid /dev/sd$D
->       dd bs=512K count=1 if=/dev/sd$D | file -
->       dd bs=512K count=1 if=/dev/sd$D | strings -a
->     done
+> One of the problems with use 1.0 metadata (or 0.90) is that the first
+> component device looks like it contains the same filesystem as the whole
+> array.   I think this is what is causing your confusion.
 
-Peter, thank you for your detailed response. Much appreciated. My major 
-regret is not coming to this list earlier. I only discovered, far too 
-late, that I should have taken expert advice before I attempted any 
-remedial work. Too much erroneous information flying around the 'net.
+Yes, I mixed up those two. Now is all clear.
 
-I will now carefully follow your suggestions as above and report back in 
-a couple of days. The data on this Raid set is irreplaceable, and I want 
-to do everything I can to regain access.
+> This all depends on the details of the particular distro you are using.
+> You don't, in general, need arrays to be listed in mdadm.conf.  A
+> particular distro could require it though.
+> 
+> If you run
+>    mdadm -Es
+> 
+> It will show a sample mdadm.conf which should contain /dev/md/3 - the
+> new raid10, and /dev/md/4.
+> You could add those lines to mdadm.conf, then
+>    mdadm --assemble /dev/md/3
+>    mdadm --assemble /dev/md/4
+> and it should get assembled.  Then you should be able to mount the large
+> filesystem successfully.
 
-Regards.
+Well, I feel much better now that I do have arrays listed in mdadm.conf
+and in /dev.
+
+Thanks very much for your help, Neil!
+
+Regards,
+Veljko
+
