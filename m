@@ -1,29 +1,43 @@
-From: Larkin Lowrey <llowrey@nuclearwinter.com>
-Subject: Write journal sizing
-Date: Mon, 24 Jul 2017 11:22:12 -0400
-Message-ID: <60abb68c-790b-42a0-3fbd-967b4cf877e5@nuclearwinter.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: Wrong array assembly on boot?
+Date: Mon, 24 Jul 2017 20:36:32 +0100
+Message-ID: <59764C40.4020503@youngman.org.uk>
+References: <59739BDD.30307@yandex.ru> <597608BD.7080108@youngman.org.uk>
+ <597611F6.20500@yandex.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <597611F6.20500@yandex.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Dark Penguin <darkpenguin@yandex.ru>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
- From what I read at the link below, the write journal mirrors the 
-contents of the stripe cache. This suggests that the write journal 
-cannot contain more uncommitted data than the stripe cache can hold. Is 
-that correct?
+On 24/07/17 16:27, Dark Penguin wrote:
+> On 24/07/17 17:48, Wols Lists wrote:
+>> > On 22/07/17 19:39, Dark Penguin wrote:
+>>> >> Greetings!
+>>> >>
+>>> >> I have a mirror RAID with two devices (sdc1 and sde1). It's not a root
+>>> >> partition, just a RAID with some data for services running on this
+>>> >> server. (I'm running Debian Jessie x86_64 with a 4.1.18 kernel.) The
+>>> >> RAID is listed in /etc/mdadm, and it has an external bitmap in /RAID .
+>> > 
+>> > As an absolute minimum, can you please give us your version of mdadm.
+> Oh, right, sorry. I thought the "absolute minimum" would be the kernel
+> version and the distribution. :)
+> 
+> mdadm - v3.3.2 - 21st August 2014
+> 
+> 
+I was afraid it might be that ...
 
-https://www.kernel.org/doc/Documentation/md/raid5-cache.txt
+You've hit a known bug in mdadm. It doesn't always successfully assemble
+a mirror. I had exactly that problem - I created one mirror and when I
+rebooted I had two ...
 
-So, if the stripe cache size is 1GB then is there any advantage in 
-making the journal device larger than 1GB? I assume no, but I'm also 
-wondering about journal overhead.
+Can't offer any advice about how to fix your damaged mirror, but you
+need to upgrade mdadm! That's two minor versions out of date - 3.4 and 4.0.
 
-My understanding is that the stripe cache size is limited to 32768 and 
-that the total memory size is the size value x 4096 x num disks. IOW, 
-max 128MB per disk (32k x 4k x 1). Is that correct?
-
---Larkin
+Cheers,
+Wol
