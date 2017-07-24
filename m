@@ -1,29 +1,54 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Wrong array assembly on boot?
-Date: Mon, 24 Jul 2017 15:48:29 +0100
-Message-ID: <597608BD.7080108@youngman.org.uk>
-References: <59739BDD.30307@yandex.ru>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH] md/raid5: add thread_group worker
+ async_tx_issue_pending_all
+Date: Mon, 24 Jul 2017 07:48:21 -0700
+Message-ID: <20170724144821.aec6ahdx33vlg45y@kernel.org>
+References: <1500877060-12256-1-git-send-email-oferh@marvell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <59739BDD.30307@yandex.ru>
+Content-Disposition: inline
+In-Reply-To: <1500877060-12256-1-git-send-email-oferh@marvell.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dark Penguin <darkpenguin@yandex.ru>, linux-raid@vger.kernel.org
+To: oferh@marvell.com
+Cc: nadavh@marvell.com, linux-raid@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 22/07/17 19:39, Dark Penguin wrote:
-> Greetings!
+On Mon, Jul 24, 2017 at 09:17:40AM +0300, oferh@marvell.com wrote:
+> From: Ofer Heifetz <oferh@marvell.com>
 > 
-> I have a mirror RAID with two devices (sdc1 and sde1). It's not a root
-> partition, just a RAID with some data for services running on this
-> server. (I'm running Debian Jessie x86_64 with a 4.1.18 kernel.) The
-> RAID is listed in /etc/mdadm, and it has an external bitmap in /RAID .
+> Since thread_group worker and raid5d kthread are not in sync, if
+> worker writes stripe before raid5d then requests will be waiting
+> for issue_pendig.
+> 
+> Issue observed when building raid5 with ext4, in some build runs
+> jbd2 would get hung and requests were waiting in the HW engine
+> waiting to be issued.
+> 
+> Fix this by adding a call to async_tx_issue_pending_all in the
+> raid5_do_work.
 
-As an absolute minimum, can you please give us your version of mdadm.
-
-And the output of "mdadm --display" of your arrays. (I think I've got
-that right, I think --examine is the disk ...)
-
-Cheers,
-Wol
+applied, thanks!
+ 
+> Signed-off-by: Ofer Heifetz <oferh@marvell.com>
+> Cc: stable@vger.kernel.org
+> ---
+>  drivers/md/raid5.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index aeeb8d6..3c0b924 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -6237,6 +6237,8 @@ static void raid5_do_work(struct work_struct *work)
+>  	pr_debug("%d stripes handled\n", handled);
+>  
+>  	spin_unlock_irq(&conf->device_lock);
+> +
+> +	async_tx_issue_pending_all();
+>  	blk_finish_plug(&plug);
+>  
+>  	pr_debug("--- raid5worker inactive\n");
+> -- 
+> 1.9.1
+> 
