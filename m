@@ -1,87 +1,46 @@
-From: Joshua Kinard <kumba@gentoo.org>
-Subject: Triggering WARN_ON_ONCE in drivers/md/md.c::set_in_sync()
-Date: Sun, 23 Jul 2017 21:11:39 -0400
-Message-ID: <1e68d380-762c-fbb4-73f9-842bd0fa7093@gentoo.org>
+From: <oferh@marvell.com>
+Subject: [PATCH] md/raid5: add thread_group worker async_tx_issue_pending_all
+Date: Mon, 24 Jul 2017 09:17:40 +0300
+Message-ID: <1500877060-12256-1-git-send-email-oferh@marvell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: shli@kernel.org
+Cc: nadavh@marvell.com, linux-raid@vger.kernel.org, Ofer Heifetz <oferh@marvell.com>, stable@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+From: Ofer Heifetz <oferh@marvell.com>
 
-I'm testing out a netboot installer image on an old SGI MIPS machine,
-which has two disks (/dev/sda, /dev/sdb) in an md raid1 setup, all
-filesystems using XFS V5.  root filesystem is on /dev/md0 and /dev/md2
-is where /usr will mount, but /usr is in the middle of a resync.  The
-remaining md devices are synced and have bitmaps enabled.
+Since thread_group worker and raid5d kthread are not in sync, if
+worker writes stripe before raid5d then requests will be waiting
+for issue_pendig.
 
-If I attempt to mount the root filesystem, I trigger these messages on
-the console:
-    [  147.156932] XFS (md0): Mounting V5 Filesystem
-    [  148.545726] ------------[ cut here ]------------
-    [  148.550522] WARNING: CPU: 0 PID: 258 at drivers/md/md.c:2273 set_in_sync+0x38/0xfc
-    [  148.558265] CPU: 0 PID: 258 Comm: md0_raid1 Not tainted 4.12.3-mipsgit-20170703 #1
-    [  148.565915] Stack : 0000000000000046 0000000000000000 0000000000000000 ffffffff9401fce1
-    [  148.574021]         0000000000000000 0000000000000000 0000000000000005 ffffffff8005a03c
-    [  148.582100]         ffffffff80726e57 ffffffff806b3060 980000005318d800 0000000000000102
-    [  148.590198]         ffffffff80b91f90 00000000000008e1 ffffffff806b0000 ffffffff80b70000
-    [  148.598298]         0000000000000000 ffffffff80096b5c 980000005355fbc8 ffffffff8002d170
-    [  148.606395]         ffffffff8046c974 ffffffff8005b03c 0000000000000007 ffffffff806b3060
-    [  148.614495]         0000000000000000 0000000000000000 0000000000000000 0000000000000000
-    [  148.622576]         0000000000000000 980000005355fb10 0000000000000000 ffffffff8002d3e0
-    [  148.630673]         0000000000000000 0000000000000000 ffffffff8046c974 0000000000000000
-    [  148.638773]         0000000000000000 ffffffff8000e81c 0000000000000000 ffffffff8002d3e0
-    [  148.646869]         ...
-    [  148.649354] Call Trace:
-    [  148.651878] [<ffffffff8000e81c>] show_stack+0x70/0x8c
-    [  148.657012] [<ffffffff8002d3e0>] __warn+0x108/0x110
-    [  148.661935] [<ffffffff8046c974>] set_in_sync+0x38/0xfc
-    [  148.667157] [<ffffffff80476990>] md_check_recovery+0x2fc/0x5c0
-    [  148.673080] [<ffffffff8044bba8>] raid1d+0x48/0x1298
-    [  148.678032] [<ffffffff8046c934>] md_thread+0x178/0x180
-    [  148.683235] [<ffffffff80047650>] kthread+0x140/0x148
-    [  148.688271] [<ffffffff80009260>] ret_from_kernel_thread+0x14/0x1c
-    [  148.694438] ---[ end trace d27f806e939dc049 ]---
-    [  149.210292] XFS (md0): Ending clean mount
+Issue observed when building raid5 with ext4, in some build runs
+jbd2 would get hung and requests were waiting in the HW engine
+waiting to be issued.
 
-Checking *(set_in_sync+0x38) in gdb yields:
-    (gdb) l *(set_in_sync+0x38)
-    0xffffffff8046c974 is in set_in_sync (drivers/md/md.c:2274).
-    2269    }
-    2270
-    2271    static bool set_in_sync(struct mddev *mddev)
-    2272    {
-    2273            WARN_ON_ONCE(!spin_is_locked(&mddev->lock));
-    2274            if (!mddev->in_sync) {
-    2275                    mddev->sync_checkers++;
-    2276                    spin_unlock(&mddev->lock);
-    2277                    percpu_ref_switch_to_atomic_sync(&mddev->writes_pending);
-    2278                    spin_lock(&mddev->lock);
+Fix this by adding a call to async_tx_issue_pending_all in the
+raid5_do_work.
 
-Everything is still usable after this point, but attempting to untar a
-large file onto the /usr mount (/dev/md2) will crash/panic the kernel,
-but those panic messages are marked as "tainted".  I'm currently
-waiting for the resync to finish now before proceeding further.  I'll
-add that this machine only has one CPU, so my understanding was all
-spinlocks compile out in that case (if PREEMPT is not enabled, which it
-isn't).  Thus I am a bit stumped why this is being triggered, especially
-when mounting an unrelated md device that is already fully resynced.
+Signed-off-by: Ofer Heifetz <oferh@marvell.com>
+Cc: stable@vger.kernel.org
+---
+ drivers/md/raid5.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-If any additional info is needed, let me know.  Thanks!
-
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index aeeb8d6..3c0b924 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6237,6 +6237,8 @@ static void raid5_do_work(struct work_struct *work)
+ 	pr_debug("%d stripes handled\n", handled);
+ 
+ 	spin_unlock_irq(&conf->device_lock);
++
++	async_tx_issue_pending_all();
+ 	blk_finish_plug(&plug);
+ 
+ 	pr_debug("--- raid5worker inactive\n");
 -- 
-Joshua Kinard
-Gentoo/MIPS
-kumba@gentoo.org
-6144R/F5C6C943 2015-04-27
-177C 1972 1FB8 F254 BAD0 3E72 5C63 F4E3 F5C6 C943
-
-"The past tempts us, the present confuses us, the future frightens us.  And our
-lives slip away, moment by moment, lost in that vast, terrible in-between."
-
---Emperor Turhan, Centauri Republic
-
+1.9.1
