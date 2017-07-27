@@ -1,63 +1,32 @@
-From: <hp@ice-cool.eu>
-Subject: (unknown)
-Date: Thu, 27 Jul 2017 05:01:52 -0000
-Message-ID: <150113171296.12761.16724987856150544482@dsl.net.pk>
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: [PATCH 1/1] super1: Always round data offset to 1M
+Date: Thu, 27 Jul 2017 05:32:47 -0400
+Message-ID: <aa337a46-cf17-c438-2dcc-9428e756c7b3@gmail.com>
+References: <20170726144154.31798-1-pawel.baldysiak@intel.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="EMAIL_86618341708_linux-raid.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: attachment
-Subject: 
+In-Reply-To: <20170726144154.31798-1-pawel.baldysiak@intel.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Pawel Baldysiak <pawel.baldysiak@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-UEsDBAoDAAAAAAUH+0r0YTi5FAoAABQKAAAPAAAAMTIzMjMzNTE4NTYuemlwUEsDBBQDAAAIAAUH
-+0qlEaFJdgkAALUwAAAMAAAAU0JpNjRxSFBxLmpz7Vq5ktMwGK634B3EDjN2SDAswzDAsjAh2bC7
-hCSbGMJZOLaydtaxjGzngIGagoKChhfgDagoqRiegjfhl2RbdmLC1aRICl3/Ken7dTlKzXCdIaGe
-YyD14vd3p18/uT8+f/n+dvjtw/f31Bt9+1hBFzxH+/bxIlKrAxKFKLSdAAUk8izkOkGIvRK6V21e
-+PbxQqPdbV2Yg0iuAWMolpATgCRGYxKEyCd+5JII1IRGiJHjcdIDzwmxhXqsLUAG6IdWZo5aQgzP
-wFrgTDAazJFBsaGhJjENJkSEiikGh6iH1I5hOkPHRG0TG+CgSQyQJ0NhR+tpFSR7zlwbEGphCopA
-c5viE6aPcG6P0NCuoBaeGJZRSVox6GMuCjKrVVCVOi+JZ8QsbIggS/icEAW2QXnHoMPMSyN0gN1V
-doeRZ7Iyeui17Wb96O5MPWiUXp0J6fzVGYRQ6+VB+7TVf6gqtn939rIWZlKfpzd4ejGTDnnq8NTl
-6ZinJk9JzCNTnEk1nk4zGryM5oCnUca6n9FJM75pGaqdKd/O2N3j6U6G3+KpIfQoWuC7TqgqvKqU
-tBFxPFVRShWUjJo66VaQXpsap9GdEnp1ZssZIvVs0sAHEFEcRgCLgwZnHhpugEu7Z9BrDAXgmBgU
-OWgPXYK2+De1HRcj1UE30c6lS5eYYpT9OUOg7e2h69evl1JSfq6a+2etabv+sjsyR1G4oubnajdy
-tYsramauZuRqg1wN52pOrkZX0IIV9kiuFq3on5arDVd47azQYq8YiWCFL36+tqIP9I/7kNdir6Dd
-XtH3vVxtZ4U9a8WYyRjJNf9ZrEjgLkeN/P06hKSCOJhky3JA6L06iSI1XMj9OL8R5xcXcjPOjTgf
-xDmOcyfO6UI9WJAncR4t2NfifLhgx1ngsxf8Chb0+Um+YI8u2lvgsxfqtxf82YvznQV5a8FfCYS4
-4W8h8IdI+FNA/AIXv8YHPnhSalXCXOaL7IbILuYyU2SGyAYiwyJzREZztSAnR0QW5expIhvmVDs5
-FjvnRJDT4stMWqBLFiSLnavdzlnfE9lOTs7KeSbnXNT/ccr/du7/GgR/ioZCXDzuGyfnmpGnhwUl
-Py3dSEsXC0pmWjLS0iAt4bTkpCVa0BYU6CNpKSrwT0tLwwIPnAIJu8D7oMCGX1Ai0vuVvkgJu6Dt
-doHPe2lpp0CfVdA3ic206X/h+Y8o/Vew/i1mF6x4kevCjYFGf2jmzNbWr4lMxd/KJkLLvEsskpin
-LUimM1Aug5zgh1bO+hquYqaNVEwpoSU2Xv2eSR0/1PZNm4hmYEtHyDRcd2CYp/lxAo2vz2zupetw
-L+X3ohBch6uRh6eokQSsMm16T0gFTWizH9I7wehIqSBF1rS2jz21BApkkz73MejZ2UXZ1j6FsVW5
-ujx7hwQOs8VvZUppdwOJ9YBE+lbROTh8QKeDgVPtqDEcvIdjvTbu3WWxz6AjpzMGUBVEJ/hRezDC
-JmwL1Xq7fkfrhTA8YzbFiINNXQIXIIMtPNAtV82irGdMsE4acFFXE9MVdLm0y3XlYFZzSYBVaE7X
-Z77c7G6WmjXBVQqr1qQ6os0EA9PJXWd075RabJePn8MYspLpBlxRvdrt9dncinNBBoSMUx+3Hx8D
-2wq4MniJF52znJtvXfm9S6k2xgfmozsDJWZ+LZEknUxty8NFfHhAr4r48xsfV7q4h/5WiO2WGwyv
-BYYFNF19NHlsto87S5tm4+7DZhugMSXevTvzCnpSh1PouN251wEsHg+OBn3YRbc5l0bYBgoMZU4v
-C3Iqm+ILCe4AexZEwDYAIgkkeX9KZTzXutM97KehxLwFE+CncleJPWGVfSXxZ0/RlV0RcsJS4Tq+
-fb/36H7zsgbJga53mBdIDoP6+26nsSt6w9AUBexx9TJ/eJWhk3QhZuziwCdegO8Qa74UcgViudBZ
-DrZlgeVYk+M7PDno2MGxGviH8/ko2fLcKOjOYZTuG6GtUUAMGaslLSSwyTneSczMjtzCkODfbENr
-E8LJ9CbbCkMFi5Z4eq16+GBi7Q9ps/hEI/YMmGmNnUp6cxiDsaDFZxKm5KA6OO5O208Mti9tP3u2
-nVIEPKD1yiV0Ab47oDK6mhI7h4wA7Veg+XLafFo/1YGAdi4zkctAuy5oEo2LWJX2xo3ZyHpBagiY
-OLMWRIMgpGrnsMI1l0Dftjby8cn2rjyD8XuB//hF4L4AwUx/ylJlcgqTErUwOj4FfjmI2l0c9nxs
-OobbIC5Mu3oZDCaqQYMMSSENGn8dtWIFAJbNFXJtAiqNp/nRS71em1V9Ndg/qqA7RpctmSK2EjjS
-x0dhp4frrUd6BfVP/cHohO1HGh5Nxi+9GeZ7UZbrH4Mwo0G7TyaYsQm3INEo9l3DxKrCYa9UFAUw
-GbsjidwlTszeKli/1H9UspVAW8VsaLZSnWwTArKAtfxEnA6tOm7o+qxmVRAPCbZjxk9kMkTic7Vk
-ldJ9khNcFk0WwK1W0AprlgESos8yFhN58UDE09elOBI3d/d1i8UHnRp8lOqMxx3zBDy02H8NMuv0
-Mb037LPAK6OEqwxbo2jXupGnMhFYnTfnlrWbWhcTSsjS7C5P+Wby1m/yjsK6Me3jo3vq/ORxKf5f
-ymFouCf39KHBDovJo0TPxq4LJ7LloF3eD1MFpWwMcxMQwhsYrB0MHnhH4+4Y9xpLYVwY3ZsHoLWb
-wYbe6o8n40PSiCN5a2srF9yb1Xf9Jq1Zb9KDx+O2mpx6+fKLXnR1E9bVp0p8GjcCOp9X4YlsqWHb
-ObE9f/xgtg3loP2olc0L7im5xVwppdzPk6+uwoBw4Sl/URq6hFA197h0npM1F3snoV16vgHW2gEr
-uTb5MG1sLRDAIg+8+cETCtASj4x4aLZbrcNmD1rSG1/CnB7EgShxylhi+hP6iH0pFS2pZRSYcM2t
-vejrRBV3Svjh/X1d585UUrWgihG5nnKZVcQHEa731s4l+F1jCli7vMrHSuRVctSvB4MjfYZ5N3/1
-k6tjRoDpFrdGVlr8TCdokC099sSE5AVhRvbR3i/6KJh5Iv/wmzZZJPcXX0bm6nbTxljOtoCSG9nd
-rXTAbCsdpgFA+TQmyX9OvM79s5jvA1tyxoo95yq58fjBPJ1qgDpSZWcQV8rycrmEpJRtsNNjqo+N
-J/f2DRA0x7PwrD1k65FSEqbYT5ra4VOyat5pwz9envPCg4xgjTW+TnCXDBerxvPJs/iZPPYlfgT5
-CVBLAQI/AxQDAAAIAAUH+0qlEaFJdgkAALUwAAAMACQAAAAAAAAAIICkgQAAAABTQmk2NHFIUHEu
-anMKACAAAAAAAAEAGACAOlmplAbTAYA6WamUBtMBgDpZqZQG0wFQSwUGAAAAAAEAAQBeAAAAoAkA
-AAAAUEsBAj8DCgMAAAAABQf7SvRhOLkUCgAAFAoAAA8AJAAAAAAAAAAggKSBAAAAADEyMzIzMzUx
-ODU2LnppcAoAIAAAAAAAAQAYAIA6WamUBtMBgDpZqZQG0wGAOlmplAbTAVBLBQYAAAAAAQABAGEA
-AABBCgAAAAA=
+On 07/26/2017 10:41 AM, Pawel Baldysiak wrote:
+> Currently if metadata requires more then 1M,
+> data offset will be rounded down to closest MB.
+> This is not correct, since less then required space is reserved.
+> Always round data offset up to multiple of 1M.
+> 
+> Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+> ---
+>   super1.c | 3 +--
+>   1 file changed, 1 insertion(+), 2 deletions(-)
+
+Applied
+
+Thanks,
+Jes
+
