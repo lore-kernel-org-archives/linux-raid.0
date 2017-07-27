@@ -1,149 +1,75 @@
-From: Nigel Croxon <ncroxon@redhat.com>
-Subject: Re: raid0: device does not exist with examine and scan
-Date: Thu, 27 Jul 2017 13:17:35 -0400
-Message-ID: <983cdf1c-abab-d20f-f71f-9f7441f4f3ce@redhat.com>
-References: <1f4ad2b8-70f4-12e1-16e9-40550a05fd96@redhat.com>
- <597A1DD2.50906@youngman.org.uk>
+From: Song Liu <songliubraving@fb.com>
+Subject: [PATCH 2/2] md/r5cache: fix io_unit handling in r5l_log_endio()
+Date: Thu, 27 Jul 2017 16:35:56 -0700
+Message-ID: <20170727233556.3802574-2-songliubraving@fb.com>
+References: <20170727233556.3802574-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <597A1DD2.50906@youngman.org.uk>
-Content-Language: en-US
+In-Reply-To: <20170727233556.3802574-1-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-On 07/27/2017 01:07 PM, Wols Lists wrote:
-> On 27/07/17 17:11, Nigel Croxon wrote:
->>
->> Hello all,
->>
->> The device name referenced in the mdadm --examine --scan does not exist
->> when using metadata=1.2 and --name on the creation.
->> I am using metadata 0.9 as a bases to test against 1.2.
->> Am I fighting a udev rule? Did the symlink from /dev/md/TEST_MD to
->> /dev/md0 disappear?
->>
->>
->> If I start with METADATA=0.9 and specifying a --name
->>
->> # mdadm --create --verbose /dev/md0 --level=0 --metadata=0.9
->> --raid-devices=2 --name=TEST_MD /dev/sdd /dev/sde
->>
->> with METADATA=0.9, there is no NAME field printed on DETAIL
-> 
-> I don't think 0.9 metadata supports names ...
->>
->> # mdadm -D /dev/md0
->> /dev/md0:
->>            Version : 0.90
->>      Creation Time : Thu Jul 27 10:36:02 2017
->>         Raid Level : raid0
->>         Array Size : 293045760 (279.47 GiB 300.08 GB)
->>       Raid Devices : 2
->>      Total Devices : 2
->>    Preferred Minor : 0
->>        Persistence : Superblock is persistent
->>
->>        Update Time : Thu Jul 27 10:36:02 2017
->>              State : clean
->>     Active Devices : 2
->>    Working Devices : 2
->>     Failed Devices : 0
->>      Spare Devices : 0
->>
->>         Chunk Size : 512K
->>
->> Consistency Policy : none
->>
->>               UUID : 623d8bac:8819491b:e9034e5d:acd14f01
->>             Events : 0.1
->>
->>     Number   Major   Minor   RaidDevice State
->>        0       8       48        0      active sync   /dev/sdd
->>        1       8       64        1      active sync   /dev/sde
->>
->>
->> The --examine --scan shows /dev/md0, and not /dev/md/TEST_MD.
->> # mdadm --examine --scan
->> ARRAY /dev/md0 UUID=65cb66eb:d8a0d9ff:85609b40:89383835
->>
->>
->> Next, change the METADATA=1.2 and specifying a --name
->> # mdadm --create --verbose /dev/md0 --level=0 --metadata=1.2
->> --raid-devices=2 --name=TEST_MD /dev/sdd /dev/sde
->>
->> With METADATA=1.2, there is a NAME field printed:
->> thinkstation:TEST_MD  (local to host thinkstation)
->>
->> # mdadm -D /dev/md0
->> /dev/md0:
->>            Version : 1.2
->>      Creation Time : Thu Jul 27 11:13:02 2017
->>         Raid Level : raid0
->>         Array Size : 292784128 (279.22 GiB 299.81 GB)
->>       Raid Devices : 2
->>      Total Devices : 2
->>        Persistence : Superblock is persistent
->>
->>        Update Time : Thu Jul 27 11:13:02 2017
->>              State : clean
->>     Active Devices : 2
->>    Working Devices : 2
->>     Failed Devices : 0
->>      Spare Devices : 0
->>
->>         Chunk Size : 512K
->>
->> Consistency Policy : none
->>
->>               Name : thinkstation:TEST_MD  (local to host thinkstation)
->>               UUID : 591d68eb:5182a6e2:ead93be0:812f7fc6
->>             Events : 0
->>
->>     Number   Major   Minor   RaidDevice State
->>        0       8       48        0      active sync   /dev/sdd
->>        1       8       64        1      active sync   /dev/sde
->>
->> The --examine --scan is shows /dev/md/TEST_MD and not /dev/md0.
->>
->> # mdadm --examine --scan
->> ARRAY /dev/md/TEST_MD  metadata=1.2
->> UUID=413a8ca9:a1edb21b:9eb8876d:784349ed name=thinkstation:TEST_MD
->>
->> This problem is, /dev/md/TEST_MD does not exist. /dev/md0 does.
-> 
-> Is the array running? This is an educated guess on my part, but I think
-> it's running the array that creates the symlink.
->>
+In r5l_log_endio(), the io_unit should only be modified with lock
+io_list_lock held.
 
-# mdadm --create --verbose /dev/md0 --level=0 --metadata=1.2
---raid-devices=2 --name=TEST_MD /dev/sdd /dev/sde
-mdadm: chunk size defaults to 512K
-mdadm: array /dev/md0 started.
+Also, r5l_log_endio() should not call __r5l_stripe_write_finished()
+directly. It should be just set io_state to IO_UNIT_STRIPE_END and
+__r5l_stripe_write_finished() will be called later.
 
-# cat /proc/mdstat
-Personalities : [raid0]
-md0 : active raid0 sde[1] sdd[0]
-      292784128 blocks super 1.2 512k chunks
+Signed-off-by: Song Liu <songliubraving@fb.com>
+---
+ drivers/md/raid5-cache.c | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
 
-unused devices: <none>
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 315cabf..d4e08a2 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -580,6 +580,20 @@ static void r5l_log_endio(struct bio *bio)
+ 
+ 	spin_lock_irqsave(&log->io_list_lock, flags);
+ 	__r5l_set_io_unit_state(io, IO_UNIT_IO_END);
++
++	if (io->has_null_flush) {
++		struct bio *bi;
++
++		WARN_ON(bio_list_empty(&io->flush_barriers));
++		while ((bi = bio_list_pop(&io->flush_barriers)) != NULL) {
++			bio_endio(bi);
++			atomic_dec(&io->pending_stripe);
++		}
++	}
++	/* finish flush only io_unit and PAYLOAD_FLUSH only io_unit */
++	if (atomic_read(&io->pending_stripe) == 0)
++		__r5l_set_io_unit_state(io, IO_UNIT_STRIPE_END);
++
+ 	if (log->need_cache_flush && !list_empty(&io->stripe_list))
+ 		r5l_move_to_end_ios(log);
+ 	else
+@@ -599,20 +613,6 @@ static void r5l_log_endio(struct bio *bio)
+ 
+ 	if (log->need_cache_flush)
+ 		md_wakeup_thread(log->rdev->mddev->thread);
+-
+-	if (io->has_null_flush) {
+-		struct bio *bi;
+-
+-		WARN_ON(bio_list_empty(&io->flush_barriers));
+-		while ((bi = bio_list_pop(&io->flush_barriers)) != NULL) {
+-			bio_endio(bi);
+-			atomic_dec(&io->pending_stripe);
+-		}
+-	}
+-
+-	/* finish flush only io_unit and PAYLOAD_FLUSH only io_unit */
+-	if (atomic_read(&io->pending_stripe) == 0)
+-		__r5l_stripe_write_finished(io);
+ }
+ 
+ static void r5l_do_submit_io(struct r5l_log *log, struct r5l_io_unit *io)
+-- 
+2.9.3
 
-# mdadm --examine --scan
-ARRAY /dev/md/TEST_MD  metadata=1.2
-UUID=fff9f89d:62dcc596:665386ca:d19f2487 name=thinkstation:TEST_MD
-
-# ls /dev/md/
-ls: cannot access /dev/md/: No such file or directory
-
-
->> mdadm --version
->> mdadm - v4.0-158-gcb91230 - 2017-07-10
->>
->> Am I fighting udev rules?
->>
-> Cheers,
-> Wol
-> 
-> 
