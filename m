@@ -1,50 +1,41 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH 1/2] md/r5cache: fix r5c_journal_mode_store
-Date: Thu, 27 Jul 2017 16:35:55 -0700
-Message-ID: <20170727233556.3802574-1-songliubraving@fb.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: [PATCH v2] md: notify about new spare disk in the container
+Date: Fri, 28 Jul 2017 15:49:25 +0200
+Message-ID: <20170728134925.11088-1-artur.paszkiewicz@intel.com>
+References: <20170721202446.lpy7noq6bbn7g7qt@kernel.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170721202446.lpy7noq6bbn7g7qt@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com, Song Liu <songliubraving@fb.com>
+To: shli@kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-In r5c_journal_mode_store(), conf->log may change (and become NULL)
-after mddev_suspend(). This patch check conf->log again after
-mddev_suspend() to mitigate this risk.
+From: "Alexey Obitotskiy" <aleksey.obitotskiy@intel.com>
 
-Signed-off-by: Song Liu <songliubraving@fb.com>
+In case of external metadata arrays spare disks are added to containers
+first. mdadm keeps monitoring /proc/mdstat output and when spare disk is
+available, it moves it from the container to the array. The problem is
+there is no notification of new spare disk in the container and mdadm
+waits a long time (until timeout) before it takes the action.
+
+Signed-off-by: Alexey Obitotskiy <aleksey.obitotskiy@intel.com>
 ---
- drivers/md/raid5-cache.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/md/md.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index bfa1e90..315cabf 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -2541,9 +2541,8 @@ static ssize_t r5c_journal_mode_show(struct mddev *mddev, char *page)
- int r5c_journal_mode_set(struct mddev *mddev, int mode)
- {
- 	struct r5conf *conf = mddev->private;
--	struct r5l_log *log = conf->log;
- 
--	if (!log)
-+	if (!conf->log)
- 		return -ENODEV;
- 
- 	if (mode < R5C_JOURNAL_MODE_WRITE_THROUGH ||
-@@ -2555,6 +2554,10 @@ int r5c_journal_mode_set(struct mddev *mddev, int mode)
- 		return -EINVAL;
- 
- 	mddev_suspend(mddev);
-+	if (!conf || !conf->log) {
-+		mddev_resume(mddev);
-+		return -ENODEV;
-+	}
- 	conf->log->r5c_journal_mode = mode;
- 	mddev_resume(mddev);
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 8cdca0296749..594ebbaf4171 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -4283,6 +4283,8 @@ new_dev_store(struct mddev *mddev, const char *buf, size_t len)
+ 	if (err)
+ 		export_rdev(rdev);
+ 	mddev_unlock(mddev);
++	if (!err)
++		md_new_event(mddev);
+ 	return err ? err : len;
+ }
  
 -- 
-2.9.3
+2.13.1
 
