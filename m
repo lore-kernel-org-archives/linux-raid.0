@@ -1,163 +1,59 @@
-From: Nigel Croxon <ncroxon@redhat.com>
-Subject: Re: raid0: device does not exist with examine and scan
-Date: Fri, 28 Jul 2017 09:50:14 -0400
-Message-ID: <15aa9a9c-acec-894c-3d23-5cd3616aeabb@redhat.com>
-References: <1f4ad2b8-70f4-12e1-16e9-40550a05fd96@redhat.com>
- <597A1DD2.50906@youngman.org.uk>
- <983cdf1c-abab-d20f-f71f-9f7441f4f3ce@redhat.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: [GIT PULL] MD update for 4.13-rc3
+Date: Fri, 28 Jul 2017 08:05:55 -0700
+Message-ID: <20170728150555.yfxhk2ame36iceoo@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <983cdf1c-abab-d20f-f71f-9f7441f4f3ce@redhat.com>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/27/2017 01:17 PM, Nigel Croxon wrote:
-> On 07/27/2017 01:07 PM, Wols Lists wrote:
->> On 27/07/17 17:11, Nigel Croxon wrote:
->>>
->>> Hello all,
->>>
->>> The device name referenced in the mdadm --examine --scan does not exist
->>> when using metadata=1.2 and --name on the creation.
->>> I am using metadata 0.9 as a bases to test against 1.2.
->>> Am I fighting a udev rule? Did the symlink from /dev/md/TEST_MD to
->>> /dev/md0 disappear?
->>>
->>>
->>> If I start with METADATA=0.9 and specifying a --name
->>>
->>> # mdadm --create --verbose /dev/md0 --level=0 --metadata=0.9
->>> --raid-devices=2 --name=TEST_MD /dev/sdd /dev/sde
->>>
->>> with METADATA=0.9, there is no NAME field printed on DETAIL
->>
->> I don't think 0.9 metadata supports names ...
->>>
->>> # mdadm -D /dev/md0
->>> /dev/md0:
->>>            Version : 0.90
->>>      Creation Time : Thu Jul 27 10:36:02 2017
->>>         Raid Level : raid0
->>>         Array Size : 293045760 (279.47 GiB 300.08 GB)
->>>       Raid Devices : 2
->>>      Total Devices : 2
->>>    Preferred Minor : 0
->>>        Persistence : Superblock is persistent
->>>
->>>        Update Time : Thu Jul 27 10:36:02 2017
->>>              State : clean
->>>     Active Devices : 2
->>>    Working Devices : 2
->>>     Failed Devices : 0
->>>      Spare Devices : 0
->>>
->>>         Chunk Size : 512K
->>>
->>> Consistency Policy : none
->>>
->>>               UUID : 623d8bac:8819491b:e9034e5d:acd14f01
->>>             Events : 0.1
->>>
->>>     Number   Major   Minor   RaidDevice State
->>>        0       8       48        0      active sync   /dev/sdd
->>>        1       8       64        1      active sync   /dev/sde
->>>
->>>
->>> The --examine --scan shows /dev/md0, and not /dev/md/TEST_MD.
->>> # mdadm --examine --scan
->>> ARRAY /dev/md0 UUID=65cb66eb:d8a0d9ff:85609b40:89383835
->>>
->>>
->>> Next, change the METADATA=1.2 and specifying a --name
->>> # mdadm --create --verbose /dev/md0 --level=0 --metadata=1.2
->>> --raid-devices=2 --name=TEST_MD /dev/sdd /dev/sde
->>>
->>> With METADATA=1.2, there is a NAME field printed:
->>> thinkstation:TEST_MD  (local to host thinkstation)
->>>
->>> # mdadm -D /dev/md0
->>> /dev/md0:
->>>            Version : 1.2
->>>      Creation Time : Thu Jul 27 11:13:02 2017
->>>         Raid Level : raid0
->>>         Array Size : 292784128 (279.22 GiB 299.81 GB)
->>>       Raid Devices : 2
->>>      Total Devices : 2
->>>        Persistence : Superblock is persistent
->>>
->>>        Update Time : Thu Jul 27 11:13:02 2017
->>>              State : clean
->>>     Active Devices : 2
->>>    Working Devices : 2
->>>     Failed Devices : 0
->>>      Spare Devices : 0
->>>
->>>         Chunk Size : 512K
->>>
->>> Consistency Policy : none
->>>
->>>               Name : thinkstation:TEST_MD  (local to host thinkstation)
->>>               UUID : 591d68eb:5182a6e2:ead93be0:812f7fc6
->>>             Events : 0
->>>
->>>     Number   Major   Minor   RaidDevice State
->>>        0       8       48        0      active sync   /dev/sdd
->>>        1       8       64        1      active sync   /dev/sde
->>>
->>> The --examine --scan is shows /dev/md/TEST_MD and not /dev/md0.
->>>
->>> # mdadm --examine --scan
->>> ARRAY /dev/md/TEST_MD  metadata=1.2
->>> UUID=413a8ca9:a1edb21b:9eb8876d:784349ed name=thinkstation:TEST_MD
->>>
->>> This problem is, /dev/md/TEST_MD does not exist. /dev/md0 does.
->>
->> Is the array running? This is an educated guess on my part, but I think
->> it's running the array that creates the symlink.
->>>
-> 
-> # mdadm --create --verbose /dev/md0 --level=0 --metadata=1.2
-> --raid-devices=2 --name=TEST_MD /dev/sdd /dev/sde
-> mdadm: chunk size defaults to 512K
-> mdadm: array /dev/md0 started.
-> 
-> # cat /proc/mdstat
-> Personalities : [raid0]
-> md0 : active raid0 sde[1] sdd[0]
->       292784128 blocks super 1.2 512k chunks
-> 
-> unused devices: <none>
-> 
-> # mdadm --examine --scan
-> ARRAY /dev/md/TEST_MD  metadata=1.2
-> UUID=fff9f89d:62dcc596:665386ca:d19f2487 name=thinkstation:TEST_MD
-> 
-> # ls /dev/md/
-> ls: cannot access /dev/md/: No such file or directory
-> 
-> 
->>> mdadm --version
->>> mdadm - v4.0-158-gcb91230 - 2017-07-10
->>>
->>> Am I fighting udev rules?
->>>
->> Cheers,
->> Wol
->>
->>
+Hi,
+This update fixes several bugs, 3 of them are suitable for stable:
+- An initialization issue fixed by Ming
+- A bio clone race issue fixed by me
+- An async tx flush issue fixed by Ofer
+- Other cleanups
 
-Looks like I'm all set.
+Thanks,
+Shaohua
 
-1) Reboot - and the symlink will be there.
-or
-2) stop the device and reassemble with -I
+The following changes since commit 4ec9f7a18b9fcef6e8f7c13279b48e3bb5d4d704:
 
-This is how the udev rules do it.
+  Merge branch 'x86-urgent-for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip (2017-07-21 11:20:58 -0700)
 
--Nigel
+are available in the git repository at:
 
+  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git for-next
 
+for you to fetch changes up to ed9b66d21866ae3bf16557406258ebe6c00a9a84:
+
+  MD: fix warnning for UP case (2017-07-25 15:18:13 -0700)
+
+----------------------------------------------------------------
+Guoqing Jiang (1):
+      md: simplify code with bio_io_error
+
+Ming Lei (3):
+      md: remove 'idx' from 'struct resync_pages'
+      md: raid1/raid10: initialize bvec table via bio_add_page()
+      md: raid1-10: move raid1/raid10 common code into raid1-10.c
+
+Ofer Heifetz (1):
+      md/raid5: add thread_group worker async_tx_issue_pending_all
+
+Shaohua Li (2):
+      md/raid1: fix writebehind bio clone
+      MD: fix warnning for UP case
+
+ drivers/md/md.c       |  2 +-
+ drivers/md/md.h       | 54 ----------------------------------
+ drivers/md/raid1-10.c | 81 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/md/raid1.c    | 68 +++++++++++++-----------------------------
+ drivers/md/raid10.c   | 25 +++++-----------
+ drivers/md/raid5.c    | 11 ++++---
+ 6 files changed, 115 insertions(+), 126 deletions(-)
+ create mode 100644 drivers/md/raid1-10.c
