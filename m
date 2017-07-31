@@ -1,62 +1,66 @@
-From: Larkin Lowrey <llowrey@nuclearwinter.com>
-Subject: Re: How to add journal device to existing RAID5?
-Date: Sun, 30 Jul 2017 13:05:48 -0400
-Message-ID: <37a24c87-b29f-5e1b-c683-671946fce48f@nuclearwinter.com>
-References: <ec6b9beb-b239-9ab9-03ac-7351e152d1af@kyberraum.net>
+From: Dima Dvorcovoy <dvorc@bsu.by>
+Subject: remove mdadm stripe limitation, pls
+Date: Mon, 31 Jul 2017 18:52:24 +0300
+Message-ID: <1501516344.23767.4.camel@bsu.by>
+References: <S1752524AbdGaPpr/20170731154547Z+299@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ec6b9beb-b239-9ab9-03ac-7351e152d1af@kyberraum.net>
-Content-Language: en-US
+In-Reply-To: <S1752524AbdGaPpr/20170731154547Z+299@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Vasco Steinmetz <linux@kyberraum.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The patch to allow the adding of a journal to an existing array was 
-applied in March. See:
+I got in trouble trying to mount RAID0 drives from brocen HW
+controller. The mdadm utility is locked to 4k stripe minimum, but these
+drives have 1s (512bytes) stripes. 
 
-http://marc.info/?l=linux-raid&m=149072503301987
+Then, I dig into kernel and found there are no actual stripe limitation
+seems. So, all the limits are in mdadm code. I patched soure and all
+works ok. 
+mdadm --build /dev/md0 --level=0 --chunk=1s --raid-devices=2 /dev/sdd
+/dev/sdc 
 
-The most recent mdadm release, v4.0, was in January so it does not 
-include that patch.
+First: there are UNDOCUCMENTED option in --chunk, size could be given
+in sectors (s). 
 
-All the patch does is remove the restriction in mdadm so it may be 
-possible to patch the v4.0 source and build locally to test.
+Second: 1s used as INVALID_SECTORS constant. I changed it to 0xffff 
 
-I too am very interested in this capability and would like to know when 
-the next mdadm release is expected.
+Third: The sector number is stored in K. I removes this division, maybe
+it is only for output. 
 
---Larkin
+Where to connect with mdadm team to ask for changes? What I skipped to
+patch? 
 
-On 7/30/2017 11:19 AM, Vasco Steinmetz wrote:
-> Hi,
->
-> I bought a 32GB Intel Optane NVMe and would like to add it to an
-> existing RAID5 array as the journal device.
->
-> My hope was that with the latest Loonix kernel 4.12.4 and mdadm 4.0
-> adding a log device to an already existing array should work.
->
-> It didn't. :(
->
-> Though I marked the R5 array as RO, mdadm complained that adding a
-> journal to that particular array is not possible because it didn't have
-> had a journal device in teh past.
->
-> Unfortunately it is not possible for me to recreate the array, as that
-> would imply to move all data to backup, delete and recreate the array
-> and afterwards move it back.
->
->
-> When is it planned for mdadm/md-raid?.c to add/remove journal devices on
-> the fly (assuming they array may not be currently in use, e.g. --readonly)?
->
->
-> Kind regards,
-> Vasco
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+[mdadm.h] 
+1737c1737 
+< * a value for 'invalid'. Use '1'. 
+--- 
+> * a value for 'invalid'. Use '-1'. 
+1739c1739 
+< #define INVALID_SECTORS 1 
+--- 
+> #define INVALID_SECTORS 0xffff 
+[mdadm.c] 
+381,384c381,382 
+< if (s.chunk == INVALID_SECTORS || 
+< s.chunk < 8 || (s.chunk&1)) { 
+< pr_err("invalid chunk/rounding value: %s\n", 
+< optarg); 
+--- 
+> if (s.chunk == INVALID_SECTORS) { 
+> pr_err("invalid chunk/rounding value: %s\n",optarg); 
+[Build.c] 
+387,388d384 
+< /* Convert sectors to K */ 
+< s.chunk /= 2; 
+145c145 
+< array.chunk_size = s->chunk*1024; 
+--- 
+> array.chunk_size = s->chunk*512; 
+[Create.c] 
+696c696 
+< info.array.chunk_size = s->chunk*1024; 
+--- 
+> info.array.chunk_size = s->chunk*512;
