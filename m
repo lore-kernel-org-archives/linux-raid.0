@@ -1,166 +1,200 @@
-From: Simon Kirby <sim@hostway.ca>
-Subject: raid1 lockups on 4.12.x
-Date: Mon, 31 Jul 2017 11:36:16 -0700
-Message-ID: <20170731183616.GD22429@hostway.ca>
+From: Paul Tonelli <paul@tonel.li>
+Subject: Re: Recovery after accidental raid5 superblock rewrite
+Date: Mon, 31 Jul 2017 21:57:32 +0200
+Message-ID: <e0c059b0-2d68-92bf-3eb9-e2827602061c@tonel.li>
+References: <2009e689-39b7-14fa-44bd-3288f96b9c91@tonel.li>
+ <20170603212011.GA13271@metamorpher.de>
+ <12fc0496-423a-bca6-ac57-ed40958645e7@tonel.li>
+ <20170603232919.GA17108@metamorpher.de>
+ <b8b6eb18-2952-86ee-5329-9e4f4c406c3d@tonel.li>
+ <20170605092454.GA3651@metamorpher.de>
+ <dfa4dd0d-c68a-4e1b-aac7-649f7f1a72f6@tonel.li>
+ <20170605235619.GA8478@metamorpher.de>
+ <5f9ed8be-ec90-17bc-3e45-0721689a62a8@tonel.li>
+ <20170610204105.GA19409@metamorpher.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20170610204105.GA19409@metamorpher.de>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+Hello (again)
 
-I recently upgraded two old boxes to 4.12.3 only to find that they
-started to lock up several times per day. I upgraded to 4.12.4 and the
-problem persisted. Downgrading to 4.11.11 seems to have stopped the
-issue.
+Sorry to resuscitate this topic back from the dead, but I have again the 
+same issue.
 
-I captured the following with nmi_watchdog=1 and a serial console while
-on 4.12.4.
+TL;DR
 
-[ 9672.236351] NMI watchdog: BUG: soft lockup - CPU#0 stuck for 22s! [md2_raid1:1704]
-[ 9672.236351] Modules linked in: nf_conntrack_ipv4 nf_defrag_ipv4 xt_state nf_conntrack serio_raw evdev e1000
-[ 9672.236351] CPU: 0 PID: 1704 Comm: md2_raid1 Not tainted 4.12.4-hw #6
-[ 9672.236351] Hardware name: Dell Computer Corporation PowerEdge 750              /0R1479, BIOS A03 10/22/2004
-[ 9672.236351] task: f4a1a100 task.stack: f47fa000
-[ 9672.236351] EIP: md_check_recovery+0x2d4/0x460 
-[ 9672.236351] EFLAGS: 00000246 CPU: 0
-[ 9672.236351] EAX: 00000000 EBX: f448ec00 ECX: 00000001 EDX: 00000000
-[ 9672.236351] ESI: 00000000 EDI: 00000000 EBP: f47fbe38 ESP: f47fbe28
-[ 9672.236351]  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
-[ 9672.236351] CR0: 80050033 CR2: b77c0000 CR3: 31501000 CR4: 000006d0
-[ 9672.236351] Call Trace:
-[ 9672.236351]  raid1d+0x27/0x16f0
-[ 9672.236351]  ? ktime_get+0x44/0x100
-[ 9672.236351]  ? lapic_next_event+0x13/0x20
-[ 9672.236351]  ? clockevents_program_event+0x9d/0x150
-[ 9672.236351]  ? __hrtimer_run_queues+0x13a/0x210
-[ 9672.236351]  ? hrtimer_interrupt+0xb0/0x190
-[ 9672.236351]  ? smp_apic_timer_interrupt+0x33/0x40
-[ 9672.236351]  ? apic_timer_interrupt+0x32/0x38
-[ 9672.236351]  ? perf_trace_thermal_power_cpu_limit+0x68/0x120
-[ 9672.344374]  md_thread+0x116/0x140
-[ 9672.344374]  ? do_wait_intr+0x70/0x70
-[ 9672.344374]  kthread+0xe3/0x110
-[ 9672.344374]  ? md_register_thread+0xc0/0xc0
-[ 9672.344374]  ? __kthread_init_worker+0x90/0x90
-[ 9672.344374]  ret_from_fork+0x19/0x24
-[ 9672.344374] Code: 68 01 00 00 ef f0 0f ba b3 68 01 00 00 05 72 47 8b b3 08 01 00 00 85 f6 0f 85 d9 fe ff ff f0 80 a3 68 01 00 00 fe b9 01 00 00 00 <ba> 03 00 00 00 c7 04 24 00 00 00 00 b8 c0 a8 bc c1 e8 86 d9 97
+The difference compared to last time:
+- I created a clean raid a few days back
+- the data is completely backed up and available
+- I can actually access the data
 
-later, there were (looping) backtraces such as:
+but I still have no clue about what went wrong.
 
-[34552.236353] NMI watchdog: BUG: soft lockup - CPU#0 stuck for 23s! [md0_raid1:1684]
-[34552.236353] Modules linked in: nf_conntrack_ipv4 nf_defrag_ipv4 xt_state nf_conntrack serio_raw evdev e1000
-[34552.236353] CPU: 0 PID: 1684 Comm: md0_raid1 Tainted: G             L  4.12.4-hw #6
-[34552.236353] Hardware name: Dell Computer Corporation PowerEdge 750              /0R1479, BIOS A03 10/22/2004
-[34552.236353] task: f4a95280 task.stack: f52c0000
-[34552.236353] EIP: _raw_spin_unlock_irqrestore+0xa/0x10
-[34552.236353] EFLAGS: 00000292 CPU: 0
-[34552.236353] EAX: 00000292 EBX: f46a3d08 ECX: 00000001 EDX: 00000292
-[34552.236353] ESI: 00000292 EDI: 00000003 EBP: f52c1de4 ESP: f52c1de4
-[34552.236353]  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
-[34552.236353] CR0: 80050033 CR2: 08062e00 CR3: 347af000 CR4: 000006d0
-[34552.236353] Call Trace:
-[34552.236353]  __wake_up+0x40/0x50
-[34552.236353]  md_wakeup_thread+0x2b/0x30
-[34552.236353]  mddev_unlock+0x74/0xc0
-[34552.236353]  md_check_recovery+0x1c3/0x460
-[34552.324380]  raid1d+0x27/0x16f0
-[34552.324380]  ? ktime_get+0x44/0x100
-[34552.324380]  ? lapic_next_event+0x13/0x20
-[34552.324380]  ? clockevents_program_event+0x9d/0x150
-[34552.324380]  ? __hrtimer_run_queues+0x13a/0x210
-[34552.344366]  ? smp_apic_timer_interrupt+0x33/0x40
-[34552.344366]  ? apic_timer_interrupt+0x32/0x38
-[34552.344366]  ? perf_trace_thermal_power_cpu_limit+0xb/0x120
-[34552.344366]  md_thread+0x116/0x140
-[34552.344366]  ? do_wait_intr+0x70/0x70
-[34552.344366]  kthread+0xe3/0x110
-[34552.344366]  ? md_register_thread+0xc0/0xc0
-[34552.344366]  ? __kthread_init_worker+0x90/0x90
-[34552.344366]  ret_from_fork+0x19/0x24
-[34552.344366] Code: 00 f0 0f b1 0a 85 c0 75 08 b0 01 5d c3 8d 74 26 00 31 c0 5d c3 8d b6 00 00 00 00 8d bf 00 00 00 00 55 89 e5 c6 00 00 89 d0 50 9d <8d> 74 26 00 5d c3 55 89 c1 89 e5 b8 00 ff ff ff f0 0f c1 01 89
-[34567.020353] INFO: rcu_sched self-detected stall on CPU
-[34567.020361]  0-...: (104347 ticks this GP) idle=d52/140000000000001/0 softirq=615378/615378 fqs=52025
-[34567.020361]   (t=105006 jiffies g=349461 c=349460 q=85)
-[34567.020361] NMI backtrace for cpu 0
-[34567.020361] CPU: 0 PID: 1684 Comm: md0_raid1 Tainted: G             L  4.12.4-hw #6
-[34567.020361] Hardware name: Dell Computer Corporation PowerEdge 750              /0R1479, BIOS A03 10/22/2004
-[34567.020361] Call Trace:
-[34567.020361]  dump_stack+0x58/0x78
-[34567.020361]  nmi_cpu_backtrace+0xa6/0xb0
-[34567.020361]  nmi_trigger_cpumask_backtrace+0x92/0xd0
-[34567.020361]  ? irq_force_complete_move+0xd0/0xd0
-[34567.020361]  arch_trigger_cpumask_backtrace+0x10/0x20
-[34567.020361]  rcu_dump_cpu_stacks+0x64/0xa7
-[34567.020361]  rcu_check_callbacks+0x6af/0x710
-[34567.020361]  ? account_process_tick+0x54/0x130
-[34567.020361]  update_process_times+0x2a/0x60   
-[34567.020361]  tick_sched_handle.isra.11+0x30/0x60
-[34567.020361]  tick_sched_timer+0x3b/0x80
-[34567.020361]  __hrtimer_run_queues+0xb0/0x210
-[34567.020361]  ? tick_nohz_handler+0xa0/0xa0  
-[34567.020361]  hrtimer_interrupt+0x95/0x190   
-[34567.020361]  local_apic_timer_interrupt+0x2a/0x50
-[34567.020361]  smp_apic_timer_interrupt+0x2e/0x40  
-[34567.020361]  apic_timer_interrupt+0x32/0x38
-[34567.020361] EIP: _raw_spin_unlock_irqrestore+0xa/0x10
-[34567.020361] EFLAGS: 00000292 CPU: 0
-[34567.020361] EAX: 00000292 EBX: f448e5f0 ECX: 00000001 EDX: 00000292
-[34567.020361] ESI: 00000292 EDI: 00000003 EBP: f52c1e00 ESP: f52c1e00
-[34567.020361]  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
-[34567.020361]  __wake_up+0x40/0x50
-[34567.020361]  md_check_recovery+0x1bc/0x460
-[34567.020361]  raid1d+0x27/0x16f0
-[34567.020361]  ? ktime_get+0x44/0x100
-[34567.020361]  ? lapic_next_event+0x13/0x20
-[34567.020361]  ? clockevents_program_event+0x9d/0x150
-[34567.020361]  ? __hrtimer_run_queues+0x13a/0x210
-[34567.020361]  ? hrtimer_interrupt+0xb0/0x190
-[34567.020361]  ? hrtimer_interrupt+0xb0/0x190
-[34567.020361]  ? smp_apic_timer_interrupt+0x33/0x40
-[34567.020361]  ? apic_timer_interrupt+0x32/0x38
-[34567.020361]  md_thread+0x116/0x140
-[34567.020361]  ? do_wait_intr+0x70/0x70
-[34567.020361]  kthread+0xe3/0x110
-[34567.020361]  ? md_register_thread+0xc0/0xc0
-[34567.020361]  ? __kthread_init_worker+0x90/0x90
-[34567.020361]  ret_from_fork+0x19/0x24
-[34592.236352] NMI watchdog: BUG: soft lockup - CPU#0 stuck for 22s! [md0_raid1:1684]
-[34592.236352] Modules linked in: nf_conntrack_ipv4 nf_defrag_ipv4 xt_state nf_conntrack serio_raw evdev e1000
-[34592.236352] CPU: 0 PID: 1684 Comm: md0_raid1 Tainted: G             L  4.12.4-hw #6
-[34592.236352] Hardware name: Dell Computer Corporation PowerEdge 750              /0R1479, BIOS A03 10/22/2004
-[34592.236352] task: f4a95280 task.stack: f52c0000
-[34592.236352] EIP: _raw_spin_unlock_irqrestore+0xa/0x10
-[34592.236352] EFLAGS: 00000292 CPU: 0
-[34592.236352] EAX: 00000292 EBX: c1bca8c0 ECX: 00000001 EDX: 00000292
-[34592.236352] ESI: 00000292 EDI: 00000003 EBP: f52c1e00 ESP: f52c1e00
-[34592.236352]  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
-[34592.236352] CR0: 80050033 CR2: 08062e00 CR3: 347af000 CR4: 000006d0
-[34592.236352] Call Trace:
-[34592.236352]  __wake_up+0x40/0x50
-[34592.236352]  md_check_recovery+0x2ea/0x460
-[34592.236352]  raid1d+0x27/0x16f0
-[34592.236352]  ? ktime_get+0x44/0x100
-[34592.236352]  ? lapic_next_event+0x13/0x20
-[34592.236352]  ? clockevents_program_event+0x9d/0x150
-[34592.236352]  ? __hrtimer_run_queues+0x13a/0x210
-[34592.236352]  ? tick_program_event+0x41/0x80
-[34592.236352]  ? hrtimer_interrupt+0xb0/0x190
-[34592.344366]  ? irq_exit+0x58/0xb0
-[34592.344366]  ? smp_apic_timer_interrupt+0x33/0x40
-[34592.344366]  ? apic_timer_interrupt+0x32/0x38
-[34592.356384]  ? perf_trace_thermal_power_cpu_limit+0xb/0x120
-[34592.356384]  md_thread+0x116/0x140
-[34592.356384]  ? do_wait_intr+0x70/0x70
-[34592.356384]  kthread+0xe3/0x110
-[34592.356384]  ? md_register_thread+0xc0/0xc0
-[34592.356384]  ? __kthread_init_worker+0x90/0x90
-[34592.356384]  ret_from_fork+0x19/0x24
-[34592.356384] Code: 00 f0 0f b1 0a 85 c0 75 08 b0 01 5d c3 8d 74 26 00 31 c0 5d c3 8d b6 00 00 00 00 8d bf 00 00 00 00 55 89 e5 c6 00 00 89 d0 50 9d <8d> 74 26 00 5d c3 55 89 c1 89 e5 b8 00 ff ff ff f0 0f c1 01 89 
+1) I created the raid:
 
-Config here: http://0x.ca/sim/ref/4.12.4-32/config
+sudo mdadm --create --verbose /dev/md0 --level=5 --raid-devices=3 
+/dev/sdb /dev/sdc /dev/sdd
 
-Simon-
+without lvm this time, juste a single ext4 partition
+
+mkfs.ext4 /dev/md0
+mount /dev/md0 /srv/data
+
+I copied 3Tb on it
+
+I just rebooted the machine
+
+2) and (again) no md0 assembled at boot:
+
+mdadm -E /dev/sd[bcd]
+/dev/sdb:
+    MBR Magic : aa55
+Partition[0] :   4294967295 sectors at            1 (type ee)
+/dev/sdc:
+    MBR Magic : aa55
+Partition[0] :   4294967295 sectors at            1 (type ee)
+/dev/sdd:
+    MBR Magic : aa55
+Partition[0] :   4294967295 sectors at            1 (type ee)
+
+
+This time, I am able to get my data back. I first create the overlays and:
+
+mdadm --create --verbose /dev/md0 --assume-clean --level=5 
+--raid-devices=3 /dev/mapper/sdb /dev/mapper/sdc /dev/mapper/sdd
+mount /dev/md0 /srv/data
+
+# mdadm --detail --scan /dev/md0
+ARRAY /dev/md0 metadata=1.2 name=smic:0 
+UUID=2ebab32e:82283ac5:4232d2ee:92abf170
+
+and it mounts, so I did exactly the same using the real disks and 
+(again) got my data back. The raid is now running:
+
+# mdadm -E /dev/sdb
+/dev/sdb:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : 2ebab32e:82283ac5:4232d2ee:92abf170
+            Name : smic:0  (local to host smic)
+   Creation Time : Mon Jul 31 21:36:12 2017
+      Raid Level : raid5
+    Raid Devices : 3
+
+  Avail Dev Size : 5860271024 (2794.40 GiB 3000.46 GB)
+      Array Size : 5860270080 (5588.79 GiB 6000.92 GB)
+   Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=262056 sectors, after=944 sectors
+           State : clean
+     Device UUID : 2d1daf78:1e085799:6f1799b2:e88e60d1
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Mon Jul 31 21:36:19 2017
+   Bad Block Log : 512 entries available at offset 72 sectors
+        Checksum : 63abce91 - correct
+          Events : 1
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 0
+    Array State : AAA ('A' == active, '.' == missing, 'R' == replacing)
+# mdadm -E /dev/sdc
+/dev/sdc:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : 2ebab32e:82283ac5:4232d2ee:92abf170
+            Name : smic:0  (local to host smic)
+   Creation Time : Mon Jul 31 21:36:12 2017
+      Raid Level : raid5
+    Raid Devices : 3
+
+  Avail Dev Size : 5860271024 (2794.40 GiB 3000.46 GB)
+      Array Size : 5860270080 (5588.79 GiB 6000.92 GB)
+   Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=262056 sectors, after=944 sectors
+           State : clean
+     Device UUID : db6d0696:072c5166:1491157d:6ddf34cf
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Mon Jul 31 21:36:19 2017
+   Bad Block Log : 512 entries available at offset 72 sectors
+        Checksum : 164e0d53 - correct
+          Events : 1
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 1
+    Array State : AAA ('A' == active, '.' == missing, 'R' == replacing)
+# mdadm -E /dev/sdd
+/dev/sdd:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : 2ebab32e:82283ac5:4232d2ee:92abf170
+            Name : smic:0  (local to host smic)
+   Creation Time : Mon Jul 31 21:36:12 2017
+      Raid Level : raid5
+    Raid Devices : 3
+
+  Avail Dev Size : 5860271024 (2794.40 GiB 3000.46 GB)
+      Array Size : 5860270080 (5588.79 GiB 6000.92 GB)
+   Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=262056 sectors, after=944 sectors
+           State : clean
+     Device UUID : 0c52bea6:a0cbf060:fe5edff0:4ee71d21
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Mon Jul 31 21:36:19 2017
+   Bad Block Log : 512 entries available at offset 72 sectors
+        Checksum : e75866e8 - correct
+          Events : 1
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 2
+    Array State : AAA ('A' == active, '.' == missing, 'R' == replacing)
+
+but a reboot always brings me back to step 2), with the need to press 
+ctrl-D at boot time.
+
+What am I missing? Am I using a bad version of the mdadm or kernel 
+(mdadm:amd64 3.3.2-5+deb8u2, kernel 4.8.0-0.bpo.2-amd64) or am I doing 
+it wrong in another way ?
+
+best regards,
+
+On 06/10/2017 10:41 PM, Andreas Klauer wrote:
+> On Sat, Jun 10, 2017 at 10:04:16PM +0200, Paul Tonelli wrote:
+>> I believe the offset we manually specify is after the default one on a
+>> raid assembly with 3 disks, so it should have rebuilt the previous LVM
+>> superblock, or am I missing something (again).
+> It should be the reverse. When you grow the raid, the offset shrinks.
+>
+> Not able to provide further insights. You have a LVM2 header which,
+> given the correct offset, should appear on the /dev/md device and
+> in that case everything else should appear too.
+>
+> If that is not the case then things will be a lot more complicated.
+>
+> Regards
+> Andreas Klauer
+
+
