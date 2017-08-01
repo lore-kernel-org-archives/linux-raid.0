@@ -1,60 +1,69 @@
-From: <xa0ajutor@colectiv.info>
-Subject: (unknown)
-Date: Tue, 01 Aug 2017 01:35:07 -0000
-Message-ID: <150155130768.22644.6496220083556422130@internetathome.com.bd>
-Mime-Version: 1.0
-Content-Type: application/zip; name="EMAIL_2558300_linux-raid.zip"
-Content-Transfer-Encoding: base64
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: [PATCH] udev rules: introduce rules for cluster-md to confirm device
+Date: Tue,  1 Aug 2017 11:15:04 +0800
+Message-ID: <20170801031504.8452-1-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: attachment
-Subject: 
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: jes.sorensen@gmail.com, neilb@suse.com, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-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
+For cluster scenario, add device is different with native raid.
+When a node issues adds a device, then the node will broadcast
+a message with UUID to other nodes in the cluster. If receiving
+node can find the device with the specific UUID, it must confirm
+the device, otherwise reports it is missing.
+
+Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+---
+ Makefile                               |  6 ++++--
+ udev-md-clustered-confirm-device.rules | 20 ++++++++++++++++++++
+ 2 files changed, 24 insertions(+), 2 deletions(-)
+ create mode 100644 udev-md-clustered-confirm-device.rules
+
+diff --git a/Makefile b/Makefile
+index 021d3ad..0977f27 100644
+--- a/Makefile
++++ b/Makefile
+@@ -256,8 +256,10 @@ install-man: mdadm.8 md.4 mdadm.conf.5 mdmon.8
+ 	$(INSTALL) -D -m 644 md.4 $(DESTDIR)$(MAN4DIR)/md.4
+ 	$(INSTALL) -D -m 644 mdadm.conf.5 $(DESTDIR)$(MAN5DIR)/mdadm.conf.5
+ 
+-install-udev: udev-md-raid-arrays.rules udev-md-raid-assembly.rules udev-md-raid-creating.rules
+-	@for file in 01-md-raid-creating.rules 63-md-raid-arrays.rules 64-md-raid-assembly.rules ; \
++install-udev: udev-md-raid-arrays.rules udev-md-raid-assembly.rules udev-md-raid-creating.rules \
++		udev-md-clustered-confirm-device.rules 
++	@for file in 01-md-raid-creating.rules 63-md-raid-arrays.rules 64-md-raid-assembly.rules \
++		69-md-clustered-confirm-device.rules ; \
+ 	do sed -e 's,BINDIR,$(BINDIR),g' udev-$${file#??-} > .install.tmp.1 && \
+ 	   $(ECHO) $(INSTALL) -D -m 644 udev-$${file#??-} $(DESTDIR)$(UDEVDIR)/rules.d/$$file ; \
+ 	   $(INSTALL) -D -m 644 .install.tmp.1 $(DESTDIR)$(UDEVDIR)/rules.d/$$file ; \
+diff --git a/udev-md-clustered-confirm-device.rules b/udev-md-clustered-confirm-device.rules
+new file mode 100644
+index 0000000..d763e27
+--- /dev/null
++++ b/udev-md-clustered-confirm-device.rules
+@@ -0,0 +1,20 @@
++# do not edit this file, it will be overwritten on update
++
++SUBSYSTEM!="block", GOTO="clustermd_end"
++
++# handle md arrays
++KERNEL!="md*", GOTO="clustermd_end"
++ENV{DEVTYPE}!="disk", GOTO="clustermd_end"
++
++# Based on the received UUID, node confirms the device if
++# it is found by blkid, otherwise the node reports it is
++# missing.
++ACTION=="change", ENV{EVENT}=="ADD_DEVICE", ENV{DEVICE_UUID}=="?*", ENV{RAID_DISK}=="?*", \
++PROGRAM="BINDIR/blkid -o device -t UUID_SUB=$env{DEVICE_UUID}", RESULT!="", \
++RUN+="BINDIR/mdadm --manage $env{DEVNAME} --cluster-confirm $env{RAID_DISK}:$result"
++
++ACTION=="change", ENV{EVENT}=="ADD_DEVICE", ENV{DEVICE_UUID}=="?*", ENV{RAID_DISK}=="?*", \
++PROGRAM="BINDIR/blkid -o device -t UUID_SUB=$env{DEVICE_UUID}", RESULT=="", \
++RUN+="BINDIR/mdadm --manage $env{DEVNAME} --cluster-confirm $env{RAID_DISK}:missing"
++
++LABEL="clustermd_end"
+-- 
+2.10.0
+
