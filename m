@@ -1,69 +1,88 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: [PATCH v3] udev rules: introduce rules for cluster-md to confirm
- device
-Date: Wed, 2 Aug 2017 22:50:41 -0400
-Message-ID: <22914.36737.548270.182436@quad.stoffel.home>
-References: <20170801031504.8452-1-gqjiang@suse.com>
-        <20170802020541.3412-1-gqjiang@suse.com>
-        <22914.32725.983017.495207@quad.stoffel.home>
-        <59828314.3050602@suse.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: jcejka@suse.com
+Subject: [PATCH] mdadm: allow to assemble /dev/md_xxx named arrays.
+Date: Thu,  3 Aug 2017 18:32:36 +0200
+Message-ID: <20170803163236.28958-1-jcejka@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <59828314.3050602@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>
-Cc: John Stoffel <john@stoffel.org>, linux-raid@vger.kernel.org, jes.sorensen@gmail.com, neilb@suse.com
+To: linux-raid@vger.kernel.org
+Cc: Josef Cejka <jcejka@suse.com>
 List-Id: linux-raid.ids
 
->>>>> "Guoqing" == Guoqing Jiang <gqjiang@suse.com> writes:
+From: Josef Cejka <jcejka@suse.com>
 
-Guoqing> On 08/03/2017 09:43 AM, John Stoffel wrote:
->>>>>>> "Guoqing" == Guoqing Jiang <gqjiang@suse.com> writes:
-Guoqing> For cluster scenario, add device is different with native raid.
-Guoqing> When a node issues adds a device, then the node will broadcast
-Guoqing> a message with UUID to other nodes in the cluster. If receiving
-Guoqing> node can find the device with the specific UUID, it must confirm
-Guoqing> the device, otherwise reports it is missing.
->> 
-Guoqing> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-Guoqing> ---
-Guoqing> Makefile                               |  6 ++++--
-Guoqing> udev-md-clustered-confirm-device.rules | 21 +++++++++++++++++++++
-Guoqing> 2 files changed, 25 insertions(+), 2 deletions(-)
-Guoqing> create mode 100644 udev-md-clustered-confirm-device.rules
->> 
-Guoqing> diff --git a/Makefile b/Makefile
-Guoqing> index 021d3ad..0977f27 100644
-Guoqing> --- a/Makefile
-Guoqing> +++ b/Makefile
-Guoqing> @@ -256,8 +256,10 @@ install-man: mdadm.8 md.4 mdadm.conf.5 mdmon.8
-Guoqing> $(INSTALL) -D -m 644 md.4 $(DESTDIR)$(MAN4DIR)/md.4
-Guoqing> $(INSTALL) -D -m 644 mdadm.conf.5 $(DESTDIR)$(MAN5DIR)/mdadm.conf.5
->> 
-Guoqing> -install-udev: udev-md-raid-arrays.rules udev-md-raid-assembly.rules udev-md-raid-creating.rules
-Guoqing> -	@for file in 01-md-raid-creating.rules 63-md-raid-arrays.rules 64-md-raid-assembly.rules ; \
-Guoqing> +install-udev: udev-md-raid-arrays.rules udev-md-raid-assembly.rules udev-md-raid-creating.rules \
-Guoqing> +		udev-md-clustered-confirm-device.rules
->> 
->> 
->> You have udev-md-clustered-.... here, but down below you use
->> clustermd-end in your names.  Which I find slightly annoying because
->> they're different.  Just me being annoying here.  :-)  I didn't check
->> if the other raid rules have this issue as well.
->> 
+Allow to assemble arrays using /dev/md_xxx name format
+both from cmdline like mdadm -A /dev/md_xxx
+or using ASSEMBLE directive in mdadm.conf
 
-Guoqing> Well, I named it as "udev-md-clustered-*" to align with the
-Guoqing> name of existed udev rules, it also means the array is
-Guoqing> clustered. And clustermd is a convenient/short name to use.
+Signed-off-by: Josef Cejka <jcejka@suse.com>
+---
+ config.c |  5 +++--
+ mdopen.c | 26 ++++++++++++++++----------
+ 2 files changed, 19 insertions(+), 12 deletions(-)
 
-I think mdcluster is better than clustermd, but that's only because
-it's the same order as udev-md-clustered-* but we're both just
-bike shedding here.  :-)  
-
-Guoqing> But not a big deal, I am open to the name if you have better
-Guoqing> idea, :-) .
-
-Not really.  Appreciate your nice reply to my semi-inane comment.
+diff --git a/config.c b/config.c
+index 48e0278..113ef01 100644
+--- a/config.c
++++ b/config.c
+@@ -389,6 +389,7 @@ void arrayline(char *line)
+ 			 *  /dev/md/{anything}
+ 			 *  /dev/mdNN
+ 			 *  /dev/md_dNN
++			 *  /dev/md_XXX
+ 			 *  <ignore>
+ 			 *  or anything that doesn't start '/' or '<'
+ 			 */
+@@ -397,8 +398,8 @@ void arrayline(char *line)
+ 			    (w[0] != '/' && w[0] != '<') ||
+ 			    (strncmp(w, "/dev/md", 7) == 0 &&
+ 			     is_number(w + 7)) ||
+-			    (strncmp(w, "/dev/md_d", 9) == 0 &&
+-			     is_number(w + 9))) {
++			    (strncmp(w, "/dev/md_", 8) == 0 &&
++			     strlen(w) > 8)) {
+ 				/* This is acceptable */;
+ 				if (mis.devname)
+ 					pr_err("only give one device per ARRAY line: %s and %s\n",
+diff --git a/mdopen.c b/mdopen.c
+index c4f1c12..0f3a244 100644
+--- a/mdopen.c
++++ b/mdopen.c
+@@ -174,19 +174,25 @@ int create_mddev(char *dev, char *name, int autof, int trustworthy,
+ 				num = strtoul(e, NULL, 10);
+ 			strcpy(cname, dev+5);
+ 			cname[e-(dev+5)] = 0;
+-			/* name *must* be mdXX or md_dXX in this context */
++			/* name is not mdXX or md_dXX */
+ 			if (num < 0 ||
+ 			    (strcmp(cname, "md") != 0 && strcmp(cname, "md_d") != 0)) {
+-				pr_err("%s is an invalid name for an md device.  Try /dev/md/%s\n",
+-					dev, dev+5);
+-				return -1;
++				if (strncmp(cname, "md_", 3) != 0) {
++					pr_err("%s is an invalid name for an md device.  Try /dev/md/%s\n",
++						dev, dev+5);
++					return -1;
++				}
++				/* /dev/md_<string> format */
++				strcpy(cname, dev+8);
++				num = -1;
++			} else {
++				if (strcmp(cname, "md") == 0)
++					use_mdp = 0;
++				else
++					use_mdp = 1;
++				/* recreate name: /dev/md/0 or /dev/md/d0 */
++				sprintf(cname, "%s%d", use_mdp?"d":"", num);
+ 			}
+-			if (strcmp(cname, "md") == 0)
+-				use_mdp = 0;
+-			else
+-				use_mdp = 1;
+-			/* recreate name: /dev/md/0 or /dev/md/d0 */
+-			sprintf(cname, "%s%d", use_mdp?"d":"", num);
+ 		} else
+ 			strcpy(cname, dev);
+ 
+-- 
+2.12.3
 
