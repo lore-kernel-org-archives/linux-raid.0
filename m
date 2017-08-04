@@ -1,8 +1,7 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [PATCH 2/4] Use correct syntax for passing DEVLINKS to mdadm from
- udev
+Subject: [PATCH 3/4] super1: only set clustered flag when bitmap is present
 Date: Fri, 04 Aug 2017 15:30:02 +1000
-Message-ID: <150182460221.25561.3743606766426534278.stgit@noble>
+Message-ID: <150182460223.25561.11910300226536151781.stgit@noble>
 References: <150182450644.25561.9683614144764209335.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,44 +13,38 @@ To: Jes Sorensen <jes.sorensen@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
- ${DEVLINKS}
-is not valid udev syntax, and is passed through uninterpreted.
- $env{DEVLINKS}
-or
-  %e{DEVLINKS}
-is correct.
+If no bitmap is present, then the test
+
+	if (__le32_to_cpu(bsb->nodes) > 1)
+
+accesses uninitialised memory.  So move that test inside
+a test for a bitmap being present.
 
 Signed-off-by: NeilBrown <neilb@suse.com>
 ---
- mdadm.8.in                  |    2 +-
- udev-md-raid-assembly.rules |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ super1.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/mdadm.8.in b/mdadm.8.in
-index ecfe9da8d474..d8c2dfca6040 100644
---- a/mdadm.8.in
-+++ b/mdadm.8.in
-@@ -2948,7 +2948,7 @@ This is the only context where the aliases are used.  They are
- usually provided by a
- .I udev
- rules mentioning
--.BR ${DEVLINKS} .
-+.BR $env{DEVLINKS} .
+diff --git a/super1.c b/super1.c
+index 86ec850d03bd..47f90cd75805 100644
+--- a/super1.c
++++ b/super1.c
+@@ -977,14 +977,14 @@ static void getinfo_super1(struct supertype *st, struct mdinfo *info, char *map)
+ 	info->array.chunk_size = __le32_to_cpu(sb->chunksize)*512;
+ 	info->array.state =
+ 		(__le64_to_cpu(sb->resync_offset) == MaxSector)	? 1 : 0;
+-	if (__le32_to_cpu(bsb->nodes) > 1)
+-		info->array.state |= (1 << MD_SB_CLUSTERED);
  
- .IP +
- Does the device have a valid md superblock?  If a specific metadata
-diff --git a/udev-md-raid-assembly.rules b/udev-md-raid-assembly.rules
-index 8ca232a44b1f..9f055ed022d5 100644
---- a/udev-md-raid-assembly.rules
-+++ b/udev-md-raid-assembly.rules
-@@ -30,7 +30,7 @@ LABEL="md_inc"
- 
- # remember you can limit what gets auto/incrementally assembled by
- # mdadm.conf(5)'s 'AUTO' and selectively whitelist using 'ARRAY'
--ACTION=="add|change", IMPORT{program}="BINDIR/mdadm --incremental --export $devnode --offroot ${DEVLINKS}"
-+ACTION=="add|change", IMPORT{program}="BINDIR/mdadm --incremental --export $devnode --offroot $env{DEVLINKS}"
- ACTION=="add|change", ENV{MD_STARTED}=="*unsafe*", ENV{MD_FOREIGN}=="no", ENV{SYSTEMD_WANTS}+="mdadm-last-resort@$env{MD_DEVICE}.timer"
- ACTION=="remove", ENV{ID_PATH}=="?*", RUN+="BINDIR/mdadm -If $name --path $env{ID_PATH}"
- ACTION=="remove", ENV{ID_PATH}!="?*", RUN+="BINDIR/mdadm -If $name"
+ 	super_offset = __le64_to_cpu(sb->super_offset);
+ 	info->data_offset = __le64_to_cpu(sb->data_offset);
+ 	info->component_size = __le64_to_cpu(sb->size);
+ 	if (sb->feature_map & __le32_to_cpu(MD_FEATURE_BITMAP_OFFSET)) {
+ 		info->bitmap_offset = (int32_t)__le32_to_cpu(sb->bitmap_offset);
++		if (__le32_to_cpu(bsb->nodes) > 1)
++			info->array.state |= (1 << MD_SB_CLUSTERED);
+ 	} else if (sb->feature_map & __le32_to_cpu(MD_FEATURE_PPL)) {
+ 		info->ppl_offset = __le16_to_cpu(sb->ppl.offset);
+ 		info->ppl_size = __le16_to_cpu(sb->ppl.size);
 
 
