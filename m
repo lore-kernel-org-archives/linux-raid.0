@@ -1,7 +1,7 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: [PATCH 3/5] testb: implement bandwidth control
-Date: Sat,  5 Aug 2017 08:51:47 -0700
-Message-ID: <dc8e1a2ddd66e3f5a68229a119e8f8ac864b0bfe.1501945859.git.shli@fb.com>
+Subject: [PATCH 1/5] testb: add interface
+Date: Sat,  5 Aug 2017 08:51:45 -0700
+Message-ID: <c4ad20449f985430bc7f7af11b56ec776335a4c1.1501945859.git.shli@fb.com>
 References: <cover.1501945859.git.shli@fb.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <cover.1501945859.git.shli@fb.com>
@@ -14,241 +14,346 @@ List-Id: linux-raid.ids
 
 From: Kyungchan Koh <kkc6196@fb.com>
 
-In test, we usually expect controllable disk speed. For example, in a
-raid array, we'd like some disks are fast and some are slow. MD RAID
-actually has a feature for this. To test the feature, we'd like to make
-the disk run in specific speed.
+The testb block device driver is intended for testing, so configuration
+should be easy. We are using configfs here, which can be configured with
+a shell script. Basically the the testb will be configured as:
 
-block throttling probably can be used for this purpose, but it requires
-cgroup setup. Here we just implement a simple throttling mechanism in
-the driver. There is slight fluctuation in the mechanism, but it's good
-enough for test.
+mount the configfs fs as usual:
+mount -t configfs none /mnt
+
+Checking which features the driver supports:
+cat /mnt/testb/features
+
+The 'features' attribute is for future extension. We probably will add
+new features into the driver, userspace can check this attribute to find
+the supported features.
+
+Create a device:
+mkdir /mnt/testb/a
+
+Then configure the device by setting attributes under /mnt/testb/a
+size: disk size in bytes
+blocksize: sector size, mush be multiples of 512, and maximum is 4k
+discard: if the disk supports discard
+nr_queues: how many queues supported in the disk
+q_depth: queue depth of the disk
+
+Then power on the device:
+echo 1 > /mnt/testb/a/power
+this will create a disk, which should be /dev/testb_a
+We don't allow change attributes after the device poweron once so far
+
+We can remove the disk by writing 0 to the 'power' attribute. 'rmdir
+/mnt/testb/a' will delete the device, which also remove the disk if the
+disk isn't removed yet.
 
 Signed-off-by: Kyungchan Koh <kkc6196@fb.com>
 Signed-off-by: Shaohua Li <shli@fb.com>
 ---
- drivers/block/test_blk.c | 104 ++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 103 insertions(+), 1 deletion(-)
+ drivers/block/Kconfig    |   8 ++
+ drivers/block/Makefile   |   2 +
+ drivers/block/test_blk.c | 261 +++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 271 insertions(+)
+ create mode 100644 drivers/block/test_blk.c
 
+diff --git a/drivers/block/Kconfig b/drivers/block/Kconfig
+index 8ddc982..2da5d02 100644
+--- a/drivers/block/Kconfig
++++ b/drivers/block/Kconfig
+@@ -15,6 +15,14 @@ menuconfig BLK_DEV
+ 
+ if BLK_DEV
+ 
++config BLK_DEV_TEST_BLK
++	tristate "A test block driver"
++	depends on CONFIGFS_FS
++	help
++	  A memory-based block device driver for testing purposes. Configurable
++	  through configFS. Useful features such as bandwidth throttling,
++	  writeback cache, and power loss emulation.
++
+ config BLK_DEV_NULL_BLK
+ 	tristate "Null test block driver"
+ 
+diff --git a/drivers/block/Makefile b/drivers/block/Makefile
+index ec8c368..f0f0d21 100644
+--- a/drivers/block/Makefile
++++ b/drivers/block/Makefile
+@@ -29,6 +29,8 @@ obj-$(CONFIG_VIRTIO_BLK)	+= virtio_blk.o
+ 
+ obj-$(CONFIG_BLK_DEV_SX8)	+= sx8.o
+ 
++obj-$(CONFIG_BLK_DEV_TEST_BLK)	+= test_blk.o
++
+ obj-$(CONFIG_XEN_BLKDEV_FRONTEND)	+= xen-blkfront.o
+ obj-$(CONFIG_XEN_BLKDEV_BACKEND)	+= xen-blkback/
+ obj-$(CONFIG_BLK_DEV_DRBD)     += drbd/
 diff --git a/drivers/block/test_blk.c b/drivers/block/test_blk.c
-index 1b06ce7..c67c73d 100644
---- a/drivers/block/test_blk.c
+new file mode 100644
+index 0000000..93e8ec2
+--- /dev/null
 +++ b/drivers/block/test_blk.c
-@@ -9,9 +9,11 @@
- 
- #include <linux/init.h>
- #include <linux/module.h>
-+#include <linux/atomic.h>
- #include <linux/blk-mq.h>
- #include <linux/blkdev.h>
- #include <linux/configfs.h>
-+#include <linux/hrtimer.h>
- #include <linux/radix-tree.h>
- #include <linux/idr.h>
- 
-@@ -23,6 +25,14 @@
- 
- #define FREE_BATCH		16
- 
-+#define TICKS_PER_SEC		50ULL
-+#define TIMER_INTERVAL		(NSEC_PER_SEC / TICKS_PER_SEC)
+@@ -0,0 +1,261 @@
++/*
++ * test_blk.c - A memory-based test block device driver.
++ *
++ * Copyright (c) 2017 Facebook, Inc.
++ *
++ * Parts derived from drivers/block/null_blk.c and drivers/block/brd.c,
++ * copyright to respective owners.
++ */
 +
-+static inline u64 mb_per_tick(int mbps)
++#include <linux/init.h>
++#include <linux/module.h>
++#include <linux/blkdev.h>
++#include <linux/configfs.h>
++#include <linux/radix-tree.h>
++
++/*
++ * Status flags for testb_device.
++ *
++ * CONFIGURED:	Device has been configured and turned on. Cannot reconfigure.
++ * UP:		Device is currently on and visible in userspace.
++ */
++enum testb_device_flags {
++	TESTB_DEV_FL_CONFIGURED	= 0,
++	TESTB_DEV_FL_UP		= 1,
++};
++
++/*
++ * testb_device represents the characteristics of a virtual device.
++ *
++ * @item:	The struct used by configfs to represent items in fs.
++ * @lock:	Protect data of the device
++ * @pages:	The storage of the device.
++ * @flags:	TEST_DEV_FL_ flags to indicate various status.
++ *
++ * @power:	1 means on; 0 means off.
++ * @size:	The size of the disk (in bytes).
++ * @blocksize:	The block size for the request queue.
++ * @nr_queues:	The number of queues.
++ * @q_depth:	The depth of each queue.
++ * @discard:	If enable discard
++ */
++struct testb_device {
++	struct config_item item;
++	spinlock_t lock;
++	struct radix_tree_root pages;
++	unsigned long flags;
++
++	uint power;
++	u64 size;
++	uint blocksize;
++	uint nr_queues;
++	uint q_depth;
++	uint discard;
++};
++
++static inline struct testb_device *to_testb_device(struct config_item *item)
 +{
-+	return (1 << 20) / TICKS_PER_SEC * ((u64) mbps);
++	return item ? container_of(item, struct testb_device, item) : NULL;
 +}
 +
- struct testb {
- 	unsigned int index;
- 	struct request_queue *q;
-@@ -33,6 +43,9 @@ struct testb {
- 	struct blk_mq_tag_set tag_set;
- 
- 	char disk_name[DISK_NAME_LEN];
-+
-+	atomic_long_t cur_bytes;
-+	struct hrtimer timer;
- };
- 
- /*
-@@ -53,10 +66,12 @@ struct testb_page {
-  *
-  * CONFIGURED:	Device has been configured and turned on. Cannot reconfigure.
-  * UP:		Device is currently on and visible in userspace.
-+ * THROTTLED:	Device is being throttled.
-  */
- enum testb_device_flags {
- 	TESTB_DEV_FL_CONFIGURED	= 0,
- 	TESTB_DEV_FL_UP		= 1,
-+	TESTB_DEV_FL_THROTTLED	= 2,
- };
- 
- /*
-@@ -74,6 +89,7 @@ enum testb_device_flags {
-  * @nr_queues:	The number of queues.
-  * @q_depth:	The depth of each queue.
-  * @discard:	If enable discard
-+ * @mbps:	Bandwidth throttle cap (in mb/s).
-  */
- struct testb_device {
- 	struct config_item item;
-@@ -88,6 +104,7 @@ struct testb_device {
- 	uint nr_queues;
- 	uint q_depth;
- 	uint discard;
-+	uint mbps;
- };
- 
- static int testb_poweron_device(struct testb_device *dev);
-@@ -161,6 +178,7 @@ TESTB_DEVICE_ATTR(blocksize, uint);
- TESTB_DEVICE_ATTR(nr_queues, uint);
- TESTB_DEVICE_ATTR(q_depth, uint);
- TESTB_DEVICE_ATTR(discard, uint);
-+TESTB_DEVICE_ATTR(mbps, uint);
- 
- static ssize_t testb_device_power_show(struct config_item *item, char *page)
- {
-@@ -207,6 +225,7 @@ static struct configfs_attribute *testb_device_attrs[] = {
- 	&testb_device_attr_nr_queues,
- 	&testb_device_attr_q_depth,
- 	&testb_device_attr_discard,
-+	&testb_device_attr_mbps,
- 	NULL,
- };
- 
-@@ -247,6 +266,7 @@ config_item *testb_group_make_item(struct config_group *group, const char *name)
- 	t_dev->nr_queues = 2;
- 	t_dev->q_depth = 64;
- 	t_dev->discard = 1;
-+	t_dev->mbps = -1;
- 
- 	return &t_dev->item;
- }
-@@ -265,7 +285,7 @@ testb_group_drop_item(struct config_group *group, struct config_item *item)
- 
- static ssize_t memb_group_features_show(struct config_item *item, char *page)
- {
--	return snprintf(page, PAGE_SIZE, "\n");
-+	return snprintf(page, PAGE_SIZE, "bandwidth\n");
- }
- 
- CONFIGFS_ATTR_RO(memb_group_, features);
-@@ -299,6 +319,11 @@ static DEFINE_IDA(testb_indices);
- static DEFINE_MUTEX(testb_lock);
- static int testb_major;
- 
-+static inline int testb_throttled(struct testb *testb)
++static inline ssize_t testb_device_uint_attr_show(uint val, char *page)
 +{
-+	return test_bit(TESTB_DEV_FL_THROTTLED, &testb->t_dev->flags);
++	return snprintf(page, PAGE_SIZE, "%u\n", val);
 +}
 +
- static struct testb_page *testb_alloc_page(gfp_t gfp_flags)
- {
- 	struct testb_page *t_page;
-@@ -570,6 +595,44 @@ static int testb_handle_rq(struct request *rq)
- 	} else if (req_op(rq) == REQ_OP_FLUSH)
- 		return testb_handle_flush(testb);
- 
-+	len = blk_rq_bytes(rq);
-+	if (testb_throttled(testb)) {
-+		if (!hrtimer_active(&testb->timer))
-+			hrtimer_restart(&testb->timer);
++static ssize_t
++testb_device_uint_attr_store(uint *val, const char *page, size_t count)
++{
++	uint tmp;
++	int result;
 +
-+		/*
-+		 * The lock is taken here to ensure no race happens
-+		 * between the timer that a) resets the budget and
-+		 * b) starts the queue and the cmd handler that
-+		 * c) spends the budget and d) determines to stop
-+		 * the queue.
-+		 *
-+		 * The race happens when the processes interweave.
-+		 * For example, c, a, b, d. For a whole interval,
-+		 * there may be no I/O occurring due to the race.
-+		 *
-+		 * Solution: Create an isolated region using the
-+		 * device spinlock that ensure a and b occur in
-+		 * isolation to c and d such that no interweaving
-+		 * occurs.
-+		 *
-+		 * This also prevents multiple processes or threads from
-+		 * calling blk_mq_stop_hw_queues.
-+		 */
-+		spin_lock_irqsave(&testb->t_dev->lock, lock_flag);
++	result = kstrtouint(page, 0, &tmp);
++	if (result)
++		return result;
 +
-+		if (atomic_long_add_negative((int)(-1 * len),
-+						&testb->cur_bytes)) {
-+			if (!blk_mq_queue_stopped(testb->q))
-+				blk_mq_stop_hw_queues(testb->q);
++	*val = tmp;
++	return count;
++}
 +
-+			spin_unlock_irqrestore(&testb->t_dev->lock, lock_flag);
-+			/* requeue the request */
-+			return -ENOMEM;
-+		}
-+		spin_unlock_irqrestore(&testb->t_dev->lock, lock_flag);
++static inline ssize_t testb_device_u64_attr_show(u64 val, char *page)
++{
++	return snprintf(page, PAGE_SIZE, "%llu\n", val);
++}
++
++static ssize_t
++testb_device_u64_attr_store(u64 *val, const char *page, size_t count)
++{
++	int result;
++	u64 tmp;
++
++	result = kstrtoull(page, 0, &tmp);
++	if (result)
++		return result;
++
++	*val = tmp;
++	return count;
++}
++
++/* The following macro should only be used with TYPE = {uint, u64}. */
++#define TESTB_DEVICE_ATTR(NAME, TYPE)						\
++static ssize_t									\
++testb_device_##NAME##_show(struct config_item *item, char *page)		\
++{										\
++	return testb_device_##TYPE##_attr_show(					\
++				to_testb_device(item)->NAME, page);		\
++}										\
++static ssize_t									\
++testb_device_##NAME##_store(struct config_item *item, const char *page,		\
++			    size_t count)					\
++{										\
++	if (test_bit(TESTB_DEV_FL_CONFIGURED, &to_testb_device(item)->flags))	\
++		return -EBUSY;							\
++	return testb_device_##TYPE##_attr_store(				\
++			&to_testb_device(item)->NAME, page, count);		\
++}										\
++CONFIGFS_ATTR(testb_device_, NAME);
++
++TESTB_DEVICE_ATTR(size, u64);
++TESTB_DEVICE_ATTR(blocksize, uint);
++TESTB_DEVICE_ATTR(nr_queues, uint);
++TESTB_DEVICE_ATTR(q_depth, uint);
++TESTB_DEVICE_ATTR(discard, uint);
++
++static ssize_t testb_device_power_show(struct config_item *item, char *page)
++{
++	return testb_device_uint_attr_show(to_testb_device(item)->power, page);
++}
++
++static ssize_t testb_device_power_store(struct config_item *item,
++				     const char *page, size_t count)
++{
++	struct testb_device *t_dev = to_testb_device(item);
++	uint newp = 0;
++	ssize_t ret;
++
++	ret = testb_device_uint_attr_store(&newp, page, count);
++	if (ret < 0)
++		return ret;
++
++	if (!t_dev->power && newp) {
++		if (test_and_set_bit(TESTB_DEV_FL_UP, &t_dev->flags))
++			return count;
++
++		set_bit(TESTB_DEV_FL_CONFIGURED, &t_dev->flags);
++		t_dev->power = newp;
++	} else if (to_testb_device(item)->power && !newp) {
++		t_dev->power = newp;
++		clear_bit(TESTB_DEV_FL_UP, &t_dev->flags);
 +	}
 +
- 	spin_lock_irqsave(&testb->t_dev->lock, lock_flag);
- 	rq_for_each_segment(bvec, rq, iter) {
- 		len = bvec.bv_len;
-@@ -622,6 +685,8 @@ static void testb_free_bdev(struct testb *testb)
- 	ida_simple_remove(&testb_indices, testb->index);
- 	mutex_unlock(&testb_lock);
- 
-+	if (testb_throttled(testb))
-+		hrtimer_cancel(&testb->timer);
- 	blk_cleanup_queue(testb->q);
- 	blk_mq_free_tag_set(&testb->tag_set);
- 
-@@ -657,6 +722,37 @@ static void testb_config_flush(struct testb *testb)
- 	blk_queue_flush_queueable(testb->q, true);
- }
- 
-+static enum hrtimer_restart testb_timer_fn(struct hrtimer *timer)
-+{
-+	struct testb *testb = container_of(timer, struct testb, timer);
-+	ktime_t testb_timer_interval = ktime_set(0, TIMER_INTERVAL);
-+	int testb_mbps = testb->t_dev->mbps;
-+	unsigned long lock_flag;
-+
-+	if (atomic_long_read(&testb->cur_bytes) == mb_per_tick(testb_mbps))
-+		return HRTIMER_NORESTART;
-+
-+	spin_lock_irqsave(&testb->t_dev->lock, lock_flag);
-+	atomic_long_set(&testb->cur_bytes, mb_per_tick(testb_mbps));
-+	if (blk_mq_queue_stopped(testb->q))
-+		blk_mq_start_stopped_hw_queues(testb->q, true);
-+	spin_unlock_irqrestore(&testb->t_dev->lock, lock_flag);
-+
-+	hrtimer_forward_now(&testb->timer, testb_timer_interval);
-+
-+	return HRTIMER_RESTART;
++	return count;
 +}
 +
-+static void testb_setup_timer(struct testb *testb)
-+{
-+	ktime_t testb_timer_interval = ktime_set(0, TIMER_INTERVAL);
++CONFIGFS_ATTR(testb_device_, power);
 +
-+	hrtimer_init(&testb->timer, CLOCK_MONOTONIC, HRTIMER_MODE_ABS);
-+	testb->timer.function = &testb_timer_fn;
-+	atomic_long_set(&testb->cur_bytes, mb_per_tick(testb->t_dev->mbps));
-+	hrtimer_start(&testb->timer, testb_timer_interval, HRTIMER_MODE_ABS);
++static struct configfs_attribute *testb_device_attrs[] = {
++	&testb_device_attr_power,
++	&testb_device_attr_size,
++	&testb_device_attr_blocksize,
++	&testb_device_attr_nr_queues,
++	&testb_device_attr_q_depth,
++	&testb_device_attr_discard,
++	NULL,
++};
++
++static void testb_device_release(struct config_item *item)
++{
++	kfree(to_testb_device(item));
 +}
 +
- static int testb_gendisk_register(struct testb *testb)
- {
- 	sector_t size;
-@@ -722,6 +818,12 @@ static int testb_alloc_bdev(struct testb_device *t_dev)
- 		goto out_cleanup_tags;
- 	}
- 
-+	if (t_dev->mbps && t_dev->mbps != -1) {
-+		t_dev->mbps = (t_dev->mbps >> 10) > 0 ? 1024 : t_dev->mbps;
-+		set_bit(TESTB_DEV_FL_THROTTLED, &t_dev->flags);
-+		testb_setup_timer(testb);
-+	}
++static struct configfs_item_operations testb_device_ops = {
++	.release	= testb_device_release,
++};
 +
- 	testb->q->queuedata = testb;
- 	queue_flag_set_unlocked(QUEUE_FLAG_NONROT, testb->q);
- 	queue_flag_clear_unlocked(QUEUE_FLAG_ADD_RANDOM, testb->q);
++static struct config_item_type testb_device_type = {
++	.ct_item_ops	= &testb_device_ops,
++	.ct_attrs	= testb_device_attrs,
++	.ct_owner	= THIS_MODULE,
++};
++
++static struct
++config_item *testb_group_make_item(struct config_group *group, const char *name)
++{
++	struct testb_device *t_dev;
++
++	t_dev = kzalloc(sizeof(struct testb_device), GFP_KERNEL);
++	if (!t_dev)
++		return ERR_PTR(-ENOMEM);
++
++	config_item_init_type_name(&t_dev->item, name, &testb_device_type);
++
++	/* Initialize attributes with default values. */
++	t_dev->size = 1024 * 1024 * 1024ULL;
++	t_dev->blocksize = 512;
++	t_dev->nr_queues = 2;
++	t_dev->q_depth = 64;
++	t_dev->discard = 1;
++
++	return &t_dev->item;
++}
++
++static void
++testb_group_drop_item(struct config_group *group, struct config_item *item)
++{
++	config_item_put(item);
++}
++
++static ssize_t memb_group_features_show(struct config_item *item, char *page)
++{
++	return snprintf(page, PAGE_SIZE, "\n");
++}
++
++CONFIGFS_ATTR_RO(memb_group_, features);
++
++static struct configfs_attribute *testb_group_attrs[] = {
++	&memb_group_attr_features,
++	NULL,
++};
++
++static struct configfs_group_operations testb_group_ops = {
++	.make_item	= testb_group_make_item,
++	.drop_item	= testb_group_drop_item,
++};
++
++static struct config_item_type testb_group_type = {
++	.ct_group_ops	= &testb_group_ops,
++	.ct_attrs	= testb_group_attrs,
++	.ct_owner	= THIS_MODULE,
++};
++
++static struct configfs_subsystem testb_subsys = {
++	.su_group = {
++		.cg_item = {
++			.ci_namebuf = "testb",
++			.ci_type = &testb_group_type,
++		},
++	},
++};
++
++static int __init testb_init(void)
++{
++	int ret = 0;
++	struct configfs_subsystem *subsys = &testb_subsys;
++
++	config_group_init(&subsys->su_group);
++	mutex_init(&subsys->su_mutex);
++
++	ret = configfs_register_subsystem(subsys);
++	return ret;
++}
++
++static void __exit testb_exit(void)
++{
++	configfs_unregister_subsystem(&testb_subsys);
++}
++
++module_init(testb_init);
++module_exit(testb_exit);
++
++MODULE_AUTHOR("Will Koh <kkc6196@fb.com>, Shaohua Li <shli@fb.com>");
++MODULE_LICENSE("GPL");
 -- 
 2.9.3
