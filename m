@@ -1,572 +1,66 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: [PATCH 4/5] testb: emulate disk cache
-Date: Sat,  5 Aug 2017 08:51:48 -0700
-Message-ID: <b60b958417a6fb689de74adb4da89ea6a47f295a.1501945859.git.shli@fb.com>
-References: <cover.1501945859.git.shli@fb.com>
+From: Alex <mysqlstudent@gmail.com>
+Subject: Re: RecovData Handshk error
+Date: Sat, 5 Aug 2017 15:43:43 -0400
+Message-ID: <CAB1R3shMZX7Dg0G3iVa-oMrM77DFSJzDTt64VqGr4OF1Ys8RwA@mail.gmail.com>
+References: <CAB1R3shnsVV2bnkiF2q-X+9iHD0eUrS0Xq0hqWgWM+EQAUwFXA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cover.1501945859.git.shli@fb.com>
-In-Reply-To: <cover.1501945859.git.shli@fb.com>
-References: <cover.1501945859.git.shli@fb.com>
+In-Reply-To: <CAB1R3shnsVV2bnkiF2q-X+9iHD0eUrS0Xq0hqWgWM+EQAUwFXA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-block@vger.kernel.org, linux-raid@vger.kernel.org
-Cc: kernel-team@fb.com, Kyungchan Koh <kyungchan.koh@gmail.com>, Kyungchan Koh <kkc6196@fb.com>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From: Kyungchan Koh <kkc6196@fb.com>
+Hi all, I sent the message below last week and haven't received any
+response. Is there a place that might be more appropriate for help
+with my MegaRAID and possible disk failure?
 
-Software must flush disk cache to guarantee data safety. To check if
-software correctly does disk cache flush, we must know the behavior of
-disk. But physical disk behavior is uncontrollable. Even software
-doesn't do the flush, the disk probably does the flush. This patch tries
-to emulate a cache in the test disk.
-
-All write will go to a cache first, when the cache is full, we then
-flush some data to disk storage. A flush request will flush all data of
-the cache to disk storage. If there is a power failure (by writing to
-power attribute, 'echo 0 > disk_name/power'), we discard all data in the
-cache, but preserve the data in disk storage. Later we can power on the
-disk again as usual (write 1 to 'power' attribute), then we can check if
-data integrity and very if software does everything correctly.
-
-Signed-off-by: Kyungchan Koh <kkc6196@fb.com>
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- drivers/block/test_blk.c | 248 ++++++++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 224 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/block/test_blk.c b/drivers/block/test_blk.c
-index c67c73d..631dae4 100644
---- a/drivers/block/test_blk.c
-+++ b/drivers/block/test_blk.c
-@@ -46,6 +46,7 @@ struct testb {
- 
- 	atomic_long_t cur_bytes;
- 	struct hrtimer timer;
-+	unsigned long cache_flush_pos;
- };
- 
- /*
-@@ -62,16 +63,27 @@ struct testb_page {
- };
- 
- /*
-+ * The highest 2 bits of bitmap are for special purpose. LOCK means the cache
-+ * page is being flushing to storage. FREE means the cache page is freed and
-+ * should be skipped from flushing to storage. Please see
-+ * testb_make_cache_space
-+ */
-+#define TESTB_PAGE_LOCK (sizeof(unsigned long) * 8 - 1)
-+#define TESTB_PAGE_FREE (sizeof(unsigned long) * 8 - 2)
-+
-+/*
-  * Status flags for testb_device.
-  *
-  * CONFIGURED:	Device has been configured and turned on. Cannot reconfigure.
-  * UP:		Device is currently on and visible in userspace.
-  * THROTTLED:	Device is being throttled.
-+ * CACHE:	Device is using a write-back cache.
-  */
- enum testb_device_flags {
- 	TESTB_DEV_FL_CONFIGURED	= 0,
- 	TESTB_DEV_FL_UP		= 1,
- 	TESTB_DEV_FL_THROTTLED	= 2,
-+	TESTB_DEV_FL_CACHE	= 3,
- };
- 
- /*
-@@ -81,6 +93,8 @@ enum testb_device_flags {
-  * @lock:	Protect data of the device
-  * @testb:	The device that these attributes belong to.
-  * @pages:	The storage of the device.
-+ * @cache:	The cache of the device.
-+ * @curr_cache:	The current cache size.
-  * @flags:	TEST_DEV_FL_ flags to indicate various status.
-  *
-  * @power:	1 means on; 0 means off.
-@@ -90,13 +104,16 @@ enum testb_device_flags {
-  * @q_depth:	The depth of each queue.
-  * @discard:	If enable discard
-  * @mbps:	Bandwidth throttle cap (in mb/s).
-+ * @cache_size:	The max capacity of the cache.
-  */
- struct testb_device {
- 	struct config_item item;
- 	spinlock_t lock;
- 	struct testb *testb;
- 	struct radix_tree_root pages;
-+	struct radix_tree_root cache;
- 	unsigned long flags;
-+	unsigned int curr_cache;
- 
- 	uint power;
- 	u64 size;
-@@ -105,11 +122,13 @@ struct testb_device {
- 	uint q_depth;
- 	uint discard;
- 	uint mbps;
-+	u64 cache_size;
- };
- 
- static int testb_poweron_device(struct testb_device *dev);
- static void testb_poweroff_device(struct testb_device *dev);
--static void testb_free_device_storage(struct testb_device *t_dev);
-+static void testb_free_device_storage(struct testb_device *t_dev,
-+	bool is_cache);
- 
- static inline struct testb_device *to_testb_device(struct config_item *item)
- {
-@@ -179,6 +198,7 @@ TESTB_DEVICE_ATTR(nr_queues, uint);
- TESTB_DEVICE_ATTR(q_depth, uint);
- TESTB_DEVICE_ATTR(discard, uint);
- TESTB_DEVICE_ATTR(mbps, uint);
-+TESTB_DEVICE_ATTR(cache_size, u64);
- 
- static ssize_t testb_device_power_show(struct config_item *item, char *page)
- {
-@@ -226,6 +246,7 @@ static struct configfs_attribute *testb_device_attrs[] = {
- 	&testb_device_attr_q_depth,
- 	&testb_device_attr_discard,
- 	&testb_device_attr_mbps,
-+	&testb_device_attr_cache_size,
- 	NULL,
- };
- 
-@@ -233,7 +254,7 @@ static void testb_device_release(struct config_item *item)
- {
- 	struct testb_device *t_dev = to_testb_device(item);
- 
--	testb_free_device_storage(t_dev);
-+	testb_free_device_storage(t_dev, false);
- 	kfree(t_dev);
- }
- 
-@@ -257,6 +278,7 @@ config_item *testb_group_make_item(struct config_group *group, const char *name)
- 		return ERR_PTR(-ENOMEM);
- 	spin_lock_init(&t_dev->lock);
- 	INIT_RADIX_TREE(&t_dev->pages, GFP_ATOMIC);
-+	INIT_RADIX_TREE(&t_dev->cache, GFP_ATOMIC);
- 
- 	config_item_init_type_name(&t_dev->item, name, &testb_device_type);
- 
-@@ -267,6 +289,7 @@ config_item *testb_group_make_item(struct config_group *group, const char *name)
- 	t_dev->q_depth = 64;
- 	t_dev->discard = 1;
- 	t_dev->mbps = -1;
-+	t_dev->cache_size = 100 * 1024 * 1024ULL;
- 
- 	return &t_dev->item;
- }
-@@ -285,7 +308,7 @@ testb_group_drop_item(struct config_group *group, struct config_item *item)
- 
- static ssize_t memb_group_features_show(struct config_item *item, char *page)
- {
--	return snprintf(page, PAGE_SIZE, "bandwidth\n");
-+	return snprintf(page, PAGE_SIZE, "bandwidth,cache\n");
- }
- 
- CONFIGFS_ATTR_RO(memb_group_, features);
-@@ -324,6 +347,11 @@ static inline int testb_throttled(struct testb *testb)
- 	return test_bit(TESTB_DEV_FL_THROTTLED, &testb->t_dev->flags);
- }
- 
-+static inline int testb_cache_active(struct testb *testb)
-+{
-+	return test_bit(TESTB_DEV_FL_CACHE, &testb->t_dev->flags);
-+}
-+
- static struct testb_page *testb_alloc_page(gfp_t gfp_flags)
- {
- 	struct testb_page *t_page;
-@@ -348,11 +376,15 @@ static void testb_free_page(struct testb_page *t_page)
- {
- 	WARN_ON(!t_page);
- 
-+	__set_bit(TESTB_PAGE_FREE, &t_page->bitmap);
-+	if (test_bit(TESTB_PAGE_LOCK, &t_page->bitmap))
-+		return;
- 	__free_page(t_page->page);
- 	kfree(t_page);
- }
- 
--static void testb_free_sector(struct testb *testb, sector_t sector)
-+static void testb_free_sector(struct testb *testb, sector_t sector,
-+	bool is_cache)
- {
- 	unsigned int sector_bit;
- 	u64 idx;
-@@ -361,7 +393,7 @@ static void testb_free_sector(struct testb *testb, sector_t sector)
- 
- 	assert_spin_locked(&testb->t_dev->lock);
- 
--	root = &testb->t_dev->pages;
-+	root = is_cache ? &testb->t_dev->cache : &testb->t_dev->pages;
- 	idx = sector >> PAGE_SECTORS_SHIFT;
- 	sector_bit = (sector & SECTOR_MASK);
- 
-@@ -373,36 +405,40 @@ static void testb_free_sector(struct testb *testb, sector_t sector)
- 			ret = radix_tree_delete_item(root, idx, t_page);
- 			WARN_ON(ret != t_page);
- 			testb_free_page(ret);
-+			if (is_cache)
-+				testb->t_dev->curr_cache -= PAGE_SIZE;
- 		}
- 	}
- }
- 
- static struct testb_page *testb_radix_tree_insert(struct testb *testb, u64 idx,
--	struct testb_page *t_page)
-+	struct testb_page *t_page, bool is_cache)
- {
- 	struct radix_tree_root *root;
- 
- 	assert_spin_locked(&testb->t_dev->lock);
- 
--	root = &testb->t_dev->pages;
-+	root = is_cache ? &testb->t_dev->cache : &testb->t_dev->pages;
- 
- 	if (radix_tree_insert(root, idx, t_page)) {
- 		testb_free_page(t_page);
- 		t_page = radix_tree_lookup(root, idx);
- 		WARN_ON(!t_page || t_page->page->index != idx);
--	}
-+	} else if (is_cache)
-+		testb->t_dev->curr_cache += PAGE_SIZE;
- 
- 	return t_page;
- }
- 
--static void testb_free_device_storage(struct testb_device *t_dev)
-+static void testb_free_device_storage(struct testb_device *t_dev,
-+	bool is_cache)
- {
- 	unsigned long pos = 0;
- 	int nr_pages;
- 	struct testb_page *ret, *t_pages[FREE_BATCH];
- 	struct radix_tree_root *root;
- 
--	root = &t_dev->pages;
-+	root = is_cache ? &t_dev->cache : &t_dev->pages;
- 
- 	do {
- 		int i;
-@@ -419,21 +455,27 @@ static void testb_free_device_storage(struct testb_device *t_dev)
- 
- 		pos++;
- 	} while (nr_pages == FREE_BATCH);
-+
-+	if (is_cache)
-+		t_dev->curr_cache = 0;
- }
- 
--static struct testb_page *testb_lookup_page(struct testb *testb,
--	sector_t sector, bool for_write)
-+static struct testb_page *__testb_lookup_page(struct testb *testb,
-+	sector_t sector, bool for_write, bool is_cache)
- {
- 	unsigned int sector_bit;
- 	u64 idx;
- 	struct testb_page *t_page;
-+	struct radix_tree_root *root;
- 
- 	assert_spin_locked(&testb->t_dev->lock);
- 
- 	idx = sector >> PAGE_SECTORS_SHIFT;
- 	sector_bit = (sector & SECTOR_MASK);
- 
--	t_page = radix_tree_lookup(&testb->t_dev->pages, idx);
-+	root = is_cache ? &testb->t_dev->cache : &testb->t_dev->pages;
-+
-+	t_page = radix_tree_lookup(root, idx);
- 	WARN_ON(t_page && t_page->page->index != idx);
- 
- 	if (t_page && (for_write || test_bit(sector_bit, &t_page->bitmap)))
-@@ -442,15 +484,27 @@ static struct testb_page *testb_lookup_page(struct testb *testb,
- 	return NULL;
- }
- 
-+static struct testb_page *testb_lookup_page(struct testb *testb,
-+	sector_t sector, bool for_write, bool ignore_cache)
-+{
-+	struct testb_page *page = NULL;
-+
-+	if (!ignore_cache)
-+		page = __testb_lookup_page(testb, sector, for_write, true);
-+	if (page)
-+		return page;
-+	return __testb_lookup_page(testb, sector, for_write, false);
-+}
-+
- static struct testb_page *testb_insert_page(struct testb *testb,
--	sector_t sector, unsigned long *lock_flag)
-+	sector_t sector, unsigned long *lock_flag, bool ignore_cache)
- {
- 	u64 idx;
- 	struct testb_page *t_page;
- 
- 	assert_spin_locked(&testb->t_dev->lock);
- 
--	t_page = testb_lookup_page(testb, sector, true);
-+	t_page = testb_lookup_page(testb, sector, true, ignore_cache);
- 	if (t_page)
- 		return t_page;
- 
-@@ -466,7 +520,7 @@ static struct testb_page *testb_insert_page(struct testb *testb,
- 	spin_lock_irqsave(&testb->t_dev->lock, *lock_flag);
- 	idx = sector >> PAGE_SECTORS_SHIFT;
- 	t_page->page->index = idx;
--	t_page = testb_radix_tree_insert(testb, idx, t_page);
-+	t_page = testb_radix_tree_insert(testb, idx, t_page, !ignore_cache);
- 	radix_tree_preload_end();
- 
- 	return t_page;
-@@ -474,11 +528,122 @@ static struct testb_page *testb_insert_page(struct testb *testb,
- 	testb_free_page(t_page);
- out_lock:
- 	spin_lock_irqsave(&testb->t_dev->lock, *lock_flag);
--	return testb_lookup_page(testb, sector, true);
-+	return testb_lookup_page(testb, sector, true, ignore_cache);
-+}
-+
-+static int
-+testb_flush_cache_page(struct testb *testb, struct testb_page *c_page,
-+	unsigned long *lock_flag)
-+{
-+	int i;
-+	unsigned int offset;
-+	u64 idx;
-+	struct testb_page *t_page, *ret;
-+	void *dst, *src;
-+
-+	assert_spin_locked(&testb->t_dev->lock);
-+
-+	idx = c_page->page->index;
-+
-+	t_page = testb_insert_page(testb, idx << PAGE_SECTORS_SHIFT,
-+		lock_flag, true);
-+
-+	__clear_bit(TESTB_PAGE_LOCK, &c_page->bitmap);
-+	if (test_bit(TESTB_PAGE_FREE, &c_page->bitmap)) {
-+		testb_free_page(c_page);
-+		if (t_page && t_page->bitmap == 0) {
-+			ret = radix_tree_delete_item(&testb->t_dev->pages,
-+				idx, t_page);
-+			testb_free_page(t_page);
-+		}
-+		return 0;
-+	}
-+
-+	if (!t_page)
-+		return -ENOMEM;
-+
-+	src = kmap_atomic(c_page->page);
-+	dst = kmap_atomic(t_page->page);
-+
-+	for (i = 0; i < PAGE_SECTORS;
-+			i += (testb->t_dev->blocksize >> SECTOR_SHIFT)) {
-+		if (test_bit(i, &c_page->bitmap)) {
-+			offset = (i << SECTOR_SHIFT);
-+			memcpy(dst + offset, src + offset,
-+				testb->t_dev->blocksize);
-+			__set_bit(i, &t_page->bitmap);
-+		}
-+	}
-+
-+	kunmap_atomic(dst);
-+	kunmap_atomic(src);
-+
-+	ret = radix_tree_delete_item(&testb->t_dev->cache, idx, c_page);
-+	testb_free_page(ret);
-+	testb->t_dev->curr_cache -= PAGE_SIZE;
-+
-+	return 0;
-+}
-+
-+static int testb_make_cache_space(struct testb *testb,
-+	unsigned long *lock_flag, size_t n)
-+{
-+	int i, err, nr_pages;
-+	struct testb_page *c_pages[FREE_BATCH];
-+	size_t flushed = 0, one_round;
-+
-+	assert_spin_locked(&testb->t_dev->lock);
-+
-+again:
-+	if (testb->t_dev->cache_size > testb->t_dev->curr_cache + n ||
-+			testb->t_dev->curr_cache == 0)
-+		return 0;
-+
-+	nr_pages = radix_tree_gang_lookup(&testb->t_dev->cache,
-+			(void **)c_pages, testb->cache_flush_pos, FREE_BATCH);
-+	/*
-+	 * testb_flush_cache_page could unlock before using the c_pages. To
-+	 * avoid race, we don't allow page free
-+	 */
-+	for (i = 0; i < nr_pages; i++) {
-+		testb->cache_flush_pos = c_pages[i]->page->index;
-+		/*
-+		 * We found the page which is being flushed to disk by other
-+		 * threads
-+		 */
-+		if (test_bit(TESTB_PAGE_LOCK, &c_pages[i]->bitmap))
-+			c_pages[i] = NULL;
-+		else
-+			__set_bit(TESTB_PAGE_LOCK, &c_pages[i]->bitmap);
-+	}
-+
-+	one_round = 0;
-+	for (i = 0; i < nr_pages; i++) {
-+		if (c_pages[i] == NULL)
-+			continue;
-+		err = testb_flush_cache_page(testb, c_pages[i], lock_flag);
-+		if (err)
-+			return err;
-+		one_round++;
-+	}
-+	flushed += one_round << PAGE_SHIFT;
-+
-+	if (n > flushed) {
-+		if (nr_pages == 0)
-+			testb->cache_flush_pos = 0;
-+		if (one_round == 0) {
-+			/* give other threads a chance */
-+			spin_unlock_irqrestore(&testb->t_dev->lock, *lock_flag);
-+			spin_lock_irqsave(&testb->t_dev->lock, *lock_flag);
-+		}
-+		goto again;
-+	}
-+	return 0;
- }
- 
- static int copy_to_testb(struct testb *testb, struct page *source,
--	unsigned int off, sector_t sector, size_t n, unsigned long *lock_flag)
-+	unsigned int off, sector_t sector, size_t n, unsigned long *lock_flag,
-+	bool is_fua)
- {
- 	size_t temp, count = 0;
- 	unsigned int offset;
-@@ -488,8 +653,12 @@ static int copy_to_testb(struct testb *testb, struct page *source,
- 	while (count < n) {
- 		temp = min_t(size_t, testb->t_dev->blocksize, n - count);
- 
-+		if (testb_cache_active(testb) && !is_fua)
-+			testb_make_cache_space(testb, lock_flag, PAGE_SIZE);
-+
- 		offset = (sector & SECTOR_MASK) << SECTOR_SHIFT;
--		t_page = testb_insert_page(testb, sector, lock_flag);
-+		t_page = testb_insert_page(testb, sector, lock_flag,
-+			!testb_cache_active(testb) || is_fua);
- 		if (!t_page)
- 			return -ENOSPC;
- 
-@@ -501,6 +670,9 @@ static int copy_to_testb(struct testb *testb, struct page *source,
- 
- 		__set_bit(sector & SECTOR_MASK, &t_page->bitmap);
- 
-+		if (is_fua)
-+			testb_free_sector(testb, sector, true);
-+
- 		count += temp;
- 		sector += temp >> SECTOR_SHIFT;
- 	}
-@@ -519,7 +691,8 @@ static int copy_from_testb(struct testb *testb, struct page *dest,
- 		temp = min_t(size_t, testb->t_dev->blocksize, n - count);
- 
- 		offset = (sector & SECTOR_MASK) << SECTOR_SHIFT;
--		t_page = testb_lookup_page(testb, sector, false);
-+		t_page = testb_lookup_page(testb, sector, false,
-+			!testb_cache_active(testb));
- 
- 		dst = kmap_atomic(dest);
- 		if (!t_page) {
-@@ -546,7 +719,9 @@ static void testb_handle_discard(struct testb *testb, sector_t sector, size_t n)
- 	spin_lock_irqsave(&testb->t_dev->lock, lock_flag);
- 	while (n > 0) {
- 		temp = min_t(size_t, n, testb->t_dev->blocksize);
--		testb_free_sector(testb, sector);
-+		testb_free_sector(testb, sector, false);
-+		if (testb_cache_active(testb))
-+			testb_free_sector(testb, sector, true);
- 		sector += temp >> SECTOR_SHIFT;
- 		n -= temp;
- 	}
-@@ -555,12 +730,28 @@ static void testb_handle_discard(struct testb *testb, sector_t sector, size_t n)
- 
- static int testb_handle_flush(struct testb *testb)
- {
-+	unsigned long lock_flag;
-+	int err;
-+
-+	if (!testb_cache_active(testb))
-+		return 0;
-+
-+	spin_lock_irqsave(&testb->t_dev->lock, lock_flag);
-+	while (true) {
-+		err = testb_make_cache_space(testb, &lock_flag,
-+			testb->t_dev->cache_size);
-+		if (err || testb->t_dev->curr_cache == 0)
-+			break;
-+	}
-+
-+	WARN_ON(!radix_tree_empty(&testb->t_dev->cache));
-+	spin_unlock_irqrestore(&testb->t_dev->lock, lock_flag);
- 	return 0;
- }
- 
- static int testb_transfer(struct testb *testb, struct page *page,
- 	unsigned int len, unsigned int off, bool is_write, sector_t sector,
--	unsigned long *lock_flags)
-+	unsigned long *lock_flags, bool is_fua)
- {
- 	int err = 0;
- 
-@@ -571,7 +762,7 @@ static int testb_transfer(struct testb *testb, struct page *page,
- 	} else {
- 		flush_dcache_page(page);
- 		err = copy_to_testb(testb, page, off, sector, len,
--						lock_flags);
-+						lock_flags, is_fua);
- 	}
- 
- 	return err;
-@@ -638,7 +829,7 @@ static int testb_handle_rq(struct request *rq)
- 		len = bvec.bv_len;
- 		err = testb_transfer(testb, bvec.bv_page, len, bvec.bv_offset,
- 				     op_is_write(req_op(rq)), sector,
--				     &lock_flag);
-+				     &lock_flag, req_op(rq) & REQ_FUA);
- 		if (err) {
- 			spin_unlock_irqrestore(&testb->t_dev->lock, lock_flag);
- 			return err;
-@@ -690,6 +881,8 @@ static void testb_free_bdev(struct testb *testb)
- 	blk_cleanup_queue(testb->q);
- 	blk_mq_free_tag_set(&testb->tag_set);
- 
-+	if (testb_cache_active(testb))
-+		testb_free_device_storage(testb->t_dev, true);
- 	kfree(testb);
- }
- 
-@@ -799,6 +992,9 @@ static int testb_alloc_bdev(struct testb_device *t_dev)
- 	testb->t_dev = t_dev;
- 	t_dev->testb = testb;
- 
-+	if (t_dev->cache_size > 0)
-+		set_bit(TESTB_DEV_FL_CACHE, &testb->t_dev->flags);
-+
- 	testb->tag_set.ops = &testb_mq_ops;
- 	testb->tag_set.nr_hw_queues = t_dev->nr_queues;
- 	testb->tag_set.queue_depth = t_dev->q_depth;
-@@ -869,6 +1065,10 @@ static int __init testb_init(void)
- 	int ret = 0;
- 	struct configfs_subsystem *subsys = &testb_subsys;
- 
-+	/* check for testb_page.bitmap */
-+	if (sizeof(unsigned long) * 8 - 2 < (PAGE_SIZE >> SECTOR_SHIFT))
-+		return -EINVAL;
-+
- 	config_group_init(&subsys->su_group);
- 	mutex_init(&subsys->su_mutex);
- 
--- 
-2.9.3
-
+On Sat, Jul 29, 2017 at 9:54 PM, Alex <mysqlstudent@gmail.com> wrote:
+> Hi,
+>
+> I have a fedora25 system with a MegaRAID SAS 9260-8i. I believe
+> there's 8 500GB SSDs connected. It appears one (or more?) may be
+> having a problem. I'm now noticing this message periodically in the
+> kernel logs:
+>
+> [Wed Jun 28 01:40:06 2017] ata1.00: exception Emask 0x0 SAct 0x0 SErr
+> 0x400001 action 0x6 frozen
+> [Wed Jun 28 01:40:06 2017] ata1: SError: { RecovData Handshk }
+> [Wed Jun 28 01:40:06 2017] ata1.00: cmd
+> a0/00:00:00:08:00/00:00:00:00:00/a0 tag 29 pio 16392 in
+>                                     Get event status notification 4a
+> 01 00 00 10 00 00 00 08 00res 40/00:00:00:00:00/00:00:00:00:00/00
+> Emask 0x4 (timeout)
+> [Wed Jun 28 01:40:06 2017] ata1.00: status: { DRDY }
+> [Wed Jun 28 01:40:06 2017] ata1: hard resetting link
+> [Wed Jun 28 01:40:06 2017] ata1: SATA link up 1.5 Gbps (SStatus 113
+> SControl 300)
+> [Wed Jun 28 01:40:06 2017] ata1.00: configured for UDMA/133
+> [Wed Jun 28 01:40:06 2017] ata1: EH complete
+>
+> Is it something to be concerned with? What level of panic? :-)
+>
+> It appears to recover normally? Is it a device or disk issue? How can
+> I identify which disk is involved?
+>
+> This is the information on the control from lspci:
+>
+> 05:00.0 RAID bus controller: LSI Logic / Symbios Logic MegaRAID SAS
+> 2108 [Liberator] (rev 05)
+>         Subsystem: LSI Logic / Symbios Logic MegaRAID SAS 9260-8i
+>         Flags: bus master, fast devsel, latency 0, IRQ 29, NUMA node 0
+>         I/O ports at 7000 [size=256]
+>         Memory at df960000 (64-bit, non-prefetchable) [size=16K]
+>         Memory at df900000 (64-bit, non-prefetchable) [size=256K]
+>         Expansion ROM at df940000 [disabled] [size=128K]
+>         Capabilities: [50] Power Management version 3
+>         Capabilities: [68] Express Endpoint, MSI 00
+>         Capabilities: [d0] Vital Product Data
+>         Capabilities: [a8] MSI: Enable- Count=1/1 Maskable- 64bit+
+>         Capabilities: [c0] MSI-X: Enable+ Count=15 Masked-
+>         Capabilities: [100] Advanced Error Reporting
+>         Capabilities: [138] Power Budgeting <?>
+>         Kernel driver in use: megaraid_sas
+>         Kernel modules: megaraid_sas
+>
+> Thanks for any ideas.
