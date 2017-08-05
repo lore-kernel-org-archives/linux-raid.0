@@ -1,359 +1,572 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: [PATCH 1/5] testb: add interface
-Date: Sat,  5 Aug 2017 08:51:45 -0700
-Message-ID: <c4ad20449f985430bc7f7af11b56ec776335a4c1.1501945859.git.shli@fb.com>
+Subject: [PATCH 4/5] testb: emulate disk cache
+Date: Sat,  5 Aug 2017 08:51:48 -0700
+Message-ID: <b60b958417a6fb689de74adb4da89ea6a47f295a.1501945859.git.shli@fb.com>
 References: <cover.1501945859.git.shli@fb.com>
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <cover.1501945859.git.shli@fb.com>
 In-Reply-To: <cover.1501945859.git.shli@fb.com>
 References: <cover.1501945859.git.shli@fb.com>
-Sender: linux-block-owner@vger.kernel.org
+Sender: linux-raid-owner@vger.kernel.org
 To: linux-block@vger.kernel.org, linux-raid@vger.kernel.org
 Cc: kernel-team@fb.com, Kyungchan Koh <kyungchan.koh@gmail.com>, Kyungchan Koh <kkc6196@fb.com>
 List-Id: linux-raid.ids
 
 From: Kyungchan Koh <kkc6196@fb.com>
 
-The testb block device driver is intended for testing, so configuration
-should be easy. We are using configfs here, which can be configured with
-a shell script. Basically the the testb will be configured as:
+Software must flush disk cache to guarantee data safety. To check if
+software correctly does disk cache flush, we must know the behavior of
+disk. But physical disk behavior is uncontrollable. Even software
+doesn't do the flush, the disk probably does the flush. This patch tries
+to emulate a cache in the test disk.
 
-mount the configfs fs as usual:
-mount -t configfs none /mnt
-
-Checking which features the driver supports:
-cat /mnt/testb/features
-
-The 'features' attribute is for future extension. We probably will add
-new features into the driver, userspace can check this attribute to find
-the supported features.
-
-Create a device:
-mkdir /mnt/testb/a
-
-Then configure the device by setting attributes under /mnt/testb/a
-size: disk size in bytes
-blocksize: sector size, mush be multiples of 512, and maximum is 4k
-discard: if the disk supports discard
-nr_queues: how many queues supported in the disk
-q_depth: queue depth of the disk
-
-Then power on the device:
-echo 1 > /mnt/testb/a/power
-this will create a disk, which should be /dev/testb_a
-We don't allow change attributes after the device poweron once so far
-
-We can remove the disk by writing 0 to the 'power' attribute. 'rmdir
-/mnt/testb/a' will delete the device, which also remove the disk if the
-disk isn't removed yet.
+All write will go to a cache first, when the cache is full, we then
+flush some data to disk storage. A flush request will flush all data of
+the cache to disk storage. If there is a power failure (by writing to
+power attribute, 'echo 0 > disk_name/power'), we discard all data in the
+cache, but preserve the data in disk storage. Later we can power on the
+disk again as usual (write 1 to 'power' attribute), then we can check if
+data integrity and very if software does everything correctly.
 
 Signed-off-by: Kyungchan Koh <kkc6196@fb.com>
 Signed-off-by: Shaohua Li <shli@fb.com>
 ---
- drivers/block/Kconfig    |   8 ++
- drivers/block/Makefile   |   2 +
- drivers/block/test_blk.c | 261 +++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 271 insertions(+)
- create mode 100644 drivers/block/test_blk.c
+ drivers/block/test_blk.c | 248 ++++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 224 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/block/Kconfig b/drivers/block/Kconfig
-index 8ddc982..2da5d02 100644
---- a/drivers/block/Kconfig
-+++ b/drivers/block/Kconfig
-@@ -15,6 +15,14 @@ menuconfig BLK_DEV
- 
- if BLK_DEV
- 
-+config BLK_DEV_TEST_BLK
-+	tristate "A test block driver"
-+	depends on CONFIGFS_FS
-+	help
-+	  A memory-based block device driver for testing purposes. Configurable
-+	  through configFS. Useful features such as bandwidth throttling,
-+	  writeback cache, and power loss emulation.
-+
- config BLK_DEV_NULL_BLK
- 	tristate "Null test block driver"
- 
-diff --git a/drivers/block/Makefile b/drivers/block/Makefile
-index ec8c368..f0f0d21 100644
---- a/drivers/block/Makefile
-+++ b/drivers/block/Makefile
-@@ -29,6 +29,8 @@ obj-$(CONFIG_VIRTIO_BLK)	+= virtio_blk.o
- 
- obj-$(CONFIG_BLK_DEV_SX8)	+= sx8.o
- 
-+obj-$(CONFIG_BLK_DEV_TEST_BLK)	+= test_blk.o
-+
- obj-$(CONFIG_XEN_BLKDEV_FRONTEND)	+= xen-blkfront.o
- obj-$(CONFIG_XEN_BLKDEV_BACKEND)	+= xen-blkback/
- obj-$(CONFIG_BLK_DEV_DRBD)     += drbd/
 diff --git a/drivers/block/test_blk.c b/drivers/block/test_blk.c
-new file mode 100644
-index 0000000..93e8ec2
---- /dev/null
+index c67c73d..631dae4 100644
+--- a/drivers/block/test_blk.c
 +++ b/drivers/block/test_blk.c
-@@ -0,0 +1,261 @@
-+/*
-+ * test_blk.c - A memory-based test block device driver.
-+ *
-+ * Copyright (c) 2017 Facebook, Inc.
-+ *
-+ * Parts derived from drivers/block/null_blk.c and drivers/block/brd.c,
-+ * copyright to respective owners.
+@@ -46,6 +46,7 @@ struct testb {
+ 
+ 	atomic_long_t cur_bytes;
+ 	struct hrtimer timer;
++	unsigned long cache_flush_pos;
+ };
+ 
+ /*
+@@ -62,16 +63,27 @@ struct testb_page {
+ };
+ 
+ /*
++ * The highest 2 bits of bitmap are for special purpose. LOCK means the cache
++ * page is being flushing to storage. FREE means the cache page is freed and
++ * should be skipped from flushing to storage. Please see
++ * testb_make_cache_space
 + */
-+
-+#include <linux/init.h>
-+#include <linux/module.h>
-+#include <linux/blkdev.h>
-+#include <linux/configfs.h>
-+#include <linux/radix-tree.h>
-+
-+/*
-+ * Status flags for testb_device.
-+ *
-+ * CONFIGURED:	Device has been configured and turned on. Cannot reconfigure.
-+ * UP:		Device is currently on and visible in userspace.
-+ */
-+enum testb_device_flags {
-+	TESTB_DEV_FL_CONFIGURED	= 0,
-+	TESTB_DEV_FL_UP		= 1,
-+};
++#define TESTB_PAGE_LOCK (sizeof(unsigned long) * 8 - 1)
++#define TESTB_PAGE_FREE (sizeof(unsigned long) * 8 - 2)
 +
 +/*
-+ * testb_device represents the characteristics of a virtual device.
-+ *
-+ * @item:	The struct used by configfs to represent items in fs.
-+ * @lock:	Protect data of the device
-+ * @pages:	The storage of the device.
-+ * @flags:	TEST_DEV_FL_ flags to indicate various status.
-+ *
-+ * @power:	1 means on; 0 means off.
-+ * @size:	The size of the disk (in bytes).
-+ * @blocksize:	The block size for the request queue.
-+ * @nr_queues:	The number of queues.
-+ * @q_depth:	The depth of each queue.
-+ * @discard:	If enable discard
-+ */
-+struct testb_device {
-+	struct config_item item;
-+	spinlock_t lock;
-+	struct radix_tree_root pages;
-+	unsigned long flags;
-+
-+	uint power;
-+	u64 size;
-+	uint blocksize;
-+	uint nr_queues;
-+	uint q_depth;
-+	uint discard;
-+};
-+
-+static inline struct testb_device *to_testb_device(struct config_item *item)
+  * Status flags for testb_device.
+  *
+  * CONFIGURED:	Device has been configured and turned on. Cannot reconfigure.
+  * UP:		Device is currently on and visible in userspace.
+  * THROTTLED:	Device is being throttled.
++ * CACHE:	Device is using a write-back cache.
+  */
+ enum testb_device_flags {
+ 	TESTB_DEV_FL_CONFIGURED	= 0,
+ 	TESTB_DEV_FL_UP		= 1,
+ 	TESTB_DEV_FL_THROTTLED	= 2,
++	TESTB_DEV_FL_CACHE	= 3,
+ };
+ 
+ /*
+@@ -81,6 +93,8 @@ enum testb_device_flags {
+  * @lock:	Protect data of the device
+  * @testb:	The device that these attributes belong to.
+  * @pages:	The storage of the device.
++ * @cache:	The cache of the device.
++ * @curr_cache:	The current cache size.
+  * @flags:	TEST_DEV_FL_ flags to indicate various status.
+  *
+  * @power:	1 means on; 0 means off.
+@@ -90,13 +104,16 @@ enum testb_device_flags {
+  * @q_depth:	The depth of each queue.
+  * @discard:	If enable discard
+  * @mbps:	Bandwidth throttle cap (in mb/s).
++ * @cache_size:	The max capacity of the cache.
+  */
+ struct testb_device {
+ 	struct config_item item;
+ 	spinlock_t lock;
+ 	struct testb *testb;
+ 	struct radix_tree_root pages;
++	struct radix_tree_root cache;
+ 	unsigned long flags;
++	unsigned int curr_cache;
+ 
+ 	uint power;
+ 	u64 size;
+@@ -105,11 +122,13 @@ struct testb_device {
+ 	uint q_depth;
+ 	uint discard;
+ 	uint mbps;
++	u64 cache_size;
+ };
+ 
+ static int testb_poweron_device(struct testb_device *dev);
+ static void testb_poweroff_device(struct testb_device *dev);
+-static void testb_free_device_storage(struct testb_device *t_dev);
++static void testb_free_device_storage(struct testb_device *t_dev,
++	bool is_cache);
+ 
+ static inline struct testb_device *to_testb_device(struct config_item *item)
+ {
+@@ -179,6 +198,7 @@ TESTB_DEVICE_ATTR(nr_queues, uint);
+ TESTB_DEVICE_ATTR(q_depth, uint);
+ TESTB_DEVICE_ATTR(discard, uint);
+ TESTB_DEVICE_ATTR(mbps, uint);
++TESTB_DEVICE_ATTR(cache_size, u64);
+ 
+ static ssize_t testb_device_power_show(struct config_item *item, char *page)
+ {
+@@ -226,6 +246,7 @@ static struct configfs_attribute *testb_device_attrs[] = {
+ 	&testb_device_attr_q_depth,
+ 	&testb_device_attr_discard,
+ 	&testb_device_attr_mbps,
++	&testb_device_attr_cache_size,
+ 	NULL,
+ };
+ 
+@@ -233,7 +254,7 @@ static void testb_device_release(struct config_item *item)
+ {
+ 	struct testb_device *t_dev = to_testb_device(item);
+ 
+-	testb_free_device_storage(t_dev);
++	testb_free_device_storage(t_dev, false);
+ 	kfree(t_dev);
+ }
+ 
+@@ -257,6 +278,7 @@ config_item *testb_group_make_item(struct config_group *group, const char *name)
+ 		return ERR_PTR(-ENOMEM);
+ 	spin_lock_init(&t_dev->lock);
+ 	INIT_RADIX_TREE(&t_dev->pages, GFP_ATOMIC);
++	INIT_RADIX_TREE(&t_dev->cache, GFP_ATOMIC);
+ 
+ 	config_item_init_type_name(&t_dev->item, name, &testb_device_type);
+ 
+@@ -267,6 +289,7 @@ config_item *testb_group_make_item(struct config_group *group, const char *name)
+ 	t_dev->q_depth = 64;
+ 	t_dev->discard = 1;
+ 	t_dev->mbps = -1;
++	t_dev->cache_size = 100 * 1024 * 1024ULL;
+ 
+ 	return &t_dev->item;
+ }
+@@ -285,7 +308,7 @@ testb_group_drop_item(struct config_group *group, struct config_item *item)
+ 
+ static ssize_t memb_group_features_show(struct config_item *item, char *page)
+ {
+-	return snprintf(page, PAGE_SIZE, "bandwidth\n");
++	return snprintf(page, PAGE_SIZE, "bandwidth,cache\n");
+ }
+ 
+ CONFIGFS_ATTR_RO(memb_group_, features);
+@@ -324,6 +347,11 @@ static inline int testb_throttled(struct testb *testb)
+ 	return test_bit(TESTB_DEV_FL_THROTTLED, &testb->t_dev->flags);
+ }
+ 
++static inline int testb_cache_active(struct testb *testb)
 +{
-+	return item ? container_of(item, struct testb_device, item) : NULL;
++	return test_bit(TESTB_DEV_FL_CACHE, &testb->t_dev->flags);
 +}
 +
-+static inline ssize_t testb_device_uint_attr_show(uint val, char *page)
+ static struct testb_page *testb_alloc_page(gfp_t gfp_flags)
+ {
+ 	struct testb_page *t_page;
+@@ -348,11 +376,15 @@ static void testb_free_page(struct testb_page *t_page)
+ {
+ 	WARN_ON(!t_page);
+ 
++	__set_bit(TESTB_PAGE_FREE, &t_page->bitmap);
++	if (test_bit(TESTB_PAGE_LOCK, &t_page->bitmap))
++		return;
+ 	__free_page(t_page->page);
+ 	kfree(t_page);
+ }
+ 
+-static void testb_free_sector(struct testb *testb, sector_t sector)
++static void testb_free_sector(struct testb *testb, sector_t sector,
++	bool is_cache)
+ {
+ 	unsigned int sector_bit;
+ 	u64 idx;
+@@ -361,7 +393,7 @@ static void testb_free_sector(struct testb *testb, sector_t sector)
+ 
+ 	assert_spin_locked(&testb->t_dev->lock);
+ 
+-	root = &testb->t_dev->pages;
++	root = is_cache ? &testb->t_dev->cache : &testb->t_dev->pages;
+ 	idx = sector >> PAGE_SECTORS_SHIFT;
+ 	sector_bit = (sector & SECTOR_MASK);
+ 
+@@ -373,36 +405,40 @@ static void testb_free_sector(struct testb *testb, sector_t sector)
+ 			ret = radix_tree_delete_item(root, idx, t_page);
+ 			WARN_ON(ret != t_page);
+ 			testb_free_page(ret);
++			if (is_cache)
++				testb->t_dev->curr_cache -= PAGE_SIZE;
+ 		}
+ 	}
+ }
+ 
+ static struct testb_page *testb_radix_tree_insert(struct testb *testb, u64 idx,
+-	struct testb_page *t_page)
++	struct testb_page *t_page, bool is_cache)
+ {
+ 	struct radix_tree_root *root;
+ 
+ 	assert_spin_locked(&testb->t_dev->lock);
+ 
+-	root = &testb->t_dev->pages;
++	root = is_cache ? &testb->t_dev->cache : &testb->t_dev->pages;
+ 
+ 	if (radix_tree_insert(root, idx, t_page)) {
+ 		testb_free_page(t_page);
+ 		t_page = radix_tree_lookup(root, idx);
+ 		WARN_ON(!t_page || t_page->page->index != idx);
+-	}
++	} else if (is_cache)
++		testb->t_dev->curr_cache += PAGE_SIZE;
+ 
+ 	return t_page;
+ }
+ 
+-static void testb_free_device_storage(struct testb_device *t_dev)
++static void testb_free_device_storage(struct testb_device *t_dev,
++	bool is_cache)
+ {
+ 	unsigned long pos = 0;
+ 	int nr_pages;
+ 	struct testb_page *ret, *t_pages[FREE_BATCH];
+ 	struct radix_tree_root *root;
+ 
+-	root = &t_dev->pages;
++	root = is_cache ? &t_dev->cache : &t_dev->pages;
+ 
+ 	do {
+ 		int i;
+@@ -419,21 +455,27 @@ static void testb_free_device_storage(struct testb_device *t_dev)
+ 
+ 		pos++;
+ 	} while (nr_pages == FREE_BATCH);
++
++	if (is_cache)
++		t_dev->curr_cache = 0;
+ }
+ 
+-static struct testb_page *testb_lookup_page(struct testb *testb,
+-	sector_t sector, bool for_write)
++static struct testb_page *__testb_lookup_page(struct testb *testb,
++	sector_t sector, bool for_write, bool is_cache)
+ {
+ 	unsigned int sector_bit;
+ 	u64 idx;
+ 	struct testb_page *t_page;
++	struct radix_tree_root *root;
+ 
+ 	assert_spin_locked(&testb->t_dev->lock);
+ 
+ 	idx = sector >> PAGE_SECTORS_SHIFT;
+ 	sector_bit = (sector & SECTOR_MASK);
+ 
+-	t_page = radix_tree_lookup(&testb->t_dev->pages, idx);
++	root = is_cache ? &testb->t_dev->cache : &testb->t_dev->pages;
++
++	t_page = radix_tree_lookup(root, idx);
+ 	WARN_ON(t_page && t_page->page->index != idx);
+ 
+ 	if (t_page && (for_write || test_bit(sector_bit, &t_page->bitmap)))
+@@ -442,15 +484,27 @@ static struct testb_page *testb_lookup_page(struct testb *testb,
+ 	return NULL;
+ }
+ 
++static struct testb_page *testb_lookup_page(struct testb *testb,
++	sector_t sector, bool for_write, bool ignore_cache)
 +{
-+	return snprintf(page, PAGE_SIZE, "%u\n", val);
++	struct testb_page *page = NULL;
++
++	if (!ignore_cache)
++		page = __testb_lookup_page(testb, sector, for_write, true);
++	if (page)
++		return page;
++	return __testb_lookup_page(testb, sector, for_write, false);
 +}
 +
-+static ssize_t
-+testb_device_uint_attr_store(uint *val, const char *page, size_t count)
-+{
-+	uint tmp;
-+	int result;
-+
-+	result = kstrtouint(page, 0, &tmp);
-+	if (result)
-+		return result;
-+
-+	*val = tmp;
-+	return count;
+ static struct testb_page *testb_insert_page(struct testb *testb,
+-	sector_t sector, unsigned long *lock_flag)
++	sector_t sector, unsigned long *lock_flag, bool ignore_cache)
+ {
+ 	u64 idx;
+ 	struct testb_page *t_page;
+ 
+ 	assert_spin_locked(&testb->t_dev->lock);
+ 
+-	t_page = testb_lookup_page(testb, sector, true);
++	t_page = testb_lookup_page(testb, sector, true, ignore_cache);
+ 	if (t_page)
+ 		return t_page;
+ 
+@@ -466,7 +520,7 @@ static struct testb_page *testb_insert_page(struct testb *testb,
+ 	spin_lock_irqsave(&testb->t_dev->lock, *lock_flag);
+ 	idx = sector >> PAGE_SECTORS_SHIFT;
+ 	t_page->page->index = idx;
+-	t_page = testb_radix_tree_insert(testb, idx, t_page);
++	t_page = testb_radix_tree_insert(testb, idx, t_page, !ignore_cache);
+ 	radix_tree_preload_end();
+ 
+ 	return t_page;
+@@ -474,11 +528,122 @@ static struct testb_page *testb_insert_page(struct testb *testb,
+ 	testb_free_page(t_page);
+ out_lock:
+ 	spin_lock_irqsave(&testb->t_dev->lock, *lock_flag);
+-	return testb_lookup_page(testb, sector, true);
++	return testb_lookup_page(testb, sector, true, ignore_cache);
 +}
 +
-+static inline ssize_t testb_device_u64_attr_show(u64 val, char *page)
++static int
++testb_flush_cache_page(struct testb *testb, struct testb_page *c_page,
++	unsigned long *lock_flag)
 +{
-+	return snprintf(page, PAGE_SIZE, "%llu\n", val);
-+}
++	int i;
++	unsigned int offset;
++	u64 idx;
++	struct testb_page *t_page, *ret;
++	void *dst, *src;
 +
-+static ssize_t
-+testb_device_u64_attr_store(u64 *val, const char *page, size_t count)
-+{
-+	int result;
-+	u64 tmp;
++	assert_spin_locked(&testb->t_dev->lock);
 +
-+	result = kstrtoull(page, 0, &tmp);
-+	if (result)
-+		return result;
++	idx = c_page->page->index;
 +
-+	*val = tmp;
-+	return count;
-+}
++	t_page = testb_insert_page(testb, idx << PAGE_SECTORS_SHIFT,
++		lock_flag, true);
 +
-+/* The following macro should only be used with TYPE = {uint, u64}. */
-+#define TESTB_DEVICE_ATTR(NAME, TYPE)						\
-+static ssize_t									\
-+testb_device_##NAME##_show(struct config_item *item, char *page)		\
-+{										\
-+	return testb_device_##TYPE##_attr_show(					\
-+				to_testb_device(item)->NAME, page);		\
-+}										\
-+static ssize_t									\
-+testb_device_##NAME##_store(struct config_item *item, const char *page,		\
-+			    size_t count)					\
-+{										\
-+	if (test_bit(TESTB_DEV_FL_CONFIGURED, &to_testb_device(item)->flags))	\
-+		return -EBUSY;							\
-+	return testb_device_##TYPE##_attr_store(				\
-+			&to_testb_device(item)->NAME, page, count);		\
-+}										\
-+CONFIGFS_ATTR(testb_device_, NAME);
-+
-+TESTB_DEVICE_ATTR(size, u64);
-+TESTB_DEVICE_ATTR(blocksize, uint);
-+TESTB_DEVICE_ATTR(nr_queues, uint);
-+TESTB_DEVICE_ATTR(q_depth, uint);
-+TESTB_DEVICE_ATTR(discard, uint);
-+
-+static ssize_t testb_device_power_show(struct config_item *item, char *page)
-+{
-+	return testb_device_uint_attr_show(to_testb_device(item)->power, page);
-+}
-+
-+static ssize_t testb_device_power_store(struct config_item *item,
-+				     const char *page, size_t count)
-+{
-+	struct testb_device *t_dev = to_testb_device(item);
-+	uint newp = 0;
-+	ssize_t ret;
-+
-+	ret = testb_device_uint_attr_store(&newp, page, count);
-+	if (ret < 0)
-+		return ret;
-+
-+	if (!t_dev->power && newp) {
-+		if (test_and_set_bit(TESTB_DEV_FL_UP, &t_dev->flags))
-+			return count;
-+
-+		set_bit(TESTB_DEV_FL_CONFIGURED, &t_dev->flags);
-+		t_dev->power = newp;
-+	} else if (to_testb_device(item)->power && !newp) {
-+		t_dev->power = newp;
-+		clear_bit(TESTB_DEV_FL_UP, &t_dev->flags);
++	__clear_bit(TESTB_PAGE_LOCK, &c_page->bitmap);
++	if (test_bit(TESTB_PAGE_FREE, &c_page->bitmap)) {
++		testb_free_page(c_page);
++		if (t_page && t_page->bitmap == 0) {
++			ret = radix_tree_delete_item(&testb->t_dev->pages,
++				idx, t_page);
++			testb_free_page(t_page);
++		}
++		return 0;
 +	}
 +
-+	return count;
++	if (!t_page)
++		return -ENOMEM;
++
++	src = kmap_atomic(c_page->page);
++	dst = kmap_atomic(t_page->page);
++
++	for (i = 0; i < PAGE_SECTORS;
++			i += (testb->t_dev->blocksize >> SECTOR_SHIFT)) {
++		if (test_bit(i, &c_page->bitmap)) {
++			offset = (i << SECTOR_SHIFT);
++			memcpy(dst + offset, src + offset,
++				testb->t_dev->blocksize);
++			__set_bit(i, &t_page->bitmap);
++		}
++	}
++
++	kunmap_atomic(dst);
++	kunmap_atomic(src);
++
++	ret = radix_tree_delete_item(&testb->t_dev->cache, idx, c_page);
++	testb_free_page(ret);
++	testb->t_dev->curr_cache -= PAGE_SIZE;
++
++	return 0;
 +}
 +
-+CONFIGFS_ATTR(testb_device_, power);
-+
-+static struct configfs_attribute *testb_device_attrs[] = {
-+	&testb_device_attr_power,
-+	&testb_device_attr_size,
-+	&testb_device_attr_blocksize,
-+	&testb_device_attr_nr_queues,
-+	&testb_device_attr_q_depth,
-+	&testb_device_attr_discard,
-+	NULL,
-+};
-+
-+static void testb_device_release(struct config_item *item)
++static int testb_make_cache_space(struct testb *testb,
++	unsigned long *lock_flag, size_t n)
 +{
-+	kfree(to_testb_device(item));
-+}
++	int i, err, nr_pages;
++	struct testb_page *c_pages[FREE_BATCH];
++	size_t flushed = 0, one_round;
 +
-+static struct configfs_item_operations testb_device_ops = {
-+	.release	= testb_device_release,
-+};
++	assert_spin_locked(&testb->t_dev->lock);
 +
-+static struct config_item_type testb_device_type = {
-+	.ct_item_ops	= &testb_device_ops,
-+	.ct_attrs	= testb_device_attrs,
-+	.ct_owner	= THIS_MODULE,
-+};
++again:
++	if (testb->t_dev->cache_size > testb->t_dev->curr_cache + n ||
++			testb->t_dev->curr_cache == 0)
++		return 0;
 +
-+static struct
-+config_item *testb_group_make_item(struct config_group *group, const char *name)
-+{
-+	struct testb_device *t_dev;
++	nr_pages = radix_tree_gang_lookup(&testb->t_dev->cache,
++			(void **)c_pages, testb->cache_flush_pos, FREE_BATCH);
++	/*
++	 * testb_flush_cache_page could unlock before using the c_pages. To
++	 * avoid race, we don't allow page free
++	 */
++	for (i = 0; i < nr_pages; i++) {
++		testb->cache_flush_pos = c_pages[i]->page->index;
++		/*
++		 * We found the page which is being flushed to disk by other
++		 * threads
++		 */
++		if (test_bit(TESTB_PAGE_LOCK, &c_pages[i]->bitmap))
++			c_pages[i] = NULL;
++		else
++			__set_bit(TESTB_PAGE_LOCK, &c_pages[i]->bitmap);
++	}
 +
-+	t_dev = kzalloc(sizeof(struct testb_device), GFP_KERNEL);
-+	if (!t_dev)
-+		return ERR_PTR(-ENOMEM);
++	one_round = 0;
++	for (i = 0; i < nr_pages; i++) {
++		if (c_pages[i] == NULL)
++			continue;
++		err = testb_flush_cache_page(testb, c_pages[i], lock_flag);
++		if (err)
++			return err;
++		one_round++;
++	}
++	flushed += one_round << PAGE_SHIFT;
 +
-+	config_item_init_type_name(&t_dev->item, name, &testb_device_type);
++	if (n > flushed) {
++		if (nr_pages == 0)
++			testb->cache_flush_pos = 0;
++		if (one_round == 0) {
++			/* give other threads a chance */
++			spin_unlock_irqrestore(&testb->t_dev->lock, *lock_flag);
++			spin_lock_irqsave(&testb->t_dev->lock, *lock_flag);
++		}
++		goto again;
++	}
++	return 0;
+ }
+ 
+ static int copy_to_testb(struct testb *testb, struct page *source,
+-	unsigned int off, sector_t sector, size_t n, unsigned long *lock_flag)
++	unsigned int off, sector_t sector, size_t n, unsigned long *lock_flag,
++	bool is_fua)
+ {
+ 	size_t temp, count = 0;
+ 	unsigned int offset;
+@@ -488,8 +653,12 @@ static int copy_to_testb(struct testb *testb, struct page *source,
+ 	while (count < n) {
+ 		temp = min_t(size_t, testb->t_dev->blocksize, n - count);
+ 
++		if (testb_cache_active(testb) && !is_fua)
++			testb_make_cache_space(testb, lock_flag, PAGE_SIZE);
 +
-+	/* Initialize attributes with default values. */
-+	t_dev->size = 1024 * 1024 * 1024ULL;
-+	t_dev->blocksize = 512;
-+	t_dev->nr_queues = 2;
-+	t_dev->q_depth = 64;
-+	t_dev->discard = 1;
+ 		offset = (sector & SECTOR_MASK) << SECTOR_SHIFT;
+-		t_page = testb_insert_page(testb, sector, lock_flag);
++		t_page = testb_insert_page(testb, sector, lock_flag,
++			!testb_cache_active(testb) || is_fua);
+ 		if (!t_page)
+ 			return -ENOSPC;
+ 
+@@ -501,6 +670,9 @@ static int copy_to_testb(struct testb *testb, struct page *source,
+ 
+ 		__set_bit(sector & SECTOR_MASK, &t_page->bitmap);
+ 
++		if (is_fua)
++			testb_free_sector(testb, sector, true);
 +
-+	return &t_dev->item;
-+}
+ 		count += temp;
+ 		sector += temp >> SECTOR_SHIFT;
+ 	}
+@@ -519,7 +691,8 @@ static int copy_from_testb(struct testb *testb, struct page *dest,
+ 		temp = min_t(size_t, testb->t_dev->blocksize, n - count);
+ 
+ 		offset = (sector & SECTOR_MASK) << SECTOR_SHIFT;
+-		t_page = testb_lookup_page(testb, sector, false);
++		t_page = testb_lookup_page(testb, sector, false,
++			!testb_cache_active(testb));
+ 
+ 		dst = kmap_atomic(dest);
+ 		if (!t_page) {
+@@ -546,7 +719,9 @@ static void testb_handle_discard(struct testb *testb, sector_t sector, size_t n)
+ 	spin_lock_irqsave(&testb->t_dev->lock, lock_flag);
+ 	while (n > 0) {
+ 		temp = min_t(size_t, n, testb->t_dev->blocksize);
+-		testb_free_sector(testb, sector);
++		testb_free_sector(testb, sector, false);
++		if (testb_cache_active(testb))
++			testb_free_sector(testb, sector, true);
+ 		sector += temp >> SECTOR_SHIFT;
+ 		n -= temp;
+ 	}
+@@ -555,12 +730,28 @@ static void testb_handle_discard(struct testb *testb, sector_t sector, size_t n)
+ 
+ static int testb_handle_flush(struct testb *testb)
+ {
++	unsigned long lock_flag;
++	int err;
 +
-+static void
-+testb_group_drop_item(struct config_group *group, struct config_item *item)
-+{
-+	config_item_put(item);
-+}
++	if (!testb_cache_active(testb))
++		return 0;
 +
-+static ssize_t memb_group_features_show(struct config_item *item, char *page)
-+{
-+	return snprintf(page, PAGE_SIZE, "\n");
-+}
++	spin_lock_irqsave(&testb->t_dev->lock, lock_flag);
++	while (true) {
++		err = testb_make_cache_space(testb, &lock_flag,
++			testb->t_dev->cache_size);
++		if (err || testb->t_dev->curr_cache == 0)
++			break;
++	}
 +
-+CONFIGFS_ATTR_RO(memb_group_, features);
++	WARN_ON(!radix_tree_empty(&testb->t_dev->cache));
++	spin_unlock_irqrestore(&testb->t_dev->lock, lock_flag);
+ 	return 0;
+ }
+ 
+ static int testb_transfer(struct testb *testb, struct page *page,
+ 	unsigned int len, unsigned int off, bool is_write, sector_t sector,
+-	unsigned long *lock_flags)
++	unsigned long *lock_flags, bool is_fua)
+ {
+ 	int err = 0;
+ 
+@@ -571,7 +762,7 @@ static int testb_transfer(struct testb *testb, struct page *page,
+ 	} else {
+ 		flush_dcache_page(page);
+ 		err = copy_to_testb(testb, page, off, sector, len,
+-						lock_flags);
++						lock_flags, is_fua);
+ 	}
+ 
+ 	return err;
+@@ -638,7 +829,7 @@ static int testb_handle_rq(struct request *rq)
+ 		len = bvec.bv_len;
+ 		err = testb_transfer(testb, bvec.bv_page, len, bvec.bv_offset,
+ 				     op_is_write(req_op(rq)), sector,
+-				     &lock_flag);
++				     &lock_flag, req_op(rq) & REQ_FUA);
+ 		if (err) {
+ 			spin_unlock_irqrestore(&testb->t_dev->lock, lock_flag);
+ 			return err;
+@@ -690,6 +881,8 @@ static void testb_free_bdev(struct testb *testb)
+ 	blk_cleanup_queue(testb->q);
+ 	blk_mq_free_tag_set(&testb->tag_set);
+ 
++	if (testb_cache_active(testb))
++		testb_free_device_storage(testb->t_dev, true);
+ 	kfree(testb);
+ }
+ 
+@@ -799,6 +992,9 @@ static int testb_alloc_bdev(struct testb_device *t_dev)
+ 	testb->t_dev = t_dev;
+ 	t_dev->testb = testb;
+ 
++	if (t_dev->cache_size > 0)
++		set_bit(TESTB_DEV_FL_CACHE, &testb->t_dev->flags);
 +
-+static struct configfs_attribute *testb_group_attrs[] = {
-+	&memb_group_attr_features,
-+	NULL,
-+};
+ 	testb->tag_set.ops = &testb_mq_ops;
+ 	testb->tag_set.nr_hw_queues = t_dev->nr_queues;
+ 	testb->tag_set.queue_depth = t_dev->q_depth;
+@@ -869,6 +1065,10 @@ static int __init testb_init(void)
+ 	int ret = 0;
+ 	struct configfs_subsystem *subsys = &testb_subsys;
+ 
++	/* check for testb_page.bitmap */
++	if (sizeof(unsigned long) * 8 - 2 < (PAGE_SIZE >> SECTOR_SHIFT))
++		return -EINVAL;
 +
-+static struct configfs_group_operations testb_group_ops = {
-+	.make_item	= testb_group_make_item,
-+	.drop_item	= testb_group_drop_item,
-+};
-+
-+static struct config_item_type testb_group_type = {
-+	.ct_group_ops	= &testb_group_ops,
-+	.ct_attrs	= testb_group_attrs,
-+	.ct_owner	= THIS_MODULE,
-+};
-+
-+static struct configfs_subsystem testb_subsys = {
-+	.su_group = {
-+		.cg_item = {
-+			.ci_namebuf = "testb",
-+			.ci_type = &testb_group_type,
-+		},
-+	},
-+};
-+
-+static int __init testb_init(void)
-+{
-+	int ret = 0;
-+	struct configfs_subsystem *subsys = &testb_subsys;
-+
-+	config_group_init(&subsys->su_group);
-+	mutex_init(&subsys->su_mutex);
-+
-+	ret = configfs_register_subsystem(subsys);
-+	return ret;
-+}
-+
-+static void __exit testb_exit(void)
-+{
-+	configfs_unregister_subsystem(&testb_subsys);
-+}
-+
-+module_init(testb_init);
-+module_exit(testb_exit);
-+
-+MODULE_AUTHOR("Will Koh <kkc6196@fb.com>, Shaohua Li <shli@fb.com>");
-+MODULE_LICENSE("GPL");
+ 	config_group_init(&subsys->su_group);
+ 	mutex_init(&subsys->su_mutex);
+ 
 -- 
 2.9.3
+
