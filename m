@@ -1,66 +1,29 @@
-From: Alex <mysqlstudent@gmail.com>
-Subject: Re: RecovData Handshk error
-Date: Sat, 5 Aug 2017 15:43:43 -0400
-Message-ID: <CAB1R3shMZX7Dg0G3iVa-oMrM77DFSJzDTt64VqGr4OF1Ys8RwA@mail.gmail.com>
-References: <CAB1R3shnsVV2bnkiF2q-X+9iHD0eUrS0Xq0hqWgWM+EQAUwFXA@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 5/5] testb: badblock support
+Date: Sat, 5 Aug 2017 18:56:31 -0700
+Message-ID: <CAA9_cmdcYq8yr9cO=Tm4bQ25OhFbhy=e2mNWtknFMPc5BqGEDA@mail.gmail.com>
+References: <cover.1501945859.git.shli@fb.com> <76006963eb89552e91e3d6acf72199a75d45659a.1501945859.git.shli@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAB1R3shnsVV2bnkiF2q-X+9iHD0eUrS0Xq0hqWgWM+EQAUwFXA@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <76006963eb89552e91e3d6acf72199a75d45659a.1501945859.git.shli@fb.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-block@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>, Kernel Team <kernel-team@fb.com>, Kyungchan Koh <kyungchan.koh@gmail.com>, Shaohua Li <shli@fb.com>
 List-Id: linux-raid.ids
 
-Hi all, I sent the message below last week and haven't received any
-response. Is there a place that might be more appropriate for help
-with my MegaRAID and possible disk failure?
+On Sat, Aug 5, 2017 at 8:51 AM, Shaohua Li <shli@kernel.org> wrote:
+> From: Shaohua Li <shli@fb.com>
+>
+> Sometime disk could have tracks broken and data there is inaccessable,
+> but data in other parts can be accessed in normal way. MD RAID supports
+> such disks. But we don't have a good way to test it, because we can't
+> control which part of a physical disk is bad. For a virtual disk, this
+> can be easily controlled.
+>
+> This patch adds a new 'badblock' attribute. Configure it in this way:
+> echo "+1-100" > xxx/badblock, this will make sector [1-100] as bad
+> blocks.
+> echo "-20-30" > xxx/badblock, this will make sector [20-30] good
 
-On Sat, Jul 29, 2017 at 9:54 PM, Alex <mysqlstudent@gmail.com> wrote:
-> Hi,
->
-> I have a fedora25 system with a MegaRAID SAS 9260-8i. I believe
-> there's 8 500GB SSDs connected. It appears one (or more?) may be
-> having a problem. I'm now noticing this message periodically in the
-> kernel logs:
->
-> [Wed Jun 28 01:40:06 2017] ata1.00: exception Emask 0x0 SAct 0x0 SErr
-> 0x400001 action 0x6 frozen
-> [Wed Jun 28 01:40:06 2017] ata1: SError: { RecovData Handshk }
-> [Wed Jun 28 01:40:06 2017] ata1.00: cmd
-> a0/00:00:00:08:00/00:00:00:00:00/a0 tag 29 pio 16392 in
->                                     Get event status notification 4a
-> 01 00 00 10 00 00 00 08 00res 40/00:00:00:00:00/00:00:00:00:00/00
-> Emask 0x4 (timeout)
-> [Wed Jun 28 01:40:06 2017] ata1.00: status: { DRDY }
-> [Wed Jun 28 01:40:06 2017] ata1: hard resetting link
-> [Wed Jun 28 01:40:06 2017] ata1: SATA link up 1.5 Gbps (SStatus 113
-> SControl 300)
-> [Wed Jun 28 01:40:06 2017] ata1.00: configured for UDMA/133
-> [Wed Jun 28 01:40:06 2017] ata1: EH complete
->
-> Is it something to be concerned with? What level of panic? :-)
->
-> It appears to recover normally? Is it a device or disk issue? How can
-> I identify which disk is involved?
->
-> This is the information on the control from lspci:
->
-> 05:00.0 RAID bus controller: LSI Logic / Symbios Logic MegaRAID SAS
-> 2108 [Liberator] (rev 05)
->         Subsystem: LSI Logic / Symbios Logic MegaRAID SAS 9260-8i
->         Flags: bus master, fast devsel, latency 0, IRQ 29, NUMA node 0
->         I/O ports at 7000 [size=256]
->         Memory at df960000 (64-bit, non-prefetchable) [size=16K]
->         Memory at df900000 (64-bit, non-prefetchable) [size=256K]
->         Expansion ROM at df940000 [disabled] [size=128K]
->         Capabilities: [50] Power Management version 3
->         Capabilities: [68] Express Endpoint, MSI 00
->         Capabilities: [d0] Vital Product Data
->         Capabilities: [a8] MSI: Enable- Count=1/1 Maskable- 64bit+
->         Capabilities: [c0] MSI-X: Enable+ Count=15 Masked-
->         Capabilities: [100] Advanced Error Reporting
->         Capabilities: [138] Power Budgeting <?>
->         Kernel driver in use: megaraid_sas
->         Kernel modules: megaraid_sas
->
-> Thanks for any ideas.
+Did you happen to overlook block/badblocks.c, or did you find it unsuitable?
