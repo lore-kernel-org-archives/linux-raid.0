@@ -1,71 +1,54 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 0/5] block: a virtual block device driver for testing
-Date: Mon, 7 Aug 2017 10:29:05 +0200
-Message-ID: <42bfcce1-8329-c0df-7457-107b388491ff@suse.de>
-References: <cover.1501945859.git.shli@fb.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cover.1501945859.git.shli@fb.com>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org
-Cc: kernel-team@fb.com, Kyungchan Koh <kyungchan.koh@gmail.com>, Shaohua Li <shli@fb.com>
+From: Byungchul Park <byungchul.park@lge.com>
+Subject: [RESEND PATCH] bcache: Don't reinvent the wheel but use existing llist API
+Date: Mon,  7 Aug 2017 17:38:41 +0900
+Message-ID: <1502095121-14337-1-git-send-email-byungchul.park@lge.com>
+Return-path: <linux-bcache-owner@vger.kernel.org>
+Sender: linux-bcache-owner@vger.kernel.org
+To: kent.overstreet@gmail.com, shli@kernel.org
+Cc: linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@lge.com
 List-Id: linux-raid.ids
 
-On 08/05/2017 05:51 PM, Shaohua Li wrote:
-> From: Shaohua Li <shli@fb.com>
-> 
-> In testing software RAID, I usually found it's hard to cover specific cases.
-> RAID is supposed to work even disk is in semi good state, for example, some
-> sectors are broken. Since we can't control the behavior of hardware, it's
-> difficult to create test suites to do destructive tests. But we can control the
-> behavior of software, software based disk is an obvious choice for such tests.
-> While we already have several software based disks for testing (eg, null_blk,
-> scsi_debug), none is for destructive testing, this is the reason we create a
-> new test block device.
-> 
-> Currently the driver can create disk with following features:
-> - Bandwidth control. A raid array consists of several disks. The disks could
->   run in different speed, for example, one disk is SSD and the other is HD.
->   Actually raid1 has a feature called write behind just for this. To test such
->   raid1 feature, we'd like the disks speed could be controlled.
-> - Emulate disk cache. Software must flush disk cache to guarantee data is
->   safely stored in media after a power failure. To verify if software works
->   well, we can't simply use physical disk, because even software doesn't flush
->   cache, the hardware probably will flush the cache. With a software
->   implementation of disk cache, we can fully control how we flush disk cache in a
->   power failure.
-> - Badblock. If only part of a disk is broken, software raid continues working.
->   To test if software raid works well, disks must include some broken parts or
->   bad blocks. Bad blocks can be easily implemented in software.
-> 
-> While this is inspired by software raid testing, the driver is very flexible
-> for extension. We can easily add new features into the driver. The interface is
-> configfs, which can be configured with a shell script. There is a 'features'
-> attribute exposing all supported features. By checking this, we don't need to
-> worry about compability issues. For configuration details, please check the
-> first patch.
-> 
-Any particular reason why you can't fold these changes into brd or null_blk?
-After all, without those testing features it is 'just' another ramdisk
-driver...
+Although llist provides proper APIs, they are not used. Make them used.
 
-> This is William's intern project. I made some changes, all errors are mine. You
-> are more than welcomed to test and add new features!
-> 
-Ah. But then why isn't he mentioned in the From: or Signed-off: lines?
-Shouldn't he be getting some more credits than just 'William'?
-(Unless William is in fact an alias for Kyungchan Koh, in which case a
-name mapping would be nice ...)
+Signed-off-by: Byungchul Park <byungchul.park@lge.com>
+---
+ drivers/md/bcache/closure.c | 17 +++--------------
+ 1 file changed, 3 insertions(+), 14 deletions(-)
 
-Cheers,
-
-Hannes
+diff --git a/drivers/md/bcache/closure.c b/drivers/md/bcache/closure.c
+index 864e673..1841d03 100644
+--- a/drivers/md/bcache/closure.c
++++ b/drivers/md/bcache/closure.c
+@@ -64,27 +64,16 @@ void closure_put(struct closure *cl)
+ void __closure_wake_up(struct closure_waitlist *wait_list)
+ {
+ 	struct llist_node *list;
+-	struct closure *cl;
++	struct closure *cl, *t;
+ 	struct llist_node *reverse = NULL;
+ 
+ 	list = llist_del_all(&wait_list->list);
+ 
+ 	/* We first reverse the list to preserve FIFO ordering and fairness */
+-
+-	while (list) {
+-		struct llist_node *t = list;
+-		list = llist_next(list);
+-
+-		t->next = reverse;
+-		reverse = t;
+-	}
++	reverse = llist_reverse_order(list);
+ 
+ 	/* Then do the wakeups */
+-
+-	while (reverse) {
+-		cl = container_of(reverse, struct closure, list);
+-		reverse = llist_next(reverse);
+-
++	llist_for_each_entry_safe(cl, t, reverse, list) {
+ 		closure_set_waiting(cl, 0);
+ 		closure_sub(cl, CLOSURE_WAITING + 1);
+ 	}
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+1.9.1
