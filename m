@@ -1,40 +1,75 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH 5/5] testb: badblock support
-Date: Sun, 6 Aug 2017 21:39:10 -0700
-Message-ID: <20170807043910.dyjogknyqrwoogmg@kernel.org>
-References: <cover.1501945859.git.shli@fb.com>
- <76006963eb89552e91e3d6acf72199a75d45659a.1501945859.git.shli@fb.com>
- <CAA9_cmdcYq8yr9cO=Tm4bQ25OhFbhy=e2mNWtknFMPc5BqGEDA@mail.gmail.com>
+From: "David C. Rankin" <drankinatty@suddenlinkmail.com>
+Subject: raid1 mismatch_cnt 128 revisited - so I can sleep better at night...
+Date: Mon, 7 Aug 2017 02:35:19 -0500
+Message-ID: <dbe4e7d5-0d46-fec3-346b-67628144743d@suddenlinkmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAA9_cmdcYq8yr9cO=Tm4bQ25OhFbhy=e2mNWtknFMPc5BqGEDA@mail.gmail.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-block@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>, Kernel Team <kernel-team@fb.com>, Kyungchan Koh <kyungchan.koh@gmail.com>, Shaohua Li <shli@fb.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: mdraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, Aug 05, 2017 at 06:56:31PM -0700, Dan Williams wrote:
-> On Sat, Aug 5, 2017 at 8:51 AM, Shaohua Li <shli@kernel.org> wrote:
-> > From: Shaohua Li <shli@fb.com>
-> >
-> > Sometime disk could have tracks broken and data there is inaccessable,
-> > but data in other parts can be accessed in normal way. MD RAID supports
-> > such disks. But we don't have a good way to test it, because we can't
-> > control which part of a physical disk is bad. For a virtual disk, this
-> > can be easily controlled.
-> >
-> > This patch adds a new 'badblock' attribute. Configure it in this way:
-> > echo "+1-100" > xxx/badblock, this will make sector [1-100] as bad
-> > blocks.
-> > echo "-20-30" > xxx/badblock, this will make sector [20-30] good
-> 
-> Did you happen to overlook block/badblocks.c, or did you find it unsuitable?
+Neil, all,
 
-Hmm, I overlooked at it indeed, thought I don't need those features of
-badblocks without double checking the code. Will use badblocks interface in
-next post.
+  After a recent scrub on my / filesystem raid1 array, I checked and received
+a mismatch_cnt of 128. E.g.
 
-Thanks,
-Shaohua
+$ cat /proc/mdstat
+Personalities : [raid1]
+md1 : active raid1 sda6[0] sdb6[1]
+      52396032 blocks super 1.2 [2/2] [UU]
+
+md3 : active raid1 sdb8[1] sda8[0]
+      2115584 blocks super 1.2 [2/2] [UU]
+
+md0 : active raid1 sda5[0] sdb5[1]
+      511680 blocks super 1.2 [2/2] [UU]
+
+md2 : active raid1 sda7[0] sdb7[1]
+      921030656 blocks super 1.2 [2/2] [UU]
+      bitmap: 0/7 pages [0KB], 65536KB chunk
+
+md4 : active raid1 sdd[2] sdc[0]
+      2930135488 blocks super 1.2 [2/2] [UU]
+      bitmap: 0/22 pages [0KB], 65536KB chunk
+
+
+md3 is swap,
+
+$ for i in {{0..2},4}; do \
+    echo -n "md$i mismatch count: " \
+    cat /sys/block/md$i/md/mismatch_cnt \
+  done
+md0 mismatch count: 0
+md1 mismatch count: 128
+md2 mismatch count: 0
+md4 mismatch count: 0
+
+  The normal search of raid1 mismatch_cnt brings up the old bug report where
+this has been addressed and fixed several times since the 2.6 days:
+
+https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=405919
+
+  The apt title of the bug is "please explain mismatch_cnt so I can sleep
+better at night" which is usually why admins end up searching after
+encountering a non-zero mismatch_cnt.
+
+  So, have we had a regression in the 4.12.4 kernel code?
+
+  Or, should I just chock it up to the same of logic of a page of memory that
+hasn't changed being written out to swap and the write-request sitting on the
+array until it eventually copied out of the page resulting in different times
+that are flagged as mismatched -- and ignore it?
+
+  The only thing that worries me is top report nothing in swap, e.g.
+
+GiB Swap:  0.0/2.018
+
+so the old swap caused time difference wouldn't seem to apply?
+
+  What say the experts? Should I be concerned here or is this still a running
+issue I can ignore.
+
+-- 
+David C. Rankin, J.D.,P.E.
