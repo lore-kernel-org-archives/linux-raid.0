@@ -1,31 +1,74 @@
-From: Drew <drew.kay@gmail.com>
-Subject: Re: RecovData Handshk error
-Date: Mon, 7 Aug 2017 06:19:47 -0700
-Message-ID: <CACJz6QtTHQAS_hc2gBVcZRGv8k1R8F4sebG__=bk19hMo7-ypQ@mail.gmail.com>
-References: <CAB1R3shnsVV2bnkiF2q-X+9iHD0eUrS0Xq0hqWgWM+EQAUwFXA@mail.gmail.com>
- <CAB1R3shMZX7Dg0G3iVa-oMrM77DFSJzDTt64VqGr4OF1Ys8RwA@mail.gmail.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH 0/5] block: a virtual block device driver for testing
+Date: Mon, 7 Aug 2017 09:36:07 -0700
+Message-ID: <20170807163607.msflun2r4q5tlpsk@kernel.org>
+References: <cover.1501945859.git.shli@fb.com>
+ <42bfcce1-8329-c0df-7457-107b388491ff@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAB1R3shMZX7Dg0G3iVa-oMrM77DFSJzDTt64VqGr4OF1Ys8RwA@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Alex <mysqlstudent@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <42bfcce1-8329-c0df-7457-107b388491ff@suse.de>
+Sender: linux-block-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org, kernel-team@fb.com, Kyungchan Koh <kyungchan.koh@gmail.com>, Shaohua Li <shli@fb.com>
 List-Id: linux-raid.ids
 
-Hi Alex,
+On Mon, Aug 07, 2017 at 10:29:05AM +0200, Hannes Reinecke wrote:
+> On 08/05/2017 05:51 PM, Shaohua Li wrote:
+> > From: Shaohua Li <shli@fb.com>
+> > 
+> > In testing software RAID, I usually found it's hard to cover specific cases.
+> > RAID is supposed to work even disk is in semi good state, for example, some
+> > sectors are broken. Since we can't control the behavior of hardware, it's
+> > difficult to create test suites to do destructive tests. But we can control the
+> > behavior of software, software based disk is an obvious choice for such tests.
+> > While we already have several software based disks for testing (eg, null_blk,
+> > scsi_debug), none is for destructive testing, this is the reason we create a
+> > new test block device.
+> > 
+> > Currently the driver can create disk with following features:
+> > - Bandwidth control. A raid array consists of several disks. The disks could
+> >   run in different speed, for example, one disk is SSD and the other is HD.
+> >   Actually raid1 has a feature called write behind just for this. To test such
+> >   raid1 feature, we'd like the disks speed could be controlled.
+> > - Emulate disk cache. Software must flush disk cache to guarantee data is
+> >   safely stored in media after a power failure. To verify if software works
+> >   well, we can't simply use physical disk, because even software doesn't flush
+> >   cache, the hardware probably will flush the cache. With a software
+> >   implementation of disk cache, we can fully control how we flush disk cache in a
+> >   power failure.
+> > - Badblock. If only part of a disk is broken, software raid continues working.
+> >   To test if software raid works well, disks must include some broken parts or
+> >   bad blocks. Bad blocks can be easily implemented in software.
+> > 
+> > While this is inspired by software raid testing, the driver is very flexible
+> > for extension. We can easily add new features into the driver. The interface is
+> > configfs, which can be configured with a shell script. There is a 'features'
+> > attribute exposing all supported features. By checking this, we don't need to
+> > worry about compability issues. For configuration details, please check the
+> > first patch.
+> > 
+> Any particular reason why you can't fold these changes into brd or null_blk?
+> After all, without those testing features it is 'just' another ramdisk
+> driver...
 
-This particular mailing list is dedicated to the linux software raid
-subsystem md, not raid in general. Your best bet is to ask in one of
-the SAS/SATA mailing lists, or a vendor specific forum for further
-info.
+null_blk isn't a good fit. ramdisk might be, but I try to not. We are adding
+new interfaces, locks and so on. Adding the features into ramdisk driver will
+mess it up. Binding it to ramdisk driver will make adding new features harder
+too, because the test driver doesn't really care about performance while
+ramdisk does.
 
+> > This is William's intern project. I made some changes, all errors are mine. You
+> > are more than welcomed to test and add new features!
+> > 
+> Ah. But then why isn't he mentioned in the From: or Signed-off: lines?
+> Shouldn't he be getting some more credits than just 'William'?
+> (Unless William is in fact an alias for Kyungchan Koh, in which case a
+> name mapping would be nice ...)
 
--- 
-Drew
+William is infact an alias for Kyungchan Koh. I'll make the name consistent in
+next post.
 
-"Nothing in life is to be feared. It is only to be understood."
---Marie Curie
-
-"This started out as a hobby and spun horribly out of control."
--Unknown
+Thanks,
+Shaohua
