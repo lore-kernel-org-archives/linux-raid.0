@@ -1,67 +1,228 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH v2] md/bitmap: preserve whole sb_page when initializing bitmap
-Date: Tue, 8 Aug 2017 13:36:44 -0700
-Message-ID: <20170808203644.538499-1-songliubraving@fb.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH 3/9] md: raid1 nowait support
+Date: Tue, 8 Aug 2017 13:39:07 -0700
+Message-ID: <20170808203907.obfzlkqe4zboipva@kernel.org>
+References: <20170726235806.12148-1-rgoldwyn@suse.de>
+ <20170726235806.12148-4-rgoldwyn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, shli@kernel.org
-Cc: Song Liu <songliubraving@fb.com>, shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170726235806.12148-4-rgoldwyn@suse.de>
+Sender: linux-block-owner@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: linux-block@vger.kernel.org, hch@infradead.org, jack@suse.cz, linux-raid@vger.kernel.org, dm-devel@redhat.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 List-Id: linux-raid.ids
 
-When bitmap_resize() is used to initialize the bitmap, it is
-necessary to preserve the whole page of sb_page instead of just
-the header (bitmap_super_t). This is because the sb_page may
-contain bitmap read from the disks (initialized by mdadm).
+On Wed, Jul 26, 2017 at 06:58:00PM -0500, Goldwyn Rodrigues wrote:
+> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> 
+> The RAID1 driver would bail with EAGAIN in case of:
+>  + I/O has to wait for a barrier
+>  + array is frozen
+>  + Area is suspended
+>  + There are too many pending I/O that it will be queued.
+> 
+> To facilitate error for wait barriers, wait_barrier() is
+> returning bool. True in case if there was a wait (or is not
+> required). False in case a wait was required, but was not performed.
+> 
+> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> ---
+>  drivers/md/raid1.c | 74 +++++++++++++++++++++++++++++++++++++++++-------------
+>  1 file changed, 57 insertions(+), 17 deletions(-)
+> 
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 3febfc8391fb..66ca4288e3e8 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -903,8 +903,9 @@ static void lower_barrier(struct r1conf *conf, sector_t sector_nr)
+>  	wake_up(&conf->wait_barrier);
+>  }
+>  
+> -static void _wait_barrier(struct r1conf *conf, int idx)
+> +static bool _wait_barrier(struct r1conf *conf, int idx, bool nowait)
+>  {
+> +	bool ret = true;
+>  	/*
+>  	 * We need to increase conf->nr_pending[idx] very early here,
+>  	 * then raise_barrier() can be blocked when it waits for
+> @@ -935,7 +936,7 @@ static void _wait_barrier(struct r1conf *conf, int idx)
+>  	 */
+>  	if (!READ_ONCE(conf->array_frozen) &&
+>  	    !atomic_read(&conf->barrier[idx]))
+> -		return;
+> +		return ret;
+>  
+>  	/*
+>  	 * After holding conf->resync_lock, conf->nr_pending[idx]
+> @@ -953,18 +954,26 @@ static void _wait_barrier(struct r1conf *conf, int idx)
+>  	 */
+>  	wake_up(&conf->wait_barrier);
+>  	/* Wait for the barrier in same barrier unit bucket to drop. */
+> -	wait_event_lock_irq(conf->wait_barrier,
+> -			    !conf->array_frozen &&
+> -			     !atomic_read(&conf->barrier[idx]),
+> -			    conf->resync_lock);
+> +	if (conf->array_frozen || atomic_read(&conf->barrier[idx])) {
+> +		if (nowait)
+> +			ret = false;
 
-Note that, this code path is only triggered with certain
-combinations of parameters. One example is when raid456 array
-is created with write journal.
+In this case, we nr_pending shouldn't be increased
 
-To make the sb_page consistent across mutliple device, we also
-update IO block size in write_sb_page() and read_sb_page() to
-PAGE_SIZE.
+> +		else
+> +			wait_event_lock_irq(conf->wait_barrier,
+> +					!conf->array_frozen &&
+> +					!atomic_read(&conf->barrier[idx]),
+> +					conf->resync_lock);
+> +	}
+>  	atomic_inc(&conf->nr_pending[idx]);
+>  	atomic_dec(&conf->nr_waiting[idx]);
+>  	spin_unlock_irq(&conf->resync_lock);
+> +	return ret;
+>  }
+>  
+> -static void wait_read_barrier(struct r1conf *conf, sector_t sector_nr)
+> +static bool wait_read_barrier(struct r1conf *conf, sector_t sector_nr,
+> +		bool nowait)
+>  {
+>  	int idx = sector_to_idx(sector_nr);
+> +	bool ret = true;
+>  
+>  	/*
+>  	 * Very similar to _wait_barrier(). The difference is, for read
+> @@ -976,7 +985,7 @@ static void wait_read_barrier(struct r1conf *conf, sector_t sector_nr)
+>  	atomic_inc(&conf->nr_pending[idx]);
+>  
+>  	if (!READ_ONCE(conf->array_frozen))
+> -		return;
+> +		return ret;
+>  
+>  	spin_lock_irq(&conf->resync_lock);
+>  	atomic_inc(&conf->nr_waiting[idx]);
+> @@ -987,19 +996,28 @@ static void wait_read_barrier(struct r1conf *conf, sector_t sector_nr)
+>  	 */
+>  	wake_up(&conf->wait_barrier);
+>  	/* Wait for array to be unfrozen */
+> -	wait_event_lock_irq(conf->wait_barrier,
+> -			    !conf->array_frozen,
+> -			    conf->resync_lock);
+> +	if (conf->array_frozen) {
+> +		/* If nowait flag is set, return false to
+> +		 * show we did not wait
+> +		 */
+> +		if (nowait)
+> +			ret = false;
 
-Signed-off-by: Song Liu <songliubraving@fb.com>
----
- drivers/md/bitmap.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ditto
+> +		else
+> +			wait_event_lock_irq(conf->wait_barrier,
+> +					!conf->array_frozen,
+> +					conf->resync_lock);
+> +	}
+>  	atomic_inc(&conf->nr_pending[idx]);
+>  	atomic_dec(&conf->nr_waiting[idx]);
+>  	spin_unlock_irq(&conf->resync_lock);
+> +	return ret;
+>  }
+>  
+> -static void wait_barrier(struct r1conf *conf, sector_t sector_nr)
+> +static bool wait_barrier(struct r1conf *conf, sector_t sector_nr, bool nowait)
+>  {
+>  	int idx = sector_to_idx(sector_nr);
+>  
+> -	_wait_barrier(conf, idx);
+> +	return _wait_barrier(conf, idx, nowait);
+>  }
+>  
+>  static void wait_all_barriers(struct r1conf *conf)
+> @@ -1007,7 +1025,7 @@ static void wait_all_barriers(struct r1conf *conf)
+>  	int idx;
+>  
+>  	for (idx = 0; idx < BARRIER_BUCKETS_NR; idx++)
+> -		_wait_barrier(conf, idx);
+> +		_wait_barrier(conf, idx, false);
+>  }
+>  
+>  static void _allow_barrier(struct r1conf *conf, int idx)
+> @@ -1223,7 +1241,11 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
+>  	 * Still need barrier for READ in case that whole
+>  	 * array is frozen.
+>  	 */
+> -	wait_read_barrier(conf, bio->bi_iter.bi_sector);
+> +	if (!wait_read_barrier(conf, bio->bi_iter.bi_sector,
+> +				bio->bi_opf & REQ_NOWAIT)) {
+> +		bio_wouldblock_error(bio);
+> +		return;
+> +	}
+>  
+>  	if (!r1_bio)
+>  		r1_bio = alloc_r1bio(mddev, bio);
+> @@ -1333,6 +1355,11 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+>  		 * an interruptible wait.
+>  		 */
+>  		DEFINE_WAIT(w);
+> +		if (bio->bi_opf & REQ_NOWAIT) {
+> +			bio_wouldblock_error(bio);
+> +			return;
+> +		}
+> +
+>  		for (;;) {
+>  			sigset_t full, old;
+>  			prepare_to_wait(&conf->wait_barrier,
+> @@ -1351,7 +1378,11 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+>  		}
+>  		finish_wait(&conf->wait_barrier, &w);
+>  	}
+> -	wait_barrier(conf, bio->bi_iter.bi_sector);
+> +	if (!wait_barrier(conf, bio->bi_iter.bi_sector,
+> +				bio->bi_opf & REQ_NOWAIT)) {
+> +		bio_wouldblock_error(bio);
+> +		return;
+> +	}
+>  
+>  	r1_bio = alloc_r1bio(mddev, bio);
+>  	r1_bio->sectors = max_write_sectors;
+> @@ -1359,6 +1390,10 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+>  	if (conf->pending_count >= max_queued_requests) {
+>  		md_wakeup_thread(mddev->thread);
+>  		raid1_log(mddev, "wait queued");
+> +		if (bio->bi_opf & REQ_NOWAIT) {
+> +			bio_wouldblock_error(bio);
+> +			return;
+> +		}
+>  		wait_event(conf->wait_barrier,
+>  			   conf->pending_count < max_queued_requests);
+>  	}
+> @@ -1442,6 +1477,11 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+>  		/* Wait for this device to become unblocked */
+>  		int j;
+>  
+> +		if (bio->bi_opf & REQ_NOWAIT) {
+> +			bio_wouldblock_error(bio);
+> +			return;
+> +		}
+> +
+>  		for (j = 0; j < i; j++)
+>  			if (r1_bio->bios[j])
+>  				rdev_dec_pending(conf->mirrors[j].rdev, mddev);
+> @@ -1449,7 +1489,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+>  		allow_barrier(conf, bio->bi_iter.bi_sector);
+>  		raid1_log(mddev, "wait rdev %d blocked", blocked_rdev->raid_disk);
+>  		md_wait_for_blocked_rdev(blocked_rdev, mddev);
+> -		wait_barrier(conf, bio->bi_iter.bi_sector);
+> +		wait_barrier(conf, bio->bi_iter.bi_sector, false);
 
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index 40f3cd7..384e45d 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -162,8 +162,7 @@ static int read_sb_page(struct mddev *mddev, loff_t offset,
- 
- 		target = offset + index * (PAGE_SIZE/512);
- 
--		if (sync_page_io(rdev, target,
--				 roundup(size, bdev_logical_block_size(rdev->bdev)),
-+		if (sync_page_io(rdev, target, PAGE_SIZE,
- 				 page, REQ_OP_READ, 0, true)) {
- 			page->index = index;
- 			return 0;
-@@ -227,8 +226,7 @@ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
- 			int last_page_size = store->bytes & (PAGE_SIZE-1);
- 			if (last_page_size == 0)
- 				last_page_size = PAGE_SIZE;
--			size = roundup(last_page_size,
--				       bdev_logical_block_size(bdev));
-+			size = roundup(last_page_size, PAGE_SIZE);
- 		}
- 		/* Just make sure we aren't corrupting data or
- 		 * metadata
-@@ -2117,8 +2115,7 @@ int bitmap_resize(struct bitmap *bitmap, sector_t blocks,
- 
- 	if (store.sb_page && bitmap->storage.sb_page)
- 		memcpy(page_address(store.sb_page),
--		       page_address(bitmap->storage.sb_page),
--		       sizeof(bitmap_super_t));
-+		       page_address(bitmap->storage.sb_page), PAGE_SIZE);
- 	bitmap_file_unmap(&bitmap->storage);
- 	bitmap->storage = store;
- 
--- 
-2.9.3
+There are other cases we could block, for example, md_wait_for_blocked_rdev
+here. Is the goal just avoid block for normal situations?
 
+>  		goto retry_write;
+>  	}
+>  
+> -- 
+> 2.12.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
