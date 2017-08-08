@@ -1,75 +1,77 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [md PATCH 1/2] md: always clear ->safemode when
- md_check_recovery gets the mddev lock.
-Date: Tue, 8 Aug 2017 07:40:20 -0700
-Message-ID: <20170808144020.p7dxen5etqy2oxpg@kernel.org>
-References: <150217527795.23065.7747775748038187816.stgit@noble>
- <150217539687.23065.4449077069418495000.stgit@noble>
+From: Gary R Hook <gary.hook@amd.com>
+Subject: Re: [PATCH v4 02/19] crypto: ccm: use -EAGAIN for transient busy
+ indication
+Date: Tue, 8 Aug 2017 10:24:49 -0500
+Message-ID: <4600c898-a2f2-f95f-15b4-0adcc6acc0b5__9485.24268246747$1502205996$gmane$org@amd.com>
+References: <1502193834-11289-1-git-send-email-gilad@benyossef.com>
+ <1502193834-11289-3-git-send-email-gilad@benyossef.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <150217539687.23065.4449077069418495000.stgit@noble>
+In-Reply-To: <1502193834-11289-3-git-send-email-gilad@benyossef.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>, David R <david@unsolicited.net>, linux-raid@vger.kernel.org
+To: Gilad Ben-Yossef <gilad@benyossef.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, "Lendacky, Thomas" <Thomas.Lendacky@amd.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Arnaud Ebalard <arno@natisbad.org>, Matthias Brugger <matthias.bgg@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, Serg
+Cc: Ofir Drang <ofir.drang@arm.com>
 List-Id: linux-raid.ids
 
-On Tue, Aug 08, 2017 at 04:56:36PM +1000, Neil Brown wrote:
-> If ->safemode == 1, md_check_recovery() will try to get the mddev lock
-> and perform various other checks.
-> If mddev->in_sync is zero, it will call set_in_sync, and clear
-> ->safemode.  However if mddev->in_sync is not zero, ->safemode will not
-> be cleared.
-> 
-> When md_check_recovery() drops the mddev lock, the thread is woken
-> up again.  Normally it would just check if there was anything else to
-> do, find nothing, and go to sleep.  However as ->safemode was not
-> cleared, it will take the mddev lock again, then wake itself up
-> when unlocking.
-> 
-> This results in an infinite loop, repeatedly calling
-> md_check_recovery(), which RCU or the soft-lockup detector
-> will eventually complain about.
-> 
-> Prior to commit 4ad23a976413 ("MD: use per-cpu counter for
-> writes_pending"), safemode would only be set to one when the
-> writes_pending counter reached zero, and would be cleared again
-> when writes_pending is incremented.  Since that patch, safemode
-> is set more freely, but is not reliably cleared.
-> 
-> So in md_check_recovery() clear ->safemode before checking ->in_sync.
+On 08/08/2017 07:03 AM, Gilad Ben-Yossef wrote:
+> Replace -EBUSY with -EAGAIN when reporting transient busy
+> indication in the absence of backlog.
+>
+> Signed-off-by: Gilad Ben-Yossef <gilad@benyossef.com>
 
-Nice catch! Applied both patches.
+Could we use "ccp" in the subject line, please?
 
-I spent hours to check why md_check_recovery loops, apparently I missed
-set_in_sync is only called when in_sync is not set, silly me.
-
-Thanks,
-Shaohua
- 
-> Fixes: 4ad23a976413 ("MD: use per-cpu counter for writes_pending")
-> Cc: stable@vger.kernel.org (4.12+)
-> Reported-by: Dominik Brodowski <linux@dominikbrodowski.net>
-> Reported-by: David R <david@unsolicited.net>
-> Signed-off-by: NeilBrown <neilb@suse.com>
 > ---
->  drivers/md/md.c |    3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index c99634612fc4..d84aceede1cb 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -8656,6 +8656,9 @@ void md_check_recovery(struct mddev *mddev)
->  	if (mddev_trylock(mddev)) {
->  		int spares = 0;
->  
-> +		if (mddev->safemode == 1)
-> +			mddev->safemode = 0;
-> +
->  		if (mddev->ro) {
->  			struct md_rdev *rdev;
->  			if (!mddev->external && mddev->in_sync)
-> 
-> 
+>  drivers/crypto/ccp/ccp-crypto-main.c | 8 +++-----
+>  drivers/crypto/ccp/ccp-dev.c         | 7 +++++--
+>  2 files changed, 8 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/crypto/ccp/ccp-crypto-main.c b/drivers/crypto/ccp/ccp-crypto-main.c
+> index 35a9de7..403ff0a 100644
+> --- a/drivers/crypto/ccp/ccp-crypto-main.c
+> +++ b/drivers/crypto/ccp/ccp-crypto-main.c
+> @@ -222,9 +222,10 @@ static int ccp_crypto_enqueue_cmd(struct ccp_crypto_cmd *crypto_cmd)
+>
+>  	/* Check if the cmd can/should be queued */
+>  	if (req_queue.cmd_count >= CCP_CRYPTO_MAX_QLEN) {
+> -		ret = -EBUSY;
+> -		if (!(crypto_cmd->cmd->flags & CCP_CMD_MAY_BACKLOG))
+> +		if (!(crypto_cmd->cmd->flags & CCP_CMD_MAY_BACKLOG)) {
+> +			ret = -EAGAIN;
+>  			goto e_lock;
+> +		}
+>  	}
+>
+>  	/* Look for an entry with the same tfm.  If there is a cmd
+> @@ -243,9 +244,6 @@ static int ccp_crypto_enqueue_cmd(struct ccp_crypto_cmd *crypto_cmd)
+>  		ret = ccp_enqueue_cmd(crypto_cmd->cmd);
+>  		if (!ccp_crypto_success(ret))
+>  			goto e_lock;	/* Error, don't queue it */
+> -		if ((ret == -EBUSY) &&
+> -		    !(crypto_cmd->cmd->flags & CCP_CMD_MAY_BACKLOG))
+> -			goto e_lock;	/* Not backlogging, don't queue it */
+>  	}
+>
+>  	if (req_queue.cmd_count >= CCP_CRYPTO_MAX_QLEN) {
+> diff --git a/drivers/crypto/ccp/ccp-dev.c b/drivers/crypto/ccp/ccp-dev.c
+> index 4e029b1..3d637e3 100644
+> --- a/drivers/crypto/ccp/ccp-dev.c
+> +++ b/drivers/crypto/ccp/ccp-dev.c
+> @@ -292,9 +292,12 @@ int ccp_enqueue_cmd(struct ccp_cmd *cmd)
+>  	i = ccp->cmd_q_count;
+>
+>  	if (ccp->cmd_count >= MAX_CMD_QLEN) {
+> -		ret = -EBUSY;
+> -		if (cmd->flags & CCP_CMD_MAY_BACKLOG)
+> +		if (cmd->flags & CCP_CMD_MAY_BACKLOG) {
+> +			ret = -EBUSY;
+>  			list_add_tail(&cmd->entry, &ccp->backlog);
+> +		} else {
+> +			ret = -EAGAIN;
+> +		}
+>  	} else {
+>  		ret = -EINPROGRESS;
+>  		ccp->cmd_count++;
+>
