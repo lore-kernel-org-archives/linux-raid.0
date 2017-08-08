@@ -1,93 +1,43 @@
 From: Gilad Ben-Yossef <gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
-Subject: [PATCH v4 07/19] crypto: move pub key to generic async completion
-Date: Tue,  8 Aug 2017 15:03:38 +0300
-Message-ID: <1502193834-11289-8-git-send-email-gilad__16637.2068961666$1502197392$gmane$org@benyossef.com>
+Subject: Re: [PATCH v4 06/19] crypto: move algif to generic async completion
+Date: Tue, 8 Aug 2017 16:45:36 +0300
+Message-ID: <CAOtvUMfp7Hie_RA8XNmWS084PvyO_xB0VAf2Vt9nR68cQhz3=g@mail.gmail.com>
 References: <1502193834-11289-1-git-send-email-gilad@benyossef.com>
+ <1502193834-11289-7-git-send-email-gilad@benyossef.com> <8585274.Umn6qnzcUd@tauon.chronox.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <1502193834-11289-1-git-send-email-gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
-List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-To: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tom Lendacky <thomas.lendacky-5C7GfCeVMHo@public.gmane.org>, Gary Hook <gary.hook-5C7GfCeVMHo@public.gmane.org>, Boris Brezillon <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Arnaud Ebalard <arno-LkuqDEemtHBg9hUCZPvPmw@public.gmane.org>, Matthias Brugger <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alasdair Kergon <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Steve French <sfrench-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, "Theodore Y. Ts'o" <tytso-3s7WtUTddSA@public.gmane.org>, Jaegeuk Kim <jaegeuk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Dmitry Kasatkin <dmitry.kasatkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, keyrings-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel@lists
-Cc: Ofir Drang <ofir.drang-5wv7dgnIgG8@public.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <8585274.Umn6qnzcUd-b2PLbiJbNv8ftSvlWXw0+g@public.gmane.org>
+Sender: linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Stephan Mueller <smueller-T9tCv8IpfcWELgA04lAiVw@public.gmane.org>
+Cc: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tom Lendacky <thomas.lendacky-5C7GfCeVMHo@public.gmane.org>, Gary Hook <gary.hook-5C7GfCeVMHo@public.gmane.org>, Boris Brezillon <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Arnaud Ebalard <arno-LkuqDEemtHBg9hUCZPvPmw@public.gmane.org>, Matthias Brugger <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alasdair Kergon <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, device-mapper development <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Steve French <sfrench-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, "Theodore Y. Ts'o" <tytso-3s7WtUTddSA@public.gmane.org>, Jaegeuk Kim <jaegeuk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Dmitry Kasatkin <dmitry.kasatkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Serge E. Hallyn
 List-Id: linux-raid.ids
 
-public_key_verify_signature() is starting an async crypto op and
-waiting for it to complete. Move it over to generic code doing
-the same.
+On Tue, Aug 8, 2017 at 4:10 PM, Stephan Mueller <smueller-T9tCv8IpfcWELgA04lAiVw@public.gmane.org> wrote:
+> Am Dienstag, 8. August 2017, 14:03:37 CEST schrieb Gilad Ben-Yossef:
+>
+> Hi Gilad,
+>
+>> algif starts several async crypto ops and waits for their completion.
+>> Move it over to generic code doing the same.
+>
+> Just FYI: your patch set and my patch [1] will clash.
+>
+> [1] https://patchwork.kernel.org/patch/9875959/
 
-Signed-off-by: Gilad Ben-Yossef <gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
----
- crypto/asymmetric_keys/public_key.c | 28 ++++------------------------
- 1 file changed, 4 insertions(+), 24 deletions(-)
+I'll try to rebase on linux-next + your patch than.
 
-diff --git a/crypto/asymmetric_keys/public_key.c b/crypto/asymmetric_keys/public_key.c
-index 3cd6e12..d916235 100644
---- a/crypto/asymmetric_keys/public_key.c
-+++ b/crypto/asymmetric_keys/public_key.c
-@@ -57,29 +57,13 @@ static void public_key_destroy(void *payload0, void *payload3)
- 	public_key_signature_free(payload3);
- }
- 
--struct public_key_completion {
--	struct completion completion;
--	int err;
--};
--
--static void public_key_verify_done(struct crypto_async_request *req, int err)
--{
--	struct public_key_completion *compl = req->data;
--
--	if (err == -EINPROGRESS)
--		return;
--
--	compl->err = err;
--	complete(&compl->completion);
--}
--
- /*
-  * Verify a signature using a public key.
-  */
- int public_key_verify_signature(const struct public_key *pkey,
- 				const struct public_key_signature *sig)
- {
--	struct public_key_completion compl;
-+	struct crypto_wait cwait;
- 	struct crypto_akcipher *tfm;
- 	struct akcipher_request *req;
- 	struct scatterlist sig_sg, digest_sg;
-@@ -131,20 +115,16 @@ int public_key_verify_signature(const struct public_key *pkey,
- 	sg_init_one(&digest_sg, output, outlen);
- 	akcipher_request_set_crypt(req, &sig_sg, &digest_sg, sig->s_size,
- 				   outlen);
--	init_completion(&compl.completion);
-+	crypto_init_wait(&cwait);
- 	akcipher_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG |
- 				      CRYPTO_TFM_REQ_MAY_SLEEP,
--				      public_key_verify_done, &compl);
-+				      crypto_req_done, &cwait);
- 
- 	/* Perform the verification calculation.  This doesn't actually do the
- 	 * verification, but rather calculates the hash expected by the
- 	 * signature and returns that to us.
- 	 */
--	ret = crypto_akcipher_verify(req);
--	if ((ret == -EINPROGRESS) || (ret == -EBUSY)) {
--		wait_for_completion(&compl.completion);
--		ret = compl.err;
--	}
-+	ret = crypto_wait_req(crypto_akcipher_verify(req), &cwait);
- 	if (ret < 0)
- 		goto out_free_output;
- 
+Thanks for letting me know.
+
+Gilad
+
+
+
+
 -- 
-2.1.4
+Gilad Ben-Yossef
+Chief Coffee Drinker
+
+"If you take a class in large-scale robotics, can you end up in a
+situation where the homework eats your dog?"
+ -- Jean-Baptiste Queru
