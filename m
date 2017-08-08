@@ -1,63 +1,39 @@
-From: <citydesk@thereporteronline.com>
-Subject: (unknown)
-Date: Tue, 08 Aug 2017 19:40:10 -0000
-Message-ID: <150222121043.22644.10566021006948666379@hinet.net>
+From: "David C. Rankin" <drankinatty@suddenlinkmail.com>
+Subject: Re: RecovData Handshk error
+Date: Tue, 8 Aug 2017 15:08:27 -0500
+Message-ID: <0d9494df-383e-20d9-28c5-fdebc481642b@suddenlinkmail.com>
+References: <CAB1R3shnsVV2bnkiF2q-X+9iHD0eUrS0Xq0hqWgWM+EQAUwFXA@mail.gmail.com>
+ <CAB1R3shMZX7Dg0G3iVa-oMrM77DFSJzDTt64VqGr4OF1Ys8RwA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="4143572985.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: attachment
-Subject: 
+In-Reply-To: <CAB1R3shMZX7Dg0G3iVa-oMrM77DFSJzDTt64VqGr4OF1Ys8RwA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Alex <mysqlstudent@gmail.com>
+Cc: mdraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-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
+On 08/05/2017 02:43 PM, Alex wrote:
+> Hi all, I sent the message below last week and haven't received any
+> response. Is there a place that might be more appropriate for help
+> with my MegaRAID and possible disk failure?
+
+Alex,
+
+  Sorry, the reason you got no response is because the LSI (or whatever
+vendor) MegaRAID software is a for a proprietary HARDWARE raid implementation.
+This list is for opensource Linux SOFTWARE raid. The MegaRAID software used to
+manage the proprietary hardware RAID card and drives (while opensourced a
+while back) has nothing at all to do with Linux software RAID discussed here.
+
+  Once you get your problem sorted out, (or if you can't), you might consider
+just using your raid card as a simple disk controller and creating a Linux
+software RAID array on that -- then your questions would be relevant here.
+
+(and unless you are saturating your hardware raid setup relying on a
+battery-powered write-back cache, then good old free software raid here will
+likely match or exceed the I/O performance of your current hardware card :)
+
+-- 
+David C. Rankin, J.D.,P.E.
