@@ -1,49 +1,68 @@
-From: Coly Li <i@coly.li>
-Subject: Re: [RESEND PATCH] bcache: Don't reinvent the wheel but use existing
- llist API
-Date: Tue, 8 Aug 2017 14:50:15 +0800
-Message-ID: <1c3836c4-e930-5d7b-76cc-31a287a408a7@coly.li>
-References: <1502095121-14337-1-git-send-email-byungchul.park@lge.com>
- <b37c4038-d95f-ca81-5789-825ebfc6d425@coly.li>
- <20170808041233.GR20323@X58A-UD3R>
- <d99cc72b-833d-c8b1-4c44-923cb50d5d1f@coly.li>
- <20170808060056.GS20323@X58A-UD3R>
+From: David R <david@unsolicited.net>
+Subject: Re: [MD] Crash with 4.12+ kernel and high disk load -- bisected to
+ 4ad23a976413: MD: use per-cpu counter for writes_pending
+Date: Tue, 08 Aug 2017 06:55:26 +0000
+Message-ID: <20170808065526.Horde.9rrpLi3TCaOrBk9KfEU4ZFP@vinovium.com>
+References: <ee7921d2-d3ff-2381-1f05-2c07b8001d08@unsolicited.net>
+ <c2df7906-67b2-b33f-0e82-49e6ef53f5f1@unsolicited.net>
+ <20170807112025.GA3094@light.dominikbrodowski.net>
+ <20170808045103.xpi32xkjidjuxczq@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-bcache-owner@vger.kernel.org>
-In-Reply-To: <20170808060056.GS20323@X58A-UD3R>
-Content-Language: en-US
-Sender: linux-bcache-owner@vger.kernel.org
-To: Byungchul Park <byungchul.park@lge.com>
-Cc: kent.overstreet@gmail.com, shli@kernel.org, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@lge.com
+Content-Type: text/plain; charset=utf-8; format=flowed; DelSp=Yes
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170808045103.xpi32xkjidjuxczq@kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: Dominik Brodowski <linux@dominikbrodowski.net>, NeilBrown <neilb@suse.com>, Shaohua Li <shli@fb.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2017/8/8 下午2:00, Byungchul Park wrote:
-> On Tue, Aug 08, 2017 at 01:28:39PM +0800, Coly Li wrote:
->>>>> +	llist_for_each_entry_safe(cl, t, reverse, list) {
->>>>
->>>> Just wondering why not using llist_for_each_entry(), or you use the
->>>> _safe version on purpose ?
->>>
->>> If I use llist_for_each_entry(), then it would change the original
->>> behavior. Is it ok?
->>>
->>
->> I feel llist_for_each_entry() keeps the original behavior, and variable
-> 
-> Ah.. I see. Then.. Can I change it into non-safe version? Is it still ok
-> with non-safe one? I will change it at the next spin, if yes.
-> 
->> 't' can be removed. Anyway, either llist_for_each_entry() or
->> llist_for_each_entry_safe() works correctly and well here. Any one you
->> use is OK to me, thanks for your informative reply :-)
-> 
-> I rather appriciate it.
-> 
 
-Yes, please. And you have my Acked-by :-)
+Quoting Shaohua Li <shli@kernel.org>:
+
+> Spent some time to check this one, unfortunately I can't find how that patch
+> makes rcu stall. the percpu part looks good to me too. Can you  
+> double check if
+> reverting 4ad23a976413aa57 makes the issue go away? When the rcu  
+> stall happens,
+> what the /sys/block/md/md0/array_state? please also attach /proc/mdstat. When
+> you say the mdx_raid1 threads are in 'R' state, can you double check if the
+> /proc/pid/stack always 0xffffffffff?
+>
+> Thanks,
+> Shaohua
+
+I confess to knowing absolutely nothing about the md code, so please  
+don't be too hard on me. However
+:-
+
+static bool set_in_sync(struct mddev *mddev)
+{
+     WARN_ON_ONCE(!spin_is_locked(&mddev->lock));
+     if (!mddev->in_sync) {
+         mddev->sync_checkers++;
+         spin_unlock(&mddev->lock);
+         percpu_ref_switch_to_atomic_sync(&mddev->writes_pending);
+         spin_lock(&mddev->lock);
+         if (!mddev->in_sync &&
+             percpu_ref_is_zero(&mddev->writes_pending)) {
+             mddev->in_sync = 1;
+             /*
+              * Ensure ->in_sync is visible before we clear
+              * ->sync_checkers.
+              */
+             smp_mb();
+             set_bit(MD_SB_CHANGE_CLEAN, &mddev->sb_flags);
+             sysfs_notify_dirent_safe(mddev->sysfs_state);
+         }
+         if (--mddev->sync_checkers == 0)
+             percpu_ref_switch_to_percpu(&mddev->writes_pending);
 
 
--- 
-Coly Li
+The switch_to_percpu() takes place under mddev->lock however  
+switch_to_atomic_sync() does not. A thread can be in the middle of (or  
+about to execute) switch_to_atomic_sync() at the same time as another  
+is calling switch_to_percpu(). This can't be correct surely?
+
+Cheers
+David
