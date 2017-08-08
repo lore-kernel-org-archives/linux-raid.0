@@ -1,69 +1,86 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [md PATCH 2/2] md: fix test in md_write_start()
-Date: Tue, 08 Aug 2017 16:56:36 +1000
-Message-ID: <150217539692.23065.18394409211906101884.stgit@noble>
-References: <150217527795.23065.7747775748038187816.stgit@noble>
+Subject: Re: [MD] Crash with 4.12+ kernel and high disk load -- bisected to 4ad23a976413: MD: use per-cpu counter for writes_pending
+Date: Tue, 08 Aug 2017 17:01:28 +1000
+Message-ID: <87k22esfuf.fsf@notabene.neil.brown.name>
+References: <ee7921d2-d3ff-2381-1f05-2c07b8001d08@unsolicited.net> <c2df7906-67b2-b33f-0e82-49e6ef53f5f1@unsolicited.net> <20170807112025.GA3094@light.dominikbrodowski.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <150217527795.23065.7747775748038187816.stgit@noble>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170807112025.GA3094@light.dominikbrodowski.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dominik Brodowski <linux@dominikbrodowski.net>, Shaohua Li <shli@fb.com>
+Cc: David R <david@unsolicited.net>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-md_write_start() needs to clear the in_sync flag is it is set, or if
-there might be a race with set_in_sync() such that the later will
-set it very soon.  In the later case it is sufficient to take the
-spinlock to synchronize with set_in_sync(), and then set the flag
-if needed.
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-The current test is incorrect.
-It should be:
-  if "flag is set" or "race is possible"
+On Mon, Aug 07 2017, Dominik Brodowski wrote:
 
-"flag is set" is trivially "mddev->in_sync".
-"race is possible" should be tested by "mddev->sync_checkers".
+> Neil, Shaohua,
+>
+> following up on David R's bug message: I have observed something similar
+> on v4.12.[345] and v4.13-rc4, but not on v4.11. This is a RAID1 (on bare
+> metal partitions, /dev/sdaX and /dev/sdbY linked together). In case it
+> matters: Further upwards are cryptsetup, a DM volume group, then logical
+> volumes, and then filesystems (ext4, but also happened with xfs).
+>
+> In a tedious bisect (the bug wasn't as quickly reproducible as I would li=
+ke,
+> but happened when I repeatedly created large lvs and filled them with some
+> content, while compiling kernels in parallel), I was able to track this
+> down to:
+>
+>
+> commit 4ad23a976413aa57fe5ba7a25953dc35ccca5b71
+> Author: NeilBrown <neilb@suse.com>
+> Date:   Wed Mar 15 14:05:14 2017 +1100
+>
+>     MD: use per-cpu counter for writes_pending
+>=20=20=20=20=20
+>     The 'writes_pending' counter is used to determine when the
+>     array is stable so that it can be marked in the superblock
+>     as "Clean".  Consequently it needs to be updated frequently
+>     but only checked for zero occasionally.  Recent changes to
+>     raid5 cause the count to be updated even more often - once
+>     per 4K rather than once per bio.  This provided
+>     justification for making the updates more efficient.
+>
+>     ...
 
-If sync_checkers is 0, then there can be no race.  set_in_sync() will
-wait in percpu_ref_switch_to_atomic_sync() for an RCU grace period,
-and as md_write_start() holds the rcu_read_lock(), set_in_sync() will
-be sure ot see the update to writes_pending.
+Thanks for the report... and for bisecting and for re-sending...
 
-If sync_checkers is > 0, there could be race.  If md_write_start()
-happened entirely between
-		if (!mddev->in_sync &&
-		    percpu_ref_is_zero(&mddev->writes_pending)) {
-and
-			mddev->in_sync = 1;
-in set_in_sync(), then it would not see that is_sync had been set,
-and set_in_sync() would not see that writes_pending had been
-incremented.
+I believe I have found the problem, and have sent a patch separately.
 
-This bug means that in_sync is sometimes not set when it should be.
-Consequently there is a small chance that the array will be marked as
-"clean" when in fact it is inconsistent.
+If mddev->safemode =3D=3D 1 and mddev->in_sync !=3D 0, md_check_recovery()
+causes the thread that calls it to spin.
+Prior to the patch you found, that couldn't happen.  Now it can,
+so it needs to be handled more carefully.
 
-Fixes: 4ad23a976413 ("MD: use per-cpu counter for writes_pending")
-cc: stable@vger.kernel.org (v4.12+)
-Signed-off-by: NeilBrown <neilb@suse.com>
----
- drivers/md/md.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+While I was examining the code, I found another bug - so that is a win!
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index d84aceede1cb..e4ba95f6cd59 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -7996,7 +7996,7 @@ bool md_write_start(struct mddev *mddev, struct bio *bi)
- 	if (mddev->safemode == 1)
- 		mddev->safemode = 0;
- 	/* sync_checkers is always 0 when writes_pending is in per-cpu mode */
--	if (mddev->in_sync || !mddev->sync_checkers) {
-+	if (mddev->in_sync || mddev->sync_checkers) {
- 		spin_lock(&mddev->lock);
- 		if (mddev->in_sync) {
- 			mddev->in_sync = 0;
+Thanks,
+NeilBrown
 
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlmJYcoACgkQOeye3VZi
+gbkV1A//SbJoywhtTl3vMc2zwA258abAefSgT1sCGzAMEG4xyCBAltnux/4pfq1l
+UqJPU+fPhUy1fjc4Nel4MmO47huvgmQcXlPi9An79yre90fNsiruZenRQvewpD5d
+GhY1oQ0Pespoxw/5peEB6x98+EO03yCZJdr/Vxozk7s6S1vyMFX9z58OUC222g2D
+qv+04kO6Zn8QS0z7McSJewwO7r4ldVeaooL5HZPY5JLnJqA7tg/nNImZBhf/zC23
+HIlfsKhXqODhel68FNpKOakvi+d5/BFsVGipXys9zWn+haZracs1AKR/aWKbKNE9
+Bc1pxSSUaNoj8CQbzt1Mry3iVLB6zEVQOkccWrkjlVPpdfyN2Rf956YhFNxTGrBu
+NWYafufqRzoxGgNr8poYKgdUfqukihcAxYtJP04eRQRsuVOqwWTAIv0L2sASc9Tc
+9klRXU2ApTO4+uAxwWro+g2IDPQovaDg4Ia9mpk+pltdrxdrNeetMnFUW0quHC8Y
+KD0exS642Upb7K5pg8O9LTW4GmkD0PKI/yCWuL9u54ztghNE4NCck1aO9FWbUQOs
+MKi87Ukjiu+BO1tpXraDd9sRERdJoDFvqFQI38Qa1JHFmAng2tuLnwK8MCoGVQB1
+7rLLmJiF1TCuGd4Fj7MGHdtH1gLgeTkLuqyzwyjjZNjdEIIBtJk=
+=J93t
+-----END PGP SIGNATURE-----
+--=-=-=--
