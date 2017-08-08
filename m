@@ -1,241 +1,84 @@
 From: Gilad Ben-Yossef <gilad@benyossef.com>
-Subject: [PATCH v4 12/19] dm: move dm-verity to generic async completion
-Date: Tue,  8 Aug 2017 15:03:43 +0300
-Message-ID: <1502193834-11289-13-git-send-email-gilad__44478.9912122816$1502194113$gmane$org@benyossef.com>
+Subject: [PATCH v4 17/19] crypto: qce: move to generic async completion
+Date: Tue,  8 Aug 2017 15:03:48 +0300
+Message-ID: <1502193834-11289-18-git-send-email-gilad__18826.1408395649$1502194115$gmane$org@benyossef.com>
 References: <1502193834-11289-1-git-send-email-gilad@benyossef.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1502193834-11289-1-git-send-email-gilad@benyossef.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Tom Lendacky <thomas.lendacky@amd.com>, Gary Hook <gary.hook@amd.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Arnaud Ebalard <arno@natisbad.org>, Matthias Brugger <matthias.bgg@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, keyrings@vger.kernel.org, linux-arm-kernel@lists
+Sender: linux-raid-owner@vger.kernel.org
+To: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Tom Lendacky <thomas.lendacky@amd.com>, Gary Hook <gary.hook@amd.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Arnaud Ebalard <arno@natisbad.org>, Matthias Brugger <matthias.bgg@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>, linux-crypto@v
 Cc: Ofir Drang <ofir.drang@arm.com>
 List-Id: linux-raid.ids
 
-dm-verity is starting async. crypto ops and waiting for them to complete.
-Move it over to generic code doing the same.
-
-This also fixes a possible data coruption bug created by the
-use of wait_for_completion_interruptible() without dealing
-correctly with an interrupt aborting the wait prior to the
-async op finishing.
+The qce driver starts several async crypto ops and  waits for their
+completions. Move it over to generic code doing the same.
 
 Signed-off-by: Gilad Ben-Yossef <gilad@benyossef.com>
 ---
- drivers/md/dm-verity-target.c | 81 +++++++++++--------------------------------
- drivers/md/dm-verity.h        |  5 ---
- 2 files changed, 20 insertions(+), 66 deletions(-)
+ drivers/crypto/qce/sha.c | 30 ++++--------------------------
+ 1 file changed, 4 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/md/dm-verity-target.c b/drivers/md/dm-verity-target.c
-index 79f18d4..8df08a8 100644
---- a/drivers/md/dm-verity-target.c
-+++ b/drivers/md/dm-verity-target.c
-@@ -92,74 +92,33 @@ static sector_t verity_position_at_level(struct dm_verity *v, sector_t block,
- 	return block >> (level * v->hash_per_block_bits);
+diff --git a/drivers/crypto/qce/sha.c b/drivers/crypto/qce/sha.c
+index 47e114a..53227d7 100644
+--- a/drivers/crypto/qce/sha.c
++++ b/drivers/crypto/qce/sha.c
+@@ -349,28 +349,12 @@ static int qce_ahash_digest(struct ahash_request *req)
+ 	return qce->async_req_enqueue(tmpl->qce, &req->base);
  }
  
--/*
-- * Callback function for asynchrnous crypto API completion notification
-- */
--static void verity_op_done(struct crypto_async_request *base, int err)
--{
--	struct verity_result *res = (struct verity_result *)base->data;
--
--	if (err == -EINPROGRESS)
--		return;
--
--	res->err = err;
--	complete(&res->completion);
--}
--
--/*
-- * Wait for async crypto API callback
-- */
--static inline int verity_complete_op(struct verity_result *res, int ret)
--{
--	switch (ret) {
--	case 0:
--		break;
--
--	case -EINPROGRESS:
--	case -EBUSY:
--		ret = wait_for_completion_interruptible(&res->completion);
--		if (!ret)
--			ret = res->err;
--		reinit_completion(&res->completion);
--		break;
--
--	default:
--		DMERR("verity_wait_hash: crypto op submission failed: %d", ret);
--	}
--
--	if (unlikely(ret < 0))
--		DMERR("verity_wait_hash: crypto op failed: %d", ret);
--
--	return ret;
--}
--
- static int verity_hash_update(struct dm_verity *v, struct ahash_request *req,
- 				const u8 *data, size_t len,
--				struct verity_result *res)
-+				struct crypto_wait *wait)
- {
- 	struct scatterlist sg;
- 
- 	sg_init_one(&sg, data, len);
- 	ahash_request_set_crypt(req, &sg, NULL, len);
- 
--	return verity_complete_op(res, crypto_ahash_update(req));
-+	return crypto_wait_req(crypto_ahash_update(req), wait);
- }
- 
- /*
-  * Wrapper for crypto_ahash_init, which handles verity salting.
-  */
- static int verity_hash_init(struct dm_verity *v, struct ahash_request *req,
--				struct verity_result *res)
-+				struct crypto_wait *wait)
- {
- 	int r;
- 
- 	ahash_request_set_tfm(req, v->tfm);
- 	ahash_request_set_callback(req, CRYPTO_TFM_REQ_MAY_SLEEP |
- 					CRYPTO_TFM_REQ_MAY_BACKLOG,
--					verity_op_done, (void *)res);
--	init_completion(&res->completion);
-+					crypto_req_done, (void *)wait);
-+	crypto_init_wait(wait);
- 
--	r = verity_complete_op(res, crypto_ahash_init(req));
-+	r = crypto_wait_req(crypto_ahash_init(req), wait);
- 
- 	if (unlikely(r < 0)) {
- 		DMERR("crypto_ahash_init failed: %d", r);
-@@ -167,18 +126,18 @@ static int verity_hash_init(struct dm_verity *v, struct ahash_request *req,
- 	}
- 
- 	if (likely(v->salt_size && (v->version >= 1)))
--		r = verity_hash_update(v, req, v->salt, v->salt_size, res);
-+		r = verity_hash_update(v, req, v->salt, v->salt_size, wait);
- 
- 	return r;
- }
- 
- static int verity_hash_final(struct dm_verity *v, struct ahash_request *req,
--			     u8 *digest, struct verity_result *res)
-+			     u8 *digest, struct crypto_wait *wait)
- {
- 	int r;
- 
- 	if (unlikely(v->salt_size && (!v->version))) {
--		r = verity_hash_update(v, req, v->salt, v->salt_size, res);
-+		r = verity_hash_update(v, req, v->salt, v->salt_size, wait);
- 
- 		if (r < 0) {
- 			DMERR("verity_hash_final failed updating salt: %d", r);
-@@ -187,7 +146,7 @@ static int verity_hash_final(struct dm_verity *v, struct ahash_request *req,
- 	}
- 
- 	ahash_request_set_crypt(req, NULL, digest, 0);
--	r = verity_complete_op(res, crypto_ahash_final(req));
-+	r = crypto_wait_req(crypto_ahash_final(req), wait);
- out:
- 	return r;
- }
-@@ -196,17 +155,17 @@ int verity_hash(struct dm_verity *v, struct ahash_request *req,
- 		const u8 *data, size_t len, u8 *digest)
- {
- 	int r;
--	struct verity_result res;
-+	struct crypto_wait wait;
- 
--	r = verity_hash_init(v, req, &res);
-+	r = verity_hash_init(v, req, &wait);
- 	if (unlikely(r < 0))
- 		goto out;
- 
--	r = verity_hash_update(v, req, data, len, &res);
-+	r = verity_hash_update(v, req, data, len, &wait);
- 	if (unlikely(r < 0))
- 		goto out;
- 
--	r = verity_hash_final(v, req, digest, &res);
-+	r = verity_hash_final(v, req, digest, &wait);
- 
- out:
- 	return r;
-@@ -389,7 +348,7 @@ int verity_hash_for_block(struct dm_verity *v, struct dm_verity_io *io,
-  * Calculates the digest for the given bio
-  */
- int verity_for_io_block(struct dm_verity *v, struct dm_verity_io *io,
--			struct bvec_iter *iter, struct verity_result *res)
-+			struct bvec_iter *iter, struct crypto_wait *wait)
- {
- 	unsigned int todo = 1 << v->data_dev_block_bits;
- 	struct bio *bio = dm_bio_from_per_bio_data(io, v->ti->per_io_data_size);
-@@ -414,7 +373,7 @@ int verity_for_io_block(struct dm_verity *v, struct dm_verity_io *io,
- 		 */
- 		sg_set_page(&sg, bv.bv_page, len, bv.bv_offset);
- 		ahash_request_set_crypt(req, &sg, NULL, len);
--		r = verity_complete_op(res, crypto_ahash_update(req));
-+		r = crypto_wait_req(crypto_ahash_update(req), wait);
- 
- 		if (unlikely(r < 0)) {
- 			DMERR("verity_for_io_block crypto op failed: %d", r);
-@@ -482,7 +441,7 @@ static int verity_verify_io(struct dm_verity_io *io)
- 	struct dm_verity *v = io->v;
- 	struct bvec_iter start;
- 	unsigned b;
--	struct verity_result res;
-+	struct crypto_wait wait;
- 
- 	for (b = 0; b < io->n_blocks; b++) {
- 		int r;
-@@ -507,17 +466,17 @@ static int verity_verify_io(struct dm_verity_io *io)
- 			continue;
- 		}
- 
--		r = verity_hash_init(v, req, &res);
-+		r = verity_hash_init(v, req, &wait);
- 		if (unlikely(r < 0))
- 			return r;
- 
- 		start = io->iter;
--		r = verity_for_io_block(v, io, &io->iter, &res);
-+		r = verity_for_io_block(v, io, &io->iter, &wait);
- 		if (unlikely(r < 0))
- 			return r;
- 
- 		r = verity_hash_final(v, req, verity_io_real_digest(v, io),
--					&res);
-+					&wait);
- 		if (unlikely(r < 0))
- 			return r;
- 
-diff --git a/drivers/md/dm-verity.h b/drivers/md/dm-verity.h
-index a59e0ad..b675bc0 100644
---- a/drivers/md/dm-verity.h
-+++ b/drivers/md/dm-verity.h
-@@ -90,11 +90,6 @@ struct dm_verity_io {
- 	 */
- };
- 
--struct verity_result {
+-struct qce_ahash_result {
 -	struct completion completion;
--	int err;
+-	int error;
 -};
 -
- static inline struct ahash_request *verity_io_hash_req(struct dm_verity *v,
- 						     struct dm_verity_io *io)
+-static void qce_digest_complete(struct crypto_async_request *req, int error)
+-{
+-	struct qce_ahash_result *result = req->data;
+-
+-	if (error == -EINPROGRESS)
+-		return;
+-
+-	result->error = error;
+-	complete(&result->completion);
+-}
+-
+ static int qce_ahash_hmac_setkey(struct crypto_ahash *tfm, const u8 *key,
+ 				 unsigned int keylen)
  {
+ 	unsigned int digestsize = crypto_ahash_digestsize(tfm);
+ 	struct qce_sha_ctx *ctx = crypto_tfm_ctx(&tfm->base);
+-	struct qce_ahash_result result;
++	struct crypto_wait wait;
+ 	struct ahash_request *req;
+ 	struct scatterlist sg;
+ 	unsigned int blocksize;
+@@ -405,9 +389,9 @@ static int qce_ahash_hmac_setkey(struct crypto_ahash *tfm, const u8 *key,
+ 		goto err_free_ahash;
+ 	}
+ 
+-	init_completion(&result.completion);
++	crypto_init_wait(&wait);
+ 	ahash_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG,
+-				   qce_digest_complete, &result);
++				   crypto_req_done, &wait);
+ 	crypto_ahash_clear_flags(ahash_tfm, ~0);
+ 
+ 	buf = kzalloc(keylen + QCE_MAX_ALIGN_SIZE, GFP_KERNEL);
+@@ -420,13 +404,7 @@ static int qce_ahash_hmac_setkey(struct crypto_ahash *tfm, const u8 *key,
+ 	sg_init_one(&sg, buf, keylen);
+ 	ahash_request_set_crypt(req, &sg, ctx->authkey, keylen);
+ 
+-	ret = crypto_ahash_digest(req);
+-	if (ret == -EINPROGRESS || ret == -EBUSY) {
+-		ret = wait_for_completion_interruptible(&result.completion);
+-		if (!ret)
+-			ret = result.error;
+-	}
+-
++	ret = crypto_wait_req(crypto_ahash_digest(req), &wait);
+ 	if (ret)
+ 		crypto_ahash_set_flags(tfm, CRYPTO_TFM_RES_BAD_KEY_LEN);
+ 
 -- 
 2.1.4
+
