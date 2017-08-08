@@ -1,96 +1,45 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH 2/9] md: Add nowait support to md
-Date: Tue, 8 Aug 2017 13:34:12 -0700
-Message-ID: <20170808203412.jqqqj73pcoeovbzd@kernel.org>
-References: <20170726235806.12148-1-rgoldwyn@suse.de>
- <20170726235806.12148-3-rgoldwyn@suse.de>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH 2/5] testb: implement block device operations
+Date: Tue, 8 Aug 2017 14:34:16 -0600
+Message-ID: <c8e6bbbd-d938-abb7-1e15-b17ce92d91ba@kernel.dk>
+References: <cover.1501945859.git.shli@fb.com>
+ <971572972425927f702b33da37be14a9ab646a94.1501945859.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170726235806.12148-3-rgoldwyn@suse.de>
+In-Reply-To: <971572972425927f702b33da37be14a9ab646a94.1501945859.git.shli@fb.com>
+Content-Language: en-US
 Sender: linux-block-owner@vger.kernel.org
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc: linux-block@vger.kernel.org, hch@infradead.org, jack@suse.cz, linux-raid@vger.kernel.org, dm-devel@redhat.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Shaohua Li <shli@kernel.org>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org
+Cc: kernel-team@fb.com, Kyungchan Koh <kyungchan.koh@gmail.com>, Kyungchan Koh <kkc6196@fb.com>
 List-Id: linux-raid.ids
 
-On Wed, Jul 26, 2017 at 06:57:59PM -0500, Goldwyn Rodrigues wrote:
-> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> 
-> Set queue flags to QUEUE_FLAG_NOWAIT to indicate REQ_NOWAIT
-> will be handled.
-> 
-> If an I/O on the md will be delayed, it would bail by calling
-> bio_wouldblock_error(). The conditions when this could happen are:
-> 
->  + MD is suspended
->  + There is a change pending on the SB, and current I/O would
->    block until that is complete.
-> 
-> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> ---
->  drivers/md/md.c | 27 +++++++++++++++++++++++++--
->  1 file changed, 25 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 8cdca0296749..d96c27d16841 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -285,6 +285,13 @@ static blk_qc_t md_make_request(struct request_queue *q, struct bio *bio)
->  		bio_endio(bio);
->  		return BLK_QC_T_NONE;
->  	}
+On 08/05/2017 09:51 AM, Shaohua Li wrote:
+> +static struct testb_page *testb_insert_page(struct testb *testb,
+> +	sector_t sector, unsigned long *lock_flag)
+> +{
+> +	u64 idx;
+> +	struct testb_page *t_page;
 > +
-> +	if (mddev->suspended && (bio->bi_opf & REQ_NOWAIT)) {
-> +		bio_wouldblock_error(bio);
-> +		rcu_read_unlock();
+> +	assert_spin_locked(&testb->t_dev->lock);
+> +
+> +	t_page = testb_lookup_page(testb, sector, true);
+> +	if (t_page)
+> +		return t_page;
+> +
+> +	spin_unlock_irqrestore(&testb->t_dev->lock, *lock_flag);
 
-this unlock is not required.
+Passing in lock flags through several functions is kind of iffy. It also
+used to break on some architectures, though I don't think that's the
+case anymore. The problem is that it usually ends up being a code
+locking, instead of a data structure locking. The latter is much
+cleaner.
 
-> +		return BLK_QC_T_NONE;
-> +	}
-> +
->  check_suspended:
->  	rcu_read_lock();
->  	if (mddev->suspended) {
-> @@ -5274,6 +5281,10 @@ static int md_alloc(dev_t dev, char *name)
->  		mddev->queue = NULL;
->  		goto abort;
->  	}
-> +
-> +	/* Set the NOWAIT flags to show support */
-> +	queue_flag_set_unlocked(QUEUE_FLAG_NOWAIT, mddev->queue);
-> +
->  	disk->major = MAJOR(mddev->unit);
->  	disk->first_minor = unit << shift;
->  	if (name)
-> @@ -8010,8 +8021,20 @@ bool md_write_start(struct mddev *mddev, struct bio *bi)
->  	rcu_read_unlock();
->  	if (did_change)
->  		sysfs_notify_dirent_safe(mddev->sysfs_state);
-> -	wait_event(mddev->sb_wait,
-> -		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags) && !mddev->suspended);
-> +
-> +	/* Don't wait for sb writes if marked with REQ_NOWAIT */
-> +	if (test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags) ||
-> +			mddev->suspended) {
-> +		if (bi->bi_opf & REQ_NOWAIT) {
-> +			bio_wouldblock_error(bi);
-> +			percpu_ref_put(&mddev->writes_pending);
-> +			return false;
-> +		}
-> +
-> +		wait_event(mddev->sb_wait,
-> +				!test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags) && !mddev->suspended);
-> +	}
-> +
->  	if (test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags)) {
->  		percpu_ref_put(&mddev->writes_pending);
->  		return false;
-> -- 
-> 2.12.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +static int copy_from_testb(struct testb *testb, struct page *dest,
+> +	unsigned int off, sector_t sector, size_t n, unsigned long *lock_flag)
+
+This also gets the lock flags passed in, but doesn't use it.
+
+-- 
+Jens Axboe
