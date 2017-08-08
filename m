@@ -1,76 +1,75 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 0/5] block: a virtual block device driver for testing
-Date: Tue, 8 Aug 2017 14:31:54 -0600
-Message-ID: <f6896ce5-1752-feba-fadb-dbc89dbf4e20@kernel.dk>
-References: <cover.1501945859.git.shli@fb.com>
- <42bfcce1-8329-c0df-7457-107b388491ff@suse.de>
- <20170807163607.msflun2r4q5tlpsk@kernel.org>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH 1/9] QUEUE_FLAG_NOWAIT to indicate device supports nowait
+Date: Tue, 8 Aug 2017 13:32:46 -0700
+Message-ID: <20170808203246.sdjnpzixxz5brjaf@kernel.org>
+References: <20170726235806.12148-1-rgoldwyn@suse.de>
+ <20170726235806.12148-2-rgoldwyn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170807163607.msflun2r4q5tlpsk@kernel.org>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <20170726235806.12148-2-rgoldwyn@suse.de>
 Sender: linux-block-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>, Hannes Reinecke <hare@suse.de>
-Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org, kernel-team@fb.com, Kyungchan Koh <kyungchan.koh@gmail.com>, Shaohua Li <shli@fb.com>
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: linux-block@vger.kernel.org, hch@infradead.org, jack@suse.cz, linux-raid@vger.kernel.org, dm-devel@redhat.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 List-Id: linux-raid.ids
 
-On 08/07/2017 10:36 AM, Shaohua Li wrote:
-> On Mon, Aug 07, 2017 at 10:29:05AM +0200, Hannes Reinecke wrote:
->> On 08/05/2017 05:51 PM, Shaohua Li wrote:
->>> From: Shaohua Li <shli@fb.com>
->>>
->>> In testing software RAID, I usually found it's hard to cover specific cases.
->>> RAID is supposed to work even disk is in semi good state, for example, some
->>> sectors are broken. Since we can't control the behavior of hardware, it's
->>> difficult to create test suites to do destructive tests. But we can control the
->>> behavior of software, software based disk is an obvious choice for such tests.
->>> While we already have several software based disks for testing (eg, null_blk,
->>> scsi_debug), none is for destructive testing, this is the reason we create a
->>> new test block device.
->>>
->>> Currently the driver can create disk with following features:
->>> - Bandwidth control. A raid array consists of several disks. The disks could
->>>   run in different speed, for example, one disk is SSD and the other is HD.
->>>   Actually raid1 has a feature called write behind just for this. To test such
->>>   raid1 feature, we'd like the disks speed could be controlled.
->>> - Emulate disk cache. Software must flush disk cache to guarantee data is
->>>   safely stored in media after a power failure. To verify if software works
->>>   well, we can't simply use physical disk, because even software doesn't flush
->>>   cache, the hardware probably will flush the cache. With a software
->>>   implementation of disk cache, we can fully control how we flush disk cache in a
->>>   power failure.
->>> - Badblock. If only part of a disk is broken, software raid continues working.
->>>   To test if software raid works well, disks must include some broken parts or
->>>   bad blocks. Bad blocks can be easily implemented in software.
->>>
->>> While this is inspired by software raid testing, the driver is very flexible
->>> for extension. We can easily add new features into the driver. The interface is
->>> configfs, which can be configured with a shell script. There is a 'features'
->>> attribute exposing all supported features. By checking this, we don't need to
->>> worry about compability issues. For configuration details, please check the
->>> first patch.
->>>
->> Any particular reason why you can't fold these changes into brd or null_blk?
->> After all, without those testing features it is 'just' another ramdisk
->> driver...
+On Wed, Jul 26, 2017 at 06:57:58PM -0500, Goldwyn Rodrigues wrote:
+> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 > 
-> null_blk isn't a good fit. ramdisk might be, but I try to not. We are adding
-> new interfaces, locks and so on. Adding the features into ramdisk driver will
-> mess it up. Binding it to ramdisk driver will make adding new features harder
-> too, because the test driver doesn't really care about performance while
-> ramdisk does.
+> Nowait is a feature of direct AIO, where users can request
+> to return immediately if the I/O is going to block. This translates
+> to REQ_NOWAIT in bio.bi_opf flags. While request based devices
+> don't wait, stacked devices such as md/dm will.
+> 
+> In order to explicitly mark stacked devices as supported, we
+> set the QUEUE_FLAG_NOWAIT in the queue_flags and return -EAGAIN
+> whenever the device would block.
 
-I'm curious why null_blk isn't a good fit? You'd just need to add RAM
-storage to it. That would just be a separate option that should be set,
-ram_backing=1 or something like that. That would make it less critical
-than using the RAM disk driver as well, since only people that want a "real"
-data backing would enable it.
+probably you should route this patch to Jens first, DM/MD are different trees.
+ 
+> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> ---
+>  block/blk-core.c       | 3 ++-
+>  include/linux/blkdev.h | 2 ++
+>  2 files changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index 970b9c9638c5..1c9a981d88e5 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -2025,7 +2025,8 @@ generic_make_request_checks(struct bio *bio)
+>  	 * if queue is not a request based queue.
+>  	 */
+>  
+> -	if ((bio->bi_opf & REQ_NOWAIT) && !queue_is_rq_based(q))
+> +	if ((bio->bi_opf & REQ_NOWAIT) && !queue_is_rq_based(q) &&
+> +	    !blk_queue_supports_nowait(q))
+>  		goto not_supported;
+>  
+>  	part = bio->bi_bdev->bd_part;
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 25f6a0cb27d3..fae021ebec1b 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -633,6 +633,7 @@ struct request_queue {
+>  #define QUEUE_FLAG_REGISTERED  29	/* queue has been registered to a disk */
+>  #define QUEUE_FLAG_SCSI_PASSTHROUGH 30	/* queue supports SCSI commands */
+>  #define QUEUE_FLAG_QUIESCED    31	/* queue has been quiesced */
+> +#define QUEUE_FLAG_NOWAIT      32	/* stack device driver supports REQ_NOWAIT */
+>  
+>  #define QUEUE_FLAG_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
+>  				 (1 << QUEUE_FLAG_STACKABLE)	|	\
+> @@ -732,6 +733,7 @@ static inline void queue_flag_clear(unsigned int flag, struct request_queue *q)
+>  #define blk_queue_dax(q)	test_bit(QUEUE_FLAG_DAX, &(q)->queue_flags)
+>  #define blk_queue_scsi_passthrough(q)	\
+>  	test_bit(QUEUE_FLAG_SCSI_PASSTHROUGH, &(q)->queue_flags)
+> +#define blk_queue_supports_nowait(q)	test_bit(QUEUE_FLAG_NOWAIT, &(q)->queue_flags)
 
-It's not that I'm extremely opposed to adding a(nother) test block driver,
-but we at least need some sort of reasoning behind why, which isn't just
-"not a good fit".
-
--- 
-Jens Axboe
+Should this bit consider under layer disks? For example, one raid array disk
+doesn't support NOWAIT, shouldn't we disable NOWAIT for the array?
+ 
+I have another generic question. If a bio is splitted into 2 bios, one bio
+doesn't need to wait but the other need to wait. We will return -EAGAIN for the
+second bio, so the whole bio will return -EAGAIN, but the first bio is already
+dispatched to disk. Is this correct behavior?
