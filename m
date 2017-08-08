@@ -1,199 +1,51 @@
-From: Andrea Righi <righi.andrea@gmail.com>
-Subject: [PATCH] Assemble: prevent segfault with faulty "best" devices
-Date: Tue, 8 Aug 2017 19:48:07 +0200
-Message-ID: <20170808174807.GA6611@Dell>
+From: Song Liu <songliubraving@fb.com>
+Subject: Re: [PATCH] md/bitmap: preserve whole sb_page when initializing
+ bitmap
+Date: Tue, 8 Aug 2017 18:50:59 +0000
+Message-ID: <B38136B1-E937-40AE-906E-B7294F7556C6@fb.com>
+References: <20170802061137.2434370-1-songliubraving@fb.com>
+ <20170808152856.bhoikpeuw7pg6yy5@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20170808152856.bhoikpeuw7pg6yy5@kernel.org>
+Content-Language: en-US
+Content-ID: <A1685D82C2647E4EBA870CE73E25C3A1@namprd15.prod.outlook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <jes@trained-monkey.org>
-Cc: Robert LeBlanc <robert@leblancnet.us>, NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Shaohua Li <shli@fb.com>, "neilb@suse.com" <neilb@suse.com>, Kernel Team <Kernel-team@fb.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "hch@infradead.org" <hch@infradead.org>, "jes.sorensen@gmail.com" <jes.sorensen@gmail.com>
 List-Id: linux-raid.ids
 
-I was able to trigger this curious problem that seems to happen only on
-one of our server:
-
-# mdadm --assemble /dev/md/10.4.237.12-volume --name 10.4.237.12-volume
-Segmentation fault
-
-This md volume is a raid1 volume made of 2 device mapper (dm-multipath)
-devices and the underlying LUNs are imported via iSCSI.
-
-Applying the following patch (see below) seems to fix the problem:
-
-# ./mdadm --assemble /dev/md/10.4.237.12-volume --name 10.4.237.12-volume
-mdadm: /dev/md/10.4.237.12-volume has been started with 2 drives.
-
-But I'm not sure if it's the right fix or if there're some other
-problems that I'm missing.
-
-More details about the md superblocks that might help to better
-understand the nature of the problem:
-
-# for i in 36001405a04ed0c104881{1,2}00000000000p2; do echo dev: ${i}; mdadm --examine /dev/mapper/${i}; done
-dev: 36001405a04ed0c104881100000000000p2
-/dev/mapper/36001405a04ed0c104881100000000000p2:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 5f3e8283:7f831b85:bc1958b9:6f2787a4
-           Name : 10.4.237.12-volume
-  Creation Time : Thu Jul 27 14:43:16 2017
-     Raid Level : raid1
-   Raid Devices : 2
-
- Avail Dev Size : 1073729503 (511.99 GiB 549.75 GB)
-     Array Size : 536864704 (511.99 GiB 549.75 GB)
-  Used Dev Size : 1073729408 (511.99 GiB 549.75 GB)
-    Data Offset : 8192 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=8104 sectors, after=95 sectors
-          State : clean
-    Device UUID : 16dae7e3:42f3487f:fbeac43a:71cf1f63
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Tue Aug  8 11:12:22 2017
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : 518c443e - correct
-         Events : 167
-
-
-   Device Role : Active device 0
-   Array State : AA ('A' == active, '.' == missing, 'R' == replacing)
-dev: 36001405a04ed0c104881200000000000p2
-/dev/mapper/36001405a04ed0c104881200000000000p2:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 5f3e8283:7f831b85:bc1958b9:6f2787a4
-           Name : 10.4.237.12-volume
-  Creation Time : Thu Jul 27 14:43:16 2017
-     Raid Level : raid1
-   Raid Devices : 2
-
- Avail Dev Size : 1073729503 (511.99 GiB 549.75 GB)
-     Array Size : 536864704 (511.99 GiB 549.75 GB)
-  Used Dev Size : 1073729408 (511.99 GiB 549.75 GB)
-    Data Offset : 8192 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=8104 sectors, after=95 sectors
-          State : clean
-    Device UUID : ef612bdd:e475fe02:5d3fc55e:53612f34
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Tue Aug  8 11:12:22 2017
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : c39534fd - correct
-         Events : 167
-
-
-   Device Role : Active device 1
-   Array State : AA ('A' == active, '.' == missing, 'R' == replacing)
-
-# for i in 36001405a04ed0c104881{1,2}00000000000p2; do echo dev: ${i}; hexdump -s 4096 -n 4189696 -C /dev/mapper/${i}; done
-dev: 36001405a04ed0c104881100000000000p2
-00001000  fc 4e 2b a9 01 00 00 00  01 00 00 00 00 00 00 00  |.N+.............|
-00001010  5f 3e 82 83 7f 83 1b 85  bc 19 58 b9 6f 27 87 a4  |_>........X.o'..|
-00001020  31 30 2e 34 2e 32 33 37  2e 31 32 2d 76 6f 6c 75  |10.4.237.12-volu|
-00001030  6d 65 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |me..............|
-00001040  64 50 7a 59 00 00 00 00  01 00 00 00 00 00 00 00  |dPzY............|
-00001050  80 cf ff 3f 00 00 00 00  00 00 00 00 02 00 00 00  |...?............|
-00001060  08 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-00001070  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-00001080  00 20 00 00 00 00 00 00  df cf ff 3f 00 00 00 00  |. .........?....|
-00001090  08 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-000010a0  00 00 00 00 00 00 00 00  16 da e7 e3 42 f3 48 7f  |............B.H.|
-000010b0  fb ea c4 3a 71 cf 1f 63  00 00 08 00 48 00 00 00  |...:q..c....H...|
-000010c0  54 f0 89 59 00 00 00 00  a7 00 00 00 00 00 00 00  |T..Y............|
-000010d0  ff ff ff ff ff ff ff ff  9c 43 8c 51 80 00 00 00  |.........C.Q....|
-000010e0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-*
-00001100  00 00 01 00 fe ff fe ff  fe ff fe ff fe ff fe ff  |................|
-00001110  fe ff fe ff fe ff fe ff  fe ff fe ff fe ff fe ff  |................|
-*
-00001200  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-*
-00002000  62 69 74 6d 04 00 00 00  5f 3e 82 83 7f 83 1b 85  |bitm...._>......|
-00002010  bc 19 58 b9 6f 27 87 a4  a7 00 00 00 00 00 00 00  |..X.o'..........|
-00002020  a7 00 00 00 00 00 00 00  80 cf ff 3f 00 00 00 00  |...........?....|
-00002030  00 00 00 00 00 00 00 01  05 00 00 00 00 00 00 00  |................|
-00002040  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-*
-00003100  ff ff ff ff ff ff ff ff  ff ff ff ff ff ff ff ff  |................|
-*
-00004000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-*
-003ffe00
-dev: 36001405a04ed0c104881200000000000p2
-00001000  fc 4e 2b a9 01 00 00 00  01 00 00 00 00 00 00 00  |.N+.............|
-00001010  5f 3e 82 83 7f 83 1b 85  bc 19 58 b9 6f 27 87 a4  |_>........X.o'..|
-00001020  31 30 2e 34 2e 32 33 37  2e 31 32 2d 76 6f 6c 75  |10.4.237.12-volu|
-00001030  6d 65 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |me..............|
-00001040  64 50 7a 59 00 00 00 00  01 00 00 00 00 00 00 00  |dPzY............|
-00001050  80 cf ff 3f 00 00 00 00  00 00 00 00 02 00 00 00  |...?............|
-00001060  08 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-00001070  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-00001080  00 20 00 00 00 00 00 00  df cf ff 3f 00 00 00 00  |. .........?....|
-00001090  08 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-000010a0  01 00 00 00 00 00 00 00  ef 61 2b dd e4 75 fe 02  |.........a+..u..|
-000010b0  5d 3f c5 5e 53 61 2f 34  00 00 08 00 48 00 00 00  |]?.^Sa/4....H...|
-000010c0  54 f0 89 59 00 00 00 00  a7 00 00 00 00 00 00 00  |T..Y............|
-000010d0  ff ff ff ff ff ff ff ff  5b 34 95 c3 80 00 00 00  |........[4......|
-000010e0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-*
-00001100  00 00 01 00 fe ff fe ff  fe ff fe ff fe ff fe ff  |................|
-00001110  fe ff fe ff fe ff fe ff  fe ff fe ff fe ff fe ff  |................|
-*
-00001200  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-*
-00002000  62 69 74 6d 04 00 00 00  5f 3e 82 83 7f 83 1b 85  |bitm...._>......|
-00002010  bc 19 58 b9 6f 27 87 a4  a7 00 00 00 00 00 00 00  |..X.o'..........|
-00002020  a7 00 00 00 00 00 00 00  80 cf ff 3f 00 00 00 00  |...........?....|
-00002030  00 00 00 00 00 00 00 01  05 00 00 00 00 00 00 00  |................|
-00002040  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-*
-00003100  ff ff ff ff ff ff ff ff  ff ff ff ff ff ff ff ff  |................|
-*
-00004000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-*
-003ffe00
-
----
-Assemble: prevent segfault with faulty "best" devices
-
-In Assemble(), after context reload, best[i] can be -1 in some cases,
-and before checking if this value is negative we use it to access
-devices[j].i.disk.raid_disk, potentially causing a segfault.
-
-Check if best[i] is negative before using it to prevent this potential
-segfault.
-
-Signed-off-by: Andrea Righi <andrea@betterlinux.com>
-Signed-off-by: Robert LeBlanc <robert@leblancnet.us>
----
- Assemble.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/Assemble.c b/Assemble.c
-index 3da0903..fc681eb 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -1669,6 +1669,8 @@ try_again:
- 		int j = best[i];
- 		unsigned int desired_state;
- 
-+		if (j < 0)
-+			continue;
- 		if (devices[j].i.disk.raid_disk == MD_DISK_ROLE_JOURNAL)
- 			desired_state = (1<<MD_DISK_JOURNAL);
- 		else if (i >= content->array.raid_disks * 2)
-@@ -1678,8 +1680,6 @@ try_again:
- 		else
- 			desired_state = (1<<MD_DISK_ACTIVE) | (1<<MD_DISK_SYNC);
- 
--		if (j<0)
--			continue;
- 		if (!devices[j].uptodate)
- 			continue;
- 
+Pj4gT24gOC84LzE3LCA4OjMwIEFNLCAiU2hhb2h1YSBMaSIgPHNobGlAa2VybmVsLm9yZz4gd3Jv
+dGU6DQoNCiAgICBPbiBUdWUsIEF1ZyAwMSwgMjAxNyBhdCAxMToxMTozN1BNIC0wNzAwLCBTb25n
+IExpdSB3cm90ZToNCiAgICA+IFdoZW4gYml0bWFwX3Jlc2l6ZSgpIGlzIHVzZWQgdG8gaW5pdGlh
+bGl6ZSB0aGUgYml0bWFwLCBpdCBpcw0KICAgID4gbmVjZXNzYXJ5IHRvIHByZXNlcnZlIHRoZSB3
+aG9sZSBwYWdlIG9mIHNiX3BhZ2UgaW5zdGVhZCBvZiBqdXN0DQogICAgPiB0aGUgaGVhZGVyIChi
+aXRtYXBfc3VwZXJfdCkuIFRoaXMgaXMgYmVjYXVzZSB0aGUgc2JfcGFnZSBtYXkNCiAgICA+IGNv
+bnRhaW4gYml0bWFwIHJlYWQgZnJvbSB0aGUgZGlza3MgKGluaXRpYWxpemVkIGJ5IG1kYWRtKS4N
+CiAgICA+IA0KICAgID4gTm90ZSB0aGF0LCB0aGlzIGNvZGUgcGF0aCBpcyBvbmx5IHRyaWdnZXJl
+ZCB3aXRoIGNlcnRhaW4NCiAgICA+IGNvbWJpbmF0aW9ucyBvZiBwYXJhbWV0ZXJzLiBPbmUgZXhh
+bXBsZSBpcyB3aGVuIHJhaWQ0NTYgYXJyYXkNCiAgICA+IGlzIGNyZWF0ZWQgd2l0aCB3cml0ZSBq
+b3VybmFsDQogICAgDQogICAgR29vZCBjYXRjaCwgdGhpcyBpc3N1ZSBwcm9iYWJseSBvbmx5IGV4
+aXN0cyB3aXRoIGpvdXJuYWwsIGJlY2F1c2Ugd2Ugd3JpdGUNCiAgICBzdXBlcmJsb2NrIHRoZXJl
+Lg0KICAgICANCiAgICA+IFNpZ25lZC1vZmYtYnk6IFNvbmcgTGl1IDxzb25nbGl1YnJhdmluZ0Bm
+Yi5jb20+DQogICAgPiAtLS0NCiAgICA+ICBkcml2ZXJzL21kL2JpdG1hcC5jIHwgMyArLS0NCiAg
+ICA+ICAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKyksIDIgZGVsZXRpb25zKC0pDQogICAg
+PiANCiAgICA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL21kL2JpdG1hcC5jIGIvZHJpdmVycy9tZC9i
+aXRtYXAuYw0KICAgID4gaW5kZXggNDBmM2NkNy4uOTNkZDgwOSAxMDA2NDQNCiAgICA+IC0tLSBh
+L2RyaXZlcnMvbWQvYml0bWFwLmMNCiAgICA+ICsrKyBiL2RyaXZlcnMvbWQvYml0bWFwLmMNCiAg
+ICA+IEBAIC0yMTE4LDcgKzIxMTgsNyBAQCBpbnQgYml0bWFwX3Jlc2l6ZShzdHJ1Y3QgYml0bWFw
+ICpiaXRtYXAsIHNlY3Rvcl90IGJsb2NrcywNCiAgICA+ICAJaWYgKHN0b3JlLnNiX3BhZ2UgJiYg
+Yml0bWFwLT5zdG9yYWdlLnNiX3BhZ2UpDQogICAgPiAgCQltZW1jcHkocGFnZV9hZGRyZXNzKHN0
+b3JlLnNiX3BhZ2UpLA0KICAgID4gIAkJICAgICAgIHBhZ2VfYWRkcmVzcyhiaXRtYXAtPnN0b3Jh
+Z2Uuc2JfcGFnZSksDQogICAgPiAtCQkgICAgICAgc2l6ZW9mKGJpdG1hcF9zdXBlcl90KSk7DQog
+ICAgPiArCQkgICAgICAgaW5pdCA/IFBBR0VfU0laRSA6IHNpemVvZihiaXRtYXBfc3VwZXJfdCkp
+Ow0KICAgIA0KICAgIEkgdGhpbmsgdGhpcyBzaG91bGQgYmUgJ3JvdW5kdXAoc2l6ZW9mKGJpdG1h
+cF9zdXBlcl90KSwNCiAgICBiZGV2X2xvZ2ljYWxfYmxvY2tfc2l6ZShyZGV2LT5iZGV2KSknLCB3
+ZSBub3QgYWx3YXlzIHJlYWQgb25lIHBhZ2UuDQogICAgDQpUaGUgc2JfcGFnZSBpcyByZWFkIGZy
+b20gZnJvbSBvbmUgZGV2aWNlLCBidXQgdXBkYXRlZCBpbiBhbGwgZGV2aWNlcy4gU28gd2hlbiAN
+CmRpZmZlcmVudCBkZXZpY2VzIGhhdmUgZGlmZmVyZW50IGJsb2NrIHNpemVzLCB3ZSBtYXkgc3Rp
+bGwgd3JpdGUgd3JvbmcgYml0bWFwDQp0byB0aGUgZGV2aWNlcy4gSG93IGFib3V0IHdlIG1ha2Ug
+cmVhZF9zYl9wYWdlKCkgYW5kIHdyaXRlX3NiX3BhZ2UoKSBib3RoIGFjY2Vzcw0KZnVsbCBwYWdl
+IGluc3RlYWQ/DQoNClRoYW5rcywNClNvbmcNCiANCg0K
