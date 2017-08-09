@@ -1,86 +1,54 @@
-From: David R <david@unsolicited.net>
-Subject: Re: [MD] Crash with 4.12+ kernel and high disk load -- bisected to
- 4ad23a976413: MD: use per-cpu counter for writes_pending
-Date: Wed, 09 Aug 2017 06:28:37 +0000
-Message-ID: <20170809062837.Horde.FGhyXH8bqUtevHY6m-LHp8x@vinovium.com>
-References: <ee7921d2-d3ff-2381-1f05-2c07b8001d08@unsolicited.net>
- <c2df7906-67b2-b33f-0e82-49e6ef53f5f1@unsolicited.net>
- <20170807112025.GA3094@light.dominikbrodowski.net>
- <87k22esfuf.fsf@notabene.neil.brown.name>
- <20170808073614.GA21316@light.dominikbrodowski.net>
- <20170808090600.GA28583@isilmar-4.linta.de>
+From: Nikolay Borisov <nborisov@suse.com>
+Subject: Re: [RESEND PATCH] bcache: Don't reinvent the wheel but use existing
+ llist API
+Date: Wed, 9 Aug 2017 09:39:09 +0300
+Message-ID: <aa85a3ed-d9a0-e9d6-58e2-b6c9e4a63984@suse.com>
+References: <1502095121-14337-1-git-send-email-byungchul.park@lge.com>
+ <b37c4038-d95f-ca81-5789-825ebfc6d425@coly.li>
+ <20170808041233.GR20323@X58A-UD3R>
+ <d99cc72b-833d-c8b1-4c44-923cb50d5d1f@coly.li>
+ <20170808060056.GS20323@X58A-UD3R>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed; DelSp=Yes
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170808090600.GA28583@isilmar-4.linta.de>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: NeilBrown <neilb@suse.com>, Shaohua Li <shli@fb.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, tj@kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-bcache-owner@vger.kernel.org>
+In-Reply-To: <20170808060056.GS20323@X58A-UD3R>
+Content-Language: en-US
+Sender: linux-bcache-owner@vger.kernel.org
+To: Byungchul Park <byungchul.park@lge.com>, Coly Li <i@coly.li>
+Cc: kent.overstreet@gmail.com, shli@kernel.org, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@lge.com
 List-Id: linux-raid.ids
 
-My raid check also ran through cleanly, so feel free to add my Tested-By:
 
-Cheers
-David
 
-Quoting Dominik Brodowski <linux@dominikbrodowski.net>:
+On  8.08.2017 09:00, Byungchul Park wrote:
+> On Tue, Aug 08, 2017 at 01:28:39PM +0800, Coly Li wrote:
+>>>>> +	llist_for_each_entry_safe(cl, t, reverse, list) {
+>>>>
+>>>> Just wondering why not using llist_for_each_entry(), or you use the
+>>>> _safe version on purpose ?
+>>>
+>>> If I use llist_for_each_entry(), then it would change the original
+>>> behavior. Is it ok?
 
-> On Tue, Aug 08, 2017 at 09:36:14AM +0200, Dominik Brodowski wrote:
->> On Tue, Aug 08, 2017 at 05:01:28PM +1000, NeilBrown wrote:
->> > On Mon, Aug 07 2017, Dominik Brodowski wrote:
->> >
->> > > Neil, Shaohua,
->> > >
->> > > following up on David R's bug message: I have observed something similar
->> > > on v4.12.[345] and v4.13-rc4, but not on v4.11. This is a RAID1 (on bare
->> > > metal partitions, /dev/sdaX and /dev/sdbY linked together). In case it
->> > > matters: Further upwards are cryptsetup, a DM volume group, then logical
->> > > volumes, and then filesystems (ext4, but also happened with xfs).
->> > >
->> > > In a tedious bisect (the bug wasn't as quickly reproducible as  
->> I would like,
->> > > but happened when I repeatedly created large lvs and filled  
->> them with some
->> > > content, while compiling kernels in parallel), I was able to track this
->> > > down to:
->> > >
->> > >
->> > > commit 4ad23a976413aa57fe5ba7a25953dc35ccca5b71
->> > > Author: NeilBrown <neilb@suse.com>
->> > > Date:   Wed Mar 15 14:05:14 2017 +1100
->> > >
->> > >     MD: use per-cpu counter for writes_pending
->> > >
->> > >     The 'writes_pending' counter is used to determine when the
->> > >     array is stable so that it can be marked in the superblock
->> > >     as "Clean".  Consequently it needs to be updated frequently
->> > >     but only checked for zero occasionally.  Recent changes to
->> > >     raid5 cause the count to be updated even more often - once
->> > >     per 4K rather than once per bio.  This provided
->> > >     justification for making the updates more efficient.
->> > >
->> > >     ...
->> >
->> > Thanks for the report... and for bisecting and for re-sending...
->> >
->> > I believe I have found the problem, and have sent a patch separately.
->> >
->> > If mddev->safemode == 1 and mddev->in_sync != 0, md_check_recovery()
->> > causes the thread that calls it to spin.
->> > Prior to the patch you found, that couldn't happen.  Now it can,
->> > so it needs to be handled more carefully.
->> >
->> > While I was examining the code, I found another bug - so that is a win!
->> >
->> > Thanks,
->> > NeilBrown
+Generally, _safe versions of list primitives is used when you are going
+to perform removal in the iteration. I haven't looked at the code in
+bcache but if it's removing entries from the list then _safe version is
+required. If you are only iterating - then non-safe version is fine.
+
+>>>
 >>
->>
->> Nice catch. Thanks! Will give it (both patches at once) a try on the test
->> system immediately.
->
-> More than 2 hours of stress-testing shows no issues any more. Very nice.
-> Thanks!
->
-> 	Dominik
+>> I feel llist_for_each_entry() keeps the original behavior, and variable
+> 
+> Ah.. I see. Then.. Can I change it into non-safe version? Is it still ok
+> with non-safe one? I will change it at the next spin, if yes.
+> 
+>> 't' can be removed. Anyway, either llist_for_each_entry() or
+>> llist_for_each_entry_safe() works correctly and well here. Any one you
+>> use is OK to me, thanks for your informative reply :-)
+> 
+> I rather appriciate it.
+> 
+> Thank you,
+> Byungchul
+> 
