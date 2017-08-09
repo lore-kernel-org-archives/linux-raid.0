@@ -1,37 +1,60 @@
-From: Gilad Ben-Yossef <gilad@benyossef.com>
-Subject: Re: [PATCH v4 02/19] crypto: ccm: use -EAGAIN for transient busy indication
-Date: Wed, 9 Aug 2017 08:18:03 +0300
-Message-ID: <CAOtvUMeUHk9KxQumhuvJ52dp-_-LFOD8XGvCWvhU6LjEZhEF7A@mail.gmail.com>
-References: <1502193834-11289-1-git-send-email-gilad@benyossef.com>
- <1502193834-11289-3-git-send-email-gilad@benyossef.com> <4600c898-a2f2-f95f-15b4-0adcc6acc0b5@amd.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: [PATCH v2] md/r5cache: call mddev_lock/unlock() in r5c_journal_mode_show
+Date: Tue, 8 Aug 2017 22:56:52 -0700
+Message-ID: <20170809055652.3114509-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-security-module-owner@vger.kernel.org>
-In-Reply-To: <4600c898-a2f2-f95f-15b4-0adcc6acc0b5@amd.com>
-Sender: owner-linux-security-module@vger.kernel.org
-To: Gary R Hook <gary.hook@amd.com>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, "Lendacky, Thomas" <Thomas.Lendacky@amd.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Arnaud Ebalard <arno@natisbad.org>, Matthias Brugger <matthias.bgg@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>, linux-
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org, shli@kernel.org
+Cc: fengguang.wu@intel.com, sfr@canb.auug.org.au, Song Liu <songliubraving@fb.com>, shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com
 List-Id: linux-raid.ids
 
-On Tue, Aug 8, 2017 at 6:24 PM, Gary R Hook <gary.hook@amd.com> wrote:
-> On 08/08/2017 07:03 AM, Gilad Ben-Yossef wrote:
->>
->> Replace -EBUSY with -EAGAIN when reporting transient busy
->> indication in the absence of backlog.
->>
->> Signed-off-by: Gilad Ben-Yossef <gilad@benyossef.com>
->
->
-> Could we use "ccp" in the subject line, please?
+In r5c_journal_mode_show(), it is necessary to call mddev_lock()
+before accessing conf and conf->log. Otherwise, the conf->log
+may change (and become NULL).
 
-Of course, sorry about the the typo.
+Signed-off-by: Song Liu <songliubraving@fb.com>
+Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+Reported-by: kbuild test robot <fengguang.wu@intel.com>
+---
+ drivers/md/raid5-cache.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-Gilad
-
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 2dcbafa..b6f3702 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -2529,11 +2529,19 @@ static void r5l_write_super(struct r5l_log *log, sector_t cp)
+ 
+ static ssize_t r5c_journal_mode_show(struct mddev *mddev, char *page)
+ {
+-	struct r5conf *conf = mddev->private;
++	struct r5conf *conf;
+ 	int ret;
++	int err;
+ 
+-	if (!conf->log)
++	err = mddev_lock(mddev);
++	if (err)
++		return err;
++
++	conf = mddev->private;
++	if (!conf || !conf->log) {
++		mddev_unlock(mddev);
+ 		return 0;
++	}
+ 
+ 	switch (conf->log->r5c_journal_mode) {
+ 	case R5C_JOURNAL_MODE_WRITE_THROUGH:
+@@ -2551,6 +2559,7 @@ static ssize_t r5c_journal_mode_show(struct mddev *mddev, char *page)
+ 	default:
+ 		ret = 0;
+ 	}
++	mddev_unlock(mddev);
+ 	return ret;
+ }
+ 
 -- 
-Gilad Ben-Yossef
-Chief Coffee Drinker
+2.9.3
 
-"If you take a class in large-scale robotics, can you end up in a
-situation where the homework eats your dog?"
- -- Jean-Baptiste Queru
