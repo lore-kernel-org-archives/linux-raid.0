@@ -1,40 +1,55 @@
-From: Byungchul Park <byungchul.park@lge.com>
-Subject: Re: [RESEND PATCH] bcache: Don't reinvent the wheel but use existing
- llist API
-Date: Wed, 9 Aug 2017 15:42:42 +0900
-Message-ID: <20170809064242.GT20323@X58A-UD3R>
-References: <1502095121-14337-1-git-send-email-byungchul.park@lge.com>
- <b37c4038-d95f-ca81-5789-825ebfc6d425@coly.li>
- <20170808041233.GR20323@X58A-UD3R>
- <d99cc72b-833d-c8b1-4c44-923cb50d5d1f@coly.li>
- <20170808060056.GS20323@X58A-UD3R>
- <aa85a3ed-d9a0-e9d6-58e2-b6c9e4a63984@suse.com>
+From: Bryan Hepworth <bryan.hepworth@newcastle.ac.uk>
+Subject: RE: force raid reassembly
+Date: Wed, 9 Aug 2017 07:40:59 +0000
+Message-ID: <WM!49c8f3ee838245237e393f4355023af0f71fe159d76e8eb2ff3def02e706fa851a6d42a1043197bc8731779b2d01e52a!@mailhub-mx5.ncl.ac.uk>
+References: <DB4PR07MB409B56E9B9173E33079902ED58A0@DB4PR07MB409.eurprd07.prod.outlook.com>
+ <WM!bafd27028d31e7e922c12b615def50baa8369ba598ac220b2884f1706eddac34cd0580e2d54cc3da9be1bbadf104dab1!@mailhub-mx1.ncl.ac.uk>
+ <e6fff4a2-ebce-0c85-e2a5-d9cef0a27043@gmail.com>
+ <WM!c7e5d36941a99d370e99c9ecff040c34199c6ab48c7c1548590a2e9075a62b0e4a8a44d8c43afabb53f77be4c9108e21!@mailhub-mx3.ncl.ac.uk>
+ <DB4PR07MB40970AB64E677A452895432D58B0@DB4PR07MB409.eurprd07.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-bcache-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <aa85a3ed-d9a0-e9d6-58e2-b6c9e4a63984@suse.com>
-Sender: linux-bcache-owner@vger.kernel.org
-To: Nikolay Borisov <nborisov@suse.com>
-Cc: Coly Li <i@coly.li>, kent.overstreet@gmail.com, shli@kernel.org, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@lge.com
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <WM!c7e5d36941a99d370e99c9ecff040c34199c6ab48c7c1548590a2e9075a62b0e4a8a44d8c43afabb53f77be4c9108e21!@mailhub-mx3.ncl.ac.uk>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: Joe Landman <joe.landman@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Aug 09, 2017 at 09:39:09AM +0300, Nikolay Borisov wrote:
-> 
-> 
-> On  8.08.2017 09:00, Byungchul Park wrote:
-> > On Tue, Aug 08, 2017 at 01:28:39PM +0800, Coly Li wrote:
-> >>>>> +	llist_for_each_entry_safe(cl, t, reverse, list) {
-> >>>>
-> >>>> Just wondering why not using llist_for_each_entry(), or you use the
-> >>>> _safe version on purpose ?
-> >>>
-> >>> If I use llist_for_each_entry(), then it would change the original
-> >>> behavior. Is it ok?
-> 
-> Generally, _safe versions of list primitives is used when you are going
-> to perform removal in the iteration. I haven't looked at the code in
-> bcache but if it's removing entries from the list then _safe version is
-> required. If you are only iterating - then non-safe version is fine.
-
-Thank you~ :)
+DQoNCj4tLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPkZyb206IEpvZSBMYW5kbWFuIFttYWls
+dG86am9lLmxhbmRtYW5AZ21haWwuY29tXQ0KPlNlbnQ6IDA4IEF1Z3VzdCAyMDE3IDIzOjQ0DQo+
+VG86IEJyeWFuIEhlcHdvcnRoOyBsaW51eC1yYWlkQHZnZXIua2VybmVsLm9yZw0KPlN1YmplY3Q6
+IFJlOiBmb3JjZSByYWlkIHJlYXNzZW1ibHkNCj4NCj4NCj4NCj5PbiA4LzgvMTcgMzoyNyBQTSwg
+QnJ5YW4gSGVwd29ydGggd3JvdGU6DQo+PiBIaSBhbGwNCj4+DQo+PiBJJ2QgYmUgZ3JhdGVmdWwg
+b2YgYW5vdGhlciBwYWlyIG9mIGV5ZXMganVzdCB0byBjaGVjayBhbmQgdmVyaWZ5IHdoYXQgSSdt
+DQo+dGhpbmtpbmcuIEkndmUgaGFkIGFuIGFycmF5IGZhaWwgYW5kIEkndmUgY2hlY2tlZCB0aGUg
+Y29tcG9uZW50cyB3aXRoIHRoZQ0KPm1kYWRtIC0tZXhhbWluZSBjb21tYW5kLiBGaXZlIG91dCBv
+ZiB0aGUgc2l4IGV2ZW50IGNvdW50cyBhcmUgY29ycmVjdCBhbmQNCj5JJ20gaG9waW5nIEkgY2Fu
+IGdldCBpdCB0byBhc3NlbWJsZSB3aXRoIHRoZSBmb3JjZSBvcHRpb246IC0NCj4+DQo+PiAibWRh
+ZG0gLS1hc3NlbWJsZSAtLWZvcmNlIC9kZXYvbWRYIDxsaXN0IG9mIGRldmljZXM+Ig0KPj4NCj4+
+IG1kYWRtIC0tYXNzZW1ibGUgLS1mb3JjZSAvZGV2L21kMCAvZGV2L3NkZDEgL2Rldi9zZGcxIC9k
+ZXYvc2RmMQ0KPi9kZXYvc2RlMSAvZGV2L3NkYjEgL2Rldi9zZGMxDQo+DQo+SSBkb24ndCB0aGlu
+ayB5b3UgbmVlZCB0byBleHBsaWNpdGx5IGxpc3QgdGhlIGRldmljZXMgKC9kZXYvc2QoLi4pKSBp
+bg0KPnRoZSBmb3JjZQ0KPg0KPllvdSBjb3VsZCBkbyBzb21ldGhpbmcgbGlrZSB0aGlzOg0KPg0K
+Pm1kYWRtIC0tZXhhbWluZSAtLXNjYW4gfCBncmVwIG1kMCA+IC90bXAvbWQwLmNvbmYNCj5tZGFk
+bSAtQXMgLWMgL3RtcC9tZDAuY29uZg0KPg0KPmlmIHRoaXMgZG9lc24ndCB3b3JrLCB0aGVuIHRo
+ZSBmb3JjZSAqbWF5KiBiZSBhbiBvcHRpb24sIGJ1dCBiZSB2ZXJ5DQo+Y2FyZWZ1bCB3aXRoIHRo
+aXMuDQo+Pg0KDQpIaSBKb2UNCg0KVGhhbmtzIGZvciB0aGUgcmVwbHksIHVuZm9ydHVuYXRlbHkg
+dGhhdCBjYW1lIGJhY2sgYXMgZm9sbG93czogLQ0KDQpbcm9vdEBpbnNjcmliZTQgfl0jIG1kYWRt
+IC0tZXhhbWluZSAtLXNjYW4NCkFSUkFZIC9kZXYvbWQvaW50ZXJtZWRpYXRlMSAgbWV0YWRhdGE9
+MS4yIFVVSUQ9NjRhMzRhYTM6MzcwM2UxYjA6MzdkMzE3M2E6YmVjMGM4NzQgbmFtZT1pbnRlcm1l
+ZGlhdGUxDQpBUlJBWSAvZGV2L21kL2ludGVybWVkaWF0ZTAgIG1ldGFkYXRhPTEuMiBVVUlEPWFj
+ZTAwZmI1Ojg3NzFkNTVhOmNmMzY3MjhiOmRkYzNjZTg5IG5hbWU9aW50ZXJtZWRpYXRlMA0KICAg
+c3BhcmVzPTENCkFSUkFZIC9kZXYvbWQvMTI4ICBtZXRhZGF0YT0xLjIgVVVJRD1kNTliNGZhYzph
+ZGU0ZmRiZjoxM2ViZTg1MDo1ZTcwYmE0MiBuYW1lPWlnbWltYWdlci5uY2wuYWMudWs6MTI4DQoN
+Cltyb290QGluc2NyaWJlNCBtZF0jIG1kYWRtIC0tZXhhbWluZSAtLXNjYW4gfCBncmVwIGludGVy
+bWVkaWF0ZTAgPiAvdG1wL2ludGVybWVkaWF0ZTAuY29uZg0KW3Jvb3RAaW5zY3JpYmU0IG1kXSMg
+Y2F0IC90bXAvaW50ZXJtZWRpYXRlMC5jb25mDQpBUlJBWSAvZGV2L21kL2ludGVybWVkaWF0ZTAg
+IG1ldGFkYXRhPTEuMiBVVUlEPWFjZTAwZmI1Ojg3NzFkNTVhOmNmMzY3MjhiOmRkYzNjZTg5IG5h
+bWU9aW50ZXJtZWRpYXRlMA0KW3Jvb3RAaW5zY3JpYmU0IG1kXSMgbWRhZG0gLS1hc3NlbWJsZSAt
+LXNjYW4gLWMgL3RtcC9pbnRlcm1lZGlhdGUwLmNvbmYNCm1kYWRtOiAvZGV2L21kL2ludGVybWVk
+aWF0ZTAgYXNzZW1ibGVkIGZyb20gNCBkcml2ZXMgYW5kIDEgc3BhcmUgLSBub3QgZW5vdWdoIHRv
+IHN0YXJ0IHRoZSBhcnJheS4NCltyb290QGluc2NyaWJlNCBtZF0jDQoNCkxvb2tzIGxpa2UgSSds
+bCBoYXZlIHRvIHVzZSB0aGUgZm9yY2Ugb3B0aW9uIHVubGVzcyB5b3UgY2FuIHRoaW5rIG9mIGEg
+YmV0dGVyIHdheQ0KDQpUaGFua3MNCg0KQnJ5YW4NCg==
