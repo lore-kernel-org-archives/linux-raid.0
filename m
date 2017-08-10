@@ -1,58 +1,61 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH] raid5: remove raid5_build_block
-Date: Thu, 10 Aug 2017 16:12:17 +0800
-Message-ID: <1502352737-26945-1-git-send-email-gqjiang@suse.com>
+From: jcejka@suse.com
+Subject: [PATCH v2] mdopen: prevent named arrays devices from buffer overflow
+Date: Thu, 10 Aug 2017 11:32:46 +0200
+Message-ID: <20170810093246.26988-1-jcejka@suse.com>
+References: <20170803164816.29998-1-jcejka@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170803164816.29998-1-jcejka@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: shli@kernel.org
-Cc: linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
+To: linux-raid@vger.kernel.org
+Cc: Josef Cejka <jcejka@suse.com>
 List-Id: linux-raid.ids
 
-Now raid5_build_block is just called to set the
-sector of r5dev, raid5_compute_blocknr can be
-used directly for the purpose.
+From: Josef Cejka <jcejka@suse.com>
 
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+Device names for named arrays must fit into 32 bytes
+and longer strings provided by user should be rejected. Now they
+corrupt the stack (overwrite following devname[] buffer) and
+(if not detected) create arrays using old create_on_open
+mechanism because write to new_array fails with E2BIG.
+
+Reproducer:
+echo "CREATE names=yes" >>/etc/mdadm.conf
+mdadm -A /dev/md/abcdefghijklmnopqrstuvwxyz123 --uuid=...
+
+Signed-off-by: Josef Cejka <jcejka@suse.com>
+Reviewed-by: Coly Li <colyli@suse.de>
 ---
- drivers/md/raid5.c | 11 +----------
- 1 file changed, 1 insertion(+), 10 deletions(-)
+ mdopen.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 356cd9c..41143f9 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -491,7 +491,6 @@ static int grow_buffers(struct stripe_head *sh, gfp_t gfp)
- 	return 0;
- }
- 
--static void raid5_build_block(struct stripe_head *sh, int i, int previous);
- static void stripe_set_idx(sector_t stripe, struct r5conf *conf, int previous,
- 			    struct stripe_head *sh);
- 
-@@ -527,7 +526,7 @@ static void init_stripe(struct stripe_head *sh, sector_t sector, int previous)
- 			WARN_ON(1);
- 		}
- 		dev->flags = 0;
--		raid5_build_block(sh, i, previous);
-+		dev->sector = raid5_compute_blocknr(sh, i, previous);
+diff --git a/mdopen.c b/mdopen.c
+index 0f3a244..fd8a1db 100644
+--- a/mdopen.c
++++ b/mdopen.c
+@@ -314,7 +314,10 @@ int create_mddev(char *dev, char *name, int autof, int trustworthy,
+ 	if (num < 0 && cname && ci->names) {
+ 		int fd;
+ 		int n = -1;
+-		sprintf(devnm, "md_%s", cname);
++		if (snprintf(devnm, sizeof(devnm), "md_%s", cname) >= sizeof(devnm)) {
++			pr_err("Device name md_%s must be shorter than %d bytes.\n", cname, sizeof(devnm));
++			return -1;
++		}
+ 		if (block_udev)
+ 			udev_block(devnm);
+ 		fd = open("/sys/module/md_mod/parameters/new_array", O_WRONLY);
+@@ -364,7 +367,10 @@ int create_mddev(char *dev, char *name, int autof, int trustworthy,
+ 			udev_block(devnm);
  	}
- 	if (read_seqcount_retry(&conf->gen_lock, seq))
- 		goto retry;
-@@ -2663,14 +2662,6 @@ static void raid5_end_write_request(struct bio *bi)
- 		raid5_release_stripe(sh->batch_head);
- }
  
--static void raid5_build_block(struct stripe_head *sh, int i, int previous)
--{
--	struct r5dev *dev = &sh->dev[i];
--
--	dev->flags = 0;
--	dev->sector = raid5_compute_blocknr(sh, i, previous);
--}
--
- static void raid5_error(struct mddev *mddev, struct md_rdev *rdev)
- {
- 	char b[BDEVNAME_SIZE];
+-	sprintf(devname, "/dev/%s", devnm);
++	if (snprintf(devname, sizeof(devname), "/dev/%s", devnm) >= sizeof(devname)) {
++		pr_err("Device path /dev/%s must be shorter than %d bytes.\n", devnm, sizeof(devname));
++		return -1;
++	}
+ 
+ 	if (dev && dev[0] == '/')
+ 		strcpy(chosen, dev);
 -- 
-2.10.0
+2.12.3
 
