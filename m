@@ -1,91 +1,115 @@
-From: jcejka@suse.com
-Subject: [PATCH v2] mdadm: allow to assemble /dev/md_xxx named arrays.
-Date: Thu, 10 Aug 2017 11:41:41 +0200
-Message-ID: <20170810094141.27575-1-jcejka@suse.com>
-References: <20170803163236.28958-1-jcejka@suse.com>
+From: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+Subject: [PATCH] Detail: correct output for active arrays
+Date: Thu, 10 Aug 2017 11:43:48 +0200
+Message-ID: <1502358228-26458-1-git-send-email-mariusz.tkaczyk@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170803163236.28958-1-jcejka@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Josef Cejka <jcejka@suse.com>
+Cc: jes.sorensen@gmail.com, Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
 List-Id: linux-raid.ids
 
-From: Josef Cejka <jcejka@suse.com>
+The check for inactive array is incorrect as it compares it against
+active array. Introduce a new function md_is_array_active so the check
+is consistent across the code.
 
-Allow to assemble arrays using /dev/md_xxx name format
-both from cmdline like mdadm -A /dev/md_xxx
-or using ASSEMBLE directive in mdadm.conf
+As the output contains list of disks in the array include this
+information in sysfs read.
 
-Signed-off-by: Josef Cejka <jcejka@suse.com>
-Reviewed-by: Coly Li <colyli@suse.de>
+Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
 ---
- config.c |  5 +++--
- mdopen.c | 26 ++++++++++++++++----------
- 2 files changed, 19 insertions(+), 12 deletions(-)
+ Detail.c | 15 +++++++--------
+ mdadm.h  |  1 +
+ util.c   | 15 +++++++++------
+ 3 files changed, 17 insertions(+), 14 deletions(-)
 
-diff --git a/config.c b/config.c
-index 48e0278..113ef01 100644
---- a/config.c
-+++ b/config.c
-@@ -389,6 +389,7 @@ void arrayline(char *line)
- 			 *  /dev/md/{anything}
- 			 *  /dev/mdNN
- 			 *  /dev/md_dNN
-+			 *  /dev/md_XXX
- 			 *  <ignore>
- 			 *  or anything that doesn't start '/' or '<'
- 			 */
-@@ -397,8 +398,8 @@ void arrayline(char *line)
- 			    (w[0] != '/' && w[0] != '<') ||
- 			    (strncmp(w, "/dev/md", 7) == 0 &&
- 			     is_number(w + 7)) ||
--			    (strncmp(w, "/dev/md_d", 9) == 0 &&
--			     is_number(w + 9))) {
-+			    (strncmp(w, "/dev/md_", 8) == 0 &&
-+			     strlen(w) > 8)) {
- 				/* This is acceptable */;
- 				if (mis.devname)
- 					pr_err("only give one device per ARRAY line: %s and %s\n",
-diff --git a/mdopen.c b/mdopen.c
-index c4f1c12..0f3a244 100644
---- a/mdopen.c
-+++ b/mdopen.c
-@@ -174,19 +174,25 @@ int create_mddev(char *dev, char *name, int autof, int trustworthy,
- 				num = strtoul(e, NULL, 10);
- 			strcpy(cname, dev+5);
- 			cname[e-(dev+5)] = 0;
--			/* name *must* be mdXX or md_dXX in this context */
-+			/* name is not mdXX or md_dXX */
- 			if (num < 0 ||
- 			    (strcmp(cname, "md") != 0 && strcmp(cname, "md_d") != 0)) {
--				pr_err("%s is an invalid name for an md device.  Try /dev/md/%s\n",
--					dev, dev+5);
--				return -1;
-+				if (strncmp(cname, "md_", 3) != 0) {
-+					pr_err("%s is an invalid name for an md device.  Try /dev/md/%s\n",
-+						dev, dev+5);
-+					return -1;
-+				}
-+				/* /dev/md_<string> format */
-+				strcpy(cname, dev+8);
-+				num = -1;
-+			} else {
-+				if (strcmp(cname, "md") == 0)
-+					use_mdp = 0;
-+				else
-+					use_mdp = 1;
-+				/* recreate name: /dev/md/0 or /dev/md/d0 */
-+				sprintf(cname, "%s%d", use_mdp?"d":"", num);
- 			}
--			if (strcmp(cname, "md") == 0)
--				use_mdp = 0;
--			else
--				use_mdp = 1;
--			/* recreate name: /dev/md/0 or /dev/md/d0 */
--			sprintf(cname, "%s%d", use_mdp?"d":"", num);
- 		} else
- 			strcpy(cname, dev);
+diff --git a/Detail.c b/Detail.c
+index 2332b85..2c9fb24 100644
+--- a/Detail.c
++++ b/Detail.c
+@@ -86,7 +86,8 @@ int Detail(char *dev, struct context *c)
+ 			dev, strerror(errno));
+ 		return rv;
+ 	}
+-	sra = sysfs_read(fd, NULL, GET_VERSION | GET_DEVS | GET_ARRAY_STATE);
++	sra = sysfs_read(fd, NULL, GET_VERSION | GET_DEVS |
++			GET_ARRAY_STATE | GET_STATE);
+ 	if (!sra) {
+ 		if (md_get_array_info(fd, &array)) {
+ 			pr_err("%s does not appear to be an md device\n", dev);
+@@ -96,8 +97,7 @@ int Detail(char *dev, struct context *c)
+ 	}
+ 	external = (sra != NULL && sra->array.major_version == -1 &&
+ 		    sra->array.minor_version == -2);
+-	inactive = (sra->array_state == ARRAY_ACTIVE ||
+-		    sra->array_state == ARRAY_CLEAR);
++	inactive = (sra != NULL && !md_array_is_active(sra));
+ 	st = super_by_fd(fd, &subarray);
+ 	if (md_get_array_info(fd, &array)) {
+ 		if (errno == ENODEV) {
+@@ -314,11 +314,10 @@ int Detail(char *dev, struct context *c)
+ 	next = array.raid_disks * 2;
+ 	if (inactive) {
+ 		struct mdinfo *mdi;
+-		if (sra != NULL)
+-			for (mdi = sra->devs; mdi; mdi = mdi->next) {
+-				disks[next++] = mdi->disk;
+-				disks[next - 1].number = -1;
+-			}
++		for (mdi = sra->devs; mdi; mdi = mdi->next) {
++			disks[next++] = mdi->disk;
++			disks[next - 1].number = -1;
++		}
+ 	} else for (d = 0; d < max_disks; d++) {
+ 		mdu_disk_info_t disk;
+ 		disk.number = d;
+diff --git a/mdadm.h b/mdadm.h
+index ee9b837..191ae8f 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -1425,6 +1425,7 @@ extern int Restore_metadata(char *dev, char *dir, struct context *c,
  
+ int md_array_valid(int fd);
+ int md_array_active(int fd);
++int md_array_is_active(struct mdinfo *info);
+ int md_get_array_info(int fd, struct mdu_array_info_s *array);
+ int md_set_array_info(int fd, struct mdu_array_info_s *array);
+ int md_get_disk_info(int fd, struct mdu_disk_info_s *disk);
+diff --git a/util.c b/util.c
+index 8eeb509..c1c8509 100644
+--- a/util.c
++++ b/util.c
+@@ -228,15 +228,11 @@ int md_array_active(int fd)
+ {
+ 	struct mdinfo *sra;
+ 	struct mdu_array_info_s array;
+-	int ret;
++	int ret = 0;
+ 
+ 	sra = sysfs_read(fd, NULL, GET_ARRAY_STATE);
+ 	if (sra) {
+-		if (sra->array_state != ARRAY_CLEAR &&
+-		    sra->array_state != ARRAY_INACTIVE &&
+-		    sra->array_state != ARRAY_UNKNOWN_STATE)
+-			ret = 0;
+-		else
++		if (!md_array_is_active(sra))
+ 			ret = -ENODEV;
+ 
+ 		free(sra);
+@@ -251,6 +247,13 @@ int md_array_active(int fd)
+ 	return !ret;
+ }
+ 
++int md_array_is_active(struct mdinfo *info)
++{
++	return (info->array_state != ARRAY_CLEAR &&
++		info->array_state != ARRAY_INACTIVE &&
++		info->array_state != ARRAY_UNKNOWN_STATE);
++}
++
+ /*
+  * Get array info from the kernel. Longer term we want to deprecate the
+  * ioctl and get it from sysfs.
 -- 
-2.12.3
+1.8.3.1
 
