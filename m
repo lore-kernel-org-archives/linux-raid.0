@@ -1,138 +1,205 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 1/9] QUEUE_FLAG_NOWAIT to indicate device supports nowait
-Date: Thu, 10 Aug 2017 11:20:02 -0600
-Message-ID: <c6b91e66-dd5b-5bbb-7b19-9ec478f1ab94@kernel.dk>
-References: <20170808203246.sdjnpzixxz5brjaf@kernel.org>
- <51cdf08c-c8a4-6bbd-3342-7cdb2b510668@suse.de>
- <20170809150205.4dm3vskyjqzyejsq@kernel.org>
- <de5000a0-a52c-bce4-de4f-ab39aae4b593@suse.de>
- <20170809202125.5zs4h45luqlub5if@kernel.org>
- <b3017adc-619d-06f7-ffb5-5ba14f01ffc2@suse.de>
- <20170810011742.s45ugh55jslvkguu@kernel.org>
- <a20baa0e-261b-f912-5bca-40c7523d7c44@suse.de>
- <3a23e4af-9ec0-43f3-5aa0-5af68e0dac07@kernel.dk>
- <bfbd8644-1cd9-a748-1039-3dc08e4c45f5@suse.de>
- <20170810142515.GC14925@quack2.suse.cz>
- <e0c72d10-388e-efac-242d-1b3542490085@kernel.dk>
- <05106658-7bc4-4054-fbda-3b33ea32e215@suse.de>
+From: Mr Typo <euroregistrar@gmail.com>
+Subject: md0 device gone, disks busy
+Date: Thu, 10 Aug 2017 22:26:06 +0200
+Message-ID: <CAHnOR0OrjQD2=o4uSU4N3_W+UvHQzpcW=oYB0cmPU_kPQxzhcg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <05106658-7bc4-4054-fbda-3b33ea32e215@suse.de>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>, Jan Kara <jack@suse.cz>
-Cc: Shaohua Li <shli@kernel.org>, linux-block@vger.kernel.org, hch@infradead.org, linux-raid@vger.kernel.org, dm-devel@redhat.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 08/10/2017 11:15 AM, Goldwyn Rodrigues wrote:
-> 
-> 
-> On 08/10/2017 09:28 AM, Jens Axboe wrote:
->> On 08/10/2017 08:25 AM, Jan Kara wrote:
->>> On Thu 10-08-17 06:49:53, Goldwyn Rodrigues wrote:
->>>> On 08/09/2017 09:17 PM, Jens Axboe wrote:
->>>>> On 08/09/2017 08:07 PM, Goldwyn Rodrigues wrote:
->>>>>>>>>>>> No, from a multi-device point of view, this is inconsistent. I
->>>>>>>>>>>> have tried the request bio returns -EAGAIN before the split, but
->>>>>>>>>>>> I shall check again. Where do you see this happening?
->>>>>>>>>>>
->>>>>>>>>>> No, this isn't multi-device specific, any driver can do it.
->>>>>>>>>>> Please see blk_queue_split.
->>>>>>>>>>>
->>>>>>>>>>
->>>>>>>>>> In that case, the bio end_io function is chained and the bio of
->>>>>>>>>> the split will replicate the error to the parent (if not already
->>>>>>>>>> set).
->>>>>>>>>
->>>>>>>>> this doesn't answer my question. So if a bio returns -EAGAIN, part
->>>>>>>>> of the bio probably already dispatched to disk (if the bio is
->>>>>>>>> splitted to 2 bios, one returns -EAGAIN, the other one doesn't
->>>>>>>>> block and dispatch to disk), what will application be going to do?
->>>>>>>>> I think this is different to other IO errors. FOr other IO errors,
->>>>>>>>> application will handle the error, while we ask app to retry the
->>>>>>>>> whole bio here and app doesn't know part of bio is already written
->>>>>>>>> to disk.
->>>>>>>>
->>>>>>>> It is the same as for other I/O errors as well, such as EIO. You do
->>>>>>>> not know which bio of all submitted bio's returned the error EIO.
->>>>>>>> The application would and should consider the whole I/O as failed.
->>>>>>>>
->>>>>>>> The user application does not know of bios, or how it is going to be
->>>>>>>> split in the underlying layers. It knows at the system call level.
->>>>>>>> In this case, the EAGAIN will be returned to the user for the whole
->>>>>>>> I/O not as a part of the I/O. It is up to application to try the I/O
->>>>>>>> again with or without RWF_NOWAIT set. In direct I/O, it is bubbled
->>>>>>>> out using dio->io_error. You can read about it at the patch header
->>>>>>>> for the initial patchset at [1].
->>>>>>>>
->>>>>>>> Use case: It is for applications having two threads, a compute
->>>>>>>> thread and an I/O thread. It would try to push AIO as much as
->>>>>>>> possible in the compute thread using RWF_NOWAIT, and if it fails,
->>>>>>>> would pass it on to I/O thread which would perform without
->>>>>>>> RWF_NOWAIT. End result if done right is you save on context switches
->>>>>>>> and all the synchronization/messaging machinery to perform I/O.
->>>>>>>>
->>>>>>>> [1] http://marc.info/?l=linux-block&m=149789003305876&w=2
->>>>>>>
->>>>>>> Yes, I knew the concept, but I didn't see previous patches mentioned
->>>>>>> the -EAGAIN actually should be taken as a real IO error. This means a
->>>>>>> lot to applications and make the API hard to use. I'm wondering if we
->>>>>>> should disable bio split for NOWAIT bio, which will make the -EAGAIN
->>>>>>> only mean 'try again'.
->>>>>>
->>>>>> Don't take it as EAGAIN, but read it as EWOULDBLOCK. Why do you say
->>>>>> the API is hard to use? Do you have a case to back it up?
->>>>>
->>>>> Because it is hard to use, and potentially suboptimal. Let's say you're
->>>>> doing a 1MB write, we hit EWOULDBLOCK for the last split. Do we return a
->>>>> short write, or do we return EWOULDBLOCK? If the latter, then that
->>>>> really sucks from an API point of view.
->>>>>
->>>>>> No, not splitting the bio does not make sense here. I do not see any
->>>>>> advantage in it, unless you can present a case otherwise.
->>>>>
->>>>> It ties back into the "hard to use" that I do agree with IFF we don't
->>>>> return the short write. It's hard for an application to use that
->>>>> efficiently, if we write 1MB-128K but get EWOULDBLOCK, the re-write the
->>>>> full 1MB from a different context.
->>>>>
->>>>
->>>> It returns the error code only and not short reads/writes. But isn't
->>>> that true for all system calls in case of error?
->>>>
->>>> For aio, there are two result fields in io_event out of which one could
->>>> be used for error while the other be used for amount of writes/reads
->>>> performed. However, only one is used. This will not work with
->>>> pread()/pwrite() calls though because of the limitation of return values.
->>>>
->>>> Finally, what if the EWOULDBLOCK is returned for an earlier bio (say
->>>> offset 128k) for a 1MB pwrite(), while the rest of the 7 128K are
->>>> successful. What short return value should the system call return?
->>>
->>> This is indeed tricky. If an application submits 1MB write, I don't think
->>> we can afford to just write arbitrary subset of it. That just IMHO too much
->>> violates how writes traditionally behaved. Even short writes trigger bugs
->>> in various applications but I'm willing to require that applications using
->>> NOWAIT IO can handle these. However writing arbitrary subset looks like a
->>> nasty catch. IMHO we should not submit further bios until we are sure
->>> current one does not return EWOULDBLOCK when splitting a larger one...
->>
->> Exactly, that's the point that both Shaohua and I was getting at. Short
->> writes should be fine, especially if NOWAIT is set. Discontig writes
->> should also be OK, but it's horrible and inefficient. If we do that,
->> then using this feature is a net-loss, not a win by any stretch.
->>
-> 
-> To make sure I understand this, we disable bio splits for NOWAIT bio so
-> we return EWOULDBLOCK for the entire I/O.
+Hello everyone,
 
-That's also not great, since splits is a common operation, and the majority
-of splits can proceed without hitting out-of-resources. So ideally we'd
-handle that case, but in a saner fashion than the laissez faire approach
-that the current patchset takes.
+i had a power outage 2 days ago and when i came home i found my linux
+box not booting up anymore. After some commands i found out that there
+is a problem with a device not beeing mounted because md0 is missing.
 
--- 
-Jens Axboe
+I tried to find out what is going on, but i cannot understand what is
+going on.  i hope you can help me. Linux is a CentOS7.
 
+I am posting the current status of the box below:
+
+thank you all in advance
+
+kind regards
+Andy
+
+[root@quad ~]# mdadm -V
+mdadm - v3.4 - 28th January 2016
+[root@quad ~]# uname -a
+Linux quad 3.10.0-514.26.2.el7.x86_64 #1 SMP Tue Jul 4 15:04:05 UTC
+2017 x86_64 x86_64 x86_64 GNU/Linux
+
+[root@quad ~]# cat /proc/mdstat
+Personalities :
+unused devices: <none>
+[root@quad ~]# ls -la /dev/md0
+ls: cannot access /dev/md0: No such file or directory
+
+[root@quad ~]# mdadm -Esv
+ARRAY /dev/md/0  level=raid5 metadata=1.2 num-devices=4
+UUID=9d020f27:c0542472:b95a18d2:5741114d name=quad.:0
+   devices=/dev/sda1,/dev/sdb1,/dev/sdc1,/dev/sdd1
+
+
+[root@quad ~]# mdadm -A -v /dev/md0
+mdadm: looking for devices for /dev/md0
+mdadm: /dev/sda1 is busy - skipping
+mdadm: /dev/sdb1 is busy - skipping
+mdadm: /dev/sdc1 is busy - skipping
+mdadm: /dev/sdd1 is busy - skipping
+
+
+[root@quad ~]# cat /proc/partitions  |grep -e sd[a-d]
+   8       32 1953514584 sdc
+   8       33 1953513560 sdc1
+   8        0 1953514584 sda
+   8        1 1953513560 sda1
+   8       16 1953514584 sdb
+   8       17 1953513560 sdb1
+   8       48 1953514584 sdd
+   8       49 1953513560 sdd1
+
+[root@quad ~]# cat /etc/mdadm.conf
+DEVICE /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1
+ARRAY /dev/md0 metadata=1.2 name=quad:0 UUID=9d020f27:c0542472:b95a18d2:5741114d
+
+[root@quad ~]# mdadm --examine --scan
+ARRAY /dev/md/0  metadata=1.2 UUID=9d020f27:c0542472:b95a18d2:5741114d
+name=quad:0
+[root@quad ~]# cat /etc/mdadm/mdadm.conf
+ARRAY /dev/md/0  metadata=1.2 UUID=9d020f27:c0542472:b95a18d2:5741114d
+name=quad:
+
+
+[root@quad ~]# lsof /dev/sda*
+COMMAND   PID USER   FD   TYPE DEVICE SIZE/OFF  NODE NAME
+multipath 607 root   10r   BLK    8,0      0t0 14507 /dev/sda
+
+
+[root@quad ~]# mdadm --examine /dev/sd[a-d]*
+/dev/sda:
+   MBR Magic : aa55
+Partition[0] :   3907027120 sectors at         2048 (type fd)
+/dev/sda1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 9d020f27:c0542472:b95a18d2:5741114d
+           Name : quad:0  (local to host quad)
+  Creation Time : Wed Aug 20 19:28:52 2014
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 3906764976 (1862.89 GiB 2000.26 GB)
+     Array Size : 5860146816 (5588.67 GiB 6000.79 GB)
+  Used Dev Size : 3906764544 (1862.89 GiB 2000.26 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=262064 sectors, after=432 sectors
+          State : clean
+    Device UUID : cee082b6:e5128634:bbaea65e:e75a2352
+
+    Update Time : Wed Aug  9 22:09:11 2017
+       Checksum : 9b6dc518 - correct
+         Events : 25456
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 0
+   Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdb:
+   MBR Magic : aa55
+Partition[0] :   3907027120 sectors at         2048 (type fd)
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 9d020f27:c0542472:b95a18d2:5741114d
+           Name : quad:0  (local to host quad)
+  Creation Time : Wed Aug 20 19:28:52 2014
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 3906764976 (1862.89 GiB 2000.26 GB)
+     Array Size : 5860146816 (5588.67 GiB 6000.79 GB)
+  Used Dev Size : 3906764544 (1862.89 GiB 2000.26 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=262064 sectors, after=432 sectors
+          State : clean
+    Device UUID : b217daeb:fcebf9a3:8f8fd682:3ce535c6
+
+    Update Time : Wed Aug  9 22:09:11 2017
+       Checksum : d87b403e - correct
+         Events : 25456
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 1
+   Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdc:
+   MBR Magic : aa55
+Partition[0] :   3907027120 sectors at         2048 (type fd)
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 9d020f27:c0542472:b95a18d2:5741114d
+           Name : quad:0  (local to host quad)
+  Creation Time : Wed Aug 20 19:28:52 2014
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 3906764976 (1862.89 GiB 2000.26 GB)
+     Array Size : 5860146816 (5588.67 GiB 6000.79 GB)
+  Used Dev Size : 3906764544 (1862.89 GiB 2000.26 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=262064 sectors, after=432 sectors
+          State : clean
+    Device UUID : f1a520b9:0894d2aa:d822db73:8dfd006b
+
+    Update Time : Wed Aug  9 22:09:11 2017
+       Checksum : 426a2224 - correct
+         Events : 25456
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 2
+   Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdd:
+   MBR Magic : aa55
+Partition[0] :   3907027120 sectors at         2048 (type fd)
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 9d020f27:c0542472:b95a18d2:5741114d
+           Name : quad:0  (local to host quad)
+  Creation Time : Wed Aug 20 19:28:52 2014
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 3906764976 (1862.89 GiB 2000.26 GB)
+     Array Size : 5860146816 (5588.67 GiB 6000.79 GB)
+  Used Dev Size : 3906764544 (1862.89 GiB 2000.26 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=262064 sectors, after=432 sectors
+          State : clean
+    Device UUID : 42270e8a:deb45300:a3e5de7e:74345b99
+
+    Update Time : Wed Aug  9 22:09:11 2017
+       Checksum : a236c146 - correct
+         Events : 25456
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 3
+   Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
