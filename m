@@ -1,99 +1,185 @@
-From: Coly Li <colyli@suse.de>
-Subject: Re: [PATCH] mdadm: allow to assemble /dev/md_xxx named arrays.
-Date: Thu, 10 Aug 2017 20:24:28 +0800
-Message-ID: <1d686f60-3101-8614-c917-76100c094e2c@suse.de>
-References: <20170803163236.28958-1-jcejka@suse.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH] imsm: rebuild from 2-disk RAID10
+Date: Thu, 10 Aug 2017 15:47:22 +0200
+Message-ID: <1502372842-19381-1-git-send-email-tomasz.majchrzak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170803163236.28958-1-jcejka@suse.com>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: jcejka@suse.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: jes.sorensen@gmail.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
-On 2017/8/4 上午12:32, jcejka@suse.com wrote:
-> From: Josef Cejka <jcejka@suse.com>
-> 
-> Allow to assemble arrays using /dev/md_xxx name format
-> both from cmdline like mdadm -A /dev/md_xxx
-> or using ASSEMBLE directive in mdadm.conf
-> 
-> Signed-off-by: Josef Cejka <jcejka@suse.com>
+When RAID10 loses 2 disks and it is still operational, it cannot be
+rebuilt. The rebuild process starts for the first disk and completes,
+however completion is not recorded in metadata. There is an assumption
+that rebuild completion corresponds to transition from degraded to
+normal state. It's not the case for 2-disk RAID10 as it's still degraded
+after rebuild to first disk completes.
 
-Reviewed-by: Coly Li <colyli@suse.de>
+Check if disk rebuild flag is set in the second map and clear it. So far it
+has been checked only in the first map (where it was not set). The flag in
+the second map has not been cleared but rebuild completion dropped second
+map so the problem was not visible.
 
-Thanks.
+If rebuild completion is notified and array still has failed disks and is in
+degraded state, check first if rebuild position is really unset (the same
+check as for array in normal state). If so, mark migration as done but don't
+change array state (it should remain degraded). Update failed disk number.
 
-Coly Li
-> ---
->  config.c |  5 +++--
->  mdopen.c | 26 ++++++++++++++++----------
->  2 files changed, 19 insertions(+), 12 deletions(-)
-> 
-> diff --git a/config.c b/config.c
-> index 48e0278..113ef01 100644
-> --- a/config.c
-> +++ b/config.c
-> @@ -389,6 +389,7 @@ void arrayline(char *line)
->  			 *  /dev/md/{anything}
->  			 *  /dev/mdNN
->  			 *  /dev/md_dNN
-> +			 *  /dev/md_XXX
->  			 *  <ignore>
->  			 *  or anything that doesn't start '/' or '<'
->  			 */
-> @@ -397,8 +398,8 @@ void arrayline(char *line)
->  			    (w[0] != '/' && w[0] != '<') ||
->  			    (strncmp(w, "/dev/md", 7) == 0 &&
->  			     is_number(w + 7)) ||
-> -			    (strncmp(w, "/dev/md_d", 9) == 0 &&
-> -			     is_number(w + 9))) {
-> +			    (strncmp(w, "/dev/md_", 8) == 0 &&
-> +			     strlen(w) > 8)) {
->  				/* This is acceptable */;
->  				if (mis.devname)
->  					pr_err("only give one device per ARRAY line: %s and %s\n",
-> diff --git a/mdopen.c b/mdopen.c
-> index c4f1c12..0f3a244 100644
-> --- a/mdopen.c
-> +++ b/mdopen.c
-> @@ -174,19 +174,25 @@ int create_mddev(char *dev, char *name, int autof, int trustworthy,
->  				num = strtoul(e, NULL, 10);
->  			strcpy(cname, dev+5);
->  			cname[e-(dev+5)] = 0;
-> -			/* name *must* be mdXX or md_dXX in this context */
-> +			/* name is not mdXX or md_dXX */
->  			if (num < 0 ||
->  			    (strcmp(cname, "md") != 0 && strcmp(cname, "md_d") != 0)) {
-> -				pr_err("%s is an invalid name for an md device.  Try /dev/md/%s\n",
-> -					dev, dev+5);
-> -				return -1;
-> +				if (strncmp(cname, "md_", 3) != 0) {
-> +					pr_err("%s is an invalid name for an md device.  Try /dev/md/%s\n",
-> +						dev, dev+5);
-> +					return -1;
-> +				}
-> +				/* /dev/md_<string> format */
-> +				strcpy(cname, dev+8);
-> +				num = -1;
-> +			} else {
-> +				if (strcmp(cname, "md") == 0)
-> +					use_mdp = 0;
-> +				else
-> +					use_mdp = 1;
-> +				/* recreate name: /dev/md/0 or /dev/md/d0 */
-> +				sprintf(cname, "%s%d", use_mdp?"d":"", num);
->  			}
-> -			if (strcmp(cname, "md") == 0)
-> -				use_mdp = 0;
-> -			else
-> -				use_mdp = 1;
-> -			/* recreate name: /dev/md/0 or /dev/md/d0 */
-> -			sprintf(cname, "%s%d", use_mdp?"d":"", num);
->  		} else
->  			strcpy(cname, dev);
->  
-> 
+On rebuild start don't clear the rebuild flag in the destination map for all
+the drives because failed state is lost for one of them. Just do a copy of
+a map and clear the flag in the destination map for the disk that goes into
+rebuild. Similarily preserve the rebuild flag in the map during disk removal.
+
+If the disk is missing on array start and migration has been in progress,
+don't just cancel it. Check first if maybe one of the disks was not under
+rebuild (rebuild flag present both in source and destination map). If so,
+rebuild was running despite of failed disk so there is no need to cancel
+migration.
+
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+---
+ super-intel.c | 77 +++++++++++++++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 67 insertions(+), 10 deletions(-)
+
+diff --git a/super-intel.c b/super-intel.c
+index 51b7cc3..125c3a9 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -4023,7 +4023,7 @@ static void migrate(struct imsm_dev *dev, struct intel_super *super,
+ 
+ 	/* duplicate and then set the target end state in map[0] */
+ 	memcpy(dest, src, sizeof_imsm_map(src));
+-	if (migr_type == MIGR_REBUILD || migr_type == MIGR_GEN_MIGR) {
++	if (migr_type == MIGR_GEN_MIGR) {
+ 		__u32 ord;
+ 		int i;
+ 
+@@ -7936,14 +7936,35 @@ static void handle_missing(struct intel_super *super, struct imsm_dev *dev)
+ 	/* end process for initialization and rebuild only
+ 	 */
+ 	if (is_gen_migration(dev) == 0) {
+-		__u8 map_state;
+-		int failed;
++		int failed = imsm_count_failed(super, dev, MAP_0);
+ 
+-		failed = imsm_count_failed(super, dev, MAP_0);
+-		map_state = imsm_check_degraded(super, dev, failed, MAP_0);
++		if (failed) {
++			__u8 map_state;
++			struct imsm_map *map = get_imsm_map(dev, MAP_0);
++			struct imsm_map *map1;
++			int i, ord, ord_map1;
++			int rebuilt = 1;
+ 
+-		if (failed)
+-			end_migration(dev, super, map_state);
++			for (i = 0; i < map->num_members; i++) {
++				ord = get_imsm_ord_tbl_ent(dev, i, MAP_0);
++				if (!(ord & IMSM_ORD_REBUILD))
++					continue;
++
++				map1 = get_imsm_map(dev, MAP_1);
++				if (!map1)
++					continue;
++
++				ord_map1 = __le32_to_cpu(map1->disk_ord_tbl[i]);
++				if (ord_map1 & IMSM_ORD_REBUILD)
++					rebuilt = 0;
++			}
++
++			if (rebuilt) {
++				map_state = imsm_check_degraded(super, dev,
++								failed, MAP_0);
++				end_migration(dev, super, map_state);
++			}
++		}
+ 	}
+ 	for (dl = super->missing; dl; dl = dl->next)
+ 		mark_missing(super, dev, &dl->disk, dl->index);
+@@ -8225,8 +8246,10 @@ static void imsm_set_disk(struct active_array *a, int n, int state)
+ 	int failed;
+ 	int ord;
+ 	__u8 map_state;
++	int rebuild_done = 0;
++	int i;
+ 
+-	ord = imsm_disk_slot_to_ord(a, n);
++	ord = get_imsm_ord_tbl_ent(dev, n, MAP_X);
+ 	if (ord < 0)
+ 		return;
+ 
+@@ -8244,6 +8267,7 @@ static void imsm_set_disk(struct active_array *a, int n, int state)
+ 		struct imsm_map *migr_map = get_imsm_map(dev, MAP_1);
+ 
+ 		set_imsm_ord_tbl_ent(migr_map, n, ord_to_idx(ord));
++		rebuild_done = 1;
+ 		super->updates_pending++;
+ 	}
+ 
+@@ -8306,7 +8330,39 @@ static void imsm_set_disk(struct active_array *a, int n, int state)
+ 				dprintf_cont(" Map state change");
+ 				end_migration(dev, super, map_state);
+ 				super->updates_pending++;
++			} else if (!rebuild_done) {
++				break;
++			}
++
++			/* check if recovery is really finished */
++			for (mdi = a->info.devs; mdi ; mdi = mdi->next)
++				if (mdi->recovery_start != MaxSector) {
++					recovery_not_finished = 1;
++					break;
++				}
++			if (recovery_not_finished) {
++				dprintf_cont("\n");
++				dprintf("Rebuild has not finished yet, state not changed");
++				if (a->last_checkpoint < mdi->recovery_start) {
++					a->last_checkpoint =
++						mdi->recovery_start;
++					super->updates_pending++;
++				}
++				break;
+ 			}
++
++			dprintf_cont(" Rebuild done, still degraded");
++			dev->vol.migr_state = 0;
++			set_migr_type(dev, 0);
++			dev->vol.curr_migr_unit = 0;
++
++			for (i = 0; i < map->num_members; i++) {
++				int idx = get_imsm_ord_tbl_ent(dev, i, MAP_0);
++
++				if (idx & IMSM_ORD_REBUILD)
++					map->failed_disk_num = i;
++			}
++			super->updates_pending++;
+ 			break;
+ 		}
+ 		if (is_gen_migration(dev)) {
+@@ -9936,7 +9992,7 @@ static void imsm_delete(struct intel_super *super, struct dl **dlp, unsigned ind
+ 	struct imsm_dev *dev;
+ 	struct imsm_map *map;
+ 	unsigned int i, j, num_members;
+-	__u32 ord;
++	__u32 ord, ord_map0;
+ 	struct bbm_log *log = super->bbm_log;
+ 
+ 	dprintf("deleting device[%d] from imsm_super\n", index);
+@@ -9958,12 +10014,13 @@ static void imsm_delete(struct intel_super *super, struct dl **dlp, unsigned ind
+ 			 * ord-flags to the first map
+ 			 */
+ 			ord = get_imsm_ord_tbl_ent(dev, j, MAP_X);
++			ord_map0 = get_imsm_ord_tbl_ent(dev, j, MAP_0);
+ 
+ 			if (ord_to_idx(ord) <= index)
+ 				continue;
+ 
+ 			map = get_imsm_map(dev, MAP_0);
+-			set_imsm_ord_tbl_ent(map, j, ord_to_idx(ord - 1));
++			set_imsm_ord_tbl_ent(map, j, ord_map0 - 1);
+ 			map = get_imsm_map(dev, MAP_1);
+ 			if (map)
+ 				set_imsm_ord_tbl_ent(map, j, ord - 1);
+-- 
+1.8.3.1
 
