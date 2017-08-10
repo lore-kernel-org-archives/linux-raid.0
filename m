@@ -1,115 +1,46 @@
-From: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
-Subject: [PATCH] Detail: correct output for active arrays
-Date: Thu, 10 Aug 2017 11:43:48 +0200
-Message-ID: <1502358228-26458-1-git-send-email-mariusz.tkaczyk@intel.com>
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: Re: [PATCH 1/9] QUEUE_FLAG_NOWAIT to indicate device supports nowait
+Date: Thu, 10 Aug 2017 06:38:53 -0500
+Message-ID: <f8d2c0e3-e81f-55e7-2645-4598af34b367@suse.de>
+References: <20170726235806.12148-1-rgoldwyn@suse.de>
+ <20170726235806.12148-2-rgoldwyn@suse.de>
+ <20170808203246.sdjnpzixxz5brjaf@kernel.org>
+ <10dbe9f0-e2a0-456f-b271-7cf0312aa1d5@kernel.dk>
+ <284fb7b3-9265-229f-4c66-bd043b94ec9f@kernel.dk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <284fb7b3-9265-229f-4c66-bd043b94ec9f@kernel.dk>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: jes.sorensen@gmail.com, Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+To: Jens Axboe <axboe@kernel.dk>, Shaohua Li <shli@kernel.org>
+Cc: linux-block@vger.kernel.org, hch@infradead.org, jack@suse.cz, linux-raid@vger.kernel.org, dm-devel@redhat.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 List-Id: linux-raid.ids
 
-The check for inactive array is incorrect as it compares it against
-active array. Introduce a new function md_is_array_active so the check
-is consistent across the code.
 
-As the output contains list of disks in the array include this
-information in sysfs read.
 
-Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
----
- Detail.c | 15 +++++++--------
- mdadm.h  |  1 +
- util.c   | 15 +++++++++------
- 3 files changed, 17 insertions(+), 14 deletions(-)
+On 08/09/2017 09:18 PM, Jens Axboe wrote:
+> On 08/08/2017 02:36 PM, Jens Axboe wrote:
+>> On 08/08/2017 02:32 PM, Shaohua Li wrote:
+>>>> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+>>>> index 25f6a0cb27d3..fae021ebec1b 100644
+>>>> --- a/include/linux/blkdev.h
+>>>> +++ b/include/linux/blkdev.h
+>>>> @@ -633,6 +633,7 @@ struct request_queue {
+>>>>  #define QUEUE_FLAG_REGISTERED  29	/* queue has been registered to a disk */
+>>>>  #define QUEUE_FLAG_SCSI_PASSTHROUGH 30	/* queue supports SCSI commands */
+>>>>  #define QUEUE_FLAG_QUIESCED    31	/* queue has been quiesced */
+>>>> +#define QUEUE_FLAG_NOWAIT      32	/* stack device driver supports REQ_NOWAIT */
+>>
+>> Does this work on 32-bit, where sizeof(unsigned long) == 32?
+> 
+> I didn't get an answer to this one.
+> 
 
-diff --git a/Detail.c b/Detail.c
-index 2332b85..2c9fb24 100644
---- a/Detail.c
-+++ b/Detail.c
-@@ -86,7 +86,8 @@ int Detail(char *dev, struct context *c)
- 			dev, strerror(errno));
- 		return rv;
- 	}
--	sra = sysfs_read(fd, NULL, GET_VERSION | GET_DEVS | GET_ARRAY_STATE);
-+	sra = sysfs_read(fd, NULL, GET_VERSION | GET_DEVS |
-+			GET_ARRAY_STATE | GET_STATE);
- 	if (!sra) {
- 		if (md_get_array_info(fd, &array)) {
- 			pr_err("%s does not appear to be an md device\n", dev);
-@@ -96,8 +97,7 @@ int Detail(char *dev, struct context *c)
- 	}
- 	external = (sra != NULL && sra->array.major_version == -1 &&
- 		    sra->array.minor_version == -2);
--	inactive = (sra->array_state == ARRAY_ACTIVE ||
--		    sra->array_state == ARRAY_CLEAR);
-+	inactive = (sra != NULL && !md_array_is_active(sra));
- 	st = super_by_fd(fd, &subarray);
- 	if (md_get_array_info(fd, &array)) {
- 		if (errno == ENODEV) {
-@@ -314,11 +314,10 @@ int Detail(char *dev, struct context *c)
- 	next = array.raid_disks * 2;
- 	if (inactive) {
- 		struct mdinfo *mdi;
--		if (sra != NULL)
--			for (mdi = sra->devs; mdi; mdi = mdi->next) {
--				disks[next++] = mdi->disk;
--				disks[next - 1].number = -1;
--			}
-+		for (mdi = sra->devs; mdi; mdi = mdi->next) {
-+			disks[next++] = mdi->disk;
-+			disks[next - 1].number = -1;
-+		}
- 	} else for (d = 0; d < max_disks; d++) {
- 		mdu_disk_info_t disk;
- 		disk.number = d;
-diff --git a/mdadm.h b/mdadm.h
-index ee9b837..191ae8f 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -1425,6 +1425,7 @@ extern int Restore_metadata(char *dev, char *dir, struct context *c,
- 
- int md_array_valid(int fd);
- int md_array_active(int fd);
-+int md_array_is_active(struct mdinfo *info);
- int md_get_array_info(int fd, struct mdu_array_info_s *array);
- int md_set_array_info(int fd, struct mdu_array_info_s *array);
- int md_get_disk_info(int fd, struct mdu_disk_info_s *disk);
-diff --git a/util.c b/util.c
-index 8eeb509..c1c8509 100644
---- a/util.c
-+++ b/util.c
-@@ -228,15 +228,11 @@ int md_array_active(int fd)
- {
- 	struct mdinfo *sra;
- 	struct mdu_array_info_s array;
--	int ret;
-+	int ret = 0;
- 
- 	sra = sysfs_read(fd, NULL, GET_ARRAY_STATE);
- 	if (sra) {
--		if (sra->array_state != ARRAY_CLEAR &&
--		    sra->array_state != ARRAY_INACTIVE &&
--		    sra->array_state != ARRAY_UNKNOWN_STATE)
--			ret = 0;
--		else
-+		if (!md_array_is_active(sra))
- 			ret = -ENODEV;
- 
- 		free(sra);
-@@ -251,6 +247,13 @@ int md_array_active(int fd)
- 	return !ret;
- }
- 
-+int md_array_is_active(struct mdinfo *info)
-+{
-+	return (info->array_state != ARRAY_CLEAR &&
-+		info->array_state != ARRAY_INACTIVE &&
-+		info->array_state != ARRAY_UNKNOWN_STATE);
-+}
-+
- /*
-  * Get array info from the kernel. Longer term we want to deprecate the
-  * ioctl and get it from sysfs.
+Oh, I assumed the question is rhetorical.
+No, it will not work on 32-bit. I was planning to change the field
+queue_flags to u64. Is that okay?
+
 -- 
-1.8.3.1
-
+Goldwyn
