@@ -1,47 +1,48 @@
-From: Sarah Newman <srn@prgmr.com>
-Subject: Re: md0 device gone, disks busy
-Date: Thu, 10 Aug 2017 19:55:03 -0700
-Message-ID: <f99b9fb1-e71b-33ad-4145-1ce53d926d53@prgmr.com>
-References: <CAHnOR0OrjQD2=o4uSU4N3_W+UvHQzpcW=oYB0cmPU_kPQxzhcg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHnOR0OrjQD2=o4uSU4N3_W+UvHQzpcW=oYB0cmPU_kPQxzhcg@mail.gmail.com>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: Mr Typo <euroregistrar@gmail.com>
-Cc: linux-raid@vger.kernel.org
+From: Byungchul Park <byungchul.park@lge.com>
+Subject: [PATCH v4] bcache: Don't reinvent the wheel but use existing llist API
+Date: Fri, 11 Aug 2017 13:42:23 +0900
+Message-ID: <1502426543-15229-1-git-send-email-byungchul.park@lge.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: kent.overstreet@gmail.com, shli@kernel.org
+Cc: linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, i@coly.li, nborisov@suse.com, linux-kernel@vger.kernel.org, kernel-team@lge.com
 List-Id: linux-raid.ids
 
-On 08/10/2017 01:26 PM, Mr Typo wrote:
-> Hello everyone,
-> 
-> i had a power outage 2 days ago and when i came home i found my linux
-> box not booting up anymore. After some commands i found out that there
-> is a problem with a device not beeing mounted because md0 is missing.
-> 
-> I tried to find out what is going on, but i cannot understand what is
-> going on.  i hope you can help me. Linux is a CentOS7.
-> 
-> I am posting the current status of the box below:
-> 
-> thank you all in advance
-> 
-> kind regards
-> Andy
+Although llist provides proper APIs, they are not used. Make them used.
 
-> [root@quad ~]# mdadm -Esv
-> ARRAY /dev/md/0  level=raid5 metadata=1.2 num-devices=4
-> UUID=9d020f27:c0542472:b95a18d2:5741114d name=quad.:0
->    devices=/dev/sda1,/dev/sdb1,/dev/sdc1,/dev/sdd1
+Signed-off-by: Byungchul Park <byungchul.park@lge.com>
+Acked-by: Coly Li <colyli@suse.de>
+---
+ drivers/md/bcache/closure.c | 15 ++-------------
+ 1 file changed, 2 insertions(+), 13 deletions(-)
 
-It's running, it's just called /dev/md/0 instead. You should be able to temporarily change the name with
-
-mdadm --stop /dev/md/0
-mdadm --assemble /dev/md0 /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1
-
-I think for centos 7, to change what happens on boot you can edit /etc/mdadm.conf to explicitly name the array and run 'dracut -f' to update the
-initial ram disk that loads on boot before the actual root file system is mounted. 'man mdadm.conf' has an example of the mdadm.conf syntax.
-
---Sarah
+diff --git a/drivers/md/bcache/closure.c b/drivers/md/bcache/closure.c
+index 864e673..7d5286b 100644
+--- a/drivers/md/bcache/closure.c
++++ b/drivers/md/bcache/closure.c
+@@ -70,21 +70,10 @@ void __closure_wake_up(struct closure_waitlist *wait_list)
+ 	list = llist_del_all(&wait_list->list);
+ 
+ 	/* We first reverse the list to preserve FIFO ordering and fairness */
+-
+-	while (list) {
+-		struct llist_node *t = list;
+-		list = llist_next(list);
+-
+-		t->next = reverse;
+-		reverse = t;
+-	}
++	reverse = llist_reverse_order(list);
+ 
+ 	/* Then do the wakeups */
+-
+-	while (reverse) {
+-		cl = container_of(reverse, struct closure, list);
+-		reverse = llist_next(reverse);
+-
++	llist_for_each_entry(cl, reverse, list) {
+ 		closure_set_waiting(cl, 0);
+ 		closure_sub(cl, CLOSURE_WAITING + 1);
+ 	}
+-- 
+1.9.1
