@@ -1,38 +1,78 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: [PATCH] MD: not clear ->safemode for external metadata array
-Date: Fri, 11 Aug 2017 20:39:52 -0700
-Message-ID: <a34d31891470e5c0c16e1eb0b05398e2b30f6c23.1502509111.git.shli@fb.com>
+From: Felix Koop <fdp@fkoop.de>
+Subject: Re: mdadm will only start root device degraded
+Date: Sat, 12 Aug 2017 11:20:27 +0200
+Message-ID: <1502529627.31985.2.camel@fkoop.de>
+References: <1502092265.23002.9.camel@fkoop.de>
+         <598DF0A1.5030902@youngman.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <598DF0A1.5030902@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Shaohua Li <shli@fb.com>, NeilBrown <neilb@suse.com>
+To: Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Shaohua Li <shli@fb.com>
+Hello Wol,
 
-->safemode should be triggered by mdadm for external metadaa array, otherwise
-array's state confuses mdadm.
+thanks for trying to help me.
 
-Fixes: 33182d15c6bf(md: always clear ->safemode when md_check_recovery gets the mddev lock.)
-Cc: NeilBrown <neilb@suse.com>
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- drivers/md/md.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Yes, md2 is a mirror. Initially it was a mirror of sdf1 and sdg1. Then
+I broke that mirror and reassembled/recreated it as a mirror of sdf1
+and cryptorootg (which is the encrypted device sdg1). After the
+reassembly this worked fine until next reboot. cryprotrootg is unlocked
+during boot, but md2 is not reassembled.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index f8840ef1aafd..a74dc9963822 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -8658,7 +8658,7 @@ void md_check_recovery(struct mddev *mddev)
- 	if (mddev_trylock(mddev)) {
- 		int spares = 0;
- 
--		if (mddev->safemode == 1)
-+		if (!mddev->external && mddev->safemode == 1)
- 			mddev->safemode = 0;
- 
- 		if (mddev->ro) {
+Is it correct that mirroring (or raid in general) does not work on
+encrypted devices? If so, why?
+
 -- 
-2.11.0
+Mit freundlichen Grüßen
 
+Felix Koop
+
+
+Am Freitag, den 11.08.2017, 19:00 +0100 schrieb Wols Lists:
+> On 07/08/17 08:51, Felix Koop wrote:
+> > Hello,
+> > 
+> > I have the following problem: /dev/md2 is my root device. This is a
+> > raid1 device consisting of 2 partitions (sdg1 and sdf1). Booting in
+> > this configuration worked fine.
+> > 
+> > When I decided to encrypt those partitions, I started to encrypt
+> > one of
+> > them (sdg1). Now the array always starts degraded with the
+> > encrypted
+> > sdg1 (cryptorootg) missing. I am asked during boot process for the
+> > password and the encrypted device is unlocked successfully. But the
+> > raid is not set up correctly. I have to run after every boot
+> > 
+> > mdadm /dev/md2 --add /dev/mapper/cryptorootg
+> > 
+> > and then device is sync'ing and working fine until next reboot. An
+> > entry in /etc/crypttab was created.
+> > 
+> > What do I have to configure differently to have mdadm recognising
+> > the
+> > raid device correctly during boot?
+> > 
+> > 
+> > 
+> 
+> Start again? I'm guessing md2 is a mirror, which means the raid code
+> expects sdg1 and sdf1 to be identical. But you've now encrypted one
+> of
+> them, so they are not identical, which is why the raid keeps breaking
+> on
+> boot.
+> 
+> I'm out of my depth here, but if you want to encrypt your raid, you
+> need
+> to encrypt the raid device itself (md2), not the component devices.
+> 
+> (Or encrypt both component devices, such that your boot sequence will
+> need to unlock them before the raid can assemble them.)
+> 
+> Cheers,
+> Wol
