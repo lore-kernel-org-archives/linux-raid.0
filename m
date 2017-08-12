@@ -1,259 +1,67 @@
-From: Anthony Youngman <antlists@youngman.org.uk>
-Subject: Re: force raid reassembly
-Date: Sat, 12 Aug 2017 18:44:27 +0100
-Message-ID: <5f064932-fc2d-926c-932b-1f3cdaaeb77a@youngman.org.uk>
-References: <DB4PR07MB409B56E9B9173E33079902ED58A0@DB4PR07MB409.eurprd07.prod.outlook.com>
- <WM!bafd27028d31e7e922c12b615def50baa8369ba598ac220b2884f1706eddac34cd0580e2d54cc3da9be1bbadf104dab1!@mailhub-mx1.ncl.ac.uk>
- <15dc68d8630.27fa.c989c0045808b278ebe0f0fc417d866d@gmail.com>
+From: Sarah Newman <srn@prgmr.com>
+Subject: mpt3sas + raid10 kicked drives at reboot
+Date: Sat, 12 Aug 2017 13:53:11 -0700
+Message-ID: <0d5f3973-b9c6-bcfe-63c7-4d6c62529bfb@prgmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15dc68d8630.27fa.c989c0045808b278ebe0f0fc417d866d@gmail.com>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Joe Landman <joe.landman@gmail.com>, Bryan Hepworth <bryan.hepworth@newcastle.ac.uk>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Only thing is, sdb1 says "AAA.AA", which is a bit weird, unless sdb1 is 
-the very last one, which is the last dot in AAA.A. of all the others.
+Hi,
 
-If five drives all have almost identical event counts, I'd be inclined 
-to ddrescue the dodgy one (probably sdb1) and hope it all works out.
+With mostly vanilla 4.9.31 it looks like I had some problem with mpt3sas + md RAID10 on a device named md127. Because it happened at reboot I assume
+there was some kind of race condition rather than there being a hardware issue.
 
-The alternative is to ddrescue both dodgy drives, and write the program 
-that marks blocks as dodgy. Then you can hope that a scan can rebuild 
-everything.
+md127 has an internal bitmap. There was also a DBRD device running on top of md127. I have a RAID1 on the same drives and there was no issue with it.
+I had half of the drives on a 9200-8i card and half of the drives on a 9300-8i card. From my notes, the 9300-8i is the one that threw the drives. All
+the drives on the 9300-8i were kicked and none of the ones on the 9200-8i were.
 
-Cheers,
-Wol
+I will be looking into updates related to the 9300-8i but if anyone has insights as to why it would have happened with the RAID10 and not the RAID1
+device I'd appreciate it.
 
-On 09/08/17 11:34, Joe Landman wrote:
-> Ok, you are missing 2 drives in a 6 drive raid.  This is generally bad 
-> news.  Are you sure all your drives are accessible?  Can you read 
-> partition tables from each? If not, f2f hen a force won't likely do 
-> anything.
-> 
-> Can you give context and logs entries on what happend to cause this?  
-> Also do you have backups of the data... raid is not a backup itself ... 
-> if need be, can you recover from a recent backup?
-> 
-> 
-> On August 8, 2017 3:39:46 PM Bryan Hepworth 
-> <bryan.hepworth@newcastle.ac.uk> wrote:
-> 
->> Hi all
->>
->> I'd be grateful of another pair of eyes just to check and verify what 
->> I'm thinking. I've had an array fail and I've checked the components 
->> with the mdadm --examine command. Five out of the six event counts are 
->> correct and I'm hoping I can get it to assemble with the force option: -
->>
->> "mdadm --assemble --force /dev/mdX <list of devices>"
->>
->> mdadm --assemble --force /dev/md0 /dev/sdd1 /dev/sdg1 /dev/sdf1 
->> /dev/sde1 /dev/sdb1 /dev/sdc1
->>
->> Output from --examine is as follows: -
->>
->>
->> [root@inscribe4 dev]# mdadm --examine /dev/sde1
->> /dev/sde1:
->>           Magic : a92b4efc
->>         Version : 1.2
->>     Feature Map : 0x1
->>      Array UUID : ace00fb5:8771d55a:cf36728b:ddc3ce89
->>            Name : intermediate0
->>   Creation Time : Tue Oct 15 21:03:50 2013
->>      Raid Level : raid5
->>    Raid Devices : 6
->>
->>  Avail Dev Size : 3906761858 (1862.89 GiB 2000.26 GB)
->>      Array Size : 9766901760 (9314.44 GiB 10001.31 GB)
->>   Used Dev Size : 3906760704 (1862.89 GiB 2000.26 GB)
->>     Data Offset : 262144 sectors
->>    Super Offset : 8 sectors
->>    Unused Space : before=262064 sectors, after=1154 sectors
->>           State : clean
->>     Device UUID : 8d0b6c8e:0c526265:6ec0a71b:52a636ba
->>
->> Internal Bitmap : 8 sectors from superblock
->>     Update Time : Tue Aug  8 14:16:53 2017
->>        Checksum : 44b7b461 - correct
->>          Events : 119894
->>
->>          Layout : left-symmetric
->>      Chunk Size : 512K
->>
->>    Device Role : spare
->>    Array State : AAA.A. ('A' == active, '.' == missing, 'R' == replacing)
->>
->> [root@inscribe4 dev]# mdadm --examine /dev/sdg1
->> /dev/sdg1:
->>           Magic : a92b4efc
->>         Version : 1.2
->>     Feature Map : 0x1
->>      Array UUID : ace00fb5:8771d55a:cf36728b:ddc3ce89
->>            Name : intermediate0
->>   Creation Time : Tue Oct 15 21:03:50 2013
->>      Raid Level : raid5
->>    Raid Devices : 6
->>
->>  Avail Dev Size : 3906761858 (1862.89 GiB 2000.26 GB)
->>      Array Size : 9766901760 (9314.44 GiB 10001.31 GB)
->>   Used Dev Size : 3906760704 (1862.89 GiB 2000.26 GB)
->>     Data Offset : 262144 sectors
->>    Super Offset : 8 sectors
->>    Unused Space : before=262064 sectors, after=1154 sectors
->>           State : clean
->>     Device UUID : e238e74b:d40efc43:d34d876d:ca0700b0
->>
->> Internal Bitmap : 8 sectors from superblock
->>     Update Time : Tue Aug  8 14:16:53 2017
->>        Checksum : 28758d54 - correct
->>          Events : 119894
->>
->>          Layout : left-symmetric
->>      Chunk Size : 512K
->>
->>    Device Role : Active device 1
->>    Array State : AAA.A. ('A' == active, '.' == missing, 'R' == replacing)
->>
->> [root@inscribe4 dev]# mdadm --examine /dev/sdd1
->> /dev/sdd1:
->>           Magic : a92b4efc
->>         Version : 1.2
->>     Feature Map : 0x1
->>      Array UUID : ace00fb5:8771d55a:cf36728b:ddc3ce89
->>            Name : intermediate0
->>   Creation Time : Tue Oct 15 21:03:50 2013
->>      Raid Level : raid5
->>    Raid Devices : 6
->>
->>  Avail Dev Size : 3906761858 (1862.89 GiB 2000.26 GB)
->>      Array Size : 9766901760 (9314.44 GiB 10001.31 GB)
->>   Used Dev Size : 3906760704 (1862.89 GiB 2000.26 GB)
->>     Data Offset : 262144 sectors
->>    Super Offset : 8 sectors
->>    Unused Space : before=262064 sectors, after=1154 sectors
->>           State : clean
->>     Device UUID : 1732f121:f6f0df09:fafd2411:7c78ce00
->>
->> Internal Bitmap : 8 sectors from superblock
->>     Update Time : Tue Aug  8 14:16:53 2017
->>        Checksum : b8cf8981 - correct
->>          Events : 119894
->>
->>          Layout : left-symmetric
->>      Chunk Size : 512K
->>
->>    Device Role : Active device 0
->>    Array State : AAA.A. ('A' == active, '.' == missing, 'R' == replacing)
->>
->> [root@inscribe4 dev]# mdadm --examine /dev/sdf1
->> /dev/sdf1:
->>           Magic : a92b4efc
->>         Version : 1.2
->>     Feature Map : 0x1
->>      Array UUID : ace00fb5:8771d55a:cf36728b:ddc3ce89
->>            Name : intermediate0
->>   Creation Time : Tue Oct 15 21:03:50 2013
->>      Raid Level : raid5
->>    Raid Devices : 6
->>
->>  Avail Dev Size : 3906761858 (1862.89 GiB 2000.26 GB)
->>      Array Size : 9766901760 (9314.44 GiB 10001.31 GB)
->>   Used Dev Size : 3906760704 (1862.89 GiB 2000.26 GB)
->>     Data Offset : 262144 sectors
->>    Super Offset : 8 sectors
->>    Unused Space : before=262064 sectors, after=1154 sectors
->>           State : clean
->>     Device UUID : 3d414ad2:4310c1f9:98f50214:3e9b1e33
->>
->> Internal Bitmap : 8 sectors from superblock
->>     Update Time : Tue Aug  8 14:16:53 2017
->>        Checksum : 8e37d25d - correct
->>          Events : 119894
->>
->>          Layout : left-symmetric
->>      Chunk Size : 512K
->>
->>    Device Role : Active device 2
->>    Array State : AAA.A. ('A' == active, '.' == missing, 'R' == replacing)
->>
->> [root@inscribe4 dev]# mdadm --examine /dev/sdb1
->> /dev/sdb1:
->>           Magic : a92b4efc
->>         Version : 1.2
->>     Feature Map : 0x1
->>      Array UUID : ace00fb5:8771d55a:cf36728b:ddc3ce89
->>            Name : intermediate0
->>   Creation Time : Tue Oct 15 21:03:50 2013
->>      Raid Level : raid5
->>    Raid Devices : 6
->>
->>  Avail Dev Size : 3906761858 (1862.89 GiB 2000.26 GB)
->>      Array Size : 9766901760 (9314.44 GiB 10001.31 GB)
->>   Used Dev Size : 3906760704 (1862.89 GiB 2000.26 GB)
->>     Data Offset : 262144 sectors
->>    Super Offset : 8 sectors
->>    Unused Space : before=262064 sectors, after=1154 sectors
->>           State : clean
->>     Device UUID : a84263cd:75ce20b9:a3a72a1c:b18b2457
->>
->> Internal Bitmap : 8 sectors from superblock
->>     Update Time : Mon Jul 31 22:50:37 2017
->>        Checksum : 74d320d6 - correct
->>          Events : 119879
->>
->>          Layout : left-symmetric
->>      Chunk Size : 512K
->>
->>    Device Role : Active device 5
->>    Array State : AAA.AA ('A' == active, '.' == missing, 'R' == replacing)
->>
->> [root@inscribe4 dev]# mdadm --examine /dev/sdc1
->> /dev/sdc1:
->>           Magic : a92b4efc
->>         Version : 1.2
->>     Feature Map : 0x1
->>      Array UUID : ace00fb5:8771d55a:cf36728b:ddc3ce89
->>            Name : intermediate0
->>   Creation Time : Tue Oct 15 21:03:50 2013
->>      Raid Level : raid5
->>    Raid Devices : 6
->>
->>  Avail Dev Size : 3906761858 (1862.89 GiB 2000.26 GB)
->>      Array Size : 9766901760 (9314.44 GiB 10001.31 GB)
->>   Used Dev Size : 3906760704 (1862.89 GiB 2000.26 GB)
->>     Data Offset : 262144 sectors
->>    Super Offset : 8 sectors
->>    Unused Space : before=262064 sectors, after=1154 sectors
->>           State : clean
->>     Device UUID : be5ec20e:249645e5:22aeca25:a60c7599
->>
->> Internal Bitmap : 8 sectors from superblock
->>     Update Time : Tue Aug  8 14:16:53 2017
->>        Checksum : 2e529fae - correct
->>          Events : 119894
->>
->>          Layout : left-symmetric
->>      Chunk Size : 512K
->>
->>    Device Role : Active device 4
->>    Array State : AAA.A. ('A' == active, '.' == missing, 'R' == replacing)
->>
->> Thanks
->>
->> Bryan
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+init: Re-executing /sbin/init
+[4780009.765708] EXT4-fs (md0): re-mounted. Opts: (null)
+Please stand by while rebooting the system...
+[4780010.980443] sd 8:0:2:0: [sdf] Synchronizing SCSI cache
+[4780010.980788] sd 8:0:1:0: [sde] Synchronizing SCSI cache
+[4780010.981089] sd 8:0:0:0: [sdd] Synchronizing SCSI cache
+[Fri Aug 11 19:05:43 2017][4780010.981374] sd 7:0:2:0: [sdc] Synchronizing SCSI cache
+[4780010.981614] sd 7:0:1:0: [sdb] Synchronizing SCSI cache
+[4780010.981840] sd 7:0:0:0: [sda] Synchronizing SCSI cache
+[4780010.982281] mpt3sas_cm0: sending message unit reset !!
+[4780014.248128] drbd resource0: Discarding network configuration.
+[4780014.248511] sd 8:0:2:0: [sdf] tag#0 FAILED Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+[4780014.248750] sd 8:0:2:0: [sdf] tag#0 CDB: Synchronize Cache(10) 35 00 00 00 00 00 00 00 00 00
+[4780014.248967] blk_update_request: I/O error, dev sdf, sector 20973584
+[4780014.249123] md: super_written gets error=-5
+[4780014.249231] md/raid10:md127: Disk failure on sdf2, disabling device.
+[4780014.249231] md/raid10:md127: Operation continuing on 5 devices.
+[4780014.249573] sd 8:0:1:0: [sde] tag#1 FAILED Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+[4780014.249800] sd 8:0:1:0: [sde] tag#1 CDB: Synchronize Cache(10) 35 00 00 00 00 00 00 00 00 00
+[4780014.250028] blk_update_request: I/O error, dev sde, sector 20973584
+[4780014.250188] md: super_written gets error=-5
+[4780014.250294] md/raid10:md127: Disk failure on sde2, disabling device.
+[4780014.250294] md/raid10:md127: Operation continuing on 4 devices.
+[4780014.250596] sd 8:0:0:0: [sdd] tag#2 FAILED Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+[4780014.250808] sd 8:0:0:0: [sdd] tag#2 CDB: Synchronize Cache(10) 35 00 00 00 00 00 00 00 00 00
+[4780014.251033] blk_update_request: I/O error, dev sdd, sector 20973584
+[4780014.251201] md: super_written gets error=-5
+[4780014.251307] md/raid10:md127: Disk failure on sdd2, disabling device.
+[4780014.251307] md/raid10:md127: Operation continuing on 3 devices.
+[4780014.253458] drbd resource0: Connection closed
+[4780014.253816] drbd resource0: conn( Disconnecting -> StandAlone )
+[4780014.254057] drbd resource0: receiver terminated
+[4780014.254210] drbd resource0: Terminating drbd_r_resource
+[4780034.718113] mpt3sas_cm0: _base_wait_for_doorbell_ack: failed due to timeout count(15000), int_status(c0000000)!
+[4780034.718369] mpt3sas_cm0: message unit reset: FAILED
+[4780034.718491] mpt3sas_cm0: sending diag reset !!
+[4780035.690689] mpt3sas_cm0: diag reset: SUCCESS
+[4780036.746631] mpt2sas_cm0: sending message unit reset !!
+[4780036.747997] mpt2sas_cm0: message unit reset: SUCCESS
+[4780037.019600] reboot: Restarting system
+
+Thanks, Sarah
