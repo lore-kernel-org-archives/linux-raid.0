@@ -1,582 +1,194 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: [PATCH V2 8/9] nullb: emulate cache
-Date: Mon, 14 Aug 2017 15:04:59 -0700
-Message-ID: <727aaf4b878c064945b15c2b6e2d5fad487a3b54.1502746933.git.shli@fb.com>
+Subject: [PATCH V2 9/9] nullb: badbblocks support
+Date: Mon, 14 Aug 2017 15:05:00 -0700
+Message-ID: <0f2420944c74de6f60c0134cc3af1422da17ac49.1502746933.git.shli@fb.com>
 References: <cover.1502746933.git.shli@fb.com>
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <cover.1502746933.git.shli@fb.com>
 In-Reply-To: <cover.1502746933.git.shli@fb.com>
 References: <cover.1502746933.git.shli@fb.com>
-Sender: linux-block-owner@vger.kernel.org
+Sender: linux-raid-owner@vger.kernel.org
 To: linux-block@vger.kernel.org, linux-raid@vger.kernel.org
 Cc: kernel-team@fb.com, Kyungchan Koh <kyungchan.koh@gmail.com>, Shaohua Li <shli@fb.com>
 List-Id: linux-raid.ids
 
 From: Shaohua Li <shli@fb.com>
 
-Software must flush disk cache to guarantee data safety. To check if
-software correctly does disk cache flush, we must know the behavior of
-disk. But physical disk behavior is uncontrollable. Even software
-doesn't do the flush, the disk probably does the flush. This patch tries
-to emulate a cache in the test disk.
+Sometime disk could have tracks broken and data there is inaccessable,
+but data in other parts can be accessed in normal way. MD RAID supports
+such disks. But we don't have a good way to test it, because we can't
+control which part of a physical disk is bad. For a virtual disk, this
+can be easily controlled.
 
-All write will go to a cache first, when the cache is full, we then
-flush some data to disk storage. A flush request will flush all data of
-the cache to disk storage. A FUA write will write to memory store
-directly and revalidate data in cache. If there is a power failure (by
-writing to power attribute, 'echo 0 > disk_name/power'), we discard all
-data in the cache, but preserve the data in disk storage. Later we can
-power on the disk again as usual (write 1 to 'power' attribute), then we
-can check data integrity and very if software does everything correctly.
+This patch adds a new 'badblock' attribute. Configure it in this way:
+echo "+1-100" > xxx/badblock, this will make sector [1-100] as bad
+blocks.
+echo "-20-30" > xxx/badblock, this will make sector [20-30] good
 
-A new attritue 'cache_size' (in MB) is added to configure cache size.
+If badblocks are accessed, the nullb disk will return IO error. Other
+parts of the disk can accessed in normal way.
 
-Based on original patch from Kyungchan Koh
-
-Signed-off-by: Kyungchan Koh <kkc6196@fb.com>
 Signed-off-by: Shaohua Li <shli@fb.com>
 ---
- drivers/block/null_blk.c | 261 +++++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 231 insertions(+), 30 deletions(-)
+ drivers/block/null_blk.c | 89 +++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 88 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/block/null_blk.c b/drivers/block/null_blk.c
-index 7e6332e..e138a67 100644
+index e138a67..2032360 100644
 --- a/drivers/block/null_blk.c
 +++ b/drivers/block/null_blk.c
-@@ -58,11 +58,13 @@ struct nullb_queue {
-  * CONFIGURED:	Device has been configured and turned on. Cannot reconfigure.
-  * UP:		Device is currently on and visible in userspace.
-  * THROTTLED:	Device is being throttled.
-+ * CACHE:	Device is using a write-back cache.
-  */
- enum nullb_device_flags {
- 	NULLB_DEV_FL_CONFIGURED	= 0,
- 	NULLB_DEV_FL_UP		= 1,
- 	NULLB_DEV_FL_THROTTLED	= 2,
-+	NULLB_DEV_FL_CACHE	= 3,
- };
+@@ -14,6 +14,7 @@
+ #include <linux/hrtimer.h>
+ #include <linux/lightnvm.h>
+ #include <linux/configfs.h>
++#include <linux/badblocks.h>
  
- /*
-@@ -72,20 +74,29 @@ enum nullb_device_flags {
-  * @bitmap:	The bitmap represents which sector in the page has data.
-  *		Each bit represents one block size. For example, sector 8
-  *		will use the 7th bit
-+ * The highest 2 bits of bitmap are for special purpose. LOCK means the cache
-+ * page is being flushing to storage. FREE means the cache page is freed and
-+ * should be skipped from flushing to storage. Please see
-+ * null_make_cache_space
-  */
- struct nullb_page {
- 	struct page *page;
- 	unsigned long bitmap;
- };
-+#define NULLB_PAGE_LOCK (sizeof(unsigned long) * 8 - 1)
-+#define NULLB_PAGE_FREE (sizeof(unsigned long) * 8 - 2)
- 
- struct nullb_device {
- 	struct nullb *nullb;
- 	struct config_item item;
- 	struct radix_tree_root data; /* data stored in the disk */
-+	struct radix_tree_root cache; /* disk cache data */
+ #define SECTOR_SHIFT		9
+ #define PAGE_SECTORS_SHIFT	(PAGE_SHIFT - SECTOR_SHIFT)
+@@ -93,6 +94,7 @@ struct nullb_device {
+ 	struct radix_tree_root cache; /* disk cache data */
  	unsigned long flags; /* device flags */
-+	unsigned int curr_cache;
+ 	unsigned int curr_cache;
++	struct badblocks badblocks;
  
  	unsigned long size; /* device size in MB */
  	unsigned long completion_nsec; /* time in ns to complete a request */
-+	unsigned long cache_size; /* disk cache size in MB */
- 	unsigned int submit_queues; /* number of submission queues */
- 	unsigned int home_node; /* home node for the device */
- 	unsigned int queue_mode; /* block interface */
-@@ -114,6 +125,7 @@ struct nullb {
- 	unsigned int queue_depth;
- 	atomic_long_t cur_bytes;
- 	struct hrtimer bw_timer;
-+	unsigned long cache_flush_pos;
- 	spinlock_t lock;
+@@ -386,6 +388,59 @@ static ssize_t nullb_device_power_store(struct config_item *item,
  
- 	struct nullb_queue *queues;
-@@ -234,7 +246,7 @@ static struct nullb_device *null_alloc_dev(void);
- static void null_free_dev(struct nullb_device *dev);
- static void null_del_dev(struct nullb *nullb);
- static int null_add_dev(struct nullb_device *dev);
--static void null_free_device_storage(struct nullb_device *dev);
-+static void null_free_device_storage(struct nullb_device *dev, bool is_cache);
+ CONFIGFS_ATTR(nullb_device_, power);
  
- static inline struct nullb_device *to_nullb_device(struct config_item *item)
- {
-@@ -333,6 +345,7 @@ NULLB_DEVICE_ATTR(use_per_node_hctx, bool);
- NULLB_DEVICE_ATTR(memory_backed, bool);
- NULLB_DEVICE_ATTR(discard, bool);
- NULLB_DEVICE_ATTR(mbps, uint);
-+NULLB_DEVICE_ATTR(cache_size, ulong);
- 
- static ssize_t nullb_device_power_show(struct config_item *item, char *page)
- {
-@@ -390,6 +403,7 @@ static struct configfs_attribute *nullb_device_attrs[] = {
- 	&nullb_device_attr_memory_backed,
++static ssize_t nullb_device_badblocks_show(struct config_item *item, char *page)
++{
++	struct nullb_device *t_dev = to_nullb_device(item);
++
++	return badblocks_show(&t_dev->badblocks, page, 0);
++}
++
++static ssize_t nullb_device_badblocks_store(struct config_item *item,
++				     const char *page, size_t count)
++{
++	struct nullb_device *t_dev = to_nullb_device(item);
++	char *orig, *buf, *tmp;
++	u64 start, end;
++	int ret;
++
++	orig = kstrndup(page, count, GFP_KERNEL);
++	if (!orig)
++		return -ENOMEM;
++
++	buf = strstrip(orig);
++
++	ret = -EINVAL;
++	if (buf[0] != '+' && buf[0] != '-')
++		goto out;
++	tmp = strchr(&buf[1], '-');
++	if (!tmp)
++		goto out;
++	*tmp = '\0';
++	ret = kstrtoull(buf + 1, 0, &start);
++	if (ret)
++		goto out;
++	ret = kstrtoull(tmp + 1, 0, &end);
++	if (ret)
++		goto out;
++	ret = -EINVAL;
++	if (start > end)
++		goto out;
++	/* enable badblocks */
++	cmpxchg(&t_dev->badblocks.shift, -1, 0);
++	if (buf[0] == '+')
++		ret = badblocks_set(&t_dev->badblocks, start,
++			end - start + 1, 1);
++	else
++		ret = badblocks_clear(&t_dev->badblocks, start,
++			end - start + 1);
++	if (ret == 0)
++		ret = count;
++out:
++	kfree(orig);
++	return ret;
++}
++CONFIGFS_ATTR(nullb_device_, badblocks);
++
+ static struct configfs_attribute *nullb_device_attrs[] = {
+ 	&nullb_device_attr_size,
+ 	&nullb_device_attr_completion_nsec,
+@@ -404,6 +459,7 @@ static struct configfs_attribute *nullb_device_attrs[] = {
  	&nullb_device_attr_discard,
  	&nullb_device_attr_mbps,
-+	&nullb_device_attr_cache_size,
+ 	&nullb_device_attr_cache_size,
++	&nullb_device_attr_badblocks,
  	NULL,
  };
  
-@@ -397,7 +411,7 @@ static void nullb_device_release(struct config_item *item)
+@@ -411,6 +467,7 @@ static void nullb_device_release(struct config_item *item)
  {
  	struct nullb_device *dev = to_nullb_device(item);
  
--	null_free_device_storage(dev);
-+	null_free_device_storage(dev, false);
++	badblocks_exit(&dev->badblocks);
+ 	null_free_device_storage(dev, false);
  	null_free_dev(dev);
  }
- 
-@@ -442,7 +456,7 @@ nullb_group_drop_item(struct config_group *group, struct config_item *item)
+@@ -456,7 +513,7 @@ nullb_group_drop_item(struct config_group *group, struct config_item *item)
  
  static ssize_t memb_group_features_show(struct config_item *item, char *page)
  {
--	return snprintf(page, PAGE_SIZE, "memory_backed,discard,bandwidth\n");
-+	return snprintf(page, PAGE_SIZE, "memory_backed,discard,bandwidth,cache\n");
+-	return snprintf(page, PAGE_SIZE, "memory_backed,discard,bandwidth,cache\n");
++	return snprintf(page, PAGE_SIZE, "memory_backed,discard,bandwidth,cache,badblocks\n");
  }
  
  CONFIGFS_ATTR_RO(memb_group_, features);
-@@ -472,6 +486,11 @@ static struct configfs_subsystem nullb_subsys = {
- 	},
- };
- 
-+static inline int null_cache_active(struct nullb *nullb)
-+{
-+	return test_bit(NULLB_DEV_FL_CACHE, &nullb->dev->flags);
-+}
-+
- static struct nullb_device *null_alloc_dev(void)
- {
- 	struct nullb_device *dev;
-@@ -480,6 +499,7 @@ static struct nullb_device *null_alloc_dev(void)
- 	if (!dev)
+@@ -500,6 +557,11 @@ static struct nullb_device *null_alloc_dev(void)
  		return NULL;
  	INIT_RADIX_TREE(&dev->data, GFP_ATOMIC);
-+	INIT_RADIX_TREE(&dev->cache, GFP_ATOMIC);
+ 	INIT_RADIX_TREE(&dev->cache, GFP_ATOMIC);
++	if (badblocks_init(&dev->badblocks, 0)) {
++		kfree(dev);
++		return NULL;
++	}
++
  	dev->size = g_gb * 1024;
  	dev->completion_nsec = g_completion_nsec;
  	dev->submit_queues = g_submit_queues;
-@@ -650,18 +670,22 @@ static struct nullb_page *null_alloc_page(gfp_t gfp_flags)
- 
- static void null_free_page(struct nullb_page *t_page)
- {
-+	__set_bit(NULLB_PAGE_FREE, &t_page->bitmap);
-+	if (test_bit(NULLB_PAGE_LOCK, &t_page->bitmap))
-+		return;
- 	__free_page(t_page->page);
- 	kfree(t_page);
- }
- 
--static void null_free_sector(struct nullb *nullb, sector_t sector)
-+static void null_free_sector(struct nullb *nullb, sector_t sector,
-+	bool is_cache)
- {
- 	unsigned int sector_bit;
- 	u64 idx;
- 	struct nullb_page *t_page, *ret;
- 	struct radix_tree_root *root;
- 
--	root = &nullb->dev->data;
-+	root = is_cache ? &nullb->dev->cache : &nullb->dev->data;
- 	idx = sector >> PAGE_SECTORS_SHIFT;
- 	sector_bit = (sector & SECTOR_MASK);
- 
-@@ -673,34 +697,37 @@ static void null_free_sector(struct nullb *nullb, sector_t sector)
- 			ret = radix_tree_delete_item(root, idx, t_page);
- 			WARN_ON(ret != t_page);
- 			null_free_page(ret);
-+			if (is_cache)
-+				nullb->dev->curr_cache -= PAGE_SIZE;
+@@ -1166,6 +1228,30 @@ static blk_status_t null_handle_cmd(struct nullb_cmd *cmd)
  		}
  	}
- }
  
- static struct nullb_page *null_radix_tree_insert(struct nullb *nullb, u64 idx,
--	struct nullb_page *t_page)
-+	struct nullb_page *t_page, bool is_cache)
- {
- 	struct radix_tree_root *root;
- 
--	root = &nullb->dev->data;
-+	root = is_cache ? &nullb->dev->cache : &nullb->dev->data;
- 
- 	if (radix_tree_insert(root, idx, t_page)) {
- 		null_free_page(t_page);
- 		t_page = radix_tree_lookup(root, idx);
- 		WARN_ON(!t_page || t_page->page->index != idx);
--	}
-+	} else if (is_cache)
-+		nullb->dev->curr_cache += PAGE_SIZE;
- 
- 	return t_page;
- }
- 
--static void null_free_device_storage(struct nullb_device *dev)
-+static void null_free_device_storage(struct nullb_device *dev, bool is_cache)
- {
- 	unsigned long pos = 0;
- 	int nr_pages;
- 	struct nullb_page *ret, *t_pages[FREE_BATCH];
- 	struct radix_tree_root *root;
- 
--	root = &dev->data;
-+	root = is_cache ? &dev->cache : &dev->data;
- 
- 	do {
- 		int i;
-@@ -717,19 +744,24 @@ static void null_free_device_storage(struct nullb_device *dev)
- 
- 		pos++;
- 	} while (nr_pages == FREE_BATCH);
++	if (nullb->dev->badblocks.shift != -1) {
++		int bad_sectors;
++		sector_t sector, size, first_bad;
++		bool is_flush = true;
 +
-+	if (is_cache)
-+		dev->curr_cache = 0;
- }
- 
--static struct nullb_page *null_lookup_page(struct nullb *nullb,
--	sector_t sector, bool for_write)
-+static struct nullb_page *__null_lookup_page(struct nullb *nullb,
-+	sector_t sector, bool for_write, bool is_cache)
- {
- 	unsigned int sector_bit;
- 	u64 idx;
- 	struct nullb_page *t_page;
-+	struct radix_tree_root *root;
- 
- 	idx = sector >> PAGE_SECTORS_SHIFT;
- 	sector_bit = (sector & SECTOR_MASK);
- 
--	t_page = radix_tree_lookup(&nullb->dev->data, idx);
-+	root = is_cache ? &nullb->dev->cache : &nullb->dev->data;
-+	t_page = radix_tree_lookup(root, idx);
- 	WARN_ON(t_page && t_page->page->index != idx);
- 
- 	if (t_page && (for_write || test_bit(sector_bit, &t_page->bitmap)))
-@@ -738,13 +770,25 @@ static struct nullb_page *null_lookup_page(struct nullb *nullb,
- 	return NULL;
- }
- 
-+static struct nullb_page *null_lookup_page(struct nullb *nullb,
-+	sector_t sector, bool for_write, bool ignore_cache)
-+{
-+	struct nullb_page *page = NULL;
-+
-+	if (!ignore_cache)
-+		page = __null_lookup_page(nullb, sector, for_write, true);
-+	if (page)
-+		return page;
-+	return __null_lookup_page(nullb, sector, for_write, false);
-+}
-+
- static struct nullb_page *null_insert_page(struct nullb *nullb,
--	sector_t sector)
-+	sector_t sector, bool ignore_cache)
- {
- 	u64 idx;
- 	struct nullb_page *t_page;
- 
--	t_page = null_lookup_page(nullb, sector, true);
-+	t_page = null_lookup_page(nullb, sector, true, ignore_cache);
- 	if (t_page)
- 		return t_page;
- 
-@@ -760,7 +804,7 @@ static struct nullb_page *null_insert_page(struct nullb *nullb,
- 	spin_lock_irq(&nullb->lock);
- 	idx = sector >> PAGE_SECTORS_SHIFT;
- 	t_page->page->index = idx;
--	t_page = null_radix_tree_insert(nullb, idx, t_page);
-+	t_page = null_radix_tree_insert(nullb, idx, t_page, !ignore_cache);
- 	radix_tree_preload_end();
- 
- 	return t_page;
-@@ -768,11 +812,113 @@ static struct nullb_page *null_insert_page(struct nullb *nullb,
- 	null_free_page(t_page);
- out_lock:
- 	spin_lock_irq(&nullb->lock);
--	return null_lookup_page(nullb, sector, true);
-+	return null_lookup_page(nullb, sector, true, ignore_cache);
-+}
-+
-+static int null_flush_cache_page(struct nullb *nullb, struct nullb_page *c_page)
-+{
-+	int i;
-+	unsigned int offset;
-+	u64 idx;
-+	struct nullb_page *t_page, *ret;
-+	void *dst, *src;
-+
-+	idx = c_page->page->index;
-+
-+	t_page = null_insert_page(nullb, idx << PAGE_SECTORS_SHIFT, true);
-+
-+	__clear_bit(NULLB_PAGE_LOCK, &c_page->bitmap);
-+	if (test_bit(NULLB_PAGE_FREE, &c_page->bitmap)) {
-+		null_free_page(c_page);
-+		if (t_page && t_page->bitmap == 0) {
-+			ret = radix_tree_delete_item(&nullb->dev->data,
-+				idx, t_page);
-+			null_free_page(t_page);
++		if (dev->queue_mode == NULL_Q_BIO &&
++				bio_op(cmd->bio) != REQ_OP_FLUSH) {
++			is_flush = false;
++			sector = cmd->bio->bi_iter.bi_sector;
++			size = bio_sectors(cmd->bio);
 +		}
-+		return 0;
-+	}
-+
-+	if (!t_page)
-+		return -ENOMEM;
-+
-+	src = kmap_atomic(c_page->page);
-+	dst = kmap_atomic(t_page->page);
-+
-+	for (i = 0; i < PAGE_SECTORS;
-+			i += (nullb->dev->blocksize >> SECTOR_SHIFT)) {
-+		if (test_bit(i, &c_page->bitmap)) {
-+			offset = (i << SECTOR_SHIFT);
-+			memcpy(dst + offset, src + offset,
-+				nullb->dev->blocksize);
-+			__set_bit(i, &t_page->bitmap);
++		if (dev->queue_mode != NULL_Q_BIO &&
++				req_op(cmd->rq) != REQ_OP_FLUSH) {
++			is_flush = false;
++			sector = blk_rq_pos(cmd->rq);
++			size = blk_rq_sectors(cmd->rq);
++		}
++		if (!is_flush && badblocks_check(&nullb->dev->badblocks, sector,
++				size, &first_bad, &bad_sectors)) {
++			cmd->error = BLK_STS_IOERR;
++			goto out;
 +		}
 +	}
 +
-+	kunmap_atomic(dst);
-+	kunmap_atomic(src);
-+
-+	ret = radix_tree_delete_item(&nullb->dev->cache, idx, c_page);
-+	null_free_page(ret);
-+	nullb->dev->curr_cache -= PAGE_SIZE;
-+
-+	return 0;
-+}
-+
-+static int null_make_cache_space(struct nullb *nullb, unsigned long n)
-+{
-+	int i, err, nr_pages;
-+	struct nullb_page *c_pages[FREE_BATCH];
-+	unsigned long flushed = 0, one_round;
-+
-+again:
-+	if ((nullb->dev->cache_size * 1024 * 1024) >
-+	     nullb->dev->curr_cache + n || nullb->dev->curr_cache == 0)
-+		return 0;
-+
-+	nr_pages = radix_tree_gang_lookup(&nullb->dev->cache,
-+			(void **)c_pages, nullb->cache_flush_pos, FREE_BATCH);
-+	/*
-+	 * nullb_flush_cache_page could unlock before using the c_pages. To
-+	 * avoid race, we don't allow page free
-+	 */
-+	for (i = 0; i < nr_pages; i++) {
-+		nullb->cache_flush_pos = c_pages[i]->page->index;
-+		/*
-+		 * We found the page which is being flushed to disk by other
-+		 * threads
-+		 */
-+		if (test_bit(NULLB_PAGE_LOCK, &c_pages[i]->bitmap))
-+			c_pages[i] = NULL;
-+		else
-+			__set_bit(NULLB_PAGE_LOCK, &c_pages[i]->bitmap);
-+	}
-+
-+	one_round = 0;
-+	for (i = 0; i < nr_pages; i++) {
-+		if (c_pages[i] == NULL)
-+			continue;
-+		err = null_flush_cache_page(nullb, c_pages[i]);
-+		if (err)
-+			return err;
-+		one_round++;
-+	}
-+	flushed += one_round << PAGE_SHIFT;
-+
-+	if (n > flushed) {
-+		if (nr_pages == 0)
-+			nullb->cache_flush_pos = 0;
-+		if (one_round == 0) {
-+			/* give other threads a chance */
-+			spin_unlock_irq(&nullb->lock);
-+			spin_lock_irq(&nullb->lock);
-+		}
-+		goto again;
-+	}
-+	return 0;
- }
- 
- static int copy_to_nullb(struct nullb *nullb, struct page *source,
--	unsigned int off, sector_t sector, size_t n)
-+	unsigned int off, sector_t sector, size_t n, bool is_fua)
- {
- 	size_t temp, count = 0;
- 	unsigned int offset;
-@@ -782,8 +928,12 @@ static int copy_to_nullb(struct nullb *nullb, struct page *source,
- 	while (count < n) {
- 		temp = min_t(size_t, nullb->dev->blocksize, n - count);
- 
-+		if (null_cache_active(nullb) && !is_fua)
-+			null_make_cache_space(nullb, PAGE_SIZE);
-+
- 		offset = (sector & SECTOR_MASK) << SECTOR_SHIFT;
--		t_page = null_insert_page(nullb, sector);
-+		t_page = null_insert_page(nullb, sector,
-+			!null_cache_active(nullb) || is_fua);
- 		if (!t_page)
- 			return -ENOSPC;
- 
-@@ -795,6 +945,9 @@ static int copy_to_nullb(struct nullb *nullb, struct page *source,
- 
- 		__set_bit(sector & SECTOR_MASK, &t_page->bitmap);
- 
-+		if (is_fua)
-+			null_free_sector(nullb, sector, true);
-+
- 		count += temp;
- 		sector += temp >> SECTOR_SHIFT;
- 	}
-@@ -813,7 +966,8 @@ static int copy_from_nullb(struct nullb *nullb, struct page *dest,
- 		temp = min_t(size_t, nullb->dev->blocksize, n - count);
- 
- 		offset = (sector & SECTOR_MASK) << SECTOR_SHIFT;
--		t_page = null_lookup_page(nullb, sector, false);
-+		t_page = null_lookup_page(nullb, sector, false,
-+			!null_cache_active(nullb));
- 
- 		dst = kmap_atomic(dest);
- 		if (!t_page) {
-@@ -839,15 +993,38 @@ static void null_handle_discard(struct nullb *nullb, sector_t sector, size_t n)
- 	spin_lock_irq(&nullb->lock);
- 	while (n > 0) {
- 		temp = min_t(size_t, n, nullb->dev->blocksize);
--		null_free_sector(nullb, sector);
-+		null_free_sector(nullb, sector, false);
-+		if (null_cache_active(nullb))
-+			null_free_sector(nullb, sector, true);
- 		sector += temp >> SECTOR_SHIFT;
- 		n -= temp;
- 	}
- 	spin_unlock_irq(&nullb->lock);
- }
- 
-+static int null_handle_flush(struct nullb *nullb)
-+{
-+	int err;
-+
-+	if (!null_cache_active(nullb))
-+		return 0;
-+
-+	spin_lock_irq(&nullb->lock);
-+	while (true) {
-+		err = null_make_cache_space(nullb,
-+			nullb->dev->cache_size * 1024 * 1024);
-+		if (err || nullb->dev->curr_cache == 0)
-+			break;
-+	}
-+
-+	WARN_ON(!radix_tree_empty(&nullb->dev->cache));
-+	spin_unlock_irq(&nullb->lock);
-+	return err;
-+}
-+
- static int null_transfer(struct nullb *nullb, struct page *page,
--	unsigned int len, unsigned int off, bool is_write, sector_t sector)
-+	unsigned int len, unsigned int off, bool is_write, sector_t sector,
-+	bool is_fua)
- {
- 	int err = 0;
- 
-@@ -856,7 +1033,7 @@ static int null_transfer(struct nullb *nullb, struct page *page,
- 		flush_dcache_page(page);
- 	} else {
- 		flush_dcache_page(page);
--		err = copy_to_nullb(nullb, page, off, sector, len);
-+		err = copy_to_nullb(nullb, page, off, sector, len, is_fua);
- 	}
- 
- 	return err;
-@@ -883,7 +1060,8 @@ static int null_handle_rq(struct nullb_cmd *cmd)
- 	rq_for_each_segment(bvec, rq, iter) {
- 		len = bvec.bv_len;
- 		err = null_transfer(nullb, bvec.bv_page, len, bvec.bv_offset,
--				     op_is_write(req_op(rq)), sector);
-+				     op_is_write(req_op(rq)), sector,
-+				     req_op(rq) & REQ_FUA);
- 		if (err) {
- 			spin_unlock_irq(&nullb->lock);
- 			return err;
-@@ -917,7 +1095,8 @@ static int null_handle_bio(struct nullb_cmd *cmd)
- 	bio_for_each_segment(bvec, bio, iter) {
- 		len = bvec.bv_len;
- 		err = null_transfer(nullb, bvec.bv_page, len, bvec.bv_offset,
--				     op_is_write(bio_op(bio)), sector);
-+				     op_is_write(bio_op(bio)), sector,
-+				     bio_op(bio) & REQ_FUA);
- 		if (err) {
- 			spin_unlock_irq(&nullb->lock);
- 			return err;
-@@ -988,10 +1167,17 @@ static blk_status_t null_handle_cmd(struct nullb_cmd *cmd)
- 	}
- 
  	if (dev->memory_backed) {
--		if (dev->queue_mode == NULL_Q_BIO)
--			err = null_handle_bio(cmd);
--		else
--			err = null_handle_rq(cmd);
-+		if (dev->queue_mode == NULL_Q_BIO) {
-+			if (bio_op(cmd->bio) == REQ_OP_FLUSH)
-+				err = null_handle_flush(nullb);
-+			else
-+				err = null_handle_bio(cmd);
-+		} else {
-+			if (req_op(cmd->rq) == REQ_OP_FLUSH)
-+				err = null_handle_flush(nullb);
-+			else
-+				err = null_handle_rq(cmd);
-+		}
+ 		if (dev->queue_mode == NULL_Q_BIO) {
+ 			if (bio_op(cmd->bio) == REQ_OP_FLUSH)
+@@ -1180,6 +1266,7 @@ static blk_status_t null_handle_cmd(struct nullb_cmd *cmd)
+ 		}
  	}
  	cmd->error = errno_to_blk_status(err);
++out:
  	/* Complete IO by inline, softirq or timer */
-@@ -1333,6 +1519,8 @@ static void null_del_dev(struct nullb *nullb)
- 	if (!dev->use_lightnvm)
- 		put_disk(nullb->disk);
- 	cleanup_queues(nullb);
-+	if (null_cache_active(nullb))
-+		null_free_device_storage(nullb->dev, true);
- 	kfree(nullb);
- 	dev->nullb = NULL;
- }
-@@ -1511,7 +1699,10 @@ static void null_validate_conf(struct nullb_device *dev)
- 	/* Do memory allocation, so set blocking */
- 	if (dev->memory_backed)
- 		dev->blocking = true;
--
-+	else /* cache is meaningless */
-+		dev->cache_size = 0;
-+	dev->cache_size = min_t(unsigned long, ULONG_MAX / 1024 / 1024,
-+						dev->cache_size);
- 	dev->mbps = min_t(unsigned int, 1024 * 40, dev->mbps);
- 	/* can not stop a queue */
- 	if (dev->queue_mode == NULL_Q_BIO)
-@@ -1586,6 +1777,12 @@ static int null_add_dev(struct nullb_device *dev)
- 		nullb_setup_bwtimer(nullb);
- 	}
- 
-+	if (dev->cache_size > 0) {
-+		set_bit(NULLB_DEV_FL_CACHE, &nullb->dev->flags);
-+		blk_queue_write_cache(nullb->q, true, true);
-+		blk_queue_flush_queueable(nullb->q, true);
-+	}
-+
- 	nullb->q->queuedata = nullb;
- 	queue_flag_set_unlocked(QUEUE_FLAG_NONROT, nullb->q);
- 	queue_flag_clear_unlocked(QUEUE_FLAG_ADD_RANDOM, nullb->q);
-@@ -1636,6 +1833,10 @@ static int __init null_init(void)
- 	struct nullb *nullb;
- 	struct nullb_device *dev;
- 
-+	/* check for nullb_page.bitmap */
-+	if (sizeof(unsigned long) * 8 - 2 < (PAGE_SIZE >> SECTOR_SHIFT))
-+		return -EINVAL;
-+
- 	if (g_bs > PAGE_SIZE) {
- 		pr_warn("null_blk: invalid block size\n");
- 		pr_warn("null_blk: defaults block size to %lu\n", PAGE_SIZE);
+ 	switch (dev->irqmode) {
+ 	case NULL_IRQ_SOFTIRQ:
 -- 
 2.9.5
+
