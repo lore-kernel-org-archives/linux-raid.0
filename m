@@ -1,102 +1,101 @@
 From: Gilad Ben-Yossef <gilad@benyossef.com>
-Subject: [PATCH v5 16/19] crypto: talitos: move to generic async completion
-Date: Mon, 14 Aug 2017 18:21:26 +0300
-Message-ID: <1502724094-23305-17-git-send-email-gilad__38087.4654664241$1502724515$gmane$org@benyossef.com>
+Subject: [PATCH v5 09/19] crypto: move gcm to generic async completion
+Date: Mon, 14 Aug 2017 18:21:19 +0300
+Message-ID: <1502724094-23305-10-git-send-email-gilad__13630.7320477956$1502724529$gmane$org@benyossef.com>
 References: <1502724094-23305-1-git-send-email-gilad@benyossef.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1502724094-23305-1-git-send-email-gilad@benyossef.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Tom Lendacky <thomas.lendacky@amd.com>, Gary Hook <gary.hook@amd.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Arnaud Ebalard <arno@natisbad.org>, Matthias Brugger <matthias.bgg@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, keyrings@vger.kernel.org, linux-arm-kernel@lists
+Sender: linux-raid-owner@vger.kernel.org
+To: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Tom Lendacky <thomas.lendacky@amd.com>, Gary Hook <gary.hook@amd.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Arnaud Ebalard <arno@natisbad.org>, Matthias Brugger <matthias.bgg@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>, linux-crypto@v
 Cc: Ofir Drang <ofir.drang@arm.com>
 List-Id: linux-raid.ids
 
-The talitos driver starts several async crypto ops and  waits for their
-completions. Move it over to generic code doing the same.
+gcm is starting an async. crypto op and waiting for it complete.
+Move it over to generic code doing the same.
 
 Signed-off-by: Gilad Ben-Yossef <gilad@benyossef.com>
 ---
- drivers/crypto/talitos.c | 38 +++++---------------------------------
- 1 file changed, 5 insertions(+), 33 deletions(-)
+ crypto/gcm.c | 32 ++++++--------------------------
+ 1 file changed, 6 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/crypto/talitos.c b/drivers/crypto/talitos.c
-index 79791c6..194a307 100644
---- a/drivers/crypto/talitos.c
-+++ b/drivers/crypto/talitos.c
-@@ -2037,22 +2037,6 @@ static int ahash_import(struct ahash_request *areq, const void *in)
- 	return 0;
- }
+diff --git a/crypto/gcm.c b/crypto/gcm.c
+index 3841b5e..fb923a5 100644
+--- a/crypto/gcm.c
++++ b/crypto/gcm.c
+@@ -16,7 +16,6 @@
+ #include <crypto/scatterwalk.h>
+ #include <crypto/hash.h>
+ #include "internal.h"
+-#include <linux/completion.h>
+ #include <linux/err.h>
+ #include <linux/init.h>
+ #include <linux/kernel.h>
+@@ -78,11 +77,6 @@ struct crypto_gcm_req_priv_ctx {
+ 	} u;
+ };
  
--struct keyhash_result {
--	struct completion completion;
+-struct crypto_gcm_setkey_result {
 -	int err;
+-	struct completion completion;
 -};
 -
--static void keyhash_complete(struct crypto_async_request *req, int err)
+ static struct {
+ 	u8 buf[16];
+ 	struct scatterlist sg;
+@@ -98,17 +92,6 @@ static inline struct crypto_gcm_req_priv_ctx *crypto_gcm_reqctx(
+ 	return (void *)PTR_ALIGN((u8 *)aead_request_ctx(req), align + 1);
+ }
+ 
+-static void crypto_gcm_setkey_done(struct crypto_async_request *req, int err)
 -{
--	struct keyhash_result *res = req->data;
+-	struct crypto_gcm_setkey_result *result = req->data;
 -
 -	if (err == -EINPROGRESS)
 -		return;
 -
--	res->err = err;
--	complete(&res->completion);
+-	result->err = err;
+-	complete(&result->completion);
 -}
 -
- static int keyhash(struct crypto_ahash *tfm, const u8 *key, unsigned int keylen,
- 		   u8 *hash)
+ static int crypto_gcm_setkey(struct crypto_aead *aead, const u8 *key,
+ 			     unsigned int keylen)
  {
-@@ -2060,10 +2044,10 @@ static int keyhash(struct crypto_ahash *tfm, const u8 *key, unsigned int keylen,
+@@ -119,7 +102,7 @@ static int crypto_gcm_setkey(struct crypto_aead *aead, const u8 *key,
+ 		be128 hash;
+ 		u8 iv[16];
  
- 	struct scatterlist sg[1];
- 	struct ahash_request *req;
--	struct keyhash_result hresult;
-+	struct crypto_wait wait;
- 	int ret;
+-		struct crypto_gcm_setkey_result result;
++		struct crypto_wait wait;
  
--	init_completion(&hresult.completion);
-+	crypto_init_wait(&wait);
+ 		struct scatterlist sg[1];
+ 		struct skcipher_request req;
+@@ -140,21 +123,18 @@ static int crypto_gcm_setkey(struct crypto_aead *aead, const u8 *key,
+ 	if (!data)
+ 		return -ENOMEM;
  
- 	req = ahash_request_alloc(tfm, GFP_KERNEL);
- 	if (!req)
-@@ -2072,25 +2056,13 @@ static int keyhash(struct crypto_ahash *tfm, const u8 *key, unsigned int keylen,
- 	/* Keep tfm keylen == 0 during hash of the long key */
- 	ctx->keylen = 0;
- 	ahash_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG,
--				   keyhash_complete, &hresult);
-+				   crypto_req_done, &wait);
+-	init_completion(&data->result.completion);
++	crypto_init_wait(&data->wait);
+ 	sg_init_one(data->sg, &data->hash, sizeof(data->hash));
+ 	skcipher_request_set_tfm(&data->req, ctr);
+ 	skcipher_request_set_callback(&data->req, CRYPTO_TFM_REQ_MAY_SLEEP |
+ 						  CRYPTO_TFM_REQ_MAY_BACKLOG,
+-				      crypto_gcm_setkey_done,
+-				      &data->result);
++				      crypto_req_done,
++				      &data->wait);
+ 	skcipher_request_set_crypt(&data->req, data->sg, data->sg,
+ 				   sizeof(data->hash), data->iv);
  
- 	sg_init_one(&sg[0], key, keylen);
- 
- 	ahash_request_set_crypt(req, sg, hash, keylen);
--	ret = crypto_ahash_digest(req);
--	switch (ret) {
--	case 0:
--		break;
--	case -EINPROGRESS:
--	case -EBUSY:
--		ret = wait_for_completion_interruptible(
--			&hresult.completion);
--		if (!ret)
--			ret = hresult.err;
--		break;
--	default:
--		break;
+-	err = crypto_skcipher_encrypt(&data->req);
+-	if (err == -EINPROGRESS || err == -EBUSY) {
+-		wait_for_completion(&data->result.completion);
+-		err = data->result.err;
 -	}
-+	ret = crypto_wait_req(crypto_ahash_digest(req), &wait);
-+
- 	ahash_request_free(req);
++	err = crypto_wait_req(crypto_skcipher_encrypt(&data->req),
++							&data->wait);
  
- 	return ret;
+ 	if (err)
+ 		goto out;
 -- 
 2.1.4
+
