@@ -1,75 +1,140 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: [PATCH V2 0/9] nullb: extend nullb for destructive tests
-Date: Mon, 14 Aug 2017 15:04:51 -0700
-Message-ID: <cover.1502746933.git.shli@fb.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
+Subject: [PATCH V2 6/9] nullb: support discard
+Date: Mon, 14 Aug 2017 15:04:57 -0700
+Message-ID: <d49a25c655fa7b2df85ea0b605f30b38f13e5dac.1502746933.git.shli@fb.com>
+References: <cover.1502746933.git.shli@fb.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <cover.1502746933.git.shli@fb.com>
+In-Reply-To: <cover.1502746933.git.shli@fb.com>
+References: <cover.1502746933.git.shli@fb.com>
+Sender: linux-block-owner@vger.kernel.org
 To: linux-block@vger.kernel.org, linux-raid@vger.kernel.org
 Cc: kernel-team@fb.com, Kyungchan Koh <kyungchan.koh@gmail.com>, Shaohua Li <shli@fb.com>
 List-Id: linux-raid.ids
 
 From: Shaohua Li <shli@fb.com>
 
-In testing software RAID, I usually found it's hard to cover specific cases.
-RAID is supposed to work even disk is in semi good state, for example, some
-sectors are broken. Since we can't control the behavior of hardware, it's
-difficult to create test suites to do the destructive tests. But we can control
-the behavior of software, software based disk is an obvious choice for such
-tests. While we already have several software based disks for testing (eg,
-null_blk, scsi_debug), none is for destructive testing. Per Jens's request, we
-extend null_blk to do the destructive testing.
+discard makes sense for memory backed disk. And also it's useful to test
+if upper layer supports dicard correctly.
 
-To make this happen, we create new configfs interface for null_blk and added
-some test features in null_blk:
+User configures 'discard' attribute to enable/disable dicard support.
 
-- Bandwidth control. A raid array consists of several disks. The disks could
-  run in different speed, for example, one disk is SSD and the other is HD.
-  Actually raid1 has a feature called write behind just for this. To test such
-  raid1 feature, we'd like the disks speed could be controlled.
-- Emulate disk cache. Software must flush disk cache to guarantee data is
-  safely stored in media after a power failure. To verify if software works
-  well, we can't simply use physical disk, because even software doesn't flush
-  cache, the hardware probably will flush the cache. With a software
-  implementation of disk cache, we can fully control how we flush disk cache in a
-  power failure.
-- Badblock. If only part of a disk is broken, software raid continues working.
-  To test if software raid works well, disks must include some broken parts or
-  bad blocks. Bad blocks can be easily implemented in software.
+Based on original patch from Kyungchan Koh
 
-To maintain compatibility, old null_blk module parameter interface is kept,
-user can still create disks with it. Those disks aren't controlled by configfs
-interface. Configfs interface will create/delete new disks. New features added
-in the patchset will only be available with configfs interface.
+Signed-off-by: Kyungchan Koh <kkc6196@fb.com>
+Signed-off-by: Shaohua Li <shli@fb.com>
+---
+ drivers/block/null_blk.c | 42 +++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 41 insertions(+), 1 deletion(-)
 
-While this is inspired by software raid testing, the interface  is very
-flexible for extension. We can easily add new features into the driver. The
-interface is configfs, which can be configured with a shell script. There is a
-'features' attribute exposing all supported features. By checking this, we
-don't need to worry about compability issues. For configuration details, please
-check the second patch.
-
-This is Kyungchan Koh's intern project. I made some changes and adopted to
-null_blk, all errors are mine. You are more than welcomed to test and add new
-features!
-
-Thanks,
-Shaohua
-
-Shaohua Li (9):
-  nullb: factor disk parameters
-  nullb: add configfs interface
-  nullb: add interface to power on disk
-  nullb: use ida to manage index
-  nullb: support memory backed store
-  nullb: support discard
-  nullb: bandwidth control
-  nullb: emulate cache
-  nullb: badbblocks support
-
- drivers/block/Kconfig    |    1 +
- drivers/block/null_blk.c | 1303 ++++++++++++++++++++++++++++++++++++++++++----
- 2 files changed, 1214 insertions(+), 90 deletions(-)
-
+diff --git a/drivers/block/null_blk.c b/drivers/block/null_blk.c
+index 45e0b56..1f3cf25 100644
+--- a/drivers/block/null_blk.c
++++ b/drivers/block/null_blk.c
+@@ -88,6 +88,7 @@ struct nullb_device {
+ 	bool use_per_node_hctx; /* use per-node allocation for hardware context */
+ 	bool power; /* power on/off the device */
+ 	bool memory_backed; /* if data is stored in memory */
++	bool discard; /* if support discard */
+ };
+ 
+ struct nullb {
+@@ -318,6 +319,7 @@ NULLB_DEVICE_ATTR(use_lightnvm, bool);
+ NULLB_DEVICE_ATTR(blocking, bool);
+ NULLB_DEVICE_ATTR(use_per_node_hctx, bool);
+ NULLB_DEVICE_ATTR(memory_backed, bool);
++NULLB_DEVICE_ATTR(discard, bool);
+ 
+ static ssize_t nullb_device_power_show(struct config_item *item, char *page)
+ {
+@@ -373,6 +375,7 @@ static struct configfs_attribute *nullb_device_attrs[] = {
+ 	&nullb_device_attr_use_per_node_hctx,
+ 	&nullb_device_attr_power,
+ 	&nullb_device_attr_memory_backed,
++	&nullb_device_attr_discard,
+ 	NULL,
+ };
+ 
+@@ -425,7 +428,7 @@ nullb_group_drop_item(struct config_group *group, struct config_item *item)
+ 
+ static ssize_t memb_group_features_show(struct config_item *item, char *page)
+ {
+-	return snprintf(page, PAGE_SIZE, "memory_backed\n");
++	return snprintf(page, PAGE_SIZE, "memory_backed,discard\n");
+ }
+ 
+ CONFIGFS_ATTR_RO(memb_group_, features);
+@@ -815,6 +818,20 @@ static int copy_from_nullb(struct nullb *nullb, struct page *dest,
+ 	return 0;
+ }
+ 
++static void null_handle_discard(struct nullb *nullb, sector_t sector, size_t n)
++{
++	size_t temp;
++
++	spin_lock_irq(&nullb->lock);
++	while (n > 0) {
++		temp = min_t(size_t, n, nullb->dev->blocksize);
++		null_free_sector(nullb, sector);
++		sector += temp >> SECTOR_SHIFT;
++		n -= temp;
++	}
++	spin_unlock_irq(&nullb->lock);
++}
++
+ static int null_transfer(struct nullb *nullb, struct page *page,
+ 	unsigned int len, unsigned int off, bool is_write, sector_t sector)
+ {
+@@ -843,6 +860,11 @@ static int null_handle_rq(struct nullb_cmd *cmd)
+ 
+ 	sector = blk_rq_pos(rq);
+ 
++	if (req_op(rq) == REQ_OP_DISCARD) {
++		null_handle_discard(nullb, sector, blk_rq_bytes(rq));
++		return 0;
++	}
++
+ 	spin_lock_irq(&nullb->lock);
+ 	rq_for_each_segment(bvec, rq, iter) {
+ 		len = bvec.bv_len;
+@@ -871,6 +893,12 @@ static int null_handle_bio(struct nullb_cmd *cmd)
+ 
+ 	sector = bio->bi_iter.bi_sector;
+ 
++	if (bio_op(bio) == REQ_OP_DISCARD) {
++		null_handle_discard(nullb, sector,
++			bio_sectors(bio) << SECTOR_SHIFT);
++		return 0;
++	}
++
+ 	spin_lock_irq(&nullb->lock);
+ 	bio_for_each_segment(bvec, bio, iter) {
+ 		len = bvec.bv_len;
+@@ -1207,6 +1235,16 @@ static void null_del_dev(struct nullb *nullb)
+ 	dev->nullb = NULL;
+ }
+ 
++static void null_config_discard(struct nullb *nullb)
++{
++	if (nullb->dev->discard == false)
++		return;
++	nullb->q->limits.discard_granularity = nullb->dev->blocksize;
++	nullb->q->limits.discard_alignment = nullb->dev->blocksize;
++	blk_queue_max_discard_sectors(nullb->q, UINT_MAX >> 9);
++	queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, nullb->q);
++}
++
+ static int null_open(struct block_device *bdev, fmode_t mode)
+ {
+ 	return 0;
+@@ -1448,6 +1486,8 @@ static int null_add_dev(struct nullb_device *dev)
+ 	blk_queue_logical_block_size(nullb->q, dev->blocksize);
+ 	blk_queue_physical_block_size(nullb->q, dev->blocksize);
+ 
++	null_config_discard(nullb);
++
+ 	sprintf(nullb->disk_name, "nullb%d", nullb->index);
+ 
+ 	if (dev->use_lightnvm)
 -- 
 2.9.5
-
