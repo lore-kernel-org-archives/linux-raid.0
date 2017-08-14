@@ -1,66 +1,48 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] raid5: remove raid5_build_block
-Date: Mon, 14 Aug 2017 09:20:20 -0700
-Message-ID: <20170814162020.wkesdge7oego5xng@kernel.org>
-References: <1502352737-26945-1-git-send-email-gqjiang@suse.com>
+Subject: [GIT PULL] MD update for 4.13-rc5
+Date: Mon, 14 Aug 2017 09:41:52 -0700
+Message-ID: <20170814164152.mjbewehyeytyfawd@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1502352737-26945-1-git-send-email-gqjiang@suse.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>
-Cc: linux-raid@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Aug 10, 2017 at 04:12:17PM +0800, Guoqing Jiang wrote:
-> Now raid5_build_block is just called to set the
-> sector of r5dev, raid5_compute_blocknr can be
-> used directly for the purpose.
-> 
-> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+Hi,
+Please pull MD fixes. This update fixes several bugs:
+- Fixes a rcu stall issue introduced in 4.12 by Neil Brown.
+- Fixes two raid5 cache race conditions by Song Liu.
 
-Applied, thanks!
-> ---
->  drivers/md/raid5.c | 11 +----------
->  1 file changed, 1 insertion(+), 10 deletions(-)
-> 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 356cd9c..41143f9 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -491,7 +491,6 @@ static int grow_buffers(struct stripe_head *sh, gfp_t gfp)
->  	return 0;
->  }
->  
-> -static void raid5_build_block(struct stripe_head *sh, int i, int previous);
->  static void stripe_set_idx(sector_t stripe, struct r5conf *conf, int previous,
->  			    struct stripe_head *sh);
->  
-> @@ -527,7 +526,7 @@ static void init_stripe(struct stripe_head *sh, sector_t sector, int previous)
->  			WARN_ON(1);
->  		}
->  		dev->flags = 0;
-> -		raid5_build_block(sh, i, previous);
-> +		dev->sector = raid5_compute_blocknr(sh, i, previous);
->  	}
->  	if (read_seqcount_retry(&conf->gen_lock, seq))
->  		goto retry;
-> @@ -2663,14 +2662,6 @@ static void raid5_end_write_request(struct bio *bi)
->  		raid5_release_stripe(sh->batch_head);
->  }
->  
-> -static void raid5_build_block(struct stripe_head *sh, int i, int previous)
-> -{
-> -	struct r5dev *dev = &sh->dev[i];
-> -
-> -	dev->flags = 0;
-> -	dev->sector = raid5_compute_blocknr(sh, i, previous);
-> -}
-> -
->  static void raid5_error(struct mddev *mddev, struct md_rdev *rdev)
->  {
->  	char b[BDEVNAME_SIZE];
-> -- 
-> 2.10.0
-> 
+Thanks,
+Shaohua
+
+The following changes since commit 16f73eb02d7e1765ccab3d2018e0bd98eb93d973:
+
+  Linux 4.13-rc3 (2017-07-30 12:40:36 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git tags/md/4.13-rc5
+
+for you to fetch changes up to afc1f55ca44e257f69da8f43e0714a76686ae8d1:
+
+  MD: not clear ->safemode for external metadata array (2017-08-11 20:42:06 -0700)
+
+----------------------------------------------------------------
+NeilBrown (2):
+      md: always clear ->safemode when md_check_recovery gets the mddev lock.
+      md: fix test in md_write_start()
+
+Shaohua Li (1):
+      MD: not clear ->safemode for external metadata array
+
+Song Liu (2):
+      md/r5cache: call mddev_lock/unlock() in r5c_journal_mode_set
+      md/r5cache: fix io_unit handling in r5l_log_endio()
+
+ drivers/md/md.c          |  5 +++-
+ drivers/md/raid5-cache.c | 61 ++++++++++++++++++++++++++++++++++++------------
+ 2 files changed, 50 insertions(+), 16 deletions(-)
