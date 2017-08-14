@@ -1,38 +1,133 @@
-From: Jack Wang <jack.wang.usish@gmail.com>
-Subject: Re: raid1 lockups on 4.12.x
-Date: Mon, 14 Aug 2017 10:40:02 +0200
-Message-ID: <CA+res+QDmtOZTNG_Unegf_zY+mSvX4Ce7qTLye1gb__W7xYhNw@mail.gmail.com>
-References: <20170731183616.GD22429@hostway.ca> <20170814070844.GA10721@hostway.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: Gilad Ben-Yossef <gilad@benyossef.com>
+Subject: [PATCH v5 01/19] crypto: change transient busy return code to -EAGAIN
+Date: Mon, 14 Aug 2017 18:21:11 +0300
+Message-ID: <1502724094-23305-2-git-send-email-gilad__25648.6842096367$1502724133$gmane$org@benyossef.com>
+References: <1502724094-23305-1-git-send-email-gilad@benyossef.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170814070844.GA10721@hostway.ca>
+In-Reply-To: <1502724094-23305-1-git-send-email-gilad@benyossef.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Simon Kirby <sim@hostway.ca>
-Cc: linux-raid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.com>, Shaohua Li <shli@kernel.org>
+To: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Tom Lendacky <thomas.lendacky@amd.com>, Gary Hook <gary.hook@amd.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Arnaud Ebalard <arno@natisbad.org>, Matthias Brugger <matthias.bgg@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>, linux-crypto@v
+Cc: Ofir Drang <ofir.drang@arm.com>
 List-Id: linux-raid.ids
 
-2017-08-14 9:08 GMT+02:00 Simon Kirby <sim@hostway.ca>:
-> On Mon, Jul 31, 2017 at 11:36:16AM -0700, Simon Kirby wrote:
->
->> Hello,
->>
->> I recently upgraded two old boxes to 4.12.3 only to find that they
->> started to lock up several times per day. I upgraded to 4.12.4 and the
->> problem persisted. Downgrading to 4.11.11 seems to have stopped the
->> issue.
->
-> I am still seeing this, even on 4.12.6, now also on a home server using
-> RAID 1, even with the "mddev->in_sync || !mddev->sync_checkers" condition
-> fixed to drop the '!':
+The crypto API was using the -EBUSY return value to indicate
+both a hard failure to submit a crypto operation into a
+transformation provider when the latter was busy and the backlog
+mechanism was not enabled as well as a notification that the
+operation was queued into the backlog when the backlog mechanism
+was enabled.
 
-Hi,
+Having the same return code indicate two very different conditions
+depending on a flag is both error prone and requires extra runtime
+check like the following to discern between the cases:
 
-Neil and Shaohua have 3 fixes in this regards:
+	if (err == -EINPROGRESS ||
+	    (err == -EBUSY && (ahash_request_flags(req) &
+			       CRYPTO_TFM_REQ_MAY_BACKLOG)))
 
-https://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git/commit/?h=for-next&id=33182d15c6bf182f7ae32a66ea4a547d979cd6d7
-https://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git/commit/?h=for-next&id=81fe48e9aa00bdd509bd3c37a76d1132da6b9f09
-https://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git/commit/?h=for-next&id=afc1f55ca44e257f69da8f43e0714a76686ae8d1
+This patch changes the return code used to indicate a crypto op
+failed due to the transformation provider being transiently busy
+to -EAGAIN.
 
-Hope this helps!
-Jack
+Signed-off-by: Gilad Ben-Yossef <gilad@benyossef.com>
+---
+ crypto/algapi.c     |  6 ++++--
+ crypto/algif_hash.c | 20 +++++++++++++++++---
+ crypto/cryptd.c     |  4 +---
+ 3 files changed, 22 insertions(+), 8 deletions(-)
+
+diff --git a/crypto/algapi.c b/crypto/algapi.c
+index aa699ff..916bee3 100644
+--- a/crypto/algapi.c
++++ b/crypto/algapi.c
+@@ -897,9 +897,11 @@ int crypto_enqueue_request(struct crypto_queue *queue,
+ 	int err = -EINPROGRESS;
+ 
+ 	if (unlikely(queue->qlen >= queue->max_qlen)) {
+-		err = -EBUSY;
+-		if (!(request->flags & CRYPTO_TFM_REQ_MAY_BACKLOG))
++		if (!(request->flags & CRYPTO_TFM_REQ_MAY_BACKLOG)) {
++			err = -EAGAIN;
+ 			goto out;
++		}
++		err = -EBUSY;
+ 		if (queue->backlog == &queue->list)
+ 			queue->backlog = &request->list;
+ 	}
+diff --git a/crypto/algif_hash.c b/crypto/algif_hash.c
+index 5e92bd2..3b3c154 100644
+--- a/crypto/algif_hash.c
++++ b/crypto/algif_hash.c
+@@ -39,6 +39,20 @@ struct algif_hash_tfm {
+ 	bool has_key;
+ };
+ 
++/* Previous versions of crypto_* ops used to return -EBUSY
++ * rather than -EAGAIN to indicate being tied up. The in
++ * kernel API changed but we don't want to break the user
++ * space API. As only the hash user interface exposed this
++ * error ever to the user, do the translation here.
++ */
++static inline int crypto_user_err(int err)
++{
++	if (err == -EAGAIN)
++		return -EBUSY;
++
++	return err;
++}
++
+ static int hash_alloc_result(struct sock *sk, struct hash_ctx *ctx)
+ {
+ 	unsigned ds;
+@@ -136,7 +150,7 @@ static int hash_sendmsg(struct socket *sock, struct msghdr *msg,
+ unlock:
+ 	release_sock(sk);
+ 
+-	return err ?: copied;
++	return err ? crypto_user_err(err) : copied;
+ }
+ 
+ static ssize_t hash_sendpage(struct socket *sock, struct page *page,
+@@ -188,7 +202,7 @@ static ssize_t hash_sendpage(struct socket *sock, struct page *page,
+ unlock:
+ 	release_sock(sk);
+ 
+-	return err ?: size;
++	return err ? crypto_user_err(err) : size;
+ }
+ 
+ static int hash_recvmsg(struct socket *sock, struct msghdr *msg, size_t len,
+@@ -236,7 +250,7 @@ static int hash_recvmsg(struct socket *sock, struct msghdr *msg, size_t len,
+ 	hash_free_result(sk, ctx);
+ 	release_sock(sk);
+ 
+-	return err ?: len;
++	return err ? crypto_user_err(err) : len;
+ }
+ 
+ static int hash_accept(struct socket *sock, struct socket *newsock, int flags,
+diff --git a/crypto/cryptd.c b/crypto/cryptd.c
+index 0508c48..d1dbdce 100644
+--- a/crypto/cryptd.c
++++ b/crypto/cryptd.c
+@@ -137,16 +137,14 @@ static int cryptd_enqueue_request(struct cryptd_queue *queue,
+ 	int cpu, err;
+ 	struct cryptd_cpu_queue *cpu_queue;
+ 	atomic_t *refcnt;
+-	bool may_backlog;
+ 
+ 	cpu = get_cpu();
+ 	cpu_queue = this_cpu_ptr(queue->cpu_queue);
+ 	err = crypto_enqueue_request(&cpu_queue->queue, request);
+ 
+ 	refcnt = crypto_tfm_ctx(request->tfm);
+-	may_backlog = request->flags & CRYPTO_TFM_REQ_MAY_BACKLOG;
+ 
+-	if (err == -EBUSY && !may_backlog)
++	if (err == -EAGAIN)
+ 		goto out_put_cpu;
+ 
+ 	queue_work_on(cpu, kcrypto_wq, &cpu_queue->work);
+-- 
+2.1.4
+
