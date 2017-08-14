@@ -1,103 +1,125 @@
-From: Gilad Ben-Yossef <gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
-Subject: [PATCH v5 18/19] crypto: mediatek: move to generic async completion
-Date: Mon, 14 Aug 2017 18:21:28 +0300
-Message-ID: <1502724094-23305-19-git-send-email-gilad__34231.9915107966$1502724621$gmane$org@benyossef.com>
+From: Gilad Ben-Yossef <gilad@benyossef.com>
+Subject: [PATCH v5 05/19] crypto: introduce crypto wait for async op
+Date: Mon, 14 Aug 2017 18:21:15 +0300
+Message-ID: <1502724094-23305-6-git-send-email-gilad__29807.1456993513$1502724622$gmane$org@benyossef.com>
 References: <1502724094-23305-1-git-send-email-gilad@benyossef.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <1502724094-23305-1-git-send-email-gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
-List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-To: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tom Lendacky <thomas.lendacky-5C7GfCeVMHo@public.gmane.org>, Gary Hook <gary.hook-5C7GfCeVMHo@public.gmane.org>, Boris Brezillon <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Arnaud Ebalard <arno-LkuqDEemtHBg9hUCZPvPmw@public.gmane.org>, Matthias Brugger <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alasdair Kergon <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Steve French <sfrench-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, "Theodore Y. Ts'o" <tytso-3s7WtUTddSA@public.gmane.org>, Jaegeuk Kim <jaegeuk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Dmitry Kasatkin <dmitry.kasatkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, keyrings-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel@lists
-Cc: Ofir Drang <ofir.drang-5wv7dgnIgG8@public.gmane.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1502724094-23305-1-git-send-email-gilad@benyossef.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Tom Lendacky <thomas.lendacky@amd.com>, Gary Hook <gary.hook@amd.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Arnaud Ebalard <arno@natisbad.org>, Matthias Brugger <matthias.bgg@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>, linux-crypto@v
+Cc: Ofir Drang <ofir.drang@arm.com>, Eric Biggers <ebiggers3@gmail.com>
 List-Id: linux-raid.ids
 
-The mediatek driver starts several async crypto ops and waits for their
-completions. Move it over to generic code doing the same.
+Invoking a possibly async. crypto op and waiting for completion
+while correctly handling backlog processing is a common task
+in the crypto API implementation and outside users of it.
 
-Signed-off-by: Gilad Ben-Yossef <gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
+This patch adds a generic implementation for doing so in
+preparation for using it across the board instead of hand
+rolled versions.
+
+Signed-off-by: Gilad Ben-Yossef <gilad@benyossef.com>
+CC: Eric Biggers <ebiggers3@gmail.com>
 ---
- drivers/crypto/mediatek/mtk-aes.c | 31 +++++--------------------------
- 1 file changed, 5 insertions(+), 26 deletions(-)
+ crypto/api.c           | 13 +++++++++++++
+ include/linux/crypto.h | 41 +++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 54 insertions(+)
 
-diff --git a/drivers/crypto/mediatek/mtk-aes.c b/drivers/crypto/mediatek/mtk-aes.c
-index 9e845e8..e2c7c95 100644
---- a/drivers/crypto/mediatek/mtk-aes.c
-+++ b/drivers/crypto/mediatek/mtk-aes.c
-@@ -137,11 +137,6 @@ struct mtk_aes_gcm_ctx {
- 	struct crypto_skcipher *ctr;
- };
+diff --git a/crypto/api.c b/crypto/api.c
+index 941cd4c..2a2479d 100644
+--- a/crypto/api.c
++++ b/crypto/api.c
+@@ -24,6 +24,7 @@
+ #include <linux/sched/signal.h>
+ #include <linux/slab.h>
+ #include <linux/string.h>
++#include <linux/completion.h>
+ #include "internal.h"
  
--struct mtk_aes_gcm_setkey_result {
--	int err;
--	struct completion completion;
--};
--
- struct mtk_aes_drv {
- 	struct list_head dev_list;
- 	/* Device list lock */
-@@ -936,17 +931,6 @@ static int mtk_aes_gcm_crypt(struct aead_request *req, u64 mode)
- 				    &req->base);
+ LIST_HEAD(crypto_alg_list);
+@@ -595,5 +596,17 @@ int crypto_has_alg(const char *name, u32 type, u32 mask)
+ }
+ EXPORT_SYMBOL_GPL(crypto_has_alg);
+ 
++void crypto_req_done(struct crypto_async_request *req, int err)
++{
++	struct crypto_wait *wait = req->data;
++
++	if (err == -EINPROGRESS)
++		return;
++
++	wait->err = err;
++	complete(&wait->completion);
++}
++EXPORT_SYMBOL_GPL(crypto_req_done);
++
+ MODULE_DESCRIPTION("Cryptographic core API");
+ MODULE_LICENSE("GPL");
+diff --git a/include/linux/crypto.h b/include/linux/crypto.h
+index 84da997..bb00186 100644
+--- a/include/linux/crypto.h
++++ b/include/linux/crypto.h
+@@ -24,6 +24,7 @@
+ #include <linux/slab.h>
+ #include <linux/string.h>
+ #include <linux/uaccess.h>
++#include <linux/completion.h>
+ 
+ /*
+  * Autoloaded crypto modules should only use a prefixed name to avoid allowing
+@@ -468,6 +469,45 @@ struct crypto_alg {
+ } CRYPTO_MINALIGN_ATTR;
+ 
+ /*
++ * A helper struct for waiting for completion of async crypto ops
++ */
++struct crypto_wait {
++	struct completion completion;
++	int err;
++};
++
++/*
++ * Macro for declaring a crypto op async wait object on stack
++ */
++#define DECLARE_CRYPTO_WAIT(_wait) \
++	struct crypto_wait _wait = { \
++		COMPLETION_INITIALIZER_ONSTACK((_wait).completion), 0 }
++
++/*
++ * Async ops completion helper functioons
++ */
++void crypto_req_done(struct crypto_async_request *req, int err);
++
++static inline int crypto_wait_req(int err, struct crypto_wait *wait)
++{
++	switch (err) {
++	case -EINPROGRESS:
++	case -EBUSY:
++		wait_for_completion(&wait->completion);
++		reinit_completion(&wait->completion);
++		err = wait->err;
++		break;
++	};
++
++	return err;
++}
++
++static inline void crypto_init_wait(struct crypto_wait *wait)
++{
++	init_completion(&wait->completion);
++}
++
++/*
+  * Algorithm registration interface.
+  */
+ int crypto_register_alg(struct crypto_alg *alg);
+@@ -1604,5 +1644,6 @@ static inline int crypto_comp_decompress(struct crypto_comp *tfm,
+ 						    src, slen, dst, dlen);
  }
  
--static void mtk_gcm_setkey_done(struct crypto_async_request *req, int err)
--{
--	struct mtk_aes_gcm_setkey_result *result = req->data;
--
--	if (err == -EINPROGRESS)
--		return;
--
--	result->err = err;
--	complete(&result->completion);
--}
--
- /*
-  * Because of the hardware limitation, we need to pre-calculate key(H)
-  * for the GHASH operation. The result of the encryption operation
-@@ -962,7 +946,7 @@ static int mtk_aes_gcm_setkey(struct crypto_aead *aead, const u8 *key,
- 		u32 hash[4];
- 		u8 iv[8];
- 
--		struct mtk_aes_gcm_setkey_result result;
-+		struct crypto_wait wait;
- 
- 		struct scatterlist sg[1];
- 		struct skcipher_request req;
-@@ -1002,22 +986,17 @@ static int mtk_aes_gcm_setkey(struct crypto_aead *aead, const u8 *key,
- 	if (!data)
- 		return -ENOMEM;
- 
--	init_completion(&data->result.completion);
-+	crypto_init_wait(&data->wait);
- 	sg_init_one(data->sg, &data->hash, AES_BLOCK_SIZE);
- 	skcipher_request_set_tfm(&data->req, ctr);
- 	skcipher_request_set_callback(&data->req, CRYPTO_TFM_REQ_MAY_SLEEP |
- 				      CRYPTO_TFM_REQ_MAY_BACKLOG,
--				      mtk_gcm_setkey_done, &data->result);
-+				      crypto_req_done, &data->wait);
- 	skcipher_request_set_crypt(&data->req, data->sg, data->sg,
- 				   AES_BLOCK_SIZE, data->iv);
- 
--	err = crypto_skcipher_encrypt(&data->req);
--	if (err == -EINPROGRESS || err == -EBUSY) {
--		err = wait_for_completion_interruptible(
--			&data->result.completion);
--		if (!err)
--			err = data->result.err;
--	}
-+	err = crypto_wait_req(crypto_skcipher_encrypt(&data->req),
-+			      &data->wait);
- 	if (err)
- 		goto out;
++
+ #endif	/* _LINUX_CRYPTO_H */
  
 -- 
 2.1.4
+
