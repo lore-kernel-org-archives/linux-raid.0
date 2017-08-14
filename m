@@ -1,7 +1,7 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: [PATCH V2 2/9] nullb: add configfs interface
-Date: Mon, 14 Aug 2017 15:04:53 -0700
-Message-ID: <156192ac0cf3a91e1fb112514a8682ecf5fb3f11.1502746933.git.shli@fb.com>
+Subject: [PATCH V2 3/9] nullb: add interface to power on disk
+Date: Mon, 14 Aug 2017 15:04:54 -0700
+Message-ID: <d48ba9601b8b739384714264644a5764bdefa0d4.1502746933.git.shli@fb.com>
 References: <cover.1502746933.git.shli@fb.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <cover.1502746933.git.shli@fb.com>
@@ -14,327 +14,169 @@ List-Id: linux-raid.ids
 
 From: Shaohua Li <shli@fb.com>
 
-Add configfs interface for nullb. configfs interface is more flexible
-and easy to configure in a per-disk basis.
+The device created in nullb configfs interface isn't power on by
+default. After user configures the device, user can do 'echo 1 >
+xxx/nullb/device_name/power' to power on the device, which will create a
+disk. the xxx/nullb/device_name/index is the disk index, so if the index
+is 2, the new created disk should be named as /dev/nullb2. Note, the
+'index' is only valid after disk is power on.
 
-Configuration is something like this:
-mount -t configfs none /mnt
+'echo 0 > xxx/nullb/device_name/power' will remove the disk. Note, this
+doesn't remove the device. To remove the device, user should do 'rmdir
+xxx/nullb/device_name'. Removing the device will remove the disk too.
 
-Checking which features the driver supports:
-cat /mnt/nullb/features
-
-The 'features' attribute is for future extension. We probably will add
-new features into the driver, userspace can check this attribute to find
-the supported features.
-
-Create/remove a device:
-mkdir/rmdir /mnt/nullb/a
-
-Then configure the device by setting attributes under /mnt/nullb/a, most
-of nullb supported module parameters are converted to attributes:
-size; /* device size in MB */
-completion_nsec; /* time in ns to complete a request */
-submit_queues; /* number of submission queues */
-home_node; /* home node for the device */
-queue_mode; /* block interface */
-blocksize; /* block size */
-irqmode; /* IRQ completion handler */
-hw_queue_depth; /* queue depth */
-use_lightnvm; /* register as a LightNVM device */
-blocking; /* blocking blk-mq device */
-use_per_node_hctx; /* use per-node allocation for hardware context */
-
-Note, creating a device doesn't create a disk immediately. Creating a
-disk is done in two phases: create a device and then power on the
-device. Next patch will introduce device power on.
-
-Based on original patch from Kyungchan Koh
-
-Signed-off-by: Kyungchan Koh <kkc6196@fb.com>
 Signed-off-by: Shaohua Li <shli@fb.com>
 ---
- drivers/block/Kconfig    |   1 +
- drivers/block/null_blk.c | 210 ++++++++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 210 insertions(+), 1 deletion(-)
+ drivers/block/null_blk.c | 80 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 80 insertions(+)
 
-diff --git a/drivers/block/Kconfig b/drivers/block/Kconfig
-index 8ddc982..5dd62a8 100644
---- a/drivers/block/Kconfig
-+++ b/drivers/block/Kconfig
-@@ -17,6 +17,7 @@ if BLK_DEV
- 
- config BLK_DEV_NULL_BLK
- 	tristate "Null test block driver"
-+	depends on CONFIGFS_FS
- 
- config BLK_DEV_FD
- 	tristate "Normal floppy disk support"
 diff --git a/drivers/block/null_blk.c b/drivers/block/null_blk.c
-index 73938cd..c782492 100644
+index c782492..cf14c46 100644
 --- a/drivers/block/null_blk.c
 +++ b/drivers/block/null_blk.c
-@@ -1,3 +1,7 @@
-+/*
-+ * Add configfs and memory store: Kyungchan Koh <kkc6196@fb.com> and
-+ * Shaohua Li <shli@fb.com>
-+ */
- #include <linux/module.h>
- 
- #include <linux/moduleparam.h>
-@@ -9,6 +13,7 @@
- #include <linux/blk-mq.h>
- #include <linux/hrtimer.h>
- #include <linux/lightnvm.h>
-+#include <linux/configfs.h>
- 
- struct nullb_cmd {
- 	struct list_head list;
-@@ -30,8 +35,21 @@ struct nullb_queue {
- 	struct nullb_cmd *cmds;
+@@ -59,9 +59,11 @@ struct nullb_device {
+ 	unsigned int blocksize; /* block size */
+ 	unsigned int irqmode; /* IRQ completion handler */
+ 	unsigned int hw_queue_depth; /* queue depth */
++	unsigned int index; /* index of the disk, only valid with a disk */
+ 	bool use_lightnvm; /* register as a LightNVM device */
+ 	bool blocking; /* blocking blk-mq device */
+ 	bool use_per_node_hctx; /* use per-node allocation for hardware context */
++	bool power; /* power on/off the device */
  };
  
-+/*
-+ * Status flags for nullb_device.
-+ *
-+ * CONFIGURED:	Device has been configured and turned on. Cannot reconfigure.
-+ * UP:		Device is currently on and visible in userspace.
-+ */
-+enum nullb_device_flags {
-+	NULLB_DEV_FL_CONFIGURED	= 0,
-+	NULLB_DEV_FL_UP		= 1,
-+};
-+
- struct nullb_device {
- 	struct nullb *nullb;
-+	struct config_item item;
-+	unsigned long flags; /* device flags */
+ struct nullb {
+@@ -193,6 +195,8 @@ MODULE_PARM_DESC(use_per_node_hctx, "Use per-node allocation for hardware contex
  
- 	unsigned long size; /* device size in MB */
- 	unsigned long completion_nsec; /* time in ns to complete a request */
-@@ -173,6 +191,185 @@ static bool g_use_per_node_hctx;
- module_param_named(use_per_node_hctx, g_use_per_node_hctx, bool, S_IRUGO);
- MODULE_PARM_DESC(use_per_node_hctx, "Use per-node allocation for hardware context queues. Default: false");
+ static struct nullb_device *null_alloc_dev(void);
+ static void null_free_dev(struct nullb_device *dev);
++static void null_del_dev(struct nullb *nullb);
++static int null_add_dev(struct nullb_device *dev);
  
-+static struct nullb_device *null_alloc_dev(void);
-+static void null_free_dev(struct nullb_device *dev);
-+
-+static inline struct nullb_device *to_nullb_device(struct config_item *item)
-+{
-+	return item ? container_of(item, struct nullb_device, item) : NULL;
-+}
-+
-+static inline ssize_t nullb_device_uint_attr_show(unsigned int val, char *page)
-+{
-+	return snprintf(page, PAGE_SIZE, "%u\n", val);
-+}
-+
-+static inline ssize_t nullb_device_ulong_attr_show(unsigned long val,
-+	char *page)
-+{
-+	return snprintf(page, PAGE_SIZE, "%lu\n", val);
-+}
-+
-+static inline ssize_t nullb_device_bool_attr_show(bool val, char *page)
-+{
-+	return snprintf(page, PAGE_SIZE, "%u\n", val);
-+}
-+
-+static ssize_t nullb_device_uint_attr_store(unsigned int *val,
-+	const char *page, size_t count)
-+{
-+	unsigned int tmp;
-+	int result;
-+
-+	result = kstrtouint(page, 0, &tmp);
-+	if (result)
-+		return result;
-+
-+	*val = tmp;
-+	return count;
-+}
-+
-+static ssize_t nullb_device_ulong_attr_store(unsigned long *val,
-+	const char *page, size_t count)
-+{
-+	int result;
-+	unsigned long tmp;
-+
-+	result = kstrtoul(page, 0, &tmp);
-+	if (result)
-+		return result;
-+
-+	*val = tmp;
-+	return count;
-+}
-+
-+static ssize_t nullb_device_bool_attr_store(bool *val, const char *page,
-+	size_t count)
-+{
-+	bool tmp;
-+	int result;
-+
-+	result = kstrtobool(page,  &tmp);
-+	if (result)
-+		return result;
-+
-+	*val = tmp;
-+	return count;
-+}
-+
-+/* The following macro should only be used with TYPE = {uint, ulong, bool}. */
-+#define NULLB_DEVICE_ATTR(NAME, TYPE)						\
-+static ssize_t									\
-+nullb_device_##NAME##_show(struct config_item *item, char *page)		\
-+{										\
-+	return nullb_device_##TYPE##_attr_show(					\
-+				to_nullb_device(item)->NAME, page);		\
-+}										\
-+static ssize_t									\
-+nullb_device_##NAME##_store(struct config_item *item, const char *page,		\
-+			    size_t count)					\
-+{										\
-+	if (test_bit(NULLB_DEV_FL_CONFIGURED, &to_nullb_device(item)->flags))	\
-+		return -EBUSY;							\
-+	return nullb_device_##TYPE##_attr_store(				\
-+			&to_nullb_device(item)->NAME, page, count);		\
-+}										\
-+CONFIGFS_ATTR(nullb_device_, NAME);
-+
-+NULLB_DEVICE_ATTR(size, ulong);
-+NULLB_DEVICE_ATTR(completion_nsec, ulong);
-+NULLB_DEVICE_ATTR(submit_queues, uint);
-+NULLB_DEVICE_ATTR(home_node, uint);
-+NULLB_DEVICE_ATTR(queue_mode, uint);
-+NULLB_DEVICE_ATTR(blocksize, uint);
-+NULLB_DEVICE_ATTR(irqmode, uint);
-+NULLB_DEVICE_ATTR(hw_queue_depth, uint);
-+NULLB_DEVICE_ATTR(use_lightnvm, bool);
-+NULLB_DEVICE_ATTR(blocking, bool);
-+NULLB_DEVICE_ATTR(use_per_node_hctx, bool);
-+
-+static struct configfs_attribute *nullb_device_attrs[] = {
-+	&nullb_device_attr_size,
-+	&nullb_device_attr_completion_nsec,
-+	&nullb_device_attr_submit_queues,
-+	&nullb_device_attr_home_node,
-+	&nullb_device_attr_queue_mode,
-+	&nullb_device_attr_blocksize,
-+	&nullb_device_attr_irqmode,
-+	&nullb_device_attr_hw_queue_depth,
-+	&nullb_device_attr_use_lightnvm,
-+	&nullb_device_attr_blocking,
-+	&nullb_device_attr_use_per_node_hctx,
-+	NULL,
-+};
-+
-+static void nullb_device_release(struct config_item *item)
-+{
-+	null_free_dev(to_nullb_device(item));
-+}
-+
-+static struct configfs_item_operations nullb_device_ops = {
-+	.release	= nullb_device_release,
-+};
-+
-+static struct config_item_type nullb_device_type = {
-+	.ct_item_ops	= &nullb_device_ops,
-+	.ct_attrs	= nullb_device_attrs,
-+	.ct_owner	= THIS_MODULE,
-+};
-+
-+static struct
-+config_item *nullb_group_make_item(struct config_group *group, const char *name)
-+{
-+	struct nullb_device *dev;
-+
-+	dev = null_alloc_dev();
-+	if (!dev)
-+		return ERR_PTR(-ENOMEM);
-+
-+	config_item_init_type_name(&dev->item, name, &nullb_device_type);
-+
-+	return &dev->item;
-+}
-+
-+static void
-+nullb_group_drop_item(struct config_group *group, struct config_item *item)
-+{
-+	config_item_put(item);
-+}
-+
-+static ssize_t memb_group_features_show(struct config_item *item, char *page)
-+{
-+	return snprintf(page, PAGE_SIZE, "\n");
-+}
-+
-+CONFIGFS_ATTR_RO(memb_group_, features);
-+
-+static struct configfs_attribute *nullb_group_attrs[] = {
-+	&memb_group_attr_features,
-+	NULL,
-+};
-+
-+static struct configfs_group_operations nullb_group_ops = {
-+	.make_item	= nullb_group_make_item,
-+	.drop_item	= nullb_group_drop_item,
-+};
-+
-+static struct config_item_type nullb_group_type = {
-+	.ct_group_ops	= &nullb_group_ops,
-+	.ct_attrs	= nullb_group_attrs,
-+	.ct_owner	= THIS_MODULE,
-+};
-+
-+static struct configfs_subsystem nullb_subsys = {
-+	.su_group = {
-+		.cg_item = {
-+			.ci_namebuf = "nullb",
-+			.ci_type = &nullb_group_type,
-+		},
-+	},
-+};
-+
- static struct nullb_device *null_alloc_dev(void)
+ static inline struct nullb_device *to_nullb_device(struct config_item *item)
  {
- 	struct nullb_device *dev;
-@@ -919,12 +1116,19 @@ static int __init null_init(void)
- 			return ret;
- 	}
+@@ -284,10 +288,50 @@ NULLB_DEVICE_ATTR(queue_mode, uint);
+ NULLB_DEVICE_ATTR(blocksize, uint);
+ NULLB_DEVICE_ATTR(irqmode, uint);
+ NULLB_DEVICE_ATTR(hw_queue_depth, uint);
++NULLB_DEVICE_ATTR(index, uint);
+ NULLB_DEVICE_ATTR(use_lightnvm, bool);
+ NULLB_DEVICE_ATTR(blocking, bool);
+ NULLB_DEVICE_ATTR(use_per_node_hctx, bool);
  
-+	config_group_init(&nullb_subsys.su_group);
-+	mutex_init(&nullb_subsys.su_mutex);
++static ssize_t nullb_device_power_show(struct config_item *item, char *page)
++{
++	return nullb_device_bool_attr_show(to_nullb_device(item)->power, page);
++}
 +
-+	ret = configfs_register_subsystem(&nullb_subsys);
-+	if (ret)
-+		goto err_tagset;
++static ssize_t nullb_device_power_store(struct config_item *item,
++				     const char *page, size_t count)
++{
++	struct nullb_device *dev = to_nullb_device(item);
++	bool newp = false;
++	ssize_t ret;
 +
- 	mutex_init(&lock);
++	ret = nullb_device_bool_attr_store(&newp, page, count);
++	if (ret < 0)
++		return ret;
++
++	if (!dev->power && newp) {
++		if (test_and_set_bit(NULLB_DEV_FL_UP, &dev->flags))
++			return count;
++		if (null_add_dev(dev)) {
++			clear_bit(NULLB_DEV_FL_UP, &dev->flags);
++			return -ENOMEM;
++		}
++
++		set_bit(NULLB_DEV_FL_CONFIGURED, &dev->flags);
++		dev->power = newp;
++	} else if (to_nullb_device(item)->power && !newp) {
++		mutex_lock(&lock);
++		dev->power = newp;
++		null_del_dev(dev->nullb);
++		mutex_unlock(&lock);
++		clear_bit(NULLB_DEV_FL_UP, &dev->flags);
++	}
++
++	return count;
++}
++
++CONFIGFS_ATTR(nullb_device_, power);
++
+ static struct configfs_attribute *nullb_device_attrs[] = {
+ 	&nullb_device_attr_size,
+ 	&nullb_device_attr_completion_nsec,
+@@ -297,9 +341,11 @@ static struct configfs_attribute *nullb_device_attrs[] = {
+ 	&nullb_device_attr_blocksize,
+ 	&nullb_device_attr_irqmode,
+ 	&nullb_device_attr_hw_queue_depth,
++	&nullb_device_attr_index,
+ 	&nullb_device_attr_use_lightnvm,
+ 	&nullb_device_attr_blocking,
+ 	&nullb_device_attr_use_per_node_hctx,
++	&nullb_device_attr_power,
+ 	NULL,
+ };
  
- 	null_major = register_blkdev(0, "nullb");
- 	if (null_major < 0) {
- 		ret = null_major;
--		goto err_tagset;
-+		goto err_conf;
- 	}
+@@ -335,6 +381,15 @@ config_item *nullb_group_make_item(struct config_group *group, const char *name)
+ static void
+ nullb_group_drop_item(struct config_group *group, struct config_item *item)
+ {
++	struct nullb_device *dev = to_nullb_device(item);
++
++	if (test_and_clear_bit(NULLB_DEV_FL_UP, &dev->flags)) {
++		mutex_lock(&lock);
++		dev->power = false;
++		null_del_dev(dev->nullb);
++		mutex_unlock(&lock);
++	}
++
+ 	config_item_put(item);
+ }
  
- 	if (g_use_lightnvm) {
-@@ -961,6 +1165,8 @@ static int __init null_init(void)
- 	kmem_cache_destroy(ppa_cache);
- err_ppa:
- 	unregister_blkdev(null_major, "nullb");
-+err_conf:
-+	configfs_unregister_subsystem(&nullb_subsys);
- err_tagset:
- 	if (g_queue_mode == NULL_Q_MQ && shared_tags)
- 		blk_mq_free_tag_set(&tag_set);
-@@ -971,6 +1177,8 @@ static void __exit null_exit(void)
+@@ -973,11 +1028,35 @@ static int null_init_tag_set(struct nullb *nullb, struct blk_mq_tag_set *set)
+ 	return blk_mq_alloc_tag_set(set);
+ }
+ 
++static void null_validate_conf(struct nullb_device *dev)
++{
++	dev->blocksize = round_down(dev->blocksize, 512);
++	dev->blocksize = clamp_t(unsigned int, dev->blocksize, 512, 4096);
++	if (dev->use_lightnvm && dev->blocksize != 4096)
++		dev->blocksize = 4096;
++
++	if (dev->use_lightnvm && dev->queue_mode != NULL_Q_MQ)
++		dev->queue_mode = NULL_Q_MQ;
++
++	if (dev->queue_mode == NULL_Q_MQ && dev->use_per_node_hctx) {
++		if (dev->submit_queues != nr_online_nodes)
++			dev->submit_queues = nr_online_nodes;
++	} else if (dev->submit_queues > nr_cpu_ids)
++		dev->submit_queues = nr_cpu_ids;
++	else if (dev->submit_queues == 0)
++		dev->submit_queues = 1;
++
++	dev->queue_mode = min_t(unsigned int, dev->queue_mode, NULL_Q_MQ);
++	dev->irqmode = min_t(unsigned int, dev->irqmode, NULL_IRQ_TIMER);
++}
++
+ static int null_add_dev(struct nullb_device *dev)
  {
  	struct nullb *nullb;
+ 	int rv;
  
-+	configfs_unregister_subsystem(&nullb_subsys);
++	null_validate_conf(dev);
 +
- 	unregister_blkdev(null_major, "nullb");
+ 	nullb = kzalloc_node(sizeof(*nullb), GFP_KERNEL, dev->home_node);
+ 	if (!nullb) {
+ 		rv = -ENOMEM;
+@@ -1040,6 +1119,7 @@ static int null_add_dev(struct nullb_device *dev)
  
  	mutex_lock(&lock);
+ 	nullb->index = nullb_indexes++;
++	dev->index = nullb->index;
+ 	mutex_unlock(&lock);
+ 
+ 	blk_queue_logical_block_size(nullb->q, dev->blocksize);
 -- 
 2.9.5
