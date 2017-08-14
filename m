@@ -1,93 +1,52 @@
 From: Gilad Ben-Yossef <gilad@benyossef.com>
-Subject: [PATCH v5 13/19] cifs: move to generic async completion
-Date: Mon, 14 Aug 2017 18:21:23 +0300
-Message-ID: <1502724094-23305-14-git-send-email-gilad__20633.4159862765$1502724651$gmane$org@benyossef.com>
+Subject: [PATCH v5 04/19] crypto: marvell/cesa: remove redundant backlog checks on EBUSY
+Date: Mon, 14 Aug 2017 18:21:14 +0300
+Message-ID: <1502724094-23305-5-git-send-email-gilad__40668.4745139957$1502724670$gmane$org@benyossef.com>
 References: <1502724094-23305-1-git-send-email-gilad@benyossef.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1502724094-23305-1-git-send-email-gilad@benyossef.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Tom Lendacky <thomas.lendacky@amd.com>, Gary Hook <gary.hook@amd.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Arnaud Ebalard <arno@natisbad.org>, Matthias Brugger <matthias.bgg@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, keyrings@vger.kernel.org, linux-arm-kernel@lists
+Sender: linux-raid-owner@vger.kernel.org
+To: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Tom Lendacky <thomas.lendacky@amd.com>, Gary Hook <gary.hook@amd.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Arnaud Ebalard <arno@natisbad.org>, Matthias Brugger <matthias.bgg@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>, linux-crypto@v
 Cc: Ofir Drang <ofir.drang@arm.com>
 List-Id: linux-raid.ids
 
-cifs starts an async. crypto op and waits for their completion.
-Move it over to generic code doing the same.
+Now that -EBUSY return code only indicates backlog queueing
+we can safely remove the now redundant check for the
+CRYPTO_TFM_REQ_MAY_BACKLOG flag when -EBUSY is returned.
 
 Signed-off-by: Gilad Ben-Yossef <gilad@benyossef.com>
-Acked-by: Pavel Shilovsky <pshilov@microsoft.com>
 ---
- fs/cifs/smb2ops.c | 30 ++++--------------------------
- 1 file changed, 4 insertions(+), 26 deletions(-)
+ drivers/crypto/marvell/cesa.c | 3 +--
+ drivers/crypto/marvell/cesa.h | 2 +-
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/fs/cifs/smb2ops.c b/fs/cifs/smb2ops.c
-index cfacf2c..16fb041 100644
---- a/fs/cifs/smb2ops.c
-+++ b/fs/cifs/smb2ops.c
-@@ -1878,22 +1878,6 @@ init_sg(struct smb_rqst *rqst, u8 *sign)
- 	return sg;
- }
+diff --git a/drivers/crypto/marvell/cesa.c b/drivers/crypto/marvell/cesa.c
+index 6e7a5c7..269737f 100644
+--- a/drivers/crypto/marvell/cesa.c
++++ b/drivers/crypto/marvell/cesa.c
+@@ -183,8 +183,7 @@ int mv_cesa_queue_req(struct crypto_async_request *req,
+ 	spin_lock_bh(&engine->lock);
+ 	ret = crypto_enqueue_request(&engine->queue, req);
+ 	if ((mv_cesa_req_get_type(creq) == CESA_DMA_REQ) &&
+-	    (ret == -EINPROGRESS ||
+-	    (ret == -EBUSY && req->flags & CRYPTO_TFM_REQ_MAY_BACKLOG)))
++	    (ret == -EINPROGRESS || ret == -EBUSY)
+ 		mv_cesa_tdma_chain(engine, creq);
+ 	spin_unlock_bh(&engine->lock);
  
--struct cifs_crypt_result {
--	int err;
--	struct completion completion;
--};
--
--static void cifs_crypt_complete(struct crypto_async_request *req, int err)
--{
--	struct cifs_crypt_result *res = req->data;
--
--	if (err == -EINPROGRESS)
--		return;
--
--	res->err = err;
--	complete(&res->completion);
--}
--
- static int
- smb2_get_enc_key(struct TCP_Server_Info *server, __u64 ses_id, int enc, u8 *key)
- {
-@@ -1934,12 +1918,10 @@ crypt_message(struct TCP_Server_Info *server, struct smb_rqst *rqst, int enc)
- 	struct aead_request *req;
- 	char *iv;
- 	unsigned int iv_len;
--	struct cifs_crypt_result result = {0, };
-+	DECLARE_CRYPTO_WAIT(wait);
- 	struct crypto_aead *tfm;
- 	unsigned int crypt_len = le32_to_cpu(tr_hdr->OriginalMessageSize);
+diff --git a/drivers/crypto/marvell/cesa.h b/drivers/crypto/marvell/cesa.h
+index b7872f6..63c8457 100644
+--- a/drivers/crypto/marvell/cesa.h
++++ b/drivers/crypto/marvell/cesa.h
+@@ -763,7 +763,7 @@ static inline int mv_cesa_req_needs_cleanup(struct crypto_async_request *req,
+ 	 * the backlog and will be processed later. There's no need to
+ 	 * clean it up.
+ 	 */
+-	if (ret == -EBUSY && req->flags & CRYPTO_TFM_REQ_MAY_BACKLOG)
++	if (ret == -EBUSY)
+ 		return false;
  
--	init_completion(&result.completion);
--
- 	rc = smb2_get_enc_key(server, tr_hdr->SessionId, enc, key);
- 	if (rc) {
- 		cifs_dbg(VFS, "%s: Could not get %scryption key\n", __func__,
-@@ -1999,14 +1981,10 @@ crypt_message(struct TCP_Server_Info *server, struct smb_rqst *rqst, int enc)
- 	aead_request_set_ad(req, assoc_data_len);
- 
- 	aead_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG,
--				  cifs_crypt_complete, &result);
-+				  crypto_req_done, &wait);
- 
--	rc = enc ? crypto_aead_encrypt(req) : crypto_aead_decrypt(req);
--
--	if (rc == -EINPROGRESS || rc == -EBUSY) {
--		wait_for_completion(&result.completion);
--		rc = result.err;
--	}
-+	rc = crypto_wait_req(enc ? crypto_aead_encrypt(req)
-+				: crypto_aead_decrypt(req), &wait);
- 
- 	if (!rc && enc)
- 		memcpy(&tr_hdr->Signature, sign, SMB2_SIGNATURE_SIZE);
+ 	/* Request wasn't queued, we need to clean it up */
 -- 
 2.1.4
+
