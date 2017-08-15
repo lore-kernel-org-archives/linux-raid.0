@@ -1,360 +1,272 @@
-From: Shaohua Li <shli@kernel.org>
+From: Stephane Thiell <sthiell@stanford.edu>
 Subject: Re: BUG_ON(sh->batch_head) in init_stripe()
-Date: Tue, 15 Aug 2017 11:39:48 -0700
-Message-ID: <20170815183948.dbmbwfqlkn5hhxa7@kernel.org>
+Date: Tue, 15 Aug 2017 19:07:08 +0000
+Message-ID: <707199B5-1D72-40F5-958A-202040683B01@stanford.edu>
 References: <1E249B1F-4030-4482-ABB9-E18A87B5CD47@stanford.edu>
  <D70C6DBD-6B79-4FBE-A22D-8BC2E17CC2EB@stanford.edu>
- <5992BDE5.8060108@suse.com>
- <CED1B4D4-F187-4B87-9330-D04A4C50D5BB@stanford.edu>
+ <5992BDE5.8060108@suse.com> <20170815183646.a7w4gzl6xhgx56xi@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CED1B4D4-F187-4B87-9330-D04A4C50D5BB@stanford.edu>
+In-Reply-To: <20170815183646.a7w4gzl6xhgx56xi@kernel.org>
+Content-Language: en-US
+Content-ID: <C2B2FBA6D3E91347BD1A7F479749498A@namprd02.prod.outlook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stephane Thiell <sthiell@stanford.edu>
+To: Shaohua Li <shli@kernel.org>
 Cc: Guoqing Jiang <gqjiang@suse.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Aug 15, 2017 at 05:59:38PM +0000, Stephane Thiell wrote:
-> 
-> > On Aug 15, 2017, at 2:24 AM, Guoqing Jiang <gqjiang@suse.com> wrote:
-> > 
-> > 
-> > 
-> > On 08/14/2017 01:29 AM, Stephane Thiell wrote:
-> >> Also known as "kernel BUG at drivers/md/raid5.c:527!"
-> >> 
-> >> I’m still struggling with this issue in raid5.c. I currently have one crash per week in average on a system using Lustre and 24 x 10-disk raid6 per server. It did happen with or without check running. I now think there is a race at some point where a released stripe head (batched) is added to conf->inactive_list without sh->batch_head being set back to NULL.
-> >> 
-> >> Because sh->batch_head is only being set back to NULL in a single function, break_stripe_batch_list(), my guess is that a call to raid5_release_stripe() on the head stripe is performed elsewhere. I didn’t find where this could come from yet. So perhaps sh->batch_head should be just set to NULL in do_release_stripe(), before being added to the inactive list?
-> >> 
-> >> Alternatively, I wonder if it would make more sense to set batch_head to NULL where sh->overwrite_disks is also set back to 0 (like in ops_run_biodrain() today).
-> >> 
-> >> Because sh->overwrite_disks is also set to 0 in init_stripe(), my current plan is to try this change, at least as a workaround: remove the BUG_ON(sh->batch_head) from init_stripe() and set sh->batch_head = NULL (I don’t think I need to lock on sh->stripe_lock there?). I will get new hardware soon so I will give it a try on a test system. Any suggestions welcomed…
-> >> 
-> >> Quick analysis of the last vmcore:
-> >> 
-> >> crash> ps | grep ">"
-> >> ...
-> >>> 16119  16111  22  ffff881f93bace70  RU   0.0  150772  10748  e2label
-> >>> 151448      2  34  ffff881ff753bec0  RU   0.0       0      0  [kiblnd_sd_00_00]
-> >>> 151449      2   2  ffff881ff753edd0  RU   0.0       0      0  [kiblnd_sd_00_01]
-> >>> 154637      2  29  ffff881f776b1f60  RU   0.0       0      0  [md32_raid6]
-> >>> 163643      2  11  ffff8820d200bec0  UN   0.0       0      0  [ll_ost_io01_008]
-> >>> 164083      2  13  ffff8820d2753ec0  UN   0.0       0      0  [ll_ost_io01_034]
-> >>> 171389      2   5  ffff883fd072de20  UN   0.0       0      0  [ll_ost_io01_058]
-> >>> 171391      2  17  ffff883fd072ce70  UN   0.0       0      0  [ll_ost_io01_060]
-> >>> 171399      2  33  ffff883fd9e9ce70  UN   0.0       0      0  [ll_ost_io01_068]
-> >>> 237019      2  15  ffff882715628fb0  UN   0.0       0      0  [ll_ost_io01_084]
-> >>> 237033      2   3  ffff881fb0250fb0  UN   0.0       0      0  [ll_ost_io01_098]
-> >> ...
-> >> 
-> >> crash>  bt 237033
-> >> PID: 237033  TASK: ffff881fb0250fb0  CPU: 3   COMMAND: "ll_ost_io01_098"
-> >>  #0 [ffff8826fa3e7240] machine_kexec at ffffffff81059bdb
-> >>  #1 [ffff8826fa3e72a0] __crash_kexec at ffffffff811057c2
-> >>  #2 [ffff8826fa3e7370] crash_kexec at ffffffff811058b0
-> >>  #3 [ffff8826fa3e7388] oops_end at ffffffff8168fac8
-> >>  #4 [ffff8826fa3e73b0] die at ffffffff8102e93b
-> >>  #5 [ffff8826fa3e73e0] do_trap at ffffffff8168f180
-> >>  #6 [ffff8826fa3e7430] do_invalid_op at ffffffff8102b144
-> >>  #7 [ffff8826fa3e74e0] invalid_op at ffffffff81698b5e
-> >>     [exception RIP: raid5_get_active_stripe+1809]
-> >>     RIP: ffffffffa0fefd71  RSP: ffff8826fa3e7590  RFLAGS: 00010086
-> >>     RAX: 0000000000000000  RBX: ffff883df051641c  RCX: dead000000000200
-> >>     RDX: 0000000000000000  RSI: 0000000000000005  RDI: ffff881e08d54d30
-> >>     RBP: ffff8826fa3e7638   R8: ffff881e08d54d40   R9: 0000000000000080
-> >>     R10: 0000000000000000  R11: 0000000000000000  R12: ffff883df0516400
-> >>     R13: ffff881e08d54d30  R14: 0000000000000000  R15: 0000000000000000
-> >>     ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
-> >>  #8 [ffff8826fa3e7640] raid5_make_request at ffffffffa0feff55 [raid456]
-> >>  #9 [ffff8826fa3e7730] md_make_request at ffffffff814f838c
-> >> #10 [ffff8826fa3e7790] generic_make_request at ffffffff812eedc9
-> >> #11 [ffff8826fa3e77d8] submit_bio at ffffffff812eef11
-> >> #12 [ffff8826fa3e7830] osd_submit_bio at ffffffffa10cdbcc [osd_ldiskfs]
-> >> #13 [ffff8826fa3e7840] osd_do_bio at ffffffffa10d03c1 [osd_ldiskfs]
-> >> #14 [ffff8826fa3e7960] osd_write_commit at ffffffffa10d0b94 [osd_ldiskfs]
-> >> #15 [ffff8826fa3e7a00] ofd_commitrw_write at ffffffffa120c734 [ofd]
-> >> #16 [ffff8826fa3e7a78] ofd_commitrw at ffffffffa120ff07 [ofd]
-> >> #17 [ffff8826fa3e7b08] obd_commitrw at ffffffffa0c7dc22 [ptlrpc]
-> >> #18 [ffff8826fa3e7b70] tgt_brw_write at ffffffffa0c55fc1 [ptlrpc]
-> >> #19 [ffff8826fa3e7cd8] tgt_request_handle at ffffffffa0c52275 [ptlrpc]
-> >> #20 [ffff8826fa3e7d20] ptlrpc_server_handle_request at ffffffffa0bfe1fb [ptlrpc]
-> >> #21 [ffff8826fa3e7de8] ptlrpc_main at ffffffffa0c022b0 [ptlrpc]
-> >> #22 [ffff8826fa3e7ec8] kthread at ffffffff810b0a4f
-> >> #23 [ffff8826fa3e7f50] ret_from_fork at ffffffff81697218
-> >> 
-> >> 
-> >> After some disassembly work, I found out that all active tasks are working on the same md (all are raid6):
-> >> 
-> >> md32’s (struct r5conf *) is 0xffff883df0516400
-> >> 
-> >> Our crashed task:
-> >> 
-> >> crash> printf "%s", ((struct r5conf)*0xffff883df0516400).cache_name[0]
-> >> raid6-md32
-> >> 
-> >> Example for md32_raid6 task in release_inactive_stripe_list:
-> >> 
-> >> crash> bt 154637
-> >> PID: 154637  TASK: ffff881f776b1f60  CPU: 29  COMMAND: "md32_raid6"
-> >>  #0 [ffff883ffc985e48] crash_nmi_callback at ffffffff8104d2e2
-> >>  #1 [ffff883ffc985e58] nmi_handle at ffffffff8168fc77
-> >>  #2 [ffff883ffc985eb0] do_nmi at ffffffff8168fe83
-> >>  #3 [ffff883ffc985ef0] end_repeat_nmi at ffffffff8168f093
-> >>     [exception RIP: _raw_spin_lock_irqsave+64]
-> >>     RIP: ffffffff8168e5f0  RSP: ffff881e8d0cbc60  RFLAGS: 00000006
-> >>     RAX: 00000000000031bb  RBX: ffff883df0516740  RCX: 000000000000009a
-> >>     RDX: 0000000000000098  RSI: 000000000000009a  RDI: ffff883df051641c
-> >>     RBP: ffff881e8d0cbc60   R8: 0000000000000206   R9: 0000000000000000
-> >>     R10: 0000000000000000  R11: 0000000000000007  R12: ffff883df0516400
-> >>     R13: ffff883df051641c  R14: 0000000000000006  R15: 0000000000000005
-> >>     ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
-> >> --- <NMI exception stack> ---
-> >>  #4 [ffff881e8d0cbc60] _raw_spin_lock_irqsave at ffffffff8168e5f0
-> >>  #5 [ffff881e8d0cbc68] release_inactive_stripe_list at ffffffffa0fe5500 [raid456]
-> >>  #6 [ffff881e8d0cbcb0] handle_active_stripes at ffffffffa0ff34c2 [raid456]
-> >>  #7 [ffff881e8d0cbd60] raid5d at ffffffffa0ff3c28 [raid456]
-> >>  #8 [ffff881e8d0cbe50] md_thread at ffffffff814fb745
-> >>  #9 [ffff881e8d0cbec8] kthread at ffffffff810b0a4f
-> >> #10 [ffff881e8d0cbf50] ret_from_fork at ffffffff81697218
-> >> 
-> >> 
-> >> crash> bt 163643 164083 171389 171391 171399 237019 237033 |grep "exception RIP:"
-> >>     [exception RIP: _raw_spin_lock_irq+63]
-> >>     [exception RIP: _raw_spin_lock_irq+63]
-> >>     [exception RIP: _raw_spin_lock_irq+58]
-> >>     [exception RIP: _raw_spin_lock_irq+63]
-> >>     [exception RIP: _raw_spin_lock_irq+58]
-> >>     [exception RIP: _raw_spin_lock_irq+63]
-> >>     [exception RIP: raid5_get_active_stripe+1809]
-> >> 
-> >> crash> bt 163643 164083 171389 171391 171399 237019 237033 |grep "raid5_get_active_stripe"
-> >>  #5 [ffff883bcee93588] raid5_get_active_stripe at ffffffffa0fef6cb [raid456]
-> >>  #5 [ffff883ba4af7588] raid5_get_active_stripe at ffffffffa0fef6cb [raid456]
-> >>  #5 [ffff88390877b588] raid5_get_active_stripe at ffffffffa0fef6cb [raid456]
-> >>  #5 [ffff88390803b588] raid5_get_active_stripe at ffffffffa0fef6cb [raid456]
-> >>  #5 [ffff88390831f588] raid5_get_active_stripe at ffffffffa0fef6cb [raid456]
-> >>  #5 [ffff8826fa7f7588] raid5_get_active_stripe at ffffffffa0fef6cb [raid456]
-> >>     [exception RIP: raid5_get_active_stripe+1809]
-> >> 
-> >> crash> bt 163643 164083 171389 171391 171399 237019 237033 |grep R12
-> >>     R10: 0000000000000003  R11: 0000000000000000  R12: ffff883df0516400
-> >>     R10: 0000000000000001  R11: 0000000000000000  R12: ffff883df0516400
-> >>     R10: 0000000000000005  R11: 0000000000000000  R12: ffff883df0516400
-> >>     R10: 0000000000000007  R11: 0000000000000000  R12: ffff883df0516400
-> >>     R10: 0000000000000009  R11: 0000000000000000  R12: ffff883df0516400
-> >>     R10: 0000000000000009  R11: 0000000000000000  R12: ffff883df0516400
-> >>     R10: 0000000000000000  R11: 0000000000000000  R12: ffff883df0516400
-> >> 
-> >> 
-> >> The bad stripe_head (sh) is available at (usually in %r13):
-> >> 
-> >> crash> p ((struct stripe_head)*0xffff881e08d54d30).raid_conf
-> >> $98 = (struct r5conf *) 0xffff883df0516400
-> >> 
-> >> and batch_head is not NULL... that's the issue:
-> >> 
-> >> crash> p ((struct stripe_head)*0xffff881e08d54d30).batch_head
-> >> $99 = (struct stripe_head *) 0xffff881e08d54d30
-> >> 
-> >> Full struct dump below. We can see than overwrite_disks is set to 0, state is 0… but this batch_head not set to NULL makes it crash in init_stripe():
-> >> 
-> >> crash> p ((struct stripe_head)*0xffff881e08d54d30)
-> >> $6 = {
-> >>   hash = {
-> >>     next = 0x0,
-> >>     pprev = 0x0
-> >>   },
-> >>   lru = {
-> >>     next = 0xffff881e08d54d40,
-> >>     prev = 0xffff881e08d54d40
-> >>   },
-> >>   release_list = {
-> >>     next = 0xffff881dfe405cc0
-> >>   },
-> >>   raid_conf = 0xffff883df0516400,
-> >>   generation = 0,
-> >>   sector = 3701224808,
-> >>   pd_idx = 1,
-> >>   qd_idx = 2,
-> >>   ddf_layout = 0,
-> >>   hash_lock_index = 5,
-> >>   state = 0,
-> >>   count = {
-> >>     counter = 0
-> >>   },
-> >>   bm_seq = 22708787,
-> >>   disks = 10,
-> >>   overwrite_disks = 0,
-> >>   check_state = check_state_idle,
-> >>   reconstruct_state = reconstruct_state_idle,
-> >>   stripe_lock = {
-> >>     {
-> >>       rlock = {
-> >>         raw_lock = {
-> >>           {
-> >>             head_tail = 3709263126,
-> >>             tickets = {
-> >>               head = 56598,
-> >>               tail = 56598
-> >>             }
-> >>           }
-> >>         }
-> >>       }
-> >>     }
-> >>   },
-> >>   cpu = 15,
-> >>   group = 0x0,
-> >>   batch_head = 0xffff881e08d54d30,
-> >>   batch_lock = {
-> >>     {
-> >>       rlock = {
-> >>         raw_lock = {
-> >>           {
-> >>             head_tail = 9961624,
-> >>             tickets = {
-> >>               head = 152,
-> >>               tail = 152
-> >>             }
-> >>           }
-> >>         }
-> >>       }
-> >>     }
-> >>   },
-> >>   batch_list = {
-> >>     next = 0xffff881dfe405d28,
-> >>     prev = 0xffff881e0e2dec98
-> >>   },
-> >>   log_io = 0x0,
-> >>   log_list = {
-> >>     next = 0x0,
-> >>     prev = 0x0
-> >>   },
-> >>   ops = {
-> >>     target = 0,
-> >>     target2 = 0,
-> >>     zero_sum_result = (unknown: 0)
-> >>   },
-> >>   dev = {{
-> >>       req = {
-> >>         bi_sector = 0,
-> >>         bi_next = 0x0,
-> >>         bi_bdev = 0x0,
-> >>         bi_flags = 1,
-> >>         bi_rw = 0,
-> >>         bi_vcnt = 0,
-> >>         bi_idx = 0,
-> >>         bi_phys_segments = 0,
-> >>         bi_size = 0,
-> >>         bi_seg_front_size = 0,
-> >>         bi_seg_back_size = 0,
-> >>         bi_end_io = 0x0,
-> >>         bi_private = 0xffff881e08d54d30,
-> >>         bi_ioc = 0x0,
-> >>         bi_css = 0x0,
-> >>         bi_integrity = 0x0,
-> >>         bi_max_vecs = 1,
-> >>         bi_cnt = {
-> >>           counter = 1
-> >>         },
-> >>         bi_io_vec = 0xffff881e08d54f00,
-> >>         bi_pool = 0x0,
-> >>         {
-> >>           bio_aux = 0x0,
-> >>           __UNIQUE_ID_rh_kabi_hide15 = {
-> >>             rh_reserved1 = 0x0
-> >>           },
-> >>           {<No data fields>}
-> >>         },
-> >>         bi_inline_vecs = 0xffff881e08d54e78
-> >>       },
-> >>       rreq = {
-> >>         bi_sector = 0,
-> >>         bi_next = 0x0,
-> >>         bi_bdev = 0x0,
-> >>         bi_flags = 1,
-> >>         bi_rw = 0,
-> >>         bi_vcnt = 0,
-> >>         bi_idx = 0,
-> >>         bi_phys_segments = 0,
-> >>         bi_size = 0,
-> >>         bi_seg_front_size = 0,
-> >>         bi_seg_back_size = 0,
-> >>         bi_end_io = 0x0,
-> >>         bi_private = 0xffff881e08d54d30,
-> >>         bi_ioc = 0x0,
-> >>         bi_css = 0x0,
-> >>         bi_integrity = 0x0,
-> >>         bi_max_vecs = 1,
-> >>         bi_cnt = {
-> >>           counter = 1
-> >>         },
-> >>         bi_io_vec = 0xffff881e08d54f10,
-> >>         bi_pool = 0x0,
-> >>         {
-> >>           bio_aux = 0x0,
-> >>           __UNIQUE_ID_rh_kabi_hide15 = {
-> >>             rh_reserved1 = 0x0
-> >>           },
-> >>           {<No data fields>}
-> >>         },
-> >>         bi_inline_vecs = 0xffff881e08d54f00
-> >>       },
-> >>       vec = {
-> >>         bv_page = 0xffffea0078236080,
-> >>         bv_len = 4096,
-> >>         bv_offset = 0
-> >>       },
-> >>       rvec = {
-> >>         bv_page = 0x0,
-> >>         bv_len = 0,
-> >>         bv_offset = 0
-> >>       },
-> >>       page = 0xffffea0078236080,
-> >>       orig_page = 0xffffea0078236080,
-> >>       toread = 0x0,
-> >>       read = 0x0,
-> >>       towrite = 0x0,
-> >>       written = 0xffff8824832a7c00,
-> >>       sector = 29609798632,
-> >>       flags = 24,
-> > 
-> > Seems the flags is R5_OVERWRITE | R5_Insync, handle_stripe_clean_event
-> > only calls break_stripe_batch_list if do_endio is set to true.
-> > 
-> > if (head_sh->batch_head && do_endio)
-> >                break_stripe_batch_list(head_sh, STRIPE_EXPAND_SYNC_FLAGS);
-> > 
-> > And do_endio is set to true if we meet the below condition.
-> > 
-> > if (!test_bit(R5_LOCKED, &dev->flags) &&
-> >                            (test_bit(R5_UPTODATE, &dev->flags) ||
-> >                             test_bit(R5_Discard, &dev->flags) ||
-> >                             test_bit(R5_SkipCopy, &dev->flags))) {
-> > 
-> > I guess it is why the batch_head is not null, just my 2 cents.
-> 
-> 
-> That’s a very good point, thanks Guoqing!
-> 
-> I checked another similar crash dump, and found out that this same flags was 16 (R5_Insync alone), which doesn’t meet the condition for having do_endio = true neither.
-> 
-> The code below in raid5_end_write_request does directly release a sh->batch_head, couldn’t that be an issue?
-> 
-> static void raid5_end_write_request(struct bio *bi)
-> {
-> 
-> ...
-> 
->         raid5_release_stripe(sh);
-> 
->         if (sh->batch_head && sh != sh->batch_head)
->                 raid5_release_stripe(sh->batch_head);
-> }
+DQo+IE9uIEF1ZyAxNSwgMjAxNywgYXQgMTE6MzYgQU0sIFNoYW9odWEgTGkgPHNobGlAa2VybmVs
+Lm9yZz4gd3JvdGU6DQo+IA0KPiBPbiBUdWUsIEF1ZyAxNSwgMjAxNyBhdCAwNToyNDo1M1BNICsw
+ODAwLCBHdW9xaW5nIEppYW5nIHdyb3RlOg0KPj4gDQo+PiANCj4+IE9uIDA4LzE0LzIwMTcgMDE6
+MjkgQU0sIFN0ZXBoYW5lIFRoaWVsbCB3cm90ZToNCj4+PiBBbHNvIGtub3duIGFzICJrZXJuZWwg
+QlVHIGF0IGRyaXZlcnMvbWQvcmFpZDUuYzo1MjchIg0KPj4+IA0KPj4+IEnigJltIHN0aWxsIHN0
+cnVnZ2xpbmcgd2l0aCB0aGlzIGlzc3VlIGluIHJhaWQ1LmMuIEkgY3VycmVudGx5IGhhdmUgb25l
+IGNyYXNoIHBlciB3ZWVrIGluIGF2ZXJhZ2Ugb24gYSBzeXN0ZW0gdXNpbmcgTHVzdHJlIGFuZCAy
+NCB4IDEwLWRpc2sgcmFpZDYgcGVyIHNlcnZlci4gSXQgZGlkIGhhcHBlbiB3aXRoIG9yIHdpdGhv
+dXQgY2hlY2sgcnVubmluZy4gSSBub3cgdGhpbmsgdGhlcmUgaXMgYSByYWNlIGF0IHNvbWUgcG9p
+bnQgd2hlcmUgYSByZWxlYXNlZCBzdHJpcGUgaGVhZCAoYmF0Y2hlZCkgaXMgYWRkZWQgdG8gY29u
+Zi0+aW5hY3RpdmVfbGlzdCB3aXRob3V0IHNoLT5iYXRjaF9oZWFkIGJlaW5nIHNldCBiYWNrIHRv
+IE5VTEwuDQo+Pj4gDQo+Pj4gQmVjYXVzZSBzaC0+YmF0Y2hfaGVhZCBpcyBvbmx5IGJlaW5nIHNl
+dCBiYWNrIHRvIE5VTEwgaW4gYSBzaW5nbGUgZnVuY3Rpb24sIGJyZWFrX3N0cmlwZV9iYXRjaF9s
+aXN0KCksIG15IGd1ZXNzIGlzIHRoYXQgYSBjYWxsIHRvIHJhaWQ1X3JlbGVhc2Vfc3RyaXBlKCkg
+b24gdGhlIGhlYWQgc3RyaXBlIGlzIHBlcmZvcm1lZCBlbHNld2hlcmUuIEkgZGlkbuKAmXQgZmlu
+ZCB3aGVyZSB0aGlzIGNvdWxkIGNvbWUgZnJvbSB5ZXQuIFNvIHBlcmhhcHMgc2gtPmJhdGNoX2hl
+YWQgc2hvdWxkIGJlIGp1c3Qgc2V0IHRvIE5VTEwgaW4gZG9fcmVsZWFzZV9zdHJpcGUoKSwgYmVm
+b3JlIGJlaW5nIGFkZGVkIHRvIHRoZSBpbmFjdGl2ZSBsaXN0Pw0KPj4+IA0KPj4+IEFsdGVybmF0
+aXZlbHksIEkgd29uZGVyIGlmIGl0IHdvdWxkIG1ha2UgbW9yZSBzZW5zZSB0byBzZXQgYmF0Y2hf
+aGVhZCB0byBOVUxMIHdoZXJlIHNoLT5vdmVyd3JpdGVfZGlza3MgaXMgYWxzbyBzZXQgYmFjayB0
+byAwIChsaWtlIGluIG9wc19ydW5fYmlvZHJhaW4oKSB0b2RheSkuDQo+Pj4gDQo+Pj4gQmVjYXVz
+ZSBzaC0+b3ZlcndyaXRlX2Rpc2tzIGlzIGFsc28gc2V0IHRvIDAgaW4gaW5pdF9zdHJpcGUoKSwg
+bXkgY3VycmVudCBwbGFuIGlzIHRvIHRyeSB0aGlzIGNoYW5nZSwgYXQgbGVhc3QgYXMgYSB3b3Jr
+YXJvdW5kOiByZW1vdmUgdGhlIEJVR19PTihzaC0+YmF0Y2hfaGVhZCkgZnJvbSBpbml0X3N0cmlw
+ZSgpIGFuZCBzZXQgc2gtPmJhdGNoX2hlYWQgPSBOVUxMIChJIGRvbuKAmXQgdGhpbmsgSSBuZWVk
+IHRvIGxvY2sgb24gc2gtPnN0cmlwZV9sb2NrIHRoZXJlPykuIEkgd2lsbCBnZXQgbmV3IGhhcmR3
+YXJlIHNvb24gc28gSSB3aWxsIGdpdmUgaXQgYSB0cnkgb24gYSB0ZXN0IHN5c3RlbS4gQW55IHN1
+Z2dlc3Rpb25zIHdlbGNvbWVk4oCmDQo+Pj4gDQo+Pj4gUXVpY2sgYW5hbHlzaXMgb2YgdGhlIGxh
+c3Qgdm1jb3JlOg0KPj4+IA0KPj4+IGNyYXNoPiBwcyB8IGdyZXAgIj4iDQo+Pj4gLi4uDQo+Pj4+
+IDE2MTE5ICAxNjExMSAgMjIgIGZmZmY4ODFmOTNiYWNlNzAgIFJVICAgMC4wICAxNTA3NzIgIDEw
+NzQ4ICBlMmxhYmVsDQo+Pj4+IDE1MTQ0OCAgICAgIDIgIDM0ICBmZmZmODgxZmY3NTNiZWMwICBS
+VSAgIDAuMCAgICAgICAwICAgICAgMCAgW2tpYmxuZF9zZF8wMF8wMF0NCj4+Pj4gMTUxNDQ5ICAg
+ICAgMiAgIDIgIGZmZmY4ODFmZjc1M2VkZDAgIFJVICAgMC4wICAgICAgIDAgICAgICAwICBba2li
+bG5kX3NkXzAwXzAxXQ0KPj4+PiAxNTQ2MzcgICAgICAyICAyOSAgZmZmZjg4MWY3NzZiMWY2MCAg
+UlUgICAwLjAgICAgICAgMCAgICAgIDAgIFttZDMyX3JhaWQ2XQ0KPj4+PiAxNjM2NDMgICAgICAy
+ICAxMSAgZmZmZjg4MjBkMjAwYmVjMCAgVU4gICAwLjAgICAgICAgMCAgICAgIDAgIFtsbF9vc3Rf
+aW8wMV8wMDhdDQo+Pj4+IDE2NDA4MyAgICAgIDIgIDEzICBmZmZmODgyMGQyNzUzZWMwICBVTiAg
+IDAuMCAgICAgICAwICAgICAgMCAgW2xsX29zdF9pbzAxXzAzNF0NCj4+Pj4gMTcxMzg5ICAgICAg
+MiAgIDUgIGZmZmY4ODNmZDA3MmRlMjAgIFVOICAgMC4wICAgICAgIDAgICAgICAwICBbbGxfb3N0
+X2lvMDFfMDU4XQ0KPj4+PiAxNzEzOTEgICAgICAyICAxNyAgZmZmZjg4M2ZkMDcyY2U3MCAgVU4g
+ICAwLjAgICAgICAgMCAgICAgIDAgIFtsbF9vc3RfaW8wMV8wNjBdDQo+Pj4+IDE3MTM5OSAgICAg
+IDIgIDMzICBmZmZmODgzZmQ5ZTljZTcwICBVTiAgIDAuMCAgICAgICAwICAgICAgMCAgW2xsX29z
+dF9pbzAxXzA2OF0NCj4+Pj4gMjM3MDE5ICAgICAgMiAgMTUgIGZmZmY4ODI3MTU2MjhmYjAgIFVO
+ICAgMC4wICAgICAgIDAgICAgICAwICBbbGxfb3N0X2lvMDFfMDg0XQ0KPj4+PiAyMzcwMzMgICAg
+ICAyICAgMyAgZmZmZjg4MWZiMDI1MGZiMCAgVU4gICAwLjAgICAgICAgMCAgICAgIDAgIFtsbF9v
+c3RfaW8wMV8wOThdDQo+Pj4gLi4uDQo+Pj4gDQo+Pj4gY3Jhc2g+ICBidCAyMzcwMzMNCj4+PiBQ
+SUQ6IDIzNzAzMyAgVEFTSzogZmZmZjg4MWZiMDI1MGZiMCAgQ1BVOiAzICAgQ09NTUFORDogImxs
+X29zdF9pbzAxXzA5OCINCj4+PiAgIzAgW2ZmZmY4ODI2ZmEzZTcyNDBdIG1hY2hpbmVfa2V4ZWMg
+YXQgZmZmZmZmZmY4MTA1OWJkYg0KPj4+ICAjMSBbZmZmZjg4MjZmYTNlNzJhMF0gX19jcmFzaF9r
+ZXhlYyBhdCBmZmZmZmZmZjgxMTA1N2MyDQo+Pj4gICMyIFtmZmZmODgyNmZhM2U3MzcwXSBjcmFz
+aF9rZXhlYyBhdCBmZmZmZmZmZjgxMTA1OGIwDQo+Pj4gICMzIFtmZmZmODgyNmZhM2U3Mzg4XSBv
+b3BzX2VuZCBhdCBmZmZmZmZmZjgxNjhmYWM4DQo+Pj4gICM0IFtmZmZmODgyNmZhM2U3M2IwXSBk
+aWUgYXQgZmZmZmZmZmY4MTAyZTkzYg0KPj4+ICAjNSBbZmZmZjg4MjZmYTNlNzNlMF0gZG9fdHJh
+cCBhdCBmZmZmZmZmZjgxNjhmMTgwDQo+Pj4gICM2IFtmZmZmODgyNmZhM2U3NDMwXSBkb19pbnZh
+bGlkX29wIGF0IGZmZmZmZmZmODEwMmIxNDQNCj4+PiAgIzcgW2ZmZmY4ODI2ZmEzZTc0ZTBdIGlu
+dmFsaWRfb3AgYXQgZmZmZmZmZmY4MTY5OGI1ZQ0KPj4+ICAgICBbZXhjZXB0aW9uIFJJUDogcmFp
+ZDVfZ2V0X2FjdGl2ZV9zdHJpcGUrMTgwOV0NCj4+PiAgICAgUklQOiBmZmZmZmZmZmEwZmVmZDcx
+ICBSU1A6IGZmZmY4ODI2ZmEzZTc1OTAgIFJGTEFHUzogMDAwMTAwODYNCj4+PiAgICAgUkFYOiAw
+MDAwMDAwMDAwMDAwMDAwICBSQlg6IGZmZmY4ODNkZjA1MTY0MWMgIFJDWDogZGVhZDAwMDAwMDAw
+MDIwMA0KPj4+ICAgICBSRFg6IDAwMDAwMDAwMDAwMDAwMDAgIFJTSTogMDAwMDAwMDAwMDAwMDAw
+NSAgUkRJOiBmZmZmODgxZTA4ZDU0ZDMwDQo+Pj4gICAgIFJCUDogZmZmZjg4MjZmYTNlNzYzOCAg
+IFI4OiBmZmZmODgxZTA4ZDU0ZDQwICAgUjk6IDAwMDAwMDAwMDAwMDAwODANCj4+PiAgICAgUjEw
+OiAwMDAwMDAwMDAwMDAwMDAwICBSMTE6IDAwMDAwMDAwMDAwMDAwMDAgIFIxMjogZmZmZjg4M2Rm
+MDUxNjQwMA0KPj4+ICAgICBSMTM6IGZmZmY4ODFlMDhkNTRkMzAgIFIxNDogMDAwMDAwMDAwMDAw
+MDAwMCAgUjE1OiAwMDAwMDAwMDAwMDAwMDAwDQo+Pj4gICAgIE9SSUdfUkFYOiBmZmZmZmZmZmZm
+ZmZmZmZmICBDUzogMDAxMCAgU1M6IDAwMTgNCj4+PiAgIzggW2ZmZmY4ODI2ZmEzZTc2NDBdIHJh
+aWQ1X21ha2VfcmVxdWVzdCBhdCBmZmZmZmZmZmEwZmVmZjU1IFtyYWlkNDU2XQ0KPj4+ICAjOSBb
+ZmZmZjg4MjZmYTNlNzczMF0gbWRfbWFrZV9yZXF1ZXN0IGF0IGZmZmZmZmZmODE0ZjgzOGMNCj4+
+PiAjMTAgW2ZmZmY4ODI2ZmEzZTc3OTBdIGdlbmVyaWNfbWFrZV9yZXF1ZXN0IGF0IGZmZmZmZmZm
+ODEyZWVkYzkNCj4+PiAjMTEgW2ZmZmY4ODI2ZmEzZTc3ZDhdIHN1Ym1pdF9iaW8gYXQgZmZmZmZm
+ZmY4MTJlZWYxMQ0KPj4+ICMxMiBbZmZmZjg4MjZmYTNlNzgzMF0gb3NkX3N1Ym1pdF9iaW8gYXQg
+ZmZmZmZmZmZhMTBjZGJjYyBbb3NkX2xkaXNrZnNdDQo+Pj4gIzEzIFtmZmZmODgyNmZhM2U3ODQw
+XSBvc2RfZG9fYmlvIGF0IGZmZmZmZmZmYTEwZDAzYzEgW29zZF9sZGlza2ZzXQ0KPj4+ICMxNCBb
+ZmZmZjg4MjZmYTNlNzk2MF0gb3NkX3dyaXRlX2NvbW1pdCBhdCBmZmZmZmZmZmExMGQwYjk0IFtv
+c2RfbGRpc2tmc10NCj4+PiAjMTUgW2ZmZmY4ODI2ZmEzZTdhMDBdIG9mZF9jb21taXRyd193cml0
+ZSBhdCBmZmZmZmZmZmExMjBjNzM0IFtvZmRdDQo+Pj4gIzE2IFtmZmZmODgyNmZhM2U3YTc4XSBv
+ZmRfY29tbWl0cncgYXQgZmZmZmZmZmZhMTIwZmYwNyBbb2ZkXQ0KPj4+ICMxNyBbZmZmZjg4MjZm
+YTNlN2IwOF0gb2JkX2NvbW1pdHJ3IGF0IGZmZmZmZmZmYTBjN2RjMjIgW3B0bHJwY10NCj4+PiAj
+MTggW2ZmZmY4ODI2ZmEzZTdiNzBdIHRndF9icndfd3JpdGUgYXQgZmZmZmZmZmZhMGM1NWZjMSBb
+cHRscnBjXQ0KPj4+ICMxOSBbZmZmZjg4MjZmYTNlN2NkOF0gdGd0X3JlcXVlc3RfaGFuZGxlIGF0
+IGZmZmZmZmZmYTBjNTIyNzUgW3B0bHJwY10NCj4+PiAjMjAgW2ZmZmY4ODI2ZmEzZTdkMjBdIHB0
+bHJwY19zZXJ2ZXJfaGFuZGxlX3JlcXVlc3QgYXQgZmZmZmZmZmZhMGJmZTFmYiBbcHRscnBjXQ0K
+Pj4+ICMyMSBbZmZmZjg4MjZmYTNlN2RlOF0gcHRscnBjX21haW4gYXQgZmZmZmZmZmZhMGMwMjJi
+MCBbcHRscnBjXQ0KPj4+ICMyMiBbZmZmZjg4MjZmYTNlN2VjOF0ga3RocmVhZCBhdCBmZmZmZmZm
+ZjgxMGIwYTRmDQo+Pj4gIzIzIFtmZmZmODgyNmZhM2U3ZjUwXSByZXRfZnJvbV9mb3JrIGF0IGZm
+ZmZmZmZmODE2OTcyMTgNCj4+PiANCj4+PiANCj4+PiBBZnRlciBzb21lIGRpc2Fzc2VtYmx5IHdv
+cmssIEkgZm91bmQgb3V0IHRoYXQgYWxsIGFjdGl2ZSB0YXNrcyBhcmUgd29ya2luZyBvbiB0aGUg
+c2FtZSBtZCAoYWxsIGFyZSByYWlkNik6DQo+Pj4gDQo+Pj4gbWQzMuKAmXMgKHN0cnVjdCByNWNv
+bmYgKikgaXMgMHhmZmZmODgzZGYwNTE2NDAwDQo+Pj4gDQo+Pj4gT3VyIGNyYXNoZWQgdGFzazoN
+Cj4+PiANCj4+PiBjcmFzaD4gcHJpbnRmICIlcyIsICgoc3RydWN0IHI1Y29uZikqMHhmZmZmODgz
+ZGYwNTE2NDAwKS5jYWNoZV9uYW1lWzBdDQo+Pj4gcmFpZDYtbWQzMg0KPj4+IA0KPj4+IEV4YW1w
+bGUgZm9yIG1kMzJfcmFpZDYgdGFzayBpbiByZWxlYXNlX2luYWN0aXZlX3N0cmlwZV9saXN0Og0K
+Pj4+IA0KPj4+IGNyYXNoPiBidCAxNTQ2MzcNCj4+PiBQSUQ6IDE1NDYzNyAgVEFTSzogZmZmZjg4
+MWY3NzZiMWY2MCAgQ1BVOiAyOSAgQ09NTUFORDogIm1kMzJfcmFpZDYiDQo+Pj4gICMwIFtmZmZm
+ODgzZmZjOTg1ZTQ4XSBjcmFzaF9ubWlfY2FsbGJhY2sgYXQgZmZmZmZmZmY4MTA0ZDJlMg0KPj4+
+ICAjMSBbZmZmZjg4M2ZmYzk4NWU1OF0gbm1pX2hhbmRsZSBhdCBmZmZmZmZmZjgxNjhmYzc3DQo+
+Pj4gICMyIFtmZmZmODgzZmZjOTg1ZWIwXSBkb19ubWkgYXQgZmZmZmZmZmY4MTY4ZmU4Mw0KPj4+
+ICAjMyBbZmZmZjg4M2ZmYzk4NWVmMF0gZW5kX3JlcGVhdF9ubWkgYXQgZmZmZmZmZmY4MTY4ZjA5
+Mw0KPj4+ICAgICBbZXhjZXB0aW9uIFJJUDogX3Jhd19zcGluX2xvY2tfaXJxc2F2ZSs2NF0NCj4+
+PiAgICAgUklQOiBmZmZmZmZmZjgxNjhlNWYwICBSU1A6IGZmZmY4ODFlOGQwY2JjNjAgIFJGTEFH
+UzogMDAwMDAwMDYNCj4+PiAgICAgUkFYOiAwMDAwMDAwMDAwMDAzMWJiICBSQlg6IGZmZmY4ODNk
+ZjA1MTY3NDAgIFJDWDogMDAwMDAwMDAwMDAwMDA5YQ0KPj4+ICAgICBSRFg6IDAwMDAwMDAwMDAw
+MDAwOTggIFJTSTogMDAwMDAwMDAwMDAwMDA5YSAgUkRJOiBmZmZmODgzZGYwNTE2NDFjDQo+Pj4g
+ICAgIFJCUDogZmZmZjg4MWU4ZDBjYmM2MCAgIFI4OiAwMDAwMDAwMDAwMDAwMjA2ICAgUjk6IDAw
+MDAwMDAwMDAwMDAwMDANCj4+PiAgICAgUjEwOiAwMDAwMDAwMDAwMDAwMDAwICBSMTE6IDAwMDAw
+MDAwMDAwMDAwMDcgIFIxMjogZmZmZjg4M2RmMDUxNjQwMA0KPj4+ICAgICBSMTM6IGZmZmY4ODNk
+ZjA1MTY0MWMgIFIxNDogMDAwMDAwMDAwMDAwMDAwNiAgUjE1OiAwMDAwMDAwMDAwMDAwMDA1DQo+
+Pj4gICAgIE9SSUdfUkFYOiBmZmZmZmZmZmZmZmZmZmZmICBDUzogMDAxMCAgU1M6IDAwMTgNCj4+
+PiAtLS0gPE5NSSBleGNlcHRpb24gc3RhY2s+IC0tLQ0KPj4+ICAjNCBbZmZmZjg4MWU4ZDBjYmM2
+MF0gX3Jhd19zcGluX2xvY2tfaXJxc2F2ZSBhdCBmZmZmZmZmZjgxNjhlNWYwDQo+Pj4gICM1IFtm
+ZmZmODgxZThkMGNiYzY4XSByZWxlYXNlX2luYWN0aXZlX3N0cmlwZV9saXN0IGF0IGZmZmZmZmZm
+YTBmZTU1MDAgW3JhaWQ0NTZdDQo+Pj4gICM2IFtmZmZmODgxZThkMGNiY2IwXSBoYW5kbGVfYWN0
+aXZlX3N0cmlwZXMgYXQgZmZmZmZmZmZhMGZmMzRjMiBbcmFpZDQ1Nl0NCj4+PiAgIzcgW2ZmZmY4
+ODFlOGQwY2JkNjBdIHJhaWQ1ZCBhdCBmZmZmZmZmZmEwZmYzYzI4IFtyYWlkNDU2XQ0KPj4+ICAj
+OCBbZmZmZjg4MWU4ZDBjYmU1MF0gbWRfdGhyZWFkIGF0IGZmZmZmZmZmODE0ZmI3NDUNCj4+PiAg
+IzkgW2ZmZmY4ODFlOGQwY2JlYzhdIGt0aHJlYWQgYXQgZmZmZmZmZmY4MTBiMGE0Zg0KPj4+ICMx
+MCBbZmZmZjg4MWU4ZDBjYmY1MF0gcmV0X2Zyb21fZm9yayBhdCBmZmZmZmZmZjgxNjk3MjE4DQo+
+Pj4gDQo+Pj4gDQo+Pj4gY3Jhc2g+IGJ0IDE2MzY0MyAxNjQwODMgMTcxMzg5IDE3MTM5MSAxNzEz
+OTkgMjM3MDE5IDIzNzAzMyB8Z3JlcCAiZXhjZXB0aW9uIFJJUDoiDQo+Pj4gICAgIFtleGNlcHRp
+b24gUklQOiBfcmF3X3NwaW5fbG9ja19pcnErNjNdDQo+Pj4gICAgIFtleGNlcHRpb24gUklQOiBf
+cmF3X3NwaW5fbG9ja19pcnErNjNdDQo+Pj4gICAgIFtleGNlcHRpb24gUklQOiBfcmF3X3NwaW5f
+bG9ja19pcnErNThdDQo+Pj4gICAgIFtleGNlcHRpb24gUklQOiBfcmF3X3NwaW5fbG9ja19pcnEr
+NjNdDQo+Pj4gICAgIFtleGNlcHRpb24gUklQOiBfcmF3X3NwaW5fbG9ja19pcnErNThdDQo+Pj4g
+ICAgIFtleGNlcHRpb24gUklQOiBfcmF3X3NwaW5fbG9ja19pcnErNjNdDQo+Pj4gICAgIFtleGNl
+cHRpb24gUklQOiByYWlkNV9nZXRfYWN0aXZlX3N0cmlwZSsxODA5XQ0KPj4+IA0KPj4+IGNyYXNo
+PiBidCAxNjM2NDMgMTY0MDgzIDE3MTM4OSAxNzEzOTEgMTcxMzk5IDIzNzAxOSAyMzcwMzMgfGdy
+ZXAgInJhaWQ1X2dldF9hY3RpdmVfc3RyaXBlIg0KPj4+ICAjNSBbZmZmZjg4M2JjZWU5MzU4OF0g
+cmFpZDVfZ2V0X2FjdGl2ZV9zdHJpcGUgYXQgZmZmZmZmZmZhMGZlZjZjYiBbcmFpZDQ1Nl0NCj4+
+PiAgIzUgW2ZmZmY4ODNiYTRhZjc1ODhdIHJhaWQ1X2dldF9hY3RpdmVfc3RyaXBlIGF0IGZmZmZm
+ZmZmYTBmZWY2Y2IgW3JhaWQ0NTZdDQo+Pj4gICM1IFtmZmZmODgzOTA4NzdiNTg4XSByYWlkNV9n
+ZXRfYWN0aXZlX3N0cmlwZSBhdCBmZmZmZmZmZmEwZmVmNmNiIFtyYWlkNDU2XQ0KPj4+ICAjNSBb
+ZmZmZjg4MzkwODAzYjU4OF0gcmFpZDVfZ2V0X2FjdGl2ZV9zdHJpcGUgYXQgZmZmZmZmZmZhMGZl
+ZjZjYiBbcmFpZDQ1Nl0NCj4+PiAgIzUgW2ZmZmY4ODM5MDgzMWY1ODhdIHJhaWQ1X2dldF9hY3Rp
+dmVfc3RyaXBlIGF0IGZmZmZmZmZmYTBmZWY2Y2IgW3JhaWQ0NTZdDQo+Pj4gICM1IFtmZmZmODgy
+NmZhN2Y3NTg4XSByYWlkNV9nZXRfYWN0aXZlX3N0cmlwZSBhdCBmZmZmZmZmZmEwZmVmNmNiIFty
+YWlkNDU2XQ0KPj4+ICAgICBbZXhjZXB0aW9uIFJJUDogcmFpZDVfZ2V0X2FjdGl2ZV9zdHJpcGUr
+MTgwOV0NCj4+PiANCj4+PiBjcmFzaD4gYnQgMTYzNjQzIDE2NDA4MyAxNzEzODkgMTcxMzkxIDE3
+MTM5OSAyMzcwMTkgMjM3MDMzIHxncmVwIFIxMg0KPj4+ICAgICBSMTA6IDAwMDAwMDAwMDAwMDAw
+MDMgIFIxMTogMDAwMDAwMDAwMDAwMDAwMCAgUjEyOiBmZmZmODgzZGYwNTE2NDAwDQo+Pj4gICAg
+IFIxMDogMDAwMDAwMDAwMDAwMDAwMSAgUjExOiAwMDAwMDAwMDAwMDAwMDAwICBSMTI6IGZmZmY4
+ODNkZjA1MTY0MDANCj4+PiAgICAgUjEwOiAwMDAwMDAwMDAwMDAwMDA1ICBSMTE6IDAwMDAwMDAw
+MDAwMDAwMDAgIFIxMjogZmZmZjg4M2RmMDUxNjQwMA0KPj4+ICAgICBSMTA6IDAwMDAwMDAwMDAw
+MDAwMDcgIFIxMTogMDAwMDAwMDAwMDAwMDAwMCAgUjEyOiBmZmZmODgzZGYwNTE2NDAwDQo+Pj4g
+ICAgIFIxMDogMDAwMDAwMDAwMDAwMDAwOSAgUjExOiAwMDAwMDAwMDAwMDAwMDAwICBSMTI6IGZm
+ZmY4ODNkZjA1MTY0MDANCj4+PiAgICAgUjEwOiAwMDAwMDAwMDAwMDAwMDA5ICBSMTE6IDAwMDAw
+MDAwMDAwMDAwMDAgIFIxMjogZmZmZjg4M2RmMDUxNjQwMA0KPj4+ICAgICBSMTA6IDAwMDAwMDAw
+MDAwMDAwMDAgIFIxMTogMDAwMDAwMDAwMDAwMDAwMCAgUjEyOiBmZmZmODgzZGYwNTE2NDAwDQo+
+Pj4gDQo+Pj4gDQo+Pj4gVGhlIGJhZCBzdHJpcGVfaGVhZCAoc2gpIGlzIGF2YWlsYWJsZSBhdCAo
+dXN1YWxseSBpbiAlcjEzKToNCj4+PiANCj4+PiBjcmFzaD4gcCAoKHN0cnVjdCBzdHJpcGVfaGVh
+ZCkqMHhmZmZmODgxZTA4ZDU0ZDMwKS5yYWlkX2NvbmYNCj4+PiAkOTggPSAoc3RydWN0IHI1Y29u
+ZiAqKSAweGZmZmY4ODNkZjA1MTY0MDANCj4+PiANCj4+PiBhbmQgYmF0Y2hfaGVhZCBpcyBub3Qg
+TlVMTC4uLiB0aGF0J3MgdGhlIGlzc3VlOg0KPj4+IA0KPj4+IGNyYXNoPiBwICgoc3RydWN0IHN0
+cmlwZV9oZWFkKSoweGZmZmY4ODFlMDhkNTRkMzApLmJhdGNoX2hlYWQNCj4+PiAkOTkgPSAoc3Ry
+dWN0IHN0cmlwZV9oZWFkICopIDB4ZmZmZjg4MWUwOGQ1NGQzMA0KPj4+IA0KPj4+IEZ1bGwgc3Ry
+dWN0IGR1bXAgYmVsb3cuIFdlIGNhbiBzZWUgdGhhbiBvdmVyd3JpdGVfZGlza3MgaXMgc2V0IHRv
+IDAsIHN0YXRlIGlzIDDigKYgYnV0IHRoaXMgYmF0Y2hfaGVhZCBub3Qgc2V0IHRvIE5VTEwgbWFr
+ZXMgaXQgY3Jhc2ggaW4gaW5pdF9zdHJpcGUoKToNCj4+PiANCj4+PiBjcmFzaD4gcCAoKHN0cnVj
+dCBzdHJpcGVfaGVhZCkqMHhmZmZmODgxZTA4ZDU0ZDMwKQ0KPj4+ICQ2ID0gew0KPj4+ICAgaGFz
+aCA9IHsNCj4+PiAgICAgbmV4dCA9IDB4MCwNCj4+PiAgICAgcHByZXYgPSAweDANCj4+PiAgIH0s
+DQo+Pj4gICBscnUgPSB7DQo+Pj4gICAgIG5leHQgPSAweGZmZmY4ODFlMDhkNTRkNDAsDQo+Pj4g
+ICAgIHByZXYgPSAweGZmZmY4ODFlMDhkNTRkNDANCj4+PiAgIH0sDQo+Pj4gICByZWxlYXNlX2xp
+c3QgPSB7DQo+Pj4gICAgIG5leHQgPSAweGZmZmY4ODFkZmU0MDVjYzANCj4+PiAgIH0sDQo+Pj4g
+ICByYWlkX2NvbmYgPSAweGZmZmY4ODNkZjA1MTY0MDAsDQo+Pj4gICBnZW5lcmF0aW9uID0gMCwN
+Cj4+PiAgIHNlY3RvciA9IDM3MDEyMjQ4MDgsDQo+Pj4gICBwZF9pZHggPSAxLA0KPj4+ICAgcWRf
+aWR4ID0gMiwNCj4+PiAgIGRkZl9sYXlvdXQgPSAwLA0KPj4+ICAgaGFzaF9sb2NrX2luZGV4ID0g
+NSwNCj4+PiAgIHN0YXRlID0gMCwNCj4+PiAgIGNvdW50ID0gew0KPj4+ICAgICBjb3VudGVyID0g
+MA0KPj4+ICAgfSwNCj4+PiAgIGJtX3NlcSA9IDIyNzA4Nzg3LA0KPj4+ICAgZGlza3MgPSAxMCwN
+Cj4+PiAgIG92ZXJ3cml0ZV9kaXNrcyA9IDAsDQo+Pj4gICBjaGVja19zdGF0ZSA9IGNoZWNrX3N0
+YXRlX2lkbGUsDQo+Pj4gICByZWNvbnN0cnVjdF9zdGF0ZSA9IHJlY29uc3RydWN0X3N0YXRlX2lk
+bGUsDQo+Pj4gICBzdHJpcGVfbG9jayA9IHsNCj4+PiAgICAgew0KPj4+ICAgICAgIHJsb2NrID0g
+ew0KPj4+ICAgICAgICAgcmF3X2xvY2sgPSB7DQo+Pj4gICAgICAgICAgIHsNCj4+PiAgICAgICAg
+ICAgICBoZWFkX3RhaWwgPSAzNzA5MjYzMTI2LA0KPj4+ICAgICAgICAgICAgIHRpY2tldHMgPSB7
+DQo+Pj4gICAgICAgICAgICAgICBoZWFkID0gNTY1OTgsDQo+Pj4gICAgICAgICAgICAgICB0YWls
+ID0gNTY1OTgNCj4+PiAgICAgICAgICAgICB9DQo+Pj4gICAgICAgICAgIH0NCj4+PiAgICAgICAg
+IH0NCj4+PiAgICAgICB9DQo+Pj4gICAgIH0NCj4+PiAgIH0sDQo+Pj4gICBjcHUgPSAxNSwNCj4+
+PiAgIGdyb3VwID0gMHgwLA0KPj4+ICAgYmF0Y2hfaGVhZCA9IDB4ZmZmZjg4MWUwOGQ1NGQzMCwN
+Cj4+PiAgIGJhdGNoX2xvY2sgPSB7DQo+Pj4gICAgIHsNCj4+PiAgICAgICBybG9jayA9IHsNCj4+
+PiAgICAgICAgIHJhd19sb2NrID0gew0KPj4+ICAgICAgICAgICB7DQo+Pj4gICAgICAgICAgICAg
+aGVhZF90YWlsID0gOTk2MTYyNCwNCj4+PiAgICAgICAgICAgICB0aWNrZXRzID0gew0KPj4+ICAg
+ICAgICAgICAgICAgaGVhZCA9IDE1MiwNCj4+PiAgICAgICAgICAgICAgIHRhaWwgPSAxNTINCj4+
+PiAgICAgICAgICAgICB9DQo+Pj4gICAgICAgICAgIH0NCj4+PiAgICAgICAgIH0NCj4+PiAgICAg
+ICB9DQo+Pj4gICAgIH0NCj4+PiAgIH0sDQo+Pj4gICBiYXRjaF9saXN0ID0gew0KPj4+ICAgICBu
+ZXh0ID0gMHhmZmZmODgxZGZlNDA1ZDI4LA0KPj4+ICAgICBwcmV2ID0gMHhmZmZmODgxZTBlMmRl
+Yzk4DQo+Pj4gICB9LA0KPj4+ICAgbG9nX2lvID0gMHgwLA0KPj4+ICAgbG9nX2xpc3QgPSB7DQo+
+Pj4gICAgIG5leHQgPSAweDAsDQo+Pj4gICAgIHByZXYgPSAweDANCj4+PiAgIH0sDQo+Pj4gICBv
+cHMgPSB7DQo+Pj4gICAgIHRhcmdldCA9IDAsDQo+Pj4gICAgIHRhcmdldDIgPSAwLA0KPj4+ICAg
+ICB6ZXJvX3N1bV9yZXN1bHQgPSAodW5rbm93bjogMCkNCj4+PiAgIH0sDQo+Pj4gICBkZXYgPSB7
+ew0KPj4+ICAgICAgIHJlcSA9IHsNCj4+PiAgICAgICAgIGJpX3NlY3RvciA9IDAsDQo+Pj4gICAg
+ICAgICBiaV9uZXh0ID0gMHgwLA0KPj4+ICAgICAgICAgYmlfYmRldiA9IDB4MCwNCj4+PiAgICAg
+ICAgIGJpX2ZsYWdzID0gMSwNCj4+PiAgICAgICAgIGJpX3J3ID0gMCwNCj4+PiAgICAgICAgIGJp
+X3ZjbnQgPSAwLA0KPj4+ICAgICAgICAgYmlfaWR4ID0gMCwNCj4+PiAgICAgICAgIGJpX3BoeXNf
+c2VnbWVudHMgPSAwLA0KPj4+ICAgICAgICAgYmlfc2l6ZSA9IDAsDQo+Pj4gICAgICAgICBiaV9z
+ZWdfZnJvbnRfc2l6ZSA9IDAsDQo+Pj4gICAgICAgICBiaV9zZWdfYmFja19zaXplID0gMCwNCj4+
+PiAgICAgICAgIGJpX2VuZF9pbyA9IDB4MCwNCj4+PiAgICAgICAgIGJpX3ByaXZhdGUgPSAweGZm
+ZmY4ODFlMDhkNTRkMzAsDQo+Pj4gICAgICAgICBiaV9pb2MgPSAweDAsDQo+Pj4gICAgICAgICBi
+aV9jc3MgPSAweDAsDQo+Pj4gICAgICAgICBiaV9pbnRlZ3JpdHkgPSAweDAsDQo+Pj4gICAgICAg
+ICBiaV9tYXhfdmVjcyA9IDEsDQo+Pj4gICAgICAgICBiaV9jbnQgPSB7DQo+Pj4gICAgICAgICAg
+IGNvdW50ZXIgPSAxDQo+Pj4gICAgICAgICB9LA0KPj4+ICAgICAgICAgYmlfaW9fdmVjID0gMHhm
+ZmZmODgxZTA4ZDU0ZjAwLA0KPj4+ICAgICAgICAgYmlfcG9vbCA9IDB4MCwNCj4+PiAgICAgICAg
+IHsNCj4+PiAgICAgICAgICAgYmlvX2F1eCA9IDB4MCwNCj4+PiAgICAgICAgICAgX19VTklRVUVf
+SURfcmhfa2FiaV9oaWRlMTUgPSB7DQo+Pj4gICAgICAgICAgICAgcmhfcmVzZXJ2ZWQxID0gMHgw
+DQo+Pj4gICAgICAgICAgIH0sDQo+Pj4gICAgICAgICAgIHs8Tm8gZGF0YSBmaWVsZHM+fQ0KPj4+
+ICAgICAgICAgfSwNCj4+PiAgICAgICAgIGJpX2lubGluZV92ZWNzID0gMHhmZmZmODgxZTA4ZDU0
+ZTc4DQo+Pj4gICAgICAgfSwNCj4+PiAgICAgICBycmVxID0gew0KPj4+ICAgICAgICAgYmlfc2Vj
+dG9yID0gMCwNCj4+PiAgICAgICAgIGJpX25leHQgPSAweDAsDQo+Pj4gICAgICAgICBiaV9iZGV2
+ID0gMHgwLA0KPj4+ICAgICAgICAgYmlfZmxhZ3MgPSAxLA0KPj4+ICAgICAgICAgYmlfcncgPSAw
+LA0KPj4+ICAgICAgICAgYmlfdmNudCA9IDAsDQo+Pj4gICAgICAgICBiaV9pZHggPSAwLA0KPj4+
+ICAgICAgICAgYmlfcGh5c19zZWdtZW50cyA9IDAsDQo+Pj4gICAgICAgICBiaV9zaXplID0gMCwN
+Cj4+PiAgICAgICAgIGJpX3NlZ19mcm9udF9zaXplID0gMCwNCj4+PiAgICAgICAgIGJpX3NlZ19i
+YWNrX3NpemUgPSAwLA0KPj4+ICAgICAgICAgYmlfZW5kX2lvID0gMHgwLA0KPj4+ICAgICAgICAg
+YmlfcHJpdmF0ZSA9IDB4ZmZmZjg4MWUwOGQ1NGQzMCwNCj4+PiAgICAgICAgIGJpX2lvYyA9IDB4
+MCwNCj4+PiAgICAgICAgIGJpX2NzcyA9IDB4MCwNCj4+PiAgICAgICAgIGJpX2ludGVncml0eSA9
+IDB4MCwNCj4+PiAgICAgICAgIGJpX21heF92ZWNzID0gMSwNCj4+PiAgICAgICAgIGJpX2NudCA9
+IHsNCj4+PiAgICAgICAgICAgY291bnRlciA9IDENCj4+PiAgICAgICAgIH0sDQo+Pj4gICAgICAg
+ICBiaV9pb192ZWMgPSAweGZmZmY4ODFlMDhkNTRmMTAsDQo+Pj4gICAgICAgICBiaV9wb29sID0g
+MHgwLA0KPj4+ICAgICAgICAgew0KPj4+ICAgICAgICAgICBiaW9fYXV4ID0gMHgwLA0KPj4+ICAg
+ICAgICAgICBfX1VOSVFVRV9JRF9yaF9rYWJpX2hpZGUxNSA9IHsNCj4+PiAgICAgICAgICAgICBy
+aF9yZXNlcnZlZDEgPSAweDANCj4+PiAgICAgICAgICAgfSwNCj4+PiAgICAgICAgICAgezxObyBk
+YXRhIGZpZWxkcz59DQo+Pj4gICAgICAgICB9LA0KPj4+ICAgICAgICAgYmlfaW5saW5lX3ZlY3Mg
+PSAweGZmZmY4ODFlMDhkNTRmMDANCj4+PiAgICAgICB9LA0KPj4+ICAgICAgIHZlYyA9IHsNCj4+
+PiAgICAgICAgIGJ2X3BhZ2UgPSAweGZmZmZlYTAwNzgyMzYwODAsDQo+Pj4gICAgICAgICBidl9s
+ZW4gPSA0MDk2LA0KPj4+ICAgICAgICAgYnZfb2Zmc2V0ID0gMA0KPj4+ICAgICAgIH0sDQo+Pj4g
+ICAgICAgcnZlYyA9IHsNCj4+PiAgICAgICAgIGJ2X3BhZ2UgPSAweDAsDQo+Pj4gICAgICAgICBi
+dl9sZW4gPSAwLA0KPj4+ICAgICAgICAgYnZfb2Zmc2V0ID0gMA0KPj4+ICAgICAgIH0sDQo+Pj4g
+ICAgICAgcGFnZSA9IDB4ZmZmZmVhMDA3ODIzNjA4MCwNCj4+PiAgICAgICBvcmlnX3BhZ2UgPSAw
+eGZmZmZlYTAwNzgyMzYwODAsDQo+Pj4gICAgICAgdG9yZWFkID0gMHgwLA0KPj4+ICAgICAgIHJl
+YWQgPSAweDAsDQo+Pj4gICAgICAgdG93cml0ZSA9IDB4MCwNCj4+PiAgICAgICB3cml0dGVuID0g
+MHhmZmZmODgyNDgzMmE3YzAwLA0KPj4+ICAgICAgIHNlY3RvciA9IDI5NjA5Nzk4NjMyLA0KPj4+
+ICAgICAgIGZsYWdzID0gMjQsDQo+PiANCj4+IFNlZW1zIHRoZSBmbGFncyBpcyBSNV9PVkVSV1JJ
+VEUgfCBSNV9JbnN5bmMsIGhhbmRsZV9zdHJpcGVfY2xlYW5fZXZlbnQNCj4+IG9ubHkgY2FsbHMg
+YnJlYWtfc3RyaXBlX2JhdGNoX2xpc3QgaWYgZG9fZW5kaW8gaXMgc2V0IHRvIHRydWUuDQo+PiAN
+Cj4+IGlmIChoZWFkX3NoLT5iYXRjaF9oZWFkICYmIGRvX2VuZGlvKQ0KPj4gICAgICAgICAgICAg
+ICAgYnJlYWtfc3RyaXBlX2JhdGNoX2xpc3QoaGVhZF9zaCwgU1RSSVBFX0VYUEFORF9TWU5DX0ZM
+QUdTKTsNCj4+IA0KPj4gQW5kIGRvX2VuZGlvIGlzIHNldCB0byB0cnVlIGlmIHdlIG1lZXQgdGhl
+IGJlbG93IGNvbmRpdGlvbi4NCj4+IA0KPj4gaWYgKCF0ZXN0X2JpdChSNV9MT0NLRUQsICZkZXYt
+PmZsYWdzKSAmJg0KPj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgKHRlc3RfYml0KFI1X1VQ
+VE9EQVRFLCAmZGV2LT5mbGFncykgfHwNCj4+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICB0
+ZXN0X2JpdChSNV9EaXNjYXJkLCAmZGV2LT5mbGFncykgfHwNCj4+ICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICB0ZXN0X2JpdChSNV9Ta2lwQ29weSwgJmRldi0+ZmxhZ3MpKSkgew0KPj4gDQo+
+PiBJIGd1ZXNzIGl0IGlzIHdoeSB0aGUgYmF0Y2hfaGVhZCBpcyBub3QgbnVsbCwganVzdCBteSAy
+IGNlbnRzLg0KPiANCj4gdGhpcyBpcyBzdHJhbmdlLiBUaGUgYmlfZW5kX2lvID09IE5VTEwsIHdy
+aXR0ZW4gIT0gTlVMTCBhbmQgIVI1X1VQVE9EQVRFIG1lYW5zDQo+IHdlIGFyZSBkbyByZXN0cnVj
+dGlvbiBhbmQgcmVzdHJ1Y3Rpb24gaXNuJ3QgZmluaXNoZWQgeWV0LiBCdXQgYXQgdGhhdCB0aW1l
+LCB3ZQ0KPiBzaG91bGQgaGF2ZSBSNV9MT0NLRUQgc2V0LCB3aGljaCBpc24ndCB0cnVlIGZvciB0
+aGlzIGNhc2UuDQo+IA0KPiBEaWQgeW91IGVuYWJsZSBza2lwX2NvcHkgb3IgZGlzY2FyZD8NCg0K
+Tm9wZSENCg0KIyBjYXQgL3N5cy9ibG9jay9tZDMyL21kL3NraXBfY29weSANCjANCg0KIyBjYXQg
+L3N5cy9ibG9jay9tZDMyL3F1ZXVlL2Rpc2NhcmRfbWF4X2J5dGVzDQowDQojIGNhdCAvc3lzL2Js
+b2NrL21kMzIvcXVldWUvZGlzY2FyZF9ncmFudWxhcml0eQ0KNTI0Mjg4DQojIGNhdCAvc3lzL2Js
+b2NrL21kMzIvcXVldWUvZGlzY2FyZF96ZXJvZXNfZGF0YQ0KMA0KIyBjYXQgL3N5cy9ibG9jay9t
+ZDMyL2Rpc2NhcmRfYWxpZ25tZW50IA0KNTI0Mjg4DQoNCiMgY2F0IC9zeXMvbW9kdWxlL3JhaWQ0
+NTYvcGFyYW1ldGVycy9kZXZpY2VzX2hhbmRsZV9kaXNjYXJkX3NhZmVseSANCk4NCg0KDQpUaGFu
+a3MhDQoNClN0ZXBoYW5lDQoNCg==
 
-Can you dump the full stripe_head info for this crash dump? Also stripe_head
-should include 10 dev for your 10-disk raid, but crash dump only show one, is
-it possible you can dump the info for the devs in the stripe?
