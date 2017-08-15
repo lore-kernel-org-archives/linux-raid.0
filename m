@@ -1,25 +1,61 @@
-From: Brad Campbell <lists2009@fnarfbargle.com>
-Subject: Re: [GIT PULL] MD update for 4.13-rc5
-Date: Tue, 15 Aug 2017 15:46:59 +0800
-Message-ID: <7ef5cf69-6f72-dff5-feef-d3aae760afed@fnarfbargle.com>
-References: <20170814164152.mjbewehyeytyfawd@kernel.org>
+From: Boris Brezillon <boris.brezillon@free-electrons.com>
+Subject: Re: [PATCH v5 04/19] crypto: marvell/cesa: remove redundant backlog
+ checks on EBUSY
+Date: Tue, 15 Aug 2017 10:16:29 +0200
+Message-ID: <20170815101629.7d323845@bbrezillon>
+References: <1502724094-23305-1-git-send-email-gilad@benyossef.com>
+        <1502724094-23305-5-git-send-email-gilad@benyossef.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170814164152.mjbewehyeytyfawd@kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-security-module-owner@vger.kernel.org>
+In-Reply-To: <1502724094-23305-5-git-send-email-gilad@benyossef.com>
+Sender: owner-linux-security-module@vger.kernel.org
+To: Gilad Ben-Yossef <gilad@benyossef.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Tom Lendacky <thomas.lendacky@amd.com>, Gary Hook <gary.hook@amd.com>, Arnaud Ebalard <arno@natisbad.org>, Matthias Brugger <matthias.bgg@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, linux-kerne
 List-Id: linux-raid.ids
 
-G'day Shaohua,
+Le Mon, 14 Aug 2017 18:21:14 +0300,
+Gilad Ben-Yossef <gilad@benyossef.com> a écrit :
 
-Should this one be tagged for stable 4.12?
+> Now that -EBUSY return code only indicates backlog queueing
+> we can safely remove the now redundant check for the
+> CRYPTO_TFM_REQ_MAY_BACKLOG flag when -EBUSY is returned.
+> 
+> Signed-off-by: Gilad Ben-Yossef <gilad@benyossef.com>
 
-On 15/08/17 00:41, Shaohua Li wrote:
-> Shaohua Li (1):
->       MD: not clear ->safemode for external metadata array
+Acked-by: Boris Brezillon <boris.brezillon@free-electrons.com>
 
-Regards,
-Brad
+> ---
+>  drivers/crypto/marvell/cesa.c | 3 +--
+>  drivers/crypto/marvell/cesa.h | 2 +-
+>  2 files changed, 2 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/crypto/marvell/cesa.c b/drivers/crypto/marvell/cesa.c
+> index 6e7a5c7..269737f 100644
+> --- a/drivers/crypto/marvell/cesa.c
+> +++ b/drivers/crypto/marvell/cesa.c
+> @@ -183,8 +183,7 @@ int mv_cesa_queue_req(struct crypto_async_request *req,
+>  	spin_lock_bh(&engine->lock);
+>  	ret = crypto_enqueue_request(&engine->queue, req);
+>  	if ((mv_cesa_req_get_type(creq) == CESA_DMA_REQ) &&
+> -	    (ret == -EINPROGRESS ||
+> -	    (ret == -EBUSY && req->flags & CRYPTO_TFM_REQ_MAY_BACKLOG)))
+> +	    (ret == -EINPROGRESS || ret == -EBUSY)
+>  		mv_cesa_tdma_chain(engine, creq);
+>  	spin_unlock_bh(&engine->lock);
+>  
+> diff --git a/drivers/crypto/marvell/cesa.h b/drivers/crypto/marvell/cesa.h
+> index b7872f6..63c8457 100644
+> --- a/drivers/crypto/marvell/cesa.h
+> +++ b/drivers/crypto/marvell/cesa.h
+> @@ -763,7 +763,7 @@ static inline int mv_cesa_req_needs_cleanup(struct crypto_async_request *req,
+>  	 * the backlog and will be processed later. There's no need to
+>  	 * clean it up.
+>  	 */
+> -	if (ret == -EBUSY && req->flags & CRYPTO_TFM_REQ_MAY_BACKLOG)
+> +	if (ret == -EBUSY)
+>  		return false;
+>  
+>  	/* Request wasn't queued, we need to clean it up */
+
