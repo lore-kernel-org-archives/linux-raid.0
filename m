@@ -1,182 +1,143 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: [PATCH V2 3/9] nullb: add interface to power on disk
-Date: Mon, 14 Aug 2017 15:04:54 -0700
-Message-ID: <d48ba9601b8b739384714264644a5764bdefa0d4.1502746933.git.shli@fb.com>
-References: <cover.1502746933.git.shli@fb.com>
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <cover.1502746933.git.shli@fb.com>
-In-Reply-To: <cover.1502746933.git.shli@fb.com>
-References: <cover.1502746933.git.shli@fb.com>
-Sender: linux-block-owner@vger.kernel.org
-To: linux-block@vger.kernel.org, linux-raid@vger.kernel.org
-Cc: kernel-team@fb.com, Kyungchan Koh <kyungchan.koh@gmail.com>, Shaohua Li <shli@fb.com>
+From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Subject: Re: [PATCH v5 05/19] crypto: introduce crypto wait for async op
+Date: Tue, 15 Aug 2017 03:23:03 +0100
+Message-ID: <20170815032303.000042b2@huawei.com>
+References: <1502724094-23305-1-git-send-email-gilad@benyossef.com>
+ <1502724094-23305-6-git-send-email-gilad@benyossef.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1502724094-23305-6-git-send-email-gilad@benyossef.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Gilad Ben-Yossef <gilad@benyossef.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, linux-doc@vger.kernel.org, Gary Hook <gary.hook@amd.com>, David Howells <dhowells@redhat.com>, dm-devel@redhat.com, keyrings@vger.kernel.org, linux-ima-devel@lists.sourceforge.net, Alasdair Kergon <agk@redhat.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Herbert Xu <herbert@gondor.apana.org.au>, Jonathan Corbet <corbet@lwn.net>, Mimi Zohar <zohar@linux.vnet.ibm.com>, "Serge E. Hallyn" <serge@hallyn.com>, Tom Lendacky <thomas.lendacky@amd.com>, Eric Biggers <ebiggers3@gmail.com>, linux-cifs@vger.kernel.org, linux-ima-user@lists.sourceforge.net, Arnaud Ebalard <arno@natisbad.org>, linux-raid@vger.kernel.org, linux-fscrypt@vger.kernel.org, linux-mediatek@lists.infradead.org, James Morris <james.l.morris@oracle.com>, Matthias Brugger <matthias.bgg@gmail.com>, Jaegeuk Kim <jaegeuk@kernel.org>, linux-arm-kernel@lists.infradead.o
 List-Id: linux-raid.ids
 
-From: Shaohua Li <shli@fb.com>
+On Mon, 14 Aug 2017 18:21:15 +0300
+Gilad Ben-Yossef <gilad@benyossef.com> wrote:
 
-The device created in nullb configfs interface isn't power on by
-default. After user configures the device, user can do 'echo 1 >
-xxx/nullb/device_name/power' to power on the device, which will create a
-disk. the xxx/nullb/device_name/index is the disk index, so if the index
-is 2, the new created disk should be named as /dev/nullb2. Note, the
-'index' is only valid after disk is power on.
+> Invoking a possibly async. crypto op and waiting for completion
+> while correctly handling backlog processing is a common task
+> in the crypto API implementation and outside users of it.
+> 
+> This patch adds a generic implementation for doing so in
+> preparation for using it across the board instead of hand
+> rolled versions.
+> 
+> Signed-off-by: Gilad Ben-Yossef <gilad@benyossef.com>
+> CC: Eric Biggers <ebiggers3@gmail.com>
 
-'echo 0 > xxx/nullb/device_name/power' will remove the disk. Note, this
-doesn't remove the device. To remove the device, user should do 'rmdir
-xxx/nullb/device_name'. Removing the device will remove the disk too.
+One really trivial point inline I happened to notice.
 
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- drivers/block/null_blk.c | 80 ++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 80 insertions(+)
+> ---
+>  crypto/api.c           | 13 +++++++++++++
+>  include/linux/crypto.h | 41 +++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 54 insertions(+)
+> 
+> diff --git a/crypto/api.c b/crypto/api.c
+> index 941cd4c..2a2479d 100644
+> --- a/crypto/api.c
+> +++ b/crypto/api.c
+> @@ -24,6 +24,7 @@
+>  #include <linux/sched/signal.h>
+>  #include <linux/slab.h>
+>  #include <linux/string.h>
+> +#include <linux/completion.h>
+>  #include "internal.h"
+>  
+>  LIST_HEAD(crypto_alg_list);
+> @@ -595,5 +596,17 @@ int crypto_has_alg(const char *name, u32 type, u32 mask)
+>  }
+>  EXPORT_SYMBOL_GPL(crypto_has_alg);
+>  
+> +void crypto_req_done(struct crypto_async_request *req, int err)
+> +{
+> +	struct crypto_wait *wait = req->data;
+> +
+> +	if (err == -EINPROGRESS)
+> +		return;
+> +
+> +	wait->err = err;
+> +	complete(&wait->completion);
+> +}
+> +EXPORT_SYMBOL_GPL(crypto_req_done);
+> +
+>  MODULE_DESCRIPTION("Cryptographic core API");
+>  MODULE_LICENSE("GPL");
+> diff --git a/include/linux/crypto.h b/include/linux/crypto.h
+> index 84da997..bb00186 100644
+> --- a/include/linux/crypto.h
+> +++ b/include/linux/crypto.h
+> @@ -24,6 +24,7 @@
+>  #include <linux/slab.h>
+>  #include <linux/string.h>
+>  #include <linux/uaccess.h>
+> +#include <linux/completion.h>
+>  
+>  /*
+>   * Autoloaded crypto modules should only use a prefixed name to avoid allowing
+> @@ -468,6 +469,45 @@ struct crypto_alg {
+>  } CRYPTO_MINALIGN_ATTR;
+>  
+>  /*
+> + * A helper struct for waiting for completion of async crypto ops
+> + */
+> +struct crypto_wait {
+> +	struct completion completion;
+> +	int err;
+> +};
+> +
+> +/*
+> + * Macro for declaring a crypto op async wait object on stack
+> + */
+> +#define DECLARE_CRYPTO_WAIT(_wait) \
+> +	struct crypto_wait _wait = { \
+> +		COMPLETION_INITIALIZER_ONSTACK((_wait).completion), 0 }
+> +
+> +/*
+> + * Async ops completion helper functioons
+> + */
+> +void crypto_req_done(struct crypto_async_request *req, int err);
+> +
+> +static inline int crypto_wait_req(int err, struct crypto_wait *wait)
+> +{
+> +	switch (err) {
+> +	case -EINPROGRESS:
+> +	case -EBUSY:
+> +		wait_for_completion(&wait->completion);
+> +		reinit_completion(&wait->completion);
+> +		err = wait->err;
+> +		break;
+> +	};
+> +
+> +	return err;
+> +}
+> +
+> +static inline void crypto_init_wait(struct crypto_wait *wait)
+> +{
+> +	init_completion(&wait->completion);
+> +}
+> +
+> +/*
+>   * Algorithm registration interface.
+>   */
+>  int crypto_register_alg(struct crypto_alg *alg);
+> @@ -1604,5 +1644,6 @@ static inline int crypto_comp_decompress(struct crypto_comp *tfm,
+>  						    src, slen, dst, dlen);
+>  }
+>  
+> +
 
-diff --git a/drivers/block/null_blk.c b/drivers/block/null_blk.c
-index c782492..cf14c46 100644
---- a/drivers/block/null_blk.c
-+++ b/drivers/block/null_blk.c
-@@ -59,9 +59,11 @@ struct nullb_device {
- 	unsigned int blocksize; /* block size */
- 	unsigned int irqmode; /* IRQ completion handler */
- 	unsigned int hw_queue_depth; /* queue depth */
-+	unsigned int index; /* index of the disk, only valid with a disk */
- 	bool use_lightnvm; /* register as a LightNVM device */
- 	bool blocking; /* blocking blk-mq device */
- 	bool use_per_node_hctx; /* use per-node allocation for hardware context */
-+	bool power; /* power on/off the device */
- };
- 
- struct nullb {
-@@ -193,6 +195,8 @@ MODULE_PARM_DESC(use_per_node_hctx, "Use per-node allocation for hardware contex
- 
- static struct nullb_device *null_alloc_dev(void);
- static void null_free_dev(struct nullb_device *dev);
-+static void null_del_dev(struct nullb *nullb);
-+static int null_add_dev(struct nullb_device *dev);
- 
- static inline struct nullb_device *to_nullb_device(struct config_item *item)
- {
-@@ -284,10 +288,50 @@ NULLB_DEVICE_ATTR(queue_mode, uint);
- NULLB_DEVICE_ATTR(blocksize, uint);
- NULLB_DEVICE_ATTR(irqmode, uint);
- NULLB_DEVICE_ATTR(hw_queue_depth, uint);
-+NULLB_DEVICE_ATTR(index, uint);
- NULLB_DEVICE_ATTR(use_lightnvm, bool);
- NULLB_DEVICE_ATTR(blocking, bool);
- NULLB_DEVICE_ATTR(use_per_node_hctx, bool);
- 
-+static ssize_t nullb_device_power_show(struct config_item *item, char *page)
-+{
-+	return nullb_device_bool_attr_show(to_nullb_device(item)->power, page);
-+}
-+
-+static ssize_t nullb_device_power_store(struct config_item *item,
-+				     const char *page, size_t count)
-+{
-+	struct nullb_device *dev = to_nullb_device(item);
-+	bool newp = false;
-+	ssize_t ret;
-+
-+	ret = nullb_device_bool_attr_store(&newp, page, count);
-+	if (ret < 0)
-+		return ret;
-+
-+	if (!dev->power && newp) {
-+		if (test_and_set_bit(NULLB_DEV_FL_UP, &dev->flags))
-+			return count;
-+		if (null_add_dev(dev)) {
-+			clear_bit(NULLB_DEV_FL_UP, &dev->flags);
-+			return -ENOMEM;
-+		}
-+
-+		set_bit(NULLB_DEV_FL_CONFIGURED, &dev->flags);
-+		dev->power = newp;
-+	} else if (to_nullb_device(item)->power && !newp) {
-+		mutex_lock(&lock);
-+		dev->power = newp;
-+		null_del_dev(dev->nullb);
-+		mutex_unlock(&lock);
-+		clear_bit(NULLB_DEV_FL_UP, &dev->flags);
-+	}
-+
-+	return count;
-+}
-+
-+CONFIGFS_ATTR(nullb_device_, power);
-+
- static struct configfs_attribute *nullb_device_attrs[] = {
- 	&nullb_device_attr_size,
- 	&nullb_device_attr_completion_nsec,
-@@ -297,9 +341,11 @@ static struct configfs_attribute *nullb_device_attrs[] = {
- 	&nullb_device_attr_blocksize,
- 	&nullb_device_attr_irqmode,
- 	&nullb_device_attr_hw_queue_depth,
-+	&nullb_device_attr_index,
- 	&nullb_device_attr_use_lightnvm,
- 	&nullb_device_attr_blocking,
- 	&nullb_device_attr_use_per_node_hctx,
-+	&nullb_device_attr_power,
- 	NULL,
- };
- 
-@@ -335,6 +381,15 @@ config_item *nullb_group_make_item(struct config_group *group, const char *name)
- static void
- nullb_group_drop_item(struct config_group *group, struct config_item *item)
- {
-+	struct nullb_device *dev = to_nullb_device(item);
-+
-+	if (test_and_clear_bit(NULLB_DEV_FL_UP, &dev->flags)) {
-+		mutex_lock(&lock);
-+		dev->power = false;
-+		null_del_dev(dev->nullb);
-+		mutex_unlock(&lock);
-+	}
-+
- 	config_item_put(item);
- }
- 
-@@ -973,11 +1028,35 @@ static int null_init_tag_set(struct nullb *nullb, struct blk_mq_tag_set *set)
- 	return blk_mq_alloc_tag_set(set);
- }
- 
-+static void null_validate_conf(struct nullb_device *dev)
-+{
-+	dev->blocksize = round_down(dev->blocksize, 512);
-+	dev->blocksize = clamp_t(unsigned int, dev->blocksize, 512, 4096);
-+	if (dev->use_lightnvm && dev->blocksize != 4096)
-+		dev->blocksize = 4096;
-+
-+	if (dev->use_lightnvm && dev->queue_mode != NULL_Q_MQ)
-+		dev->queue_mode = NULL_Q_MQ;
-+
-+	if (dev->queue_mode == NULL_Q_MQ && dev->use_per_node_hctx) {
-+		if (dev->submit_queues != nr_online_nodes)
-+			dev->submit_queues = nr_online_nodes;
-+	} else if (dev->submit_queues > nr_cpu_ids)
-+		dev->submit_queues = nr_cpu_ids;
-+	else if (dev->submit_queues == 0)
-+		dev->submit_queues = 1;
-+
-+	dev->queue_mode = min_t(unsigned int, dev->queue_mode, NULL_Q_MQ);
-+	dev->irqmode = min_t(unsigned int, dev->irqmode, NULL_IRQ_TIMER);
-+}
-+
- static int null_add_dev(struct nullb_device *dev)
- {
- 	struct nullb *nullb;
- 	int rv;
- 
-+	null_validate_conf(dev);
-+
- 	nullb = kzalloc_node(sizeof(*nullb), GFP_KERNEL, dev->home_node);
- 	if (!nullb) {
- 		rv = -ENOMEM;
-@@ -1040,6 +1119,7 @@ static int null_add_dev(struct nullb_device *dev)
- 
- 	mutex_lock(&lock);
- 	nullb->index = nullb_indexes++;
-+	dev->index = nullb->index;
- 	mutex_unlock(&lock);
- 
- 	blk_queue_logical_block_size(nullb->q, dev->blocksize);
--- 
-2.9.5
+Trivial observation.  Shouldn't have this bonus blank line inserted here.
+
+>  #endif	/* _LINUX_CRYPTO_H */
+>  
