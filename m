@@ -1,68 +1,133 @@
-From: <een@zmva.hu>
-Subject: (unknown)
-Date: Tue, 15 Aug 2017 14:45:27 -0000
-Message-ID: <150280832701.19167.18248295355556062866@hinet.net>
-Mime-Version: 1.0
-Content-Type: application/zip; name="4863169031.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-Subject: 
-Content-Disposition: attachment
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 2/2] dm integrity: use init_completion instead of COMPLETION_INITIALIZER_ONSTACK
+Date: Tue, 15 Aug 2017 17:11:59 +0200
+Message-ID: <20170815151242.2637861-2-arnd@arndb.de>
+References: <20170815151242.2637861-1-arnd@arndb.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170815151242.2637861-1-arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>
+Cc: Ingo Molnar <mingo@kernel.org>, Byungchul Park <byungchul.park@lge.com>, Peter Zijlstra <peterz@infradead.org>, Arnd Bergmann <arnd@arndb.de>, Mikulas Patocka <mpatocka@redhat.com>, Jens Axboe <axboe@fb.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-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
+The new lockdep support for completions causeed the stack usage
+in dm-integrity to explode, in case of write_journal from 504 bytes
+to 1120 (using arm gcc-7.1.1):
+
+drivers/md/dm-integrity.c: In function 'write_journal':
+drivers/md/dm-integrity.c:827:1: error: the frame size of 1120 bytes is larger than 1024 bytes [-Werror=frame-larger-than=]
+
+The problem is that not only the size of 'struct completion' grows
+significantly, but we end up having multiple copies of it on the stack
+when we assign it from a local variable after the initial declaration.
+
+COMPLETION_INITIALIZER_ONSTACK() is the right thing to use when we
+want to declare and initialize a completion on the stack. However,
+this driver doesn't do that and instead initializes the completion
+just before it is used.
+
+In this case, init_completion() does the same thing more efficiently,
+and drops the stack usage for the function above down to 496 bytes.
+While the other functions in this file are not bad enough to cause
+a warning, they benefit equally from the change, so I do the change
+across the entire file. In the one place where we reuse a completion,
+I picked the cheaper reinit_completion() over init_completion().
+
+Fixes: cd8084f91c02 ("locking/lockdep: Apply crossrelease to completions")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+The patch causing this is currently part of linux-next, scheduled for
+4.14, so it would be good to have this in the same release.
+---
+ drivers/md/dm-integrity.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
+index 293a19652d55..b16010bcbd17 100644
+--- a/drivers/md/dm-integrity.c
++++ b/drivers/md/dm-integrity.c
+@@ -773,13 +773,13 @@ static void write_journal(struct dm_integrity_c *ic, unsigned commit_start, unsi
+ 	unsigned i;
+ 
+ 	io_comp.ic = ic;
+-	io_comp.comp = COMPLETION_INITIALIZER_ONSTACK(io_comp.comp);
++	init_completion(&io_comp.comp);
+ 
+ 	if (commit_start + commit_sections <= ic->journal_sections) {
+ 		io_comp.in_flight = (atomic_t)ATOMIC_INIT(1);
+ 		if (ic->journal_io) {
+ 			crypt_comp_1.ic = ic;
+-			crypt_comp_1.comp = COMPLETION_INITIALIZER_ONSTACK(crypt_comp_1.comp);
++			init_completion(&crypt_comp_1.comp);
+ 			crypt_comp_1.in_flight = (atomic_t)ATOMIC_INIT(0);
+ 			encrypt_journal(ic, true, commit_start, commit_sections, &crypt_comp_1);
+ 			wait_for_completion_io(&crypt_comp_1.comp);
+@@ -795,18 +795,18 @@ static void write_journal(struct dm_integrity_c *ic, unsigned commit_start, unsi
+ 		to_end = ic->journal_sections - commit_start;
+ 		if (ic->journal_io) {
+ 			crypt_comp_1.ic = ic;
+-			crypt_comp_1.comp = COMPLETION_INITIALIZER_ONSTACK(crypt_comp_1.comp);
++			init_completion(&crypt_comp_1.comp);
+ 			crypt_comp_1.in_flight = (atomic_t)ATOMIC_INIT(0);
+ 			encrypt_journal(ic, true, commit_start, to_end, &crypt_comp_1);
+ 			if (try_wait_for_completion(&crypt_comp_1.comp)) {
+ 				rw_journal(ic, REQ_OP_WRITE, REQ_FUA, commit_start, to_end, &io_comp);
+-				crypt_comp_1.comp = COMPLETION_INITIALIZER_ONSTACK(crypt_comp_1.comp);
++				reinit_completion(&crypt_comp_1.comp);
+ 				crypt_comp_1.in_flight = (atomic_t)ATOMIC_INIT(0);
+ 				encrypt_journal(ic, true, 0, commit_sections - to_end, &crypt_comp_1);
+ 				wait_for_completion_io(&crypt_comp_1.comp);
+ 			} else {
+ 				crypt_comp_2.ic = ic;
+-				crypt_comp_2.comp = COMPLETION_INITIALIZER_ONSTACK(crypt_comp_2.comp);
++				init_completion(&crypt_comp_2.comp);
+ 				crypt_comp_2.in_flight = (atomic_t)ATOMIC_INIT(0);
+ 				encrypt_journal(ic, true, 0, commit_sections - to_end, &crypt_comp_2);
+ 				wait_for_completion_io(&crypt_comp_1.comp);
+@@ -1679,7 +1679,7 @@ static void dm_integrity_map_continue(struct dm_integrity_io *dio, bool from_map
+ 	dio->in_flight = (atomic_t)ATOMIC_INIT(2);
+ 
+ 	if (need_sync_io) {
+-		read_comp = COMPLETION_INITIALIZER_ONSTACK(read_comp);
++		init_completion(&read_comp);
+ 		dio->completion = &read_comp;
+ 	} else
+ 		dio->completion = NULL;
+@@ -1836,7 +1836,7 @@ static void do_journal_write(struct dm_integrity_c *ic, unsigned write_start,
+ 
+ 	comp.ic = ic;
+ 	comp.in_flight = (atomic_t)ATOMIC_INIT(1);
+-	comp.comp = COMPLETION_INITIALIZER_ONSTACK(comp.comp);
++	init_completion(&comp.comp);
+ 
+ 	i = write_start;
+ 	for (n = 0; n < write_sections; n++, i++, wraparound_section(ic, &i)) {
+@@ -2063,7 +2063,7 @@ static void replay_journal(struct dm_integrity_c *ic)
+ 		if (ic->journal_io) {
+ 			struct journal_completion crypt_comp;
+ 			crypt_comp.ic = ic;
+-			crypt_comp.comp = COMPLETION_INITIALIZER_ONSTACK(crypt_comp.comp);
++			init_completion(&crypt_comp.comp);
+ 			crypt_comp.in_flight = (atomic_t)ATOMIC_INIT(0);
+ 			encrypt_journal(ic, false, 0, ic->journal_sections, &crypt_comp);
+ 			wait_for_completion(&crypt_comp.comp);
+@@ -2636,7 +2636,7 @@ static int create_journal(struct dm_integrity_c *ic, char **error)
+ 			memset(iv, 0x00, ivsize);
+ 
+ 			skcipher_request_set_crypt(req, sg, sg, PAGE_SIZE * ic->journal_pages + sizeof ic->commit_ids, iv);
+-			comp.comp = COMPLETION_INITIALIZER_ONSTACK(comp.comp);
++			init_completion(&comp.comp);
+ 			comp.in_flight = (atomic_t)ATOMIC_INIT(1);
+ 			if (do_crypt(true, req, &comp))
+ 				wait_for_completion(&comp.comp);
+@@ -2693,7 +2693,7 @@ static int create_journal(struct dm_integrity_c *ic, char **error)
+ 
+ 				sg_init_one(&sg, crypt_data, crypt_len);
+ 				skcipher_request_set_crypt(req, &sg, &sg, crypt_len, iv);
+-				comp.comp = COMPLETION_INITIALIZER_ONSTACK(comp.comp);
++				init_completion(&comp.comp);
+ 				comp.in_flight = (atomic_t)ATOMIC_INIT(1);
+ 				if (do_crypt(true, req, &comp))
+ 					wait_for_completion(&comp.comp);
+-- 
+2.9.0
