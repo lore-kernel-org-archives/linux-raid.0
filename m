@@ -1,202 +1,148 @@
-From: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Subject: [PATCH 2/2] raid5-ppl: Recovery support for multiple partial parity logs
-Date: Wed, 16 Aug 2017 17:13:46 +0200
-Message-ID: <20170816151346.23382-3-pawel.baldysiak@intel.com>
-References: <20170816151346.23382-1-pawel.baldysiak@intel.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170816151346.23382-1-pawel.baldysiak@intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@kernel.org, Pawel Baldysiak <pawel.baldysiak@intel.com>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: Re: [dm-devel] [PATCH 2/2] dm integrity: use init_completion instead
+ of COMPLETION_INITIALIZER_ONSTACK
+Date: Wed, 16 Aug 2017 12:12:52 -0400 (EDT)
+Message-ID: <alpine.LRH.2.02.1708161209220.25079@file01.intranet.prod.int.rdu2.redhat.com>
+References: <20170815151242.2637861-1-arnd@arndb.de> <20170815151242.2637861-2-arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170815151242.2637861-2-arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, linux-raid@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, Byungchul Park <byungchul.park@lge.com>, Ingo Molnar <mingo@kernel.org>
 List-Id: linux-raid.ids
 
-Search PPL buffer in order to find out the latest PPL header (the one
-with largest generation number) and use it for recovery. The PPL entry
-format and recovery algorithm are the same as for single PPL approach.
+This patch is OK.
 
-Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
----
- drivers/md/raid5-ppl.c | 128 ++++++++++++++++++++++++++++++++++---------------
- 1 file changed, 90 insertions(+), 38 deletions(-)
+Acked-by: Mikulas Patocka <mpatocka@redhat.com>
 
-diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
-index b313f17a6260..a98ef172f8e8 100644
---- a/drivers/md/raid5-ppl.c
-+++ b/drivers/md/raid5-ppl.c
-@@ -831,12 +831,14 @@ static int ppl_recover_entry(struct ppl_log *log, struct ppl_header_entry *e,
- 	return ret;
- }
- 
--static int ppl_recover(struct ppl_log *log, struct ppl_header *pplhdr)
-+static int ppl_recover(struct ppl_log *log, struct ppl_header *pplhdr,
-+		       sector_t offset)
- {
- 	struct ppl_conf *ppl_conf = log->ppl_conf;
- 	struct md_rdev *rdev = log->rdev;
- 	struct mddev *mddev = rdev->mddev;
--	sector_t ppl_sector = rdev->ppl.sector + (PPL_HEADER_SIZE >> 9);
-+	sector_t ppl_sector = rdev->ppl.sector + offset +
-+			      (PPL_HEADER_SIZE >> 9);
- 	struct page *page;
- 	int i;
- 	int ret = 0;
-@@ -920,6 +922,9 @@ static int ppl_write_empty_header(struct ppl_log *log)
- 		return -ENOMEM;
- 
- 	pplhdr = page_address(page);
-+	/* zero out PPL space to avoid collision with old PPLs */
-+	blkdev_issue_zeroout(rdev->bdev, rdev->ppl.sector,
-+			    log->rdev->ppl.size, GFP_NOIO, 0);
- 	memset(pplhdr->reserved, 0xff, PPL_HDR_RESERVED);
- 	pplhdr->signature = cpu_to_le32(log->ppl_conf->signature);
- 	pplhdr->checksum = cpu_to_le32(~crc32c_le(~0, pplhdr, PAGE_SIZE));
-@@ -940,63 +945,110 @@ static int ppl_load_distributed(struct ppl_log *log)
- 	struct ppl_conf *ppl_conf = log->ppl_conf;
- 	struct md_rdev *rdev = log->rdev;
- 	struct mddev *mddev = rdev->mddev;
--	struct page *page;
--	struct ppl_header *pplhdr;
-+	struct page *page, *page2, *tmp;
-+	struct ppl_header *pplhdr = NULL, *prev_pplhdr = NULL;
- 	u32 crc, crc_stored;
- 	u32 signature;
--	int ret = 0;
-+	int ret = 0, i;
-+	sector_t pplhdr_offset = 0, prev_pplhdr_offset = 0;
- 
- 	pr_debug("%s: disk: %d\n", __func__, rdev->raid_disk);
--
--	/* read PPL header */
-+	/* read PPL headers, find the recent one */
- 	page = alloc_page(GFP_KERNEL);
- 	if (!page)
- 		return -ENOMEM;
- 
--	if (!sync_page_io(rdev, rdev->ppl.sector - rdev->data_offset,
--			  PAGE_SIZE, page, REQ_OP_READ, 0, false)) {
--		md_error(mddev, rdev);
--		ret = -EIO;
--		goto out;
-+	page2 = alloc_page(GFP_KERNEL);
-+	if (!page2) {
-+		__free_page(page);
-+		return -ENOMEM;
- 	}
--	pplhdr = page_address(page);
- 
--	/* check header validity */
--	crc_stored = le32_to_cpu(pplhdr->checksum);
--	pplhdr->checksum = 0;
--	crc = ~crc32c_le(~0, pplhdr, PAGE_SIZE);
-+	/* searching ppl area for latest ppl */
-+	while (pplhdr_offset < rdev->ppl.size - (PPL_HEADER_SIZE >> 9)) {
-+		if (!sync_page_io(rdev,
-+				  rdev->ppl.sector - rdev->data_offset +
-+				  pplhdr_offset, PAGE_SIZE, page, REQ_OP_READ,
-+				  0, false)) {
-+			md_error(mddev, rdev);
-+			ret = -EIO;
-+			/* if not able to read - don't recover any PPL */
-+			pplhdr = NULL;
-+			break;
-+		}
-+		pplhdr = page_address(page);
-+
-+		/* check header validity */
-+		crc_stored = le32_to_cpu(pplhdr->checksum);
-+		pplhdr->checksum = 0;
-+		crc = ~crc32c_le(~0, pplhdr, PAGE_SIZE);
-+
-+		if (crc_stored != crc) {
-+			pr_debug("%s: ppl header crc does not match: stored: 0x%x calculated: 0x%x (offset: %llu)\n",
-+				 __func__, crc_stored, crc,
-+				 (unsigned long long)pplhdr_offset);
-+			pplhdr = prev_pplhdr;
-+			pplhdr_offset = prev_pplhdr_offset;
-+			break;
-+		}
- 
--	if (crc_stored != crc) {
--		pr_debug("%s: ppl header crc does not match: stored: 0x%x calculated: 0x%x\n",
--			 __func__, crc_stored, crc);
--		ppl_conf->mismatch_count++;
--		goto out;
--	}
-+		signature = le32_to_cpu(pplhdr->signature);
- 
--	signature = le32_to_cpu(pplhdr->signature);
-+		if (mddev->external) {
-+			/*
-+			 * For external metadata the header signature is set and
-+			 * validated in userspace.
-+			 */
-+			ppl_conf->signature = signature;
-+		} else if (ppl_conf->signature != signature) {
-+			pr_debug("%s: ppl header signature does not match: stored: 0x%x configured: 0x%x (offset: %llu)\n",
-+				 __func__, signature, ppl_conf->signature,
-+				 (unsigned long long)pplhdr_offset);
-+			pplhdr = prev_pplhdr;
-+			pplhdr_offset = prev_pplhdr_offset;
-+			break;
-+		}
- 
--	if (mddev->external) {
--		/*
--		 * For external metadata the header signature is set and
--		 * validated in userspace.
--		 */
--		ppl_conf->signature = signature;
--	} else if (ppl_conf->signature != signature) {
--		pr_debug("%s: ppl header signature does not match: stored: 0x%x configured: 0x%x\n",
--			 __func__, signature, ppl_conf->signature);
--		ppl_conf->mismatch_count++;
--		goto out;
-+		if (prev_pplhdr && le64_to_cpu(prev_pplhdr->generation) >
-+		    le64_to_cpu(pplhdr->generation)) {
-+			/* previous was newest */
-+			pplhdr = prev_pplhdr;
-+			pplhdr_offset = prev_pplhdr_offset;
-+			break;
-+		}
-+
-+		prev_pplhdr_offset = pplhdr_offset;
-+		prev_pplhdr = pplhdr;
-+
-+		tmp = page;
-+		page = page2;
-+		page2 = tmp;
-+
-+		/* calculate next potential ppl offset */
-+		for (i = 0; i < le32_to_cpu(pplhdr->entries_count); i++)
-+			pplhdr_offset +=
-+			    le32_to_cpu(pplhdr->entries[i].pp_size) >> 9;
-+		pplhdr_offset += PPL_HEADER_SIZE >> 9;
- 	}
- 
-+	/* no valid ppl found */
-+	if (!pplhdr)
-+		ppl_conf->mismatch_count++;
-+	else
-+		pr_debug("%s: latest PPL found at offset: %llu, with generation: %llu\n",
-+		    __func__, (unsigned long long)pplhdr_offset,
-+		    le64_to_cpu(pplhdr->generation));
-+
- 	/* attempt to recover from log if we are starting a dirty array */
--	if (!mddev->pers && mddev->recovery_cp != MaxSector)
--		ret = ppl_recover(log, pplhdr);
--out:
-+	if (pplhdr && !mddev->pers && mddev->recovery_cp != MaxSector)
-+		ret = ppl_recover(log, pplhdr, pplhdr_offset);
-+
- 	/* write empty header if we are starting the array */
- 	if (!ret && !mddev->pers)
- 		ret = ppl_write_empty_header(log);
- 
- 	__free_page(page);
-+	__free_page(page2);
- 
- 	pr_debug("%s: return: %d mismatch_count: %d recovered_entries: %d\n",
- 		 __func__, ret, ppl_conf->mismatch_count,
--- 
-2.13.4
+On Tue, 15 Aug 2017, Arnd Bergmann wrote:
 
+> The new lockdep support for completions causeed the stack usage
+> in dm-integrity to explode, in case of write_journal from 504 bytes
+> to 1120 (using arm gcc-7.1.1):
+> 
+> drivers/md/dm-integrity.c: In function 'write_journal':
+> drivers/md/dm-integrity.c:827:1: error: the frame size of 1120 bytes is larger than 1024 bytes [-Werror=frame-larger-than=]
+> 
+> The problem is that not only the size of 'struct completion' grows
+> significantly, but we end up having multiple copies of it on the stack
+> when we assign it from a local variable after the initial declaration.
+> 
+> COMPLETION_INITIALIZER_ONSTACK() is the right thing to use when we
+> want to declare and initialize a completion on the stack. However,
+> this driver doesn't do that and instead initializes the completion
+> just before it is used.
+> 
+> In this case, init_completion() does the same thing more efficiently,
+> and drops the stack usage for the function above down to 496 bytes.
+> While the other functions in this file are not bad enough to cause
+> a warning, they benefit equally from the change, so I do the change
+> across the entire file. In the one place where we reuse a completion,
+> I picked the cheaper reinit_completion() over init_completion().
+> 
+> Fixes: cd8084f91c02 ("locking/lockdep: Apply crossrelease to completions")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+> The patch causing this is currently part of linux-next, scheduled for
+> 4.14, so it would be good to have this in the same release.
+> ---
+>  drivers/md/dm-integrity.c | 20 ++++++++++----------
+>  1 file changed, 10 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
+> index 293a19652d55..b16010bcbd17 100644
+> --- a/drivers/md/dm-integrity.c
+> +++ b/drivers/md/dm-integrity.c
+> @@ -773,13 +773,13 @@ static void write_journal(struct dm_integrity_c *ic, unsigned commit_start, unsi
+>  	unsigned i;
+>  
+>  	io_comp.ic = ic;
+> -	io_comp.comp = COMPLETION_INITIALIZER_ONSTACK(io_comp.comp);
+> +	init_completion(&io_comp.comp);
+>  
+>  	if (commit_start + commit_sections <= ic->journal_sections) {
+>  		io_comp.in_flight = (atomic_t)ATOMIC_INIT(1);
+>  		if (ic->journal_io) {
+>  			crypt_comp_1.ic = ic;
+> -			crypt_comp_1.comp = COMPLETION_INITIALIZER_ONSTACK(crypt_comp_1.comp);
+> +			init_completion(&crypt_comp_1.comp);
+>  			crypt_comp_1.in_flight = (atomic_t)ATOMIC_INIT(0);
+>  			encrypt_journal(ic, true, commit_start, commit_sections, &crypt_comp_1);
+>  			wait_for_completion_io(&crypt_comp_1.comp);
+> @@ -795,18 +795,18 @@ static void write_journal(struct dm_integrity_c *ic, unsigned commit_start, unsi
+>  		to_end = ic->journal_sections - commit_start;
+>  		if (ic->journal_io) {
+>  			crypt_comp_1.ic = ic;
+> -			crypt_comp_1.comp = COMPLETION_INITIALIZER_ONSTACK(crypt_comp_1.comp);
+> +			init_completion(&crypt_comp_1.comp);
+>  			crypt_comp_1.in_flight = (atomic_t)ATOMIC_INIT(0);
+>  			encrypt_journal(ic, true, commit_start, to_end, &crypt_comp_1);
+>  			if (try_wait_for_completion(&crypt_comp_1.comp)) {
+>  				rw_journal(ic, REQ_OP_WRITE, REQ_FUA, commit_start, to_end, &io_comp);
+> -				crypt_comp_1.comp = COMPLETION_INITIALIZER_ONSTACK(crypt_comp_1.comp);
+> +				reinit_completion(&crypt_comp_1.comp);
+>  				crypt_comp_1.in_flight = (atomic_t)ATOMIC_INIT(0);
+>  				encrypt_journal(ic, true, 0, commit_sections - to_end, &crypt_comp_1);
+>  				wait_for_completion_io(&crypt_comp_1.comp);
+>  			} else {
+>  				crypt_comp_2.ic = ic;
+> -				crypt_comp_2.comp = COMPLETION_INITIALIZER_ONSTACK(crypt_comp_2.comp);
+> +				init_completion(&crypt_comp_2.comp);
+>  				crypt_comp_2.in_flight = (atomic_t)ATOMIC_INIT(0);
+>  				encrypt_journal(ic, true, 0, commit_sections - to_end, &crypt_comp_2);
+>  				wait_for_completion_io(&crypt_comp_1.comp);
+> @@ -1679,7 +1679,7 @@ static void dm_integrity_map_continue(struct dm_integrity_io *dio, bool from_map
+>  	dio->in_flight = (atomic_t)ATOMIC_INIT(2);
+>  
+>  	if (need_sync_io) {
+> -		read_comp = COMPLETION_INITIALIZER_ONSTACK(read_comp);
+> +		init_completion(&read_comp);
+>  		dio->completion = &read_comp;
+>  	} else
+>  		dio->completion = NULL;
+> @@ -1836,7 +1836,7 @@ static void do_journal_write(struct dm_integrity_c *ic, unsigned write_start,
+>  
+>  	comp.ic = ic;
+>  	comp.in_flight = (atomic_t)ATOMIC_INIT(1);
+> -	comp.comp = COMPLETION_INITIALIZER_ONSTACK(comp.comp);
+> +	init_completion(&comp.comp);
+>  
+>  	i = write_start;
+>  	for (n = 0; n < write_sections; n++, i++, wraparound_section(ic, &i)) {
+> @@ -2063,7 +2063,7 @@ static void replay_journal(struct dm_integrity_c *ic)
+>  		if (ic->journal_io) {
+>  			struct journal_completion crypt_comp;
+>  			crypt_comp.ic = ic;
+> -			crypt_comp.comp = COMPLETION_INITIALIZER_ONSTACK(crypt_comp.comp);
+> +			init_completion(&crypt_comp.comp);
+>  			crypt_comp.in_flight = (atomic_t)ATOMIC_INIT(0);
+>  			encrypt_journal(ic, false, 0, ic->journal_sections, &crypt_comp);
+>  			wait_for_completion(&crypt_comp.comp);
+> @@ -2636,7 +2636,7 @@ static int create_journal(struct dm_integrity_c *ic, char **error)
+>  			memset(iv, 0x00, ivsize);
+>  
+>  			skcipher_request_set_crypt(req, sg, sg, PAGE_SIZE * ic->journal_pages + sizeof ic->commit_ids, iv);
+> -			comp.comp = COMPLETION_INITIALIZER_ONSTACK(comp.comp);
+> +			init_completion(&comp.comp);
+>  			comp.in_flight = (atomic_t)ATOMIC_INIT(1);
+>  			if (do_crypt(true, req, &comp))
+>  				wait_for_completion(&comp.comp);
+> @@ -2693,7 +2693,7 @@ static int create_journal(struct dm_integrity_c *ic, char **error)
+>  
+>  				sg_init_one(&sg, crypt_data, crypt_len);
+>  				skcipher_request_set_crypt(req, &sg, &sg, crypt_len, iv);
+> -				comp.comp = COMPLETION_INITIALIZER_ONSTACK(comp.comp);
+> +				init_completion(&comp.comp);
+>  				comp.in_flight = (atomic_t)ATOMIC_INIT(1);
+>  				if (do_crypt(true, req, &comp))
+>  					wait_for_completion(&comp.comp);
+> -- 
+> 2.9.0
+> 
+> --
+> dm-devel mailing list
+> dm-devel@redhat.com
+> https://www.redhat.com/mailman/listinfo/dm-devel
+> 
