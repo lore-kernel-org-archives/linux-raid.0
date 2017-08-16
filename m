@@ -1,39 +1,265 @@
 From: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Subject: [PATCH 0/2] md: Add support for Multiple PPLs
-Date: Wed, 16 Aug 2017 17:13:44 +0200
-Message-ID: <20170816151346.23382-1-pawel.baldysiak@intel.com>
+Subject: [PATCH 1/2] md: Runtime support for multiple ppls
+Date: Wed, 16 Aug 2017 17:13:45 +0200
+Message-ID: <20170816151346.23382-2-pawel.baldysiak@intel.com>
+References: <20170816151346.23382-1-pawel.baldysiak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170816151346.23382-1-pawel.baldysiak@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: shli@kernel.org, Pawel Baldysiak <pawel.baldysiak@intel.com>
+Cc: shli@kernel.org, Pawel Baldysiak <pawel.baldysiak@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-Current Partial Parity Log implementation allows only single PPL to be
-written to particular member drive. In such case PPL entry is
-overwritten by every write as it's stored at the same sector of a drive.
-Such approach is suboptimal for SSD drives as it leads to increased
-write amplification factor due to write-after-write limitations.
+Increase PPL area to 1MB and use it as circular buffer to store PPL. The
+entry with highest generation number is the latest one. If PPL to be
+written is larger then space left in a buffer, rewind the buffer to the
+start (don't wrap it). 
 
-This patchset changes the implementation by extending PPL area to 1MB.
-PPL is not stored at fixed location but multiple PPLs are written in a
-circular buffer. There is at most one valid PPL at any time (latest
-one). Recovery algorithm stays the same. The main benefits of this
-approach are increased drive lifespan and in some cases improved
-performance. 
+Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+---
+ drivers/md/md.c                | 16 +++++++++++++---
+ drivers/md/md.h                |  1 +
+ drivers/md/raid0.c             |  3 ++-
+ drivers/md/raid1.c             |  3 ++-
+ drivers/md/raid5-ppl.c         | 43 +++++++++++++++++++++++++++++++++++++++---
+ drivers/md/raid5.c             |  1 +
+ include/uapi/linux/raid/md_p.h |  4 +++-
+ 7 files changed, 62 insertions(+), 9 deletions(-)
 
-Pawel Baldysiak (2):
-  md: Runtime support for multiple ppls
-  raid5-ppl: Recovery support for multiple partial parity logs
-
- drivers/md/md.c                |  16 +++-
- drivers/md/md.h                |   1 +
- drivers/md/raid0.c             |   3 +-
- drivers/md/raid1.c             |   3 +-
- drivers/md/raid5-ppl.c         | 171 +++++++++++++++++++++++++++++++----------
- drivers/md/raid5.c             |   1 +
- include/uapi/linux/raid/md_p.h |   4 +-
- 7 files changed, 152 insertions(+), 47 deletions(-)
-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 8cdca0296749..31a87b9b548c 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -1536,7 +1536,8 @@ static int super_1_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor_
+ 	} else if (sb->bblog_offset != 0)
+ 		rdev->badblocks.shift = 0;
+ 
+-	if (le32_to_cpu(sb->feature_map) & MD_FEATURE_PPL) {
++	if ((le32_to_cpu(sb->feature_map) &
++	    (MD_FEATURE_PPL | MD_FEATURE_MULTIPLE_PPLS))) {
+ 		rdev->ppl.offset = (__s16)le16_to_cpu(sb->ppl.offset);
+ 		rdev->ppl.size = le16_to_cpu(sb->ppl.size);
+ 		rdev->ppl.sector = rdev->sb_start + rdev->ppl.offset;
+@@ -1655,10 +1656,15 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
+ 		if (le32_to_cpu(sb->feature_map) & MD_FEATURE_JOURNAL)
+ 			set_bit(MD_HAS_JOURNAL, &mddev->flags);
+ 
+-		if (le32_to_cpu(sb->feature_map) & MD_FEATURE_PPL) {
++		if (le32_to_cpu(sb->feature_map) &
++		    (MD_FEATURE_PPL | MD_FEATURE_MULTIPLE_PPLS)) {
+ 			if (le32_to_cpu(sb->feature_map) &
+ 			    (MD_FEATURE_BITMAP_OFFSET | MD_FEATURE_JOURNAL))
+ 				return -EINVAL;
++			if ((le32_to_cpu(sb->feature_map) & MD_FEATURE_PPL) &&
++			    (le32_to_cpu(sb->feature_map) &
++					    MD_FEATURE_MULTIPLE_PPLS))
++				return -EINVAL;
+ 			set_bit(MD_HAS_PPL, &mddev->flags);
+ 		}
+ 	} else if (mddev->pers == NULL) {
+@@ -1875,7 +1881,11 @@ static void super_1_sync(struct mddev *mddev, struct md_rdev *rdev)
+ 		sb->feature_map |= cpu_to_le32(MD_FEATURE_JOURNAL);
+ 
+ 	if (test_bit(MD_HAS_PPL, &mddev->flags)) {
+-		sb->feature_map |= cpu_to_le32(MD_FEATURE_PPL);
++		if (test_bit(MD_HAS_MULTIPLE_PPLS, &mddev->flags))
++			sb->feature_map |=
++			    cpu_to_le32(MD_FEATURE_MULTIPLE_PPLS);
++		else
++			sb->feature_map |= cpu_to_le32(MD_FEATURE_PPL);
+ 		sb->ppl.offset = cpu_to_le16(rdev->ppl.offset);
+ 		sb->ppl.size = cpu_to_le16(rdev->ppl.size);
+ 	}
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index b50eb4ac1b82..43025baa6761 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -236,6 +236,7 @@ enum mddev_flags {
+ 				 * never cause the array to become failed.
+ 				 */
+ 	MD_HAS_PPL,		/* The raid array has PPL feature set */
++	MD_HAS_MULTIPLE_PPLS,	/* The raid array has multiple PPLs feature set */
+ };
+ 
+ enum mddev_sb_flags {
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index 94d9ae9b0fd0..d17ca1520a48 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -30,7 +30,8 @@
+ 	((1L << MD_HAS_JOURNAL) |	\
+ 	 (1L << MD_JOURNAL_CLEAN) |	\
+ 	 (1L << MD_FAILFAST_SUPPORTED) |\
+-	 (1L << MD_HAS_PPL))
++	 (1L << MD_HAS_PPL) |		\
++	 (1L << MD_HAS_MULTIPLE_PPLS))
+ 
+ static int raid0_congested(struct mddev *mddev, int bits)
+ {
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 3febfc8391fb..3fb8db2b55ad 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -48,7 +48,8 @@
+ #define UNSUPPORTED_MDDEV_FLAGS		\
+ 	((1L << MD_HAS_JOURNAL) |	\
+ 	 (1L << MD_JOURNAL_CLEAN) |	\
+-	 (1L << MD_HAS_PPL))
++	 (1L << MD_HAS_PPL) |		\
++	 (1L << MD_HAS_MULTIPLE_PPLS))
+ 
+ /*
+  * Number of guaranteed r1bios in case of extreme VM load:
+diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
+index 44ad5baf3206..b313f17a6260 100644
+--- a/drivers/md/raid5-ppl.c
++++ b/drivers/md/raid5-ppl.c
+@@ -87,6 +87,8 @@
+  * The current io_unit accepting new stripes is always at the end of the list.
+  */
+ 
++#define PPL_SPACE_SIZE (128 * 1024)
++
+ struct ppl_conf {
+ 	struct mddev *mddev;
+ 
+@@ -122,6 +124,10 @@ struct ppl_log {
+ 					 * always at the end of io_list */
+ 	spinlock_t io_list_lock;
+ 	struct list_head io_list;	/* all io_units of this log */
++
++	sector_t next_io_sector;
++	unsigned int entry_space;
++	bool use_multippl;
+ };
+ 
+ #define PPL_IO_INLINE_BVECS 32
+@@ -264,13 +270,12 @@ static int ppl_log_stripe(struct ppl_log *log, struct stripe_head *sh)
+ 	int i;
+ 	sector_t data_sector = 0;
+ 	int data_disks = 0;
+-	unsigned int entry_space = (log->rdev->ppl.size << 9) - PPL_HEADER_SIZE;
+ 	struct r5conf *conf = sh->raid_conf;
+ 
+ 	pr_debug("%s: stripe: %llu\n", __func__, (unsigned long long)sh->sector);
+ 
+ 	/* check if current io_unit is full */
+-	if (io && (io->pp_size == entry_space ||
++	if (io && (io->pp_size == log->entry_space ||
+ 		   io->entries_count == PPL_HDR_MAX_ENTRIES)) {
+ 		pr_debug("%s: add io_unit blocked by seq: %llu\n",
+ 			 __func__, io->seq);
+@@ -451,12 +456,25 @@ static void ppl_submit_iounit(struct ppl_io_unit *io)
+ 	pplhdr->entries_count = cpu_to_le32(io->entries_count);
+ 	pplhdr->checksum = cpu_to_le32(~crc32c_le(~0, pplhdr, PPL_HEADER_SIZE));
+ 
++	/* Rewind the buffer if current PPL is larger then remaining space */
++	if (log->use_multippl &&
++	    log->rdev->ppl.sector + log->rdev->ppl.size - log->next_io_sector <
++	    (PPL_HEADER_SIZE + io->pp_size) >> 9)
++		log->next_io_sector = log->rdev->ppl.sector;
++
++
+ 	bio->bi_end_io = ppl_log_endio;
+ 	bio->bi_opf = REQ_OP_WRITE | REQ_FUA;
+ 	bio->bi_bdev = log->rdev->bdev;
+-	bio->bi_iter.bi_sector = log->rdev->ppl.sector;
++	bio->bi_iter.bi_sector = log->next_io_sector;
+ 	bio_add_page(bio, io->header_page, PAGE_SIZE, 0);
+ 
++	pr_debug("%s: log->current_io_sector: %llu\n", __func__,
++	    (unsigned long long)log->next_io_sector);
++
++	if (log->use_multippl)
++		log->next_io_sector += (PPL_HEADER_SIZE + io->pp_size) >> 9;
++
+ 	list_for_each_entry(sh, &io->stripe_list, log_list) {
+ 		/* entries for full stripe writes have no partial parity */
+ 		if (test_bit(STRIPE_FULL_WRITE, &sh->state))
+@@ -1031,6 +1049,7 @@ static int ppl_load(struct ppl_conf *ppl_conf)
+ static void __ppl_exit_log(struct ppl_conf *ppl_conf)
+ {
+ 	clear_bit(MD_HAS_PPL, &ppl_conf->mddev->flags);
++	clear_bit(MD_HAS_MULTIPLE_PPLS, &ppl_conf->mddev->flags);
+ 
+ 	kfree(ppl_conf->child_logs);
+ 
+@@ -1099,6 +1118,22 @@ static int ppl_validate_rdev(struct md_rdev *rdev)
+ 	return 0;
+ }
+ 
++static void ppl_init_child_log(struct ppl_log *log, struct md_rdev *rdev)
++{
++	if ((rdev->ppl.size << 9) >= (PPL_SPACE_SIZE +
++				      PPL_HEADER_SIZE) * 2) {
++		log->use_multippl = true;
++		set_bit(MD_HAS_MULTIPLE_PPLS,
++			&log->ppl_conf->mddev->flags);
++		log->entry_space = PPL_SPACE_SIZE;
++	} else {
++		log->use_multippl = false;
++		log->entry_space = (log->rdev->ppl.size << 9) -
++				   PPL_HEADER_SIZE;
++	}
++	log->next_io_sector = rdev->ppl.sector;
++}
++
+ int ppl_init_log(struct r5conf *conf)
+ {
+ 	struct ppl_conf *ppl_conf;
+@@ -1196,6 +1231,7 @@ int ppl_init_log(struct r5conf *conf)
+ 			q = bdev_get_queue(rdev->bdev);
+ 			if (test_bit(QUEUE_FLAG_WC, &q->queue_flags))
+ 				need_cache_flush = true;
++			ppl_init_child_log(log, rdev);
+ 		}
+ 	}
+ 
+@@ -1261,6 +1297,7 @@ int ppl_modify_log(struct r5conf *conf, struct md_rdev *rdev, bool add)
+ 		if (!ret) {
+ 			log->rdev = rdev;
+ 			ret = ppl_write_empty_header(log);
++			ppl_init_child_log(log, rdev);
+ 		}
+ 	} else {
+ 		log->rdev = NULL;
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index aeeb8d6854e2..c1b1b8e4f1af 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -7242,6 +7242,7 @@ static int raid5_run(struct mddev *mddev)
+ 		pr_warn("md/raid:%s: using journal device and PPL not allowed - disabling PPL\n",
+ 			mdname(mddev));
+ 		clear_bit(MD_HAS_PPL, &mddev->flags);
++		clear_bit(MD_HAS_MULTIPLE_PPLS, &mddev->flags);
+ 	}
+ 
+ 	if (mddev->private == NULL)
+diff --git a/include/uapi/linux/raid/md_p.h b/include/uapi/linux/raid/md_p.h
+index d500bd224979..b9197976b660 100644
+--- a/include/uapi/linux/raid/md_p.h
++++ b/include/uapi/linux/raid/md_p.h
+@@ -324,9 +324,10 @@ struct mdp_superblock_1 {
+ #define	MD_FEATURE_RECOVERY_BITMAP	128 /* recovery that is happening
+ 					     * is guided by bitmap.
+ 					     */
+-#define MD_FEATURE_CLUSTERED		256 /* clustered MD */
++#define	MD_FEATURE_CLUSTERED		256 /* clustered MD */
+ #define	MD_FEATURE_JOURNAL		512 /* support write cache */
+ #define	MD_FEATURE_PPL			1024 /* support PPL */
++#define	MD_FEATURE_MULTIPLE_PPLS	2048 /* support for multiple PPLs */
+ #define	MD_FEATURE_ALL			(MD_FEATURE_BITMAP_OFFSET	\
+ 					|MD_FEATURE_RECOVERY_OFFSET	\
+ 					|MD_FEATURE_RESHAPE_ACTIVE	\
+@@ -338,6 +339,7 @@ struct mdp_superblock_1 {
+ 					|MD_FEATURE_CLUSTERED		\
+ 					|MD_FEATURE_JOURNAL		\
+ 					|MD_FEATURE_PPL			\
++					|MD_FEATURE_MULTIPLE_PPLS	\
+ 					)
+ 
+ struct r5l_payload_header {
 -- 
 2.13.4
 
