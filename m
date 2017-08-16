@@ -1,148 +1,40 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: Re: [dm-devel] [PATCH 2/2] dm integrity: use init_completion instead
- of COMPLETION_INITIALIZER_ONSTACK
-Date: Wed, 16 Aug 2017 12:12:52 -0400 (EDT)
-Message-ID: <alpine.LRH.2.02.1708161209220.25079@file01.intranet.prod.int.rdu2.redhat.com>
-References: <20170815151242.2637861-1-arnd@arndb.de> <20170815151242.2637861-2-arnd@arndb.de>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: [PATCH V2 8/9] nullb: emulate cache
+Date: Wed, 16 Aug 2017 18:00:10 +0100
+Message-ID: <59947A1A.6040602@youngman.org.uk>
+References: <cover.1502746933.git.shli@fb.com>
+ <727aaf4b878c064945b15c2b6e2d5fad487a3b54.1502746933.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170815151242.2637861-2-arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@fb.com>, linux-raid@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, Byungchul Park <byungchul.park@lge.com>, Ingo Molnar <mingo@kernel.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <727aaf4b878c064945b15c2b6e2d5fad487a3b54.1502746933.git.shli@fb.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org
+Cc: kernel-team@fb.com, Kyungchan Koh <kyungchan.koh@gmail.com>, Shaohua Li <shli@fb.com>
 List-Id: linux-raid.ids
 
-This patch is OK.
+On 14/08/17 23:04, Shaohua Li wrote:
+> From: Shaohua Li <shli@fb.com>
+> 
+> Software must flush disk cache to guarantee data safety. To check if
+> software correctly does disk cache flush, we must know the behavior of
+> disk. But physical disk behavior is uncontrollable. Even software
+> doesn't do the flush, the disk probably does the flush. This patch tries
+> to emulate a cache in the test disk.
+> 
+> All write will go to a cache first, when the cache is full, we then
+> flush some data to disk storage. A flush request will flush all data of
+> the cache to disk storage. A FUA write will write to memory store
+> directly and revalidate data in cache. If there is a power failure (by
+> writing to power attribute, 'echo 0 > disk_name/power'), we discard all
+> data in the cache, but preserve the data in disk storage. Later we can
+> power on the disk again as usual (write 1 to 'power' attribute), then we
+> can check data integrity and very if software does everything correctly.
+> 
+> A new attritue 'cache_size' (in MB) is added to configure cache size.
 
-Acked-by: Mikulas Patocka <mpatocka@redhat.com>
+c/attritue/attribute/
 
-On Tue, 15 Aug 2017, Arnd Bergmann wrote:
-
-> The new lockdep support for completions causeed the stack usage
-> in dm-integrity to explode, in case of write_journal from 504 bytes
-> to 1120 (using arm gcc-7.1.1):
-> 
-> drivers/md/dm-integrity.c: In function 'write_journal':
-> drivers/md/dm-integrity.c:827:1: error: the frame size of 1120 bytes is larger than 1024 bytes [-Werror=frame-larger-than=]
-> 
-> The problem is that not only the size of 'struct completion' grows
-> significantly, but we end up having multiple copies of it on the stack
-> when we assign it from a local variable after the initial declaration.
-> 
-> COMPLETION_INITIALIZER_ONSTACK() is the right thing to use when we
-> want to declare and initialize a completion on the stack. However,
-> this driver doesn't do that and instead initializes the completion
-> just before it is used.
-> 
-> In this case, init_completion() does the same thing more efficiently,
-> and drops the stack usage for the function above down to 496 bytes.
-> While the other functions in this file are not bad enough to cause
-> a warning, they benefit equally from the change, so I do the change
-> across the entire file. In the one place where we reuse a completion,
-> I picked the cheaper reinit_completion() over init_completion().
-> 
-> Fixes: cd8084f91c02 ("locking/lockdep: Apply crossrelease to completions")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
-> The patch causing this is currently part of linux-next, scheduled for
-> 4.14, so it would be good to have this in the same release.
-> ---
->  drivers/md/dm-integrity.c | 20 ++++++++++----------
->  1 file changed, 10 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
-> index 293a19652d55..b16010bcbd17 100644
-> --- a/drivers/md/dm-integrity.c
-> +++ b/drivers/md/dm-integrity.c
-> @@ -773,13 +773,13 @@ static void write_journal(struct dm_integrity_c *ic, unsigned commit_start, unsi
->  	unsigned i;
->  
->  	io_comp.ic = ic;
-> -	io_comp.comp = COMPLETION_INITIALIZER_ONSTACK(io_comp.comp);
-> +	init_completion(&io_comp.comp);
->  
->  	if (commit_start + commit_sections <= ic->journal_sections) {
->  		io_comp.in_flight = (atomic_t)ATOMIC_INIT(1);
->  		if (ic->journal_io) {
->  			crypt_comp_1.ic = ic;
-> -			crypt_comp_1.comp = COMPLETION_INITIALIZER_ONSTACK(crypt_comp_1.comp);
-> +			init_completion(&crypt_comp_1.comp);
->  			crypt_comp_1.in_flight = (atomic_t)ATOMIC_INIT(0);
->  			encrypt_journal(ic, true, commit_start, commit_sections, &crypt_comp_1);
->  			wait_for_completion_io(&crypt_comp_1.comp);
-> @@ -795,18 +795,18 @@ static void write_journal(struct dm_integrity_c *ic, unsigned commit_start, unsi
->  		to_end = ic->journal_sections - commit_start;
->  		if (ic->journal_io) {
->  			crypt_comp_1.ic = ic;
-> -			crypt_comp_1.comp = COMPLETION_INITIALIZER_ONSTACK(crypt_comp_1.comp);
-> +			init_completion(&crypt_comp_1.comp);
->  			crypt_comp_1.in_flight = (atomic_t)ATOMIC_INIT(0);
->  			encrypt_journal(ic, true, commit_start, to_end, &crypt_comp_1);
->  			if (try_wait_for_completion(&crypt_comp_1.comp)) {
->  				rw_journal(ic, REQ_OP_WRITE, REQ_FUA, commit_start, to_end, &io_comp);
-> -				crypt_comp_1.comp = COMPLETION_INITIALIZER_ONSTACK(crypt_comp_1.comp);
-> +				reinit_completion(&crypt_comp_1.comp);
->  				crypt_comp_1.in_flight = (atomic_t)ATOMIC_INIT(0);
->  				encrypt_journal(ic, true, 0, commit_sections - to_end, &crypt_comp_1);
->  				wait_for_completion_io(&crypt_comp_1.comp);
->  			} else {
->  				crypt_comp_2.ic = ic;
-> -				crypt_comp_2.comp = COMPLETION_INITIALIZER_ONSTACK(crypt_comp_2.comp);
-> +				init_completion(&crypt_comp_2.comp);
->  				crypt_comp_2.in_flight = (atomic_t)ATOMIC_INIT(0);
->  				encrypt_journal(ic, true, 0, commit_sections - to_end, &crypt_comp_2);
->  				wait_for_completion_io(&crypt_comp_1.comp);
-> @@ -1679,7 +1679,7 @@ static void dm_integrity_map_continue(struct dm_integrity_io *dio, bool from_map
->  	dio->in_flight = (atomic_t)ATOMIC_INIT(2);
->  
->  	if (need_sync_io) {
-> -		read_comp = COMPLETION_INITIALIZER_ONSTACK(read_comp);
-> +		init_completion(&read_comp);
->  		dio->completion = &read_comp;
->  	} else
->  		dio->completion = NULL;
-> @@ -1836,7 +1836,7 @@ static void do_journal_write(struct dm_integrity_c *ic, unsigned write_start,
->  
->  	comp.ic = ic;
->  	comp.in_flight = (atomic_t)ATOMIC_INIT(1);
-> -	comp.comp = COMPLETION_INITIALIZER_ONSTACK(comp.comp);
-> +	init_completion(&comp.comp);
->  
->  	i = write_start;
->  	for (n = 0; n < write_sections; n++, i++, wraparound_section(ic, &i)) {
-> @@ -2063,7 +2063,7 @@ static void replay_journal(struct dm_integrity_c *ic)
->  		if (ic->journal_io) {
->  			struct journal_completion crypt_comp;
->  			crypt_comp.ic = ic;
-> -			crypt_comp.comp = COMPLETION_INITIALIZER_ONSTACK(crypt_comp.comp);
-> +			init_completion(&crypt_comp.comp);
->  			crypt_comp.in_flight = (atomic_t)ATOMIC_INIT(0);
->  			encrypt_journal(ic, false, 0, ic->journal_sections, &crypt_comp);
->  			wait_for_completion(&crypt_comp.comp);
-> @@ -2636,7 +2636,7 @@ static int create_journal(struct dm_integrity_c *ic, char **error)
->  			memset(iv, 0x00, ivsize);
->  
->  			skcipher_request_set_crypt(req, sg, sg, PAGE_SIZE * ic->journal_pages + sizeof ic->commit_ids, iv);
-> -			comp.comp = COMPLETION_INITIALIZER_ONSTACK(comp.comp);
-> +			init_completion(&comp.comp);
->  			comp.in_flight = (atomic_t)ATOMIC_INIT(1);
->  			if (do_crypt(true, req, &comp))
->  				wait_for_completion(&comp.comp);
-> @@ -2693,7 +2693,7 @@ static int create_journal(struct dm_integrity_c *ic, char **error)
->  
->  				sg_init_one(&sg, crypt_data, crypt_len);
->  				skcipher_request_set_crypt(req, &sg, &sg, crypt_len, iv);
-> -				comp.comp = COMPLETION_INITIALIZER_ONSTACK(comp.comp);
-> +				init_completion(&comp.comp);
->  				comp.in_flight = (atomic_t)ATOMIC_INIT(1);
->  				if (do_crypt(true, req, &comp))
->  					wait_for_completion(&comp.comp);
-> -- 
-> 2.9.0
-> 
-> --
-> dm-devel mailing list
-> dm-devel@redhat.com
-> https://www.redhat.com/mailman/listinfo/dm-devel
-> 
+Cheers,
+Wol
