@@ -1,35 +1,39 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH v2] Monitor: Include containers in spare migration
-Date: Wed, 16 Aug 2017 09:06:13 -0400
-Message-ID: <ac063625-11dc-d529-cd08-275570adaf77@gmail.com>
-References: <1502888386-15946-1-git-send-email-mariusz.tkaczyk@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Pawel Baldysiak <pawel.baldysiak@intel.com>
+Subject: [PATCH 0/2] md: Add support for Multiple PPLs
+Date: Wed, 16 Aug 2017 17:13:44 +0200
+Message-ID: <20170816151346.23382-1-pawel.baldysiak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1502888386-15946-1-git-send-email-mariusz.tkaczyk@intel.com>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: shli@kernel.org, Pawel Baldysiak <pawel.baldysiak@intel.com>
 List-Id: linux-raid.ids
 
-On 08/16/2017 08:59 AM, Mariusz Tkaczyk wrote:
-> Spare migration doesn't work for external metadata. mdadm skips
-> a container with spare device because it is inactive. It used to work
-> because GET_ARRAY_INFO ioctl returned valid structure for a container
-> and mdadm treated such response as active container. Current
-> implementation checks it in sysfs where container is shown as inactive.
-> 
-> Adapt sysfs implementation to work the same way as ioctl.
-> 
-> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
-> ---
->   Monitor.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+Current Partial Parity Log implementation allows only single PPL to be
+written to particular member drive. In such case PPL entry is
+overwritten by every write as it's stored at the same sector of a drive.
+Such approach is suboptimal for SSD drives as it leads to increased
+write amplification factor due to write-after-write limitations.
 
-Applied!
+This patchset changes the implementation by extending PPL area to 1MB.
+PPL is not stored at fixed location but multiple PPLs are written in a
+circular buffer. There is at most one valid PPL at any time (latest
+one). Recovery algorithm stays the same. The main benefits of this
+approach are increased drive lifespan and in some cases improved
+performance. 
 
-Thanks,
-Jes
+Pawel Baldysiak (2):
+  md: Runtime support for multiple ppls
+  raid5-ppl: Recovery support for multiple partial parity logs
+
+ drivers/md/md.c                |  16 +++-
+ drivers/md/md.h                |   1 +
+ drivers/md/raid0.c             |   3 +-
+ drivers/md/raid1.c             |   3 +-
+ drivers/md/raid5-ppl.c         | 171 +++++++++++++++++++++++++++++++----------
+ drivers/md/raid5.c             |   1 +
+ include/uapi/linux/raid/md_p.h |   4 +-
+ 7 files changed, 152 insertions(+), 47 deletions(-)
+
+-- 
+2.13.4
 
