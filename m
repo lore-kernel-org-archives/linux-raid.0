@@ -1,68 +1,219 @@
-From: <xa0ajutor@colectiv.info>
-Subject: (unknown)
-Date: Wed, 16 Aug 2017 02:03:00 -0000
-Message-ID: <150284898017.22642.2269273129168799349@hinet.net>
+From: Chris Mi <chrism-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Subject: [patch net-next 0/3] net/sched: Improve getting objects by
+ indexes
+Date: Tue, 15 Aug 2017 22:12:15 -0400
+Message-ID: <1502849538-14284-1-git-send-email-chrism@mellanox.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="522025194.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: attachment
-Subject: 
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <nbd-general-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/options/nbd-general>,
+ <mailto:nbd-general-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=nbd-general>
+List-Post: <mailto:nbd-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+List-Help: <mailto:nbd-general-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/nbd-general>,
+ <mailto:nbd-general-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
+Errors-To: nbd-general-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+To: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: lucho-OnYtXJJ0/fesTnJN9+BGXg@public.gmane.org, sergey.senozhatsky.work-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, wsa-z923LK4zBo2bacvFa/9K2g@public.gmane.org, markb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, tom.leiming-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, stefanr-MtYdepGKPcBMYopoZt5u/LNAH6kLmebB@public.gmane.org, zhi.a.wang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, nsekhar-l0cyMroinI0@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, bfields-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org, linux-sctp-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org, jinpu.wang-EIkl63zCoXaH+58JC4qpiA@public.gmane.org, pshelar-LZ6Gd1LRuIk@public.gmane.org, sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, AlexBin.Xie-5C7GfCeVMHo@public.gmane.org, david1.zhou-5C7GfCeVMHo@public.gmane.org, linux-samsung-soc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, maximlevitsky-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, sudarsana.kalluru-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org, marek.vasut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-atm-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, dtwlin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, michel.daenzer-5C7GfCeVMHo@public.gmane.org, dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, tpmdd-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, niranjana.vishwanathapura-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-0h96xk9xTtrk1uMJSBkQmQ@public.gmane.org, ohad-Ix1uc/W3ht7QT0dZR+AlfA@public.gmane.org, pmladek-IBi9RG/b67k@public.gmane.org, dick.kennedy-dY08KVG/lbpWk0Htik3J/w@public.gmane.orglinux-
 List-Id: linux-raid.ids
 
-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
-UEsFBgAAAAABAAEAXAAAAHELAAAAAA==
+Using current TC code, it is very slow to insert a lot of rules.
+
+In order to improve the rules update rate in TC,
+we introduced the following two changes:
+        1) changed cls_flower to use IDR to manage the filters.
+        2) changed all act_xxx modules to use IDR instead of
+           a small hash table
+
+But IDR has a limitation that it uses int. TC handle uses u32.
+To make sure there is no regression, we also changed IDR to use
+unsigned long. All clients of IDR are changed to use new IDR API.
+
+Chris Mi (3):
+  idr: Use unsigned long instead of int
+  net/sched: Change cls_flower to use IDR
+  net/sched: Change act_api and act_xxx modules to use IDR
+
+ block/bsg.c                                     |   8 +-
+ block/genhd.c                                   |  12 +-
+ drivers/atm/nicstar.c                           |  11 +-
+ drivers/block/drbd/drbd_main.c                  |  31 +--
+ drivers/block/drbd/drbd_nl.c                    |  22 ++-
+ drivers/block/drbd/drbd_proc.c                  |   3 +-
+ drivers/block/drbd/drbd_receiver.c              |  15 +-
+ drivers/block/drbd/drbd_state.c                 |  34 ++--
+ drivers/block/drbd/drbd_worker.c                |   6 +-
+ drivers/block/loop.c                            |  17 +-
+ drivers/block/nbd.c                             |  20 +-
+ drivers/block/zram/zram_drv.c                   |   9 +-
+ drivers/char/tpm/tpm-chip.c                     |  10 +-
+ drivers/char/tpm/tpm.h                          |   2 +-
+ drivers/dca/dca-sysfs.c                         |   9 +-
+ drivers/firewire/core-cdev.c                    |  18 +-
+ drivers/firewire/core-device.c                  |  15 +-
+ drivers/gpu/drm/amd/amdgpu/amdgpu_bo_list.c     |   8 +-
+ drivers/gpu/drm/amd/amdgpu/amdgpu_ctx.c         |   9 +-
+ drivers/gpu/drm/amd/amdgpu/amdgpu_gem.c         |   6 +-
+ drivers/gpu/drm/amd/amdgpu/amdgpu_kms.c         |   2 +-
+ drivers/gpu/drm/drm_auth.c                      |   9 +-
+ drivers/gpu/drm/drm_connector.c                 |  10 +-
+ drivers/gpu/drm/drm_context.c                   |  20 +-
+ drivers/gpu/drm/drm_dp_aux_dev.c                |  11 +-
+ drivers/gpu/drm/drm_drv.c                       |   6 +-
+ drivers/gpu/drm/drm_gem.c                       |  19 +-
+ drivers/gpu/drm/drm_info.c                      |   2 +-
+ drivers/gpu/drm/drm_mode_object.c               |  11 +-
+ drivers/gpu/drm/drm_syncobj.c                   |  18 +-
+ drivers/gpu/drm/exynos/exynos_drm_ipp.c         |  25 ++-
+ drivers/gpu/drm/i915/gvt/display.c              |   2 +-
+ drivers/gpu/drm/i915/gvt/kvmgt.c                |   2 +-
+ drivers/gpu/drm/i915/gvt/vgpu.c                 |   9 +-
+ drivers/gpu/drm/i915/i915_debugfs.c             |   6 +-
+ drivers/gpu/drm/i915/i915_gem_context.c         |   9 +-
+ drivers/gpu/drm/qxl/qxl_cmd.c                   |   8 +-
+ drivers/gpu/drm/qxl/qxl_release.c               |  14 +-
+ drivers/gpu/drm/sis/sis_mm.c                    |   8 +-
+ drivers/gpu/drm/tegra/drm.c                     |  10 +-
+ drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c    |   3 +-
+ drivers/gpu/drm/vgem/vgem_fence.c               |  12 +-
+ drivers/gpu/drm/via/via_mm.c                    |   8 +-
+ drivers/gpu/drm/virtio/virtgpu_kms.c            |   5 +-
+ drivers/gpu/drm/virtio/virtgpu_vq.c             |   5 +-
+ drivers/gpu/drm/vmwgfx/vmwgfx_resource.c        |   9 +-
+ drivers/i2c/i2c-core-base.c                     |  19 +-
+ drivers/infiniband/core/cm.c                    |   8 +-
+ drivers/infiniband/core/cma.c                   |  12 +-
+ drivers/infiniband/core/rdma_core.c             |   9 +-
+ drivers/infiniband/core/sa_query.c              |  23 +--
+ drivers/infiniband/core/ucm.c                   |   7 +-
+ drivers/infiniband/core/ucma.c                  |  14 +-
+ drivers/infiniband/hw/cxgb3/iwch.c              |   4 +-
+ drivers/infiniband/hw/cxgb3/iwch.h              |   4 +-
+ drivers/infiniband/hw/cxgb4/device.c            |  18 +-
+ drivers/infiniband/hw/cxgb4/iw_cxgb4.h          |   4 +-
+ drivers/infiniband/hw/hfi1/init.c               |   9 +-
+ drivers/infiniband/hw/hfi1/vnic_main.c          |   6 +-
+ drivers/infiniband/hw/mlx4/cm.c                 |  13 +-
+ drivers/infiniband/hw/ocrdma/ocrdma_main.c      |   7 +-
+ drivers/infiniband/hw/qib/qib_init.c            |   9 +-
+ drivers/infiniband/ulp/opa_vnic/opa_vnic_vema.c |  10 +-
+ drivers/iommu/intel-svm.c                       |   9 +-
+ drivers/md/dm.c                                 |  13 +-
+ drivers/memstick/core/memstick.c                |  10 +-
+ drivers/memstick/core/ms_block.c                |   9 +-
+ drivers/memstick/core/mspro_block.c             |  12 +-
+ drivers/mfd/rtsx_pcr.c                          |   9 +-
+ drivers/misc/c2port/core.c                      |   7 +-
+ drivers/misc/cxl/context.c                      |   8 +-
+ drivers/misc/cxl/main.c                         |  15 +-
+ drivers/misc/mei/main.c                         |   8 +-
+ drivers/misc/mic/scif/scif_api.c                |  11 +-
+ drivers/misc/mic/scif/scif_ports.c              |  18 +-
+ drivers/misc/tifm_core.c                        |   9 +-
+ drivers/mtd/mtdcore.c                           |   9 +-
+ drivers/mtd/mtdcore.h                           |   2 +-
+ drivers/mtd/ubi/block.c                         |   7 +-
+ drivers/net/ppp/ppp_generic.c                   |  27 +--
+ drivers/net/tap.c                               |  10 +-
+ drivers/net/wireless/ath/ath10k/htt.h           |   3 +-
+ drivers/net/wireless/ath/ath10k/htt_tx.c        |  22 ++-
+ drivers/net/wireless/ath/ath10k/mac.c           |   2 +-
+ drivers/net/wireless/marvell/mwifiex/main.c     |  13 +-
+ drivers/net/wireless/marvell/mwifiex/wmm.c      |   2 +-
+ drivers/of/overlay.c                            |  15 +-
+ drivers/of/unittest.c                           |  25 ++-
+ drivers/power/supply/bq2415x_charger.c          |  16 +-
+ drivers/power/supply/bq27xxx_battery_i2c.c      |  15 +-
+ drivers/power/supply/ds2782_battery.c           |   9 +-
+ drivers/powercap/powercap_sys.c                 |   8 +-
+ drivers/pps/pps.c                               |  10 +-
+ drivers/rapidio/rio_cm.c                        |  17 +-
+ drivers/remoteproc/remoteproc_core.c            |   8 +-
+ drivers/rpmsg/virtio_rpmsg_bus.c                |   8 +-
+ drivers/scsi/bfa/bfad_im.c                      |   8 +-
+ drivers/scsi/ch.c                               |   8 +-
+ drivers/scsi/lpfc/lpfc_crtn.h                   |   2 +-
+ drivers/scsi/lpfc/lpfc_init.c                   |  11 +-
+ drivers/scsi/lpfc/lpfc_vport.c                  |   8 +-
+ drivers/scsi/sg.c                               |  10 +-
+ drivers/scsi/st.c                               |   8 +-
+ drivers/staging/greybus/uart.c                  |  22 +--
+ drivers/staging/unisys/visorhba/visorhba_main.c |   7 +-
+ drivers/target/iscsi/iscsi_target.c             |   7 +-
+ drivers/target/iscsi/iscsi_target_login.c       |   9 +-
+ drivers/target/target_core_device.c             |   9 +-
+ drivers/target/target_core_user.c               |  13 +-
+ drivers/tee/tee_shm.c                           |   8 +-
+ drivers/uio/uio.c                               |   9 +-
+ drivers/usb/class/cdc-acm.c                     |  24 +--
+ drivers/usb/core/devices.c                      |   2 +-
+ drivers/usb/core/hcd.c                          |   7 +-
+ drivers/usb/mon/mon_main.c                      |   3 +-
+ drivers/usb/serial/usb-serial.c                 |  11 +-
+ drivers/vfio/vfio.c                             |  15 +-
+ fs/dlm/lock.c                                   |   9 +-
+ fs/dlm/lockspace.c                              |   6 +-
+ fs/dlm/recover.c                                |  10 +-
+ fs/nfs/nfs4client.c                             |   9 +-
+ fs/nfsd/nfs4state.c                             |   8 +-
+ fs/notify/inotify/inotify_fsnotify.c            |   4 +-
+ fs/notify/inotify/inotify_user.c                |   9 +-
+ fs/ocfs2/cluster/tcp.c                          |  10 +-
+ include/linux/idr.h                             |  26 +--
+ include/linux/of.h                              |   4 +-
+ include/linux/radix-tree.h                      |   2 +-
+ include/net/9p/9p.h                             |   2 +-
+ include/net/act_api.h                           |  76 +++-----
+ ipc/msg.c                                       |   2 +-
+ ipc/sem.c                                       |   2 +-
+ ipc/shm.c                                       |   4 +-
+ ipc/util.c                                      |  17 +-
+ kernel/bpf/syscall.c                            |  20 +-
+ kernel/cgroup/cgroup.c                          |  57 +++---
+ kernel/events/core.c                            |  10 +-
+ kernel/workqueue.c                              |  15 +-
+ lib/idr.c                                       |  38 ++--
+ lib/radix-tree.c                                |   5 +-
+ mm/memcontrol.c                                 |  11 +-
+ net/9p/client.c                                 |  17 +-
+ net/9p/util.c                                   |  14 +-
+ net/core/net_namespace.c                        |  23 ++-
+ net/mac80211/cfg.c                              |  23 +--
+ net/mac80211/iface.c                            |   3 +-
+ net/mac80211/main.c                             |   2 +-
+ net/mac80211/tx.c                               |   7 +-
+ net/mac80211/util.c                             |   3 +-
+ net/netlink/genetlink.c                         |  18 +-
+ net/qrtr/qrtr.c                                 |  21 +-
+ net/rxrpc/conn_client.c                         |  15 +-
+ net/sched/act_api.c                             | 249 +++++++++++-------------
+ net/sched/act_bpf.c                             |  17 +-
+ net/sched/act_connmark.c                        |  16 +-
+ net/sched/act_csum.c                            |  16 +-
+ net/sched/act_gact.c                            |  16 +-
+ net/sched/act_ife.c                             |  20 +-
+ net/sched/act_ipt.c                             |  26 ++-
+ net/sched/act_mirred.c                          |  19 +-
+ net/sched/act_nat.c                             |  16 +-
+ net/sched/act_pedit.c                           |  18 +-
+ net/sched/act_police.c                          |  18 +-
+ net/sched/act_sample.c                          |  17 +-
+ net/sched/act_simple.c                          |  20 +-
+ net/sched/act_skbedit.c                         |  18 +-
+ net/sched/act_skbmod.c                          |  18 +-
+ net/sched/act_tunnel_key.c                      |  20 +-
+ net/sched/act_vlan.c                            |  22 +--
+ net/sched/cls_flower.c                          |  55 +++---
+ net/sctp/associola.c                            |   8 +-
+ net/tipc/server.c                               |   7 +-
+ 172 files changed, 1256 insertions(+), 1113 deletions(-)
+
+-- 
+1.8.3.1
+
+
+------------------------------------------------------------------------------
+Check out the vibrant tech community on one of the world's most
+engaging tech sites, Slashdot.org! http://sdm.link/slashdot
