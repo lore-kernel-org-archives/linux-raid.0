@@ -1,36 +1,38 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Filesystem corruption on RAID1
-Date: Thu, 17 Aug 2017 18:33:43 +0100
-Message-ID: <5995D377.9080100@youngman.org.uk>
-References: <c2fe6593-c806-ab9f-fcff-8327c013237b@assyoma.it>
- <20170713214856.4a5c8778@natsu> <592f19bf608e9a959f9445f7f25c5dad@assyoma.it>
- <d1255092-73f5-1ca4-0e68-69ff37631a26@thelounge.net>
- <cd37f90b86eb67be4c893b7fdf112692@assyoma.it>
- <770b09d3-cff6-b6b2-0a51-5d11e8bac7e9@thelounge.net>
- <9eea45ddc0f80f4f4e238b5c2527a1fa@assyoma.it>
- <f01b4649-df39-9835-728d-545cbd45976d@assyoma.it>
- <CAAMCDefXYdDKrFjEgeS8JAYt1GNP0-fL1chEXrGqxY8=xEf4Cw@mail.gmail.com>
- <7ca98351facca6e3668d3271422e1376@assyoma.it>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH 0/2] md: Add support for Multiple PPLs
+Date: Thu, 17 Aug 2017 11:03:31 -0700
+Message-ID: <20170817180331.baxoqhgbqi5q6fvx@kernel.org>
+References: <20170816151346.23382-1-pawel.baldysiak@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7ca98351facca6e3668d3271422e1376@assyoma.it>
+Content-Disposition: inline
+In-Reply-To: <20170816151346.23382-1-pawel.baldysiak@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gionatan Danti <g.danti@assyoma.it>, Roger Heflin <rogerheflin@gmail.com>
-Cc: Reindl Harald <h.reindl@thelounge.net>, Roman Mamedov <rm@romanrm.net>, Linux RAID <linux-raid@vger.kernel.org>
+To: Pawel Baldysiak <pawel.baldysiak@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 17/08/17 15:31, Gionatan Danti wrote:
-> However, the entire idea of barriers/cache flushes/FUAs was to *safely
-> enable* unprotected write caches, even in the face of powerloss. Indeed,
-> for full-system powerloss their are adequate. However, device-level
-> micro-powerlosses seem to pose an bigger threat to data reliability.
+On Wed, Aug 16, 2017 at 05:13:44PM +0200, Pawel Baldysiak wrote:
+> Current Partial Parity Log implementation allows only single PPL to be
+> written to particular member drive. In such case PPL entry is
+> overwritten by every write as it's stored at the same sector of a drive.
+> Such approach is suboptimal for SSD drives as it leads to increased
+> write amplification factor due to write-after-write limitations.
+> 
+> This patchset changes the implementation by extending PPL area to 1MB.
+> PPL is not stored at fixed location but multiple PPLs are written in a
+> circular buffer. There is at most one valid PPL at any time (latest
+> one). Recovery algorithm stays the same. The main benefits of this
+> approach are increased drive lifespan and in some cases improved
+> performance. 
 
-Which is fine until the drive, bluntly put, lies to you. Cheaper drives
-are prone to this, in order to look good in benchmarks. Especially as
-it's hard to detect until you get screwed over by exactly this sort of
-thing.
+The patches look good. Is this in intel RST standard?
 
-Cheers,
-Wol
+I didn't get the point why this is helpful though. You mentioned reduce write
+amplification. Why does this reduce write amplification? As far as I know, SSD
+never does in-place write, write to the same sector or different sector has no
+difference.
+
+Thanks,
+Shaohua
