@@ -1,32 +1,92 @@
-From: Byungchul Park <byungchul.park@lge.com>
-Subject: Re: [PATCH v4] bcache: Don't reinvent the wheel but use existing
- llist API
-Date: Fri, 18 Aug 2017 15:10:05 +0900
-Message-ID: <20170818061005.GB20323@X58A-UD3R>
-References: <1502426543-15229-1-git-send-email-byungchul.park@lge.com>
- <20170818012426.GX20323@X58A-UD3R>
- <34c37201-1ec8-270e-91b0-a8d94b7a7d6e@coly.li>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <34c37201-1ec8-270e-91b0-a8d94b7a7d6e@coly.li>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Coly Li <i@coly.li>
-Cc: kent.overstreet@gmail.com, shli@kernel.org, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, nborisov@suse.com, linux-kernel@vger.kernel.org, kernel-team@lge.com
+From: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+Subject: [PATCH] Detail: differentiate between container and inactive arrays
+Date: Fri, 18 Aug 2017 12:00:23 +0200
+Message-ID: <1503050423-20984-1-git-send-email-mariusz.tkaczyk@intel.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: jes.sorensen@gmail.com
+Cc: linux-raid@vger.kernel.org, Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
 List-Id: linux-raid.ids
 
-On Fri, Aug 18, 2017 at 02:04:20PM +0800, Coly Li wrote:
-> On 2017/8/18 上午9:24, Byungchul Park wrote:
-> > On Fri, Aug 11, 2017 at 01:42:23PM +0900, Byungchul Park wrote:
-> >> Although llist provides proper APIs, they are not used. Make them used.
-> > 
-> > Any opinions about this?
-> > 
-> 
-> The patch is good. If Eric has no time, I will take care of it later.
+Containers used to be handled as active arrays because GET_ARRAY_INFO 
+ioctl returns valid structure for them. As containers appear as inactive 
+in sysfs, the output for detail command has changed.
 
-Hi, Coly
+Stop relying on inactive state for containers. Make the output look the 
+same as in mdadm 4.0.
 
-Thanks a lot. :)
+Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+---
+ Detail.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
+
+diff --git a/Detail.c b/Detail.c
+index 2c9fb24..4dcf81d 100644
+--- a/Detail.c
++++ b/Detail.c
+@@ -80,6 +80,7 @@ int Detail(char *dev, struct context *c)
+ 	char *avail = NULL;
+ 	int external;
+ 	int inactive;
++	int is_container = 0;
+ 
+ 	if (fd < 0) {
+ 		pr_err("cannot open %s: %s\n",
+@@ -119,6 +120,8 @@ int Detail(char *dev, struct context *c)
+ 		}
+ 	}
+ 
++	if (array.raid_disks == 0 && external)
++		is_container = 1;
+ 	if (fstat(fd, &stb) != 0 && !S_ISBLK(stb.st_mode))
+ 		stb.st_rdev = 0;
+ 	rv = 0;
+@@ -228,7 +231,7 @@ int Detail(char *dev, struct context *c)
+ 				printf("MD_LEVEL=%s\n", str);
+ 			printf("MD_DEVICES=%d\n", array.raid_disks);
+ 		} else {
+-			if (!inactive)
++			if (is_container)
+ 				printf("MD_LEVEL=container\n");
+ 			printf("MD_DEVICES=%d\n", array.nr_disks);
+ 		}
+@@ -357,13 +360,16 @@ int Detail(char *dev, struct context *c)
+ 
+ 	if (c->brief) {
+ 		mdu_bitmap_file_t bmf;
+-		printf("%sARRAY %s", inactive ? "INACTIVE-":"", dev);
++		if (inactive && !is_container)
++			printf("INACTIVE-ARRAY %s", dev);
++		else
++			printf("ARRAY %s", dev);
+ 		if (c->verbose > 0) {
+ 			if (array.raid_disks)
+ 				printf(" level=%s num-devices=%d",
+ 				       str ? str : "-unknown-",
+ 				       array.raid_disks);
+-			else if (!inactive)
++			else if (is_container)
+ 				printf(" level=container num-devices=%d",
+ 				       array.nr_disks);
+ 			else
+@@ -416,7 +422,7 @@ int Detail(char *dev, struct context *c)
+ 		atime = array.ctime;
+ 		if (atime)
+ 			printf("     Creation Time : %.24s\n", ctime(&atime));
+-		if (array.raid_disks == 0 && external)
++		if (is_container)
+ 			str = "container";
+ 		if (str)
+ 			printf("        Raid Level : %s\n", str);
+@@ -489,7 +495,7 @@ int Detail(char *dev, struct context *c)
+ 			       " (DELAYED)": "",
+ 			       (e && e->percent == RESYNC_PENDING) ?
+ 			       " (PENDING)": "");
+-		} else if (inactive) {
++		} else if (inactive && !is_container) {
+ 			printf("             State : inactive\n");
+ 		}
+ 		if (array.raid_disks)
+-- 
+1.8.3.1
+
