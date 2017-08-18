@@ -1,92 +1,75 @@
-From: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
-Subject: [PATCH] Detail: differentiate between container and inactive arrays
-Date: Fri, 18 Aug 2017 12:00:23 +0200
-Message-ID: <1503050423-20984-1-git-send-email-mariusz.tkaczyk@intel.com>
+From: Gionatan Danti <g.danti@assyoma.it>
+Subject: Re: Filesystem corruption on RAID1
+Date: Fri, 18 Aug 2017 14:26:15 +0200
+Message-ID: <784bec391a00b9e074744f31901df636@assyoma.it>
+References: <c2fe6593-c806-ab9f-fcff-8327c013237b@assyoma.it>
+ <20170713214856.4a5c8778@natsu>
+ <592f19bf608e9a959f9445f7f25c5dad@assyoma.it>
+ <d1255092-73f5-1ca4-0e68-69ff37631a26@thelounge.net>
+ <cd37f90b86eb67be4c893b7fdf112692@assyoma.it>
+ <770b09d3-cff6-b6b2-0a51-5d11e8bac7e9@thelounge.net>
+ <9eea45ddc0f80f4f4e238b5c2527a1fa@assyoma.it>
+ <f01b4649-df39-9835-728d-545cbd45976d@assyoma.it>
+ <CAAMCDefXYdDKrFjEgeS8JAYt1GNP0-fL1chEXrGqxY8=xEf4Cw@mail.gmail.com>
+ <7ca98351facca6e3668d3271422e1376@assyoma.it>
+ <5995D377.9080100@youngman.org.uk>
+ <83f4572f09e7fbab9d4e6de4a5257232@assyoma.it>
+ <59961DD7.3060208@youngman.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <59961DD7.3060208@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: jes.sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org, Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: Roger Heflin <rogerheflin@gmail.com>, Reindl Harald <h.reindl@thelounge.net>, Roman Mamedov <rm@romanrm.net>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Containers used to be handled as active arrays because GET_ARRAY_INFO 
-ioctl returns valid structure for them. As containers appear as inactive 
-in sysfs, the output for detail command has changed.
+Il 18-08-2017 00:51 Wols Lists ha scritto:
+> Except that that is not what should be happening. I don't know my hard
+> drive details, but I believe drives have an instruction "async write
+> this data and let me know when you have done so".
+> 
+> This should NOT return "yes I've flushed it TO cache". Which is how you
+> get your problem - the level above thinks it's been safely flushed to
+> disk (because the disk has said "yes I've got it"), but it then gets
+> lost because of your power fluctuation. It should only acknowledge it
+> *after* it's been flushed *from* cache.
+> 
+> And this is apparently exactly what cheap drives do ...
+> 
+> If the level above says "tell me when it's safely on disk", and the
+> drive truly does as its told, your problem won't happen because the 
+> disk
+> block layer will time out waiting for the acknowledgement and retry the
+> write.
 
-Stop relying on inactive state for containers. Make the output look the 
-same as in mdadm 4.0.
+SATA drives generally guarantee persistent storage on physical medium by 
+issuing *two* different FLUSH_CACHE commands, which do *not* form an 
+atomic operation. In other words, it's not a problem of "cheap drives" 
+or "lying hardware", rather, it seems a specific SATA limitation.
 
-Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
----
- Detail.c | 16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
+This means the problem can not be solved by simply "buying better 
+disks". Traditional flushing/barrier infrastructure simply has *no* 
+method to ensure an atomic commit at the hardware level, and if 
+something goes wrong between the two flushes, a (small) possibility 
+exists to have corrupted writes without I/O errors reported to the upper 
+layer, even in case of sync() writes. It's basically as a failing DRAM 
+cache, but with *no* real failures...
 
-diff --git a/Detail.c b/Detail.c
-index 2c9fb24..4dcf81d 100644
---- a/Detail.c
-+++ b/Detail.c
-@@ -80,6 +80,7 @@ int Detail(char *dev, struct context *c)
- 	char *avail = NULL;
- 	int external;
- 	int inactive;
-+	int is_container = 0;
- 
- 	if (fd < 0) {
- 		pr_err("cannot open %s: %s\n",
-@@ -119,6 +120,8 @@ int Detail(char *dev, struct context *c)
- 		}
- 	}
- 
-+	if (array.raid_disks == 0 && external)
-+		is_container = 1;
- 	if (fstat(fd, &stb) != 0 && !S_ISBLK(stb.st_mode))
- 		stb.st_rdev = 0;
- 	rv = 0;
-@@ -228,7 +231,7 @@ int Detail(char *dev, struct context *c)
- 				printf("MD_LEVEL=%s\n", str);
- 			printf("MD_DEVICES=%d\n", array.raid_disks);
- 		} else {
--			if (!inactive)
-+			if (is_container)
- 				printf("MD_LEVEL=container\n");
- 			printf("MD_DEVICES=%d\n", array.nr_disks);
- 		}
-@@ -357,13 +360,16 @@ int Detail(char *dev, struct context *c)
- 
- 	if (c->brief) {
- 		mdu_bitmap_file_t bmf;
--		printf("%sARRAY %s", inactive ? "INACTIVE-":"", dev);
-+		if (inactive && !is_container)
-+			printf("INACTIVE-ARRAY %s", dev);
-+		else
-+			printf("ARRAY %s", dev);
- 		if (c->verbose > 0) {
- 			if (array.raid_disks)
- 				printf(" level=%s num-devices=%d",
- 				       str ? str : "-unknown-",
- 				       array.raid_disks);
--			else if (!inactive)
-+			else if (is_container)
- 				printf(" level=container num-devices=%d",
- 				       array.nr_disks);
- 			else
-@@ -416,7 +422,7 @@ int Detail(char *dev, struct context *c)
- 		atime = array.ctime;
- 		if (atime)
- 			printf("     Creation Time : %.24s\n", ctime(&atime));
--		if (array.raid_disks == 0 && external)
-+		if (is_container)
- 			str = "container";
- 		if (str)
- 			printf("        Raid Level : %s\n", str);
-@@ -489,7 +495,7 @@ int Detail(char *dev, struct context *c)
- 			       " (DELAYED)": "",
- 			       (e && e->percent == RESYNC_PENDING) ?
- 			       " (PENDING)": "");
--		} else if (inactive) {
-+		} else if (inactive && !is_container) {
- 			printf("             State : inactive\n");
- 		}
- 		if (array.raid_disks)
+Newer drivers should implement FUAs, but I don't know if libata alredy 
+uses them by default. Anyway, the disk's firmware is free to split a 
+single FUA in more internal operations, so I am not sure they solves all 
+problems.
+
+I really found the linux-scsi discussion interesting. Give it a look...
+
+Regards.
+
 -- 
-1.8.3.1
-
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
