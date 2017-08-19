@@ -1,71 +1,109 @@
-From: Gionatan Danti <g.danti@assyoma.it>
-Subject: Re: Filesystem corruption on RAID1
-Date: Fri, 18 Aug 2017 21:42:25 +0200
-Message-ID: <a93cf0cc1d39c30f585eb53ed36aa4c0@assyoma.it>
-References: <c2fe6593-c806-ab9f-fcff-8327c013237b@assyoma.it>
- <20170713214856.4a5c8778@natsu>
- <592f19bf608e9a959f9445f7f25c5dad@assyoma.it>
- <d1255092-73f5-1ca4-0e68-69ff37631a26@thelounge.net>
- <cd37f90b86eb67be4c893b7fdf112692@assyoma.it>
- <770b09d3-cff6-b6b2-0a51-5d11e8bac7e9@thelounge.net>
- <9eea45ddc0f80f4f4e238b5c2527a1fa@assyoma.it>
- <f01b4649-df39-9835-728d-545cbd45976d@assyoma.it>
- <CAAMCDefXYdDKrFjEgeS8JAYt1GNP0-fL1chEXrGqxY8=xEf4Cw@mail.gmail.com>
- <7ca98351facca6e3668d3271422e1376@assyoma.it>
- <5995D377.9080100@youngman.org.uk>
- <83f4572f09e7fbab9d4e6de4a5257232@assyoma.it>
- <59961DD7.3060208@youngman.org.uk>
- <784bec391a00b9e074744f31901df636@assyoma.it>
- <CAAMCDefNRMuTwyXn_=3v_EWHwkjy3mhod1dLw3RQpjU=9VHNJQ@mail.gmail.com>
+From: Vasco Steinmetz <linux@kyberraum.net>
+Subject: Warning in raid5-cache.c with NVME journal and DM_MQ_DEFAULT
+Date: Sat, 19 Aug 2017 06:52:09 +0200
+Message-ID: <d7042309-ab0c-9a7a-ecb6-d8988a38888e@kyberraum.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAMCDefNRMuTwyXn_=3v_EWHwkjy3mhod1dLw3RQpjU=9VHNJQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roger Heflin <rogerheflin@gmail.com>
-Cc: Wols Lists <antlists@youngman.org.uk>, Reindl Harald <h.reindl@thelounge.net>, Roman Mamedov <rm@romanrm.net>, Linux RAID <linux-raid@vger.kernel.org>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Il 18-08-2017 14:54 Roger Heflin ha scritto:
-> I have noticed all of the hardware raid controllers explicitly turn
-> off the disk's write cache so this would eliminate this issue, but the
-> cost is much slower write times.
+Hi,
 
-True...
+after adding an NVME (intel optane) as a journal device to an existing
+raid5 under kernel 4.12.4, I'm experiencing the following warnings in
+the kernel log:
 
-> It makes the hardware raid controllers (and disk arrays) become
-> uselessly slow when their battery backup dies and disables the raid
-> card and/or arrays write cache.
+[ 5430.188385] WARNING: CPU: 4 PID: 0 at drivers/md/raid5-cache.c:296
+__r5l_stripe_write_finished+0x1a8/0x1b0
+[ 5430.188385] Modules linked in: nfsd auth_rpcgss oid_registry nfs_acl
+lockd grace af_packet tun bonding msr binfmt_misc dm_crypt loop rpcrdma
+sunrpc ib_srp scsi_transport_srp ib_ipoib rdma_ucm rdma_cm iw_cm ib_cm
+configfs ib_uverbs ib_umad mlx4_ib ib_core ipv6 input_leds led_class
+hid_generic usbhid hid ipmi_ssif evdev x86_pkg_temp_thermal
+crct10dif_pclmul crc32_pclmul crc32c_intel ghash_clmulni_intel pcbc
+nct6775 igb hwmon_vid aesni_intel aes_x86_64 crypto_simd xhci_pci
+glue_helper xhci_hcd i2c_algo_bit ehci_pci cryptd ehci_hcd ptp i2c_i801
+pps_core usbcore dca coretemp deadline_iosched mlx4_core hwmon i2c_core
+pcspkr usb_common intel_pch_thermal 8250 thermal 8250_base ipmi_si fan
+serial_core ipmi_devintf rtc_cmos ipmi_msghandler button unix
+[ 5430.188428] CPU: 4 PID: 0 Comm: swapper/4 Not tainted 4.12.4 #1
+[ 5430.188429] Hardware name: Supermicro X10SL7-F/X10SL7-F, BIOS 3.0a
+12/17/2015
+[ 5430.188430] task: ffff8807fbfba640 task.stack: ffffc900031b0000
+[ 5430.188433] RIP: 0010:__r5l_stripe_write_finished+0x1a8/0x1b0
+[ 5430.188434] RSP: 0018:ffff88081fd03d20 EFLAGS: 00010002
+[ 5430.188435] RAX: 0000000000000082 RBX: ffff8804268b0ee0 RCX:
+0000000000000001
+[ 5430.188436] RDX: 0000000000000101 RSI: 0000000000000001 RDI:
+ffff880429884070
+[ 5430.188437] RBP: ffff88081fd03d58 R08: 0000000000000101 R09:
+0000000000000001
+[ 5430.188438] R10: ffff88081fd03b10 R11: 0000000000000001 R12:
+ffff880429884078
+[ 5430.188438] R13: ffff880429884070 R14: ffff8807f767eb28 R15:
+ffff880429884000
+[ 5430.188440] FS:  0000000000000000(0000) GS:ffff88081fd00000(0000)
+knlGS:0000000000000000
+[ 5430.188440] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 5430.188441] CR2: 0000000001d2a000 CR3: 0000000001809000 CR4:
+00000000001406e0
+[ 5430.188442] Call Trace:
+[ 5430.188443]  <IRQ>
+[ 5430.188446]  r5l_log_endio+0x17c/0x290
+[ 5430.188449]  bio_endio+0x61/0x70
+[ 5430.188453]  blk_update_request+0x7d/0x2b0
+[ 5430.188455]  blk_mq_end_request+0x15/0x60
+[ 5430.188459]  nvme_complete_rq+0x1e/0xe0
+[ 5430.188461]  nvme_pci_complete_rq+0x10b/0x150
+[ 5430.188463]  __blk_mq_complete_request+0x8c/0x140
+[ 5430.188464]  blk_mq_complete_request+0x11/0x20
+[ 5430.188466]  __nvme_process_cq+0x89/0x1c0
+[ 5430.188468]  nvme_irq+0x1b/0x30
+[ 5430.188471]  __handle_irq_event_percpu+0x65/0xd0
+[ 5430.188472]  handle_irq_event_percpu+0x1e/0x50
+[ 5430.188473]  handle_irq_event+0x27/0x50
+[ 5430.188475]  handle_edge_irq+0x9a/0x120
+[ 5430.188479]  handle_irq+0x15/0x20
+[ 5430.188481]  do_IRQ+0x41/0xc0
+[ 5430.188486]  common_interrupt+0x86/0x86
+[ 5430.188489] RIP: 0010:cpuidle_enter_state+0x15f/0x1f0
+[ 5430.188490] RSP: 0018:ffffc900031b3e90 EFLAGS: 00000286 ORIG_RAX:
+ffffffffffffffdc
+[ 5430.188491] RAX: ffff88081fd189c0 RBX: ffff88081fd1ff00 RCX:
+000000000000001f
+[ 5430.188492] RDX: 20c49ba5e353f7cf RSI: ffff88081fd161d8 RDI:
+0000000000000000
+[ 5430.188492] RBP: ffffc900031b3ec0 R08: ffff88081fd15b24 R09:
+0000000000000018
+[ 5430.188493] R10: ffffc900031b3e70 R11: 0000000000000190 R12:
+000004f05070ffde
+[ 5430.188494] R13: 0000000000000004 R14: ffffffff81850e18 R15:
+0000000000000004
+[ 5430.188494]  </IRQ>
+[ 5430.188496]  cpuidle_enter+0x12/0x20
+[ 5430.188500]  call_cpuidle+0x1e/0x30
+[ 5430.188501]  do_idle+0x16f/0x1b0
+[ 5430.188503]  cpu_startup_entry+0x18/0x20
+[ 5430.188506]  start_secondary+0xe8/0xf0
+[ 5430.188508]  secondary_startup_64+0x9f/0x9f
+[ 5430.188509] Code: c8 48 8b 80 d0 02 00 00 a8 08 74 be eb ad 48 8b 75
+d0 4c 89 ef e8 29 75 0e 00 48 83 c4 10 5b 41 5c 41 5d 41 5e 41 5f 5d c3
+0f 0b <0f> ff e9 97 fe ff ff 90 55 48 89 e5 41 57 41 56 41 55 41 54 49
+[ 5430.188533] ---[ end trace 6ecece6f3eb41632 ]---
 
-...true...
+The warnings appear only if blk-mq is compiled in and enabled as default
+for dm per CONFIG_DM_MQ_DEFAULT.
+When I disable this option the warning disappears.
 
-> Remember, safe, fast and cheap, you only get to pick 2.   We generally
-> pick fast and cheap, the disk arrays/raid controllers pick safe and
-> fast, but not so cheap as a hardware raid controller with write cache
-> backup of some sort are quite expensive.
+I'm not sure whether I had writeback activated at that time.
 
-...and true. I am not arguing any of these points.
 
-What really surprised me was to realize that, facing micro-powerlosses, 
-*even sync() writes* can be vulnerable to undetected data loss, at least 
-when not using FUAs (using instead the common barrier infrastructure).
+Complete dmesg output and kernel config available upon request.
 
-So while many (old) mismatch_cnt reports on RAID1/10 arrays where 
-dismissed as "don't bother, it's a harmless RAID1 thing", I really think 
-than some were genuine corruptions due to micro powerlosses and similar 
-causes.
 
-If nothing more, such reports really emphasize the need to have a 
-"trusted" mismatch_cnt for mirrored arrays, even in the face of some 
-performance losses (due to no using zero copy anymore).
+Kind regards,
+Vasco
 
-Regards.
-
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
