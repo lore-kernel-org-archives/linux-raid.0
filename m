@@ -1,109 +1,252 @@
-From: Vasco Steinmetz <linux@kyberraum.net>
-Subject: Warning in raid5-cache.c with NVME journal and DM_MQ_DEFAULT
-Date: Sat, 19 Aug 2017 06:52:09 +0200
-Message-ID: <d7042309-ab0c-9a7a-ecb6-d8988a38888e@kyberraum.net>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: Re: [dm-devel] [PATCH v5 12/19] dm: move dm-verity to generic async
+ completion
+Date: Sat, 19 Aug 2017 16:08:02 -0400 (EDT)
+Message-ID: <alpine.LRH.2.02.1708191605370.2380@file01.intranet.prod.int.rdu2.redhat.com>
+References: <1502724094-23305-1-git-send-email-gilad@benyossef.com> <1502724094-23305-13-git-send-email-gilad@benyossef.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-crypto-owner@vger.kernel.org>
+In-Reply-To: <1502724094-23305-13-git-send-email-gilad@benyossef.com>
+Sender: linux-crypto-owner@vger.kernel.org
+To: Gilad Ben-Yossef <gilad@benyossef.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Tom Lendacky <thomas.lendacky@amd.com>, Gary Hook <gary.hook@amd.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Arnaud Ebalard <arno@natisbad.org>, Matthias Brugger <matthias.bgg@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>, linux-crypto@v
 List-Id: linux-raid.ids
 
-Hi,
-
-after adding an NVME (intel optane) as a journal device to an existing
-raid5 under kernel 4.12.4, I'm experiencing the following warnings in
-the kernel log:
-
-[ 5430.188385] WARNING: CPU: 4 PID: 0 at drivers/md/raid5-cache.c:296
-__r5l_stripe_write_finished+0x1a8/0x1b0
-[ 5430.188385] Modules linked in: nfsd auth_rpcgss oid_registry nfs_acl
-lockd grace af_packet tun bonding msr binfmt_misc dm_crypt loop rpcrdma
-sunrpc ib_srp scsi_transport_srp ib_ipoib rdma_ucm rdma_cm iw_cm ib_cm
-configfs ib_uverbs ib_umad mlx4_ib ib_core ipv6 input_leds led_class
-hid_generic usbhid hid ipmi_ssif evdev x86_pkg_temp_thermal
-crct10dif_pclmul crc32_pclmul crc32c_intel ghash_clmulni_intel pcbc
-nct6775 igb hwmon_vid aesni_intel aes_x86_64 crypto_simd xhci_pci
-glue_helper xhci_hcd i2c_algo_bit ehci_pci cryptd ehci_hcd ptp i2c_i801
-pps_core usbcore dca coretemp deadline_iosched mlx4_core hwmon i2c_core
-pcspkr usb_common intel_pch_thermal 8250 thermal 8250_base ipmi_si fan
-serial_core ipmi_devintf rtc_cmos ipmi_msghandler button unix
-[ 5430.188428] CPU: 4 PID: 0 Comm: swapper/4 Not tainted 4.12.4 #1
-[ 5430.188429] Hardware name: Supermicro X10SL7-F/X10SL7-F, BIOS 3.0a
-12/17/2015
-[ 5430.188430] task: ffff8807fbfba640 task.stack: ffffc900031b0000
-[ 5430.188433] RIP: 0010:__r5l_stripe_write_finished+0x1a8/0x1b0
-[ 5430.188434] RSP: 0018:ffff88081fd03d20 EFLAGS: 00010002
-[ 5430.188435] RAX: 0000000000000082 RBX: ffff8804268b0ee0 RCX:
-0000000000000001
-[ 5430.188436] RDX: 0000000000000101 RSI: 0000000000000001 RDI:
-ffff880429884070
-[ 5430.188437] RBP: ffff88081fd03d58 R08: 0000000000000101 R09:
-0000000000000001
-[ 5430.188438] R10: ffff88081fd03b10 R11: 0000000000000001 R12:
-ffff880429884078
-[ 5430.188438] R13: ffff880429884070 R14: ffff8807f767eb28 R15:
-ffff880429884000
-[ 5430.188440] FS:  0000000000000000(0000) GS:ffff88081fd00000(0000)
-knlGS:0000000000000000
-[ 5430.188440] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 5430.188441] CR2: 0000000001d2a000 CR3: 0000000001809000 CR4:
-00000000001406e0
-[ 5430.188442] Call Trace:
-[ 5430.188443]  <IRQ>
-[ 5430.188446]  r5l_log_endio+0x17c/0x290
-[ 5430.188449]  bio_endio+0x61/0x70
-[ 5430.188453]  blk_update_request+0x7d/0x2b0
-[ 5430.188455]  blk_mq_end_request+0x15/0x60
-[ 5430.188459]  nvme_complete_rq+0x1e/0xe0
-[ 5430.188461]  nvme_pci_complete_rq+0x10b/0x150
-[ 5430.188463]  __blk_mq_complete_request+0x8c/0x140
-[ 5430.188464]  blk_mq_complete_request+0x11/0x20
-[ 5430.188466]  __nvme_process_cq+0x89/0x1c0
-[ 5430.188468]  nvme_irq+0x1b/0x30
-[ 5430.188471]  __handle_irq_event_percpu+0x65/0xd0
-[ 5430.188472]  handle_irq_event_percpu+0x1e/0x50
-[ 5430.188473]  handle_irq_event+0x27/0x50
-[ 5430.188475]  handle_edge_irq+0x9a/0x120
-[ 5430.188479]  handle_irq+0x15/0x20
-[ 5430.188481]  do_IRQ+0x41/0xc0
-[ 5430.188486]  common_interrupt+0x86/0x86
-[ 5430.188489] RIP: 0010:cpuidle_enter_state+0x15f/0x1f0
-[ 5430.188490] RSP: 0018:ffffc900031b3e90 EFLAGS: 00000286 ORIG_RAX:
-ffffffffffffffdc
-[ 5430.188491] RAX: ffff88081fd189c0 RBX: ffff88081fd1ff00 RCX:
-000000000000001f
-[ 5430.188492] RDX: 20c49ba5e353f7cf RSI: ffff88081fd161d8 RDI:
-0000000000000000
-[ 5430.188492] RBP: ffffc900031b3ec0 R08: ffff88081fd15b24 R09:
-0000000000000018
-[ 5430.188493] R10: ffffc900031b3e70 R11: 0000000000000190 R12:
-000004f05070ffde
-[ 5430.188494] R13: 0000000000000004 R14: ffffffff81850e18 R15:
-0000000000000004
-[ 5430.188494]  </IRQ>
-[ 5430.188496]  cpuidle_enter+0x12/0x20
-[ 5430.188500]  call_cpuidle+0x1e/0x30
-[ 5430.188501]  do_idle+0x16f/0x1b0
-[ 5430.188503]  cpu_startup_entry+0x18/0x20
-[ 5430.188506]  start_secondary+0xe8/0xf0
-[ 5430.188508]  secondary_startup_64+0x9f/0x9f
-[ 5430.188509] Code: c8 48 8b 80 d0 02 00 00 a8 08 74 be eb ad 48 8b 75
-d0 4c 89 ef e8 29 75 0e 00 48 83 c4 10 5b 41 5c 41 5d 41 5e 41 5f 5d c3
-0f 0b <0f> ff e9 97 fe ff ff 90 55 48 89 e5 41 57 41 56 41 55 41 54 49
-[ 5430.188533] ---[ end trace 6ecece6f3eb41632 ]---
-
-The warnings appear only if blk-mq is compiled in and enabled as default
-for dm per CONFIG_DM_MQ_DEFAULT.
-When I disable this option the warning disappears.
-
-I'm not sure whether I had writeback activated at that time.
 
 
-Complete dmesg output and kernel config available upon request.
+On Mon, 14 Aug 2017, Gilad Ben-Yossef wrote:
 
+> dm-verity is starting async. crypto ops and waiting for them to complete.
+> Move it over to generic code doing the same.
+> 
+> This also fixes a possible data coruption bug created by the
+> use of wait_for_completion_interruptible() without dealing
+> correctly with an interrupt aborting the wait prior to the
+> async op finishing.
 
-Kind regards,
-Vasco
+What is the exact problem there? The interruptible sleep is called from a 
+workqueue and workqueues have all signals blocked. Are signals unblocked 
+for some reason there?
 
+Should there be another patch for stable kernels that fixes the 
+interruptible sleep?
+
+Mikulas
+
+> Signed-off-by: Gilad Ben-Yossef <gilad@benyossef.com>
+> ---
+>  drivers/md/dm-verity-target.c | 81 +++++++++++--------------------------------
+>  drivers/md/dm-verity.h        |  5 ---
+>  2 files changed, 20 insertions(+), 66 deletions(-)
+> 
+> diff --git a/drivers/md/dm-verity-target.c b/drivers/md/dm-verity-target.c
+> index 79f18d4..8df08a8 100644
+> --- a/drivers/md/dm-verity-target.c
+> +++ b/drivers/md/dm-verity-target.c
+> @@ -92,74 +92,33 @@ static sector_t verity_position_at_level(struct dm_verity *v, sector_t block,
+>  	return block >> (level * v->hash_per_block_bits);
+>  }
+>  
+> -/*
+> - * Callback function for asynchrnous crypto API completion notification
+> - */
+> -static void verity_op_done(struct crypto_async_request *base, int err)
+> -{
+> -	struct verity_result *res = (struct verity_result *)base->data;
+> -
+> -	if (err == -EINPROGRESS)
+> -		return;
+> -
+> -	res->err = err;
+> -	complete(&res->completion);
+> -}
+> -
+> -/*
+> - * Wait for async crypto API callback
+> - */
+> -static inline int verity_complete_op(struct verity_result *res, int ret)
+> -{
+> -	switch (ret) {
+> -	case 0:
+> -		break;
+> -
+> -	case -EINPROGRESS:
+> -	case -EBUSY:
+> -		ret = wait_for_completion_interruptible(&res->completion);
+> -		if (!ret)
+> -			ret = res->err;
+> -		reinit_completion(&res->completion);
+> -		break;
+> -
+> -	default:
+> -		DMERR("verity_wait_hash: crypto op submission failed: %d", ret);
+> -	}
+> -
+> -	if (unlikely(ret < 0))
+> -		DMERR("verity_wait_hash: crypto op failed: %d", ret);
+> -
+> -	return ret;
+> -}
+> -
+>  static int verity_hash_update(struct dm_verity *v, struct ahash_request *req,
+>  				const u8 *data, size_t len,
+> -				struct verity_result *res)
+> +				struct crypto_wait *wait)
+>  {
+>  	struct scatterlist sg;
+>  
+>  	sg_init_one(&sg, data, len);
+>  	ahash_request_set_crypt(req, &sg, NULL, len);
+>  
+> -	return verity_complete_op(res, crypto_ahash_update(req));
+> +	return crypto_wait_req(crypto_ahash_update(req), wait);
+>  }
+>  
+>  /*
+>   * Wrapper for crypto_ahash_init, which handles verity salting.
+>   */
+>  static int verity_hash_init(struct dm_verity *v, struct ahash_request *req,
+> -				struct verity_result *res)
+> +				struct crypto_wait *wait)
+>  {
+>  	int r;
+>  
+>  	ahash_request_set_tfm(req, v->tfm);
+>  	ahash_request_set_callback(req, CRYPTO_TFM_REQ_MAY_SLEEP |
+>  					CRYPTO_TFM_REQ_MAY_BACKLOG,
+> -					verity_op_done, (void *)res);
+> -	init_completion(&res->completion);
+> +					crypto_req_done, (void *)wait);
+> +	crypto_init_wait(wait);
+>  
+> -	r = verity_complete_op(res, crypto_ahash_init(req));
+> +	r = crypto_wait_req(crypto_ahash_init(req), wait);
+>  
+>  	if (unlikely(r < 0)) {
+>  		DMERR("crypto_ahash_init failed: %d", r);
+> @@ -167,18 +126,18 @@ static int verity_hash_init(struct dm_verity *v, struct ahash_request *req,
+>  	}
+>  
+>  	if (likely(v->salt_size && (v->version >= 1)))
+> -		r = verity_hash_update(v, req, v->salt, v->salt_size, res);
+> +		r = verity_hash_update(v, req, v->salt, v->salt_size, wait);
+>  
+>  	return r;
+>  }
+>  
+>  static int verity_hash_final(struct dm_verity *v, struct ahash_request *req,
+> -			     u8 *digest, struct verity_result *res)
+> +			     u8 *digest, struct crypto_wait *wait)
+>  {
+>  	int r;
+>  
+>  	if (unlikely(v->salt_size && (!v->version))) {
+> -		r = verity_hash_update(v, req, v->salt, v->salt_size, res);
+> +		r = verity_hash_update(v, req, v->salt, v->salt_size, wait);
+>  
+>  		if (r < 0) {
+>  			DMERR("verity_hash_final failed updating salt: %d", r);
+> @@ -187,7 +146,7 @@ static int verity_hash_final(struct dm_verity *v, struct ahash_request *req,
+>  	}
+>  
+>  	ahash_request_set_crypt(req, NULL, digest, 0);
+> -	r = verity_complete_op(res, crypto_ahash_final(req));
+> +	r = crypto_wait_req(crypto_ahash_final(req), wait);
+>  out:
+>  	return r;
+>  }
+> @@ -196,17 +155,17 @@ int verity_hash(struct dm_verity *v, struct ahash_request *req,
+>  		const u8 *data, size_t len, u8 *digest)
+>  {
+>  	int r;
+> -	struct verity_result res;
+> +	struct crypto_wait wait;
+>  
+> -	r = verity_hash_init(v, req, &res);
+> +	r = verity_hash_init(v, req, &wait);
+>  	if (unlikely(r < 0))
+>  		goto out;
+>  
+> -	r = verity_hash_update(v, req, data, len, &res);
+> +	r = verity_hash_update(v, req, data, len, &wait);
+>  	if (unlikely(r < 0))
+>  		goto out;
+>  
+> -	r = verity_hash_final(v, req, digest, &res);
+> +	r = verity_hash_final(v, req, digest, &wait);
+>  
+>  out:
+>  	return r;
+> @@ -389,7 +348,7 @@ int verity_hash_for_block(struct dm_verity *v, struct dm_verity_io *io,
+>   * Calculates the digest for the given bio
+>   */
+>  int verity_for_io_block(struct dm_verity *v, struct dm_verity_io *io,
+> -			struct bvec_iter *iter, struct verity_result *res)
+> +			struct bvec_iter *iter, struct crypto_wait *wait)
+>  {
+>  	unsigned int todo = 1 << v->data_dev_block_bits;
+>  	struct bio *bio = dm_bio_from_per_bio_data(io, v->ti->per_io_data_size);
+> @@ -414,7 +373,7 @@ int verity_for_io_block(struct dm_verity *v, struct dm_verity_io *io,
+>  		 */
+>  		sg_set_page(&sg, bv.bv_page, len, bv.bv_offset);
+>  		ahash_request_set_crypt(req, &sg, NULL, len);
+> -		r = verity_complete_op(res, crypto_ahash_update(req));
+> +		r = crypto_wait_req(crypto_ahash_update(req), wait);
+>  
+>  		if (unlikely(r < 0)) {
+>  			DMERR("verity_for_io_block crypto op failed: %d", r);
+> @@ -482,7 +441,7 @@ static int verity_verify_io(struct dm_verity_io *io)
+>  	struct dm_verity *v = io->v;
+>  	struct bvec_iter start;
+>  	unsigned b;
+> -	struct verity_result res;
+> +	struct crypto_wait wait;
+>  
+>  	for (b = 0; b < io->n_blocks; b++) {
+>  		int r;
+> @@ -507,17 +466,17 @@ static int verity_verify_io(struct dm_verity_io *io)
+>  			continue;
+>  		}
+>  
+> -		r = verity_hash_init(v, req, &res);
+> +		r = verity_hash_init(v, req, &wait);
+>  		if (unlikely(r < 0))
+>  			return r;
+>  
+>  		start = io->iter;
+> -		r = verity_for_io_block(v, io, &io->iter, &res);
+> +		r = verity_for_io_block(v, io, &io->iter, &wait);
+>  		if (unlikely(r < 0))
+>  			return r;
+>  
+>  		r = verity_hash_final(v, req, verity_io_real_digest(v, io),
+> -					&res);
+> +					&wait);
+>  		if (unlikely(r < 0))
+>  			return r;
+>  
+> diff --git a/drivers/md/dm-verity.h b/drivers/md/dm-verity.h
+> index a59e0ad..b675bc0 100644
+> --- a/drivers/md/dm-verity.h
+> +++ b/drivers/md/dm-verity.h
+> @@ -90,11 +90,6 @@ struct dm_verity_io {
+>  	 */
+>  };
+>  
+> -struct verity_result {
+> -	struct completion completion;
+> -	int err;
+> -};
+> -
+>  static inline struct ahash_request *verity_io_hash_req(struct dm_verity *v,
+>  						     struct dm_verity_io *io)
+>  {
+> -- 
+> 2.1.4
+> 
+> --
+> dm-devel mailing list
+> dm-devel@redhat.com
+> https://www.redhat.com/mailman/listinfo/dm-devel
+> 
