@@ -1,8 +1,11 @@
-From: Wols Lists <antlists@youngman.org.uk>
+From: Gionatan Danti <g.danti@assyoma.it>
 Subject: Re: Filesystem corruption on RAID1
-Date: Sun, 20 Aug 2017 17:10:20 +0100
-Message-ID: <5999B46C.1050906@youngman.org.uk>
+Date: Sun, 20 Aug 2017 21:01:49 +0200
+Message-ID: <cc201ff8ad3ca61c48c39c619ea6bd2e@assyoma.it>
 References: <c2fe6593-c806-ab9f-fcff-8327c013237b@assyoma.it>
+ <20170713214856.4a5c8778@natsu>
+ <592f19bf608e9a959f9445f7f25c5dad@assyoma.it>
+ <d1255092-73f5-1ca4-0e68-69ff37631a26@thelounge.net>
  <cd37f90b86eb67be4c893b7fdf112692@assyoma.it>
  <770b09d3-cff6-b6b2-0a51-5d11e8bac7e9@thelounge.net>
  <9eea45ddc0f80f4f4e238b5c2527a1fa@assyoma.it>
@@ -19,60 +22,49 @@ References: <c2fe6593-c806-ab9f-fcff-8327c013237b@assyoma.it>
  <7d0af770699948fb0ecb66185145be05@assyoma.it>
  <alpine.DEB.2.20.1708201241400.3655@uplift.swm.pp.se>
  <59998974.60103@youngman.org.uk>
- <5df0037e-fc76-1127-e2e8-c4992b6d216e@websitemanagers.com.au>
- <alpine.DEB.2.20.1708201742080.3655@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.20.1708201742080.3655@uplift.swm.pp.se>
+In-Reply-To: <59998974.60103@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>, Adam Goryachev <mailinglists@websitemanagers.com.au>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: Mikael Abrahamsson <swmike@swm.pp.se>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 20/08/17 16:48, Mikael Abrahamsson wrote:
-> On Mon, 21 Aug 2017, Adam Goryachev wrote:
-> 
->> data (even where it is wrong). So just do a check/repair which will
->> ensure both drives are consistent, then you can safely do the fsck.
->> (Assuming you fixed the problem causing random write errors first).
-> 
-> This involves manual intervention.
-> 
-> While I don't know how to implement this, let's at least see if we can
-> architect something for throwing ideas around.
-> 
-> What about having an option for any raid level that would do "repair on
-> read". So you can do "0" or "1" on this. RAID1 would mean it reads all
-> stripes and if there is inconsistency, pick one and write it to all of
-> them. It could also be some kind of IOCTL option I guess. For RAID5/6,
-> read all data drives, and check parity. If parity is wrong, write parity.
-> 
-> This could mean that if filesystem developers wanted to do repair (and
-> this could be a userspace option or mount option), it would use the
-> beforementioned option for all fsck-like operation to make sure that
-> metadata was consistent while doing fsck (this would be different for
-> different tools, if it's an "fs needs to be mounted"-type of fs, or if
-> it's an "offline fsck" type filesystem. Then it could go back to normal
-> operation for everything else that would hopefully not cause
-> catastrophical failures to the filesystem, but instead just individual
-> file corruption in case of mismatches.
-> 
-Look for the thread "RFC Raid error detection and auto-recovery, 10th May.
+Il 20-08-2017 15:07 Wols Lists ha scritto:
+> Which is exactly what my "force integrity check on read" proposal would
+> have achieved, but that generated so much heat and argument IN FAVOUR 
+> of
+> returning possibly corrupt data that I'll probably get flamed to high
+> heaven if I bring it back up again.
 
-Basically, that proposed a three-way flag - "default" is the current
-"read the data section", "check" would read the entire stripe and
-compare a mirror or calculate parity on a raid and return a read error
-if it couldn't work out the correct data, and "fix" would write the
-correct data back if it could work it out.
+I think the aversion to such an approach is due to:
+a) a *big* performance degradation (you get the IOPs of a single disk);
+b) the existence on all-encompassing checksummed filesystems as ZFS and 
+BTRFS[1];
+c) the difficulty to actually write such a code;
+d) a understimating of how often can these data-corruption problem 
+happens in real life.
 
-So basically, on a two-disk raid-1, or raid 4 or 5, both "check" and
-"fix" would return read errors if there's a problem and you're SOL
-without a backup.
+I can not really blame MDRAID for what it provides, as it is incredibly 
+flexible and very fast. Sure, a user-selectable option to auto 
+discover/correct corrupted data would be great, but it seems that this 
+is not the road MDRAID will ever take.
 
-With a three-disk or more raid-1, or raid-6, it would return the correct
-data (and fix the stripe) if it could, otherwise again you're SOL.
+However, a possible solution would be to use dm-integrity on top of the 
+single component devices of an MDRAID array. Give at look at stratis[2], 
+it will be interesting...
 
-Cheers,
-Wol
+
+[1] In the current state, I do not really trust BTRFS. I put much more 
+hopes on ZoL...
+[2] https://stratis-storage.github.io/StratisSoftwareDesign.pdf
+
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
