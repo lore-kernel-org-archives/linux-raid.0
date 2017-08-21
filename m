@@ -1,143 +1,50 @@
-From: Gilad Ben-Yossef <gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
-Subject: [PATCH v6 01/19] crypto: change transient busy return code to -EAGAIN
-Date: Mon, 21 Aug 2017 17:04:47 +0300
-Message-ID: <1503324309-13673-2-git-send-email-gilad__23286.0854048797$1503324584$gmane$org@benyossef.com>
-References: <1503324309-13673-1-git-send-email-gilad@benyossef.com>
+From: Anthony Youngman <antlists@youngman.org.uk>
+Subject: Re: Filesystem corruption on RAID1
+Date: Mon, 21 Aug 2017 15:09:55 +0100
+Message-ID: <e9f75960-3572-d713-2ea2-e2bb9b817c0d@youngman.org.uk>
+References: <c2fe6593-c806-ab9f-fcff-8327c013237b@assyoma.it>
+ <592f19bf608e9a959f9445f7f25c5dad@assyoma.it>
+ <d1255092-73f5-1ca4-0e68-69ff37631a26@thelounge.net>
+ <cd37f90b86eb67be4c893b7fdf112692@assyoma.it>
+ <770b09d3-cff6-b6b2-0a51-5d11e8bac7e9@thelounge.net>
+ <9eea45ddc0f80f4f4e238b5c2527a1fa@assyoma.it>
+ <f01b4649-df39-9835-728d-545cbd45976d@assyoma.it>
+ <CAAMCDefXYdDKrFjEgeS8JAYt1GNP0-fL1chEXrGqxY8=xEf4Cw@mail.gmail.com>
+ <7ca98351facca6e3668d3271422e1376@assyoma.it>
+ <5995D377.9080100@youngman.org.uk>
+ <83f4572f09e7fbab9d4e6de4a5257232@assyoma.it>
+ <59961DD7.3060208@youngman.org.uk>
+ <784bec391a00b9e074744f31901df636@assyoma.it>
+ <CAAMCDefNRMuTwyXn_=3v_EWHwkjy3mhod1dLw3RQpjU=9VHNJQ@mail.gmail.com>
+ <a93cf0cc1d39c30f585eb53ed36aa4c0@assyoma.it>
+ <alpine.DEB.2.20.1708200907440.3655@uplift.swm.pp.se>
+ <CAJCQCtQNx=8-16Xu1ffxqYh04W3mDy_qiPSysBw-g=fwWOtDMA@mail.gmail.com>
+ <alpine.DEB.2.20.1708211027370.3655@uplift.swm.pp.se>
+ <1b95e2f43f237b4da2aed74b0b60e617@assyoma.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <1503324309-13673-1-git-send-email-gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
-List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-To: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tom Lendacky <thomas.lendacky-5C7GfCeVMHo@public.gmane.org>, Gary Hook <gary.hook-5C7GfCeVMHo@public.gmane.org>, Boris Brezillon <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Arnaud Ebalard <arno-LkuqDEemtHBg9hUCZPvPmw@public.gmane.org>, Matthias Brugger <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alasdair Kergon <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Steve French <sfrench-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, "Theodore Y. Ts'o" <tytso-3s7WtUTddSA@public.gmane.org>, Jaegeuk Kim <jaegeuk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Dmitry Kasatkin <dmitry.kasatkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, keyrings-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel@lists
-Cc: Ofir Drang <ofir.drang-5wv7dgnIgG8@public.gmane.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1b95e2f43f237b4da2aed74b0b60e617@assyoma.it>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: Gionatan Danti <g.danti@assyoma.it>, Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: Chris Murphy <lists@colorremedies.com>, Linux RAID <linux-raid@vger.kernel.org>, linux-raid-owner@vger.kernel.org
 List-Id: linux-raid.ids
 
-The crypto API was using the -EBUSY return value to indicate
-both a hard failure to submit a crypto operation into a
-transformation provider when the latter was busy and the backlog
-mechanism was not enabled as well as a notification that the
-operation was queued into the backlog when the backlog mechanism
-was enabled.
+On 21/08/17 13:28, Gionatan Danti wrote:
+>> It would also be a good diagnostic tool for admins. If you suspect
+>> that you're getting inconsistencies but you're fine with the
+>> performance degradation then md could log inconsistencies somewhere so
+>> you know about them.
+> 
+> I second that.
+> Thanks.
 
-Having the same return code indicate two very different conditions
-depending on a flag is both error prone and requires extra runtime
-check like the following to discern between the cases:
+Sounds like I should try and write the code for my RFC then :-)
 
-	if (err == -EINPROGRESS ||
-	    (err == -EBUSY && (ahash_request_flags(req) &
-			       CRYPTO_TFM_REQ_MAY_BACKLOG)))
+Just be prepared for a lot of requests for help ... :-) Another item on 
+my long list of "I'll do it when I get the chance" things :-(
 
-This patch changes the return code used to indicate a crypto op
-failed due to the transformation provider being transiently busy
-to -EAGAIN.
-
-Signed-off-by: Gilad Ben-Yossef <gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
----
- crypto/algapi.c     |  6 ++++--
- crypto/algif_hash.c | 20 +++++++++++++++++---
- crypto/cryptd.c     |  4 +---
- 3 files changed, 22 insertions(+), 8 deletions(-)
-
-diff --git a/crypto/algapi.c b/crypto/algapi.c
-index aa699ff..916bee3 100644
---- a/crypto/algapi.c
-+++ b/crypto/algapi.c
-@@ -897,9 +897,11 @@ int crypto_enqueue_request(struct crypto_queue *queue,
- 	int err = -EINPROGRESS;
- 
- 	if (unlikely(queue->qlen >= queue->max_qlen)) {
--		err = -EBUSY;
--		if (!(request->flags & CRYPTO_TFM_REQ_MAY_BACKLOG))
-+		if (!(request->flags & CRYPTO_TFM_REQ_MAY_BACKLOG)) {
-+			err = -EAGAIN;
- 			goto out;
-+		}
-+		err = -EBUSY;
- 		if (queue->backlog == &queue->list)
- 			queue->backlog = &request->list;
- 	}
-diff --git a/crypto/algif_hash.c b/crypto/algif_hash.c
-index 5e92bd2..3b3c154 100644
---- a/crypto/algif_hash.c
-+++ b/crypto/algif_hash.c
-@@ -39,6 +39,20 @@ struct algif_hash_tfm {
- 	bool has_key;
- };
- 
-+/* Previous versions of crypto_* ops used to return -EBUSY
-+ * rather than -EAGAIN to indicate being tied up. The in
-+ * kernel API changed but we don't want to break the user
-+ * space API. As only the hash user interface exposed this
-+ * error ever to the user, do the translation here.
-+ */
-+static inline int crypto_user_err(int err)
-+{
-+	if (err == -EAGAIN)
-+		return -EBUSY;
-+
-+	return err;
-+}
-+
- static int hash_alloc_result(struct sock *sk, struct hash_ctx *ctx)
- {
- 	unsigned ds;
-@@ -136,7 +150,7 @@ static int hash_sendmsg(struct socket *sock, struct msghdr *msg,
- unlock:
- 	release_sock(sk);
- 
--	return err ?: copied;
-+	return err ? crypto_user_err(err) : copied;
- }
- 
- static ssize_t hash_sendpage(struct socket *sock, struct page *page,
-@@ -188,7 +202,7 @@ static ssize_t hash_sendpage(struct socket *sock, struct page *page,
- unlock:
- 	release_sock(sk);
- 
--	return err ?: size;
-+	return err ? crypto_user_err(err) : size;
- }
- 
- static int hash_recvmsg(struct socket *sock, struct msghdr *msg, size_t len,
-@@ -236,7 +250,7 @@ static int hash_recvmsg(struct socket *sock, struct msghdr *msg, size_t len,
- 	hash_free_result(sk, ctx);
- 	release_sock(sk);
- 
--	return err ?: len;
-+	return err ? crypto_user_err(err) : len;
- }
- 
- static int hash_accept(struct socket *sock, struct socket *newsock, int flags,
-diff --git a/crypto/cryptd.c b/crypto/cryptd.c
-index 0508c48..d1dbdce 100644
---- a/crypto/cryptd.c
-+++ b/crypto/cryptd.c
-@@ -137,16 +137,14 @@ static int cryptd_enqueue_request(struct cryptd_queue *queue,
- 	int cpu, err;
- 	struct cryptd_cpu_queue *cpu_queue;
- 	atomic_t *refcnt;
--	bool may_backlog;
- 
- 	cpu = get_cpu();
- 	cpu_queue = this_cpu_ptr(queue->cpu_queue);
- 	err = crypto_enqueue_request(&cpu_queue->queue, request);
- 
- 	refcnt = crypto_tfm_ctx(request->tfm);
--	may_backlog = request->flags & CRYPTO_TFM_REQ_MAY_BACKLOG;
- 
--	if (err == -EBUSY && !may_backlog)
-+	if (err == -EAGAIN)
- 		goto out_put_cpu;
- 
- 	queue_work_on(cpu, kcrypto_wq, &cpu_queue->work);
--- 
-2.1.4
+Cheers,
+Wol
