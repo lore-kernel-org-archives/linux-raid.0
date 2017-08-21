@@ -1,207 +1,53 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: BUG_ON(sh->batch_head) in init_stripe()
-Date: Mon, 21 Aug 2017 09:10:53 -0700
-Message-ID: <20170821161053.kvwe27zexys7fgh3@kernel.org>
-References: <1E249B1F-4030-4482-ABB9-E18A87B5CD47@stanford.edu>
- <D70C6DBD-6B79-4FBE-A22D-8BC2E17CC2EB@stanford.edu>
- <5992BDE5.8060108@suse.com>
- <CED1B4D4-F187-4B87-9330-D04A4C50D5BB@stanford.edu>
- <20170815183948.dbmbwfqlkn5hhxa7@kernel.org>
- <0E8520DD-6D21-4C92-A31C-F7EB34C85E5C@stanford.edu>
- <20170817225835.2ky3t4nbtkxxotbv@kernel.org>
- <6CFD60E7-05B3-4D4E-B595-25CBEB5DFBFB@stanford.edu>
- <20170818055006.cdrh4q3trz3jtvbw@kernel.org>
- <C45EC19A-1CF2-45BA-B907-BCD5B4E644F0@stanford.edu>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 2/2] dm integrity: use init_completion instead of
+ COMPLETION_INITIALIZER_ONSTACK
+Date: Mon, 21 Aug 2017 12:13:54 -0400
+Message-ID: <20170821161354.GA8375@redhat.com>
+References: <20170815151242.2637861-1-arnd@arndb.de>
+ <20170815151242.2637861-2-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <C45EC19A-1CF2-45BA-B907-BCD5B4E644F0@stanford.edu>
+In-Reply-To: <20170815151242.2637861-2-arnd@arndb.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stephane Thiell <sthiell@stanford.edu>
-Cc: Guoqing Jiang <gqjiang@suse.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Alasdair Kergon <agk@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Ingo Molnar <mingo@kernel.org>, Byungchul Park <byungchul.park@lge.com>, Peter Zijlstra <peterz@infradead.org>, Mikulas Patocka <mpatocka@redhat.com>, Jens Axboe <axboe@fb.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Aug 18, 2017 at 07:00:20AM +0000, Stephane Thiell wrote:
+On Tue, Aug 15 2017 at 11:11am -0400,
+Arnd Bergmann <arnd@arndb.de> wrote:
+
+> The new lockdep support for completions causeed the stack usage
+> in dm-integrity to explode, in case of write_journal from 504 bytes
+> to 1120 (using arm gcc-7.1.1):
 > 
-> > On Aug 17, 2017, at 10:50 PM, Shaohua Li <shli@kernel.org> wrote:
-> > 
-> > On Fri, Aug 18, 2017 at 04:13:21AM +0000, Stephane Thiell wrote:
-> >>> On Aug 17, 2017, at 3:58 PM, Shaohua Li <shli@kernel.org> wrote:
-> >>> 
-> >>> On Tue, Aug 15, 2017 at 07:27:44PM +0000, Stephane Thiell wrote:
-> >>>> 
-> >>>>> On Aug 15, 2017, at 11:39 AM, Shaohua Li <shli@kernel.org> wrote:
-> >>>>> 
-> >>>>> On Tue, Aug 15, 2017 at 05:59:38PM +0000, Stephane Thiell wrote:
-> >>>>>> 
-> >>>>>>> On Aug 15, 2017, at 2:24 AM, Guoqing Jiang <gqjiang@suse.com> wrote:
-> >>>>>>> 
-> >>>>>>> 
-> >>>>>>> 
-> >>>>>>> On 08/14/2017 01:29 AM, Stephane Thiell wrote:
-> >>>>>>>> Also known as "kernel BUG at drivers/md/raid5.c:527!"
-> >>>>>>>> 
-> >>>>>>>> I’m still struggling with this issue in raid5.c. I currently have one crash per week in average on a system using Lustre and 24 x 10-disk raid6 per server. It did happen with or without check running. I now think there is a race at some point where a released stripe head (batched) is added to conf->inactive_list without sh->batch_head being set back to NULL.
-> >>>>>>>> 
-> >>>>>>>> Because sh->batch_head is only being set back to NULL in a single function, break_stripe_batch_list(), my guess is that a call to raid5_release_stripe() on the head stripe is performed elsewhere. I didn’t find where this could come from yet. So perhaps sh->batch_head should be just set to NULL in do_release_stripe(), before being added to the inactive list?
-> >>>>>>>> 
-> >>>>>>>> Alternatively, I wonder if it would make more sense to set batch_head to NULL where sh->overwrite_disks is also set back to 0 (like in ops_run_biodrain() today).
-> >>>>>>>> 
-> >>>>>>>> Because sh->overwrite_disks is also set to 0 in init_stripe(), my current plan is to try this change, at least as a workaround: remove the BUG_ON(sh->batch_head) from init_stripe() and set sh->batch_head = NULL (I don’t think I need to lock on sh->stripe_lock there?). I will get new hardware soon so I will give it a try on a test system. Any suggestions welcomed…
-> >>>>>>>> 
-> >>>>>>>> Quick analysis of the last vmcore:
-> >>>>>>>> 
-> >>>>>>>> crash> ps | grep ">"
-> >>>>>>>> ...
-> >>>>>>>>> 16119  16111  22  ffff881f93bace70  RU   0.0  150772  10748  e2label
-> >>>>>>>>> 151448      2  34  ffff881ff753bec0  RU   0.0       0      0  [kiblnd_sd_00_00]
-> >>>>>>>>> 151449      2   2  ffff881ff753edd0  RU   0.0       0      0  [kiblnd_sd_00_01]
-> >>>>>>>>> 154637      2  29  ffff881f776b1f60  RU   0.0       0      0  [md32_raid6]
-> >>>>>>>>> 163643      2  11  ffff8820d200bec0  UN   0.0       0      0  [ll_ost_io01_008]
-> >>>>>>>>> 164083      2  13  ffff8820d2753ec0  UN   0.0       0      0  [ll_ost_io01_034]
-> >>>>>>>>> 171389      2   5  ffff883fd072de20  UN   0.0       0      0  [ll_ost_io01_058]
-> >>>>>>>>> 171391      2  17  ffff883fd072ce70  UN   0.0       0      0  [ll_ost_io01_060]
-> >>>>>>>>> 171399      2  33  ffff883fd9e9ce70  UN   0.0       0      0  [ll_ost_io01_068]
-> >>>>>>>>> 237019      2  15  ffff882715628fb0  UN   0.0       0      0  [ll_ost_io01_084]
-> >>>>>>>>> 237033      2   3  ffff881fb0250fb0  UN   0.0       0      0  [ll_ost_io01_098]
-> >>>>>>>> ...
-> >>>>>>>> 
-> >>>>>>>> crash>  bt 237033
-> >>>>>>>> PID: 237033  TASK: ffff881fb0250fb0  CPU: 3   COMMAND: "ll_ost_io01_098"
-> >>>>>>>> #0 [ffff8826fa3e7240] machine_kexec at ffffffff81059bdb
-> >>>>>>>> #1 [ffff8826fa3e72a0] __crash_kexec at ffffffff811057c2
-> >>>>>>>> #2 [ffff8826fa3e7370] crash_kexec at ffffffff811058b0
-> >>>>>>>> #3 [ffff8826fa3e7388] oops_end at ffffffff8168fac8
-> >>>>>>>> #4 [ffff8826fa3e73b0] die at ffffffff8102e93b
-> >>>>>>>> #5 [ffff8826fa3e73e0] do_trap at ffffffff8168f180
-> >>>>>>>> #6 [ffff8826fa3e7430] do_invalid_op at ffffffff8102b144
-> >>>>>>>> #7 [ffff8826fa3e74e0] invalid_op at ffffffff81698b5e
-> >>>>>>>>  [exception RIP: raid5_get_active_stripe+1809]
-> >>>>>>>>  RIP: ffffffffa0fefd71  RSP: ffff8826fa3e7590  RFLAGS: 00010086
-> >>>>>>>>  RAX: 0000000000000000  RBX: ffff883df051641c  RCX: dead000000000200
-> >>>>>>>>  RDX: 0000000000000000  RSI: 0000000000000005  RDI: ffff881e08d54d30
-> >>>>>>>>  RBP: ffff8826fa3e7638   R8: ffff881e08d54d40   R9: 0000000000000080
-> >>>>>>>>  R10: 0000000000000000  R11: 0000000000000000  R12: ffff883df0516400
-> >>>>>>>>  R13: ffff881e08d54d30  R14: 0000000000000000  R15: 0000000000000000
-> >>>>>>>>  ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
-> >>>>>>>> #8 [ffff8826fa3e7640] raid5_make_request at ffffffffa0feff55 [raid456]
-> >>>>>>>> #9 [ffff8826fa3e7730] md_make_request at ffffffff814f838c
-> >>>>>>>> #10 [ffff8826fa3e7790] generic_make_request at ffffffff812eedc9
-> >>>>>>>> #11 [ffff8826fa3e77d8] submit_bio at ffffffff812eef11
-> >>>>>>>> #12 [ffff8826fa3e7830] osd_submit_bio at ffffffffa10cdbcc [osd_ldiskfs]
-> >>>>>>>> #13 [ffff8826fa3e7840] osd_do_bio at ffffffffa10d03c1 [osd_ldiskfs]
-> >>>>>>>> #14 [ffff8826fa3e7960] osd_write_commit at ffffffffa10d0b94 [osd_ldiskfs]
-> >>>>>>>> #15 [ffff8826fa3e7a00] ofd_commitrw_write at ffffffffa120c734 [ofd]
-> >>>>>>>> #16 [ffff8826fa3e7a78] ofd_commitrw at ffffffffa120ff07 [ofd]
-> >>>>>>>> #17 [ffff8826fa3e7b08] obd_commitrw at ffffffffa0c7dc22 [ptlrpc]
-> >>>>>>>> #18 [ffff8826fa3e7b70] tgt_brw_write at ffffffffa0c55fc1 [ptlrpc]
-> >>>>>>>> #19 [ffff8826fa3e7cd8] tgt_request_handle at ffffffffa0c52275 [ptlrpc]
-> >>>>>>>> #20 [ffff8826fa3e7d20] ptlrpc_server_handle_request at ffffffffa0bfe1fb [ptlrpc]
-> >>>>>>>> #21 [ffff8826fa3e7de8] ptlrpc_main at ffffffffa0c022b0 [ptlrpc]
-> >>>>>>>> #22 [ffff8826fa3e7ec8] kthread at ffffffff810b0a4f
-> >>>>>>>> #23 [ffff8826fa3e7f50] ret_from_fork at ffffffff81697218
-> >>>>>>>> 
-> >>>>>>>> 
-> >>>>>>>> After some disassembly work, I found out that all active tasks are working on the same md (all are raid6):
-> >>>>>>>> 
-> >>>>>>>> md32’s (struct r5conf *) is 0xffff883df0516400
-> >>>>>>>> 
-> >>>>>>>> Our crashed task:
-> >>>>>>>> 
-> >>>>>>>> crash> printf "%s", ((struct r5conf)*0xffff883df0516400).cache_name[0]
-> >>>>>>>> raid6-md32
-> >>>>>>>> 
-> >>>>>>>> Example for md32_raid6 task in release_inactive_stripe_list:
-> >>>>>>>> 
-> >>>>>>>> crash> bt 154637
-> >>>>>>>> PID: 154637  TASK: ffff881f776b1f60  CPU: 29  COMMAND: "md32_raid6"
-> >>>>>>>> #0 [ffff883ffc985e48] crash_nmi_callback at ffffffff8104d2e2
-> >>>>>>>> #1 [ffff883ffc985e58] nmi_handle at ffffffff8168fc77
-> >>>>>>>> #2 [ffff883ffc985eb0] do_nmi at ffffffff8168fe83
-> >>>>>>>> #3 [ffff883ffc985ef0] end_repeat_nmi at ffffffff8168f093
-> >>>>>>>>  [exception RIP: _raw_spin_lock_irqsave+64]
-> >>>>>>>>  RIP: ffffffff8168e5f0  RSP: ffff881e8d0cbc60  RFLAGS: 00000006
-> >>>>>>>>  RAX: 00000000000031bb  RBX: ffff883df0516740  RCX: 000000000000009a
-> >>>>>>>>  RDX: 0000000000000098  RSI: 000000000000009a  RDI: ffff883df051641c
-> >>>>>>>>  RBP: ffff881e8d0cbc60   R8: 0000000000000206   R9: 0000000000000000
-> >>>>>>>>  R10: 0000000000000000  R11: 0000000000000007  R12: ffff883df0516400
-> >>>>>>>>  R13: ffff883df051641c  R14: 0000000000000006  R15: 0000000000000005
-> >>>>>>>>  ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
-> >>>>>>>> --- <NMI exception stack> ---
-> >>>>>>>> #4 [ffff881e8d0cbc60] _raw_spin_lock_irqsave at ffffffff8168e5f0
-> >>>>>>>> #5 [ffff881e8d0cbc68] release_inactive_stripe_list at ffffffffa0fe5500 [raid456]
-> >>>>>>>> #6 [ffff881e8d0cbcb0] handle_active_stripes at ffffffffa0ff34c2 [raid456]
-> >>>>>>>> #7 [ffff881e8d0cbd60] raid5d at ffffffffa0ff3c28 [raid456]
-> >>>>>>>> #8 [ffff881e8d0cbe50] md_thread at ffffffff814fb745
-> >>>>>>>> #9 [ffff881e8d0cbec8] kthread at ffffffff810b0a4f
-> >>>>>>>> #10 [ffff881e8d0cbf50] ret_from_fork at ffffffff81697218
-> >>>>>>>> 
-> >>>>>>>> 
-> >>>>>>>> crash> bt 163643 164083 171389 171391 171399 237019 237033 |grep "exception RIP:"
-> >>>>>>>>  [exception RIP: _raw_spin_lock_irq+63]
-> >>>>>>>>  [exception RIP: _raw_spin_lock_irq+63]
-> >>>>>>>>  [exception RIP: _raw_spin_lock_irq+58]
-> >>>>>>>>  [exception RIP: _raw_spin_lock_irq+63]
-> >>>>>>>>  [exception RIP: _raw_spin_lock_irq+58]
-> >>>>>>>>  [exception RIP: _raw_spin_lock_irq+63]
-> >>>>>>>>  [exception RIP: raid5_get_active_stripe+1809]
-> >>>>>>>> 
-> >>>>>>>> crash> bt 163643 164083 171389 171391 171399 237019 237033 |grep "raid5_get_active_stripe"
-> >>>>>>>> #5 [ffff883bcee93588] raid5_get_active_stripe at ffffffffa0fef6cb [raid456]
-> >>>>>>>> #5 [ffff883ba4af7588] raid5_get_active_stripe at ffffffffa0fef6cb [raid456]
-> >>>>>>>> #5 [ffff88390877b588] raid5_get_active_stripe at ffffffffa0fef6cb [raid456]
-> >>>>>>>> #5 [ffff88390803b588] raid5_get_active_stripe at ffffffffa0fef6cb [raid456]
-> >>>>>>>> #5 [ffff88390831f588] raid5_get_active_stripe at ffffffffa0fef6cb [raid456]
-> >>>>>>>> #5 [ffff8826fa7f7588] raid5_get_active_stripe at ffffffffa0fef6cb [raid456]
-> >>>>>>>>  [exception RIP: raid5_get_active_stripe+1809]
-> >>>>>>>> 
-> >>>>>>>> crash> bt 163643 164083 171389 171391 171399 237019 237033 |grep R12
-> >>>>>>>>  R10: 0000000000000003  R11: 0000000000000000  R12: ffff883df0516400
-> >>>>>>>>  R10: 0000000000000001  R11: 0000000000000000  R12: ffff883df0516400
-> >>>>>>>>  R10: 0000000000000005  R11: 0000000000000000  R12: ffff883df0516400
-> >>>>>>>>  R10: 0000000000000007  R11: 0000000000000000  R12: ffff883df0516400
-> >>>>>>>>  R10: 0000000000000009  R11: 0000000000000000  R12: ffff883df0516400
-> >>>>>>>>  R10: 0000000000000009  R11: 0000000000000000  R12: ffff883df0516400
-> >>>>>>>>  R10: 0000000000000000  R11: 0000000000000000  R12: ffff883df0516400
-> >>>>>>>> 
-> >>>>>>>> 
-> >>>>>>>> The bad stripe_head (sh) is available at (usually in %r13):
-> >>>>>>>> 
-> >>>>>>>> crash> p ((struct stripe_head)*0xffff881e08d54d30).raid_conf
-> >>>>>>>> $98 = (struct r5conf *) 0xffff883df0516400
-> >>>>>>>> 
-> >>>>>>>> and batch_head is not NULL... that's the issue:
+> drivers/md/dm-integrity.c: In function 'write_journal':
+> drivers/md/dm-integrity.c:827:1: error: the frame size of 1120 bytes is larger than 1024 bytes [-Werror=frame-larger-than=]
+> 
+> The problem is that not only the size of 'struct completion' grows
+> significantly, but we end up having multiple copies of it on the stack
+> when we assign it from a local variable after the initial declaration.
+> 
+> COMPLETION_INITIALIZER_ONSTACK() is the right thing to use when we
+> want to declare and initialize a completion on the stack. However,
+> this driver doesn't do that and instead initializes the completion
+> just before it is used.
+> 
+> In this case, init_completion() does the same thing more efficiently,
+> and drops the stack usage for the function above down to 496 bytes.
+> While the other functions in this file are not bad enough to cause
+> a warning, they benefit equally from the change, so I do the change
+> across the entire file. In the one place where we reuse a completion,
+> I picked the cheaper reinit_completion() over init_completion().
+> 
+> Fixes: cd8084f91c02 ("locking/lockdep: Apply crossrelease to completions")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+> The patch causing this is currently part of linux-next, scheduled for
+> 4.14, so it would be good to have this in the same release.
 
-Last mail appers not hitting the list, resend.
+This looks good.  Please just stage it for 4.14 along with its
+dependencies via whatever tree they are going in.
 
-The new dump info does reveal some infos. Not sure if it's the issue you found,
-but I did find a race condition. Please try below patch and report back:
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index ed5cd705b985..35637fe34820 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -806,13 +806,19 @@ static void stripe_add_to_batch_list(struct r5conf *conf, struct stripe_head *sh
- 		}
- 
- 		/*
-+		 * We must assign batch_head of this stripe within the
-+		 * batch_lock, otherwise clear_batch_ready of batch head
-+		 * stripe could clear BATCH_READY bit of this stripe and this
-+		 * stripe->batch_head doesn't get assigned, which could
-+		 * confuse clear_batch_ready for this stripe
-+		 */
-+		sh->batch_head = head->batch_head;
-+		/*
- 		 * at this point, head's BATCH_READY could be cleared, but we
- 		 * can still add the stripe to batch list
- 		 */
- 		list_add(&sh->batch_list, &head->batch_list);
- 		spin_unlock(&head->batch_head->batch_lock);
--
--		sh->batch_head = head->batch_head;
- 	} else {
- 		head->batch_head = head;
- 		sh->batch_head = head->batch_head;
+Acked-by: Mike Snitzer <snitzer@redhat.com>
