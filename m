@@ -1,82 +1,231 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Filesystem corruption on RAID1
-Date: Mon, 21 Aug 2017 11:33:30 -0600
-Message-ID: <CAJCQCtRBe2t=qB8nqbtSKO7vGQz_NiyBSon8JAKKNK0V=sba8w@mail.gmail.com>
-References: <c2fe6593-c806-ab9f-fcff-8327c013237b@assyoma.it>
- <20170713214856.4a5c8778@natsu> <592f19bf608e9a959f9445f7f25c5dad@assyoma.it>
- <d1255092-73f5-1ca4-0e68-69ff37631a26@thelounge.net> <cd37f90b86eb67be4c893b7fdf112692@assyoma.it>
- <770b09d3-cff6-b6b2-0a51-5d11e8bac7e9@thelounge.net> <9eea45ddc0f80f4f4e238b5c2527a1fa@assyoma.it>
- <f01b4649-df39-9835-728d-545cbd45976d@assyoma.it> <CAAMCDefXYdDKrFjEgeS8JAYt1GNP0-fL1chEXrGqxY8=xEf4Cw@mail.gmail.com>
- <7ca98351facca6e3668d3271422e1376@assyoma.it> <5995D377.9080100@youngman.org.uk>
- <83f4572f09e7fbab9d4e6de4a5257232@assyoma.it> <59961DD7.3060208@youngman.org.uk>
- <784bec391a00b9e074744f31901df636@assyoma.it> <CAAMCDefNRMuTwyXn_=3v_EWHwkjy3mhod1dLw3RQpjU=9VHNJQ@mail.gmail.com>
- <a93cf0cc1d39c30f585eb53ed36aa4c0@assyoma.it> <alpine.DEB.2.20.1708200907440.3655@uplift.swm.pp.se>
- <CAJCQCtQNx=8-16Xu1ffxqYh04W3mDy_qiPSysBw-g=fwWOtDMA@mail.gmail.com> <alpine.DEB.2.20.1708211027370.3655@uplift.swm.pp.se>
+From: Stephane Thiell <sthiell@stanford.edu>
+Subject: Re: BUG_ON(sh->batch_head) in init_stripe()
+Date: Mon, 21 Aug 2017 17:35:58 +0000
+Message-ID: <3B02F9EA-5673-499F-8334-4BA481DED1FA@stanford.edu>
+References: <1E249B1F-4030-4482-ABB9-E18A87B5CD47@stanford.edu>
+ <D70C6DBD-6B79-4FBE-A22D-8BC2E17CC2EB@stanford.edu>
+ <5992BDE5.8060108@suse.com>
+ <CED1B4D4-F187-4B87-9330-D04A4C50D5BB@stanford.edu>
+ <20170815183948.dbmbwfqlkn5hhxa7@kernel.org>
+ <0E8520DD-6D21-4C92-A31C-F7EB34C85E5C@stanford.edu>
+ <20170817225835.2ky3t4nbtkxxotbv@kernel.org>
+ <6CFD60E7-05B3-4D4E-B595-25CBEB5DFBFB@stanford.edu>
+ <20170818055006.cdrh4q3trz3jtvbw@kernel.org>
+ <C45EC19A-1CF2-45BA-B907-BCD5B4E644F0@stanford.edu>
+ <20170821161053.kvwe27zexys7fgh3@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.20.1708211027370.3655@uplift.swm.pp.se>
+In-Reply-To: <20170821161053.kvwe27zexys7fgh3@kernel.org>
+Content-Language: en-US
+Content-ID: <FB1CC760AC7D524CBF464D966E624366@namprd02.prod.outlook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: Chris Murphy <lists@colorremedies.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: Shaohua Li <shli@kernel.org>
+Cc: Guoqing Jiang <gqjiang@suse.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Aug 21, 2017 at 2:37 AM, Mikael Abrahamsson <swmike@swm.pp.se> wrote:
-> On Sun, 20 Aug 2017, Chris Murphy wrote:
->
->> Since md doesn't read from both mirrors, it's possible there's a read from
->> a non-corrupt drive, which presents good information to fsck, which then
->> sees no reason to fix anything in that block; but the other mirror does have
->> corruption which thus goes undetected.
->
->
-> That was exactly what I wrote.
->
->> One way of dealing with it is to scrub (repair) so they both have the same
->> information to hand over to fsck. Fixups then get replicated to disks by md.
->
->
-> Yes, it is, but that would require a full repair before doing fsck. That
-> seems excessive because that will take hours on larger drives.
+DQo+IE9uIEF1ZyAyMSwgMjAxNywgYXQgOToxMCBBTSwgU2hhb2h1YSBMaSA8c2hsaUBrZXJuZWwu
+b3JnPiB3cm90ZToNCj4gDQo+IE9uIEZyaSwgQXVnIDE4LCAyMDE3IGF0IDA3OjAwOjIwQU0gKzAw
+MDAsIFN0ZXBoYW5lIFRoaWVsbCB3cm90ZToNCj4+IA0KPj4+IE9uIEF1ZyAxNywgMjAxNywgYXQg
+MTA6NTAgUE0sIFNoYW9odWEgTGkgPHNobGlAa2VybmVsLm9yZz4gd3JvdGU6DQo+Pj4gDQo+Pj4g
+T24gRnJpLCBBdWcgMTgsIDIwMTcgYXQgMDQ6MTM6MjFBTSArMDAwMCwgU3RlcGhhbmUgVGhpZWxs
+IHdyb3RlOg0KPj4+Pj4gT24gQXVnIDE3LCAyMDE3LCBhdCAzOjU4IFBNLCBTaGFvaHVhIExpIDxz
+aGxpQGtlcm5lbC5vcmc+IHdyb3RlOg0KPj4+Pj4gDQo+Pj4+PiBPbiBUdWUsIEF1ZyAxNSwgMjAx
+NyBhdCAwNzoyNzo0NFBNICswMDAwLCBTdGVwaGFuZSBUaGllbGwgd3JvdGU6DQo+Pj4+Pj4gDQo+
+Pj4+Pj4+IE9uIEF1ZyAxNSwgMjAxNywgYXQgMTE6MzkgQU0sIFNoYW9odWEgTGkgPHNobGlAa2Vy
+bmVsLm9yZz4gd3JvdGU6DQo+Pj4+Pj4+IA0KPj4+Pj4+PiBPbiBUdWUsIEF1ZyAxNSwgMjAxNyBh
+dCAwNTo1OTozOFBNICswMDAwLCBTdGVwaGFuZSBUaGllbGwgd3JvdGU6DQo+Pj4+Pj4+PiANCj4+
+Pj4+Pj4+PiBPbiBBdWcgMTUsIDIwMTcsIGF0IDI6MjQgQU0sIEd1b3FpbmcgSmlhbmcgPGdxamlh
+bmdAc3VzZS5jb20+IHdyb3RlOg0KPj4+Pj4+Pj4+IA0KPj4+Pj4+Pj4+IA0KPj4+Pj4+Pj4+IA0K
+Pj4+Pj4+Pj4+IE9uIDA4LzE0LzIwMTcgMDE6MjkgQU0sIFN0ZXBoYW5lIFRoaWVsbCB3cm90ZToN
+Cj4+Pj4+Pj4+Pj4gQWxzbyBrbm93biBhcyAia2VybmVsIEJVRyBhdCBkcml2ZXJzL21kL3JhaWQ1
+LmM6NTI3ISINCj4+Pj4+Pj4+Pj4gDQo+Pj4+Pj4+Pj4+IEnigJltIHN0aWxsIHN0cnVnZ2xpbmcg
+d2l0aCB0aGlzIGlzc3VlIGluIHJhaWQ1LmMuIEkgY3VycmVudGx5IGhhdmUgb25lIGNyYXNoIHBl
+ciB3ZWVrIGluIGF2ZXJhZ2Ugb24gYSBzeXN0ZW0gdXNpbmcgTHVzdHJlIGFuZCAyNCB4IDEwLWRp
+c2sgcmFpZDYgcGVyIHNlcnZlci4gSXQgZGlkIGhhcHBlbiB3aXRoIG9yIHdpdGhvdXQgY2hlY2sg
+cnVubmluZy4gSSBub3cgdGhpbmsgdGhlcmUgaXMgYSByYWNlIGF0IHNvbWUgcG9pbnQgd2hlcmUg
+YSByZWxlYXNlZCBzdHJpcGUgaGVhZCAoYmF0Y2hlZCkgaXMgYWRkZWQgdG8gY29uZi0+aW5hY3Rp
+dmVfbGlzdCB3aXRob3V0IHNoLT5iYXRjaF9oZWFkIGJlaW5nIHNldCBiYWNrIHRvIE5VTEwuDQo+
+Pj4+Pj4+Pj4+IA0KPj4+Pj4+Pj4+PiBCZWNhdXNlIHNoLT5iYXRjaF9oZWFkIGlzIG9ubHkgYmVp
+bmcgc2V0IGJhY2sgdG8gTlVMTCBpbiBhIHNpbmdsZSBmdW5jdGlvbiwgYnJlYWtfc3RyaXBlX2Jh
+dGNoX2xpc3QoKSwgbXkgZ3Vlc3MgaXMgdGhhdCBhIGNhbGwgdG8gcmFpZDVfcmVsZWFzZV9zdHJp
+cGUoKSBvbiB0aGUgaGVhZCBzdHJpcGUgaXMgcGVyZm9ybWVkIGVsc2V3aGVyZS4gSSBkaWRu4oCZ
+dCBmaW5kIHdoZXJlIHRoaXMgY291bGQgY29tZSBmcm9tIHlldC4gU28gcGVyaGFwcyBzaC0+YmF0
+Y2hfaGVhZCBzaG91bGQgYmUganVzdCBzZXQgdG8gTlVMTCBpbiBkb19yZWxlYXNlX3N0cmlwZSgp
+LCBiZWZvcmUgYmVpbmcgYWRkZWQgdG8gdGhlIGluYWN0aXZlIGxpc3Q/DQo+Pj4+Pj4+Pj4+IA0K
+Pj4+Pj4+Pj4+PiBBbHRlcm5hdGl2ZWx5LCBJIHdvbmRlciBpZiBpdCB3b3VsZCBtYWtlIG1vcmUg
+c2Vuc2UgdG8gc2V0IGJhdGNoX2hlYWQgdG8gTlVMTCB3aGVyZSBzaC0+b3ZlcndyaXRlX2Rpc2tz
+IGlzIGFsc28gc2V0IGJhY2sgdG8gMCAobGlrZSBpbiBvcHNfcnVuX2Jpb2RyYWluKCkgdG9kYXkp
+Lg0KPj4+Pj4+Pj4+PiANCj4+Pj4+Pj4+Pj4gQmVjYXVzZSBzaC0+b3ZlcndyaXRlX2Rpc2tzIGlz
+IGFsc28gc2V0IHRvIDAgaW4gaW5pdF9zdHJpcGUoKSwgbXkgY3VycmVudCBwbGFuIGlzIHRvIHRy
+eSB0aGlzIGNoYW5nZSwgYXQgbGVhc3QgYXMgYSB3b3JrYXJvdW5kOiByZW1vdmUgdGhlIEJVR19P
+TihzaC0+YmF0Y2hfaGVhZCkgZnJvbSBpbml0X3N0cmlwZSgpIGFuZCBzZXQgc2gtPmJhdGNoX2hl
+YWQgPSBOVUxMIChJIGRvbuKAmXQgdGhpbmsgSSBuZWVkIHRvIGxvY2sgb24gc2gtPnN0cmlwZV9s
+b2NrIHRoZXJlPykuIEkgd2lsbCBnZXQgbmV3IGhhcmR3YXJlIHNvb24gc28gSSB3aWxsIGdpdmUg
+aXQgYSB0cnkgb24gYSB0ZXN0IHN5c3RlbS4gQW55IHN1Z2dlc3Rpb25zIHdlbGNvbWVk4oCmDQo+
+Pj4+Pj4+Pj4+IA0KPj4+Pj4+Pj4+PiBRdWljayBhbmFseXNpcyBvZiB0aGUgbGFzdCB2bWNvcmU6
+DQo+Pj4+Pj4+Pj4+IA0KPj4+Pj4+Pj4+PiBjcmFzaD4gcHMgfCBncmVwICI+Ig0KPj4+Pj4+Pj4+
+PiAuLi4NCj4+Pj4+Pj4+Pj4+IDE2MTE5ICAxNjExMSAgMjIgIGZmZmY4ODFmOTNiYWNlNzAgIFJV
+ICAgMC4wICAxNTA3NzIgIDEwNzQ4ICBlMmxhYmVsDQo+Pj4+Pj4+Pj4+PiAxNTE0NDggICAgICAy
+ICAzNCAgZmZmZjg4MWZmNzUzYmVjMCAgUlUgICAwLjAgICAgICAgMCAgICAgIDAgIFtraWJsbmRf
+c2RfMDBfMDBdDQo+Pj4+Pj4+Pj4+PiAxNTE0NDkgICAgICAyICAgMiAgZmZmZjg4MWZmNzUzZWRk
+MCAgUlUgICAwLjAgICAgICAgMCAgICAgIDAgIFtraWJsbmRfc2RfMDBfMDFdDQo+Pj4+Pj4+Pj4+
+PiAxNTQ2MzcgICAgICAyICAyOSAgZmZmZjg4MWY3NzZiMWY2MCAgUlUgICAwLjAgICAgICAgMCAg
+ICAgIDAgIFttZDMyX3JhaWQ2XQ0KPj4+Pj4+Pj4+Pj4gMTYzNjQzICAgICAgMiAgMTEgIGZmZmY4
+ODIwZDIwMGJlYzAgIFVOICAgMC4wICAgICAgIDAgICAgICAwICBbbGxfb3N0X2lvMDFfMDA4XQ0K
+Pj4+Pj4+Pj4+Pj4gMTY0MDgzICAgICAgMiAgMTMgIGZmZmY4ODIwZDI3NTNlYzAgIFVOICAgMC4w
+ICAgICAgIDAgICAgICAwICBbbGxfb3N0X2lvMDFfMDM0XQ0KPj4+Pj4+Pj4+Pj4gMTcxMzg5ICAg
+ICAgMiAgIDUgIGZmZmY4ODNmZDA3MmRlMjAgIFVOICAgMC4wICAgICAgIDAgICAgICAwICBbbGxf
+b3N0X2lvMDFfMDU4XQ0KPj4+Pj4+Pj4+Pj4gMTcxMzkxICAgICAgMiAgMTcgIGZmZmY4ODNmZDA3
+MmNlNzAgIFVOICAgMC4wICAgICAgIDAgICAgICAwICBbbGxfb3N0X2lvMDFfMDYwXQ0KPj4+Pj4+
+Pj4+Pj4gMTcxMzk5ICAgICAgMiAgMzMgIGZmZmY4ODNmZDllOWNlNzAgIFVOICAgMC4wICAgICAg
+IDAgICAgICAwICBbbGxfb3N0X2lvMDFfMDY4XQ0KPj4+Pj4+Pj4+Pj4gMjM3MDE5ICAgICAgMiAg
+MTUgIGZmZmY4ODI3MTU2MjhmYjAgIFVOICAgMC4wICAgICAgIDAgICAgICAwICBbbGxfb3N0X2lv
+MDFfMDg0XQ0KPj4+Pj4+Pj4+Pj4gMjM3MDMzICAgICAgMiAgIDMgIGZmZmY4ODFmYjAyNTBmYjAg
+IFVOICAgMC4wICAgICAgIDAgICAgICAwICBbbGxfb3N0X2lvMDFfMDk4XQ0KPj4+Pj4+Pj4+PiAu
+Li4NCj4+Pj4+Pj4+Pj4gDQo+Pj4+Pj4+Pj4+IGNyYXNoPiAgYnQgMjM3MDMzDQo+Pj4+Pj4+Pj4+
+IFBJRDogMjM3MDMzICBUQVNLOiBmZmZmODgxZmIwMjUwZmIwICBDUFU6IDMgICBDT01NQU5EOiAi
+bGxfb3N0X2lvMDFfMDk4Ig0KPj4+Pj4+Pj4+PiAjMCBbZmZmZjg4MjZmYTNlNzI0MF0gbWFjaGlu
+ZV9rZXhlYyBhdCBmZmZmZmZmZjgxMDU5YmRiDQo+Pj4+Pj4+Pj4+ICMxIFtmZmZmODgyNmZhM2U3
+MmEwXSBfX2NyYXNoX2tleGVjIGF0IGZmZmZmZmZmODExMDU3YzINCj4+Pj4+Pj4+Pj4gIzIgW2Zm
+ZmY4ODI2ZmEzZTczNzBdIGNyYXNoX2tleGVjIGF0IGZmZmZmZmZmODExMDU4YjANCj4+Pj4+Pj4+
+Pj4gIzMgW2ZmZmY4ODI2ZmEzZTczODhdIG9vcHNfZW5kIGF0IGZmZmZmZmZmODE2OGZhYzgNCj4+
+Pj4+Pj4+Pj4gIzQgW2ZmZmY4ODI2ZmEzZTczYjBdIGRpZSBhdCBmZmZmZmZmZjgxMDJlOTNiDQo+
+Pj4+Pj4+Pj4+ICM1IFtmZmZmODgyNmZhM2U3M2UwXSBkb190cmFwIGF0IGZmZmZmZmZmODE2OGYx
+ODANCj4+Pj4+Pj4+Pj4gIzYgW2ZmZmY4ODI2ZmEzZTc0MzBdIGRvX2ludmFsaWRfb3AgYXQgZmZm
+ZmZmZmY4MTAyYjE0NA0KPj4+Pj4+Pj4+PiAjNyBbZmZmZjg4MjZmYTNlNzRlMF0gaW52YWxpZF9v
+cCBhdCBmZmZmZmZmZjgxNjk4YjVlDQo+Pj4+Pj4+Pj4+IFtleGNlcHRpb24gUklQOiByYWlkNV9n
+ZXRfYWN0aXZlX3N0cmlwZSsxODA5XQ0KPj4+Pj4+Pj4+PiBSSVA6IGZmZmZmZmZmYTBmZWZkNzEg
+IFJTUDogZmZmZjg4MjZmYTNlNzU5MCAgUkZMQUdTOiAwMDAxMDA4Ng0KPj4+Pj4+Pj4+PiBSQVg6
+IDAwMDAwMDAwMDAwMDAwMDAgIFJCWDogZmZmZjg4M2RmMDUxNjQxYyAgUkNYOiBkZWFkMDAwMDAw
+MDAwMjAwDQo+Pj4+Pj4+Pj4+IFJEWDogMDAwMDAwMDAwMDAwMDAwMCAgUlNJOiAwMDAwMDAwMDAw
+MDAwMDA1ICBSREk6IGZmZmY4ODFlMDhkNTRkMzANCj4+Pj4+Pj4+Pj4gUkJQOiBmZmZmODgyNmZh
+M2U3NjM4ICAgUjg6IGZmZmY4ODFlMDhkNTRkNDAgICBSOTogMDAwMDAwMDAwMDAwMDA4MA0KPj4+
+Pj4+Pj4+PiBSMTA6IDAwMDAwMDAwMDAwMDAwMDAgIFIxMTogMDAwMDAwMDAwMDAwMDAwMCAgUjEy
+OiBmZmZmODgzZGYwNTE2NDAwDQo+Pj4+Pj4+Pj4+IFIxMzogZmZmZjg4MWUwOGQ1NGQzMCAgUjE0
+OiAwMDAwMDAwMDAwMDAwMDAwICBSMTU6IDAwMDAwMDAwMDAwMDAwMDANCj4+Pj4+Pj4+Pj4gT1JJ
+R19SQVg6IGZmZmZmZmZmZmZmZmZmZmYgIENTOiAwMDEwICBTUzogMDAxOA0KPj4+Pj4+Pj4+PiAj
+OCBbZmZmZjg4MjZmYTNlNzY0MF0gcmFpZDVfbWFrZV9yZXF1ZXN0IGF0IGZmZmZmZmZmYTBmZWZm
+NTUgW3JhaWQ0NTZdDQo+Pj4+Pj4+Pj4+ICM5IFtmZmZmODgyNmZhM2U3NzMwXSBtZF9tYWtlX3Jl
+cXVlc3QgYXQgZmZmZmZmZmY4MTRmODM4Yw0KPj4+Pj4+Pj4+PiAjMTAgW2ZmZmY4ODI2ZmEzZTc3
+OTBdIGdlbmVyaWNfbWFrZV9yZXF1ZXN0IGF0IGZmZmZmZmZmODEyZWVkYzkNCj4+Pj4+Pj4+Pj4g
+IzExIFtmZmZmODgyNmZhM2U3N2Q4XSBzdWJtaXRfYmlvIGF0IGZmZmZmZmZmODEyZWVmMTENCj4+
+Pj4+Pj4+Pj4gIzEyIFtmZmZmODgyNmZhM2U3ODMwXSBvc2Rfc3VibWl0X2JpbyBhdCBmZmZmZmZm
+ZmExMGNkYmNjIFtvc2RfbGRpc2tmc10NCj4+Pj4+Pj4+Pj4gIzEzIFtmZmZmODgyNmZhM2U3ODQw
+XSBvc2RfZG9fYmlvIGF0IGZmZmZmZmZmYTEwZDAzYzEgW29zZF9sZGlza2ZzXQ0KPj4+Pj4+Pj4+
+PiAjMTQgW2ZmZmY4ODI2ZmEzZTc5NjBdIG9zZF93cml0ZV9jb21taXQgYXQgZmZmZmZmZmZhMTBk
+MGI5NCBbb3NkX2xkaXNrZnNdDQo+Pj4+Pj4+Pj4+ICMxNSBbZmZmZjg4MjZmYTNlN2EwMF0gb2Zk
+X2NvbW1pdHJ3X3dyaXRlIGF0IGZmZmZmZmZmYTEyMGM3MzQgW29mZF0NCj4+Pj4+Pj4+Pj4gIzE2
+IFtmZmZmODgyNmZhM2U3YTc4XSBvZmRfY29tbWl0cncgYXQgZmZmZmZmZmZhMTIwZmYwNyBbb2Zk
+XQ0KPj4+Pj4+Pj4+PiAjMTcgW2ZmZmY4ODI2ZmEzZTdiMDhdIG9iZF9jb21taXRydyBhdCBmZmZm
+ZmZmZmEwYzdkYzIyIFtwdGxycGNdDQo+Pj4+Pj4+Pj4+ICMxOCBbZmZmZjg4MjZmYTNlN2I3MF0g
+dGd0X2Jyd193cml0ZSBhdCBmZmZmZmZmZmEwYzU1ZmMxIFtwdGxycGNdDQo+Pj4+Pj4+Pj4+ICMx
+OSBbZmZmZjg4MjZmYTNlN2NkOF0gdGd0X3JlcXVlc3RfaGFuZGxlIGF0IGZmZmZmZmZmYTBjNTIy
+NzUgW3B0bHJwY10NCj4+Pj4+Pj4+Pj4gIzIwIFtmZmZmODgyNmZhM2U3ZDIwXSBwdGxycGNfc2Vy
+dmVyX2hhbmRsZV9yZXF1ZXN0IGF0IGZmZmZmZmZmYTBiZmUxZmIgW3B0bHJwY10NCj4+Pj4+Pj4+
+Pj4gIzIxIFtmZmZmODgyNmZhM2U3ZGU4XSBwdGxycGNfbWFpbiBhdCBmZmZmZmZmZmEwYzAyMmIw
+IFtwdGxycGNdDQo+Pj4+Pj4+Pj4+ICMyMiBbZmZmZjg4MjZmYTNlN2VjOF0ga3RocmVhZCBhdCBm
+ZmZmZmZmZjgxMGIwYTRmDQo+Pj4+Pj4+Pj4+ICMyMyBbZmZmZjg4MjZmYTNlN2Y1MF0gcmV0X2Zy
+b21fZm9yayBhdCBmZmZmZmZmZjgxNjk3MjE4DQo+Pj4+Pj4+Pj4+IA0KPj4+Pj4+Pj4+PiANCj4+
+Pj4+Pj4+Pj4gQWZ0ZXIgc29tZSBkaXNhc3NlbWJseSB3b3JrLCBJIGZvdW5kIG91dCB0aGF0IGFs
+bCBhY3RpdmUgdGFza3MgYXJlIHdvcmtpbmcgb24gdGhlIHNhbWUgbWQgKGFsbCBhcmUgcmFpZDYp
+Og0KPj4+Pj4+Pj4+PiANCj4+Pj4+Pj4+Pj4gbWQzMuKAmXMgKHN0cnVjdCByNWNvbmYgKikgaXMg
+MHhmZmZmODgzZGYwNTE2NDAwDQo+Pj4+Pj4+Pj4+IA0KPj4+Pj4+Pj4+PiBPdXIgY3Jhc2hlZCB0
+YXNrOg0KPj4+Pj4+Pj4+PiANCj4+Pj4+Pj4+Pj4gY3Jhc2g+IHByaW50ZiAiJXMiLCAoKHN0cnVj
+dCByNWNvbmYpKjB4ZmZmZjg4M2RmMDUxNjQwMCkuY2FjaGVfbmFtZVswXQ0KPj4+Pj4+Pj4+PiBy
+YWlkNi1tZDMyDQo+Pj4+Pj4+Pj4+IA0KPj4+Pj4+Pj4+PiBFeGFtcGxlIGZvciBtZDMyX3JhaWQ2
+IHRhc2sgaW4gcmVsZWFzZV9pbmFjdGl2ZV9zdHJpcGVfbGlzdDoNCj4+Pj4+Pj4+Pj4gDQo+Pj4+
+Pj4+Pj4+IGNyYXNoPiBidCAxNTQ2MzcNCj4+Pj4+Pj4+Pj4gUElEOiAxNTQ2MzcgIFRBU0s6IGZm
+ZmY4ODFmNzc2YjFmNjAgIENQVTogMjkgIENPTU1BTkQ6ICJtZDMyX3JhaWQ2Ig0KPj4+Pj4+Pj4+
+PiAjMCBbZmZmZjg4M2ZmYzk4NWU0OF0gY3Jhc2hfbm1pX2NhbGxiYWNrIGF0IGZmZmZmZmZmODEw
+NGQyZTINCj4+Pj4+Pj4+Pj4gIzEgW2ZmZmY4ODNmZmM5ODVlNThdIG5taV9oYW5kbGUgYXQgZmZm
+ZmZmZmY4MTY4ZmM3Nw0KPj4+Pj4+Pj4+PiAjMiBbZmZmZjg4M2ZmYzk4NWViMF0gZG9fbm1pIGF0
+IGZmZmZmZmZmODE2OGZlODMNCj4+Pj4+Pj4+Pj4gIzMgW2ZmZmY4ODNmZmM5ODVlZjBdIGVuZF9y
+ZXBlYXRfbm1pIGF0IGZmZmZmZmZmODE2OGYwOTMNCj4+Pj4+Pj4+Pj4gW2V4Y2VwdGlvbiBSSVA6
+IF9yYXdfc3Bpbl9sb2NrX2lycXNhdmUrNjRdDQo+Pj4+Pj4+Pj4+IFJJUDogZmZmZmZmZmY4MTY4
+ZTVmMCAgUlNQOiBmZmZmODgxZThkMGNiYzYwICBSRkxBR1M6IDAwMDAwMDA2DQo+Pj4+Pj4+Pj4+
+IFJBWDogMDAwMDAwMDAwMDAwMzFiYiAgUkJYOiBmZmZmODgzZGYwNTE2NzQwICBSQ1g6IDAwMDAw
+MDAwMDAwMDAwOWENCj4+Pj4+Pj4+Pj4gUkRYOiAwMDAwMDAwMDAwMDAwMDk4ICBSU0k6IDAwMDAw
+MDAwMDAwMDAwOWEgIFJESTogZmZmZjg4M2RmMDUxNjQxYw0KPj4+Pj4+Pj4+PiBSQlA6IGZmZmY4
+ODFlOGQwY2JjNjAgICBSODogMDAwMDAwMDAwMDAwMDIwNiAgIFI5OiAwMDAwMDAwMDAwMDAwMDAw
+DQo+Pj4+Pj4+Pj4+IFIxMDogMDAwMDAwMDAwMDAwMDAwMCAgUjExOiAwMDAwMDAwMDAwMDAwMDA3
+ICBSMTI6IGZmZmY4ODNkZjA1MTY0MDANCj4+Pj4+Pj4+Pj4gUjEzOiBmZmZmODgzZGYwNTE2NDFj
+ICBSMTQ6IDAwMDAwMDAwMDAwMDAwMDYgIFIxNTogMDAwMDAwMDAwMDAwMDAwNQ0KPj4+Pj4+Pj4+
+PiBPUklHX1JBWDogZmZmZmZmZmZmZmZmZmZmZiAgQ1M6IDAwMTAgIFNTOiAwMDE4DQo+Pj4+Pj4+
+Pj4+IC0tLSA8Tk1JIGV4Y2VwdGlvbiBzdGFjaz4gLS0tDQo+Pj4+Pj4+Pj4+ICM0IFtmZmZmODgx
+ZThkMGNiYzYwXSBfcmF3X3NwaW5fbG9ja19pcnFzYXZlIGF0IGZmZmZmZmZmODE2OGU1ZjANCj4+
+Pj4+Pj4+Pj4gIzUgW2ZmZmY4ODFlOGQwY2JjNjhdIHJlbGVhc2VfaW5hY3RpdmVfc3RyaXBlX2xp
+c3QgYXQgZmZmZmZmZmZhMGZlNTUwMCBbcmFpZDQ1Nl0NCj4+Pj4+Pj4+Pj4gIzYgW2ZmZmY4ODFl
+OGQwY2JjYjBdIGhhbmRsZV9hY3RpdmVfc3RyaXBlcyBhdCBmZmZmZmZmZmEwZmYzNGMyIFtyYWlk
+NDU2XQ0KPj4+Pj4+Pj4+PiAjNyBbZmZmZjg4MWU4ZDBjYmQ2MF0gcmFpZDVkIGF0IGZmZmZmZmZm
+YTBmZjNjMjggW3JhaWQ0NTZdDQo+Pj4+Pj4+Pj4+ICM4IFtmZmZmODgxZThkMGNiZTUwXSBtZF90
+aHJlYWQgYXQgZmZmZmZmZmY4MTRmYjc0NQ0KPj4+Pj4+Pj4+PiAjOSBbZmZmZjg4MWU4ZDBjYmVj
+OF0ga3RocmVhZCBhdCBmZmZmZmZmZjgxMGIwYTRmDQo+Pj4+Pj4+Pj4+ICMxMCBbZmZmZjg4MWU4
+ZDBjYmY1MF0gcmV0X2Zyb21fZm9yayBhdCBmZmZmZmZmZjgxNjk3MjE4DQo+Pj4+Pj4+Pj4+IA0K
+Pj4+Pj4+Pj4+PiANCj4+Pj4+Pj4+Pj4gY3Jhc2g+IGJ0IDE2MzY0MyAxNjQwODMgMTcxMzg5IDE3
+MTM5MSAxNzEzOTkgMjM3MDE5IDIzNzAzMyB8Z3JlcCAiZXhjZXB0aW9uIFJJUDoiDQo+Pj4+Pj4+
+Pj4+IFtleGNlcHRpb24gUklQOiBfcmF3X3NwaW5fbG9ja19pcnErNjNdDQo+Pj4+Pj4+Pj4+IFtl
+eGNlcHRpb24gUklQOiBfcmF3X3NwaW5fbG9ja19pcnErNjNdDQo+Pj4+Pj4+Pj4+IFtleGNlcHRp
+b24gUklQOiBfcmF3X3NwaW5fbG9ja19pcnErNThdDQo+Pj4+Pj4+Pj4+IFtleGNlcHRpb24gUklQ
+OiBfcmF3X3NwaW5fbG9ja19pcnErNjNdDQo+Pj4+Pj4+Pj4+IFtleGNlcHRpb24gUklQOiBfcmF3
+X3NwaW5fbG9ja19pcnErNThdDQo+Pj4+Pj4+Pj4+IFtleGNlcHRpb24gUklQOiBfcmF3X3NwaW5f
+bG9ja19pcnErNjNdDQo+Pj4+Pj4+Pj4+IFtleGNlcHRpb24gUklQOiByYWlkNV9nZXRfYWN0aXZl
+X3N0cmlwZSsxODA5XQ0KPj4+Pj4+Pj4+PiANCj4+Pj4+Pj4+Pj4gY3Jhc2g+IGJ0IDE2MzY0MyAx
+NjQwODMgMTcxMzg5IDE3MTM5MSAxNzEzOTkgMjM3MDE5IDIzNzAzMyB8Z3JlcCAicmFpZDVfZ2V0
+X2FjdGl2ZV9zdHJpcGUiDQo+Pj4+Pj4+Pj4+ICM1IFtmZmZmODgzYmNlZTkzNTg4XSByYWlkNV9n
+ZXRfYWN0aXZlX3N0cmlwZSBhdCBmZmZmZmZmZmEwZmVmNmNiIFtyYWlkNDU2XQ0KPj4+Pj4+Pj4+
+PiAjNSBbZmZmZjg4M2JhNGFmNzU4OF0gcmFpZDVfZ2V0X2FjdGl2ZV9zdHJpcGUgYXQgZmZmZmZm
+ZmZhMGZlZjZjYiBbcmFpZDQ1Nl0NCj4+Pj4+Pj4+Pj4gIzUgW2ZmZmY4ODM5MDg3N2I1ODhdIHJh
+aWQ1X2dldF9hY3RpdmVfc3RyaXBlIGF0IGZmZmZmZmZmYTBmZWY2Y2IgW3JhaWQ0NTZdDQo+Pj4+
+Pj4+Pj4+ICM1IFtmZmZmODgzOTA4MDNiNTg4XSByYWlkNV9nZXRfYWN0aXZlX3N0cmlwZSBhdCBm
+ZmZmZmZmZmEwZmVmNmNiIFtyYWlkNDU2XQ0KPj4+Pj4+Pj4+PiAjNSBbZmZmZjg4MzkwODMxZjU4
+OF0gcmFpZDVfZ2V0X2FjdGl2ZV9zdHJpcGUgYXQgZmZmZmZmZmZhMGZlZjZjYiBbcmFpZDQ1Nl0N
+Cj4+Pj4+Pj4+Pj4gIzUgW2ZmZmY4ODI2ZmE3Zjc1ODhdIHJhaWQ1X2dldF9hY3RpdmVfc3RyaXBl
+IGF0IGZmZmZmZmZmYTBmZWY2Y2IgW3JhaWQ0NTZdDQo+Pj4+Pj4+Pj4+IFtleGNlcHRpb24gUklQ
+OiByYWlkNV9nZXRfYWN0aXZlX3N0cmlwZSsxODA5XQ0KPj4+Pj4+Pj4+PiANCj4+Pj4+Pj4+Pj4g
+Y3Jhc2g+IGJ0IDE2MzY0MyAxNjQwODMgMTcxMzg5IDE3MTM5MSAxNzEzOTkgMjM3MDE5IDIzNzAz
+MyB8Z3JlcCBSMTINCj4+Pj4+Pj4+Pj4gUjEwOiAwMDAwMDAwMDAwMDAwMDAzICBSMTE6IDAwMDAw
+MDAwMDAwMDAwMDAgIFIxMjogZmZmZjg4M2RmMDUxNjQwMA0KPj4+Pj4+Pj4+PiBSMTA6IDAwMDAw
+MDAwMDAwMDAwMDEgIFIxMTogMDAwMDAwMDAwMDAwMDAwMCAgUjEyOiBmZmZmODgzZGYwNTE2NDAw
+DQo+Pj4+Pj4+Pj4+IFIxMDogMDAwMDAwMDAwMDAwMDAwNSAgUjExOiAwMDAwMDAwMDAwMDAwMDAw
+ICBSMTI6IGZmZmY4ODNkZjA1MTY0MDANCj4+Pj4+Pj4+Pj4gUjEwOiAwMDAwMDAwMDAwMDAwMDA3
+ICBSMTE6IDAwMDAwMDAwMDAwMDAwMDAgIFIxMjogZmZmZjg4M2RmMDUxNjQwMA0KPj4+Pj4+Pj4+
+PiBSMTA6IDAwMDAwMDAwMDAwMDAwMDkgIFIxMTogMDAwMDAwMDAwMDAwMDAwMCAgUjEyOiBmZmZm
+ODgzZGYwNTE2NDAwDQo+Pj4+Pj4+Pj4+IFIxMDogMDAwMDAwMDAwMDAwMDAwOSAgUjExOiAwMDAw
+MDAwMDAwMDAwMDAwICBSMTI6IGZmZmY4ODNkZjA1MTY0MDANCj4+Pj4+Pj4+Pj4gUjEwOiAwMDAw
+MDAwMDAwMDAwMDAwICBSMTE6IDAwMDAwMDAwMDAwMDAwMDAgIFIxMjogZmZmZjg4M2RmMDUxNjQw
+MA0KPj4+Pj4+Pj4+PiANCj4+Pj4+Pj4+Pj4gDQo+Pj4+Pj4+Pj4+IFRoZSBiYWQgc3RyaXBlX2hl
+YWQgKHNoKSBpcyBhdmFpbGFibGUgYXQgKHVzdWFsbHkgaW4gJXIxMyk6DQo+Pj4+Pj4+Pj4+IA0K
+Pj4+Pj4+Pj4+PiBjcmFzaD4gcCAoKHN0cnVjdCBzdHJpcGVfaGVhZCkqMHhmZmZmODgxZTA4ZDU0
+ZDMwKS5yYWlkX2NvbmYNCj4+Pj4+Pj4+Pj4gJDk4ID0gKHN0cnVjdCByNWNvbmYgKikgMHhmZmZm
+ODgzZGYwNTE2NDAwDQo+Pj4+Pj4+Pj4+IA0KPj4+Pj4+Pj4+PiBhbmQgYmF0Y2hfaGVhZCBpcyBu
+b3QgTlVMTC4uLiB0aGF0J3MgdGhlIGlzc3VlOg0KPiANCj4gTGFzdCBtYWlsIGFwcGVycyBub3Qg
+aGl0dGluZyB0aGUgbGlzdCwgcmVzZW5kLg0KPiANCj4gVGhlIG5ldyBkdW1wIGluZm8gZG9lcyBy
+ZXZlYWwgc29tZSBpbmZvcy4gTm90IHN1cmUgaWYgaXQncyB0aGUgaXNzdWUgeW91IGZvdW5kLA0K
+PiBidXQgSSBkaWQgZmluZCBhIHJhY2UgY29uZGl0aW9uLiBQbGVhc2UgdHJ5IGJlbG93IHBhdGNo
+IGFuZCByZXBvcnQgYmFjazoNCj4gDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL21kL3JhaWQ1LmMg
+Yi9kcml2ZXJzL21kL3JhaWQ1LmMNCj4gaW5kZXggZWQ1Y2Q3MDViOTg1Li4zNTYzN2ZlMzQ4MjAg
+MTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvbWQvcmFpZDUuYw0KPiArKysgYi9kcml2ZXJzL21kL3Jh
+aWQ1LmMNCj4gQEAgLTgwNiwxMyArODA2LDE5IEBAIHN0YXRpYyB2b2lkIHN0cmlwZV9hZGRfdG9f
+YmF0Y2hfbGlzdChzdHJ1Y3QgcjVjb25mICpjb25mLCBzdHJ1Y3Qgc3RyaXBlX2hlYWQgKnNoDQo+
+IAkJfQ0KPiANCj4gCQkvKg0KPiArCQkgKiBXZSBtdXN0IGFzc2lnbiBiYXRjaF9oZWFkIG9mIHRo
+aXMgc3RyaXBlIHdpdGhpbiB0aGUNCj4gKwkJICogYmF0Y2hfbG9jaywgb3RoZXJ3aXNlIGNsZWFy
+X2JhdGNoX3JlYWR5IG9mIGJhdGNoIGhlYWQNCj4gKwkJICogc3RyaXBlIGNvdWxkIGNsZWFyIEJB
+VENIX1JFQURZIGJpdCBvZiB0aGlzIHN0cmlwZSBhbmQgdGhpcw0KPiArCQkgKiBzdHJpcGUtPmJh
+dGNoX2hlYWQgZG9lc24ndCBnZXQgYXNzaWduZWQsIHdoaWNoIGNvdWxkDQo+ICsJCSAqIGNvbmZ1
+c2UgY2xlYXJfYmF0Y2hfcmVhZHkgZm9yIHRoaXMgc3RyaXBlDQo+ICsJCSAqLw0KPiArCQlzaC0+
+YmF0Y2hfaGVhZCA9IGhlYWQtPmJhdGNoX2hlYWQ7DQo+ICsJCS8qDQo+IAkJICogYXQgdGhpcyBw
+b2ludCwgaGVhZCdzIEJBVENIX1JFQURZIGNvdWxkIGJlIGNsZWFyZWQsIGJ1dCB3ZQ0KPiAJCSAq
+IGNhbiBzdGlsbCBhZGQgdGhlIHN0cmlwZSB0byBiYXRjaCBsaXN0DQo+IAkJICovDQo+IAkJbGlz
+dF9hZGQoJnNoLT5iYXRjaF9saXN0LCAmaGVhZC0+YmF0Y2hfbGlzdCk7DQo+IAkJc3Bpbl91bmxv
+Y2soJmhlYWQtPmJhdGNoX2hlYWQtPmJhdGNoX2xvY2spOw0KPiAtDQo+IC0JCXNoLT5iYXRjaF9o
+ZWFkID0gaGVhZC0+YmF0Y2hfaGVhZDsNCj4gCX0gZWxzZSB7DQo+IAkJaGVhZC0+YmF0Y2hfaGVh
+ZCA9IGhlYWQ7DQo+IAkJc2gtPmJhdGNoX2hlYWQgPSBoZWFkLT5iYXRjaF9oZWFkOw0KDQpBd2Vz
+b21lISBJIHdpbGwgYXBwbHkgeW91ciBwYXRjaCB0b2RheSBvbiB0d28gb2YgbXkgTHVzdHJlIHNl
+cnZlcnMgYW5kIHJlcG9ydCBiYWNrIGlmIEkgc2VlIGFub3RoZXIgb2NjdXJyZW5jZSwgb3IgYWZ0
+ZXIgc29tZSB0aW1lIGlmIGl0IGRvZXNu4oCZdCBzaG93IHVwLiBXZeKAmWxsIG5lZWQgdG8gd2Fp
+dCBmb3IgYXQgbGVhc3QgYSBjb3VwbGUgd2Vla3MgdG8gYmUgc3VyZSB0aGlzIGRvZXMgYWN0dWFs
+bHkgZml4IHRoZSBpc3N1ZSBJ4oCZbSBzZWVpbmcuDQoNClRoYW5rcyBtdWNoIQ0KU3RlcGhhbmUN
+Cg0K
 
-Hence we have ZFS and Btrfs and dm-integrity to unambiguously identify
-corruption and prevent it from escaping to higher levels.
-
-That you have multiple incongruencies with fs metadata, there's a good
-chance some data is also affected. Data is a much bigger percentage.
-
-Might as well bite the bullet and scrub the whole thing.
-
-
->
->> Another way is to split the mirror (make one device faulty), and then
->> fix the remaining drive (now degraded). If that goes well, the 2nd
->> device can be re-added. Here's a caveat thought: how it resync's will
->> depend on the write-intent bitmap being present. I have no idea if
->> write-intent bitmaps on two drives can get out of sync and what the
->> ensuing behavior is, but I'd like to think md will discover the fixed
->> drive event count is higher than the re-added one, and if necessary
->> does a full resync, rather than possibly re-introducing any
->> corruption.
->
->
-> This doesn't solve the problem because it doesn't check if the second mirror
-> is out of sync with the first one, because it'll only detect writes to the
-> degraded array and sync those. It doesn't fix the "fsck read the block and
-> it was fine, but on the second drive it's not fine".
->
-> In that case fsck would have to be modified to write all blocks it read to
-> make them dirty, so they're sync:ed.
-
-OK so you have a corrupt underlying storage stack for possibly unknown
-reasons, and you're just going to take a chance and overwrite the
-entire file system. Seems like a bad hack to me, but I'd love to know
-what the ext4 and XFS devs think about it.
-
-The rule has always been get lower levels healthy first. Two mirrors
-that have the same even count but are not block identical is a broken
-array.
-
-
--- 
-Chris Murphy
