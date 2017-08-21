@@ -1,119 +1,147 @@
-From: Anthony Youngman <antlists@youngman.org.uk>
-Subject: Re: Filesystem corruption on RAID1
-Date: Mon, 21 Aug 2017 15:03:59 +0100
-Message-ID: <de4af3a8-aee2-4632-6038-4adb006bed92@youngman.org.uk>
-References: <c2fe6593-c806-ab9f-fcff-8327c013237b@assyoma.it>
- <9eea45ddc0f80f4f4e238b5c2527a1fa@assyoma.it>
- <f01b4649-df39-9835-728d-545cbd45976d@assyoma.it>
- <CAAMCDefXYdDKrFjEgeS8JAYt1GNP0-fL1chEXrGqxY8=xEf4Cw@mail.gmail.com>
- <7ca98351facca6e3668d3271422e1376@assyoma.it>
- <5995D377.9080100@youngman.org.uk>
- <83f4572f09e7fbab9d4e6de4a5257232@assyoma.it>
- <59961DD7.3060208@youngman.org.uk>
- <784bec391a00b9e074744f31901df636@assyoma.it>
- <CAAMCDefNRMuTwyXn_=3v_EWHwkjy3mhod1dLw3RQpjU=9VHNJQ@mail.gmail.com>
- <a93cf0cc1d39c30f585eb53ed36aa4c0@assyoma.it>
- <alpine.DEB.2.20.1708200907440.3655@uplift.swm.pp.se>
- <7d0af770699948fb0ecb66185145be05@assyoma.it>
- <alpine.DEB.2.20.1708201241400.3655@uplift.swm.pp.se>
- <59998974.60103@youngman.org.uk>
- <5df0037e-fc76-1127-e2e8-c4992b6d216e@websitemanagers.com.au>
- <alpine.DEB.2.20.1708201742080.3655@uplift.swm.pp.se>
- <5999B46C.1050906@youngman.org.uk>
- <bdb354cb-62f4-a254-11f6-6cdb00639341@websitemanagers.com.au>
+From: Gilad Ben-Yossef <gilad@benyossef.com>
+Subject: [PATCH v6 00/19] simplify crypto wait for async op
+Date: Mon, 21 Aug 2017 17:04:46 +0300
+Message-ID: <1503324309-13673-1-git-send-email-gilad__35505.3221378059$1503324368$gmane$org@benyossef.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <bdb354cb-62f4-a254-11f6-6cdb00639341@websitemanagers.com.au>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <mailinglists@websitemanagers.com.au>, Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Tom Lendacky <thomas.lendacky@amd.com>, Gary Hook <gary.hook@amd.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Arnaud Ebalard <arno@natisbad.org>, Matthias Brugger <matthias.bgg@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, keyrings@vger.kernel.org, linux-arm-kernel@lists
+Cc: Ofir Drang <ofir.drang@arm.com>
 List-Id: linux-raid.ids
 
+Many users of kernel async. crypto services have a pattern of
+starting an async. crypto op and than using a completion
+to wait for it to end.
 
+This patch set simplifies this common use case in two ways:
 
-On 21/08/17 00:11, Adam Goryachev wrote:
-> On 21/08/17 02:10, Wols Lists wrote:
->> On 20/08/17 16:48, Mikael Abrahamsson wrote:
->>> On Mon, 21 Aug 2017, Adam Goryachev wrote:
->>>
->>>> data (even where it is wrong). So just do a check/repair which will
->>>> ensure both drives are consistent, then you can safely do the fsck.
->>>> (Assuming you fixed the problem causing random write errors first).
->>> This involves manual intervention.
->>>
->>> While I don't know how to implement this, let's at least see if we can
->>> architect something for throwing ideas around.
->>>
->>> What about having an option for any raid level that would do "repair on
->>> read". So you can do "0" or "1" on this. RAID1 would mean it reads all
->>> stripes and if there is inconsistency, pick one and write it to all of
->>> them. It could also be some kind of IOCTL option I guess. For RAID5/6,
->>> read all data drives, and check parity. If parity is wrong, write 
->>> parity.
->>>
->>> This could mean that if filesystem developers wanted to do repair (and
->>> this could be a userspace option or mount option), it would use the
->>> beforementioned option for all fsck-like operation to make sure that
->>> metadata was consistent while doing fsck (this would be different for
->>> different tools, if it's an "fs needs to be mounted"-type of fs, or if
->>> it's an "offline fsck" type filesystem. Then it could go back to normal
->>> operation for everything else that would hopefully not cause
->>> catastrophical failures to the filesystem, but instead just individual
->>> file corruption in case of mismatches.
->>>
->> Look for the thread "RFC Raid error detection and auto-recovery, 10th 
->> May.
->>
->> Basically, that proposed a three-way flag - "default" is the current
->> "read the data section", "check" would read the entire stripe and
->> compare a mirror or calculate parity on a raid and return a read error
->> if it couldn't work out the correct data, and "fix" would write the
->> correct data back if it could work it out.
->>
->> So basically, on a two-disk raid-1, or raid 4 or 5, both "check" and
->> "fix" would return read errors if there's a problem and you're SOL
->> without a backup.
->>
->> With a three-disk or more raid-1, or raid-6, it would return the correct
->> data (and fix the stripe) if it could, otherwise again you're SOL.
-> 
->  From memory, the main sticking point was in implementing this with 
-> RAID6 and the argument that you might not be able to choose the "right" 
-> pieces of data because there wasn't a sufficient amount of data to know 
-> which was corrupted.
+First, by separating the return codes of the case where a
+request is queued to a backlog due to the provider being
+busy (-EBUSY) from the case the request has failed due
+to the provider being busy and backlogging is not enabled
+(-EAGAIN).
 
-That was the impression I got, but I really don't understand the 
-problem. If *ANY* one stripe is corrupted, we have two unknowns, two 
-parity blocks, and we can recalculate the missing stripe.
+Next, this change is than built on to create a generic API
+to wait for a async. crypto operation to complete.
 
-If two or more stripes are corrupt, the recovery will return garbage 
-(which is detectable) and we return a read error. We DO NOT attempt to 
-rewrite the stripe! In your words, if we can't choose the "right" piece 
-of data, we bail and do nothing.
+The end result is a smaller code base and an API that is
+easier to use and more difficult to get wrong.
 
-As I understood it, the worry was that we would run the recovery 
-algorithm and then overwrite the data with garbage, but nobody ever gave 
-me a plausible scenario where that could happen. The only plausible 
-scenario is where multiple stripes are corrupted in such a way that the 
-recovery algorithm is fooled into thinking only one stripe is affected. 
-And if I read that paper correctly, the odds of that happening are very low.
+The patch set was boot tested on x86_64 and arm64 which
+at the very least tests the crypto users via testmgr and
+tcrypt but I do note that I do not have access to some
+of the HW whose drivers are modified nor do I claim I was
+able to test all of the corner cases.
 
-Short summary - if just one stripe is corrupted, then my proposal will 
-fix and return CORRECT data. If however, more than one stripe is 
-corrupted, then my proposal will with near-perfect accuracy bail and do 
-nothing (apart from returning a read error). As I say, the only risk to 
-the data is if the error looks like a single-stripe problem when it 
-isn't, and that's unlikely.
+The patch set is based upon linux-next release tagged
+next-20170817.
 
-I've had enough data-loss scenarios in my career to be rather paranoid 
-about scribbling over stuff when I don't know what I'm doing ... (I do 
-understand concerns about "using the wrong tool to fix the wrong 
-problem", but you don't refuse to sell a punter a wheel-wrench because 
-he might not be able to tell the difference between a flat tyre and a 
-mis-firing engine).
+Changes from v5:
+- Remove redundant new line as spotted by Jonathan
+  Cameron.
+- Reworded dm-verity change commit message to better
+  clarify potential issue averted by change as
+  pointed out by Mikulas Patocka.
 
-Cheers,
-Wol
+Changes from v4:
+- Rebase on top of latest algif changes from Stephan
+  Mueller.
+- Fix typo in ccp patch title.
+
+Changes from v3:
+- Instead of changing the return code to indicate
+  backlog queueing, change the return code to indicate
+  transient busy state, as suggested by Herbert Xu.
+
+Changes from v2:
+- Patch title changed from "introduce crypto wait for
+  async op" to better reflect the current state.
+- Rebase on top of latest linux-next.
+- Add a new return code of -EIOCBQUEUED for backlog
+  queueing, as suggested by Herbert Xu.
+- Transform more users to the new API.
+- Update the drbg change to account for new init as
+  indicated by Stephan Muller.
+
+Changes from v1:
+- Address review comments from Eric Biggers.
+- Separated out bug fixes of existing code and rebase
+  on top of that patch set.
+- Rename 'ecr' to 'wait' in fscrypto code.
+- Split patch introducing the new API from the change
+  moving over the algif code which it originated from
+  to the new API.
+- Inline crypto_wait_req().
+- Some code indentation fixes.
+
+Gilad Ben-Yossef (19):
+  crypto: change transient busy return code to -EAGAIN
+  crypto: ccp: use -EAGAIN for transient busy indication
+  crypto: remove redundant backlog checks on EBUSY
+  crypto: marvell/cesa: remove redundant backlog checks on EBUSY
+  crypto: introduce crypto wait for async op
+  crypto: move algif to generic async completion
+  crypto: move pub key to generic async completion
+  crypto: move drbg to generic async completion
+  crypto: move gcm to generic async completion
+  crypto: move testmgr to generic async completion
+  fscrypt: move to generic async completion
+  dm: move dm-verity to generic async completion
+  cifs: move to generic async completion
+  ima: move to generic async completion
+  crypto: tcrypt: move to generic async completion
+  crypto: talitos: move to generic async completion
+  crypto: qce: move to generic async completion
+  crypto: mediatek: move to generic async completion
+  crypto: adapt api sample to use async. op wait
+
+ Documentation/crypto/api-samples.rst |  52 ++-------
+ crypto/af_alg.c                      |  27 -----
+ crypto/ahash.c                       |  12 +--
+ crypto/algapi.c                      |   6 +-
+ crypto/algif_aead.c                  |   8 +-
+ crypto/algif_hash.c                  |  50 +++++----
+ crypto/algif_skcipher.c              |   9 +-
+ crypto/api.c                         |  13 +++
+ crypto/asymmetric_keys/public_key.c  |  28 +----
+ crypto/cryptd.c                      |   4 +-
+ crypto/cts.c                         |   6 +-
+ crypto/drbg.c                        |  36 ++-----
+ crypto/gcm.c                         |  32 ++----
+ crypto/lrw.c                         |   8 +-
+ crypto/rsa-pkcs1pad.c                |  16 +--
+ crypto/tcrypt.c                      |  84 +++++----------
+ crypto/testmgr.c                     | 204 ++++++++++++-----------------------
+ crypto/xts.c                         |   8 +-
+ drivers/crypto/ccp/ccp-crypto-main.c |   8 +-
+ drivers/crypto/ccp/ccp-dev.c         |   7 +-
+ drivers/crypto/marvell/cesa.c        |   3 +-
+ drivers/crypto/marvell/cesa.h        |   2 +-
+ drivers/crypto/mediatek/mtk-aes.c    |  31 +-----
+ drivers/crypto/qce/sha.c             |  30 +-----
+ drivers/crypto/talitos.c             |  38 +------
+ drivers/md/dm-verity-target.c        |  81 ++++----------
+ drivers/md/dm-verity.h               |   5 -
+ fs/cifs/smb2ops.c                    |  30 +-----
+ fs/crypto/crypto.c                   |  28 +----
+ fs/crypto/fname.c                    |  36 ++-----
+ fs/crypto/fscrypt_private.h          |  10 --
+ fs/crypto/keyinfo.c                  |  21 +---
+ include/crypto/drbg.h                |   3 +-
+ include/crypto/if_alg.h              |  15 +--
+ include/linux/crypto.h               |  40 +++++++
+ security/integrity/ima/ima_crypto.c  |  56 +++-------
+ 36 files changed, 310 insertions(+), 737 deletions(-)
+
+-- 
+2.1.4
