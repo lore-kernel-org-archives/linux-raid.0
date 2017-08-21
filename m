@@ -1,7 +1,7 @@
 From: Gilad Ben-Yossef <gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
-Subject: [PATCH v6 17/19] crypto: qce: move to generic async completion
-Date: Mon, 21 Aug 2017 17:05:03 +0300
-Message-ID: <1503324309-13673-18-git-send-email-gilad__19587.2806049467$1503336057$gmane$org@benyossef.com>
+Subject: [PATCH v6 13/19] cifs: move to generic async completion
+Date: Mon, 21 Aug 2017 17:04:59 +0300
+Message-ID: <1503324309-13673-14-git-send-email-gilad__11409.4066121199$1503336061$gmane$org@benyossef.com>
 References: <1503324309-13673-1-git-send-email-gilad@benyossef.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,74 +21,73 @@ To: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>, "Dav
 Cc: Ofir Drang <ofir.drang-5wv7dgnIgG8@public.gmane.org>
 List-Id: linux-raid.ids
 
-The qce driver starts several async crypto ops and  waits for their
-completions. Move it over to generic code doing the same.
+cifs starts an async. crypto op and waits for their completion.
+Move it over to generic code doing the same.
 
 Signed-off-by: Gilad Ben-Yossef <gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
+Acked-by: Pavel Shilovsky <pshilov-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>
 ---
- drivers/crypto/qce/sha.c | 30 ++++--------------------------
+ fs/cifs/smb2ops.c | 30 ++++--------------------------
  1 file changed, 4 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/crypto/qce/sha.c b/drivers/crypto/qce/sha.c
-index 47e114a..53227d7 100644
---- a/drivers/crypto/qce/sha.c
-+++ b/drivers/crypto/qce/sha.c
-@@ -349,28 +349,12 @@ static int qce_ahash_digest(struct ahash_request *req)
- 	return qce->async_req_enqueue(tmpl->qce, &req->base);
+diff --git a/fs/cifs/smb2ops.c b/fs/cifs/smb2ops.c
+index cfacf2c..16fb041 100644
+--- a/fs/cifs/smb2ops.c
++++ b/fs/cifs/smb2ops.c
+@@ -1878,22 +1878,6 @@ init_sg(struct smb_rqst *rqst, u8 *sign)
+ 	return sg;
  }
  
--struct qce_ahash_result {
+-struct cifs_crypt_result {
+-	int err;
 -	struct completion completion;
--	int error;
 -};
 -
--static void qce_digest_complete(struct crypto_async_request *req, int error)
+-static void cifs_crypt_complete(struct crypto_async_request *req, int err)
 -{
--	struct qce_ahash_result *result = req->data;
+-	struct cifs_crypt_result *res = req->data;
 -
--	if (error == -EINPROGRESS)
+-	if (err == -EINPROGRESS)
 -		return;
 -
--	result->error = error;
--	complete(&result->completion);
+-	res->err = err;
+-	complete(&res->completion);
 -}
 -
- static int qce_ahash_hmac_setkey(struct crypto_ahash *tfm, const u8 *key,
- 				 unsigned int keylen)
+ static int
+ smb2_get_enc_key(struct TCP_Server_Info *server, __u64 ses_id, int enc, u8 *key)
  {
- 	unsigned int digestsize = crypto_ahash_digestsize(tfm);
- 	struct qce_sha_ctx *ctx = crypto_tfm_ctx(&tfm->base);
--	struct qce_ahash_result result;
-+	struct crypto_wait wait;
- 	struct ahash_request *req;
- 	struct scatterlist sg;
- 	unsigned int blocksize;
-@@ -405,9 +389,9 @@ static int qce_ahash_hmac_setkey(struct crypto_ahash *tfm, const u8 *key,
- 		goto err_free_ahash;
- 	}
+@@ -1934,12 +1918,10 @@ crypt_message(struct TCP_Server_Info *server, struct smb_rqst *rqst, int enc)
+ 	struct aead_request *req;
+ 	char *iv;
+ 	unsigned int iv_len;
+-	struct cifs_crypt_result result = {0, };
++	DECLARE_CRYPTO_WAIT(wait);
+ 	struct crypto_aead *tfm;
+ 	unsigned int crypt_len = le32_to_cpu(tr_hdr->OriginalMessageSize);
  
 -	init_completion(&result.completion);
-+	crypto_init_wait(&wait);
- 	ahash_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG,
--				   qce_digest_complete, &result);
-+				   crypto_req_done, &wait);
- 	crypto_ahash_clear_flags(ahash_tfm, ~0);
- 
- 	buf = kzalloc(keylen + QCE_MAX_ALIGN_SIZE, GFP_KERNEL);
-@@ -420,13 +404,7 @@ static int qce_ahash_hmac_setkey(struct crypto_ahash *tfm, const u8 *key,
- 	sg_init_one(&sg, buf, keylen);
- 	ahash_request_set_crypt(req, &sg, ctx->authkey, keylen);
- 
--	ret = crypto_ahash_digest(req);
--	if (ret == -EINPROGRESS || ret == -EBUSY) {
--		ret = wait_for_completion_interruptible(&result.completion);
--		if (!ret)
--			ret = result.error;
--	}
 -
-+	ret = crypto_wait_req(crypto_ahash_digest(req), &wait);
- 	if (ret)
- 		crypto_ahash_set_flags(tfm, CRYPTO_TFM_RES_BAD_KEY_LEN);
+ 	rc = smb2_get_enc_key(server, tr_hdr->SessionId, enc, key);
+ 	if (rc) {
+ 		cifs_dbg(VFS, "%s: Could not get %scryption key\n", __func__,
+@@ -1999,14 +1981,10 @@ crypt_message(struct TCP_Server_Info *server, struct smb_rqst *rqst, int enc)
+ 	aead_request_set_ad(req, assoc_data_len);
  
+ 	aead_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG,
+-				  cifs_crypt_complete, &result);
++				  crypto_req_done, &wait);
+ 
+-	rc = enc ? crypto_aead_encrypt(req) : crypto_aead_decrypt(req);
+-
+-	if (rc == -EINPROGRESS || rc == -EBUSY) {
+-		wait_for_completion(&result.completion);
+-		rc = result.err;
+-	}
++	rc = crypto_wait_req(enc ? crypto_aead_encrypt(req)
++				: crypto_aead_decrypt(req), &wait);
+ 
+ 	if (!rc && enc)
+ 		memcpy(&tr_hdr->Signature, sign, SMB2_SIGNATURE_SIZE);
 -- 
 2.1.4
