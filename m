@@ -1,84 +1,143 @@
-From: Gilad Ben-Yossef <gilad@benyossef.com>
-Subject: [PATCH v6 17/19] crypto: qce: move to generic async completion
-Date: Mon, 21 Aug 2017 17:05:03 +0300
-Message-ID: <1503324309-13673-18-git-send-email-gilad__27182.4487405413$1503324580$gmane$org@benyossef.com>
+From: Gilad Ben-Yossef <gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
+Subject: [PATCH v6 01/19] crypto: change transient busy return code to -EAGAIN
+Date: Mon, 21 Aug 2017 17:04:47 +0300
+Message-ID: <1503324309-13673-2-git-send-email-gilad__23286.0854048797$1503324584$gmane$org@benyossef.com>
 References: <1503324309-13673-1-git-send-email-gilad@benyossef.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1503324309-13673-1-git-send-email-gilad@benyossef.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Tom Lendacky <thomas.lendacky@amd.com>, Gary Hook <gary.hook@amd.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Arnaud Ebalard <arno@natisbad.org>, Matthias Brugger <matthias.bgg@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>, linux-crypto@v
-Cc: Ofir Drang <ofir.drang@arm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+In-Reply-To: <1503324309-13673-1-git-send-email-gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
+List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
+Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+To: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tom Lendacky <thomas.lendacky-5C7GfCeVMHo@public.gmane.org>, Gary Hook <gary.hook-5C7GfCeVMHo@public.gmane.org>, Boris Brezillon <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Arnaud Ebalard <arno-LkuqDEemtHBg9hUCZPvPmw@public.gmane.org>, Matthias Brugger <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alasdair Kergon <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Steve French <sfrench-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, "Theodore Y. Ts'o" <tytso-3s7WtUTddSA@public.gmane.org>, Jaegeuk Kim <jaegeuk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Dmitry Kasatkin <dmitry.kasatkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, keyrings-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel@lists
+Cc: Ofir Drang <ofir.drang-5wv7dgnIgG8@public.gmane.org>
 List-Id: linux-raid.ids
 
-The qce driver starts several async crypto ops and  waits for their
-completions. Move it over to generic code doing the same.
+The crypto API was using the -EBUSY return value to indicate
+both a hard failure to submit a crypto operation into a
+transformation provider when the latter was busy and the backlog
+mechanism was not enabled as well as a notification that the
+operation was queued into the backlog when the backlog mechanism
+was enabled.
 
-Signed-off-by: Gilad Ben-Yossef <gilad@benyossef.com>
+Having the same return code indicate two very different conditions
+depending on a flag is both error prone and requires extra runtime
+check like the following to discern between the cases:
+
+	if (err == -EINPROGRESS ||
+	    (err == -EBUSY && (ahash_request_flags(req) &
+			       CRYPTO_TFM_REQ_MAY_BACKLOG)))
+
+This patch changes the return code used to indicate a crypto op
+failed due to the transformation provider being transiently busy
+to -EAGAIN.
+
+Signed-off-by: Gilad Ben-Yossef <gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
 ---
- drivers/crypto/qce/sha.c | 30 ++++--------------------------
- 1 file changed, 4 insertions(+), 26 deletions(-)
+ crypto/algapi.c     |  6 ++++--
+ crypto/algif_hash.c | 20 +++++++++++++++++---
+ crypto/cryptd.c     |  4 +---
+ 3 files changed, 22 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/crypto/qce/sha.c b/drivers/crypto/qce/sha.c
-index 47e114a..53227d7 100644
---- a/drivers/crypto/qce/sha.c
-+++ b/drivers/crypto/qce/sha.c
-@@ -349,28 +349,12 @@ static int qce_ahash_digest(struct ahash_request *req)
- 	return qce->async_req_enqueue(tmpl->qce, &req->base);
+diff --git a/crypto/algapi.c b/crypto/algapi.c
+index aa699ff..916bee3 100644
+--- a/crypto/algapi.c
++++ b/crypto/algapi.c
+@@ -897,9 +897,11 @@ int crypto_enqueue_request(struct crypto_queue *queue,
+ 	int err = -EINPROGRESS;
+ 
+ 	if (unlikely(queue->qlen >= queue->max_qlen)) {
+-		err = -EBUSY;
+-		if (!(request->flags & CRYPTO_TFM_REQ_MAY_BACKLOG))
++		if (!(request->flags & CRYPTO_TFM_REQ_MAY_BACKLOG)) {
++			err = -EAGAIN;
+ 			goto out;
++		}
++		err = -EBUSY;
+ 		if (queue->backlog == &queue->list)
+ 			queue->backlog = &request->list;
+ 	}
+diff --git a/crypto/algif_hash.c b/crypto/algif_hash.c
+index 5e92bd2..3b3c154 100644
+--- a/crypto/algif_hash.c
++++ b/crypto/algif_hash.c
+@@ -39,6 +39,20 @@ struct algif_hash_tfm {
+ 	bool has_key;
+ };
+ 
++/* Previous versions of crypto_* ops used to return -EBUSY
++ * rather than -EAGAIN to indicate being tied up. The in
++ * kernel API changed but we don't want to break the user
++ * space API. As only the hash user interface exposed this
++ * error ever to the user, do the translation here.
++ */
++static inline int crypto_user_err(int err)
++{
++	if (err == -EAGAIN)
++		return -EBUSY;
++
++	return err;
++}
++
+ static int hash_alloc_result(struct sock *sk, struct hash_ctx *ctx)
+ {
+ 	unsigned ds;
+@@ -136,7 +150,7 @@ static int hash_sendmsg(struct socket *sock, struct msghdr *msg,
+ unlock:
+ 	release_sock(sk);
+ 
+-	return err ?: copied;
++	return err ? crypto_user_err(err) : copied;
  }
  
--struct qce_ahash_result {
--	struct completion completion;
--	int error;
--};
--
--static void qce_digest_complete(struct crypto_async_request *req, int error)
--{
--	struct qce_ahash_result *result = req->data;
--
--	if (error == -EINPROGRESS)
--		return;
--
--	result->error = error;
--	complete(&result->completion);
--}
--
- static int qce_ahash_hmac_setkey(struct crypto_ahash *tfm, const u8 *key,
- 				 unsigned int keylen)
- {
- 	unsigned int digestsize = crypto_ahash_digestsize(tfm);
- 	struct qce_sha_ctx *ctx = crypto_tfm_ctx(&tfm->base);
--	struct qce_ahash_result result;
-+	struct crypto_wait wait;
- 	struct ahash_request *req;
- 	struct scatterlist sg;
- 	unsigned int blocksize;
-@@ -405,9 +389,9 @@ static int qce_ahash_hmac_setkey(struct crypto_ahash *tfm, const u8 *key,
- 		goto err_free_ahash;
- 	}
+ static ssize_t hash_sendpage(struct socket *sock, struct page *page,
+@@ -188,7 +202,7 @@ static ssize_t hash_sendpage(struct socket *sock, struct page *page,
+ unlock:
+ 	release_sock(sk);
  
--	init_completion(&result.completion);
-+	crypto_init_wait(&wait);
- 	ahash_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG,
--				   qce_digest_complete, &result);
-+				   crypto_req_done, &wait);
- 	crypto_ahash_clear_flags(ahash_tfm, ~0);
+-	return err ?: size;
++	return err ? crypto_user_err(err) : size;
+ }
  
- 	buf = kzalloc(keylen + QCE_MAX_ALIGN_SIZE, GFP_KERNEL);
-@@ -420,13 +404,7 @@ static int qce_ahash_hmac_setkey(struct crypto_ahash *tfm, const u8 *key,
- 	sg_init_one(&sg, buf, keylen);
- 	ahash_request_set_crypt(req, &sg, ctx->authkey, keylen);
+ static int hash_recvmsg(struct socket *sock, struct msghdr *msg, size_t len,
+@@ -236,7 +250,7 @@ static int hash_recvmsg(struct socket *sock, struct msghdr *msg, size_t len,
+ 	hash_free_result(sk, ctx);
+ 	release_sock(sk);
  
--	ret = crypto_ahash_digest(req);
--	if (ret == -EINPROGRESS || ret == -EBUSY) {
--		ret = wait_for_completion_interruptible(&result.completion);
--		if (!ret)
--			ret = result.error;
--	}
--
-+	ret = crypto_wait_req(crypto_ahash_digest(req), &wait);
- 	if (ret)
- 		crypto_ahash_set_flags(tfm, CRYPTO_TFM_RES_BAD_KEY_LEN);
+-	return err ?: len;
++	return err ? crypto_user_err(err) : len;
+ }
  
+ static int hash_accept(struct socket *sock, struct socket *newsock, int flags,
+diff --git a/crypto/cryptd.c b/crypto/cryptd.c
+index 0508c48..d1dbdce 100644
+--- a/crypto/cryptd.c
++++ b/crypto/cryptd.c
+@@ -137,16 +137,14 @@ static int cryptd_enqueue_request(struct cryptd_queue *queue,
+ 	int cpu, err;
+ 	struct cryptd_cpu_queue *cpu_queue;
+ 	atomic_t *refcnt;
+-	bool may_backlog;
+ 
+ 	cpu = get_cpu();
+ 	cpu_queue = this_cpu_ptr(queue->cpu_queue);
+ 	err = crypto_enqueue_request(&cpu_queue->queue, request);
+ 
+ 	refcnt = crypto_tfm_ctx(request->tfm);
+-	may_backlog = request->flags & CRYPTO_TFM_REQ_MAY_BACKLOG;
+ 
+-	if (err == -EBUSY && !may_backlog)
++	if (err == -EAGAIN)
+ 		goto out_put_cpu;
+ 
+ 	queue_work_on(cpu, kcrypto_wq, &cpu_queue->work);
 -- 
 2.1.4
-
