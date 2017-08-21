@@ -1,7 +1,7 @@
 From: Gilad Ben-Yossef <gilad@benyossef.com>
-Subject: [PATCH v6 16/19] crypto: talitos: move to generic async completion
-Date: Mon, 21 Aug 2017 17:05:02 +0300
-Message-ID: <1503324309-13673-17-git-send-email-gilad__29801.1975632564$1503324655$gmane$org@benyossef.com>
+Subject: [PATCH v6 13/19] cifs: move to generic async completion
+Date: Mon, 21 Aug 2017 17:04:59 +0300
+Message-ID: <1503324309-13673-14-git-send-email-gilad__21294.9291723364$1503324673$gmane$org@benyossef.com>
 References: <1503324309-13673-1-git-send-email-gilad@benyossef.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1503324309-13673-1-git-send-email-gilad@benyossef.com>
@@ -10,30 +10,31 @@ To: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft
 Cc: Ofir Drang <ofir.drang@arm.com>
 List-Id: linux-raid.ids
 
-The talitos driver starts several async crypto ops and  waits for their
-completions. Move it over to generic code doing the same.
+cifs starts an async. crypto op and waits for their completion.
+Move it over to generic code doing the same.
 
 Signed-off-by: Gilad Ben-Yossef <gilad@benyossef.com>
+Acked-by: Pavel Shilovsky <pshilov@microsoft.com>
 ---
- drivers/crypto/talitos.c | 38 +++++---------------------------------
- 1 file changed, 5 insertions(+), 33 deletions(-)
+ fs/cifs/smb2ops.c | 30 ++++--------------------------
+ 1 file changed, 4 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/crypto/talitos.c b/drivers/crypto/talitos.c
-index 79791c6..194a307 100644
---- a/drivers/crypto/talitos.c
-+++ b/drivers/crypto/talitos.c
-@@ -2037,22 +2037,6 @@ static int ahash_import(struct ahash_request *areq, const void *in)
- 	return 0;
+diff --git a/fs/cifs/smb2ops.c b/fs/cifs/smb2ops.c
+index cfacf2c..16fb041 100644
+--- a/fs/cifs/smb2ops.c
++++ b/fs/cifs/smb2ops.c
+@@ -1878,22 +1878,6 @@ init_sg(struct smb_rqst *rqst, u8 *sign)
+ 	return sg;
  }
  
--struct keyhash_result {
--	struct completion completion;
+-struct cifs_crypt_result {
 -	int err;
+-	struct completion completion;
 -};
 -
--static void keyhash_complete(struct crypto_async_request *req, int err)
+-static void cifs_crypt_complete(struct crypto_async_request *req, int err)
 -{
--	struct keyhash_result *res = req->data;
+-	struct cifs_crypt_result *res = req->data;
 -
 -	if (err == -EINPROGRESS)
 -		return;
@@ -42,51 +43,41 @@ index 79791c6..194a307 100644
 -	complete(&res->completion);
 -}
 -
- static int keyhash(struct crypto_ahash *tfm, const u8 *key, unsigned int keylen,
- 		   u8 *hash)
+ static int
+ smb2_get_enc_key(struct TCP_Server_Info *server, __u64 ses_id, int enc, u8 *key)
  {
-@@ -2060,10 +2044,10 @@ static int keyhash(struct crypto_ahash *tfm, const u8 *key, unsigned int keylen,
+@@ -1934,12 +1918,10 @@ crypt_message(struct TCP_Server_Info *server, struct smb_rqst *rqst, int enc)
+ 	struct aead_request *req;
+ 	char *iv;
+ 	unsigned int iv_len;
+-	struct cifs_crypt_result result = {0, };
++	DECLARE_CRYPTO_WAIT(wait);
+ 	struct crypto_aead *tfm;
+ 	unsigned int crypt_len = le32_to_cpu(tr_hdr->OriginalMessageSize);
  
- 	struct scatterlist sg[1];
- 	struct ahash_request *req;
--	struct keyhash_result hresult;
-+	struct crypto_wait wait;
- 	int ret;
+-	init_completion(&result.completion);
+-
+ 	rc = smb2_get_enc_key(server, tr_hdr->SessionId, enc, key);
+ 	if (rc) {
+ 		cifs_dbg(VFS, "%s: Could not get %scryption key\n", __func__,
+@@ -1999,14 +1981,10 @@ crypt_message(struct TCP_Server_Info *server, struct smb_rqst *rqst, int enc)
+ 	aead_request_set_ad(req, assoc_data_len);
  
--	init_completion(&hresult.completion);
-+	crypto_init_wait(&wait);
+ 	aead_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG,
+-				  cifs_crypt_complete, &result);
++				  crypto_req_done, &wait);
  
- 	req = ahash_request_alloc(tfm, GFP_KERNEL);
- 	if (!req)
-@@ -2072,25 +2056,13 @@ static int keyhash(struct crypto_ahash *tfm, const u8 *key, unsigned int keylen,
- 	/* Keep tfm keylen == 0 during hash of the long key */
- 	ctx->keylen = 0;
- 	ahash_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG,
--				   keyhash_complete, &hresult);
-+				   crypto_req_done, &wait);
- 
- 	sg_init_one(&sg[0], key, keylen);
- 
- 	ahash_request_set_crypt(req, sg, hash, keylen);
--	ret = crypto_ahash_digest(req);
--	switch (ret) {
--	case 0:
--		break;
--	case -EINPROGRESS:
--	case -EBUSY:
--		ret = wait_for_completion_interruptible(
--			&hresult.completion);
--		if (!ret)
--			ret = hresult.err;
--		break;
--	default:
--		break;
+-	rc = enc ? crypto_aead_encrypt(req) : crypto_aead_decrypt(req);
+-
+-	if (rc == -EINPROGRESS || rc == -EBUSY) {
+-		wait_for_completion(&result.completion);
+-		rc = result.err;
 -	}
-+	ret = crypto_wait_req(crypto_ahash_digest(req), &wait);
-+
- 	ahash_request_free(req);
++	rc = crypto_wait_req(enc ? crypto_aead_encrypt(req)
++				: crypto_aead_decrypt(req), &wait);
  
- 	return ret;
+ 	if (!rc && enc)
+ 		memcpy(&tr_hdr->Signature, sign, SMB2_SIGNATURE_SIZE);
 -- 
 2.1.4
 
