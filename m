@@ -1,32 +1,19 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH] Detail: differentiate between container and inactive
- arrays
-Date: Wed, 23 Aug 2017 13:43:07 -0400
-Message-ID: <13b894c3-a7b7-5d7e-46cc-a653eb04282c@gmail.com>
-References: <1503050423-20984-1-git-send-email-mariusz.tkaczyk@intel.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: don't require a struct block_device to submit a bio
+Date: Wed, 23 Aug 2017 20:01:43 +0200
+Message-ID: <20170823180143.GA5802@lst.de>
+References: <20170823171032.30529-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1503050423-20984-1-git-send-email-mariusz.tkaczyk@intel.com>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170823171032.30529-1-hch@lst.de>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 08/18/2017 06:00 AM, Mariusz Tkaczyk wrote:
-> Containers used to be handled as active arrays because GET_ARRAY_INFO
-> ioctl returns valid structure for them. As containers appear as inactive
-> in sysfs, the output for detail command has changed.
-> 
-> Stop relying on inactive state for containers. Make the output look the
-> same as in mdadm 4.0.
-> 
-> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+Patch 6 didn't seem to make it through to the list, so here is a
+link to the git tree:
 
-Applied!
-
-Thanks,
-Jes
-
+http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/bi_bdev
