@@ -1,8 +1,7 @@
 From: Gilad Ben-Yossef <gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
-Subject: [PATCH v7 04/19] crypto: marvell/cesa: remove redundant backlog
- checks on EBUSY
-Date: Thu, 24 Aug 2017 17:18:51 +0300
-Message-ID: <1503584350-7831-5-git-send-email-gilad__10446.9480495483$1503585232$gmane$org@benyossef.com>
+Subject: [PATCH v7 07/19] crypto: move pub key to generic async completion
+Date: Thu, 24 Aug 2017 17:18:54 +0300
+Message-ID: <1503584350-7831-8-git-send-email-gilad__35620.5895579935$1503585242$gmane$org@benyossef.com>
 References: <1503584350-7831-1-git-send-email-gilad@benyossef.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,43 +21,73 @@ To: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>, "Dav
 Cc: Ofir Drang <ofir.drang-5wv7dgnIgG8@public.gmane.org>
 List-Id: linux-raid.ids
 
-Now that -EBUSY return code only indicates backlog queueing
-we can safely remove the now redundant check for the
-CRYPTO_TFM_REQ_MAY_BACKLOG flag when -EBUSY is returned.
+public_key_verify_signature() is starting an async crypto op and
+waiting for it to complete. Move it over to generic code doing
+the same.
 
 Signed-off-by: Gilad Ben-Yossef <gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
-Acked-by: Boris Brezillon <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
 ---
- drivers/crypto/marvell/cesa.c | 3 +--
- drivers/crypto/marvell/cesa.h | 2 +-
- 2 files changed, 2 insertions(+), 3 deletions(-)
+ crypto/asymmetric_keys/public_key.c | 28 ++++------------------------
+ 1 file changed, 4 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/crypto/marvell/cesa.c b/drivers/crypto/marvell/cesa.c
-index 6e7a5c7..0c3909d 100644
---- a/drivers/crypto/marvell/cesa.c
-+++ b/drivers/crypto/marvell/cesa.c
-@@ -183,8 +183,7 @@ int mv_cesa_queue_req(struct crypto_async_request *req,
- 	spin_lock_bh(&engine->lock);
- 	ret = crypto_enqueue_request(&engine->queue, req);
- 	if ((mv_cesa_req_get_type(creq) == CESA_DMA_REQ) &&
--	    (ret == -EINPROGRESS ||
--	    (ret == -EBUSY && req->flags & CRYPTO_TFM_REQ_MAY_BACKLOG)))
-+	    (ret == -EINPROGRESS || ret == -EBUSY))
- 		mv_cesa_tdma_chain(engine, creq);
- 	spin_unlock_bh(&engine->lock);
+diff --git a/crypto/asymmetric_keys/public_key.c b/crypto/asymmetric_keys/public_key.c
+index 3cd6e12..d916235 100644
+--- a/crypto/asymmetric_keys/public_key.c
++++ b/crypto/asymmetric_keys/public_key.c
+@@ -57,29 +57,13 @@ static void public_key_destroy(void *payload0, void *payload3)
+ 	public_key_signature_free(payload3);
+ }
  
-diff --git a/drivers/crypto/marvell/cesa.h b/drivers/crypto/marvell/cesa.h
-index b7872f6..63c8457 100644
---- a/drivers/crypto/marvell/cesa.h
-+++ b/drivers/crypto/marvell/cesa.h
-@@ -763,7 +763,7 @@ static inline int mv_cesa_req_needs_cleanup(struct crypto_async_request *req,
- 	 * the backlog and will be processed later. There's no need to
- 	 * clean it up.
+-struct public_key_completion {
+-	struct completion completion;
+-	int err;
+-};
+-
+-static void public_key_verify_done(struct crypto_async_request *req, int err)
+-{
+-	struct public_key_completion *compl = req->data;
+-
+-	if (err == -EINPROGRESS)
+-		return;
+-
+-	compl->err = err;
+-	complete(&compl->completion);
+-}
+-
+ /*
+  * Verify a signature using a public key.
+  */
+ int public_key_verify_signature(const struct public_key *pkey,
+ 				const struct public_key_signature *sig)
+ {
+-	struct public_key_completion compl;
++	struct crypto_wait cwait;
+ 	struct crypto_akcipher *tfm;
+ 	struct akcipher_request *req;
+ 	struct scatterlist sig_sg, digest_sg;
+@@ -131,20 +115,16 @@ int public_key_verify_signature(const struct public_key *pkey,
+ 	sg_init_one(&digest_sg, output, outlen);
+ 	akcipher_request_set_crypt(req, &sig_sg, &digest_sg, sig->s_size,
+ 				   outlen);
+-	init_completion(&compl.completion);
++	crypto_init_wait(&cwait);
+ 	akcipher_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG |
+ 				      CRYPTO_TFM_REQ_MAY_SLEEP,
+-				      public_key_verify_done, &compl);
++				      crypto_req_done, &cwait);
+ 
+ 	/* Perform the verification calculation.  This doesn't actually do the
+ 	 * verification, but rather calculates the hash expected by the
+ 	 * signature and returns that to us.
  	 */
--	if (ret == -EBUSY && req->flags & CRYPTO_TFM_REQ_MAY_BACKLOG)
-+	if (ret == -EBUSY)
- 		return false;
+-	ret = crypto_akcipher_verify(req);
+-	if ((ret == -EINPROGRESS) || (ret == -EBUSY)) {
+-		wait_for_completion(&compl.completion);
+-		ret = compl.err;
+-	}
++	ret = crypto_wait_req(crypto_akcipher_verify(req), &cwait);
+ 	if (ret < 0)
+ 		goto out_free_output;
  
- 	/* Request wasn't queued, we need to clean it up */
 -- 
 2.1.4
