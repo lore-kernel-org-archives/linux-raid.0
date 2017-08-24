@@ -1,122 +1,53 @@
-From: Gilad Ben-Yossef <gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
-Subject: [PATCH v7 08/19] crypto: move drbg to generic async completion
-Date: Thu, 24 Aug 2017 17:18:55 +0300
-Message-ID: <1503584350-7831-9-git-send-email-gilad__30282.821894116$1503586564$gmane$org@benyossef.com>
-References: <1503584350-7831-1-git-send-email-gilad@benyossef.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: [PATCH] md/raid5: release/flush io in raid5_do_work()
+Date: Thu, 24 Aug 2017 09:53:59 -0700
+Message-ID: <20170824165359.4065174-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <1503584350-7831-1-git-send-email-gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
-List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-To: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tom Lendacky <thomas.lendacky-5C7GfCeVMHo@public.gmane.org>, Gary Hook <gary.hook-5C7GfCeVMHo@public.gmane.org>, Boris Brezillon <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Arnaud Ebalard <arno-LkuqDEemtHBg9hUCZPvPmw@public.gmane.org>, Matthias Brugger <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alasdair Kergon <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Steve French <sfrench-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, "Theodore Y. Ts'o" <tytso-3s7WtUTddSA@public.gmane.org>, Jaegeuk Kim <jaegeuk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Dmitry Kasatkin <dmitry.kasatkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, keyrings-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel@lists
-Cc: Ofir Drang <ofir.drang-5wv7dgnIgG8@public.gmane.org>
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Song Liu <songliubraving@fb.com>, shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com, "4.4+" <stable@vger.kernel.org>
 List-Id: linux-raid.ids
 
-DRBG is starting an async. crypto op and waiting for it complete.
-Move it over to generic code doing the same.
+In raid5, there are scenarios where some ios are deferred to a later
+time, and some IO need a flush to complete. To make sure we make
+progress with these IOs, we need to call the following functions:
 
-The code now also passes CRYPTO_TFM_REQ_MAY_SLEEP flag indicating
-crypto request memory allocation may use GFP_KERNEL which should
-be perfectly fine as the code is obviously sleeping for the
-completion of the request any way.
+    flush_deferred_bios(conf);
+    r5l_flush_stripe_to_raid(conf->log);
 
-Signed-off-by: Gilad Ben-Yossef <gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
+Both of these functions are called in raid5d(), but missing in
+raid5_do_work(). As a result, these functions are not called
+when multi-threading (group_thread_cnt > 0) is enabled. This patch
+adds calls to these function to raid5_do_work().
+
+Note for stable branches:
+
+  r5l_flush_stripe_to_raid(conf->log) is need for 4.4+
+  flush_deferred_bios(conf) is only needed for 4.11+
+
+Cc: stable@vger.kernel.org (4.4+)
+Signed-off-by: Song Liu <songliubraving@fb.com>
 ---
- crypto/drbg.c         | 36 +++++++++---------------------------
- include/crypto/drbg.h |  3 +--
- 2 files changed, 10 insertions(+), 29 deletions(-)
+ drivers/md/raid5.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/crypto/drbg.c b/crypto/drbg.c
-index 633a88e..c522251 100644
---- a/crypto/drbg.c
-+++ b/crypto/drbg.c
-@@ -1651,16 +1651,6 @@ static int drbg_fini_sym_kernel(struct drbg_state *drbg)
- 	return 0;
- }
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index f64ff32..6af57c6 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6226,6 +6226,10 @@ static void raid5_do_work(struct work_struct *work)
  
--static void drbg_skcipher_cb(struct crypto_async_request *req, int error)
--{
--	struct drbg_state *drbg = req->data;
--
--	if (error == -EINPROGRESS)
--		return;
--	drbg->ctr_async_err = error;
--	complete(&drbg->ctr_completion);
--}
--
- static int drbg_init_sym_kernel(struct drbg_state *drbg)
- {
- 	struct crypto_cipher *tfm;
-@@ -1691,7 +1681,7 @@ static int drbg_init_sym_kernel(struct drbg_state *drbg)
- 		return PTR_ERR(sk_tfm);
- 	}
- 	drbg->ctr_handle = sk_tfm;
--	init_completion(&drbg->ctr_completion);
-+	crypto_init_wait(&drbg->ctr_wait);
+ 	spin_unlock_irq(&conf->device_lock);
  
- 	req = skcipher_request_alloc(sk_tfm, GFP_KERNEL);
- 	if (!req) {
-@@ -1700,8 +1690,9 @@ static int drbg_init_sym_kernel(struct drbg_state *drbg)
- 		return -ENOMEM;
- 	}
- 	drbg->ctr_req = req;
--	skcipher_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG,
--					drbg_skcipher_cb, drbg);
-+	skcipher_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG |
-+						CRYPTO_TFM_REQ_MAY_SLEEP,
-+					crypto_req_done, &drbg->ctr_wait);
- 
- 	alignmask = crypto_skcipher_alignmask(sk_tfm);
- 	drbg->ctr_null_value_buf = kzalloc(DRBG_CTR_NULL_LEN + alignmask,
-@@ -1762,21 +1753,12 @@ static int drbg_kcapi_sym_ctr(struct drbg_state *drbg,
- 		/* Output buffer may not be valid for SGL, use scratchpad */
- 		skcipher_request_set_crypt(drbg->ctr_req, &sg_in, &sg_out,
- 					   cryptlen, drbg->V);
--		ret = crypto_skcipher_encrypt(drbg->ctr_req);
--		switch (ret) {
--		case 0:
--			break;
--		case -EINPROGRESS:
--		case -EBUSY:
--			wait_for_completion(&drbg->ctr_completion);
--			if (!drbg->ctr_async_err) {
--				reinit_completion(&drbg->ctr_completion);
--				break;
--			}
--		default:
-+		ret = crypto_wait_req(crypto_skcipher_encrypt(drbg->ctr_req),
-+					&drbg->ctr_wait);
-+		if (ret)
- 			goto out;
--		}
--		init_completion(&drbg->ctr_completion);
++	flush_deferred_bios(conf);
 +
-+		crypto_init_wait(&drbg->ctr_wait);
++	r5l_flush_stripe_to_raid(conf->log);
++
+ 	async_tx_issue_pending_all();
+ 	blk_finish_plug(&plug);
  
- 		memcpy(outbuf, drbg->outscratchpad, cryptlen);
- 
-diff --git a/include/crypto/drbg.h b/include/crypto/drbg.h
-index 22f884c..8f94110 100644
---- a/include/crypto/drbg.h
-+++ b/include/crypto/drbg.h
-@@ -126,8 +126,7 @@ struct drbg_state {
- 	__u8 *ctr_null_value;			/* CTR mode aligned zero buf */
- 	__u8 *outscratchpadbuf;			/* CTR mode output scratchpad */
-         __u8 *outscratchpad;			/* CTR mode aligned outbuf */
--	struct completion ctr_completion;	/* CTR mode async handler */
--	int ctr_async_err;			/* CTR mode async error */
-+	struct crypto_wait ctr_wait;		/* CTR mode async wait obj */
- 
- 	bool seeded;		/* DRBG fully seeded? */
- 	bool pr;		/* Prediction resistance enabled? */
 -- 
-2.1.4
+2.9.5
+
