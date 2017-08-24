@@ -1,7 +1,7 @@
 From: Gilad Ben-Yossef <gilad@benyossef.com>
-Subject: [PATCH v7 05/19] crypto: introduce crypto wait for async op
-Date: Thu, 24 Aug 2017 17:18:52 +0300
-Message-ID: <1503584350-7831-6-git-send-email-gilad__19100.1916923144$1503584759$gmane$org@benyossef.com>
+Subject: [PATCH v7 17/19] crypto: qce: move to generic async completion
+Date: Thu, 24 Aug 2017 17:19:04 +0300
+Message-ID: <1503584350-7831-18-git-send-email-gilad__15894.7277152494$1503584804$gmane$org@benyossef.com>
 References: <1503584350-7831-1-git-send-email-gilad@benyossef.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -18,112 +18,77 @@ List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
 To: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Tom Lendacky <thomas.lendacky@amd.com>, Gary Hook <gary.hook@amd.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Arnaud Ebalard <arno@natisbad.org>, Matthias Brugger <matthias.bgg@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, keyrings@vger.kernel.org, linux-arm-kernel@lists
-Cc: Eric Biggers <ebiggers3@gmail.com>, Jonathan Cameron <Jonathan.Cameron@huawei.com>, Ofir Drang <ofir.drang@arm.com>
+Cc: Ofir Drang <ofir.drang@arm.com>
 List-Id: linux-raid.ids
 
-Invoking a possibly async. crypto op and waiting for completion
-while correctly handling backlog processing is a common task
-in the crypto API implementation and outside users of it.
-
-This patch adds a generic implementation for doing so in
-preparation for using it across the board instead of hand
-rolled versions.
+The qce driver starts several async crypto ops and  waits for their
+completions. Move it over to generic code doing the same.
 
 Signed-off-by: Gilad Ben-Yossef <gilad@benyossef.com>
-CC: Eric Biggers <ebiggers3@gmail.com>
-CC: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 ---
- crypto/api.c           | 13 +++++++++++++
- include/linux/crypto.h | 40 ++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 53 insertions(+)
+ drivers/crypto/qce/sha.c | 30 ++++--------------------------
+ 1 file changed, 4 insertions(+), 26 deletions(-)
 
-diff --git a/crypto/api.c b/crypto/api.c
-index 941cd4c..2a2479d 100644
---- a/crypto/api.c
-+++ b/crypto/api.c
-@@ -24,6 +24,7 @@
- #include <linux/sched/signal.h>
- #include <linux/slab.h>
- #include <linux/string.h>
-+#include <linux/completion.h>
- #include "internal.h"
- 
- LIST_HEAD(crypto_alg_list);
-@@ -595,5 +596,17 @@ int crypto_has_alg(const char *name, u32 type, u32 mask)
+diff --git a/drivers/crypto/qce/sha.c b/drivers/crypto/qce/sha.c
+index 47e114a..53227d7 100644
+--- a/drivers/crypto/qce/sha.c
++++ b/drivers/crypto/qce/sha.c
+@@ -349,28 +349,12 @@ static int qce_ahash_digest(struct ahash_request *req)
+ 	return qce->async_req_enqueue(tmpl->qce, &req->base);
  }
- EXPORT_SYMBOL_GPL(crypto_has_alg);
  
-+void crypto_req_done(struct crypto_async_request *req, int err)
-+{
-+	struct crypto_wait *wait = req->data;
-+
-+	if (err == -EINPROGRESS)
-+		return;
-+
-+	wait->err = err;
-+	complete(&wait->completion);
-+}
-+EXPORT_SYMBOL_GPL(crypto_req_done);
-+
- MODULE_DESCRIPTION("Cryptographic core API");
- MODULE_LICENSE("GPL");
-diff --git a/include/linux/crypto.h b/include/linux/crypto.h
-index 84da997..78508ca 100644
---- a/include/linux/crypto.h
-+++ b/include/linux/crypto.h
-@@ -24,6 +24,7 @@
- #include <linux/slab.h>
- #include <linux/string.h>
- #include <linux/uaccess.h>
-+#include <linux/completion.h>
+-struct qce_ahash_result {
+-	struct completion completion;
+-	int error;
+-};
+-
+-static void qce_digest_complete(struct crypto_async_request *req, int error)
+-{
+-	struct qce_ahash_result *result = req->data;
+-
+-	if (error == -EINPROGRESS)
+-		return;
+-
+-	result->error = error;
+-	complete(&result->completion);
+-}
+-
+ static int qce_ahash_hmac_setkey(struct crypto_ahash *tfm, const u8 *key,
+ 				 unsigned int keylen)
+ {
+ 	unsigned int digestsize = crypto_ahash_digestsize(tfm);
+ 	struct qce_sha_ctx *ctx = crypto_tfm_ctx(&tfm->base);
+-	struct qce_ahash_result result;
++	struct crypto_wait wait;
+ 	struct ahash_request *req;
+ 	struct scatterlist sg;
+ 	unsigned int blocksize;
+@@ -405,9 +389,9 @@ static int qce_ahash_hmac_setkey(struct crypto_ahash *tfm, const u8 *key,
+ 		goto err_free_ahash;
+ 	}
  
- /*
-  * Autoloaded crypto modules should only use a prefixed name to avoid allowing
-@@ -468,6 +469,45 @@ struct crypto_alg {
- } CRYPTO_MINALIGN_ATTR;
+-	init_completion(&result.completion);
++	crypto_init_wait(&wait);
+ 	ahash_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG,
+-				   qce_digest_complete, &result);
++				   crypto_req_done, &wait);
+ 	crypto_ahash_clear_flags(ahash_tfm, ~0);
  
- /*
-+ * A helper struct for waiting for completion of async crypto ops
-+ */
-+struct crypto_wait {
-+	struct completion completion;
-+	int err;
-+};
-+
-+/*
-+ * Macro for declaring a crypto op async wait object on stack
-+ */
-+#define DECLARE_CRYPTO_WAIT(_wait) \
-+	struct crypto_wait _wait = { \
-+		COMPLETION_INITIALIZER_ONSTACK((_wait).completion), 0 }
-+
-+/*
-+ * Async ops completion helper functioons
-+ */
-+void crypto_req_done(struct crypto_async_request *req, int err);
-+
-+static inline int crypto_wait_req(int err, struct crypto_wait *wait)
-+{
-+	switch (err) {
-+	case -EINPROGRESS:
-+	case -EBUSY:
-+		wait_for_completion(&wait->completion);
-+		reinit_completion(&wait->completion);
-+		err = wait->err;
-+		break;
-+	};
-+
-+	return err;
-+}
-+
-+static inline void crypto_init_wait(struct crypto_wait *wait)
-+{
-+	init_completion(&wait->completion);
-+}
-+
-+/*
-  * Algorithm registration interface.
-  */
- int crypto_register_alg(struct crypto_alg *alg);
+ 	buf = kzalloc(keylen + QCE_MAX_ALIGN_SIZE, GFP_KERNEL);
+@@ -420,13 +404,7 @@ static int qce_ahash_hmac_setkey(struct crypto_ahash *tfm, const u8 *key,
+ 	sg_init_one(&sg, buf, keylen);
+ 	ahash_request_set_crypt(req, &sg, ctx->authkey, keylen);
+ 
+-	ret = crypto_ahash_digest(req);
+-	if (ret == -EINPROGRESS || ret == -EBUSY) {
+-		ret = wait_for_completion_interruptible(&result.completion);
+-		if (!ret)
+-			ret = result.error;
+-	}
+-
++	ret = crypto_wait_req(crypto_ahash_digest(req), &wait);
+ 	if (ret)
+ 		crypto_ahash_set_flags(tfm, CRYPTO_TFM_RES_BAD_KEY_LEN);
+ 
 -- 
 2.1.4
