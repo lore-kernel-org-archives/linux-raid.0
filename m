@@ -1,133 +1,157 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: [PATCH] md/raid1/10: reset bio allocated from mempool
-Date: Thu, 24 Aug 2017 19:41:16 -0700
-Message-ID: <e3c131755b9c25f860a0a0d1b2a549bf4bcff696.1503628850.git.shli@fb.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Shaohua Li <shli@fb.com>, "4.12+" <stable@vger.kernel.org>, Ming Lei <ming.lei@redhat.com>
+From: Bryan Hepworth <bryan.hepworth@newcastle.ac.uk>
+Subject: RE: force raid reassembly
+Date: Fri, 25 Aug 2017 08:03:42 +0000
+Message-ID: <WM!9b03d1b4466fdec001ad28edeb810dfe5419db37ae478f508d6051fb53243ff98800a5e32ce844a7048b4377d8ebe5c3!@mailhub-mx3.ncl.ac.uk>
+References: <DB4PR07MB409B56E9B9173E33079902ED58A0@DB4PR07MB409.eurprd07.prod.outlook.com>
+ <WM!bafd27028d31e7e922c12b615def50baa8369ba598ac220b2884f1706eddac34cd0580e2d54cc3da9be1bbadf104dab1!@mailhub-mx1.ncl.ac.uk>
+ <15dc68d8630.27fa.c989c0045808b278ebe0f0fc417d866d@gmail.com>
+ <5f064932-fc2d-926c-932b-1f3cdaaeb77a@youngman.org.uk>
+ <WM!13c5dc8d433950e8d178eb39ac57b28caef2d362792181894459f3aa56870cedd0dcd8b5aa75be7d1b060d3021a4afe9!@mailhub-mx3.ncl.ac.uk>
+ <DBXPR07MB415CB58355ECBF4DB0D6632D59B0@DBXPR07MB415.eurprd07.prod.outlook.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <WM!13c5dc8d433950e8d178eb39ac57b28caef2d362792181894459f3aa56870cedd0dcd8b5aa75be7d1b060d3021a4afe9!@mailhub-mx3.ncl.ac.uk>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: Anthony Youngman <antlists@youngman.org.uk>, Joe Landman <joe.landman@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From: Shaohua Li <shli@fb.com>
-
-Data allocated from mempool doesn't always get initialized, this happens when
-the data is reused instead of fresh allocation. In the raid1/10 case, we must
-reinitialize the bios.
-
-Reported-by: Jonathan G. Underwood <jonathan.underwood@gmail.com>
-Fixes: f0250618361d(md: raid10: don't use bio's vec table to manage resync pages)
-Fixes: 98d30c5812c3(md: raid1: don't use bio's vec table to manage resync pages)
-Cc: stable@vger.kernel.org (4.12+)
-Cc: Ming Lei <ming.lei@redhat.com>
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- drivers/md/raid1.c  | 19 ++++++++++++++++++-
- drivers/md/raid10.c | 35 ++++++++++++++++++++++++++++++++---
- 2 files changed, 50 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index f50958ded9f0..79474f47eeef 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -2564,6 +2564,23 @@ static int init_resync(struct r1conf *conf)
- 	return 0;
- }
- 
-+static struct r1bio *raid1_alloc_init_r1buf(struct r1conf *conf)
-+{
-+	struct r1bio *r1bio = mempool_alloc(conf->r1buf_pool, GFP_NOIO);
-+	struct resync_pages *rps;
-+	struct bio *bio;
-+	int i;
-+
-+	for (i = conf->poolinfo->raid_disks; i--; ) {
-+		bio = r1bio->bios[i];
-+		rps = bio->bi_private;
-+		bio_reset(bio);
-+		bio->bi_private = rps;
-+	}
-+	r1bio->master_bio = NULL;
-+	return r1bio;
-+}
-+
- /*
-  * perform a "sync" on one "block"
-  *
-@@ -2649,7 +2666,7 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
- 
- 	bitmap_cond_end_sync(mddev->bitmap, sector_nr,
- 		mddev_is_clustered(mddev) && (sector_nr + 2 * RESYNC_SECTORS > conf->cluster_sync_high));
--	r1_bio = mempool_alloc(conf->r1buf_pool, GFP_NOIO);
-+	r1_bio = raid1_alloc_init_r1buf(conf);
- 
- 	raise_barrier(conf, sector_nr);
- 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index f55d4cc085f6..d51ac02e98ef 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -2798,6 +2798,35 @@ static int init_resync(struct r10conf *conf)
- 	return 0;
- }
- 
-+static struct r10bio *raid10_alloc_init_r10buf(struct r10conf *conf)
-+{
-+	struct r10bio *r10bio = mempool_alloc(conf->r10buf_pool, GFP_NOIO);
-+	struct rsync_pages *rp;
-+	struct bio *bio;
-+	int nalloc;
-+	int i;
-+
-+	if (test_bit(MD_RECOVERY_SYNC, &conf->mddev->recovery) ||
-+	    test_bit(MD_RECOVERY_RESHAPE, &conf->mddev->recovery))
-+		nalloc = conf->copies; /* resync */
-+	else
-+		nalloc = 2; /* recovery */
-+
-+	for (i = 0; i < nalloc; i++) {
-+		bio = r10bio->devs[i].bio;
-+		rp = bio->bi_private;
-+		bio_reset(bio);
-+		bio->bi_private = rp;
-+		bio = r10bio->devs[i].repl_bio;
-+		if (bio) {
-+			rp = bio->bi_private;
-+			bio_reset(bio);
-+			bio->bi_private = rp;
-+		}
-+	}
-+	return r10bio;
-+}
-+
- /*
-  * perform a "sync" on one "block"
-  *
-@@ -3027,7 +3056,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
- 				atomic_inc(&mreplace->nr_pending);
- 			rcu_read_unlock();
- 
--			r10_bio = mempool_alloc(conf->r10buf_pool, GFP_NOIO);
-+			r10_bio = raid10_alloc_init_r10buf(conf);
- 			r10_bio->state = 0;
- 			raise_barrier(conf, rb2 != NULL);
- 			atomic_set(&r10_bio->remaining, 0);
-@@ -3236,7 +3265,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
- 		}
- 		if (sync_blocks < max_sync)
- 			max_sync = sync_blocks;
--		r10_bio = mempool_alloc(conf->r10buf_pool, GFP_NOIO);
-+		r10_bio = raid10_alloc_init_r10buf(conf);
- 		r10_bio->state = 0;
- 
- 		r10_bio->mddev = mddev;
-@@ -4360,7 +4389,7 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr,
- 
- read_more:
- 	/* Now schedule reads for blocks from sector_nr to last */
--	r10_bio = mempool_alloc(conf->r10buf_pool, GFP_NOIO);
-+	r10_bio = raid10_alloc_init_r10buf(conf);
- 	r10_bio->state = 0;
- 	raise_barrier(conf, sectors_done != 0);
- 	atomic_set(&r10_bio->remaining, 0);
--- 
-2.11.0
+DQoNCj4tLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPkZyb206IEFudGhvbnkgWW91bmdtYW4g
+W21haWx0bzphbnRsaXN0c0B5b3VuZ21hbi5vcmcudWtdDQo+U2VudDogMTIgQXVndXN0IDIwMTcg
+MTg6NDQNCj5UbzogSm9lIExhbmRtYW47IEJyeWFuIEhlcHdvcnRoOyBsaW51eC1yYWlkQHZnZXIu
+a2VybmVsLm9yZw0KPlN1YmplY3Q6IFJlOiBmb3JjZSByYWlkIHJlYXNzZW1ibHkNCj4NCj5Pbmx5
+IHRoaW5nIGlzLCBzZGIxIHNheXMgIkFBQS5BQSIsIHdoaWNoIGlzIGEgYml0IHdlaXJkLCB1bmxl
+c3Mgc2RiMSBpcw0KPnRoZSB2ZXJ5IGxhc3Qgb25lLCB3aGljaCBpcyB0aGUgbGFzdCBkb3QgaW4g
+QUFBLkEuIG9mIGFsbCB0aGUgb3RoZXJzLg0KPg0KPklmIGZpdmUgZHJpdmVzIGFsbCBoYXZlIGFs
+bW9zdCBpZGVudGljYWwgZXZlbnQgY291bnRzLCBJJ2QgYmUgaW5jbGluZWQNCj50byBkZHJlc2N1
+ZSB0aGUgZG9kZ3kgb25lIChwcm9iYWJseSBzZGIxKSBhbmQgaG9wZSBpdCBhbGwgd29ya3Mgb3V0
+Lg0KPg0KPlRoZSBhbHRlcm5hdGl2ZSBpcyB0byBkZHJlc2N1ZSBib3RoIGRvZGd5IGRyaXZlcywg
+YW5kIHdyaXRlIHRoZSBwcm9ncmFtDQo+dGhhdCBtYXJrcyBibG9ja3MgYXMgZG9kZ3kuIFRoZW4g
+eW91IGNhbiBob3BlIHRoYXQgYSBzY2FuIGNhbiByZWJ1aWxkDQo+ZXZlcnl0aGluZy4NCj4NCj5D
+aGVlcnMsDQo+V29sDQoNCkhpIEFudGhvbnkNCg0KSSd2ZSBnb3QgYW5vdGhlciBxdWljayBxdWVz
+dGlvbiwgaG9wZSB5b3UgY2FuIHNlZSB3aGF0IHlvdSByZWNrb24uLi4NCg0KVGhlIGRpc2tzIGFy
+ZSBpbiBhbiBtZDEyMDAgc3RvcmFnZSBzaGVsZiBhbmQgYWxsIHNlZW0gdG8gaGF2ZSBzZXR0bGVk
+IGRvd24gbm93LiBDb3VsZCB5b3UgdGFrZSBhIHF1aWNrIGxvb2sgYXQgdGhlIG91dHB1dCBhbmQg
+c2VlIGlmIHlvdSB0aGluayB0aGUgc2FtZSBhZHZpY2Ugc3RhbmRzLg0KDQpUaGFua3Mgc28gbXVj
+aC4NCg0KQnJ5YW4NCg0KW3Jvb3RAaW5zY3JpYmU0IH5dIyBjYXQgL3Byb2MvbWRzdGF0DQpQZXJz
+b25hbGl0aWVzIDogW3JhaWQ2XSBbcmFpZDVdIFtyYWlkNF0NCm1kMTI1IDogYWN0aXZlIChhdXRv
+LXJlYWQtb25seSkgcmFpZDUgc2RoMVs0XSBzZGcxWzZdIHNkaTFbM10gc2RrMVsxXSBzZGwxWzBd
+IHNkajFbN10NCiAgICAgIDk3Njc1NTIwMDAgYmxvY2tzIHN1cGVyIDEuMiBsZXZlbCA1LCA1MTJr
+IGNodW5rLCBhbGdvcml0aG0gMiBbNi82XSBbVVVVVVVVXQ0KICAgICAgYml0bWFwOiAwLzE1IHBh
+Z2VzIFswS0JdLCA2NTUzNktCIGNodW5rDQoNCm1kMTI2IDogaW5hY3RpdmUgc2RiMVs0XSBzZGUx
+WzddIHNkYzFbMF0gc2RmMVsxXSBzZGQxWzhdKFMpDQogICAgICA5NzY2OTA0NjQ1IGJsb2NrcyBz
+dXBlciAxLjINCg0KbWQxMjcgOiBhY3RpdmUgKGF1dG8tcmVhZC1vbmx5KSByYWlkNiBzZG9bMl0g
+c2RxWzRdIHNkbVswXSBzZHdbMTBdIHNkdFsxMl0gc2RzWzZdIHNkblsxXSBzZHJbNV0gc2R1Wzhd
+IHNkcFszXSBzZHhbMTFdIHNkdls5XQ0KICAgICAgMTk1MzUxMjk2MDAgYmxvY2tzIHN1cGVyIDEu
+MiBsZXZlbCA2LCA1MTJrIGNodW5rLCBhbGdvcml0aG0gMiBbMTIvMTJdIFtVVVVVVVVVVVVVVVVd
+DQogICAgICBiaXRtYXA6IDAvMTUgcGFnZXMgWzBLQl0sIDY1NTM2S0IgY2h1bmsNCg0KdW51c2Vk
+IGRldmljZXM6IDxub25lPg0KW3Jvb3RAaW5zY3JpYmU0IH5dIyBtZGFkbSAtLWV4YW1pbmUgL2Rl
+di9zZGExDQovZGV2L3NkYTE6DQogICAgICAgICAgTWFnaWMgOiBhOTJiNGVmYw0KICAgICAgICBW
+ZXJzaW9uIDogMS4yDQogICAgRmVhdHVyZSBNYXAgOiAweDENCiAgICAgQXJyYXkgVVVJRCA6IGFj
+ZTAwZmI1Ojg3NzFkNTVhOmNmMzY3MjhiOmRkYzNjZTg5DQogICAgICAgICAgIE5hbWUgOiBpbnRl
+cm1lZGlhdGUwDQogIENyZWF0aW9uIFRpbWUgOiBUdWUgT2N0IDE1IDIxOjAzOjUwIDIwMTMNCiAg
+ICAgUmFpZCBMZXZlbCA6IHJhaWQ1DQogICBSYWlkIERldmljZXMgOiA2DQoNCiBBdmFpbCBEZXYg
+U2l6ZSA6IDM5MDY3NjE4NTggKDE4NjIuODkgR2lCIDIwMDAuMjYgR0IpDQogICAgIEFycmF5IFNp
+emUgOiA5NzY2OTAxNzYwICg5MzE0LjQ0IEdpQiAxMDAwMS4zMSBHQikNCiAgVXNlZCBEZXYgU2l6
+ZSA6IDM5MDY3NjA3MDQgKDE4NjIuODkgR2lCIDIwMDAuMjYgR0IpDQogICAgRGF0YSBPZmZzZXQg
+OiAyNjIxNDQgc2VjdG9ycw0KICAgU3VwZXIgT2Zmc2V0IDogOCBzZWN0b3JzDQogICBVbnVzZWQg
+U3BhY2UgOiBiZWZvcmU9MjYyMDY0IHNlY3RvcnMsIGFmdGVyPTExNTQgc2VjdG9ycw0KICAgICAg
+ICAgIFN0YXRlIDogY2xlYW4NCiAgICBEZXZpY2UgVVVJRCA6IGE4NDI2M2NkOjc1Y2UyMGI5OmEz
+YTcyYTFjOmIxOGIyNDU3DQoNCkludGVybmFsIEJpdG1hcCA6IDggc2VjdG9ycyBmcm9tIHN1cGVy
+YmxvY2sNCiAgICBVcGRhdGUgVGltZSA6IE1vbiBKdWwgMzEgMjI6NTA6MzcgMjAxNw0KICAgICAg
+IENoZWNrc3VtIDogNzRkMzIwZDYgLSBjb3JyZWN0DQogICAgICAgICBFdmVudHMgOiAxMTk4NzkN
+Cg0KICAgICAgICAgTGF5b3V0IDogbGVmdC1zeW1tZXRyaWMNCiAgICAgQ2h1bmsgU2l6ZSA6IDUx
+MksNCg0KICAgRGV2aWNlIFJvbGUgOiBBY3RpdmUgZGV2aWNlIDUNCiAgIEFycmF5IFN0YXRlIDog
+QUFBLkFBICgnQScgPT0gYWN0aXZlLCAnLicgPT0gbWlzc2luZywgJ1InID09IHJlcGxhY2luZykN
+CiAgIA0KW3Jvb3RAaW5zY3JpYmU0IH5dIyBtZGFkbSAtLWV4YW1pbmUgL2Rldi9zZGIxDQovZGV2
+L3NkYjE6DQogICAgICAgICAgTWFnaWMgOiBhOTJiNGVmYw0KICAgICAgICBWZXJzaW9uIDogMS4y
+DQogICAgRmVhdHVyZSBNYXAgOiAweDENCiAgICAgQXJyYXkgVVVJRCA6IGFjZTAwZmI1Ojg3NzFk
+NTVhOmNmMzY3MjhiOmRkYzNjZTg5DQogICAgICAgICAgIE5hbWUgOiBpbnRlcm1lZGlhdGUwDQog
+IENyZWF0aW9uIFRpbWUgOiBUdWUgT2N0IDE1IDIxOjAzOjUwIDIwMTMNCiAgICAgUmFpZCBMZXZl
+bCA6IHJhaWQ1DQogICBSYWlkIERldmljZXMgOiA2DQoNCiBBdmFpbCBEZXYgU2l6ZSA6IDM5MDY3
+NjE4NTggKDE4NjIuODkgR2lCIDIwMDAuMjYgR0IpDQogICAgIEFycmF5IFNpemUgOiA5NzY2OTAx
+NzYwICg5MzE0LjQ0IEdpQiAxMDAwMS4zMSBHQikNCiAgVXNlZCBEZXYgU2l6ZSA6IDM5MDY3NjA3
+MDQgKDE4NjIuODkgR2lCIDIwMDAuMjYgR0IpDQogICAgRGF0YSBPZmZzZXQgOiAyNjIxNDQgc2Vj
+dG9ycw0KICAgU3VwZXIgT2Zmc2V0IDogOCBzZWN0b3JzDQogICBVbnVzZWQgU3BhY2UgOiBiZWZv
+cmU9MjYyMDY0IHNlY3RvcnMsIGFmdGVyPTExNTQgc2VjdG9ycw0KICAgICAgICAgIFN0YXRlIDog
+Y2xlYW4NCiAgICBEZXZpY2UgVVVJRCA6IGJlNWVjMjBlOjI0OTY0NWU1OjIyYWVjYTI1OmE2MGM3
+NTk5DQoNCkludGVybmFsIEJpdG1hcCA6IDggc2VjdG9ycyBmcm9tIHN1cGVyYmxvY2sNCiAgICBV
+cGRhdGUgVGltZSA6IFR1ZSBBdWcgIDggMTQ6MTY6NTMgMjAxNw0KICAgICAgIENoZWNrc3VtIDog
+MmU1MjlmYWUgLSBjb3JyZWN0DQogICAgICAgICBFdmVudHMgOiAxMTk4OTQNCg0KICAgICAgICAg
+TGF5b3V0IDogbGVmdC1zeW1tZXRyaWMNCiAgICAgQ2h1bmsgU2l6ZSA6IDUxMksNCg0KICAgRGV2
+aWNlIFJvbGUgOiBBY3RpdmUgZGV2aWNlIDQNCiAgIEFycmF5IFN0YXRlIDogQUFBLkEuICgnQScg
+PT0gYWN0aXZlLCAnLicgPT0gbWlzc2luZywgJ1InID09IHJlcGxhY2luZykNCiAgIA0KW3Jvb3RA
+aW5zY3JpYmU0IH5dIyBtZGFkbSAtLWV4YW1pbmUgL2Rldi9zZGMxDQovZGV2L3NkYzE6DQogICAg
+ICAgICAgTWFnaWMgOiBhOTJiNGVmYw0KICAgICAgICBWZXJzaW9uIDogMS4yDQogICAgRmVhdHVy
+ZSBNYXAgOiAweDENCiAgICAgQXJyYXkgVVVJRCA6IGFjZTAwZmI1Ojg3NzFkNTVhOmNmMzY3Mjhi
+OmRkYzNjZTg5DQogICAgICAgICAgIE5hbWUgOiBpbnRlcm1lZGlhdGUwDQogIENyZWF0aW9uIFRp
+bWUgOiBUdWUgT2N0IDE1IDIxOjAzOjUwIDIwMTMNCiAgICAgUmFpZCBMZXZlbCA6IHJhaWQ1DQog
+ICBSYWlkIERldmljZXMgOiA2DQoNCiBBdmFpbCBEZXYgU2l6ZSA6IDM5MDY3NjE4NTggKDE4NjIu
+ODkgR2lCIDIwMDAuMjYgR0IpDQogICAgIEFycmF5IFNpemUgOiA5NzY2OTAxNzYwICg5MzE0LjQ0
+IEdpQiAxMDAwMS4zMSBHQikNCiAgVXNlZCBEZXYgU2l6ZSA6IDM5MDY3NjA3MDQgKDE4NjIuODkg
+R2lCIDIwMDAuMjYgR0IpDQogICAgRGF0YSBPZmZzZXQgOiAyNjIxNDQgc2VjdG9ycw0KICAgU3Vw
+ZXIgT2Zmc2V0IDogOCBzZWN0b3JzDQogICBVbnVzZWQgU3BhY2UgOiBiZWZvcmU9MjYyMDY0IHNl
+Y3RvcnMsIGFmdGVyPTExNTQgc2VjdG9ycw0KICAgICAgICAgIFN0YXRlIDogY2xlYW4NCiAgICBE
+ZXZpY2UgVVVJRCA6IDE3MzJmMTIxOmY2ZjBkZjA5OmZhZmQyNDExOjdjNzhjZTAwDQoNCkludGVy
+bmFsIEJpdG1hcCA6IDggc2VjdG9ycyBmcm9tIHN1cGVyYmxvY2sNCiAgICBVcGRhdGUgVGltZSA6
+IFR1ZSBBdWcgIDggMTQ6MTY6NTMgMjAxNw0KICAgICAgIENoZWNrc3VtIDogYjhjZjg5ODEgLSBj
+b3JyZWN0DQogICAgICAgICBFdmVudHMgOiAxMTk4OTQNCg0KICAgICAgICAgTGF5b3V0IDogbGVm
+dC1zeW1tZXRyaWMNCiAgICAgQ2h1bmsgU2l6ZSA6IDUxMksNCg0KICAgRGV2aWNlIFJvbGUgOiBB
+Y3RpdmUgZGV2aWNlIDANCiAgIEFycmF5IFN0YXRlIDogQUFBLkEuICgnQScgPT0gYWN0aXZlLCAn
+LicgPT0gbWlzc2luZywgJ1InID09IHJlcGxhY2luZykNCiAgIA0KW3Jvb3RAaW5zY3JpYmU0IH5d
+IyBtZGFkbSAtLWV4YW1pbmUgL2Rldi9zZGQxDQovZGV2L3NkZDE6DQogICAgICAgICAgTWFnaWMg
+OiBhOTJiNGVmYw0KICAgICAgICBWZXJzaW9uIDogMS4yDQogICAgRmVhdHVyZSBNYXAgOiAweDEN
+CiAgICAgQXJyYXkgVVVJRCA6IGFjZTAwZmI1Ojg3NzFkNTVhOmNmMzY3MjhiOmRkYzNjZTg5DQog
+ICAgICAgICAgIE5hbWUgOiBpbnRlcm1lZGlhdGUwDQogIENyZWF0aW9uIFRpbWUgOiBUdWUgT2N0
+IDE1IDIxOjAzOjUwIDIwMTMNCiAgICAgUmFpZCBMZXZlbCA6IHJhaWQ1DQogICBSYWlkIERldmlj
+ZXMgOiA2DQoNCiBBdmFpbCBEZXYgU2l6ZSA6IDM5MDY3NjE4NTggKDE4NjIuODkgR2lCIDIwMDAu
+MjYgR0IpDQogICAgIEFycmF5IFNpemUgOiA5NzY2OTAxNzYwICg5MzE0LjQ0IEdpQiAxMDAwMS4z
+MSBHQikNCiAgVXNlZCBEZXYgU2l6ZSA6IDM5MDY3NjA3MDQgKDE4NjIuODkgR2lCIDIwMDAuMjYg
+R0IpDQogICAgRGF0YSBPZmZzZXQgOiAyNjIxNDQgc2VjdG9ycw0KICAgU3VwZXIgT2Zmc2V0IDog
+OCBzZWN0b3JzDQogICBVbnVzZWQgU3BhY2UgOiBiZWZvcmU9MjYyMDY0IHNlY3RvcnMsIGFmdGVy
+PTExNTQgc2VjdG9ycw0KICAgICAgICAgIFN0YXRlIDogY2xlYW4NCiAgICBEZXZpY2UgVVVJRCA6
+IDhkMGI2YzhlOjBjNTI2MjY1OjZlYzBhNzFiOjUyYTYzNmJhDQoNCkludGVybmFsIEJpdG1hcCA6
+IDggc2VjdG9ycyBmcm9tIHN1cGVyYmxvY2sNCiAgICBVcGRhdGUgVGltZSA6IFR1ZSBBdWcgIDgg
+MTQ6MTY6NTMgMjAxNw0KICAgICAgIENoZWNrc3VtIDogNDRiN2I0NjEgLSBjb3JyZWN0DQogICAg
+ICAgICBFdmVudHMgOiAxMTk4OTQNCg0KICAgICAgICAgTGF5b3V0IDogbGVmdC1zeW1tZXRyaWMN
+CiAgICAgQ2h1bmsgU2l6ZSA6IDUxMksNCg0KICAgRGV2aWNlIFJvbGUgOiBzcGFyZQ0KICAgQXJy
+YXkgU3RhdGUgOiBBQUEuQS4gKCdBJyA9PSBhY3RpdmUsICcuJyA9PSBtaXNzaW5nLCAnUicgPT0g
+cmVwbGFjaW5nKQ0KICAgDQpbcm9vdEBpbnNjcmliZTQgfl0jIG1kYWRtIC0tZXhhbWluZSAvZGV2
+L3NkZTENCi9kZXYvc2RlMToNCiAgICAgICAgICBNYWdpYyA6IGE5MmI0ZWZjDQogICAgICAgIFZl
+cnNpb24gOiAxLjINCiAgICBGZWF0dXJlIE1hcCA6IDB4MQ0KICAgICBBcnJheSBVVUlEIDogYWNl
+MDBmYjU6ODc3MWQ1NWE6Y2YzNjcyOGI6ZGRjM2NlODkNCiAgICAgICAgICAgTmFtZSA6IGludGVy
+bWVkaWF0ZTANCiAgQ3JlYXRpb24gVGltZSA6IFR1ZSBPY3QgMTUgMjE6MDM6NTAgMjAxMw0KICAg
+ICBSYWlkIExldmVsIDogcmFpZDUNCiAgIFJhaWQgRGV2aWNlcyA6IDYNCg0KIEF2YWlsIERldiBT
+aXplIDogMzkwNjc2MTg1OCAoMTg2Mi44OSBHaUIgMjAwMC4yNiBHQikNCiAgICAgQXJyYXkgU2l6
+ZSA6IDk3NjY5MDE3NjAgKDkzMTQuNDQgR2lCIDEwMDAxLjMxIEdCKQ0KICBVc2VkIERldiBTaXpl
+IDogMzkwNjc2MDcwNCAoMTg2Mi44OSBHaUIgMjAwMC4yNiBHQikNCiAgICBEYXRhIE9mZnNldCA6
+IDI2MjE0NCBzZWN0b3JzDQogICBTdXBlciBPZmZzZXQgOiA4IHNlY3RvcnMNCiAgIFVudXNlZCBT
+cGFjZSA6IGJlZm9yZT0yNjIwNjQgc2VjdG9ycywgYWZ0ZXI9MTE1NCBzZWN0b3JzDQogICAgICAg
+ICAgU3RhdGUgOiBjbGVhbg0KICAgIERldmljZSBVVUlEIDogM2Q0MTRhZDI6NDMxMGMxZjk6OThm
+NTAyMTQ6M2U5YjFlMzMNCg0KSW50ZXJuYWwgQml0bWFwIDogOCBzZWN0b3JzIGZyb20gc3VwZXJi
+bG9jaw0KICAgIFVwZGF0ZSBUaW1lIDogVHVlIEF1ZyAgOCAxNDoxNjo1MyAyMDE3DQogICAgICAg
+Q2hlY2tzdW0gOiA4ZTM3ZDI1ZCAtIGNvcnJlY3QNCiAgICAgICAgIEV2ZW50cyA6IDExOTg5NA0K
+DQogICAgICAgICBMYXlvdXQgOiBsZWZ0LXN5bW1ldHJpYw0KICAgICBDaHVuayBTaXplIDogNTEy
+Sw0KDQogICBEZXZpY2UgUm9sZSA6IEFjdGl2ZSBkZXZpY2UgMg0KICAgQXJyYXkgU3RhdGUgOiBB
+QUEuQS4gKCdBJyA9PSBhY3RpdmUsICcuJyA9PSBtaXNzaW5nLCAnUicgPT0gcmVwbGFjaW5nKQ0K
+ICAgDQpbcm9vdEBpbnNjcmliZTQgfl0jIG1kYWRtIC0tZXhhbWluZSAvZGV2L3NkZjENCi9kZXYv
+c2RmMToNCiAgICAgICAgICBNYWdpYyA6IGE5MmI0ZWZjDQogICAgICAgIFZlcnNpb24gOiAxLjIN
+CiAgICBGZWF0dXJlIE1hcCA6IDB4MQ0KICAgICBBcnJheSBVVUlEIDogYWNlMDBmYjU6ODc3MWQ1
+NWE6Y2YzNjcyOGI6ZGRjM2NlODkNCiAgICAgICAgICAgTmFtZSA6IGludGVybWVkaWF0ZTANCiAg
+Q3JlYXRpb24gVGltZSA6IFR1ZSBPY3QgMTUgMjE6MDM6NTAgMjAxMw0KICAgICBSYWlkIExldmVs
+IDogcmFpZDUNCiAgIFJhaWQgRGV2aWNlcyA6IDYNCg0KIEF2YWlsIERldiBTaXplIDogMzkwNjc2
+MTg1OCAoMTg2Mi44OSBHaUIgMjAwMC4yNiBHQikNCiAgICAgQXJyYXkgU2l6ZSA6IDk3NjY5MDE3
+NjAgKDkzMTQuNDQgR2lCIDEwMDAxLjMxIEdCKQ0KICBVc2VkIERldiBTaXplIDogMzkwNjc2MDcw
+NCAoMTg2Mi44OSBHaUIgMjAwMC4yNiBHQikNCiAgICBEYXRhIE9mZnNldCA6IDI2MjE0NCBzZWN0
+b3JzDQogICBTdXBlciBPZmZzZXQgOiA4IHNlY3RvcnMNCiAgIFVudXNlZCBTcGFjZSA6IGJlZm9y
+ZT0yNjIwNjQgc2VjdG9ycywgYWZ0ZXI9MTE1NCBzZWN0b3JzDQogICAgICAgICAgU3RhdGUgOiBj
+bGVhbg0KICAgIERldmljZSBVVUlEIDogZTIzOGU3NGI6ZDQwZWZjNDM6ZDM0ZDg3NmQ6Y2EwNzAw
+YjANCg0KSW50ZXJuYWwgQml0bWFwIDogOCBzZWN0b3JzIGZyb20gc3VwZXJibG9jaw0KICAgIFVw
+ZGF0ZSBUaW1lIDogVHVlIEF1ZyAgOCAxNDoxNjo1MyAyMDE3DQogICAgICAgQ2hlY2tzdW0gOiAy
+ODc1OGQ1NCAtIGNvcnJlY3QNCiAgICAgICAgIEV2ZW50cyA6IDExOTg5NA0KDQogICAgICAgICBM
+YXlvdXQgOiBsZWZ0LXN5bW1ldHJpYw0KICAgICBDaHVuayBTaXplIDogNTEySw0KDQogICBEZXZp
+Y2UgUm9sZSA6IEFjdGl2ZSBkZXZpY2UgMQ0KICAgQXJyYXkgU3RhdGUgOiBBQUEuQS4gKCdBJyA9
+PSBhY3RpdmUsICcuJyA9PSBtaXNzaW5nLCAnUicgPT0gcmVwbGFjaW5nKQ0KW3Jvb3RAaW5zY3Jp
+YmU0IH5dIw0KICAgDQogICANCg0K
