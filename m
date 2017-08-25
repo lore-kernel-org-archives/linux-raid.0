@@ -1,63 +1,133 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md/raid5: release/flush io in raid5_do_work()
-Date: Thu, 24 Aug 2017 10:02:12 -0700
-Message-ID: <20170824170212.bfuydnvs3dq4nvfk@kernel.org>
-References: <20170824165359.4065174-1-songliubraving@fb.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH] md/raid1/10: reset bio allocated from mempool
+Date: Thu, 24 Aug 2017 19:41:16 -0700
+Message-ID: <e3c131755b9c25f860a0a0d1b2a549bf4bcff696.1503628850.git.shli@fb.com>
 Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170824165359.4065174-1-songliubraving@fb.com>
 Sender: stable-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>
-Cc: linux-raid@vger.kernel.org, shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com, "4.4+" <stable@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: Shaohua Li <shli@fb.com>, "4.12+" <stable@vger.kernel.org>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-raid.ids
 
-On Thu, Aug 24, 2017 at 09:53:59AM -0700, Song Liu wrote:
-> In raid5, there are scenarios where some ios are deferred to a later
-> time, and some IO need a flush to complete. To make sure we make
-> progress with these IOs, we need to call the following functions:
-> 
->     flush_deferred_bios(conf);
->     r5l_flush_stripe_to_raid(conf->log);
-> 
-> Both of these functions are called in raid5d(), but missing in
-> raid5_do_work(). As a result, these functions are not called
-> when multi-threading (group_thread_cnt > 0) is enabled. This patch
-> adds calls to these function to raid5_do_work().
-> 
-> Note for stable branches:
-> 
->   r5l_flush_stripe_to_raid(conf->log) is need for 4.4+
->   flush_deferred_bios(conf) is only needed for 4.11+
-> 
-> Cc: stable@vger.kernel.org (4.4+)
-> Signed-off-by: Song Liu <songliubraving@fb.com>
+From: Shaohua Li <shli@fb.com>
 
-Applied, thanks!
-> ---
->  drivers/md/raid5.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index f64ff32..6af57c6 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -6226,6 +6226,10 @@ static void raid5_do_work(struct work_struct *work)
->  
->  	spin_unlock_irq(&conf->device_lock);
->  
-> +	flush_deferred_bios(conf);
-> +
-> +	r5l_flush_stripe_to_raid(conf->log);
-> +
->  	async_tx_issue_pending_all();
->  	blk_finish_plug(&plug);
->  
-> -- 
-> 2.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Data allocated from mempool doesn't always get initialized, this happens when
+the data is reused instead of fresh allocation. In the raid1/10 case, we must
+reinitialize the bios.
+
+Reported-by: Jonathan G. Underwood <jonathan.underwood@gmail.com>
+Fixes: f0250618361d(md: raid10: don't use bio's vec table to manage resync pages)
+Fixes: 98d30c5812c3(md: raid1: don't use bio's vec table to manage resync pages)
+Cc: stable@vger.kernel.org (4.12+)
+Cc: Ming Lei <ming.lei@redhat.com>
+Signed-off-by: Shaohua Li <shli@fb.com>
+---
+ drivers/md/raid1.c  | 19 ++++++++++++++++++-
+ drivers/md/raid10.c | 35 ++++++++++++++++++++++++++++++++---
+ 2 files changed, 50 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index f50958ded9f0..79474f47eeef 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -2564,6 +2564,23 @@ static int init_resync(struct r1conf *conf)
+ 	return 0;
+ }
+ 
++static struct r1bio *raid1_alloc_init_r1buf(struct r1conf *conf)
++{
++	struct r1bio *r1bio = mempool_alloc(conf->r1buf_pool, GFP_NOIO);
++	struct resync_pages *rps;
++	struct bio *bio;
++	int i;
++
++	for (i = conf->poolinfo->raid_disks; i--; ) {
++		bio = r1bio->bios[i];
++		rps = bio->bi_private;
++		bio_reset(bio);
++		bio->bi_private = rps;
++	}
++	r1bio->master_bio = NULL;
++	return r1bio;
++}
++
+ /*
+  * perform a "sync" on one "block"
+  *
+@@ -2649,7 +2666,7 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 
+ 	bitmap_cond_end_sync(mddev->bitmap, sector_nr,
+ 		mddev_is_clustered(mddev) && (sector_nr + 2 * RESYNC_SECTORS > conf->cluster_sync_high));
+-	r1_bio = mempool_alloc(conf->r1buf_pool, GFP_NOIO);
++	r1_bio = raid1_alloc_init_r1buf(conf);
+ 
+ 	raise_barrier(conf, sector_nr);
+ 
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index f55d4cc085f6..d51ac02e98ef 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -2798,6 +2798,35 @@ static int init_resync(struct r10conf *conf)
+ 	return 0;
+ }
+ 
++static struct r10bio *raid10_alloc_init_r10buf(struct r10conf *conf)
++{
++	struct r10bio *r10bio = mempool_alloc(conf->r10buf_pool, GFP_NOIO);
++	struct rsync_pages *rp;
++	struct bio *bio;
++	int nalloc;
++	int i;
++
++	if (test_bit(MD_RECOVERY_SYNC, &conf->mddev->recovery) ||
++	    test_bit(MD_RECOVERY_RESHAPE, &conf->mddev->recovery))
++		nalloc = conf->copies; /* resync */
++	else
++		nalloc = 2; /* recovery */
++
++	for (i = 0; i < nalloc; i++) {
++		bio = r10bio->devs[i].bio;
++		rp = bio->bi_private;
++		bio_reset(bio);
++		bio->bi_private = rp;
++		bio = r10bio->devs[i].repl_bio;
++		if (bio) {
++			rp = bio->bi_private;
++			bio_reset(bio);
++			bio->bi_private = rp;
++		}
++	}
++	return r10bio;
++}
++
+ /*
+  * perform a "sync" on one "block"
+  *
+@@ -3027,7 +3056,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 				atomic_inc(&mreplace->nr_pending);
+ 			rcu_read_unlock();
+ 
+-			r10_bio = mempool_alloc(conf->r10buf_pool, GFP_NOIO);
++			r10_bio = raid10_alloc_init_r10buf(conf);
+ 			r10_bio->state = 0;
+ 			raise_barrier(conf, rb2 != NULL);
+ 			atomic_set(&r10_bio->remaining, 0);
+@@ -3236,7 +3265,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 		}
+ 		if (sync_blocks < max_sync)
+ 			max_sync = sync_blocks;
+-		r10_bio = mempool_alloc(conf->r10buf_pool, GFP_NOIO);
++		r10_bio = raid10_alloc_init_r10buf(conf);
+ 		r10_bio->state = 0;
+ 
+ 		r10_bio->mddev = mddev;
+@@ -4360,7 +4389,7 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr,
+ 
+ read_more:
+ 	/* Now schedule reads for blocks from sector_nr to last */
+-	r10_bio = mempool_alloc(conf->r10buf_pool, GFP_NOIO);
++	r10_bio = raid10_alloc_init_r10buf(conf);
+ 	r10_bio->state = 0;
+ 	raise_barrier(conf, sectors_done != 0);
+ 	atomic_set(&r10_bio->remaining, 0);
+-- 
+2.11.0
