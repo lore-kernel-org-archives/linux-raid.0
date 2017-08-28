@@ -1,7 +1,7 @@
 From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH 2/5] mdadm/test: use the first element of array as parsing condition
-Date: Mon, 28 Aug 2017 17:24:28 +0800
-Message-ID: <1503912271-6463-3-git-send-email-zlliu@suse.com>
+Subject: [PATCH 3/5] mdadm/test: get rid of the tests/testdev
+Date: Mon, 28 Aug 2017 17:24:29 +0800
+Message-ID: <1503912271-6463-4-git-send-email-zlliu@suse.com>
 References: <1503912271-6463-1-git-send-email-zlliu@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1503912271-6463-1-git-send-email-zlliu@suse.com>
@@ -10,29 +10,34 @@ To: Jes.Sorensen@gmail.com
 Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
-it would complain "too many arguments" when array[] has
-few members, it's proper to check whether or not array[0]
-is null.
+It's time to get rid of the tests/testdev due
+to it has covered by testdev() in new 'test'.
 
-Reported-by: Xiao Ni <xni@redhat.com>
 Signed-off-by: Zhilong Liu <zlliu@suse.com>
 ---
- test | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ tests/testdev | 13 -------------
+ 1 file changed, 13 deletions(-)
+ delete mode 100644 tests/testdev
 
-diff --git a/test b/test
-index 87e2df2..25268a0 100755
---- a/test
-+++ b/test
-@@ -75,7 +75,7 @@ save_log() {
- 		echo
- 	elif [ "$DEVTYPE" == 'loop' -o "$DEVTYPE" == 'disk' ]
- 	then
--		if [ ! -z ${array[@]} -a ${#array[@]} -ge 1 ]
-+		if [ ! -z "$array" -a ${#array[@]} -ge 1 ]
- 		then
- 			md_disks=($($mdadm -D -Y ${array[@]} | grep "/dev/" | cut -d'=' -f2))
- 			cat /proc/mdstat | grep -q "bitmap"
+diff --git a/tests/testdev b/tests/testdev
+deleted file mode 100644
+index 8b6e6f0..0000000
+--- a/tests/testdev
++++ /dev/null
+@@ -1,13 +0,0 @@
+-dev=$1
+-cnt=$2
+-size=$3
+-chunk=$4
+-mkfs -j $dev > /dev/null 2>&1 && fsck -fn $dev >&2
+-dsize=$[size/chunk]
+-dsize=$[dsize*chunk]
+-rasize=$[dsize*2*cnt]
+-if [ $rasize -ne `/sbin/blockdev --getsize $dev` ]
+-then
+-  echo "ERROR: size is wrong for $dev: $cnt * $size (chunk=$chunk) = $rasize, not `/sbin/blockdev --getsize $dev`"
+-  exit 1;
+-fi
 -- 
 2.6.6
 
