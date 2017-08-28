@@ -1,43 +1,79 @@
 From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH 3/5] mdadm/test: get rid of the tests/testdev
-Date: Mon, 28 Aug 2017 17:24:29 +0800
-Message-ID: <1503912271-6463-4-git-send-email-zlliu@suse.com>
-References: <1503912271-6463-1-git-send-email-zlliu@suse.com>
+Subject: Re: [PATCH -v4 1/1] mdadm/test: Add one test case for raid5 reshape
+Date: Mon, 28 Aug 2017 17:31:26 +0800
+Message-ID: <298629d4-4cad-8584-5d5c-11757efd25e1@suse.com>
+References: <1500537533-8470-1-git-send-email-xni@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1503912271-6463-1-git-send-email-zlliu@suse.com>
+In-Reply-To: <1500537533-8470-1-git-send-email-xni@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
+To: Xiao Ni <xni@redhat.com>, jes.sorensen@gmail.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-It's time to get rid of the tests/testdev due
-to it has covered by testdev() in new 'test'.
+Hi, Jes;
+    Kind reminder for this commit.
 
-Signed-off-by: Zhilong Liu <zlliu@suse.com>
----
- tests/testdev | 13 -------------
- 1 file changed, 13 deletions(-)
- delete mode 100644 tests/testdev
+Thanks,
+-Zhilong
 
-diff --git a/tests/testdev b/tests/testdev
-deleted file mode 100644
-index 8b6e6f0..0000000
---- a/tests/testdev
-+++ /dev/null
-@@ -1,13 +0,0 @@
--dev=$1
--cnt=$2
--size=$3
--chunk=$4
--mkfs -j $dev > /dev/null 2>&1 && fsck -fn $dev >&2
--dsize=$[size/chunk]
--dsize=$[dsize*chunk]
--rasize=$[dsize*2*cnt]
--if [ $rasize -ne `/sbin/blockdev --getsize $dev` ]
--then
--  echo "ERROR: size is wrong for $dev: $cnt * $size (chunk=$chunk) = $rasize, not `/sbin/blockdev --getsize $dev`"
--  exit 1;
--fi
--- 
-2.6.6
+On 07/20/2017 03:58 PM, Xiao Ni wrote:
+> This case tries to allow raid5 reshape to use backwards direction.
+> It changes chunksize after reshape and stops the raid. Then starts
+> the raid again.
+>
+> Signed-off-by: Xiao Ni <xni@redhat.com>
+> Suggested-by:  Jes Sorensen <jes.sorensen@gmail.com>
+> Suggested-by:  Zhilong Liu <zlliu@suse.com>
+> Suggested-by:  Paul Menzel <pmenzel@molgen.mpg.de>
+> ---
+>   test           |  7 +++++++
+>   tests/02r5grow | 17 +++++++++++++++++
+>   2 files changed, 24 insertions(+)
+>
+> diff --git a/test b/test
+> index 87e2df2..98e2981 100755
+> --- a/test
+> +++ b/test
+> @@ -320,6 +320,13 @@ check() {
+>   		grep -sq "inactive" /proc/mdstat ||
+>   			die "array is not inactive!"
+>   		;;
+> +	# It only can be used when there is only one raid
+> +	chunk )
+> +		chunk_size=`awk -F',' '/chunk/{print $2}' /proc/mdstat | awk -F'[a-z]' '{print $1}'`
+> +		if [ "$chunk_size" -ne "$2" ] ; then
+> +			die "chunksize should be $2, but it's $chunk_size"
+> +		fi
+> +		;;
+>   	* )
+>   		die "unknown check $1"
+>   		;;
+> diff --git a/tests/02r5grow b/tests/02r5grow
+> index 386e82e..ea3101b 100644
+> --- a/tests/02r5grow
+> +++ b/tests/02r5grow
+> @@ -34,3 +34,20 @@ check nosync
+>   sh tests/testdev $md0 3 $[size/2] 128
+>   
+>   mdadm -S $md0
+> +
+> +# create a raid5 array and change the chunk
+> +mdadm -CR $md0 --level raid5 --metadata=1.1 --chunk=32 --raid-disks 3 --size $[size/2] $dev1 $dev2 $dev3
+> +check wait
+> +check state UUU
+> +check chunk 32
+> +
+> +mdadm $md0 --grow --chunk=64
+> +check reshape
+> +check wait
+> +check chunk 64
+> +
+> +mdadm -S $md0
+> +mdadm -As
+> +check state UUU
+> +check chunk 64
+> +mdadm -Ss
 
