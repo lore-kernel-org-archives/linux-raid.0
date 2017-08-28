@@ -1,7 +1,7 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH 2/2] mdadm: save previous journal_clean when reload super
-Date: Mon, 28 Aug 2017 15:20:36 -0700
-Message-ID: <20170828222036.3278481-3-songliubraving@fb.com>
+Subject: [PATCH 1/2] mdadm: install two more udev rules in mdadm.spec
+Date: Mon, 28 Aug 2017 15:20:35 -0700
+Message-ID: <20170828222036.3278481-2-songliubraving@fb.com>
 References: <20170828222036.3278481-1-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,39 +12,28 @@ To: linux-raid@vger.kernel.org
 Cc: Song Liu <songliubraving@fb.com>, shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com
 List-Id: linux-raid.ids
 
-In Incremental.c:count_active(), max_events is tracked to show to
-which devices are up to date. If a device has events==max_events+1,
-getinfo_super() is called to reload the superblock from this
-device. getinfo_super1() blindly set journal_clean to 0, which is
-wrong. This patch fixes this issue by saving previous
-journal_clean before calling getinfo_super().
+To avoid rpmbuild error.
 
 Signed-off-by: Song Liu <songliubraving@fb.com>
 ---
- Incremental.c | 3 +++
- 1 file changed, 3 insertions(+)
+ mdadm.spec | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/Incremental.c b/Incremental.c
-index 6cf2174..b17b37f 100644
---- a/Incremental.c
-+++ b/Incremental.c
-@@ -747,13 +747,16 @@ static int count_active(struct supertype *st, struct mdinfo *sra,
- 				;
- 			else if (info.events == max_events+1) {
- 				int i;
-+				int journal_clean;
- 				max_events = info.events;
- 				for (i = 0; i < raid_disks; i++)
- 					if (avail[i])
- 						avail[i]--;
- 				avail[info.disk.raid_disk] = 2;
- 				best[info.disk.raid_disk] = devnum;
-+				journal_clean = bestinfo->journal_clean;
- 				st->ss->getinfo_super(st, bestinfo, NULL);
-+				bestinfo->journal_clean = journal_clean;
- 			} else { /* info.events much bigger */
- 				memset(avail, 0, raid_disks);
- 				max_events = info.events;
+diff --git a/mdadm.spec b/mdadm.spec
+index 4e97efb..4e6f870 100644
+--- a/mdadm.spec
++++ b/mdadm.spec
+@@ -37,8 +37,10 @@ rm -rf $RPM_BUILD_ROOT
+ %doc TODO ChangeLog mdadm.conf-example COPYING
+ %{_sbindir}/mdadm
+ %{_sbindir}/mdmon
++/usr/lib/udev/rules.d/01-md-raid-creating.rules
+ /usr/lib/udev/rules.d/63-md-raid-arrays.rules
+ /usr/lib/udev/rules.d/64-md-raid-assembly.rules
++/usr/lib/udev/rules.d/69-md-clustered-confirm-device.rules
+ %config(noreplace,missingok)/%{_sysconfdir}/mdadm.conf
+ %{_mandir}/man*/md*
+ 
 -- 
 2.9.5
 
