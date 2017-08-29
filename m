@@ -1,33 +1,42 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH 0/2] mdadm patches for r5cache and mdadm.spec
-Date: Mon, 28 Aug 2017 15:20:34 -0700
-Message-ID: <20170828222036.3278481-1-songliubraving@fb.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: I/O hangs after resuming from suspend-to-ram
+Date: Tue, 29 Aug 2017 08:24:25 +0800
+Message-ID: <20170829002425.GA28904@ming.t460p>
+References: <3926917.BCSovyVWdL@natalenko.name>
+ <4174287.OjL0pO8MRx@natalenko.name>
+ <20170828125822.GA19670@ming.t460p>
+ <1615033.Xza1AIGLzP@natalenko.name>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1615033.Xza1AIGLzP@natalenko.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Song Liu <songliubraving@fb.com>, shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com
+To: Oleksandr Natalenko <oleksandr@natalenko.name>
+Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Shaohua Li <shli@kernel.org>
 List-Id: linux-raid.ids
 
-These two patches are not related to each other. I just found
-them recently.
+On Mon, Aug 28, 2017 at 08:22:26PM +0200, Oleksandr Natalenko wrote:
+> Hi.
+> 
+> On pondělí 28. srpna 2017 14:58:28 CEST Ming Lei wrote:
+> > Could you verify if the following patch fixes your issue?
+> > …SNIP…
+> 
+> I've applied it to v4.12.9 and rechecked — the issue is still there, 
+> unfortunately. Stacktrace is the same as before.
+> 
+> Were you able to reproduce it in a VM?
 
-The first patch is found when building rpm with mdadm.spec.
+Yes, I can.
 
-The send patch fixes an --incremental issue when there is
-mismatch in "Events" in an array with r5cache.
+> 
+> Should I re-check it with v4.13-rc7?
+> 
+> Any other suggestions?
 
-Thanks,
-Song
+Please test it with v4.13-rc7 first.
 
-Song Liu (2):
-  mdadm: install two more udev rules in mdadm.spec
-  mdadm: save previous journal_clean when reload super
-
- Incremental.c | 3 +++
- mdadm.spec    | 2 ++
- 2 files changed, 5 insertions(+)
-
---
-2.9.5
+-- 
+Ming
