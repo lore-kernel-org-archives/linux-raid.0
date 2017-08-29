@@ -1,64 +1,44 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH v2] mdadm: set journal_clean after scanning all disks
-Date: Tue, 29 Aug 2017 09:53:02 -0700
-Message-ID: <20170829165302.3526230-1-songliubraving@fb.com>
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: [PATCH 0/2] mdadm patches for r5cache and mdadm.spec
+Date: Tue, 29 Aug 2017 13:40:01 -0400
+Message-ID: <9bc710d6-b4da-521c-31f7-67feb32cb55f@gmail.com>
+References: <20170828222036.3278481-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170828222036.3278481-1-songliubraving@fb.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Song Liu <songliubraving@fb.com>, shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com
+To: Song Liu <songliubraving@fb.com>, linux-raid@vger.kernel.org
+Cc: shli@fb.com, kernel-team@fb.com, NeilBrown <neilb@suse.com>
 List-Id: linux-raid.ids
 
-Summary:
-In Incremental.c:count_active(), max_events is tracked to show to
-which devices are up to date. If a device has events==max_events+1,
-getinfo_super() is called to reload the superblock from this
-device. getinfo_super1() blindly set journal_clean to 0, which is
-wrong.
+On 08/28/2017 06:20 PM, Song Liu wrote:
+> These two patches are not related to each other. I just found
+> them recently.
+> 
+> The first patch is found when building rpm with mdadm.spec.
+> 
+> The send patch fixes an --incremental issue when there is
+> mismatch in "Events" in an array with r5cache.
+> 
+> Thanks,
+> Song
+> 
+> Song Liu (2):
+>    mdadm: install two more udev rules in mdadm.spec
+>    mdadm: save previous journal_clean when reload super
+> 
+>   Incremental.c | 3 +++
+>   mdadm.spec    | 2 ++
+>   2 files changed, 5 insertions(+)
 
-This patch fixes this by tracking max_journal_events for all the
-disks. After scanning all disks, journal_clean is set if
-max_journal_events >= max_events-1.
+Hi,
 
-Signed-off-by: Song Liu <songliubraving@fb.com>
----
- Incremental.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+I applied the first one, but leaving the second one out for now, per 
+Neil's comments.
 
-diff --git a/Incremental.c b/Incremental.c
-index 6cf2174..91301eb 100644
---- a/Incremental.c
-+++ b/Incremental.c
-@@ -684,6 +684,7 @@ static int count_active(struct supertype *st, struct mdinfo *sra,
- 	int cnt = 0;
- 	int replcnt = 0;
- 	__u64 max_events = 0;
-+	__u64 max_journal_events = 0;
- 	char *avail = NULL;
- 	int *best = NULL;
- 	char *devmap = NULL;
-@@ -714,8 +715,9 @@ static int count_active(struct supertype *st, struct mdinfo *sra,
- 
- 		info.array.raid_disks = raid_disks;
- 		st->ss->getinfo_super(st, &info, devmap + raid_disks * devnum);
--		if (info.disk.raid_disk == MD_DISK_ROLE_JOURNAL)
--			bestinfo->journal_clean = 1;
-+		if (info.disk.raid_disk == MD_DISK_ROLE_JOURNAL &&
-+		    info.events > max_journal_events)
-+			max_journal_events = info.events;
- 		if (!avail) {
- 			raid_disks = info.array.raid_disks;
- 			avail = xcalloc(raid_disks, 1);
-@@ -765,6 +767,8 @@ static int count_active(struct supertype *st, struct mdinfo *sra,
- 			replcnt++;
- 		st->ss->free_super(st);
- 	}
-+	if (max_journal_events >= max_events - 1)
-+		bestinfo->journal_clean = 1;
- 
- 	if (!avail)
- 		return 0;
--- 
-2.9.5
+Cheers,
+Jes
 
