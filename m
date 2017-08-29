@@ -1,224 +1,164 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: report a bug that panic when grow size for external bitmap
-Date: Tue, 29 Aug 2017 20:47:19 +1000
-Message-ID: <87k21mhcqw.fsf@notabene.neil.brown.name>
-References: <ad8c69c7-f1e0-b6ab-dc87-a81aa7bca391@suse.com> <87y3q3gq8g.fsf@notabene.neil.brown.name> <6eaf97d4-bd8c-e33c-a9c7-37d0fe2086ce@suse.com> <87mv6jgj8z.fsf@notabene.neil.brown.name> <ba801ebe-9c0c-d911-2b18-936495fe0ed3@suse.com>
+From: Oleksandr Natalenko <oleksandr@natalenko.name>
+Subject: Re: I/O hangs after resuming from suspend-to-ram
+Date: Tue, 29 Aug 2017 17:52:42 +0200
+Message-ID: <2329566.kid2YYBOAQ@natalenko.name>
+References: <3926917.BCSovyVWdL@natalenko.name> <1615033.Xza1AIGLzP@natalenko.name> <20170829002425.GA28904@ming.t460p>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ba801ebe-9c0c-d911-2b18-936495fe0ed3@suse.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Zhilong Liu <zlliu@suse.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170829002425.GA28904@ming.t460p>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Shaohua Li <shli@kernel.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hello.
 
-On Tue, Aug 29 2017, Zhilong Liu wrote:
+Re-tested with v4.13-rc7 + proposed patch and got the same result.
 
-> On 08/29/2017 11:12 AM, NeilBrown wrote:
->> On Tue, Aug 29 2017, Zhilong Liu wrote:
->>
->>> Hi, Neil;
->>>       Thanks for your pointing and sorry for the incorrect dmesg for la=
-st
->>> mail.
->>>
->>> Here update the pure steps and paste the dmesg.
->>>
->>> ENV:
->>> OS: 4.13-rc7 upstream
->>> linux-apta:~/mdadm-test # df -T /mnt/
->>> Filesystem     Type 1K-blocks     Used Available Use% Mounted on
->>> /dev/sda2      ext4  44248848 24416952  18778472  57% /
->>>
->>> Reproduce: 100%
->>>
->>> Steps:
->>> linux-apta:~/mdadm-test # ./mdadm -CR /dev/md0 -l1 -b /mnt/3 -n2 -x1
->>> /dev/loop[0-2] --force
->>> mdadm: Note: this array has metadata at the start and
->>>       may not be suitable as a boot device.  If you plan to
->>>       store '/boot' on this device please ensure that
->>>       your boot-loader understands md/v1.x metadata, or use
->>>       --metadata=3D0.90
->>> mdadm: Defaulting to version 1.2 metadata
->>> mdadm: array /dev/md0 started.
->>> linux-apta:~/mdadm-test # cat /proc/mdstat
->>> Personalities : [raid1]
->>> md0 : active raid1 loop2[2](S) loop1[1] loop0[0]
->>>         18944 blocks super 1.2 [2/2] [UU]
->>>         bitmap: 3/3 pages [12KB], 4KB chunk, file: /mnt/3
->>>
->>> unused devices: <none>
->>> linux-apta:~/mdadm-test # dmesg -c
->>> [  181.378209] md/raid1:md0: not clean -- starting background reconstru=
-ction
->>> [  181.378211] md/raid1:md0: active with 2 out of 2 mirrors
->>> [  181.379354] md0: detected capacity change from 0 to 19398656
->>> [  181.379773] md: resync of RAID array md0
->>> [  190.396162] md: md0: resync done.
->>>
->>> linux-apta:~/mdadm-test # ./mdadm --grow /dev/md0 --size 128
->>> Segmentation fault
->>> linux-apta:~/mdadm-test # cat /sys/block/md0/md/component_size
->>> 18944                         "here is incorrect also."
->>> linux-apta:~/mdadm-test # dmesg -c
->>> [  208.027505] ------------[ cut here ]------------
->>> [  208.027508] kernel BUG at drivers/md/bitmap.c:298!
->> Thanks.  Less confusing now.
->>
->> The problem is that when the bitmap is resized, new pages are allocated
->> to store the on-disk copy, but these are not read from the file, the
->> contents are set from the in-memory bitmap.
->> So read_page() isn't called and particularly
->>
->> 	bh =3D alloc_page_buffers(page, 1<<inode->i_blkbits, 0);
->>          ...
->> 	attach_page_buffers(page, bh);
->>
->> doesn't happen.
->>
->> Maybe something like this will work.
->> Can you test it?
->
-> Another panic happens when I built with the below patch.
->
-> Steps:
-> 1. patching the codes to bitmap.c
-> 2. rebuilt the kernel source code.
-> 3. reboot and test.
->
-> linux-apta:~/mdadm-test # ./mdadm -CR /dev/md0 -l1 -b /mnt/3 -n2 -x1=20
-> /dev/loop[0-2] --force
-> mdadm: Note: this array has metadata at the start and
->      may not be suitable as a boot device.  If you plan to
->      store '/boot' on this device please ensure that
->      your boot-loader understands md/v1.x metadata, or use
->      --metadata=3D0.90
-> mdadm: Defaulting to version 1.2 metadata
-> Segmentation fault
-> linux-apta:~/mdadm-test # dmesg -c
-> [   46.416567] md/raid1:md0: not clean -- starting background reconstruct=
-ion
-> [   46.416570] md/raid1:md0: active with 2 out of 2 mirrors
-> [   46.417003] ------------[ cut here ]------------
-> [   46.417004] kernel BUG at drivers/md/bitmap.c:371!
+Let me know if any additional testing is needed.
 
-Thanks.  I see what I missed. Please try this patch instead.
-
-NeilBrown
-
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index 40f3cd7eab0f..ca7633a81632 100644
-=2D-- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -368,12 +368,7 @@ static int read_page(struct file *file, unsigned long =
-index,
- 	pr_debug("read bitmap file (%dB @ %llu)\n", (int)PAGE_SIZE,
- 		 (unsigned long long)index << PAGE_SHIFT);
+=3D=3D=3D
+[   82.638148] INFO: task md0_raid10:193 blocked for more than 20 seconds.
+[   82.642804]       Not tainted 4.13.0-pf1 #1
+[   82.646998] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables=
 =20
-=2D	bh =3D alloc_page_buffers(page, 1<<inode->i_blkbits, 0);
-=2D	if (!bh) {
-=2D		ret =3D -ENOMEM;
-=2D		goto out;
-=2D	}
-=2D	attach_page_buffers(page, bh);
-+	bh =3D page_buffers(page);
- 	block =3D index << (PAGE_SHIFT - inode->i_blkbits);
- 	while (bh) {
- 		if (count =3D=3D 0)
-@@ -771,12 +766,18 @@ static inline struct page *filemap_get_page(struct bi=
-tmap_storage *store,
- }
+this message.
+[   82.649007] md0_raid10      D    0   193      2 0x00000000
+[   82.650799] Call Trace:
+[   82.652118]  __schedule+0x239/0x890
+[   82.653469]  schedule+0x3d/0x90
+[   82.654649]  md_super_wait+0x6e/0xa0 [md_mod]
+[   82.656186]  ? wait_woken+0x80/0x80
+[   82.657333]  md_update_sb.part.59+0x3df/0x840 [md_mod]
+[   82.659084]  ? percpu_ref_switch_to_percpu+0x36/0x40
+[   82.660477]  md_check_recovery+0x453/0x520 [md_mod]
+[   82.662125]  raid10d+0x62/0x1420 [raid10]
+[   82.663457]  ? __schedule+0x241/0x890
+[   82.664766]  ? schedule+0x3d/0x90
+[   82.665816]  ? schedule_timeout+0x208/0x390
+[   82.666785]  md_thread+0x120/0x160 [md_mod]
+[   82.668117]  ? md_thread+0x120/0x160 [md_mod]
+[   82.669487]  ? wait_woken+0x80/0x80
+[   82.670531]  kthread+0x125/0x140
+[   82.671602]  ? find_pers+0x70/0x70 [md_mod]
+[   82.672452]  ? kthread_create_on_node+0x70/0x70
+[   82.673844]  ret_from_fork+0x25/0x30
+[   82.674991] INFO: task dmcrypt_write:226 blocked for more than 20 second=
+s.
+[   82.678246]       Not tainted 4.13.0-pf1 #1
+[   82.679336] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables=
 =20
- static int bitmap_storage_alloc(struct bitmap_storage *store,
-=2D				unsigned long chunks, int with_super,
-+				unsigned long chunks,
-+				struct file *file,
-+				int with_super,
- 				int slot_number)
- {
- 	int pnum, offset =3D 0;
- 	unsigned long num_pages;
- 	unsigned long bytes;
-+	struct inode *inode =3D NULL;
-+
-+	if (file)
-+		inode =3D file_inode(file);
+this message.
+[   82.681175] dmcrypt_write   D    0   226      2 0x00000000
+[   82.682522] Call Trace:
+[   82.683104]  __schedule+0x239/0x890
+[   82.684099]  schedule+0x3d/0x90
+[   82.684754]  md_write_start+0xe3/0x270 [md_mod]
+[   82.685599]  ? wait_woken+0x80/0x80
+[   82.686273]  raid10_make_request+0x3f/0x140 [raid10]
+[   82.687258]  md_make_request+0xa2/0x290 [md_mod]
+[   82.688132]  ? _raw_spin_unlock_irq+0x10/0x30
+[   82.689660]  ? finish_task_switch+0x75/0x200
+[   82.690624]  generic_make_request+0x125/0x320
+[   82.691722]  dmcrypt_write+0x22d/0x250 [dm_crypt]
+[   82.693120]  ? dmcrypt_write+0x22d/0x250 [dm_crypt]
+[   82.694760]  ? wake_up_q+0x80/0x80
+[   82.695752]  kthread+0x125/0x140
+[   82.696831]  ? kthread+0x125/0x140
+[   82.697964]  ? crypt_iv_essiv_dtr+0x70/0x70 [dm_crypt]
+[   82.699340]  ? kthread_create_on_node+0x70/0x70
+[   82.700728]  ret_from_fork+0x25/0x30
+[   82.702378] INFO: task NetworkManager:432 blocked for more than 20 secon=
+ds.
+[   82.704022]       Not tainted 4.13.0-pf1 #1
+[   82.705264] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables=
 =20
- 	bytes =3D DIV_ROUND_UP(chunks, 8);
- 	if (with_super)
-@@ -801,15 +802,33 @@ static int bitmap_storage_alloc(struct bitmap_storage=
- *store,
- 		store->filemap[0] =3D store->sb_page;
- 		pnum =3D 1;
- 		store->sb_page->index =3D offset;
-+		if (inode) {
-+			struct buffer_head *bh;
-+			struct page *p =3D store->sb_page;
-+			bh =3D alloc_page_buffers(p, 1 << inode->i_blkbits, 0);
-+			if (bh)
-+				attach_page_buffers(p, bh);
-+			else
-+				return -ENOMEM;
-+		}
- 	}
+this message.
+[   82.709068] NetworkManager  D    0   432      1 0x00000000
+[   82.710189] Call Trace:
+[   82.711041]  __schedule+0x239/0x890
+[   82.712162]  schedule+0x3d/0x90
+[   82.713223]  io_schedule+0x16/0x40
+[   82.714324]  wait_on_page_bit_common+0xe7/0x170
+[   82.715644]  ? page_cache_tree_insert+0xc0/0xc0
+[   82.717008]  __filemap_fdatawait_range+0x10d/0x170
+[   82.718562]  ? __filemap_fdatawrite_range+0xc1/0x100
+[   82.720103]  ? __filemap_fdatawrite_range+0xcd/0x100
+[   82.721561]  file_write_and_wait_range+0x78/0xa0
+[   82.722839]  xfs_file_fsync+0x5f/0x210 [xfs]
+[   82.724085]  vfs_fsync_range+0x4b/0xb0
+[   82.725152]  do_fsync+0x3d/0x70
+[   82.726535]  SyS_fsync+0x10/0x20
+[   82.727953]  entry_SYSCALL_64_fastpath+0x1a/0xa5
+[   82.729196] RIP: 0033:0x7fcd816f6c8d
+[   82.730336] RSP: 002b:00007ffd4650d4d0 EFLAGS: 00000293 ORIG_RAX:=20
+000000000000004a
+[   82.732192] RAX: ffffffffffffffda RBX: 0000000000000013 RCX:=20
+00007fcd816f6c8d
+[   82.733922] RDX: 00007ffd4650d4f0 RSI: 00007ffd4650d4f0 RDI:=20
+0000000000000013
+[   82.735313] RBP: 000056436710ff00 R08: 0000000000000000 R09:=20
+00000000313d26e9
+[   82.738973] R10: 000000000000003d R11: 0000000000000293 R12:=20
+00007ffd4650d638
+[   82.740531] R13: 0000000000000001 R14: 0000000000000002 R15:=20
+00005643670eb1c0
+[   82.741869] INFO: task sync:676 blocked for more than 20 seconds.
+[   82.743116]       Not tainted 4.13.0-pf1 #1
+[   82.744286] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables=
 =20
- 	for ( ; pnum < num_pages; pnum++) {
-=2D		store->filemap[pnum] =3D alloc_page(GFP_KERNEL|__GFP_ZERO);
-=2D		if (!store->filemap[pnum]) {
-+		struct page *p =3D alloc_page(GFP_KERNEL|__GFP_ZERO);
-+		store->filemap[pnum] =3D p;
-+		if (!p) {
- 			store->file_pages =3D pnum;
- 			return -ENOMEM;
- 		}
-=2D		store->filemap[pnum]->index =3D pnum + offset;
-+		if (inode) {
-+			struct buffer_head *bh;
-+			bh =3D alloc_page_buffers(p, 1 << inode->i_blkbits, 0);
-+			if (bh)
-+				attach_page_buffers(p, bh);
-+			else
-+				return -ENOMEM;
-+		}
-+		p->index =3D pnum + offset;
- 	}
- 	store->file_pages =3D pnum;
-=20
-@@ -2091,7 +2110,7 @@ int bitmap_resize(struct bitmap *bitmap, sector_t blo=
-cks,
- 	chunks =3D DIV_ROUND_UP_SECTOR_T(blocks, 1 << chunkshift);
- 	memset(&store, 0, sizeof(store));
- 	if (bitmap->mddev->bitmap_info.offset || bitmap->mddev->bitmap_info.file)
-=2D		ret =3D bitmap_storage_alloc(&store, chunks,
-+		ret =3D bitmap_storage_alloc(&store, chunks, bitmap->mddev->bitmap_info.=
-file,
- 					   !bitmap->mddev->bitmap_info.external,
- 					   mddev_is_clustered(bitmap->mddev)
- 					   ? bitmap->cluster_slot : 0);
+this message.
+[   82.745935] sync            D    0   676    542 0x00000000
+[   82.747338] Call Trace:
+[   82.748281]  __schedule+0x239/0x890
+[   82.749421]  schedule+0x3d/0x90
+[   82.750458]  io_schedule+0x16/0x40
+[   82.751420]  wait_on_page_bit_common+0xe7/0x170
+[   82.752668]  ? page_cache_tree_insert+0xc0/0xc0
+[   82.753873]  __filemap_fdatawait_range+0x10d/0x170
+[   82.755153]  ? finish_wait+0x56/0x70
+[   82.756226]  filemap_fdatawait_keep_errors+0x27/0x50
+[   82.757568]  sync_inodes_sb+0x204/0x2a0
+[   82.758788]  ? SyS_tee+0x3d0/0x3d0
+[   82.759926]  sync_inodes_one_sb+0x16/0x20
+[   82.761152]  iterate_supers+0x94/0x100
+[   82.762419]  sys_sync+0x44/0xb0
+[   82.763499]  entry_SYSCALL_64_fastpath+0x1a/0xa5
+[   82.764495] RIP: 0033:0x7fd85d7941d7
+[   82.765736] RSP: 002b:00007ffe648d4f48 EFLAGS: 00000206 ORIG_RAX:=20
+00000000000000a2
+[   82.769068] RAX: ffffffffffffffda RBX: 0000000000000006 RCX:=20
+00007fd85d7941d7
+[   82.770663] RDX: 00007fd85da50e01 RSI: 0000000000000000 RDI:=20
+00007fd85d8197d3
+[   82.772211] RBP: 0000000000002710 R08: 0000000000000000 R09:=20
+0000000000000000
+[   82.774138] R10: 000000000000082c R11: 0000000000000206 R12:=20
+00007fd85da4ead8
+[   82.776430] R13: 0000000000000030 R14: 0000000000c6cfd0 R15:=20
+00007fd85da4ea80
+=3D=3D=3D
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlmlRjkACgkQOeye3VZi
-gbkoEg/+Oxlc4naZRlRh1Gb+06RO2DQzQoMK1ii2gc5li44Hr446n0Uae9L1YAvQ
-KiuQx5L+JUJQI6HAOzxgnhYVRssE4NWL6ihiALB2TMPQzBpOjjjoaIQSxwCEZ8Ex
-yonFtrScFLOEa/9e0QjhhAnZ6p0RFJ39+iWQJ8zfiOGrG7Vs/jfpfcBJuJp6agCB
-OqCW2NU7edK9WYSefgnv05PUOV95cPOKZM3MVNsHMk4YBJ9YhptH0Lag/uEiufbr
-9Ted1O0ocfgUGMpLA0fFKbsNiZGzFBH0a0AuIMUiHfuxxi5aNv+QRMy+EYWUD2lE
-uDdEMbliu7PSnwojgx4lPLifErDgYlNDkE7MneemHoeJPA8YVCEipv8O5sgOzhS7
-sE+yc1457awKpefKgabm2GjIXfh32lu8OE+/MJ84PAlZ5kbhjtycFQdY5x7WurTx
-mOhSA9i7XrSsHjy76KjgTMmr5pCPPJsv4c1a8JFiU/yKps+HjxmPyUw27tpZJmeq
-o7RMxrZKhJhHWpeKi8s2TcckW1zXTSwtKE7d2zKcJV9vG4YySAbk2K/7yLkGKgiF
-edw1HFtqF/V+tvImJs656CGhBGxwNQIR0i8/vGs6W465nq79VViEVi5GahpPkpqB
-5Dnd6+7HbWzmX/u5xHnW2ZGNbjwct0K85GIfIf2sZ9fiy3LVlXY=
-=qY9u
------END PGP SIGNATURE-----
---=-=-=--
+On =C3=BAter=C3=BD 29. srpna 2017 2:24:25 CEST Ming Lei wrote:
+> On Mon, Aug 28, 2017 at 08:22:26PM +0200, Oleksandr Natalenko wrote:
+> > Hi.
+> >=20
+> > On pond=C4=9Bl=C3=AD 28. srpna 2017 14:58:28 CEST Ming Lei wrote:
+> > > Could you verify if the following patch fixes your issue?
+> > > =E2=80=A6SNIP=E2=80=A6
+> >=20
+> > I've applied it to v4.12.9 and rechecked =E2=80=94 the issue is still t=
+here,
+> > unfortunately. Stacktrace is the same as before.
+> >=20
+> > Were you able to reproduce it in a VM?
+>=20
+> Yes, I can.
+>=20
+> > Should I re-check it with v4.13-rc7?
+> >=20
+> > Any other suggestions?
+>=20
+> Please test it with v4.13-rc7 first.
