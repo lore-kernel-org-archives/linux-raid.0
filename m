@@ -1,100 +1,104 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: I/O hangs after resuming from suspend-to-ram
-Date: Wed, 30 Aug 2017 16:06:29 +0800
-Message-ID: <20170830080628.GA2402@ming.t460p>
-References: <3926917.BCSovyVWdL@natalenko.name>
- <1615033.Xza1AIGLzP@natalenko.name>
- <20170829002425.GA28904@ming.t460p>
- <2329566.kid2YYBOAQ@natalenko.name>
- <20170830021537.GA4897@ming.t460p>
- <20170830051725.GA5840@ming.t460p>
- <692537117e26fe71b5e07cd8c86b38e4@natalenko.name>
+From: Xiao Ni <xni@redhat.com>
+Subject: Re: [PATCH -v4 1/1] mdadm/test: Add one test case for raid5 reshape
+Date: Wed, 30 Aug 2017 04:54:10 -0400 (EDT)
+Message-ID: <947493769.3457641.1504083250947.JavaMail.zimbra@redhat.com>
+References: <1500537533-8470-1-git-send-email-xni@redhat.com> <b2d5bab8-94a5-9045-5734-b27e27c4f1fd@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <692537117e26fe71b5e07cd8c86b38e4@natalenko.name>
-Sender: linux-block-owner@vger.kernel.org
-To: oleksandr@natalenko.name
-Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Shaohua Li <shli@kernel.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <b2d5bab8-94a5-9045-5734-b27e27c4f1fd@gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Jes Sorensen <jes.sorensen@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
 
-On Wed, Aug 30, 2017 at 08:15:02AM +0200, oleksandr@natalenko.name wrote:
-> Hello.
+
+----- Original Message -----
+> From: "Jes Sorensen" <jes.sorensen@gmail.com>
+> To: "Xiao Ni" <xni@redhat.com>, linux-raid@vger.kernel.org
+> Sent: Tuesday, August 29, 2017 5:19:22 AM
+> Subject: Re: [PATCH -v4 1/1] mdadm/test: Add one test case for raid5 reshape
 > 
-> Addressing your questions below.
+> On 07/20/2017 03:58 AM, Xiao Ni wrote:
+> > This case tries to allow raid5 reshape to use backwards direction.
+> > It changes chunksize after reshape and stops the raid. Then starts
+> > the raid again.
+> > 
+> > Signed-off-by: Xiao Ni <xni@redhat.com>
+> > Suggested-by:  Jes Sorensen <jes.sorensen@gmail.com>
+> > Suggested-by:  Zhilong Liu <zlliu@suse.com>
+> > Suggested-by:  Paul Menzel <pmenzel@molgen.mpg.de>
+> > ---
+> >   test           |  7 +++++++
+> >   tests/02r5grow | 17 +++++++++++++++++
+> >   2 files changed, 24 insertions(+)
+> > 
+> > diff --git a/test b/test
+> > index 87e2df2..98e2981 100755
+> > --- a/test
+> > +++ b/test
+> > @@ -320,6 +320,13 @@ check() {
+> >   		grep -sq "inactive" /proc/mdstat ||
+> >   			die "array is not inactive!"
+> >   		;;
+> > +	# It only can be used when there is only one raid
+> > +	chunk )
+> > +		chunk_size=`awk -F',' '/chunk/{print $2}' /proc/mdstat | awk -F'[a-z]'
+> > '{print $1}'`
+> > +		if [ "$chunk_size" -ne "$2" ] ; then
+> > +			die "chunksize should be $2, but it's $chunk_size"
+> > +		fi
+> > +		;;
+> >   	* )
+> >   		die "unknown check $1"
+> >   		;;
+> > diff --git a/tests/02r5grow b/tests/02r5grow
+> > index 386e82e..ea3101b 100644
+> > --- a/tests/02r5grow
+> > +++ b/tests/02r5grow
+> > @@ -34,3 +34,20 @@ check nosync
+> >   sh tests/testdev $md0 3 $[size/2] 128
+> >   
+> >   mdadm -S $md0
+> > +
+> > +# create a raid5 array and change the chunk
+> > +mdadm -CR $md0 --level raid5 --metadata=1.1 --chunk=32 --raid-disks 3
+> > --size $[size/2] $dev1 $dev2 $dev3
+> > +check wait
+> > +check state UUU
+> > +check chunk 32
+> > +
+> > +mdadm $md0 --grow --chunk=64
+> > +check reshape
+> > +check wait
+> > +check chunk 64
+> > +
+> > +mdadm -S $md0
+> > +mdadm -As
+> > +check state UUU
+> > +check chunk 64
+> > +mdadm -Ss
 > 
-> > Can't reproduce even with putting dmcypt on raid10 after applying my
-> > patch.
+> Hi Xiao,
 > 
-> Just a side note, that dm-crypt is not necessary here — I am able to trigger
-> hang with RAID10 and LVM only.
+> I don't like the last part running 'mdadm -As' this will auto-assemble
+> any array in the system and you can get a false test failure because it
+> will assume the first assembled array is the one you are looking for.
+
+Hi Jes
+
+Is it ok to change mdadm -As to mdadm -A $md0 $dev1 $dev2 $dev3
+
+Regards
+Xiao
 > 
-> > BTW, could you share us which blk-mq scheduler you are using on sata?
+> Cheers,
+> Jes
 > 
-> Okay, now it makes sense. Previously, without your patch I was able to
-> reproduce the issue with "mq-deadline", "bfq" and "none". Now, I cannot
-> trigger it with "none" set, but "mq-deadline" still hangs for me. Does this
-> mean each scheduler should be modified separately?
-
-No, it shouldn't.
-
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> > Could you apply the following debug patch and provide the dmesg log
-> > after running the commands below?
-> 
-> Is it still relevant since I confirm issue to be fixed with "none"?
-
-Please try the following patch and previous patch together and see
-if they make a difference:
-
-
-From bc5626b4b65c7ff26567e75f42584c2c43ffe7c1 Mon Sep 17 00:00:00 2001
-From: Ming Lei <ming.lei@redhat.com>
-Date: Wed, 30 Aug 2017 15:53:01 +0800
-Subject: [PATCH] blk-mq: add requests in the tail of hctx->dispatch
-
-So that we can allow to insert request at the head
-of hctx->dispatch.
-
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- block/blk-mq-sched.c | 2 +-
- block/blk-mq.c       | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-index eeeea026fb47..b40dd063d61f 100644
---- a/block/blk-mq-sched.c
-+++ b/block/blk-mq-sched.c
-@@ -272,7 +272,7 @@ static bool blk_mq_sched_bypass_insert(struct blk_mq_hw_ctx *hctx,
- 	 * the dispatch list.
- 	 */
- 	spin_lock(&hctx->lock);
--	list_add(&rq->queuelist, &hctx->dispatch);
-+	list_add_tail(&rq->queuelist, &hctx->dispatch);
- 	spin_unlock(&hctx->lock);
- 	return true;
- }
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 4603b115e234..fed3d0c16266 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -1067,7 +1067,7 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list)
- 		blk_mq_put_driver_tag(rq);
- 
- 		spin_lock(&hctx->lock);
--		list_splice_init(list, &hctx->dispatch);
-+		list_splice_tail_init(list, &hctx->dispatch);
- 		spin_unlock(&hctx->lock);
- 
- 		/*
--- 
-2.9.5
-
-
--- 
-Ming
