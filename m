@@ -1,121 +1,34 @@
-From: =?UTF-8?q?Micha=C5=82=20Miros=C5=82aw?= <mirq-linux@rere.qmqm.pl>
-Subject: [PATCH] md: allow changing set_name of running array
-Date: Wed, 30 Aug 2017 00:02:45 +0200
-Message-ID: <429c2b1c84c44b0c09ea7aa8dfa86846885441f7.1504044125.git.mirq-linux@rere.qmqm.pl>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: I/O hangs after resuming from suspend-to-ram
+Date: Wed, 30 Aug 2017 10:15:38 +0800
+Message-ID: <20170830021537.GA4897@ming.t460p>
+References: <3926917.BCSovyVWdL@natalenko.name>
+ <1615033.Xza1AIGLzP@natalenko.name>
+ <20170829002425.GA28904@ming.t460p>
+ <2329566.kid2YYBOAQ@natalenko.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <2329566.kid2YYBOAQ@natalenko.name>
+Sender: linux-block-owner@vger.kernel.org
+To: Oleksandr Natalenko <oleksandr@natalenko.name>
+Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Shaohua Li <shli@kernel.org>
 List-Id: linux-raid.ids
 
-Allow changing active array's set_name. This is the only way to
-safely update superblock on an array which carries a mounted fs.
+Hi,
 
-Signed-off-by: Michał Mirosław <mirq-linux@rere.qmqm.pl>
----
- drivers/md/md.c | 79 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 79 insertions(+)
+On Tue, Aug 29, 2017 at 05:52:42PM +0200, Oleksandr Natalenko wrote:
+> Hello.
+> 
+> Re-tested with v4.13-rc7 + proposed patch and got the same result.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index caca5d689cdc..59aa10669bef 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5051,6 +5051,84 @@ static struct md_sysfs_entry md_consistency_policy =
- __ATTR(consistency_policy, S_IRUGO | S_IWUSR, consistency_policy_show,
-        consistency_policy_store);
- 
-+static ssize_t
-+set_name_show(struct mddev *mddev, char *page)
-+{
-+	struct mdp_superblock_1 *sb;
-+	struct md_rdev *rdev;
-+	int err;
-+
-+	err = mddev_lock(mddev);
-+	if (err)
-+		return err;
-+
-+	/* only version-1 superblocks carry a MD set's name */
-+	err = -ENXIO;
-+	if (mddev->major_version != 1)
-+		goto out_unlock;
-+
-+	err = -EINVAL;
-+	rdev_for_each(rdev, mddev) {
-+		if (WARN_ON(!rdev->sb_loaded))
-+			continue;
-+
-+		sb = page_address(rdev->sb_page);
-+		err = sprintf(page, "%.32s\n", sb->set_name);
-+		break;
-+	}
-+
-+out_unlock:
-+	mddev_unlock(mddev);
-+	return err;
-+}
-+
-+static ssize_t
-+set_name_store(struct mddev *mddev, const char *buf, size_t buflen)
-+{
-+	struct mdp_superblock_1 *sb;
-+	struct md_rdev *rdev;
-+	size_t len = buflen;
-+	int err;
-+
-+	if (len && buf[len - 1] == '\n')
-+		--len;
-+
-+	if (len > sizeof(sb->set_name))
-+		return -ENOSPC;
-+
-+	err = mddev_lock(mddev);
-+	if (err)
-+		return err;
-+
-+	/* only version-1 superblocks carry a MD set's name */
-+	err = -ENXIO;
-+	if (mddev->major_version != 1)
-+		goto out_unlock;
-+
-+	err = -EROFS;
-+	if (mddev->ro)
-+		goto out_unlock;
-+
-+	rdev_for_each(rdev, mddev) {
-+		if (WARN_ON(!rdev->sb_loaded))
-+			continue;
-+
-+		sb = page_address(rdev->sb_page);
-+		memcpy(sb->set_name, buf, len);
-+		memset(&sb->set_name[len], 0, sizeof(sb->set_name) - len);
-+	}
-+
-+	md_update_sb(mddev, 1);
-+	err = buflen;
-+
-+out_unlock:
-+	mddev_unlock(mddev);
-+	return err;
-+}
-+
-+static struct md_sysfs_entry md_set_name =
-+__ATTR(set_name, S_IRUGO | S_IWUSR, set_name_show, set_name_store);
-+
- static struct attribute *md_default_attrs[] = {
- 	&md_level.attr,
- 	&md_layout.attr,
-@@ -5067,6 +5145,7 @@ static struct attribute *md_default_attrs[] = {
- 	&md_array_size.attr,
- 	&max_corr_read_errors.attr,
- 	&md_consistency_policy.attr,
-+	&md_set_name.attr,
- 	NULL,
- };
- 
+Maybe there is another issue, I didn't use dmcrypt on raid10, will
+test in your way to see if I can reproduce it.
+
+BTW, could you share us which blk-mq scheduler you are using on sata?
+The patch I posted should address one issue on none scheduler.
+
+
 -- 
-2.11.0
-
+Ming
