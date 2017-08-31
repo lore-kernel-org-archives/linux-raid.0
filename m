@@ -1,26 +1,47 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: Re: [PATCH 2/2] mdadm: remove journal with "remove-journal"
-Date: Thu, 31 Aug 2017 10:51:01 -0700
-Message-ID: <20170831175101.2965834-1-songliubraving@fb.com>
-References: <63717f4b-5b81-7290-5265-087713f0bd45@nuclearwinter.com>
+From: Robert L Mathews <lists@tigertech.com>
+Subject: Re: Filesystem corruption on RAID1
+Date: Thu, 31 Aug 2017 15:55:35 -0700
+Message-ID: <dbc04880-65f9-edd8-fbd4-f70d9549e06e@tigertech.com>
+References: <c2fe6593-c806-ab9f-fcff-8327c013237b@assyoma.it>
+ <20170713214856.4a5c8778@natsu> <592f19bf608e9a959f9445f7f25c5dad@assyoma.it>
+ <d1255092-73f5-1ca4-0e68-69ff37631a26@thelounge.net>
+ <cd37f90b86eb67be4c893b7fdf112692@assyoma.it>
+ <770b09d3-cff6-b6b2-0a51-5d11e8bac7e9@thelounge.net>
+ <9eea45ddc0f80f4f4e238b5c2527a1fa@assyoma.it>
+ <f01b4649-df39-9835-728d-545cbd45976d@assyoma.it>
+ <CAAMCDefXYdDKrFjEgeS8JAYt1GNP0-fL1chEXrGqxY8=xEf4Cw@mail.gmail.com>
+ <7ca98351facca6e3668d3271422e1376@assyoma.it>
+ <5995D377.9080100@youngman.org.uk>
+ <83f4572f09e7fbab9d4e6de4a5257232@assyoma.it>
+ <59961DD7.3060208@youngman.org.uk>
+ <784bec391a00b9e074744f31901df636@assyoma.it>
+ <CAAMCDefNRMuTwyXn_=3v_EWHwkjy3mhod1dLw3RQpjU=9VHNJQ@mail.gmail.com>
+ <a93cf0cc1d39c30f585eb53ed36aa4c0@assyoma.it>
+ <alpine.DEB.2.20.1708200907440.3655@uplift.swm.pp.se>
+ <7d0af770699948fb0ecb66185145be05@assyoma.it>
+ <alpine.DEB.2.20.1708201241400.3655@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <63717f4b-5b81-7290-5265-087713f0bd45@nuclearwinter.com>
+In-Reply-To: <alpine.DEB.2.20.1708201241400.3655@uplift.swm.pp.se>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@kernel.org, jes.sorensen@gmail.com, llowrey@nuclearwinter.com, Song Liu <songliubraving@fb.com>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Larkin,
+On 8/20/17 3:43 AM, Mikael Abrahamsson wrote:
 
-We didn't ship this patch. Instead, we decide to use sysfs entry
+> Indeed, but as far as I know there is nothing md can do about this. What
+> md could do about it is at least present a consistent view of data to
+> fsck (which for raid1 would be read all stripes and issue "repair" if
+> they don't match). Yes, this might indeed cause corruption but at least
+> it would be consistent and visible.
 
-/sys/block/mdXXX/md/consistency_policy
+If you set all disks except one as "write-mostly", won't mdadm give you
+a consistent view of it because it only reads from a single disk?
 
-You can find the patch at:
+(Sorry for the delayed reply to a two-week-old thread; I was on vacation.)
 
-https://marc.info/?l=linux-raid&m=149063896208043
-
-Thanks,
-Song
+-- 
+Robert L Mathews, Tiger Technologies, http://www.tigertech.net/
