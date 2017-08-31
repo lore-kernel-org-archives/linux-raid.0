@@ -1,47 +1,105 @@
-From: Robert L Mathews <lists@tigertech.com>
-Subject: Re: Filesystem corruption on RAID1
-Date: Thu, 31 Aug 2017 15:55:35 -0700
-Message-ID: <dbc04880-65f9-edd8-fbd4-f70d9549e06e@tigertech.com>
-References: <c2fe6593-c806-ab9f-fcff-8327c013237b@assyoma.it>
- <20170713214856.4a5c8778@natsu> <592f19bf608e9a959f9445f7f25c5dad@assyoma.it>
- <d1255092-73f5-1ca4-0e68-69ff37631a26@thelounge.net>
- <cd37f90b86eb67be4c893b7fdf112692@assyoma.it>
- <770b09d3-cff6-b6b2-0a51-5d11e8bac7e9@thelounge.net>
- <9eea45ddc0f80f4f4e238b5c2527a1fa@assyoma.it>
- <f01b4649-df39-9835-728d-545cbd45976d@assyoma.it>
- <CAAMCDefXYdDKrFjEgeS8JAYt1GNP0-fL1chEXrGqxY8=xEf4Cw@mail.gmail.com>
- <7ca98351facca6e3668d3271422e1376@assyoma.it>
- <5995D377.9080100@youngman.org.uk>
- <83f4572f09e7fbab9d4e6de4a5257232@assyoma.it>
- <59961DD7.3060208@youngman.org.uk>
- <784bec391a00b9e074744f31901df636@assyoma.it>
- <CAAMCDefNRMuTwyXn_=3v_EWHwkjy3mhod1dLw3RQpjU=9VHNJQ@mail.gmail.com>
- <a93cf0cc1d39c30f585eb53ed36aa4c0@assyoma.it>
- <alpine.DEB.2.20.1708200907440.3655@uplift.swm.pp.se>
- <7d0af770699948fb0ecb66185145be05@assyoma.it>
- <alpine.DEB.2.20.1708201241400.3655@uplift.swm.pp.se>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH] mdadm: handle super == NULL case in avail_size1
+Date: Fri, 01 Sep 2017 09:36:23 +1000
+Message-ID: <87ziafe2dk.fsf@notabene.neil.brown.name>
+References: <20170831173751.2910909-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.20.1708201241400.3655@uplift.swm.pp.se>
-Content-Language: en-US
+In-Reply-To: <20170831173751.2910909-1-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: Song Liu <songliubraving@fb.com>, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com
 List-Id: linux-raid.ids
 
-On 8/20/17 3:43 AM, Mikael Abrahamsson wrote:
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> Indeed, but as far as I know there is nothing md can do about this. What
-> md could do about it is at least present a consistent view of data to
-> fsck (which for raid1 would be read all stripes and issue "repair" if
-> they don't match). Yes, this might indeed cause corruption but at least
-> it would be consistent and visible.
+On Thu, Aug 31 2017, Song Liu wrote:
 
-If you set all disks except one as "write-mostly", won't mdadm give you
-a consistent view of it because it only reads from a single disk?
+> Summary:
+>
+> Handling super =3D=3D NULL case in avail_size1() was removed a while
+> back. However, it is still useful in the following stack:
+>
+> avail_size1() with st->sb =3D=3D NULL
+> array_try_spare() with st =3D=3D NULL
+> try_spare() with st =3D=3D NULL
+> Incremental() with st =3D=3D NULL
 
-(Sorry for the delayed reply to a two-week-old thread; I was on vacation.)
+I assume you mean "st->sb =3D=3D NULL" in each case here?  What you have
+written doesn't make sense.
 
--- 
-Robert L Mathews, Tiger Technologies, http://www.tigertech.net/
+
+>
+> This patch adds the handling of super =3D=3D NULL back to avail_size1().
+
+I doubt this is the best thing to do.
+If we don't have st->sb, calling avail_size doesn't make any sense.
+Maybe we should be calling validate_geometry.
+
+NeilBrown
+
+
+>
+> Signed-off-by: Song Liu <songliubraving@fb.com>
+> ---
+>  super1.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+>
+> diff --git a/super1.c b/super1.c
+> index f6a1045..5e8d967 100644
+> --- a/super1.c
+> +++ b/super1.c
+> @@ -2340,7 +2340,9 @@ static __u64 avail_size1(struct supertype *st, __u6=
+4 devsize,
+>  	if (devsize < 24)
+>  		return 0;
+>=20=20
+> -	if (__le32_to_cpu(super->feature_map) & MD_FEATURE_BITMAP_OFFSET) {
+> +	if (!super)
+> +		bmspace =3D choose_bm_space(devsize);
+> +	else if (__le32_to_cpu(super->feature_map) & MD_FEATURE_BITMAP_OFFSET) {
+>  		/* hot-add. allow for actual size of bitmap */
+>  		struct bitmap_super_s *bsb;
+>  		bsb =3D (struct bitmap_super_s *)(((char*)super)+MAX_SB_SIZE);
+> @@ -2350,7 +2352,7 @@ static __u64 avail_size1(struct supertype *st, __u6=
+4 devsize,
+>  	}
+>=20=20
+>  	/* Allow space for bad block log */
+> -	if (super->bblog_size)
+> +	if (super && super->bblog_size)
+>  		bbspace =3D __le16_to_cpu(super->bblog_size);
+>=20=20
+>  	if (st->minor_version < 0)
+> --=20
+> 2.9.5
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlmonXgACgkQOeye3VZi
+gblI2Q//Scu1V1ElHY+MdU0UESqB3f3letMbJKDIazey1obYNwDk0myx3N1KZcLs
+4iwPSP0IOsERHwtlr/4wpQx64QMsFWXYGofsmHYFCb3KjisxdS+gV64Dgfr9LOkB
+yH7kLT2NDwXFC7u4XxVRSCJCeO9WwzTQPE4bcNRoykgXdjhYOiANvmaJ/gmHPEBf
+5c/dxTcyvP07dKvsZytp8mMXBW9gLRphPMNJRTTnVhUFTYTs2a+Luc2ds+QslCrW
+/hB//z65/2Br7wdsTIGXDr+fv2vs/3jMmusUzLiW+T/vfeIIK4YQ0x441W74YfMn
+MKLWoD3xkT1eTEJkzdokDKRVWC5EEvdJsV78vPPZA6UZlIfNpv0MT4GGbItpPnfM
+CT90vrzIIwq10X+yvNWlwkyNTkLbQyKutCcLjIId8OfSjHIuHzNmn9vjlra9jWwc
+xWGFVNQTkTgR7NSZlJoRiqBB/iwglk/aPGwYLPe83No/OZm4fbKnEgG3BMl8aJWA
+E4nZ8fNCadWZk75u6goOOp4o/Sw8dyZ28oEMXSKjhApMXVDq1v3i9IzBRSHQyWYk
++kXCC/SkfupfRj83vUOtz85jimnd0do7+0D+BWcR0dZ/6PFNx7U+dJFSiaDt/dYl
+9mwjsox/vxf9+4vhtX56v5LlfPykSfRrBPdd2RxuSoETG1q4BmQ=
+=WbN5
+-----END PGP SIGNATURE-----
+--=-=-=--
