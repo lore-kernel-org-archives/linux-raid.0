@@ -1,102 +1,181 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: report a bug that panic when grow size for external bitmap
-Date: Thu, 31 Aug 2017 13:30:31 +1000
-Message-ID: <87efrsfm7c.fsf@notabene.neil.brown.name>
-References: <ad8c69c7-f1e0-b6ab-dc87-a81aa7bca391@suse.com> <87y3q3gq8g.fsf@notabene.neil.brown.name> <6eaf97d4-bd8c-e33c-a9c7-37d0fe2086ce@suse.com> <87mv6jgj8z.fsf@notabene.neil.brown.name> <ba801ebe-9c0c-d911-2b18-936495fe0ed3@suse.com> <87k21mhcqw.fsf@notabene.neil.brown.name> <73429dce-a22d-149e-656a-13af228c093f@suse.com> <87r2vsfuom.fsf@notabene.neil.brown.name> <2d737c2f-69f4-672f-2b7c-4a279f70c3c3@suse.com>
+From: Xiao Ni <xni@redhat.com>
+Subject: Re: The dev node can't be released at once after stopping raid
+Date: Wed, 30 Aug 2017 23:55:17 -0400 (EDT)
+Message-ID: <1941784023.3852671.1504151717389.JavaMail.zimbra@redhat.com>
+References: <1159964415.16461871.1496288839399.JavaMail.zimbra@redhat.com> <43bca632-9d77-2063-603c-6dcf47f3d250@suse.com> <1471667815.16472496.1496296238179.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2d737c2f-69f4-672f-2b7c-4a279f70c3c3@suse.com>
+In-Reply-To: <1471667815.16472496.1496296238179.JavaMail.zimbra@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Zhilong Liu <zlliu@suse.com>
+To: neilb@suse.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hi Neil
 
-On Thu, Aug 31 2017, Zhilong Liu wrote:
+I have searched in history emails and there have many topics like this. Sorry for talking
+about this again. But it looks like the situation I encountered is different. There is 1 second
+window between stop the raid device and delete the node /dev/md0. The /dev/md0 node can be
+removed successfully after 1 second. 
 
-> On 08/31/2017 08:27 AM, NeilBrown wrote:
->> On Wed, Aug 30 2017, Zhilong Liu wrote:
->>
->>> On 08/29/2017 06:47 PM, NeilBrown wrote:
->>>> Thanks.  I see what I missed. Please try this patch instead.
->>> Hi, Neil;
->>>       I have tested the following patch, I still got the call-trace aft=
-er
->>> I built with it.
->>> If you need other infos, I would append.
->>
->> Thanks for testing.
->> I looked more completely and I think it is easiest just to disable the
->> functionality rather than try to fix it.
->> Resizing the file in the kernel is extra complexity that I don't
->> want to get in to.
->> We could adjust the bitmap chunk size so that the file doesn't
->> need to grow, but it started getting more complicated than I really
->> wanted to deal with.
->> If there is anyone actually using file-backed bitmaps who wants to
->> be able to resize the array without removing the bitmap first, then
->> we can look at the problem again.  For now I've sent a patch which
->> just returns an error instead of crashing when someone tries to resize
->> an array with a file-backed bitmap.
->
-> Hi, Neil;
->      Shall update the "SIZE CHANGES" under "GROW MODE" of man-page for
-> resize like following after kernel patch merged?
+There is no process that open the /dev/md0 after mdadm -S /dev/md0: 
 
-Good idea, but it isn't just "--grow --size".  It is anything that
-changes the size of the array, which includes changing the number of
-devices in a RAID5 etc.  So a more general statement would be better.
+mdadm -CR /dev/md0 -l1 -n2 /dev/loop0 /dev/loop1 --assume-clean
+dmesg:
+[36416.860525] Opened by mdadm, pid is 3523
+[36416.984160] md/raid1:md0: active with 2 out of 2 mirrors
+[36416.984181] md0: detected capacity change from 0 to 523239424
+[36416.984219] Released by mdadm, pid is 3523
+[36416.984228] remove_and_add_spares
+[36416.991588] Opened by mdadm, pid is 3541
+[36416.997183] Released by mdadm, pid is 3541
+[36417.001376] Opened by systemd-udevd, pid is 3525
+[36417.007128] Released by systemd-udevd, pid is 3525
 
-NeilBrown
+udev:
+KERNEL[36419.830817] add      /devices/virtual/bdi/9:0 (bdi)
+KERNEL[36419.831045] add      /devices/virtual/block/md0 (block)
+UDEV  [36419.832911] add      /devices/virtual/bdi/9:0 (bdi)
+UDEV  [36419.836380] add      /devices/virtual/block/md0 (block)
+KERNEL[36419.877705] change   /devices/virtual/block/loop0 (block)
+KERNEL[36419.878057] change   /devices/virtual/block/loop0 (block)
+KERNEL[36419.926761] change   /devices/virtual/block/loop1 (block)
+KERNEL[36419.927015] change   /devices/virtual/block/loop1 (block)
+UDEV  [36419.953112] change   /devices/virtual/block/loop0 (block)
+UDEV  [36419.953141] change   /devices/virtual/block/loop1 (block)
+KERNEL[36419.954765] change   /devices/virtual/block/md0 (block)
+UDEV  [36419.955973] change   /devices/virtual/block/loop0 (block)
+UDEV  [36419.962799] change   /devices/virtual/block/loop1 (block)
+UDEV  [36419.982934] change   /devices/virtual/block/md0 (block)
 
->
-> Thanks,
-> -Zhilong
->
-> diff --git a/mdadm.8.in b/mdadm.8.in
-> index e0747fb..f0fd1fc 100644
-> --- a/mdadm.8.in
-> +++ b/mdadm.8.in
-> @@ -2758,6 +2758,11 @@ Also the size of an array cannot be changed while=
-=20
-> it has an active
->   bitmap.  If an array has a bitmap, it must be removed before the size
->   can be changed. Once the change is complete a new bitmap can be created.
->
-> +.PP
-> +Note:
-> +.B "--grow --size"
-> +is not yet supported for external file bitmap.
-> +
->   .SS RAID\-DEVICES CHANGES
->
->   A RAID1 array can work with any number of devices from 1 upwards
->
->> Thanks,
->> NeilBrown
+mdadm -S /dev/md0
+dmesg:
+[36493.068054] Opened by mdadm, pid is 3552
+[36493.072051] Released by mdadm, pid is 3552
+[36493.076123] Opened by mdadm, pid is 3552
+[36493.080073] md0: detected capacity change from 523239424 to 0
+[36493.080077] md: md0 stopped.
+[36493.273011] Released by mdadm, pid is 3552
+udev:
+KERNEL[36496.300219] remove   /devices/virtual/bdi/9:0 (bdi)
+KERNEL[36496.300335] remove   /devices/virtual/block/md0 (block)
+UDEV  [36496.300736] remove   /devices/virtual/bdi/9:0 (bdi)
+UDEV  [36496.301812] remove   /devices/virtual/block/md0 (block)
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+There are only REMOVE events during command mdadm -S /dev/md0.
 
------BEGIN PGP SIGNATURE-----
+I tried to create a lvm and remove it to check whether lvm has this problem or not. 
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlmngtkACgkQOeye3VZi
-gbmuUQ/9Fi91g2TuhW94+TfRvhlobyG2fbukG9fW4PLp2NNa5kEOz+V01uOtPXJg
-yyC1yCGRdUH2usGAshSOO/i0qxD5K0v2xBOY1GAt5ZvkaJXXV5qU515kxquG6ZDx
-dfPao+65NiUkgiRlva4DJz1x/YaEYqNhQfBy2sjPyGJiP6ujzcIa82Pj56TAAtzO
-kRQv3dvbr+KL3HJHcuPaT3CB4c3zfKG038V22g8GScSYrOQpsThvwhjkwAQ03mJ5
-oF325Zk9g7qtouSKIUs0fQmLVMzv0ff3F4qI21ZBmv/ifofZOwzw3N1AELlj0Ih2
-d/g1jGR+MqLY/8gMA558tpfJY7wl9KKviOffwrj8LeZK+E7q55GJJbtQvpOgVttK
-LBQH+zDHQG3QKxUlYBzdUx4eBfWPF7Sl8xDxGY0OGiuoEBFvrn3k7C37GefXRBiU
-Er0fUpOpPOdb02c1UnJOi+/cD3BJj82hLnS7WFfAE7acJUqHXbAxcwNRIYAikRht
-1AipXyWyV+axE5KWT0xW46Ban0Vp+NPGYvIAO32bMVm7Zq6zFd/CUK3G34hDTWM2
-nHG3bX0p5XaZTyy3tzAvotakv74dZCMMUbp8c1XiInLqZxlurI1baYef9EEQtJqf
-DtPrSpYVSDklSPrMIuk1DArPxSF6519aBODnO/ieTB30TsCjLGY=
-=TyWJ
------END PGP SIGNATURE-----
---=-=-=--
+pvcreate /dev/md0 
+vgcreate vg /dev/md0 
+lvcreate -L 100M -n test vg
+lvremove vg/test -y
+ls /dev/mapper/vg-test
+ls /dev/dm-3
+
+The node /dev/mapper/vg-test and /dev/dm-3 can be removed in time. There is no time
+window. So it looks like it's a problem of md. Could you give some suggestions about
+this? What should I do next? 
+
+If it's not a bug, why there is a 1 second window?
+
+Best Regards
+Xiao
+
+----- Original Message -----
+> From: "Xiao Ni" <xni@redhat.com>
+> To: "Zhilong Liu" <zlliu@suse.com>
+> Cc: linux-raid@vger.kernel.org
+> Sent: Thursday, June 1, 2017 1:50:38 PM
+> Subject: Re: The dev node can't be released at once after stopping raid
+> 
+> 
+> 
+> ----- Original Message -----
+> > From: "Zhilong Liu" <zlliu@suse.com>
+> > To: "Xiao Ni" <xni@redhat.com>, linux-raid@vger.kernel.org
+> > Sent: Thursday, June 1, 2017 12:43:49 PM
+> > Subject: Re: The dev node can't be released at once after stopping raid
+> > 
+> > 
+> > 
+> > On 06/01/2017 11:47 AM, Xiao Ni wrote:
+> > > Hi all
+> > >
+> > > I tried with the latest linux stable kernel and latest mdadm.
+> > >
+> > > After stopping a raid device, the dev node directory can't be released
+> > > at once. I did a simple test, the script is:
+> > >
+> > > #!/bin/sh
+> > >
+> > > while [ 1 ]; do
+> > > mdadm -CR /dev/md0 -l1 -n2 /dev/loop0 /dev/loop1
+> > > sleep 5
+> > > mdadm -S /dev/md0
+> > > ls /dev/md0
+> > > sleep 1
+> > > ls /dev/md0
+> > > done
+> > >
+> > > mdadm: stopped /dev/md0
+> > > /dev/md0
+> > > ls: cannot access /dev/md0: No such file or directory
+> > >
+> > > It usually detects dev node /dev/md0 isn't released after stopping raid.
+> > > I'm not sure whether it's a bug or not. Do we need to do some job to
+> > > make sure that the node should be released before command mdadm -S
+> > > return?
+> > 
+> > it's waiting for processing the udev events. we can monitor it via to "#
+> > udevadm monitor".
+> > 
+> > For mdadm -S /dev/md0, Manage_stop() has already did the errno checking,
+> > 
+> > cut piece of code from Manage.c
+> > .. .. .. ..
+> > done:
+> > 
+> >      /* As we have an O_EXCL open, any use of the device
+> >       * which blocks STOP_ARRAY is probably a transient use,
+> >       * so it is reasonable to retry for a while - 5 seconds.
+> >       */
+> >      count = 25; err = 0;
+> >      while (count && fd >= 0 &&
+> >             (err = ioctl(fd, STOP_ARRAY, NULL)) < 0 && errno == EBUSY) {
+> >          usleep(200000);
+> >          count --;
+> >      }
+> 
+> Hi Zhilong
+> 
+> Good suggestions. I tried it and it can add some codes in the script to wait.
+> Is it better to check the udev events in mdadm? Let's check it after closing
+> mdfd when Manage_stop returns. Because it's mdadm's job, right?
+> 
+> Regards
+> Xiao
+> > 
+> > Best regards,
+> > -Zhilong
+> > 
+> > > Best Regards
+> > > Xiao
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > >
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
