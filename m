@@ -1,55 +1,48 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: Re: [PATCH] mdadm: handle super == NULL case in avail_size1
-Date: Thu, 31 Aug 2017 23:46:19 +0000
-Message-ID: <C170566B-A2B7-4220-9C61-D08DDE5E7E4A@fb.com>
-References: <20170831173751.2910909-1-songliubraving@fb.com>
- <87ziafe2dk.fsf@notabene.neil.brown.name>
+From: commentsabout@riseup.net
+Subject: Encrypted software RAID1 with Debian Stretch
+Date: Thu, 31 Aug 2017 23:58:38 +0000
+Message-ID: <28c61e8c14f44ec6727b8f3fb3c80c98@riseup.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87ziafe2dk.fsf@notabene.neil.brown.name>
-Content-Language: en-US
-Content-ID: <26D520AFBACBD645824CEDDBC6EE0C41@namprd15.prod.outlook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Shaohua Li <shli@fb.com>, Kernel Team <Kernel-team@fb.com>, Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@infradead.org>, "jes.sorensen@gmail.com" <jes.sorensen@gmail.com>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hello,
 
-> On Aug 31, 2017, at 4:36 PM, NeilBrown <neilb@suse.com> wrote:
->=20
-> On Thu, Aug 31 2017, Song Liu wrote:
->=20
->> Summary:
->>=20
->> Handling super =3D=3D NULL case in avail_size1() was removed a while
->> back. However, it is still useful in the following stack:
->>=20
->> avail_size1() with st->sb =3D=3D NULL
->> array_try_spare() with st =3D=3D NULL
->> try_spare() with st =3D=3D NULL
->> Incremental() with st =3D=3D NULL
->=20
-> I assume you mean "st->sb =3D=3D NULL" in each case here?  What you have
-> written doesn't make sense.
->=20
+(this is a cross-post from debian-users mailing list
+https://groups.google.com/d/msg/linux.debian.user/jjdr6LXaOm8/MOoVVo0lAwAJ
+)
 
-I did mean st =3D=3D NULL. In array_try_spare(), if st is NULL, st2 is=20
-allocated with match_metadata_desc(), and avail_size() is called with
-st2.=20
+Here is a picture of what I'm trying to achieve:
+https://imgur.com/a/DAM8D (the "Today" column). 
 
->>=20
->> This patch adds the handling of super =3D=3D NULL back to avail_size1().
->=20
-> I doubt this is the best thing to do.
-> If we don't have st->sb, calling avail_size doesn't make any sense.
-> Maybe we should be calling validate_geometry.
->=20
+I am trying to build a home backup system. The system (Debian Stretch) 
+will be on a SSD. For the time being, I only have one pair of HDDs (the 
+"Today" column in the picture) ; in the future (the "Future" column), I 
+would like to add other pairs of HDD to store other kind of data. 
 
-This was the same logic that got removed a few years ago. So far it=20
-works for my use cases. And I think it makes (some) sense.=20
-Is validate_geometry() really better than this approach?
+This backup system will only be turned on when needed, I don't plan on 
+using it as some sort of server or a NAS. 
 
-Thanks,
-Song
+We are talking about software RAID1. 
+
+I would like everything to be encrypted (FDE), from the system (/ and 
+/swap) to the RAID1 drives. 
+
+If possible, I would like to have different encryption keys for the 
+system and the various RAID1 pairs (in the "Future" column in the 
+picture, one for the system, one for "work", one for "family", one for 
+"misc"). So that I can give the system encryption passphrase, "family" 
+and "misc" ones to my wife and keep the "work" one for myself. 
+
+I'm a complete noob when it comes to this kind of operations so I'm
+looking for a step by step ELI5 explanation (I have tried to use the
+Debian graphical installer to achieve this but have failed because I was
+just messing around with the options trying to figure out what to do). 
+
+Thank you in advance for your help :) 
+
+CA 
