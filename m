@@ -1,83 +1,104 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH] mdadm: handle super == NULL case in avail_size1
-Date: Fri, 01 Sep 2017 09:36:23 +1000
-Message-ID: <87ziafe2dk.fsf@notabene.neil.brown.name>
-References: <20170831173751.2910909-1-songliubraving@fb.com>
+Subject: Re: The dev node can't be released at once after stopping raid
+Date: Fri, 01 Sep 2017 09:39:21 +1000
+Message-ID: <87wp5je28m.fsf@notabene.neil.brown.name>
+References: <1159964415.16461871.1496288839399.JavaMail.zimbra@redhat.com> <43bca632-9d77-2063-603c-6dcf47f3d250@suse.com> <1471667815.16472496.1496296238179.JavaMail.zimbra@redhat.com> <1941784023.3852671.1504151717389.JavaMail.zimbra@redhat.com> <87bmmwfj5z.fsf@notabene.neil.brown.name> <1889255088.3872827.1504160273377.JavaMail.zimbra@redhat.com> <8760d4fd25.fsf@notabene.neil.brown.name> <716638049.3884368.1504163810231.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170831173751.2910909-1-songliubraving@fb.com>
+In-Reply-To: <716638049.3884368.1504163810231.JavaMail.zimbra@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Song Liu <songliubraving@fb.com>, shli@fb.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com
+To: Xiao Ni <xni@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Aug 31 2017, Song Liu wrote:
+On Thu, Aug 31 2017, Xiao Ni wrote:
 
-> Summary:
+> ----- Original Message -----
+>> From: "NeilBrown" <neilb@suse.com>
+>> To: "Xiao Ni" <xni@redhat.com>
+>> Cc: linux-raid@vger.kernel.org
+>> Sent: Thursday, August 31, 2017 2:48:02 PM
+>> Subject: Re: The dev node can't be released at once after stopping raid
+>>=20
+>> On Thu, Aug 31 2017, Xiao Ni wrote:
+>> >
+>> > There is a bug https://bugzilla.redhat.com/show_bug.cgi?id=3D1444434.
+>> > Another tool(blivet) stops raid device and the device node still exist=
+s.
+>> > Then it calls mdadm -S xxx again and it fails.
+>>=20
+>> I would suggest that the tool is broken.  It should trust mdadm and not
+>> double check that it actually worked.
+>>=20
+>> >                                                 So I ask myself why
+>> > /dev/mdxxx can't be removed immediately after command mdadm -S.
+>>=20
+>> Because udev is asynchronous.  You cannot rely on things happening
+>> instantly.  udev doesn't work that way.
+>>=20
+>> mdadm has a function 'wait_for()' which waits for the device name to
+>> appear when the array is started.  Possibly we could add something to
+>> wait for udev to remove the device when the array is stopped, but I
+>> really think it shouldn't be necessary.  Nothing should look at the name
+>> after the device is stopped.
 >
-> Handling super =3D=3D NULL case in avail_size1() was removed a while
-> back. However, it is still useful in the following stack:
+> Hmm I want to try it. There are many topics about /dev/mdxx exists after
+> stop array before. I want to stop this topic forever.=20
 >
-> avail_size1() with st->sb =3D=3D NULL
-> array_try_spare() with st =3D=3D NULL
-> try_spare() with st =3D=3D NULL
-> Incremental() with st =3D=3D NULL
+> Can we remove /dev/mdxx directly? Something like this:
+> diff --git a/Manage.c b/Manage.c
+> index b82a729..04994b3 100644
+> --- a/Manage.c
+> +++ b/Manage.c
+> @@ -482,6 +482,7 @@ done:
+>         map_lock(&map);
+>         map_remove(&map, devnm);
+>         map_unlock(&map);
+> +       unlink(devname);
 
-I assume you mean "st->sb =3D=3D NULL" in each case here?  What you have
-written doesn't make sense.
+udev will create the device and multiple links.  You are just removing
+the device.  Someone might come along and complain about the links.
 
-
->
-> This patch adds the handling of super =3D=3D NULL back to avail_size1().
-
-I doubt this is the best thing to do.
-If we don't have st->sb, calling avail_size doesn't make any sense.
-Maybe we should be calling validate_geometry.
+I don't like this change.
 
 NeilBrown
 
 
+>  out:
+>         sysfs_free(mdi);
 >
-> Signed-off-by: Song Liu <songliubraving@fb.com>
-> ---
->  super1.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
 >
-> diff --git a/super1.c b/super1.c
-> index f6a1045..5e8d967 100644
-> --- a/super1.c
-> +++ b/super1.c
-> @@ -2340,7 +2340,9 @@ static __u64 avail_size1(struct supertype *st, __u6=
-4 devsize,
->  	if (devsize < 24)
->  		return 0;
->=20=20
-> -	if (__le32_to_cpu(super->feature_map) & MD_FEATURE_BITMAP_OFFSET) {
-> +	if (!super)
-> +		bmspace =3D choose_bm_space(devsize);
-> +	else if (__le32_to_cpu(super->feature_map) & MD_FEATURE_BITMAP_OFFSET) {
->  		/* hot-add. allow for actual size of bitmap */
->  		struct bitmap_super_s *bsb;
->  		bsb =3D (struct bitmap_super_s *)(((char*)super)+MAX_SB_SIZE);
-> @@ -2350,7 +2352,7 @@ static __u64 avail_size1(struct supertype *st, __u6=
-4 devsize,
->  	}
->=20=20
->  	/* Allow space for bad block log */
-> -	if (super->bblog_size)
-> +	if (super && super->bblog_size)
->  		bbspace =3D __le16_to_cpu(super->bblog_size);
->=20=20
->  	if (st->minor_version < 0)
-> --=20
-> 2.9.5
+> Best Regards
+> Xiao=20
 >
+>>=20
+>> >
+>> > In topic "MD Remnants After =E2=80=93stop", you said the REMOVE events=
+ are
+>> > generated by "md_free() -> del_gendisk() ->  blk_unregister_queue()".
+>> > When mdadm -S return, the REMOVE events should be generated already,
+>> > right?
+>>=20
+>> Not necessarily. md_free is called from mddev_delayed_delete, which is
+>> run on a work-queue, so might be delayed briefly.
+>>=20
+>> >
+>> > I always have a question. Who is responsible for removing the device
+>> > node under /dev/ directory? The function unlink()?
+>>=20
+>> udev is responsible for removing the device.  Obviously udev uses unlink=
+()
+>> to do this.
+>>=20
+>> NeilBrown
+>>=20
+>>=20
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
@@ -88,18 +109,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlmonXgACgkQOeye3VZi
-gblI2Q//Scu1V1ElHY+MdU0UESqB3f3letMbJKDIazey1obYNwDk0myx3N1KZcLs
-4iwPSP0IOsERHwtlr/4wpQx64QMsFWXYGofsmHYFCb3KjisxdS+gV64Dgfr9LOkB
-yH7kLT2NDwXFC7u4XxVRSCJCeO9WwzTQPE4bcNRoykgXdjhYOiANvmaJ/gmHPEBf
-5c/dxTcyvP07dKvsZytp8mMXBW9gLRphPMNJRTTnVhUFTYTs2a+Luc2ds+QslCrW
-/hB//z65/2Br7wdsTIGXDr+fv2vs/3jMmusUzLiW+T/vfeIIK4YQ0x441W74YfMn
-MKLWoD3xkT1eTEJkzdokDKRVWC5EEvdJsV78vPPZA6UZlIfNpv0MT4GGbItpPnfM
-CT90vrzIIwq10X+yvNWlwkyNTkLbQyKutCcLjIId8OfSjHIuHzNmn9vjlra9jWwc
-xWGFVNQTkTgR7NSZlJoRiqBB/iwglk/aPGwYLPe83No/OZm4fbKnEgG3BMl8aJWA
-E4nZ8fNCadWZk75u6goOOp4o/Sw8dyZ28oEMXSKjhApMXVDq1v3i9IzBRSHQyWYk
-+kXCC/SkfupfRj83vUOtz85jimnd0do7+0D+BWcR0dZ/6PFNx7U+dJFSiaDt/dYl
-9mwjsox/vxf9+4vhtX56v5LlfPykSfRrBPdd2RxuSoETG1q4BmQ=
-=WbN5
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlmonisACgkQOeye3VZi
+gbnNIg/9HyFxXJobm6FW6IDy/Ds0EfWeVtGvzecc3Z6MHmOh3cIdk1WHPlS1eC36
+i0U2jgP0DSVWPuVe6gkXvnU5+zb4u5HDVCgitn3Lr0EFVnaUbZjmJbg/gBwLoV0Z
+Cb+8U3/8AgCBitZlNNF6uZkgvVblSUgI+npknxOmX4hdx1SNqaQV4M3Z7ucoG+h4
+ORBtKjhty5LJFmr0fBchkdUXmUBDwVLxhgRxLx+74NwPmhJ2zRg2pRFQ44XfgRgF
+RFPEs6RiRAY3cIh5Cvshr1WtOhrHpByzQMqDUf23IciDOO3Dr4QqZMa85cIoTaiB
+Tr0HtGt2c5eJtZzy2RxZBMQ07cK8fZHk1iRcglN7UW9s5wQdTQYQP3G/G9daWg1P
+mRQJgpE7wg/ctpW4P92T88U3FARZPDV2p5W+URLzAs+NwEUpH4Hg67IUg78L1l6v
+mCOxJD0acblsBzpGV6+mGHdu/fmrX+B6s0NJ6xp9WjgJ3C5j3otejgEWFuptxo9y
+ka8EKCk2gJXQt+QuYRm9btbQiyMQoXsTavn4+mmWljXoavZuYdRIc7dSivCJpgKR
+pVF7p7a7tfVTr6FwGjkAU61lhRhEfqDMsXxMeaIlL2aGgMcSW9sdQ3+F0Srs0ds9
+05551NVmr425IKnE+mPiFLyEvb15FIE8p/2BvM9aSL7tpdaQKTA=
+=1ca9
 -----END PGP SIGNATURE-----
 --=-=-=--
