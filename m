@@ -1,56 +1,26 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH] mdadm: handle super == NULL case in avail_size1
-Date: Thu, 31 Aug 2017 10:37:51 -0700
-Message-ID: <20170831173751.2910909-1-songliubraving@fb.com>
+Subject: Re: [PATCH 2/2] mdadm: remove journal with "remove-journal"
+Date: Thu, 31 Aug 2017 10:51:01 -0700
+Message-ID: <20170831175101.2965834-1-songliubraving@fb.com>
+References: <63717f4b-5b81-7290-5265-087713f0bd45@nuclearwinter.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <63717f4b-5b81-7290-5265-087713f0bd45@nuclearwinter.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Song Liu <songliubraving@fb.com>, shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org, jes.sorensen@gmail.com
+Cc: shli@kernel.org, jes.sorensen@gmail.com, llowrey@nuclearwinter.com, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-Summary:
+Hi Larkin,
 
-Handling super == NULL case in avail_size1() was removed a while
-back. However, it is still useful in the following stack:
+We didn't ship this patch. Instead, we decide to use sysfs entry
 
-avail_size1() with st->sb == NULL
-array_try_spare() with st == NULL
-try_spare() with st == NULL
-Incremental() with st == NULL
+/sys/block/mdXXX/md/consistency_policy
 
-This patch adds the handling of super == NULL back to avail_size1().
+You can find the patch at:
 
-Signed-off-by: Song Liu <songliubraving@fb.com>
----
- super1.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+https://marc.info/?l=linux-raid&m=149063896208043
 
-diff --git a/super1.c b/super1.c
-index f6a1045..5e8d967 100644
---- a/super1.c
-+++ b/super1.c
-@@ -2340,7 +2340,9 @@ static __u64 avail_size1(struct supertype *st, __u64 devsize,
- 	if (devsize < 24)
- 		return 0;
- 
--	if (__le32_to_cpu(super->feature_map) & MD_FEATURE_BITMAP_OFFSET) {
-+	if (!super)
-+		bmspace = choose_bm_space(devsize);
-+	else if (__le32_to_cpu(super->feature_map) & MD_FEATURE_BITMAP_OFFSET) {
- 		/* hot-add. allow for actual size of bitmap */
- 		struct bitmap_super_s *bsb;
- 		bsb = (struct bitmap_super_s *)(((char*)super)+MAX_SB_SIZE);
-@@ -2350,7 +2352,7 @@ static __u64 avail_size1(struct supertype *st, __u64 devsize,
- 	}
- 
- 	/* Allow space for bad block log */
--	if (super->bblog_size)
-+	if (super && super->bblog_size)
- 		bbspace = __le16_to_cpu(super->bblog_size);
- 
- 	if (st->minor_version < 0)
--- 
-2.9.5
-
+Thanks,
+Song
