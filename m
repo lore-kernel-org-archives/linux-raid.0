@@ -1,63 +1,52 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md/raid5: preserve STRIPE_ON_UNPLUG_LIST in
- break_stripe_batch_list
-Date: Thu, 31 Aug 2017 22:38:57 -0700
-Message-ID: <20170901053857.a5qaqhzdevucby6p@kernel.org>
-References: <1503921720-21473-1-git-send-email-dennisyang@qnap.com>
+From: Reindl Harald <h.reindl@thelounge.net>
+Subject: Re: Filesystem corruption on RAID1
+Date: Fri, 1 Sep 2017 07:39:38 +0200
+Message-ID: <8fa7e6e8-0924-6db7-2e7d-9d5316cb3b8e@thelounge.net>
+References: <c2fe6593-c806-ab9f-fcff-8327c013237b@assyoma.it>
+ <20170713214856.4a5c8778@natsu> <592f19bf608e9a959f9445f7f25c5dad@assyoma.it>
+ <d1255092-73f5-1ca4-0e68-69ff37631a26@thelounge.net>
+ <cd37f90b86eb67be4c893b7fdf112692@assyoma.it>
+ <770b09d3-cff6-b6b2-0a51-5d11e8bac7e9@thelounge.net>
+ <9eea45ddc0f80f4f4e238b5c2527a1fa@assyoma.it>
+ <f01b4649-df39-9835-728d-545cbd45976d@assyoma.it>
+ <CAAMCDefXYdDKrFjEgeS8JAYt1GNP0-fL1chEXrGqxY8=xEf4Cw@mail.gmail.com>
+ <7ca98351facca6e3668d3271422e1376@assyoma.it>
+ <5995D377.9080100@youngman.org.uk>
+ <83f4572f09e7fbab9d4e6de4a5257232@assyoma.it>
+ <59961DD7.3060208@youngman.org.uk>
+ <784bec391a00b9e074744f31901df636@assyoma.it>
+ <CAAMCDefNRMuTwyXn_=3v_EWHwkjy3mhod1dLw3RQpjU=9VHNJQ@mail.gmail.com>
+ <a93cf0cc1d39c30f585eb53ed36aa4c0@assyoma.it>
+ <alpine.DEB.2.20.1708200907440.3655@uplift.swm.pp.se>
+ <7d0af770699948fb0ecb66185145be05@assyoma.it>
+ <alpine.DEB.2.20.1708201241400.3655@uplift.swm.pp.se>
+ <dbc04880-65f9-edd8-fbd4-f70d9549e06e@tigertech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1503921720-21473-1-git-send-email-dennisyang@qnap.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dennis Yang <dennisyang@qnap.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <dbc04880-65f9-edd8-fbd4-f70d9549e06e@tigertech.com>
+Content-Language: de-CH
+Sender: linux-raid-owner@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Aug 28, 2017 at 08:01:59PM +0800, Dennis Yang wrote:
-> break_stripe_batch_list() did not preserve STRIPE_ON_UNPLUG_LIST which is
-> set when a stripe_head gets queued to the stripe_head list maintained by
-> raid5_plug_cb and waiting for releasing after blk_unplug().
-> 
-> In release_stripe_plug(), if a stripe_head has its STRIPE_ON_UNPLUG_LIST
-> set, it indicates that this stripe_head is already in the raid5_plug_cb
-> list and release_stripe() would be called instead to drop a reference
-> count. Otherwise, the STRIPE_ON_UNPLUG_LIST bit would be set for this
-> stripe_head and it will get queued into the raid5_plug_cb list.
-> 
-> Without preserving STRIPE_ON_UNPLUG_LIST in break_stripe_batch_list(),
-> a stripe_head could be re-added to the raid5_plug_cb list while it is
-> currently on that list and waiting to be released. This would mess up
-> the raid5_plug_cb and leads to soft/hard lockup in raid5_unplug() or
-> kernel crash.
 
-Did you observe this? From my understanding, this is impossible. If a stripe is
-in batch list (that's why we have break_stripe_batch_list), add_stripe_bio will
-bail out (because sh->batch_head != NULL), so the stripe is never added into
-plug list, hence has the STRIPE_ON_UNPLUG_LIST bit set. Am I missing anything?
+Am 01.09.2017 um 00:55 schrieb Robert L Mathews:
+> On 8/20/17 3:43 AM, Mikael Abrahamsson wrote:
+> 
+>> Indeed, but as far as I know there is nothing md can do about this. What
+>> md could do about it is at least present a consistent view of data to
+>> fsck (which for raid1 would be read all stripes and issue "repair" if
+>> they don't match). Yes, this might indeed cause corruption but at least
+>> it would be consistent and visible.
+> 
+> If you set all disks except one as "write-mostly", won't mdadm give you
+> a consistent view of it because it only reads from a single disk?
 
-Thanks,
-Shaohua
- 
-> Signed-off-by: Dennis Yang <dennisyang@qnap.com>
-> ---
->  drivers/md/raid5.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index e92dd2d..faf3cfd 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -4611,7 +4611,8 @@ static void break_stripe_batch_list(struct stripe_head *head_sh,
->  
->  		set_mask_bits(&sh->state, ~(STRIPE_EXPAND_SYNC_FLAGS |
->  					    (1 << STRIPE_PREREAD_ACTIVE) |
-> -					    (1 << STRIPE_DEGRADED)),
-> +					    (1 << STRIPE_DEGRADED) |
-> +					    (1 << STRIPE_ON_UNPLUG_LIST)),
->  			      head_sh->state & (1 << STRIPE_INSYNC));
->  
->  		sh->check_state = head_sh->check_state;
-> -- 
-> 1.9.1
-> 
+you gain nothing when you completly lie to fsck and after that switch 
+back to normal operations with the other disks part of the game
+
+and it works only on RAID1 and *really* RAID1, otherwise my current 
+RAID10 would be as fast as hell instead the terrible random lags which 
+are worser sometimes as before replace two out of 4 disks with a SSD
