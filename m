@@ -1,57 +1,47 @@
-From: Anthony Youngman <antlists@youngman.org.uk>
-Subject: Re: raid5 messed up
-Date: Fri, 1 Sep 2017 23:47:34 +0100
-Message-ID: <65e0e7ae-28fd-57d2-c3c1-2ffba4924bd7@youngman.org.uk>
-References: <fdbb6bf6-357c-781e-beee-d8589cbb299d@email.latech.edu>
+From: Robert L Mathews <lists@tigertech.com>
+Subject: Re: Filesystem corruption on RAID1
+Date: Fri, 1 Sep 2017 16:14:37 -0700
+Message-ID: <c2063aa8-85c6-4d64-3a41-b13cef523030@tigertech.com>
+References: <c2fe6593-c806-ab9f-fcff-8327c013237b@assyoma.it>
+ <d1255092-73f5-1ca4-0e68-69ff37631a26@thelounge.net>
+ <cd37f90b86eb67be4c893b7fdf112692@assyoma.it>
+ <770b09d3-cff6-b6b2-0a51-5d11e8bac7e9@thelounge.net>
+ <9eea45ddc0f80f4f4e238b5c2527a1fa@assyoma.it>
+ <f01b4649-df39-9835-728d-545cbd45976d@assyoma.it>
+ <CAAMCDefXYdDKrFjEgeS8JAYt1GNP0-fL1chEXrGqxY8=xEf4Cw@mail.gmail.com>
+ <7ca98351facca6e3668d3271422e1376@assyoma.it>
+ <5995D377.9080100@youngman.org.uk>
+ <83f4572f09e7fbab9d4e6de4a5257232@assyoma.it>
+ <59961DD7.3060208@youngman.org.uk>
+ <784bec391a00b9e074744f31901df636@assyoma.it>
+ <CAAMCDefNRMuTwyXn_=3v_EWHwkjy3mhod1dLw3RQpjU=9VHNJQ@mail.gmail.com>
+ <a93cf0cc1d39c30f585eb53ed36aa4c0@assyoma.it>
+ <alpine.DEB.2.20.1708200907440.3655@uplift.swm.pp.se>
+ <7d0af770699948fb0ecb66185145be05@assyoma.it>
+ <alpine.DEB.2.20.1708201241400.3655@uplift.swm.pp.se>
+ <dbc04880-65f9-edd8-fbd4-f70d9549e06e@tigertech.com>
+ <8fa7e6e8-0924-6db7-2e7d-9d5316cb3b8e@thelounge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <fdbb6bf6-357c-781e-beee-d8589cbb299d@email.latech.edu>
+In-Reply-To: <8fa7e6e8-0924-6db7-2e7d-9d5316cb3b8e@thelounge.net>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: bishop@latech.edu, linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 01/09/17 21:15, Thomas C. Bishop wrote:
-> I messed up my raid5 array . I know a two of HDs are "failure 
-> prediction" and one is out.. seagate is shipping me replacements.
-> 
-> This is my backup server so there's the actual copy of data but I'd 
-> prefer to recover the array because other data scripts/tools have crept 
-> into it ... mostly junk but would like to verify.
-> 
-> Here's out put as recommended at 
-> https://raid.wiki.kernel.org/index.php/Linux_Raid
-> 
-> Thanks in advance for any assistance,
-> 
-> TOm
+On 8/31/17 10:39 PM, Reindl Harald wrote:
+> you gain nothing when you completly lie to fsck and after that switch
+> back to normal operations with the other disks part of the game
 
-Okay, one failed drive, so it's not looking bad on that front. sdi1 
-seems to be the broken one.
+Sorry, I didn't make myself clear. I meant that you could leave the
+array like that (all disks except one write-mostly) permanently, in
+normal use (and while fscking too). That way you always have a
+consistent view of the array.
 
-Seagates - no mention of the model, or whether SCT/ERC is supported. Are 
-they Seagate NAS drives? Read the timeout mismatch / why you shouldn't 
-use desktop drives page on the wiki. Could that be the problem?
+With an array composed of modern SSDs, such a setup still performs well
+for many loads.
 
-It's looking good in that nearly all the event counts are identical.
-
-Seagate are sending a replacement? My immediate reaction is to wait 
-until it arrives, ddrescue sdi onto it, and then re-assemble the array. 
-It'll probably reject the new sdi because of the event mismatch, but it 
-might just work fine. If it does reject it, then you can do a --re-add 
-which because you've got a bitmap, should bring everything back hunky-dory.
-
-Make sure ddrescue generates a log! If ddrescue can't copy the disk 
-completely, get back here with the contents of that log and we'll see if 
-we can mark the failed sectors as "bad" on the copy. That way, you can 
-safely re-add the drive knowing that a scrub will fall over the bad 
-sectors and re-create them correctly.
-
-My gut feeling is that this should be a simple recovery, though if 
-you've actually got a spare drive on the array, you should have gone for 
-raid-6.
-
-Cheers,
-Wol
+-- 
+Robert L Mathews, Tiger Technologies, http://www.tigertech.net/
