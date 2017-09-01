@@ -1,35 +1,80 @@
 From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH v2] mdadm: set journal_clean after scanning all disks
-Date: Fri, 1 Sep 2017 11:12:55 -0400
-Message-ID: <48c74e1d-4cfc-5624-1065-36d2f44f0dac@gmail.com>
-References: <20170829165302.3526230-1-songliubraving@fb.com>
+Subject: Re: [PATCH 1/5] mdadm/bitmap: examine-bitmap failed when bitmap is
+ external mode
+Date: Fri, 1 Sep 2017 11:20:59 -0400
+Message-ID: <c981d78a-a960-501b-b0e6-786f7b01389a@gmail.com>
+References: <1503912271-6463-1-git-send-email-zlliu@suse.com>
+ <1503912271-6463-2-git-send-email-zlliu@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170829165302.3526230-1-songliubraving@fb.com>
+In-Reply-To: <1503912271-6463-2-git-send-email-zlliu@suse.com>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>, linux-raid@vger.kernel.org
-Cc: shli@fb.com, neilb@suse.com, kernel-team@fb.com, dan.j.williams@intel.com, hch@infradead.org
+To: Zhilong Liu <zlliu@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 08/29/2017 12:53 PM, Song Liu wrote:
-> Summary:
-> In Incremental.c:count_active(), max_events is tracked to show to
-> which devices are up to date. If a device has events==max_events+1,
-> getinfo_super() is called to reload the superblock from this
-> device. getinfo_super1() blindly set journal_clean to 0, which is
-> wrong.
+On 08/28/2017 05:24 AM, Zhilong Liu wrote:
+> --examine-bitmap: the bitmap_file_open() shouldn't omit the
+> regular file descriptor when the bitmap is external mode.
+> Such as: ./mdadm -X /mnt/3
 > 
-> This patch fixes this by tracking max_journal_events for all the
-> disks. After scanning all disks, journal_clean is set if
-> max_journal_events >= max_events-1.
+> This commit is partial revert of commit 0a6bff09d416
+> (mdadm/util: unify fstat checking blkdev into function)
 > 
-> Signed-off-by: Song Liu <songliubraving@fb.com>
+> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+> ---
+>   bitmap.c | 13 ++++++++-----
+>   1 file changed, 8 insertions(+), 5 deletions(-)
 
-Applied!
+I am not in love with this approach, but I guess we have to go with it.
 
-Thanks,
+I have applied the patch with one minor change, the pr_err() portion 
+should respect that code is 80 characters across.
+
+Cheers,
 Jes
+
+> diff --git a/bitmap.c b/bitmap.c
+> index 3653660..de5f9db 100644
+> --- a/bitmap.c
+> +++ b/bitmap.c
+> @@ -183,6 +183,7 @@ static int
+>   bitmap_file_open(char *filename, struct supertype **stp, int node_num)
+>   {
+>   	int fd;
+> +	struct stat stb;
+>   	struct supertype *st = *stp;
+>   
+>   	fd = open(filename, O_RDONLY|O_DIRECT);
+> @@ -192,7 +193,13 @@ bitmap_file_open(char *filename, struct supertype **stp, int node_num)
+>   		return -1;
+>   	}
+>   
+> -	if (fstat_is_blkdev(fd, filename, NULL)) {
+> +	if (fstat(fd, &stb) < 0) {
+> +		pr_err("fstat failed for %s: %s\n",
+> +			filename, strerror(errno));
+> +		close(fd);
+> +		return -1;
+> +	}
+> +	if ((stb.st_mode & S_IFMT) == S_IFBLK) {
+>   		/* block device, so we are probably after an internal bitmap */
+>   		if (!st)
+>   			st = guess_super(fd);
+> @@ -211,11 +218,7 @@ bitmap_file_open(char *filename, struct supertype **stp, int node_num)
+>   				fd = -1;
+>   			}
+>   		}
+> -
+>   		*stp = st;
+> -	} else {
+> -		close(fd);
+> -		return -1;
+>   	}
+>   
+>   	return fd;
+> 
 
