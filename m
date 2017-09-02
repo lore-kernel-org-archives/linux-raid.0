@@ -1,47 +1,58 @@
-From: Robert L Mathews <lists@tigertech.com>
-Subject: Re: Filesystem corruption on RAID1
-Date: Fri, 1 Sep 2017 16:14:37 -0700
-Message-ID: <c2063aa8-85c6-4d64-3a41-b13cef523030@tigertech.com>
-References: <c2fe6593-c806-ab9f-fcff-8327c013237b@assyoma.it>
- <d1255092-73f5-1ca4-0e68-69ff37631a26@thelounge.net>
- <cd37f90b86eb67be4c893b7fdf112692@assyoma.it>
- <770b09d3-cff6-b6b2-0a51-5d11e8bac7e9@thelounge.net>
- <9eea45ddc0f80f4f4e238b5c2527a1fa@assyoma.it>
- <f01b4649-df39-9835-728d-545cbd45976d@assyoma.it>
- <CAAMCDefXYdDKrFjEgeS8JAYt1GNP0-fL1chEXrGqxY8=xEf4Cw@mail.gmail.com>
- <7ca98351facca6e3668d3271422e1376@assyoma.it>
- <5995D377.9080100@youngman.org.uk>
- <83f4572f09e7fbab9d4e6de4a5257232@assyoma.it>
- <59961DD7.3060208@youngman.org.uk>
- <784bec391a00b9e074744f31901df636@assyoma.it>
- <CAAMCDefNRMuTwyXn_=3v_EWHwkjy3mhod1dLw3RQpjU=9VHNJQ@mail.gmail.com>
- <a93cf0cc1d39c30f585eb53ed36aa4c0@assyoma.it>
- <alpine.DEB.2.20.1708200907440.3655@uplift.swm.pp.se>
- <7d0af770699948fb0ecb66185145be05@assyoma.it>
- <alpine.DEB.2.20.1708201241400.3655@uplift.swm.pp.se>
- <dbc04880-65f9-edd8-fbd4-f70d9549e06e@tigertech.com>
- <8fa7e6e8-0924-6db7-2e7d-9d5316cb3b8e@thelounge.net>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Subject: Re: raid5 messed up
+Date: Sat, 2 Sep 2017 02:24:52 +0200
+Message-ID: <20170902002452.GA26288@metamorpher.de>
+References: <fdbb6bf6-357c-781e-beee-d8589cbb299d@email.latech.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8fa7e6e8-0924-6db7-2e7d-9d5316cb3b8e@thelounge.net>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <fdbb6bf6-357c-781e-beee-d8589cbb299d@email.latech.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: "Thomas C. Bishop" <bishop@latech.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 8/31/17 10:39 PM, Reindl Harald wrote:
-> you gain nothing when you completly lie to fsck and after that switch
-> back to normal operations with the other disks part of the game
+On Fri, Sep 01, 2017 at 03:15:41PM -0500, Thomas C. Bishop wrote:
+> I messed up my raid5 array .
 
-Sorry, I didn't make myself clear. I meant that you could leave the
-array like that (all disks except one write-mostly) permanently, in
-normal use (and while fscking too). That way you always have a
-consistent view of the array.
+That's an understatement...
 
-With an array composed of modern SSDs, such a setup still performs well
-for many loads.
+> I know a two of HDs are "failure 
+> prediction" and one is out..
 
--- 
-Robert L Mathews, Tiger Technologies, http://www.tigertech.net/
+RAID 5 with three failed drives, chances of survival are very low.
+You should never let things get this far. Timeouts? Doesn't matter!
+You either have no disk monitoring at all or never acted on it.
+
+ddrescue the broken drives to new ones first.
+Then always use overlays for recovery experiments.
+
+https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID#Making_the_harddisks_read-only_using_an_overlay_file
+
+Experiments for example could be:
+
+ *) --assemble --force
+ *) --assemble --update=force-no-bbl
+ *) --create --metadata=1.0 --chunk=128 with one 'missing' drive
+
+Again, use overlays for everything.
+
+>    Bad Block Log : 512 entries available at offset -8 sectors - bad 
+> blocks present.
+
+You have bbl entries on more than one drive, use --examine-badblocks 
+to see if they are identical. You have to clear those or md will 
+either not work at all or always give read errors even after replacing 
+the drives. Bad block list issues were previously discussed on the list, 
+you might find it when searching for "no-bbl".
+
+> === START OF READ SMART DATA SECTION ===
+> SMART Health Status: OK
+
+Never trust this unconditionally. It's a false friend.
+Always look at the detailed output with reallocated etc. sectors.
+Run selftests regularly, detect disk errors early, replace drives immediately.
+
+Good luck
+Andreas Klauer
