@@ -1,50 +1,33 @@
-From: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
-Subject: [PATCH] Monitor: Check redundancy for arrays
-Date: Mon,  4 Sep 2017 12:52:46 +0200
-Message-ID: <1504522366-21913-1-git-send-email-mariusz.tkaczyk@intel.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: future of raid 6
+Date: Mon, 4 Sep 2017 14:28:09 +0200 (CEST)
+Message-ID: <alpine.DEB.2.20.1709041425100.29378@uplift.swm.pp.se>
+References: <2811558.CnJCJrJZ21@markus> <20170904095347.GA4187@metamorpher.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170904095347.GA4187@metamorpher.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: jes.sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org, Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Cc: Markus <M4rkusXXL@web.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-GET_MISMATCH option doesn't exist for RAID arrays without redundancy
-so sysfs_read fails if this information is requested. Set options
-according to the device using information from /proc/mdstat.
+On Mon, 4 Sep 2017, Andreas Klauer wrote:
 
-Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
----
- Monitor.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+> Genuine simultaneous drive failures are *very* rare.
 
-diff --git a/Monitor.c b/Monitor.c
-index 497e364..b60996b 100644
---- a/Monitor.c
-+++ b/Monitor.c
-@@ -466,7 +466,7 @@ static int check_array(struct state *st, struct mdstat_ent *mdstat,
- 	int new_array = 0;
- 	int retval;
- 	int is_container = 0;
--	unsigned long array_only_flags = 0;
-+	unsigned long redundancy_only_flags = 0;
- 
- 	if (test)
- 		alert("TestMessage", dev, NULL, ainfo);
-@@ -504,11 +504,11 @@ static int check_array(struct state *st, struct mdstat_ent *mdstat,
- 	if (md_get_array_info(fd, &array) < 0)
- 		goto disappeared;
- 
--	if (!is_container)
--		array_only_flags |= GET_MISMATCH;
-+	if (!is_container && map_name(pers, mse->level) > 0)
-+		redundancy_only_flags |= GET_MISMATCH;
- 
- 	sra = sysfs_read(-1, st->devnm, GET_LEVEL | GET_DISKS | GET_DEVS |
--			GET_STATE | array_only_flags);
-+			GET_STATE | redundancy_only_flags);
- 
- 	if (!sra)
- 		goto disappeared;
+No, the "drive failed and I now have URE on another drive" is not "*very 
+rare*". Yes, it can be somewhat mitigated by frequent scrubbing.
+
+That's why I run RAID6 and not RAID5. I have been hit by the above problem 
+several times when running RAID5. I haven't yet had a data loss event 
+(that I know of) because of this since I moved to RAID6.
+
+I think "RAID6 with triple parity" would make sense for some deployment 
+scenarios. It's not uncommon for people to have several RAID6 arrays and 
+then have a hot spare in the chassis. This hot spare could instead 
+actually do work by being triple redundancy in one array, instead of 
+sitting there powered on but doing nothing.
+
 -- 
-1.8.3.1
-
+Mikael Abrahamsson    email: swmike@swm.pp.se
