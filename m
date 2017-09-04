@@ -1,72 +1,50 @@
-From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Subject: Re: future of raid 6
-Date: Mon, 4 Sep 2017 11:53:47 +0200
-Message-ID: <20170904095347.GA4187@metamorpher.de>
-References: <2811558.CnJCJrJZ21@markus>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+Subject: [PATCH] Monitor: Check redundancy for arrays
+Date: Mon,  4 Sep 2017 12:52:46 +0200
+Message-ID: <1504522366-21913-1-git-send-email-mariusz.tkaczyk@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <2811558.CnJCJrJZ21@markus>
 Sender: linux-raid-owner@vger.kernel.org
-To: Markus <M4rkusXXL@web.de>
-Cc: linux-raid@vger.kernel.org
+To: jes.sorensen@gmail.com
+Cc: linux-raid@vger.kernel.org, Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
 List-Id: linux-raid.ids
 
-On Sun, Sep 03, 2017 at 08:28:15PM +0200, Markus wrote:
-> (Rebuilds are likely to hit an unrecoverable error, not to mention the 
-> long time it will take to rebuild raids with +10TB per drive.)
+GET_MISMATCH option doesn't exist for RAID arrays without redundancy
+so sysfs_read fails if this information is requested. Set options
+according to the device using information from /proc/mdstat.
 
-Rebuilds are not likely to hit an unrecoverable error at all.
-Rebuilds do not take a long time, and it tends to be irrelevant.
+Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+---
+ Monitor.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-A lot of articles make rebuilds out to be some kind of mythological beast 
-that breathes fire, spits poison, and devours your drives. It's not true.
+diff --git a/Monitor.c b/Monitor.c
+index 497e364..b60996b 100644
+--- a/Monitor.c
++++ b/Monitor.c
+@@ -466,7 +466,7 @@ static int check_array(struct state *st, struct mdstat_ent *mdstat,
+ 	int new_array = 0;
+ 	int retval;
+ 	int is_container = 0;
+-	unsigned long array_only_flags = 0;
++	unsigned long redundancy_only_flags = 0;
+ 
+ 	if (test)
+ 		alert("TestMessage", dev, NULL, ainfo);
+@@ -504,11 +504,11 @@ static int check_array(struct state *st, struct mdstat_ent *mdstat,
+ 	if (md_get_array_info(fd, &array) < 0)
+ 		goto disappeared;
+ 
+-	if (!is_container)
+-		array_only_flags |= GET_MISMATCH;
++	if (!is_container && map_name(pers, mse->level) > 0)
++		redundancy_only_flags |= GET_MISMATCH;
+ 
+ 	sra = sysfs_read(-1, st->devnm, GET_LEVEL | GET_DISKS | GET_DEVS |
+-			GET_STATE | array_only_flags);
++			GET_STATE | redundancy_only_flags);
+ 
+ 	if (!sra)
+ 		goto disappeared;
+-- 
+1.8.3.1
 
-The probability of failure during a rebuild is not higher than normal. 
-A rebuild is as boring as can be, just a linear read (n-1 drives), 
-linear write (1 drive). Reshapes are more interesting but it's still 
-just normal reading and writing: there is no magic involved, there is 
-absolutely nothing that could possibly cause undue drive failures.
-
-Drives fail randomly, silently. The only way to verify that a drive hasn't 
-failed yet is to read everything from start to end. If you don't run these 
-read tests regularly, the error will go unnoticed for weeks, months, years.
-
-That's the timeframe we're really looking at: not hours, days it actually 
-takes for the rebuild itself to finish, but weeks (for you to order a new 
-drive and it actually getting shipped), and months (for you to detect the 
-error in the first place and bring yourself to order a replacement and not 
-see how it goes first because you feel the pinch of replacement costs).
-
-If you do not monitor and regularly test your drives to cut down this time, 
-no amount of redundancy will ever be enough. If you never run any tests, 
-the errors will pop up during rebuild. If you never tested and thus allowed 
-the rebuild itself to be the first ever test in years, it's not a miracle. 
-You can't blame the rebuild for that.
-
-It has nothing to do with bit error rates, timeouts, same batch of drives, 
-and all the other shit people come up with to make excuses for their lack 
-of monitoring drives properly.
-
-Genuine simultaneous drive failures are *very* rare.
-
-> What is the future for redundant mass storage?
-
-It's still RAID-5 or something similar on a filesystem level.
-Simply because it works, and it's cost effective. It doesn't matter 
-if the drive has 1000MB, 100GB, 10TB - nothing changed.
-
-Most machines (desktops, nas, rented servers) only have 2-4 drives anyway. 
-You need twice as many for RAID-6 to start making any kind of sense, 
-and triple parity is even further off, like 20+ drives.
-
-If you're currently running a three drive RAID-6 and need more redundancy, 
-you can do it with a four drive RAID-1. Knock yourself out. Nobody does it. 
-It's barking mad. The only problem it solves does not really exist.
-
-And regardless of redundancy, you still need backups. If you have backups, 
-the zero point something chance of simultaneous failure matters even less.
-
-Regards
-Andreas Klauer
