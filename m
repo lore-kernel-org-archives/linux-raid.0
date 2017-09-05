@@ -1,119 +1,82 @@
 From: Gilad Ben-Yossef <gilad@benyossef.com>
-Subject: [PATCH v8 06/20] crypto: introduce crypto wait for async op
-Date: Tue,  5 Sep 2017 15:38:45 +0300
-Message-ID: <1504615144-29770-7-git-send-email-gilad__34423.5255070545$1504615707$gmane$org@benyossef.com>
+Subject: [PATCH v8 03/20] net: use -EAGAIN for transient busy indication
+Date: Tue,  5 Sep 2017 15:38:42 +0300
+Message-ID: <1504615144-29770-4-git-send-email-gilad__29942.0051895597$1504615789$gmane$org@benyossef.com>
 References: <1504615144-29770-1-git-send-email-gilad@benyossef.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1504615144-29770-1-git-send-email-gilad@benyossef.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Tom Lendacky <thomas.lendacky@amd.com>, Gary Hook <gary.hook@amd.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Arnaud Ebalard <arno@natisbad.org>, Matthias Brugger <matthias.bgg@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Steffen Klassert <steffen.klassert@secunet.com>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>
-Cc: Ofir Drang <ofir.drang@arm.com>, Eric Biggers <ebiggers3@gmail.com>, Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Cc: Ofir Drang <ofir.drang@arm.com>
 List-Id: linux-raid.ids
 
-Invoking a possibly async. crypto op and waiting for completion
-while correctly handling backlog processing is a common task
-in the crypto API implementation and outside users of it.
-
-This patch adds a generic implementation for doing so in
-preparation for using it across the board instead of hand
-rolled versions.
+Replace -EBUSY with -EAGAIN when handling transient busy
+indication in the absence of backlog.
 
 Signed-off-by: Gilad Ben-Yossef <gilad@benyossef.com>
-CC: Eric Biggers <ebiggers3@gmail.com>
-CC: Jonathan Cameron <Jonathan.Cameron@huawei.com>
----
- crypto/api.c           | 13 +++++++++++++
- include/linux/crypto.h | 40 ++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 53 insertions(+)
 
-diff --git a/crypto/api.c b/crypto/api.c
-index 941cd4c..2a2479d 100644
---- a/crypto/api.c
-+++ b/crypto/api.c
-@@ -24,6 +24,7 @@
- #include <linux/sched/signal.h>
- #include <linux/slab.h>
- #include <linux/string.h>
-+#include <linux/completion.h>
- #include "internal.h"
+---
+
+Please squash this patch with the previous one when merging upstream.
+---
+ net/ipv4/ah4.c  | 2 +-
+ net/ipv4/esp4.c | 2 +-
+ net/ipv6/ah6.c  | 2 +-
+ net/ipv6/esp6.c | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/net/ipv4/ah4.c b/net/ipv4/ah4.c
+index 37db44f..049cb0a 100644
+--- a/net/ipv4/ah4.c
++++ b/net/ipv4/ah4.c
+@@ -240,7 +240,7 @@ static int ah_output(struct xfrm_state *x, struct sk_buff *skb)
+ 		if (err == -EINPROGRESS)
+ 			goto out;
  
- LIST_HEAD(crypto_alg_list);
-@@ -595,5 +596,17 @@ int crypto_has_alg(const char *name, u32 type, u32 mask)
- }
- EXPORT_SYMBOL_GPL(crypto_has_alg);
+-		if (err == -EBUSY)
++		if (err == -EAGAIN)
+ 			err = NET_XMIT_DROP;
+ 		goto out_free;
+ 	}
+diff --git a/net/ipv4/esp4.c b/net/ipv4/esp4.c
+index b00e4a4..ff8e088 100644
+--- a/net/ipv4/esp4.c
++++ b/net/ipv4/esp4.c
+@@ -432,7 +432,7 @@ int esp_output_tail(struct xfrm_state *x, struct sk_buff *skb, struct esp_info *
+ 	case -EINPROGRESS:
+ 		goto error;
  
-+void crypto_req_done(struct crypto_async_request *req, int err)
-+{
-+	struct crypto_wait *wait = req->data;
-+
-+	if (err == -EINPROGRESS)
-+		return;
-+
-+	wait->err = err;
-+	complete(&wait->completion);
-+}
-+EXPORT_SYMBOL_GPL(crypto_req_done);
-+
- MODULE_DESCRIPTION("Cryptographic core API");
- MODULE_LICENSE("GPL");
-diff --git a/include/linux/crypto.h b/include/linux/crypto.h
-index 84da997..78508ca 100644
---- a/include/linux/crypto.h
-+++ b/include/linux/crypto.h
-@@ -24,6 +24,7 @@
- #include <linux/slab.h>
- #include <linux/string.h>
- #include <linux/uaccess.h>
-+#include <linux/completion.h>
+-	case -EBUSY:
++	case -EAGAIN:
+ 		err = NET_XMIT_DROP;
+ 		break;
  
- /*
-  * Autoloaded crypto modules should only use a prefixed name to avoid allowing
-@@ -468,6 +469,45 @@ struct crypto_alg {
- } CRYPTO_MINALIGN_ATTR;
+diff --git a/net/ipv6/ah6.c b/net/ipv6/ah6.c
+index 7802b72..ba0c145 100644
+--- a/net/ipv6/ah6.c
++++ b/net/ipv6/ah6.c
+@@ -443,7 +443,7 @@ static int ah6_output(struct xfrm_state *x, struct sk_buff *skb)
+ 		if (err == -EINPROGRESS)
+ 			goto out;
  
- /*
-+ * A helper struct for waiting for completion of async crypto ops
-+ */
-+struct crypto_wait {
-+	struct completion completion;
-+	int err;
-+};
-+
-+/*
-+ * Macro for declaring a crypto op async wait object on stack
-+ */
-+#define DECLARE_CRYPTO_WAIT(_wait) \
-+	struct crypto_wait _wait = { \
-+		COMPLETION_INITIALIZER_ONSTACK((_wait).completion), 0 }
-+
-+/*
-+ * Async ops completion helper functioons
-+ */
-+void crypto_req_done(struct crypto_async_request *req, int err);
-+
-+static inline int crypto_wait_req(int err, struct crypto_wait *wait)
-+{
-+	switch (err) {
-+	case -EINPROGRESS:
-+	case -EBUSY:
-+		wait_for_completion(&wait->completion);
-+		reinit_completion(&wait->completion);
-+		err = wait->err;
-+		break;
-+	};
-+
-+	return err;
-+}
-+
-+static inline void crypto_init_wait(struct crypto_wait *wait)
-+{
-+	init_completion(&wait->completion);
-+}
-+
-+/*
-  * Algorithm registration interface.
-  */
- int crypto_register_alg(struct crypto_alg *alg);
+-		if (err == -EBUSY)
++		if (err == -EAGAIN)
+ 			err = NET_XMIT_DROP;
+ 		goto out_free;
+ 	}
+diff --git a/net/ipv6/esp6.c b/net/ipv6/esp6.c
+index 89910e2..1a71ee5 100644
+--- a/net/ipv6/esp6.c
++++ b/net/ipv6/esp6.c
+@@ -396,7 +396,7 @@ int esp6_output_tail(struct xfrm_state *x, struct sk_buff *skb, struct esp_info
+ 	case -EINPROGRESS:
+ 		goto error;
+ 
+-	case -EBUSY:
++	case -EAGAIN:
+ 		err = NET_XMIT_DROP;
+ 		break;
+ 
 -- 
 2.1.4
 
