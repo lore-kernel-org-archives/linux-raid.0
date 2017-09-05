@@ -1,82 +1,47 @@
-From: Coly Li <colyli@suse.de>
-Subject: Re: [PATCH v4] bcache: Don't reinvent the wheel but use existing
- llist API
-Date: Tue, 5 Sep 2017 10:54:37 +0800
-Message-ID: <14395d10-a370-8f0f-09e1-3abc6fe7ba77@suse.de>
-References: <1502426543-15229-1-git-send-email-byungchul.park@lge.com>
- <20170818012426.GX20323@X58A-UD3R>
- <34c37201-1ec8-270e-91b0-a8d94b7a7d6e@coly.li>
- <20170905023731.GR3240@X58A-UD3R>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: [PATCH] md: allow changing set_name of running array
+Date: Mon, 4 Sep 2017 23:06:29 -0400
+Message-ID: <8a217462-fdc0-f011-8433-ed42986d4e75@turmel.org>
+References: <429c2b1c84c44b0c09ea7aa8dfa86846885441f7.1504044125.git.mirq-linux@rere.qmqm.pl>
+ <87tw0ne0xq.fsf@notabene.neil.brown.name>
+ <20170901164110.y3op7umpgh4jvkr5@qmqm.qmqm.pl>
+ <874lsjdwye.fsf@notabene.neil.brown.name>
+ <20170904193639.iagu5d5iu3tdhce2@qmqm.qmqm.pl>
+ <87pob6c62v.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170905023731.GR3240@X58A-UD3R>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Byungchul Park <byungchul.park@lge.com>, Coly Li <i@coly.li>
-Cc: kent.overstreet@gmail.com, shli@kernel.org, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, nborisov@suse.com, linux-kernel@vger.kernel.org, kernel-team@lge.com
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87pob6c62v.fsf@notabene.neil.brown.name>
+Content-Language: en-GB
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>, =?UTF-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirq-linux@rere.qmqm.pl>
+Cc: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2017/9/5 上午10:37, Byungchul Park wrote:
-> On Fri, Aug 18, 2017 at 02:04:20PM +0800, Coly Li wrote:
->> On 2017/8/18 上午9:24, Byungchul Park wrote:
->>> On Fri, Aug 11, 2017 at 01:42:23PM +0900, Byungchul Park wrote:
->>>> Although llist provides proper APIs, they are not used. Make them used.
->>>
->>> Any opinions about this?
->>>
->>
->> The patch is good. If Eric has no time, I will take care of it later.
+On 09/04/2017 09:00 PM, NeilBrown wrote:
+> If a name is given in mdadm.conf and it doesn't match the name in the
+> metadata, that line will be ignored.  If mdadm doesn't find a match in
+> mdadm.conf and the hostname doesn't match, the the array will be treated
+> as "foreign" and will be assembled as e.g. /dev/md127 with a symlink
+> from /dev/md/0_1.
+> If the name and uuid in mdadm.conf do match the metadata, it will be
+> treat as "local" and will be given the name that you would expect
+> (/dev/md0, /dev/md/0).
 > 
-> I would be appriciated if you take this at this window :)
-
-Sure, I am preparing a patch list to block maintainers which we are
-missed in last merge window, your patch is in the list.
-
-It will be in one or two days from my side.
-
-Coly
-
->>>>
->>>> Signed-off-by: Byungchul Park <byungchul.park@lge.com>
->>>> Acked-by: Coly Li <colyli@suse.de>
->>>> ---
->>>>  drivers/md/bcache/closure.c | 15 ++-------------
->>>>  1 file changed, 2 insertions(+), 13 deletions(-)
->>>>
->>>> diff --git a/drivers/md/bcache/closure.c b/drivers/md/bcache/closure.c
->>>> index 864e673..7d5286b 100644
->>>> --- a/drivers/md/bcache/closure.c
->>>> +++ b/drivers/md/bcache/closure.c
->>>> @@ -70,21 +70,10 @@ void __closure_wake_up(struct closure_waitlist *wait_list)
->>>>  	list = llist_del_all(&wait_list->list);
->>>>  
->>>>  	/* We first reverse the list to preserve FIFO ordering and fairness */
->>>> -
->>>> -	while (list) {
->>>> -		struct llist_node *t = list;
->>>> -		list = llist_next(list);
->>>> -
->>>> -		t->next = reverse;
->>>> -		reverse = t;
->>>> -	}
->>>> +	reverse = llist_reverse_order(list);
->>>>  
->>>>  	/* Then do the wakeups */
->>>> -
->>>> -	while (reverse) {
->>>> -		cl = container_of(reverse, struct closure, list);
->>>> -		reverse = llist_next(reverse);
->>>> -
->>>> +	llist_for_each_entry(cl, reverse, list) {
->>>>  		closure_set_waiting(cl, 0);
->>>>  		closure_sub(cl, CLOSURE_WAITING + 1);
->>>>  	}
->>>> -- 
->>>> 1.9.1
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> So my guess is that the mdadm.conf you had at the time doesn't match
+> what you have provided above.
 > 
+> It would be nice to add an option to "mdadm --incremental" to tell it to
+> update various details like you can with "mdadm --assemble"....
+
+I just delete the name and metadata version from mdadm.conf.  The above
+would become:
+
+ARRAY /dev/md/0 UUID=d5ea39a9:5ec27c36:c83296d4:70f879d4
+ARRAY /dev/md/1 UUID=9bf69b92:2e7ba905:5f959c09:c8fecb99
+
+The default output of mdadm -Es is overspecified for use as mdadm.conf,
+though it works on precisely the setup that produced it.
+
+Phil
