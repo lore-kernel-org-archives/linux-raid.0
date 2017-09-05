@@ -1,78 +1,72 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: Re: Stuck in md_write_start because MD_SB_CHANGE_PENDING can't be
- cleared
-Date: Tue, 5 Sep 2017 10:15:00 +0800
-Message-ID: <3a5955de-e6a1-de83-b00b-1984f7125799@redhat.com>
-References: <546311999.4473128.1504339295016.JavaMail.zimbra@redhat.com>
- <877exfdx7x.fsf@notabene.neil.brown.name>
- <22698eb3-35f7-04e5-96e8-26470d892655@redhat.com>
- <b5856cb8-0ea6-7bf2-10a0-76dd69d04698@redhat.com>
- <87y3pvc9ha.fsf@notabene.neil.brown.name>
- <34fedde7-cef9-34ff-1403-9d097267eb55@redhat.com>
- <87k21ec4fn.fsf@notabene.neil.brown.name>
+From: Byungchul Park <byungchul.park@lge.com>
+Subject: Re: [PATCH v4] bcache: Don't reinvent the wheel but use existing
+ llist API
+Date: Tue, 5 Sep 2017 11:37:31 +0900
+Message-ID: <20170905023731.GR3240@X58A-UD3R>
+References: <1502426543-15229-1-git-send-email-byungchul.park@lge.com>
+ <20170818012426.GX20323@X58A-UD3R>
+ <34c37201-1ec8-270e-91b0-a8d94b7a7d6e@coly.li>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87k21ec4fn.fsf@notabene.neil.brown.name>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, linux-raid <linux-raid@vger.kernel.org>
-Cc: shli@kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-bcache-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <34c37201-1ec8-270e-91b0-a8d94b7a7d6e@coly.li>
+Sender: linux-bcache-owner@vger.kernel.org
+To: Coly Li <i@coly.li>
+Cc: kent.overstreet@gmail.com, shli@kernel.org, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, nborisov@suse.com, linux-kernel@vger.kernel.org, kernel-team@lge.com
 List-Id: linux-raid.ids
 
+On Fri, Aug 18, 2017 at 02:04:20PM +0800, Coly Li wrote:
+> On 2017/8/18 上午9:24, Byungchul Park wrote:
+> > On Fri, Aug 11, 2017 at 01:42:23PM +0900, Byungchul Park wrote:
+> >> Although llist provides proper APIs, they are not used. Make them used.
+> > 
+> > Any opinions about this?
+> > 
+> 
+> The patch is good. If Eric has no time, I will take care of it later.
 
+I would be appriciated if you take this at this window :)
 
-On 09/05/2017 09:36 AM, NeilBrown wrote:
-> On Mon, Sep 04 2017, Xiao Ni wrote:
->
->>
->> In function handle_stripe:
->> 4697         if (s.handle_bad_blocks ||
->> 4698             test_bit(MD_SB_CHANGE_PENDING, &conf->mddev->sb_flags)) {
->> 4699                 set_bit(STRIPE_HANDLE, &sh->state);
->> 4700                 goto finish;
->> 4701         }
->>
->> Because MD_SB_CHANGE_PENDING is set, so the stripes can't be handled.
->>
-> Right, of course.  I see what is happening now.
->
-> - raid5d cannot complete stripes until the metadata is written
-> - the metadata cannot be written until raid5d gets the mddev_lock
-> - mddev_lock is held by the write to suspend_hi
-> - the write to suspend_hi is waiting for raid5_quiesce
-> - raid5_quiesce is waiting for some stripes to complete.
->
-> We could declare that ->quiesce(, 1) cannot be called while holding the
-> lock.
-> We could possible allow it but only if md_update_sb() is called first,
-> though that might still be racy.
->
-> ->quiesce(, 1) is currently called from:
->   mddev_suspend
->   suspend_lo_store
->   suspend_hi_store
->   __md_stop_writes
->   mddev_detach
->   set_bitmap_file
->   update_array_info (when setting/removing internal bitmap)
->   md_do_sync
->
-> and most of those are call with the lock held, or take the lock.
->
-> Maybe we should *require* that mddev_lock is held when calling
-> ->quiesce() and have ->quiesce() do the metadata update.
->
-> Something like the following maybe.  Can you test it?
-
-Hi Neil
-
-Thanks for the analysis. I need to thing for a while :)
-I already added the patch and the test is running now. It usually needs 
-more than 5
-hours to reproduce this problem. I'll let it run more than 24 hours. 
-I'll update the test
-result later.
-
-Regards
-Xiao
+> Thanks.
+> 
+> Coly
+> 
+> >>
+> >> Signed-off-by: Byungchul Park <byungchul.park@lge.com>
+> >> Acked-by: Coly Li <colyli@suse.de>
+> >> ---
+> >>  drivers/md/bcache/closure.c | 15 ++-------------
+> >>  1 file changed, 2 insertions(+), 13 deletions(-)
+> >>
+> >> diff --git a/drivers/md/bcache/closure.c b/drivers/md/bcache/closure.c
+> >> index 864e673..7d5286b 100644
+> >> --- a/drivers/md/bcache/closure.c
+> >> +++ b/drivers/md/bcache/closure.c
+> >> @@ -70,21 +70,10 @@ void __closure_wake_up(struct closure_waitlist *wait_list)
+> >>  	list = llist_del_all(&wait_list->list);
+> >>  
+> >>  	/* We first reverse the list to preserve FIFO ordering and fairness */
+> >> -
+> >> -	while (list) {
+> >> -		struct llist_node *t = list;
+> >> -		list = llist_next(list);
+> >> -
+> >> -		t->next = reverse;
+> >> -		reverse = t;
+> >> -	}
+> >> +	reverse = llist_reverse_order(list);
+> >>  
+> >>  	/* Then do the wakeups */
+> >> -
+> >> -	while (reverse) {
+> >> -		cl = container_of(reverse, struct closure, list);
+> >> -		reverse = llist_next(reverse);
+> >> -
+> >> +	llist_for_each_entry(cl, reverse, list) {
+> >>  		closure_set_waiting(cl, 0);
+> >>  		closure_sub(cl, CLOSURE_WAITING + 1);
+> >>  	}
+> >> -- 
+> >> 1.9.1
