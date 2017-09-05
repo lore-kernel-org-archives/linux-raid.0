@@ -1,7 +1,7 @@
 From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH 2/3] mdadm/manpage: disable bitmap_resize for external file bitmap
-Date: Tue,  5 Sep 2017 17:41:37 +0800
-Message-ID: <1504604498-26048-3-git-send-email-zlliu@suse.com>
+Subject: [PATCH 1/3] mdadm/grow: Component size must be larger than chunk size
+Date: Tue,  5 Sep 2017 17:41:36 +0800
+Message-ID: <1504604498-26048-2-git-send-email-zlliu@suse.com>
 References: <1504604498-26048-1-git-send-email-zlliu@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1504604498-26048-1-git-send-email-zlliu@suse.com>
@@ -10,31 +10,32 @@ To: Jes.Sorensen@gmail.com
 Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
-Update the manpage in "SIZE CHANGES" against the md commit.
-Commit: e8a27f836f165c26f867ece7f31eb5c811692319
-(md/bitmap: disable bitmap_resize for file-backed bitmaps.)
+Grow: Changing component size must be larger than current
+chunk size against stripe raids, otherwise Grow_reshape()
+would set s->size to '0'.
 
 Signed-off-by: Zhilong Liu <zlliu@suse.com>
 ---
- mdadm.8.in | 5 +++++
- 1 file changed, 5 insertions(+)
+ Grow.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/mdadm.8.in b/mdadm.8.in
-index e0747fb..f0fd1fc 100644
---- a/mdadm.8.in
-+++ b/mdadm.8.in
-@@ -2758,6 +2758,11 @@ Also the size of an array cannot be changed while it has an active
- bitmap.  If an array has a bitmap, it must be removed before the size
- can be changed. Once the change is complete a new bitmap can be created.
+diff --git a/Grow.c b/Grow.c
+index 534ba80..f0a21ff 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -1816,6 +1816,12 @@ int Grow_reshape(char *devname, int fd,
+ 		return 1;
+ 	}
  
-+.PP
-+Note:
-+.B "--grow --size"
-+is not yet supported for external file bitmap.
++	if (array.level > 1 &&
++	   (array.chunk_size / 1024) > (int)s->size) {
++		pr_err("component size must be larger than chunk size.\n");
++		return 1;
++	}
 +
- .SS RAID\-DEVICES CHANGES
- 
- A RAID1 array can work with any number of devices from 1 upwards
+ 	st = super_by_fd(fd, &subarray);
+ 	if (!st) {
+ 		pr_err("Unable to determine metadata format for %s\n", devname);
 -- 
 2.6.6
 
