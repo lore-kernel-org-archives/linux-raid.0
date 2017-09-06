@@ -1,113 +1,80 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: [GIT PULL] MD update for 4.14-rc1
-Date: Wed, 6 Sep 2017 14:26:19 -0700
-Message-ID: <20170906212619.fxmyukyaqcqjn2yi@kernel.org>
+From: "Thomas C. Bishop" <bishop@latech.edu>
+Subject: Re: raid5 messed up
+Date: Wed, 6 Sep 2017 18:00:26 -0500
+Message-ID: <44cd847f-8be8-ee8b-0dd2-136ba2676675@email.latech.edu>
+References: <fdbb6bf6-357c-781e-beee-d8589cbb299d@email.latech.edu>
+ <20170902002452.GA26288@metamorpher.de>
+Reply-To: bishop@latech.edu
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170902002452.GA26288@metamorpher.de>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: Andreas Klauer <Andreas.Klauer@metamorpher.de>, "Thomas C. Bishop" <bishop@latech.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
-Please pull MD update for 4.14. The update mainly fixes bugs:
-- Make raid5 ppl support several ppl from Pawel
-- Several raid5-cache bug fixes from Song
-- Bitmap fixes from Neil and Me
-- One raid1/10 regression fix since 4.12 from Me
-- Other small fixes and cleanup
+note the smartctl report is
 
-Note, this pull has conflict with block tree, which can be resolved as below:
+"failure  prediction"
+on two HDs not failed.
 
-diff --cc drivers/md/raid5-ppl.c
-index 1e237c4,a98ef17..cd026c8
---- a/drivers/md/raid5-ppl.c
-+++ b/drivers/md/raid5-ppl.c
-@@@ -451,12 -456,25 +456,25 @@@ static void ppl_submit_iounit(struct pp
-  	pplhdr->entries_count = cpu_to_le32(io->entries_count);
-  	pplhdr->checksum = cpu_to_le32(~crc32c_le(~0, pplhdr, PPL_HEADER_SIZE));
-  
-+ 	/* Rewind the buffer if current PPL is larger then remaining space */
-+ 	if (log->use_multippl &&
-+ 	    log->rdev->ppl.sector + log->rdev->ppl.size - log->next_io_sector <
-+ 	    (PPL_HEADER_SIZE + io->pp_size) >> 9)
-+ 		log->next_io_sector = log->rdev->ppl.sector;
-+ 
-+ 
-  	bio->bi_end_io = ppl_log_endio;
-  	bio->bi_opf = REQ_OP_WRITE | REQ_FUA;
- -	bio->bi_bdev = log->rdev->bdev;
- +	bio_set_dev(bio, log->rdev->bdev);
-- 	bio->bi_iter.bi_sector = log->rdev->ppl.sector;
-+ 	bio->bi_iter.bi_sector = log->next_io_sector;
-  	bio_add_page(bio, io->header_page, PAGE_SIZE, 0);
-  
-+ 	pr_debug("%s: log->current_io_sector: %llu\n", __func__,
-+ 	    (unsigned long long)log->next_io_sector);
-+ 
-+ 	if (log->use_multippl)
-+ 		log->next_io_sector += (PPL_HEADER_SIZE + io->pp_size) >> 9;
-+ 
-  	list_for_each_entry(sh, &io->stripe_list, log_list) {
-  		/* entries for full stripe writes have no partial parity */
-  		if (test_bit(STRIPE_FULL_WRITE, &sh->state))
+I used the scterc option (see Phil's recommend so the smart is cut-off. I 'll check his full ist of options.
 
-Thanks,
-Shaohua
+smartctl -iA -l scterc /dev/sdXn
 
-The following changes since commit 143c97cc652949893c8056c679012f0aeccb80e5:
 
-  Revert "pty: fix the cached path of the pty slave file descriptor in the master" (2017-08-23 18:16:11 -0700)
+Tom
+On 09/01/2017 07:24 PM, Andreas Klauer wrote:
+> On Fri, Sep 01, 2017 at 03:15:41PM -0500, Thomas C. Bishop wrote:
+>> I messed up my raid5 array .
+> That's an understatement...
+>
+>> I know a two of HDs are "failure
+>> prediction" and one is out..
+> RAID 5 with three failed drives, chances of survival are very low.
+> You should never let things get this far. Timeouts? Doesn't matter!
+> You either have no disk monitoring at all or never acted on it.
+>
+> ddrescue the broken drives to new ones first.
+> Then always use overlays for recovery experiments.
+>
+> https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID#Making_the_harddisks_read-only_using_an_overlay_file
+>
+> Experiments for example could be:
+>
+>   *) --assemble --force
+>   *) --assemble --update=force-no-bbl
+>   *) --create --metadata=1.0 --chunk=128 with one 'missing' drive
+>
+> Again, use overlays for everything.
+>
+>>     Bad Block Log : 512 entries available at offset -8 sectors - bad
+>> blocks present.
+> You have bbl entries on more than one drive, use --examine-badblocks
+> to see if they are identical. You have to clear those or md will
+> either not work at all or always give read errors even after replacing
+> the drives. Bad block list issues were previously discussed on the list,
+> you might find it when searching for "no-bbl".
+>
+>> === START OF READ SMART DATA SECTION ===
+>> SMART Health Status: OK
+> Never trust this unconditionally. It's a false friend.
+> Always look at the detailed output with reallocated etc. sectors.
+> Run selftests regularly, detect disk errors early, replace drives immediately.
+>
+> Good luck
+> Andreas Klauer
 
-are available in the git repository at:
+-- 
+     ***********************************
+          Thomas C. Bishop
+Hazel Stewart Garner Associate Professor
+         Chemistry & Physics
+          Tel: 318-257-5209
+          Fax: 318-257-3823
+         www.latech.edu/~bishop
+     ***********************************
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git tags/md/4.14-rc1
-
-for you to fetch changes up to e8a27f836f165c26f867ece7f31eb5c811692319:
-
-  md/bitmap: disable bitmap_resize for file-backed bitmaps. (2017-08-31 22:57:03 -0700)
-
-----------------------------------------------------------------
-Alexey Obitotskiy (1):
-      md: notify about new spare disk in the container
-
-Cihangir Akturk (1):
-      md: replace seq_release_private with seq_release
-
-Denys Vlasenko (1):
-      lib/raid6: align AVX512 constants to 512 bits, not bytes
-
-Guoqing Jiang (1):
-      raid5: remove raid5_build_block
-
-NeilBrown (1):
-      md/bitmap: disable bitmap_resize for file-backed bitmaps.
-
-Pawel Baldysiak (2):
-      md: Runtime support for multiple ppls
-      raid5-ppl: Recovery support for multiple partial parity logs
-
-Shaohua Li (3):
-      md/bitmap: copy correct data for bitmap super
-      md/raid1/10: reset bio allocated from mempool
-      md/raid0: attach correct cgroup info in bio
-
-Song Liu (2):
-      md/raid5: release/flush io in raid5_do_work()
-      md/r5cache: call mddev_lock/unlock() in r5c_journal_mode_show
-
- block/bio.c                    |   2 +-
- drivers/md/bitmap.c            |   9 ++-
- drivers/md/md.c                |  20 ++++-
- drivers/md/md.h                |   1 +
- drivers/md/raid0.c             |   4 +-
- drivers/md/raid1.c             |  22 +++++-
- drivers/md/raid10.c            |  35 ++++++++-
- drivers/md/raid5-cache.c       |  12 ++-
- drivers/md/raid5-ppl.c         | 171 +++++++++++++++++++++++++++++++----------
- drivers/md/raid5.c             |  16 ++--
- include/uapi/linux/raid/md_p.h |   4 +-
- lib/raid6/avx512.c             |   2 +-
- 12 files changed, 230 insertions(+), 68 deletions(-)
