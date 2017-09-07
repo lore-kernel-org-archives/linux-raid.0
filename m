@@ -1,99 +1,63 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: Re: Stuck in md_write_start because MD_SB_CHANGE_PENDING can't be
- cleared
-Date: Wed, 6 Sep 2017 21:37:57 -0400 (EDT)
-Message-ID: <624049285.8379021.1504748277805.JavaMail.zimbra@redhat.com>
-References: <546311999.4473128.1504339295016.JavaMail.zimbra@redhat.com> <877exfdx7x.fsf@notabene.neil.brown.name> <22698eb3-35f7-04e5-96e8-26470d892655@redhat.com> <b5856cb8-0ea6-7bf2-10a0-76dd69d04698@redhat.com> <87y3pvc9ha.fsf@notabene.neil.brown.name> <34fedde7-cef9-34ff-1403-9d097267eb55@redhat.com> <87k21ec4fn.fsf@notabene.neil.brown.name> <3a5955de-e6a1-de83-b00b-1984f7125799@redhat.com>
+From: Coly Li <i@coly.li>
+Subject: Re: [PATCH 06/14] md/bcache: Use %pS printk format for direct
+ addresses
+Date: Thu, 7 Sep 2017 12:50:18 +0800
+Message-ID: <29e5f2a8-c829-0aba-5b06-1501c98690a6@coly.li>
+References: <1504729681-3504-1-git-send-email-deller@gmx.de>
+ <1504729681-3504-7-git-send-email-deller@gmx.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3a5955de-e6a1-de83-b00b-1984f7125799@redhat.com>
+In-Reply-To: <1504729681-3504-7-git-send-email-deller@gmx.de>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, linux-raid <linux-raid@vger.kernel.org>
-Cc: shli@kernel.org
+To: Helge Deller <deller@gmx.de>
+Cc: linux-kernel@vger.kernel.org, Sergey Senozhatsky <sergey.senozhatsky@gmail.com>, Petr Mladek <pmladek@suse.com>, Andrew Morton <akpm@linux-foundation.org>, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-
------ Original Message -----
-> From: "Xiao Ni" <xni@redhat.com>
-> To: "NeilBrown" <neilb@suse.com>, "linux-raid" <linux-raid@vger.kernel.org>
-> Cc: shli@kernel.org
-> Sent: Tuesday, September 5, 2017 10:15:00 AM
-> Subject: Re: Stuck in md_write_start because MD_SB_CHANGE_PENDING can't be cleared
+On 2017/9/7 上午4:27, Helge Deller wrote:
+> Use the %pS instead of the %pF printk format specifier for printing symbols
+> from direct addresses. This is needed for the ia64, ppc64 and parisc64
+> architectures.
 > 
+> Signed-off-by: Helge Deller <deller@gmx.de>
+> Cc: linux-bcache@vger.kernel.org
+> Cc: linux-raid@vger.kernel.org
+> ---
+>  drivers/md/bcache/closure.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
+> diff --git a/drivers/md/bcache/closure.c b/drivers/md/bcache/closure.c
+> index 864e673..0b0c9bc 100644
+> --- a/drivers/md/bcache/closure.c
+> +++ b/drivers/md/bcache/closure.c
+> @@ -175,7 +175,7 @@ static int debug_seq_show(struct seq_file *f, void *data)
+>  	list_for_each_entry(cl, &closure_list, all) {
+>  		int r = atomic_read(&cl->remaining);
+>  
+> -		seq_printf(f, "%p: %pF -> %pf p %p r %i ",
+> +		seq_printf(f, "%p: %pS -> %pf p %p r %i ",
+>  			   cl, (void *) cl->ip, cl->fn, cl->parent,
+>  			   r & CLOSURE_REMAINING_MASK);
+>  
+> @@ -187,7 +187,7 @@ static int debug_seq_show(struct seq_file *f, void *data)
+>  			   r & CLOSURE_SLEEPING	? "Sl" : "");
+>  
+>  		if (r & CLOSURE_WAITING)
+> -			seq_printf(f, " W %pF\n",
+> +			seq_printf(f, " W %pS\n",
+>  				   (void *) cl->waiting_on);
+>  
+>  		seq_printf(f, "\n");
 > 
-> On 09/05/2017 09:36 AM, NeilBrown wrote:
-> > On Mon, Sep 04 2017, Xiao Ni wrote:
-> >
-> >>
-> >> In function handle_stripe:
-> >> 4697         if (s.handle_bad_blocks ||
-> >> 4698             test_bit(MD_SB_CHANGE_PENDING, &conf->mddev->sb_flags)) {
-> >> 4699                 set_bit(STRIPE_HANDLE, &sh->state);
-> >> 4700                 goto finish;
-> >> 4701         }
-> >>
-> >> Because MD_SB_CHANGE_PENDING is set, so the stripes can't be handled.
-> >>
-> > Right, of course.  I see what is happening now.
-> >
-> > - raid5d cannot complete stripes until the metadata is written
-> > - the metadata cannot be written until raid5d gets the mddev_lock
-> > - mddev_lock is held by the write to suspend_hi
-> > - the write to suspend_hi is waiting for raid5_quiesce
-> > - raid5_quiesce is waiting for some stripes to complete.
-> >
-> > We could declare that ->quiesce(, 1) cannot be called while holding the
-> > lock.
-> > We could possible allow it but only if md_update_sb() is called first,
-> > though that might still be racy.
-> >
-> > ->quiesce(, 1) is currently called from:
-> >   mddev_suspend
-> >   suspend_lo_store
-> >   suspend_hi_store
-> >   __md_stop_writes
-> >   mddev_detach
-> >   set_bitmap_file
-> >   update_array_info (when setting/removing internal bitmap)
-> >   md_do_sync
-> >
-> > and most of those are call with the lock held, or take the lock.
-> >
-> > Maybe we should *require* that mddev_lock is held when calling
-> > ->quiesce() and have ->quiesce() do the metadata update.
-> >
-> > Something like the following maybe.  Can you test it?
-> 
-> Hi Neil
-> 
-> Thanks for the analysis. I need to thing for a while :)
-> I already added the patch and the test is running now. It usually needs
-> more than 5
-> hours to reproduce this problem. I'll let it run more than 24 hours.
-> I'll update the test
-> result later.
 
-Hi Neil
+It is unclear to me, that if %pF is used, on ia64/ppc64/parisc64 a
+function descriptor conversion happens, what negative effect exactly
+takes place ? Or you just want to unify the out put format, and get rid
+of extra conversion information ?
 
-The problem still exists. But it doesn't show calltrace this time. It
-was stuck yesterday. I didn't notice that because there has no calltrace.
+Thanks.
 
-echo file raid5.c +p > /sys/kernel/debug/dynamic_debug/control
-
-It shows that raid5d is still spinning.
-
-Regards
-Xiao
-
-> 
-> Regards
-> Xiao
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+-- 
+Coly Li
