@@ -1,44 +1,56 @@
-From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: [PATCH] Grow: stop previous reshape process first
-Date: Thu,  7 Sep 2017 13:01:16 +0200
-Message-ID: <1504782076-1664-1-git-send-email-tomasz.majchrzak@intel.com>
+From: "Thomas C. Bishop" <bishop@latech.edu>
+Subject: Re: raid5 messed up
+Date: Thu, 7 Sep 2017 08:33:29 -0500
+Message-ID: <6e5083a4-609b-daba-3326-0dbd9dda6c34@email.latech.edu>
+References: <fdbb6bf6-357c-781e-beee-d8589cbb299d@email.latech.edu>
+ <d08b6aaf-208e-f4bf-7d19-139103eb14cd@turmel.org>
+ <42b3f75a-d93d-f20d-579b-901a305fb508@email.latech.edu>
+ <59B09036.1040600@youngman.org.uk>
+Reply-To: bishop@latech.edu
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <59B09036.1040600@youngman.org.uk>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: jes.sorensen@gmail.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+To: Wols Lists <antlists@youngman.org.uk>, bishop@latech.edu, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If array is stopped during reshape and assembled again straight away,
-reshape process in a background might still be running. systemd doesn't
-start a new service if one already exists. If there is a race, previous
-process might terminate and new one is not created. Reshape doesn't
-continue after assemble.
+I see what you mean... seems it would be simple enough to find this 
+spec. but not clear if supported or not.
+Seagate claims this is a "best fit applications" drive for High-Capacity 
+RAID storage but never lists ERC as feature.
+http://www.seagate.com/files/www-content/partners/my%20spp%20dashboard/learn/en-us/docs/storage-solutions-guide-jul-2013-ssg1351-13-1307us.pdf
+pg 30 of the brochure.
 
-Tell systemd to restart the service rather than just start it. It will
-assure previous service is stopped first. If it's not running, stopping
-has no effect and only new process is started.
+  elsewhere@seagate I read ERC is a subset of the smart control commands 
+which are supported on this drive so one _might_ think it's supported.
 
-Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
----
- Grow.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+FYI: smartctl --xall  doesn't provide an answer either.
+closest it comes is
+SMART support is:     Available - device has SMART capability.
 
-diff --git a/Grow.c b/Grow.c
-index 534ba80..267b06f 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -3003,9 +3003,9 @@ static int continue_via_systemd(char *devnm)
- 		snprintf(pathbuf, sizeof(pathbuf), "mdadm-grow-continue@%s.service",
- 			 devnm);
- 		status = execl("/usr/bin/systemctl", "systemctl",
--			       "start",
-+			       "restart",
- 			       pathbuf, NULL);
--		status = execl("/bin/systemctl", "systemctl", "start",
-+		status = execl("/bin/systemctl", "systemctl", "restart",
- 			       pathbuf, NULL);
- 		exit(1);
- 	case -1: /* Just do it ourselves. */
+Tom
+
+On 09/06/2017 07:17 PM, Wols Lists wrote:
+> On 07/09/17 00:47, Thomas C. Bishop wrote:
+>> === START OF INFORMATION SECTION ===
+>> Vendor:               SEAGATE
+>> Product:              ST4000NM0023
+> Can't see any mention of ERC in the smart output, but a web search tells
+> me this is a Constellation, which I believe does support ERC?
+>
+> Cheers,
+> Wol
+
 -- 
-1.8.3.1
+     ***********************************
+          Thomas C. Bishop
+Hazel Stewart Garner Associate Professor
+         Chemistry & Physics
+          Tel: 318-257-5209
+          Fax: 318-257-3823
+         www.latech.edu/~bishop
+     ***********************************
 
