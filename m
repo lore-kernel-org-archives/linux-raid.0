@@ -1,8 +1,7 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [PATCH 1/4] md: always hold reconfig_mutex when calling
- mddev_suspend()
+Subject: [PATCH 3/4] md: use mddev_suspend/resume instead of ->quiesce()
 Date: Tue, 12 Sep 2017 11:49:12 +1000
-Message-ID: <150518095211.32691.5131214910102889465.stgit@noble>
+Message-ID: <150518095220.32691.8912693955251592979.stgit@noble>
 References: <150518076229.32691.13542756562323866921.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,61 +13,94 @@ To: Xiao Ni <xni@redhat.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Most often mddev_suspend() is called with
-reconfig_mutex held.  Make this a requirement in
-preparation a subsequent patch.
+mddev_suspend() is a more general interface than
+calling ->quiesce() and is so more extensible.  A
+future patch will make use of this.
 
 Signed-off-by: NeilBrown <neilb@suse.com>
 ---
- drivers/md/dm-raid.c     |    5 ++++-
- drivers/md/md.c          |    1 +
- drivers/md/raid5-cache.c |    2 ++
- 3 files changed, 7 insertions(+), 1 deletion(-)
+ drivers/md/md.c |   24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index 5bfe285ea9d1..f013b03e15c3 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -3628,8 +3628,11 @@ static void raid_postsuspend(struct dm_target *ti)
- {
- 	struct raid_set *rs = ti->private;
- 
--	if (!test_and_set_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags))
-+	if (!test_and_set_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags)) {
-+		mddev_lock_nointr(&rs->md);
- 		mddev_suspend(&rs->md);
-+		mddev_unlock(&rs->md);
-+	}
- 
- 	rs->md.ro = 1;
- }
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index b01e458d31e9..675c9e6495e4 100644
+index d6d491243411..0b167169fef9 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -336,6 +336,7 @@ static blk_qc_t md_make_request(struct request_queue *q, struct bio *bio)
- void mddev_suspend(struct mddev *mddev)
- {
- 	WARN_ON_ONCE(mddev->thread && current == mddev->thread->tsk);
-+	lockdep_assert_held(&mddev->reconfig_mutex);
- 	if (mddev->suspended++)
- 		return;
- 	synchronize_rcu();
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 2dcbafa8e66c..8d09c2fa3d63 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -703,9 +703,11 @@ static void r5c_disable_writeback_async(struct work_struct *work)
- 	wait_event(mddev->sb_wait,
- 		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
+@@ -4820,8 +4820,8 @@ suspend_lo_store(struct mddev *mddev, const char *buf, size_t len)
+ 		mddev->pers->quiesce(mddev, 2);
+ 	else {
+ 		/* Expanding suspended region - need to wait */
+-		mddev->pers->quiesce(mddev, 1);
+-		mddev->pers->quiesce(mddev, 0);
++		mddev_suspend(mddev);
++		mddev_resume(mddev);
+ 	}
+ 	err = 0;
+ unlock:
+@@ -4863,8 +4863,8 @@ suspend_hi_store(struct mddev *mddev, const char *buf, size_t len)
+ 		mddev->pers->quiesce(mddev, 2);
+ 	else {
+ 		/* Expanding suspended region - need to wait */
+-		mddev->pers->quiesce(mddev, 1);
+-		mddev->pers->quiesce(mddev, 0);
++		mddev_suspend(mddev);
++		mddev_resume(mddev);
+ 	}
+ 	err = 0;
+ unlock:
+@@ -6595,7 +6595,7 @@ static int set_bitmap_file(struct mddev *mddev, int fd)
+ 			struct bitmap *bitmap;
  
-+	mddev_lock_nointr(mddev);
- 	mddev_suspend(mddev);
- 	log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_THROUGH;
- 	mddev_resume(mddev);
-+	mddev_unlock(mddev);
- }
- 
- static void r5l_submit_current_io(struct r5l_log *log)
+ 			bitmap = bitmap_create(mddev, -1);
+-			mddev->pers->quiesce(mddev, 1);
++			mddev_suspend(mddev);
+ 			if (!IS_ERR(bitmap)) {
+ 				mddev->bitmap = bitmap;
+ 				err = bitmap_load(mddev);
+@@ -6605,11 +6605,11 @@ static int set_bitmap_file(struct mddev *mddev, int fd)
+ 				bitmap_destroy(mddev);
+ 				fd = -1;
+ 			}
+-			mddev->pers->quiesce(mddev, 0);
++			mddev_resume(mddev);
+ 		} else if (fd < 0) {
+-			mddev->pers->quiesce(mddev, 1);
++			mddev_suspend(mddev);
+ 			bitmap_destroy(mddev);
+-			mddev->pers->quiesce(mddev, 0);
++			mddev_resume(mddev);
+ 		}
+ 	}
+ 	if (fd < 0) {
+@@ -6895,7 +6895,7 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
+ 			mddev->bitmap_info.space =
+ 				mddev->bitmap_info.default_space;
+ 			bitmap = bitmap_create(mddev, -1);
+-			mddev->pers->quiesce(mddev, 1);
++			mddev_suspend(mddev);
+ 			if (!IS_ERR(bitmap)) {
+ 				mddev->bitmap = bitmap;
+ 				rv = bitmap_load(mddev);
+@@ -6903,7 +6903,7 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
+ 				rv = PTR_ERR(bitmap);
+ 			if (rv)
+ 				bitmap_destroy(mddev);
+-			mddev->pers->quiesce(mddev, 0);
++			mddev_resume(mddev);
+ 		} else {
+ 			/* remove the bitmap */
+ 			if (!mddev->bitmap) {
+@@ -6926,9 +6926,9 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
+ 				mddev->bitmap_info.nodes = 0;
+ 				md_cluster_ops->leave(mddev);
+ 			}
+-			mddev->pers->quiesce(mddev, 1);
++			mddev_suspend(mddev);
+ 			bitmap_destroy(mddev);
+-			mddev->pers->quiesce(mddev, 0);
++			mddev_resume(mddev);
+ 			mddev->bitmap_info.offset = 0;
+ 		}
+ 	}
 
 
