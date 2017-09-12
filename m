@@ -1,46 +1,43 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: Re: [PATCH 0/4] RFC: attempt to remove md deadlocks with metadata
- without
-Date: Mon, 11 Sep 2017 22:51:51 -0400 (EDT)
-Message-ID: <296444241.9937022.1505184711007.JavaMail.zimbra@redhat.com>
-References: <150518076229.32691.13542756562323866921.stgit@noble>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: debian9/raid1 assembly/unexpected failure opening device
+Date: Tue, 12 Sep 2017 23:37:00 +0100
+Message-ID: <87377rwnlf.fsf@esperi.org.uk>
+References: <CAGv-CE+UwWraQpVF8hG+OBxj1B7Gwbh7tUcMq7hKz0MQ0NWd-w@mail.gmail.com>
+        <CA+res+QAvW_WeULtzwVN8jyYvRgSt8bUFXbHDu5Fg9Wyo85_xw@mail.gmail.com>
+        <CAGv-CEJfZZQfQKzwVRdgtkAy7PrAQFL8uKDADkAJZdyQn9NvnQ@mail.gmail.com>
+        <59A81E07.3020806@youngman.org.uk>
+        <CAGv-CELfookNhwhtXDq89E-8ZZdvOa0tiUHxk-E1Nf_uvh-kQw@mail.gmail.com>
+        <59A84372.2090006@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <150518076229.32691.13542756562323866921.stgit@noble>
+In-Reply-To: <59A84372.2090006@youngman.org.uk> (Wols Lists's message of "Thu,
+        31 Aug 2017 18:12:18 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: Joel Walberg <joel.walberg@gmail.com>, Jack Wang <jack.wang.usish@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On 31 Aug 2017, Wols Lists uttered the following:
 
+> On 31/08/17 14:51, Joel Walberg wrote:
+>> While I hadn't seen that section on the Wiki, it's certainly something
+>> that I'll be using to decide my next purchase after fully reading the
+>> links that are provided there.
+>
+> I keep on intending to add a page for the smartctl information sections
+> from various drives, just haven't got round to it ...
+>
+> There seem to be three main classes of raid drives out there, WD Reds,
+> Seagate  NASs, and Toshiba N300 raid drives. Everybody seems to buy
+> Reds, I've only recently seen NASs,
 
------ Original Message -----
-> From: "NeilBrown" <neilb@suse.com>
-> To: "Xiao Ni" <xni@redhat.com>
-> Cc: linux-raid@vger.kernel.org
-> Sent: Tuesday, September 12, 2017 9:49:12 AM
-> Subject: [PATCH 0/4] RFC: attempt to remove md deadlocks with metadata without
-> 
-> Hi,
->  I looked again at the previous patch I posted which tried to mak
->  md_update_sb() safe without taking reconfig_mutex, and realized that
->  it had serious problems, particularly around devices being added or
->  removed while the update was happening.
-> 
->  So I decided to try a different approach, which is embodied in these
->  patches.  The md thread is now explicitly allowed to call
->  md_update_sb() while some other thread holds the lock and
->  waits for mddev_suspend() to complete.
-> 
->  Please test these and confirm that they still address the problem you
->  found.
+And higher-end drives too: e.g. Seagate Constellations and the like.
 
-Hi Neil
+>                 They all seem to cost about 50% more than the basic
+> desktop drives, but that's still amazingly cheap ...
 
-Thanks for the patches. I'll update the test result. 
+... until you need to buy lots of them. :)
 
-Regards
-Xiao
-
+-- 
+NULL && (void)
