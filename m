@@ -1,52 +1,70 @@
-From: Reindl Harald <h.reindl@thelounge.net>
-Subject: Re: Encrypted software RAID1 with Debian Stretch
-Date: Wed, 13 Sep 2017 03:34:21 +0200
-Message-ID: <3a85ea27-602a-3f5b-3537-d4159a56c2ed@thelounge.net>
-References: <28c61e8c14f44ec6727b8f3fb3c80c98@riseup.net>
- <59A92C91.7010508@youngman.org.uk> <87y3pjv6jw.fsf@esperi.org.uk>
+From: Xiao Ni <xni@redhat.com>
+Subject: Re: [PATCH 0/4] RFC: attempt to remove md deadlocks with metadata
+ without
+Date: Tue, 12 Sep 2017 22:11:50 -0400 (EDT)
+Message-ID: <1403889957.10216459.1505268710452.JavaMail.zimbra@redhat.com>
+References: <150518076229.32691.13542756562323866921.stgit@noble>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87y3pjv6jw.fsf@esperi.org.uk>
-Content-Language: de-CH
+In-Reply-To: <150518076229.32691.13542756562323866921.stgit@noble>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nix <nix@esperi.org.uk>, Wols Lists <antlists@youngman.org.uk>
-Cc: commentsabout@riseup.net, linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Am 13.09.2017 um 01:30 schrieb Nix:
-> On 1 Sep 2017, Wols Lists stated:
->> Okay. Personal preference (and I don't do it myself, but I'd have to
->> rebuild my system to do it) I would use btrfs for the filesystems. Yes
->> it has a bad rep for its inbuilt raid, but if all you're doing is backup
->> snapshots it should be great. Each backup cycle consists of "take a
->> snapshot, do an in-place rsync", so if only 10MB of live data has
->> changed, the backup only uses an extra 10MB on the backup drives.
+
+----- Original Message -----
+> From: "NeilBrown" <neilb@suse.com>
+> To: "Xiao Ni" <xni@redhat.com>
+> Cc: linux-raid@vger.kernel.org
+> Sent: Tuesday, September 12, 2017 9:49:12 AM
+> Subject: [PATCH 0/4] RFC: attempt to remove md deadlocks with metadata without
 > 
-> This sounds like downright dangerous advice to me. Surely what matters
-> for backup is stability? Use something old and boring and stable. btrfs
-> is the very last thing you should be thinking of for this application.
-> After all, you'll only need the backups when things are already going
-> wrong: the last thing you want to find is that you've been using a
-> filesystem that has betrayed you at the last.
-
-well, SuSE is using it as default for their enterprise Linux an di am 
-using it on an backup-vm for two years (two 2 TB virtual disks) now 
-without any problem on top of LUKS with forcec compression enabled
-
-> ext2 is probably too old (it's not maintained much any more)
-
-sorry, but when you are talking about betrayed filesystems above and 
-then take ext2, a non journaled filesystem which takes ages for fsck, in 
-your mouth....
-
->> Note also, I've really only covered the raid aspect. I don't know lvm, I
->> don't know btrfs.
+> Hi,
+>  I looked again at the previous patch I posted which tried to mak
+>  md_update_sb() safe without taking reconfig_mutex, and realized that
+>  it had serious problems, particularly around devices being added or
+>  removed while the update was happening.
 > 
-> I can tell. if you did, you wouldn't be recommending it for this
-> application. btrfs is cool and all, but it's also new, and in filesystem
-> land new means dangerous
+>  So I decided to try a different approach, which is embodied in these
+>  patches.  The md thread is now explicitly allowed to call
+>  md_update_sb() while some other thread holds the lock and
+>  waits for mddev_suspend() to complete.
+> 
+>  Please test these and confirm that they still address the problem you
+>  found.
 
-with that argumentation... no i better stop comment.....
+Hi Neil
+
+The test have been running for more than 24 hours. The problem doesn't appear.
+The patches can fix this bug. 
+
+Best Regards
+Xiao
+> 
+> Thanks,
+> NeilBrown
+> 
+> ---
+> 
+> NeilBrown (4):
+>       md: always hold reconfig_mutex when calling mddev_suspend()
+>       md: don't call bitmap_create() while array is quiesced.
+>       md: use mddev_suspend/resume instead of ->quiesce()
+>       md: allow metadata update while suspending.
+> 
+> 
+>  drivers/md/dm-raid.c     |    5 ++++-
+>  drivers/md/md.c          |   45
+>  ++++++++++++++++++++++++++++++++-------------
+>  drivers/md/md.h          |    6 ++++++
+>  drivers/md/raid5-cache.c |    2 ++
+>  4 files changed, 44 insertions(+), 14 deletions(-)
+> 
+> --
+> Signature
+> 
+> 
