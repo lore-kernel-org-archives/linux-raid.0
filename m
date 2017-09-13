@@ -1,91 +1,57 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: Re: [PATCH 0/4] RFC: attempt to remove md deadlocks with metadata
- without
-Date: Wed, 13 Sep 2017 11:09:11 -0400 (EDT)
-Message-ID: <1025458651.10368123.1505315351335.JavaMail.zimbra@redhat.com>
-References: <150518076229.32691.13542756562323866921.stgit@noble> <1403889957.10216459.1505268710452.JavaMail.zimbra@redhat.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: Encrypted software RAID1 with Debian Stretch
+Date: Wed, 13 Sep 2017 17:10:57 +0100
+Message-ID: <59B95891.9040809@youngman.org.uk>
+References: <28c61e8c14f44ec6727b8f3fb3c80c98@riseup.net>
+ <59A92C91.7010508@youngman.org.uk> <87y3pjv6jw.fsf@esperi.org.uk>
+ <3a85ea27-602a-3f5b-3537-d4159a56c2ed@thelounge.net>
+ <87377qvh7t.fsf@esperi.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1403889957.10216459.1505268710452.JavaMail.zimbra@redhat.com>
+In-Reply-To: <87377qvh7t.fsf@esperi.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: Nix <nix@esperi.org.uk>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On 13/09/17 14:52, Nix wrote:
+> Nonetheless, fs/ext2 is almost unmaintained these days, and bugs are
+> slowly creeping back in. fs/ext4 can take up its duties perfectly well
+> these days, reading and writing both ext4-sans-journal and traditional
+> ext2 filesystems perfectly well.
 
+ext2 as filesystem code in linux no longer exists. Likewise, I believe,
+ext3. Both have been dropped and deleted. The only supported/maintained
+ext driver now is ext4, which has backwards compatibility with 3 and 2.
 
------ Original Message -----
-> From: "Xiao Ni" <xni@redhat.com>
-> To: "NeilBrown" <neilb@suse.com>
-> Cc: linux-raid@vger.kernel.org
-> Sent: Wednesday, September 13, 2017 10:11:50 AM
-> Subject: Re: [PATCH 0/4] RFC: attempt to remove md deadlocks with metadata without
+Much like XFS I gather, which although nominally a single filesystem, is
+actually full of compatibility code for earlier, incompatible variants.
 > 
-> 
-> 
-> ----- Original Message -----
-> > From: "NeilBrown" <neilb@suse.com>
-> > To: "Xiao Ni" <xni@redhat.com>
-> > Cc: linux-raid@vger.kernel.org
-> > Sent: Tuesday, September 12, 2017 9:49:12 AM
-> > Subject: [PATCH 0/4] RFC: attempt to remove md deadlocks with metadata
-> > without
-> > 
-> > Hi,
-> >  I looked again at the previous patch I posted which tried to mak
-> >  md_update_sb() safe without taking reconfig_mutex, and realized that
-> >  it had serious problems, particularly around devices being added or
-> >  removed while the update was happening.
-> > 
-> >  So I decided to try a different approach, which is embodied in these
-> >  patches.  The md thread is now explicitly allowed to call
-> >  md_update_sb() while some other thread holds the lock and
-> >  waits for mddev_suspend() to complete.
-> > 
-> >  Please test these and confirm that they still address the problem you
-> >  found.
-> 
-> Hi Neil
-> 
-> The test have been running for more than 24 hours. The problem doesn't
-> appear.
-> The patches can fix this bug.
-> 
+> One person having no problems with a filesystem as new as btrfs does not
+> mean the filesystem is reliable enough to use for backup. The
+> reliability bar for such filesystems is far higher than that for fses in
+> daily use! ("The required-feature bar is often also much lower. All they
+> have to do is store stuff that rarely changes and not lose it!")
 
-Hi Neil
+"The required-feature bar is often also much lower. All they
+have to do is store stuff that rarely changes and not lose it!"
 
-Sorry for the bad news. The test is still running and it's stuck again. 
+Actually, btrfs is very good at that! PROVIDED you don't use the fancy
+new experimental features (like raid :-) in btrfs, it works very well.
+It's a nice, stable, very decent filesystem.
 
-Regards
-Xiao
-> > 
-> > Thanks,
-> > NeilBrown
-> > 
-> > ---
-> > 
-> > NeilBrown (4):
-> >       md: always hold reconfig_mutex when calling mddev_suspend()
-> >       md: don't call bitmap_create() while array is quiesced.
-> >       md: use mddev_suspend/resume instead of ->quiesce()
-> >       md: allow metadata update while suspending.
-> > 
-> > 
-> >  drivers/md/dm-raid.c     |    5 ++++-
-> >  drivers/md/md.c          |   45
-> >  ++++++++++++++++++++++++++++++++-------------
-> >  drivers/md/md.h          |    6 ++++++
-> >  drivers/md/raid5-cache.c |    2 ++
-> >  4 files changed, 44 insertions(+), 14 deletions(-)
-> > 
-> > --
-> > Signature
-> > 
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+The only real bug left in basic functionality is IF you combine
+snapshots with a disk full, it can be a disaster. Hence my comments
+about monitoring disk space! Seriously, I would be very happy to set my
+system up as I suggested and, apart from the learning curve (I'm
+currently still on raid-1/ext on my home system, would love to upgrade
+but can't afford it), I would be only to happy to entrust my backup to
+btrfs.
+
+The rule is simple - don't abuse your tools, and btrfs - USED WITHIN ITS
+LIMITATIONS - is a powerful and reliable file system.
+
+Cheers,
+Wol
