@@ -1,57 +1,33 @@
 From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Encrypted software RAID1 with Debian Stretch
-Date: Wed, 13 Sep 2017 17:10:57 +0100
-Message-ID: <59B95891.9040809@youngman.org.uk>
-References: <28c61e8c14f44ec6727b8f3fb3c80c98@riseup.net>
- <59A92C91.7010508@youngman.org.uk> <87y3pjv6jw.fsf@esperi.org.uk>
- <3a85ea27-602a-3f5b-3537-d4159a56c2ed@thelounge.net>
- <87377qvh7t.fsf@esperi.org.uk>
+Subject: Re: debian9/raid1 assembly/unexpected failure opening device
+Date: Wed, 13 Sep 2017 17:15:02 +0100
+Message-ID: <59B95986.7040503@youngman.org.uk>
+References: <CAGv-CE+UwWraQpVF8hG+OBxj1B7Gwbh7tUcMq7hKz0MQ0NWd-w@mail.gmail.com>
+ <CA+res+QAvW_WeULtzwVN8jyYvRgSt8bUFXbHDu5Fg9Wyo85_xw@mail.gmail.com>
+ <CAGv-CEJfZZQfQKzwVRdgtkAy7PrAQFL8uKDADkAJZdyQn9NvnQ@mail.gmail.com>
+ <59A81E07.3020806@youngman.org.uk>
+ <CAGv-CELfookNhwhtXDq89E-8ZZdvOa0tiUHxk-E1Nf_uvh-kQw@mail.gmail.com>
+ <59A84372.2090006@youngman.org.uk> <87377rwnlf.fsf@esperi.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87377qvh7t.fsf@esperi.org.uk>
+In-Reply-To: <87377rwnlf.fsf@esperi.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
 To: Nix <nix@esperi.org.uk>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 13/09/17 14:52, Nix wrote:
-> Nonetheless, fs/ext2 is almost unmaintained these days, and bugs are
-> slowly creeping back in. fs/ext4 can take up its duties perfectly well
-> these days, reading and writing both ext4-sans-journal and traditional
-> ext2 filesystems perfectly well.
+On 12/09/17 23:37, Nix wrote:
+>>                 They all seem to cost about 50% more than the basic
+>> > desktop drives, but that's still amazingly cheap ...
+> ... until you need to buy lots of them. :)
 
-ext2 as filesystem code in linux no longer exists. Likewise, I believe,
-ext3. Both have been dropped and deleted. The only supported/maintained
-ext driver now is ext4, which has backwards compatibility with 3 and 2.
-
-Much like XFS I gather, which although nominally a single filesystem, is
-actually full of compatibility code for earlier, incompatible variants.
-> 
-> One person having no problems with a filesystem as new as btrfs does not
-> mean the filesystem is reliable enough to use for backup. The
-> reliability bar for such filesystems is far higher than that for fses in
-> daily use! ("The required-feature bar is often also much lower. All they
-> have to do is store stuff that rarely changes and not lose it!")
-
-"The required-feature bar is often also much lower. All they
-have to do is store stuff that rarely changes and not lose it!"
-
-Actually, btrfs is very good at that! PROVIDED you don't use the fancy
-new experimental features (like raid :-) in btrfs, it works very well.
-It's a nice, stable, very decent filesystem.
-
-The only real bug left in basic functionality is IF you combine
-snapshots with a disk full, it can be a disaster. Hence my comments
-about monitoring disk space! Seriously, I would be very happy to set my
-system up as I suggested and, apart from the learning curve (I'm
-currently still on raid-1/ext on my home system, would love to upgrade
-but can't afford it), I would be only to happy to entrust my backup to
-btrfs.
-
-The rule is simple - don't abuse your tools, and btrfs - USED WITHIN ITS
-LIMITATIONS - is a powerful and reliable file system.
+I'm just thinking back to my first disk drive. I paid £200 for a WD
+bigfoot. It was a 5400rpm 5 1/4 drive - marketed as "cheapest cost per
+MB available". And how big was it? Just *six* *giga*bytes, I think my
+current pair of 3TB drives cost me less than that - 3 orders of
+magnitude more storage, for less money.
 
 Cheers,
 Wol
