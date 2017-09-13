@@ -1,43 +1,52 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: debian9/raid1 assembly/unexpected failure opening device
-Date: Tue, 12 Sep 2017 23:37:00 +0100
-Message-ID: <87377rwnlf.fsf@esperi.org.uk>
-References: <CAGv-CE+UwWraQpVF8hG+OBxj1B7Gwbh7tUcMq7hKz0MQ0NWd-w@mail.gmail.com>
-        <CA+res+QAvW_WeULtzwVN8jyYvRgSt8bUFXbHDu5Fg9Wyo85_xw@mail.gmail.com>
-        <CAGv-CEJfZZQfQKzwVRdgtkAy7PrAQFL8uKDADkAJZdyQn9NvnQ@mail.gmail.com>
-        <59A81E07.3020806@youngman.org.uk>
-        <CAGv-CELfookNhwhtXDq89E-8ZZdvOa0tiUHxk-E1Nf_uvh-kQw@mail.gmail.com>
-        <59A84372.2090006@youngman.org.uk>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH 0/4] RFC: attempt to remove md deadlocks with metadata without
+Date: Thu, 14 Sep 2017 09:05:20 +1000
+Message-ID: <87o9qe9p3j.fsf@notabene.neil.brown.name>
+References: <150518076229.32691.13542756562323866921.stgit@noble> <1403889957.10216459.1505268710452.JavaMail.zimbra@redhat.com> <1025458651.10368123.1505315351335.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <59A84372.2090006@youngman.org.uk> (Wols Lists's message of "Thu,
-        31 Aug 2017 18:12:18 +0100")
+In-Reply-To: <1025458651.10368123.1505315351335.JavaMail.zimbra@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: Joel Walberg <joel.walberg@gmail.com>, Jack Wang <jack.wang.usish@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: Xiao Ni <xni@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 31 Aug 2017, Wols Lists uttered the following:
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> On 31/08/17 14:51, Joel Walberg wrote:
->> While I hadn't seen that section on the Wiki, it's certainly something
->> that I'll be using to decide my next purchase after fully reading the
->> links that are provided there.
+On Wed, Sep 13 2017, Xiao Ni wrote:
 >
-> I keep on intending to add a page for the smartctl information sections
-> from various drives, just haven't got round to it ...
+> Hi Neil
 >
-> There seem to be three main classes of raid drives out there, WD Reds,
-> Seagate  NASs, and Toshiba N300 raid drives. Everybody seems to buy
-> Reds, I've only recently seen NASs,
+> Sorry for the bad news. The test is still running and it's stuck again.=20
 
-And higher-end drives too: e.g. Seagate Constellations and the like.
+Any details?  Anything at all?  Just a little hint maybe?
 
->                 They all seem to cost about 50% more than the basic
-> desktop drives, but that's still amazingly cheap ...
+Just saying "it's stuck again" is very nearly useless.
 
-... until you need to buy lots of them. :)
+Thanks,
+NeilBrown
 
--- 
-NULL && (void)
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlm5ubAACgkQOeye3VZi
+gblwlBAAsU6p6+TUZFRckCvEvRhsJp8I6ksuiQrasUcw8HqjO4ozP67J6EyDDz0Q
+cQnp+QkjKuzQAjjGQOeXEvj6PD+QBqmryrQyk5L2VlJzc6b9+hq1URz+ibTgHTT1
+4Umv7aDorMhUJZ1zrcDslMLueSx8QKWaIHbzAjCl+/KIawTUeaw8lW5hiRhRu9mb
+K9q7dOVbn0WzVNkwzlwpUZDRiTGnieVDLl/Kma/pNkyLpYp/oXw42ztmbboV7IAO
+rSU0tAzk9rTw/UFzpIsq/HnOm0ni711ffEH03lP5MjxXemBUPnSct/SYGuxXcWwD
+IRuZhnizzUWBMX4H3xXLO4v8f184B04QucDOhFyrjilz7n+uIbaV4C61bIzfmgSW
+lnp3dqaHySFlfo68/SROIhGGqATHAZC9j0ab4ijHtpmn7/wzrgEdfLJ0oi1X6R3K
+5OibQOMtv/1BTDAUH5opxkHXQSHrbmjXyJxF0EkB+4aSdIkau0sAKzoIOBuhT7c5
+98S9mU4dkaHTINQM6KocZ08/zgBd9fM6S2uUkQxTE6c+nBUFsbUGpmKxgQo7/61I
+ZFJKQgXgufPlokZhu66kbrbZiGrEzoJA9HM/ov+yWVwWAKQKGZXDsO4qFoxvdmzi
+e+z3pvMPh6jZZ1tgcO7ylZaZQ74OZE/zXT+1JplonJdUrTG8VIo=
+=UIVg
+-----END PGP SIGNATURE-----
+--=-=-=--
