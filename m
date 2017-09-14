@@ -1,36 +1,62 @@
-From: Wols Lists <antlists@youngman.org.uk>
+From: Reindl Harald <h.reindl@thelounge.net>
 Subject: Re: Encrypted software RAID1 with Debian Stretch
-Date: Thu, 14 Sep 2017 17:56:53 +0100
-Message-ID: <59BAB4D5.4040507@youngman.org.uk>
+Date: Thu, 14 Sep 2017 19:01:02 +0200
+Message-ID: <ba7e431d-2bec-313e-eb3c-51cb7c3f47c8@thelounge.net>
 References: <28c61e8c14f44ec6727b8f3fb3c80c98@riseup.net>
  <59A92C91.7010508@youngman.org.uk> <87y3pjv6jw.fsf@esperi.org.uk>
  <3a85ea27-602a-3f5b-3537-d4159a56c2ed@thelounge.net>
  <87377qvh7t.fsf@esperi.org.uk> <59B95891.9040809@youngman.org.uk>
  <87r2v9sfkm.fsf@esperi.org.uk> <59BA6FAF.9020501@youngman.org.uk>
- <878thhsa0w.fsf@esperi.org.uk>
+ <878thhsa0w.fsf@esperi.org.uk> <20170914183932.001ffe25@natsu>
+ <87wp51qq60.fsf@esperi.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <878thhsa0w.fsf@esperi.org.uk>
+In-Reply-To: <87wp51qq60.fsf@esperi.org.uk>
+Content-Language: de-CH
 Sender: linux-raid-owner@vger.kernel.org
-To: Nix <nix@esperi.org.uk>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Nix <nix@esperi.org.uk>, Roman Mamedov <rm@romanrm.net>
+Cc: Wols Lists <antlists@youngman.org.uk>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 14/09/17 14:08, Nix wrote:
-> Ah, so it's like bup only immediately accessible without Python and FUSE
-> installed, and probably less reliable (but hopefully this will change.)
-> Except it doesn't do full deduplication (if you change a file, it gets
-> backed up, even if you change it to the same contents as it had before:
-> yeah, perhaps this is a tad contrived).
 
-Actually, yes it does ... at least the way I suggested.
 
-The whole point of an in-place rsync is it does a comparison, and only
-writes the data IF IT CHANGES. So a "change it to itself" change will be
-detected and ignored by rsync (okay, it may well update the inode, but
-then that HAS changed :-)
+Am 14.09.2017 um 17:02 schrieb Nix:
+> On 14 Sep 2017, Roman Mamedov said:
+> 
+>> On Thu, 14 Sep 2017 14:08:15 +0100
+>> Nix <nix@esperi.org.uk> wrote:
+>>
+>>> Backups based on not-yet-reliable filesystems are, uh, less effective.
+>>
+>> You're just grasping for straws at this point. Single-device Btrfs and
+>> its core features like snapshotting and compression are very solid, it is
+>> silly trying to "cast doubt" on those.
+> 
+> I'm not grasping for straws, but I do think I'm a lot more conservative
+> than you where backups are concerned!
 
-Cheers,
-Wol
+depends also on the type of backup, normally you have more than once anyways
+
+* microserver with NFS, dedicated to run a vmware backup-appliance
+* that beast holding 31 days of anything is backuped
+   once per month on a external disk, there are two identical
+   external disks, one is always located off-house and both
+   are containing the *supsended* backup appliance inclduding memory
+
+so, and the btrfs backup machine is located on the other side of the 
+town, does dauly backups and rnshshot for 7 days and is reachable via 
+ssh/sftp and key-auth - that one is mostly for "i have deleted a single 
+file or folder can you restore it"
+
+why BTRFS?
+because of the compression!
+
+the other stuuf above is 1 time XFS and the external disks ext4
+
+*that* is how a backup plan looks like because when you lose your 
+complete backup because one damaged filesystem you have no backup plan 
+at all (take it offeding if you want to do so...)
+
+
