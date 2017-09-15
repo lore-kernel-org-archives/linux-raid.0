@@ -1,50 +1,52 @@
 From: Nix <nix@esperi.org.uk>
 Subject: Re: Encrypted software RAID1 with Debian Stretch
-Date: Fri, 15 Sep 2017 12:35:41 +0100
-Message-ID: <87k210p52q.fsf@esperi.org.uk>
+Date: Fri, 15 Sep 2017 12:38:52 +0100
+Message-ID: <87fubop4xf.fsf@esperi.org.uk>
 References: <28c61e8c14f44ec6727b8f3fb3c80c98@riseup.net>
         <59A92C91.7010508@youngman.org.uk> <87y3pjv6jw.fsf@esperi.org.uk>
         <3a85ea27-602a-3f5b-3537-d4159a56c2ed@thelounge.net>
         <87377qvh7t.fsf@esperi.org.uk> <59B95891.9040809@youngman.org.uk>
         <87r2v9sfkm.fsf@esperi.org.uk> <59BA6FAF.9020501@youngman.org.uk>
-        <878thhsa0w.fsf@esperi.org.uk> <20170914183932.001ffe25@natsu>
-        <87wp51qq60.fsf@esperi.org.uk> <20170914212206.272b1289@natsu>
+        <878thhsa0w.fsf@esperi.org.uk> <59BAB4D5.4040507@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170914212206.272b1289@natsu> (Roman Mamedov's message of "Thu,
-        14 Sep 2017 21:22:06 +0500")
+In-Reply-To: <59BAB4D5.4040507@youngman.org.uk> (Wols Lists's message of "Thu,
+        14 Sep 2017 17:56:53 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.net>
-Cc: Wols Lists <antlists@youngman.org.uk>, linux-raid <linux-raid@vger.kernel.org>
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 14 Sep 2017, Roman Mamedov said:
+On 14 Sep 2017, Wols Lists spake thusly:
 
-> On Thu, 14 Sep 2017 16:02:31 +0100
-> Nix <nix@esperi.org.uk> wrote:
+> On 14/09/17 14:08, Nix wrote:
+>> Ah, so it's like bup only immediately accessible without Python and FUSE
+>> installed, and probably less reliable (but hopefully this will change.)
+>> Except it doesn't do full deduplication (if you change a file, it gets
+>> backed up, even if you change it to the same contents as it had before:
+>> yeah, perhaps this is a tad contrived).
 >
->> I would never consider snapshots on the same filesystem to be a backup
->> of anything, except possibly as a defence against 'oh whoops I rm'ed the
->> wrong tree'.
+> Actually, yes it does ... at least the way I suggested.
 >
-> No one proposed that.
+> The whole point of an in-place rsync is it does a comparison, and only
+> writes the data IF IT CHANGES. So a "change it to itself" change will be
+> detected and ignored by rsync (okay, it may well update the inode, but
+> then that HAS changed :-)
 
-Oh I thought that was what people were proposing as the compelling btrfs
-advantage.
+That's not full deduplication. It can't even deduplicate the results of
+a "cp -a", let alone changes of smoething from A to B and back to A
+again, or a change of something to something else present elsewhere in
+history, or a change of something to something in part containing
+something seen elsewhere in history. The rsync rolling-hash algorithm is
+the key to spotting all of these, but just because the algorithm can
+chunk things properly doesn't mean you're going to spot duplicates
+across time unless you try. And rsync (by design) doesn't do anything
+like that.
 
->                       The scenario is that the backup server would have its
-> rsync destination dir (from multiple other systems) periodically snapshotted,
-> providing a historic view of what it contained 1-2-3 months ago. Just like
-> "bup" does in userspace, I guess? -- or like rdiff-backup did, which I used
-> before. But now we have that directly in filesystem, no need to cling to
-> userspace crutches anymore.
-
-I'm fairly sure that can't deduplicate anywhere near as effectively. No
-dedup within files; no dedup across trees (very important if you have
-duplicated data on multipl systems you are backing up); no dedup
-anywhere except in immediate history. That's all rdiff-backup could do,
-but the state of the art is better now.
+... anyway, this has nothing to do with RAID anymore: I dragged things
+so far off topic you need a telescope to see the topic now. Sorry about
+that.
 
 -- 
 NULL && (void)
