@@ -1,52 +1,87 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: Encrypted software RAID1 with Debian Stretch
-Date: Fri, 15 Sep 2017 12:38:52 +0100
-Message-ID: <87fubop4xf.fsf@esperi.org.uk>
-References: <28c61e8c14f44ec6727b8f3fb3c80c98@riseup.net>
-        <59A92C91.7010508@youngman.org.uk> <87y3pjv6jw.fsf@esperi.org.uk>
-        <3a85ea27-602a-3f5b-3537-d4159a56c2ed@thelounge.net>
-        <87377qvh7t.fsf@esperi.org.uk> <59B95891.9040809@youngman.org.uk>
-        <87r2v9sfkm.fsf@esperi.org.uk> <59BA6FAF.9020501@youngman.org.uk>
-        <878thhsa0w.fsf@esperi.org.uk> <59BAB4D5.4040507@youngman.org.uk>
+From: Shaohua Li <shli@kernel.org>
+Subject: Linux Plumbers MD BOF discussion notes
+Date: Fri, 15 Sep 2017 07:27:37 -0700
+Message-ID: <20170915142737.qafwl3vgl6vhfi5q@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <59BAB4D5.4040507@youngman.org.uk> (Wols Lists's message of "Thu,
-        14 Sep 2017 17:56:53 +0100")
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 14 Sep 2017, Wols Lists spake thusly:
+This is a short note based on Song's record. Please reply to the list if
+anything is missing.
 
-> On 14/09/17 14:08, Nix wrote:
->> Ah, so it's like bup only immediately accessible without Python and FUSE
->> installed, and probably less reliable (but hopefully this will change.)
->> Except it doesn't do full deduplication (if you change a file, it gets
->> backed up, even if you change it to the same contents as it had before:
->> yeah, perhaps this is a tad contrived).
->
-> Actually, yes it does ... at least the way I suggested.
->
-> The whole point of an in-place rsync is it does a comparison, and only
-> writes the data IF IT CHANGES. So a "change it to itself" change will be
-> detected and ignored by rsync (okay, it may well update the inode, but
-> then that HAS changed :-)
+*IMSM - PPL
+Fix write hole without extra device; Updated status and upcomming mdadm change
+to support it. Intel guys are improving it, like fixing current 'disable disk
+cache' problem.
 
-That's not full deduplication. It can't even deduplicate the results of
-a "cp -a", let alone changes of smoething from A to B and back to A
-again, or a change of something to something else present elsewhere in
-history, or a change of something to something in part containing
-something seen elsewhere in history. The rsync rolling-hash algorithm is
-the key to spotting all of these, but just because the algorithm can
-chunk things properly doesn't mean you're going to spot duplicates
-across time unless you try. And rsync (by design) doesn't do anything
-like that.
+*Hiding member drives
+Hiding RAID array member drives from user, so MD RAID array looks more like a
+hardware raid array. This turns out to be real customer requirement.
+We do need to access the member drives for different reasons (create/assembly,
+mdmon, iostat). Working around this issue might be possible, eg, delete the
+/dev/xxx after array assembly. But must justify the value and also discuss with
+block guys since this is a general issue.
 
-... anyway, this has nothing to do with RAID anymore: I dragged things
-so far off topic you need a telescope to see the topic now. Sorry about
-that.
+*Block-mq
+Converting MD to use block-mq? md is bio based (not request based) driver, so
+no value to go mq. md dispatches bio directly to low level disks. blk-mq still
+benefits if low level disk supports it but this is transparent to md.
+ 
+*NVDIMM caching
+NVDIMM supports block interface. Using it as a raid5 cache disk should be
+straightforward.
+Directly storing raid5 stripe cache in NVDIMM without current raid5-cache log
+device? Had problems for example how to detect/fix data mismatch after power
+failure. Need major changes in raid5 code.
+ 
+*stream ID
+Support stream ID in MD. It should be fairly easy to support stream ID in
+raid0/1/10. Intel guys described a scenario in raid5 which breaks stream ID,
+eg, write stripe data multiple times because of read-modify-write (clarify?).
+Probably detecting IO pattern like what DM does can help.
 
--- 
-NULL && (void)
+*split/merge problem
+md layer splits bio and block layer will do bio merge for low level disks. The
+merge/split overhead is noticeable for raid0 with fast SSD and small chunk
+size. Fixing the issue for raid0 is doable. Fixing for raid5 is not sure.
+Discussed increasing stripe size of raid5 to reduce the split/merge overhead.
+There is tradeoff here for example more unnecessary IO for read-modify-write
+with bigger stripe size.
+
+*Testing
+md need recover data after disk failures, mdadm has test suite, but not
+covering all cases. mdadm test suite is fragile, may kill the machine
+We need to build more completed tests.
+
+The recent null_blk block device driver can emulate several types of disk
+failures. The plan is to make null_blk support all disk failures which md can
+handle and create a test suite using null_blk. Help is welcome!
+ 
+*RAID-1 RAID-10 barrier inconsistency
+Coly improved the barrier scalibility for raid1, hopefully he can do the same
+for raid10
+ 
+*DAX
+Support DAX in raid0/linear should not be hard. Does it make sense to support
+other raid types?
+
+*sysfs / ioctl
+Jes started working on it. Goal is to replace ioctl with sysfs based interfaces.
+There are gaps currently, eg, some operations can only be done with ioctl. Suse
+guys promised to close the gap in kernel side.
+
+Using configfs instead of sysfs?
+ 
+*Stop nested RAID device
+For example a raid0 on top of raid5. Userspace must understand the topology to
+stop the nested raid arrays.
+mdadm stop is async, need sync option for stop array (clarify?)
+ 
+*More stable in kernel API
+race condition when access md_dev data: data could be changed because of
+resync. dm-raid need to get reliable resync status report. Need further
+discussion on this side, email/draft patch could be helpful.
