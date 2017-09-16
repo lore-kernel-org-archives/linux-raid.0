@@ -1,202 +1,234 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: Linux Plumbers MD BOF discussion notes
-Date: Sat, 16 Sep 2017 10:08:06 +1000
-Message-ID: <871sn78pzt.fsf@notabene.neil.brown.name>
-References: <20170915142737.qafwl3vgl6vhfi5q@kernel.org>
+From: Xiao Ni <xni@redhat.com>
+Subject: Re: [PATCH 0/4] RFC: attempt to remove md deadlocks with metadata
+ without
+Date: Sat, 16 Sep 2017 09:15:57 -0400 (EDT)
+Message-ID: <1823716408.11533021.1505567757693.JavaMail.zimbra@redhat.com>
+References: <150518076229.32691.13542756562323866921.stgit@noble> <1403889957.10216459.1505268710452.JavaMail.zimbra@redhat.com> <1025458651.10368123.1505315351335.JavaMail.zimbra@redhat.com> <87o9qe9p3j.fsf@notabene.neil.brown.name> <446747392.10694917.1505364915884.JavaMail.zimbra@redhat.com> <871sn9alrh.fsf@notabene.neil.brown.name> <393232447.10845976.1505375841983.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170915142737.qafwl3vgl6vhfi5q@kernel.org>
+In-Reply-To: <393232447.10845976.1505375841983.JavaMail.zimbra@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
 
-Sounds like an interesting, wide ranging discussion...
+----- Original Message -----
+> From: "Xiao Ni" <xni@redhat.com>
+> To: "NeilBrown" <neilb@suse.com>
+> Cc: linux-raid@vger.kernel.org
+> Sent: Thursday, September 14, 2017 3:57:21 PM
+> Subject: Re: [PATCH 0/4] RFC: attempt to remove md deadlocks with metadata without
+> 
+> 
+> 
+> ----- Original Message -----
+> > From: "NeilBrown" <neilb@suse.com>
+> > To: "Xiao Ni" <xni@redhat.com>
+> > Cc: linux-raid@vger.kernel.org
+> > Sent: Thursday, September 14, 2017 1:32:02 PM
+> > Subject: Re: [PATCH 0/4] RFC: attempt to remove md deadlocks with metadata
+> > without
+> > 
+> > On Thu, Sep 14 2017, Xiao Ni wrote:
+> > 
+> > > ----- Original Message -----
+> > >> From: "NeilBrown" <neilb@suse.com>
+> > >> To: "Xiao Ni" <xni@redhat.com>
+> > >> Cc: linux-raid@vger.kernel.org
+> > >> Sent: Thursday, September 14, 2017 7:05:20 AM
+> > >> Subject: Re: [PATCH 0/4] RFC: attempt to remove md deadlocks with
+> > >> metadata
+> > >> without
+> > >> 
+> > >> On Wed, Sep 13 2017, Xiao Ni wrote:
+> > >> >
+> > >> > Hi Neil
+> > >> >
+> > >> > Sorry for the bad news. The test is still running and it's stuck
+> > >> > again.
+> > >> 
+> > >> Any details?  Anything at all?  Just a little hint maybe?
+> > >> 
+> > >> Just saying "it's stuck again" is very nearly useless.
+> > >> 
+> > > Hi Neil
+> > >
+> > > It doesn't show any useful information in /var/log/messages
+> > >
+> > > echo file raid5.c +p > /sys/kernel/debug/dynamic_debug/control
+> > > There aren't any messages too.
+> > >
+> > > It looks like another problem.
+> > >
+> > > [root@dell-pr1700-02 ~]# ps auxf | grep D
+> > > USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+> > > root      8381  0.0  0.0      0     0 ?        D    Sep13   0:00  \_
+> > > [kworker/u8:1]
+> > > root      8966  0.0  0.0      0     0 ?        D    Sep13   0:00  \_
+> > > [jbd2/md0-8]
+> > > root       824  0.0  0.1 216856  8492 ?        Ss   Sep03   0:06
+> > > /usr/bin/abrt-watch-log -F BUG: WARNING: at WARNING: CPU: INFO: possible
+> > > recursive locking detected ernel BUG at list_del corruption list_add
+> > > corruption do_IRQ: stack overflow: ear stack overflow (cur: eneral
+> > > protection fault nable to handle kernel ouble fault: RTNL: assertion
+> > > failed eek! page_mapcount(page) went negative! adness at NETDEV WATCHDOG
+> > > ysctl table check failed : nobody cared IRQ handler type mismatch Machine
+> > > Check Exception: Machine check events logged divide error: bounds:
+> > > coprocessor segment overrun: invalid TSS: segment not present: invalid
+> > > opcode: alignment check: stack segment: fpu exception: simd exception:
+> > > iret exception: /var/log/messages -- /usr/bin/abrt-dump-oops -xtD
+> > > root       836  0.0  0.0 195052  3200 ?        Ssl  Sep03   0:00
+> > > /usr/sbin/gssproxy -D
+> > > root      1225  0.0  0.0 106008  7436 ?        Ss   Sep03   0:00
+> > > /usr/sbin/sshd -D
+> > > root     12411  0.0  0.0 112672  2264 pts/0    S+   00:50   0:00
+> > > \_ grep --color=auto D
+> > > root      8987  0.0  0.0 109000  2728 pts/2    D+   Sep13   0:04
+> > > \_ dd if=/dev/urandom of=/mnt/md_test/testfile bs=1M count=1000
+> > > root      8983  0.0  0.0   7116  2080 ?        Ds   Sep13   0:00
+> > > /usr/sbin/mdadm --grow --continue /dev/md0
+> > >
+> > > [root@dell-pr1700-02 ~]# cat /proc/mdstat
+> > > Personalities : [raid6] [raid5] [raid4]
+> > > md0 : active raid5 loop6[7] loop4[6] loop5[5](S) loop3[3] loop2[2]
+> > > loop1[1]
+> > > loop0[0]
+> > >       2039808 blocks super 1.2 level 5, 512k chunk, algorithm 2 [6/6]
+> > >       [UUUUUU]
+> > >       [>....................]  reshape =  0.0% (1/509952)
+> > >       finish=1059.5min
+> > >       speed=7K/sec
+> > >       
+> > > unused devices: <none>
+> > >
+> > >
+> > > It looks like the reshape doesn't start. This time I didn't add the codes
+> > > to check
+> > > the information of mddev->suspended and active_stripes. I just added the
+> > > patches
+> > > to source codes. Do you have other suggestions to check more things?
+> > >
+> > > Best Regards
+> > > Xiao
+> > 
+> > What do
+> >  cat /proc/8987/stack
+> >  cat /proc/8983/stack
+> >  cat /proc/8966/stack
+> >  cat /proc/8381/stack
+> > 
+> > show??
+> 
+> dd if=/dev/urandom of=/mnt/md_test/testfile bs=1M count=1000
+> 
+> [root@dell-pr1700-02 ~]# cat /proc/8987/stack
+> [<ffffffff810d4ea6>] io_schedule+0x16/0x40
+> [<ffffffff811c66ae>] __lock_page+0x10e/0x160
+> [<ffffffffa09b4ef0>] mpage_prepare_extent_to_map+0x290/0x310 [ext4]
+> [<ffffffffa09ba007>] ext4_writepages+0x467/0xe80 [ext4]
+> [<ffffffff811d6bec>] do_writepages+0x1c/0x70
+> [<ffffffff811c7c66>] __filemap_fdatawrite_range+0xc6/0x100
+> [<ffffffff811c7d6c>] filemap_flush+0x1c/0x20
+> [<ffffffffa09b757c>] ext4_alloc_da_blocks+0x2c/0x70 [ext4]
+> [<ffffffffa09a89a9>] ext4_release_file+0x79/0xc0 [ext4]
+> [<ffffffff81263d67>] __fput+0xe7/0x210
+> [<ffffffff81263ece>] ____fput+0xe/0x10
+> [<ffffffff810c59c3>] task_work_run+0x83/0xb0
+> [<ffffffff81003d64>] exit_to_usermode_loop+0x6c/0xa8
+> [<ffffffff8100389a>] do_syscall_64+0x13a/0x150
+> [<ffffffff81777527>] entry_SYSCALL64_slow_path+0x25/0x25
+> [<ffffffffffffffff>] 0xffffffffffffffff
+> 
+> /usr/sbin/mdadm --grow --continue /dev/md0. Is it the reason to add
+> lockdep_assert_held(&mddev->reconfig_mutex)?
+> [root@dell-pr1700-02 ~]# cat /proc/8983/stack
+> [<ffffffffa0a3464c>] mddev_suspend+0x12c/0x160 [md_mod]
+> [<ffffffffa0a379ec>] suspend_lo_store+0x7c/0xe0 [md_mod]
+> [<ffffffffa0a3b7d0>] md_attr_store+0x80/0xc0 [md_mod]
+> [<ffffffff812ec8da>] sysfs_kf_write+0x3a/0x50
+> [<ffffffff812ec39f>] kernfs_fop_write+0xff/0x180
+> [<ffffffff81260457>] __vfs_write+0x37/0x170
+> [<ffffffff812619e2>] vfs_write+0xb2/0x1b0
+> [<ffffffff81263015>] SyS_write+0x55/0xc0
+> [<ffffffff810037c7>] do_syscall_64+0x67/0x150
+> [<ffffffff81777527>] entry_SYSCALL64_slow_path+0x25/0x25
+> [<ffffffffffffffff>] 0xffffffffffffffff
+> 
+> [jbd2/md0-8]
+> [root@dell-pr1700-02 ~]# cat /proc/8966/stack
+> [<ffffffffa0a39b20>] md_write_start+0xf0/0x220 [md_mod]
+> [<ffffffffa0972b49>] raid5_make_request+0x89/0x8b0 [raid456]
+> [<ffffffffa0a34175>] md_make_request+0xf5/0x260 [md_mod]
+> [<ffffffff81376427>] generic_make_request+0x117/0x2f0
+> [<ffffffff81376675>] submit_bio+0x75/0x150
+> [<ffffffff8129e0b0>] submit_bh_wbc+0x140/0x170
+> [<ffffffff8129e683>] submit_bh+0x13/0x20
+> [<ffffffffa0957e29>] jbd2_write_superblock+0x109/0x230 [jbd2]
+> [<ffffffffa0957f8b>] jbd2_journal_update_sb_log_tail+0x3b/0x80 [jbd2]
+> [<ffffffffa09517ff>] jbd2_journal_commit_transaction+0x16ef/0x19e0 [jbd2]
+> [<ffffffffa0955d02>] kjournald2+0xd2/0x260 [jbd2]
+> [<ffffffff810c73f9>] kthread+0x109/0x140
+> [<ffffffff817776c5>] ret_from_fork+0x25/0x30
+> [<ffffffffffffffff>] 0xffffffffffffffff
+> 
+> [kworker/u8:1]
+> [root@dell-pr1700-02 ~]# cat /proc/8381/stack
+> [<ffffffffa0a34131>] md_make_request+0xb1/0x260 [md_mod]
+> [<ffffffff81376427>] generic_make_request+0x117/0x2f0
+> [<ffffffff81376675>] submit_bio+0x75/0x150
+> [<ffffffffa09d421c>] ext4_io_submit+0x4c/0x60 [ext4]
+> [<ffffffffa09d43f4>] ext4_bio_write_page+0x1a4/0x3b0 [ext4]
+> [<ffffffffa09b44f7>] mpage_submit_page+0x57/0x70 [ext4]
+> [<ffffffffa09b4778>] mpage_map_and_submit_buffers+0x168/0x290 [ext4]
+> [<ffffffffa09ba3f2>] ext4_writepages+0x852/0xe80 [ext4]
+> [<ffffffff811d6bec>] do_writepages+0x1c/0x70
+> [<ffffffff81293895>] __writeback_single_inode+0x45/0x320
+> [<ffffffff812940c0>] writeback_sb_inodes+0x280/0x570
+> [<ffffffff8129443c>] __writeback_inodes_wb+0x8c/0xc0
+> [<ffffffff812946e6>] wb_writeback+0x276/0x310
+> [<ffffffff81294f9c>] wb_workfn+0x19c/0x3b0
+> [<ffffffff810c0ff9>] process_one_work+0x149/0x360
+> [<ffffffff810c177d>] worker_thread+0x4d/0x3c0
+> [<ffffffff810c73f9>] kthread+0x109/0x140
+> [<ffffffff817776c5>] ret_from_fork+0x25/0x30
+> [<ffffffffffffffff>] 0xffffffffffffffff
+> 
+> If they can't give useful hints, I can try to print more information and do
+> test again.
 
+Hi Neil
 
+I added some codes to print some information. 
 
-On Fri, Sep 15 2017, Shaohua Li wrote:
+[13404.528231] mddev->suspended : 1
+[13404.531170] mddev->active_io : 1
+[13404.533774] conf->quiesce 0
 
-> This is a short note based on Song's record. Please reply to the list if
-> anything is missing.
->
-> *IMSM - PPL
-> Fix write hole without extra device; Updated status and upcomming mdadm c=
-hange
-> to support it. Intel guys are improving it, like fixing current 'disable =
-disk
-> cache' problem.
->
-> *Hiding member drives
-> Hiding RAID array member drives from user, so MD RAID array looks more li=
-ke a
-> hardware raid array. This turns out to be real customer requirement.
-> We do need to access the member drives for different reasons (create/asse=
-mbly,
-> mdmon, iostat). Working around this issue might be possible, eg, delete t=
-he
-> /dev/xxx after array assembly. But must justify the value and also discus=
-s with
-> block guys since this is a general issue.
+MD_SB_CHANGE_PENDING of mddev->flags is not set
+MD_UPDATING_SB of mddev->flags is not set
 
+It's stuck at mddev_suspend
+wait_event(mddev->sb_wait, atomic_read(&mddev->active_io) == 0)
 
-"Hiding" is a very vague term.  Should we get Harry Potter's
-invisibility cloak and wrap it around the hardware?
-Do we need to:
-  - remove from /proc/partitions - possible and possibly sane
-  - remove from from /dev - easy, given clear justification
-  - remove from /sys/block - I don't think this is justifiable
-  - make open() impossible - it already is if you use O_EXCL
-??
+md_write_start
+wait_event(mddev->sb_wait,
+      !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags) && !mddev->suspended);
 
-Possibly something sensible could be done, but we do need a clear
-statement of, and justification for, the customer requirement.
+Best Regards
+Xiao
 
->
-> *Block-mq
-> Converting MD to use block-mq? md is bio based (not request based) driver=
-, so
-> no value to go mq. md dispatches bio directly to low level disks. blk-mq =
-still
-> benefits if low level disk supports it but this is transparent to md.
->=20=20
-> *NVDIMM caching
-> NVDIMM supports block interface. Using it as a raid5 cache disk should be
-> straightforward.
-> Directly storing raid5 stripe cache in NVDIMM without current raid5-cache=
- log
-> device? Had problems for example how to detect/fix data mismatch after po=
-wer
-> failure. Need major changes in raid5 code.
->=20=20
-> *stream ID
-> Support stream ID in MD. It should be fairly easy to support stream ID in
-> raid0/1/10. Intel guys described a scenario in raid5 which breaks stream =
-ID,
-> eg, write stripe data multiple times because of read-modify-write (clarif=
-y?).
-> Probably detecting IO pattern like what DM does can help.
->
-> *split/merge problem
-> md layer splits bio and block layer will do bio merge for low level disks=
-. The
-> merge/split overhead is noticeable for raid0 with fast SSD and small chunk
-> size. Fixing the issue for raid0 is doable. Fixing for raid5 is not sure.
-> Discussed increasing stripe size of raid5 to reduce the split/merge overh=
-ead.
-> There is tradeoff here for example more unnecessary IO for read-modify-wr=
-ite
-> with bigger stripe size.
-
-For raid5 I can understand this being an issue as raid5 only submits
-PAGE_SIZE bios to lower level devices.
-The batching that Shaohua added might be a good starting point.  If you
-have a batch of stripes, you should be able to submit one bio per device
-for the whole batch.
-
-For RAID0, I don't understand the problem.  RAID0 never splits smaller
-than the chunk size, and that is a firm requirement.
-Maybe RAID0 could merge the bios itself rather than passing them down.
-Maybe that would help.  Do if a request is properly aligned and covers
-several stripes, that could be mapped to one-bio-per-device.  Is that
-the goal?
-
->
-> *Testing
-> md need recover data after disk failures, mdadm has test suite, but not
-> covering all cases. mdadm test suite is fragile, may kill the machine
-> We need to build more completed tests.
->
-> The recent null_blk block device driver can emulate several types of disk
-> failures. The plan is to make null_blk support all disk failures which md=
- can
-> handle and create a test suite using null_blk. Help is welcome!
->=20=20
-> *RAID-1 RAID-10 barrier inconsistency
-> Coly improved the barrier scalibility for raid1, hopefully he can do the =
-same
-> for raid10
->=20=20
-> *DAX
-> Support DAX in raid0/linear should not be hard. Does it make sense to sup=
-port
-> other raid types?
->
-> *sysfs / ioctl
-> Jes started working on it. Goal is to replace ioctl with sysfs based inte=
-rfaces.
-> There are gaps currently, eg, some operations can only be done with ioctl=
-. Suse
-> guys promised to close the gap in kernel side.
->
-> Using configfs instead of sysfs?
-
-It seems that no one actually wants this, but I'll just throw in my
-opinion that this is a nonsensical suggestion.  configfs is only for
-people who don't understand sysfs.  It has no real value.
-
->=20=20
-> *Stop nested RAID device
-> For example a raid0 on top of raid5. Userspace must understand the topolo=
-gy to
-> stop the nested raid arrays.
-> mdadm stop is async, need sync option for stop array (clarify?)
-
-I've been thinking that it might be useful for md (and dm and loop
-and..) to have a setting whereby it automatically shuts down on last
-close.  This would make it easier to orchestrate shutdown.
-Certainly it would make sense to use such a mode for stacked arrays.
-
-The "mdadm stop is async" comment refers to the fact that
-mddev_delayed_delete is run in a work queue, possibly after "mdadm -S
-/dev/mdX" completes.
-It might also refer to that fact that udev subsequently deletes things
-from /dev, possibly after a further delay.
-
-It might be possible to remove the need for mddev_delayed_delete if we
-enhance disk_release (in genhd.c) in some way so that it can drop the
-reference on the mddev (instead of mddev having to be careful when it
-drops the reference on the gendisk).
-
-Getting mdadm to wait for udev might be easy if udev provides some sort
-of API for that.
-
-NeilBrown
-
-
->=20=20
-> *More stable in kernel API
-> race condition when access md_dev data: data could be changed because of
-> resync. dm-raid need to get reliable resync status report. Need further
-> discussion on this side, email/draft patch could be helpful.
+> 
+> Best Regards
+> Xiao
+> > 
+> > NeilBrown
+> > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlm8a2gACgkQOeye3VZi
-gbkaQg//aKweBFym6gJEvKLKZm7fen+HYdFXHiDaQPGGrU3Lse9nAl+8PvI4ozOg
-MtqqAB0xdTH70qcMTY4BZvQDN4dVyvU6sejfwtN+DRhp5ts6hyz6mQzK5SvVH64p
-9Ryp7r/5vCsYXwJUin49FPb4/HIhDFn+sXfcqKkU8kLS0qdQiiV2vHUSTg0Imbak
-G88gJJWsP7FFMN6i5Hw5trydiGOeHyJJBN3fIivfL3+jJ81hOM5DpdrPFJYiEtn8
-dS6GCsF1L+PKiaKDYxTJ72KytTFXC3KdqYNIWkbOH00q9Fh2iAphCAsiwN8K80Gv
-DtLCPacEyUS5dcn2MPqc5zcZQSj5OCVeacVohIY3JulhkCFXAo1a0daEB70JFMBz
-8PSFJjhIUh8kUoFmHyTepRKeOICKpPc8hjZ4dOFEmo+mBIe+eT7xk09rkuN4Y/GH
-xo3k+DMNKh5UNfEEwwSpHtLWvQDDdxgnmcJVCF0P+FmSBxSrB9zMWEDb6QwxaR+L
-9yY8JxkCD/k2uRhUDfmCg3838Kfrpy0n/DiwFiHWtXzdy+LCDTeeJWmbw7/8InuQ
-8rBMrs5lfv86tPyQvWe9NKJ89KMqK32lpEQut3ufZH1JesKLh2Uwh3UIxXHnktoS
-2pYtzjFgIm7TTWxY14sre9Hi8rCEx2y3Br/01Yw5ipPK7g5u3oA=
-=vphf
------END PGP SIGNATURE-----
---=-=-=--
+> 
