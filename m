@@ -1,28 +1,18 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: [MDADM PATCH 0/2] /dev/md0 can't be released immediatly
-Date: Tue, 19 Sep 2017 14:06:45 +0800
-Message-ID: <1505801207-10096-1-git-send-email-xni@redhat.com>
+From: tang tang <shenjietangtang@gmail.com>
+Subject: does multipath of mdraid is still alive
+Date: Tue, 19 Sep 2017 17:20:25 +0800
+Message-ID: <CAMAbQJjLvzVdtA9gWZdr+5udGOX1u28Tj48GC7OKhLsCBHjXvQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: neilb@suse.com, jes.sorensen@gmail.com
 List-Id: linux-raid.ids
 
-Hi all
-
-The device node /dev/md0 can't be released immediatly after the command
-mdadm -S /dev/md0 or mdadm -Ss.
-
-We should give enough time to udev to handle udev events.
-
-Xiao Ni (2):
-  Close mdfd before returning main function
-  Give enough time to udev to handle events
-
- Create.c |  2 +-
- mdadm.c  | 16 ++++++++++++++++
- 2 files changed, 17 insertions(+), 1 deletion(-)
-
--- 
-2.7.4
-
+I found multipath of mdraid is not in RHEL and "New installations
+should not use md/multipath as it is not well supported and has no
+ongoing development. Use the Device Mapper based multipath-tools
+instead" in man page.
+Can anybody help to answer : Is multipath still alive on mdraid=EF=BC=9F
+Thanks.
