@@ -1,30 +1,33 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Linux Plumbers MD BOF discussion notes
-Date: Mon, 18 Sep 2017 14:57:51 +0100
-Message-ID: <59BFD0DF.7070006@youngman.org.uk>
-References: <20170915142737.qafwl3vgl6vhfi5q@kernel.org>
- <871sn78pzt.fsf@notabene.neil.brown.name>
- <alpine.DEB.2.20.1709180852450.29378@uplift.swm.pp.se>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+From: Xiao Ni <xni@redhat.com>
+Subject: [MDADM PATCH 1/2] Close mdfd before returning main function
+Date: Tue, 19 Sep 2017 14:06:46 +0800
+Message-ID: <1505801207-10096-2-git-send-email-xni@redhat.com>
+References: <1505801207-10096-1-git-send-email-xni@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.20.1709180852450.29378@uplift.swm.pp.se>
+In-Reply-To: <1505801207-10096-1-git-send-email-xni@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>, NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.com, jes.sorensen@gmail.com
 List-Id: linux-raid.ids
 
-On 18/09/17 08:04, Mikael Abrahamsson wrote:
-> If we could disable writing to the drives/partitions from regular
-> userspace when they're handled by md, that could be some kind of middle
-> ground. I guess most tools don't use O_EXCL.
+Signed-off-by: Xiao Ni <xni@redhat.com>
+---
+ mdadm.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-It would make sense to set permissions to read-only, but of course on
-Unix root just ignores permissions :-(
+diff --git a/mdadm.c b/mdadm.c
+index d80aab3..7cdcdba 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -1734,6 +1734,8 @@ int main(int argc, char *argv[])
+ 		autodetect();
+ 		break;
+ 	}
++	if (mdfd > 0)
++		close(mdfd);
+ 	exit(rv);
+ }
+ 
+-- 
+2.7.4
 
-Oh for Pr1mos where the only right that couldn't be taken away from the
-super-user was the right to set rights :-)
-
-Cheers,
-Wol
