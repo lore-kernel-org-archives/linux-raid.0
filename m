@@ -1,41 +1,62 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: [GIT PULL] MD update for 4.14-rc2
-Date: Tue, 19 Sep 2017 08:22:30 -0700
-Message-ID: <20170919151340.pgkmo3isq634lpyy@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Xiao Ni <xni@redhat.com>
+Subject: [mdadm PATCH 1/1] Fix a build error
+Date: Wed, 20 Sep 2017 11:48:28 +0800
+Message-ID: <1505879308-6077-1-git-send-email-xni@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: jsorensen@fb.com, ncroxon@redhat.com, pmenzel@molgen.mpg.de, antlists@youngman.org.uk
 List-Id: linux-raid.ids
 
-Hi,
-2 small patches fix long live raid5 stripe batch bugs, one from Dennis and the
-other from me. Please pull!
+On the s390 platform the build fails with the error below.
+Manage.c: In function 'Manage_subdevs':
+Manage.c:1502:5: error: passing argument 3 of 'fstat_is_blkdev' from incompatible pointer type [-Werror]
+     fstat_is_blkdev(tfd, dv->devname, &rdev);
+     ^
+In file included from Manage.c:25:0:
+mdadm.h:1446:12: note: expected 'dev_t *' but argument is of type 'long unsigned int *'
 
-Thanks,
-Shaohua
+It was introduced by commit 0a6bff09 (mdadm/util: unify fstat
+checking blkdev into function). It needs to pass a type 'dev_t'
+argument to fstat_is_blkdev, but it passes a type 'unsigned
+long' argument. So use a temporary variable to fix this.
 
-The following changes since commit e8a27f836f165c26f867ece7f31eb5c811692319:
+Signed-off-by: Xiao Ni <xni@redhat.com>
+Suggested-by: Paul Menzel <pmenzel@molgen.mpg.de>
+Suggested-by: Wols Lists <antlists@youngman.org.uk>
+---
+ Manage.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-  md/bitmap: disable bitmap_resize for file-backed bitmaps. (2017-08-31 22:57:03 -0700)
+diff --git a/Manage.c b/Manage.c
+index 871d342..6de1fc2 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -1497,13 +1497,14 @@ int Manage_subdevs(char *devname, int fd,
+ 			 */
+ 			rdev = makedev(mj, mn);
+ 		} else {
++			dev_t device_id;
+ 			tfd = dev_open(dv->devname, O_RDONLY);
+ 			if (tfd >= 0) {
+-				fstat_is_blkdev(tfd, dv->devname, &rdev);
++				fstat_is_blkdev(tfd, dv->devname, &device_id);
+ 				close(tfd);
+ 			} else {
+ 				int open_err = errno;
+-				if (!stat_is_blkdev(dv->devname, &rdev)) {
++				if (!stat_is_blkdev(dv->devname, &device_id)) {
+ 					if (dv->disposition == 'M')
+ 						/* non-fatal. Also improbable */
+ 						continue;
+@@ -1523,6 +1524,7 @@ int Manage_subdevs(char *devname, int fd,
+ 					goto abort;
+ 				}
+ 			}
++			rdev = (unsigned long)device_id;
+ 		}
+ 		switch(dv->disposition){
+ 		default:
+-- 
+2.7.4
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git for-next
-
-for you to fetch changes up to 184a09eb9a2fe425e49c9538f1604b05ed33cfef:
-
-  md/raid5: preserve STRIPE_ON_UNPLUG_LIST in break_stripe_batch_list (2017-09-05 22:51:13 -0700)
-
-----------------------------------------------------------------
-Dennis Yang (1):
-      md/raid5: preserve STRIPE_ON_UNPLUG_LIST in break_stripe_batch_list
-
-Shaohua Li (1):
-      md/raid5: fix a race condition in stripe batch
-
- drivers/md/raid5.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
